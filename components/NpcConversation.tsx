@@ -14,11 +14,11 @@ import {earnForNpc} from '@/lib/town/cardRewardTriggers';
 import {npcCardsToday} from '@/lib/town/cardRewardStore';
 import cardStyles from './CardOffer.module.css';
 import NpcMatchStory from './NpcMatchStory';
-import {markNpcVisited,npcOpener} from '@/lib/town/npcOpeners';
+import {answerChallenge,claimChallengeReward,markFreshSeen,planNpcVisit,type VisitPlan} from '@/lib/town/npcFreshPicker';
 const NpcRanking=dynamic(()=>import('./NpcRanking'),{ssr:false});
 const CourtFreestyleClips=dynamic(()=>import('./CourtFreestyleClips'),{ssr:false});
 const NpcClips=dynamic(()=>import('./NpcClips'),{ssr:false});
-type Exchange={id:string;question:string;answer?:string;news?:'scores'|'transfers'};
+type Exchange={id:string;question:string;answer?:string;news?:'scores'|'transfers';seen?:string};
 type Props={npc:NpcDefinition|null;open:boolean;onOpenChange:(open:boolean)=>void;
  /** Extra reply buttons (e.g. the Konbini cashier's "Browse the counter"); `practice:false` hides the island-only Practise reply. */
  actions?:{label:string;onClick:()=>void}[];practice?:boolean};
@@ -34,26 +34,32 @@ export default function NpcConversation({npc,open,onOpenChange,actions,practice=
   else if(el.open){const finish=()=>{el.close();restore.current?.focus({preventScroll:true});};if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)finish();else timer=setTimeout(finish,DRAWER_SLIDE_OUT_MS);}
   return()=>{if(timer)clearTimeout(timer);};},[open,npc]);
  const [showRanking,setShowRanking]=useState(false),[showClips,setShowClips]=useState(false);
- useEffect(()=>{setShowRanking(false);setShowClips(false);},[npc?.id,open]);
+ const [quiz,setQuiz]=useState<{tries:number;done:boolean;wrong:number[]}|null>(null),won=useRef<string|null>(null);
+ useEffect(()=>{setShowRanking(false);setShowClips(false);setQuiz(null);if(open)won.current=null;},[npc?.id,open]);
  const asked=new Set(exchanges.map(exchange=>exchange.id));
  // Card rewards: a chat is "finished" once a topic and its follow-up were asked; closing it then offers a card pick (at most one
  // per islander per day and NPC_PICKS_PER_DAY a day, docs/card-rewards.md). Tracked in a ref so it survives the close.
  const learned=useRef<{npc:NpcDefinition;topics:string}|null>(null);
- if(open&&npc&&exchanges.some(exchange=>exchange.id.endsWith(':follow-up')))learned.current={npc,topics:exchanges.map(exchange=>`${exchange.question} ${exchange.answer??''}`).join(' ')};
+ if(open&&npc&&(exchanges.some(exchange=>exchange.id.endsWith(':follow-up'))||won.current===npc.id))learned.current={npc,topics:exchanges.map(exchange=>`${exchange.question} ${exchange.answer??''}`).join(' ')};
  useEffect(()=>{if(open)return;const done=learned.current;learned.current=null;if(done)earnForNpc(done.npc,done.topics);},[open]);
- // Rotating openers (lib/town/npcOpeners.ts): the opener is fixed for one chat; closing it moves this islander to their next line.
- const opener=useRef<{id:string;text:string;done:boolean}|null>(null);
- if(open&&npc&&(!opener.current||opener.current.id!==npc.id||opener.current.done))opener.current={id:npc.id,text:npcOpener(npc),done:false};
- useEffect(()=>{if(open)return;const o=opener.current;if(o&&!o.done){o.done=true;markNpcVisited(o.id);}},[open]);
+ // Fresh chats (lib/town/npcFreshPicker.ts): one plan per visit (opener or returning line, unseen topics, a challenge), remembered on device.
+ const visit=useRef<{id:string;plan:VisitPlan;done:boolean}|null>(null);
+ if(open&&npc&&(!visit.current||visit.current.id!==npc.id||visit.current.done))visit.current={id:npc.id,plan:planNpcVisit(npc),done:false};
+ useEffect(()=>{if(!open&&visit.current)visit.current.done=true;},[open]);
+ const plan=visit.current?.id===npc?.id?visit.current?.plan:null,challenge=plan?.challenge;
  const cardsToday=open&&npc?npcCardsToday(npc.id):'off';
- const send=(exchange:Exchange)=>{if(thinkingId||asked.has(exchange.id))return;if((exchange.answer?.length??0)>150&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)setThinkingId(exchange.id);setExchanges(current=>[...current,exchange]);};
+ const send=(exchange:Exchange)=>{if(thinkingId||asked.has(exchange.id))return;if((exchange.answer?.length??0)>150&&!window.matchMedia('(prefers-reduced-motion: reduce)').matches)setThinkingId(exchange.id);setExchanges(current=>[...current,exchange]);if(exchange.seen&&npc)markFreshSeen(npc.id,'topic',exchange.seen);};
+ const answer=(choice:number|null)=>{if(!challenge||!npc||!quiz)return;const reveal=choice===null,result=reveal?{correct:false,done:true,text:`It is “${challenge.options[challenge.correct]}”. ${challenge.right}`}:answerChallenge(challenge,choice,quiz.tries);
+  send({id:`ch:${challenge.id}:${reveal?'reveal':quiz.tries}`,question:reveal?'Show me the answer':challenge.options[choice],answer:result.text});
+  if(result.done)markFreshSeen(npc.id,'challenge',challenge.id);if(result.correct&&claimChallengeReward(npc.id))won.current=npc.id;
+  setQuiz({tries:quiz.tries+1,done:result.done,wrong:reveal||result.correct?quiz.wrong:[...quiz.wrong,choice]});};
  return <dialog ref={dialog} className={`${styles.dialog} ${slide.drawer} ${open?`${styles.entering} ${slide.entering}`:`${styles.leaving} ${slide.leaving}`}`} aria-labelledby="npc-conversation-title" aria-modal="true" onCancel={event=>{event.preventDefault();onOpenChange(false);}} onClick={event=>{if(event.target===event.currentTarget)onOpenChange(false);}} onKeyDown={event=>{event.stopPropagation();if(event.key==='Escape'){event.preventDefault();onOpenChange(false);}}} onKeyUp={event=>event.stopPropagation()}>
   <section className={`${styles.panel} ${slide.panel} ${shell.shell} ${shell.drawer}`}>
    <header className={`${styles.header} ${shell.header}`}><div><h2 id="npc-conversation-title">{npc?.name??'Let’s talk futbol.'}</h2></div><DoneButton ref={close} className={styles.close} onDone={()=>onOpenChange(false)}/></header>
    <div ref={body} className={`${shell.body} ${styles.body}`}>
     <p className={shell.context}>{npc?.role}</p>
     <div className={styles.transcript} role="log" aria-label={`Conversation with ${npc?.name??'an island neighbour'}`} aria-live="polite" aria-relevant="additions">
-     <div className={styles.message}><span className={styles.speaker}>{npc?.name}</span><p>{opener.current?.id===npc?.id?opener.current?.text:npc?.greeting}</p></div>
+     <div className={styles.message}><span className={styles.speaker}>{npc?.name}</span><p>{plan?.opener??npc?.greeting}</p></div>
      {open&&npc?.matchStory&&<NpcMatchStory key={npc.id} id={npc.id} name={npc.name} league={npc.newsLeague} slot={npc.newsSlot} focus={npc.newsFocus}/>}
      {open&&npc?.freestyle!==undefined&&<CourtFreestyleClips key={npc.id} clipId={npc.freestyleClip} variant={npc.freestyle}/>}
      {open&&showRanking&&npc?.ranking&&<NpcRanking/>}
@@ -69,12 +75,15 @@ export default function NpcConversation({npc,open,onOpenChange,actions,practice=
      {npc?.ranking&&!showRanking&&<button type="button" onClick={()=>setShowRanking(true)}>Let’s rank players and teams <Icon name="arrow"/></button>}
      {(npc?.newsLeague||npc?.videoTopic)&&!showClips&&<button type="button" onClick={()=>setShowClips(true)}>{npc.videoTopic?'Watch a clip':`Show me a clip from ${npc.role.split(' · ').at(-1)}`} <Icon name="arrow"/></button>}
      {npc?.news&&!asked.has('news')&&<button type="button" onClick={()=>send({id:'news',question:npc.newsQuestion??(npc.news==='scores'?'What are the latest scores?':'Any transfer news?'),answer:npc.newsIntro,news:npc.news})}>{npc.newsQuestion??(npc.news==='scores'?'What are the latest scores?':'Any transfer news?')}<Icon name="arrow"/></button>}
-     {npc?.topics.filter(item=>asked.has(item.id)&&!asked.has(`${item.id}:follow-up`)).map(item=><button type="button" key={`${item.id}:follow-up`} onClick={()=>send({id:`${item.id}:follow-up`,question:item.followUp.question,answer:item.followUp.answer})}>{item.followUp.question}<Icon name="arrow"/></button>)}
-     {npc?.topics.filter(item=>!asked.has(item.id)).map(item=><button type="button" key={item.id} onClick={()=>send({id:item.id,question:item.question,answer:item.answer})}>{item.question}<Icon name="arrow"/></button>)}
+     {quiz&&!quiz.done&&challenge?<>{challenge.options.map((option,index)=>!quiz.wrong.includes(index)&&<button type="button" key={option} data-npc-challenge-option={index} onClick={()=>answer(index)}>{option}<Icon name="arrow"/></button>)}
+      {quiz.tries>0&&<button type="button" className={styles.goodbye} onClick={()=>answer(null)}>Show me the answer</button>}</>:<>
+     {challenge&&!quiz&&<button type="button" data-npc-challenge onClick={()=>{send({id:`ch:${challenge.id}`,question:'Quick challenge!',answer:challenge.prompt});setQuiz({tries:0,done:false,wrong:[]});}}>Quick challenge <Icon name="arrow"/></button>}
+     {plan?.topics.map(item=>item.followUp&&asked.has(item.id)&&!asked.has(`${item.id}:follow-up`)&&<button type="button" key={`${item.id}:follow-up`} onClick={()=>send({id:`${item.id}:follow-up`,question:item.followUp!.question,answer:item.followUp!.answer})}>{item.followUp.question}<Icon name="arrow"/></button>)}
+     {plan?.topics.filter(item=>!asked.has(item.id)).map(item=><button type="button" key={item.id} onClick={()=>send({id:item.id,question:item.question,answer:item.answer,seen:item.id})}>{item.question}<Icon name="arrow"/></button>)}
 
      {actions?.map(a=><button type="button" key={a.label} data-npc-action={a.label} onClick={a.onClick}>{a.label} <Icon name="arrow"/></button>)}
      {practice&&<button type="button" onClick={()=>{onOpenChange(false);launchLearning(readLearning().active??'support',`npc:${npc?.id??'island'}`);}}>{npc?.ranking?'Learn the game behind the rankings':`Practise with ${npc?.name??'a teammate'}`} <Icon name="arrow"/></button>}
-     <button type="button" className={styles.goodbye} onClick={()=>onOpenChange(false)}>Thanks, see you around.</button>
+     <button type="button" className={styles.goodbye} onClick={()=>onOpenChange(false)}>Thanks, see you around.</button></>}
     </div>}
    </div>
   </section>
