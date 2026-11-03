@@ -16,8 +16,8 @@ import s from './learn.module.css';
 export default function LearnMontage(){
  const m=learnMontage();
  if(!m)return null;
- const big=m.sizes[m.sizes.length-1],by=(k:string)=>m.sizes.find(x=>x.key===k);
- const sm=by('montage_s'),md=by('montage_m');
+ const by=(k:string)=>m.sizes.find(x=>x.key===k),big=by('montage')!;
+ const sm=by('montage_s'),md=by('montage_m'),xl=by('montage_xl');
  const dur=m.duration??28;
  return <section className={s.montage} id="film" aria-labelledby="montage-h" data-montage="">
   <div className={s.montageMedia} data-media="still" style={{'--dur':`${dur}s`} as React.CSSProperties}>
@@ -25,6 +25,7 @@ export default function LearnMontage(){
     width={big.image.width} height={big.image.height} alt={m.alt??LEARN_MONTAGE.title} loading="lazy" decoding="async"/>
    {big.mp4&&<>
     <video className={s.clip} data-mv="" muted loop playsInline preload="none" aria-hidden="true" tabIndex={-1} disablePictureInPicture>
+     {xl?.mp4&&<source media="(min-width: 900px) and (min-resolution: 1.5dppx)" src={learnUrl(xl.mp4)} type="video/mp4" data-size="xl"/>}
      {sm?.mp4&&<source media="(max-width: 640px)" src={learnUrl(sm.mp4)} type="video/mp4" data-size="s"/>}
      {md?.mp4&&<source media="(max-width: 1280px)" src={learnUrl(md.mp4)} type="video/mp4" data-size="m"/>}
      <source src={learnUrl(big.mp4)} type="video/mp4" data-size="l"/>

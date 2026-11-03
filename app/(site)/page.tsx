@@ -62,7 +62,7 @@ function Stage({k,label,eager,tags,hero}:{k:string;label:string;eager?:boolean;t
  if(!a.image)return <Tags tags={tags} center/>;
  const wide=isWide(k),film=a.image.width>=a.image.height*1.5;// a landscape 16:9 clip (Fuel up) gets the large film frame
  return <figure className={hero?`${s.stage} ${s.heroStage}`:s.stage} data-reveal={hero?undefined:''}>
-  <div className={[s.frame,film?s.frameFilm:wide?s.frameWide:s.frameTall,hero&&s.heroFrame].filter(Boolean).join(' ')}><LearnMedia imageKey={k} label={label} eager={eager} sizes={film?'(min-width: 1180px) 1052px, 92vw':undefined}/></div>
+  <div className={[s.frame,film?s.frameFilm:wide?s.frameWide:s.frameTall,hero&&s.heroFrame].filter(Boolean).join(' ')}><LearnMedia imageKey={k} label={label} eager={eager} sizes={film?'(min-width: 1180px) 1180px, 92vw':undefined}/></div>
   {tags?.length?<figcaption><Tags tags={tags} center/></figcaption>:null}
  </figure>;
 }

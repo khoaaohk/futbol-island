@@ -171,6 +171,9 @@
  /* a 4:5 shot is the card itself (no tan well around it, so no empty side gaps), as large as min(80svh, 820px) allows */
  .stage:has(>.frameTall){padding:0;background:none;border-radius:0}
  .stage:has(>.frameTall)>.frameTall{width:min(100%,var(--tallMax) * 4 / 5)}
+ /* the 16:9 film frame is the card too (owner, Nov 3): no tan well around it, and it uses the full stage width */
+ .stage:has(>.frameFilm){padding:0;background:none;border-radius:0;max-width:1180px}
+ .stage:has(>.frameFilm)>.frameFilm{width:100%}
 }
 .media{position:absolute;inset:0;overflow:hidden}
 .still,.clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
