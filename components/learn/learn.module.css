@@ -407,3 +407,5 @@
 @media(max-width:640px){.root .note{text-align:center;margin-inline:auto}}
 /* only the word "free" in the hero line is bold (owner, Nov 3): no highlight, no colour */
 .root .bold{font-weight:800;color:inherit}
+/* phones (owner, Nov 3): the hero title is exactly two lines, "Explore Futbol Island." then "Learn the game."; the size follows the width so line one never wraps */
+@media(max-width:640px){.root .h1{max-width:none;font-size:min(52px,calc((100vw - 2 * var(--gut,20px)) / 9.4))}.root .h1Line{white-space:nowrap}}
