@@ -573,5 +573,41 @@
   "width": 1600,
   "height": 900,
   "alt": "The party screen shows a short code to share only with friends you know."
+ },
+ "montage": {
+  "file": "/learn/montage.webp",
+  "width": 1920,
+  "height": 1080,
+  "alt": "One afternoon on Futbol Island: dribble across the town square, pass with a neighbour, ride a scooter, moped and bike, then fly a jetpack over the town to the sea.",
+  "video": {
+   "mp4": "/learn/video/montage_l.mp4",
+   "width": 1920,
+   "height": 1080,
+   "duration": 27.8
+  }
+ },
+ "montage_m": {
+  "file": "/learn/montage_m.webp",
+  "width": 1280,
+  "height": 720,
+  "alt": "One afternoon on Futbol Island: dribble across the town square, pass with a neighbour, ride a scooter, moped and bike, then fly a jetpack over the town to the sea.",
+  "video": {
+   "mp4": "/learn/video/montage_m.mp4",
+   "width": 1280,
+   "height": 720,
+   "duration": 27.8
+  }
+ },
+ "montage_s": {
+  "file": "/learn/montage_s.webp",
+  "width": 854,
+  "height": 480,
+  "alt": "One afternoon on Futbol Island: dribble across the town square, pass with a neighbour, ride a scooter, moped and bike, then fly a jetpack over the town to the sea.",
+  "video": {
+   "mp4": "/learn/video/montage_s.mp4",
+   "width": 854,
+   "height": 480,
+   "duration": 27.8
+  }
  }
 }
