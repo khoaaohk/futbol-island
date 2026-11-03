@@ -13,7 +13,6 @@ import FaqEnhance from '@/components/learn/FaqEnhance';
 import MobileMenu from '@/components/learn/MobileMenu';
 import PageStats from '@/components/learn/PageStats';
 import s from '@/components/learn/learn.module.css';
-import ColourWord from '@/components/learn/ColourWord';
 import {LEARN_FAQ,LEARN_FAQ_TOP,LEARN_FEATURES,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,type LearnHighlight,type LearnHighlightId} from '@/lib/site/learnFeatures';
 import {LESSONS_INDEX} from '@/lib/site/lessons';
 import {abs,organizationLd,pageMeta,PLAY_PATH,siteLd,SITE_NAME,websiteLd} from '@/lib/site/seo';
@@ -122,7 +121,7 @@ export default function Home(){
   <section className={`${s.ch} ${s.light} ${s.hero}`} id="top" data-par="hero" aria-labelledby="learn-title">
    <div className={s.head}>
     <h1 className={s.h1} id="learn-title"><TitleLines t={top.title}/></h1>
-    <p className={s.sub}>{top.line.split(/\b(free)\b/).map((part,i)=>part==='free'?<ColourWord key={i}>free</ColourWord>:part)}</p>
+    <p className={s.sub}>{top.line.split(/\b(free)\b/).map((part,i)=>part==='free'?<mark key={i} className={s.hl}>free</mark>:part)}</p>
     <div className={s.ctaRow}>
      <a className={s.cta} href={PLAY_URL}>{LEARN_HERO.cta}</a>
      <a className={s.more} href="#in-action">Watch it<Chevron/></a>

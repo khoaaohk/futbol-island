@@ -402,3 +402,5 @@
 @media(min-width:900px){.root .stepsTitle{margin-bottom:0}}
 .root .endLinks{margin-top:clamp(16px,4vh,40px)}
 @media(max-width:640px){.root .note{text-align:center;margin-inline:auto}}
+/* "free" in the hero line: a highlighter mark in app orange (owner, Nov 3), dark ink on it for contrast */
+.root .hl{background:#ff7a1a;color:var(--ink);padding:0 .28em .04em;margin:0 -.04em;border-radius:.3em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
