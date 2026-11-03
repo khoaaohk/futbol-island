@@ -402,6 +402,5 @@
 @media(min-width:900px){.root .stepsTitle{margin-bottom:0}}
 .root .endLinks{margin-top:clamp(16px,4vh,40px)}
 @media(max-width:640px){.root .note{text-align:center;margin-inline:auto}}
-/* "free" in the hero line: a soft, blurred orange highlight behind bold dark text (owner, Nov 3). One static blurred layer, no animation */
-.root .hl{position:relative;isolation:isolate;background:none;color:var(--ink);font-weight:800;padding:0 .12em}
-.root .hl::before{content:"";position:absolute;z-index:-1;inset:.1em -.1em .02em;border-radius:.5em;background:#ff7a1a;opacity:.62;filter:blur(.28em)}
+/* "free" in the hero line: a solid app-blue highlight with bold white text (owner, Nov 3) */
+.root .hl{background:#2f6bff;color:#fff;font-weight:800;padding:0 .28em .04em;margin:0 -.04em;border-radius:.3em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
