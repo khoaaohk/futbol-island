@@ -172,7 +172,7 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
 // 16.9 s water-first fuel_konbini, each at the lowest CRF that fits its cap: +10.4 MB in all (+10.3 MB clips): 81.4 / 75.3 MB
 // Nov 3 best-quality slides (fresh 2560x1440 captures, coins ~512, both sizes at the lowest CRF under 2 MB) and the new 34.3 s montage
 // (zoomed out, no UI: square, causeway scooter, flight, zipline, swim, reef dive; veryslow, montage caps raised to 10 / 5 / 2.5 MB):
-assert(total<118e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 118 MB)`);assert(clips<106e6,`clips ${(clips/1e6).toFixed(1)} MB (< 106 MB)`);
+assert(total<124e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 124 MB)`);assert(clips<113e6,`clips ${(clips/1e6).toFixed(1)} MB (< 113 MB)`);
  // the hero clip is ~2.5x longer than the other 4:5 clips (Nov 3), so only it gets 6 MB (1080) / 3 MB (720 phone file)
  // Nov 3 montage: 34.3 s of moving wide shots (the old 27.8 s cut sat at CRF 35 under 4.5 / 2.2 / 1.1 MB and looked soft): CRF 29-30 needs 10 / 5 / 2.5 MB
  const cap={'montage_l.mp4':10e6,'montage_m.mp4':5e6,'montage_s.mp4':2.5e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6,
