@@ -135,7 +135,7 @@
 }
 
 /* ---- buttons and links ---------------------------------------------------------------------------------------------------- */
-.cta{display:inline-flex;align-items:center;justify-content:center;min-height:56px;max-width:100%;padding:6px 30px 8px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);
+.cta{display:inline-flex;align-items:center;justify-content:center;min-height:56px;max-width:100%;padding:0 30px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);
  border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
  box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:var(--btn-font,Arial,Helvetica,sans-serif);font-weight:800;font-size:19px;line-height:1.15;text-align:center;text-decoration:none;position:relative;overflow:hidden;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
 /* audit Nov 3: 44px tap targets for the bar's logo (22px tall) and Play pill (36px); invisible, the look is unchanged */
@@ -148,7 +148,7 @@
 /* states match the game and the other pages (docs/ui/BUTTONS.md): no hover colour change; pressed sinks and shortens the edge; the global focus ring */
 .cta:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 /* secondary button (docs/ui/BUTTONS.md): mint face, 3px rim, mint edge, same height as the gold primary, sinks on press (owner, Nov 3) */
-.root .more{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:56px;padding:6px 26px 8px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);font-size:clamp(16px,.4vw + 14px,19px);font-weight:700;text-decoration:none;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+.root .more{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:56px;padding:0 26px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);font-size:clamp(16px,.4vw + 14px,19px);font-weight:700;text-decoration:none;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
 .root .more:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 var(--btn-mint-edge,#8bac9d)}
 .chev{width:.8em;height:.8em;margin-top:2px}
 .ghostBtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 20px;border-radius:999px;border:1px solid currentColor;background:none;color:inherit;font:500 15px/1.2 var(--sans);cursor:pointer}
