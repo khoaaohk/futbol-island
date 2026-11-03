@@ -22,6 +22,7 @@
 /* the page has its own sticky bar with the logo, so the shared site header is hidden here (Nov 3: moved out of an inline <style>,
    whose escaped ">" made React's hydration text check fail and re-render the whole document on the client) */
 :global([data-reading-page]):has(.root)>:global(header){display:none}
+:global([data-reading-page]):has(.root) :global(footer) a[href="/learn"]{display:none}
 @media(prefers-reduced-motion:no-preference){:global(html):has(.root:not([data-calm])){scroll-behavior:smooth}}
 .root *{box-sizing:border-box}
 .root h1,.root h2,.root h3,.root p,.root ul,.root ol,.root figure{margin:0}

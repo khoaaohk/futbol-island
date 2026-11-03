@@ -85,5 +85,5 @@
 
 /* Quiet footer: one line and the privacy link. */
 .footer{border-top:1px solid var(--rule);padding:var(--s2) var(--gutter) calc(var(--s2) + env(safe-area-inset-bottom,0px));font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
-.footerInner{max-width:calc(1040px - 2 * var(--gutter));margin:0 auto;display:flex;flex-wrap:wrap;gap:0 var(--s2);align-items:center}
+.footerInner{max-width:calc(1040px - 2 * var(--gutter));margin:0 auto;display:flex;flex-wrap:wrap;gap:0 var(--s2);align-items:center;justify-content:center;text-align:center}
 .page .footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink-soft);font-weight:700}
