@@ -5,7 +5,7 @@
 const assert=require('node:assert/strict'),fs=require('fs'),path=require('path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const boot=/documentElement\.dataset\.islandHandoff=/.test(read('components/islandLoadingBoot.ts'));
-const root=/documentElement\.dataset\.rootView=/.test(read('lib/rootView.ts'))&&/ROOT_VIEW_BOOT/.test(read('app/page.tsx'));
+const root=/documentElement\.dataset\.rootView=/.test(read('lib/rootView.ts'))&&/ROOT_VIEW_BOOT/.test(read('app/play/page.tsx'));
 assert(boot&&root,'both boot scripts are where this test expects them');
 assert.match(read('app/layout.tsx'),/<html lang="en" suppressHydrationWarning>/,'root <html> tolerates the pre-hydration attributes');
 console.log('PASS layout hydration: <html> tolerates the pre-paint hand-off and root-view attributes');

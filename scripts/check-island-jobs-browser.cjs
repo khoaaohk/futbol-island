@@ -19,7 +19,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
    localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-time-of-day','day');
    for(const [k,v] of Object.entries({'fi2-audio-mix':'4-50-v1','fi2-sound-muted':'true','fi2-music-enabled':'false','fi2-voice-enabled':'false'}))localStorage.setItem(k,v);
    sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x:SIGN.x,z:SIGN.z,yaw:Math.PI,ride:'walk',flightHeight:0}));},{SIGN});
-  await page.goto(base+'/?from=konbini',{timeout:240000});await page.waitForFunction(()=>window.__fi2&&window.__fi2Jobs,null,{timeout:180000});
+  await page.goto(base+'/play?from=konbini',{timeout:240000});await page.waitForFunction(()=>window.__fi2&&window.__fi2Jobs,null,{timeout:180000});
   await page.locator('[data-island-return-loading]').waitFor({state:'detached',timeout:90000}).catch(()=>{});await wait(1500);
   const tap=loc=>mobile?loc.tap():loc.click(),shot=name=>page.screenshot({path:`${OUT}/${tag}-${name}.png`});
   const tp=(x,z,yaw=0)=>page.evaluate(({x,z,yaw})=>window.__fi2.teleport(x,z,yaw),{x,z,yaw});

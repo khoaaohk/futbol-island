@@ -69,7 +69,7 @@ const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
 {
  const X=world().load('lib/externalLinks.ts'),o='https://futbolisland.app';
  for(const href of ['https://www.scottbuckley.com.au/library/wildflowers/','https://creativecommons.org/licenses/by/4.0/','https://www.instagram.com/fc_yap/','/coffee/checkout?amount=500&return=about','mailto:hi@example.com','http://futbolisland.app.evil.com/'])assert.equal(X.leavesSite(href,o),true,href+' leaves the site');
- for(const href of ['/','/?panel=about','/konbini?door=cay','/coffee','#top','javascript:void(0)','https://futbolisland.app/arcade'])assert.equal(X.leavesSite(href,o),false,href+' stays in the game');
+ for(const href of ['/','/play','/play?panel=about','/konbini?door=cay','/coffee','#top','javascript:void(0)','https://futbolisland.app/arcade'])assert.equal(X.leavesSite(href,o),false,href+' stays in the game');
  assert(/<ExternalLinkGate\/>/.test(read('app/layout.tsx')),'the gate is mounted once for every page');
  // Vercel Web Analytics was removed Oct 7 2026 (paid duplicate of the first-party /admin counter).
  assert(!/@vercel\/analytics|<Analytics\/>/.test(read('app/layout.tsx')),'no Vercel Web Analytics script');

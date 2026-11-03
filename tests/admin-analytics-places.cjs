@@ -91,7 +91,7 @@ await ok('grid',()=>{
 
 // 3. The tracker's accounting: activity split (idle booked apart), place time and cells only in the world view.
 await ok('tracker accounting',()=>{
- const x=env(),tr=T.startTracker(x.e);tr.pageview('/');
+ const x=env(),tr=T.startTracker(x.e);tr.pageview('/play');
  x.play(30_000,85,-35,'walk',{input:true});                       // A: 30 s walking on Island Square
  x.play(20_000,135,100,'ride',{dx:2});                             // B: 20 s riding across Eleven Park (moving, no taps)
  x.play(0,343,68,'walk');T.islandFrame(343,68,'walk',P.placeAt);    // arrive at the jetty
@@ -109,11 +109,11 @@ await ok('tracker accounting',()=>{
  assert(Math.abs(sum(b.c)*1000-sum(b.pl))<=IDS.SAMPLE_MS,'cells agree with place time to within one sample');
  assert.equal(x.timers.size,0,'still no timers while hidden');tr.stop();
  // Passive activities (watching, reading, quizzes) are not cut at 60 s; the boat deck is "on a boat"; frames do nothing when off.
- const y=env(),t2=T.startTracker(y.e);t2.pageview('/');y.play(120_000,135,100,'lesson');y.play(10_000,335,-5,'walk',{input:true});y.play(10_000,385,185,'walk',{input:true});y.hide();
+ const y=env(),t2=T.startTracker(y.e);t2.pageview('/play');y.play(120_000,135,100,'lesson');y.play(10_000,335,-5,'walk',{input:true});y.play(10_000,385,185,'walk',{input:true});y.hide();
  const b2=merged(y.sent);assert.deepEqual(b2.ac,{lesson:120_000,boat:20_000},'both deep-sea boats count as on a boat');assert.equal(b2.ac.idle,undefined);t2.stop();
  let calls=0;T.islandFrame(0,0,'walk',()=>{calls++;return 'town';});assert.equal(calls,0,'no tracker (dev, DNT, preview): islandFrame is a no-op');
  // Per frame: a comparison. The place lookup runs once per SAMPLE_MS however many frames there are.
- const z=env(),t3=T.startTracker(z.e);t3.pageview('/');calls=0;const look=(a,b)=>{calls++;return P.placeAt(a,b);};
+ const z=env(),t3=T.startTracker(z.e);t3.pageview('/play');calls=0;const look=(a,b)=>{calls++;return P.placeAt(a,b);};
  for(let i=0;i<600;i++){T.islandFrame(85,-35,'walk',look);z.advance(1000/60);}assert.equal(calls,2,'10 s of 60 fps frames → 2 samples');
  // Off the island the page decides: an arcade game, a museum exhibit.
  t3.pageview('/arcade');const g=T.enterActivity('arcade_tennis');z.fire('pointerdown');z.advance(20_000);g();z.advance(5_000);
@@ -124,14 +124,14 @@ await ok('tracker accounting',()=>{
 
 // 4. Caps: at most 64 cells per beat (the busiest), whole seconds; a cell visited twice is ONE total, not two entries.
 await ok('cell caps and no sequence',()=>{
- const x=env(),tr=T.startTracker(x.e);tr.pageview('/');x.timers.clear();// one long beat (no safety ping; moving, so never idle)
+ const x=env(),tr=T.startTracker(x.e);tr.pageview('/play');x.timers.clear();// one long beat (no safety ping; moving, so never idle)
  for(let i=0;i<100;i++){const px=-90+(i%17)*20,pz=-180+Math.floor(i/17)*20;x.play(i<10?10_000:5000,px,pz,'walk');}
  x.hide();const b=x.sent.find(s=>s.t==='beat');
  assert.equal(Object.keys(b.c).length,IDS.MAX_BEAT_CELLS,'capped at 64 cells');
  assert(Object.values(b.c).every(v=>Number.isInteger(v)&&v>0));
  assert(Object.values(b.c).filter(v=>v===10).length>=9,'the busiest cells are the ones kept');
  tr.stop();
- const y=env(),t2=T.startTracker(y.e);t2.pageview('/');
+ const y=env(),t2=T.startTracker(y.e);t2.pageview('/play');
  y.play(15_000,85,-35,'walk',{input:true});y.play(15_000,135,100,'walk',{input:true});y.play(15_000,85,-35,'walk',{input:true});y.hide();
  const c=merged(y.sent).c;
  assert.equal(Object.keys(c).length,2,'A → B → A is two totals; the order is not kept anywhere');assert.equal(c[IDS.cellOf(85,-35)],30);

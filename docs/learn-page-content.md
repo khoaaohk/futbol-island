@@ -1,5 +1,10 @@
 # /learn marketing hub: content (Nov 2 2026)
 
+> **Nov 3 2026 (owner): this page is now the HOME page, https://futbolisland.app/ (`app/(site)/page.tsx`).** `/learn` is a permanent (308)
+> redirect to `/`; the game (title screen, save code, island) moved from `/` to **/play** (`app/play/page.tsx`), and every Play button
+> on the site goes to `/play`. Old game links to `/?from=…`, `/?panel=…`, `/?party=…` … redirect to `/play` with the same query
+> (`next.config.mjs`). The lesson index stays at `/learn/lessons`. Checks: `tests/learn-page.cjs`, `tests/seo-pages.cjs`, `tests/landing.cjs`.
+
 Research and copy for the new **futbolisland.app/learn** page: every feature a player can use today and how each one ties to football.
 Audience: parents and coaches first (they decide), kids second. The page itself is built later by another agent; the current SEO lesson
 index (`app/(site)/learn/page.tsx` + `[slug]`) is planned to move to `/learn/lessons`.

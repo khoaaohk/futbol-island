@@ -3,7 +3,7 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const ROOT=path.join(__dirname,'..'),read=f=>fs.readFileSync(path.join(ROOT,f),'utf8'),req=require('node:module').createRequire(ROOT+'/package.json');
 const cache=new Map(),env={NEXT_PUBLIC_MULTIPLAYER:'1',NEXT_PUBLIC_MULTIPLAYER_URL:'http://localhost:8790/'};
-const store=new Map(),calls=[];let href='https://futbolisland.app/?party=k7m-q4r&x=1',origin='https://futbolisland.app';
+const store=new Map(),calls=[];let href='https://futbolisland.app/play?party=k7m-q4r&x=1',origin='https://futbolisland.app';
 const sandbox={
  sessionStorage:{getItem:k=>store.get(k)??null,setItem:(k,v)=>store.set(k,v),removeItem:k=>store.delete(k)},
  location:{get href(){return href;},get origin(){return origin;}},history:{state:null,replaceState:(_s,_t,u)=>{href='https://futbolisland.app'+u;}},
@@ -87,10 +87,10 @@ t('code filter is exact (alphabet, no guessing)',()=>{
  assert.match(I.NOT_IN_CODES_HINT,/isn't used in codes/);assert(join.includes('NOT_IN_CODES_HINT'),'hint shown');
 });
 t('display and links',()=>{
- assert.equal(I.partyLink('K7MQ4R'),'https://futbolisland.app/?party=K7MQ4R');
- origin='http://localhost:3000';assert.equal(I.partyLink('K7MQ4R'),'http://localhost:3000/?party=K7MQ4R','localhost links stay on localhost (#9)');
- origin='https://futbol-island-git-x-team.vercel.app';assert(I.partyLink('K7MQ4R').startsWith(origin+'/?party='),'preview links stay on the preview');
- origin='https://evil.example';assert.equal(I.partyLink('K7MQ4R'),'https://futbolisland.app/?party=K7MQ4R','unknown origins fall back to SITE_URL');
+ assert.equal(I.partyLink('K7MQ4R'),'https://futbolisland.app/play?party=K7MQ4R','invites open the game at /play (Nov 3 2026)');
+ origin='http://localhost:3000';assert.equal(I.partyLink('K7MQ4R'),'http://localhost:3000/play?party=K7MQ4R','localhost links stay on localhost (#9)');
+ origin='https://futbol-island-git-x-team.vercel.app';assert(I.partyLink('K7MQ4R').startsWith(origin+'/play?party='),'preview links stay on the preview');
+ origin='https://evil.example';assert.equal(I.partyLink('K7MQ4R'),'https://futbolisland.app/play?party=K7MQ4R','unknown origins fall back to SITE_URL');
  origin='https://futbolisland.app';
  assert.equal(I.groupCode('K7MQ4R'),'K7M-Q4R');assert.equal(I.groupCode('K7'),'K7');
  assert(invite.includes('groupCode(code)')&&/Share link|Copy link/.test(invite)&&/Share only with friends you know/.test(invite)&&!/QR/.test(invite)&&/Works for/.test(invite)&&/New code/.test(invite)&&/expiresAt > 0/.test(invite)&&!/partyQr/.test(invite),'invite card content');
@@ -101,10 +101,10 @@ t('readPendingParty: ?party= moves to sessionStorage and leaves the URL; invalid
  assert.equal(I.readPendingParty(),'K7MQ4R');assert(/^K7MQ4R:\d+$/.test(store.get('fi-party-pending')),'stored with a time stamp');assert(!/party=/.test(href),'removed from the URL: '+href);assert(/x=1/.test(href),'other params kept');
  assert.equal(I.readPendingParty(),'K7MQ4R','survives a reload via sessionStorage');
  I.clearPendingParty();assert.equal(I.readPendingParty(),null);
- for(const bad of ['O0O0O0','K7MQ4','K7MQ4RR','<script>','..%2f','1234567'.slice(0,6)]){store.clear();href='https://futbolisland.app/?party='+encodeURIComponent(bad);assert.equal(I.readPendingParty(),null,'rejects '+bad);assert.equal(store.has('fi-party-pending'),false);}
+ for(const bad of ['O0O0O0','K7MQ4','K7MQ4RR','<script>','..%2f','1234567'.slice(0,6)]){store.clear();href='https://futbolisland.app/play?party='+encodeURIComponent(bad);assert.equal(I.readPendingParty(),null,'rejects '+bad);assert.equal(store.has('fi-party-pending'),false);}
  {const w=Date.now;store.set('fi-party-pending','K7MQ4R:'+(w()-31*60*1000));href='https://futbolisland.app/';assert.equal(I.readPendingParty(),null,'a pending code older than 30 min is dropped (#19)');assert.equal(store.has('fi-party-pending'),false);
   store.set('fi-party-pending','K7MQ4R:'+(w()-60*1000));assert.equal(I.readPendingParty(),'K7MQ4R','a fresh one stays');store.clear();
-  href='https://futbolisland.app/?party=K7MQ4R&x=1';I.stripPartyParam();assert(!/party=/.test(href)&&/x=1/.test(href),'stripPartyParam removes it without storing');assert.equal(store.has('fi-party-pending'),false);}
+  href='https://futbolisland.app/play?party=K7MQ4R&x=1';I.stripPartyParam();assert(!/party=/.test(href)&&/x=1/.test(href),'stripPartyParam removes it without storing');assert.equal(store.has('fi-party-pending'),false);}
  store.set('fi-party-pending','nope!!');href='https://futbolisland.app/';assert.equal(I.readPendingParty(),null);assert.equal(store.has('fi-party-pending'),false,'a bad stored value is dropped');
 });
 t('no animals: picker gone, create and join send only the first name; the name is required',()=>{

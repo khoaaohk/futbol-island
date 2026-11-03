@@ -66,7 +66,7 @@ test('first run: the welcome steps through to the island and pays the 40 welcome
   // longer read by isInGame() (only an in-memory `entered` flag, <html data-island-handoff>, or a `from`/`panel` query key
   // are). A `from=` query key is what the game's own links use to land straight in the game (the same key tests/e2e/gap-helpers.ts
   // bootAt uses as `?from=konbini`), so use it here too instead of the dead flag.
-  await page.goto('/?from=e2e-first-run', { waitUntil: 'domcontentloaded' });
+  await page.goto('/play?from=e2e-first-run', { waitUntil: 'domcontentloaded' });
   const welcome = page.locator('dialog[data-onboarding-step][open]');
   await expect(welcome).toBeVisible({ timeout: 150_000 });
   await expect(welcome).toHaveAttribute('data-onboarding-step', 'welcome');

@@ -93,7 +93,7 @@ async function open(browser,[w,h],{faceDown=false}={}){
  // Pass B: switch the testing flag off in the served bundle only (the source keeps UNLOCK_ALL_CARDS on via CARD_REWARDS_LAUNCH=false).
  if(faceDown)await page.route(/\/_next\/static\/.*\.js/,async route=>{try{const res=await route.fetch();let body=await res.text();body=body.replace(/UNLOCK_ALL_CARDS\s*=\s*(true|![\w$.]+)/g,'UNLOCK_ALL_CARDS = false');await route.fulfill({response:res,body});}
   catch(error){if(!/closed|disposed/i.test(String(error?.message)))throw error;}});
- await page.goto(/[?&](from|panel)=/.test(URL)?URL:`${URL.replace(/\/$/,'')}/?from=e2e`,{waitUntil:'domcontentloaded',timeout:120000});await page.waitForFunction(()=>window.__fi2?.games?.entries?.length,null,{timeout:120000});await page.waitForTimeout(1000);
+ await page.goto(/[?&](from|panel)=/.test(URL)?URL:`${URL.replace(/\/$/,'')}/play?from=e2e`,{waitUntil:'domcontentloaded',timeout:120000});await page.waitForFunction(()=>window.__fi2?.games?.entries?.length,null,{timeout:120000});await page.waitForTimeout(1000);
  await page.getByRole('button',{name:'Paths'}).click();await page.getByRole('button',{name:/Collect cards/}).click({timeout:30000});
  // Condition waits (not fixed sleeps): the binder's pockets are in and its page is announced, then a moment for the idle prebuild.
  await page.waitForFunction(b=>!!document.querySelector(`${b} li button`)&&[...document.querySelectorAll('dialog[open] p[aria-live=polite]')].some(p=>/^Page /.test(p.textContent)),BINDER,{timeout:30000});

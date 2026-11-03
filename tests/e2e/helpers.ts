@@ -81,7 +81,7 @@ export async function openIsland(page: Page, { query = '', storage = {} as Recor
   // already carry one, instead of landing on the title screen and timing out waiting for the HUD.
   const qs = new URLSearchParams(query.replace(/^\?/, ''));
   if (!qs.has('from') && !qs.has('panel')) qs.set('from', 'e2e');
-  const url = `/?${qs.toString()}`;
+  const url = `/play?${qs.toString()}`;
   // The shared dev server recompiles while other work edits files; a boot can hit a transient ChunkLoadError or stall.
   // Retry the boot (not the test) up to 3 times, and only keep errors from the successful boot.
   for (let attempt = 1; ; attempt++) {

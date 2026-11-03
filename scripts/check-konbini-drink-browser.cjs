@@ -39,7 +39,7 @@ async function strip(browser,files,out,label){
    const cues=(await page.evaluate(()=>window.__sfxLog)).filter(c=>c.t>=t).map(c=>c.cue).filter(c=>c!=='click');return {words:await page.evaluate(()=>window.__words.slice()),cues,frames};};
   const out={viewport:name};
   // ---- Island drink machine: hot cocoa ----
-  await page.goto(base+'/');await page.waitForFunction(()=>window.__fi2?.vending?.entries?.length,null,{timeout:120000});await wait(1500);
+  await page.goto(base+'/play');await page.waitForFunction(()=>window.__fi2?.vending?.entries?.length,null,{timeout:120000});await wait(1500);
   await page.evaluate(()=>{const g=document.querySelector('[data-vending-go]');g.dataset.vending='drinksplaza';g.click();});
   await page.waitForSelector('[data-drink-machine]',{timeout:20000});await wait(900);
   const cocoa=page.locator('[data-vending-item^="drink-cocoa"]').first();await tap(cocoa);await wait(250);await tap(cocoa);

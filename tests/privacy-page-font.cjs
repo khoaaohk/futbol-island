@@ -7,7 +7,7 @@ const css=read('app/privacy/privacy.module.css'),helper=read('lib/islandBrushPre
 const preload=(helper.match(/ISLAND_BRUSH_URL='(\/[^']*IslandBrush[^']*\.ttf)'/)||[])[1];
 assert.ok(preload,'lib/islandBrushPreload.ts names the brush URL');
 assert.ok(!/rel="preload"[^>]*IslandBrush/.test(read('app/layout.tsx')),'no root-layout preload (unused on /museum)');
-for(const r of ['app/page.tsx','app/privacy/page.tsx','app/arcade/page.tsx','app/konbini/page.tsx','app/island-return/page.tsx'])assert.match(read(r),/preloadIslandBrush\(\)/,r+' preloads the brush');
+for(const r of ['app/play/page.tsx','app/privacy/page.tsx','app/arcade/page.tsx','app/konbini/page.tsx','app/island-return/page.tsx'])assert.match(read(r),/preloadIslandBrush\(\)/,r+' preloads the brush');
 assert.ok(!/preloadIslandBrush/.test(read('app/museum/page.tsx')),'the museum does not');
 if(/font-family:[^;}]*IslandBrush/.test(css)){
  const face=css.match(/@font-face\{[^}]*font-family:IslandBrush;[^}]*src:url\('([^']+)'\)/);

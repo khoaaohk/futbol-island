@@ -27,7 +27,7 @@ const SIGN={x:606,z:133.5};
     localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-time-of-day',time);localStorage.setItem('fi2-bug-pill-v1','1');
     for(const [k,v] of Object.entries({'fi2-audio-mix':'4-50-v1','fi2-sound-muted':'true','fi2-music-enabled':'false','fi2-voice-enabled':'false'}))localStorage.setItem(k,v);
     sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x:SIGN.x,z:SIGN.z,yaw:Math.PI,ride:'walk',flightHeight:0}));},{SIGN,time});
-   await page.goto(base+'/?from=konbini',{timeout:240000});await page.waitForFunction(()=>window.__fi2&&window.__fi2Jobs,null,{timeout:180000});
+   await page.goto(base+'/play?from=konbini',{timeout:240000});await page.waitForFunction(()=>window.__fi2&&window.__fi2Jobs,null,{timeout:180000});
    await page.locator('[data-island-return-loading]').waitFor({state:'detached',timeout:90000}).catch(()=>{});await wait(1500);return {ctx,page,errors};}
   const tap=async(page,loc)=>mobile?loc.tap():loc.click();
   const shot=async(page,name)=>page.screenshot({path:`${OUT}/${tag}-${name}.png`});

@@ -305,9 +305,9 @@ await ok('tracker',async()=>{
  const pre=env({search:'?preview=all'});assert.equal(T.startTracker(pre.e),null);assert.equal(T.skipReason({...pre.e,window:{...pre.e.window,location:{hostname:'futbolisland.app',pathname:'/arcade',search:''}}}),'preview','preview mode sticks for the tab');
  assert.equal(T.startTracker(env({host:'localhost'}).e),null,'local dev sends nothing');assert.equal(T.startTracker(env({pathname:'/motion-lab'}).e),null,'labs send nothing');
  const adminTab={};assert.equal(T.startTracker(env({pathname:'/admin',store:adminTab}).e),null,'admin visits are not counted');
- assert.equal(T.startTracker(env({pathname:'/',store:adminTab}).e),null,'and the admin tab stays off when it reloads the game');
+ assert.equal(T.startTracker(env({pathname:'/play',store:adminTab}).e),null,'and the admin tab stays off when it reloads the game');
  const x=env({search:'?utm_source=club&utm_campaign=autumn',referrer:'https://www.google.com/search?q=futbol'});
- const tr=T.startTracker(x.e);tr.pageview('/');
+ const tr=T.startTracker(x.e);tr.pageview('/play');
  assert.equal(x.sent.length,1);const start=x.sent[0];
  assert.deepEqual(Object.keys(start).sort(),['p','r','s','t','tp','u','v']);assert.equal(start.t,'start');assert.equal(start.r,'www.google.com','host only');assert.deepEqual(start.u,{source:'club',campaign:'autumn'});
  assert.equal(C.validateEvent(JSON.stringify(start)).ok,true,'what the tracker sends passes validation');
@@ -334,10 +334,10 @@ await ok('tracker',async()=>{
  x.show();x.fire('pointerdown');assert.equal(x.timers.size,1,'input wakes the ping');
  tr.stop();assert.equal(x.timers.size,0);
  // A whole 10-minute session costs a handful of writes.
- const z=env();const tz=T.startTracker(z.e);tz.pageview('/');for(let i=0;i<10;i++){z.advance(60_000);z.fire('pointerdown');if(i===4)tz.pageview('/arcade');}z.hide();z.fire('pagehide');tz.stop();
+ const z=env();const tz=T.startTracker(z.e);tz.pageview('/play');for(let i=0;i<10;i++){z.advance(60_000);z.fire('pointerdown');if(i===4)tz.pageview('/arcade');}z.hide();z.fire('pagehide');tz.stop();
  assert(z.sent.length>=3&&z.sent.length<=6,'3–6 writes for a 10-minute session, got '+z.sent.length);
  // A tab hidden for over 30 minutes starts a fresh session on return.
- const y=env();const t2=T.startTracker(y.e);t2.pageview('/');const first=y.sent[0].s;y.hide();
+ const y=env();const t2=T.startTracker(y.e);t2.pageview('/play');const first=y.sent[0].s;y.hide();
  const saved=JSON.parse(y.store['fi-visit']);y.store['fi-visit']=JSON.stringify({...saved,at:saved.at-31*60_000});y.show();
  assert.equal(y.sent.slice(-1)[0].t,'start');assert.notEqual(y.sent.slice(-1)[0].s,first);t2.stop();
  const src=read('lib/analytics/tracker.ts');

@@ -102,7 +102,7 @@ const PHONE = { width: 390, height: 844 }, DESK = { width: 1280, height: 800 };
   // ---- 3. a guest sees the code ----
   const ctxG = await b.newContext({ viewport: PHONE });
   const g = await ctxG.newPage(); watch(g);
-  await enter(g, `/?party=${code}`);
+  await enter(g, `/play?party=${code}`);
   await g.waitForSelector('[data-party-join]', { timeout: 20000 }).catch(() => bad('the join card did not open from the link'));
   await nick(g, 'Mia');
   await g.click('[data-party-join] button:has-text("Join")'); await gate(g);

@@ -34,7 +34,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));let lastPage=null;
   const tap=async loc=>mobile?loc.tap():loc.click();
   const balance=()=>page.evaluate(()=>{const w=JSON.parse(localStorage.getItem('fi2-arcade-wallet-v1'));return Object.values(w.runs).reduce((n,r)=>n+r.paid,0)-Object.values(w.spends??{}).reduce((n,s)=>n+s.cost,0);});
   // ---- Island: walk (or fly) to the doors ----
-  await page.goto(base+'/?from=konbini');await page.waitForFunction(()=>window.__fi2,null,{timeout:120000});await page.locator('[data-island-return-loading]').waitFor({state:'detached',timeout:60000});
+  await page.goto(base+'/play?from=konbini');await page.waitForFunction(()=>window.__fi2,null,{timeout:120000});await page.locator('[data-island-return-loading]').waitFor({state:'detached',timeout:60000});
   const promptSel=door==='main'?'[data-konbini-enter]':'[data-caykonbini-enter]';let shown=false;
   if(flight){await page.waitForTimeout(1200);
    if(!mobile){const pt=await page.evaluate(({bx,bz})=>{const f=window.__fi2,v=new (f.camera.position.constructor)(bx,2.5,bz);v.project(f.camera);const r=f.renderer.domElement.getBoundingClientRect();return {x:r.left+(v.x+1)/2*r.width,y:r.top+(1-v.y)/2*r.height};},D);await page.mouse.move(pt.x,pt.y);await page.mouse.move(pt.x+2,pt.y+1);}

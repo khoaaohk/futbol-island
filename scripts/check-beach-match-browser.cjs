@@ -12,7 +12,7 @@ const OUT=process.argv[2]??'/tmp/beach-match';fs.mkdirSync(OUT,{recursive:true})
   const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile,deviceScaleFactor:mobile?3:1});
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>localStorage.setItem('fi2-welcome-v1','completed'));
-  await page.goto('http://localhost:8092/',{waitUntil:'domcontentloaded'});
+  await page.goto('http://localhost:8092/play',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>window.__fi2?.games&&!document.querySelector('[class*=IslandLoading]'),null,{timeout:240000});await page.waitForTimeout(2500);
   const beach=()=>page.evaluate(()=>{const e=window.__fi2.games.entries.find(e=>e.venue.id==='beach');return {x:e.venue.x,z:e.venue.z,halfZ:e.venue.width/2,dormant:!!e.dormant,visible:e.root.visible,time:e.sim.stats.time,rigs:e.rigs.size,score:{...e.sim.score},period:e.sim.period,events:e.effects.events.slice(-6).map(x=>x.text)};});
   // 1. From the main island the beach match is asleep.

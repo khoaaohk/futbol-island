@@ -11,7 +11,7 @@ try{const ctx=await browser.newContext({viewport:mobile?{width:390,height:844}:{
  await page.addInitScript(({SIGN,time})=>{if(sessionStorage.getItem('s'))return;sessionStorage.setItem('s','1');localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-time-of-day',time);
   for(const [k,v] of Object.entries({'fi2-sound-muted':'true','fi2-music-enabled':'false','fi2-voice-enabled':'false'}))localStorage.setItem(k,v);
   sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x:SIGN.x,z:SIGN.z,yaw:Math.PI,ride:'walk',flightHeight:0}));},{SIGN,time});
- await page.goto(base+'/?from=konbini',{timeout:300000});await page.waitForFunction(()=>window.__fi2&&window.__fi2Jobs,null,{timeout:300000});
+ await page.goto(base+'/play?from=konbini',{timeout:300000});await page.waitForFunction(()=>window.__fi2&&window.__fi2Jobs,null,{timeout:300000});
  await page.locator('[data-island-return-loading]').waitFor({state:'detached',timeout:90000}).catch(()=>{});await wait(1500);note('island loaded at the sign');
  const tap=loc=>mobile?loc.tap():loc.click();
  const pill=async(when)=>{const r=await page.evaluate(()=>{const el=document.querySelector('[data-job-active]');if(!el)return {ok:false,why:'missing'};const b=el.getBoundingClientRect();

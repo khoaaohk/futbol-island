@@ -6,7 +6,7 @@
 //  3. Purchases through the REAL arcade wallet: coins only, one charge per design (double tap / retry / buying again), not enough
 //     coins says how many more, ownership and "your pick" recorded under fi2-shop-owned-v1 (a synced key).
 //  4. Static guards: the room sleeps (no idle loop), disposes its renderer, lazy-loads its scene and the studios, and the
-//     island ↔ shop boundary follows the museum's (/shop, /?from=shop rewritten to /island-return).
+//     island ↔ shop boundary follows the museum's (/shop, /play?from=shop rewritten to /island-return).
 //  7. Walk-in (Oct 12 2026, "player should be able to walk inside … npcs here along with clerk"): the floor plan in node (door →
 //     every wall, the clerk's corner closed, nobody stuck behind the counter, every shopper's walk clear), the cast (clerk + a
 //     capped number of shoppers, kid-friendly kit lines, no brands), and the room's wiring (player, joystick, prompts, chat, exit).
@@ -119,7 +119,7 @@ const C=require('../lib/shop/shopCast.ts');
  for(const s of ['BallStudio','JerseyStudio','BootStudio'])assert(new RegExp(`${s}=dynamic\\(`).test(studios),s+' is its own lazy chunk');
  assert(/const covered=!!studio\|\|myKit\|\|!!talking;/.test(room)&&/room\.current\?\.setCovered\(covered\)/.test(room),'the store stops drawing under a studio, My kit or a chat');
  assert(/spendArcadeCoins/.test(room)&&!/stripe|checkout|price_id/i.test(room),'coins only, never real money');
- assert(/'\^\(arcade\|konbini\|museum\|shop\)\$'/.test(read('next.config.mjs')),'/?from=shop returns to the island at the door');
+ assert(/'\^\(arcade\|konbini\|museum\|shop\)\$'/.test(read('next.config.mjs')),'/play?from=shop returns to the island at the door');
  assert(/refreshShopDeparture\(\)/.test(room)&&/SHOP_RETURN_URL/.test(room),'Done saves the door departure and goes back');
  // 5. Island wiring (the museum's recipe): the world builds the merged shop instead of the two old houses (still drawing their
  //    paint and shape so every other building keeps its look), Town enters it from a tap, the door prompt and the map, and the

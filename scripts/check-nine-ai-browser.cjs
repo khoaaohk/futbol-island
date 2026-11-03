@@ -15,7 +15,7 @@ const press=async(page,loc,mobile)=>{const b=await loc.boundingBox();if(b&&mobil
   const context=await browser.newContext({viewport:view.viewport,isMobile:view.mobile,hasTouch:view.mobile,deviceScaleFactor:view.mobile?3:1});
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>localStorage.setItem('fi2-welcome-v1','completed'));
-  await page.goto('http://localhost:8092/',{waitUntil:'domcontentloaded',timeout:300000});
+  await page.goto('http://localhost:8092/play',{waitUntil:'domcontentloaded',timeout:300000});
   // The title screen (Oct 9 2026) asks for a save code first: Start → Get my code → I saved it, tapped like a child would.
   for(let i=0,t0=Date.now();Date.now()-t0<360000&&!(await page.evaluate(()=>!!window.__fi2?.games));i++){
    for(const name of [/^I saved it$/,/^Get my code$/,/^Start/]){const b=page.getByRole('button',{name}).first();if(await b.isVisible().catch(()=>false)&&await b.isEnabled().catch(()=>false)){await press(page,b,view.mobile);break;}}

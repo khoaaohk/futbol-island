@@ -292,7 +292,7 @@ async function step2() {
   await shot(a, 's2-a-rings'); await shot(b, 's2-b-rings');
   // Second run: a device joins from the ?party= link, then leaves.
   const L = await device('L', { phone: true });
-  await enter(L.p, `/?party=${st.code}`);
+  await enter(L.p, `/play?party=${st.code}`);
   const card = await L.p.waitForSelector('[data-party-join]', { timeout: 20000 }).then(() => true).catch(() => false);
   const pre = await L.p.evaluate(() => Array.from(document.querySelectorAll('[data-party-join] input')).map((i) => i.value).join('')).catch(() => '');
   rec(card && pre.toUpperCase().includes(st.code), 'the ?party= link opens Join with the code filled in', pre);
