@@ -5,7 +5,9 @@
 //  2. tone: no banned hype words and no emoji anywhere in the copy;
 //  3. truth: every number in a proof line is declared in `counts`, and every count equals the value computed here from the
 //     game's own data (lessons, Fishbook, cards, museum, NPCs, arcade, relay constants …), so the copy fails when the game changes;
-//  4. nothing paused or removed is promoted (cave game, underground world, the old 2D arcade games).
+//  4. nothing paused or removed is promoted (cave game, underground world, the old 2D arcade games);
+//  5. the /learn "Fuel up" chapter (Nov 3 2026) claims only what the game does (docs/learn-konbini-facts.md): Konbini food and
+//     drinks refill fuel, every item has a football-nutrition note, water comes first, the notes cite sources, walking always works.
 // usage: node tests/learn-content.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path');
 const root=path.join(__dirname,'..');
@@ -116,5 +118,20 @@ for(const s of [H.subhead,...H.trust,...Q.flatMap(q=>[q.q,q.a]),...steps.map(s=>
 
 // ---- 4. nothing paused or removed --------------------------------------------------------------------------------------------
 for(const s of ALL)assert.ok(!/\b(cave|underground)\b/i.test(s),`no paused or removed feature: "${s}"`);
+
+// ---- 5. Fuel up: every claim is true in the game's own data ----------------------------------------------------------------
+{const HL=L('lib/site/learnFeatures.ts').LEARN_HIGHLIGHTS,fu=HL.find(h=>h.id==='fuel');assert.ok(fu,'the Fuel up chapter exists');
+ const food=L('lib/konbini/food.ts'),fuel=L('lib/town/fuel.ts');
+ for(const s of [fu.title,fu.line,...fu.chips]){assert.ok(!BANNED.test(s)&&!/\p{Extended_Pictographic}/u.test(s),`Fuel up tone: "${s}"`);
+  assert.ok(!/energy drink|weight|diet|calorie|medical|healthy|faster|stronger/i.test(s),`Fuel up: no health, weight or perk claims: "${s}"`);}
+ // "Konbini snacks refill your energy" / "Eat to refill your fuel": every Konbini item adds fuel, and walking needs none
+ for(const f of food.FOOD_MENU)assert.ok(fuel.foodFuel(f)>0,`${f.id} refills fuel`);
+ assert.ok(fuel.canUse('walk',0)&&!fuel.canUse('jetpack',0),'fuel only gates the fast modes; walking always works');
+ // "each one shares a football food tip" / "Tips from real sources"
+ for(const f of food.FOOD_MENU)assert.ok(food.foodNote(f.id).length>20,`${f.id} shows a nutrition note`);
+ assert.ok(food.FOOD_SOURCES.length>=3&&food.FOOD_SOURCES.every(x=>/^https:\/\//.test(x.url)),'the notes cite real sources');
+ // "Water comes first"
+ assert.match(food.FOOD_NOTES.hydration,/Water comes first/,'the hydration note says water comes first');
+ assert.ok(/fuel/i.test(F.find(f=>f.id==='konbini').description),'the Konbini feature mentions fuel');}
 
 console.log(`learn-content ok (${F.length} features in ${G.length} groups, ${Q.length} FAQs, ${keys.size} image keys)`);

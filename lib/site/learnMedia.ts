@@ -10,7 +10,7 @@ import type {LearnGroupId} from './learnFeatures';
  * Pure Node (fs, no env reads, no client code), like lib/site/lessons.ts.
  */
 export type LearnImage={src:string;width:number;height:number};
-export type LearnClip={webm?:string;mp4?:string;/** a 1280px mp4 for viewports <= 1280px wide (slides only) */mp4m?:string};
+export type LearnClip={webm?:string;mp4?:string;/** a 1280px mp4 for viewports <= 1280px wide (slides, and chapter clips that ship one) */mp4m?:string};
 export type LearnAsset={key:string;alt?:string;image?:LearnImage;clip?:LearnClip;focus?:string};
 
 /** Group colours (from the island palette: sea, pink, deep green, gold) and the plain glyph drawn on fallback art. */
@@ -86,6 +86,8 @@ export function learnAsset(pageKey:string):LearnAsset{
  }
  const webm=`learn/video/${key}.webm`,mp4=`learn/video/${key}.mp4`;
  const clip:LearnClip={};if(exists(webm))clip.webm='/'+webm;if(exists(mp4))clip.mp4='/'+mp4;
+ // A 16:9 chapter clip (e.g. fuel_konbini, Nov 3 2026) may ship a 1280px <key>_m.mp4 for viewports <= 1280px, like the slides.
+ if(clip.mp4&&exists(`learn/video/${key}_m.mp4`))clip.mp4m=`/learn/video/${key}_m.mp4`;
  if(clip.webm||clip.mp4)a.clip=clip;
  cache.set(pageKey,a);
  return a;

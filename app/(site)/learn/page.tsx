@@ -14,7 +14,7 @@ import {abs,breadcrumbLd,pageMeta,siteLd,SITE_NAME} from '@/lib/site/seo';
 
 /**
  * /learn (Nov 2 2026; Nov 3 restyle after apple.com/apple-vision-pro, owner). Full-viewport "chapters", one idea each, from
- * LEARN_HIGHLIGHTS in lib/site/learnFeatures.ts: hero, learn, explore, play with friends (the one pinned feature chapter),
+ * LEARN_HIGHLIGHTS in lib/site/learnFeatures.ts: hero, learn, explore, fuel up (Konbini food and fuel, Nov 3), play with friends (the one pinned feature chapter),
  * safe + 5 FAQs, then a closing Play chapter. Right after the hero: a full-bleed montage film (LearnMontage), then "See it in
  * action", a horizontal clip carousel (LearnReel); between Play with friends and Safe: "Even more to explore", a light
  * auto-advancing slideshow (LearnSlides). The sticky sub-nav turns dark over dark chapters ([data-nav-dark] markers, LearnEnhance). Each chapter: a huge tight headline, one line, one large media card, its 3 chips as a
@@ -50,9 +50,9 @@ function Tags({tags,center}:{tags?:readonly string[];center?:boolean}){
 function Stage({k,label,eager,tags,hero}:{k:string;label:string;eager?:boolean;tags?:readonly string[];hero?:boolean}){
  const a=learnAsset(k);
  if(!a.image)return <Tags tags={tags} center/>;
- const wide=isWide(k);
+ const wide=isWide(k),film=a.image.width>=a.image.height*1.5;// a landscape 16:9 clip (Fuel up) gets the large film frame
  return <figure className={hero?`${s.stage} ${s.heroStage}`:s.stage} data-reveal={hero?undefined:''}>
-  <div className={[s.frame,wide?s.frameWide:s.frameTall,hero&&s.heroFrame].filter(Boolean).join(' ')}><LearnMedia imageKey={k} label={label} eager={eager}/></div>
+  <div className={[s.frame,film?s.frameFilm:wide?s.frameWide:s.frameTall,hero&&s.heroFrame].filter(Boolean).join(' ')}><LearnMedia imageKey={k} label={label} eager={eager} sizes={film?'(min-width: 1180px) 1052px, 92vw':undefined}/></div>
   {tags?.length?<figcaption><Tags tags={tags} center/></figcaption>:null}
  </figure>;
 }
@@ -120,6 +120,9 @@ export default function LearnHub(){
   {/* ---- 2-3. learn, explore ---- */}
   <Chapter h={hl('learn')} dark/>
   <Chapter h={hl('explore')}/>
+
+  {/* ---- 3b. Fuel up: Konbini food refills the fuel bar, each item a sourced football-nutrition tip (docs/learn-konbini-facts.md) ---- */}
+  <Chapter h={hl('fuel')}/>
 
   {/* ---- 4. play with friends: pinned media, the 3 steps scroll past, one grown-up line ---- */}
   <Chapter h={together} dark>
