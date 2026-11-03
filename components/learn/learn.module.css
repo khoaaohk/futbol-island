@@ -14,11 +14,19 @@
  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI Variable Display','Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;
  --ease:cubic-bezier(.2,.7,.2,1);--gut:max(16px,env(safe-area-inset-left,0px));--fade:min(16vh,150px);
  --tallMax:min(80svh,820px);
+ /* spacing audit Nov 3: ONE section rhythm. --sec is the padding above and below every block (chapters, montage, reel, slides,
+    end), so every content-to-content gap is 2 x --sec: phones 236px at 844 tall (owner Nov 3: even and generous; was 169-372,
+    uneven), desktop 288px at 900 tall (was 162-396). */
+ --sec:clamp(96px,16svh,180px);
  position:relative;width:100vw;margin:calc(-1 * var(--s3,24px)) 0 calc(-1 * var(--s5,64px)) calc(50% - 50vw);
  background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.47;
  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:clip;
 }
 :global(html):has(.root){scroll-padding-top:72px}
+@media(max-width:640px){.root{--sec:clamp(88px,14svh,140px)}}
+/* spacing audit Nov 3: from 760px the bar is full width with 24px ends, so the content gutter is 24 too (was 16: headings, the
+   reel and the friends column started 8px left of the logo) */
+@media(min-width:760px){.root{--gut:max(24px,env(safe-area-inset-left,0px))}}
 /* the page has its own sticky bar with the logo, so the shared site header is hidden here (Nov 3: moved out of an inline <style>,
    whose escaped ">" made React's hydration text check fail and re-render the whole document on the client) */
 :global([data-reading-page]):has(.root)>:global(header){display:none}
@@ -99,7 +107,7 @@
 .navMark{position:absolute;left:0;right:0;top:var(--fade);bottom:var(--fade);visibility:hidden;pointer-events:none}
 
 /* ---- chapters: light / dark, centred, big type, generous space ----------------------------------------------------------- */
-.ch{position:relative;display:grid;justify-items:center;gap:clamp(40px,7vh,88px);padding:clamp(104px,22vh,260px) var(--gut);text-align:center}
+.ch{position:relative;display:grid;justify-items:center;gap:clamp(40px,7vh,88px);padding:var(--sec) var(--gut);/* spacing audit Nov 3: was clamp(104px,22vh,260px) */text-align:center}
 .light{background:var(--paper);color:var(--ink)}
 .dark{--inkD:var(--ink);--ink2D:var(--ink2);--well-d:#fbf7ee;--night:#14221d;color:var(--ink);background:linear-gradient(var(--paper),var(--tint) var(--fade),var(--tint) calc(100% - var(--fade)),var(--paper));
  background:linear-gradient(in oklab,var(--paper),var(--tint) var(--fade),var(--tint) calc(100% - var(--fade)),var(--paper))}
@@ -117,7 +125,7 @@
 .hero{padding-top:clamp(48px,9vh,112px);gap:clamp(40px,6vh,72px)}
 /* wide screens: the hero puts its words left and the big media right, so both are in the first screen */
 @media(min-width:1024px){
- .hero{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);align-items:center;max-width:1240px;margin:0 auto;padding-top:clamp(40px,7vh,96px);padding-bottom:clamp(96px,18vh,200px);text-align:left}
+ .hero{grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);align-items:center;max-width:1240px;margin:0 auto;padding-top:clamp(40px,7vh,96px);padding-bottom:var(--sec);text-align:left}
  .hero .head{justify-items:start}
  .hero .ctaRow{justify-content:flex-start}
  .hero .h1{font-size:clamp(56px,3.6vw + 20px,88px)}
@@ -189,7 +197,7 @@
    to the right edge, a trailing spacer lets the last card reach the snap edge. ReelEnhance adds the arrows, active caption and clips. */
 .reel{--rpad:calc(max(0px,(100vw - 1240px) / 2) + var(--gut));/* audit Nov 3: 1240 = the sub-nav / hero column, so the row starts under the logo (was 1080: 80px in) */
  --cw:86vw;--rgap:12px;
- display:grid;gap:clamp(28px,4vh,44px);padding:clamp(56px,10vh,120px) 0 clamp(72px,12vh,140px);background:var(--paper);color:var(--ink)}
+ display:grid;gap:clamp(28px,4vh,44px);padding:var(--sec) 0;/* spacing audit Nov 3: the shared rhythm */background:var(--paper);color:var(--ink)}
 @media(min-width:740px){.reel{--cw:min(1100px,78vw,(100svh - 250px) * 16 / 9);--rgap:24px}}
 .reelHead{display:grid;gap:12px;padding:0 var(--rpad);text-align:left}
 .reelHead .h2{max-width:none}
@@ -225,7 +233,7 @@
    No gutters, no corners, no words on it; the headline + line sit under it. Round button top-right with a progress ring: a CSS
    stroke-dashoffset animation over the clip's length (--dur) on a 44px SVG (a tiny repaint, paused with the clip; MontageEnhance
    keeps it in step on media events). Calm: the poster with a big Play button and no ring. */
-.montage{display:grid;gap:clamp(32px,6vh,64px);padding:0 0 clamp(56px,10vh,120px);background:var(--paper);color:var(--ink)}
+.montage{display:grid;gap:clamp(32px,6vh,64px);padding:var(--sec) 0;/* spacing audit Nov 3: the shared rhythm (was 0 top, so the film sat half a gap under the hero) */background:var(--paper);color:var(--ink)}
 .montageMedia{position:relative;width:100%;aspect-ratio:16/9;max-height:100svh;overflow:hidden;background:var(--night);transform:translateZ(0)}
 .montageHead{display:grid;justify-items:center;gap:12px;padding:0 var(--gut);text-align:center}
 .mPlay{position:absolute;top:clamp(12px,2vw,28px);right:clamp(12px,2vw,28px);z-index:2;display:none;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;
@@ -252,8 +260,9 @@
    pause / play button. JS off: a plain swipeable row of posters + captions, no controls. */
 .slides{--spad:calc(max(0px,(100vw - 1240px) / 2) + var(--gut));/* audit Nov 3: the same 1240 column as the logo */
  --sw:84vw;--sgap:10px;--dur:6s;
- display:grid;gap:clamp(24px,4vh,44px);padding:clamp(64px,11vh,128px) 0 clamp(72px,12vh,140px);background:var(--paper);color:var(--ink)}
-@media(min-width:740px){.slides{--sw:min(1040px,72vw,(100svh - 340px) * 16 / 9);--sgap:20px}}
+ display:grid;gap:clamp(24px,4vh,44px);padding:var(--sec) 0;/* spacing audit Nov 3: the shared rhythm */background:var(--paper);color:var(--ink)}
+/* spacing audit Nov 3: max(100svh,560px): on a 390px-tall landscape phone the slide was 89px wide */
+@media(min-width:740px){.slides{--sw:min(1040px,72vw,(max(100svh,560px) - 340px) * 16 / 9);--sgap:20px}}
 .slidesHead{padding:0 var(--spad);text-align:left}
 .slidesHead .h2{max-width:none}
 .slideRow{position:relative;display:flex;gap:var(--sgap);overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;
@@ -341,7 +350,7 @@
 .faq p{padding:0 2px 22px;max-width:64ch;font-size:17px;color:var(--ink2)}
 
 /* ---- the end ---------------------------------------------------------------------------------------------------------------- */
-.end{min-height:min(100svh,920px);align-content:center;padding-bottom:calc(clamp(104px,22vh,260px) + env(safe-area-inset-bottom,0px))}
+.end{min-height:min(100svh,920px);align-content:center;padding-bottom:calc(var(--sec) + env(safe-area-inset-bottom,0px))}
 .end .h2{font-size:clamp(48px,5.4vw + 18px,112px)}
 .root .end .more,.dark .more{color:var(--goldInk)}
 .endLinks{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 24px;margin-top:clamp(16px,4vh,40px);font-size:15px}
@@ -372,3 +381,10 @@
 .root[data-calm] .subnav::before{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--paper)}
 @media(prefers-reduced-motion:reduce){.root *,.root *::before,.root *::after{animation:none!important;transition:none!important}}
 @media print{.subnav,.menu,.clipBtn,.reelCtl,.reelPlay,.mPlay,.slideCtl,.slidePlay{display:none}.dark{background:none;color:inherit}}
+/* spacing audit Nov 3: `.root h3/p{margin:0}` (0,1,1) beat these single-class margins, so the FAQ title sat on the list's top
+   rule (0px), the grown-up note on the last step and the end links on the Play button; restated at .root specificity */
+.root .faqTitle{margin-bottom:clamp(24px,4vh,40px)}
+.root .note{margin-top:12px}
+.root .stepsTitle{margin-bottom:8px}
+@media(min-width:900px){.root .stepsTitle{margin-bottom:0}}
+.root .endLinks{margin-top:clamp(16px,4vh,40px)}
