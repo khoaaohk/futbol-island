@@ -614,12 +614,12 @@
   "file": "/learn/fuel_konbini.webp",
   "width": 1600,
   "height": 900,
-  "alt": "Walk to the rice case in the Konbini, buy a salmon onigiri, read its football fuel tip and eat it for +50 fuel, then eat a banana from the island pocket to fill the fuel bar.",
+  "alt": "In the Konbini, buy a bottle of water and drink it for +25 fuel, then buy a salmon onigiri and eat it for +50 fuel; a banana from the island pocket fills the fuel bar to 100.",
   "video": {
    "mp4": "/learn/video/fuel_konbini.mp4",
    "width": 1920,
    "height": 1080,
-   "duration": 10.07
+   "duration": 16.87
   }
  },
  "town_overview_45": {
@@ -895,5 +895,23 @@
    "height": 720,
    "duration": 10
   }
+ },
+ "explore_45": {
+  "file": "/learn/explore_45.webp",
+  "width": 1080,
+  "height": 1350,
+  "small": {
+   "file": "/learn/explore_45_m.webp",
+   "width": 720,
+   "height": 900
+  },
+  "video": {
+   "mp4": "/learn/video/explore_45.mp4",
+   "mp4m": "/learn/video/explore_45_m.mp4",
+   "width": 1080,
+   "height": 1350,
+   "duration": 15.7
+  },
+  "alt": "Swim round a sunken pitch on the reef, kick a ball at a soccer-wall target to find a hidden ball, then kick one at a mango tree on Summit Isle to drop another and open its mini lesson."
  }
 }
