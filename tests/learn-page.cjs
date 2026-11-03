@@ -132,7 +132,7 @@ for(const q of Q){assert(text.includes(norm(q.q)),`FAQ q: ${q.q}`);assert(text.i
 for(const st of F.find(f=>f.id==='party-start').steps)assert(text.includes(norm(st.line)),`step: ${st.line}`);
 const ld=[...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m=>JSON.parse(m[1]));
 const faq=ld.find(x=>x['@type']==='FAQPage');assert(faq,'FAQPage JSON-LD');
-assert.deepEqual(faq.mainEntity.map(e=>[e.name,e.acceptedAnswer.text]),Q.map(q=>[q.q,q.a]),'FAQPage JSON-LD matches LEARN_FAQ');
+assert.deepEqual(faq.mainEntity.map(e=>[e.name,e.acceptedAnswer.text]),JSON.parse(JSON.stringify(Q.map(q=>[q.q,q.a]))),'FAQPage JSON-LD matches LEARN_FAQ');
 assert(ld.some(x=>x['@type']==='BreadcrumbList'),'BreadcrumbList');
 assert.match(html,/<link rel="canonical" href="https:\/\/futbolisland\.app\/learn"\/>/,'canonical');
 assert.match(html,/<meta property="og:image" content="[^"]*opengraph-image\.png"/,'OG image');

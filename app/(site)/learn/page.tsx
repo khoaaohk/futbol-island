@@ -133,7 +133,7 @@ export default function LearnHub(){
     <div className={s.heroText}>
      <div className={s.heroCrumbs}><Breadcrumbs crumbs={CRUMBS}/></div>
      <p className={s.eyebrow} style={{color:'#ffd451'}}>What’s inside Futbol Island</p>
-     <h1 className={s.h1} id="learn-title">{words.map((w,i)=><span key={i} className={s.word} style={{'--w':i} as CSSProperties}>{w}{i<words.length-1?' ':''}</span>)}</h1>
+     <h1 className={s.h1} id="learn-title">{words.map((w,i)=><span key={i}><span className={s.word} style={{'--w':i} as CSSProperties}>{w}</span>{i<words.length-1?' ':''}</span>)}</h1>
      <p className={s.lead}>{LEARN_HERO.subhead}</p>
      <div className={s.ctaRow}><a className={s.cta} href={PLAY_URL}>{LEARN_HERO.cta}</a><a className={s.ghostLink} href="#together">Play with a friend</a></div>
      <ul className={s.trust}>{LEARN_HERO.trust.map(t=><li key={t}><Check className={s.check}/>{t}</li>)}</ul>
