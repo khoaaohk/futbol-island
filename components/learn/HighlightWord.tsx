@@ -1,8 +1,8 @@
 'use client';
 import {useEffect,useRef} from 'react';
 
-/** Highlight colours that keep white text readable: app blue, purple, pink, green. */
-const COLOURS=['#2f6bff','#8a5cf0','#e8479b','#1f9d63'];
+/** Highlight colours that keep white text readable: vivid blue, purple, hot pink, fresh green (bright, not dull or dark; white bold text at 24px+ keeps 3:1). */
+const COLOURS=['#1e7bff','#9b5cff','#ff2d87','#11a863'];
 
 /**
  * The highlighted "free" in the hero line (owner, Nov 3): a <mark> whose background fades between a few app colours every ~2.5 s
