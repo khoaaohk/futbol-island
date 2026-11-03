@@ -163,8 +163,10 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  // Nov 3 merge with the Fuel up clip: 52 / 48 MB (the slides, ~14 MB, and the old 390x844 files to delete, are the next reconcile; big files move to R2 after)
 // Nov 3 merge with the feature slideshow clips (~12.6 MB): 64 / 58 MB until the old 390x844 files are deleted and the big files move to R2
 // Nov 3: lesson_field_45 re-cut as a 16 s four-surface clip (paths, story, lesson, quiz; was a 0.2 MB 8 s pitch clip): +2.9 MB → 66 / 61 MB
-assert(total<66e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 66 MB)`);assert(clips<61e6,`clips ${(clips/1e6).toFixed(1)} MB (< 61 MB)`);
- const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':3.5e6};
+// Nov 3: the 9 "See it in action" clips re-captured at best quality (1920 at the lowest CRF under 2 MB, + a 1280 wide_*_m file each,
+// 1920 posters; was 9 x ~1.4 MB): +13.3 MB → 78 / 73 MB. wide_cards is 16 s (collect + binder), so its pair may reach 3 / 1.5 MB.
+assert(total<78e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 78 MB)`);assert(clips<73e6,`clips ${(clips/1e6).toFixed(1)} MB (< 73 MB)`);
+ const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':3.5e6,'wide_cards.mp4':3e6,'wide_cards_m.mp4':1.5e6};
  // 4:5 clips: 1080x1350 <= 2.5 MB (the hero 3.5 MB), their 720x900 phone file <= 1.2 MB
  const capOf=b=>cap[b]||(/_45_m\.mp4$/.test(b)?1.2e6:/_45\.mp4$/.test(b)?2.5e6:2e6);
  for(const f of files.filter(f=>/\.(mp4|webm)$/.test(f))){const b=path.basename(f);assert(size(f)<=capOf(b),`${b} is ${(size(f)/1e6).toFixed(2)} MB (cap ${(capOf(b)/1e6)} MB)`);}
