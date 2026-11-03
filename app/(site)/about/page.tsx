@@ -36,8 +36,8 @@ export default function About(){
    <Breadcrumbs crumbs={CRUMBS}/>
    <h1 className={styles.title}>About Futbol Island</h1>
    <p className={styles.lead}>{DESC}</p>
-   <a className={styles.cta} href="/">Start Playing</a>
-   <p className={styles.caption}>Want the tour first? <a href="/learn">See what’s inside the game</a>: every feature and the football idea it teaches.</p>
+   <a className={styles.cta} href="/play">Start Playing</a>
+   <p className={styles.caption}>Want the tour first? <a href="/">See what’s inside the game</a>: every feature and the football idea it teaches.</p>
   </header>
 
   <section className={styles.section} aria-labelledby="who"><h2 className={styles.h2} id="who">Who it is for</h2>

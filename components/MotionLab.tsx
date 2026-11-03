@@ -41,5 +41,5 @@ export default function MotionLab(){
  <div ref={host} className={styles.stage}/>{error&&<p role="alert">{error}</p>}
  <div className={styles.controls}><button disabled={!!error} onClick={()=>playing?controls.current?.pause():controls.current?.play()}>{playing?'Pause':'Play'}</button><button disabled={!!error} onClick={()=>controls.current?.seek(0)}>Restart</button><button onClick={download}>Export diagnostics</button></div>
  <label className={styles.timeline}>Time<input aria-label="Movement time" type="range" min="0" max={STUDY_DURATION} step="0.01" value={time} onChange={e=>controls.current?.seek(Number(e.target.value))}/><output>{time.toFixed(2)}s</output></label>
- <p className={styles.note}>On a phone, check foot sliding, abrupt joint changes and stiffness at normal speed. Export diagnostics after playback. Record heat and battery observations separately; this page cannot measure device temperature. Playback stops after one action and pauses when hidden.</p><a href="/">Back to Futbol Island</a></main>;
+ <p className={styles.note}>On a phone, check foot sliding, abrupt joint changes and stiffness at normal speed. Export diagnostics after playback. Record heat and battery observations separately; this page cannot measure device temperature. Playback stops after one action and pauses when hidden.</p><a href="/play">Back to Futbol Island</a></main>;
 }

@@ -19,7 +19,7 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   assert.equal(D.konbiniDeparture(door,'jetpack').ride,'walk','never returns in flight');
   assert(D.konbiniDoorNear(door,d.x,d.front+1.5));assert(!D.konbiniDoorNear(door,d.x,d.front+6));assert(!D.konbiniDoorNear(door,d.x+3.7,d.front+1),'the vending machine beside the door keeps its own prompt');
   assert.equal(D.nearestKonbiniDoor(d.x,d.front+1),door);}
- assert.equal(D.parseKonbiniDoor('?door=cay'),'cay');assert.equal(D.parseKonbiniDoor('?door=x'),'main');assert.equal(D.KONBINI_RETURN_URL,'/?from=konbini');
+ assert.equal(D.parseKonbiniDoor('?door=cay'),'cay');assert.equal(D.parseKonbiniDoor('?door=x'),'main');assert.equal(D.KONBINI_RETURN_URL,'/play?from=konbini');
  let s={at:'outside',door:null};s=D.stepKonbini(s,{type:'enter'});assert.equal(s.at,'outside','no Enter away from a door');
  s=D.stepKonbini(s,{type:'near',door:'cay'});s=D.stepKonbini(s,{type:'enter'});assert.deepEqual(s,{at:'entering',door:'cay'});
  s=D.stepKonbini(s,{type:'near',door:'main'});assert.equal(s.door,'cay','walking past another door while entering changes nothing');

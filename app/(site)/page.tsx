@@ -14,10 +14,11 @@ import MobileMenu from '@/components/learn/MobileMenu';
 import s from '@/components/learn/learn.module.css';
 import {LEARN_FAQ,LEARN_FAQ_TOP,LEARN_FEATURES,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,type LearnHighlight,type LearnHighlightId} from '@/lib/site/learnFeatures';
 import {LESSONS_INDEX} from '@/lib/site/lessons';
-import {abs,breadcrumbLd,pageMeta,siteLd,SITE_NAME} from '@/lib/site/seo';
+import {abs,organizationLd,pageMeta,PLAY_PATH,siteLd,SITE_NAME,websiteLd} from '@/lib/site/seo';
 
 /**
- * /learn (Nov 2 2026; Nov 3 restyle after apple.com/apple-vision-pro, owner). Full-viewport "chapters", one idea each, from
+ * The home page `/` (owner, Nov 3 2026: the feature tour moved here from /learn, which now 308-redirects here; the game moved
+ * from `/` to /play). Nov 2 2026; Nov 3 restyle after apple.com/apple-vision-pro, owner). Full-viewport "chapters", one idea each, from
  * LEARN_HIGHLIGHTS in lib/site/learnFeatures.ts: hero, learn, explore, fuel up (Konbini food and fuel, Nov 3), play with friends (the one pinned feature chapter),
  * safe + 5 FAQs, then a closing Play chapter. Right after the hero: a full-bleed montage film (LearnMontage), then "See it in
  * action", a horizontal clip carousel (LearnReel); between Play with friends and Safe: "Even more to explore", a light
@@ -29,12 +30,15 @@ import {abs,breadcrumbLd,pageMeta,siteLd,SITE_NAME} from '@/lib/site/seo';
  * The full feature list (LEARN_FEATURES) stays as data; the lesson index lives at /learn/lessons.
  */
 export const dynamic='force-static';
-const DESC='Futbol Island is a free football learning game for kids aged 7 to 12: short lessons, an island to explore, private play with friends, and no ads, chat or accounts.';
-export const metadata=pageMeta('What’s inside the game',DESC,'/learn');
-const CRUMBS=[{name:'Home',path:'/'},{name:'What’s inside',path:'/learn'}];
+// Home SEO (owner, Nov 3 2026): title <= 60 and description <= 155 characters (tests/seo-pages.cjs), canonical `/`.
+const TITLE='Futbol Island: explore an island, learn football';
+const DESC='A free football learning game for kids aged 7 to 12: short lessons, an island to explore and private play with friends. No ads, chat or accounts.';
+export const metadata=pageMeta(TITLE,DESC,'/',{whole:true,type:'website'});
+// The section ids stay 'learn-*' (anchors, CSS and tests key on them).
 const ROOT_ID='learn-root';
-// Same-origin '/' like /about: an absolute URL counts as leaving the site on www / preview hosts and hits the grown-up link gate.
-const PLAY_URL='/';
+// Every Play goes to the game at /play. Same-origin path like /about: an absolute URL counts as leaving the site on www /
+// preview hosts and hits the grown-up link gate.
+const PLAY_URL=PLAY_PATH;
 
 const hl=(id:LearnHighlightId)=>LEARN_HIGHLIGHTS.find(h=>h.id===id)!;
 const FAQ=LEARN_FAQ_TOP.map(q=>LEARN_FAQ.find(x=>x.q===q)!);
@@ -83,7 +87,7 @@ const NAME_RE=new RegExp(`(${SITE_NAME}\\S*)`);
 
 const Chevron=()=><svg className={s.chev} viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M4 2.5 7.5 6 4 9.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 
-export default function LearnHub(){
+export default function Home(){
  const top=hl('top'),together=hl('together'),safe=hl('safe'),party=LEARN_FEATURES.find(f=>f.id==='party-start')!;
  const steps=party.steps??[];
  // The pinned friends media: the chapter's own shot, plus each step's real shot where one exists (no shot = the chapter's shot).
@@ -93,8 +97,9 @@ export default function LearnHub(){
  return <div id={ROOT_ID} className={s.root}>
   {/* the page has its own sticky bar with the logo, so the shared site header is hidden here (learn.module.css, not an inline
       <style>: React escapes its ">" and the hydration text check failed, re-rendering the whole document) */}
+  <JsonLd data={websiteLd()}/>
+  <JsonLd data={organizationLd()}/>
   <JsonLd data={siteLd()}/>
-  <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'FAQPage',mainEntity:FAQ.map(q=>({'@type':'Question',name:q.q,acceptedAnswer:{'@type':'Answer',text:q.a}}))}}/>
   <LearnEnhance rootId={ROOT_ID}/>
   <FaqEnhance selector="[data-faq-list]"/>
@@ -103,7 +108,7 @@ export default function LearnHub(){
   <nav className={s.subnav} aria-label="On this page" data-subnav="">
    <span className={s.navDark} aria-hidden="true"/>
    <div className={s.subnavIn}>
-    <a className={s.logo} href={PLAY_URL} aria-label="Futbol Island home"><LogoWord text="Futbol Island"/></a>
+    <a className={s.logo} href="/" aria-label="Futbol Island home"><LogoWord text="Futbol Island"/></a>
     <ul className={s.subLinks} data-sublinks="">{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}</ul>
     <MobileMenu links={NAV}/>
     <NavPlay className={s.pill} href={PLAY_URL}/>

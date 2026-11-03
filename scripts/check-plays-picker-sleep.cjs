@@ -13,7 +13,7 @@ const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const page=await ctx.newPage();await page.routeWebSocket(/webpack-hmr|_next\/.*hmr|turbopack/,()=>{});
   await page.addInitScript(()=>{for(const [k,v] of Object.entries({'fi2-audio-mix':'4-50-v1','fi2-sound-muted':'true','fi2-music-enabled':'false','fi2-voice-enabled':'false','fi2-welcome-v1':'completed'}))localStorage.setItem(k,v);
    const raf=window.requestAnimationFrame.bind(window);window.__rafs=0;window.requestAnimationFrame=cb=>raf(t=>{window.__rafs++;cb(t);});});
-  await page.goto(base+'/',{waitUntil:'domcontentloaded',timeout:240000});
+  await page.goto(base+'/play',{waitUntil:'domcontentloaded',timeout:240000});
   await page.waitForFunction(()=>window.__fi2?.games?.entries?.length&&!document.querySelector('[data-island-return-loading]'),null,{timeout:240000});await wait(2500);
   for(let i=0;i<3;i++){const offer=page.getByRole('button',{name:'Open this card'});if(!(await offer.count()))break;await offer.first().click().catch(()=>{});await wait(3500);const done=page.getByRole('button',{name:'Done',exact:true});if(await done.count())await done.last().click().catch(()=>{});await wait(1500);}
   await page.evaluate(()=>{const f=window.__fi2,r=f.renderer,orig=r.render;window.__frames=0;r.render=function(s,c){orig.call(this,s,c);if(s===f.scene)window.__frames++;};});

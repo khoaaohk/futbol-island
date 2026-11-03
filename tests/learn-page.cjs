@@ -1,5 +1,6 @@
-// /learn, the feature tour (Nov 2 2026, app/(site)/learn/page.tsx + components/learn/*). Checks:
-//  1. routes: /learn is the tour, the lesson index moved to /learn/lessons (+ [slug]), old /learn/<id> redirects permanently
+// The feature tour, the HOME page `/` since Nov 3 2026 (it was /learn from Nov 2; app/(site)/page.tsx + components/learn/*;
+// /learn now 308-redirects to `/`, the game moved from `/` to /play). Checks:
+//  1. routes: `/` is the tour, the lesson index moved to /learn/lessons (+ [slug]), old /learn/<id> redirects permanently
 //     (and /learn/lessons itself is not caught by that redirect); sitemap and llms files list both;
 //  2. links into /learn: title-screen bottom row, site footer, about page, in-game Grown-ups panel (new tab, rel noopener);
 //  3. heat + motion: one client island for behaviour with reduced-motion, Save-Data, slow-network and Battery saver branches,
@@ -49,11 +50,13 @@ const {LEARN_FEATURES:F,LEARN_GROUPS:G,LEARN_FAQ:ALLQ,LEARN_FAQ_TOP:TOP,LEARN_HI
 const Q=TOP.map(q=>ALLQ.find(x=>x.q===q));
 
 // ---- 1. routes ----------------------------------------------------------------------------------------------------------------
-for(const f of ['app/(site)/learn/page.tsx','app/(site)/learn/lessons/page.tsx','app/(site)/learn/lessons/[slug]/page.tsx'])assert(has(f),`${f} exists`);
+assert(!has('app/(site)/learn/page.tsx')&&!has('app/page.tsx'),'the tour is the home page: no /learn page, no root app/page.tsx');
+for(const f of ['app/(site)/page.tsx','app/play/page.tsx','app/(site)/learn/lessons/page.tsx','app/(site)/learn/lessons/[slug]/page.tsx'])assert(has(f),`${f} exists`);
 assert(!has('app/(site)/learn/[slug]'),'the old /learn/[slug] route is gone (moved to lessons/[slug])');
-const page=read('app/(site)/learn/page.tsx');
-assert.match(page,/export const dynamic='force-static';/,'/learn is static');
-assert.match(page,/pageMeta\([^)]*'\/learn'\)/,'/learn has its own metadata and canonical');
+const page=read('app/(site)/page.tsx');
+assert.match(page,/export const dynamic='force-static';/,'the home page is static');
+assert.match(page,/pageMeta\(TITLE,DESC,'\/',\{whole:true,type:'website'\}\)/,'the home page has its own metadata and canonical /');
+assert.match(page,/const PLAY_URL=PLAY_PATH;/,'Play goes to the game');assert.equal(L('lib/site/seo.ts').PLAY_PATH,'/play','the game is at /play');
 assert.match(read('app/(site)/learn/lessons/page.tsx'),/pageMeta\('Football lessons',DESC,'\/learn\/lessons'\)/,'the lesson index canonical is /learn/lessons');
 const lessons=L('lib/site/lessons.ts');
 assert.equal(lessons.lessonPath('x'),'/learn/lessons/x','lesson pages live under /learn/lessons');
@@ -62,28 +65,30 @@ const red=nc.match(/const redirects = \[(.*)\];/);assert(red,'next.config.mjs ha
 assert.match(red[1],/source: '\/learn\/:slug\(\(\?!lessons\$\)[^']+'/,'old lesson URLs redirect, /learn/lessons excluded');
 assert.match(red[1],/destination: '\/learn\/lessons\/:slug', permanent: true/,'permanent redirect to /learn/lessons/<id>');
 assert.match(nc,/async redirects\(\) \{ return redirects; \}/,'redirects are wired into the config');
+assert.match(red[1],/\{ source: '\/learn', destination: '\/', permanent: true \}/,'/learn is a permanent redirect to the home page /');
 {const re=new RegExp('^/learn/(?:'+red[1].match(/:slug\((.*)\)', destination/)[1]+')$');
  for(const l of lessons.LESSONS)assert(re.test('/learn/'+l.id),`old URL /learn/${l.id} is caught by the redirect`);
  assert(!re.test('/learn/lessons'),'/learn/lessons is not redirected');}
 const paths=L('lib/site/paths.ts').sitePaths();
-assert.equal(paths.find(p=>p.path==='/learn')?.priority,.9,'/learn in the sitemap at .9');
+assert(!paths.some(p=>p.path==='/learn'),'/learn (a redirect) is not in the sitemap');assert.equal(paths.find(p=>p.path==='/')?.priority,1,'the tour (/) is the main entry');
 assert(paths.some(p=>p.path==='/learn/lessons'),'/learn/lessons in the sitemap');
 assert(!paths.some(p=>/^\/learn\/(?!lessons)[^/]+$/.test(p.path)),'no old /learn/<id> path in the sitemap');
 const llms=read('public/llms.txt');
-assert.match(llms,/\(https:\/\/futbolisland\.app\/learn\): the feature tour/,'llms.txt describes /learn as the feature tour');
+assert.match(llms,/\(https:\/\/futbolisland\.app\/\): the feature tour/,'llms.txt describes / as the feature tour');assert.match(llms,/\(https:\/\/futbolisland\.app\/play\): the title screen/,'llms.txt: /play is the game');assert.doesNotMatch(llms,/futbolisland\.app\/learn\)/,'llms.txt: no /learn link');
 assert.match(llms,/\(https:\/\/futbolisland\.app\/learn\/lessons\): every lesson/,'llms.txt points the lesson index at /learn/lessons');
 const full=read('app/llms-full.txt/route.ts');
-assert(full.includes("abs('/learn')")&&full.includes("abs('/learn/lessons')"),'llms-full.txt lists the tour and the lesson index');
+assert(full.includes("abs('/')")&&full.includes("abs('/play')")&&full.includes("abs('/learn/lessons')")&&!full.includes("abs('/learn')"),'llms-full.txt lists the tour (/), the game (/play) and the lesson index');
 
-// ---- 2. links into /learn -------------------------------------------------------------------------------------------------------
+// ---- 2. links into the tour (/) -------------------------------------------------------------------------------------------------------
 assert.doesNotMatch(read('components/landing/GrownUps.tsx'),/What’s inside/,'title screen bottom row: no What’s inside link (owner, Nov 3)');
 assert.match(read('components/landing/Landing.tsx'),/<LandingBack\/>/,'title screen: the game Back button at the top-left');
-assert.match(read('components/landing/LandingBack.tsx'),/BackButton[\s\S]*assign\('\/learn'\)/,'title screen Back goes to /learn');
-assert.match(read('app/(site)/layout.tsx'),/<a href="\/learn">What’s inside<\/a>\s*<a href="\/privacy">Privacy<\/a>/,'site footer: What’s inside beside Privacy');
-assert.doesNotMatch(read('app/(site)/layout.tsx').replace(/\{\/\*[\s\S]*?\*\/\}/g,''),/<header[\s\S]*href="\/learn"[\s\S]*<\/header>/,'no section navigation in the header (Oct 16 2026)');
-assert.match(read('app/(site)/about/page.tsx'),/href="\/learn"/,'about links to /learn');
-assert.match(read('components/GrownUps.tsx'),/<a href="\/learn" target="_blank" rel="noopener">/,'in-game Grown-ups panel links to /learn in a new tab');
-assert.match(page,/href=\{PLAY_URL\}/,'/learn links back to Play');
+assert.match(read('components/landing/LandingBack.tsx'),/BackButton[\s\S]*assign\('\/'\)/,'title screen Back goes to the home page /');
+assert.match(read('app/(site)/layout.tsx'),/<a href="\/">What’s inside<\/a>\s*<a href="\/privacy">Privacy<\/a>/,'site footer: What’s inside (/) beside Privacy');
+assert.match(read('components/learn/learn.module.css'),/:global\(\[data-reading-page\]\):has\(\.root\) :global\(footer\) a\[href="\/"\]\{display:none\}/,'the tour hides the footer link to itself');
+assert.doesNotMatch(read('app/(site)/layout.tsx').replace(/\{\/\*[\s\S]*?\*\/\}/g,''),/<header[\s\S]*href="\/(learn|play)"[\s\S]*<\/header>/,'no section navigation in the header (Oct 16 2026)');
+assert.match(read('app/(site)/about/page.tsx'),/<a href="\/">See what’s inside the game<\/a>/,'about links to the tour at /');assert.match(read('app/(site)/about/page.tsx'),/className=\{styles\.cta\} href="\/play"/,'about Play goes to /play');
+assert.match(read('components/GrownUps.tsx'),/<a href="\/" target="_blank" rel="noopener">futbolisland\.app<\/a>/,'in-game Grown-ups panel links to the tour (/) in a new tab');
+assert.match(page,/href=\{PLAY_URL\}/,'the tour links to Play');assert.match(page,/<a className=\{s\.logo\} href="\/"/,'the logo goes home (/)');assert.match(page,/<NavPlay className=\{s\.pill\} href=\{PLAY_URL\}\/>/,'the bar Play goes to /play');
 
 // ---- 3. heat + motion -----------------------------------------------------------------------------------------------------------
 const enh=strip(read('components/learn/LearnEnhance.tsx'));
@@ -184,13 +189,13 @@ assert(total<66e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 66 MB)`);asse
   for(const n of t.match(/\d+/g)??[])assert([f.hook,f.description,f.proof,f.footballTie].join(' ').includes(n),`${c.key}: number ${n} comes from the feature copy`);
   assert(!/[<>]/.test(c.caption),`${c.key}: no markup in captions`);}
  assert.deepEqual(JSON.parse(JSON.stringify(learnBoldParts('a **b** c'))),[{text:'a ',bold:false},{text:'b',bold:true},{text:' c',bold:false}],'bold parser');
- assert.doesNotMatch(reel+read('app/(site)/learn/page.tsx'),/dangerouslySetInnerHTML/,'captions are text nodes, never HTML');
+ assert.doesNotMatch(reel+read('app/(site)/page.tsx'),/dangerouslySetInnerHTML/,'captions are text nodes, never HTML');
  // media: a card without its manifest entry + poster renders nothing (no placeholder art), the section disappears with no cards
  assert.equal(M.learnWideAsset('definitely_not_captured_xyz'),null,'missing wide clip = no card');
  assert.match(reel,/\.filter\(\(x\)[^\n]*=>!!x\.a\)\.slice\(0,9\)/,'missing cards are skipped, 9 at most');
  assert.match(reel,/if\(!cards\.length\)return null;/,'no cards = no section');
  assert.match(read('lib/site/learnMedia.ts'),/if\(!m\|\|!exists\(still\)\)return null;/,'a card needs its manifest entry and poster');
- assert.match(read('app/(site)/learn/page.tsx'),/<LearnReel\/>\s*\n\s*\{\/\* ---- 2-3\. learn, explore/,'the carousel sits right after the hero');
+ assert.match(read('app/(site)/page.tsx'),/<LearnReel\/>\s*\n\s*\{\/\* ---- 2-3\. learn, explore/,'the carousel sits right after the hero');
  // a11y
  assert.match(reel,/role="region" aria-roledescription="carousel" aria-label="[^"]+" tabIndex=\{0\}/,'row: region, carousel, labelled, focusable');
  assert.match(reel,/role="group" aria-roledescription="slide" aria-label=\{`\$\{i\+1\} of \$\{n\}: /,'cards: group "n of N"');
@@ -350,13 +355,13 @@ assert.doesNotMatch(page,/FeatureFinder|LEARN_GROUPS|data-pin|IslandArt|Jersey/,
 assert.match(page,/<FriendSteps /,'the 3-step play-with-a-friend pinned feature');
 assert.match(page,/LEARN_GROWNUP_LINE/,'grown-ups stay in charge: one line');
 {const hrefs=[...page.matchAll(/href=(?:"([^"]+)"|\{`([^`]+)`\})/g)].map(m=>m[1]??m[2]);
- const ok=new Set(['/about','/privacy','#together']);
+ const ok=new Set(['/','/about','/privacy','#together']);
  for(const h of hrefs){if(h.startsWith('#'))continue;assert(ok.has(h)||h.startsWith('#')||/^https:\/\/futbolisland\.app\//.test(h),`link ${h} is known`);}
  for(const id of ['/about','/privacy'])assert(has(`app/(site)${id}`)||has(`app${id}`),`${id} route exists`);}
 
 // ---- 5. built site --------------------------------------------------------------------------------------------------------------
-const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),built=path.join(dist,'server/app/learn.html');
-if(!fs.existsSync(built)){console.log(`learn page sources ok: ${HL.length} sections, ${Q.length} FAQ (data: ${F.length} features, ${G.length} groups)`);console.log(`  SKIP built-page checks: no /learn in ${path.relative(root,dist)} (build with NEXT_DIST_DIR to run them)`);process.exit(0);}
+const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),built=path.join(dist,'server/app/index.html');
+if(!fs.existsSync(built)){console.log(`learn page sources ok: ${HL.length} sections, ${Q.length} FAQ (data: ${F.length} features, ${G.length} groups)`);console.log(`  SKIP built-page checks: no home page in ${path.relative(root,dist)} (build with NEXT_DIST_DIR to run them)`);process.exit(0);}
 const html=fs.readFileSync(built,'utf8');
 const text=html.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<style[\s\S]*?<\/style>/g,' ').replace(/<[^>]+>/g,' ').replace(/&#x27;/g,"'").replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/\s+/g,' ');
 const norm=x=>x.replace(/\s+/g,' ');
@@ -367,8 +372,10 @@ for(const st of F.find(f=>f.id==='party-start').steps)assert(text.includes(norm(
 const ld=[...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m=>JSON.parse(m[1]));
 const faq=ld.find(x=>x['@type']==='FAQPage');assert(faq,'FAQPage JSON-LD');
 assert.deepEqual(faq.mainEntity.map(e=>[e.name,e.acceptedAnswer.text]),JSON.parse(JSON.stringify(Q.map(q=>[q.q,q.a]))),'FAQPage JSON-LD matches the 5 shown FAQs');
-assert(ld.some(x=>x['@type']==='BreadcrumbList'),'BreadcrumbList');
-assert.match(html,/<link rel="canonical" href="https:\/\/futbolisland\.app\/learn"\/>/,'canonical');
+for(const t of ['WebSite','Organization'])assert(ld.some(x=>x['@type']===t),t+' JSON-LD');
+assert.match(html,/<link rel="canonical" href="https:\/\/futbolisland\.app"\/>/,'canonical /');
+assert(!fs.existsSync(path.join(dist,'server/app/learn.html')),'no /learn page is built (it redirects)');
+{const plays=[...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>((?:(?!<\/a>)[\s\S])*?)<\/a>/g)].filter(m=>/Play/.test(m[2].replace(/<[^>]+>/g,''))).map(m=>m[1]);assert(plays.length>=2&&plays.every(h=>h==='/play'),'built: every Play link goes to /play: '+plays.join(' '));}
 assert.match(html,/<meta property="og:image" content="[^"]*opengraph-image\.png"/,'OG image');
 assert.equal((html.match(/<h1[ >]/g)||[]).length,1,'one h1');
 {const vs=[...html.matchAll(/<video [^>]*>/g)].map(m=>m[0]);

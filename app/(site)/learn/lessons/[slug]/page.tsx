@@ -40,6 +40,6 @@ export default function LessonPage({params}:{params:{slug:string}}){
     {q.explain&&<p><b>Coach’s explanation:</b> {q.explain}</p>}
    </li>)}</ol>
   </section>}
-  <p className={styles.end}><a className={styles.cta} href="/">Play it on the island</a></p>
+  <p className={styles.end}><a className={styles.cta} href="/play">Play it on the island</a></p>
  </>;
 }

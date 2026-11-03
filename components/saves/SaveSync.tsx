@@ -1,6 +1,6 @@
 'use client';
 /**
- * Keeps a save code's island in step (docs/accounts-design.md §4.3–§4.4; Oct 10 2026). Mounted beside the island (app/page.tsx,
+ * Keeps a save code's island in step (docs/accounts-design.md §4.3–§4.4; Oct 10 2026). Mounted beside the island (app/play/page.tsx,
  * app/island-return) and in the arcade, Konbini and museum rooms with `boot={false}` (they only save when hidden).
  *
  * Heat: no polling, no timers, no loops. Listeners only: the tab hiding (visibilitychange / pagehide, keepalive), the

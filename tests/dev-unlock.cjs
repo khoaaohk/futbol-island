@@ -45,7 +45,7 @@ const snapshot=s=>JSON.stringify([...s.m.entries()].sort());
   assert.equal(req('development',host,'?unlock=all'),null,`host ${host} is refused`);
  assert.equal(req('development','localhost',''),null,'no flag, no unlock');
  assert.equal(req('development','localhost','?unlock=yes'),null,'only the exact flag');
- assert.equal(G.stripDevUnlockParams('http://localhost:8092/?unlock=all&balls=1&from=arcade'),'/?from=arcade');
+ assert.equal(G.stripDevUnlockParams('http://localhost:8092/play?unlock=all&balls=1&from=arcade'),'/play?from=arcade');
 
  // ---- The unlock module refuses to run off localhost / in production (storage untouched) ---------------------------------
  for(const env of [{nodeEnv:'production',hostname:'localhost'},{nodeEnv:'development',hostname:'futbolisland.app'},{nodeEnv:'production',hostname:'futbolisland.app'}]){

@@ -33,7 +33,7 @@ async function run(browser,vp){
   await g.locator('[data-parent-gate-answer]').fill(String(WORDS.indexOf(m[1])*WORDS.indexOf(m[2])));taps++;await tap(g.getByRole('button',{name:'Continue'}));return true;};
  const hscroll=async()=>page.evaluate(()=>{const p=document.querySelector('[data-idp-plan]');if(!p)return 'no plan';const bad=[...p.querySelectorAll('*')].filter(e=>{const r=e.getBoundingClientRect();return r.width&&r.right>innerWidth+1;});return bad.length?bad.slice(0,3).map(e=>e.className+':'+Math.round(e.getBoundingClientRect().right)):false;});
  const idle=async(ms=2000)=>{await page.evaluate(()=>{window.__raf=0;});await page.waitForTimeout(ms);return page.evaluate(()=>({raf:window.__raf,running:document.getAnimations().filter(a=>a.playState==='running').length}));};
- await page.goto(BASE+'/',{waitUntil:'domcontentloaded',timeout:240000});
+ await page.goto(BASE+'/play',{waitUntil:'domcontentloaded',timeout:240000});
  await page.waitForSelector('[data-title-start]',{timeout:120000});await page.waitForTimeout(1500);await page.locator('[data-title-start]').click();
  // Title → save code (required before play) → the island. Taps whatever forward button the save sheets show.
  for(let i=0;i<90;i++){

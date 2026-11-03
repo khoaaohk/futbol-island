@@ -15,7 +15,7 @@ const VIEWS=[{tag:'phone',viewport:{width:390,height:844},touch:true},{tag:'land
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   // straight into the game (the title screen's own hand-off flag, lib/rootView.ts), past the first-run welcome
   await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');sessionStorage.setItem('fi2-island-handoff','1');});
-  await page.goto('http://localhost:8092/',{waitUntil:'domcontentloaded',timeout:300000});
+  await page.goto('http://localhost:8092/play',{waitUntil:'domcontentloaded',timeout:300000});
   await page.waitForFunction(()=>window.__fi2?.games&&!document.querySelector('[class*=IslandLoading]'),null,{timeout:300000});await page.waitForTimeout(2500);
   // the save-code prompt (components/saves) can open over a fresh island: close it so the court is visible
   const closeSave=async()=>{for(let i=0;i<3;i++){const d=page.locator('dialog[open]');if(!(await d.count()))return;await page.keyboard.press('Escape');await page.waitForTimeout(400);

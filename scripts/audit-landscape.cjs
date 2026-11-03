@@ -256,7 +256,7 @@ const SCENES = {
   async perf(env, size) {
     const p = env.p;
     await p.addInitScript(() => { sessionStorage.setItem('fi2-in-game', '1'); localStorage.setItem('fi2-welcome-v1', 'completed'); sessionStorage.setItem('fi2-arcade-departure-v1', JSON.stringify({ version: 1, x: 23, z: -62, yaw: 0, ride: 'walk', flightHeight: 0 })); });
-    await p.goto(url + '/?from=arcade', { waitUntil: 'domcontentloaded', timeout: 120000 });
+    await p.goto(url + '/play?from=arcade', { waitUntil: 'domcontentloaded', timeout: 120000 });
     await p.waitForFunction(() => window.__fi2 && !document.querySelector('[data-island-return-loading]'), null, { timeout: 120000 }); await p.waitForTimeout(6000);
     for (const [spot, x, z] of [['plaza', 23, -62], ['harbour', 217, 200], ['town', 104, 40]]) {
       await p.evaluate(({ x, z }) => { const f = window.__fi2; f.location.x = x; f.location.z = z; f.rooftop.reset(x, z); f.velocity.x = f.velocity.z = 0; }, { x, z }); await p.waitForTimeout(3500);
@@ -274,7 +274,7 @@ const SCENES = {
     const p = env.p;
     const at = async (x, z, ride = 'walk') => {
       await p.addInitScript(({ x, z, ride }) => { sessionStorage.setItem('fi2-in-game', '1'); localStorage.setItem('fi2-welcome-v1', 'completed'); sessionStorage.setItem('fi2-arcade-departure-v1', JSON.stringify({ version: 1, x, z, yaw: 0, ride, flightHeight: 0 })); }, { x, z, ride });
-      await p.goto(url + '/?from=arcade', { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await p.goto(url + '/play?from=arcade', { waitUntil: 'domcontentloaded', timeout: 120000 });
       await p.waitForFunction(() => window.__fi2 && !document.querySelector('[data-island-return-loading]'), null, { timeout: 120000 }); await p.waitForTimeout(4000);
     };
     await flow(env, size, 'fishing', async () => {
@@ -335,7 +335,7 @@ const SCENES = {
       if (process.env.GUEST === '1') {
         const g = await env.b.newContext({ viewport: { width: env.s.w, height: env.s.h }, isMobile: true, hasTouch: true, deviceScaleFactor: 3 }); const gp = await g.newPage();
         await (await g.newCDPSession(gp)).send('Emulation.setSafeAreaInsetsOverride', { insets: env.s.inset }).catch(() => {});
-        await gp.goto(url + '/?party=' + code, { waitUntil: 'domcontentloaded', timeout: 120000 }); await gp.waitForTimeout(6000);
+        await gp.goto(url + '/play?party=' + code, { waitUntil: 'domcontentloaded', timeout: 120000 }); await gp.waitForTimeout(6000);
         await clickText(gp, 'text=Get my save code', 20000); await gp.waitForTimeout(2500); await clickText(gp, 'button:has-text("Get my code")', 4000); await gp.waitForTimeout(2500);
         await clickText(gp, 'button:has-text("I saved it")', 4000); await gp.waitForTimeout(1500); await clickText(gp, 'button:has-text("Play")', 8000);
         await gp.waitForFunction(() => !!window.__fi2?.scene, null, { timeout: 120000 }).catch(() => {}); await gp.waitForTimeout(9000);
@@ -353,7 +353,7 @@ const SCENES = {
     friends.forEach((f) => f.close());
     await flow(env, size, 'fishing', async () => {
       await p.addInitScript(() => { sessionStorage.setItem('fi2-in-game', '1'); localStorage.setItem('fi2-welcome-v1', 'completed'); sessionStorage.setItem('fi2-arcade-departure-v1', JSON.stringify({ version: 1, x: 217, z: 211.4, yaw: 0, ride: 'walk', flightHeight: 0 })); });
-      await p.goto(url + '/?from=arcade', { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await p.goto(url + '/play?from=arcade', { waitUntil: 'domcontentloaded', timeout: 120000 });
       await p.waitForFunction(() => window.__fi2 && !document.querySelector('[data-island-return-loading]'), null, { timeout: 120000 }); await p.waitForTimeout(4000);
       await p.locator('[data-fish-enter]').tap({ timeout: 8000 }); await p.waitForTimeout(3000);
       log('b1-fishing', await p.evaluate(() => { const rr = (e) => { if (!e) return null; const r = e.getBoundingClientRect(); return r.width ? r : null; }, b = rr(document.querySelector('[data-fish-stop]')), f = rr([...document.querySelectorAll('button[aria-label="Play with friends"],[data-party-open]')].find((e) => e.getBoundingClientRect().width));
@@ -404,7 +404,7 @@ const SCENES = {
     });
     await flow(env, size, 'dive', async () => {
       await p.addInitScript(() => { sessionStorage.setItem('fi2-in-game', '1'); localStorage.setItem('fi2-welcome-v1', 'completed'); sessionStorage.setItem('fi2-arcade-departure-v1', JSON.stringify({ version: 1, x: 512, z: -256, yaw: 0, ride: 'walk', flightHeight: 0 })); });
-      await p.goto(url + '/?from=arcade', { waitUntil: 'domcontentloaded', timeout: 120000 });
+      await p.goto(url + '/play?from=arcade', { waitUntil: 'domcontentloaded', timeout: 120000 });
       await p.waitForFunction(() => window.__fi2 && !document.querySelector('[data-island-return-loading]'), null, { timeout: 120000 }); await p.waitForTimeout(4000);
       for (const dz of [-10, -20, -30, -36]) { await p.evaluate(({ dz }) => { const l = window.__fi2.location; l.x = 512; l.z = -256 + dz; }, { dz }); await p.waitForTimeout(1200); }
       log('b3-toast-swim', await pollToast(3000));

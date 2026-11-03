@@ -1,4 +1,4 @@
-/* /learn, the feature tour (Nov 2 2026; Nov 3 restyle after apple.com/apple-vision-pro, owner). Full-viewport chapters that
+/* The home page `/` (moved from /learn Nov 3 2026), the feature tour (Nov 2 2026; Nov 3 restyle after apple.com/apple-vision-pro, owner). Full-viewport chapters that
    alternate soft off-white (--paper) and near-black pitch green (--night), each one huge tight headline, one line and one large
    media card; gold (the Play button gold from app/globals.css) is the only accent. Type: the system sans stack (no download);
    IslandBrush only for the logo (owner, Nov 3: buttons use the regular button font).
@@ -30,7 +30,7 @@
 /* the page has its own sticky bar with the logo, so the shared site header is hidden here (Nov 3: moved out of an inline <style>,
    whose escaped ">" made React's hydration text check fail and re-render the whole document on the client) */
 :global([data-reading-page]):has(.root)>:global(header){display:none}
-:global([data-reading-page]):has(.root) :global(footer) a[href="/learn"]{display:none}
+:global([data-reading-page]):has(.root) :global(footer) a[href="/"]{display:none}
 @media(prefers-reduced-motion:no-preference){:global(html):has(.root:not([data-calm])){scroll-behavior:smooth}}
 .root *{box-sizing:border-box}
 .root h1,.root h2,.root h3,.root p,.root ul,.root ol,.root figure{margin:0}

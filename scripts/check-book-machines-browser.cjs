@@ -12,7 +12,7 @@ const MACHINES=[['northbeach','cafu'],['causeway','nadim'],['cayplaza','kante'],
   // 30 fixture runs × 20 coins = 600 coins, as scripts/check-player-book-browser.cjs seeds them.
   await p.addInitScript(()=>{if(localStorage.getItem('book-machines-seeded'))return;localStorage.setItem('book-machines-seeded','1');localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-island-jobs-v1',JSON.stringify({version:1,day:'',today:{},lifetime:{},earned:0,best:{},starter:true}));localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs:Object.fromEntries(Array.from({length:30},(_,i)=>['book-fixture-'+i,{game:'island',paid:20,reason:'fixture',at:i}])),packs:[]}));
    const Native=window.Audio;window.__bookVoices=[];window.Audio=function(...a){const x=new Native(...a);window.__bookVoices.push(x);return x;};window.Audio.prototype=Native.prototype;});
-  await p.goto(process.env.FUTBOL_BASE_URL||'http://localhost:8092/',{timeout:240000});await p.waitForFunction(()=>window.__fi2?.vending,null,{timeout:240000});await p.waitForTimeout(3000);
+  await p.goto(process.env.FUTBOL_BASE_URL||'http://localhost:8092/play',{timeout:240000});await p.waitForFunction(()=>window.__fi2?.vending,null,{timeout:240000});await p.waitForTimeout(3000);
   let coins=600;
   for(const [machine,book] of MACHINES){
    const itemId=await p.evaluate(m=>window.__fi2.vending.entries.find(e=>e.machine.id===m)?.machine.specials[0],machine);assert(itemId,machine+' has a special');

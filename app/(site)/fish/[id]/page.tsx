@@ -40,6 +40,6 @@ export default function FishPage({params}:{params:{id:string}}){
    {when&&<p>{when}.</p>}
    <p className={styles.caption}>Size on the island: {f.size[0]}–{f.size[1]} cm.</p>
   </section>
-  <p className={styles.end}><a className={styles.cta} href="/">Go fishing on the island</a></p>
+  <p className={styles.end}><a className={styles.cta} href="/play">Go fishing on the island</a></p>
  </>;
 }

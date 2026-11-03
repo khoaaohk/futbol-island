@@ -9,7 +9,7 @@ const views=[['phone-portrait',{width:390,height:844},true],['phone-landscape',{
   const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>{if(localStorage.getItem('vend-fixture'))return;localStorage.setItem('vend-fixture','1');localStorage.setItem('fi2-welcome-v1','completed');
    const runs={};for(let i=0;i<2;i++)runs['fixture-'+i]={game:'live',paid:20,reason:'fixture',at:Date.now()+i};localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs,best:{},attempts:{},visits:{},packs:[]}));});
-  await page.goto('http://localhost:8092/',{waitUntil:'domcontentloaded',timeout:90000});await page.waitForFunction(()=>window.__fi2?.vending,null,{timeout:180000});await page.waitForTimeout(4000);
+  await page.goto('http://localhost:8092/play',{waitUntil:'domcontentloaded',timeout:90000});await page.waitForFunction(()=>window.__fi2?.vending,null,{timeout:180000});await page.waitForTimeout(4000);
   const tag=`${name}-${machineArg}`;const shot=async n=>{await page.screenshot({path:`${OUT}/${tag}-${n}.png`});console.log(tag,n);};
   // Stand in front of the machine on foot.
   await page.evaluate(id=>{const f=window.__fi2,e=f.vending.entries.find(e=>e.machine.id===id);f.location.x=e.front.x+e.dir.x*1.5;f.location.z=e.front.z+e.dir.z*1.5;if(f.rideRef.current==='jetpack'){f.rideRef.current='walk';f.flight.height=e.machine.y;}},machineArg);

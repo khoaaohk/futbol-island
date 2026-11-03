@@ -1,6 +1,6 @@
 /**
- * What `/` shows (Oct 9 2026; user: "the start screen must be at https://futbolisland.app/, not /start"): the title screen
- * (components/landing) or the game, at the same URL. /start no longer exists.
+ * What /play shows (Oct 9 2026 at `/`; moved to /play on Nov 3 2026 when the feature tour became the home page): the title
+ * screen (components/landing) or the game, at the same URL. /start no longer exists.
  *
  *  - Every visit and every reload shows the title screen, with its water-fill Play for a returning player (user, Oct 9 2026:
  *    the old loader must not show on a reload). The only reload that goes straight to the game is the game's own hand-off
@@ -9,7 +9,7 @@
  *  - Links the game itself makes also open the game: `?from=` (the Arcade / Konbini / Museum return, normally rewritten to
  *    /island-return before it gets here) and `?panel=` (Settings → About, e.g. the Stripe return of a donation made from the
  *    game, which opens in a new tab).
- *  - ROOT_VIEW_BOOT decides BEFORE first paint (an inline script at the top of app/page.tsx sets <html data-root-view>, which
+ *  - ROOT_VIEW_BOOT decides BEFORE first paint (an inline script at the top of app/play/page.tsx sets <html data-root-view>, which
  *    globals.css uses to show one of the two prerendered screens), so neither screen ever flashes. The page stays static.
  *  - On the client, components/root/RootSwitch.tsx reads the same rule (isInGame) and switches in place on enterGame().
  */
@@ -17,7 +17,7 @@ export const IN_GAME_KEY='fi2-in-game';
 /** Query keys only the game's own links carry. */
 export const GAME_QUERY_KEYS=['from','panel'] as const;
 /** Oct 15 2026: only the game's own return trips open the game with `?from=`; any other value (a printed link's tag, e.g. the QR
- *  card's ?from=flyer, read once by the visit counter) shows the title screen like a bare `/`. Same list as next.config.mjs. */
+ *  card's ?from=flyer, read once by the visit counter) shows the title screen like a bare `/`. Same list as next.config.mjs (GAME_FROM: old `/?from=` links redirect to /play). */
 export const GAME_FROM=['arcade','konbini','museum','shop','e2e'] as const;// 'e2e' = the Playwright suite's straight-into-the-game link (tests/e2e/helpers.ts), Oct 16 2026
 const gameQuery=(q:URLSearchParams)=>q.has('panel')||(GAME_FROM as readonly string[]).includes(q.get('from')||'');
 export type RootView='landing'|'game';

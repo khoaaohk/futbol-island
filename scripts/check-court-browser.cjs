@@ -6,7 +6,7 @@ const assert=require('node:assert/strict');
   const context=await browser.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile});
   const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.addInitScript(()=>localStorage.setItem('fi2-welcome-v1','completed'));
-  await page.goto('http://localhost:8092/',{waitUntil:'domcontentloaded'});
+  await page.goto('http://localhost:8092/play',{waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>window.__fi2?.islandNpcs,null,{timeout:180000});await page.waitForTimeout(3500);
   await page.evaluate(()=>{const f=window.__fi2;f.rideRef.current='walk';f.flight.height=0;f.location.x=86;f.location.z=-54.5;});
   await page.waitForTimeout(1800);

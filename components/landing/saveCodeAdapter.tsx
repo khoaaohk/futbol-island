@@ -29,5 +29,5 @@ export function SaveCodeCreate({onDone,onPhase,onHaveCode,onBack,headless}:Pick<
 export function SaveCodeRestore({onDone,onPhase,onCancel,onPlay,onBack}:Pick<RestoreProps,'onDone'|'onPhase'|'onCancel'|'onPlay'|'onBack'>){
  return <RealRestore required onBack={onBack} onPhase={p=>{startRestorePhase(p);onPhase?.(p);}} onCancel={onCancel}
   onPlay={onPlay}
-  onDone={restored=>{if(restored)trackStart('st:play_restored');if(restored){window.history.replaceState(window.history.state,'','/');if(HANDOFF_ENABLED)markReloadHandoff();}onDone(restored);}}/>;
+  onDone={restored=>{if(restored)trackStart('st:play_restored');if(restored){window.history.replaceState(window.history.state,'','/play');if(HANDOFF_ENABLED)markReloadHandoff();}onDone(restored);}}/>;
 }

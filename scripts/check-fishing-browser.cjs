@@ -11,7 +11,7 @@ const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,
  const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text().slice(0,160));});
  const [x,z]=spots[spot];
  await page.addInitScript(([x,z])=>{sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x,z,yaw:0,ride:'walk',flightHeight:0}));const real=Math.random;Math.random=()=>window.__fishBias?.985+.015*real():real();},[x,z]);
- await page.goto((process.env.FUTBOL_BASE_URL||'http://localhost:8092')+'/?from=arcade');
+ await page.goto((process.env.FUTBOL_BASE_URL||'http://localhost:8092')+'/play?from=arcade');
  await page.waitForFunction(()=>window.__fi2&&!document.querySelector('[data-island-return-loading]'),null,{timeout:120000});
  await page.waitForTimeout(3000);
  const tag=`${mode}-${spot}`;const shot=n=>page.screenshot({path:OUT+`${tag}-${n}.png`});

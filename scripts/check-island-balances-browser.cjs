@@ -2,7 +2,7 @@ const {chromium}=require('playwright'),assert=require('node:assert/strict');
 (async()=>{const b=await chromium.launch({headless:true,args:['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});for(const mobile of (process.argv.includes("--phone")?[true]:[false,true])){
  const c=await b.newContext({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile});const p=await c.newPage();const errors=[];p.on('pageerror',e=>errors.push(e.message));
  await p.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-market-v1',JSON.stringify({version:1,day:'2026-09-28',basket:{sardine:2,orange:3,carrot:1},soldToday:0,sales:0,lifetime:0}));});
- await p.goto('http://localhost:8092/');await p.waitForFunction(()=>window.__fi2?.world,null,{timeout:180000});await p.waitForTimeout(3500);
+ await p.goto('http://localhost:8092/play');await p.waitForFunction(()=>window.__fi2?.world,null,{timeout:180000});await p.waitForTimeout(3500);
  const tap=s=>mobile?p.locator(s).tap():p.locator(s).click();
  await p.evaluate(()=>{window.balanceEvents=[];for(const type of ['pointerdown','pointerup','click','touchstart','touchend'])document.addEventListener(type,e=>window.balanceEvents.push([type,e.target.tagName,e.target.closest('[data-job-wallet]')!==null]),true);});
  await tap('[data-job-wallet]');await p.waitForSelector('[data-island-balances][open]',{timeout:5000}).catch(async e=>{console.log('events',await p.evaluate(()=>window.balanceEvents));await p.screenshot({path:'/tmp/balances-failed.png'});throw e;});await p.waitForTimeout(500);

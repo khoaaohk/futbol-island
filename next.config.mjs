@@ -30,11 +30,22 @@ const cacheStatic = [
   { source: '/admin', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Cache-Control', value: 'no-store' }] },
   { source: '/api/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
 ];
-// `/` is prerendered static (CDN-cached). The only query it used to read on the server, ?from=arcade|konbini|museum (spawn
-// outside that door, walking, return loading screen), is a rewrite to the equally static /island-return, so neither page
-// renders per request. The URL in the address bar stays /?from=…; ?store= is read by Town on the client (it always was).
-const rewrites = { beforeFiles: [{ source: '/', has: [{ type: 'query', key: 'from', value: '^(arcade|konbini|museum|shop)$' }], destination: '/island-return' }] };
+// The game is at /play (Nov 3 2026, owner: the feature tour is the home page `/`, the game moved from `/`). /play is prerendered
+// static (CDN-cached). The only query it used to read on the server, ?from=arcade|konbini|museum|shop (spawn outside that door,
+// walking, return loading screen), is a rewrite to the equally static /island-return, so neither page renders per request. The
+// URL in the address bar stays /play?from=…; ?store=, ?panel=, ?party=, ?coffee= … are read on the client (they always were).
+const GAME_FROM = 'arcade|konbini|museum|shop|e2e';// lib/rootView.ts GAME_FROM
+const rewrites = { beforeFiles: [{ source: '/play', has: [{ type: 'query', key: 'from', value: '^(arcade|konbini|museum|shop)$' }], destination: '/island-return' }] };
+// Links the game made before Nov 3 2026 pointed at `/` with a query only the game reads: a saved arcade/shop return, a Stripe
+// success/cancel URL (?coffee=, ?panel=about), a shared party invite (?party=), the Konbini store (?store=), a lesson link
+// (?lesson=), and the dev/test switches (?preview=, ?unlock=, ?testCoins=). Each redirects to /play with the SAME query (Next
+// passes the query through). Any other `/?…` (e.g. the printed QR card's /?from=flyer, a visit-counter tag) stays on the home page.
+const GAME_QUERY_TO_PLAY = [
+ { type: 'query', key: 'from', value: `^(${GAME_FROM})$` },
+ ...['panel', 'party', 'store', 'coffee', 'lesson', 'preview', 'unlock', 'testCoins'].map(key => ({ type: 'query', key })),
+].map(has => ({ source: '/', has: [has], destination: '/play', permanent: true }));
 // Nov 2 2026: /learn became the feature tour and the lesson index moved to /learn/lessons. Old lesson URLs /learn/<id> keep
 // working with a permanent redirect (search results and shared links); /learn/lessons itself is excluded from the pattern.
-const redirects = [{ source: '/learn/:slug((?!lessons$)[A-Za-z0-9_-]+)', destination: '/learn/lessons/:slug', permanent: true }];
+// Nov 3 2026: the feature tour moved to the home page, so /learn itself is a permanent redirect to `/`.
+const redirects = [{ source: '/learn', destination: '/', permanent: true }, { source: '/learn/:slug((?!lessons$)[A-Za-z0-9_-]+)', destination: '/learn/lessons/:slug', permanent: true }, ...GAME_QUERY_TO_PLAY];
 export default phase => ({ reactStrictMode: true, distDir: process.env.NEXT_DIST_DIR || (phase === 'phase-development-server' ? '.next-dev' : '.next'), async headers() { return cacheStatic; }, async rewrites() { return rewrites; }, async redirects() { return redirects; } });

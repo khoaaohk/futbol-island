@@ -14,7 +14,7 @@ const stats=a=>{if(!a.length)return {n:0};const s=[...a].sort((x,y)=>x-y),q=p=>s
   const cdp=await ctx.newCDPSession(page);await cdp.send('Emulation.setCPUThrottlingRate',{rate:4});return {ctx,page,cdp};}
  async function walk(page,ms=5000,a='ArrowUp',b='ArrowDown',count=()=>0){const c0=await page.evaluate(count);await page.evaluate(()=>{window.__intervals=[];});await page.keyboard.down(a);await page.waitForTimeout(ms/2);await page.keyboard.up(a);await page.keyboard.down(b);await page.waitForTimeout(ms/2);await page.keyboard.up(b);const c1=await page.evaluate(count);return {rafIntervals:stats(await page.evaluate(()=>window.__intervals)),renderedFps:+((c1-c0)/(ms/1000)).toFixed(1)};}
  // Island Square
- {const {ctx,page}=await open('/?from=konbini',()=>window.__fi2&&!document.querySelector('[data-island-return-loading]'));
+ {const {ctx,page}=await open('/play?from=konbini',()=>window.__fi2&&!document.querySelector('[data-island-return-loading]'));
   const frame=await walk(page,5000,'ArrowUp','ArrowDown',()=>window.__fi2.renderer.info.render.frame);const r=await page.evaluate(()=>{const f=window.__fi2;f.renderer.render(f.scene,f.camera);const calls=f.renderer.info.render.calls,tri=f.renderer.info.render.triangles;const t=performance.now();for(let i=0;i<20;i++)f.renderer.render(f.scene,f.camera);return {calls,triangles:tri,renderMs:+((performance.now()-t)/20).toFixed(2)};});
   out.islandSquare={...r,frame};await ctx.close();}
  // Arcade room

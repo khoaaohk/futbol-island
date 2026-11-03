@@ -42,7 +42,7 @@ export default function CoffeePage() {
           textAlign: "center",
         }}
       >
-        <Link href="/?panel=about" style={{color:"#294a3e",display:"block",textAlign:"left",marginBottom:20}}><Icon name="back"/> Back to donations</Link>
+        <Link href="/play?panel=about" style={{color:"#294a3e",display:"block",textAlign:"left",marginBottom:20}}><Icon name="back"/> Back to donations</Link>
         <h1 style={{ fontSize: "26px", fontWeight: 800, letterSpacing: "0.5px", margin: "10px 0 6px" }}>
           Support Futbol Island
         </h1>

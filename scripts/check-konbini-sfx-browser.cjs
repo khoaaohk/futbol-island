@@ -50,7 +50,7 @@ async function strip(browser,files,out,label){
   const now=()=>page.evaluate(()=>performance.now());
   const out={viewport:tag};
   // ---- 1. Island: Enter ----
-  await page.goto(base+'/?from=konbini');await page.waitForFunction(()=>window.__fi2,null,{timeout:120000});await page.locator('[data-island-return-loading]').waitFor({state:'detached',timeout:60000});
+  await page.goto(base+'/play?from=konbini');await page.waitForFunction(()=>window.__fi2,null,{timeout:120000});await page.locator('[data-island-return-loading]').waitFor({state:'detached',timeout:60000});
   let shown=false;await page.keyboard.down('ArrowUp');for(let i=0;i<40&&!shown;i++){await wait(120);shown=await page.locator('[data-konbini-enter]').evaluate(b=>!b.hidden);}await page.keyboard.up('ArrowUp');
   assert(shown,'Enter prompt at the Konbini doors');await page.screenshot({path:`${OUT}/${tag}-1-island-enter.png`});
   const enter=page.locator('[data-konbini-enter]');

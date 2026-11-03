@@ -75,7 +75,7 @@ require('fs').mkdirSync(out, { recursive: true });
     await p.evaluate(() => document.querySelector('[data-konbini-enter]')?.click());
     await p.waitForURL(/\/konbini/, { timeout: 90000, waitUntil: 'commit' }).catch(() => bad('the Konbini door did not open the room page'));
     await p.waitForTimeout(stayMs);
-    await back('/?from=konbini');
+    await back('/play?from=konbini');
   };
   // 0. Konbini round trip (owner report: "going into the konbini clears the party").
   await konbini(5000); await check('konbini-trip');
@@ -94,7 +94,7 @@ require('fs').mkdirSync(out, { recursive: true });
   }
   // 2. Room page round trip (a full page navigation, as the doors do), then reload, then back / forward.
   await p.goto(url + '/arcade', { waitUntil: 'domcontentloaded', timeout: 90000 }); await p.waitForTimeout(5000);
-  await back('/?from=arcade'); await check('arcade-trip');
+  await back('/play?from=arcade'); await check('arcade-trip');
   await p.reload({ waitUntil: 'domcontentloaded', timeout: 90000 }); await p.waitForTimeout(8000); await p.click('button:has-text("Skip")').catch(() => {}); await check('reload');
   await p.goto(url + '/museum', { waitUntil: 'domcontentloaded', timeout: 90000 }); await p.waitForTimeout(4000);
   await p.goBack({ waitUntil: 'domcontentloaded', timeout: 90000 }); await p.waitForTimeout(8000); await check('back');

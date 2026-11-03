@@ -51,7 +51,7 @@ export function partyOrigin(): string {
 }
 
 export function partyLink(code: string): string {
-  return `${partyOrigin()}/?party=${code}`;
+  return `${partyOrigin()}/play?party=${code}`;
 }
 
 /** Web Share where the browser has it, else the clipboard. */

@@ -79,7 +79,7 @@ export default function CardLab(){
  return <main className={styles.lab}>
   <style>{pinFix}</style>
   <header className={styles.header}>
-   <BackButton onBack={()=>router.push('/')}/>
+   <BackButton onBack={()=>router.push('/play')}/>
    <div><h1>Card lab: holo foil</h1><p>Each position has its own foil, so the shine teaches the job. Dev only.</p></div>
   </header>
   <div className={styles.layout}>

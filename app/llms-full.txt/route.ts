@@ -3,27 +3,31 @@ import {FORMAT_LABEL,FORMAT_ORDER,LESSONS,lessonPath} from '@/lib/site/lessons';
 import {SITE_FISH} from '@/lib/site/fish';
 import {SITE_CARDS} from '@/lib/site/cards';
 import {SITE_EXHIBITS,exhibitPath} from '@/lib/site/exhibits';
+import {LEARN_FAQ} from '@/lib/site/learnFeatures';
 import {abs} from '@/lib/site/seo';
 /**
- * /llms-full.txt (Oct 16 2026): the About text plus the lesson and museum index as one plain-text file for AI assistants.
+ * /llms-full.txt (Oct 16 2026): the About text, the grown-ups' FAQ (Nov 3 2026) plus the lesson and museum index as one plain-text file for AI assistants.
  * Built once at build time from the same data as the pages (no file to keep in step by hand).
  */
 export const dynamic='force-static';
 export function GET(){
  const out=[
   '# Futbol Island','',
-  `> A free, phone-first football (soccer) learning game for kids aged 7 to 12: ${abs('/')}. No ads, no chat, no accounts.`,'',
+  `> A free, phone-first football (soccer) learning game for kids aged 7 to 12. Home page and feature tour: ${abs('/')}. Play it (runs in the web browser): ${abs('/play')}. No ads, no chat, no accounts.`,'',
   '## About','',
   `### ${G.whyTitle}`,G.why,'',`### ${G.learnsTitle}`,G.learns,'',`### ${G.privacyTitle}`,`${G.privacy} Privacy policy: ${abs('/privacy')}`,'',
   `### ${G.free}`,G.freeWhy,'',`### ${G.partnerTitle}`,`${G.partnerLead}${G.partnerName}${G.partnerRest}`,'',
   `### ${G.nonprofitsTitle}`,`${G.nonprofitsLead}${NONPROFITS.map(n=>n.name).join(', ')}.`,'',
   '### On the island',
-  `- A tour of everything on the island, how each feature ties to football, and a FAQ for parents: ${abs('/learn')}`,
+  `- A tour of everything on the island, how each feature ties to football, and a FAQ for parents (the home page): ${abs('/')}`,
+  `- The game itself: the title screen (start, continue with a save code, join friends) and the island: ${abs('/play')}`,
   `- ${LESSONS.length} lessons with quizzes: ${abs('/learn/lessons')}`,
   `- ${SITE_FISH.length} sea animals, each linked to a real football club fact: ${abs('/fish')}`,
   `- ${SITE_CARDS.length} player and coach cards: ${abs('/cards')}`,
   `- ${SITE_EXHIBITS.length} History Museum exhibits: ${abs('/exhibits')}`,
   `- More about the game: ${abs('/about')}`,'',
+  '## Questions grown-ups ask','',
+  ...LEARN_FAQ.flatMap(f=>[`### ${f.q}`,f.a,'']),
   '## Lessons','',
   ...FORMAT_ORDER.flatMap(f=>[`### ${FORMAT_LABEL[f]}`,...LESSONS.filter(l=>l.format===f).map(l=>`- [${l.title}](${abs(lessonPath(l.id))}): ${l.concept}`),'']),
   '## Museum exhibits','',

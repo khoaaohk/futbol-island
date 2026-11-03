@@ -84,7 +84,7 @@ async function runOnce(browser,p,run){
  if(SHOTS){cdp.on('Page.screencastFrame',async f=>{frames.push({t:f.metadata.timestamp*1000,buf:Buffer.from(f.data,'base64')});cdp.send('Page.screencastFrameAck',{sessionId:f.sessionId}).catch(()=>{});});
   await cdp.send('Page.startScreencast',{format:'png',maxWidth:p.viewport.width,maxHeight:p.viewport.height,everyNthFrame:1});}
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(BASE+'/',{waitUntil:'commit',timeout:120000});
+ await page.goto(BASE+'/play',{waitUntil:'commit',timeout:120000});
  // The splash has a ≥3 s minimum dwell; wait for the title, the cast and their entrances to settle.
  await page.waitForFunction(()=>{const S=window.__splashTiming;return S&&S.elements.some(e=>e.id==='splash-title');},null,{timeout:90000}).catch(()=>{});
  await page.waitForTimeout(p.net==='fast3g'?3500:2000);
@@ -117,7 +117,7 @@ async function runOnce(browser,p,run){
  const summary=[];let failed=false;
  try{
   // Warm the server (dev compiles on first request) without warming the browser: every measured run is a fresh context.
-  await fetch(BASE+'/').then(r=>r.text()).catch(()=>{});
+  await fetch(BASE+'/play').then(r=>r.text()).catch(()=>{});
   for(const p of PROFILES){for(let run=1;run<=RUNS;run++){
    const r=await runOnce(browser,p,run);const f=n=>n==null||!isFinite(n)?'—':Math.round(n)+'ms';
    console.log(`\n[${LABEL}] ${p.id} run ${run}: html ${f(r.html?.responseEnd)} · FCP ${f(r.fcp)} · title ${f(r.title)} · last character visible ${f(r.lastVisible)} (vs title ${f(r.visGap)}, vs FCP ${f(r.visGapFcp)}) · last sharp ${f(r.lastCast)} (vs title ${f(r.gap)}, vs FCP ${f(r.gapFcp)}) · LCP ${f(r.lcp?.t)} ${r.lcp?.url||''}`);

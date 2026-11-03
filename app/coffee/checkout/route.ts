@@ -56,8 +56,8 @@ export async function GET(req: Request) {
       ],
       // return=start (the title screen's For grown-ups sheet) goes back to the title screen at `/` (a new tab shows it; one
       // already in the game shows the game; lib/rootView.ts); return=about to the game's About (?panel= opens the game).
-      success_url: `${url.origin}${url.searchParams.get('return')==='start'?'/?coffee=thanks':'/?panel=about&coffee=thanks'}`,
-      cancel_url: `${url.origin}${url.searchParams.get('return')==='about'?'/?panel=about':url.searchParams.get('return')==='start'?'/':'/coffee'}`,
+      success_url: `${url.origin}${url.searchParams.get('return')==='start'?'/play?coffee=thanks':'/play?panel=about&coffee=thanks'}`,
+      cancel_url: `${url.origin}${url.searchParams.get('return')==='about'?'/play?panel=about':url.searchParams.get('return')==='start'?'/play':'/coffee'}`,
     });
 
     if (!session.url) throw new Error("no session url");

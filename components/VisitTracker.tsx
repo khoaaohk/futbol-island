@@ -28,6 +28,6 @@ export default function VisitTracker({allowLocalhost=false}:{allowLocalhost?:boo
  useEffect(()=>{if(pathname)tracker.current?.pageview(pathname);},[pathname]);
  // The title screen (`/` before Play; lib/rootView.ts): its view and one passive click listener for its buttons and links
  // (lib/analytics/startEvents.ts). Play switches `/` to the game in place, which stops it.
- useEffect(()=>{if(pathname!=='/'||view!=='landing'||!tracker.current)return;return watchStart(window);},[pathname,view]);
+ useEffect(()=>{if(pathname!=='/play'||view!=='landing'||!tracker.current)return;return watchStart(window);},[pathname,view]);
  return null;
 }

@@ -97,8 +97,8 @@ await ok('delegated listener',()=>{
  // Tracker off (DNT, bots, preview…): watchStart and trackStart change nothing.
  const y=env();y.e.navigator.doNotTrack='1';assert.equal(T.startTracker(y.e),null);SE.trackStart('st:start');
  const z=env(),t2=T.startTracker(z.e);t2.pageview('/');assert.deepEqual(J(t2.state().counts),{},'nothing left over from the off tracker');
- // VisitTracker mounts it while `/` shows the title screen (not the game: lib/rootView.ts), after the tracker started.
- const vt=read('components/VisitTracker.tsx');assert(/useEffect\(\(\)=>\{if\(pathname!=='\/'\|\|view!=='landing'\|\|!tracker\.current\)return;return watchStart\(window\);\},\[pathname,view\]\)/.test(vt));
+ // VisitTracker mounts it while /play shows the title screen (not the game: lib/rootView.ts), after the tracker started.
+ const vt=read('components/VisitTracker.tsx');assert(/useEffect\(\(\)=>\{if\(pathname!=='\/play'\|\|view!=='landing'\|\|!tracker\.current\)return;return watchStart\(window\);\},\[pathname,view\]\)/.test(vt));
  assert(/const pathname=usePathname\(\),view=useRootView\(\);/.test(vt));
  // No timers, frames, requests or page reads in the listener module.
  const src=strip(read('lib/analytics/startEvents.ts'));
@@ -121,12 +121,12 @@ await ok('outcome hooks',()=>{
  // The wiring at each moment.
  const ad=read('components/landing/saveCodeAdapter.tsx');
  assert(/onPhase=\{p=>\{startCreatePhase\(p\);onPhase\?\.\(p\);\}\}/.test(ad)&&/onPhase=\{p=>\{startRestorePhase\(p\);onPhase\?\.\(p\);\}\}/.test(ad));
- assert(/if\(c\)trackStart\('st:saved'\)/.test(ad)&&/if\(restored\)trackStart\('st:play_restored'\);if\(restored\)\{window\.history\.replaceState\(window\.history\.state,'','\/'\)/.test(ad),'counted first, then the address is reset to a bare / (a ?coffee=thanks is not counted again after the reload)');
+ assert(/if\(c\)trackStart\('st:saved'\)/.test(ad)&&/if\(restored\)trackStart\('st:play_restored'\);if\(restored\)\{window\.history\.replaceState\(window\.history\.state,'','\/play'\)/.test(ad),'counted first, then the address is reset to a bare /play (a ?coffee=thanks is not counted again after the reload)');
  assert(/useEffect\(\(\)=>\{startTitleState\(state\);\},\[state\]\)/.test(read('components/landing/TitleActions.tsx')));
  assert(/onCancel=\{\(\)=>\{trackStart\('sg:gate_no'\);setStep\('closed'\);\}\} onPass=\{\(\)=>\{trackStart\('sg:gate_ok'\);setStep\('open'\);\}\}/.test(read('components/landing/Donate.tsx')));
  // The first-word check was removed (user, Oct 10 2026): st:word stays in the allowlist for past days but is no longer sent.
  assert(!/startWordPick\(/.test(read('components/saves/SaveCodeCreate.tsx')),'the removed check sends nothing');
- assert(/return=\$\{returnTo\}/.test(read('components/landing/Donate.tsx'))&&/donateReturn="start"/.test(read('components/landing/GrownUps.tsx'))&&/'start'\?'\/\?coffee=thanks'/.test(read('app/coffee/checkout/route.ts')),'Stripe success returns to the title screen at /?coffee=thanks');
+ assert(/return=\$\{returnTo\}/.test(read('components/landing/Donate.tsx'))&&/donateReturn="start"/.test(read('components/landing/GrownUps.tsx'))&&/'start'\?'\/play\?coffee=thanks'/.test(read('app/coffee/checkout/route.ts')),'Stripe success returns to the title screen at /play?coffee=thanks');
  assert(/start page are tapped \(for example Start, For grown-ups or Donate\), counted as totals/.test(read('components/privacy/PrivacyPolicy.tsx')),'privacy policy §7');
  assert(/admin-analytics-start\.cjs/.test(read('package.json')),'part of npm test');
 });

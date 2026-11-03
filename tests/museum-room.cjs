@@ -76,14 +76,14 @@ const IDS=X.EXHIBITS.map(e=>e.id);
 // 4. Doors: out to the island at the museum door, on foot, never in flight.
 {const p=D.museumDeparture('bike');assert.ok(validIslandReturnPosition(p));assert.equal(p.ride,'bike');assert.equal(D.museumDeparture('jetpack').ride,'walk');
  assert.ok(Math.abs(D.MUSEUM_DOOR.x-160.2)<1e-9&&Math.abs(D.MUSEUM_DOOR.front-185.7)<1e-9,'world.ts house door');assert.ok(p.z>D.MUSEUM_DOOR.front+2&&p.yaw===0,'outside, facing out');
- assert.equal(D.MUSEUM_RETURN_URL,'/?from=museum');assert.equal(D.MUSEUM_URL,'/museum');
+ assert.equal(D.MUSEUM_RETURN_URL,'/play?from=museum');assert.equal(D.MUSEUM_URL,'/museum');
  console.log('PASS doors: departure outside the museum door, ride kept, flight lands on foot');}
 
 // 5. Wiring: every island way in leads to /museum; ?from=museum returns at the door; the room is heat-safe.
-{const town=read('components/Town.tsx'),page=read('app/page.tsx'),museum=read('components/Museum.tsx'),scene=read('lib/museum/museumScene.ts'),room=read('components/MuseumRoom.tsx');
+{const town=read('components/Town.tsx'),page=read('app/play/page.tsx'),museum=read('components/Museum.tsx'),scene=read('lib/museum/museumScene.ts'),room=read('components/MuseumRoom.tsx');
  assert.match(town,/if\(!museumOpen\)return;saveMuseumDeparture\(rideRef\.current\);musicRef\.current\?\.setSceneActive\(false\);stopIslandNarration\(\);[^\n]*MUSEUM_URL/,'museumOpen saves the departure, stops music/narration and navigates');
  assert.match(town,/target==='museum'\)setMuseumOpen\(true\)/,'endgame / graduation links still open the museum');
- assert.match(read('next.config.mjs'),/key: 'from', value: '\^\(arcade\|konbini\|museum(\|shop)?\)\$' \}\], destination: '\/island-return'/,'/?from=museum is rewritten to the static island-return page');assert.match(read('app/island-return/page.tsx'),/<Town returningFromArcade\/>/);assert.match(museum,/MuseumDoorSlide mode="enter"/);assert.ok(!/Coming soon/.test(museum));
+ assert.match(read('next.config.mjs'),/source: '\/play', has: \[\{ type: 'query', key: 'from', value: '\^\(arcade\|konbini\|museum(\|shop)?\)\$' \}\], destination: '\/island-return'/,'/play?from=museum is rewritten to the static island-return page');assert.match(read('app/island-return/page.tsx'),/<Town returningFromArcade\/>/);assert.match(museum,/MuseumDoorSlide mode="enter"/);assert.ok(!/Coming soon/.test(museum));
  assert.match(scene,/forceContextLoss\(\)/);assert.match(scene,/powerPreference:'low-power'/);assert.match(scene,/frameCapSlot/);assert.ok(!/setInterval/.test(scene+room),'no timers polling');
  assert.match(scene,/if\(settle>0\|\|leaving(?:\|\|remote)?\)frame=requestAnimationFrame\(tick\);else/,'the loop sleeps when nothing moves');
  assert.match(room,/import\('@\/lib\/museum\/museumScene'\)/,'scene lazy-loaded');

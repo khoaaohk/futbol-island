@@ -41,6 +41,6 @@ export default function CardPage({params}:{params:{number:string}}){
    <h2 className={styles.h2} id="career">{c.coach?'Coaching career':'Clubs'}</h2>
    <ul>{c.career.map(s=><li key={s}>{s}</li>)}</ul>
   </section>}
-  <p className={styles.end}><a className={styles.cta} href="/">Collect cards on the island</a></p>
+  <p className={styles.end}><a className={styles.cta} href="/play">Collect cards on the island</a></p>
  </>;
 }

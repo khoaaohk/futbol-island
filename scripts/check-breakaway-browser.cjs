@@ -4,7 +4,7 @@ const assert=require('node:assert/strict');
  const mobile=process.argv.includes('--mobile'),reduced=process.argv.includes('--reduced'),page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile,reducedMotion:reduced?'reduce':'no-preference'}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-audio-mix','4-50-v1');localStorage.setItem('fi2-sound-muted','true');localStorage.setItem('fi2-music-enabled','false');localStorage.setItem('fi2-voice-enabled','false');});
  // Arcade plays cost coins: grant preview test coins before opening the cabinet.
- await page.goto(new URL('/?preview=all&testCoins=50000',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href);await page.waitForTimeout(15000);
+ await page.goto(new URL('/play?preview=all&testCoins=50000',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href);await page.waitForTimeout(15000);
  await page.goto(new URL('/arcade?game=runner',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href);await page.getByRole('button',{name:'Play',exact:true}).click();
  await page.waitForFunction(()=>window.__arcade3d?.phaseRef.current==='playing');
  const canvas=page.locator('[data-arcade-kind="runner"] canvas');

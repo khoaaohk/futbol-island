@@ -1,4 +1,4 @@
-// The title screen at `/` (Oct 9 2026, docs/performance-guide.md "Title screen at /"; /start was removed): the route is static; a save code is REQUIRED to
+// The title screen at /play (at `/` from Oct 9 2026, moved to /play on Nov 3 2026 when the feature tour became the home page; docs/performance-guide.md "Title screen at /"; /start was removed): the route is static; a save code is REQUIRED to
 // play (no Play until a code is made or restored, except the "saving is taking a break" outage state, and the returning-code fast
 // path); the real save components are used through one adapter; motion stays heat-safe (spring rAF stops at rest, ambient loops
 // calm after 8 s and pause when hidden, tilt only after a gesture, reduced motion is static); no WebGL; accessibility basics.
@@ -12,21 +12,43 @@ function load(file){const out=ts.transpileModule(read(file),{compilerOptions:{mo
 const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`),landing=read(`${DIR}/Landing.tsx`),adapter=read(`${DIR}/saveCodeAdapter.tsx`),css=read(`${DIR}/Title.module.css`);
 
 // 1. The route is static: force-static, no request data, server components; after a build it is prerendered.
-{const page=read('app/page.tsx'),rootFiles=['app/page.tsx','components/root/RootSwitch.tsx','components/root/Game.tsx','components/root/gameLoader.ts','components/root/useRootView.ts','lib/rootView.ts','components/IslandLoadingStatic.tsx'];
+{const page=read('app/play/page.tsx'),rootFiles=['app/play/page.tsx','components/root/RootSwitch.tsx','components/root/Game.tsx','components/root/gameLoader.ts','components/root/useRootView.ts','lib/rootView.ts','components/IslandLoadingStatic.tsx'];
  assert.match(page,/export const dynamic='force-static';/,'force-static');
  assert(!/^'use client'/.test(page)&&!/^'use client'/.test(landing),'page and Landing are server components');
  for(const f of [...rootFiles,...tsx])assert(!/\b(cookies|headers|useSearchParams)\s*\(|searchParams/.test(strip(read(f))),`${f} reads no request data`);
- assert.match(page,/canonical:'\/'/);assert.match(page,/openGraph:\{title,description,url:'\/'/,'Open Graph tags point at /');
- const manifest=path.join(ROOT,'.next/prerender-manifest.json'),html=path.join(ROOT,'.next/server/app/index.html'),buildId=path.join(ROOT,'.next/BUILD_ID');
+ assert.match(page,/canonical:'\/play'/);assert.match(page,/openGraph:\{title,description,url:'\/play'/,'Open Graph tags point at /play');
+ const DIST=process.env.NEXT_DIST_DIR||'.next',manifest=path.join(ROOT,DIST,'prerender-manifest.json'),html=path.join(ROOT,DIST,'server/app/play.html'),buildId=path.join(ROOT,DIST,'BUILD_ID');
  // Only a build made after this page changed tells us anything (the repo's .next can be an older build).
- const fresh=fs.existsSync(buildId)&&fs.existsSync(html)&&fs.statSync(buildId).mtimeMs>fs.statSync(path.join(ROOT,'app/page.tsx')).mtimeMs;
- if(fresh&&fs.existsSync(manifest)){const m=JSON.parse(fs.readFileSync(manifest,'utf8'));assert(m.routes['/'],'/ is prerendered (next build ○)');assert(!m.routes['/start'],'no /start route');
+ const fresh=fs.existsSync(buildId)&&fs.existsSync(html)&&fs.statSync(buildId).mtimeMs>fs.statSync(path.join(ROOT,'app/play/page.tsx')).mtimeMs;
+ if(fresh&&fs.existsSync(manifest)){const m=JSON.parse(fs.readFileSync(manifest,'utf8'));assert(m.routes['/play'],'/play is prerendered (next build ○)');assert(!m.routes['/start'],'no /start route');
   const h=fs.readFileSync(html,'utf8');assert.equal((h.match(/<h1[\s>]/g)||[]).length,1,'one h1 in the built page');
   assert(h.includes('data-root-landing')&&h.includes('data-root-game')&&h.includes('data-root-loader'),'both screens are prerendered');
   assert(h.indexOf('dataset.rootView')<h.indexOf('data-root-landing'),'the pre-paint flag runs before either screen');
   assert(!/<link[^>]+rel="preload"[^>]+\/splash\/(hero|keeper|cat|rival)/.test(h),'no loader-cast preloads for title-screen visitors');
   if(h.includes('data-title-state'))assert(!h.includes('data-landing-play'),'no Play in the static HTML: it appears only after a code (or a saving break)');}
- assert.match(read('next.config.mjs'),/destination: '\/island-return'/,'the /?from= rewrite is untouched');}
+ assert.match(read('next.config.mjs'),/source: '\/play', has: \[\{ type: 'query', key: 'from', value: '\^\(arcade\|konbini\|museum\|shop\)\$' \}\], destination: '\/island-return'/,'the /play?from= rewrite to the static island-return page');}
+
+// 1b. Nov 3 2026 (owner): the feature tour is the home page `/`, the game is /play. /learn → `/` (308); the game's old `/?…`
+//     links (door returns, Stripe returns, party invites, store, dev switches) → /play with the same query; the title screen's
+//     Back goes to `/`; nothing in the game sends a player to a bare `/` or `/?…` any more.
+{const cfg=read('next.config.mjs');
+ assert.match(cfg,/\{ source: '\/learn', destination: '\/', permanent: true \}/,'/learn is a permanent redirect to /');
+ assert.match(cfg,/source: '\/learn\/:slug\(\(\?!lessons\$\)/,'old lesson URLs still redirect to /learn/lessons/<id>');
+ assert.match(cfg,/const GAME_FROM = 'arcade\|konbini\|museum\|shop\|e2e';/);
+ for(const k of ['panel','party','store','coffee'])assert(cfg.includes(`'${k}'`),`/?${k}= redirects to /play`);
+ assert.match(cfg,/\.map\(has => \(\{ source: '\/', has: \[has\], destination: '\/play', permanent: true \}\)\)/,'each old game query on / redirects to /play (query kept)');
+ assert(!fs.existsSync(path.join(ROOT,'app/page.tsx')),'no app/page.tsx: `/` is app/(site)/page.tsx');
+ assert(fs.existsSync(path.join(ROOT,'app/(site)/page.tsx'))&&!fs.existsSync(path.join(ROOT,'app/(site)/learn/page.tsx')),'the tour is the home page');
+ assert.match(read('components/landing/LandingBack.tsx'),/window\.location\.assign\('\/'\)/,'the title screen Back goes to the home page /');
+ assert.match(adapter,/window\.history\.replaceState\(window\.history\.state,'','\/play'\)/,'a restored save reloads /play');
+ for(const [f,v] of [['lib/shop/shopDoors.ts',"SHOP_RETURN_URL='/play?from=shop'"],['lib/konbini/konbiniDoors.ts',"KONBINI_RETURN_URL='/play?from=konbini'"],['lib/museum/museumDoors.ts',"MUSEUM_RETURN_URL='/play?from=museum'"],
+  ['components/ArcadeRoom.tsx',"destination='/play?from=arcade'"],['lib/multiplayer/invite.ts','/play?party=${code}']])assert(read(f).includes(v),`${f}: ${v}`);
+ const all=[];const walk=d=>{for(const e of fs.readdirSync(path.join(ROOT,d),{withFileTypes:true})){const f=`${d}/${e.name}`;if(e.isDirectory())walk(f);else if(/\.tsx?$/.test(e.name))all.push(f);}};
+ for(const d of ['app','components','lib'])walk(d);
+ const noComments=s=>s.replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[^:])\/\/.*$/gm,'$1');
+ for(const f of all){const s=noComments(read(f));
+  assert(!/['"`]\/\?(from|panel|party|store|coffee)=/.test(s),`${f}: a game link to /?… (use /play?…)`);
+  assert(!/href="\/learn"|assign\('\/learn'\)/.test(s),`${f}: a link to the old /learn (use /)`);}}
 
 // 2. A save code is required to play.
 {assert(!/PlayButton/.test(strip(landing)),'no Play on the title screen itself');
@@ -61,7 +83,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert.match(adapter,/export \{isSavingAvailable,getLocalCode\} from '@\/lib\/saves\/client';/);
  assert.match(adapter,/<RealCreate required autoStart /,'create: required (no "Not now"), starts on the Start tap');
  assert.match(adapter,/<RealRestore required /);
- assert.match(adapter,/if\(restored\)\{window\.history\.replaceState\(window\.history\.state,'','\/'\);/,'a restore reloads a bare / (no ?coffee=thanks counted twice)');
+ assert.match(adapter,/if\(restored\)\{window\.history\.replaceState\(window\.history\.state,'','\/play'\);/,'a restore reloads a bare /play (no ?coffee=thanks counted twice)');
  assert.match(adapter,/ onPlay=\{onPlay\}/,'the water loader runs before the save is applied');
  for(const f of tsx.filter(f=>!f.endsWith('saveCodeAdapter.tsx')))assert(!/from '@\/(lib|components)\/saves/.test(read(f)),`${f}: only the adapter imports the save code`);
  // The only storage use: the one-shot hand-off flags for the reload path (handoffMotion.ts / waterLaunch.ts); the in-game flag is
@@ -242,10 +264,10 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
 // 7. Analytics: the title screen is counted by what it shows (st:view while `/` shows it), not by a path; the old /start stays a
 // known path only so its past sessions still show.
 assert.match(read('lib/analytics/core.ts'),/isStartSession=[^\n]*\(s\.counts\?\.\['st:view'\]\|\|0\)>0/);
-assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/'\|\|view!=='landing'\|\|!tracker\.current\)return;return watchStart\(window\);/);
+assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/play'\|\|view!=='landing'\|\|!tracker\.current\)return;return watchStart\(window\);/);
 
-// 10. `/` = the title screen first, then the game in place (lib/rootView.ts, components/root/*); /start is gone.
-{const rv=read('lib/rootView.ts'),page=read('app/page.tsx'),sw=read('components/root/RootSwitch.tsx'),css=read('app/globals.css');
+// 10. /play (was `/` until Nov 3 2026) = the title screen first, then the game in place (lib/rootView.ts, components/root/*); /start is gone.
+{const rv=read('lib/rootView.ts'),page=read('app/play/page.tsx'),sw=read('components/root/RootSwitch.tsx'),css=read('app/globals.css');
  // The pre-paint rule, run as the browser runs it: fresh → title screen; a tab in the game, ?from=, ?panel= → the game.
  const BOOT=JSON.parse('"'+(rv.match(/ROOT_VIEW_BOOT=`([^`]*)`/)[1]).replace(/\$\{IN_GAME_KEY\}/g,'fi2-in-game').replace(/\$\{JSON\.stringify\(GAME_QUERY_KEYS\)\}/g,"['from','panel']").replace(/\$\{JSON\.stringify\(GAME_FROM\)\}/g,"['arcade','konbini','museum','shop']").replace(/"/g,'\\"')+'"');
  const boot=(search,stored={},nav='navigate')=>{const html={dataset:{}};vm.runInNewContext(BOOT,{document:{documentElement:html},location:{search},URLSearchParams,
@@ -255,7 +277,7 @@ assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/'\|\|view!==
  assert.equal(boot('',{'fi2-in-game':'1'},'reload'),'landing','a reload shows the title screen and its water-fill Play, never the old loader (user)');
  assert.equal(boot('',{'fi2-in-game':'1'},'navigate'),'landing','…and so does visiting the address again');
  assert.equal(boot('',{'fi2-island-handoff':'tan'},'reload'),'game','the game\'s own hand-off reload (a restored save) lands in the game');
- assert.equal(boot('?from=arcade'),'game','/?from=arcade goes straight to the game');
+ assert.equal(boot('?from=arcade'),'game','/play?from=arcade goes straight to the game');
  assert.equal(boot('?from=flyer'),'landing','a printed link\'s tag (the QR card\'s ?from=flyer) shows the title screen (Oct 15 2026)');
  assert.equal(boot('?panel=about&coffee=thanks'),'game','the game\'s About return opens the game');
  assert.equal(boot('',null),'landing');
@@ -269,7 +291,7 @@ assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/'\|\|view!==
  // Decided before first paint, static, both screens prerendered; the game is its own chunk.
  assert.match(page,/<script dangerouslySetInnerHTML=\{\{__html:ROOT_VIEW_BOOT\}\}\/>\s*<RootSwitch landing=\{<Landing\/>\} loader=\{<IslandLoadingStatic\/>\}\/>/,'the flag script comes before both screens');
  assert.match(css,/html\[data-root-view=game\] \[data-root-landing\],html:not\(\[data-root-view=game\]\) \[data-root-game\]\{display:none\}/,'one screen shows, from the first paint');
- for(const f of ['app/page.tsx','components/root/RootSwitch.tsx','components/root/useRootView.ts','components/root/gameLoader.ts','components/IslandLoadingStatic.tsx','components/islandLoadingBoot.ts','lib/rootView.ts',...files.filter(f=>!f.endsWith('/Handoff.tsx')/* loaded on demand by the unused PlayButton */)])
+ for(const f of ['app/play/page.tsx','components/root/RootSwitch.tsx','components/root/useRootView.ts','components/root/gameLoader.ts','components/IslandLoadingStatic.tsx','components/islandLoadingBoot.ts','lib/rootView.ts',...files.filter(f=>!f.endsWith('/Handoff.tsx')/* loaded on demand by the unused PlayButton */)])
   assert(!/^\s*import [^;]*from '(@\/components|\.\.?)\/(Town|IslandLoading|root\/Game)'/m.test(read(f)),`${f}: no static import of the game or the client loader (first load stays light)`);
  assert(!/^'use client'/.test(read('components/IslandLoadingStatic.tsx'))&&!/^'use client'/.test(read('components/LoadingBeanCast.tsx')),'the placeholder loader is plain HTML (no JS)');
  assert.match(read('components/IslandLoadingStatic.tsx'),/<LoadingBeanCast lite\/>/,'no cast preloads or inline images for title-screen visitors');
@@ -278,7 +300,7 @@ assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/'\|\|view!==
  assert.match(sw,/continueLoaderFrom\(placeholderStart\(\)\);flushSync\(\(\)=>setGame\(\(\)=>G\)\);/);
  assert.match(sw,/\{view!=='game'&&<div data-root-landing="">\{landing\}<\/div>\}/);assert.match(sw,/\{view!=='landing'&&<div data-root-game="">/);
  assert.match(read('components/IslandLoading.tsx'),/const from=takeLoaderContinuation\(\);\s*if\(from!==null&&screen\.current\)for\(const a of screen\.current\.getAnimations\(\{subtree:true\}\)\)a\.startTime=from;/);
- // Every way into Town marks the tab: /, /?from= (island-return) and a restored save's reload.
+ // Every way into Town marks the tab: /play, /play?from= (island-return) and a restored save's reload.
  assert.match(read('components/Town.tsx'),/useEffect\(\(\)=>\{rememberInGame\(\);\},\[\]\);/);
  assert.match(read('components/root/Game.tsx'),/<Town\/><DevUnlock\/><SaveSync\/>/,'DevUnlock and SaveSync come with the game, as before');
  // /start is gone: no route, no redirect, nothing links to it.
@@ -290,7 +312,7 @@ assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/'\|\|view!==
  // Analytics keeps '/start' as a path KEY for sessions recorded before it was removed (not a link).
  const ANALYTICS_KEYS=['app/admin/AnalyticsDashboard.tsx','lib/analytics/core.ts','lib/analytics/startReport.ts'];
  for(const f of code.filter(f=>!ANALYTICS_KEYS.includes(f)))assert(!/[`'"](https:\/\/futbolisland\.app)?\/start(?=[?#`'"\/])/.test(strip2(read(f))),`${f} links to /start`);
- assert.match(read('app/coffee/checkout/route.ts'),/'start'\?'\/\?coffee=thanks'/,'the title screen\'s donation returns to /?coffee=thanks');}
+ assert.match(read('app/coffee/checkout/route.ts'),/'start'\?'\/play\?coffee=thanks'/,'the title screen\'s donation returns to /play?coffee=thanks');}
 // iPhone SE landscape (667x375, docs/LANDSCAPE_AUDIT_OCT23.md batch 1): tighter vertical gaps, so For grown-ups / Privacy show without scrolling.
 {const m=css.match(/@media\(max-height:400px\)\{([^@]*?)\}\}?/);assert(m,'SE landscape block');
  for(const re of [/\.copy\{padding-top:calc\(env\(safe-area-inset-top,0px\) \+ 2svh\)\}/,/\.title\{margin:6px 0 4px\}/,/\.card\{gap:6px;padding:10px 18px 8px\}/])assert.match(css,re);}

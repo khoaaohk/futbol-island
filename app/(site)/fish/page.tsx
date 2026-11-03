@@ -20,7 +20,7 @@ export default function FishIndex(){
    <h1 className={styles.title}>Fishbook</h1>
    <p className={styles.lead}>{DESC} Fishing on the island also teaches a goalkeeper’s patience: wait for the real bite, like a keeper waits for the real shot.</p>
    <p className={styles.caption}>Where each animal lives on the island is a made-up island story. The club facts are real.</p>
-   <a className={styles.cta} href="/">Go fishing on the island</a>
+   <a className={styles.cta} href="/play">Go fishing on the island</a>
   </header>
   {ORDER.map(r=>{const list=SITE_FISH.filter(f=>f.rarity===r);if(!list.length)return null;return <section key={r} className={styles.section} aria-labelledby={`r-${r}`}>
    <h2 className={styles.h2} id={`r-${r}`}>{rarityWord(list[0])} <span className={styles.count}>({list.length})</span></h2>

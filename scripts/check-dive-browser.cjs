@@ -33,7 +33,7 @@ const BEACH=shoreFor(FIRST);
  page.on('pageerror',e=>errors.push('pageerror: '+e.message));page.on('console',async m=>{if(m.type()==='error'&&!/ResizeObserver loop|Failed to load resource|404/.test(m.text())){const a=await Promise.all(m.args().map(x=>x.jsonValue().catch(()=>'?')));errors.push('console: '+a.map(String).join(' | ').slice(0,700));}});
  await page.addInitScript(({x,z,yaw})=>{sessionStorage.setItem('fi2-in-game','1');localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-save-deleted-v1','device-specs');
   sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x,z,yaw,ride:'walk',flightHeight:0}));},BEACH);
- await page.goto(BASE+'/?from=arcade');
+ await page.goto(BASE+'/play?from=arcade');
  await page.waitForFunction(()=>window.__fi2&&window.__fi2.dive&&!document.querySelector('[data-island-return-loading]'),null,{timeout:240000});
  await page.waitForTimeout(5000);
  const shot=async name=>{const f=path.join(OUT,name);await page.screenshot({path:f});console.log('shot',path.relative(process.cwd(),f),fs.statSync(f).size,'bytes');};

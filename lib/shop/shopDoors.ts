@@ -33,7 +33,7 @@ export const KIT_SHOP_GLOW=[
 ] as const;
 export const SHOP_EXIT_OFFSET=2.4;
 export const SHOP_URL='/shop';
-export const SHOP_RETURN_URL='/?from=shop';
+export const SHOP_RETURN_URL='/play?from=shop';
 /** The Enter prompt zone: in front of the shopfront, a little wider than the double door (like the museum's). */
 export function shopDoorNear(x:number,z:number){return Math.abs(x-SHOP_DOOR.x)<7&&z>SHOP_DOOR.front-.5&&z<SHOP_DOOR.front+6;}
 /** Where the player stands outside after leaving: 2.4 m out from the door, facing away from it. */

@@ -23,7 +23,7 @@ const MARKS=[['0-push-in',-.3],['1-stage-settle',.12],['2-wind-up',.5],['3-hit',
    localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-time-of-day',time);
    for(const [k,v] of Object.entries({'fi2-audio-mix':'4-50-v1','fi2-sound-muted':'true','fi2-music-enabled':'false','fi2-voice-enabled':'false'}))localStorage.setItem(k,v);
    sessionStorage.setItem('fi2-arcade-departure-v1',JSON.stringify({version:1,x:SIGN.x,z:SIGN.z,yaw:Math.PI,ride:'walk',flightHeight:0}));},{SIGN,time:night?'night':sunset?'sunset':'day'});
-  await page.goto(base+'/?from=konbini',{timeout:240000});await page.waitForFunction(()=>window.__fi2&&window.__fi2Jobs,null,{timeout:180000});
+  await page.goto(base+'/play?from=konbini',{timeout:240000});await page.waitForFunction(()=>window.__fi2&&window.__fi2Jobs,null,{timeout:180000});
   await page.locator('[data-island-return-loading]').waitFor({state:'detached',timeout:90000}).catch(()=>{});await wait(1500);
   const tap=async loc=>mobile?loc.tap():loc.click();
   const shot=name=>page.screenshot({path:`${OUT}/${tag}-${name}.png`});
