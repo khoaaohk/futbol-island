@@ -18,7 +18,7 @@
  background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.47;
  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:clip;
 }
-:global(html):has(.root){scroll-padding-top:56px}
+:global(html):has(.root){scroll-padding-top:72px}
 /* the page has its own sticky bar with the logo, so the shared site header is hidden here (Nov 3: moved out of an inline <style>,
    whose escaped ">" made React's hydration text check fail and re-render the whole document on the client) */
 :global([data-reading-page]):has(.root)>:global(header){display:none}
@@ -33,11 +33,11 @@
 .root a:focus-visible,.root button:focus-visible,.root summary:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:10px}
 
 /* ---- sticky sub-nav: chrome (translucent blur + hairline) fades in once the page scrolls ------------------------------------ */
-.subnav{position:sticky;top:0;z-index:20;height:52px}
+.subnav{position:sticky;top:0;z-index:20;height:68px}
 .subnav::before,.subnav::after{content:"";position:absolute;inset:0;pointer-events:none}
 .subnav::before{background:rgb(251 247 238 / .9);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px)}
 .subnav::after{top:auto;height:1px;background:rgb(20 34 29 / .12)}
-.subnavIn{position:relative;display:flex;align-items:center;gap:8px;height:100%;max-width:1080px;margin:0 auto;padding:0 var(--gut)}
+.subnavIn{position:relative;display:flex;align-items:center;gap:8px;height:100%;box-sizing:border-box;max-width:1080px;margin:0 auto;padding:0 var(--gut) 3px}
 .root .logo{flex:none;margin-right:auto;font-family:IslandBrush,Arial,sans-serif;font-size:22px;line-height:1;color:var(--deep);text-decoration:none;white-space:nowrap}
 .root .subLinks{display:flex;flex:1;min-width:0;gap:0;overflow:hidden}
 .root .subLinks a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:var(--ink);font-size:14px;opacity:.78;text-decoration:none;white-space:nowrap;position:relative;transition:opacity .16s}
@@ -267,9 +267,9 @@
 .stepLine{padding-top:4px;font-size:19px;font-weight:500;line-height:1.38;color:var(--inkD)}
 .note{margin-top:12px;font-size:15px;color:var(--ink2D)}
 @media(min-width:900px){
- /* the pinned 4:5 box: about min(46vw, 640px) wide, at most min(82svh, 820px) tall, vertically centred under the 52px sub-nav */
+ /* the pinned 4:5 box: about min(46vw, 640px) wide, at most min(82svh, 820px) tall, vertically centred under the 68px sub-nav */
  .feature{--pinW:min(46vw,640px,min(82svh,820px) * 4 / 5);max-width:1320px;grid-template-columns:var(--pinW) minmax(0,1fr);align-items:start;gap:clamp(40px,6vw,96px);view-timeline:--feat block}
- .pin{position:sticky;top:calc(50svh - var(--pinW) * 5 / 8 + 26px)}
+ .pin{position:sticky;top:calc(50svh - var(--pinW) * 5 / 8 + 34px)}
  .pinFrame{width:var(--pinW)}
  .stepCol{padding:calc(50svh - 140px) 0}
  .stepsTitle{margin-bottom:0}
