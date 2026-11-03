@@ -105,7 +105,7 @@ export default function LearnHub(){
     <p className={s.sub}>{top.line}</p>
     <div className={s.ctaRow}>
      <a className={s.cta} href={PLAY_URL}>{LEARN_HERO.cta}</a>
-     <a className={s.more} href="#learn">See what’s inside<Chevron/></a>
+     <a className={s.more} href="#in-action">See it in action<Chevron/></a>
     </div>
    </div>
    <Stage k={top.shot} label="Futbol Island from the air" eager hero/>
