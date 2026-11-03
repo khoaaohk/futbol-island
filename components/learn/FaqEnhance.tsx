@@ -11,13 +11,14 @@ export default function FaqEnhance({selector}:{selector:string}){
   const list=document.querySelector(selector);if(!list)return;
   list.setAttribute('data-ready','');
   const calm=()=>!!list.closest('[data-calm]')||matchMedia('(prefers-reduced-motion: reduce)').matches;
-  const timers=new WeakMap<Element,number>();
+  const timers=new WeakMap<Element,number>(),mine=new WeakSet<Element>();// mine: opened by the click below (it sets data-x itself)
   const onClick=(e:Event)=>{
    const sum=(e.target as Element).closest('summary');if(!sum||!list.contains(sum))return;
    const d=sum.parentElement as HTMLDetailsElement;e.preventDefault();
    clearTimeout(timers.get(d));
-   if(!d.open){
-    d.open=true;
+   // closing (open, data-x gone, waiting for the transition) counts as closed: a tap then opens it again instead of doing nothing
+   if(!d.open||!d.hasAttribute('data-x')){
+    if(!d.open){mine.add(d);d.open=true;}
     if(calm()){d.setAttribute('data-x','');return;}
     requestAnimationFrame(()=>requestAnimationFrame(()=>d.setAttribute('data-x','')));
    }else{
@@ -27,7 +28,14 @@ export default function FaqEnhance({selector}:{selector:string}){
    }
   };
   list.addEventListener('click',onClick);
-  return()=>{list.removeEventListener('click',onClick);list.removeAttribute('data-ready');};
+  // opened or closed without a click (the browser's find-in-page opens a <details> holding the match; a script setting .open):
+  // keep data-x in step, or an open answer would stay collapsed and invisible (toggle does not bubble; capture reaches it)
+  const onToggle=(e:Event)=>{const d=e.target as HTMLDetailsElement;if(!(d instanceof HTMLDetailsElement)||!list.contains(d))return;
+   if(!d.open){mine.delete(d);d.removeAttribute('data-x');return;}
+   if(mine.has(d)){mine.delete(d);return;}
+   d.setAttribute('data-x','');};
+  list.addEventListener('toggle',onToggle,true);
+  return()=>{list.removeEventListener('click',onClick);list.removeEventListener('toggle',onToggle,true);list.removeAttribute('data-ready');};
  },[selector]);
  return null;
 }
