@@ -37,6 +37,7 @@ export default function About(){
    <h1 className={styles.title}>About Futbol Island</h1>
    <p className={styles.lead}>{DESC}</p>
    <a className={styles.cta} href="/">Play on the island</a>
+   <p className={styles.caption}>Want the tour first? <a href="/learn">See what’s inside the game</a>: every feature and the football idea it teaches.</p>
   </header>
 
   <section className={styles.section} aria-labelledby="who"><h2 className={styles.h2} id="who">Who it is for</h2>
@@ -48,7 +49,7 @@ export default function About(){
   <section className={styles.section} aria-labelledby="learn"><h2 className={styles.h2} id="learn">What it teaches</h2>
    <p>{G.learns}</p>
    <ul>
-    <li><b>Positions and tactics:</b> <a href="/learn">{LESSONS.length} short lessons</a> in 7v7, 9v9, 11v11 and futsal. Each one plays out on a pitch with moving players, a coach explains every step, and a quick quiz checks the idea.</li>
+    <li><b>Positions and tactics:</b> <a href="/learn/lessons">{LESSONS.length} short lessons</a> in 7v7, 9v9, 11v11 and futsal. Each one plays out on a pitch with moving players, a coach explains every step, and a quick quiz checks the idea.</li>
     <li><b>The rules:</b> the Laws of the Game, from offside and the penalty kick to throw-ins and free kicks, in the lessons and the museum.</li>
     <li><b>The keeper’s mindset:</b> fishing on the island doubles as a goalkeeper lesson: stay set, don’t bite on a feint, then react fast.</li>
     <li><b>The hidden-ball hunt:</b> balls are hidden all around the island, and every ball you find teaches one football idea.</li>

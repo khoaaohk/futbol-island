@@ -37,6 +37,8 @@ export function LegalLinks(){
  const close=()=>setSheet(null);
  return <>
   <button type="button" className={styles.grownLink} data-track="sg:open" onClick={()=>setSheet('grown')}>For grown-ups</button>
+  {/* Nov 2 2026: the feature tour, a plain link (crawlable, works without JS). No data-track: lib/analytics/startIds.ts has no id for it. */}
+  <a className={styles.grownLink} href="/learn">What’s inside</a>
   <a className={styles.grownLink} href="/privacy" data-track="sp:open" onClick={e=>{e.preventDefault();setSheet('privacy');}}>Privacy</a>
   <Sheet open={sheet==='grown'} onClose={close} title="For grown-ups" id="grown-ups-title">
    <AboutGrownUps onOpenPrivacy={()=>setSheet('privacy')} donateReturn="start"/>
