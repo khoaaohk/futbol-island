@@ -110,7 +110,7 @@
 .backLink{left:24px}
 .grownRow .grownLink.grownTop,.grownRow a.grownLink.grownTop{right:24px;display:flex;align-items:center;margin:0;padding:0 4px;color:#fff;font:800 14px var(--btn-font)}
 /* same spot as the Back in the For grown-ups / game sheets (ModalShell.module.css): 24px in, 20px down; phones 18px in, 16px down */
-@media(max-width:600px),(pointer:coarse){.backLink{left:calc(14px + env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}.grownRow .grownLink.grownTop{right:calc(14px + env(safe-area-inset-right,0px));top:calc(16px + env(safe-area-inset-top,0px))}}
+@media(max-width:600px),(pointer:coarse){.backLink{left:calc(var(--phone-gutter,18px) + env(safe-area-inset-left,0px));top:calc(16px + env(safe-area-inset-top,0px))}.grownRow .grownLink.grownTop{right:calc(14px + env(safe-area-inset-right,0px));top:calc(16px + env(safe-area-inset-top,0px))}}
 /* spacing audit Nov 3: the game button's own `button.button.button{position:relative}` beat .backLink, so Back sat in the grid's
    first row 18px further in than For grown-ups (32 vs 14 on phones, 42 vs 24 on desktop). Now absolute at the same inset; the copy
    keeps the 44px it used to sit under (margin-top), so the tagline / title / island do not move. For grown-ups: 44px tall like Back
