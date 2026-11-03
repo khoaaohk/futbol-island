@@ -171,7 +171,7 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
   proof:'22 exhibits in 7 galleries.',counts:{exhibits:22,galleries:7}},
  {id:'konbini',title:'The Konbini',group:'explore',imageKey:'konbini',
   hook:'A walk-in corner shop with football magazines on the shelves.',
-  description:'The Konbini is a small shop to walk into, with snacks that refill your fuel, a cashier with tips and a ball for keep-ups. Every snack shows a short football food tip, and the magazines and cashier facts teach the Laws and long-settled football history, each with sources.',
+  description:'The Konbini (convenience store) is a small shop to walk into, with snacks that refill your fuel, a cashier with tips and a ball for keep-ups. Every snack shows a short football food tip, and the magazines and cashier facts teach the Laws and long-settled football history, each with sources.',
   footballTie:'What food and water do for a player, plus Laws of the Game facts and tournament history in short magazine pages.',
   where:'Tap Enter the Konbini on the main island, or its sister shop on Coral Cay.',
   proof:'8 football magazines on the shelves.',counts:{magazines:8}},
@@ -385,7 +385,7 @@ export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
   chips:['Fishing and diving','Arcade and vending machines','Islanders and cards'],features:['fishing','swim-dive','arcade','vending','islanders','player-cards']},
  // "Fuel up" (Nov 3 2026): only what docs/learn-konbini-facts.md supports. Konbini food and drinks refill the fuel bar (the energy
  // for rides, flying and sprinting; walking always works), and every item shows one sourced football-nutrition line.
- {id:'fuel',title:'Fuel up like a footballer.',line:'Konbini snacks refill your energy, and each one shares a football food tip.',shot:'fuel_konbini',
+ {id:'fuel',title:'Fuel up like a footballer.',line:'Snacks from the Konbini (convenience store) refill your energy and teach food tips.',shot:'fuel_konbini',
   chips:['Eat to refill your fuel','Water comes first','Tips from real sources'],features:['konbini']},
  {id:'together',title:'Play with friends',line:'Private parties by code. Same island, no chat, just football calls.',shot:'mp_sidebyside',
   chips:['Private code only','Football calls, no chat','Own kits and names'],features:['party-start','friends-kits','friends-emotes','friends-safety']},

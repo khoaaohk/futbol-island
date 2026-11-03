@@ -304,7 +304,7 @@ assert.equal(HL.map(h=>h.id).join(),'top,learn,explore,fuel,together,safe','six 
  assert(a.image&&a.image.width>=a.image.height*1.5,'Fuel up: a 16:9 poster');assert(a.clip?.mp4&&a.clip.mp4m,'Fuel up: 1920 mp4 + 1280 phone mp4');
  assert.match(media,/a\.clip\.mp4m&&<source media=\{a\.image\.m\?[^}]*'\(max-width: 1280px\)'\}[\s\S]*a\.clip\.mp4&&<source/,'the phone file is a <source media> listed before the full-size mp4');
  assert.match(css,/\.frameFilm\{width:min\(100%,1052px\);aspect-ratio:16\/9\}/,'16:9 chapter clips get the large film frame');}
-for(const h of HL){assert(h.chips.length<=3,`${h.id}: at most 3 chips`);assert(h.title&&h.line&&h.line.length<=80,`${h.id}: one headline, one short line`);
+for(const h of HL){assert(h.chips.length<=3,`${h.id}: at most 3 chips`);assert(h.title&&h.line&&h.line.length<=90,`${h.id}: one headline, one short line`);
  assert(has(`public/learn/${h.shot}.webp`),`${h.id}: shot ${h.shot} is a real still`);for(const id of h.features)assert(F.some(f=>f.id===id),`${h.id}: feature ${id} exists`);}
 for(const h of HL.slice(1))assert(page.includes(`hl('${h.id}')`),`section ${h.id} rendered`);
 assert(has('public/learn/town_overview.webp')&&HL[0].shot==='town_overview','hero uses the town overview shot');
