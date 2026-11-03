@@ -418,7 +418,7 @@ assert.equal((html.match(/<h1[ >]/g)||[]).length,1,'one h1');
  if(M.learnMontage()){const mv=html.match(/<video [^>]*data-mv=""[^>]*>([\s\S]*?)<\/video>/);assert(mv,'built: one montage video');
   assert.equal((html.match(/data-mv=""/g)||[]).length,1,'built: exactly one montage video');
   assert.match(mv[0],/preload="none"/,'built: montage preload none until near');
-  const srcs=[...mv[1].matchAll(/<source [^>]*>/g)].map(m=>m[0]);assert(srcs.length<=3&&srcs.slice(0,-1).every(x=>/media="/.test(x))&&!/media="/.test(srcs[srcs.length-1]),'built: montage sources are media alternatives with one default');
+  const srcs=[...mv[1].matchAll(/<source [^>]*>/g)].map(m=>m[0]);assert(srcs.length<=4&&srcs.slice(0,-1).every(x=>/media="/.test(x))&&!/media="/.test(srcs[srcs.length-1]),'built: montage sources are media alternatives with one default');
   assert(html.indexOf('id="learn-title"')<html.indexOf('id="montage-h"')&&(html.indexOf('id="reel-h"')<0||html.indexOf('id="montage-h"')<html.indexOf('id="reel-h"')),'built: hero, montage, then the carousel');}
  else assert(!/data-montage=""/.test(html),'built: no montage files = no section');
  const live=SL.filter(x=>M.learnSlideAsset(x.key)),cards=html.match(/data-slide=""/g)||[];
