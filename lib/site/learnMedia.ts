@@ -148,13 +148,13 @@ export function learnSlideAsset(key:string):LearnAsset|null{
 export type LearnMontageSize={key:string;image:LearnImage;mp4?:string};
 /**
  * The full-bleed montage after the /learn hero (Nov 3 2026): manifest entries `montage_s` (854), `montage_m` (1280) and `montage`
- * (1920), each with its poster (public/learn/<key>.webp) and clip (the entry's video.mp4). The 1920 entry and its poster are
+ * (1920) and the optional `montage_xl` (2560, for large and retina screens), each with its poster (public/learn/<key>.webp) and clip (the entry's video.mp4). The 1920 entry and its poster are
  * required (else null = no montage section); a missing smaller size just drops out of the ladder. Sizes are smallest first.
  */
 export function learnMontage():{alt?:string;duration?:number;sizes:LearnMontageSize[]}|null{
  const man=readManifestOnce();
  const sizes:LearnMontageSize[]=[];let alt:string|undefined,duration:number|undefined;
- for(const key of ['montage_s','montage_m','montage']){
+ for(const key of ['montage_s','montage_m','montage','montage_xl']){
   const m=man.get(key) as (RawEntry&{video?:{mp4?:unknown;duration?:unknown}})|undefined;
   const still=`learn/${key}.webp`;
   if(!m||!exists(still))continue;
@@ -164,7 +164,7 @@ export function learnMontage():{alt?:string;duration?:number;sizes:LearnMontageS
   if(typeof m.alt==='string'&&m.alt.trim())alt=m.alt.trim();
   if(typeof d==='number'&&d>0)duration=d;
  }
- if(sizes[sizes.length-1]?.key!=='montage')return null;
+ if(!sizes.some(x=>x.key==='montage'))return null;
  return {alt,duration,sizes};
 }
 

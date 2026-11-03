@@ -403,13 +403,13 @@ export type LearnCarouselItem={key:string;feature:string;title:string;caption:st
 export const LEARN_CAROUSEL:readonly LearnCarouselItem[]=[
  {key:'fishing',feature:'fishing',title:'Fishing and the Fishbook',caption:'Cast a line and fill the **Fishbook**: every sea animal you catch links to a real club, team or football story.'},
  {key:'diving',feature:'reef-balls',title:'Reef treasure balls',caption:'Dive the reefs to an open **treasure chest** with a football inside and a mini lesson about a real football fact.'},
+ {key:'cards',feature:'player-cards',title:'Player cards and binder',caption:'Earn a mystery **player card**, watch it fly into the **binder**, then flip pages of stars and greats by position.'},
  {key:'bugs',feature:'bug-squad',title:'Bug Squad',caption:'Swing the **Bug Squad** net: every bug you catch plays one position, like the Goalie Ladybug, and brings a true football story.'},
  {key:'jobs',feature:'island-jobs',title:'Island jobs',caption:'**Job boards** offer short jobs that pay coins: set out the cones, paint the centre circle or flag the offside.'},
  {key:'vending',feature:'vending',title:'Vending machines',caption:'Spend coins earned by playing and learning at the **vending machines**, where every card in a pack carries a football lesson.'},
  {key:'museum',feature:'history-museum',title:'The History Museum',caption:'Walk the **History Museum** from 1863 to VAR and see where offside, the penalty kick and throw-ins came from.'},
  {key:'arcade',feature:'arcade',title:'Football pinball',caption:'Play **football pinball** in the Arcade: aim the flippers, time each shot at goal and score points.'},
  {key:'books',feature:'pop-up-books',title:'Pop-up books, read aloud',caption:'**Pop-up books**, read aloud, tell true stories of footballers who kept going, and a book check links each story to a lesson.'},
- {key:'cards',feature:'player-cards',title:'Player cards and binder',caption:'Earn a mystery **player card**, watch it fly into the **binder**, then flip pages of stars and greats by position.'},
  {key:'npc',feature:'islanders',title:'Talk to the islanders',caption:'Walk up to an **islander** and tap Talk to hear coaches, fans and players share football stories, with no typing.'},
  {key:'multiplayer',feature:'party-start',title:'Play with friends',caption:'A grown-up starts a **private party**, and friends join by code to call for the ball and celebrate like a team.'},
 ];

@@ -194,7 +194,7 @@ assert(total<124e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 124 MB)`);as
 {const reel=read('components/learn/LearnReel.tsx'),rx=strip(read('components/learn/ReelEnhance.tsx')),M=L('lib/site/learnMedia.ts');
  assert.match(read('components/learn/ReelEnhance.tsx'),/^'use client';/,'ReelEnhance is a client island');
  // data: 11 cards in the owner's order, one sentence each, <= 22 words, bold via markers, facts from the linked feature
- assert.equal(CAR.map(c=>c.key).join(),'fishing,diving,bugs,jobs,vending,museum,arcade,books,cards,npc,multiplayer','11 cards in order');
+ assert.equal(CAR.map(c=>c.key).join(),'fishing,diving,cards,bugs,jobs,vending,museum,arcade,books,npc,multiplayer','11 cards in order');
  for(const c of CAR){const t=learnPlain(c.caption),f=F.find(x=>x.id===c.feature);assert(f,`${c.key}: feature ${c.feature} exists`);
   assert(t.split(/\s+/).length<=22,`${c.key}: caption <= 22 words`);assert.equal(t.split(/(?<=[.!?])\s+/).length,1,`${c.key}: one sentence`);
   assert.match(t,/\.$/,`${c.key}: ends with a full stop`);assert.equal((c.caption.match(/\*\*/g)||[]).length%2,0,`${c.key}: bold markers pair up`);
