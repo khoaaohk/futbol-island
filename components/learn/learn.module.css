@@ -401,3 +401,4 @@
 .root .stepsTitle{margin-bottom:8px}
 @media(min-width:900px){.root .stepsTitle{margin-bottom:0}}
 .root .endLinks{margin-top:clamp(16px,4vh,40px)}
+@media(max-width:640px){.root .note{text-align:center;margin-inline:auto}}
