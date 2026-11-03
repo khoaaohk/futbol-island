@@ -31,6 +31,7 @@ import type {FishingAdminMetrics} from './fishingAdminMetrics';
 import type {SourcesSummary} from './live';
 import type {SponsorReport} from './sponsor';
 import type {EmoteReport,PartyReport} from './partyReport';
+import type {MarketingReport} from './marketingReport';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
 /** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the start-page
@@ -564,6 +565,8 @@ export type Report={
   *  built and small-number-suppressed on the server (<5 sessions, <5 parties), 'not_yet' before PARTY_SINCE. */
  party?:PartyReport|null;
  emotes?:EmoteReport|null;
+ /** Nov 3 2026: the "Marketing page" tab (lib/analytics/marketingReport.ts): the tour page at `/`, small-number-suppressed. */
+ marketing?:MarketingReport|null;
 };
 
 /** How the report's days and comparisons were cut (Oct 12 2026). Shown on /admin wherever it changes how a number reads. */

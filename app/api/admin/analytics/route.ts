@@ -7,6 +7,7 @@ import {loadSaveMetrics} from '@/lib/saves/metrics';
 import {loadSummitKickMetrics} from '@/lib/arcade/kickAdminMetrics';
 import {loadFishingMetrics} from '@/lib/analytics/fishingAdminMetrics';
 import {loadSources} from '@/lib/analytics/liveAdmin';
+import {labelMarketing} from '@/lib/analytics/marketingLabels';
 
 export const dynamic='force-dynamic';
 export const runtime='nodejs';
@@ -21,6 +22,7 @@ export async function GET(req:Request){
   report.summitKick=await loadSummitKickMetrics(report.from,report.to);
   report.fishing=await loadFishingMetrics(report.from,report.to);
   report.sources=await loadSources(report.from,report.to);
+  labelMarketing(report.marketing);// Nov 3 2026: the Marketing page tab's card, slide, FAQ and step names
   return Response.json(report,{headers});}
  catch{return Response.json({error:'store-unavailable'},{status:502,headers});}
 }

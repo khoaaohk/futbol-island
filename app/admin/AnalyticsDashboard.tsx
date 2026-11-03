@@ -13,6 +13,7 @@ import EmoteSection from './EmoteSection';
 import PartyRetentionCard from './PartyRetentionCard';
 import LearningSection from './LearningSection';
 import StartSection from './StartSection';
+import MarketingSection from './MarketingSection';
 import {EngagementTiles,HeadlineTiles,InvestorFunnel,PlanCard} from './OverviewSection';
 import {ComingBackCard,NewCodesCard,RestoresCard,RetentionCard,SaveHealthCard,SaveMetricsBanner,SaveStorageCard,WeeklyCodesCard,saveData} from './SavesSection';
 import RegionCard from './RegionCard';
@@ -31,9 +32,9 @@ const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'yester
 /** Oct 20 2026: tabs instead of one long page (owner: "fix the admin portal so it's easier to find this"). Overview = the sponsor
  *  view (SponsorOverview.tsx); Engagement = engagement, product usage and the learning / title-screen detail; Players = headline,
  *  acquisition and save health; Live = who is on now and each day's players. The sections keep their investor order in source. */
-type Tab='overview'|'engagement'|'players'|'live'|'report';
+type Tab='overview'|'engagement'|'players'|'marketing'|'live'|'report';
 /** Oct 22 2026: + Sponsor report (SponsorReport.tsx, Phase B of docs/analytics-multiplayer-plan.md §8): the weekly sponsor view. */
-const TABS:[Tab,string][]=[['overview','Overview'],['engagement','Engagement'],['players','Players'],['live','Live'],['report','Sponsor report']];
+const TABS:[Tab,string][]=[['overview','Overview'],['engagement','Engagement'],['players','Players'],['marketing','Marketing page'],['live','Live'],['report','Sponsor report']];
 const SOURCE_LABEL:Record<string,string>={direct:'Direct',search:'Search',social:'Social',referral:'Referral',campaign:'Campaign'};
 const DEVICE_LABEL:Record<string,string>={phone:'Phone',tablet:'Tablet',desktop:'Desktop'};
 const AREA_LABEL:Record<string,string>={island:'Island',paths:'Paths',arcade:'Arcade',museum:'Museum',konbini:'Konbini',shop:'Kit Shop',controller:'Phone controller',other:'Other pages'};
@@ -209,6 +210,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
        Oct 20 2026: each section shows on its tab (TABS above). */}
    <div className={`${styles.stack} ${loading?styles.loading:''}`} aria-busy={loading} role="tabpanel" id="admin-tabpanel" aria-labelledby={'tab-'+tab}>
     {tab==='overview'&&<SponsorOverview report={report} rangeText={rangeText} playerCount={playerCount} countryName={countryName}/>}
+    {tab==='marketing'&&<MarketingSection report={report} rangeText={rangeText} dayLabel={k=>dayLabel(k,false)}/>}
     {tab==='report'&&<SponsorReport week={week??isoWeekOf(tm?.today??report.to)} onWeek={setWeek}/>}
     {tab==='live'&&<section className={styles.island} aria-labelledby="sec-live">
      <div className={styles.sectionHead}><h2 id="sec-live">Live</h2><p>Who is playing right now, and each day’s players one by one (anonymous; the last 14 days).</p></div>

@@ -35,9 +35,12 @@
  *                                  emote camera and friends' emotes seen, plus mp: learning-in-a-party, first-party and ping ids;
  *                                  moving emotes (Oct 22 2026): em:e50..e54, em:ctx_walk, em:move_<n>.
  *                                  docs/analytics-multiplayer-plan.md is the spec for both families.
+ *   mk:<event>                     the marketing page at `/` (MARKETING_COUNT_IDS, lib/analytics/marketingIds.ts; Nov 3 2026):
+ *                                  views, time bands, scroll depth, sections seen, taps, sources, devices, Web Vitals
  */
 import {LESSON_TABLE} from './learningIds.generated';
 import {START_COUNT_IDS} from './startIds';
+import {MARKETING_COUNT_IDS} from './marketingIds';
 
 export const LEARN_FORMATS=['7v7','9v9','11v11','futsal'] as const;
 export type LearnFormat=typeof LEARN_FORMATS[number];
@@ -269,6 +272,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...WATER_COUNT_EVENTS.map(([e])=>'wa:'+e),
  ...ENGAGE_FIXED_IDS,
  ...PARTY_FIXED_IDS,...EMOTE_FIXED_IDS,...PARTY_RETENTION_IDS,
+ ...MARKETING_COUNT_IDS,// mk: the marketing page at `/` (marketingIds.ts, Nov 3 2026)
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 
