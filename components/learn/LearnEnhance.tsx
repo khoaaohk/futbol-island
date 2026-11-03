@@ -74,6 +74,9 @@ export default function LearnEnhance({rootId}:{rootId:string}){
 
   // ---- 3. clips -------------------------------------------------------------------------------------------------------------
   const vids=[...root.querySelectorAll<HTMLVideoElement>('video[data-lv]')];
+  // Calm mode: the hero clip is preload="auto" in the HTML, so it is already downloading (3.5-7 MB) for a Save-Data / 2g / 3g /
+  // reduced-motion / Battery saver viewer; drop it back to "none" and reset it, which stops the fetch (a tap on Play loads it).
+  if(calm)for(const v of vids)if(v.preload==='auto'&&v.paused){v.preload='none';if(v.networkState!==v.NETWORK_EMPTY)v.load();}
   // 4:5 clips (Nov 3): Save-Data / 2g / 3g keep only the 720px file (its <source media> otherwise serves viewports <= 640px)
   if(slowLink())for(const v of vids){const small=v.querySelector('source[media="(max-width: 640px)"]');
    if(small){v.querySelectorAll('source').forEach(x=>{if(x!==small)x.remove();});small.removeAttribute('media');if(v.networkState!==v.NETWORK_EMPTY)v.load();}}
