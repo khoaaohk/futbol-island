@@ -172,10 +172,12 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
 // 16.9 s water-first fuel_konbini, each at the lowest CRF that fits its cap: +10.4 MB in all (+10.3 MB clips): 81.4 / 75.3 MB
 // Nov 3 best-quality slides (fresh 2560x1440 captures, coins ~512, both sizes at the lowest CRF under 2 MB) and the new 34.3 s montage
 // (zoomed out, no UI: square, causeway scooter, flight, zipline, swim, reef dive; veryslow, montage caps raised to 10 / 5 / 2.5 MB):
-assert(total<124e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 124 MB)`);assert(clips<113e6,`clips ${(clips/1e6).toFixed(1)} MB (< 113 MB)`);
- // the hero clip is ~2.5x longer than the other 4:5 clips (Nov 3), so only it gets 6 MB (1080) / 3 MB (720 phone file)
+// Nov 3 hero re-shoot (29.7 s: smooth dribble + two shots that knock down two townspeople, scooter, flight, parachute over the whole
+// island; veryslow at the old hero's ~2 Mbps, CRF 26 / 27): +2.5 MB, 127 / 116 MB
+assert(total<127e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 127 MB)`);assert(clips<116e6,`clips ${(clips/1e6).toFixed(1)} MB (< 116 MB)`);
+ // the hero clip is ~3.5x longer than the other 4:5 clips (Nov 3: 29.7 s), so only it gets 7.5 MB (1080) / 3.6 MB (720 phone file)
  // Nov 3 montage: 34.3 s of moving wide shots (the old 27.8 s cut sat at CRF 35 under 4.5 / 2.2 / 1.1 MB and looked soft): CRF 29-30 needs 10 / 5 / 2.5 MB
- const cap={'montage_l.mp4':10e6,'montage_m.mp4':5e6,'montage_s.mp4':2.5e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6,
+ const cap={'montage_l.mp4':10e6,'montage_m.mp4':5e6,'montage_s.mp4':2.5e6,'town_overview_45.mp4':7.5e6,'town_overview_45_m.mp4':3.6e6,
   // explore_45 is ~2x the other 4:5 clips (15.7 s: reef swim, wall-target ball, Summit Isle mango-tree ball): 4 MB / 2 MB;
   // fuel_konbini (16:9, 15.9 s: storefront walk-up, walk inside, then the shelf detail) needs 3.5 MB at 1920 for CRF 24 (its 1280 file keeps 2 MB)
   'explore_45.mp4':4e6,'explore_45_m.mp4':2e6,'fuel_konbini.mp4':3.5e6,'wide_cards.mp4':3e6,'wide_cards_m.mp4':1.5e6};
