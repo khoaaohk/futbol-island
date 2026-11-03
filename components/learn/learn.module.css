@@ -191,7 +191,7 @@
 .tags li+li::before{content:"";width:4px;height:4px;margin:0 12px;border-radius:50%;background:var(--gold)}
 .tagsCenter{margin:0 auto}
 /* phones (owner, Nov 3): the chips flow as two lines, no stacked column and no dot at a line start */
-@media(max-width:599px){.root .tags{gap:4px 16px;max-width:none}.tags li+li::before{display:none}}
+@media(max-width:599px){.root .tags{gap:4px 0;max-width:none}.tags li+li::before{display:none}.tags li:not(:last-child)::after{content:"";width:4px;height:4px;margin:0 12px;border-radius:50%;background:var(--gold)}}
 
 /* ---- See it in action: a horizontal row of 16:9 clip cards (Nov 3 2026, after apple.com/apple-vision-pro's highlights) -----
    CSS scroll snap, native swipe / trackpad scroll; the row starts at the content gutter (the sub-nav's 1080px column) and bleeds
