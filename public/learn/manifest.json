@@ -610,6 +610,18 @@
    "duration": 34.3
   }
  },
+ "montage_xl": {
+  "file": "/learn/montage_xl.webp",
+  "width": 2560,
+  "height": 1440,
+  "alt": "One afternoon on Futbol Island: dribble across the town square, scooter along the causeway road, fly a jetpack over the town, ride the zipline to Coral Cay, swim with the rays and explore a reef underwater.",
+  "video": {
+   "mp4": "/learn/video/montage_xl.mp4",
+   "width": 2560,
+   "height": 1440,
+   "duration": 34.3
+  }
+ },
  "montage_m": {
   "file": "/learn/montage_m.webp",
   "width": 1280,

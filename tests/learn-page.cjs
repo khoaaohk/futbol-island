@@ -172,10 +172,11 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
 // 16.9 s water-first fuel_konbini, each at the lowest CRF that fits its cap: +10.4 MB in all (+10.3 MB clips): 81.4 / 75.3 MB
 // Nov 3 best-quality slides (fresh 2560x1440 captures, coins ~512, both sizes at the lowest CRF under 2 MB) and the new 34.3 s montage
 // (zoomed out, no UI: square, causeway scooter, flight, zipline, swim, reef dive; veryslow, montage caps raised to 10 / 5 / 2.5 MB):
-assert(total<124e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 124 MB)`);assert(clips<113e6,`clips ${(clips/1e6).toFixed(1)} MB (< 113 MB)`);
+// Nov 3: montage_xl (2560x1440, CRF 27 veryslow, 19.8 MB, only for >= 900px retina screens, was upscaled blur from the 1920 file) + poster: 145 / 134 MB
+assert(total<145e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 145 MB)`);assert(clips<134e6,`clips ${(clips/1e6).toFixed(1)} MB (< 134 MB)`);
  // the hero clip is ~2.5x longer than the other 4:5 clips (Nov 3), so only it gets 6 MB (1080) / 3 MB (720 phone file)
  // Nov 3 montage: 34.3 s of moving wide shots (the old 27.8 s cut sat at CRF 35 under 4.5 / 2.2 / 1.1 MB and looked soft): CRF 29-30 needs 10 / 5 / 2.5 MB
- const cap={'montage_l.mp4':10e6,'montage_m.mp4':5e6,'montage_s.mp4':2.5e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6,
+ const cap={'montage_xl.mp4':21e6,'montage_l.mp4':10e6,'montage_m.mp4':5e6,'montage_s.mp4':2.5e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6,
   // explore_45 is ~2x the other 4:5 clips (15.7 s: reef swim, wall-target ball, Summit Isle mango-tree ball): 4 MB / 2 MB;
   // fuel_konbini (16:9, 15.9 s: storefront walk-up, walk inside, then the shelf detail) needs 3.5 MB at 1920 for CRF 24 (its 1280 file keeps 2 MB)
   'explore_45.mp4':4e6,'explore_45_m.mp4':2e6,'fuel_konbini.mp4':3.5e6,'wide_cards.mp4':3e6,'wide_cards_m.mp4':1.5e6};
@@ -194,7 +195,7 @@ assert(total<124e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 124 MB)`);as
 {const reel=read('components/learn/LearnReel.tsx'),rx=strip(read('components/learn/ReelEnhance.tsx')),M=L('lib/site/learnMedia.ts');
  assert.match(read('components/learn/ReelEnhance.tsx'),/^'use client';/,'ReelEnhance is a client island');
  // data: 11 cards in the owner's order, one sentence each, <= 22 words, bold via markers, facts from the linked feature
- assert.equal(CAR.map(c=>c.key).join(),'fishing,diving,cards,bugs,jobs,vending,museum,arcade,books,npc,multiplayer','11 cards in order');
+ assert.equal(CAR.map(c=>c.key).join(),'fishing,diving,cards,bugs,jobs,vending,museum,multiplayer,arcade,books,npc','11 cards in order');
  for(const c of CAR){const t=learnPlain(c.caption),f=F.find(x=>x.id===c.feature);assert(f,`${c.key}: feature ${c.feature} exists`);
   assert(t.split(/\s+/).length<=22,`${c.key}: caption <= 22 words`);assert.equal(t.split(/(?<=[.!?])\s+/).length,1,`${c.key}: one sentence`);
   assert.match(t,/\.$/,`${c.key}: ends with a full stop`);assert.equal((c.caption.match(/\*\*/g)||[]).length%2,0,`${c.key}: bold markers pair up`);
@@ -265,7 +266,7 @@ assert(total<124e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 124 MB)`);as
  assert.match(mx,/slowLink\(\)[\s\S]*source\[data-size="s"\]/,'montage: Save-Data / 2g / 3g keep only the smallest file');
  assert.match(mx,/extPlaying\(page,ME\)<MAX_PLAYING/,'montage counts toward the page-wide cap of 2');
  assert.doesNotMatch(mx,/setInterval|requestAnimationFrame/,'montage: no timers, no frame loop (the ring is CSS)');
- {const M2=M.learnMontage();if(M2){assert.equal(M2.sizes[M2.sizes.length-1].key,'montage','montage: the 1920 size is last');assert(M2.sizes.every(x=>x.mp4&&has('public'+x.mp4)),'montage: every size has its clip on disk');}}
+ {const M2=M.learnMontage();if(M2){assert.equal(M2.sizes.map(x=>x.key).filter(k=>k==='montage'||k==='montage_xl').join(),'montage,montage_xl','montage: the 1920 size, then the optional 2560 size');assert(M2.sizes.every(x=>x.mp4&&has('public'+x.mp4)),'montage: every size has its clip on disk');}}
  // slideshow: data, placement, media
  assert.equal(SL.map(x=>x.key).join(),'stories,arcade,beachmatch,kit,collection,party','6 slides in order');
  for(const x of SL){const w=x.caption.split(/\s+/).length;assert(w<=14,`${x.key}: caption <= 14 words`);assert.equal(x.caption.split(/(?<=[.!?])\s+/).length,1,`${x.key}: one sentence`);

@@ -408,10 +408,10 @@ export const LEARN_CAROUSEL:readonly LearnCarouselItem[]=[
  {key:'jobs',feature:'island-jobs',title:'Island jobs',caption:'**Job boards** offer short jobs that pay coins: set out the cones, paint the centre circle or flag the offside.'},
  {key:'vending',feature:'vending',title:'Vending machines',caption:'Spend coins earned by playing and learning at the **vending machines**, where every card in a pack carries a football lesson.'},
  {key:'museum',feature:'history-museum',title:'The History Museum',caption:'Walk the **History Museum** from 1863 to VAR and see where offside, the penalty kick and throw-ins came from.'},
+ {key:'multiplayer',feature:'party-start',title:'Play with friends',caption:'A grown-up starts a **private party**, and friends join by code to call for the ball and celebrate like a team.'},
  {key:'arcade',feature:'arcade',title:'Football pinball',caption:'Play **football pinball** in the Arcade: aim the flippers, time each shot at goal and score points.'},
  {key:'books',feature:'pop-up-books',title:'Pop-up books, read aloud',caption:'**Pop-up books**, read aloud, tell true stories of footballers who kept going, and a book check links each story to a lesson.'},
  {key:'npc',feature:'islanders',title:'Talk to the islanders',caption:'Walk up to an **islander** and tap Talk to hear coaches, fans and players share football stories, with no typing.'},
- {key:'multiplayer',feature:'party-start',title:'Play with friends',caption:'A grown-up starts a **private party**, and friends join by code to call for the ball and celebrate like a team.'},
 ];
 /** The words under the full-bleed montage after the hero (Nov 3 2026). PLACEHOLDER copy: the owner should confirm or replace it. */
 export const LEARN_MONTAGE={title:'A whole island to play in.',line:'Dribble, ride, fly, zip and dive.'};
