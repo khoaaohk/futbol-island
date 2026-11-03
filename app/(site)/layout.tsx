@@ -9,7 +9,7 @@ import styles from './site.module.css';
  */
 export default function SiteLayout({children}:{children:React.ReactNode}){
  preloadIslandBrush();
- return <div className={styles.page}>
+ return <div className={styles.page} data-reading-page="">
   <style>{'html,body{background:#fff8e7;color-scheme:light}'}</style>
   <header className={styles.header}><div className={styles.headerInner}>
    <a className={styles.brand} href="/">Futbol Island</a>

@@ -7,6 +7,8 @@
 .lock[data-mode=landscape] .phone{transform:rotate(0deg);animation-name:turnSideways}
 @keyframes turnSideways{0%,35%{transform:rotate(0deg)}65%,100%{transform:rotate(90deg)}}
 @media(prefers-reduced-motion:reduce){.phone{animation:none;transform:rotate(0deg)}.lock[data-mode=landscape] .phone{animation:none;transform:rotate(90deg)}}
+/* reading pages (app/(site): /learn, /about …) are not the game: never cover them, a sideways phone can read them fine */
+:global(body:has([data-reading-page])) .lock{display:none!important}
 /* phones held sideways: touch screen, short side */
 @media(pointer:coarse) and (orientation:landscape) and (max-height:500px){.lock[data-mode=portrait]{display:flex}}
 /* landscape mode, phones held upright: touch screen, narrow side */
