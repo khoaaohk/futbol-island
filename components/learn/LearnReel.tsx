@@ -29,6 +29,7 @@ export default function LearnReel(){
       loading={i<2?'eager':'lazy'} decoding="async"/>
      {a.clip&&<>
       <video className={s.clip} data-rv="" muted loop playsInline preload="none" aria-hidden="true" tabIndex={-1} disablePictureInPicture>
+       {a.clip.mp4m&&<source media="(max-width: 1280px)" src={learnUrl(a.clip.mp4m)} type="video/mp4"/>}
        {a.clip.mp4&&<source src={learnUrl(a.clip.mp4)} type="video/mp4"/>}
        {a.clip.webm&&<source src={learnUrl(a.clip.webm)} type="video/webm"/>}
       </video>

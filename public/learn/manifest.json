@@ -456,20 +456,20 @@
  },
  "wide_fishing": {
   "file": "/learn/wide_fishing.webp",
-  "width": 1600,
-  "height": 900,
-  "alt": "Wait for the bite, spin the reel and land a brown shrimp at the beach fishing spot.",
+  "width": 1920,
+  "height": 1080,
+  "alt": "Wait for the bite, spin the reel and land a mackerel at the beach fishing spot.",
   "video": {
    "mp4": "/learn/video/wide_fishing.mp4",
    "width": 1920,
    "height": 1080,
-   "duration": 7.83
+   "duration": 7.9
   }
  },
  "wide_diving": {
   "file": "/learn/wide_diving.webp",
-  "width": 1600,
-  "height": 900,
+  "width": 1920,
+  "height": 1080,
   "alt": "Swim through a reef grotto past an old goal and find a starfish on the sea floor.",
   "video": {
    "mp4": "/learn/video/wide_diving.mp4",
@@ -480,20 +480,20 @@
  },
  "wide_vending": {
   "file": "/learn/wide_vending.webp",
-  "width": 1600,
-  "height": 900,
-  "alt": "Zoom onto the plaza vending machine, buy an all-time greats pack and reveal a Luka Modrić card.",
+  "width": 1920,
+  "height": 1080,
+  "alt": "Zoom onto the plaza vending machine, buy an all-time greats pack and reveal a Marta card.",
   "video": {
    "mp4": "/learn/video/wide_vending.mp4",
    "width": 1920,
    "height": 1080,
-   "duration": 9
+   "duration": 10
   }
  },
  "wide_museum": {
   "file": "/learn/wide_museum.webp",
-  "width": 1600,
-  "height": 900,
+  "width": 1920,
+  "height": 1080,
   "alt": "Walk through the football museum to a case and see the throw-in and the Ballon d’Or up close.",
   "video": {
    "mp4": "/learn/video/wide_museum.mp4",
@@ -504,20 +504,20 @@
  },
  "wide_arcade": {
   "file": "/learn/wide_arcade.webp",
-  "width": 1600,
-  "height": 900,
+  "width": 1920,
+  "height": 1080,
   "alt": "Launch the ball and flip away on the arcade’s football pinball table as the score climbs.",
   "video": {
    "mp4": "/learn/video/wide_arcade.mp4",
    "width": 1920,
    "height": 1080,
-   "duration": 9
+   "duration": 10
   }
  },
  "wide_books": {
   "file": "/learn/wide_books.webp",
-  "width": 1600,
-  "height": 900,
+  "width": 1920,
+  "height": 1080,
   "alt": "Turn the pages of a pop-up story book about a footballer growing up far from home.",
   "video": {
    "mp4": "/learn/video/wide_books.mp4",
@@ -528,38 +528,38 @@
  },
  "wide_cards": {
   "file": "/learn/wide_cards.webp",
-  "width": 1600,
-  "height": 900,
-  "alt": "Flip through the player card binder, page after page of strikers.",
+  "width": 1920,
+  "height": 1080,
+  "alt": "Open a mystery card, Lamine Yamal flies into the binder, then the binder pages turn through the wingers.",
   "video": {
    "mp4": "/learn/video/wide_cards.mp4",
    "width": 1920,
    "height": 1080,
-   "duration": 9
+   "duration": 16.2
   }
  },
  "wide_npc": {
   "file": "/learn/wide_npc.webp",
-  "width": 1600,
-  "height": 900,
+  "width": 1920,
+  "height": 1080,
   "alt": "Walk up to Mr. Okafor, ask for a quick challenge and choose the kind answer.",
   "video": {
    "mp4": "/learn/video/wide_npc.mp4",
    "width": 1920,
    "height": 1080,
-   "duration": 9
+   "duration": 10
   }
  },
  "wide_multiplayer": {
   "file": "/learn/wide_multiplayer.webp",
-  "width": 1600,
-  "height": 900,
+  "width": 1920,
+  "height": 1080,
   "alt": "Two friends meet on the island, wave hello and high-five.",
   "video": {
    "mp4": "/learn/video/wide_multiplayer.mp4",
    "width": 1920,
    "height": 1080,
-   "duration": 9
+   "duration": 10
   }
  },
  "friend_step1": {

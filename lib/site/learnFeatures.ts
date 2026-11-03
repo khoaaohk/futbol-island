@@ -407,7 +407,7 @@ export const LEARN_CAROUSEL:readonly LearnCarouselItem[]=[
  {key:'museum',feature:'history-museum',title:'The History Museum',caption:'Walk the **History Museum** from 1863 to VAR and see where offside, the penalty kick and throw-ins came from.'},
  {key:'arcade',feature:'arcade',title:'Football pinball',caption:'Play **football pinball** in the Arcade: aim the flippers, time each shot at goal and score points.'},
  {key:'books',feature:'pop-up-books',title:'Pop-up books, read aloud',caption:'**Pop-up books**, read aloud, tell true stories of footballers who kept going, and a book check links each story to a lesson.'},
- {key:'cards',feature:'player-cards',title:'Player cards and binder',caption:'Collect **player cards** of current stars, all-time greats and coaches, each showing the position, country, strengths and career.'},
+ {key:'cards',feature:'player-cards',title:'Player cards and binder',caption:'Earn a mystery **player card**, watch it fly into the **binder**, then flip pages of stars and greats by position.'},
  {key:'npc',feature:'islanders',title:'Talk to the islanders',caption:'Walk up to an **islander** and tap Talk to hear coaches, fans and players share football stories, with no typing.'},
  {key:'multiplayer',feature:'party-start',title:'Play with friends',caption:'A grown-up starts a **private party**, and friends join by code to call for the ball and celebrate like a team.'},
 ];

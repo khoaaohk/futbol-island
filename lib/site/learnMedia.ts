@@ -123,10 +123,14 @@ export function learnAsset(pageKey:string):LearnAsset{
 /**
  * A "See it in action" carousel card's media (Nov 3 2026): manifest entry `wide_<key>` + poster public/learn/wide_<key>.webp
  * (both required, else null = the card is skipped), clip from the entry's own `video` paths or public/learn/video/wide_<key>.*
- * or public/learn/wide_<key>.* (whichever exist on disk).
+ * or public/learn/wide_<key>.* (whichever exist on disk). Nov 3 re-capture: a 1280x720 public/learn/video/wide_<key>_m.mp4
+ * (`clip.mp4m`) is served to viewports <= 1280px wide through <source media>, like the slides.
  */
 export function learnWideAsset(key:string):LearnAsset|null{
- return /^[a-z0-9_]+$/.test(key)?prefixedAsset(`wide_${key}`):null;
+ if(!/^[a-z0-9_]+$/.test(key))return null;
+ const a=prefixedAsset(`wide_${key}`);
+ if(a?.clip?.mp4&&exists(`learn/video/wide_${key}_m.mp4`))a.clip.mp4m=`/learn/video/wide_${key}_m.mp4`;
+ return a;
 }
 /**
  * An "Even more to explore" slide's media (Nov 3 2026): manifest entry `slide_<key>` + poster public/learn/slide_<key>.webp (both

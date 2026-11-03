@@ -165,15 +165,14 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  // Nov 3: + the 4:5 re-captures (~9.7 MB, both sizes) while the old 390x844 files still sit beside them (removal pending): 46 / 42 MB.
  // Nov 3 merge with the Fuel up clip: 52 / 48 MB (the slides, ~14 MB, and the old 390x844 files to delete, are the next reconcile; big files move to R2 after)
 // Nov 3 merge with the feature slideshow clips (~12.6 MB): 64 / 58 MB until the old 390x844 files are deleted and the big files move to R2
-// Nov 3: lesson_field_45 re-cut as a 16 s four-surface clip (paths, story, lesson, quiz) and the hero re-recorded 8.5 s -> 21.3 s (dribble, scooter over the bridge, flight along Summit Isle): 71 / 65 MB until the old 390x844 files are deleted and the big files move to R2
-// Nov 3 best-quality 4:5 re-records (coins ~500: dive, save code, join, side by side, friend steps), the new 15.7 s explore_45 and the
-// 16.9 s water-first fuel_konbini, each at the lowest CRF that fits its cap: +10.4 MB in all (+10.3 MB clips): 81.4 / 75.3 MB
-assert(total<81.4e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 81.4 MB)`);assert(clips<75.3e6,`clips ${(clips/1e6).toFixed(1)} MB (< 75.3 MB)`);
+// Nov 3: lesson_field_45 re-cut (16 s) and the hero re-recorded (21.3 s); best-quality 4:5 re-records (coins ~500), explore_45 and the water-first fuel_konbini; the 9 "See it in action"
+// clips re-captured at best quality (1920 at the lowest CRF under 2 MB + a 1280 wide_*_m file each; wide_cards is 16 s: collect + binder, so its pair may reach 3 / 1.5 MB): 95 / 90 MB until the old 390x844 files are deleted and the big files move to R2
+assert(total<95e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 95 MB)`);assert(clips<90e6,`clips ${(clips/1e6).toFixed(1)} MB (< 90 MB)`);
  // the hero clip is ~2.5x longer than the other 4:5 clips (Nov 3), so only it gets 6 MB (1080) / 3 MB (720 phone file)
  const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6,
   // explore_45 is ~2x the other 4:5 clips (15.7 s: reef swim, wall-target ball, Summit Isle mango-tree ball): 4 MB / 2 MB;
   // fuel_konbini (16:9, 16.9 s of fine Konbini shelf detail) needs 3.5 MB at 1920 for CRF 24 (its 1280 file keeps 2 MB)
-  'explore_45.mp4':4e6,'explore_45_m.mp4':2e6,'fuel_konbini.mp4':3.5e6};
+  'explore_45.mp4':4e6,'explore_45_m.mp4':2e6,'fuel_konbini.mp4':3.5e6,'wide_cards.mp4':3e6,'wide_cards_m.mp4':1.5e6};
  // 4:5 clips: 1080x1350 <= 2.5 MB (the hero 3.5 MB), their 720x900 phone file <= 1.2 MB
  const capOf=b=>cap[b]||(/_45_m\.mp4$/.test(b)?1.2e6:/_45\.mp4$/.test(b)?2.5e6:2e6);
  for(const f of files.filter(f=>/\.(mp4|webm)$/.test(f))){const b=path.basename(f);assert(size(f)<=capOf(b),`${b} is ${(size(f)/1e6).toFixed(2)} MB (cap ${(capOf(b)/1e6)} MB)`);}
