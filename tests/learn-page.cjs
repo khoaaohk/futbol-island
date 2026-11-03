@@ -77,7 +77,8 @@ assert(full.includes("abs('/learn')")&&full.includes("abs('/learn/lessons')"),'l
 
 // ---- 2. links into /learn -------------------------------------------------------------------------------------------------------
 assert.doesNotMatch(read('components/landing/GrownUps.tsx'),/What’s inside/,'title screen bottom row: no What’s inside link (owner, Nov 3)');
-assert.match(read('components/landing/Landing.tsx'),/<a className=\{styles\.backLink\} href="\/learn"/,'title screen: a Back pill at the top-left goes to /learn');
+assert.match(read('components/landing/Landing.tsx'),/<LandingBack\/>/,'title screen: the game Back button at the top-left');
+assert.match(read('components/landing/LandingBack.tsx'),/BackButton[\s\S]*assign\('\/learn'\)/,'title screen Back goes to /learn');
 assert.match(read('app/(site)/layout.tsx'),/<a href="\/learn">What’s inside<\/a>\s*<a href="\/privacy">Privacy<\/a>/,'site footer: What’s inside beside Privacy');
 assert.doesNotMatch(read('app/(site)/layout.tsx').replace(/\{\/\*[\s\S]*?\*\/\}/g,''),/<header[\s\S]*href="\/learn"[\s\S]*<\/header>/,'no section navigation in the header (Oct 16 2026)');
 assert.match(read('app/(site)/about/page.tsx'),/href="\/learn"/,'about links to /learn');
