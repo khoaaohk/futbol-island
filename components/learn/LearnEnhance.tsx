@@ -6,14 +6,20 @@ import {useEffect} from 'react';
  * HTML without JavaScript. Heat budget (AGENTS.md): no scroll listeners, no layout reads while scrolling, no per-frame loops, IntersectionObserver for everything, all of it stopped on unmount.
  *  1. Motion mode: `data-calm` on the page root when the viewer asked for reduced motion, has Save-Data on, is on a 2g/3g
  *     connection, or has the game's Battery saver on (localStorage 'fi2-battery-saver', the same key as lib/graphics/heatTier.ts).
- *     Calm = no fade-up or hero parallax (CSS), clips never start by themselves (poster + tap to play). Content is identical.
+ *     Calm = no fade/scale-in, no hero zoom, no blur on the sub-nav (CSS); clips never start or preload ahead by themselves
+ *     (poster still + tap to play). Content is identical.
  *  2. Fallback for browsers without CSS scroll-driven animations (`animation-timeline: view()`): `data-lm-io` on the root, then
- *     each section's [data-reveal] block gets `data-in` when it enters (soft fade-up), and the hero ([data-par]) gets `--p` (0..1 through the viewport) computed from the
- *     IntersectionObserver entry's own rect (no getBoundingClientRect), written in one rAF.
- *  3. Clips: play only while >= 50 % visible, at most 2 at once (the most visible win), pause when the tab is hidden; each clip
+ *     each chapter's [data-reveal] block gets `data-in` when it enters (fade + scale in), and the hero ([data-par]) gets `--p`
+ *     (0..1 scrolled past) computed from the IntersectionObserver entry's own rect (no getBoundingClientRect), written in one rAF.
+ *  3. Clips (Nov 3: "start instantly" like apple.com, owner): a clip within ~1.5 screens of the viewport is raised from
+ *     preload="none" to "auto" (and loaded) so it is buffered before it scrolls in (only the visible and the next chapter);
+ *     it plays once >= 25 % visible, at most 2 at once (the most visible win), never while its friends panel is hidden, and pauses
+ *     when the tab is hidden. The still underneath is the poster; the clip crossfades in once it plays (`data-playing`). Each clip
  *     has a pause / play button (also the only way to start one in calm mode).
  */
 const MAX_PLAYING=2;
+const PLAY_AT=.25;
+const AHEAD='150% 0px 150% 0px';
 
 function calmWanted(){
  try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return true;}catch{}
@@ -62,7 +68,7 @@ export default function LearnEnhance({rootId}:{rootId:string}){
    b.setAttribute('aria-label',`${playing?'Pause':'Play'} the clip: ${b.dataset.label??''}`);v.parentElement?.toggleAttribute('data-playing',playing);};
   function evaluate(){
    const hidden=document.visibilityState==='hidden';
-   const want=vids.filter(v=>!hidden&&(ratio.get(v)??0)>=.5&&!userPaused.has(v)&&(!calm||userStarted.has(v)))
+   const want=vids.filter(v=>!hidden&&(ratio.get(v)??0)>=PLAY_AT&&!v.closest('[data-panel]:not([data-on])')&&!userPaused.has(v)&&(!calm||userStarted.has(v)))
     .sort((a,b)=>(ratio.get(b)??0)-(ratio.get(a)??0)).slice(0,MAX_PLAYING);
    for(const v of vids){
     if(want.includes(v)){if(v.paused){const p=v.play();if(p)p.then(()=>mark(v,true),()=>mark(v,false));else mark(v,true);}}
@@ -70,9 +76,14 @@ export default function LearnEnhance({rootId}:{rootId:string}){
    }
   }
   if(vids.length){
-   const io=new IntersectionObserver(es=>{for(const e of es)ratio.set(e.target as HTMLVideoElement,e.isIntersecting?e.intersectionRatio:0);evaluate();},{threshold:[0,.5,.75,1]});
+   const io=new IntersectionObserver(es=>{for(const e of es)ratio.set(e.target as HTMLVideoElement,e.isIntersecting?e.intersectionRatio:0);evaluate();},{threshold:[0,PLAY_AT,.5,.75,1]});
    vids.forEach(v=>io.observe(v));
+   // buffer ahead: once a clip is near (and the viewer is not in calm mode), let the browser fetch its first seconds
+   const ahead=new IntersectionObserver(es=>{for(const e of es){const v=e.target as HTMLVideoElement;if(!e.isIntersecting||calm)continue;
+     if(v.preload!=='auto'){v.preload='auto';if(v.paused&&v.readyState===0&&v.networkState!==2)v.load();}ahead.unobserve(v);}},{rootMargin:AHEAD});
+   vids.forEach(v=>ahead.observe(v));
    const vis=()=>evaluate();document.addEventListener('visibilitychange',vis);
+   root.addEventListener('learn:panel',vis);
    const click=(ev:Event)=>{const b=(ev.target as Element).closest?.('[data-lv-btn]');if(!b||!root.contains(b))return;
     const v=b.parentElement?.querySelector<HTMLVideoElement>('video[data-lv]');if(!v)return;
     if(v.paused){userPaused.delete(v);userStarted.add(v);ratio.set(v,Math.max(ratio.get(v)??0,.5));
@@ -82,7 +93,7 @@ export default function LearnEnhance({rootId}:{rootId:string}){
      const p=v.play();if(p)p.then(()=>mark(v,true),()=>mark(v,false));else mark(v,true);}
     else{v.pause();mark(v,false);userPaused.add(v);userStarted.delete(v);}};
    root.addEventListener('click',click);
-   offs.push(()=>{io.disconnect();document.removeEventListener('visibilitychange',vis);root.removeEventListener('click',click);vids.forEach(v=>{if(!v.paused)v.pause();});});
+   offs.push(()=>{io.disconnect();ahead.disconnect();document.removeEventListener('visibilitychange',vis);root.removeEventListener('learn:panel',vis);root.removeEventListener('click',click);vids.forEach(v=>{if(!v.paused)v.pause();});});
   }
 
   return ()=>offs.forEach(f=>f());

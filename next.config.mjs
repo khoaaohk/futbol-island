@@ -19,9 +19,11 @@ const cacheAssets = [
 const cacheStatic = [
   ...cacheAssets,
   { source: '/players/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
-  // /learn stills and clips (Nov 2 2026 QA): only the files, never the /learn page or /learn/lessons routes. Same day + SWR as other art.
-  { source: '/learn/:file([a-z0-9_]+\\.webp)', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
-  { source: '/learn/video/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
+  // /learn stills and clips (Nov 2 2026 QA): only the files, never the /learn page or /learn/lessons routes. Nov 3: a week + a
+  // month of SWR so a return visit plays at once (the names are not content-hashed, so not `immutable`: a recapture under the
+  // same name reaches everyone within a week).
+  { source: '/learn/:file([a-z0-9_]+\\.webp)', headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }] },
+  { source: '/learn/video/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }] },
   { source: '/splash/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
   // Admin analytics (Oct 7 2026): never indexed, never cached.
   { source: '/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Cache-Control', value: 'no-store' }] },

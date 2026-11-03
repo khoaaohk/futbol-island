@@ -5,10 +5,12 @@
 //  3. heat + motion: one client island for behaviour with reduced-motion, Save-Data, slow-network and Battery saver branches,
 //     IntersectionObserver only (no scroll listeners, no getBoundingClientRect), max 2 clips, pause when hidden; CSS has the
 //     scroll-driven path, the IO fallback path and the calm / reduced-motion kill switch; clips are muted, looped, inline,
-//     preload="none"; the media module tolerates a missing manifest and missing files;
-//  4. content (simplified Nov 2 2026, owner "too much going on"): exactly the 5 LEARN_HIGHLIGHTS sections, each with at most 3
-//     chips and a real shot (no drawn placeholder art anywhere); 5 FAQs picked from LEARN_FAQ, safety first; no feature finder,
-//     a nav of <= 5 anchors; one motion kind (fade-up + hero parallax); hrefs are internal paths that exist or futbolisland.app;
+//     preload="none" (auto for the hero only), play at >= 25 % visible, buffer ~1.5 screens ahead except in calm mode;
+//     the media module tolerates a missing manifest and missing files; IslandBrush only on the Play buttons (Nov 3, owner);
+//  4. content (simplified Nov 2 2026, owner "too much going on"; Apple-style chapters Nov 3): exactly the 5 LEARN_HIGHLIGHTS
+//     sections, each with at most 3 chips and a real shot (no drawn placeholder art anywhere); 5 FAQs picked from LEARN_FAQ, safety
+//     first; no feature finder, a nav of <= 5 anchors; one motion language (fade + scale in, hero zoom-out), one pinned feature;
+//     hrefs are internal paths that exist or futbolisland.app;
 //  5. a built site (NEXT_DIST_DIR or .next, when it holds /learn): every highlight, the 5 FAQ questions and answers and the
 //     3 friend steps are in the HTML; FAQPage JSON-LD matches the 5 shown; old /learn/<id> pages are not built.
 // usage: node tests/learn-page.cjs
@@ -82,10 +84,16 @@ assert.match(enh,/fi2-battery-saver/,'Battery saver branch (same key as lib/grap
 assert.match(read('lib/graphics/heatTier.ts'),/SAVER_KEY='fi2-battery-saver'/,'the Battery saver key still matches the game');
 assert.match(enh,/animation-timeline: view\(\)/,'feature-detects CSS scroll-driven animations');
 assert.match(enh,/const MAX_PLAYING=2;/,'at most 2 clips at once');
-assert.match(enh,/>=\.5/,'a clip plays only when >= 50 % visible');
+assert.match(enh,/const PLAY_AT=\.25;/,'a clip plays once >= 25 % visible (Nov 3: start sooner, like apple.com)');
+assert.match(enh,/>=PLAY_AT/,'the play threshold is used');
+assert.match(enh,/const AHEAD='150% 0px 150% 0px';/,'clips buffer ahead ~1.5 screens before they scroll in');
+assert.match(enh,/if\(!e\.isIntersecting\|\|calm\)continue;/,'no buffering ahead in calm mode (Save-Data, slow network, battery saver)');
+assert.match(enh,/\[data-panel\]:not\(\[data-on\]\)/,'a clip in a hidden friends panel never plays');
+assert.doesNotMatch(enh,/currentTime/,'no video scrubbing');
 assert.match(enh,/visibilitychange/,'clips pause when the tab is hidden');
 assert(!has('components/learn/FeatureFinder.tsx'),'the Find a feature finder is gone');
-for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FriendStepper.tsx','components/learn/ShareLink.tsx']){const src=strip(read(f));
+for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FriendSteps.tsx','components/learn/ShareLink.tsx']){const src=strip(read(f));
+ assert.doesNotMatch(src,/getBoundingClientRect|offsetTop|scrollY|pageYOffset|scrollTo\(|preventDefault\(\)[^;]*wheel|['"]wheel['"]/,`${f}: no layout reads while scrolling, no scroll-jacking`);
  assert.doesNotMatch(src,/addEventListener\(\s*['"]scroll['"]|onScroll|onscroll/,`${f}: no scroll listeners`);
  assert.doesNotMatch(src,/framer-motion|gsap|animejs|react-spring|lottie/,`${f}: no animation library`);}
 assert.doesNotMatch(enh,/getBoundingClientRect|offsetTop|scrollY|pageYOffset/,'LearnEnhance reads no layout while scrolling (IO entry rects only)');
@@ -94,15 +102,21 @@ assert.match(css,/@supports\(animation-timeline:view\(\)\)/,'CSS scroll-driven p
 assert.match(css,/\.root\[data-lm-io\]/,'IntersectionObserver fallback path');
 assert.match(css,/\.root\[data-calm\] \*,[^{]*\{animation:none!important;transition:none!important\}/,'calm kills every animation');
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{animation:none!important;transition:none!important\}\}/,'reduced motion kills every animation, even before JS');
-{const kf=[...css.matchAll(/@keyframes (\w+)\{([\s\S]*?\})\}/g)];assert.deepEqual(kf.map(k=>k[1]).sort(),['fadeUp','heroDrift'],'one motion kind: soft fade-up + light hero parallax');
+{const kf=[...css.matchAll(/@keyframes (\w+)\{([\s\S]*?\})\}/g)];assert.deepEqual(kf.map(k=>k[1]).sort(),['chrome','heroZoom','rise'],'one motion language: fade + scale in, hero zoom-out (+ the sub-nav chrome fade)');
  for(const [,name,body] of kf){const props=[...body.matchAll(/([a-z-]+):/g)].map(m=>m[1]).filter(p=>!['transform','opacity','box-shadow','background','color'].includes(p));
   assert.deepEqual(props,[],`@keyframes ${name} animates transform / opacity only`);
   assert.doesNotMatch(body,/box-shadow|background|color/,`@keyframes ${name}: transform / opacity only`);}
- assert.doesNotMatch(css,/position:sticky;top:8|data-pin|\.word\b/,'no pinned sections, no word-by-word headline');}
+ // Nov 3 restyle: the sub-nav plus at most one pinned feature (the friends media); no word-by-word headline, no snap scrolling
+ assert((css.match(/position:sticky/g)||[]).length<=2,'sticky: the sub-nav and one pinned feature at most');
+ assert.doesNotMatch(css,/\.word\b|scroll-snap-type/,'no word-by-word headline, no scroll snapping');
+ // owner, Nov 3: IslandBrush only on the gold Play buttons; everything else is the system sans
+ for(const m of strip(css).matchAll(/([^{}]+)\{[^{}]*IslandBrush[^{}]*\}/g))assert.match(m[1].trim(),/^\.(cta|pill)$/,`IslandBrush only on Play buttons, not ${m[1].trim()}`);
+ assert.match(css,/--sans:-apple-system,/,'system sans stack, no web font download');}
 const media=read('components/learn/LearnMedia.tsx');
-assert.match(media,/<video [^>]*muted loop playsInline preload="none"/,'clips: muted, loop, playsinline, preload none');
+assert.match(media,/<video [^>]*muted loop playsInline preload=\{eager\?'auto':'none'\}/,'clips: muted, loop, playsinline, preload none (auto for the hero only; LearnEnhance buffers the next one ahead)');
+assert.match(media,/srcSet=/,'stills carry srcset + sizes, ready for sharper captures');
 assert.doesNotMatch(media,/<video [^>]*poster=/,'no video poster: a poster downloads at once even with preload none (the lazy still underneath is the poster)');
-assert.match(media,/video\/webm[\s\S]*video\/mp4/,'webm first, then mp4');
+assert.match(strip(media),/video\/mp4[\s\S]*video\/webm/,'mp4 (H.264, hardware-decoded on phones) first, then webm (Nov 3)');
 assert.match(media,/data-lv-btn/,'every clip has a pause / play button');
 assert.match(media,/if\(!a\.image\)return null;/,'no still = no picture at all (no drawn placeholder art)');
 assert.doesNotMatch(media,/Fallback|fbGlyph|gradient/,'no drawn fallback card');
@@ -131,7 +145,7 @@ assert.match(page,/mainEntity:FAQ\.map/,'FAQ JSON-LD is built from the shown FAQ
 assert.match(page,/<details key=\{q\.q\} className=\{s\.faq\}><summary>/,'FAQ is details / summary');
 assert.doesNotMatch(page,/FeatureFinder|LEARN_GROUPS|data-pin|IslandArt|Jersey/,'no finder, no 7 group sections, no drawn art');
 {const nav=page.match(/const NAV:[^=]*=(\[.*\]);/);assert(nav,'NAV');assert(JSON.parse(nav[1].replace(/'/g,'"')).length<=5,'nav: <= 5 anchors');}
-assert.match(page,/<FriendStepper /,'the 3-step play-with-a-friend stepper');
+assert.match(page,/<FriendSteps /,'the 3-step play-with-a-friend pinned feature');
 assert.match(page,/LEARN_GROWNUP_LINE/,'grown-ups stay in charge: one line');
 {const hrefs=[...page.matchAll(/href=(?:"([^"]+)"|\{`([^`]+)`\})/g)].map(m=>m[1]??m[2]);
  const ok=new Set(['/about','/privacy','#together']);
@@ -155,7 +169,9 @@ assert(ld.some(x=>x['@type']==='BreadcrumbList'),'BreadcrumbList');
 assert.match(html,/<link rel="canonical" href="https:\/\/futbolisland\.app\/learn"\/>/,'canonical');
 assert.match(html,/<meta property="og:image" content="[^"]*opengraph-image\.png"/,'OG image');
 assert.equal((html.match(/<h1[ >]/g)||[]).length,1,'one h1');
-for(const m of html.matchAll(/<video [^>]*>/g))assert(/muted/.test(m[0])&&/loop/.test(m[0])&&/playsInline|playsinline/.test(m[0])&&/preload="none"/.test(m[0]),'built video attrs');
+{const vs=[...html.matchAll(/<video [^>]*>/g)].map(m=>m[0]);
+ for(const v of vs)assert(/muted/.test(v)&&/loop/.test(v)&&/playsInline|playsinline/.test(v)&&/preload="(none|auto)"/.test(v)&&!/poster=/.test(v),'built video attrs');
+ assert.equal(vs.filter(v=>/preload="auto"/.test(v)).length,1,'only the hero clip preloads in full');}
 assert(!fs.existsSync(path.join(dist,'server/app/learn',lessons.LESSONS[0].id+'.html')),'old /learn/<id> pages are not built');
 assert(fs.existsSync(path.join(dist,'server/app/learn/lessons',lessons.LESSONS[0].id+'.html')),'lessons are built under /learn/lessons');
 console.log(`learn page ok: ${HL.length} sections, ${Q.length} FAQ, ${(html.match(/<video /g)||[]).length} clips, ${(html.match(/src="\/learn\/[a-z0-9_]+\.webp"/g)||[]).length} stills in ${path.relative(root,dist)}`);
