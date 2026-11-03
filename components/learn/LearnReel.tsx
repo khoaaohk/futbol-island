@@ -1,5 +1,5 @@
 import {LEARN_CAROUSEL,learnBoldParts,learnPlain} from '@/lib/site/learnFeatures';
-import {learnWideAsset} from '@/lib/site/learnMedia';
+import {learnUrl,learnWideAsset} from '@/lib/site/learnMedia';
 import ReelEnhance from './ReelEnhance';
 import s from './learn.module.css';
 
@@ -25,12 +25,12 @@ export default function LearnReel(){
   <div className={s.reelRow} role="region" aria-roledescription="carousel" aria-label="See it in action: clips from the game" tabIndex={0} data-reel-row="">
    {cards.map(({c,a},i)=><div key={c.key} className={s.card} role="group" aria-roledescription="slide" aria-label={`${i+1} of ${n}: ${c.title}`} data-reel-card="" data-active={i===0?'':undefined}>
     <div className={s.cardMedia} data-media="still">
-     <img className={s.still} src={a.image!.src} width={a.image!.width} height={a.image!.height} alt={a.alt??learnPlain(c.caption)}
+     <img className={s.still} src={learnUrl(a.image!.src)} width={a.image!.width} height={a.image!.height} alt={a.alt??learnPlain(c.caption)}
       loading={i<2?'eager':'lazy'} decoding="async"/>
      {a.clip&&<>
       <video className={s.clip} data-rv="" muted loop playsInline preload="none" aria-hidden="true" tabIndex={-1} disablePictureInPicture>
-       {a.clip.mp4&&<source src={a.clip.mp4} type="video/mp4"/>}
-       {a.clip.webm&&<source src={a.clip.webm} type="video/webm"/>}
+       {a.clip.mp4&&<source src={learnUrl(a.clip.mp4)} type="video/mp4"/>}
+       {a.clip.webm&&<source src={learnUrl(a.clip.webm)} type="video/webm"/>}
       </video>
       <button type="button" className={s.reelPlay} data-rv-btn="" aria-label={`Play the clip: ${c.title}`} data-label={c.title}>
        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path className={s.icoPlay} d="M8 5.5v13l11-6.5z"/><path className={s.icoPause} d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>

@@ -1,5 +1,5 @@
 import {LEARN_MONTAGE} from '@/lib/site/learnFeatures';
-import {learnMontage} from '@/lib/site/learnMedia';
+import {learnMontage,learnUrl} from '@/lib/site/learnMedia';
 import MontageEnhance from './MontageEnhance';
 import s from './learn.module.css';
 
@@ -21,13 +21,13 @@ export default function LearnMontage(){
  const dur=m.duration??28;
  return <section className={s.montage} id="film" aria-labelledby="montage-h" data-montage="">
   <div className={s.montageMedia} data-media="still" style={{'--dur':`${dur}s`} as React.CSSProperties}>
-   <img className={s.still} src={big.image.src} srcSet={m.sizes.map(x=>`${x.image.src} ${x.image.width}w`).join(', ')} sizes="100vw"
+   <img className={s.still} src={learnUrl(big.image.src)} srcSet={m.sizes.map(x=>`${learnUrl(x.image.src)} ${x.image.width}w`).join(', ')} sizes="100vw"
     width={big.image.width} height={big.image.height} alt={m.alt??LEARN_MONTAGE.title} loading="lazy" decoding="async"/>
    {big.mp4&&<>
     <video className={s.clip} data-mv="" muted loop playsInline preload="none" aria-hidden="true" tabIndex={-1} disablePictureInPicture>
-     {sm?.mp4&&<source media="(max-width: 640px)" src={sm.mp4} type="video/mp4" data-size="s"/>}
-     {md?.mp4&&<source media="(max-width: 1280px)" src={md.mp4} type="video/mp4" data-size="m"/>}
-     <source src={big.mp4} type="video/mp4" data-size="l"/>
+     {sm?.mp4&&<source media="(max-width: 640px)" src={learnUrl(sm.mp4)} type="video/mp4" data-size="s"/>}
+     {md?.mp4&&<source media="(max-width: 1280px)" src={learnUrl(md.mp4)} type="video/mp4" data-size="m"/>}
+     <source src={learnUrl(big.mp4)} type="video/mp4" data-size="l"/>
     </video>
     <button type="button" className={s.mPlay} data-mv-btn="" aria-label="Play the island film">
      <svg viewBox="0 0 44 44" aria-hidden="true" focusable="false">

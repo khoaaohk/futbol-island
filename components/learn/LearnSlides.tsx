@@ -1,5 +1,5 @@
 import {LEARN_SLIDES} from '@/lib/site/learnFeatures';
-import {learnSlideAsset} from '@/lib/site/learnMedia';
+import {learnSlideAsset,learnUrl} from '@/lib/site/learnMedia';
 import SlidesEnhance from './SlidesEnhance';
 import s from './learn.module.css';
 
@@ -26,12 +26,12 @@ export default function LearnSlides(){
    {slides.map(({x,a},i)=><div key={x.key} className={s.slide} role="group" aria-roledescription="slide" aria-label={`${i+1} of ${n}: ${x.title}`}
     data-slide="" data-active={i===0?'':undefined}>
     <div className={s.slideMedia} data-media="still">
-     <img className={s.still} src={a.image!.src} width={a.image!.width} height={a.image!.height} alt={a.alt??x.caption} loading="lazy" decoding="async"/>
+     <img className={s.still} src={learnUrl(a.image!.src)} width={a.image!.width} height={a.image!.height} alt={a.alt??x.caption} loading="lazy" decoding="async"/>
      {a.clip&&<>
       <video className={s.clip} data-sv="" muted loop playsInline preload="none" aria-hidden="true" tabIndex={-1} disablePictureInPicture>
-       {a.clip.mp4m&&<source media="(max-width: 1280px)" src={a.clip.mp4m} type="video/mp4"/>}
-       {a.clip.mp4&&<source src={a.clip.mp4} type="video/mp4"/>}
-       {a.clip.webm&&<source src={a.clip.webm} type="video/webm"/>}
+       {a.clip.mp4m&&<source media="(max-width: 1280px)" src={learnUrl(a.clip.mp4m)} type="video/mp4"/>}
+       {a.clip.mp4&&<source src={learnUrl(a.clip.mp4)} type="video/mp4"/>}
+       {a.clip.webm&&<source src={learnUrl(a.clip.webm)} type="video/webm"/>}
       </video>
       <button type="button" className={s.slidePlay} data-sv-btn="" aria-label={`Play the clip: ${x.title}`} data-label={x.title}>
        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path className={s.icoPlay} d="M8 5.5v13l11-6.5z"/><path className={s.icoPause} d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>

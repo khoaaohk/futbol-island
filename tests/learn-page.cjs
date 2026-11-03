@@ -166,9 +166,14 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  // Nov 3 merge with the Fuel up clip: 52 / 48 MB (the slides, ~14 MB, and the old 390x844 files to delete, are the next reconcile; big files move to R2 after)
 // Nov 3 merge with the feature slideshow clips (~12.6 MB): 64 / 58 MB until the old 390x844 files are deleted and the big files move to R2
 // Nov 3: lesson_field_45 re-cut as a 16 s four-surface clip (paths, story, lesson, quiz) and the hero re-recorded 8.5 s -> 21.3 s (dribble, scooter over the bridge, flight along Summit Isle): 71 / 65 MB until the old 390x844 files are deleted and the big files move to R2
-assert(total<71e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 71 MB)`);assert(clips<65e6,`clips ${(clips/1e6).toFixed(1)} MB (< 65 MB)`);
+// Nov 3 best-quality 4:5 re-records (coins ~500: dive, save code, join, side by side, friend steps), the new 15.7 s explore_45 and the
+// 16.9 s water-first fuel_konbini, each at the lowest CRF that fits its cap: +10.4 MB in all (+10.3 MB clips): 81.4 / 75.3 MB
+assert(total<81.4e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 81.4 MB)`);assert(clips<75.3e6,`clips ${(clips/1e6).toFixed(1)} MB (< 75.3 MB)`);
  // the hero clip is ~2.5x longer than the other 4:5 clips (Nov 3), so only it gets 6 MB (1080) / 3 MB (720 phone file)
- const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6};
+ const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6,
+  // explore_45 is ~2x the other 4:5 clips (15.7 s: reef swim, wall-target ball, Summit Isle mango-tree ball): 4 MB / 2 MB;
+  // fuel_konbini (16:9, 16.9 s of fine Konbini shelf detail) needs 3.5 MB at 1920 for CRF 24 (its 1280 file keeps 2 MB)
+  'explore_45.mp4':4e6,'explore_45_m.mp4':2e6,'fuel_konbini.mp4':3.5e6};
  // 4:5 clips: 1080x1350 <= 2.5 MB (the hero 3.5 MB), their 720x900 phone file <= 1.2 MB
  const capOf=b=>cap[b]||(/_45_m\.mp4$/.test(b)?1.2e6:/_45\.mp4$/.test(b)?2.5e6:2e6);
  for(const f of files.filter(f=>/\.(mp4|webm)$/.test(f))){const b=path.basename(f);assert(size(f)<=capOf(b),`${b} is ${(size(f)/1e6).toFixed(2)} MB (cap ${(capOf(b)/1e6)} MB)`);}
@@ -240,7 +245,11 @@ assert(total<71e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 71 MB)`);asse
  assert.match(page,/<LearnMontage\/>\s*\n\s*\{\/\* ---- 1b\. See it in action[^\n]*\n\s*<LearnReel\/>/,'the montage sits right after the hero, before the carousel');
  assert.match(mon,/<video [^>]*data-mv="" muted loop playsInline preload="none"/,'montage clip: muted, loop, inline, preload none (raised when near)');
  assert.doesNotMatch(mon,/<video [^>]*(poster=|autoPlay)/,'montage: no poster attribute, no autoplay attribute');
- assert.match(mon,/<source media="\(max-width: 640px\)"[^>]*data-size="s"\/>\}\s*\n\s*\{md\?\.mp4&&<source media="\(max-width: 1280px\)"[^>]*data-size="m"\/>\}\s*\n\s*<source src=\{big\.mp4\}/,'montage: s / m / l as <source media> alternatives (only one is requested)');
+ assert.match(mon,/<source media="\(max-width: 640px\)"[^>]*data-size="s"\/>\}\s*\n\s*\{md\?\.mp4&&<source media="\(max-width: 1280px\)"[^>]*data-size="m"\/>\}\s*\n\s*<source src=\{learnUrl\(big\.mp4\)\}/,'montage: s / m / l as <source media> alternatives (only one is requested)');
+ // Nov 3: re-recorded files keep their names and are cached a week, so the montage, slides and reel URLs carry ?v=<content hash> too
+ for(const [f,src,re] of [['montage',mon,/src=\{learnUrl\(big\.image\.src\)\}[\s\S]*learnUrl\(x\.image\.src\)[\s\S]*src=\{learnUrl\(sm\.mp4\)\}[\s\S]*src=\{learnUrl\(md\.mp4\)\}/],
+  ['slides',sli,/src=\{learnUrl\(a\.image!\.src\)\}[\s\S]*src=\{learnUrl\(a\.clip\.mp4\)\}/],['reel',read('components/learn/LearnReel.tsx'),/src=\{learnUrl\(a\.image!\.src\)\}[\s\S]*src=\{learnUrl\(a\.clip\.mp4\)\}/]]){
+  assert.match(src,re,`${f}: poster and clip URLs are cache-busted (learnUrl)`);assert.doesNotMatch(src,/src=\{(a\.image!|a\.clip|big|sm|md)\.[a-z0-9]+\}/,`${f}: no raw media URL left`);}
  assert.match(mon,/srcSet=\{m\.sizes\.map/,'montage poster: the same size ladder through srcset');
  assert.match(mon,/if\(!m\)return null;/,'no montage files = no section');
  assert.match(mon,/pathLength=\{100\} data-ring=""/,'montage button: a progress ring');
@@ -261,7 +270,7 @@ assert(total<71e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 71 MB)`);asse
  assert.equal(M.learnSlideAsset('definitely_not_captured_xyz'),null,'missing slide = no slide');
  assert.match(page,/<Chapter h=\{together\} dark>[\s\S]*<\/Chapter>\s*\n\s*\{\/\* ---- 4b\. Even more[^\n]*\n\s*<LearnSlides\/>\s*\n\s*\{\/\* ---- 5\. safe/,'the slideshow sits after Play with friends, before Safe for kids');
  assert.match(sli,/<video [^>]*data-sv="" muted loop playsInline preload="none"/,'slide clips: muted, loop, inline, preload none');
- assert.match(sli,/<source media="\(max-width: 1280px\)" src=\{a\.clip\.mp4m\}/,'slides: the 1280px file for viewports <= 1280px');
+ assert.match(sli,/<source media="\(max-width: 1280px\)" src=\{learnUrl\(a\.clip\.mp4m\)\}/,'slides: the 1280px file for viewports <= 1280px');
  assert.match(sli,/role="region" aria-roledescription="carousel" aria-label="[^"]+" tabIndex=\{0\}/,'slide row: region, carousel, labelled, focusable');
  assert.match(sli,/aria-current=\{i===0\?'true':undefined\}/,'dots: aria-current on the active one');
  // slideshow behaviour + heat
@@ -347,7 +356,10 @@ assert.equal(HL.map(h=>h.id).join(),'top,learn,explore,fuel,together,safe','six 
  assert.match(media,/a\.clip\.mp4m&&<source media=\{a\.image\.m\?[^}]*'\(max-width: 1280px\)'\}[\s\S]*a\.clip\.mp4&&<source/,'the phone file is a <source media> listed before the full-size mp4');
  assert.match(css,/\.frameFilm\{width:min\(100%,1052px\);aspect-ratio:16\/9\}/,'16:9 chapter clips get the large film frame');}
 for(const h of HL){assert(h.chips.length<=3,`${h.id}: at most 3 chips`);assert(h.title&&h.line&&h.line.length<=90,`${h.id}: one headline, one short line`);
- assert(has(`public/learn/${h.shot}.webp`),`${h.id}: shot ${h.shot} is a real still`);for(const id of h.features)assert(F.some(f=>f.id===id),`${h.id}: feature ${id} exists`);}
+ {const k45=L('lib/site/learnMedia.ts').LEARN_45[h.shot];assert(has(`public/learn/${h.shot}.webp`)||k45&&has(`public/learn/${k45}.webp`),`${h.id}: shot ${h.shot} is a real still (or its 4:5 capture)`);}for(const id of h.features)assert(F.some(f=>f.id===id),`${h.id}: feature ${id} exists`);}
+// Nov 3: the Explore chapter plays explore_45 (reef swim, a wall-target ball, a Summit Isle mango-tree ball) and its chips name the balls
+{const ex=HL.find(h=>h.id==='explore'),a=L('lib/site/learnMedia.ts').learnAsset(ex.shot);assert(a.image?.src==='/learn/explore_45.webp'&&a.image.m&&a.clip?.mp4m?.endsWith('explore_45_m.mp4'),'Explore: the 4:5 explore_45 still, phone still and phone clip');
+ assert(ex.chips.some(c=>/ball/i.test(c)),'Explore chips mention the balls to find');}
 for(const h of HL.slice(1))assert(page.includes(`hl('${h.id}')`),`section ${h.id} rendered`);
 assert(has('public/learn/town_overview.webp')&&HL[0].shot==='town_overview','hero uses the town overview shot');
 assert.equal(Q.length,5,'5 FAQs');for(const q of Q)assert(q,'every LEARN_FAQ_TOP question exists in LEARN_FAQ');

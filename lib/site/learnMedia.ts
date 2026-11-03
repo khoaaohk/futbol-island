@@ -87,6 +87,8 @@ export const LEARN_SHOT:Readonly<Record<string,string>>={
 export const LEARN_45:Readonly<Record<string,string>>={
  town_overview:'town_overview_45',lesson_field:'lesson_field_45',diving_reef:'diving_reef_45',save_code:'save_code_45',
  mp_sidebyside:'mp_sidebyside_45',mp_join:'mp_join_45',friend_step1:'friend_step1_45',friend_step2:'friend_step2_45',
+ // Nov 3 2026: the Explore chapter clip (swim the reef, kick a wall target to find a ball, a ball dropped from a Summit Isle mango tree)
+ explore:'explore_45',
 };
 
 /** Crop focus (CSS object-position) for shots whose subject is not in the middle; upright shots default to the middle. */

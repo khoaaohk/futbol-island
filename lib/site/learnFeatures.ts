@@ -381,8 +381,8 @@ export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
  {id:'top',title:LEARN_HERO.headline,line:'A free football game made for kids.',shot:'town_overview',chips:[],features:[]},
  {id:'learn',title:'Learn the game',line:'Short lessons and quizzes show real football ideas on a moving pitch.',shot:'lesson_field',
   chips:['Paths, lessons and quizzes','Story films and books','A football museum'],features:['learning-paths','lesson-quiz','path-stories','pop-up-books','history-museum']},
- {id:'explore',title:'Explore the island',line:'Every corner hides a football idea to find.',shot:'diving_reef',
-  chips:['Fishing and diving','Arcade and vending machines','Islanders and cards'],features:['fishing','swim-dive','arcade','vending','islanders','player-cards']},
+ {id:'explore',title:'Explore the island',line:'Every corner hides a football idea to find.',shot:'explore',
+  chips:['116 hidden balls to find','Each ball, a mini lesson','Swim and dive the reef'],features:['ball-hunt','reef-balls','swim-dive','fishing','islanders','player-cards']},
  // "Fuel up" (Nov 3 2026): only what docs/learn-konbini-facts.md supports. Konbini food and drinks refill the fuel bar (the energy
  // for rides, flying and sprinting; walking always works), and every item shows one sourced football-nutrition line.
  {id:'fuel',title:'Fuel up like a footballer.',line:'Snacks from the Konbini (convenience store) refill your energy and teach food tips.',shot:'fuel_konbini',
