@@ -9,7 +9,7 @@
    `.root[data-calm]` (Save-Data, 2g/3g, Battery saver), which also drops the sub-nav blur; with JS off every word is visible. */
 
 .root{
- --paper:#fbf7ee;--night:#0c1714;--well-l:#efe8d7;--well-d:#15241f;
+ --paper:#fbf7ee;--tint:#ecefdf;--night:#0c1714;--well-l:#efe8d7;--well-d:#15241f;
  --ink:#14221d;--ink2:#5b675f;--inkD:#f6f1e4;--ink2D:#a3aea6;--gold:#e9c16b;--goldInk:#8a6620;--pitch:#1d6b55;
  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI Variable Display','Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;
  --ease:cubic-bezier(.2,.7,.2,1);--gut:max(16px,env(safe-area-inset-left,0px));--fade:min(16vh,150px);
@@ -47,16 +47,16 @@
 /* over a dark chapter (LearnEnhance sets data-dark from IntersectionObserver): a near-black layer fades in (opacity only) and the
    logo / links turn light; the gold pill reads on both */
 .navDark{position:absolute;inset:0;background:rgb(12 23 20 / .9);opacity:0;transition:opacity .35s var(--ease);pointer-events:none}
-.subnav[data-dark] .navDark{opacity:1}
-.subnav[data-dark]::after{background:rgb(246 241 228 / .12)}
-.root .subnav[data-dark] .logo,.root .subnav[data-dark] .subLinks a{color:var(--inkD)}
+.subnav[data-dark] .navDark{opacity:0}
+
+
 .navMark{position:absolute;left:0;right:0;top:var(--fade);bottom:var(--fade);visibility:hidden;pointer-events:none}
 
 /* ---- chapters: light / dark, centred, big type, generous space ----------------------------------------------------------- */
 .ch{position:relative;display:grid;justify-items:center;gap:clamp(40px,7vh,88px);padding:clamp(104px,22vh,260px) var(--gut);text-align:center}
 .light{background:var(--paper);color:var(--ink)}
-.dark{color:var(--inkD);background:linear-gradient(var(--paper),var(--night) var(--fade),var(--night) calc(100% - var(--fade)),var(--paper));
- background:linear-gradient(in oklab,var(--paper),var(--night) var(--fade),var(--night) calc(100% - var(--fade)),var(--paper))}
+.dark{--inkD:var(--ink);--ink2D:var(--ink2);--well-d:#fbf7ee;--night:#14221d;color:var(--ink);background:linear-gradient(var(--paper),var(--tint) var(--fade),var(--tint) calc(100% - var(--fade)),var(--paper));
+ background:linear-gradient(in oklab,var(--paper),var(--tint) var(--fade),var(--tint) calc(100% - var(--fade)),var(--paper))}
 .head{display:grid;justify-items:center;gap:clamp(14px,2vh,22px);max-width:1000px}
 .kicker{font-size:clamp(17px,.5vw + 15px,21px);font-weight:600;color:var(--goldInk);letter-spacing:-.005em}
 .h1,.h2{font-weight:600;line-height:1.04;letter-spacing:-.028em;text-wrap:balance}
@@ -89,7 +89,7 @@
 /* ---- media: a large rounded card; on wide screens it sits in a big soft "well" ------------------------------------------- */
 .stage{display:grid;justify-items:center;gap:22px;width:100%}
 .frame{position:relative;overflow:hidden;border-radius:clamp(26px,2.4vw,40px);background:var(--well-l);box-shadow:0 30px 60px -20px rgb(12 23 20 / .35);transform:translateZ(0)}
-.dark .frame{background:var(--well-d);box-shadow:0 30px 70px -24px rgb(0 0 0 / .7)}
+.dark .frame{background:var(--well-d);box-shadow:0 30px 60px -24px rgb(12 23 20 / .28)}
 .frameTall{height:var(--tallH);aspect-ratio:780/1688}
 .frameWide{width:min(100%,640px);aspect-ratio:792/844}
 .frame169{width:min(100%,640px);aspect-ratio:16/9}
@@ -277,7 +277,7 @@
 /* ---- the end ---------------------------------------------------------------------------------------------------------------- */
 .end{min-height:min(100svh,920px);align-content:center;padding-bottom:calc(clamp(104px,22vh,260px) + env(safe-area-inset-bottom,0px))}
 .end .h2{font-size:clamp(48px,5.4vw + 18px,112px)}
-.root .end .more,.dark .more{color:var(--gold)}
+.root .end .more,.dark .more{color:var(--goldInk)}
 .endLinks{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 24px;margin-top:clamp(16px,4vh,40px);font-size:15px}
 .root .endLinks a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink2D);text-decoration:none}
 .root .endLinks a:hover{color:var(--inkD)}
