@@ -70,6 +70,10 @@
 .root .subLinks a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-2px;border-radius:999px}
 /* phones: logo + Play pill only (Nov 3: four links squeezed in at 390px clipped "Safety"); the anchors stay in the page */
 @media(max-width:640px){.root .subLinks{display:none}}
+/* 641-759px (audit Nov 3): logo 157 + four 92px links + Play 76 need 680px, so at 650 "Safety" ran under Play. Narrower 82px
+   links + 4px gaps (chip step 86px) fit from 641px; same chip, same motion */
+@media(min-width:641px) and (max-width:759px){.root .subLinks{gap:4px}.root .subLinks a,.root ul.subLinks::before{width:82px}
+ .root ul.subLinks::before{transform:translateX(calc(var(--i,0) * 86px)) scale(.86)}.root .subLinks[data-has-current]::before{transform:translateX(calc(var(--i,0) * 86px))}}
 /* phones (owner, Nov 3): menu button far left, logo centred, Play right */
 @media(max-width:640px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr}.root .logo{grid-column:2;grid-row:1;margin:0;justify-self:center}.menu{grid-column:1;grid-row:1;justify-self:start}.pill{grid-column:3;grid-row:1;justify-self:end}}
 @media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:none;padding:0 var(--gut) 3px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px}}
