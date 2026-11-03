@@ -324,7 +324,7 @@ assert(total<124e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 124 MB)`);as
   assert.match(mm,/querySelector<HTMLAnchorElement>\('a'\)\?\.focus/,'focus to the first link on open');assert.match(mm,/btn\.focus\(/,'focus back to the button');
   assert.match(mm,/removeEventListener\('pointerdown'/,'document listeners only while open');
   assert.match(css,/\.menu\{display:none\}\s*@media\(max-width:640px\)\{\.menu\{display:block;flex:none\}\}/,'menu only at <= 640px');
-  assert.match(css,/\.menuBtn\{display:inline-flex;[^}]*background:var\(--btn-mint[^}]*font:800 17px/,'mint pill button reading Menu');
+  assert.match(css,/\.menuBtn\{display:inline-flex;[^}]*background:var\(--btn-mint[^}]*font:600 14px/,'mint pill button reading Menu');
   assert.match(css,/\.menuBtn:active\{translate:0 var\(--btn-press,3px\);/,'pressed button sinks 3px');assert.doesNotMatch(css,/\.menuBtn:hover/,'no hover colour');
   assert.match(css,/\.menuPanel\{position:absolute;top:100%;left:0;right:0;height:calc\(100svh - 68px\);overflow-y:auto;/,'panel under the 68px bar, fills the screen below the bar, scrolls');
   assert.match(css,/\.menu\[open\] \.menuPanel\{animation:menuIn \.22s/,'opens with the 220ms slide / fade');
