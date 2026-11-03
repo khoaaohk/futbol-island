@@ -40,14 +40,15 @@
 .subnavIn{position:relative;display:flex;align-items:center;gap:8px;height:100%;max-width:1080px;margin:0 auto;padding:0 var(--gut)}
 .root .logo{flex:none;margin-right:auto;font-family:IslandBrush,Arial,sans-serif;font-size:22px;line-height:1;color:var(--deep);text-decoration:none;white-space:nowrap}
 .root .subLinks{display:flex;flex:1;min-width:0;gap:0;overflow:hidden}
-.root .subLinks a{display:inline-flex;align-items:center;min-height:44px;padding:0 7px;color:var(--ink);font-size:14px;opacity:.72;text-decoration:none;white-space:nowrap;position:relative;transition:opacity .16s}
-/* hover: full ink + a soft pill behind (pointer devices); selected (aria-current, set by LearnEnhance): full ink + a gold bar under it */
-.root .subLinks a::before{content:"";position:absolute;inset:6px 0;border-radius:999px;background:rgb(20 34 29 / .07);opacity:0;transition:opacity .16s;pointer-events:none}
-.root .subLinks a::after{content:"";position:absolute;left:50%;bottom:7px;width:18px;height:3px;margin-left:-9px;border-radius:3px;background:var(--goldInk);transform:scaleX(0);transition:transform .2s var(--ease)}
-@media(hover:hover){.root .subLinks a:hover{opacity:1}.root .subLinks a:hover::before{opacity:1}}
-.root .subLinks a:active::before{opacity:1;background:rgb(20 34 29 / .12)}
+.root .subLinks a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:var(--ink);font-size:14px;opacity:.78;text-decoration:none;white-space:nowrap;position:relative;transition:opacity .16s}
+/* nav links follow the chip / tab family (docs/ui/BUTTONS.md): no face at rest; hover shows the cream chip (3px rim, cream edge); the current
+   chapter (aria-current, set by LearnEnhance) is the pink chip with the pink edge; pressed sinks the chip */
+.root .subLinks a{isolation:isolate}
+.root .subLinks a::before{content:"";position:absolute;z-index:-1;inset:4px 0;border:var(--btn-rim-width,3px) solid transparent;border-radius:999px;background:transparent;box-shadow:0 0 0 transparent;transition:background-color .16s,box-shadow .16s,border-color .16s,translate .16s;pointer-events:none}
+@media(hover:hover){.root .subLinks a:hover{opacity:1}.root .subLinks a:hover::before{background:var(--btn-cream,#fff1d3);border-color:var(--btn-rim,#fff2cd);box-shadow:0 3px 0 var(--btn-cream-edge,#193f3733)}}
 .root .subLinks a[aria-current]{opacity:1}
-.root .subLinks a[aria-current]::after{transform:scaleX(1)}
+.root .subLinks a[aria-current]::before{background:var(--btn-pink,#ed9dce);border-color:var(--btn-rim,#fff2cd);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
+.root .subLinks a:active::before{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
 .root .subLinks a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-2px;border-radius:999px}
 @media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:1240px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;gap:6px;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px;padding:0 9px}}
 .pill{flex:none;display:inline-flex;align-items:center;min-height:36px;padding:3px 16px 5px;border-radius:999px;background:var(--btn-gold,#e9c16b);
@@ -89,11 +90,9 @@
  border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
  box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:IslandBrush,var(--sans);font-size:23px;line-height:1.15;text-align:center;text-decoration:none;transition:translate .16s,box-shadow .16s}
 .pill{transition:translate .16s,box-shadow .16s,background-color .16s}
-/* same states as the gold button on the other pages: brighter on hover (pointer devices only), pressed = sinks 3px */
-@media(hover:hover){.cta:hover{background-color:var(--btn-gold-bright,#f9d665);box-shadow:0 var(--btn-lift,5px) 0 var(--btn-gold-bright-edge,#aa8b3e),var(--btn-halo,0 0 0 4px #fff2cd40)}
- .pill:hover{background:var(--btn-gold-bright,#f9d665);box-shadow:inset 0 0 0 1.5px var(--btn-rim,#fff2cd),0 2px 0 var(--btn-gold-bright-edge,#aa8b3e)}}
+/* states match the game and the other pages (docs/ui/BUTTONS.md): no hover colour change; pressed sinks and shortens the edge; the global focus ring */
 .cta:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
-.pill:active{translate:0 2px;box-shadow:inset 0 0 0 1.5px var(--btn-rim,#fff2cd),0 0 0 #a8863d}
+.pill:active{translate:0 var(--btn-press,3px);box-shadow:inset 0 0 0 1.5px var(--btn-rim,#fff2cd),0 0 0 #a8863d}
 .root .more{display:inline-flex;align-items:center;gap:4px;min-height:44px;color:var(--pitch);font-size:clamp(17px,.4vw + 15px,21px);font-weight:500;text-decoration:none}
 .root .more:hover{text-decoration:underline;text-underline-offset:4px}
 .chev{width:.8em;height:.8em;margin-top:2px}
