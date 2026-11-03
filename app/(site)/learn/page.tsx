@@ -3,6 +3,8 @@ import LearnMedia from '@/components/learn/LearnMedia';
 import {learnAsset} from '@/lib/site/learnMedia';
 import LearnEnhance from '@/components/learn/LearnEnhance';
 import LearnReel from '@/components/learn/LearnReel';
+import LearnMontage from '@/components/learn/LearnMontage';
+import LearnSlides from '@/components/learn/LearnSlides';
 import FriendSteps from '@/components/learn/FriendSteps';
 import ShareLink from '@/components/learn/ShareLink';
 import s from '@/components/learn/learn.module.css';
@@ -13,7 +15,9 @@ import {abs,breadcrumbLd,pageMeta,siteLd,SITE_NAME} from '@/lib/site/seo';
 /**
  * /learn (Nov 2 2026; Nov 3 restyle after apple.com/apple-vision-pro, owner). Full-viewport "chapters", one idea each, from
  * LEARN_HIGHLIGHTS in lib/site/learnFeatures.ts: hero, learn, explore, play with friends (the one pinned feature chapter),
- * safe + 5 FAQs, then a closing Play chapter. Right after the hero: "See it in action", a horizontal clip carousel (LearnReel). Each chapter: a huge tight headline, one line, one large media card, its 3 chips as a
+ * safe + 5 FAQs, then a closing Play chapter. Right after the hero: a full-bleed montage film (LearnMontage), then "See it in
+ * action", a horizontal clip carousel (LearnReel); between Play with friends and Safe: "Even more to explore", a light
+ * auto-advancing slideshow (LearnSlides). The sticky sub-nav turns dark over dark chapters ([data-nav-dark] markers, LearnEnhance). Each chapter: a huge tight headline, one line, one large media card, its 3 chips as a
  * quiet caption. Chapters alternate soft off-white and near-black (deep pitch green); gold is the only accent. Anything without a
  * real shot is text only (no drawn art). All words are prerendered; LearnEnhance only adds the one motion language (fade + scale
  * in, gentle hero zoom-out, a slight settle on the pinned media) and the lazy clips (visible + next only, max 2 playing).
@@ -34,6 +38,8 @@ const NAV:[string,string][]=[['learn','Learn'],['explore','Explore'],['together'
 
 /** Wide (about square or wider) shots get the wide card; upright phone screens the tall one. */
 const isWide=(k:string)=>{const im=learnAsset(k).image;return !!im&&im.width>im.height*.8;};
+/** Landscape 16:9 screens (the desktop friend-step shots) keep their own 16:9 frame instead of the near-square crop. */
+const frameOf=(k:string)=>{const im=learnAsset(k).image;return !im||im.width<=im.height*.8?s.frameTall:im.width>=im.height*1.5?s.frame169:s.frameWide;};
 
 function Tags({tags,center}:{tags?:readonly string[];center?:boolean}){
  return tags?.length?<ul className={center?`${s.tags} ${s.tagsCenter}`:s.tags}>{tags.map(c=><li key={c}>{c}</li>)}</ul>:null;
@@ -53,6 +59,7 @@ function Stage({k,label,eager,tags,hero}:{k:string;label:string;eager?:boolean;t
 
 function Chapter({h,dark,children}:{h:LearnHighlight;dark?:boolean;children?:React.ReactNode}){
  return <section className={`${s.ch} ${dark?s.dark:s.light}`} id={h.id} aria-labelledby={`${h.id}-h`}>
+  {dark&&<NavMark/>}
   <div className={s.head} data-reveal="">
    <h2 className={s.h2} id={`${h.id}-h`}>{h.title}</h2>
    <p className={s.sub}>{h.line}</p>
@@ -60,6 +67,9 @@ function Chapter({h,dark,children}:{h:LearnHighlight;dark?:boolean;children?:Rea
   {children??<Stage k={h.shot} label={h.title} tags={h.chips}/>}
  </section>;
 }
+
+/** Covers a dark chapter's near-black middle; the sticky sub-nav turns dark while one is under it (LearnEnhance). */
+const NavMark=()=><span className={s.navMark} data-nav-dark="" aria-hidden="true"/>;
 
 const Chevron=()=><svg className={s.chev} viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M4 2.5 7.5 6 4 9.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 
@@ -71,15 +81,16 @@ export default function LearnHub(){
  const panelOf=steps.map(x=>{if(!learnAsset(x.imageKey).image)return 0;if(!panelKeys.includes(x.imageKey))panelKeys.push(x.imageKey);return panelKeys.indexOf(x.imageKey);});
  const panelLabel=(i:number)=>{const st=panelOf.indexOf(i);return i&&st>=0?`Step ${st+1}: ${steps[st].line}`:together.title;};
  return <div id={ROOT_ID} className={s.root}>
-  {/* the page has its own sticky bar with the logo, so the shared site header is hidden here */}
-  <style>{'[data-reading-page]>header{display:none}'}</style>
+  {/* the page has its own sticky bar with the logo, so the shared site header is hidden here (learn.module.css, not an inline
+      <style>: React escapes its ">" and the hydration text check failed, re-rendering the whole document) */}
   <JsonLd data={siteLd()}/>
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'FAQPage',mainEntity:FAQ.map(q=>({'@type':'Question',name:q.q,acceptedAnswer:{'@type':'Answer',text:q.a}}))}}/>
   <LearnEnhance rootId={ROOT_ID}/>
 
   {/* ---- sticky sub-nav: page name, 4 anchors, Play pill ---- */}
-  <nav className={s.subnav} aria-label="On this page">
+  <nav className={s.subnav} aria-label="On this page" data-subnav="">
+   <span className={s.navDark} aria-hidden="true"/>
    <div className={s.subnavIn}>
     <a className={s.logo} href={PLAY_URL} aria-label="Futbol Island home">Futbol Island</a>
     <ul className={s.subLinks}>{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}</ul>
@@ -101,6 +112,9 @@ export default function LearnHub(){
    <Stage k={top.shot} label="Futbol Island from the air" eager hero/>
   </section>
 
+  {/* ---- 1a. the full-bleed montage film (renders nothing until its clip and poster exist) ---- */}
+  <LearnMontage/>
+
   {/* ---- 1b. See it in action: the horizontal clip carousel (renders nothing until its wide clips exist) ---- */}
   <LearnReel/>
 
@@ -111,9 +125,12 @@ export default function LearnHub(){
   {/* ---- 4. play with friends: pinned media, the 3 steps scroll past, one grown-up line ---- */}
   <Chapter h={together} dark>
    <FriendSteps steps={steps.map(x=>x.line)} panelOf={panelOf} note={LEARN_GROWNUP_LINE}
-    panels={panelKeys.map((k,i)=><div key={k} className={`${s.frame} ${isWide(k)?s.frameWide:s.frameTall}`}><LearnMedia imageKey={k} label={panelLabel(i)} sizes="(min-width: 900px) 400px, 80vw"/></div>)}/>
+    panels={panelKeys.map((k,i)=><div key={k} className={`${s.frame} ${frameOf(k)}`}><LearnMedia imageKey={k} label={panelLabel(i)} sizes="(min-width: 900px) 400px, 80vw"/></div>)}/>
    <Tags tags={together.chips} center/>
   </Chapter>
+
+  {/* ---- 4b. Even more to explore: the light slideshow (renders nothing until its slides exist) ---- */}
+  <LearnSlides/>
 
   {/* ---- 5. safe + FAQ ---- */}
   <Chapter h={safe}>
@@ -126,6 +143,7 @@ export default function LearnHub(){
 
   {/* ---- the end: one big Play ---- */}
   <section className={`${s.ch} ${s.dark} ${s.end}`} aria-labelledby="end-h">
+   <NavMark/>
    <div className={s.head} data-reveal="">
     <h2 className={s.h2} id="end-h">Ready for the island?</h2>
     <p className={s.sub}>Free, with no ads and no chat.</p>

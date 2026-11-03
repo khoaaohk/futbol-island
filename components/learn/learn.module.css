@@ -19,6 +19,9 @@
  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:clip;
 }
 :global(html):has(.root){scroll-padding-top:56px}
+/* the page has its own sticky bar with the logo, so the shared site header is hidden here (Nov 3: moved out of an inline <style>,
+   whose escaped ">" made React's hydration text check fail and re-render the whole document on the client) */
+:global([data-reading-page]):has(.root)>:global(header){display:none}
 @media(prefers-reduced-motion:no-preference){:global(html):has(.root:not([data-calm])){scroll-behavior:smooth}}
 .root *{box-sizing:border-box}
 .root h1,.root h2,.root h3,.root p,.root ul,.root ol,.root figure{margin:0}
@@ -41,6 +44,13 @@
 @media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:1240px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;gap:6px;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px;padding:0 9px}}
 .pill{flex:none;display:inline-flex;align-items:center;min-height:36px;padding:3px 16px 5px;border-radius:999px;background:var(--btn-gold,#e9c16b);
  box-shadow:inset 0 0 0 1.5px var(--btn-rim,#fff2cd),0 2px 0 #a8863d;color:var(--btn-ink,#244d40)!important;font-family:IslandBrush,var(--sans);font-size:17px;line-height:1.1;text-decoration:none;white-space:nowrap}
+/* over a dark chapter (LearnEnhance sets data-dark from IntersectionObserver): a near-black layer fades in (opacity only) and the
+   logo / links turn light; the gold pill reads on both */
+.navDark{position:absolute;inset:0;background:rgb(12 23 20 / .9);opacity:0;transition:opacity .35s var(--ease);pointer-events:none}
+.subnav[data-dark] .navDark{opacity:1}
+.subnav[data-dark]::after{background:rgb(246 241 228 / .12)}
+.root .subnav[data-dark] .logo,.root .subnav[data-dark] .subLinks a{color:var(--inkD)}
+.navMark{position:absolute;left:0;right:0;top:var(--fade);bottom:var(--fade);visibility:hidden;pointer-events:none}
 
 /* ---- chapters: light / dark, centred, big type, generous space ----------------------------------------------------------- */
 .ch{position:relative;display:grid;justify-items:center;gap:clamp(40px,7vh,88px);padding:clamp(104px,22vh,260px) var(--gut);text-align:center}
@@ -82,6 +92,8 @@
 .dark .frame{background:var(--well-d);box-shadow:0 30px 70px -24px rgb(0 0 0 / .7)}
 .frameTall{height:var(--tallH);aspect-ratio:780/1688}
 .frameWide{width:min(100%,640px);aspect-ratio:792/844}
+.frame169{width:min(100%,640px);aspect-ratio:16/9}
+.panel>.frame169{width:100%;height:auto}
 @media(min-width:900px){
  .stage{max-width:1180px;padding:clamp(48px,5vw,80px) clamp(24px,4vw,64px) clamp(28px,3vw,44px);border-radius:40px;background:var(--well-l)}
  .dark .stage{background:var(--well-d)}
@@ -146,6 +158,80 @@
 .reelArrow:disabled{opacity:.35;cursor:default}
 @media(prefers-reduced-motion:reduce){.reelRow{scroll-behavior:auto}}
 
+/* ---- the montage: one edge-to-edge 16:9 film right after the hero (Nov 3 2026, after apple.com/apple-vision-pro) ------------
+   No gutters, no corners, no words on it; the headline + line sit under it. Round button top-right with a progress ring: a CSS
+   stroke-dashoffset animation over the clip's length (--dur) on a 44px SVG (a tiny repaint, paused with the clip; MontageEnhance
+   keeps it in step on media events). Calm: the poster with a big Play button and no ring. */
+.montage{display:grid;gap:clamp(32px,6vh,64px);padding:0 0 clamp(56px,10vh,120px);background:var(--paper);color:var(--ink)}
+.montageMedia{position:relative;width:100%;aspect-ratio:16/9;max-height:100svh;overflow:hidden;background:var(--night);transform:translateZ(0)}
+.montageHead{display:grid;justify-items:center;gap:12px;padding:0 var(--gut);text-align:center}
+.mPlay{position:absolute;top:clamp(12px,2vw,28px);right:clamp(12px,2vw,28px);z-index:2;display:none;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:50%;
+ background:rgb(232 232 237 / .7);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#1d1d1f;cursor:pointer}
+.montage[data-js] .mPlay{display:grid}
+.mPlay svg{width:44px;height:44px;overflow:visible}
+.mPlay path{fill:currentColor}
+.mPlay[data-playing] .icoPause{display:block}
+.mPlay[data-playing] .icoPlay{display:none}
+.mTrack,.mRing{fill:none;stroke-width:2}
+.mTrack{stroke:rgb(29 29 31 / .14)}
+.mRing{stroke:currentColor;stroke-linecap:round;stroke-dasharray:100;stroke-dashoffset:100;transform:rotate(-90deg);transform-origin:22px 22px;
+ animation:ring var(--dur,28s) linear infinite;animation-play-state:paused}
+.montageMedia[data-playing] .mRing{animation-play-state:running}
+.montage[data-calm] .mRing,.montage[data-calm] .mTrack{display:none}
+.montage[data-calm] .mPlay:not([data-playing]){top:50%;right:50%;transform:translate(50%,-50%);width:64px;height:64px}
+.montage[data-calm] .mPlay:not([data-playing]) svg{width:56px;height:56px}
+.montageMedia[data-playing] .clip{opacity:1}
+
+/* ---- Even more to explore: a LIGHT auto-advancing slideshow (Nov 3 2026, after visionOS's "Explore what's new") ---------------
+   Headline top-left at the content gutter; a centre-snapping row of 16:9 slides, the active one centred and the neighbours
+   peeking on both sides (with JS: dimmed .55 + scaled .94, transform / opacity only); a white caption on a soft scrim near each
+   slide's top; under the row a light pill of dots (the active dot is a bar that fills over 6 s, transform scaleX) and a round
+   pause / play button. JS off: a plain swipeable row of posters + captions, no controls. */
+.slides{--spad:calc(max(0px,(100vw - 1080px) / 2) + var(--gut));--sw:84vw;--sgap:10px;--dur:6s;
+ display:grid;gap:clamp(24px,4vh,44px);padding:clamp(64px,11vh,128px) 0 clamp(72px,12vh,140px);background:var(--paper);color:var(--ink)}
+@media(min-width:740px){.slides{--sw:min(1040px,72vw,(100svh - 340px) * 16 / 9);--sgap:20px}}
+.slidesHead{padding:0 var(--spad);text-align:left}
+.slidesHead .h2{max-width:none}
+.slideRow{position:relative;display:flex;gap:var(--sgap);overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;
+ padding:4px 0 8px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.slideRow::-webkit-scrollbar{display:none}
+.slideRow::before,.slideRow::after{content:"";flex:0 0 max(1px,calc((100% - var(--sw)) / 2 - var(--sgap)))}
+.slideRow:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+.slide{flex:0 0 var(--sw);scroll-snap-align:center;scroll-snap-stop:always}
+.slideMedia{position:relative;overflow:hidden;aspect-ratio:16/9;border-radius:clamp(22px,2.4vw,34px);background:var(--well-l);transform:translateZ(0);
+ transition:transform .6s var(--ease),opacity .6s var(--ease)}
+.slides[data-js] .slide:not([data-active]) .slideMedia{opacity:.55;transform:translateZ(0) scale(.94)}
+.slideMedia .still,.slideMedia .clip{object-position:50% 50%}
+.slideMedia[data-playing] .clip{opacity:1}
+.slideCap{position:absolute;inset:0 0 auto;z-index:1;padding:clamp(14px,3vw,40px) clamp(18px,7%,96px) clamp(44px,8vw,120px);text-align:center;color:#fff;
+ font-size:clamp(18px,1.7vw + 9px,40px);font-weight:600;line-height:1.14;letter-spacing:-.02em;text-wrap:balance;
+ background:linear-gradient(rgb(6 12 10 / .62),rgb(6 12 10 / .3) 55%,rgb(6 12 10 / 0));pointer-events:none;text-shadow:0 1px 12px rgb(0 0 0 / .25)}
+.slidePlay{position:absolute;right:clamp(12px,1.6vw,22px);bottom:clamp(12px,1.6vw,22px);z-index:2;display:none;place-items:center;width:44px;height:44px;border-radius:50%;border:0;
+ background:rgb(232 232 237 / .78);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--ink);cursor:pointer}
+.slidePlay svg{width:18px;height:18px;fill:currentColor}
+.slidePlay[data-playing] .icoPause{display:block}
+.slidePlay[data-playing] .icoPlay{display:none}
+.slides[data-js][data-calm] .slidePlay{display:grid}
+.slideCtl{display:none;justify-content:center;align-items:center;gap:12px;padding:0 var(--gut)}
+.slides[data-js] .slideCtl{display:flex}
+.dots{display:flex;align-items:center;height:56px;padding:0 14px;border-radius:999px;background:rgb(20 34 29 / .07)}
+.dot{display:grid;place-items:center;height:44px;padding:0 5px;border:0;background:none;cursor:pointer}
+.dotBar{position:relative;display:block;width:8px;height:8px;border-radius:999px;overflow:hidden;background:rgb(20 34 29 / .3)}
+.dot[aria-current] .dotBar{width:44px;background:rgb(20 34 29 / .16)}
+.dotFill{position:absolute;inset:0;border-radius:inherit;background:var(--ink);transform:scaleX(0);transform-origin:0 50%}
+.dot[aria-current] .dotFill{transform:none}
+.slides[data-js]:not([data-calm]) .dot[aria-current] .dotFill{animation:fill var(--dur) linear both;animation-play-state:paused}
+.slides[data-js][data-run]:not([data-calm]) .dot[aria-current] .dotFill{animation-play-state:running}
+.slidesToggle{display:grid;place-items:center;width:56px;height:56px;border:0;border-radius:50%;background:rgb(20 34 29 / .07);color:var(--ink);cursor:pointer}
+.slidesToggle svg{width:20px;height:20px;fill:currentColor}
+.slidesToggle .icoPause{display:block}
+.slidesToggle .icoPlay,.slidesToggle[data-paused] .icoPause{display:none}
+.slidesToggle[data-paused] .icoPlay{display:block}
+.slides[data-calm] .slidesToggle{display:none}
+.dot:hover .dotBar{background:rgb(20 34 29 / .45)}
+.dot[aria-current]:hover .dotBar{background:rgb(20 34 29 / .2)}
+@media(prefers-reduced-motion:reduce){.slideRow{scroll-behavior:auto}}
+
 /* ---- play with friends: the one pinned feature (wide screens) --------------------------------------------------------------- */
 .feature{display:grid;justify-items:center;gap:40px;width:100%;max-width:1080px}
 .pin{width:100%;display:grid;justify-items:center}
@@ -202,6 +288,8 @@
 @keyframes rise{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
 @keyframes heroZoom{to{transform:scale(.9)}}
 @keyframes chrome{from{opacity:0}to{opacity:1}}
+@keyframes fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes ring{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
 @supports(animation-timeline:view()){
  .root:not([data-calm]) [data-reveal]{animation:rise linear both;animation-timeline:view();animation-range:entry 0% entry 70%}
  .root:not([data-calm]) .heroFrame{animation:heroZoom linear both;animation-timeline:scroll(root);animation-range:0 100vh}
@@ -216,4 +304,4 @@
 .root[data-calm] *,.root[data-calm] *::before,.root[data-calm] *::after{animation:none!important;transition:none!important}
 .root[data-calm] .subnav::before{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--paper)}
 @media(prefers-reduced-motion:reduce){.root *,.root *::before,.root *::after{animation:none!important;transition:none!important}}
-@media print{.subnav,.clipBtn,.reelCtl,.reelPlay{display:none}.dark{background:none;color:inherit}}
+@media print{.subnav,.clipBtn,.reelCtl,.reelPlay,.mPlay,.slideCtl,.slidePlay{display:none}.dark{background:none;color:inherit}}

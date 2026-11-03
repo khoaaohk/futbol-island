@@ -21,6 +21,19 @@ const MAX_PLAYING=2;
 const PLAY_AT=.25;
 const AHEAD='150% 0px 150% 0px';
 
+/** Save-Data or a 2g / 3g connection (the montage then only ever loads its smallest file). */
+export function slowLink(){
+ const c=(navigator as Navigator&{connection?:{saveData?:boolean;effectiveType?:string}}).connection;
+ return !!c&&(!!c.saveData||/^(slow-2g|2g|3g)$/.test(c.effectiveType??''));
+}
+/**
+ * The page-wide cap of 2 playing clips is shared: the montage (MontageEnhance), the See it in action carousel (ReelEnhance) and the
+ * Even more to explore slideshow (SlidesEnhance) each publish how many clips they play on the page root and fire `learn:panel`
+ * when that changes; the page's own chapter clips (below) only fill what is left.
+ */
+export const EXT_PLAYING=['data-montage-playing','data-reel-playing','data-slides-playing'] as const;
+export const extPlaying=(page:Element,except?:string)=>EXT_PLAYING.reduce((t,a)=>a===except?t:t+(Number(page.getAttribute(a))||0),0);
+
 export function calmWanted(){
  try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return true;}catch{}
  const c=(navigator as Navigator&{connection?:{saveData?:boolean;effectiveType?:string}}).connection;
@@ -63,7 +76,8 @@ export default function LearnEnhance({rootId}:{rootId:string}){
   const vids=[...root.querySelectorAll<HTMLVideoElement>('video[data-lv]')];
   // the See it in action carousel (ReelEnhance) runs its own clips; they count toward the same cap of 2 (it writes data-reel-playing
   // on the root and fires learn:panel whenever that changes)
-  const reelPlaying=()=>Number(root.getAttribute('data-reel-playing'))||0;
+  // (Nov 3: and the montage and the slideshow, see EXT_PLAYING)
+  const reelPlaying=()=>extPlaying(root);
   const ratio=new Map<HTMLVideoElement,number>();
   const userPaused=new Set<HTMLVideoElement>(),userStarted=new Set<HTMLVideoElement>();
   const btnOf=(v:HTMLVideoElement)=>v.parentElement?.querySelector<HTMLButtonElement>('[data-lv-btn]')??null;
@@ -97,6 +111,19 @@ export default function LearnEnhance({rootId}:{rootId:string}){
     else{v.pause();mark(v,false);userPaused.add(v);userStarted.delete(v);}};
    root.addEventListener('click',click);
    offs.push(()=>{io.disconnect();ahead.disconnect();document.removeEventListener('visibilitychange',vis);root.removeEventListener('learn:panel',vis);root.removeEventListener('click',click);vids.forEach(v=>{if(!v.paused)v.pause();});});
+  }
+
+  // ---- 4. the sub-nav turns dark over dark chapters ----------------------------------------------------------------------------
+  // Each dark chapter holds a [data-nav-dark] marker covering its near-black middle (not the paper fades). An IntersectionObserver
+  // whose root is a thin strip at the top of the viewport (where the bar sits; percentage margins, so nothing is measured) sets
+  // `data-dark` on the bar while a marker is under it. No scroll listeners, no layout reads.
+  const nav=root.querySelector<HTMLElement>('[data-subnav]'),marks=[...root.querySelectorAll('[data-nav-dark]')];
+  if(nav&&marks.length){
+   const under=new Set<Element>();
+   const navIo=new IntersectionObserver(es=>{for(const e of es){if(e.isIntersecting)under.add(e.target);else under.delete(e.target);}nav.toggleAttribute('data-dark',under.size>0);},
+    {rootMargin:'-2% 0px -95% 0px'});
+   marks.forEach(m=>navIo.observe(m));
+   offs.push(()=>{navIo.disconnect();nav.removeAttribute('data-dark');});
   }
 
   return ()=>offs.forEach(f=>f());

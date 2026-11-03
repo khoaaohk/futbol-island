@@ -10,7 +10,7 @@ import type {LearnGroupId} from './learnFeatures';
  * Pure Node (fs, no env reads, no client code), like lib/site/lessons.ts.
  */
 export type LearnImage={src:string;width:number;height:number};
-export type LearnClip={webm?:string;mp4?:string};
+export type LearnClip={webm?:string;mp4?:string;/** a 1280px mp4 for viewports <= 1280px wide (slides only) */mp4m?:string};
 export type LearnAsset={key:string;alt?:string;image?:LearnImage;clip?:LearnClip;focus?:string};
 
 /** Group colours (from the island palette: sea, pink, deep green, gold) and the plain glyph drawn on fallback art. */
@@ -55,14 +55,14 @@ function readManifest():Map<string,RawEntry>{
  * The capture pass (Nov 2 2026) named its shots after what they show, not after the page's imageKeys. This maps a page imageKey
  * to the shot that really shows that feature (checked by eye against each still and its manifest alt text). Keys not listed here
  * use their own name; features with no matching shot keep the drawn card on purpose (live matches, graduation, bugs, beachcombing,
- * Konbini, quick challenges, news, jobs, Summit Kick, two friend steps, indoors, controls, costumes, jersey back, the safe group).
+ * Konbini, quick challenges, news, jobs, Summit Kick, indoors, controls, costumes, jersey back, the safe group).
  */
 export const LEARN_SHOT:Readonly<Record<string,string>>={
  learning_paths:'paths_screen',lesson_quiz:'lesson_field',path_stories:'stories_chapter',daily_warm_up:'quiz_question',
  reef_balls:'diving_reef',swim_dive:'animal_ride',fishing_fishbook:'fishing',history_museum:'museum',islanders_talk:'npc_chat',
  bubbles_banter:'npc_bubble',arcade:'arcade_room',keep_ups:'emotes',
  friends_party:'mp_party',friends_step_join:'mp_join',friends_kits:'mp_meet',friends_high_five:'mp_emotes',friends_ball_duet:'mp_ball',
- friends_ride:'mp_ride',card_binder:'player_cards',pop_up_books:'books',vending_machine:'vending',rides:'scooter_bike',
+ friends_ride:'mp_ride',card_binder:'player_cards',friends_step_start:'friend_step1',friends_step_code:'friend_step2',pop_up_books:'books',vending_machine:'vending',rides:'scooter_bike',
 };
 
 /** Crop focus (CSS object-position) for shots whose subject is not in the middle; upright shots default to the middle. */
@@ -96,8 +96,46 @@ export function learnAsset(pageKey:string):LearnAsset{
  * or public/learn/wide_<key>.* (whichever exist on disk).
  */
 export function learnWideAsset(key:string):LearnAsset|null{
+ return /^[a-z0-9_]+$/.test(key)?prefixedAsset(`wide_${key}`):null;
+}
+/**
+ * An "Even more to explore" slide's media (Nov 3 2026): manifest entry `slide_<key>` + poster public/learn/slide_<key>.webp (both
+ * required, else null = no slide), the clip as for the carousel, plus an optional 1280px public/learn/video/slide_<key>_m.mp4
+ * (`clip.mp4m`) served to viewports <= 1280px wide through <source media>, so a phone never fetches the 1920px file.
+ */
+export function learnSlideAsset(key:string):LearnAsset|null{
  if(!/^[a-z0-9_]+$/.test(key))return null;
- const id=`wide_${key}`,m=readManifestOnce().get(id) as (RawEntry&{video?:{mp4?:unknown;webm?:unknown}})|undefined;
+ const a=prefixedAsset(`slide_${key}`);
+ if(a?.clip?.mp4&&exists(`learn/video/slide_${key}_m.mp4`))a.clip.mp4m=`/learn/video/slide_${key}_m.mp4`;
+ return a;
+}
+
+/** One size of the /learn montage: its poster and its H.264 clip. */
+export type LearnMontageSize={key:string;image:LearnImage;mp4?:string};
+/**
+ * The full-bleed montage after the /learn hero (Nov 3 2026): manifest entries `montage_s` (854), `montage_m` (1280) and `montage`
+ * (1920), each with its poster (public/learn/<key>.webp) and clip (the entry's video.mp4). The 1920 entry and its poster are
+ * required (else null = no montage section); a missing smaller size just drops out of the ladder. Sizes are smallest first.
+ */
+export function learnMontage():{alt?:string;duration?:number;sizes:LearnMontageSize[]}|null{
+ const man=readManifestOnce();
+ const sizes:LearnMontageSize[]=[];let alt:string|undefined,duration:number|undefined;
+ for(const key of ['montage_s','montage_m','montage']){
+  const m=man.get(key) as (RawEntry&{video?:{mp4?:unknown;duration?:unknown}})|undefined;
+  const still=`learn/${key}.webp`;
+  if(!m||!exists(still))continue;
+  const w=m.width??m.w,h=m.height??m.h,v=m.video?.mp4,d=m.video?.duration;
+  const mp4=typeof v==='string'&&/^\/learn\/[a-z0-9_/]+\.mp4$/.test(v)&&exists(v.slice(1))?v:undefined;
+  sizes.push({key,image:{src:'/'+still,...(typeof w==='number'&&typeof h==='number'&&w>0&&h>0?{width:w,height:h}:{width:1920,height:1080})},mp4});
+  if(typeof m.alt==='string'&&m.alt.trim())alt=m.alt.trim();
+  if(typeof d==='number'&&d>0)duration=d;
+ }
+ if(sizes[sizes.length-1]?.key!=='montage')return null;
+ return {alt,duration,sizes};
+}
+
+function prefixedAsset(id:string):LearnAsset|null{
+ const m=readManifestOnce().get(id) as (RawEntry&{video?:{mp4?:unknown;webm?:unknown}})|undefined;
  const still=`learn/${id}.webp`;
  if(!m||!exists(still))return null;
  const w=m.width??m.w,h=m.height??m.h;

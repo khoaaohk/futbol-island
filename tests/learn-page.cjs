@@ -13,8 +13,13 @@
 //     hrefs are internal paths that exist or futbolisland.app;
 //  3b. the See it in action carousel (Nov 3): 9 cards max in order, one-sentence captions from the feature copy, bold via
 //     markers (no HTML), snap CSS on the row only, only the active card plays, preload rules, a11y attributes, no scroll reads;
+//  3c. (Nov 3) the full-bleed montage (one <video>, s / m / l as <source media> alternatives so one file is fetched, preload none,
+//     30 % play threshold, page-wide cap), the light Even more to explore slideshow (<= 6 slides in order, auto-advance gated on
+//     visibility / pause / hover / focus / calm, only the active slide plays, centre snap, no scroll reads), the dark sub-nav over
+//     dark chapters (IntersectionObserver markers), friend steps 1 and 2 with their own 16:9 shots;
 //  5. a built site (NEXT_DIST_DIR or .next, when it holds /learn): every highlight, the 5 FAQ questions and answers and the
-//     3 friend steps are in the HTML; FAQPage JSON-LD matches the 5 shown; old /learn/<id> pages are not built.
+//     3 friend steps are in the HTML; FAQPage JSON-LD matches the 5 shown; old /learn/<id> pages are not built; montage and
+//     slideshow order and sources.
 // usage: node tests/learn-page.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),vm=require('node:vm');
 const root=path.join(__dirname,'..');
@@ -94,7 +99,8 @@ assert.match(enh,/\[data-panel\]:not\(\[data-on\]\)/,'a clip in a hidden friends
 assert.doesNotMatch(enh,/currentTime/,'no video scrubbing');
 assert.match(enh,/visibilitychange/,'clips pause when the tab is hidden');
 assert(!has('components/learn/FeatureFinder.tsx'),'the Find a feature finder is gone');
-for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FriendSteps.tsx','components/learn/ShareLink.tsx','components/learn/ReelEnhance.tsx','components/learn/LearnReel.tsx']){const src=strip(read(f));
+for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FriendSteps.tsx','components/learn/ShareLink.tsx','components/learn/ReelEnhance.tsx','components/learn/LearnReel.tsx',
+ 'components/learn/LearnMontage.tsx','components/learn/MontageEnhance.tsx','components/learn/LearnSlides.tsx','components/learn/SlidesEnhance.tsx']){const src=strip(read(f));
  assert.doesNotMatch(src,/getBoundingClientRect|offsetTop|scrollY|pageYOffset|scrollTo\(|preventDefault\(\)[^;]*wheel|['"]wheel['"]/,`${f}: no layout reads while scrolling, no scroll-jacking`);
  assert.doesNotMatch(src,/addEventListener\(\s*['"]scroll['"]|onScroll|onscroll/,`${f}: no scroll listeners`);
  assert.doesNotMatch(src,/framer-motion|gsap|animejs|react-spring|lottie/,`${f}: no animation library`);}
@@ -104,8 +110,11 @@ assert.match(css,/@supports\(animation-timeline:view\(\)\)/,'CSS scroll-driven p
 assert.match(css,/\.root\[data-lm-io\]/,'IntersectionObserver fallback path');
 assert.match(css,/\.root\[data-calm\] \*,[^{]*\{animation:none!important;transition:none!important\}/,'calm kills every animation');
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{animation:none!important;transition:none!important\}\}/,'reduced motion kills every animation, even before JS');
-{const kf=[...css.matchAll(/@keyframes (\w+)\{([\s\S]*?\})\}/g)];assert.deepEqual(kf.map(k=>k[1]).sort(),['chrome','heroZoom','rise'],'one motion language: fade + scale in, hero zoom-out (+ the sub-nav chrome fade)');
- for(const [,name,body] of kf){const props=[...body.matchAll(/([a-z-]+):/g)].map(m=>m[1]).filter(p=>!['transform','opacity','box-shadow','background','color'].includes(p));
+{const kf=[...css.matchAll(/@keyframes (\w+)\{([\s\S]*?\})\}/g)];assert.deepEqual(kf.map(k=>k[1]).sort(),['chrome','fill','heroZoom','ring','rise'],'one motion language: fade + scale in, hero zoom-out (+ the sub-nav chrome fade, the slideshow dot fill, the montage ring)');
+ // the one exception (Nov 3, brief): the montage button's 44px progress ring animates stroke-dashoffset (a tiny repaint, paused with the clip)
+ assert.match(css,/@keyframes ring\{from\{stroke-dashoffset:100\}to\{stroke-dashoffset:0\}\}/,'montage ring: stroke-dashoffset on the 44px button only');
+ assert.equal((css.match(/animation:ring /g)||[]).length,1,'the ring animation is used once (the montage button)');
+ for(const [,name,body] of kf.filter(k=>k[1]!=='ring')){const props=[...body.matchAll(/([a-z-]+):/g)].map(m=>m[1]).filter(p=>!['transform','opacity','box-shadow','background','color'].includes(p));
   assert.deepEqual(props,[],`@keyframes ${name} animates transform / opacity only`);
   assert.doesNotMatch(body,/box-shadow|background|color/,`@keyframes ${name}: transform / opacity only`);}
  // Nov 3 restyle: the sub-nav plus at most one pinned feature (the friends media); no word-by-word headline, no snap scrolling
@@ -113,7 +122,7 @@ assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{anim
  assert.doesNotMatch(css,/\.word\b/,'no word-by-word headline');
  // scroll snap only on the See it in action row (horizontal, Nov 3); never on the page itself (no vertical scroll-jacking)
  {const snaps=[...strip(css).matchAll(/([^{}]+)\{[^{}]*scroll-snap-type:([^;}]+)/g)].map(m=>[m[1].trim(),m[2].trim()]);
-  assert.deepEqual(snaps,[['.reelRow','x mandatory']],'scroll-snap-type only on the carousel row, x mandatory');}
+  assert.deepEqual(snaps,[['.reelRow','x mandatory'],['.slideRow','x mandatory']],'scroll-snap-type only on the carousel and slideshow rows, x mandatory');}
  // owner, Nov 3: IslandBrush only on the gold Play buttons; everything else is the system sans
  for(const m of strip(css).matchAll(/([^{}]+)\{[^{}]*IslandBrush[^{}]*\}/g))assert.match(m[1].trim(),/^\.(cta|pill)$|^\.root \.logo$/,`IslandBrush only on Play buttons and the logo wordmark, not ${m[1].trim()}`);
  assert.match(css,/--sans:-apple-system,/,'system sans stack, no web font download');}
@@ -193,6 +202,65 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  assert.match(css,/\.card\[data-active\] \.cap\{color:var\(--ink\)\}/,'active caption dark (inactive grey)');
  assert.match(css,/\.reel\[data-js\]\[data-calm\] \.reelPlay/,'calm mode: a Play button on every card');}
 
+// ---- 3c. the montage, the Even more to explore slideshow, the dark sub-nav, the friend-step shots (Nov 3 2026) -------------------
+{const M=L('lib/site/learnMedia.ts'),{LEARN_SLIDES:SL,LEARN_MONTAGE:LM}=L('lib/site/learnFeatures.ts');
+ const mon=read('components/learn/LearnMontage.tsx'),mx=strip(read('components/learn/MontageEnhance.tsx'));
+ const sli=read('components/learn/LearnSlides.tsx'),sx=strip(read('components/learn/SlidesEnhance.tsx')),enh2=strip(read('components/learn/LearnEnhance.tsx'));
+ // montage: one <video> whose sources are media alternatives (one file fetched), poster ladder by srcset, preload none in the HTML
+ assert.match(page,/<LearnMontage\/>\s*\n\s*\{\/\* ---- 1b\. See it in action[^\n]*\n\s*<LearnReel\/>/,'the montage sits right after the hero, before the carousel');
+ assert.match(mon,/<video [^>]*data-mv="" muted loop playsInline preload="none"/,'montage clip: muted, loop, inline, preload none (raised when near)');
+ assert.doesNotMatch(mon,/<video [^>]*(poster=|autoPlay)/,'montage: no poster attribute, no autoplay attribute');
+ assert.match(mon,/<source media="\(max-width: 640px\)"[^>]*data-size="s"\/>\}\s*\n\s*\{md\?\.mp4&&<source media="\(max-width: 1280px\)"[^>]*data-size="m"\/>\}\s*\n\s*<source src=\{big\.mp4\}/,'montage: s / m / l as <source media> alternatives (only one is requested)');
+ assert.match(mon,/srcSet=\{m\.sizes\.map/,'montage poster: the same size ladder through srcset');
+ assert.match(mon,/if\(!m\)return null;/,'no montage files = no section');
+ assert.match(mon,/pathLength=\{100\} data-ring=""/,'montage button: a progress ring');
+ assert(LM.title.length<=40&&LM.line.length<=40,'montage: a short headline and one line under it');
+ assert.match(mx,/const PLAY_AT=\.3;/,'montage plays at >= 30 % visible');
+ assert.match(mx,/visibilitychange/,'montage pauses when the tab is hidden');
+ assert.match(mx,/if\(calm\|\|!near\|\|v\.preload==='auto'\)return;/,'montage: no preloading in calm mode or before it is near');
+ assert.match(mx,/slowLink\(\)[\s\S]*source\[data-size="s"\]/,'montage: Save-Data / 2g / 3g keep only the smallest file');
+ assert.match(mx,/extPlaying\(page,ME\)<MAX_PLAYING/,'montage counts toward the page-wide cap of 2');
+ assert.doesNotMatch(mx,/setInterval|requestAnimationFrame/,'montage: no timers, no frame loop (the ring is CSS)');
+ {const M2=M.learnMontage();if(M2){assert.equal(M2.sizes[M2.sizes.length-1].key,'montage','montage: the 1920 size is last');assert(M2.sizes.every(x=>x.mp4&&has('public'+x.mp4)),'montage: every size has its clip on disk');}}
+ // slideshow: data, placement, media
+ assert.equal(SL.map(x=>x.key).join(),'stories,arcade,beachmatch,kit,collection,party','6 slides in order');
+ for(const x of SL){const w=x.caption.split(/\s+/).length;assert(w<=14,`${x.key}: caption <= 14 words`);assert.equal(x.caption.split(/(?<=[.!?])\s+/).length,1,`${x.key}: one sentence`);
+  assert(!/[<>*]/.test(x.caption),`${x.key}: plain text caption`);}
+ assert.match(sli,/\.filter\(\(y\)[^\n]*=>!!y\.a\)\.slice\(0,6\)/,'missing slides are skipped, 6 at most');
+ assert.match(sli,/if\(!slides\.length\)return null;/,'no slides = no section');
+ assert.equal(M.learnSlideAsset('definitely_not_captured_xyz'),null,'missing slide = no slide');
+ assert.match(page,/<Chapter h=\{together\} dark>[\s\S]*<\/Chapter>\s*\n\s*\{\/\* ---- 4b\. Even more[^\n]*\n\s*<LearnSlides\/>\s*\n\s*\{\/\* ---- 5\. safe/,'the slideshow sits after Play with friends, before Safe for kids');
+ assert.match(sli,/<video [^>]*data-sv="" muted loop playsInline preload="none"/,'slide clips: muted, loop, inline, preload none');
+ assert.match(sli,/<source media="\(max-width: 1280px\)" src=\{a\.clip\.mp4m\}/,'slides: the 1280px file for viewports <= 1280px');
+ assert.match(sli,/role="region" aria-roledescription="carousel" aria-label="[^"]+" tabIndex=\{0\}/,'slide row: region, carousel, labelled, focusable');
+ assert.match(sli,/aria-current=\{i===0\?'true':undefined\}/,'dots: aria-current on the active one');
+ // slideshow behaviour + heat
+ assert.match(sx,/const RUN_AT=\.5;/,'auto-advance only while >= 50 % of the section is on screen');
+ assert.match(sx,/'data-run',n>1&&!calm&&!paused&&!hover&&!focus&&!hidden&&seen>=RUN_AT/,'auto-advance gated: visible, not paused / hovered / focused / calm, tab visible');
+ assert.match(sx,/addEventListener\('animationend',onEnd\)/,'auto-advance on the dot bar\'s CSS animation end (no interval timer)');
+ assert.doesNotMatch(sx,/setInterval|currentTime/,'slideshow: no interval, no scrubbing');
+ assert.match(sx,/let want=!ok\?-1:calm\?started:paused\?-1:active;/,'only the active slide plays (calm: only the tapped one)');
+ assert.match(sx,/extPlaying\(page,ME\)>=MAX_PLAYING/,'slides count toward the page-wide cap of 2');
+ assert.match(sx,/root:row,rootMargin:/,'active slide from an IntersectionObserver on the row');
+ assert.match(sx,/behavior:reduce\?'auto':'smooth'/,'programmatic moves are instant under reduced motion / calm');
+ assert.match(sx,/const t=\(\(i%n\)\+n\)%n;/,'wraps last -> first');
+ assert.match(sx,/ArrowRight[\s\S]*ArrowLeft[\s\S]*Home[\s\S]*End/,'arrow keys, Home and End on the focused row');
+ assert.doesNotMatch(sx,/getBoundingClientRect|scrollLeft|scrollX/,'slideshow: no layout reads tied to scrolling');
+ // CSS: a light section, centre snap, dimmed + scaled neighbours, controls only with JS, the fill bar runs only with data-run
+ assert.match(css,/\.slides\{[^}]*background:var\(--paper\);color:var\(--ink\)\}/,'slideshow: the light (paper) section');
+ assert.match(css,/\.slide\{flex:0 0 var\(--sw\);scroll-snap-align:center/,'slides snap centred');
+ assert.match(css,/\.slides\[data-js\] \.slide:not\(\[data-active\]\) \.slideMedia\{opacity:\.55;transform:translateZ\(0\) scale\(\.94\)\}/,'neighbours dimmed .55 + scaled .94 (transform / opacity)');
+ assert.match(css,/\.slides\[data-js\]\[data-run\]:not\(\[data-calm\]\) \.dot\[aria-current\] \.dotFill\{animation-play-state:running\}/,'the dot bar only fills while the slideshow runs');
+ assert.match(css,/\.slideCtl\{display:none;/,'slideshow controls hidden without JS');
+ // dark sub-nav: IO on markers inside dark chapters, a data attribute, no scroll reads
+ assert.match(page,/<nav className=\{s\.subnav\}[^>]*data-subnav=""/,'the sub-nav is marked for the dark switch');
+ assert.match(page,/\{dark&&<NavMark\/>\}/,'every dark chapter carries a nav marker');
+ assert.match(enh2,/nav\.toggleAttribute\('data-dark',under\.size>0\)/,'the sub-nav gets data-dark from an IntersectionObserver');
+ assert.match(css,/\.subnav\[data-dark\] \.navDark\{opacity:1\}/,'dark nav: an opacity fade');
+ // friend steps 1 and 2 show their own desktop shots (16:9 frame)
+ assert.equal(M.LEARN_SHOT.friends_step_start,'friend_step1','step 1 shot');assert.equal(M.LEARN_SHOT.friends_step_code,'friend_step2','step 2 shot');
+ assert.match(css,/\.frame169\{[^}]*aspect-ratio:16\/9\}/,'16:9 shots keep a 16:9 frame');}
+
 // ---- 4. content -----------------------------------------------------------------------------------------------------------------
 assert.equal(HL.map(h=>h.id).join(),'top,learn,explore,together,safe','five sections');
 for(const h of HL){assert(h.chips.length<=3,`${h.id}: at most 3 chips`);assert(h.title&&h.line&&h.line.length<=80,`${h.id}: one headline, one short line`);
@@ -233,7 +301,7 @@ assert.equal((html.match(/<h1[ >]/g)||[]).length,1,'one h1');
  for(const v of vs)assert(/muted/.test(v)&&/loop/.test(v)&&/playsInline|playsinline/.test(v)&&/preload="(none|auto)"/.test(v)&&!/poster=/.test(v),'built video attrs');
  assert.equal(vs.filter(v=>/preload="auto"/.test(v)).length,1,'only the hero clip preloads in full');}
 {const M=L('lib/site/learnMedia.ts'),live=CAR.filter(c=>M.learnWideAsset(c.key));
- const cards=html.match(/aria-roledescription="slide"/g)||[];
+ const cards=html.match(/aria-roledescription="slide"[^>]*data-reel-card=""/g)||[];
  assert.equal(cards.length,live.length,`carousel: ${live.length} cards (one per wide clip on disk + in the manifest)`);
  assert(cards.length<=9,'carousel: 9 cards at most');
  if(live.length){assert.match(html,/role="region" aria-roledescription="carousel"/,'carousel region');
@@ -241,6 +309,18 @@ assert.equal((html.match(/<h1[ >]/g)||[]).length,1,'one h1');
   const rv=[...html.matchAll(/<video [^>]*data-rv=""[^>]*>/g)].map(m=>m[0]);assert(rv.every(v=>/preload="none"/.test(v)),'carousel clips preload none in the HTML');
   assert(html.indexOf('id="reel-h"')<html.indexOf('id="learn-h"'),'the carousel sits before the Learn chapter');}
  else assert(!/id="reel-h"/.test(html),'no wide clips yet = no carousel section');}
+{const M=L('lib/site/learnMedia.ts'),{LEARN_SLIDES:SL}=L('lib/site/learnFeatures.ts');
+ if(M.learnMontage()){const mv=html.match(/<video [^>]*data-mv=""[^>]*>([\s\S]*?)<\/video>/);assert(mv,'built: one montage video');
+  assert.equal((html.match(/data-mv=""/g)||[]).length,1,'built: exactly one montage video');
+  assert.match(mv[0],/preload="none"/,'built: montage preload none until near');
+  const srcs=[...mv[1].matchAll(/<source [^>]*>/g)].map(m=>m[0]);assert(srcs.length<=3&&srcs.slice(0,-1).every(x=>/media="/.test(x))&&!/media="/.test(srcs[srcs.length-1]),'built: montage sources are media alternatives with one default');
+  assert(html.indexOf('id="learn-title"')<html.indexOf('id="montage-h"')&&(html.indexOf('id="reel-h"')<0||html.indexOf('id="montage-h"')<html.indexOf('id="reel-h"')),'built: hero, montage, then the carousel');}
+ else assert(!/data-montage=""/.test(html),'built: no montage files = no section');
+ const live=SL.filter(x=>M.learnSlideAsset(x.key)),cards=html.match(/data-slide=""/g)||[];
+ assert.equal(cards.length,live.length,`built: ${live.length} slides`);assert(cards.length<=6,'built: 6 slides at most');
+ if(live.length){const flat=text.replace(/\s+/g,'');let at=-1;for(const x of live){const k=flat.indexOf(x.caption.replace(/\s+/g,''),at+1);assert(k>at,`built: slide caption in order: ${x.key}`);at=k;}
+  assert(html.indexOf('id="together-h"')<html.indexOf('id="slides-h"')&&html.indexOf('id="slides-h"')<html.indexOf('id="safe-h"'),'built: slideshow between Play with friends and Safe');
+  assert([...html.matchAll(/<video [^>]*data-sv=""[^>]*>/g)].every(m=>/preload="none"/.test(m[0])),'built: slide clips preload none');}}
 assert(!fs.existsSync(path.join(dist,'server/app/learn',lessons.LESSONS[0].id+'.html')),'old /learn/<id> pages are not built');
 assert(fs.existsSync(path.join(dist,'server/app/learn/lessons',lessons.LESSONS[0].id+'.html')),'lessons are built under /learn/lessons');
 console.log(`learn page ok: ${HL.length} sections, ${Q.length} FAQ, ${(html.match(/<video /g)||[]).length} clips, ${(html.match(/src="\/learn\/[a-z0-9_]+\.webp"/g)||[]).length} stills in ${path.relative(root,dist)}`);
