@@ -2,6 +2,7 @@ import TitleScene from './TitleScene';
 import TitleArt from './TitleArt';
 import TitleActions from './TitleActions';
 import {LegalLinks} from './GrownUps';
+import LandingBack from './LandingBack';
 import styles from './Title.module.css';
 
 /**
@@ -19,7 +20,7 @@ export default function Landing(){
    <div className={styles.scene} aria-hidden="true"><TitleArt/></div>
    {/* Nov 3 2026 (owner): a Back pill at the top-left (the spot the logo has on /learn) that returns to the feature tour; "For grown-ups" sits top-right
        (GrownUps.tsx). A plain crawlable link, no JS. */}
-   <a className={styles.backLink} href="/learn" data-enter="eyebrow"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M8.5 2.5 4 7l4.5 4.5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/></svg>Back</a>
+   <LandingBack/>
    <header className={styles.copy} data-x="copy">
     <p className={styles.eyebrow} data-enter="eyebrow">PLAY · LEARN · GROW</p>
     <h1 className={styles.title} aria-label="Futbol Island">

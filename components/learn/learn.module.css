@@ -108,6 +108,7 @@
 /* audit Nov 3: the hero title breaks between its sentences and never inside "Futbol Island" (was "Explore Futbol | Island. Learn | the game.") */
 .h1Line{display:block}
 .nowrap{white-space:nowrap}
+.h1Name{background:linear-gradient(95deg,#e8479b,#ff7a1a);-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent}
 .h2{font-size:clamp(44px,4.4vw + 20px,92px);max-width:16ch}
 .sub{max-width:32ch;font-size:clamp(19px,.85vw + 15px,28px);font-weight:500;line-height:1.28;letter-spacing:-.01em;color:var(--ink2);text-wrap:balance}
 .dark .sub{color:var(--ink2D)}
