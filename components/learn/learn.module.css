@@ -76,7 +76,7 @@
    reduced motion / calm; the current chapter is the same pink chip as the desktop nav; pressed icon sinks 3px, no hover colour */
 .menu{display:none}
 @media(max-width:640px){.menu{display:block;flex:none}}
-.menuBtn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;min-width:76px;padding:0 20px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);font:600 14px/1.1 var(--btn-font,Arial,Helvetica,sans-serif);list-style:none;cursor:pointer;transition:translate .16s,box-shadow .16s;-webkit-tap-highlight-color:transparent}
+.menuBtn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:var(--navigation-width,76px);height:44px;padding:0;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);font:600 14px/1.1 var(--btn-font,Arial,Helvetica,sans-serif);list-style:none;cursor:pointer;transition:translate .16s,box-shadow .16s;-webkit-tap-highlight-color:transparent}
 .menuBtn::-webkit-details-marker{display:none}
 .menuIco{position:relative;display:block;width:20px;height:10px}
 .menuIco i{position:absolute;left:0;width:20px;height:2px;border-radius:1px;background:currentColor;transition:transform .22s var(--ease)}

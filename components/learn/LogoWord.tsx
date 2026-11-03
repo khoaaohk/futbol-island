@@ -1,8 +1,8 @@
 'use client';
 import {useEffect,useRef} from 'react';
 
-/** Bright app colours (no black or dark greens, owner Nov 3): pink, sea blue, orange flag, teal water, pitch green, purple, sun gold. */
-const COLOURS=['#e8479b','#2f6bff','#ff7a1a','#14b8c8','#2fb36a','#8a5cf0','#f2b01e'];
+/** Bright app colours (no black or dark greens, owner Nov 3): pink, sea blue, orange flag, pitch green, purple (no gold or light teal: too faint on white). */
+const COLOURS=['#e8479b','#2f6bff','#ff7a1a','#2fb36a','#8a5cf0'];
 
 /**
  * The bar logo (owner, Nov 3 2026): every letter takes a random app colour on its own slow timer. Heat rules: a handful of tiny glyphs,
