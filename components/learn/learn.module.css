@@ -39,7 +39,7 @@
 .subnav::after{top:auto;height:1px;background:rgb(20 34 29 / .12)}
 .subnavIn{position:relative;display:flex;align-items:center;gap:8px;height:100%;box-sizing:border-box;max-width:1080px;margin:0 auto;padding:0 var(--gut) 3px}
 .root .logo{flex:none;margin-right:auto;font-family:IslandBrush,Arial,sans-serif;font-size:26px;line-height:1;color:var(--ink);text-decoration:none;white-space:nowrap}
-.root .subLinks{position:relative;display:flex;flex:1;min-width:0;gap:6px;overflow:hidden}
+.root .subLinks{position:relative;display:flex;flex:1;min-width:0;gap:6px;overflow:visible}
 .root .subLinks a{display:inline-flex;align-items:center;justify-content:center;width:92px;min-height:44px;padding:0;z-index:1;color:var(--ink);font-size:14px;opacity:.78;text-decoration:none;white-space:nowrap;position:relative;transition:opacity .16s}
 /* nav links follow the chip / tab family (docs/ui/BUTTONS.md): no face at rest; hover only turns the text pitch green (owner, Nov 3).
    The current chapter (aria-current, set by LearnEnhance) is ONE pink chip (3px rim, pink edge) that MOVES between the links
