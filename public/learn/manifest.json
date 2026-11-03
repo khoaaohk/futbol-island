@@ -638,12 +638,12 @@
   "file": "/learn/fuel_konbini.webp",
   "width": 1600,
   "height": 900,
-  "alt": "In the Konbini, buy a bottle of water and drink it for +25 fuel, then buy a salmon onigiri and eat it for +50 fuel; a banana from the island pocket fills the fuel bar to 100.",
+  "alt": "Walk up to the Konbini on Island Square and step inside, stroll past the shelves, then buy a bottle of water and drink it for +25 fuel and a salmon onigiri and eat it for +50 fuel; a banana from the island pocket fills the fuel bar to 100.",
   "video": {
    "mp4": "/learn/video/fuel_konbini.mp4",
    "width": 1920,
    "height": 1080,
-   "duration": 16.87
+   "duration": 15.87
   }
  },
  "town_overview_45": {
