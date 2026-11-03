@@ -136,7 +136,7 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
  {id:'reef-balls',title:'Reef treasure balls',group:'explore',imageKey:'reef_balls',
   hook:'Dive to a treasure chest and find a football inside.',
   description:'Each Explore reef zone hides one ball in its open treasure chest. Picking it up plays a mini lesson about a real football fact, then offers a card choice.',
-  footballTie:'Little-known football facts, like the oldest ball ever found and the game of cuju in ancient China.',
+  footballTie:'Little-known football facts, like the oldest ball ever found and a kicking game from ancient China.',
   where:'Swim out to an Explore reef zone, tap Dive, and look for the open chest.',
   proof:'7 reef zones, 7 hidden balls, 7 mini lessons that repeat no other lesson.',counts:{exploreBalls:7}},
  {id:'swim-dive',title:'Swim, dive and ride',group:'explore',imageKey:'swim_dive',
