@@ -137,17 +137,32 @@ export default function LearnEnhance({rootId}:{rootId:string}){
   const chapters=[...root.querySelectorAll<HTMLElement>('section[id]')];
   if(links.length&&chapters.length){
    const idxOf=new Map(chapters.map((c,i)=>[c,i] as const));
-   const navAt=chapters.map(c=>links.find(a=>a.hash.slice(1)===c.id));
+   // every link to a chapter (the desktop list and the phone menu) gets aria-current; the desktop list's one moving pink chip
+   // reads --i (the link's index) + data-has-current (learn.module.css). Written only when the chapter changes.
+   const navAt=chapters.map(c=>links.some(a=>a.hash.slice(1)===c.id)?c.id:undefined);
+   const list=root.querySelector<HTMLElement>('[data-sublinks]');
+   const order=list?[...list.querySelectorAll('a')].map(a=>a.hash.slice(1)):[];
    const inBand=new Set<number>();
+   let shown:string|undefined,raf=0;
    const setCurrent=()=>{
-    const cur=inBand.size?Math.min(...inBand):-1;let link:HTMLAnchorElement|undefined;
-    for(let i=cur;i>=0&&!link;i--)link=navAt[i];
-    for(const a of links){const on=a===link;if(on)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current');}
+    const cur=inBand.size?Math.min(...inBand):-1;let id:string|undefined;
+    for(let i=cur;i>=0&&!id;i--)id=navAt[i];
+    if(id===shown)return;
+    const from=shown;shown=id;
+    for(const a of links){if(a.hash.slice(1)===id)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current');}
+    if(!list)return;
+    cancelAnimationFrame(raf);
+    if(!id){list.removeAttribute('data-has-current');return;}// fades out in place
+    list.style.setProperty('--i',String(Math.max(0,order.indexOf(id))));
+    if(from&&list.hasAttribute('data-has-current'))return;// slides from the old link (transform only)
+    // first appearance: jump to the target while hidden, then fade + scale in there (two frames so the jump is styled first)
+    list.setAttribute('data-snap','');list.removeAttribute('data-has-current');
+    raf=requestAnimationFrame(()=>{raf=requestAnimationFrame(()=>{list.removeAttribute('data-snap');list.setAttribute('data-has-current','');});});
    };
    const secIo=new IntersectionObserver(es=>{for(const e of es){const i=idxOf.get(e.target as HTMLElement);if(i===undefined)continue;if(e.isIntersecting)inBand.add(i);else inBand.delete(i);}setCurrent();},
     {rootMargin:'-45% 0px -54% 0px'});
    chapters.forEach(c=>secIo.observe(c));
-   offs.push(()=>{secIo.disconnect();links.forEach(a=>a.removeAttribute('aria-current'));});
+   offs.push(()=>{secIo.disconnect();cancelAnimationFrame(raf);links.forEach(a=>a.removeAttribute('aria-current'));list?.removeAttribute('data-has-current');list?.removeAttribute('data-snap');});
   }
 
   return ()=>offs.forEach(f=>f());

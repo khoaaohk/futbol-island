@@ -39,22 +39,55 @@
 .subnav::after{top:auto;height:1px;background:rgb(20 34 29 / .12)}
 .subnavIn{position:relative;display:flex;align-items:center;gap:8px;height:100%;box-sizing:border-box;max-width:1080px;margin:0 auto;padding:0 var(--gut) 3px}
 .root .logo{flex:none;margin-right:auto;font-family:IslandBrush,Arial,sans-serif;font-size:22px;line-height:1;color:var(--ink);text-decoration:none;white-space:nowrap}
-.root .subLinks{display:flex;flex:1;min-width:0;gap:0;overflow:hidden}
-.root .subLinks a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:var(--ink);font-size:14px;opacity:.78;text-decoration:none;white-space:nowrap;position:relative;transition:opacity .16s}
-/* nav links follow the chip / tab family (docs/ui/BUTTONS.md): no face at rest; hover only turns the text pitch green (owner, Nov 3); the current
-   chapter (aria-current, set by LearnEnhance) is the pink chip with the pink edge; pressed sinks the chip */
-.root .subLinks a{isolation:isolate}
-.root .subLinks a::before{content:"";position:absolute;z-index:-1;inset:4px 0;border:var(--btn-rim-width,3px) solid transparent;border-radius:999px;background:transparent;box-shadow:0 0 0 transparent;transition:background-color .16s,box-shadow .16s,border-color .16s,translate .16s;pointer-events:none}
+.root .subLinks{position:relative;display:flex;flex:1;min-width:0;gap:6px;overflow:hidden}
+.root .subLinks a{display:inline-flex;align-items:center;justify-content:center;width:92px;min-height:44px;padding:0;z-index:1;color:var(--ink);font-size:14px;opacity:.78;text-decoration:none;white-space:nowrap;position:relative;transition:opacity .16s}
+/* nav links follow the chip / tab family (docs/ui/BUTTONS.md): no face at rest; hover only turns the text pitch green (owner, Nov 3).
+   The current chapter (aria-current, set by LearnEnhance) is ONE pink chip (3px rim, pink edge) that MOVES between the links
+   (owner, Nov 3): the four links are a fixed 92px + 6px gap, so the chip is the list's ::before moved by transform only,
+   translateX(var(--i) * 98px), with a springy snap; LearnEnhance sets --i and data-has-current when the chapter changes (no
+   per-frame work). First appearance: data-snap jumps it to the target while hidden, then it fades + scales in there; leaving to
+   nothing fades it out in place. Reduced motion / calm: instant (the global transition:none rules). Pressed sinks the chip. */
+.root .subLinks::before{content:"";position:absolute;left:0;top:4px;width:92px;height:36px;box-sizing:border-box;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);
+ border-radius:999px;background:var(--btn-pink,#ed9dce);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590);pointer-events:none;opacity:0;
+ transform:translateX(calc(var(--i,0) * 98px)) scale(.86);transition:opacity .2s var(--ease),transform .2s var(--ease),translate .16s}
+.root .subLinks[data-has-current]::before{opacity:1;transform:translateX(calc(var(--i,0) * 98px));transition:opacity .2s var(--ease),transform .32s cubic-bezier(.34,1.56,.64,1),translate .16s}
+.root .subLinks[data-snap]::before{transition:none}
+.root .subLinks:has(a[aria-current]:active)::before{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
 @media(hover:hover){.root .subLinks a:not([aria-current]):hover{opacity:1;color:var(--pitch)}}
 .root .subLinks a[aria-current]{opacity:1}
-.root .subLinks a[aria-current]::before{background:var(--btn-pink,#ed9dce);border-color:var(--btn-rim,#fff2cd);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
-.root .subLinks a:active::before{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
 .root .subLinks a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-2px;border-radius:999px}
 /* phones: logo + Play pill only (Nov 3: four links squeezed in at 390px clipped "Safety"); the anchors stay in the page */
 @media(max-width:640px){.root .subLinks{display:none}}
-@media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:1240px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;gap:6px;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px;padding:0 9px}}
+@media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:1240px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px}}
 .pill{flex:none;display:inline-flex;align-items:center;min-height:36px;padding:3px 16px 5px;border-radius:999px;background:var(--btn-gold,#e9c16b);
  box-shadow:inset 0 0 0 1.5px var(--btn-rim,#fff2cd),0 2px 0 #a8863d;color:var(--btn-ink,#244d40)!important;font-family:IslandBrush,var(--sans);font-size:17px;line-height:1.1;text-decoration:none;white-space:nowrap}
+/* ---- phone menu (owner, Nov 3 2026; MobileMenu.tsx): <= 640px only, a two-line icon left of the Play pill opens a cream panel
+   under the 68px bar with the four links in large type; open slides / fades down 220ms (transform + opacity), instant under
+   reduced motion / calm; the current chapter is the same pink chip as the desktop nav; pressed icon sinks 3px, no hover colour */
+.menu{display:none}
+@media(max-width:640px){.menu{display:block;flex:none}}
+.menuBtn{display:grid;place-items:center;width:44px;height:44px;border-radius:999px;color:var(--ink);list-style:none;cursor:pointer;transition:translate .16s;-webkit-tap-highlight-color:transparent}
+.menuBtn::-webkit-details-marker{display:none}
+.menuBtn:active{translate:0 var(--btn-press,3px)}
+.root .menuBtn:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-2px}
+.menuIco{position:relative;display:block;width:20px;height:10px}
+.menuIco i{position:absolute;left:0;width:20px;height:2px;border-radius:1px;background:currentColor;transition:transform .22s var(--ease)}
+.menuIco i:first-child{top:0}
+.menuIco i:last-child{top:8px}
+.menu[open] .menuIco i:first-child{transform:translateY(4px) rotate(45deg)}
+.menu[open] .menuIco i:last-child{transform:translateY(-4px) rotate(-45deg)}
+.menuPanel{position:absolute;top:100%;left:0;right:0;max-height:calc(100svh - 68px);overflow-y:auto;overscroll-behavior:contain;padding:6px var(--gut) 18px;
+ background:rgb(251 247 238 / .94);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);box-shadow:0 1px 0 rgb(20 34 29 / .12)}
+.menu[open] .menuPanel{animation:menuIn .22s var(--ease) both}
+.menu:not([open]) .menuPanel{display:none}/* no boxes at all while closed (Chrome keeps closed <details> content laid out as content-visibility:hidden) */
+.menuList li+li{border-top:1px solid rgb(20 34 29 / .12)}
+.root .menuList a{display:flex;align-items:center;min-height:56px;color:var(--ink);font-size:30px;font-weight:600;line-height:1.1;letter-spacing:-.02em;text-decoration:none}
+.menuList a span{display:inline-block;padding:3px 16px 5px;border:var(--btn-rim-width,3px) solid transparent;border-radius:999px}
+.menuList a[aria-current] span{background:var(--btn-pink,#ed9dce);border-color:var(--btn-rim,#fff2cd);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
+.menuList a:active span{translate:0 var(--btn-press,3px)}
+.root .menuList a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-3px;border-radius:14px}
+.root[data-calm] .menuPanel{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--paper)}
+
 /* over a dark chapter (LearnEnhance sets data-dark from IntersectionObserver): a near-black layer fades in (opacity only) and the
    logo / links turn light; the gold pill reads on both */
 .navDark{position:absolute;inset:0;background:rgb(12 23 20 / .9);opacity:0;transition:opacity .35s var(--ease);pointer-events:none}
@@ -317,6 +350,7 @@
 @keyframes rise{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:none}}
 @keyframes heroZoom{to{transform:scale(.9)}}
 @keyframes chrome{from{opacity:0}to{opacity:1}}
+@keyframes menuIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 @keyframes fill{from{transform:scaleX(0)}to{transform:scaleX(1)}}
 @keyframes ring{from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
 @supports(animation-timeline:view()){
@@ -333,4 +367,4 @@
 .root[data-calm] *,.root[data-calm] *::before,.root[data-calm] *::after{animation:none!important;transition:none!important}
 .root[data-calm] .subnav::before{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--paper)}
 @media(prefers-reduced-motion:reduce){.root *,.root *::before,.root *::after{animation:none!important;transition:none!important}}
-@media print{.subnav,.clipBtn,.reelCtl,.reelPlay,.mPlay,.slideCtl,.slidePlay{display:none}.dark{background:none;color:inherit}}
+@media print{.subnav,.menu,.clipBtn,.reelCtl,.reelPlay,.mPlay,.slideCtl,.slidePlay{display:none}.dark{background:none;color:inherit}}

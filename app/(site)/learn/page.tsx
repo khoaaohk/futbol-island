@@ -7,6 +7,7 @@ import LearnMontage from '@/components/learn/LearnMontage';
 import LearnSlides from '@/components/learn/LearnSlides';
 import FriendSteps from '@/components/learn/FriendSteps';
 import ShareLink from '@/components/learn/ShareLink';
+import MobileMenu from '@/components/learn/MobileMenu';
 import s from '@/components/learn/learn.module.css';
 import {LEARN_FAQ,LEARN_FAQ_TOP,LEARN_FEATURES,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,type LearnHighlight,type LearnHighlightId} from '@/lib/site/learnFeatures';
 import {LESSONS_INDEX} from '@/lib/site/lessons';
@@ -98,7 +99,8 @@ export default function LearnHub(){
    <span className={s.navDark} aria-hidden="true"/>
    <div className={s.subnavIn}>
     <a className={s.logo} href={PLAY_URL} aria-label="Futbol Island home">Futbol Island</a>
-    <ul className={s.subLinks}>{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}</ul>
+    <ul className={s.subLinks} data-sublinks="">{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}</ul>
+    <MobileMenu links={NAV}/>
     <a className={s.pill} href={PLAY_URL}>Play</a>
    </div>
   </nav>
