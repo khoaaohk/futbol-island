@@ -14,7 +14,7 @@
 //     sections, each with at most 3 chips and a real shot (no drawn placeholder art anywhere); 5 FAQs picked from LEARN_FAQ, safety
 //     first; no feature finder, a nav of <= 5 anchors; one motion language (fade + scale in, hero zoom-out), one pinned feature;
 //     hrefs are internal paths that exist or futbolisland.app;
-//  3b. the See it in action carousel (Nov 3): 9 cards max in order, one-sentence captions from the feature copy, bold via
+//  3b. the See it in action carousel (Nov 3): 11 cards max in order, one-sentence captions from the feature copy, bold via
 //     markers (no HTML), snap CSS on the row only, only the active card plays, preload rules, a11y attributes, no scroll reads;
 //  3c. (Nov 3) the full-bleed montage (one <video>, s / m / l as <source media> alternatives so one file is fetched, preload none,
 //     30 % play threshold, page-wide cap), the light Even more to explore slideshow (<= 6 slides in order, auto-advance gated on
@@ -167,7 +167,8 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
 // Nov 3 merge with the feature slideshow clips (~12.6 MB): 64 / 58 MB until the old 390x844 files are deleted and the big files move to R2
 // Nov 3: lesson_field_45 re-cut (16 s) and the hero re-recorded (21.3 s); best-quality 4:5 re-records (coins ~500), explore_45 and the water-first fuel_konbini; the 9 "See it in action"
 // clips re-captured at best quality (1920 at the lowest CRF under 2 MB + a 1280 wide_*_m file each; wide_cards is 16 s: collect + binder, so its pair may reach 3 / 1.5 MB): 95 / 90 MB until the old 390x844 files are deleted and the big files move to R2
-assert(total<95e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 95 MB)`);assert(clips<90e6,`clips ${(clips/1e6).toFixed(1)} MB (< 90 MB)`);
+// Nov 3: two more carousel cards, wide_bugs + wide_jobs (4 clips 5.5 MB + 2 posters 0.15 MB): +6 MB on both caps, 101 / 96 MB
+assert(total<101e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 101 MB)`);assert(clips<96e6,`clips ${(clips/1e6).toFixed(1)} MB (< 96 MB)`);
  // the hero clip is ~2.5x longer than the other 4:5 clips (Nov 3), so only it gets 6 MB (1080) / 3 MB (720 phone file)
  const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6,
   // explore_45 is ~2x the other 4:5 clips (15.7 s: reef swim, wall-target ball, Summit Isle mango-tree ball): 4 MB / 2 MB;
@@ -187,8 +188,8 @@ assert(total<95e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 95 MB)`);asse
 // ---- 3b. See it in action: the horizontal clip carousel (Nov 3 2026) ----------------------------------------------------------
 {const reel=read('components/learn/LearnReel.tsx'),rx=strip(read('components/learn/ReelEnhance.tsx')),M=L('lib/site/learnMedia.ts');
  assert.match(read('components/learn/ReelEnhance.tsx'),/^'use client';/,'ReelEnhance is a client island');
- // data: 9 cards in the owner's order, one sentence each, <= 22 words, bold via markers, facts from the linked feature
- assert.equal(CAR.map(c=>c.key).join(),'fishing,diving,vending,museum,arcade,books,cards,npc,multiplayer','9 cards in order');
+ // data: 11 cards in the owner's order, one sentence each, <= 22 words, bold via markers, facts from the linked feature
+ assert.equal(CAR.map(c=>c.key).join(),'fishing,diving,bugs,jobs,vending,museum,arcade,books,cards,npc,multiplayer','11 cards in order');
  for(const c of CAR){const t=learnPlain(c.caption),f=F.find(x=>x.id===c.feature);assert(f,`${c.key}: feature ${c.feature} exists`);
   assert(t.split(/\s+/).length<=22,`${c.key}: caption <= 22 words`);assert.equal(t.split(/(?<=[.!?])\s+/).length,1,`${c.key}: one sentence`);
   assert.match(t,/\.$/,`${c.key}: ends with a full stop`);assert.equal((c.caption.match(/\*\*/g)||[]).length%2,0,`${c.key}: bold markers pair up`);
@@ -200,7 +201,7 @@ assert(total<95e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 95 MB)`);asse
  assert.doesNotMatch(reel+read('app/(site)/page.tsx'),/dangerouslySetInnerHTML/,'captions are text nodes, never HTML');
  // media: a card without its manifest entry + poster renders nothing (no placeholder art), the section disappears with no cards
  assert.equal(M.learnWideAsset('definitely_not_captured_xyz'),null,'missing wide clip = no card');
- assert.match(reel,/\.filter\(\(x\)[^\n]*=>!!x\.a\)\.slice\(0,9\)/,'missing cards are skipped, 9 at most');
+ assert.match(reel,/\.filter\(\(x\)[^\n]*=>!!x\.a\)\.slice\(0,11\)/,'missing cards are skipped, 11 at most');
  assert.match(reel,/if\(!cards\.length\)return null;/,'no cards = no section');
  assert.match(read('lib/site/learnMedia.ts'),/if\(!m\|\|!exists\(still\)\)return null;/,'a card needs its manifest entry and poster');
  assert.match(read('app/(site)/page.tsx'),/<LearnReel\/>\s*\n\s*\{\/\* ---- 2-3\. learn, explore/,'the carousel sits right after the hero');
@@ -399,7 +400,7 @@ assert.equal((html.match(/<h1[ >]/g)||[]).length,1,'one h1');
 {const M=L('lib/site/learnMedia.ts'),live=CAR.filter(c=>M.learnWideAsset(c.key));
  const cards=html.match(/aria-roledescription="slide"[^>]*data-reel-card=""/g)||[];
  assert.equal(cards.length,live.length,`carousel: ${live.length} cards (one per wide clip on disk + in the manifest)`);
- assert(cards.length<=9,'carousel: 9 cards at most');
+ assert(cards.length<=11,'carousel: 11 cards at most');
  if(live.length){assert.match(html,/role="region" aria-roledescription="carousel"/,'carousel region');
   {const flat=text.replace(/\s+/g,"");for(const c of live)assert(flat.includes(learnPlain(c.caption).replace(/\s+/g,"")),`caption: ${c.key}`);}
   const rv=[...html.matchAll(/<video [^>]*data-rv=""[^>]*>/g)].map(m=>m[0]);assert(rv.every(v=>/preload="none"/.test(v)),'carousel clips preload none in the HTML');

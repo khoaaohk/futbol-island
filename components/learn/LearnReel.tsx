@@ -14,7 +14,7 @@ import s from './learn.module.css';
  * `poster` attribute: the <img> underneath is the poster, so a clip crossfades in only once it really plays).
  */
 export default function LearnReel(){
- const cards=LEARN_CAROUSEL.map(c=>({c,a:learnWideAsset(c.key)})).filter((x):x is {c:typeof x.c;a:NonNullable<typeof x.a>}=>!!x.a).slice(0,9);
+ const cards=LEARN_CAROUSEL.map(c=>({c,a:learnWideAsset(c.key)})).filter((x):x is {c:typeof x.c;a:NonNullable<typeof x.a>}=>!!x.a).slice(0,11);
  if(!cards.length)return null;
  const n=cards.length;
  return <section className={s.reel} id="in-action" aria-labelledby="reel-h" data-reel="">

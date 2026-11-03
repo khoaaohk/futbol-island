@@ -478,6 +478,30 @@
    "duration": 8
   }
  },
+ "wide_bugs": {
+  "file": "/learn/wide_bugs.webp",
+  "width": 1920,
+  "height": 1080,
+  "alt": "On the Summit Isle pitch, sneak up on a ladybug, swing the net and catch the Goalie Ladybug, whose card tells a true goalkeeping story.",
+  "video": {
+   "mp4": "/learn/video/wide_bugs.mp4",
+   "width": 1920,
+   "height": 1080,
+   "duration": 10.83
+  }
+ },
+ "wide_jobs": {
+  "file": "/learn/wide_jobs.webp",
+  "width": 1920,
+  "height": 1080,
+  "alt": "Three island jobs: set a cone on its mark, paint the faded centre circle, then watch an offside replay and keep the flag down.",
+  "video": {
+   "mp4": "/learn/video/wide_jobs.mp4",
+   "width": 1920,
+   "height": 1080,
+   "duration": 11.2
+  }
+ },
  "wide_vending": {
   "file": "/learn/wide_vending.webp",
   "width": 1920,
