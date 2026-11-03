@@ -9,6 +9,8 @@ import s from './learn.module.css';
  * public/learn/video/<key>.* exists, and otherwise an illustrated card drawn here in the group's colours (never a broken image).
  * Server component: LearnEnhance (client) decides when a clip may play (>= 50 % visible, at most 2 at once, never on reduced
  * motion / Save-Data / slow network / battery saver unless tapped). `preload="none"`: nothing downloads before it plays.
+ * No `poster` on the video (QA Nov 2): a poster downloads at once even with preload none, which pulled every still (~1.7 MB) on
+ * first load. The lazy <img> underneath is the poster; the clip fades in over it only once it plays.
  */
 const GLYPHS:Record<LearnGlyph,React.ReactNode>={
  pitch:<><rect x="8" y="14" width="48" height="36" rx="3"/><path d="M32 14v36"/><circle cx="32" cy="32" r="7"/><path d="M8 24h7v16H8M56 24h-7v16h7"/></>,
@@ -47,11 +49,13 @@ function Fallback({group,seed,label,cast}:{group:LearnGroupId;seed:string;label:
 export default function LearnMedia({imageKey,group,label,cast,eager,className}:{imageKey:string;group:LearnGroupId;label:string;cast?:string;eager?:boolean;className?:string}){
  const a=learnAsset(imageKey);
  const alt=a.alt??label;
+ // Most shots are upright phone screens shown in wide slots: crop around the middle (the HUD sits at the top), or the shot's own focus.
+ const focus=a.image?{objectPosition:a.focus??(a.image.height>a.image.width?'50% 50%':'50% 20%')}:undefined;
  return <div className={[s.media,className].filter(Boolean).join(' ')} data-media={a.image?'still':'art'}>
-  {a.image?<img className={s.still} src={a.image.src} width={a.image.width} height={a.image.height} alt={alt} loading={eager?'eager':'lazy'} decoding="async"/>
+  {a.image?<img className={s.still} src={a.image.src} width={a.image.width} height={a.image.height} alt={alt} loading={eager?'eager':'lazy'} decoding="async" style={focus}/>
    :<Fallback group={group} seed={imageKey} label={alt} cast={cast}/>}
   {a.clip&&<>
-   <video className={s.clip} data-lv="" muted loop playsInline preload="none" poster={a.image?.src} aria-hidden="true" tabIndex={-1} disablePictureInPicture>
+   <video className={s.clip} data-lv="" muted loop playsInline preload="none" aria-hidden="true" tabIndex={-1} disablePictureInPicture style={focus}>
     {a.clip.webm&&<source src={a.clip.webm} type="video/webm"/>}
     {a.clip.mp4&&<source src={a.clip.mp4} type="video/mp4"/>}
    </video>

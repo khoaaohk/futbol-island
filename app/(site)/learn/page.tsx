@@ -2,6 +2,7 @@ import type {CSSProperties} from 'react';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import LearnMedia,{Glyph,castStill} from '@/components/learn/LearnMedia';
+import {learnAsset} from '@/lib/site/learnMedia';
 import LearnEnhance from '@/components/learn/LearnEnhance';
 import FeatureFinder from '@/components/learn/FeatureFinder';
 import FriendStepper from '@/components/learn/FriendStepper';
@@ -22,7 +23,8 @@ const DESC='Everything inside Futbol Island, the free football learning game for
 export const metadata=pageMeta('What’s inside the game',DESC,'/learn');
 const CRUMBS=[{name:'Home',path:'/'},{name:'What’s inside',path:'/learn'}];
 const ROOT_ID='learn-root';
-const PLAY_URL='https://futbolisland.app/';
+// Same-origin '/' like /about: an absolute URL counts as leaving the site on www / preview hosts and hits the grown-up link gate.
+const PLAY_URL='/';
 
 const byGroup=(g:LearnGroupId)=>LEARN_FEATURES.filter(f=>f.group===g);
 const group=(g:LearnGroupId)=>LEARN_GROUPS.find(x=>x.id===g)!;
@@ -263,7 +265,8 @@ export default function LearnHub(){
    <div className={s.wrap}>
     <SecHead g="safe" id="safe-h"/>
     <ul className={s.badges}>{['Free','No ads','No chat','No accounts','Nothing to download'].map(b=><li key={b} className={s.badge}><Check/>{b}</li>)}</ul>
-    <ul className={`${s.grid} ${s.stacked}`}>{safe.map(f=><li key={f.id} data-reveal=""><FeatureCard f={f}/></li>)}</ul>
+    {/* trust cards: text only unless a real shot exists (four identical shield cards read as placeholders) */}
+    <ul className={`${s.grid} ${s.stacked}`}>{safe.map(f=><li key={f.id} data-reveal=""><FeatureCard f={f} media={!!learnAsset(f.imageKey).image}/></li>)}</ul>
    </div>
   </section>
   <Wave a="safe" b="faq"/>

@@ -96,13 +96,17 @@ assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{anim
   assert.deepEqual(props,[],`@keyframes ${name} animates transform / opacity only`);
   if(name!=='lightUp')assert.doesNotMatch(body,/box-shadow|background|color/,`@keyframes ${name}: transform / opacity only`);}}
 const media=read('components/learn/LearnMedia.tsx');
-assert.match(media,/<video [^>]*muted loop playsInline preload="none" poster=/,'clips: muted, loop, playsinline, preload none, poster');
+assert.match(media,/<video [^>]*muted loop playsInline preload="none"/,'clips: muted, loop, playsinline, preload none');
+assert.doesNotMatch(media,/<video [^>]*poster=/,'no video poster: a poster downloads at once even with preload none (the lazy still underneath is the poster)');
 assert.match(media,/video\/webm[\s\S]*video\/mp4/,'webm first, then mp4');
 assert.match(media,/data-lv-btn/,'every clip has a pause / play button');
 const lm=read('lib/site/learnMedia.ts');
 assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerated');
 {const M=L('lib/site/learnMedia.ts');const a=M.learnAsset('definitely_not_captured_xyz');assert(!a.image&&!a.clip,'a missing shot falls back');
  for(const f of F){const x=M.learnAsset(f.imageKey);if(x.image){assert(x.image.width>0&&x.image.height>0,`${f.imageKey}: size`);assert(has('public'+x.image.src),`${f.imageKey}: file`);}}
+ // QA Nov 2: the capture pass named shots by what they show; every LEARN_SHOT alias must point at a real still, and most features get one
+ for(const [k,v] of Object.entries(M.LEARN_SHOT))assert(has(`public/learn/${v}.webp`),`LEARN_SHOT ${k} -> ${v}: still exists`);
+ assert(F.filter(f=>M.learnAsset(f.imageKey).image).length>=24,'at least 24 features show a real still (not the drawn card)');
  // public/learn stays small enough to deploy (brief: under 18 MB, clips under 14 MB)
  const walk=d=>fs.existsSync(d)?fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]):[];
  const files=walk(path.join(root,'public/learn')),size=f=>fs.statSync(f).size;

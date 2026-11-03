@@ -11,7 +11,7 @@ import type {LearnGroupId} from './learnFeatures';
  */
 export type LearnImage={src:string;width:number;height:number};
 export type LearnClip={webm?:string;mp4?:string};
-export type LearnAsset={key:string;alt?:string;image?:LearnImage;clip?:LearnClip};
+export type LearnAsset={key:string;alt?:string;image?:LearnImage;clip?:LearnClip;focus?:string};
 
 /** Group colours (from the island palette: sea, pink, deep green, gold) and the plain glyph drawn on fallback art. */
 export const LEARN_THEME:Record<LearnGroupId,{c1:string;c2:string;ink:string;glyph:LearnGlyph}>={
@@ -51,13 +51,31 @@ function readManifest():Map<string,RawEntry>{
  return out;
 }
 
+/**
+ * The capture pass (Nov 2 2026) named its shots after what they show, not after the page's imageKeys. This maps a page imageKey
+ * to the shot that really shows that feature (checked by eye against each still and its manifest alt text). Keys not listed here
+ * use their own name; features with no matching shot keep the drawn card on purpose (live matches, graduation, bugs, beachcombing,
+ * Konbini, quick challenges, news, jobs, Summit Kick, two friend steps, indoors, controls, costumes, jersey back, the safe group).
+ */
+export const LEARN_SHOT:Readonly<Record<string,string>>={
+ learning_paths:'paths_screen',lesson_quiz:'lesson_field',path_stories:'stories_chapter',daily_warm_up:'quiz_question',
+ reef_balls:'diving_reef',swim_dive:'animal_ride',fishing_fishbook:'fishing',history_museum:'museum',islanders_talk:'npc_chat',
+ bubbles_banter:'npc_bubble',arcade:'arcade_room',keep_ups:'emotes',
+ friends_party:'mp_party',friends_step_join:'mp_join',friends_kits:'mp_meet',friends_high_five:'mp_emotes',friends_ball_duet:'mp_ball',
+ friends_ride:'mp_ride',card_binder:'player_cards',pop_up_books:'books',vending_machine:'vending',rides:'scooter_bike',
+};
+
+/** Crop focus (CSS object-position) for shots whose subject is not in the middle; upright shots default to the middle. */
+const LEARN_FOCUS:Readonly<Record<string,string>>={kit_shop:'50% 22%',paths_screen:'50% 20%',save_code:'50% 42%',fishing:'50% 62%'};
+
 let cache:Map<string,LearnAsset>|null=null;
 /** The asset for one imageKey (always an object; `image` / `clip` only when the files exist). */
-export function learnAsset(key:string):LearnAsset{
+export function learnAsset(pageKey:string):LearnAsset{
  if(!cache)cache=new Map();
- const hit=cache.get(key);if(hit)return hit;
+ const hit=cache.get(pageKey);if(hit)return hit;
+ const key=LEARN_SHOT[pageKey]??pageKey;
  const m=readManifestOnce().get(key);
- const a:LearnAsset={key,alt:typeof m?.alt==='string'&&m.alt.trim()?m.alt.trim():undefined};
+ const a:LearnAsset={key:pageKey,alt:typeof m?.alt==='string'&&m.alt.trim()?m.alt.trim():undefined,focus:LEARN_FOCUS[key]};
  const still=`learn/${key}.webp`;
  if(/^[a-z0-9_]+$/.test(key)&&exists(still)){
   let size:{width:number;height:number}|null=null;
@@ -69,7 +87,7 @@ export function learnAsset(key:string):LearnAsset{
  const webm=`learn/video/${key}.webm`,mp4=`learn/video/${key}.mp4`;
  const clip:LearnClip={};if(exists(webm))clip.webm='/'+webm;if(exists(mp4))clip.mp4='/'+mp4;
  if(clip.webm||clip.mp4)a.clip=clip;
- cache.set(key,a);
+ cache.set(pageKey,a);
  return a;
 }
 let manifest:Map<string,RawEntry>|null=null;
