@@ -412,7 +412,7 @@ export const LEARN_CAROUSEL:readonly LearnCarouselItem[]=[
  {key:'multiplayer',feature:'party-start',title:'Play with friends',caption:'A grown-up starts a **private party**, and friends join by code to call for the ball and celebrate like a team.'},
 ];
 /** The words under the full-bleed montage after the hero (Nov 3 2026). PLACEHOLDER copy: the owner should confirm or replace it. */
-export const LEARN_MONTAGE={title:'A whole island to play in.',line:'Dribble, pass, ride, fly.'};
+export const LEARN_MONTAGE={title:'A whole island to play in.',line:'Dribble, ride, fly, zip and dive.'};
 /**
  * "Even more to explore" (Nov 3 2026, owner: after visionOS's "Explore what's new" slideshow, on a light section between Play with
  * friends and Safe for kids). Six slides in this order, one short sentence each (<= 14 words, plain text, no bold), shown as a
