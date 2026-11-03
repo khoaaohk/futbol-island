@@ -59,7 +59,7 @@ export const LEARN_GROUPS:readonly LearnGroup[]=[
 ];
 
 export const LEARN_HERO={
- headline:'Football ideas kids can see, try and remember',
+ headline:'Explore an island. Learn football.',
  subhead:'Futbol Island is a free football learning game for kids aged 7 to 12. They explore an island and learn positions, team shape and the Laws of the Game in 7v7, 9v9, 11v11 and futsal, one short lesson at a time.',
  trust:[
   'Free, with no ads, and coins are earned by playing, never bought',

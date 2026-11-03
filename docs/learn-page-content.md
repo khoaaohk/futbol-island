@@ -12,7 +12,7 @@ index (`app/(site)/learn/page.tsx` + `[slug]`) is planned to move to `/learn/les
 
 ## Hero
 
-**Football ideas kids can see, try and remember**
+**Explore an island. Learn football.**
 
 Futbol Island is a free football learning game for kids aged 7 to 12. They explore an island and learn positions, team shape and the Laws of the Game in 7v7, 9v9, 11v11 and futsal, one short lesson at a time.
 
