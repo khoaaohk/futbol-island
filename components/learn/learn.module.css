@@ -86,6 +86,10 @@
  .stage{max-width:1180px;padding:clamp(48px,5vw,80px) clamp(24px,4vw,64px) clamp(28px,3vw,44px);border-radius:40px;background:var(--well-l)}
  .dark .stage{background:var(--well-d)}
  .stage .frame{box-shadow:0 30px 60px -24px rgb(12 23 20 / .4)}
+ /* an upright shot fills its tan card edge to edge (cropped, not letterboxed) */
+ .stage:has(>.frameTall){padding:0;overflow:hidden}
+ .stage:has(>.frameTall)>.frameTall{width:100%;height:auto;max-height:min(80svh,820px);aspect-ratio:4/5;border-radius:0;box-shadow:none}
+ .stage:has(>.frameTall) .still,.stage:has(>.frameTall) .clip{object-position:50% 22%}
 }
 .media{position:absolute;inset:0;overflow:hidden}
 .still,.clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
