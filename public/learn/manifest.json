@@ -1,0 +1,457 @@
+{
+ "town_overview": {
+  "file": "/learn/town_overview.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Fly over Futbol Island on your jetpack and see the streets, pitches and beach below.",
+  "video": {
+   "mp4": "/learn/video/town_overview.mp4",
+   "webm": "/learn/video/town_overview.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 7.08
+  }
+ },
+ "lesson_field": {
+  "file": "/learn/lesson_field.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Watch a play unfold on the pitch while the coach card tells you what to look for.",
+  "video": {
+   "mp4": "/learn/video/lesson_field.mp4",
+   "webm": "/learn/video/lesson_field.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 7.58
+  }
+ },
+ "quiz_question": {
+  "file": "/learn/quiz_question.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Answer a quick quiz by tapping the best spot for your teammate on the pitch.",
+  "video": {
+   "mp4": "/learn/video/quiz_question.mp4",
+   "webm": "/learn/video/quiz_question.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 7.04
+  }
+ },
+ "stories_chapter": {
+  "file": "/learn/stories_chapter.webp",
+  "width": 480,
+  "height": 1039,
+  "alt": "Read a story chapter with bold pictures and a calm voice about big football feelings.",
+  "video": {
+   "mp4": "/learn/video/stories_chapter.mp4",
+   "webm": "/learn/video/stories_chapter.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 7.58
+  }
+ },
+ "ball_hunt": {
+  "file": "/learn/ball_hunt.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Find a hidden ball on the reef and unlock a mini lesson about the rules of the game.",
+  "video": {
+   "mp4": "/learn/video/ball_hunt.mp4",
+   "webm": "/learn/video/ball_hunt.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 6.54
+  }
+ },
+ "fishing": {
+  "file": "/learn/fishing.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Cast your line, wait for the splash and spin the reel to land a fish.",
+  "video": {
+   "mp4": "/learn/video/fishing.mp4",
+   "webm": "/learn/video/fishing.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 7.5
+  }
+ },
+ "fishbook": {
+  "file": "/learn/fishbook.webp",
+  "width": 664,
+  "height": 1437,
+  "alt": "Flip through your Fishbook to see every fish you caught and a fun football fact for each one.",
+  "video": {
+   "mp4": "/learn/video/fishbook.mp4",
+   "webm": "/learn/video/fishbook.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 6.08
+  }
+ },
+ "diving_reef": {
+  "file": "/learn/diving_reef.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Dive under the sea and swim around a sunken pitch on a colourful reef.",
+  "video": {
+   "mp4": "/learn/video/diving_reef.mp4",
+   "webm": "/learn/video/diving_reef.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 7.08
+  }
+ },
+ "animal_ride": {
+  "file": "/learn/animal_ride.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Hop on a friendly whale shark and ride it through the warm island water.",
+  "video": {
+   "mp4": "/learn/video/animal_ride.mp4",
+   "webm": "/learn/video/animal_ride.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 7.08
+  }
+ },
+ "npc_chat": {
+  "file": "/learn/npc_chat.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Chat with an island neighbour and take on a quick football challenge.",
+  "video": {
+   "mp4": "/learn/video/npc_chat.mp4",
+   "webm": "/learn/video/npc_chat.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 5.13
+  }
+ },
+ "npc_bubble": {
+  "file": "/learn/npc_bubble.webp",
+  "width": 460,
+  "height": 600,
+  "alt": "Walk past a neighbour and a thought bubble pops up with a football tip.",
+  "video": {
+   "mp4": "/learn/video/npc_bubble.mp4",
+   "webm": "/learn/video/npc_bubble.webm",
+   "width": 460,
+   "height": 600,
+   "duration": 6.54
+  }
+ },
+ "books": {
+  "file": "/learn/books.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Open a pop-up book about a football star and turn the pages to see the story come alive.",
+  "video": {
+   "mp4": "/learn/video/books.mp4",
+   "webm": "/learn/video/books.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 7.13
+  }
+ },
+ "vending": {
+  "file": "/learn/vending.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Pick a card pack from a vending machine and watch a legend card pop out.",
+  "video": {
+   "mp4": "/learn/video/vending.mp4",
+   "webm": "/learn/video/vending.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 6.54
+  }
+ },
+ "museum": {
+  "file": "/learn/museum.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Visit the football museum and look at famous trophies and history cases.",
+  "video": {
+   "mp4": "/learn/video/museum.mp4",
+   "webm": "/learn/video/museum.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 4.46
+  }
+ },
+ "player_cards": {
+  "file": "/learn/player_cards.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Turn the pages of your card binder full of football stars and legends.",
+  "video": {
+   "mp4": "/learn/video/player_cards.mp4",
+   "webm": "/learn/video/player_cards.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 5.88
+  }
+ },
+ "kit_shop": {
+  "file": "/learn/kit_shop.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Design your own jersey and put your name and number on the back.",
+  "video": {
+   "mp4": "/learn/video/kit_shop.mp4",
+   "webm": "/learn/video/kit_shop.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 7.75
+  }
+ },
+ "arcade_room": {
+  "file": "/learn/arcade_room.webp",
+  "width": 1100,
+  "height": 700,
+  "alt": "Glowing arcade cabinets fill a neon room where you walk up to a game and press Play.",
+  "video": {
+   "mp4": "/learn/video/arcade_room.mp4",
+   "webm": "/learn/video/arcade_room.webm",
+   "width": 720,
+   "height": 458,
+   "duration": 6.54
+  }
+ },
+ "strikers": {
+  "file": "/learn/strikers.webp",
+  "width": 1100,
+  "height": 509,
+  "alt": "Two teams race around a glowing pitch in a fast arcade football match.",
+  "video": {
+   "mp4": "/learn/video/strikers.mp4",
+   "webm": "/learn/video/strikers.webm",
+   "width": 720,
+   "height": 332,
+   "duration": 7.04
+  }
+ },
+ "tennis": {
+  "file": "/learn/tennis.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Kick the ball over the net and win points in Futbol Tennis.",
+  "video": {
+   "mp4": "/learn/video/tennis.mp4",
+   "webm": "/learn/video/tennis.webm",
+   "width": 480,
+   "height": 1038,
+   "duration": 7.04
+  }
+ },
+ "pinball": {
+  "file": "/learn/pinball.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Flip the football around a pinball table to score big points.",
+  "video": {
+   "mp4": "/learn/video/pinball.mp4",
+   "webm": "/learn/video/pinball.webm",
+   "width": 480,
+   "height": 1038,
+   "duration": 7
+  }
+ },
+ "breakaway": {
+  "file": "/learn/breakaway.webp",
+  "width": 1100,
+  "height": 509,
+  "alt": "Run down a glowing track, dodge tacklers and jump over obstacles on the way to goal.",
+  "video": {
+   "mp4": "/learn/video/breakaway.mp4",
+   "webm": "/learn/video/breakaway.webm",
+   "width": 720,
+   "height": 332,
+   "duration": 7.08
+  }
+ },
+ "pass_puzzles": {
+  "file": "/learn/pass_puzzles.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Draw a pass around the defender to find your teammate and solve the puzzle.",
+  "video": {
+   "mp4": "/learn/video/pass_puzzles.mp4",
+   "webm": "/learn/video/pass_puzzles.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 5.25
+  }
+ },
+ "beach_match": {
+  "file": "/learn/beach_match.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Watch a sunny five-a-side match on the beach court.",
+  "video": {
+   "mp4": "/learn/video/beach_match.mp4",
+   "webm": "/learn/video/beach_match.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 5.17
+  }
+ },
+ "emotes": {
+  "file": "/learn/emotes.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Pick an emote and do tricks with the ball next to an island neighbour.",
+  "video": {
+   "mp4": "/learn/video/emotes.mp4",
+   "webm": "/learn/video/emotes.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 6.58
+  }
+ },
+ "scooter_bike": {
+  "file": "/learn/scooter_bike.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Zoom along the island paths on your own scooter.",
+  "video": {
+   "mp4": "/learn/video/scooter_bike.mp4",
+   "webm": "/learn/video/scooter_bike.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 4.08
+  }
+ },
+ "save_code": {
+  "file": "/learn/save_code.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Get a secret save code made of three football words and a number to keep your island safe.",
+  "video": {
+   "mp4": "/learn/video/save_code.mp4",
+   "webm": "/learn/video/save_code.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 6.13
+  }
+ },
+ "paths_screen": {
+  "file": "/learn/paths_screen.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Choose your path: 7v7, 9v9, 11v11 or Futsal, each with its own lessons.",
+  "video": {
+   "mp4": "/learn/video/paths_screen.mp4",
+   "webm": "/learn/video/paths_screen.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 7.08
+  }
+ },
+ "mp_join": {
+  "file": "/learn/mp_join.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Type in your friend's party code and tap Join to play together.",
+  "video": {
+   "mp4": "/learn/video/mp_join.mp4",
+   "webm": "/learn/video/mp_join.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 5.08
+  }
+ },
+ "mp_meet": {
+  "file": "/learn/mp_meet.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "A friend walks over and you both wave hello, with name tags over your heads.",
+  "video": {
+   "mp4": "/learn/video/mp_meet.mp4",
+   "webm": "/learn/video/mp_meet.webm",
+   "width": 480,
+   "height": 1038,
+   "duration": 6
+  }
+ },
+ "mp_emotes": {
+  "file": "/learn/mp_emotes.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Give your friend a high five, then dance together.",
+  "video": {
+   "mp4": "/learn/video/mp_emotes.mp4",
+   "webm": "/learn/video/mp_emotes.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 5.88
+  }
+ },
+ "mp_ball": {
+  "file": "/learn/mp_ball.webp",
+  "width": 780,
+  "height": 1686,
+  "alt": "Kick your ball at a friend and, Bonk!, down they go.",
+  "video": {
+   "mp4": "/learn/video/mp_ball.mp4",
+   "webm": "/learn/video/mp_ball.webm",
+   "width": 480,
+   "height": 1038,
+   "duration": 6
+  }
+ },
+ "mp_bump": {
+  "file": "/learn/mp_bump.webp",
+  "width": 780,
+  "height": 1684,
+  "alt": "Two friends on bikes ride into each other for a silly bump.",
+  "video": {
+   "mp4": "/learn/video/mp_bump.mp4",
+   "webm": "/learn/video/mp_bump.webm",
+   "width": 480,
+   "height": 1036,
+   "duration": 4.21
+  }
+ },
+ "mp_ride": {
+  "file": "/learn/mp_ride.webp",
+  "width": 780,
+  "height": 1692,
+  "alt": "Ride scooters side by side across the island with a friend.",
+  "video": {
+   "mp4": "/learn/video/mp_ride.mp4",
+   "webm": "/learn/video/mp_ride.webm",
+   "width": 480,
+   "height": 1042,
+   "duration": 6
+  }
+ },
+ "mp_party": {
+  "file": "/learn/mp_party.webp",
+  "width": 780,
+  "height": 1688,
+  "alt": "Three friends in one party have a dance-off in the plaza.",
+  "video": {
+   "mp4": "/learn/video/mp_party.mp4",
+   "webm": "/learn/video/mp_party.webm",
+   "width": 390,
+   "height": 844,
+   "duration": 4.04
+  }
+ },
+ "mp_sidebyside": {
+  "file": "/learn/mp_sidebyside.webp",
+  "width": 792,
+  "height": 844,
+  "alt": "Two phones, one island: each player sees their friend dance and high-five.",
+  "video": {
+   "mp4": "/learn/video/mp_sidebyside.mp4",
+   "webm": "/learn/video/mp_sidebyside.webm",
+   "width": 480,
+   "height": 512,
+   "duration": 4.17
+  }
+ }
+}
