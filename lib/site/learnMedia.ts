@@ -9,8 +9,8 @@ import type {LearnGroupId} from './learnFeatures';
  * deterministic illustrated card in the feature's group colours (components/learn/LearnMedia.tsx).
  * Pure Node (fs, no env reads, no client code), like lib/site/lessons.ts.
  */
-export type LearnImage={src:string;width:number;height:number};
-export type LearnClip={webm?:string;mp4?:string;/** a 1280px mp4 for viewports <= 1280px wide (slides only) */mp4m?:string};
+export type LearnImage={src:string;width:number;height:number;/** a smaller still for phones (<= 640px wide, 4:5 shots only) */m?:{src:string;width:number;height:number}};
+export type LearnClip={webm?:string;mp4?:string;/** a smaller mp4 for narrow viewports: 1280px slides (<= 1280px), 720x900 4:5 clips (<= 640px) */mp4m?:string};
 export type LearnAsset={key:string;alt?:string;image?:LearnImage;clip?:LearnClip;focus?:string};
 
 /** Group colours (from the island palette: sea, pink, deep green, gold) and the plain glyph drawn on fallback art. */
@@ -65,6 +65,18 @@ export const LEARN_SHOT:Readonly<Record<string,string>>={
  friends_ride:'mp_ride',card_binder:'player_cards',friends_step_start:'friend_step1',friends_step_code:'friend_step2',pop_up_books:'books',vending_machine:'vending',rides:'scooter_bike',
 };
 
+/**
+ * The 4:5 re-captures (Nov 3 2026, owner: the upright 390x844 recordings sat skinny in a wide column). Recorded on a 600x750 CSS
+ * px touch "device" at DPR 3, so they fill a phone's content width without stretching or cropping. Each shot key maps to its
+ * `<key>_45` manifest entry: still public/learn/<key>_45.webp (1080x1350) + <key>_45_m.webp (720x900), clip
+ * public/learn/video/<key>_45.mp4 (1080x1350) + <key>_45_m.mp4 (720x900, served to viewports <= 640px wide).
+ * A missing `_45` entry or still falls back to the old shot.
+ */
+export const LEARN_45:Readonly<Record<string,string>>={
+ town_overview:'town_overview_45',lesson_field:'lesson_field_45',diving_reef:'diving_reef_45',save_code:'save_code_45',
+ mp_sidebyside:'mp_sidebyside_45',mp_join:'mp_join_45',friend_step1:'friend_step1_45',friend_step2:'friend_step2_45',
+};
+
 /** Crop focus (CSS object-position) for shots whose subject is not in the middle; upright shots default to the middle. */
 const LEARN_FOCUS:Readonly<Record<string,string>>={kit_shop:'50% 22%',paths_screen:'50% 20%',save_code:'50% 42%',fishing:'50% 62%'};
 
@@ -73,7 +85,8 @@ let cache:Map<string,LearnAsset>|null=null;
 export function learnAsset(pageKey:string):LearnAsset{
  if(!cache)cache=new Map();
  const hit=cache.get(pageKey);if(hit)return hit;
- const key=LEARN_SHOT[pageKey]??pageKey;
+ const base=LEARN_SHOT[pageKey]??pageKey,k45=LEARN_45[base];
+ const key=k45&&readManifestOnce().has(k45)&&exists(`learn/${k45}.webp`)?k45:base;
  const m=readManifestOnce().get(key);
  const a:LearnAsset={key:pageKey,alt:typeof m?.alt==='string'&&m.alt.trim()?m.alt.trim():undefined,focus:LEARN_FOCUS[key]};
  const still=`learn/${key}.webp`;
@@ -83,9 +96,11 @@ export function learnAsset(pageKey:string):LearnAsset{
   if(typeof w==='number'&&typeof h==='number'&&w>0&&h>0)size={width:w,height:h};
   else{try{const fd=fs.openSync(path.join(PUB,still),'r');const b=Buffer.alloc(32);fs.readSync(fd,b,0,32,0);fs.closeSync(fd);size=webpSize(b);}catch{size=null;}}
   a.image={src:'/'+still,...(size??{width:1600,height:1000})};
+  if(key===k45&&exists(`learn/${key}_m.webp`))a.image.m={src:`/learn/${key}_m.webp`,width:720,height:900};
  }
  const webm=`learn/video/${key}.webm`,mp4=`learn/video/${key}.mp4`;
  const clip:LearnClip={};if(exists(webm))clip.webm='/'+webm;if(exists(mp4))clip.mp4='/'+mp4;
+ if(key===k45&&clip.mp4&&exists(`learn/video/${key}_m.mp4`))clip.mp4m=`/learn/video/${key}_m.mp4`;
  if(clip.webm||clip.mp4)a.clip=clip;
  cache.set(pageKey,a);
  return a;
