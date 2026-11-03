@@ -132,11 +132,11 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  // QA Nov 2: the capture pass named shots by what they show; every LEARN_SHOT alias must point at a real still, and most features get one
  for(const [k,v] of Object.entries(M.LEARN_SHOT))assert(has(`public/learn/${v}.webp`),`LEARN_SHOT ${k} -> ${v}: still exists`);
  assert(F.filter(f=>M.learnAsset(f.imageKey).image).length>=24,'at least 24 features show a real still (not the drawn card)');
- // public/learn stays small enough to deploy (brief: under 18 MB, clips under 14 MB)
+ // public/learn stays small enough to deploy (brief: under 32 MB since the Nov 3 landscape clips, clips under 14 MB)
  const walk=d=>fs.existsSync(d)?fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]):[];
  const files=walk(path.join(root,'public/learn')),size=f=>fs.statSync(f).size;
  const total=files.reduce((t,f)=>t+size(f),0),clips=files.filter(f=>/\.(mp4|webm)$/.test(f)).reduce((t,f)=>t+size(f),0);
- assert(total<18e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 18 MB)`);assert(clips<14e6*2,`clips ${(clips/1e6).toFixed(1)} MB (mp4 + webm pairs, < 14 MB each set)`);}
+ assert(total<32e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 32 MB)`);assert(clips<14e6*2,`clips ${(clips/1e6).toFixed(1)} MB (mp4 + webm pairs, < 14 MB each set)`);}
 
 // ---- 3b. See it in action: the horizontal clip carousel (Nov 3 2026) ----------------------------------------------------------
 {const reel=read('components/learn/LearnReel.tsx'),rx=strip(read('components/learn/ReelEnhance.tsx')),M=L('lib/site/learnMedia.ts');
