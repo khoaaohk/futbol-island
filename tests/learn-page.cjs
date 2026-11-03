@@ -119,7 +119,7 @@ assert.match(css,/@supports\(animation-timeline:view\(\)\)/,'CSS scroll-driven p
 assert.match(css,/\.root\[data-lm-io\]/,'IntersectionObserver fallback path');
 assert.match(css,/\.root\[data-calm\] \*,[^{]*\{animation:none!important;transition:none!important\}/,'calm kills every animation');
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{animation:none!important;transition:none!important\}\}/,'reduced motion kills every animation, even before JS');
-{const kf=[...css.matchAll(/@keyframes (\w+)\{([\s\S]*?\})\}/g)];assert.deepEqual(kf.map(k=>k[1]).sort(),['chrome','fill','heroZoom','hlFade','menuIn','ring','rise'],'one motion language: fade + scale in, hero zoom-out (+ the sub-nav chrome fade, the phone menu slide-down, the slideshow dot fill, the montage ring, the hero highlight colour fade)');
+{const kf=[...css.matchAll(/@keyframes (\w+)\{([\s\S]*?\})\}/g)];assert.deepEqual(kf.map(k=>k[1]).sort(),['chrome','fill','heroZoom','menuIn','ring','rise'],'one motion language: fade + scale in, hero zoom-out (+ the sub-nav chrome fade, the phone menu slide-down, the slideshow dot fill, the montage ring)');
  // the one exception (Nov 3, brief): the montage button's 44px progress ring animates stroke-dashoffset (a tiny repaint, paused with the clip)
  assert.match(css,/@keyframes ring\{from\{stroke-dashoffset:100\}to\{stroke-dashoffset:0\}\}/,'montage ring: stroke-dashoffset on the 44px button only');
  assert.equal((css.match(/animation:ring /g)||[]).length,1,'the ring animation is used once (the montage button)');
