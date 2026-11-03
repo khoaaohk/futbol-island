@@ -18,7 +18,10 @@
     end), so every content-to-content gap is 2 x --sec: phones 236px at 844 tall (owner Nov 3: even and generous; was 169-372,
     uneven), desktop 288px at 900 tall (was 162-396). */
  --sec:clamp(96px,16svh,180px);
- position:relative;width:100vw;margin:calc(-1 * var(--s3,24px)) 0 calc(-1 * var(--s5,64px)) calc(50% - 50vw);
+ /* full bleed out of the site's 1040px grid <main> (responsive audit Nov 3): width auto + equal negative side margins, not
+    width:100vw + one margin. A fixed 100vw item made the grid track grow to 100vw / 2 once the viewport passed ~1984px, so at
+    2560 the page sat 144px right and the Play pill was off screen. */
+ position:relative;width:auto;margin:calc(-1 * var(--s3,24px)) calc(50% - 50vw) calc(-1 * var(--s5,64px));
  background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.47;
  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:clip;
 }
