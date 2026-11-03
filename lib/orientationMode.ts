@@ -6,7 +6,7 @@
 export type OrientationMode = 'portrait' | 'landscape';
 
 /** Phones held sideways (touch, short side): the portrait-only app shows "Turn your phone upright". */
-export const PORTRAIT_ONLY_QUERY = '(pointer:coarse) and (orientation:landscape) and (max-height:500px)';
+export const PORTRAIT_ONLY_QUERY = '(pointer:coarse) and (orientation:landscape) and (max-height:500px) and (min-width:540px)';
 /** Phones held upright (touch, narrow side): Strikers shows "Turn your phone sideways". Tall tablets (wider than 500 px) still
  *  play upright with the portrait tuning. */
 /** Narrow, tall mouse windows and upright tablets never see a card (round 3, Oct 26 2026, docs/ARCADE_STRIKERS_R3_OCT26.md): Strikers

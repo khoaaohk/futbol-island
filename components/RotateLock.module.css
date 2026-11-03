@@ -9,8 +9,8 @@
 @media(prefers-reduced-motion:reduce){.phone{animation:none;transform:rotate(0deg)}.lock[data-mode=landscape] .phone{animation:none;transform:rotate(90deg)}}
 /* reading pages (app/(site): /learn, /about …) are not the game: never cover them, a sideways phone can read them fine */
 :global(body:has([data-reading-page])) .lock{display:none!important}
-/* phones held sideways: touch screen, short side */
-@media(pointer:coarse) and (orientation:landscape) and (max-height:500px){.lock[data-mode=portrait]{display:flex}}
+/* phones held sideways: touch screen, short side. min-width keeps an UPRIGHT phone with the keyboard open (viewport shorter than wide, ~390x300) from reading as sideways (owner, Nov 3 2026) */
+@media(pointer:coarse) and (orientation:landscape) and (max-height:500px) and (min-width:540px){.lock[data-mode=portrait]{display:flex}}
 /* landscape mode, phones held upright: touch screen, narrow side */
 @media(pointer:coarse) and (orientation:portrait) and (max-width:500px){.lock[data-mode=landscape]{display:flex}}
 
