@@ -388,3 +388,6 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
 /* iPhone SE landscape (375 px tall, docs/LANDSCAPE_AUDIT_OCT23.md batch 1): tighter vertical gaps, so the title, the action card
    (including the "saving is taking a break" card) and For grown-ups / Privacy all fit without the page scrolling. */
 @media(max-height:400px){.copy{padding-top:calc(env(safe-area-inset-top,0px) + 2svh)}.title{margin:6px 0 4px}.card{gap:6px;padding:10px 18px 8px}.actions{padding-bottom:2px}}
+
+/* Visually hidden, read by screen readers and crawlers (Landing.tsx: what /play is, in words). */
+.srOnly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}

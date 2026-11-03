@@ -5,11 +5,18 @@
 ## About
 
 - [About Futbol Island](https://futbolisland.app/about): who it is for, what it teaches, how it works, the partners and a short FAQ for parents and coaches.
-- [Play the game](https://futbolisland.app/): the title screen and the island itself (runs in the web browser).
+- [Futbol Island home](https://futbolisland.app/): the feature tour for parents and coaches: every feature on the island (lessons, exploring, fuel and food, playing with friends, safety), the football idea each one teaches, short clips with captions, and a FAQ for grown-ups.
+- [Play the game](https://futbolisland.app/play): the title screen (start a new island or continue with a save code, or join friends) and the island itself. Runs in the web browser on phones, tablets and computers; nothing to install.
+
+## Key facts
+
+- Free to play, nothing to buy. No ads, no chat, no accounts or sign-up.
+- For kids aged 7 to 12; grown-ups and coaches can read every lesson on the website.
+- Progress is kept with a save code that carries no personal details.
+- Play with friends is private: parties are joined by code only (no public lobbies or matchmaking), with preset football calls and emotes instead of chat.
 
 ## Learn
 
-- [What's inside Futbol Island](https://futbolisland.app/learn): the feature tour for parents and coaches: every feature on the island (lessons, exploring, games, playing with friends, collecting, safety), the football idea each one teaches, and a FAQ.
 - [Football lessons](https://futbolisland.app/learn/lessons): every lesson in 7v7, 9v9, 11v11 and futsal, each with the coach's teaching text and its quiz questions.
 
 ## Fish
@@ -30,5 +37,5 @@
 
 ## Optional
 
-- [Full text for AI assistants](https://futbolisland.app/llms-full.txt): the About text and the full lesson index in one plain-text file.
+- [Full text for AI assistants](https://futbolisland.app/llms-full.txt): the About text, the grown-ups' FAQ, the full lesson index and the museum index in one plain-text file.
 - [Sitemap](https://futbolisland.app/sitemap.xml): every page.
