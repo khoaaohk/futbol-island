@@ -101,7 +101,6 @@ export default function LearnHub(){
   {/* ---- 1. hero ---- */}
   <section className={`${s.ch} ${s.light} ${s.hero}`} id="top" data-par="hero" aria-labelledby="learn-title">
    <div className={s.head}>
-    <p className={s.kicker}>{SITE_NAME}</p>
     <h1 className={s.h1} id="learn-title">{top.title}</h1>
     <p className={s.sub}>{top.line}</p>
     <div className={s.ctaRow}>

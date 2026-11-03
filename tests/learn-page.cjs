@@ -256,7 +256,7 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  assert.match(page,/<nav className=\{s\.subnav\}[^>]*data-subnav=""/,'the sub-nav is marked for the dark switch');
  assert.match(page,/\{dark&&<NavMark\/>\}/,'every dark chapter carries a nav marker');
  assert.match(enh2,/nav\.toggleAttribute\('data-dark',under\.size>0\)/,'the sub-nav gets data-dark from an IntersectionObserver');
- assert.match(css,/\.subnav\[data-dark\] \.navDark\{opacity:1\}/,'dark nav: an opacity fade');
+ assert.match(css,/\.subnav\[data-dark\] \.navDark\{opacity:0\}/,'nav stays light over the soft tinted chapters (owner, Nov 3: no near-black)');
  // friend steps 1 and 2 show their own desktop shots (16:9 frame)
  assert.equal(M.LEARN_SHOT.friends_step_start,'friend_step1','step 1 shot');assert.equal(M.LEARN_SHOT.friends_step_code,'friend_step2','step 2 shot');
  assert.match(css,/\.frame169\{[^}]*aspect-ratio:16\/9\}/,'16:9 shots keep a 16:9 frame');}
