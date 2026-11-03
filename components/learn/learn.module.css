@@ -12,7 +12,7 @@
  --paper:#fbf7ee;--tint:#ecefdf;--night:#0c1714;--well-l:#efe8d7;--well-d:#15241f;
  --ink:#14221d;--ink2:#5b675f;--inkD:#f6f1e4;--ink2D:#a3aea6;--gold:#e9c16b;--goldInk:#8a6620;--pitch:#1d6b55;
  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI Variable Display','Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;
- --ease:cubic-bezier(.2,.7,.2,1);--gut:max(16px,env(safe-area-inset-left,0px));--fade:min(16vh,150px);
+ --ease:cubic-bezier(.2,.7,.2,1);--gut:max(16px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));--fade:min(16vh,150px);
  --tallMax:min(80svh,820px);
  /* spacing audit Nov 3: ONE section rhythm. --sec is the padding above and below every block (chapters, montage, reel, slides,
     end), so every content-to-content gap is 2 x --sec: phones 236px at 844 tall (owner Nov 3: even and generous; was 169-372,
@@ -29,7 +29,8 @@
 @media(max-width:640px){.root{--sec:clamp(100px,16svh,150px)}}
 /* spacing audit Nov 3: from 760px the bar is full width with 24px ends, so the content gutter is 24 too (was 16: headings, the
    reel and the friends column started 8px left of the logo) */
-@media(min-width:760px){.root{--gut:max(24px,env(safe-area-inset-left,0px))}}
+/* both insets (audit Nov 3): a landscape iPhone has its notch on either side, and the bar's Play pill sits at the right edge */
+@media(min-width:760px){.root{--gut:max(24px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px))}}
 /* the page has its own sticky bar with the logo, so the shared site header is hidden here (Nov 3: moved out of an inline <style>,
    whose escaped ">" made React's hydration text check fail and re-render the whole document on the client) */
 :global([data-reading-page]):has(.root)>:global(header){display:none}
@@ -71,7 +72,7 @@
 @media(max-width:640px){.root .subLinks{display:none}}
 /* phones (owner, Nov 3): menu button far left, logo centred, Play right */
 @media(max-width:640px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr}.root .logo{grid-column:2;grid-row:1;margin:0;justify-self:center}.menu{grid-column:1;grid-row:1;justify-self:start}.pill{grid-column:3;grid-row:1;justify-self:end}}
-@media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:none;padding:0 24px 3px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px}}
+@media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:none;padding:0 var(--gut) 3px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px}}
 .pill{flex:none}
 .root .subnavIn button.pill{align-self:center!important;margin-top:0!important}
 /* ---- phone menu (owner, Nov 3 2026; MobileMenu.tsx): <= 640px only, a two-line icon left of the Play pill opens a cream panel
