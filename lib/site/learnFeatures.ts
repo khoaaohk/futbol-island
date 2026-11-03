@@ -378,7 +378,7 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
 export type LearnHighlightId='top'|'learn'|'explore'|'fuel'|'together'|'safe';
 export type LearnHighlight={id:LearnHighlightId;title:string;line:string;shot:string;chips:readonly string[];features:readonly string[]};
 export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
- {id:'top',title:LEARN_HERO.headline,line:'A free football game for kids aged 7 to 12.',shot:'town_overview',chips:[],features:[]},
+ {id:'top',title:LEARN_HERO.headline,line:'A free football game made for kids, but adults can play too.',shot:'town_overview',chips:[],features:[]},
  {id:'learn',title:'Learn the game',line:'Short lessons and quizzes show real football ideas on a moving pitch.',shot:'lesson_field',
   chips:['Lessons and quizzes','Story films and books','A football museum'],features:['learning-paths','lesson-quiz','path-stories','pop-up-books','history-museum']},
  {id:'explore',title:'Explore the island',line:'Every corner hides a football idea to find.',shot:'diving_reef',
