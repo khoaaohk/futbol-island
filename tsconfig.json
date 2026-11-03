@@ -37,7 +37,8 @@
     ".next-push/types/**/*.ts",
     ".next-agent-8471/types/**/*.ts",
     ".next-agent-8771/types/**/*.ts",
-    ".next-agent-8131/types/**/*.ts"
+    ".next-agent-8131/types/**/*.ts",
+    ".next-coord/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
