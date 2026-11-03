@@ -147,7 +147,8 @@ assert.notEqual(attr(html('/'),/<title>([^<]*)<\/title>/),attr(html('/play'),/<t
  for(const q of faq.mainEntity)assert(shown.includes(q.name)&&q.acceptedAnswer.text.length>10,`FAQ "${q.name}" is on the page with its answer`);
  assert.equal(ld.find(x=>[].concat(x['@type']).includes('VideoGame')).url,SITE+'/play','the game JSON-LD points at /play');
  const hrefs=[...h.matchAll(/<a [^>]*href="([^"]*)"/g)].map(m=>m[1]);
- for(const l of ['/learn/lessons','/about','/privacy','/play'])assert(hrefs.includes(l),`/ links to ${l}`);
+ // Nov 3 (owner): no Lessons / About links in the footer; those pages are reached through the sitemap and llms.txt
+ for(const l of ['/privacy','/play'])assert(hrefs.includes(l),`/ links to ${l}`);
  assert(!hrefs.includes('/learn'),'no link to the old /learn');
  assert(/<main[\s>]/.test(h)&&/<nav[^>]*aria-label="On this page"/.test(h)&&/<footer[\s>]/.test(h),'/: main, nav and footer landmarks');
  const heads=[...h.matchAll(/<h([1-6])[\s>]/g)].map(m=>+m[1]);assert.equal(heads[0],1,'/: the h1 comes first');

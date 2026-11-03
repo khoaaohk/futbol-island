@@ -20,8 +20,6 @@ export default function SiteLayout({children}:{children:React.ReactNode}){
   <footer className={styles.footer}><div className={styles.footerInner}>
    <span>Futbol Island · a free football learning game for kids.</span>
    <a href="/">What’s inside</a>
-   <a href="/learn/lessons">Lessons</a>
-   <a href="/about">About</a>
    <a href="/privacy">Privacy</a>
   </div></footer>
  </div>;
