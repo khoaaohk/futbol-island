@@ -173,10 +173,10 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
 // Nov 3 best-quality slides (fresh 2560x1440 captures, coins ~512, both sizes at the lowest CRF under 2 MB) and the new 34.3 s montage
 // (zoomed out, no UI: square, causeway scooter, flight, zipline, swim, reef dive; veryslow, montage caps raised to 10 / 5 / 2.5 MB):
 // Nov 3: montage_xl (2560x1440, CRF 27 veryslow, 19.8 MB, only for >= 900px retina screens, was upscaled blur from the 1920 file) + poster: 145 / 134 MB
-// Nov 3 hero re-shoot (30.4 s: a walk across the 7v7 pitch during a match, scooter, flight, then the blast + parachute on the game's own
-// camera down to a rooftop landing; veryslow at the old hero's ~2 Mbps, CRF 25 / 26): +2.5 MB, 127 / 116 MB
+// Nov 3 hero re-shoot (30.9 s: a walk across the 7v7 pitch during a match, a bike up the ramp to the rooftop futsal court, flight, then
+// the blast + parachute down to a rooftop landing, all on the game's own camera; veryslow at the old hero's ~2 Mbps, CRF 26 / 27): 127 / 116 MB
 assert(total<148e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 148 MB)`);assert(clips<137e6,`clips ${(clips/1e6).toFixed(1)} MB (< 137 MB)`);
- // the hero clip is ~3.5x longer than the other 4:5 clips (Nov 3: 30.4 s), so only it gets 7.5 MB (1080) / 3.6 MB (720 phone file)
+ // the hero clip is ~3.5x longer than the other 4:5 clips (Nov 3: 30.9 s), so only it gets 7.5 MB (1080) / 3.6 MB (720 phone file)
  // Nov 3 montage: 34.3 s of moving wide shots (the old 27.8 s cut sat at CRF 35 under 4.5 / 2.2 / 1.1 MB and looked soft): CRF 29-30 needs 10 / 5 / 2.5 MB
 const cap={'montage_xl.mp4':21e6,'montage_l.mp4':10e6,'montage_m.mp4':5e6,'montage_s.mp4':2.5e6,'town_overview_45.mp4':7.5e6,'town_overview_45_m.mp4':3.6e6,
   // explore_45 is ~2x the other 4:5 clips (15.7 s: reef swim, wall-target ball, Summit Isle mango-tree ball): 4 MB / 2 MB;

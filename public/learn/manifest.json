@@ -662,7 +662,7 @@
   "file": "/learn/town_overview_45.webp",
   "width": 1080,
   "height": 1350,
-  "alt": "Walk across the 7v7 pitch while a match is played around you, ride a scooter over the bridge to Coral Cay, fly along the shore of Summit Isle, then blast up and parachute down over the island.",
+  "alt": "Walk across the 7v7 pitch while a match is played around you, ride a bike up the ramp to the rooftop futsal court, fly along the shore of Summit Isle, then blast up and parachute down over the island.",
   "small": {
    "file": "/learn/town_overview_45_m.webp",
    "width": 720,
@@ -673,7 +673,7 @@
    "mp4m": "/learn/video/town_overview_45_m.mp4",
    "width": 1080,
    "height": 1350,
-   "duration": 30.43
+   "duration": 30.93
   }
  },
  "lesson_field_45": {
