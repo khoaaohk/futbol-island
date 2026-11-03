@@ -132,12 +132,12 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  // QA Nov 2: the capture pass named shots by what they show; every LEARN_SHOT alias must point at a real still, and most features get one
  for(const [k,v] of Object.entries(M.LEARN_SHOT))assert(has(`public/learn/${v}.webp`),`LEARN_SHOT ${k} -> ${v}: still exists`);
  assert(F.filter(f=>M.learnAsset(f.imageKey).image).length>=24,'at least 24 features show a real still (not the drawn card)');
- // public/learn stays small enough to deploy (brief: under 40 MB since the Nov 3 hero montage, 3 sizes; clips under 36 MB).
+ // public/learn stays small enough to deploy (brief: under 56 MB since the Nov 3 feature slideshow clips, slide_* in 2 sizes; clips under 50 MB).
  // Only the montage may pass 2 MB per file (montage_l.mp4 <= 4.5 MB, montage_m <= 2.2 MB, montage_s <= 1.1 MB).
  const walk=d=>fs.existsSync(d)?fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]):[];
  const files=walk(path.join(root,'public/learn')),size=f=>fs.statSync(f).size;
  const total=files.reduce((t,f)=>t+size(f),0),clips=files.filter(f=>/\.(mp4|webm)$/.test(f)).reduce((t,f)=>t+size(f),0);
- assert(total<40e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 40 MB)`);assert(clips<36e6,`clips ${(clips/1e6).toFixed(1)} MB (< 36 MB)`);
+ assert(total<56e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 56 MB)`);assert(clips<50e6,`clips ${(clips/1e6).toFixed(1)} MB (< 50 MB)`);
  const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6};
  for(const f of files.filter(f=>/\.(mp4|webm)$/.test(f))){const b=path.basename(f);assert(size(f)<=(cap[b]||2e6),`${b} is ${(size(f)/1e6).toFixed(2)} MB (cap ${((cap[b]||2e6)/1e6)} MB)`);}}
 

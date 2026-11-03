@@ -609,5 +609,149 @@
    "height": 480,
    "duration": 27.8
   }
+ },
+ "slide_stories": {
+  "file": "/learn/slide_stories.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Watch a play unfold on the lesson pitch, then answer the quiz and see why the right run works.",
+  "video": {
+   "mp4": "/learn/video/slide_stories.mp4",
+   "width": 1920,
+   "height": 1080,
+   "duration": 10
+  }
+ },
+ "slide_stories_m": {
+  "file": "/learn/slide_stories.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Watch a play unfold on the lesson pitch, then answer the quiz and see why the right run works.",
+  "video": {
+   "mp4": "/learn/video/slide_stories_m.mp4",
+   "width": 1280,
+   "height": 720,
+   "duration": 10
+  }
+ },
+ "slide_arcade": {
+  "file": "/learn/slide_arcade.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Dribble, pass and score in Island Strikers, the arcade’s five-a-side football game.",
+  "video": {
+   "mp4": "/learn/video/slide_arcade.mp4",
+   "width": 1920,
+   "height": 1080,
+   "duration": 10
+  }
+ },
+ "slide_arcade_m": {
+  "file": "/learn/slide_arcade.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Dribble, pass and score in Island Strikers, the arcade’s five-a-side football game.",
+  "video": {
+   "mp4": "/learn/video/slide_arcade_m.mp4",
+   "width": 1280,
+   "height": 720,
+   "duration": 10
+  }
+ },
+ "slide_beachmatch": {
+  "file": "/learn/slide_beachmatch.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Watch a seven-a-side beach match where a shot is tipped away by a diving keeper.",
+  "video": {
+   "mp4": "/learn/video/slide_beachmatch.mp4",
+   "width": 1920,
+   "height": 1080,
+   "duration": 9
+  }
+ },
+ "slide_beachmatch_m": {
+  "file": "/learn/slide_beachmatch.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Watch a seven-a-side beach match where a shot is tipped away by a diving keeper.",
+  "video": {
+   "mp4": "/learn/video/slide_beachmatch_m.mp4",
+   "width": 1280,
+   "height": 720,
+   "duration": 9
+  }
+ },
+ "slide_kit": {
+  "file": "/learn/slide_kit.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Design a jersey in the studio, paint it, put your name and number on the back, then wear it around town.",
+  "video": {
+   "mp4": "/learn/video/slide_kit.mp4",
+   "width": 1920,
+   "height": 1080,
+   "duration": 10
+  }
+ },
+ "slide_kit_m": {
+  "file": "/learn/slide_kit.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Design a jersey in the studio, paint it, put your name and number on the back, then wear it around town.",
+  "video": {
+   "mp4": "/learn/video/slide_kit_m.mp4",
+   "width": 1280,
+   "height": 720,
+   "duration": 10
+  }
+ },
+ "slide_collection": {
+  "file": "/learn/slide_collection.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Scroll the Fishbook, where every sea animal links to a real club story, then open a two eras card pack.",
+  "video": {
+   "mp4": "/learn/video/slide_collection.mp4",
+   "width": 1920,
+   "height": 1080,
+   "duration": 10
+  }
+ },
+ "slide_collection_m": {
+  "file": "/learn/slide_collection.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Scroll the Fishbook, where every sea animal links to a real club story, then open a two eras card pack.",
+  "video": {
+   "mp4": "/learn/video/slide_collection_m.mp4",
+   "width": 1280,
+   "height": 720,
+   "duration": 10
+  }
+ },
+ "slide_party": {
+  "file": "/learn/slide_party.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Two friends in a party wave, dance, high-five and cheer together on the town square.",
+  "video": {
+   "mp4": "/learn/video/slide_party.mp4",
+   "width": 1920,
+   "height": 1080,
+   "duration": 10
+  }
+ },
+ "slide_party_m": {
+  "file": "/learn/slide_party.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Two friends in a party wave, dance, high-five and cheer together on the town square.",
+  "video": {
+   "mp4": "/learn/video/slide_party_m.mp4",
+   "width": 1280,
+   "height": 720,
+   "duration": 10
+  }
  }
 }
