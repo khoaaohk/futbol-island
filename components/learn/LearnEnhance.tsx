@@ -126,6 +126,27 @@ export default function LearnEnhance({rootId}:{rootId:string}){
    offs.push(()=>{navIo.disconnect();nav.removeAttribute('data-dark');});
   }
 
+  // ---- 5. the sub-nav shows which chapter you are in ----------------------------------------------------------------------------
+  // One IntersectionObserver over every chapter, its root a thin band across the middle of the viewport (percentage margins, nothing
+  // measured). The current chapter maps to the last nav-linked chapter at or before it, so Explore stays selected through
+  // "Fuel up"; the hero, montage and carousel (before the first nav chapter) select nothing. Sets aria-current + data-current only.
+  const links=[...root.querySelectorAll<HTMLAnchorElement>('[data-subnav] a[href^="#"]')].filter(a=>a.hash.length>1);
+  const chapters=[...root.querySelectorAll<HTMLElement>('section[id]')];
+  if(links.length&&chapters.length){
+   const idxOf=new Map(chapters.map((c,i)=>[c,i] as const));
+   const navAt=chapters.map(c=>links.find(a=>a.hash.slice(1)===c.id));
+   const inBand=new Set<number>();
+   const setCurrent=()=>{
+    const cur=inBand.size?Math.min(...inBand):-1;let link:HTMLAnchorElement|undefined;
+    for(let i=cur;i>=0&&!link;i--)link=navAt[i];
+    for(const a of links){const on=a===link;if(on)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current');}
+   };
+   const secIo=new IntersectionObserver(es=>{for(const e of es){const i=idxOf.get(e.target as HTMLElement);if(i===undefined)continue;if(e.isIntersecting)inBand.add(i);else inBand.delete(i);}setCurrent();},
+    {rootMargin:'-45% 0px -54% 0px'});
+   chapters.forEach(c=>secIo.observe(c));
+   offs.push(()=>{secIo.disconnect();links.forEach(a=>a.removeAttribute('aria-current'));});
+  }
+
   return ()=>offs.forEach(f=>f());
  },[rootId]);
  return null;
