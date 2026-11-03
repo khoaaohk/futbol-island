@@ -34,10 +34,15 @@ const exists=(rel:string)=>{try{return fs.statSync(path.join(PUB,rel)).isFile();
  * compact-bar re-record). `?v=` + 10 hex of the file's content hash gives every re-capture a new URL; hashed once per file.
  */
 const vCache=new Map<string,string>();
+/** Optional media origin, e.g. https://futbol-media.khoa0aohk.workers.dev (no trailing slash). */
+const MEDIA_BASE=(process.env.LEARN_MEDIA_BASE||'').replace(/\/+$/,'');
 export function learnUrl(src:string):string{
  let v=vCache.get(src);
  if(v===undefined){try{v=createHash('sha1').update(fs.readFileSync(path.join(PUB,src))).digest('hex').slice(0,10);}catch{v='';}vCache.set(src,v);}
- return v?`${src}?v=${v}`:src;
+ // Big clips can live on Cloudflare R2 (docs/learn-media-r2.md): with LEARN_MEDIA_BASE set, /learn/video/*.mp4 are served from there
+ // (same path, same ?v=<hash>); unset = served by the site itself, exactly as before.
+ const base=MEDIA_BASE&&/^\/learn\/video\/[a-z0-9_]+\.mp4$/.test(src)?MEDIA_BASE:'';
+ return v?`${base}${src}?v=${v}`:`${base}${src}`;
 }
 
 /** Width and height from a WebP header (VP8 / VP8L / VP8X), so every <img> has its real size without a manifest. */
