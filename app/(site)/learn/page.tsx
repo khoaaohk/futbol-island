@@ -7,6 +7,7 @@ import LearnMontage from '@/components/learn/LearnMontage';
 import LearnSlides from '@/components/learn/LearnSlides';
 import FriendSteps from '@/components/learn/FriendSteps';
 import ShareLink from '@/components/learn/ShareLink';
+import MobileMenu from '@/components/learn/MobileMenu';
 import s from '@/components/learn/learn.module.css';
 import {LEARN_FAQ,LEARN_FAQ_TOP,LEARN_FEATURES,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,type LearnHighlight,type LearnHighlightId} from '@/lib/site/learnFeatures';
 import {LESSONS_INDEX} from '@/lib/site/lessons';
@@ -71,6 +72,11 @@ function Chapter({h,dark,children}:{h:LearnHighlight;dark?:boolean;children?:Rea
 /** Covers a dark chapter's near-black middle; the sticky sub-nav turns dark while one is under it (LearnEnhance). */
 const NavMark=()=><span className={s.navMark} data-nav-dark="" aria-hidden="true"/>;
 
+/** The hero title one sentence per line, "Futbol Island" never split (audit Nov 3: it wrapped "Explore Futbol | Island. Learn |
+ *  the game."). The words and the plain text are unchanged. */
+const TitleLines=({t}:{t:string})=><>{t.split(/(?<=\.)\s+/).map((x,i)=><span key={i} className={s.h1Line}>{i?' ':''}{x.split(NAME_RE).map((p,j)=>j%2?<span key={j} className={s.nowrap}>{p}</span>:p)}</span>)}</>;
+const NAME_RE=new RegExp(`(${SITE_NAME}\\S*)`);
+
 const Chevron=()=><svg className={s.chev} viewBox="0 0 12 12" aria-hidden="true" focusable="false"><path d="M4 2.5 7.5 6 4 9.5" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 
 export default function LearnHub(){
@@ -93,7 +99,8 @@ export default function LearnHub(){
    <span className={s.navDark} aria-hidden="true"/>
    <div className={s.subnavIn}>
     <a className={s.logo} href={PLAY_URL} aria-label="Futbol Island home">Futbol Island</a>
-    <ul className={s.subLinks}>{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}</ul>
+    <ul className={s.subLinks} data-sublinks="">{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}</ul>
+    <MobileMenu links={NAV}/>
     <a className={s.pill} href={PLAY_URL}>Play</a>
    </div>
   </nav>
@@ -101,7 +108,7 @@ export default function LearnHub(){
   {/* ---- 1. hero ---- */}
   <section className={`${s.ch} ${s.light} ${s.hero}`} id="top" data-par="hero" aria-labelledby="learn-title">
    <div className={s.head}>
-    <h1 className={s.h1} id="learn-title">{top.title}</h1>
+    <h1 className={s.h1} id="learn-title"><TitleLines t={top.title}/></h1>
     <p className={s.sub}>{top.line}</p>
     <div className={s.ctaRow}>
      <a className={s.cta} href={PLAY_URL}>{LEARN_HERO.cta}</a>

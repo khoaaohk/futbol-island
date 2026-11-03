@@ -103,7 +103,7 @@ assert.doesNotMatch(enh,/currentTime/,'no video scrubbing');
 assert.match(enh,/visibilitychange/,'clips pause when the tab is hidden');
 assert(!has('components/learn/FeatureFinder.tsx'),'the Find a feature finder is gone');
 for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FriendSteps.tsx','components/learn/ShareLink.tsx','components/learn/ReelEnhance.tsx','components/learn/LearnReel.tsx',
- 'components/learn/LearnMontage.tsx','components/learn/MontageEnhance.tsx','components/learn/LearnSlides.tsx','components/learn/SlidesEnhance.tsx']){const src=strip(read(f));
+ 'components/learn/LearnMontage.tsx','components/learn/MontageEnhance.tsx','components/learn/LearnSlides.tsx','components/learn/SlidesEnhance.tsx','components/learn/MobileMenu.tsx']){const src=strip(read(f));
  assert.doesNotMatch(src,/getBoundingClientRect|offsetTop|scrollY|pageYOffset|scrollTo\(|preventDefault\(\)[^;]*wheel|['"]wheel['"]/,`${f}: no layout reads while scrolling, no scroll-jacking`);
  assert.doesNotMatch(src,/addEventListener\(\s*['"]scroll['"]|onScroll|onscroll/,`${f}: no scroll listeners`);
  assert.doesNotMatch(src,/framer-motion|gsap|animejs|react-spring|lottie/,`${f}: no animation library`);}
@@ -113,7 +113,7 @@ assert.match(css,/@supports\(animation-timeline:view\(\)\)/,'CSS scroll-driven p
 assert.match(css,/\.root\[data-lm-io\]/,'IntersectionObserver fallback path');
 assert.match(css,/\.root\[data-calm\] \*,[^{]*\{animation:none!important;transition:none!important\}/,'calm kills every animation');
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{animation:none!important;transition:none!important\}\}/,'reduced motion kills every animation, even before JS');
-{const kf=[...css.matchAll(/@keyframes (\w+)\{([\s\S]*?\})\}/g)];assert.deepEqual(kf.map(k=>k[1]).sort(),['chrome','fill','heroZoom','ring','rise'],'one motion language: fade + scale in, hero zoom-out (+ the sub-nav chrome fade, the slideshow dot fill, the montage ring)');
+{const kf=[...css.matchAll(/@keyframes (\w+)\{([\s\S]*?\})\}/g)];assert.deepEqual(kf.map(k=>k[1]).sort(),['chrome','fill','heroZoom','menuIn','ring','rise'],'one motion language: fade + scale in, hero zoom-out (+ the sub-nav chrome fade, the phone menu slide-down, the slideshow dot fill, the montage ring)');
  // the one exception (Nov 3, brief): the montage button's 44px progress ring animates stroke-dashoffset (a tiny repaint, paused with the clip)
  assert.match(css,/@keyframes ring\{from\{stroke-dashoffset:100\}to\{stroke-dashoffset:0\}\}/,'montage ring: stroke-dashoffset on the 44px button only');
  assert.equal((css.match(/animation:ring /g)||[]).length,1,'the ring animation is used once (the montage button)');
@@ -288,7 +288,38 @@ assert(total<64e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 64 MB)`);asse
  assert.match(css,/--pinW:min\(46vw,640px,min\(82svh,820px\) \* 4 \/ 5\)/,'friends (wide): pinned box about min(46vw, 640px), <= min(82svh, 820px) tall');
  assert.match(css,/\.panel>\.frameTall\{width:100%;max-width:none;height:100%\}/,'4:5 step pictures fill the box');
  // phones: logo + Play pill only (four links clipped "Safety" at 390px)
- assert.match(css,/@media\(max-width:640px\)\{\.root \.subLinks\{display:none\}\}/,'nav at <= 640px: no links');}
+ assert.match(css,/@media\(max-width:640px\)\{\.root \.subLinks\{display:none\}\}/,'nav at <= 640px: no links');
+ // owner, Nov 3: phones get a menu (icon left of Play) instead; <details>/<summary> so the links work with JS off
+ {const mm=strip(read('components/learn/MobileMenu.tsx'));
+  assert.match(page,/<ul className=\{s\.subLinks\} data-sublinks="">[\s\S]*?<\/ul>\s*<MobileMenu links=\{NAV\}\/>\s*<a className=\{s\.pill\}/,'phone menu sits between the links and the Play pill');
+  assert.match(mm,/<details className=\{s\.menu\}[^>]*>\s*<summary className=\{s\.menuBtn\} aria-label="Menu" aria-controls="learn-menu">/,'details + summary, aria-label Menu, aria-controls');
+  assert.match(mm,/setAttribute\('aria-expanded',String\(d\.open\)\)/,'aria-expanded follows the panel');
+  assert.match(mm,/e\.key==='Escape'/,'Escape closes');assert.match(mm,/'pointerdown'/,'a tap outside closes');
+  assert.match(mm,/closest\('a'\)\)\{d\.open=false/,'a link tap closes (the anchor scrolls natively)');
+  assert.match(mm,/querySelector<HTMLAnchorElement>\('a'\)\?\.focus/,'focus to the first link on open');assert.match(mm,/btn\.focus\(/,'focus back to the button');
+  assert.match(mm,/removeEventListener\('pointerdown'/,'document listeners only while open');
+  assert.match(css,/\.menu\{display:none\}\s*@media\(max-width:640px\)\{\.menu\{display:block;flex:none\}\}/,'menu only at <= 640px');
+  assert.match(css,/\.menuBtn\{display:grid;place-items:center;width:44px;height:44px;/,'44px icon button');
+  assert.match(css,/\.menuBtn:active\{translate:0 var\(--btn-press,3px\)\}/,'pressed icon sinks 3px');assert.doesNotMatch(css,/\.menuBtn:hover/,'no hover colour on the icon');
+  assert.match(css,/\.menuPanel\{position:absolute;top:100%;left:0;right:0;max-height:calc\(100svh - 68px\);overflow-y:auto;/,'panel under the 68px bar, fits the viewport, scrolls');
+  assert.match(css,/\.menu\[open\] \.menuPanel\{animation:menuIn \.22s/,'opens with the 220ms slide / fade');
+  assert.match(css,/\.root \.menuList a\{[^}]*min-height:56px;[^}]*font-size:30px;font-weight:600/,'large rows, 56px tall');
+  assert.match(css,/\.menuList a\[aria-current\] span\{background:var\(--btn-pink/,'current chapter: the pink chip');
+  assert.doesNotMatch(css.match(/\.menu[A-Za-z]*\{[^}]*\}/g).join(''),/IslandBrush/,'no IslandBrush in the menu');}
+ // owner, Nov 3: ONE pink chip that moves between the desktop links (transform only, springy), not a fade per link
+ {assert.equal((css.match(/\.root \.subLinks::before\{/g)||[]).length,1,'one indicator: the list ::before');
+  assert.doesNotMatch(css,/\.subLinks a(\[aria-current\])?::before/,'no per-link chip any more');
+  assert.match(css,/\.root \.subLinks a\{display:inline-flex;align-items:center;justify-content:center;width:92px;/,'links a fixed 92px');
+  assert.match(css,/\.root \.subLinks\{position:relative;display:flex;flex:1;min-width:0;gap:6px;/,'6px gap');
+  const ind=[...css.matchAll(/\.root \.subLinks(?:\[[a-z-]+\])?::before\{([^}]*)\}/g)].map(m=>m[1]);
+  for(const b of ind){const tr=(b.match(/transition:([^;}]*)/)||[,''])[1];
+   if(tr&&tr!=='none')for(const part of tr.split(/,(?![^(]*\))/))assert.match(part.trim(),/^(opacity|transform|translate) /,`indicator transitions transform / opacity only: ${part}`);}
+  assert(ind.some(b=>/transform:translateX\(calc\(var\(--i,0\) \* 98px\)\);transition:[^;]*transform \.32s cubic-bezier\(\.34,1\.56,\.64,1\)/.test(b)),'moves by translateX(--i * 98px), 320ms spring');
+  assert.match(css,/\.root \.subLinks\[data-snap\]::before\{transition:none\}/,'first appearance jumps while hidden');
+  assert.match(enh,/list\.style\.setProperty\('--i'/,'LearnEnhance writes --i');assert.match(enh,/'data-has-current'/,'and data-has-current');
+  // reduced motion: the global .root *::before{transition:none!important} rule (asserted above) makes the move instant
+  assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,\.root \*::before,/,'reduced motion: the indicator changes instantly');}
+}
 
 // ---- 4. content -----------------------------------------------------------------------------------------------------------------
 assert.equal(HL.map(h=>h.id).join(),'top,learn,explore,fuel,together,safe','six sections');

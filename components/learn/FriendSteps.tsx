@@ -11,6 +11,9 @@ import s from './learn.module.css';
  * `panelOf[i]` is the index of the picture for step i (steps without their own real shot share the chapter's shot).
  * Changing step fires `learn:panel` on the page root so LearnEnhance re-checks which clips may play (hidden panels never play).
  */
+/** Hyphenated words ("grown-up", "6-character") never break at the hyphen (audit Nov 3: "grown- | up check" on phones). */
+const noHyphenBreak=(t:string)=>t.split(/(\S+-\S+)/).map((x,i)=>i%2?<span key={i} className={s.nowrap}>{x}</span>:x);
+
 export default function FriendSteps({steps,panels,panelOf,note}:{steps:string[];panels:React.ReactNode[];panelOf:number[];note?:string}){
  const [cur,setCur]=useState(0);
  const ref=useRef<HTMLDivElement>(null);
@@ -32,7 +35,7 @@ export default function FriendSteps({steps,panels,panelOf,note}:{steps:string[];
    <h3 className={s.stepsTitle} id="friend-steps">Play with a friend in 3 steps</h3>
    <ol className={s.stepList} aria-labelledby="friend-steps">
     {steps.map((line,i)=><li key={i} className={s.step} data-step={i} data-on={i===cur?'':undefined}>
-     <span className={s.stepNum} aria-hidden="true">{i+1}</span><p className={s.stepLine}><span className={s.srOnly}>Step {i+1}: </span>{line}</p>
+     <span className={s.stepNum} aria-hidden="true">{i+1}</span><p className={s.stepLine}><span className={s.srOnly}>Step {i+1}: </span>{noHyphenBreak(line)}</p>
     </li>)}
    </ol>
    {note&&<p className={s.note}>{note}</p>}
