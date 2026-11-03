@@ -380,7 +380,7 @@ export type LearnHighlight={id:LearnHighlightId;title:string;line:string;shot:st
 export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
  {id:'top',title:LEARN_HERO.headline,line:'A free football game for kids aged 7 to 12.',shot:'town_overview',chips:[],features:[]},
  {id:'learn',title:'Learn the game',line:'Short lessons and quizzes show real football ideas on a moving pitch.',shot:'lesson_field',
-  chips:['Lessons and quizzes','Story films and books','A football museum'],features:['learning-paths','lesson-quiz','path-stories','pop-up-books','history-museum']},
+  chips:['Paths, lessons and quizzes','Story films and books','A football museum'],features:['learning-paths','lesson-quiz','path-stories','pop-up-books','history-museum']},
  {id:'explore',title:'Explore the island',line:'Every corner hides a football idea to find.',shot:'diving_reef',
   chips:['Fishing and diving','Arcade and vending machines','Islanders and cards'],features:['fishing','swim-dive','arcade','vending','islanders','player-cards']},
  // "Fuel up" (Nov 3 2026): only what docs/learn-konbini-facts.md supports. Konbini food and drinks refill the fuel bar (the energy
