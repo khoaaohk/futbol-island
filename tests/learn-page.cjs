@@ -322,7 +322,7 @@ assert(total<95e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 95 MB)`);asse
   assert.match(css,/\.menuBtn:active\{translate:0 var\(--btn-press,3px\)\}/,'pressed icon sinks 3px');assert.doesNotMatch(css,/\.menuBtn:hover/,'no hover colour on the icon');
   assert.match(css,/\.menuPanel\{position:absolute;top:100%;left:0;right:0;height:calc\(100svh - 68px\);overflow-y:auto;/,'panel under the 68px bar, fills the screen below the bar, scrolls');
   assert.match(css,/\.menu\[open\] \.menuPanel\{animation:menuIn \.22s/,'opens with the 220ms slide / fade');
-  assert.match(css,/\.root \.menuList a\{[^}]*min-height:88px;[^}]*font-size:36px;font-weight:600/,'large rows, 88px tall, full-screen menu');
+  assert.match(css,/\.root \.menuList a\{[^}]*min-height:112px;[^}]*font-size:36px;font-weight:600/,'large rows, 112px tall, full-screen menu');
   assert.match(css,/\.menuList a\[aria-current\] span\{background:var\(--btn-pink/,'current chapter: the pink chip');
   assert.doesNotMatch(css.match(/\.menu[A-Za-z]*\{[^}]*\}/g).join(''),/IslandBrush/,'no IslandBrush in the menu');}
  // owner, Nov 3: ONE pink chip that moves between the desktop links (transform only, springy), not a fade per link
