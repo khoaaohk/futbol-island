@@ -292,7 +292,7 @@ assert(total<64e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 64 MB)`);asse
  assert.match(css,/@media\(max-width:640px\)\{\.root \.subLinks\{display:none\}\}/,'nav at <= 640px: no links');
  // owner, Nov 3: phones get a menu (icon left of Play) instead; <details>/<summary> so the links work with JS off
  {const mm=strip(read('components/learn/MobileMenu.tsx'));
-  assert.match(page,/<ul className=\{s\.subLinks\} data-sublinks="">[\s\S]*?<\/ul>\s*<MobileMenu links=\{NAV\}\/>\s*<a className=\{s\.pill\}/,'phone menu sits between the links and the Play pill');
+  assert.match(page,/<ul className=\{s\.subLinks\} data-sublinks="">[\s\S]*?<\/ul>\s*<MobileMenu links=\{NAV\}\/>\s*<NavPlay className=\{s\.pill\}/,'phone menu sits between the links and the Play pill');
   assert.match(mm,/<details className=\{s\.menu\}[^>]*>\s*<summary className=\{s\.menuBtn\} aria-label="Menu" aria-controls="learn-menu">/,'details + summary, aria-label Menu, aria-controls');
   assert.match(mm,/setAttribute\('aria-expanded',String\(d\.open\)\)/,'aria-expanded follows the panel');
   assert.match(mm,/e\.key==='Escape'/,'Escape closes');assert.match(mm,/'pointerdown'/,'a tap outside closes');
