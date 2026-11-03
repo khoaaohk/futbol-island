@@ -3,7 +3,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {LESSONS,lessonById,lessonPath} from '@/lib/site/lessons';
 import {abs,breadcrumbLd,firstSentence,KIDS_AUDIENCE,pageMeta,PUBLISHER,SITE_NAME,SITE_URL} from '@/lib/site/seo';
-import styles from '../../site.module.css';
+import styles from '../../../site.module.css';
 
 /** One lesson as plain text. The quiz shows its questions, options and explanations, never which option is correct. */
 export const dynamic='force-static';
@@ -15,7 +15,7 @@ export function generateMetadata({params}:{params:{slug:string}}){
 }
 export default function LessonPage({params}:{params:{slug:string}}){
  const l=lessonById(params.slug);if(!l)notFound();
- const crumbs=[{name:'Home',path:'/'},{name:'Learn',path:'/learn'},{name:l.title,path:lessonPath(l.id)}];
+ const crumbs=[{name:'Home',path:'/'},{name:'What’s inside',path:'/learn'},{name:'Lessons',path:'/learn/lessons'},{name:l.title,path:lessonPath(l.id)}];
  return <>
   <JsonLd data={{'@context':'https://schema.org','@type':'LearningResource',name:l.title,url:abs(lessonPath(l.id)),description:l.concept,
    inLanguage:'en',isAccessibleForFree:true,educationalLevel:l.difficulty??'Beginner',learningResourceType:['Lesson','Quiz'],

@@ -29,4 +29,7 @@ const cacheStatic = [
 // outside that door, walking, return loading screen), is a rewrite to the equally static /island-return, so neither page
 // renders per request. The URL in the address bar stays /?from=…; ?store= is read by Town on the client (it always was).
 const rewrites = { beforeFiles: [{ source: '/', has: [{ type: 'query', key: 'from', value: '^(arcade|konbini|museum|shop)$' }], destination: '/island-return' }] };
-export default phase => ({ reactStrictMode: true, distDir: process.env.NEXT_DIST_DIR || (phase === 'phase-development-server' ? '.next-dev' : '.next'), async headers() { return cacheStatic; }, async rewrites() { return rewrites; } });
+// Nov 2 2026: /learn became the feature tour and the lesson index moved to /learn/lessons. Old lesson URLs /learn/<id> keep
+// working with a permanent redirect (search results and shared links); /learn/lessons itself is excluded from the pattern.
+const redirects = [{ source: '/learn/:slug((?!lessons$)[A-Za-z0-9_-]+)', destination: '/learn/lessons/:slug', permanent: true }];
+export default phase => ({ reactStrictMode: true, distDir: process.env.NEXT_DIST_DIR || (phase === 'phase-development-server' ? '.next-dev' : '.next'), async headers() { return cacheStatic; }, async rewrites() { return rewrites; }, async redirects() { return redirects; } });

@@ -54,9 +54,9 @@ for(const c of cards.SITE_CARDS)assert(c.blurb&&c.roleLabel,`card ${c.number} ha
 assert.equal(exhibits.SITE_EXHIBITS.length,L('lib/endgame/museum.ts').EXHIBITS.length,'every exhibit');
 const PATHS=paths.sitePaths().map(p=>p.path);
 assert.equal(new Set(PATHS).size,PATHS.length,'no duplicate paths');
-for(const p of ['/','/about','/privacy','/learn','/fish','/cards','/exhibits'])assert(PATHS.includes(p),p+' in the sitemap');
+for(const p of ['/','/about','/privacy','/learn','/learn/lessons','/fish','/cards','/exhibits'])assert(PATHS.includes(p),p+' in the sitemap');
 assert(!PATHS.some(p=>p==='/'+'start'),'the removed landing page is not listed');
-assert.equal(PATHS.length,7+lessons.LESSONS.length+fish.SITE_FISH.length+cards.SITE_CARDS.length+exhibits.SITE_EXHIBITS.length);
+assert.equal(PATHS.length,8+lessons.LESSONS.length+fish.SITE_FISH.length+cards.SITE_CARDS.length+exhibits.SITE_EXHIBITS.length);
 // robots.ts names every bot and closes the private routes (checked again on the built file below).
 const robotsSrc=read('app/robots.ts');
 const BOTS=['GPTBot','ClaudeBot','Claude-Web','anthropic-ai','PerplexityBot','Google-Extended','CCBot','Bingbot','Googlebot'];
@@ -98,9 +98,9 @@ for(const p of PATHS){
   const types=ld.flatMap(x=>[].concat(x['@type']));
   if(p==='/'||p==='/about')for(const t of ['WebApplication','VideoGame'])assert(types.includes(t),`${p}: ${t}`);
   if(p==='/'||p==='/about'){const g=ld.find(x=>[].concat(x['@type']).includes('VideoGame'));assert.equal(g.audience.suggestedMinAge,7);assert.equal(g.audience.suggestedMaxAge,12);assert.equal(g.isAccessibleForFree,true);assert.equal(g.applicationCategory,'GameApplication');assert(g.educationalUse&&g.publisher);}
-  if(/^\/learn\/./.test(p)){const r=ld.find(x=>x['@type']==='LearningResource');assert(r&&r.educationalLevel&&r.learningResourceType&&r.teaches&&r.audience,`${p}: LearningResource`);}
+  if(/^\/learn\/lessons\/./.test(p)){const r=ld.find(x=>x['@type']==='LearningResource');assert(r&&r.educationalLevel&&r.learningResourceType&&r.teaches&&r.audience,`${p}: LearningResource`);}
   if(/^\/(fish|cards|exhibits)\/./.test(p)){const r=ld.find(x=>x['@type']==='CreativeWork');assert(r&&r.about,`${p}: CreativeWork with about`);}
-  if(['/learn','/fish','/cards','/exhibits','/about'].includes(p))assert(types.includes('BreadcrumbList'),`${p}: BreadcrumbList`);
+  if(['/learn','/learn/lessons','/fish','/cards','/exhibits','/about'].includes(p))assert(types.includes('BreadcrumbList'),`${p}: BreadcrumbList`);
   if(p!=='/')assert.match(h,/aria-label="Breadcrumb"/,`${p}: breadcrumbs`);}
  const t=text(h);for(const re of PERSONAL)assert(!re.test(t),`${p}: no personal-data string (${re}): ${(t.match(re)||[])[0]}`);
 }
@@ -116,7 +116,7 @@ const robots=fs.readFileSync(path.join(app,'robots.txt.body'),'utf8');
 const groups=robots.split(/\n\s*\n/).map(g=>({ua:(g.match(/^User-Agent: (.+)$/mi)||[])[1],allow:[...g.matchAll(/^Allow: (.+)$/gm)].map(m=>m[1]),dis:[...g.matchAll(/^Disallow: (.+)$/gm)].map(m=>m[1])})).filter(g=>g.ua);
 for(const b of [...BOTS,'*']){const g=groups.find(x=>x.ua===b);assert(g,`robots.txt has a group for ${b}`);assert(g.allow.includes('/'),`${b} allowed /`);
  for(const d of ['/admin','/api','/coffee/checkout',...L('lib/dev/labRoutes.ts').LAB_ROUTES])assert(g.dis.includes(d),`${b} disallowed ${d}`);
- for(const p of ['/about','/learn','/fish','/cards','/exhibits'])assert(!g.dis.some(d=>p.startsWith(d)),`${b} may read ${p}`);}
+ for(const p of ['/about','/learn','/learn/lessons','/fish','/cards','/exhibits'])assert(!g.dis.some(d=>p.startsWith(d)),`${b} may read ${p}`);}
 assert.match(robots,new RegExp(`^Sitemap: ${SITE}/sitemap\\.xml$`,'m'),'robots.txt points at the sitemap');
 // llms.txt links resolve to a built page or file.
 for(const p of llmsLinks){const ok=PATHS.includes(p)||fs.existsSync(path.join(app,p.slice(1)+'.body'))||fs.existsSync(path.join(root,'public',p.slice(1)));assert(ok,`llms.txt link ${p} resolves`);}

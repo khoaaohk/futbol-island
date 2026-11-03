@@ -9,7 +9,8 @@
 
 ## Learn
 
-- [Football lessons](https://futbolisland.app/learn): every lesson in 7v7, 9v9, 11v11 and futsal, each with the coach's teaching text and its quiz questions.
+- [What's inside Futbol Island](https://futbolisland.app/learn): the feature tour for parents and coaches: every feature on the island (lessons, exploring, games, playing with friends, collecting, safety), the football idea each one teaches, and a FAQ.
+- [Football lessons](https://futbolisland.app/learn/lessons): every lesson in 7v7, 9v9, 11v11 and futsal, each with the coach's teaching text and its quiz questions.
 
 ## Fish
 

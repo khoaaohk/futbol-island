@@ -2,12 +2,12 @@ import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {FORMAT_LABEL,FORMAT_ORDER,LESSONS,lessonPath} from '@/lib/site/lessons';
 import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
-import styles from '../site.module.css';
+import styles from '../../site.module.css';
 
 export const dynamic='force-static';
 const DESC=`All ${LESSONS.length} Futbol Island football lessons for kids: positions, team shape, passing, defending and restarts in 7v7, 9v9, 11v11 and futsal, each with a short quiz.`;
-export const metadata=pageMeta('Football lessons',DESC,'/learn');
-const CRUMBS=[{name:'Home',path:'/'},{name:'Learn',path:'/learn'}];
+export const metadata=pageMeta('Football lessons',DESC,'/learn/lessons');
+const CRUMBS=[{name:'Home',path:'/'},{name:'What’s inside',path:'/learn'},{name:'Lessons',path:'/learn/lessons'}];
 
 export default function LearnIndex(){
  return <>

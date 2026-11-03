@@ -3,7 +3,7 @@ import path from 'node:path';
 import {LESSON_TABLE} from '@/lib/analytics/learningIds.generated';
 import paths from '@/lib/paths/formatPaths.json';
 /**
- * The lessons as plain reading pages (/learn, /learn/<id>): read-only views of public/lessons/*.json, the same files the game
+ * The lessons as plain reading pages (/learn/lessons, /learn/lessons/<id>): read-only views of public/lessons/*.json, the same files the game
  * plays. Only the words are kept: title, format, concept, the coach's step text, and each quiz question with its options and
  * explanation. The correct-answer index (`correct`) and the tap-spot flags are deliberately dropped, so a page never gives a
  * quiz away. Order and count follow LESSON_TABLE (scripts/gen-learning-ids.cjs).
@@ -34,4 +34,6 @@ export const LESSONS:SiteLesson[]=LESSON_TABLE.map(([format,id])=>{
   questions:(l.questions??[]).filter(q=>clean(q.q)).map(q=>({q:clean(q.q),options:(q.options??[]).map(clean).sort((a,b)=>a.localeCompare(b,'en')),explain:neutral(clean(q.explain))}))};
 });
 export const lessonById=(id:string)=>LESSONS.find(l=>l.id===id);
-export const lessonPath=(id:string)=>`/learn/${id}`;
+export const lessonPath=(id:string)=>`/learn/lessons/${id}`;
+/** The lesson index (Nov 2 2026: moved from /learn, which is now the feature tour; old /learn/<id> URLs redirect, next.config.mjs). */
+export const LESSONS_INDEX='/learn/lessons';
