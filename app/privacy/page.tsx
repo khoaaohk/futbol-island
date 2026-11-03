@@ -1,4 +1,5 @@
 import type {Metadata} from 'next';
+import {pageMeta} from '@/lib/site/seo';
 import PrivacyPolicy from '@/components/privacy/PrivacyPolicy';
 import styles from './privacy.module.css';
 
@@ -6,7 +7,8 @@ import styles from './privacy.module.css';
  * /privacy: the online notice for Futbol Island. The text lives in components/privacy/PrivacyPolicy.tsx (shared with the title screen's
  * Privacy sheet), which documents the COPPA notice, retention policy (12 months for unused saves) and security program.
  */
-export const metadata:Metadata={title:'Privacy · Futbol Island',description:'What Futbol Island keeps, why, and for how long. No accounts, no ads, no chat.',alternates:{canonical:'/privacy'}};
+// pageMeta (Nov 3 2026 bug hunt): its own og:url / og:title / twitter tags; it inherited the home page's og:url before.
+export const metadata:Metadata=pageMeta('Privacy','What Futbol Island keeps, why, and for how long. No accounts, no ads, no chat.','/privacy',{type:'website'});
 
 import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 export default function PrivacyPage(){
