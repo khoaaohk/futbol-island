@@ -7,7 +7,9 @@
 //     scroll-driven path, the IO fallback path and the calm / reduced-motion kill switch; clips are muted, looped, inline,
 //     preload="none" (auto for the hero only), play at >= 25 % visible, buffer ~1.5 screens ahead except in calm mode;
 //     the media module tolerates a missing manifest and missing files; IslandBrush only on the Play buttons (Nov 3, owner);
-//  4. content (simplified Nov 2 2026, owner "too much going on"; Apple-style chapters Nov 3): exactly the 5 LEARN_HIGHLIGHTS
+//  4. content (simplified Nov 2 2026, owner "too much going on"; Apple-style chapters Nov 3): exactly the 6 LEARN_HIGHLIGHTS
+//     (the light "Fuel up" chapter, Nov 3: after Explore, before Play with friends, its 16:9 Konbini clip in the large film frame
+//     with a 1280px <source media> for phones, copy only from docs/learn-konbini-facts.md),
 //     sections, each with at most 3 chips and a real shot (no drawn placeholder art anywhere); 5 FAQs picked from LEARN_FAQ, safety
 //     first; no feature finder, a nav of <= 5 anchors; one motion language (fade + scale in, hero zoom-out), one pinned feature;
 //     hrefs are internal paths that exist or futbolisland.app;
@@ -142,6 +144,8 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  for(const [k,v] of Object.entries(M.LEARN_SHOT))assert(has(`public/learn/${v}.webp`),`LEARN_SHOT ${k} -> ${v}: still exists`);
  assert(F.filter(f=>M.learnAsset(f.imageKey).image).length>=24,'at least 24 features show a real still (not the drawn card)');
  // public/learn stays small enough to deploy (brief: under 40 MB since the Nov 3 hero montage, 3 sizes; clips under 36 MB).
+ // Nov 3: the Fuel up clip (fuel_konbini 1920 + 1280 + poster, 2.3 MB) leaves ~38.7 MB total / ~35.2 MB clips, under both caps; the
+ // Even more to explore slides add ~14 MB, so the caps are raised when that branch merges.
  // Only the montage may pass 2 MB per file (montage_l.mp4 <= 4.5 MB, montage_m <= 2.2 MB, montage_s <= 1.1 MB).
  const walk=d=>fs.existsSync(d)?fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]):[];
  const files=walk(path.join(root,'public/learn')),size=f=>fs.statSync(f).size;
@@ -262,7 +266,19 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  assert.match(css,/\.frame169\{[^}]*aspect-ratio:16\/9\}/,'16:9 shots keep a 16:9 frame');}
 
 // ---- 4. content -----------------------------------------------------------------------------------------------------------------
-assert.equal(HL.map(h=>h.id).join(),'top,learn,explore,together,safe','five sections');
+assert.equal(HL.map(h=>h.id).join(),'top,learn,explore,fuel,together,safe','six sections');
+// Fuel up (Nov 3 2026): a light chapter between Explore and Play with friends; its clip is a 16:9 film (large frame) with a 1280px
+// phone file; the copy names only what the game does (docs/learn-konbini-facts.md; the number checks are in tests/learn-content.cjs).
+{const fu=HL.find(h=>h.id==='fuel');
+ assert.match(page,/<Chapter h=\{hl\('explore'\)\}\/>\s*\n[^\n]*Fuel up[^\n]*\n\s*<Chapter h=\{hl\('fuel'\)\}\/>/,'Fuel up sits right after Explore, as a light chapter (no dark prop)');
+ assert(page.indexOf("hl('fuel')")<page.indexOf('<Chapter h={together} dark>'),'Fuel up comes before Play with friends');
+ assert.equal(fu.shot,'fuel_konbini','Fuel up uses the Konbini clip');assert.deepEqual([...fu.features],['konbini'],'Fuel up covers the Konbini feature');
+ assert(has('docs/learn-konbini-facts.md'),'the facts doc behind the Fuel up copy exists');
+ assert.doesNotMatch([fu.title,fu.line,...fu.chips].join(' '),/energy drink|weight|diet|healthy|medical|faster|stronger|calorie/i,'Fuel up copy: no health claims, no weight or diet talk, no gameplay perk');
+ const M=L('lib/site/learnMedia.ts'),a=M.learnAsset('fuel_konbini');
+ assert(a.image&&a.image.width>=a.image.height*1.5,'Fuel up: a 16:9 poster');assert(a.clip?.mp4&&a.clip.mp4m,'Fuel up: 1920 mp4 + 1280 phone mp4');
+ assert.match(media,/a\.clip\.mp4m&&<source media="\(max-width: 1280px\)"[\s\S]*a\.clip\.mp4&&<source/,'the phone file is a <source media> listed before the full-size mp4');
+ assert.match(css,/\.frameFilm\{width:min\(100%,1052px\);aspect-ratio:16\/9\}/,'16:9 chapter clips get the large film frame');}
 for(const h of HL){assert(h.chips.length<=3,`${h.id}: at most 3 chips`);assert(h.title&&h.line&&h.line.length<=80,`${h.id}: one headline, one short line`);
  assert(has(`public/learn/${h.shot}.webp`),`${h.id}: shot ${h.shot} is a real still`);for(const id of h.features)assert(F.some(f=>f.id===id),`${h.id}: feature ${id} exists`);}
 for(const h of HL.slice(1))assert(page.includes(`hl('${h.id}')`),`section ${h.id} rendered`);

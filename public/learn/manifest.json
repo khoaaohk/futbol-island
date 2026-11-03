@@ -609,5 +609,17 @@
    "height": 480,
    "duration": 27.8
   }
+ },
+ "fuel_konbini": {
+  "file": "/learn/fuel_konbini.webp",
+  "width": 1600,
+  "height": 900,
+  "alt": "Walk to the rice case in the Konbini, buy a salmon onigiri, read its football fuel tip and eat it for +50 fuel, then eat a banana from the island pocket to fill the fuel bar.",
+  "video": {
+   "mp4": "/learn/video/fuel_konbini.mp4",
+   "width": 1920,
+   "height": 1080,
+   "duration": 10.07
+  }
  }
 }

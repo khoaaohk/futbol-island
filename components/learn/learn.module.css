@@ -93,6 +93,7 @@
 .frameTall{height:var(--tallH);aspect-ratio:780/1688}
 .frameWide{width:min(100%,640px);aspect-ratio:792/844}
 .frame169{width:min(100%,640px);aspect-ratio:16/9}
+.frameFilm{width:min(100%,1052px);aspect-ratio:16/9}
 .panel>.frame169{width:100%;height:auto}
 @media(min-width:900px){
  .stage{max-width:1180px;padding:clamp(48px,5vw,80px) clamp(24px,4vw,64px) clamp(28px,3vw,44px);border-radius:40px;background:var(--well-l)}

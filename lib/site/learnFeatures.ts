@@ -171,8 +171,8 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
   proof:'22 exhibits in 7 galleries.',counts:{exhibits:22,galleries:7}},
  {id:'konbini',title:'The Konbini',group:'explore',imageKey:'konbini',
   hook:'A walk-in corner shop with football magazines on the shelves.',
-  description:'The Konbini is a small shop to walk into, with snacks, a cashier with tips and a ball for keep-ups. Its magazines and cashier facts teach the Laws and long-settled football history, each with sources.',
-  footballTie:'Laws of the Game facts and tournament history, read in short magazine pages.',
+  description:'The Konbini is a small shop to walk into, with snacks that refill your fuel, a cashier with tips and a ball for keep-ups. Every snack shows a short football food tip, and the magazines and cashier facts teach the Laws and long-settled football history, each with sources.',
+  footballTie:'What food and water do for a player, plus Laws of the Game facts and tournament history in short magazine pages.',
   where:'Tap Enter the Konbini on the main island, or its sister shop on Coral Cay.',
   proof:'8 football magazines on the shelves.',counts:{magazines:8}},
  {id:'islanders',title:'Talk to the islanders',group:'explore',imageKey:'islanders_talk',
@@ -370,12 +370,12 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
 ];
 
 /**
- * The calm /learn page (Nov 2 2026, owner: "needs to be simpler, there's too much going on"). The page shows only these five
- * sections, each one headline, one short line, one real shot (public/learn, see lib/site/learnMedia.ts) and up to 3 chips.
+ * The calm /learn page (Nov 2 2026, owner: "needs to be simpler, there's too much going on"). The page shows only these six
+ * sections (the Nov 3 "Fuel up" chapter made it six), each one headline, one short line, one real shot (public/learn, see lib/site/learnMedia.ts) and up to 3 chips.
  * LEARN_FEATURES above stays the full catalogue (tests, docs and other pages use it); `features` lists the ids each section covers.
  * Copy rule: every line fits two short lines on a phone.
  */
-export type LearnHighlightId='top'|'learn'|'explore'|'together'|'safe';
+export type LearnHighlightId='top'|'learn'|'explore'|'fuel'|'together'|'safe';
 export type LearnHighlight={id:LearnHighlightId;title:string;line:string;shot:string;chips:readonly string[];features:readonly string[]};
 export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
  {id:'top',title:LEARN_HERO.headline,line:'A free football game for kids aged 7 to 12.',shot:'town_overview',chips:[],features:[]},
@@ -383,6 +383,10 @@ export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
   chips:['Lessons and quizzes','Story films and books','A football museum'],features:['learning-paths','lesson-quiz','path-stories','pop-up-books','history-museum']},
  {id:'explore',title:'Explore the island',line:'Every corner hides a football idea to find.',shot:'diving_reef',
   chips:['Fishing and diving','Arcade and vending machines','Islanders and cards'],features:['fishing','swim-dive','arcade','vending','islanders','player-cards']},
+ // "Fuel up" (Nov 3 2026): only what docs/learn-konbini-facts.md supports. Konbini food and drinks refill the fuel bar (the energy
+ // for rides, flying and sprinting; walking always works), and every item shows one sourced football-nutrition line.
+ {id:'fuel',title:'Fuel up like a footballer.',line:'Konbini snacks refill your energy, and each one shares a football food tip.',shot:'fuel_konbini',
+  chips:['Eat to refill your fuel','Water comes first','Tips from real sources'],features:['konbini']},
  {id:'together',title:'Play with friends',line:'Private parties by code. Same island, no chat, just football calls.',shot:'mp_sidebyside',
   chips:['Private code only','Football calls, no chat','Own kits and names'],features:['party-start','friends-kits','friends-emotes','friends-safety']},
  {id:'safe',title:'Safe for kids',line:'Free, with no ads, no chat and no accounts.',shot:'save_code',

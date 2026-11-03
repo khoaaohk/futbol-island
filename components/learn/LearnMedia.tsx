@@ -15,6 +15,8 @@ import s from './learn.module.css';
  * - No `poster` attribute: a poster downloads at once for every clip; the lazy <img> underneath is the poster instead.
  * - The still carries srcset + sizes so higher-resolution captures can be added later without touching the layout (the box is an
  *   aspect-ratio box and both layers are object-fit: cover).
+ * - A clip with a 1280px `<key>_m.mp4` (lib/site/learnMedia.ts `clip.mp4m`) lists it first behind media="(max-width: 1280px)", so a
+ *   phone never fetches the 1920px file (the Fuel up chapter, Nov 3 2026).
  * - <source> order: H.264 mp4 first, VP9 webm as the fallback (Nov 3). H.264 is hardware-decoded on every phone (VP9 is not on
  *   many, which costs heat), the two files are within ~25 % of each other in size (the mp4 is smaller for 4 of the 6 page
  *   clips), and in a throttled Chrome test the hero webm hit a decode error mid-load while the same mp4 played.
@@ -30,6 +32,7 @@ export default function LearnMedia({imageKey,label,eager,className,sizes}:{image
    width={a.image.width} height={a.image.height} alt={alt} loading={eager?'eager':'lazy'} fetchPriority={eager?'high':undefined} decoding="async" style={focus}/>
   {a.clip&&<>
    <video className={s.clip} data-lv="" muted loop playsInline preload={eager?'auto':'none'} aria-hidden="true" tabIndex={-1} disablePictureInPicture style={focus}>
+    {a.clip.mp4m&&<source media="(max-width: 1280px)" src={a.clip.mp4m} type="video/mp4"/>}
     {a.clip.mp4&&<source src={a.clip.mp4} type="video/mp4"/>}
     {a.clip.webm&&<source src={a.clip.webm} type="video/webm"/>}
    </video>
