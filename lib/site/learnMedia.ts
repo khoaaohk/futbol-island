@@ -90,6 +90,25 @@ export function learnAsset(pageKey:string):LearnAsset{
  cache.set(pageKey,a);
  return a;
 }
+/**
+ * A "See it in action" carousel card's media (Nov 3 2026): manifest entry `wide_<key>` + poster public/learn/wide_<key>.webp
+ * (both required, else null = the card is skipped), clip from the entry's own `video` paths or public/learn/video/wide_<key>.*
+ * or public/learn/wide_<key>.* (whichever exist on disk).
+ */
+export function learnWideAsset(key:string):LearnAsset|null{
+ if(!/^[a-z0-9_]+$/.test(key))return null;
+ const id=`wide_${key}`,m=readManifestOnce().get(id) as (RawEntry&{video?:{mp4?:unknown;webm?:unknown}})|undefined;
+ const still=`learn/${id}.webp`;
+ if(!m||!exists(still))return null;
+ const w=m.width??m.w,h=m.height??m.h;
+ const image:LearnImage={src:'/'+still,...(typeof w==='number'&&typeof h==='number'&&w>0&&h>0?{width:w,height:h}:{width:1600,height:900})};
+ const pick=(ext:'mp4'|'webm')=>{const v=m.video?.[ext];
+  const c=[typeof v==='string'&&/^\/learn\/[a-z0-9_/]+\.(mp4|webm)$/.test(v)?v.slice(1):'',`learn/video/${id}.${ext}`,`learn/${id}.${ext}`];
+  const hit=c.find(x=>x&&exists(x));return hit?'/'+hit:undefined;};
+ const clip:LearnClip={mp4:pick('mp4'),webm:pick('webm')};
+ return {key:id,alt:typeof m.alt==='string'&&m.alt.trim()?m.alt.trim():undefined,image,clip:clip.mp4||clip.webm?clip:undefined};
+}
+
 let manifest:Map<string,RawEntry>|null=null;
 const readManifestOnce=()=>manifest??(manifest=readManifest());
 

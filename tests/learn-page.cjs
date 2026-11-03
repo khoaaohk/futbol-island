@@ -11,6 +11,8 @@
 //     sections, each with at most 3 chips and a real shot (no drawn placeholder art anywhere); 5 FAQs picked from LEARN_FAQ, safety
 //     first; no feature finder, a nav of <= 5 anchors; one motion language (fade + scale in, hero zoom-out), one pinned feature;
 //     hrefs are internal paths that exist or futbolisland.app;
+//  3b. the See it in action carousel (Nov 3): 9 cards max in order, one-sentence captions from the feature copy, bold via
+//     markers (no HTML), snap CSS on the row only, only the active card plays, preload rules, a11y attributes, no scroll reads;
 //  5. a built site (NEXT_DIST_DIR or .next, when it holds /learn): every highlight, the 5 FAQ questions and answers and the
 //     3 friend steps are in the HTML; FAQPage JSON-LD matches the 5 shown; old /learn/<id> pages are not built.
 // usage: node tests/learn-page.cjs
@@ -36,7 +38,7 @@ function load(file){
  return mod.exports;
 }
 const L=rel=>load(path.join(root,rel));
-const {LEARN_FEATURES:F,LEARN_GROUPS:G,LEARN_FAQ:ALLQ,LEARN_FAQ_TOP:TOP,LEARN_HIGHLIGHTS:HL}=L('lib/site/learnFeatures.ts');
+const {LEARN_FEATURES:F,LEARN_GROUPS:G,LEARN_FAQ:ALLQ,LEARN_FAQ_TOP:TOP,LEARN_HIGHLIGHTS:HL,LEARN_CAROUSEL:CAR,learnBoldParts,learnPlain}=L('lib/site/learnFeatures.ts');
 const Q=TOP.map(q=>ALLQ.find(x=>x.q===q));
 
 // ---- 1. routes ----------------------------------------------------------------------------------------------------------------
@@ -92,7 +94,7 @@ assert.match(enh,/\[data-panel\]:not\(\[data-on\]\)/,'a clip in a hidden friends
 assert.doesNotMatch(enh,/currentTime/,'no video scrubbing');
 assert.match(enh,/visibilitychange/,'clips pause when the tab is hidden');
 assert(!has('components/learn/FeatureFinder.tsx'),'the Find a feature finder is gone');
-for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FriendSteps.tsx','components/learn/ShareLink.tsx']){const src=strip(read(f));
+for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FriendSteps.tsx','components/learn/ShareLink.tsx','components/learn/ReelEnhance.tsx','components/learn/LearnReel.tsx']){const src=strip(read(f));
  assert.doesNotMatch(src,/getBoundingClientRect|offsetTop|scrollY|pageYOffset|scrollTo\(|preventDefault\(\)[^;]*wheel|['"]wheel['"]/,`${f}: no layout reads while scrolling, no scroll-jacking`);
  assert.doesNotMatch(src,/addEventListener\(\s*['"]scroll['"]|onScroll|onscroll/,`${f}: no scroll listeners`);
  assert.doesNotMatch(src,/framer-motion|gsap|animejs|react-spring|lottie/,`${f}: no animation library`);}
@@ -108,7 +110,10 @@ assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{anim
   assert.doesNotMatch(body,/box-shadow|background|color/,`@keyframes ${name}: transform / opacity only`);}
  // Nov 3 restyle: the sub-nav plus at most one pinned feature (the friends media); no word-by-word headline, no snap scrolling
  assert((css.match(/position:sticky/g)||[]).length<=2,'sticky: the sub-nav and one pinned feature at most');
- assert.doesNotMatch(css,/\.word\b|scroll-snap-type/,'no word-by-word headline, no scroll snapping');
+ assert.doesNotMatch(css,/\.word\b/,'no word-by-word headline');
+ // scroll snap only on the See it in action row (horizontal, Nov 3); never on the page itself (no vertical scroll-jacking)
+ {const snaps=[...strip(css).matchAll(/([^{}]+)\{[^{}]*scroll-snap-type:([^;}]+)/g)].map(m=>[m[1].trim(),m[2].trim()]);
+  assert.deepEqual(snaps,[['.reelRow','x mandatory']],'scroll-snap-type only on the carousel row, x mandatory');}
  // owner, Nov 3: IslandBrush only on the gold Play buttons; everything else is the system sans
  for(const m of strip(css).matchAll(/([^{}]+)\{[^{}]*IslandBrush[^{}]*\}/g))assert.match(m[1].trim(),/^\.(cta|pill)$/,`IslandBrush only on Play buttons, not ${m[1].trim()}`);
  assert.match(css,/--sans:-apple-system,/,'system sans stack, no web font download');}
@@ -132,6 +137,58 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  const files=walk(path.join(root,'public/learn')),size=f=>fs.statSync(f).size;
  const total=files.reduce((t,f)=>t+size(f),0),clips=files.filter(f=>/\.(mp4|webm)$/.test(f)).reduce((t,f)=>t+size(f),0);
  assert(total<18e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 18 MB)`);assert(clips<14e6*2,`clips ${(clips/1e6).toFixed(1)} MB (mp4 + webm pairs, < 14 MB each set)`);}
+
+// ---- 3b. See it in action: the horizontal clip carousel (Nov 3 2026) ----------------------------------------------------------
+{const reel=read('components/learn/LearnReel.tsx'),rx=strip(read('components/learn/ReelEnhance.tsx')),M=L('lib/site/learnMedia.ts');
+ assert.match(read('components/learn/ReelEnhance.tsx'),/^'use client';/,'ReelEnhance is a client island');
+ // data: 9 cards in the owner's order, one sentence each, <= 22 words, bold via markers, facts from the linked feature
+ assert.equal(CAR.map(c=>c.key).join(),'fishing,diving,vending,museum,arcade,books,cards,npc,multiplayer','9 cards in order');
+ for(const c of CAR){const t=learnPlain(c.caption),f=F.find(x=>x.id===c.feature);assert(f,`${c.key}: feature ${c.feature} exists`);
+  assert(t.split(/\s+/).length<=22,`${c.key}: caption <= 22 words`);assert.equal(t.split(/(?<=[.!?])\s+/).length,1,`${c.key}: one sentence`);
+  assert.match(t,/\.$/,`${c.key}: ends with a full stop`);assert.equal((c.caption.match(/\*\*/g)||[]).length%2,0,`${c.key}: bold markers pair up`);
+  const bold=learnBoldParts(c.caption).filter(p=>p.bold);assert(bold.length>=1&&bold.length<=2,`${c.key}: one or two bold phrases`);
+  assert(/football|lesson|club|team|offside|skill|position|ball/i.test(t),`${c.key}: has the football tie`);
+  for(const n of t.match(/\d+/g)??[])assert([f.hook,f.description,f.proof,f.footballTie].join(' ').includes(n),`${c.key}: number ${n} comes from the feature copy`);
+  assert(!/[<>]/.test(c.caption),`${c.key}: no markup in captions`);}
+ assert.deepEqual(JSON.parse(JSON.stringify(learnBoldParts('a **b** c'))),[{text:'a ',bold:false},{text:'b',bold:true},{text:' c',bold:false}],'bold parser');
+ assert.doesNotMatch(reel+read('app/(site)/learn/page.tsx'),/dangerouslySetInnerHTML/,'captions are text nodes, never HTML');
+ // media: a card without its manifest entry + poster renders nothing (no placeholder art), the section disappears with no cards
+ assert.equal(M.learnWideAsset('definitely_not_captured_xyz'),null,'missing wide clip = no card');
+ assert.match(reel,/\.filter\(\(x\)[^\n]*=>!!x\.a\)\.slice\(0,9\)/,'missing cards are skipped, 9 at most');
+ assert.match(reel,/if\(!cards\.length\)return null;/,'no cards = no section');
+ assert.match(read('lib/site/learnMedia.ts'),/if\(!m\|\|!exists\(still\)\)return null;/,'a card needs its manifest entry and poster');
+ assert.match(read('app/(site)/learn/page.tsx'),/<LearnReel\/>\s*\n\s*\{\/\* ---- 2-3\. learn, explore/,'the carousel sits right after the hero');
+ // a11y
+ assert.match(reel,/role="region" aria-roledescription="carousel" aria-label="[^"]+" tabIndex=\{0\}/,'row: region, carousel, labelled, focusable');
+ assert.match(reel,/role="group" aria-roledescription="slide" aria-label=\{`\$\{i\+1\} of \$\{n\}: /,'cards: group "n of N"');
+ assert.match(reel,/aria-label="Previous clip"/,'prev has a label');assert.match(reel,/aria-label="Next clip"/,'next has a label');
+ assert.match(reel,/aria-label=\{`Play the clip: /,'play / pause has a label');
+ assert.match(rx,/ArrowRight[\s\S]*ArrowLeft[\s\S]*Home[\s\S]*End/,'arrow keys, Home and End on the focused row');
+ assert.match(rx,/prev\.disabled=i<=0;if\(next\)next\.disabled=i>=cards\.length-1;/,'arrows disabled at the ends');
+ // behaviour + heat
+ assert.match(reel,/<video [^>]*data-rv="" muted loop playsInline preload="none"/,'carousel clips: muted, loop, inline, preload none');
+ assert.doesNotMatch(reel,/<video [^>]*(poster=|autoPlay)/,'no poster attribute, no autoplay attribute');
+ assert.match(strip(reel),/video\/mp4[\s\S]*video\/webm/,'mp4 first, then webm');
+ assert.match(rx,/const MAX_PLAYING=2;/,'at most 2 carousel clips (calm, tapped)');
+ assert.match(rx,/calm\?started\.slice\(-MAX_PLAYING\):paused\?\[\]:\[active\]/,'only the active card plays (calm: only the tapped cards, 2 at most)');
+ assert.match(rx,/const NEAR='150% 0px 150% 0px';/,'preload ahead from ~1.5 screens');
+ assert.match(rx,/near=true;raise\(active\);raise\(active\+1\);/,'when near: the active + next card preload');
+ assert.match(rx,/if\(!v\|\|calm\|\|!near\)return;/,'no preloading in calm mode or before the row is near');
+ assert.match(rx,/root:row,rootMargin:/,'active card from an IntersectionObserver on the row');
+ assert.match(rx,/visibilitychange/,'pauses when the tab is hidden');
+ assert.match(rx,/onScreen=e\.isIntersecting&&e\.intersectionRatio>=SHOW_AT/,'pauses when the row is off screen');
+ assert.match(rx,/data-reel-playing/,'carousel clips count toward the page-wide cap');
+ assert.match(strip(read('components/learn/LearnEnhance.tsx')),/slice\(0,Math\.max\(0,MAX_PLAYING-reelPlaying\(\)\)\)/,'the page clips leave room for the carousel clip');
+ assert.match(rx,/behavior:reduce\?'auto':'smooth'/,'arrows scroll smoothly, instantly in calm / reduced motion');
+ assert.doesNotMatch(rx,/currentTime|setInterval/,'no scrubbing, no timers');
+ assert.doesNotMatch(rx,/getBoundingClientRect|scrollLeft|scrollX/,'no layout reads tied to scrolling');
+ // CSS: snap aligned to the gutter, peeking cards, arrows and play buttons only with JS
+ assert.match(css,/\.reelRow\{[^}]*scroll-snap-type:x mandatory;scroll-padding-left:var\(--rpad\)/,'snap row, padding at the content gutter');
+ assert.match(css,/\.card\{flex:0 0 var\(--cw\);scroll-snap-align:start/,'cards snap at their start');
+ assert.match(css,/--cw:min\(1100px,78vw,/,'desktop card width');assert.match(css,/--cw:86vw/,'phone card width');
+ assert.match(css,/\.reelCtl\{display:none;/,'arrows hidden without JS');assert.match(css,/\.reel\[data-js\] \.reelCtl\{display:flex\}/,'arrows shown with JS');
+ assert.match(css,/\.card\[data-active\] \.cap\{color:var\(--ink\)\}/,'active caption dark (inactive grey)');
+ assert.match(css,/\.reel\[data-js\]\[data-calm\] \.reelPlay/,'calm mode: a Play button on every card');}
 
 // ---- 4. content -----------------------------------------------------------------------------------------------------------------
 assert.equal(HL.map(h=>h.id).join(),'top,learn,explore,together,safe','five sections');
@@ -172,6 +229,15 @@ assert.equal((html.match(/<h1[ >]/g)||[]).length,1,'one h1');
 {const vs=[...html.matchAll(/<video [^>]*>/g)].map(m=>m[0]);
  for(const v of vs)assert(/muted/.test(v)&&/loop/.test(v)&&/playsInline|playsinline/.test(v)&&/preload="(none|auto)"/.test(v)&&!/poster=/.test(v),'built video attrs');
  assert.equal(vs.filter(v=>/preload="auto"/.test(v)).length,1,'only the hero clip preloads in full');}
+{const M=L('lib/site/learnMedia.ts'),live=CAR.filter(c=>M.learnWideAsset(c.key));
+ const cards=html.match(/aria-roledescription="slide"/g)||[];
+ assert.equal(cards.length,live.length,`carousel: ${live.length} cards (one per wide clip on disk + in the manifest)`);
+ assert(cards.length<=9,'carousel: 9 cards at most');
+ if(live.length){assert.match(html,/role="region" aria-roledescription="carousel"/,'carousel region');
+  {const flat=text.replace(/\s+/g,"");for(const c of live)assert(flat.includes(learnPlain(c.caption).replace(/\s+/g,"")),`caption: ${c.key}`);}
+  const rv=[...html.matchAll(/<video [^>]*data-rv=""[^>]*>/g)].map(m=>m[0]);assert(rv.every(v=>/preload="none"/.test(v)),'carousel clips preload none in the HTML');
+  assert(html.indexOf('id="reel-h"')<html.indexOf('id="learn-h"'),'the carousel sits before the Learn chapter');}
+ else assert(!/id="reel-h"/.test(html),'no wide clips yet = no carousel section');}
 assert(!fs.existsSync(path.join(dist,'server/app/learn',lessons.LESSONS[0].id+'.html')),'old /learn/<id> pages are not built');
 assert(fs.existsSync(path.join(dist,'server/app/learn/lessons',lessons.LESSONS[0].id+'.html')),'lessons are built under /learn/lessons');
 console.log(`learn page ok: ${HL.length} sections, ${Q.length} FAQ, ${(html.match(/<video /g)||[]).length} clips, ${(html.match(/src="\/learn\/[a-z0-9_]+\.webp"/g)||[]).length} stills in ${path.relative(root,dist)}`);

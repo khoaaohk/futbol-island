@@ -2,6 +2,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import LearnMedia from '@/components/learn/LearnMedia';
 import {learnAsset} from '@/lib/site/learnMedia';
 import LearnEnhance from '@/components/learn/LearnEnhance';
+import LearnReel from '@/components/learn/LearnReel';
 import FriendSteps from '@/components/learn/FriendSteps';
 import ShareLink from '@/components/learn/ShareLink';
 import s from '@/components/learn/learn.module.css';
@@ -12,7 +13,7 @@ import {abs,breadcrumbLd,pageMeta,siteLd,SITE_NAME} from '@/lib/site/seo';
 /**
  * /learn (Nov 2 2026; Nov 3 restyle after apple.com/apple-vision-pro, owner). Full-viewport "chapters", one idea each, from
  * LEARN_HIGHLIGHTS in lib/site/learnFeatures.ts: hero, learn, explore, play with friends (the one pinned feature chapter),
- * safe + 5 FAQs, then a closing Play chapter. Each chapter: a huge tight headline, one line, one large media card, its 3 chips as a
+ * safe + 5 FAQs, then a closing Play chapter. Right after the hero: "See it in action", a horizontal clip carousel (LearnReel). Each chapter: a huge tight headline, one line, one large media card, its 3 chips as a
  * quiet caption. Chapters alternate soft off-white and near-black (deep pitch green); gold is the only accent. Anything without a
  * real shot is text only (no drawn art). All words are prerendered; LearnEnhance only adds the one motion language (fade + scale
  * in, gentle hero zoom-out, a slight settle on the pinned media) and the lazy clips (visible + next only, max 2 playing).
@@ -97,6 +98,9 @@ export default function LearnHub(){
    </div>
    <Stage k={top.shot} label="Futbol Island from the air" eager hero/>
   </section>
+
+  {/* ---- 1b. See it in action: the horizontal clip carousel (renders nothing until its wide clips exist) ---- */}
+  <LearnReel/>
 
   {/* ---- 2-3. learn, explore ---- */}
   <Chapter h={hl('learn')} dark/>

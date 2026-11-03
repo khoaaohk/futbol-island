@@ -107,6 +107,41 @@
 .tagsCenter{margin:0 auto}
 @media(max-width:599px){.root .tags{flex-direction:column;align-items:center;gap:4px}.tags li+li::before{display:none}}
 
+/* ---- See it in action: a horizontal row of 16:9 clip cards (Nov 3 2026, after apple.com/apple-vision-pro's highlights) -----
+   CSS scroll snap, native swipe / trackpad scroll; the row starts at the content gutter (the sub-nav's 1080px column) and bleeds
+   to the right edge, a trailing spacer lets the last card reach the snap edge. ReelEnhance adds the arrows, active caption and clips. */
+.reel{--rpad:calc(max(0px,(100vw - 1080px) / 2) + var(--gut));--cw:86vw;--rgap:12px;
+ display:grid;gap:clamp(28px,4vh,44px);padding:clamp(56px,10vh,120px) 0 clamp(72px,12vh,140px);background:var(--paper);color:var(--ink)}
+@media(min-width:740px){.reel{--cw:min(1100px,78vw,(100svh - 250px) * 16 / 9);--rgap:24px}}
+.reelHead{display:grid;gap:12px;padding:0 var(--rpad);text-align:left}
+.reelHead .h2{max-width:none}
+.reelHead .sub{max-width:40ch}
+.reelRow{position:relative;display:flex;gap:var(--rgap);overflow-x:auto;overflow-y:hidden;overscroll-behavior-x:contain;
+ scroll-snap-type:x mandatory;scroll-padding-left:var(--rpad);padding:4px 0 8px var(--rpad);scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.reelRow::-webkit-scrollbar{display:none}
+.reelRow::after{content:"";flex:0 0 max(1px,calc(100% - var(--cw) - var(--rgap)))}
+.reelRow:focus-visible{outline:3px solid var(--gold);outline-offset:-3px}
+.card{flex:0 0 var(--cw);scroll-snap-align:start;display:grid;align-content:start;gap:clamp(14px,2vh,22px)}
+.cardMedia{position:relative;overflow:hidden;aspect-ratio:16/9;border-radius:clamp(24px,2.4vw,32px);background:var(--well-l);transform:translateZ(0)}
+.cardMedia .still,.cardMedia .clip{object-position:50% 50%}
+.cardMedia[data-playing] .clip{opacity:1}
+.cap{max-width:44ch;padding:0 4px;color:var(--ink2);font-size:clamp(17px,.45vw + 14px,21px);font-weight:500;line-height:1.36;letter-spacing:-.01em;transition:color .4s var(--ease)}
+.cap strong{font-weight:650}
+.card[data-active] .cap{color:var(--ink)}
+.reelPlay{position:absolute;right:clamp(12px,1.6vw,22px);bottom:clamp(12px,1.6vw,22px);z-index:2;display:none;place-items:center;width:44px;height:44px;border-radius:50%;border:0;
+ background:rgb(232 232 237 / .78);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--ink);cursor:pointer}
+.reelPlay svg{width:18px;height:18px;fill:currentColor}
+.reelPlay[data-playing] .icoPause{display:block}
+.reelPlay[data-playing] .icoPlay{display:none}
+.reel[data-js] .card[data-active] .reelPlay,.reel[data-js][data-calm] .reelPlay{display:grid}
+.reelCtl{display:none;justify-content:flex-end;gap:14px;padding:0 var(--rpad)}
+.reel[data-js] .reelCtl{display:flex}
+.reelArrow{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:0;background:rgb(20 34 29 / .08);color:var(--ink);cursor:pointer;transition:opacity .2s}
+.reelArrow svg{width:22px;height:22px}
+.reelArrow:hover:not(:disabled){background:rgb(20 34 29 / .13)}
+.reelArrow:disabled{opacity:.35;cursor:default}
+@media(prefers-reduced-motion:reduce){.reelRow{scroll-behavior:auto}}
+
 /* ---- play with friends: the one pinned feature (wide screens) --------------------------------------------------------------- */
 .feature{display:grid;justify-items:center;gap:40px;width:100%;max-width:1080px}
 .pin{width:100%;display:grid;justify-items:center}
@@ -177,4 +212,4 @@
 .root[data-calm] *,.root[data-calm] *::before,.root[data-calm] *::after{animation:none!important;transition:none!important}
 .root[data-calm] .subnav::before{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--paper)}
 @media(prefers-reduced-motion:reduce){.root *,.root *::before,.root *::after{animation:none!important;transition:none!important}}
-@media print{.subnav,.clipBtn{display:none}.dark{background:none;color:inherit}}
+@media print{.subnav,.clipBtn,.reelCtl,.reelPlay{display:none}.dark{background:none;color:inherit}}

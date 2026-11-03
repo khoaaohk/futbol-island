@@ -21,7 +21,7 @@ const MAX_PLAYING=2;
 const PLAY_AT=.25;
 const AHEAD='150% 0px 150% 0px';
 
-function calmWanted(){
+export function calmWanted(){
  try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return true;}catch{}
  const c=(navigator as Navigator&{connection?:{saveData?:boolean;effectiveType?:string}}).connection;
  if(c?.saveData)return true;
@@ -61,6 +61,9 @@ export default function LearnEnhance({rootId}:{rootId:string}){
 
   // ---- 3. clips -------------------------------------------------------------------------------------------------------------
   const vids=[...root.querySelectorAll<HTMLVideoElement>('video[data-lv]')];
+  // the See it in action carousel (ReelEnhance) runs its own clips; they count toward the same cap of 2 (it writes data-reel-playing
+  // on the root and fires learn:panel whenever that changes)
+  const reelPlaying=()=>Number(root.getAttribute('data-reel-playing'))||0;
   const ratio=new Map<HTMLVideoElement,number>();
   const userPaused=new Set<HTMLVideoElement>(),userStarted=new Set<HTMLVideoElement>();
   const btnOf=(v:HTMLVideoElement)=>v.parentElement?.querySelector<HTMLButtonElement>('[data-lv-btn]')??null;
@@ -69,7 +72,7 @@ export default function LearnEnhance({rootId}:{rootId:string}){
   function evaluate(){
    const hidden=document.visibilityState==='hidden';
    const want=vids.filter(v=>!hidden&&(ratio.get(v)??0)>=PLAY_AT&&!v.closest('[data-panel]:not([data-on])')&&!userPaused.has(v)&&(!calm||userStarted.has(v)))
-    .sort((a,b)=>(ratio.get(b)??0)-(ratio.get(a)??0)).slice(0,MAX_PLAYING);
+    .sort((a,b)=>(ratio.get(b)??0)-(ratio.get(a)??0)).slice(0,Math.max(0,MAX_PLAYING-reelPlaying()));
    for(const v of vids){
     if(want.includes(v)){if(v.paused){const p=v.play();if(p)p.then(()=>mark(v,true),()=>mark(v,false));else mark(v,true);}}
     else if(!v.paused){v.pause();mark(v,false);}
@@ -89,7 +92,7 @@ export default function LearnEnhance({rootId}:{rootId:string}){
     if(v.paused){userPaused.delete(v);userStarted.add(v);ratio.set(v,Math.max(ratio.get(v)??0,.5));
      // a tapped clip always plays; if that makes three, the least visible other one stops
      const others=vids.filter(o=>o!==v&&!o.paused).sort((a,b)=>(ratio.get(a)??0)-(ratio.get(b)??0));
-     if(others.length>=MAX_PLAYING){others[0].pause();mark(others[0],false);userPaused.add(others[0]);}
+     if(others.length>=MAX_PLAYING-reelPlaying()&&others.length){others[0].pause();mark(others[0],false);userPaused.add(others[0]);}
      const p=v.play();if(p)p.then(()=>mark(v,true),()=>mark(v,false));else mark(v,true);}
     else{v.pause();mark(v,false);userPaused.add(v);userStarted.delete(v);}};
    root.addEventListener('click',click);

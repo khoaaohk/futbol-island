@@ -388,6 +388,32 @@ export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
  {id:'safe',title:'Safe for kids',line:'Free, with no ads, no chat and no accounts.',shot:'save_code',
   chips:['Free, no ads','No chat','A save code, not an account'],features:['free-no-ads','save-code','grown-ups']},
 ];
+/**
+ * "See it in action" (Nov 3 2026, owner: an apple.com/apple-vision-pro style horizontal clip carousel right after the hero).
+ * One card per wide 16:9 clip, in this order. Media: public/learn/wide_<key>.webp (poster) + the clip, listed in
+ * public/learn/manifest.json as `wide_<key>`; a card whose manifest entry or poster is missing is skipped (no placeholder art).
+ * `caption`: one sentence (<= 22 words) for a 7-12 year old's parent, with the football tie, reusing `feature`'s own facts and
+ * phrasing (no new claims); **words** between double asterisks render bold (parsed by learnBoldParts, never as HTML).
+ */
+export type LearnCarouselItem={key:string;feature:string;title:string;caption:string};
+export const LEARN_CAROUSEL:readonly LearnCarouselItem[]=[
+ {key:'fishing',feature:'fishing',title:'Fishing and the Fishbook',caption:'Cast a line and fill the **Fishbook**: every sea animal you catch links to a real club, team or football story.'},
+ {key:'diving',feature:'reef-balls',title:'Reef treasure balls',caption:'Dive the reefs to an open **treasure chest** with a football inside and a mini lesson about a real football fact.'},
+ {key:'vending',feature:'vending',title:'Vending machines',caption:'Spend coins earned by playing and learning at the **vending machines**, where every card in a pack carries a football lesson.'},
+ {key:'museum',feature:'history-museum',title:'The History Museum',caption:'Walk the **History Museum** from 1863 to VAR and see where offside, the penalty kick and throw-ins came from.'},
+ {key:'arcade',feature:'arcade',title:'The Arcade',caption:'**The Arcade** has five football games, and each cabinet names the one skill it trains, from first touch to finishing.'},
+ {key:'books',feature:'pop-up-books',title:'Pop-up books, read aloud',caption:'**Pop-up books**, read aloud, tell true stories of footballers who kept going, and a book check links each story to a lesson.'},
+ {key:'cards',feature:'player-cards',title:'Player cards and binder',caption:'Collect **player cards** of current stars, all-time greats and coaches, each showing the position, country, strengths and career.'},
+ {key:'npc',feature:'islanders',title:'Talk to the islanders',caption:'Walk up to an **islander** and tap Talk to hear coaches, fans and players share football stories, with no typing.'},
+ {key:'multiplayer',feature:'party-start',title:'Play with friends',caption:'A grown-up starts a **private party**, and friends join by code to call for the ball and celebrate like a team.'},
+];
+/** A caption split into plain and **bold** runs (rendered as text nodes and <strong>, so nothing is ever parsed as HTML). */
+export function learnBoldParts(s:string):{text:string;bold:boolean}[]{
+ return s.split('**').map((text,i)=>({text,bold:i%2===1})).filter(p=>p.text);
+}
+/** The caption as plain text (no markers), e.g. for aria labels and tests. */
+export const learnPlain=(s:string)=>s.split('**').join('');
+
 /** One line under the friend steps (text only). */
 export const LEARN_GROWNUP_LINE='Grown-ups stay in charge: a grown-up check comes first, and Settings can switch it off.';
 /** The five questions /learn shows (and its FAQPage JSON-LD lists), safety first. */
