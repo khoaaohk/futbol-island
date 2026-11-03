@@ -224,10 +224,11 @@
 .reel[data-js] .card[data-active] .reelPlay,.reel[data-js][data-calm] .reelPlay{display:grid}
 .reelCtl{display:none;justify-content:flex-end;gap:14px;padding:0 var(--rpad)}
 .reel[data-js] .reelCtl{display:flex}
-.reelArrow{display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:0;background:rgb(20 34 29 / .08);color:var(--ink);cursor:pointer;transition:opacity .2s}
+/* game style (owner, Nov 3): the round gold button with the cream rim and gold edge, like the Konbini arrows; sinks on press */
+.reelArrow{display:grid;place-items:center;box-sizing:border-box;width:48px;height:48px;border-radius:50%;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);cursor:pointer;transition:opacity .2s,translate .16s,box-shadow .16s}
+.reelArrow:active:not(:disabled){translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 .reelArrow svg{width:22px;height:22px}
-.reelArrow:hover:not(:disabled){background:rgb(20 34 29 / .13)}
-.reelArrow:disabled{opacity:.35;cursor:default}
+.reelArrow:disabled{opacity:.45;cursor:default;box-shadow:0 0 0 transparent;translate:0 var(--btn-press,3px)}
 @media(prefers-reduced-motion:reduce){.reelRow{scroll-behavior:auto}}
 
 /* ---- the montage: one edge-to-edge 16:9 film right after the hero (Nov 3 2026, after apple.com/apple-vision-pro) ------------
@@ -288,22 +289,22 @@
 .slides[data-js][data-calm] .slidePlay{display:grid}
 .slideCtl{display:none;justify-content:center;align-items:center;gap:12px;padding:0 var(--gut)}
 .slides[data-js] .slideCtl{display:flex}
-.dots{display:flex;align-items:center;height:56px;padding:0 14px;border-radius:999px;background:rgb(20 34 29 / .07)}
+/* game style (docs/ui/BUTTONS.md, owner Nov 3): mint pill with the 3px cream rim and a mint edge; dots cream, the active one a cream track filled pink; the toggle is the round gold button */
+.dots{display:flex;align-items:center;box-sizing:border-box;height:56px;padding:0 16px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d)}
 .dot{display:grid;place-items:center;height:44px;padding:0 5px;border:0;background:none;cursor:pointer}
-.dotBar{position:relative;display:block;width:8px;height:8px;border-radius:999px;overflow:hidden;background:rgb(20 34 29 / .3)}
-.dot[aria-current] .dotBar{width:44px;background:rgb(20 34 29 / .16)}
-.dotFill{position:absolute;inset:0;border-radius:inherit;background:var(--ink);transform:scaleX(0);transform-origin:0 50%}
+.dotBar{position:relative;display:block;width:8px;height:8px;border-radius:999px;overflow:hidden;background:var(--btn-rim,#fff2cd);box-shadow:inset 0 0 0 1px rgb(36 77 64 / .18)}
+.dot[aria-current] .dotBar{width:44px;background:var(--btn-rim,#fff2cd)}
+.dotFill{position:absolute;inset:0;border-radius:inherit;background:var(--btn-pink,#ed9dce);transform:scaleX(0);transform-origin:0 50%}
 .dot[aria-current] .dotFill{transform:none}
 .slides[data-js]:not([data-calm]) .dot[aria-current] .dotFill{animation:fill var(--dur) linear both;animation-play-state:paused}
 .slides[data-js][data-run]:not([data-calm]) .dot[aria-current] .dotFill{animation-play-state:running}
-.slidesToggle{display:grid;place-items:center;width:56px;height:56px;border:0;border-radius:50%;background:rgb(20 34 29 / .07);color:var(--ink);cursor:pointer}
+.slidesToggle{display:grid;place-items:center;box-sizing:border-box;width:56px;height:56px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:50%;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);cursor:pointer;transition:translate .16s,box-shadow .16s}
+.slidesToggle:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 .slidesToggle svg{width:20px;height:20px;fill:currentColor}
 .slidesToggle .icoPause{display:block}
 .slidesToggle .icoPlay,.slidesToggle[data-paused] .icoPause{display:none}
 .slidesToggle[data-paused] .icoPlay{display:block}
 .slides[data-calm] .slidesToggle{display:none}
-.dot:hover .dotBar{background:rgb(20 34 29 / .45)}
-.dot[aria-current]:hover .dotBar{background:rgb(20 34 29 / .2)}
 @media(prefers-reduced-motion:reduce){.slideRow{scroll-behavior:auto}}
 
 /* ---- play with friends: the one pinned feature (wide screens) --------------------------------------------------------------- */
