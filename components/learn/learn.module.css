@@ -12,13 +12,16 @@
  --paper:#fbf7ee;--tint:#ecefdf;--night:#0c1714;--well-l:#efe8d7;--well-d:#15241f;
  --ink:#14221d;--ink2:#5b675f;--inkD:#f6f1e4;--ink2D:#a3aea6;--gold:#e9c16b;--goldInk:#8a6620;--pitch:#1d6b55;
  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI Variable Display','Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;
- --ease:cubic-bezier(.2,.7,.2,1);--gut:max(16px,env(safe-area-inset-left,0px));--fade:min(16vh,150px);
+ --ease:cubic-bezier(.2,.7,.2,1);--gut:max(16px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));--fade:min(16vh,150px);
  --tallMax:min(80svh,820px);
  /* spacing audit Nov 3: ONE section rhythm. --sec is the padding above and below every block (chapters, montage, reel, slides,
     end), so every content-to-content gap is 2 x --sec: phones 236px at 844 tall (owner Nov 3: even and generous; was 169-372,
     uneven), desktop 288px at 900 tall (was 162-396). */
  --sec:clamp(96px,16svh,180px);
- position:relative;width:100vw;margin:calc(-1 * var(--s3,24px)) 0 calc(-1 * var(--s5,64px)) calc(50% - 50vw);
+ /* full bleed out of the site's 1040px grid <main> (responsive audit Nov 3): width auto + equal negative side margins, not
+    width:100vw + one margin. A fixed 100vw item made the grid track grow to 100vw / 2 once the viewport passed ~1984px, so at
+    2560 the page sat 144px right and the Play pill was off screen. */
+ position:relative;width:auto;margin:calc(-1 * var(--s3,24px)) calc(50% - 50vw) calc(-1 * var(--s5,64px));
  background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.47;
  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:clip;
 }
@@ -26,7 +29,8 @@
 @media(max-width:640px){.root{--sec:clamp(100px,16svh,150px)}}
 /* spacing audit Nov 3: from 760px the bar is full width with 24px ends, so the content gutter is 24 too (was 16: headings, the
    reel and the friends column started 8px left of the logo) */
-@media(min-width:760px){.root{--gut:max(24px,env(safe-area-inset-left,0px))}}
+/* both insets (audit Nov 3): a landscape iPhone has its notch on either side, and the bar's Play pill sits at the right edge */
+@media(min-width:760px){.root{--gut:max(24px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px))}}
 /* the page has its own sticky bar with the logo, so the shared site header is hidden here (Nov 3: moved out of an inline <style>,
    whose escaped ">" made React's hydration text check fail and re-render the whole document on the client) */
 :global([data-reading-page]):has(.root)>:global(header){display:none}
@@ -66,10 +70,16 @@
 .root .subLinks a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-2px;border-radius:999px}
 /* phones: logo + Play pill only (Nov 3: four links squeezed in at 390px clipped "Safety"); the anchors stay in the page */
 @media(max-width:640px){.root .subLinks{display:none}}
+/* 641-759px (audit Nov 3): logo 157 + four 92px links + Play 76 need 680px, so at 650 "Safety" ran under Play. Narrower 82px
+   links + 4px gaps (chip step 86px) fit from 641px; same chip, same motion */
+@media(min-width:641px) and (max-width:759px){.root .subLinks{gap:4px}.root .subLinks a,.root ul.subLinks::before{width:82px}
+ .root ul.subLinks::before{transform:translateX(calc(var(--i,0) * 86px)) scale(.86)}.root .subLinks[data-has-current]::before{transform:translateX(calc(var(--i,0) * 86px))}}
 /* phones (owner, Nov 3): menu button far left, logo centred, Play right */
 @media(max-width:640px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr}.root .logo{grid-column:2;grid-row:1;margin:0;justify-self:center}.menu{grid-column:1;grid-row:1;justify-self:start}.pill{grid-column:3;grid-row:1;justify-self:end}}
-@media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:none;padding:0 24px 3px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px}}
+@media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:none;padding:0 var(--gut) 3px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px}}
 .pill{flex:none}
+/* tap target (audit Nov 3): the 26px wordmark link gets a 44px tall hit area inside the 68px bar; the look is unchanged */
+.root .logo{padding-block:9px}
 .root .subnavIn button.pill{align-self:center!important;margin-top:0!important}
 /* ---- phone menu (owner, Nov 3 2026; MobileMenu.tsx): <= 640px only, a two-line icon left of the Play pill opens a cream panel
    under the 68px bar with the four links in large type; open slides / fades down 220ms (transform + opacity), instant under
@@ -294,7 +304,7 @@
 .slides[data-js] .slideCtl{display:flex}
 /* game style (docs/ui/BUTTONS.md, owner Nov 3): mint pill with the 3px cream rim and a mint edge; dots cream, the active one a cream track filled pink; the toggle is the round gold button */
 .dots{display:flex;align-items:center;box-sizing:border-box;height:56px;padding:0 16px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d)}
-.dot{display:grid;place-items:center;height:44px;padding:0 5px;border:0;background:none;cursor:pointer}
+.dot{display:grid;place-items:center;height:44px;padding:0 8px;border:0;background:none;cursor:pointer}
 .dotBar{position:relative;display:block;width:8px;height:8px;border-radius:999px;overflow:hidden;background:var(--btn-rim,#fff2cd);box-shadow:inset 0 0 0 1px rgb(36 77 64 / .18)}
 .dot[aria-current] .dotBar{width:44px;background:var(--btn-rim,#fff2cd)}
 .dotFill{position:absolute;inset:0;border-radius:inherit;background:var(--btn-pink,#ed9dce);transform:scaleX(0);transform-origin:0 50%}
@@ -396,7 +406,9 @@
 .root[data-calm] *,.root[data-calm] *::before,.root[data-calm] *::after{animation:none!important;transition:none!important}
 .root[data-calm] .subnav::before{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--paper)}
 @media(prefers-reduced-motion:reduce){.root *,.root *::before,.root *::after{animation:none!important;transition:none!important}}
-@media print{.subnav,.menu,.clipBtn,.reelCtl,.reelPlay,.mPlay,.slideCtl,.slidePlay{display:none}.dark{background:none;color:inherit}}
+@media print{.subnav,.menu,.clipBtn,.reelCtl,.reelPlay,.mPlay,.slideCtl,.slidePlay{display:none}.dark{background:none;color:inherit}
+ /* audit Nov 3: blocks below the fold had not "risen" yet, so 14 of them printed blank (opacity 0); paper gets the end state */
+ .root *,.root *::before,.root *::after{animation:none!important;transition:none!important}}
 /* spacing audit Nov 3: `.root h3/p{margin:0}` (0,1,1) beat these single-class margins, so the FAQ title sat on the list's top
    rule (0px), the grown-up note on the last step and the end links on the Play button; restated at .root specificity */
 .root .faqTitle{margin-bottom:clamp(24px,4vh,40px)}
