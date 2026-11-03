@@ -78,17 +78,17 @@
 .menuIco i:last-child{top:8px}
 .menu[open] .menuIco i:first-child{transform:translateY(4px) rotate(45deg)}
 .menu[open] .menuIco i:last-child{transform:translateY(-4px) rotate(-45deg)}
-.menuPanel{position:absolute;top:100%;left:0;right:0;max-height:calc(100svh - 68px);overflow-y:auto;overscroll-behavior:contain;padding:6px var(--gut) 18px;
- background:rgb(251 247 238 / .94);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px);box-shadow:0 1px 0 rgb(20 34 29 / .12)}
+.menuPanel{position:absolute;top:100%;left:0;right:0;height:calc(100svh - 68px);overflow-y:auto;overscroll-behavior:contain;padding:12px var(--gut) calc(32px + env(safe-area-inset-bottom,0px));
+ background:var(--paper,#fbf7ee);box-shadow:0 1px 0 rgb(20 34 29 / .12)}/* full screen under the bar (owner, Nov 3); the bar keeps the close button */
 .menu[open] .menuPanel{animation:menuIn .22s var(--ease) both}
 .menu:not([open]) .menuPanel{display:none}/* no boxes at all while closed (Chrome keeps closed <details> content laid out as content-visibility:hidden) */
 .menuList li+li{border-top:1px solid rgb(20 34 29 / .12)}
-.root .menuList a{display:flex;align-items:center;min-height:56px;color:var(--ink);font-size:30px;font-weight:600;line-height:1.1;letter-spacing:-.02em;text-decoration:none}
+.root .menuList a{display:flex;align-items:center;min-height:88px;color:var(--ink);font-size:36px;font-weight:600;line-height:1.1;letter-spacing:-.02em;text-decoration:none}
 .menuList a span{display:inline-block;padding:3px 16px 5px;border:var(--btn-rim-width,3px) solid transparent;border-radius:999px}
 .menuList a[aria-current] span{background:var(--btn-pink,#ed9dce);border-color:var(--btn-rim,#fff2cd);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
 .menuList a:active span{translate:0 var(--btn-press,3px)}
 .root .menuList a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-3px;border-radius:14px}
-.root[data-calm] .menuPanel{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--paper)}
+
 
 /* over a dark chapter (LearnEnhance sets data-dark from IntersectionObserver): a near-black layer fades in (opacity only) and the
    logo / links turn light; the gold pill reads on both */
