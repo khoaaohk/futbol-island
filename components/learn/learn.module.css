@@ -23,7 +23,7 @@
  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:clip;
 }
 :global(html):has(.root){scroll-padding-top:72px}
-@media(max-width:640px){.root{--sec:clamp(88px,14svh,140px)}}
+@media(max-width:640px){.root{--sec:clamp(120px,19svh,180px)}}
 /* spacing audit Nov 3: from 760px the bar is full width with 24px ends, so the content gutter is 24 too (was 16: headings, the
    reel and the friends column started 8px left of the logo) */
 @media(min-width:760px){.root{--gut:max(24px,env(safe-area-inset-left,0px))}}
