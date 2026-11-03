@@ -34,7 +34,7 @@ export default function MobileMenu({links}:{links:readonly (readonly [string,str
  },[]);
  return <details className={s.menu} ref={ref} data-menu="">
   <summary className={s.menuBtn} aria-label="Menu" aria-controls="learn-menu">
-   <span className={s.menuIco} aria-hidden="true"><i/><i/></span>
+   Menu
   </summary>
   <div className={s.menuPanel} id="learn-menu">
    <ul className={s.menuList}>{links.map(([id,label])=><li key={id}><a href={`#${id}`}><span>{label}</span></a></li>)}</ul>
