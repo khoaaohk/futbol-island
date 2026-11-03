@@ -602,36 +602,36 @@
   "file": "/learn/montage.webp",
   "width": 1920,
   "height": 1080,
-  "alt": "One afternoon on Futbol Island: dribble across the town square, pass with a neighbour, ride a scooter, moped and bike, then fly a jetpack over the town to the sea.",
+  "alt": "One afternoon on Futbol Island: dribble across the town square, scooter along the causeway road, fly a jetpack over the town, ride the zipline to Coral Cay, swim with the rays and explore a reef underwater.",
   "video": {
    "mp4": "/learn/video/montage_l.mp4",
    "width": 1920,
    "height": 1080,
-   "duration": 27.8
+   "duration": 34.3
   }
  },
  "montage_m": {
   "file": "/learn/montage_m.webp",
   "width": 1280,
   "height": 720,
-  "alt": "One afternoon on Futbol Island: dribble across the town square, pass with a neighbour, ride a scooter, moped and bike, then fly a jetpack over the town to the sea.",
+  "alt": "One afternoon on Futbol Island: dribble across the town square, scooter along the causeway road, fly a jetpack over the town, ride the zipline to Coral Cay, swim with the rays and explore a reef underwater.",
   "video": {
    "mp4": "/learn/video/montage_m.mp4",
    "width": 1280,
    "height": 720,
-   "duration": 27.8
+   "duration": 34.3
   }
  },
  "montage_s": {
   "file": "/learn/montage_s.webp",
   "width": 854,
   "height": 480,
-  "alt": "One afternoon on Futbol Island: dribble across the town square, pass with a neighbour, ride a scooter, moped and bike, then fly a jetpack over the town to the sea.",
+  "alt": "One afternoon on Futbol Island: dribble across the town square, scooter along the causeway road, fly a jetpack over the town, ride the zipline to Coral Cay, swim with the rays and explore a reef underwater.",
   "video": {
    "mp4": "/learn/video/montage_s.mp4",
    "width": 854,
    "height": 480,
-   "duration": 27.8
+   "duration": 34.3
   }
  },
  "fuel_konbini": {
@@ -828,7 +828,7 @@
   "file": "/learn/slide_beachmatch.webp",
   "width": 1600,
   "height": 900,
-  "alt": "Watch a seven-a-side beach match where a shot is tipped away by a diving keeper.",
+  "alt": "Watch a seven-a-side beach match where the keeper dives to save a shot and the rebound is tucked in.",
   "video": {
    "mp4": "/learn/video/slide_beachmatch.mp4",
    "width": 1920,
@@ -840,7 +840,7 @@
   "file": "/learn/slide_beachmatch.webp",
   "width": 1600,
   "height": 900,
-  "alt": "Watch a seven-a-side beach match where a shot is tipped away by a diving keeper.",
+  "alt": "Watch a seven-a-side beach match where the keeper dives to save a shot and the rebound is tucked in.",
   "video": {
    "mp4": "/learn/video/slide_beachmatch_m.mp4",
    "width": 1280,

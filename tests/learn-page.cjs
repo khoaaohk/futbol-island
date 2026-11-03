@@ -158,7 +158,7 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  for(const [k,v] of Object.entries(M.LEARN_SHOT))assert(has(`public/learn/${v}.webp`),`LEARN_SHOT ${k} -> ${v}: still exists`);
  assert(F.filter(f=>M.learnAsset(f.imageKey).image).length>=24,'at least 24 features show a real still (not the drawn card)');
  // public/learn stays small enough to deploy (brief: under 56 MB since the Nov 3 feature slideshow clips, slide_* in 2 sizes; clips under 50 MB).
- // Only the montage may pass 2 MB per file (montage_l.mp4 <= 4.5 MB, montage_m <= 2.2 MB, montage_s <= 1.1 MB).
+ // Only the montage may pass 2 MB per file (montage_l.mp4 <= 10 MB, montage_m <= 5 MB, montage_s <= 2.5 MB since the Nov 3 re-record).
  const walk=d=>fs.existsSync(d)?fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]):[];
  const files=walk(path.join(root,'public/learn')),size=f=>fs.statSync(f).size;
  const total=files.reduce((t,f)=>t+size(f),0),clips=files.filter(f=>/\.(mp4|webm)$/.test(f)).reduce((t,f)=>t+size(f),0);
@@ -168,9 +168,14 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
 // Nov 3: lesson_field_45 re-cut (16 s) and the hero re-recorded (21.3 s); best-quality 4:5 re-records (coins ~500), explore_45 and the water-first fuel_konbini; the 9 "See it in action"
 // clips re-captured at best quality (1920 at the lowest CRF under 2 MB + a 1280 wide_*_m file each; wide_cards is 16 s: collect + binder, so its pair may reach 3 / 1.5 MB): 95 / 90 MB until the old 390x844 files are deleted and the big files move to R2
 // Nov 3: two more carousel cards, wide_bugs + wide_jobs (4 clips 5.5 MB + 2 posters 0.15 MB): +6 MB on both caps, 101 / 96 MB
-assert(total<101e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 101 MB)`);assert(clips<96e6,`clips ${(clips/1e6).toFixed(1)} MB (< 96 MB)`);
+// Nov 3 best-quality 4:5 re-records (coins ~500: dive, save code, join, side by side, friend steps), the new 15.7 s explore_45 and the
+// 16.9 s water-first fuel_konbini, each at the lowest CRF that fits its cap: +10.4 MB in all (+10.3 MB clips): 81.4 / 75.3 MB
+// Nov 3 best-quality slides (fresh 2560x1440 captures, coins ~512, both sizes at the lowest CRF under 2 MB) and the new 34.3 s montage
+// (zoomed out, no UI: square, causeway scooter, flight, zipline, swim, reef dive; veryslow, montage caps raised to 10 / 5 / 2.5 MB):
+assert(total<118e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 118 MB)`);assert(clips<106e6,`clips ${(clips/1e6).toFixed(1)} MB (< 106 MB)`);
  // the hero clip is ~2.5x longer than the other 4:5 clips (Nov 3), so only it gets 6 MB (1080) / 3 MB (720 phone file)
- const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6,
+ // Nov 3 montage: 34.3 s of moving wide shots (the old 27.8 s cut sat at CRF 35 under 4.5 / 2.2 / 1.1 MB and looked soft): CRF 29-30 needs 10 / 5 / 2.5 MB
+ const cap={'montage_l.mp4':10e6,'montage_m.mp4':5e6,'montage_s.mp4':2.5e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6,
   // explore_45 is ~2x the other 4:5 clips (15.7 s: reef swim, wall-target ball, Summit Isle mango-tree ball): 4 MB / 2 MB;
   // fuel_konbini (16:9, 15.9 s: storefront walk-up, walk inside, then the shelf detail) needs 3.5 MB at 1920 for CRF 24 (its 1280 file keeps 2 MB)
   'explore_45.mp4':4e6,'explore_45_m.mp4':2e6,'fuel_konbini.mp4':3.5e6,'wide_cards.mp4':3e6,'wide_cards_m.mp4':1.5e6};
