@@ -94,7 +94,7 @@ export default function LearnHub(){
    <div className={s.subnavIn}>
     <a className={s.logo} href={PLAY_URL} aria-label="Futbol Island home">Futbol Island</a>
     <ul className={s.subLinks}>{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}</ul>
-    <a className={s.pill} href={PLAY_URL}>Play free</a>
+    <a className={s.pill} href={PLAY_URL}>Play</a>
    </div>
   </nav>
 
