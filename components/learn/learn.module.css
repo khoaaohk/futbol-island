@@ -41,10 +41,11 @@
 .root .logo{flex:none;margin-right:auto;font-family:IslandBrush,Arial,sans-serif;font-size:22px;line-height:1;color:var(--deep);text-decoration:none;white-space:nowrap}
 .root .subLinks{display:flex;flex:1;min-width:0;gap:0;overflow:hidden}
 .root .subLinks a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:var(--ink);font-size:14px;opacity:.78;text-decoration:none;white-space:nowrap;position:relative;transition:opacity .16s}
-/* nav links follow the chip / tab family (docs/ui/BUTTONS.md): no face at rest and no hover change (the game has none); the current
+/* nav links follow the chip / tab family (docs/ui/BUTTONS.md): no face at rest; hover only turns the text pitch green (owner, Nov 3); the current
    chapter (aria-current, set by LearnEnhance) is the pink chip with the pink edge; pressed sinks the chip */
 .root .subLinks a{isolation:isolate}
 .root .subLinks a::before{content:"";position:absolute;z-index:-1;inset:4px 0;border:var(--btn-rim-width,3px) solid transparent;border-radius:999px;background:transparent;box-shadow:0 0 0 transparent;transition:background-color .16s,box-shadow .16s,border-color .16s,translate .16s;pointer-events:none}
+@media(hover:hover){.root .subLinks a:not([aria-current]):hover{opacity:1;color:var(--pitch)}}
 .root .subLinks a[aria-current]{opacity:1}
 .root .subLinks a[aria-current]::before{background:var(--btn-pink,#ed9dce);border-color:var(--btn-rim,#fff2cd);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
 .root .subLinks a:active::before{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
