@@ -83,7 +83,7 @@ assert.match(read('app/(site)/layout.tsx'),/<a href="\/learn">What’s inside<\/
 assert.doesNotMatch(read('app/(site)/layout.tsx').replace(/\{\/\*[\s\S]*?\*\/\}/g,''),/<header[\s\S]*href="\/learn"[\s\S]*<\/header>/,'no section navigation in the header (Oct 16 2026)');
 assert.match(read('app/(site)/about/page.tsx'),/href="\/learn"/,'about links to /learn');
 assert.match(read('components/GrownUps.tsx'),/<a href="\/learn" target="_blank" rel="noopener">/,'in-game Grown-ups panel links to /learn in a new tab');
-assert.match(page,/href=\{PLAY_URL\}/,'/learn links back to Play');assert.match(page,/href="\/about"/,'/learn links to About');
+assert.match(page,/href=\{PLAY_URL\}/,'/learn links back to Play');
 
 // ---- 3. heat + motion -----------------------------------------------------------------------------------------------------------
 const enh=strip(read('components/learn/LearnEnhance.tsx'));
@@ -103,7 +103,7 @@ assert.match(enh,/\[data-panel\]:not\(\[data-on\]\)/,'a clip in a hidden friends
 assert.doesNotMatch(enh,/currentTime/,'no video scrubbing');
 assert.match(enh,/visibilitychange/,'clips pause when the tab is hidden');
 assert(!has('components/learn/FeatureFinder.tsx'),'the Find a feature finder is gone');
-for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FriendSteps.tsx','components/learn/ShareLink.tsx','components/learn/ReelEnhance.tsx','components/learn/LearnReel.tsx',
+for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FriendSteps.tsx','components/learn/ReelEnhance.tsx','components/learn/LearnReel.tsx',
  'components/learn/LearnMontage.tsx','components/learn/MontageEnhance.tsx','components/learn/LearnSlides.tsx','components/learn/SlidesEnhance.tsx','components/learn/MobileMenu.tsx']){const src=strip(read(f));
  assert.doesNotMatch(src,/getBoundingClientRect|offsetTop|scrollY|pageYOffset|scrollTo\(|preventDefault\(\)[^;]*wheel|['"]wheel['"]/,`${f}: no layout reads while scrolling, no scroll-jacking`);
  assert.doesNotMatch(src,/addEventListener\(\s*['"]scroll['"]|onScroll|onscroll/,`${f}: no scroll listeners`);

@@ -6,7 +6,6 @@ import LearnReel from '@/components/learn/LearnReel';
 import LearnMontage from '@/components/learn/LearnMontage';
 import LearnSlides from '@/components/learn/LearnSlides';
 import FriendSteps from '@/components/learn/FriendSteps';
-import ShareLink from '@/components/learn/ShareLink';
 import LogoWord from '@/components/learn/LogoWord';
 import HeroName from '@/components/learn/HeroName';
 import NavPlay from '@/components/learn/NavPlay';
@@ -163,8 +162,6 @@ export default function LearnHub(){
     <h2 className={s.h2} id="end-h">Ready for the island?</h2>
     <p className={s.sub}>Free, with no ads and no chat.</p>
     <div className={s.ctaRow}><a className={s.cta} href={PLAY_URL}>{LEARN_HERO.cta}</a></div>
-    <p className={s.endLinks}><a href="/about">About</a><a href={LESSONS_INDEX}>Every lesson</a><a href="/privacy">Privacy</a></p>
-    <ShareLink url={abs('/learn')} title={`What’s inside ${SITE_NAME}`}/>
    </div>
   </section>
  </div>;
