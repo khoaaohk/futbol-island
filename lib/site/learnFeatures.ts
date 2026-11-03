@@ -369,6 +369,30 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
   proof:'Made for phones first, with a battery saver in Settings.'},
 ];
 
+/**
+ * The calm /learn page (Nov 2 2026, owner: "needs to be simpler, there's too much going on"). The page shows only these five
+ * sections, each one headline, one short line, one real shot (public/learn, see lib/site/learnMedia.ts) and up to 3 chips.
+ * LEARN_FEATURES above stays the full catalogue (tests, docs and other pages use it); `features` lists the ids each section covers.
+ * Copy rule: every line fits two short lines on a phone.
+ */
+export type LearnHighlightId='top'|'learn'|'explore'|'together'|'safe';
+export type LearnHighlight={id:LearnHighlightId;title:string;line:string;shot:string;chips:readonly string[];features:readonly string[]};
+export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
+ {id:'top',title:LEARN_HERO.headline,line:'A free football game for kids aged 7 to 12.',shot:'town_overview',chips:[],features:[]},
+ {id:'learn',title:'Learn the game',line:'Short lessons and quizzes show real football ideas on a moving pitch.',shot:'lesson_field',
+  chips:['Lessons and quizzes','Story films and books','A football museum'],features:['learning-paths','lesson-quiz','path-stories','pop-up-books','history-museum']},
+ {id:'explore',title:'Explore the island',line:'Every corner hides a football idea to find.',shot:'diving_reef',
+  chips:['Fishing and diving','Arcade and vending machines','Islanders and cards'],features:['fishing','swim-dive','arcade','vending','islanders','player-cards']},
+ {id:'together',title:'Play with friends',line:'Private parties by code. Same island, no chat, just football calls.',shot:'mp_sidebyside',
+  chips:['Private code only','Football calls, no chat','Own kits and names'],features:['party-start','friends-kits','friends-emotes','friends-safety']},
+ {id:'safe',title:'Safe for kids',line:'Free, with no ads, no chat and no accounts.',shot:'save_code',
+  chips:['Free, no ads','No chat','A save code, not an account'],features:['free-no-ads','save-code','grown-ups']},
+];
+/** One line under the friend steps (text only). */
+export const LEARN_GROWNUP_LINE='Grown-ups stay in charge: a grown-up check comes first, and Settings can switch it off.';
+/** The five questions /learn shows (and its FAQPage JSON-LD lists), safety first. */
+export const LEARN_FAQ_TOP:readonly string[]=['Is Futbol Island free?','Are there ads?','Can my child chat with other people?','Does my child need an account?','Can strangers join, or can kids message each other?'];
+
 export type LearnFaq={q:string;a:string;group:'parents'|'together'};
 
 export const LEARN_FAQ:readonly LearnFaq[]=[

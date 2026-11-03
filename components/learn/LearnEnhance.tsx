@@ -3,18 +3,15 @@ import {useEffect} from 'react';
 
 /**
  * /learn's one behaviour island (Nov 2 2026). Renders nothing; it only enhances the server-rendered page, so every word is in the
- * HTML without JavaScript. Heat budget (AGENTS.md): no scroll listeners, no layout reads while scrolling, no per-frame loops except a
- * short count-up, IntersectionObserver for everything, all of it stopped on unmount.
+ * HTML without JavaScript. Heat budget (AGENTS.md): no scroll listeners, no layout reads while scrolling, no per-frame loops, IntersectionObserver for everything, all of it stopped on unmount.
  *  1. Motion mode: `data-calm` on the page root when the viewer asked for reduced motion, has Save-Data on, is on a 2g/3g
  *     connection, or has the game's Battery saver on (localStorage 'fi2-battery-saver', the same key as lib/graphics/heatTier.ts).
- *     Calm = no parallax or reveals (CSS), clips never start by themselves (poster + tap to play). Content is identical.
+ *     Calm = no fade-up or hero parallax (CSS), clips never start by themselves (poster + tap to play). Content is identical.
  *  2. Fallback for browsers without CSS scroll-driven animations (`animation-timeline: view()`): `data-lm-io` on the root, then
- *     reveals get `data-in` when they enter, and [data-par] sections get `--p` (0..1 through the viewport) computed from the
+ *     each section's [data-reveal] block gets `data-in` when it enters (soft fade-up), and the hero ([data-par]) gets `--p` (0..1 through the viewport) computed from the
  *     IntersectionObserver entry's own rect (no getBoundingClientRect), written in one rAF.
  *  3. Clips: play only while >= 50 % visible, at most 2 at once (the most visible win), pause when the tab is hidden; each clip
  *     has a pause / play button (also the only way to start one in calm mode).
- *  4. The sticky mini-nav marks the section in view (aria-current) and the learn section's sticky stage swaps to the lesson in view.
- *  5. Count-up numbers ([data-count]) run once when first seen (full motion only).
  */
 const MAX_PLAYING=2;
 
@@ -65,8 +62,7 @@ export default function LearnEnhance({rootId}:{rootId:string}){
    b.setAttribute('aria-label',`${playing?'Pause':'Play'} the clip: ${b.dataset.label??''}`);v.parentElement?.toggleAttribute('data-playing',playing);};
   function evaluate(){
    const hidden=document.visibilityState==='hidden';
-   // a clip on a stage slide that is not shown (opacity 0, but still "visible" to IntersectionObserver) never plays
-   const want=vids.filter(v=>!hidden&&(ratio.get(v)??0)>=.5&&!userPaused.has(v)&&(!calm||userStarted.has(v))&&!v.closest('[data-stage-i]:not([data-on])'))
+   const want=vids.filter(v=>!hidden&&(ratio.get(v)??0)>=.5&&!userPaused.has(v)&&(!calm||userStarted.has(v)))
     .sort((a,b)=>(ratio.get(b)??0)-(ratio.get(a)??0)).slice(0,MAX_PLAYING);
    for(const v of vids){
     if(want.includes(v)){if(v.paused){const p=v.play();if(p)p.then(()=>mark(v,true),()=>mark(v,false));else mark(v,true);}}
@@ -89,42 +85,6 @@ export default function LearnEnhance({rootId}:{rootId:string}){
    offs.push(()=>{io.disconnect();document.removeEventListener('visibilitychange',vis);root.removeEventListener('click',click);vids.forEach(v=>{if(!v.paused)v.pause();});});
   }
 
-  // ---- 4. mini-nav and the learn stage -------------------------------------------------------------------------------------
-  const nav=root.querySelector<HTMLElement>('[data-minnav]');
-  if(nav){
-   const links=new Map<string,HTMLAnchorElement>();nav.querySelectorAll<HTMLAnchorElement>('a[href^="#"]').forEach(a=>links.set(a.hash.slice(1),a));
-   const secIo=new IntersectionObserver(es=>{for(const e of es){if(!e.isIntersecting)continue;const id=(e.target as HTMLElement).id;
-     links.forEach((a,k)=>{if(k===id)a.setAttribute('aria-current','true');else a.removeAttribute('aria-current');});
-     const a=links.get(id),track=a?.parentElement?.parentElement;
-     if(a&&track&&track.scrollWidth>track.clientWidth)track.scrollTo({left:Math.max(0,a.offsetLeft-16),behavior:calm?'auto':'smooth'});}},{rootMargin:'-45% 0px -50% 0px'});
-   root.querySelectorAll('[data-sec]').forEach(el=>secIo.observe(el));
-   offs.push(()=>secIo.disconnect());
-  }
-  root.querySelectorAll<HTMLElement>('[data-pin]').forEach(sec=>{
-   const stage=[...sec.querySelectorAll<HTMLElement>('[data-stage-i]')];
-   const pinIo=new IntersectionObserver(es=>{for(const e of es){if(!e.isIntersecting)continue;const i=(e.target as HTMLElement).dataset.pinI;
-     stage.forEach(el=>el.toggleAttribute('data-on',el.dataset.stageI===i));evaluate();}},{rootMargin:'-42% 0px -42% 0px'});
-   sec.querySelectorAll('[data-pin-i]').forEach(el=>pinIo.observe(el));
-   offs.push(()=>pinIo.disconnect());
-  });
-
-  // ---- live blocks: [data-live] while on screen (the kit colour cycle only runs then) ---------------------------------------
-  const live=new IntersectionObserver(es=>{for(const e of es)e.target.toggleAttribute('data-live',e.isIntersecting);});
-  root.querySelectorAll('[data-live-watch]').forEach(el=>live.observe(el));
-  offs.push(()=>live.disconnect());
-
-  // ---- 5. count-up ----------------------------------------------------------------------------------------------------------
-  if(!calm){
-   const nums=[...root.querySelectorAll<HTMLElement>('[data-count]')];
-   const rafs=new Set<number>();
-   const run=(el:HTMLElement)=>{const to=Number(el.dataset.count)||0,t0=performance.now(),dur=900;
-    const step=(t:number)=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);el.textContent=String(Math.round(to*e));
-     if(k<1){const id=requestAnimationFrame(step);rafs.add(id);}else el.textContent=String(to);};
-    rafs.add(requestAnimationFrame(step));};
-   const cio=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){cio.unobserve(e.target);run(e.target as HTMLElement);}},{threshold:.6});
-   nums.forEach(n=>cio.observe(n));
-   offs.push(()=>{cio.disconnect();rafs.forEach(id=>cancelAnimationFrame(id));nums.forEach(n=>{n.textContent=n.dataset.count??n.textContent;});});
-  }
   return ()=>offs.forEach(f=>f());
  },[rootId]);
  return null;

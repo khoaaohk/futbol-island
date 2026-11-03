@@ -6,10 +6,11 @@
 //     IntersectionObserver only (no scroll listeners, no getBoundingClientRect), max 2 clips, pause when hidden; CSS has the
 //     scroll-driven path, the IO fallback path and the calm / reduced-motion kill switch; clips are muted, looped, inline,
 //     preload="none"; the media module tolerates a missing manifest and missing files;
-//  4. content: every feature, group and FAQ from lib/site/learnFeatures.ts is used; FAQ JSON-LD is built from LEARN_FAQ; hrefs in
-//     the page are internal paths that exist or futbolisland.app;
-//  5. a built site (NEXT_DIST_DIR or .next, when it holds /learn): every feature title, every FAQ question and answer, the
-//     3 friend steps are in the HTML; FAQPage JSON-LD matches LEARN_FAQ; old /learn/<id> pages are not built.
+//  4. content (simplified Nov 2 2026, owner "too much going on"): exactly the 5 LEARN_HIGHLIGHTS sections, each with at most 3
+//     chips and a real shot (no drawn placeholder art anywhere); 5 FAQs picked from LEARN_FAQ, safety first; no feature finder,
+//     a nav of <= 5 anchors; one motion kind (fade-up + hero parallax); hrefs are internal paths that exist or futbolisland.app;
+//  5. a built site (NEXT_DIST_DIR or .next, when it holds /learn): every highlight, the 5 FAQ questions and answers and the
+//     3 friend steps are in the HTML; FAQPage JSON-LD matches the 5 shown; old /learn/<id> pages are not built.
 // usage: node tests/learn-page.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),vm=require('node:vm');
 const root=path.join(__dirname,'..');
@@ -33,7 +34,8 @@ function load(file){
  return mod.exports;
 }
 const L=rel=>load(path.join(root,rel));
-const {LEARN_FEATURES:F,LEARN_GROUPS:G,LEARN_FAQ:Q}=L('lib/site/learnFeatures.ts');
+const {LEARN_FEATURES:F,LEARN_GROUPS:G,LEARN_FAQ:ALLQ,LEARN_FAQ_TOP:TOP,LEARN_HIGHLIGHTS:HL}=L('lib/site/learnFeatures.ts');
+const Q=TOP.map(q=>ALLQ.find(x=>x.q===q));
 
 // ---- 1. routes ----------------------------------------------------------------------------------------------------------------
 for(const f of ['app/(site)/learn/page.tsx','app/(site)/learn/lessons/page.tsx','app/(site)/learn/lessons/[slug]/page.tsx'])assert(has(f),`${f} exists`);
@@ -82,7 +84,8 @@ assert.match(enh,/animation-timeline: view\(\)/,'feature-detects CSS scroll-driv
 assert.match(enh,/const MAX_PLAYING=2;/,'at most 2 clips at once');
 assert.match(enh,/>=\.5/,'a clip plays only when >= 50 % visible');
 assert.match(enh,/visibilitychange/,'clips pause when the tab is hidden');
-for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FeatureFinder.tsx','components/learn/FriendStepper.tsx','components/learn/ShareLink.tsx']){const src=strip(read(f));
+assert(!has('components/learn/FeatureFinder.tsx'),'the Find a feature finder is gone');
+for(const f of ['components/learn/LearnEnhance.tsx','components/learn/FriendStepper.tsx','components/learn/ShareLink.tsx']){const src=strip(read(f));
  assert.doesNotMatch(src,/addEventListener\(\s*['"]scroll['"]|onScroll|onscroll/,`${f}: no scroll listeners`);
  assert.doesNotMatch(src,/framer-motion|gsap|animejs|react-spring|lottie/,`${f}: no animation library`);}
 assert.doesNotMatch(enh,/getBoundingClientRect|offsetTop|scrollY|pageYOffset/,'LearnEnhance reads no layout while scrolling (IO entry rects only)');
@@ -91,15 +94,18 @@ assert.match(css,/@supports\(animation-timeline:view\(\)\)/,'CSS scroll-driven p
 assert.match(css,/\.root\[data-lm-io\]/,'IntersectionObserver fallback path');
 assert.match(css,/\.root\[data-calm\] \*,[^{]*\{animation:none!important;transition:none!important\}/,'calm kills every animation');
 assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{animation:none!important;transition:none!important\}\}/,'reduced motion kills every animation, even before JS');
-{const kf=[...css.matchAll(/@keyframes (\w+)\{([\s\S]*?\})\}/g)];assert(kf.length>=10,'keyframes found');
+{const kf=[...css.matchAll(/@keyframes (\w+)\{([\s\S]*?\})\}/g)];assert.deepEqual(kf.map(k=>k[1]).sort(),['fadeUp','heroDrift'],'one motion kind: soft fade-up + light hero parallax');
  for(const [,name,body] of kf){const props=[...body.matchAll(/([a-z-]+):/g)].map(m=>m[1]).filter(p=>!['transform','opacity','box-shadow','background','color'].includes(p));
   assert.deepEqual(props,[],`@keyframes ${name} animates transform / opacity only`);
-  if(name!=='lightUp')assert.doesNotMatch(body,/box-shadow|background|color/,`@keyframes ${name}: transform / opacity only`);}}
+  assert.doesNotMatch(body,/box-shadow|background|color/,`@keyframes ${name}: transform / opacity only`);}
+ assert.doesNotMatch(css,/position:sticky;top:8|data-pin|\.word\b/,'no pinned sections, no word-by-word headline');}
 const media=read('components/learn/LearnMedia.tsx');
 assert.match(media,/<video [^>]*muted loop playsInline preload="none"/,'clips: muted, loop, playsinline, preload none');
 assert.doesNotMatch(media,/<video [^>]*poster=/,'no video poster: a poster downloads at once even with preload none (the lazy still underneath is the poster)');
 assert.match(media,/video\/webm[\s\S]*video\/mp4/,'webm first, then mp4');
 assert.match(media,/data-lv-btn/,'every clip has a pause / play button');
+assert.match(media,/if\(!a\.image\)return null;/,'no still = no picture at all (no drawn placeholder art)');
+assert.doesNotMatch(media,/Fallback|fbGlyph|gradient/,'no drawn fallback card');
 const lm=read('lib/site/learnMedia.ts');
 assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerated');
 {const M=L('lib/site/learnMedia.ts');const a=M.learnAsset('definitely_not_captured_xyz');assert(!a.image&&!a.clip,'a missing shot falls back');
@@ -114,12 +120,19 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  assert(total<18e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 18 MB)`);assert(clips<14e6*2,`clips ${(clips/1e6).toFixed(1)} MB (mp4 + webm pairs, < 14 MB each set)`);}
 
 // ---- 4. content -----------------------------------------------------------------------------------------------------------------
-for(const g of G)assert(page.includes(`byGroup('${g.id}')`)||page.includes(`g="${g.id}"`),`group ${g.id} has a section`);
-for(const g of G)assert(page.includes(`id="${g.id}"`),`section #${g.id}`);
-assert.match(page,/mainEntity:LEARN_FAQ\.map/,'FAQ JSON-LD is built from LEARN_FAQ');
-assert.match(page,/LEARN_FAQ\.filter\(q=>q\.group==='parents'\)/,'parents FAQ rendered');
-assert.match(page,/LEARN_FAQ\.filter\(q=>q\.group==='together'\)/,'Play together FAQ rendered');
+assert.equal(HL.map(h=>h.id).join(),'top,learn,explore,together,safe','five sections');
+for(const h of HL){assert(h.chips.length<=3,`${h.id}: at most 3 chips`);assert(h.title&&h.line&&h.line.length<=80,`${h.id}: one headline, one short line`);
+ assert(has(`public/learn/${h.shot}.webp`),`${h.id}: shot ${h.shot} is a real still`);for(const id of h.features)assert(F.some(f=>f.id===id),`${h.id}: feature ${id} exists`);}
+for(const h of HL.slice(1))assert(page.includes(`hl('${h.id}')`),`section ${h.id} rendered`);
+assert(has('public/learn/town_overview.webp')&&HL[0].shot==='town_overview','hero uses the town overview shot');
+assert.equal(Q.length,5,'5 FAQs');for(const q of Q)assert(q,'every LEARN_FAQ_TOP question exists in LEARN_FAQ');
+assert.equal(TOP.slice(0,4).join('|'),'Is Futbol Island free?|Are there ads?|Can my child chat with other people?|Does my child need an account?','safety FAQs first');
+assert.match(page,/mainEntity:FAQ\.map/,'FAQ JSON-LD is built from the shown FAQs');
 assert.match(page,/<details key=\{q\.q\} className=\{s\.faq\}><summary>/,'FAQ is details / summary');
+assert.doesNotMatch(page,/FeatureFinder|LEARN_GROUPS|data-pin|IslandArt|Jersey/,'no finder, no 7 group sections, no drawn art');
+{const nav=page.match(/const NAV:[^=]*=(\[.*\]);/);assert(nav,'NAV');assert(JSON.parse(nav[1].replace(/'/g,'"')).length<=5,'nav: <= 5 anchors');}
+assert.match(page,/<FriendStepper /,'the 3-step play-with-a-friend stepper');
+assert.match(page,/LEARN_GROWNUP_LINE/,'grown-ups stay in charge: one line');
 {const hrefs=[...page.matchAll(/href=(?:"([^"]+)"|\{`([^`]+)`\})/g)].map(m=>m[1]??m[2]);
  const ok=new Set(['/about','/privacy','#together']);
  for(const h of hrefs){if(h.startsWith('#'))continue;assert(ok.has(h)||h.startsWith('#')||/^https:\/\/futbolisland\.app\//.test(h),`link ${h} is known`);}
@@ -127,16 +140,17 @@ assert.match(page,/<details key=\{q\.q\} className=\{s\.faq\}><summary>/,'FAQ is
 
 // ---- 5. built site --------------------------------------------------------------------------------------------------------------
 const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),built=path.join(dist,'server/app/learn.html');
-if(!fs.existsSync(built)){console.log(`learn page sources ok: ${F.length} features, ${G.length} groups, ${Q.length} FAQ`);console.log(`  SKIP built-page checks: no /learn in ${path.relative(root,dist)} (build with NEXT_DIST_DIR to run them)`);process.exit(0);}
+if(!fs.existsSync(built)){console.log(`learn page sources ok: ${HL.length} sections, ${Q.length} FAQ (data: ${F.length} features, ${G.length} groups)`);console.log(`  SKIP built-page checks: no /learn in ${path.relative(root,dist)} (build with NEXT_DIST_DIR to run them)`);process.exit(0);}
 const html=fs.readFileSync(built,'utf8');
 const text=html.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<style[\s\S]*?<\/style>/g,' ').replace(/<[^>]+>/g,' ').replace(/&#x27;/g,"'").replace(/&quot;/g,'"').replace(/&amp;/g,'&').replace(/\s+/g,' ');
 const norm=x=>x.replace(/\s+/g,' ');
-for(const f of F)for(const k of ['title','hook','proof','description','footballTie','where'])assert(text.includes(norm(f[k])),`${f.id}.${k} is in the HTML`);
+for(const h of HL){assert(text.includes(norm(h.title)),`section title: ${h.title}`);assert(text.includes(norm(h.line)),`section line: ${h.id}`);for(const c of h.chips)assert(text.includes(c),`chip: ${c}`);}
 for(const q of Q){assert(text.includes(norm(q.q)),`FAQ q: ${q.q}`);assert(text.includes(norm(q.a)),`FAQ a: ${q.q}`);}
+assert(!/class="[^"]*fallback/.test(html),'no drawn fallback art in the HTML');
 for(const st of F.find(f=>f.id==='party-start').steps)assert(text.includes(norm(st.line)),`step: ${st.line}`);
 const ld=[...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m=>JSON.parse(m[1]));
 const faq=ld.find(x=>x['@type']==='FAQPage');assert(faq,'FAQPage JSON-LD');
-assert.deepEqual(faq.mainEntity.map(e=>[e.name,e.acceptedAnswer.text]),JSON.parse(JSON.stringify(Q.map(q=>[q.q,q.a]))),'FAQPage JSON-LD matches LEARN_FAQ');
+assert.deepEqual(faq.mainEntity.map(e=>[e.name,e.acceptedAnswer.text]),JSON.parse(JSON.stringify(Q.map(q=>[q.q,q.a]))),'FAQPage JSON-LD matches the 5 shown FAQs');
 assert(ld.some(x=>x['@type']==='BreadcrumbList'),'BreadcrumbList');
 assert.match(html,/<link rel="canonical" href="https:\/\/futbolisland\.app\/learn"\/>/,'canonical');
 assert.match(html,/<meta property="og:image" content="[^"]*opengraph-image\.png"/,'OG image');
@@ -144,4 +158,4 @@ assert.equal((html.match(/<h1[ >]/g)||[]).length,1,'one h1');
 for(const m of html.matchAll(/<video [^>]*>/g))assert(/muted/.test(m[0])&&/loop/.test(m[0])&&/playsInline|playsinline/.test(m[0])&&/preload="none"/.test(m[0]),'built video attrs');
 assert(!fs.existsSync(path.join(dist,'server/app/learn',lessons.LESSONS[0].id+'.html')),'old /learn/<id> pages are not built');
 assert(fs.existsSync(path.join(dist,'server/app/learn/lessons',lessons.LESSONS[0].id+'.html')),'lessons are built under /learn/lessons');
-console.log(`learn page ok: ${F.length} features, ${Q.length} FAQ, ${(html.match(/<video /g)||[]).length} clips, ${(html.match(/src="\/learn\/[a-z0-9_]+\.webp"/g)||[]).length} stills in ${path.relative(root,dist)}`);
+console.log(`learn page ok: ${HL.length} sections, ${Q.length} FAQ, ${(html.match(/<video /g)||[]).length} clips, ${(html.match(/src="\/learn\/[a-z0-9_]+\.webp"/g)||[]).length} stills in ${path.relative(root,dist)}`);
