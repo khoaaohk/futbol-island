@@ -406,7 +406,9 @@
 .root[data-calm] *,.root[data-calm] *::before,.root[data-calm] *::after{animation:none!important;transition:none!important}
 .root[data-calm] .subnav::before{-webkit-backdrop-filter:none;backdrop-filter:none;background:var(--paper)}
 @media(prefers-reduced-motion:reduce){.root *,.root *::before,.root *::after{animation:none!important;transition:none!important}}
-@media print{.subnav,.menu,.clipBtn,.reelCtl,.reelPlay,.mPlay,.slideCtl,.slidePlay{display:none}.dark{background:none;color:inherit}}
+@media print{.subnav,.menu,.clipBtn,.reelCtl,.reelPlay,.mPlay,.slideCtl,.slidePlay{display:none}.dark{background:none;color:inherit}
+ /* audit Nov 3: blocks below the fold had not "risen" yet, so 14 of them printed blank (opacity 0); paper gets the end state */
+ .root *,.root *::before,.root *::after{animation:none!important;transition:none!important}}
 /* spacing audit Nov 3: `.root h3/p{margin:0}` (0,1,1) beat these single-class margins, so the FAQ title sat on the list's top
    rule (0px), the grown-up note on the last step and the end links on the Play button; restated at .root specificity */
 .root .faqTitle{margin-bottom:clamp(24px,4vh,40px)}
