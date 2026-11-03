@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import type {LearnGroupId} from './learnFeatures';
@@ -27,6 +28,17 @@ export type LearnGlyph='pitch'|'compass'|'ball'|'friends'|'cards'|'shirt'|'shiel
 
 const PUB=path.join(process.cwd(),'public');
 const exists=(rel:string)=>{try{return fs.statSync(path.join(PUB,rel)).isFile();}catch{return false;}};
+/**
+ * Cache-busting URL for a /learn still or clip (Nov 3 2026). next.config serves these files for a week under names a re-capture
+ * keeps, so a browser that had the old file went on showing it (the owner still saw the long HUD bar in the hero after the
+ * compact-bar re-record). `?v=` + 10 hex of the file's content hash gives every re-capture a new URL; hashed once per file.
+ */
+const vCache=new Map<string,string>();
+export function learnUrl(src:string):string{
+ let v=vCache.get(src);
+ if(v===undefined){try{v=createHash('sha1').update(fs.readFileSync(path.join(PUB,src))).digest('hex').slice(0,10);}catch{v='';}vCache.set(src,v);}
+ return v?`${src}?v=${v}`:src;
+}
 
 /** Width and height from a WebP header (VP8 / VP8L / VP8X), so every <img> has its real size without a manifest. */
 export function webpSize(buf:Buffer):{width:number;height:number}|null{

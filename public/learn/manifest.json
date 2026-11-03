@@ -626,7 +626,7 @@
   "file": "/learn/town_overview_45.webp",
   "width": 1080,
   "height": 1350,
-  "alt": "Dribble a ball across the town square while islanders play football all around you.",
+  "alt": "Dribble a ball round the town square, ride a scooter over the bridge to Coral Cay, then fly along the shore of Summit Isle.",
   "small": {
    "file": "/learn/town_overview_45_m.webp",
    "width": 720,
@@ -637,7 +637,7 @@
    "mp4m": "/learn/video/town_overview_45_m.mp4",
    "width": 1080,
    "height": 1350,
-   "duration": 8.5
+   "duration": 21.3
   }
  },
  "lesson_field_45": {
