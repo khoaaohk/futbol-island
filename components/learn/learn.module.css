@@ -38,7 +38,7 @@
 .subnav::before{background:rgb(251 247 238 / .9);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px)}
 .subnav::after{top:auto;height:1px;background:rgb(20 34 29 / .12)}
 .subnavIn{position:relative;display:flex;align-items:center;gap:8px;height:100%;box-sizing:border-box;max-width:1080px;margin:0 auto;padding:0 var(--gut) 3px}
-.root .logo{flex:none;margin-right:auto;font-family:IslandBrush,Arial,sans-serif;font-size:22px;line-height:1;color:var(--deep);text-decoration:none;white-space:nowrap}
+.root .logo{flex:none;margin-right:auto;font-family:IslandBrush,Arial,sans-serif;font-size:22px;line-height:1;color:var(--ink);text-decoration:none;white-space:nowrap}
 .root .subLinks{display:flex;flex:1;min-width:0;gap:0;overflow:hidden}
 .root .subLinks a{display:inline-flex;align-items:center;min-height:44px;padding:0 12px;color:var(--ink);font-size:14px;opacity:.78;text-decoration:none;white-space:nowrap;position:relative;transition:opacity .16s}
 /* nav links follow the chip / tab family (docs/ui/BUTTONS.md): no face at rest; hover only turns the text pitch green (owner, Nov 3); the current
@@ -72,6 +72,9 @@
 .kicker{font-size:clamp(17px,.5vw + 15px,21px);font-weight:600;color:var(--goldInk);letter-spacing:-.005em}
 .h1,.h2{font-weight:600;line-height:1.04;letter-spacing:-.028em;text-wrap:balance}
 .h1{font-size:clamp(44px,4.6vw + 22px,96px);max-width:14ch}
+/* audit Nov 3: the hero title breaks between its sentences and never inside "Futbol Island" (was "Explore Futbol | Island. Learn | the game.") */
+.h1Line{display:block}
+.nowrap{white-space:nowrap}
 .h2{font-size:clamp(44px,4.4vw + 20px,92px);max-width:16ch}
 .sub{max-width:32ch;font-size:clamp(19px,.85vw + 15px,28px);font-weight:500;line-height:1.28;letter-spacing:-.01em;color:var(--ink2);text-wrap:balance}
 .dark .sub{color:var(--ink2D)}
@@ -93,6 +96,10 @@
  border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40)!important;
  box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:IslandBrush,var(--sans);font-size:23px;line-height:1.15;text-align:center;text-decoration:none;transition:translate .16s,box-shadow .16s}
 .pill{transition:translate .16s,box-shadow .16s,background-color .16s}
+/* audit Nov 3: 44px tap targets for the bar's logo (22px tall) and Play pill (36px); invisible, the look is unchanged */
+.root .logo,.pill{position:relative}
+.root .logo::after,.pill::after{content:"";position:absolute;inset:-11px -4px}
+.pill::after{inset:-4px -2px}
 /* states match the game and the other pages (docs/ui/BUTTONS.md): no hover colour change; pressed sinks and shortens the edge; the global focus ring */
 .cta:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 .pill:active{translate:0 var(--btn-press,3px);box-shadow:inset 0 0 0 1.5px var(--btn-rim,#fff2cd),0 0 0 #a8863d}
@@ -143,7 +150,8 @@
 /* ---- See it in action: a horizontal row of 16:9 clip cards (Nov 3 2026, after apple.com/apple-vision-pro's highlights) -----
    CSS scroll snap, native swipe / trackpad scroll; the row starts at the content gutter (the sub-nav's 1080px column) and bleeds
    to the right edge, a trailing spacer lets the last card reach the snap edge. ReelEnhance adds the arrows, active caption and clips. */
-.reel{--rpad:calc(max(0px,(100vw - 1080px) / 2) + var(--gut));--cw:86vw;--rgap:12px;
+.reel{--rpad:calc(max(0px,(100vw - 1240px) / 2) + var(--gut));/* audit Nov 3: 1240 = the sub-nav / hero column, so the row starts under the logo (was 1080: 80px in) */
+ --cw:86vw;--rgap:12px;
  display:grid;gap:clamp(28px,4vh,44px);padding:clamp(56px,10vh,120px) 0 clamp(72px,12vh,140px);background:var(--paper);color:var(--ink)}
 @media(min-width:740px){.reel{--cw:min(1100px,78vw,(100svh - 250px) * 16 / 9);--rgap:24px}}
 .reelHead{display:grid;gap:12px;padding:0 var(--rpad);text-align:left}
@@ -160,6 +168,7 @@
 .cardMedia[data-playing] .clip{opacity:1}
 .cap{max-width:44ch;padding:0 4px;color:var(--ink2);font-size:clamp(17px,.45vw + 14px,21px);font-weight:500;line-height:1.36;letter-spacing:-.01em;transition:color .4s var(--ease)}
 .cap strong{font-weight:650}
+.cap,.faq p,.stepLine{text-wrap:pretty}.note{text-wrap:balance}/* audit Nov 3: no one-word last lines ("career.", "it off.") */
 .card[data-active] .cap{color:var(--ink)}
 .reelPlay{position:absolute;right:clamp(12px,1.6vw,22px);bottom:clamp(12px,1.6vw,22px);z-index:2;display:none;place-items:center;width:44px;height:44px;border-radius:50%;border:0;
  background:rgb(232 232 237 / .78);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:var(--ink);cursor:pointer}
@@ -204,7 +213,8 @@
    peeking on both sides (with JS: dimmed .55 + scaled .94, transform / opacity only); a white caption on a soft scrim near each
    slide's top; under the row a light pill of dots (the active dot is a bar that fills over 6 s, transform scaleX) and a round
    pause / play button. JS off: a plain swipeable row of posters + captions, no controls. */
-.slides{--spad:calc(max(0px,(100vw - 1080px) / 2) + var(--gut));--sw:84vw;--sgap:10px;--dur:6s;
+.slides{--spad:calc(max(0px,(100vw - 1240px) / 2) + var(--gut));/* audit Nov 3: the same 1240 column as the logo */
+ --sw:84vw;--sgap:10px;--dur:6s;
  display:grid;gap:clamp(24px,4vh,44px);padding:clamp(64px,11vh,128px) 0 clamp(72px,12vh,140px);background:var(--paper);color:var(--ink)}
 @media(min-width:740px){.slides{--sw:min(1040px,72vw,(100svh - 340px) * 16 / 9);--sgap:20px}}
 .slidesHead{padding:0 var(--spad);text-align:left}
@@ -268,16 +278,16 @@
 .note{margin-top:12px;font-size:15px;color:var(--ink2D)}
 @media(min-width:900px){
  /* the pinned 4:5 box: about min(46vw, 640px) wide, at most min(82svh, 820px) tall, vertically centred under the 68px sub-nav */
- .feature{--pinW:min(46vw,640px,min(82svh,820px) * 4 / 5);max-width:1320px;grid-template-columns:var(--pinW) minmax(0,1fr);align-items:start;gap:clamp(40px,6vw,96px);view-timeline:--feat block}
+ .feature{--pinW:min(46vw,640px,min(82svh,820px) * 4 / 5);max-width:calc(1240px - 2 * var(--gut));/* audit Nov 3: inside the logo..Play column (was 1320: 56px past both edges) */grid-template-columns:var(--pinW) minmax(0,1fr);align-items:start;gap:clamp(40px,4vw,64px);view-timeline:--feat block}
  .pin{position:sticky;top:calc(50svh - var(--pinW) * 5 / 8 + 34px)}
  .pinFrame{width:var(--pinW)}
  .stepCol{padding:calc(50svh - 140px) 0}
  .stepsTitle{margin-bottom:0}
  .root .stepList{gap:0}
- .step{min-height:62svh;align-items:center;padding:0;background:none;opacity:.32;transition:opacity .5s var(--ease)}
+ .step{min-height:62svh;align-items:center;padding:0;background:none;opacity:.5;/* audit Nov 3: .5 = 3.1:1 on the tint (.32 was 1.96:1) */transition:opacity .5s var(--ease)}
  .step[data-on]{opacity:1}
  .stepNum{width:44px;height:44px;font-size:20px}
- .stepLine{padding:0;font-size:clamp(26px,1.4vw + 14px,36px);font-weight:600;letter-spacing:-.02em;line-height:1.18}
+ .stepLine{padding:0;font-size:clamp(26px,1.4vw + 14px,36px);font-weight:600;letter-spacing:-.02em;line-height:1.18;text-wrap:balance}
 }
 
 /* ---- FAQ: a minimal accordion ------------------------------------------------------------------------------------------- */
