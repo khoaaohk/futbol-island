@@ -137,7 +137,7 @@ function Home({settings,onPlan}:{settings?:GrownUpSettings;onPlan:()=>void}){
    <h3 id="gu-about-t">About this game for parents</h3>
    <h4>What it teaches</h4>
    <p>Futbol Island teaches how football is played: positions, team shape, passing options, defending and restarts, for futsal, 7v7, 9v9 and 11v11. Children watch plays move in 3D, answer short quizzes that explain the “why”, find hidden balls that each carry a football idea, and watch illustrated stories about the feelings side of the game.</p>
-   <p>A tour of every feature on the island and the football idea behind each one: <a href="/learn" target="_blank" rel="noopener">futbolisland.app/learn</a>.</p>
+   <p>A tour of every feature on the island and the football idea behind each one: <a href="/" target="_blank" rel="noopener">futbolisland.app</a>.</p>
    <h4>How progress works</h4>
    <p>Lessons unlock in order along each path. Coins and cards are earned in the game; nothing in the game is bought with real money. There are no leaderboards and no streaks to keep.</p>
    <h4>Privacy</h4>

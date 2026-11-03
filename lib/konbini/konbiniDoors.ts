@@ -40,7 +40,7 @@ export function konbiniDoorNear(door:KonbiniDoor,x:number,z:number){const d=KONB
 export function nearestKonbiniDoor(x:number,z:number):KonbiniDoor|null{return (Object.keys(KONBINI_DOORS) as KonbiniDoor[]).find(d=>konbiniDoorNear(d,x,z))??null;}
 export const parseKonbiniDoor=(search:string):KonbiniDoor=>new URLSearchParams(search).get('door')==='cay'?'cay':'main';
 export const konbiniUrl=(door:KonbiniDoor)=>`/konbini?door=${door}`;
-export const KONBINI_RETURN_URL='/?from=konbini';
+export const KONBINI_RETURN_URL='/play?from=konbini';
 
 /** Departure record for this door: outside, facing out, keeping the ride the player walked up with (never flight: the
  *  prompt only shows on the ground). The camera sits at the island's normal follow offset. */

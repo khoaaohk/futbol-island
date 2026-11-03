@@ -12,7 +12,7 @@ import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 export default function PrivacyPage(){
  preloadIslandBrush();
  return <main className={styles.page}><div className={styles.wrap}>
-  <a className={styles.back} href="/">Back to the island</a>
+  <a className={styles.back} href="/play">Back to the island</a>
   <h1>Privacy policy</h1>
   <PrivacyPolicy/>
  </div></main>;

@@ -37,7 +37,7 @@ const TABS:[Tab,string][]=[['overview','Overview'],['engagement','Engagement'],[
 const SOURCE_LABEL:Record<string,string>={direct:'Direct',search:'Search',social:'Social',referral:'Referral',campaign:'Campaign'};
 const DEVICE_LABEL:Record<string,string>={phone:'Phone',tablet:'Tablet',desktop:'Desktop'};
 const AREA_LABEL:Record<string,string>={island:'Island',paths:'Paths',arcade:'Arcade',museum:'Museum',konbini:'Konbini',shop:'Kit Shop',controller:'Phone controller',other:'Other pages'};
-const PAGE_LABEL:Record<string,string>={'/':'Title screen and island (/)','/arcade':'Arcade','/museum':'Museum','/konbini':'Konbini','/shop':'Kit Shop','/controller':'Phone controller','/coffee':'Support page','/start':'Old landing page (/start, removed Oct 9 2026)','/other':'Other'};
+const PAGE_LABEL:Record<string,string>={'/':'Home: the feature tour (/; the title screen and island until Nov 3 2026)','/play':'Title screen and island (/play)','/arcade':'Arcade','/museum':'Museum','/konbini':'Konbini','/shop':'Kit Shop','/controller':'Phone controller','/coffee':'Support page','/start':'Old landing page (/start, removed Oct 9 2026)','/other':'Other'};
 
 let regionNames:Intl.DisplayNames|null=null;
 function countryName(code:string){
@@ -146,7 +146,7 @@ export default function AnalyticsDashboard({initial,initialRange,saves}:{initial
  return <main className={styles.page}>
   <PullToRefresh onRefresh={pullRefresh} loading={loading} updated={updatedAt}/>
   {/* Corners as in the main app and the museum exhibits: Back top left, Log out top right (24/20 px, 16/16 on phones). */}
-  <div className={styles.cornerLeft}><BackButton onBack={()=>router.push('/')}/></div>
+  <div className={styles.cornerLeft}><BackButton onBack={()=>router.push('/play')}/></div>
   <div className={styles.cornerRight}><button type="button" className={styles.secondary} onClick={logout}>Log out</button></div>
   <div className={styles.wrap}>
    <header className={styles.header}>

@@ -1,10 +1,10 @@
 import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 import styles from './site.module.css';
 /**
- * The static reading pages (Oct 16 2026: "make the site easier to find through ChatGPT, Claude and search"): /about, /learn,
- * /fish, /cards and /exhibits. Plain prerendered HTML with one small stylesheet: no three.js, no game code, no client
- * components of their own (AGENTS.md, phone heat). One exception (Nov 2 2026, owner): /learn, the feature tour, adds small client islands
- * from components/learn for motion, clips and filters; its words are still all prerendered. The game itself stays at `/`: each page has one gold "Play" button (near the
+ * The static reading pages (Oct 16 2026: "make the site easier to find through ChatGPT, Claude and search"): `/` (home), /about,
+ * /learn/lessons, /fish, /cards and /exhibits. Plain prerendered HTML with one small stylesheet: no three.js, no game code, no client
+ * components of their own (AGENTS.md, phone heat). One exception (Nov 2 2026, owner): the home page `/` (the feature tour, at /learn until Nov 3), adds small client islands
+ * from components/learn for motion, clips and filters; its words are still all prerendered. The game itself is at /play (Nov 3 2026; it was `/`): each page has one gold "Play" button (near the
  * top of index pages, at the end of detail pages). Shared type and spacing scale: site.module.css and docs/seo/DESIGN.md.
  */
 export default function SiteLayout({children}:{children:React.ReactNode}){
@@ -19,7 +19,7 @@ export default function SiteLayout({children}:{children:React.ReactNode}){
   <main className={styles.main}>{children}</main>
   <footer className={styles.footer}><div className={styles.footerInner}>
    <span>Futbol Island · a free football learning game for kids. No ads, no chat.</span>
-   <a href="/learn">What’s inside</a>
+   <a href="/">What’s inside</a>
    <a href="/privacy">Privacy</a>
   </div></footer>
  </div>;

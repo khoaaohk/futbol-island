@@ -66,7 +66,7 @@ export type Area=typeof AREAS[number];
 /** The only paths that are stored. Anything else becomes "/other". */
 /** '/start' (Oct 9 2026): the old landing page, kept so its past sessions still show; the title screen is at `/` now and /start
  *  was removed (a session that saw the title screen carries st:view). */
-export const KNOWN_PATHS=['/','/arcade','/museum','/konbini','/controller','/coffee','/start','/shop'] as const;
+export const KNOWN_PATHS=['/','/play','/arcade','/museum','/konbini','/controller','/coffee','/start','/shop'] as const;
 
 export type Utm={source?:string;medium?:string;campaign?:string};
 export type SourceClass='direct'|'search'|'social'|'referral'|'campaign';

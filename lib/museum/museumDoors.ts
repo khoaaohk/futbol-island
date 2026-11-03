@@ -18,7 +18,7 @@ export const MUSEUM_DOOR_HINT={x:MUSEUM_DOOR.x,y:4.6,z:MUSEUM_DOOR.front+.4,room
 export const MUSEUM_BUILDING={x:168,z:181,w:30,d:9,h:5} as const;
 export const MUSEUM_EXIT_OFFSET=2.4;
 export const MUSEUM_URL='/museum';
-export const MUSEUM_RETURN_URL='/?from=museum';
+export const MUSEUM_RETURN_URL='/play?from=museum';
 /** Where the player stands outside after leaving: 2.4 m out from the door, facing away from it. */
 export function museumExitPoint(){return {x:MUSEUM_DOOR.x,z:MUSEUM_DOOR.front+MUSEUM_EXIT_OFFSET,yaw:0};}
 /** Departure record: outside the door, on the ride the player walked up with (never flight), the island's follow camera. */

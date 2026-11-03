@@ -1,4 +1,4 @@
-/* The static reading pages (/about, /learn, /fish, /cards, /exhibits): plain HTML and this one sheet, no scripts, no animation.
+/* The static reading pages (/about, /learn/lessons, /fish, /cards, /exhibits): plain HTML and this one sheet, no scripts, no animation.
    Island tokens: cream paper #fff8e7, dark green ink #244d40, the gold button tokens from app/globals.css (--btn-gold …) and the
    brush face for the page title (same file and gold shadow family as the title screen). Design notes: docs/seo/DESIGN.md.
    Type scale: title 40/56 · section 22/26 · sub 18/20 · body 17/18 (lh 1.55, ≤68ch) · lead 19/21 · caption 14 · eyebrow/label 12.

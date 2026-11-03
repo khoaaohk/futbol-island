@@ -4,7 +4,7 @@ import LoadingBeanCast from './LoadingBeanCast';
 import {HANDOFF_BOOT} from './islandLoadingBoot';
 
 /**
- * The island loading screen as plain server-rendered HTML (no JS): `/` prerenders it beside the title screen (app/page.tsx), and
+ * The island loading screen as plain server-rendered HTML (no JS): `/` prerenders it beside the title screen (app/play/page.tsx), and
  * the pre-paint <html data-root-view> flag shows one of the two (lib/rootView.ts). A tab already in the game sees this from the
  * first paint while the game's code loads; then components/root/RootSwitch.tsx swaps in Town's own <IslandLoading/>, which
  * continues these CSS animations (continueLoaderFrom), so nothing restarts. Same markup as IslandLoading.tsx; the cast is `lite`.

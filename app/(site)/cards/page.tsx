@@ -20,7 +20,7 @@ export default function CardsIndex(){
    <Breadcrumbs crumbs={CRUMBS}/>
    <h1 className={styles.title}>Player cards</h1>
    <p className={styles.lead}>{DESC} Every card tells you the player’s position, what they are good at and where they played.</p>
-   <a className={styles.cta} href="/">Collect cards on the island</a>
+   <a className={styles.cta} href="/play">Collect cards on the island</a>
   </header>
   {ROLE_ORDER.map(role=>{const list=SITE_CARDS.filter(c=>c.role===role);if(!list.length)return null;return <section key={role} className={styles.section} aria-labelledby={`role-${role}`}>
    <h2 className={styles.h2} id={`role-${role}`}>{ROLE_LABELS[role]??role} <span className={styles.count}>({list.length})</span></h2>

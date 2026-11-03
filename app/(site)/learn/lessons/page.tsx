@@ -18,7 +18,7 @@ export default function LearnIndex(){
    <Breadcrumbs crumbs={CRUMBS}/>
    <h1 className={styles.title}>Football lessons</h1>
    <p className={styles.lead}>{DESC} On the island each lesson plays out on a real pitch with moving players; here you can read the coach’s words and the quiz questions.</p>
-   <a className={styles.cta} href="/">Play the lessons on the island</a>
+   <a className={styles.cta} href="/play">Play the lessons on the island</a>
   </header>
   {FORMAT_ORDER.map(f=>{const list=LESSONS.filter(l=>l.format===f);return <section key={f} className={styles.section} aria-labelledby={`fmt-${f}`}>
    <h2 className={styles.h2} id={`fmt-${f}`}>{FORMAT_LABEL[f]} lessons <span className={styles.count}>({list.length})</span></h2>
