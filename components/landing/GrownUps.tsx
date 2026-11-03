@@ -36,9 +36,7 @@ export function LegalLinks(){
  const [sheet,setSheet]=useState<null|'grown'|'privacy'>(null);
  const close=()=>setSheet(null);
  return <>
-  <button type="button" className={styles.grownLink} data-track="sg:open" onClick={()=>setSheet('grown')}>For grown-ups</button>
-  {/* Nov 2 2026: the feature tour, a plain link (crawlable, works without JS). No data-track: lib/analytics/startIds.ts has no id for it. */}
-  <a className={styles.grownLink} href="/learn">What’s inside</a>
+  <button type="button" className={`${styles.grownLink} ${styles.grownTop}`} data-track="sg:open" onClick={()=>setSheet('grown')}>For grown-ups</button>
   <a className={styles.grownLink} href="/privacy" data-track="sp:open" onClick={e=>{e.preventDefault();setSheet('privacy');}}>Privacy</a>
   <Sheet open={sheet==='grown'} onClose={close} title="For grown-ups" id="grown-ups-title">
    <AboutGrownUps onOpenPrivacy={()=>setSheet('privacy')} donateReturn="start"/>

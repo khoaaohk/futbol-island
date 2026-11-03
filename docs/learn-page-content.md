@@ -21,7 +21,7 @@ Trust points:
 - No accounts and no chat: a save code with no personal details
 - Built in San Diego with White Sports Ventures and local non-profits
 
-Button: Play on the island
+Button: Start Playing
 
 ## Groups
 

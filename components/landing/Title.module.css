@@ -104,6 +104,13 @@
 /* ---- Type ---- */
 .copy{position:relative;z-index:2;display:grid;justify-items:center;text-align:center;padding-top:calc(env(safe-area-inset-top,0px) + 4.5svh)}
 .eyebrow{margin:0;font-size:clamp(10px,1.1vw,14px);font-weight:800;letter-spacing:.17em}
+/* Nov 3 2026 (owner): Back pill top-left (same spot as the /learn logo), "For grown-ups" top-right on the same 44px row; the tagline stays above the title. */
+.backLink{position:absolute;z-index:3;top:calc(env(safe-area-inset-top,0px) + 12px);height:var(--btn-height,44px);box-sizing:border-box}
+.grownRow .grownLink.grownTop{position:fixed;z-index:3;top:calc(env(safe-area-inset-top,0px) + 12px);height:var(--btn-height,44px);box-sizing:border-box}
+.backLink{left:max(16px,env(safe-area-inset-left,0px));display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:var(--btn-nav-width,76px);padding:0 14px 0 10px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold);font:600 14px/1.1 var(--btn-font,Arial,Helvetica,sans-serif);text-decoration:none;transition:translate .16s,box-shadow .16s}
+.backLink:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed)}
+.grownRow .grownLink.grownTop,.grownRow a.grownLink.grownTop{right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;margin:0;padding:0 4px;color:#fff;font:800 14px var(--btn-font)}
+@media(min-width:900px){.backLink{left:24px}.grownRow .grownLink.grownTop{right:24px}}
 .title{margin:16px 0 10px;font-family:IslandBrush,var(--btn-font);font-weight:400;font-size:clamp(32px,4.3vw,62px);line-height:1.18;letter-spacing:-.025em;text-shadow:0 3px 0 var(--sea-shadow),0 10px 26px #0b1f7a55;white-space:nowrap}
 .word{display:inline-block;white-space:nowrap}
 .word+.word{margin-left:.24em}

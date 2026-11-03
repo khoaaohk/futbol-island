@@ -66,7 +66,7 @@ export const LEARN_HERO={
   'No accounts and no chat: a save code with no personal details',
   'Built in San Diego with White Sports Ventures and local non-profits',
  ],
- cta:'Play on the island',
+ cta:'Start Playing',
 } as const;
 
 /** Grown-up trust points for the Play together section (each one checked in the code and the privacy policy). */
