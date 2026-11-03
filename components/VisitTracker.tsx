@@ -1,10 +1,11 @@
 'use client';
 import {useEffect,useRef} from 'react';
 import {usePathname} from 'next/navigation';
-import {startTracker} from '@/lib/analytics/tracker';
+import {count,startTracker} from '@/lib/analytics/tracker';
 import {readStartFlags} from '@/lib/analytics/startFlags';
 import {readDeviceMarks,readPlayerKey} from '@/lib/analytics/deviceMarks';
 import {watchStart} from '@/lib/analytics/startEvents';
+import {countPlayArrival} from '@/lib/analytics/marketingIds';
 import {useRootView} from '@/components/root/useRootView';
 
 /**
@@ -25,7 +26,9 @@ export default function VisitTracker({allowLocalhost=false}:{allowLocalhost?:boo
    player:()=>{try{return readPlayerKey(window.localStorage,n=>crypto.getRandomValues(new Uint8Array(n)));}catch{return null;}}});
   return()=>{tracker.current?.stop();tracker.current=null;};
  },[allowLocalhost]);
- useEffect(()=>{if(pathname)tracker.current?.pageview(pathname);},[pathname]);
+ useEffect(()=>{if(!pathname)return;tracker.current?.pageview(pathname);
+  // Marketing page (Nov 3 2026): a Play tap on `/` that really reached the game counts mk:reached (lib/analytics/marketingIds.ts).
+  if(pathname==='/play'&&tracker.current)countPlayArrival((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);},[pathname]);
  // The title screen (`/` before Play; lib/rootView.ts): its view and one passive click listener for its buttons and links
  // (lib/analytics/startEvents.ts). Play switches `/` to the game in place, which stops it.
  useEffect(()=>{if(pathname!=='/play'||view!=='landing'||!tracker.current)return;return watchStart(window);},[pathname,view]);

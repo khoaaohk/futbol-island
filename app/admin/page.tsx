@@ -8,6 +8,7 @@ import {loadSaveMetrics} from '@/lib/saves/metrics';
 import {loadSummitKickMetrics} from '@/lib/arcade/kickAdminMetrics';
 import {loadFishingMetrics} from '@/lib/analytics/fishingAdminMetrics';
 import {loadSources} from '@/lib/analytics/liveAdmin';
+import {labelMarketing} from '@/lib/analytics/marketingLabels';
 import AdminLogin from './AdminLogin';
 import AnalyticsDashboard from './AnalyticsDashboard';
 
@@ -26,5 +27,6 @@ export default async function AdminPage(){
  report.summitKick=await loadSummitKickMetrics(report.from,report.to);
  report.fishing=await loadFishingMetrics(report.from,report.to);
  report.sources=await loadSources(report.from,report.to);
+ labelMarketing(report.marketing);// Nov 3 2026: the Marketing page tab's card, slide, FAQ and step names
  return <AnalyticsDashboard initial={report} initialRange="today" saves={await saveAdminLine()}/>;
 }

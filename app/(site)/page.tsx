@@ -11,6 +11,7 @@ import HeroName from '@/components/learn/HeroName';
 import NavPlay from '@/components/learn/NavPlay';
 import FaqEnhance from '@/components/learn/FaqEnhance';
 import MobileMenu from '@/components/learn/MobileMenu';
+import PageStats from '@/components/learn/PageStats';
 import s from '@/components/learn/learn.module.css';
 import {LEARN_FAQ,LEARN_FAQ_TOP,LEARN_FEATURES,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,type LearnHighlight,type LearnHighlightId} from '@/lib/site/learnFeatures';
 import {LESSONS_INDEX} from '@/lib/site/lessons';
@@ -103,6 +104,7 @@ export default function Home(){
   <JsonLd data={{'@context':'https://schema.org','@type':'FAQPage',mainEntity:FAQ.map(q=>({'@type':'Question',name:q.q,acceptedAnswer:{'@type':'Answer',text:q.a}}))}}/>
   <LearnEnhance rootId={ROOT_ID}/>
   <FaqEnhance selector="[data-faq-list]"/>
+  <PageStats rootId={ROOT_ID}/>{/* marketing page stats for /admin (lib/analytics/marketingIds.ts) */}
 
   {/* ---- sticky sub-nav: page name, 4 anchors, Play pill ---- */}
   <nav className={s.subnav} aria-label="On this page" data-subnav="">
