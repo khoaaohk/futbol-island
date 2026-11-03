@@ -1,4 +1,4 @@
-import {learnAsset} from '@/lib/site/learnMedia';
+import {learnAsset,learnUrl} from '@/lib/site/learnMedia';
 import type {LearnGroupId} from '@/lib/site/learnFeatures';
 import s from './learn.module.css';
 
@@ -27,17 +27,17 @@ export default function LearnMedia({imageKey,label,eager,className,sizes}:{image
  const alt=a.alt??label;
  // Most shots are upright phone screens: crop around the middle (the HUD sits at the top), or the shot's own focus.
  const focus={objectPosition:a.focus??(a.image.height>a.image.width?'50% 50%':'50% 20%')};
- const img=<img className={s.still} src={a.image.src} srcSet={`${a.image.src} ${a.image.width}w`} sizes={sizes??'(min-width: 900px) 440px, 80vw'}
+ const img=<img className={s.still} src={learnUrl(a.image.src)} srcSet={`${learnUrl(a.image.src)} ${a.image.width}w`} sizes={sizes??'(min-width: 900px) 440px, 80vw'}
    width={a.image.width} height={a.image.height} alt={alt} loading={eager?'eager':'lazy'} fetchPriority={eager?'high':undefined} decoding="async" style={focus}/>;
  // 4:5 shots (Nov 3): a phone (<= 640px wide) takes only the 720px still and clip, a wider screen only the 1080px ones.
  const m=a.image.m;
  return <div className={[s.media,className].filter(Boolean).join(' ')} data-media="still">
-  {m?<picture><source media="(max-width: 640px)" srcSet={m.src} width={m.width} height={m.height}/>{img}</picture>:img}
+  {m?<picture><source media="(max-width: 640px)" srcSet={learnUrl(m.src)} width={m.width} height={m.height}/>{img}</picture>:img}
   {a.clip&&<>
    <video className={s.clip} data-lv="" muted loop playsInline preload={eager?'auto':'none'} aria-hidden="true" tabIndex={-1} disablePictureInPicture style={focus}>
-    {a.clip.mp4m&&<source media={a.image.m?'(max-width: 640px)':'(max-width: 1280px)'} src={a.clip.mp4m} type="video/mp4"/>}
-    {a.clip.mp4&&<source src={a.clip.mp4} type="video/mp4"/>}
-    {a.clip.webm&&<source src={a.clip.webm} type="video/webm"/>}
+    {a.clip.mp4m&&<source media={a.image.m?'(max-width: 640px)':'(max-width: 1280px)'} src={learnUrl(a.clip.mp4m)} type="video/mp4"/>}
+    {a.clip.mp4&&<source src={learnUrl(a.clip.mp4)} type="video/mp4"/>}
+    {a.clip.webm&&<source src={learnUrl(a.clip.webm)} type="video/webm"/>}
    </video>
    <button type="button" className={s.clipBtn} data-lv-btn="" aria-label={`Play the clip: ${label}`} data-label={label}>
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path className={s.icoPlay} d="M8 5.5v13l11-6.5z"/><path className={s.icoPause} d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></svg>

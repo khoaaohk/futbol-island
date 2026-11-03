@@ -134,8 +134,11 @@ const media=read('components/learn/LearnMedia.tsx');
 assert.match(media,/<video [^>]*muted loop playsInline preload=\{eager\?'auto':'none'\}/,'clips: muted, loop, playsinline, preload none (auto for the hero only; LearnEnhance buffers the next one ahead)');
 assert.match(media,/srcSet=/,'stills carry srcset + sizes, ready for sharper captures');
 // Nov 3, 4:5 captures: a phone (<= 640px) fetches only the 720px still and clip, wider screens only the 1080px ones
-assert.match(media,/<picture><source media="\(max-width: 640px\)" srcSet=\{m\.src\}/,'4:5 stills: the 720px file for viewports <= 640px');
-assert.match(strip(media),/\{a\.clip\.mp4m&&<source media=\{a\.image\.m\?'\(max-width: 640px\)':'\(max-width: 1280px\)'\} src=\{a\.clip\.mp4m\}[^\n]*\n\s*\{a\.clip\.mp4&&<source src=\{a\.clip\.mp4\}/,'clips: the smaller source first (media): 720px for 4:5 shots (<= 640px), 1280px for 16:9 chapter clips (<= 1280px), then the full-size one');
+assert.match(media,/<picture><source media="\(max-width: 640px\)" srcSet=\{learnUrl\(m\.src\)\}/,'4:5 stills: the 720px file for viewports <= 640px');
+// Nov 3: a re-capture keeps its file name and the files are cached a week, so every still/clip URL carries ?v=<content hash>
+assert.match(media,/src=\{learnUrl\(a\.image\.src\)\}/,'stills are cache-busted by content hash');
+{const M0=L('lib/site/learnMedia.ts');assert.match(M0.learnUrl('/learn/town_overview_45.webp'),/^\/learn\/town_overview_45\.webp\?v=[0-9a-f]{10}$/,'learnUrl adds ?v=<hash>');}
+assert.match(strip(media),/\{a\.clip\.mp4m&&<source media=\{a\.image\.m\?'\(max-width: 640px\)':'\(max-width: 1280px\)'\} src=\{learnUrl\(a\.clip\.mp4m\)\}[^\n]*\n\s*\{a\.clip\.mp4&&<source src=\{learnUrl\(a\.clip\.mp4\)\}/,'clips: the smaller source first (media): 720px for 4:5 shots (<= 640px), 1280px for 16:9 chapter clips (<= 1280px), then the full-size one');
 assert.match(read('components/learn/LearnEnhance.tsx'),/slowLink\(\)\)for\(const v of vids\)[^\n]*source\[media="\(max-width: 640px\)"\]/,'Save-Data / 2g / 3g keep only the 720px clip');
 assert.doesNotMatch(media,/<video [^>]*poster=/,'no video poster: a poster downloads at once even with preload none (the lazy still underneath is the poster)');
 assert.match(strip(media),/video\/mp4[\s\S]*video\/webm/,'mp4 (H.264, hardware-decoded on phones) first, then webm (Nov 3)');
@@ -157,8 +160,10 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  // Nov 3: + the 4:5 re-captures (~9.7 MB, both sizes) while the old 390x844 files still sit beside them (removal pending): 46 / 42 MB.
  // Nov 3 merge with the Fuel up clip: 52 / 48 MB (the slides, ~14 MB, and the old 390x844 files to delete, are the next reconcile; big files move to R2 after)
 // Nov 3 merge with the feature slideshow clips (~12.6 MB): 64 / 58 MB until the old 390x844 files are deleted and the big files move to R2
-assert(total<64e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 64 MB)`);assert(clips<58e6,`clips ${(clips/1e6).toFixed(1)} MB (< 58 MB)`);
- const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':3.5e6};
+// Nov 3 hero re-record (8.5 s -> 21.3 s: dribble, scooter over the bridge, flight along Summit Isle; +~4.9 MB): 68 / 62 MB
+assert(total<68e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 68 MB)`);assert(clips<62e6,`clips ${(clips/1e6).toFixed(1)} MB (< 62 MB)`);
+ // the hero clip is ~2.5x longer than the other 4:5 clips (Nov 3), so only it gets 6 MB (1080) / 3 MB (720 phone file)
+ const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6};
  // 4:5 clips: 1080x1350 <= 2.5 MB (the hero 3.5 MB), their 720x900 phone file <= 1.2 MB
  const capOf=b=>cap[b]||(/_45_m\.mp4$/.test(b)?1.2e6:/_45\.mp4$/.test(b)?2.5e6:2e6);
  for(const f of files.filter(f=>/\.(mp4|webm)$/.test(f))){const b=path.basename(f);assert(size(f)<=capOf(b),`${b} is ${(size(f)/1e6).toFixed(2)} MB (cap ${(capOf(b)/1e6)} MB)`);}
