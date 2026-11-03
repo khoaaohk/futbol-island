@@ -147,16 +147,15 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  // QA Nov 2: the capture pass named shots by what they show; every LEARN_SHOT alias must point at a real still, and most features get one
  for(const [k,v] of Object.entries(M.LEARN_SHOT))assert(has(`public/learn/${v}.webp`),`LEARN_SHOT ${k} -> ${v}: still exists`);
  assert(F.filter(f=>M.learnAsset(f.imageKey).image).length>=24,'at least 24 features show a real still (not the drawn card)');
- // public/learn stays small enough to deploy (brief: under 40 MB since the Nov 3 hero montage, 3 sizes; clips under 36 MB).
- // Nov 3: the Fuel up clip (fuel_konbini 1920 + 1280 + poster, 2.3 MB) leaves ~38.7 MB total / ~35.2 MB clips, under both caps; the
- // Even more to explore slides add ~14 MB, so the caps are raised when that branch merges.
+ // public/learn stays small enough to deploy (brief: under 56 MB since the Nov 3 feature slideshow clips, slide_* in 2 sizes; clips under 50 MB).
  // Only the montage may pass 2 MB per file (montage_l.mp4 <= 4.5 MB, montage_m <= 2.2 MB, montage_s <= 1.1 MB).
  const walk=d=>fs.existsSync(d)?fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]):[];
  const files=walk(path.join(root,'public/learn')),size=f=>fs.statSync(f).size;
  const total=files.reduce((t,f)=>t+size(f),0),clips=files.filter(f=>/\.(mp4|webm)$/.test(f)).reduce((t,f)=>t+size(f),0);
  // Nov 3: + the 4:5 re-captures (~9.7 MB, both sizes) while the old 390x844 files still sit beside them (removal pending): 46 / 42 MB.
  // Nov 3 merge with the Fuel up clip: 52 / 48 MB (the slides, ~14 MB, and the old 390x844 files to delete, are the next reconcile; big files move to R2 after)
-assert(total<52e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 52 MB)`);assert(clips<48e6,`clips ${(clips/1e6).toFixed(1)} MB (< 48 MB)`);
+// Nov 3 merge with the feature slideshow clips (~12.6 MB): 64 / 58 MB until the old 390x844 files are deleted and the big files move to R2
+assert(total<64e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 64 MB)`);assert(clips<58e6,`clips ${(clips/1e6).toFixed(1)} MB (< 58 MB)`);
  const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':3.5e6};
  // 4:5 clips: 1080x1350 <= 2.5 MB (the hero 3.5 MB), their 720x900 phone file <= 1.2 MB
  const capOf=b=>cap[b]||(/_45_m\.mp4$/.test(b)?1.2e6:/_45\.mp4$/.test(b)?2.5e6:2e6);
