@@ -171,7 +171,7 @@ assert(total<95e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 95 MB)`);asse
  // the hero clip is ~2.5x longer than the other 4:5 clips (Nov 3), so only it gets 6 MB (1080) / 3 MB (720 phone file)
  const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':6e6,'town_overview_45_m.mp4':3e6,
   // explore_45 is ~2x the other 4:5 clips (15.7 s: reef swim, wall-target ball, Summit Isle mango-tree ball): 4 MB / 2 MB;
-  // fuel_konbini (16:9, 16.9 s of fine Konbini shelf detail) needs 3.5 MB at 1920 for CRF 24 (its 1280 file keeps 2 MB)
+  // fuel_konbini (16:9, 15.9 s: storefront walk-up, walk inside, then the shelf detail) needs 3.5 MB at 1920 for CRF 24 (its 1280 file keeps 2 MB)
   'explore_45.mp4':4e6,'explore_45_m.mp4':2e6,'fuel_konbini.mp4':3.5e6,'wide_cards.mp4':3e6,'wide_cards_m.mp4':1.5e6};
  // 4:5 clips: 1080x1350 <= 2.5 MB (the hero 3.5 MB), their 720x900 phone file <= 1.2 MB
  const capOf=b=>cap[b]||(/_45_m\.mp4$/.test(b)?1.2e6:/_45\.mp4$/.test(b)?2.5e6:2e6);
