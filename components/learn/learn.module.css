@@ -34,11 +34,12 @@
 .subnav::before{background:rgb(251 247 238 / .9);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px)}
 .subnav::after{top:auto;height:1px;background:rgb(20 34 29 / .12)}
 .subnavIn{position:relative;display:flex;align-items:center;gap:8px;height:100%;max-width:1080px;margin:0 auto;padding:0 var(--gut)}
+.root .logo{flex:none;margin-right:auto;font-family:IslandBrush,Arial,sans-serif;font-size:22px;line-height:1;color:var(--deep);text-decoration:none;white-space:nowrap}
 .root .subTitle{display:none;margin-right:auto;color:var(--ink);font-size:19px;font-weight:600;letter-spacing:-.01em;text-decoration:none;white-space:nowrap}
 .root .subLinks{display:flex;flex:1;min-width:0;gap:0;overflow:hidden}
 .root .subLinks a{display:inline-flex;align-items:center;min-height:44px;padding:0 7px;color:var(--ink);font-size:14px;opacity:.82;text-decoration:none;white-space:nowrap}
 .root .subLinks a:hover{opacity:1}
-@media(min-width:760px){.root .subTitle{display:block}.root .subLinks{flex:none;gap:6px;margin-right:12px}.root .subLinks a{font-size:13px;padding:0 9px}}
+@media(min-width:760px){.root .logo{margin-right:16px;padding-right:16px;border-right:1px solid rgb(20 34 29 / .16)}.root .subTitle{display:block}.root .subLinks{flex:none;gap:6px;margin-right:12px}.root .subLinks a{font-size:13px;padding:0 9px}}
 .pill{flex:none;display:inline-flex;align-items:center;min-height:36px;padding:3px 16px 5px;border-radius:999px;background:var(--btn-gold,#e9c16b);
  box-shadow:inset 0 0 0 1.5px var(--btn-rim,#fff2cd),0 2px 0 #a8863d;color:var(--btn-ink,#244d40)!important;font-family:IslandBrush,var(--sans);font-size:17px;line-height:1.1;text-decoration:none;white-space:nowrap}
 

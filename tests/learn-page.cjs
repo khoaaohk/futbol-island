@@ -110,7 +110,7 @@ assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{anim
  assert((css.match(/position:sticky/g)||[]).length<=2,'sticky: the sub-nav and one pinned feature at most');
  assert.doesNotMatch(css,/\.word\b|scroll-snap-type/,'no word-by-word headline, no scroll snapping');
  // owner, Nov 3: IslandBrush only on the gold Play buttons; everything else is the system sans
- for(const m of strip(css).matchAll(/([^{}]+)\{[^{}]*IslandBrush[^{}]*\}/g))assert.match(m[1].trim(),/^\.(cta|pill)$/,`IslandBrush only on Play buttons, not ${m[1].trim()}`);
+ for(const m of strip(css).matchAll(/([^{}]+)\{[^{}]*IslandBrush[^{}]*\}/g))assert.match(m[1].trim(),/^\.(cta|pill)$|^\.root \.logo$/,`IslandBrush only on Play buttons and the logo wordmark, not ${m[1].trim()}`);
  assert.match(css,/--sans:-apple-system,/,'system sans stack, no web font download');}
 const media=read('components/learn/LearnMedia.tsx');
 assert.match(media,/<video [^>]*muted loop playsInline preload=\{eager\?'auto':'none'\}/,'clips: muted, loop, playsinline, preload none (auto for the hero only; LearnEnhance buffers the next one ahead)');

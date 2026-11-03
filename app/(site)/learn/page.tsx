@@ -70,6 +70,8 @@ export default function LearnHub(){
  const panelOf=steps.map(x=>{if(!learnAsset(x.imageKey).image)return 0;if(!panelKeys.includes(x.imageKey))panelKeys.push(x.imageKey);return panelKeys.indexOf(x.imageKey);});
  const panelLabel=(i:number)=>{const st=panelOf.indexOf(i);return i&&st>=0?`Step ${st+1}: ${steps[st].line}`:together.title;};
  return <div id={ROOT_ID} className={s.root}>
+  {/* the page has its own sticky bar with the logo, so the shared site header is hidden here */}
+  <style>{'[data-reading-page]>header{display:none}'}</style>
   <JsonLd data={siteLd()}/>
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'FAQPage',mainEntity:FAQ.map(q=>({'@type':'Question',name:q.q,acceptedAnswer:{'@type':'Answer',text:q.a}}))}}/>
@@ -78,6 +80,7 @@ export default function LearnHub(){
   {/* ---- sticky sub-nav: page name, 4 anchors, Play pill ---- */}
   <nav className={s.subnav} aria-label="On this page">
    <div className={s.subnavIn}>
+    <a className={s.logo} href={PLAY_URL} aria-label="Futbol Island home">Futbol Island</a>
     <a className={s.subTitle} href="#top">What’s inside</a>
     <ul className={s.subLinks}>{NAV.map(([id,label])=><li key={id}><a href={`#${id}`}>{label}</a></li>)}</ul>
     <a className={s.pill} href={PLAY_URL}>Play free</a>
