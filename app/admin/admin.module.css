@@ -25,6 +25,9 @@
 .cornerLeft{left:calc(24px + env(safe-area-inset-left,0px))}
 .cornerRight{right:calc(24px + env(safe-area-inset-right,0px))}
 @media(max-width:600px),(pointer:coarse){.cornerLeft,.cornerRight{top:calc(16px + env(safe-area-inset-top,0px))}.cornerLeft{left:calc(16px + env(safe-area-inset-left,0px))}.cornerRight{right:calc(16px + env(safe-area-inset-right,0px))}}
+/* responsive audit Nov 3: at 375 the 101px Log out ran 25px past the header's 76px corner column into "Analytics"; on phones it
+   is a nav-width pill like Back */
+@media(max-width:600px){.cornerRight .secondary{width:var(--btn-nav-width);padding:0;font-size:14px}}
 /* Header: the ModalShell grid (76px | title | 76px) and anchors. */
 .header{display:grid;grid-template-columns:var(--btn-nav-width) minmax(0,1fr) var(--btn-nav-width);align-items:start;gap:16px;min-height:64px}
 .header>:first-child{grid-column:1;justify-self:start}
@@ -76,7 +79,7 @@
 .loading{opacity:.55;transition:opacity .2s}
 .banner{background:var(--a-surface);border-radius:22px;padding:18px 22px;box-shadow:0 6px 0 #183b3438;font-size:15px;line-height:1.5}
 .banner h2{margin:0 0 6px;font-size:18px}
-.banner code{font-size:13px;background:var(--a-page);padding:1px 6px;border-radius:6px}
+.banner code{font-size:13px;background:var(--a-page);padding:1px 6px;border-radius:6px;overflow-wrap:anywhere}/* long migration paths widened the page to 406px at 375 */
 
 /* Line chart */
 .plot{position:relative;width:100%}
