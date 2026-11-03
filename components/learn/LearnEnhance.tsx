@@ -65,7 +65,8 @@ export default function LearnEnhance({rootId}:{rootId:string}){
    b.setAttribute('aria-label',`${playing?'Pause':'Play'} the clip: ${b.dataset.label??''}`);v.parentElement?.toggleAttribute('data-playing',playing);};
   function evaluate(){
    const hidden=document.visibilityState==='hidden';
-   const want=vids.filter(v=>!hidden&&(ratio.get(v)??0)>=.5&&!userPaused.has(v)&&(!calm||userStarted.has(v)))
+   // a clip on a stage slide that is not shown (opacity 0, but still "visible" to IntersectionObserver) never plays
+   const want=vids.filter(v=>!hidden&&(ratio.get(v)??0)>=.5&&!userPaused.has(v)&&(!calm||userStarted.has(v))&&!v.closest('[data-stage-i]:not([data-on])'))
     .sort((a,b)=>(ratio.get(b)??0)-(ratio.get(a)??0)).slice(0,MAX_PLAYING);
    for(const v of vids){
     if(want.includes(v)){if(v.paused){const p=v.play();if(p)p.then(()=>mark(v,true),()=>mark(v,false));else mark(v,true);}}
@@ -102,7 +103,7 @@ export default function LearnEnhance({rootId}:{rootId:string}){
   root.querySelectorAll<HTMLElement>('[data-pin]').forEach(sec=>{
    const stage=[...sec.querySelectorAll<HTMLElement>('[data-stage-i]')];
    const pinIo=new IntersectionObserver(es=>{for(const e of es){if(!e.isIntersecting)continue;const i=(e.target as HTMLElement).dataset.pinI;
-     stage.forEach(el=>el.toggleAttribute('data-on',el.dataset.stageI===i));}},{rootMargin:'-42% 0px -42% 0px'});
+     stage.forEach(el=>el.toggleAttribute('data-on',el.dataset.stageI===i));evaluate();}},{rootMargin:'-42% 0px -42% 0px'});
    sec.querySelectorAll('[data-pin-i]').forEach(el=>pinIo.observe(el));
    offs.push(()=>pinIo.disconnect());
   });

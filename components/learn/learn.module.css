@@ -13,7 +13,7 @@
  --bg-find:#fff8e7;--bg-learn:#e7f2e8;--bg-explore:#e5edfb;--bg-play:#fff0d9;--bg-together:#153f43;--bg-collect:#f0e9fa;--bg-yours:#fdeae6;--bg-safe:#e3f2ee;--bg-faq:#fff8e7;
  position:relative;width:100vw;margin:calc(-1 * var(--s3,24px)) 0 calc(-1 * var(--s5,64px)) calc(50% - 50vw);color:var(--ink);font-size:17px;line-height:1.55;
 }
-:global(html):has(.root){scroll-padding-top:72px}
+:global(html):has(.root){scroll-padding-top:100px} /* sticky nav 61px + room for the 22-56px rise/stack reveal offset */
 @media(prefers-reduced-motion:no-preference){:global(html):has(.root:not([data-calm])){scroll-behavior:smooth}}
 .root *{box-sizing:border-box}
 .root h1,.root h2,.root h3,.root p,.root ul,.root ol,.root dl,.root dd,.root figure{margin:0}
@@ -44,6 +44,9 @@
 .cloud{position:absolute;height:clamp(18px,2.4vw,30px);border-radius:999px;background:#ffffffd0;box-shadow:24px -10px 0 4px #ffffffd0,52px 0 0 0 #ffffffd0}
 .cloud:nth-child(2){left:6%;top:16%;width:clamp(60px,9vw,120px)}
 .cloud:nth-child(3){left:46%;top:8%;width:clamp(40px,6vw,90px);opacity:.75}
+/* phones and tablets (one column): the sky sits over the island art, not behind the headline (cream text on a white cloud / gold sun) */
+@media(max-width:899px){.heroSky{top:auto;height:calc(clamp(240px,46vw,460px) + 240px)}}
+@media(min-width:720px) and (max-width:899px){.heroSky{height:calc(clamp(240px,46vw,460px) + 110px)}}
 .heroGrid{position:relative;display:grid;gap:24px;align-items:center}
 @media(min-width:900px){.heroGrid{grid-template-columns:1.05fr .95fr;gap:32px}}
 .heroText{display:grid;gap:16px;justify-items:start;padding-top:8px}
@@ -238,7 +241,7 @@ li[data-g="collect"]>.tile{--tc:#6a46b8}li[data-g="yours"]>.tile{--tc:#c8394f}li
 /* ---- together: two phones meet, the 3-step strip, the grown-up lists ------------------------------------------------------- */
 .togetherHead .h2{font-size:clamp(36px,5vw + 14px,76px);color:#fff8e7;text-shadow:0 3px 0 #c94f9f}
 .duo{position:relative;display:flex;justify-content:center;align-items:center;gap:clamp(8px,3vw,40px);padding:8px 0 28px;view-timeline:--duo block}
-.phone{position:relative;width:min(40vw,250px);aspect-ratio:9/18.5;border-radius:clamp(22px,4vw,36px);border:clamp(6px,1.2vw,10px) solid #0d1f1b;background:#0d1f1b;
+.phone{position:relative;width:min(40vw,250px,39svh);aspect-ratio:9/18.5;border-radius:clamp(22px,4vw,36px);border:clamp(6px,1.2vw,10px) solid #0d1f1b;background:#0d1f1b;
  box-shadow:0 0 0 2px #2f5a50,0 26px 50px #00000055;overflow:hidden}
 .phone::before{content:'';position:absolute;top:8px;left:50%;z-index:3;width:30%;height:clamp(10px,1.6vw,18px);border-radius:999px;background:#0d1f1b;transform:translateX(-50%)}
 .phone .media{position:absolute;inset:0;border-radius:clamp(16px,3vw,28px)}
@@ -272,7 +275,7 @@ li[data-g="collect"]>.tile{--tc:#6a46b8}li[data-g="yours"]>.tile{--tc:#c8394f}li
 @keyframes lightUp{0%{box-shadow:0 0 0 0 #ffd45100}40%{box-shadow:0 0 0 6px #ffd451aa;background:#ffd451;color:#2a1a08}100%{box-shadow:0 0 0 0 #ffd45100}}
 @media(prefers-reduced-motion:no-preference){.root:not([data-calm]) .stepper[data-lit] .stepNum{animation:lightUp 1.1s var(--ease) both;animation-delay:calc(var(--i,0) * 450ms)}}
 .stepPanels{display:grid;gap:12px;justify-items:center}
-.stepPanel .phone{width:min(56vw,250px)}
+.stepPanel .phone{width:min(56vw,250px,39svh)} /* 39svh: a whole phone fits a landscape phone screen */
 .stepPanel .phone{transform:none;margin:0}
 .stepNav{display:flex;align-items:center;justify-content:center;gap:12px;color:#fff8e7}
 .stepCount{min-width:7em;text-align:center;font-weight:700;font-size:15px}
