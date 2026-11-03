@@ -7,7 +7,7 @@ export default{
   if(req.method!=='GET'&&req.method!=='HEAD')return new Response('Method not allowed',{status:405});
   const url=new URL(req.url);
   const key=decodeURIComponent(url.pathname.replace(/^\/+/,''));
-  if(!key||key.includes('..'))return new Response('Not found',{status:404});
+  if(!key||key.includes('..')||key.startsWith('masters/'))return new Response('Not found',{status:404});
   const origin=req.headers.get('Origin')||'';
   const cors:Record<string,string>={'Vary':'Origin','Access-Control-Allow-Origin':ORIGINS.has(origin)||/^http:\/\/localhost:\d+$/.test(origin)?origin:'https://futbolisland.app','Accept-Ranges':'bytes'};
   const cache=caches.default;
