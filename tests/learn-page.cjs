@@ -131,6 +131,10 @@ assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{anim
 const media=read('components/learn/LearnMedia.tsx');
 assert.match(media,/<video [^>]*muted loop playsInline preload=\{eager\?'auto':'none'\}/,'clips: muted, loop, playsinline, preload none (auto for the hero only; LearnEnhance buffers the next one ahead)');
 assert.match(media,/srcSet=/,'stills carry srcset + sizes, ready for sharper captures');
+// Nov 3, 4:5 captures: a phone (<= 640px) fetches only the 720px still and clip, wider screens only the 1080px ones
+assert.match(media,/<picture><source media="\(max-width: 640px\)" srcSet=\{m\.src\}/,'4:5 stills: the 720px file for viewports <= 640px');
+assert.match(strip(media),/\{a\.clip\.mp4m&&<source media=\{a\.image\.m\?'\(max-width: 640px\)':'\(max-width: 1280px\)'\} src=\{a\.clip\.mp4m\}[^\n]*\n\s*\{a\.clip\.mp4&&<source src=\{a\.clip\.mp4\}/,'clips: the smaller source first (media): 720px for 4:5 shots (<= 640px), 1280px for 16:9 chapter clips (<= 1280px), then the full-size one');
+assert.match(read('components/learn/LearnEnhance.tsx'),/slowLink\(\)\)for\(const v of vids\)[^\n]*source\[media="\(max-width: 640px\)"\]/,'Save-Data / 2g / 3g keep only the 720px clip');
 assert.doesNotMatch(media,/<video [^>]*poster=/,'no video poster: a poster downloads at once even with preload none (the lazy still underneath is the poster)');
 assert.match(strip(media),/video\/mp4[\s\S]*video\/webm/,'mp4 (H.264, hardware-decoded on phones) first, then webm (Nov 3)');
 assert.match(media,/data-lv-btn/,'every clip has a pause / play button');
@@ -150,9 +154,20 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  const walk=d=>fs.existsSync(d)?fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]):[];
  const files=walk(path.join(root,'public/learn')),size=f=>fs.statSync(f).size;
  const total=files.reduce((t,f)=>t+size(f),0),clips=files.filter(f=>/\.(mp4|webm)$/.test(f)).reduce((t,f)=>t+size(f),0);
- assert(total<40e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 40 MB)`);assert(clips<36e6,`clips ${(clips/1e6).toFixed(1)} MB (< 36 MB)`);
- const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6};
- for(const f of files.filter(f=>/\.(mp4|webm)$/.test(f))){const b=path.basename(f);assert(size(f)<=(cap[b]||2e6),`${b} is ${(size(f)/1e6).toFixed(2)} MB (cap ${((cap[b]||2e6)/1e6)} MB)`);}}
+ // Nov 3: + the 4:5 re-captures (~9.7 MB, both sizes) while the old 390x844 files still sit beside them (removal pending): 46 / 42 MB.
+ // Nov 3 merge with the Fuel up clip: 52 / 48 MB (the slides, ~14 MB, and the old 390x844 files to delete, are the next reconcile; big files move to R2 after)
+assert(total<52e6,`public/learn is ${(total/1e6).toFixed(1)} MB (< 52 MB)`);assert(clips<48e6,`clips ${(clips/1e6).toFixed(1)} MB (< 48 MB)`);
+ const cap={'montage_l.mp4':4.5e6,'montage_m.mp4':2.2e6,'montage_s.mp4':1.1e6,'town_overview_45.mp4':3.5e6};
+ // 4:5 clips: 1080x1350 <= 2.5 MB (the hero 3.5 MB), their 720x900 phone file <= 1.2 MB
+ const capOf=b=>cap[b]||(/_45_m\.mp4$/.test(b)?1.2e6:/_45\.mp4$/.test(b)?2.5e6:2e6);
+ for(const f of files.filter(f=>/\.(mp4|webm)$/.test(f))){const b=path.basename(f);assert(size(f)<=capOf(b),`${b} is ${(size(f)/1e6).toFixed(2)} MB (cap ${(capOf(b)/1e6)} MB)`);}
+ // the 4:5 re-captures: every LEARN_45 target is a 1080x1350 still with its 720x900 phone still, picked over the old shot
+ for(const [k,v] of Object.entries(M.LEARN_45)){if(!has(`public/learn/${v}.webp`))continue;
+  const x=M.learnAsset(Object.entries(M.LEARN_SHOT).find(([,s])=>s===k)?.[0]??k);
+  assert.equal(x.image.src,`/learn/${v}.webp`,`${k}: the 4:5 still wins`);assert.deepEqual([x.image.width,x.image.height],[1080,1350],`${v}: 1080x1350`);
+  assert.equal(x.image.m?.src,`/learn/${v}_m.webp`,`${v}: 720 phone still`);
+  if(x.clip)assert.equal(x.clip.mp4m,`/learn/video/${v}_m.mp4`,`${v}: 720 phone clip`);}
+ assert(M.learnAsset('lesson_quiz').image.src.endsWith('_45.webp'),'the Learn chapter shows its 4:5 capture');}
 
 // ---- 3b. See it in action: the horizontal clip carousel (Nov 3 2026) ----------------------------------------------------------
 {const reel=read('components/learn/LearnReel.tsx'),rx=strip(read('components/learn/ReelEnhance.tsx')),M=L('lib/site/learnMedia.ts');
@@ -263,7 +278,17 @@ assert.match(lm,/catch\{return out;\}/,'a missing or broken manifest is tolerate
  assert.match(css,/\.subnav\[data-dark\] \.navDark\{opacity:0\}/,'nav stays light over the soft tinted chapters (owner, Nov 3: no near-black)');
  // friend steps 1 and 2 show their own desktop shots (16:9 frame)
  assert.equal(M.LEARN_SHOT.friends_step_start,'friend_step1','step 1 shot');assert.equal(M.LEARN_SHOT.friends_step_code,'friend_step2','step 2 shot');
- assert.match(css,/\.frame169\{[^}]*aspect-ratio:16\/9\}/,'16:9 shots keep a 16:9 frame');}
+ assert.match(css,/\.frame169\{[^}]*aspect-ratio:16\/9\}/,'16:9 shots keep a 16:9 frame');
+ // Nov 3: upright shots are 4:5 cards, the full content width on phones, never taller than min(80svh, 820px), no tan well around them
+ assert.match(css,/--tallMax:min\(80svh,820px\)/,'tall cap min(80svh, 820px)');
+ assert.match(css,/\.frameTall\{width:min\(100%,560px,var\(--tallMax\) \* 4 \/ 5\);height:auto;aspect-ratio:4\/5\}/,'4:5 frame sized by width');
+ assert.match(css,/@media\(max-width:640px\)\{\.frameTall\{width:100%;[^}]*border-radius:24px\}/,'phones: the 4:5 card spans the content width, 24px corners');
+ assert.match(css,/\.stage:has\(>\.frameTall\)\{padding:0;background:none;border-radius:0\}/,'desktop: no tan well around a 4:5 card');
+ assert.match(css,/\.pinFrame\{position:relative;width:min\(100%,560px,var\(--tallMax\) \* 4 \/ 5\);aspect-ratio:4\/5\}/,'friends: one 4:5 box for every step');
+ assert.match(css,/--pinW:min\(46vw,640px,min\(82svh,820px\) \* 4 \/ 5\)/,'friends (wide): pinned box about min(46vw, 640px), <= min(82svh, 820px) tall');
+ assert.match(css,/\.panel>\.frameTall\{width:100%;max-width:none;height:100%\}/,'4:5 step pictures fill the box');
+ // phones: logo + Play pill only (four links clipped "Safety" at 390px)
+ assert.match(css,/@media\(max-width:640px\)\{\.root \.subLinks\{display:none\}\}/,'nav at <= 640px: no links');}
 
 // ---- 4. content -----------------------------------------------------------------------------------------------------------------
 assert.equal(HL.map(h=>h.id).join(),'top,learn,explore,fuel,together,safe','six sections');
@@ -277,7 +302,7 @@ assert.equal(HL.map(h=>h.id).join(),'top,learn,explore,fuel,together,safe','six 
  assert.doesNotMatch([fu.title,fu.line,...fu.chips].join(' '),/energy drink|weight|diet|healthy|medical|faster|stronger|calorie/i,'Fuel up copy: no health claims, no weight or diet talk, no gameplay perk');
  const M=L('lib/site/learnMedia.ts'),a=M.learnAsset('fuel_konbini');
  assert(a.image&&a.image.width>=a.image.height*1.5,'Fuel up: a 16:9 poster');assert(a.clip?.mp4&&a.clip.mp4m,'Fuel up: 1920 mp4 + 1280 phone mp4');
- assert.match(media,/a\.clip\.mp4m&&<source media="\(max-width: 1280px\)"[\s\S]*a\.clip\.mp4&&<source/,'the phone file is a <source media> listed before the full-size mp4');
+ assert.match(media,/a\.clip\.mp4m&&<source media=\{a\.image\.m\?[^}]*'\(max-width: 1280px\)'\}[\s\S]*a\.clip\.mp4&&<source/,'the phone file is a <source media> listed before the full-size mp4');
  assert.match(css,/\.frameFilm\{width:min\(100%,1052px\);aspect-ratio:16\/9\}/,'16:9 chapter clips get the large film frame');}
 for(const h of HL){assert(h.chips.length<=3,`${h.id}: at most 3 chips`);assert(h.title&&h.line&&h.line.length<=80,`${h.id}: one headline, one short line`);
  assert(has(`public/learn/${h.shot}.webp`),`${h.id}: shot ${h.shot} is a real still`);for(const id of h.features)assert(F.some(f=>f.id===id),`${h.id}: feature ${id} exists`);}

@@ -13,7 +13,7 @@
  --ink:#14221d;--ink2:#5b675f;--inkD:#f6f1e4;--ink2D:#a3aea6;--gold:#e9c16b;--goldInk:#8a6620;--pitch:#1d6b55;
  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI Variable Display','Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;
  --ease:cubic-bezier(.2,.7,.2,1);--gut:max(16px,env(safe-area-inset-left,0px));--fade:min(16vh,150px);
- --tallH:min(74svh,760px);
+ --tallMax:min(80svh,820px);
  position:relative;width:100vw;margin:calc(-1 * var(--s3,24px)) 0 calc(-1 * var(--s5,64px)) calc(50% - 50vw);
  background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.47;
  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;overflow-x:clip;
@@ -49,6 +49,8 @@
 .root .subLinks a[aria-current]::before{background:var(--btn-pink,#ed9dce);border-color:var(--btn-rim,#fff2cd);box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590)}
 .root .subLinks a:active::before{translate:0 var(--btn-press,3px);box-shadow:0 0 0 transparent}
 .root .subLinks a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-2px;border-radius:999px}
+/* phones: logo + Play pill only (Nov 3: four links squeezed in at 390px clipped "Safety"); the anchors stay in the page */
+@media(max-width:640px){.root .subLinks{display:none}}
 @media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:1240px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;gap:6px;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px;padding:0 9px}}
 .pill{flex:none;display:inline-flex;align-items:center;min-height:36px;padding:3px 16px 5px;border-radius:999px;background:var(--btn-gold,#e9c16b);
  box-shadow:inset 0 0 0 1.5px var(--btn-rim,#fff2cd),0 2px 0 #a8863d;color:var(--btn-ink,#244d40)!important;font-family:IslandBrush,var(--sans);font-size:17px;line-height:1.1;text-decoration:none;white-space:nowrap}
@@ -81,7 +83,8 @@
  .hero .ctaRow{justify-content:flex-start}
  .hero .h1{font-size:clamp(56px,3.6vw + 20px,88px)}
  .hero .stage{padding:clamp(28px,3vw,48px)}
- .hero .frameTall{height:min(70svh,720px)}
+ .hero .stage:has(>.frameTall){padding:0}
+ .hero .stage>.frameTall{width:min(100%,min(78svh,760px) * 4 / 5)}
 }
 
 /* ---- buttons and links ---------------------------------------------------------------------------------------------------- */
@@ -101,7 +104,9 @@
 .stage{display:grid;justify-items:center;gap:22px;width:100%}
 .frame{position:relative;overflow:hidden;border-radius:clamp(26px,2.4vw,40px);background:var(--well-l);box-shadow:0 30px 60px -20px rgb(12 23 20 / .35);transform:translateZ(0)}
 .dark .frame{background:var(--well-d);box-shadow:0 30px 60px -24px rgb(12 23 20 / .28)}
-.frameTall{height:var(--tallH);aspect-ratio:780/1688}
+/* upright shots are 4:5 captures (600x750 device, Nov 3): the full content width on phones, never taller than min(80svh, 820px) */
+.frameTall{width:min(100%,560px,var(--tallMax) * 4 / 5);height:auto;aspect-ratio:4/5}
+@media(max-width:640px){.frameTall{width:100%;max-width:min(100%,var(--tallMax) * 4 / 5);border-radius:24px}.dark .frameTall,.frameTall{box-shadow:0 18px 40px -18px rgb(12 23 20 / .35)}}
 .frameWide{width:min(100%,640px);aspect-ratio:792/844}
 .frame169{width:min(100%,640px);aspect-ratio:16/9}
 .frameFilm{width:min(100%,1052px);aspect-ratio:16/9}
@@ -110,10 +115,9 @@
  .stage{max-width:1180px;padding:clamp(48px,5vw,80px) clamp(24px,4vw,64px) clamp(28px,3vw,44px);border-radius:40px;background:var(--well-l)}
  .dark .stage{background:var(--well-d)}
  .stage .frame{box-shadow:0 30px 60px -24px rgb(12 23 20 / .4)}
- /* an upright shot fills its tan card edge to edge (cropped, not letterboxed) */
- .stage:has(>.frameTall){padding:0;overflow:hidden}
- .stage:has(>.frameTall)>.frameTall{width:100%;height:auto;max-height:min(80svh,820px);aspect-ratio:4/5;border-radius:0;box-shadow:none}
- .stage:has(>.frameTall) .still,.stage:has(>.frameTall) .clip{object-position:50% 22%}
+ /* a 4:5 shot is the card itself (no tan well around it, so no empty side gaps), as large as min(80svh, 820px) allows */
+ .stage:has(>.frameTall){padding:0;background:none;border-radius:0}
+ .stage:has(>.frameTall)>.frameTall{width:min(100%,var(--tallMax) * 4 / 5)}
 }
 .media{position:absolute;inset:0;overflow:hidden}
 .still,.clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
@@ -247,12 +251,13 @@
 /* ---- play with friends: the one pinned feature (wide screens) --------------------------------------------------------------- */
 .feature{display:grid;justify-items:center;gap:40px;width:100%;max-width:1080px}
 .pin{width:100%;display:grid;justify-items:center}
-/* the pinned box holds a near-square shot and upright ones: each panel keeps its own aspect, centred in the box */
-.pinFrame{position:relative;width:min(100%,520px,62svh);aspect-ratio:792/844}
+/* one 4:5 box for every step picture (Nov 3, owner): the 4:5 captures fill it exactly and crossfade; an older shot keeps its own
+   aspect, centred in the box. Phones: the full content width. */
+.pinFrame{position:relative;width:min(100%,560px,var(--tallMax) * 4 / 5);aspect-ratio:4/5}
 .panel{position:absolute;inset:0;display:grid;place-items:center;opacity:0;visibility:hidden;transition:opacity .5s var(--ease),visibility 0s .5s}
 .panel[data-on]{opacity:1;visibility:visible;transition:opacity .5s var(--ease)}
 .panel>.frameWide{width:100%;height:auto}
-.panel>.frameTall{height:100%;width:auto}
+.panel>.frameTall{width:100%;max-width:none;height:100%}
 .stepCol{display:grid;gap:12px;width:100%;max-width:560px;text-align:left}
 .stepsTitle{font-size:clamp(24px,1.2vw + 18px,34px);font-weight:600;letter-spacing:-.02em;line-height:1.15;margin-bottom:8px}
 .root .stepList{display:grid;gap:12px}
@@ -261,9 +266,10 @@
 .stepLine{padding-top:4px;font-size:19px;font-weight:500;line-height:1.38;color:var(--inkD)}
 .note{margin-top:12px;font-size:15px;color:var(--ink2D)}
 @media(min-width:900px){
- .feature{grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:start;gap:clamp(40px,6vw,96px);view-timeline:--feat block}
- .pin{position:sticky;top:calc(50svh - min(520px,62svh) * 844 / 792 / 2 + 26px)}
- .pinFrame{width:min(100%,520px,62svh)}
+ /* the pinned 4:5 box: about min(46vw, 640px) wide, at most min(82svh, 820px) tall, vertically centred under the 52px sub-nav */
+ .feature{--pinW:min(46vw,640px,min(82svh,820px) * 4 / 5);max-width:1320px;grid-template-columns:var(--pinW) minmax(0,1fr);align-items:start;gap:clamp(40px,6vw,96px);view-timeline:--feat block}
+ .pin{position:sticky;top:calc(50svh - var(--pinW) * 5 / 8 + 26px)}
+ .pinFrame{width:var(--pinW)}
  .stepCol{padding:calc(50svh - 140px) 0}
  .stepsTitle{margin-bottom:0}
  .root .stepList{gap:0}

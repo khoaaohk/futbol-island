@@ -621,5 +621,135 @@
    "height": 1080,
    "duration": 10.07
   }
+ },
+ "town_overview_45": {
+  "file": "/learn/town_overview_45.webp",
+  "width": 1080,
+  "height": 1350,
+  "alt": "Dribble a ball across the town square while islanders play football all around you.",
+  "small": {
+   "file": "/learn/town_overview_45_m.webp",
+   "width": 720,
+   "height": 900
+  },
+  "video": {
+   "mp4": "/learn/video/town_overview_45.mp4",
+   "mp4m": "/learn/video/town_overview_45_m.mp4",
+   "width": 1080,
+   "height": 1350,
+   "duration": 8.5
+  }
+ },
+ "lesson_field_45": {
+  "file": "/learn/lesson_field_45.webp",
+  "width": 1080,
+  "height": 1350,
+  "alt": "Watch a play unfold on the pitch while the coach card tells you what to look for.",
+  "small": {
+   "file": "/learn/lesson_field_45_m.webp",
+   "width": 720,
+   "height": 900
+  },
+  "video": {
+   "mp4": "/learn/video/lesson_field_45.mp4",
+   "mp4m": "/learn/video/lesson_field_45_m.mp4",
+   "width": 1080,
+   "height": 1350,
+   "duration": 8
+  }
+ },
+ "diving_reef_45": {
+  "file": "/learn/diving_reef_45.webp",
+  "width": 1080,
+  "height": 1350,
+  "alt": "Dive under the sea and swim around a sunken pitch on a colourful reef.",
+  "small": {
+   "file": "/learn/diving_reef_45_m.webp",
+   "width": 720,
+   "height": 900
+  },
+  "video": {
+   "mp4": "/learn/video/diving_reef_45.mp4",
+   "mp4m": "/learn/video/diving_reef_45_m.mp4",
+   "width": 1080,
+   "height": 1350,
+   "duration": 8
+  }
+ },
+ "save_code_45": {
+  "file": "/learn/save_code_45.webp",
+  "width": 1080,
+  "height": 1350,
+  "alt": "Get a secret save code made of three football words and a number to keep your island safe.",
+  "small": {
+   "file": "/learn/save_code_45_m.webp",
+   "width": 720,
+   "height": 900
+  },
+  "video": {
+   "mp4": "/learn/video/save_code_45.mp4",
+   "mp4m": "/learn/video/save_code_45_m.mp4",
+   "width": 1080,
+   "height": 1350,
+   "duration": 7
+  }
+ },
+ "mp_join_45": {
+  "file": "/learn/mp_join_45.webp",
+  "width": 1080,
+  "height": 1350,
+  "alt": "Type in your friend's party code and tap Join to play together.",
+  "small": {
+   "file": "/learn/mp_join_45_m.webp",
+   "width": 720,
+   "height": 900
+  },
+  "video": {
+   "mp4": "/learn/video/mp_join_45.mp4",
+   "mp4m": "/learn/video/mp_join_45_m.mp4",
+   "width": 1080,
+   "height": 1350,
+   "duration": 6
+  }
+ },
+ "mp_sidebyside_45": {
+  "file": "/learn/mp_sidebyside_45.webp",
+  "width": 1080,
+  "height": 1350,
+  "alt": "Two phones, one island: each friend sees the other walk over, wave and high-five.",
+  "small": {
+   "file": "/learn/mp_sidebyside_45_m.webp",
+   "width": 720,
+   "height": 900
+  },
+  "video": {
+   "mp4": "/learn/video/mp_sidebyside_45.mp4",
+   "mp4m": "/learn/video/mp_sidebyside_45_m.mp4",
+   "width": 1080,
+   "height": 1350,
+   "duration": 7.97
+  }
+ },
+ "friend_step1_45": {
+  "file": "/learn/friend_step1_45.webp",
+  "width": 1080,
+  "height": 1350,
+  "alt": "A grown-up answers a times-table question before online play is switched on.",
+  "small": {
+   "file": "/learn/friend_step1_45_m.webp",
+   "width": 720,
+   "height": 900
+  }
+ },
+ "friend_step2_45": {
+  "file": "/learn/friend_step2_45.webp",
+  "width": 1080,
+  "height": 1350,
+  "alt": "The party screen shows a short code to share only with friends you know, and a Copy link button.",
+  "small": {
+   "file": "/learn/friend_step2_45_m.webp",
+   "width": 720,
+   "height": 900
+  }
  }
 }

@@ -74,6 +74,9 @@ export default function LearnEnhance({rootId}:{rootId:string}){
 
   // ---- 3. clips -------------------------------------------------------------------------------------------------------------
   const vids=[...root.querySelectorAll<HTMLVideoElement>('video[data-lv]')];
+  // 4:5 clips (Nov 3): Save-Data / 2g / 3g keep only the 720px file (its <source media> otherwise serves viewports <= 640px)
+  if(slowLink())for(const v of vids){const small=v.querySelector('source[media="(max-width: 640px)"]');
+   if(small){v.querySelectorAll('source').forEach(x=>{if(x!==small)x.remove();});small.removeAttribute('media');if(v.networkState!==v.NETWORK_EMPTY)v.load();}}
   // the See it in action carousel (ReelEnhance) runs its own clips; they count toward the same cap of 2 (it writes data-reel-playing
   // on the root and fires learn:panel whenever that changes)
   // (Nov 3: and the montage and the slideshow, see EXT_PLAYING)
