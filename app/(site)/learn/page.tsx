@@ -10,6 +10,7 @@ import ShareLink from '@/components/learn/ShareLink';
 import LogoWord from '@/components/learn/LogoWord';
 import HeroName from '@/components/learn/HeroName';
 import NavPlay from '@/components/learn/NavPlay';
+import FaqEnhance from '@/components/learn/FaqEnhance';
 import MobileMenu from '@/components/learn/MobileMenu';
 import s from '@/components/learn/learn.module.css';
 import {LEARN_FAQ,LEARN_FAQ_TOP,LEARN_FEATURES,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,type LearnHighlight,type LearnHighlightId} from '@/lib/site/learnFeatures';
@@ -97,6 +98,7 @@ export default function LearnHub(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'FAQPage',mainEntity:FAQ.map(q=>({'@type':'Question',name:q.q,acceptedAnswer:{'@type':'Answer',text:q.a}}))}}/>
   <LearnEnhance rootId={ROOT_ID}/>
+  <FaqEnhance selector="[data-faq-list]"/>
 
   {/* ---- sticky sub-nav: page name, 4 anchors, Play pill ---- */}
   <nav className={s.subnav} aria-label="On this page" data-subnav="">
@@ -150,7 +152,7 @@ export default function LearnHub(){
    <Stage k={safe.shot} label={safe.title} tags={safe.chips}/>
    <div className={s.faqWrap} id="faq" data-reveal="">
     <h3 className={s.faqTitle} id="faq-h">Questions grown-ups ask</h3>
-    <div className={s.faqList}>{FAQ.map(q=><details key={q.q} className={s.faq}><summary>{q.q}<span className={s.plus} aria-hidden="true"/></summary><p>{q.a}</p></details>)}</div>
+    <div className={s.faqList} data-faq-list="">{FAQ.map(q=><details key={q.q} className={s.faq}><summary>{q.q}<span className={s.plus} aria-hidden="true"/></summary><div className={s.faqBody}><div className={s.faqIn}><p>{q.a}</p></div></div></details>)}</div>
    </div>
   </Chapter>
 

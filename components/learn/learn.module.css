@@ -190,7 +190,8 @@
 .tags li{display:inline-flex;align-items:center;white-space:nowrap}
 .tags li+li::before{content:"";width:4px;height:4px;margin:0 12px;border-radius:50%;background:var(--gold)}
 .tagsCenter{margin:0 auto}
-@media(max-width:599px){.root .tags{flex-direction:column;align-items:center;gap:4px}.tags li+li::before{display:none}}
+/* phones (owner, Nov 3): the chips flow as two lines, no stacked column and no dot at a line start */
+@media(max-width:599px){.root .tags{gap:4px 16px;max-width:none}.tags li+li::before{display:none}}
 
 /* ---- See it in action: a horizontal row of 16:9 clip cards (Nov 3 2026, after apple.com/apple-vision-pro's highlights) -----
    CSS scroll snap, native swipe / trackpad scroll; the row starts at the content gutter (the sub-nav's 1080px column) and bleeds
@@ -347,6 +348,15 @@
 .plus::before,.plus::after{content:"";position:absolute;left:0;top:7px;width:16px;height:2px;border-radius:1px;background:var(--pitch)}
 .plus::after{transform:rotate(90deg)}
 .faq[open] .plus{transform:rotate(45deg)}
+.faqList[data-ready] .faq[open]:not([data-x]) .plus{transform:none}
+/* animated open / close (owner, Nov 3; FaqEnhance.tsx): the body's grid row eases 0fr -> 1fr while it fades; without JS the plain <details> still works */
+.faqBody{display:grid;grid-template-rows:1fr;opacity:1}
+.faqList[data-ready] .faq:not([data-x]) .faqBody{grid-template-rows:0fr;opacity:0}
+.faqList[data-ready] .faq[data-x] .faqBody{grid-template-rows:1fr;opacity:1}
+.faqBody{transition:grid-template-rows .32s var(--ease),opacity .26s ease}
+.faqIn{min-height:0;overflow:hidden}
+.root[data-calm] .faqBody{transition:none}
+@media(prefers-reduced-motion:reduce){.faqBody,.plus{transition:none}}
 .faq p{padding:0 2px 22px;max-width:64ch;font-size:17px;color:var(--ink2)}
 
 /* ---- the end ---------------------------------------------------------------------------------------------------------------- */
