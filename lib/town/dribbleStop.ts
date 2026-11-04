@@ -40,6 +40,9 @@ export const DRIBBLE={
  soleBack:.09,
  /** No new stop / turn for this long after one ends (it cannot retrigger every frame). */
  cooldown:.35,
+ /** Sole control after a first touch (live match, lib/town/match/matchMotion.ts): its length, and the speed (m/s) above which
+  *  the hold is skipped (a plain stop skips above `stopSkip`). */
+ controlTime:.56,controlTimeReduced:.36,controlSkip:1.9,stopSkip:1.2,
 } as const;
 
 export const MOVE_ROLL=0,MOVE_STOP=1,MOVE_TURN=2;
@@ -48,6 +51,8 @@ export const TOUCH_LACES=0,TOUCH_INSIDE=1,TOUCH_OUTSIDE=2;
 
 export type DribbleFeel={
  init:boolean;move:number;t:number;dur:number;cooldown:number;peak:number;
+ /** The stop is a first-touch sole control (startSoleControl): shorter, and it keeps the hold up to a brisker walk. */
+ ctrl:boolean;
  /** Active move: the foot (-1 left / 1 right), turn direction, headings. */
  side:number;dir:number;fromYaw:number;toYaw:number;fromDist:number;reduced:boolean;
  /** Rhythm: gait step clock (phase / pi), the step of the last touch, steps per touch, its push, style, foot. */
@@ -61,7 +66,7 @@ export type DribbleFeel={
 };
 
 export function createDribbleFeel():DribbleFeel{
- return {init:false,move:MOVE_ROLL,t:0,dur:1,cooldown:0,peak:0,side:1,dir:1,fromYaw:0,toYaw:0,fromDist:DRIBBLE.contact,reduced:false,
+ return {init:false,move:MOVE_ROLL,t:0,dur:1,cooldown:0,peak:0,ctrl:false,side:1,dir:1,fromYaw:0,toYaw:0,fromDist:DRIBBLE.contact,reduced:false,
   lastStep:0,touchStep:0,perTouch:1,push:DRIBBLE.pushWalk,style:TOUCH_LACES,touchSide:1,cutRef:0,cutSign:0,
   ballYaw:0,ballDist:DRIBBLE.contact,ballSide:0,press:0,yawScale:1,foot:0,footW:0,footLift:0,footToe:0,accSide:0,accFwd:0,accX:0,accLift:0};
 }
@@ -87,8 +92,16 @@ export function resetDribbleFeel(f:DribbleFeel,yaw:number,phase:number){
 }
 
 function startStop(f:DribbleFeel,reduced:boolean){
- f.move=MOVE_STOP;f.t=0;f.reduced=reduced;f.dur=reduced?DRIBBLE.stopTimeReduced:DRIBBLE.stopTime;
+ f.move=MOVE_STOP;f.t=0;f.ctrl=false;f.reduced=reduced;f.dur=reduced?DRIBBLE.stopTimeReduced:DRIBBLE.stopTime;
  f.side=-f.touchSide||1;f.fromDist=f.ballDist;f.fromYaw=f.ballYaw;
+}
+/**
+ * Sole control (Nov 4 2026, live match): right after a first touch the receiving boot steps onto the ball, holds it for a beat
+ * and lifts away as the carry starts (the same curve as a stop, shorter). Call after resetDribbleFeel on the frame the close
+ * control starts; `side` is the receiving foot (-1 left, +1 right).
+ */
+export function startSoleControl(f:DribbleFeel,side:number,reduced:boolean){
+ startStop(f,reduced);f.ctrl=true;f.side=side<0?-1:1;f.dur=reduced?DRIBBLE.controlTimeReduced:DRIBBLE.controlTime;f.fromDist=DRIBBLE.contact;
 }
 function startTurn(f:DribbleFeel,target:number,reduced:boolean){
  const change=wrap(target-f.ballYaw);
@@ -148,7 +161,7 @@ export function stepDribbleFeel(f:DribbleFeel,dt:number,speed:number,yaw:number,
 function stepStop(f:DribbleFeel,dt:number,speed:number){
  f.t+=dt;
  // Moving off again before the hold ends: skip to the lift-away, the boot leaves the ball smoothly.
- if(speed>1.2&&f.t<.62*f.dur)f.t=.62*f.dur;
+ if(speed>(f.ctrl?DRIBBLE.controlSkip:DRIBBLE.stopSkip)&&f.t<.62*f.dur)f.t=.62*f.dur;
  const p=f.t/f.dur,size=f.reduced?.75:1;
  // The ball rolls on and slows to rest under the sole (ease-out, settled by p .36: the sole lands at p .3).
  const settle=1-(1-clamp01(p/.36))**3;

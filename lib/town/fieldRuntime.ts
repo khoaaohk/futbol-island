@@ -17,6 +17,7 @@ import {classicShirtNumber} from '../graphics/shirtNumbers';
 import {fieldTokenDress} from './beanLooks';
 import {createMatchBallTexture} from '../graphics/matchBallTexture';
 import {MatchSim,ROLE_MOVEMENT} from './match/matchSim';
+import {maxTurnRate,createControlState,stepControl,settlePace,MOTION} from './match/matchMotion';
 import {VENUES,LIVE_VENUES,liveWorldX,liveWorldZ,liveWorldYaw,type Venue,type LiveVenue,type LiveFormat} from './venues';
 import {BEACH_MATCH_KITS} from './beanLooks';
 import {quizOutcomeStep,quizAnswerRevealed,lessonPositions,lessonVisualFrame,lessonStepSeconds,loftPeak,type FieldSession} from './formatLessons';
@@ -52,7 +53,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  const ballMap=createMatchBallTexture(),ballGeo=new T.SphereGeometry(.19,16,12),ballMat=new T.MeshStandardMaterial({color:'#ffffff',map:ballMap,roughness:.85});
  const lineMaterial=new T.LineBasicMaterial({color:'#e9c66d'}),lineGeometry=new T.BufferGeometry(),line=new T.LineSegments(lineGeometry,lineMaterial);scene.add(line);const linePositions=new T.Float32BufferAttribute(new Float32Array(1536),3);lineGeometry.setAttribute('position',linePositions);line.frustumCulled=false;
  // The four island pitches plus the Coral Cay beach court (LIVE_VENUES): one pooled rig set, clock and sim per venue.
- const entries:Entry[]=LIVE_VENUES.map((venue,i)=>{const root=new T.Group();root.name='match-'+venue.id;root.position.y=venue.elevation??0;scene.add(root);const ball=new T.Mesh(ballGeo,ballMat);ball.castShadow=true;root.add(ball);const sim=new MatchSim(270+i*41,venue.id);sim.windupScale=liveGameSpeed(venue.id);return {choreo:createChoreo(venue.yaw??0),comboView:createComboView(venue.yaw??0),liveFrame:createLiveFieldFrame(venue.id),clock:createMatchUpdateClock(),venue,root,sim,rigs:new Map(),ball,label:new Map(),lastLesson:'',effects:createMatchEffects(root,venue),ballPhysics:createLiveBallPhysics(liveGameSpeed(venue.id),venue,venue.sand?SAND_RESTITUTION:undefined)};});
+ const entries:Entry[]=LIVE_VENUES.map((venue,i)=>{const root=new T.Group();root.name='match-'+venue.id;root.position.y=venue.elevation??0;scene.add(root);const ball=new T.Mesh(ballGeo,ballMat);ball.castShadow=true;root.add(ball);const sim=new MatchSim(270+i*41,venue.id);sim.windupScale=liveGameSpeed(venue.id);sim.receiveSettle=settlePace(venue.width,liveGameSpeed(venue.id));return {choreo:createChoreo(venue.yaw??0),comboView:createComboView(venue.yaw??0),liveFrame:createLiveFieldFrame(venue.id),clock:createMatchUpdateClock(),venue,root,sim,rigs:new Map(),ball,label:new Map(),lastLesson:'',effects:createMatchEffects(root,venue),ballPhysics:createLiveBallPhysics(liveGameSpeed(venue.id),venue,venue.sand?SAND_RESTITUTION:undefined)};});
  const stats={ticks:0,visiblePlayers:0,culledPlayers:0,skippedPoses:0,rigs:0,matchTime:0,dormant:0};let playerCulling=true;
  const playerView=new T.Sphere(new T.Vector3(),7);
  const frustum=new T.Frustum(),matrix=new T.Matrix4(),sphere=new T.Sphere(),emptyIds=new Set<string>(),skillBallPoint=new T.Vector3(),liveContact=new T.Vector3(),receivingContact=new T.Vector3(),keeperLeft=new T.Vector3(),keeperRight=new T.Vector3();
@@ -202,6 +203,12 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
    // never at pace (a sprint in a deep crouch reads wrong).
    const ballLive=!owner||owner.team!==live.team;
    motion.stance=(live.role==='gk'||live.role==='def')&&ballLive&&!motion.kick&&!motion.dribbling&&!reception&&pace<READY_MAX_PACE&&(pace<.15||motion.jockey>0)&&ballDistance<(live.isGK?24:14)?'ready':undefined;
+   // Body motion (lib/town/match/matchMotion.ts, Nov 4 2026): a speed-capped turn with a short angular acceleration (a strike or a
+   // first touch turns quickly), and the receiver's control: after the first touch a slow receiver steps onto the ball (sole control).
+   const speedMS=Math.hypot(live.vx*v.width/250,live.vy*v.length/380)*liveGameSpeed(v.id),acting=motion.kick!==undefined||windup?.id===token.id||!!reception||(motion.receive??0)>0;
+   motion.turnRateMax=maxTurnRate(speedMS,1,acting);motion.turnAccel=acting?MOTION.turnAccelAction:MOTION.turnAccel;
+   const control=ud.control??(ud.control=createControlState());
+   motion.soleControl=stepControl(control,active&&!isPaused(v.id)?dt:0,{approaching:approachId===token.id||e.sim.ball.target===token.id,cushion:!!reception,owner:e.sim.ball.owner===token.id,striking:motion.kick!==undefined||windup?.id===token.id,speed:speedMS,foot:reception?motion.kickSide??1:control.side});
    // Readable intent: called receiver, ready marker, reactions and the squash spring (choreo.ts).
    e.choreo.apply(token.id,motion,pace);
    e.comboView.apply(token.id,motion,rig.root.rotation.y);e.comboView.settle(motion); // [combos] skill moves (skillMoves.ts / lane B moves) timed to the sim's touch

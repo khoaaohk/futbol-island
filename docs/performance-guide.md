@@ -6089,3 +6089,16 @@ the chase. Headless measurement only; no iPhone temperature measured.
   only on a > 0.004 change. Wind adds one term to the flight model (no extra predictions). Not measured on an iPhone.
 ## Breakaway Run round 3 (Oct 26 2026)
 Terrain zones are one shader on the existing terrain mesh (which was back-face culled before and is now drawn; the sky behind it is depth-rejected). New scenery is pooled and hidden when idle: classic steady play adds 0 draw calls; Storm adds 1 (rain buffer, 70 streaks on phones), the goal-line arch 4 only in its last 150 m. Cinematic beats and the chase camera allocate nothing per frame and are off under reduced motion. Details and the eyeball list: [ARCADE_BREAKAWAY_R3_OCT26.md](ARCADE_BREAKAWAY_R3_OCT26.md). Desktop emulation only; no iPhone thermal claim.
+
+## Live-match body motion (Nov 4 2026)
+`lib/town/match/matchMotion.ts` (pure, `tests/match-motion.cjs`): live match players turn with a speed-capped body yaw (13 rad/s
+walking → 5.2 rad/s sprinting, 22 rad/s for a strike or first touch, short angular acceleration). It is opt-in through
+`PlayerMotion.turnRateMax`, so the town player, friends, arcade and lessons keep the plain ease, and reduced motion skips the cap. A
+receiver control state machine (approach → cushion → sole → carry): a receiver who arrives slowly is held to a walk through the first
+touch (`MatchSim.receiveSettle`, 0 = off by default, set only by `fieldRuntime`) and then steps on the ball with the receiving boot
+(`dribbleStop.startSoleControl`, 0.56 s, 0.36 s reduced) before carrying on; fast arrivals and first-time passes take it in stride.
+The rig's stride formula moved to `gaitStride` (same maths). Runtime cost per posed live player per frame: one smoothstep
+(`maxTurnRate`), one exp plus a few compares (`stepYaw`, replacing the old exp ease) and a switch (`stepControl`); one small state object
+per rig, no per-frame allocation, culled players still skipped. Sim: two compares per player step. No new loops, draws or tick-rate
+changes. Not measured on an iPhone: check a 7v7 / 11v11 on a real phone (frame time, heat) and how the slower turns feel once a human
+joins the match.

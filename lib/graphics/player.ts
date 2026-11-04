@@ -21,7 +21,8 @@ import {jobPoseTarget,netGrip,NET_SNEAK_CROUCH,JAR_POSES,type PoseTarget,type Ga
 import type {JobPose} from '../town/jobs/jobMoves';
 import type {ZipRigPose} from '../town/zipline';
 import {createSwimPoser,type SwimRigPose} from './swimPose';
-import {createDribbleFeel,resetDribbleFeel,stepDribbleFeel,DRIBBLE} from '../town/dribbleStop';
+import {createDribbleFeel,resetDribbleFeel,stepDribbleFeel,startSoleControl,DRIBBLE} from '../town/dribbleStop';
+import {createYawState,stepYaw,gaitStride,MOTION} from '../town/match/matchMotion';
 const DRIBBLE_SOLE_BACK=DRIBBLE.soleBack;
 import {effectiveTier} from './heatTier';
 import {skyMoveWeights} from '../town/skyKeepUpMoves';
@@ -102,6 +103,13 @@ export type PlayerMotion = {
    *  Replaces the gait's legs, arms, spine and head while `w` > 0; fades out over ~.2 s when removed. */
   swim?: SwimRigPose;
   turnSmoothing?: number;
+  /** Live match (lib/town/match/matchMotion.ts): cap the body turn at this rate (rad/s) with a short angular acceleration
+   *  (`turnAccel` rad/s²), so a sprinter turns in an arc instead of snapping. Absent = the plain exponential ease (everyone else). */
+  turnRateMax?: number;
+  turnAccel?: number;
+  /** Live match: a receiver steps onto the ball after the first touch (sole control) with this foot (-1 left, +1 right). Read on
+   *  the frame the close-control footwork starts (lib/town/dribbleStop.ts startSoleControl); 0 / absent = the usual rolling touch. */
+  soleControl?: number;
   flight?: FlightPose;
   rooftopPose?: 'hang'|'fall'|'dizzy';
   /** Retreating while facing the ball: short quick toe-first steps, upright, arms out (0..1). */
@@ -499,6 +507,8 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   const ankleParent=new T.Quaternion(),soleTarget=new T.Quaternion(),soleEuler=new T.Euler();
   let dribbleLead=.6;
   const feel=createDribbleFeel();let feelOn=false,feelLive=false;
+  // Live-match turn: yaw + angular rate for the capped turn (matchMotion.stepYaw), one per rig.
+  const yawTurn=createYawState();
   const spineResponse=new Float64Array(36);
   const bodyResponse=new Float64Array(132),supportResponse=new Float64Array(4);
   const strike:StrikePose={forward:0,height:.075,open:0,pitch:0,load:0,drive:0,follow:0};
@@ -956,10 +966,15 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if (motion?.facing !== undefined || velocity > .05 && !diving && !airMove) {
       const target = motion?.facing ?? Math.atan2(dx, dz);
       delta = Math.atan2(Math.sin(target-yaw), Math.cos(target-yaw));
-      if (discontinuity || dt===0 || motion?.samplePose) yaw = target;
+      if (discontinuity || dt===0 || motion?.samplePose) {yaw = target;yawTurn.rate=0;}
       // The body turns over a planted boot: while the plant boot is still reaching in, the turn waits.
-      else yaw += delta * (1-Math.exp(-dt*(motion?.turnSmoothing??10)*(plantSide!==0&&replant[plantSide<0?0:1]>0?.3:1)*(feelLive?feel.yawScale:1)));
-    }
+      else {
+        const smoothing=(motion?.turnSmoothing??10)*(plantSide!==0&&replant[plantSide<0?0:1]>0?.3:1)*(feelLive?feel.yawScale:1);
+        // Live match: a max turn rate with a short angular acceleration (matchMotion.stepYaw); everyone else keeps the plain ease.
+        if(motion?.turnRateMax!==undefined&&!reduced){yawTurn.yaw=yaw;yaw=stepYaw(yawTurn,target,dt,smoothing,motion.turnRateMax,motion.turnAccel??MOTION.turnAccel);}
+        else {yaw += delta * (1-Math.exp(-dt*smoothing));yawTurn.rate=0;}
+      }
+    } else yawTurn.rate=0;
     turn = T.MathUtils.damp(turn, discontinuity ? 0 : delta, 9, dt);
     const localForward=distance>.00001?(dx*Math.sin(yaw)+dz*Math.cos(yaw))/distance:1;
     const localSide=distance>.00001?(dx*Math.cos(yaw)-dz*Math.sin(yaw))/distance:0;
@@ -1076,7 +1091,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     previousBrake=brake;
     // Same original-island movement principles, retargeted to II's shorter procedural limbs.
     // Travel drives gait; no clock-driven running while the replay is paused.
-    let stride = (1.1 + .8*run) * (1-.38*compact) * (motion?.dribbling ? .82 : 1) * (1-.14*Math.max(0,drive)) * (1-.4*backpedal) * strideScale * (1-.12*Math.abs(cutPreparation)-.15*opening);
+    let stride = gaitStride(run,compact,!!motion?.dribbling,drive,backpedal,strideScale,cutPreparation,opening);
     // Duty factor: a walk keeps a boot down 60 % of the cycle, a sprint ~34 % (a flight phase). A fixed
     // 60 % asked a sprinting stance boot to sweep ~1.3 m under the hips, far past leg reach, so the reach
     // clamp dragged the planted boot along the pitch (players looked like they were skating).
@@ -1113,7 +1128,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if(oldPivotSide&&oldPivotSide!==pivotSide){const i=oldPivotSide<0?0:1;replant[i]=replantTotal[i]=.18;replantAnchors[i].copy(shownFeet[i]);}
     const hardReset=discontinuity||!!sample||rideBase||reduced;
     // Dribble footwork (sole stop / drag-back / touch rhythm): stepped from this rig's own speed, yaw and gait phase.
-    if(feelOn&&dribbleActive&&!sample&&!rideBase){if(!feelLive||discontinuity)resetDribbleFeel(feel,yaw,phase);else if(!frozen)stepDribbleFeel(feel,dt,speed,yaw,previousYaw+delta,phase,reduced||effectiveTier()>=3);feelLive=true;}else feelLive=false;
+    if(feelOn&&dribbleActive&&!sample&&!rideBase){if(!feelLive||discontinuity){resetDribbleFeel(feel,yaw,phase);if(!discontinuity&&motion?.soleControl)startSoleControl(feel,motion.soleControl,reduced||effectiveTier()>=3);}else if(!frozen)stepDribbleFeel(feel,dt,speed,yaw,previousYaw+delta,phase,reduced||effectiveTier()>=3);feelLive=true;}else feelLive=false;
     const flowingBody=!rideBase&&!reduced&&motion?.juggle===undefined&&motion?.shotStep===undefined&&!motion?.parachute&&!motion?.rooftopPose&&!swimming&&motion?.stunAge===undefined&&!motion?.wallSplat;
     const resetBody=hardReset||!flowingBody||!bodyResponseActive;
     const nextBodyMode=(action>0?1:0)+(receive>.05?2:0)+(jockey>.3?4:0)+(brake>.3?8:0)+(backpedal>.4?16:0)+(opening>.1?32:0)+(motion?.keeperReach&&motion.keeperReach>.1?64:0);

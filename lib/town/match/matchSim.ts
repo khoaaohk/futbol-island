@@ -528,6 +528,13 @@ export class MatchSim {
   // windupSeconds(turn) real seconds (longer the further he must turn to face the target),
   // converted to sim time by windupScale (the live playback speed; 0 disables it).
   windupScale = 0.32;
+  // [motion] receive settle (lib/town/match/matchMotion.ts, Nov 4 2026; 0 = off, the default, so headless sims are unchanged):
+  // a receiver arriving at no more than twice this pace (sim u/s) stays at or below it through his first touch and
+  // receiveSettleTime sim seconds after, so the view can show him slow down and step on the ball (sole control).
+  receiveSettle = 0;
+  receiveSettleTime = 0.15;
+  private settleId: string | null = null;
+  private settleT = 0;
   private windup: KickWindup | null = null;
   private releasing = false;
   private deciding = false;
@@ -1799,6 +1806,8 @@ export class MatchSim {
     this.trapVX = bvx * keep; this.trapVY = bvy * keep;
     // expose the reception read (mutate in place — zero allocations)
     this.recv.id = id; this.recv.t = dur; this.recv.dur = dur;
+    // [motion] receive settle: a slow arrival controls the ball before moving off (AI only; the human keeps his pace).
+    if (this.receiveSettle > 0 && id !== this.userId && Math.hypot(p.vx, p.vy) <= this.receiveSettle * 2) { this.settleId = id; this.settleT = dur + this.receiveSettleTime; } else this.settleId = null;
     this.recv.foot = foot; this.recv.faceX = fx; this.recv.faceY = fy;
   }
   // cancel any in-progress trap (ball released / dead-ball placement owns the ball)
@@ -3010,6 +3019,7 @@ export class MatchSim {
   // stick feel are untouched. Runs inside the ≤1/30 s substeps of step(), so the rates
   // are safe however much wall-clock time a distant match accumulates.
   private integrate(dt: number) {
+    if (this.settleId && ((this.settleT -= dt) <= 0 || this.ball.owner !== this.settleId)) this.settleId = null; // [motion] receive settle
     const buildOut=this.buildOutTeam;
     const carrierId = this.ball.owner;
     const carrier = carrierId ? this.players[carrierId] : null;
@@ -3047,6 +3057,7 @@ export class MatchSim {
       if (rm.burst > 1 && liveBall && dist(p.x, p.y, this.ball.x, this.ball.y) < M.keeperBurst) maxV *= rm.burst;
       if (!isUser) maxV *= this.legsMul; // match-arc legs (AI only — never the human)
       maxV *= this.legs; // sand (beach) — 1 on every other surface
+      if (this.settleId === id) maxV = Math.min(maxV, this.receiveSettle); // [motion] receive settle
       let jockeying = false;
       if (isUser) {
         jockeying = !!(this.userJockey && carrier && carrier.team !== this.userTeam);
