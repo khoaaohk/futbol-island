@@ -55,67 +55,144 @@
 .navBtn{display:inline-flex;align-items:center;justify-content:center;width:var(--btn-nav-width,76px);height:var(--btn-height,44px);border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font:600 14px/1.1 Arial,Helvetica,sans-serif}
 .demoNote{font-size:13px;color:var(--ink2);text-align:center}
 
-/* ==== the print page /marketing/overview (A4 portrait, scripts/build-marketing-pdf.cjs) ====
-   Owner, Nov 4: the pictures carry the PDF. Each feature gets one large picture with its words smaller beneath or beside it:
-   a 16:9 poster runs the full content width (two per page), a 4:5 shot is 150mm wide (one per page), an upright phone screen
-   is 218mm tall with its words beside it. */
-:global(html):has(.doc),:global(html):has(.doc) :global(body){background:#fff!important}
-:global([data-reading-page]):has(.doc)>:global(header),:global([data-reading-page]):has(.doc) :global(footer){display:none}
-.doc{--ink:#14221d;--ink2:#5b675f;--gold:#e9c16b;--well:#f4efe2;
+
+/* ==== the print page /marketing/overview (scripts/build-marketing-pdf.cjs) ====
+   Nov 4 2026 redesign (owner: "too generic"): a 16:9 landscape deck, 1280 x 720 CSS px per slide (13.33 x 7.5 in), one idea per
+   slide. The tour's own tokens (paper, ink, tint, well, gold), the system sans for every word, IslandBrush only for the wordmark.
+   Chapter openers wear their group's island colour (LEARN_THEME). No rules, no shadows, no gradients: space and tone steps. */
+:global(html):has(.doc),:global(html):has(.doc) :global(body){background:#fbf7ee!important;margin:0}
+:global([data-reading-page]):has(.doc)>:global(header),:global([data-reading-page]):has(.doc) :global(footer):not(.folio){display:none}
+.doc{--paper:#fbf7ee;--tint:#ecefdf;--well:#efe8d7;--ink:#14221d;--ink2:#5b675f;--gold:#e9c16b;
  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
- margin:calc(-1 * var(--s3,24px)) calc(50% - 50vw) calc(-1 * var(--s5,64px));background:#fff;color:var(--ink);font:10.5pt/1.45 var(--sans);
- -webkit-print-color-adjust:exact;print-color-adjust:exact}
+ --mx:64px;--r:18px;
+ margin:calc(-1 * var(--s3,24px)) calc(50% - 50vw) calc(-1 * var(--s5,64px));background:var(--paper);color:var(--ink);font:15px/1.45 var(--sans);
+ counter-reset:pg;-webkit-print-color-adjust:exact;print-color-adjust:exact}
 .doc *{box-sizing:border-box}
-.doc h1,.doc h2,.doc h3,.doc p,.doc ul,.doc ol,.doc figure{margin:0}
+.doc h1,.doc h2,.doc h3,.doc p,.doc ul,.doc ol,.doc dl,.doc dd{margin:0}
 .doc ul,.doc ol{padding:0;list-style:none}
 .doc p,.doc li{max-width:none}
 .doc li::marker{content:none}
-.page{width:210mm;margin:0 auto;padding:16mm}
-@media screen{.page{box-shadow:0 0 0 1px #0001;margin:16px auto;background:#fff}}
-@media print{.page{width:auto;padding:0 16mm}}
-@page{size:A4;margin:14mm 0 16mm}
-.break{break-before:page}
-.cover{display:grid;grid-template-rows:repeat(4,auto) 1fr;justify-items:center;gap:7mm;text-align:center}
-@media print{.cover{height:262mm}}
-.coverLogo{font-family:IslandBrush,Arial,sans-serif;font-size:60pt;line-height:1;margin-top:8mm}
-.coverTitle{font-size:32pt;font-weight:600;line-height:1.05;letter-spacing:-.025em}
-.doc .coverLine{font-size:15pt;font-weight:500;line-height:1.3;color:var(--ink2)}
-.coverImg{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:5mm;background:var(--well);margin-top:4mm}
-.coverFoot{align-self:end;width:100%;display:flex;justify-content:space-between;font-size:10pt;color:var(--ink2)}
-.dh2{font-size:24pt;font-weight:600;line-height:1.08;letter-spacing:-.02em;margin-bottom:3mm!important}
-.dh3{font-size:13pt;font-weight:600;line-height:1.2;letter-spacing:-.01em}
-.doc .lead{font-size:12.5pt;font-weight:500;line-height:1.35;color:var(--ink2);max-width:60ch;margin-bottom:6mm!important}
-.doc .para{max-width:68ch;margin-bottom:4mm!important}
-.points{display:grid;gap:2mm;margin:2mm 0 6mm!important}
-.points li{position:relative;padding-left:5mm}
-.points li::before{content:"";position:absolute;left:0;top:.55em;width:2mm;height:2mm;border-radius:50%;background:var(--gold)}
-.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:5mm;margin:4mm 0 8mm}
-.pillar{padding:5mm;border-radius:4mm;background:var(--well);break-inside:avoid}
-.pillar b{display:block;font-size:12pt;margin-bottom:1.5mm}
-.doc .tags{display:flex;flex-wrap:wrap;gap:2mm;margin-top:2.5mm}
-.tags li{padding:1mm 3mm;border-radius:99px;background:var(--well);font-size:9pt}
-.group{break-before:page}
-.groupHead{margin-bottom:6mm}
-/* one picture, its words smaller beneath or beside */
-.fig{break-inside:avoid;margin-bottom:9mm;display:grid;gap:4mm}
-.fig img{display:block;border-radius:4mm;background:var(--well);object-fit:cover}
-.figWide img{width:100%;height:auto;aspect-ratio:16/9}
-.figWide .text{display:grid;grid-template-columns:1fr 1fr;gap:1mm 7mm}
-.figWide .text>:is(h3,.hook){grid-column:1/-1}
-.figMid img{width:150mm;height:187.5mm}
-.figTall{grid-template-columns:auto 1fr;gap:7mm;align-items:start}
-.figTall img{height:218mm;width:auto;max-width:108mm}
-.figNone{padding:5mm;border-radius:4mm;background:var(--well)}
-.text{font-size:9.5pt;line-height:1.45}
-.text h3{font-size:14pt;font-weight:600;line-height:1.2;letter-spacing:-.01em;margin-bottom:1mm}
-.doc .hook{font-size:11pt;font-weight:500;color:var(--ink2);margin-bottom:1.5mm}
-.doc .small{color:var(--ink2);margin-top:1.5mm}
-.small b{color:var(--ink);font-weight:600}
-.steps{display:grid;gap:2mm;margin:2mm 0 4mm!important;counter-reset:st}
-.steps li{position:relative;padding-left:8mm;counter-increment:st}
-.steps li::before{content:counter(st);position:absolute;left:0;top:0;width:5.5mm;height:5.5mm;border-radius:50%;background:var(--gold);font-size:8.5pt;font-weight:700;display:grid;place-items:center}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:7mm;break-inside:avoid}
-.faq{break-inside:avoid;padding:3.5mm 0}
-.faq b{display:block;font-size:11pt;margin-bottom:1mm}
-.contact{margin-top:6mm!important;padding:6mm;border-radius:4mm;background:var(--well);break-inside:avoid}
-.contact a{color:var(--ink);font-weight:600;text-decoration:none}
+.doc a{color:inherit;text-decoration:none}
+@page{size:1280px 720px;margin:0}
+
+.doc>.slide:last-child{break-after:auto}
+.slide{position:relative;width:1280px;height:720px;overflow:hidden;margin:0 auto;padding:56px var(--mx) 72px;background:var(--paper);
+ counter-increment:pg;break-after:page;break-inside:avoid}
+@media screen{.slide{margin:24px auto}}
+.folio{position:absolute;left:var(--mx);right:var(--mx);bottom:26px;display:flex;justify-content:space-between;font-size:12px;line-height:1;color:var(--ink2)}
+.folioDark{color:#fff}
+.pn::after{content:counter(pg)}
+
+.h2{font-size:40px;font-weight:600;line-height:1.05;letter-spacing:-.028em}
+.h3{font-size:17px;font-weight:600;line-height:1.25;letter-spacing:-.01em}
+.doc .statement{font-size:22px;font-weight:500;line-height:1.32;letter-spacing:-.012em}
+.doc .body{font-size:15px;line-height:1.5}
+.doc .note{font-size:13px;color:var(--ink2)}
+.img{display:block}
+.doc img{display:block;object-fit:cover;background:var(--well)}
+
+/* ---- cover: words left, the island montage bleeding off the right edge ---- */
+.cover{display:grid;grid-template-columns:470px 1fr;padding:0}
+.coverText{display:grid;grid-template-rows:auto auto auto 1fr;align-content:start;gap:22px;padding:72px 0 72px var(--mx)}
+.coverLogo{font-family:IslandBrush,Arial,sans-serif;font-size:76px;line-height:.95;margin-bottom:18px}
+.coverTitle{font-size:44px;font-weight:600;line-height:1.04;letter-spacing:-.03em}
+.coverTitle span{display:block}
+.doc .coverLine{font-size:22px;font-weight:500;line-height:1.3;color:var(--ink2)}
+.doc .coverFoot{align-self:end;font-size:15px;line-height:1.5;color:var(--ink)}
+.coverImg{width:100%;height:720px;margin-left:40px}
+.cover .folio{display:none}
+
+/* ---- split: words on one side, a 4:5 still bleeding off the other ---- */
+.split{display:grid;grid-template-columns:1fr 500px;gap:64px;padding:0 0 0 var(--mx)}
+.splitFlip{grid-template-columns:500px 1fr;padding:0 var(--mx) 0 0}
+.splitText{display:grid;align-content:start;gap:20px;padding:64px 0 88px}
+.split:not(.splitFlip) .splitText{grid-template-rows:auto auto auto 1fr}
+.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:8px!important}
+.trust li{padding:16px 18px;border-radius:14px;background:var(--tint);font-size:14px;line-height:1.4;font-weight:500}
+.split:not(.splitFlip) .facts{align-self:end}
+.splitImg{width:500px;height:720px}
+.split .folio{left:var(--mx);right:auto;gap:24px}
+.split:not(.splitFlip) .folio{right:564px}
+.splitFlip .folio{left:564px;right:var(--mx)}
+.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:26px 24px;margin-top:22px!important}
+.facts dt{font-size:52px;font-weight:600;line-height:1;letter-spacing:-.035em;font-variant-numeric:tabular-nums}
+.facts dd{font-size:14px;line-height:1.3;margin-top:8px!important}
+.pillars{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:10px}
+.pillars>div{padding:18px;border-radius:var(--r);background:var(--tint);font-size:13.5px;line-height:1.45;break-inside:avoid}
+.pillars b{display:block;font-size:16px;margin-bottom:6px}
+
+/* ---- chapter opener: the group's colour, floor to ceiling ---- */
+.opener{display:grid;grid-template-columns:400px 1fr;gap:56px;align-items:center;color:#fff;padding:56px var(--mx) 72px}
+.openerText{display:grid;gap:22px;align-content:center}
+.openerTitle{font-size:64px;font-weight:600;line-height:1;letter-spacing:-.035em}
+.doc .openerBlurb{font-size:20px;font-weight:500;line-height:1.35}
+.openerList{display:grid;gap:7px;font-size:15px;line-height:1.3;margin-top:8px!important}
+.openerImg{border-radius:var(--r);justify-self:end}
+.openerWide{width:100%;aspect-ratio:16/9;height:auto}
+.openerTall{height:592px;width:474px}
+
+/* ---- feature grid: up to six tiles, picture left and words right ---- */
+.pageHead{display:flex;align-items:baseline;gap:28px;margin-bottom:26px}
+.doc .headLine{font-size:15px;color:var(--ink);max-width:62ch}
+.gridPage .h2,.steps .h2,.safe .h2,.faqPage .h2{font-size:32px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(3,minmax(0,1fr));gap:24px 40px;height:530px}
+.tile{display:grid;grid-template-columns:262px minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:20px;min-height:0;height:100%;overflow:hidden;break-inside:avoid}
+.tileImg,.tileNote{width:262px;height:100%;min-height:0;border-radius:14px}
+.tileNote{background:var(--tint);padding:16px 18px;display:flex;align-items:center}
+.doc .tileNote p{font-size:12.5px;line-height:1.42}
+.tileText{display:grid;align-content:start;gap:6px;min-height:0}
+.tileText h3{font-size:17px;font-weight:600;line-height:1.2;letter-spacing:-.01em}
+.doc .tileHook{font-size:13.5px;line-height:1.38;font-weight:500}
+.doc .tileTie{font-size:12.5px;line-height:1.42;color:var(--ink2)}
+/* four tiles: two rows, larger pictures */
+.grid4{grid-template-rows:repeat(2,minmax(0,1fr));gap:36px 40px}
+.grid4 .tile{grid-template-columns:330px minmax(0,1fr)}
+.grid4 .tileImg,.grid4 .tileNote{width:330px}
+/* three tiles: three columns, picture on top */
+.grid3{grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto;align-items:start;gap:36px;height:auto;margin-top:24px}
+.grid3 .tile{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;gap:18px;height:auto;align-content:start}
+.grid3 .tileImg,.grid3 .tileNote{width:100%;height:auto;aspect-ratio:1}
+.grid3 .tileNote{padding:28px}
+.doc .grid3 .tileNote p{font-size:19px;line-height:1.4;font-weight:500}
+.grid3 .tileText h3{font-size:20px}
+.grid3 .tileHook{font-size:15px}
+.grid3 .tileTie{font-size:13.5px}
+
+/* ---- Play together: three steps with their screens ---- */
+.steps .pageHead{display:grid;gap:10px;margin-bottom:22px}
+.stepRow{display:grid;grid-template-columns:repeat(3,1fr);gap:28px;counter-reset:st}
+.stepRow li{display:grid;grid-template-columns:184px 1fr;gap:16px;align-items:start;counter-increment:st;break-inside:avoid}
+.stepImg{width:184px;height:230px;border-radius:12px}
+.stepRow p{font-size:14px;line-height:1.42}
+.stepRow p::before{content:counter(st);display:grid;place-items:center;width:28px;height:28px;margin-bottom:10px;border-radius:50%;background:var(--gold);font-weight:700;font-size:14px}
+.stepLists{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:30px}
+.dots{display:grid;gap:6px;margin-top:10px!important;font-size:13.5px;line-height:1.38}
+.dots li{position:relative;padding-left:16px}
+.dots li::before{content:"";position:absolute;left:0;top:.5em;width:7px;height:7px;border-radius:50%;background:var(--gold)}
+.stepLists .note{margin-top:10px!important}
+
+/* ---- Safe and simple: five features as a list, privacy beside ---- */
+.safeBody{display:grid;grid-template-columns:1fr 380px;gap:48px}
+.safeList{display:grid;grid-template-columns:1fr 1fr;gap:26px 36px;align-content:start}
+.safeList article{display:grid;gap:6px;break-inside:avoid}
+.safeList h3{font-size:18px;font-weight:600;line-height:1.2;letter-spacing:-.01em}
+.safeList p:not(.tileHook){font-size:13px;line-height:1.45;color:var(--ink2)}
+.privacy{padding:24px 26px;border-radius:var(--r);background:var(--tint);display:grid;gap:10px;align-content:start}
+.privacy p{font-size:13.5px;line-height:1.5}
+
+/* ---- questions ---- */
+.faqCols{column-count:3;column-gap:40px}
+.faq{break-inside:avoid;margin-bottom:16px}
+.faq h3{font-size:14px;font-weight:600;line-height:1.3;margin-bottom:4px!important}
+.faq p{font-size:12.5px;line-height:1.42}
+
+/* ---- about and contact ---- */
+.about{display:grid;grid-template-columns:1fr 400px;gap:72px;padding-top:64px;align-items:start}
+.aboutMain{display:grid;gap:28px;align-content:start}
+.aboutMain .statement{font-size:32px;line-height:1.25;letter-spacing:-.02em}
+.aboutSide{display:grid;gap:12px;align-content:start;padding:28px 30px;border-radius:var(--r);background:var(--tint)}
+.rows{display:grid;gap:4px;margin-top:8px!important}
+.rows li{font-size:28px;font-weight:600;line-height:1.25;letter-spacing:-.02em}
+.contact{display:grid;align-content:center;justify-items:start;gap:22px;padding-left:120px}
+.contactLogo{font-family:IslandBrush,Arial,sans-serif;font-size:64px;line-height:1;margin-bottom:12px}
+.contact .rows li{font-size:40px;letter-spacing:-.03em}

@@ -1,133 +1,197 @@
 import s from '@/components/marketing/marketing.module.css';
 import {CONTACT_EMAIL,GROWN_UPS as G,NONPROFITS,WSV_LINKS} from '@/lib/site/aboutCopy';
-import {LEARN_CAROUSEL,LEARN_FAQ,LEARN_FEATURES,LEARN_GROUPS,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,LEARN_MONTAGE,LEARN_SLIDES,LEARN_TOGETHER_NOT,LEARN_TOGETHER_TRUST,type LearnFeature} from '@/lib/site/learnFeatures';
-import {learnAsset,learnMontage,learnSlideAsset,learnWideAsset,type LearnImage} from '@/lib/site/learnMedia';
+import {LEARN_FAQ,LEARN_FEATURES,LEARN_GROUPS,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,LEARN_TOGETHER_NOT,LEARN_TOGETHER_TRUST,type LearnFeature,type LearnGroupId} from '@/lib/site/learnFeatures';
+import {learnAsset,learnMontage,learnSlideAsset,learnWideAsset,LEARN_THEME,type LearnImage} from '@/lib/site/learnMedia';
 import {hiddenMeta,LOGO_COLOURS,MARKETING_OVERVIEW_PATH} from '@/lib/site/marketing';
 
 /**
  * /marketing/overview (Nov 4 2026, owner): the print page behind the investor overview PDF (scripts/build-marketing-pdf.cjs renders
- * it to public/marketing/futbol-island-overview.pdf, A4 portrait). Unlisted and noindex like /marketing (lib/site/marketing.ts).
- * Words: ONLY copy already on the site or in lib/site (learnFeatures.ts, aboutCopy.ts): no new claims, stats or numbers.
- * Pictures (owner, Nov 4: "investors need to see them clearly"): one LARGE real still per chapter and feature, the tour's own
- * posters at their full resolution (public/learn via learnMedia), never video; words sit smaller beneath or beside each picture.
+ * it to public/marketing/futbol-island-overview.pdf). Unlisted and noindex like /marketing (lib/site/marketing.ts).
+ * Words: ONLY copy already on the site or in lib/site (learnFeatures.ts, aboutCopy.ts): no new claims, stats or numbers (the
+ * figures on the summary page are the `counts` that tests/learn-content.cjs recomputes from the game's data).
+ *
+ * Redesign (Nov 4 2026, owner: "too generic"): a 16:9 landscape deck (1280 x 720 CSS px = 13.33 x 7.5 in, the standard slide
+ * size) instead of 49 A4 portrait pages. Investors read it on a laptop screen, the tour's best pictures are 16:9 posters, and
+ * the 4:5 and phone stills sit beside their words instead of under them. One slide = one idea:
+ *  cover · what it is · why we built it · per group: a chapter opener in the group's own island colour (LEARN_THEME) with one
+ *  large picture, then a tidy grid of its features (picture left, words right; a feature with no still shows its description
+ *  on a tint field instead of drawn art) · Play together's three steps · questions · about · contact.
+ * Every one of LEARN_FEATURES appears once (data-feature; the build script checks the count).
  */
 export const dynamic='force-static';
 export const metadata=hiddenMeta('Overview','Futbol Island overview for investors and partners (print version of the marketing PDF).',MARKETING_OVERVIEW_PATH);
 
-type Pic={img:LearnImage;alt:string};
-/** The largest real still for an image key (the 1080x1350 4:5 re-capture when there is one). The PDF script re-encodes each one
- *  as a JPEG at 2x its printed size. */
-const still=(k:string):LearnImage|null=>learnAsset(k).image??null;
-const altOf=(k:string,fallback:string)=>learnAsset(k).alt??fallback;
-/** A feature's picture: its 1920px "See it in action" poster when one names it, else its own still, else the shot of a chapter
- *  that covers only it (Fuel up = the Konbini); none = words only (no drawn art). */
-function featureStill(f:LearnFeature):Pic|null{
- const c=LEARN_CAROUSEL.find(x=>x.feature===f.id),w=c?learnWideAsset(c.key):null;
- if(w?.image)return {img:w.image,alt:w.alt??c!.title};
- const own=still(f.imageKey);if(own)return {img:own,alt:altOf(f.imageKey,f.title)};
- const h=LEARN_HIGHLIGHTS.find(x=>x.features.length===1&&x.features[0]===f.id),hs=h?still(h.shot):null;
- return hs&&h?{img:hs,alt:altOf(h.shot,h.title)}:null;
-}
+type Pic={img:LearnImage;alt:string;focus?:string};
+const fromAsset=(a:{image?:LearnImage;alt?:string;focus?:string}|null,alt:string,focus?:string):Pic|null=>a?.image?{img:a.image,alt:a.alt??alt,focus:focus??a.focus}:null;
+const still=(k:string,focus?:string)=>fromAsset(learnAsset(k),k,focus);
+const wide=(k:string,focus?:string)=>fromAsset(learnWideAsset(k),k,focus);
+const slide=(k:string,focus?:string)=>fromAsset(learnSlideAsset(k),k,focus);
+
+/** Each feature's one picture, chosen by eye so no picture repeats in the deck (null = the description on a tint field). */
+const FEATURE_PIC:Record<string,()=>Pic|null>={
+ 'lesson-quiz':()=>slide('stories'),'path-stories':()=>still('stories_chapter','50% 40%'),
+ 'reef-balls':()=>wide('diving'),'ball-hunt':()=>still('ball_hunt','50% 30%'),'swim-dive':()=>still('animal_ride','50% 55%'),'fishing':()=>wide('fishing'),
+ 'bug-squad':()=>wide('bugs'),'history-museum':()=>wide('museum'),'konbini':()=>still('fuel_konbini'),'islanders':()=>wide('npc'),
+ 'quick-challenges':()=>still('npc_chat','50% 52%'),'bubbles-banter':()=>still('npc_bubble','50% 45%'),
+ 'arcade':()=>wide('arcade'),'pass-puzzles':()=>still('pass_puzzles','50% 45%'),'beach-match':()=>slide('beachmatch'),'keep-ups':()=>still('emotes','50% 50%'),'island-jobs':()=>wide('jobs'),
+ 'friends-kits':()=>still('mp_meet','50% 50%'),'friends-emotes':()=>still('mp_emotes','50% 50%'),'friends-ball':()=>still('mp_ball','50% 50%'),'friends-ride':()=>still('mp_ride','50% 50%'),
+ 'player-cards':()=>still('player_cards','50% 40%'),'pop-up-books':()=>wide('books'),'vending':()=>wide('vending'),
+ 'kit-shop':()=>still('kit_shop','50% 30%'),'rides':()=>still('scooter_bike','50% 50%'),
+};
+/** The chapter opener's large picture for each group. */
+const GROUP_PIC:Record<LearnGroupId,()=>Pic|null>={
+ learn:()=>still('lesson_field'),explore:()=>still('explore'),play:()=>slide('arcade'),together:()=>slide('party'),
+ collect:()=>slide('collection'),yours:()=>slide('kit'),safe:()=>still('save_code'),
+};
+/** The figures on the summary page: each one is a feature's own `counts` value, worded as its `proof` line words it. */
+const FACTS:{id:string;key:string;label:string}[]=[
+ {id:'learning-paths',key:'lessons',label:'lessons'},{id:'learning-paths',key:'quizQuestions',label:'quiz questions'},
+ {id:'path-stories',key:'stories',label:'narrated story films'},{id:'ball-hunt',key:'hiddenBalls',label:'hidden balls, each a mini lesson'},
+ {id:'fishing',key:'fish',label:'sea animals to catch'},{id:'islanders',key:'npcs',label:'islanders to meet'},
+ {id:'player-cards',key:'cards',label:'player cards'},{id:'pop-up-books',key:'books',label:'narrated pop-up books'},
+];
 
 const Word=({text}:{text:string})=><>{[...text].map((ch,i)=>ch===' '?' ':<span key={i} style={{color:LOGO_COLOURS[i%LOGO_COLOURS.length]}}>{ch}</span>)}</>;
-const Img=({im,alt,className}:{im:LearnImage;alt:string;className?:string})=>
+const Img=({p,className}:{p:Pic;className?:string})=>
  // eslint-disable-next-line @next/next/no-img-element
- <img className={className} src={im.src} width={im.width} height={im.height} alt={alt} loading="eager" decoding="sync"/>;
+ <img className={className} src={p.img.src} width={p.img.width} height={p.img.height} alt={p.alt} style={p.focus?{objectPosition:p.focus}:undefined} loading="eager" decoding="sync"/>;
+const isWide=(p:Pic)=>p.img.width/p.img.height>1.2;
 
-/** One large picture with its words smaller beneath (16:9 full width, 4:5 at 150mm) or beside it (upright phone screens). */
-function Fig({m,children}:{m:Pic|null;children:React.ReactNode}){
- if(!m)return <article className={`${s.fig} ${s.figNone}`}><div className={s.text}>{children}</div></article>;
- const r=m.img.width/m.img.height,kind=r>1.2?s.figWide:r>=.7?s.figMid:s.figTall;
- return <article className={`${s.fig} ${kind}`}><Img im={m.img} alt={m.alt}/><div className={s.text}>{children}</div></article>;
+/** One 16:9 slide with its running footer (section name left, page number right). */
+function Slide({children,className,folio,dark,style}:{children:React.ReactNode;className?:string;folio:string;dark?:boolean;style?:React.CSSProperties}){
+ return <section className={`${s.slide} ${className??''}`} style={style}>
+  {children}
+  <footer className={`${s.folio} ${dark?s.folioDark:''}`}><span>Futbol Island · {folio}</span><span className={s.pn}/></footer>
+ </section>;
 }
-const FeatureText=({f}:{f:LearnFeature})=><>
- <h3>{f.title}</h3>
- <p className={s.hook}>{f.hook}</p>
- <p>{f.description}</p>
- <div><p className={s.small}><b>Football idea:</b> {f.footballTie}</p><p className={s.small}><b>In the game:</b> {f.proof}</p></div>
-</>;
+
+function Tile({f}:{f:LearnFeature}){
+ const p=FEATURE_PIC[f.id]?.()??null;
+ return <article className={s.tile} data-feature={f.id}>
+  {p?<Img p={p} className={s.tileImg}/>:<div className={s.tileNote}><p>{f.description}</p></div>}
+  <div className={s.tileText}>
+   <h3>{f.title}</h3>
+   <p className={s.tileHook}>{f.hook}</p>
+   <p className={s.tileTie}>{f.footballTie}</p>
+  </div>
+ </article>;
+}
 
 export default function Overview(){
  const top=LEARN_HIGHLIGHTS.find(h=>h.id==='top')!;
- const chapters=LEARN_HIGHLIGHTS.filter(h=>h.id!=='top');
- const party=LEARN_FEATURES.find(f=>f.id==='party-start');
+ const party=LEARN_FEATURES.find(f=>f.id==='party-start')!;
  const montage=learnMontage()?.sizes.reduce<LearnImage|null>((a,x)=>!a||x.image.width>a.width?x.image:a,null)??null;
- const coverImg=montage??still(top.shot);
- const slides=LEARN_SLIDES.map(x=>({x,a:learnSlideAsset(x.key)})).filter(y=>y.a?.image);
- const title=(id:string)=>LEARN_FEATURES.find(f=>f.id===id)?.title;
- return <div className={s.doc} data-marketing-doc="">
-  {/* ---- cover: the wordmark centred, in the bar logo's bright letters (static in print) ---- */}
-  <section className={`${s.page} ${s.cover}`}>
-   <div className={s.coverLogo}><Word text="Futbol Island"/></div>
-   <h1 className={s.coverTitle}>{LEARN_HERO.headline.split(/(?<=\.)\s+/).map((x,i)=><span key={i} style={{display:"block"}}>{x}</span>)}</h1>
-   <p className={s.coverLine}>{top.line}</p>
-   {coverImg&&<Img className={s.coverImg} im={coverImg} alt={LEARN_MONTAGE.title}/>}
-   <div className={s.coverFoot}><span>Overview for investors and partners</span><span>futbolisland.app</span></div>
-  </section>
-
-  {/* ---- what it is ---- */}
-  <section className={`${s.page} ${s.break}`}>
-   <h2 className={s.dh2}>What Futbol Island is</h2>
-   <p className={s.lead}>{LEARN_HERO.subhead}</p>
-   <div className={s.trio}>
-    <div className={s.pillar}><b>{G.free}</b>{G.freeWhy}</div>
-    <div className={s.pillar}><b>No ads</b>{LEARN_FAQ.find(q=>q.q==='Are there ads?')!.a.replace(/^No\.\s*/,'')}</div>
-    <div className={s.pillar}><b>No chat</b>{LEARN_FAQ.find(q=>q.q==='Can my child chat with other people?')!.a.replace(/^No\.\s*/,'')}</div>
+ const cover:Pic|null=montage?{img:montage,alt:'One afternoon on Futbol Island',focus:'40% 50%'}:still('town_overview');
+ const count=(id:string,k:string)=>(LEARN_FEATURES.find(f=>f.id===id)?.counts as Record<string,number>|undefined)?.[k];
+ const facts=FACTS.map(x=>({...x,n:count(x.id,x.key)})).filter(x=>typeof x.n==='number');
+ const faqA=(q:string)=>LEARN_FAQ.find(x=>x.q===q)!.a.replace(/^No\.\s*/,'');
+ const stepPics=[still('friend_step1'),still('friend_step2'),still('mp_join')];
+ const summaryPic=still('town_overview'),whyPic=still('quiz_question','50% 50%');
+ return <div className={s.doc} data-marketing-doc="" data-features-total={LEARN_FEATURES.length}>
+  {/* ---- cover ---- */}
+  <Slide className={s.cover} folio="Overview">
+   <div className={s.coverText}>
+    <div className={s.coverLogo}><Word text="Futbol Island"/></div>
+    <h1 className={s.coverTitle}>{LEARN_HERO.headline.split(/(?<=\.)\s+/).map((x,i)=><span key={i}>{x}</span>)}</h1>
+    <p className={s.coverLine}>{top.line}</p>
+    <p className={s.coverFoot}>Overview for investors and partners<br/>futbolisland.app</p>
    </div>
-   <ul className={s.points}>{LEARN_HERO.trust.map(t=><li key={t}>{t}.</li>)}</ul>
-   <h3 className={s.dh3}>{G.whyTitle}</h3>
-   <p className={s.para}>{G.why}</p>
-   <h3 className={s.dh3}>{G.learnsTitle}</h3>
-   <p className={s.para}>{G.learns}</p>
-   <h3 className={s.dh3}>{G.privacyTitle}</h3>
-   <p className={s.para}>{G.privacy}</p>
-  </section>
+   {cover&&<Img p={cover} className={s.coverImg}/>}
+  </Slide>
 
-  {/* ---- the tour's chapters, one large shot each ---- */}
-  <section className={`${s.page} ${s.break}`}>
-   <div className={s.groupHead}><h2 className={s.dh2}>The island, chapter by chapter</h2><p className={s.lead} style={{marginBottom:0}}>The chapters of futbolisland.app, each one idea, with the features it covers.</p></div>
-   {chapters.map(h=>{const im=still(h.shot);return <Fig key={h.id} m={im?{img:im,alt:altOf(h.shot,h.title)}:null}>
-    <h3>{h.title}</h3>
-    <p className={s.hook}>{h.line}</p>
-    <ul className={s.tags}>{h.chips.map(c=><li key={c}>{c}</li>)}</ul>
-    {h.features.length?<p className={s.small}><b>Features:</b> {h.features.map(title).filter(Boolean).join(' · ')}</p>:null}
-   </Fig>;})}
-  </section>
+  {/* ---- what it is: the statement and the island in figures ---- */}
+  <Slide className={s.split} folio="What it is">
+   <div className={s.splitText}>
+    <h2 className={s.h2}>What Futbol Island is</h2>
+    <p className={s.statement}>{LEARN_HERO.subhead}</p>
+    <ul className={s.trust}>{LEARN_HERO.trust.map(t=><li key={t}>{t}.</li>)}</ul>
+    <dl className={s.facts}>{facts.map(x=><div key={x.key}><dt>{x.n}</dt><dd>{x.label}</dd></div>)}</dl>
+   </div>
+   {summaryPic&&<Img p={summaryPic} className={s.splitImg}/>}
+  </Slide>
 
-  {/* ---- even more to explore: the tour's slideshow stills ---- */}
-  {slides.length?<section className={`${s.page} ${s.break}`}>
-   <div className={s.groupHead}><h2 className={s.dh2}>Even more to explore</h2></div>
-   {slides.map(({x,a})=><Fig key={x.key} m={{img:a!.image!,alt:a!.alt??x.title}}><h3>{x.title}</h3><p className={s.hook}>{x.caption}</p></Fig>)}
-  </section>:null}
+  {/* ---- why we built it ---- */}
+  <Slide className={`${s.split} ${s.splitFlip}`} folio="Why we built it">
+   {whyPic&&<Img p={whyPic} className={s.splitImg}/>}
+   <div className={s.splitText}>
+    <h2 className={s.h2}>{G.whyTitle}</h2>
+    <p className={s.body}>{G.why}</p>
+    <h3 className={s.h3}>{G.learnsTitle}</h3>
+    <p className={s.body}>{G.learns}</p>
+    <div className={s.pillars}>
+     <div><b>{G.free}</b><p>{G.freeWhy}</p></div>
+     <div><b>No ads</b><p>{faqA('Are there ads?')}</p></div>
+     <div><b>No chat</b><p>{faqA('Can my child chat with other people?')}</p></div>
+    </div>
+   </div>
+  </Slide>
 
-  {/* ---- every feature, by group ---- */}
-  {LEARN_GROUPS.map(g=>{const fs=LEARN_FEATURES.filter(f=>f.group===g.id);return <section key={g.id} className={`${s.page} ${s.group}`}>
-   <div className={s.groupHead}><h2 className={s.dh2}>{g.title}</h2><p className={s.lead} style={{marginBottom:0}}>{g.blurb}</p></div>
-   {g.id==='together'&&party?.steps?<div className={s.two} style={{marginBottom:'8mm'}}>
-    <div><h3 className={s.dh3}>How a party starts</h3><ol className={s.steps}>{party.steps.map(x=><li key={x.line}>{x.line}</li>)}</ol><p className={s.small}>{LEARN_GROWNUP_LINE}</p></div>
-    <div><h3 className={s.dh3}>What it deliberately leaves out</h3><ul className={s.points}>{LEARN_TOGETHER_NOT.map(x=><li key={x}>{x}</li>)}</ul></div>
-   </div>:null}
-   {fs.map(f=><Fig key={f.id} m={featureStill(f)}><FeatureText f={f}/></Fig>)}
-   {g.id==='together'?<div style={{marginTop:'6mm',breakInside:'avoid'}}><h3 className={s.dh3}>Trust points</h3><ul className={s.points}>{LEARN_TOGETHER_TRUST.map(x=><li key={x}>{x}</li>)}</ul></div>:null}
-  </section>;})}
+  {/* ---- every feature, by group: an opener in the group's colour, then its grid ---- */}
+  {LEARN_GROUPS.map(g=>{
+   const t=LEARN_THEME[g.id],fs=LEARN_FEATURES.filter(f=>f.group===g.id),hero=GROUP_PIC[g.id]();
+   const grid=g.id==='together'?fs.filter(f=>f.id!=='party-start'):fs;
+   const pages:LearnFeature[][]=[];for(let i=0;i<grid.length;i+=6)pages.push(grid.slice(i,i+6));
+   return <div key={g.id} className={s.group}>
+    <Slide className={s.opener} folio={g.title} dark style={{background:t.c1}}>
+     <div className={s.openerText}>
+      <h2 className={s.openerTitle}>{g.title}</h2>
+      <p className={s.openerBlurb}>{g.blurb}</p>
+      <ul className={s.openerList}>{fs.map(f=><li key={f.id}>{f.title}</li>)}</ul>
+     </div>
+     {hero&&<Img p={hero} className={`${s.openerImg} ${isWide(hero)?s.openerWide:s.openerTall}`}/>}
+    </Slide>
+
+    {g.id==='together'?<Slide className={s.steps} folio={g.title}>
+     <div className={s.pageHead}><h2 className={s.h2} style={{color:t.c1}}>{party.title}</h2><p className={s.headLine}>{party.description}</p></div>
+     <ol className={s.stepRow} data-feature={party.id}>{party.steps!.map((x,i)=><li key={x.line}>{stepPics[i]&&<Img p={stepPics[i]!} className={s.stepImg}/>}<p>{x.line}</p></li>)}</ol>
+     <div className={s.stepLists}>
+      <div><h3 className={s.h3}>What it deliberately leaves out</h3><ul className={s.dots}>{LEARN_TOGETHER_NOT.map(x=><li key={x}>{x}</li>)}</ul></div>
+      <div><h3 className={s.h3}>Trust points</h3><ul className={s.dots}>{LEARN_TOGETHER_TRUST.map(x=><li key={x}>{x}</li>)}</ul><p className={s.note}>{LEARN_GROWNUP_LINE}</p></div>
+     </div>
+    </Slide>:null}
+
+    {g.id==='safe'?<Slide className={s.safe} folio={g.title}>
+     <div className={s.pageHead}><h2 className={s.h2} style={{color:t.c1}}>{g.title}</h2></div>
+     <div className={s.safeBody}>
+      <div className={s.safeList}>{fs.map(f=><article key={f.id} data-feature={f.id}><h3>{f.title}</h3><p className={s.tileHook}>{f.hook}</p><p>{f.description}</p></article>)}</div>
+      <aside className={s.privacy}><h3 className={s.h3}>{G.privacyTitle}</h3><p>{G.privacy}</p></aside>
+     </div>
+    </Slide>:pages.map((fsx,i)=><Slide key={i} className={s.gridPage} folio={g.title}>
+     <div className={s.pageHead}><h2 className={s.h2} style={{color:t.c1}}>{g.title}</h2></div>
+     <div className={`${s.grid} ${fsx.length<=3?s.grid3:fsx.length<=4?s.grid4:''}`}>{fsx.map(f=><Tile key={f.id} f={f}/>)}</div>
+    </Slide>)}
+   </div>;
+  })}
 
   {/* ---- questions grown-ups ask ---- */}
-  <section className={`${s.page} ${s.break}`}>
-   <h2 className={s.dh2}>Questions grown-ups ask</h2>
-   {LEARN_FAQ.map(q=><div key={q.q} className={s.faq}><b>{q.q}</b><p>{q.a}</p></div>)}
-  </section>
+  <Slide className={s.faqPage} folio="Questions">
+   <div className={s.pageHead}><h2 className={s.h2}>Questions grown-ups ask</h2></div>
+   <div className={s.faqCols}>{LEARN_FAQ.map(q=><div key={q.q} className={s.faq}><h3>{q.q}</h3><p>{q.a}</p></div>)}</div>
+  </Slide>
 
-  {/* ---- about and contact ---- */}
-  <section className={`${s.page} ${s.break}`}>
-   <h2 className={s.dh2}>About</h2>
-   <p className={s.lead}>{G.partnerLead}{G.partnerName}{G.partnerRest}</p>
-   <h3 className={s.dh3}>{G.nonprofitsTitle}</h3>
-   <p className={s.para}>{G.nonprofitsLead}{NONPROFITS.map(n=>n.name).join(', ')}.</p>
-   <div className={s.contact}>
-    <h3 className={s.dh3}>Contact</h3>
-    <p className={s.para} style={{marginTop:'2mm'}}><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a><br/><a href={WSV_LINKS[0].href}>{WSV_LINKS[0].label}</a><br/><a href={WSV_LINKS[1].href}>{WSV_LINKS[1].label}</a></p>
-    <p className={s.small}>Open futbolisland.app in any modern browser.</p>
+  {/* ---- about ---- */}
+  <Slide className={s.about} folio="About">
+   <div className={s.aboutMain}>
+    <h2 className={s.h2}>{G.partnerTitle} {G.partnerName}</h2>
+    <p className={s.statement}>{G.partnerLead}{G.partnerName}{G.partnerRest}</p>
    </div>
-  </section>
+   <div className={s.aboutSide}>
+    <h3 className={s.h3}>{G.nonprofitsTitle}</h3>
+    <p className={s.body}>{G.nonprofitsLead}</p>
+    <ul className={s.rows}>{NONPROFITS.map(n=><li key={n.name}>{n.name}</li>)}</ul>
+   </div>
+  </Slide>
+
+  {/* ---- contact ---- */}
+  <Slide className={s.contact} folio="Contact">
+   <div className={s.contactLogo}><Word text="Futbol Island"/></div>
+   <h2 className={s.h2}>Contact</h2>
+   <ul className={s.rows}>
+    <li><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
+    <li><a href={WSV_LINKS[0].href}>{WSV_LINKS[0].label}</a></li>
+    <li><a href={WSV_LINKS[1].href}>{WSV_LINKS[1].label}</a></li>
+   </ul>
+   <p className={s.note}>Open futbolisland.app in any modern browser.</p>
+  </Slide>
  </div>;
 }

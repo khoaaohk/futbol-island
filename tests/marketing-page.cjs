@@ -62,7 +62,12 @@ const pdf=fs.readFileSync(path.join(root,PDF));
 assert.equal(pdf.subarray(0,5).toString(),'%PDF-','it is a PDF');
 assert(pdf.length<15e6,`the PDF is under 15 MB (${(pdf.length/1e6).toFixed(2)} MB)`);
 const pages=(pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;
-assert(pages>=8,`the PDF has its pages (${pages})`);
+assert(pages>=12&&pages<=30,`the deck is compact: 12-30 pages (${pages}), not one page per feature`);
+// Nov 4 redesign: a 16:9 landscape deck (1280 x 720 CSS px = 960 x 540 pt per page)
+const box=pdf.toString('latin1').match(/\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/);
+assert(box&&Math.abs(+box[1]/+box[2]-16/9)<.01,`the PDF pages are 16:9 landscape (${box&&box.slice(1).join(' x ')})`);
+assert.match(doc,/data-feature=\{f\.id\}/,'every feature tile is marked data-feature (the build script checks all of LEARN_FEATURES are in the deck)');
+assert.match(doc,/data-features-total=\{LEARN_FEATURES\.length\}/,'the deck states how many features it must show');
 assert.match(doc,/from '@\/lib\/site\/learnFeatures'/,'print page copy comes from lib/site/learnFeatures');
 assert.match(doc,/from '@\/lib\/site\/aboutCopy'/,'and lib/site/aboutCopy');
 for(const k of ['LEARN_GROUPS.map','LEARN_FEATURES.filter','LEARN_FAQ.map','LEARN_HIGHLIGHTS','CONTACT_EMAIL','G.partnerRest','LEARN_TOGETHER_TRUST'])assert(doc.includes(k),`print page covers ${k}`);

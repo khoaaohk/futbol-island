@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Builds public/marketing/futbol-island-overview.pdf (Nov 4 2026, owner: the investor overview behind the unlisted /marketing page)
-// from the print page /marketing/overview (app/(site)/marketing/overview/page.tsx). A4 portrait, white, page numbers in the footer.
+// from the print page /marketing/overview (app/(site)/marketing/overview/page.tsx). Nov 4 redesign: a 16:9 landscape deck, 1280 x 720 CSS px
+// per page (13.33 x 7.5 in, the standard slide size); each slide draws its own running footer and page number.
 //
 //   node scripts/build-marketing-pdf.cjs                 starts its own `next dev` on port 8451 (NEXT_DIST_DIR=.next-mk), prints,
 //                                                       then stops that server by port and removes .next-mk
@@ -36,9 +37,11 @@ async function waitFor(url,ms=180000){
  try{
   await waitFor(base+'/marketing/overview');
   browser=await chromium.launch({executablePath:CHROME,args:['--mute-audio']});
-  const page=await browser.newPage({viewport:{width:900,height:1200},deviceScaleFactor:2});
+  const page=await browser.newPage({viewport:{width:1280,height:720},deviceScaleFactor:2});
   await page.goto(base+'/marketing/overview',{waitUntil:'networkidle',timeout:120000});
   await page.emulateMedia({media:'print'});
+  // print the deck alone: the reading layout's header, main padding and footer would add blank pages
+  await page.evaluate(()=>{const d=document.querySelector('[data-marketing-doc]');d.style.margin='0';document.body.replaceChildren(d);});
   await page.evaluate(async()=>{
    await document.fonts.ready;
    const imgs=[...document.querySelectorAll('[data-marketing-doc] img')];
@@ -52,14 +55,16 @@ async function waitFor(url,ms=180000){
     await img.decode().catch(()=>{});
    }
   });
+  const feat=await page.evaluate(()=>({total:+document.querySelector('[data-marketing-doc]').dataset.featuresTotal,shown:new Set([...document.querySelectorAll('[data-feature]')].map(e=>e.dataset.feature)).size}));
+  if(feat.shown!==feat.total)throw new Error(`only ${feat.shown} of ${feat.total} features are in the deck`);
+  const over=await page.evaluate(()=>[...document.querySelectorAll('[data-marketing-doc] section *')].filter(e=>{const s=e.closest('section').getBoundingClientRect(),b=e.getBoundingClientRect();return b.width&&!e.children.length&&(e.textContent||'').trim()&&(b.bottom>s.bottom-40||b.right>s.right+1)&&!e.closest('footer');}).map(e=>(e.textContent||'').slice(0,40)));
+  if(over.length)console.warn('WARNING: text past the slide edge or into the footer: '+over.slice(0,8).join(' | '));
   const missing=await page.evaluate(()=>[...document.querySelectorAll('[data-marketing-doc] img')].filter(i=>!i.naturalWidth).map(i=>i.alt));
   if(missing.length)throw new Error('images failed to load: '+missing.join(', '));
   fs.mkdirSync(path.dirname(OUT),{recursive:true});
-  await page.pdf({path:OUT,format:'A4',printBackground:true,displayHeaderFooter:true,margin:{top:'14mm',bottom:'16mm',left:'0',right:'0'},
-   headerTemplate:'<span></span>',
-   footerTemplate:'<div style="width:100%;padding:0 16mm;display:flex;justify-content:space-between;font:7.5pt -apple-system,Helvetica,Arial,sans-serif;color:#5b675f"><span>Futbol Island · Overview</span><span><span class="pageNumber"></span> / <span class="totalPages"></span></span></div>'});
+  await page.pdf({path:OUT,width:'1280px',height:'720px',printBackground:true,preferCSSPageSize:true,margin:{top:'0',bottom:'0',left:'0',right:'0'}});
   const buf=fs.readFileSync(OUT),pages=(buf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;
-  console.log(`wrote ${path.relative(root,OUT)}: ${(buf.length/1e6).toFixed(2)} MB, ${pages} pages`);
+  console.log(`wrote ${path.relative(root,OUT)}: ${(buf.length/1e6).toFixed(2)} MB, ${pages} pages, ${feat.shown}/${feat.total} features`);
   if(buf.length>15e6)console.warn('WARNING: over 15 MB');
  }finally{
   if(browser)await browser.close();
