@@ -1,0 +1,40 @@
+/* Join a live game HUD (components/LiveJoinHud.tsx). The island's own HUD look: cream cards (#fff3d9), green ink
+   (#294f43), gold primary round buttons (#f4cc7c) with IslandBrush on the primary button only; --bib is the team's
+   bib colour written by lib/town/liveJoinRuntime.ts. */
+.card{position:relative;align-self:center;display:flex;align-items:center;gap:12px;max-width:min(360px,calc(100vw - 32px));padding:12px 12px 12px 14px;border-radius:18px;background:#fff3d9;color:#294f43;box-shadow:0 4px 0 #173e3440;pointer-events:auto;animation:joinIn .22s ease-out both}
+.bib{flex:0 0 34px;height:42px;border-radius:9px 9px 12px 12px;background:var(--bib,#ffd23f);clip-path:polygon(22% 0,78% 0,100% 18%,100% 100%,0 100%,0 18%)}
+.cardText{display:grid;gap:2px;min-width:0}
+.cardText strong{font-size:17px;line-height:1.2}
+.goal{font-size:15px;font-weight:700}
+.goal b{display:inline-block;color:var(--bib,#ffd23f);-webkit-text-stroke:1px #294f43;font-size:18px}
+.cardText small{font-size:12px;color:#3f6559}
+.play{position:relative;flex:0 0 64px;width:64px;height:64px;display:grid;place-items:center;border:0;border-radius:50%;background:#f4cc7c;color:#294f43;padding:0;touch-action:manipulation;transition:transform .12s ease-out}
+.play:active{transform:scale(.94)}
+.play svg{position:absolute;inset:3px;width:58px;height:58px;transform:rotate(-90deg)}
+.track,.fill{fill:none;stroke-width:3.5}
+.track{stroke:#294f4326}
+.fill{stroke:#294f43;stroke-dasharray:100;stroke-dashoffset:calc(100 - var(--join-progress,0) * 100);stroke-linecap:round}
+.play span{font:400 24px/1 IslandBrush,Arial,sans-serif;margin-top:-6px}
+.play em{position:absolute;bottom:9px;font-style:normal;font-size:9px;font-weight:800}
+.chip{align-self:center;display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:4px 10px;max-width:calc(100vw - 32px);padding:6px 6px 6px 12px;border-radius:999px;background:#fff3d9;color:#294f43;box-shadow:0 4px 0 #173e3440;pointer-events:auto;font-size:14px}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--bib,#ffd23f);box-shadow:inset 0 0 0 2px #294f4333}
+.score{font-weight:700}
+.status:empty{display:none}
+.status{font-weight:700;color:#b5532c}
+.leave{min-height:36px;padding:0 14px;border:2px solid #294f43;border-radius:999px;background:transparent;color:#294f43;font-weight:800;font-size:13px;touch-action:manipulation}
+.leave:active{background:#294f4318}
+.tip{align-self:center;margin:0;max-width:min(380px,calc(100vw - 32px));padding:9px 14px;border-radius:14px;background:#294f43;color:#fff3d1;font-size:14px;font-weight:700;line-height:1.35;text-align:center;pointer-events:none;animation:joinIn .2s ease-out both}
+.actions{position:absolute;z-index:10;right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom,28px);display:flex;align-items:flex-end;gap:14px;pointer-events:none}
+.actions[hidden]{display:none}
+.a,.b{pointer-events:auto;display:grid;place-items:center;border-radius:50%;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .1s ease-out}
+.a{width:88px;height:88px;border:3px solid #fff0c4;background:#f4cc7c;color:#294f43;font:400 24px/1 IslandBrush,Arial,sans-serif;box-shadow:0 5px 0 #173e3459}
+.b{width:76px;height:76px;margin-bottom:46px;border:4px solid var(--bib,#ffd23f);background:#294f43ed;color:#fff0cc;font-weight:800;font-size:13px;letter-spacing:-.01em;box-shadow:0 4px 0 #173e3459}
+.a:active,.b:active{transform:scale(.93)}
+.a[aria-disabled]{opacity:.55}
+.b[hidden]{display:none}
+.badge{position:absolute;z-index:8;transform:translate(-50%,-50%);display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:var(--bib,#ffd23f);color:#294f43;border:3px solid #fff3d9;font-size:11px;font-weight:900;pointer-events:none}
+.badge[hidden]{display:none}
+@media (hover:hover) and (pointer:fine){.a{width:76px;height:76px;font-size:21px}.b{width:68px;height:68px;margin-bottom:38px;font-size:12px}}
+@media (orientation:landscape) and (max-height:500px){.a{width:76px;height:76px}.b{width:68px;height:68px;margin-bottom:24px;font-size:12px}.card{padding:8px 10px}.cardText small{display:none}}
+@keyframes joinIn{from{transform:translateY(-8px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.card,.tip{animation:none}.play,.a,.b{transition:none}}

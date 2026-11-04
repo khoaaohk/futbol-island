@@ -95,6 +95,37 @@ export const BEACH_MATCH_KITS:MatchKits=(()=>{
   return {home,away,homeKeeper,awayKeeper};
 })();
 
+/**
+ * Training bibs for the live matches you can join (docs/join-live-game-design.md §2e, Nov 4 2026): one light warm vs
+ * one dark cool bib keeps the yellow-blue axis deutan/protan kids still see, plus a lightness gap for greyscale. Shorts
+ * stay dark so the bib owns the silhouette; keepers keep KEEPER_PALETTES (picked to clash with neither bib, so the volt
+ * keeper is skipped next to yellow). Per-instance colours only: no new materials, textures or draw calls.
+ * Teaching line: "Bibs help you find your teammates with one quick look."
+ */
+const bib=(shirt:string,trim:string,shorts:string):KitColours=>({shirt,shirt2:trim,shorts,socks:shirt,socks2:trim,boots:'#1f1f24'});
+const bibKits=(home:KitColours,away:KitColours):MatchKits=>{
+  const pickKeeper=(avoid:KitColours[])=>(KEEPER_PALETTES.find(p=>avoid.every(k=>!kitsClash(k,p.kit)))??KEEPER_PALETTES[0]).kit;
+  const homeKeeper=pickKeeper([home,away]),awayKeeper=pickKeeper([home,away,homeKeeper]);
+  return {home,away,homeKeeper,awayKeeper};
+};
+export const BIB_COLOURS={
+  '7v7':{home:'#ffd23f',away:'#2459e0'},futsal:{home:'#ffd23f',away:'#2459e0'},
+  '9v9':{home:'#ff8a1f',away:'#5b3fd1'},'11v11':{home:'#22c3e6',away:'#ff7a1a'},
+} as const;
+export const LIVE_BIB_KITS:Readonly<Record<keyof typeof BIB_COLOURS,MatchKits>>={
+  '7v7':bibKits(bib(BIB_COLOURS['7v7'].home,'#1d2433','#1d2433'),bib(BIB_COLOURS['7v7'].away,'#ffffff','#1d2433')),
+  futsal:bibKits(bib(BIB_COLOURS.futsal.home,'#1d2433','#1d2433'),bib(BIB_COLOURS.futsal.away,'#ffffff','#1d2433')),
+  '9v9':bibKits(bib(BIB_COLOURS['9v9'].home,'#1d2433','#1d2433'),bib(BIB_COLOURS['9v9'].away,'#ffffff','#1d2433')),
+  '11v11':bibKits(bib(BIB_COLOURS['11v11'].home,'#14323a','#14323a'),bib(BIB_COLOURS['11v11'].away,'#1d2433','#1d2433')),
+};
+/** Kits a live venue's match wears: the beach court its barefoot kits, a joinable pitch its bibs, else the default. */
+export function liveMatchKits(format:string,sand=false,bibs=false):MatchKits|undefined{
+  if(sand)return BEACH_MATCH_KITS;
+  return bibs&&format in LIVE_BIB_KITS?LIVE_BIB_KITS[format as keyof typeof LIVE_BIB_KITS]:undefined;
+}
+/** A team's bib colour (the HUD card, the you-marker): home = gold side, away = blue side. */
+export const bibColour=(format:string,home:boolean)=>format in BIB_COLOURS?BIB_COLOURS[format as keyof typeof BIB_COLOURS][home?'home':'away']:home?'#edb957':'#356478';
+
 // ---------------------------------------------------------------- deterministic picks
 function hashOf(id:string){let h=2166136261;for(let i=0;i<id.length;i++)h=Math.imul(h^id.charCodeAt(i),16777619)>>>0;return h;}
 function picker(id:string){const h=hashOf(id);return <V>(list:readonly V[],salt:number):V=>{let x=(h^Math.imul(salt+1,0x9e3779b1))>>>0;x=Math.imul(x^x>>>15,0x2c1b3c6d)>>>0;x^=x>>>13;return list[(x>>>0)%list.length];};}

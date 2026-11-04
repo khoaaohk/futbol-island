@@ -14,12 +14,15 @@ import {createPlayer,profileFor,PLAYER_KICK_CONTACT,type PlayerRig,type PlayerMo
 import {createChoreo,windupTurnShare} from './match/choreo';
 import {createComboView} from './match/combos'; // [combos] skill poses for combination plays
 import {classicShirtNumber} from '../graphics/shirtNumbers';
-import {fieldTokenDress} from './beanLooks';
+import {fieldTokenDress,liveMatchKits,type BeanDress} from './beanLooks';
+import {joinableFormat,pickJoinTeam,pickSlot,touchlineSpot,stepBench,cheerAge,CHEER_SECONDS,LIVE_JOIN_FORMATS,type BenchWalker,type SlotCandidate} from './liveJoin';
+import type {HumanFrame} from './match/humanInputs';
+import {applyBodyEmote} from '../graphics/bodyEmotePose';
+import {BODY_EMOTE} from './emoteBody';
 import {createMatchBallTexture} from '../graphics/matchBallTexture';
 import {MatchSim,ROLE_MOVEMENT} from './match/matchSim';
 import {maxTurnRate,createControlState,stepControl,settlePace,MOTION} from './match/matchMotion';
-import {VENUES,LIVE_VENUES,liveWorldX,liveWorldZ,liveWorldYaw,type Venue,type LiveVenue,type LiveFormat} from './venues';
-import {BEACH_MATCH_KITS} from './beanLooks';
+import {VENUES,LIVE_VENUES,liveWorldX,liveWorldZ,liveWorldYaw,liveFieldPoint,type Venue,type LiveVenue,type LiveFormat} from './venues';
 import {quizOutcomeStep,quizAnswerRevealed,lessonPositions,lessonVisualFrame,lessonStepSeconds,loftPeak,type FieldSession} from './formatLessons';
 // Movement and ball share a per-format clock; the compact futsal court needs a brisker pace.
 export const LIVE_GAME_SPEED=.32;
@@ -44,7 +47,12 @@ export const profileSeed=(venue:string,id:string)=>{let h=2166136261;for(const c
 /** Role body profile for a live rig: teaching lessons keep `mid`; applied only when the role changes (once per live rig). */
 export function assignRigProfile(rig:PlayerRig,venue:string,id:string,role:'gk'|'def'|'mid'|'fwd'){if(rig.root.userData.profileRole===role)return false;rig.setProfile(profileFor(role,profileSeed(venue,id)));rig.root.userData.profileRole=role;return true;}
 export const teachingPoseAdvances=(session:FieldSession,outcomeStep:number|null|undefined)=>outcomeStep!==undefined&&outcomeStep!==null?!session.outcomePaused&&(session.outcomeProgress??0)<1:session.playing;
-type Entry={dormant?:boolean;synced?:boolean;choreo:ReturnType<typeof createChoreo>;comboView:ReturnType<typeof createComboView>;liveFrame:ReturnType<typeof createLiveFieldFrame>;clock:ReturnType<typeof createMatchUpdateClock>;venue:LiveVenue;sim:MatchSim;root:T.Group;rigs:Map<string,PlayerRig>;ball:T.Mesh;label:Map<string,T.Sprite>;lastLesson:string;effects:ReturnType<typeof createMatchEffects>;ballPhysics:ReturnType<typeof createLiveBallPhysics>};
+/** A human on a live field (join a live game): his slot, team, look, and the NPC he replaced sitting out on the touchline. */
+type HumanSlot={humanId:string;slot:string;team:'gold'|'blue';dress:BeanDress;bench:BenchWalker;benchRig:PlayerRig;benchMotion:PlayerMotion;goals:number};
+/** What Town reads about a joined human each frame (one reused object, no allocation). */
+export type HumanView={x:number;z:number;yaw:number;team:'gold'|'blue';onBall:boolean;/** 'mine' on the ball, 'team' a teammate has it, 'opp' the other team, 'loose' nobody. */possession:'mine'|'team'|'opp'|'loose';passX:number;passZ:number;forwardX:number;forwardZ:number;goalX:number;goalZ:number;restart:boolean;callOpen:boolean|null;inShotRange:boolean};
+export const createHumanView=():HumanView=>({x:0,z:0,yaw:0,team:'gold',onBall:false,possession:'loose',passX:NaN,passZ:NaN,forwardX:NaN,forwardZ:NaN,goalX:0,goalZ:0,restart:false,callOpen:null,inShotRange:false});
+type Entry={humans:Map<string,HumanSlot>;slotDress:Map<string,BeanDress>;benchPool:PlayerRig[];dormant?:boolean;synced?:boolean;choreo:ReturnType<typeof createChoreo>;comboView:ReturnType<typeof createComboView>;liveFrame:ReturnType<typeof createLiveFieldFrame>;clock:ReturnType<typeof createMatchUpdateClock>;venue:LiveVenue;sim:MatchSim;root:T.Group;rigs:Map<string,PlayerRig>;ball:T.Mesh;label:Map<string,T.Sprite>;lastLesson:string;effects:ReturnType<typeof createMatchEffects>;ballPhysics:ReturnType<typeof createLiveBallPhysics>};
 export type LiveMatchView={events:MatchEvent[];players:{id:string;x:number;y:number;home:boolean}[];ball:{x:number;y:number};score:{gold:number;blue:number};/** Beach only: period 1–3, 4 extra time, 5 full time. */period?:number};
 export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  const batch=playerBatch(scene),cues=createLessonCues(scene),paused=new Set<LiveFormat>(),hoverPaused=new Set<LiveFormat>(),collisionPaused=new Set<LiveFormat>();
@@ -53,7 +61,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  const ballMap=createMatchBallTexture(),ballGeo=new T.SphereGeometry(.19,16,12),ballMat=new T.MeshStandardMaterial({color:'#ffffff',map:ballMap,roughness:.85});
  const lineMaterial=new T.LineBasicMaterial({color:'#e9c66d'}),lineGeometry=new T.BufferGeometry(),line=new T.LineSegments(lineGeometry,lineMaterial);scene.add(line);const linePositions=new T.Float32BufferAttribute(new Float32Array(1536),3);lineGeometry.setAttribute('position',linePositions);line.frustumCulled=false;
  // The four island pitches plus the Coral Cay beach court (LIVE_VENUES): one pooled rig set, clock and sim per venue.
- const entries:Entry[]=LIVE_VENUES.map((venue,i)=>{const root=new T.Group();root.name='match-'+venue.id;root.position.y=venue.elevation??0;scene.add(root);const ball=new T.Mesh(ballGeo,ballMat);ball.castShadow=true;root.add(ball);const sim=new MatchSim(270+i*41,venue.id);sim.windupScale=liveGameSpeed(venue.id);sim.receiveSettle=settlePace(venue.width,liveGameSpeed(venue.id));return {choreo:createChoreo(venue.yaw??0),comboView:createComboView(venue.yaw??0),liveFrame:createLiveFieldFrame(venue.id),clock:createMatchUpdateClock(),venue,root,sim,rigs:new Map(),ball,label:new Map(),lastLesson:'',effects:createMatchEffects(root,venue),ballPhysics:createLiveBallPhysics(liveGameSpeed(venue.id),venue,venue.sand?SAND_RESTITUTION:undefined)};});
+ const entries:Entry[]=LIVE_VENUES.map((venue,i)=>{const root=new T.Group();root.name='match-'+venue.id;root.position.y=venue.elevation??0;scene.add(root);const ball=new T.Mesh(ballGeo,ballMat);ball.castShadow=true;root.add(ball);const sim=new MatchSim(270+i*41,venue.id);sim.windupScale=liveGameSpeed(venue.id);sim.receiveSettle=settlePace(venue.width,liveGameSpeed(venue.id));return {humans:new Map(),slotDress:new Map(),benchPool:[],choreo:createChoreo(venue.yaw??0),comboView:createComboView(venue.yaw??0),liveFrame:createLiveFieldFrame(venue.id),clock:createMatchUpdateClock(),venue,root,sim,rigs:new Map(),ball,label:new Map(),lastLesson:'',effects:createMatchEffects(root,venue),ballPhysics:createLiveBallPhysics(liveGameSpeed(venue.id),venue,venue.sand?SAND_RESTITUTION:undefined)};});
  const stats={ticks:0,visiblePlayers:0,culledPlayers:0,skippedPoses:0,rigs:0,matchTime:0,dormant:0};let playerCulling=true;
  const playerView=new T.Sphere(new T.Vector3(),7);
  const frustum=new T.Frustum(),matrix=new T.Matrix4(),sphere=new T.Sphere(),emptyIds=new Set<string>(),skillBallPoint=new T.Vector3(),liveContact=new T.Vector3(),receivingContact=new T.Vector3(),keeperLeft=new T.Vector3(),keeperRight=new T.Vector3();
@@ -92,8 +100,8 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  const near=focus?Math.hypot(focus.x-v.x,focus.z-v.z):camDistance,sleepAt=focus?45:60,wakeAt=focus?40:50;
  const dormant=!visible&&viewingFormat!==v.id&&!teaching&&(v.id==='beach'||(e.dormant?near>sphere.radius+wakeAt:near>sphere.radius+sleepAt));
  if(dormant!==e.dormant){e.dormant=dormant;if(dormant){e.root.visible=false;e.effects.update(e.sim,0,false,reduced);}}
- if(dormant){stats.dormant++;continue;}
- const immediate=visible||viewingFormat===v.id||camDistance<sphere.radius+45;
+ if(dormant){stats.dormant++;continue;}// a joined field is never dormant: the joiner stands on it (`focus`) and the camera shows it
+ const immediate=visible||viewingFormat===v.id||camDistance<sphere.radius+45||e.humans.size>0;
  const collisionToken=reactions?.states.size?e.liveFrame.tokens.find(token=>reactions.get(e.liveFrame.rows.get(token.id)!.hitId)?.cause==='truck'):undefined;
  const collisionHit=collisionToken?reactions?.get(e.liveFrame.rows.get(collisionToken.id)!.hitId):undefined;
  if(collisionHit)collisionPaused.add(v.id);else collisionPaused.delete(v.id);
@@ -127,7 +135,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  const approachDistance=approachPlayer?Math.hypot(e.sim.ball.x-approachPlayer.x,e.sim.ball.y-approachPlayer.y):Infinity;
  const highApproach=e.sim.ball.height>=.65,approachT=approachPlan&&e.sim.ball.height<2.2?Math.max(0,Math.min(1,(e.sim.receptionRadius*2.5-approachDistance)/(e.sim.receptionRadius*1.5))):0,approachWeight=approachT*approachT*(3-2*approachT);
  const used=teaching?new Set(tokens.map(t=>t.id)):e.liveFrame.used;for(const [id,rig] of e.rigs)rig.root.visible=used.has(id);for(const sprite of e.label.values())sprite.visible=false;
- for(const token of tokens){let rig=e.rigs.get(token.id);if(!rig){rig=createPlayer(token.id,token.home?'home':'away',false);const shirtNumber=classicShirtNumber(v.id,token.id);rig.setShirtNumber(shirtNumber);const dress=fieldTokenDress(v.id,token,shirtNumber,!!e.sim.players[token.id]?.isGK,v.sand?BEACH_MATCH_KITS:undefined);rig.setBeanLook(dress.look,dress.outfit);e.rigs.set(token.id,rig);stats.rigs++;}rig.root.visible=true;const position=poses.get(token.id)!,px=liveWorldX(v,position.x,position.y),pz=liveWorldZ(v,position.x,position.y);const live=e.sim.players[token.id];assignRigProfile(rig,v.id,token.id,teaching?'mid':live?.role??'mid');const hitId=e.liveFrame.rows.get(token.id)?.hitId??'field:'+v.id+':'+token.id,stunned=!teaching?reactions?.get(hitId):undefined;const reception=e.sim.recv.id===token.id&&e.sim.recv.t>0?e.sim.recv:null;
+ for(const token of tokens){let rig=e.rigs.get(token.id);if(!rig){rig=createPlayer(token.id,token.home?'home':'away',false);const shirtNumber=classicShirtNumber(v.id,token.id);rig.setShirtNumber(shirtNumber);const dress=e.slotDress.get(token.id)??fieldTokenDress(v.id,token,shirtNumber,!!e.sim.players[token.id]?.isGK,liveMatchKits(v.id,!!v.sand,joinableFormat(v.id)));rig.setBeanLook(dress.look,dress.outfit);e.rigs.set(token.id,rig);stats.rigs++;}rig.root.visible=true;const position=poses.get(token.id)!,px=liveWorldX(v,position.x,position.y),pz=liveWorldZ(v,position.x,position.y);const live=e.sim.players[token.id];assignRigProfile(rig,v.id,token.id,teaching?'mid':live?.role??'mid');const hitId=e.liveFrame.rows.get(token.id)?.hitId??'field:'+v.id+':'+token.id,stunned=!teaching?reactions?.get(hitId):undefined;const reception=e.sim.recv.id===token.id&&e.sim.recv.t>0?e.sim.recv:null;
  const motion:PlayerMotion=teachingPose?.motions.get(token.id)??(teaching?{}:e.liveFrame.rows.get(token.id)!.motion);
  rig.setDribbleFeel?.(!teaching);// live play only: the sole stop / drag-back / touch rhythm (lib/town/dribbleStop.ts); lessons keep their authored lane
  if(!teachingPose?.motions.has(token.id)){motion.stunAge=stunned?.age;motion.rooftopPose=stunned&&stunned.age>1.85?'dizzy':undefined;motion.dribbling=e.sim.ball.owner===token.id;motion.kick=live?.kick>0&&liveKickPhase(live.kick,liveGameSpeed(e.venue.id))<1?liveKickPhase(live.kick,liveGameSpeed(e.venue.id)):undefined;motion.facing=undefined;motion.receive=undefined;motion.receiveProgress=0;motion.shotPower=undefined;motion.kickSide=undefined;motion.samplePose=undefined;motion.scanYaw=undefined;motion.actionKind=undefined;motion.strikeX=motion.strikeZ=motion.intentHeading=motion.stopDistance=undefined;motion.jockey=0;motion.runIntensity=undefined;motion.keeper=0;motion.keeperReach=0;}
@@ -222,7 +230,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  if(protesting){if(collisionHit)motion.facing=Math.atan2(collisionHit.x-px,collisionHit.z-pz);motion.backpedal=motion.brake=motion.plant=0;motion.stance=undefined;motion.kick=undefined;motion.receive=undefined;motion.dribbling=false;}
  // Gate posing with the same generous shadow bounds used for drawing.
  playerView.center.set(px+1.5,(v.elevation??0)+1.5,pz-1);playerView.radius=7+Math.max(0,v.elevation??0)*2;
- const inView=!playerCulling||!!teaching||frustum.intersectsSphere(playerView);
+ const inView=!playerCulling||!!teaching||e.slotDress.has(token.id)||frustum.intersectsSphere(playerView);
  if(!inView&&!stunned&&!protesting&&!reception&&!motion.kick&&!motion.dribbling){
    rig.root.position.set(px,(v.elevation??0)+.105,pz);rig.root.userData.poseSkipped=true;stats.skippedPoses++;stats.culledPlayers++;continue;
  }
@@ -244,6 +252,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  if(teaching){const s=label(e,token.id,token.label,token.home);s.position.set(px,2.65,pz);s.visible=teaching.quiz&&teaching.answer===null&&Boolean(question&&new RegExp('\\b'+token.label+'\\b').test(question.q));
  if(s.visible&&camera instanceof T.PerspectiveCamera){const center=s.getWorldPosition(new T.Vector3()),up=new T.Vector3(0,1,0).applyQuaternion(camera.quaternion),a=center.clone().project(camera),b=center.add(up).project(camera),unit=Math.abs(b.y-a.y)*viewportHeight/2;if(unit>.001){s.scale.set(Math.min(96,Math.max(32,token.label.length*6+14))/unit,18/unit,1);s.position.addScaledVector(up,14/unit);}}
  }}
+ if(e.humans.size&&!teaching)poseBench(e,dt,time,active&&!isPaused(v.id));
  // The shot's sideways placement runs along the pitch's width axis (world x on the island pitches).
  const shotOffset=teaching?0:e.ballPhysics.shotOffset;
  if(v.yaw)e.ball.position.set(liveWorldX(v,ball.x,ball.y)+shotOffset*Math.cos(v.yaw),.295+(teaching?0:ballHeight),liveWorldZ(v,ball.x,ball.y)-shotOffset*Math.sin(v.yaw));
@@ -311,6 +320,87 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  batch.end();
  lineGeometry.setDrawRange(0,0);line.visible=false;
  }
+ // ---- Join a live game (slice 1, docs/join-live-game-design.md): humans take an outfield slot; the NPC sits out ----
+ const benchPoint={x:0,y:0};
+ const entryOf=(format:LiveFormat)=>entries.find(e=>e.venue.id===format);
+ /** The replaced NPC: walks to the touchline, then cheers on a 7 s rhythm (and again after a goal). Drawn in the batch. */
+ function poseBench(e:Entry,dt:number,time:number,running:boolean){
+  const v=e.venue,goals=e.sim.score.gold+e.sim.score.blue;let i=0;
+  for(const hs of e.humans.values()){const w=hs.bench,m=hs.benchMotion,rig=hs.benchRig;
+   if(goals!==hs.goals){hs.goals=goals;if(w.phase==='cheer')w.age=0;}
+   const step=running?dt:0;
+   if(w.phase==='off'){stepBench(w,step);m.facing=liveWorldYaw(v,w.tx-w.x,w.ty-w.y);m.runIntensity=.35;}
+   else{w.age+=step;m.facing=liveWorldYaw(v,135-w.x,0);m.runIntensity=0;}
+   rig.update(liveWorldX(v,w.x,w.y),liveWorldZ(v,w.x,w.y),step,time,reduced,m);rig.root.position.y=(v.elevation??0)+.105;
+   if(w.phase==='cheer'){const age=cheerAge(w.age);if(age>=0&&!reduced)applyBodyEmote(rig.root,BODY_EMOTE.Cheer,age,CHEER_SECONDS);}
+   rig.root.visible=true;batch.draw(rig.root);i++;
+  }
+  return i;
+ }
+ /** A human joins the live match on `format` at world (x, z). Team: fewer humans, tie → the side he walked into
+  *  (liveJoin.pickJoinTeam); slot: the nearest outfield NPC of that team (pickSlot). `dressFor` makes his look in the
+  *  team's bib. Returns his slot or null (format not joinable / full). */
+ function joinMatch(format:LiveFormat,humanId:string,x:number,z:number,dressFor:(home:boolean,kits:ReturnType<typeof liveMatchKits>)=>BeanDress,prefer?:'gold'|'blue'|null){
+  const e=entryOf(format);if(!e||!joinableFormat(format)||e.humans.has(humanId))return e?.humans.get(humanId)?.slot??null;
+  const v=e.venue,sim=e.sim,at=liveFieldPoint(v,x,z),team=pickJoinTeam(sim.humanOn,at.y,LIVE_JOIN_FORMATS[format].maxHumansPerTeam,prefer);if(!team)return null;
+  const avoid=new Set<string>();if(sim.ball.owner)avoid.add(sim.ball.owner);
+  const slot=pickSlot(Object.values(sim.players) as SlotCandidate[],team,at.x,at.y,new Set(sim.humans.keys()),avoid);if(!slot)return null;
+  const p=sim.players[slot];
+  // The NPC he replaces walks off from where he is now (no pop): a pooled bench rig in his own look takes over.
+  const token=e.liveFrame.tokens.find(t=>t.id===slot)??{id:slot,home:team==='gold'};
+  const kits=liveMatchKits(v.id,!!v.sand,joinableFormat(v.id)),shirt=classicShirtNumber(v.id,slot),npcDress=fieldTokenDress(v.id,token,shirt,false,kits);
+  const benchRig=e.benchPool.pop()??createPlayer('bench-'+v.id+'-'+e.humans.size,team==='gold'?'home':'away',false);
+  benchRig.setShirtNumber(shirt);benchRig.setBeanLook(npcDress.look,npcDress.outfit);benchRig.root.userData.npcId=slot;assignRigProfile(benchRig,v.id,slot,p.role);benchRig.root.userData.profileRole=undefined;
+  touchlineSpot(p.x,p.y,e.humans.size,benchPoint);
+  const bench:BenchWalker={id:slot,phase:'off',x:p.x,y:p.y,tx:benchPoint.x,ty:benchPoint.y,age:0};
+  benchRig.update(liveWorldX(v,p.x,p.y),liveWorldZ(v,p.x,p.y),0,0,reduced,{});
+  const dress=dressFor(team==='gold',kits);
+  e.humans.set(humanId,{humanId,slot,team,dress,bench,benchRig,benchMotion:{},goals:sim.score.gold+sim.score.blue});
+  e.slotDress.set(slot,dress);e.rigs.get(slot)?.setBeanLook(dress.look,dress.outfit);
+  sim.lockHuman(slot);sim.placePlayer(slot,Math.max(10,Math.min(260,at.x)),Math.max(10,Math.min(390,at.y)));
+  e.dormant=false;e.synced=false;
+  return slot;
+ }
+ /** The human leaves: the NPC comes back on from his touchline spot (the AI walks him into position) and the slot rig
+  *  gets the NPC's look back. Returns the world point where the human was (his avatar appears there). */
+ function leaveMatch(format:LiveFormat,humanId:string,out:{x:number;z:number}){
+  const e=entryOf(format),hs=e?.humans.get(humanId);if(!e||!hs)return null;
+  const v=e.venue,sim=e.sim,p=sim.players[hs.slot];
+  out.x=liveWorldX(v,p.x,p.y);out.z=liveWorldZ(v,p.x,p.y);
+  if(sim.ball.owner===hs.slot){sim.ball.owner=null;sim.ball.vx=sim.ball.vy=0;}// the ball stays on the grass where he left it
+  sim.releaseHuman(hs.slot);sim.placePlayer(hs.slot,hs.bench.x,hs.bench.y);
+  e.slotDress.delete(hs.slot);e.humans.delete(humanId);
+  const token=e.liveFrame.tokens.find(t=>t.id===hs.slot)??{id:hs.slot,home:hs.team==='gold'};
+  const shirt=classicShirtNumber(v.id,hs.slot),npc=fieldTokenDress(v.id,token,shirt,false,liveMatchKits(v.id,!!v.sand,joinableFormat(v.id)));
+  const rig=e.rigs.get(hs.slot);if(rig){rig.setBeanLook(npc.look,npc.outfit);rig.root.position.set(liveWorldX(v,hs.bench.x,hs.bench.y),rig.root.position.y,liveWorldZ(v,hs.bench.x,hs.bench.y));}
+  hs.benchRig.root.visible=false;e.benchPool.push(hs.benchRig);e.synced=false;
+  return out;
+ }
+ /** One frame of controls for a joined human (world stick → sim space here, so callers stay in world terms). */
+ const frameIn:HumanFrame={mx:0,my:0};
+ function humanInput(format:LiveFormat,humanId:string,wx:number,wz:number,buttons:Omit<HumanFrame,'mx'|'my'>){
+  const e=entryOf(format),hs=e?.humans.get(humanId);if(!e||!hs)return;
+  const v=e.venue,c=Math.cos(v.yaw??0),s=Math.sin(v.yaw??0),sx=(wx*c-wz*s)*250/v.width,sy=(wx*s+wz*c)*380/v.length,l=Math.hypot(sx,sy),m=Math.min(1,Math.hypot(wx,wz));
+  frameIn.mx=l>1e-6?sx/l*m:0;frameIn.my=l>1e-6?sy/l*m:0;
+  frameIn.pass=buttons.pass;frameIn.shoot=buttons.shoot;frameIn.shootPower=buttons.shootPower;frameIn.through=buttons.through;frameIn.tackle=buttons.tackle;frameIn.jockey=buttons.jockey;frameIn.sprint=buttons.sprint;frameIn.call=buttons.call;
+  e.sim.humanInput(hs.slot,frameIn);
+ }
+ /** Fill `out` with what Town needs about a joined human; false when he is not in that match. */
+ function humanView(format:LiveFormat,humanId:string,out:HumanView){
+  const e=entryOf(format),hs=e?.humans.get(humanId);if(!e||!hs)return false;
+  const v=e.venue,sim=e.sim,p=sim.players[hs.slot],rig=e.rigs.get(hs.slot);
+  out.x=rig?.root.visible?rig.root.position.x:liveWorldX(v,p.x,p.y);out.z=rig?.root.visible?rig.root.position.z:liveWorldZ(v,p.x,p.y);out.yaw=rig?.root.rotation.y??0;
+  out.team=hs.team;const owner=sim.ball.owner;out.onBall=owner===hs.slot;
+  out.possession=out.onBall?'mine':owner?(sim.players[owner].team===hs.team?'team':'opp'):'loose';
+  const pass=sim.humanTarget(hs.slot,'short'),fwd=sim.humanTarget(hs.slot,'forward');
+  if(pass){const t=sim.players[pass];out.passX=liveWorldX(v,t.x,t.y);out.passZ=liveWorldZ(v,t.x,t.y);}else out.passX=out.passZ=NaN;
+  if(fwd){const t=sim.players[fwd];out.forwardX=liveWorldX(v,t.x,t.y);out.forwardZ=liveWorldZ(v,t.x,t.y);}else out.forwardX=out.forwardZ=NaN;
+  const gy=hs.team==='gold'?8:392;out.goalX=liveWorldX(v,135,gy);out.goalZ=liveWorldZ(v,135,gy);
+  out.inShotRange=Math.abs(p.y-gy)<120;
+  out.restart=sim.isRestart;
+  out.callOpen=sim.lastCall&&sim.lastCall.id===hs.slot&&sim.stats.time-sim.lastCall.time<1.5?sim.lastCall.open:null;
+  return true;
+ }
  function pickPlayer(point:T.Vector2,camera:T.Camera,width:number,height:number,format?:LiveFormat|null,touch=false){
   let best:(PositionSelection&{x:number;y:number;z:number;screenX:number;screenY:number})|null=null,bestDistance=touch?24:12;
   const head=new T.Vector3(),foot=new T.Vector3();
@@ -324,5 +414,5 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
    }
   }return best;
  }
- return {entries,stats,update,setPlayerCulling(value:boolean){playerCulling=value;},pickPlayer,setHoverPaused(format:LiveFormat|null){hoverPaused.clear();if(format)hoverPaused.add(format);},isPaused,setPaused(format:LiveFormat,value:boolean){if(value)paused.add(format);else paused.delete(format);},getView(format:LiveFormat):LiveMatchView|null{const e=entries.find(e=>e.venue.id===format);return e?{events:[...e.effects.events],players:Object.values(e.sim.players).map(p=>({id:p.id,x:p.x,y:p.y,home:p.team==='gold'})),ball:{x:e.sim.ball.x,y:e.sim.ball.y},score:{...e.sim.score},period:e.sim.isBeach?e.sim.period:undefined}:null;},pickQuiz:cues.pick,dispose(){cues.dispose();batch.dispose();for(const e of entries){e.effects.dispose();e.rigs.forEach(r=>r.dispose());for(const s of e.label.values()){s.material.map?.dispose();s.material.dispose();}e.root.removeFromParent();}line.removeFromParent();[ballMap,ballGeo,ballMat,lineGeometry,lineMaterial].forEach(r=>r.dispose());}};
+ return {entries,stats,update,joinMatch,leaveMatch,humanInput,humanView,joinedFormat(humanId:string){for(const e of entries)if(e.humans.has(humanId))return e.venue.id;return null;},setPlayerCulling(value:boolean){playerCulling=value;},pickPlayer,setHoverPaused(format:LiveFormat|null){hoverPaused.clear();if(format)hoverPaused.add(format);},isPaused,setPaused(format:LiveFormat,value:boolean){if(value)paused.add(format);else paused.delete(format);},getView(format:LiveFormat):LiveMatchView|null{const e=entries.find(e=>e.venue.id===format);return e?{events:[...e.effects.events],players:Object.values(e.sim.players).map(p=>({id:p.id,x:p.x,y:p.y,home:p.team==='gold'})),ball:{x:e.sim.ball.x,y:e.sim.ball.y},score:{...e.sim.score},period:e.sim.isBeach?e.sim.period:undefined}:null;},pickQuiz:cues.pick,dispose(){cues.dispose();batch.dispose();for(const e of entries){e.effects.dispose();e.rigs.forEach(r=>r.dispose());e.benchPool.forEach(r=>r.dispose());e.humans.forEach(h=>h.benchRig.dispose());for(const s of e.label.values()){s.material.map?.dispose();s.material.dispose();}e.root.removeFromParent();}line.removeFromParent();[ballMap,ballGeo,ballMat,lineGeometry,lineMaterial].forEach(r=>r.dispose());}};
 }

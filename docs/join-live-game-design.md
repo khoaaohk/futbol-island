@@ -242,3 +242,72 @@ default plus "Play against", owner = first joiner, NPC takes slots back, no came
 4. Should match goals/assists/tackles count toward Passport or quests? → yes, lightweight activity counts, no coins.
 5. Ship solo first and multiplayer as the next release, or wait and ship both together? → solo first (slice 1),
    multiplayer slice 4 right after, so the sim API is built multi-human-ready from day one.
+
+## 5. Implemented in slice 1 (Nov 4 2026)
+
+**What works (solo, 7v7 only; engine keyed by human id for N humans).** Walk onto the Old Town Ground carrying your
+ball → the Join card drops in under the coins bar (your bib colour, "You're joining Yellow", "▲ Score in the top
+goal", a 2 s ring, **Play now** skips it); stepping back off the pitch cancels. On join the ball goes to the kit bag
+(walk ball hidden), the nearest outfield NPC of your team gives you his slot (his rig wears your look in the team bib;
+the main avatar is hidden) and a pooled copy of him jogs to the nearest touchline and cheers on a 7 s rhythm (again
+after a goal). On **Leave match** (Esc) he walks back on from there, the AI takes the slot from the same spot, and
+your avatar and ball appear where you were. Walking to the touchline is not leaving. Team: fewer humans, tie → the
+team whose own goal is nearest where you stepped on (party preference argument ready). Outfield only; no stats,
+Passport, quests or coins. Feet compass ring (bib colour, one chevron at the goal you attack), always-on bib-colour
+chevron above your head (the hidden-player pin, `pinAt`), off-screen goal badge as the fallback. Two contextual
+buttons replace the travel cluster while joined: on the ball **Pass** + **Shoot** (in range) / **Forward** (out of
+range); teammate on the ball **Call**; opponent on the ball **Tackle** + **Stay** (hold = jockey); loose **Go!**
+(hold = sprint). Desktop: Space = A, J = B (hold J for shot power), K = forward pass, Shift sprint. Each action shows
+its one-line lesson the first time (remembered per device; "Not open: move into space" when a call is not on).
+Control is locked to your slot (the FIFA-style auto-switching is removed). Bibs: yellow `#ffd23f` vs royal `#2459e0`
+on the 7v7 (per-instance kit rows, keepers picked to clash with neither), config ready for futsal / 9v9 / 11v11.
+
+**Passing assist (owner addition).** `lib/town/match/passAssist.ts`, all tunables in `PASS_ASSIST`: a cone pick
+round the stick (open space, progress, blocked-lane penalty; no stick → the most open teammate ahead), hysteresis
+(`switchMargin`, `minHold`) so the receiver ring never flickers, a lead point and pace so the ball arrives with
+controllable speed (a human's pass is never misplaced), Forward = a through ball into the space ahead of a runner
+(prefers `runners`; offside judged where the receiver stands), shot aim nudged at most 9 units toward the corner away
+from the keeper (never decides the outcome), tackle reach +3.4 units, jockey goal-side gap. Markers: a ring at the
+Pass target, a small compass at the Forward runner. No assist work when no human is on the ball.
+
+**Smarter teammates + forward passes (owner addition).** `lib/town/match/offBallRuns.ts` on the existing staggered
+think clock (one pick per 0.28-0.45 s per player): run in behind (forwards and wide mids when the carrier has time;
+more often for a human carrier), check to the ball, hold width, make space (peel off the carrier and off a human
+teammate). Offsets add to the formation target; the onside cap still applies. The AI teams use them too, so the
+seeded live-match fixture (`tests/fixtures/live-match-summary.json`) was regenerated on purpose; the 7v7, 9v9, 11v11,
+futsal and beach balance tests still pass. Moved to **slice 1b** for size: AI carriers weighting forward runners in
+`bestPass` (the AI keeps its existing through-ball / combination logic in combos.ts).
+
+**Files.** Pure: `lib/town/liveJoin.ts` (format switch `LIVE_JOIN_FORMATS`, countdown machine, team + slot pick,
+sit-out walker), `lib/town/match/humanInputs.ts`, `lib/town/match/passAssist.ts`, `lib/town/match/offBallRuns.ts`,
+`LIVE_BIB_KITS` / `liveMatchKits` / `bibColour` in `lib/town/beanLooks.ts`. Sim: `MatchSim.humans`, `lockHuman /
+releaseHuman / humanInput / placePlayer / humanTarget / isRestart`, call for the ball (`callerFor`, `lastCall`).
+Runtime: `fieldRuntime.joinMatch / leaveMatch / humanInput / humanView` (the joined field is never dormant or
+throttled; bench rigs pooled and drawn in the same batch), `lib/town/liveJoinRuntime.ts` (Town glue, HUD writes),
+`lib/graphics/joinMarkers.ts`, `hiddenPlayerMarker.pinAt`. UI: `components/LiveJoinHud.tsx` + `.module.css`,
+`app/globals.css` (travel cluster and pitch lesson card hidden while joined). Town: the knockout lines (position
+override, steer, field bump, walk ball, avatar visibility, emote / knock / chat gates, hover inspect off).
+
+**Validation.** `tests/join-live-game.cjs` (in `npm test`): countdown, team / slot for N humans, sit-out walker, input
+map, assist (cone, lane, hysteresis, lead, pace, offside, shot aim), runs, two humans in one sim (locked, pass, shoot,
+tackle, call, release), bibs ΔE and keeper clash, Town wiring and heat gates. `npx tsc --noEmit` clean;
+`npm run test:quiet` run once. Headless Chrome on the dev server, desktop 1440×900 and phone 390×844: countdown card,
+join, compass + head chevron + pass / forward markers, contextual buttons, leave; no page errors.
+
+**Heat.** Away from a joinable pitch: one rectangle test per frame and no DOM writes. Joined: ≤ 3 marker draw calls
+plus the existing pin, bench rig(s) in the existing batch (no new draw calls or textures), HUD attributes written only
+on change, the joined field kept awake (it is the one on screen anyway); the walk ball and main avatar are not drawn.
+
+**Still needs a real phone.** Thumb reach of the two buttons against the stick in portrait and landscape (and the
+left-handed flip), whether the minimap crowds the B button on small phones, the bibs in sunlight, a 10-minute joined
+session's frame time and temperature against watching, the feel of the 2 s countdown for 7-year-olds, and whether
+"idle = hold your spot" (no AI drift) feels right.
+
+**Slice 1b.** AI carriers preferring forward runners; the sub-board flash and goal-net pulse at join; the touchline
+glow in the edge band; skipping the card after 3 joins; a shot-power ring on the B button.
+
+**Slice 2 (multiplayer) must add.** The `Cap.Match` protocol (`C.MatchJoin`, `S.MatchSlot`, `C.MatchIn`,
+`C.MatchSnap`), the relay's `fieldOwner[format]` table and owner migration, remote humans fed through
+`fieldRuntime.joinMatch / humanInput` (already keyed by human id; `pickJoinTeam(..., prefer)` for friends), viewers
+stopping their local sim and interpolating snapshots, local prediction of your own slot, `Activity.Match` presence,
+and friend name tags tinted by bib.

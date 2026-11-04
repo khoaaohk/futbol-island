@@ -6102,3 +6102,6 @@ The rig's stride formula moved to `gaitStride` (same maths). Runtime cost per po
 per rig, no per-frame allocation, culled players still skipped. Sim: two compares per player step. No new loops, draws or tick-rate
 changes. Not measured on an iPhone: check a 7v7 / 11v11 on a real phone (frame time, heat) and how the slower turns feel once a human
 joins the match.
+
+## Join a live game, slice 1 (Nov 4 2026)
+Walking onto the live 7v7 with the ball joins the match ([join-live-game-design.md](join-live-game-design.md) §5). Away from a joinable pitch: one rectangle test per frame, no DOM writes. Joined: the field stays awake and unthrottled (it is the one on screen), ≤ 3 marker draw calls (one shared MeshBasicMaterial) plus the existing hidden-player pin, the sitting-out NPC is a pooled rig in the existing player batch (0 new draw calls, no textures), HUD attributes are written only on change; the walk ball and the main avatar are not drawn. The pass assist and off-ball runs run only on the sim think clock / when a human is on the ball. Desktop emulation only; no iPhone thermal claim.

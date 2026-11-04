@@ -55,7 +55,7 @@ interface Host{
  ballFlight:number;ballIsShot:boolean;shotIsGoal:boolean;loftDur:number;loftT:number;loftPeak:number;headerBall:boolean;acro:{to:string}|null;
  lastFrom:string|null;passIntended:string|null;kicks:number;lastKick:MatchSim['lastKick'];protect:number;passCd:number;carrying:boolean;hold:number;
  windup:KickWindup|null;windupScale:number;frameContact:MatchSim['frameContact'];combination:{runner:string;wall:string;team:Team;x:number;y:number;expires:number}|null;
- tacticalReason:string;msg:string;msgT:number;fatigue:number;userId:string|null;
+ tacticalReason:string;msg:string;msgT:number;fatigue:number;userId:string|null;humans:ReadonlyMap<string,unknown>;
  trapT:number;trapDur:number;trapVX:number;trapVY:number;touchX:number;touchY:number;recv:MatchSim['recv'];
  T:{shotRange:number;finish:number;laneReq:number};ai?:{manMark:number};goalVenue:{id:string};passMul:number;useOffside:boolean;groundFriction:number;
  persona:Record<Team,{carry:number;width:number}>;
@@ -285,7 +285,7 @@ export class Combos{
  /** A decision beat for the AI carrier. Returns true when a combination took the beat. */
  onBall(id:string,pressured:boolean,foeId:string|null,foeD:number):boolean{
   const h=this.h,o=h.players[id];
-  if(o.isGK||id===h.userId||h.windup)return false;
+  if(o.isGK||h.humans.has(id)||h.windup)return false;
   if(this.pending||this.knock)return (this.pending??this.knock)!.id===id;
   if(this.takeOn&&this.takeOn.id===id&&this.now<this.takeOn.contact)return true;
   const sh=this.shieldHold;
@@ -648,7 +648,7 @@ export class Combos{
  // ---------------------------------------------------------------- hooks the sim reads
  /** A movement target that overrides the sim's shape for this player this frame (runs, rolls, rebounds). */
  runTarget(id:string):Pt|null{
-  const h=this.h;if(id===h.userId||h.goalHold>0)return null;
+  const h=this.h;if(h.humans.has(id)||h.goalHold>0)return null;
   const r=this.roll;if(r&&r.id===id)return {x:r.x,y:r.y};
   const tk=this.takeOn;if(tk&&tk.id===id)return this.now<tk.contact?{x:tk.hold.x,y:tk.hold.y}:{x:tk.exit.x,y:tk.exit.y};
   // Over the ball during a skill's build-up: the pose owns the feet until the decisive touch.
@@ -667,7 +667,7 @@ export class Combos{
  }
  /** Called when a player claims the ball: > 0 = strike it first time with this xG multiplier. */
  finishOnClaim(id:string,via:string):number{
-  const h=this.h,p=h.players[id],now=this.now;if(p.isGK||id===h.userId)return 0;
+  const h=this.h,p=h.players[id],now=this.now;if(p.isGK||h.humans.has(id))return 0;
   const f=this.finish;
   if(f&&f.to===id&&now<=f.until&&(via==='recv'||via==='loose')){
    this.finish=null;if(f.kind==='flickVolley'?!this.volleyRange(p):!this.inRange(p,f.kind.startsWith('rebound')?80:70))return 0;
