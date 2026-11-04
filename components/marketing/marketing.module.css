@@ -1,0 +1,121 @@
+/* The unlisted marketing pages (Nov 4 2026, owner): /marketing and the print page /marketing/overview (lib/site/marketing.ts).
+   /marketing wears the tour's own root and bar (components/learn/learn.module.css .root/.subnav/.subnavIn/.logo + LogoWord), so
+   its logo, bar, header and footer behave exactly as on `/`; this sheet only adds the page's sections. Static: no video. */
+
+.root{
+ --well:#efe8d7;--sec:clamp(72px,12svh,140px);
+}
+.root ul{padding:0;list-style:none}
+/* the site layout's <main> gives every ul/p a measure and a grid (site.module.css): reset here, as the tour does */
+.root p,.root li{max-width:none}
+.root .sub{max-width:40ch}
+
+.sec{padding:var(--sec) var(--gut);display:grid;justify-items:center;gap:clamp(32px,5vh,56px);text-align:center}
+.tint{background:var(--tint)}
+.head{display:grid;justify-items:center;gap:clamp(12px,2vh,20px);max-width:880px}
+.h1,.h2{font-weight:600;line-height:1.04;letter-spacing:-.028em;text-wrap:balance}
+.h1{font-size:clamp(44px,4.6vw + 22px,88px);max-width:14ch}
+.h2{font-size:clamp(40px,3.6vw + 20px,72px)}
+.sub{font-size:clamp(19px,.85vw + 15px,26px);font-weight:500;line-height:1.28;letter-spacing:-.01em;color:var(--ink2);text-wrap:balance}
+.dl{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:12px 20px;margin-top:8px}
+.meta{font-size:15px;color:var(--ink2)}
+
+/* ---- design sheet: one panel per section ---- */
+.sheet{width:100%;max-width:1080px;display:grid;gap:clamp(28px,4vw,48px);padding:clamp(24px,4vw,48px);border-radius:clamp(26px,2.4vw,40px);background:var(--well);text-align:left}
+.tint .sheet{background:var(--paper)}
+.label{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:12px!important}
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:16px 12px}
+.chip{display:block;aspect-ratio:1;border-radius:18px;margin-bottom:8px;box-shadow:inset 0 0 0 1px rgb(20 34 29 / .08)}
+.swName{display:block;font-size:14px;font-weight:600}
+.swHex{display:block;font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.swUse{display:block;font-size:13px;color:var(--ink2)}
+.logoRow{display:flex;gap:8px;align-items:center;margin-top:12px;font-size:13px;color:var(--ink2)}
+.dot{width:22px;height:22px;border-radius:50%}
+.cols{display:grid;gap:clamp(28px,4vw,48px)}
+@media(min-width:860px){.cols{grid-template-columns:1.4fr 1fr}}
+.types{display:grid;gap:18px}
+.type{display:grid;gap:4px}
+.typeSpec{font-size:13px;color:var(--ink2)}
+.tDisplay{font-size:44px;font-weight:600;line-height:1.04;letter-spacing:-.028em}
+.tLine{font-size:22px;font-weight:500;line-height:1.28;letter-spacing:-.01em;color:var(--ink2)}
+.tBody{font-size:17px}
+.tBrush{font-family:IslandBrush,Arial,sans-serif;font-size:34px;line-height:1.1}
+.tButton{font-family:Arial,Helvetica,sans-serif;font-weight:800;font-size:17px}
+.tGameBody{font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.45}
+.notes{display:grid;gap:8px;font-size:15px;line-height:1.45}
+.notes li{padding-left:18px;position:relative}
+.notes li::before{content:"";position:absolute;left:0;top:.6em;width:6px;height:6px;border-radius:50%;background:var(--gold)}
+.demo{display:flex;flex-wrap:wrap;align-items:center;gap:16px 20px}
+/* the game's buttons sit on the title screen's sea, as they do in the game */
+.sea{display:grid;justify-items:center;gap:14px;padding:28px 20px 30px;border-radius:24px;background:#2b53e5;color:#fff2d3}
+.seaTitle{font-family:IslandBrush,Arial,sans-serif;font-size:clamp(30px,3.4vw,44px);line-height:1.1;text-shadow:0 3px 0 #1d3cb4}
+.seaBtns{display:grid;justify-items:center;gap:8px;width:min(340px,100%)}
+/* the game's green primary (docs/ui/BUTTONS.md: Primary, green), faithful CSS from the --btn-* tokens */
+.green{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 22px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-green,#244d40);color:var(--btn-ink-on-dark,#fff3d2);box-shadow:0 4px 0 var(--btn-green-edge,#17352b);font:700 15px/1.1 Arial,Helvetica,sans-serif}
+.navBtn{display:inline-flex;align-items:center;justify-content:center;width:var(--btn-nav-width,76px);height:var(--btn-height,44px);border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font:600 14px/1.1 Arial,Helvetica,sans-serif}
+.demoNote{font-size:13px;color:var(--ink2);text-align:center}
+
+/* ==== the print page /marketing/overview (A4 portrait, scripts/build-marketing-pdf.cjs) ====
+   Owner, Nov 4: the pictures carry the PDF. Each feature gets one large picture with its words smaller beneath or beside it:
+   a 16:9 poster runs the full content width (two per page), a 4:5 shot is 150mm wide (one per page), an upright phone screen
+   is 218mm tall with its words beside it. */
+:global(html):has(.doc),:global(html):has(.doc) :global(body){background:#fff!important}
+:global([data-reading-page]):has(.doc)>:global(header),:global([data-reading-page]):has(.doc) :global(footer){display:none}
+.doc{--ink:#14221d;--ink2:#5b675f;--gold:#e9c16b;--well:#f4efe2;
+ --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
+ margin:calc(-1 * var(--s3,24px)) calc(50% - 50vw) calc(-1 * var(--s5,64px));background:#fff;color:var(--ink);font:10.5pt/1.45 var(--sans);
+ -webkit-print-color-adjust:exact;print-color-adjust:exact}
+.doc *{box-sizing:border-box}
+.doc h1,.doc h2,.doc h3,.doc p,.doc ul,.doc ol,.doc figure{margin:0}
+.doc ul,.doc ol{padding:0;list-style:none}
+.doc p,.doc li{max-width:none}
+.doc li::marker{content:none}
+.page{width:210mm;margin:0 auto;padding:16mm}
+@media screen{.page{box-shadow:0 0 0 1px #0001;margin:16px auto;background:#fff}}
+@media print{.page{width:auto;padding:0 16mm}}
+@page{size:A4;margin:14mm 0 16mm}
+.break{break-before:page}
+.cover{display:grid;grid-template-rows:repeat(4,auto) 1fr;justify-items:center;gap:7mm;text-align:center}
+@media print{.cover{height:262mm}}
+.coverLogo{font-family:IslandBrush,Arial,sans-serif;font-size:60pt;line-height:1;margin-top:8mm}
+.coverTitle{font-size:32pt;font-weight:600;line-height:1.05;letter-spacing:-.025em}
+.doc .coverLine{font-size:15pt;font-weight:500;line-height:1.3;color:var(--ink2)}
+.coverImg{display:block;width:100%;height:auto;aspect-ratio:16/9;object-fit:cover;border-radius:5mm;background:var(--well);margin-top:4mm}
+.coverFoot{align-self:end;width:100%;display:flex;justify-content:space-between;font-size:10pt;color:var(--ink2)}
+.dh2{font-size:24pt;font-weight:600;line-height:1.08;letter-spacing:-.02em;margin-bottom:3mm!important}
+.dh3{font-size:13pt;font-weight:600;line-height:1.2;letter-spacing:-.01em}
+.doc .lead{font-size:12.5pt;font-weight:500;line-height:1.35;color:var(--ink2);max-width:60ch;margin-bottom:6mm!important}
+.doc .para{max-width:68ch;margin-bottom:4mm!important}
+.points{display:grid;gap:2mm;margin:2mm 0 6mm!important}
+.points li{position:relative;padding-left:5mm}
+.points li::before{content:"";position:absolute;left:0;top:.55em;width:2mm;height:2mm;border-radius:50%;background:var(--gold)}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:5mm;margin:4mm 0 8mm}
+.pillar{padding:5mm;border-radius:4mm;background:var(--well);break-inside:avoid}
+.pillar b{display:block;font-size:12pt;margin-bottom:1.5mm}
+.doc .tags{display:flex;flex-wrap:wrap;gap:2mm;margin-top:2.5mm}
+.tags li{padding:1mm 3mm;border-radius:99px;background:var(--well);font-size:9pt}
+.group{break-before:page}
+.groupHead{margin-bottom:6mm}
+/* one picture, its words smaller beneath or beside */
+.fig{break-inside:avoid;margin-bottom:9mm;display:grid;gap:4mm}
+.fig img{display:block;border-radius:4mm;background:var(--well);object-fit:cover}
+.figWide img{width:100%;height:auto;aspect-ratio:16/9}
+.figWide .text{display:grid;grid-template-columns:1fr 1fr;gap:1mm 7mm}
+.figWide .text>:is(h3,.hook){grid-column:1/-1}
+.figMid img{width:150mm;height:187.5mm}
+.figTall{grid-template-columns:auto 1fr;gap:7mm;align-items:start}
+.figTall img{height:218mm;width:auto;max-width:108mm}
+.figNone{padding:5mm;border-radius:4mm;background:var(--well)}
+.text{font-size:9.5pt;line-height:1.45}
+.text h3{font-size:14pt;font-weight:600;line-height:1.2;letter-spacing:-.01em;margin-bottom:1mm}
+.doc .hook{font-size:11pt;font-weight:500;color:var(--ink2);margin-bottom:1.5mm}
+.doc .small{color:var(--ink2);margin-top:1.5mm}
+.small b{color:var(--ink);font-weight:600}
+.steps{display:grid;gap:2mm;margin:2mm 0 4mm!important;counter-reset:st}
+.steps li{position:relative;padding-left:8mm;counter-increment:st}
+.steps li::before{content:counter(st);position:absolute;left:0;top:0;width:5.5mm;height:5.5mm;border-radius:50%;background:var(--gold);font-size:8.5pt;font-weight:700;display:grid;place-items:center}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:7mm;break-inside:avoid}
+.faq{break-inside:avoid;padding:3.5mm 0}
+.faq b{display:block;font-size:11pt;margin-bottom:1mm}
+.contact{margin-top:6mm!important;padding:6mm;border-radius:4mm;background:var(--well);break-inside:avoid}
+.contact a{color:var(--ink);font-weight:600;text-decoration:none}
