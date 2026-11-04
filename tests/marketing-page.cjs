@@ -32,13 +32,13 @@ assert(!/marketing/.test(strip(read('app/llms-full.txt/route.ts'))),'llms-full.t
 assert(!/marketing/.test(strip(read('lib/site/paths.ts'))),'paths.ts (the sitemap) does not list /marketing');
 assert(!/marketing/.test(strip(read('app/sitemap.ts'))),'sitemap.ts does not add /marketing');
 // No link anywhere: an href, a link target string or a router push to /marketing outside the marketing files.
-const OWN=new Set([PAGE,DOC,LIB,'tests/marketing-page.cjs','scripts/build-marketing-pdf.cjs']);
+const OWN=new Set([PAGE,DOC,LIB,'app/(site)/page.tsx',/* the main page's About chapter links to it (owner, Nov 4) */'tests/marketing-page.cjs','scripts/build-marketing-pdf.cjs']);
 const walk=d=>{const abs=path.join(root,d);if(!fs.existsSync(abs))return [];return fs.readdirSync(abs,{withFileTypes:true}).flatMap(e=>e.isDirectory()?(e.name==='node_modules'||e.name.startsWith('.')?[]:walk(`${d}/${e.name}`)):[`${d}/${e.name}`]);};
 const LINK=/(href=["'{`]*|['"`])(https:\/\/futbolisland\.app)?\/marketing(\/|["'`?#])/;
 let scanned=0;
 for(const f of [...walk('app'),...walk('components'),...walk('lib'),...walk('public').filter(f=>/\.(txt|html|xml|json|md|webmanifest)$/.test(f))].filter(f=>/\.(tsx?|jsx?|mjs|cjs|css|txt|html|xml|json|md|webmanifest)$/.test(f))){
  if(OWN.has(f))continue;scanned++;
- assert(!LINK.test(read(f)),`${f} links to /marketing (it must stay unlisted)`);}
+ assert(!LINK.test(read(f)),`${f} links to /marketing (only the main page's About box may)`);}
 assert(scanned>100,'the link scan covered the code ('+scanned+' files)');
 
 // ---- 2. the page ----

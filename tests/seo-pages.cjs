@@ -108,7 +108,7 @@ for(const p of PATHS){
   if(/^\/(fish|cards|exhibits)\/./.test(p)){const r=ld.find(x=>x['@type']==='CreativeWork');assert(r&&r.about,`${p}: CreativeWork with about`);}
   if(['/learn/lessons','/fish','/cards','/exhibits','/about'].includes(p))assert(types.includes('BreadcrumbList'),`${p}: BreadcrumbList`);
   if(p!=='/'&&p!=='/play')assert.match(h,/aria-label="Breadcrumb"/,`${p}: breadcrumbs`);}
- const t=text(h);for(const re of PERSONAL)assert(!re.test(t),`${p}: no personal-data string (${re}): ${(t.match(re)||[])[0]}`);
+ const t=text(h).split('jeremiah@whitesportventures.com').join('');/* the partnership's published business contact, shown on the main page About chapter (owner, Nov 4) */for(const re of PERSONAL)assert(!re.test(t),`${p}: no personal-data string (${re}): ${(t.match(re)||[])[0]}`);
 }
 // Lesson pages never reveal the answer: no markers, options A–Z as in the view, no verdict-led explanation.
 for(const l of lessons.LESSONS){const h=html(lessons.lessonPath(l.id));

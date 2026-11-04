@@ -380,7 +380,7 @@ assert.doesNotMatch(page,/FeatureFinder|LEARN_GROUPS|data-pin|IslandArt|Jersey/,
 assert.match(page,/<FriendSteps /,'the 3-step play-with-a-friend pinned feature');
 assert.match(page,/LEARN_GROWNUP_LINE/,'grown-ups stay in charge: one line');
 {const hrefs=[...page.matchAll(/href=(?:"([^"]+)"|\{`([^`]+)`\})/g)].map(m=>m[1]??m[2]);
- const ok=new Set(['/','/about','/privacy','#together']);
+ const ok=new Set(['/','/about','/privacy','/marketing','#together']);
  for(const h of hrefs){if(h.startsWith('#'))continue;assert(ok.has(h)||h.startsWith('#')||h.startsWith('mailto:')||/^https:\/\/futbolisland\.app\//.test(h),`link ${h} is known`);}
  for(const id of ['/about','/privacy'])assert(has(`app/(site)${id}`)||has(`app${id}`),`${id} route exists`);}
 
