@@ -36,7 +36,7 @@ const exists=(rel:string)=>{try{return fs.statSync(path.join(PUB,rel)).isFile();
 const vCache=new Map<string,string>();
 /** Optional media origin (no trailing slash). '' = the site serves its own clips. Set to 'https://futbol-media.khoa0aohk.workers.dev' once
  *  scripts/upload-learn-media.cjs has put every clip in R2 (this file reads no env, tests/seo-pages.cjs). */
-const MEDIA_BASE:string='';
+const MEDIA_BASE:string='https://futbol-media.khoa0aohk.workers.dev';
 export function learnUrl(src:string):string{
  let v=vCache.get(src);
  if(v===undefined){try{v=createHash('sha1').update(fs.readFileSync(path.join(PUB,src))).digest('hex').slice(0,10);}catch{v='';}vCache.set(src,v);}
