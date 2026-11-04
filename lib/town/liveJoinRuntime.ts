@@ -29,7 +29,7 @@ type Tip=keyof typeof JOIN_TIPS;
 export type JoinButton='a'|'b'|'leave'|'skip';
 type Mode='pass'|'shoot'|'forward'|'call'|'tackle'|'stay'|'go'|'';
 const TEAM_NAME={gold:'Yellow',blue:'Blue'} as const;
-const TIP_KEY='fi-join-tips-v1';
+const TIP_KEY='fi2-join-tips-v1';
 
 export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|null){
   const goalV=new T.Vector3();

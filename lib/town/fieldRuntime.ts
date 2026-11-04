@@ -97,9 +97,9 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  // touch an unseen match (the island ball's hit zone, radius + 45 m): sleep outside it, wake inside radius + 40 m. The camera sits
  // ~35 m ahead of the player, so from the spawn the unseen 11v11 read as "near" (77 m) and simulated for nobody.
  const near=focus?Math.hypot(focus.x-v.x,focus.z-v.z):camDistance,sleepAt=focus?45:60,wakeAt=focus?40:50;
- const dormant=!e.humans.size&&!visible&&viewingFormat!==v.id&&!teaching&&(v.id==='beach'||(e.dormant?near>sphere.radius+wakeAt:near>sphere.radius+sleepAt));
+ const dormant=!visible&&viewingFormat!==v.id&&!teaching&&(v.id==='beach'||(e.dormant?near>sphere.radius+wakeAt:near>sphere.radius+sleepAt));
  if(dormant!==e.dormant){e.dormant=dormant;if(dormant){e.root.visible=false;e.effects.update(e.sim,0,false,reduced);}}
- if(dormant){stats.dormant++;continue;}
+ if(dormant){stats.dormant++;continue;}// a joined field is never dormant: the joiner stands on it (`focus`) and the camera shows it
  const immediate=visible||viewingFormat===v.id||camDistance<sphere.radius+45||e.humans.size>0;
  const collisionToken=reactions?.states.size?e.liveFrame.tokens.find(token=>reactions.get(e.liveFrame.rows.get(token.id)!.hitId)?.cause==='truck'):undefined;
  const collisionHit=collisionToken?reactions?.get(e.liveFrame.rows.get(collisionToken.id)!.hitId):undefined;

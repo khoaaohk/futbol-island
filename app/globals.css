@@ -978,3 +978,7 @@ html[data-game-guard],html[data-game-guard] *{-webkit-user-select:none;user-sele
 html[data-game-guard] input,html[data-game-guard] textarea{-webkit-user-select:text;user-select:text}
 html[data-game-guard],html[data-game-guard] body{touch-action:pan-x pan-y;overscroll-behavior:none}
 html[data-game-guard] canvas{touch-action:none}
+/* Join a live game (components/LiveJoinHud.tsx): while you play in a live match the match buttons replace the travel cluster (rides, map, kick/juggle); the stick stays. Lefties keep the buttons under the left thumb. */
+.town-app[data-live-join] :is(.travel-actions,.touch-actions){visibility:hidden;pointer-events:none}
+.town-app.controls-flipped [data-join-actions]{right:auto;left:calc(18px + env(safe-area-inset-left,0px));flex-direction:row-reverse}
+.town-app[data-live-join] .field-learn-card{display:none}
