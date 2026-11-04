@@ -1,6 +1,7 @@
 import type {Metadata} from 'next';
 import {pageMeta} from '@/lib/site/seo';
 import PrivacyPolicy from '@/components/privacy/PrivacyPolicy';
+import PrivacyBack from '@/components/privacy/PrivacyBack';
 import styles from './privacy.module.css';
 
 /**
@@ -14,7 +15,7 @@ import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 export default function PrivacyPage(){
  preloadIslandBrush();
  return <main className={styles.page}><div className={styles.wrap}>
-  <a className={styles.back} href="/play">Back to the island</a>
+  <PrivacyBack className={styles.back} fallback="/play">Back</PrivacyBack>
   <h1>Privacy policy</h1>
   <PrivacyPolicy/>
  </div></main>;
