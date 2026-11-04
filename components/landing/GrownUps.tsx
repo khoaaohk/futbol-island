@@ -2,7 +2,6 @@
 import {useEffect,useRef,useState,type ReactNode} from 'react';
 import {BackButton} from '../BackButton';
 import shell from '../ModalShell.module.css';
-import PrivacyPolicy from '../privacy/PrivacyPolicy';
 import AboutGrownUps from '../about/AboutGrownUps';
 import styles from './Title.module.css';
 
@@ -29,18 +28,17 @@ function Sheet({open,onClose,title,id,children}:{open:boolean;onClose:()=>void;t
 }
 
 /**
- * The title screen's bottom row: "For grown-ups" and "Privacy" each open a full-screen sheet (user, Oct 9 2026). The privacy text is the
- * shared policy (components/privacy/PrivacyPolicy.tsx), the same one /privacy shows. Without JavaScript, Privacy still links to /privacy.
+ * The title screen's bottom row: "For grown-ups" and "Privacy" each open a full-screen sheet (user, Oct 9 2026). Privacy is a plain link to the one privacy page, /privacy
+ * (Nov 4 2026: the sheet copy was removed; /privacy looks like it and Back returns here).
  */
 export function LegalLinks(){
- const [sheet,setSheet]=useState<null|'grown'|'privacy'>(null);
+ const [sheet,setSheet]=useState<null|'grown'>(null);
  const close=()=>setSheet(null);
  return <>
   <button type="button" className={`${styles.grownLink} ${styles.grownTop}`} data-track="sg:open" onClick={()=>setSheet('grown')}>For grown-ups</button>
-  <a className={styles.grownLink} href="/privacy" data-track="sp:open" onClick={e=>{e.preventDefault();setSheet('privacy');}}>Privacy</a>
+  <a className={styles.grownLink} href="/privacy" data-track="sp:open">Privacy</a>
   <Sheet open={sheet==='grown'} onClose={close} title="For grown-ups" id="grown-ups-title">
-   <AboutGrownUps onOpenPrivacy={()=>setSheet('privacy')} donateReturn="start"/>
+   <AboutGrownUps donateReturn="start"/>
   </Sheet>
-  <Sheet open={sheet==='privacy'} onClose={close} title="Privacy policy" id="privacy-title"><div className={styles.grownInner}><PrivacyPolicy/></div></Sheet>
  </>;
 }

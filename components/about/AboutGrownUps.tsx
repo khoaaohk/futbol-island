@@ -6,7 +6,7 @@ import {GROWN_UPS as G,WSV_LINKS} from '@/lib/site/aboutCopy';
 /**
  * "For grown-ups" content, shared by the title screen's sheet (components/landing/GrownUps.tsx) and the game's Settings → About panel
  * (components/IslandSettings.tsx), so both always say the same thing (user, Oct 9 2026). data-track ids count only while the title screen shows.
- * Privacy: the title screen opens its Privacy sheet (onOpenPrivacy); the game links to /privacy in a new tab.
+ * Privacy: in-game Settings opens its own Privacy tab (onOpenPrivacy); the title screen links to /privacy in a new tab.
  * The words live in lib/site/aboutCopy.ts (Oct 16 2026), shared with the static /about page.
  */
 export default function AboutGrownUps({onOpenPrivacy,donateReturn}:{onOpenPrivacy?:()=>void;donateReturn:'start'|'about'}){
