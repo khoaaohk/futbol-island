@@ -103,6 +103,10 @@ await ok('day.ts shapes and day helpers',()=>{
  assert.equal(D.addDays('2026-11-01',1),'2026-11-02');assert.equal(D.addDays('2026-03-01',-1),'2026-02-28');
  assert.match(D.pacificDay(Date.UTC(2026,9,16,5)),/^2026-10-15$/,'5 am UTC is still the evening before in Los Angeles');
  assert.equal(D.clockPT('2026-10-16T17:05:00Z'),'10:05 am');
+ // exact start (Los Angeles, to the second, with the date) and exact play length (Nov 4 2026)
+ assert.equal(D.stampPT('2026-11-04T23:42:07.900Z'),'Wed, Nov 4, 2026, 3:42:07 pm');assert.equal(D.stampPT(''),'—');
+ assert.deepEqual([0,7,65,600,3599,3600,3725,36000.9].map(D.fmtClock),['0:00','0:07','1:05','10:00','59:59','1:00:00','1:02:05','10:00:00']);
+ {const panel=read('app/admin/LivePanel.tsx');for(const k of ['stampPT(iso)','Play length','fmtClock(r.secondsActive)','fmtClock(data.seconds)} played in total'])assert(panel.includes(k),k);}
 });
 
 await ok('dayAdmin: not configured, needs migration, 30 s cache, bad input',async()=>{

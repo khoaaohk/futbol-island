@@ -20,7 +20,7 @@ import {BackButton} from '@/components/BackButton';
 import {DoneButton} from '@/components/DoneButton';
 import {LIVE_COUNT_KEYS,LIVE_COUNT_LABEL,LIVE_MIGRATION,LIVE_OK_ROW,LIVE_WINDOWS,flagOf,fmtAgo,fmtSpent,sessionSource,sourceLabel,spotIcon,spotLabel,timeLine,
  type CountryTally,type LiveReport,type LiveRow,type LiveStatus,type LiveWindow,type Tally} from '@/lib/analytics/live';
-import {DAY_MIGRATION,DAY_OK_ROW,RAW_DAYS,addDays,clockPT,dateClockPT,pacificDay,shortDay,
+import {DAY_MIGRATION,DAY_OK_ROW,RAW_DAYS,addDays,dateClockPT,fmtClock,pacificDay,shortDay,stampPT,
  type AreaTally,type DayReport,type PlayerReport,type PlayerRow,type PlayersReport,type RowTotals} from '@/lib/analytics/day';
 import type {RelayStatsReport} from '@/lib/analytics/relayStatsTypes';
 import styles from './LivePanel.module.css';
@@ -63,7 +63,8 @@ function SessionCard({r,now,countryName,clock,onPlayer}:{r:LiveRow;now:number;co
  const chips=LIVE_COUNT_KEYS.filter(k=>r.counts[k]>0);
  const where=r.country?`${flagOf(r.country)} ${countryName(r.country)}${r.regionName?` · ${r.regionName}`:''}`:'Location unknown';
  const line=timeLine(r);
- const at=(iso:string)=>clock==='ago'?fmtAgo(iso,now):clock==='date'?dateClockPT(iso):clockPT(iso);
+ // Day and player views: the exact Los Angeles date and time, to the second (owner, Nov 4 2026).
+ const at=(iso:string)=>clock==='ago'?fmtAgo(iso,now):stampPT(iso);
  return <li className={styles.card} data-sid={r.sid}>
   <div className={styles.cardTop}>
    <code className={styles.sid} title="Anonymous session (a salted hash, not an id)">#{r.sid}</code>
@@ -71,7 +72,7 @@ function SessionCard({r,now,countryName,clock,onPlayer}:{r:LiveRow;now:number;co
     {r.returning!==null&&<span className={styles.badge} data-kind={r.returning?'returning':'new'}>{r.returning?'Returning':'New'}</span>}
     {r.hasCode!==null&&<span className={styles.badge} data-kind={r.hasCode?'code':'nocode'}>{r.hasCode?'Save code':'No code'}</span>}
    </span>
-   <span className={styles.spent} title="Foreground time this session (hidden tabs and idle time do not count)">{fmtSpent(r.secondsActive)}</span>
+   <span className={styles.spent} title="Foreground time this session (hidden tabs and idle time do not count)">{clock==='ago'?fmtSpent(r.secondsActive):fmtClock(r.secondsActive)}</span>
   </div>
   {clock==='ago'?<p className={styles.now}><span aria-hidden="true">{spotIcon(r.spot)}</span> <b>{spotLabel(r.spot)}</b>{r.previousArea&&<small> · before: {spotLabel(r.previousArea)}</small>}</p>
    :<p className={styles.now}><span aria-hidden="true">{spotIcon(r.spot)}</span> <small>last in</small> <b>{spotLabel(r.spot)}</b></p>}
@@ -79,6 +80,8 @@ function SessionCard({r,now,countryName,clock,onPlayer}:{r:LiveRow;now:number;co
   <dl className={styles.facts}>
    <div><dt>Started</dt><dd>{at(r.startedAt)}</dd></div>
    <div><dt>{clock==='ago'?'Last seen':'Ended (last seen)'}</dt><dd>{at(r.lastSeen)}</dd></div>
+   {clock!=='ago'&&<div><dt>Play length</dt><dd data-k="played">{fmtClock(r.secondsActive)}</dd></div>}
+   {clock!=='ago'&&<div><dt>Start to last beat</dt><dd>{fmtClock(r.spanSeconds)}</dd></div>}
    <div><dt>Device</dt><dd>{deviceLabel(r.device)}</dd></div>
    <div><dt>From</dt><dd>{sourceLabel(sessionSource(r))}</dd></div>
    <div className={styles.wide}><dt>Where</dt><dd>{where}</dd></div>
@@ -113,7 +116,7 @@ function DayView({data,countryName,onPlayer,step}:{data:DayReport;countryName:(c
    <button type="button" onClick={()=>step(-1)} disabled={data.day<=oldest} aria-label="Previous day">‹</button>
    <b className={styles.dayName}>{data.day===today?'Today':shortDay(data.day)}</b>
    <button type="button" onClick={()=>step(1)} disabled={data.day>=today} aria-label="Next day">›</button>
-   <span className={styles.note}>{data.sessions} sessions{data.players!==null?` · ${data.players} players`:''} · {fmtSpent(data.seconds)}</span>
+   <span className={styles.note} data-k="day-total">{data.sessions} sessions{data.players!==null?` · ${data.players} players`:''} · {fmtClock(data.seconds)} played in total</span>
   </div>
   {data.partial&&<p className={styles.warn} role="status">Sessions are kept {RAW_DAYS} days, so this day only has its totals left{data.tz==='UTC'?' (a UTC day)':''}: no list of sessions, no new/returning or code split.</p>}
   <TotalsStrips t={data}/>
@@ -126,7 +129,7 @@ function DayView({data,countryName,onPlayer,step}:{data:DayReport;countryName:(c
   {rows.length?<ul className={styles.cards}>{rows.map(r=><SessionCard key={r.sid+r.startedAt} r={r} now={0} countryName={countryName} clock="time" onPlayer={onPlayer}/>)}</ul>
    :!data.partial&&<p className={styles.empty}>{data.rows.length?'No session matches these filters.':'Nobody played this day.'}</p>}
   {data.truncated&&<p className={styles.foot}>Showing the newest {data.rows.length} of {data.sessions} sessions.</p>}
-  <p className={styles.foot}>Anonymous sessions that started this day (midnight to midnight, Pacific time), newest first; times are Pacific. Time is foreground time. A player is a save code, or one device without a code.</p>
+  <p className={styles.foot}>Anonymous sessions that started this day (midnight to midnight, Pacific time), newest first; times are Los Angeles time, to the second. Play length is foreground time to the second (m:ss or h:mm:ss); start to last beat is the wall clock from the start to the session’s last heartbeat. A player is a save code, or one device without a code.</p>
  </>;
 }
 
@@ -155,7 +158,7 @@ function PlayerCard({p,onPlayer}:{p:PlayerRow;onPlayer:(pid:string)=>void}){
      {p.returning!==null&&<span className={styles.badge} data-kind={p.returning?'returning':'new'}>{p.returning?'Returning':'New'}</span>}
      {p.hasCode!==null&&<span className={styles.badge} data-kind={p.hasCode?'code':'nocode'}>{p.hasCode?'Save code':'No code'}</span>}
     </span>
-    <span className={styles.spent}>{fmtSpent(p.seconds)}</span>
+    <span className={styles.spent}>{fmtClock(p.seconds)}</span>
    </div>
    <p className={styles.timeLine}>{p.sessions} session{p.sessions===1?'':'s'} · {p.daysPlayed} day{p.daysPlayed===1?'':'s'} · last seen {dateClockPT(p.lastSeen)}</p>
    {p.areas.length>0&&<p className={styles.timeLine}>{p.areas.map(a=>`${spotLabel(a.key)} ${fmtSpent(a.seconds)}`).join(' · ')}</p>}
@@ -172,7 +175,7 @@ function PlayerView({data,countryName}:{data:PlayerReport;countryName:(c:string)
    <div><dt>Last seen</dt><dd>{dateClockPT(data.lastSeen)}</dd></div>
    <div><dt>Days played</dt><dd>{data.daysPlayed}</dd></div>
    <div><dt>Sessions</dt><dd>{data.sessions}</dd></div>
-   <div><dt>Total time</dt><dd>{fmtSpent(data.seconds)}</dd></div>
+   <div><dt>Total time</dt><dd>{fmtClock(data.seconds)}</dd></div>
    <div><dt>Save code</dt><dd>{data.code&&data.code.with>0?'Yes':'No'}</dd></div>
   </dl>
   {data.partial&&<p className={styles.warn} role="status">Sessions are kept {RAW_DAYS} days: this player may have played before {shortDay(data.oldestDay)}.</p>}

@@ -8,7 +8,8 @@
  *  - ONE IntersectionObserver on the page's sections (sections seen and scroll depth, read only when a section crosses a
  *    threshold) and ONE MutationObserver for the data-active / data-on marks the carousel, slideshow and friends steps
  *    already set; three buffered PerformanceObservers for the Web Vitals;
- *  - time on page from visibilitychange and pagehide (onPageHide runs before the tracker's last beat), never a clock.
+ *  - time on page from visibilitychange and pagehide (onPageHide runs before the tracker's last beat), never a clock; booked in
+ *    whole seconds (mk:sec10 tens + mk:sec1 units).
  * Calm mode / reduced motion change nothing here: there is no animation and no work per frame.
  */
 import {count as trackerCount,onPageHide} from './tracker';
@@ -96,7 +97,8 @@ export function watchMarketing(env:MkEnv):()=>void{
  // ---- time on page: foreground ms from visibility, booked when hidden / left ----
  let fg=0,since:number|null=d.visibilityState==='visible'?env.now():null,booked=0,firstStint=false,vitalsDone=false;
  const settle=()=>{if(since!==null){fg+=Math.max(0,env.now()-since);since=null;}
-  const units=Math.min(MAX_SEC10,Math.round(fg/10_000));if(units>booked){count('mk:sec10',units-booked);booked=units;}
+  // Whole seconds, exact: the new seconds go out as tens (mk:sec10) and units (mk:sec1, 0–9), so 10·sec10 + sec1 = seconds booked.
+  const secs=Math.min(MAX_SEC10*10,Math.floor(fg/1000));if(secs>booked){const d=secs-booked,tens=Math.floor(d/10);if(tens)count('mk:sec10',tens);if(d%10)count('mk:sec1',d%10);booked=secs;}
   if(fg>=10_000)once('mk:engaged');
   if(!firstStint){firstStint=true;once('mk:t_'+timeBand(fg));}
   scroll();vitals();};
