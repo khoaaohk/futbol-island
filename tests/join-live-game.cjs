@@ -173,4 +173,20 @@ const outfield=(sim,team)=>sim.ids.filter(id=>sim.players[id].team===team&&!sim.
  assert.equal(B.bibColour('7v7',true),'#ffd23f');
  const fr=fs.readFileSync('lib/town/fieldRuntime.ts','utf8');assert.match(fr,/liveMatchKits\(v\.id,!!v\.sand,joinableFormat\(v\.id\)\)/,'per-instance kit data through the existing batch');}
 
+// ---- 11. Town wiring (the Rooftop Knockout pattern) + heat ----
+{const town=fs.readFileSync('components/Town.tsx','utf8'),rt=fs.readFileSync('lib/town/liveJoinRuntime.ts','utf8'),fr=fs.readFileSync('lib/town/fieldRuntime.ts','utf8');
+ assert.match(town,/const at=liveJoin\.position\(joinPoint\);if\(at\)\{location\.x=at\.x;location\.z=at\.z;/,'the camera and minimap follow your slot');
+ assert.match(town,/fieldBumpCtx\.disabled=[^;]*liveJoin\.joined;/,'no field bumps while joined');
+ assert.match(town,/const walkingBall=[^;]*!liveJoin\.joined;/,'the walk ball goes to the kit bag');
+ assert.match(town,/if\(liveJoin\.joined\)ball\.visible=false;/);
+ assert.match(town,/player\.root\.visible=[^;]*!liveJoin\.joined;/,'the slot rig is you; the avatar is hidden');
+ for(const gate of ['liveKnockout.joined||liveJoin.joined||animalRides','moveUiOpen.current||liveKnockout.joined||liveJoin.joined'])assert(town.includes(gate),'gate: '+gate);
+ assert.match(town,/inspectEnabled=[^;]*!liveJoin\.joined;/,'hovering a player never pauses the match you play in');
+ assert.match(town,/<LiveJoinStack onPress=/);assert.match(town,/<LiveJoinActions onPress=/);
+ assert.match(rt,/if\(!v&&state\.phase==='idle'&&!state\.needExit\)\{if\(countdownFormat\)/,'far from a joinable pitch: one rectangle test, no DOM work');
+ assert.match(fr,/a joined field is never dormant: the joiner stands on it/,'the joined field never sleeps (the player is on it)');
+ assert.match(fr,/e\.humans\.size>0;/,'and is never throttled');
+ const tips=[...rt.slice(rt.indexOf('JOIN_TIPS={'),rt.indexOf('} as const;')).matchAll(/:'((?:[^'\\]|\\.)*)'/g)].map(m=>m[1]);assert(tips.length>=8,'a lesson for every action');for(const t of tips)assert(t.length<80,'one-line lesson: '+t);
+ assert(/pass into the space where they are running/i.test(rt)&&/open player/i.test(rt),'the assist captions name the idea');}
+
 console.log('PASS join-live-game: format switch, countdown, team + slot for N humans, sit-out walker, input map, pass assist (cone, lane, hysteresis, lead, pace, shot aim), off-ball runs, locked sim control (pass/shoot/tackle/call/release), bibs');
