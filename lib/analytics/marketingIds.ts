@@ -27,7 +27,7 @@
  *   mk:lcp_<band> cls_<band> inp_<band>  Core Web Vitals, good / ni (needs improvement) / poor
  */
 export const MK_SECTIONS=[['top','Hero'],['film','Island film'],['in_action','Carousel (See it in action)'],['learn','Learn'],['explore','Explore'],
- ['fuel','Fuel up'],['together','Play with friends'],['more','Slideshow (Even more)'],['safe','Safety'],['faq','FAQ'],['end','Closing Play chapter']] as const;
+ ['fuel','Fuel up'],['together','Play with friends'],['more','Slideshow (Even more)'],['safe','Safety'],['about','About'],['faq','FAQ'],['end','Closing Play chapter']] as const;
 export type MkSection=typeof MK_SECTIONS[number][0];
 /** Taps, grouped for the dashboard. The id is `mk:c_<id>`. */
 export const MK_CLICKS=[

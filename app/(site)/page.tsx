@@ -12,6 +12,7 @@ import NavPlay from '@/components/learn/NavPlay';
 import FaqEnhance from '@/components/learn/FaqEnhance';
 import MobileMenu from '@/components/learn/MobileMenu';
 import PageStats from '@/components/learn/PageStats';
+import {CONTACT_EMAIL,GROWN_UPS as G,WSV_LINKS} from '@/lib/site/aboutCopy';
 import s from '@/components/learn/learn.module.css';
 import {LEARN_FAQ,LEARN_FAQ_TOP,LEARN_FEATURES,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,type LearnHighlight,type LearnHighlightId} from '@/lib/site/learnFeatures';
 import {LESSONS_INDEX} from '@/lib/site/lessons';
@@ -43,7 +44,7 @@ const PLAY_URL=PLAY_PATH;
 
 const hl=(id:LearnHighlightId)=>LEARN_HIGHLIGHTS.find(h=>h.id===id)!;
 const FAQ=LEARN_FAQ_TOP.map(q=>LEARN_FAQ.find(x=>x.q===q)!);
-const NAV:[string,string][]=[['learn','Learn'],['explore','Explore'],['together','Friends'],['safe','Safety']];
+const NAV:[string,string][]=[['learn','Learn'],['explore','Explore'],['together','Friends'],['safe','Safety'],['about','About']];
 
 /** Wide (about square or wider) shots get the wide card; upright phone screens the tall one. */
 const isWide=(k:string)=>{const im=learnAsset(k).image;return !!im&&im.width>im.height*.8;};
@@ -153,14 +154,26 @@ export default function Home(){
   {/* ---- 4b. Even more to explore: the light slideshow (renders nothing until its slides exist) ---- */}
   <LearnSlides/>
 
-  {/* ---- 5. safe + FAQ ---- */}
-  <Chapter h={safe}>
-   <Stage k={safe.shot} label={safe.title} tags={safe.chips}/>
+  {/* ---- 5. safe ---- */}
+  <Chapter h={safe}/>
+
+  {/* ---- 5b. about: the partnership, in the owner's words (lib/site/aboutCopy.ts, the same as /about) ---- */}
+  <section className={`${s.ch} ${s.dark}`} id="about" aria-labelledby="about-h">
+   <NavMark/>
+   <div className={s.head} data-reveal="">
+    <h2 className={s.h2} id="about-h">About</h2>
+    <p className={s.sub}>{G.partnerLead}<a className={s.bold} href={WSV_LINKS[0].href} rel="noopener noreferrer" target="_blank">{G.partnerName}</a>{G.partnerRest}</p>
+    <ul className={s.aboutLinks}><li><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li><li><a href={WSV_LINKS[1].href} rel="noopener noreferrer" target="_blank">{WSV_LINKS[1].label}</a></li></ul>
+   </div>
+  </section>
+
+  {/* ---- 6. FAQ ---- */}
+  <section className={`${s.ch} ${s.light}`} aria-labelledby="faq-h">
    <div className={s.faqWrap} id="faq" data-reveal="">
     <h3 className={s.faqTitle} id="faq-h">Questions grown-ups ask</h3>
     <div className={s.faqList} data-faq-list="">{FAQ.map(q=><details key={q.q} className={s.faq}><summary>{q.q}<span className={s.plus} aria-hidden="true"/></summary><div className={s.faqBody}><div className={s.faqIn}><p>{q.a}</p></div></div></details>)}</div>
    </div>
-  </Chapter>
+  </section>
 
   {/* ---- the end: one big Play ---- */}
   <section className={`${s.ch} ${s.dark} ${s.end}`} aria-labelledby="end-h">

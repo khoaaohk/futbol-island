@@ -330,7 +330,7 @@ const cap={'montage_xl.mp4':21e6,'montage_l.mp4':10e6,'montage_m.mp4':5e6,'monta
   assert.match(css,/\.menu\{display:none\}\s*@media\(max-width:640px\)\{\.menu\{display:block;flex:none\}\}/,'menu only at <= 640px');
   assert.match(css,/\.menuBtn\{display:inline-flex;[^}]*background:var\(--btn-mint[^}]*font:600 14px/,'mint pill button reading Menu');
   assert.match(css,/\.menuBtn:active\{translate:0 var\(--btn-press,3px\);/,'pressed button sinks 3px');assert.doesNotMatch(css,/\.menuBtn:hover/,'no hover colour');
-  assert.match(css,/\.menuPanel\{position:absolute;top:100%;left:0;right:0;height:calc\(100svh - 68px\);overflow-y:auto;/,'panel under the 68px bar, fills the screen below the bar, scrolls');
+  assert.match(css,/\.menuPanel\{position:absolute;top:100%;left:0;right:0;height:calc\(100svh - 68px - env\(safe-area-inset-top,0px\)\);overflow-y:auto;/,'panel under the 68px bar, fills the screen below the bar, scrolls');
   assert.match(css,/\.menu\[open\] \.menuPanel\{animation:menuIn \.22s/,'opens with the 220ms slide / fade');
   assert.match(css,/\.root \.menuList a\{[^}]*min-height:112px;[^}]*font-size:36px;font-weight:600/,'large rows, 112px tall, full-screen menu');
   assert.match(css,/\.menuList a\[aria-current\] span\{background:var\(--btn-pink/,'current chapter: the pink chip');
@@ -381,7 +381,7 @@ assert.match(page,/<FriendSteps /,'the 3-step play-with-a-friend pinned feature'
 assert.match(page,/LEARN_GROWNUP_LINE/,'grown-ups stay in charge: one line');
 {const hrefs=[...page.matchAll(/href=(?:"([^"]+)"|\{`([^`]+)`\})/g)].map(m=>m[1]??m[2]);
  const ok=new Set(['/','/about','/privacy','#together']);
- for(const h of hrefs){if(h.startsWith('#'))continue;assert(ok.has(h)||h.startsWith('#')||/^https:\/\/futbolisland\.app\//.test(h),`link ${h} is known`);}
+ for(const h of hrefs){if(h.startsWith('#'))continue;assert(ok.has(h)||h.startsWith('#')||h.startsWith('mailto:')||/^https:\/\/futbolisland\.app\//.test(h),`link ${h} is known`);}
  for(const id of ['/about','/privacy'])assert(has(`app/(site)${id}`)||has(`app${id}`),`${id} route exists`);}
 
 // ---- 5. built site --------------------------------------------------------------------------------------------------------------

@@ -45,7 +45,7 @@
 .root a:focus-visible,.root button:focus-visible,.root summary:focus-visible{outline:3px solid var(--gold);outline-offset:3px;border-radius:10px}
 
 /* ---- sticky sub-nav: chrome (translucent blur + hairline) fades in once the page scrolls ------------------------------------ */
-.subnav{position:sticky;top:0;z-index:20;height:68px}
+.subnav{position:sticky;top:0;z-index:20;box-sizing:border-box;height:calc(68px + env(safe-area-inset-top,0px));padding-top:env(safe-area-inset-top,0px)}/* viewport-fit=cover: iOS Safari's compact top bar overlays the page, so the bar clears it (owner photo Nov 3) */
 .subnav::before,.subnav::after{content:"";position:absolute;inset:0;pointer-events:none}
 .subnav::before{background:rgb(251 247 238 / .9);-webkit-backdrop-filter:saturate(180%) blur(18px);backdrop-filter:saturate(180%) blur(18px)}
 .subnav::after{top:auto;height:1px;background:rgb(20 34 29 / .12)}
@@ -96,7 +96,7 @@
 .menu[open] .menuIco i:last-child{transform:translateY(-4px) rotate(-45deg)}
 .menuBtn:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 var(--btn-mint-edge,#8bac9d)}
 .root .menuBtn:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:-2px}
-.menuPanel{position:absolute;top:100%;left:0;right:0;height:calc(100svh - 68px);overflow-y:auto;overscroll-behavior:contain;padding:20px var(--gut) calc(32px + env(safe-area-inset-bottom,0px));
+.menuPanel{position:absolute;top:100%;left:0;right:0;height:calc(100svh - 68px - env(safe-area-inset-top,0px));overflow-y:auto;overscroll-behavior:contain;padding:20px var(--gut) calc(32px + env(safe-area-inset-bottom,0px));
  background:var(--paper,#fbf7ee);box-shadow:0 1px 0 rgb(20 34 29 / .12)}/* full screen under the bar (owner, Nov 3); the bar keeps the close button */
 .menu[open] .menuPanel{animation:menuIn .22s var(--ease) both}
 .menu:not([open]) .menuPanel{display:none}/* no boxes at all while closed (Chrome keeps closed <details> content laid out as content-visibility:hidden) */
@@ -354,7 +354,10 @@
 }
 
 /* ---- FAQ: a minimal accordion ------------------------------------------------------------------------------------------- */
-.faqWrap{width:100%;max-width:820px;margin-top:clamp(40px,10vh,120px);text-align:left}
+.faqWrap{width:100%;max-width:820px;text-align:left}
+/* About chapter (Nov 3): the partnership paragraph and its two links */
+.aboutLinks{display:flex;flex-wrap:wrap;justify-content:center;gap:10px clamp(18px,3vw,36px);margin:6px 0 0;padding:0;list-style:none;font-size:18px;font-weight:600}
+.aboutLinks a,.root .sub a.bold{color:var(--goldInk);text-decoration:underline;text-underline-offset:4px}
 .faqTitle{font-size:clamp(28px,1.8vw + 18px,44px);font-weight:600;letter-spacing:-.025em;line-height:1.1;text-align:center;margin-bottom:clamp(24px,4vh,40px)}
 .faqList{border-top:1px solid rgb(20 34 29 / .14)}
 .faq{border-bottom:1px solid rgb(20 34 29 / .14)}
@@ -421,3 +424,4 @@
 .root .bold{font-weight:800;color:inherit}
 /* phones (owner, Nov 3): the hero title is exactly two lines, "Explore Futbol Island." then "Learn the game."; the size follows the width so line one never wraps */
 @media(max-width:640px){.root .h1{max-width:none;font-size:min(52px,calc((100vw - 2 * var(--gut,20px)) / 9.4))}.root .h1Line{white-space:nowrap}}
+.root #about .sub{max-width:44ch}

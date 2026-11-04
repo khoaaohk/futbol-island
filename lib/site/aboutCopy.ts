@@ -20,6 +20,8 @@ export const GROWN_UPS={
  nonprofitsTitle:'Local non-profits',
  nonprofitsLead:'We also work with local non-profits growing the game in our community. Every dollar donated goes straight to them. We’re proud to support ',
 } as const;
+/** White Sports Ventures' contact address, shown on the tour page's About chapter. */
+export const CONTACT_EMAIL='jeremiah@whitesportventures.com';
 export const WSV_LINKS=[{href:'https://www.whitesportsventures.com/about',label:'whitesportsventures.com',track:'wsv'},{href:'https://www.instagram.com/jeremiahwhiteiii/',label:'@jeremiahwhiteiii on Instagram',track:'instagram'}] as const;
 /** The local non-profits donations go to (shared with the title screen's For grown-ups sheet). */
 export const NONPROFITS=[{name:'FC YAP',href:'https://www.instagram.com/fc_yap/'},{name:'Street Soccer San Diego',href:'https://www.instagram.com/streetsoccersd/'},{name:'Ronin Futsal',href:'https://www.instagram.com/roninfutsal/'}] as const;
