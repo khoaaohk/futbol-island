@@ -5,7 +5,7 @@ import {count,startTracker} from '@/lib/analytics/tracker';
 import {readStartFlags} from '@/lib/analytics/startFlags';
 import {readDeviceMarks,readPlayerKey} from '@/lib/analytics/deviceMarks';
 import {watchStart} from '@/lib/analytics/startEvents';
-import {countPlayArrival} from '@/lib/analytics/marketingIds';
+import {countPlayArrival,countPlayStart} from '@/lib/analytics/marketingIds';
 import {useRootView} from '@/components/root/useRootView';
 
 /**
@@ -32,5 +32,7 @@ export default function VisitTracker({allowLocalhost=false}:{allowLocalhost?:boo
  // The title screen (`/` before Play; lib/rootView.ts): its view and one passive click listener for its buttons and links
  // (lib/analytics/startEvents.ts). Play switches `/` to the game in place, which stops it.
  useEffect(()=>{if(pathname!=='/play'||view!=='landing'||!tracker.current)return;return watchStart(window);},[pathname,view]);
+ // Marketing page (Nov 4 2026): that tab then really played (the view switched to the game) → mk:played, once per tab.
+ useEffect(()=>{if(pathname==='/play'&&view==='game'&&tracker.current)countPlayStart((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);},[pathname,view]);
  return null;
 }

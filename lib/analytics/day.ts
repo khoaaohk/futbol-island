@@ -70,3 +70,9 @@ export const shortDay=(day:string)=>{const t=Date.parse(day+'T12:00:00Z');return
 export const clockPT=(iso:string|null|undefined)=>{const t=Date.parse(iso||'');return Number.isFinite(t)?new Date(t).toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit'}).toLowerCase():'—';};
 /** "Oct 16, 3:42 pm" in Los Angeles. */
 export const dateClockPT=(iso:string|null|undefined)=>{const t=Date.parse(iso||'');return Number.isFinite(t)?`${new Date(t).toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',month:'short',day:'numeric'})}, ${clockPT(iso)}`:'—';};
+/** "Wed, Nov 4, 2026, 3:42:07 pm" in Los Angeles: the exact start of a session, to the second (Nov 4 2026, owner). */
+export const stampPT=(iso:string|null|undefined)=>{const t=Date.parse(iso||'');if(!Number.isFinite(t))return '—';const d=new Date(t);
+ return `${d.toLocaleDateString('en-US',{timeZone:'America/Los_Angeles',weekday:'short',month:'short',day:'numeric',year:'numeric'})}, ${d.toLocaleTimeString('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit',second:'2-digit'}).toLowerCase()}`;};
+/** Exact play length: "m:ss" under an hour, "h:mm:ss" from an hour (whole seconds, as stored). */
+export const fmtClock=(seconds:number)=>{const s=Math.max(0,Math.floor(Number(seconds)||0)),h=Math.floor(s/3600),m=Math.floor(s%3600/60),r=String(s%60).padStart(2,'0');
+ return h?`${h}:${String(m).padStart(2,'0')}:${r}`:`${m}:${r}`;};

@@ -2,7 +2,7 @@
 // Marketing page stats (Nov 3 2026): the mk: ids are allowlisted and well formed; the page tracker (lib/analytics/marketingEvents.ts)
 // maps taps, toggles, sections, carousel/slideshow/steps, time, scroll, media and Web Vitals to fixed ids only; a real tracker
 // beacon carries them and the ingest keeps them (and drops anything else); the report maths (rates, median, average, small-number
-// suppression, daily series) adds up; the admin "Marketing page" tab renders seeded data and its empty state; heat rules.
+// exact counts (no suppression), the Play → reached → played funnel, daily series) adds up; the admin "Marketing page" tab renders seeded data and its empty state; heat rules.
 'use strict';
 const assert=require('node:assert/strict'),fs=require('fs'),path=require('path'),vm=require('vm'),ts=require('typescript');
 const ROOT=path.resolve(__dirname,'..');process.chdir(ROOT);
@@ -173,13 +173,13 @@ await ok('watchMarketing: time on page, bounce, first-stint band, Web Vitals; no
  obs('layout-shift').cb({getEntries:()=>[{startTime:100,value:0.05,hadRecentInput:false},{startTime:400,value:0.04,hadRecentInput:false},{startTime:500,value:0.5,hadRecentInput:true}]});
  obs('event').cb({getEntries:()=>[{interactionId:1,duration:120},{interactionId:0,duration:900},{interactionId:2,duration:240}]});
  b.advance(4000);b.hide();
- assert.equal(c['mk:t_0_10'],1);assert.equal(c['mk:engaged'],undefined,'4 s and no tap = a bounce');assert.equal(c['mk:sec10'],undefined);
+ assert.equal(c['mk:t_0_10'],1);assert.equal(c['mk:engaged'],undefined,'4 s and no tap = a bounce');assert.equal(c['mk:sec10'],undefined);assert.equal(c['mk:sec1'],4,'whole seconds, exact');
  assert.equal(c['mk:lcp_ni'],1);assert.equal(c['mk:cls_good'],1);assert.equal(c['mk:inp_ni'],1);
  b.advance(60_000);// hidden time never counts
  b.show();b.advance(14_000);b.pagehide();
- assert.equal(c['mk:sec10'],2);assert.equal(c['mk:engaged'],1);assert.equal(c['mk:t_0_10'],1,'the band is the first stint only');assert.equal(c['mk:t_10_30'],undefined);
- b.advance(1e9);stop();assert.equal(c['mk:sec10'],2,'stop after leaving adds nothing');
- const b2=browser();const s2=ME.watchMarketing(b2.env);b2.advance(3_600_000);s2();assert.equal(b2.counts['mk:sec10'],MI.MAX_SEC10,'capped');
+ assert.equal(c['mk:sec10']*10+c['mk:sec1'],18,'4 s + 14 s = 18 s exactly');assert.equal(c['mk:sec10'],1);assert.equal(c['mk:engaged'],1);assert.equal(c['mk:t_0_10'],1,'the band is the first stint only');assert.equal(c['mk:t_10_30'],undefined);
+ b.advance(1e9);stop();assert.equal(c['mk:sec10'],1,'stop after leaving adds nothing');assert.equal(c['mk:sec1'],8);
+ const b2=browser();const s2=ME.watchMarketing(b2.env);b2.advance(3_600_000);s2();assert.equal(b2.counts['mk:sec10'],MI.MAX_SEC10,'capped');assert.equal(b2.counts['mk:sec1'],undefined);
 });
 
 await ok('mk:reached: only after a fresh Play tap in this tab, once',()=>{
@@ -188,6 +188,24 @@ await ok('mk:reached: only after a fresh Play tap in this tab, once',()=>{
  st.set('fi-mk-play',String(1000));MI.countPlayArrival(ss,1000+11*60_000,id=>got.push(id));deq(got,['mk:reached'],'stale flag ignored');
  MI.countPlayArrival(null,1,id=>got.push(id));
  {const vt=read('components/VisitTracker.tsx').replace(/\s+/g,'');assert(vt.includes("pathname==='/play'&&tracker.current)countPlayArrival(")&&vt.includes('Date.now(),count)'),'VisitTracker counts the arrival on /play');}
+});
+
+await ok('mk:played: only a tab that came from a marketing Play tap, reached /play and entered the game; once per tab; fresh only',()=>{
+ const mk=()=>{const st=new Map();return {st,ss:{getItem:k=>st.get(k)??null,removeItem:k=>st.delete(k),setItem:(k,v)=>st.set(k,String(v))}};};
+ const got=[],cnt=id=>got.push(id);
+ {const {st,ss}=mk();MI.countPlayStart(ss,5000,cnt);deq(got,[],'no marketing tap, no reach → nothing');
+  st.set(MI.MK_PLAY_KEY,'1000');MI.countPlayStart(ss,2000,cnt);deq(got,[],'a tap alone (not yet on /play) is not playing');
+  MI.countPlayArrival(ss,3000,cnt);deq(got,['mk:reached']);assert.equal(st.get(MI.MK_REACHED_KEY),'r3000');
+  MI.countPlayStart(ss,3000+60_000,cnt);deq(got,['mk:reached','mk:played']);assert(!st.has(MI.MK_REACHED_KEY));
+  MI.countPlayStart(ss,3000+70_000,cnt);deq(got,['mk:reached','mk:played'],'once');
+  st.set(MI.MK_PLAY_KEY,'200000');MI.countPlayArrival(ss,201000,cnt);MI.countPlayStart(ss,202000,cnt);
+  deq(got,['mk:reached','mk:played','mk:reached'],'a second tap in the same tab can reach again but plays once per tab');}
+ got.length=0;
+ {const {st,ss}=mk();st.set(MI.MK_PLAY_KEY,'1000');MI.countPlayArrival(ss,2000,cnt);MI.countPlayStart(ss,2000+MI.PLAY_FRESH_MS+1,cnt);deq(got,['mk:reached'],'stale arrival ignored');}
+ MI.countPlayStart(null,1,cnt);
+ assert(MI.isMarketingId('mk:played')&&MI.isMarketingId('mk:sec1')&&K.isCountId('mk:played')&&K.isCountId('mk:sec1'),'allowlisted');
+ const vt=read('components/VisitTracker.tsx').replace(/\s+/g,'');
+ assert(vt.includes("pathname==='/play'&&view==='game'&&tracker.current)countPlayStart("),'VisitTracker counts mk:played when /play switches to the game');
 });
 
 // ---- the real pipeline: tracker beacon → ingest → memory store → report ----
@@ -228,36 +246,38 @@ await ok('beacon shape → ingest → report: the mk ids ride the existing beat;
  tr.stop();
  const day=C.dayIn('pacific',now),rep=await R.buildReport(store,{from:day,to:day},now),m=rep.marketing;
  assert(m&&m.hasData);assert.equal(m.views,6);assert.equal(m.sessions,6);assert.equal(m.visitors,6,'unique visitors = sessions that entered on /');
- assert.equal(m.play.sessions,null,'4 sessions < 5 → withheld');assert.equal(m.play.ctr,null);
+ assert.equal(m.play.sessions,4,'exact, no small-number suppression');assert.equal(m.play.ctr,4/6);assert.equal(m.play.taps,4);
  assert.equal(m.sources.find(r=>r.id==='mk:src_ai').count,6);assert.equal(m.devices.find(r=>r.id==='mk:d_phone').count,6);
  assert.equal(m.engagedRate,1);assert.equal(m.bounceRate,0);assert.equal(m.medianBand,'10–30 s');
- assert(m.avgMs>=25_000&&m.avgMs<=32_000,'average from the rounded 10 s units: '+m.avgMs);
+ assert.equal(m.avgSeconds,28,'exact: (25+26+…+30)/6 = 27.5 s → 28 s');assert.equal(m.avgMs,28_000);
  assert.equal(m.daily.length,1);assert.equal(m.daily[0].views,6);
  const stored=JSON.stringify(store.data.beats.map(b=>b.counts));assert(!stored.includes('bogus'));
 });
 
 await ok('report maths: rates, funnel, median, suppression, daily series',()=>{
- const counts={'mk:view':200,'mk:engaged':150,'mk:sec10':900,'mk:play':40,'mk:reached':30,'mk:c_play_hero':30,'mk:c_play_nav':14,'mk:s25':160,'mk:s50':120,'mk:s75':80,'mk:s100':50,
+ const counts={'mk:view':200,'mk:engaged':150,'mk:sec10':900,'mk:sec1':123,'mk:play':40,'mk:reached':30,'mk:played':24,'mk:c_play_hero':30,'mk:c_play_nav':14,'mk:s25':160,'mk:s50':120,'mk:s75':80,'mk:s100':50,
   'mk:t_0_10':50,'mk:t_10_30':40,'mk:t_30_60':30,'mk:t_60_180':50,'mk:t_180_600':20,'mk:t_600':10,'mk:v_top':190,'mk:faq_2':3,'mk:rc_1':60,'mk:d_phone':120,'mk:d_desktop':80,
   'mk:lcp_good':150,'mk:lcp_ni':40,'mk:lcp_poor':10,'mk:inp_good':2};
  const sessions={...counts,'mk:view':180,'mk:c_play_hero':28,'mk:sec10':170};
  const m=MR.buildMarketing({counts,countSessions:sessions},[
-  {day:'2026-11-03',counts:{'mk:view':120},countSessions:{'mk:view':110,'mk:play':25,'mk:reached':20},dims:{entry:{'/':{s:100,v:90,pv:120}}}},
+  {day:'2026-11-03',counts:{'mk:view':120,'mk:c_play_hero':20,'mk:c_play_end':7},countSessions:{'mk:view':110,'mk:play':25,'mk:reached':20,'mk:played':17},dims:{entry:{'/':{s:100,v:90,pv:120}}}},
   {day:'2026-11-02',counts:{},countSessions:{},dims:{entry:{'/':{s:40,v:35,pv:40}}}}],{reel:['Fishing'],slides:[],faq:['Is it free?','Are there ads?'],steps:[]});
  assert.equal(m.views,200);assert.equal(m.sessions,180);
  assert.equal(m.visitors,90,'a day without page views (the old title screen at /) adds no visitors');
- assert.equal(m.avgMs,45_000);assert.equal(m.engagedRate,0.75);assert.equal(m.bounceRate,0.25);
+ assert.equal(m.avgSeconds,46,'(900·10 + 123) / 200 = 45.6 s → 46 s');assert.equal(m.avgMs,46_000);assert.equal(m.engagedRate,0.75);assert.equal(m.bounceRate,0.25);
  assert.equal(m.medianBand,'30 s – 1 min');// 200 first stints: 50+40=90 < 100, +30 = 120 ≥ 100
  assert.equal(m.play.ctr,40/180);assert.equal(m.play.reachRate,30/40);assert.equal(m.play.overall,30/180);
+ assert.equal(m.play.played,24);assert.equal(m.play.playRate,24/30);assert.equal(m.play.playedOverall,24/180);assert.equal(m.play.taps,44,'every Play tap, totalled');
  deq(m.scroll.map(r=>r.sessions),[160,120,80,50]);assert.equal(m.scroll[3].rate,50/180);
- assert.equal(m.faq.length,2);assert.equal(m.faq[1].sessions,null);assert.equal(m.faq[1].label,'Are there ads?');assert.equal(m.faq[0].sessions,0);
+ assert.equal(m.faq.length,2);assert.equal(m.faq[1].sessions,3,'exact under 5');assert.equal(m.faq[1].label,'Are there ads?');assert.equal(m.faq[0].sessions,0);
  assert.equal(m.reel[0].label,'Fishing');assert.equal(m.reel[0].rate,60/180);
  const hero=m.clicks.find(r=>r.id==='mk:c_play_hero');assert.equal(hero.sessions,28);assert.equal(hero.count,30);assert.equal(hero.group,'Play');
  assert.equal(m.devices.find(r=>r.id==='mk:d_phone').rate,0.6,'device share is of views');
  const lcp=m.vitals.find(v=>v.id==='lcp');assert.equal(lcp.goodShare,0.75);assert.equal(lcp.measured,200);
- const inp=m.vitals.find(v=>v.id==='inp');assert.equal(inp.goodShare,null);assert.equal(inp.bands.good,null);
- assert(m.hidden>=2);
- deq(m.daily.map(d=>[d.views,d.visitors,d.play]),[[120,90,25],[0,0,0]]);
+ const inp=m.vitals.find(v=>v.id==='inp');assert.equal(inp.goodShare,1);assert.equal(inp.bands.good,2);assert.equal(inp.measured,2);
+ assert(!('hidden' in m)&&!('min' in m),'no suppression fields');
+ for(const k of ['scroll','sections','clicks','faq','reel','sources','devices','time'])for(const r of m[k]){assert.notEqual(r.sessions,null,k);assert.notEqual(r.count,null,k);}
+ deq(m.daily.map(d=>[d.views,d.visitors,d.play,d.playTaps,d.reached,d.played]),[[120,90,25,27,20,17],[0,0,0,0,0,0]]);
  const ML=load('lib/analytics/marketingLabels.ts'),names=ML.marketingLabels();
  assert.equal(names.faq.length,5);assert(names.steps.length>=3);
  const named=MR.buildMarketing({counts,countSessions:sessions},[],null);assert.equal(named.reel.length,MI.MK_MAX.rc);assert.equal(named.reel[0].label,'#1');
@@ -269,10 +289,12 @@ await ok('report maths: rates, funnel, median, suppression, daily series',()=>{
 await ok('admin tab: renders seeded data and the empty state; wired into the tabs',()=>{
  const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
  const Sec=load('app/admin/MarketingSection.tsx').default;
- const counts={'mk:view':200,'mk:engaged':150,'mk:sec10':900,'mk:play':40,'mk:reached':30,'mk:c_play_hero':30,'mk:s25':160,'mk:v_top':190,'mk:t_30_60':200,'mk:d_phone':120,'mk:src_search':90,'mk:ref_google':90,'mk:lcp_good':150};
+ const counts={'mk:view':200,'mk:engaged':150,'mk:sec10':900,'mk:play':40,'mk:reached':30,'mk:played':12,'mk:c_play_hero':30,'mk:s25':160,'mk:v_top':190,'mk:t_30_60':200,'mk:d_phone':120,'mk:src_search':90,'mk:ref_google':90,'mk:lcp_good':150};
  const marketing=MR.buildMarketing({counts,countSessions:counts},[{day:'2026-11-03',counts:{'mk:view':200},countSessions:{'mk:view':200,'mk:play':40},dims:{entry:{'/':{s:150,v:140,pv:200}}}}],{reel:[],slides:[],faq:[],steps:[]});
  const html=renderToStaticMarkup(React.createElement(Sec,{report:{marketing},rangeText:'Nov 3',dayLabel:d=>d}));
  for(const s of ['Marketing page','Visits','Unique visitors','Average time on page','Bounce rate','Play click-through','Reached the game','Visits by day','Scroll depth','Sections seen','What they tap','Core Web Vitals','Where visits come from','Devices'])assert(html.includes(s),s);
+ for(const s of ['Tapped Play','Reached /play','Actually played','Play taps'])assert(html.includes(s),s);assert(!html.includes('&lt;5'),'no <5 anywhere');
+ assert(/data-k="played">12</.test(html),'actually played, exact');assert(/data-k="tapped">40</.test(html));
  assert(html.includes('20%'),'Play CTR 40/200');assert(html.includes('75%'),'reach rate 30/40');assert(html.includes('140'),'unique visitors');
  const none=renderToStaticMarkup(React.createElement(Sec,{report:{},rangeText:'Nov 3',dayLabel:d=>d}));
  assert(none.includes('No marketing-page visits in this range yet'));

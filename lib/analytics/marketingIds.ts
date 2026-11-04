@@ -12,7 +12,9 @@
  *   mk:view            the page was shown (one per page load)
  *   mk:play            any Play tap in the view (once per view; the CTR numerator)
  *   mk:engaged         the view lasted 10 s in the foreground or had a tracked tap (bounce = views without it)
- *   mk:sec10           foreground time on the page in 10-second units, rounded (capped at MAX_SEC10 per view) → average time
+ *   mk:sec10 + mk:sec1 foreground time on the page in whole seconds, as tens (sec10) and the remaining units (sec1, 0–9 per booking):
+ *                      total seconds = 10·sec10 + sec1, exact to the second (capped at MAX_SEC10·10 s per view) → average time.
+ *                      (Before Nov 4 2026 sec10 was rounded and sec1 did not exist; those first-day views are within ±5 s.)
  *   mk:t_<band>        the time band of the view's first stint (until it was first hidden or left) → median time
  *   mk:s25 … s100      deepest scroll reached
  *   mk:v_<section>     a section was seen (half of it, or half the screen, in view)
@@ -20,6 +22,8 @@
  *   mk:faq_<n>         FAQ question n (1-based, page order) opened
  *   mk:rc_<n> sl_<n> fs_<n>  carousel card / slideshow slide / friends step n became the active one while its section was seen
  *   mk:reached         the tab arrived at /play after a Play tap here (counted on /play by components/VisitTracker.tsx)
+ *   mk:played          that same tab then actually played: the title screen's Play (or a restore) switched /play to the game
+ *                      (lib/rootView.ts view 'game'), within PLAY_FRESH_MS of arriving; once per tab (Nov 4 2026)
  *   mk:d_<class>       phone / tablet / desktop (coarse pointer and screen size)
  *   mk:src_<class> mk:ref_<name>  where the view came from: a class, and a fixed referrer name
  *   mk:ret_yes / ret_no  this device has played the game before (the game's own existing mark; nothing new is stored)
@@ -68,7 +72,7 @@ export const MK_MAX={rc:9,sl:6,faq:10,fs:6} as const;
 
 const range=(n:number)=>Array.from({length:n},(_,i)=>i+1);
 export const MARKETING_COUNT_IDS:readonly string[]=[
- 'mk:view','mk:play','mk:engaged','mk:sec10','mk:reached','mk:ret_yes','mk:ret_no','mk:vid_ok','mk:err_img','mk:err_video',
+ 'mk:view','mk:play','mk:engaged','mk:sec10','mk:sec1','mk:reached','mk:played','mk:ret_yes','mk:ret_no','mk:vid_ok','mk:err_img','mk:err_video',
  ...MK_TIME_BANDS.map(b=>'mk:t_'+b[0]),...MK_SCROLL.map(s=>'mk:s'+s),...MK_SECTIONS.map(s=>'mk:v_'+s[0]),...MK_CLICKS.map(c=>'mk:c_'+c[0]),
  ...range(MK_MAX.faq).map(i=>'mk:faq_'+i),...range(MK_MAX.rc).map(i=>'mk:rc_'+i),...range(MK_MAX.sl).map(i=>'mk:sl_'+i),...range(MK_MAX.fs).map(i=>'mk:fs_'+i),
  ...MK_DEVICES.map(d=>'mk:d_'+d[0]),...MK_SOURCES.map(s=>'mk:src_'+s[0]),...MK_REFERRERS.map(r=>'mk:ref_'+r[0]),'mk:ref_other',
@@ -102,9 +106,23 @@ export function deviceOf(coarse:boolean,shortSide:number):'phone'|'tablet'|'desk
 
 /** sessionStorage key set by a Play tap on `/` (a timestamp; per tab, never sent). */
 export const MK_PLAY_KEY='fi-mk-play';
-const PLAY_FRESH_MS=10*60_000;
-/** On /play (components/VisitTracker.tsx, after its pageview): the tab came here from a Play tap on `/` → mk:reached. Lives here,
- *  not in marketingEvents.ts, so the game's bundle does not carry the page tracker. */
-export function countPlayArrival(session:Pick<Storage,'getItem'|'removeItem'>|null,nowMs:number,count:(id:string)=>void){
- try{const at=Number(session?.getItem(MK_PLAY_KEY));if(!at)return;session!.removeItem(MK_PLAY_KEY);if(nowMs-at>=0&&nowMs-at<PLAY_FRESH_MS)count('mk:reached');}catch{}
+export const PLAY_FRESH_MS=10*60_000;
+/** sessionStorage key set on /play when mk:reached was counted: `r<arrival ms>` (per tab, never sent). mk:played reads it. */
+export const MK_REACHED_KEY='fi-mk-reached';
+/** sessionStorage mark that this tab's mk:played was counted (once per tab). */
+export const MK_PLAYED_KEY='fi-mk-played';
+type Session=Pick<Storage,'getItem'|'removeItem'>&{setItem?:Storage['setItem']};
+/** On /play (components/VisitTracker.tsx, after its pageview): the tab came here from a Play tap on `/` → mk:reached, and the
+ *  arrival is remembered for mk:played. Lives here, not in marketingEvents.ts, so the game's bundle does not carry the page tracker. */
+export function countPlayArrival(session:Session|null,nowMs:number,count:(id:string)=>void){
+ try{const at=Number(session?.getItem(MK_PLAY_KEY));if(!at)return;session!.removeItem(MK_PLAY_KEY);
+  if(nowMs-at>=0&&nowMs-at<PLAY_FRESH_MS){count('mk:reached');try{session!.setItem?.(MK_REACHED_KEY,'r'+nowMs);}catch{}}}catch{}
+}
+/** On /play once the view is the game (VisitTracker): this tab reached /play from a marketing Play tap (MK_REACHED_KEY) within
+ *  PLAY_FRESH_MS and has not counted yet → mk:played. A restore's hand-off reload keeps sessionStorage, so it still counts. */
+export function countPlayStart(session:Session|null,nowMs:number,count:(id:string)=>void){
+ try{const raw=session?.getItem(MK_REACHED_KEY);if(!raw||raw[0]!=='r')return;const at=Number(raw.slice(1));
+  if(session!.getItem(MK_PLAYED_KEY)){session!.removeItem(MK_REACHED_KEY);return;}
+  session!.removeItem(MK_REACHED_KEY);
+  if(at&&nowMs-at>=0&&nowMs-at<PLAY_FRESH_MS){count('mk:played');try{session!.setItem?.(MK_PLAYED_KEY,'1');}catch{}}}catch{}
 }
