@@ -7,7 +7,9 @@ import styles from '../site.module.css';
 /** The History Museum's cases as reading pages. /museum stays the game's walk-in hall. */
 export const dynamic='force-static';
 const DESC=`The Futbol Island History Museum: ${SITE_EXHIBITS.length} exhibits on the Laws of the Game, World Cup history, balls and kits, legends, football’s firsts, tactics and the science of the game.`;
-export const metadata=pageMeta('History Museum exhibits',DESC,'/exhibits');
+// the search-result description is kept under 155 characters; the page lead stays the full sentence
+const META=`The Futbol Island History Museum: ${SITE_EXHIBITS.length} exhibits on the Laws, World Cup history, balls, kits, legends, tactics and science.`;
+export const metadata=pageMeta('History Museum exhibits',META,'/exhibits');
 const CRUMBS=[{name:'Home',path:'/'},{name:'Museum',path:'/exhibits'}];
 
 export default function ExhibitsIndex(){

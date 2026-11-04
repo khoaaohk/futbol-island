@@ -16,7 +16,9 @@ import styles from '../site.module.css';
  */
 export const dynamic='force-static';
 const DESC='Futbol Island is a free football learning game for kids aged 7 to 12. Explore an island and learn positions, tactics, rules and football history through short lessons and quizzes. No ads, no chat, no accounts.';
-export const metadata=pageMeta('About',DESC,'/about');
+// the search-result description is kept under 155 characters; the page lead above stays the full sentence
+const META='A free football learning game for kids aged 7 to 12: explore an island and learn positions, tactics, rules and football history.';
+export const metadata=pageMeta('About',META,'/about');
 const CRUMBS=[{name:'Home',path:'/'},{name:'About',path:'/about'}];
 const CONTACT=PRIVACY_CONTACT?`Privacy questions and requests: ${PRIVACY_CONTACT}.`:'A contact address for privacy questions will be listed on the privacy page. Meanwhile, “Delete my save” in the game removes a save straight away.';
 const FAQ:[string,string][]=[

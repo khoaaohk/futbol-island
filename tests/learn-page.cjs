@@ -57,7 +57,7 @@ const page=read('app/(site)/page.tsx');
 assert.match(page,/export const dynamic='force-static';/,'the home page is static');
 assert.match(page,/pageMeta\(TITLE,DESC,'\/',\{whole:true,type:'website'\}\)/,'the home page has its own metadata and canonical /');
 assert.match(page,/const PLAY_URL=PLAY_PATH;/,'Play goes to the game');assert.equal(L('lib/site/seo.ts').PLAY_PATH,'/play','the game is at /play');
-assert.match(read('app/(site)/learn/lessons/page.tsx'),/pageMeta\('Football lessons',DESC,'\/learn\/lessons'\)/,'the lesson index canonical is /learn/lessons');
+assert.match(read('app/(site)/learn/lessons/page.tsx'),/pageMeta\('Football lessons',META,'\/learn\/lessons'\)/,'the lesson index canonical is /learn/lessons');
 const lessons=L('lib/site/lessons.ts');
 assert.equal(lessons.lessonPath('x'),'/learn/lessons/x','lesson pages live under /learn/lessons');
 const nc=read('next.config.mjs');

@@ -80,7 +80,7 @@
 .pill{flex:none}
 /* tap target (audit Nov 3): the 26px wordmark link gets a 44px tall hit area inside the 68px bar; the look is unchanged */
 .root .logo{padding-block:9px}
-.root .subnavIn button.pill{align-self:center!important;margin-top:0!important}
+.root .subnavIn :is(button,a).pill{align-self:center!important;margin-top:0!important}
 /* ---- phone menu (owner, Nov 3 2026; MobileMenu.tsx): <= 640px only, a two-line icon left of the Play pill opens a cream panel
    under the 68px bar with the four links in large type; open slides / fades down 220ms (transform + opacity), instant under
    reduced motion / calm; the current chapter is the same pink chip as the desktop nav; pressed icon sinks 3px, no hover colour */

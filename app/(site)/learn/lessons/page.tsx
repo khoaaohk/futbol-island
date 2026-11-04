@@ -6,7 +6,9 @@ import styles from '../../site.module.css';
 
 export const dynamic='force-static';
 const DESC=`All ${LESSONS.length} Futbol Island football lessons for kids: positions, team shape, passing, defending and restarts in 7v7, 9v9, 11v11 and futsal, each with a short quiz.`;
-export const metadata=pageMeta('Football lessons',DESC,'/learn/lessons');
+// the search-result description is kept under 155 characters; the page lead stays the full sentence
+const META=`All ${LESSONS.length} Futbol Island football lessons for kids: positions, passing, defending and restarts in 7v7 to 11v11 and futsal, with quizzes.`;
+export const metadata=pageMeta('Football lessons',META,'/learn/lessons');
 const CRUMBS=[{name:'Home',path:'/'},{name:'What’s inside',path:'/learn'},{name:'Lessons',path:'/learn/lessons'}];
 
 export default function LearnIndex(){

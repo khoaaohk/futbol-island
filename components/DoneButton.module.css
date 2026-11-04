@@ -1,23 +1,25 @@
-button.button.button{
+:is(button,a).button.button{
  position:relative;width:var(--navigation-width,76px)!important;min-width:0!important;height:44px;
  flex:0 0 auto!important;padding:0!important;border-radius:999px!important;
  overflow:hidden;transition:width 260ms cubic-bezier(.22,.7,.3,1);
 }
-button.button.button[data-closing=true]{width:44px!important;pointer-events:none}
+:is(button,a).button.button[data-closing=true]{width:44px!important;pointer-events:none}
 .label,.icon{position:absolute;inset:0;display:grid;place-items:center;transition:opacity 160ms ease;white-space:nowrap}
 .icon{opacity:0}
 .button[data-closing=true] .label{opacity:0}
 .button[data-closing=true] .icon{opacity:1;transition-delay:100ms}
-@media(prefers-reduced-motion:reduce){button.button.button,.label,.icon{transition:none}}
+@media(prefers-reduced-motion:reduce){:is(button,a).button.button,.label,.icon{transition:none}}
 /* Shared paper finish also applies outside the modal shell (films, games and transcripts). */
-button.button.button{box-sizing:border-box;height:var(--btn-height)!important;border:var(--btn-rim-width) solid var(--btn-rim)!important;background:var(--btn-gold) var(--btn-grain) center/128px 128px!important;color:var(--btn-ink)!important;box-shadow:var(--btn-shadow-gold)!important;font-family:var(--btn-font);font-size:14px;font-weight:600;line-height:1.1;align-self:start;background-blend-mode:soft-light!important}
-button.button.button:focus{outline:none}
-button.button.button[data-keyboard-focus=true]:focus{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
-button.button.button:disabled{opacity:.5}
-button.button.button{transition:width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease}
-button.button.button[data-departing=true]{opacity:0;pointer-events:none}
+:is(button,a).button.button{box-sizing:border-box;height:var(--btn-height)!important;border:var(--btn-rim-width) solid var(--btn-rim)!important;background:var(--btn-gold) var(--btn-grain) center/128px 128px!important;color:var(--btn-ink)!important;box-shadow:var(--btn-shadow-gold)!important;font-family:var(--btn-font);font-size:14px;font-weight:600;line-height:1.1;align-self:start;background-blend-mode:soft-light!important}
+:is(button,a).button.button:focus{outline:none}
+:is(button,a).button.button[data-keyboard-focus=true]:focus{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+:is(button,a).button.button:disabled{opacity:.5}
+:is(button,a).button.button{transition:width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease}
+:is(button,a).button.button[data-departing=true]{opacity:0;pointer-events:none}
 /* One press effect for every navigation button (Back, Done, Next, Skip, Flip, Choose plays, Previous step), not only
    the ones the global aria-label rules happen to match. */
-button.button.button{transition:width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease,translate .16s,box-shadow .16s}
-button.button.button:not(:disabled):active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)!important}
-@media(prefers-reduced-motion:reduce){button.button.button{transition:none}}
+:is(button,a).button.button{transition:width 220ms cubic-bezier(.22,.7,.3,1),opacity 140ms ease,translate .16s,box-shadow .16s}
+:is(button,a).button.button:not(:disabled):active{translate:0 var(--btn-press);box-shadow:var(--btn-shadow-gold-pressed)!important}
+@media(prefers-reduced-motion:reduce){:is(button,a).button.button{transition:none}}
+/* the link form (NavigationButton with an href): same box as the button, no underline */
+a.button.button{display:inline-block;text-decoration:none;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent}
