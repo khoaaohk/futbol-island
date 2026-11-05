@@ -289,3 +289,37 @@
 .countryList ul li{display:flex;justify-content:space-between;font-size:13px;color:var(--a-ink-2);padding:2px 10px}
 /* Oct 20 2026: phones fit the date chips in two rows, so the Overview's numbers start higher up. */
 @media (max-width:600px){.filters{gap:8px}.chip{min-height:40px;padding:0 12px;font-size:14px}.filters .live{min-height:40px;padding:0 12px;font-size:13px}}
+
+/* Live matches (Nov 5 2026, LiveMatchesSection.tsx): one panel per format inside the "By format" card, a tone step (no rule). */
+.lmTiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+.lmFormats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
+.lmFormats>div{background:var(--a-page);border-radius:16px;padding:12px 14px;display:grid;gap:2px;align-content:start;min-width:0}
+.lmFormats span{font-size:14px;font-weight:800;color:var(--a-ink-2)}
+.lmFormats b{font-size:28px;line-height:1.1;font-variant-numeric:tabular-nums}
+.lmFormats small{font-size:12px;color:var(--a-muted)}
+.lmFormats dl{margin:8px 0 0;display:grid;gap:3px}
+.lmFormats dl>div{display:flex;justify-content:space-between;gap:8px;font-size:13px}
+.lmFormats dt{color:var(--a-muted)}
+.lmFormats dd{margin:0;font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+@media (max-width:1000px){.lmFormats{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:900px){.lmTiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:600px){.lmFormats{grid-template-columns:repeat(2,minmax(0,1fr))}.lmFormats b{font-size:24px}}
+/* Investor page visits (Nov 5 2026, MarketingVisitsSection.tsx): weekday × hour table on the island heat ramp. Numbers flip to
+   the light ink on the three darker bins (dark mode: the ramp runs dark→light, so the two darker bins take the light ink). */
+.page{--mv-hi:#fff9e9;--mv-lo:#244d40}
+.mvHeat{width:100%;min-width:640px;border-collapse:separate;border-spacing:2px;font-size:12px;font-variant-numeric:tabular-nums;table-layout:fixed}
+.mvHeat th{font-size:11px;font-weight:700;color:var(--a-muted);text-align:center;padding:2px 0;white-space:nowrap}
+.mvHeat th:first-child{width:36px;text-align:left}
+.mvHeat tbody th{color:var(--a-ink-2);text-align:left}
+.mvHeat td{height:26px;padding:0;text-align:center;border-radius:4px;background:var(--cell,var(--a-grid));color:var(--mv-lo);font-weight:700}
+.mvHeat td[data-bin="2"],.mvHeat td[data-bin="3"],.mvHeat td[data-bin="4"]{color:var(--mv-hi)}
+.mvHeat .mvAll{background:none;color:var(--a-ink);width:40px}
+.mvHeat thead th:last-child{width:40px}
+.mvSr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme=light])) .page{--mv-hi:#0f241d;--mv-lo:#fff3d1}}
+:root[data-theme=dark] .page{--mv-hi:#0f241d;--mv-lo:#fff3d1}
+.mvPlaces{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.mvPlaces li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline}
+.mvPlaces .barTrack{grid-column:1/-1}
+.mvName{font-size:14px;font-weight:700;color:var(--a-ink);min-width:0;overflow-wrap:anywhere}
+.mvAvg{font-size:13px;color:var(--a-muted);font-variant-numeric:tabular-nums;white-space:nowrap}

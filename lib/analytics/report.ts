@@ -26,6 +26,8 @@ import {buildEmotes,buildParty} from './partyReport';
 import {emoteLabels} from './emoteLabels';
 import {emoteVariantLabels} from './emoteVariantLabels';
 import {buildMarketing} from './marketingReport';
+import {buildLiveMatches} from './liveMatchReport';
+import {buildMarketingVisits} from './marketingVisitReport';
 import {LIVE_WINDOW_MS,SCHEMA_VERSION,addDays,dailySeries,dayBounds,dayIn,dayList,displayDistribution,emptyReport,hoursInDay,mergeRollups,rollupDay,
  type DailyRollup,type Report,type ReportTime,type TimeZoneMode} from './core';
 
@@ -119,6 +121,10 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  report.party=buildParty(merged,range,rollups);report.emotes=buildEmotes(merged,range,emoteLabels(),emoteVariantLabels());
  // Nov 3 2026: the marketing page at `/` (lib/analytics/marketingReport.ts), same rollups.
  report.marketing=buildMarketing(merged,rollups);// named by the admin route / page (marketingLabels.ts)
+ // Nov 5 2026: live matches (lib/analytics/liveMatchReport.ts): visits, joins and time per format, same rollups.
+ report.liveMatches=buildLiveMatches(merged,range,rollups);
+ // Nov 5 2026: the investor page /marketing: where (state / country), when (Pacific hour) and how long (marketingVisitReport.ts).
+ report.marketingVisits=buildMarketingVisits(merged,rollups);
 
  if(len===1&&days[0]>=oldestRaw){report.series=await store.hourly(days[0]);report.granularity='hour';
   /* no future hours drawn as zeros */if(days[0]===today)report.series=report.series.slice(0,Math.floor((now.getTime()-dayBounds(today,mode)[0])/3_600_000)+1);}

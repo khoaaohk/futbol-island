@@ -63,8 +63,8 @@
 .b[data-full] .charge{border-color:#ff7a2e;border-width:5px;animation:powerThrob .42s ease-in-out infinite alternate}
 @keyframes powerThrob{from{transform:scale(1)}to{transform:scale(1.08)}}
 @media(prefers-reduced-motion:reduce){.b[data-full] .charge{animation:none}}
-/* The trick's word: an island toast (cream card, green ink) popping over the pitch for ~0.9 s. */
-.pop{position:absolute;z-index:12;left:50%;top:34%;margin:0;padding:8px 18px;border:3px solid #fff2cd;border-radius:999px;background:#fff1d3;color:#244d40;font-weight:800;font-size:20px;white-space:nowrap;pointer-events:none;box-shadow:0 3px 0 #a8863d;opacity:0;transform:translate(-50%,8px) scale(.8);transition:opacity .18s ease,transform .18s ease}
+/* The trick's word, 'Power shot!' and the like (owner Nov 5 2026: up under the score bar, off the play): an island toast popping for ~0.9 s. */
+.pop{position:absolute;z-index:12;left:50%;top:var(--tip-top,76px);margin:0;padding:8px 18px;border:3px solid #fff2cd;border-radius:999px;background:#fff1d3;color:#244d40;font-weight:800;font-size:18px;white-space:nowrap;pointer-events:none;box-shadow:0 3px 0 #a8863d;opacity:0;transform:translate(-50%,8px) scale(.8);transition:opacity .18s ease,transform .18s ease}
 .pop[data-show]{opacity:1;transform:translate(-50%,0) scale(1);transition:opacity .12s ease-out,transform .32s cubic-bezier(.34,1.56,.64,1)}
 @media(prefers-reduced-motion:reduce){.pop,.pop[data-show]{transition:none;transform:translate(-50%,0)}}
 /* Hold-to-charge (Pass and Shoot, owner Nov 4 2026): a ring that grows out of the button as the strike charges. The

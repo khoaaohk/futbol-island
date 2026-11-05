@@ -23,7 +23,11 @@ export const OWN_LEAD_S=.18;
 const HEAD=9;
 /** Longest C.Match Snap frame the relay accepts: MATCH_SNAP_MAX (120, multiplayer/protocol/types.ts) + [code, kind, field]. */
 export const SNAP_MAX_LEN=123;
-export const SNAP_FLAG={restart:1,lofted:2,goal:4,hands:8} as const;
+export const SNAP_FLAG={restart:1,lofted:2,goal:4,hands:8,/** quick goal reset: the scored ball is faded out */ballHidden:128} as const;
+/** Quick goal reset (Nov 5 2026, matchSim GOAL_RESET): the flags number also carries sim.goalReset.serial mod 4 at bits 8-9 (period
+ *  keeps bits 4-6), so a friend's screen fades the ball and plays the arrival on the centre spot too. No extra number in the frame;
+ *  an older reader ignores the bits (it masks the period with &7). */
+export const SNAP_RESET_SHIFT=8;
 /** Owner popups on friends' screens (Nov 5 2026): after the targets, ONE packed value per listed human (same order), so the trick
  *  word / "Power shot!" / "Slipped away!" and the trick move on the rig play on every phone. Bits: trick serial mod 8 (0-2), shot
  *  serial mod 8 (3-5), slip serial mod 8 (6-8), trick kind (9-10, TRICK_KINDS), full-power shot (11), aimed shot (12), trick side
@@ -40,7 +44,7 @@ export function encodeSnap(sim:MatchSim,field:number,seq:number,ballH:number,out
   const ids=sim.ids;let n=0;
   out[n++]=NET.C_MATCH;out[n++]=NET.SNAP;out[n++]=field;
   out[n++]=seq%100000;
-  out[n++]=(sim.isRestart?SNAP_FLAG.restart:0)|(sim.ball.lofted?SNAP_FLAG.lofted:0)|(sim.goalHold>0?SNAP_FLAG.goal:0)|(sim.keeperHands?SNAP_FLAG.hands:0)|((sim.period&7)<<4);
+  out[n++]=(sim.isRestart?SNAP_FLAG.restart:0)|(sim.ball.lofted?SNAP_FLAG.lofted:0)|(sim.goalHold>0?SNAP_FLAG.goal:0)|(sim.keeperHands?SNAP_FLAG.hands:0)|((sim.period&7)<<4)|(sim.goalReset.hidden?SNAP_FLAG.ballHidden:0)|((sim.goalReset.serial&3)<<SNAP_RESET_SHIFT);
   out[n++]=sim.score.gold;out[n++]=sim.score.blue;
   out[n++]=Math.round(sim.ball.x*10);out[n++]=Math.round(sim.ball.y*10);out[n++]=Math.round(Math.max(0,ballH)*100);
   out[n++]=sim.ball.owner?ids.indexOf(sim.ball.owner):-1;out[n++]=ids.length;
@@ -69,7 +73,7 @@ export type SnapBuffer={
 };
 export function createSnapBuffer():SnapBuffer{
   const ring:Frame[]=[0,1,2].map(()=>({t:-1,len:0,v:new Float64Array(128)}));
-  let head=-1,count=0,lastSeq=-1,restart=false,hands=true,ballH=0,lastAt=-1,evAt=-1;
+  let head=-1,count=0,lastSeq=-1,restart=false,hands=true,ballH=0,lastAt=-1,evAt=-1,resetSeen=-1;
   /** The last popup value seen per slot index (-1 = not yet: the first one is only remembered, so an old trick never pops late). */
   const evSeen=new Int32Array(64).fill(-1);
   const newer=(s:number)=>lastSeq<0||((s-lastSeq+100000)%100000)>0&&((s-lastSeq+100000)%100000)<50000;
@@ -100,9 +104,12 @@ export function createSnapBuffer():SnapBuffer{
       }
       const ax=A.v[4]/10,ay=A.v[5]/10,bx=B.v[4]/10,by=B.v[5]/10,ds=Math.max(1e-3,span*simPerMs);
       const ball=sim.ball;ball.x=ax+(bx-ax)*k;ball.y=ay+(by-ay)*k;ball.vx=span>0?(bx-ax)/ds:0;ball.vy=span>0?(by-ay)/ds:0;
+      if((A.v[1]|0)&SNAP_FLAG.ballHidden){ball.x=bx;ball.y=by;ball.vx=ball.vy=0;}// it landed on the centre spot: no slide across the pitch
       ballH=(A.v[6]+(B.v[6]-A.v[6])*k)/100;ball.height=ballH;
       const own=B.v[7]|0;ball.owner=own>=0&&own<ids.length?ids[own]:null;
       const fl=B.v[1]|0;restart=(fl&SNAP_FLAG.restart)!==0;hands=(fl&SNAP_FLAG.hands)!==0;ball.lofted=(fl&SNAP_FLAG.lofted)!==0;sim.goalHold=(fl&SNAP_FLAG.goal)?1:0;sim.period=(fl>>4)&7||sim.period;
+      // Quick goal reset: the owner's hidden flag as is; a new serial (mod 4) bumps the puppet's, which fieldRuntime turns into the arrival.
+      sim.goalReset.hidden=(fl&SNAP_FLAG.ballHidden)!==0;{const rs=(fl>>SNAP_RESET_SHIFT)&3;if(resetSeen>=0&&rs!==resetSeen)sim.goalReset.serial+=(rs-resetSeen+4)&3;resetSeen=rs;}
       sim.score.gold=b.v[2];sim.score.blue=b.v[3];
       // The assist targets the owner computed for each human (the Pass ring / Forward marker on a friend's screen).
       const hAt=HEAD+(b.v[HEAD-1]|0)*3,H=b.v[hAt]|0;
@@ -119,7 +126,7 @@ export function createSnapBuffer():SnapBuffer{
       return true;
     },
     get frames(){return count;},get restart(){return restart;},get hands(){return hands;},get ballH(){return ballH;},get lastAt(){return lastAt;},
-    clear(){head=-1;count=0;lastSeq=-1;restart=false;hands=true;ballH=0;lastAt=-1;evAt=-1;evSeen.fill(-1);for(const f of ring){f.t=-1;f.len=0;}},
+    clear(){head=-1;count=0;lastSeq=-1;restart=false;hands=true;ballH=0;lastAt=-1;evAt=-1;resetSeen=-1;evSeen.fill(-1);for(const f of ring){f.t=-1;f.len=0;}},
   };
   return api;
 }

@@ -252,6 +252,7 @@ import {placeAt} from '@/lib/analytics/islandPlaces';
 // Play with friends + emote analytics (Oct 22 2026, docs/analytics-multiplayer-plan.md Phase A): the party code never imports
 // analytics, so PartyHost's onTrack names and the Hide / Mute choices become mp: counts here; emotes are counted in the emoteBus handler.
 import {countParty,partyFrame,partyLive,watchPartyEnd} from '@/lib/analytics/partyEvents';
+import {liveMatch,watchLiveMatchEnd} from '@/lib/analytics/liveMatchEvents';// live matches: visits, joins, minutes (Nov 5 2026)
 import {watchPartyAway} from '@/lib/analytics/partyRetentionEvents';// Phase C: off unless NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1
 import {countEmote,countEmoteCam,countEmoteSeen,countEmoteVariant,emoteCtx} from '@/lib/analytics/emoteEvents';import {onEmoteVariant} from '@/lib/town/emoteVariantHook';import {MOVE_ROLE,isMoveEmote,moveEmoteStop,moveEndAfter,moveScriptFor,moveVariantIndex,moveWeight,moveWheelOn,pickMoveVariant,type MoveScript} from '@/lib/town/moveEmotes';import {applyMoveEmote} from '@/lib/graphics/moveEmotePose';import {createMoveNudge} from '@/lib/town/emoteCamera';import {moveNudgeGoal} from '@/lib/town/emoteCameraMath';
 let hiddenN=0,mutedN=0;
@@ -302,6 +303,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   // Shared lesson-launch path (QA11): a lesson can start from inside Make it yours (book check, Spot it) or the
   // coin drawer, so close every overlay that would sit over the pitch or keep the island loop asleep (settingsRef).
   const closeForLesson=()=>{setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setCustomizerOpen(false);setBalancesOpen(false);setMap(false);setHint(false);};
+  useEffect(()=>watchLiveMatchEnd(),[]);// a match open when the tab closes is booked ('hide') before the final beat (Nov 5 2026)
   useEffect(()=>watchPartyEnd(),[]);// the host's party bands ride the final beat when the tab closes mid-party
   useEffect(()=>watchPartyAway(partyLive),[]);// mp:min_away (background minutes in a live party); a no-op while the Phase C switch is off
   useEffect(()=>{const launch=(event:Event)=>{const detail=(event as CustomEvent).detail;if(!validPathLaunch(detail))return;countPathLaunch(detail.format);primeLessonVoice();setFormatPathRequest(detail);setLearningRequest(null);closeForLesson();setFieldCatalog(detail.format);};window.addEventListener(FORMAT_PATH_LAUNCH,launch);return()=>window.removeEventListener(FORMAT_PATH_LAUNCH,launch);},[]);
@@ -595,7 +597,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const LEARNING_HIDE=['vending-machines','fishing-spots','fishing-spot-selection','market-stand-selection','fishing-live','fishing-shore-water','fishing-ambient-fish'];let learningHidden:[T.Object3D,boolean][]|null=null;
     bootMark('town:scene-start');
     const world=warm?.world??buildTown(scene),vending=warm?.vending??createVendingMachines(scene,{coins:()=>readArcadeWallet().balance});world.obstacles.push(...vending.obstacles,...fishingKioskObstacles());vendingRef.current=vending;
-    const fields=buildFormatFields(scene),ballReactions=createBallReactions(scene),games=createFieldRuntime(scene,ballReactions);gamesRef.current=games;const liveJoin=createLiveJoin(scene,games,()=>parent.parentElement);liveJoinRef.current=liveJoin;liveJoin.ground=()=>{if(animalRides.riding)animalRides.letGo('off');if(rideRef.current!=='walk'&&pendingRide.current!=='walk')selectRide('walk');};/* Play / Learn on the pitch bar while riding or flying: the existing dismount / jetpack landing */const joinPoint={x:0,z:0};let liveJoinWas=false,packOn:T.Object3D|null=null;/* join/leave replays the first-load arrival (characterArrival) as the uniform change *//* join a live game (lib/town/liveJoinRuntime.ts) */const fieldBump=createFieldCollision();
+    const fields=buildFormatFields(scene),ballReactions=createBallReactions(scene),games=createFieldRuntime(scene,ballReactions);gamesRef.current=games;const liveJoin=createLiveJoin(scene,games,()=>parent.parentElement);liveJoinRef.current=liveJoin;liveJoin.onMatch=e=>liveMatch.on(e);/* join / leave transitions only */liveJoin.ground=()=>{if(animalRides.riding)animalRides.letGo('off');if(rideRef.current!=='walk'&&pendingRide.current!=='walk')selectRide('walk');};/* Play / Learn on the pitch bar while riding or flying: the existing dismount / jetpack landing */const joinPoint={x:0,z:0};let liveJoinWas=false,packOn:T.Object3D|null=null;/* join/leave replays the first-load arrival (characterArrival) as the uniform change *//* join a live game (lib/town/liveJoinRuntime.ts) */const fieldBump=createFieldCollision();
     games.setBallSound((kind,gain)=>sound.ball(kind,gain,':match'));// live-match ball: the walking ball's kick/bounce/receive sounds, own throttle (lib/town/liveBallSound.ts)
     const shadowBatches=createStaticShadowBatches(renderer,scene,window.matchMedia("(pointer: coarse)").matches);
     const npcShadows=createNpcShadowBatch(renderer,scene);/* heat pass 6b: wrapped inside shadowVisibility, so it batches only casters that survive its culling */
@@ -1168,7 +1170,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const shadowBasis=new T.Matrix4().lookAt(new T.Vector3(-288,252,198),new T.Vector3(),new T.Vector3(0,1,0));
     const shadowRight=new T.Vector3().setFromMatrixColumn(shadowBasis,0),shadowUp=new T.Vector3().setFromMatrixColumn(shadowBasis,1);
     const islandShadowFit=createIslandShadowFit(sun);// the sun's shadow box follows the camera's view, terrain heights included (Summit Isle cut-off fix)
-    let last=performance.now(),frame=0,elapsed=0,accumulator=0,disposed=false,lastDistrict:District='coast',lastHud=0,goalTimer=0,lastFieldCheck=-Infinity,cachedVisibleVenue:LiveFormat|null=null;
+    let last=performance.now(),frame=0,elapsed=0,accumulator=0,disposed=false,lastDistrict:District='coast',lastHud=0,goalTimer=0,lastFieldCheck=-Infinity,cachedVisibleVenue:LiveFormat|null=null,lmVenue:LiveFormat|null=null;
     const resetInputs=(preserveMovement=false)=>{cancelShotHold();heldRidePointers.current.clear();spinGesture.current.reset();spinRequested.current=false;if(!preserveMovement)keys.clear();input.current={x:preserveMovement?input.current.x:0,z:preserveMovement?input.current.z:0,sprint:preserveMovement&&input.current.sprint,kick:false,juggle:false};if(!preserveMovement)releaseStick();};
     /** A job's action cluster owns Space / J / R while it runs (hold steps: key down = press, key up = release). */
     const jobKey=(e:KeyboardEvent,down:boolean)=>{const list=jobButtonsRef.current;if(!list||fieldMenu.current||lessonRef.current)return false;const key=e.code==='Space'?'Space':e.key.toLowerCase()==='j'?'J':e.key.toLowerCase()==='r'?'R':e.key.toLowerCase()==='e'&&list.some(b=>b.key==='E')?'E':'';if(!key)return false;
@@ -2074,6 +2076,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
           const score=Math.min(pitchVisibility(camera,v.x,.2,v.z,v.width,v.length),1e3);if(score<bestFieldScore){bestFieldScore=score;visibleVenue=v.id;}}
       }
       cachedVisibleVenue=visibleVenue;
+      if(visibleVenue!==lmVenue){lmVenue=visibleVenue;liveMatch.venue(visibleVenue);}/* live match visits (Nov 5 2026): only on a change, at most every 100 ms */
       }
       if(fieldMenu.current||mapRef.current||settingsRef.current&&!onboardingRef.current||lessonRef.current)visibleVenue=null;
 
@@ -2184,7 +2187,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const contextOwnsAction=hudFocusNow!=='learn';
       if(contextOwnsAction){for(const v of PITCH_BARS){const button=uiElement<HTMLButtonElement>(`[data-field="${v.id}"]`);if(button&&(!button.hidden||!button.disabled||fieldCardExit.has(button))){setUIHidden(button,true);setCardInactive(button);delete button.dataset.leaving;fieldCardExit.delete(button);}}}
       else {
-      for(const v of PITCH_BARS){const button=uiElement<HTMLButtonElement>(`[data-field="${v.id}"]`);if(!button)continue;if(v.id===visibleVenue){if(button.hidden||button.disabled){setUIHidden(button,false);if(button.disabled)button.disabled=false;if(button.tabIndex!==0)button.tabIndex=0;delete button.dataset.leaving;fieldCardExit.delete(button);}}else if(!button.hidden){setCardInactive(button);if(!fieldCardExit.has(button)){fieldCardExit.set(button,now);button.dataset.leaving='true';}if(visibleVenue||reduced||now-fieldCardExit.get(button)!>=350){button.hidden=true;delete button.dataset.leaving;fieldCardExit.delete(button);}}}
+      for(const v of PITCH_BARS){const button=uiElement<HTMLButtonElement>(`[data-field="${v.id}"]`);if(!button)continue;if(v.id===visibleVenue){if(button.hidden||button.disabled){if(button.hidden&&button.hasAttribute('data-live-bar'))liveMatch.barShown(v.id);/* a pitch visit: the Learn + Play bar appeared (deduped per visit in liveMatchEvents) */setUIHidden(button,false);if(button.disabled)button.disabled=false;if(button.tabIndex!==0)button.tabIndex=0;delete button.dataset.leaving;fieldCardExit.delete(button);}}else if(!button.hidden){setCardInactive(button);if(!fieldCardExit.has(button)){fieldCardExit.set(button,now);button.dataset.leaving='true';}if(visibleVenue||reduced||now-fieldCardExit.get(button)!>=350){button.hidden=true;delete button.dataset.leaving;fieldCardExit.delete(button);}}}
       }
 
       // Dynamic resolution switches at this frame boundary; the canvas CSS size is unchanged, only the drawing buffer.

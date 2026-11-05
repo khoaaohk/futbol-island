@@ -34,6 +34,9 @@ export type HumanInput={
   /** Hard to be tackled (owner Nov 4 2026): protection after receiving (real s), whether he had the ball last step,
    *  and the "slipped away!" near-miss serial + its cooldown (real s). */
   guard:number;hadBall:boolean;slipSerial:number;slipCd:number;
+  /** Tackle assist (owner Nov 5 2026): seconds left of the assisted lunge at the carrier (real s), and the "get it back"
+   *  window after an AI tackle took the ball off him (real s), when his next tackle is almost sure to win it. */
+  lunge:number;backT:number;
 };
 /** The dribbling tricks the Trick button plays (lib/graphics/skillMoves.ts poses): stick back = drag-back, else the tap cycles. */
 export const TRICK_KINDS=['stepover','croqueta','dragBack'] as const;
@@ -51,6 +54,15 @@ export const PRESS={seconds:4,cooldown:8,pace:1.14,both:2.6,one:1.5,bothDist:10}
 /** Easier human tackling (owner Nov 4 2026, kid-friendly): reach × TACKLE.reachMul, success when facing the carrier
  *  roughly (auto-aimed), a little less when turned away, and a short recovery after a miss (real seconds). */
 export const TACKLE={reachMul:1.4,chance:.85,chanceAway:.7,recover:.35} as const;
+/** Tackle assist (owner Nov 5 2026: "make it easier to tackle and get the ball back"; humans only). Tackle pressed with the
+ *  carrier within `assistR` units but outside the reach: an assisted lunge at him (up to `lunge` real s, × `lungePace`;
+ *  it ends once he is 1.3 × assistR away: a carrier who outruns it has beaten him) and the
+ *  press stays armed until he is in reach. In reach from the FRONT or SIDE (carrier heading · carrier→tackler ≥ `behindCos`):
+ *  a clean win at `front`, otherwise a poke-away (`pokeSpeed` units/s, loose, the carrier barred) instead of a miss; from
+ *  behind `chanceAway` and a miss costs `recover` real s (was .35). After an AI tackle on him, `back` real s when his next
+ *  tackle wins at `backChance` (the carrier's protection ignored). Loose balls: `pickup` extra units of claim reach and a
+ *  pull toward a loose ball within `magnetR` when the stick points at it (cos ≥ `magnetCos`) or he is idle within `idleR`. */
+export const TACKLE_ASSIST={assistR:24,lunge:1.2,lungePace:1.3,front:.95,chanceAway:.75,behindCos:-.45,recover:.15,pokeSpeed:48,back:2.5,backChance:.97,pickup:3.5,magnetR:20,magnetCos:.55,idleR:9} as const;
 /** Long ball (hold Pass): a hold past LONG_BALL.ms (real ms) lofts it; the charge reaches 1 at the strike's full charge.
  *  Distance wanted (sim units) and the peak height (m) grow with the charge. */
 export const LONG_BALL={ms:250,fullMs:700,near:70,far:170,peak0:1.8,peak1:3.6} as const;
@@ -101,7 +113,7 @@ export function stepSprint(h:HumanInput,dt:number,on:boolean){
 }
 
 export function createHumanInput(id:string,team:HumanTeam):HumanInput{
-  return {id,team,moveX:0,moveY:0,mag:0,faceX:0,faceY:team==='gold'?-1:1,sprint:false,jockey:false,pass:0,shoot:0,through:0,tackle:0,save:0,shootPower:1,passPower:0,sprintE:0,call:0,passLong:0,tackleRec:0,trickReq:0,trick:0,trickCd:0,trickBoost:0,trickKind:'stepover',trickSide:1,trickSerial:0,pressReq:0,pressT:0,pressCd:0,pressA:null,pressB:null,pressSerial:0,aimX:NaN,aimH:NaN,shotSerial:0,shotPw:0,shotAimed:false,guard:0,hadBall:false,slipSerial:0,slipCd:0};
+  return {id,team,moveX:0,moveY:0,mag:0,faceX:0,faceY:team==='gold'?-1:1,sprint:false,jockey:false,pass:0,shoot:0,through:0,tackle:0,save:0,shootPower:1,passPower:0,sprintE:0,call:0,passLong:0,tackleRec:0,trickReq:0,trick:0,trickCd:0,trickBoost:0,trickKind:'stepover',trickSide:1,trickSerial:0,pressReq:0,pressT:0,pressCd:0,pressA:null,pressB:null,pressSerial:0,aimX:NaN,aimH:NaN,shotSerial:0,shotPw:0,shotAimed:false,guard:0,hadBall:false,slipSerial:0,slipCd:0,lunge:0,backT:0};
 }
 /** Write one frame of controls (no allocation). */
 export function writeHumanInput(h:HumanInput,f:HumanFrame){
@@ -125,7 +137,7 @@ export function tickHumanInput(h:HumanInput,dt:number,onBall:boolean){
 }
 /** Age the real-time timers (trick window + cooldown, press cooldown, tackle recovery); `rdt` is real seconds. */
 export function tickHumanTimers(h:HumanInput,rdt:number){
-  h.trick=Math.max(0,h.trick-rdt);h.trickCd=Math.max(0,h.trickCd-rdt);h.trickBoost=Math.max(0,h.trickBoost-rdt);h.pressCd=Math.max(0,h.pressCd-rdt);h.tackleRec=Math.max(0,h.tackleRec-rdt);h.guard=Math.max(0,h.guard-rdt);h.slipCd=Math.max(0,h.slipCd-rdt);
+  h.trick=Math.max(0,h.trick-rdt);h.trickCd=Math.max(0,h.trickCd-rdt);h.trickBoost=Math.max(0,h.trickBoost-rdt);h.pressCd=Math.max(0,h.pressCd-rdt);h.tackleRec=Math.max(0,h.tackleRec-rdt);h.guard=Math.max(0,h.guard-rdt);h.slipCd=Math.max(0,h.slipCd-rdt);h.lunge=Math.max(0,h.lunge-rdt);h.backT=Math.max(0,h.backT-rdt);
 }
 export function clearHumanActions(h:HumanInput){h.pass=h.shoot=h.through=h.tackle=h.save=h.trickReq=h.pressReq=0;}
 

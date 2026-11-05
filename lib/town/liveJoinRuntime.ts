@@ -121,7 +121,10 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
     /** matchLink installs: party friends' slots per field (null = no party / old relay). */
     set friends(fn:((f:LiveFormat)=>FriendSlots|null)|null){friendsOf=fn;},
     /** matchLink: the picker re-reads friends' slots (a roster changed). */
-    friendsChanged(){friendsKey='';},
+    friendsChanged(){friendsKey='';if(state.phase==='joined'&&format)api.onMatch?.({type:'others',others:othersOn(format)});},
+    /** Town installs (lib/analytics/liveMatchEvents.ts liveMatch.on): join / leave transitions only, never per frame. Plain data:
+     *  the format, a coarse role (gk / def / mid / fwd) and how many other humans are on the match (Nov 5 2026). */
+    onMatch:null as ((e:{type:'join';format:string;role:string|null;others:number}|{type:'others';others:number}|{type:'leave';reason:'leave'|'forced';others:number})=>void)|null,
     /** A short message in the tip line (matchLink: a friend left, the match moved to this phone...). */
     say(text:string,seconds=3.2){tip=text;tipT=seconds;},
     /** Last machine event (headless checks). */
@@ -210,13 +213,14 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
       const v=state.phase==='joined'&&format?venues.find(u=>u.id===format)??null:venueAt(x,z,JOIN_PITCH_MARGIN);
       if(!v&&state.phase==='idle'){pressed.play=false;if(pickFormat){pickFormat=null;hud(false,false);}return null;}
       lastX=x;lastZ=z;cam=camera;if(dt>0)stepDt=dt;
-      const on=venueAt(x,z,JOIN_PITCH_MARGIN),ev=stepJoin(state,{onPitch:!!on&&(state.phase!=='pick'||!pickFormat||on.id===pickFormat)/* a teleport onto another pitch with the picker open: cancel, never a stale side + slot list */,canOffer,canJoin,play:pressed.play,start:pressed.start,dismiss:pressed.dismiss,leave:pressed.leave||forceLeave});pressed.play=pressed.start=pressed.dismiss=pressed.leave=false;
+      const byUser=pressed.leave,on=venueAt(x,z,JOIN_PITCH_MARGIN),ev=stepJoin(state,{onPitch:!!on&&(state.phase!=='pick'||!pickFormat||on.id===pickFormat)/* a teleport onto another pitch with the picker open: cancel, never a stale side + slot list */,canOffer,canJoin,play:pressed.play,start:pressed.start,dismiss:pressed.dismiss,leave:pressed.leave||forceLeave});pressed.play=pressed.start=pressed.dismiss=pressed.leave=false;
       if(ev)api.lastEvent=ev+(ev==='cancel'?(venueAt(x,z,JOIN_PITCH_MARGIN)?':busy':':stepped-off'):'');
       if(ev==='pick'&&v)openPick(v);
       if(ev==='join'&&pickFormat){const f=pickFormat,pick={team:pickTeam,slot:pickId};pickFormat=null;
         // Start: the picker shrinks back into the bar's Play first (the Join with a code close), then the slot is taken and Town's arrival plays.
-        shrink(reduced,()=>{if(state.phase!=='joined')return;const slot=games.joinMatch(f,ME,x,z,dressFor,null,pick);if(!slot){api.lastEvent='join-failed';state.phase='idle';return;}format=f;games.humanView(format,ME,view);team=view.team;colour=bibColour(format,team==='gold');markers.setColour(colour);if(f==='beach'&&!view.keeper){tip=BEACH_JOIN_TIP;tipT=3.6;}/* no bibs on sand: the format's own lesson */else showTip(view.keeper?'save':'join',false);});}
-      if(ev==='leave'){lastTrick=-1;fxAge=-1;if(format){left=games.leaveMatch(format,ME,{x:0,z:0});}format=null;markers.hide();pin(0,0,0,null);held.a=held.b=held.s=false;aDownAt=bDownAt=0;hide(el('[data-join-badge]'),true);}
+        shrink(reduced,()=>{if(state.phase!=='joined')return;const slot=games.joinMatch(f,ME,x,z,dressFor,null,pick);if(!slot){api.lastEvent='join-failed';state.phase='idle';return;}format=f;games.humanView(format,ME,view);team=view.team;colour=bibColour(format,team==='gold');markers.setColour(colour);if(f==='beach'&&!view.keeper){tip=BEACH_JOIN_TIP;tipT=3.6;}/* no bibs on sand: the format's own lesson */else showTip(view.keeper?'save':'join',false);
+          api.onMatch?.({type:'join',format:f,role:view.keeper?'gk':simOf(f)?.players[slot]?.role??null,others:othersOn(f)});});}
+      if(ev==='leave'){lastTrick=-1;fxAge=-1;if(format){api.onMatch?.({type:'leave',reason:byUser?'leave':'forced',others:othersOn(format)});left=games.leaveMatch(format,ME,{x:0,z:0});}format=null;markers.hide();pin(0,0,0,null);held.a=held.b=held.s=false;aDownAt=bDownAt=0;hide(el('[data-join-badge]'),true);}
       if(ev==='cancel'||ev==='dismiss'){pickFormat=null;shrink(reduced);}
       // Friends-ready: a side filling up while the picker is open (slice 2's remote humans) re-renders the pick.
       if(state.phase==='pick'&&pickFormat){const sim=simOf(pickFormat);if(sim&&(sim.humanOn.gold!==seenGold||sim.humanOn.blue!==seenBlue||friendsKey===''))renderPick();text(el('[data-join-start]'),state.startPending?'Landing…':'Start');}
@@ -419,12 +423,14 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
   const LABEL:Record<Mode,string>={pass:'Pass',shoot:'Shoot',forward:'Forward',call:'Call',tackle:'Tackle',stay:'Stay',go:'Go!',save:'Save',throw:'Throw',kick:'Kick',trick:'Trick',press:'Press','':''};
   const KEY_HINT:Record<Mode,string>={pass:'Space (hold for a long ball)',shoot:'J (hold for power)',forward:'J or K',call:'Space',tackle:'Space',stay:'J (hold)',go:'Space (hold)',save:'Space',throw:'Space (hold for power)',kick:'J or K (hold for power)',trick:'L',press:'P','':''};
   let dock=0,lastRestart=false,lastG=-1,lastB=-1;
+  /** Other humans on a field's match right now (party friends; analytics gets the number only). */
+  function othersOn(f:LiveFormat){const e=games.entries.find(en=>en.venue.id===f);return Math.max(0,(e?.humans.size??1)-1);}
   function hud(picking:boolean,joined:boolean){
     const card=el('[data-join-card]'),chip=el('[data-join-chip]'),actions=el('[data-join-actions]'),tipEl=el('[data-join-tip]'),app=root();
     hide(el('[data-join-modal]'),!picking&&!closing);set(app,'data-live-pick',picking?'':null);void card;
     hide(chip,!joined);if(!joined)lastG=lastB=-1;if(!joined&&lastRestart){lastRestart=false;chip?.removeAttribute('data-msg');}hide(actions,!joined);hide(el('[data-join-leave]'),!joined);hide(el('[data-join-cam]'),!joined);set(app,'data-live-join',joined?'':null);
     if(joined){
-      if(chip&&++dock%30===1){/* dock the bar at the very top, level with the coins bar it replaces (the HUD stack's top varies), measured every ~30 frames */const st=chip.offsetParent as HTMLElement|null,w=root()?.querySelector<HTMLElement>('[data-job-wallet]');if(st&&w){const wr=w.getBoundingClientRect();if(wr.height>0){const t=Math.round(wr.top-st.getBoundingClientRect().top)+'px';if(chip.style.top!==t){chip.style.top=t;chip.style.height=Math.round(wr.height)+'px';tipEl?.style.setProperty('--tip-top',(parseInt(t,10)+Math.round(wr.height)+14)+'px');}}}}
+      if(chip&&++dock%30===1){/* dock the bar at the very top, level with the coins bar it replaces (the HUD stack's top varies), measured every ~30 frames */const st=chip.offsetParent as HTMLElement|null,w=root()?.querySelector<HTMLElement>('[data-job-wallet]');if(st&&w){const wr=w.getBoundingClientRect();if(wr.height>0){const t=Math.round(wr.top-st.getBoundingClientRect().top)+'px';if(chip.style.top!==t){chip.style.top=t;chip.style.height=Math.round(wr.height)+'px';tipEl?.style.setProperty('--tip-top',(parseInt(t,10)+Math.round(wr.height)+14)+'px');el('[data-join-pop]')?.style.setProperty('--tip-top',(parseInt(t,10)+Math.round(wr.height)+14)+'px');}}}}
       chip?.style.setProperty('--bib',colour);chip?.style.setProperty('--bib-gold',bibColour(format??'',true));chip?.style.setProperty('--bib-blue',bibColour(format??'',false));actions?.style.setProperty('--bib',colour);
       const e=games.entries.find(en=>en.venue.id===format);if(e){const g=e.sim.score.gold,b=e.sim.score.blue;text(el('[data-join-sg]'),String(g));text(el('[data-join-sb]'),String(b));
         /* a goal: the bar shakes and the scoring side's pill pops (CSS, transform/scale only; a layout read once per goal) */

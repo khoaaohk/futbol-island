@@ -1,11 +1,12 @@
 'use client';
 import {useEffect,useRef} from 'react';
 import {usePathname} from 'next/navigation';
-import {count,startTracker} from '@/lib/analytics/tracker';
+import {count,onPageHide,startTracker} from '@/lib/analytics/tracker';
 import {readStartFlags} from '@/lib/analytics/startFlags';
 import {readDeviceMarks,readPlayerKey} from '@/lib/analytics/deviceMarks';
 import {watchStart} from '@/lib/analytics/startEvents';
 import {countPlayArrival,countPlayStart} from '@/lib/analytics/marketingIds';
+import {MM_PATH,watchMarketingVisit} from '@/lib/analytics/marketingVisit';
 import {useRootView} from '@/components/root/useRootView';
 
 /**
@@ -34,5 +35,8 @@ export default function VisitTracker({allowLocalhost=false}:{allowLocalhost?:boo
  useEffect(()=>{if(pathname!=='/play'||view!=='landing'||!tracker.current)return;return watchStart(window);},[pathname,view]);
  // Marketing page (Nov 4 2026): that tab then really played (the view switched to the game) → mk:played, once per tab.
  useEffect(()=>{if(pathname==='/play'&&view==='game'&&tracker.current)countPlayStart((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);},[pathname,view]);
+ // Investor page (Nov 5 2026): a view of /marketing and its foreground time (lib/analytics/marketingVisit.ts); the page stays
+ // script-free. Where and when are added by the server from the beat, never sent from here.
+ useEffect(()=>{if(pathname!==MM_PATH||!tracker.current)return;return watchMarketingVisit({document,now:()=>performance.now(),count,onPageHide});},[pathname]);
  return null;
 }

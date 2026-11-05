@@ -8,6 +8,7 @@ import type {AnalyticsStore} from './store';
 import {ACTIVITY_IDS,PLACE_IDS} from './islandIds';
 import {checkFlags} from './countIds';
 import {derivePlayerId,type PlayerSecrets} from './playerId';
+import {addVisitGeo} from './marketingVisitGeo';
 import {MAX_BEAT_PAGEVIEWS,MAX_BODY_BYTES,clampCells,clampCounts,clampEngaged,clampSplit,classifySource,deviceClass,isBot,sanitizeCountry,sanitizeHost,sanitizePath,sanitizeRegion,sanitizeUtm,dayIn,validateEvent,type CleanEvent} from './core';
 
 export type HeaderBag={get(name:string):string|null};
@@ -82,6 +83,9 @@ export async function handleIngest({body,headers,store,limiter,now=new Date(),ve
   // Players (Oct 16 2026): the start's code or install id becomes a keyed one-way id here and is not kept (lib/analytics/playerId.ts).
   playerId:start&&(ev.pc!==undefined||ev.pi!==undefined)?derivePlayerId({pc:ev.pc,pi:ev.pi},secrets):null,
  };
+ // Nov 5 2026: a /marketing visit's place (US state, else country) and Pacific weekday/hour become fixed counter ids here, from
+ // the geo headers; the headers themselves are not kept (lib/analytics/marketingVisitGeo.ts).
+ if(!start)clean.counts=addVisitGeo(clean.counts,{country:headers.get('x-vercel-ip-country'),region:headers.get('x-vercel-ip-country-region')},now);
  // A beat with no time, no page views and no counters is not written. (A count-only beat is a hide that drained leftovers.)
  if(!start&&!engagedMs&&!clean.pageviews&&!Object.keys(clean.counts).length)return {status:204,reason:'empty-beat'};
  await store.track(clean,now);

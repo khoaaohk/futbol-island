@@ -73,3 +73,44 @@ This is not legal advice. The 2025 COPPA text and the UK commencement date were 
 - **Privacy:** totals per fixed id, cells under 5 sessions shown as "<5"; privacy policy §7 gained one bullet.
 - **Tests:** tests/admin-analytics-start.cjs (ids, listener, hooks, funnel maths, /start subset incl. SQL = TypeScript, suppression,
   no free text).
+
+## Live matches (Nov 5 2026)
+
+Owner request: how often players visit and play the 7v7, futsal, 9v9, 11v11 and beach matches, and for how long.
+
+- **Events** (`lib/analytics/liveMatchEvents.ts`, ids `lm:` in `countIds.ts` LIVE_MATCH_COUNT_IDS, 118 fixed ids): on the
+  existing beat counter channel (`k`), so the same consent rules apply (nothing under DNT / GPC, bots, preview, labs, admin,
+  localhost) and **no migration** is needed (analytics_ingest already accepts any well-formed id the server allowlists).
+  Per format: `visit` (the Learn + Play bar appeared; once per visit, a step-off under 60 s is the same visit), `join` +
+  `role_<gk|def|mid|fwd>`, `leave`, `min` + `sec` (foreground time, exact to the second, capped at 2 h a match; banked as whole
+  minutes when the tab hides), `len_*` (8 length bands), `with_*` (other humans on the match: 0 / 1 / 2–3 / 4+), `end_*`
+  (Leave/Esc, pulled off, tab closed via the tracker's pagehide hook); `lm:reach_1/3/10` per tab session.
+- **Fired** from Town (bar shown, venue change: transitions only) and `lib/town/liveJoinRuntime.ts` `api.onMatch` (join after
+  the slot is taken, friends roster change, leave). The runtime imports no analytics; Town wires it. Zero per-frame cost.
+- **Admin**: tab "Live matches" (`app/admin/LiveMatchesSection.tsx`, report `lib/analytics/liveMatchReport.ts`): headline
+  tiles, per-format panels + table, matches by day, how often, length bands, roles, friends, endings. `<5` suppression like the
+  other gameplay sections; median read inside the bands, longest = top band reached.
+- **Not done**: matches per *person* per week. The rollups only know tab sessions; joining match play to the keyed player id
+  is the same kind of linkage as the party retention report (Phase C) and waits for the same legal sign-off.
+- Test: `tests/admin-analytics-live-matches.cjs`.
+
+## Investor page visits (Nov 5 2026)
+
+Owner: "for the marketing tab in admin, add a section to show what state and time they came, and how long they stayed on the
+marketing site." New section **Investor page visits** at the foot of /admin's Marketing tab (app/admin/MarketingVisitsSection.tsx,
+shown with or without tour-page data). Counts the unlisted **/marketing** page only (not `/`, not the overview PDF).
+
+- Browser (lib/analytics/marketingVisit.ts, started by components/VisitTracker.tsx while the path is /marketing; the page stays
+  script-free): `mm:view`, foreground seconds as `mm:min` + `mm:sec10` + `mm:sec1` (exact, visibility-aware, booked on every hide
+  and on pagehide, capped at 30 min per view) and one stay band `mm:t_<band>` (<10 s, 10–30 s, 30–60 s, 1–3 min, 3–10 min, 10+ min)
+  at the first hide / pagehide (the same "first look" rule as the tour page's mk:t_ bands).
+- Server (lib/analytics/marketingVisitGeo.ts, called by the ingest on every beat): from `x-vercel-ip-country` /
+  `x-vercel-ip-country-region` and the beat's arrival time it adds `mm:g_<geo>` (visits), `mm:gm_<geo>` + `mm:gx_<geo>` (stay
+  minutes + tens of seconds, ±5 s per beat) and `mm:h_<weekday>_<hour>` (Pacific, the dashboard's clock). `<geo>` is a fixed set:
+  `us_<state>` (50 states + DC), `us` (no state), `o_<ISO country>`, `other` (no/unknown header). Never an IP, city, postcode or
+  coordinate; the browser cannot send these ids (not on the client allowlist). Hour = first beat's arrival (within ~4 min).
+- Report (lib/analytics/marketingVisitReport.ts → report.marketingVisits): exact counts; average exact to the second, median
+  estimated inside its band, bounce = share of banded visits under 10 s; places with visits and average stay; 24 Pacific hours;
+  weekday × hour table (island heat ramp); visits by day.
+- No SQL migration, env or worker change: the ids ride `analytics_beats.counts` and the existing rollups (they match the counts
+  regex; a beat keeps at most 64 ids). Tests: tests/admin-analytics-marketing-visits.cjs.

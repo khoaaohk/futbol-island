@@ -261,6 +261,23 @@ t('a party friend NOT in the match watches the real one (puppet, friends on thei
   assert.equal(Cc.conn.sent.filter(m=>m[1]===MatchKind.Watch).pop()[2],-1,'the relay is told (after the 2 s debounce)');
 });
 
+t('codec: quick goal reset (Nov 5 2026): the faded ball + its landing on the centre spot reach the friend (flag bits, no extra number)',()=>{
+  const own=new MatchSim(311,'7v7'),pup=new MatchSim(311,'7v7');own.windupScale=pup.windupScale=.32;
+  const me=outfield(own,'gold')[0];own.lockHuman(me);pup.lockHuman(me);pup.enterPuppet();
+  const gk=own.ids.find(id=>own.players[id].team==='blue'&&own.players[id].isGK);own.restart=null;Object.assign(own.ball,{owner:null,target:null,intBy:null,x:135,y:40,vx:0,vy:-250,height:0});
+  const buf=N.createSnapBuffer(),out=[];let seq=0,tMs=0,len0=-1,sawHidden=false,landedAt=-1,slid=false;
+  for(let i=0;i<60*6;i++){if(own.goalHold<=0&&own.score.gold===0)own.placePlayer(gk,40,20);own.step(1/60*.32);tMs+=1000/60;
+    if(i%5===0){N.encodeSnap(own,0,seq++,0,out);if(len0<0)len0=out.length;assert.equal(out.length,len0,'same frame length');assert.ok(P.parseClient(JSON.stringify(out)));buf.push(out,3,tMs);}
+    const was=pup.goalReset.serial;buf.sample(pup,tMs,-1,.32/1000);
+    if(pup.goalReset.hidden)sawHidden=true;
+    if(pup.goalReset.serial!==was){assert.equal(landedAt,-1,'one landing');landedAt=i;}
+    if(landedAt>=0&&i-landedAt<20&&(Math.abs(pup.ball.x-135)>.5||Math.abs(pup.ball.y-200)>.5)&&own.isRestart)slid=true;}
+  assert.equal(own.score.gold,1,'the owner\'s goal');assert.equal(own.goalReset.serial,1);assert.ok(sawHidden,'the friend fades the ball');assert.ok(landedAt>0,'…and plays the arrival');
+  assert.equal(pup.goalReset.serial,1);assert.ok(!slid,'it lands ON the spot (no slide from the net across the pitch)');assert.equal(pup.goalReset.hidden,false);
+  // an older reader: the period still decodes (bits 4-6), the reset bits sit above it
+  const fl=N.SNAP_FLAG.ballHidden|(3<<N.SNAP_RESET_SHIFT)|(2<<4);assert.equal((fl>>4)&7,2,'period intact');assert.equal(N.SNAP_FLAG.ballHidden,128);
+});
+
 // ---- 5. solo and AI-only untouched ----
 t('AI-only: a sim that never meets a friend steps exactly as before (enterPuppet / leavePuppet are never called)',()=>{
   const a=new MatchSim(270,'7v7'),b=new MatchSim(270,'7v7');for(let i=0;i<600;i++){a.step(1/60*.32);b.step(1/60*.32);}

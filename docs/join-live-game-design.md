@@ -536,3 +536,43 @@ Every sprint stays under the pose relay (`MAX_SPEED_MS` 6.29 × 1.5 = 9.44). No 
 unchanged (not regenerated). **Heat.** Two number fields and a multiply; no allocations, nothing new for AI-only matches.
 Tests: `tests/join-live-game.cjs` pins the ladder (futsal + 9v9 pace, a new beach pace block, chaser + sprint per format, the 7v7
 kid values, the 9v9 pass cap, the beach shot ×1.2 × 1.08).
+
+### Analytics (Nov 5 2026)
+
+Admin "Live matches" tab: per format pitch visits, joins, join rate, players (tab sessions), matches per player, minutes,
+average / median match length, longest band, friends on the match and how matches ended. Events in
+`lib/analytics/liveMatchEvents.ts` (see `docs/analytics-roadmap.md` "Live matches"): the runtime raises `api.onMatch`
+(`{type:'join',format,role,others}`, `{type:'others',others}`, `{type:'leave',reason,others}`) at the join callback, on
+`friendsChanged()` and on `ev==='leave'` (reason `leave` for Leave / Esc / a refused spot, `forced` when Town pulls the player
+off); Town binds it to `liveMatch.on`, counts a pitch visit when a `data-live-bar` bar goes hidden → shown, and books a match
+still open at pagehide (`watchLiveMatchEnd`). Transitions only: no per-frame work, one visibilitychange listener while joined.
+
+### Quick goal reset (owner, Nov 5 2026)
+Owner: "once a goal is scored have the ball fade and show up in the center so the game can quickly be restarted… the same blue
+animation for loading the player for the ball." Human matches only (any match with a joined human, all 5 formats); AI-only matches
+keep the fetch-and-carry kick-off (`tests/fixtures/live-match-summary.json` byte-identical).
+- Sim (`matchSim.ts` `GOAL_RESET`, real seconds): the celebration is 1.4 s (was 1.8 SIM s = 5.6 real s at the 0.32 live speed, then
+  a fetch from the net and a carry: 15–24 real s goal → kick-off before). `goalReset.hidden` 0.45 s after the goal, then on the
+  hold's end the ball lands on the centre spot (`goalReset.serial++`) and `stageQuickKickoff` stages a `quick` kick-off: the
+  conceding outfielder nearest the spot (picked when the goal goes in, so he walks there during the celebration; a human too: the
+  AI walks him, then the ball is his for Pass / Forward) takes it after a 0.75 s beat, the both-halves check waits at most 0.45 s.
+  Now ~2.7 real s goal → kick-off on every format. The "Restart: get ready" bar reads `isRestart`, so it clears as it is taken.
+  Throw-ins, goal kicks, corners, beach period / full-time kick-offs and penalties are unchanged.
+- View (`lib/town/ballReset.ts`, one per pitch): fade out over 0.35 s (opacity + a slight shrink on a per-pitch material clone made
+  on the first reset), then the character arrival (`lib/graphics/characterArrival.ts`: same rings, beam, sparks, materials and
+  0.12 → 1 pop) at 0.6 × scale over 1.1 s. Reduced motion: a plain fade out / in. The character arrival has no sound, so neither
+  does this. Transform / opacity only, no per-frame allocation.
+- Multiplayer (`matchNet.ts`): `SNAP_FLAG.ballHidden` (128) and the serial mod 4 at bits 8–9 of the flags number; no extra number
+  in the frame, an older reader masks them away. The puppet snaps the ball to the spot on landing (no slide across the pitch).
+- Tests: `tests/join-live-game.cjs` "quick goal reset" (5 formats, taker, human taker passes at once, AI-only path + fixture),
+  `tests/join-live-mp.cjs` (the friend fades and lands it once, frame length unchanged).
+
+### Tackle assist + 7v7 pace tests (owner, Nov 5 2026: "assist with the tackles … get the ball back")
+Humans only (every rng draw and branch is behind a human check; AI-only matches and `tests/fixtures/live-match-summary.json` unchanged). Constants: `TACKLE_ASSIST` in `lib/town/match/humanInputs.ts`; code in `MatchSim.ballLogicStep` (human tackle), `pokeAway`, `applyHumanTargets`, the loose-ball claim loop.
+- **Lunge (magnetism):** Tackle pressed with the carrier within `assistR` 24 units (reach is still 10.6) or while he is still protected: the human runs straight at the carrier's next step at ×1.3 pace for up to 1.2 real s, overriding stick and jockey, with the press kept armed until he is in reach. The lunge ends if the carrier gets 1.3 × assistR away (outrun: the AI beat him).
+- **Front / side:** the carrier's heading (or his attacking direction when standing) against carrier → tackler, cos ≥ -0.45: a clean win at 95 %; a failed roll **pokes the ball loose** toward the tackler (±35°, 41–60 u/s, carrier barred) instead of a miss. From behind: 75 %, a miss costs 0.15 real s (was 0.35). No fouls or cards for the human (the sim has none).
+- **Get it back:** an AI tackle on a human opens a 2.5 real s window: his next tackle wins at 97 % and ignores the winner's 0.55 s protection ("Got it back!").
+- **Loose balls:** a human outfielder's claim reach is +3.5 units (counted closer in the nearest pick), and a loose ground ball within 20 units pulls him onto it when the stick points at it (cos ≥ 0.55), or within 9 units when idle.
+- **Measured** (scripted single tap within 8–20 units from front / side / behind, 40 seeds, before → after): 7v7 86 → 95 %, futsal 88 → 98 %, 9v9 73 → 97 %, 11v11 75 → 98 %, beach 82 → 98 %. Get it back (tapped at 0.2 and 0.5 s after the loss) 22–36/40 → 40/40. Heat: no new per-frame allocation (the lunge / magnet targets replace the stick target object the same frame).
+- **Marker flicker fix:** a pass target found by the loose fallback (wide cone / no aim) was scored in the strict cone for hysteresis, so it counted as invalid every frame and the marker flipped between fallback picks. Exposed by the faster 7v7 human running past all his teammates in 1 s; `scoreAtTier` now scores the shown target in the same tier (0 → 1 flip in the test, with or without the wobble).
+- **7v7 pace test pins** updated to `humanPace` 1.72 / `humanBallPace` 1.5 / sprint ×1.3 / chasers ×1 (pass pace ceiling × humanBallPace, sprint ratio ≥ 1.27, beach shot ratio over the 7v7 human's ×1.5; the human keeper "caught without a press" trial now has an idle stick, since a held stick runs the faster keeper off the line).

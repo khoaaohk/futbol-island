@@ -147,7 +147,7 @@ await ok('split: TypeScript reference, suppression into withheld',()=>{
 
 await ok('dashboard: tabs, overview, route behind the session, client bundle stays small',()=>{
  const dash=read('app/admin/AnalyticsDashboard.tsx'),ov=read('app/admin/SponsorOverview.tsx'),route=read('app/api/admin/sponsor-split/route.ts');
- assert(/\['overview','Overview'\],\['engagement','Engagement'\],\['players','Players'\],\['marketing','Marketing page'\],\['live','Live'\],\['report','Sponsor report'\]/.test(dash),'six tabs (Phase B: Sponsor report; Nov 3 2026: Marketing page)');
+ assert(/\['overview','Overview'\],\['engagement','Engagement'\],\['players','Players'\],\['matches','Live matches'\],\['marketing','Marketing page'\],\['live','Live'\],\['report','Sponsor report'\]/.test(dash),'seven tabs (Phase B: Sponsor report; Nov 3 2026: Marketing page; Nov 5 2026: Live matches)');
  assert(dash.includes("{tab==='report'&&<SponsorReport week={week??isoWeekOf(tm?.today??report.to)} onWeek={setWeek}/>}"),'the report tab');
  assert(dash.includes("{tab==='overview'&&<SponsorOverview report={report}"),'the overview is the first tab');
  assert(/\{id:'all',label:'All'\}/.test(dash),'All preset');

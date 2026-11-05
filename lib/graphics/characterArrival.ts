@@ -1,13 +1,14 @@
 import * as T from 'three';
 /** One arrival burst, driven by the island frame loop. No input lock. */
-export function createCharacterArrival(scene:T.Scene){
+/** `duration` (s): 3.5 for the character; the live-match ball's quick goal reset (lib/town/ballReset.ts) plays a short one. */
+export function createCharacterArrival(scene:T.Object3D,duration=3.5){
  const root=new T.Group();root.name='character-teleport-arrival';scene.add(root);
  const teal=new T.MeshBasicMaterial({color:0x84e9cf,transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide}),gold=new T.MeshBasicMaterial({color:0xffe39b,transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide});
  const ringGeo=new T.RingGeometry(.9,1,32),beamGeo=new T.CylinderGeometry(.65,1,4,12,1,true),sparkGeo=new T.OctahedronGeometry(.065,0);
  const rings=[teal,gold].map((m,i)=>{const ring=new T.Mesh(ringGeo,m);ring.rotation.x=-Math.PI/2;ring.position.y=.04+i*.04;root.add(ring);return ring;});
  const beam=new T.Mesh(beamGeo,teal);beam.position.y=2;root.add(beam);
  const sparks=Array.from({length:12},(_,i)=>{const s=new T.Mesh(sparkGeo,gold);root.add(s);return s;});
- let age=0;const duration=3.5;
+ let age=0;
  function update(dt:number,x:number,y:number,z:number,reduced:boolean,visible:boolean){
   age=Math.min(duration,age+Math.max(0,Math.min(.05,dt)));const t=age/duration;root.visible=visible&&t<1&&!reduced;
   if(!root.visible)return 1;

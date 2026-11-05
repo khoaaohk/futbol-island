@@ -37,10 +37,18 @@
  *                                  docs/analytics-multiplayer-plan.md is the spec for both families.
  *   mk:<event>                     the marketing page at `/` (MARKETING_COUNT_IDS, lib/analytics/marketingIds.ts; Nov 3 2026):
  *                                  views, time bands, scroll depth, sections seen, taps, sources, devices, Web Vitals
+ *   lm:<format>_<event>            live matches (LIVE_MATCH_COUNT_IDS below, lib/analytics/liveMatchEvents.ts; Nov 5 2026): per
+ *                                  format (7v7 / futsal / 9v9 / 11v11 / beach) pitch-bar visits, Start (join) with a coarse role,
+ *                                  leaves with whole minutes + leftover seconds, a length band, an other-humans band and how it
+ *                                  ended; lm:reach_<n> = tab sessions with n+ matches. Never a name, slot, side, score or time
+ *   mm:<event>                     the investor page /marketing (MARKETING_VISIT_COUNT_IDS, lib/analytics/marketingVisit.ts;
+ *                                  Nov 5 2026): views, stay seconds and stay band from the browser; where (mm:g_<geo>) and
+ *                                  when (mm:h_<weekday>_<hour>) are added by the ingest only (marketingVisitGeo.ts)
  */
 import {LESSON_TABLE} from './learningIds.generated';
 import {START_COUNT_IDS} from './startIds';
 import {MARKETING_COUNT_IDS} from './marketingIds';
+import {MARKETING_VISIT_COUNT_IDS} from './marketingVisit';
 
 export const LEARN_FORMATS=['7v7','9v9','11v11','futsal'] as const;
 export type LearnFormat=typeof LEARN_FORMATS[number];
@@ -261,6 +269,28 @@ export const EMOTE_VARIANT_IDS:readonly string[]=(Object.entries(EMOTE_VARIANT_C
 export const PARTY_FIXED_IDS:readonly string[]=PARTY_COUNT_EVENTS.map(([e])=>'mp:'+e);
 export const EMOTE_FIXED_IDS:readonly string[]=[...EMOTE_COUNT_EVENTS.map(([e])=>'em:'+e),...EMOTE_WIRE_IDS.map(n=>'em:e'+n),...EMOTE_VARIANT_IDS];
 
+/**
+ * Live matches (Nov 5 2026, lib/analytics/liveMatchEvents.ts, docs/join-live-game-design.md "Analytics"): the five joinable
+ * formats. Per format: `visit` (the pitch's Learn + Play bar appeared, once per visit), `join` (Start in the picker, slot taken),
+ * `role_<gk|def|mid|fwd>` (a coarse role, never the slot or side), `leave`, `min` + `sec` (foreground time of the match, whole
+ * minutes and the leftover 0–59 s, capped at LM_CAP_S), a length band, an other-humans band (friends on the same match: a
+ * number band, never who) and how it ended. Totals only, no order, no time of day.
+ */
+export const LIVE_MATCH_FORMATS=['7v7','futsal','9v9','11v11','beach'] as const;
+export type LiveMatchFormat=typeof LIVE_MATCH_FORMATS[number];
+export const LM_ROLES=['gk','def','mid','fwd'] as const;
+export type LmRole=typeof LM_ROLES[number];
+/** Match length bands (upper edge in seconds; the last holds everything up to the 2 h cap). */
+export const LM_LEN_BANDS=[['len_1m','Under 1 min',60],['len_3m','1–3 min',180],['len_5m','3–5 min',300],['len_10m','5–10 min',600],
+ ['len_20m','10–20 min',1200],['len_30m','20–30 min',1800],['len_60m','30–60 min',3600],['len_2h','1–2 hours',7200]] as const;
+/** Other humans on the match at its busiest (0 = solo with the AI players). */
+export const LM_WITH_BANDS=[['with_0','Solo (no friends on the match)'],['with_1','With 1 friend'],['with_2_3','With 2–3 friends'],['with_4p','With 4+ friends']] as const;
+export const LM_END_REASONS=[['end_leave','Leave / Esc'],['end_forced','Pulled off (ride, menu, busy)'],['end_hide','Tab closed or left mid-match']] as const;
+export const LM_REACH=[1,3,10] as const;
+export const LM_FORMAT_EVENTS:readonly string[]=['visit','join','leave','min','sec',...LM_ROLES.map(r=>'role_'+r),...LM_LEN_BANDS.map(b=>b[0]),...LM_WITH_BANDS.map(b=>b[0]),...LM_END_REASONS.map(b=>b[0])];
+export const lmId=(format:LiveMatchFormat,event:string)=>`lm:${format}_${event}`;
+export const LIVE_MATCH_COUNT_IDS:readonly string[]=[...LIVE_MATCH_FORMATS.flatMap(f=>LM_FORMAT_EVENTS.map(e=>lmId(f,e))),...LM_REACH.map(n=>'lm:reach_'+n)];
+
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
  ...LEARN_FORMATS.map(f=>'pf:'+f),...LEARN_FORMATS.map(f=>'gr:'+f),'gr:finale','rv:q','rv:ok','rv:done',
@@ -273,6 +303,8 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...ENGAGE_FIXED_IDS,
  ...PARTY_FIXED_IDS,...EMOTE_FIXED_IDS,...PARTY_RETENTION_IDS,
  ...MARKETING_COUNT_IDS,// mk: the marketing page at `/` (marketingIds.ts, Nov 3 2026)
+ ...LIVE_MATCH_COUNT_IDS,// lm: live matches (liveMatchEvents.ts, Nov 5 2026)
+ ...MARKETING_VISIT_COUNT_IDS,// mm: the investor page /marketing (marketingVisit.ts, Nov 5 2026)
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 
