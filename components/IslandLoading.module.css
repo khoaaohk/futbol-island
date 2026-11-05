@@ -134,4 +134,14 @@
    2026: the old .95 s delay only held a finished island behind tan). Town restarts the arrival as the fade starts. */
 :global(html[data-island-handoff=tan]) .exiting{animation:loadingDepart .5s .05s ease-in-out both}
 @media(prefers-reduced-motion:reduce){:global(html[data-island-handoff=tan]) .exiting{animation:loadingDepart .08s linear both}}
+/* A restored save's reload (Nov 5 2026, data-island-handoff="pill"; components/LoadingHandoffPill.tsx): no tan sheet. The screen starts
+   as the title screen's last frame: its sea + grain (this screen's own background) with only the full "Loading…" pill, at the box the
+   pill had before the reload (--handoff-pill-*, set pre-paint; centred if missing). Same quick cross-fade into the island as tan. */
+.handoffPill{display:none}
+:global(html[data-island-handoff=pill]) .screen>*{visibility:hidden}
+:global(html[data-island-handoff=pill]) .screen>.handoffPill{visibility:visible;display:grid;position:fixed;z-index:3;left:var(--handoff-pill-x,24px);top:var(--handoff-pill-y,calc(50% - 34px));width:var(--handoff-pill-w,calc(100% - 48px));height:var(--handoff-pill-h,68px);pointer-events:none}
+.handoffPill,.handoffPill *{box-sizing:border-box}
+.handoffPill>span{height:100%;cursor:progress}
+:global(html[data-island-handoff=pill]) .exiting{animation:loadingDepart .5s .05s ease-in-out both}
+@media(prefers-reduced-motion:reduce){:global(html[data-island-handoff=pill]) .exiting{animation:loadingDepart .08s linear both}}
 

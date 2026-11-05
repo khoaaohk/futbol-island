@@ -33,6 +33,10 @@ const filterSubs = new Set<() => void>();
 export function setHiddenFriends(ids: ReadonlySet<MemberId>): void { hiddenIds = ids; for (const f of Array.from(filterSubs)) f(); }
 export function setMutedFriends(ids: ReadonlySet<MemberId>): void { mutedIds = ids; for (const f of Array.from(filterSubs)) f(); }
 export function hiddenFriends(): ReadonlySet<MemberId> { return hiddenIds; }
+/** Multiplayer slice 2 (lib/multiplayer/matchLink.ts): friends playing MY live match are drawn on their slot rig in the match, so their
+ *  island avatar is hidden meanwhile (not a user choice: hiddenFriends() stays the party sheet's Hide list). */
+let matchIds: ReadonlySet<MemberId> = new Set();
+export function setMatchFriends(ids: ReadonlySet<MemberId>): void { matchIds = ids; for (const f of Array.from(filterSubs)) f(); }
 /** Hide / Mute changed (the island's door hints recount). */
 export function onFriendFilters(fn: () => void): () => void { filterSubs.add(fn); return () => { filterSubs.delete(fn); }; }
 export function mutedFriends(): ReadonlySet<MemberId> { return mutedIds; }
@@ -121,7 +125,7 @@ export function createFriendCore(ctx: {
     if (e && e.at !== lastEmoteAt) { lastEmoteAt = e.at; if (e.id !== s.you && avatars.emote(e.id, e.emote)) ctx.onEmoteSeen?.(); if (e.id !== s.you) ctx.onFriendEmote?.(e.id); }
     ctx.onSync?.(live, welcome);
   }
-  const applyFilters = () => { avatars.setHidden(hiddenIds); avatars.setMuted(mutedIds); };
+  const applyFilters = () => { if (matchIds.size) avatars.setHidden(new Set([...Array.from(hiddenIds), ...Array.from(matchIds)])); else avatars.setHidden(hiddenIds); avatars.setMuted(mutedIds); };
   filterSubs.add(applyFilters);
   const offStore = partyStore.subscribe(sync);
   const offPoses = onPoses((id, b, recvMs) => {

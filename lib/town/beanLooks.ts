@@ -16,7 +16,7 @@ export type TeamSide='home'|'away';
 export type KitColours=Omit<Outfit,'kind'|'number'>;
 export type TeamPalette={id:string;name:string;kit:KitColours};
 export type MatchKits={home:KitColours;away:KitColours;homeKeeper:KitColours;awayKeeper:KitColours};
-export type BeanDress={look:BeanLook;outfit:Outfit};
+export type BeanDress={look:BeanLook;outfit:Outfit;/** bean costume id (live-join only: the player's own onesie, e.g. zebra) */costume?:string};
 
 const strip=({kind:_k,number:_n,...kit}:Outfit):KitColours=>kit;
 
@@ -111,8 +111,10 @@ const bibKits=(home:KitColours,away:KitColours):MatchKits=>{
 export const BIB_COLOURS={
   '7v7':{home:'#ffd23f',away:'#2459e0'},futsal:{home:'#ffd23f',away:'#2459e0'},
   '9v9':{home:'#ff8a1f',away:'#5b3fd1'},'11v11':{home:'#22c3e6',away:'#ff7a1a'},
+  // The beach court keeps its barefoot BEACH_MATCH_KITS (no bibs on sand): its HUD chip, ring and pills take those shirts.
+  beach:{home:BEACH_KITS.home.shirt,away:BEACH_KITS.away.shirt},
 } as const;
-export const LIVE_BIB_KITS:Readonly<Record<keyof typeof BIB_COLOURS,MatchKits>>={
+export const LIVE_BIB_KITS:Readonly<Record<Exclude<keyof typeof BIB_COLOURS,'beach'>,MatchKits>>={
   '7v7':bibKits(bib(BIB_COLOURS['7v7'].home,'#1d2433','#1d2433'),bib(BIB_COLOURS['7v7'].away,'#ffffff','#1d2433')),
   futsal:bibKits(bib(BIB_COLOURS.futsal.home,'#1d2433','#1d2433'),bib(BIB_COLOURS.futsal.away,'#ffffff','#1d2433')),
   '9v9':bibKits(bib(BIB_COLOURS['9v9'].home,'#1d2433','#1d2433'),bib(BIB_COLOURS['9v9'].away,'#ffffff','#1d2433')),
@@ -169,6 +171,24 @@ export function teamedLook(own:BeanLook,dress:BeanDress,ownNumber:number|null=nu
   const keeper=!!dress.look.gloves;
   return {look:{...own,body:dress.look.body,headwear:keeper?dress.look.headwear:'none',headwearColor:keeper?dress.look.headwearColor:undefined,headwearColor2:keeper?dress.look.headwearColor2:undefined,gloves:dress.look.gloves},
     outfit:{...dress.outfit,number:dress.outfit.number??ownNumber}};
+}
+
+/** The only outfit fields the team bib replaces when the player joins a live match (owner, Nov 4 2026). */
+export const BIB_KEYS=['shirt','shirt2'] as const;
+/** A barefoot match dress (the beach kits' `barefoot`): socks and boots are the bean's own body colour. */
+export const isBarefootDress=(d:BeanDress)=>d.outfit.boots===d.look.body&&d.outfit.socks===d.look.body;
+/**
+ * The player's own character in a live match they joined (owner, Nov 4 2026): whatever they look like outside the match
+ * comes in. Data-driven: every BeanLook field is copied (body colour, skin, build, eyes, mouth, blush, hair, headwear…),
+ * every outfit field of the walking outfit is kept except BIB_KEYS, and the costume id rides along. Only a keeper slot adds
+ * its gloves. New look/outfit fields carry over without touching this.
+ */
+export function ownKitLook(own:BeanLook,dress:BeanDress,ownOutfit:Outfit,costume?:string|null):BeanDress{
+  const outfit:Outfit={...ownOutfit,kind:'kit'};for(const k of BIB_KEYS)outfit[k]=dress.outfit[k];
+  outfit.number=ownOutfit.number??dress.outfit.number??null;
+  // Sand (BEACH_MATCH_KITS, Law 4: no footwear): the slot's kit is barefoot, so are you: socks and boots take your own body colour.
+  if(isBarefootDress(dress))outfit.socks=outfit.socks2=outfit.boots=own.body;
+  return {look:dress.look.gloves?{...own,gloves:dress.look.gloves}:{...own},outfit,...(costume&&costume!=='none'?{costume}:{})};
 }
 
 /**

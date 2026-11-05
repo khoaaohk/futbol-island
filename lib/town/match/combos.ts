@@ -858,6 +858,9 @@ export function createComboView(/** The venue's turn (see createChoreo): the ski
   holds(id:string|null){const a=id?active.get(id):undefined;if(!a||!(a.type in KEEPER_RELEASE))return false;const p=progressOf(a);return p>=0&&p<KEEPER_RELEASE[a.type as keyof typeof KEEPER_RELEASE];},
   /** A header met at the top of a jump is the head's job: no leg swing on top of it. */
   settle(motion:PlayerMotion){if(motion.jump&&motion.reaction==='header')motion.kick=undefined;},
+  /** A human's dribbling trick (Trick button, owner Nov 4 2026): the authored move (stepover / La Croqueta / drag-back,
+   *  skillMoves.ts poses and ball path) played now at the quick live tempo `seconds`; one object per tap, none per frame. */
+  trick(id:string,kind:'stepover'|'croqueta'|'dragBack',side:-1|1,seconds:number){const m=SKILL_MOVE[kind]!;active.set(id,make(m,side,clock,seconds,1,{kind}));},
   skillOf(id:string){const a=active.get(id);return a?{kind:a.kind,type:a.type,progress:progressOf(a)}:undefined;},
   reset(){active.clear();passFrom.clear();lastWindup=null;lastOwner=null;touchSeen=-1;},
  };

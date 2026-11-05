@@ -636,7 +636,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
  }
 
  // ---- Frame update ----
- let slow=0,sceneryShown=true;
+ let slow=0,sceneryShown=true,badgesHidden=false;
  function update(dt:number,p:{x:number;y:number;z:number},ball:BallState|null,active:boolean,visible:boolean,reduced:boolean){
   if(visible!==sceneryShown){sceneryShown=visible;root.visible=visible;}
   if(!active){return;}
@@ -1195,7 +1195,7 @@ export function createJobScene(scene:T.Scene,options:JobSceneOptions={}){
   restoreCamera:(camera:T.PerspectiveCamera)=>{if(workApplied){camera.position.sub(workOffset);workApplied=false;}},
   get workCameraAmount(){return workCam.k;},
   /** Call right after the follow camera is placed (like fishing.applyCamera): the assistant-referee view while flagging. */
-  applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>{if(!pushCam.active){followCam.copy(camera.position);followFov=camera.fov;}let r=refCam.apply(camera,dt,reduced);if(relClose.active)r=relClose.apply(camera,dt,reduced)||r;if(relWide.active)r=relWide.apply(camera,dt,reduced)||r;if(pushCam.active)r=pushCam.apply(camera,dt,reduced)||r;workCamera(camera,dt,reduced,r||refCam.active||relClose.active||relWide.active||pushCam.active);badges.update(camera,dt,reduced,sceneryShown,lastP);return r;},badges,getView:()=>view,subscribe:(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn);};},dismissDone:()=>setView({done:null}),get run(){return run;},
+  applyCamera:(camera:T.PerspectiveCamera,dt:number,reduced:boolean)=>{if(!pushCam.active){followCam.copy(camera.position);followFov=camera.fov;}let r=refCam.apply(camera,dt,reduced);if(relClose.active)r=relClose.apply(camera,dt,reduced)||r;if(relWide.active)r=relWide.apply(camera,dt,reduced)||r;if(pushCam.active)r=pushCam.apply(camera,dt,reduced)||r;workCamera(camera,dt,reduced,r||refCam.active||relClose.active||relWide.active||pushCam.active);badges.update(camera,dt,reduced,sceneryShown&&!badgesHidden,lastP);return r;},badges,setBadgesHidden:(h:boolean)=>{badgesHidden=h;},getView:()=>view,subscribe:(fn:()=>void)=>{listeners.add(fn);return()=>{listeners.delete(fn);};},dismissDone:()=>setView({done:null}),get run(){return run;},
   /** A job runs, or the one that just ended is winding down (its last pose): Town keeps calling holdProps. */
   get holding(){return !!run||ending>0&&!!props;},
   /** Where the current step wants the player (the beacon's targets); read-only, for play-tests. */

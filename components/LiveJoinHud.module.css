@@ -1,40 +1,91 @@
 /* Join a live game HUD (components/LiveJoinHud.tsx). The island's own HUD look: cream cards (#fff3d9), green ink
    (#294f43), gold primary round buttons (#f4cc7c) with IslandBrush on the primary button only; --bib is the team's
    bib colour written by lib/town/liveJoinRuntime.ts. */
-.card{position:relative;align-self:center;display:flex;align-items:center;gap:12px;max-width:min(360px,calc(100vw - 32px));padding:12px 12px 12px 14px;border-radius:18px;background:#fff3d9;color:#294f43;box-shadow:0 4px 0 #173e3440;pointer-events:auto;animation:joinIn .22s ease-out both}
-.bib{flex:0 0 34px;height:42px;border-radius:9px 9px 12px 12px;background:var(--bib,#ffd23f);clip-path:polygon(22% 0,78% 0,100% 18%,100% 100%,0 100%,0 18%)}
-.cardText{display:grid;gap:2px;min-width:0}
-.cardText strong{font-size:17px;line-height:1.2}
-.goal{font-size:15px;font-weight:700}
-.goal b{display:inline-block;color:var(--bib,#ffd23f);-webkit-text-stroke:1px #294f43;font-size:18px}
-.cardText small{font-size:12px;color:#3f6559}
-.play{position:relative;flex:0 0 64px;width:64px;height:64px;display:grid;place-items:center;border:0;border-radius:50%;background:#f4cc7c;color:#294f43;padding:0;touch-action:manipulation;transition:transform .12s ease-out}
-.play:active{transform:scale(.94)}
-.play svg{position:absolute;inset:3px;width:58px;height:58px;transform:rotate(-90deg)}
-.track,.fill{fill:none;stroke-width:3.5}
-.track{stroke:#294f4326}
-.fill{stroke:#294f43;stroke-dasharray:100;stroke-dashoffset:calc(100 - var(--join-progress,0) * 100);stroke-linecap:round}
-.play span{font:400 24px/1 IslandBrush,Arial,sans-serif;margin-top:-6px}
-.play em{position:absolute;bottom:9px;font-style:normal;font-size:9px;font-weight:800}
-.chip{align-self:center;display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:4px 10px;max-width:calc(100vw - 32px);padding:6px 6px 6px 12px;border-radius:999px;background:#fff3d9;color:#294f43;box-shadow:0 4px 0 #173e3440;pointer-events:auto;font-size:14px}
+/* The side + position picker (owner Nov 4 2026): the party modal (party.module.css backdrop / dialog / card / menuHeader /
+   primary) grown out of the pitch bar's Play (lib/ui/growFrame); a segmented side toggle like CharacterToggle and a native
+   position select (16px so iOS never zooms). */
+.modal[hidden]{display:none}
+.pick{text-align:left}
+.pick>header h2{font-size:clamp(22px,6vw,30px);white-space:nowrap}
+.seg{--i:0;position:relative;display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));padding:4px;border:3px solid #fff5dc;border-radius:999px;background:#dfd0ad;box-shadow:0 3px 0 #ad9870;isolation:isolate}
+.seg::before{content:'';position:absolute;left:4px;top:4px;bottom:4px;width:calc((100% - 8px) / var(--n));border-radius:999px;background:#fff5dc;box-shadow:0 2px 4px #65583d26;transform:translateX(calc(var(--i) * 100%));transition:transform .24s cubic-bezier(.22,.7,.3,1);z-index:-1}
+.seg[data-index="1"]{--i:1}
+.seg button{display:flex;align-items:center;justify-content:center;gap:8px;min-width:0;min-height:44px;padding:0 8px;border:0;border-radius:999px;background:transparent;color:#555747;font:700 16px/1.1 var(--btn-font,Arial),Arial,sans-serif;white-space:nowrap;touch-action:manipulation}
+.seg button[aria-checked="true"]{color:#244d40}
+.seg button:disabled{opacity:.4}
+.swatch{flex:0 0 16px;height:19px;border-radius:3px 3px 4px 4px;clip-path:polygon(22% 0,78% 0,100% 18%,100% 100%,0 100%,0 18%)}
+[data-join-side="gold"] .swatch{background:var(--bib-gold,#ffd23f)}[data-join-side="blue"] .swatch{background:var(--bib-blue,#2459e0)}
+.humans{font-size:12px;font-weight:700;color:#5b6a52}.humans[hidden]{display:none}
+.wide.wide{width:min(440px,calc(100vw - 36px))}
+.field{width:100%}
+.foot{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:2px}
+.start{flex:0 1 auto;min-width:148px}
+.chip{position:absolute;left:50%;top:calc(-1 * (var(--island-hud-row-height,44px) + var(--island-hud-row-gap,8px)));transform:translateX(-50%);height:var(--island-hud-row-height,44px);box-sizing:border-box;display:flex;align-items:center;justify-content:center;gap:10px;white-space:nowrap;width:min(var(--chip-w,164px),calc(100vw - 2 * (var(--island-hud-edge,24px) + var(--join-side,96px) + 12px)));padding:4px 10px;transition:width .35s cubic-bezier(.34,1.3,.64,1);border:2px solid #fff2cd;border-radius:18px;background:#fff1d3;color:#244d40;box-shadow:0 3px 0 #a8863d,0 8px 18px #0f2a2f40;pointer-events:auto;font-size:15px}
 .dot{width:14px;height:14px;border-radius:50%;background:var(--bib,#ffd23f);box-shadow:inset 0 0 0 2px #294f4333}
-.score{font-weight:700}
-.status:empty{display:none}
-.status{font-weight:700;color:#b5532c}
-.leave{min-height:36px;padding:0 14px;border:2px solid #294f43;border-radius:999px;background:transparent;color:#294f43;font-weight:800;font-size:13px;touch-action:manipulation}
-.leave:active{background:#294f4318}
-.tip{align-self:center;margin:0;max-width:min(380px,calc(100vw - 32px));padding:9px 14px;border-radius:14px;background:#294f43;color:#fff3d1;font-size:14px;font-weight:700;line-height:1.35;text-align:center;pointer-events:none;animation:joinIn .2s ease-out both}
-.actions{position:absolute;z-index:10;right:calc(18px + env(safe-area-inset-right,0px));bottom:var(--control-bottom,28px);display:flex;align-items:flex-end;gap:14px;pointer-events:none}
+.pill{display:inline-flex;align-items:center;gap:8px;min-height:32px;padding:0 14px 0 10px;border-radius:999px;background:#e6efd0;color:#3c6a45;font-size:17px}.pill b{font-weight:800}.scores{display:inline-flex;gap:14px}.pill .dot{flex:none;width:16px;height:16px}
+.status{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(.8);opacity:0;pointer-events:none;white-space:nowrap;font-weight:800;font-size:15px;color:#b5532c;transition:opacity .2s ease,transform .3s ease}
+.scores .pill{transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+.chip[data-msg]{--chip-w:calc(164px + var(--msgw,150px) + 12px)}/* the bar fits its scores and grows to hold the message (owner Nov 5 2026), no empty cream either side */
+.chip[data-msg] .scores .pill:first-child{transform:translateX(calc(-1 * var(--push,90px)))}
+.chip[data-msg] .scores .pill:last-child{transform:translateX(var(--push,90px))}
+.chip[data-msg] .status{opacity:1;transform:translate(-50%,-50%) scale(1);transition:opacity .25s ease .15s,transform .45s cubic-bezier(.34,1.56,.64,1) .15s}
+@media(prefers-reduced-motion:reduce){.status,.scores .pill,.chip[data-msg] .status,.chip{transition:none}}
+.leave{position:absolute;z-index:35;top:var(--island-hud-row-top,16px);right:calc(var(--island-hud-edge,24px) + env(safe-area-inset-right,0px));box-sizing:border-box;display:grid;place-items:center;height:var(--island-hud-row-height,44px);min-width:var(--btn-icon,44px);padding:0 14px;border:3px solid #fff2cd;border-radius:999px;background:var(--btn-gold,#f4cc7c) var(--btn-grain,none);background-blend-mode:soft-light;color:#244d40;box-shadow:var(--btn-shadow-gold,0 3px 0 #a8863d);font-weight:800;font-size:13px;touch-action:manipulation;transition:scale .16s ease}.leave[hidden]{display:none}
+/* Camera angle (owner, Nov 4 2026): the top row's 44px gold circle (IslandSettings .triggers .circle), top-left opposite Leave. */
+.cam{position:absolute;z-index:35;top:var(--island-hud-row-top,16px);left:calc(var(--island-hud-edge,24px) + env(safe-area-inset-left,0px));box-sizing:border-box;display:grid;place-items:center;width:var(--btn-icon,44px);height:var(--btn-icon,44px);padding:0;border:3px solid #fff2cd;border-radius:50%;background:var(--island-control-face,#f4cc7c);background-blend-mode:soft-light;color:#244d40;box-shadow:var(--island-control-shadow,0 3px 0 #a8863d);cursor:pointer;touch-action:manipulation;transition:translate .16s,box-shadow .16s}.cam[hidden]{display:none}
+.cam:active{translate:0 3px;box-shadow:0 2px 0 #a8863d,0 0 0 4px #fff2cd40}
+.cam:focus-visible{outline:3px solid #244d40;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.cam{transition:none}.cam:active{translate:none}}
+.leave:hover{scale:1.05}.leave:active{scale:.96}@media(prefers-reduced-motion:reduce){.leave{transition:none}.leave:hover,.leave:active{scale:1}}
+.tip{position:absolute;left:50%;top:var(--tip-top,76px);translate:-50% 0;margin:0;max-width:min(380px,calc(100vw - 32px));padding:9px 14px;border-radius:14px;background:#294f43;color:#fff3d1;font-size:14px;font-weight:700;line-height:1.35;text-align:center;pointer-events:none;animation:joinIn .2s ease-out both}
+/* Action cluster (owner Nov 4 2026: five on offense): Pass (88px) in the corner, four 58px buttons on one arc round it
+   (radius 120 from Pass's centre at 184° / 152° / 120° / 88°, ≥ 8px apart), all under the right thumb: Shoot · Trick ·
+   Forward · Sprint; defense fills the same slots with Stay · Press · (gap) · Sprint. */
+.actions{position:absolute;z-index:10;right:calc(14px + env(safe-area-inset-right,0px));bottom:var(--control-bottom,28px);width:194px;height:194px;pointer-events:none}
 .actions[hidden]{display:none}
-.a,.b{pointer-events:auto;display:grid;place-items:center;border-radius:50%;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .1s ease-out}
-.a{width:88px;height:88px;border:3px solid #fff0c4;background:#f4cc7c;color:#294f43;font:400 24px/1 IslandBrush,Arial,sans-serif;box-shadow:0 5px 0 #173e3459}
-.b{width:76px;height:76px;margin-bottom:46px;border:4px solid var(--bib,#ffd23f);background:#294f43ed;color:#fff0cc;font-weight:800;font-size:13px;letter-spacing:-.01em;box-shadow:0 4px 0 #173e3459}
-.a:active,.b:active{transform:scale(.93)}
+.a,.b,.s,.f,.t{position:absolute;pointer-events:auto;display:grid;place-items:center;border-radius:50%;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .1s ease-out}
+.a{right:0;bottom:0;width:88px;height:88px;border:3px solid #fff0c4;background:#f4cc7c;color:#294f43;font-weight:800;font-size:15px;box-shadow:0 5px 0 #173e3459}
+.b{right:135px;bottom:7px;width:58px;height:58px;border:3px solid #fff0c4;background:#f2a28c;color:#294f43;font-weight:800;font-size:13px;letter-spacing:-.01em;box-shadow:0 4px 0 #173e3459}
+.s{right:11px;bottom:135px;width:58px;height:58px;border:3px solid #fff0c4;background:#9fd8c6;color:#294f43;font-weight:800;font-size:12px;box-shadow:0 4px 0 #173e3459}
+.f{right:75px;bottom:119px;width:58px;height:58px;border:3px solid #fff0c4;background:#c9b6e2;color:#294f43;font-weight:800;font-size:11px;box-shadow:0 4px 0 #173e3459}.f[hidden]{display:none}
+.b[data-mode="stay"]{background:#a9cfee}
+.t{right:121px;bottom:71px;width:58px;height:58px;border:3px solid #fff0c4;background:#8fcdee;color:#294f43;font-weight:800;font-size:12px;box-shadow:0 4px 0 #173e3459}.t[hidden]{display:none}
+.t[data-mode="press"]{background:#f2a9c9;right:101px;bottom:98px}/* defense: Press sits mid-arc (136°) between Stay (184°) and Sprint (88°) */
+.t[data-on]{transform:scale(1.06)}
+.a:active,.b:active,.s:active,.f:active,.t:active{transform:scale(.93)}
+/* Cooldown (Trick 1.2 s, Press 8 s): a quiet ring that shrinks away as the button recharges and a dimmed label; the
+   runtime writes --cool (1 → 0, quantised, only on change). Transform + opacity only. */
+.cool{position:absolute;inset:-6px;border-radius:50%;border:3px solid #294f43;pointer-events:none;opacity:calc(var(--cool,0) * .55);transform:scale(calc(.86 + .14 * var(--cool,0)))}
+.t[data-cool]>span{opacity:.55}
+/* Long ball: past 250 ms the Pass ring turns the long ball's trail purple (matchEffects #b877ff). */
+.a[data-long] .charge{border-color:#8a4fd6}
+/* Power shot (owner Nov 4 2026): a full charge on Shoot turns the ring flame orange and throbs; reduced motion holds still. */
+.b[data-full] .charge{border-color:#ff7a2e;border-width:5px;animation:powerThrob .42s ease-in-out infinite alternate}
+@keyframes powerThrob{from{transform:scale(1)}to{transform:scale(1.08)}}
+@media(prefers-reduced-motion:reduce){.b[data-full] .charge{animation:none}}
+/* The trick's word: an island toast (cream card, green ink) popping over the pitch for ~0.9 s. */
+.pop{position:absolute;z-index:12;left:50%;top:34%;margin:0;padding:8px 18px;border:3px solid #fff2cd;border-radius:999px;background:#fff1d3;color:#244d40;font-weight:800;font-size:20px;white-space:nowrap;pointer-events:none;box-shadow:0 3px 0 #a8863d;opacity:0;transform:translate(-50%,8px) scale(.8);transition:opacity .18s ease,transform .18s ease}
+.pop[data-show]{opacity:1;transform:translate(-50%,0) scale(1);transition:opacity .12s ease-out,transform .32s cubic-bezier(.34,1.56,.64,1)}
+@media(prefers-reduced-motion:reduce){.pop,.pop[data-show]{transition:none;transform:translate(-50%,0)}}
+/* Hold-to-charge (Pass and Shoot, owner Nov 4 2026): a ring that grows out of the button as the strike charges. The
+   runtime writes --charge (0..1, quantised, only on change); transform + opacity only. */
+.charge{position:absolute;inset:-7px;border-radius:50%;border:4px solid #294f43;pointer-events:none;opacity:calc(var(--charge,0) * 1.4 - .1);transform:scale(calc(.82 + .18 * var(--charge,0)))}
+.s[data-held]{background:#6cc4a8;transform:scale(.95)}
 .a[aria-disabled]{opacity:.55}
 .b[hidden]{display:none}
 .badge{position:absolute;z-index:8;transform:translate(-50%,-50%);display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:var(--bib,#ffd23f);color:#294f43;border:3px solid #fff3d9;font-size:11px;font-weight:900;pointer-events:none}
 .badge[hidden]{display:none}
-@media (hover:hover) and (pointer:fine){.a{width:76px;height:76px;font-size:21px}.b{width:68px;height:68px;margin-bottom:38px;font-size:12px}}
-@media (orientation:landscape) and (max-height:500px){.a{width:76px;height:76px}.b{width:68px;height:68px;margin-bottom:24px;font-size:12px}.card{padding:8px 10px}.cardText small{display:none}}
+
 @keyframes joinIn{from{transform:translateY(-8px);opacity:0}to{transform:none;opacity:1}}
-@media (prefers-reduced-motion:reduce){.card,.tip{animation:none}.play,.a,.b{transition:none}}
+@media (prefers-reduced-motion:reduce){.tip{animation:none}.seg::before,.a,.b{transition:none}}
+
+/* Leave: a text pill on desktop, a 44px round X on phones so the centred bar has equal room on both sides (the camera button mirrors it on the left). */
+.chip,.leave{--join-side:96px}
+@media(max-width:600px),(pointer:coarse){.chip,.leave{--join-side:44px}.leave{display:flex;align-items:center;justify-content:center;width:44px;padding:0;font-size:0;line-height:0}.leave::before{content:'\2715';font-size:17px;line-height:1;display:block}}
+
+/* A goal (owner, Nov 4): the bar shakes and the scoring pill pops. Individual transform properties (translate / scale) so they compose with the bar's centring transform and the pill push. */
+@keyframes joinShake{0%,100%{translate:0}12%{translate:-9px 0}28%{translate:8px 0}44%{translate:-6px 0}60%{translate:4px 0}78%{translate:-2px 0}}
+@keyframes joinPop{0%{scale:1}25%{scale:1.45}55%{scale:.9}80%{scale:1.12}100%{scale:1}}
+.chip[data-goal]{animation:joinShake .6s cubic-bezier(.36,.07,.19,.97) both}
+.chip[data-goal=gold] .scores .pill:first-child,.chip[data-goal=blue] .scores .pill:last-child{animation:joinPop .75s cubic-bezier(.34,1.56,.64,1) both}
+@media(prefers-reduced-motion:reduce){.chip[data-goal],.chip[data-goal] .scores .pill{animation:none}}

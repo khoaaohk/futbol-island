@@ -50,3 +50,27 @@ const fake=()=>({kicks:0,lastKick:{height:0,loft:0,dur:0},ball:{height:0}});
  const moving=ball.quaternion.clone();b.roll(ball,true);assert(ball.quaternion.equals(moving),'grounded stationary ball stops rotating');
  ball.position.z=.6;b.roll(ball,true);const paused=ball.quaternion.clone();for(let i=0;i<60;i++)b.roll(ball,false,0);assert(ball.quaternion.equals(paused),'paused flight does not spin');
 }
+// Walk-ball parity (Nov 4 2026): the flight spins with its travel like the walking ball's shot, capped at AIR_SPIN.
+{
+ const {AIR_SPIN}=load('lib/town/liveBallPhysics.ts'),b=createLiveBallPhysics(SCALE),ball=new T.Object3D();b.roll(ball,true,1/60);
+ let last=ball.quaternion.clone(),rate=0;for(let i=0;i<60;i++){ball.position.x+=.05;b.roll(ball,false,1/60);rate=ball.quaternion.angleTo(last)*60;last=ball.quaternion.clone();}
+ assert(Math.abs(rate-.05*60/.19)<.5,'air topspin follows travel (3 m/s → 15.8 rad/s): '+rate);
+ for(let i=0;i<60;i++){ball.position.x+=1;b.roll(ball,false,1/60);rate=ball.quaternion.angleTo(last)*60;last=ball.quaternion.clone();}
+ assert(Math.abs(rate-AIR_SPIN)<1,'a fast drive is capped so it never strobes: '+rate);
+}
+// Live ball sounds: the walking ball's kick / bounce / receive, volume by speed, consumed silently when unheard.
+{
+ const {createLiveBallSound,LIVE_BALL_SOUND}=load('lib/town/liveBallSound.ts'),{VENUES,BEACH_VENUE}=load('lib/town/venues.ts');
+ const venue=VENUES.find(v=>v.id==='7v7'),sim=new MatchSim(270+41,'7v7'),b=createLiveBallPhysics(SCALE,venue),s=createLiveBallSound(venue,SCALE),heard={kick:0,bounce:0,receive:0},gains=[];
+ const play=(kind,gain)=>{heard[kind]++;gains.push(gain);};
+ for(let i=0;i<60*90;i++){sim.step(DT);b.step(sim,DT,!sim.ball.owner);s.update(sim,b.landing,play);}
+ assert(heard.kick>10&&heard.receive>5&&heard.bounce>0,'a 7v7 match plays kicks, traps and bounces: '+JSON.stringify(heard));
+ assert(gains.every(g=>g>=LIVE_BALL_SOUND.quiet-1e-9&&g<=1),'gains stay in [quiet, 1]');
+ assert(new Set(gains.map(g=>g.toFixed(2))).size>3,'volume varies with ball speed');
+ const before={...heard};for(let i=0;i<60*20;i++){sim.step(DT);b.step(sim,DT,!sim.ball.owner);s.update(sim,b.landing,null);}
+ s.update(sim,0,play);assert.deepEqual(heard,before,'touches made while unheard never replay later');
+ const posts={n:0};sim.frameContact.serial++;s.update(sim,0,(k,g)=>{if(k==='bounce'&&g===1)posts.n++;});assert.equal(posts.n,1,'a post / bar hit is a full bounce');
+ const beach=new MatchSim(7,'beach'),bs=createLiveBallSound(BEACH_VENUE,.48);let gkKick=0;bs.update(beach,0,null);
+ for(let i=0;i<60*120;i++){const before=beach.touchSerial;beach.step(.48/60);let gk=false;for(let n=before+1;n<=beach.touchSerial;n++){const ev=beach.touches[(n-1)%beach.touches.length];if(ev.kind==='kick'&&beach.players[ev.id]?.isGK)gk=true;}bs.update(beach,0,k=>{if(gk&&k==='kick')gkKick++;});}
+ console.log('LIVE_BALL_SOUND_PASS',heard,{gkKickWhileThrow:gkKick});
+}

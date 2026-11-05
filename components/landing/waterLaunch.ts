@@ -104,3 +104,24 @@ export async function runTanExit(screen:HTMLElement,pill:HTMLElement|null,{reduc
  await sheet.animate([{transform:'none'},{transform:`scale(${k})`}],
   {duration:700,easing:'cubic-bezier(.45,0,.55,1)',fill:'forwards'}).finished.catch(()=>{});
 }
+
+/** A restored save reloads the page (Nov 5 2026, user: no tan sheet before the island on a restore either). Instead of the tan
+ *  exit, the title screen fades to its own sea (#2b53e5 + the riso grain, the loading screen's background) with ONLY the full
+ *  "Loading…" pill left where it was; the reload's loader (data-island-handoff="pill", components/LoadingHandoffPill.tsx) paints
+ *  exactly that from its first frame, then fades into the island. One-shot WAAPI opacity; resolves with the pill's viewport box. */
+export const PILL_SEA='#2b53e5';
+export async function runPillExit(screen:HTMLElement,pill:HTMLElement|null,{reduced=false}={}):Promise<DOMRect|null>{
+ const btn=pill?.querySelector<HTMLElement>('button')??null,r=btn?.getBoundingClientRect()??null;
+ const sheet=document.createElement('div');sheet.setAttribute('aria-hidden','true');sheet.setAttribute('data-pill-sheet','');
+ Object.assign(sheet.style,{position:'fixed',inset:'0',zIndex:'40',pointerEvents:'none',background:PILL_SEA,opacity:'0'});
+ const grain=document.createElement('i');Object.assign(grain.style,{position:'absolute',inset:'0',background:"url('/stories/films/assets/entry-grain.png')",opacity:'.38'});sheet.appendChild(grain);
+ screen.appendChild(sheet);
+ // The pill itself rides above the sea: a copy at the same box (the original sits inside the faded card's stacking context).
+ if(btn&&r){const copy=btn.cloneNode(true) as HTMLElement;copy.removeAttribute('data-landing-play');copy.setAttribute('aria-hidden','true');copy.tabIndex=-1;
+  Object.assign(copy.style,{position:'fixed',left:`${r.left}px`,top:`${r.top}px`,width:`${r.width}px`,height:`${r.height}px`,margin:'0',zIndex:'41',boxSizing:'border-box',pointerEvents:'none'});
+  screen.appendChild(copy);}
+ await sheet.animate([{opacity:0},{opacity:1}],{duration:reduced?120:320,easing:'ease-out',fill:'forwards'}).finished.catch(()=>{});
+ return r;
+}
+/** The reload's hand-off: "pill:x,y,w,h" (CSS px, the pill's viewport box) for components/islandLoadingBoot.ts HANDOFF_BOOT. */
+export const markPillReload=(r:DOMRect|null)=>{try{sessionStorage.setItem(HANDOFF_KEY,r?`pill:${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.width)},${Math.round(r.height)}`:'pill');}catch{/* the reload then shows the normal loader */}};

@@ -78,7 +78,7 @@
 /* The one way into the game: the island's gold button (title screen .start). */
 .page .cta{display:inline-flex;align-items:center;justify-content:center;min-height:52px;max-width:100%;box-sizing:border-box;padding:6px var(--s3) 8px;
  border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
- color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:IslandBrush,Arial,sans-serif;font-size:22px;line-height:1.15;text-align:center;text-decoration:none;
+ color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:inherit;font-weight:800;font-size:20px;line-height:1.15;text-align:center;text-decoration:none;
  transition:translate .16s,box-shadow .16s}
 .page .cta:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 .end{padding-top:var(--s3)}

@@ -4,6 +4,8 @@ import {shotProgress,shotHeightAt,shotOffsetAt} from './shotPlacement';
 
 /** The walking character's ball constants (walkBall.ts): gravity 13 m/s², bounce restitution .53, settles under .8 m/s. */
 export const BALL_GRAVITY=13,BALL_RESTITUTION=.53,BALL_SETTLE=.8,BALL_RADIUS=.19;
+/** Air spin ceiling (rad/s, ~9.5 turns a second): a flight's topspin follows its travel up to here (roll, below). */
+export const AIR_SPIN=60;
 
 /**
  * Render-only vertical physics for a live-match ball. The sim still owns x/y and every gameplay
@@ -56,12 +58,16 @@ export function createLiveBallPhysics(timeScale:number,goal?:{goalHeight:number;
   }
   return h;
  }
- /** Rolls the mesh about the axis perpendicular to travel while grounded; keeps its spin in the air. */
+ /** Rolls the mesh about the axis perpendicular to travel while grounded. In the air it spins like the walking ball's shot
+  *  (Town.tsx: rotation = horizontal velocity / radius, Nov 4 2026 parity): it follows the flight's travel, eased toward that
+  *  rate (and never above AIR_SPIN rad/s, so a fast drive does not strobe at 60 fps); a ball dropping straight down keeps
+  *  its spin, fading. */
  function roll(ball:T.Object3D,grounded:boolean,dt=1/60){
   const dx=ball.position.x-lastX,dz=ball.position.z-lastZ,d=Math.hypot(dx,dz);lastX=ball.position.x;lastZ=ball.position.z;
   if(!(d<2)||dt<=0)return;
   if(grounded){spin=d>1e-5?d/(BALL_RADIUS*dt):0;if(d>1e-5)axis.set(dz/d,0,-dx/d);}
-  else{if(d>1e-5&&spin===0){axis.set(dz/d,0,-dx/d);spin=Math.min(35,d/(BALL_RADIUS*dt));}spin*=Math.exp(-.9*dt);}
+  else if(d>1e-4){axis.set(dz/d,0,-dx/d);spin+=(Math.min(AIR_SPIN,d/(BALL_RADIUS*dt))-spin)*(1-Math.exp(-8*dt));}
+  else spin*=Math.exp(-.9*dt);
   if(spin>1e-5)ball.quaternion.premultiply(turn.setFromAxisAngle(axis,spin*dt));
  }
  return {step,roll,get landing(){return landing;},get height(){return h;},get shotOffset(){return shotOffset;}};

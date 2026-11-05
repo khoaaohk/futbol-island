@@ -52,6 +52,9 @@ export interface PartyConnection {
    *  frame per KIT_GAP_MS (a later change waits and the latest wins). A page that never calls it (a room page) sends nothing, so the
    *  relay keeps the slot's kit. */
   setKit(kit: Kit | null): void;
+  /** Relay v1.8 (Cap.Match): one C.Match frame ([19, kind, ...ints]; lib/multiplayer/matchLink.ts builds them). false (not sent) on an
+   *  old relay (no Cap.Match: every kid then plays their own local match), or when not live. */
+  sendMatch(msg: number[]): boolean;
   /** Change MY OWN first name mid-party (Your party > List). n goes through normalizeNick (the join form's rules); memory only, like the
    *  join name: every later reconnect Hello carries it. 'sent': a v1.3 relay (Cap.Rename) gets C.Rename now (or the next resume Hello)
    *  and re-announces me to friends. 'local': an old relay (no Cap.Rename): only this device shows it until a resume reaches a v1.3 relay.
@@ -171,7 +174,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let last: PoseBody | null = null;
   let lastPoseAt = -1e12;
   const gov = poseGovernor(); // the last pose sent, as the relay's speed check sees it (presence.ts governPose)
-  let localHidden = false;
+  let localHidden = false, lastMatchSendAt = -1e12;
   let beforeBeat: (() => void) | null = null;
   let lastEmoteAt = -1e12;
   let caps = 0; // agreed with the relay after each Welcome (S.Caps -> C.Caps)
@@ -523,7 +526,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       localHidden = (body[7] & 2) !== 0;
       if (!open() || status !== 'live') return;
       if (kitSet && kitSentKey !== myKitKey) flushKit(); // a kit change that waited for KIT_GAP_MS (string compare only otherwise)
-      body = governPose(gov, body, nowMs); // relay-safe: in bounds, never faster than the relay keeps (presence.ts governPose)
+      body = governPose(gov, body, nowMs, nowMs - lastMatchSendAt < 1500); /* a joined player's match inputs flow at 2 Hz or more */ // relay-safe: in bounds, never faster than the relay keeps (presence.ts governPose)
       let send = false;
       if (!last) send = true;
       else if (body[5] !== last[5] || body[6] !== last[6] || (body[7] & 1) !== 0 || body[7] !== last[7]) send = true; // mode / zone / flags: immediate
@@ -577,6 +580,11 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       if (key === myKitKey) return;
       myKit = kit ? kit.slice() : null; myKitKey = key;
       flushKit();
+    },
+    sendMatch(msg) {
+      if (!(caps & Cap.Match) || !open() || status !== 'live') return false;
+      lastMatchSendAt = typeof performance !== 'undefined' ? performance.now() : Date.now();
+      return raw(msg as unknown as ClientMsg);
     },
     sendHit(victim, dir) {
       if (!(caps & Cap.Hit) || localHidden || !open() || status !== 'live') return false;

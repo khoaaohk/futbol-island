@@ -188,7 +188,7 @@
 .game .menuNote{margin:0 0 8px;font-size:13px;color:#ffcf8a}
 .game .playBig{box-shadow:var(--btn-shadow-gold),0 0 22px #68eddf38;display:flex;align-items:center;justify-content:center;gap:12px;min-height:72px;margin:0 0 10px;padding:10px 16px;font:inherit;cursor:pointer;touch-action:manipulation}
 .playBig span{display:grid;text-align:left;min-width:0}
-.playBig b{font:30px/1 IslandBrush,Arial,sans-serif}
+.playBig b{font-family:inherit;font-weight:800;font-size:27px;line-height:1}
 .playBig small{font-size:12px!important;font-weight:700;line-height:1.25;padding:2px 0 0!important;border:0!important;color:inherit!important;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .game .daily{display:flex;align-items:center;gap:10px;width:100%;min-height:48px;margin:0 0 10px;padding:6px 14px;border:2px solid #76e4df;border-radius:16px;background:#183c44;color:#efffff;text-align:left;font:inherit;cursor:pointer;touch-action:manipulation}
 .game .daily b{flex:1;font-size:15px}.game .daily .starOff{color:#ffffff38}.game .daily em{display:flex;gap:2px;font-style:normal;font-size:15px}

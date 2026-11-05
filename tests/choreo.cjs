@@ -102,14 +102,24 @@ function fakeSim(){const touches=Array.from({length:8},()=>({serial:0}));let n=0
 
 // ---- fieldRuntime glue: reactions, calls, markers and the wind-up pose reach PlayerMotion ----
 {const {createFieldRuntime,LIVE_GAME_SPEED}=load('lib/town/fieldRuntime.ts'),{PLAYER_KICK_CONTACT}=load('lib/graphics/player.ts');
- const scene=new T.Scene(),runtime=createFieldRuntime(scene),camera=new T.PerspectiveCamera(60,1,.1,500),e=runtime.entries.find(e=>e.venue.id==='11v11'),v=e.venue;
- camera.position.set(v.x,110,v.z+40);camera.lookAt(v.x,0,v.z);camera.updateMatrixWorld();
- assert.equal(e.sim.windupScale,LIVE_GAME_SPEED,'the runtime sets the sim wind-up scale to the live speed');
- const seen={called:0,ready:0,reaction:{},windupKick:0,squash:0};let maxWind=0;
- for(let i=0;i<30*40;i++){runtime.update(1/30,i/30,camera,null,true,'11v11');
-  for(const [id,row] of e.liveFrame.rows){const m=row.motion;if(!m)continue;if(m.called>0)seen.called++;if(m.ready>0)seen.ready++;if(m.reaction)seen.reaction[m.reaction]=(seen.reaction[m.reaction]||0)+1;if(m.squashSerial)seen.squash++;
-   const w=e.sim.kickWindup;if(w&&w.id===id&&m.kick>0){seen.windupKick++;maxWind=Math.max(maxWind,m.kick);assert(m.kick<=PLAYER_KICK_CONTACT+1e-9,'the wind-up swing stops at contact');}}
+ const seen={called:0,ready:0,reaction:{},windupKick:0,squash:0},firstReaction=[];let maxWind=0;
+ // Three different match states (the runtime seeds its sims; each run first plays the 11v11 sim on by a different
+ // amount), each driven until its first reaction (a lofted control, a tackle, a goal...) reaches the rig, with a generous
+ // cap of 6 min real time (≈115 s of sim). A fixed 60 s window only just passed (first reaction at ~48 s, Nov 5 2026).
+ for(const pre of [0,600,1500]){
+  const scene=new T.Scene(),runtime=createFieldRuntime(scene),camera=new T.PerspectiveCamera(60,1,.1,500),e=runtime.entries.find(e=>e.venue.id==='11v11'),v=e.venue;
+  camera.position.set(v.x,110,v.z+40);camera.lookAt(v.x,0,v.z);camera.updateMatrixWorld();
+  assert.equal(e.sim.windupScale,LIVE_GAME_SPEED,'the runtime sets the sim wind-up scale to the live speed');
+  for(let i=0;i<pre;i++)e.sim.step(LIVE_GAME_SPEED/30);
+  let first=-1;
+  // at least the old 60 s window (the call / ready / wind-up / squash counts), then on until a reaction shows
+  for(let i=0;i<30*360&&(first<0||i<30*60);i++){runtime.update(1/30,i/30,camera,null,true,'11v11');
+   for(const [id,row] of e.liveFrame.rows){const m=row.motion;if(!m)continue;if(m.called>0)seen.called++;if(m.ready>0)seen.ready++;if(m.reaction){seen.reaction[m.reaction]=(seen.reaction[m.reaction]||0)+1;if(first<0)first=i/30;}if(m.squashSerial)seen.squash++;
+    const w=e.sim.kickWindup;if(w&&w.id===id&&m.kick>0){seen.windupKick++;maxWind=Math.max(maxWind,m.kick);assert(m.kick<=PLAYER_KICK_CONTACT+1e-9,'the wind-up swing stops at contact');}}
+  }
+  assert(first>=0,`reactions reach the rig (run +${pre} sim frames: none in 6 min real time)`);firstReaction.push(+first.toFixed(1));
  }
+ seen.firstReaction=firstReaction;
  assert(seen.called>20,'a called receiver shows in live play');assert(seen.ready>20,'a ready marker shows in live play');
  assert(seen.windupKick>5,'the kicker swings through the wind-up');assert(Object.keys(seen.reaction).length>=1,'reactions reach the rig');assert(seen.squash>0,'squash impulses reach the rig');
  console.log('CHOREO_RUNTIME',JSON.stringify({...seen,maxWind:+maxWind.toFixed(3)}));

@@ -130,7 +130,7 @@ button.backLink.backLink.backLink.backLink{position:absolute}
 .start{position:relative;overflow:hidden;display:grid;justify-items:center;gap:2px;width:100%;min-height:68px;padding:8px 24px 10px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);
  background:var(--btn-gold) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink);box-shadow:var(--btn-shadow-gold);cursor:pointer;
  transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
-.start span{font-family:IslandBrush,var(--btn-font);font-size:32px;line-height:1}
+.start span{font-family:var(--btn-font,inherit);font-weight:800;font-size:29px;line-height:1}
 .start small{font-size:13px;font-weight:800;letter-spacing:.03em}
 /* A long label ("Welcome back, let's play") stays on ONE line at the same pill height (user, Oct 22 2026). */
 .start span[data-long]{font-size:clamp(19px,5.7vw,24px);white-space:nowrap}

@@ -16,7 +16,7 @@ export function createMatchEffects(parent:T.Group,venue:LiveVenue){
  const frameBurst=createGoalFrameBurst();root.add(frameBurst.root);let lastFrameContact=0;
  // Purple identifies lofted passes over the top; ground passes keep the team tint.
  // Shots use the character's classic ball colour (BALL_COLORS.classic).
- let flying=false,shotFlight=false,pendingLaunch=false,flightDt=0,flightColor='#eee4c4';
+ let flying=false,shotFlight=false,powerFlight=false,pendingLaunch=false,flightDt=0,flightColor='#eee4c4';
  let lastGold=0,lastBlue=0,celebration=9,lastPasses=0,lastShots=0,lastTurnovers=0,sequence=0,lastCombo=0,lastNote=0,lastSwitches=0,lastOffside=0;
  // The goal-mouth ring sits on the scoring end: along the pitch's long axis, turned with the venue (the beach court runs east–west).
  const yaw=venue.yaw??0,endX=Math.sin(yaw)*venue.length/2,endZ=Math.cos(yaw)*venue.length/2;
@@ -76,14 +76,16 @@ export function createMatchEffects(parent:T.Group,venue:LiveVenue){
   light.material.opacity=reduced?.2*Math.max(0,Math.min(1,(2.5-celebration)*2)):Math.max(0,1-celebration/1.35)*Math.min(1,celebration/.08);
   rings.forEach((r,i)=>{const age=celebration-i*.2;r.visible=enabled&&!reduced&&age>=0&&age<1.3;r.scale.setScalar(1+Math.max(0,age)*5);r.material.opacity=Math.max(0,.65-age*.5);});
   flying=enabled&&!sim.ball.owner&&Math.hypot(sim.ball.vx,sim.ball.vy)>2&&sim.goalHold<=0;
-  shotFlight=flying&&!!sim.shotActive;flightDt=dt;flightColor=shotFlight?'#eee4c4':sim.ball.lofted?'#b877ff':sim.possession==='blue'?'#609de3':'#efbb54';
+  shotFlight=flying&&!!sim.shotActive;flightDt=dt;powerFlight=shotFlight&&!!sim.powerShot;flightColor=shotFlight?(powerFlight?'#ff7a2e':'#eee4c4'):sim.ball.lofted?'#b877ff':sim.possession==='blue'?'#609de3':'#efbb54';
   if(!enabled)pendingLaunch=false;
  }
  /** Call after the ball mesh is placed: `ball` is the rendered ball in the match root's space. */
  function trail(ball:T.Vector3,camera:T.Camera,reduced:boolean){
   frameBurst.update(flightDt,camera,reduced);
-  if(pendingLaunch&&flying)flightTrail.launch(ball.x,ball.y,ball.z,.6);pendingLaunch=false;
-  flightTrail.update(flightDt,ball,flying,reduced,camera,shotFlight?.6:0,-1,flightColor,'classic');
+  if(pendingLaunch&&flying)flightTrail.launch(ball.x,ball.y,ball.z,powerFlight?1:.6);pendingLaunch=false;
+  // A human's power shot (full charge, owner Nov 4 2026): the same pooled trail at full power in flame orange with the
+  // 'solar' rings (bigger ghosts, launch rings at full size). No new meshes, materials or draw calls.
+  flightTrail.update(flightDt,ball,flying,reduced,camera,powerFlight?1:shotFlight?.6:0,-1,flightColor,powerFlight?'solar':'classic');
   stats.trailVertices=flying&&!reduced?20:0;
  }
  return {root,stats,events,update,trail,impact:(x:number,y:number,z:number)=>flightTrail.impact(x,y,z),dispose(){root.removeFromParent();frameBurst.dispose();flightTrail.dispose();ringGeometry.dispose();rings.forEach(r=>r.material.dispose());texture.dispose();badge.material.dispose();lightTexture.dispose();light.material.dispose();}};

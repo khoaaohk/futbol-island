@@ -17,8 +17,8 @@ const FULL = [0xd62828, 0xffffff, 0x003049, 0xd62828, 0x003049, 7, 0xff00aa, 0, 
 const JERSEY = [0x2ec4d6, 0xf7f3ea, 0x1b2a4a, 0x2ec4d6, 0x1b2a4a, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
 const BOOTS = [-1, -1, -1, -1, -1, -1, 0x123456, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1];
 
-t('protocol: Cap.Kit = 64, CAPS_ALL 127, C.Kit 18 / S.Kit 39, KIT_LEN 17, rate + gap agree', () => {
-  assert.equal(Cap.Kit, 64); assert.equal(CAPS_ALL, 127); assert.equal(C.Kit, 18); assert.equal(S.Kit, 39); assert.equal(KIT_LEN, 17);
+t('protocol: Cap.Kit = 64, CAPS_ALL 255 (v1.8), C.Kit 18 / S.Kit 39, KIT_LEN 17, rate + gap agree', () => {
+  assert.equal(Cap.Kit, 64); assert.equal(CAPS_ALL, 255); assert.equal(C.Kit, 18); assert.equal(S.Kit, 39); assert.equal(KIT_LEN, 17);
   assert.equal(FULL.length, KIT_LEN); assert.ok(1000 / KIT_RATE[0] <= KIT_GAP_MS, 'the client gap never outruns the relay bucket');
   assert.ok(P.parseClient(j([C.Caps, CAPS_ALL])) && P.parseServer(j([S.Caps, CAPS_ALL])), 'the 7-bit caps still fit the 0..255 caps check');
 });

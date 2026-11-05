@@ -22,6 +22,9 @@ export type LiveVenue=Omit<Venue,'id'>&{id:LiveFormat;yaw?:number;sand?:boolean}
  *  Width/length are the drawn court (the sim's goal lines sit at ±length/2, as on the island pitches). */
 export const BEACH_VENUE:LiveVenue={id:'beach',name:'Sharks Beach Court',x:BEACH_COURT.x,z:BEACH_COURT.z,width:BEACH_COURT.width,length:BEACH_COURT.length,players:5,goalWidth:BEACH_COURT.goalWidth,goalHeight:BEACH_COURT.goalHeight,surface:'#e8d5a3',shape:'1-2-1',yaw:Math.PI/2,sand:true};
 export const LIVE_VENUES:readonly LiveVenue[]=[...VENUES,BEACH_VENUE];
+/** Sim y (along the court) of the flags just outside the beach court's touchlines: the halfway flag and the 9 m (penalty-area)
+ *  flags (coralCayWorld). A sitting-out player's cheering spot keeps clear of them (liveJoin.clearOfFlags). */
+export const BEACH_TOUCHLINE_FLAGS_Y=[200-(BEACH_COURT.length/2-BEACH_COURT.penalty)/BEACH_COURT.length*380,200,200+(BEACH_COURT.length/2-BEACH_COURT.penalty)/BEACH_COURT.length*380] as const;
 export const liveVenueById=(id:LiveFormat):LiveVenue=>LIVE_VENUES.find(v=>v.id===id)!;
 /** Sim field point (270 × 400, centre 135/200) → world x/z on a live venue, turned by its yaw. Unturned venues use the
  *  exact expressions fieldRuntime always used, so their numbers are unchanged. */

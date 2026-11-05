@@ -1,5 +1,5 @@
 // parseClient / parseServer / encode. Never throw on bad input; return null.
-import { C, S, Emote, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
+import { C, S, Emote, MatchKind, MATCH_FIELDS, MATCH_SLOT_MAX, MATCH_SNAP_MAX, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
 import { NAME_COLOURS, RESERVED_NAME_SLOTS, normalizeNick } from './names';
@@ -68,6 +68,37 @@ export function isKit(v: unknown): boolean {
   return utf8Len(JSON.stringify(v)) <= KIT_MAX_BYTES;
 }
 const isKitOrNull = (v: unknown): boolean => v === null || isKit(v);
+
+/** Relay v1.8 (Cap.Match): every value after the kind is an integer in a sane range (the shapes are in types.ts MatchKind). */
+const SNAP_ABS = 100_000;
+function intsIn(a: unknown[], from: number, lo: number, hi: number): boolean {
+  for (let i = from; i < a.length; i++) if (!inRange(a[i], lo, hi)) return false;
+  return true;
+}
+const isField = (n: unknown) => inRange(n, 0, MATCH_FIELDS.length - 1);
+function matchClientOk(a: unknown[]): boolean {
+  switch (a[1]) {
+    case MatchKind.Join: return a.length === 5 && isField(a[2]) && isBit(a[3]) && inRange(a[4], 0, MATCH_SLOT_MAX);
+    case MatchKind.Leave: return a.length === 2;
+    case MatchKind.In: return a.length === 11 && inRange(a[2], 0, MAX_INT) && intsIn(a, 3, -1000, 1023);
+    case MatchKind.Snap: return a.length >= 4 && a.length <= MATCH_SNAP_MAX + 3 && isField(a[2]) && intsIn(a, 3, -SNAP_ABS, SNAP_ABS);
+    case MatchKind.Watch: return a.length === 3 && (a[2] === -1 || isField(a[2]));
+    default: return false;
+  }
+}
+function matchServerOk(a: unknown[]): boolean {
+  switch (a[1]) {
+    case MatchKind.Join: {
+      if (a.length < 4 || (a.length - 4) % 3 !== 0 || (a.length - 4) / 3 > PARTY_MAX || !isField(a[2]) || !inRange(a[3], -1, MAX_MEMBER_ID)) return false;
+      for (let i = 4; i < a.length; i += 3) if (!inRange(a[i], 0, MAX_MEMBER_ID) || !isBit(a[i + 1]) || !inRange(a[i + 2], 0, MATCH_SLOT_MAX)) return false;
+      return true;
+    }
+    case MatchKind.In: return a.length === 12 && inRange(a[2], 0, MAX_MEMBER_ID) && inRange(a[3], 0, MAX_INT) && intsIn(a, 4, -1000, 1023);
+    case MatchKind.Watch: return a.length === 4 && isField(a[2]) && inRange(a[3], 0, PARTY_MAX);
+    case MatchKind.Snap: return a.length >= 4 && a.length <= MATCH_SNAP_MAX + 3 && isField(a[2]) && intsIn(a, 3, -SNAP_ABS, SNAP_ABS);
+    default: return false;
+  }
+}
 
 const MAX_AGE_MS = 60_000;
 /** A ball position (decimetres): inside WORLD_BOUNDS. */
@@ -145,6 +176,8 @@ export function parseClient(raw: string): ClientMsg | null {
       return a.length === 2 && isKitOrNull(a[1]) ? (a as ClientMsg) : null;
     case C.Ball:
       return a.length === 5 && inRange(a[1], 0, 3) && isBallXYZ(a[2], a[3], a[4]) ? (a as ClientMsg) : null;
+    case C.Match:
+      return matchClientOk(a) ? (a as ClientMsg) : null;
     default:
       return null;
   }
@@ -203,6 +236,8 @@ export function parseServer(raw: string): ServerMsg | null {
       return a.length === 4 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, MAX_MEMBER_ID) && a[1] !== a[2] && inRange(a[3], 0, 255) ? (a as ServerMsg) : null;
     case S.Kit:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isKitOrNull(a[2]) ? (a as ServerMsg) : null;
+    case S.Match: // relay v1.8; the roster travels as kind Join (MatchKind.Join = 0 = "Roster")
+      return matchServerOk(a) ? (a as ServerMsg) : null;
     case S.Live: {
       if (a.length !== 4 || !inRange(a[1], 0, MAX_INT) || !Array.isArray(a[2]) || !Array.isArray(a[3])) return null;
       const p = a[2] as unknown[], b = a[3] as unknown[];

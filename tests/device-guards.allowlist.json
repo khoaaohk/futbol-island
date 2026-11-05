@@ -42,6 +42,12 @@
    "file": "components/ArcadeRoom.tsx",
    "key": "button",
    "reason": "Held room action buttons are built by the actionButton() helper, so the static scan can't see their container: they render inside .travel-actions (globals.css guard) and .roomActions (ArcadeRoom.module.css guard), both with -webkit-touch-callout:none + user-select:none."
+  },
+  {
+   "check": 5,
+   "file": "app/globals.css",
+   "key": "html[data-root-view=game] [data-root-landing][data-root-cover]",
+   "reason": "Play's loading cover (Nov 4 2026) is the title page itself pinned at its scrolled position, not a bar: its own sections already handle the safe areas, and padding it would shift it from where it was on screen."
   }
  ]
 }

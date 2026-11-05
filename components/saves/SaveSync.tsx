@@ -21,9 +21,16 @@ const SaveCodeRestore=dynamic(()=>import('./SaveCodeRestore'),{ssr:false});
 const RequiredSave=dynamic(()=>import('./RequiredSave'),{ssr:false});
 /** Milestones that may earn the one-time nudge for a player without a code (doc §3.1 "A later nudge"). */
 const NUDGE_EVENTS=['fi2-card-added','fi2-graduations-changed'];
+/** A joined live match (or its side picker) owns the screen (Nov 4 2026: the required prompt covered a live match). The
+ *  "Save your island" prompt waits while `.town-app` carries either attribute (liveJoinRuntime sets them): through goals,
+ *  full time and the celebrations (the player stays joined between games), and it comes back once the player presses
+ *  Leave. Heat: one MutationObserver on those two attributes while the prompt is due; no timers, no polling. */
+export const LIVE_HOLD_ATTRS=['data-live-join','data-live-pick'];
+const liveOn=(app:Element)=>LIVE_HOLD_ATTRS.some(a=>app.hasAttribute(a));
 
 export default function SaveSync({boot=true}:{boot?:boolean}){
  const [dialog,setDialog]=useState<null|{kind:'restore';code:string}|{kind:'required'}>(null);
+ const [held,setHeld]=useState(false);
  const ref=useRef<HTMLDialogElement>(null);
  useEffect(()=>{
   const hide=()=>{if(document.visibilityState==='hidden')void syncNow('hide');else void resumeCheck();};
@@ -59,9 +66,17 @@ export default function SaveSync({boot=true}:{boot?:boolean}){
    for(const ev of NUDGE_EVENTS)window.removeEventListener(ev,nudge);
    window.removeEventListener('storage',otherTab);};
  },[boot]);
- useEffect(()=>{const el=ref.current;if(!el)return;if(dialog&&!el.open)el.showModal();else if(!dialog&&el.open)el.close();},[dialog]);
+ const required=dialog?.kind==='required';
+ useEffect(()=>{
+  if(!required)return;const app=document.querySelector('.town-app');if(!app)return;
+  const check=()=>setHeld(liveOn(app));check();
+  const obs=new MutationObserver(check);obs.observe(app,{attributes:true,attributeFilter:LIVE_HOLD_ATTRS});
+  return()=>obs.disconnect();
+ },[required]);
+ const hidden=!dialog||(required&&held);
+ useEffect(()=>{const el=ref.current;if(!el)return;if(!hidden&&!el.open)el.showModal();else if(hidden&&el.open)el.close();},[hidden]);
  const close=useCallback(()=>setDialog(null),[]);
- if(!dialog)return null;
+ if(!dialog||(dialog.kind==='required'&&held))return null;
  return <dialog ref={ref} className={styles.dialog} data-save-dialog={dialog.kind} aria-label={dialog.kind==='required'?'Save your island':'Type your save code'}
   onCancel={e=>{e.preventDefault();if(dialog.kind==='restore')close();}} onKeyDown={e=>e.stopPropagation()} onKeyUp={e=>e.stopPropagation()} onPointerDown={e=>e.stopPropagation()}>
   {/* A div, not a section: the phone rule in globals.css turns a dialog's first section into a full-screen drawer; this stays a card. */}

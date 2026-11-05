@@ -6105,3 +6105,50 @@ joins the match.
 
 ## Join a live game, slice 1 (Nov 4 2026)
 Walking onto the live 7v7 with the ball joins the match ([join-live-game-design.md](join-live-game-design.md) §5). Away from a joinable pitch: one rectangle test per frame, no DOM writes. Joined: the field stays awake and unthrottled (it is the one on screen), ≤ 3 marker draw calls (one shared MeshBasicMaterial) plus the existing hidden-player pin, the sitting-out NPC is a pooled rig in the existing player batch (0 new draw calls, no textures), HUD attributes are written only on change; the walk ball and the main avatar are not drawn. The pass assist and off-ball runs run only on the sim think clock / when a human is on the ball. Desktop emulation only; no iPhone thermal claim.
+
+- Human keeper (Nov 4 2026): no new draw calls, textures or loops. AI-only matches pay nothing (`humanKeeperOf` / `humanKeeperStep` run only with humans; the seeded fixture is unchanged); with a human in goal, ≤ 2 stretch timers per sim step and one dive aim on a press.
+
+## Live-join uniform change (Nov 4 2026, local, not deployed)
+- Joining a live match (street kit → team bib) and leaving it (bib → street kit) replay the existing first-load teleport arrival (`lib/graphics/characterArrival.ts`: 2 rings, 1 beam, 12 shared-geometry sparks, the 0.12 → 1 scale pop) via `characterArrival.restart()` in Town's live-join block. No new meshes, materials or particle system; nothing allocated per frame (the slot rig's base scale is captured once per join in `fieldRuntime.humanPop`, restored on leave).
+- Cost: the same ~15 transparent draw calls the arrival already costs on load, for its 3.5 s, only on a join/leave event; the arrival group is invisible (zero cost) the rest of the time. Reduced motion: `update` hides it and returns 1, so the kit swaps instantly.
+- Look: the joined avatar now keeps the whole own look (body colour, skin, build, hair, face, headwear) and only wears the team kit (`beanLooks.ownKitLook`; `teamedLook` still serves lessons/knockout). Validation: `tsc`, `tests/join-live-game.cjs`, `tests/bean-looks.cjs`; no device thermal claim.
+
+## Live-match ball: walk-ball feel and sounds (Nov 4 2026, local, not deployed)
+Owner: "apply the same ball physics to the 7v7 game … the sound effects, speed, and movements". Already shared before this pass: gravity 13 m/s², bounce .53, settle .8 m/s, rolling rotation, the shot trail and post/bar rebounds (`liveBallPhysics`, `matchEffects`). Added, all render-side (the sim is untouched, `tests/fixtures/live-match-summary.json` unchanged):
+- **Sounds** (`lib/town/liveBallSound.ts`): the walking ball's own `islandSound.ball('kick'|'bounce'|'receive')` voices, read from the sim's touch ring (kick = any launch except a beach keeper's throw; tackle = kick at .7; receive/intercept = receive; heavy touch/parry = bounce), post/bar contacts (full bounce) and `liveBallPhysics.landing` bounces ≥ 1.1 m/s. Gain = real ball speed (full at 20 m/s kick, 10 receive, 6 bounce; floor .35) × camera distance (1 when joined/viewing, fading to .35 at radius + 35 m). `ball()` gained optional `gain` and `channel` args; the match uses channel `:match` so its 0.1 s throttle never swallows the player's own kick. Plays only when the pitch is on screen, running, not paused, not in a lesson, and near/joined/viewed; touches are consumed every frame otherwise, so nothing replays when a match comes back into view. No per-frame allocation (fixed ring read, counters); at most a few short voices a second through the existing throttle, and the existing idle-suspend/mute/hidden-tab gates apply.
+- **Air spin**: a flight now spins with its travel like the walking ball's shot (horizontal speed / radius), eased and capped at 60 rad/s so a drive does not strobe; a straight drop keeps fading spin as before.
+- **Bounce rings**: every bounce (not only > 2 m/s) fires the pooled impact ring, as the walking ball does.
+- **Not ported**: horizontal speed/drag. The walking shot flies at 38 m/s with .33/s roll drag; the live ball's pace and roll decay (friction 2.2 sim/s) belong to the sim and the 0.32× teaching playback, and changing them would move every AI pass/shot outcome (the human shot ×(1.9+0.8·power) and pass ×1.3 speed-ups stay).
+Validation: `tests/live-ball-physics.cjs` (air spin follows travel and is capped; a 7v7 match plays kick/receive/bounce with speed-varying gains; unheard touches never replay; post = full bounce), `live-game-effects`, `beach-match` (fixture), `ai-7v7`, `join-live-game`, `idle-audio`. Not measured on an iPhone.
+- Follow-up (same day): the joined slot rig now keeps the WHOLE walking look (owner: zebra came in as a plain bean). Data-driven `ownKitLook` (every BeanLook field, every own-outfit field but `BIB_KEYS` shirt/shirt2, costume id) + `lib/town/joinedRig.ts` (costume onesie via `wearBeanCostume` kit mode: one `uCostumeKit` uniform keeps the shirt/collar bands in the bib colour; the walking 'you' body profile, locked against the per-role pass). The batch grouped a costume body under the plain body material, so the joined human's rig alone draws from the scene like the walking avatar (which is hidden while joined) and the worn backpack is re-parented to it: draw calls moved, none added; no per-frame allocation. Test: `tests/bean-costumes.cjs` 3c (every costume option × 4 looks, row texels/pattern/limb bands/hood layers/profile equal to the walking rig except the bib).
+
+## Live-match camera angles (Nov 4 2026, local, not deployed)
+- The joined player's camera button (Broadcast / Side / Behind you / Wide / Close; Side added the same day at the same cost, `lib/town/liveJoinCamera.ts`). Cost on
+  Broadcast at rest: one branch per frame, nothing written. In another angle: a few dozen multiplies, one `humanView`
+  read and one extra `camera.lookAt` per frame; no allocation (reused frame objects), no new meshes, textures, draw
+  calls or loops; the toast reuses the tip element. Wide raises the eye to ~60-90 m to frame the whole pitch: the same
+  scene is drawn (the joined field is already awake), so expect at most a few more off-pitch props in view; no new
+  iPhone thermal claim. Validation: `tests/join-live-game.cjs` (pure frames, easing, stick mapping, wiring), headless
+  phone + desktop screenshots of all four angles.
+
+## Live-join Trick, Press, long ball, snappier controls (Nov 4 2026, local, not deployed)
+- Trick: one skill-move object per tap (the combos view's existing pose + ball path), no new meshes, materials, draw
+  calls or loops; the sparkle is the pooled impact burst, the sound the existing ball touch / kick. Bamboozled defenders:
+  a reused Map aged with a bound callback (no per-frame allocation) and a rotation wobble on their rig. Slow motion
+  scales the field runtime's dt (fewer sim steps, not more); the zoom moves the camera along its line (no extra lookAt).
+  Reduced motion: no slow motion, no zoom, no wobble.
+- Press: a reused Set rebuilt only on start / end; per player one `size` check when empty. Long ball: the existing loft
+  flight and purple trail. HUD: one more button; the cooldown ring writes a quantised custom property only when its step
+  changes (transform + opacity). All human-only: AI-only matches unchanged (fixture). No iPhone thermal claim.
+
+## Live-join shooting, shot slow motion, passing help, hard to be tackled (Nov 4 2026, local, not deployed)
+- Aim marks: one InstancedMesh (5 billboards, one 64 px canvas texture made once) = +1 draw call, only while Shoot is held
+  past 180 ms; 5 matrix writes per frame then, colours written only when the pick changes; picking projects 8 points per
+  frame while held (reused vectors, no allocation). Pass target halo: +1 draw call while you are on the ball.
+- Power shot: no new objects; the existing pooled ball trail runs at full power in 'solar' style (its 3 pooled rings
+  show, +3 small draws during that one flight) plus one pooled sparkle and one extra sound per power shot.
+- Shot slow motion: the field runtime's dt × 0.3 for ≤ 1.5 s (less sim work per frame, not more), a few multiplies and
+  one lookAt for the camera; off with reduced motion. One passive pointerdown listener while the runtime exists.
+- Sim: human-gated only (a guard timer, one rng roll per tackle as before, a mates/foes loop for two supporters on the
+  existing ~3 Hz think clock while a human has the ball). AI-only matches: zero cost, fixture byte-identical.
+  No iPhone thermal claim.

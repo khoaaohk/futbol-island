@@ -8,7 +8,7 @@
 /** Every tunable number of the assist in one place. */
 export const PASS_ASSIST={
   /** Cone half-angle (cosine) round the aim: teammates outside it are never picked when the stick points somewhere. */
-  coneCos:.42,
+  coneCos:.3,// was .42 (≈65°): ≈72° half-angle, rough aim still finds the player (kids, owner Nov 4 2026)
   /** Pass range (units). */
   minDist:8,maxDist:170,
   /** A defender closer than this to the passing lane blocks it (units); blocked lanes score far lower. */
@@ -32,7 +32,7 @@ export const PASS_ASSIST={
   /** Forward pass (through ball): how far into space ahead of a forward-moving runner (units) and the onside margin. */
   throughSpace:22,onsideMargin:2,
   /** Shot aim assist: the most it bends your aim (units of goal-mouth x) and the goal half-width it aims inside. */
-  shotMaxNudge:9,shotPostInset:.82,
+  shotMaxNudge:12,shotPostInset:.82,
   /** Tackle assist: extra reach (units) on the human's tackle, and the jockey's goal-side gap (units). */
   tackleReach:3.4,jockeyGap:7,
 } as const;
@@ -79,6 +79,8 @@ export type PassContext={
   offsideY:number|null;
   /** Teammates making a forward run right now (off-ball runs), preferred for a forward pass. */
   runners?:ReadonlySet<string>;
+  /** Override of PASS_ASSIST.coneCos (the sim's wide fallback cone for a sloppy stick, PASS_HELP.looseCone). */
+  coneCos?:number;
 };
 const lead={x:0,y:0};
 /** Score one candidate (higher is better), or -Infinity when he cannot be the target. Pure. */
@@ -96,7 +98,7 @@ export function scorePassTarget(c:PassContext,id:string):number{
   if(forward&&progress<10)return -Infinity; // a forward pass goes forward
   const al=Math.hypot(c.aimX,c.aimY);
   let align=0;
-  if(al>.05){align=(dx*c.aimX+dy*c.aimY)/(d*al);if(align<PASS_ASSIST.coneCos)return -Infinity;}
+  if(al>.05){align=(dx*c.aimX+dy*c.aimY)/(d*al);if(align<(c.coneCos??PASS_ASSIST.coneCos))return -Infinity;}
   let open:number=PASS_ASSIST.openCap,lane=Infinity;
   for(const fid of c.ids){const o=c.players[fid];if(!o||o.team===f.team)continue;
     const od=Math.hypot(o.x-lead.x,o.y-lead.y);if(od<open)open=od;

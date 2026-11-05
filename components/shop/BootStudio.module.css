@@ -159,7 +159,7 @@
 .flagGridSmall{margin-top:10px;max-height:230px;overflow-y:auto;padding:2px}
 .quoteGrid{display:flex;flex-wrap:wrap;gap:8px}
 .quote{min-height:var(--btn-height);padding:0 16px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-gold-bright);box-shadow:0 4px 0 var(--btn-gold-bright-edge);
- font:400 19px IslandBrush,var(--btn-font);color:var(--ink);transition:translate .14s,box-shadow .14s}
+ font:800 17px var(--btn-font);color:var(--ink);transition:translate .14s,box-shadow .14s}
 .quote:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-gold-bright-edge)}
 .selCard{position:sticky;top:0;z-index:2;display:grid;grid-template-columns:auto 1fr;gap:6px 12px;align-items:center;margin:4px 0 14px;padding:10px 12px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:20px;background:#244d40;color:#fff2cd;box-shadow:0 5px 0 #17352b;animation:fadeUp .22s ease-out both}
 .selThumb{display:grid;place-items:center;width:52px;height:52px;border-radius:14px;background:#fff6;overflow:hidden}

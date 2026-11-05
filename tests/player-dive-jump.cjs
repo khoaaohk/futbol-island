@@ -327,7 +327,9 @@ for(const st of ['classic','bean'])for(const side of [-1,1]){
  for(const fmt of ['11v11','futsal']){
   const rate=fmt==='futsal'?.48:.32,v=load(path.join(ROOT,'lib/town/venues.ts')).venueById(fmt),sx=v.width/250,sz=v.length/380;
   let saves=0,timed=0,aimed=0,dives=0,headers=0,jumpTimed=0,landed=0,landings=0,stale=0;const m={};
-  for(let seed=0;seed<3;seed++){
+  // Headed crosses are rare (3 in the 3 base seeds, Nov 5 2026): the 11v11 plays on with more seeds (up to 9) until it
+  // has seen at least 3 to judge, so an AI change that thins crosses doesn't flake the timing check.
+  for(let seed=0;seed<3||(fmt==='11v11'&&headers<3&&seed<9);seed++){
    const sim=new MatchSim(270+seed*41,fmt);sim.windupScale=rate;const ch=choreo.createChoreo();let seen=0,watch=null,prevObj=null,prevId=null,prevP=-1;
    for(let i=0,n=Math.round(4*60/rate*60);i<n;i++){
     const cross=!!sim.aerial?.header;sim.step(rate/60);ch.consume(sim,1/60);

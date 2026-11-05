@@ -16,6 +16,11 @@ export const RATE = {
  *  is kept and forwarded on a later tick (the latest kit always wins). The client sends at most one C.Kit per KIT_GAP_MS. */
 export const KIT_RATE = [0.2, 3] as const;
 export const KIT_GAP_MS = 5000;
+/** Relay v1.8 (Cap.Match): C.Match In / Snap per member per second (burst); Join / Leave much rarer. A sender over it is dropped
+ *  silently (never bad()). The client sends In / Snap every MATCH_GAP_MS (+ at once on a button press). */
+export const MATCH_RATE = [16, 24] as const;
+export const MATCH_JOIN_RATE = [0.5, 4] as const;
+export const MATCH_GAP_MS = 80;
 
 /** Relay v1.4 (Cap.EmoteAsk): the shared ball emotes' request + accept rules (owner, Oct 23 2026). The relay enforces them; the client
  *  mirrors them (lib/multiplayer/emoteAsk.ts) so a greyed button never sends. Times in ms, distances in m. */

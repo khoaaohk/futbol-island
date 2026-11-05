@@ -7,7 +7,7 @@
 //     IntersectionObserver only (no scroll listeners, no getBoundingClientRect), max 2 clips, pause when hidden; CSS has the
 //     scroll-driven path, the IO fallback path and the calm / reduced-motion kill switch; clips are muted, looped, inline,
 //     preload="none" (auto for the hero only), play at >= 25 % visible, buffer ~1.5 screens ahead except in calm mode;
-//     the media module tolerates a missing manifest and missing files; IslandBrush only on the Play buttons (Nov 3, owner);
+//     the media module tolerates a missing manifest and missing files; no IslandBrush on any button, only the logo wordmark (Nov 4, owner);
 //  4. content (simplified Nov 2 2026, owner "too much going on"; Apple-style chapters Nov 3): exactly the 6 LEARN_HIGHLIGHTS
 //     (the light "Fuel up" chapter, Nov 3: after Explore, before Play with friends, its 16:9 Konbini clip in the large film frame
 //     with a 1280px <source media> for phones, copy only from docs/learn-konbini-facts.md),
@@ -132,8 +132,8 @@ assert.match(css,/@media\(prefers-reduced-motion:reduce\)\{\.root \*,[^{]*\{anim
  // scroll snap only on the See it in action row (horizontal, Nov 3); never on the page itself (no vertical scroll-jacking)
  {const snaps=[...strip(css).matchAll(/([^{}]+)\{[^{}]*scroll-snap-type:([^;}]+)/g)].map(m=>[m[1].trim(),m[2].trim()]);
   assert.deepEqual(snaps,[['.reelRow','x mandatory'],['.slideRow','x mandatory']],'scroll-snap-type only on the carousel and slideshow rows, x mandatory');}
- // owner, Nov 3: IslandBrush only on the gold Play buttons; everything else is the system sans
- for(const m of strip(css).matchAll(/([^{}]+)\{[^{}]*IslandBrush[^{}]*\}/g))assert.match(m[1].trim(),/^\.(cta|pill)$|^\.root \.logo$/,`IslandBrush only on Play buttons and the logo wordmark, not ${m[1].trim()}`);
+ // owner, Nov 4: NO button uses IslandBrush (Play buttons use the regular sans, 800); only the logo wordmark keeps it
+ for(const m of strip(css).matchAll(/([^{}]+)\{[^{}]*IslandBrush[^{}]*\}/g))assert.match(m[1].trim(),/^\.root \.logo$/,`IslandBrush only on the logo wordmark (never a button), not ${m[1].trim()}`);
  assert.match(css,/--sans:-apple-system,/,'system sans stack, no web font download');}
 const media=read('components/learn/LearnMedia.tsx');
 assert.match(media,/<video [^>]*muted loop playsInline preload=\{eager\?'auto':'none'\}/,'clips: muted, loop, playsinline, preload none (auto for the hero only; LearnEnhance buffers the next one ahead)');

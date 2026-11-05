@@ -71,6 +71,11 @@ for(const format of ['11v11','9v9','7v7','futsal']){
  // The player's own character in a team game keeps their shape and face but wears the team colours.
  const own={body:'#ff7a6b',skin:'#5c3a28',build:'wide',eyes:'happy',mouth:'grin',hair:{style:'bun',color:'#b04a2a'},headwear:'beanie',headwearColor:'#ffffff'},team=L.matchPlayerDress('striker-0','home',false),you=L.teamedLook(own,team,10);
  assert.equal(you.look.body,team.look.body);assert.equal(you.look.build,'wide');assert.deepEqual(you.look.hair,own.hair);assert.equal(you.look.skin,own.skin);assert.equal(you.look.headwear,'none');assert.equal(kitOf(you.outfit),kitOf(team.outfit));assert.equal(you.outfit.number,10);
+ // A joined live match (owner, Nov 4 2026): the whole own look stays, only the clothes become the team kit.
+ const ownFit={kind:'kit',shirt:'#111111',shirt2:'#222222',shorts:'#333333',socks:'#444444',socks2:'#555555',boots:'#666666',number:7},mine=L.ownKitLook(own,team,ownFit,'zebra');
+ assert.deepEqual({...mine.look,gloves:undefined},{...own,gloves:undefined},'own body colour, skin, build, hair, face, headwear all kept');assert.equal(mine.costume,'zebra','the zebra onesie survives the join');
+ assert.equal(mine.outfit.shirt,team.outfit.shirt);assert.equal(mine.outfit.shirt2,team.outfit.shirt2);assert.deepEqual([mine.outfit.shorts,mine.outfit.socks,mine.outfit.socks2,mine.outfit.boots,mine.outfit.number],['#333333','#444444','#555555','#666666',7],'only the shirt becomes the bib');
+ assert.equal(L.ownKitLook(own,team,ownFit,'none').costume,undefined);
 }
 
 // ---- Islander NPCs: valid casual outfits, varied headwear, role-suited, stable.

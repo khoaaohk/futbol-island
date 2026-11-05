@@ -766,6 +766,9 @@ html[data-bug-bar-on] .hud-stack{top:calc(var(--island-hud-row-top) + var(--isla
    loader; the pre-paint <html data-root-view> flag shows one. No flag (no JS): the title screen. */
 [data-root-landing],[data-root-game]{display:contents}
 html[data-root-view=game] [data-root-landing],html:not([data-root-view=game]) [data-root-game]{display:none}
+/* Play's cover (Nov 4 2026, RootSwitch + islandLoadingBoot): the title screen stays over the game while the island builds, exactly where it
+   was scrolled (inline top), then fades straight into the island; Town's tan loader under it is never seen. */
+html[data-root-view=game] [data-root-landing][data-root-cover]{display:block;position:fixed;left:0;right:0;top:0;z-index:2000}
 /* Painting easel (components/PaintEasel.tsx sets html[data-easel=on]): the island's HUD (pocket, minimap, buttons, prompts, toasts)
    steps aside so only the view and the painting card show; "Just look" (the card hidden too) leaves nothing but the view. */
 html[data-easel=on] .town-app>:not(.town-scene):not([data-easel-ui]){visibility:hidden!important;pointer-events:none!important}
@@ -981,4 +984,25 @@ html[data-game-guard] canvas{touch-action:none}
 /* Join a live game (components/LiveJoinHud.tsx): while you play in a live match the match buttons replace the travel cluster (rides, map, kick/juggle); the stick stays. Lefties keep the buttons under the left thumb. */
 .town-app[data-live-join] :is(.travel-actions,.touch-actions){visibility:hidden;pointer-events:none}
 .town-app.controls-flipped [data-join-actions]{right:auto;left:calc(18px + env(safe-area-inset-left,0px));flex-direction:row-reverse}
-.town-app[data-live-join] .field-learn-card{display:none}
+.town-app[data-live-join] .field-learn-card{display:none}/* the bar stays up under Pick your side: the picker grows out of its Play and shrinks back into it */
+/* Live-joinable pitch bar (components/FieldPathCard.tsx data-live-bar, owner Nov 4 2026): the gold Learn pill and an outlined Play of the same size, side by side; full width on phones. */
+.field-learn-card[data-live-bar]:not([hidden]){grid-template-columns:minmax(0,1fr) auto auto;column-gap:8px;cursor:default}
+.field-learn-card[data-live-bar]>span:first-child{grid-column:1}
+.field-learn-card[data-live-bar]>:is(.field-go,.field-play){grid-row:1 / span 2;align-self:center;padding-inline:16px}
+.field-learn-card[data-live-bar]>.field-go{grid-column:2}
+.field-learn-card[data-live-bar]>.field-play{grid-column:3;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;min-height:44px;height:44px;padding:8px 18px;border:3px solid #f2fbf6;border-radius:999px;background:var(--btn-mint,#beded1);color:#244d40;box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);font-weight:800;font-size:14px;white-space:nowrap;cursor:pointer;touch-action:manipulation;transition:background .16s ease,box-shadow .16s ease,scale .16s ease}
+.field-learn-card[data-live-bar]>.field-play:hover,.field-learn-card[data-live-bar]>.field-play:focus-visible{background:#cfe9dc;box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d),0 6px 12px #17352b33;scale:1.07}
+.field-learn-card[data-live-bar]>.field-play:active{box-shadow:0 1px 0 var(--btn-mint-edge,#8bac9d);translate:0 3px;scale:.97}
+.field-learn-card[data-live-bar]>.field-go{cursor:pointer}
+@media(prefers-reduced-motion:reduce){.field-learn-card[data-live-bar]>.field-play{transition:none}.field-learn-card[data-live-bar]>.field-play:hover,.field-learn-card[data-live-bar]>.field-play:focus-visible,.field-learn-card[data-live-bar]>.field-play:active{scale:1}}
+@media(max-width:600px),(pointer:coarse){.town-app .hud-stack.hud-stack.hud-stack>.field-learn-card[data-live-bar]{width:100%}}
+.town-app[data-live-join] .town-minimap,.town-app[data-live-join] nav[data-hud-triggers]{display:none!important}/* the match bar takes the top row: no paths / friends / settings buttons mid-match */
+.town-app[data-live-join] [data-job-wallet]{visibility:hidden;pointer-events:none}/* the match bar takes the coins bar's place */
+
+/* Pitch bar title (owner, Nov 4): smaller so the Learn + Play buttons fit beside it. */
+.town-app .field-learn-card:not([hidden]) strong{font-size:15px!important;line-height:1.15}
+
+/* Pitch bar on desktop (owner, Nov 4): sized to the field name and lesson text (min 420px, max 680px). */
+@media(min-width:601px) and (hover:hover){.town-app .hud-stack:has(>.field-learn-card:not([hidden])){width:max-content;min-width:min(420px,calc(100% - 2 * var(--phone-gutter)));max-width:min(680px,calc(100% - 2 * var(--phone-gutter)))}.town-app .hud-stack>.field-learn-card:not([hidden]){width:auto;max-width:100%}}
+/* Room between the lesson text and the Learn / Play buttons (owner, Nov 4). */
+.field-learn-card[data-live-bar]>:is(span:first-child,strong){margin-right:48px}

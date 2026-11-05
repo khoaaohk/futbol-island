@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useLayoutEffect,useState,type ReactNode} from 'react';
 import {flushSync} from 'react-dom';
-import {continueLoaderFrom} from '@/components/islandLoadingBoot';
+import {continueLoaderFrom,ISLAND_COVER_DONE,islandCovered} from '@/components/islandLoadingBoot';
 import {loadGame,loadedGame} from './gameLoader';
 import {useRootView} from './useRootView';
 
@@ -14,12 +14,26 @@ import {useRootView} from './useRootView';
  *  - Play (WaterPill → enterGame): the water fill already loaded the game and the title screen ends on a plain tan sheet with
  *    <html data-island-handoff="tan">, so the same commit drops the title screen and mounts Town, whose loader starts as that tan
  *    sheet: last title frame == first game frame, no navigation.
+ *  - Nov 4 2026 (user: no loader right before the island): Play no longer ends on that tan sheet. With <html data-island-cover>
+ *    (WaterPill) the title screen stays mounted as a fixed cover over the game while Town builds, then cross-fades (0.5 s,
+ *    one WAAPI opacity animation) straight into the island when Town's loader starts its exit (islandCoverDone), and unmounts.
  */
 export default function RootSwitch({landing,loader}:{landing:ReactNode;loader:ReactNode}){
  const view=useRootView();
  const [Game,setGame]=useState(()=>null as ReturnType<typeof loadedGame>);
  const [failed,setFailed]=useState(false);
  const Loaded=Game??(view==='game'?loadedGame():null);
+ const [,setCoverEnded]=useState(0);
+ const cover=view==='game'&&islandCovered();
+ useEffect(()=>{
+  if(!cover)return;const el=document.querySelector<HTMLElement>('[data-root-cover]');let fading=false;
+  const end=()=>{delete document.documentElement.dataset.islandCover;setCoverEnded(n=>n+1);};
+  const done=()=>{if(fading)return;fading=true;
+   if(!el||typeof el.animate!=='function'||matchMedia('(prefers-reduced-motion: reduce)').matches){end();return;}
+   el.style.pointerEvents='none';el.animate([{opacity:1},{opacity:0}],{duration:500,easing:'ease-in-out',fill:'forwards'}).finished.then(end,end);};
+  window.addEventListener(ISLAND_COVER_DONE,done);if(failed)done();
+  return()=>window.removeEventListener(ISLAND_COVER_DONE,done);
+ },[cover,failed]);
  useLayoutEffect(()=>{if(!view)return;const html=document.documentElement;const was=html.dataset.rootView;html.dataset.rootView=view;
   if(view==='game'&&was==='landing')window.scrollTo(0,0);setThemeColor(view==='game'?GAME_TINT:TITLE_TINT);},[view]);
  useEffect(()=>{
@@ -29,7 +43,7 @@ export default function RootSwitch({landing,loader}:{landing:ReactNode;loader:Re
   return()=>{live=false;};
  },[view,Loaded]);
  return <>
-  {view!=='game'&&<div data-root-landing="">{landing}</div>}
+  {(view!=='game'||cover)&&<div data-root-landing="" data-root-cover={cover?'':undefined} style={cover?{top:-(Number(document.documentElement.dataset.islandCover)||0)}:undefined}>{landing}</div>}
   {view!=='landing'&&<div data-root-game="">{Loaded?<Loaded/>:failed?<LoadFailed/>:loader}</div>}
  </>;
 }

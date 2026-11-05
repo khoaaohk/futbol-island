@@ -252,7 +252,7 @@ goal", a 2 s ring, **Play now** skips it); stepping back off the pitch cancels. 
 the main avatar is hidden) and a pooled copy of him jogs to the nearest touchline and cheers on a 7 s rhythm (again
 after a goal). On **Leave match** (Esc) he walks back on from there, the AI takes the slot from the same spot, and
 your avatar and ball appear where you were. Walking to the touchline is not leaving. Team: fewer humans, tie → the
-team whose own goal is nearest where you stepped on (party preference argument ready). Outfield only; no stats,
+team whose own goal is nearest where you stepped on (party preference argument ready). Any slot incl. keeper; no stats,
 Passport, quests or coins. Feet compass ring (bib colour, one chevron at the goal you attack), always-on bib-colour
 chevron above your head (the hidden-player pin, `pinAt`), off-screen goal badge as the fallback. Two contextual
 buttons replace the travel cluster while joined: on the ball **Pass** + **Shoot** (in range) / **Forward** (out of
@@ -303,6 +303,36 @@ left-handed flip), whether the minimap crowds the B button on small phones, the 
 session's frame time and temperature against watching, the feel of the 2 s countdown for 7-year-olds, and whether
 "idle = hold your spot" (no AI drift) feels right.
 
+**Owner decisions, Nov 4 2026 (supersede §2b's countdown and the Join card).** No auto-join and no countdown. On a
+live-joinable pitch the existing pitch lesson bar (`components/FieldPathCard.tsx`, `data-live-bar`, full width on phones)
+reads gold **Learn** (the lesson; hidden when the path has none) + outlined **Play**; other pitches keep **Go →**. The bar
+also shows while riding or flying: Play / Learn call `liveJoin.ground` (animal ride let go, `selectRide('walk')`, i.e. the
+existing dismount and jetpack landing). Play opens **Pick your side**, the party modal grown out of the Play button
+(`lib/ui/growFrame.ts`, shared with Join with a code): Back, a Yellow / Blue segmented toggle (bib swatch + humans on that
+side; a full side is disabled), a **Position** dropdown of every slot of that side named from the sim's slot ids
+(`slotName`; humans' slots disabled; default = nearest free outfield slot) and Start. Start joins as soon as the player is
+grounded and on foot (`canJoin`; the button reads "Landing…" meanwhile); stepping off the pitch or Back / Esc closes it
+(shrinks back into Play). The pick feeds `fieldRuntime.joinMatch(..., {team, slot})`, the path slice 2 reuses for friends;
+a picked slot starts where that player stands. **Goalkeeper** is pickable (human keepers, below). Also: Pass and Shoot charge while held and strike on
+release (pass up to `PASS_POWER_MAX` 1.5 x pace, same assisted target; a ring grows on the button); Sprint is a held button
+or Shift (never the stick's magnitude, which flickered), x`SPRINT_BOOST` 1.42 top speed eased in over 0.35 s and out over
+0.3 s, the rig keeps ~80 % of the run posture until sprinting.
+
+**Human keeper (owner, Nov 4 2026: "you can even play as goalie now").** `MatchSim.humanKeepers` is on, `lockHuman`
+takes the keeper slot, tunables in `HUMAN_KEEPER` (matchSim.ts). Stick moves him inside his box (|x−135| ≤ 44, ≤ 46 off
+his line; no sprint in goal). **Save** (A) dives: with a shot coming it aims where the ball crosses his line (whatever
+the stick says), lands before the ball (≤ 0.14 sim s) and adds 3.5 units of reach at full stretch, so a timed press
+saves a corner shot that beats a keeper standing still; pressed just before the strike it is buffered; at an opponent's
+feet it is a smother (80 %); else a short dive along the stick. A shot at him is caught without a press. The AI never
+pre-decides a goal against a human keeper (`shotIsGoal` false: his position and dive decide it). On the ball: **Throw**
+(A, hands; Pass at his feet) = the short pass assist, **Kick** (B or K) = the Forward pass assist with at least 0.6
+power; past six real seconds (Law 12) the AI distributes for him. The Forward button is hidden in goal. Keeper kit +
+gloves through the join dress (`dressFor(..., keeper)` → `matchPlayerDress(..., keeper)`); the replaced AI keeper walks
+to the touchline and cheers like any replaced NPC and walks back into goal on leave. One lesson, first Save or joining
+in goal: "Stay on your line, dive at the shot." Per-team caps now count the keeper (7v7: 7). Cost: zero for AI-only
+matches (`humanKeeperOf` returns at once without humans; seeded fixture unchanged); with a human keeper, a loop over
+≤ 2 stretch timers per step, no new draw calls. Tests: `tests/join-live-game.cjs` §9b.
+
 **Slice 1b.** AI carriers preferring forward runners; the sub-board flash and goal-net pulse at join; the touchline
 glow in the edge band; skipping the card after 3 joins; a shot-power ring on the B button.
 
@@ -311,3 +341,198 @@ glow in the edge band; skipping the card after 3 joins; a shot-power ring on the
 `fieldRuntime.joinMatch / humanInput` (already keyed by human id; `pickJoinTeam(..., prefer)` for friends), viewers
 stopping their local sim and interpolating snapshots, local prediction of your own slot, `Activity.Match` presence,
 and friend name tags tinted by bib.
+
+**Camera angle button (owner, Nov 4 2026: "a camera button placed on the top left ... change between different camera
+angles").** While joined, a 44px gold circle (icon only, `aria-label` "Camera angle", title "Change camera · C") sits
+top-left opposite Leave, in the paths / friends buttons' place (hidden mid-match). Each tap (or C) cycles
+**Broadcast** (today's follow view) → **Behind you** (low chase view on the attack axis, looking at the goal you attack:
+it follows the axis, never your facing, so it never swings while you turn) → **Wide** (high tactical view from behind
+your own goal, attack up the screen, the whole pitch in frame: the football lesson is teammate spacing, and its first
+use shows "Wide: keep space between you and your teammates.") → **Close** (Broadcast's direction at 55% of the follow
+distance). A short toast names the angle. The choice is kept for the browser session (sessionStorage `fi2-join-cam-v1`)
+and across joins: a player who likes Wide gets it next match; a new visit starts on Broadcast. Transitions ease (0.6 s
+smoothstep weight + the follow camera's exponential rate); reduced motion is instant; leaving eases back to Broadcast.
+**Controls:** the stick stays screen-relative in every angle (`liveJoinRuntime.steer` turns Town's fixed screen → world
+map by the camera's yaw change); an angle change while the stick is pushed keeps the old mapping until the stick is
+released (3 s cap, then it eases over), so you never reverse mid-run. Pass / Shoot are unchanged: the sim aims passes and
+shots from your world facing at the goal you attack, never from screen directions. Code: `lib/town/liveJoinCamera.ts`
+(pure maths), `liveJoinRuntime.cameraApply / cameraRestore` (Town calls restore before its follow lerp and apply after its
+lookAt), `components/LiveJoinHud.tsx` (`data-join-cam`). Tests: `tests/join-live-game.cjs` (camera section).
+Also fixed: the hud line that wrote the B button's label / title / mode had been swallowed by a `//` comment.
+**Side angle (owner, Nov 4 2026, "like the FIFA broadcast view").** Fifth angle, second in the cycle (Broadcast → Side →
+Behind you → Wide → Close): from the touchline at 30°, looking across the pitch with the goal you attack on the RIGHT of
+the screen, tracking you along the length with the follow lag (stops short of the ends), the whole width in frame (fit to
+the near touchline; a portrait phone backs off to show ~24 m of length, landscape ~36 m). Stick stays screen-relative
+(the mapping turns ~90°), with the same hold-until-released on switching in or out; pass / shot aim is unchanged (world
+facing at the attack goal). A touchline tree can stand in the foreground on the 7v7 (seen in the desktop shot).
+
+### Trick, Press together, easier tackling, long ball, snappier controls (owner, Nov 4 2026)
+**Action cluster.** Pass (88 px) stays in the corner; four 58 px buttons sit on one arc round it (radius 120 px from
+Pass's centre at 184° / 152° / 120° / 88°, at least 8 px apart, a 194 px box under the right thumb). Offense: Shoot
+(coral) · **Trick** (sky) · Forward (lilac) · Sprint (mint). Defense: Stay · **Press** (pink, the same slot) · Sprint.
+A keeper and "team" / "loose" possession show neither. The fifth button is one element (`data-join-t`) whose mode,
+colour and title follow possession, so offense and defense keep one geometry.
+**Trick** (L): only with the ball. Stick pulled back = drag-back; otherwise each tap plays the next of stepover →
+La Croqueta → drag-back, to the stick's side. The authored skill-move poses and ball path play on your rig
+(`combos.ts trick`, `skillMoves.ts`) in 0.68 s; the ball stays at your feet. For 0.6 s nobody can steal it (AI or a
+human tackle) and opponents within 16 units are bamboozled: their legs run at 35% and their speed drops to 30% at the
+tap (they wobble on the pitch), then you get a 1.4 s burst at +15% pace. Cooldown 1.2 s, shown as a ring that shrinks
+away. The juice: the ball touch sound + a soft kick "whoosh", the pooled impact sparkle at the feet, a toast word
+(Step-over! / La Croqueta! / Drag-back!), and (not with reduced motion) ~0.55 s of slow motion at 0.3× for the field
+runtime (Town scales only `games.update`'s dt by `liveJoin.timeScale`) with the camera moved 36% of the way to you,
+easing back over 0.3 s. Lesson: "Fake out the defender: a quick trick, then go past him."
+**Press** (P): only when the other side has it. The two NPC teammates nearest the carrier (never you, never the keeper)
+hunt him for 4 s: the first closes the near side goal-side of him, the second cuts off the pass to his nearest
+teammate, so they arrive from two angles instead of bunching. They sprint (×1.14, no ease-in, not shouldered off) and a
+tackle roll by a presser is ×2.6 when both are on him (×1.5 alone). The press ends early when your side wins it or
+the ball goes dead, then they resume their roles. Cooldown 8 s from the tap (ring). Lesson: "Press together: two
+defenders win the ball back." Scripted check: 37/40 carriers lose it within ~7.5 s with Press, 29/40 without.
+**Easier tackling:** reach × 1.4 (7.6 → 10.6 units), auto-aimed at the carrier, 85% when roughly facing him (70%
+turned away), a 0.35 s recovery after a miss, nothing from range (0/40 beyond reach; 30/40 at 9 units, outside the old reach).
+**Long ball:** hold Pass past 250 ms and it becomes a lofted long ball; the charge grows to 700 ms (distance wanted
+70 → 170 units, peak 1.8 → 3.6 m). The target is the best teammate at that distance (open, ahead, a runner, the stick's
+side), led into his run, flight timed to land at him (the beach lifted-pass flight), cut out only a quarter as often as
+a ground pass; nobody suitable → into the space toward goal. Its loft gives the match trail its purple; the Pass ring
+turns purple when the hold becomes long. A tap is the ground pass as before. Lesson: "Hold Pass for a long ball over the defenders."
+**Snappier controls (humans only):** stick convergence 12 → 18 /s (90% pace in 0.38 s real instead of ~0.60 s), dribble
+attach .05 → .035 s, first-touch settle .11 → .075 s, loose first touch × .45 → × .2, rig turn × 1.35 below sprint
+pace, assist cone cos .42 → .30, shot aim nudge 9 → 12. Every change is gated on a human (`humans.size`, a human id or a
+human-triggered set), so AI-only matches are byte-identical (`tests/fixtures/live-match-summary.json`, all formats).
+Code: `lib/town/match/humanInputs.ts` (TRICK, PRESS, TACKLE, LONG_BALL, HUMAN_FEEL), `matchSim.ts` (humanTrick,
+humanMovesStep, pressSpot, pressBoost, humanLongBall), `fieldRuntime.ts`, `combos.ts`, `liveJoinRuntime.ts`,
+`components/LiveJoinHud.*`. Tests: `tests/join-live-game.cjs` (Trick / Press / tackling / long ball / snappier section).
+
+### Shooting, shot slow motion, passing help, hard to be tackled (owner, Nov 4 2026: kids, fun, not competitive)
+**Aimed corners + power shots.** Hold Shoot (past 180 ms) and five soft glowing marks appear on the goal mouth you attack
+(top-left, top-right, low-left, low-right, centre; one InstancedMesh of camera-facing glows in `joinMarkers.aim`). The
+stick, or a drag on the Shoot button itself (`joinAim` store written by the HUD while the button holds the pointer),
+picks one: judged on SCREEN against where the marks are drawn (`pickAimMark`), so "left" is the kid's left in every
+camera angle; sideways = the low corner ("shoot low"), up-and-sideways = the top corner, straight up / back = centre, no
+push = the existing auto-aim. Release fires at the mark, always inside the posts (60% of the goal half-width at a tap's
+charge → 80% at full: the accuracy forgiveness), at its height (`lastKick.shotHeight` .92 / .5 / .16). A quick tap is
+unchanged: the auto-aimed shot. The B ring turns flame orange and throbs at full charge (`data-full`, transform only);
+a full charge is the **power shot** (`POWER_SHOT`): ×1.08 pace, "Power shot!", a louder strike layered on the kick, the
+pooled sparkle, and the existing ball trail at full power in flame orange with its 'solar' rings (`sim.powerShot`).
+**Shot slow motion.** A power or aimed shot of yours from the shooting zone: the match runs at 0.3× for 1.2 s real while
+the ball flies, then eases back over 0.3 s; the camera eases (0.35 s) to a low view 7.5 m behind where you struck it,
+looking at the goal. Ends early on any tap / key, a save or any touch, or a goal (the score bar's goal shake then
+plays). Its own track in `liveJoinRuntime` beside the trick's `fx` / `slowMo()` hook: Town's one `liveJoin.timeScale`
+is the min of both (no second multiplier). Reduced motion: no slow motion and no camera move. AI shots never trigger it.
+**Passing help.** A stick pointing at nobody now falls back to a ~105° cone, then to the most open teammate ahead, so
+the Pass ring always shows and the pass always goes to it (`PASS_HELP`, `loosePick`). The ring is bigger (0.6-0.86 m)
+and brighter with a soft pulsing halo. A pass to the highlighted target (Pass ring or Forward marker) is cut out half
+as often. While you have the ball your two nearest NPC teammates come to 24-52 units of you and step sideways out of
+a lane a defender blocks (`offBallRuns.supportOffset`, on the existing think clock, no rng).
+**Hard to be tackled.** An AI tackle on you succeeds a third as often (scripted: 16/60 lost vs 45/60 at the old rate);
+a roll that would have won before is a near miss: "Slipped away!" and a quick side-step wobble (the authored croqueta,
+0.42 s), at most every 1.4 s; for 0.8 s after you get the ball nobody can tackle you. The other agent's own tackle
+(TACKLE) is untouched. Every change is gated on a human, so AI-only matches are byte-identical (fixture unchanged).
+Code: `humanInputs.ts` (AIM_MARKS, SHOT_AIM, POWER_SHOT, SHOT_FX, HUMAN_GUARD, PASS_HELP, pickAimMark, shotPace),
+`matchSim.ts` (doUserShot, slipOrTackle, loosePick, interception help, supporters), `offBallRuns.ts`, `passAssist.ts`
+(`coneCos` override), `fieldRuntime.ts`, `matchEffects.ts`, `joinMarkers.ts`, `liveJoinRuntime.ts`, `LiveJoinHud.*`.
+Tests: `tests/join-live-game.cjs` (shooting / slow motion / passing help / hard to be tackled section).
+
+### Multiplayer slice 2: friends play the SAME match (Nov 4 2026, code-complete, relay not deployed)
+**What it does.** Party friends on the same live pitch (7v7, futsal, 9v9, beach) pick the same or the opposite side in
+**Pick your side** and play one shared match. Each slot holds one human: the Position dropdown disables a friend's slot and
+shows their party nickname instead of "Taken", and the side counts include them. A friend renders on their slot in their own
+look + the bib (`ownKitLook` via `matchPlayerDress('mp'+id)`, `joinedRig`) with a small name tag; their island avatar hides
+meanwhile (`roomParty.setMatchFriends`). Kids first: no goals, coins or stats are recorded for anyone; no chat, nicknames only.
+**Authority.** The first joiner of a field owns it: their phone runs the only `MatchSim`. Everyone else's sim for that field
+becomes a **puppet** (`MatchSim.enterPuppet`, never stepped): `lib/town/match/matchNet.ts` encodes ~12 Hz snapshots on the owner
+(per player x/y ×10 + kick, ball x/y/height/owner, score, restart / goal / keeper-hands / period flags, each human's pass and
+forward assist targets: a 9v9 with two humans is ~300 B, inside the 512 B client frame) and samples a 3-frame ring on the friend
+(interpolated 110 ms behind; your own slot drawn from the newest frame plus its velocity, ≤ 0.18 s lead). Friends' controls go to
+the owner as `C.Match In` (sim-space stick, held + one-shot buttons OR-ed until sent so a tap is never lost, ~12 Hz while the stick
+moves, a 2 Hz keepalive when it is held, at once on a press) and enter the owner's sim through the normal `humanInput` buffer.
+All controls work (pass / long ball / shoot + aim / Forward / sprint / trick / tackle / press / keeper save). Slow motion (trick,
+shot) is off on a shared field (it would slow everyone's game).
+**Leaving.** A friend leaving (Leave, a dropped socket, a kick, a timeout) frees the slot: the NPC comes back and the others read
+"Ben left the match. A teammate takes their place." The owner leaving: the relay hands the field to the earliest remaining joiner,
+whose phone plays on from the last snapshot with a dropped ball ("Your friend left: the match is on your phone now. Play on!").
+Racing a friend into the same slot: the relay keeps the first; the second steps off with "Ana just took that spot. Tap Play to pick
+another!". A lost connection: "Lost your friends' match: the game plays on here" and the local AI takes the friends' slots.
+**Wire (relay v1.8, `Cap.Match = 128`, `CAPS_ALL = 255`).** One client frame `C.Match` (19) and one server frame `S.Match` (40),
+each `[code, MatchKind, ...ints]`: Join `[field, team, slot]` / Leave / In / Snap; the server's kind 0 is the roster
+`[field, owner, ...(member, team, slot)]`, sent to every Cap.Match member on a change and after C.Caps. The relay
+(`roomCore.matchMsg`) keeps memory-only rosters (one human per slot, first come; owner = earliest joiner), forwards In only to
+the owner and Snap only from the owner to that field's members, rate-limits both (`MATCH_RATE` 16/s burst 24, Join/Leave 0.5/s
+burst 4; dropped silently, never `bad()`). **Backward compatible:** an old client never answers Cap.Match (it masks with its own
+CAPS_ALL 127), so it never gets S.Match; a new client on an old relay never sends C.Match, and everyone keeps a local match (slice 1).
+**Code.** `multiplayer/protocol/{types,validate,limits}.ts`, `multiplayer/relay/src/roomCore.ts`, `lib/town/match/matchNet.ts`,
+`lib/multiplayer/matchLink.ts` (the glue; Town calls `update()` after `liveJoin.update`), `lib/multiplayer/connection.ts`
+(`sendMatch`), `lib/multiplayer/roomParty.ts` (`setMatchFriends`), `lib/town/fieldRuntime.ts` (`addFriend` / `dropFriend` /
+`setPuppet` / `pushSnap` / `encodeSnap` / `friendInput` / `netInput`, name tags), `lib/town/liveJoin.ts` (`slotOptions` /
+`defaultSlot` friends overlay, `sideCounts`), `lib/town/liveJoinRuntime.ts` (`friends`, `say`, shared-field time scale),
+`lib/town/match/matchSim.ts` (`enterPuppet` / `leavePuppet`, additive: AI-only and solo matches are byte-identical,
+`tests/fixtures/live-match-summary.json` and the beach fixture unchanged). Tests: `tests/join-live-mp.cjs` (protocol, relay roster,
+codec, two and three clients over the real RoomCore).
+**Heat.** Owner: one encode + JSON per 83 ms only while a friend is on the field (alone: nothing). Friend: one lerp per player per
+frame and no AI step (less work than watching). No timers or polling; no per-frame allocation (reused arrays, a preallocated ring).
+**Deploy.** `cd multiplayer/relay && npx wrangler deploy` (no migration: memory-only state). Until then everyone plays locally.
+**Watching + popups (Nov 5 2026).** A party friend in the room who has NOT joined sees the real shared match: while that field is
+awake on their phone (`fieldRuntime.awake`, the dormant test; held 8 s after it sleeps) `matchLink` puts it in puppet mode with the
+players on their slots (no controls, no In frames) and sends `C.Match Watch [19, 4, field]` (-1 = stop, debounced 2 s; one watched
+field per member); the relay forwards that field's Snaps to its watchers too and tells the owner `S.Match Watch [40, 4, field, n]`,
+so an owner alone on the field snapshots only while someone watches. The match ending (empty roster) or the field sleeping puts the
+local sim back. Each Snap now ends with one packed value per listed human (`matchNet SNAP_EVENTS`: trick / shot / slip serials mod 8,
+trick kind + side, power, aimed; 4 numbers a human, 11v11 rotates 10 a frame), so the trick word, "Power shot!", "Slipped away!" and
+the trick move play on every phone; older readers stop after the targets. The keeper's hands pose follows the Snap's hands flag.
+Slow motion stays off on shared fields. Joined matches also hide the townsfolk name tag over the pitch (Lua above the beach court).
+Heat: a watcher pays the puppet lerp (no AI step) only while the field is awake; the relay sends no extra frames otherwise.
+**Open / next.** True own-slot prediction with reconcile (today: newest frame + velocity, ~150-300 ms kick latency for friends;
+validate on two real phones); owner migration resumes from the last snapshot (a 110 ms rewind of the ball); real 2-phone test and
+heat check (watching included).
+
+### 11v11 rollout: Eleven Park, the ADULT-tuned format (Nov 5 2026)
+**What changed.** `LIVE_JOIN_FORMATS['11v11']` is enabled (11 humans a side, keeper included, `humanSpeedCap` null). Eleven Park
+(the only 11v11 pitch, `VENUES` id `11v11`, x 135 z 100) shows Learn + Play on its pitch bar (`FieldPathCard` `data-live-bar`; the
+11v11 lesson path exists, so Learn shows until the path is done, then Play only). The picker reads **Cyan / Orange** (its bibs,
+`TEAM_NAMES` in `liveJoinRuntime.ts`), the dropdown lists all 11 slots (gk lb lcb rcb rb lcm cm rcm lw st rw), Goalkeeper first.
+**Adult tuning (owner, Nov 5 2026: 11v11 is for adults, not kids).** The other formats keep every kid help unchanged. On the 11v11
+the human runs at the full-size pace and AI chasers on a human carrier run at full speed (`MatchSim.humanChaseMul` 1; kids × 0.82).
+The only pace limit is the pose relay: the kids' `SPRINT_BOOST` 1.42 would sprint 9.82 m/s, over the relay's walk check
+(`MAX_SPEED_MS` 6.29 × 1.5 = 9.44), so `MatchSim.humanSprintBoost` is 1.3 there (a real adult sprint). Tackle reach, the
+anti-tackle guard and the pass help stay as on the 9v9 (all in sim units, so they already scale with the pitch). Pass, long-ball
+and shot pace are in sim units too, so they scale with the 100 m pitch: nothing extra was needed for range.
+Measured (human, live speed 0.32; 9v9 → 11v11): run 4.82 → 6.91 m/s (6.93 % of the pitch length per s on both), sprint 6.85 →
+8.99 m/s (was 9.82 uncapped), dribble 4.37 → 6.27 m/s, full-charge shot 32.4 → 46.5 m/s (47 % of the length per s on both), ground
+pass full charge rolls ≤ 68 m of 69.5 / ≤ 61 m of 99.8 (the long ball covers the rest: 18-45 m lofted). Keeper box 22.2 × 12.1 m
+(inside the 40.3 × 16.5 m area). Aim marks land within 0.05 m on the 11v11.
+**Camera.** Wide on a pitch over 80 m may pull back to 150 m (the 100 m pitch needs ~145 m to keep both goal lines in frame; the
+95 m cap stays for every smaller pitch); Side, Behind you and Close fit unchanged.
+**Multiplayer.** A 22-player + 2-human 11v11 snapshot is 306 B of the 512 B client frame (85 numbers). With more than 14 humans
+(a big party) the frame would pass `MATCH_SNAP_MAX` 120 (the 9v9 past 17), so `encodeSnap` now writes as many humans' pass targets
+as fit and rotates the rest by seq (a puppet keeps a missing human's last targets): 22 humans = 121 numbers, 417 B
+(`tests/join-live-mp.cjs`, `SNAP_MAX_LEN` = `MATCH_SNAP_MAX` + 3 checked).
+**AI-only determinism.** All changes are human-only fields (`humanChaseMul` is read only with a human carrier, `humanSprintBoost`
+only for a human): `tests/fixtures/live-match-summary.json` unchanged. **Heat.** Two number fields; no allocations, no new work for
+AI-only matches. Tests: `tests/join-live-game.cjs` (the futsal + 9v9 section now loops 11v11 too: slots, pick, control, pass /
+shoot / rejoin + goal / tackle / call / trick / press, keeper, aim marks, pace vs relay, chaser pace, camera fit, AI fixture).
+### Pace ladder: the 11v11 speed of play on futsal, 9v9 and beach (Nov 5 2026)
+**Owner ask.** The 11v11's speed of play and ball movement (full-speed chasers, sprint boost 1.3, pace that scales with the
+pitch) on the other adult-paced formats, as a ladder of the 11v11 human (run 6.91 m/s, sprint 8.99, dribble 6.27, shot 46.5):
+9v9 90 %, futsal 80 %, beach 70 % (sand). **7v7 keeps the kid tuning exactly** (chasers × 0.82, SPRINT_BOOST 1.42, pace 1).
+**How.** Two human-only `MatchSim` fields set per format in the constructor: `humanPace` (the human's top speed: run, dribble,
+sprint, jockey; and every opponent chasing a human carrier, with `humanChaseMul` 1, so chasers stay level with him as on the
+11v11) and `humanBallPace` (a human's ground pass, lifted pass, long ball and shot). 9v9 1.29 / 1.29, futsal 1.40 / 1.075, beach
+1.39 / 1.08; all three `humanSprintBoost` 1.3, `humanChaseMul` 1. Staying on small pitches: futsal ground passes still sit under
+`humanPassCap` 1.6; the 9v9 gets `humanPassCap` 1.95 (= 1.3 × PASS_POWER_MAX, the old full charge: a tap is quicker, the full
+charge rolls no further than before, ≤ 68 m of 69.5); a human lifted pass or long ball that leaves quicker than the AI's pace
+lands soft via `landCap` (now also on the long ball into space). Roll, spin and kick sounds read the real ball speed, so they
+scale on their own. Pass assist, tackle ease, AI tackles on a human 1/3, aim marks and slow motion are unchanged on every format.
+Measured (human, before → after, m/s; tap/full = ground pass in the test layout, long = long-ball launch):
+
+| format | run | sprint | dribble | shot (full) | pass tap / full | long ball |
+|---|---|---|---|---|---|---|
+| 7v7 (unchanged) | 3.62 | 5.14 | 3.19 | 24.4 | 14.6 / 21.9 | 14.5 |
+| futsal (80 %) | 3.95 → 5.53 | 5.61 → 7.19 | 3.65 → 5.09 | 34.6 → 37.2 | 32.0 / 32.3 → 32.3 / 32.3 (cap) | 15.8 → 17.0 |
+| 9v9 (90 %) | 4.82 → 6.22 | 6.85 → 8.08 | 4.37 → 5.64 | 32.4 → 41.9 | 32.0 / 48.0 → 41.2 / 48.0 | 19.3 → 24.9 |
+| beach (70 %) | 3.48 → 4.84 | 4.94 → 6.29 | 3.20 → 4.45 | 30.2 → 32.7 | 15.0 / 22.4 → 16.1 / 24.2 | 15.0 → 16.2 |
+| 11v11 (reference) | 6.91 | 8.99 | 6.27 | 46.5 | 28.5 / 42.7 | 27.7 |
+
+Every sprint stays under the pose relay (`MAX_SPEED_MS` 6.29 × 1.5 = 9.44). No long ball left the court (4 seeds each).
+**AI-only determinism.** Both fields are read only for a human or with a human carrier: `tests/fixtures/live-match-summary.json`
+unchanged (not regenerated). **Heat.** Two number fields and a multiply; no allocations, nothing new for AI-only matches.
+Tests: `tests/join-live-game.cjs` pins the ladder (futsal + 9v9 pace, a new beach pace block, chaser + sprint per format, the 7v7
+kid values, the 9v9 pass cap, the beach shot ×1.2 × 1.08).

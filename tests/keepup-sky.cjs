@@ -234,7 +234,7 @@ function holdRun(holdMs,{taps=0,frames=60*6}={}){
  assert(/const next=keepUpBusy\.current\?null:\[/.test(town),'no nearby NPC (Talk prompt) during a run');
  assert(/const npc=keepUpBusy\.current\?null:islandNpcs\.pick\(characterRay\)/.test(town),'tap on an NPC does not open talk');
  assert(/&&nearbyNpcRef\.current&&!keepUpBusy\.current&&/.test(town),'E does not open talk');
- assert(/emoteCam\.active\|\|keepUpBusy\.current\)/.test(town),'NPC tags (LET’S TALK) hidden');
+ assert(/emoteCam\.active\|\|keepUpBusy\.current(\|\|liveJoin\.joined)?[^;]*\)/.test(town),'NPC tags (LET’S TALK) hidden');
  // and it ends with the run: a run that ended (counted false) frees talk again.
  const b=W.createWalkBall(),p={x:0,y:0,z:0,yaw:0};b.keepUp(p);b.keepUpRelease();assert(b.state.counted);for(let i=0;i<60*4;i++)b.update(DT,p,flat);assert(!b.state.counted,'no presses: the run ends, talk comes back');}
 // 8. Cues (owner, Oct 24: "a ring inside that animates …", "very intuitive", "SKINNIER … a little BIGGER"): source pins.

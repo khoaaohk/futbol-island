@@ -28,7 +28,7 @@ import {abs,organizationLd,pageMeta,PLAY_PATH,siteLd,SITE_NAME,websiteLd} from '
  * quiet caption. Chapters alternate soft off-white and near-black (deep pitch green); gold is the only accent. Anything without a
  * real shot is text only (no drawn art). All words are prerendered; LearnEnhance only adds the one motion language (fade + scale
  * in, gentle hero zoom-out, a slight settle on the pinned media) and the lazy clips (visible + next only, max 2 playing).
- * Type: the system sans (no download); IslandBrush only on the gold Play buttons (owner, Nov 3).
+ * Type: the system sans (no download); no IslandBrush on buttons, the Play buttons use the regular sans 800 (owner, Nov 4).
  * The full feature list (LEARN_FEATURES) stays as data; the lesson index lives at /learn/lessons.
  */
 export const dynamic='force-static';

@@ -49,8 +49,39 @@ export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
  *  it (an old relay) the host's Lock name button is hidden.
  *  Hit (relay v1.6, Oct 23 2026) = a friend's kicked ball can knock a party friend over (C.Hit / S.Hit: a harmless ~1 s cartoon tumble).
  *  Without it (an old relay or an old client) friends are never knocked over; the NPC knock-over by my own ball is unchanged. */
-export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64 } as const;
-export const CAPS_ALL = 127;
+export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64, Match: 128 } as const;
+export const CAPS_ALL = 255;
+/** Relay v1.8 (Cap.Match, Nov 4 2026; docs/join-live-game-design.md "Multiplayer slice 2"): friends play the SAME live match.
+ *  ONE new client frame C.Match and ONE new server frame S.Match, each [code, MatchKind, ...]. An old client never answers Cap.Match in
+ *  C.Caps, so it never gets S.Match (and could not parse it: parseServer -> null); an old relay never offers it, so a new client never
+ *  sends C.Match and every kid plays their own local match (slice 1).
+ *  - C.Match Join  [19, 0, field, team, slot]: I took `slot` (an index into that format's MatchSim.ids) on `team` (0 gold, 1 blue) of
+ *    `field` (MATCH_FIELDS index). The relay keeps one roster per field: one human per slot, first come; the first joiner OWNS the field
+ *    (runs the only MatchSim). A taken slot is refused (the joiner gets the roster without itself).
+ *  - C.Match Leave [19, 1]: I left my match (also implied by a disconnect, a leave, a kick or a timeout).
+ *  - C.Match In    [19, 2, seq, mx, my, buttons, passPower, shootPower, long, aimX, aimH]: a non-owner's controls (sim-space stick and
+ *    0..1 values x100, MATCH_BTN bits, aim -1000 = auto), ~12 Hz + at once on a button press. Forwarded ONLY to the field's owner.
+ *  - C.Match Snap  [19, 3, field, ...state]: the owner's snapshot (lib/town/match/matchNet.ts encodeSnap), ~12 Hz while the field has a
+ *    friend. Accepted only from the owner, forwarded only to the field's other members.
+ *  - S.Match Roster [40, 0, field, owner, ...flat (member, team, slot)]: to every Cap.Match member when a field's roster changes (owner -1
+ *    = nobody), and every live roster right after C.Caps. Owner migration: the earliest remaining joiner.
+ *  - C.Match Watch [19, 4, field]: (Nov 5 2026) a party friend NOT in that match watches it (field -1 = stop): the relay also forwards
+ *    that field's Snaps to them, so their screen shows the real shared match (a puppet, no controls). One watched field per member.
+ *  - S.Match In    [40, 2, from, seq, ...the C.Match In values]: to the owner. S.Match Snap [40, 3, field, ...state]: to the members
+ *    and the field's watchers. The Snap may end with one packed event value per human (matchNet SNAP_EVENTS; older readers skip it).
+ *  - S.Match Watch [40, 4, field, watchers]: to the field's owner when its watcher count may have changed (an owner alone on the field
+ *    snapshots only while someone watches). */
+export const MatchKind = { Join: 0, Leave: 1, In: 2, Snap: 3, Watch: 4 } as const;
+export type MatchKind = (typeof MatchKind)[keyof typeof MatchKind];
+/** S.Match kind 0 is the roster (the relay's answer to Join / Leave). */
+export const MATCH_ROSTER = MatchKind.Join;
+/** Field ids on the wire (lib/town/venues LiveFormat order). */
+export const MATCH_FIELDS = ['7v7', 'futsal', '9v9', '11v11', 'beach'] as const;
+export const MATCH_SLOT_MAX = 31;
+/** C.Match In button bits. */
+export const MATCH_BTN = { pass: 1, shoot: 2, through: 4, tackle: 8, jockey: 16, sprint: 32, call: 64, save: 128, trick: 256, press: 512 } as const;
+/** A snapshot frame's number count cap (a 9v9 is ~70; 11v11 ~80). */
+export const MATCH_SNAP_MAX = 120;
 /** Relay v1.7 (Cap.Kit, Oct 26 2026): a member's worn Kit Shop gear (lib/multiplayer/kit.ts) so friends see it on their avatar and ball.
  *  A flat array of KIT_LEN integers (never the kid's ball drawing, decals, crest or names):
  *   0 shirt, 1 shirt trim, 2 shorts, 3 socks, 4 sock tops  (colours 0..0xFFFFFF; jersey worn iff [0] >= 0, then 1..4 are colours too)
@@ -95,7 +126,7 @@ export type PoseBody = [number, number, number, number, number, Mode, Zone, numb
 export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null, nick?: string | null];
 
 // client -> server
-export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13, EmoteAsk: 14, EmoteAnswer: 15, NameLock: 16, Hit: 17, Kit: 18 } as const;
+export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13, EmoteAsk: 14, EmoteAnswer: 15, NameLock: 16, Hit: 17, Kit: 18, Match: 19 } as const;
 export type C = (typeof C)[keyof typeof C];
 export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
   reservedAnimal?: number | null, nick?: string | null]; // slot 5 reserved (old animal index: parsed, ignored; send null). nick (slot 6) is REQUIRED for new clients: a 7-element Hello with a missing or invalid nick is refused with ErrorCode.BadName. Old 5 / 6-element Hellos (no nick) are still accepted as colour-name-only during the transition period.
@@ -136,12 +167,14 @@ export type CHit = [typeof C.Hit, victim: MemberId, dir: number];
 /** Relay v1.7 (Cap.Kit): my worn Kit Shop gear (Kit, or null = nothing worn). Sent ONLY after S.Caps carried Cap.Kit (an old relay never
  *  sees it), right after each S.Caps and on a change, at most once per KIT_GAP_MS (lib/multiplayer/connection.ts). */
 export type CKit = [typeof C.Kit, kit: Kit | null];
-export type ClientMsg = CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename | CEmoteAsk | CEmoteAnswer | CNameLock | CHit | CKit;
+/** Relay v1.8 (Cap.Match): see MatchKind. Integers only. */
+export type CMatch = [typeof C.Match, kind: MatchKind, ...rest: number[]];
+export type ClientMsg = CMatch | CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename | CEmoteAsk | CEmoteAnswer | CNameLock | CHit | CKit;
 
 // server -> client
 export const S = {
   Welcome: 20, Joined: 21, Left: 22, Poses: 23, Emote: 24, Ping: 25, Host: 26, Code: 27, Ended: 28, Error: 29, Beat: 30, Renamed: 31,
-  Caps: 32, Live: 33, EmoteAsk: 34, EmoteAnswer: 35, Duet: 36, NameLock: 37, Hit: 38, Kit: 39,
+  Caps: 32, Live: 33, EmoteAsk: 34, EmoteAnswer: 35, Duet: 36, NameLock: 37, Hit: 38, Kit: 39, Match: 40,
 } as const;
 export type S = (typeof S)[keyof typeof S];
 export type SWelcome = [typeof S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
@@ -182,4 +215,6 @@ export type SHit = [typeof S.Hit, shooter: MemberId, victim: MemberId, dir: numb
 /** Relay v1.7, only to Cap.Kit members: member `id` wears `kit` (null = nothing from the Kit Shop). Sent to every other Cap.Kit member
  *  when it changes, and once per member wearing something to a member right after its C.Caps (a join or a resume learns every kit). */
 export type SKit = [typeof S.Kit, id: MemberId, kit: Kit | null];
-export type ServerMsg = SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;
+/** Relay v1.8 (Cap.Match): see MatchKind. Integers only. */
+export type SMatch = [typeof S.Match, kind: MatchKind, ...rest: number[]];
+export type ServerMsg = SMatch | SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;

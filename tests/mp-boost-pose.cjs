@@ -77,6 +77,11 @@ t('governPose: clamps to WORLD_BOUNDS, passes slow moves, warps a big lag once p
   const slow=pr.governPose(g,[200,B.maxY,0,0,0,Mode.Jetpack,Zone.Main,0],1000);assert.equal(slow[0],200);assert.equal(slow[7],0);
   const jump=pr.governPose(g,[3000,B.maxY,0,0,0,Mode.Jetpack,Zone.Main,0],100);assert.equal(jump[7]&1,1,'a 300 m lag with a Warp free: Warp');pr.commitPose(g,jump,100);
   const far=pr.governPose(g,[6000,B.maxY,0,0,0,Mode.Jetpack,Zone.Main,0],200);assert.equal(far[7]&1,0,'no second Warp inside 5.3 s');
+  {/* live match (Nov 5 2026): an 11v11 sprint (8.99 m/s) is kept whole, a Run-mode pose is capped at the old 7.08 m/s */
+   const g2=pr.poseGovernor();const a=pr.governPose(g2,[0,0,0,0,0,Mode.Run,Zone.Main,0],0);pr.commitPose(g2,a,0);
+   const sprint=[90,0,0,0,0,Mode.Run,Zone.Main,0];
+   assert.equal(pr.governPose(g2,sprint.slice(),1000,true)[0],90,'live: 9 m/s in one second is sent whole');
+   assert(pr.governPose(g2,sprint.slice(),1000,false)[0]<90,'not live: capped at the Run limit');}
   assert.ok(far[0]>3000&&far[0]<3000+10*(34*1.5*.1+2),'capped under the relay limit');
   assert.ok(P.speedOk(jump,far,100),'the relay keeps the capped pose');
 });

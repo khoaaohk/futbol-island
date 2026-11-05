@@ -4,7 +4,8 @@ import {useEffect,useLayoutEffect,useRef,useState,type CSSProperties} from 'reac
 import styles from './IslandLoading.module.css';
 import LoadingIslandArt,{LOADING_LAND_PATH} from './LoadingIslandArt';
 import LoadingBeanCast from './LoadingBeanCast';
-import {HANDOFF_BOOT,takeLoaderContinuation} from './islandLoadingBoot';
+import LoadingHandoffPill from './LoadingHandoffPill';
+import {HANDOFF_BOOT,islandCoverDone,islandCovered,takeLoaderContinuation} from './islandLoadingBoot';
 
 /** Static artwork: the island can finish loading without another rendering loop. */
 export default function IslandLoading({exiting=false}:{exiting?:boolean}){
@@ -37,9 +38,16 @@ export default function IslandLoading({exiting=false}:{exiting?:boolean}){
   // overlay copy on the title screen, leaves it for the game's own loader).
   const exited=useRef(false);exited.current=exiting;
   useEffect(()=>()=>{if(exited.current)delete document.documentElement.dataset.islandHandoff;},[]);
-  return <div ref={screen} data-main-island-loading className={`town-loading ${styles.screen} ${exiting?styles.exiting:''}`} role="status">
+  // Play's cover (Nov 4 2026, islandLoadingBoot): under the title screen this loader is never shown (not even while the cover
+  // fades), and its exit (the island's first frame) is the cue for the cover to fade straight into the island. A loader that goes
+  // away without exiting (a failed load) also lifts the cover; the check after unmount skips StrictMode's dev re-run.
+  const [covered]=useState(islandCovered);
+  useEffect(()=>{if(exiting)islandCoverDone();},[exiting]);
+  useEffect(()=>()=>{queueMicrotask(()=>{if(!document.querySelector('[data-main-island-loading]'))islandCoverDone();});},[]);
+  return <div ref={screen} data-main-island-loading className={`town-loading ${styles.screen} ${exiting?styles.exiting:''}`} style={covered?{visibility:'hidden'}:undefined} role="status">
     <script dangerouslySetInnerHTML={{__html:HANDOFF_BOOT}}/>
     <div className={styles.art} aria-hidden="true"><LoadingIslandArt/></div>
+    <LoadingHandoffPill/>
     {land&&<svg data-island-tan-wipe className={styles.tanWipe} viewBox={land.viewBox} style={land.style} preserveAspectRatio="none" aria-hidden="true"><path d={LOADING_LAND_PATH} fill="#dfc587"/></svg>}
     <LoadingBeanCast/>
     <div className={styles.copy}>

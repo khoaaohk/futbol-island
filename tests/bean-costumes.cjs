@@ -5,7 +5,7 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typ
 const base=path.resolve(__dirname,'..'),req=require('node:module').createRequire(base+'/package.json'),cache=new Map(),storage=new Map();
 function load(file){if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{exports:mod.exports,module:mod,Math,console,localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},require:id=>id.startsWith('.')?load(path.resolve(path.dirname(file),id+'.ts')):req(id)});cache.set(file,mod.exports);return mod.exports;}
 const {setCharacterStyle}=load(base+'/lib/graphics/characterStyle.ts');setCharacterStyle('bean');
-const {createPlayer}=load(base+'/lib/graphics/player.ts');
+const {createPlayer,profileFor}=load(base+'/lib/graphics/player.ts');const require_profile=r=>profileFor(r,0);
 const BC=load(base+'/lib/graphics/beanCostumes.ts');
 const {beanSkinOf,BeanMaterial}=load(base+'/lib/graphics/beanSkin.ts');
 const {CLUB_COSTUMES}=load(base+'/lib/town/costumes.ts'),{ISLAND_COSTUMES}=load(base+'/lib/town/islandCostumes.ts'),{DEFAULT_CUSTOMIZATION:D}=load(base+'/lib/town/customization.ts');
@@ -100,6 +100,35 @@ console.log('PASS bean rig switch: skin stays on, parts on joints, face/expressi
  townApply(you,{...D,costume:'none'});assert.equal(BC.beanCostumeOf(you),undefined);assert.equal(visibleParts(you),0);assert.equal(youSkin.active,true);assert.equal(youSkin.meshes[0].material.userData.costumeUniforms,undefined,'normal look back');
  you.dispose();again.dispose();saveCustomization({...D});
  console.log('PASS regression: equip shows the costume through the town apply sequence, persists after reload, unequip restores the look');
+}
+// 3c. Live join (owner, Nov 4 2026): the joined slot rig looks exactly like the walking avatar except the shirt (team bib).
+// Data-driven: every costume option × several customizations; the rig's per-instance row (every static texel but shirt/shirt2),
+// costume parts, onesie pattern, limb bands, hood layers and body profile scale must match the walking avatar's.
+{
+ const C=load(base+'/lib/town/customization.ts'),L=load(base+'/lib/town/beanLooks.ts'),{dressJoinedRig,undressJoinedRig}=load(base+'/lib/town/joinedRig.ts'),{BD}=load(base+'/lib/graphics/beanSkin.ts');
+ const team=L.matchPlayerDress('you','home',false),bib=new Set(L.BIB_KEYS.map(k=>BD[k]));
+ const looks=[{},{bodyColor:C.CUSTOMIZATION_OPTIONS.bodyColor.at(-1).id,skinTone:C.CUSTOMIZATION_OPTIONS.skinTone.at(-1).id,build:'wide',hair:'curls',headwear:'cap',eyes:'happy',mouth:'grin'},
+  {character:'female',build:'tall',hair:'ponytail',headwear:'beanie',clothing:'sunset'},{build:'short',hair:'none',headwear:'visor',clothing:'coast',skinTone:C.CUSTOMIZATION_OPTIONS.skinTone[1].id}];
+ const costumes=C.CUSTOMIZATION_OPTIONS.costume.map(o=>o.id);let checked=0;
+ const rowOf=r=>{const d=beanSkinOf(r).meshes[0].userData.beanData;return Array.from(d.array.slice(0,(d.staticWidth??d.width)*4));};
+ for(const id of costumes){assert(id==='none'||BC.hasBeanCostume(id),id+' has a bean version (the joined rig can show it)');
+  for(const extra of looks){const c={...D,...extra,costume:id},outfit=C.playerOutfit(c);
+   const walk=BC.attachBeanCostumes(createPlayer('you','home',true,true));walk.setShirtNumber(10);walk.setAppearance(c);walk.setBeanLook(C.beanLookFor(c),outfit);walk.setShirtNumber(10);walk.setProfile(require_profile('you'));
+   const slot=BC.attachBeanCostumes(createPlayer('cm','home',false));slot.setShirtNumber(6);slot.setBeanLook(team.look,team.outfit);slot.setProfile(require_profile('mid'));
+   const dress=L.ownKitLook(C.beanLookFor(c),team,outfit,c.costume);dressJoinedRig(slot,dress);
+   const a=BC.beanCostumeOf(walk),b=BC.beanCostumeOf(slot),where=id+' '+JSON.stringify(extra);
+   assert.equal(b?.id,a?.id,where+' same costume');
+   if(a){assert.equal(b.meshes.length,a.meshes.length,where);a.meshes.forEach((m,i)=>assert.equal(b.meshes[i].geometry,m.geometry,where+' same parts'));
+    const ua=beanSkinOf(walk).meshes[0].material.userData.costumeUniforms,ub=beanSkinOf(slot).meshes[0].material.userData.costumeUniforms;
+    assert.equal(ub.uCostumePattern.value,ua.uCostumePattern.value,where+' same onesie pattern');assert.equal(ua.uCostumeKit.value,0);assert.equal(ub.uCostumeKit.value,1,where+' bib over the onesie');
+    const la=beanSkinOf(walk).meshes[1].material.userData.costumeUniforms,lb=beanSkinOf(slot).meshes[1].material.userData.costumeUniforms;
+    for(const k of Object.keys(la))assert.deepEqual(JSON.stringify(lb[k].value),JSON.stringify(la[k].value),where+' limb '+k);}
+   beanSkinOf(walk).meshes.forEach((m,i)=>assert.equal(beanSkinOf(slot).meshes[i].layers.mask,m.layers.mask,where+' hood hides the same hair/hat'));
+   const ra=rowOf(walk),rb=rowOf(slot);for(let t=0;t<ra.length/4;t++){if(bib.has(t))continue;assert.deepEqual(rb.slice(t*4,t*4+4),ra.slice(t*4,t*4+4),where+' row texel '+t);}
+   assert.equal(dress.outfit.shirt,team.outfit.shirt);assert.equal(dress.outfit.shirt2,team.outfit.shirt2);
+   assert.equal(slot.root.scale.x,walk.root.scale.x,where+' own body profile');assert.equal(slot.root.userData.profileLocked,true);
+   undressJoinedRig(slot);assert.equal(BC.beanCostumeOf(slot),undefined);walk.dispose();slot.dispose();checked++;}}
+ console.log('PASS live join: joined rig = walking avatar except the bib shirt, for',costumes.length,'costume options ×',looks.length,'looks (',checked,'pairs)');
 }
 // 4. Classic style: a no-op.
 setCharacterStyle('classic');const classic=createPlayer('costume-classic','home');const set=classic.setAppearance;assert.equal(BC.attachBeanCostumes(classic),classic);assert.equal(classic.setAppearance,set,'classic rigs untouched');classic.dispose();setCharacterStyle('bean');

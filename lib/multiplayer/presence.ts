@@ -185,12 +185,14 @@ export function poseGovernor(): PoseGovernor { return { has: false, x: 0, y: 0, 
 export function resetPoseGovernor(g: PoseGovernor): void { g.has = false; }
 const clampI = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, Number.isFinite(v) ? Math.round(v) : 0));
 /** The body to send now (a fresh array; `body` is untouched). Pure but for reading `g`; call commitPose(g, out, nowMs) once it is sent. */
-export function governPose(g: PoseGovernor, body: PoseBody, nowMs: number): PoseBody {
+/** In a live match (Nov 5 2026): the human's sprint is up to 9 m/s (11v11 8.99, 9v9 8.08), over Run's 7.08 m/s check; the relay allows 9.44 m/s + 2 m, so the governor's limit is 9.34 m/s + 1 m. */
+export const LIVE_MATCH_POSE_MS = 8.3;
+export function governPose(g: PoseGovernor, body: PoseBody, nowMs: number, live = false): PoseBody {
   const B = WORLD_BOUNDS, out = body.slice() as PoseBody;
   out[0] = clampI(out[0], B.minX, B.maxX); out[1] = clampI(out[1], B.minY, B.maxY); out[2] = clampI(out[2], B.minZ, B.maxZ);
   if (!g.has || (out[7] & RELAY_WARP) || roomOf(out) !== g.room) return out; // first pose, an explicit Warp, a room flip: no speed check
   const dx = (out[0] - g.x) / 10, dy = (out[1] - g.y) / 10, dz = (out[2] - g.z) / 10, d = Math.sqrt(dx * dx + dy * dy + dz * dz);
-  const dt = Math.max(0, nowMs - g.at) / 1000, limit = (MAX_SPEED_MS[out[5] as Mode] ?? 6) * 1.5 * POSE_SAFE * dt + 1;
+  const dt = Math.max(0, nowMs - g.at) / 1000, limit = (live ? Math.max(LIVE_MATCH_POSE_MS, MAX_SPEED_MS[out[5] as Mode] ?? 6) : (MAX_SPEED_MS[out[5] as Mode] ?? 6)) * 1.5 * POSE_SAFE * dt + 1;
   if (d <= limit) return out;
   if (d > POSE_WARP_LAG_M && nowMs - g.warpAt >= POSE_WARP_GAP_MS) { out[7] |= RELAY_WARP; return out; }
   const k = limit / d; // capped: the furthest point toward the real spot the relay still keeps

@@ -257,11 +257,14 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   /** A hop's touchdown on Summit Isle's slopes (rooftopTravel / slopeHop): a soft thud, fuller for a harder landing (0…1). */
   function land(power:number){if(ready('land',.18)){const p=Math.max(0,Math.min(1,power));tone(150,62,.1+.08*p,.07+.1*p,'triangle');hiss(420,.07+.06*p,.05+.07*p);}}
   function impact(){if(ready('impact',1)){hiss(750,.42,.4);tone(105,38,.28,.3);tone(420,780,.18,.09,'sine',.12);tone(600,240,.3,.08,'sine',.28);}}
-  function ball(kind:'kick'|'bounce'|'receive'){
-    if(!ready('ball-'+kind,.1))return;
-    if(kind==='kick'){tone(175,65,.14,.16);hiss(1100,.055,.065);}
-    else if(kind==='bounce'){tone(240,90,.11,.13);hiss(1700,.045,.08);}
-    else{tone(130,75,.085,.07);hiss(650,.035,.025);}
+  /** `gain` (0…1) scales the same voices (a live match's ball: by speed and distance, lib/town/liveBallSound.ts);
+   *  `channel` gives another ball its own 0.1 s throttle so a nearby match never swallows the player's own kick. */
+  function ball(kind:'kick'|'bounce'|'receive',gain=1,channel=''){
+    const g=Number.isFinite(gain)?Math.max(0,Math.min(1,gain)):0;
+    if(g<=0||!ready('ball-'+kind+channel,.1))return;
+    if(kind==='kick'){tone(175,65,.14,.16*g);hiss(1100,.055,.065*g);}
+    else if(kind==='bounce'){tone(240,90,.11,.13*g);hiss(1700,.045,.08*g);}
+    else{tone(130,75,.085,.07*g);hiss(650,.035,.025*g);}
   }
   function boost(direction:'forward'|'up'='forward'){
     if(!ready('boost:'+direction,.35))return;

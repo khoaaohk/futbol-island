@@ -3,7 +3,7 @@
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, AWAY_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState, EMOTE_ASK, AskReply,
-  HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, isKit,
+  HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, isKit, MatchKind, MATCH_ROSTER, MATCH_RATE, MATCH_JOIN_RATE,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
@@ -80,7 +80,14 @@ interface Member {
   hitTimes: number[]; knockedAt: number;
   /** Relay v1.7 (Cap.Kit): the worn kit (null = none), its join key (change check), and whether a change still waits for kitBucket. */
   kit: number[] | null; kitKey: string; kitDue: boolean; kitBucket: TokenBucket;
+  /** Relay v1.8 (Cap.Match): the live field this member plays on (-1 none) and its rate buckets (In / Snap, Join / Leave). */
+  matchField: number; matchBucket: TokenBucket; matchJoinBucket: TokenBucket;
+  /** Nov 5 2026 (C.Match Watch): the field this member watches without playing (-1 none): it gets that field's Snaps too. */
+  matchWatch: number;
 }
+/** Relay v1.8: one shared live match. owner = the member running the MatchSim (-1 nobody); slots: member -> [team, slot] in join order
+ *  (Map insertion order: the owner migrates to the earliest remaining joiner). Memory only: a match never survives an eviction. */
+interface MatchField { owner: number; slots: Map<number, [number, number]> }
 
 /** C.Rename: at most this many name changes per member per minute (the control bucket also applies). */
 const RENAME_PER_MIN = 4;
@@ -147,6 +154,8 @@ export class RoomCore {
   private asks = new Map<number, AskPair>();
   /** Relay v1.6: when shooter * 64 + victim last knocked that friend over (pair cooldown; never persisted). */
   private hitPairs = new Map<number, number>();
+  /** Relay v1.8 (Cap.Match): field id -> its roster (only fields with someone on them). */
+  private fields = new Map<number, MatchField>();
   /** Called after Rotate so the worker / dev relay can re-register the room under the new code. */
   onRotate: ((oldCode: string, newCode: string) => void) | null = null;
 
@@ -285,6 +294,7 @@ export class RoomCore {
       case C.EmoteAnswer: this.emoteAnswer(m, msg[1] as number, msg[2] === 1, now); return;
       case C.Hit: this.hit(m, msg[1] as number, msg[2] as number, now); return;
       case C.Kit: this.kitMsg(m, msg[1] as number[] | null, now); return;
+      case C.Match: this.matchMsg(m, msg as number[], now); return;
       case C.ResetName: return; // retired (Oct 23 2026, replaced by C.NameLock): an old host client's frame is ignored, never an error
       default: break;
     }
@@ -333,6 +343,7 @@ export class RoomCore {
     this.byPeer.delete(peer);
     m.peer = null;
     m.goneAt = this.clock.now(); // slot kept for RESUME_GRACE_MS; others hear Left/Timeout only when it lapses
+    this.matchDrop(m); this.matchUnwatch(m); // relay v1.8: a dropped player's match slot goes back to the AI at once (the party slot keeps its grace)
   }
 
   /** Relay v1.2: called between two 5 Hz ticks (the Durable Object steps at 10 Hz): only the nearest LIVE_NEAR friends within
@@ -625,6 +636,7 @@ export class RoomCore {
       pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
       emoteTimes: [], bad: 0, secStart: now, secCount: 0, heardAt: now, relayAway: false, nickLocked: false, renameTimes: [], hitTimes: [], knockedAt: 0,
       kit: null, kitKey: '', kitDue: false, kitBucket: new TokenBucket(KIT_RATE[0], KIT_RATE[1]),
+      matchField: -1, matchWatch: -1, matchBucket: new TokenBucket(MATCH_RATE[0], MATCH_RATE[1]), matchJoinBucket: new TokenBucket(MATCH_JOIN_RATE[0], MATCH_JOIN_RATE[1]),
     };
   }
 
@@ -677,11 +689,85 @@ export class RoomCore {
   /** C.Caps: what this client understands. A Cap.NameLock client then hears every current name lock, a Cap.Kit client every friend's
    *  worn kit (a join or a resume). */
   private caps(m: Member, bits: number): void {
-    m.caps = bits & CAPS_ALL;
+    m.caps = bits & CAPS_ALL; this.matchUnwatch(m); // a (re)connect: the client sends its Watch again
     if (!m.peer) return;
     const peer = m.peer;
     if (m.caps & Cap.NameLock) this.members.forEach((x) => { if (x.nickLocked) this.send(peer, [S.NameLock, x.id, 1]); });
     if (m.caps & Cap.Kit) this.members.forEach((x) => { if (x !== m && x.kit) this.send(peer, [S.Kit, x.id, x.kit]); });
+    if (m.caps & Cap.Match) this.fields.forEach((_f, id) => this.send(peer, this.rosterMsg(id)));
+    else this.matchDrop(m); // a socket that stopped understanding matches (an old tab resumed the slot) leaves its match
+  }
+
+  // ---- relay v1.8 (Cap.Match): shared live matches. The relay only keeps the roster (who plays which slot, who owns the field) and
+  // forwards inputs to the owner and the owner's snapshots to the members; the MatchSim runs on the owner's phone. ----
+  private matchMsg(m: Member, msg: number[], now: number): void {
+    if (!(m.caps & Cap.Match) || !m.peer) return;
+    const kind = msg[1];
+    if (kind === MatchKind.Join || kind === MatchKind.Leave || kind === MatchKind.Watch) {
+      if (!m.matchJoinBucket.take(now)) return;
+      if (kind === MatchKind.Watch) { // a spectator: memory-only, no roster news; the owner learns its field is watched (it snapshots)
+        const was = m.matchWatch; m.matchWatch = msg[2];
+        if (was >= 0 && was !== m.matchWatch) this.watchNews(was);
+        if (m.matchWatch >= 0) this.watchNews(m.matchWatch);
+        return;
+      }
+      if (kind === MatchKind.Leave) { this.matchDrop(m); return; }
+      const fieldId = msg[2], team = msg[3], slot = msg[4];
+      if (m.matchField >= 0 && m.matchField !== fieldId) this.matchDrop(m);
+      let f = this.fields.get(fieldId);
+      let taken = false;
+      if (f) f.slots.forEach((v, id) => { if (id !== m.id && v[1] === slot) taken = true; });
+      if (taken) { this.send(m.peer, this.rosterMsg(fieldId)); return; } // refused: the joiner sees the roster without itself
+      if (!f) { f = { owner: -1, slots: new Map() }; this.fields.set(fieldId, f); }
+      f.slots.set(m.id, [team, slot]); m.matchField = fieldId;
+      if (f.owner < 0) f.owner = m.id;
+      this.rosterNews(fieldId);
+      return;
+    }
+    if (!m.matchBucket.take(now)) return;
+    const f = m.matchField >= 0 ? this.fields.get(m.matchField) : undefined;
+    if (!f) return;
+    if (kind === MatchKind.In) {
+      if (f.owner === m.id) return;
+      const o = this.members.get(f.owner);
+      if (o?.peer && (o.caps & Cap.Match)) this.send(o.peer, [S.Match, MatchKind.In, m.id, ...msg.slice(2)]);
+    } else if (kind === MatchKind.Snap) {
+      if (f.owner !== m.id || msg[2] !== m.matchField) return;
+      const text = encode([S.Match, MatchKind.Snap, ...msg.slice(2)]);
+      const fieldId = m.matchField; // the field's other players and its watchers (party friends looking on, Nov 5 2026)
+      this.members.forEach((r) => { if (r.id !== m.id && r.peer && (r.caps & Cap.Match) && (f.slots.has(r.id) || r.matchWatch === fieldId)) { try { r.peer.send(text); } catch { /* gone */ } } });
+    }
+  }
+  /** Take `m` out of its match (leave, disconnect, removal): its slot goes back to the AI; an owner hands the field to the earliest remaining joiner. */
+  private matchDrop(m: Member): void {
+    const fieldId = m.matchField;
+    if (fieldId < 0) return;
+    m.matchField = -1;
+    const f = this.fields.get(fieldId);
+    if (!f || !f.slots.delete(m.id)) return;
+    if (f.owner === m.id) f.owner = f.slots.size ? f.slots.keys().next().value as number : -1;
+    if (!f.slots.size) this.fields.delete(fieldId);
+    this.rosterNews(fieldId);
+  }
+  private rosterMsg(fieldId: number): ServerMsg {
+    const f = this.fields.get(fieldId), out: number[] = [S.Match, MATCH_ROSTER, fieldId, f ? f.owner : -1];
+    if (f) f.slots.forEach((v, id) => { out.push(id, v[0], v[1]); });
+    return out as unknown as ServerMsg;
+  }
+  private rosterNews(fieldId: number): void {
+    const text = encode(this.rosterMsg(fieldId));
+    this.members.forEach((r) => { if (r.peer && (r.caps & Cap.Match)) { try { r.peer.send(text); } catch { /* gone */ } } });
+    this.watchNews(fieldId); // the owner may have changed, or a watcher started playing
+  }
+  /** A member stops watching (disconnect, removal, a new C.Caps): its field's owner learns the new count. */
+  private matchUnwatch(m: Member): void { const f = m.matchWatch; if (f < 0) return; m.matchWatch = -1; this.watchNews(f); }
+  /** Nov 5 2026: S.Match Watch [40, 4, field, watchers] to the field's owner (party friends watching it without playing), so an owner
+   *  alone on the field still snapshots while someone watches, and stops when nobody does. */
+  private watchNews(fieldId: number): void {
+    const f = this.fields.get(fieldId); if (!f) return;
+    const o = this.members.get(f.owner); if (!o?.peer || !(o.caps & Cap.Match)) return;
+    let n = 0; this.members.forEach((r) => { if (r.matchWatch === fieldId && r.peer && (r.caps & Cap.Match) && !f.slots.has(r.id)) n++; });
+    this.send(o.peer, [S.Match, MatchKind.Watch, fieldId, n] as unknown as ServerMsg);
   }
 
   /** C.Kit (relay v1.7, Cap.Kit): parseClient already checked the shape and size. Kept on the slot (survives a resume and an eviction);
@@ -755,10 +841,11 @@ export class RoomCore {
   private drop(m: Member, code: number): void {
     const p = m.peer;
     if (p) { this.byPeer.delete(p); m.peer = null; m.goneAt = this.clock.now(); p.close(code); }
+    this.matchDrop(m); this.matchUnwatch(m);
   }
 
   private remove(m: Member, reason: LeaveReason, closeCode: number | null): void {
-    this.members.delete(m.id); this.forgetAsks(m.id); this.forgetHits(m.id);
+    this.members.delete(m.id); this.forgetAsks(m.id); this.forgetHits(m.id); this.matchDrop(m); this.matchUnwatch(m);
     if (m.peer) {
       const p = m.peer;
       this.byPeer.delete(p); m.peer = null;

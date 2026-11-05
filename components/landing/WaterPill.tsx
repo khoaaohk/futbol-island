@@ -1,18 +1,19 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
-import {markTanHandoff,markTanReload,runTanExit,runWaterFill} from './waterLaunch';
+import {markPillReload,markTanHandoff,runPillExit,runWaterFill} from './waterLaunch';
 import {trackStart} from '@/lib/analytics/startEvents';
 import {enterGame,rememberInGame} from '@/lib/rootView';
 import {bootMark} from '@/lib/boot/perfMarks';
+import {markIslandCover} from '@/components/islandLoadingBoot';
 import {warmIsland} from '../root/islandPreload';
 import styles from './Title.module.css';
 
 /**
  * The big gold pill that takes a player into the game (user, Oct 9 2026). Pressed (or started by the save flow), it becomes a
  * water loader: the links and other buttons fade, water rises inside the pill while the game's code loads (waterLaunch.ts), then
- * the title screen hands off through the full-tan exit and `/` switches to the game in place (enterGame → components/root/
- * RootSwitch.tsx; no navigation, the URL stays `/`). `apply`: a restored save, applied at the end; its reload lands in the game
- * (rememberInGame) and starts as the same tan sheet (markTanReload).
+ * `/` switches to the game in place under the title screen, which fades straight into the island once it is drawn (Nov 4 2026:
+ * no tan sheet before the island; enterGame → components/root/RootSwitch.tsx; no navigation, the URL stays `/`). `apply`: a restored save, applied at the end; its reload lands in the game
+ * (rememberInGame) and starts as the same sea + "Loading…" pill the title screen ended on (runPillExit / markPillReload).
  * Keeps data-landing-play inside the data-title-card container for start-page analytics.
  */
 export default function WaterPill({label='Play',sub,card,autoStart=false,apply}:{label?:string;sub?:string;card:string;autoStart?:boolean;apply?:()=>void}){
@@ -27,8 +28,11 @@ export default function WaterPill({label='Play',sub,card,autoStart=false,apply}:
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
   screen?.setAttribute('data-launch','');
   void runWaterFill(fill.current,{reduced,onLevel:setLevel})
-   .then(()=>screen?runTanExit(screen,wrap.current,{reduced}):undefined)
-   .then(()=>{bootMark('tan-full');if(apply){rememberInGame();markTanReload();apply();}else{markTanHandoff();enterGame();}});
+   // A restore reloads the page (Nov 5 2026: no tan sheet): the title fades to its sea with only the full "Loading…" pill left,
+   // and the reload's loader paints exactly that (data-island-handoff="pill") before it fades into the island. Play does not reload
+   // (Nov 4 2026): the title screen stays up as the cover over the game while Town builds and fades straight into the island.
+   .then(()=>screen&&apply?runPillExit(screen,wrap.current,{reduced}):null)
+   .then(box=>{bootMark('tan-full');if(apply){rememberInGame();markPillReload(box);apply();}else{markTanHandoff();markIslandCover();enterGame();}});
  };
  // The save flow hands over straight into loading (a new code saved, or a restored island): no second tap.
  useEffect(()=>{if(!autoStart)return;const t=setTimeout(()=>{if(card!=='restored')trackStart(`st:play_${card}`);go();},reducedNow()?0:420);return()=>clearTimeout(t);

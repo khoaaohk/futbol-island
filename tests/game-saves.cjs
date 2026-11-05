@@ -385,6 +385,11 @@ await ok('ui hidden without setup',async()=>{
  const sync=read('components/saves/SaveSync.tsx');
  assert(/else if\(!shouldShowIslandOnboarding\(\)&&codeRequired\(\)\)void savingStatus\(\)\.then\(s=>\{if\(s\.saving&&codeRequired\(\)\)setDialog/.test(sync),'existing players without a code are asked on start, only when saving works');
  assert(/onCancel=\{e=>\{e\.preventDefault\(\);if\(dialog\.kind==='restore'\)close\(\);\}\}/.test(sync),'the required prompt cannot be dismissed with Escape');
+ // Nov 4 2026: the required prompt never covers a live match: held while .town-app carries data-live-join / data-live-pick
+ // (through goals, full time and celebrations), shown again after Leave; one MutationObserver, no timers.
+ assert(/LIVE_HOLD_ATTRS=\['data-live-join','data-live-pick'\]/.test(sync)&&/obs\.observe\(app,\{attributes:true,attributeFilter:LIVE_HOLD_ATTRS\}\)/.test(sync),'the prompt watches the live-match flags on .town-app');
+ assert(/const check=\(\)=>setHeld\(liveOn\(app\)\);check\(\);/.test(sync)&&/if\(!dialog\|\|\(dialog\.kind==='required'&&held\)\)return null;/.test(sync),'held (not rendered) while joined; back as soon as the flags clear (Leave)');
+ assert.match(read('lib/town/liveJoinRuntime.ts'),/set\(app,'data-live-join',joined\?'':null\)/,'the runtime still sets the flag the prompt watches');
  // Onboarding analytics ids are unchanged (the save screens are sub-screens of the welcome).
  assert.deepEqual([...onb.matchAll(/\{id:'([a-z]+)',eyebrow:/g)].map(m=>m[1]),['welcome','paths','balls','earn','learn']);
  for(const f of ['components/saves/SaveCodeCard.tsx','components/saves/SaveCodeCreate.tsx','components/saves/SaveCodeRestore.tsx','components/saves/SaveActions.tsx','components/saves/SaveSync.tsx','components/IslandOnboarding.tsx'])

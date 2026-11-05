@@ -311,7 +311,7 @@ strength words: child free text never leaves the device; Oct 9 2026), `fi2-coach
 
 **C. Never synced**
 
-- Session-only: `fi2-parent-gate-lock-v1`, `fi2-arcade-departure-v1`, `fi-card-back-tab`, `fi2-dev-unlock-toast`, and the
+- Session-only: `fi2-join-cam-v1` (live-match camera angle), `fi2-parent-gate-lock-v1`, `fi2-arcade-departure-v1`, `fi-card-back-tab`, `fi2-dev-unlock-toast`, and the
   analytics `fi-visit` / `fi-visit-off`.
 - Developer-only: `fi2-cards-dev-v1`, `fi2-cards-dev-progress-v1`, `fi2-card-trade-dev-v1`, `fi2-ride-dev-paths-v1`,
   `fi2-path-art-source`.

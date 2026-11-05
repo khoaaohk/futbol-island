@@ -19,6 +19,7 @@ import ConfirmStep from './ConfirmStep';
 import { DoneButton } from '@/components/DoneButton';
 import HudSlot from '@/components/HudStack';
 import styles from './party.module.css';
+import {growFrame,GROW_IN_MS,GROW_OUT_MS} from '@/lib/ui/growFrame';
 
 /** Analytics event names (Oct 22 2026, docs/analytics-multiplayer-plan.md §3). This file never imports analytics: Town.tsx passes
  *  `onTrack`, which maps a name to an `mp:` count (partyEvents.ts PARTY_TRACK_EVENTS in the analytics folder; a test keeps the two lists equal).
@@ -51,21 +52,6 @@ const inertIf = (on: boolean): Record<string, string> => (on ? { inert: '' } : {
 const reducedMotion = () => typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 /** The Play with friends HUD button the card grows out of (and shrinks back into). */
 const openerRect = () => document.querySelector<HTMLElement>('[data-party-open]')?.getBoundingClientRect() ?? null;
-
-/** Grow timing: card reveals out of the HUD button in ~300 ms, content fades in over the last 60%; shrink back in ~200 ms. */
-const GROW_IN_MS = 300;
-const GROW_OUT_MS = 200;
-/** One grow keyframe: the card is clipped to a button-sized rounded box (constant corner radius, never stretched) and moved so that
- *  box sits over the HUD button; `box` null is the resting card. Translate + clip only: nothing is scaled, so no oval. */
-function growFrame(box: DOMRect | null, el: HTMLElement): Keyframe {
-  const r = parseFloat(getComputedStyle(el).borderTopLeftRadius) || 24;
-  if (!box) return { transform: 'none', clipPath: `inset(0px round ${r}px)` };
-  const c = el.getBoundingClientRect();
-  const ix = Math.max(0, (c.width - box.width) / 2), iy = Math.max(0, (c.height - box.height) / 2);
-  const dx = box.left + box.width / 2 - (c.left + c.width / 2), dy = box.top + box.height / 2 - (c.top + c.height / 2);
-  return { transform: `translate(${dx.toFixed(1)}px, ${dy.toFixed(1)}px)`, clipPath: `inset(${iy.toFixed(1)}px ${ix.toFixed(1)}px round ${Math.min(r, box.width / 2)}px)` };
-}
-
 
 /**
  * Dialog shell: backdrop, Esc closes, focus moves in. Same cream card look as the other island cards.

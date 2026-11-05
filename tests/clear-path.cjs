@@ -52,7 +52,7 @@ const none=new Set(),seven=coreOf('7v7');
  assert.match(qlp,/\.\.\.\(path\.openingStory\?\[\{lesson:core\[0\],story:path\.openingStory,index:-1\}\]:\[\]\)/,'the opening story stays on the map as an optional stop');
  assert.match(onb,/label=\{last\?'Explore':'Next'\}/,'onboarding ends on Explore (Oct 6 2026, user)');assert.doesNotMatch(onb,/launchPathLesson/,'Explore drops into the island, no lesson launch');
  assert.match(town,/\{VENUES\.map\(v=><FieldPathCard key=\{v\.id\} venue=\{v\}/,'Town renders the pitch cards from FieldPathCard');
- assert.match(card2,/pitchCardTarget\(venue\.id,/);assert.match(card2,/if\(target\)launchPathLesson\(venue\.id,target\.lesson,steps,answers,'pitch'\);else onPlays\(\);/,'the card launches the lesson, or the free viewer when the path is done');
+ assert.match(card2,/pitchCardTarget\((?:venue\.id|path),/);assert.match(card2,/if\(target&&path\)launchPathLesson\(path,target\.lesson,steps,answers,'pitch'\);else onPlays\(\);/,'the card launches the lesson, or the free viewer when the path is done');
  assert.match(quests,/<div ref=\{setLandingSlot\} className=\{journey\.landingSlot\}\/>\n <section className=\{journey\.arrival\}/,'the landing slot sits above the hero art');
  assert.match(qlp,/return landingSlot\?createPortal\(landing,landingSlot\):landing;/,'the landing card renders into that slot');
 }

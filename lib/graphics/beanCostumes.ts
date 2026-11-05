@@ -2,7 +2,7 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {getCostume,type AnimalKind} from '../town/costumes';
 import {getIslandCostume,ISLAND_COSTUMES} from '../town/islandCostumes';
-import {BD,BeanMaterial,beanBodyDims,beanSkinOf,type BeanBodyDims,type BeanSkin} from './beanSkin';
+import {BD,BEAN_BANDS,BeanMaterial,beanBodyDims,beanSkinOf,type BeanBodyDims,type BeanSkin} from './beanSkin';
 import type {BeanBuild} from './beanLook';
 
 /*
@@ -311,6 +311,7 @@ export function beanCostumePartMaterial(){
 export const BODY_HOOK=' // Derivatives outside the region branches',LIMB_HOOK=' diffuseColor.rgb=col;\n}';
 const BODY_PARS=/* glsl */`
 uniform sampler2D uCostumePattern;
+uniform float uCostumeKit;
 float costumeRad(float u,vec4 s0){
  float uu=clamp(u,0.,1.),e=abs(2.*uu-1.),n=uu>.5?2.3:2.1;
  return s0.y*pow(max(0.,1.-pow(e,n)),1./n)*(1.+s0.w*(uu-.5))*(1.+.04*sin(uu*6.2831853-1.2));
@@ -321,7 +322,9 @@ const BODY_CODE=/* glsl */`
    // front) and from the back coordinate elsewhere, so the mip level never jumps (no seam line down the belly).
    vec2 gb=vec2(dFdx(vBeanBack.x),dFdy(vBeanBack.x)),gf=vec2(dFdx(vBeanFace.x),dFdy(vBeanFace.x));
    float front=step(1.5707963,abs(ca-3.14159265));vec2 gu=mix(gb,gf,front)/(cr*6.2831853),gv=vec2(dFdx(u),dFdy(u));
-   col=textureGrad(uCostumePattern,vec2(ca/6.2831853,clamp(u,.002,.998)),vec2(gu.x,gv.x),vec2(gu.y,gv.y)).rgb; }
+   vec3 pat=textureGrad(uCostumePattern,vec2(ca/6.2831853,clamp(u,.002,.998)),vec2(gu.x,gv.x),vec2(gu.y,gv.y)).rgb;
+   // Live-match bib (Nov 4 2026): with uCostumeKit on, the shirt + collar bands keep the kit colour over the onesie.
+   col=uCostumeKit>.5&&u>=${BEAN_BANDS.shorts.toFixed(6)}&&u<${BEAN_BANDS.collar.toFixed(6)}?col:pat; }
 `;
 const LIMB_PARS=/* glsl */`
 uniform vec4 uCostumeArm[6];uniform vec4 uCostumeLeg[6];uniform vec3 uCostumeHand;uniform vec3 uCostumeBoot;uniform vec3 uCostumeSole;
@@ -367,6 +370,7 @@ export function attachBeanCostumes<R extends Wearable>(rig:R):R{
  const joints={} as Joints;for(const [k,n] of Object.entries(JOINT_NAMES)){const o=find(n);if(!o)return rig;joints[k as BeanCostumeJoint]=o;}
  const [bodyMesh,limbMesh,...headMeshes]=skin.meshes;
  const baseBody=bodyMesh.material as BeanMaterial,baseLimbs=limbMesh.material as BeanMaterial;
+ const kitU={value:0};// shared by every costume body material this rig puts on (wearBeanCostume sets it)
  let state:BeanCostumeState|undefined,bodyMat:BeanMaterial|undefined,limbMat:BeanMaterial|undefined;
  const layerMasks=new Map<T.Object3D,number>();
  const takeOff=()=>{
@@ -382,7 +386,7 @@ export function attachBeanCostumes<R extends Wearable>(rig:R):R{
   takeOff();
   const parts=beanCostumeParts(id,build),limbs=beanCostumeLimbs(id);if(!parts||!limbs)return;
   const data=baseBody.beanUniforms.beanData.value!;
-  bodyMat=costumeMaterial('body',data,{uCostumePattern:{value:beanCostumePattern(id)}});
+  bodyMat=costumeMaterial('body',data,{uCostumePattern:{value:beanCostumePattern(id)},uCostumeKit:kitU});
   limbMat=costumeMaterial('limbs',data,{uCostumeArm:{value:bandUniform(limbs.arm)},uCostumeLeg:{value:bandUniform(limbs.leg)},uCostumeHand:{value:linear(limbs.hand)},uCostumeBoot:{value:linear(limbs.boot)},uCostumeSole:{value:linear(limbs.sole)}});
   bodyMesh.material=bodyMat;limbMesh.material=limbMat;
   // Hair and hats go under the hood. Layers, not .visible: lane A owns the visibility of its meshes.
@@ -407,8 +411,12 @@ export function attachBeanCostumes<R extends Wearable>(rig:R):R{
  rig.setBeanLook=(...args:unknown[])=>{setBeanLook(...args);if(state)putOn(state.id);show();};
  rig.setShirtNumber=(n:number|null)=>{setShirtNumber(n);show();};
  rig.dispose=()=>{takeOff();dispose();};
- Object.defineProperty(rig,'beanCostumeWear',{value:{get state(){return state;},skin:skin as BeanSkin},enumerable:false,configurable:true});
+ const wear=(id:string|null,kit:boolean)=>{kitU.value=kit?1:0;if(hasBeanCostume(id)){putOn(id!);show();}else takeOff();};
+ Object.defineProperty(rig,'beanCostumeWear',{value:{get state(){return state;},skin:skin as BeanSkin,wear},enumerable:false,configurable:true});
  return rig;
 }
+/** Puts a bean costume on (or takes it off) without lane A's setAppearance, for rigs that are not the walking player
+ *  (a joined live-match slot). `kit` keeps the shirt/collar bands in the outfit colour (the team bib over the onesie). */
+export function wearBeanCostume(rig:object,id:string|null|undefined,kit:boolean){(rig as {beanCostumeWear?:{wear:(id:string|null,kit:boolean)=>void}}).beanCostumeWear?.wear(id??null,kit);}
 /** The bean costume a rig is wearing (undefined when none, or when it shows the classic fallback). */
 export function beanCostumeOf(rig:object):BeanCostumeState|undefined{return (rig as {beanCostumeWear?:{state?:BeanCostumeState}}).beanCostumeWear?.state;}

@@ -88,7 +88,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  for(const f of tsx.filter(f=>!f.endsWith('saveCodeAdapter.tsx')))assert(!/from '@\/(lib|components)\/saves/.test(read(f)),`${f}: only the adapter imports the save code`);
  // The only storage use: the one-shot hand-off flags for the reload path (handoffMotion.ts / waterLaunch.ts); the in-game flag is
  // lib/rootView.ts's.
- for(const f of files)assert(!/localStorage|sessionStorage|indexedDB|sendBeacon|\/api\/save/.test(strip(read(f)).replace("sessionStorage.setItem(HANDOFF_STORAGE_KEY,'1')",'').replace("sessionStorage.setItem(HANDOFF_KEY,'tan')",'')),`${f}: no save logic or storage of its own`);
+ for(const f of files)assert(!/localStorage|sessionStorage|indexedDB|sendBeacon|\/api\/save/.test(strip(read(f)).replace("sessionStorage.setItem(HANDOFF_STORAGE_KEY,'1')",'').replace("sessionStorage.setItem(HANDOFF_KEY,'tan')",'').replace(/sessionStorage\.setItem\(HANDOFF_KEY,r\?`pill:[^`]*`:'pill'\)/,'')),`${f}: no save logic or storage of its own`);
  assert.match(actions,/import\('\.\/saveCodeAdapter'\)/,'loaded on demand');
  const create=read('components/saves/SaveCodeCreate.tsx');assert.match(create,/required/,'the real create supports required mode');
  assert.doesNotMatch(create,/Which word comes first\?/,'no first-word check on any code screen (user, Oct 10 2026)');}
@@ -206,7 +206,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert.match(loaderCss,/\.art\{transform-origin:50% 100%;animation:coastArrive 3s/,'the cold-start entrance is still there');
  assert.match(loader,/if\(!Number\.isFinite\(start\)\|\|start<=1\)return;/,'no flag: no track change');
  const key=(motion.match(/HANDOFF_STORAGE_KEY='([^']+)'/)||[])[1];assert(key&&read('components/islandLoadingBoot.ts').includes(`sessionStorage.getItem('${key}')`),'the reload path shares the key');
- assert.match(loader,/import \{HANDOFF_BOOT,takeLoaderContinuation\} from '\.\/islandLoadingBoot';/);
+ assert.match(loader,/import \{HANDOFF_BOOT,islandCoverDone,islandCovered,takeLoaderContinuation\} from '\.\/islandLoadingBoot';/);
  // The restore path (a full reload into `/`) starts the game's loader settled too.
  assert.match(adapter,/if\(HANDOFF_ENABLED\)markReloadHandoff\(\);/,'the reload flag only when the hand-off is on');}
 
@@ -225,7 +225,28 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert.match(water,/requestAnimationFrame\(frame\);\s*\}\);\s*\}/,'the fill loop ends when full');assert(!/setInterval/.test(water+pill),'no polling');
  // Order: fade links/buttons ([data-launch]) → fill → pill out, pink down, items away → sand covers the screen → tan flag → route.
  assert.match(pill,/screen\?\.setAttribute\('data-launch',''\);/);assert(!/useRouter|router\./.test(strip(pill)),'no navigation: `/` switches in place');
- assert.match(pill,/runWaterFill\(fill\.current,\{reduced,onLevel:setLevel\}\)\s*\.then\(\(\)=>screen\?runTanExit\(screen,wrap\.current,\{reduced\}\):undefined\)\s*\.then\(\(\)=>\{(?:bootMark\('[a-z-]+'\);)?if\(apply\)\{rememberInGame\(\);markTanReload\(\);apply\(\);\}else\{markTanHandoff\(\);enterGame\(\);\}\}\);/);
+ // Nov 4 2026 (user: no loader right before the island): only a restore (it reloads onto the tan loader) still runs the tan exit;
+ // Play marks the cover and `/` switches to the game under the title screen, which fades straight into the island.
+ // Nov 5 2026 (user: no tan sheet on a restore either): the restore fades the title to its sea with only the full "Loading…" pill
+ // (runPillExit), hands that pill's box over the reload (markPillReload), and the reload's loader paints the same frame.
+ assert.match(pill,/runWaterFill\(fill\.current,\{reduced,onLevel:setLevel\}\)[\s\S]*?\.then\(\(\)=>screen&&apply\?runPillExit\(screen,wrap\.current,\{reduced\}\):null\)\s*\.then\(box=>\{(?:bootMark\('[a-z-]+'\);)?if\(apply\)\{rememberInGame\(\);markPillReload\(box\);apply\(\);\}else\{markTanHandoff\(\);markIslandCover\(\);enterGame\(\);\}\}\);/);
+ {const boot=read('components/islandLoadingBoot.ts'),lc=read('components/IslandLoading.module.css'),hp=read('components/LoadingHandoffPill.tsx');
+  assert.match(water,/export const markPillReload=\(r:DOMRect\|null\)=>\{try\{sessionStorage\.setItem\(HANDOFF_KEY,r\?`pill:/,'the pill box rides the reload');
+  assert.match(water,/background:PILL_SEA/);assert.match(water,/export const PILL_SEA='#2b53e5';/);assert.match(lc,/\.screen\.screen\{[^}]*background:#2b53e5/,'the title sea is the loader\'s own background');
+  assert.match(boot,/if\(v\.slice\(0,4\)==='pill'\)\{h\.dataset\.islandHandoff='pill';/,'pre-paint: pill mode');assert.match(boot,/h\.style\.setProperty\('--handoff-pill-'\+k,n\+'px'\)/,'…at the same box');
+  assert.match(lc,/:global\(html\[data-island-handoff=pill\]\) \.screen>\*\{visibility:hidden\}/,'no art, cast or tan: only the sea');
+  assert.match(lc,/:global\(html\[data-island-handoff=pill\]\) \.screen>\.handoffPill\{visibility:visible;display:grid;position:fixed;[^}]*left:var\(--handoff-pill-x/,'the pill where it was');
+  assert.match(lc,/:global\(html\[data-island-handoff=pill\]\) \.exiting\{animation:loadingDepart \.5s \.05s ease-in-out both\}/,'the same quick fade into the island');
+  assert.match(hp,/className=\{`\$\{title\.start\} \$\{title\.waterPill\}`\} data-loading=""/,'the title\'s own pill classes, loading');assert.match(hp,/<span>Loading…<\/span>/);
+  for(const f of ['components/IslandLoading.tsx','components/IslandLoadingStatic.tsx'])assert.match(read(f),/<LoadingHandoffPill\/>/,f+' carries the pill');}
+ {const rs=read('components/root/RootSwitch.tsx'),il=read('components/IslandLoading.tsx'),boot=read('components/islandLoadingBoot.ts'),g=read('app/globals.css');
+  assert.match(rs,/\{\(view!=='game'\|\|cover\)&&<div data-root-landing="" data-root-cover=\{cover\?'':undefined\}/,'the title screen stays mounted as the cover');
+  assert.match(rs,/window\.addEventListener\(ISLAND_COVER_DONE,done\);if\(failed\)done\(\);/,'it lifts on the loader\'s exit, or a failed load');
+  assert.match(rs,/el\.animate\(\[\{opacity:1\},\{opacity:0\}\],\{duration:500/,'one opacity cross-fade into the island');
+  assert.match(il,/style=\{covered\?\{visibility:'hidden'\}:undefined\}/,'Town\'s tan loader is never seen under the cover');
+  assert.match(il,/useEffect\(\(\)=>\{if\(exiting\)islandCoverDone\(\);\},\[exiting\]\);/,'the cover fades when the island\'s first frame is drawn');
+  assert.match(boot,/export function islandCoverDone\(\)\{if\(islandCovered\(\)\)window\.dispatchEvent/);
+  assert.match(g,/html\[data-root-view=game\] \[data-root-landing\]\[data-root-cover\]\{display:block;position:fixed/,'the cover sits over the game');}
  assert.match(pill,/data-landing-play="hero"/,'analytics: Play inside its data-title-card');
  assert.match(water,/const slide=\[\{transform:'none',opacity:1\},.*translateY\(.*opacity:0\}\]/,'pink slides down and fades');
  {const d=+water.match(/slideTiming:KeyframeAnimationOptions=\{delay:(\d+),duration:(\d+)/)[1],u=+water.match(/slideTiming:KeyframeAnimationOptions=\{delay:\d+,duration:(\d+)/)[1];
@@ -234,7 +255,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert.match(water,/q\('\[data-x="near"\]'\)\?\.animate\(slide,slideTiming\);q\('\[data-x="far"\]'\)\?\.animate\(slide,slideTiming\);/,'the dark hills ride down with the pink (their flat bottom is never exposed)');
  assert.match(water,/\{transform:`scale\(\$\{k\}\)`\}/,'the sand grows in place, outward in every direction (user)');
  assert.doesNotMatch(water,/translate\(\$\{dx\}px/,'…without drifting to the screen centre');
- for(const k of strip(water).matchAll(/\.animate\(\[([\s\S]*?)\],\{/g))assert(!/(width|height|top|left|background|filter)\s*:/.test(k[1]),`exit keyframes: transform/opacity only: ${k[1].slice(0,50)}`);
+ for(const k of strip(water).matchAll(/\.animate\(\[([\s\S]*?)\],\s*\{/g))assert(!/(width|height|top|left|background|filter)\s*:/.test(k[1]),`exit keyframes: transform/opacity only: ${k[1].slice(0,50)}`);
  assert.match(css,/@media\(prefers-reduced-motion:no-preference\)\{\.waterPill\[data-loading\] \.waterCrest\{animation:crestRoll/,'the crest rolls only while loading');
  assert.match(css,/\.screen\[data-launch\] :is\(\.grownRow,\.tilt,\.haveCode,\.quiet,\.breakChip,\.cardTitle,\.cardBody(?:,\[data-title-join-stack\])?\)\{opacity:0;pointer-events:none\}/,'links and other buttons go first (Join friends included since Oct 22 2026)');
  assert.match(water,/if\(reduced\|\|!land\)\{/,'reduced motion: a plain fill, then a cross-fade to tan');
@@ -243,13 +264,13 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert.match(lcss,/:global\(html\[data-island-handoff=tan\]\) \.screen\{background:#dfc587\}/);
  assert.match(lcss,/:global\(html\[data-island-handoff=tan\]\) \.screen>\*\{visibility:hidden\}/);
  assert.match(water,/export const TAN='#dfc587';/,'the same tan');
- assert.match(read('components/islandLoadingBoot.ts'),/document\.documentElement\.dataset\.islandHandoff=v==='tan'\?'tan':'reload'/,'the reload path carries tan mode');
+ assert.match(read('components/islandLoadingBoot.ts'),/else document\.documentElement\.dataset\.islandHandoff=v==='tan'\?'tan':'reload'/,'an older tab\'s tan reload still carries tan mode');
  assert.match(read('components/IslandLoadingStatic.tsx'),/<script dangerouslySetInnerHTML=\{\{__html:HANDOFF_BOOT\}\}\/>/,'… also when `/` paints the static loader first');
  assert.match(ltsx,/useEffect\(\(\)=>\(\)=>\{if\(exited\.current\)delete document\.documentElement\.dataset\.islandHandoff;\},\[\]\);/,'the flag lasts through the game loader\'s exit');
  assert.match(lcss,/\.art\{transform-origin:50% 100%;animation:coastArrive 3s/,'cold start unchanged');
  // The tan hold is as short as the island allows: no 3 s art minimum and an earlier fade, only in tan mode.
  const town=read('components/Town.tsx');
- assert.match(town,/const tanHandoff=\(\)=>document\.documentElement\.dataset\.islandHandoff==='tan';/);
+ assert.match(town,/const tanHandoff=\(\)=>\{const v=document\.documentElement\.dataset\.islandHandoff;return v==='tan'\|\|v==='pill';\};/,'pill mode keeps the plain-sheet timing');
  assert.match(town,/setMinimumLoadElapsed\(true\),tanHandoff\(\)\?0:3000\)/,'tan: no 3 s minimum; cold start keeps it');
  // Preload pass (Oct 9 2026): the tan sheet cross-fades as soon as the first frame is drawn; arrival with it, HUD as it ends.
  assert.match(lcss,/:global\(html\[data-island-handoff=tan\]\) \.exiting\{animation:loadingDepart \.5s \.05s ease-in-out both\}/);
@@ -298,7 +319,7 @@ assert.match(read('components/VisitTracker.tsx'),/if\(pathname!=='\/play'\|\|vie
  // Play: one synchronous swap (the game was loaded by the water fill); a reload continues the placeholder's animations.
  assert.match(sw,/const Loaded=Game\?\?\(view==='game'\?loadedGame\(\):null\);/);
  assert.match(sw,/continueLoaderFrom\(placeholderStart\(\)\);flushSync\(\(\)=>setGame\(\(\)=>G\)\);/);
- assert.match(sw,/\{view!=='game'&&<div data-root-landing="">\{landing\}<\/div>\}/);assert.match(sw,/\{view!=='landing'&&<div data-root-game="">/);
+ assert.match(sw,/\{\(view!=='game'\|\|cover\)&&<div data-root-landing=""[^>]*>\{landing\}<\/div>\}/,'the title screen, or (Nov 4 2026) Play\'s cover over the game');assert.match(sw,/\{view!=='landing'&&<div data-root-game="">/);
  assert.match(read('components/IslandLoading.tsx'),/const from=takeLoaderContinuation\(\);\s*if\(from!==null&&screen\.current\)for\(const a of screen\.current\.getAnimations\(\{subtree:true\}\)\)a\.startTime=from;/);
  // Every way into Town marks the tab: /play, /play?from= (island-return) and a restored save's reload.
  assert.match(read('components/Town.tsx'),/useEffect\(\(\)=>\{rememberInGame\(\);\},\[\]\);/);

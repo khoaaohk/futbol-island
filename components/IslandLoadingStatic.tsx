@@ -1,6 +1,7 @@
 import styles from './IslandLoading.module.css';
 import LoadingIslandArt from './LoadingIslandArt';
 import LoadingBeanCast from './LoadingBeanCast';
+import LoadingHandoffPill from './LoadingHandoffPill';
 import {HANDOFF_BOOT} from './islandLoadingBoot';
 
 /**
@@ -15,6 +16,7 @@ export default function IslandLoadingStatic(){
   <div data-main-island-loading className={`town-loading ${styles.screen}`} role="status">
    <script dangerouslySetInnerHTML={{__html:HANDOFF_BOOT}}/>
    <div className={styles.art} aria-hidden="true"><LoadingIslandArt/></div>
+   <LoadingHandoffPill/>
    <LoadingBeanCast lite/>
    <div className={styles.copy}>
     <span className={styles.eyebrow}>PLAY · LEARN · GROW</span>

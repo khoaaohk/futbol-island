@@ -65,7 +65,7 @@ const park=(s,team,x,y)=>{for(const id of (team==='gold'?s.goldIds:s.blueIds))if
  assert.equal(h.note.text,S.SEVEN_NOTES.buildOut[0],'the feed names the build-out line');
  // the centre-backs split to the edges of the box for the first pass
  assert(Math.abs(h.targets.lcb.x-135)>=79&&Math.abs(h.targets.rcb.x-135)>=79,'centre-backs split wide ('+h.targets.lcb.x.toFixed(0)+', '+h.targets.rcb.x.toFixed(0)+')');
- const view=fs.readFileSync('lib/town/fieldRuntime.ts','utf8');assert(/isGK&&e\.sim\.keeperHands\)\{const keeper=/.test(view),'the view puts the ball in his hands only when he has it in his hands');}
+ const view=fs.readFileSync('lib/town/fieldRuntime.ts','utf8');assert(/isGK&&\(e\.puppet\?e\.puppet\.hands:e\.sim\.keeperHands\)\)\{const keeper=/.test(view),'the view puts the ball in his hands only when he has it in his hands');}
 
 // ---- 5. Keeper recycle: pressed in our own third with the keeper free ----
 {const s=fresh(13);park(s,'blue',230,60);park(s,'gold',230,200);s.possession='gold';

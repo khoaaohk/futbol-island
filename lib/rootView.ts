@@ -4,8 +4,8 @@
  *
  *  - Every visit and every reload shows the title screen, with its water-fill Play for a returning player (user, Oct 9 2026:
  *    the old loader must not show on a reload). The only reload that goes straight to the game is the game's own hand-off
- *    reload (a restored save: markTanReload → sessionStorage fi2-island-handoff, read here or already moved onto <html
- *    data-island-handoff> by the loader's boot script), which lands on the tan sheet.
+ *    reload (a restored save: markPillReload → sessionStorage fi2-island-handoff, read here or already moved onto <html
+ *    data-island-handoff> by the loader's boot script), which lands on the title's sea with the "Loading…" pill (Nov 5 2026; was tan).
  *  - Links the game itself makes also open the game: `?from=` (the Arcade / Konbini / Museum return, normally rewritten to
  *    /island-return before it gets here) and `?panel=` (Settings → About, e.g. the Stripe return of a donation made from the
  *    game, which opens in a new tab).

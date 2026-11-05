@@ -19,3 +19,7 @@ After performance changes, update these notes with the implementation, relevant 
 ## Mobile heat is a primary requirement
 
 For every feature and change, keeping phone heat down is a primary concern. Prefer on-demand loading, bounded work, shared assets, cached requests and sleeping off-screen or inactive content. Avoid background polling, autoplay, unnecessary animation loops and simultaneous video players. Preserve visual quality and responsive controls; document added runtime costs and validate relevant performance behavior. Do not claim reduced iPhone temperature without real-device evidence.
+
+## Button font (owner, Nov 4 2026)
+
+No button text uses IslandBrush (including primary and Play buttons): use the regular UI sans, weight 800, a size 1-3px under the old brush size. IslandBrush stays for headings, the wordmark/logo, titles and big numerals.

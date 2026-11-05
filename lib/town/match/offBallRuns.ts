@@ -5,6 +5,8 @@
 // still applies afterwards, so a run in behind is timed level with the last defender, never offside.
 // Teaching: "Pass to the player, or pass into the space where they are running."
 
+import {PASS_HELP} from './humanInputs';
+
 export const RUN={Hold:0,Beyond:1,Check:2,Wide:3,Space:4} as const;
 export type RunKind=typeof RUN[keyof typeof RUN];
 export const RUN_NAMES=['hold','beyond','check','wide','space'] as const;
@@ -68,6 +70,17 @@ export function pickOffBallRun(c:RunContext,rnd:number,out:{x:number;y:number}):
     const wantX=135+(c.hx>=135?1:-1)*RUNS.wideX;out.x=(wantX-c.px)*.6;return clampOut(out,RUN.Wide);
   }
   return RUN.Hold;
+}
+/** Make yourself available for a HUMAN carrier (owner Nov 4 2026, kids): one of his two nearest NPC teammates comes to
+ *  PASS_HELP.near..far units of him and steps sideways out of a lane a defender blocks (laneD = that defender's distance
+ *  to the lane carrier → him, (bx, by) the defender). Writes an offset (added to the formation target) into `out`. Pure. */
+export function supportOffset(px:number,py:number,cx:number,cy:number,bx:number,by:number,laneD:number,out:{x:number;y:number}){
+  out.x=0;out.y=0;
+  const dx=px-cx,dy=py-cy,d=Math.hypot(dx,dy)||1;
+  if(d>PASS_HELP.far){const k=Math.min(PASS_HELP.step,d-PASS_HELP.far);out.x-=dx/d*k;out.y-=dy/d*k;}
+  else if(d<PASS_HELP.near){const k=PASS_HELP.near-d;out.x+=dx/d*k;out.y+=dy/d*k;}
+  if(laneD<PASS_HELP.laneClear){const nx=-dy/d,ny=dx/d,side=((bx-cx)*nx+(by-cy)*ny)>0?-1:1,k=Math.min(PASS_HELP.step,PASS_HELP.laneClear-laneD+4);out.x+=nx*side*k;out.y+=ny*side*k;}
+  return clampOut(out,RUN.Check),out;
 }
 function clampOut(out:{x:number;y:number},kind:RunKind):RunKind{
   const l=Math.hypot(out.x,out.y);if(l>RUNS.maxOffset){out.x*=RUNS.maxOffset/l;out.y*=RUNS.maxOffset/l;}return kind;
