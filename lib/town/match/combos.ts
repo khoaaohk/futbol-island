@@ -860,7 +860,10 @@ export function createComboView(/** The venue's turn (see createChoreo): the ski
   settle(motion:PlayerMotion){if(motion.jump&&motion.reaction==='header')motion.kick=undefined;},
   /** A human's dribbling trick (Trick button, owner Nov 4 2026): the authored move (stepover / La Croqueta / drag-back,
    *  skillMoves.ts poses and ball path) played now at the quick live tempo `seconds`; one object per tap, none per frame. */
-  trick(id:string,kind:'stepover'|'croqueta'|'dragBack',side:-1|1,seconds:number){const m=SKILL_MOVE[kind]!;active.set(id,make(m,side,clock,seconds,1,{kind}));},
+  trick(id:string,kind:'stepover'|'croqueta'|'dragBack'|'roulette',side:-1|1,seconds:number){const m=SKILL_MOVE[kind]!;active.set(id,make(m,side,clock,seconds,1,{kind}));},
+  /** Body play (humanInputs HUMAN_BODY, Nov 5 2026): a human's shield (back to the defender) or shoulder challenge, the authored
+   *  skillMoves pose played once now unless another move is running. One object per start, none per frame. */
+  body(id:string,type:'shield'|'shoulderCharge',side:-1|1,seconds:number){const a=active.get(id);if(a&&progressOf(a)>=0&&progressOf(a)<1)return;active.set(id,make(type,side,clock,seconds,1));},
   skillOf(id:string){const a=active.get(id);return a?{kind:a.kind,type:a.type,progress:progressOf(a)}:undefined;},
   reset(){active.clear();passFrom.clear();lastWindup=null;lastOwner=null;touchSeen=-1;},
  };

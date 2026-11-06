@@ -396,6 +396,10 @@ export const COLOUR_ORDER: readonly number[]; export const RESERVED_NAME_SLOTS =
 export class TokenBucket { constructor(perSec: number, burst: number); take(nowMs: number): boolean }
 export const RATE: { pose: [8, 12]; emote: [0.5, 2]; ping: [0.33, 2]; control: [1, 3]; closeAbovePerSec: 30;
   emotePerMin: 10 };
+// Flood guard (Nov 5 2026, NOT deployed yet): a per-socket TokenBucket(RATE.closeAbovePerSec = 30/s, FLOOD_BURST = 120), one token per
+// frame, none left -> S.Error RateLimited + close 4002 (was a fixed 1 s window of 30 frames). Per-kind buckets still apply inside it.
+export const FLOOD_BURST: 120;
+export const MATCH_OWNER_SILENT_MS: 6000; // relay v1.8 fields: a silent owner (no C.Match frame) with a live friend is moved on (join-live-game-design.md)
 export const WORLD_BOUNDS: { minX: -4000; maxX: 10000; minZ: -6000; maxZ: 6000; minY: -400; maxY: 2000 }; // dm; must contain main, Cay (612,-160), Summit (640,130) + flight margins
 export const MAX_SPEED_MS: Record<Mode, number>;  // walk 3.7*1.7 sprint, scooter 14, bike 20, moped 28, jetpack 34, swim 3, others 6
 ```

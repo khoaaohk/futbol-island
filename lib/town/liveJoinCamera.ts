@@ -74,6 +74,37 @@ export function joinCamFrame(angle:JoinCamAngle,px:number,pz:number,ax:number,az
   }
 }
 
+// replayCamFrame's fit state (module scratch: no closure or object per frame)
+const FIT={lx:0,ly:0,lz:0,fx:0,fy:0,fz:0,rx:0,rz:0,ux:0,uy:0,uz:0,tanH:1,tanV:1,d:0};
+/** The eye distance (along −forward from the look point) that puts (x, y, z) inside the fov margins; keeps the largest. */
+function fitPoint(x:number,y:number,z:number){const F=FIT,dx=x-F.lx,dy=y-F.ly,dz=z-F.lz,df=dx*F.fx+dy*F.fy+dz*F.fz;
+  F.d=Math.max(F.d,Math.abs(dx*F.rx+dz*F.rz)/F.tanH-df,Math.abs(dx*F.ux+dy*F.uy+dz*F.uz)/F.tanV-df);}
+/** The goal replay camera's inputs (one reused object; liveJoinRuntime fills it). World units; NaN shooter = none. */
+export type ReplayCamShot={bx:number;by:number;bz:number;sx:number;sz:number;gx:number;gz:number;ax:number;az:number;goalWidth:number;goalHeight:number;ground:number};
+export const createReplayCamShot=():ReplayCamShot=>({bx:0,by:0,bz:0,sx:NaN,sz:NaN,gx:0,gz:0,ax:0,az:1,goalWidth:5,goalHeight:2,ground:0});
+/** Goal replay framing (Nov 5 2026 review: "the goal cut off, the ball a dot, a crowd not a shot"). A broadcast replay angle from
+ *  behind the attacker on the TV side (the goal top-right on a portrait phone, on the right in landscape, the side view's convention),
+ *  fixed per replay so it never swings; the eye backs off just far enough that the goal mouth (both posts, the bar), the ball and,
+ *  before the shot, the shooter all sit inside the frame (a closed-form fit per point in the camera's own axes, the HUD bands kept
+ *  clear). `tight` 0 → 1: the build-up's wider framing → the finish (goal + ball only, nearer). No allocation. */
+export function replayCamFrame(s:ReplayCamShot,aspect:number,tight:number,out:JoinCamFrame){
+  const t=Math.max(0,Math.min(1,(aspect-.6)/.9)),yaw=(22+36*t)*Math.PI/180,pitch=(36-8*t)*Math.PI/180;
+  // ground forward: the attack direction turned toward the TV side (az, −ax); then down by `pitch`
+  const cy=Math.cos(yaw),sy=Math.sin(yaw),gfx=s.ax*cy+s.az*sy,gfz=s.az*cy-s.ax*sy,cp=Math.cos(pitch),fx=gfx*cp,fy=-Math.sin(pitch),fz=gfz*cp;
+  const rl=Math.hypot(fz,fx)||1,rx=-fz/rl,rz=fx/rl,ux=-rz*fy,uy=rz*fx-rx*fz,uz=rx*fy;// right = f × up, up = right × f
+  const g=s.ground,gh=s.goalHeight,hw=s.goalWidth/2,px=-s.az,pz=s.ax;// along the goal line
+  // the look point: between the ball and the goal mouth, leaning to the goal at the finish
+  const wl=.42+.18*tight,lx=s.bx+(s.gx-s.bx)*wl,ly=s.by+(g+gh*.5-s.by)*wl,lz=s.bz+(s.gz-s.bz)*wl;
+  const tanV=TAN_HALF_FOV*(.68+.06*tight),tanH=TAN_HALF_FOV*Math.max(.3,aspect)*(.8+.07*tight);
+  const F=FIT;F.lx=lx;F.ly=ly;F.lz=lz;F.fx=fx;F.fy=fy;F.fz=fz;F.rx=rx;F.rz=rz;F.ux=ux;F.uy=uy;F.uz=uz;F.tanH=tanH;F.tanV=tanV;F.d=0;
+  fitPoint(s.gx+px*hw,g,s.gz+pz*hw);fitPoint(s.gx-px*hw,g,s.gz-pz*hw);fitPoint(s.gx+px*hw,g+gh,s.gz+pz*hw);fitPoint(s.gx-px*hw,g+gh,s.gz-pz*hw);
+  fitPoint(s.gx+s.ax*1.2,g,s.gz+s.az*1.2);// the back of the net
+  fitPoint(s.bx,s.by,s.bz);
+  if(tight<.5&&Number.isFinite(s.sx))fitPoint(s.sx,g+1.6,s.sz);// the shooter (head height)
+  const d=Math.min(75,Math.max(11+7*(1-tight),F.d*(1.12-.12*tight)));
+  out.lx=lx;out.ly=ly;out.lz=lz;out.ex=lx-fx*d;out.ey=ly-fy*d;out.ez=lz-fz*d;
+}
+
 const wrap=(a:number)=>Math.atan2(Math.sin(a),Math.cos(a));
 const smooth=(u:number)=>u*u*(3-2*u);
 

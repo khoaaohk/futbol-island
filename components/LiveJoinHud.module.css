@@ -1,5 +1,5 @@
 /* Join a live game HUD (components/LiveJoinHud.tsx). The island's own HUD look: cream cards (#fff3d9), green ink
-   (#294f43), gold primary round buttons (#f4cc7c) with IslandBrush on the primary button only; --bib is the team's
+   (#294f43), gold primary round buttons (#f4cc7c), the regular UI sans on every button (owner Nov 4 2026, no IslandBrush); --bib is the team's
    bib colour written by lib/town/liveJoinRuntime.ts. */
 /* The side + position picker (owner Nov 4 2026): the party modal (party.module.css backdrop / dialog / card / menuHeader /
    primary) grown out of the pitch bar's Play (lib/ui/growFrame); a segmented side toggle like CharacterToggle and a native
@@ -38,21 +38,25 @@
 @media(prefers-reduced-motion:reduce){.cam{transition:none}.cam:active{translate:none}}
 .leave:hover{scale:1.05}.leave:active{scale:.96}@media(prefers-reduced-motion:reduce){.leave{transition:none}.leave:hover,.leave:active{scale:1}}
 .tip{position:absolute;left:50%;top:var(--tip-top,76px);translate:-50% 0;margin:0;max-width:min(380px,calc(100vw - 32px));padding:9px 14px;border-radius:14px;background:#294f43;color:#fff3d1;font-size:14px;font-weight:700;line-height:1.35;text-align:center;pointer-events:none;animation:joinIn .2s ease-out both}
-/* Action cluster (owner Nov 4 2026: five on offense): Pass (88px) in the corner, four 58px buttons on one arc round it
-   (radius 120 from Pass's centre at 184° / 152° / 120° / 88°, ≥ 8px apart), all under the right thumb: Shoot · Trick ·
-   Forward · Sprint; defense fills the same slots with Stay · Press · (gap) · Sprint. */
+/* Action cluster (easier controls, owner Nov 5 2026; lib/town/liveControls.ts): only the buttons that make sense now. Pass /
+   Tackle / Press / Call / Go! (88px) in the corner; on one 45° arc round its centre: Trick or Stay (52px, small secondary, 186°,
+   r 108), Shoot / Forward / Kick (68px, 141°, r 118), Sprint (58px, 96°, r 120; only with "Push stick to sprint" off). Each
+   button sits --x from the cluster's outer edge and --y from its bottom, so the flipped (left-handed) layout mirrors it. */
 .actions{position:absolute;z-index:10;right:calc(14px + env(safe-area-inset-right,0px));bottom:var(--control-bottom,28px);width:194px;height:194px;pointer-events:none}
 .actions[hidden]{display:none}
-.a,.b,.s,.f,.t{position:absolute;pointer-events:auto;display:grid;place-items:center;border-radius:50%;padding:0;touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .1s ease-out}
-.a{right:0;bottom:0;width:88px;height:88px;border:3px solid #fff0c4;background:#f4cc7c;color:#294f43;font-weight:800;font-size:15px;box-shadow:0 5px 0 #173e3459}
-.b{right:135px;bottom:7px;width:58px;height:58px;border:3px solid #fff0c4;background:#f2a28c;color:#294f43;font-weight:800;font-size:13px;letter-spacing:-.01em;box-shadow:0 4px 0 #173e3459}
-.s{right:11px;bottom:135px;width:58px;height:58px;border:3px solid #fff0c4;background:#9fd8c6;color:#294f43;font-weight:800;font-size:12px;box-shadow:0 4px 0 #173e3459}
-.f{right:75px;bottom:119px;width:58px;height:58px;border:3px solid #fff0c4;background:#c9b6e2;color:#294f43;font-weight:800;font-size:11px;box-shadow:0 4px 0 #173e3459}.f[hidden]{display:none}
-.b[data-mode="stay"]{background:#a9cfee}
-.t{right:121px;bottom:71px;width:58px;height:58px;border:3px solid #fff0c4;background:#8fcdee;color:#294f43;font-weight:800;font-size:12px;box-shadow:0 4px 0 #173e3459}.t[hidden]{display:none}
-.t[data-mode="press"]{background:#f2a9c9;right:101px;bottom:98px}/* defense: Press sits mid-arc (136°) between Stay (184°) and Sprint (88°) */
+.a,.b,.s,.t{position:absolute;right:var(--x);bottom:var(--y);pointer-events:auto;display:grid;place-items:center;border-radius:50%;padding:0;border:3px solid #fff0c4;color:#294f43;font-weight:800;touch-action:none;user-select:none;-webkit-user-select:none;transition:transform .1s ease-out}
+:global(.controls-flipped) .actions>*{right:auto;left:var(--x)}
+.a{--x:0px;--y:0px;width:88px;height:88px;background:#f4cc7c;font-size:15px;box-shadow:0 5px 0 #173e3459}
+.a[data-mode="press"]{background:#f2a9c9}/* defence, out of reach: Press (hold to chase) */
+/* In goal (Nov 5 2026): Dive in the keeper's green; Catch (a shot at his body) turns cream so the change reads; Throw in his hands. */
+.a[data-mode="save"]{background:#9fdcb8}.a[data-catch]{background:#fff1d3;transform:scale(1.05)}.a[data-mode="throw"]{background:#c6e6a0}
+.b{--x:102px;--y:84px;width:68px;height:68px;background:#f2a28c;font-size:14px;letter-spacing:-.01em;box-shadow:0 4px 0 #173e3459}
+.b[data-mode="forward"]{background:#c9b6e2;font-size:12px}
+.b[data-mode="stay"]{--x:125px;--y:7px;width:52px;height:52px;background:#a9cfee;font-size:12px}/* defence: the small secondary */
+.s{--x:28px;--y:134px;width:58px;height:58px;background:#9fd8c6;font-size:12px;box-shadow:0 4px 0 #173e3459}.s[hidden]{display:none}
+.t{--x:125px;--y:7px;width:52px;height:52px;background:#8fcdee;font-size:12px;box-shadow:0 4px 0 #173e3459}.t[hidden]{display:none}
 .t[data-on]{transform:scale(1.06)}
-.a:active,.b:active,.s:active,.f:active,.t:active{transform:scale(.93)}
+.a:active,.b:active,.s:active,.t:active{transform:scale(.93)}
 /* Cooldown (Trick 1.2 s, Press 8 s): a quiet ring that shrinks away as the button recharges and a dimmed label; the
    runtime writes --cool (1 → 0, quantised, only on change). Transform + opacity only. */
 .cool{position:absolute;inset:-6px;border-radius:50%;border:3px solid #294f43;pointer-events:none;opacity:calc(var(--cool,0) * .55);transform:scale(calc(.86 + .14 * var(--cool,0)))}
@@ -89,3 +93,27 @@
 .chip[data-goal]{animation:joinShake .6s cubic-bezier(.36,.07,.19,.97) both}
 .chip[data-goal=gold] .scores .pill:first-child,.chip[data-goal=blue] .scores .pill:last-child{animation:joinPop .75s cubic-bezier(.34,1.56,.64,1) both}
 @media(prefers-reduced-motion:reduce){.chip[data-goal],.chip[data-goal] .scores .pill{animation:none}}
+/* Goal replay (Nov 5 2026, lib/town/goalReplay.ts): the REPLAY tag + Skip under the score bar, where the trick word pops. Regular UI sans on the button (no IslandBrush); a static red dot, no loop. */
+.replay{position:absolute;z-index:12;left:50%;top:var(--tip-top,76px);translate:-50% 0;display:flex;align-items:center;gap:8px;margin:0;animation:joinIn .2s ease-out both}
+.replay[hidden]{display:none}
+.replayTag{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;background:#193f37e6;color:#fff3d1;font-weight:800;font-size:14px;letter-spacing:.14em;text-transform:uppercase;pointer-events:none}
+.replayTag i{width:9px;height:9px;border-radius:50%;background:#ff5a4e;box-shadow:0 0 0 3px #ff5a4e40}
+.replaySkip{min-height:44px;min-width:64px;padding:0 18px;border:3px solid #fff2cd;border-radius:999px;background:#fff1d3;color:#244d40;font:800 14px/1 var(--btn-font,Arial),Arial,sans-serif;box-shadow:0 3px 0 #a8863d;cursor:pointer;touch-action:manipulation}
+.replaySkip:active{translate:0 2px;box-shadow:0 1px 0 #a8863d}
+/* While a replay plays the controls fade out (opacity only; a tap anywhere skips, so the buttons take no taps) and come back after.
+   The stick (Town's .touch-controls, outside this module) gets the same opacity inline from liveJoinRuntime replayHud. */
+.actions[data-replaying]{opacity:0;transition:opacity .2s ease-out}.actions[data-replaying] button{pointer-events:none}
+@media(prefers-reduced-motion:reduce){.replay{animation:none}.actions[data-replaying]{transition:none}}
+/* Slow-motion vignette (Nov 5 2026, kick effects): opacity only, written by liveJoinRuntime; never takes taps. */
+.vignette{position:fixed;inset:0;z-index:1;pointer-events:none;opacity:0;background:radial-gradient(ellipse 75% 70% at 50% 52%,transparent 58%,rgba(14,28,34,.22) 82%,rgba(10,20,26,.46) 100%)}
+
+/* "You're the keeper" (Nov 5 2026): ~2 s under the score bar on joining in goal and at each kick-off after a goal. Opaque, no glow;
+   the runtime toggles data-show; transform + opacity only. */
+.keeper{position:absolute;z-index:12;left:50%;top:var(--tip-top,76px);display:flex;align-items:center;gap:12px;margin:0;padding:10px 18px 10px 12px;border-radius:20px;background:#193f37;color:#fff3d1;pointer-events:none;opacity:0;transform:translate(-50%,-10px) scale(.92);transition:opacity .2s ease,transform .2s ease;max-width:calc(100vw - 32px)}
+.keeper[data-show]{opacity:1;transform:translate(-50%,0) scale(1);transition:opacity .14s ease-out,transform .3s cubic-bezier(.3,1.4,.6,1)}
+.keeper svg{flex:none;width:40px;height:40px}
+.keeper b{display:block;font-size:19px;font-weight:800;line-height:1.1;white-space:nowrap}
+.keeper small{display:block;margin-top:2px;font-size:13px;font-weight:700;line-height:1.25;color:#cfe8d6;white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.keeper,.keeper[data-show]{transition:opacity .12s linear;transform:translate(-50%,0)}}
+.pickKeeper{margin:2px 0 0;padding:9px 12px;border-radius:12px;background:#e3f2e6;color:#244d40;font-size:14px;font-weight:700;line-height:1.35}
+.pickKeeper[hidden]{display:none}

@@ -27,6 +27,13 @@ export const RUNS={
   maxOffset:40,
 } as const;
 
+/** Teammates CALL for the ball (owner Nov 5 2026: "passing feels like a team game"): while a HUMAN has the ball, the most open
+ *  AI teammate (onside, a clear lane, space round him, in range; ahead of the ball or a run in behind scores higher) raises an
+ *  arm for `hold` real seconds, then rests `rest` s before he calls again; at most `max` at once. MatchSim.updateCalls reads this
+ *  on its own `think` clock (real s), only with a human carrier, so AI-only matches never call. The human's pass assist adds
+ *  passAssist.PASS_ASSIST.wCall to a caller (it wins a near tie). Teaching: "Call for it when you are open". Sim units. */
+export const TEAM_CALL={think:.25,hold:.8,rest:.7,max:2,minD:14,maxD:150,lane:8,space:14,behind:8,wAhead:.22,wRun:10,spaceCap:40,laneCap:24} as const;
+
 /** Everything one decision reads, filled by the sim into a reused object (no allocation per think). */
 export type RunContext={
   px:number;py:number;hx:number;role:'gk'|'def'|'mid'|'fwd';

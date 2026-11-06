@@ -68,7 +68,7 @@ const load=(path,extra={})=>{const m={exports:{}};vm.runInNewContext(ts.transpil
   const skipCode=skipLine.replace(/\/\/.*$/,'');
   assert(/if\(!visible\)continue;/.test(skipCode),'offscreen fields leave the loop before any rig is created or posed (the skip must be live code, not inside a // comment)');
   assert(skip<runtime.indexOf('createPlayer(token.id')&&skip<runtime.indexOf('rig.update(px,pz'),'rig creation/posing comes after the visibility skip');
-  assert.match(runtime,/const matchDt=e\.clock\.take\(dt,immediate,/,'distant hidden matches step on the throttled match clock');
+  assert.match(runtime,/const matchDt=e\.clock\.take\(dt(?:In)?,immediate,/,'distant hidden matches step on the throttled match clock');
   for(const menu of ['customizerOpen','storeOpen','settingsOpen','cardOfferOpen','conversationOpen'])assert(new RegExp(`settingsRef\\.current=[^;]*\\b${menu}\\b`).test(town),`${menu} pauses the island`);
   assert.match(town,/if\(now-idleSince>idleGrace\)\{[^}]*cancelAnimationFrame\(frame\);loopSleeping=true;return;\}/,'a paused island stops requesting frames');
 }

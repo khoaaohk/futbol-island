@@ -262,7 +262,8 @@ export function createChoreo(yaw=0){
    }
   }
  }
- function consume(sim:MatchSim,realDt:number){
+ let callSim:MatchSim|null=null;// teammates calling for the ball (MatchSim.teamCallers, Nov 5 2026): their arm goes up too
+ function consume(sim:MatchSim,realDt:number){callSim=sim;
   clock+=Math.max(0,realDt);
   // Where the shot was struck from (one-on-ones are smothered).
   const shotNow=sim.shotActive;if(shotNow&&!shotWas)shotFrom={x:sim.ball.x,y:sim.ball.y};if(!shotNow)shotFrom=null;shotWas=shotNow;
@@ -322,7 +323,7 @@ export function createChoreo(yaw=0){
    if(s.move&&mp>=0){s.move.motion.progress=mp;motion.move=s.move.motion;if(s.move.facing!==undefined)motion.facing=s.move.facing;// The flick-up keeps the ball through a wind-up and hands over to the strike just after its contact (a self-volley).
     if(s.move.kind!=='soleRoll'&&(s.move.kind!=='flickUp'||mp<MOVE_CONTACT.flickUp+.1)){motion.kick=undefined;motion.receive=undefined;}}else motion.move=undefined;
   }else{motion.reaction=undefined;motion.reactionProgress=undefined;motion.squash=undefined;motion.squashSerial=undefined;motion.dive=undefined;motion.jump=undefined;motion.move=undefined;}
-  motion.called=id===caller&&callWeight>0?callWeight:0;
+  motion.called=id===caller&&callWeight>0?callWeight:callSim&&callSim.teamCallers.size?callSim.callWeight(id):0;
   const run=clamp((pace-.35)/.25,0,1),calm=1-run*run*(3-2*run);
   motion.ready=id===marker&&markerWeight>0?markerWeight*calm:0;
  }
@@ -335,6 +336,13 @@ export function createChoreo(yaw=0){
   /** Height (m) the held ball rises above the feet during a flick-up (0 otherwise). */
   ballLift(id:string|null){if(!id)return 0;const m=states.get(id)?.move;if(!m||m.kind!=='flickUp')return 0;const p=(clock-m.start)/MOVE_SECONDS.flickUp,c=MOVE_CONTACT.flickUp;return p>c&&p<1?.75*Math.sin(Math.PI*(p-c)/(1-c)):0;},
   jumpOf(id:string){const s=states.get(id);return s?.jump?(clock-s.jump.start)/JUMP_SECONDS:undefined;},
+  /** Body moves (Nov 5 2026, humanInputs TRICK_BEAT / HUMAN_BODY): the defender a human's move beat stumbles now (owner and friends). */
+  stumble(id:string){const s=state(id);if(airborne(s.dive,DIVE_SECONDS))return;s.reaction='stumble';s.start=clock;s.dur=REACTION_SECONDS.stumble;s.squash=-2.6;s.serial++;},
+  /** A human's flick-up (Trick while sprinting): the lane-B flickUp move, its contact now (the ball lifts off the boot: ballLift). */
+  flick(id:string,side:-1|1){startMove(id,'flickUp',MOVE_CONTACT.flickUp*MOVE_SECONDS.flickUp*.4,side,0);},
+  /** A human keeper's dive (his press, or a friend's screen from the owner's dive serial): full stretch toward `side` (+1 = the
+   *  keeper's own right as he faces out), contact in `contactIn` real s. Never interrupts a dive already in the air. */
+  dive(id:string,contactIn:number,side:-1|1,height:number,facing:number,kind:DiveKind='side',outcome:SaveOutcome='catch'){startDive(id,contactIn,side,height,facing,kind,outcome);},
   reset(){states.clear();caller=marker=null;callWeight=markerWeight=0;}};
 }
 export type Choreo=ReturnType<typeof createChoreo>;

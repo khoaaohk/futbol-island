@@ -275,11 +275,13 @@ const errs = (p) => p.of(S.Error).map((m) => m[1]);
   const late = join(room); const wl = welcome(late)[7].find((m) => m[0] === ib);
   assert.deepEqual(wl[4].slice(0, 3), [5000, 0, 300]);
 }
-// flood: > 30 frames in a second closes
+// flood (Nov 5 2026: a token bucket, 30/s sustained, burst FLOOD_BURST 120): a 40-frame burst passes, a flood past the burst closes
 {
   const { room } = mk();
   const host = join(room, room.hostKey), f = join(room);
   for (let i = 0; i < 40; i++) send(room, f, [C.Beat, i]);
+  assert.equal(f.closed, null, 'a stalled link\'s 40-frame backlog is not a flood');
+  for (let i = 0; i < 200; i++) send(room, f, [C.Beat, i]);
   assert.equal(f.closed, CLOSE.Flood);
   assert.ok(errs(f).includes(ErrorCode.RateLimited));
   assert.equal(host.closed, null);

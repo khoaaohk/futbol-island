@@ -321,7 +321,7 @@ or Shift (never the stick's magnitude, which flickered), x`SPRINT_BOOST` 1.42 to
 **Human keeper (owner, Nov 4 2026: "you can even play as goalie now").** `MatchSim.humanKeepers` is on, `lockHuman`
 takes the keeper slot, tunables in `HUMAN_KEEPER` (matchSim.ts). Stick moves him inside his box (|x−135| ≤ 44, ≤ 46 off
 his line; no sprint in goal). **Save** (A) dives: with a shot coming it aims where the ball crosses his line (whatever
-the stick says), lands before the ball (≤ 0.14 sim s) and adds 3.5 units of reach at full stretch, so a timed press
+the stick says), lands before the ball (≤ 0.14 sim s; superseded Nov 5 2026 by a real push-off + flight, see "Goalkeeper feel + body moves") and adds 3.5 units of reach at full stretch, so a timed press
 saves a corner shot that beats a keeper standing still; pressed just before the strike it is buffered; at an opponent's
 feet it is a smother (80 %); else a short dive along the stick. A shot at him is caught without a press. The AI never
 pre-decides a goal against a human keeper (`shotIsGoal` false: his position and dive decide it). On the ball: **Throw**
@@ -576,3 +576,502 @@ Humans only (every rng draw and branch is behind a human check; AI-only matches 
 - **Measured** (scripted single tap within 8–20 units from front / side / behind, 40 seeds, before → after): 7v7 86 → 95 %, futsal 88 → 98 %, 9v9 73 → 97 %, 11v11 75 → 98 %, beach 82 → 98 %. Get it back (tapped at 0.2 and 0.5 s after the loss) 22–36/40 → 40/40. Heat: no new per-frame allocation (the lunge / magnet targets replace the stick target object the same frame).
 - **Marker flicker fix:** a pass target found by the loose fallback (wide cone / no aim) was scored in the strict cone for hysteresis, so it counted as invalid every frame and the marker flipped between fallback picks. Exposed by the faster 7v7 human running past all his teammates in 1 s; `scoreAtTier` now scores the shown target in the same tier (0 → 1 flip in the test, with or without the wobble).
 - **7v7 pace test pins** updated to `humanPace` 1.72 / `humanBallPace` 1.5 / sprint ×1.3 / chasers ×1 (pass pace ceiling × humanBallPace, sprint ratio ≥ 1.27, beach shot ratio over the 7v7 human's ×1.5; the human keeper "caught without a press" trial now has an idle stick, since a held stick runs the faster keeper off the line).
+
+### Goal replays (owner, Nov 5 2026: "do the replays for scores")
+- **What:** in a live match I am on (7v7, futsal, 9v9, 11v11, beach; solo, my match with friends, or a friend's match), every goal is shown again: after the ball-flies-in beat (`GOAL_REPLAY.delay` 0.4 s, before the scored ball fades) the last 1.7 match s up to 0.3 s after the goal play at 0.55× (~3.1 s) from the TV **Side** camera (`liveJoinCamera` `joinCamFrame('side')` on the replayed ball, the scoring side attacking left → right), with a **REPLAY** tag + **Skip** under the score bar (the trick word's spot). A tap anywhere, any key or Skip ends it (not in its first 0.15 s: that tap is the shot). The lesson: the build-up — see the pass and the space that made the goal.
+- **Recording** (`lib/town/goalReplay.ts`): one preallocated `Float32Array` ring per field (≈4.2 s at 18 Hz: ball x/y/vx/vy, rendered height, owner, lofted, shot offset; each player x/y/vx/vy/kick — the same fields a friend's puppet gets from `matchNet` snapshots), filled by `fieldRuntime` only on the field I am on, so friends' matches record from their snapshots. AI-only matches never record (fixture unchanged).
+- **Playback:** the field runtime stashes the live state, writes the interpolated replay frame into the sim, draws the field (rigs at `dt × rate`: true slow motion), then restores the live state before anything else reads it (the owner's `encodeSnap`, the HUD score, the AI). The quick-reset view is paused (`ballReset.show`) while it plays and carries on after.
+- **Solo:** the sim holds (the field clock is not run) and the quick goal reset continues exactly where it paused. **Shared** (a friend runs the match or plays on mine): the sim never holds, nothing is sent (protocol, relay and snapshots unchanged; a test checks the owner's snapshots are byte-identical to a phone without replays); the replay is shorter (1.1 match s at 0.7×, ≤ 1.6 s) and cuts back at the live kick-off. **Reduced motion:** real speed, 1.2 s, the camera cuts instead of easing.
+- **Setting:** Island settings → Live matches → **Goal replays** (default on, `localStorage fi2-goal-replays-v1`).
+- **Heat:** no allocation after the ring is made, no extra draw calls, render targets or passes; one small copy at 18 Hz while joined.
+- **Tests:** `tests/join-live-game.cjs` (ring fills, all 5 formats solo / skip / shared / off, live state + score untouched, quick reset still happens), `tests/join-live-mp.cjs` (owner + friend replay locally, owner snapshots unchanged, friend's replay over by the kick-off). Not checked on a real phone or in a browser yet.
+- **Replay camera + polish (Nov 5 2026, after a screenshot review: on a 390x844 phone the old side camera showed a tilted crowd mid-pitch, the goal cut
+  off at the edge, the ball a dot, and the live GOAL! card still up 1.2 s into the replay on desktop).**
+  - **Camera** (`liveJoinCamera.ts replayCamFrame`, driven by `liveJoinRuntime replayCam`): a broadcast replay angle from behind the scorer on the TV
+    side, turned 22° off the attack axis on a portrait phone (goal top-right) up to 58° on a wide screen (goal on the right), 36°-28° down; fixed for
+    the whole replay so it never swings. The eye backs off just far enough (closed-form fit per point in the camera's axes, HUD bands kept clear)
+    that both posts and the bar, the back of the net, the ball and (before the shot) the shooter are in frame. The finish (after the shot, at least
+    0.5 s in, or the last ~1.1 s) eases to goal + ball only, nearer (`repTight`); eye and look follow at 1 − e^(−3.2 dt). Reduced motion / calm:
+    two held shots (build-up, finish), cut, no easing. Per goal side and per venue from `liveWorldX/Z/Yaw` + `goalWidth/Height` + elevation, so the
+    quarter-turned beach court and the raised futsal roof frame the same way.
+  - **Scorer + ball:** `goalReplay` finds the shooter (the last owner before the goal inside the clip: `shotT`, `shooterX/Y` at the playhead).
+    The existing compass marker rings him (scoring side's colour, chevron at the goal); once the ball leaves his feet the existing Pass ring + halo
+    sit under the ball. One ring at a time, reused meshes (no new draw calls), transform / opacity only; my bib colour comes back after.
+  - **Overlays:** while it plays the field's GOAL! card, its light burst and the goal-mouth rings are hidden (`matchEffects.quiet()`, which also ends
+    that celebration so it does not pop back after the replay); the trick pop, tip, goal badge, aim marks, Pass / Forward markers and the head pin
+    are off; the action buttons fade (opacity, taps off: a tap anywhere skips) and the stick fades (inline opacity: it is Town's). All back after.
+    Skip: 72x44 px (the 44 px min-height holds; same pill as before).
+  - **Checked:** `tests/join-live-game.cjs` now plays a natural goal per format (I dribble in from halfway and shoot, keeper drawn away): the shooter is
+    found and is me; every replay frame's camera target holds the ball + the whole goal mouth at 390x844, 844x390 and 1280x800 (worst |ndc| ≈ 0.87);
+    the eased portrait camera keeps the ball on screen (≤ 0.59) and ends with the goal mouth in frame; eye 11-48 m. Headless Chrome screenshots
+    (natural shot, mid-replay): 9v9 phone + desktop, beach + futsal phone. Still open: on a portrait phone the shooter sits low (≈ 75% down) with
+    empty pitch between him and the goal early in the build-up; the keeper was drawn away in the test goals, so a goal past a diving keeper is
+    unchecked; not seen on a real phone.
+
+### Phone tuning pass (Nov 5 2026: no physical phone; headless Chrome emulation + sim runs)
+**Measured vs inferred.** Everything below is headless Chrome (touch, DPR 3, iPhone safe-area insets through CDP
+`Emulation.setSafeAreaInsetsOverride`, 4x CPU throttle) or the node sim. None of it is iPhone heat or touch feel: those stay real-phone questions.
+- **Layout** (390x844, 360x640, iPad 820x1180, desktop 1280x800; on the ball and on defense; 844x390 on a phone is the "Turn your phone upright" lock): every control >= 44 px (Pass 88,
+  the arc 58, camera / Leave 44), inside the insets (portrait top row at 63 = 47 + 16, Pass bottom 782 = 844 - 28 - 34; the HUD under the
+  landscape lock also respects 47 px side insets), no overlaps, arc gaps >= 7.5 px. Press sits evenly between Stay and Sprint: 97.1 / 97.3 px centre to centre.
+  **Fixed:** the trick / "Slipped away!" pop rendered at top 0-12 px, over the score bar: the runtime wrote its `--tip-top` in HUD-stack
+  units but the pop sits outside the stack (offsetParent = the app). It is now measured from its own parent (`liveJoinRuntime.ts`
+  dock block). The replay tag (`[data-join-replay]`, same line) gets the same stack-unit value and likely needs the same fix.
+  Real-phone question: on 360-390 px portrait the joystick's rest ring ends 11 px left of Shoot (different thumbs, but close).
+- **Perf** (iPhone 390x844 portrait, 4x CPU, production build, 20 s with two goal resets): 60 fps on all five formats, frame p50
+  15-19 ms, p95 25-27 ms, 0-2 frames > 34 ms per 20 s (worst 52 ms, beach, in the first goal window), goal windows max 25-33 ms
+  otherwise; draw calls 83-121, 137-216k triangles; 58-150 layouts and 181-257 style recalcs per 20 s (51-89 ms), no layout thrash.
+  (A first run in landscape measured the portrait-lock screen, ~60 style recalcs/s from it; discarded.) Heap sampling (portrait):
+  a joined 7v7 allocates 14.3 MB/s (the island outside a match 16.1 MB/s); top allocators the character rig update + its per-leg
+  closure in `lib/graphics/player.ts` (2.8 + 1.6 MB/s, ~75 KB per frame across the rigs), then `obstacleGrid.query` (new Set + spread per call, 0.6 MB/s); nothing in the match HUD or sim stands out. The bar's `width` transition
+  (`.chip`, 0.35 s on a message) is kept: it runs a few times a minute and the whole 20 s run has 58-150 layouts (6-24 ms).
+- **Feel** (sim, real-time steps at the live speed, a scripted human mid chasing the ball and tapping Tackle within 14 units; 10 seeds
+  x 3 min per format; "won" = his side has it within 1.5 s). TACKLE_ASSIST unchanged after this pass:
+
+| format | won per tap (assist / old values) | in-reach clean win | possession gold, human / AI-only | goals/min gold-blue (AI-only) |
+|---|---|---|---|---|
+| 7v7 | 35 % / 7 % | 86 % | 39 / 54 % | 0.47-0.10 (0.13-0.23) |
+| futsal | 36 % / 13 % | 79 % | 43 / 50 % | 1.23-0.30 (0.77-0.33) |
+| 9v9 | 39 % / 10 % | 85 % | 47 / 51 % | 0.50-0.23 (0.20-0.17) |
+| 11v11 | 27 % / 3 % | 72 % | 68 / 54 % | 0.23-0.13 (0.20-0.10) |
+| beach | 43 % / 18 % | 85 % | 43 / 52 % | 0.60-0.03 (0.23-0.30) |
+
+  Clearly helpful (3-9x the old values) and well under ~70 % per tap on the 9v9 / 11v11; not an auto-win at match level (his side's
+  possession does not rise over the AI-only match). Once in reach from the front it is close to certain by design (95 % or a poke-away).
+  Pace vs the pose governor (9.34 m/s + 1 m, relay 9.44 + 2 m), sprint held + lunge, 12 seeds: sprint 7v7 8.09, futsal 7.34, 9v9 8.08,
+  11v11 8.98, beach 6.42 m/s; peak over 0.1 s 9.32 m/s (7v7 lunge); no 1 s window over the governor. 7v7 still runs at the 9v9 pace.
+- **Friends / latency** (owner sim -> encodeSnap every 83 ms -> SnapBuffer on a puppet, 4 x 2 min per format, two scripted humans):
+  goals, quick-reset landings and kick rises match the owner exactly at 0, 150, 300 ms and 150-300 ms (no double goal / reset / kick).
+  Fixed latency or +-20 ms jitter: the ball is smooth (puppet step <= the owner's). Jitter is the problem, not latency: with in-order
+  (WebSocket) delivery and 100-150 ms spread the puppet ball steps up to 2x the owner's per-frame move (frames bunch; `INTERP_MS` 110
+  and arrival-time stamps). Fix later if friends see it: stamp frames by seq x SNAP_GAP_MS with an adaptive delay (not a tiny change).
+
+### Easier controls (owner, Nov 5 2026: kids first; A, B, C approved, auto-switching on defence REJECTED: you are always your slot)
+- **Where:** `lib/town/liveControls.ts` (pure: `joinModes`, `tackleNear`, `stickSprint`, `runEffort`, `tapShotCorner`, the setting store), used by `lib/town/liveJoinRuntime.ts`; `HumanView` gained `carrierD/X/Z`, `simX`, `keeperX` (view only, no sim change: the AI-only fixture is byte-identical).
+- **A. Only the buttons that make sense now** (at most three): on the ball **Pass** (88 px, corner) + **Shoot** (68 px) in the shooting zone, which becomes **Forward** (the through ball, J/K) out of it (settled for 0.2 s so it never flickers; latched at the press) + a small **Trick** (52 px). The separate Forward button is gone. Defending: ONE big button, **Tackle** within the tackle assist's lunge reach (`TACKLE_ASSIST.assistR`, hysteresis ×1.15), **Press** further (pink): a tap starts the press together, and held you run at the carrier (steered at him while the stick is idle, sprinting) and it tackles once he is in reach. **Stay** stays as the small secondary (52 px, Trick's slot): hold = jockey is the "stay goal-side, don't dive in" lesson, and the small slot keeps the rule "big = the main action, small = the careful one". A teammate has it: **Call** only; loose: **Go!**; keepers unchanged (Save / Throw + Kick). Keys unchanged (P still presses).
+- **Layout:** one 45° arc round Pass's centre: small slot 186° r 108, Shoot 141° r 118, Sprint 96° r 120 (only with the setting off); ≥ 8 px apart in every state. Each button is placed by `--x/--y` from the cluster's outer edge, so **Flip controls** mirrors it exactly (cluster 14 px from the left edge). The stick's rest ring now has 27 px to the nearest button at 390 px (was 11), 24+ at 360-375 (test).
+- **B. Push the stick to sprint** (Island settings → Live matches, default on, `localStorage fi2-stick-sprint-v1`, a device preference): the RAW touch-stick deflection ≥ 0.95 (knob pinned on the ring) sprints, < 0.88 stops (no flicker at the rim); the full run pace now comes at 0.85 (`runEffort`), so running flat out below the ring never sprints. The ring fills with a solid mint band (`data-sprint`, opacity + transform, written on change). On: no Sprint button; off: today's layout. Shift and the keyboard unchanged; sprint speeds and the pose governor unchanged (same `SPRINT_BOOST`).
+- **C. Tap to shoot:** released before `SHOT_AIM.minHoldMs` (0.18 s) the shot is aimed at the LOW corner away from the keeper (keeper on the middle or none: the far post), sent through the frame's existing `aimX/aimH` (multiplayer: no protocol / relay change; a friend's phone reads the keeper from its mirrored sim). A hold keeps the power ring, the corner marks + drag aim, the slow motion.
+- **Tests:** `tests/join-live-game.cjs` "easier controls" (states incl. keeper / restart, Tackle vs Press in the sim on all 5 formats 8/8, sprint thresholds + trembling-thumb hysteresis + setting, tap shot away from the keeper on all 5, net frame carries the aim, geometry + mirror + stick room, fixture). Screenshots (dev server, headless Chrome, 390x844 + 1280x800): ball, defence (sprint ring set by the script), mirrored. Not tried on a real phone; touch feel of the 0.95 ring and the Press chase are real-phone questions.
+
+### Kick effects (owner, Nov 5 2026: "improve the tackling, passing, shooting mechanics. make the tricks slow motion even better along with the shot slow motion. add trails, effects, and make this feel more premium")
+
+Approved defaults: team-coloured trails (the kicker's bib colour, lifted toward white), purple kept for lofted long balls, flame kept for the power shot, a moderate flash. All five formats, solo and with friends. The sim, the protocol and the AI fixture are untouched: every effect is drawn from the touch ring or the drawn ball.
+
+- **One source for every phone** (`lib/town/kickFx.ts`). Effects read `MatchSim.touches`. A friend's puppet sim never steps, so `lib/town/match/puppetTouches.ts` writes the same events into the puppet's own ring from what the snapshots already carry: owner changes, ball velocity, the lofted flag and the score. A kick is owner → nobody at 45 u/s or more; a tackle is a change of side, or a slow knock-loose followed by a pickup; a goal is a score change. Choreo slides and stumbles, the combos view's block and poke tackles, goal celebrations and the ball sounds now play on friends' screens too. Over 60 s of play, a puppet sees 13-23 kicks against the owner's 13-24 (tests/join-live-mp.cjs).
+- **Shooting / passing**: the trail (`lib/graphics/ballEffects.ts`, extended: `shape.ribbon` swaps the line for a camera-facing additive ribbon over the same 20 points, `shape.ghosts` caps the ghost balls) scales with the ball's live speed. A soft pass gets a thin streak with 2-4 ghosts; a hard shot gets the full ribbon with up to 14. There is a flare ring at the foot (plus a dust ring on hard strikes). A lofted ball shows a pulsing landing ring where it will come down: a ballistic estimate from the drawn ball (g 13, smoothed), so it also works on puppets and in replays. The receiver gets a "got it" ring that closes on his feet. A goal billows the existing net (`propReactions.hit`, a vertex sway, no new mesh). A parry flashes at the ball so the keeper's dive reads.
+- **Tackling**: a human's lunge starts with the rig's `plant` impulse (the wind-up dip), then choreo's slide / block / poke and the loser's stumble (now on puppets too). A clean win spawns an impact ring in the winner's colour, a dust ring and a sparkle, with a 70 ms hit pause (solo, `SLOW_MO.hitScale`) and a tiny camera shake when I am the winner or the loser. A poke-away gets one sharp small ring at the ball and a lighter shake. `TACKLE_ASSIST` is unchanged.
+- **Slow motion** (`lib/town/slowMo.ts`): the trick and the shot ease in over 120 ms (no hard snap) and out over 180 ms, ending at exactly 1. A shot first freezes for 35 ms at contact. A hard shot of mine punches the camera in (`SLOW_MO.punch`) with a small decaying shake. A CSS vignette (`[data-join-vignette]`, opacity only, written in 20 cached steps) follows the slow motion. A short "time dips" cue plays (`islandSound.match('slow')`: a falling tone under a low-passed whoosh, a one-shot with no bus filter). Local only: `timeScale` stays 1 on a shared match, as before, while the camera and the vignette still play.
+- **Sound** (`lib/town/liveBallSound.ts` → `islandSound.match`): a low thump under strikes of 13 m/s or more (scaled by power), a light tick on softer kicks, a thud on a clean tackle, a poke flick, and the net swish plus a crowd swell on a goal. Same tone / noise kit, modest gains, per-kind throttles.
+- **Settings**: reduced motion (calm) = no trail, flares, shake, punch, hit pause or slow motion; only the still information rings (landing, got it). **Island settings → Live matches → Match effects: Full / Light** (`fi2-match-fx-v1`, a device key, default Full). Light keeps the thin ball line and the information rings and drops the ribbon, ghosts and flares.
+- **Heat**: all the rings are ONE `InstancedMesh` (`lib/graphics/matchFxRings.ts`, a 12-slot pool, additive with soft vertex-colour bands, so a ring fades through its instance colour). That is one draw call while any ring lives and none at rest. The ribbon replaces the line (same draw count). Pending events sit in a fixed 8-slot ring, and nothing is allocated per frame. Measured in headless Chrome (dev server, phone 390×844 DPR 3, 4× CPU throttle, 20 s joined match, a scripted pass / shoot / tackle every 0.7 s, before = the same build with `window.__fi2FxOff`):
+
+| | frame p50 / p95 (ms) | draw calls mean / max | effect objects drawn mean / max | heap growth |
+|---|---|---|---|---|
+| 9v9 before | 23.1 / 29.3 | 93.4 / 134 | 4.97 / 16 | 12.41 MB/s |
+| 9v9 after | 22.5 / 28.9 | 94.1 / 123 | 2.98 / 7 | 12.33 MB/s |
+| beach before | 21.7 / 28.1 | 81.6 / 109 | 5.17 / 16 | 10.23 MB/s |
+| beach after | 17.7 / 28.5 | 80.8 / 108 | 3.64 / 17 | 10.29 MB/s |
+
+  Fewer effect draws on average, because passes no longer show all 14 ghosts. The heap growth is the dev build's baseline and does not change. This is desktop emulation, not a measurement of iPhone heat.
+
+### Match focus: the island holds still while you play (owner, Nov 5 2026: "make sure to pause everything else on the island while playing the game to not draw additional heat")
+
+**Where:** `lib/town/matchFocus.ts` (one flag + the held dt), read in `components/Town.tsx` right after the fishing focus block; `lib/graphics/islandNpcs.ts` `setFocus({…,r:-1,still:true})`. The flag is `liveJoin.joined` (phase `joined` with a slot) and nothing else, so every exit clears it on the next frame: the Leave button, a forced leave (lesson / menu / ride), a friend-match drop (matchLink presses Leave), a failed join. Spectators are not joined and are not touched. `?matchfocus=0` turns it off for A/B runs. A debug `__fi2.teleport` while joined keeps you in the match (the match owns your position), so focus correctly stays on.
+
+**Audit first (measured, not guessed).** Headless Chrome, 390x844 DPR 3, touch, 4x CPU throttle, production build, 20 s joined 9v9 and beach, a CPU profile (CDP Profiler) plus a timer wrapped round each `__fi2` system's per-frame method, plus a per-draw attribution (`renderBufferDirect` charged to its top-level scene root). The phone loop renders at its 30 fps cap. Cost outside the match, ms per rendered frame at 4x, ranked:
+
+| # | system (not the match) | 9v9 | beach | note |
+|---|---|---|---|---|
+| 1 | townsfolk `islandNpcs.update` (158 people: distances, emote ages, routines, poses) | 0.57-0.65 | 0.53-0.65 | the only big one; also most of the rig allocation churn |
+| 2 | island part of the render walk (matrix refresh 0.64, frustum projection 0.61, shadow traversal; includes the match) | within noise | within noise | off-screen units are already skipped by `viewGate`; skipping the frozen roots' matrix refresh measured inside run-to-run noise, so not done |
+| 3 | street traffic | 0.05-0.09 | 0.05-0.09 | |
+| 4 | ball hunt (coins), 1-2 draws | 0.04-0.06 | 0.05-0.06 | coins never count in a match |
+| 5 | coach wall + volleyball groups | 0-0.04 | 0-0.01 | |
+| 6 | open-sea whales / rays, Coral Cay sharks / mantas | 0.04 | 0.05 | already sleep far / off screen |
+| 7 | fishing boats, beach finds, shore foam, dive preview, ferry, lighthouse, bugs, vending, summit | <=0.02 each | <=0.02 each | |
+| - | not costs today | | | other matches already dormant (fieldRuntime heat pass 5: 4 of 5 asleep); remote avatars already range + frustum culled with a rig cap; 0 React HUD renders and 0 `setInterval`s in 10 s of play; no ambient loop runs on dry land (the water bed starts only in the sea); island music is one media element; the water clock is a uniform (0 CPU) and its shading costs the same moving or still |
+
+Draws that are the island inside a joined 9v9 view (per frame): static chunks 37 + 5 shadow, townsfolk 4.8 + 1 shadow + the NPC shadow batch 3, clear-water window 5, cars 2.7 (shadow), jobs 3, coins 2, manhole covers 2. The rest is the pitch, the players' batch and the HUD markers.
+
+**What it does.** Holds still, exactly where they are (nothing hidden, nobody teleports): every townsperson (one held pass so the name tag hides, then the update returns at once), traffic, the volleyball and coach-wall groups, the ferry, the lighthouse beam, sea life, bugs, Summit fruit trees and beach finds (the fishing focus `backgroundFrozen` gates, reused with `MATCH_FOCUS_LIVE` = only the matches live). The ball hunt sleeps (coins never count in a match). **Kept:** the match sim + render, matchNet / matchLink / presence pose sending and its governor, saves, analytics beats, match sound, the Leave flow, `characterArrival`, the goal replay, the water clock + lighting, shadows every frame (the players move: half-rate shadows would trail them), the pixel ratio and the heat governor. **Resume:** held systems never accumulate time; the first 3 frames after leaving take dt <= 1/30 s (`MATCH_FOCUS_RESUME_DT`), so a long leave frame (rig rebuild, arrival restart) is never one big catch-up step. No per-frame allocation.
+
+**Heat proof** (same build, `?matchfocus=0` = before; three alternating 20 s runs each, mean; desktop Chrome emulation, not an iPhone):
+
+| | rAF p50 / p95 (ms) | draw calls | triangles | heap growth | main-thread script / 20 s | profiled CPU busy |
+|---|---|---|---|---|---|---|
+| 9v9 before | 16.1 / 26.7 | 93 | 153k | 14.0 MB/s | 4671 ms | 29.6 % |
+| 9v9 after | 14.9 / 25.7 | 84 | 145k | 10.9 MB/s | 4211 ms (-10 %) | 27.5 % |
+| beach before | 15.5 / 25.9 | 80 | 214k | 10.3 MB/s | 4168 ms | 24.4 % |
+| beach after | 16.0 / 24.7 | 79 | 216k | 8.9 MB/s | 3448 ms (-17 %) | 20.7 % |
+
+Per system the held work is 0.7-0.85 ms of the ~7 ms the loop spends per rendered frame at 4x. Frame pacing does not move much because the phone loop is already capped at 30 fps; the saving is idle main-thread time (less heat), not more frames. Match-to-match play varies the match's own cost by +-15 %, which is why the runs alternate. **Leave check** (scripted, `__fi2`): beside the pitch 3-7 townsfolk moving, 11/11 cars, water clock +4 s per 4 s; joined: 0/158 townsfolk, 0/11 cars, sea life still, coins asleep, the water still animating; after Leave: 4-8 townsfolk moving again, 11/11 cars, beach-side sea life moving again, coins back, 1 resume clamp. Not tried on a real phone; real heat is a device question.
+
+**Not paused, and why:** the water surface (no CPU cost; freezing would change the pitch-side look for nothing), shadows (the players move), the pixel ratio (pitch quality), the island music (one decoded stream; the owner's audio choice), matrix refresh of frozen units (no measurable gain), the clear-water window by the beach court (part of the beach view), daily play / explore checklist tickers (a comparison each frame).
+
+**Tests:** `tests/join-live-game.cjs` "match focus": set on join / cleared on Leave, forced leave, disconnect and a failed join in all 5 formats, dt 0 while joined, the clamped resume dt, `?matchfocus=0`, Town's gates per system, kept systems (no half-rate shadows, no pixel ratio change, water / party / matchLink), the townsfolk `still` early return.
+
+### Bot fill + teammates call for the ball (owner, Nov 5 2026: "the AI fills every other slot … make runs, call for the ball so passing feels like a team game")
+**What already existed (audit).** Bot fill was mostly there from slice 1 / 2: a solo Start locks one slot and the AI plays every
+other one (all 5 formats); `MatchSim.lockHuman` keeps the player's spot, role and the ball (a picked slot is never re-placed in
+`fieldRuntime.joinMatch`), `releaseHuman` hands it back where he stands; the relay roster keeps one human per slot, first come
+(the second picker steps off with "Ana just took that spot. Tap Play to pick another!"); the owner leaving hands the field to the
+earliest remaining joiner (`matchLink`: "Your friend left: the match is on your phone now"), who plays on from the last snapshot
+with a dropped ball (`leavePuppet`; host migration proper stays out of scope: safe, a ~110 ms rewind, nobody's ball). Off-ball
+runs (`offBallRuns.pickOffBallRun`: in behind ×1.35 for a human carrier, check, width, space) and the two nearest supporters'
+lane-clearing step (`supportOffset`) were in too.
+**Gaps filled.** (1) A FRIEND leaving now hands the slot to the bot IN PLACE with the ball at his feet (`liveJoin.handBack(sim,
+slot, null)` from `fieldRuntime.dropFriend` → `leaveMatch(…, inPlace)`); before, the slot player jumped to the touchline spot and
+the ball was dropped. My own Leave keeps the old exit (ball on the grass, the NPC jogs back on). The touchline NPC of a friend's
+slot hides as the bot takes over. (2) The Position dropdown reads **Bot** under every AI-held slot (`SLOT_BOT_NOTE`), a friend's
+name under theirs, "Taken" for any other human. (3) **Calls:** while a human has the ball, the most open AI teammate (onside, a
+clear lane ≥ 8 u, nobody within 14 u, 14-150 u away, level or ahead; a runner in behind scores higher; `offBallRuns.TEAM_CALL`)
+CALLS: his arm goes up (choreo's existing `called` pose) and a ring pings out round his head (`joinMarkers.callPing`, bib-tinted,
+opacity/scale only, +1 draw call per caller, at most 2) for 0.8 s, rests 0.7 s, calls again while still open; a closed lane ends it
+at once. `MatchSim.updateCalls` runs on a 0.25 s think clock, only with a human carrier, pure geometry (no rng): a friend's
+puppet runs the same call from the snapshot positions (`fieldRuntime` puppet branch), so no protocol or relay change. A caller also
+keeps his lane open (the supporters' `supportOffset`). (4) **Assist:** `PASS_ASSIST.wCall` 16 on a caller in either pass mode,
+so he wins a near tie (the 12-point marker hysteresis still holds a clearly better shown target; aim still dominates). (5) Two
+human-pass fixes the harness found: a pass to a runner is led for the pace it really leaves at (`leadPoint(…, paceMul)`: the
+base-pace lead put the zippier human ball in front of him too early), and a human's ground pass keep-out ends once the ball is
+~30 u out (`ballFlight = min(0.16, 30 / speed)`): the flat 0.16 sim s let a short pass run past a teammate's feet before he was
+allowed to take it (7v7: 0/6 short passes to an open teammate received before, 6/6 after). Both read only for a human passer.
+**Measured** (scratchpad `team.cjs`, a scripted human mid carrying, passing on pressure / after 1.1 s, shooting in range; 3 min × 12
+seeds, "aim" = stick toward goal / "tap" = no stick; before → after):
+
+| format | pass completion aim | tap | gold poss (aim) | goals/min gold-blue (aim) | AI-only goals/min |
+|---|---|---|---|---|---|
+| 7v7 | 36 → 91 % | 30 → 95 % | 44 → 55 % | 0.42-0.11 → 1.17-0.03 | unchanged |
+| futsal | 80 → 86 % | 84 → 91 % | 46 → 42 % | 1.08-0.17 → 1.22-0.17 | unchanged |
+| 9v9 | 46 → 76 % | 55 → 89 % | 49 → 55 % | 0.47-0.19 → 0.78-0.19 | unchanged |
+| 11v11 | 73 → 95 % | 82 → 98 % | 55 → 58 % | 0.33-0.08 → 0.31-0.28 | unchanged |
+| beach | 55 → 84 % | 63 → 87 % | 38 → 43 % | 0.42-0.00 → 0.64-0.06 | unchanged |
+
+Most of the gain is the two pass fixes (a received pass instead of one run past the receiver); calls alone moved completion
+within noise and put ~10 % of passes on a caller (80-95 % of those completed). Kids' formats got easier (the 7v7 most: it had the
+worst bug); the adult 11v11's scoring rate is unchanged (0.31 vs 0.33 a minute) and the AI still wins the ball back by tackles and
+interceptions. AI-only matches never call and never read the pass fixes: `tests/fixtures/live-match-summary.json` unchanged (not
+regenerated). **Heat:** a 0.25 s think over ≤ 11 teammates × ≤ 11 foes only while a human has the ball, a Set of existing ids and
+a number per player (no allocation), two ring meshes created once with the markers. **Tests:** `tests/join-live-game.cjs` "bot fill +
+calls" (solo start + bots in all 5, handover with / without the ball, no teleport, leave / re-join, Bot notes, calls within 1 s,
+AI-only / AI carrier never call, the arm pose, assist tie to a caller, real-pace lead, short pass received in all 5, fixture);
+`tests/join-live-mp.cjs` 4c (a friend takes the bot's slot on the ball and gives it back in place with the ball, the picker's
+names + Bots on a third phone, re-join, two friends racing for one slot in the same frame, the owner leaving with two friends on,
+calls on the friend's puppet, twin owners' snapshot bytes identical).
+
+### Goalkeeper feel + body moves (owner, Nov 5 2026: "improve dive and save feel … make it unmistakable when you're the keeper"; "players get more freedom for moves")
+
+**Audit (before).** A human keeper's Save dived to where the shot crossed his line and landed BEFORE the ball, whatever the timing
+(`diveTime` clamp), with +3.5 units of stretch reach: a scripted kid pressing Save 0.2-0.5 s after any AI strike saved 83-100 % of
+on-target shots in every format (9v9 89 %, 11v11 85 % at 0.35 s). The stick was ignored with a shot on, catch / parry was the AI's
+20 % roll, there was no keeper indicator beyond the kit, the button said Save, and no save effect. Forward hidden, Throw / Kick and
+the six-second hand-back (Law 12) worked and are unchanged.
+
+**Keeper (sim: `HUMAN_KEEPER` in `lib/town/match/matchSim.ts`, humans only).**
+- A real dive: a push-off of `diveLag` 0.12 real s (`readLag` 0.05 when the stick already leans the shot's way: he read it), then the
+  flight at `diveSpeed` 30 sim units per real s × `diveBy` (futsal / beach 1.5, 7v7 0.55: the small courts' units are shorter). A late
+  press on a corner is beaten; a timed one saves it. Tap Dive = the auto-dive to the shot's line (easy for kids); Dive with the stick
+  pushed hard the OTHER way (≥ 0.6, ≥ 4 units off) dives the stick's way: a wrong guess is beaten. Smother and loose-ball dives as before.
+- Catch vs parry by where the ball meets him (its path's distance off his body): within `catchR` 7 units he holds it, further he
+  parries it wide ("Punched clear!"), a high one is tipped over. A full-stretch save is "big" (`saveBig`).
+- AI shots at a human keeper: at least `cornerShare` 0.4 go for a corner, the one AWAY from him `awaySide` 70 % of the time when he
+  is off centre (positioning is the lesson). AI-only matches: `cp === xg`, the side roll unchanged: the fixture is byte-identical.
+- `HumanInput` gained `diveSerial / diveSide / saveSerial / saveKind / saveBig` (the view's pose, rings, sound, hit pause).
+
+**Save rate** (`scratchpad/gk/keeper.cjs`: 10 seeds × 6 real min per format at live pace; the scripted keeper tracks the ball across
+his line and taps Dive N s after each strike; on target = inside the posts, under the bar):
+
+| on-target saved | 7v7 | futsal | 9v9 | 11v11 | beach |
+|---|---|---|---|---|---|
+| AI keeper (reference) | 72 % | 79 % | 52 % | 77 % | 86 % |
+| before, react 0.2 / 0.35 / 0.5 s | 96 / 98 / 100 | 97 / 93 / 76 | 93 / 89 / 92 | 85 / 85 / 83 | 97 / 95 / 90 |
+| after, never dives | 26 | 38 | 33 | 38 | 27 |
+| **after, react 0.2 / 0.35 / 0.5 s** | 90 / 77 / 61 | 74 / 65 / 51 | 67 / **67** / 57 | 76 / **65** / 50 | 82 / 68 / 51 |
+
+Default skill (a ~0.35 s reaction) lands 9v9 / 11v11 at 65-67 % (target 55-70 %); quick hands save more, a late dive concedes. 7v7
+stays the easiest (77 %). Samples are 40-120 shots per cell: ±7 points of noise.
+
+**Keeper indicator (view).** `lib/graphics/keeperMarkers.ts` (4 meshes built once; ≤ 4 draw calls only while you are the keeper, no
+allocation per frame): a double ring in your bib colour (it replaces the outfield attack compass), a white glove badge over your head
+(one sprite, a canvas drawn once), a soft green goal-mouth glow, and your dive-reach arc (save reach at full stretch + a quarter-second
+dive) that fades in while an opponent can shoot. "You're the keeper / Dive at the shot, then throw it out" for 2.1 s under the score bar
+on joining in goal and at each kick-off after a goal (`[data-join-keeper]`, opaque, transform / opacity only; a tip waits under it).
+Buttons: **Dive** (green) turns **Catch** (cream) when the shot comes at his body (`liveBodyFx.fillMoveView` catchable; the same
+press, the sim decides), **Throw** / **Kick** in his hands. One-time tips: "Tap Dive when they shoot. The stick picks a side." on
+joining in goal; "Stick at a teammate, then Throw. Six seconds max in your hands!" the first time he holds it (Law 12). The picker
+shows a keeper line under the position when Goalkeeper is picked (`[data-join-pick-keeper]`).
+
+**Save feel (view, `lib/town/liveBodyFx.ts` + `kickFx.burst`).** The dive plays choreo's full-stretch dive pose at the press (and on
+friends' screens); a catch closes a "got it" ring on the hands, a parry / tip flashes a white burst, a big save adds the dust ring +
+sparkle, a glove thud and the crowd swell; the word ("Great catch!", "Punched clear!", "Tipped over!", "What a save!"); a big save of
+mine: a 0.11 s hit pause, a short slow motion (0.35× for 0.32 s, small zoom) and a tiny shake (solo; a shared match stays 1×).
+
+**Body moves (sim: `TRICK_KINDS`, `TRICK_MOVES`, `TRICK_BEAT`, `HUMAN_BODY` in `lib/town/match/humanInputs.ts`).** No new button: the
+Trick reads the stick against the ATTACKING direction (a run-relative read always came out "forward": the run follows the stick within
+a step): stick back = **drag-back**, stick left / right = **spin turn** (roulette) that way, Sprint held = **flick-up** (choreo's
+flickUp with the ball lift), otherwise **step-over** / **La Croqueta** alternate. Five moves. Each beats the NEAREST defender within
+`TRICK.radius` with its own chance (step-over / croqueta 0.6, drag-back 0.55, spin 0.7, flick 0.65): he stumbles for 0.4 real s at
+0.1× pace (choreo stumble + a ring at his feet); the others near him are bamboozled as before. Measured (`scratchpad/gk/body.cjs`, 40
+runs at a defender 9 units ahead, separation after 1.2 s): no move 0.4-1.1 m, sprint only 1.7-2.4 m, a move 2.3-6.1 m; beaten 40-78 %
+(the in-game test: 20-31 of 40 per format). Speed cap: the move's burst never passes his own full sprint (it used to: sprint + Trick
+on the 11v11 reached 9.6 m/s); sprint + flick-up peaks at 9.14 m/s (11v11), under the 9.34 client / 9.44 server pose limit.
+- **Shield:** a human carrier with an opponent within 8 units BEHIND him (back turned) holds him off: AI tackles × 0.5, the authored
+  shield pose plays. **Shoulder:** hold Stay with the stick at an AI carrier within 6.5 units: 40 % knocks it loose (the poke-away),
+  else he loses a step (0.3 s); 1.6 s cooldown, the shoulderCharge pose. **Momentum:** a sharp cut (heading past cos 0.6 against
+  ~0.25 s ago, ≥ 30 u/s) keeps it tight for 0.35 s (AI tackles × 0.75, the ball drawn 35 % closer, the rig's plant dip); at full
+  sprint it runs looser (× 1.25, the ball drawn further ahead). **Lean:** humans bank × 1.6 into turns (up to 0.28 rad) and a little
+  more into the sprint (`PlayerMotion.leanBoost`). `TACKLE_ASSIST` is unchanged. Headers / volleys: the existing jump for any lofted
+  ball's target already plays for humans; nothing new added.
+- Reduced motion and Match effects: Light trim the rings (kickFx levels) and the hit pause / slow motion; the move, the stumble and the
+  poses always play.
+
+**Multiplayer.** No protocol or relay change. The snapshot carries ONE more packed number per listed human after the popup values
+(`matchNet.SNAP_BODY`: the trick kind's high bit (flick = 4), beat, dive serial + side, save serial + kind + big, shoulder serial,
+shield), every number far inside the relay's ±100 000 check; an older reader stops before it, an older owner's frame bumps nothing (a
+flick then reads as a step-over). A friend's screen names the beaten defender (its nearest opponent outfielder) and the shouldered
+carrier from its own puppet. Cost: 5 numbers a human instead of 4, so a big party rotates sooner (11v11 lists 8 humans a frame, was
+10; 9v9 11, was 13); the 11v11 frame stays 314 B of 512.
+
+**Tests.** `tests/join-live-game.cjs` 9b (dive semantics, push-off timing, dive speed, wrong way, corner) and "keeper feel + body
+moves" (all 5 formats: indicator data, catch / parry / tip, Dive saves the corner, wrong way beaten, throw-out, six seconds; moves by
+stick on all 5, stumble rate + length, speed cap, shield, shoulder, cut, the SNAP_BODY round trip, the view's poses with / without
+reduced motion, HUD wiring, mirrored controls, fixture). `tests/join-live-mp.cjs` (a real minute per format with a human keeper and a
+tricking friend: dives 20/20, saves 10/10, tricks 29-30/29-30 with their kinds, beaten defenders and shoulders equal on both phones;
+an older owner's frame). `npx tsc --noEmit` clean, `npm run test:quiet` 379/379.
+
+**Screenshots** (dev server, headless Chrome, 390×844 DPR 3 + 1280×800; scripted shot + Space / the Trick press):
+`scratchpad/gk/keeper-*.png` (banner, glove badge over the "you" pin, the double ring, the green goal-mouth glow + reach arc, the
+keeper mid-dive, Dive / Catch) and `move-*.png` (the spin turn at ~25 % with "Spin turn! Got past!"). Seen: the moves read small on the
+phone at the default camera; island prompts ("Talk to …", the explore "Something shimmers" card) can still show over a joined match
+(pre-existing, not touched). Not tried on a real phone: dive timing by touch and the glow's contrast in sunlight are device questions.
+
+### QA round 1 (multiplayer, Nov 5 2026: node harness over the real RoomCore, no phones)
+**Checked** (`tests/join-live-mp.cjs` + scratchpad probes, all 5 formats): a friend joins a bot slot with / without the ball, the
+keeper slot, the owner's side or the other one, mid-play, during the goal hold (score mirrored, one reset landing, the owner's kick-off on
+time); two friends racing one slot; a friend's Leave and an abrupt tab close (the bot takes over in place with the ball, the picker on a
+third phone reads Bot at once); the owner leaving with two friends on (earliest joiner runs it, score kept, one sim, no stall); everyone
+leaving (watchers back to their own match); keeper dives / saves, body moves, kick effects and calls once per event on friends; owner
+snapshot bytes identical with and without replays / effects; AI-only fixture unchanged.
+**Fixed.**
+- **Owner migration froze the friends who stayed** (`matchLink.ts`, `fieldRuntime.resetSnaps`): the new owner's snapshot seq starts at
+  its own count, so a friend's buffer dropped every frame until it passed the old owner's (20 s of play = 20 s frozen; an hour = an
+  hour). A roster with a new owner now clears the puppet's buffer (seq, popup and reset serials: no phantom "trick!" / reset arrival).
+- **Jitter** (`matchNet.ts` `JITTER`, `matchLink` send schedule): frames were stamped on arrival, so frames bunched behind a slow one
+  made the friend's ball step 2x. The owner now sends on a fixed 83 ms schedule and its seq counts skipped gaps (seq × 83 ms = its
+  clock); a friend stamps frames with that plus the lower envelope of arrival − seq × 83 (may creep 2 %), draws INTERP_MS + the recent
+  lateness behind (decaying peak, ≤ +300 ms, grows 20 % / shrinks 4 % of real time), and keeps 8 frames. A steady link (any fixed
+  latency) is unchanged (110 ms, ≤ 2 frames of grid). Also fixes the old schedule's 100 ms gaps on a 30-45 fps owner, and the own-slot
+  velocity spike from two frames arriving 1 ms apart. Measured (scratchpad `mpqa/lat3.cjs`, 4 seeds × 60 s, in-order delivery):
+  | link | ball steps > 1.6x the owner's (before → after) | step change, friend / owner | delay |
+  |---|---|---|---|
+  | 0 / 150 / 300 ms fixed | 4-0 → 4-0 (restart placements) | = owner | 110 ms |
+  | 150-250 ms | 24-74 → 0-4 per format | 0.11-0.24 → 0.02-0.04 (owner 0.01-0.04) | 173 ms |
+  | 150-300 ms | 89-333 → 1-6 | 0.22-0.50 → 0.02-0.05 | 206 ms |
+  Goals, quick resets and kicks match the owner exactly as before. Trade-off: under jitter friends see the others ~60-100 ms later
+  (their own slot is still the newest frame + velocity).
+- **A frame over 512 B** (`matchNet.encodeSnap`, `SNAP_MAX_BYTES`): the count cap alone let a 9v9 with 11+ humans reach ~514-522 B in
+  worst frames (every slot ≥ 100 u from the line, kicks and serial bits set), which `encode` refuses: a frozen match. The listed humans
+  are now also fitted by bytes (at the costliest human's size), so the 11v11 / 9v9 rotate a little sooner only in such frames
+  (worst now 492-495 B; tested in all 5 formats with every slot human).
+- **Lost taps** (`matchLink` `IN_MIN_GAP_MS` 64): a kid mashing Tackle while steering sent ~20 In/s, over the relay's 16/s, and ~1 tap
+  in 6 was dropped. Urgent sends now wait at least 64 ms (taps stay OR-ed): 13 In/s, 100/100 taps.
+- **A stalled friend ran away** (`matchLink` `IN_STALE_MS` 1.2 s): the owner kept a stalled friend's last stick, so a 5 s socket stall
+  ran his player ~100 u across the pitch. The owner now lets go after 1.2 s without In (2 keepalives missed); the next In takes over.
+- **Phantom GOAL!** (`matchEffects.syncScore`, `fieldRuntime` `puppetFresh`): walking up to (watching) or joining a friends' match
+  whose score is ahead of my local one popped the GOAL! card + announcement, and the replay history of my old match was kept. The
+  first snapshot now syncs the card's score and cancels the old replay history.
+**Not changed (by design / reported).** The pose governor: friends send In ≥ 2 Hz and owners snapshot while anyone plays or watches,
+so `live` holds in shared matches; a party member alone on a field with nobody watching is capped at Run (only visible far away, where
+no one watches). A backgrounded / locked owner freezes the friends until its hidden socket closes (`HIDDEN_CLOSE_MS` 15 s), then the
+relay migrates; a "waiting for Ana" hint or a faster hand-off is a design call. Beach toasts (restart reasons, full time lines) come from
+the owner's sim notes and are not mirrored. **Relay:** no change needed (frames, kinds, limits and rate buckets unchanged; owner-side
+schedule and friend-side stamping only). **Two real phones still needed for:** iOS background / lock while owning, real jitter shape
+on cellular (WebSocket head-of-line blocking after a loss), and the touch latency of a friend's taps (+≤ 64 ms).
+
+### QA round 2 (multiplayer, Nov 5 2026: node harness over the real RoomCore, jitter + loss, no phones)
+**Closed the two round-1 gaps.**
+- **Owner backgrounded / locked** (`matchLink.ts` `handOff`, `visibilitychange` hidden + `pagehide`): the owner's phone sends its last
+  snapshot, then the existing **Leave**: the relay hands the field to the earliest remaining joiner at once (no 15 s freeze) and a bot
+  plays his slot. It does **not** re-join while hidden (a sleeping phone back on the roster would be made the owner again when the
+  others leave: frozen friends). Back on screen it Joins its slot as the last joiner: a friend of the new owner ("Ben kept the match
+  going while you were away"), or told kindly if a friend took the slot. My roster copy drops me at once (a stale copy confirmed me
+  again). Only with a friend on the field. The relay only ever has one owner, so no split brain (tested: owner returns as a friend,
+  the others leaving never hand the field back to the sleeping phone, one owner after). A Leave dropped by the Join / Leave bucket
+  keeps the old 15 s path.
+- **Friend-side hint** (`STALL_HINT_MS` 2 s): a friend whose owner's snapshots stop sees "Waiting for Ana…" in the tip spot under the
+  score bar (re-said each frame for 0.25 s, so it fades as frames resume; the string is built once per owner). **Friend-side
+  promotion after 6 s: not done.** No client frame can take ownership; any client-only version would be two owners. It needs a relay
+  change (below); the client already handles either way (an owner who finds itself a non-owner in a roster becomes a puppet).
+- **Beach toasts on friends** (`matchNet` `createSnapBuffer.sample`, `liveJoinRuntime`): derived from data every frame carries, once per
+  new frame, into the puppet's `humanNote` / `results` the HUD already reads: the restart flag ending with my slot on the ball at the
+  centre spot (kick-off) or the touchline (kick-in; corners and goal clearances never toast), and the period reaching 5 (full time,
+  the frame's score; extra time from period 4). A level game is a shoot-out whose score only the owner knows: the friend reads
+  "Penalties! Level after extra time: five kicks each decide it" (marker: level `pens`). Not mirrored (sim-internal, no snapshot
+  trace): the "4 seconds up: the pass was played for you" and "No goal: …straight in" toasts. No wire change.
+**Chaos pass #2** (`tests/join-live-mp.cjs` "QA2 chaos", seeds 3301 / 4409 / 5521 / 6637 / 7741, 200 s each, 5 players + 1 watcher,
+30 fps, in-order delivery with 0-300 ms jitter each way, 5 % Snap / In loss): ~80 events per format (joins, a stale-picker join of a
+held slot, leaves, slot swaps, owner leaves, backgrounds, phones that freeze without a hand-off, owner and friend socket stalls with
+the burst after). Invariants per frame / at ~30 settle points per format: one owner (= the relay's), one stepping sim on the field,
+no slot twice (relay and owner sim), no stale human on the owner, joined = on the roster, watchers never on the roster nor counted,
+the shared score never goes back (beach: only to 0-0 after full time) and equals the owner's on every screen, no frame over 512 B /
+120 numbers (worst 361 B / 101), nothing thrown, no client acting as owner > 1.5 s after the relay moved it, and a friend frozen past
+2.1 s only during a deliberate owner freeze / stall, always with the hint (never after a hand-off).
+**Fixed (found by the chaos pass).**
+- A refused re-join (`matchLink`, "X just took that spot") left the link's owner flag, friends and puppet in place (harmless on a
+  first join; after a hand-off it watched with stale friends locked on my sim): it now tears down to my own match.
+- Leaving and joining another slot before the link's next update kept my old slot on the relay (local slot ≠ roster slot): a changed
+  local slot is now a Leave + re-join. Not reachable through today's picker (several frames), kept as a cheap guard (one map lookup).
+**Reported, not changed: the relay's flood guard vs a stalled socket.** `RATE.closeAbovePerSec` (30 frames in one second → close)
+counts arrivals, so a phone whose link stalls ≥ ~1.5 s (cellular dead spot) and then flushes its backlog (poses ~10 Hz + match frames
+12-13 Hz) is closed with `CLOSE.Flood` and reconnects (seen 2-12 times per 200 s run with match frames alone). The match survives it
+(owner: migration at the drop; friend: bot in place, re-join after the resume), but the kid sees a reconnect. **Relay change suggested,
+not deployed** (relay untouched this round): make the flood guard a token bucket with burst headroom (e.g. 30/s, burst 90-120),
+and, for the friend-side promotion, track the owner's last Snap per field and, when a friend's In arrives > 6 s after it, move the
+owner to the earliest other joiner and re-append the old owner (`slots.delete` + `set`) with a roster: the relay stays the only
+arbiter (no split brain) and the old owner's phone becomes a puppet on its next roster, as tested here. **Relay redeploy: not needed for
+this round's client changes** (frames, kinds, limits unchanged). **Phones still needed for:** iOS delivering the hand-off frames from
+`visibilitychange` / `pagehide` before suspension, real stall shapes vs the flood guard.
+
+### Relay: burst guard + silent-owner promotion (NOT deployed, Nov 5 2026)
+Code + tests only; the live relay is still version `03b5d3cc-1ebe-425f-b9fd-b7dfc8c1ea40`. Closes the two relay items QA round 2 reported.
+- **Burst guard** (`roomCore.ts` `message`, `protocol/limits.ts` `FLOOD_BURST`): the flood guard is a per-socket `TokenBucket`
+  (`RATE.closeAbovePerSec` 30/s sustained, unchanged; burst `FLOOD_BURST` 120) instead of "> 30 frames in one fixed second". A phone
+  flushing ~5 s of backlog after a stall passes; 200 frames/s is still closed after ~0.7 s, thousands at once after ≤ 120 frames. The
+  per-kind buckets (pose, ball, emote, ping, control, `MATCH_RATE`, Join / Leave / Watch), size caps and validation are unchanged.
+- **Silent-owner promotion** (`roomCore.ts` `promoteSilentOwners`, 5 Hz tick; `MATCH_OWNER_SILENT_MS` 6 s): a field owner who sent no
+  C.Match frame for 6 s while another joiner is on the field (and that joiner sent a C.Match frame within the same 6 s) is taken off
+  the field through the existing `matchDrop` (= a Leave): the earliest remaining joiner owns it, everyone gets the roster, the AI plays
+  his slot. His socket stays open; his late Snaps / In are ignored (`matchField` -1) until he Joins again as the last joiner (a friend):
+  one owner, the relay the only arbiter. The clock restarts on a new owner and on an alone owner's first friend's Join (he did not
+  need to snapshot before). Alone, or with only silent friends: nothing happens. Clients without Cap.Match are untouched.
+- **Client** (`matchLink.ts`, safe on the old relay too): an owner the relay drops from the roster (new relay: promotion; any relay:
+  his socket dropped) is treated like his own hand-off: no Join while the page is hidden, then "Ben kept the match going while you
+  were away". Friends: unchanged (roster with a new owner → snap buffer reset, the new owner "the match is on your phone now",
+  "Waiting for Ana…" fades). On the old relay the frozen owner simply stays the owner (the 15 s path), as before.
+- **Tests:** `tests/join-live-mp.cjs` 3 new checks (burst 100 / 1 s and 100 at once accepted, 200/s closed ≤ 1 s, 5000 at once closed
+  ≤ 120, `MATCH_RATE` still drops; promotion at 6 s not 5.8 s, roster + split brain + re-join as friend, alone / silent friend / first
+  friend; client+new relay and client+old relay); `world2` now runs the relay's 5 Hz tick and the chaos line prints promotions;
+  `tests/mp-room-core.cjs` flood check now: 40 at once pass, 240 close. `multiplayer/bots/bot.mjs` flood bot sends 300 (past the
+  burst); `scripts/mp-relay-smoke.mjs` ok. **Chaos pass #2** (same 5 seeds, 200 s each): flood closes 5 / 12 / 6 / 8 / 2 (33) →
+  0 / 0 / 0 / 0 / 0; invariants all hold. A scratch variant with longer owner freezes (4-14 s) had 12 promotions, 0 closes, all invariants.
+- **Deploy (owner approves):** `cd multiplayer/relay && npx wrangler deploy` (no migration: fields are memory-only; parties in progress
+  reconnect and resume). Check: `npx wrangler deployments list` shows the new version; two phones in a match, lock the owner's phone
+  without leaving the page: the friend sees "Waiting for …" then plays on after ~6 s. Client and relay can ship in either order.
+  **Rollback:** `cd multiplayer/relay && npx wrangler rollback 03b5d3cc-1ebe-425f-b9fd-b7dfc8c1ea40` (the client works with both).
+
+### QA round 1 (solo: one human + AI, Nov 5 2026)
+
+Scripted humans (idle / "kid": slow, sloppy, 35-50 % tackle presses / "pro": the feel harness) on all five formats as keeper,
+defender, midfielder and striker: the pure sim (3 min x 3-4 seeds per format and side) and headless Chrome on the dev server (portrait
+390x844 DPR 3, 360x640, iPad 820x1180, desktop 1280x800, each also with "Switch control sides"), driving the real runtime
+(`liveJoin.steer` / `press`, so the HUD modes, tap shot and assists are in the loop). Scripts live in the agent scratchpad only.
+
+- **Fixed: a kid parked on a dead ball froze the match.** (1) The half-time / new-period kick-off waits for everyone in his half and the
+  other side out of the circle and had no failsafe, so a human standing on the centre spot (or over halfway) stopped it for good
+  (145 s of a 3-min futsal run). (2) Standing on a throw-in / corner / goal-kick spot kept the taker off it until the 4 s failsafe
+  (12.5 real s at the 7v7's live speed; 16-17 s restarts in 7v7, 9v9, 11v11). `MatchSim.applyHumanTargets`: during a kick-off his stick
+  target stays in his own half and out of the circle on the other side's kick-off (Law 8); on any other restart it is kept 18 u off the
+  spot, along the line from the spot through where he stands (into the field when he is on it). `restartLogic`: a human match's kick-off
+  also goes 1.5 real s after its beat however he stands. Humans only: the AI-only fixture is byte-identical. Max dead-ball time with a
+  scripted kid is now 3.6-9.4 s in most runs (AI-only 14-20 s, which is the goal celebration + fetch); the few 11-18 s left are the beach
+  period break or a script that re-aims at the ball under its feet every frame and wiggles on the spot (the 4 s failsafe still ends it). Regression:
+  `tests/join-live-game.cjs` "QA round 1 (solo)" (fails on the old code).
+- **Checked, fine:** picker (slot names incl. futsal Fixo / Ala / Pivot, keeper line, side names per format; Bot / Taken labels only
+  appear with friends, the multiplayer pass covers them), Start, Leave (match focus off, HUD hidden, no humans left in any sim), leave
+  then re-join another format and side, reload mid-match (clean, not joined). No in-match travel UI exists (only Camera, Leave and the
+  actions), so "teleport away" cannot happen from the HUD. Buttons per state for every position (Throw / Kick / Dive / Call in goal;
+  Pass + Shoot or Forward + Trick on the ball; Tackle or Press + Stay defending; Call; Go!). Layout: no overlaps, every target >= 44 px,
+  inside the safe areas on all four views, mirrored correctly when flipped. Desktop keys: Space pass, J shoot, K through ball, L trick,
+  P press on defence, Shift sprint, C camera, Esc leave. Goal -> replay (tag 14 px under the score bar, Skip works from 1.6 s, controls fade
+  out and come straight back) -> quick reset -> kick-off in 3.9 s (skipped) / 6.2 s (full replay); replays off, reduced motion and
+  "Match effects: Light" all run without errors. 3 real minutes per format in the browser: 0 page errors / console errors / unhandled
+  rejections, ball never out of bounds or NaN, no AI outfielder still > 10 s in open play, no ball resting in a net, keeper holds <= 6 s.
+- **Balance (not changed, owner call):** goals / min human side vs AI side, 7v7 midfielder: idle human 0.08-0.11 vs 0.42-0.44 (his side
+  plays a man short), kid 0.17-0.44 vs 0.00-0.17, pro 0.83-1.33 vs 0.00 (the browser bot: 5-0 in 3 min). A sloppy kid gets a close, winnable
+  game; a skilled player beats the 7v7 AI easily. 11v11 human pass completion 96 % of 48 passes (14 seeds; 7v7 95 %, 9v9 77 %, beach 82 %).
+  Tackles are not auto-wins: 33-51 % of tackle presses win the ball (feel harness). Human top speeds (14-frame windows): sprint <= 9.16 m/s,
+  carry / lunge peaks 9.44-9.46 m/s on the 11v11 for under half a second, which the pose governor's +1 m per pose absorbs.
+- **Perf** (dev server, portrait 390x844, 4x CPU, 20 s with two goal resets): 60 fps all five; frame p50 / p95 7v7 18.1 / 25.1, futsal
+  14.7 / 26.3, 9v9 13.6 / 26.6, 11v11 16.4 / 26.7, beach 19.4 / 26.6 ms; max frame 30-36 ms; draw calls 95 / 112 / 90 / 109 / 81; heap
+  growth 6.6-9.7 MB/s. No regression against the earlier passes (9v9 ~94 draw calls, p50 15-23 ms, 10-14 MB/s). Desktop emulation, not
+  phone heat.
+- **Needs a real phone:** thumb reach of the 52 px Trick / Stay on the arc when flipped, the keeper's stick being held at the box edge
+  (by design) reading as "stuck" to a kid, and the real-device heat of a full match.
+
+### QA round 2 (balance, Nov 6 2026: scripted humans in the pure sim, no phones)
+
+Four scripted humans in the midfield slot (idle; kid: 0.35 s reactions, ±40° stick noise, 42 % of close tackles pressed, shoots from far
+with the 1-tap shot; average: 0.18 s, ±17°, 1-tap shots; skilled: 0.08 s, sprints and hunts the ball, Press, tricks, aimed corner shots),
+20 seeds x 3 real minutes per format x profile at live pace, alternating sides, plus the teammate harness ("pro" passer, 14 seeds) and the
+keeper harness. An "exploit" bot (instant through balls / long balls every touch) scores less than the skilled one everywhere (no cheap line).
+**What changed** (`lib/town/match/humanDefence.ts`, read only with a human joined: AI-only matches byte-identical, fixture md5 ca9034fe…):
+per-format multipliers on the existing engine. `intercept` / `lane`: a defender reads a human's assisted pass more often and from further
+off the lane (11v11 ×2.4 / ×1.8, so PASS_HELP's halving no longer applies to adults; kids' formats ×1.4-1.6 / ×1.15-1.2). `read`: an AI
+carrier treats a human closing within 12 u × read as pressure and releases it. `attack`: × the AI's shooting instinct near a human-defended
+goal. `keeper`: × the AI keeper's reach against a human's AIMED shot only (the corner pick is never wide; the kids' 1-tap shot is
+untouched): futsal 1.35, 9v9 / beach 1.3, 11v11 1.15, 7v7 1.1. `tackle`: 11v11 only, HUMAN_GUARD.tackleMul × 1.2. Strength ramps from the
+first human's join (7v7: 35 % -> 100 % over 4 real min, no spike at kick-off; others 0.5-0.8 over 2 min; 11v11 30 s) and, on the kids'
+formats only, a 3-goal band since the join: 3+ behind × 0.4-0.5 (defenders sit off), 3+ ahead × 1.25-1.35; off with humans on both sides.
+TACKLE_ASSIST, human speeds and pose limits unchanged. Regression: `tests/join-live-game.cjs` "QA round 2 (balance)".
+
+| format / profile | goals for-against / min before -> after | human pass completion | tackles won |
+|---|---|---|---|
+| 7v7 kid / avg / skilled | 0.23-0.17, 0.33-0.10, 0.77-0.03 -> 0.20-0.12, 0.45-0.05, 0.60-0.10 | 99/73/78 -> 94/72/77 % | 40/49/46 -> 46/55/38 % |
+| 7v7 skilled, 8 min | 6.3-0.5 a game (max 11-0) -> 4.9-0.6 (max 7-0) | 78 -> 76 % | 46 -> 33 % |
+| futsal kid / avg / skilled | 0.62-0.55, 1.05-0.35, 1.35-0.17 -> 0.73-0.67, 0.97-0.43, 1.02-0.27 | 93/77/77 -> 92/72/74 % | 55/46/45 -> 48/40/41 % |
+| 9v9 kid / avg / skilled | 0.17-0.35, 0.33-0.13, 0.82-0.15 -> 0.18-0.35, 0.37-0.12, 0.62-0.13 | 92/79/81 -> 87/74/79 % | 40/39/40 -> 30/37/38 % |
+| 11v11 kid / avg / skilled | 0.25-0.22, 0.20-0.22, 0.42-0.18 -> 0.18-0.20, 0.27-0.23, 0.32-0.12 | 88/79/84 -> 89/81/75 % ("pro" passer 96 -> 87 %) | 25/36/35 -> 0(n=10)/26/37 % |
+| beach kid / avg / skilled | 0.53-0.35, 0.75-0.15, 0.92-0.10 -> 0.42-0.30, 0.63-0.12, 0.78-0.15 | 89/82/80 -> 92/83/79 % | 38/48/45 -> 32/45/45 % |
+
+Idle humans unchanged (his side plays a man short: 0.05-0.15 vs 0.22-0.68). The skilled bot's aimed-shot conversion: futsal 63 -> 28 %,
+9v9 67 -> 56 %, beach 46 -> 33 %, 7v7 39 -> 25 %. Human keeper saves (react 0.3 s) 65-80 % -> 67-85 % (noise); AI keeper vs AI shots
+unchanged; teammate calls ("to caller" passes completed 90-100 %) unchanged. ±0.1 goals / min is seed noise at this sample size.
+- **Not reached:** the skilled bot still concedes only 0.10-0.15 / min (target ~0.3): it wins the ball ~3 times a minute with the
+  (kept) tackle assist, so the AI rarely reaches his third; the 11v11 goal targets (0.5-0.9 for / 0.3-0.6 against) would need a more
+  open game than the AI's own (0.2 per side per min), which tuning the defence cannot give.
+- **Needs a real kid / adult:** whether the 7v7's late "read" (carriers letting it go as he closes) feels like smart opponents or like
+  the ball "running away" from a kid's tackle; whether the AI keeper's extra reach on aimed shots reads as a great save or as unfair;
+  whether adults find 11v11 passing now honest (75-87 %) and whether the 3-goal band is invisible over a 10-minute session.
+
+### QA round 2 (robustness + soak, Nov 6 2026: headless Chrome on a dev server + the node relay harness, no phones)
+
+Adversarial input, lifecycle and soak runs on all five formats (phone 390x844 DPR 3, 360x640, iPad 820x1180, desktop 1280x800; real CDP
+multi-touch on the HUD and stick; 4x CPU throttle for the soak). Scripts live in the agent scratchpad only.
+
+- **Fixed: a held button stayed held after a tab switch / phone call / page hide.** Holding Sprint and then hiding the page (visibilitychange
+  hidden + blur, no touchend arrives) left sprint on after resume; Pass / Shoot holds kept their press times, so the Stay jockey or a late
+  release could fire. `liveJoinRuntime` now has `release()` (clears the holds, the press times and modes, the Press chase and the Shoot drag
+  WITHOUT firing anything), called on window `blur` (RotateLock's wrong-orientation blur included), `pagehide` and a hidden page; removed in
+  `dispose`. Town's own keys were already cleared by its blur. `LiveJoinHud`: Pass and Shoot also let go on `lostpointercapture`, as Sprint
+  always did (an iOS capture lost without pointerup / pointercancel; Chrome delivers pointerup to a hidden captured button, checked).
+- **Fixed: a solo match kept playing behind "Turn your phone upright".** RotateLock promises "the game waits behind it", but a phone held
+  sideways mid-match let the AI play on (3 s sideways: 1 sim s; a goal could go in on a kid who cannot see). `liveJoin.timeScale` is 0 while
+  the card's own query (`wrongOrientationQuery('portrait')`, one MediaQueryList made once, a property read per frame) matches and I am
+  joined; a shared match keeps real time (friends' phones). Upright again: back to exactly 1 at once.
+  Regression: `tests/join-live-game.cjs` "QA round 2 (robustness + soak)" (fails on the old code); the shared timeScale assertions in both join tests follow the new getter.
+- **Checked, fine:** 60-frame mash with three fingers (stick + Pass + Shoot) and touchcancel; pointercancel / release outside the window;
+  keyboard + mouse together (Space held + clicking Pass); hold Shoot then rotate / resize / flip push-to-sprint and Match effects Light, then
+  lose the ball (button hidden) and release: no stuck jockey or sprint; camera 20x; Skip spam; 12 forced goals in a row (replay ring and pop
+  bounded, the effects log capped at 80); replays off mid-replay; reduced motion mid-replay; Leave / Esc during a replay, a slow motion and a
+  keeper dive (controls opacity back, replay tag hidden, timeScale 1, match focus off); 50 leave + rejoin cycles across all five formats in
+  under 1 s each (0 failures, one human on one field afterwards, the bench pool stays at 1 per field); Start pressed three times; Start then
+  Leave inside the shrink; a teleport onto another pitch with the picker up (cancelled, as designed); 30 s hidden mid slow motion (no player
+  or ball jump; the slow motion carries on and ends at 1); WebGL context lost and restored (renders again, no errors); reload mid-replay (clean,
+  not joined); sprint into the corner flag for 45 s on 7v7 / 11v11 / beach (clamped, no NaN, at most 6 s of dead ball); 12-letter friend
+  names in the picker (nicks are 2-12 letters, no emoji possible: `normalizeNick`), no overflow at 360 px; all controls on screen on every view.
+- **Soak** (15 real min per format, phone, 4x CPU, a scripted kid who wanders and mashes buttons and the camera, plus 3 forced goals every
+  90 s; 7v7 midfielder and futsal keeper idle for the first 5 min). Heap after GC, dev build: minute 1 to minute 15 was +10.6 / +12.2 / +15.5 / +4.8 /
+  +21.7 MB for 7v7 / futsal / 9v9 / 11v11 / beach. Geometries +31 / +34 / +23 / +37 / +14 and textures +12 / +10 / +8 / +13 / +29 come
+  from first-time loads (replays, effects, camera angles) and stop growing by about minute 10. DOM nodes held at 2073 and window + document
+  listeners at 291 throughout; frame p50 / p95 were 16.7 / 16.8 ms in every sample (headless vsync bound). Draw calls were 62-95 on Broadcast,
+  with peaks of 190-272 when the kid had cycled to Wide / Behind. 0 page errors, 0 console errors, 0 warnings, and timeScale was 1 at the end.
+  After Leave: match focus off, DOM back to 2088, listeners 290, heap 36-75 MB above the pre-join island baseline (that format's first-time assets stay loaded; 1-15 MB below the in-match peak).
+  Node relay harness (3 humans, 150 ms jitter, 3 % loss, 10 match-minutes on 9v9 and 11v11): heap +0.9 to +2.3 MB over
+  10 min, slowly levelling off (the harness keeps its own send logs). Puppet rings stayed at 8 frames and no sim array grew. 8 humans on 11v11 for 2 min: roster 8,
+  one owner, frames <= 405 B / 116 numbers, every screen showed the owner's score.
+- **Not fixed (outside this lane):** Town reads `prefers-reduced-motion` once at mount, so turning it on mid-match only takes effect on
+  the next visit (the slow-motion hook reads it live). CDP page freeze does not stop rAF in headless Chrome, so a real freeze / resume was
+  not reproduced (a hidden page is handled: Town resets its clock and the dt clamp holds).
+- **Needs a real phone:** iOS Safari's pointer capture when a held button is hidden or the page goes to the background (the fixes cover
+  both paths, but untested on a device); a phone call or Control Centre swipe over a held Sprint; the rotate card's pause as the phone is
+  actually turned; and the heat of a full 15-minute match.

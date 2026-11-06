@@ -6,6 +6,23 @@ export function createBallEffects(){
  const root=new T.Group();root.name='ball-shot-effects';const sparkles=createBallSparkles();root.add(sparkles.root);
  const points=Array.from({length:20},()=>new T.Vector3()),positions=new Float32Array(60),geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.BufferAttribute(positions,3));
  const material=new T.LineBasicMaterial({color:'#fff1b3',transparent:true,opacity:.6,depthWrite:false});const trail=new T.Line(geometry,material);trail.frustumCulled=false;root.add(trail);
+ // Live-match kick trails (Nov 5 2026, docs/join-live-game-design.md "Kick effects"): `shape.ribbon` > 0 swaps the thin line for a
+ // camera-facing ribbon of that half-width (m) over the same 20 points (one mesh, tapering and fading to the tail, additive), and
+ // `shape.ghosts` caps the ghost balls (a light pass shows a few, a hard shot all 14). Defaults keep the walking ball's look.
+ const shape={ghosts:14,ribbon:0};
+ const ribbonPos=new Float32Array(120),ribbonCol=new Float32Array(120),ribbonIdx:number[]=[];
+ for(let i=0;i<20;i++){const f=Math.pow(1-i/19,1.6);for(let s=0;s<2;s++){const o=(i*2+s)*3;ribbonCol[o]=ribbonCol[o+1]=ribbonCol[o+2]=f;}}
+ for(let i=0;i<19;i++){const a=i*2,b=a+1,c=a+2,d=a+3;ribbonIdx.push(a,b,c,b,d,c);}
+ const ribbonGeometry=new T.BufferGeometry();ribbonGeometry.setAttribute('position',new T.BufferAttribute(ribbonPos,3));ribbonGeometry.setAttribute('color',new T.BufferAttribute(ribbonCol,3));ribbonGeometry.setIndex(ribbonIdx);
+ const ribbonMaterial=new T.MeshBasicMaterial({color:'#fff1b3',vertexColors:true,transparent:true,opacity:.6,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide,toneMapped:false});
+ const ribbon=new T.Mesh(ribbonGeometry,ribbonMaterial);ribbon.name='ball-trail-ribbon';ribbon.frustumCulled=false;ribbon.visible=false;ribbon.renderOrder=1;root.add(ribbon);
+ const rA=new T.Vector3(),rB=new T.Vector3(),rC=new T.Vector3();
+ const writeRibbon=(camera:T.Camera,width:number)=>{
+  for(let i=0;i<20;i++){const p=points[i],q=points[i<19?i+1:18],sgn=i<19?1:-1;
+   rA.subVectors(p,q).multiplyScalar(sgn);rB.subVectors(camera.position,p);rC.crossVectors(rA,rB);const l=rC.length();
+   const w=width*(1-i/19*.75)/(l>1e-6?l:1);if(l<=1e-6)rC.set(0,0,0);
+   const o=i*6;ribbonPos[o]=p.x+rC.x*w;ribbonPos[o+1]=p.y+rC.y*w;ribbonPos[o+2]=p.z+rC.z*w;ribbonPos[o+3]=p.x-rC.x*w;ribbonPos[o+4]=p.y-rC.y*w;ribbonPos[o+5]=p.z-rC.z*w;}
+  ribbonGeometry.attributes.position.needsUpdate=true;};
  const ghostGeometry=new T.SphereGeometry(.16,8,6),ghostMaterial=new T.MeshBasicMaterial({color:'#fff1b3',transparent:true,opacity:.42,depthWrite:false}),ghosts=Array.from({length:14},()=>{const ghost=new T.Mesh<T.BufferGeometry,T.MeshBasicMaterial>(ghostGeometry,ghostMaterial);root.add(ghost);return ghost;});
  const shardGeometry=new T.IcosahedronGeometry(.16,0);
  const starShape=new T.Shape();for(let i=0;i<10;i++){const a=i*Math.PI/5,r=i%2?.06:.16;i?starShape.lineTo(Math.cos(a)*r,Math.sin(a)*r):starShape.moveTo(Math.cos(a)*r,Math.sin(a)*r);}starShape.closePath();const starGeometry=new T.ShapeGeometry(starShape);
@@ -25,7 +42,7 @@ export function createBallEffects(){
  const seed=(power:number,drips:boolean)=>{for(let i=0;i<DROPS;i++){const o=i*4,crown=i<ghosts.length,u=((i*0.618034)%1),v=((i*0.381966+.17)%1);
    seeds[o]=u*Math.PI*2;seeds[o+1]=drips?.4+v*.5:crown?(3.2+v*1.6)*(.55+.45*power):(2+v*2.2)*(.55+.45*power);
    seeds[o+2]=drips?.15+u*.25:crown?.25+v*.55:(1.1+u*1.5)*(.6+.4*power);seeds[o+3]=drips?.1:crown?.38+v*.3:.16+v*.14;}};
- return {root,impact(x:number,y:number,z:number){const ring=rings[cursor++%rings.length];ring.age=0;ring.power=0;ring.flat=false;ring.size=1;ring.material.color.set('#fff3c2');ring.mesh.position.set(x,y,z);},
+ return {root,shape,impact(x:number,y:number,z:number){const ring=rings[cursor++%rings.length];ring.age=0;ring.power=0;ring.flat=false;ring.size=1;ring.material.color.set('#fff3c2');ring.mesh.position.set(x,y,z);},
   /** A ball landing in the sea (ballSea.ts): two pooled rings, one lying flat on the water and one small upright burst. */
   /** A ripple ring on the water (wading, swimming, surfacing; lib/town/water): one pooled flat ring, `power` its size. */
   /** A swim ripple (swimRipples.ts): a thin ring that spreads to `maxR` m over `life` s and fades (opacity ≤ .35), slightly wobbly; `stretch` lengthens it along `angle` (the bow wake's V), `still` = 1 holds it at `maxR` (reduced motion). */
@@ -49,11 +66,12 @@ export function createBallEffects(){
   /** Surfacing after the dip: a few drips falling off the head and shoulders (the droplet spheres, small and close). */
   drips(x:number,y:number,z:number,reduced:boolean){if(reduced)return;burst.age=0;burst.x=x;burst.y=y;burst.z=z;burst.power=.3;burst.drips=true;seed(.3,true);},launch(x:number,y:number,z:number,power:number){if(power<=.05)return;for(let i=0;i<3;i++){const ring=rings[cursor++%rings.length];ring.age=-i*.065;ring.power=power;ring.size=1;ring.material.color.set(i%2?'#fff8db':'#ffce67');ring.mesh.position.set(x,y,z);}},update(dt:number,p:{x:number;y:number;z:number},shot:boolean,reduced:boolean,camera:T.Camera,power=0,charging=-1,color='#eee4c4',style:CharacterCustomization['ball']='classic'){
   sparkles.update(dt,p,shot,root.visible,reduced,color);
-  if(!root.visible){if(!hidden){hidden=true;wasShot=false;burst.age=SPLASH_BURST_S;for(const ring of rings){ring.age=1;ring.mesh.visible=false;}for(const r of swimRipples){r.age=r.life;r.mesh.visible=false;}chargeRing.visible=trail.visible=false;for(const mesh of [...energy,...ghosts,...solarRings])mesh.visible=false;}return;}hidden=false;
+  if(!root.visible){if(!hidden){hidden=true;wasShot=false;burst.age=SPLASH_BURST_S;for(const ring of rings){ring.age=1;ring.mesh.visible=false;}for(const r of swimRipples){r.age=r.life;r.mesh.visible=false;}chargeRing.visible=trail.visible=ribbon.visible=false;for(const mesh of [...energy,...ghosts,...solarRings])mesh.visible=false;}return;}hidden=false;
   clock+=dt;chargeRing.visible=charging>=0;chargeRing.position.set(p.x,p.y,p.z);chargeRing.quaternion.copy(camera.quaternion);chargeRing.scale.setScalar(.27+Math.max(0,charging)*.13+(reduced?0:Math.sin(clock*12)*.025));chargeMaterial.opacity=charging>=0?.3+charging*.35:0;material.opacity=.6+power*.3;ghostMaterial.opacity=.42+power*.2;if(color!==lastColor){lastColor=color;material.color.set(color);ghostMaterial.color.copy(material.color);solarMaterial.color.set(color);chargeMaterial.color.set(color);energyMaterial.color.set(color);}
   energyMaterial.opacity=charging>=0?.4+charging*.5:0;energy.forEach((mesh,i)=>{mesh.visible=charging>=0&&!reduced;if(!mesh.visible)return;const phase=(clock*(.8+Math.max(0,charging)*.7)+i/8)%1,angle=i*Math.PI*.75+clock*1.4,radius=.2+(1-phase)*(.45+Math.max(0,charging)*.3);mesh.position.set(p.x+Math.cos(angle)*radius,p.y+Math.sin(angle)*radius*.65,p.z+Math.sin(angle+.8)*radius);mesh.scale.setScalar(.1+phase*.17);});
-  if(!shot||!wasShot)points.forEach(v=>v.set(p.x,p.y,p.z));else if(dt>0){for(let i=points.length-1;i>0;i--)points[i].copy(points[i-1]);points[0].set(p.x,p.y,p.z);}wasShot=shot;trail.visible=shot&&!reduced;
-  ghosts.forEach((ghost,i)=>{ghost.visible=shot&&!reduced;if(!ghost.visible)return;ghost.position.copy(points[i+1]);ghost.geometry=style==='frost'?shardGeometry:style==='cosmic'?starGeometry:ghostGeometry;ghost.scale.setScalar((1-i/15)*(1+power*.65));if(style==='frost'){ghost.scale.set(.45*(1-i/15),1.5*(1-i/15),.45*(1-i/15));ghost.rotation.set(clock*2+i,i*.7,clock+i);}else if(style==='cosmic'){const radius=(1-i/15)*.18,angle=clock*8+i*.9;ghost.position.x+=Math.cos(angle)*radius;ghost.position.y+=Math.sin(angle)*radius;ghost.quaternion.copy(camera.quaternion);}else ghost.rotation.set(0,0,0);});
+  if(!shot||!wasShot)points.forEach(v=>v.set(p.x,p.y,p.z));else if(dt>0){for(let i=points.length-1;i>0;i--)points[i].copy(points[i-1]);points[0].set(p.x,p.y,p.z);}wasShot=shot;trail.visible=shot&&!reduced&&shape.ribbon<=0;ribbon.visible=shot&&!reduced&&shape.ribbon>0;
+  if(ribbon.visible){ribbonMaterial.color.copy(material.color);ribbonMaterial.opacity=.5+power*.4;writeRibbon(camera,shape.ribbon);}
+  ghosts.forEach((ghost,i)=>{ghost.visible=shot&&!reduced&&i<shape.ghosts;if(!ghost.visible)return;ghost.position.copy(points[i+1]);ghost.geometry=style==='frost'?shardGeometry:style==='cosmic'?starGeometry:ghostGeometry;ghost.scale.setScalar((1-i/15)*(1+power*.65));if(style==='frost'){ghost.scale.set(.45*(1-i/15),1.5*(1-i/15),.45*(1-i/15));ghost.rotation.set(clock*2+i,i*.7,clock+i);}else if(style==='cosmic'){const radius=(1-i/15)*.18,angle=clock*8+i*.9;ghost.position.x+=Math.cos(angle)*radius;ghost.position.y+=Math.sin(angle)*radius;ghost.quaternion.copy(camera.quaternion);}else ghost.rotation.set(0,0,0);});
   solarRings.forEach((ring,i)=>{ring.visible=shot&&!reduced&&style==='solar';if(!ring.visible)return;ring.position.copy(points[3+i*4]);ring.quaternion.copy(camera.quaternion);ring.scale.setScalar(.15+((clock*2+i/3)%1)*.3);});
   // The splash burst: spray spheres and droplets on gravity arcs from the hit, fading and shrinking; they stop at the water line.
   // Takes the ghost and charge spheres only while the ball is neither shot nor charging (it is parked on the sand in the sea).
@@ -72,5 +90,5 @@ export function createBallEffects(){
    r.mesh.rotation.set(-Math.PI/2,0,r.angle+(wob?.12*Math.sin(r.age*2.6+r.seed):0));r.mesh.scale.set(r.maxR*grow*wx*r.stretch,r.maxR*grow*wz,1);
    r.material.opacity=r.op*(r.still?Math.min(1,t*6,(1-t)*3):Math.min(1,t*12)*(1-t)*(1-t));}
   for(const ring of rings){ring.age+=dt;const t=ring.age/.38;ring.mesh.visible=t>=0&&t<1;if(t>=0&&t<1){if(ring.flat)ring.mesh.rotation.set(-Math.PI/2,0,0);else ring.mesh.quaternion.copy(camera.quaternion);ring.mesh.scale.setScalar((reduced?.4:.15+t*(.95+ring.power*2.2))*ring.size);ring.material.opacity=(1-t)*.75;}}
- },dispose(){sparkles.dispose();solarMaterial.dispose();shardGeometry.dispose();starGeometry.dispose();energyMaterial.dispose();chargeMaterial.dispose();ghostGeometry.dispose();ghostMaterial.dispose();geometry.dispose();material.dispose();ringGeometry.dispose();rings.forEach(r=>r.material.dispose());swimRipples.forEach(r=>r.material.dispose());rippleGeometry.dispose();root.removeFromParent();}};
+ },dispose(){sparkles.dispose();ribbonGeometry.dispose();ribbonMaterial.dispose();solarMaterial.dispose();shardGeometry.dispose();starGeometry.dispose();energyMaterial.dispose();chargeMaterial.dispose();ghostGeometry.dispose();ghostMaterial.dispose();geometry.dispose();material.dispose();ringGeometry.dispose();rings.forEach(r=>r.material.dispose());swimRipples.forEach(r=>r.material.dispose());rippleGeometry.dispose();root.removeFromParent();}};
 }

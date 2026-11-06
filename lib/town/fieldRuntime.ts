@@ -6,8 +6,9 @@ import {recordQuestStep} from './questProgress';
 import * as T from 'three';
 import type {BallReactions} from '../graphics/ballReactions';
 import {createLiveBallPhysics} from './liveBallPhysics';
-import {createLiveBallSound,type LiveBallSoundPlay} from './liveBallSound';
+import {createLiveBallSound,type LiveBallSoundPlay,type LiveBallSoundKind} from './liveBallSound';
 import {createMatchEffects,type MatchEvent} from './matchEffects';
+import {createPuppetTouches} from './match/puppetTouches';
 import {createLessonCues} from './lessonCues';
 import {playerBatch} from '../graphics/playerBatch';
 import {teachingMotion} from './teachingMotion';
@@ -17,13 +18,15 @@ import {createChoreo,windupTurnShare} from './match/choreo';
 import {createComboView} from './match/combos'; // [combos] skill poses for combination plays
 import {classicShirtNumber} from '../graphics/shirtNumbers';
 import {fieldTokenDress,liveMatchKits,type BeanDress} from './beanLooks';
-import {joinableFormat,chooseJoinTeam,pickSlot,touchlineSpot,benchMargin,clearOfFlags,stepBench,cheerAge,CHEER_SECONDS,LIVE_JOIN_FORMATS,type BenchWalker,type SlotCandidate,type JoinPick} from './liveJoin';
-import {TRICK,PRESS,HUMAN_FEEL,POWER_SHOT,type HumanFrame} from './match/humanInputs';
+import {joinableFormat,chooseJoinTeam,pickSlot,handBack,touchlineSpot,benchMargin,clearOfFlags,stepBench,cheerAge,CHEER_SECONDS,LIVE_JOIN_FORMATS,type BenchWalker,type SlotCandidate,type JoinPick} from './liveJoin';
+import {TRICK,PRESS,HUMAN_FEEL,POWER_SHOT,type HumanFrame,type TrickKind} from './match/humanInputs';
+import {createBodyFx,createMoveView,fillMoveView,type HumanMoveView} from './liveBodyFx';// keeper feel + body moves (Nov 5 2026)
 import {createSnapBuffer,createInAccum,accumulateIn,encodeSnap,type SnapBuffer} from './match/matchNet';
 import {applyBodyEmote} from '../graphics/bodyEmotePose';
 import {BODY_EMOTE} from './emoteBody';
 import {createMatchBallTexture} from '../graphics/matchBallTexture';
 import {createBallReset} from './ballReset';
+import {createGoalReplay,replaysEnabled,type GoalReplay} from './goalReplay';
 import {MatchSim,ROLE_MOVEMENT} from './match/matchSim';
 import {maxTurnRate,createControlState,stepControl,settlePace,MOTION} from './match/matchMotion';
 import {VENUES,LIVE_VENUES,BEACH_TOUCHLINE_FLAGS_Y,liveWorldX,liveWorldZ,liveWorldYaw,liveFieldPoint,type Venue,type LiveVenue,type LiveFormat} from './venues';
@@ -54,9 +57,9 @@ export const teachingPoseAdvances=(session:FieldSession,outcomeStep:number|null|
 /** A human on a live field (join a live game): his slot, team, look, and the NPC he replaced sitting out on the touchline. */
 type HumanSlot={shotSeen?:number;slipSeen?:number;humanId:string;slot:string;team:'gold'|'blue';dress:BeanDress;bench:BenchWalker;benchRig:PlayerRig;benchMotion:PlayerMotion;goals:number;base?:{x:number;y:number;z:number};/** The last dribbling trick the view played (HumanInput.trickSerial). */trickSeen?:number};
 /** What Town reads about a joined human each frame (one reused object, no allocation). */
-export type HumanView={x:number;z:number;yaw:number;team:'gold'|'blue';onBall:boolean;/** 'mine' on the ball, 'team' a teammate has it, 'opp' the other team, 'loose' nobody. */possession:'mine'|'team'|'opp'|'loose';passX:number;passZ:number;forwardX:number;forwardZ:number;goalX:number;goalZ:number;restart:boolean;callOpen:boolean|null;inShotRange:boolean;/** In goal (human keeper, Nov 4 2026) and, on the ball, holding it in his hands. */keeper:boolean;hands:boolean;/** Trick / Press buttons (owner Nov 4 2026): cooldown left 0..1 (1 = just used) and whether the trick window / the press is on. */trickCd:number;trickOn:boolean;pressCd:number;pressOn:boolean;/** Bumps on every trick (the HUD's popup word, slow motion and zoom); the move played. */trickSerial:number;trickKind:'stepover'|'croqueta'|'dragBack';/** Bumps on every shot of his (slow motion), its charge 0..1 and whether a corner was picked; bumps on every AI tackle he slips away from. */shotSerial:number;shotPw:number;shotAimed:boolean;slipSerial:number};
-export const createHumanView=():HumanView=>({x:0,z:0,yaw:0,team:'gold',onBall:false,possession:'loose',passX:NaN,passZ:NaN,forwardX:NaN,forwardZ:NaN,goalX:0,goalZ:0,restart:false,callOpen:null,inShotRange:false,keeper:false,hands:false,trickCd:0,trickOn:false,pressCd:0,pressOn:false,trickSerial:0,trickKind:'stepover',shotSerial:0,shotPw:0,shotAimed:false,slipSerial:0});
-type Entry={/** Multiplayer slice 2: a friend's phone runs this match; the sim is a puppet fed by snapshots (null = this phone runs it). */puppet?:SnapBuffer|null;/** The rendered ball height last frame (m): the owner's snapshot carries it. */lastBallH?:number;/** Friends on this field: slot -> name (their name tag). */names?:Map<string,string>;humans:Map<string,HumanSlot>;slotDress:Map<string,BeanDress>;benchPool:PlayerRig[];dormant?:boolean;synced?:boolean;choreo:ReturnType<typeof createChoreo>;comboView:ReturnType<typeof createComboView>;liveFrame:ReturnType<typeof createLiveFieldFrame>;clock:ReturnType<typeof createMatchUpdateClock>;venue:LiveVenue;sim:MatchSim;root:T.Group;rigs:Map<string,PlayerRig>;ball:T.Mesh;label:Map<string,T.Sprite>;lastLesson:string;effects:ReturnType<typeof createMatchEffects>;ballPhysics:ReturnType<typeof createLiveBallPhysics>;ballSound:ReturnType<typeof createLiveBallSound>;/** Quick goal reset view (human matches): fade in the net, arrival on the centre spot. */ballReset:ReturnType<typeof createBallReset>};
+export type HumanView={x:number;z:number;yaw:number;team:'gold'|'blue';onBall:boolean;/** 'mine' on the ball, 'team' a teammate has it, 'opp' the other team, 'loose' nobody. */possession:'mine'|'team'|'opp'|'loose';passX:number;passZ:number;forwardX:number;forwardZ:number;goalX:number;goalZ:number;restart:boolean;callOpen:boolean|null;inShotRange:boolean;/** In goal (human keeper, Nov 4 2026) and, on the ball, holding it in his hands. */keeper:boolean;hands:boolean;/** Trick / Press buttons (owner Nov 4 2026): cooldown left 0..1 (1 = just used) and whether the trick window / the press is on. */trickCd:number;trickOn:boolean;pressCd:number;pressOn:boolean;/** Bumps on every trick (the HUD's popup word, slow motion and zoom); the move played. */trickSerial:number;trickKind:TrickKind;/** Bumps on every shot of his (slow motion), its charge 0..1 and whether a corner was picked; bumps on every AI tackle he slips away from. */shotSerial:number;shotPw:number;shotAimed:boolean;slipSerial:number;/** Easier controls (Nov 5 2026): the carrier's distance from me (sim units, NaN when nobody else has it) and world point; my sim x and the sim x of the keeper I shoot at (NaN: none), for the tap shot's corner. */carrierD:number;carrierX:number;carrierZ:number;simX:number;keeperX:number;/** Teammates calling for the ball (MatchSim.teamCallers, Nov 5 2026), up to two: world point + weight 0..1 (NaN / 0: none). */callAX:number;callAZ:number;callAW:number;callBX:number;callBZ:number;callBW:number}&HumanMoveView;
+export const createHumanView=():HumanView=>({x:0,z:0,yaw:0,team:'gold',onBall:false,possession:'loose',passX:NaN,passZ:NaN,forwardX:NaN,forwardZ:NaN,goalX:0,goalZ:0,restart:false,callOpen:null,inShotRange:false,keeper:false,hands:false,trickCd:0,trickOn:false,pressCd:0,pressOn:false,trickSerial:0,trickKind:'stepover',shotSerial:0,shotPw:0,shotAimed:false,slipSerial:0,carrierD:NaN,carrierX:NaN,carrierZ:NaN,simX:135,keeperX:NaN,callAX:NaN,callAZ:NaN,callAW:0,callBX:NaN,callBZ:NaN,callBW:0,...createMoveView()});
+type Entry={/** Multiplayer slice 2: a friend's phone runs this match; the sim is a puppet fed by snapshots (null = this phone runs it). */puppet?:SnapBuffer|null;/** No snapshot sampled yet since the puppet began (its first score is the shared match's, not a goal). */puppetFresh?:boolean;/** Kick effects on a puppet: its touch ring written from the snapshots (lib/town/match/puppetTouches.ts); a rig's position lookup. */puppetTouch?:ReturnType<typeof createPuppetTouches>;at?:(id:string,out:T.Vector3)=>boolean;/** The rendered ball height last frame (m): the owner's snapshot carries it. */lastBallH?:number;/** Friends on this field: slot -> name (their name tag). */names?:Map<string,string>;humans:Map<string,HumanSlot>;slotDress:Map<string,BeanDress>;benchPool:PlayerRig[];dormant?:boolean;synced?:boolean;choreo:ReturnType<typeof createChoreo>;comboView:ReturnType<typeof createComboView>;liveFrame:ReturnType<typeof createLiveFieldFrame>;clock:ReturnType<typeof createMatchUpdateClock>;venue:LiveVenue;sim:MatchSim;root:T.Group;rigs:Map<string,PlayerRig>;ball:T.Mesh;label:Map<string,T.Sprite>;lastLesson:string;effects:ReturnType<typeof createMatchEffects>;ballPhysics:ReturnType<typeof createLiveBallPhysics>;ballSound:ReturnType<typeof createLiveBallSound>;/** Quick goal reset view (human matches): fade in the net, arrival on the centre spot. */ballReset:ReturnType<typeof createBallReset>;/** Goal replays (lib/town/goalReplay.ts): made the first time I join this field. */replay?:GoalReplay};
 export type LiveMatchView={events:MatchEvent[];players:{id:string;x:number;y:number;home:boolean}[];ball:{x:number;y:number};score:{gold:number;blue:number};/** Beach only: period 1–3, 4 extra time, 5 full time. */period?:number};
 /** The local human's id (liveJoinRuntime ME). */
 const OWN='me';
@@ -84,7 +87,10 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
   ud.strikeX=T.MathUtils.clamp(lateral,-.25,.25);
   ud.strikeZ=T.MathUtils.clamp(bx*Math.sin(strikeYaw)+bz*Math.cos(strikeYaw),.55,.92);
  }
- function update(dt:number,time:number,camera:T.Camera,session:FieldSession|null,active:boolean,viewingFormat:LiveFormat|null=null,viewportHeight=window.innerHeight,focus?:{x:number;z:number}){
+ /** Keeper feel + body moves per field (lib/town/liveBodyFx.ts), made on first use (a field with humans). */
+ const bodyFx=new Map<string,ReturnType<typeof createBodyFx>>(),bodyFxOf=(e:Entry)=>{let f=bodyFx.get(e.venue.id);if(!f){f=createBodyFx();bodyFx.set(e.venue.id,f);}return f;};
+ function update(dtIn:number,time:number,camera:T.Camera,session:FieldSession|null,active:boolean,viewingFormat:LiveFormat|null=null,viewportHeight=window.innerHeight,focus?:{x:number;z:number}){
+ const dt=dtIn;
  const question=session?.quiz?session.lesson.questions[session.question]:undefined;
  const outcomeStep=quizOutcomeStep(session);
  if(session){if(outcomeStep!==undefined&&outcomeStep!==null)session.outcomeProgress=Math.min(1,(session.outcomeProgress??0)+(active&&!session.outcomePaused?dt:0)/lessonStepSeconds(session.lesson.steps[outcomeStep]));else session.outcomeProgress=0;}
@@ -93,6 +99,10 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  batch.begin();stats.visiblePlayers=0;stats.culledPlayers=0;stats.skippedPoses=0;stats.dormant=0;stats.ticks++;stats.matchTime=time;
  camera.updateMatrixWorld();frustum.setFromProjectionMatrix(matrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
  for(const e of entries){const v=e.venue,teaching=session?.format===v.id?session:null;
+ // Goal replay (lib/town/goalReplay.ts): while one plays this field draws the replay at its rate (the rigs' dt too: real slow motion);
+ // solo, the sim holds (no clock); shared, the match runs on underneath at real time.
+ const rp=!teaching&&e.replay&&e.humans.has(OWN)&&e.replay.step(active?dtIn:0,!!e.puppet||e.humans.size>1,reduced,e.sim.goalHold,e.puppet?e.puppet.restart:e.sim.isRestart)?e.replay:null;
+ const dt=rp?dtIn*rp.rate:dtIn;
  sphere.center.set(v.x,1+(v.elevation??0),v.z);sphere.radius=Math.hypot(v.width,v.length)/2+2;
  const visible=(!viewingFormat||v.id===viewingFormat)&&(!session||!!teaching)&&frustum.intersectsSphere(sphere)&&(!!viewingFormat||camera.position.distanceTo(sphere.center)<240);
  // Nearby matches remain responsive to island ball hits, even just outside the view.
@@ -113,29 +123,34 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  const collisionToken=reactions?.states.size?e.liveFrame.tokens.find(token=>reactions.get(e.liveFrame.rows.get(token.id)!.hitId)?.cause==='truck'):undefined;
  const collisionHit=collisionToken?reactions?.get(e.liveFrame.rows.get(collisionToken.id)!.hitId):undefined;
  if(collisionHit)collisionPaused.add(v.id);else collisionPaused.delete(v.id);
- const matchDt=e.clock.take(dt,immediate,active&&!teaching&&!isPaused(v.id));
+ const matchDt=e.clock.take(dtIn,immediate,active&&!teaching&&!isPaused(v.id)&&!rp?.holdSim);
  // Audit F23: the live frame only changes when the sim steps (and once for a fresh field).
  if(matchDt>0||!e.synced){e.liveFrame.sync(e.sim.players);e.synced=true;}
- if(matchDt>0&&e.puppet){/* a friend's match: sample the snapshots (no AI step); the rig clock still runs */const me=e.humans.get(OWN);e.puppet.sample(e.sim,performance.now(),me?e.sim.ids.indexOf(me.slot):-1,liveGameSpeed(e.venue.id)/1000);e.sim.stats.time+=matchDt*liveGameSpeed(e.venue.id);e.liveFrame.sync(e.sim.players);}
+ if(matchDt>0&&e.puppet){/* a friend's match: sample the snapshots (no AI step); the rig clock still runs */const me=e.humans.get(OWN);if(e.puppet.sample(e.sim,performance.now(),me?e.sim.ids.indexOf(me.slot):-1,liveGameSpeed(e.venue.id)/1000)&&e.puppetFresh){/* the first frame of a friends' match: its score is not a goal here (no GOAL! card, no replay of my old match) */e.puppetFresh=false;e.effects.syncScore(e.sim);e.replay?.cancel();}e.puppetTouch?.step(e.sim,matchDt);if(e.sim.humans.size)e.sim.updateCalls(matchDt*liveGameSpeed(e.venue.id));/* teammates calling for the ball: from the snapshot's positions (no rng, no protocol) */e.sim.stats.time+=matchDt*liveGameSpeed(e.venue.id);e.liveFrame.sync(e.sim.players);}
  else if(matchDt>0){for(const token of e.liveFrame.tokens){const row=e.liveFrame.rows.get(token.id)!,p=e.sim.players[token.id];row.frozen=!!reactions?.get(row.hitId);if(row.frozen){row.x=p.x;row.y=p.y;}}e.sim.step(matchDt*liveGameSpeed(e.venue.id));for(const token of e.liveFrame.tokens){const row=e.liveFrame.rows.get(token.id)!,p=e.sim.players[token.id];if(row.frozen&&p){p.x=row.x;p.y=row.y;p.vx=p.vy=0;}}e.liveFrame.sync(e.sim.players);}
  // Touch events → reactions/squash/calls: bookkeeping only, read even offscreen so nothing replays late.
  e.choreo.consume(e.sim,teaching?0:matchDt);
  e.comboView.consume(e.sim,teaching?0:matchDt); // [combos] skill events → timed poses
  // Ball height: real gravity and bounces (render-only), stepped even offscreen so a kick is never replayed late.
- const ballHeight=e.puppet?e.puppet.ballH:e.ballPhysics.step(e.sim,matchDt*liveGameSpeed(e.venue.id),!e.sim.ball.owner,e.comboView.kickStyle(e.sim.kicks)); // [combos] chip / knuckleball render arcs; a puppet: the owner's height
+ let ballHeight=e.puppet?e.puppet.ballH:e.ballPhysics.step(e.sim,matchDt*liveGameSpeed(e.venue.id),!e.sim.ball.owner,e.comboView.kickStyle(e.sim.kicks)); // [combos] chip / knuckleball render arcs; a puppet: the owner's height
  e.lastBallH=ballHeight;
+ // Goal replays: keep the last ~4 s of what is drawn (only on the field I am on), and arm a replay on a goal.
+ if(!teaching&&e.humans.has(OWN)){const rr=e.replay??=createGoalReplay(e.sim.ids.length);rr.record(e.sim,matchDt,ballHeight,e.ballPhysics.shotOffset);rr.watch(e.sim,active&&replaysEnabled(),active?dtIn:0);}
  // Ball sounds (walk-ball parity, Nov 4 2026): only for a running, on-screen pitch that is near, joined or being watched, never in a
  // lesson; quieter with camera distance. Touches are consumed every frame regardless, so nothing plays late.
  const hearAt=sphere.radius+35,hear=active&&!teaching&&!isPaused(v.id)&&matchDt>0&&visible&&(viewingFormat===v.id||e.humans.size>0||camDistance<hearAt);
  e.ballSound.update(e.sim,e.ballPhysics.landing,hear?ballSoundPlay:null,viewingFormat===v.id||e.humans.size>0?1:Math.max(.35,Math.min(1,1.3-camDistance/hearAt)));
  // Dribbling trick (Trick button, owner Nov 4 2026): a new trick plays its authored move on the human's rig (combos view,
  // skillMoves.ts poses + ball path) and the ball's soft touch sound. Checked only on pitches with humans; no allocation.
- if(e.humans.size)for(const hs of e.humans.values()){const h=e.sim.humans.get(hs.slot);if(h&&h.trickSerial!==(hs.trickSeen??0)){hs.trickSeen=h.trickSerial;e.comboView.trick(hs.slot,h.trickKind,h.trickSide,TRICK.anim);if(hear){ballSoundPlay?.('receive',.55);ballSoundPlay?.('kick',.18);}/* the touch + a soft whoosh */if(!reduced)e.effects.impact(e.ball.position.x,e.ball.position.y,e.ball.position.z);/* pooled sparkle at the feet */}
+ if(e.humans.size)for(const hs of e.humans.values()){const h=e.sim.humans.get(hs.slot);if(h&&h.trickSerial!==(hs.trickSeen??0)){hs.trickSeen=h.trickSerial;bodyFxOf(e).trick(e,hs.slot,h,reduced);/* the move by stick direction + the beaten defender's stumble (lib/town/liveBodyFx.ts) */if(hear){ballSoundPlay?.('receive',.55);ballSoundPlay?.('kick',.18);}/* the touch + a soft whoosh */if(!reduced)e.effects.impact(e.ball.position.x,e.ball.position.y,e.ball.position.z);/* pooled sparkle at the feet */}
    // Power shot (owner Nov 4 2026): a louder strike layered on the touch-ring kick + the pooled sparkle; a slip away from an
    // AI tackle: a quick side-step wobble (the authored croqueta, short) and a soft touch. Serial-driven, no allocation.
    if(h&&h.shotSerial!==(hs.shotSeen??0)){hs.shotSeen=h.shotSerial;if(h.shotPw>=POWER_SHOT.full){if(hear){ballSoundPlay?.('kick',1);ballSoundPlay?.('bounce',.5);}if(!reduced)e.effects.impact(e.ball.position.x,e.ball.position.y,e.ball.position.z);}}
-   if(h&&h.slipSerial!==(hs.slipSeen??0)){hs.slipSeen=h.slipSerial;if(!reduced)e.comboView.trick(hs.slot,'croqueta',h.moveX>=0?1:-1,.42);if(hear)ballSoundPlay?.('receive',.35);}}
- e.root.visible=visible;e.effects.update(e.sim,active&&!isPaused(v.id)?dt:0,visible&&!teaching,reduced,visible&&!teaching&&active&&(viewingFormat===v.id||camDistance<sphere.radius+35));if(!visible)continue; // [spot it] watching = on screen + near (lib/learning/spotIt.ts)
+   if(h&&h.slipSerial!==(hs.slipSeen??0)){hs.slipSeen=h.slipSerial;if(!reduced)e.comboView.trick(hs.slot,'croqueta',h.moveX>=0?1:-1,.42);if(hear)ballSoundPlay?.('receive',.35);}
+   if(h)bodyFxOf(e).step(e,hs.slot,h,reduced,hear,ballSoundPlay,dt);/* keeper dive + save, shield, shoulder, the cut */}
+ e.root.visible=visible;e.effects.update(e.sim,active&&!isPaused(v.id)?dt:0,visible&&!teaching,reduced,visible&&!teaching&&active&&(viewingFormat===v.id||camDistance<sphere.radius+35));if(rp)e.effects.quiet();/* a goal replay: no live GOAL! card over it */if(!visible)continue; // [spot it] watching = on screen + near (lib/learning/spotIt.ts)
+ // A replay frame goes into the sim for the draw below only (restored at the end of this field's draw).
+ const replaying=!!rp&&rp.apply(e.sim);if(replaying)ballHeight=rp!.ballH;
  let teachingPose:ReturnType<typeof teachingMotion>|undefined;
  let emphasized=emptyIds,callouts=emptyIds;
  let poses=e.liveFrame.poses,ball:{x:number;y:number}=e.sim.ball,tokens=e.liveFrame.tokens;
@@ -220,6 +235,11 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
    if(Math.hypot(intentX,intentZ)>.05)motion.intentHeading=Math.atan2(intentX,intentZ)+(v.yaw??0);
    if(live.moveDistance!==undefined)motion.stopDistance=live.moveDistance*Math.min(v.width/250,v.length/380);
    motion.brake=Math.max(live.brake,ud.brakeEstimate??0);motion.backpedal=live.backpedal;motion.plant=live.plant;
+   // Kick effects (Nov 5 2026): a human's tackle lunge starts with a plant (the rig's dip-and-drive impulse: the wind-up lean), then
+   // the sprint at the carrier; the win plays choreo's slide / block / poke and the loser's stumble. Humans only, no allocation.
+   if(e.humans.size){const hu=e.sim.humans.get(token.id),lg=!!hu&&hu.lunge>0;if(lg&&!ud.lungeWas)motion.plant=1;ud.lungeWas=lg;
+     // Body moves (Nov 5 2026, liveBodyFx): humans lean into turns and the sprint; a sharp cut on the ball dips and drives (the plant).
+     motion.leanBoost=hu?1:undefined;if(hu&&bodyFxOf(e).plant(token.id))motion.plant=1;}else motion.leanBoost=undefined;
    // Jockey is a slow containing shuffle: it fades out by ~.6 pace so a chase reads as a run.
    motion.jockey=!live.isGK&&owner&&owner.team!==live.team&&ballDistance<9&&!motion.kick?Math.max(0,1-ballDistance/11)*(1-T.MathUtils.smoothstep(pace,.35,.6)):0;
    if(motion.jockey>0&&!reception&&approachId!==token.id){
@@ -284,7 +304,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  }}
  if(e.humans.size&&!teaching)poseBench(e,dt,time,active&&!isPaused(v.id));
  // The shot's sideways placement runs along the pitch's width axis (world x on the island pitches).
- const shotOffset=teaching?0:e.ballPhysics.shotOffset;
+ const shotOffset=teaching?0:replaying?rp!.shotOffset:e.ballPhysics.shotOffset;
  if(v.yaw)e.ball.position.set(liveWorldX(v,ball.x,ball.y)+shotOffset*Math.cos(v.yaw),.295+(teaching?0:ballHeight),liveWorldZ(v,ball.x,ball.y)-shotOffset*Math.sin(v.yaw));
  else e.ball.position.set(v.x+(ball.x-135)/250*v.width+shotOffset,.295+(teaching?0:ballHeight),v.z+(ball.y-200)/380*v.length);
  if(teaching&&teachingPose){
@@ -329,6 +349,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  else if(e.sim.ball.owner){const ownerRig=e.rigs.get(e.sim.ball.owner),owner=e.sim.players[e.sim.ball.owner];if(ownerRig){
  const speed=Math.hypot(owner.vx*v.width/250,owner.vy*v.length/380)*liveGameSpeed(v.id);
  const held=groundDribbleContact(ownerRig.root.position.x,ownerRig.root.position.z,ownerRig.root.rotation.y,ownerRig.root.userData.contactSide??1,ownerRig.root.userData.dribbleDistance??0,speed,liveContact,ownerRig.root.scale.x,ownerRig.dribbleContact(receivingContact));
+ if(e.humans.size&&e.sim.humans.has(e.sim.ball.owner))bodyFxOf(e).tighten(e.sim.ball.owner,held,ownerRig.root.position,Math.hypot(owner.vx,owner.vy));// momentum dribbling: tight in a cut, looser at sprint
  const recv=e.sim.recv,q=recv.id===e.sim.ball.owner?Math.min(1,recv.t/Math.max(.001,recv.dur)):0;
  if(q>0){ownerRig.ballContact(ownerRig.root.userData.contactSide??1,receivingContact);receivingContact.y=.295;held.lerp(receivingContact,q*q*(3-2*q));
  // A chest/thigh/head control: the ball falls from the touch height to the feet over the cushion.
@@ -344,7 +365,8 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  if(approachWeight>0&&approachId){const receiver=e.rigs.get(approachId);if(receiver){receiver.ballContact(receiver.root.userData.contactSide??1,receivingContact);receivingContact.y=.295;const y=e.ball.position.y;e.ball.position.lerp(receivingContact,approachWeight);if(highApproach)e.ball.position.y=y;/* a high ball is met in the air, not pulled to the boot */}}
  e.root.userData.lastBallOwner=teaching?undefined:e.sim.ball.owner;e.root.userData.lastBallTime=e.sim.stats.time;
  if(teaching){e.ball.rotation.x=e.ball.position.z/.19;e.ball.rotation.z=-e.ball.position.x/.19;}
- else{e.ballPhysics.roll(e.ball,ballHeight<.02,active&&!isPaused(v.id)?dt:0);e.ballReset.update(e.sim,active&&!isPaused(v.id)?dt:0,reduced);e.effects.trail(e.ball.position,camera,reduced);if(e.ballPhysics.landing>0&&!reduced)e.effects.impact(e.ball.position.x,e.ball.position.y,e.ball.position.z);}
+ else{e.ballPhysics.roll(e.ball,ballHeight<.02,active&&!isPaused(v.id)?dt:0);if(replaying)e.ballReset.show();else e.ballReset.update(e.sim,active&&!isPaused(v.id)?dt:0,reduced);e.effects.trail(e.ball.position,camera,reduced,e.at??=(id,out)=>{const r=e.rigs.get(id);if(!r||!r.root.visible)return false;out.copy(r.root.position);return true;});if(!replaying&&e.ballPhysics.landing>0&&!reduced)e.effects.impact(e.ball.position.x,e.ball.position.y,e.ball.position.z);}
+ if(replaying)rp!.restore(e.sim);
  }
  cues.update(visualSession,session?VENUES.find(v=>v.id===session.format):undefined,camera,viewportHeight);
  batch.end();
@@ -397,16 +419,18 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  }
  /** The human leaves: the NPC comes back on from his touchline spot (the AI walks him into position) and the slot rig
   *  gets the NPC's look back. Returns the world point where the human was (his avatar appears there). */
- function leaveMatch(format:LiveFormat,humanId:string,out:{x:number;z:number}){
+ function leaveMatch(format:LiveFormat,humanId:string,out:{x:number;z:number},inPlace=false){
   const e=entryOf(format),hs=e?.humans.get(humanId);if(!e||!hs)return null;
   const v=e.venue,sim=e.sim,p=sim.players[hs.slot];
+  if(humanId===OWN)e.replay?.cancel();
   out.x=liveWorldX(v,p.x,p.y);out.z=liveWorldZ(v,p.x,p.y);
-  if(sim.ball.owner===hs.slot){sim.ball.owner=null;sim.ball.vx=sim.ball.vy=0;}// the ball stays on the grass where he left it
-  sim.releaseHuman(hs.slot);sim.placePlayer(hs.slot,hs.bench.x,hs.bench.y);
+  // Me leaving: the ball stays on the grass where I left it and the NPC comes back on from his touchline spot. A FRIEND leaving
+  // (inPlace, Nov 5 2026 bot fill): the bot takes the slot where it stands, ball and all (handBack: no teleport, no dropped ball).
+  handBack(sim,hs.slot,inPlace?null:hs.bench);
   e.slotDress.delete(hs.slot);e.humans.delete(humanId);
   const token=e.liveFrame.tokens.find(t=>t.id===hs.slot)??{id:hs.slot,home:hs.team==='gold'};
   const shirt=classicShirtNumber(v.id,hs.slot),npc=fieldTokenDress(v.id,token,shirt,false,liveMatchKits(v.id,!!v.sand,joinableFormat(v.id)));
-  const rig=e.rigs.get(hs.slot);if(rig){if(hs.base)rig.root.scale.set(hs.base.x,hs.base.y,hs.base.z);rig.root.removeFromParent();undressJoinedRig(rig);rig.setBeanLook(npc.look,npc.outfit);rig.root.position.set(liveWorldX(v,hs.bench.x,hs.bench.y),rig.root.position.y,liveWorldZ(v,hs.bench.x,hs.bench.y));}
+  const rig=e.rigs.get(hs.slot);if(rig){if(hs.base)rig.root.scale.set(hs.base.x,hs.base.y,hs.base.z);rig.root.removeFromParent();undressJoinedRig(rig);rig.setBeanLook(npc.look,npc.outfit);if(!inPlace)rig.root.position.set(liveWorldX(v,hs.bench.x,hs.bench.y),rig.root.position.y,liveWorldZ(v,hs.bench.x,hs.bench.y));}
   hs.benchRig.root.visible=false;e.benchPool.push(hs.benchRig);e.synced=false;
   return out;
  }
@@ -444,6 +468,12 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
   out.restart=e.puppet?e.puppet.restart:sim.isRestart;out.keeper=p.isGK;out.hands=out.onBall&&p.isGK&&(e.puppet?e.puppet.hands:sim.keeperHands);
   out.callOpen=sim.lastCall&&sim.lastCall.id===hs.slot&&sim.stats.time-sim.lastCall.time<1.5?sim.lastCall.open:null;
   const h=sim.humans.get(hs.slot);out.trickCd=h?h.trickCd/TRICK.cooldown:0;out.trickOn=!!h&&h.trick>0;out.pressCd=h?h.pressCd/PRESS.cooldown:0;out.pressOn=!!h&&h.pressT>0;out.trickSerial=h?h.trickSerial:0;out.trickKind=h?h.trickKind:'stepover';out.shotSerial=h?h.shotSerial:0;out.shotPw=h?h.shotPw:0;out.shotAimed=!!h&&h.shotAimed;out.slipSerial=h?h.slipSerial:0;
+  if(owner&&owner!==hs.slot){const o=sim.players[owner];out.carrierD=Math.hypot(o.x-p.x,o.y-p.y);out.carrierX=liveWorldX(v,o.x,o.y);out.carrierZ=liveWorldZ(v,o.x,o.y);}else out.carrierD=out.carrierX=out.carrierZ=NaN;
+  out.callAX=out.callBX=NaN;out.callAW=out.callBW=0;
+  if(sim.teamCallers.size){let k=0;for(const id of sim.teamCallers){const q=sim.players[id];if(!q||q.team!==hs.team)continue;const w=sim.callWeight(id),r=e.rigs.get(id),x=r?.root.visible?r.root.position.x:liveWorldX(v,q.x,q.y),z=r?.root.visible?r.root.position.z:liveWorldZ(v,q.x,q.y);
+   if(k===0){out.callAX=x;out.callAZ=z;out.callAW=w;}else{out.callBX=x;out.callBZ=z;out.callBW=w;}if(++k>1)break;}}
+  out.simX=p.x;out.keeperX=NaN;for(let i=0;i<sim.ids.length;i++){const q=sim.players[sim.ids[i]];if(q.isGK&&q.team!==hs.team){out.keeperX=q.x;break;}}
+  fillMoveView(out,sim,v,hs.slot,hs.team,bodyFxOf(e).seen(hs.slot));// keeper + body moves (lib/town/liveBodyFx.ts)
   return true;
  }
  function pickPlayer(point:T.Vector2,camera:T.Camera,width:number,height:number,format?:LiveFormat|null,touch=false){
@@ -466,12 +496,21 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
   const e=entryOf(format);if(!e)return null;const got=joinMatch(format,humanId,e.venue.x,e.venue.z,dressFor,team,{team,slot});
   if(got){(e.names??=new Map()).set(got,name);}return got;
  }
- function dropFriend(format:LiveFormat,humanId:string){const e=entryOf(format),hs=e?.humans.get(humanId);if(!e||!hs)return;e.names?.delete(hs.slot);leaveMatch(format,humanId,netOut);}
+ function dropFriend(format:LiveFormat,humanId:string){const e=entryOf(format),hs=e?.humans.get(humanId);if(!e||!hs)return;e.names?.delete(hs.slot);leaveMatch(format,humanId,netOut,true);}
  /** On: a friend runs this match (stop the AI, draw their snapshots). Off: this phone runs it again from the last snapshot. */
  function setPuppet(format:LiveFormat,on:boolean){const e=entryOf(format);if(!e||!!e.puppet===on)return;
-  if(on){e.puppet=createSnapBuffer();e.sim.enterPuppet();}else{e.puppet=null;e.sim.leavePuppet();}e.synced=false;}
+  if(on){e.puppet=createSnapBuffer();e.puppetFresh=true;e.puppetTouch=createPuppetTouches();e.sim.enterPuppet();}else{e.puppet=null;e.puppetTouch=undefined;e.sim.leavePuppet();}e.synced=false;}
  return {entries,stats,update,joinMatch,leaveMatch,humanPop,humanRoot,humanInput,humanView,addFriend,dropFriend,setPuppet,
   isPuppet:(format:LiveFormat)=>!!entryOf(format)?.puppet,
+  /** Kick effects (lib/town/kickFx.ts): the field's event serials (kick / tackle / receive) for the camera and HUD. */
+  fx:(format:LiveFormat)=>entryOf(format)?.effects.kick.view??null,
+  /** A live-match one-shot through the match sound hook (liveJoinRuntime: the slow-motion cue). */
+  sound:(kind:LiveBallSoundKind,gain=1)=>ballSoundPlay?.(kind,gain),
+  /** Town: a goal billows the goal net (lib/graphics/propReactions.ts hit), world point + velocity. */
+  setNetHit(f:((x:number,y:number,z:number,vx:number,vz:number,reduced:boolean)=>void)|null){for(const e of entries)e.effects.kick.netHit=f;},
+  /** Goal replays (lib/town/goalReplay.ts): the field's replay state (null before I first join it), and Skip. */
+  replay:(format:LiveFormat)=>entryOf(format)?.replay??null,
+  skipReplay:(format:LiveFormat)=>!!entryOf(format)?.replay?.skip(),
   /** Awake (not dormant: on screen or near the player). matchLink watches a friends' match only while its field is (Nov 5 2026). */
   awake:(format:LiveFormat)=>{const e=entryOf(format);return !!e&&!e.dormant;},
   /** A friend is on this field with me (or runs it): no solo slow motion (it would slow everyone's match). */
@@ -479,6 +518,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
   simOf:(format:LiveFormat)=>entryOf(format)?.sim??null,
   slotOf:(format:LiveFormat,humanId:string)=>entryOf(format)?.humans.get(humanId)?.slot??null,
   pushSnap(format:LiveFormat,data:readonly number[],from:number,tMs:number){const e=entryOf(format);return !!e?.puppet&&e.puppet.push(data,from,tMs);},
+  resetSnaps(format:LiveFormat){entryOf(format)?.puppet?.clear();},
   encodeSnap(format:LiveFormat,field:number,seq:number,out:number[]){const e=entryOf(format);return e?encodeSnap(e.sim,field,seq,e.lastBallH??0,out):null;},
   /** A friend's controls (sim space, decoded by matchLink) into the owner's sim. */
   friendInput(format:LiveFormat,humanId:string,frame:HumanFrame){const e=entryOf(format),hs=e?.humans.get(humanId);if(e&&hs)e.sim.humanInput(hs.slot,frame);},

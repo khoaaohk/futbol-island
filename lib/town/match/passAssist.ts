@@ -15,6 +15,8 @@ export const PASS_ASSIST={
   laneBlock:6,
   /** Score weights: aim alignment dominates, openness and progress break ties, distance costs a little. */
   wAlign:70,wOpen:1.1,wForward:.12,wDist:.05,wBlocked:55,wRunner:18,
+  /** A teammate calling for the ball (offBallRuns.TEAM_CALL) gets this on either pass: he wins when roughly level (Nov 5 2026). */
+  wCall:16,
   /** Openness is capped (units of space round the receiver) so one very open player far away does not always win. */
   openCap:30,
   /** Hysteresis: a new target must beat the shown one by this many score points to take the marker over… */
@@ -57,9 +59,11 @@ export function passSpeedFor(distance:number,arrive:number=PASS_ASSIST.arriveSpe
 
 /** Where to play the ball for a receiver who is moving: the point he reaches when the ball does (two fixed-point
  *  iterations, capped at `maxLead`), plus `extraSpace` along his run for a through ball. Writes into `out`. */
-export function leadPoint(fromX:number,fromY:number,r:{x:number;y:number;vx:number;vy:number},out:{x:number;y:number},extraSpace=0){
+export function leadPoint(fromX:number,fromY:number,r:{x:number;y:number;vx:number;vy:number},out:{x:number;y:number},extraSpace=0,paceMul=1){
+  // paceMul: the pace the pass really leaves at over passSpeedFor (a human's zippier pass, Nov 5 2026): leading for the base pace put
+  // a quicker ball in front of the runner before he got there and it ran on past him (7v7: ~a third of human passes to a runner).
   let tx=r.x,ty=r.y;
-  for(let i=0;i<2;i++){const d=Math.hypot(tx-fromX,ty-fromY),t=Math.min(1.6,rollTime(d,passSpeedFor(d)));tx=r.x+r.vx*t;ty=r.y+r.vy*t;}
+  for(let i=0;i<2;i++){const d=Math.hypot(tx-fromX,ty-fromY),t=Math.min(1.6,rollTime(d,passSpeedFor(d)*paceMul));tx=r.x+r.vx*t;ty=r.y+r.vy*t;}
   const sp=Math.hypot(r.vx,r.vy);
   if(extraSpace>0&&sp>8){tx+=r.vx/sp*extraSpace;ty+=r.vy/sp*extraSpace;}
   let lx=tx-r.x,ly=ty-r.y;const l=Math.hypot(lx,ly);
@@ -79,6 +83,8 @@ export type PassContext={
   offsideY:number|null;
   /** Teammates making a forward run right now (off-ball runs), preferred for a forward pass. */
   runners?:ReadonlySet<string>;
+  /** Teammates calling for the ball right now (MatchSim.teamCallers): preferred on a near tie (wCall). */
+  callers?:ReadonlySet<string>;
   /** Override of PASS_ASSIST.coneCos (the sim's wide fallback cone for a sloppy stick, PASS_HELP.looseCone). */
   coneCos?:number;
 };
@@ -106,6 +112,7 @@ export function scorePassTarget(c:PassContext,id:string):number{
   let s=align*PASS_ASSIST.wAlign+open*PASS_ASSIST.wOpen+progress*PASS_ASSIST.wForward*(forward||al<=.05?2:1)-d*PASS_ASSIST.wDist;
   if(lane<PASS_ASSIST.laneBlock)s-=PASS_ASSIST.wBlocked*(1-lane/PASS_ASSIST.laneBlock*.5);
   if(forward&&c.runners?.has(id))s+=PASS_ASSIST.wRunner;
+  if(c.callers?.has(id))s+=PASS_ASSIST.wCall;
   return s;
 }
 /** Best target for the context: aimed → the best in the cone; no stick → the most open teammate ahead. `out.score` is

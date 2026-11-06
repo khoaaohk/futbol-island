@@ -18,6 +18,8 @@ function SlotField({onSlot}:{onSlot:(slot:string)=>void}){
   return <IslandSelect label="Position" value={v.value} options={v.options} onChange={onSlot} className={styles.field} dataAttrs={{'data-join-slot':''}}/>;
 }
 
+/** The keeper's glove (same drawing as the on-pitch badge, lib/graphics/keeperMarkers.ts). */
+function Glove(){return <svg viewBox="0 0 128 128" aria-hidden="true" focusable="false"><path d="M34 70V34a10 10 0 0 1 20 0v24V26a10 10 0 0 1 20 0v32V30a10 10 0 0 1 22 0v32V42a8 8 0 0 1 16 0l-2 42q-4 20-26 22H52q-22-2-26-22L14 66q-4-10 4-14t16 10z" fill="#fff" stroke="#0e2a24" strokeWidth="7" strokeLinejoin="round"/><rect x="44" y="96" width="58" height="14" rx="3" fill="#ffd23f" stroke="#0e2a24" strokeWidth="4"/></svg>;}
 type Press=(b:JoinButton,down:boolean)=>void;
 const down=(press:Press,b:JoinButton)=>(e:React.PointerEvent)=>{e.preventDefault();e.stopPropagation();(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);press(b,true);};
 const up=(press:Press,b:JoinButton)=>(e:React.PointerEvent)=>{e.stopPropagation();press(b,false);};
@@ -68,6 +70,7 @@ export function LiveJoinActions({onPress,onSlot}:{onPress:Press;onSlot:(slot:str
             </button>)}
           </div>
           <SlotField onSlot={onSlot}/>
+          <p data-join-pick-keeper className={styles.pickKeeper} hidden>Goalkeeper: you wear the gloves. Dive at shots, catch it and throw it out to a teammate.</p>
           <footer className={styles.foot}>
             <BackButton immediate aria-label="Back" title="Back · Esc" data-join-back onBack={()=>onPress('back',true)}/>
             <button type="button" data-join-start className={`${party.primary} ${styles.start}`} onClick={()=>onPress('start',true)} title="Start · Enter">Start</button>
@@ -76,14 +79,28 @@ export function LiveJoinActions({onPress,onSlot}:{onPress:Press;onSlot:(slot:str
       </div>
     </div>
     {/* The trick's word ("Step-over!"), a short toast over the pitch; the runtime writes the text and data-show. */}
+    {/* Slow motion (trick / shot, lib/town/slowMo.ts): a soft edge vignette; the runtime writes its opacity in 20 steps (no layout). */}
+    <i data-join-vignette className={styles.vignette} aria-hidden="true"/>
     <p data-join-pop className={styles.pop} aria-live="polite"/>
+    {/* Goalkeeper feel (Nov 5 2026): "You're the keeper" for ~2 s on joining in goal and at each kick-off after a goal. */}
+    <div data-join-keeper className={styles.keeper} role="status" aria-live="polite">
+      <Glove/>
+      <span><b>You&rsquo;re the keeper</b><small>Dive at the shot, then throw it out</small></span>
+    </div>
+    {/* Goal replay (lib/town/goalReplay.ts): the REPLAY tag under the score bar (the pop's spot) and Skip; a tap anywhere skips too.
+        The runtime shows / hides it once per replay. */}
+    <div data-join-replay className={styles.replay} role="status" hidden>
+      <span className={styles.replayTag}><i aria-hidden="true"/>Replay</span>
+      <button type="button" data-join-replay-skip className={styles.replaySkip} onClick={()=>onPress('skip',true)} title="Skip replay · any key">Skip</button>
+    </div>
     <div data-join-actions className={styles.actions} hidden>
-      <button type="button" data-join-f className={styles.f} onPointerDown={down(onPress,'f')}>Forward</button>
       <button type="button" data-join-s className={styles.s} onPointerDown={down(onPress,'s')} onPointerUp={up(onPress,'s')} onPointerCancel={up(onPress,'s')} onLostPointerCapture={up(onPress,'s')}>Sprint</button>
-      <button type="button" data-join-b className={styles.b} onPointerDown={shootDown(onPress)} onPointerMove={shootMove} onPointerUp={shootUp(onPress)} onPointerCancel={shootUp(onPress)}><i className={styles.charge} aria-hidden="true"/><span data-join-b-label>Shoot</span></button>
-      {/* Trick (offense) / Press (defense), owner Nov 4 2026: one slot in the arc, its mode's colour; the ring shows the cooldown. */}
+      <button type="button" data-join-b className={styles.b} onPointerDown={shootDown(onPress)} onPointerMove={shootMove} onPointerUp={shootUp(onPress)} onPointerCancel={shootUp(onPress)} onLostPointerCapture={shootUp(onPress)}><i className={styles.charge} aria-hidden="true"/><span data-join-b-label>Shoot</span></button>
+      {/* Easier controls (owner Nov 5 2026, lib/town/liveControls.ts): only what makes sense now. With the ball: Pass (big, corner),
+          Shoot in range (Forward, the through ball, out of range), a small Trick. Defending: ONE big Tackle / Press (by distance) and a
+          small Stay. Sprint only with "Push stick to sprint" off. The small Trick slot; its ring shows the cooldown. */}
       <button type="button" data-join-t data-mode="trick" className={styles.t} onPointerDown={down(onPress,'t')} hidden><i className={styles.cool} aria-hidden="true"/><span data-join-t-label>Trick</span></button>
-      <button type="button" data-join-a className={styles.a} onPointerDown={down(onPress,'a')} onPointerUp={up(onPress,'a')} onPointerCancel={up(onPress,'a')}><i className={styles.charge} aria-hidden="true"/><span data-join-a-label>Pass</span></button>
+      <button type="button" data-join-a className={styles.a} onPointerDown={down(onPress,'a')} onPointerUp={up(onPress,'a')} onPointerCancel={up(onPress,'a')} onLostPointerCapture={up(onPress,'a')}><i className={styles.charge} aria-hidden="true"/><span data-join-a-label>Pass</span></button>
     </div>
   </>;
 }

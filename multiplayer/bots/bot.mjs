@@ -86,7 +86,7 @@ function runBot({ url, code, path: shape = 'circle', cheat = null, hostKey = nul
         case S.Welcome:
           out.welcomed = true; out.id = m[2]; out.token = m[3];
           for (const mi of m[7]) { if (mi[0] !== out.id) seen.add(mi[0]); if (mi[0] === out.id) out.host = mi[3] === 1; }
-          if (cheat === 'flood') { for (let i = 0; i < 80; i++) send([C.Beat, i]); }
+          if (cheat === 'flood') { for (let i = 0; i < 300; i++) send([C.Beat, i]); } // past the relay's FLOOD_BURST (120, Nov 5 2026)
           t0 = Date.now(); timer = setInterval(pose, 200);
           setTimeout(() => { try { ws.close(1000); } catch { /* ignore */ } setTimeout(finish, 300); }, ms);
           break;

@@ -34,6 +34,8 @@ export function createBallReset(root:T.Object3D,ball:T.Mesh,baseMat:T.Material){
    ball.visible=true;ball.scale.setScalar(pop);useFade(Math.min(1,.25+arriveT/BALL_ARRIVAL.fadeIn));
    if(fx.getState().done){arriveT=-1;rest();}
   },
+  /** A goal replay is drawing the ball (lib/town/goalReplay.ts): plain and whole, the fade / arrival state kept for after it. */
+  show(){rest();if(fx)fx.update(0,0,0,0,true,false);},
   dispose(){fx?.dispose();mat?.dispose();rest();},
  };
 }

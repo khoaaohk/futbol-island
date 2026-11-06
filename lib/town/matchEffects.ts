@@ -3,6 +3,7 @@ import type {MatchSim} from './match/matchSim';
 import {type LiveVenue} from './venues';
 import {createBallEffects} from '../graphics/ballEffects';
 import {createGoalFrameBurst} from '../graphics/goalFrameBurst';
+import {createKickFx} from './kickFx';
 import {reportMatchConcept,matchFeedConcept,matchStatConcept} from '../learning/spotIt';
 /** "Overhead kick!" stays as it is; "Kick-in" gets a full stop (no "!." in the teaching feed, code review finding 17). */
 export const sentence=(t:string)=>/[.!?]$/.test(t.trim())?t.trim():t.trim()+'.';
@@ -13,10 +14,12 @@ export type MatchEvent={id:number;time:number;text:string};
 export function createMatchEffects(parent:T.Group,venue:LiveVenue){
  const root=new T.Group();root.name='live-effects-'+venue.id;parent.add(root);
  const flightTrail=createBallEffects();flightTrail.root.name='ball-flight-trail';root.add(flightTrail.root);
+ // Kick effects (Nov 5 2026, lib/town/kickFx.ts): team-coloured power-scaled trails, foot flares, landing / got-it / tackle rings.
+ const kick=createKickFx(root,venue,flightTrail);
  const frameBurst=createGoalFrameBurst();root.add(frameBurst.root);let lastFrameContact=0;
  // Purple identifies lofted passes over the top; ground passes keep the team tint.
  // Shots use the character's classic ball colour (BALL_COLORS.classic).
- let flying=false,shotFlight=false,powerFlight=false,pendingLaunch=false,flightDt=0,flightColor='#eee4c4';
+ let lastSim:MatchSim|null=null,flying=false,shotFlight=false,powerFlight=false,pendingLaunch=false,flightDt=0,flightColor='#eee4c4';
  let lastGold=0,lastBlue=0,celebration=9,lastPasses=0,lastShots=0,lastTurnovers=0,sequence=0,lastCombo=0,lastNote=0,lastSwitches=0,lastOffside=0;
  // The goal-mouth ring sits on the scoring end: along the pitch's long axis, turned with the venue (the beach court runs east–west).
  const yaw=venue.yaw??0,endX=Math.sin(yaw)*venue.length/2,endZ=Math.cos(yaw)*venue.length/2;
@@ -50,7 +53,7 @@ export function createMatchEffects(parent:T.Group,venue:LiveVenue){
  /** `watching`: this pitch is on screen, not in a lesson and the camera is near (fieldRuntime). Only then may a concept the
   *  child learned raise a "Spot it!" callout (lib/learning/spotIt.ts): event-driven on counter/serial changes, throttled there. */
  function update(sim:MatchSim,dt:number,enabled:boolean,reduced:boolean,watching=false){
-  root.visible=enabled;celebration+=dt;
+  root.visible=enabled;celebration+=dt;kick.consume(sim,enabled,reduced);
   if(sim.frameContact.serial!==lastFrameContact){
    lastFrameContact=sim.frameContact.serial;
    if(enabled){const hit=sim.frameContact;frameBurst.trigger(hit.x,hit.y-(venue.elevation??0),hit.z);}
@@ -76,11 +79,12 @@ export function createMatchEffects(parent:T.Group,venue:LiveVenue){
   light.material.opacity=reduced?.2*Math.max(0,Math.min(1,(2.5-celebration)*2)):Math.max(0,1-celebration/1.35)*Math.min(1,celebration/.08);
   rings.forEach((r,i)=>{const age=celebration-i*.2;r.visible=enabled&&!reduced&&age>=0&&age<1.3;r.scale.setScalar(1+Math.max(0,age)*5);r.material.opacity=Math.max(0,.65-age*.5);});
   flying=enabled&&!sim.ball.owner&&Math.hypot(sim.ball.vx,sim.ball.vy)>2&&sim.goalHold<=0;
-  shotFlight=flying&&!!sim.shotActive;flightDt=dt;powerFlight=shotFlight&&!!sim.powerShot;flightColor=shotFlight?(powerFlight?'#ff7a2e':'#eee4c4'):sim.ball.lofted?'#b877ff':sim.possession==='blue'?'#609de3':'#efbb54';
+  shotFlight=flying&&kick.isShot(sim);flightDt=dt;powerFlight=shotFlight&&!!sim.powerShot;flightColor=kick.colour(sim,shotFlight,powerFlight);lastSim=sim;
   if(!enabled)pendingLaunch=false;
  }
- /** Call after the ball mesh is placed: `ball` is the rendered ball in the match root's space. */
- function trail(ball:T.Vector3,camera:T.Camera,reduced:boolean){
+ /** Call after the ball mesh is placed: `ball` is the rendered ball in the match root's space; `at` = a player's rig position. */
+ function trail(ball:T.Vector3,camera:T.Camera,reduced:boolean,at:((id:string,out:T.Vector3)=>boolean)|null=null){
+  if(lastSim)kick.draw(lastSim,ball,flightDt,flying,at);
   frameBurst.update(flightDt,camera,reduced);
   if(pendingLaunch&&flying)flightTrail.launch(ball.x,ball.y,ball.z,powerFlight?1:.6);pendingLaunch=false;
   // A human's power shot (full charge, owner Nov 4 2026): the same pooled trail at full power in flame orange with the
@@ -88,5 +92,11 @@ export function createMatchEffects(parent:T.Group,venue:LiveVenue){
   flightTrail.update(flightDt,ball,flying,reduced,camera,powerFlight?1:shotFlight?.6:0,-1,flightColor,powerFlight?'solar':'classic');
   stats.trailVertices=flying&&!reduced?20:0;
  }
- return {root,stats,events,update,trail,impact:(x:number,y:number,z:number)=>flightTrail.impact(x,y,z),dispose(){root.removeFromParent();frameBurst.dispose();flightTrail.dispose();ringGeometry.dispose();rings.forEach(r=>r.material.dispose());texture.dispose();badge.material.dispose();lightTexture.dispose();light.material.dispose();}};
+ /** A goal replay is playing (fieldRuntime, after update): the live GOAL! card, its light burst and the goal-mouth rings are over
+  *  (hidden now, and not back after the replay: the replay is the goal's moment). */
+ function quiet(){celebration=9;badge.visible=light.visible=false;rings[0].visible=rings[1].visible=false;}
+ /** A friend's match took over this field's sim (multiplayer puppet, QA round 1 Nov 5 2026): its score is the shared match's, not a
+  *  goal: take it as seen, so no GOAL! card / announcement pops when I walk up to or join a friends' match. */
+ const syncScore=(sim:MatchSim)=>{lastGold=sim.score.gold;lastBlue=sim.score.blue;};
+ return {root,stats,events,update,quiet,syncScore,trail,kick,impact:(x:number,y:number,z:number)=>flightTrail.impact(x,y,z),dispose(){root.removeFromParent();kick.dispose();frameBurst.dispose();flightTrail.dispose();ringGeometry.dispose();rings.forEach(r=>r.material.dispose());texture.dispose();badge.material.dispose();lightTexture.dispose();light.material.dispose();}};
 }

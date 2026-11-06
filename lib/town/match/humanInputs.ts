@@ -37,9 +37,36 @@ export type HumanInput={
   /** Tackle assist (owner Nov 5 2026): seconds left of the assisted lunge at the carrier (real s), and the "get it back"
    *  window after an AI tackle took the ball off him (real s), when his next tackle is almost sure to win it. */
   lunge:number;backT:number;
+  /** Human keeper (dive + save feel, Nov 5 2026): bumps on every dive (side +1 = toward sim +x) and every save he makes
+   *  (kind 0 catch, 1 parry, 2 tipped over; big = made at full stretch). The view's pose, rings, sound and hit pause read them. */
+  diveSerial:number;diveSide:-1|1;saveSerial:number;saveKind:0|1|2;saveBig:boolean;
+  /** Body moves (Nov 5 2026): the defender the last trick beat (null = none), shielding now, the shoulder challenge serial and
+   *  cooldown (real s), the cut's tight window (real s) and the last heading the cut is measured against. */
+  trickBeat:string|null;shield:boolean;shoulderSerial:number;shoulderCd:number;/** the carrier his last shoulder challenge met */shoulderOn:string|null;cut:number;lastVx:number;lastVy:number;
 };
-/** The dribbling tricks the Trick button plays (lib/graphics/skillMoves.ts poses): stick back = drag-back, else the tap cycles. */
-export const TRICK_KINDS=['stepover','croqueta','dragBack'] as const;
+/** The dribbling tricks the Trick button plays (lib/graphics/skillMoves.ts poses). Body moves (owner Nov 5 2026: "more freedom for
+ *  moves", no new button): Trick + stick BACK = drag-back, + stick to the SIDE = spin turn (roulette) that way, while SPRINTING =
+ *  flick-up over him, otherwise the tap alternates step-over / La Croqueta. Order matters: matchNet packs the index (0-2 in bits
+ *  9-10, the high bit 14), so the first three keep their old numbers for older readers. */
+export const TRICK_KINDS=['stepover','croqueta','dragBack','roulette','flick'] as const;
+/** Per move: the chance the NEAREST defender within TRICK.radius is beaten (he stumbles for TRICK_BEAT.stumble real s, his legs
+ *  at TRICK_BEAT.slow) and the authored move's length on the rig (real s). The rest within the radius are bamboozled as before. */
+export const TRICK_MOVES={stepover:{beat:.6,anim:.68},croqueta:{beat:.6,anim:.68},dragBack:{beat:.55,anim:.68},roulette:{beat:.7,anim:.85},flick:{beat:.65,anim:.78}} as const;
+/** Picking the move: stick ≥ `stick` deflection; its cos with the attack ≤ `back` = drag-back; |side| ≥ `side` = spin turn; Sprint
+ *  held (or its ease ≥ `sprintE`) = flick-up (all read against his attacking direction, not his run). A beaten defender stumbles `stumble` real s at `slow` × his pace. */
+export const TRICK_BEAT={stick:.3,back:-.35,side:.8,sprintE:.6,stumble:.4,slow:.1} as const;
+/** Body play (owner Nov 5 2026; humans only). SHIELD: a human carrier with an opponent within `shieldR` units BEHIND him (the
+ *  opponent's direction · his facing ≤ `shieldCos`: he turned his back) holds him off: AI tackles on him succeed `shieldMul` as
+ *  often. SHOULDER: a human defender holding Stay with the stick at an AI carrier within `shoulderR` (cos ≥ `shoulderCos`) leans
+ *  in: `shoulderWin` of the time the ball is knocked loose (the poke-away), else the carrier loses a step (`shoulderStumble`
+ *  real s); then `shoulderCd` real s. MOMENTUM: a sharp cut (heading past `cutCos` against his heading of ~`cutLag` real s ago, at ≥ `cutSpeed` u/s)
+ *  keeps it tight for `cutHold` real s (AI tackles × `cutTight`); at full sprint it runs looser (× `sprintLoose`). */
+export const HUMAN_BODY={shieldR:8,shieldCos:-.3,shieldMul:.5,shoulderR:6.5,shoulderCos:.5,shoulderWin:.4,shoulderStumble:.3,shoulderCd:1.6,cutCos:.6,cutLag:.25,cutSpeed:30,cutHold:.35,cutTight:.75,sprintLoose:1.25} as const;
+/** Is a carrier at (cx, cy) facing (fx, fy) shielding the ball from an opponent at (ox, oy)? Pure (sim + friends' view). */
+export function shieldOn(cx:number,cy:number,fx:number,fy:number,ox:number,oy:number){
+  const dx=ox-cx,dy=oy-cy,d=Math.hypot(dx,dy),f=Math.hypot(fx,fy);
+  return d>.01&&d<=HUMAN_BODY.shieldR&&f>.01&&(dx*fx+dy*fy)/(d*f)<=HUMAN_BODY.shieldCos;
+}
 export type TrickKind=typeof TRICK_KINDS[number];
 /** Trick: the protected window (no steal, nearby opponents bamboozled), its cooldown, how far "nearby" reaches (sim
  *  units) and how slow a bamboozled opponent runs (× his pace), all real seconds. The view plays the move in TRICK_ANIM. */
@@ -113,7 +140,7 @@ export function stepSprint(h:HumanInput,dt:number,on:boolean){
 }
 
 export function createHumanInput(id:string,team:HumanTeam):HumanInput{
-  return {id,team,moveX:0,moveY:0,mag:0,faceX:0,faceY:team==='gold'?-1:1,sprint:false,jockey:false,pass:0,shoot:0,through:0,tackle:0,save:0,shootPower:1,passPower:0,sprintE:0,call:0,passLong:0,tackleRec:0,trickReq:0,trick:0,trickCd:0,trickBoost:0,trickKind:'stepover',trickSide:1,trickSerial:0,pressReq:0,pressT:0,pressCd:0,pressA:null,pressB:null,pressSerial:0,aimX:NaN,aimH:NaN,shotSerial:0,shotPw:0,shotAimed:false,guard:0,hadBall:false,slipSerial:0,slipCd:0,lunge:0,backT:0};
+  return {id,team,moveX:0,moveY:0,mag:0,faceX:0,faceY:team==='gold'?-1:1,sprint:false,jockey:false,pass:0,shoot:0,through:0,tackle:0,save:0,shootPower:1,passPower:0,sprintE:0,call:0,passLong:0,tackleRec:0,trickReq:0,trick:0,trickCd:0,trickBoost:0,trickKind:'stepover',trickSide:1,trickSerial:0,pressReq:0,pressT:0,pressCd:0,pressA:null,pressB:null,pressSerial:0,aimX:NaN,aimH:NaN,shotSerial:0,shotPw:0,shotAimed:false,guard:0,hadBall:false,slipSerial:0,slipCd:0,lunge:0,backT:0,diveSerial:0,diveSide:1,saveSerial:0,saveKind:0,saveBig:false,trickBeat:null,shield:false,shoulderSerial:0,shoulderCd:0,shoulderOn:null,cut:0,lastVx:0,lastVy:0};
 }
 /** Write one frame of controls (no allocation). */
 export function writeHumanInput(h:HumanInput,f:HumanFrame){
@@ -137,7 +164,7 @@ export function tickHumanInput(h:HumanInput,dt:number,onBall:boolean){
 }
 /** Age the real-time timers (trick window + cooldown, press cooldown, tackle recovery); `rdt` is real seconds. */
 export function tickHumanTimers(h:HumanInput,rdt:number){
-  h.trick=Math.max(0,h.trick-rdt);h.trickCd=Math.max(0,h.trickCd-rdt);h.trickBoost=Math.max(0,h.trickBoost-rdt);h.pressCd=Math.max(0,h.pressCd-rdt);h.tackleRec=Math.max(0,h.tackleRec-rdt);h.guard=Math.max(0,h.guard-rdt);h.slipCd=Math.max(0,h.slipCd-rdt);h.lunge=Math.max(0,h.lunge-rdt);h.backT=Math.max(0,h.backT-rdt);
+  h.trick=Math.max(0,h.trick-rdt);h.trickCd=Math.max(0,h.trickCd-rdt);h.trickBoost=Math.max(0,h.trickBoost-rdt);h.pressCd=Math.max(0,h.pressCd-rdt);h.tackleRec=Math.max(0,h.tackleRec-rdt);h.guard=Math.max(0,h.guard-rdt);h.slipCd=Math.max(0,h.slipCd-rdt);h.lunge=Math.max(0,h.lunge-rdt);h.backT=Math.max(0,h.backT-rdt);h.shoulderCd=Math.max(0,h.shoulderCd-rdt);h.cut=Math.max(0,h.cut-rdt);
 }
 export function clearHumanActions(h:HumanInput){h.pass=h.shoot=h.through=h.tackle=h.save=h.trickReq=h.pressReq=0;}
 

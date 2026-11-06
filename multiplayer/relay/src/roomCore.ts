@@ -3,7 +3,7 @@
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, AWAY_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState, EMOTE_ASK, AskReply,
-  HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, isKit, MatchKind, MATCH_ROSTER, MATCH_RATE, MATCH_JOIN_RATE,
+  HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, isKit, MatchKind, MATCH_ROSTER, MATCH_RATE, MATCH_JOIN_RATE, FLOOD_BURST, MATCH_OWNER_SILENT_MS,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
@@ -64,7 +64,8 @@ interface Member {
   /** Relay v1.1: roomOf(pose) (-1 = island or a legacy door pose), when the room last changed, and whether it changed this tick. */
   room: number; lastFlipAt: number; flipped: boolean;
   poseBucket: TokenBucket; emoteBucket: TokenBucket; pingBucket: TokenBucket; ctlBucket: TokenBucket;
-  emoteTimes: number[]; bad: number; secStart: number; secCount: number;
+  /** Flood guard (Nov 5 2026): every frame takes a token (RATE.closeAbovePerSec/s, burst FLOOD_BURST); none left closes the socket. */
+  emoteTimes: number[]; bad: number; floodBucket: TokenBucket;
   /** Presence (design 4.4.1): last frame heard from this member, and whether the relay itself set the away (Hidden) flag on its pose. */
   heardAt: number; relayAway: boolean;
   /** Relay v1.2 (live feel, Oct 23 2026). caps: what this client answered to S.Caps (0 = an old client: legacy S.Poses only).
@@ -82,12 +83,14 @@ interface Member {
   kit: number[] | null; kitKey: string; kitDue: boolean; kitBucket: TokenBucket;
   /** Relay v1.8 (Cap.Match): the live field this member plays on (-1 none) and its rate buckets (In / Snap, Join / Leave). */
   matchField: number; matchBucket: TokenBucket; matchJoinBucket: TokenBucket;
+  /** Nov 5 2026 (silent-owner promotion): when this member's last C.Match frame arrived (any kind, before the rate buckets). */
+  matchAt: number;
   /** Nov 5 2026 (C.Match Watch): the field this member watches without playing (-1 none): it gets that field's Snaps too. */
   matchWatch: number;
 }
 /** Relay v1.8: one shared live match. owner = the member running the MatchSim (-1 nobody); slots: member -> [team, slot] in join order
  *  (Map insertion order: the owner migrates to the earliest remaining joiner). Memory only: a match never survives an eviction. */
-interface MatchField { owner: number; slots: Map<number, [number, number]> }
+interface MatchField { owner: number; slots: Map<number, [number, number]>; ownerAt: number }
 
 /** C.Rename: at most this many name changes per member per minute (the control bucket also applies). */
 const RENAME_PER_MIN = 4;
@@ -258,9 +261,9 @@ export class RoomCore {
     this.count('msgs');
     m.heardAt = now; // any frame (pose, beat, emote) proves they are here
     if (m.relayAway) this.unAway(m);
-    // flood guard: more than closeAbovePerSec frames within one second -> close
-    if (now - m.secStart >= 1000) { m.secStart = now; m.secCount = 0; }
-    if (++m.secCount > RATE.closeAbovePerSec) {
+    // flood guard (Nov 5 2026): a token bucket, RATE.closeAbovePerSec/s sustained with FLOOD_BURST headroom (a stalled phone's
+    // flushed backlog passes; a sustained flood is closed within ~1 s). Was "more than 30 frames within one fixed second".
+    if (!m.floodBucket.take(now)) {
       this.count('rateCloses');
       this.send(peer, [S.Error, ErrorCode.RateLimited]);
       this.drop(m, CLOSE.Flood);
@@ -369,6 +372,7 @@ export class RoomCore {
     this.markAway(now);
     this.members.forEach((m) => { if (m.kitDue && m.kitBucket.take(now)) { m.kitDue = false; this.kitNews(m); } }); // relay v1.7: a rate-limited kit change
     this.migrateHost(now);
+    this.promoteSilentOwners(now);
     if (this.members.size === 0 && now - this.emptySince >= EMPTY_CLOSE_MS) { this.end(EndReason.Empty); return; }
     this.fanOut(false);
   }
@@ -634,9 +638,10 @@ export class RoomCore {
       caps: 0, poseNo: 0, ballNo: 0, seen: new Map(), seenBall: new Map(), ball: null, ballAt: now, ballBucket: new TokenBucket(RATE.ball[0], RATE.ball[1]),
       poseBucket: new TokenBucket(RATE.pose[0], RATE.pose[1]), emoteBucket: new TokenBucket(RATE.emote[0], RATE.emote[1]),
       pingBucket: new TokenBucket(RATE.ping[0], RATE.ping[1]), ctlBucket: new TokenBucket(RATE.control[0], RATE.control[1]),
-      emoteTimes: [], bad: 0, secStart: now, secCount: 0, heardAt: now, relayAway: false, nickLocked: false, renameTimes: [], hitTimes: [], knockedAt: 0,
+      emoteTimes: [], bad: 0, floodBucket: new TokenBucket(RATE.closeAbovePerSec, FLOOD_BURST), heardAt: now, relayAway: false, nickLocked: false, renameTimes: [], hitTimes: [], knockedAt: 0,
       kit: null, kitKey: '', kitDue: false, kitBucket: new TokenBucket(KIT_RATE[0], KIT_RATE[1]),
       matchField: -1, matchWatch: -1, matchBucket: new TokenBucket(MATCH_RATE[0], MATCH_RATE[1]), matchJoinBucket: new TokenBucket(MATCH_JOIN_RATE[0], MATCH_JOIN_RATE[1]),
+      matchAt: -1e12,
     };
   }
 
@@ -703,6 +708,8 @@ export class RoomCore {
   private matchMsg(m: Member, msg: number[], now: number): void {
     if (!(m.caps & Cap.Match) || !m.peer) return;
     const kind = msg[1];
+    m.matchAt = now; // heard on C.Match (silent-owner promotion: the owner's field clock, a friend's "still here")
+    if (m.matchField >= 0) { const g = this.fields.get(m.matchField); if (g && g.owner === m.id) g.ownerAt = now; }
     if (kind === MatchKind.Join || kind === MatchKind.Leave || kind === MatchKind.Watch) {
       if (!m.matchJoinBucket.take(now)) return;
       if (kind === MatchKind.Watch) { // a spectator: memory-only, no roster news; the owner learns its field is watched (it snapshots)
@@ -718,9 +725,11 @@ export class RoomCore {
       let taken = false;
       if (f) f.slots.forEach((v, id) => { if (id !== m.id && v[1] === slot) taken = true; });
       if (taken) { this.send(m.peer, this.rosterMsg(fieldId)); return; } // refused: the joiner sees the roster without itself
-      if (!f) { f = { owner: -1, slots: new Map() }; this.fields.set(fieldId, f); }
+      if (!f) { f = { owner: -1, slots: new Map(), ownerAt: now }; this.fields.set(fieldId, f); }
+      // An owner who was alone (no Snaps needed) gets MATCH_OWNER_SILENT_MS from his first friend's Join to start snapshotting.
+      if (f.slots.size < 2 && f.owner !== m.id) f.ownerAt = now;
       f.slots.set(m.id, [team, slot]); m.matchField = fieldId;
-      if (f.owner < 0) f.owner = m.id;
+      if (f.owner < 0) { f.owner = m.id; f.ownerAt = now; }
       this.rosterNews(fieldId);
       return;
     }
@@ -738,6 +747,23 @@ export class RoomCore {
       this.members.forEach((r) => { if (r.id !== m.id && r.peer && (r.caps & Cap.Match) && (f.slots.has(r.id) || r.matchWatch === fieldId)) { try { r.peer.send(text); } catch { /* gone */ } } });
     }
   }
+  /** Nov 5 2026 (silent-owner promotion, 5 Hz tick): an owner who sent no C.Match frame for MATCH_OWNER_SILENT_MS (a locked / suspended
+   *  phone that never sent its hand-off, a dead-spot socket that is still open) while another joiner is on the field and was heard on
+   *  C.Match within the same span is taken off the field exactly as on a Leave (matchDrop): the earliest remaining joiner owns it and
+   *  everyone gets the roster; the AI plays his slot. His socket stays; his later Snaps are ignored (matchField -1) until he Joins again,
+   *  as the last joiner (a friend). The relay stays the only arbiter: one owner per field, no split brain. A field whose other joiners
+   *  are silent too is left alone (nobody to hand it to). */
+  private promoteSilentOwners(now: number): void {
+    if (!this.fields.size) return;
+    for (const f of Array.from(this.fields.values())) {
+      if (f.slots.size < 2 || now - f.ownerAt < MATCH_OWNER_SILENT_MS) continue;
+      const o = this.members.get(f.owner);
+      if (!o) continue;
+      let live = false;
+      f.slots.forEach((_v, id) => { if (id === f.owner) return; const r = this.members.get(id); if (r?.peer && (r.caps & Cap.Match) && now - r.matchAt < MATCH_OWNER_SILENT_MS) live = true; });
+      if (live) this.matchDrop(o);
+    }
+  }
   /** Take `m` out of its match (leave, disconnect, removal): its slot goes back to the AI; an owner hands the field to the earliest remaining joiner. */
   private matchDrop(m: Member): void {
     const fieldId = m.matchField;
@@ -745,7 +771,7 @@ export class RoomCore {
     m.matchField = -1;
     const f = this.fields.get(fieldId);
     if (!f || !f.slots.delete(m.id)) return;
-    if (f.owner === m.id) f.owner = f.slots.size ? f.slots.keys().next().value as number : -1;
+    if (f.owner === m.id) { f.owner = f.slots.size ? f.slots.keys().next().value as number : -1; f.ownerAt = this.clock.now(); } // a new owner: a fresh silence clock
     if (!f.slots.size) this.fields.delete(fieldId);
     this.rosterNews(fieldId);
   }

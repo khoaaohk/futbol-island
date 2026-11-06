@@ -107,6 +107,9 @@ export type PlayerMotion = {
    *  (`turnAccel` rad/s²), so a sprinter turns in an arc instead of snapping. Absent = the plain exponential ease (everyone else). */
   turnRateMax?: number;
   turnAccel?: number;
+  /** Live match, human players (body moves, Nov 5 2026: lib/town/liveBodyFx.ts): 1 = lean further into turns (bank × 1.6, up to
+   *  0.28 rad) and a little more into the sprint, scaled by speed and turn rate like everyone's lean. Absent = the normal lean. */
+  leanBoost?: number;
   /** Live match: a receiver steps onto the ball after the first touch (sole control) with this foot (-1 left, +1 right). Read on
    *  the frame the close-control footwork starts (lib/town/dribbleStop.ts startSoleControl); 0 / absent = the usual rolling touch. */
   soleControl?: number;
@@ -1231,7 +1234,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     if(referenceShot>0)sampleMotionReference('shot',kick,referencePose,6);
     const crouch=(Math.max(defensive,motion?.keeper??0)*.07+readyBlend*.05)*P.crouch+compact*.025+backpedal*.02;
     const effort = amount*(1-.8*action)*(1-.35*receive);
-    const bank = T.MathUtils.clamp(turn*speed*.055, -.18, .18)*effort;
+    const lb=motion?.leanBoost??0,bank = T.MathUtils.clamp(turn*speed*.055*(1+.6*lb), -.18-.1*lb, .18+.1*lb)*effort;
     const coilAmplitude=(.11+.08*sprint)*(1-.6*shuffle)*(1-.7*backpedal)*effort;
     const coil=Math.sin(phase-.25)*coilAmplitude;
     // Authored phase offset for chest counter-rotation; not a universal biological lag.
@@ -1260,7 +1263,7 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
     const breathing = reduced ? 0 : Math.sin(time*2+seed)*.004*(1-amount);
     const pelvisRest=.88+(P.legs-1)*.83;
     // Whole-body pitch: pelvis carries ~35 %, torso the rest, head counter-pitches to keep the gaze level.
-    const runLean=amount*(.15+.27*Math.pow(sprint,1.3))*P.lean*(1-backpedal)*(1-.5*shuffle);
+    const runLean=amount*(.15+(.27+.06*lb)*Math.pow(sprint,1.3))*P.lean*(1-backpedal)*(1-.5*shuffle);
     // Braking sits back: a firm brake (the sim's request or the body's own deceleration) replaces the
     // run lean outright, whatever the run intensity, instead of only scaling it down.
     // Critically damped loading eases both onset and release instead of reversing

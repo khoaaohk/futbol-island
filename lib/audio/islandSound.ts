@@ -266,6 +266,28 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     else if(kind==='bounce'){tone(240,90,.11,.13*g);hiss(1700,.045,.08*g);}
     else{tone(130,75,.085,.07*g);hiss(650,.035,.025*g);}
   }
+  /** Live-match layers (Nov 5 2026, lib/town/liveBallSound.ts LiveMatchSoundKind): played on top of ball('kick') etc., from the same
+   *  tone / noise kit (no samples, no new nodes kept). Modest volumes; each kind has its own throttle. `slow` = the slow-motion
+   *  "time dips" cue (a falling tone under a soft low-passed whoosh), played by liveJoinRuntime when a trick / shot slows the match. */
+  function match(kind:'thump'|'tick'|'thud'|'poke'|'swish'|'crowd'|'slow',gain=1){
+    const g=Number.isFinite(gain)?Math.max(0,Math.min(1,gain)):0;
+    if(g<=0||!ready('match-'+kind,kind==='crowd'?2.5:kind==='slow'?.5:.09))return;
+    switch(kind){
+      case 'thump':tone(118,44,.2,.2*g,'sine');hiss(380,.07,.06*g);return;                       // a hard strike's body
+      case 'tick':tone(1250,880,.035,.025*g,'triangle');hiss(2600,.025,.03*g);return;           // the pass leaving the boot
+      case 'thud':tone(92,42,.2,.19*g,'sine');hiss(520,.11,.1*g);tone(210,120,.07,.05*g,'triangle',.01);return;// a clean tackle
+      case 'poke':tone(330,170,.07,.07*g,'triangle');hiss(1500,.045,.05*g);return;              // a toe-poke knocking it loose
+      case 'swish':{const c=context!,source=c.createBufferSource(),filter=c.createBiquadFilter(),t=c.currentTime;source.buffer=noise;// the net
+        filter.type='bandpass';filter.Q.value=.9;filter.frequency.setValueAtTime(2600,t);filter.frequency.exponentialRampToValueAtTime(700,t+.38);
+        source.connect(filter);voice(source,filter,.42,.13*g,0,.02);return;}
+      case 'crowd':{const c=context!,source=c.createBufferSource(),filter=c.createBiquadFilter(),t=c.currentTime;source.buffer=noise;source.loop=true;// the stands swell
+        filter.type='bandpass';filter.Q.value=.45;filter.frequency.setValueAtTime(650,t);filter.frequency.linearRampToValueAtTime(1150,t+.9);
+        source.connect(filter);voice(source,filter,1.9,.085*g,.05,.45);tone(392,440,.5,.012*g,'triangle',.35,.2);tone(523,587,.55,.01*g,'triangle',.5,.2);return;}
+      case 'slow':{tone(420,150,.42,.03*g,'sine',0,.03);const c=context!,source=c.createBufferSource(),filter=c.createBiquadFilter(),t=c.currentTime;source.buffer=noise;
+        filter.type='lowpass';filter.Q.value=.7;filter.frequency.setValueAtTime(1400,t);filter.frequency.exponentialRampToValueAtTime(260,t+.4);
+        source.connect(filter);voice(source,filter,.45,.05*g,0,.05);return;}
+    }
+  }
   function boost(direction:'forward'|'up'='forward'){
     if(!ready('boost:'+direction,.35))return;
     if(direction==='forward'){hiss(950,.4,.085);tone(190,95,.34,.075,'sine',0,.035);tone(310,180,.3,.022,'sine',.025,.045);}
@@ -354,7 +376,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   function dispose(){water.dispose();if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-job-cue',jobCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
   /** The sea, once per frame while swimming (a frame with `in:false` winds everything down). */
   function swim(dt:number,frame:WaterSoundFrame){if(frame.in&&idleSuspended&&context?.state==='suspended')wakeIdle();water.update(dt,frame);}
-  return {swim,waterPlunge:()=>water.plunge(),waterSurface:()=>water.surface(),setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,boost,whaleSong,honk,truck,setVolume,setMuted,visibility,silence,dispose};
+  return {swim,waterPlunge:()=>water.plunge(),waterSurface:()=>water.surface(),setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,match,boost,whaleSong,honk,truck,setVolume,setMuted,visibility,silence,dispose};
 }
 
 // ---- lib/audio/waterSound (kept in this file: the tests load islandSound.ts alone) ----

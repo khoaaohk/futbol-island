@@ -109,7 +109,7 @@ ok('analytics + wiring: count ids, the ray spot, the minimal Town hook',()=>{
  R.loopPoint(t.loop.points,t.lengths,t.total,t.u,o);sea.update(1/60,false,f,o);
  assert.equal(sea.spot(.6,o.x,o.z,false),false,'not while on land/out of the water');assert.equal(sea.spot(.6,o.x,o.z,true),true,'a near ray is spotted');assert.equal(sea.lastSpotted(),t.loop.species,'its kind is known (the ray lesson)');assert.equal(sea.spot(.6,o.x,o.z,true),false,'once per ray');sea.dispose();
  const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');
- assert.match(town,/const openSea=createOpenSeaLife\(scene\);/);assert.match(town,/\.\.\.openSea\.friends\]/);assert.match(town,/openSea\.update\(active&&!learning\?dt:0,reduced\|\|heat\.staticAmbience,world\.sharks\.frustum,location\)/);
+ assert.match(town,/const openSea=createOpenSeaLife\(scene\);/);assert.match(town,/\.\.\.openSea\.friends\]/);assert.match(town,/openSea\.update\(active&&!learning\?heldDt:0,reduced\|\|heat\.staticAmbience,world\.sharks\.frustum,location\)/);
  const sec=fs.readFileSync(path.join(base,'app/admin/WaterSection.tsx'),'utf8');
  for(const id of ['wa:ride_open_whale','wa:ray_spot'])assert(sec.includes(`value(rows,'${id}')`),id+' has its own tile in the admin Water section');
  assert.match(town,/openSea\.dispose\(\)/);assert.match(town,/countOpenSeaWhaleRide\(\)/);assert.match(town,/countRaySpot\(\)/);

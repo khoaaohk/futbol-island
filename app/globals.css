@@ -983,7 +983,12 @@ html[data-game-guard],html[data-game-guard] body{touch-action:pan-x pan-y;oversc
 html[data-game-guard] canvas{touch-action:none}
 /* Join a live game (components/LiveJoinHud.tsx): while you play in a live match the match buttons replace the travel cluster (rides, map, kick/juggle); the stick stays. Lefties keep the buttons under the left thumb. */
 .town-app[data-live-join] :is(.travel-actions,.touch-actions){visibility:hidden;pointer-events:none}
-.town-app.controls-flipped [data-join-actions]{right:auto;left:calc(18px + env(safe-area-inset-left,0px));flex-direction:row-reverse}
+.town-app.controls-flipped [data-join-actions]{right:auto;left:calc(14px + env(safe-area-inset-left,0px))}/* mirrored: the buttons sit from the left edge (LiveJoinHud.module.css --x) */
+/* Push the stick to sprint (live matches, Nov 5 2026; lib/town/liveControls.ts): while the knob pinned on the ring sprints, the ring fills
+   with a solid mint band (opacity + transform only; no glow, no loop). The runtime writes data-sprint only on change. */
+.town-app[data-live-join] .joystick::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:5px solid #7fe0bf;pointer-events:none;opacity:0;transform:scale(.92);transition:opacity .12s ease-out,transform .16s ease-out;z-index:0}
+.town-app[data-live-join] .joystick[data-sprint]::after{opacity:.95;transform:scale(1)}
+@media(prefers-reduced-motion:reduce){.town-app[data-live-join] .joystick::after{transition:none}}
 .town-app[data-live-join] .field-learn-card{display:none}/* the bar stays up under Pick your side: the picker grows out of its Play and shrinks back into it */
 /* Live-joinable pitch bar (components/FieldPathCard.tsx data-live-bar, owner Nov 4 2026): the gold Learn pill and an outlined Play of the same size, side by side; full width on phones. */
 .field-learn-card[data-live-bar]:not([hidden]){grid-template-columns:minmax(0,1fr) auto auto;column-gap:8px;cursor:default}

@@ -89,10 +89,12 @@ type SlotSim={ids:readonly string[];players:Record<string,{team:HumanTeam;role:s
  *  while the sim refuses human keepers) disabled. Pure: tests/join-live-game.cjs checks both sides. */
 /** Multiplayer slice 2: slots party friends hold on this field (the relay's roster), slot id -> the friend's name. */
 export type FriendSlots=ReadonlyMap<string,{name:string;team:HumanTeam}>;
+/** The note on a slot the AI holds (Nov 5 2026: the picker shows bot vs human occupancy; a friend's slot shows their name). */
+export const SLOT_BOT_NOTE='Bot';
 export function slotOptions(sim:SlotSim,team:HumanTeam,friends?:FriendSlots|null,format?:string):SlotOption[]{
   const ids=sim.ids.filter(id=>sim.players[id].team===team);
   ids.sort((a,b)=>{const p=sim.players[a],q=sim.players[b];return (SLOT_ORDER[p.role]??9)-(SLOT_ORDER[q.role]??9)||p.hx-q.hx;});
-  return ids.map(id=>{const p=sim.players[id],friend=friends?.get(id),taken=sim.humans.has(id)||!!friend,keeperOff=p.isGK&&!sim.humanKeepers;return {value:id,label:slotName(id,team,p.role,format),disabled:taken||keeperOff,note:friend?friend.name:taken?'Taken':keeperOff?'Coming soon':undefined};});
+  return ids.map(id=>{const p=sim.players[id],friend=friends?.get(id),taken=sim.humans.has(id)||!!friend,keeperOff=p.isGK&&!sim.humanKeepers;return {value:id,label:slotName(id,team,p.role,format),disabled:taken||keeperOff,note:friend?friend.name:taken?'Taken':keeperOff?'Coming soon':SLOT_BOT_NOTE};});
 }
 /** The dropdown's default: the current pick when it is still open on this side, else the nearest free outfield slot. */
 export function defaultSlot(sim:SlotSim,team:HumanTeam,current:string|null,entryX:number,entryY:number,friends?:FriendSlots|null):string|null{
@@ -117,6 +119,17 @@ export function pickSlot(players:Iterable<SlotCandidate>,team:HumanTeam,entryX:n
     if(d<bd){bd=d;best=p.id;}
   }
   return best;
+}
+
+/** Bot fill (Nov 5 2026): a human's slot goes back to the AI. `bench` null = IN PLACE (a friend leaving a shared match): the bot plays
+ *  on from where he stands, in the same role and shape spot, with the ball at his feet if the human had it (no teleport, no dropped
+ *  ball). A bench spot = my own exit: the ball stays on the grass where I left it and the NPC comes back on from his touchline spot.
+ *  Taking a slot is the mirror: MatchSim.lockHuman keeps the player's spot, role and the ball (fieldRuntime.joinMatch places a
+ *  picked slot nowhere new). */
+export function handBack(sim:{ball:{owner:string|null;vx:number;vy:number};releaseHuman(id:string):void;placePlayer(id:string,x:number,y:number):void},slot:string,bench:{x:number;y:number}|null){
+  if(bench&&sim.ball.owner===slot){sim.ball.owner=null;sim.ball.vx=sim.ball.vy=0;}
+  sim.releaseHuman(slot);
+  if(bench)sim.placePlayer(slot,bench.x,bench.y);
 }
 
 /** Humans per side for the picker: the sim's (me + friends already on my match) plus roster friends the sim does not hold yet. */

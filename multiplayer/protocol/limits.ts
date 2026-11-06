@@ -21,6 +21,17 @@ export const KIT_GAP_MS = 5000;
 export const MATCH_RATE = [16, 24] as const;
 export const MATCH_JOIN_RATE = [0.5, 4] as const;
 export const MATCH_GAP_MS = 80;
+/** Relay flood guard (Nov 5 2026, burst guard): a per-socket token bucket, RATE.closeAbovePerSec frames/s sustained (unchanged, 30)
+ *  with FLOOD_BURST frames of headroom; a frame with no token left closes the socket (CLOSE.Flood). Was a fixed 1 s window of 30
+ *  frames, which closed a phone flushing its backlog after a ~1.5 s cellular stall (poses 10 Hz + match frames 12-13 Hz). 120 frames
+ *  = a ~5 s stall of normal play; a hostile 200 frames/s is closed after ~0.7 s, 1000+/s after ~120 frames. Every per-kind bucket
+ *  (pose, ball, emote, ping, control, MATCH_RATE...) still applies per frame inside it, and the size / validation checks are unchanged. */
+export const FLOOD_BURST = 120;
+/** Relay silent-owner promotion (Nov 5 2026): a live field's owner who sends no C.Match frame for this long while another joiner is on
+ *  the field (and that joiner was heard on C.Match within the same span) is dropped from the field exactly like a Leave: the earliest
+ *  remaining joiner owns it, a bot plays the silent owner's slot, his later frames are ignored until he Joins again (as a friend).
+ *  An owner snapshots every 83 ms whenever anyone else plays, so 6 s is ~72 missed frames (a locked / suspended phone). */
+export const MATCH_OWNER_SILENT_MS = 6000;
 
 /** Relay v1.4 (Cap.EmoteAsk): the shared ball emotes' request + accept rules (owner, Oct 23 2026). The relay enforces them; the client
  *  mirrors them (lib/multiplayer/emoteAsk.ts) so a greyed button never sends. Times in ms, distances in m. */

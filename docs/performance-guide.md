@@ -1,5 +1,9 @@
 # Performance reference for future Futbol Island updates
 
+## Match focus: the island holds still during a joined live match (Nov 5 2026, local, not deployed)
+
+While a human is joined in a live match (`liveJoin.joined`), `lib/town/matchFocus.ts` holds the townsfolk (one held pass, then `islandNpcs.update` returns), traffic, the volleyball / coach groups, ferry, lighthouse, sea life, bugs, fruit and beach finds, and sleeps the ball hunt; it reuses the fishing focus `backgroundFrozen` gates. Shadows stay every frame, the pixel ratio and water clock are untouched. Measured (headless Chrome 390x844 DPR 3, 4x CPU, production build, 3 alternating 20 s runs): main-thread script -10 % (9v9) / -17 % (beach), heap growth 14.0 -> 10.9 / 10.3 -> 8.9 MB/s, draw calls 93 -> 84 / 80 -> 79. Ranking, numbers and the leave check: docs/join-live-game-design.md "Match focus". Desktop emulation only; no iPhone heat claim.
+
 ## Deep-sea boat looks (Oct 26 2026, local, not deployed)
 
 The two deep-sea boats now differ (`BOAT_LOOKS` in `lib/town/fishing/deepSeaBoatData.ts`, fixed data, no randomness): the Deep Sea Boat is the full-size family boat (cream hull, gold stripe, teal trim, clay roof, flag + outriggers, cooler, bow number 11); the Summit Deep Boat is 0.8 × length, 0.9 × beam and freeboard (sea-blue hull, cream stripe, yellow trim, teal roof under a red/cream sun top, pennant, fish boxes + net, number 10). Hull footprint, `onHull`, afloat box, deck rect + height, stand, captain point, prompt and the swell factor (1.15 on the small boat, still clamped by `BOAT_LIMITS`) all derive from `look.scale`. Cost: one merged mesh per boat as before; one cached geometry per look (≈1.8k / 1.9k triangles) instead of one shared, one shared material, no new draws, nothing per frame (scale is baked into the geometry at build). Pinned by `tests/fishing-boat-variants.cjs`. No device measurement.

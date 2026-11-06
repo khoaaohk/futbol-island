@@ -36,6 +36,8 @@ export interface MatchGames {
   netInput(): InAccum;
   /** The field is awake (on screen or near me; fieldRuntime's dormant test). Watching a friends' match only while it is (absent: always). */
   awake?(f: LiveFormat): boolean;
+  /** Forget the snapshots buffered so far (QA round 1, Nov 5 2026): a new owner's stream has its own seq and serials. */
+  resetSnaps?(f: LiveFormat): void;
 }
 /** The live join flow (liveJoinRuntime's api). */
 export interface MatchJoin {
@@ -62,6 +64,17 @@ const JOIN_RETRY_MS = 3000;
 const WATCH_HOLD_MS = 8000;
 /** How long "watch nothing" must hold before the relay is told (ms). */
 const WATCH_STOP_MS = 2000;
+/** QA round 1 (Nov 5 2026): never send In faster than the relay's MATCH_RATE refill (16/s): a kid mashing Tackle while steering sent
+ *  ~20/s and the relay silently dropped ~1 tap in 6 (taps wait OR-ed, so a press is at most this much later, never lost). */
+const IN_MIN_GAP_MS = 64;
+/** Owner: a friend's In stream silent this long (a stalled socket: 2 missed keepalives + jitter) lets go of their stick, so their
+ *  player stops instead of running on with the last stick for the whole stall (5 s: ~100 u across the pitch). */
+const IN_STALE_MS = 1200;
+/** QA round 2 (Nov 5 2026): a friend whose owner's snapshots stop this long (a locked / backgrounded phone, a stalled socket) sees
+ *  "Waiting for <owner>…" in the tip spot under the score bar until they resume (re-said each frame for STALL_TIP_S: it fades
+ *  that long after the next snapshot; one string per stall, no per-frame allocation). */
+export const STALL_HINT_MS = 2000;
+const STALL_TIP_S = 0.25;
 
 export function createMatchLink(d: MatchLinkDeps) {
   const now = d.now ?? (() => (typeof performance !== 'undefined' ? performance.now() : Date.now()));
@@ -71,6 +84,9 @@ export function createMatchLink(d: MatchLinkDeps) {
   const frame: HumanFrame = { mx: 0, my: 0 }, snapOut: number[] = [], inOut: number[] = [], joinOut = [C.Match, MatchKind.Join, 0, 0, 0], leaveOut = [C.Match, MatchKind.Leave];
   let mine: { format: LiveFormat; field: number; idx: number; sentAt: number; confirmed: boolean } | null = null;
   let owner = false, seq = 0, inSeq = 0, lastSnap = -1e12, lastIn = -1e12, dirtyFriends = true;
+  /** Friend: when the owner's last snapshot arrived (or the stream began); the stall line, built once per owner. Owner: I handed my
+   *  field on (going to the background) and should hear who runs it when I am back. */
+  let snapAt = -1e12, stallFor = -1, stallText = '', stalled = false, handedOff = false, away = false, welcomeBack = false;
   const matchIds = new Set<number>();
   // Watching (Nov 5 2026): a party friend who is NOT in a shared match sees the real one (a puppet of the owner's snapshots, friends on
   // their slots, no controls) instead of their own local match. One watched field at a time; back to the local sim when it ends.
@@ -78,6 +94,9 @@ export function createMatchLink(d: MatchLinkDeps) {
   const watchApplied = new Map<number, string>(), watchOut = [C.Match, MatchKind.Watch, -1];
   /** Fields I own: how many friends watch them (S.Match Watch). Alone on my field, I snapshot only while someone watches. */
   const watchers = new Map<number, number>();
+  /** Owner: when each friend's last In arrived (-1: released after a stall, until the next one). */
+  const inAt = new Map<number, number>();
+  const still: HumanFrame = { mx: 0, my: 0 };
   const active = () => d.conn.status === 'live' && (d.conn.caps & Cap.Match) !== 0;
   const fieldOf = (f: LiveFormat) => (MATCH_FIELDS as readonly string[]).indexOf(f);
 
@@ -87,6 +106,10 @@ export function createMatchLink(d: MatchLinkDeps) {
     if (a[1] === MatchKind.Join) { // the roster (MATCH_ROSTER)
       const field = a[2], r: Roster = { owner: a[3], slots: new Map() };
       for (let i = 4; i + 2 < a.length; i += 3) r.slots.set(a[i], { team: a[i + 1] ? 'blue' : 'gold', idx: a[i + 2] });
+      // A new owner (migration): its snapshots are a new stream (own seq, own popup serials). Without this a friend dropped every frame
+      // until the new owner's seq passed the old one's (a frozen match for as long as the old owner had played; QA round 1, Nov 5 2026).
+      const was = rosters.get(field);
+      if (was && was.owner !== r.owner) { const f = MATCH_FIELDS[field] as LiveFormat | undefined; if (f && d.games.isPuppet(f)) d.games.resetSnaps?.(f); if (mine && mine.field === field) snapAt = now(); }
       if (r.slots.size) rosters.set(field, r); else rosters.delete(field);
       dirtyFriends = true; if (watch && watch.field === field) watch.dirty = true; d.join.friendsChanged();
       return;
@@ -94,9 +117,14 @@ export function createMatchLink(d: MatchLinkDeps) {
     if (a[1] === MatchKind.Snap && watch && a[2] === watch.field) { d.games.pushSnap(watch.format, a, 3, now()); return; }
     if (a[1] === MatchKind.Watch) { if (a[3] > 0) watchers.set(a[2], a[3]); else watchers.delete(a[2]); return; } // I own it: friends watch
     if (!mine || !mine.confirmed) return;
-    if (a[1] === MatchKind.In && owner) d.games.friendInput(mine.format, friendKey(a[2]), decodeIn(a, 3, frame));
-    else if (a[1] === MatchKind.Snap && !owner && a[2] === mine.field) d.games.pushSnap(mine.format, a, 3, now());
+    if (a[1] === MatchKind.In && owner) { inAt.set(a[2], now()); d.games.friendInput(mine.format, friendKey(a[2]), decodeIn(a, 3, frame)); }
+    else if (a[1] === MatchKind.Snap && !owner && a[2] === mine.field) { snapAt = now(); d.games.pushSnap(mine.format, a, 3, now()); }
   });
+
+  // The page going to the background (visibilitychange hidden, pagehide: also a locked phone) hands my field on (api.handOff).
+  const onVis = () => { if (typeof document !== 'undefined' && document.visibilityState === 'hidden') api.handOff(); }, onHide = () => { api.handOff(); };
+  if (typeof document !== 'undefined' && typeof window !== 'undefined') { document.addEventListener('visibilitychange', onVis); window.addEventListener('pagehide', onHide); }
+  const offVis = () => { if (typeof document !== 'undefined' && typeof window !== 'undefined') { document.removeEventListener('visibilitychange', onVis); window.removeEventListener('pagehide', onHide); } };
 
   d.join.friends = (f) => {
     if (!active()) return null;
@@ -167,7 +195,7 @@ export function createMatchLink(d: MatchLinkDeps) {
       applied.forEach((_s, id) => d.games.dropFriend(format, friendKey(id)));
       if (d.games.isPuppet(format)) d.games.setPuppet(format, false);
     }
-    applied.clear(); syncMatchIds(); owner = false; lastSnap = lastIn = -1e12;
+    applied.clear(); inAt.clear(); syncMatchIds(); owner = false; lastSnap = lastIn = -1e12; handedOff = stalled = away = welcomeBack = false;
     if (why) d.join.say(why);
   }
 
@@ -182,7 +210,8 @@ export function createMatchLink(d: MatchLinkDeps) {
         watchers.clear();
         return;
       }
-      if (mine && joined !== mine.format) { d.conn.sendMatch(leaveOut); teardown(mine.format, null); mine = null; }
+      // Left, or (QA round 2 chaos) left and joined another slot before this ran: the relay must hear the old slot go first.
+      if (mine && (joined !== mine.format || d.games.slotOf(mine.format, ME) !== d.games.simOf(mine.format)?.ids[mine.idx])) { d.conn.sendMatch(leaveOut); teardown(mine.format, null); mine = null; }
       watchUpdate(t, joined);
       if (joined && !mine) {
         const slot = d.games.slotOf(joined, ME), sim = d.games.simOf(joined), field = fieldOf(joined);
@@ -194,13 +223,17 @@ export function createMatchLink(d: MatchLinkDeps) {
       if (!sim) return;
       const me = d.me(), r = rosters.get(mine.field), inRoster = !!r && r.slots.has(me);
       if (!mine.confirmed) {
-        if (inRoster) { mine.confirmed = true; dirtyFriends = true; }
+        if (inRoster) { mine.confirmed = true; dirtyFriends = true; welcomeBack = handedOff; handedOff = false; }
         else {
+          // Handed on (handOff): no Join while the page is hidden (a hidden phone must never be made the owner again when the others
+          // leave); back on screen, Join my slot at once (the last joiner: a friend of the new owner, or the owner if all left).
+          if (away) { if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return; away = false; mine.sentAt = -1e12; }
           let takenBy = -1;
           r?.slots.forEach((v, id) => { if (v.idx === mine!.idx && id !== me) takenBy = id; });
           if (takenBy >= 0 && t - mine.sentAt < JOIN_RETRY_MS * 2) { // refused: a friend got that spot first
             d.join.say(`${d.nameOf(takenBy)} just took that spot. Tap Play to pick another!`);
-            mine = null; d.join.press('leave', true); return;
+            // QA round 2: back to my own match cleanly (after a hand-off I still had the old owner flag and my friends on their slots)
+            teardown(mine.format, null); mine = null; d.join.press('leave', true); return;
           }
           if (t - mine.sentAt >= JOIN_RETRY_MS) {
             const myTeam = sim.players[sim.ids[mine.idx]]?.team === 'blue' ? 1 : 0;
@@ -210,6 +243,9 @@ export function createMatchLink(d: MatchLinkDeps) {
           return;
         }
       } else if (!inRoster) { // the relay no longer has me (a reconnect): join again, my slot stays mine locally
+        // Nov 5 2026: an OWNER the relay took off the field (silent-owner promotion on a new relay: my phone slept without handing on;
+        // or my socket dropped on any relay) is treated like my own hand-off: no Join while hidden, then "X kept the match going".
+        if (owner) handedOff = away = true;
         mine.confirmed = false; mine.sentAt = -1e12; return;
       }
       // ---- confirmed: owner or puppet, friends on their slots ----
@@ -218,14 +254,17 @@ export function createMatchLink(d: MatchLinkDeps) {
         const was = d.games.isPuppet(format);
         d.games.setPuppet(format, !isOwner);
         if (isOwner && was) d.join.say('Your friend left: the match is on your phone now. Play on!');
+        else if (!isOwner && welcomeBack) d.join.say(`${d.nameOf(r!.owner)} kept the match going while you were away. Play on!`);
+        if (!isOwner) snapAt = t;
         owner = isOwner; dirtyFriends = true;
       }
+      welcomeBack = false;
       if (dirtyFriends) {
         dirtyFriends = false;
         applied.forEach((slot, id) => {
           const v = r!.slots.get(id);
           if (v && sim.ids[v.idx] === slot) return;
-          d.games.dropFriend(format, friendKey(id)); applied.delete(id);
+          d.games.dropFriend(format, friendKey(id)); applied.delete(id); inAt.delete(id);
           if (!v) d.join.say(`${d.nameOf(id)} left the match. A teammate takes their place.`);
         });
         r!.slots.forEach((v, id) => {
@@ -238,18 +277,46 @@ export function createMatchLink(d: MatchLinkDeps) {
         syncMatchIds();
       }
       if (owner) {
+        applied.forEach((_s, id) => { const at = inAt.get(id); if (at === undefined) inAt.set(id, t); else if (at >= 0 && t - at > IN_STALE_MS) { inAt.set(id, -1); d.games.friendInput(format, friendKey(id), still); } });
         if ((r!.slots.size > 1 || (watchers.get(mine.field) ?? 0) > 0) && t - lastSnap >= SNAP_GAP_MS) {
+          // A fixed schedule (not "83 ms after the last send", which at 30-45 fps on a hot phone sent every 100 ms), and the seq counts
+          // the gaps skipped by a stall: seq × SNAP_GAP_MS is my clock, which friends stamp frames with (matchNet JITTER).
+          const gap = t - lastSnap;
+          if (gap >= SNAP_GAP_MS * 2) { if (gap < 60000) seq += Math.floor(gap / SNAP_GAP_MS) - 1; lastSnap = t; } else lastSnap += SNAP_GAP_MS;
           const out = d.games.encodeSnap(format, mine.field, seq++, snapOut);
-          if (out) { d.conn.sendMatch(out); lastSnap = t; }
+          if (out) d.conn.sendMatch(out);
         }
       } else {
+        // QA round 2: the owner's snapshots stopped (a locked phone that did not hand over, a stalled socket): say whom we wait for.
+        stalled = t - snapAt > STALL_HINT_MS;
+        if (stalled) { if (stallFor !== r!.owner) { stallFor = r!.owner; stallText = `Waiting for ${d.nameOf(r!.owner)}…`; } d.join.say(stallText, STALL_TIP_S); }
         const acc = d.games.netInput();
-        if (acc.urgent || (acc.dirty || t - lastIn >= 500) && t - lastIn >= IN_GAP_MS) { if (d.conn.sendMatch(encodeIn(acc, inSeq++, inOut))) lastIn = t; }
+        if ((acc.urgent || acc.dirty || t - lastIn >= 500) && t - lastIn >= (acc.urgent ? IN_MIN_GAP_MS : IN_GAP_MS)) { if (d.conn.sendMatch(encodeIn(acc, inSeq++, inOut))) lastIn = t; }
       }
+    },
+    /** QA round 2 (Nov 5 2026): my phone goes to the background / locks / leaves the page while I run a shared match: friends would see
+     *  it frozen until the hidden socket closes (HIDDEN_CLOSE_MS 15 s). Hand it on now through the existing frames, no relay change: my
+     *  last snapshot (nothing I played since the last one is lost), then Leave: the relay gives the field to the earliest remaining
+     *  joiner at once (as for any owner leaving) and a bot plays my slot while I am away. I do NOT re-join while hidden (a sleeping
+     *  phone back on the roster would be made the owner again when the others leave: frozen friends); back on screen I Join my slot
+     *  again as the last joiner, a friend of the new owner (the relay only ever has one owner: no split brain). If a friend took my
+     *  slot meanwhile, I am told kindly and pick again. Only with a friend on the field (alone, or only watched, nobody would take
+     *  over). A Leave dropped by the relay's Join / Leave bucket keeps me the owner (the old 15 s path). Returns true when sent. */
+    handOff() {
+      if (!mine?.confirmed || !owner || !active()) return false;
+      const r = rosters.get(mine.field), v = r?.slots.get(d.me());
+      if (!r || !v || r.slots.size < 2) return false;
+      const out = d.games.encodeSnap(mine.format, mine.field, seq++, snapOut); if (out) d.conn.sendMatch(out);
+      if (!d.conn.sendMatch(leaveOut)) return false;
+      r.slots.delete(d.me()); // my copy of the roster as the relay will have it (a stale copy would confirm me again on my return)
+      mine.confirmed = false; mine.sentAt = now(); handedOff = away = true;
+      return true;
     },
     /** Headless checks: my match state. */
     get state() { return { joined: !!mine?.confirmed, owner, friends: applied.size, field: mine?.field ?? -1, watching: watch ? watch.field : -1, watched: watchApplied.size }; },
-    dispose() { off(); unwatch(); if (mine) teardown(mine.format, null); mine = null; d.join.friends = null; rosters.clear(); },
+    /** Headless checks: the "Waiting for …" line is up (a friend, no snapshot for STALL_HINT_MS). */
+    get stalled() { return stalled && !owner && !!mine?.confirmed; },
+    dispose() { off(); offVis(); unwatch(); if (mine) teardown(mine.format, null); mine = null; d.join.friends = null; rosters.clear(); },
   };
   return api;
 }

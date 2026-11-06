@@ -121,13 +121,16 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  /** Heat pass 4 (lib/graphics/islandHeat): tier 3 / Battery saver draws and poses ambient townsfolk only within this range. */
  let drawLimit:number|null=null;
  /** Fishing focus mode (lib/graphics/focusMode.ts): townsfolk farther than r from (x, z) hold still (no routine, no posing; still drawn). */
- let focusAt:{x:number;z:number;r:number}|null=null;const heldByFocus=(e:{position:{x:number;z:number}})=>focusAt!==null&&Math.hypot(e.position.x-focusAt.x,e.position.z-focusAt.z)>focusAt.r;
+ let focusAt:{x:number;z:number;r:number;still?:boolean}|null=null,stillPasses=0;const heldByFocus=(e:{position:{x:number;z:number}})=>focusAt!==null&&Math.hypot(e.position.x-focusAt.x,e.position.z-focusAt.z)>focusAt.r;
  const fastRoutine:typeof entries=[],slowRoutine:typeof entries=[];let slowRoutineDt=0;
  // fewerAmbient (visible heat option, OFF by default; lib/graphics/heatTier HEAT_OPTIONS): 40% of townsfolk are not drawn, routined or talkable on phones.
  const thinAmbient=heatOptions().fewerAmbient&&typeof window!=='undefined'&&window.matchMedia('(pointer: coarse)').matches;let thinnedSet:Set<object>|null=null;const isThinned=(entry:object)=>thinAmbient&&(thinnedSet??=new Set(entries.filter((e,i)=>(i%5===1||i%5===3)&&!e.definition.floor))).has(entry);
  // Townsfolk on a moving floor (the boat captains, Oct 15 2026): their feet follow the deck's live height (two calls a frame).
  const floored=entries.filter(e=>!!e.definition.floor);
  const update=(dt:number,time:number,reduced:boolean,player:Position,paused:boolean,desktop=false,hoveredId:string|null=null,camera?:T.Camera,hideTags=false)=>{
+  // Match focus (lib/town/matchFocus.ts): everyone held (r −1) and `still`: after ONE held pass (the name tag hides, every pose stays
+  // as drawn) the update returns at once; nothing advances, so nothing jumps when it resumes.
+  if(focusAt&&focusAt.still&&focusAt.r<0){if(stillPasses>0){stats.moving=0;return;}stillPasses++;}
   stats.posed=stats.offscreenSkipped=0;for(const e of floored)e.position.y=e.definition.floor!();if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
   for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7||entry.fx.kind>=0;
    if(entry.ix){/* a skater / scooter / juggler answers (lib/town/npcEmoteSets.ts): it keeps its route, only its speed dips and then returns */entry.ix.age+=paused?0:dt;if(entry.ix.age>=entry.ix.s.seconds){entry.ix=null;entry.routine.speed=entry.baseSpeed;entry.rig.root.rotation.x=0;}else{npcIxAt(entry.ix.s,entry.ix.age,entry.ixOut);entry.routine.speed=entry.baseSpeed*entry.ixOut.slow;}}
@@ -226,5 +229,5 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  /** A seated townsperson (bench / towel) stands up and steps off along the open front side to a clear spot; false = she stays seated (no clear spot, cooldown, stunned, reduced motion). */
  const standUp=(id:string,reduced:boolean)=>{const e=entryById.get(id);if(!e||!e.sm||reduced||e.stunned||!e.rig.root.visible)return false;const others:{x:number;z:number}[]=[];for(const o of entries)if(o!==e)others.push(o.position);const spot={x:0,z:0};return openFront(e.sm.hx,e.sm.hz,e.sm.yaw,placement.isWalkable,others,spot)&&seatStandUp(e.sm,spot.x,spot.z);};
 
- return {react,interact,duet,passBy,standUp,setSparkHook(fn:((x:number,y:number,z:number)=>void)|null){sparkHook=fn;},reactToTruck,stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},setFocus(f:{x:number;z:number;r:number}|null){focusAt=f;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
+ return {react,interact,duet,passBy,standUp,setSparkHook(fn:((x:number,y:number,z:number)=>void)|null){sparkHook=fn;},reactToTruck,stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},setFocus(f:{x:number;z:number;r:number;still?:boolean}|null){focusAt=f;stillPasses=0;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
 }

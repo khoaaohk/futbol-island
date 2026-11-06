@@ -41,11 +41,21 @@ export function createJoinMarkers(scene:T.Scene){
   const aimM=new T.Matrix4(),aimP=new T.Vector3(),aimS=new T.Vector3(),aimC=new T.Color(),AIM_ON=new T.Color('#fff4cf'),AIM_OFF=new T.Color('#e9b94a').multiplyScalar(.7);
   for(let i=0;i<5;i++)aims.setColorAt(i,AIM_OFF);
   let aimSel=-2;
+  // Teammates calling for the ball (Nov 5 2026, MatchSim.teamCallers): a soft ring pinging out round the caller's head (his arm is
+  // up: choreo's `called` pose), up to two at once. One shared ring geometry, a material each (its own opacity); +1 draw call per
+  // caller, only while one calls to the joined human. Transform / opacity only; reduced motion: a still ring.
+  const pingGeo=ringGeometry(.8,1,32),pings=[0,1].map(i=>{const m=new T.Mesh(pingGeo,new T.MeshBasicMaterial({color:'#fff4cf',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide,toneMapped:false,blending:T.AdditiveBlending}));m.name='join-call-ping-'+i;m.visible=false;m.renderOrder=4;m.frustumCulled=false;scene.add(m);return m;});
   return {
-    setColour(hex:string){material.color.set(hex);passMat.color.set(hex).lerp(AIM_ON,.25);haloMat.color.set(hex);},
-    hide(){compass.visible=pass.visible=halo.visible=forward.visible=aims.visible=false;},
+    setColour(hex:string){material.color.set(hex);passMat.color.set(hex).lerp(AIM_ON,.25);haloMat.color.set(hex);for(const m of pings)(m.material as T.MeshBasicMaterial).color.set(hex).lerp(AIM_ON,.45);},
+    hide(){compass.visible=pass.visible=halo.visible=forward.visible=aims.visible=false;pings[0].visible=pings[1].visible=false;},
+    /** Caller `i` (0 / 1) calling for the ball at world (x, y ground, z) with weight `w` 0..1 (NaN x or w 0 hides it): a ring at head
+     *  height that pings out and fades, ~1.25 a second. */
+    callPing(i:number,x:number,y:number,z:number,w:number,time:number,reduced:boolean){const m=pings[i];if(!m)return;m.visible=Number.isFinite(x)&&w>0;if(!m.visible)return;
+      const f=reduced?.5:(time*1.25+i*.4)%1,mat=m.material as T.MeshBasicMaterial;m.position.set(x,y+2.2,z);m.scale.setScalar(.32+.42*f);mat.opacity=w*(reduced?.75:.95*(1-f*f));},
     /** Your feet: ring + chevron toward the goal (world yaw of the attack direction). */
     you(x:number,y:number,z:number,attackYaw:number){compass.visible=true;compass.position.set(x,y+.135,z);compass.rotation.y=attackYaw;},
+    /** Hide only the compass (a goal replay with no shooter to ring). */
+    hideYou(){compass.visible=false;},
     /** The assist's Pass target (NaN hides it). */
     passTarget(x:number,y:number,z:number,time:number,reduced:boolean){pass.visible=halo.visible=Number.isFinite(x);if(!pass.visible)return;pass.position.set(x,y+.14,z);halo.position.set(x,y+.13,z);
       const w=reduced?0:Math.sin(time*4.2);pass.scale.setScalar(1+.06*w);halo.scale.setScalar(1+.12*w);haloMat.opacity=reduced?.3:.24+.14*(w*.5+.5);},
@@ -59,6 +69,6 @@ export function createJoinMarkers(scene:T.Scene){
     },
     /** The Forward-pass runner (NaN hides it); chevron along his run toward the goal. */
     forwardTarget(x:number,y:number,z:number,yaw:number){forward.visible=Number.isFinite(x);if(!forward.visible)return;forward.position.set(x,y+.14,z);forward.rotation.y=yaw;},
-    dispose(){[compass,pass,halo,forward,aims].forEach(m=>m.removeFromParent());compassGeo.dispose();material.dispose();passGeo.dispose();haloGeo.dispose();passMat.dispose();haloMat.dispose();aimGeo.dispose();aimMat.dispose();aimTex.dispose();aims.dispose();},
+    dispose(){[compass,pass,halo,forward,aims,...pings].forEach(m=>m.removeFromParent());pingGeo.dispose();pings.forEach(m=>(m.material as T.Material).dispose());compassGeo.dispose();material.dispose();passGeo.dispose();haloGeo.dispose();passMat.dispose();haloMat.dispose();aimGeo.dispose();aimMat.dispose();aimTex.dispose();aims.dispose();},
   };
 }
