@@ -51,9 +51,11 @@ assert.match(css,/\.page\{[\s\S]*?overscroll-behavior-y:contain/,'.page declares
 
 // 7. The dashboard reuses its existing reload (`load`) — never a full page/location reload.
 assert.match(dash,/import PullToRefresh from '\.\/PullToRefresh';/,'AnalyticsDashboard imports PullToRefresh');
-assert.match(dash,/const pullRefresh=useCallback\(\(\)=>\{setPreset\('today'\);return load\('range=today'\);\},\[load\]\);/,'the pull-to-refresh callback calls the existing load(), not a new fetch path, and like a reload comes back to Today');
+// Nov 6 2026 (deliberate, owner: "rebuild it so I can see trends better"): the page now opens on the last 30 days, so a pull, like a reload, comes back to that default.
+assert.match(dash,/const DEFAULT_RANGE:Preset='30d';/,'the default range is 30 days');
+assert.match(dash,/const pullRefresh=useCallback\(\(\)=>\{setPreset\(DEFAULT_RANGE\);return load\('range='\+DEFAULT_RANGE\);\},\[load\]\);/,'the pull-to-refresh callback calls the existing load(), not a new fetch path, and like a reload comes back to the default range');
 const page=fs.readFileSync(path.join(root,'app/admin/page.tsx'),'utf8');
-assert.ok(page.includes('initialRange="today"')&&!/range:'7d'/.test(page),'the admin page opens on Today on every load or reload');
+assert.ok(page.includes('initialRange="30d"')&&!/range:'7d'/.test(page),'the admin page opens on the last 30 days on every load or reload (Nov 6 2026; Today before)');
 assert.match(dash,/<PullToRefresh onRefresh=\{pullRefresh\} loading=\{loading\} updated=\{updatedAt\}\/>/,'PullToRefresh is wired to the existing loading state and reload');
 assert.ok(!/location\.reload/.test(dash)&&!/window\.location\.reload/.test(ptr),'no full page reload anywhere in this path (would risk the admin session)');
 

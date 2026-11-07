@@ -137,7 +137,7 @@ export function ChartCard({title,subtitle,table,children,wide=false,empty=false,
 
 /** Signed change vs a named period: an arrow and a sign carry the direction, colour only adds whether that is good. */
 export function Delta({cur,prev,label,goodUp=true,points=false}:{cur:number|null;prev:number|null|undefined;label:string;goodUp?:boolean;points?:boolean}){
- if(cur===null||prev===null||prev===undefined)return <small className={styles.delta}>— no {label} to compare</small>;
+ if(cur===null||prev===null||prev===undefined)return <small className={styles.delta}>— nothing to compare with {label}</small>;
  if(points){const d=Math.round((cur-prev)*100);const tone=d===0?'flat':(d>0)===goodUp?'good':'bad';
   return <small className={styles.delta} data-tone={tone}><span aria-hidden="true">{d>0?'▲':d<0?'▼':'•'}</span> {d>0?'+':d<0?'−':'±'}{Math.abs(d)} pts vs {label}</small>;}
  if(prev===0)return <small className={styles.delta} data-tone={cur>0?(goodUp?'good':'bad'):'flat'}>{cur>0?<><span aria-hidden="true">▲</span> new vs {label} (0)</>:<>± 0 vs {label}</>}</small>;

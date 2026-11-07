@@ -298,7 +298,8 @@ await ok('admin tab: renders seeded data and the empty state; wired into the tab
  assert(html.includes('20%'),'Play CTR 40/200');assert(html.includes('75%'),'reach rate 30/40');assert(html.includes('140'),'unique visitors');
  const none=renderToStaticMarkup(React.createElement(Sec,{report:{},rangeText:'Nov 3',dayLabel:d=>d}));
  assert(none.includes('No marketing-page visits in this range yet'));
- const dash=read('app/admin/AnalyticsDashboard.tsx');assert(/\['marketing','Marketing page'\]/.test(dash)&&/tab==='marketing'&&<MarketingSection/.test(dash));
+ const dash=read('app/admin/AnalyticsDashboard.tsx');// Nov 6 2026 (deliberate, the trend rebuild): the tab is "Marketing" (tabs in lib/analytics/metricIndex.ts) and the section carries its metric-index id.
+ assert(/\['marketing','Marketing'\]/.test(read('lib/analytics/metricIndex.ts'))&&/tab==='marketing'&&<div[^>]*data-metric="marketing.section"><span[^>]*\/><MarketingSection/.test(dash));
  assert(/report\.marketing=buildMarketing\(/.test(read('lib/analytics/report.ts')));
 });
 

@@ -7,6 +7,8 @@
 import {regionName} from './regions';
 import {rpc} from './liveAdmin';
 import type {LiveStatus} from './live';
+import {getStore} from './store';
+import {localPeopleOff,memoryPlayer,memoryPlayers} from './memoryPeople';
 import {DAY_RE,PID_RE,emptyDay,emptyPlayer,emptyPlayers,shapeDay,shapePlayer,shapePlayers,type DayReport,type PlayerReport,type PlayersReport} from './day';
 
 export const DAY_CACHE_MS=30_000;
@@ -26,10 +28,15 @@ export const validDay=(d:string|null|undefined):d is string=>!!d&&DAY_RE.test(d)
 export function loadDay(day:string,o:Opts={}):Promise<DayReport>{
  return cached('d:'+day,o,'analytics_day_sessions',{p_day:day,p_limit:500},j=>shapeDay(j,regionName),s=>emptyDay(s,day));
 }
+/** A local preview's memory store (ANALYTICS_LOCAL_FILE, no Supabase): the same reads from its raw rows (memoryPeople.ts). */
+function memoryData(){if(process.env.NEXT_PUBLIC_SUPABASE_URL&&process.env.SUPABASE_SERVICE_ROLE_KEY)return null;const st=getStore();
+ return st&&st.kind==='memory'&&!localPeopleOff()?(st as unknown as {data:Parameters<typeof memoryPlayers>[0]}).data:null;}
 export function loadPlayers(from:string,to:string,o:Opts={}):Promise<PlayersReport>{
+ const mem=memoryData();if(mem)return Promise.resolve(shapePlayers(memoryPlayers(mem,from,to,new Date(o.now??Date.now()))));
  return cached(`p:${from}:${to}`,o,'analytics_players',{p_from:from,p_to:to,p_limit:500},shapePlayers,s=>emptyPlayers(s,from,to));
 }
 export function loadPlayer(pid:string,o:Opts={}):Promise<PlayerReport>{
  if(!PID_RE.test(pid))return Promise.resolve(emptyPlayer('ok',null));
+ const mem=memoryData();if(mem)return Promise.resolve(shapePlayer(memoryPlayer(mem,pid,new Date(o.now??Date.now())),regionName));
  return cached('i:'+pid,o,'analytics_player_sessions',{p_pid:pid,p_limit:200},j=>shapePlayer(j,regionName),s=>emptyPlayer(s,pid));
 }

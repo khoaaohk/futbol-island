@@ -124,7 +124,7 @@ await ok('admin shows and labels every id (no raw ids, no unshown counters)',()=
  assert(/shopRows\.filter/.test(section)&&/sandbarRows/.test(section)&&/beachRows/.test(section)&&/fruitRows/.test(section));
  const ov=read('lib/analytics/overview.ts');for(const g of ['SHOP_COUNT_EVENTS','SANDBAR_COUNT_EVENTS','SUMMIT_COUNT_EVENTS','BEACH_COUNT_EVENTS','FORAGE_FRUIT_KINDS'])assert(ov.includes(g+'.map('),'overview reads '+g);
  const L=load('lib/analytics/learning.ts').buildLearning({'tu:open':9,'tu:finish':4},{'tu:open':7,'tu:finish':3},{});
- assert.deepEqual(J(L.paths.tutorial),{open:7,finish:null},'the Island Tutorial: sessions, small numbers suppressed');
+ assert.deepEqual(J(L.paths.tutorial),{open:7,finish:3},'the Island Tutorial: sessions, exact numbers');
  assert(/paths\.tutorial/.test(read('app/admin/LearningSection.tsx')),'the Learning section shows the Island Tutorial');
  for(const [e] of CID.TUTORIAL_COUNT_EVENTS)assert(/countTutorial(Open|Finish)\(\)/.test(read('components/IslandTutorial.tsx'))&&CID.FIXED_COUNT_IDS.includes('tu:'+e));
 });

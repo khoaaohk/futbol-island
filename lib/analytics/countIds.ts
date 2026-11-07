@@ -40,7 +40,9 @@
  *   lm:<format>_<event>            live matches (LIVE_MATCH_COUNT_IDS below, lib/analytics/liveMatchEvents.ts; Nov 5 2026): per
  *                                  format (7v7 / futsal / 9v9 / 11v11 / beach) pitch-bar visits, Start (join) with a coarse role,
  *                                  leaves with whole minutes + leftover seconds, a length band, an other-humans band and how it
- *                                  ended; lm:reach_<n> = tab sessions with n+ matches. Never a name, slot, side, score or time
+ *                                  ended; lm:reach_<n> = tab sessions with n+ matches; Nov 6 2026: goals for / against, goal
+ *                                  replays shown / skipped, AI and human slots at the join (totals only). Never a name, slot,
+ *                                  side, a match's score or time
  *   mm:<event>                     the investor page /marketing (MARKETING_VISIT_COUNT_IDS, lib/analytics/marketingVisit.ts;
  *                                  Nov 5 2026): views, stay seconds and stay band from the browser; where (mm:g_<geo>) and
  *                                  when (mm:h_<weekday>_<hour>) are added by the ingest only (marketingVisitGeo.ts)
@@ -121,11 +123,22 @@ export const FISHING_LURE_IDS=['panenka','knuckleball','rabona','nutmeg'] as con
  * per spin fight: slips bucketed 0 / 1 / 2 / 3+, runs the player stopped spinning for vs spun through, the average spin rate
  * bucketed slow (< 0.45) / mid / full (≥ 0.8); the Fishbook opened from the HUD's button; requests done, legend clues and releases.
  * Removed 15 Oct 2026 with the features (user: "too complicated"): fi:record, fi:derby_start, fi:derby_done, fi:photo, fi:lure.
+ * Nov 6 2026 (the funnel, docs/analytics-roadmap.md): Fish tapped (start), casts, real bites, misses split too early / too late
+ * (fi:miss stays registered for the days before the split and is no longer sent), landings by rarity word (never the species or
+ * spot), a new Fishbook species, a catch that found the basket full, the first-time tutorial finished vs skipped, and fish sold
+ * (the count of fish in a sale, fishingEvents.ts fishSold).
  */
+export const FISHING_RARITIES=['common','uncommon','rare','legendary'] as const;
 export const FISHING_COUNT_EVENTS=[
  ...FISHING_LURE_IDS.map(id=>[`lure_${id}`,`Lure put on: ${id[0].toUpperCase()+id.slice(1)}`] as const),['lure_none','Lure taken off'],
  ['hook_spin','Fight started (spin reel)'],
- ['land','Fish landed'],['escape','Hooked fish got away (idle)'],['miss','Bite missed (too early or too late)'],
+ ['start','Fish tapped (a fishing session started)'],['cast','Casts'],['bite','Real bites (the float plunged)'],
+ ['land','Fish landed'],['escape','Hooked fish got away (idle)'],['miss','Bite missed (before Nov 6 2026, early or late)'],
+ ['miss_early','Bite missed: too early (tapped on a nibble)'],['miss_late','Bite missed: too late (float went back up)'],
+ ...FISHING_RARITIES.map(r=>[`land_${r}`,`Landed: ${r} catch`] as const),
+ ['new_species','New Fishbook species'],['basket_full','Landed with the basket full'],
+ ['tutorial_done','Fishing tutorial finished (first catch)'],['tutorial_skip','Fishing tutorial skipped'],
+ ['sold','Fish sold (count of fish)'],
  ['slips_0','Spin fights with no slip'],['slips_1','Spin fights with 1 slip'],['slips_2','Spin fights with 2 slips'],['slips_3plus','Spin fights with 3+ slips'],
  ['run_stopped','Runs: stopped spinning in time'],['run_spun','Runs: spun through (slipped)'],
  ['spin_slow','Spin fights at a slow average rate'],['spin_mid','Spin fights at a medium average rate'],['spin_full','Spin fights at a full average rate'],
@@ -287,7 +300,13 @@ export const LM_LEN_BANDS=[['len_1m','Under 1 min',60],['len_3m','1–3 min',180
 export const LM_WITH_BANDS=[['with_0','Solo (no friends on the match)'],['with_1','With 1 friend'],['with_2_3','With 2–3 friends'],['with_4p','With 4+ friends']] as const;
 export const LM_END_REASONS=[['end_leave','Leave / Esc'],['end_forced','Pulled off (ride, menu, busy)'],['end_hide','Tab closed or left mid-match']] as const;
 export const LM_REACH=[1,3,10] as const;
-export const LM_FORMAT_EVENTS:readonly string[]=['visit','join','leave','min','sec',...LM_ROLES.map(r=>'role_'+r),...LM_LEN_BANDS.map(b=>b[0]),...LM_WITH_BANDS.map(b=>b[0]),...LM_END_REASONS.map(b=>b[0])];
+/** Nov 6 2026 (the admin rebuild; gaps the daily layer flagged): goals in the match while this player was on it, for and
+ *  against their side (`goal_for` / `goal_against`: totals only, never a match's score or who scored), goal replays shown and
+ *  skipped (`replay` / `replay_skip`), and the match's slots at the join: `slots_bot` += the AI players, `slots_human` += the
+ *  humans including this one (so per match: slots ÷ joins). */
+export const LM_MATCH_EVENTS=[['goal_for','Goals for your side'],['goal_against','Goals against your side'],['replay','Goal replays shown'],['replay_skip','Goal replays skipped'],
+ ['slots_bot','AI players on the match at the join (slots)'],['slots_human','Humans on the match at the join (slots, you included)']] as const;
+export const LM_FORMAT_EVENTS:readonly string[]=['visit','join','leave','min','sec',...LM_ROLES.map(r=>'role_'+r),...LM_LEN_BANDS.map(b=>b[0]),...LM_WITH_BANDS.map(b=>b[0]),...LM_END_REASONS.map(b=>b[0]),...LM_MATCH_EVENTS.map(b=>b[0])];
 export const lmId=(format:LiveMatchFormat,event:string)=>`lm:${format}_${event}`;
 export const LIVE_MATCH_COUNT_IDS:readonly string[]=[...LIVE_MATCH_FORMATS.flatMap(f=>LM_FORMAT_EVENTS.map(e=>lmId(f,e))),...LM_REACH.map(n=>'lm:reach_'+n)];
 

@@ -9,7 +9,7 @@ import FishArt from './FishArt';
 import styles from './FishbookExtras.module.css';
 import {FISH,spotById} from '@/lib/town/fishing/fishCatalog';
 const FISH_COUNT=FISH.length;
-import {LEGEND_FISH,LEGEND_INFO} from '@/lib/town/fishing/legendary';
+import {LEGEND_FISH,LEGEND_INFO,legendBefore} from '@/lib/town/fishing/legendary';
 import {LURES} from '@/lib/town/fishing/lures';
 import {FLOAT_SKINS,MILESTONES,MILESTONE_REWARDS,MILESTONE_WORD,fishbookPercent,type FishingLog,type FloatSkin} from '@/lib/town/fishing/fishingLog';
 import {chooseFloat,chooseLure,chooseRod,todaysLog} from '@/lib/town/fishing/fishingLogStore';
@@ -33,13 +33,13 @@ export function TrophyPage({log}:{log:FishingLog}){
  const caughtLegends=LEGEND_FISH.filter(f=>log.legends[f.id]).length;
  return <div className={styles.page} data-fishbook-page="trophies">
   <section className={styles.card}><h3>Island Legends <small>{caughtLegends} / {LEGEND_FISH.length}</small></h3>
-   <p className={styles.note}>One giant lives at every fishing spot. Find its clue (help an islander, or catch 3 different kinds at the spot), then catch it once and let it go. Legends are never sold.</p>
-   <ul className={styles.legends}>{LEGEND_FISH.map(f=>{const info=LEGEND_INFO[f.id],got=!!log.legends[f.id],clue=log.clues.includes(info.spot);
+   <p className={styles.note}>One giant lives at every fishing spot, and four spots hide a second one that comes after the first. Find its clue (help an islander, or catch 3 different kinds at the spot), then catch it once and let it go. Legends are never sold.</p>
+   <ul className={styles.legends}>{LEGEND_FISH.map(f=>{const info=LEGEND_INFO[f.id],got=!!log.legends[f.id],prev=legendBefore(f.id),waits=!!prev&&!log.legends[prev.id],clue=log.clues.includes(info.spot)&&!waits;
     return <li key={f.id} data-legend={got?'caught':clue?'clue':'unknown'}>
      <FishArt fish={f} hidden={!got} size={84}/>
      <div><h4>{got?f.name:clue?'A legend is out there…':'???'}</h4><p className={styles.where}>{spotById(info.spot)?.name}</p>
       {got?<><p>{info.story}</p><p className={styles.fact}><span>Real football legend</span><b>{f.club.name}</b>{f.club.nickname?` · “${f.club.nickname}”`:''}. {f.club.fact}</p><p className={styles.released}>Caught and released</p></>
-       :clue?<p><b>Clue:</b> {info.clue}</p>:<p>No clue yet.</p>}</div></li>;})}</ul>
+       :clue?<p><b>Clue:</b> {info.clue}</p>:waits?<p>A second giant. It swims here once the first legend of this spot is caught and released.</p>:<p>No clue yet.</p>}</div></li>;})}</ul>
   </section>
   <section className={styles.card}><h3>Rod and float</h3>
    <p className={styles.note}>Cosmetic only: they never change which fish bite. Fill your Fishbook to earn them.</p>

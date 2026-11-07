@@ -14,6 +14,8 @@ User request: "Add fishing-related elements along the island to catch fish to se
   - Nibbles: a nibble is a feint. Stay set like a keeper who doesn't dive early. The source is Bar-Eli et al. (2007), who studied 286 penalties and found that keepers nearly always dive, although staying in the middle would have saved the most.
   - Tapping on a nibble: "Dived too early", like being sold a striker's dummy.
   - Tapping late: "A touch too late". Keepers wait on their toes, ready to spring.
+  - A hooked fish lost because the reel stopped: "Keep spinning!". After a save a keeper holds the ball tight so nobody scores the rebound (6 Nov 2026; it used to show the late-tap lesson).
+  - Tapping on a nibble can no longer happen from the HUD (the reel reads Wait…), so "Dived too early" stays for the core only.
   - Reeling a big animal that pulls back: "Hold on like a keeper". After a save, a keeper holds the ball tight so nobody scores from the rebound (the old Pull-back hint went with the Easy reel, 15 Oct 2026).
 - **Game fiction is labelled separately.** The spot names, their blurbs and which fish live where are original fiction, shown as **Island story** in the Fishbook.
 
@@ -25,7 +27,7 @@ User request: "Add fishing-related elements along the island to catch fish to se
 - **Teaching choices.** When a club has a general nickname ("The Sharks", "Red Fish"), the exact species that stands for it is our choice. For example, Chonburi "The Sharks" is shown as a Blacktip Reef Shark. The fact itself never claims the species.
 - **Kid UI.** A plain "Source: Wikipedia" credit, or "Wikipedia (Italian)", or "Wikipedia and Wiktionary". There are no links. The URLs stay in the data and in this table.
 
-| Animal | Spot | Rarity word | Coins | Reel taps | Shadow | Club and story (real) | Source |
+| Animal | Spot | Rarity word | Coins | Reel taps (history) | Shadow | Club and story (real) | Source |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Brown Shrimp | Every spot | Common | 3 | 2–3 | small | **Southend United** ("The Shrimpers"): Southend United are "The Shrimpers" because nearby Leigh-on-Sea had lots of shrimp-fishing boats, and a shrimp is on the club badge. | https://en.wikipedia.org/wiki/Southend_United_F.C. |
 | Sardine | Every spot | Common | 3 | 2–3 | small | **Santos FC** ("Peixe (Fish)"): In 1933 rival fans teased port-city Santos as "fishmongers", so Santos fans proudly took the nickname "Peixe" (Fish). Pelé played there from 1956 to 1974. | https://en.wikipedia.org/wiki/Santos_FC |
@@ -139,24 +141,26 @@ Each spot has a small fishing post (tackle chest, a notice board with a fish emb
 
 Kids see only the rarity word: Common catch, Good catch, Rare catch, Legendary catch. No odds or percentages appear anywhere. `tests/fishing.cjs` scans every kid-facing string and the fishing and market components for them.
 
-| Rarity | Catch weight (`RARITY_WEIGHT`) | Swim speed | Bite window | Reel taps | Pull-back when you pause | Coins |
-| --- | --- | --- | --- | --- | --- | --- |
-| Common | 40 | 0.9 m/s | 1.0 s | 2–3 | never | 2–4 |
-| Good (uncommon) | 12 | 1.0 m/s | 0.9 s | 4–5 | after 1.8 s, 0.7 taps/s | 4–7 |
-| Rare | 4 | 1.2 m/s | 0.8 s | 6–8 | after 1.4 s, 1 tap/s | 8–11 |
-| Legendary | 1.2 | 1.5 m/s | 0.7 s | 10–14 | after 1.1 s, 1.3 taps/s | 12–18 |
-| Any shark (every rarity, user decision: sharks must be hard) | its rarity's weight | 1.6 m/s | its rarity's window | **10–14** | as legendary | by rarity |
+| Rarity | Catch weight (`RARITY_WEIGHT`) | Swim speed | Bite window (base) | Spin fight (`fishingFight.ts`) | Coins |
+| --- | --- | --- | --- | --- | --- |
+| Common | 40 | 0.9 m/s | 1.0 s | short, gentle | 2–4 |
+| Good (uncommon) | 12 | 1.0 m/s | 0.9 s | longer, a run or two | 4–7 |
+| Rare | 4 | 1.2 m/s | 0.8 s | longer runs, more tension | 8–11 |
+| Legendary | 1.2 | 1.5 m/s | 0.7 s | the longest | 12–18 |
+| Any shark (every rarity, user decision: sharks must be hard) | its rarity's weight | 1.6 m/s | its rarity's window | as legendary | by rarity |
+
+Bite window extras (Nov 6 2026), added to the base and never changing the odds: Easy bite (Island settings) or reduced motion +0.35 s (they do not stack); after 2 late misses in a row +0.3 s, after 3 or more +0.45 s, until the next hook (`missHelp`).
 
 - **Weighted selection per spot.** Each species' weight is added to every spot in its `spots` list, and `rollCatch` picks by weight. In 10,000 simulated casts per spot, commons land about 60–92% of the time, then Good, then Rare, then Legendary (asserted per tier and per species).
 - **Rarer means harder in every way.** Rarer animals have lower weights, bigger shadows on average (`small` 0.45 m up to `giant` 1.9 m) and faster swimming, and big or rare animals may circle the float first. They need more taps and have shorter bite windows. Easy mode and reduced motion add 0.35 s to the bite window.
-- **Reel taps.** Removed (15 Oct 2026): every hook starts the spin fight; the `Reel taps` columns above are history.
+- **Reel taps.** Removed (15 Oct 2026): every hook starts the spin fight. The rarity table above was rewritten for the spin fight on 6 Nov 2026; the species table's `Reel taps` column is history.
 - **Resistance.** Bigger animals fight harder through the spin fight (longer runs, stronger tension); the old tap-meter pull-back went with the Easy reel (15 Oct 2026).
 - **Kid-fair.**
   - Commons never pull.
   - Progress never drops below zero.
-  - A pause alone never loses the fish; only 8 s with no taps at all lets it swim off, the same as a late tap.
+  - A pause alone never loses the fish; only 8 s with no spinning at all lets a hooked fish swim off (it says "Keep spinning!", 6 Nov 2026).
   - Nothing is ever lost.
-  - Space, Enter, the Reel button and a tap on the water all reel.
+  - Space, Enter, the reel and a tap on the water do the same thing. While a shadow comes in or nibbles, the reel reads **Wait…** and every tap is ignored (no scare, 6 Nov 2026).
 - **Economy.** The mean catch is worth about 4.0 coins (`scripts/economy-sim.cjs`), the same as before, so the shared 40-coin daily soft cap still limits market income.
 
 ## Approaches: a new direction every cast
@@ -440,3 +444,139 @@ User ask: build every fishing improvement in [fishing-research.md](fishing-resea
 - **Deep-sea boats** (`boatMotion.ts`): heave, pitch and roll on the water clock. The motion is bigger while you fish from the boat, a cast rocks it and a run leans it. The deck and angler ride the heave; the camera follows 30 % of the heave, smoothed, and none of the tilt. The waterline foam is pinned to the sea in the vertex shader, so there is no new draw. Reduced motion keeps only a tiny heave.
 - **Layout** (checked at 390×844, 844×390 and 1440×900): Back top left, the status line top centre, the Fishbook / reel / lure row at the bottom, the lure panel above the lure button, the content toast above the reel. The old content HUD's request chip was dropped (requests live on the Fishbook's Requests page and in the catch toast).
 - **Heat**: no new draws. The "!", fin and wakes are kinds in the overlay's one instanced draw. Work happens only while fishing; the spin maths is a few operations per pointer move.
+
+## Audit fixes, 6 Nov 2026 (items 1, 2, 3, 4, 5, 7; items 6, 8, 9, 10 are a parallel pass)
+
+- **Wait… is honest** (`components/FishingHost.tsx` REEL_LABEL, `fishingSession.ts` tap): the big reel reads **Reel in** while the float floats (a tap brings the line back), **Wait…** while a shadow swims in and nibbles (aria-disabled, quieter label, no press effect; every tap, Space and water tap is ignored with no scare), **Hook!** at the plunge. The tutorial's wait step names the Wait… button; the ghost hand appears only on Hook! and the spin. The core still scares a fish tapped on a nibble for other callers (`tapSession`), so `fi:miss_early` should now stay near zero.
+- **Lost fish** (`KEEPER_LESSONS.lost`, `LOST_HINT`): a hooked fish lost because the reel stopped says "It got away! Keep spinning once it's hooked." with the keeper-holds-the-ball lesson; a late reaction to the plunge keeps "A touch too late". The bite hint is "Now! Tap Hook!" (it said "Reel it in" while the button said Hook!).
+- **Cast after a catch** (`castLocked`, `CATCH_READ_TIME` 3 s): taps in the read time are ignored and no longer restart a 0.7 s quiet timer (a child tapping steadily could never cast); the reel reads Wait… (disabled) and the core steps a `castable` event when the time is up, so the HUD unlocks on that frame.
+- **Summit headlands**: Palm Point now has mackerel, sea bass and its Mealy Crab (the stargazer at night); Lookout Rocks has brown shrimp, sardines and its Bloater (the bigeye at night). Same-price commons, so the mean catch is exactly what it was (4.00 and 3.00 coins; `tests/economy.cjs` §12 still passes, `tests/fishing-nov6.cjs` snapshots the two tables), and the "3 kinds at a spot" legend clue can now fire there (every spot has at least 3 kinds, tested).
+- **Legends and the Fishbook total**: `recordCatch` ignores an Island Legend (it is released, never a species), so the "N caught in total" line no longer gains a +1 that the next merge or reload dropped. (A total already saved with that +1 keeps it: the sanitizer keeps the larger total.)
+- **Catch card coins** (`newestUnitValue` / `coinsText` in `lib/town/market/marketStand.ts`): the card shows what the newest one in the basket fetches now under the market's own rules (same-kind ladder, half price past the allowance), e.g. "1 coin" for a 6th sardine; "up to N coins" when it is not in the basket.
+- **Kid bite window** (`missHelp`, `biteWindow` in `fishingCore.ts`): after 2 late misses in a row the next bite window is +0.3 s, +0.45 s after 3 or more, until the next hook. **Island settings → Fishing → Easy bite** (default off, device key `fi2-fish-easy-bite-v1`) adds +0.35 s to every bite, like reduced motion (they do not stack). The rarity window stays the base and odds never read either, so every shark (Great White included) still has a shorter window than any common under the same help (tested).
+- **Analytics** (the funnel; `docs/analytics-roadmap.md` "Fishing funnel"): `fi:start`, `fi:cast`, `fi:bite`, `fi:miss_early` / `fi:miss_late` (`fi:miss` kept for older days, no longer sent), `fi:land_common` / `fi:land_uncommon` / `fi:land_rare` / `fi:land_legendary`, `fi:new_species`, `fi:basket_full`, `fi:tutorial_done` / `fi:tutorial_skip`, `fi:sold` (count of fish; `fishSold(n)` is the one call for every buyer). /admin's Fishing section shows the funnel with drop-off, misses, rarity mix, basket full and tutorial completion, all exact; `supabase/migrations/20261106_analytics_fishing_sessions.sql` (additive) adds the sessions that fished but never hooked.
+- **Heat**: no new loops or timers. One extra view field (castLock) published once per catch; one market-store subscription in the HUD (it changes only when the basket does).
+
+
+## Bad-luck protection, request nudge, night switch, sell where you fish (6 Nov 2026, fishing audit items 6, 8, 9, 10)
+
+- **Legendary bad-luck protection** (`fishingOdds.ts` `PITY`, `applyPity`; counts in the fishing log `pity`, keyed `<spot>|<species>`). Before this the rarest specials had no help: Great White and Sand Tiger 0.33 % a cast, Whale Shark / Thresher / Whitetip 0.39 %, Coelacanth 0.45 %, Ocean Sunfish 0.52 % (about 300 casts, 2+ hours at one spot). Now every cast at a spot without a legendary species the player has **never caught** adds 0.006 to its weight multiplier there, capped at 3× (reached after ~330 casts). Catching it clears its counts everywhere; a species in the Fishbook never gets pity again. Measured (5000 simulated players, `tests/fishing-sell-pity.cjs`): Great White 307 → ~170 casts to the first catch, Sand Tiger 306 → ~168, Thresher 245 → ~158, Whitetip 253 → ~157, Whale Shark 261 → ~163, Coelacanth 220 → ~139, Ocean Sunfish ~194 → ~124. The sharks keep the slowest place (150+ casts). Commons and every non-legendary weight are untouched. Internal only: no numbers, bars or hints are shown.
+  - **Economy.** Long run: unchanged. Pity only exists before a species' first catch, so once a species is caught its table is exactly the old one. The most it can ever add is that one catch arriving sooner. Per cast it is also value-guarded (`PITY.evGuard` 2.9 %, against the same reference the lure guard uses). With every legendary at full pity, each spot's mean catch rises by at most 2.2 % (Harbour Wall 3.96 → 4.04 coins). This holds in all 15 time × lure mixes, inside the ±3 % guard (`tests/economy.cjs` §12 h). Where a spot has several legendaries (South Pier, the boats), the guard eases the ramp (1.3–1.4× each at most).
+  - **Saves.** The counts are part of the synced `fi2-fishing-log-v1`. `sanitizeLog` keeps only legendary `spot|species` keys, caps each count at 400 and keeps at most 60 keys. Old saves load with none. Two tabs merge by the larger count. The live roll saves the counts quietly (`writeQuiet`: one write per bite, no re-render).
+- **Today's request toast** (`fishingLog.ts` `requestNudge`, `FishingLureButton.tsx` `FishingCatchToast`). On the **first cast of a fishing session** (a ref per mounted HUD, so once per session) the content toast shows today's first unfinished request with a spot hint for 3 s, for example "Nell is looking for an eel: try North Beach Rocks." It shows nothing when every request is done, when this spot already fits the request, for a "3 different kinds" request (any spot fits) and during the first-time tutorial. There is still no HUD chip.
+- **Night fish switch** (`Fishbook.tsx` `TimeSwitch`, `timeOfDay.ts` `requestTimeOfDay` / `SET_TIME_EVENT`). The Fishbook's "Night and sunset fish" section has a Day / Sunset / Night switch. It writes the same `fi2-time-of-day` setting as Settings and tells `Town.tsx` (a one-line listener that runs its own `changeTime`), so the island changes behind the book. The switch has 44 px targets, a regular sans label and a thumb that slides by transform only. Each night or sunset card reads "Comes out at night. Switch the island to Night to find it." (or "Out now: go and find it!"). Captain Marina has a line about it.
+- **Sell where you fish** (`lib/economy.ts` `MARKET_BUYERS`, `MarketStand.tsx`, `marketStand.ts` `nearestFishBuyer` / `basketFullLine`, `boatCaptains.ts` `captainSellActions`).
+  - **Who buys what.** Mele's Coral Cay farm stand now buys fish as well as produce. Captain Marina and Skipper Kofi buy fish on their boats: "Sell my fish" in their chat (`Town.tsx` passes the actions) opens the stand as that captain.
+  - **One market state.** Every buyer sells through the same market state, `quoteSale`, `sellOneGood` and `market:<day>:<sale>` runs. That means the same prices, allowance, ladder, tallies and Training meter everywhere, so there is no second allowance and no price by size. Each stand shows the price per fish and a "Sell all fish · N coins" total. Fish sales call `fishSold(count)` (`lib/analytics/fishingEvents.ts`).
+  - **Full basket.** A catch that finds the basket full shows a toast pointing to the nearest buyer. On a boat that is its captain. From the shore it is the nearer land stand: Mele for Coral Cay, the causeway's far end and Summit; Rosa for the main island. A shore angler is never sent out to a boat. The farm stand's HUD prompt reads "Sell fish & produce".
+- **Tests**: `tests/fishing-sell-pity.cjs` (new, in `npm test`), `tests/economy.cjs` §12 h, `tests/island-jobs.cjs` (farm stand tabs), `tests/e2e/gap-selling.spec.ts` (farm stand: fish and produce tabs).
+- **Heat**: no new draws, timers or loops. The pity is a few multiplications and one small localStorage write per bite, and the toasts reuse the one toast timeout.
+
+## Signature species, wave 1 of 3 (6 Nov 2026)
+
+Owner decision: grow the Fishbook from 73 to 150 species across all 18 spots, about 4 signature species per spot (common to rare), every animal with a sourced football fact **and** a 2-3 sentence fish tale. Wave 1 covers the first six shore spots in `FISH_SPOTS` order: South Pier, Lifebuoy Point, Harbour Wall, North Beach Rocks, West Cove and the East Jetty Spiral (it now has specials of its own). Waves 2 and 3 follow (rest of the shore + causeway; Coral Cay + Summit Isle + boats + 4 new legends).
+
+- **Data.** `lib/town/fishing/shoreSignatures.ts` (`SIGNATURE_FISH_WAVE1`, 24 species, each with `story` inline), merged into `FISH` in `fishCatalog.ts`. `lib/town/fishing/fishStories.ts` holds a story for each of the original 73 (they only retell facts already sourced). Link kinds: see the review below (the first-pass `Famous dish`, `Place name`, `National fish` kinds were removed the same day). Sources per fact: `docs/fishing-content-sources.md` (with the candidates checked and cut).
+- **Per spot.** South Pier: flying fish, skipjack, white grouper, albacore (rare). Lifebuoy Point: queen conch, cockle, Dover sole, mud crab (rare). Harbour Wall: pollock, langoustine, flying squid (night), Greenland shark (legendary). North Beach Rocks: galjoen, queen scallop, red scorpionfish, moray (rare). West Cove: giant river prawn (was ghost shrimp), hilsa, corvina (sunset), pink cusk-eel (rare). East Jetty: sprat, plaice (night), ghost crab, reef squid (rare).
+- **Economy.** Prices in their rarity band, never by size. Each new day species has an explicit internal `weight` (commons 12-22, uncommons 4-10, rares 2.4-3, the Greenland shark 0.8), chosen so each spot's mean catch stays within ±1.3 % of its pre-wave value (South Pier 3.605 → 3.648, Lifebuoy 4.205 → 4.167, Harbour 3.963 → 3.963, North Rocks 3.458 → 3.456, West Cove 4.820 → 4.797, East Jetty 4.048 → 4.046; sell values within ±2.2 %). Two price nudges inside the common band for that: cockle and ghost shrimp (now the giant river prawn, same weight and price) 3, sprat 3. Night / sunset species are outside the static tables and swap for a resting shared fish of the same rarity (`nightFish.ts timeSwaps`), so §12 is unchanged. Totals grew 7-15 %, so legendary sharks became slightly harder, never easier (the pity tests still pass).
+- **Looks.** Every new species has its own cached model in `fishModels.ts` built from the existing builders (`fish`, `scombrid`, `shark`, `crab`, `lobster`, `shell`, `shrimp`, `squid`, plus a small `eelLike` loft for the moray and cusk-eel): no new meshes or materials, no per-frame work; the 2D Fishbook art and the shadows use the existing shape fallbacks.
+- **UI.** Fishbook: a spot's own night / sunset species now sit on that spot's page, each spot page counts "N of M caught here", uncaught cards show "???" with the silhouette and "Found at", caught cards add the **Fish tale** under the real fact. The catch card shows the fish tale under the fact. The Fishbook button shows "X/N" progress (N = `FISH.length`).
+- **Site.** `/fish/<id>` pages and the sitemap come from `FISH` (97 now), each page with a "Fish tale" section; `lib/site/learnFeatures.ts` proof line updated (97 animals, 11 legendary).
+- **Tests.** `tests/fishing-signatures.cjs` (new): no duplicate ids / names, 4+ own species per wave-1 spot with an easy common and a goal, explicit weights, tables sum from weights, prices in band, mean catch ±2.5 % of the pre-wave values, every species reachable under every lure and time, every species has fact + 2-3 sentence story + source (no scary words, no odds, no links), every wave-1 source in the sources doc, the Fishbook partition covers each species once, old saves keep their 73 and start the new ones at 0, a legend never adds a stray +1. `tests/fishing.cjs` updated deliberately (150 cap, link kinds, East Jetty specials, the five-spot snapshot).
+
+### Wave 1 football-link review (6 Nov 2026, second pass)
+
+Owner rule: every catch teaches a real, sourced **football** fact; a country's dish, a place name, a port or a national fish is not
+one. Each of the 24 was re-checked against its pages (and 12 of the original 73, all strong: Southend, Santos, Yokohama, Platense
+HN, Whitstable, Volendam, Great Yarmouth, Ranong, Safi, Northern Marianas, Marseille, Mahasarakham; their stories match).
+- **Strong as written (5):** skipjack (Kochi United crest), flying squid (Vanta, now also cited to the J.League mascot profile),
+  plaice (Lowestoft "Trawler Boys"), ghost crab (Panamá Viejo "Cangrejeros"), reef squid (Platense "Calamares", with the "squid in
+  its ink" origin).
+- **Re-linked / replaced (5):** flying fish (Cocos Islands club Flying Fish, RSSSF), albacore (US Concarneau "Les Thoniers"), mud
+  crab (Samut Prakan United "The Crab Devils"), hilsa (East Bengal fans, Kolkata derby, ESPN), and **Giant River Prawn
+  (`river-prawn`) replaces Ghost Shrimp** (Mohun Bagan fans' prawn, ESPN): same spot, rarity, weight 10, price 3, small shadow;
+  its model reuses the shrimp builder with new colours. Hilsa and prawn now make a West Cove "Kolkata derby" pair.
+- **Labelled fun fish facts (14):** no verifiable club / team / mascot / player tie to the animal, so the fact reads "Fun fish
+  fact: … Football: …" and the Fishbook, `/fish/<id>` and the catch card tag it "Fun fish fact + real football fact" (new link
+  kind `Fun fish fact`). Fraserburgh's source was wrong (town page only): now the club page, which also gives "The Broch";
+  Peterhead's title now also cites the SPFL.
+- **Enforced:** `club.entity {kind,name}` on all 97 species (`FootballEntityKind`: club | national-team | stadium | mascot |
+  player | tournament | chant | federation); tests/fishing-signatures.cjs §5b fails when the kind is missing, the name is not in
+  the fact word for word, the source is empty, a "Fun fish fact:" label and the link kind disagree, a fun fish fact has no
+  "Football:" half naming the entity, or a signature species uses a port or a dish / national fish / "named after" as its link.
+  Rarities, weights and prices are unchanged, so §12 and the ±2.5 % guards are untouched. Sources and the cut list:
+  docs/fishing-content-sources.md.
+
+
+## Signature species, wave 2 of 3 (6 Nov 2026)
+
+Wave 2 = the next six shore spots in `FISH_SPOTS` order: the three causeway posts and the three Coral Cay beaches, 4 own species
+each (`SIGNATURE_FISH_WAVE2` in `lib/town/fishing/shoreSignatures.ts`, merged into `FISH`). The Fishbook is now **121 of 150**.
+Wave 3 is left with Summit Isle (Boulder Cove has 3 own species, **Palm Point and Lookout Rocks still only 1 each**, Drop-off
+Ledge 0), the two deep-sea boats and 4 new legends: 29 species to reach 150.
+
+- **Per spot.** Seawall Gate Sands: green shore crab (Ray Wilkins "The Crab"), stone crab, cuttlefish (sunset), red-lipped batfish (rare).
+  Channel Bend: tarpon, European lobster (Redhill "the Lobsters"), silky shark (Joel "Tiburón" Sánchez, rare), Japanese spider
+  crab (rare). Turtle Bank: checkered puffer (Baiaco, "baiacu"), southern stingray, Moreton Bay bug (night), bonefish (rare).
+  Coral Garden Beach: Red Sea clownfish, disc abalone, humphead wrasse (rare), Caribbean reef octopus (Arconada "El Pulpo", night,
+  rare). Sharks Beach Point: stoplight parrotfish, wahoo, tiger shark (Ferran Torres "tiburón", rare), whitetip reef shark
+  (Persebaya's mascot Zoro, night, rare). Farm Beach: Lebranche mullet, John Dory, common snook (sunset), Japanese mantis shrimp (rare).
+- **Links.** 7 strong (a player's or club's nickname, a mascot) and 17 labelled fun fish facts ("Fun fish fact: … Football: …"),
+  each naming its `club.entity` word for word with a source. Sources, verdicts and the cut list: docs/fishing-content-sources.md
+  ("Wave 2", "Checked and cut (wave 2)"). Strong links were scarce: most sea-animal nicknames are already in the book or failed the
+  two-source rule.
+- **Economy.** Prices in band, never by size. Explicit weights (commons 20-22, uncommons 4-7, rares 2.4-2.6; sharks ≤ the Little
+  Shark's 4) keep each spot's mean catch within ±0.3 % of its pre-wave value (gate 3.814 → 3.815, channel 4.263 → 4.252, turtle
+  3.750 → 3.750, coral 3.874 → 3.874, sharks 3.867 → 3.867, farm 3.826 → 3.826) and Rosa's sell value within +2.2 %; the 3.7-4.3
+  band holds. Five prices sit low in their band for that (tarpon 3, European lobster 5, wahoo 5, spider crab 8, tiger shark 9);
+  the Moreton Bay bug is 5 and the snook 6 so their night / sunset swap passes the ±2 % time guard. The night / sunset species
+  (cuttlefish, snook, Moreton Bay bug, reef octopus, whitetip) take a resting shared fish's place at their time (`timeSwaps`), so
+  §12 holds in all 15 time × lure mixes. Sharks stay hard: the two day sharks are rare at weight 2.4 (under 1.5 % a cast), the
+  whitetip only swaps in at night for a resting shared rare, and every table grew, so the legendary sharks only got rarer.
+  (`tests/economy.cjs`'s casual-pace check is sensitive to the average fish value: the first, lower-EV weights failed it, the
+  final ones keep the average unchanged.)
+- **Looks.** 24 cached models in `fishModels.ts` from the existing builders (crab, lobster, shell, squid, octopus, ray, shark,
+  scombrid, shrimp, fish): new colours and patterns only, no new meshes or materials, nothing per frame.
+- **UI / site.** No UI change needed: the Fishbook's spot pages, "N of M caught here", the silhouettes and the X/N pill all derive
+  from `FISH`; the six new spot pages appear by themselves. `/fish/<id>` pages and the sitemap come from `FISH` (121);
+  `lib/site/learnFeatures.ts` proof line updated (121 animals, 11 legendary).
+- **Tests.** `tests/fishing-signatures.cjs` now runs every rule per wave (WAVES = wave 1 + wave 2, counts from the catalogue),
+  adds the wave-2 pre-wave EV table, the "no species in two waves" check, a rule for rare and night sharks, the wave-2 sources /
+  cut-list sections and the strong-link kinds. `tests/fishing.cjs`: the causeway / cay spots now have their own specials (only
+  summit-ledge waits for wave 3). `tests/seo-pages.cjs`: every signature species has a sitemap page and a fish tale, the fun
+  fish fact label is on the page.
+
+## Signature species, wave 3 of 3 (6 Nov 2026)
+
+Wave 3 = Summit Isle's four shore spots (4 new own species each) and the two deep-sea boats (13 new deep-sea specials, shared by
+both boats because they fish one deep table), `SIGNATURE_FISH_WAVE3` in `lib/town/fishing/shoreSignatures.ts`, merged into `FISH`.
+The Fishbook is now **150 of 150**, plus **22 Island Legends** (4 new).
+
+- **Per spot.** Boulder Cove: garibaldi, goose barnacle, wolf eel, sarcastic fringehead (rare). Palm Point: sand bubbler crab,
+  milkfish (sunset), bluespotted ribbontail ray, zebra shark (rare). Lookout Rocks: European smelt, capelin (night), garfish,
+  Atlantic salmon (rare). Drop-off Ledge (its first own species): bluefish, lingcod, Japanese amberjack, bluntnose sixgill shark
+  (Aldosivi "Tiburón", night, rare). Both boats: giant red shrimp, firefly squid, blue whiting, Humboldt squid, orange roughy, opah,
+  spotted ratfish, red king crab, Atlantic footballfish, giant oarfish, black scabbardfish, Patagonian toothfish, bigeye tuna.
+- **Links.** 1 strong (Aldosivi's nickname, two sources) and 28 labelled fun fish facts (owner approved), each naming its
+  `club.entity` word for word with a source. Sources, verdicts and the cut list: docs/fishing-content-sources.md ("Wave 3",
+  "Checked and cut (wave 3)").
+- **Economy.** Prices in band, never by size. Explicit weights keep each spot's mean catch within ±1.3 % of its pre-wave value
+  (cove 2.992 → 2.955, palm 4.000 → 3.956, lookout 3.000 → 3.036, ledge 4.216 → 4.251, both boats 4.485 → 4.528) and the sell
+  value within ±1.2 %. The boats' deep-sea share is 0.838 (the 0.75-0.85 band holds). The milkfish (4), capelin (3) and sixgill
+  (10) swap at their time for a resting shared fish of the same price (mackerel or sea bass, shrimp or sardine, the Little Shark),
+  so §12 holds in all 15 time × lure mixes. Sharks stay hard: the zebra shark is rare at weight 2 (1.47 % a cast), the sixgill only
+  takes the Little Shark's place at night, and every table grew, so the legendary sharks only got rarer.
+- **Island Legends 18 → 22** (`DEFS2` in `legendary.ts`, ids `legend-<spot>-2`): Captain Ribbon (deep-sea boat, Homare Sawa),
+  Old Faithful (Summit Deep Boat, Paolo Maldini), Three Finals (Lookout Rocks, Cafu), Lone Star (Drop-off Ledge, George Weah). A
+  second legend swims once the spot's first legend is caught and released: the same clue counts, nothing expires, nothing is lost
+  (`legendForSpot(spot, caught)`, `legendsDue`, `CatchContext.legendsCaught`). The trophy page shows "A second giant…" until then.
+  Legends stay worth 0 coins and outside FISH.
+- **Looks.** 29 cached models in `fishModels.ts` from the existing builders (fish, shark, scombrid, squid, shrimp, crab, shell,
+  ray, `eelLike`): new colours and patterns only, no new meshes or materials, nothing per frame. Silhouettes and shadows derive
+  from the models. The new legends use the shape fallbacks.
+- **UI / site.** The four Summit spot pages and the Deep sea section fill from `FISH`; `/fish/<id>` pages and the sitemap come
+  from `FISH` (150); `lib/site/learnFeatures.ts` proof line updated (150 animals, 11 legendary).
+- **Tests.** `tests/fishing-signatures.cjs`: wave 3 in WAVES (Summit), a boat block (shared by both boats, deep-sea, explicit
+  weights, no new sharks), pre-wave-3 EV table, wave-3 sources / cut-list sections. `tests/fishing-content.cjs`: 22 legends and
+  the second-legend order. `tests/fishing.cjs`, `tests/fishing-nov6.cjs`, `tests/economy.cjs`, `tests/seo-pages.cjs` updated deliberately.
+- **Heat**: no new draws, timers or loops; models are cached on first use like the rest.

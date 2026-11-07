@@ -12,7 +12,7 @@ export const INDEX_PATHS=['/learn/lessons','/fish','/cards','/exhibits'] as cons
 /** When the home page and the game page last changed in substance (sitemap <lastmod>; bump it with a real content change). */
 export const HOME_UPDATED='2026-11-03';
 export function sitePaths():{path:string;priority:number;lastmod?:string}[]{
- return [{path:'/',priority:1,lastmod:HOME_UPDATED},{path:'/about',priority:.9},{path:'/play',priority:.3,lastmod:HOME_UPDATED},{path:'/privacy',priority:.5},...INDEX_PATHS.map(path=>({path,priority:.8})),
+ return [{path:'/',priority:1,lastmod:HOME_UPDATED},{path:'/about',priority:.9},{path:'/play',priority:.3,lastmod:HOME_UPDATED},{path:'/privacy',priority:.5},{path:'/marketing',priority:.4},...INDEX_PATHS.map(path=>({path,priority:.8})),
   ...LESSONS.map(l=>({path:lessonPath(l.id),priority:.6})),...SITE_FISH.map(f=>({path:fishPath(f.id),priority:.4})),
   ...SITE_CARDS.map(c=>({path:cardPath(c.number),priority:.4})),...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),priority:.5}))];
 }

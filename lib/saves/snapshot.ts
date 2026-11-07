@@ -90,6 +90,7 @@ export const DEVICE_KEYS:readonly string[]=['fi2-npc-fresh-v1','fi2-goal-replays
  'fi2-paintings-v1',
  // Fishing (Oct 15 2026): the first-time ghost-hand tutorial seen, and the Easy reel choice (a per-device control preference).
  'fi2-fish-tutorial-v1',
+ 'fi2-fish-easy-bite-v1',// Island settings → Fishing → Easy bite (longer bite window), Nov 6 2026
  'fi2-coach-plays-v1','fi2-arcade-boards-v1'];// arcade leaderboards: the device board, its letters and its own island-entry claims (docs/arcade-leaderboards.md)
 /** The save system's own device keys. The code is kept here so this device can sync and show "My save code". */
 /** The device's random install id for anonymous player counts (Oct 16 2026; DEVICE_KEYS above). */

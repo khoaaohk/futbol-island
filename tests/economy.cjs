@@ -234,7 +234,7 @@ console.log('PASS economy: learning beats repetition, one daily training budget 
   const hot=O.catchWeights(s,1,{time:'day',lure:'knuckleball',legends:[]}),base=tierShare(s.weights),boosted=tierShare(O.catchWeights(s,1));
   for(const r of Object.keys(boosted))assert(Math.abs(tierShare(hot)[r]-boosted[r])<1e-9,`${s.id}: a lure on a hotspot keeps the hotspot's capped rarity mix (${r})`);void base;void share0;}
  // d) C1 legends: never goods, never in FISH or a static table, worth nothing at Rosa's (released), and only swim once found.
- assert.equal(L.LEGEND_FISH.length,cat.FISH_SPOTS.length,'one legend per spot');
+ assert(cat.FISH_SPOTS.every(s=>L.legendsAt(s.id).length>=1)&&L.LEGEND_FISH.length===cat.FISH_SPOTS.length+4,'one legend per spot, plus 4 second legends (wave 3, Nov 6 2026)');
  for(const f of L.LEGEND_FISH){assert(!G.goodById(f.id),`${f.id}: not a market good (never sold)`);assert(!cat.FISH.includes(f),`${f.id}: not a Fishbook species`);
   assert(cat.FISH_SPOTS.every(s=>!(f.id in s.weights)),`${f.id}: not in any static table`);assert.equal(f.price,0,`${f.id}: no price`);}
  {const s=cat.spotById('harbour-wall'),w=O.catchWeights(s,0,{time:'day',lure:null,legends:['harbour-wall']}),id=L.legendId('harbour-wall');
@@ -253,4 +253,11 @@ console.log('PASS economy: learning beats repetition, one daily training budget 
  //    lure module itself touches no price or wallet.
  const lureSrc=fs.readFileSync(path.join(__dirname,'../lib/town/fishing/lures.ts'),'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
  assert(!/price|fishSellValue|economy|market|wallet|credit|coins?\b/i.test(lureSrc),'the lures touch no price or wallet');
+ // h) Nov 6 2026 legendary bad-luck protection (fishingOdds.ts PITY): only before a species' FIRST catch (so every long-run table is
+ //    unchanged), at most PITY.cap×, and value-guarded per cast: with every legendary at full pity, in all 15 time × lure mixes, each
+ //    spot's mean catch stays within ±3 % of its day table. Pity never touches a non-legendary weight.
+ for(const s of cat.FISH_SPOTS){const L=O.pitySpecies(s);if(!L.length)continue;const pity=Object.fromEntries(L.map(id=>[id,1e6])),p0=O.meanPrice(s.weights),v0=O.meanSellValue(s.weights);
+  for(const c of ctxs){const w=O.catchWeights(s,0,{...c,pity}),p=O.meanPrice(w),v=O.meanSellValue(w);
+   assert(Math.abs(p-p0)<=p0*.03+1e-9&&Math.abs(v-v0)<=v0*.03+1e-9,`${s.id} ${c.time}/${c.lure} at full pity: mean catch within ±3 % (${p0.toFixed(2)} → ${p.toFixed(2)})`);}}
+ assert(O.PITY.cap<=4&&O.PITY.evGuard<=.03,'pity is gentle (at most 4×) and inside the ±3 % guard');
  console.log('PASS economy §12 fishing content: night fish priced in band and each spot\'s mean catch within ±3 % (all 15 time × lure mixes, 18 spots), lures never move rarity (BOOST_CAP kept), legends never sold, requests metered through the jobs wallet, free lures carry no value');}

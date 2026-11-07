@@ -30,13 +30,19 @@ export function hotFactor(spot:Pick<FishSpot,'rarityBoost'>,rarity:FishRarity,ho
  * In the game the live roll goes through Agent A's `fishingSession.setCatchRoll` (fishingLogStore.ts liveCatchRoll), which passes
  * the live context explicitly; no global source is registered, so fishingCore.rollCatch and every sim keep the neutral tables.
  */
-export type CatchContext={time:TimeOfDayKey;lure:LureId|null;legends:readonly string[]};
+export type CatchContext={time:TimeOfDayKey;lure:LureId|null;legends:readonly string[];
+ /** Nov 6 2026 bad-luck protection (PITY below): casts at THIS spot without each still-uncaught legendary species, by id. The store
+  *  passes only species this player has never caught (fishingLogStore.ts liveContext); absent or empty = no pity. */
+ pity?:Readonly<Record<string,number>>;
+ /** Nov 6 2026 (wave 3): the legends this player already caught and released, so a spot with two legends sends the next one. */
+ legendsCaught?:Readonly<Record<string,number>>};
 export const NEUTRAL_CONTEXT:CatchContext=Object.freeze({time:'day',lure:null,legends:Object.freeze([])}) as CatchContext;
 let source:(()=>CatchContext)|null=null;
 /** The browser store registers where the live context comes from (read once per bite, never per frame). */
 export function setCatchContextSource(fn:(()=>CatchContext)|null){source=fn;}
 export function catchContext():CatchContext{try{return source?.()??NEUTRAL_CONTEXT;}catch{return NEUTRAL_CONTEXT;}}
-const isNeutral=(c:CatchContext)=>c.time==='day'&&!c.lure&&!c.legends.length;
+const hasPity=(c:CatchContext)=>!!c.pity&&Object.values(c.pity).some(n=>n>0);
+const isNeutral=(c:CatchContext)=>c.time==='day'&&!c.lure&&!c.legends.length&&!hasPity(c);
 
 /** How strongly a lure pulls its favoured kinds (inside each rarity), before the value guard. */
 export const FAMILY_BOOST={lure:2.2} as const;
@@ -74,8 +80,35 @@ export function familyMixes(w:Record<string,number>,mixes:readonly {favors:(f:Fi
  let lo=0,hi=1;for(let i=0;i<14;i++){const m=(lo+hi)/2;if(ok(at(m)))lo=m;else hi=m;}
  return lo>.001&&ok(at(lo))?at(lo):{...w};
 }
+/**
+ * Legendary bad-luck protection (Nov 6 2026, fishing audit item 6). Before this a still-uncaught special such as the Great White
+ * (0.33 % a cast at Harbour Wall) took about 300 casts, 2+ hours at one spot, with no help at all. Now each cast at a spot WITHOUT a
+ * legendary species this player has never caught adds PITY.rate to that species' weight multiplier there, up to PITY.cap (3×, reached
+ * after ~330 casts); catching it clears the count, and once a species is in the Fishbook it never gets pity again. Internal only:
+ * no numbers or bars are ever shown to kids.
+ *  - Long-run value: pity exists only before a species' FIRST catch, so every table is exactly as before once it is caught; the
+ *    most it can ever add is that one catch arriving sooner (one legendary in place of one common, once per species).
+ *  - Per cast it is also value-guarded: eased back until the spot's mean catch (catalogue price and sell value) is at most
+ *    PITY.evGuard above the table before the time swaps and the lure (the same reference the lure guard uses), so night fish,
+ *    a lure and pity together stay inside the ±3 % guard of tests/economy.cjs §12.
+ *  - Sharks stay hard: every legendary gets the same ramp, so the sharks keep their (lowest) place; they still take 150+ casts
+ *    on average (tests/fishing-sell-pity.cjs simulates it).
+ */
+export const PITY={rate:.006,cap:3,evGuard:.029,maxCount:400} as const;
+export const pityMultiplier=(n:number)=>Math.min(PITY.cap,1+PITY.rate*Math.max(0,Math.min(PITY.maxCount,n||0)));
+/** The species at this spot that can gain pity: its legendary-rarity animals. */
+export const pitySpecies=(spot:Pick<FishSpot,'weights'>)=>Object.keys(spot.weights).filter(id=>fishById(id)?.rarity==='legendary');
+/** Apply pity (counts by id) to a table, value-guarded against `ref`. Pure; a fresh object (or `w` itself when nothing applies). */
+export function applyPity(w:Record<string,number>,pity:Readonly<Record<string,number>>,ref:Record<string,number>=w):Record<string,number>{
+ const ids=Object.keys(pity).filter(id=>pity[id]>0&&w[id]>0&&fishById(id)?.rarity==='legendary');if(!ids.length)return w;
+ const at=(s:number)=>{const o={...w};for(const id of ids)o[id]=w[id]*(1+(pityMultiplier(pity[id])-1)*s);return o;};
+ const p0=meanPrice(ref),v0=meanSellValue(ref),ok=(o:Record<string,number>)=>meanPrice(o)-p0<=p0*PITY.evGuard&&meanSellValue(o)-v0<=v0*PITY.evGuard;
+ const full=at(1);if(ok(full))return full;if(!ok(w))return w;
+ let lo=0,hi=1;for(let i=0;i<14;i++){const m=(lo+hi)/2;if(ok(at(m)))lo=m;else hi=m;}
+ return lo>.001?at(lo):w;
+}
 /** True while a legend is in this spot's water for this context (found, not caught yet). */
-export const legendSwims=(spot:Pick<FishSpot,'id'>,ctx:CatchContext)=>ctx.legends.includes(spot.id)&&!!legendForSpot(spot.id);
+export const legendSwims=(spot:Pick<FishSpot,'id'>,ctx:CatchContext)=>ctx.legends.includes(spot.id)&&!!legendForSpot(spot.id,ctx.legendsCaught);
 
 /** The spot's weights for a cast (a fresh object, once per bite: no per-frame work). `hot`: on a hotspot (0..1). `ctx`: time,
  *  lure and legends (defaults to the live context; the neutral one returns the spot's own table untouched). */
@@ -89,8 +122,10 @@ export function catchWeights(spot:FishSpot,hot:number,ctx:CatchContext=catchCont
  // C3: the lure's family mix (never rarity, value-guarded against the table before the time swaps).
  const lure=ctx.lure?lureById(ctx.lure):undefined;
  if(lure)out=familyMixes(out,[{favors:lure.favors,k:FAMILY_BOOST.lure}],before);
+ // Nov 6 2026: bad-luck protection for still-uncaught legendaries (value-guarded against the same reference).
+ if(ctx.pity)out=applyPity(out,ctx.pity,before);
  // C1: a found legend joins at a small fixed weight (worth 0 coins: never sold, so it can only lower the mean value).
- if(legendSwims(spot,ctx)){const L=legendForSpot(spot.id)!;out=out===spot.weights?{...out}:out;out[L.id]=LEGEND_WEIGHT*(1+.5*Math.max(0,Math.min(1,hot)));}
+ if(legendSwims(spot,ctx)){const L=legendForSpot(spot.id,ctx.legendsCaught)!;out=out===spot.weights?{...out}:out;out[L.id]=LEGEND_WEIGHT*(1+.5*Math.max(0,Math.min(1,hot)));}
  return out;
 }
 /** Where a time species actually comes, at its time (Fishbook "Found at"): every spot where it has a day fish to stand in for. */

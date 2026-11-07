@@ -18,7 +18,7 @@ import {funnelMath} from './startReport';
 import type {EmoteGroup} from './emoteLabels';
 
 export {funnelMath,PARTY_SINCE};
-export const MIN_PARTIES=5;
+export const MIN_PARTIES=1;
 const LABEL:Record<string,string>=Object.fromEntries(PARTY_COUNT_EVENTS.map(([e,l])=>['mp:'+e,l]));
 
 export type PartyStatus='not_yet'|'empty'|'ok';

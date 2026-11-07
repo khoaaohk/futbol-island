@@ -8,7 +8,11 @@
  */
 import {useEffect,useRef,useState} from 'react';
 import styles from './FishingLureButton.module.css';
-import {chooseLure,lastCatchEffects,useFishingLog} from '@/lib/town/fishing/fishingLogStore';
+import {chooseLure,lastCatchEffects,todaysLog,useFishingLog} from '@/lib/town/fishing/fishingLogStore';
+import {requestNudge} from '@/lib/town/fishing/fishingLog';
+import {dayKey} from '@/lib/town/fishing/timeOfDay';
+import {fishingPrefs,fishingSession} from '@/lib/town/fishing/fishingStore';
+import {basketFullLine} from '@/lib/town/market/marketStand';
 import {LURES,lureById} from '@/lib/town/fishing/lures';
 import {fishById} from '@/lib/town/fishing/fishCatalog';
 import {LEGEND_INFO,legendForSpot} from '@/lib/town/fishing/legendary';
@@ -37,18 +41,27 @@ export function FishingLureButton({className}:{className:string}){
 }
 
 /** One short toast for what a catch did (a request finished, a reward, a legend's clue, a legend released). It waits while the
- *  catch card is up (`cardUp`), then shows for 6 s. */
+ *  catch card is up (`cardUp`), then shows for 6 s.
+ *  Nov 6 2026 (fishing audit items 8 and 10): it is mounted once per fishing session, so on the session's FIRST cast it shows today's
+ *  first unfinished request and where to look for 3 s (fishingLog.ts requestNudge; nothing when all are done or this spot fits),
+ *  and a catch that found the basket full points to the nearest buyer of fish (marketStand.ts basketFullLine). Listeners on the
+ *  Event API's beats only: no timers but the toast's one timeout. */
 export function FishingCatchToast({cardUp}:{cardUp:boolean}){
  useFishingLog();
- const effects=lastCatchEffects(),seen=useRef(0);const [toast,setToast]=useState<{text:string;key:number}|null>(null);
+ const effects=lastCatchEffects(),seen=useRef(0);const [toast,setToast]=useState<{text:string;key:number;ms?:number;kind?:string}|null>(null);
+ const nudged=useRef(false);
+ useEffect(()=>fishingSession.onFishingEvent(e=>{
+  if(e.type==='cast'&&!nudged.current&&e.spot){nudged.current=true;if(!fishingPrefs().tutorialDone)return;/* the first-time tutorial has the screen */const now=Date.now(),text=requestNudge(todaysLog(now),dayKey(now),e.spot);if(text)setToast({text,key:-now,ms:3000,kind:'request'});}
+  else if(e.type==='catch'&&e.inBasket===false&&e.spot)setToast({text:basketFullLine(e.spot),key:-Date.now(),ms:5000,kind:'basket'});
+ }),[]);
  useEffect(()=>{if(!effects||effects.key===seen.current)return;seen.current=effects.key;const e=effects.effects,parts:string[]=[];
   if(e.legend){const f=fishById(effects.id);parts.push(`Released! ${f?.name??'The legend'} swims free again. It is on your Fishbook trophy page.`);}
   for(const q of e.requestsDone)parts.push(`${q.who}: ${q.thanks} +${FISH_REQUEST_COINS} coins`);
   for(const u of e.unlocked)parts.push(`You earned the ${u}!`);
   for(const s of e.newClues){const L=legendForSpot(s);if(L)parts.push(`Legend clue: ${LEGEND_INFO[L.id].clue}`);}
-  if(parts.length)setToast({text:parts.join(' '),key:effects.key});
+  if(parts.length)setToast(t=>({text:[t?.kind==='basket'?t.text:'',...parts].filter(Boolean).join(' '),key:effects.key}));
  },[effects]);
- useEffect(()=>{if(!toast||cardUp)return;const t=setTimeout(()=>setToast(null),6000);return()=>clearTimeout(t);},[toast?.key,cardUp]);// eslint-disable-line react-hooks/exhaustive-deps
+ useEffect(()=>{if(!toast||cardUp)return;const t=setTimeout(()=>setToast(null),toast.ms??6000);return()=>clearTimeout(t);},[toast?.key,cardUp]);// eslint-disable-line react-hooks/exhaustive-deps
  if(!toast||cardUp)return null;
- return <p className={styles.toast} key={toast.key} role="status" data-fish-toast>{toast.text}</p>;
+ return <p className={styles.toast} key={toast.key} role="status" data-fish-toast data-toast-kind={toast.kind}>{toast.text}</p>;
 }

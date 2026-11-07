@@ -116,6 +116,14 @@ ok('report maths: visits, joins, rate, players, avg / median seconds, longest ba
  const m2=fixture();for(const k of Object.keys(m2.counts))if(k.startsWith('lm:futsal'))delete m2.counts[k],delete m2.countSessions[k];
  const r2=R.buildLiveMatches(m2,{from:'2026-11-05',to:'2026-11-11'},rollups);
  assert.equal(r2.totals.joins,20);assert.equal(r2.totals.visits,40);assert.equal(r2.totals.joinRate,.5);assert.equal(r2.totals.matchesPerWeek,20);assert.equal(r2.totals.minutes,95);assert.equal(r2.totals.medianSec,180);
+ // Audit Nov 6 2026: a range reaching back before counting began (LM_SINCE) rates per week, and shares sessions, over the days
+ // since then only (it used to divide 20 joins by all 14 days: 10 a week instead of 70).
+ const pre=['2026-10-23','2026-10-24','2026-10-25','2026-10-26','2026-10-27','2026-10-28','2026-10-29','2026-10-30','2026-10-31','2026-11-01','2026-11-02','2026-11-03','2026-11-04'];
+ const wide=[...pre.map(day=>({day,counts:{},countSessions:{},sessions:1000})),{day:'2026-11-05',counts:{},countSessions:{},sessions:150},{day:'2026-11-06',counts:{},countSessions:{},sessions:50}];
+ const r3=R.buildLiveMatches({...m2,totals:{sessions:13200}},{from:'2026-10-23',to:'2026-11-06'},wide);
+ assert.equal(r3.partial,true);assert.equal(r3.days,2,'Nov 5–6');assert.equal(r3.totals.matchesPerWeek,20/2*7);
+ assert.equal(r3.sessions,200,'sessions since Nov 5');assert.equal(r3.totals.playShare,11/200);
+ assert(read('app/admin/LiveMatchesSection.tsx').includes("'Every count is exact (no small-number hiding).'"),'no "<5" promise when nothing is hidden');
  assert.equal(R.buildLiveMatches({counts:{},countSessions:{},totals:{sessions:0}},{from:'2026-10-01',to:'2026-10-07'}).status,'not_yet');
  assert.equal(R.buildLiveMatches({counts:{},countSessions:{},totals:{sessions:3}},{from:'2026-11-05',to:'2026-11-07'}).status,'empty');
 });
@@ -126,8 +134,9 @@ ok('privacy: only fixed ids and numbers leave the tab; the runtime hands over fo
  assert(!/fetch\(|sendBeacon|localStorage|sessionStorage|setInterval|setTimeout|requestAnimationFrame/.test(ev),'no request, storage, timer or frame loop of its own');
  for(const m of ev.matchAll(/env\.count\(([^,)]+)/g))assert(/^(lmId\(|'lm:reach_')/.test(m[1].trim()),'count id built from the allowlist: '+m[1]);
  const rt=strip(read('lib/town/liveJoinRuntime.ts')),calls=[...rt.matchAll(/api\.onMatch\?\.\((\{[^}]*\})\)/g)].map(m=>m[1]);
- assert.equal(calls.length,3,'join, others and leave');
- for(const c of calls){const keys=[...c.matchAll(/([a-z]+):/g)].map(m=>m[1]);for(const k of keys)assert(['type','format','role','others','reason'].includes(k),'payload key '+k);}
+ // Nov 6 2026 (deliberate): + goal, replay shown and replay skipped (countIds.ts LM_MATCH_EVENTS), each a transition with a yes/no.
+ assert.equal(calls.length,6,'join, others, leave, goal, replay, replay skipped');
+ for(const c of calls){const keys=[...c.matchAll(/([a-z]+):/g)].map(m=>m[1]);for(const k of keys)assert(['type','format','role','others','reason','mine','skipped'].includes(k),'payload key '+k);}
  assert(!/lib\/analytics/.test(rt.match(/^import[^\n]*$/gm).join('\n')),'the runtime imports no analytics (Town wires it)');
  // A real event's object carries numbers and fixed words only.
  const {a,log,adv}=rig();a.on({type:'join',format:'7v7',role:'fwd',others:3,name:'Alex',code:'ABCD'});adv(61);a.on({type:'leave',reason:'leave',others:3});
@@ -142,11 +151,12 @@ ok('wiring: Town, the runtime, the report, the dashboard tab',()=>{
  assert.match(town,/if\(visibleVenue!==lmVenue\)\{lmVenue=visibleVenue;liveMatch\.venue\(visibleVenue\);\}/);
  assert(read('components/FieldPathCard.tsx').includes('data-live-bar=""'));
  const rt=read('lib/town/liveJoinRuntime.ts');
- assert.match(rt,/api\.onMatch\?\.\(\{type:'join',format:f,role:view\.keeper\?'gk':simOf\(f\)\?\.players\[slot\]\?\.role\?\?null,others:othersOn\(f\)\}\)/);
+ assert.match(rt,/api\.onMatch\?\.\(\{type:'join',format:f,role:view\.keeper\?'gk':simOf\(f\)\?\.players\[slot\]\?\.role\?\?null,others:othersOn\(f\),\.\.\.slotsOn\(f\)\}\)/);// Nov 6 2026: + the AI / human slot counts
  assert.match(rt,/api\.onMatch\?\.\(\{type:'leave',reason:byUser\?'leave':'forced',others:othersOn\(format\)\}\);left=games\.leaveMatch/);
  assert(read('lib/analytics/report.ts').includes('report.liveMatches=buildLiveMatches(merged,range,rollups)'));
  assert(read('lib/analytics/core.ts').includes('liveMatches?:LiveMatchReport|null'));
- const dash=read('app/admin/AnalyticsDashboard.tsx');assert(dash.includes("['matches','Live matches']")&&dash.includes("{tab==='matches'&&<LiveMatchesSection report={report}"));
+ const dash=read('app/admin/AnalyticsDashboard.tsx');// Nov 6 2026 (deliberate): the tabs live in lib/analytics/metricIndex.ts (DASH_TABS) and the section carries its metric-index id.
+ assert(read('lib/analytics/metricIndex.ts').includes("['matches','Live matches']")&&dash.includes("{tab==='matches'&&<div className={dd.mx} data-metric=\"matches.section\"><LiveMatchesSection report={report}"));
  const sec=read('app/admin/LiveMatchesSection.tsx');assert(sec.includes('report.liveMatches')&&!/IslandBrush/.test(sec));
 });
 ok('fixture render: the Live matches section (data, empty, not tracked yet)',()=>{
@@ -156,7 +166,8 @@ ok('fixture render: the Live matches section (data, empty, not tracked yet)',()=
  const days=['2026-11-05','2026-11-06'],rollups=days.map(day=>({day,counts:{'lm:7v7_join':10,'lm:7v7_min':40},countSessions:{'lm:7v7_join':6,'lm:7v7_min':6}}));
  const el=lm=>renderToStaticMarkup(React.createElement(S.default,{report:{liveMatches:lm},rangeText:'Nov 5 – Nov 6',dayLabel:d=>d.slice(5)}));
  const html=el(R.buildLiveMatches(fixture(),{from:days[0],to:days[1]},rollups));
- for(const want of ['Live matches','Pitch visits','Matches joined','By format','Matches by day','How often','Match length','Position picked','With friends','How matches ended','Beach soccer','11v11','&lt;5'])assert(html.includes(want),want);
+ for(const want of ['Live matches','Pitch visits','Matches joined','By format','Matches by day','How often','Match length','Position picked','With friends','How matches ended','Beach soccer','11v11','Every count is exact'])assert(html.includes(want),want);
+ assert(!html.includes('&lt;5'),'exact counts (owner Nov 5 2026): no "<5" anywhere on the tab (audit Nov 6 2026: the header still promised one)');
  assert.equal(S.fmtSec(135),'2 min 15 s');assert.equal(S.fmtSec(38),'38 s');assert.equal(S.fmtSec(4320),'1 h 12 min');assert.equal(S.fmtSec(null),'—');
  assert(/No live matches in this range yet/.test(el(R.buildLiveMatches({counts:{},countSessions:{},totals:{sessions:0}},{from:'2026-11-05',to:'2026-11-06'}))));
  assert(/Not tracked yet/.test(el(R.buildLiveMatches({counts:{},countSessions:{},totals:{sessions:0}},{from:'2026-10-01',to:'2026-10-02'}))));

@@ -378,7 +378,9 @@ function environment(shared){
   st={...st,soldToday:M.MARKET_FULL_PRICE_COINS};mk.refresh();mk.gather('mango',2);assert.equal(mk.quote('produce').coins,2,`after ${M.MARKET_FULL_PRICE_COINS} coins of sales today, farm produce sells at half price too`);
   const MS=env.load('lib/town/market/marketStand.ts'),one=await MS.sellOneGood('mango',{read:()=>st,write:v=>{st=JSON.parse(JSON.stringify(v));},credit:async(i,a)=>a,refresh:()=>mk.refresh(),now:()=>t0});assert.equal(one.coins,1);assert.equal(mk.read().basket.mango,1);
   const DM=env.load('lib/town/dailyMeter.ts');assert(DM.isTrainingRun(`market:${M.localMarketDay(t0)}:3`,'island'),'every farm-stand sale is a metered market run');
-  const stand=fs.readFileSync(path.join(base,'components/MarketStand.tsx'),'utf8');assert.match(stand,/place==='farm'/);assert.match(stand,/filter\(t=>t\.id==='produce'\)/,'the farm stand buys produce only');}
+  const stand=fs.readFileSync(path.join(base,'components/MarketStand.tsx'),'utf8');// Nov 6 2026 (sell where you fish): Mele buys fish and produce, through the one market state (lib/economy.ts MARKET_BUYERS).
+  assert.match(stand,/buyerTakes\(place,t\.id\)/,'the stand\'s tabs come from the shared buyer table');
+  const E=env.load('lib/economy.ts');assert.deepEqual([...E.MARKET_BUYERS.farm.kinds],['fish','produce'],'the farm stand buys fish and produce');}
 
  // ---- Job moves (Sep 30 2026, docs/island-jobs.md §10): walking only, the job's own buttons, the ball set aside, poses ----
  {const JM=env.load('lib/town/jobs/jobMoves.ts'),job=C.jobById('farm-harvest'),floor=(x,z)=>V.fieldSurfaceHeight(x,z),at=(q,dx=0,dz=0)=>({x:q.x+dx,y:floor(q.x+dx,q.z+dz),z:q.z+dz}),spots=job.task.spots,idx=f=>spots.findIndex(f);

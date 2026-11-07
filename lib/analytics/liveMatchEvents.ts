@@ -14,6 +14,9 @@
  *    background tab keeps the minutes (only the leave, its band and < 60 s are lost).
  * While a match is open the module holds one visibilitychange listener (added on join, removed on leave): no timer.
  *
+ * Nov 6 2026: goals for / against the player's side while they are on the match, goal replays shown / skipped, and the AI and
+ * human slots at the join (lm:<f>_goal_for … _slots_human, countIds.ts LM_MATCH_EVENTS): the same channel and rules.
+ *
  * Privacy (a kids' game): totals per fixed id only. Never a name, nick, slot, side, score, party code, time of day or an order of
  * events; friends are a number band (0 / 1 / 2–3 / 4+), never who.
  */
@@ -26,7 +29,12 @@ export const LM_CAP_S=7200;
 export const VISIT_AWAY_MS=60_000;
 export type LmEnd='leave'|'forced'|'hide';
 /** What lib/town/liveJoinRuntime.ts raises (api.onMatch). Pure data: format, a coarse role and a head count, nothing else. */
-export type LiveMatchEvent={type:'join';format:string;role:string|null;others:number}|{type:'others';others:number}|{type:'leave';reason:LmEnd;others:number};
+export type LiveMatchEvent={type:'join';format:string;role:string|null;others:number;
+  /** Nov 6 2026: the match's AI players and humans (this player included) at the join; booked as lm:<f>_slots_bot / _slots_human. */
+  bots?:number;humans?:number}
+ |{type:'others';others:number}|{type:'leave';reason:LmEnd;others:number}
+ /** Nov 6 2026: a goal in the match this player is on (`mine`: for their side), and a goal replay shown / skipped. Totals only. */
+ |{type:'goal';mine:boolean}|{type:'replay';skipped?:boolean};
 
 export const isLmFormat=(f:unknown):f is LiveMatchFormat=>(LIVE_MATCH_FORMATS as readonly unknown[]).includes(f);
 /** The length band for a match of `s` seconds (already capped). */
@@ -80,12 +88,18 @@ export function createLiveMatchAnalytics(env:Env){
     if(!isLmFormat(e.format))return;if(open)api.on({type:'leave',reason:'forced',others:open.others});
     open={format:e.format,fgMs:0,since:env.visible()?t:null,banked:0,others:Math.max(0,e.others|0)};
     env.count(lmId(e.format,'join'));env.count(lmId(e.format,'role_'+roleOf(e.role,e.role==='gk')));
+    // Slots at the join (Nov 6 2026): whole numbers, capped at a full 11v11 side pair, so one join books at most 22 of each.
+    const slots=(n:unknown)=>Math.max(0,Math.min(22,Math.floor(Number(n)||0)));
+    if(e.bots!==undefined&&slots(e.bots)>0)env.count(lmId(e.format,'slots_bot'),slots(e.bots));
+    if(e.humans!==undefined&&slots(e.humans)>0)env.count(lmId(e.format,'slots_human'),slots(e.humans));
     matches++;for(const n of LM_REACH)if(matches===n)env.count('lm:reach_'+n);
     unlisten?.();unlisten=env.listen(onVisibility);
     return;
    }
    const o=open;if(!o)return;
    if(e.type==='others'){o.others=Math.max(o.others,e.others|0);return;}
+   if(e.type==='goal'){env.count(lmId(o.format,e.mine?'goal_for':'goal_against'));return;}
+   if(e.type==='replay'){env.count(lmId(o.format,e.skipped?'replay_skip':'replay'));return;}
    o.others=Math.max(o.others,e.others|0);
    o.fgMs=fg(o,t);o.since=null;bank(o,t);
    const r=rest[o.format]||0;if(r>0)env.count(lmId(o.format,'sec'),r);rest[o.format]=0;

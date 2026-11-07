@@ -143,9 +143,13 @@ export function buildSponsorWeekly({week,now=new Date(),merged,prev,players,prev
  const bands=src==='none'?[]:PARTY_PEAK_BUCKETS.map(([id,label])=>{const v=raw[id]||0;return {key:id,label,value:v>=SPONSOR_MIN?v:v>0?null:0};});
  const topEmotes=!partyLive?[]:EMOTE_WIRE_IDS.map(n=>({key:'e'+n,label:emoteLabel?.(n)??`Emote ${n}`,value:(c.countSessions['em:e'+n]||0)>=SPONSOR_MIN?c.counts['em:e'+n]||0:null}))
   .filter(b=>b.value!==null&&b.value>0).sort((a,b)=>(b.value??0)-(a.value??0)).slice(0,5);
+ // Audit Nov 6 2026: a week still in progress (today is inside it) was compared with the whole of last week, so every change read
+ // low (a Friday showed about −26% on flat traffic). Its changes are withheld until the week has ended.
+ const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles'}).format(now),inProgress=today>=r.from&&today<=r.to;
+ if(inProgress)for(const k of kpis)k.change=null;
  return {week,from:r.from,to:r.to,prevWeek:shiftWeek(week,-1),nextWeek:shiftWeek(week,1),generatedAt:now.toISOString(),min:SPONSOR_MIN,banner:DRAFT_BANNER,exportLine:EXPORT_LINE,
   kpis,partySize:{source:src,bands},topEmotes,
-  notes:['Visitors with Do Not Track or Global Privacy Control are not counted, so every figure is a floor. No sampling, nothing estimated.',
+  notes:[...(inProgress?[`This week is still in progress (to ${today}, Pacific): the change vs last week is shown once the week has ended.`]:[]),'Visitors with Do Not Track or Global Privacy Control are not counted, so every figure is a floor. No sampling, nothing estimated.',
    'Party sizes from the hosts’ devices miss parties whose host tab was closed abruptly; the party service’s own totals are used when available.',
    `Play with friends and emote numbers start ${PARTY_SINCE}; earlier weeks say “not tracked yet”.`,
    'Days are Pacific days; the week runs Monday to Sunday.']};

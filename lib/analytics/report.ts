@@ -27,6 +27,7 @@ import {emoteLabels} from './emoteLabels';
 import {emoteVariantLabels} from './emoteVariantLabels';
 import {buildMarketing} from './marketingReport';
 import {buildLiveMatches} from './liveMatchReport';
+import {buildFishingFunnel} from './fishingFunnel';
 import {buildMarketingVisits} from './marketingVisitReport';
 import {LIVE_WINDOW_MS,SCHEMA_VERSION,addDays,dailySeries,dayBounds,dayIn,dayList,displayDistribution,emptyReport,hoursInDay,mergeRollups,rollupDay,
  type DailyRollup,type Report,type ReportTime,type TimeZoneMode} from './core';
@@ -109,13 +110,16 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  // The period before averages the same positions (its own last day is complete, so it is the full rollup there).
  let prevPer:PerDay|null=null;
  if(prev&&prevFull){const used=(len===1?prev.rollups:prevFull).slice(curPer.skip,curPer.take),vd=used.reduce((a,r)=>a+r.visitors,0);prevPer={value:used.length?vd/used.length:0,days:used.length,visitorDays:vd};}
- report.overview=buildOverview({merged,rollups,from:range.from,to:range.to,perDay:curPer},prev&&prevPer?{...prev,perDay:prevPer}:null);
+ // Audit Nov 6 2026: a period before tracking began (no session on any of its days) is "nothing to compare with", not a real
+ // zero: the tiles, cards and the CSV then say so instead of "0" / "new vs (0)".
+ const cmp=trackedBefore?prev:null;
+ report.overview=buildOverview({merged,rollups,from:range.from,to:range.to,perDay:curPer},cmp&&prevPer?{...cmp,perDay:prevPer}:null);
  // Oct 20 2026: the sponsor Overview (lib/analytics/sponsor.ts) from the same rollups. A range under a week also gets the 7 days
  // ending on its last day for the tiles' trend lines (best effort: without them the trend is just the range).
  let trendRollups:DailyRollup[]|undefined;
  if(len<7)try{trendRollups=(await loadRollups(store,dayList(addDays(range.to,-6),range.to),now,mode)).rollups;}catch{}
- report.sponsor=buildSponsor({from:range.from,to:range.to,merged,rollups,prev:prev?{from:prev.from,to:prev.to,merged:prev.merged}:null,
-  trendRollups,firstTry:report.overview.current.firstTry,labels:sponsorLabels});
+ report.sponsor=buildSponsor({from:range.from,to:range.to,merged,rollups,prev:cmp?{from:cmp.from,to:cmp.to,merged:cmp.merged}:null,
+  trendRollups,firstTry:report.overview.current.firstTry,labels:sponsorLabels,perDay:{value:curPer.value,prev:cmp&&prevPer?prevPer.value:null}});
 
  // Oct 22 2026: Play with friends and emotes (lib/analytics/partyReport.ts), same rollups.
  report.party=buildParty(merged,range,rollups);report.emotes=buildEmotes(merged,range,emoteLabels(),emoteVariantLabels());
@@ -123,6 +127,8 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  report.marketing=buildMarketing(merged,rollups);// named by the admin route / page (marketingLabels.ts)
  // Nov 5 2026: live matches (lib/analytics/liveMatchReport.ts): visits, joins and time per format, same rollups.
  report.liveMatches=buildLiveMatches(merged,range,rollups);
+ // Nov 6 2026: the fishing funnel (lib/analytics/fishingFunnel.ts), exact, same rollups.
+ report.fishingFunnel=buildFishingFunnel(merged,range);
  // Nov 5 2026: the investor page /marketing: where (state / country), when (Pacific hour) and how long (marketingVisitReport.ts).
  report.marketingVisits=buildMarketingVisits(merged,rollups);
 

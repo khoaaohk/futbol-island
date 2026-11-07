@@ -222,7 +222,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,c
   return active.howTo;};
  return <>
   {walletBtn}
-  {view.stand&&offerAllowed&&!offer&&!active&&!introJob&&!payday&&<HudSlot><button type="button" className={styles.offer} data-hud-slot="focus" data-farm-stand-sell onClick={()=>window.dispatchEvent(new CustomEvent(OPEN_MARKET_STAND,{detail:{tab:'produce',place:'farm'}}))}><small>Coral Cay Farm Stand</small>Sell fruit &amp; veg<span aria-hidden="true">Sell</span></button></HudSlot>}
+  {view.stand&&offerAllowed&&!offer&&!active&&!introJob&&!payday&&<HudSlot><button type="button" className={styles.offer} data-hud-slot="focus" data-farm-stand-sell onClick={()=>window.dispatchEvent(new CustomEvent(OPEN_MARKET_STAND,{detail:{place:'farm'}}))}><small>Coral Cay Farm Stand</small>Sell fish &amp; produce<span aria-hidden="true">Sell</span></button></HudSlot>}
   {offer&&offerAllowed&&!active&&!introJob&&!payday&&<HudSlot><button type="button" className={styles.offer} data-hud-slot="focus" data-job-offer={offer.id} aria-keyshortcuts="G" title="Open job (G)" onClick={()=>setIntro(offer.id)}><small>Island job · {offer.role}</small>{offer.title}<span aria-hidden="true">Go</span></button></HudSlot>}
   {/* Job cards (the offer's Start job / Not now, and the payday card) hang in the stack's task slot, right under the coins bar:
       the child is choosing to act here, so they rank with the job panel, above Talk prompts and hints (docs/ui/HUD_STACK.md). */}

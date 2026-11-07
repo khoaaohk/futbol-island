@@ -1,7 +1,7 @@
-// The unlisted marketing pages (Nov 4 2026, owner): /marketing and its print page /marketing/overview (lib/site/marketing.ts).
-//  1. Hidden: noindex + nofollow metadata, an X-Robots-Tag header for /marketing and everything under it (the PDF too), not in the
-//     sitemap paths, robots.ts, llms.txt or llms-full.txt, and no link to /marketing anywhere in app/, components/, lib/ or public/
-//     outside the marketing files themselves.
+// The marketing pages (Nov 4 2026, owner): /marketing and its print page /marketing/overview (lib/site/marketing.ts).
+//  1. Since Nov 6 2026 (owner) /marketing itself is open to search (pageMeta, canonical, in the sitemap paths). Everything UNDER it (the
+//     print page and the PDF) stays hidden: noindex + nofollow metadata and an X-Robots-Tag header for /marketing/:path+, not in the
+//     sitemap, and no link to /marketing/... anywhere outside the marketing files themselves.
 //  2. The page: force-static, no video, the PDF download (download attribute) with the real gold `.cta`, the title screen's own
 //     game buttons; every design swatch hex is really in the CSS file it is taken from.
 //  3. The PDF exists, is a PDF and is under 15 MB; the print page uses only lib/site copy and the tour's stills (no video).
@@ -22,17 +22,19 @@ assert.match(lib,/robots:\{index:false,follow:false/,'hiddenMeta: noindex, nofol
 assert.match(lib,/googleBot:\{index:false,follow:false/,'hiddenMeta: googleBot noindex, nofollow');
 for(const [f,s,p] of [[PAGE,page,'MARKETING_PATH'],[DOC,doc,'MARKETING_OVERVIEW_PATH']]){
  assert.match(s,/export const dynamic='force-static';/,f+' is force-static');
- assert(new RegExp(`export const metadata=hiddenMeta\\([^\\n]*${p}\\)`).test(s),f+' uses hiddenMeta (noindex)');
+ if(f===PAGE)assert(new RegExp(`export const metadata=pageMeta\\([^\\n]*${p}[^\\n]*\\)`).test(s)&&!/hiddenMeta/.test(s),f+' is indexable (pageMeta, no hiddenMeta)');
+ else assert(new RegExp(`export const metadata=hiddenMeta\\([^\\n]*${p}\\)`).test(s),f+' uses hiddenMeta (noindex)');
  assert(!/['"]use client['"]/.test(s),f+' is a server page');}
 const cfg=read('next.config.mjs');
-for(const src of ["'/marketing'","'/marketing/:path*'"])assert(new RegExp(`source: ${src.replace(/[*/]/g,'\\$&')}, headers: \\[\\{ key: 'X-Robots-Tag', value: 'noindex, nofollow`).test(cfg),`X-Robots-Tag noindex for ${src}`);
+assert(!/source: '\/marketing', headers/.test(cfg),'no X-Robots-Tag rule on /marketing itself');
+for(const src of ["'/marketing/:path+'"])assert(new RegExp(`source: ${src.replace(/[*+/]/g,'\\$&')}, headers: \\[\\{ key: 'X-Robots-Tag', value: 'noindex, nofollow`).test(cfg),`X-Robots-Tag noindex for ${src}`);
 assert(!/marketing/.test(strip(read('app/robots.ts'))),'robots.txt does not name /marketing (that would advertise it)');
 assert(!/marketing/i.test(read('public/llms.txt')),'llms.txt does not list /marketing');
 assert(!/marketing/.test(strip(read('app/llms-full.txt/route.ts'))),'llms-full.txt does not list /marketing');
-assert(!/marketing/.test(strip(read('lib/site/paths.ts'))),'paths.ts (the sitemap) does not list /marketing');
-assert(!/marketing/.test(strip(read('app/sitemap.ts'))),'sitemap.ts does not add /marketing');
+assert(/path:'\/marketing'/.test(strip(read('lib/site/paths.ts'))),'paths.ts (the sitemap) lists /marketing');
+assert(!/marketing\/overview/.test(strip(read('lib/site/paths.ts'))),'the print page /marketing/overview is not in the sitemap');
 // No link anywhere: an href, a link target string or a router push to /marketing outside the marketing files.
-const OWN=new Set([PAGE,DOC,LIB,'app/(site)/page.tsx',/* the main page's About chapter links to it (owner, Nov 4) */'tests/marketing-page.cjs','scripts/build-marketing-pdf.cjs']);
+const OWN=new Set([PAGE,DOC,LIB,'lib/site/paths.ts'/* the sitemap lists /marketing since Nov 6 2026 */,'app/(site)/page.tsx',/* the main page's About chapter links to it (owner, Nov 4) */'tests/marketing-page.cjs','scripts/build-marketing-pdf.cjs']);
 const walk=d=>{const abs=path.join(root,d);if(!fs.existsSync(abs))return [];return fs.readdirSync(abs,{withFileTypes:true}).flatMap(e=>e.isDirectory()?(e.name==='node_modules'||e.name.startsWith('.')?[]:walk(`${d}/${e.name}`)):[`${d}/${e.name}`]);};
 const LINK=/(href=["'{`]*|['"`])(https:\/\/futbolisland\.app)?\/marketing(\/|["'`?#])/;
 let scanned=0;
@@ -76,8 +78,11 @@ assert.match(read('components/marketing/marketing.module.css'),/break-inside:avo
 // ---- 4. a built site ----
 const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),app=path.join(dist,'server/app');
 if(!fs.existsSync(path.join(app,'marketing.html'))){console.log('marketing page ok (sources; SKIP built checks: no build with /marketing)');process.exit(0);}
-for(const p of ['marketing','marketing/overview']){const h=fs.readFileSync(path.join(app,p+'.html'),'utf8');
- assert.match(h,/<meta name="robots" content="noindex, nofollow/,`/${p}: robots noindex, nofollow`);
- assert(!/<meta property="og:/.test(h),`/${p}: no Open Graph card`);}
-if(fs.existsSync(path.join(app,'sitemap.xml.body')))assert(!/marketing/.test(fs.readFileSync(path.join(app,'sitemap.xml.body'),'utf8')),'the built sitemap leaves /marketing out');
+{const h=fs.readFileSync(path.join(app,'marketing.html'),'utf8');
+ assert(!/<meta name="robots" content="noindex/.test(h),'/marketing: open to search (no noindex)');
+ assert(/<link rel="canonical" href="https:\/\/futbolisland\.app\/marketing"/.test(h),'/marketing: canonical');}
+{const h=fs.readFileSync(path.join(app,'marketing/overview.html'),'utf8');
+ assert.match(h,/<meta name="robots" content="noindex, nofollow/,'/marketing/overview: robots noindex, nofollow');
+ assert(!/<meta property="og:/.test(h),'/marketing/overview: no Open Graph card');}
+if(fs.existsSync(path.join(app,'sitemap.xml.body'))){const b=fs.readFileSync(path.join(app,'sitemap.xml.body'),'utf8');assert(/\/marketing</.test(b)&&!/marketing\/overview/.test(b),'the built sitemap lists /marketing but not its print page');}
 console.log('marketing page ok (sources and build)');

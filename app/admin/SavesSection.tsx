@@ -98,7 +98,7 @@ export function ComingBackCard({d,saves}:{d:RawSaveMetrics|null;saves:SaveMetric
 export function RestoresCard({report}:{report:Report}){
  const o=report.overview,rows:DayColumn[]=(o?.daily||[]).map(r=>({key:r.day,label:day(r.day),value:r.restored,detail:`codes made ${show(r.created)} · fails ${show(r.restoreFails)}`}));
  const empty=!o||o.daily.every(r=>r.restored===0&&r.created===0);
- return <ChartCard title="Restores on a new device" subtitle="Sessions where “I have a save code” worked, per day. A day with fewer than 5 shows a dashed stub and “<5”." empty={empty}
+ return <ChartCard title="Restores on a new device" subtitle="Sessions where “I have a save code” worked, per day." empty={empty}
   emptyText="No save-code restores in this range yet."
   table={{columns:['Day','Restored','Restore failed','Codes made','Welcome back (code already here)','Saving break shown'],rows:(o?.daily||[]).map(r=>[day(r.day),show(r.restored),show(r.restoreFails),show(r.created),show(r.returning),show(r.breaks)])}}>
   <DayColumns rows={rows} unit="restores" ariaLabel="Restores on a new device per day"/>

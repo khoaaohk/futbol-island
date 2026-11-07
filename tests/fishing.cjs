@@ -30,7 +30,7 @@ const straight=(r,f)=>{const pts=[];for(let i=0;i<=8;i++)pts.push({x:3-(3-cat.SH
 const spawn={approach:straight,out:{x:1,z:0}};
 
 // ---- Catalogue + football facts ----
-assert(FISH.length>=10&&FISH.length<=80,'10 shared species + spot specials + the Deep Sea Boat creatures + the night and sunset fish (Oct 15 2026)');
+assert(FISH.length>=10&&FISH.length<=150,'10 shared species + spot specials + the Deep Sea Boat creatures + the night and sunset fish (Oct 15 2026) + the signature species (Nov 6 2026, growing to 150 in three waves)');
 assert.equal(new Set(FISH.map(f=>f.id)).size,FISH.length,'unique ids');
 const SPOT_IDS=FISH_SPOTS.map(s=>s.id),PRICE={common:[2,4],uncommon:[4,7],rare:[8,11],legendary:[12,20]};
 for(const f of FISH){
@@ -38,7 +38,7 @@ for(const f of FISH){
  assert(f.club&&f.club.name&&f.club.fact.length>30&&f.club.fact.length<=230,`${f.id}: one-line club fact`);
  assert(/^https:\/\//.test(f.club.source),`${f.id}: cited source`);
  for(const u of f.club.sources??[])assert(/^https:\/\//.test(u),`${f.id}: extra sources are URLs`);
- assert(['Nickname','Port city','Fan culture','Football culture','Crest','Mascot','Club name'].includes(f.club.link),`${f.id}: link kind`);
+ assert(cat.CLUB_LINK_KINDS.includes(f.club.link),`${f.id}: link kind`);
  assert(['common','uncommon','rare','legendary'].includes(f.rarity),`${f.id}: rarity`);
  assert(Array.isArray(f.spots)&&f.spots.length>=1&&f.spots.every(id=>SPOT_IDS.includes(id)),`${f.id}: lives at a real spot`);
  assert(Number.isInteger(f.price)&&f.price>=PRICE[f.rarity][0]&&f.price<=PRICE[f.rarity][1],`${f.id}: price ${f.price} fits its rarity`);
@@ -54,11 +54,15 @@ const exclusives=FISH.filter(cat.isExclusive);
 // a destination catch like the six main shore spots, so it keeps its own 1-10 specials instead.
 // The two deep-sea boats (Oct 14 2026) fish the same deep water: they share the deep-sea specials (isDeepSeaSpecial). Summit
 // Isle's Drop-off Ledge (Oct 14 2026) is a shore spot with a shared table, like the East Jetty.
-for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);if(s.id==='east-pier'||s.id==='summit-ledge'||s.area==='causeway'||s.area==='cay'){assert.equal(own.length,0,`${s.id}: no specials of its own`);continue;}
- if(s.deep){const deep=FISH.filter(cat.isDeepSeaSpecial);assert.equal(own.length,0,`${s.id}: no single-boat specials`);assert(deep.length>=1&&deep.length<=10&&deep.every(f=>f.id in s.weights),`${s.id}: the shared deep-sea specials`);continue;}
- assert(own.length>=1&&own.length<=10,`${s.id}: 1-10 specials (${own.length})`);}
+// Nov 6 2026 (signature species, wave 1 of 3): the first six shore spots (the East Jetty included) have 4+ species of their own;
+// Wave 2 (Nov 6 2026) gave the three causeway posts and the three Coral Cay beaches 4+ each; wave 3 (Nov 6 2026) gave Summit Isle's
+// four spots 4 each (Drop-off Ledge its first own species) and the boats 13 more shared deep-sea specials (21 in all)
+// (tests/fishing-signatures.cjs holds the per-wave rules).
+for(const s of FISH_SPOTS){const own=exclusives.filter(f=>f.spots[0]===s.id);
+ if(s.deep){const deep=FISH.filter(cat.isDeepSeaSpecial);assert.equal(own.length,0,`${s.id}: no single-boat specials`);assert(deep.length>=1&&deep.length<=24&&deep.every(f=>f.id in s.weights),`${s.id}: the shared deep-sea specials`);continue;}
+ assert(own.length>=1&&own.length<=16,`${s.id}: 1-16 specials (${own.length})`);}
 {const pier=cat.spotById('east-pier'),w=Object.entries(pier.weights),tot=w.reduce((n,[,x])=>n+x,0),ev=w.reduce((n,[id,x])=>n+x/tot*fishById(id).price,0);
- assert(['shrimp','sardine','mackerel','sea-bass','herring','cod','haddock','tuna','octopus'].every(id=>id in pier.weights)&&w.length===9,'east-pier: shore commons, three good catches, a rare tuna and a legendary octopus');
+ assert(['shrimp','sardine','mackerel','sea-bass','herring','cod','haddock','tuna','octopus','sprat','ghost-crab','reef-squid'].every(id=>id in pier.weights)&&w.length===12,'east-pier: shore commons, three good catches, a rare tuna, a legendary octopus and (Nov 6 2026) its own sprat, ghost crab and reef squid (the plaice comes at night)');
  assert(ev>3.8&&ev<4.3,`east-pier mean catch ${ev.toFixed(2)} ≈ the shore's 4.0 (economy unchanged)`);}
 assert(new Set(FISH.map(f=>f.club.name+'|'+f.name)).size===FISH.length,'no duplicate stories');
 assert.equal(FISH.filter(f=>/Paul the Octopus/.test(f.club.name)).length,1,'Paul the Octopus appears once');
@@ -122,7 +126,7 @@ assert.equal(FISH_SPOTS.length,18,'18 fishing spots: 6 main-island posts, 2 deep
  assert(summit.onSummitIsle(cove.x,cove.z),'the angler stands on walkable Summit Isle sand');
  assert(!summit.onSummitSandbar(cove.x,cove.z),'the cove is on the island itself, not the sandbar');
  const own=exclusives.filter(f=>f.spots[0]==='summit-cove');
- assert.equal(own.length,3,'three species exclusive to the cove');
+ assert.equal(own.length,7,'seven species exclusive to the cove (3, plus 4 signature species in wave 3, Nov 6 2026)');
  assert(own.some(f=>f.rarity==='legendary'),'a legendary catch swims past the cove');
  for(const o of FISH_SPOTS)if(o.id!=='summit-cove')assert(Math.hypot(o.x-cove.x,o.z-cove.z)>60,`summit-cove: 60+ m from ${o.id}`);
  assert(cove.x>300&&cove.z>0,'the cove is on Summit Isle, nowhere near Coral Cay or the main island');
@@ -142,7 +146,7 @@ assert.equal(FISH_SPOTS.length,18,'18 fishing spots: 6 main-island posts, 2 deep
   assert(summit.onSummitIsle(spot.x,spot.z),'the angler stands on walkable Summit Isle sand');
   assert(!summit.onSummitSandbar(spot.x,spot.z),'on the island itself, not the sandbar');
   const own=exclusives.filter(f=>f.spots[0]===id);
-  assert.equal(own.length,1,`${id}: one exclusive species`);
+  assert.equal(own.length,5,`${id}: five exclusive species (1, plus 4 signature species in wave 3, Nov 6 2026)`);
   for(const o of FISH_SPOTS)if(o.id!==id)assert(Math.hypot(o.x-spot.x,o.z-spot.z)>60,`${id}: 60+ m from ${o.id}`);
   assert(core.inOpenWater(spot.buoy.x,spot.buoy.z),`${id}: the idle float sits in open water`);
   const c=core.castPoint(spot,spot);assert(core.inOpenWater(c.x,c.z)&&Math.hypot(c.x-spot.buoy.x,c.z-spot.buoy.z)<3,`${id}: the cast lands in open water by the float`);
@@ -237,10 +241,13 @@ const run=(s,spot,rand,until,max=40)=>{const ev=[];for(let t=0;t<max;t+=1/30){ev
  const nib=ev.filter(x=>x==='nibble').length;assert(nib>=1&&nib<=4,`1-4 nibbles (${nib})`);
  assert.equal(core.tapSession(s),'reel');assert.equal(s.phase,'reeling');assert.equal(core.tapSession(s),null,'taps do nothing in the fight (the reel is spun);');assert(s.fight,'the hook always starts the spin fight');landFight(s,pier,r,spawn);assert.equal(s.phase,'caught');assert(s.fish&&fishById(s.fish.id),'the hooked fish is known');
  const landedFish=s.fish;
- for(let i=0;i<120;i++){core.stepSession(s,pier,.05,r,spawn);assert.equal(core.tapSession(s),null,'rapid reel taps cannot dismiss a catch');}
- assert.equal(s.phase,'caught');assert.equal(s.fish,landedFish,'catch fact remains available throughout the tap burst');
- for(let i=0;i<8;i++)core.stepSession(s,pier,.1,r,spawn);
- assert.equal(core.tapSession(s),'cast','an intentional tap after a pause casts again');}
+ // Nov 6 2026: taps in the read time are ignored but no longer restart a quiet timer (a child tapping steadily could never cast
+ // again); the session steps 'castable' once, when CATCH_READ_TIME is over, and the next tap casts.
+ const evs=[];for(let i=0;i<55;i++){evs.push(...core.stepSession(s,pier,.05,r,spawn));assert(core.castLocked(s),'locked while the fact is read');assert.equal(core.tapSession(s),null,'rapid taps cannot dismiss a catch');}
+ assert.equal(s.phase,'caught');assert.equal(s.fish,landedFish,'catch fact remains available throughout the tap burst');assert(!evs.includes('castable'));
+ for(let i=0;i<8;i++)evs.push(...core.stepSession(s,pier,.05,r,spawn));
+ assert.equal(evs.filter(x=>x==='castable').length,1,'one castable event when the read time ends');assert(!core.castLocked(s));
+ assert.equal(core.tapSession(s),'cast','a tap right after the read time casts (the burst did not extend it)');}
 // Nibble counts across seeds; legendary fish nibble faster and more.
 {const counts=new Set();for(let seed=1;seed<60;seed++){const s=core.createSession(),r=lcg(seed);core.tapSession(s);const ev=run(s,pier,r,x=>x.phase==='bite');counts.add(ev.filter(x=>x==='nibble').length);}
  assert([...counts].every(n=>n>=1&&n<=4)&&counts.size>=3,'nibble count varies 1-4');}
@@ -271,7 +278,7 @@ for(const [r,w] of Object.entries(core.BITE_WINDOW)){assert(w>=.6&&w<=1,`${r} wi
  while(api.session.phase!=='bite'&&steps++<1500)api.handle(core.stepSession(api.session,FISH_SPOTS[4],1/30,r,spawn));
  assert(renders-rendersBefore<20,'the HUD re-renders on phase changes only, not per frame');
  assert(cues.includes('tick')&&cues.includes('plunge')&&cues.includes('splash'));
- assert.equal(api.getView().hint,'Now! Reel it in!');assert(api.getView().lesson,'a keeper lesson was shown');
+ assert.equal(api.getView().hint,'Now! Tap Hook!','the hint names the button (it reads Hook!)');assert(api.getView().lesson,'a keeper lesson was shown');
  // Oct 15 2026: the hook always starts the spin fight (the Easy reel tap meter is gone; the fight is covered in tests/fishing-fight.cjs).
  api.tap();assert.equal(api.getView().phase,'reeling');assert.equal(landed.length,0,'hooking alone does not award a fish');while(api.session.phase==='reeling'){const f=api.session.fight;if(f){if(FF.running(f)||f.tension>.85)api.hold(false);else if(f.tension<.5)api.hold(true);}api.handle(core.stepSession(api.session,FISH_SPOTS[4],.1,r,spawn));}assert.equal(api.getView().phase,'caught');assert.equal(landed.length,1,'the catch is landed once (Fishbook + basket)');assert(api.getView().caught?.isNew);
  assert(cues.includes('fanfare'));api.drainTapEvents();
@@ -383,8 +390,9 @@ assert.equal(JSON.parse(store.get(core.FISHBOOK_STORAGE_KEY)).species.herring.co
  const own=FISH.filter(cat.isDeepSeaSpecial);
  assert(own.length>=6&&own.every(f=>f.deepSea),'the boats have their own deep-sea specials');
  assert(fishById('ocean-sunfish').weight<cat.RARITY_WEIGHT.legendary,'the ocean sunfish is the rarest');
- // Old shore spots unchanged (snapshot taken before the boat was added: species count and total internal weight).
- const SNAP={'south-pier':[14,304.8],'west-pier':[16,281.2],'harbour-wall':[18,369.2],'north-rocks':[15,358.4],'west-cove':[18,269.2]};
+ // Old shore spots: no boat specials. Snapshot of species count and total internal weight, updated deliberately on 6 Nov 2026 for
+ // the signature species (wave 1: +4 each, the night / sunset ones outside the static table; was 14/304.8, 16/281.2, 18/369.2, 15/358.4, 18/269.2).
+ const SNAP={'south-pier':[18,338.4],'west-pier':[20,320.2],'harbour-wall':[21,395],'north-rocks':[19,390.8],'west-cove':[21,292.2]};
  for(const [sid,[n,sum]] of Object.entries(SNAP)){const s=cat.spotById(sid),v=Object.values(s.weights);assert.equal(v.length,n,`${sid}: same species`);assert(Math.abs(v.reduce((a,b)=>a+b,0)-sum)<1e-6,`${sid}: same weights`);assert(!Object.keys(s.weights).some(k=>own.some(f=>f.id===k)),`${sid}: no boat specials`);}
  // Each deep-sea species: complete content, a cited source, Fishbook art for its shape.
  const art=fs.readFileSync(path.join(ROOT,'components/FishArt.tsx'),'utf8');

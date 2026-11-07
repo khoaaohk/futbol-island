@@ -158,7 +158,7 @@ for(const f of ['lib/town/fishing/fishingOverlay.ts','lib/town/fishing/deepSeaBo
  store.resetFishingTutorial();ok(!store.fishingPrefs().tutorialDone,'the tutorial can be replayed');
  ok(/'fi2-fish-tutorial-v1'/.test(snap)&&/`fi2-fish-tutorial-v1`/.test(doc)&&!/easy-reel/.test(snap+doc),'the tutorial flag is a DEVICE key (snapshot + accounts design); the Easy reel key is gone');
  const host=src('components/FishingHost.tsx'),tut=src('components/FishingTutorial.tsx');
- ok(/!prefs\.tutorialDone/.test(host)&&/onDone=\{finishFishingTutorial\}/.test(host),'the HUD shows the tutorial until it is done');
+ ok(/!prefs\.tutorialDone/.test(host)&&/onDone=\{how=>\{countFishTutorial\(how\);finishFishingTutorial\(\);\}\}/.test(host),'the HUD shows the tutorial until it is done');
  ok(['aim','watch','wait','now','reel'].every(k=>new RegExp(`${k}:'`).test(tut))&&/GhostHand/.test(host)&&/Spin the reel/.test(tut)&&!/swipe/i.test(tut),'the steps: aim, watch, wait, NOW, spin, with the ghost hand (no swipe)');
  ok(/ghostButton\[data-ghost=reel\]\{[^}]*ghostSpin/.test(src('components/FishingHost.module.css')),'the reel step\'s ghost hand circles the reel');
  ok(!/setTimeout|setInterval|requestAnimationFrame/.test(tut),'the tutorial has no timers');}
@@ -173,7 +173,8 @@ for(const f of ['lib/town/fishing/fishingOverlay.ts','lib/town/fishing/deepSeaBo
  ok([15,15.5,16,16.4].every(cm=>s(cm).text==='about half a football across')&&FISH.every(f=>[f.size[0],f.size[1],(f.size[0]+f.size[1])/2].every(cm=>!/half footballs/.test(s(cm).text))),'no "half footballs"');
  {const h=src('components/FishingHost.tsx');ok(/if\(e\.key==='Escape'\)\{if\(e\.type==='keydown'\)\{[^}]*back\.current\?\.click\(\)/.test(h)&&h.indexOf("if(e.key==='Escape')")<h.indexOf("closest('button:not([data-fish-reel])')"),'Escape is Back even with a HUD button focused');
   ok(/<FishingCatchToast cardUp=\{view\.phase==='caught'&&dismissed!==catchKey\}/.test(h),'the content toast shows once the catch card is dismissed');}
- ok(/coin\{fishSellValue\(fish\)===1\?'':'s'\}/.test(src('components/FishingHost.tsx')),'the catch card says "1 coin"');
+ // Nov 6 2026: the card's coins come from the market's own rules (coinsText says "1 coin" / "2 coins" / a part-coin).
+{const ms=e.load('lib/town/market/marketStand.ts');ok(ms.coinsText(1)==='1 coin'&&ms.coinsText(2)==='2 coins'&&ms.coinsText(.5)==='2 for 1 coin'&&/data-fish-worth>\{worth\}/.test(src('components/FishingHost.tsx')),'the catch card says "1 coin" (and what a buyer pays)');}
  ok(new Set(Object.values(card.RARITY_STARS)).size===4&&card.rarityStarText('rare')==='★★★☆','rarity is 1-4 stars');
  const host=src('components/FishingHost.tsx');
  ok(/data-stamp="new"/.test(host)&&/data-stamp="record"/.test(host)&&/view\.caught\.isBiggest/.test(host),'NEW and RECORD stamps on the card');

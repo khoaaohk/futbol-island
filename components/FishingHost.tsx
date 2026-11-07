@@ -17,8 +17,9 @@
 import dynamic from 'next/dynamic';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {registerBackCloser} from '@/lib/town/backCloses';
-import {fishSellValue} from '@/lib/economy';
-import {fishingSession,finishFishingTutorial,useFishingPrefs} from '@/lib/town/fishing/fishingStore';
+import {fishSellValue,isMarketBuyer,type MarketBuyer} from '@/lib/economy';
+import {fishingSession,finishFishingTutorial,useFishbook,useFishingPrefs} from '@/lib/town/fishing/fishingStore';
+import {speciesCaught} from '@/lib/town/fishing/fishingCore';
 import {sizeCompare} from '@/lib/town/fishing/fishingCard';
 import {FULL_SPIN_S} from '@/lib/town/fishing/fishingFight';
 import {RarityStars} from './RarityStars';
@@ -29,23 +30,29 @@ import {lureById} from '@/lib/town/fishing/lures';
 import {FLOAT_SKINS} from '@/lib/town/fishing/fishingLog';
 import {moodParams} from '@/lib/town/fishing/waterMood';
 import {readTimeOfDay} from '@/lib/town/fishing/timeOfDay';
-import {RARITY_LABEL,KEEPER_LESSONS,fishById,spotById} from '@/lib/town/fishing/fishCatalog';
+import {FISH,RARITY_LABEL,KEEPER_LESSONS,fishById,spotById} from '@/lib/town/fishing/fishCatalog';
 import {creditConceptTick} from '@/lib/learning/reviewStore';
 import {conceptForFish} from '@/lib/learning/conceptMap';
 import styles from './FishingHost.module.css';
 import {BackButton} from './BackButton';
 import {Icon} from './Icon';
 import {FishingCatchToast,FishingLureButton} from './FishingLureButton';
-import {countFishbookOpen} from '@/lib/analytics/fishingEvents';
+import {countFishStart,countFishTutorial,countFishbookOpen} from '@/lib/analytics/fishingEvents';
+import {islandMarket} from '@/lib/town/jobs/islandWallet';
+import {coinsText,newestUnitValue} from '@/lib/town/market/marketStand';
 const MarketStand=dynamic(()=>import('./MarketStand'),{ssr:false});
-type Place='rosa'|'farm';
+type Place=MarketBuyer;// rosa, farm (Mele), marina, kofi: one market state (lib/economy.ts MARKET_BUYERS)
 const Fishbook=dynamic(()=>import('./Fishbook'),{ssr:false});
 export const OPEN_MARKET_STAND='fi2-open-market-stand';
 type Tab='fish'|'produce'|'beach'|'cards';
 const useFishing=()=>useSyncExternalStore(fishingSession.subscribe,fishingSession.getView,fishingSession.getView);
 /** The chosen float / rod (Fishbook rewards) and the float's glow after dark (the night water mood), set as a session starts (looks only). */
 function pushLook(){try{const c=fishingCosmetics();fishingSession.setLook({floatColor:lureById(c.lure)?.color??(c.float==='classic'?null:FLOAT_SKINS[c.float]?.color??null),goldenRod:c.rod==='golden',floatGlow:moodParams(readTimeOfDay()).floatGlow});}catch{/* looks only */}}
-const REEL_LABEL={ready:'Cast',casting:'Cast',floating:'Reel',approach:'Reel',nibble:'Reel',bite:'Hook!',reeling:'Reel',scared:'Wait…',escaped:'Wait…',caught:'Cast'} as const;
+/** Nov 6 2026 ("wait honest"): the button only offers what a tap does. Floating: Reel in (the line comes back); a shadow coming in
+ *  or nibbling: Wait… (disabled, taps ignored with no penalty: fishingSession.tap); the plunge: Hook!; after a catch, Wait… until the
+ *  club fact has had its read time (view.castLock), then Cast. */
+const REEL_LABEL={ready:'Cast',casting:'Cast',floating:'Reel in',approach:'Wait…',nibble:'Wait…',bite:'Hook!',reeling:'Reel',scared:'Wait…',escaped:'Wait…',caught:'Cast'} as const;
+const REEL_ARIA:Partial<Record<keyof typeof REEL_LABEL,string>>={floating:'Reel in the line',approach:'Wait: a fish is coming',nibble:'Wait for the real bite',scared:'Wait: another fish will come',escaped:'Wait: another fish will come'};
 /** A full spin, in radians a second (one revolution per FULL_SPIN_S); the pointer's angular speed is measured against it. */
 const FULL_SPIN=Math.PI*2/FULL_SPIN_S;
 /** The finger must be this far from the reel's centre for its angle to mean anything. */
@@ -99,7 +106,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  useEffect(()=>view.active?registerBackCloser(()=>fishingSession.stop()):undefined,[view.active]);
  // Only the dialogs pause the island; live fishing keeps the existing world loop running.
  useEffect(()=>{fishingSession.pause(stand||book||paused);onDialogChange?.(stand||book);return()=>fishingSession.pause(false);},[stand,book,paused,onDialogChange]);
- useEffect(()=>{const open=(e:Event)=>{const d=(e as CustomEvent<{tab?:Tab;place?:Place}>).detail;setPlace(d?.place==='farm'?'farm':'rosa');setTab(d?.tab);setLoaded(l=>({...l,stand:true}));setStand(true);};window.addEventListener(OPEN_MARKET_STAND,open);return()=>window.removeEventListener(OPEN_MARKET_STAND,open);},[]);
+ useEffect(()=>{const open=(e:Event)=>{const d=(e as CustomEvent<{tab?:Tab;place?:Place}>).detail;const pl:unknown=d?.place;setPlace(isMarketBuyer(pl)?pl:'rosa');setTab(d?.tab);setLoaded(l=>({...l,stand:true}));setStand(true);};window.addEventListener(OPEN_MARKET_STAND,open);return()=>window.removeEventListener(OPEN_MARKET_STAND,open);},[]);
  // Lesson toast: one short line, gone after a few seconds (one timeout, no loop).
  // Lessons show only while waiting / nibbling / after a miss or the catch, never during the bite (the hint owns that moment).
  useEffect(()=>{if(!view.lesson)return;{const beat=Object.entries(KEEPER_LESSONS).find(([,l])=>l.title===view.lesson!.title)?.[0];if(beat)creditConceptTick(conceptForFish(beat),'fish:keeper');}/* Lane 3: keeper timing → the keeper lesson (once ever) */setToast(view.lesson);setExpanded(false);const t=setTimeout(()=>setToast(null),6500);return()=>clearTimeout(t);},[view.lesson]);
@@ -110,11 +117,15 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  // at that point and letting go casts there (drag to move the dotted arc); a mouse hovering the water previews the aim; the
  // arrow keys turn and lengthen the aim, and holding Space throws farther (a quick tap is a quick cast). Fishing has the canvas
  // to itself (the joystick and touch controls are hidden while fishing), so the aim drag never fights them.
- const phaseRef=useRef(view.phase);phaseRef.current=view.phase;
+ const phaseRef=useRef(view.phase);phaseRef.current=view.phase;const lockRef=useRef(view.castLock);lockRef.current=view.castLock;
  const keyAim=useRef({u:0,v:.75,space:0});
  const fightRef=useRef(false);fightRef.current=view.phase==='reeling'&&view.fight;
  const reelEl=useRef<HTMLButtonElement>(null),crank=useRef<SVGGElement>(null),spin=useRef<Spin|null>(null),turn=useRef(0);const trailIdle=useRef(0);
  const prefs=useFishingPrefs(),lureNow=useFishingLog().lure;
+ // Island settings → Fishing → Easy bite: the session's bite window (fishingCore.ts EASY_BONUS).
+ useEffect(()=>{fishingSession.setEasyBite(prefs.easyBite);},[prefs.easyBite]);
+ // The catch card's coins come from the live basket (the market's own rules), so the card says what a buyer will actually pay.
+ const market=useSyncExternalStore(islandMarket.subscribe,islandMarket.read,islandMarket.read);
  // The float takes the chosen lure's colour: a lure picked mid-session recolours it within a frame (setLook bumps lookRev).
  useEffect(()=>{if(view.active)pushLook();},[lureNow,view.active]);
  /** Space / Enter held = a steady full spin (the crank turns by CSS while the key is down; no render). */
@@ -123,7 +134,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  useEffect(()=>{if(view.phase!=='reeling'){spin.current=null;fishingSession.spinEnd();keySpin(false);}},[view.phase]);
  useEffect(()=>{
   if(!view.active||book||stand)return;
-  const castable=()=>phaseRef.current==='ready'||phaseRef.current==='caught';
+  const castable=()=>(phaseRef.current==='ready'||phaseRef.current==='caught')&&!lockRef.current;
   const ndc=(e:PointerEvent)=>{const r=(e.target as HTMLCanvasElement).getBoundingClientRect();return {kind:'screen' as const,x:(e.clientX-r.left)/r.width*2-1,y:1-(e.clientY-r.top)/r.height*2};};
   const key=(e:KeyboardEvent)=>{const t=e.target;if(t instanceof Element&&t.closest('input,textarea,select,dialog'))return;
    // Escape is Back even with a HUD button focused (the Fishbook button gets focus back when the book closes; QA 16 Oct 2026).
@@ -182,17 +193,19 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
   castDown(e);};
  const reelMove=(e:React.PointerEvent<HTMLButtonElement>)=>{if(spinMove(e))return;castMove(e);};
  const reelUp=(e:React.PointerEvent<HTMLButtonElement>)=>{if(spinStop(e))return;castUp(e);};
- const castDown=(e:React.PointerEvent<HTMLButtonElement>)=>{if(!(view.phase==='ready'||view.phase==='caught'))return;castDrag.current={x:e.clientX,y:e.clientY,id:e.pointerId,moved:false};try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* older browsers */}};
+ const castDown=(e:React.PointerEvent<HTMLButtonElement>)=>{if(!(view.phase==='ready'||view.phase==='caught')||view.castLock)return;castDrag.current={x:e.clientX,y:e.clientY,id:e.pointerId,moved:false};try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* older browsers */}};
  const castMove=(e:React.PointerEvent<HTMLButtonElement>)=>{const d=castDrag.current;if(!d||d.id!==e.pointerId)return;const dx=e.clientX-d.x,dy=e.clientY-d.y;if(!d.moved&&Math.hypot(dx,dy)<10)return;d.moved=true;
   fishingSession.aim({kind:'polar',u:Math.max(-1,Math.min(1,dx/110)),v:Math.max(0,Math.min(1,.75-dy/140))});};
  const castUp=(e:React.PointerEvent<HTMLButtonElement>)=>{const d=castDrag.current;if(!d||d.id!==e.pointerId)return;castDrag.current=null;if(d.moved){e.preventDefault();fishingSession.castAimed();suppressClick.current=true;}};
  const suppressClick=useRef(false);
  const fish=view.caught?fishById(view.caught.id):undefined;
+ // Nov 6 2026: Fishbook progress on the Fishbook button (species caught of every Fishbook species, derived from FISH).
+ const caught=speciesCaught(useFishbook());
  // Catches from the moored boat say where they came from (docs/fishing.md "Deep Sea Boat").
  const fromBoat=!!(view.spotId&&spotById(view.spotId)?.boat);
  // The catch card can be dismissed; a new catch (different fish or size) shows it again.
  const catchKey=view.caught?`${view.caught.id}-${view.caught.size}`:'';const [dismissed,setDismissed]=useState('');
- const waiting=view.phase==='scared'||view.phase==='escaped'||view.phase==='casting';
+ const waiting=view.phase==='scared'||view.phase==='escaped'||view.phase==='casting'||view.phase==='approach'||view.phase==='nibble'||view.castLock;
  const fighting=view.phase==='reeling'&&view.fight,castable=view.phase==='ready'||view.phase==='caught';
  // A3: the first-time tutorial (this device), finished on the first catch's "Got it" or Skip.
  const tutorial=view.active&&!prefs.tutorialDone&&!book&&!stand,tStep=tutorial?tutorialStep(view.phase):null;
@@ -201,9 +214,12 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  const legend=view.caught&&isLegendId(view.caught.id)?LEGEND_INFO[view.caught.id]:null;
  // RECORD: this player's biggest of the species (the Fishbook's `biggest`).
  const record=!!view.caught&&!legend&&view.caught.isBiggest;
- const reelLabel=fighting?(view.strain?'Ease!':view.run?'Stop!':'Spin!'):view.phase==='reeling'?'Reel':REEL_LABEL[view.phase];
+ const reelLabel=fighting?(view.strain?'Ease!':view.run?'Stop!':'Spin!'):view.phase==='reeling'?'Reel':view.castLock?'Wait…':REEL_LABEL[view.phase];
+ // What this catch fetches now (Nov 6 2026: the card used to show full price, but the same-kind ladder and the daily allowance can
+ // lower it): the newest one in the basket's value; "up to" full price when it is not in the basket.
+ const worth=fish&&view.caught&&!legend?(()=>{const v=view.caught.inBasket?newestUnitValue(market,fish.id):null;return v===null?`up to ${coinsText(fishSellValue(fish))}`:coinsText(v);})():'';
  return <>
-  <button type="button" className="store-enter-prompt" data-fish-enter aria-label="Fish" hidden onClick={e=>{const id=e.currentTarget.dataset.spot;if(id){pushLook();fishingSession.start(id);}}}>Fish</button>
+  <button type="button" className="store-enter-prompt" data-fish-enter aria-label="Fish" hidden onClick={e=>{const id=e.currentTarget.dataset.spot;if(id){countFishStart();pushLook();fishingSession.start(id);}}}>Fish</button>
   <button type="button" className="store-enter-prompt" data-market-enter aria-label="Sell at the market stand" hidden onClick={()=>{setTab(undefined);setPlace('rosa');setLoaded(l=>({...l,stand:true}));setStand(true);}}>Sell</button>
   {/* In-world catch label: positioned above the held-up fish by fishingWorld.ts. */}
   <div className={styles.catch} data-fish-catch hidden aria-live="polite" data-dismissed={dismissed===catchKey&&catchKey?'':undefined}>{fish&&view.caught&&<>
@@ -212,10 +228,12 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    {legend?<p className={styles.stamps}><span className={styles.stamp} data-stamp="legend">Island legend!</span></p>:(view.caught.isNew||record)&&<p className={styles.stamps}>{view.caught.isNew&&<span className={styles.stamp} data-stamp="new">New!</span>}{record&&<span className={styles.stamp} data-stamp="record">Record!</span>}</p>}
    <p className={styles.catchTop}><b>{fish.name}</b>{fromBoat&&<em className={styles.catchWhere} data-fish-where>Deep sea boat</em>}</p>
    {legend?<p className={styles.catchMeta} data-rarity="legendary" data-fish-legend><RarityStars rarity="legendary" className={styles.stars}/> {legend.title} · caught once and released</p>
-   :<p className={styles.catchMeta} data-rarity={fish.rarity}><RarityStars rarity={fish.rarity} className={styles.stars}/> {RARITY_LABEL[fish.rarity]} · {fishSellValue(fish)} coin{fishSellValue(fish)===1?'':'s'}{view.caught.inBasket?'':' · basket full'}</p>}
+   :<p className={styles.catchMeta} data-rarity={fish.rarity}><RarityStars rarity={fish.rarity} className={styles.stars}/> {RARITY_LABEL[fish.rarity]} · <span data-fish-worth>{worth}</span>{view.caught.inBasket?'':' · basket full'}</p>}
    {size&&<p className={styles.catchSize} data-fish-size data-unit={size.unit}><b>{view.caught.size} cm</b>: {size.text}</p>}
-   <p className={styles.catchClub}><span>Real football fact</span>{fish.club.name}{fish.club.nickname?` · “${fish.club.nickname}”`:''}</p>
+   <p className={styles.catchClub}><span>{fish.club.link==='Fun fish fact'?'Fun fish fact + real football fact':'Real football fact'}</span>{fish.club.name}{fish.club.nickname?` · “${fish.club.nickname}”`:''}</p>
    <p className={styles.catchFact}>{fish.club.fact}</p>
+   {/* Nov 6 2026: the fish tale (2-3 kid-friendly sentences tying the animal to the fact; fishStories.ts). */}
+   {fish.story&&<p className={styles.catchStory} data-fish-story><span>Fish tale</span>{fish.story}</p>}
   </>}</div>
   {view.active&&<div className={styles.hud} data-fishing-hud data-phase={view.phase}>
    <div className={styles.back}><BackButton ref={back} data-fish-stop onBack={()=>fishingSession.stop()}/></div>
@@ -225,13 +243,13 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    </div>
    {/* B2: the white flash at the top of the leap (one-shot CSS, after the leap's rise; none with reduced motion). */}
    {view.phase==='caught'&&catchKey&&<div className={styles.leapFlash} key={catchKey} aria-hidden="true"/>}
-   {tutorial&&<FishingTutorial phase={view.phase} onDone={finishFishingTutorial}/>}
+   {tutorial&&<FishingTutorial phase={view.phase} onDone={how=>{countFishTutorial(how);finishFishingTutorial();}}/>}
    {/* Content toast (a request finished, a reward, a legend's clue or release): after the catch card (or once it is dismissed), above the reel. */}
    <FishingCatchToast cardUp={view.phase==='caught'&&dismissed!==catchKey}/>
    <div className={styles.controls}>
-    <button type="button" className={`${styles.action} ${styles.book}`} aria-label="Fishbook" title="Fishbook" onClick={()=>{countFishbookOpen();setLoaded(l=>({...l,book:true}));setBook(true);}}><Icon name="book" size={28}/></button>
+    <button type="button" className={`${styles.action} ${styles.book}`} aria-label="Fishbook" aria-description={`${caught} of ${FISH.length} species`} title={`Fishbook: ${caught} of ${FISH.length} species`} onClick={()=>{countFishbookOpen();setLoaded(l=>({...l,book:true}));setBook(true);}}><Icon name="book" size={28}/><span className={styles.bookCount} data-fishbook-count aria-hidden="true">{caught}/{FISH.length}</span></button>
     <button type="button" ref={reelEl} className={styles.reel} data-fish-reel data-phase={view.phase} data-fish-fight={fighting?'':undefined} data-strain={fighting&&view.strain||undefined} data-run={fighting&&view.run||undefined} data-warn={view.warn||undefined}
-     aria-label={fighting?'Spin the reel to wind in':view.phase==='reeling'?'Tap to reel':REEL_LABEL[view.phase]} aria-disabled={waiting} onPointerDown={reelDown} onPointerMove={reelMove} onPointerUp={reelUp} onPointerCancel={e=>{castDrag.current=null;fishingSession.aim(null);spinStop(e);}} onContextMenu={e=>{if(fighting)e.preventDefault();}}
+     aria-label={fighting?'Spin the reel to wind in':view.phase==='reeling'?'Tap to reel':view.castLock?'Read your catch: Cast is ready in a moment':REEL_ARIA[view.phase]??REEL_LABEL[view.phase]} aria-disabled={waiting} onPointerDown={reelDown} onPointerMove={reelMove} onPointerUp={reelUp} onPointerCancel={e=>{castDrag.current=null;fishingSession.aim(null);spinStop(e);}} onContextMenu={e=>{if(fighting)e.preventDefault();}}
      onClick={()=>{if(suppressClick.current){suppressClick.current=false;return;}if(fighting)return;if(!waiting)fishingSession.tap();}}>
      {/* The tension arc (CSS: --tension written by the world, no render per frame); a notch marks the red zone. */}
      {fighting&&<span className={styles.arc} aria-hidden="true"><i className={styles.arcNotch}/></span>}

@@ -57,12 +57,18 @@ assert.equal(cards.SITE_CARDS.length,L('lib/town/cardCollection.ts').CARD_ENTRIE
 for(const c of cards.SITE_CARDS)assert(c.blurb&&c.roleLabel,`card ${c.number} has a blurb and position`);
 assert.equal(exhibits.SITE_EXHIBITS.length,L('lib/endgame/museum.ts').EXHIBITS.length,'every exhibit');
 const PATHS=paths.sitePaths().map(p=>p.path);
+// Nov 6 2026 (signature species, waves 1-2, parametric: no hard-coded count): every Fishbook species, the new waves included, has a
+// sitemap page and a fish tale, and a fun fish fact is labelled as such on its public page.
+{const SIG=L('lib/town/fishing/shoreSignatures.ts'),page=fs.readFileSync(path.join(__dirname,'../app/(site)/fish/[id]/page.tsx'),'utf8');
+ for(const f of [...SIG.SIGNATURE_FISH_WAVE1,...SIG.SIGNATURE_FISH_WAVE2,...SIG.SIGNATURE_FISH_WAVE3]){assert(fish.SITE_FISH.includes(f),`${f.id}: on the site`);assert(PATHS.includes(fish.fishPath(f.id)),`${f.id}: in the sitemap`);}
+ for(const f of fish.SITE_FISH)assert(typeof f.story==='string'&&f.story.length>=60,`${f.id}: has a fish tale for its page`);
+ assert(/Fish tale/.test(page)&&/'Fun fish fact'\?'Fun fish fact \+ real football fact'/.test(page),'the fish page shows the tale and labels a fun fish fact');}
 assert.equal(new Set(PATHS).size,PATHS.length,'no duplicate paths');
-for(const p of ['/','/about','/privacy','/play','/learn/lessons','/fish','/cards','/exhibits'])assert(PATHS.includes(p),p+' in the sitemap');
+for(const p of ['/','/about','/privacy','/play','/marketing','/learn/lessons','/fish','/cards','/exhibits'])assert(PATHS.includes(p),p+' in the sitemap');
 assert(!PATHS.includes('/learn'),'/learn redirects to / (next.config.mjs), so it is not listed');
 {const sp=paths.sitePaths(),pr=p=>sp.find(x=>x.path===p).priority;assert.equal(pr('/'),1,'/ is the main entry');assert(pr('/play')<pr('/about')&&pr('/play')>0,'/play listed, low priority');assert(sp.find(x=>x.path==='/').lastmod,'/ has a lastmod');}
 assert(!PATHS.some(p=>p==='/'+'start'),'the removed landing page is not listed');
-assert.equal(PATHS.length,8+lessons.LESSONS.length+fish.SITE_FISH.length+cards.SITE_CARDS.length+exhibits.SITE_EXHIBITS.length);
+assert.equal(PATHS.length,9+/* / /about /privacy /play /marketing + the 4 index pages */ lessons.LESSONS.length+fish.SITE_FISH.length+cards.SITE_CARDS.length+exhibits.SITE_EXHIBITS.length);
 // robots.ts names every bot and closes the private routes (checked again on the built file below).
 const robotsSrc=read('app/robots.ts');
 const BOTS=['GPTBot','ClaudeBot','Claude-Web','anthropic-ai','PerplexityBot','Google-Extended','CCBot','Bingbot','Googlebot'];

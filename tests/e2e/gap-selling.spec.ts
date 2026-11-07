@@ -70,7 +70,7 @@ test('selling with an empty basket says so kindly and pays nothing', async ({ pa
   expectNoErrors(issues, info);
 });
 
-test('Coral Cay farm stand: on foot at the counter → Sell fruit & veg → produce only, same prices', async ({ page }, info) => {
+test('Coral Cay farm stand: on foot at the counter → Sell fish & produce → fish and produce, same prices', async ({ page }, info) => {
   const issues = await bootAt(page, { x: FARM_STAND_SELL.x, z: FARM_STAND_SELL.z + 1, ride: 'walk', storage: { 'fi2-market-v1': marketSave({ mango: 2, sardine: 1 }) } });
   const btn = page.locator('[data-farm-stand-sell]');
   await expect(btn, 'farm stand sell button').toBeVisible({ timeout: 20_000 });
@@ -78,8 +78,10 @@ test('Coral Cay farm stand: on foot at the counter → Sell fruit & veg → prod
   await hit(page, '[data-farm-stand-sell]', info);
   const stand = page.locator('dialog[data-market-stand]');
   await expect(stand).toHaveAttribute('data-market-place', 'farm');
-  await expect(stand.getByRole('tab')).toHaveCount(1);
-  await expect(stand.locator('[data-market-sell-all="fish"]')).toHaveCount(0);
+  // Nov 6 2026 (sell where you fish): Mele buys fish too, through the same market state; no beach or card tabs.
+  await expect(stand.getByRole('tab')).toHaveCount(2);
+  await expect(stand.locator('[data-market-sell-all="fish"]')).toBeVisible();
+  await stand.getByRole('tab', { name: /Produce/ }).click();
   const all = stand.locator('[data-market-sell-all="produce"]');
   const coins = Number((await all.textContent())!.match(/(\d+) coins/)![1]);
   expect(coins).toBe(2 * goodById('mango')!.price);

@@ -1,7 +1,7 @@
 import type {AnimalGroup,FishShape,FishSpecies,SpotId} from './fishCatalog';
 
 /**
- * C1 (docs/fishing-research.md): Island Legends. One named giant per fishing spot (18), each with a short island story (GAME
+ * C1 (docs/fishing-research.md): Island Legends. One named giant per fishing spot (18; four spots got a second one in wave 3, 22 in all, see DEFS2), each with a short island story (GAME
  * FICTION) and a real football "legend" fact (REAL, sourced; the same teaching-hook pattern as the deep-sea creatures: the fact
  * never claims the animal). Checked 15 Oct 2026 against the pages in `source` (polite fetches, one at a time).
  *
@@ -75,14 +75,42 @@ const DEFS:Def[]=[
   story:'A sailfish that leaps high out of the water at the drop-off, higher than any fish on the island.',clue:'Something leaps high out of the deep water past Drop-off Ledge.',
   club:{name:'Cristiano Ronaldo',country:'Portugal',link:'Football culture',fact:'Cristiano Ronaldo has scored more goals for his country than any other men\'s player.',source:W+'Cristiano_Ronaldo'}},
 ];
+/**
+ * Wave 3 (Nov 6 2026, owner: "4 new legends, 18 -> 22"): a SECOND giant at four of the wave-3 spots (both deep-sea boats, Lookout
+ * Rocks and Drop-off Ledge). It swims only once the spot's first legend has been caught and released (the same clue, nothing to
+ * find again, nothing expires), and it is caught once and released the same way. Real, sourced football legend facts (checked
+ * 6 Nov 2026 against the pages in `source`); the animal never claims the player. Ids: `legend-<spot>-2`.
+ */
+const DEFS2:Def[]=[
+ {spot:'deep-sea-boat',name:'Captain Ribbon',title:'The deep bay\'s captain oarfish',group:'fish',shape:'eel',size:[900,1000],color:'#d8dce4',belly:'#f2f4f8',
+  story:'A giant silver oarfish with a crimson crest, longer than any fish in the bay. It leads the deep shoals like a captain leading her team.',clue:'The crew saw a long silver ribbon with a red crest, far below the hull.',
+  club:{name:'Homare Sawa',country:'Japan',link:'Football culture',entity:{kind:'player',name:'Homare Sawa'},fact:'At the 2011 Women\'s World Cup, Japan\'s captain Homare Sawa won both the Golden Ball and the Golden Boot, and Japan won the title.',source:W+'Homare_Sawa'}},
+ {spot:'deep-sea-boat-west',name:'Old Faithful',title:'The deep channel\'s loyal halibut',group:'fish',shape:'round',size:[250,300],color:'#5a5040',belly:'#f0ece0',
+  story:'A giant flatfish that has stayed on the same patch of the green channel for 25 summers and never once moved away.',clue:'The skipper says one giant flatfish has never left its patch of the channel.',
+  club:{name:'Paolo Maldini',country:'Italy',link:'Football culture',entity:{kind:'player',name:'Paolo Maldini'},fact:'Paolo Maldini played all 25 seasons of his career for AC Milan, and he won the European Cup five times.',source:W+'Paolo_Maldini'}},
+ {spot:'summit-lookout',name:'Three Finals',title:'Lookout Rocks\' giant salmon',group:'fish',shape:'long',size:[150,170],color:'#5f707e',belly:'#eef0ee',
+  story:'A giant silver salmon that has led the shoal past the lookout three summers in a row, always out in front.',clue:'The lookout counted the same giant salmon passing three summers running.',
+  club:{name:'Cafu',country:'Brazil',link:'Football culture',entity:{kind:'player',name:'Cafu'},fact:'Brazil\'s Cafu is the only player to play in three World Cup finals in a row: 1994, 1998 and 2002. He was captain in 2002.',source:W+'Cafu'}},
+ {spot:'summit-ledge',name:'Lone Star',title:'The ledge\'s lone-star amberjack',group:'fish',shape:'long',size:[200,230],color:'#5a6a7a',belly:'#eef0e8',
+  story:'A giant amberjack with one bright star-shaped mark on its side, who cruises the drop-off on its own.',clue:'Something huge with one bright star on its side cruises along Drop-off Ledge.',
+  club:{name:'George Weah',country:'Liberia',link:'Football culture',entity:{kind:'player',name:'George Weah'},fact:'In 1995 Liberia\'s George Weah won the Ballon d\'Or, the first African player to win it. He later became president of Liberia.',source:W+'George_Weah'}},
+];
+/** A spot's first legend id (`legend-<spot>`); the wave-3 second legends are `legend-<spot>-2`. */
 export const legendId=(spot:string)=>`legend-${spot}`;
-/** The 18 legends as species objects (resolved by fishById so the live session can fight them). Never in FISH. */
-export const LEGEND_FISH:FishSpecies[]=DEFS.map(d=>({id:legendId(d.spot),name:d.name,plural:d.name,rarity:'legendary',group:d.group,spots:[d.spot],
+const ALL:{d:Def;id:string}[]=[...DEFS.map(d=>({d,id:legendId(d.spot)})),...DEFS2.map(d=>({d,id:`${legendId(d.spot)}-2`}))];
+/** The 22 legends as species objects (resolved by fishById so the live session can fight them). Never in FISH. */
+export const LEGEND_FISH:FishSpecies[]=ALL.map(({d,id})=>({id,name:d.name,plural:d.name,rarity:'legendary',group:d.group,spots:[d.spot],
  price:0,size:d.size,color:d.color,belly:d.belly,shape:d.shape,shadow:'giant',club:d.club}));
-export const LEGEND_INFO:Readonly<Record<string,LegendInfo>>=Object.fromEntries(DEFS.map(d=>[legendId(d.spot),{spot:d.spot,title:d.title,story:d.story,clue:d.clue}]));
+export const LEGEND_INFO:Readonly<Record<string,LegendInfo>>=Object.fromEntries(ALL.map(({d,id})=>[id,{spot:d.spot,title:d.title,story:d.story,clue:d.clue}]));
 const LEGEND_IDS=new Set(LEGEND_FISH.map(f=>f.id));
 export const isLegendId=(id:unknown):id is string=>typeof id==='string'&&LEGEND_IDS.has(id);
-export const legendForSpot=(spot:string)=>LEGEND_FISH.find(f=>f.spots[0]===spot);
+/** Every legend at a spot, in order (one, or two at the four wave-3 spots). */
+export const legendsAt=(spot:string)=>LEGEND_FISH.filter(f=>f.spots[0]===spot);
+/** The spot's legend now: the first one not yet caught (`caught` = the log's legends; without it, the first). Undefined once all
+ *  of the spot's legends were caught and released. */
+export const legendForSpot=(spot:string,caught?:Readonly<Record<string,unknown>>)=>legendsAt(spot).find(f=>!caught||!caught[f.id]);
+/** A second legend's predecessor (the spot's first legend), so the Fishbook can say which one to catch first. */
+export const legendBefore=(id:string)=>{const f=LEGEND_FISH.find(x=>x.id===id);if(!f)return undefined;const at=legendsAt(f.spots[0]);const i=at.indexOf(f);return i>0?at[i-1]:undefined;};
 /** Internal weight (never shown) a found-but-uncaught legend adds at its spot. Small: a hunt, not a gift. */
 export const LEGEND_WEIGHT=2.5;
 /** Agent A's fight profile hook: legends fight with the 'legend' profile (3 runs and a leap; they rest on a slip, never escape). */

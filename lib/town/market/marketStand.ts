@@ -6,11 +6,19 @@
  */
 import {GOODS,goodById,type GoodKind} from './goods';
 import {MARKET_FULL_PRICE_COINS,MARKET_STORAGE_KEY,localMarketDay,quoteSale,sanitizeMarket,nextUnitValue,plentyToday,plentyLine,withTallies,type MarketState,type SaleResult} from './market';
-import {perItemText} from '../../economy';
+import {MARKET_BUYERS,perItemText,type MarketBuyer} from '../../economy';
+import {FISH_SPOTS,MARKET_STAND} from '../fishing/fishCatalog';
+import {DEEP_SEA_BOATS} from '../fishing/deepSeaBoatData';
 
 /** What the NEXT item of this good is worth right now (full price, lowered by the same-kind ladder, halved after today's
  *  allowance). May be part of a coin (½, ¼): Rosa keeps a tally, see perItemText ("2 for 1 coin"). */
 export function unitPrice(s:MarketState,id:string){const g=goodById(id);if(!g)return 0;return nextUnitValue(s,g);}
+/** The catch card's coins (Nov 6 2026): what Rosa pays now for the NEWEST `id` in the basket (the one just landed), from the same
+ *  market rules as selling it (nextUnitValue: the same-kind ladder for the ones already sold today and in the basket before it,
+ *  half price past today's allowance). `null` when it is not in the basket (basket full): the card then says "up to" full price. */
+export function newestUnitValue(s:MarketState,id:string):number|null{const g=goodById(id),have=s.basket[id]??0;if(!g||have<1)return null;return nextUnitValue(s,g,have-1);}
+/** How the catch card says that value: "2 coins", "1 coin", or a part-coin the stand's way ("2 for 1 coin"). */
+export function coinsText(value:number):string{return Number.isInteger(value)?`${value} coin${value===1?'':'s'}`:perItemText(value);}
 /** Basket lines of one kind, in registry order. `each` is the next item's value (maybe a part-coin), `eachText` how the stand
  *  says it ("2 coins each", "2 for 1 coin"), `full` its full price, `plenty`: Rosa already has plenty of this good today. */
 export function basketLines(s:MarketState,kind:GoodKind){return GOODS.filter(g=>g.kind===kind&&(s.basket[g.id]??0)>0).map(g=>{const each=unitPrice(s,g.id);
@@ -42,3 +50,22 @@ export async function sellOneGood(id:string,ports:SellPorts):Promise<SaleResult>
  return {ok:true,coins:plan.coins,credited,lines:[{id,name:plan.name,count:1,coins:plan.coins}],halfPrice:half,message:(plan.coins?'':'That one goes on Rosa’s tally: the next one makes a coin. ')+(plan.plenty?plentyLine([id])+' ':'')+(plan.next.soldToday>=MARKET_FULL_PRICE_COINS?'Great trading today! More sales today earn half price; prices reset tomorrow.':`Full prices until you have sold ${MARKET_FULL_PRICE_COINS} coins of goods today.`)};
 }
 export {MARKET_STORAGE_KEY};
+
+// ---- Sell where you fish (Nov 6 2026): who buys fish, and the nearest buyer to a fishing spot ----
+/** Where each buyer stands (world x, z). The farm stand is Coral Cay's FARM.stand (lib/town/coralCay.ts; tests check it). */
+export const FARM_STAND_AT={x:611,z:-101.5};
+const CAPTAIN_FOR:Record<string,MarketBuyer>={'deep-sea-boat':'marina','deep-sea-boat-west':'kofi'};
+export function buyerAt(b:MarketBuyer):{x:number;z:number}{
+ if(b==='rosa')return {x:MARKET_STAND.x,z:MARKET_STAND.z};if(b==='farm')return FARM_STAND_AT;
+ const boat=DEEP_SEA_BOATS.find(x=>CAPTAIN_FOR[x.spotId]===b)!;return boat.toWorld(boat.captainLocal.x,boat.captainLocal.z);
+}
+/** The buyer of fish nearest a fishing spot: a boat's own captain on a boat; from the shore, the nearer stand on land (Rosa's or
+ *  Mele's), never a captain (the boats are moored out at sea). */
+export function nearestFishBuyer(spotId:string):MarketBuyer{
+ if(CAPTAIN_FOR[spotId])return CAPTAIN_FOR[spotId];const s=FISH_SPOTS.find(x=>x.id===spotId);if(!s)return 'rosa';
+ let best:MarketBuyer='rosa',d=Infinity;for(const b of ['rosa','farm'] as const){const p=buyerAt(b),e=Math.hypot(p.x-s.x,p.z-s.z);if(e<d){d=e;best=b;}}
+ return best;
+}
+/** The "basket full" line for a catch at this spot: it points at the nearest buyer of fish. */
+export function basketFullLine(spotId:string):string{const b=nearestFishBuyer(spotId),w=MARKET_BUYERS[b];
+ return b==='marina'||b==='kofi'?`Your basket is full, so that one swam free. ${w.who} buys fish right here on the boat: talk to the captain.`:`Your basket is full, so that one swam free. Sell your fish at ${w.where}.`;}

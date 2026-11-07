@@ -19,7 +19,8 @@ import {islandJobWallet,islandMarket} from '@/lib/town/jobs/islandWallet';
 import {goodById,type GoodKind} from '@/lib/town/market/goods';
 import {BASKET_LIMIT,MARKET_FULL_PRICE_COINS,basketCount,type SaleResult} from '@/lib/town/market/market';
 import {MARKET_STORAGE_KEY,allowanceUsed,basketLines,sellOneGood} from '@/lib/town/market/marketStand';
-import {MARKET} from '@/lib/economy';
+import {MARKET,MARKET_BUYERS,buyerTakes,type MarketBuyer} from '@/lib/economy';
+import {fishSold} from '@/lib/analytics/fishingEvents';
 const MARKET_LADDER_FULL_EACH=MARKET.ladder.fullEach;
 import {FISH_SPOTS,MARKET_STAND,fishById} from '@/lib/town/fishing/fishCatalog';
 import {beachFindById,OPEN_SHELLBOOK} from '@/lib/town/beachcombing';
@@ -29,28 +30,37 @@ const TABS:{id:Tab;label:string}[]=[{id:'fish',label:'Fish'},{id:'produce',label
 const useMarket=()=>useSyncExternalStore(islandMarket.subscribe,islandMarket.read,islandMarket.read);
 const sellPorts={read:()=>JSON.parse(localStorage.getItem(MARKET_STORAGE_KEY)??'null'),write:(v:unknown)=>localStorage.setItem(MARKET_STORAGE_KEY,JSON.stringify(v)),credit:(id:string,amount:number,reason:string)=>islandJobWallet.credit(id,amount,reason),refresh:()=>islandMarket.refresh()};
 
-/** `farm`: the Coral Cay farm stand (Sep 30 2026) buys produce only, at the same prices and under the same daily allowance and
- *  Training meter as Rosa's stand (one shared market state), so selling here never pays more than selling there. */
-export type StandPlace='rosa'|'farm';
+/** `farm`: Mele's Coral Cay farm stand (Sep 30 2026: produce; Nov 6 2026: fish too) and the two boat captains (`marina`, `kofi`:
+ *  fish only) buy at the same prices and under the same daily allowance, ladder and Training meter as Rosa's stand: ONE shared
+ *  market state (lib/economy.ts MARKET_BUYERS), so selling there never pays more than selling here. */
+export type StandPlace=MarketBuyer;
+const STAND_NOTE:Record<Exclude<StandPlace,'rosa'>,string>={
+ farm:'I buy fish, fruit and veg at the same fixed prices as Rosa\u2019s market. Beach finds and card swaps are at Rosa\u2019s stand on the main island.',
+ marina:'No need to sail back to shore: I buy your fish right here, at the same fixed prices as Rosa\u2019s market. Produce and beach finds go to Rosa.',
+ kofi:'Sell me your catch right here on the boat, at the same fixed prices as Rosa\u2019s market. Produce and beach finds go to Rosa or Mele.',
+};
+const STAND_TITLE:Record<StandPlace,string>={rosa:`${MARKET_STAND.seller}'s Market Stand`,farm:'Coral Cay Farm Stand',marina:'Captain Marina buys fish',kofi:'Skipper Kofi buys fish'};
 export default function MarketStand({open,onOpenChange,initialTab,place='rosa'}:{open:boolean;onOpenChange:(open:boolean)=>void;initialTab?:Tab;place?:StandPlace}){
- const farm=place==='farm',tabs=farm?TABS.filter(t=>t.id==='produce'):TABS;
+ const rosa=place==='rosa',tabs=TABS.filter(t=>buyerTakes(place,t.id)),first=tabs[0].id;
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);
  const [tab,setTab]=useState<Tab>('fish'),wallet=useArcadeWallet(),market=useMarket();
  const [note,setNote]=useState<{id:number;coins:number;text:string;lesson?:string}|null>(null),[busy,setBusy]=useState(false);
  useEffect(()=>{const el=dialog.current;if(!el)return;if(open&&!el.open){restore.current=document.activeElement instanceof HTMLElement?document.activeElement:null;islandMarket.refresh();
-  const s=islandMarket.read();setTab(farm?'produce':initialTab??(basketLines(s,'fish').length||!basketLines(s,'produce').length?'fish':'produce'));setNote(null);el.showModal();close.current?.focus();}
-  else if(!open&&el.open){el.close();restore.current?.focus({preventScroll:true});}},[open,initialTab,farm]);
+  const s=islandMarket.read();const want=initialTab&&tabs.some(t=>t.id===initialTab)?initialTab:undefined;
+  setTab(want??(tabs.length===1?first:basketLines(s,'fish').length||!basketLines(s,'produce').length?'fish':'produce'));setNote(null);el.showModal();close.current?.focus();}
+  else if(!open&&el.open){el.close();restore.current?.focus({preventScroll:true});}},[open,initialTab,place]);// eslint-disable-line react-hooks/exhaustive-deps
  const done=(r:SaleResult)=>{setBusy(false);if(!r.ok){setNote({id:Date.now(),coins:0,text:r.reason});return;}const first=goodById(r.lines[0]?.id??'');
+  const fishCount=r.lines.reduce((a,l)=>a+(goodById(l.id)?.kind==='fish'?l.count:0),0);if(fishCount)fishSold(fishCount);// analytics: the number only
   setNote({id:Date.now(),coins:r.credited||r.coins,text:`${r.lines.map(l=>`${l.count} ${l.name}`).join(', ')} sold. ${r.message}`,lesson:first?.lesson});};
  const sellAll=(kind:GoodKind)=>{if(busy)return;setBusy(true);void islandMarket.sell(kind).then(done,()=>setBusy(false));};
  const sellOne=(id:string)=>{if(busy)return;setBusy(true);void sellOneGood(id,sellPorts).then(done,()=>setBusy(false));};
  const used=allowanceUsed(market),count=basketCount(market);
  return <dialog ref={dialog} className={styles.dialog} aria-labelledby="market-stand-title" data-market-stand data-market-place={place} onCancel={e=>{e.preventDefault();onOpenChange(false);}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}} onKeyDown={e=>e.stopPropagation()} onKeyUp={e=>e.stopPropagation()}>
   <section className={`${styles.panel} ${shell.shell}`}>
-   <header className={shell.header}><div><h2 id="market-stand-title">{farm?'Coral Cay Farm Stand':`${MARKET_STAND.seller}'s Market Stand`}</h2></div><DoneButton ref={close} onDone={()=>onOpenChange(false)}/></header>
+   <header className={shell.header}><div><h2 id="market-stand-title">{STAND_TITLE[place]}</h2></div><DoneButton ref={close} onDone={()=>onOpenChange(false)}/></header>
    <div className={shell.body}>
     <div className={styles.top}>
-     {farm?<p className={styles.rosa} data-farm-stand-note><b>Mele:</b> “I buy fruit and veg at the same fixed prices as Rosa&apos;s market. Fish and card swaps are at Rosa&apos;s stand on the main island.”</p>
+     {!rosa?<p className={styles.rosa} data-farm-stand-note={place==='farm'?'':undefined} data-buyer-note={place}><b>{MARKET_BUYERS[place].who}:</b> “{STAND_NOTE[place]}”</p>
      :<p className={styles.rosa}><b>{MARKET_STAND.seller}:</b> “I buy fresh fish, garden produce, empty shells from the beach and — if you ever want to swap — cards. Fixed prices, no haggling!”</p>}
      <div className={styles.wallet} data-market-balance><span className={styles.coin} aria-hidden="true"/><b>{wallet.balance}</b><small>coins</small></div>
     </div>
@@ -64,22 +74,22 @@ export default function MarketStand({open,onOpenChange,initialTab,place='rosa'}:
      {note.coins>0&&<b>+{note.coins} coin{note.coins===1?'':'s'}</b>} {note.text}{note.lesson&&<small><em>Football lesson</em>{note.lesson}</small>}
     </p>}
     <div role="tabpanel" id={`market-panel-${tab}`} aria-labelledby={`market-tab-${tab}`}>
-     {tab==='cards'?null:<Goods kind={tab} lines={basketLines(market,tab)} busy={busy} onOne={sellOne} onAll={()=>sellAll(tab)}/>}
-     {!farm&&<MarketCardsSection active={tab==='cards'} onSold={(coins,name)=>setNote({id:Date.now(),coins,text:`${name} traded in.`})}/>}
+     {tab==='cards'?null:<Goods kind={tab} lines={basketLines(market,tab)} busy={busy} onOne={sellOne} onAll={()=>sellAll(tab)} seller={MARKET_BUYERS[place].who}/>}
+     {rosa&&<MarketCardsSection active={tab==='cards'} onSold={(coins,name)=>setNote({id:Date.now(),coins,text:`${name} traded in.`})}/>}
     </div>
    </div>
   </section>
  </dialog>;
 }
 
-function Goods({kind,lines,busy,onOne,onAll}:{kind:'fish'|'produce'|'beach';lines:ReturnType<typeof basketLines>;busy:boolean;onOne:(id:string)=>void;onAll:()=>void}){
+function Goods({kind,lines,busy,onOne,onAll,seller}:{kind:'fish'|'produce'|'beach';lines:ReturnType<typeof basketLines>;busy:boolean;onOne:(id:string)=>void;onAll:()=>void;seller:string}){
  if(!lines.length&&kind==='beach')return <div className={styles.empty} data-market-beach-empty><b>No beach finds in your basket yet.</b><p>Look for little sparkles on the sand of Summit Isle, Coral Cay, North Beach and South Beach. I only buy empty shells: living animals go back in the sea.</p><button type="button" className={styles.one} onClick={()=>window.dispatchEvent(new Event(OPEN_SHELLBOOK))} data-market-shellbook>Shellbook</button></div>;
  if(!lines.length)return <div className={styles.empty}>{kind==='fish'?<><b>No fish in your basket yet.</b><p>Look for the little fishing posts with a red float (F on the map): {FISH_SPOTS.filter(s=>!s.area).map(s=>s.name).join(', ')}, plus {FISH_SPOTS.filter(s=>s.area).length} more along the Coral Cay causeway and round Coral Cay.</p></>:<><b>No produce in your basket yet.</b><p>Pick ripe fruit and vegetables at the Community Garden, just north of the market, or work a Harvest day on Coral Cay Farm.</p></>}</div>;
  const total=islandMarket.quote(kind).coins;
  return <section className={styles.goods} aria-label={kind==='fish'?'Sell fish':kind==='beach'?'Sell beach finds':'Sell produce'}>
   <ul>{lines.map(({good,count,eachText,plenty})=>{const fish=kind==='fish'?fishById(good.id):undefined;return <li key={good.id} data-good={good.id} data-plenty={plenty||undefined}>
    <span className={styles.art}>{fish?<FishArt fish={fish} size={64}/>:kind==='beach'&&beachFindById(good.id)?<BeachFindArt find={beachFindById(good.id)!} size={44}/>:<ProduceArt good={good} size={40}/>}</span>
-   <span className={styles.name}><b>{count>1?good.plural:good.name} × {count}</b><small>{eachText}{fish?` · ${fish.club.name}`:''}</small>{plenty&&<small className={styles.plenty} data-plenty-note>{`${MARKET_STAND.seller} already has plenty of ${good.plural.toLowerCase()} today: ${eachText}. Fresh tomorrow!`}</small>}</span>
+   <span className={styles.name}><b>{count>1?good.plural:good.name} × {count}</b><small>{eachText}{fish?` · ${fish.club.name}`:''}</small>{plenty&&<small className={styles.plenty} data-plenty-note>{`${seller} already has plenty of ${good.plural.toLowerCase()} today: ${eachText}. Fresh tomorrow!`}</small>}</span>
    <button type="button" className={styles.one} disabled={busy} onClick={()=>onOne(good.id)} aria-label={`Sell one ${good.name} (${eachText})`}>Sell 1</button>
   </li>;})}</ul>
   <button type="button" className={styles.all} disabled={busy} onClick={onAll} data-market-sell-all={kind}>Sell all {kind==='beach'?'beach finds':kind} · {total} coin{total===1?'':'s'}</button>

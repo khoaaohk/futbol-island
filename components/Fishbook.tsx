@@ -19,6 +19,7 @@ import {refreshMilestones,useFishingLog} from '@/lib/town/fishing/fishingLogStor
 import {shadowShapeWord} from '@/lib/town/fishing/fishingFight';
 import {RarityStars} from './RarityStars';
 import {WHEN_LABEL} from '@/lib/town/fishing/nightFish';
+import {readTimeOfDay,requestTimeOfDay,type TimeOfDay} from '@/lib/town/fishing/timeOfDay';
 /** Plain credit name for a source URL. Kids see no clickable external links (user, Sep 27 2026); the URLs stay in the data and docs. */
 const LANG:Record<string,string>={en:'',it:' (Italian)',es:' (Spanish)',pt:' (Portuguese)',fr:' (French)',nl:' (Dutch)',de:' (German)',ja:' (Japanese)',th:' (Thai)'};
 const host=(url:string)=>{try{const h=new URL(url).hostname.replace(/^www\./,''),w=h.match(/^([a-z]+)\.wikipedia\.org$/);return w?`Wikipedia${LANG[w[1]]??''}`:h;}catch{return url;}};
@@ -26,7 +27,9 @@ const credit=(f:FishSpecies)=>f.club.credit??host(f.club.source);
 /** Shared species first, then each spot's own specials (the Fishbook shows where every species lives, never how often it bites). */
 /** Oct 14 2026: the two deep-sea boats share one "Deep sea specials" section (their catches are marked "Deep sea"). */
 /** Oct 15 2026: the night and sunset fish (nightFish.ts) have their own section. */
-const SECTIONS=[{id:'shared',title:'Found at several spots',fish:FISH.filter(f=>!f.when&&!isExclusive(f)&&!isDeepSeaSpecial(f))},{id:'night',title:'Night and sunset fish',fish:FISH.filter(f=>!!f.when)},...FISH_SPOTS.map(s=>({id:s.id,title:`${s.name} specials`,fish:FISH.filter(f=>!f.when&&isExclusive(f)&&f.spots[0]===s.id)})),{id:'deep-sea',title:'Deep sea specials',fish:FISH.filter(isDeepSeaSpecial)}].filter(s=>s.fish.length);
+/** Nov 6 2026 (signature species): a spot's own night or sunset species sit on that spot's page (with the time hint); the night
+ *  section keeps the time fish that visit several spots. Spot pages count "N of M caught here" over the species shown. */
+const SECTIONS:{id:string;title:string;fish:FishSpecies[];spot?:boolean}[]=[{id:'shared',title:'Found at several spots',fish:FISH.filter(f=>!f.when&&!isExclusive(f)&&!isDeepSeaSpecial(f))},{id:'night',title:'Night and sunset fish',fish:FISH.filter(f=>!!f.when&&!isExclusive(f))},...FISH_SPOTS.map(s=>({id:s.id,title:`${s.name} specials`,spot:true,fish:FISH.filter(f=>isExclusive(f)&&f.spots[0]===s.id)})),{id:'deep-sea',title:'Deep sea specials',fish:FISH.filter(isDeepSeaSpecial)}].filter(s=>s.fish.length);
 /** "Found at": main-island shore spots first (collapsed to "every main-island shore spot" when it lives at all of them), then
  *  the causeway and Coral Cay spots (Oct 5 2026; collapsed the same way), then Summit Isle's spots (Oct 12 2026), then the
  *  deep-sea boats (two since Oct 14 2026). */
@@ -41,13 +44,24 @@ const boatsFor=(f:FishSpecies)=>{const at=BOAT_SPOTS.filter(s=>f.spots.includes(
 const deepTag=(f:FishSpecies)=>f.deepSea?'Deep sea · ':'';
 /** The shadow's size and shape words, the only clues before a catch (shape: Agent A's A2 silhouette cue). */
 const shadowWords=(f:FishSpecies)=>`${SHADOW_LABEL[f.shadow]} · ${shadowShapeWord(f)}`;
-const whenLine=(f:FishSpecies)=>f.when?<p className={styles.found} data-fish-when={f.when}>{WHEN_LABEL[f.when]}</p>:null;
+/** Nov 6 2026 (fishing audit: night fish were hard to find, the switch lived in Settings): the card says how to meet it, and the
+ *  night section has its own Day / Sunset / Night switch (the same island setting, lib/town/fishing/timeOfDay.ts). */
+const WHEN_WORD:Record<'night'|'sunset',string>={night:'Night',sunset:'Sunset'};
+const whenLine=(f:FishSpecies,time:TimeOfDay)=>f.when?<p className={styles.found} data-fish-when={f.when}>{WHEN_LABEL[f.when]}. {time===f.when?'Out now: go and find it!':`Switch the island to ${WHEN_WORD[f.when]} to find it.`}</p>:null;
+const TIMES:[TimeOfDay,string][]=[['day','Day'],['sunset','Sunset'],['night','Night']];
+function TimeSwitch({time,onChange}:{time:TimeOfDay;onChange:(t:TimeOfDay)=>void}){
+ return <div className={styles.timeSwitch} role="group" aria-label="Island time" data-fishbook-time>
+  <span className={styles.timeLabel}>Island time</span>
+  <span className={styles.timeTrack} data-time={time}><i aria-hidden="true"/>{TIMES.map(([t,label])=><button key={t} type="button" aria-pressed={time===t} data-time-choice={t} onClick={()=>onChange(t)}>{label}</button>)}</span>
+ </div>;
+}
 
 export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);
  const book=useFishbook(),caught=speciesCaught(book),log=useFishingLog();
- const [page,setPage]=useState<FishbookPage>('fish');
- useEffect(()=>{if(open)refreshMilestones();},[open]);
+ const [page,setPage]=useState<FishbookPage>('fish'),[time,setTime]=useState<TimeOfDay>('sunset');
+ useEffect(()=>{if(open){refreshMilestones();setTime(readTimeOfDay());}},[open]);
+ const changeTime=(t:TimeOfDay)=>{setTime(t);requestTimeOfDay(t);};
  const [leaving,setLeaving]=useState(false),closing=useRef(false),timer=useRef<ReturnType<typeof setTimeout>>();
  useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);},[]);
  const requestClose=()=>{if(closing.current)return;closing.current=true;
@@ -65,12 +79,13 @@ export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void})
     {page==='trophies'&&<TrophyPage log={log}/>}{page==='requests'&&<RequestsPage log={log}/>}
     {page==='fish'&&<>
     {SECTIONS.map(sec=>{const got=sec.fish.filter(f=>book.species[f.id]).length;return <section key={sec.id} className={styles.spot} data-fishbook-spot={sec.id}>
-     <h3 className={styles.spotTitle}>{sec.title} <small>{got} / {sec.fish.length}</small></h3>
+     <h3 className={styles.spotTitle}>{sec.title} <small data-spot-count>{sec.spot?`${got} of ${sec.fish.length} caught here`:`${got} / ${sec.fish.length}`}</small></h3>
+     {sec.id==='night'&&<TimeSwitch time={time} onChange={changeTime}/>}
      <ul className={styles.grid}>{sec.fish.map(f=>{const e=book.species[f.id];return <li key={f.id} data-caught={!!e}>
       <FishArt fish={f} hidden={!e} size={92}/>
-      {e?<><h3>{f.name}</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined}><RarityStars rarity={f.rarity} size={12}/> {deepTag(f)}{RARITY_LABEL[f.rarity]} · {shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f)}<p>Caught {e.count} · biggest {e.biggest} cm · {fishSellValue(f)} coins at Rosa&apos;s stand</p>
-       <div className={styles.fact}><span className={styles.tag}>Real football fact · {f.club.link}</span><p className={styles.club}><b>{f.club.name}</b>{f.club.nickname?` · “${f.club.nickname}”`:''}</p><p>{f.club.fact}</p><small className={styles.credit}>Source: {credit(f)}</small></div></>
-       :<><h3>Not caught yet</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined} data-shape-word>{deepTag(f)}{shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f)}</>}
+      {e?<><h3>{f.name}</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined}><RarityStars rarity={f.rarity} size={12}/> {deepTag(f)}{RARITY_LABEL[f.rarity]} · {shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f,time)}<p>Caught {e.count} · biggest {e.biggest} cm · {fishSellValue(f)} coins at Rosa&apos;s stand</p>
+       <div className={styles.fact}><span className={styles.tag}>{f.club.link==='Fun fish fact'?'Fun fish fact + real football fact':`Real football fact · ${f.club.link}`}</span><p className={styles.club}><b>{f.club.name}</b>{f.club.nickname?` · “${f.club.nickname}”`:''}</p><p>{f.club.fact}</p><small className={styles.credit}>Source: {credit(f)}</small></div>{f.story&&<div className={styles.story} data-fish-story><span className={styles.tag}>Fish tale</span><p>{f.story}</p></div>}</>
+       :<><h3 aria-label="Not caught yet">???</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined} data-shape-word>{deepTag(f)}{shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f,time)}</>}
      </li>;})}</ul>
     </section>;})}
     <section className={styles.keeper}><h3>The keeper&apos;s lesson</h3><p><b>{KEEPER_LESSONS.nibble.title}.</b> {KEEPER_LESSONS.nibble.text}</p><small className={styles.credit}>Source: Bar-Eli et al. (2007), Journal of Economic Psychology</small></section>

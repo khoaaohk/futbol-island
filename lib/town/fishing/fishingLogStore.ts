@@ -6,8 +6,8 @@
  * on 15 Oct 2026: user decision, "too complicated".)
  */
 import {useSyncExternalStore} from 'react';
-import {FISHING_LOG_KEY,claimMilestones,emptyLog,ensureDay,legendsDue,logCatch,mergeLogs,sanitizeLog,type CatchEffects,type FishingLog,type FloatSkin} from './fishingLog';
-import {catchWeights,type CatchContext} from './fishingOdds';
+import {FISHING_LOG_KEY,bumpPity,pityFor,claimMilestones,emptyLog,ensureDay,legendsDue,logCatch,mergeLogs,sanitizeLog,type CatchEffects,type FishingLog,type FloatSkin} from './fishingLog';
+import {catchWeights,pitySpecies,type CatchContext} from './fishingOdds';
 import {TIME_KEY,dayKey,readTimeOfDay} from './timeOfDay';
 import {isLureId,type LureId} from './lures';
 import {FISHBOOK_STORAGE_KEY,sanitizeFishbook,speciesCaught} from './fishingCore';
@@ -23,7 +23,8 @@ const listeners=new Set<()=>void>();
 const emit=()=>listeners.forEach(fn=>fn());
 const readSaved=():FishingLog=>{try{return sanitizeLog(JSON.parse(localStorage.getItem(FISHING_LOG_KEY)??'null'));}catch{return emptyLog();}};
 export function readFishingLog():FishingLog{if(!loaded&&typeof window!=='undefined'){loaded=true;state=readSaved();}return state;}
-function write(next:FishingLog){state=next;try{localStorage.setItem(FISHING_LOG_KEY,JSON.stringify(next));}catch{/* full storage: the log stays in memory this visit */}emit();}
+function writeQuiet(next:FishingLog){state=next;try{localStorage.setItem(FISHING_LOG_KEY,JSON.stringify(next));}catch{/* full storage: the log stays in memory this visit */}}
+function write(next:FishingLog){writeQuiet(next);emit();}
 /** Re-read, merge with another tab's save, change, write. */
 function update(fn:(log:FishingLog)=>FishingLog){write(fn(mergeLogs(readFishingLog(),readSaved())));}
 const onStorage=(e:StorageEvent)=>{if(e.key===FISHING_LOG_KEY||e.key===TIME_KEY||e.key===null){loaded=false;readFishingLog();emit();}};
@@ -32,13 +33,21 @@ export const useFishingLog=()=>useSyncExternalStore(subscribeFishingLog,readFish
 
 // ---- The live catch context (read once per bite by fishingOdds.catchWeights) ----
 export const timeOfDay=():TimeOfDayKey=>readTimeOfDay();
-export function liveContext():CatchContext{const log=readFishingLog();return {time:timeOfDay(),lure:log.lure,legends:legendsDue(log)};}
+export function liveContext(spot?:Parameters<typeof catchWeights>[0]):CatchContext{const log=readFishingLog(),ctx:CatchContext={time:timeOfDay(),lure:log.lure,legends:legendsDue(log),legendsCaught:log.legends};
+ if(spot){const p=pityFor(log,spot.id,uncaughtLegendaries(spot));if(Object.keys(p).length)ctx.pity=p;}
+ return ctx;}
+/** This spot's legendary species the player has never caught (bad-luck protection, fishingOdds.ts PITY). Read once per bite. */
+function uncaughtLegendaries(spot:Parameters<typeof catchWeights>[0]):string[]{const ids=pitySpecies(spot);if(!ids.length)return ids;
+ try{const b=sanitizeFishbook(JSON.parse(localStorage.getItem(FISHBOOK_STORAGE_KEY)??'null'));return ids.filter(id=>!b.species[id]);}catch{return [];}}
 /** The live catch roll (fishingSession.setCatchRoll): the same weighted pick as fishingCore.rollCatch, through the live context
  *  (night fish, the lure, legends). Read once per bite. */
 export function liveCatchRoll(spot:Parameters<typeof catchWeights>[0],rand:number,hot:number):string{
- const weighted=Object.entries(catchWeights(spot,hot,liveContext())),total=weighted.reduce((a,[,w])=>a+w,0);let pick=Math.max(0,Math.min(.999999,rand))*total;
- for(const [id,w] of weighted){if(pick<w)return id;pick-=w;}
- return weighted[weighted.length-1][0];
+ const weighted=Object.entries(catchWeights(spot,hot,liveContext(spot))),total=weighted.reduce((a,[,w])=>a+w,0);let pick=Math.max(0,Math.min(.999999,rand))*total;
+ let out=weighted[weighted.length-1][0];
+ for(const [id,w] of weighted){if(pick<w){out=id;break;}pick-=w;}
+ // Bad-luck protection: each still-uncaught legendary that did not come gains one count (saved quietly: no re-render, once per bite).
+ const missing=uncaughtLegendaries(spot);if(missing.length){const next=bumpPity(mergeLogs(readFishingLog(),readSaved()),spot.id,missing,out);if(next!==state)writeQuiet(next);}
+ return out;
 }
 
 // ---- Lures and cosmetics ----

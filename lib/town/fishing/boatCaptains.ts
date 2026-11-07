@@ -69,6 +69,7 @@ export const BOAT_CAPTAINS:NpcDefinition[]=[
    'A penalty is taken from the penalty mark, 11 metres from the goal line. A keeper has to react as fast as you do when the float plunges.',
    'Southend United are "The Shrimpers": nearby Leigh-on-Sea had lots of shrimp-fishing boats.',
    'Reading the water is like reading the game. Look where the water changes before you cast, the way a midfielder looks up before the pass.',
+   'Some fish only come out after dark, like a floodlit match. Open your Fishbook\'s night fish, switch the island to Night right there, and come and find them.',
   ],
   topics:[
    {id:'boat',question:'How does fishing on the boat work?',answer:'Deep water means bigger, rarer fish, but every bite takes a little longer while they rise from far below. Hotspots like a bait ball, diving gulls or a dark upwelling are where the big ones gather.',
@@ -99,3 +100,11 @@ export const BOAT_CAPTAINS:NpcDefinition[]=[
     followUp:{question:'Why let it go?',answer:'A legend is caught once and set free, so it can keep its story going. Good sports shake hands and let the game go on.'}},
   ]},
 ];
+
+/** Sell where you fish (Nov 6 2026): each captain buys fish on board, through the ONE market state (lib/economy.ts MARKET_BUYERS).
+ *  Components/Town.tsx passes these as the conversation's actions; the stand opens on the shared `fi2-open-market-stand` event. */
+export const CAPTAIN_BUYER:Readonly<Record<string,'marina'|'kofi'>>={'boat-captain-marina':'marina','boat-skipper-kofi':'kofi'};
+export function captainSellActions(npc:{id:string}|null|undefined,close:()=>void):{label:string;onClick:()=>void}[]|undefined{
+ const place=npc?CAPTAIN_BUYER[npc.id]:undefined;if(!place)return undefined;
+ return [{label:'Sell my fish',onClick:()=>{close();window.dispatchEvent(new CustomEvent('fi2-open-market-stand',{detail:{tab:'fish',place}}));}}];
+}

@@ -90,9 +90,9 @@ await ok('overview rows',()=>{
  const shOpen=o.shop.find(r=>r.id==='sh:open_jersey'),shSpend=o.shop.find(r=>r.id==='sh:spend'),kick=o.summit.find(r=>r.id==='su:kick_play');
  assert.equal(shOpen.value,7,'6 sessions ≥ MIN_SESSIONS: the total shows');
  assert.equal(shSpend.value,450);
- assert.equal(kick.value,null,'only 2 sessions: suppressed');
+ assert.equal(kick.value,2,'2 sessions: exact');
  for(const r of [...o.shop,...o.sandbar,...o.summit,...o.beach])assert(r.label&&typeof r.label==='string'&&r.label.length>0,r.id+' has a label');
- const mango=o.fruit.find(f=>f.kind==='mango');assert.equal(mango.hand,9,'5 sessions: shown');assert.equal(mango.ball,null,'2 sessions: suppressed');
+ const mango=o.fruit.find(f=>f.kind==='mango');assert.equal(mango.hand,9,'5 sessions: shown');assert.equal(mango.ball,1,'1 session: exact');
  assert.equal(o.fruit.length,CID.FORAGE_FRUIT_KINDS.length);
 });
 

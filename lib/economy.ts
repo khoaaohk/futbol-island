@@ -83,6 +83,22 @@ export const JOB_PAY_BAND=[4,7] as const;
  *  - basket: how many goods fit in the basket (unchanged, not a price).
  */
 export const MARKET={allowance:30,halfFactor:.5,basket:20,ladder:{fullEach:4,second:.5,third:.25}} as const;
+/**
+ * Who buys what (Nov 6 2026, fishing audit "sell where you fish": Coral Cay, Summit and boat anglers had to trek back to Rosa).
+ * Every buyer sells through the ONE market state above (fi2-market-v1: the same basket, fixed prices, daily allowance, same-kind
+ * ladder, tallies and `market:<day>:<sale>` wallet runs through the Training meter), so WHERE you sell never changes what you earn:
+ * no second allowance, no price by size, no new loophole. Only which goods each buyer takes differs.
+ */
+export const MARKET_BUYERS={
+ rosa:{who:'Rosa',where:'Rosa\u2019s market stand',kinds:['fish','produce','beach','cards']},
+ farm:{who:'Mele',where:'Mele\u2019s farm stand on Coral Cay',kinds:['fish','produce']},
+ marina:{who:'Captain Marina',where:'Captain Marina on the Deep Sea Boat',kinds:['fish']},
+ kofi:{who:'Skipper Kofi',where:'Skipper Kofi on the Summit Deep Boat',kinds:['fish']},
+} as const satisfies Record<string,{who:string;where:string;kinds:readonly ('fish'|'produce'|'beach'|'cards')[]}>;
+export type MarketBuyer=keyof typeof MARKET_BUYERS;
+export const isMarketBuyer=(v:unknown):v is MarketBuyer=>typeof v==='string'&&Object.prototype.hasOwnProperty.call(MARKET_BUYERS,v);
+/** Does this buyer take this kind of good? */
+export const buyerTakes=(b:MarketBuyer,kind:string)=>(MARKET_BUYERS[b].kinds as readonly string[]).includes(kind);
 
 /** Fish sell value = the catalogue's species value (lib/town/fishing/fishCatalog.ts `price`, which sets each species' place in the
  *  pecking order) × this factor for its rarity, rounded, at least 1. Commons are halved, rarer catches keep more of their value. */

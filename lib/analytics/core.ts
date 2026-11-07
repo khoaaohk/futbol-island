@@ -28,6 +28,7 @@ import type {Overview} from './overview';
 import type {SaveMetricsReport} from '../saves/metrics';
 import type {KickAdminMetrics} from '../arcade/kickAdminMetrics';
 import type {FishingAdminMetrics} from './fishingAdminMetrics';
+import type {FishingFunnel} from './fishingFunnel';
 import type {SourcesSummary} from './live';
 import type {SponsorReport} from './sponsor';
 import type {EmoteReport,PartyReport} from './partyReport';
@@ -559,6 +560,8 @@ export type Report={
  /** Oct 15 2026: fights per fishing session over the raw-beat window (lib/analytics/fishingAdminMetrics.ts,
   *  supabase/migrations/20261017_analytics_fishing.sql); the fishing counters themselves are in `overview.fishing`. */
  fishing?:FishingAdminMetrics|null;
+ /** Nov 6 2026: the fishing funnel (lib/analytics/fishingFunnel.ts): Fish tapped → cast → bite → hooked → landed, exact counts. */
+ fishingFunnel?:FishingFunnel|null;
  /** Oct 15 2026: "Where players come from" (lib/analytics/liveAdmin.ts loadSources, supabase/migrations/20261018_analytics_live.sql). */
  sources?:SourcesSummary|null;
  /** Oct 20 2026: the sponsor Overview (lib/analytics/sponsor.ts): games, designs, cards, videos and stories, books, reading, quizzes. */
@@ -612,6 +615,7 @@ export function resolveRange(q:{range?:string|null;from?:string|null;to?:string|
  switch(q.range){
   case 'today':return {from:today,to:today};
   case 'yesterday':{const y=addDays(today,-1);return {from:y,to:y};}
+  case '14d':return {from:addDays(today,-13),to:today};// Nov 6 2026: the dashboard rebuild's 14-day preset
   case '30d':return {from:addDays(today,-29),to:today};
   case '90d':return {from:addDays(today,-89),to:today};
   // Oct 20 2026: everything since analytics began (the first migration, Oct 7 2026).

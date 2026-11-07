@@ -1,0 +1,1 @@
+self.__BUILD_MANIFEST = {__rewrites:{afterFiles:[],beforeFiles:[{has:[{type:"query",key:"from",value:"^(arcade|konbini|museum|shop)$"}],source:"\u002Fplay",destination:"\u002Fisland-return"}],fallback:[]},sortedPages:["\u002F_app"]};self.__BUILD_MANIFEST_CB && self.__BUILD_MANIFEST_CB()

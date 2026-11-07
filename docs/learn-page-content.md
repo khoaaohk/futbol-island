@@ -155,7 +155,7 @@ Fishing on the island is calm and quick, and every catch goes into the Fishbook.
 
 - **Football tie:** Club history and culture, plus a goalkeeper lesson: stay set, do not bite on a feint, then react fast.
 - **Where:** Head to a fishing spot on the shore or a boat; the Fishbook opens from fishing.
-- **Proof:** 73 sea animals to catch, 10 of them legendary.
+- **Proof:** 97 sea animals to catch, 11 of them legendary (Nov 6 2026: wave 1 of the signature species).
 - **id / image:** `fishing` / `fishing_fishbook`
 
 ### Bug Squad

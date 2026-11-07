@@ -9,7 +9,7 @@ import {COACH_VOICE_IDS,GRAD_BANDS,LEARN_FORMATS,LESSON_STAGES,ONBOARDING_STEPS,
 import {LESSON_TEXT} from './learningText.generated';
 
 /** A cell resting on fewer sessions than this in the range is not shown. */
-export const MIN_SESSIONS=5;
+export const MIN_SESSIONS=1;
 /** null = withheld (under MIN_SESSIONS sessions). */
 export type Cell=number|null;
 export type FunnelLesson={id:string;name:string;stages:Cell[];drop:{stage:number;share:number}|null};

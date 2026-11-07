@@ -92,11 +92,15 @@ await ok('overview',async()=>{
  const rep=await R.buildReport(store,{from:day,to:day},NOW);
  const o=rep.overview;assert(o,'overview built');
  assert.equal(o.current.visitors,8);assert.equal(o.previous.visitors,4,'previous period = the day before');assert.equal(o.prevFrom,prevDay);
- assert.equal(o.current.steps['st:created'],8);assert.equal(o.current.steps['st:restored'],6);assert.equal(o.previous.steps['st:restored'],null,'4 sessions → withheld');
- assert.equal(o.plan.find(p=>p.id==='open').sessions,null,'2 sessions → withheld');
+ assert.equal(o.current.steps['st:created'],8);assert.equal(o.current.steps['st:restored'],6);assert.equal(o.previous.steps['st:restored'],4,'4 sessions → exact');
+ assert.equal(o.plan.find(p=>p.id==='open').sessions,2,'2 sessions → exact');
  assert.deepEqual(J(o.daily),[{day,created:8,restored:6,returning:0,breaks:0,restoreFails:0}]);
+ // Audit Nov 6 2026: a period with nothing recorded is no previous period at all (admin-analytics-pacific.cjs), so the week
+ // before gets one session here to keep checking its length.
+ assert.equal((await R.buildReport(store,{from:D(-6),to:TODAY},NOW)).overview.previous,null,'nothing before the week: no previous period');
+ add(D(-10),90,{'st:view':1});
  const week=await R.buildReport(store,{from:D(-6),to:TODAY},NOW);assert.equal(week.overview.daily.length,7);assert.equal(week.overview.previous.days,7);
- assert.equal(week.overview.daily.find(r=>r.day===prevDay).restored,null,'a day under 5 is withheld too');
+ assert.equal(week.overview.daily.find(r=>r.day===prevDay).restored,4,'a small day is exact too');
  assert(!/visitorHash|"v\d"/.test(JSON.stringify(o)),'no visitor ids in the overview');
 });
 

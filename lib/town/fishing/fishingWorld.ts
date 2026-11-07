@@ -130,7 +130,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   if(fishing){
    if(session.takeStop())stopFishing(session);
    else{const o=session.options;if(session.session.phase==='reeling')session.tickSpin(c.now);/* the finger's spin rate fades once it stops */
-    events.push(...stepSession(session.session,FISH_SPOTS[liveSpot],c.dt,Math.random,{easy:c.reduced,out:cast.dir,approach:(r,f)=>planApproach(cast,r,f),lure:o.lure,roll:session.catchRoll??undefined}));if(events.length||session.session.phase==='reeling')session.handle(events);}
+    events.push(...stepSession(session.session,FISH_SPOTS[liveSpot],c.dt,Math.random,{easy:c.reduced||session.easyBite,out:cast.dir,approach:(r,f)=>planApproach(cast,r,f),lure:o.lure,roll:session.catchRoll??undefined}));if(events.length||session.session.phase==='reeling')session.handle(events);}
   }else session.takeStop();
   const taps=session.drainTapEvents();events.push(...taps);
   if(fishing){const s=FISH_SPOTS[liveSpot],nowS=c.now/1000,ph=session.session.phase;clock+=c.dt;

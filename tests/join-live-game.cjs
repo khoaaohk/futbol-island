@@ -940,7 +940,9 @@ console.log('PASS join-live-game (quick goal reset): fade in the net, arrival on
  assert.match(fr,/const replaying=!!rp&&rp\.apply\(e\.sim\);[\s\S]*if\(replaying\)e\.ballReset\.show\(\);else e\.ballReset\.update\([\s\S]*if\(replaying\)rp!\.restore\(e\.sim\);\n \}/,'apply → draw → restore');
  assert.match(fr,/const dt=rp\?dtIn\*rp\.rate:dtIn;/,'the rigs animate at the replay rate (real slow motion)');
  const hot=gr.slice(gr.indexOf('record(sim'),gr.indexOf('return r;'));assert(!/\bnew [A-Z]|=>|\[\]|\{[a-z]+:/.test(hot),'no allocation in record / watch / step / apply / restore');
- assert.match(rt,/if\(b==='skip'\)\{if\(down&&format\)games\.skipReplay\(format\);return;\}/);assert.match(rt,/function onTap\(\)\{[^\n]*games\.skipReplay\(format\)/,'a tap anywhere skips');assert.match(rt,/!e\.repeat\)games\.skipReplay\(format\)/,'a key skips');
+ // Nov 6 2026 (deliberate): the three skip paths go through skipRep(), which calls games.skipReplay and books a real skip for the admin analytics.
+ assert.match(rt,/function skipRep\(f:LiveFormat\)\{if\(games\.skipReplay\(f\)\)api\.onMatch\?\.\(\{type:'replay',skipped:true\}\);\}/,'skipRep skips the replay');
+ assert.match(rt,/if\(b==='skip'\)\{if\(down&&format\)skipRep\(format\);return;\}/);assert.match(rt,/function onTap\(\)\{[^\n]*skipRep\(format\)/,'a tap anywhere skips');assert.match(rt,/!e\.repeat\)skipRep\(format\)/,'a key skips');
  assert.match(rt,/replayCamFrame\(repShot,camera\.aspect,cut\?want:repTight,repGoal\)/,'the replay camera frames goal + ball + shooter');assert.match(rt,/cut=reduced\|\|!!rep\?\.calm/,'reduced motion: the camera cuts');
  assert.match(rt,/if\(!cut\|\|fresh\|\|want!==repCutTight\)/,'reduced motion: held shots, recomputed only on a cut (no easing)');
  // the live goal overlays are off while it plays: the field's GOAL! card / light / rings (ended, not back after), the pop, tip, goal badge, aim marks; the controls fade

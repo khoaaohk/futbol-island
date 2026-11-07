@@ -577,7 +577,163 @@ const SPECIES:Record<string,Spec>={
  // ---- Palm Point and Lookout Rocks, Summit Isle
  'mealy-crab':b=>{crab(b,{body:'#6a4a78',belly:'#e9cdae',claw:'#5a3d68',kind:'edible'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
  bloater:b=>{fish(b,{x1:.32,H:.1,W:.045,peak:.4,q:.74,ped:.11,sag:.012,top:'#3a6f8f',side:'#cdd9df',belly:'#eef2f0',line:.22,tail:'fork',tailH:.12,finC:'#82a0ac',dorsal:[{t0:.4,t1:.52,h:.055,shape:'tri'}],anal:[{t0:.76,t1:.87,h:.022,shape:'square'}],pect:{t:.22,len:.065},pelvic:{t:.5,len:.032},eye:{t:.1,r:.03},mouth:{t:.03,len:.022,a:1.5}});},
+
+ // ---- Signature species, wave 1 (Nov 6 2026, ./shoreSignatures.ts): existing builders, each with its own shape, colour and pattern.
+ 'flying-fish':b=>{fish(b,{x1:.32,H:.1,W:.06,peak:.3,q:.7,ped:.1,top:'#3f6f9e',side:'#9ec0dc',belly:'#e6eef4',line:.2,tail:'fork',tailH:.14,finC:'#4f86b8',
+  dorsal:[{t0:.55,t1:.68,h:.03,shape:'low'}],anal:[{t0:.6,t1:.72,h:.025,shape:'low'}],pect:{t:.2,len:.34,sweep:.9,wide:2.2,c:'#7fb0d8'},pelvic:{t:.5,len:.12,c:'#7fb0d8'},eye:{t:.08,r:.032},mouth:{t:.02,len:.02,a:1.5}});return {anim:{...FISH_ANIM,start:.2,amp:.05}};},
+ skipjack:b=>{scombrid(b,{top:'#2c4a73',side:'#8fa3b8',belly:'#dfe6ee',H:.15,W:.11,finlet:'#e3d27a',d1:{t0:.24,t1:.42,h:.07,shape:'tri'},d2:{t0:.46,t1:.55,h:.06,shape:'sickle'},a1:{t0:.5,t1:.58,h:.05,shape:'sickle'},
+  paint:(c,t,up)=>up<-.25&&Math.sin((t*26+up*4))>.55&&t>.2&&t<.85?mixC(c,hex('#2f3c52'),.55):c});return {anim:{...FISH_ANIM,start:.3,amp:.05}};},
+ 'white-grouper':b=>{const L=fish(b,{x1:.3,H:.17,W:.12,peak:.35,q:.6,ped:.17,top:'#7a6a58',side:'#a8998a',belly:'#ece4d6',line:.1,tail:'round',tailH:.13,finC:'#6f604f',
+  paint:(c,t,up)=>Math.sin(t*22)>.6&&up>-.2&&t>.15&&t<.85?mixC(c,hex('#55483a'),.45):c,
+  dorsal:[{t0:.25,t1:.72,h:.06,shape:'spiny',spines:9}],anal:[{t0:.6,t1:.78,h:.05,shape:'round'}],pect:{t:.24,len:.1,round:true},pelvic:{t:.3,len:.05},eye:{t:.1,r:.028},mouth:{t:.02,len:.06,a:1.4}});void L;},
+ albacore:b=>{scombrid(b,{top:'#2b3f66',side:'#8796ad',belly:'#e3e9ef',H:.15,W:.12,finlet:'#f0e9c8',d1:{t0:.24,t1:.4,h:.07,shape:'tri'},d2:{t0:.45,t1:.54,h:.06,shape:'sickle'},a1:{t0:.5,t1:.58,h:.05,shape:'sickle'},pect:.22});return {anim:{...FISH_ANIM,start:.3,amp:.05}};},
+ 'queen-conch':b=>{shell(b,{outer:'#e0a27c',inner:'#f7b8a8',kind:'pearl'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.1,z:0},shadow:'crab'};},
+ cockle:b=>{shell(b,{outer:'#cdb894',inner:'#f2e8d4',kind:'oyster'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.1,z:0},shadow:'crab'};},
+ 'dover-sole':b=>{const L=fish(b,{x1:.34,H:.16,W:.025,peak:.4,q:.9,ped:.08,top:'#8f7a5c',side:'#a89072',belly:'#efe6d2',line:-.6,tail:'round',tailH:.09,finC:'#7f6b50',
+  paint:(c,t,up,side)=>cell(t*20,up*5,side*2)>.8?mixC(c,hex('#5f4e38'),.5):c,
+  dorsal:[{t0:.04,t1:.94,h:.03,shape:'low'}],anal:[{t0:.12,t1:.94,h:.03,shape:'low'}],pect:{t:.18,len:.04},eye:{t:.07,a:.6,r:.018},mouth:{t:.01,len:.025,a:1.3}});void L;return {shadow:'ray'};},
+ 'mud-crab':b=>{crab(b,{body:'#5d6a4a',belly:'#e6d2a8',claw:'#4f5b3e',tip:'#2a2a20',kind:'blue'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
+ pollock:b=>{const L=fish(b,{x1:.32,H:.12,W:.07,peak:.35,q:.7,ped:.11,top:'#5d6b52',side:'#a7ae92',belly:'#e8ead8',line:.05,tail:'slight',tailH:.12,finC:'#5a6650',
+  dorsal:[{t0:.28,t1:.4,h:.05,shape:'round'},{t0:.44,t1:.6,h:.045,shape:'round'},{t0:.64,t1:.78,h:.04,shape:'round'}],anal:[{t0:.46,t1:.62,h:.035,shape:'round'},{t0:.66,t1:.78,h:.03,shape:'round'}],pect:{t:.24,len:.07},eye:{t:.09,r:.03},mouth:{t:.02,len:.04,a:1.5}});
+  lateralLine(b,L,.12,.95,t=>.35-.3*Math.sin(t*PI),.006,hex('#3f4a38'));},
+ langoustine:b=>{lobster(b,{body:'#e38a6c',belly:'#f6d2bd',spot:'#fbe6da'});return {anim:{...FISH_ANIM,amp:0},hold:{x:.7,z:0},shadow:'crab'};},
+ 'flying-squid':b=>{squid(b,{body:'#c76a6a',belly:'#f4d0c8'});return {anim:{axis:[-1,0,0],start:.2,span:.35,dir:[0,.7,.7],k:[0,0,8],amp:.03},hold:{x:.75,z:0},shadow:'octopus'};},
+ 'greenland-shark':b=>{shark(b,{top:'#5a6066',belly:'#c9cdd0',H:.13,W:.12,q:.5,dorsal:.06,d2:.05,pect:.09,roundFins:true,line:-.05,
+  paint:(c,t,up,side)=>cell(t*28,up*6,side*3)>.75?mixC(c,hex('#3e4348'),.5):c});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.05}};},
+ galjoen:b=>{const L=fish(b,{x1:.3,H:.2,W:.07,peak:.4,q:.7,ped:.15,top:'#2f3338',side:'#5a5e62',belly:'#c9c2a8',line:.25,tail:'slight',tailH:.15,finC:'#2c3034',
+  paint:(c,t,up)=>Math.sin(t*30)>.7&&up>-.4&&t>.2&&t<.8?mixC(c,hex('#151719'),.5):c,
+  dorsal:[{t0:.22,t1:.75,h:.07,shape:'spiny',spines:10}],anal:[{t0:.55,t1:.78,h:.06,shape:'round'}],pect:{t:.25,len:.08},pelvic:{t:.3,len:.04},eye:{t:.11,r:.028},mouth:{t:.02,len:.03,a:1.5}});void L;},
+ 'queen-scallop':b=>{shell(b,{outer:'#d27a5a',inner:'#f4dccb',kind:'pearl'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.1,z:0},shadow:'crab'};},
+ 'red-scorpionfish':b=>{const L=fish(b,{x1:.3,H:.16,W:.11,peak:.3,q:.55,ped:.17,top:'#b3442f',side:'#c4553e',belly:'#f0c09a',line:-.1,tail:'round',tailH:.12,finC:'#a83c2a',
+  paint:(c,t,up,side)=>cell(t*24,up*6,side*3)>.7?mixC(c,hex('#6f2418'),.5):c,
+  dorsal:[{t0:.2,t1:.75,h:.08,shape:'spiny',spines:12}],anal:[{t0:.6,t1:.78,h:.05,shape:'round'}],pect:{t:.24,len:.12,wide:1.6,round:true},pelvic:{t:.3,len:.05},eye:{t:.1,a:.8,r:.03},mouth:{t:.01,len:.07,a:1.4}});void L;},
+ moray:b=>{eelLike(b,{top:'#4f6a3a',belly:'#c7c98a',h:.06,w:.045,fleck:'#2f4024'});return {anim:{axis:[1,0,0],start:-.3,span:.8,dir:[0,.5,.85],k:[9,0,0],amp:.06}};},
+ 'river-prawn':b=>{shrimp(b,{body:'#6f8fa6',belly:'#e8eef2',speckle:'#3f5f7a'});return {anim:{axis:[1,0,0],start:.05,span:.3,dir:[0,1,0],k:[6,0,0],amp:.025},shadow:'fish'};},
+ hilsa:b=>{const L=fish(b,{x1:.32,H:.15,W:.055,peak:.4,q:.75,ped:.1,top:'#56708e',side:'#c8d3de',belly:'#eef1f4',line:.25,tail:'fork',tailH:.15,finC:'#7f97ad',
+  dorsal:[{t0:.4,t1:.52,h:.05,shape:'tri'}],anal:[{t0:.72,t1:.86,h:.02,shape:'low'}],pect:{t:.22,len:.06},pelvic:{t:.48,len:.03},eye:{t:.09,r:.03},mouth:{t:.02,len:.03,a:1.6}});
+  spots(b,L,[[.2,.75,.016],[.27,.78,.012]],hex('#3c4f66'));},
+ corvina:b=>{const L=fish(b,{x1:.32,H:.15,W:.08,peak:.36,q:.65,ped:.13,top:'#7f868d',side:'#b5bbc0',belly:'#eef0ec',line:.1,tail:'slight',tailH:.13,finC:'#a7a08a',
+  dorsal:[{t0:.25,t1:.4,h:.06,shape:'tri'},{t0:.43,t1:.8,h:.04,shape:'low'}],anal:[{t0:.66,t1:.78,h:.04,shape:'round'}],pect:{t:.24,len:.08},pelvic:{t:.3,len:.04},eye:{t:.1,r:.028},mouth:{t:.02,len:.05,a:1.5}});
+  lateralLine(b,L,.12,.95,t=>.3-.2*Math.sin(t*PI),.007,hex('#d8dde0'));},
+ 'pink-cusk-eel':b=>{eelLike(b,{top:'#d38f84',belly:'#f4d8cf',h:.05,w:.035,fleck:'#b06a60'});return {anim:{axis:[1,0,0],start:-.3,span:.8,dir:[0,.5,.85],k:[9,0,0],amp:.05}};},
+ sprat:b=>{fish(b,{x1:.32,H:.09,W:.045,peak:.4,q:.75,ped:.1,top:'#5f7f96',side:'#cdd9e0',belly:'#e9eef0',line:.2,tail:'fork',tailH:.11,finC:'#8aa0ae',dorsal:[{t0:.42,t1:.52,h:.04,shape:'tri'}],anal:[{t0:.74,t1:.86,h:.018,shape:'low'}],pect:{t:.22,len:.05},pelvic:{t:.46,len:.025},eye:{t:.09,r:.03},mouth:{t:.02,len:.02,a:1.5}});},
+ plaice:b=>{const L=fish(b,{x1:.34,H:.17,W:.025,peak:.42,q:.9,ped:.08,top:'#7d6a4c',side:'#94805e',belly:'#f0e8d8',line:-.6,tail:'round',tailH:.1,finC:'#6f5d42',
+  dorsal:[{t0:.05,t1:.93,h:.035,shape:'low'}],anal:[{t0:.14,t1:.93,h:.035,shape:'low'}],pect:{t:.18,len:.045},eye:{t:.08,a:.6,r:.02},mouth:{t:.01,len:.025,a:1.3}});
+  spots(b,L,Array.from({length:9},(_,i):[number,number,number]=>[.18+.68*hash(i*4.1),.35+.9*hash(i*2.3),.02]),hex('#e8752e'),0,7);return {shadow:'ray'};},
+ 'ghost-crab':b=>{crab(b,{body:'#e0d2b0',belly:'#f4ecd8',claw:'#d6c49c',kind:'swimming'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
+ 'reef-squid':b=>{squid(b,{body:'#b9a28a',belly:'#f2e4d6'});return {anim:{axis:[-1,0,0],start:.2,span:.35,dir:[0,.7,.7],k:[0,0,8],amp:.03},hold:{x:.75,z:0},shadow:'octopus'};},
+ // ---- Signature species, wave 2 (Nov 6 2026, ./shoreSignatures.ts SIGNATURE_FISH_WAVE2): existing builders, new colours and patterns.
+ 'green-shore-crab':b=>{crab(b,{body:'#4f6a3c',belly:'#d9cf96',claw:'#55703f',tip:'#2a2f20',kind:'edible'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
+ 'stone-crab':b=>{crab(b,{body:'#8a5a3a',belly:'#efd8b8',claw:'#b8743f',tip:'#151515',kind:'coconut'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
+ cuttlefish:b=>{squid(b,{body:'#8c7a62',belly:'#efe4d2'});return {anim:{axis:[-1,0,0],start:.2,span:.35,dir:[0,.7,.7],k:[0,0,8],amp:.03},hold:{x:.75,z:0},shadow:'octopus'};},
+ 'red-lipped-batfish':b=>{fish(b,{x1:.25,H:.1,W:.2,peak:.3,q:.4,ped:.12,top:'#8a7a6a',side:'#a8967f',belly:'#e9ddc9',line:-.2,tail:'round',tailH:.08,finC:'#7a6a5a',
+  paint:(c,t,up,side)=>cell(t*22,up*6,side*3)>.78?mixC(c,hex('#5a4c40'),.45):c,
+  dorsal:[{t0:.6,t1:.72,h:.03,shape:'round'}],pect:{t:.4,len:.12,round:true,droop:1.2},pelvic:{t:.25,len:.07},eye:{t:.1,a:.6,r:.026},mouth:{t:.0,len:.07,a:1.6,c:'#d8343a'}});return {shadow:'ray'};},
+ tarpon:b=>{const L=fish(b,{x1:.32,H:.14,W:.07,peak:.38,q:.7,ped:.11,top:'#4f6f86',side:'#d3dde4',belly:'#eef2f4',line:.25,tail:'fork',tailH:.17,finC:'#7f97ad',
+  dorsal:[{t0:.42,t1:.54,h:.07,shape:'sickle'}],anal:[{t0:.68,t1:.8,h:.04,shape:'tri'}],pect:{t:.2,len:.08},pelvic:{t:.42,len:.04},eye:{t:.08,r:.036},mouth:{t:.0,len:.07,a:.9}});
+  spots(b,L,Array.from({length:12},(_,i):[number,number,number]=>[.2+.55*(i%6)/5,1.1+.5*Math.floor(i/6),.022]),hex('#bccad4'),0,6);return {anim:{...FISH_ANIM,start:.3,amp:.05}};},
+ 'european-lobster':b=>{lobster(b,{body:'#2f4f7a',belly:'#d9c69a',spot:'#6f8fb8'});return {anim:{...FISH_ANIM,amp:0},hold:{x:.7,z:0},shadow:'crab'};},
+ 'silky-shark':b=>{shark(b,{top:'#6e7f8c',belly:'#eef0f0',H:.09,q:.7,dorsal:.11,pect:.3});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},
+ 'spider-crab':b=>{crab(b,{body:'#d0743f',belly:'#f4d8b8',claw:'#e08a52',tip:'#f2e0c8',kind:'swimming'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
+ 'checkered-puffer':b=>{const L=fish(b,{x1:.25,H:.2,W:.18,peak:.4,q:.45,ped:.16,top:'#6f6a42',side:'#c9c49a',belly:'#f2eed8',line:-.1,tail:'round',tailH:.1,finC:'#8a8458',
+  paint:(c,t,up)=>up>-.1&&(Math.sin(t*40)>.6||Math.sin(up*16)>.7)?mixC(c,hex('#3f3a22'),.5):c,
+  dorsal:[{t0:.66,t1:.76,h:.04,shape:'round'}],anal:[{t0:.68,t1:.78,h:.035,shape:'round'}],pect:{t:.3,len:.06,round:true},eye:{t:.14,a:.7,r:.035},mouth:{t:.0,len:.03,a:1.3}});void L;},
+ 'southern-stingray':b=>{ray(b,{top:'#7a6e58',belly:'#f2ecdc',spine:true});return {anim:{axis:[0,0,1],start:.1,span:.4,dir:[0,1,0],k:[3,0,0],amp:.04},hold:{x:1.35,z:-PI/2},shadow:'ray'};},
+ 'moreton-bay-bug':b=>{lobster(b,{body:'#9a6a46',belly:'#f0d8b8',spot:'#c08a5a'});return {anim:{...FISH_ANIM,amp:0},hold:{x:.7,z:0},shadow:'crab'};},
+ clownfish:b=>{fish(b,{x1:.3,H:.17,W:.08,peak:.38,q:.55,ped:.16,top:'#d8641e',side:'#e8823a',belly:'#f6c08a',tail:'round',tailH:.12,finC:'#c25418',
+  paint:(c,t)=>(Math.abs(t-.18)<.04||Math.abs(t-.5)<.045||Math.abs(t-.86)<.03)?hex('#f6f1e8'):c,
+  dorsal:[{t0:.3,t1:.48,h:.05,shape:'spiny',spines:6},{t0:.5,t1:.76,h:.055,shape:'round'}],anal:[{t0:.6,t1:.78,h:.05,shape:'round'}],pect:{t:.26,len:.07,round:true},pelvic:{t:.3,len:.04},eye:{t:.11,r:.03},mouth:{t:.02,len:.03,a:1.5}});},
+ 'disc-abalone':b=>{shell(b,{outer:'#7a6a5a',inner:'#cfe0e0',kind:'pearl'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.1,z:0},shadow:'crab'};},
+ 'humphead-wrasse':b=>{fish(b,{x1:.3,H:.2,W:.1,peak:.3,q:.6,ped:.15,top:'#2f7a6a',side:'#4f9a86',belly:'#bfe0cf',line:.05,tail:'round',tailH:.15,finC:'#3f8a7a',
+  paint:(c,t,up)=>t<.2&&up>.3?mixC(c,hex('#1f5f52'),.4):Math.sin(t*50+up*9)>.8?mixC(c,hex('#6fb8a4'),.4):c,
+  dorsal:[{t0:.25,t1:.78,h:.06,shape:'round'}],anal:[{t0:.58,t1:.8,h:.05,shape:'round'}],pect:{t:.25,len:.1,round:true},pelvic:{t:.3,len:.05},eye:{t:.12,r:.026},mouth:{t:.01,len:.06,a:1.5}});},
+ 'reef-octopus':b=>{octopus(b,{body:'#4f8a8a',belly:'#cfe8e0'});return {anim:{axis:[1,0,0],start:-.05,span:.5,dir:[0,.75,.65],k:[5,0,9],amp:.06},hold:{x:0,z:-PI/2},shadow:'octopus'};},
+ 'tiger-shark':b=>{shark(b,{top:'#7a7466',belly:'#efece2',H:.12,q:.6,dorsal:.14,
+  paint:(c,t,up)=>up>-.05&&t>.25&&t<.9&&Math.sin(t*34)>.55?mixC(c,hex('#4a463c'),.5):c});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},
+ 'bonefish':b=>{const L=fish(b,{x1:.32,H:.12,W:.065,peak:.36,q:.7,ped:.1,top:'#7f939c',side:'#d4dde0',belly:'#f2f5f4',line:.25,tail:'fork',tailH:.15,finC:'#8fa3ac',
+  dorsal:[{t0:.36,t1:.5,h:.06,shape:'tri'}],anal:[{t0:.74,t1:.84,h:.025,shape:'low'}],pect:{t:.22,len:.06},pelvic:{t:.46,len:.035},eye:{t:.08,r:.03},mouth:{t:.0,len:.03,a:2}});
+  lateralLine(b,L,.12,.95,t=>.35-.2*Math.sin(t*PI),.006,hex('#5f7480'));},
+ 'whitetip-reef-shark':b=>{shark(b,{top:'#6f7678',belly:'#eef0ee',H:.09,q:.65,dorsal:.12,tip:'#f6f6f2',roundFins:true});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},
+ parrotfish:b=>{fish(b,{x1:.3,H:.16,W:.08,peak:.35,q:.6,ped:.15,top:'#2f9a7a',side:'#3fb08a',belly:'#e8c070',line:-.15,tail:'crescent',tailH:.14,finC:'#d86a4a',
+  paint:(c,t,up)=>t<.1?mixC(c,hex('#e8e0c8'),.5):Math.sin(t*36+up*5)>.75?mixC(c,hex('#1f6f5a'),.4):c,
+  dorsal:[{t0:.25,t1:.8,h:.04,shape:'low'}],anal:[{t0:.62,t1:.8,h:.04,shape:'low'}],pect:{t:.25,len:.08,c:'#f0b040'},pelvic:{t:.3,len:.04},eye:{t:.12,r:.028,ring:'#f2d050'},mouth:{t:.0,len:.04,a:1.4,c:'#e8e0c8'}});},
+ wahoo:b=>{scombrid(b,{top:'#2f5a86',side:'#8fb0c8',belly:'#e4ecf2',H:.1,W:.08,x1:.36,finlet:'#3f6a96',d1:{t0:.2,t1:.5,h:.04,shape:'low'},d2:{t0:.58,t1:.66,h:.04,shape:'sickle'},a1:{t0:.6,t1:.68,h:.04,shape:'sickle'},
+  paint:(c,t,up)=>up>-.3&&t>.18&&t<.88&&Math.sin(t*44)>.5?mixC(c,hex('#1f3a5a'),.5):c});return {anim:{...FISH_ANIM,start:.3,amp:.05}};},
+ 'lebranche-mullet':b=>{const L=fish(b,{x1:.32,H:.12,W:.08,peak:.35,q:.7,ped:.12,top:'#5f6f76',side:'#c8d0d2',belly:'#eef0ee',line:.15,tail:'fork',tailH:.13,finC:'#6f7f86',
+  dorsal:[{t0:.38,t1:.46,h:.05,shape:'spiny',spines:4},{t0:.6,t1:.7,h:.04,shape:'tri'}],anal:[{t0:.64,t1:.74,h:.035,shape:'tri'}],pect:{t:.24,len:.06},pelvic:{t:.4,len:.04},eye:{t:.08,r:.028},mouth:{t:.0,len:.03,a:1.6}});
+  for(const up of [.55,.8,1.05])lateralLine(b,L,.15,.9,()=>Math.cos(up),.004,hex('#7f8c92'));},
+ 'john-dory':b=>{const L=fish(b,{x1:.3,H:.26,W:.05,peak:.42,q:.5,ped:.12,top:'#8a8270',side:'#b8b098',belly:'#e8e2d0',line:-.2,tail:'round',tailH:.12,finC:'#8a826a',
+  dorsal:[{t0:.25,t1:.5,h:.1,shape:'spiny',spines:9},{t0:.52,t1:.82,h:.05,shape:'round'}],anal:[{t0:.55,t1:.82,h:.05,shape:'round'}],pect:{t:.3,len:.06},pelvic:{t:.32,len:.1},eye:{t:.12,a:.7,r:.03},mouth:{t:.0,len:.06,a:1.2}});
+  spots(b,L,[[.45,1.5,.06]],hex('#2a2620'),0,8);},
+ snook:b=>{const L=fish(b,{x1:.32,H:.13,W:.075,peak:.35,q:.7,ped:.12,top:'#7a7a5a',side:'#c8c8b0',belly:'#eeeee2',line:.1,tail:'fork',tailH:.14,finC:'#c8b860',
+  dorsal:[{t0:.3,t1:.44,h:.06,shape:'spiny',spines:7},{t0:.5,t1:.66,h:.05,shape:'round'}],anal:[{t0:.64,t1:.74,h:.04,shape:'tri'}],pect:{t:.22,len:.07},pelvic:{t:.3,len:.04,c:'#d8c860'},eye:{t:.08,r:.028},mouth:{t:.0,len:.07,a:1.1}});
+  lateralLine(b,L,.1,.98,t=>.3-.25*Math.sin(t*PI),.008,hex('#1f1f18'));},
+ 'mantis-shrimp':b=>{shrimp(b,{body:'#8a9a6a',belly:'#e8eccf',speckle:'#4f5a3a'});return {anim:{axis:[1,0,0],start:.05,span:.3,dir:[0,1,0],k:[6,0,0],amp:.025},shadow:'fish'};},
+ // ---- Signature species, wave 3 (Nov 6 2026, ./shoreSignatures.ts SIGNATURE_FISH_WAVE3): existing builders, new colours and patterns.
+ garibaldi:b=>{fish(b,{x1:.3,H:.18,W:.08,peak:.38,q:.55,ped:.16,top:'#e8641a',side:'#f07a1e',belly:'#f6a050',tail:'slight',tailH:.13,finC:'#e0601a',
+  dorsal:[{t0:.28,t1:.78,h:.05,shape:'round'}],anal:[{t0:.6,t1:.8,h:.05,shape:'round'}],pect:{t:.26,len:.07,round:true},pelvic:{t:.3,len:.04},eye:{t:.11,r:.03},mouth:{t:.02,len:.03,a:1.5}});},
+ 'goose-barnacle':b=>{shell(b,{outer:'#5a4a3e',inner:'#e8c8a8',kind:'mussel'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.0,z:0},shadow:'crab'};},
+ 'wolf-eel':b=>{eelLike(b,{top:'#7a7f7a',belly:'#c8c4b0',h:.065,w:.05,fleck:'#4a4f4a'});return {anim:{axis:[1,0,0],start:-.3,span:.8,dir:[0,.5,.85],k:[9,0,0],amp:.05}};},
+ 'sarcastic-fringehead':b=>{fish(b,{x1:.34,H:.09,W:.06,peak:.3,q:.6,ped:.2,top:'#6a5a3a',side:'#7a6a4a',belly:'#d8c8a0',line:-.1,tail:'round',tailH:.08,finC:'#5a4a30',
+  paint:(c,t,up,side)=>cell(t*20,up*6,side*3)>.75?mixC(c,hex('#3a3020'),.5):c,
+  dorsal:[{t0:.12,t1:.92,h:.04,shape:'low'}],anal:[{t0:.5,t1:.92,h:.025,shape:'low'}],pect:{t:.2,len:.06,round:true},eye:{t:.08,a:.8,r:.024},mouth:{t:.0,len:.09,a:1.4,c:'#e0b020'}});},
+ 'sand-bubbler-crab':b=>{crab(b,{body:'#d8c8a0',belly:'#f2e8d0',claw:'#e0d0a8',kind:'swimming'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
+ milkfish:b=>{fish(b,{x1:.33,H:.13,W:.065,peak:.38,q:.72,ped:.09,top:'#6f8a96',side:'#cdd8dc',belly:'#eef2f2',line:.2,tail:'fork',tailH:.18,finC:'#8aa0aa',
+  dorsal:[{t0:.4,t1:.52,h:.06,shape:'tri'}],anal:[{t0:.74,t1:.84,h:.025,shape:'low'}],pect:{t:.22,len:.06},pelvic:{t:.46,len:.035},eye:{t:.08,r:.03},mouth:{t:.0,len:.025,a:1.6}});},
+ 'ribbontail-ray':b=>{ray(b,{top:'#b8a060',belly:'#f2ecd8',spine:true,spots:'#3fa8f0'});return {anim:{axis:[0,0,1],start:.1,span:.4,dir:[0,1,0],k:[3,0,0],amp:.04},hold:{x:1.35,z:-PI/2},shadow:'ray'};},
+ 'zebra-shark':b=>{shark(b,{top:'#c8b070',belly:'#f2e8c8',H:.09,q:.6,dorsal:.08,d2:.06,pect:.2,roundFins:true,tailH:.16,
+  paint:(c,t,up,side)=>up>-.3&&cell(t*30,up*7,side*3)>.7?mixC(c,hex('#3a3020'),.6):c});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.07}};},
+ smelt:b=>{fish(b,{x1:.32,H:.09,W:.045,peak:.4,q:.75,ped:.1,top:'#6f8a86',side:'#cfdcd8',belly:'#eef2ee',line:.2,tail:'fork',tailH:.11,finC:'#8aa8a0',dorsal:[{t0:.42,t1:.52,h:.04,shape:'tri'}],anal:[{t0:.7,t1:.84,h:.02,shape:'low'}],pect:{t:.22,len:.05},pelvic:{t:.46,len:.025},eye:{t:.09,r:.032},mouth:{t:.01,len:.03,a:1.5}});},
+ capelin:b=>{const L=fish(b,{x1:.32,H:.085,W:.042,peak:.4,q:.75,ped:.1,top:'#4f7a7a',side:'#c8d8d4',belly:'#e8eeea',line:.2,tail:'fork',tailH:.1,finC:'#6f8a8a',dorsal:[{t0:.44,t1:.54,h:.035,shape:'tri'}],anal:[{t0:.68,t1:.84,h:.02,shape:'low'}],pect:{t:.22,len:.05},pelvic:{t:.46,len:.025},eye:{t:.09,r:.028},mouth:{t:.01,len:.025,a:1.5}});
+  lateralLine(b,L,.12,.95,()=>.1,.006,hex('#3f6a6a'));},
+ garfish:b=>{const L=fish(b,{x1:.36,H:.06,W:.04,peak:.45,q:.8,ped:.15,top:'#2f6a5a',side:'#9fc0b4',belly:'#e8f0ea',line:.2,tail:'fork',tailH:.08,finC:'#3f7a6a',dorsal:[{t0:.76,t1:.88,h:.03,shape:'low'}],anal:[{t0:.74,t1:.86,h:.03,shape:'low'}],pect:{t:.2,len:.04},eye:{t:.1,r:.018}});
+  b.tube(smoothPath([[-.5,0,0],[-.6,-.004,0],[-.7,-.01,0]],4),t=>.012*(1-t*.8),4,()=>hex('#2f5a4a'));void L;return {anim:{...FISH_ANIM,start:.2,amp:.05}};},
+ 'atlantic-salmon':b=>{const L=fish(b,{x1:.33,H:.13,W:.075,peak:.38,q:.7,ped:.1,top:'#4f6070',side:'#c8d0d6',belly:'#eef0ee',line:.15,tail:'slight',tailH:.15,finC:'#6f7f8a',
+  dorsal:[{t0:.38,t1:.5,h:.06,shape:'tri'},{t0:.8,t1:.84,h:.025,shape:'round'}],anal:[{t0:.72,t1:.82,h:.035,shape:'tri'}],pect:{t:.22,len:.07},pelvic:{t:.46,len:.035},eye:{t:.08,r:.026},mouth:{t:.0,len:.05,a:1.4}});
+  spots(b,L,Array.from({length:10},(_,i):[number,number,number]=>[.15+.5*hash(i*3.7),.6+.6*hash(i*1.9),.012]),hex('#2a3038'),0,5);},
+ bluefish:b=>{fish(b,{x1:.32,H:.13,W:.07,peak:.38,q:.7,ped:.11,top:'#2f5f80',side:'#9ab8c8',belly:'#e8eef0',line:.15,tail:'fork',tailH:.16,finC:'#4f7f9a',
+  dorsal:[{t0:.3,t1:.42,h:.04,shape:'spiny',spines:6},{t0:.46,t1:.74,h:.05,shape:'low'}],anal:[{t0:.5,t1:.76,h:.04,shape:'low'}],pect:{t:.22,len:.06},pelvic:{t:.3,len:.035},eye:{t:.09,r:.028},mouth:{t:.0,len:.07,a:1.3}});return {anim:{...FISH_ANIM,start:.3,amp:.05}};},
+ lingcod:b=>{fish(b,{x1:.32,H:.12,W:.08,peak:.3,q:.6,ped:.12,top:'#5a5a3a',side:'#7a7a5a',belly:'#d8d0b0',line:-.1,tail:'round',tailH:.12,finC:'#5a5a3a',
+  paint:(c,t,up,side)=>cell(t*22,up*6,side*3)>.7?mixC(c,hex('#2f3020'),.5):c,
+  dorsal:[{t0:.18,t1:.5,h:.06,shape:'spiny',spines:9},{t0:.52,t1:.86,h:.05,shape:'round'}],anal:[{t0:.5,t1:.86,h:.04,shape:'low'}],pect:{t:.22,len:.1,round:true},eye:{t:.08,r:.024},mouth:{t:.0,len:.09,a:1.3}});},
+ amberjack:b=>{const L=fish(b,{x1:.33,H:.13,W:.075,peak:.38,q:.7,ped:.09,top:'#4f6070',side:'#b8c4cc',belly:'#eef0e8',line:.1,tail:'fork',tailH:.18,finC:'#c8b040',
+  dorsal:[{t0:.3,t1:.38,h:.03,shape:'spiny',spines:5},{t0:.42,t1:.76,h:.05,shape:'low'}],anal:[{t0:.6,t1:.78,h:.04,shape:'low'}],pect:{t:.22,len:.06},pelvic:{t:.3,len:.035},eye:{t:.08,r:.026},mouth:{t:.0,len:.05,a:1.5}});
+  lateralLine(b,L,.08,.96,()=>.0,.01,hex('#e0c040'));return {anim:{...FISH_ANIM,start:.3,amp:.05}};},
+ 'sixgill-shark':b=>{shark(b,{top:'#5a5550',belly:'#b8b4ae',H:.11,W:.1,q:.55,dorsal:.07,d2:0,pect:.2,roundFins:true,line:-.05,gills:6});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.06}};},
+ 'giant-red-shrimp':b=>{shrimp(b,{body:'#c8342a',belly:'#f2b0a0',speckle:'#8a1a14'});return {anim:{axis:[1,0,0],start:.05,span:.3,dir:[0,1,0],k:[6,0,0],amp:.025},shadow:'fish'};},
+ 'firefly-squid':b=>{squid(b,{body:'#3f5aa8',belly:'#a8c8f0'});return {anim:{axis:[-1,0,0],start:.2,span:.35,dir:[0,.7,.7],k:[0,0,8],amp:.03},hold:{x:.75,z:0},shadow:'octopus'};},
+ 'blue-whiting':b=>{fish(b,{x1:.32,H:.1,W:.05,peak:.38,q:.72,ped:.1,top:'#4f6f96',side:'#c8d4e0',belly:'#e8eef2',line:.2,tail:'slight',tailH:.11,finC:'#6f8aa8',
+  dorsal:[{t0:.3,t1:.42,h:.04,shape:'tri'},{t0:.5,t1:.62,h:.035,shape:'tri'},{t0:.7,t1:.82,h:.03,shape:'tri'}],anal:[{t0:.45,t1:.62,h:.03,shape:'low'},{t0:.68,t1:.82,h:.025,shape:'low'}],pect:{t:.22,len:.05},eye:{t:.09,r:.034},mouth:{t:.01,len:.03,a:1.5}});},
+ 'humboldt-squid':b=>{squid(b,{body:'#b8483a',belly:'#f2c8c0'});return {anim:{axis:[-1,0,0],start:.2,span:.35,dir:[0,.7,.7],k:[0,0,8],amp:.03},hold:{x:.75,z:0},shadow:'octopus'};},
+ 'orange-roughy':b=>{fish(b,{x1:.3,H:.2,W:.09,peak:.36,q:.5,ped:.15,top:'#d8502a',side:'#e0603a',belly:'#f2b090',line:-.1,tail:'fork',tailH:.13,finC:'#c84a2a',
+  dorsal:[{t0:.3,t1:.5,h:.06,shape:'spiny',spines:6},{t0:.52,t1:.72,h:.05,shape:'round'}],anal:[{t0:.6,t1:.76,h:.045,shape:'round'}],pect:{t:.26,len:.07},pelvic:{t:.3,len:.04},eye:{t:.12,r:.045,ring:'#f0d0b0'},mouth:{t:.01,len:.05,a:1.4}});},
+ opah:b=>{const L=fish(b,{x1:.3,H:.27,W:.08,peak:.42,q:.5,ped:.1,top:'#b8404a',side:'#c8505a',belly:'#f2c8a0',line:-.2,tail:'crescent',tailH:.16,finC:'#e03030',
+  dorsal:[{t0:.25,t1:.6,h:.1,shape:'sickle'}],anal:[{t0:.6,t1:.8,h:.04,shape:'low'}],pect:{t:.3,len:.12,c:'#e03030'},pelvic:{t:.42,len:.08,c:'#e03030'},eye:{t:.12,r:.034,ring:'#f2d050'},mouth:{t:.01,len:.04,a:1.5}});
+  spots(b,L,Array.from({length:14},(_,i):[number,number,number]=>[.2+.6*hash(i*2.9),.3+1.2*hash(i*5.1),.016]),hex('#f6f0e8'),0,6);},
+ 'spotted-ratfish':b=>{const L=fish(b,{x1:.4,H:.12,W:.07,peak:.22,q:.5,ped:.02,top:'#7a6a5a',side:'#8a7a6a',belly:'#d8d0c8',line:-.1,tail:'slight',tailH:.04,finC:'#6a5a4a',
+  dorsal:[{t0:.18,t1:.28,h:.1,shape:'tri'},{t0:.34,t1:.8,h:.03,shape:'low'}],pect:{t:.25,len:.16,wide:1.6,sweep:.4},eye:{t:.08,r:.04,iris:'#40a070'}});
+  spots(b,L,Array.from({length:12},(_,i):[number,number,number]=>[.15+.55*hash(i*4.3),.4+1.1*hash(i*2.1),.012]),hex('#f2ecdc'),0,5);},
+ 'red-king-crab':b=>{crab(b,{body:'#a8382a',belly:'#f2c0a0',claw:'#b8443a',tip:'#f2d8c0',kind:'swimming'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
+ footballfish:b=>{const L=fish(b,{x1:.25,H:.26,W:.24,peak:.4,q:.3,ped:.2,top:'#3a3230',side:'#4a403c',belly:'#6a5a50',line:-.3,tail:'round',tailH:.1,finC:'#2a2422',
+  dorsal:[{t0:.68,t1:.84,h:.05,shape:'round'}],anal:[{t0:.7,t1:.84,h:.045,shape:'round'}],pect:{t:.5,len:.06,round:true},eye:{t:.2,a:.7,r:.016},mouth:{t:.0,len:.1,a:1.3,c:'#1a0e10'}});
+  b.tube(smoothPath([[-.3,.22,0],[-.36,.32,0],[-.46,.34,0]],6),()=>.008,4,()=>hex('#4a3c34'));
+  b.blob([-.48,.32,0],[.03,.03,.03],6,4,()=>hex('#c8f0ff'),{g:1});void L;return {anim:{...FISH_ANIM,start:.1,amp:.04}};},
+ oarfish:b=>{const L=fish(b,{x1:.5,H:.06,W:.02,peak:.15,q:.6,ped:.2,top:'#b8bcc8',side:'#d8dce4',belly:'#eef0f4',line:-.1,tail:'slight',tailH:.04,finC:'#d83a3a',n:24,
+  dorsal:[{t0:.0,t1:.08,h:.12,shape:'tri'},{t0:.08,t1:.98,h:.03,shape:'low'}],eye:{t:.03,r:.012}});
+  spots(b,L,Array.from({length:10},(_,i):[number,number,number]=>[.15+.08*i,.9,.01]),hex('#5a6070'),0,5);return {anim:{axis:[1,0,0],start:-.3,span:.8,dir:[0,.5,.85],k:[7,0,0],amp:.04}};},
+ 'black-scabbardfish':b=>{eelLike(b,{top:'#2a2a2e',belly:'#5a5a60',h:.05,w:.025});return {anim:{axis:[1,0,0],start:-.3,span:.8,dir:[0,.5,.85],k:[9,0,0],amp:.05}};},
+ 'patagonian-toothfish':b=>{fish(b,{x1:.32,H:.16,W:.1,peak:.34,q:.6,ped:.13,top:'#3a3a32',side:'#5a5a50',belly:'#b8b4a8',line:-.1,tail:'slight',tailH:.13,finC:'#3a3a32',
+  paint:(c,t,up,side)=>cell(t*20,up*6,side*3)>.78?mixC(c,hex('#22221c'),.5):c,
+  dorsal:[{t0:.3,t1:.46,h:.05,shape:'spiny',spines:7},{t0:.5,t1:.8,h:.045,shape:'round'}],anal:[{t0:.55,t1:.8,h:.04,shape:'round'}],pect:{t:.24,len:.09,round:true},pelvic:{t:.3,len:.04},eye:{t:.1,r:.03},mouth:{t:.0,len:.08,a:1.4}});},
+ 'bigeye-tuna':b=>{scombrid(b,{top:'#1c2f5a',side:'#9aa8bc',belly:'#e0e6ee',H:.17,W:.13,finlet:'#e8c83a',d2:{t0:.56,t1:.62,h:.1,shape:'sickle',c:'#e8c83a'},a1:{t0:.57,t1:.63,h:.09,shape:'sickle',c:'#e8c83a'},pect:.2});return {anim:{...FISH_ANIM,start:.3,amp:.05}};},
 };
+/** An eel-shaped body (moray, cusk-eel): one loft with long low fins, optional pale flecks (Nov 6 2026). */
+function eelLike(b:Builder,o:{top:string;belly:string;h:number;w:number;fleck?:string}){
+ const top=hex(o.top),bel=hex(o.belly),fl=o.fleck?hex(o.fleck):null,env=(t:number)=>Math.pow(Math.sin(PI*Math.min(1,t*1.15+.04)),.35)*(t>.9?(1-t)*10*.7+.3:1);
+ const L:Loft={x0:-.5,x1:.5,n:24,sides:8,h:t=>o.h*env(t),w:t=>o.w*env(t),c:t=>.05*Math.sin(t*PI*2.2),paint:(t,up,sd)=>up>-.2?(fl&&cell(t*34,up*5,sd*3)>.72?fl:top):bel};
+ b.loft(L);fin(b,L,{t0:.12,t1:.99,h:.03,shape:'low'},'top',shade(top,.9));fin(b,L,{t0:.45,t1:.99,h:.025,shape:'low'},'bottom',shade(top,.9));
+ eyes(b,L,.04,1.0,.013);
+}
 /** Fallbacks when a species id has no entry (new species added later): the right animal type in the species' colours. */
 function byShape(b:Builder,shape:FishShape|undefined,color:string,belly:string):ReturnType<Spec>{
  switch(shape){

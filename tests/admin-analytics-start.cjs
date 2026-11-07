@@ -177,12 +177,12 @@ await ok('suppression',()=>{
  const sess={'st:view':40,'st:start':20,'st:created':4,'st:saved':12,'sg:open':9,'sg:wsv':3,'sg:amt_10':6,'sg:paid':2,'sp:open':5,'sp:short':1},cnt={...sess,'sg:wsv':3,'sg:amt_10':8};
  const merged={counts:cnt,countSessions:sess,start:{visitors:30,sessions:41,pageviews:80,days:1,dims:{country:[],source:[],referrer:[],campaign:[],device:[]}},dims:{entry:[{key:'/start',visitors:25,sessions:33,pageviews:60}]}};
  const r=SR.buildStart(merged,4,1);
- const nf=r.funnels.find(f=>f.id==='new').steps.map(s=>s.sessions);assert.deepEqual(J(nf),[40,20,null,12,0]);
- const wsv=r.grown.links.find(l=>l.id==='wsv');assert.equal(wsv.sessions,null);assert.equal(wsv.clicks,null,'taps behind < 5 sessions are withheld too');
+ const nf=r.funnels.find(f=>f.id==='new').steps.map(s=>s.sessions);assert.deepEqual(J(nf),[40,20,4,12,0]);
+ const wsv=r.grown.links.find(l=>l.id==='wsv');assert.equal(wsv.sessions,3);assert.equal(wsv.clicks,3,'taps are exact too');
  const a10=r.grown.amounts.find(a=>a.amount===10);assert.equal(a10.sessions,6);assert.equal(a10.clicks,8);
- assert.equal(r.grown.paid,null);assert.equal(r.privacy.fromLink,5);assert.equal(r.privacy.sections[0].sessions,null);
- assert.equal(r.hidden,5,'created, wsv (sessions + taps), paid, the short-version section');
- assert(!/"(sessions|clicks|viewed|paid|opened|fromLink|fromGrown|answered|right|tilt|gateNo)":[1-4][,}]/.test(JSON.stringify(r)),'no raw small cells');
+ assert.equal(r.grown.paid,2);assert.equal(r.privacy.fromLink,5);assert.equal(r.privacy.sections[0].sessions,1);
+ assert.equal(r.hidden,0,'nothing is hidden');
+ 
  assert(/<5/.test(read('app/admin/StartSection.tsx'))&&/fewer than/.test(read('app/admin/StartSection.tsx')),'the dashboard says what is hidden');
 });
 

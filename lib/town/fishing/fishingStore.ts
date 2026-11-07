@@ -73,15 +73,19 @@ export const bestSize=(id:FishId)=>readFishbook().species[id]?.biggest??0;
 // ---- Device preferences (Oct 15 2026): the first-time tutorial, per device (lib/saves/snapshot.ts DEVICE_KEYS;
 // docs/accounts-design.md table B). No timers: read once, written on change. (The Easy reel option was removed: the spin fight is the only reel.) ----
 export const FISH_TUTORIAL_KEY='fi2-fish-tutorial-v1';
-const prefListeners=new Set<()=>void>();let prefs:{tutorialDone:boolean}|null=null;
-const SERVER_PREFS={tutorialDone:true};
+/** Nov 6 2026: Island settings → Fishing → Easy bite (default off): every bite window is EASY_BONUS longer (fishingCore.ts), like
+ *  reduced motion. A device key (lib/saves/snapshot.ts DEVICE_KEYS). Rarity odds and the fight are unchanged. */
+export const FISH_EASY_BITE_KEY='fi2-fish-easy-bite-v1';
+const prefListeners=new Set<()=>void>();let prefs:{tutorialDone:boolean;easyBite:boolean}|null=null;
+const SERVER_PREFS={tutorialDone:true,easyBite:false};
 function readPrefs(){if(prefs)return prefs;if(typeof window==='undefined')return SERVER_PREFS;
- let done=false;try{done=localStorage.getItem(FISH_TUTORIAL_KEY)==='1';}catch{/* private mode */}
- prefs={tutorialDone:done};return prefs;}
+ let done=false,easyBite=false;try{done=localStorage.getItem(FISH_TUTORIAL_KEY)==='1';easyBite=localStorage.getItem(FISH_EASY_BITE_KEY)==='1';}catch{/* private mode */}
+ prefs={tutorialDone:done,easyBite};return prefs;}
 const setPrefs=(patch:Partial<NonNullable<typeof prefs>>)=>{prefs={...readPrefs(),...patch};prefListeners.forEach(f=>f());};
 export const fishingPrefs=()=>readPrefs();
 export const subscribeFishingPrefs=(fn:()=>void)=>{prefListeners.add(fn);return()=>{prefListeners.delete(fn);};};
 export const useFishingPrefs=()=>useSyncExternalStore(subscribeFishingPrefs,readPrefs,()=>SERVER_PREFS);
 /** The ghost-hand tutorial runs once per device (the first fishing session); B may offer a replay from the Fishbook. */
 export function finishFishingTutorial(){try{localStorage.setItem(FISH_TUTORIAL_KEY,'1');}catch{/* private mode */}setPrefs({tutorialDone:true});}
+export function setEasyBite(on:boolean){try{if(on)localStorage.setItem(FISH_EASY_BITE_KEY,'1');else localStorage.removeItem(FISH_EASY_BITE_KEY);}catch{/* private mode */}setPrefs({easyBite:on});}
 export function resetFishingTutorial(){try{localStorage.removeItem(FISH_TUTORIAL_KEY);}catch{/* private mode */}setPrefs({tutorialDone:false});}

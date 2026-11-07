@@ -9,10 +9,10 @@
  * list (`lures`). Old saves still carry those fields; sanitizeLog ignores them.
  * Pure (no storage, no React): fishingLogStore.ts is the browser binding. Sizes stay small (a few KB at most: every list is capped).
  */
-import {FISH,FISH_SPOTS,fishById} from './fishCatalog';
+import {FISH,FISH_SPOTS,SHORE_SPOTS,fishById,spotById} from './fishCatalog';
 import {LEGEND_CLUE_KINDS,isLegendId,legendForSpot} from './legendary';
 import {isLureId,type LureId} from './lures';
-import {requestProgress,requestsForDay,type FishRequest} from './requests';
+import {requestHint,requestProgress,requestsForDay,type FishRequest} from './requests';
 
 export const FISHING_LOG_KEY='fi2-fishing-log-v1';
 export type FloatSkin='classic'|'football'|'seagull'|'golden';
@@ -31,8 +31,11 @@ export type FishingLog={version:1;
  lure:LureId|null;
  /** Fishbook milestones claimed (25 / 50 / 100). */
  milestones:number[];
- floats:FloatSkin[];float:FloatSkin;goldenRod:boolean;rod:'standard'|'golden'};
-export const emptyLog=():FishingLog=>({version:1,kinds:{},clues:[],legends:{},req:{day:'',progress:{},done:[],kinds:[]},reqTotal:0,lure:null,milestones:[],floats:['classic'],float:'classic',goldenRod:false,rod:'standard'});
+ floats:FloatSkin[];float:FloatSkin;goldenRod:boolean;rod:'standard'|'golden';
+ /** Nov 6 2026 bad-luck protection (fishingOdds.ts PITY): casts without a still-uncaught legendary, keyed `<spot>|<species>`.
+  *  Internal only, never shown. Cleared for a species when it is caught. Old saves have none (= no pity yet). */
+ pity:Record<string,number>};
+export const emptyLog=():FishingLog=>({version:1,kinds:{},clues:[],legends:{},req:{day:'',progress:{},done:[],kinds:[]},reqTotal:0,lure:null,milestones:[],floats:['classic'],float:'classic',goldenRod:false,rod:'standard',pity:{}});
 const SPOT_IDS=FISH_SPOTS.map(s=>s.id);
 const whole=(v:unknown,max=1e9)=>typeof v==='number'&&Number.isFinite(v)?Math.max(0,Math.min(max,Math.floor(v))):0;
 const strList=(v:unknown,ok:(s:string)=>boolean,cap:number)=>Array.isArray(v)?[...new Set(v.filter((x):x is string=>typeof x==='string'&&ok(x)))].slice(0,cap):[];
@@ -40,6 +43,18 @@ const isSpot=(s:string)=>SPOT_IDS.includes(s as never);
 const isFish=(s:string)=>FISH.some(f=>f.id===s);
 const SKINS=Object.keys(FLOAT_SKINS) as FloatSkin[];
 export const MILESTONES=[25,50,100] as const;
+/** Pity keys: `<spot>|<species>` for a legendary species in that spot's table (fishingOdds.ts pitySpecies). */
+export const pityKey=(spot:string,id:string)=>`${spot}|${id}`;
+const PITY_COUNT_MAX=400,PITY_KEYS_MAX=60;
+const isPityKey=(k:string)=>{const [spot,id,...rest]=k.split('|');if(rest.length||!spot||!id)return false;const s=FISH_SPOTS.find(x=>x.id===spot);return !!s&&id in s.weights&&fishById(id)?.rarity==='legendary';};
+/** One cast at `spot` rolled `picked`: every still-uncaught legendary there (`uncaught`) that did not come gains one count. Pure. */
+export function bumpPity(log:FishingLog,spot:string,uncaught:readonly string[],picked:string):FishingLog{
+ if(!uncaught.length)return log;const pity={...log.pity};let changed=false;
+ for(const id of uncaught){if(id===picked)continue;const k=pityKey(spot,id);if(!isPityKey(k))continue;const n=Math.min(PITY_COUNT_MAX,(pity[k]??0)+1);if(n!==pity[k]){pity[k]=n;changed=true;}}
+ return changed?{...log,pity}:log;
+}
+/** The pity counts for one spot's still-uncaught legendaries (the catch context's `pity`). */
+export function pityFor(log:FishingLog,spot:string,uncaught:readonly string[]):Record<string,number>{const o:Record<string,number>={};for(const id of uncaught){const n=log.pity[pityKey(spot,id)]??0;if(n>0)o[id]=n;}return o;}
 /** Old saves: a 75 % milestone was claimed before 15 Oct 2026; it is dropped (its reward, a lure, is free now). */
 export function sanitizeLog(value:unknown):FishingLog{
  const v=value&&typeof value==='object'?value as Partial<FishingLog>:{},out=emptyLog();
@@ -56,6 +71,7 @@ export function sanitizeLog(value:unknown):FishingLog{
  out.floats=[...new Set<FloatSkin>(['classic',...strList(v.floats,s=>SKINS.includes(s as FloatSkin),8) as FloatSkin[]])];
  out.float=SKINS.includes(v.float as FloatSkin)&&out.floats.includes(v.float as FloatSkin)?v.float as FloatSkin:'classic';
  out.goldenRod=v.goldenRod===true;out.rod=out.goldenRod&&v.rod==='golden'?'golden':'standard';
+ if(v.pity&&typeof v.pity==='object')for(const [k,n] of Object.entries(v.pity).slice(0,PITY_KEYS_MAX)){if(isPityKey(k)){const c=whole(n,PITY_COUNT_MAX);if(c>0)out.pity[k]=c;}}
  return out;
 }
 /** Two tabs / a downloaded save: keep the larger of everything (nothing earned is ever lost). */
@@ -65,7 +81,8 @@ export function mergeLogs(a:FishingLog,b:FishingLog):FishingLog{
  const legends={...b.legends};for(const [id,t] of Object.entries(a.legends))legends[id]=Math.min(t,legends[id]??t);
  const req=a.req.day===b.req.day?{day:a.req.day,progress:Object.fromEntries(u(Object.keys(a.req.progress),Object.keys(b.req.progress)).map(id=>[id,Math.max(a.req.progress[id]??0,b.req.progress[id]??0)])),done:u(a.req.done,b.req.done),kinds:u(a.req.kinds,b.req.kinds).slice(0,40)}:(a.req.day>b.req.day?a.req:b.req);
  return {version:1,kinds,clues:u(a.clues,b.clues),legends,req,reqTotal:Math.max(a.reqTotal,b.reqTotal),
-  lure:a.lure??b.lure,milestones:u(a.milestones,b.milestones),floats:u(a.floats,b.floats),float:a.float,goldenRod:a.goldenRod||b.goldenRod,rod:a.rod};
+  lure:a.lure??b.lure,milestones:u(a.milestones,b.milestones),floats:u(a.floats,b.floats),float:a.float,goldenRod:a.goldenRod||b.goldenRod,rod:a.rod,
+  pity:Object.fromEntries(u(Object.keys(a.pity??{}),Object.keys(b.pity??{})).map(k=>[k,Math.max(a.pity?.[k]??0,b.pity?.[k]??0)]))};
 }
 
 // ---- Rewards (earned, never bought; cosmetic only) ----
@@ -104,6 +121,8 @@ export function logCatch(log0:FishingLog,c:CatchInput):{log:FishingLog;effects:C
   // Caught once, then released: it never returns, it is never sold, and it does not count as a Fishbook species.
   if(!log.legends[c.id])log={...log,legends:{...log.legends,[c.id]:c.now||1}};effects.legend=true;
  }else if(fishById(c.id)){
+  // Bad-luck protection: caught, so its pity counts go (at every spot; a caught species never gets pity again).
+  if(Object.keys(log.pity).some(k=>k.endsWith(`|${c.id}`)))log={...log,pity:Object.fromEntries(Object.entries(log.pity).filter(([k])=>!k.endsWith(`|${c.id}`)))};
   const k=log.kinds[c.spot]??[];if(!k.includes(c.id)&&isSpot(c.spot)){log={...log,kinds:{...log.kinds,[c.spot]:[...k,c.id].slice(0,40)}};
    if(k.length+1>=LEGEND_CLUE_KINDS&&legendForSpot(c.spot)&&!log.clues.includes(c.spot)){log={...log,clues:[...log.clues,c.spot]};effects.newClues.push(c.spot);}}
   // Requests (today's three).
@@ -119,4 +138,28 @@ export function logCatch(log0:FishingLog,c:CatchInput):{log:FishingLog;effects:C
  return {log,effects};
 }
 /** Spots whose legend is swimming now: the clue is found and it was not caught yet. */
-export const legendsDue=(log:FishingLog)=>log.clues.filter(s=>{const L=legendForSpot(s);return !!L&&!log.legends[L.id];});
+/** Wave 3 (Nov 6 2026): at the four spots with a second legend, it swims once the first was caught (the same clue counts). */
+export const legendsDue=(log:FishingLog)=>log.clues.filter(s=>!!legendForSpot(s,log.legends));
+
+/**
+ * Today's requests nudge (Nov 6 2026, fishing audit item 8): the HUD request chip was removed on purpose, so on the FIRST cast of a
+ * fishing session the HUD shows one calm line for the day's first unfinished request and where to look: "Rosa wants a Red Snapper:
+ * try Harbour Wall." Null when every request is done or this spot already fits it (so a "3 different kinds" request, which any
+ * spot fits, never nags). Words only, never odds.
+ */
+export function requestNudge(log:FishingLog,day:string,spot:string):string|null{
+ const done=log.req.day===day?log.req.done:[],q=requestsForDay(day).find(r=>!done.includes(r.id));if(!q)return null;
+ const here=spotById(spot),has=(s:{weights:Record<string,number>}|undefined,ok:(id:string)=>boolean)=>!!s&&Object.keys(s.weights).some(ok);
+ const big=(id:string)=>{const f=fishById(id);return !!f&&(f.shadow==='huge'||f.shadow==='giant');},inGroup=(id:string)=>fishById(id)?.group===q.target;
+ const names=(ok:(id:string)=>boolean)=>SHORE_SPOTS.filter(s=>has(s,ok)).slice(0,2).map(s=>s.name);
+ let hint='';
+ switch(q.kind){
+  case 'kinds':return null;
+  case 'species':if((fishById(q.target)?.spots as readonly string[]|undefined)?.includes(spot))return null;hint=requestHint(q);break;
+  case 'spot':if(q.target===spot)return null;break;// its text already names the spot
+  case 'shadow':if(has(here,big))return null;{const n=names(big);hint=n.length?`Try ${n.join(' or ')}.`:'';}break;
+  case 'group':if(has(here,inGroup))return null;{const n=names(inGroup);hint=n.length?`Try ${n.join(' or ')}.`:'';}break;
+ }
+ const ask=q.text.replace(/[.!]\s*$/,'');
+ return hint?`${ask}: ${hint.charAt(0).toLowerCase()}${hint.slice(1)}`:`${ask}.`;
+}

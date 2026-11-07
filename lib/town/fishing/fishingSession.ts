@@ -21,9 +21,11 @@
  *           'run'     the fish makes a run during the fight (`dir` -1 left / 1 right on screen): stop spinning and let it tire
  *           'slip'    too much tension: it slipped back a notch (never lost)
  *           'warn'    the line twang before an idle escape
- *           'catch'   landed: also `isNew`, `isBiggest` (a new size record for that species), `inBasket`, and `fight` (the
+ *           'catch'   landed: also `isNew`, `isBiggest` (a new size record for that species), `inBasket`, `legend` (an Island
+ *                     Legend, released), and `fight` (the
  *                     spin fight's stats, fishingFight.ts FightStats)
- *           'escape'  it swam off: `how` 'scared' (tapped on a nibble) or 'escaped' (too late / idle); `hooked` says whether
+ *           'escape'  it swam off: `how` 'scared' (tapped on a nibble; core only: the HUD ignores nibble taps since Nov 6 2026) or
+ *                     'escaped' (too late / idle); `hooked` says whether
  *                     it had been hooked (an idle escape from the fight: `fight` stats ride along too)
  *     fish  species id (FishId) or null;  size  cm or null;  spot  spot id or null;  at  Date.now() ms
  *     also  rarity, shadow (size class), lure (the options at the time), hot ('calm'|'hot'|'spooked' water)
@@ -40,8 +42,8 @@
  *   ./fishingCard.ts; rarity icons: components/RarityStars.tsx (RARITY_STARS in ./fishingCard.ts); the local best size per
  *   species: bestSize(id) in ./fishingStore.ts (the Fishbook's `biggest`).
  */
-import {createSession,tapSession,type Session,type SessionEvent,type SessionPhase} from './fishingCore';
-import {KEEPER_LESSONS,fishById,spotById,type FishId,type FishSpot,type FishRarity,type ShadowSize} from './fishCatalog';
+import {castLocked,createSession,tapSession,type Session,type SessionEvent,type SessionPhase} from './fishingCore';
+import {KEEPER_LESSONS,fishById,isFishbookSpecies,spotById,type FishId,type FishSpot,type FishRarity,type ShadowSize} from './fishCatalog';
 import {countSummitFishCatch} from '../../analytics/summitEvents';
 import {HOTSPOT_HINT,READ_WATER_HINT,SPOOKED_HINT} from './fishingAim';
 import {fightStats,running,setHold,type FightStats,FULL_SPIN_S} from './fishingFight';
@@ -52,7 +54,9 @@ export type FishingView={active:boolean;spotId:string|null;phase:SessionPhase;hi
  water:'calm'|'hot'|'spooked';
  /** Oct 15 2026: the tension fight is on (spin the reel); `run` the fish is making a run (stop spinning and let it tire);
   *  `strain` the arc is in the red; `slips` how many times it slipped back; `warn` the idle warning is showing. */
- fight:boolean;run:boolean;strain:boolean;slips:number;warn:boolean};
+ fight:boolean;run:boolean;strain:boolean;slips:number;warn:boolean;
+ /** Nov 6 2026: Cast is waiting out the catch's read time (the HUD shows the button disabled; taps do nothing). */
+ castLock:boolean};
 /** Aim input from the HUD (Oct 14 2026): a screen point on the water (normalised device coordinates, the world turns it into a
  *  landing), or a polar aim (u −1..1 across, v 0..1 near→far) from the Cast-button drag and the arrow keys. */
 export type AimInput={kind:'screen';x:number;y:number}|{kind:'polar';u:number;v:number;
@@ -66,13 +70,15 @@ const HINTS:Record<SessionPhase,string>={
  floating:'Watch the water for a fish shadow…',
  approach:'A fish is coming. Stay still…',
  nibble:'Nibbles… wait for the big splash!',
- bite:'Now! Reel it in!',
- reeling:'Keep tapping Reel! Bigger animals need more pulls.',
+ bite:'Now! Tap Hook!',
+ reeling:'Spin the reel to wind it in.',
  scared:'Too early! It swam off. Another fish will come.',
  escaped:'Too late, it got away. Stay ready.',
  caught:'Nice catch! Keep fishing or stop.',
 };
-const IDLE:FishingView={active:false,spotId:null,phase:'ready',hint:'',lesson:null,caught:null,catches:0,water:'calm',fight:false,run:false,strain:false,slips:0,warn:false};
+const IDLE:FishingView={active:false,spotId:null,phase:'ready',hint:'',lesson:null,caught:null,catches:0,water:'calm',fight:false,run:false,strain:false,slips:0,warn:false,castLock:false};
+/** A HOOKED fish swam off because the reel stopped (Nov 6 2026: it used to say "Too late", which is the bite's lesson). */
+export const LOST_HINT='It got away! Keep spinning once it\'s hooked.';
 /** The waiting hint for the water the float landed in. */
 const floatHint=(w:FishingView['water'])=>w==='spooked'?SPOOKED_HINT:w==='hot'?HOTSPOT_HINT:HINTS.floating;
 /** While a big animal pulls back (the keeper link: hold on to the ball after a save so nobody scores the rebound). */
@@ -90,7 +96,9 @@ export type FishCue='tick'|'splash'|'plunge'|'cast'|'fanfare'|'reel'|'twang'|'sl
 export type FishingEventType='cast'|'nibble'|'bite'|'hook'|'run'|'slip'|'warn'|'catch'|'escape';
 export type FishingEvent={type:FishingEventType;fish:FishId|null;size:number|null;spot:string|null;at:number;
  rarity:FishRarity|null;shadow:ShadowSize|null;lure:string|null;hot:FishingView['water'];
- dir?:-1|1;isNew?:boolean;isBiggest?:boolean;inBasket?:boolean;how?:'scared'|'escaped';hooked?:boolean;fight?:FightStats};
+ dir?:-1|1;isNew?:boolean;isBiggest?:boolean;inBasket?:boolean;how?:'scared'|'escaped';hooked?:boolean;fight?:FightStats;
+ /** On 'catch' (Nov 6 2026): an Island Legend (released: never a Fishbook species, never in the basket). */
+ legend?:boolean};
 export type FishingOptions={lure:string|null};
 /** The angler's cosmetics and the night glow (Agent B: fishingLogStore.fishingCosmetics, waterMood.moodParams): looks only. */
 export type FishingLook={floatColor:string|null;goldenRod:boolean;floatGlow:number};
@@ -108,7 +116,7 @@ export function createFishingSession(land:Lander,cue:(kind:FishCue,strength?:num
  let paused=false,aimInput:AimInput|null=null,aimCast:AimInput|null=null,water:FishingView['water']='calm';
  let options:FishingOptions={lure:null},roll:CatchRoll|null=null,fightHint:string|null=null;
  // The spin input (the HUD's pointer circles): the last rate and when it came; a steady hold (Space / Enter) is rate 1.
- let spinRate=0,spinAt=0,held=false,hooked=false;
+ let spinRate=0,spinAt=0,held=false,hooked=false,lostHooked=false,easyBite=false;
  let clickAt=0,clickAcc=0;
  /** The ratchet: advance the virtual spool by rate × dt and click on each 1/SPIN_CLICKS_PER_REV turn (bounded: dt is capped). */
  function ratchet(now:number){const r=held?1:spinRate;if(r<=0||!session.fight){clickAt=0;clickAcc=0;return;}if(!clickAt){clickAt=now;return;}
@@ -130,6 +138,7 @@ export function createFishingSession(land:Lander,cue:(kind:FishCue,strength?:num
   if(ph==='reeling'&&session.warned)return WARN_HINT;
   if(ph==='reeling'&&session.fight){if(running(session.fight))return RUN_HINT;if(session.fight.strained)return STRAIN_HINT;return fightHint??FIGHT_HINT;}
   if(ph==='floating'||ph==='approach'&&water==='spooked')return floatHint(water);
+   if(ph==='escaped'&&lostHooked)return LOST_HINT;
   return HINTS[ph];};
  /** Apply events from a step or a tap: sounds, landing the fish, the content events and the snapshot. */
  function handle(events:(SessionEvent|null)[]){
@@ -142,20 +151,20 @@ export function createFishingSession(land:Lander,cue:(kind:FishCue,strength?:num
    // A1: the bite's pulse grows with the shadow (small 14 ms … giant 30 ms).
    if(e==='bite'){const f=session.fish?fishById(session.fish.id):undefined;cue('plunge',f?SHADOW_STEP[f.shadow]:0);emit('bite');}
    if(e==='scared'){lessonNext=lesson('scared',true);emit('escape',{how:'scared',hooked:false});}
-   if(e==='escaped'){lessonNext=lesson('escaped',true);emit('escape',{how:'escaped',hooked,...(hooked&&session.lastFight?{fight:fightStats(session.lastFight)}:{})});hooked=false;}
+   if(e==='escaped'){lostHooked=hooked;lessonNext=lesson(hooked?'lost':'escaped',true);emit('escape',{how:'escaped',hooked,...(hooked&&session.lastFight?{fight:fightStats(session.lastFight)}:{})});hooked=false;}
    if(e==='warn'){cue('twang');emit('warn');}
    if(e==='run'){cue('run');fightHint=null;const r=session.fight?.run;emit('run',r?{dir:r.dir}:{});}
    if(e==='slip'){cue('slip');fightHint=session.fight?.style==='legend'?LEGEND_REST_HINT:SLIP_HINT;emit('slip');}
    if(e==='hooked'&&session.fish){const f=session.fish;caught={id:f.id,size:f.size,...land(f.id,f.size)};catches++;cue('fanfare');countSummitFishCatch(view.spotId);
-    emit('catch',{isNew:caught.isNew,isBiggest:caught.isBiggest,inBasket:caught.inBasket,...(session.lastFight?{fight:fightStats(session.lastFight)}:{})});hooked=false;}
+    emit('catch',{isNew:caught.isNew,isBiggest:caught.isBiggest,inBasket:caught.inBasket,legend:!isFishbookSpecies(f.id),...(session.lastFight?{fight:fightStats(session.lastFight)}:{})});hooked=false;}
    if(e==='cast')caught=null;
   }
   // The fight's arc is CSS written by the
   // world (fightMeter), so the HUD never re-renders per frame: only these discrete fields are compared.
   const ph=session.phase,fight=ph==='reeling'&&!!session.fight;
-  const run=fight&&running(session.fight!),strain=fight&&session.fight!.strained,slips=fight?session.fight!.slips:0,warn=ph==='reeling'&&session.warned,hint=hintFor(caught);
-  if(view.phase!==ph||lessonNext!==view.lesson||caught!==view.caught||view.fight!==fight||view.run!==run||view.strain!==strain||view.slips!==slips||view.warn!==warn||view.hint!==hint)
-   publish({phase:ph,hint,lesson:lessonNext,caught,catches,water,fight,run,strain,slips,warn});
+  const run=fight&&running(session.fight!),strain=fight&&session.fight!.strained,slips=fight?session.fight!.slips:0,warn=ph==='reeling'&&session.warned,hint=hintFor(caught),castLock=castLocked(session);
+  if(view.phase!==ph||lessonNext!==view.lesson||caught!==view.caught||view.fight!==fight||view.run!==run||view.strain!==strain||view.slips!==slips||view.warn!==warn||view.hint!==hint||view.castLock!==castLock)
+   publish({phase:ph,hint,lesson:lessonNext,caught,catches,water,fight,run,strain,slips,warn,castLock});
  }
  /** Push the effective rate (a held key is a full spin; else the finger's fading rate) into the fight; spinning resets the idle clock. */
  function applySpin(){if(!view.active||paused||!session.fight)return;const rate=held?1:spinRate;setHold(session.fight,rate>0,rate);if(rate>0){session.reelIdle=0;if(session.warned){session.warned=false;handle([]);}}}
@@ -169,6 +178,9 @@ export function createFishingSession(land:Lander,cue:(kind:FishCue,strength?:num
   get options():Readonly<FishingOptions>{return options;},
   setOptions(patch:Partial<FishingOptions>){options={...options,...patch};},
   setCatchRoll(fn:CatchRoll|null){roll=fn;},
+  /** Nov 6 2026: Island settings' Easy bite (the HUD pushes fishingStore's device preference; the world passes it to stepSession). */
+  setEasyBite(on:boolean){easyBite=!!on;},
+  get easyBite(){return easyBite;},
   /** HUD: the chosen float / rod and the night float glow (the world hands them to the visuals). */
   setLook(patch:Partial<FishingLook>){look={...look,...patch};lookRev++;},
   /** Bumped by every setLook: the world re-applies the look (float colour) in its next frame when this changes. */
@@ -178,8 +190,10 @@ export function createFishingSession(land:Lander,cue:(kind:FishCue,strength?:num
   get catchRoll(){return roll;},
   /** HUD: start fishing at a spot (the world picks it up on its next frame). */
   start(spotId:string){if(!spotById(spotId))return;pending=spotId;stopRequested=false;},
-  /** HUD / Space / tap on the water. Hooking always starts the spin fight. */
-  tap(){if(!view.active||paused)return;const hooking=session.phase==='bite';
+  /** HUD / Space / tap on the water. Hooking always starts the spin fight. Nov 6 2026 ("wait honest"): while a shadow swims in or
+      *  nibbles the button reads Wait… and every input is ignored with no penalty (no scare), and so is Cast during the catch's read
+      *  time (castLock). The core's scare on a nibble tap stays for other callers. */
+     tap(){if(!view.active||paused)return;if(session.phase==='approach'||session.phase==='nibble'||castLocked(session))return;const hooking=session.phase==='bite';
    const e=tapSession(session);if(e)tapEvents.push(e);if(e!=='cast')aimCast=null;
    if(hooking&&session.phase==='reeling'){fightHint=null;hooked=true;emit('hook');}
    handle([e]);},
@@ -212,7 +226,7 @@ export function createFishingSession(land:Lander,cue:(kind:FishCue,strength?:num
   // ---- world side ----
   takePending(){const p=pending;pending=null;return p;},
   takeStop(){const s=stopRequested;stopRequested=false;return s;},
-  begin(spotId:string){session=createSession();aimInput=null;aimCast=null;water='calm';fightHint=null;held=false;spinRate=0;hooked=false;publish({active:true,spotId,phase:'ready',hint:HINTS.ready,lesson:null,caught:null,water,fight:false,run:false,strain:false,slips:0,warn:false});},
+  begin(spotId:string){session=createSession();aimInput=null;aimCast=null;water='calm';fightHint=null;held=false;spinRate=0;hooked=false;lostHooked=false;publish({active:true,spotId,phase:'ready',hint:HINTS.ready,lesson:null,caught:null,water,fight:false,run:false,strain:false,slips:0,warn:false,castLock:false});},
   end(){session=createSession();tapEvents=[];aimInput=null;aimCast=null;water='calm';fightHint=null;held=false;spinRate=0;publish({...IDLE,catches:view.catches});},
   get session(){return session;},
   handle,

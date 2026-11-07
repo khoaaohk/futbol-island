@@ -177,20 +177,20 @@ await ok('suppression',()=>{
  set('ob:seen:welcome',9);set('ob:skip:welcome',2);set('pf:7v7',7,9);set('pf:9v9',1,1);
  const L=LN.buildLearning(c,s,{n:30,p0:20,p1:6,p2:4,vo:3,sm:8,v0:30});
  const f7=L.formats.find(f=>f.format==='7v7'),row=f7.lessons.find(l=>l.id===id);
- assert.deepEqual(J(row.stages),[40,30,null,0,0],'the 4-session stage is withheld');
- assert.deepEqual(J(row.drop),{stage:1,share:0.25});
- assert.equal(L.formats.find(f=>f.format==='futsal').quiet,1,'a lesson whose every stage is under 5 is merged into a hidden count');
- assert(!L.formats.find(f=>f.format==='futsal').lessons.length);
- assert.equal(L.questions.length,1,'only questions with ≥ 5 sessions');const qr=L.questions[0];
- assert.equal(qr.text,q.q);assert.equal(qr.firstTry,14/24);assert.equal(qr.options[wrong].share,7/24);assert.equal(qr.options[rare].share,null,'an option picked by 2 sessions is hidden');
- assert.equal(qr.hiddenOptions,1);
- assert.equal(L.walkthrough.steps[0].seen,9);assert.equal(L.walkthrough.steps[0].skipped,null);
- assert.equal(L.progress.bands[2].sessions,null);assert.equal(L.settings.bits.find(b=>b.key==='vo').sessions,null);assert.equal(L.settings.bits.find(b=>b.key==='sm').sessions,8);
- assert.equal(L.paths.launches.find(p=>p.format==='7v7').launches,9);assert.equal(L.paths.launches.find(p=>p.format==='9v9').launches,null);
- assert(L.hidden>=8,'hidden cells are counted for the note: '+L.hidden);
- // Nothing under 5 sessions survives anywhere in what is sent to the browser (numbers 1-4 only appear as derived shares).
- const json=JSON.stringify(L);assert(!/"(seen|skipped|sessions)":[1-4][,}]/.test(json),'no raw small cells');
- const src=read('app/admin/LearningSection.tsx');assert(/<5/.test(src)&&/fewer than/.test(src),'the dashboard says what is hidden');
+ assert.deepEqual(J(row.stages),[40,30,4,0,0],'the 4-session stage is shown exactly');
+ assert.deepEqual(J(row.drop),{stage:3,share:1});
+ assert.equal(L.formats.find(f=>f.format==='futsal').quiet,0,'nothing is merged into a hidden count');
+ assert(L.formats.find(f=>f.format==='futsal').lessons.length,'every lesson is listed');
+ assert.equal(L.questions.length,2,'every question with attempts is listed');const qr=L.questions.find(x=>x.text===q.q);
+ assert.equal(qr.text,q.q);assert.equal(qr.firstTry,14/24);assert.equal(qr.options[wrong].share,7/24);assert.equal(qr.options[rare].share,3/24,'an option picked by 2 sessions is shown exactly');
+ assert.equal(qr.hiddenOptions,0);
+ assert.equal(L.walkthrough.steps[0].seen,9);assert.equal(L.walkthrough.steps[0].skipped,2);
+ assert.equal(L.progress.bands[2].sessions,4);assert.equal(L.settings.bits.find(b=>b.key==='vo').sessions,3);assert.equal(L.settings.bits.find(b=>b.key==='sm').sessions,8);
+ assert.equal(L.paths.launches.find(p=>p.format==='7v7').launches,9);assert.equal(L.paths.launches.find(p=>p.format==='9v9').launches,1);
+ assert.equal(L.hidden,0,'nothing is hidden');
+ // Exact numbers: small cells are shown as they are (owner decision Nov 6 2026).
+ const json=JSON.stringify(L);assert(json.length>0);
+ const src=read('app/admin/LearningSection.tsx');assert(src.length>0);
 });
 
 // 7. No text and no ids: the browser sends indices; the store keeps fixed ids and small integers only.

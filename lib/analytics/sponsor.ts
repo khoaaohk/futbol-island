@@ -83,7 +83,9 @@ const PEAK_MID:Record<string,number>={peak_1:1,peak_2:2,peak_3_4:3.5,peak_5_8:6.
 /** ≈ players per party from the size bands (band midpoints), once 5+ parties are in them. */
 export function avgPartySize(c:{counts:Record<string,number>}):number|null{const n=PARTY_PEAK_BUCKETS.reduce((a,[id])=>a+(c.counts['mp:'+id]||0),0);return n>=MIN_PARTIES?PARTY_PEAK_BUCKETS.reduce((a,[id])=>a+(c.counts['mp:'+id]||0)*PEAK_MID[id],0)/n:null;}
 /** The emote groups (countIds.ts EMOTE_WIRE_IDS ranges): key, label, first and last local emote number. */
-const EMOTE_GROUPS:readonly (readonly [string,string,number,number])[]=[['wheel','On foot (the wheel)',0,9],['ride','On a ride',60,89],['fly','Flying',20,29],['swim','Swimming',30,39],['npc','With a townsperson',40,49]];
+const EMOTE_GROUPS:readonly (readonly [string,string,number,number])[]=[['wheel','On foot (the wheel)',0,9],['ride','On a ride',60,89],['fly','Flying',20,29],['swim','Swimming',30,39],['npc','With a townsperson',40,49],
+ // Audit Nov 6 2026: the moving (walking / running) emotes 50–59 (Oct 23 2026) were left out, so this card read lower than em:pick.
+ ['walk','Walking or running',50,59]];
 
 const GAME_LABEL:Record<string,string>={live:'Island Strikers',runner:'Breakaway Run',tennis:'Futbol Tennis',pinball:'Futbol Pinball',puzzle:'Pass Puzzles'};
 const SOURCE_LABEL:Record<string,string>={ball:'Hidden ball found',npc:'Islander gift',quiz:'Perfect quiz',explore:'Exploring',journey:'Learning Journey',story:'Story finished',path:'Path finished',pack:'Card pack',starter:'Starter kit'};
@@ -182,6 +184,11 @@ const DEFS:Def[]=[
      {label:'Emotes per emoting session',value:ratio(picks,emoting),format:'dec',pending:!pl},
      {label:'A townsperson answered',value:ratio(one(c,'em:to_npc'),picks),format:'pct',pending:!pl}]};}},
 ];
+/** Nov 6 2026: the same definitions, read by the daily data layer (lib/analytics/daily.ts) so a day's total and this card's
+ *  total are one rule (which counters a metric and each of its parts add up). */
+export type SponsorDef={readonly id:SponsorMetricId;readonly label:string;readonly unit:string;readonly how:string;readonly gap?:string;readonly minutes?:boolean;
+ readonly parts:readonly {readonly key:string;readonly label:string;readonly test:(id:string)=>boolean;readonly engage:boolean;readonly party?:boolean}[]};
+export const SPONSOR_DEFS:readonly SponsorDef[]=DEFS;
 
 function countsOf(m:Pick<Merged,'counts'|'countSessions'|'activities'|'totals'>&{areas?:Merged['areas']}):Counts{
  return {counts:m.counts||{},countSessions:m.countSessions||{},bookMs:m.activities.find(a=>a.activity==='book')?.ms||0,sessions:m.totals.sessions,
@@ -198,9 +205,12 @@ function totalOf(d:Def,c:Counts,live:boolean,pending:(p:Def['parts'][number])=>b
 }
 
 export type SponsorInput={from:string;to:string;merged:Merged;rollups:DailyRollup[];
- prev:{from:string;to:string;merged:Merged}|null;trendRollups?:DailyRollup[];firstTry?:{right:number;tries:number}|null;labels?:Labels};
+ prev:{from:string;to:string;merged:Merged}|null;trendRollups?:DailyRollup[];firstTry?:{right:number;tries:number}|null;labels?:Labels;
+ /** Audit Nov 6 2026: "Players per day" from report.ts perDayOf (complete days only, from the first tracked day), so this tab,
+  *  its CSV and the Players tab show the same number. Without it: visitor-days over the range's days (the old rule). */
+ perDay?:{value:number;prev:number|null}};
 
-export function buildSponsor({from,to,merged,rollups,prev,trendRollups,firstTry=null,labels={}}:SponsorInput):SponsorReport{
+export function buildSponsor({from,to,merged,rollups,prev,trendRollups,firstTry=null,labels={},perDay}:SponsorInput):SponsorReport{
  const cur=countsOf(merged),pc=prev?countsOf(prev.merged):null;
  const live=engageIn(cur.counts)||(!!pc&&engageIn(pc.counts));
  const partyLive=partyIn(cur.counts)||(!!pc&&partyIn(pc.counts));
@@ -226,7 +236,7 @@ export function buildSponsor({from,to,merged,rollups,prev,trendRollups,firstTry=
  return {from,to,prevFrom:prev?.from??'',prevTo:prev?.to??'',min:MIN_SESSIONS,engageLive:live,engageSince:ENGAGE_SINCE,
   trendDays:trend.map(r=>r.day),metrics,
   kpis:{sessions:t.sessions,prevSessions:pt?pt.sessions:null,visitorDays:t.visitors,prevVisitorDays:pt?pt.visitors:null,
-   perDay:rollups.length?t.visitors/rollups.length:0,prevPerDay:pt&&rollups.length?pt.visitors/rollups.length:null,
+   perDay:perDay?perDay.value:rollups.length?t.visitors/rollups.length:0,prevPerDay:perDay?(pt?perDay.prev:null):pt&&rollups.length?pt.visitors/rollups.length:null,
    avgSessionMs:t.sessions?t.engagedMs/t.sessions:0,prevAvgSessionMs:pt&&pt.sessions?pt.engagedMs/pt.sessions:null,engagedMs:t.engagedMs}};
 }
 
@@ -240,7 +250,7 @@ export function change(cur:Cell,prev:Cell|null):number|null{
 export function sponsorCsv(r:SponsorReport,extra:{label:string;value:string}[]=[]):string{
  const q=(v:unknown)=>{const s=v===null||v===undefined?'':String(v);return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;};
  const cell=(v:Cell)=>v===null?'<5':String(v);
- const rows:unknown[][]=[['Futbol Island engagement',`${r.from} to ${r.to}`,'previous period',`${r.prevFrom} to ${r.prevTo}`],[],
+ const rows:unknown[][]=[['Futbol Island engagement',`${r.from} to ${r.to}`,'previous period',r.prevFrom?`${r.prevFrom} to ${r.prevTo}`:'none (no data recorded before this range)'],[],
   ['Metric','Part','Total','Previous period','Change','Unit','Status','How it is counted']];
  for(const m of r.metrics){
   const ch=change(m.total,m.prev);

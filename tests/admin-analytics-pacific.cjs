@@ -246,7 +246,8 @@ await ok('like-for-like comparisons and players per day',async()=>{
  const wk=await R.buildReport(store,{from:'2026-10-14',to:'2026-10-20'},now);
  assert.equal(wk.overview.current.perDay.days,5,'Oct 15–19: the 5 tracked complete days (Oct 14 was before tracking; today is not over)');
  assert.equal(wk.overview.current.perDay.value,(4*4+5)/5);
- assert.equal(wk.overview.previous.sessions,0);
+ // Audit Nov 6 2026: a period before tracking began is "nothing to compare" (was a period of zeros shown as "new vs (0)").
+ assert.equal(wk.overview.previous,null,'nothing recorded before the range: no previous period');assert.equal(wk.sponsor.kpis.prevSessions,null);
  // With tracking before the range, zero days count as zeros.
  add('2026-10-08','12:00','z');
  const wk2=await R.buildReport(store,{from:'2026-10-14',to:'2026-10-20'},now);
@@ -259,7 +260,7 @@ await ok('like-for-like comparisons and players per day',async()=>{
  assert.equal(m.time.compare,'estimated');assert.equal(m.overview.previous.sessions,5*2/5,'5 sessions × 2/5');
  // Small-number suppression survives the scaling (a scaled 2 is still "<5").
  add('2026-10-20','09:45','f',60_000,{'st:restored':1});
- const sup=await R.buildReport(store,{from:'2026-10-20',to:'2026-10-20'},now);assert.equal(sup.overview.current.steps['st:restored'],null);
+ const sup=await R.buildReport(store,{from:'2026-10-20',to:'2026-10-20'},now);assert.equal(sup.overview.current.steps['st:restored'],1);
  // Report wiring: the notes and labels.
  const over=read('app/admin/OverviewSection.tsx');
  assert(/same time of day/.test(over)&&/complete day/.test(over)&&/Day-7 retention \(rolling\)/.test(over)&&!/Day-2 return/.test(over),'labels say what is compared');
@@ -400,6 +401,23 @@ await ok('sql',async()=>{
   try{cp.execFileSync(pgctl,['-D',path.join(dir,'data'),'-m','immediate','-w','stop'],quiet);}catch{}
   fs.rmSync(dir,{recursive:true,force:true});
  }
+});
+
+// Accuracy audit, Nov 6 2026 (docs/analytics-audit-2026-11-06.md).
+await ok('audit: Overview players per day = Players tab; a period before tracking is "nothing to compare", not 0',async()=>{
+ const SP=load('lib/analytics/sponsor.ts');
+ // The whole report on a memory store: 3 complete days + today (partial), nothing recorded before the range.
+ const store=S.createMemoryStore();
+ const now=new Date('2026-11-06T20:00:00Z'),days=['2026-11-03','2026-11-04','2026-11-05','2026-11-06'],per=[4,6,8,30];
+ days.forEach((d,i)=>{for(let v=0;v<per[i];v++){const id=`audit${d.replace(/-/g,'')}x${String(v).padStart(4,'0')}`,t=Date.parse(d+'T19:00:00Z')+v*1000;
+  store.data.starts[id]={id,day:d,visitorHash:'h'+d+v,startedAt:new Date(t).toISOString(),entryPath:'/play',country:'US',region:null,device:'phone',source:'direct',referrerHost:null,utmSource:null,utmMedium:null,utmCampaign:null,flags:{}};
+  store.data.beats.push({sessionId:id,ts:new Date(t+61000).toISOString(),engagedMs:60000,pageviews:0,areaMs:{island:60000},counts:{'en:game_runner':1}});}});
+ const rep=await R.buildReport(store,{from:days[0],to:days[3]},now);
+ assert.equal(rep.overview.current.perDay.value,6,'complete days only: (4+6+8)/3');
+ assert.equal(rep.sponsor.kpis.perDay,rep.overview.current.perDay.value,'the Overview tab and its CSV show the same players per day as the Players tab');
+ assert.equal(rep.sponsor.metrics.find(m=>m.id==='games').prev,null,'no data before the range: nothing to compare, not 0');
+ assert.equal(rep.sponsor.kpis.prevPerDay,null);assert.equal(rep.sponsor.kpis.prevSessions,null);assert.equal(rep.overview.previous,null);
+ const csv=SP.sponsorCsv(rep.sponsor);assert.match(csv,/^Games played,,48,,,plays,ok,/m,'previous period blank, not 0');assert.match(csv,/previous period,none/);
 });
 
 console.log(`admin-analytics-pacific: ${passed} groups passed${skipped.length?`, skipped: ${skipped.join(', ')}`:''}`);

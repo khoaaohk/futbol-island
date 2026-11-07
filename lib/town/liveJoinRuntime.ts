@@ -151,7 +151,9 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
     friendsChanged(){friendsKey='';if(state.phase==='joined'&&format)api.onMatch?.({type:'others',others:othersOn(format)});},
     /** Town installs (lib/analytics/liveMatchEvents.ts liveMatch.on): join / leave transitions only, never per frame. Plain data:
      *  the format, a coarse role (gk / def / mid / fwd) and how many other humans are on the match (Nov 5 2026). */
-    onMatch:null as ((e:{type:'join';format:string;role:string|null;others:number}|{type:'others';others:number}|{type:'leave';reason:'leave'|'forced';others:number})=>void)|null,
+    onMatch:null as ((e:{type:'join';format:string;role:string|null;others:number;bots?:number;humans?:number}|{type:'others';others:number}|{type:'leave';reason:'leave'|'forced';others:number}
+      /* Nov 6 2026 (admin analytics): a goal while I am on (for my side or not), a goal replay shown / skipped; transitions only */
+      |{type:'goal';mine:boolean}|{type:'replay';skipped?:boolean})=>void)|null,
     /** A short message in the tip line (matchLink: a friend left, the match moved to this phone...). */
     say(text:string,seconds=3.2){tip=text;tipT=seconds;},
     /** Last machine event (headless checks). */
@@ -174,7 +176,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
       if(b==='s'){held.s=down;return;}
       if(b==='f'){if(down)forwardKey=true;return;}
       if(b==='t'){if(down)pressed.t=true;return;}
-      if(b==='skip'){if(down&&format)games.skipReplay(format);return;}
+      if(b==='skip'){if(down&&format)skipRep(format);return;}
       if(down&&shotAge>.12)shotSkip=true;// any tap skips the shot's slow motion
       if(b==='b'&&down){joinAim.x=joinAim.y=0;joinAim.on=false;aimSel=-1;}
       if(b==='a'||b==='b'){if(down&&!held[b]){pressed[b]=true;if(b==='a'){aDownAt=performance.now();aMode=modes().a;}else{bDownAt=performance.now();bMode=modes().b;}}held[b]=down;return;}
@@ -262,7 +264,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
       if(ev==='join'&&pickFormat){const f=pickFormat,pick={team:pickTeam,slot:pickId};pickFormat=null;
         // Start: the picker shrinks back into the bar's Play first (the Join with a code close), then the slot is taken and Town's arrival plays.
         shrink(reduced,()=>{if(state.phase!=='joined')return;const slot=games.joinMatch(f,ME,x,z,dressFor,null,pick);if(!slot){api.lastEvent='join-failed';state.phase='idle';return;}format=f;games.humanView(format,ME,view);team=view.team;colour=bibColour(format,team==='gold');markers.setColour(colour);keeperMarks.setColour(colour);if(view.keeper)bannerT=KEEPER_FX.banner;if(f==='beach'&&!view.keeper){tip=BEACH_JOIN_TIP;tipT=3.6;}/* no bibs on sand: the format's own lesson */else showTip(view.keeper?'keeper':'join',false);
-          api.onMatch?.({type:'join',format:f,role:view.keeper?'gk':simOf(f)?.players[slot]?.role??null,others:othersOn(f)});});}
+          api.onMatch?.({type:'join',format:f,role:view.keeper?'gk':simOf(f)?.players[slot]?.role??null,others:othersOn(f),...slotsOn(f)});});}
       if(ev==='leave'){lastTrick=-1;fxAge=-1;kickSeen=tackleSeen=-1;saveSeen=beatSeen=-1;bannerT=0;bannerOwed=false;keeperMarks.hide();if(format){api.onMatch?.({type:'leave',reason:byUser?'leave':'forced',others:othersOn(format)});left=games.leaveMatch(format,ME,{x:0,z:0});}format=null;markers.hide();pin(0,0,0,null);held.a=held.b=held.s=false;aDownAt=bDownAt=0;bMode='';chase=edgeSprint=false;if(edgeShown){edgeShown=false;set(el('.touch-controls .joystick'),'data-sprint',null);}hide(el('[data-join-badge]'),true);}
       if(ev==='cancel'||ev==='dismiss'){pickFormat=null;shrink(reduced);}
       // Friends-ready: a side filling up while the picker is open (slice 2's remote humans) re-renders the pick.
@@ -271,7 +273,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
       if(state.phase==='joined'&&format&&games.humanView(format,ME,view)){
         const fv=venues.find(u=>u.id===format)!,y=fv.elevation??0,rep=games.replay(format),replaying=!!rep?.active;
         if(view.inShotRange!==rangeL){rangeT+=dt;if(rangeT>=RANGE_SETTLE){rangeL=view.inShotRange;rangeT=0;}}else rangeT=0;nearL=tackleNear(nearL,view.carrierD);
-        if(replaying!==replayShown){replayShown=replaying;replayHud(replaying,rep?.scorer==='gold');}
+        if(replaying!==replayShown){replayShown=replaying;replayHud(replaying,rep?.scorer==='gold');if(replaying)api.onMatch?.({type:'replay'});}
         if(replaying&&rep){// the replay: the compass on the shooter (chevron at the goal) and, once the ball has left his feet, the Pass ring under the ball
           const b=fieldBall(format);let sx=NaN,sz=NaN;markers.forwardTarget(NaN,y,0,0);
           if(rep.shooterX>=0){const gy=rep.scorer==='gold'?10:390;sx=liveWorldX(fv,rep.shooterX,rep.shooterY);sz=liveWorldZ(fv,rep.shooterX,rep.shooterY);markers.you(sx,y,sz,Math.atan2(liveWorldX(fv,135,gy)-sx,liveWorldZ(fv,135,gy)-sz));}
@@ -414,7 +416,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
   // listener so the walk's Space shot never fires behind the picker; a focused button keeps its own Enter / Space.
   function onKey(e:KeyboardEvent){
     if(shotAge>.12)shotSkip=true;// any key skips the shot's slow motion
-    if(format&&state.phase==='joined'&&!e.repeat)games.skipReplay(format);// …and a goal replay
+    if(format&&state.phase==='joined'&&!e.repeat)skipRep(format);// …and a goal replay
     if(typingTarget(e.target)||e.target instanceof HTMLButtonElement&&e.key!=='Escape'||(e.target as Element|null)?.closest?.('[role=listbox]'))return;// the position list keeps its own keys
     if(state.phase==='idle'){if(e.key==='Enter'&&!e.repeat&&venueAt(lastX,lastZ,JOIN_PITCH_MARGIN)){e.preventDefault();e.stopPropagation();api.press('play',true);}return;}
     if(state.phase==='joined'){if((e.key==='c'||e.key==='C')&&!e.repeat&&!e.metaKey&&!e.ctrlKey&&!e.altKey){e.preventDefault();e.stopPropagation();api.press('camera',true);}return;}
@@ -426,7 +428,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
   function onHidden(){if(document.hidden)api.release();}
   window.addEventListener('blur',api.release);window.addEventListener('pagehide',api.release);document.addEventListener('visibilitychange',onHidden);
   // A tap anywhere skips the shot's slow motion (passive; nothing else is done with it).
-  function onTap(){if(shotAge>.12)shotSkip=true;if(format&&state.phase==='joined')games.skipReplay(format);}// …and a goal replay (Skip too)
+  function onTap(){if(shotAge>.12)shotSkip=true;if(format&&state.phase==='joined')skipRep(format);}// …and a goal replay (Skip too)
   /** The goal replay's camera (after the angle / trick / shot ones): the side view of the replayed ball. No allocation. */
   function replayCam(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
     const rep=state.phase==='joined'&&format?games.replay(format):null,on=!!rep?.active,cut=reduced||!!rep?.calm;
@@ -544,6 +546,10 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
   const LABEL:Record<Mode,string>={pass:'Pass',shoot:'Shoot',forward:'Forward',call:'Call',tackle:'Tackle',stay:'Stay',go:'Go!',save:'Dive',throw:'Throw',kick:'Kick',trick:'Trick',press:'Press','':''};
   const KEY_HINT:Record<Mode,string>={pass:'Space (hold for a long ball)',shoot:'J (hold for power)',forward:'J or K',call:'Space',tackle:'Space',stay:'J (hold)',go:'Space (hold)',save:'Space (stick picks a side)',throw:'Space (hold for power)',kick:'J or K (hold for power)',trick:'L',press:'P','':''};
   let dock=0,lastRestart=false,lastG=-1,lastB=-1;
+  /** Skip a goal replay; a real skip (one was playing) is booked for the admin analytics (Nov 6 2026). */
+  function skipRep(f:LiveFormat){if(games.skipReplay(f))api.onMatch?.({type:'replay',skipped:true});}
+  /** The match's AI players and humans at the join (counts only, for the admin analytics). */
+  function slotsOn(f:LiveFormat){const e=games.entries.find(en=>en.venue.id===f);if(!e)return {};const all=Object.keys(e.sim.players).length,h=e.humans.size;return {bots:Math.max(0,all-h),humans:h};}
   /** Other humans on a field's match right now (party friends; analytics gets the number only). */
   function othersOn(f:LiveFormat){const e=games.entries.find(en=>en.venue.id===f);return Math.max(0,(e?.humans.size??1)-1);}
   function hud(picking:boolean,joined:boolean){
@@ -557,6 +563,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
         /* a goal: the bar shakes and the scoring side's pill pops (CSS, transform/scale only; a layout read once per goal) */
         if(lastG>=0&&(g>lastG||b>lastB)&&view.keeper)bannerOwed=true;// the keeper banner again at the kick-off
         if(lastG>=0&&(g>lastG||b>lastB)&&chip){chip.removeAttribute('data-goal');void chip.offsetWidth;chip.setAttribute('data-goal',g>lastG?'gold':'blue');window.setTimeout(()=>chip.removeAttribute('data-goal'),1100);}
+        if(lastG>=0&&(g>lastG||b>lastB))api.onMatch?.({type:'goal',mine:(g>lastG?'gold':'blue')===team});// analytics: a transition, once per goal
         lastG=g;lastB=b;}
       
       const m=modes(),a=el('[data-join-a]'),b=el('[data-join-b]'),now=performance.now();

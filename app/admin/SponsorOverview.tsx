@@ -12,6 +12,7 @@ import type {Report} from '@/lib/analytics/core';
 import {change,sponsorCsv,type SponsorMetric,type SponsorMetricId} from '@/lib/analytics/sponsor';
 import type {SponsorSplit,SplitRow} from '@/lib/analytics/sponsorSplit';
 import {DoneButton} from '@/components/DoneButton';
+import ExportControl from './ExportControl';
 import {BarList,DayColumns,Delta,Sparkline,fmtDuration,fmtInt,fmtPct,type BarRow} from './charts';
 import styles from './admin.module.css';
 import panelStyles from './LivePanel.module.css';
@@ -74,13 +75,15 @@ export default function SponsorOverview({report,rangeText,playerCount,countryNam
   <div className={s.audience} role="list" aria-label="Players">
    <div className={styles.tile} role="listitem"><span>Players</span><b>{playerCount===null?'—':fmtInt(playerCount)}</b><small>{playerCount===null&&srcMissing?srcMissing:`distinct players (save code or device)${n>14?', last 14 days only':''}`}</small></div>
    <div className={styles.tile} role="listitem"><span>Players per day</span><b>{fmtInt(k.perDay)}</b><Delta cur={k.perDay} prev={k.prevPerDay} label={prevLabel}/></div>
-   <div className={styles.tile} role="listitem"><span>Returning players</span><b>{retKnown===null?'—':fmtPct(retKnown)}</b><small>{retKnown===null&&srcMissing?srcMissing:`of sessions from a device that played before${n>14?' (last 14 days)':''}`}</small></div>
+   <div className={styles.tile} role="listitem"><span>Returning sessions</span><b>{retKnown===null?'—':fmtPct(retKnown)}</b><small>{retKnown===null&&srcMissing?srcMissing:`of sessions from a device that played before${n>14?' (last 14 days)':''}`}</small></div>
    <div className={styles.tile} role="listitem"><span>Avg session</span><b>{k.sessions?fmtDuration(k.avgSessionMs):'—'}</b><Delta cur={k.sessions?k.avgSessionMs:null} prev={k.prevAvgSessionMs} label={prevLabel}/></div>
   </div>
 
   <ul className={s.metrics} aria-label="Engagement">
    {sp.metrics.map(m=><li key={m.id}><MetricCard m={m} prevLabel={prevLabel} trendDays={sp.trendDays} onOpen={el=>openMetric(m.id,el)} expanded={open===m.id}/></li>)}
   </ul>
+
+  <ExportControl from={sp.from} to={sp.to} today={report.time?.today??sp.to}/>
 
   <details className={s.how}>
    <summary>How these are counted</summary>

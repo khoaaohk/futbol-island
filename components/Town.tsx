@@ -102,6 +102,8 @@ import {DEFAULT_CUSTOMIZATION,loadCustomization,saveCustomization,sanitizeCustom
 import {enforceRideUnlocks} from '@/lib/town/rideUnlocks';
 import {COACH_VOICES,primeLessonVoice,lessonVoiceSpeaking} from '@/lib/town/useLessonVoice';
 import {createIslandLighting,type TimeOfDay} from '@/lib/graphics/islandLighting';
+import {captainSellActions} from '@/lib/town/fishing/boatCaptains';
+import {SET_TIME_EVENT} from '@/lib/town/fishing/timeOfDay';
 import {createStaticShadowBatches} from '@/lib/graphics/staticShadowBatches';
 import {createNpcShadowBatch} from '@/lib/graphics/npcShadowBatch';
 import {createStaticShadowCache} from '@/lib/graphics/staticShadowCache';
@@ -385,6 +387,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const savePreference=(key:string,value:string)=>{try{localStorage.setItem(key,value);}catch{}};
   const [timeOfDay,setTimeOfDay]=useState<TimeOfDay>('sunset'),timeRef=useRef<TimeOfDay>('sunset');
   const changeTime=(mode:TimeOfDay)=>{timeRef.current=mode;setTimeOfDay(mode);try{localStorage.setItem('fi2-time-of-day',mode);}catch{}};
+  useEffect(()=>{const on=(e:Event)=>{const m=(e as CustomEvent<unknown>).detail;if(m==='day'||m==='sunset'||m==='night')changeTime(m);};window.addEventListener(SET_TIME_EVENT,on);return()=>window.removeEventListener(SET_TIME_EVENT,on);},[]);// eslint-disable-line react-hooks/exhaustive-deps -- the Fishbook's night fish toggle (lib/town/fishing/timeOfDay.ts)
   const musicRef=useRef<ReturnType<typeof createIslandMusic>|null>(null);
   const [musicEnabled,setMusicEnabled]=useState(true);
   const [musicVolume,setMusicVolume]=useState(.04),[soundVolume,setSoundVolume]=useState(.5);
@@ -2269,7 +2272,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
   useEffect(()=>{if(mapFoldNow&&typeof window!=='undefined'&&window.matchMedia('(max-width:600px),(pointer:coarse)').matches)setMinimapCollapsed(true);},[mapFoldNow]);
   return <main onPointerDownCapture={unlockAudio} onPointerUpCapture={unlockAudio} onKeyDownCapture={unlockAudio} onPointerOverCapture={e=>{const button=soundButton(e.target);/* relatedTarget null = the browser re-hit-testing after the DOM changed under a resting pointer (an animating preview re-rendering a button), not the pointer arriving: no hover tick, or it repeats while you hover Done. */if(e.pointerType!=='touch'&&button&&e.relatedTarget instanceof Node&&!button.contains(e.relatedTarget))soundRef.current?.ui(button.getAttribute('data-sound')==='slide'?'slide':'hover');}} onFocusCapture={e=>{if(soundButton(e.target))soundRef.current?.ui('hover');}} onClickCapture={e=>{const button=soundButton(e.target);if(button&&!(e.detail!==0&&performance.now()<Number((button as HTMLElement).dataset.touchActionUntil??0))){tapHaptic();const cue=(button as HTMLElement).dataset.uiSound;soundRef.current?.ui(cue==='expand'||cue==='collapse'?cue:'click');}}} className={'town-app'+(loadingComplete?' island-revealing':'')+' district-'+district+(controlsFlipped?' controls-flipped':'')+(lesson||fieldCatalog?' in-lesson':'')+(locationZone&1?' at-field':'')+(locationZone&2?' at-square':'')}>
     <HudStackContext.Provider value={hudStackEl}>
-    {ready&&!failed&&mountWhen('conversation',conversationOpen)&&<NpcConversation npc={talkingNpc} open={conversationOpen} onOpenChange={setConversationOpen}/>}
+    {ready&&!failed&&mountWhen('conversation',conversationOpen)&&<NpcConversation npc={talkingNpc} open={conversationOpen} onOpenChange={setConversationOpen} actions={captainSellActions(talkingNpc,()=>setConversationOpen(false))}/>}
     {ready&&!failed&&mountWhen('onboarding',onboardingOpen)&&<IslandOnboarding npcTarget={onboardingNpcTarget} onNpcStepChange={active=>{onboardingNpcStep.current=active;if(active)wakeLoopRef.current();}} open={onboardingOpen} onClose={()=>setOnboardingOpen(false)} value={customization} onChange={changeCustomization}/>}
     {ready&&!failed&&!settingsRef.current&&!map&&!fieldCatalog&&!lesson&&<CoinHuntHud near={hudFocus==='hint'?coinNear||seaNote:''}/>}
     {balancesOpen&&<IslandBalanceDrawer onClose={()=>setBalancesOpen(false)}/>}

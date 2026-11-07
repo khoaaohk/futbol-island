@@ -1,0 +1,12 @@
+/* The Overview's export (Nov 6 2026): the admin's own surface, buttons in the regular UI sans (AGENTS.md button font). */
+.root{display:grid;gap:14px;padding:16px 18px;border-radius:22px;background:var(--a-surface);box-shadow:0 0 0 1px var(--a-ring)}
+.text h3{margin:0;font-size:18px;font-weight:700}
+.text p{margin:4px 0 0;font-size:14px;line-height:1.45;color:var(--a-ink-2);max-width:62ch}
+.range{align-items:flex-end}
+.files{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.files li{display:grid;gap:6px;align-content:start}
+.files small{font-size:12px;line-height:1.35;color:var(--a-muted)}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;text-decoration:none;font-family:var(--btn-font);font-weight:800;font-size:15px}
+.btn[aria-disabled=true]{opacity:.5;box-shadow:none;pointer-events:none}
+.btn:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+@media (max-width:520px){.files{grid-template-columns:1fr 1fr}.files small{display:none}.btn{padding:0 10px;font-size:14px;white-space:nowrap}}

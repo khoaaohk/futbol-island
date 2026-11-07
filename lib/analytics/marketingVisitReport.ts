@@ -42,9 +42,12 @@ export function bandMedianSec(counts:readonly number[]):number|null{
  return MM_BANDS[MM_BANDS.length-1][2];
 }
 
+/** Stay seconds on /marketing (60·mm:min + 10·mm:sec10 + mm:sec1): the one rule for this section and the daily layer (daily.ts). */
+export const mmSeconds=(c:Record<string,number>)=>60*(c['mm:min']||0)+10*(c['mm:sec10']||0)+(c['mm:sec1']||0);
+
 export function buildMarketingVisits(m:Pick<Merged,'counts'>,rollups:Pick<DailyRollup,'day'|'counts'>[]):MarketingVisitReport{
  const c=m.counts||{},n=(id:string)=>c[id]||0;
- const views=n('mm:view'),seconds=60*n('mm:min')+10*n('mm:sec10')+n('mm:sec1');
+ const views=n('mm:view'),seconds=mmSeconds(c);
  const bandCounts=MM_BANDS.map(b=>n('mm:t_'+b[0])),banded=bandCounts.reduce((a,x)=>a+x,0),bounced=bandCounts[0];
  const medianSec=bandMedianSec(bandCounts);
  let medianBand:string|null=null;if(banded){let run=0;for(let i=0;i<MM_BANDS.length;i++){run+=bandCounts[i];if(run*2>=banded){medianBand=MM_BANDS[i][1];break;}}}

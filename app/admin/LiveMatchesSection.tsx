@@ -41,7 +41,7 @@ export default function LiveMatchesSection({report,rangeText,dayLabel}:{report:R
  const head=<div className={styles.sectionHead}><h2 id="sec-live-matches">Live matches</h2>
   <p>Players walking up to a pitch (its Learn + Play bar appeared), pressing Start to join the match, and how long they played, for {rangeText}.
    A “player” is one browser tab (no person is followed across visits); time is foreground play only, capped at 2 hours a match.
-   Counts resting on fewer than {r?.min??5} sessions show as “&lt;5”.</p></div>;
+   {' '}{(r?.min??5)>1?<>Counts resting on fewer than {r?.min??5} sessions show as “&lt;5”.</>:'Every count is exact (no small-number hiding).'}</p></div>;
  if(!r||r.status!=='ok')return <section className={styles.island} aria-labelledby="sec-live-matches">{head}
   <p className={styles.empty}>{r?.status==='not_yet'?`Not tracked yet: live match counting starts on ${r.since}.`:EMPTY}</p></section>;
  const t=r.totals,f=r.formats,multi=r.daily.length>1;
@@ -50,7 +50,7 @@ export default function LiveMatchesSection({report,rangeText,dayLabel}:{report:R
   <div className={`${styles.startTiles} ${styles.lmTiles}`} aria-label="Live matches headline">
    <div><span>Pitch visits</span><b>{show(t.visits)}</b><small>{pct(t.joinRate)} became a match (joins per visit)</small></div>
    <div><span>Matches joined</span><b>{show(t.joins)}</b><small>{num(t.matchesPerWeek)} a week over {r.days} day{r.days===1?'':'s'}</small></div>
-   <div><span>Players</span><b>{show(t.players)}</b><small>tabs that joined a match · {pct(t.playShare)} of {fmtInt(r.sessions)} sessions</small></div>
+   <div><span>Players</span><b>{show(t.players)}</b><small>tabs that joined a match · {pct(t.playShare)} of {fmtInt(r.sessions)} sessions{r.partial?` since ${r.since}`:''}</small></div>
    <div><span>Matches per player</span><b>{num(t.playsPerPlayer)}</b><small>per visit that played</small></div>
    <div><span>Minutes played</span><b>{t.minutes===null?'—':fmtInt(t.minutes)}</b><small>{t.minutesPerWeek===null?'':`${fmtInt(t.minutesPerWeek)} a week`}</small></div>
    <div><span>Average match</span><b>{fmtSec(t.avgSec)}</b><small>median about {fmtSec(t.medianSec)}</small></div>
@@ -79,6 +79,24 @@ export default function LiveMatchesSection({report,rangeText,dayLabel}:{report:R
    <ul className={styles.legend}>{f.map((x,i)=><li key={x.format}><i style={{'--key':COLORS[i]} as CSSProperties}/>{x.label}</li>)}</ul>
    {multi?<LineChart labels={labels} values={values} ariaLabel={`Live matches joined per day by format, ${rangeText}`} series={f.map((x,i)=>({key:x.format,label:x.label,color:COLORS[i]}))}/>
     :<BarList rows={f.map(x=>({key:x.format,label:x.label,value:r.daily[0]?.joins[x.format]??0}))} unit="matches" share={false} limit={5}/>}
+  </ChartCard>
+
+  <ChartCard wide title="Goals, replays and who was on" subtitle={`Goals in the matches while the player was on (for and against their side), goal replays shown and skipped, and the AI and human players on the match when they joined. Counting began ${t.extrasSince}; joins before it have no slot numbers.`}
+   empty={![t.goalsFor,t.goalsAgainst,t.replays,t.botSlots,t.humanSlots].some(v=>v)} emptyText={`Not tracked before ${t.extrasSince}: no goals, replays or slots in this range yet.`}
+   table={{columns:['Format','Goals for','Goals against','Replays shown','Replays skipped','AI players per join','Humans per join'],
+    rows:[...f.map(x=>[x.label,show(x.goalsFor),show(x.goalsAgainst),show(x.replays),show(x.replaySkips),num(x.botsPerJoin),num(x.humansPerJoin)]),['All formats',show(t.goalsFor),show(t.goalsAgainst),show(t.replays),show(t.replaySkips),num(t.botsPerJoin),num(t.humansPerJoin)]]}}>
+   <div className={styles.lmFormats} data-metric="matches.goals_replays_slots">
+    {f.map(x=><div key={x.format} data-format={x.format}>
+     <span>{x.label}</span><b>{show(x.goalsFor===null||x.goalsAgainst===null?null:(x.goalsFor??0)+(x.goalsAgainst??0))}</b><small>goals while on</small>
+     <dl>
+      <div><dt>For / against</dt><dd>{show(x.goalsFor)} / {show(x.goalsAgainst)}</dd></div>
+      <div><dt>Replays shown</dt><dd>{show(x.replays)}</dd></div>
+      <div><dt>Skipped</dt><dd>{show(x.replaySkips)}</dd></div>
+      <div><dt>AI per join</dt><dd>{num(x.botsPerJoin)}</dd></div>
+      <div><dt>Humans per join</dt><dd>{num(x.humansPerJoin)}</dd></div>
+     </dl>
+    </div>)}
+   </div>
   </ChartCard>
 
   <div className={styles.grid}>

@@ -55,7 +55,9 @@ const summit=load('lib/town/summitIsle.ts');
  const land=summit.SUMMIT_LANDMARKS.sandbarLanding;
  assert(Math.hypot(cove.x-land.x,cove.z-land.z)>150,'the cove is the far side of the island from the sandbar');
  const species=cat.FISH.filter(f=>cat.isExclusive(f)&&f.spots[0]==='summit-cove');
- assert.equal(species.length,3,'2-3 new species (3 here): a seahorse, a shrimp and a legendary shark');
+ // Nov 6 2026 (wave 3 signature species): the cove's original 3 (a seahorse, a shrimp, a legendary shark) + 4 of its own.
+ assert.equal(species.length,7,'the cove\'s original 3 species plus 4 wave-3 signature species');
+ assert(['pool-seahorse','rockpool-shrimp','red-reef-shark'].every(id=>species.some(f=>f.id===id)),'the original seahorse, shrimp and legendary shark are still there');
  for(const f of species){
   assert(f.club.name&&f.club.fact.length>30&&f.club.fact.length<=230,`${f.id}: one-line club fact`);
   assert(/^https:\/\//.test(f.club.source),`${f.id}: cited source`);
@@ -73,7 +75,7 @@ const summit=load('lib/town/summitIsle.ts');
   assert(spot&&spot.area==='summit',`${id}: its own Fishbook place`);
   assert(summit.onSummitIsle(spot.x,spot.z),`${id}: the angler stands on Summit Isle sand`);
   const species=cat.FISH.filter(f=>cat.isExclusive(f)&&f.spots[0]===id);
-  assert.equal(species.length,1,`${id}: one exclusive species`);
+  assert.equal(species.length,5,`${id}: its original exclusive species plus 4 wave-3 signature species (Nov 6 2026)`);
   for(const f of species){
    assert(f.club.name&&f.club.fact.length>30&&f.club.fact.length<=230,`${f.id}: one-line club fact`);
    assert(/^https:\/\//.test(f.club.source),`${f.id}: cited source`);
@@ -127,4 +129,4 @@ const summit=load('lib/town/summitIsle.ts');
  const folk=load('lib/town/summitIsleNpcs.ts').SUMMIT_ISLE_NPCS,ranger=folk.find(n=>n.role==='Park ranger');
  assert(Math.hypot(ranger.x-job.board.x,ranger.z-job.board.z)<10,'the ranger NPC stands near their own job sign');
 }
-console.log('PASS summit life: a Konbini snack stand + drink machine, Boulder Cove with 3 new species plus Lookout Rocks and Palm Point with one each, 7 hikers/ranger with verified lines, the Trail clean-up job');
+console.log('PASS summit life: a Konbini snack stand + drink machine, Boulder Cove (3 + 4 wave-3 species), Lookout Rocks and Palm Point (1 + 4 each), 7 hikers/ranger with verified lines, the Trail clean-up job');

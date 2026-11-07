@@ -175,23 +175,23 @@ ok('partyReport: funnel maths, suppression, derived numbers, Not tracked yet',()
  const p=R.buildParty(fixture(),RANGE,[{day:'2026-10-22',counts:{'mp:min':400},countSessions:{'mp:min':20},areaMs:{island:1000*60000}},{day:'2026-10-23',counts:{'mp:min':10},countSessions:{'mp:min':2},areaMs:{island:60000*50}}]);
  assert.equal(p.status,'ok');assert.equal(p.partial,false);assert.equal(p.inParty,55);assert.equal(p.inShare,55/200);
  assert.deepEqual(p.host.map(s=>s.sessions),[60,45,40,38,30,25,25,15]);
- const g=Object.fromEntries(p.guest.map(s=>[s.id,s.sessions]));assert.equal(g['mp:open_any'],83);assert.equal(g['st:friends'],null,'<5 sessions hidden');
+ const g=Object.fromEntries(p.guest.map(s=>[s.id,s.sessions]));assert.equal(g['mp:open_any'],83);assert.equal(g['st:friends'],3,'small numbers exact');
  const math=R.funnelMath(p.host.map(s=>s.sessions));assert.equal(math[1].drop,1-45/60);
- const f=Object.fromEntries(p.failures.map(r=>[r.id,r.value]));assert.equal(f['mp:fail_not_found'],7);assert.equal(f['mp:fail_full'],null);assert.equal(f['mp:fail_rate'],0);
- const pk=Object.fromEntries(p.peak.map(r=>[r.id,r.value]));assert.equal(pk['mp:peak_1'],null,'<5 parties hidden');assert.equal(pk['mp:peak_2'],10);assert.equal(pk['mp:peak_5_8'],5);
+ const f=Object.fromEntries(p.failures.map(r=>[r.id,r.value]));assert.equal(f['mp:fail_not_found'],7);assert.equal(f['mp:fail_full'],2);assert.equal(f['mp:fail_rate'],0);
+ const pk=Object.fromEntries(p.peak.map(r=>[r.id,r.value]));assert.equal(pk['mp:peak_1'],3,'small party counts exact');assert.equal(pk['mp:peak_2'],10);assert.equal(pk['mp:peak_5_8'],5);
  assert.equal(p.histParties,26);assert(Math.abs(p.avgSize-(3*1+10*2+8*3.5+5*6.5)/26)<1e-9);assert.equal(p.medianSize,'2 players');assert.equal(p.medianLen,'5–15 min');
  assert.equal(p.minutes,900);assert.equal(p.islandMinutes,3000);assert.equal(p.minuteShare,0.3);assert.equal(p.joinsPerParty,40/28);
- assert.deepEqual(p.minReach.map(s=>s.sessions),[40,25,12,null,0]);
- assert.deepEqual(p.daily,[{day:'2026-10-22',party:400,solo:600},{day:'2026-10-23',party:null,solo:50}]);
+ assert.deepEqual(p.minReach.map(s=>s.sessions),[40,25,12,4,0]);
+ assert.deepEqual(p.daily,[{day:'2026-10-22',party:400,solo:600},{day:'2026-10-23',party:10,solo:40}]);
  assert.equal(p.invites.perParty,18/28);assert.equal(p.invites.linkConv,15/20);
- assert(p.hidden>=4);
+ assert.equal(p.hidden,0);
  const before=R.buildParty(fixture(),{from:'2026-10-01',to:'2026-10-21'});assert.equal(before.status,'not_yet');
  const empty=R.buildParty({counts:{},countSessions:{},totals:{sessions:10},areas:[]},RANGE);assert.equal(empty.status,'empty');assert.equal(empty.inShare,0);
  assert.equal(R.buildParty(fixture(),{from:'2026-10-15',to:'2026-10-22'}).partial,true);
  const e=R.buildEmotes(fixture(),RANGE,labels);
  assert.equal(e.status,'ok');assert.equal(e.picks,600);assert.equal(e.emotingSessions,90);assert.equal(e.perEmoter,600/90);assert.equal(e.npcRate,240/600);assert.equal(e.wheelConv,1-60/300);
- const by=Object.fromEntries(e.byEmote.map(r=>[r.wire,r]));assert.equal(by[0].label,'Wave');assert.equal(by[8].value,90);assert.equal(by[45].value,null);assert.equal(by[45].group,'npc');assert.equal(by[4].label,'Show off');
- assert.deepEqual(e.targets.map(r=>r.value),[240,50,300,null]);assert.equal(R.buildEmotes(fixture(),{from:'2026-10-01',to:'2026-10-02'}).status,'not_yet');
+ const by=Object.fromEntries(e.byEmote.map(r=>[r.wire,r]));assert.equal(by[0].label,'Wave');assert.equal(by[8].value,90);assert.equal(by[45].value,4);assert.equal(by[45].group,'npc');assert.equal(by[4].label,'Show off');
+ assert.deepEqual(e.targets.map(r=>r.value),[240,50,300,3]);assert.equal(R.buildEmotes(fixture(),{from:'2026-10-01',to:'2026-10-02'}).status,'not_yet');
  const rep=read('lib/analytics/report.ts');assert(/report\.party=buildParty\(merged,range,rollups\);report\.emotes=buildEmotes\(merged,range,emoteLabels\(\),emoteVariantLabels\(\)\)/.test(rep));
  assert(/party\?:PartyReport\|null;\n emotes\?:EmoteReport\|null;/.test(read('lib/analytics/core.ts')));
 });
@@ -219,7 +219,8 @@ ok('Town, EmoteControl and the title screen are wired',()=>{
  const ec=read('components/EmoteControl.tsx');for(const k of ['btn','wheel','wheel_close'])assert(ec.includes(`countEmoteUi('${k}')`),k);
  assert(/trackStart\('st:friends'\)/.test(read('components/landing/TitleActions.tsx')));
  const SI=createLoader()('lib/analytics/startIds.ts');assert(SI.START_COUNT_IDS.includes('st:friends'));
- const dash=read('app/admin/AnalyticsDashboard.tsx');assert(/<WaterSection report=\{report\}\/>\n\s*<FriendsSection report=\{report\}\/>\n\s*<EmoteSection report=\{report\}\/>/.test(dash),'mounted on the Engagement tab');
+ const dash=read('app/admin/AnalyticsDashboard.tsx');// Nov 6 2026 (deliberate): the trend rebuild wraps each section in its metric-index id (data-metric) on "Island and games" (the old Engagement tab's sections).
+ assert(/<WaterSection report=\{report\}\/><\/div>\n\s*<div[^>]*data-metric="engagement.friends"><FriendsSection report=\{report\}\/><\/div>\n\s*<div[^>]*data-metric="engagement.emotes"><EmoteSection report=\{report\}\/>/.test(dash),'mounted on the Island and games tab');
  const pkg=JSON.parse(read('package.json'));assert(pkg.scripts.test.includes('node tests/admin-analytics-party.cjs'),'in the test chain');
 });
 
@@ -247,8 +248,8 @@ ok('fixture render: Friends & parties and Emotes sections',()=>{
  const rollups=[{day:'2026-10-22',counts:{'mp:min':400},countSessions:{'mp:min':20},areaMs:{island:1000*60000}}];
  const report={party:R.buildParty(fixture(),RANGE,rollups),emotes:R.buildEmotes(fixture(),RANGE,labels)};
  const f=renderToStaticMarkup(React.createElement(Friends,{report})),e=renderToStaticMarkup(React.createElement(Emote,{report}));
- assert(/Friends &amp; parties/.test(f)&&/Host funnel/.test(f)&&/Party size/.test(f)&&/data-status="ok"/.test(f)&&/&lt;5/.test(f),'friends section');
- assert(/Emotes played/.test(e)&&/Wave/.test(e)&&/Show off/.test(e)&&/Who answered/.test(e)&&/&lt;5/.test(e),'emote section');
+ assert(/Friends &amp; parties/.test(f)&&/Host funnel/.test(f)&&/Party size/.test(f)&&/data-status="ok"/.test(f),'friends section');
+ assert(/Emotes played/.test(e)&&/Wave/.test(e)&&/Show off/.test(e)&&/Who answered/.test(e),'emote section');
  for(const html of [f,e])assert(!/[23456789BCDFGHJKMNPQRSTVWXYZ]{3}-[23456789BCDFGHJKMNPQRSTVWXYZ]{3}/.test(html),'no party code shape');
  const old={party:R.buildParty(fixture(),{from:'2026-10-01',to:'2026-10-21'}),emotes:R.buildEmotes(fixture(),{from:'2026-10-01',to:'2026-10-21'})};
  assert(/Not tracked yet/.test(renderToStaticMarkup(React.createElement(Friends,{report:old}))));

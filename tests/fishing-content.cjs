@@ -60,12 +60,21 @@ for(const l of LU.LURES)ok(FISH_SPOTS.some(s=>{const a=s.weights,b=O.catchWeight
  ok(/for your next cast/.test(hud),'the note says the lure works from the next cast');}
 
 // ---- C1 legends ----
-ok(L.LEGEND_FISH.length===18&&new Set(L.LEGEND_FISH.map(f=>f.spots[0])).size===FISH_SPOTS.length,'one legend at each of the 18 spots');
+ok(L.LEGEND_FISH.length===22&&new Set(L.LEGEND_FISH.map(f=>f.spots[0])).size===FISH_SPOTS.length,'a legend at each of the 18 spots, and 4 second legends (22)');
+// Wave 3 (Nov 6 2026): a spot's second legend swims only after its first is caught and released (same clue, nothing expires).
+{const two=FISH_SPOTS.filter(s=>L.legendsAt(s.id).length===2).map(s=>s.id).sort();ok(JSON.stringify(two)===JSON.stringify(['deep-sea-boat','deep-sea-boat-west','summit-ledge','summit-lookout']),'second legends at both boats, Lookout Rocks and Drop-off Ledge');
+ for(const id of two){const [a,b]=L.legendsAt(id);ok(a.id===L.legendId(id)&&b.id===L.legendId(id)+'-2'&&L.legendBefore(b.id)===a&&!L.legendBefore(a.id),`${id}: legend order`);
+  let log={...LOG.emptyLog(),clues:[id]};ok(LOG.legendsDue(log).includes(id)&&L.legendForSpot(id,log.legends)===a,`${id}: the first legend swims first`);
+  const w1=O.catchWeights(cat.spotById(id),0,{time:'day',lure:null,legends:LOG.legendsDue(log),legendsCaught:log.legends});ok(w1[a.id]>0&&!(b.id in w1),`${id}: only the first is in the water`);
+  log=LOG.logCatch(log,{id:a.id,size:a.size[0],spot:id,now:5,day:'2026-11-06',speciesCaught:1}).log;ok(LOG.legendsDue(log).includes(id)&&L.legendForSpot(id,log.legends)===b,`${id}: after the release the second one swims`);
+  const w2=O.catchWeights(cat.spotById(id),0,{time:'day',lure:null,legends:LOG.legendsDue(log),legendsCaught:log.legends});ok(w2[b.id]>0&&!(a.id in w2),`${id}: the released first never comes back`);
+  log=LOG.logCatch(log,{id:b.id,size:b.size[0],spot:id,now:6,day:'2026-11-06',speciesCaught:1}).log;ok(!LOG.legendsDue(log).includes(id),`${id}: both released, nothing left to hunt`);}
+ const ex=read('components/FishbookExtras.tsx');ok(/legendBefore/.test(ex)&&/A second giant/.test(ex),'the trophy page explains a second legend');}
 for(const f of L.LEGEND_FISH){const info=L.LEGEND_INFO[f.id];
  ok(fishById(f.id)===f&&!FISH.includes(f)&&f.rarity==='legendary'&&f.shadow==='giant','legend '+f.id+': fought like a giant, not a Fishbook species');
  ok(L.fightProfileFor(f.id)==='legend'&&L.fightProfileFor('sardine')===undefined,'legend fight profile id for Agent A');
  ok(/^https:\/\//.test(f.club.source)&&kidText(f.club.fact)&&f.club.fact.length<=200&&kidText(info.story)&&kidText(info.clue),f.id+': sourced fact, kid-safe story and clue');}
-ok(new Set(L.LEGEND_FISH.map(f=>f.name)).size===18,'every legend has its own name');
+ok(new Set(L.LEGEND_FISH.map(f=>f.name)).size===22,'every legend has its own name');
 
 // ---- B4 requests ----
 for(const day of ['2026-10-15','2026-10-16','2026-12-25']){const q=RQ.requestsForDay(day);
@@ -133,4 +142,4 @@ ok(/<FishingLureButton className=\{styles\.action\}\/>/.test(read('components/Fi
 {const fb=read('components/FishbookExtras.tsx').replace(/\/\*[\s\S]*?\*\/|\/\/.*/g,'');ok(/\[\['fish','Fish'\],\['trophies','Trophies'\],\['requests','Requests'\]\]/.test(fb)&&!/RecordsPage|PhotosPage|weather|derby/i.test(fb),'Fishbook pages: Fish, Trophies, Requests');}
 // Heat: nothing at rest. No intervals anywhere in the fishing content UI; the only timer is the toast's one timeout.
 {const hud=read('components/FishingLureButton.tsx');ok(!/setInterval|requestAnimationFrame/.test(hud)&&(hud.match(/setTimeout/g)||[]).length===1,'no loops in the lure HUD; one toast timeout');}
-console.log(`PASS fishing content: night & sunset fish (time-only water mood), 4 free lures, 18 legends, daily requests, Fishbook rewards (floats + Golden Rod), two boat captains; derby / photos / record boards / weather removed (${checks} checks)`);
+console.log(`PASS fishing content: night & sunset fish (time-only water mood), 4 free lures, 22 legends, daily requests, Fishbook rewards (floats + Golden Rod), two boat captains; derby / photos / record boards / weather removed (${checks} checks)`);

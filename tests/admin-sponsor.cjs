@@ -147,7 +147,8 @@ await ok('split: TypeScript reference, suppression into withheld',()=>{
 
 await ok('dashboard: tabs, overview, route behind the session, client bundle stays small',()=>{
  const dash=read('app/admin/AnalyticsDashboard.tsx'),ov=read('app/admin/SponsorOverview.tsx'),route=read('app/api/admin/sponsor-split/route.ts');
- assert(/\['overview','Overview'\],\['engagement','Engagement'\],\['players','Players'\],\['matches','Live matches'\],\['marketing','Marketing page'\],\['live','Live'\],\['report','Sponsor report'\]/.test(dash),'seven tabs (Phase B: Sponsor report; Nov 3 2026: Marketing page; Nov 5 2026: Live matches)');
+ // Nov 6 2026 (deliberate, the trend rebuild): nine tabs, defined in lib/analytics/metricIndex.ts (the old ones' sections all kept, mapped by the metric index).
+ assert(/\['overview','Overview'\],\['players','Players and retention'\],\['learning','Learning'\],\['island','Island and games'\],\['matches','Live matches'\],\['fishing','Fishing'\],\['marketing','Marketing'\],\['live','Live now'\],\['report','Sponsor report'\]/.test(read('lib/analytics/metricIndex.ts'))&&/const TABS:\[Tab,string\]\[\]=DASH_TABS;/.test(dash),'nine tabs (Phase B: Sponsor report; Nov 3: Marketing; Nov 5: Live matches; Nov 6: the trend rebuild)');
  assert(dash.includes("{tab==='report'&&<SponsorReport week={week??isoWeekOf(tm?.today??report.to)} onWeek={setWeek}/>}"),'the report tab');
  assert(dash.includes("{tab==='overview'&&<SponsorOverview report={report}"),'the overview is the first tab');
  assert(/\{id:'all',label:'All'\}/.test(dash),'All preset');
@@ -257,6 +258,10 @@ await ok('weekly report: ISO weeks, reach rounding, ≥10 suppression, not track
  const tiny=W.buildSponsorWeekly({week:'2026-W43',merged:C.mergeRollups([C.rollupDay('2026-10-20',partyDay('2026-10-20',6))]),prev:null,players:6,prevPlayers:null,returning:{share:0.5,sessions:6},relay:null});
  for(const k of tiny.kpis)assert(k.value===null||k.value===0,k.id+' withheld: '+k.value);
  assert(tiny.partySize.bands.every(b=>b.value===null||b.value===0));assert.deepEqual(tiny.topEmotes,[]);
+ // Audit Nov 6 2026: the week in progress (W43 on Thu Oct 22) is not compared with the whole of last week.
+ const mid=W.buildSponsorWeekly({week:'2026-W43',now:new Date('2026-10-22T20:00:00Z'),merged,prev:prevMerged,players:437,prevPlayers:8,returning:null,relay:null});
+ assert(mid.kpis.every(k=>k.change===null),'no change for a week still in progress');assert.match(mid.notes[0],/still in progress \(to 2026-10-22/);
+ assert(rep.kpis.some(k=>k.change!==null),'a finished week keeps its changes');
  const old=W.buildSponsorWeekly({week:'2026-W40',merged:C.mergeRollups([C.rollupDay('2026-10-01',many(30,'2026-10-01',{'le:learn7_roles':1}))]),prev:null,players:null,prevPlayers:null,returning:null,relay:null});
  const OK2=Object.fromEntries(old.kpis.map(k=>[k.id,k]));for(const id of ['social','emotes'])assert.equal(OK2[id].status,'not_yet',id);
  assert.equal(OK2.reach.status,'unavailable');assert.equal(OK2.learning.value,30);
@@ -298,6 +303,14 @@ await ok('weekly report: fixture render (desktop + phone screenshot input)',()=>
   const raw=f=>read(f).replace(/\.([A-Za-z][\w-]*)/g,(m,c)=>'.'+c);// identity class names (the proxy above)
   fs.writeFileSync(process.env.SPONSOR_REPORT_OUT,`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>:root{--btn-font:Arial,sans-serif;--btn-radius:999px;--btn-rim-width:2px;--btn-rim:#183b34;--btn-mint:#bff0d4;--btn-mint-edge:#7cc9a0;--btn-ink:#183b34}body{margin:0}${raw('app/admin/admin.module.css')}${raw('app/admin/SponsorReport.module.css')}</style></head><body><main class="page">${html}</main></body></html>`);
  }
+});
+
+// Accuracy audit, Nov 6 2026 (docs/analytics-audit-2026-11-06.md).
+await ok('audit: walking emotes count in "Emotes used" (the report-level checks are in admin-analytics-pacific.cjs)',()=>{
+ const day='2026-10-24',rollups=[C.rollupDay(day,many(6,day,{'em:pick':2,'em:e0':1,'em:e52':1,'em:reach_1':1}))];
+ const r=S.buildSponsor({from:day,to:day,merged:C.mergeRollups(rollups),rollups,prev:null});
+ assert.equal(M(r,'emotes').total,12,'6 sessions × 2 picks: the moving emote (50–59) is in the total, like em:pick');
+ assert(M(r,'emotes').breakdowns.find(b=>b.id==='parts').items.some(i=>i.key==='walk'),'a "Walking or running" part');
 });
 
 console.log(`admin-sponsor: ${passed} checks passed`);

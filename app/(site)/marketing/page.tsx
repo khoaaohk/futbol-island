@@ -4,17 +4,18 @@ import s from '@/components/marketing/marketing.module.css';
 import learn from '@/components/learn/learn.module.css';
 import LogoWord from '@/components/learn/LogoWord';
 import title from '@/components/landing/Title.module.css';
-import {GAME_SHEET,hiddenMeta,LOGO_COLOURS,MARKETING_PATH,MARKETING_PDF,SITE_SHEET,type DesignSheet,type TypeSpec} from '@/lib/site/marketing';
+import {pageMeta} from '@/lib/site/seo';
+import {GAME_SHEET,LOGO_COLOURS,MARKETING_PATH,MARKETING_PDF,SITE_SHEET,type DesignSheet,type TypeSpec} from '@/lib/site/marketing';
 
 /**
  * /marketing (Nov 4 2026, owner): an unlisted page for potential investors. At the top, the investor overview PDF to download
  * (public/marketing/futbol-island-overview.pdf, built by scripts/build-marketing-pdf.cjs from /marketing/overview); under it a
- * short design-system sheet for the marketing site and for the game. Not linked from anywhere and not in the sitemap, robots.txt
- * or the llms files; noindex + nofollow (lib/site/marketing.ts, next.config.mjs X-Robots-Tag, tests/marketing-page.cjs).
+ * short design-system sheet for the marketing site and for the game. Since Nov 6 2026 (owner) this page is open to search and in the sitemap; only /marketing/* (print page, PDF) stays noindex (lib/site/marketing.ts, next.config.mjs, tests/marketing-page.cjs).
  * Static: no scripts and no video. The buttons are the real ones: the tour's gold `.cta` and the title screen's `.start` / `.haveCode`.
  */
 export const dynamic='force-static';
-export const metadata=hiddenMeta('Marketing','Futbol Island marketing material: the overview PDF and the design system of the site and the game.',MARKETING_PATH);
+/** Nov 6 2026 (owner): the page itself is open to search engines (canonical, Open Graph, in the sitemap); its print page and the PDF under /marketing/ stay noindex. Content unchanged. */
+export const metadata=pageMeta('Marketing','Futbol Island marketing material: the overview PDF and the design system of the site and the game.',MARKETING_PATH,{type:'website'});
 
 /** The PDF's size on disk at build time ("3.4 MB"); null while the file has not been built. */
 function pdfSize():string|null{

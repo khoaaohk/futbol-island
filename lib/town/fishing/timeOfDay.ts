@@ -8,6 +8,10 @@
  */
 export type TimeOfDay='day'|'sunset'|'night';
 export const TIME_KEY='fi2-time-of-day';
+/** Nov 6 2026: other places (the Fishbook's night fish toggle) can switch the island's time: Town.tsx listens for this event and
+ *  runs its own changeTime (the same setting IslandSettings writes). Saved here too, so it holds even before the island listens. */
+export const SET_TIME_EVENT='fi2-set-time-of-day';
+export function requestTimeOfDay(mode:TimeOfDay){try{localStorage.setItem(TIME_KEY,mode);}catch{/* no storage */}try{window.dispatchEvent(new CustomEvent(SET_TIME_EVENT,{detail:mode}));}catch{/* no window */}}
 export function readTimeOfDay():TimeOfDay{try{const t=localStorage.getItem(TIME_KEY);if(t==='day'||t==='sunset'||t==='night')return t;}catch{/* no storage */}return 'sunset';}
 /** Local day key (YYYY-MM-DD) for a timestamp. */
 export const dayKey=(now:number)=>{const d=new Date(now);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};

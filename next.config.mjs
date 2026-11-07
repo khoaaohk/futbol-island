@@ -29,9 +29,8 @@ const cacheStatic = [
   { source: '/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Cache-Control', value: 'no-store' }] },
   { source: '/admin', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Cache-Control', value: 'no-store' }] },
   { source: '/api/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
-  // The unlisted marketing pages and their PDF (Nov 4 2026, lib/site/marketing.ts): never indexed, never followed.
-  { source: '/marketing', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }] },
-  { source: '/marketing/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }] },
+  // Everything UNDER /marketing (the print page and the PDF; Nov 4 2026, lib/site/marketing.ts) is never indexed or followed. The /marketing page itself is open to search since Nov 6 2026 (owner).
+  { source: '/marketing/:path+', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }] },
 ];
 // The game is at /play (Nov 3 2026, owner: the feature tour is the home page `/`, the game moved from `/`). /play is prerendered
 // static (CDN-cached). The only query it used to read on the server, ?from=arcade|konbini|museum|shop (spawn outside that door,

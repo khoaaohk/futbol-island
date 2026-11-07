@@ -1,6 +1,6 @@
 # Reference pages design (Oct 17 2026)
 
-The static reference pages under `app/(site)/` (about, learn + 96 lessons, fish + 73 species, cards + 450 cards, exhibits + 22
+The static reference pages under `app/(site)/` (about, learn + 96 lessons, fish + 97 species (Nov 6 2026; grows with the Fishbook), cards + 450 cards, exhibits + 22
 exhibits) exist for search engines and AI assistants. They teach the same football as the island (positions, tactics, rules, club
 history), so they should read clearly. The rule from Oct 16 still holds: **no section navigation**. A visitor sees the page, one gold
 "Play" button into the island and the privacy link. SEO pieces (titles, descriptions, canonicals, JSON-LD, breadcrumb markup) are

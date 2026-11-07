@@ -4,16 +4,17 @@
  *
  * The catch is a timing game played live in the 3D island: cast, a fish shadow notices the float and swims over (from a
  * different direction each time, on a curved or wandering path; big or rare animals may circle the float once), it
- * nibbles 1-4 times (small bobs), then really bites (the float plunges). Tap during the bite window to hook it, then tap
- * Reel a number of times that grows with the animal (commons 2-3 ... legendary animals and sharks 10-14). Bigger animals
- * pull back if you pause. Tapping on a nibble scares the fish; tapping late lets it swim off. Nothing is ever lost.
- * Since Oct 15 2026 the default reel is the tension-and-runs fight (./fishingFight.ts: spin the big reel to wind in, stop spinning
- * through a run, ease off in the red; a slip drops one notch, the line never snaps); tapping the reel N times stays as the "Easy
- * reel" option.
+ * nibbles 1-4 times (small bobs), then really bites (the float plunges). Tap Hook! during the bite window to hook it, then the
+ * tension-and-runs fight (./fishingFight.ts, Oct 15 2026; the only reel): spin the big reel to wind in, stop spinning through a
+ * run, ease off in the red; a slip drops one notch, the line never snaps. Stop spinning too long and the hooked fish swims off.
+ * Waiting too long after the plunge lets it swim off too. Nothing is ever lost.
+ * Nov 6 2026: the HUD's button reads Wait… (and ignores taps, fishingSession.ts) while a shadow comes in and nibbles; this core
+ * still scares a fish tapped on a nibble (`tapSession`) for other callers. After two late misses in a row the next bite window
+ * widens (MISS_HELP), and the Easy bite setting (fishingStore.ts) adds EASY_BONUS like reduced motion does.
  *
  * Kid safety: catch weights are internal only (never shown), and every phase ends on its own, so nothing loops forever.
  */
-import {FISH,FISH_SPOTS,SHADOW_LENGTH,fishById,type FishId,type FishSpot,type FishRarity,type FishSpecies} from './fishCatalog';
+import {FISH,FISH_SPOTS,SHADOW_LENGTH,fishById,isFishbookSpecies,type FishId,type FishSpot,type FishRarity,type FishSpecies} from './fishCatalog';
 import {catchWeights} from './fishingOdds';
 import {createFight,stepFight,type Fight} from './fishingFight';
 import {distanceToShore,onIsland} from '../shoreline';
@@ -115,16 +116,27 @@ export function rollSize(id:FishId,rand:number,spook=0,bigger=0){const f=fishByI
 // ---- Session: the live catch timing ----
 export type SessionPhase='ready'|'casting'|'floating'|'approach'|'nibble'|'bite'|'reeling'|'scared'|'escaped'|'caught';
 export type SessionEvent='splash'|'notice'|'nibble'|'bite'|'escaped'|'scared'|'hooked'|'reel'|'reeled-in'|'cast'
+ /** Nov 6 2026: the catch's read time is over, Cast works again. */
+ |'castable'
  /** Oct 15 2026 (docs/fishing-research.md A5, B1): the line twangs before the idle escape; the fight's runs, slips and the red zone. */
  |'warn'|'run'|'slip'|'leap'|'strain'|'ease';
 /** Reaction window after the real bite: about 0.6-1 s (shorter for rarer animals), a little longer in easy mode / reduced motion. */
 export const BITE_WINDOW:Record<FishRarity,number>={common:1,uncommon:.9,rare:.8,legendary:.7};
+/** Easy bite (Island settings) or reduced motion: this much longer to react, for every bite (the two never stack). */
 export const EASY_BONUS=.35;
+/** Kid help (Nov 6 2026): after MISS_HELP_AFTER late misses in a row, each further bite window is MISS_HELP longer (2 misses +0.3 s,
+ *  3+ misses +0.45 s at most), until the next hook. The species' own window stays the base, so sharks stay harder than commons. */
+export const MISS_HELP=.3,MISS_HELP_CAP=.45,MISS_HELP_AFTER=2;
+export const missHelp=(lateMisses:number)=>lateMisses<MISS_HELP_AFTER?0:Math.min(MISS_HELP_CAP,MISS_HELP*(lateMisses-MISS_HELP_AFTER+1));
+/** The bite window for a species right now (base by rarity + easy + the late-miss help). */
+export const biteWindow=(rarity:FishRarity,easy:boolean,lateMisses=0)=>BITE_WINDOW[rarity]+(easy?EASY_BONUS:0)+missHelp(lateMisses);
 export const CAST_TIME=.7,FLEE_TIME=1.3;
 export const REEL_IDLE_LIMIT=8,REEL_TAP_GAP=.12;
 /** A5 (Oct 15 2026): the warning twang this long into an idle reel, before the REEL_IDLE_LIMIT escape. */
 export const REEL_WARN=5;
-export const CATCH_READ_TIME=3,CATCH_TAP_QUIET=.7;
+/** After a catch, Cast waits CATCH_READ_TIME s so the club fact can be read (taps in that time are ignored and never extend it;
+ *  the HUD shows the button disabled, and the session steps a 'castable' event when it ends). */
+export const CATCH_READ_TIME=3;
 /** Swim speed (m/s) by rarity: rarer animals are faster (sharks fastest). */
 export const SWIM_SPEED:Record<FishRarity,number>={common:.9,uncommon:1,rare:1.2,legendary:1.5};
 const speedOf=(f:FishSpecies)=>f.group==='shark'?1.6:SWIM_SPEED[f.rarity];
@@ -145,7 +157,9 @@ export type Session={phase:SessionPhase;t:number;wait:number;fish:{id:FishId;siz
  /** The fight of the last hook (kept after it lands or escapes, for the session's catch / escape events); null for an Easy reel hook. */
  lastFight:Fight|null;
  /** The idle warning (A5) has played for this pause. */
- warned:boolean};
+ warned:boolean;
+ /** Late misses in a row since the last hook (MISS_HELP widens the next window). */
+ lateMisses:number};
 /** After this many fish swim off with no tap at all, the line is reeled in (no endless cycle if a child puts the phone down). */
 export const IDLE_ESCAPES=3;
 export type SessionOptions={
@@ -159,7 +173,7 @@ export type SessionOptions={
  lure?:string|null;
  roll?:(spot:FishSpot,rand:number,hot:number)=>FishId;
 };
-export const createSession=():Session=>({phase:'ready',t:0,wait:0,fish:null,shadow:null,nibblesLeft:0,nextNibble:0,window:0,nibbles:0,dip:0,idleEscapes:0,reelTaps:0,reelTarget:0,reelIdle:0,reelCooldown:0,mods:{hot:0,spook:0},fight:null,lastFight:null,warned:false});
+export const createSession=():Session=>({phase:'ready',t:0,wait:0,fish:null,shadow:null,nibblesLeft:0,nextNibble:0,window:0,nibbles:0,dip:0,idleEscapes:0,reelTaps:0,reelTarget:0,reelIdle:0,reelCooldown:0,mods:{hot:0,spook:0},fight:null,lastFight:null,warned:false,lateMisses:0});
 const go=(s:Session,phase:SessionPhase)=>{s.phase=phase;s.t=0;};
 /** Spooked water waits up to 2.5× as long for a bite (Oct 14 2026). */
 export const SPOOK_WAIT=1.5;
@@ -196,9 +210,9 @@ export function stepSession(s:Session,spot:FishSpot,dt:number,rand:()=>number,o:
   }break;
   case 'nibble':if(s.t>=s.nextNibble){
    if(s.nibblesLeft>0){s.nibblesLeft--;s.nibbles++;s.dip=1;ev.push('nibble');const leg=s.fish&&fishById(s.fish.id)!.rarity==='legendary';s.nextNibble=s.t+(leg?.45+rand()*.45:.7+rand()*.6);}
-   else{const r=fishById(s.fish!.id)!.rarity;s.window=BITE_WINDOW[r]+(o.easy?EASY_BONUS:0);go(s,'bite');ev.push('bite');}
+   else{const r=fishById(s.fish!.id)!.rarity;s.window=biteWindow(r,!!o.easy,s.lateMisses);go(s,'bite');ev.push('bite');}
   }break;
-  case 'bite':if(s.t>=s.window){s.idleEscapes++;if(sh)aimFlee(sh);go(s,'escaped');ev.push('escaped');}break;
+  case 'bite':if(s.t>=s.window){s.idleEscapes++;s.lateMisses++;if(sh)aimFlee(sh);go(s,'escaped');ev.push('escaped');}break;
   case 'reeling':{
    if(s.fight){
     // The fight: spinning resets the idle clock; landing is the hook-out.
@@ -210,6 +224,7 @@ export function stepSession(s:Session,spot:FishSpot,dt:number,rand:()=>number,o:
     break;}
    s.reelIdle+=step;// (no fight: only if a caller set the phase by hand)
    if(s.reelIdle>=REEL_IDLE_LIMIT){s.idleEscapes++;s.warned=false;if(sh)aimFlee(sh);go(s,'escaped');ev.push('escaped');}break;}
+  case 'caught':if(s.t>=CATCH_READ_TIME&&s.t-step<CATCH_READ_TIME)ev.push('castable');break;
   case 'scared':case 'escaped':
    // Swims off and sinks into the haze as it fades (never vanishes in view).
    if(sh){const flee=(s.phase==='scared'?3.2:2.2)*step;sh.x+=Math.sin(sh.heading+Math.PI)*flee;sh.z+=Math.cos(sh.heading+Math.PI)*flee;sh.alpha=Math.max(0,1-s.t/FLEE_TIME);sh.rise=Math.min(1,s.t/FLEE_TIME);}
@@ -221,18 +236,20 @@ export function stepSession(s:Session,spot:FishSpot,dt:number,rand:()=>number,o:
  *  Oct 15 2026; the Easy reel tap meter is gone); while it runs, taps do nothing (the reel is spun instead). */
 export function tapSession(s:Session,opts?:{rand?:()=>number}):SessionEvent|null{
  s.idleEscapes=0;
- // A burst of reel taps must never skip the catch fact. Require both time to
- // read and a short pause in tapping before an intentional new cast.
- if(s.phase==='caught'&&(s.t<CATCH_READ_TIME||s.reelCooldown>0)){s.reelCooldown=CATCH_TAP_QUIET;return null;}
+ // A burst of taps must never skip the catch fact: Cast waits out the read time. Taps in it are ignored and do NOT restart it
+ // (Nov 6 2026: each tap used to restart a 0.7 s quiet timer, so a child tapping steadily could never cast again).
+ if(castLocked(s))return null;
  switch(s.phase){
   case 'ready':case 'caught':s.fish=s.phase==='caught'?null:s.fish;s.shadow=null;s.nibbles=0;s.reelTaps=s.reelTarget=s.reelIdle=s.reelCooldown=0;s.fight=null;s.warned=false;go(s,'casting');return 'cast';
   case 'floating':go(s,'ready');return 'reeled-in';
   case 'approach':case 'nibble':if(s.shadow)aimFlee(s.shadow);go(s,'scared');return 'scared';
-  case 'bite':{const f=fishById(s.fish!.id)!;s.reelTaps=0;s.reelIdle=0;s.warned=false;s.reelCooldown=REEL_TAP_GAP;
+  case 'bite':{const f=fishById(s.fish!.id)!;s.reelTaps=0;s.reelIdle=0;s.warned=false;s.reelCooldown=REEL_TAP_GAP;s.lateMisses=0;
    s.fight=createFight(f,s.fish!.size,opts?.rand??Math.random);s.lastFight=s.fight;s.reelTarget=1;go(s,'reeling');return 'reel';}
   default:return null;
  }
 }
+/** Cast is not ready yet: the catch's read time (or the hook's tap gap) is still running. */
+export const castLocked=(s:Pick<Session,'phase'|'t'|'reelCooldown'>)=>s.phase==='caught'&&(s.t<CATCH_READ_TIME||s.reelCooldown>0);
 /** Seconds of the reaction window left while the float is under (for the HUD, never a countdown number). */
 export const biteRemaining=(s:Session)=>s.phase==='bite'?Math.max(0,s.window-s.t):0;
 
@@ -253,7 +270,9 @@ export function sanitizeFishbook(value:unknown):Fishbook{
 }
 export type CatchRecord={book:Fishbook;isNew:boolean;isBiggest:boolean};
 export function recordCatch(book:Fishbook,id:FishId,size:number,now:number):CatchRecord{
- const f=fishById(id);if(!f)return {book,isNew:false,isBiggest:false};
+ // Nov 6 2026: an Island Legend is released, never a Fishbook species: it no longer bumps `total` (that +1 used to show in the
+ // session and was dropped by sanitizeFishbook / mergeFishbooks, which keep FISH only, on the next catch or reload).
+ const f=isFishbookSpecies(id)?fishById(id):undefined;if(!f)return {book,isNew:false,isBiggest:false};
  const prev=book.species[id],s=Math.max(0,Math.min(f.size[1],Math.round(size*10)/10));
  const entry:FishbookEntry={count:(prev?.count??0)+1,biggest:Math.max(prev?.biggest??0,s),first:prev?.first||now};
  return {book:{...book,species:{...book.species,[id]:entry},total:book.total+1},isNew:!prev,isBiggest:!!prev&&s>prev.biggest};
