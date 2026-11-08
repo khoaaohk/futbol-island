@@ -15,8 +15,10 @@ import {isLureId,type LureId} from './lures';
 import {requestHint,requestProgress,requestsForDay,type FishRequest} from './requests';
 
 export const FISHING_LOG_KEY='fi2-fishing-log-v1';
-export type FloatSkin='classic'|'football'|'seagull'|'golden';
-export const FLOAT_SKINS:Record<FloatSkin,{name:string;color:string}>={classic:{name:'Classic red float',color:'#d6453a'},football:{name:'Football float',color:'#f4f4f0'},seagull:{name:'Seagull float',color:'#9fb7c9'},golden:{name:'Golden float',color:'#e3b53c'}};
+/** Nov 7 2026 (return hooks, fishingHooks.ts FISH_SETS): five more floats, each earned by completing a Fishbook set. Cosmetic only. */
+export type FloatSkin='classic'|'football'|'seagull'|'golden'|'coral'|'abyss'|'moon'|'fin'|'shell';
+export const FLOAT_SKINS:Record<FloatSkin,{name:string;color:string}>={classic:{name:'Classic red float',color:'#d6453a'},football:{name:'Football float',color:'#f4f4f0'},seagull:{name:'Seagull float',color:'#9fb7c9'},golden:{name:'Golden float',color:'#e3b53c'},
+ coral:{name:'Coral float',color:'#f08a6c'},abyss:{name:'Deep blue float',color:'#2b4f9a'},moon:{name:'Moon float',color:'#d9def5'},fin:{name:'Shark fin float',color:'#66737e'},shell:{name:'Shell float',color:'#e8c9a2'}};
 export type FishingLog={version:1;
  /** Distinct kinds caught per spot (capped). */
  kinds:Record<string,string[]>;
@@ -68,7 +70,7 @@ export function sanitizeLog(value:unknown):FishingLog{
  out.reqTotal=whole(v.reqTotal,1e6);
  out.lure=isLureId(v.lure)?v.lure:null;
  out.milestones=(Array.isArray(v.milestones)?v.milestones:[]).filter((m):m is number=>MILESTONES.includes(m as never)).filter((m,i,a)=>a.indexOf(m)===i);
- out.floats=[...new Set<FloatSkin>(['classic',...strList(v.floats,s=>SKINS.includes(s as FloatSkin),8) as FloatSkin[]])];
+ out.floats=[...new Set<FloatSkin>(['classic',...strList(v.floats,s=>SKINS.includes(s as FloatSkin),16) as FloatSkin[]])];
  out.float=SKINS.includes(v.float as FloatSkin)&&out.floats.includes(v.float as FloatSkin)?v.float as FloatSkin:'classic';
  out.goldenRod=v.goldenRod===true;out.rod=out.goldenRod&&v.rod==='golden'?'golden':'standard';
  if(v.pity&&typeof v.pity==='object')for(const [k,n] of Object.entries(v.pity).slice(0,PITY_KEYS_MAX)){if(isPityKey(k)){const c=whole(n,PITY_COUNT_MAX);if(c>0)out.pity[k]=c;}}

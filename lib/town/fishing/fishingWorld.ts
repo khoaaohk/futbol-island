@@ -17,6 +17,7 @@ import {createDeepSeaBoat} from './deepSeaBoat';
 import {DEEP_SEA_BOATS,boatBySpot} from './deepSeaBoatData';
 import {aimCharge,type FishingSessionApi} from './fishingSession';
 import {aimArea,aimPolar,clampAim,hotAt,hotspotSeed,planHotspots,quickCast,rememberCast,spookAt,HOTSPOT_RESEED,type AimArea,type CastMark,type Hotspot,type Landing} from './fishingAim';
+import {RARITY_GLOW} from './fishingDelight';// Nov 7 2026 delight pass: sparkles round a rare catch (cosmetic)
 
 /**
  * Fishing props on the island + the "Fish" / "Sell" prompts (docs/fishing.md).
@@ -164,7 +165,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
     visuals.showShadow(s.shadow&&f?{size:f.shadow,pos:{x:s.shadow.x,z:s.shadow.z},heading:s.shadow.heading+(ph==='scared'||ph==='escaped'?Math.PI:0),alpha:s.shadow.alpha,shape:f.shape,id:f.id,color:f.color,mode:ph==='nibble'||ph==='bite'?ph:ph==='scared'||ph==='escaped'?'flee':'swim'}:null);
     visuals.setReelingFish(ph==='reeling'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape,id:f.id}:null);
     visuals.setFight?.(meter?fightLook:null);
-    visuals.holdUpFish(ph==='caught'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape,id:f.id}:null);
+    visuals.holdUpFish(ph==='caught'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape,id:f.id,glow:RARITY_GLOW[f.rarity]}:null);// glow: the delight pass's sparkles round a rare catch (cosmetic)
     for(const e of events)beat(e);}
    if(visuals.busy)visuals.frame(c.dt,c.elapsed,c.reduced);
   }

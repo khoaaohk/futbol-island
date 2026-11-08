@@ -42,6 +42,8 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-island-jobs-v1','fi2-garden-v1','fi2-market-v1','fi2-fishbook-v1','fi2-konbini-v1','fi2-konbini-collection-v1','fi2-konbini-ball-v1',
  'fi2-summit-forage-v1',// Summit Isle fruit trees (Oct 13 2026): fruit picked per tree (regrow clock), today's count, the tip seen
  'fi2-fishing-log-v1',// Fishing content (Oct 15 2026, docs/fishing.md "Content systems"): legends, clues, requests, the lure on the line, Fishbook rewards
+ 'fi2-fishing-hooks-v1',// Fishing return hooks (Nov 7 2026, docs/fishing.md "Return hooks"): sets claimed, Visitor marks, golden catches, legend chapters (a few KB)
+ 'fi2-fishing-secrets-v1',// Fishing delight pass (Nov 7 2026, docs/fishing.md "Delight pass"): two found-once secret stamps (message in a bottle, golden glint); ~50 bytes
  'fi2-beachcomb-v1',// Beachcombing (Oct 14 2026, docs/beachcombing.md): the Shellbook, today's taken spots, the tips seen
  'fi2-bug-book-v1',// The Bug book (Oct 20 2026, lib/town/jobs/bugBook.ts): catch counts for the 8 Summit bugs + 8 fireflies and the reward flag (≤ ~130 bytes)
  'fi2-dive-finds-v1',
@@ -56,7 +58,7 @@ export const SYNC_KEYS:readonly string[]=[
 ];
 export const ARCADE_RECORD_KEY=/^fi2-arcade-record-[a-z0-9]{1,24}(?:-[a-z0-9]{1,24}){0,2}-v1$/;
 /** Doc §4.1 table B: each device keeps its own. */
-export const DEVICE_KEYS:readonly string[]=['fi2-npc-fresh-v1','fi2-goal-replays-v1'/* live matches: Goal replays on / off (lib/town/goalReplay.ts) */,'fi2-stick-sprint-v1'/* live matches: Push stick to sprint on / off (lib/town/liveControls.ts) */,'fi2-match-fx-v1'/* live matches: Match effects Full / Light (lib/town/matchFxSetting.ts) */,'fi2-pinball-prefs-v1','fi2-pinball-tutorial-v1','fi2-music-enabled','fi2-runner-hint-v1','fi2-bug-pill-v1','fi2-multiplayer-allowed-v1','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
+export const DEVICE_KEYS:readonly string[]=['fi2-npc-fresh-v1','fi2-goal-replays-v1'/* live matches: Goal replays on / off (lib/town/goalReplay.ts) */,'fi2-stick-sprint-v1'/* live matches: Push stick to sprint on / off (lib/town/liveControls.ts) */,'fi2-match-fx-v1'/* live matches: Match effects Full / Light (lib/town/matchFxSetting.ts) */,'fi2-match-11-mode-v1'/* live matches: 11v11 kid / adult balance (lib/town/match/matchModeSetting.ts) */,'fi2-match-haptics-v1'/* live matches: Vibration on / off (lib/town/liveControls.ts) */,'fi2-match-phrases-v1'/* live matches: Quick phrases on / off (lib/town/quickPhrases.ts) */,'fi2-pinball-prefs-v1','fi2-pinball-tutorial-v1','fi2-music-enabled','fi2-runner-hint-v1','fi2-bug-pill-v1','fi2-multiplayer-allowed-v1','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
  'fi2-voice-enabled','fi2-coach-voice','fi2-controls-flipped','fi2-battery-saver','fi2-time-of-day','fi2-cards-field-v1','fi-card-dots',
  'fi2-last-visit-day-v1','fi2-bottle-open-date','fi2-idp-text-v1',
  // The energy bar (Oct 12 2026): refilled on each device's first visit of the day and redrawn as the player walks (a float),

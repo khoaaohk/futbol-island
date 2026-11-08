@@ -23,16 +23,19 @@ import {hotspotAt,type Hotspot} from './fishingAim';
  * not only a colour), a shark's dorsal FIN breaking the surface, and a V-shaped WAKE behind a shark on its approach or a fish
  * making a run. These are per-frame MARKS the visuals push while fishing (at most MARKS a frame); nothing at rest.
  */
-const KIND={dropoff:0,ripples:1,boil:2,edge:3,shadow:4,upwelling:5,bird:6,dot:7,target:8,ring:9,drop:10,bubble:11,bang:12,fin:13,wake:14} as const;
-const SURF=-.385,DOTS=16,BIRDS=3,RINGS=7,DROPS=18,BUBBLES=8,MARKS=4,CAP=3*(1+BIRDS)+DOTS+1+RINGS+DROPS+BUBBLES+MARKS;
+const KIND={dropoff:0,ripples:1,boil:2,edge:3,shadow:4,upwelling:5,bird:6,dot:7,target:8,ring:9,drop:10,bubble:11,bang:12,fin:13,wake:14,glow:15} as const;
+/** Nov 7 2026 delight pass: EXTRAS = per-frame cosmetic marks (sparkles round a rare catch, fireflies, the idle gull, the far
+ *  whale, the golden glint), a fixed pool of preallocated slots (no allocation per frame), still in this one draw. */
+const SURF=-.385,DOTS=16,BIRDS=3,RINGS=7,DROPS=18,BUBBLES=8,MARKS=4,EXTRAS=16,CAP=3*(1+BIRDS)+DOTS+1+RINGS+DROPS+BUBBLES+MARKS+EXTRAS;
 export type OverlayMark='bang'|'fin'|'wake';
+export type OverlayExtra='glow'|'gull'|'shadow';
 const VERT=/* glsl */`
 attribute float iKind,iSeed,iAlpha;uniform float uTime;varying vec2 vUv;varying float vKind,vSeed,vAlpha;
 void main(){
  vUv=uv;vKind=iKind;vSeed=iSeed;vAlpha=iAlpha;
  vec3 c=(modelMatrix*instanceMatrix*vec4(0.,0.,0.,1.)).xyz;
  vec3 p;
- if(iKind>5.5&&iKind<7.5||iKind>9.5&&iKind<13.5){// Billboards (birds, aim dots, drops, bubbles, the bite's "!", a fin): face the camera, size from the instance scale.
+ if(iKind>5.5&&iKind<7.5||iKind>9.5&&iKind<13.5||iKind>14.5){// Billboards (birds, aim dots, drops, bubbles, the bite's "!", a fin): face the camera, size from the instance scale.
   float s=length(instanceMatrix[0].xyz);vec3 right=vec3(viewMatrix[0][0],viewMatrix[1][0],viewMatrix[2][0]),up=vec3(viewMatrix[0][1],viewMatrix[1][1],viewMatrix[2][1]);
   p=c+(right*position.x+up*position.z*-1.)*s;}
  else p=(modelMatrix*instanceMatrix*vec4(position,1.)).xyz;
@@ -68,6 +71,9 @@ void main(){
  else if(vKind<13.5){// A dorsal fin (seen side-on from any angle): a swept triangle, dark slate with a lighter leading edge.
   float y=d.y*.5+.5,x=d.x*.5+.5,lead=.18+y*.42,trail=.92-y*.18*(1.+y);float inside=step(.0,y)*step(y,.96)*step(lead,x)*step(x,trail);
   a=inside*.95;col=mix(vec3(.2,.26,.3),vec3(.55,.62,.66),smoothstep(.06,.0,x-lead));}
+ else if(vKind>14.5){// Delight sparkle (Nov 7 2026): a soft round glow with a four-point twinkle, vSeed <1 gold (catch / glint), >=1 firefly green-gold.
+  float core=exp(-r*r*9.),star=exp(-abs(d.x)*14.)*exp(-abs(d.y)*3.)+exp(-abs(d.y)*14.)*exp(-abs(d.x)*3.);
+  a=clamp(core+star*.55,0.,1.)*(1.-smoothstep(.85,1.,r));col=vSeed<1.?vec3(1.,.86,.36):vec3(.86,1.,.5);}
  else{// A V-wake on the surface behind a moving fin / a running fish (the apex at -Z, vSeed = 0..1 strength).
   vec2 q=vec2(abs(d.x),.5-d.y*.5);/* q.y 0 at the front (-Z, the fish), 1 behind */float arm=abs(q.x-q.y*.62);float crest=(1.-smoothstep(.02,.07,arm))*smoothstep(.0,.15,q.y)*(1.-smoothstep(.55,1.,q.y));
   float trail=exp(-pow(d.x/.08,2.))*smoothstep(.1,.5,q.y)*(1.-smoothstep(.5,1.,q.y))*.35;float ripple=.75+.25*sin(q.y*26.-t*9.);
@@ -89,6 +95,7 @@ export function createFishingOverlay(scene:T.Scene,uw?:{uUwShallow:{value:T.Vect
  const mesh=new T.InstancedMesh(quad,material,CAP);mesh.name='fishing-water-signs';mesh.renderOrder=1.4;mesh.frustumCulled=false;mesh.visible=false;mesh.raycast=()=>{};mesh.count=0;scene.add(mesh);
  const dummy=new T.Object3D();
  let hotspots:readonly Hotspot[]=[],aim:AimPreview=null,fade=0,target=0,clock=0;
+ const extras=Array.from({length:EXTRAS},()=>({kind:0,x:0,y:0,z:0,sx:0,sz:0,yaw:0,alpha:0,seed:0}));let extraN=0;
  const rings:Ring[]=[],drops:Drop[]=[],bubbles:Bubble[]=[],marks:{kind:number;x:number;y:number;z:number;size:number;yaw:number;alpha:number;seed:number}[]=[];let bubbleSources:{x:number;y:number;z:number}[]=[],bubbleWait=2,lifeOn=true;
  /** Fx alive (rings, drops, bubbles): the overlay stays awake for them a moment after a session ends. */
  const fxBusy=()=>rings.length>0||drops.length>0||bubbles.length>0;
@@ -108,6 +115,10 @@ export function createFishingOverlay(scene:T.Scene,uw?:{uUwShallow:{value:T.Vect
   /** A one-frame mark (A1/A2/B6): the bite's "!" (billboard, centre at y), a dorsal fin (billboard, base at y), a V-wake on the
    *  surface pointing along `yaw` (the fish heads toward -Z after the yaw). Pushed every frame while it should show; at most MARKS. */
   mark(kind:OverlayMark,x:number,y:number,z:number,size:number,yaw=0,alpha=1,seed=1){if(marks.length>=MARKS)return;marks.push({kind:KIND[kind],x,y,z,size,yaw,alpha,seed});mesh.visible=true;},
+  /** A one-frame cosmetic extra (delight pass): a glow sparkle (billboard; seed <1 gold, >=1 firefly), a gull (billboard), or a
+   *  dark shadow on the water (sx by sz metres, yaw; the far whale / manta). Pooled: at most EXTRAS a frame, extra ones are dropped. */
+  extra(kind:OverlayExtra,x:number,y:number,z:number,sx:number,alpha=1,seed=0,sz=sx,yaw=0){if(extraN>=EXTRAS)return;const e=extras[extraN++];
+   e.kind=kind==='glow'?KIND.glow:kind==='gull'?KIND.bird:KIND.shadow;e.x=x;e.y=y;e.z=z;e.sx=sx;e.sz=sz;e.yaw=yaw;e.alpha=alpha;e.seed=seed;mesh.visible=true;},
   /** Where bubbles may rise from (reef pieces in view: base x, seabed y, z). */
   setBubbleSources(list:{x:number;y:number;z:number}[]){bubbleSources=list;},
   /** fishingLife: drops and bubbles only on the cool tiers (gameplay rings always). */
@@ -117,12 +128,12 @@ export function createFishingOverlay(scene:T.Scene,uw?:{uUwShallow:{value:T.Vect
   /** The aim preview (null hides it). */
   setAim(a:AimPreview){aim=a;},
   begin(){target=1;mesh.visible=true;},
-  end(){target=0;aim=null;bubbles.length=0;marks.length=0;},
+  end(){target=0;aim=null;bubbles.length=0;marks.length=0;extraN=0;},
   /** `time`: the session clock for the hotspot drift (seconds); dt for the fades and animation. */
   frame(dt:number,reduced:boolean,time:number){
    if(!mesh.visible)return;
    fade=reduced?target:T.MathUtils.clamp(fade+Math.sign(target-fade)*Math.min(Math.abs(target-fade),dt/.7),0,1);
-   if(fade<=0&&target===0&&!fxBusy()&&!marks.length){mesh.visible=false;mesh.count=0;return;}
+   if(fade<=0&&target===0&&!fxBusy()&&!marks.length&&!extraN){mesh.visible=false;mesh.count=0;return;}
    if(!reduced)clock=(clock+Math.min(dt,.1))%3600;uniforms.uTime.value=clock;
    let n=0;
    hotspots.forEach((h,hi)=>{const c=hotspotAt(h,reduced?0:time),seed=hi*7.3+1;
@@ -150,6 +161,7 @@ export function createFishingOverlay(scene:T.Scene,uw?:{uUwShallow:{value:T.Vect
     if(b.y>=b.top||!lifeOn){if(b.y>=b.top&&rings.length<RINGS)rings.push({x:b.x,z:b.z,y:SURF+.004,size:.12,life:.6,age:0});bubbles.splice(i,1);continue;}
     const w=Math.sin(b.age*7+b.seed)*.025;put(n++,KIND.bubble,Math.max(0,SURF-b.y),Math.min(1,b.age*3)*fade,b.x+w,b.y,b.z+w*.6,b.size);}
    for(const m of marks)put(n++,m.kind,m.seed,m.alpha,m.x,m.y,m.z,m.size,m.kind===KIND.wake?m.size*1.8:m.size,m.yaw);marks.length=0;
+   for(let i=0;i<extraN;i++){const e=extras[i];put(n++,e.kind,e.seed,e.alpha,e.x,e.y,e.z,e.sx,e.sz,e.yaw);}extraN=0;
    mesh.count=n;mesh.instanceMatrix.needsUpdate=true;kindA.needsUpdate=true;seedA.needsUpdate=true;alphaA.needsUpdate=true;
   },
   dispose(){mesh.removeFromParent();mesh.dispose();quad.dispose();material.dispose();},

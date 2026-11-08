@@ -5,6 +5,8 @@
 // integration (locked control, N humans, pass/forward/shoot/tackle/call, release to the AI, AI-only matches unchanged
 // in cost) and the bibs (colour-blind-safe pair, keepers that clash with neither).
 const assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path'),ts=require('typescript');
+// Tackle wind-up (Nov 7 2026, liveMechanics TACKLE_FX): a press in reach SETS first; step through the set to its result.
+const TK=(sim,me)=>{for(let i=0;i<12&&sim.tackleWindupOf(me)>0;i++){sim.humanInput(me,{mx:0,my:0});sim.step(1/30);}};
 const cache=new Map();function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(file);const m={exports:{}};cache.set(file,m.exports);vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,{module:m,exports:m.exports,Math,Number,Set,Map,Infinity,NaN,console,require:id=>id.startsWith('.')?(id.endsWith('.json')?require(path.resolve(path.dirname(file),id)):load(path.resolve(path.dirname(file),id+'.ts'))):require(id)});return m.exports;}
 const J=load('lib/town/liveJoin.ts'),H=load('lib/town/match/humanInputs.ts'),A=load('lib/town/match/passAssist.ts'),R=load('lib/town/match/offBallRuns.ts'),B=load('lib/town/beanLooks.ts');
 const {MatchSim}=load('lib/town/match/matchSim.ts');
@@ -169,8 +171,11 @@ const outfield=(sim,team)=>sim.ids.filter(id=>sim.players[id].team===team&&!sim.
  sim.ball.owner=a;sim.possession='gold';sim.ball.x=sim.players[a].x;sim.ball.y=sim.players[a].y;sim.ball.vx=sim.ball.vy=0;
  sim.humanInput(a,{mx:0,my:-1});sim.step(DT);
  const shown=sim.humanTarget(a,'short');assert(shown&&sim.players[shown].team==='gold'&&!sim.players[shown].isGK,'Pass target shown');assert.equal(sim.passTargetId,shown);
- let flips=0,last=shown;for(let i=0;i<30;i++){sim.ball.owner=a;sim.humanInput(a,{mx:.05*Math.sin(i),my:-1});sim.step(DT);const t=sim.humanTarget(a,'short');if(t!==last){flips++;last=t;}}
- assert(flips<=1,'the marker does not flicker under a wobbly stick ('+flips+' changes)');
+ let flips=0,quick=0,lastAt=-99,last=shown,prev=null;for(let i=0;i<30;i++){sim.ball.owner=a;sim.humanInput(a,{mx:.05*Math.sin(i),my:-1});sim.step(DT);const t=sim.humanTarget(a,'short');if(t!==last){flips++;if(i-lastAt<8&&t===prev)quick++;lastAt=i;prev=last;last=t;}}
+ // he runs ~120 u up the pitch in this second, so the best man may honestly change as he passes players (Tier 1, Nov 7 2026:
+ // idle-human cover moves the AI differently); a flicker is a change straight back within 8 frames (A -> B -> A; Tier 2, Nov 7:
+ // the contest heavy touches move the AI again, and he now runs past three men into the box: st -> lm -> rm -> st, no flicker)
+ assert(flips<=3&&quick===0,'the marker does not flicker under a wobbly stick ('+flips+' changes, '+quick+' quick)');
  sim.ball.owner=a;sim.humanInput(a,{mx:0,my:-1,pass:true});sim.step(DT);
  assert.notEqual(sim.ball.owner,a,'the pass leaves his foot');assert(sim.ball.target||sim.ball.intBy,'played to a player');
  const sp=Math.hypot(sim.ball.vx,sim.ball.vy);assert.equal(sim.humanBallPace,1.5,'7v7 ball pace (owner Nov 5 2026: match the 9v9)');assert(sp>=180&&sp<=420*1.3*sim.humanBallPace+1,'weighted pace ('+sp.toFixed(0)+')');
@@ -186,7 +191,7 @@ const outfield=(sim,team)=>sim.ids.filter(id=>sim.players[id].team===team&&!sim.
 {const sim=new MatchSim(270+41,'7v7');sim.windupScale=.32;for(let i=0;i<90;i++)sim.step(DT);
  const me=outfield(sim,'gold')[1],foe=outfield(sim,'blue')[1];sim.lockHuman(me);
  let won=0;for(let k=0;k<20;k++){sim.restart=null;sim.ball.owner=foe;sim.possession='blue';sim.protect=0;sim.placePlayer(foe,140,200);sim.placePlayer(me,140,200+4.2+2.8);sim.ball.x=140;sim.ball.y=200;
-  sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);if(sim.ball.owner===me)won++;}
+  sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);TK(sim,me);if(sim.ball.owner===me)won++;}
  assert(won>=8,'a well-timed tackle (just outside the old reach) usually wins it ('+won+'/20)');
  // Call: an AI teammate on the ball with an open lane plays it to the caller
  const mate=outfield(sim,'gold').find(id=>id!==me);let answered=0;
@@ -225,7 +230,7 @@ const outfield=(sim,team)=>sim.ids.filter(id=>sim.players[id].team===team&&!sim.
   return {sp:Math.hypot(sim.ball.vx,sim.ball.vy),to:sim.ball.target||sim.ball.intBy};};
  const tap=pace(0),full=pace(1),half=pace(.5);assert(tap.sp>0&&full.sp>0,'both passes leave the foot');assert.equal(full.to,tap.to,'charging never changes the assisted target');
  const k=full.sp/tap.sp;assert(Math.abs(k-H.PASS_POWER_MAX)<.12,'full hold x'+k.toFixed(2));assert(half.sp>tap.sp&&half.sp<full.sp,'power grows with the hold');
- const rt=fs.readFileSync('lib/town/liveJoinRuntime.ts','utf8');assert.match(rt,/passNow=aUp&&\(aMode==='pass'\|\|aMode==='throw'\)&&mode\.a===aMode/,'Pass (and a keeper\'s Throw) strikes on RELEASE (charge first)');}
+ const rt=fs.readFileSync('lib/town/liveJoinRuntime.ts','utf8');assert.match(rt,/passNow=aUp&&\(aMode==='pass'\|\|aMode==='throw'\)&&\(mode\.a===aMode\|\|graceA/,'Pass (and a keeper\'s Throw) strikes on RELEASE (charge first)');}
 
 // AI-only matches pay nothing for the human code (no pass-assist work when nobody is human)
 {const src=fs.readFileSync('lib/town/match/matchSim.ts','utf8');
@@ -380,7 +385,7 @@ const outfield=(sim,team)=>sim.ids.filter(id=>sim.players[id].team===team&&!sim.
  assert.match(css,/\.cam\{position:absolute;[^}]*top:var\(--island-hud-row-top[^}]*left:calc\(var\(--island-hud-edge[^}]*width:var\(--btn-icon,44px\)[^}]*border-radius:50%/,'top-left, the 44px top-row circle');
  assert.match(rt,/hide\(el\('\[data-join-cam\]'\),!joined\)/,'only while joined');assert.match(rt,/sessionStorage\.setItem\(CAM_KEY,a\)/,'remembered for the session');
  assert.match(rt,/stickLen=Math\.hypot\(ix,iz\);turnStick\(ix,iz,camCtl\.control\(/,'the stick turns with the camera');
- assert.match(rt,/if\(!goal&&camCtl\.w<=0\)\{camDelta=0;return;\}/,'free on Broadcast at rest');
+ assert.match(rt,/if\(!goal&&camCtl\.w<=0\)\{camDelta=0;lookAhead\(camera,dt,reduced\);return;\}/,'Broadcast at rest: only the big pitches\' ball lookahead');assert.match(rt,/if\(lookX===0&&lookZ===0&&lookT\.x===0&&lookT\.z===0\)return;/,'no work once eased to 0');
  const iR=town.indexOf('liveJoin.cameraRestore(camera)'),iL=town.indexOf('camera.position.lerp(camTarget'),iA=town.indexOf('liveJoin.cameraApply(camera');
  assert(iR>0&&iR<iL&&iL<iA,'Town: restore before the follow lerp, apply after its lookAt');
  assert(!/new T\.|\{x:0/.test(rt.slice(rt.indexOf('cameraApply('),rt.indexOf('dispose(){markers'))),'no per-frame allocation in cameraApply');}
@@ -401,7 +406,7 @@ const outfield=(sim,team)=>sim.ids.filter(id=>sim.players[id].team===team&&!sim.
   assert.equal(kept,3,'…but nobody can steal it during the trick');
   sim.humanInput(me,{mx:0,my:-1,trick:true});sim.step(DT);assert.equal(hu.trickSerial,1,'cooldown: a second tap too soon does nothing');
   for(let i=0;i<20&&hu.trick>0;i++){sim.humanInput(me,{mx:0,my:-1});sim.step(DT);}
-  hu.guard=0;/* the receive guard (HUMAN_GUARD) has its own section */sim.placePlayer(foe,sim.players[me].x,sim.players[me].y-3);sim.humanInput(me,{mx:0,my:-1});sim.step(DT);assert.notEqual(sim.ball.owner,me,'after the window a defender on him can win it again');sim.rng=rng;
+  hu.guard=0;/* the receive guard (HUMAN_GUARD) has its own section; TACKLE_FX.aiWind: the defender sets first */for(let i=0;i<4&&sim.ball.owner===me;i++){sim.placePlayer(foe,sim.players[me].x,sim.players[me].y-3);sim.humanInput(me,{mx:0,my:-1});sim.step(DT);}assert.notEqual(sim.ball.owner,me,'after the window a defender on him can win it again');sim.rng=rng;
   assert.equal(sim.dazed.size,0,'the bamboozled defender recovers');
   give(sim,me,135,250);for(let i=0;i<20&&hu.trickCd>0;i++){sim.humanInput(me,{mx:0,my:0});sim.step(DT);}
   sim.humanInput(me,{mx:0,my:0,trick:true});sim.step(DT);assert.equal(hu.trickKind,'croqueta','next tap: La Croqueta');
@@ -428,18 +433,18 @@ const outfield=(sim,team)=>sim.ids.filter(id=>sim.players[id].team===team&&!sim.
  // Easier tackling: reach × 1.4, ~85% when in reach, a short recovery after a miss, never from range
  {const sim=fresh(),me=outf(sim,'gold')[1],foe=outf(sim,'blue')[1];sim.lockHuman(me);const hu=sim.humans.get(me);
   const reach=(4.2+A.PASS_ASSIST.tackleReach)*TACKLE.reachMul;
-  const go=(gap,face)=>{let won=0;for(let k=0;k<40;k++){give(sim,foe,140,200);sim.placePlayer(me,140,200+gap);hu.tackleRec=0;hu.faceX=0;hu.faceY=face;sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);if(sim.ball.owner===me)won++;}return won;};
+  const go=(gap,face)=>{let won=0;for(let k=0;k<40;k++){give(sim,foe,140,200);sim.placePlayer(me,140,200+gap);hu.tackleRec=0;hu.faceX=0;hu.faceY=face;sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);TK(sim,me);if(sim.ball.owner===me)won++;}return won;};
   const near=go(9,-1),far=go(reach+3,-1);console.log('  tackles won: '+near+'/40 at 9 units (old reach 7.6), '+far+'/40 out of reach');
   assert(near>=28,'a tackle just outside the old reach now usually wins it ('+near+'/40)');assert.equal(far,0,'no free steals from range');
   // Tackle assist (Nov 5 2026): a failed roll from the FRONT (blue attacks +y) pokes it loose instead of missing; from behind a short-recovery miss he can retry
   const TA=H.TACKLE_ASSIST;
-  give(sim,foe,140,200);sim.placePlayer(me,140,206);const rng=sim.rng;sim.rng=()=>.99;sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);sim.rng=rng;
+  give(sim,foe,140,200);sim.placePlayer(me,140,206);const rng=sim.rng;sim.rng=()=>.99;sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);TK(sim,me);sim.rng=rng;
   assert(sim.ball.owner!==foe&&hu.tackleRec===0,'front: no miss, the ball is poked away from the carrier ('+sim.msg+')');
-  give(sim,foe,140,200);sim.placePlayer(me,140,194);hu.tackleRec=0;sim.rng=()=>.99;sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);sim.rng=rng;
+  give(sim,foe,140,200);sim.placePlayer(me,140,194);hu.tackleRec=0;sim.rng=()=>.99;sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);TK(sim,me);sim.rng=rng;
   assert(sim.ball.owner===foe&&hu.tackleRec>0&&hu.tackleRec<=TA.recover&&TA.recover<TACKLE.recover,'behind: a miss with a shorter recovery ('+hu.tackleRec.toFixed(2)+' s, was '+TACKLE.recover+')');
   let f=0;while(hu.tackleRec>0&&f<30){give(sim,foe,140,200);sim.placePlayer(me,140,194);sim.humanInput(me,{mx:0,my:0});sim.step(DT);f++;}
   assert(f<=8,'the retry is ready within '+f+' frames');let retry=0;
-  for(let k=0;k<20;k++){give(sim,foe,140,200);sim.placePlayer(me,140,194);hu.tackleRec=0;sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);if(sim.ball.owner===me)retry++;}
+  for(let k=0;k<20;k++){give(sim,foe,140,200);sim.placePlayer(me,140,194);hu.tackleRec=0;sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);TK(sim,me);if(sim.ball.owner===me)retry++;}
   assert(retry>=12,'the retry from behind usually wins it ('+retry+'/20)');}
  // Long ball: tap = the ground pass, hold = lofted over the defenders to a teammate at the distance the hold asks for
  {const sim=fresh(),me=outf(sim,'gold')[1];sim.lockHuman(me);const g=outf(sim,'gold').filter(id=>id!==me);
@@ -639,7 +644,7 @@ console.log('PASS join-live-game: aimed corners + power shots, shot slow motion 
    sim.releaseHuman(a);assert.equal(sim.humans.size,0,tag+'leave again');}
   // tackle + call
   {const sim=fresh(),me=outf(sim,'gold')[1],foe=outf(sim,'blue')[1];sim.lockHuman(me);let won=0;
-   for(let k=0;k<20;k++){give(sim,foe,140,200);sim.placePlayer(me,140,207);sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);if(sim.ball.owner===me)won++;}
+   for(let k=0;k<20;k++){give(sim,foe,140,200);sim.placePlayer(me,140,207);sim.humanInput(me,{mx:0,my:0,tackle:true});sim.step(DT);TK(sim,me);if(sim.ball.owner===me)won++;}
    assert(won>=8,tag+'a well-timed tackle usually wins it ('+won+'/20)');
    const mate=outf(sim,'gold').find(id=>id!==me);let answered=0;
    for(let k=0;k<10;k++){sim.restart=null;sim.ball.owner=mate;sim.possession='gold';sim.passCd=0;sim.protect=0;sim.placePlayer(mate,135,250);sim.ball.x=135;sim.ball.y=250;sim.placePlayer(me,175,215);
@@ -685,10 +690,11 @@ console.log('PASS join-live-game: aimed corners + power shots, shot slow motion 
    if(F==='9v9')assert(Math.abs(run-6.22)<.15&&Math.abs(sprint-8.09)<.2,'9v9: ~6.2 m/s, sprint ~8.1 m/s (90 % of the 11v11)');
    if(F==='futsal')assert(Math.abs(run-5.53)<.15&&Math.abs(sprint-7.19)<.2,'futsal: ~5.5 m/s, sprint ~7.2 m/s (80 % of the 11v11)');
    // 11v11 = the adult-tuned format (owner Nov 5 2026): full-size pace, the sprint ~9 m/s (a real adult sprint) under the relay
-   if(F==='11v11')assert(Math.abs(run-7)<.4&&sprint>8.6&&sprint<relay-.2,'11v11: ~7 m/s, sprint ~9 m/s under the relay');}
+   // Tier 2 (Nov 7 2026, HUMAN_SIDE.pace 1.15): the 11v11 run ~8 m/s, the sprint top unchanged (boost 1.3 / 1.15)
+   if(F==='11v11')assert(Math.abs(run-7*1.15)<.4&&sprint>8.6&&sprint<relay-.2,'11v11: ~8 m/s, sprint ~9 m/s under the relay');}
   // adult tuning: AI chasers on a human carrier run at full pace on the 11v11 (the kids' × 0.82 stays on the other formats); AI never reads it
-  {const sim=fresh();assert.equal(sim.humanChaseMul,1,tag+'chaser pace on a human carrier (full speed)');assert.equal(sim.humanSprintBoost,1.3,tag+'sprint boost');
-   assert.equal(sim.humanPace,{futsal:1.4,'9v9':1.29,'11v11':1}[F],tag+'pace ladder');const k=new MatchSim(311,'7v7');assert.equal(k.humanChaseMul,1,'7v7 chasers at full pace (Nov 5 2026)');assert.equal(k.humanSprintBoost,1.3);assert.equal(k.humanPace,1.72);assert.equal(k.humanBallPace,1.5,'7v7 matches the 9v9 speeds (owner Nov 5 2026)');}
+  {const sim=fresh();assert.equal(sim.humanChaseMul,1,tag+'chaser pace on a human carrier (full speed)');assert(Math.abs(sim.humanSprintBoost*sim.humanPace/(F==='11v11'?1:sim.humanPace)-1.3)<1e-9,tag+'sprint boost (11v11: the sprint top stays 1.3 x the old run)');
+   assert.equal(sim.humanPace,{futsal:1.4,'9v9':1.29,'11v11':1.15}[F],tag+'pace ladder');const k=new MatchSim(311,'7v7');assert.equal(k.humanChaseMul,1,'7v7 chasers at full pace (Nov 5 2026)');assert.equal(k.humanSprintBoost,1.3);assert.equal(k.humanPace,1.72);assert.equal(k.humanBallPace,1.5,'7v7 matches the 9v9 speeds (owner Nov 5 2026)');}
   // pass pace: the 9v9 keeps the full charge; the 18.5 m futsal court caps the human multiplier at 1.6 (AI passes untouched)
   {const pace=power=>{const sim=fresh();const a=outf(sim,'gold')[1];sim.lockHuman(a);give(sim,a,135,260);sim.humanInput(a,{mx:0,my:-1});sim.step(DT);sim.ball.owner=a;
     sim.humanInput(a,{mx:0,my:-1,pass:true,passPower:power});sim.step(DT);return {sp:Math.hypot(sim.ball.vx,sim.ball.vy),cap:sim.humanPassCap};};
@@ -800,7 +806,7 @@ console.log('PASS join-live-game (futsal + 9v9 + 11v11): slots + names, pick, lo
   let k=0;while(sim.ball.owner==='st'&&k<300){sim.humanInput('st',{mx:.3,my:-.3});sim.step(DT);k++;}const real=k*DT/sim.windupScale;
   assert(real>SM.BEACH_HUMAN_RESTART_S-.2&&real<SM.BEACH_HUMAN_RESTART_S+.4,'played for him after ~4 real s: '+real.toFixed(2));assert.equal(sim.humanNote.text,SM.BEACH_HUMAN_NOTES.late);assert(sim.ball.target,'to a teammate');
   for(let i=0;i<30;i++)sim.step(DT);
-  sim.restart={kind:'kickin',t:0,x:30,y:60,taker:'st'};sim.placePlayer('st',30,60);t=0;while(sim.ball.owner!=='st'&&t<200){sim.humanInput('st',{mx:0,my:0});sim.step(DT);t++;}
+  Object.assign(sim.ball,{owner:null,target:null,intBy:null,x:30,y:60,vx:0,vy:0});/* the ball may be back at his feet by now (seeded play differs with the Nov 7 mechanics): a real kick-in */sim.restart={kind:'kickin',t:0,x:30,y:60,taker:'st'};sim.placePlayer('st',30,60);t=0;while(sim.ball.owner!=='st'&&t<200){sim.humanInput('st',{mx:0,my:0});sim.step(DT);t++;}
   sim.placePlayer('st',135,60);sim.ball.x=135;sim.ball.y=60;const g=sim.score.gold,n=sim.humanNote.serial;sim.humanInput('st',{mx:0,my:-1,shoot:true,shootPower:1,aimX:.6,aimH:.5});sim.step(DT);
   for(let i=0;i<40;i++){sim.placePlayer('dgk',40,20);sim.step(DT);}assert.equal(sim.score.gold,g,'no goal straight from a kick-in');assert(sim.humanNote.serial>n);assert.equal(sim.humanNote.text,SM.BEACH_HUMAN_NOTES.noGoal);
   // an AI taker gets no toast
@@ -1064,12 +1070,14 @@ assert.match(fs.readFileSync('lib/town/liveJoinRuntime.ts','utf8'),/pe\?\.style\
  assert.equal(LC.tapShotCorner(150,135),2,'keeper central: the far post from a shooter on the right');assert.equal(LC.tapShotCorner(120,NaN),3,'no keeper: the far post');
  assert.equal(AIM_MARKS[2].h,0);assert.equal(AIM_MARKS[3].h,0);assert.equal(SHOT_AIM.minHoldMs,180,'tap = released before 0.18 s');
  {const outf=(sim,team)=>sim.ids.filter(id=>sim.players[id].team===team&&!sim.players[id].isGK),rows=[];
-  for(const F of FORMATS){const sim=new MatchSim(333,F);for(let i=0;i<40;i++)sim.step(DT);const me=outf(sim,'gold')[2],gk=sim.ids.find(id=>sim.players[id].team==='blue'&&sim.players[id].isGK);sim.lockHuman(me);
+  for(const F of FORMATS){const sim=new MatchSim(333,F),tx={};for(let i=0;i<40;i++)sim.step(DT);const me=outf(sim,'gold')[2],gk=sim.ids.find(id=>sim.players[id].team==='blue'&&sim.players[id].isGK);sim.lockHuman(me);
    for(const kx of [141,129]){sim.restart=null;sim.windup=null;sim.placePlayer(me,150,95);sim.placePlayer(gk,kx,12);Object.assign(sim.ball,{owner:me,target:null,intBy:null,x:150,y:95,vx:0,vy:0,height:0});sim.possession='gold';sim.protect=0;sim.passCd=1;
-    const m=AIM_MARKS[LC.tapShotCorner(sim.players[me].x,sim.players[gk].x)];sim.humanInput(me,{mx:0,my:-1,shoot:true,shootPower:.72,aimX:m.x,aimH:m.h});sim.step(DT);
-    const x=sim.lastKick.aimX;assert((x-135)*(kx-135)<0,F+': the tap shot goes away from the keeper ('+x.toFixed(1)+' vs keeper '+kx+')');assert(Math.abs(x-135)<=19*.82+.01,'inside the posts');assert.equal(sim.lastKick.shotHeight,SHOT_AIM.low,'low');rows.push(F+' '+x.toFixed(0));}}
+    // Nov 7 2026: the HUD tap sends NO aim mark (NaN): the sim's own auto-aim picks the far corner away from the keeper.
+    sim.humanInput(me,{mx:0,my:-1,shoot:true,shootPower:.76,aimX:NaN,aimH:NaN});sim.step(DT);
+    const x=sim.lastKick.aimX;assert(Math.abs(x-135)<=19+.01,F+': inside the posts');assert.equal(sim.humans.get(me).shotAimed,false,F+': not an aimed shot (no keeper reach bonus)');tx[kx]=x;rows.push(F+' '+x.toFixed(0));}
+   assert(tx[141]<tx[129],F+': the auto-aim leans away from the keeper ('+tx[141].toFixed(1)+' vs '+tx[129].toFixed(1)+')');}
   console.log('  tap shot x (keeper right / left): '+rows.join(', '));}
- assert.match(rt,/const tapShot=bUp&&mb==='shoot'&&bHoldMs<SHOT_AIM\.minHoldMs;/);assert.match(rt,/aimSel>=0\?AIM_MARKS\[aimSel\]:tapShot\?AIM_MARKS\[tapShotCorner\(view\.simX,view\.keeperX\)\]:null/,'a hold keeps the picked corner (or today\'s auto-aim)');
+ assert.match(rt,/const aimMark=bUp&&mb==='shoot'&&bHoldMs>=SHOT_AIM\.minHoldMs&&aimSel>=0\?AIM_MARKS\[aimSel\]:null;/,'a hold keeps the picked corner; a tap sends no mark (the sim\'s far-corner auto-aim)');assert(!/tapShotCorner\(/.test(rt),'the HUD no longer turns a tap into an aim mark');
  assert.match(rt,/aiming=mb==='shoot'&&bHoldMs>=SHOT_AIM\.minHoldMs/,'the hold still shows the marks + aim');assert.match(rt,/bMode=modes\(\)\.b/,'Shoot latched at the press (the label may settle meanwhile)');
  // multiplayer: the tap's corner rides the frame's existing aim fields (no protocol change)
  {const a=NET.createInAccum(),o=[],f={};NET.accumulateIn(a,{mx:0,my:-1,shoot:true,shootPower:.72,aimX:-1,aimH:0});NET.encodeIn(a,7,o);assert.equal(o.length,11,'C.Match In unchanged: 11 values');NET.decodeIn(o,2,f);assert.equal(f.shoot,true);assert.equal(f.aimX,-1);assert.equal(f.aimH,0);}
@@ -1413,12 +1421,13 @@ assert.match(fs.readFileSync('lib/town/liveJoinRuntime.ts','utf8'),/pe\?\.style\
   for(const k of ['intercept','lane','read','tackle','attack','keeper'])assert(d[k]>=1&&d[k]<=2.5,f+' '+k+' is a gentle multiplier (never easier than before): '+d[k]);
   assert(d.tackle<=1.25&&d.keeper<=1.4,f+': tackling a human and the keeper stay close to the owner\'s "hard to be tackled" / aimed-shot tuning');
   assert(S(d,0,0,false)<=S(d,600,0,false)&&Math.abs(S(d,600,0,false)-1)<1e-9,f+': ramps in from the join to full strength');
-  if(f!=='11v11'){assert(d.margin===3&&d.sag<1&&d.tight>1&&d.tight<=1.4,f+': mild rubber band at 3 goals');
+  {assert(d.margin===3&&d.sag<1&&d.tight>1&&d.tight<=1.4,f+': mild rubber band at 3 goals');
    assert(S(d,600,-3,false)<S(d,600,-2,false)&&S(d,600,2,false)<S(d,600,3,false),f+': sags 3 behind, tightens 3 ahead, nothing in between');
    assert.equal(S(d,600,-4,true),S(d,600,0,true),f+': friends on both sides: no rubber band');}
   if(f!=='11v11')for(const k of ['intercept','lane'])assert(T['11v11'][k]>=d[k],'11v11 (adults) reads the lanes hardest: '+k);}
  assert(T['7v7'].start<=0.5&&T['7v7'].ramp>=180,'7v7: no pressure spike at kick-off, a little more resistance late');
- assert.equal(T['11v11'].margin,0,'11v11: adults get no rubber band');
+ // Tier 2 (Nov 7 2026): the 11v11 row eased toward the 9v9 shape (it was intercept 2.4, lane 1.8, read 1.7, attack 1.5, ramp 30 from .8, no band)
+ {const e=T['11v11'];assert(e.ramp>=120&&e.start<=.5&&e.margin===3&&e.read<=1.25&&e.attack<=1.15&&e.intercept<=1.8&&e.lane<=1.4,'11v11: eased toward the 9v9 (ramp '+e.ramp+', read '+e.read+', attack '+e.attack+')');}
  assert.deepEqual(Object.keys(N).sort(),Object.keys(T['7v7']).sort(),'one neutral value per knob');
  // a human's pass past a defender 3.5 u off the lane (200 seeds): the 11v11 reads it far more often, the 7v7 hardly more at the join
  const trial=(F,seed)=>{const s=new MatchSim(seed,F);s.windupScale=.32;for(let i=0;i<10;i++)s.step(DT*.32);
@@ -1431,7 +1440,8 @@ assert.match(fs.readFileSync('lib/town/liveJoinRuntime.ts','utf8'),/pe\?\.style\
  const count=F=>{let n=0;for(let k=0;k<200;k++)if(trial(F,500+k))n++;return n;};
  const on={e:count('11v11'),s:count('7v7')},keep=Object.fromEntries(F5.map(f=>[f,{...T[f]}]));for(const f of F5)Object.assign(T[f],N);
  const off={e:count('11v11'),s:count('7v7')};for(const f of F5)Object.assign(T[f],keep[f]);
- assert(on.e>=off.e*1.6&&on.e>=16&&on.e<=70,'11v11: a defender in the lane cuts out a human\'s pass more often ('+off.e+' -> '+on.e+' of 200)');
+ const st0=T['11v11'].start;T['11v11'].start=1;const full=count('11v11');T['11v11'].start=st0; // Tier 2: the 11v11 ramps in from .5 like the 9v9
+ assert(on.e>=off.e&&full>=off.e*1.4&&full>=14&&full<=70,'11v11: a defender in the lane cuts out a human\'s pass more often once ramped in ('+off.e+' -> '+on.e+' at the join, '+full+' full, of 200)');
  assert(on.s<=off.s*1.6+4,'7v7 at the join: no spike ('+off.s+' -> '+on.s+' of 200)');
  const ms=fs.readFileSync('lib/town/match/matchSim.ts','utf8');
  assert.match(ms,/this\.humans\.size > 0 && !!nf && this\.humans\.has\(nf\.p\.id\) && pressure < P\.pressDist \* this\.humanDefenceMul\("read"/,'an AI carrier reads a closing human (humans only)');
@@ -1440,3 +1450,35 @@ assert.match(fs.readFileSync('lib/town/liveJoinRuntime.ts','utf8'),/pe\?\.style\
  const Sm=require('./fixtures/live-match-summary.cjs'),expected=JSON.parse(fs.readFileSync(path.join(__dirname,'fixtures/live-match-summary.json'),'utf8'));
  for(const e of expected)assert.deepEqual(Sm.summary(MatchSim,e.format,e.seed),e,'AI-only '+e.format+' unchanged');
  console.log('PASS join-live-game (QA round 2 balance): per-format AI defence vs a human side, ramped + 3-goal band on the kids\' formats; lane reads 11v11 '+off.e+' -> '+on.e+', 7v7 at join '+off.s+' -> '+on.s+' of 200; fixture unchanged');}
+
+// ---- Control feel (Nov 7 2026): tap shot without an aim mark, per-format shooting zone, ball cue + lookahead, input buffering,
+// button emphasis, receiver arrow, charge haptics. ----
+{const LC=load('lib/town/liveControls.ts'),CAM=load('lib/town/liveJoinCamera.ts');
+ const rt=fs.readFileSync('lib/town/liveJoinRuntime.ts','utf8'),fr=fs.readFileSync('lib/town/fieldRuntime.ts','utf8'),hud=fs.readFileSync('components/LiveJoinHud.tsx','utf8'),css=fs.readFileSync('components/LiveJoinHud.module.css','utf8'),mk=fs.readFileSync('lib/graphics/joinMarkers.ts','utf8'),set=fs.readFileSync('components/IslandSettings.tsx','utf8');
+ // shooting zone per format: 11v11 ~23 m, the rest keep 120 u
+ assert.equal(LC.shotRangeU('11v11'),85);for(const f of ['9v9','7v7','futsal','beach'])assert.equal(LC.shotRangeU(f),120,f);
+ assert.match(fr,/out\.inShotRange=Math\.abs\(p\.y-gy\)<shotRangeU\(v\.id\);/,'the zone reads the format');
+ // input buffering: early press upgrades within 150 ms (never from Call), a pass just after losing it is still latched
+ assert.equal(LC.PRESS_BUFFER.ms,150);
+ assert.equal(LC.bufferedA('go','pass',100),'pass');assert.equal(LC.bufferedA('go','tackle',140),'tackle');assert.equal(LC.bufferedA('','throw',50),'throw');
+ assert.equal(LC.bufferedA('go','pass',200),'go','too early: stays Go!');assert.equal(LC.bufferedA('call','pass',50),'call','a call never turns into a pass back');assert.equal(LC.bufferedA('pass','tackle',50),'pass');
+ assert.equal(LC.graceA('pass','go',80),'pass');assert.equal(LC.graceA('pass','go',300),'go');assert.equal(LC.graceA('pass','tackle',20),'tackle','a new action wins');assert.equal(LC.graceA('go','pass',10),'pass');
+ assert.match(rt,/tackle:aDown&&mode\.a==='tackle'\|\|chaseTackle\|\|bufTackle,/);assert.match(rt,/\|\|bufPass;/);assert.match(rt,/aMode=latchA\(aDownAt\)/);
+ // emphasis: one hot button
+ const m=(a,b)=>({a,b,c:''});
+ assert.equal(LC.hotButton(m('pass','shoot'),true),'b','in range: Shoot');assert.equal(LC.hotButton(m('pass','forward'),true),'a','open teammate: Pass');
+ assert.equal(LC.hotButton(m('pass','forward'),false),'');assert.equal(LC.hotButton(m('tackle','stay'),false),'a');assert.equal(LC.hotButton(m('press','stay'),false),'');
+ assert.match(css,/\.actions\[data-calm\] \[data-hot\]::after\{animation:none\}/,'Match effects Light: still ring');assert.match(css,/prefers-reduced-motion:reduce\)\{\.a\[data-hot\]::after,\.b\[data-hot\]::after\{animation:none\}/);
+ assert.match(rt,/const calm=matchFxLevel\(\)==='light'/);
+ // haptics: guarded, behind a setting, the row only where vibrate exists
+ assert.match(rt,/hapticTick\(/);assert.match(set,/\{canVibrate&&<button[^>]*data-match-haptics/);assert.equal(LC.hapticsSupported(),false,'no navigator here: unsupported, no throw');LC.hapticTick();
+ assert.match(fs.readFileSync('lib/saves/snapshot.ts','utf8'),/'fi2-match-haptics-v1'/,'a device preference');
+ // ball cue + lookahead
+ assert.match(hud,/data-join-ballcue/);assert.match(css,/\.ballCue\{position:fixed;[^}]*pointer-events:none;opacity:0;/);assert(!/\.ballCue[^{]*\{[^}]*(left|top):calc/.test(css));
+ assert.match(rt,/cue\.style\.transform='translate\('/,'transform only');
+ const o={x:0,z:0};CAM.ballLookTarget('7v7',30,0,o);assert.equal(o.x,0,'small pitches: none');
+ CAM.ballLookTarget('11v11',40,0,o);assert.equal(o.x,7,'capped');CAM.ballLookTarget('11v11',10,0,o);assert(Math.abs(o.x-3.2)<1e-9);CAM.ballLookTarget('9v9',0,30,o);assert.equal(o.z,4);CAM.ballLookTarget('11v11',40,0,o,390/844);assert(Math.abs(o.x-2.8)<1e-9,'portrait phone: 40% of the cap');
+ assert.match(rt,/lookAhead\(camera,dt,reduced\);return;/);
+ // receiver arrow: shares the ring's material, built once
+ assert.match(mk,/arrow=new T\.Mesh\(arrowGeo,passMat\)/);assert.match(rt,/markers\.passTarget\(view\.onBall\?view\.passX:NaN,y,view\.passZ,time,reduced,view\.x,view\.z\)/);
+ console.log('PASS join-live-game (control feel): tap shot unaimed, 11v11 zone 85 u, buffering, emphasis, ball cue + lookahead, haptics');}

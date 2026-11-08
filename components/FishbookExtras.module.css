@@ -43,3 +43,54 @@
 .reqs em{font-style:normal;font-weight:800;color:#2f7a5f}
 .reqs span{flex-basis:100%;font-size:12.5px;color:#4b5f57}
 .milestones li b{display:inline;font-size:inherit;margin:0}
+/* Nov 7 2026 return hooks (docs/fishing.md "Return hooks"): today's visitors, the Sets page, marks and story chapters. */
+.visitors{padding:14px 16px;border-radius:20px 32px 20px 20px;background:#244d40;color:#fff2cd}
+.visitors h3{margin:0 0 4px;font-size:19px}
+.visitors .note{color:#fff2cdd9}
+.visitors ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.visitors li{display:grid;grid-template-columns:56px 1fr;gap:10px;align-items:center;padding:8px 10px;border-radius:14px;background:#fff0cc;color:#244d40}
+.visitors li[data-got]{background:#e5f4ec}
+.visitors li b{display:block;font-size:14.5px}
+.visitors li span{display:block;font-size:12.5px;line-height:1.4;color:#365b58}
+.visitors li em{display:block;font-style:normal;font-size:12.5px;font-weight:800;color:#2f7a5f}
+.marks{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0!important}
+.marks span{display:inline-block;padding:2px 9px;border-radius:7px;font-size:12px;font-weight:900;border:2px solid currentColor;background:#fffdf4}
+.marks [data-mark=golden]{color:#9a6a00;background:#ffe9a3}
+.marks [data-mark=visitor]{color:#2f7a5f}
+.chapters p{margin-top:6px!important}
+.chapters b,.legendChapter b{display:block;font-size:11.5px;font-weight:900;color:#a8552f}
+.nextChapter{margin-top:6px!important;font-size:12.5px!important;font-weight:700;color:#4b5f57!important}
+.sets{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px}
+.sets li{padding:12px 14px;border-radius:16px;background:#fff8e8;border:2px dashed #d9cfae}
+.sets li[data-done]{border:3px solid #2f7a5f;background:#e5f4ec}
+.sets h4{margin:0;font-size:16px}
+.sets p{margin:6px 0 0;font-size:13px;line-height:1.45}
+.setHead{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.setHead b{font-size:14px;color:#2f7a5f;white-space:nowrap}
+.setBar{position:relative;height:8px;margin-top:8px;border-radius:999px;background:#244d4026;overflow:hidden}
+.setBar i{position:absolute;inset:0;border-radius:999px;background:#2f7a5f;transform-origin:left center}
+.setReward{font-weight:700;color:#365b58}
+.stampMark{display:inline-block;padding:1px 9px;border:2.5px solid #2f7a5f;border-radius:7px;color:#2f7a5f;background:#fffdf4;rotate:-3deg;font-weight:900}
+/* ---- Delight pass (Nov 7 2026, docs/fishing.md "Delight pass"). Transform / opacity only, one-shot, none with reduced motion. ---- */
+/* Page flip: the new page swings in from its spine. */
+.page{transform-origin:left center;animation:pageFlip .32s cubic-bezier(.2,.8,.3,1) both}
+@keyframes pageFlip{from{opacity:0;transform:perspective(900px) rotateY(-14deg) translateX(-10px)}}
+/* A species new since the book was last open: the stamp thumps down (with the island's stamp thump), then six bits of confetti pop. */
+.freshStamp{position:absolute;z-index:1;top:8px;right:10px;padding:1px 10px;border:2.5px solid #c2185b;border-radius:7px;background:#fffdf4;color:#c2185b;font-family:IslandBrush,sans-serif;font-size:16px;line-height:1.25;rotate:8deg;pointer-events:none;animation:freshThump .38s cubic-bezier(.2,1.6,.4,1) .25s both}
+@keyframes freshThump{from{opacity:0;transform:scale(2.1)}60%{opacity:1}}
+.freshStamp i{position:absolute;left:50%;top:50%;width:7px;height:7px;margin:-3.5px;border-radius:2px;background:#ffd451;opacity:0;animation:confetti .8s cubic-bezier(.15,.7,.3,1) .5s both}
+.freshStamp i:nth-child(2n){background:#2f7f9a}.freshStamp i:nth-child(3n){background:#c2185b;border-radius:50%}
+.freshStamp i:nth-child(1){--a:-150deg}.freshStamp i:nth-child(2){--a:-100deg}.freshStamp i:nth-child(3){--a:-50deg}.freshStamp i:nth-child(4){--a:0deg}.freshStamp i:nth-child(5){--a:60deg}.freshStamp i:nth-child(6){--a:150deg}
+@keyframes confetti{0%{opacity:0;transform:rotate(var(--a)) translateX(0)}20%{opacity:1}100%{opacity:0;transform:rotate(var(--a)) translateX(46px) rotate(200deg)}}
+/* A set finished since the book was last open: the card lifts once and eight sparks fly from its stamp line. */
+.sets li[data-celebrate]{position:relative;animation:setLift .6s cubic-bezier(.2,1.4,.4,1) .2s both}
+@keyframes setLift{40%{transform:translateY(-6px) scale(1.02)}}
+.setBurst{position:absolute;left:50%;top:50%;pointer-events:none}
+.setBurst i{position:absolute;width:8px;height:8px;margin:-4px;border-radius:2px;background:#2f7a5f;opacity:0;animation:confetti .9s cubic-bezier(.15,.7,.3,1) .35s both}
+.setBurst i:nth-child(2n){background:#ffd451}.setBurst i:nth-child(3n){background:#c2185b;border-radius:50%}
+.setBurst i:nth-child(1){--a:0deg}.setBurst i:nth-child(2){--a:45deg}.setBurst i:nth-child(3){--a:90deg}.setBurst i:nth-child(4){--a:135deg}.setBurst i:nth-child(5){--a:180deg}.setBurst i:nth-child(6){--a:225deg}.setBurst i:nth-child(7){--a:270deg}.setBurst i:nth-child(8){--a:315deg}
+/* Golden and Visitor marks pop in, one after the other. */
+.marks span{animation:markIn .34s cubic-bezier(.2,1.5,.4,1) .15s both}
+.marks span+span{animation-delay:.27s}
+@keyframes markIn{from{opacity:0;transform:scale(.6)}}
+@media(prefers-reduced-motion:reduce){.page,.freshStamp,.sets li[data-celebrate],.marks span{animation:none}.freshStamp i,.setBurst{display:none}}

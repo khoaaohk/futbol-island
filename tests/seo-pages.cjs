@@ -81,6 +81,13 @@ assert.match(llms,/^# Futbol Island\n\n> .{200,}/,'title line and one-paragraph 
 for(const s of ['About','Learn','Fish','Cards','Museum','Privacy'])assert(new RegExp(`^## ${s}$`,'m').test(llms),`llms.txt has ## ${s}`);
 const llmsLinks=[...llms.matchAll(/\]\((https:\/\/futbolisland\.app[^)]*)\)/g)].map(m=>m[1].slice(SITE.length)||'/');
 assert(llmsLinks.length>=8);
+// Nov 7 2026 audit: pageMeta keeps every title <= 60 and every description 70-160 characters.
+{const seo=L('lib/site/seo.ts');
+ assert(seo.fitTitle('A short one').length<=60&&seo.fitTitle('Quick football lesson about switching play (11v11 lesson)').length<=60,'fitTitle <= 60');
+ assert.equal(seo.fitTitle('Home page',true),'Home page','whole titles stay as given');
+ const long=seo.fitTitle('An extremely long lesson title that goes on and on and on without end (11v11 lesson)');assert(long.length<=60,'long title is cut: '+long);
+ assert(seo.fitDescription('Too short.').length>=70,'short descriptions get a tail');
+ assert(seo.fitDescription('word '.repeat(80)).length<=160,'long descriptions are cut');}
 console.log(`seo sources ok: ${lessons.LESSONS.length} lessons, ${fish.SITE_FISH.length} fish, ${cards.SITE_CARDS.length} cards, ${exhibits.SITE_EXHIBITS.length} exhibits, ${PATHS.length} sitemap paths`);
 
 // ---- 2. the built site --------------------------------------------------------------------------------------------------------
@@ -102,7 +109,7 @@ for(const p of PATHS){
  const h=html(p);
  assert.match(h,/<html lang="en"/,`${p}: lang="en"`);
  assert.match(h,/<title>[^<]+<\/title>/,`${p}: title`);
- if(p!=='/'&&p!=='/play')assert.match(h,/<title>[^<]+ · Futbol Island<\/title>/,`${p}: "X · Futbol Island"`);
+ if(p!=='/'&&p!=='/play'&&!/^\/learn\/lessons\/./.test(p))assert.match(h,/<title>[^<]+ · Futbol Island<\/title>/,`${p}: "X · Futbol Island"`);/* long lesson titles drop the suffix to stay <= 60 (lib/site/seo.ts fitTitle) */
  assert.match(h,/<meta name="description" content="[^"]{20,}"/,`${p}: description`);
  assert(h.includes(`<link rel="canonical" href="${p==='/'?SITE:SITE+p}"/>`),`${p}: canonical`);
  if(GENERATED.includes(p)){const ld=[...h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m=>JSON.parse(m[1]));
@@ -113,7 +120,7 @@ for(const p of PATHS){
   if(/^\/learn\/lessons\/./.test(p)){const r=ld.find(x=>x['@type']==='LearningResource');assert(r&&r.educationalLevel&&r.learningResourceType&&r.teaches&&r.audience,`${p}: LearningResource`);}
   if(/^\/(fish|cards|exhibits)\/./.test(p)){const r=ld.find(x=>x['@type']==='CreativeWork');assert(r&&r.about,`${p}: CreativeWork with about`);}
   if(['/learn/lessons','/fish','/cards','/exhibits','/about'].includes(p))assert(types.includes('BreadcrumbList'),`${p}: BreadcrumbList`);
-  if(p!=='/'&&p!=='/play')assert.match(h,/aria-label="Breadcrumb"/,`${p}: breadcrumbs`);}
+  if(p!=='/'&&p!=='/play'&&p!=='/marketing')assert.match(h,/aria-label="Breadcrumb"/,`${p}: breadcrumbs`);}
  const t=text(h).split('jeremiah@whitesportventures.com').join('');/* the partnership's published business contact, shown on the main page About chapter (owner, Nov 4) */for(const re of PERSONAL)assert(!re.test(t),`${p}: no personal-data string (${re}): ${(t.match(re)||[])[0]}`);
 }
 // Lesson pages never reveal the answer: no markers, options A–Z as in the view, no verdict-led explanation.
@@ -162,6 +169,12 @@ assert.notEqual(attr(html('/'),/<title>([^<]*)<\/title>/),attr(html('/play'),/<t
  for(const m of h.matchAll(/<img [^>]*>/g))assert(/\balt="[^"]+"/.test(m[0])||/aria-hidden="true"|alt=""/.test(m[0]),`/: every image has alt text: ${m[0].slice(0,80)}`);}
 {const t=text(html('/play'));assert(/free football learning game/i.test(t)&&/save code/i.test(t),'/play has crawlable text');}
 // The reading pages' gold Play buttons (class "cta") go to the game at /play (the museum pages straight into the /museum room).
-{let ctas=0;for(const p of PATHS.filter(p=>p!=='/play'))for(const m of html(p).matchAll(/<a class="[^"]*_cta__[^"]*" href="([^"]*)"/g)){ctas++;assert(m[1]==='/play'||(m[1]==='/museum'&&p.startsWith('/exhibits')),`${p}: Play goes to /play (exhibits: straight into /museum), not ${m[1]}`);}
+{let ctas=0;for(const p of PATHS.filter(p=>p!=='/play'&&p!=='/marketing'))for(const m of html(p).matchAll(/<a class="[^"]*_cta__[^"]*" href="([^"]*)"/g)){ctas++;assert(m[1]==='/play'||(m[1]==='/museum'&&p.startsWith('/exhibits')),`${p}: Play goes to /play (exhibits: straight into /museum), not ${m[1]}`);}
  assert(ctas>PATHS.length/2,`the gold Play buttons were found (${ctas})`);}
+// Nov 7 2026 audit: every sitemap page (incl. the 150 fish) has a title <= 60 and a 70-160 character description; fish are distinct.
+{const dec=x=>x.replace(/&#x27;/g,"'").replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>'),seen=new Map();
+ for(const p of PATHS){const h=html(p),t=dec((h.match(/<title>([^<]*)<\/title>/)||[])[1]||''),d=dec((h.match(/<meta name="description" content="([^"]*)"/)||[])[1]||'');
+  assert(t.length>0&&t.length<=60,`${p}: title <= 60 (${t.length}): ${t}`);assert(d.length>=70&&d.length<=160,`${p}: description 70-160 (${d.length}): ${d}`);
+  assert(!seen.has(t),`${p}: title unique (also ${seen.get(t)})`);seen.set(t,p);
+  assert(/<meta property="og:image" content="[^"]+"/.test(h)&&/<meta name="twitter:image"/.test(h),`${p}: social image`);}}
 console.log(`seo built site ok: ${PATHS.length} pages checked in ${path.relative(root,dist)}`);

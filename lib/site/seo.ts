@@ -16,9 +16,25 @@ export function firstSentence(text:string,max=160):string{
  if(s.length>max)s=s.slice(0,max-1).replace(/\s+\S*$/,'')+'…';
  return s;
 }
+/** Titles stay <= 60 characters (search snippets): drop " · Futbol Island", then a trailing "(…)" label, then cut on a word. */
+export function fitTitle(title:string,whole?:boolean):string{
+ const full=whole?title:`${title} · ${SITE_NAME}`;
+ if(full.length<=60)return full;
+ if(title.length<=60)return title;
+ const bare=title.replace(/\s*\([^)]*\)\s*$/,'');
+ if(bare.length>0&&bare.length<=60)return bare;
+ return title.slice(0,59).replace(/\s+\S*$/,'')+'…';
+}
+/** Descriptions stay 70-160 characters: a very short one gets a plain tail, a long one is cut on a word. */
+export function fitDescription(d:string):string{
+ let s=d.replace(/\s+/g,' ').trim();
+ if(s.length<70)s=`${s} A page of Futbol Island, a free football learning game for kids.`;
+ if(s.length>160)s=s.slice(0,159).replace(/\s+\S*$/,'')+'…';
+ return s;
+}
 /** Page metadata: "X · Futbol Island" (or the title as given with `whole`, for the home page), description, canonical, Open Graph. */
 export function pageMeta(title:string,description:string,path:string,o:{whole?:boolean;type?:'article'|'website'}={}):Metadata{
- const full=o.whole?title:`${title} · ${SITE_NAME}`;
+ const full=fitTitle(title,o.whole);description=fitDescription(description);
  return {title:full,description,alternates:{canonical:path},
   openGraph:{title:full,description,url:path,siteName:SITE_NAME,type:o.type??'article',images:[{url:'/opengraph-image.png',width:1200,height:630,alt:SITE_NAME}]},
   twitter:{card:'summary_large_image',title:full,description,images:['/opengraph-image.png']}};

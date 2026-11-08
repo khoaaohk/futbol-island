@@ -215,6 +215,26 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
       case 'squeak':tone(1500,2100,.12,.05,'triangle');return;
       case 'hiss':hiss(5000,.35,.08);return;
       case 'sting':tone(110,108,.34,.13,'triangle');tone(116.5,115,.5,.13,'triangle',.4);return; // water P1a: the sharks' two-note "da-dum" (a semitone up)
+      // Fishing delight pass (Nov 7 2026, lib/town/fishing/fishingDelight.ts): a flourish per catch tier, layered just after the
+      // existing finish jingle (delay .32 s), bigger for rare, legend and golden; a set-complete chime; the Fishbook stamp thump; the
+      // idle gull; the far whale; and one short cue per animal group. Synthesized from the same tone/noise kit: no samples, no files.
+      case 'fish-common':tone(880,1320,.07,.02,'sine',.32);return;
+      case 'fish-good':tone(988,988,.08,.035,'triangle',.32);tone(1319,1319,.12,.03,'triangle',.4);return;
+      case 'fish-rare':tone(784,784,.08,.04,'triangle',.32);tone(988,988,.08,.04,'triangle',.4);tone(1319,1319,.18,.04,'triangle',.48);hiss(6200,.35,.025,.5);return;
+      case 'fish-legend':tone(392,392,.5,.05,'sine',.3,.08);tone(523,523,.1,.045,'triangle',.32);tone(659,659,.1,.045,'triangle',.42);tone(784,784,.1,.045,'triangle',.52);tone(1047,1047,.32,.05,'triangle',.62);hiss(6400,.5,.03,.66);return;
+      case 'fish-golden':for(let i=0;i<5;i++)tone(1568*Math.pow(1.122,i),1568*Math.pow(1.122,i),.22,.028,'sine',.32+i*.065);tone(3136,3136,.5,.012,'sine',.66);hiss(7000,.45,.03,.4);return;
+      case 'fish-set':tone(659,659,.1,.04,'triangle',.9);tone(880,880,.1,.04,'triangle',1);tone(1175,1175,.24,.04,'triangle',1.1);return;
+      case 'fish-stamp':tone(150,70,.12,.12,'sine',0,.004);hiss(420,.05,.05);tone(1320,1760,.08,.02,'sine',.08);return;
+      case 'gull':tone(1500,1100,.14,.022,'triangle');tone(1450,1050,.12,.018,'triangle',.18);tone(1400,1000,.1,.014,'triangle',.33);return;
+      case 'whale-far':whaleSong();return;
+      case 'animal-bloop':tone(260,520,.07,.035,'sine',.5);tone(340,680,.06,.025,'sine',.6);return;
+      case 'animal-glide':hiss(900,.4,.04,.5);tone(220,180,.35,.02,'sine',.5);return;
+      case 'animal-wiggle':tone(500,700,.05,.025,'sine',.5);tone(700,450,.05,.025,'sine',.57);tone(450,650,.05,.022,'sine',.64);return;
+      case 'animal-clack':tone(1800,1700,.025,.035,'square',.5);tone(1900,1800,.025,.03,'square',.6);tone(1750,1650,.025,.025,'square',.7);return;
+      case 'animal-clam':tone(700,500,.04,.035,'triangle',.5);tone(1100,1100,.05,.02,'sine',.56);return;
+      case 'animal-squish':tone(300,180,.12,.035,'sine',.5);hiss(700,.1,.025,.52);return;
+      case 'animal-tink':tone(2093,2093,.18,.022,'sine',.5);tone(2637,2637,.18,.016,'sine',.58);return;
+      case 'animal-whale':whaleSong();return;
     }};
   document.addEventListener('fi2-job-cue',jobCue);
   function ride(mode:TravelMode){

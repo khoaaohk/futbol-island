@@ -12,7 +12,8 @@
 // Kids first: no scores, coins or stats are counted for anyone; friends only ever see party nicknames.
 // Heat: idle (no party, or not on a shared field) this costs one caps check per frame. No timers: Town calls update() per frame.
 import { Cap, C, S, MatchKind, MATCH_FIELDS, type ServerMsg } from '../../multiplayer/protocol';
-import { SNAP_GAP_MS, IN_GAP_MS, encodeIn, decodeIn, type InAccum } from '../town/match/matchNet';
+import { SNAP_GAP_MS, IN_GAP_MS, SNAP_MAX_LEN, SNAP_MAX_BYTES, encodeIn, decodeIn, type InAccum } from '../town/match/matchNet';
+import { PHRASE_WIRE, packInPhrase, readInPhrase, packSnapPhrase, readSnapPhrase, appendSnapPhrase, type PhraseBus } from '../town/quickPhrases';
 import type { HumanFrame, HumanTeam } from '../town/match/humanInputs';
 import type { FriendSlots } from '../town/liveJoin';
 import type { BeanDress, MatchKits } from '../town/beanLooks';
@@ -44,6 +45,8 @@ export interface MatchJoin {
   readonly joined: boolean; readonly format: LiveFormat | null;
   friends: ((f: LiveFormat) => FriendSlots | null) | null;
   friendsChanged(): void; say(text: string, seconds?: number): void; press(b: 'leave', down: boolean): void;
+  /** Quick phrases (lib/town/quickPhrases.ts, Nov 7 2026): my latest phrase out, friends' phrases in. Absent: no phrases on the wire. */
+  readonly phrases?: PhraseBus | null;
 }
 export interface MatchConn { readonly caps: number; readonly status: string; sendMatch(msg: number[]): boolean; onMessage(fn: (m: ServerMsg) => void): () => void }
 export type MatchLinkDeps = {
@@ -97,6 +100,13 @@ export function createMatchLink(d: MatchLinkDeps) {
   /** Owner: when each friend's last In arrived (-1: released after a stall, until the next one). */
   const inAt = new Map<number, number>();
   const still: HumanFrame = { mx: 0, my: 0 };
+  // Quick phrases (Nov 7 2026; lib/town/quickPhrases.ts PHRASE_WIRE): a friend's phrase rides their In frame to the owner, the owner
+  // re-broadcasts it (and its own) as one optional trailing Snap value. No relay / protocol change. Owner: the last phrase seen per
+  // member and a tiny relay ring; friend: the last one seen per slot; both: my last serial sent. Fixed objects, no per-frame allocation.
+  const inPhraseSeen = new Map<number, number>(), snapPhraseSeen = new Int16Array(32).fill(-1), phraseIn = { slot: 0, id: 0, serial: 0 };
+  const relayQ = Array.from({ length: 4 }, () => ({ value: 0, at: -1e12 })); let relayHead = 0, myPhraseSent = 0;
+  const queueRelay = (slot: number, id: number, serial: number, t: number) => { const q = relayQ[relayHead]; relayHead = (relayHead + 1) % relayQ.length; q.value = packSnapPhrase(slot, id, serial); q.at = t; };
+  const phraseReset = () => { inPhraseSeen.clear(); snapPhraseSeen.fill(-1); for (const q of relayQ) q.at = -1e12; };
   const active = () => d.conn.status === 'live' && (d.conn.caps & Cap.Match) !== 0;
   const fieldOf = (f: LiveFormat) => (MATCH_FIELDS as readonly string[]).indexOf(f);
 
@@ -117,8 +127,17 @@ export function createMatchLink(d: MatchLinkDeps) {
     if (a[1] === MatchKind.Snap && watch && a[2] === watch.field) { d.games.pushSnap(watch.format, a, 3, now()); return; }
     if (a[1] === MatchKind.Watch) { if (a[3] > 0) watchers.set(a[2], a[3]); else watchers.delete(a[2]); return; } // I own it: friends watch
     if (!mine || !mine.confirmed) return;
-    if (a[1] === MatchKind.In && owner) { inAt.set(a[2], now()); d.games.friendInput(mine.format, friendKey(a[2]), decodeIn(a, 3, frame)); }
-    else if (a[1] === MatchKind.Snap && !owner && a[2] === mine.field) { snapAt = now(); d.games.pushSnap(mine.format, a, 3, now()); }
+    if (a[1] === MatchKind.In && owner) {
+      inAt.set(a[2], now());
+      const pv = readInPhrase(a, 3); // always stripped first: the sim never sees the phrase bits
+      if (pv >= 0 && inPhraseSeen.get(a[2]) !== pv) { inPhraseSeen.set(a[2], pv); const v = rosters.get(mine.field)?.slots.get(a[2]); if (v) { d.join.phrases?.show(v.idx, pv & 7); queueRelay(v.idx, pv & 7, pv >> 3, now()); } }
+      d.games.friendInput(mine.format, friendKey(a[2]), decodeIn(a, 3, frame));
+    }
+    else if (a[1] === MatchKind.Snap && !owner && a[2] === mine.field) {
+      snapAt = now(); d.games.pushSnap(mine.format, a, 3, now());
+      const p = readSnapPhrase(a, phraseIn);
+      if (p && p.slot !== mine.idx) { const k = p.id | (p.serial << 3); if (snapPhraseSeen[p.slot] !== k) { snapPhraseSeen[p.slot] = k; d.join.phrases?.show(p.slot, p.id); } }
+    }
   });
 
   // The page going to the background (visibilitychange hidden, pagehide: also a locked phone) hands my field on (api.handOff).
@@ -195,7 +214,7 @@ export function createMatchLink(d: MatchLinkDeps) {
       applied.forEach((_s, id) => d.games.dropFriend(format, friendKey(id)));
       if (d.games.isPuppet(format)) d.games.setPuppet(format, false);
     }
-    applied.clear(); inAt.clear(); syncMatchIds(); owner = false; lastSnap = lastIn = -1e12; handedOff = stalled = away = welcomeBack = false;
+    applied.clear(); inAt.clear(); phraseReset(); syncMatchIds(); owner = false; lastSnap = lastIn = -1e12; handedOff = stalled = away = welcomeBack = false;
     if (why) d.join.say(why);
   }
 
@@ -283,7 +302,12 @@ export function createMatchLink(d: MatchLinkDeps) {
           // the gaps skipped by a stall: seq × SNAP_GAP_MS is my clock, which friends stamp frames with (matchNet JITTER).
           const gap = t - lastSnap;
           if (gap >= SNAP_GAP_MS * 2) { if (gap < 60000) seq += Math.floor(gap / SNAP_GAP_MS) - 1; lastSnap = t; } else lastSnap += SNAP_GAP_MS;
-          const out = d.games.encodeSnap(format, mine.field, seq++, snapOut);
+          const ph = d.join.phrases?.out;
+          if (ph && ph.serial && ph.serial !== myPhraseSent && t - ph.at < PHRASE_WIRE.holdMs) { myPhraseSent = ph.serial; queueRelay(mine.idx, ph.id, ph.serial, t); }
+          const out = d.games.encodeSnap(format, mine.field, seq, snapOut);
+          // one live phrase per frame (rotating by seq), only while the frame still fits (the 512 B cap stays)
+          if (out) for (let i = 0; i < relayQ.length; i++) { const q = relayQ[(seq + i) % relayQ.length]; if (t - q.at < PHRASE_WIRE.holdMs) { appendSnapPhrase(out, q.value, SNAP_MAX_LEN, SNAP_MAX_BYTES); break; } }
+          seq++;
           if (out) d.conn.sendMatch(out);
         }
       } else {
@@ -291,7 +315,11 @@ export function createMatchLink(d: MatchLinkDeps) {
         stalled = t - snapAt > STALL_HINT_MS;
         if (stalled) { if (stallFor !== r!.owner) { stallFor = r!.owner; stallText = `Waiting for ${d.nameOf(r!.owner)}…`; } d.join.say(stallText, STALL_TIP_S); }
         const acc = d.games.netInput();
-        if ((acc.urgent || acc.dirty || t - lastIn >= 500) && t - lastIn >= (acc.urgent ? IN_MIN_GAP_MS : IN_GAP_MS)) { if (d.conn.sendMatch(encodeIn(acc, inSeq++, inOut))) lastIn = t; }
+        const ph = d.join.phrases?.out, say = !!ph && ph.serial > 0 && t - ph.at < PHRASE_WIRE.holdMs, fresh = say && ph!.serial !== myPhraseSent;
+        if ((acc.urgent || acc.dirty || fresh || t - lastIn >= 500) && t - lastIn >= (acc.urgent || fresh ? IN_MIN_GAP_MS : IN_GAP_MS)) {
+          encodeIn(acc, inSeq++, inOut); if (say) packInPhrase(inOut, ph!.id, ph!.serial); // repeated while fresh (a dropped In never loses it)
+          if (d.conn.sendMatch(inOut)) { lastIn = t; if (say) myPhraseSent = ph!.serial; }
+        }
       }
     },
     /** QA round 2 (Nov 5 2026): my phone goes to the background / locks / leaves the page while I run a shared match: friends would see

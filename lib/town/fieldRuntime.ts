@@ -20,6 +20,7 @@ import {classicShirtNumber} from '../graphics/shirtNumbers';
 import {fieldTokenDress,liveMatchKits,type BeanDress} from './beanLooks';
 import {joinableFormat,chooseJoinTeam,pickSlot,handBack,touchlineSpot,benchMargin,clearOfFlags,stepBench,cheerAge,CHEER_SECONDS,LIVE_JOIN_FORMATS,type BenchWalker,type SlotCandidate,type JoinPick} from './liveJoin';
 import {TRICK,PRESS,HUMAN_FEEL,POWER_SHOT,type HumanFrame,type TrickKind} from './match/humanInputs';
+import {shotRangeU} from './liveControls';
 import {createBodyFx,createMoveView,fillMoveView,type HumanMoveView} from './liveBodyFx';// keeper feel + body moves (Nov 5 2026)
 import {createSnapBuffer,createInAccum,accumulateIn,encodeSnap,type SnapBuffer} from './match/matchNet';
 import {applyBodyEmote} from '../graphics/bodyEmotePose';
@@ -31,6 +32,7 @@ import {MatchSim,ROLE_MOVEMENT} from './match/matchSim';
 import {maxTurnRate,createControlState,stepControl,settlePace,MOTION} from './match/matchMotion';
 import {VENUES,LIVE_VENUES,BEACH_TOUCHLINE_FLAGS_Y,liveWorldX,liveWorldZ,liveWorldYaw,liveFieldPoint,type Venue,type LiveVenue,type LiveFormat} from './venues';
 import {quizOutcomeStep,quizAnswerRevealed,lessonPositions,lessonVisualFrame,lessonStepSeconds,loftPeak,type FieldSession} from './formatLessons';
+import {elevenMode} from './match/matchModeSetting';// 11v11 kid / adult (Island settings), applied at the first join
 // Movement and ball share a per-format clock; the compact futsal court needs a brisker pace.
 export const LIVE_GAME_SPEED=.32;
 export const liveGameSpeed=(format:LiveFormat)=>format==='futsal'||format==='beach'?.48:LIVE_GAME_SPEED;
@@ -413,6 +415,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
   const dress=dressFor(team==='gold',kits,p.isGK);// in goal: the keeper kit + gloves (matchPlayerDress keeper)
   e.humans.set(humanId,{humanId,slot,team,dress,bench,benchRig,benchMotion:{},goals:sim.score.gold+sim.score.blue});
   e.slotDress.set(slot,dress);{const r=e.rigs.get(slot);if(r)dressJoinedRig(r,dress);}
+  if(!sim.humans.size)sim.setElevenMode(elevenMode());// 11v11 kid / adult (this device runs the sim: the owner's mode for everyone on it)
   sim.lockHuman(slot);if(!pick?.role&&!want)sim.placePlayer(slot,Math.max(10,Math.min(260,at.x)),Math.max(10,Math.min(390,at.y)));// a picked position starts where that player stands (you take his place in the shape); otherwise where you walked on
   e.dormant=false;e.synced=false;
   return slot;
@@ -464,7 +467,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
   if(pass){const t=sim.players[pass];out.passX=liveWorldX(v,t.x,t.y);out.passZ=liveWorldZ(v,t.x,t.y);}else out.passX=out.passZ=NaN;
   if(fwd){const t=sim.players[fwd];out.forwardX=liveWorldX(v,t.x,t.y);out.forwardZ=liveWorldZ(v,t.x,t.y);}else out.forwardX=out.forwardZ=NaN;
   const gy=hs.team==='gold'?8:392;out.goalX=liveWorldX(v,135,gy);out.goalZ=liveWorldZ(v,135,gy);
-  out.inShotRange=Math.abs(p.y-gy)<120;
+  out.inShotRange=Math.abs(p.y-gy)<shotRangeU(v.id);// per format (liveControls.SHOT_RANGE_U)
   out.restart=e.puppet?e.puppet.restart:sim.isRestart;out.keeper=p.isGK;out.hands=out.onBall&&p.isGK&&(e.puppet?e.puppet.hands:sim.keeperHands);
   out.callOpen=sim.lastCall&&sim.lastCall.id===hs.slot&&sim.stats.time-sim.lastCall.time<1.5?sim.lastCall.open:null;
   const h=sim.humans.get(hs.slot);out.trickCd=h?h.trickCd/TRICK.cooldown:0;out.trickOn=!!h&&h.trick>0;out.pressCd=h?h.pressCd/PRESS.cooldown:0;out.pressOn=!!h&&h.pressT>0;out.trickSerial=h?h.trickSerial:0;out.trickKind=h?h.trickKind:'stepover';out.shotSerial=h?h.shotSerial:0;out.shotPw=h?h.shotPw:0;out.shotAimed=!!h&&h.shotAimed;out.slipSerial=h?h.slipSerial:0;

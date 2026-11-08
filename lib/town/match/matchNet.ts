@@ -51,6 +51,11 @@ export const SNAP_BODY={kindHi:1,beat:2,dive:2,diveLeft:16,save:5,saveKind:7,big
 const bodyPack=(h:{trickKind:string;trickBeat:string|null;diveSerial:number;diveSide:number;saveSerial:number;saveKind:number;saveBig:boolean;shoulderSerial:number;shield:boolean})=>
   (TRICK_KINDS.indexOf(h.trickKind as typeof TRICK_KINDS[number])>3?SNAP_BODY.kindHi:0)|(h.trickBeat?SNAP_BODY.beat:0)|((h.diveSerial&3)<<SNAP_BODY.dive)|(h.diveSide<0?SNAP_BODY.diveLeft:0)
   |((h.saveSerial&3)<<SNAP_BODY.save)|((h.saveKind&3)<<SNAP_BODY.saveKind)|(h.saveBig?SNAP_BODY.big:0)|((h.shoulderSerial&3)<<SNAP_BODY.shoulder)|(h.shield?SNAP_BODY.shield:0);
+/** Tackle wind-up + result (Nov 7 2026, liveMechanics TACKLE_FX; MatchSim.tackleNetBits / netTackle): the BODY value carries the human
+ *  tackler's set (bit 13) and his result serial mod 4 (bits 14-15), the POPUP value the result kind (bits 14-15: TACKLE_KINDS steal /
+ *  deflect / stumble). Both values stay < 65 536 (the relay's ±100 000 integer check); the byte fit above counts them. No relay or
+ *  protocol change; an older reader ignores the bits. */
+export const SNAP_TACKLE={winding:8192,serial:14,kind:14} as const;
 const NO_AIM=-1000;
 
 /** Owner: write the snapshot of `sim` into `out` as a full C.Match Snap frame [19, 3, field, ...]. `ballH` is the rendered ball
@@ -73,12 +78,12 @@ export function encodeSnap(sim:MatchSim,field:number,seq:number,ballH:number,out
   // from the line, kicks and serial bits set: up to ~522 B, refused by encode, a frozen match). Fit the listed humans by bytes too,
   // at the costliest human's size (2 + 2 + 2 + 5 + 4 digits + 5 commas at most), so every frame stays ≤ SNAP_MAX_BYTES.
   let used=2+n+2;for(let i=0;i<n;i++)used+=digits(out[i]);// brackets, the commas, the count
-  let worst=0;sim.humans.forEach((h,id)=>{const t=sim.humanTargets.get(id);const c=digits(ids.indexOf(id))+digits(t?.pass.id?ids.indexOf(t.pass.id):-1)+digits(t?.forward.id?ids.indexOf(t.forward.id):-1)+digits(evPack(h))+digits(bodyPack(h))+5;if(c>worst)worst=c;});
+  let worst=0;sim.humans.forEach((h,id)=>{const t=sim.humanTargets.get(id);const c=digits(ids.indexOf(id))+digits(t?.pass.id?ids.indexOf(t.pass.id):-1)+digits(t?.forward.id?ids.indexOf(t.forward.id):-1)+digits(evPack(h)|sim.tackleNetBits(id,false))+digits(bodyPack(h)|sim.tackleNetBits(id,true))+5;if(c>worst)worst=c;});
   const H=sim.humans.size,fit=Math.min(H,Math.max(0,Math.floor((SNAP_MAX_LEN-n-1)/5)),worst>0?Math.max(0,Math.floor((SNAP_MAX_BYTES-used)/worst)):H),start=H>fit&&fit>0?(seq*fit)%H:0;
   out[n++]=fit;let j=0;
   for(const id of sim.humans.keys()){const rel=(j++-start+H)%H;if(rel>=fit)continue;const t=sim.humanTargets.get(id);out[n++]=ids.indexOf(id);out[n++]=t?.pass.id?ids.indexOf(t.pass.id):-1;out[n++]=t?.forward.id?ids.indexOf(t.forward.id):-1;}
-  j=0;for(const h of sim.humans.values()){const rel=(j++-start+H)%H;if(rel>=fit)continue;out[n++]=evPack(h);}
-  j=0;for(const h of sim.humans.values()){const rel=(j++-start+H)%H;if(rel>=fit)continue;out[n++]=bodyPack(h);}
+  j=0;for(const h of sim.humans.values()){const rel=(j++-start+H)%H;if(rel>=fit)continue;out[n++]=evPack(h)|sim.tackleNetBits(h.id,false);}
+  j=0;for(const h of sim.humans.values()){const rel=(j++-start+H)%H;if(rel>=fit)continue;out[n++]=bodyPack(h)|sim.tackleNetBits(h.id,true);}
   out.length=n;return out;
 }
 
@@ -180,7 +185,9 @@ export function createSnapBuffer():SnapBuffer{
           if(dl)h.slipSerial+=dl;}
         // Keeper + body moves (SNAP_BODY): the move's high kind bit and beaten defender, the dive / save / shoulder serials, the shield.
         const bFrom=evFrom+H;if(b.len>=bFrom+H)for(let j=0;j<H;j++){const si=b.v[hAt+1+j*3]|0,e2=b.v[bFrom+j]|0;if(si<0||si>=64)continue;const was=bodySeen[si];bodySeen[si]=e2;const h=sim.humans.get(ids[si]);if(!h)continue;
-          h.shield=(e2&SNAP_BODY.shield)!==0;if(was<0||was===e2)continue;
+          h.shield=(e2&SNAP_BODY.shield)!==0;
+          {const kind=((b.v[evFrom+j]|0)>>SNAP_TACKLE.kind)&3,bumps=was<0?0:(((e2>>SNAP_TACKLE.serial)&3)-((was>>SNAP_TACKLE.serial)&3)+4)&3;if(was<0||was!==e2)sim.netTackle(ids[si],(e2&SNAP_TACKLE.winding)!==0,bumps,kind);}
+          if(was<0||was===e2)continue;
           const dd=(((e2>>SNAP_BODY.dive)&3)-((was>>SNAP_BODY.dive)&3)+4)&3,dv=(((e2>>SNAP_BODY.save)&3)-((was>>SNAP_BODY.save)&3)+4)&3,dh=(((e2>>SNAP_BODY.shoulder)&3)-((was>>SNAP_BODY.shoulder)&3)+4)&3;
           if(dd){h.diveSerial+=dd;h.diveSide=e2&SNAP_BODY.diveLeft?-1:1;}
           if(dv){h.saveSerial+=dv;h.saveKind=((e2>>SNAP_BODY.saveKind)&3) as 0|1|2;h.saveBig=(e2&SNAP_BODY.big)!==0;}

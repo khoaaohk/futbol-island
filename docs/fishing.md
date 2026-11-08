@@ -580,3 +580,76 @@ The Fishbook is now **150 of 150**, plus **22 Island Legends** (4 new).
   weights, no new sharks), pre-wave-3 EV table, wave-3 sources / cut-list sections. `tests/fishing-content.cjs`: 22 legends and
   the second-legend order. `tests/fishing.cjs`, `tests/fishing-nov6.cjs`, `tests/economy.cjs`, `tests/seo-pages.cjs` updated deliberately.
 - **Heat**: no new draws, timers or loops; models are cached on first use like the rest.
+
+## Return hooks (7 Nov 2026)
+
+Reasons to come back and "catch them all". Owner rules: no leaderboards, no line snapping, prices never by size, sharks stay hard,
+nothing expires, no penalties, no streaks. Every hook is **cosmetic or stamp-only**: no hook touches `catchWeights`, the basket or
+a sell value, so the economy EV guard (tests/economy.cjs §12) is unchanged; tests/fishing-hooks.cjs checks that the odds, session,
+store, economy and market files never import the hooks and that the hooks store never pays or fills the basket.
+
+Files: `lib/town/fishing/fishingHooks.ts` (pure rules), `fishingHooksStore.ts` (browser binding, one catch listener, no timers),
+`fishChapters.ts` (chapter text). UI: `components/FishbookExtras.tsx` (Sets page, Today's visitors banner, marks and chapters),
+`Fishbook.tsx`, the catch card in `FishingHost.tsx` and the toast in `FishingLureButton.tsx`.
+
+Save: `fi2-fishing-hooks-v1` (synced, lib/saves/snapshot.ts; docs/accounts-design.md): `{version:1,sets,visits,golden,legendSeen}`,
+keyed only by catalogue ids (a maxed-out save is under 16 KB); merge keeps the larger of everything.
+
+1. **Sets (14).** Six spot sets (South Pier, Lifebuoy Point, Harbour Wall, North Beach Rocks, West Cove, East Jetty Spiral specials),
+   three area sets (Causeway posts, Coral Cay beaches, Summit Isle shore) and five themed sets (the shared ten, deep sea specials,
+   night and sunset fish, every shark, crabs and lobsters). The Sets page shows "N of M" from the Fishbook. Each gives a stamp;
+   five also give a new float (Coral Cay → Coral float, deep sea → Deep blue float, night → Moon float, sharks → Shark fin float,
+   crabs and lobsters → Shell float; `FLOAT_SKINS` in fishingLog.ts, the log's float cap raised to 16). Sets are claimed on a
+   catch and when the Fishbook opens (`refreshSets`, which also re-grants the floats after a merge). Never time-limited.
+2. **Today's visitor.** One species per area (Main island, Causeway and Coral Cay, Summit Isle, Deep-sea boats), picked with
+   `hash01('visitor|<area>|<Pacific day>')` from the area's own non-legendary-rarity animals: the same for everyone, all day
+   (America/Los_Angeles). Shown as a "Today's visitors" banner at the top of the Fishbook's Fish page and, at the first cast of a
+   session, as one toast line at a spot in that area ("Today's visitor round here: … Look at …", plus the time for a night or
+   sunset fish). Catching it stamps a Visitor mark on its Fishbook card (once per species and day) and a "Today's visitor!" stamp
+   on the catch card. **No odds change**: the banner only says where and when.
+3. **Golden variants.** `GOLDEN_CHANCE` = 1 in 150 Fishbook catches (never a legend). Same fish, same basket, same price: the
+   catch card gets a gold edge, a "Golden!" stamp and one line ("Rosa pays the same as for any …"); the Fishbook card gets a gold
+   edge and a Golden mark (×n).
+4. **Story chapters.** Species: the fish tale is chapter 1 (first catch), chapter 2 unlocks on the 3rd catch, chapter 3 on the 5th
+   (counted from the Fishbook, nothing extra saved); 32 favourites have chapters (the shared ten plus 22 spot and signature
+   species). Legends are caught once and released, so all 22 come back as "seen again": chapter 1 is the island story at the
+   release, chapters 2 and 3 after 5 and 15 more catches at that spot (`legendSeen`). Same voice as fishStories.ts; every football
+   detail is restated from the animal's own sourced fact (the test checks that every number of two or more digits in a chapter
+   appears in that fact); the animals' adventures are island fiction. The toast announces a new chapter; the Fishbook shows the
+   unlocked chapters and "catch it N more times" for the next one.
+
+Heat: no timers, no frame work; one listener on the fishing event API and one small localStorage write per catch.
+
+## Delight pass (7 Nov 2026)
+
+Sounds, animations and little joys. Cosmetic only: nothing touches the odds, a price, the basket or the fight (tests/economy.cjs §12
+unchanged; tests/fishing-delight.cjs checks imports both ways). Nothing expires, no penalties, no leaderboards.
+
+Files: `lib/town/fishing/fishingDelight.ts` (pure rules: gate, tiers, animal cues, ambient timing, secrets),
+`fishingDelightStore.ts` (browser binding: one listener on the event API, the cues, the cheer event, the secrets save),
+`fishingAmbient.ts` (the 3D extras, driven by the visuals' frame). Sounds are new `fi2-job-cue` cases in `lib/audio/islandSound.ts`
+(synthesized from the existing tone / noise kit: no files), so the Sound effects switch, the volume, the idle fade and rate limits apply;
+the store and ambient also send nothing when `fi2-sound-muted` is on.
+
+1. **Catch celebration by tier** (common, good, rare, legend, golden; `celebrationTier`): the catch card gets a glow (rare: violet; legend
+   and golden: gold), a one-shot shimmer sweep (rare and up) and a burst of sparkles (4 / 6 / 10), plus a sound flourish layered after the
+   finish jingle (common a tiny lift … legend a five-note fanfare, golden a bell run). Rare and legendary catches are also circled by 5 / 8
+   glowing sparkles in 3D as they are held up (`CatchLook.glow`).
+2. **Splashes by size**: the bite and hook rings and spray scale with the shadow's size class (small ×0.91 … giant ×1.43).
+3. **Fishbook**: a species caught since the book was last open stamps "New!" with a thump and six bits of confetti; tabs flip in with the
+   page-turn sound; a set finished since the last look lifts with an eight-spark burst and a chime (the book opens on Sets);
+   Golden / Visitor marks pop in. Session-only marks: nothing saved.
+4. **Animal cues** by group (`animalCue`): fish bloop, shark sting (also on the hook), ray glide, eel wiggle, crab / lobster clack,
+   shellfish clam, octopus / squid squish, seahorse tink, whale shark song.
+5. **Idle charm while waiting**: a gull circling over the float (a call every 25–55 s), fireflies over the shallows at night (3 at sunset).
+   Not done: a yawning cat or islander (needs rig work outside fishing).
+6. **The far pass**: very rarely (3–7 minutes of waiting) a whale or manta crosses 27 m out over 22 s; the whale spouts and sings.
+7. **Islanders cheer** a rare, huge / giant, golden or legend catch: the nearest free islander within 14 m hops and claps with
+   "Wow, what a catch!" (Town.tsx, their usual emote cooldown; reduced motion keeps them still).
+8. **Secrets** (once per save, stamps only; `fi2-fishing-secrets-v1`, synced, lib/saves/snapshot.ts, docs/accounts-design.md):
+   a message in a bottle (1 in 40 catches, its own random number) and the golden glint (a sparkle on the water by day and sunset every
+   2–5 minutes; cast while it shows). Each shows a stamp and one line on the catch card.
+
+Gate: reduced motion drops every move and sparkle (stamps and glow stay, still); heat tier 2+ / Battery saver drops the 3D extras and
+halves the card's sparkles. Heat: no new mesh, material, texture or render target: the extras are a preallocated pool of 16 slots in the
+overlay's one instanced draw; no timers; a few float writes a frame while fishing; nothing at rest.

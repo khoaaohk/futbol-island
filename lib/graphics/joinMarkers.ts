@@ -21,6 +21,10 @@ function compassGeometry(inner:number,outer:number,segments:number){
   pos.push(-half,0,base,0,0,tip,0,0,notch, 0,0,notch,0,0,tip,half,0,base);
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.computeBoundingSphere();return g;
 }
+/** A flat chevron pointing along local +z (the receiver arrow), built once. */
+function chevronGeometry(half:number,len:number,notch:number){
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([-half,0,0,0,0,len,0,0,notch, 0,0,notch,0,0,len,half,0,0],3));g.computeBoundingSphere();return g;
+}
 function ringGeometry(inner:number,outer:number,segments:number){const g=new T.RingGeometry(inner,outer,segments);g.rotateX(-Math.PI/2);return g;}
 export function createJoinMarkers(scene:T.Scene){
   const material=new T.MeshBasicMaterial({color:'#ffd23f',transparent:true,opacity:.92,depthWrite:false,side:T.DoubleSide});
@@ -31,7 +35,10 @@ export function createJoinMarkers(scene:T.Scene){
   const haloMat=new T.MeshBasicMaterial({color:'#ffd23f',transparent:true,opacity:.3,depthWrite:false,side:T.DoubleSide,toneMapped:false,blending:T.AdditiveBlending});
   const passGeo=ringGeometry(.6,.86,40),haloGeo=ringGeometry(.86,1.32,40);
   const pass=new T.Mesh(passGeo,passMat),halo=new T.Mesh(haloGeo,haloMat);pass.name='join-pass-target';halo.name='join-pass-halo';
-  for(const m of [pass,halo]){m.visible=false;m.renderOrder=3;m.frustumCulled=false;scene.add(m);}
+  // Receiver arrow (Nov 7 2026): a chevron just short of the Pass ring pointing along the pass (you → him), so the kid sees WHO
+  // the pass goes to even in a crowd. Shares the ring's material; +1 draw call only while the ring shows. Static (no pulse).
+  const arrowGeo=chevronGeometry(.42,.62,.3),arrow=new T.Mesh(arrowGeo,passMat);arrow.name='join-pass-arrow';
+  for(const m of [pass,halo,arrow]){m.visible=false;m.renderOrder=3;m.frustumCulled=false;scene.add(m);}
   // Aim marks: a soft glow + ring drawn once into a 64 px canvas; five billboards in one instanced draw.
   const cv=document.createElement('canvas');cv.width=cv.height=64;const cx=cv.getContext('2d');
   if(cx){const g=cx.createRadialGradient(32,32,0,32,32,32);g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.28,'rgba(255,255,255,.9)');g.addColorStop(.5,'rgba(255,255,255,.28)');g.addColorStop(1,'rgba(255,255,255,0)');cx.fillStyle=g;cx.fillRect(0,0,64,64);cx.strokeStyle='rgba(255,255,255,.95)';cx.lineWidth=4;cx.beginPath();cx.arc(32,32,22,0,Math.PI*2);cx.stroke();}
@@ -47,7 +54,7 @@ export function createJoinMarkers(scene:T.Scene){
   const pingGeo=ringGeometry(.8,1,32),pings=[0,1].map(i=>{const m=new T.Mesh(pingGeo,new T.MeshBasicMaterial({color:'#fff4cf',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide,toneMapped:false,blending:T.AdditiveBlending}));m.name='join-call-ping-'+i;m.visible=false;m.renderOrder=4;m.frustumCulled=false;scene.add(m);return m;});
   return {
     setColour(hex:string){material.color.set(hex);passMat.color.set(hex).lerp(AIM_ON,.25);haloMat.color.set(hex);for(const m of pings)(m.material as T.MeshBasicMaterial).color.set(hex).lerp(AIM_ON,.45);},
-    hide(){compass.visible=pass.visible=halo.visible=forward.visible=aims.visible=false;pings[0].visible=pings[1].visible=false;},
+    hide(){compass.visible=pass.visible=halo.visible=arrow.visible=forward.visible=aims.visible=false;pings[0].visible=pings[1].visible=false;},
     /** Caller `i` (0 / 1) calling for the ball at world (x, y ground, z) with weight `w` 0..1 (NaN x or w 0 hides it): a ring at head
      *  height that pings out and fades, ~1.25 a second. */
     callPing(i:number,x:number,y:number,z:number,w:number,time:number,reduced:boolean){const m=pings[i];if(!m)return;m.visible=Number.isFinite(x)&&w>0;if(!m.visible)return;
@@ -56,8 +63,10 @@ export function createJoinMarkers(scene:T.Scene){
     you(x:number,y:number,z:number,attackYaw:number){compass.visible=true;compass.position.set(x,y+.135,z);compass.rotation.y=attackYaw;},
     /** Hide only the compass (a goal replay with no shooter to ring). */
     hideYou(){compass.visible=false;},
-    /** The assist's Pass target (NaN hides it). */
-    passTarget(x:number,y:number,z:number,time:number,reduced:boolean){pass.visible=halo.visible=Number.isFinite(x);if(!pass.visible)return;pass.position.set(x,y+.14,z);halo.position.set(x,y+.13,z);
+    /** The assist's Pass target (NaN hides it); (fromX, fromZ) the passer: the receiver arrow points from him along the pass. */
+    passTarget(x:number,y:number,z:number,time:number,reduced:boolean,fromX=NaN,fromZ=NaN){pass.visible=halo.visible=Number.isFinite(x);
+      {const dx=x-fromX,dz=z-fromZ,d=Math.hypot(dx,dz);arrow.visible=pass.visible&&d>3;if(arrow.visible){arrow.position.set(x-dx/d*1.95,y+.14,z-dz/d*1.95);arrow.rotation.y=Math.atan2(dx,dz);}}
+      if(!pass.visible)return;pass.position.set(x,y+.14,z);halo.position.set(x,y+.13,z);
       const w=reduced?0:Math.sin(time*4.2);pass.scale.setScalar(1+.06*w);halo.scale.setScalar(1+.12*w);haloMat.opacity=reduced?.3:.24+.14*(w*.5+.5);},
     /** Shoot held: the five aim marks on the goal mouth (`pts` = 5 world points, x y z each; null hides them), `sel` the
      *  picked one (-1 = auto-aim, all small). Billboards facing the camera; colours written only when the pick changes. */
@@ -69,6 +78,6 @@ export function createJoinMarkers(scene:T.Scene){
     },
     /** The Forward-pass runner (NaN hides it); chevron along his run toward the goal. */
     forwardTarget(x:number,y:number,z:number,yaw:number){forward.visible=Number.isFinite(x);if(!forward.visible)return;forward.position.set(x,y+.14,z);forward.rotation.y=yaw;},
-    dispose(){[compass,pass,halo,forward,aims,...pings].forEach(m=>m.removeFromParent());pingGeo.dispose();pings.forEach(m=>(m.material as T.Material).dispose());compassGeo.dispose();material.dispose();passGeo.dispose();haloGeo.dispose();passMat.dispose();haloMat.dispose();aimGeo.dispose();aimMat.dispose();aimTex.dispose();aims.dispose();},
+    dispose(){[compass,pass,halo,arrow,forward,aims,...pings].forEach(m=>m.removeFromParent());pingGeo.dispose();pings.forEach(m=>(m.material as T.Material).dispose());compassGeo.dispose();material.dispose();passGeo.dispose();haloGeo.dispose();arrowGeo.dispose();passMat.dispose();haloMat.dispose();aimGeo.dispose();aimMat.dispose();aimTex.dispose();aims.dispose();},
   };
 }

@@ -4,7 +4,8 @@ import s from '@/components/marketing/marketing.module.css';
 import learn from '@/components/learn/learn.module.css';
 import LogoWord from '@/components/learn/LogoWord';
 import title from '@/components/landing/Title.module.css';
-import {pageMeta} from '@/lib/site/seo';
+import JsonLd from '@/components/seo/JsonLd';
+import {abs,breadcrumbLd,pageMeta,PUBLISHER,SITE_NAME} from '@/lib/site/seo';
 import {GAME_SHEET,LOGO_COLOURS,MARKETING_PATH,MARKETING_PDF,SITE_SHEET,type DesignSheet,type TypeSpec} from '@/lib/site/marketing';
 
 /**
@@ -51,6 +52,9 @@ export default function Marketing(){
  // The tour's own root and bar (learn.module.css .root/.subnav/.subnavIn/.logo + LogoWord): the same logo, size and place as on
  // `/` (far left on desktop, centred on phones), and the same hidden site header and footer "What's inside" link.
  return <div className={`${learn.root} ${s.root}`}>
+  {/* Nov 7 2026 SEO: structured data only (no visible content change). */}
+  <JsonLd data={{'@context':'https://schema.org','@type':'WebPage',name:`Marketing · ${SITE_NAME}`,url:abs(MARKETING_PATH),inLanguage:'en',isPartOf:{'@type':'WebSite',name:SITE_NAME,url:abs('/')},publisher:PUBLISHER}}/>
+  <JsonLd data={breadcrumbLd([{name:'Home',path:'/'},{name:'Marketing',path:MARKETING_PATH}])}/>
   <div className={learn.subnav}><div className={learn.subnavIn}><a className={learn.logo} href="/" aria-label="Futbol Island home"><LogoWord text="Futbol Island"/></a></div></div>
 
   {/* ---- 1. the download ---- */}

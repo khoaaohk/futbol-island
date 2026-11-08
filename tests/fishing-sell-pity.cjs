@@ -83,7 +83,7 @@ ok(O.pityMultiplier(0)===1&&O.pityMultiplier(1e6)===O.PITY.cap&&O.pityMultiplier
   ok(seen>5,'species nudges checked');}
  const toast=read('components/FishingLureButton.tsx');
  ok(/requestNudge\(todaysLog\(now\),dayKey\(now\),e\.spot\)/.test(toast)&&/e\.type==='cast'&&!nudged\.current/.test(toast)&&/nudged=useRef\(false\)/.test(toast),'the toast nudges on the FIRST cast of a session only (a ref per mounted HUD)');
- ok(/ms:3000,kind:'request'/.test(toast),'the request nudge shows for 3 s');
+ ok(/ms:text\.length>90\?5000:3000,kind:'request'/.test(toast),'the request nudge shows for 3 s (5 s when today\'s visitor line rides along, Nov 7 2026)');
  ok(!/data-request-chip|requestChip/.test(read('components/FishingHost.tsx')+toast),'no HUD request chip came back');}
 
 // ---- 9. The Fishbook's night fish switch ----

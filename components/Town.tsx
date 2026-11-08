@@ -119,6 +119,7 @@ import {jobById} from '@/lib/town/jobs/jobCatalog';
 import {createFocusArbiter,type HudCandidate,type HudFocus} from '@/lib/ui/hudStack';
 import {HudStackContext} from './HudStack';
 import {fishingSession} from '@/lib/town/fishing/fishingStore';
+import {FISHING_CHEER_EVENT} from '@/lib/town/fishing/fishingDelightStore';
 import {createJobScene,FARM_STAND_SELL,getJobRuntime} from '@/lib/town/jobs/jobScene';
 import {BUG_FLY_NOTE,BUG_RIDES,BUG_WALK_NOTE} from '@/lib/town/jobs/bugCatch';
 import {createWildBugs} from '@/lib/graphics/wildBugs';
@@ -1555,6 +1556,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     let diveRestAt=-1;const idleRide=createIdleRide(),idleInput=new AbortController(),stir=()=>idleRide.stir(performance.now());
     renderer.domElement.addEventListener('pointerdown',emoteCam.tap,{signal:idleInput.signal});// tapping the screen ends the emote zoom at once
     for(const type of ['pointerdown','pointermove','keydown','wheel'])window.addEventListener(type,stir,{capture:true,passive:true,signal:idleInput.signal});
+    // Fishing delight pass (Nov 7 2026, docs/fishing.md "Delight pass"): a big, rare, golden or legend catch gets a cheer from the nearest free
+    // islander within 14 m (hop and clap, reduced motion keeps it still; their normal emote cooldown applies). One-shot, on the catch only.
+    window.addEventListener(FISHING_CHEER_EVENT,()=>{const me=player.root.position,now=performance.now()/1000;let best:(typeof islandNpcs.entries)[number]|null=null,bd=14;
+     for(const q of islandNpcs.entries){if(q.fx.kind>=0||q.stunned||!q.rig.root.visible||(npcCool.get(q.id)??0)>now)continue;const d=Math.hypot(q.position.x-me.x,q.position.z-me.z);if(d<bd){bd=d;best=q;}}
+     if(!best)return;const rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches,n=islandNpcs.react(best.id,EMOTE.Cheer,rm);if(n){npcCool.set(best.id,now+emoteSeconds(EMOTE.Cheer)+NPC_COOLDOWN_SECONDS);emoteBubbles.showText('Wow, what a catch!',2.2,n.position.x,n.position.y+2.6,n.position.z);}},{signal:idleInput.signal});
     const dailyPlay=createDailyPlay({now:Date.now,claim:grantDailyPlayCoins,earned:amount=>window.dispatchEvent(new CustomEvent('fi2-daily-play-earned',{detail:{amount}}))});
     let dailyX=location.x,dailyZ=location.z;
     const exploreZones=createExploreZones(exploreActivityNow(),kind=>recordExploreActivity(kind));// Coral Cay / East Jetty checklist items (G-13)

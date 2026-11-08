@@ -26,7 +26,13 @@ import {RarityStars} from './RarityStars';
 import {FishingTutorial,GhostHand,tutorialStep} from './FishingTutorial';
 import {LEGEND_INFO,isLegendId} from '@/lib/town/fishing/legendary';
 import {fishingCosmetics,useFishingLog} from '@/lib/town/fishing/fishingLogStore';
+// Nov 7 2026 return hooks (docs/fishing.md "Return hooks"): golden and visitor stamps on the catch card (cosmetic only).
+import {lastHookEffects,useFishingHooks} from '@/lib/town/fishing/fishingHooksStore';
 import {lureById} from '@/lib/town/fishing/lures';
+// Nov 7 2026 delight pass (docs/fishing.md "Delight pass"): the rarity-tiered celebration and the secrets on the catch card (cosmetic).
+import {CELEBRATION,SECRET_TEXT,celebrationTier} from '@/lib/town/fishing/fishingDelight';
+import {lastDelight,useDelightRev} from '@/lib/town/fishing/fishingDelightStore';
+import {effectiveTier} from '@/lib/graphics/heatTier';
 import {FLOAT_SKINS} from '@/lib/town/fishing/fishingLog';
 import {moodParams} from '@/lib/town/fishing/waterMood';
 import {readTimeOfDay} from '@/lib/town/fishing/timeOfDay';
@@ -214,6 +220,11 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  const legend=view.caught&&isLegendId(view.caught.id)?LEGEND_INFO[view.caught.id]:null;
  // RECORD: this player's biggest of the species (the Fishbook's `biggest`).
  const record=!!view.caught&&!legend&&view.caught.isBiggest;
+ useFishingHooks();const hook=lastHookEffects(),hooked=hook&&view.caught&&hook.id===view.caught.id&&hook.size===view.caught.size?hook.effects:null;
+ const golden=!!hooked?.golden,visitor=!!hooked?.visitor;
+ useDelightRev();const dl=lastDelight(),delight=dl&&view.caught&&dl.id===view.caught.id&&dl.size===view.caught.size?dl:null;
+ // The celebration tier (common … legend, golden): glow, shimmer and sparkles; Battery saver / hot phones keep half the sparkles.
+ const tier=fish?celebrationTier(fish.rarity,{golden,legend:!!legend}):'common',fx=CELEBRATION[tier],sparkN=effectiveTier()>=2?Math.floor(fx.sparkles/2):fx.sparkles,secret=delight?.secret?SECRET_TEXT[delight.secret]:null;
  const reelLabel=fighting?(view.strain?'Ease!':view.run?'Stop!':'Spin!'):view.phase==='reeling'?'Reel':view.castLock?'Wait…':REEL_LABEL[view.phase];
  // What this catch fetches now (Nov 6 2026: the card used to show full price, but the same-kind ladder and the daily allowance can
  // lower it): the newest one in the basket's value; "up to" full price when it is not in the basket.
@@ -222,13 +233,18 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
   <button type="button" className="store-enter-prompt" data-fish-enter aria-label="Fish" hidden onClick={e=>{const id=e.currentTarget.dataset.spot;if(id){countFishStart();pushLook();fishingSession.start(id);}}}>Fish</button>
   <button type="button" className="store-enter-prompt" data-market-enter aria-label="Sell at the market stand" hidden onClick={()=>{setTab(undefined);setPlace('rosa');setLoaded(l=>({...l,stand:true}));setStand(true);}}>Sell</button>
   {/* In-world catch label: positioned above the held-up fish by fishingWorld.ts. */}
-  <div className={styles.catch} data-fish-catch hidden aria-live="polite" data-dismissed={dismissed===catchKey&&catchKey?'':undefined}>{fish&&view.caught&&<>
+  <div className={styles.catch} data-fish-catch hidden aria-live="polite" data-dismissed={dismissed===catchKey&&catchKey?'':undefined} data-golden={golden||undefined} data-tier={view.caught?tier:undefined}>{fish&&view.caught&&<>
+   {/* Delight pass: the glow, a shimmer sweep and a burst of sparkles by tier (transform / opacity only, one-shot; none with reduced motion). */}
+   {tier!=='common'&&<span className={styles.celebrate} key={catchKey} aria-hidden="true">{fx.shimmer&&<b className={styles.shine}/>}{Array.from({length:sparkN},(_,i)=><i key={i} style={{'--a':`${Math.round(i*360/sparkN+(i%2)*14)}deg`,'--d':`${44+(i%3)*14}px`,'--w':`${i*35}ms`} as React.CSSProperties}/>)}</span>}
    <button type="button" className={styles.catchClose} aria-label="Dismiss" onClick={()=>setDismissed(catchKey)}><span aria-hidden="true">×</span></button>
    {/* A4: NEW (first of its kind) and RECORD (this player's biggest yet) stamps; A6: rarity stars as well as the word and colour. */}
-   {legend?<p className={styles.stamps}><span className={styles.stamp} data-stamp="legend">Island legend!</span></p>:(view.caught.isNew||record)&&<p className={styles.stamps}>{view.caught.isNew&&<span className={styles.stamp} data-stamp="new">New!</span>}{record&&<span className={styles.stamp} data-stamp="record">Record!</span>}</p>}
+   {legend?<p className={styles.stamps}><span className={styles.stamp} data-stamp="legend">Island legend!</span></p>:(view.caught.isNew||record||golden||visitor)&&<p className={styles.stamps}>{golden&&<span className={styles.stamp} data-stamp="golden">Golden!</span>}{view.caught.isNew&&<span className={styles.stamp} data-stamp="new">New!</span>}{record&&<span className={styles.stamp} data-stamp="record">Record!</span>}{visitor&&<span className={styles.stamp} data-stamp="visitor">Today&apos;s visitor!</span>}</p>}
    <p className={styles.catchTop}><b>{fish.name}</b>{fromBoat&&<em className={styles.catchWhere} data-fish-where>Deep sea boat</em>}</p>
    {legend?<p className={styles.catchMeta} data-rarity="legendary" data-fish-legend><RarityStars rarity="legendary" className={styles.stars}/> {legend.title} · caught once and released</p>
    :<p className={styles.catchMeta} data-rarity={fish.rarity}><RarityStars rarity={fish.rarity} className={styles.stars}/> {RARITY_LABEL[fish.rarity]} · <span data-fish-worth>{worth}</span>{view.caught.inBasket?'':' · basket full'}</p>}
+   {/* A golden one: a short celebration, and the plain truth that it is the same fish at the same price (stamp-only). */}
+   {golden&&!legend&&<p className={styles.catchGolden} data-fish-golden><b>A golden {fish.name}!</b> Very rare. It gets a gold mark in your Fishbook, and Rosa pays the same as for any {fish.name}.</p>}
+   {secret&&<p className={styles.catchSecret} data-fish-secret={delight?.secret}><span className={styles.stamp} data-stamp="secret">{secret.stamp}</span> {secret.note}</p>}
    {size&&<p className={styles.catchSize} data-fish-size data-unit={size.unit}><b>{view.caught.size} cm</b>: {size.text}</p>}
    <p className={styles.catchClub}><span>{fish.club.link==='Fun fish fact'?'Fun fish fact + real football fact':'Real football fact'}</span>{fish.club.name}{fish.club.nickname?` · “${fish.club.nickname}”`:''}</p>
    <p className={styles.catchFact}>{fish.club.fact}</p>

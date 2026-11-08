@@ -16,8 +16,14 @@ import {useFishbook} from '@/lib/town/fishing/fishingStore';
 import {FISHBOOK_PAGES,MilestoneBar,RequestsPage,TrophyPage,type FishbookPage} from './FishbookExtras';
 import extra from './FishbookExtras.module.css';
 import {refreshMilestones,useFishingLog} from '@/lib/town/fishing/fishingLogStore';
+// Nov 7 2026 return hooks: the Sets page, today's visitors, golden / visitor marks and story chapters (cosmetic, docs/fishing.md).
+import {SetsPage,SpeciesHooks,VisitorBanner} from './FishbookExtras';
+import {refreshSets,useFishingHooks} from '@/lib/town/fishing/fishingHooksStore';
 import {shadowShapeWord} from '@/lib/town/fishing/fishingFight';
 import {RarityStars} from './RarityStars';
+// Nov 7 2026 delight pass (docs/fishing.md "Delight pass"): new species stamp in with a thump and a little confetti, pages flip,
+// finished sets celebrate once. Session-only marks (fishingDelightStore.ts): nothing saved, nothing to lose.
+import {clearFresh,freshSetIds,freshSpecies,playFishCue} from '@/lib/town/fishing/fishingDelightStore';
 import {WHEN_LABEL} from '@/lib/town/fishing/nightFish';
 import {readTimeOfDay,requestTimeOfDay,type TimeOfDay} from '@/lib/town/fishing/timeOfDay';
 /** Plain credit name for a source URL. Kids see no clickable external links (user, Sep 27 2026); the URLs stay in the data and docs. */
@@ -58,9 +64,15 @@ function TimeSwitch({time,onChange}:{time:TimeOfDay;onChange:(t:TimeOfDay)=>void
 
 export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);
- const book=useFishbook(),caught=speciesCaught(book),log=useFishingLog();
+ const book=useFishbook(),caught=speciesCaught(book),log=useFishingLog(),hooks=useFishingHooks();
  const [page,setPage]=useState<FishbookPage>('fish'),[time,setTime]=useState<TimeOfDay>('sunset');
- useEffect(()=>{if(open){refreshMilestones();setTime(readTimeOfDay());}},[open]);
+ useEffect(()=>{if(open){refreshMilestones();refreshSets();setTime(readTimeOfDay());}},[open]);
+ // What is new since the book was last open: captured once per opening (the marks clear on close, so each stamps in only once).
+ const [fresh,setFresh]=useState<{species:ReadonlySet<string>;sets:ReadonlySet<string>}>({species:new Set(),sets:new Set()});
+ useEffect(()=>{if(!open)return;const species=new Set(freshSpecies()),sets=new Set(freshSetIds());setFresh({species,sets});
+  if(species.size)playFishCue('fish-stamp');if(sets.size)setPage('sets');return()=>clearFresh();},[open]);
+ useEffect(()=>{if(page==='sets'&&fresh.sets.size)playFishCue('fish-set');},[page,fresh.sets]);
+ const turnPage=(id:FishbookPage)=>{if(id===page)return;setPage(id);try{document.dispatchEvent(new CustomEvent('fi2-path-cue',{detail:'page'}));}catch{/* sound only */}};
  const changeTime=(t:TimeOfDay)=>{setTime(t);requestTimeOfDay(t);};
  const [leaving,setLeaving]=useState(false),closing=useRef(false),timer=useRef<ReturnType<typeof setTimeout>>();
  useEffect(()=>()=>{if(timer.current)clearTimeout(timer.current);},[]);
@@ -75,21 +87,25 @@ export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void})
    <header className={`${shell.header} ${styles.header}`}><div><h2 id="fishbook-title">Fishbook</h2></div><DoneButton ref={close} onDone={requestClose}/></header>
    <div className={shell.body}>{open&&<div className={styles.book}>
     <div className={styles.intro}><b>{caught} / {FISH.length} species</b>{book.total} caught in total. Every sea animal links to a real club, team or football story from the sea. Each fishing spot has its own specials.<MilestoneBar caught={caught} log={log}/></div>
-    <div className={extra.tabs} role="tablist" aria-label="Fishbook pages">{FISHBOOK_PAGES.map(([id,label])=><button key={id} type="button" role="tab" aria-selected={page===id} data-fishbook-tab={id} onClick={()=>setPage(id)}>{label}</button>)}</div>
-    {page==='trophies'&&<TrophyPage log={log}/>}{page==='requests'&&<RequestsPage log={log}/>}
+    <div className={extra.tabs} role="tablist" aria-label="Fishbook pages">{FISHBOOK_PAGES.map(([id,label])=><button key={id} type="button" role="tab" aria-selected={page===id} data-fishbook-tab={id} onClick={()=>turnPage(id)}>{label}</button>)}</div>
+    <div className={extra.page} key={page} data-fishbook-page={page}>
+    {page==='sets'&&<SetsPage book={book} hooks={hooks} fresh={fresh.sets}/>}{page==='trophies'&&<TrophyPage log={log} hooks={hooks}/>}{page==='requests'&&<RequestsPage log={log}/>}
     {page==='fish'&&<>
+    <VisitorBanner hooks={hooks}/>
     {SECTIONS.map(sec=>{const got=sec.fish.filter(f=>book.species[f.id]).length;return <section key={sec.id} className={styles.spot} data-fishbook-spot={sec.id}>
      <h3 className={styles.spotTitle}>{sec.title} <small data-spot-count>{sec.spot?`${got} of ${sec.fish.length} caught here`:`${got} / ${sec.fish.length}`}</small></h3>
      {sec.id==='night'&&<TimeSwitch time={time} onChange={changeTime}/>}
-     <ul className={styles.grid}>{sec.fish.map(f=>{const e=book.species[f.id];return <li key={f.id} data-caught={!!e}>
+     <ul className={styles.grid}>{sec.fish.map(f=>{const e=book.species[f.id],isFresh=!!e&&fresh.species.has(f.id);return <li key={f.id} data-caught={!!e} data-golden={e&&hooks.golden[f.id]?'':undefined} data-fresh={isFresh||undefined}>
+      {isFresh&&<span className={extra.freshStamp} aria-hidden="true">New!<i/><i/><i/><i/><i/><i/></span>}
       <FishArt fish={f} hidden={!e} size={92}/>
       {e?<><h3>{f.name}</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined}><RarityStars rarity={f.rarity} size={12}/> {deepTag(f)}{RARITY_LABEL[f.rarity]} · {shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f,time)}<p>Caught {e.count} · biggest {e.biggest} cm · {fishSellValue(f)} coins at Rosa&apos;s stand</p>
-       <div className={styles.fact}><span className={styles.tag}>{f.club.link==='Fun fish fact'?'Fun fish fact + real football fact':`Real football fact · ${f.club.link}`}</span><p className={styles.club}><b>{f.club.name}</b>{f.club.nickname?` · “${f.club.nickname}”`:''}</p><p>{f.club.fact}</p><small className={styles.credit}>Source: {credit(f)}</small></div>{f.story&&<div className={styles.story} data-fish-story><span className={styles.tag}>Fish tale</span><p>{f.story}</p></div>}</>
+       <div className={styles.fact}><span className={styles.tag}>{f.club.link==='Fun fish fact'?'Fun fish fact + real football fact':`Real football fact · ${f.club.link}`}</span><p className={styles.club}><b>{f.club.name}</b>{f.club.nickname?` · “${f.club.nickname}”`:''}</p><p>{f.club.fact}</p><small className={styles.credit}>Source: {credit(f)}</small></div>{f.story&&<div className={styles.story} data-fish-story><span className={styles.tag}>Fish tale</span><p>{f.story}</p><SpeciesHooks fish={f} count={e.count} hooks={hooks}/></div>}</>
        :<><h3 aria-label="Not caught yet">???</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined} data-shape-word>{deepTag(f)}{shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f,time)}</>}
      </li>;})}</ul>
     </section>;})}
     <section className={styles.keeper}><h3>The keeper&apos;s lesson</h3><p><b>{KEEPER_LESSONS.nibble.title}.</b> {KEEPER_LESSONS.nibble.text}</p><small className={styles.credit}>Source: Bar-Eli et al. (2007), Journal of Economic Psychology</small></section>
     </>}
+    </div>
     <p className={styles.help}>Club facts are real football history. The fishing spots, their stories, the legends and which fish live where are island stories (game fiction).</p>
    </div>}</div>
   </section>

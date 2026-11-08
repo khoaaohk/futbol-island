@@ -11,6 +11,7 @@ import party from './party/party.module.css';
 import {useSyncExternalStore} from 'react';
 import {IslandSelect} from './IslandSelect';
 import {joinSlots,joinAim} from '@/lib/town/liveJoinRuntime';
+import {PHRASES,BUBBLE} from '@/lib/town/quickPhrases';
 
 /** The position dropdown: the island's own IslandSelect (not the native popup), fed by the runtime's slot list (written on taps). */
 function SlotField({onSlot}:{onSlot:(slot:string)=>void}){
@@ -93,6 +94,13 @@ export function LiveJoinActions({onPress,onSlot}:{onPress:Press;onSlot:(slot:str
       <span className={styles.replayTag}><i aria-hidden="true"/>Replay</span>
       <button type="button" data-join-replay-skip className={styles.replaySkip} onClick={()=>onPress('skip',true)} title="Skip replay · any key">Skip</button>
     </div>
+    {/* The ball off screen (Nov 7 2026; big pitches): a small ball with an arrow at the screen edge pointing at it. The runtime
+        writes its spot (transform) and angle (--cue-deg) on change and data-show; hidden while the ball is on screen. */}
+    <div data-join-ballcue className={styles.ballCue} aria-hidden="true"><i className={styles.cueArrow}/><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#294f43" strokeWidth="2.4"/><path d="M12 7.2l3.6 2.6-1.4 4.2H9.8L8.4 9.8z" fill="#294f43"/></svg></div>
+    {/* Quick phrase bubbles over players' heads: a fixed pool; the runtime writes the spot (transform) and data-show / data-out. */}
+    <div data-join-bubbles className={styles.bubbles} aria-hidden="true">{Array.from({length:BUBBLE.pool},(_,i)=><div key={i} data-join-bubble={i} className={styles.bubble}><span/></div>)}</div>
+    {/* The goal's assist (feature-detected from the sim's goal event): a small caption under the score bar for ~2 s. */}
+    <p data-join-assist className={styles.assist} role="status"/>
     <div data-join-actions className={styles.actions} hidden>
       <button type="button" data-join-s className={styles.s} onPointerDown={down(onPress,'s')} onPointerUp={up(onPress,'s')} onPointerCancel={up(onPress,'s')} onLostPointerCapture={up(onPress,'s')}>Sprint</button>
       <button type="button" data-join-b className={styles.b} onPointerDown={shootDown(onPress)} onPointerMove={shootMove} onPointerUp={shootUp(onPress)} onPointerCancel={shootUp(onPress)} onLostPointerCapture={shootUp(onPress)}><i className={styles.charge} aria-hidden="true"/><span data-join-b-label>Shoot</span></button>
@@ -100,6 +108,18 @@ export function LiveJoinActions({onPress,onSlot}:{onPress:Press;onSlot:(slot:str
           Shoot in range (Forward, the through ball, out of range), a small Trick. Defending: ONE big Tackle / Press (by distance) and a
           small Stay. Sprint only with "Push stick to sprint" off. The small Trick slot; its ring shows the cooldown. */}
       <button type="button" data-join-t data-mode="trick" className={styles.t} onPointerDown={down(onPress,'t')} hidden><i className={styles.cool} aria-hidden="true"/><span data-join-t-label>Trick</span></button>
+      {/* Quick phrases (Nov 7 2026, lib/town/livePhraseHud.ts): a small speech button over the cluster (it follows the flipped
+          layout like every button here) opens a compact tray of eight fixed calls; no free text. Hidden with Quick phrases Off. */}
+      <div data-join-phrases className={styles.phrases}>
+        <div className={styles.tray} role="group" aria-label="Quick phrases">
+          {PHRASES.map((p,i)=><button key={p} type="button" data-join-phrase={i} className={styles.phrase} onClick={()=>onPress(`phrase-${i}`,true)}>{p}</button>)}
+        </div>
+        <button type="button" data-join-phrase-open className={styles.phraseBtn} onClick={()=>onPress('phrases',true)} aria-expanded="false" aria-label="Quick phrases" title="Quick phrases">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M4 5.5h16a1.5 1.5 0 0 1 1.5 1.5v8.5A1.5 1.5 0 0 1 20 17h-9l-4.5 3.5V17H4a1.5 1.5 0 0 1-1.5-1.5V7A1.5 1.5 0 0 1 4 5.5z"/><path d="M8 11.3h.01M12 11.3h.01M16 11.3h.01" strokeWidth="3"/></svg>
+        </button>
+      </div>
+      {/* A tackle winding up on me (feature-detected from the sim): a short cue over the cluster. */}
+      <p data-join-telegraph className={styles.telegraph} aria-live="polite">Tackle coming!</p>
       <button type="button" data-join-a className={styles.a} onPointerDown={down(onPress,'a')} onPointerUp={up(onPress,'a')} onPointerCancel={up(onPress,'a')} onLostPointerCapture={up(onPress,'a')}><i className={styles.charge} aria-hidden="true"/><span data-join-a-label>Pass</span></button>
     </div>
   </>;

@@ -156,3 +156,15 @@ export function turnStick(ix:number,iz:number,delta:number,out:{x:number;z:numbe
   if(delta===0){out.x=ix;out.z=iz;return out;}
   const c=Math.cos(delta),n=Math.sin(delta);out.x=ix*c+iz*n;out.z=-ix*n+iz*c;return out;
 }
+
+/** Broadcast ball lookahead (Nov 7 2026 audit: on 11v11 the ball is > 25 m from you ~11% of the time, and Town's follow view
+ *  ±16, 23, 33 from you shows only ~15 m across on a portrait phone). On the big pitches the broadcast camera slides a share
+ *  of the you → ball gap toward the ball, capped (metres, at a 1.6 aspect; narrower screens less), eased at `rate` (1/s). Translation only: the view direction and the
+ *  screen-relative stick never change. The small pitches fit already (none). Reduced motion: off. */
+export const BALL_LOOK={'11v11':{share:.32,max:7},'9v9':{share:.22,max:4},rate:2.2} as const;
+/** The lookahead offset target for a you → ball gap (dx, dz, metres) on `format` (written into out; 0, 0 when none). Pure. */
+export function ballLookTarget(format:string,dx:number,dz:number,out:{x:number;z:number},aspect=1.6){
+  out.x=out.z=0;const L=format==='11v11'?BALL_LOOK['11v11']:format==='9v9'?BALL_LOOK['9v9']:null;if(!L)return out;
+  // A portrait phone sees ~15 m across: the cap shrinks with the aspect (to 40% at 0.64 and below) so you stay well inside the frame.
+  const d=Math.hypot(dx,dz);if(!(d>1e-3))return out;const cap=L.max*Math.max(.4,Math.min(1,aspect/1.6)),m=Math.min(cap,d*L.share)/d;out.x=dx*m;out.z=dz*m;return out;
+}

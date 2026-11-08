@@ -17,6 +17,17 @@ import {LURES,lureById} from '@/lib/town/fishing/lures';
 import {fishById} from '@/lib/town/fishing/fishCatalog';
 import {LEGEND_INFO,legendForSpot} from '@/lib/town/fishing/legendary';
 import {FISH_REQUEST_COINS} from '@/lib/economy';
+// Nov 7 2026 return hooks (docs/fishing.md "Return hooks"): today's visitor at the first cast, new story chapters and finished sets.
+import {areaForSpot,pacificDay,visitorFor,visitorHint} from '@/lib/town/fishing/fishingHooks';
+import {lastHookEffects,readFishingHooks,useFishingHooks} from '@/lib/town/fishing/fishingHooksStore';
+import {FLOAT_SKINS} from '@/lib/town/fishing/fishingLog';
+
+/** "Today's visitor round here: the Blue Shark. Look at Harbour Wall." Null once it was caught as today's visitor. */
+function visitorLine(spot:string,now:number):string|null{
+ const area=areaForSpot(spot),day=pacificDay(now),f=area&&visitorFor(area.id,day);if(!f)return null;
+ if(readFishingHooks().visits[f.id]?.day===day)return null;
+ return `Today's visitor round here: the ${f.name}. ${visitorHint(f)}`;
+}
 
 /** Oct 15 2026 (user: "fix the lure icon to be more centered and make sure the size is similar to other action btns"): the hook's
  *  bounding box is centred in the 24-box (eye top right at x 16.5, bend down to x 5.5, barb), drawn bold like components/Icon.tsx. */
@@ -47,11 +58,12 @@ export function FishingLureButton({className}:{className:string}){
  *  and a catch that found the basket full points to the nearest buyer of fish (marketStand.ts basketFullLine). Listeners on the
  *  Event API's beats only: no timers but the toast's one timeout. */
 export function FishingCatchToast({cardUp}:{cardUp:boolean}){
- useFishingLog();
+ useFishingLog();useFishingHooks();
+ const hook=lastHookEffects(),hookSeen=useRef(0);
  const effects=lastCatchEffects(),seen=useRef(0);const [toast,setToast]=useState<{text:string;key:number;ms?:number;kind?:string}|null>(null);
  const nudged=useRef(false);
  useEffect(()=>fishingSession.onFishingEvent(e=>{
-  if(e.type==='cast'&&!nudged.current&&e.spot){nudged.current=true;if(!fishingPrefs().tutorialDone)return;/* the first-time tutorial has the screen */const now=Date.now(),text=requestNudge(todaysLog(now),dayKey(now),e.spot);if(text)setToast({text,key:-now,ms:3000,kind:'request'});}
+  if(e.type==='cast'&&!nudged.current&&e.spot){nudged.current=true;if(!fishingPrefs().tutorialDone)return;/* the first-time tutorial has the screen */const now=Date.now(),text=[requestNudge(todaysLog(now),dayKey(now),e.spot),visitorLine(e.spot,now)].filter(Boolean).join(' ');if(text)setToast({text,key:-now,ms:text.length>90?5000:3000,kind:'request'});}
   else if(e.type==='catch'&&e.inBasket===false&&e.spot)setToast({text:basketFullLine(e.spot),key:-Date.now(),ms:5000,kind:'basket'});
  }),[]);
  useEffect(()=>{if(!effects||effects.key===seen.current)return;seen.current=effects.key;const e=effects.effects,parts:string[]=[];
@@ -61,6 +73,13 @@ export function FishingCatchToast({cardUp}:{cardUp:boolean}){
   for(const s of e.newClues){const L=legendForSpot(s);if(L)parts.push(`Legend clue: ${LEGEND_INFO[L.id].clue}`);}
   if(parts.length)setToast(t=>({text:[t?.kind==='basket'?t.text:'',...parts].filter(Boolean).join(' '),key:effects.key}));
  },[effects]);
+ useEffect(()=>{if(!hook||hook.key===hookSeen.current)return;hookSeen.current=hook.key;const e=hook.effects,parts:string[]=[];
+  const f=fishById(hook.id);
+  if(e.chapter&&f)parts.push(`${f.name}, chapter ${e.chapter.n}: ${e.chapter.text}`);
+  if(e.legendChapter){const L=fishById(e.legendChapter.id);parts.push(`${L?.name??'A legend'} was seen again (chapter ${e.legendChapter.n}): ${e.legendChapter.text}`);}
+  for(const s of hook.sets)parts.push(`Set complete: ${s.title}! The ${s.stamp} is in your Fishbook${s.float?`, and the ${FLOAT_SKINS[s.float].name} is yours`:''}.`);
+  if(parts.length)setToast(t=>({text:[t&&t.key>0&&t.key===effects?.key?t.text:'',...parts].filter(Boolean).join(' '),key:1e6+hook.key,ms:9000,kind:'story'}));
+ },[hook]);// eslint-disable-line react-hooks/exhaustive-deps
  useEffect(()=>{if(!toast||cardUp)return;const t=setTimeout(()=>setToast(null),toast.ms??6000);return()=>clearTimeout(t);},[toast?.key,cardUp]);// eslint-disable-line react-hooks/exhaustive-deps
  if(!toast||cardUp)return null;
  return <p className={styles.toast} key={toast.key} role="status" data-fish-toast data-toast-kind={toast.kind}>{toast.text}</p>;

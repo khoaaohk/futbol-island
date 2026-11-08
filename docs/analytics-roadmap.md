@@ -203,7 +203,7 @@ dashboard == export for the same range (tests/admin-dashboard.cjs checks it on t
 - **Data**: `GET /api/admin/dashboard?range=…` (`lib/analytics/dashboardAdmin.ts`): the layer trimmed to the series the tabs draw
   (`lib/analytics/dashboard.ts` `wantSeries`, ~165 series, ~80 kB for 30 days), plus the people status, D1/D7 cohorts and feature
   start days (from `countSince.generated.ts`) for chart markers. `/admin` server-renders it with the report (in parallel) and
-  now opens on **the last 30 days** (was Today; a pull-to-refresh comes back to it). The minute auto-refresh reloads the
+  opens on **Today** (owner ruling Nov 7 2026; it was the last 30 days for one day on Nov 6; a pull-to-refresh comes back to it). The minute auto-refresh reloads the
   trend data every fifth tick only. The layer's arithmetic moved to `lib/analytics/dailyMath.ts` (re-exported by daily.ts) so
   the browser runs the same rules (sum / ratio / mean of complete days, previous period, weeks, weekdays).
 - **Header (every tab)**: Today, Yesterday, 7, 14 (new preset), 30, 90 days, All, Custom; Compare (offered only when the previous

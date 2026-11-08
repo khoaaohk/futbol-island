@@ -54,6 +54,8 @@ export function liveCatchRoll(spot:Parameters<typeof catchWeights>[0],rand:numbe
 /** Put a lure on the line (or none). Every lure is free and can be changed at any moment: it takes effect at the next bite. */
 export function chooseLure(id:LureId|null){const next=id&&isLureId(id)?id:null;update(l=>({...l,lure:next}));countLureChosen(next);}
 export function chooseFloat(skin:FloatSkin){update(l=>({...l,float:l.floats.includes(skin)?skin:l.float}));}
+/** Nov 7 2026 (return hooks): a completed Fishbook set gives a float (fishingHooksStore.ts). Idempotent; never takes one away. */
+export function grantFloats(skins:readonly FloatSkin[]){const l=readFishingLog();if(skins.every(k=>l.floats.includes(k)))return;update(x=>({...x,floats:[...new Set([...x.floats,...skins])]}));}
 export function chooseRod(rod:'standard'|'golden'){update(l=>({...l,rod:rod==='golden'&&l.goldenRod?'golden':'standard'}));}
 /** Cosmetics for the rod and float (fishingVisuals.ts may read these; they never change any odds or values). */
 export function fishingCosmetics(){const l=readFishingLog();return {float:l.float,rod:l.rod,lure:l.lure};}

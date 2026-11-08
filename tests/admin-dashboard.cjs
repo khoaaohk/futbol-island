@@ -247,7 +247,7 @@ await ok('live matches: goals for / against, replays shown / skipped and AI / hu
 // 7. the page and the UI rules ------------------------------------------------------------------------------------------------------
 await ok('page, route and UI rules: 30-day default built in parallel, export and compare in the header, no brush font, 44px, no chart library',()=>{
  const page=read('app/admin/page.tsx'),dsh=read('app/admin/AnalyticsDashboard.tsx'),css=read('app/admin/dash.module.css');
- assert(page.includes('initialRange="30d"')&&/loadDashboard\(/.test(page)&&page.indexOf('verifySession(')<page.indexOf('loadDashboard('),'the server renders the trends after the session check');
+ assert(page.includes('initialRange="today"')&&/loadDashboard\(/.test(page)&&page.indexOf('verifySession(')<page.indexOf('loadDashboard('),'the server renders the trends after the session check');
  assert(/fetch\(`\/api\/admin\/dashboard\?\$\{q\}`/.test(dsh)&&/fetch\(`\/api\/admin\/analytics\?\$\{q\}`/.test(dsh),'both reads per range change');
  assert(dsh.indexOf("fetch(`/api/admin/dashboard")<dsh.indexOf("fetch(`/api/admin/analytics"),'started together (the trend fetch is not awaited first)');
  assert(/data-compare-toggle/.test(dsh)&&/data-header-export/.test(dsh)&&/<ExportControl/.test(dsh)&&/data-refresh/.test(dsh),'header: compare, refresh, export');

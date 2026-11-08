@@ -13,7 +13,8 @@ import { createHumanInput, writeHumanInput, tickHumanInput, tickHumanTimers, ste
 import { PASS_ASSIST, pickPassTarget, scorePassTarget, stickyTarget, leadPoint, passSpeedFor, shotAim, segmentDistance, type PassContext, type StickyTarget, type PassMode } from "./passAssist";
 import { createRunContext, pickOffBallRun, supportOffset, RUN, RUNS, TEAM_CALL } from "./offBallRuns";
 const RUNS_SUPPORT = RUNS.supportRadius;
-import { HUMAN_DEFENCE, defenceStrength, atStrength, type HumanDefence } from "./humanDefence"; // QA round 2 (balance): the AI against a human side
+import { HUMAN_DEFENCE, defenceStrength, atStrength, HUMAN_CHASE, HUMAN_CONTEST, HUMAN_FEED, HUMAN_SIDE, chaseStrength, HUMAN_DEFENCE_ADULT_11, HUMAN_SIDE_NEUTRAL, type ElevenMode, type HumanDefence, type HumanChase, type HumanContest, type HumanFeed, type HumanSide } from "./humanDefence";
+import { TACKLE_FX, TACKLE_TUNE, TACKLE_KINDS, THROUGH, POST_CROSS, ASSIST, postSpot, type TackleFxKind } from "./liveMechanics"; // Nov 7 2026: tackle wind-up, through balls, post crosses, assists (human-gated) // QA round 2 (balance): the AI against a human side
 import { ELEVEN_FORMAT_AI, defendAI, recoveryDepth, formatNotes, type DefendAI, type CoachNotes } from "./elevenAI"; // 11v11 lane
 /** Lane B: xG multiplier of an acrobatic first-time finish (volley, scissor, bicycle, diving header). */
 const ACRO_XG = 0.7;
@@ -29,7 +30,9 @@ export type Role = "gk" | "def" | "mid" | "fwd";
  * height (m) at the touch, `speed` the ball's pace (u/s) arriving (or leaving, for `kick`),
  * `heavy` a first touch that pops out of stride, `other` the dispossessed carrier of a tackle. */
 export type TouchKind = "receive" | "intercept" | "tackle" | "heavy" | "parry" | "goal" | "kick";
-export type TouchEvent = { serial: number; kind: TouchKind; id: string; other: string | null; team: Team; height: number; speed: number; heavy: boolean; time: number };
+/** `assist` / `assistSlot` (goal events only, Nov 7 2026): the team-mate whose pass set up the goal (liveMechanics ASSIST) and his
+ *  index in `ids` (-1 = none); null / -1 on every other touch. Cosmetic: no coins, quests or goal counts read it. */
+export type TouchEvent = { serial: number; kind: TouchKind; id: string; other: string | null; team: Team; height: number; speed: number; heavy: boolean; time: number; assist: string | null; assistSlot: number };
 export type KickWindup = { id: string; kind: "pass" | "loft" | "shot" | "clear"; to: string | null; firm: number; loftKind: "through" | "cross" | "switch"; t: number; dur: number; tx: number; ty: number; turn: number };
 
 export interface SimPlayer {
@@ -76,6 +79,14 @@ export const BEACH_HUMAN_RESTART_S = 4;
  *  over `fade`), `arrive` = the dead-ball beat while it lands on the spot, then the kick-off goes once the taker is there (the
  *  both-halves check waits at most `grace`). AI-only matches never enter this path (fixtures/live-match-summary.json unchanged). */
 export const GOAL_RESET = { hold: 1.4, fadeAt: 0.45, fade: 0.35, arrive: 0.75, grace: 0.45 } as const;
+/** Tier 1 kid touch rate (Nov 7 2026; human-joined matches only, pure geometry, no rng). SOFT RECEIVER: an AI carrier's
+ *  bestPass / safePass picks an open (nearest foe >= `open` u), onside human team-mate `minD`..`maxD` u away with a clear
+ *  lane (no outfield foe within the sim's laneReq of it), at most one pass in `every` of that team's AI passes. STARVED: a
+ *  human who has not had the ball for `starve` real s is a soft caller (callerFor) up to `starveD` u, `retry` s apart.
+ *  IDLE: a human whose stick has been neutral `idle` real s (and is not the receiver) is left out of the presser / cover /
+ *  support picks, so an AI team-mate does that job (his control is never switched). DOUBLE: a human defender within
+ *  `doubleD` u of the carrier and closing takes the presser slot; the AI presser drops to cover instead of doubling up. */
+export const SOFT_FEED = { minD: 12, maxD: 150, open: 9, every: 2, starve: 9, starveD: 200, retry: 3, idle: 2, doubleD: 30 } as const;
 export const BEACH_HUMAN_NOTES = {
   kickin: "Kick-in: kick or throw it to a teammate within 4 seconds",
   kickoff: "Kick-off: pass it first. It can't go straight in",
@@ -322,6 +333,14 @@ export class MatchSim {
   /** QA round 2 (balance, Nov 6 2026; humanDefence.ts): this format's knobs, the real clock when the first human joined
    *  (-1 = none) and the score then (the rubber band reads the margin since). Untouched in AI-only matches. */
   humanDefence: HumanDefence = HUMAN_DEFENCE["9v9"];
+  /** Tier 2 (humanDefence.ts HUMAN_CHASE): how the AI side chases a human side that leads. Read only with a human joined. */
+  humanChase: HumanChase = HUMAN_CHASE["9v9"];
+  /** Tier 2 (humanDefence.ts HUMAN_CONTEST): heavy touches near a defending human. Read only with a human joined. */
+  humanContest: HumanContest = HUMAN_CONTEST["9v9"];
+  /** Tier 2 (humanDefence.ts HUMAN_FEED): the one-two return to a human. Read only with a human joined. */
+  humanFeed: HumanFeed = HUMAN_FEED["9v9"];
+  /** Tier 2 (humanDefence.ts HUMAN_SIDE): the human's own side (pace, AI team-mates' finish / shooting, crosses to him). */
+  humanSide: HumanSide = HUMAN_SIDE["9v9"];
   private humanSince = -1;
   private humanScore0 = { gold: 0, blue: 0 };
   /** A human may take the keeper slot (join picker's Goalkeeper; human keeper control, Nov 4 2026: HUMAN_KEEPER). */
@@ -340,6 +359,24 @@ export class MatchSim {
   private supOut = { x: 0, y: 0 };
   /** Per human slot: the Pass and Forward-pass targets the assist shows (hysteresis, passAssist.stickyTarget). */
   readonly humanTargets = new Map<string, { pass: StickyTarget; forward: StickyTarget }>();
+  // ---- live mechanics (Nov 7 2026, liveMechanics.ts; HUD / FX hooks, written only with a human joined) ----
+  /** The newest tackle telegraph or result: `serial` bumps on each; `kind` windup | steal | deflect | stumble; `by` the tackler,
+   *  `on` the carrier; x / y the tackler (sim units). A friend's puppet gets the human tacklers' ones from the snapshot. */
+  readonly tackleFx = { serial: 0, kind: "windup" as TackleFxKind, by: "", on: "", x: 0, y: 0 };
+  /** Human tacklers winding up (id → state); read tackleWindup(id) for the rig's set pose (0..1). */
+  private readonly tackleWinds = new Map<string, { t: number; on: string; armed: boolean; ahead: boolean; serial: number; kind: number }>();
+  private aiWindBy = ""; private aiWindOn = ""; private aiWindT = 0; // an AI defender setting himself on a HUMAN carrier
+  /** The newest through ball (a human's, or an AI team-mate's to a running human): `serial` bumps; x / y = where it is led. */
+  readonly lastThrough = { serial: 0, from: "", to: "", x: 0, y: 0 };
+  /** The newest near / far-post cross: the run's spot (x / y) and its receiver; `active` while that cross is in the air. */
+  readonly crossPost = { serial: 0, side: "near" as "near" | "far", to: "", x: 0, y: 0, active: false };
+  /** The newest goal: scorer, the assist (null = none; `assistSlot` its index in ids, -1 none) and whether a cross set it up. */
+  readonly lastGoal = { serial: 0, scorer: "", assist: null as string | null, assistSlot: -1, cross: false };
+  private pendPass = { from: "", to: "", at: 0, cross: false }; // the last pass in flight / received (assist detection; no rng)
+  private postOut = { x: 0, y: 0 };
+  private tackleTune = TACKLE_TUNE["9v9"];
+  /** 11v11 kid / adult (settings key fi2-match-11-mode-v1; setElevenMode). Other formats ignore it. */
+  elevenMode: ElevenMode = "kid";
   /** Last "call for the ball": who called and whether the lane was open (the HUD shows "Not open: move into space"). */
   lastCall: { id: string; open: boolean; time: number } | null = null;
   /** Off-ball runs in behind chosen on the think clock (offBallRuns.ts): a Forward pass prefers these runners. */
@@ -403,6 +440,10 @@ export class MatchSim {
   /** Futsal telemetry (tests / balance harness): 5 m ring corrections, back passes refused, extra passes, marking switches. */
   futsalStats = { ringPushes: 0, backPassBlocked: 0, extraPasses: 0, markSwitches: 0 };
   private presserId: string | null = null;
+  // ---- Tier 1 human feed (SOFT_FEED): written only while a human is joined; AI-only matches never touch them ----
+  private hIdle = new Map<string, number>(); // real s each human's stick has been neutral
+  private hBallAt = new Map<string, number>(); // this.clock when each human last had the ball (or joined)
+  private feedCool: Record<Team, number> = { gold: 0, blue: 0 }; // AI passes that team plays before the next soft feed
   private defenseIntent = {cover:null as string|null,balance:null as string|null};
   private chaserIds = new Set<string>(); // players running onto a loose ball this frame
   private passMul = 1; // futsal: quicker, zippier passing (smaller, faster game)
@@ -414,6 +455,8 @@ export class MatchSim {
    *  ~9.0 m/s (a real adult sprint). The chaser slow-down on a human carrier (kids: × 0.82) is off on the 11v11. AI never reads them. */
   humanSprintBoost: number = SPRINT_BOOST;
   humanChaseMul = 0.82;
+  /** Tier 2 (11v11): the tackle lunge never passes the 11v11 sprint top (P.runSpeed × 1.3 × role speed = 8.99 m/s), now the run is × HUMAN_SIDE.pace. */
+  humanLungeCap = false;
   /** The live-join pace ladder (owner Nov 5 2026: "11v11 has great speed of play and ball movement", applied to the other
    *  adult-paced formats; 7v7 keeps the kid tuning at 1). `humanPace` multiplies the human's top speed (run, dribble, sprint,
    *  jockey) AND the opponents chasing a human carrier (with humanChaseMul), so chasers stay level with him as on the 11v11.
@@ -633,7 +676,7 @@ export class MatchSim {
   // ---- touch events (additive — consumed by choreo.ts) ----
   // A fixed ring of 8 preallocated events; touchSerial counts every touch ever emitted, so a
   // reader keeps its last serial and reads the newer ones (zero allocations per touch).
-  touches: TouchEvent[] = Array.from({ length: 8 }, () => ({ serial: 0, kind: "receive" as TouchKind, id: "", other: null, team: "gold" as Team, height: 0, speed: 0, heavy: false, time: 0 }));
+  touches: TouchEvent[] = Array.from({ length: 8 }, () => ({ serial: 0, kind: "receive" as TouchKind, id: "", other: null, team: "gold" as Team, height: 0, speed: 0, heavy: false, time: 0, assist: null as string | null, assistSlot: -1 }));
   touchSerial = 0;
   // ---- kick wind-up (CONTRACT §5) ----
   // An AI kick does not leave the foot the instant it is chosen: the kicker winds up for
@@ -665,7 +708,7 @@ export class MatchSim {
     const e = this.touches[this.touchSerial % this.touches.length];
     this.touchSerial++;
     e.serial = this.touchSerial; e.kind = kind; e.id = id; e.other = other; e.team = this.players[id]?.team ?? "gold";
-    e.height = height; e.speed = speed; e.heavy = heavy; e.time = this.stats.time;
+    e.height = height; e.speed = speed; e.heavy = heavy; e.time = this.stats.time; e.assist = null; e.assistSlot = -1;
   }
   // Defer an AI kick into a wind-up. Returns true when the kick was deferred (the caller stops);
   // the release re-enters the same doPass/doLoft/doShot/doClear with fresh positions.
@@ -696,7 +739,7 @@ export class MatchSim {
     const blue = squads?.blue ?? (format === "11v11" ? BLUE_HOME_11 : format === "futsal" ? BLUE_HOME_5 : format === "beach" ? BLUE_HOME_BEACH : format === "7v7" ? BLUE_HOME_7 : BLUE_HOME);
     if (format === "futsal") { this.passMul = 1.22; this.humanPassCap = 1.6; } // zippier passing for the quick small-sided game; human passes capped at 1.6× (the court is 18.5 m wide)
     this.windupScale = format === "futsal" || format === "beach" ? 0.48 : 0.32; // = liveGameSpeed(format) in fieldRuntime, which sets it too
-    if (format === "11v11") { this.allowLoft = true; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // big field → balls over the top / crosses; adult human pace (see humanSprintBoost)
+    if (format === "11v11") { this.allowLoft = true; this.humanPace = HUMAN_SIDE["11v11"].pace; this.humanSprintBoost = 1.3 / HUMAN_SIDE["11v11"].pace; this.humanLungeCap = true; this.humanChaseMul = 1; } // Tier 2: run × pace, the sprint top (8.99 m/s) and the lunge held under the pose limit; big field → balls over the top / crosses; adult human pace (see humanSprintBoost)
     // The pace ladder (humanPace): 9v9 90 %, futsal 80 %, beach 70 % of the 11v11 human's m/s; the 11v11 sprint boost + full-speed chasers.
     if (format === "9v9") { this.humanPace = 1.29; this.humanBallPace = 1.29; this.humanPassCap = 1.3 * PASS_POWER_MAX; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // the cap: a full charge rolls no further than before (≤ 68 m of 69.5)
     if (format === "7v7") { this.humanPace = 1.72; this.humanBallPace = 1.5; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // owner Nov 5 2026: "way too slow even for kids, match 9v9": run 3.62 -> 6.2 m/s like the 9v9 (sprint boost 1.3 keeps the sprint under the pose limit)
@@ -728,6 +771,11 @@ export class MatchSim {
     this.ai = format === "11v11" ? { ...formatAI(format), ...ELEVEN_FORMAT_AI } : formatAI(format); // 11v11 row: elevenAI.ts
     this.defend = defendAI(format);
     this.humanDefence = HUMAN_DEFENCE[format] ?? this.humanDefence; // QA round 2 (balance): read only with a human joined
+    this.humanChase = HUMAN_CHASE[format] ?? this.humanChase; // Tier 2: read only with a human joined
+    this.humanContest = HUMAN_CONTEST[format] ?? this.humanContest;
+    this.humanFeed = HUMAN_FEED[format] ?? this.humanFeed;
+    this.humanSide = HUMAN_SIDE[format] ?? this.humanSide;
+    this.tackleTune = TACKLE_TUNE[format] ?? this.tackleTune; // live mechanics: read only by a human's tackle
     this.notes = formatNotes(format); // this format's coaching lines (11v11 lane: Eleven Park explains its own laws)
     // deal the philosophy cards for this match (seeded → reproducible): two DISTINCT
     // styles from the deck, then `spice` sets how pronounced the identities are today
@@ -817,6 +865,7 @@ export class MatchSim {
   // how high the opposing block steps up, so each phase LOOKS different from the stands.
   private phaseOf(t: Team): "build" | "progress" | "final" | "counter" {
     if (this.counterT > 0 && this.counterTeam === t) return "counter";
+    if (this.humans.size && this.humanChase.counter > 0 && this.possession === t && this.chaseK(t) >= this.humanChase.counter) return "counter"; // Tier 2: chasing a human side's lead
     const d = this.depth(t, this.ball.y);
     return d < 150 ? "build" : d < 262 ? "progress" : "final";
   }
@@ -838,6 +887,10 @@ export class MatchSim {
       this.humanOn[p.team]++;
       const b = this.brain[id]; if (b) { b.lapse = 0; b.ox = 0; b.oy = 0; b.mode = 0; }
       if (this.windup?.id === id) this.windup = null;
+      this.hIdle.set(id, 0); this.hBallAt.set(id, this.clock);
+      // Tier 1: joining during a goal celebration or the slow fetch-and-carry kick-off skips straight to the quick reset.
+      if (this.goalHold > 0 && !this.goalQuick && this.goalNet) { const conceding: Team = this.goalNet === "top" ? "blue" : "gold"; this.goalHold = 0; this.goalNet = null; this.stageQuickKickoff(conceding); }
+      else if (this.restart?.kind === "kickoff" && this.restart.carry && !this.fullTime) this.stageQuickKickoff(this.players[this.restart.taker]?.team ?? this.possession);
     }
     this.syncPrimaryHuman();
     return true;
@@ -847,9 +900,9 @@ export class MatchSim {
     const h = this.humans.get(id);
     if (!h) return;
     this.humans.delete(id); this.humanTargets.delete(id); this.humanOn[h.team] = Math.max(0, this.humanOn[h.team] - 1);
-    this.hkStretch.delete(id); this.hkSmother.delete(id);
+    this.hkStretch.delete(id); this.hkSmother.delete(id); this.hIdle.delete(id); this.hBallAt.delete(id); this.tackleWinds.delete(id);
     if (h.pressT > 0) { if (h.pressA) this.pressSet.delete(h.pressA); if (h.pressB) this.pressSet.delete(h.pressB); }
-    if (!this.humans.size) { this.dazed.clear(); this.stumbled.clear(); this.teamCallers.clear(); this.humanSince = -1; }
+    if (!this.humans.size) { this.dazed.clear(); this.stumbled.clear(); this.teamCallers.clear(); this.humanSince = -1; this.aiWindBy = ""; this.aiWindT = 0; this.tackleWindup = null; }
     if (this.passTargetId && this.ball.owner === id) this.passTargetId = null;
     this.syncPrimaryHuman();
   }
@@ -1017,13 +1070,72 @@ export class MatchSim {
     tgt = tgt ?? this.safePass(owner) ?? this.nearestOfTeam(o.team, o.x, o.y, owner);
     if (!tgt) return;
     const r = this.players[tgt], moving = Math.hypot(r.vx, r.vy) > 12;
+    // Through ball (Nov 7 2026, THROUGH): the Forward pass, or a Pass to a runner ahead with the stick pushed forward past him
+    // (or the Forward assist picked him): led into the space ahead of his run.
+    const thr = mode === "forward" || (!o.isGK && this.throughRun(o, r, h, t?.forward.id === tgt));
     const charge = 1 + (PASS_POWER_MAX - 1) * clamp(h.passPower, 0, 1), paceMul = Math.min(this.passMul * 1.3 * charge * this.humanBallPace, this.humanPassCap);
-    if (mode === "forward" || moving) leadPoint(o.x, o.y, r, this.leadOut, mode === "forward" ? PASS_ASSIST.throughSpace : 0, this.leadRealPace ? paceMul : 1);
+    if (thr || moving) leadPoint(o.x, o.y, r, this.leadOut, mode === "forward" ? PASS_ASSIST.throughSpace : thr ? THROUGH.space : 0, this.leadRealPace ? paceMul : 1);
     else { this.leadOut.x = r.x; this.leadOut.y = r.y; }
     const d = Math.hypot(this.leadOut.x - o.x, this.leadOut.y - o.y);
-    this.humanLead = { x: this.leadOut.x, y: this.leadOut.y, speed: passSpeedFor(d, mode === "forward" ? PASS_ASSIST.arriveSpeed * 1.15 : PASS_ASSIST.arriveSpeed) * paceMul + (this.groundFriction - P.friction) * d, charge }; /* sand (beach) rolls dead sooner: the extra loss over d added back so it still arrives (0 on grass) */ // human passes zip like the shot (user: faster passing); hold-to-charge: tap = this pace, full hold = PASS_POWER_MAX ×
+    if (thr) this.markThrough(owner, tgt, this.leadOut.x, this.leadOut.y);
+    this.humanLead = { x: this.leadOut.x, y: this.leadOut.y, speed: passSpeedFor(d, thr ? PASS_ASSIST.arriveSpeed * 1.15 : PASS_ASSIST.arriveSpeed) * paceMul + (this.groundFriction - P.friction) * d, charge }; /* sand (beach) rolls dead sooner: the extra loss over d added back so it still arrives (0 on grass) */ // human passes zip like the shot (user: faster passing); hold-to-charge: tap = this pace, full hold = PASS_POWER_MAX ×
     this.doPass(owner, tgt, mode === "forward" ? 1.3 : 1);
     this.humanLead = null;
+  }
+  /** THROUGH: a human's Pass to `r` is a through ball: he is ahead, onside and running forward (or an off-ball runner), and the
+   *  stick is pushed forward past him or the Forward assist picked him. Pure read; no rng. */
+  private throughRun(o: SimPlayer, r: SimPlayer, h: HumanInput, assistPicked: boolean) {
+    const dir = this.dirY(o.team), run = r.vy * dir;
+    if ((r.y - o.y) * dir < THROUGH.ahead || this.isOffside(o.team, r.y)) return false;
+    if (!(run >= THROUGH.runV || (this.runners.has(r.id) && run >= THROUGH.runnerV))) return false;
+    if (!(assistPicked || (h.mag > 0.3 && (h.moveY * dir) / h.mag >= THROUGH.stickFwd))) return false;
+    leadPoint(o.x, o.y, r, this.leadOut, THROUGH.space);
+    return this.laneClear(o, this.leadOut.x, this.leadOut.y, THROUGH.lane); // a defender in the way: the plain pass to him instead
+  }
+  /** No outfield defender within `w` units of the lane from `from` to (x, y) (past the presser) nor 1.5 × w of the spot. */
+  private laneClear(from: SimPlayer, x: number, y: number, w: number) {
+    for (const fid of this.foes(from.team)) {
+      const f = this.players[fid]; if (f.isGK) continue;
+      if (dist(f.x, f.y, x, y) < w * 1.5 || (dist(f.x, f.y, from.x, from.y) >= 8 && segDist(f.x, f.y, from.x, from.y, x, y) < w)) return false;
+    }
+    return true;
+  }
+  /** THROUGH (AI team-mate → a HUMAN running forward, onside, ahead of the passer): writes the lead point (THROUGH.feedSpace
+   *  ahead of his run) into leadOut when no defender is within THROUGH.feedLane of the lane or the spot. Humans only; no rng. */
+  private throughFeed(from: SimPlayer, t: SimPlayer) {
+    const dir = this.dirY(from.team);
+    if (t.vy * dir < THROUGH.feedRunV || (t.y - from.y) * dir < THROUGH.feedAhead || this.isOffside(from.team, t.y)) return false;
+    if (this.beach || this.goalVenue.id === "futsal") return false; // sand stops a ground ball short; the court is too tight: to his feet as before
+    leadPoint(from.x, from.y, t, this.leadOut, THROUGH.feedSpace);
+    return this.laneClear(from, this.leadOut.x, this.leadOut.y, THROUGH.feedLane);
+  }
+  /** ASSIST: the last pass the scorer received from a team-mate within ASSIST.window real s. Bookkeeping only (no rng). */
+  private noteGoal(team: Team) {
+    const g = this.lastGoal, sc = this.scorerId, pp = this.pendPass;
+    const ok = !!sc && pp.from !== "" && pp.to === sc && pp.from !== sc && this.players[pp.from]?.team === team && this.players[sc]?.team === team && this.clock - pp.at <= ASSIST.window;
+    g.serial++; g.scorer = sc ?? ""; g.assist = ok ? pp.from : null; g.assistSlot = ok ? this.ids.indexOf(pp.from) : -1; g.cross = ok && pp.cross;
+    if (sc) { const e = this.touches[(this.touchSerial - 1) % this.touches.length]; e.assist = g.assist; e.assistSlot = g.assistSlot; }
+    if (ok) this.msg += " · Assist";
+    pp.from = "";
+  }
+  private markThrough(from: string, to: string, x: number, y: number) { const l = this.lastThrough; l.serial++; l.from = from; l.to = to; l.x = x; l.y = y; }
+  /** POST_CROSS: the near or far post spot (into postOut) the receiver can reach in the cross's flight with the better lead
+   *  over the nearest defender (tie → near), or null (the cross keeps its old landing). Pure read; no rng. */
+  private pickPost(from: SimPlayer, t: SimPlayer): "near" | "far" | null {
+    const gy = this.atkGoalY(from.team), dir = this.dirY(from.team), drag = P.friction * 0.35;
+    const runV = P.runSpeed * ROLE_MOVEMENT[t.role].speed * (this.humans.has(t.id) ? this.humanPace : 1);
+    let best: "near" | "far" | null = null, bestAdv = -Infinity, bx = 0, by = 0;
+    for (let k = 0; k < 2; k++) {
+      const s = postSpot(k === 1, from.x, gy, dir, this.postOut);
+      const D = dist(from.x, from.y, s.x, s.y), sp = clamp(D * 1.5 + 165, 250, 430), dur = -Math.log(Math.max(0.05, 1 - drag * D / sp)) / drag;
+      const arrive = dist(t.x, t.y, s.x, s.y) / runV;
+      if (arrive > dur + POST_CROSS.slack) continue;
+      let def = Infinity;
+      for (const fid of this.foes(from.team)) { const f = this.players[fid]; def = Math.min(def, dist(f.x, f.y, s.x, s.y) / (P.runSpeed * ROLE_MOVEMENT[f.role].speed)); }
+      if (def - arrive >= POST_CROSS.lead && def - arrive > bestAdv + 1e-9) { bestAdv = def - arrive; best = k === 1 ? "far" : "near"; bx = s.x; by = s.y; }
+    }
+    if (best) { this.postOut.x = bx; this.postOut.y = by; }
+    return best;
   }
   /** Long ball (hold Pass, owner Nov 4 2026): a lofted pass over the defenders to the best teammate at the distance the
    *  hold asks for (open, ahead, a runner in space, the stick's side), led into his run and timed to land soft at his feet;
@@ -1084,9 +1196,9 @@ export class MatchSim {
   /** Tackle assist (owner Nov 5 2026): a human's tackle that does not win it cleanly from the front / side knocks the ball
    *  loose instead of missing: off the carrier's foot toward the tackler (± up to ~35°), the carrier barred from the
    *  re-claim, so it is a 50/50 the tackler usually wins (TACKLE_ASSIST.pickup). Humans only; no allocation. */
-  private pokeAway(h: HumanInput, owner: string) {
+  private pokeAway(h: HumanInput, owner: string, spread = 1.2, say = "Poked it away!") {
     const u = this.players[h.id], b = this.ball;
-    const a = (this.rng() - 0.5) * 1.2, dx = u.x - b.x, dy = u.y - b.y, L = Math.hypot(dx, dy) || 1;
+    const a = (this.rng() - 0.5) * spread, dx = u.x - b.x, dy = u.y - b.y, L = Math.hypot(dx, dy) || 1;
     const c = Math.cos(a), sn = Math.sin(a), ux = dx / L, uy = dy / L, sp = TACKLE_ASSIST.pokeSpeed * (0.85 + this.rng() * 0.4);
     this.carrying = false; this.carryUntil = 0; this.windup = null; this.passRelease = null; this.passIntended = null;
     b.owner = null; this.endTrap(); b.target = null; b.intBy = null; b.height = 0; b.lofted = false; this.loftDur = 0;
@@ -1095,14 +1207,89 @@ export class MatchSim {
     this.possession = h.team; // his touch is the last touch
     this.lastFrom = owner; this.ballFlight = 0.1; this.deadT = 0;
     this.touch("tackle", h.id, owner, 0, Math.hypot(u.vx, u.vy));
-    this.msg = "Poked it away!"; this.msgT = 0.9;
+    this.msg = say; this.msgT = 0.9;
+  }
+  /** TACKLE_FX.aiWind: an AI defender right on a HUMAN carrier sets himself first (the telegraph: tackleFx windup, aiTackleSet)
+   *  and only then may his tackle roll land. No rng draw while he sets. Human carriers only. */
+  private aiSet(by: string, on: string) {
+    if (this.aiWindBy === by && this.aiWindOn === on) return this.aiWindT <= 0;
+    this.aiWindBy = by; this.aiWindOn = on; this.aiWindT = TACKLE_FX.aiWind; this.emitTackle("windup", by, on); return false;
+  }
+  /** 11v11 kid (default: the Tier 2 balance) or adult (the honest pre-Tier-2 tuning: HUMAN_DEFENCE_ADULT_11, HUMAN_SIDE_NEUTRAL:
+   *  the human's run at 1 with the 1.3 sprint, no lunge cap). Set by the sim's owner before the first human joins
+   *  (fieldRuntime.joinMatch reads matchModeSetting); a no-op on the other formats. Never changes an AI-only match. */
+  setElevenMode(mode: ElevenMode) {
+    this.elevenMode = mode === "adult" ? "adult" : "kid";
+    if (this.goalVenue.id !== "11v11") return;
+    const adult = this.elevenMode === "adult";
+    this.humanDefence = adult ? HUMAN_DEFENCE_ADULT_11 : HUMAN_DEFENCE["11v11"];
+    this.humanSide = adult ? HUMAN_SIDE_NEUTRAL : HUMAN_SIDE["11v11"];
+    this.humanPace = this.humanSide.pace; this.humanSprintBoost = 1.3 / this.humanSide.pace; this.humanLungeCap = !adult;
+  }
+  /** Tackle telegraph for the rig / HUD: 0 = not winding up, else 0.01..1 through the set (TACKLE_FX.wind). */
+  tackleWindupOf(id: string) { const w = this.tackleWinds.get(id); return w && w.armed ? Math.max(0.01, Math.min(1, 1 - w.t / TACKLE_FX.wind)) : 0; }
+  /** The HUD's "Tackle coming!" cue (feature-detected by the live HUD): a tackle being set right now, or null. `on` = the carrier's
+   *  slot (id), `by` = the tackler's, `t` = 0..1 through the set. An AI defender setting on a human carrier first, else a human
+   *  tackler's set. One reused object (no allocation). On a friend's puppet only human tacklers' sets arrive (snapshot bits). */
+  tackleWindup: { on: string; by: string; t: number } | null = null;
+  /** Rewrites tackleWindup (each step with humans, and on a puppet when the snapshot changes it). */
+  private refreshWindup() {
+    const o = this.windupOut;
+    if (this.aiWindT > 0 && this.aiWindBy) { o.on = this.aiWindOn; o.by = this.aiWindBy; o.t = Math.max(0.01, Math.min(1, 1 - this.aiWindT / TACKLE_FX.aiWind)); this.tackleWindup = o; return; }
+    for (const [id, w] of this.tackleWinds) if (w.armed) { o.on = w.on; o.by = id; o.t = Math.max(0.01, Math.min(1, 1 - w.t / TACKLE_FX.wind)); this.tackleWindup = o; return; }
+    this.tackleWindup = null;
+  }
+  private windupOut = { on: "", by: "", t: 0 };
+  /** The AI defender setting himself on a human carrier right now (TACKLE_FX.aiWind), or null. */
+  get aiTackleSet(): string | null { return this.aiWindT > 0 && this.aiWindBy ? this.aiWindBy : null; }
+  private windingOn(carrier: string) { for (const w of this.tackleWinds.values()) if (w.armed && w.on === carrier) return true; return false; }
+  private windOf(id: string) { let w = this.tackleWinds.get(id); if (!w) this.tackleWinds.set(id, w = { t: 0, on: "", armed: false, ahead: true, serial: 0, kind: 0 }); return w; }
+  private emitTackle(kind: TackleFxKind, by: string, on: string) {
+    const f = this.tackleFx, p = this.players[by]; f.serial++; f.kind = kind; f.by = by; f.on = on; f.x = p ? p.x : 0; f.y = p ? p.y : 0;
+    if (kind !== "windup") { const w = this.tackleWinds.get(by); if (w) { w.serial++; w.kind = TACKLE_KINDS.indexOf(kind); } }
+  }
+  /** matchNet (SNAP_TACKLE): human `id`'s tackle bits: the body value carries winding (bit 13) + result serial mod 4 (14-15), the
+   *  popup value the result kind (14-15). 0 for a human who never tackled. */
+  tackleNetBits(id: string, body: boolean) {
+    const w = this.tackleWinds.get(id); if (!w) return 0;
+    return body ? (w.armed ? 8192 : 0) | ((w.serial & 3) << 14) : (w.kind & 3) << 14;
+  }
+  /** A friend's puppet (never stepped): human `id`'s tackle from the owner's snapshot (winding now, result bumps, result kind). */
+  netTackle(id: string, winding: boolean, bumps: number, kind: number) {
+    const w = this.windOf(id), was = w.armed, on = this.ball.owner ?? "";
+    w.armed = winding; w.t = winding ? (was ? w.t : TACKLE_FX.wind) : 0;
+    if (winding && !was) this.emitTackle("windup", id, on);
+    for (let i = 0; i < bumps; i++) this.emitTackle(TACKLE_KINDS[kind & 3] ?? "steal", id, on);
+    this.refreshWindup();
   }
   /** QA round 2 (balance): knob `k` of the AI defending against human team `team`, at its current strength (humanDefence.ts). */
   private humanDefenceMul(k: "intercept" | "lane" | "read" | "tackle" | "attack" | "keeper", team: Team) {
-    const d = this.humanDefence, foe: Team = team === "gold" ? "blue" : "gold", s0 = this.humanScore0;
+    const d = this.humanDefence, foe: Team = team === "gold" ? "blue" : "gold";
+    return atStrength(d[k], defenceStrength(d, this.humanSince < 0 ? 0 : this.clock - this.humanSince, this.humanGoalLead(team), this.humanOn[foe] > 0));
+  }
+  /** Tier 2 (HUMAN_CONTEST): the extra heavy-touch chance on an AI claim with a HUMAN opponent within HUMAN_CONTEST.r, so
+   *  he gets a contest for the ball (fading to 0 at the edge). Pure; 0 with no human foe near. */
+  private contestLoose(cp: SimPlayer) {
+    const C = this.humanContest;
+    let best = Infinity;
+    for (const h of this.humans.values()) { if (h.team === cp.team) continue; const q = this.players[h.id]; if (q.isGK) continue; best = Math.min(best, dist(q.x, q.y, cp.x, cp.y)); }
+    return best < C.r ? C.loose * (1 - 0.5 * best / C.r) : 0;
+  }
+  /** Tier 2 (HUMAN_CHASE.ease): × an AI defender's tackle / lane read against chasing side `t` (the leading human side's AI
+   *  team-mates ease off, as a side two up does). 1 when `t` is not chasing. */
+  private chaseEase(t: Team) { const k = this.chaseK(t); return k > 0 ? atStrength(this.humanChase.ease, k) : 1; }
+  /** Team `team`'s goal margin since the first human joined (> 0 = ahead). */
+  private humanGoalLead(team: Team) {
+    const foe: Team = team === "gold" ? "blue" : "gold", s0 = this.humanScore0;
     if (this.score.gold < s0.gold || this.score.blue < s0.blue) { s0.gold = 0; s0.blue = 0; } // a new game (beach full time / reset)
-    const lead = (this.score[team] - s0[team]) - (this.score[foe] - s0[foe]);
-    return atStrength(d[k], defenceStrength(d, this.humanSince < 0 ? 0 : this.clock - this.humanSince, lead, this.humanOn[foe] > 0));
+    return (this.score[team] - s0[team]) - (this.score[foe] - s0[foe]);
+  }
+  /** Tier 2 (HUMAN_CHASE): 0..1, how hard AI side `t` (no human on it) chases the human side that leads it by 2+ goals since
+   *  the join. 0 in AI-only matches, with humans on both sides, or when the humans are level / behind. Pure (no rng). */
+  private chaseK(t: Team) {
+    const foe: Team = t === "gold" ? "blue" : "gold";
+    if (!this.humans.size || this.humanOn[t] > 0 || this.humanOn[foe] <= 0) return 0;
+    return chaseStrength(this.humanChase, this.humanGoalLead(foe), false);
   }
   /** An AI tackle on a HUMAN carrier (owner Nov 4 2026: hard to be tackled): one roll; it wins at HUMAN_GUARD.tackleMul
    *  of the old rate, and a roll that would have won before is a near miss: the "Slipped away!" serial (rate-limited). */
@@ -1141,8 +1328,11 @@ export class MatchSim {
   private humanMovesStep() {
     const rdt = this.realDt, owner = this.ball.owner, carrier = owner ? this.players[owner] : null;
     let changed = false;
+    if (this.aiWindT > 0) this.aiWindT = Math.max(0, this.aiWindT - rdt);
+    if (this.aiWindBy) { const a = this.players[this.aiWindBy]; if (!carrier || owner !== this.aiWindOn || !a || dist(a.x, a.y, carrier.x, carrier.y) > P.tackleDist * 1.6) this.aiWindBy = ""; } // he lost / passed it, or the defender dropped off
     for (const h of this.humans.values()) {
       tickHumanTimers(h, rdt);
+      { const w = this.tackleWinds.get(h.id); if (w && w.armed) { w.t = Math.max(0, w.t - rdt); if (owner !== w.on) w.armed = false; } }
       this.humanBody(h, owner, carrier, rdt);
       // A short protection window after he gets the ball (HUMAN_GUARD.receive): nobody can tackle him at once.
       if (owner === h.id) { if (!h.hadBall) { h.hadBall = true; h.guard = HUMAN_GUARD.receive; } } else h.hadBall = false;
@@ -1164,6 +1354,7 @@ export class MatchSim {
     if (changed) { this.pressSet.clear(); for (const h of this.humans.values()) if (h.pressT > 0) { if (h.pressA) this.pressSet.add(h.pressA); if (h.pressB) this.pressSet.add(h.pressB); } }
     if (this.dazed.size) this.dazed.forEach(this.ageDazed);
     if (this.stumbled.size) this.stumbled.forEach(this.ageStumbled);
+    this.refreshWindup();
   }
   private ageDazed = (t: number, id: string) => { if (t - this.realDt <= 0) this.dazed.delete(id); else this.dazed.set(id, t - this.realDt); };
   private ageStumbled = (t: number, id: string) => { if (t - this.realDt <= 0) this.stumbled.delete(id); else this.stumbled.set(id, t - this.realDt); };
@@ -1204,7 +1395,50 @@ export class MatchSim {
       h.call = open ? 0 : h.call; // an open call is answered once
       if (open) return h.id;
     }
+    // Tier 1 STARVED: a human who has gone SOFT_FEED.starve real s without the ball counts as calling when he is open.
+    for (const h of this.humans.values()) {
+      if (h.team !== o.team || h.id === owner || this.players[h.id].isGK || this.idleHuman(h.id)) continue;
+      const at = this.hBallAt.get(h.id) ?? this.clock;
+      if (this.clock - at < SOFT_FEED.starve || !this.feedOpen(o, this.players[h.id], SOFT_FEED.starveD)) continue;
+      this.hBallAt.set(h.id, this.clock - SOFT_FEED.starve + SOFT_FEED.retry); // answered: not again for `retry` s
+      return h.id;
+    }
+    // Tier 2 GIVE-AND-GO (HUMAN_FEED.giveGo): the AI team-mate he just passed to plays it straight back when he is open.
+    if (this.humanFeed.giveGo && this.lastFrom && this.humans.has(this.lastFrom) && !o.isGK && (this.feedCool[o.team] <= 0 || this.humanFeed.giveGoFree)) {
+      const t = this.players[this.lastFrom];
+      if (t.team === o.team && !t.isGK && !this.idleHuman(t.id) && this.feedOpen(o, t, SOFT_FEED.maxD)) return t.id;
+    }
     return null;
+  }
+  /** Tier 1 SOFT_FEED: is human team-mate `t` an open, onside pass for AI carrier `o` within `maxD`? Pure geometry. */
+  private feedOpen(o: SimPlayer, t: SimPlayer, maxD: number) {
+    if (this.isOffside(o.team, t.y)) return false;
+    const d = dist(o.x, o.y, t.x, t.y);
+    if (d < SOFT_FEED.minD || d > maxD) return false;
+    for (const fid of this.foes(o.team)) {
+      const f = this.players[fid];
+      if (dist(f.x, f.y, t.x, t.y) < SOFT_FEED.open) return false;
+      if (f.isGK || dist(f.x, f.y, o.x, o.y) < 10) continue; // the presser on his toes doesn't shadow the lane
+      if (segDist(f.x, f.y, o.x, o.y, t.x, t.y) < this.T.laneReq) return false;
+    }
+    return true;
+  }
+  /** Tier 1 SOFT RECEIVER for an AI carrier's bestPass / safePass: the open human team-mate (nearest), at most one AI pass in
+   *  SOFT_FEED.every; null in AI-only matches (no rng, no state touched). `minFwd`: bestPass keeps its forward-only rule. */
+  private softFeed(fromId: string, minFwd: number): string | null {
+    if (!this.humans.size) return null;
+    const o = this.players[fromId];
+    if (this.humanOn[o.team] <= 0 || this.humans.has(fromId) || this.feedCool[o.team] > 0) return null;
+    const gy = this.atkGoalY(o.team);
+    let best: string | null = null, bd = Infinity;
+    for (const h of this.humans.values()) {
+      if (h.team !== o.team || h.id === fromId || (h.id === this.lastFrom && !this.humanFeed.giveGo) || this.idleHuman(h.id)) continue; // a parked stick is not asking for it (Tier 2 giveGo: the return of his one-two)
+      const t = this.players[h.id];
+      if (t.isGK || Math.abs(o.y - gy) - Math.abs(t.y - gy) < minFwd || !this.feedOpen(o, t, SOFT_FEED.maxD)) continue;
+      const d = dist(o.x, o.y, t.x, t.y);
+      if (d < bd) { bd = d; best = h.id; }
+    }
+    return best;
   }
   // Each human's steering target from his stick. No stick: he holds his spot (he is in control, not the AI), except
   // that a pass played to him is still met (the receiver run is an assist) and a restart he takes is AI-walked.
@@ -1223,7 +1457,8 @@ export class MatchSim {
         // Loose ball near him (TACKLE_ASSIST magnet): the stick pointing at it, or standing idle right by it, takes him onto it.
         const bx = b.x - p.x, by = b.y - p.y, bd = Math.hypot(bx, by);
         if (bd > 0.5 && (h.mag > 0.05 ? bd < TACKLE_ASSIST.magnetR && (bx * h.moveX + by * h.moveY) / (bd * h.mag) >= TACKLE_ASSIST.magnetCos : bd < TACKLE_ASSIST.idleR)) {
-          this.targets[id] = { x: clamp(b.x + b.vx * 0.1, 14, 256), y: clamp(b.y + b.vy * 0.1, 12, 388) };
+          // (Tier 1: down to y 6 / 394, so a ball resting just inside the goal line is reachable, not a 6 s stand-off)
+          this.targets[id] = { x: clamp(b.x + b.vx * 0.1, 14, 256), y: clamp(b.y + b.vy * 0.1, 6, 394) };
           continue;
         }
       }
@@ -1386,7 +1621,7 @@ export class MatchSim {
       this.integrate(dt);
       if (this.fullTime <= 0) {
         this.score.gold = 0; this.score.blue = 0; this.period = 1; this.gameStart = this.clock; this.periodEnd = this.clock + BEACH_PERIOD;
-        this.stageKickoff(this.results.length % 2 ? "blue" : "gold");
+        this.periodKickoff(this.results.length % 2 ? "blue" : "gold");
         this.teach("New game on Sharks Beach", "Five a side including the keeper, all barefoot on the sand");
       }
       return true;
@@ -1397,13 +1632,13 @@ export class MatchSim {
     if (this.period < 3) {
       this.period++; this.periodEnd += BEACH_PERIOD;
       this.teach(`End of period ${this.period - 1} of 3`, "A beach match has three periods of 12 minutes, with short breaks to drink water and hear the coach");
-      this.stageKickoff(this.period === 2 ? "blue" : "gold");
+      this.periodKickoff(this.period === 2 ? "blue" : "gold");
       return false;
     }
     if (this.period === 3 && level) {
       this.period = 4; this.periodEnd += BEACH_EXTRA;
       this.teach("Level after three periods: extra time!", "FIFA beach matches can't end in a draw: 3 minutes of extra time, and no golden goal");
-      this.stageKickoff("blue");
+      this.periodKickoff("blue");
       return false;
     }
     const result: { gold: number; blue: number; pens?: { gold: number; blue: number }; extra: boolean } = { gold: this.score.gold, blue: this.score.blue, extra: this.period === 4 };
@@ -1428,6 +1663,8 @@ export class MatchSim {
     this.period = 5; this.fullTime = BEACH_FULL_TIME; this.restart = null; this.msg = "Full time"; this.msgT = BEACH_FULL_TIME;
     return true;
   }
+  /** Beach period / extra-time / new-game kick-off: the quick reset with a human joined (Tier 1), else the fetch-and-carry. */
+  private periodKickoff(team: Team) { if (this.humans.size) this.stageQuickKickoff(team); else this.stageKickoff(team); }
   private stageKickoff(conceding: Team) {
     // the ball STAYS where it lies (in the net) — the taker fetches it and carries it to
     // the centre spot, so the reset visibly travels instead of teleporting (see restartLogic)
@@ -1565,6 +1802,20 @@ export class MatchSim {
     }
     return best ? { p: best, d: bd } : null;
   }
+  /** Tier 1 IDLE: a human whose stick has been neutral SOFT_FEED.idle real s and who is not the ball's receiver. */
+  private idleHuman(id: string) { return this.humans.has(id) && (this.hIdle.get(id) ?? 0) >= SOFT_FEED.idle && this.ball.target !== id && this.ball.intBy !== id; }
+  /** nearestOfTeam that passes over idle humans (an AI team-mate presses / chases / supports instead). Same as nearestOfTeam
+   *  without a human joined. */
+  private nearestActive(team: Team, x: number, y: number, except: string | null = null) {
+    if (!this.humans.size) return this.nearestOfTeam(team, x, y, except);
+    let bd = Infinity, best: string | null = null;
+    for (const id of this.mates(team)) {
+      if (this.players[id].isGK || id === except || this.idleHuman(id)) continue;
+      const d = dist(this.players[id].x, this.players[id].y, x, y);
+      if (d < bd) { bd = d; best = id; }
+    }
+    return best ?? this.nearestOfTeam(team, x, y, except);
+  }
   private nearestOfTeam(team: Team, x: number, y: number, except: string | null = null) {
     let bd = Infinity;
     let best: string | null = null;
@@ -1578,6 +1829,7 @@ export class MatchSim {
 
   // penetrating pass: a forward, open, un-blocked option (progresses the attack)
   private bestPass(fromId: string): string | null {
+    if (this.humans.size) { const soft = this.softFeed(fromId, 5); if (soft) return soft; } // Tier 1 soft receiver (humans only)
     const from = this.players[fromId];
     const gy = this.atkGoalY(from.team);
     let best: string | null = null;
@@ -1646,7 +1898,8 @@ export class MatchSim {
     for(const id of this.mates(from.team)){
       const t=this.players[id];if(id===fromId||t.isGK||this.isOffside(from.team,t.y))continue;
       const width=Math.abs(t.x-from.x),d=dist(t.x,t.y,from.x,from.y);
-      const cross=!noCross&&Math.abs(from.x-135)>62&&Math.abs(from.y-gy)<125&&Math.abs(t.x-135)<55&&Math.abs(t.y-gy)<80&&width>48;
+      const hc=this.humans.has(id)&&this.humanOn[from.team]>0?this.humanSide.crossWide:0; // Tier 2: a human in the box is a cross target from further across (near / far post)
+      const cross=!noCross&&Math.abs(from.x-135)>62&&Math.abs(from.y-gy)<125&&Math.abs(t.x-135)<55+hc&&Math.abs(t.y-gy)<80+hc*.5&&width>48-hc;
       const switching=!noSwitch&&width>110&&(from.x-135)*(t.x-135)<0&&Math.abs(t.y-from.y)<95&&crowd>=2;
       if((!cross&&!switching)||d>250||d<65)continue;
       const tx=clamp(t.x+t.vx*.18,15,255),ty=clamp(t.y+t.vy*.18,16,384);
@@ -1654,7 +1907,7 @@ export class MatchSim {
       let defender=Infinity;
       for(const fid of foes){const f=this.players[fid];defender=Math.min(defender,.18+dist(f.x+f.vx*.18,f.y+f.vy*.18,tx,ty)/(P.runSpeed*ROLE_MOVEMENT[f.role].speed));}
       const advantage=defender-arrival;if(advantage<.12)continue;
-      const value=advantage*35+(cross?20:width*.09)-d*.025;
+      const value=advantage*35+(cross?20:width*.09)-d*.025+(hc>0&&cross?15:0);
       if(value>bestValue){bestValue=value;best=id;this.aerialKind=cross?'cross':'switch';}
     }
     return best;
@@ -1662,6 +1915,7 @@ export class MatchSim {
   // keep-ball pass: prefer an OPEN team-mate, but with a strong FORWARD/lateral bias so
   // possession is worked UP the pitch (build-up), not endlessly recycled to the keeper.
   private safePass(fromId: string): string | null {
+    if (this.humans.size) { const soft = this.softFeed(fromId, -40); if (soft) return soft; } // Tier 1 soft receiver (humans only)
     const from = this.players[fromId];
     const gy = this.atkGoalY(from.team);
     // overload read: when the carrier's zone is crowded with defenders, the far side of
@@ -1719,6 +1973,7 @@ export class MatchSim {
     if(this.combination&&!(fromId===this.combination.wall&&target===this.combination.runner))this.combination=null;
     this.carrying=false;this.carryUntil=0;
     this.passRelease=target?{id:fromId,x:from.x,y:from.y,tx,ty,target}:null;
+    this.crossPost.active = false; if (target) { const pp = this.pendPass; pp.from = fromId; pp.to = target; pp.at = this.clock; pp.cross = false; } // assist detection (bookkeeping only)
     this.offsideFree = null; this.offsidePass = null; // any new kick ends a restart's offside exemption and a pending call
     this.gkFeetId = null; // 7v7: the keeper's back-pass touch ends with his release
     this.windup = null; this.passIntended = null; this.headerBall = false; this.acro = null; this.saveRoll = -1; this.powerShot = false; this.landCap = 0;
@@ -1769,15 +2024,19 @@ export class MatchSim {
     const t = this.players[toId];
     const offLoft = this.defend.releaseRead > 0 && !t.isGK && this.isOffside(from.team, t.y) ? t : null; // 11v11: a ball over the top to a man already beyond the line is flagged too
     const dir = this.dirY(from.team);
-    const tx = clamp(t.x+(kind==='through'?0:t.vx*.18),15,255);
-    const ty = clamp(t.y+(kind==='through'?dir*14:t.vy*.18),16,384);
+    let tx = clamp(t.x+(kind==='through'?0:t.vx*.18),15,255);
+    let ty = clamp(t.y+(kind==='through'?dir*14:t.vy*.18),16,384);
+    // Near / far-post cross (Nov 7 2026, POST_CROSS): to a human, or AI-to-AI on the 9v9 / 11v11, only with a human joined.
+    const post = kind === "cross" && this.humans.size > 0 && (this.humans.has(toId) || this.goalVenue.id === "9v9" || this.goalVenue.id === "11v11") ? this.pickPost(from, t) : null;
+    if (post) { tx = this.postOut.x; ty = this.postOut.y; }
     const D = dist(from.x, from.y, tx, ty);
     const speed = clamp(D * 1.5 + 165, 250, 430);
     // (beach: a small court and a light ball — flatter lifts, still over a defender's head)
     const peak=this.beach?(kind==='cross'?2.5:kind==='switch'?Math.min(3.2,2.2+D*.004):2.9):kind==='cross'?3.2:kind==='switch'?Math.min(5,3+D*.006):4.4;
     this.launch(fromId, tx, ty, speed, 0, toId, peak);
     if (offLoft) this.offsidePass = { id: toId, x: offLoft.x, y: offLoft.y }; // whistled if he is the one who meets it
-    this.passIntended = toId; this.headerBall = kind === "cross";
+    this.passIntended = toId; this.headerBall = kind === "cross"; this.pendPass.cross = kind === "cross";
+    if (post) { const c = this.crossPost; c.serial++; c.side = post; c.to = toId; c.x = tx; c.y = ty; c.active = true; }
     // In range of goal a cross or ball over the top is sometimes met first time (acrobatic finish).
     // Beach: much more often (volleys and overhead kicks are the sand game's signature finishes), and a ball over the
     // top may be met in the air too, so an overhead kick can meet it above head height.
@@ -1800,6 +2059,10 @@ export class MatchSim {
   private doPass(fromId: string, toId: string, firm = 1) {
     if (this.defer(fromId, "pass", toId, firm)) return;
     { const alt = this.reReadRun(fromId, toId); if (alt) { this.doPass(fromId, alt, firm); return; } } // 11v11: see reReadRun
+    if (this.humans.size && this.humanOn[this.players[fromId].team] > 0 && !this.humans.has(fromId)) { // Tier 1: the soft-feed cap
+      const tm = this.players[fromId].team;
+      this.feedCool[tm] = this.humans.has(toId) ? SOFT_FEED.every - 1 : Math.max(0, this.feedCool[tm] - 1);
+    }
     const from = this.players[fromId];
     const t = this.players[toId];
     const dir = this.dirY(from.team);
@@ -1826,6 +2089,9 @@ export class MatchSim {
     let ty = t.y + dir * 5 + oy; // lead the runner a touch
     // [combos] a through ball / cut-back is played into the runner's path, not to his feet
     const comboLead = this.combos ? this.combos.passLead(fromId, toId) : null; if (comboLead) { tx = comboLead.x; ty = comboLead.y; }
+    // Through ball to a running HUMAN (THROUGH.feed*): his AI team-mate leads him into the space ahead (humans only; no rng).
+    const feedThr = !comboLead && !this.humanLead && this.humans.size > 0 && this.humans.has(toId) && !this.humans.has(fromId) && !from.isGK && !offAt && this.throughFeed(from, t);
+    if (feedThr) { tx = this.leadOut.x; ty = this.leadOut.y; }
     // Pass assist (a human's pass): led into the runner's space and weighted to arrive (passAssist.ts).
     const assisted = this.humanLead && this.humans.has(fromId) ? this.humanLead : null;
     if (assisted) { tx = assisted.x; ty = assisted.y; }
@@ -1860,7 +2126,8 @@ export class MatchSim {
       const pInter = clamp(risk - (laneD / laneW) * risk, 0, risk);
       // A human's pass to the highlighted target (Pass ring / Forward marker) is cut out half as often (PASS_HELP, kids).
       const shown = assisted ? this.humanTargets.get(fromId) : undefined, help = (shown && (shown.pass.id === toId || shown.forward.id === toId) ? PASS_HELP.interceptMul : 1) * (humanTeam ? this.humanDefenceMul("intercept", humanTeam) : 1);
-      if (this.rng() < pInter * (long > 0 ? 0.25 : lift ? 0.6 : 1) * help) intercepted = true;
+      const ease = this.humans.size && !assisted ? this.chaseEase(from.team) : 1; // Tier 2 (HUMAN_CHASE.ease): the leading human side's AI eases off
+      if (this.rng() < pInter * (long > 0 ? 0.25 : lift ? 0.6 : 1) * help * ease) intercepted = true;
     }
     if (lift || (this.beach && from.isGK && D > 55)) {
       // Lifted pass / keeper's throw: the same pace and air drag as a loft, flight timed to land at the target.
@@ -1879,6 +2146,7 @@ export class MatchSim {
       this.launch(fromId, tx, ty, speed, height, toId);
     }
     this.passIntended = toId;
+    if (feedThr && !intercepted) this.markThrough(fromId, toId, tx, ty);
     if (offAt && !intercepted) this.offsidePass = { id: toId, x: offAt.x, y: offAt.y }; // whistled when he receives it
     if (this.ai.teach && t.isGK && !from.isGK && !intercepted && pressure < P.pressDist) this.teach(this.notes.keeper[0], this.notes.keeper[1], "keeper", 70);
     if (this.ai.coach7 && t.isGK && !from.isGK && !intercepted) { this.seven.backPasses++; this.teach(SEVEN_NOTES.backPass[0], SEVEN_NOTES.backPass[1], "keeper7", 60); } // 7v7: bld_7_usekeeper
@@ -1911,6 +2179,8 @@ export class MatchSim {
     const distGoal = dist(from.x, from.y, 135, gy);
     const angle = Math.abs(from.x - 135);
     let xg = clamp(0.34 - (distGoal - 28) * 0.0035, 0.05, 0.34) * clamp(1.15 - angle / 60, 0.35, 1) * this.T.finish * xgMul * this.ai.finishMul; // [combos] xgMul
+    if (this.humans.size) { const ck = this.chaseK(from.team); if (ck > 0) xg *= atStrength(this.humanChase.finish, ck); } // Tier 2: HUMAN_CHASE.finish (humans only)
+    if (this.humans.size && this.humanOn[from.team] > 0 && this.humanOn[from.team === "gold" ? "blue" : "gold"] <= 0) xg *= this.humanSide.finish; // Tier 2: the human's AI team-mates finish (HUMAN_SIDE)
     // Beach: game state — a side two up protects its lead (fewer bodies forward, a worse chance), a side behind throws
     // everyone forward (the keeper included). Keeps the high-scoring sand game a contest instead of a runaway.
     if (this.beach) { const lead = from.team === "gold" ? this.score.gold - this.score.blue : this.score.blue - this.score.gold; xg *= lead >= 2 ? BEACH_LEAD_XG[0] : lead === 1 ? BEACH_LEAD_XG[1] : lead <= -1 ? BEACH_LEAD_XG[2] : 1; }
@@ -2129,6 +2399,8 @@ export class MatchSim {
     this.passTargetId = null;
     if (this.humans.size) {
       const owner = this.ball.owner, h = owner ? this.humans.get(owner) : undefined;
+      for (const hu of this.humans.values()) this.hIdle.set(hu.id, hu.mag > 0.05 ? 0 : (this.hIdle.get(hu.id) ?? 0) + this.realDt); // Tier 1 idle clock
+      if (h && owner) this.hBallAt.set(owner, this.clock);
       this.updateCalls(dt); // teammates calling for the ball (read by the assist below)
       for (const [id, t] of this.humanTargets) if (id !== owner && (t.pass.id || t.forward.id)) { t.pass.id = t.forward.id = null; }
       if (h && owner) { this.refreshHumanTargets(owner, h, dt); this.passTargetId = this.humanTargets.get(owner)?.pass.id ?? null; }
@@ -2195,6 +2467,19 @@ export class MatchSim {
     return n;
   }
   /** The extra pass: an open, onside team-mate in a clear lane whose chance clearly beats the shooter's (futsalAI). */
+  /** Tier 2 (HUMAN_FEED.square): an AI carrier about to shoot squares it to an open, onside HUMAN team-mate whose chance is at
+   *  least `square` × his own (no rng: AI-only matches never get here). */
+  private humanSquare(ownerId: string): string | null {
+    const o = this.players[ownerId];
+    if (this.humanFeed.square <= 0 || this.humanOn[o.team] <= 0 || this.humans.has(ownerId)) return null;
+    const gy = this.atkGoalY(o.team), own = chanceQuality(o.x, o.y, gy) * laneFactor(this.shotBlockers(o.team, o.x, o.y, gy));
+    for (const h of this.humans.values()) {
+      const t = this.players[h.id];
+      if (h.team !== o.team || t.isGK || this.idleHuman(h.id) || !this.feedOpen(o, t, 120)) continue;
+      if (chanceQuality(t.x, t.y, gy) * laneFactor(this.shotBlockers(o.team, t.x, t.y, gy)) >= own * this.humanFeed.square) return h.id;
+    }
+    return null;
+  }
   private extraPassTarget(ownerId: string): string | null {
     if (this.rng() >= this.ai.extraPass) return null;
     const o = this.players[ownerId], gy = this.atkGoalY(o.team);
@@ -2415,10 +2700,12 @@ export class MatchSim {
   private ballLogic(dt: number) {
     this.deciding = true;
     try { this.ballLogicStep(dt); } finally { this.deciding = false; }
+    if (this.humans.size) this.refreshWindup(); // a set started / resolved this step shows at once
   }
   private ballLogicStep(dt: number) {
     let owner = this.ball.owner;
     if (this.noDirect && owner !== null && owner !== this.noDirect) this.noDirect = null; // the restart taker lost it first
+    if (owner !== null && this.pendPass.from !== "" && owner !== this.pendPass.to) this.pendPass.from = ""; // assist: someone else has it now
 
     // ---- HUMAN tackle (any human pressing Tackle while an opponent has the ball) ----
     // A lunge: right on the carrier (with a mild assist reach, PASS_ASSIST.tackleReach) is a good chance to win it.
@@ -2429,27 +2716,41 @@ export class MatchSim {
         if (h.tackle <= 0) continue;
         if (h.tackleRec > 0) continue; // recovering from a missed lunge: the press stays buffered for a moment
         h.tackle = 0;
-        if (this.players[owner].isGK && this.keeperHands) { h.lunge = 0; continue; } // the ball is in the keeper's hands
+        const w = this.windOf(h.id); if (w.armed && w.on !== owner) w.armed = false;
+        if (this.players[owner].isGK && this.keeperHands) { h.lunge = 0; w.armed = false; continue; } // the ball is in the keeper's hands
         const u = this.players[h.id], o = this.players[owner], d = dist(u.x, u.y, o.x, o.y);
-        if (this.humans.get(owner)?.trick) { h.tackleRec = TACKLE.recover; h.lunge = 0; continue; } // fooled by a human's trick
+        if (this.humans.get(owner)?.trick) { h.tackleRec = TACKLE.recover; h.lunge = 0; if (w.armed) { w.armed = false; this.emitTackle("stumble", h.id, owner); } continue; } // fooled by a human's trick
         // Easier tackling (owner Nov 4 2026, kid-friendly): reach × TACKLE.reachMul, auto-aimed at the carrier (the lunge
         // turns him whatever the stick says). No steals from range.
         // Tackle assist (owner Nov 5 2026, TACKLE_ASSIST): out of reach but within assistR, or the carrier still protected,
         // he lunges at the carrier with the press armed; in reach from the front / side it is a clean win or a poke-away,
         // from behind a short-recovery miss; just after an AI tackle on him ("get it back") it almost always wins.
-        const back = h.backT > 0;
-        if (d >= (P.tackleDist + PASS_ASSIST.tackleReach) * TACKLE.reachMul || (this.protect > 0 && !back)) {
+        const back = h.backT > 0, reach = (P.tackleDist + PASS_ASSIST.tackleReach) * TACKLE.reachMul;
+        if (d >= reach * (w.armed ? TACKLE_FX.slack : 1) || (this.protect > 0 && !back)) {
+          if (w.armed && (d >= reach * TACKLE_FX.escape || w.t <= 0)) { // he got away from the set: a stumble, quickly back up
+            w.armed = false; h.lunge = 0; h.tackleRec = TACKLE_FX.stumble; this.emitTackle("stumble", h.id, owner); this.msg = "So close!"; this.msgT = 0.7; continue;
+          }
           if (d < TACKLE_ASSIST.assistR && h.lunge <= 0) h.lunge = TACKLE_ASSIST.lunge;
+          if (w.armed) h.tackle = INPUT_BUFFER;
           continue;
         }
+        // Wind-up (Nov 7 2026, TACKLE_FX): in reach he SETS first (a readable telegraph, still tracking the carrier on the
+        // lunge), then the tackle resolves with the same one roll as before. The carrier can cut, shield, trick or pass away.
+        // front / side: the carrier's heading (his attacking direction when he stands) against carrier → tackler, read when
+        // he SETS (the side he committed from; the carrier running on during the set does not turn it into one from behind)
+        const ov = Math.hypot(o.vx, o.vy), hx = ov > 5 ? o.vx / ov : 0, hy = ov > 5 ? o.vy / ov : this.dirY(o.team);
+        if (!w.armed) { w.armed = true; w.on = owner; w.t = TACKLE_FX.wind; w.ahead = d > 0.01 ? ((u.x - o.x) * hx + (u.y - o.y) * hy) / d >= TACKLE_ASSIST.behindCos : true; this.emitTackle("windup", h.id, owner); }
+        if (w.t > 0) { h.tackle = INPUT_BUFFER; h.lunge = Math.max(h.lunge, w.t + 0.05); continue; }
+        w.armed = false;
         h.lunge = 0;
         h.faceX = (o.x - u.x) / (d || 1); h.faceY = (o.y - u.y) / (d || 1); // auto-aim
-        // front / side: the carrier's heading (his attacking direction when he stands) against carrier → tackler
-        const ov = Math.hypot(o.vx, o.vy), hx = ov > 5 ? o.vx / ov : 0, hy = ov > 5 ? o.vy / ov : this.dirY(o.team);
-        const ahead = d > 0.01 ? ((u.x - o.x) * hx + (u.y - o.y) * hy) / d >= TACKLE_ASSIST.behindCos : true;
-        if (this.rng() >= (back ? TACKLE_ASSIST.backChance : ahead ? TACKLE_ASSIST.front : TACKLE_ASSIST.chanceAway)) {
-          if (ahead || back) { this.pokeAway(h, owner); owner = null; break; } // not a miss: the ball is knocked loose
-          h.tackleRec = TACKLE_ASSIST.recover; continue; // from behind: a miss, retried after a short recovery
+        const ahead = w.ahead || (d > 0.01 ? ((u.x - o.x) * hx + (u.y - o.y) * hy) / d >= TACKLE_ASSIST.behindCos : true); // either end of the set counts (kid-friendly)
+        // Results (TACKLE_FX): a clean steal; from the front / side the top TACKLE_TUNE.deflect of the old clean share is a
+        // deflection (loose, wider) and a fail is the poke-away; from behind a fail is a stumble with a quick recovery.
+        const roll = this.rng(), win = back ? TACKLE_ASSIST.backChance : ahead ? TACKLE_ASSIST.front : this.tackleTune.behind;
+        if (roll >= win || (ahead && !back && roll >= win - this.tackleTune.deflect)) {
+          if (ahead || back) { const defl = roll < win; this.pokeAway(h, owner, defl ? TACKLE_FX.deflectSpread : 1.2, defl ? "Deflected!" : "Poked it away!"); this.emitTackle("deflect", h.id, owner); owner = null; break; } // not a miss: the ball is knocked loose
+          h.tackleRec = TACKLE_FX.stumble; this.emitTackle("stumble", h.id, owner); this.msg = "So close!"; this.msgT = 0.7; continue; // from behind: a stumble, quickly back up
         }
         h.backT = 0;
         {
@@ -2458,7 +2759,7 @@ export class MatchSim {
           this.touch("tackle", h.id, owner, 0, Math.hypot(u.vx, u.vy));
           this.passCd = 0.45; this.protect = P.protectTime; this.lastFrom = null;
           this.startCounter(h.team); // won it in open play → break fast
-          this.stats.turnovers++; this.msg = back ? "Got it back!" : "Tackle won!"; this.msgT = 0.9;
+          this.stats.turnovers++; this.msg = back ? "Got it back!" : "Tackle won!"; this.msgT = 0.9; this.emitTackle("steal", h.id, owner);
           owner = this.ball.owner; // the human now has it — fall into the on-ball branch below
           break;
         }
@@ -2511,18 +2812,21 @@ export class MatchSim {
         } else if (hu.trickReq > 0) {
           hu.trickReq = 0;
           if (hu.trickCd <= 0) this.humanTrick(o, hu);
-        } else if (hu.trick <= 0 && hu.guard <= 0 && this.protect <= 0 && nfu && nfu.d < P.tackleDist && this.slipOrTackle(hu, P.tackleChance * dt * this.bodyTackleMul(hu))) {
+        } else if (hu.trick <= 0 && hu.guard <= 0 && this.protect <= 0 && nfu && nfu.d < P.tackleDist && this.aiSet(nfu.p.id, owner) && this.slipOrTackle(hu, P.tackleChance * dt * this.bodyTackleMul(hu))) {
           // a defender right on the human can still win it (keeps the game a challenge), a third as often (HUMAN_GUARD)
           this.ball.owner = nfu.p.id; this.possession = nfu.p.team;
           this.startTrap(nfu.p.id); // the steal eases across to the winner's feet
           this.touch("tackle", nfu.p.id, owner, 0, Math.hypot(nfu.p.vx, nfu.p.vy));
           this.passCd = 0.45; this.protect = P.protectTime; this.lastFrom = null;
           this.startCounter(nfu.p.team);
-          this.stats.turnovers++; this.msg = "Tackled!"; this.msgT = 0.9;
+          this.stats.turnovers++; this.msg = "Tackled!"; this.msgT = 0.9; this.emitTackle("steal", nfu.p.id, owner); this.aiWindBy = "";
           hu.backT = TACKLE_ASSIST.back; // "get it back" (owner Nov 5 2026): his next tackle almost always wins it
         }
         return; // skip the AI decision for the human's player
       }
+      // Tackle wind-up (TACKLE_FX): a human setting himself on this AI carrier holds the carrier's next decision for the set
+      // (the AI cannot read the telegraph and release under it, so tackling stays as easy for a kid as before). Humans only; no rng.
+      if (this.humans.size && this.windingOn(owner)) return;
       // ---- a human teammate called for it with an open lane: the AI carrier plays it to him ----
       if (this.humans.size && !this.windup && !o.isGK && this.passCd <= 0.2) {
         const caller = this.callerFor(owner);
@@ -2569,7 +2873,8 @@ export class MatchSim {
       // sight of goal (few defenders in the shot lane) → higher chance to shoot. This
       // is what actually produces shots against a compact block.
       let shootChance = 0;
-      const R = this.T.shotRange * this.persona[o.team].range * this.ai.shotRange; // small-sided games shoot from further out; the aggressor lets fly earlier
+      const chase = this.humans.size ? this.chaseK(o.team) : 0; // Tier 2: chasing a human side's 2+ goal lead (0 in AI-only matches)
+      const R = this.T.shotRange * this.persona[o.team].range * this.ai.shotRange * (chase > 0 ? atStrength(this.humanChase.range, chase) : 1); // small-sided games shoot from further out; the aggressor lets fly earlier
       if (!o.isGK && distGoal < R && angle < 50) {
         let laneBlockers = 0;
         for (const fid of this.foes(o.team)) {
@@ -2579,7 +2884,7 @@ export class MatchSim {
         }
         const closeF = clamp((R - distGoal) / R, 0, 1);
         const angleF = clamp((50 - angle) / 50, 0, 1);
-        shootChance = (0.24 + closeF * 0.7 + angleF * 0.36) * (laneBlockers === 0 ? 1 : laneBlockers === 1 ? 0.62 : 0.18) * this.T.shoot * this.tempoMul * (this.humans.size > 0 && this.humanOn[o.team === "gold" ? "blue" : "gold"] > 0 ? this.humanDefenceMul("attack", o.team === "gold" ? "blue" : "gold") : 1); // arcs: eager early/late, shy in the lull; (QA round 2: against a human side, humanDefence.attack)
+        shootChance = (0.24 + closeF * 0.7 + angleF * 0.36) * (laneBlockers === 0 ? 1 : laneBlockers === 1 ? 0.62 : 0.18) * this.T.shoot * this.tempoMul * (this.humans.size > 0 && this.humanOn[o.team === "gold" ? "blue" : "gold"] > 0 ? this.humanDefenceMul("attack", o.team === "gold" ? "blue" : "gold") : 1) * (chase > 0 ? atStrength(this.humanChase.attack, chase) : 1) * (this.humans.size && this.humanOn[o.team] > 0 && this.humanOn[o.team === "gold" ? "blue" : "gold"] <= 0 ? this.humanSide.shoot : 1); // arcs: eager early/late, shy in the lull; (QA round 2: against a human side, humanDefence.attack; Tier 2: HUMAN_CHASE.attack)
         if (this.ai.shotPatience > 0 && laneBlockers > 0 && distGoal > R * 0.7) shootChance *= 1 - this.ai.shotPatience; // futsal: don't blast through a defender from range
       }
       // The composure beat already includes the shortest wind-up (a square-on kick), so the
@@ -2599,7 +2904,9 @@ export class MatchSim {
           // distribution is a philosophy read: a DIRECT side's keeper often skips the
           // short roll-out and launches it long (11v11 only, where the loft exists) —
           // often, not always, or the hoof-bleed hands the match to a patient opponent
-          if (!pressured && !(this.allowLoft && this.persona[o.team].loft >= 2 && this.rng() < 0.55)) {
+          // Tier 2 (HUMAN_CHASE.counter): a side chasing a human side's lead goes forward from the keeper, not short to be pressed
+          const chaseGk = this.humans.size > 0 && this.humanChase.counter > 0 && this.chaseK(o.team) >= this.humanChase.counter;
+          if (!pressured && !chaseGk && !(this.allowLoft && this.persona[o.team].loft >= 2 && this.rng() < 0.55)) {
             const keep = this.safePass(owner);
             if (keep) { this.doPass(owner, keep, 0.9); return; }
           }
@@ -2628,8 +2935,12 @@ export class MatchSim {
         // a sight of goal in the final third → shoot (comes before everything else)
         this.carrying = false;
         // …unless a team-mate has a clearly better chance: the extra pass (futsal habit, formatAI extraPass)
-        const extra = this.ai.extraPass > 0 ? this.extraPassTarget(owner) : null;
-        if (extra) {
+        const toHuman = this.humans.size ? this.humanSquare(owner) : null; // Tier 2 (HUMAN_FEED.square): the open human team-mate's chance
+        const extra = toHuman ? null : this.ai.extraPass > 0 ? this.extraPassTarget(owner) : null;
+        if (toHuman) {
+          this.tacticalReason = "Square it: the team-mate had as good a chance";
+          this.doPass(owner, toHuman, 1.12);
+        } else if (extra) {
           this.futsalStats.extraPasses++;
           this.tacticalReason = "Extra pass: the team-mate had the better chance";
           this.teach(FUTSAL_NOTES.extraPass[0], FUTSAL_NOTES.extraPass[1], "fextra", 45);
@@ -2775,7 +3086,7 @@ export class MatchSim {
       // so his total exposure matches the pre-wind-up rhythm).
       // Press together (human Press button): a double team on the carrier wins it far more often (1 without a press).
       const pressMul = this.pressSet.size && nf && this.pressSet.has(nf.p.id) ? this.pressBoost(nf.p.id, o) : 1;
-      if (!jockeying && this.ball.owner === owner && this.protect <= 0 && nf && nf.d < P.tackleDist && this.rng() < P.tackleChance * this.T.press * this.persona[nf.p.team].press * this.fairMul * pressMul * dt) {
+      if (!jockeying && this.ball.owner === owner && this.protect <= 0 && nf && nf.d < P.tackleDist && this.rng() < P.tackleChance * this.T.press * this.persona[nf.p.team].press * this.fairMul * pressMul * (this.humans.size && !this.humans.has(nf.p.id) ? this.chaseEase(o.team) : 1) * dt) {
         this.carrying = false;
         this.ball.owner = nf.p.id;
         this.possession = nf.p.team;
@@ -2882,6 +3193,7 @@ export class MatchSim {
           this.msgT = 2.4;
           this.scorerId = this.lastFrom; // launch() stamped the striker
           if (this.scorerId) { this.touch("goal", this.scorerId, null, 0, sp); this.touches[(this.touchSerial - 1) % this.touches.length].team = crossedTop ? "gold" : "blue"; }
+          this.noteGoal(crossedTop ? "gold" : "blue"); // the assist (cosmetic: lastGoal + the goal touch's assist / assistSlot + the feed line)
           this.goalQuick = this.humans.size > 0; this.goalHold = this.goalQuick ? GOAL_RESET.hold * this.wsReal() : 1.8;
           if (this.goalQuick) this.quickTaker = this.spotTaker(crossedTop ? "blue" : "gold"); this.ballImpact = Math.min(1, sp / 220);
           this.ball.x = clamp(xc, 135 - GHALF + 1.5, 135 + GHALF - 1.5); // nestle inside the posts for the net bulge
@@ -2919,7 +3231,8 @@ export class MatchSim {
         this.ball.owner = null; this.ball.target = null; this.ball.intBy = null; this.ballIsShot = false; this.shotIsGoal = false;
         this.ball.lofted = false; this.loftDur = 0;
         this.counterT = 0; this.counterTeam = null; this.lastFrom = null; this.carrying = false;
-        this.restart = { kind, t: 1.0 + this.rng() * 0.8, x: sx, y: sy, taker };
+        // Tier 1: with a human joined the setup beat is REAL seconds (1-1.8 s at the live pace); same rng draw either way.
+        this.restart = { kind, t: (1.0 + this.rng() * 0.8) * (this.humans.size ? this.wsReal() : 1), x: sx, y: sy, taker };
         this.msg = kind === "corner" ? "Corner!" : kind === "goalkick" ? (this.beach || this.ai.goalClearance ? "Goal clearance" : "Goal kick") : this.ai.touchline;
         if (this.ai.teach && kind === "kickin") { const n = this.notes.throwIn(team === "gold" ? "Gold" : "Blue"); this.teach(n[0], n[1], "throwin", 75); }
         if (this.ai.restartRing > 0 && kind === "kickin") { const n = FUTSAL_NOTES.kickIn(team === "gold" ? "Gold" : "Blue"); this.teach(n[0], n[1], "fkickin", 60); }
@@ -2945,7 +3258,7 @@ export class MatchSim {
         const gd = g ? dist(g.x, g.y, this.ball.x, this.ball.y) : Infinity;
         const humanGk = this.humans.size > 0 && !!defGk && this.humans.has(defGk);
         // QA round 2 (balance): an AI keeper facing a human's AIMED strike (a picked corner is never wide: SHOT_AIM) reaches
-        // humanDefence.keeper × as far; the 1-tap auto-aimed shot little kids use is unchanged, and so are AI-only matches
+        // humanDefence.keeper × as far (the HUD 1-tap shot sends an aim mark, so it counts as aimed; only a no-mark shot does not); AI-only matches unchanged
         const shooter = !humanGk && this.humans.size > 0 && g && this.lastFrom ? this.humans.get(this.lastFrom) : undefined;
         const keeperMul = shooter && shooter.shotAimed ? this.humanDefenceMul("keeper", shooter.team) : 1;
         if (!this.shotIsGoal && g && this.ballFlight <= 0 && gd < P.gkReach * keeperMul + 1 + stretch) {
@@ -3050,10 +3363,12 @@ export class MatchSim {
         // barred from an instant re-claim (lastFrom), so a pressing defender can pounce.
         // Kept RARE — and only off a ball arriving with real pace, never a GK catch —
         // so the turnover/switch balance holds (verified with scripts/simavg.mjs).
-        if (!cp.isGK && claimVia !== "shot" && sp > 60) {
+        const contest = this.humans.size && !this.humans.has(claimer) && !cp.isGK ? this.contestLoose(cp) : 0; // Tier 2 (HUMAN_CONTEST): a human defender close by
+        if (!cp.isGK && claimVia !== "shot" && (sp > 60 || (contest > 0 && sp > 25))) {
           const lapse = (this.brain[claimer]?.lapse ?? 0) > 0;
           const pLoose = (0.012 + (sp > 200 ? 0.014 : 0) + this.fatigue * 0.012 + (lapse ? 0.05 : 0)) *
-            (this.humans.has(claimer) ? HUMAN_FEEL.looseMul : 1); // the human's touch is more reliable (was .45; kids, Nov 4 2026)
+            (this.humans.has(claimer) ? HUMAN_FEEL.looseMul : 1) // the human's touch is more reliable (was .45; kids, Nov 4 2026)
+            + contest; // Tier 2: 0 unless a human opponent is close (AI-only: no new rng draw)
           if (this.rng() < pLoose) {
             const sq = 62 + this.rng() * 26; // squirt pace — a chaseable few units, not a clearance
             this.ball.vx = (this.ball.vx / sp) * sq + cp.vx * 0.3;
@@ -3254,11 +3569,20 @@ export class MatchSim {
     const dir = this.dirY(poss);
     const ballOwner = this.ball.owner;
     const ownerPos = this.ownerPosS; ownerPos.x = ballOwner ? this.players[ballOwner].x : this.ball.x; ownerPos.y = ballOwner ? this.players[ballOwner].y : this.ball.y;
-    let presser = this.nearestOfTeam(defTeam, ownerPos.x, ownerPos.y);
+    let presser = this.nearestActive(defTeam, ownerPos.x, ownerPos.y);
     const previous=this.presserId?this.players[this.presserId]:null;
     if(previous&&previous.team===defTeam&&presser&&!this.humans.has(previous.id)){
       const candidate=this.players[presser];
       if(dist(previous.x,previous.y,ownerPos.x,ownerPos.y)<dist(candidate.x,candidate.y,ownerPos.x,ownerPos.y)+8)presser=previous.id;
+    }
+    // Tier 1 DOUBLE: a human closing on the carrier (SOFT_FEED.doubleD) is the presser; the AI one drops to cover below.
+    if (this.humans.size && ballOwner && this.humanOn[defTeam] > 0 && presser && !this.humans.has(presser)) {
+      const c = this.players[ballOwner];
+      for (const h of this.humans.values()) {
+        const q = this.players[h.id];
+        if (h.team !== defTeam || q.isGK || this.idleHuman(h.id)) continue;
+        if (dist(q.x, q.y, c.x, c.y) < SOFT_FEED.doubleD && q.vx * (c.x - q.x) + q.vy * (c.y - q.y) > 0) { presser = h.id; break; }
+      }
     }
     this.presserId = presser;
     // second defender provides COVER behind the presser, so passing lanes near the
@@ -3266,7 +3590,7 @@ export class MatchSim {
     let cover:string|null=null,coverScore=Infinity;
     const ownGoal=this.ownGoalY(defTeam);
     for(const id of this.mates(defTeam)){
-      const p=this.players[id];if(p.isGK||id===presser)continue;
+      const p=this.players[id];if(p.isGK||id===presser||(this.humans.size&&this.idleHuman(id)))continue;
       const wrongSide=Math.max(0,Math.abs(p.y-ownGoal)-Math.abs(ownerPos.y-ownGoal));
       const score=dist(p.x,p.y,ownerPos.x,ownerPos.y)+wrongSide*.8;
       if(score<coverScore){coverScore=score;cover=id;}
@@ -3278,7 +3602,7 @@ export class MatchSim {
     let balance: string | null = null; let balD = Infinity;
     if (this.mates(defTeam).length >= 7) {
       for (const bid of this.mates(defTeam)) {
-        if (this.players[bid].isGK || bid === presser || bid === cover) continue;
+        if (this.players[bid].isGK || bid === presser || bid === cover || (this.humans.size && this.idleHuman(bid))) continue;
         const d = dist(this.players[bid].x, this.players[bid].y, ownerPos.x, ownerPos.y);
         if (d < balD) { balD = d; balance = bid; }
       }
@@ -3298,13 +3622,13 @@ export class MatchSim {
     if (ballOwner) {
       let d1 = Infinity, d2 = Infinity;
       for (const mid of this.mates(poss)) {
-        if (mid === ballOwner || this.players[mid].isGK) continue;
+        if (mid === ballOwner || this.players[mid].isGK || (this.humans.size && this.idleHuman(mid))) continue;
         const m = this.players[mid];
         const d = dist(m.x, m.y, ownerPos.x, ownerPos.y);
         if (d < d1) { d1 = d; s1 = mid; }
       }
       for (const mid of this.mates(poss)) {
-        if (mid === ballOwner || mid === s1 || this.players[mid].isGK) continue;
+        if (mid === ballOwner || mid === s1 || this.players[mid].isGK || (this.humans.size && this.idleHuman(mid))) continue;
         const m = this.players[mid];
         if (m.role === "fwd") continue; // forwards keep STRETCHING the last line — they don't drop in to combine
         if ((m.y - ownerPos.y) * dir < 6) continue; // must already be ahead of the ball
@@ -3313,7 +3637,7 @@ export class MatchSim {
       }
     } else if (this.ball.target && !this.ball.intBy && this.players[this.ball.target].team === poss) {
       tmrRecv = this.players[this.ball.target];
-      tmr = this.nearestOfTeam(poss, tmrRecv.x, tmrRecv.y, this.ball.target);
+      tmr = this.nearestActive(poss, tmrRecv.x, tmrRecv.y, this.ball.target);
     }
 
     // Ball not owned: the intended RECEIVER runs onto it; the nearest opponent
@@ -3327,11 +3651,11 @@ export class MatchSim {
         chasers.add(this.ball.intBy);
       } else if (this.ball.target) {
         chasers.add(this.ball.target);
-        const opp = this.nearestOfTeam(this.players[this.ball.target].team === "gold" ? "blue" : "gold", this.ball.x, this.ball.y);
+        const opp = this.nearestActive(this.players[this.ball.target].team === "gold" ? "blue" : "gold", this.ball.x, this.ball.y);
         if (opp) chasers.add(opp);
       } else {
-        const a = this.nearestOfTeam("gold", this.ball.x, this.ball.y);
-        const b = this.nearestOfTeam("blue", this.ball.x, this.ball.y);
+        const a = this.nearestActive("gold", this.ball.x, this.ball.y);
+        const b = this.nearestActive("blue", this.ball.x, this.ball.y);
         if (a) chasers.add(a);
         if (b) chasers.add(b);
       }
@@ -3387,6 +3711,8 @@ export class MatchSim {
         }
       }
       if (!staged) {
+      // Near / far-post cross (POST_CROSS): the receiver runs into the spot while the ball is in the air.
+      if (loose && this.crossPost.active && id === this.crossPost.to && this.ball.target === id && this.ball.height > 0.5) { this.setTarget(id, this.crossPost.x, this.crossPost.y); continue; }
       if (loose && chasers.has(id)) {
         tx = this.ball.x + this.ball.vx * 0.16; // run onto the ball, leading it
         ty = this.ball.y + this.ball.vy * 0.16;
@@ -3646,7 +3972,9 @@ export class MatchSim {
         const c = this.players[ballOwner], spot = this.pressSpot(id, c); tx = spot.x; ty = spot.y;
       }
       let nx = clamp(tx, 14, 256);
-      let ny = clamp(ty, 12, 388);
+      // Tier 1 (humans joined): a loose-ball chaser may go down to y 6 / 394 — a ball resting inside y 12 / 388 by the goal
+      // line was out of everyone's reach until the dead-ball failsafe (up to ~6.5 real s of nothing on the beach).
+      let ny = this.humans.size && loose && chasers.has(id) ? clamp(ty, 6, 394) : clamp(ty, 12, 388);
       const prev = this.targets[id];
       // the carrier, first presser and committed ball chasers stay fully
       // responsive; only the zonal / get-open players get smoothed (that's where the
@@ -3745,7 +4073,7 @@ export class MatchSim {
           if (id === carrierId && hu!.trickBoost > 0) maxV = Math.min(maxV * TRICK.burstPace, Math.max(maxV, P.runSpeed * rm.speed * this.humanSprintBoost));
         }
         maxV *= this.humanPace; // the format's pace ladder (1 on the 7v7 + 11v11)
-        if (hu!.lunge > 0 && carrier && carrier.team !== hu!.team) maxV *= TACKLE_ASSIST.lungePace; // the assisted tackle lunge
+        if (hu!.lunge > 0 && carrier && carrier.team !== hu!.team) maxV = this.humanLungeCap ? Math.min(maxV * TACKLE_ASSIST.lungePace, Math.max(maxV, P.runSpeed * rm.speed * 1.3)) : maxV * TACKLE_ASSIST.lungePace; // the assisted tackle lunge (Tier 2, 11v11: never past the old 8.99 m/s sprint top)
       }
       const pressing = (id === this.presserId || (this.pressSet.size > 0 && this.pressSet.has(id) && !!carrier && carrier.team !== p.team)) && carrierId && carrierId !== id;
       // ---- backpedal decision (outfield players defending a carrier) ----

@@ -17,9 +17,11 @@ import {createKeeperMarkers} from '../graphics/keeperMarkers';
 import {LONG_BALL,AIM_MARKS,SHOT_AIM,SHOT_FX,POWER_SHOT,pickAimMark} from './match/humanInputs';
 import {shotMouthX} from './shotPlacement';
 import {SLOW_MO,slowMoScale,punchWeight} from './slowMo';
+import {matchFxLevel} from './matchFxSetting';
 import {wrongOrientationQuery} from '../orientationMode';
-import {joinModes,tackleNear,stickSprint,stickSprintEnabled,runEffort,tapShotCorner,RANGE_SETTLE,type JoinMode,type JoinModes} from './liveControls';
-import {createJoinCamera,createJoinCamFrame,joinCamFrame,replayCamFrame,createReplayCamShot,nextJoinCamAngle,isJoinCamAngle,turnStick,JOIN_CAM_LABEL,type JoinCamPitch} from './liveJoinCamera';
+import {joinModes,tackleNear,stickSprint,stickSprintEnabled,runEffort,RANGE_SETTLE,bufferedA,graceA,hotButton,OPEN_CALL_W,hapticTick,HAPTIC,PRESS_BUFFER,type JoinMode,type JoinModes} from './liveControls';
+import {createPhraseHud} from './livePhraseHud';
+import {createJoinCamera,createJoinCamFrame,joinCamFrame,replayCamFrame,createReplayCamShot,nextJoinCamAngle,isJoinCamAngle,turnStick,JOIN_CAM_LABEL,ballLookTarget,BALL_LOOK,type JoinCamPitch} from './liveJoinCamera';
 
 export const ME='me';
 type Games=ReturnType<typeof createFieldRuntime>;
@@ -44,7 +46,7 @@ export const JOIN_TIPS={
   aim:'Hold Shoot and push the stick at a corner. Full charge is a power shot!',
 } as const;
 type Tip=keyof typeof JOIN_TIPS;
-export type JoinButton='a'|'b'|'s'|'f'|'t'|'skip'|'leave'|'camera'|'play'|'start'|'back'|'dismiss'|'side-gold'|'side-blue';
+export type JoinButton='a'|'b'|'s'|'f'|'t'|'skip'|'leave'|'camera'|'play'|'start'|'back'|'dismiss'|'side-gold'|'side-blue'|'phrases'|`phrase-${number}`;
 type Mode=JoinMode;
 const TEAM_NAME={gold:'Yellow',blue:'Blue'} as const,TEAMS=['gold','blue'] as const;
 /** The side names follow the format's bibs (beanLooks LIVE_BIB_KITS): the 9v9 plays in orange / purple, not yellow / blue. */
@@ -100,6 +102,11 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
   const held={a:false,b:false,s:false},pressed={a:false,b:false,t:false,leave:false,play:false,start:false,dismiss:false};let aDownAt=0,bDownAt=0,aMode:Mode='',chargeA=-1,chargeB=-1,heldS=false;const keyPrev={a:false,b:false,k:false,l:false,p:false,esc:false};let forwardKey=false,trickKey=false,pressKey=false;
   // Easier controls (owner Nov 5 2026, lib/town/liveControls.ts): Shoot's mode latched at the press, the Shoot / Forward and
   // Tackle / Press choices (settled), the Press chase (held: run at the carrier, tackle once in reach) and the stick-edge sprint.
+  // Input buffering (Nov 7 2026, liveControls.bufferedA / graceA): the Pass button's mode now and the one before it (with when
+  // it changed), and a tap made while it could not act yet (Go! / Wait) waiting up to PRESS_BUFFER.ms for the pass to arrive.
+  let aCurMode:Mode='',aPrevMode:Mode='',aChangedAt=0,aPend:Mode='',aPendAt=0;
+  // Button emphasis (liveControls.hotButton) and the charge's haptic ticks: written / fired only on change.
+  let hotShown:''|'a'|'b'|'x'='x',tickA=0,tickB=0,calmShown=false;
   let bMode:Mode='',rangeL=false,rangeT=0,nearL=false,chase=false,edgeSprint=false,edgeShown=false;const modeOut:JoinModes={a:'',b:'',c:''};
   // Trick / Press (owner Nov 4 2026): cooldown ring steps written on change; the trick's popup, slow motion and zoom.
   // Shooting (owner Nov 4 2026): the corner picked while Shoot is held (-1 = auto-aim), the aim marks' world points, the
@@ -116,6 +123,10 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
   // cameraApply after its lookAt. Reused objects only (no per-frame allocation).
   const camCtl=createJoinCamera(),camGoal=createJoinCamFrame(),camOut=createJoinCamFrame(),camBase={x:0,y:0,z:0},stickOut={x:0,z:0};
   const camPitch:JoinCamPitch={x:0,z:0,width:1,length:1,yaw:0,ground:0};let camSaved=false,camDelta=0,stickLen=0,stepDt=1/60;
+  // Broadcast ball lookahead (liveJoinCamera BALL_LOOK, 9v9 / 11v11): the eased offset now and its target (reused object).
+  let lookX=0,lookZ=0;const lookT={x:0,z:0};
+  // The off-screen ball cue (Nov 7 2026): its last written screen point / angle and whether it shows (written on change only).
+  const ballV=new T.Vector3();let cueX=-1,cueY=-1,cueDeg=999,cueShown=false;
   // Goal replays (lib/town/goalReplay.ts; the field runtime draws it): a broadcast replay angle behind the scorer on the TV side
   // (liveJoinCamera replayCamFrame) framing the goal mouth + ball + shooter, easing in to goal + ball for the finish (repTight);
   // eased in / out by replayW; reduced motion: two held shots, cut (no easing). The REPLAY tag + Skip under the score bar, the
@@ -128,6 +139,8 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
   const el=(sel:string)=>{const cached=dom[sel];if(cached?.isConnected)return cached;const found=root()?.querySelector<HTMLElement>(sel)??null;dom[sel]=found;return found;};
   const set=(e:HTMLElement|null,attr:string,value:string|null)=>{if(!e)return;if(value===null){if(e.hasAttribute(attr))e.removeAttribute(attr);}else if(e.getAttribute(attr)!==value)e.setAttribute(attr,value);};
   const text=(e:HTMLElement|null,value:string)=>{if(e&&e.textContent!==value)e.textContent=value;};
+  // Quick phrases (Nov 7 2026, lib/town/livePhraseHud.ts): the tray, the bubbles over heads, the AI's answers; matchLink reads `phrases`.
+  const phraseHud=createPhraseHud({el,set,sound:g=>games.sound('tick',g)});
   const hide=(e:HTMLElement|null,hidden:boolean)=>{if(e&&e.hidden!==hidden)e.hidden=hidden;};
   const showTip=(k:Tip,always=false)=>{if(!always&&seen.has(k))return;seen.add(k);try{localStorage.setItem(TIP_KEY,JSON.stringify([...seen]));}catch{}tip=JOIN_TIPS[k];tipT=3.6;};
   // A raised pitch (the rooftop futsal court, elevation 6) counts only from its own level or above (flying over it is fine):
@@ -172,14 +185,20 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
     /** The position dropdown (HUD onChange). */
     selectSlot(id:string){if(state.phase!=='pick')return;pickId=id;renderPick();},
     get format(){return format;},
+    /** Quick phrases: the bus matchLink sends my phrase on and shows friends' phrases through (lib/town/quickPhrases.ts PhraseBus). */
+    get phrases(){return phraseHud.bus;},
+    /** Quick phrases (headless checks): the HUD side (tray, bubble pool, rate limit). */
+    get phraseHud(){return phraseHud;},
     press(b:JoinButton,down:boolean){
+      if(b==='phrases'){if(down)phraseHud.toggleTray();return;}
+      if(b.startsWith('phrase-')){if(down)phraseHud.say(Number(b.slice(7)));return;}
       if(b==='s'){held.s=down;return;}
       if(b==='f'){if(down)forwardKey=true;return;}
       if(b==='t'){if(down)pressed.t=true;return;}
       if(b==='skip'){if(down&&format)skipRep(format);return;}
       if(down&&shotAge>.12)shotSkip=true;// any tap skips the shot's slow motion
       if(b==='b'&&down){joinAim.x=joinAim.y=0;joinAim.on=false;aimSel=-1;}
-      if(b==='a'||b==='b'){if(down&&!held[b]){pressed[b]=true;if(b==='a'){aDownAt=performance.now();aMode=modes().a;}else{bDownAt=performance.now();bMode=modes().b;}}held[b]=down;return;}
+      if(b==='a'||b==='b'){if(down&&!held[b]){pressed[b]=true;if(b==='a'){aDownAt=performance.now();aMode=latchA(aDownAt);aPendAt=0;}else{bDownAt=performance.now();bMode=modes().b;}}held[b]=down;return;}
       if(!down)return;
       if(b==='leave'){pressed.leave=true;return;}
       if(b==='camera'){if(state.phase!=='joined'||!format)return;const a=nextJoinCamAngle(camCtl.angle);camCtl.set(a,stickLen);try{sessionStorage.setItem(CAM_KEY,a);}catch{}
@@ -208,12 +227,18 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
       keyPrev.a=ka;keyPrev.b=kb;keyPrev.k=kk;keyPrev.l=kl;keyPrev.p=kp;keyPrev.esc=ke;
       games.humanView(format,ME,view);
       const mode=modes(),now=performance.now(),aDown=pressed.a,bDown=pressed.b,bUp=!held.b&&bDownAt>0,aUp=!held.a&&aDownAt>0;
+      if(mode.a!==aCurMode){aPrevMode=aCurMode;aCurMode=mode.a;aChangedAt=now;}
+      // Input buffering (Nov 7 2026): a press made up to PRESS_BUFFER.ms before the button could act (Go! while the pass rolls
+      // in) becomes the Pass / Throw / Tackle it turns into: held, it charges from the press; already released, it fires now.
+      let bufPass=false,bufTackle=false;
+      if(aDownAt>0){const up=bufferedA(aMode,mode.a,now-aDownAt);if(up!==aMode){aMode=up;if(up==='tackle')bufTackle=true;}}
+      if(aPendAt>0){if(now-aPendAt>PRESS_BUFFER.ms)aPendAt=0;else{const up=bufferedA(aPend,mode.a,now-aPendAt);if(up!==aPend){aPendAt=0;if(up==='tackle')bufTackle=true;else bufPass=true;}}}
       // Hold-to-charge (owner, Nov 4 2026): Shoot AND Pass strike on RELEASE; the longer the hold, the more power.
       const mb:Mode=bDownAt>0&&bMode?bMode:mode.b;// Shoot / Forward / Kick as it was when pressed (the label may settle meanwhile)
       const holdS=bUp?Math.min(1,(now-bDownAt)/CHARGE_MS):0,bHoldMs=bUp?now-bDownAt:held.b&&bDownAt>0?now-bDownAt:0;if(!held.b){bDownAt=0;bMode='';}
-      const holdMs=aUp?now-aDownAt:0,holdA=aUp?Math.min(1,holdMs/CHARGE_MS):0,passNow=aUp&&(aMode==='pass'||aMode==='throw')&&mode.a===aMode;
+      const holdMs=aUp?now-aDownAt:0,holdA=aUp?Math.min(1,holdMs/CHARGE_MS):0,passNow=aUp&&(aMode==='pass'||aMode==='throw')&&(mode.a===aMode||graceA(aPrevMode,mode.a,now-aChangedAt)===aMode)||bufPass;
       // Long ball (owner Nov 4 2026): Pass held past LONG_BALL.ms lofts it; the charge grows to the full hold (a tap stays the ground pass).
-      const long=passNow&&aMode==='pass'&&holdMs>=LONG_BALL.ms?Math.max(.05,Math.min(1,(holdMs-LONG_BALL.ms)/(LONG_BALL.fullMs-LONG_BALL.ms))):0;if(aUp){aDownAt=0;aMode='';}
+      const long=passNow&&aMode==='pass'&&holdMs>=LONG_BALL.ms?Math.max(.05,Math.min(1,(holdMs-LONG_BALL.ms)/(LONG_BALL.fullMs-LONG_BALL.ms))):0;if(aUp){if(aMode==='go'||aMode===''){aPend=aMode;aPendAt=aDownAt;}aDownAt=0;aMode='';}
       const tTap=pressed.t,trick=(tTap||trickKey)&&mode.c==='trick',pressTap=aDown&&mode.a==='press',pressNow=pressTap||pressKey&&view.possession==='opp'&&!view.keeper&&!view.restart;
       // The big defence button (owner Nov 5 2026): Tackle in reach (the assisted lunge); further, Press = the press together
       // (two teammates hunt the carrier) and, held, you run at him and tackle once he is in reach. The stick still steers.
@@ -232,15 +257,15 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
       // Aimed shot: while Shoot is held past SHOT_AIM.minHoldMs the stick (or a drag on the button) picks a corner mark;
       // a quicker tap stays the auto-aimed shot. The pick is kept through the release frame.
       aiming=mb==='shoot'&&bHoldMs>=SHOT_AIM.minHoldMs&&(held.b||bUp);if(aiming&&held.b){aimSel=pickCorner(mx,mz,len);if(aimSel>=0)showTip('aim');}
-      // Tap to shoot (owner Nov 5 2026): released before SHOT_AIM.minHoldMs it is aimed for him at the low corner away from the
-      // keeper (liveControls.tapShotCorner), sent through the frame's existing aim fields (multiplayer protocol unchanged).
-      const tapShot=bUp&&mb==='shoot'&&bHoldMs<SHOT_AIM.minHoldMs;
-      const aimMark=bUp&&mb==='shoot'&&bHoldMs>=SHOT_AIM.minHoldMs&&aimSel>=0?AIM_MARKS[aimSel]:tapShot?AIM_MARKS[tapShotCorner(view.simX,view.keeperX)]:null;if(bUp)aiming=false;
+      // Tap to shoot (released before SHOT_AIM.minHoldMs): NO aim mark (aimX / aimH NaN), so the sim plays its own auto-aimed
+      // shot at the far corner away from the keeper. Nov 7 2026 audit: sending the tap as a picked corner aimed it at only
+      // 60-74% of the goal and gave the keeper the aimed-shot reach bonus (futsal 17% vs 60% scored, beach 15% vs 34%).
+      const aimMark=bUp&&mb==='shoot'&&bHoldMs>=SHOT_AIM.minHoldMs&&aimSel>=0?AIM_MARKS[aimSel]:null;if(bUp)aiming=false;
       games.humanInput(format,ME,mx,mz,{
         pass:passNow,passPower:passNow&&!long?holdA:forwardB?holdS:0,long,trick,press:pressNow,
         through:forwardKey&&view.onBall||forwardB,
         shoot:bUp&&mb==='shoot',shootPower:.7+.3*holdS,aimX:aimMark?aimMark.x:NaN,aimH:aimMark?aimMark.h:NaN,
-        tackle:aDown&&mode.a==='tackle'||chaseTackle,
+        tackle:aDown&&mode.a==='tackle'||chaseTackle||bufTackle,
         call:aDown&&mode.a==='call',
         save:aDown&&mode.a==='save',
         jockey:held.b&&mode.b==='stay',
@@ -265,7 +290,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
         // Start: the picker shrinks back into the bar's Play first (the Join with a code close), then the slot is taken and Town's arrival plays.
         shrink(reduced,()=>{if(state.phase!=='joined')return;const slot=games.joinMatch(f,ME,x,z,dressFor,null,pick);if(!slot){api.lastEvent='join-failed';state.phase='idle';return;}format=f;games.humanView(format,ME,view);team=view.team;colour=bibColour(format,team==='gold');markers.setColour(colour);keeperMarks.setColour(colour);if(view.keeper)bannerT=KEEPER_FX.banner;if(f==='beach'&&!view.keeper){tip=BEACH_JOIN_TIP;tipT=3.6;}/* no bibs on sand: the format's own lesson */else showTip(view.keeper?'keeper':'join',false);
           api.onMatch?.({type:'join',format:f,role:view.keeper?'gk':simOf(f)?.players[slot]?.role??null,others:othersOn(f),...slotsOn(f)});});}
-      if(ev==='leave'){lastTrick=-1;fxAge=-1;kickSeen=tackleSeen=-1;saveSeen=beatSeen=-1;bannerT=0;bannerOwed=false;keeperMarks.hide();if(format){api.onMatch?.({type:'leave',reason:byUser?'leave':'forced',others:othersOn(format)});left=games.leaveMatch(format,ME,{x:0,z:0});}format=null;markers.hide();pin(0,0,0,null);held.a=held.b=held.s=false;aDownAt=bDownAt=0;bMode='';chase=edgeSprint=false;if(edgeShown){edgeShown=false;set(el('.touch-controls .joystick'),'data-sprint',null);}hide(el('[data-join-badge]'),true);}
+      if(ev==='leave'){lastTrick=-1;fxAge=-1;kickSeen=tackleSeen=-1;saveSeen=beatSeen=-1;bannerT=0;bannerOwed=false;keeperMarks.hide();if(format){api.onMatch?.({type:'leave',reason:byUser?'leave':'forced',others:othersOn(format)});left=games.leaveMatch(format,ME,{x:0,z:0});}format=null;markers.hide();pin(0,0,0,null);held.a=held.b=held.s=false;aDownAt=bDownAt=0;bMode='';aPendAt=0;chase=edgeSprint=false;if(edgeShown){edgeShown=false;set(el('.touch-controls .joystick'),'data-sprint',null);}hide(el('[data-join-badge]'),true);if(cueShown){cueShown=false;set(el('[data-join-ballcue]'),'data-show',null);}hotShown='x';lookX=lookZ=0;phraseHud.frame(0,false,null,'','',null,0,camera,false,false);}
       if(ev==='cancel'||ev==='dismiss'){pickFormat=null;shrink(reduced);}
       // Friends-ready: a side filling up while the picker is open (slice 2's remote humans) re-renders the pick.
       if(state.phase==='pick'&&pickFormat){const sim=simOf(pickFormat);if(sim&&(sim.humanOn.gold!==seenGold||sim.humanOn.blue!==seenBlue||friendsKey===''))renderPick();text(el('[data-join-start]'),state.startPending?'Landing…':'Start');}
@@ -284,7 +309,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
         }else{
         // In goal (Nov 5 2026): the keeper's double ring, glove badge, goal-mouth glow and dive-reach arc replace the attack compass.
         if(view.keeper){markers.hideYou();keeperMarks.show(view.x,y,view.z,view.outYaw,view.reachM,keeperGoal(view),view.threat,time,reduced,dt);}else{keeperMarks.hide();markers.you(view.x,y,view.z,Math.atan2(view.goalX-view.x,view.goalZ-view.z));}
-        markers.passTarget(view.onBall?view.passX:NaN,y,view.passZ,time,reduced);
+        markers.passTarget(view.onBall?view.passX:NaN,y,view.passZ,time,reduced,view.x,view.z);// + the receiver arrow along the pass
         const fwd=view.onBall&&!view.inShotRange&&view.forwardX!==view.passX;markers.forwardTarget(fwd?view.forwardX:NaN,y,view.forwardZ,Math.atan2(view.goalX-view.forwardX,view.goalZ-view.forwardZ));
         markers.callPing(0,view.callAX,y,view.callAZ,view.callAW,time,reduced);markers.callPing(1,view.callBX,y,view.callBZ,view.callBW,time,reduced);// teammates calling for it (arm up + a ping)
         pin(view.x,y,view.z,colour);}
@@ -292,6 +317,18 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
         goalV.set(view.goalX,y+1,view.goalZ).project(camera);const behind=goalV.z>1,gx=behind?-goalV.x:goalV.x,gy=behind?-goalV.y:goalV.y,off=!replaying&&(behind||Math.abs(gx)>.94||Math.abs(gy)>.9);
         const badge=el('[data-join-badge]');hide(badge,!off);
         if(off&&badge){const k=Math.max(Math.abs(gx)/.86,Math.abs(gy)/.74,1);badge.style.left=((gx/k+1)*50).toFixed(1)+'%';badge.style.top=((1-gy/k)*50).toFixed(1)+'%';badge.style.setProperty('--bib',colour);}
+        // The ball off screen (Nov 7 2026 audit: on 11v11 it is > 25 m from you ~11% of the time): a small ball + arrow at the screen
+        // edge pointing at it, clear of the score bar and both thumbs; hidden while the ball is on screen or a replay plays. One
+        // pooled element, transform + opacity only, written when its whole-pixel spot or whole-degree angle changes.
+        {const bl=fieldBall(format),cue=el('[data-join-ballcue]');let show=false;
+          if(bl&&cue&&!replaying){ballV.copy(bl.position).project(camera);const bh=ballV.z>1,nx=bh?-ballV.x:ballV.x,ny=bh?-ballV.y:ballV.y;show=bh||Math.abs(nx)>.97||Math.abs(ny)>.95;
+            if(show){const W=innerWidth,H=innerHeight,dx=nx*W/2,dy=-ny*H/2,hx=W/2-30,up=H/2-100,down=Math.max(H*.18,H/2-250),k=Math.max(Math.abs(dx)/hx,dy<0?-dy/up:dy/down,1);
+              const px=Math.round(W/2+dx/k),py=Math.round(H/2+dy/k),deg=Math.round(Math.atan2(dy,dx)*180/Math.PI);
+              if(px!==cueX||py!==cueY){cueX=px;cueY=py;cue.style.transform='translate('+px+'px,'+py+'px)';}
+              if(deg!==cueDeg){cueDeg=deg;cue.style.setProperty('--cue-deg',deg+'deg');}}}
+          if(show!==cueShown){cueShown=show;set(cue,'data-show',show?'':null);}}
+        // Quick phrases: bubbles over heads (pooled), the AI's answers, the assist caption and the tackle wind-up cue.
+        phraseHud.frame(dt,!replaying,simOf(format) as never,format,games.slotOf(format,ME)??'',fv,y,camera,view.onBall,reduced||matchFxLevel()==='light');
         // A trick (owner Nov 4 2026): the popup word, and (not reduced) a short slow motion with the camera zoomed in.
         if(view.trickSerial!==lastTrick){const fresh=lastTrick>=0&&view.trickSerial>0;lastTrick=view.trickSerial;if(fresh){const pop=el('[data-join-pop]');if(pop){text(pop,TRICK_WORD[view.trickKind]);pop.removeAttribute('data-show');void pop.offsetWidth;pop.setAttribute('data-show','');}popT=.9;if(!reduced)api.slowMo(TRICK_FX);}}
         // A shot of his (owner Nov 4 2026): "Power shot!" at full charge; from the shooting zone a power or aimed shot plays
@@ -401,7 +438,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
           if(joinCamFrame(camCtl.shown,view.x,view.z,ax,az,camPitch,camera.aspect,base,camGoal))goal=camGoal;
         }
       }
-      if(!goal&&camCtl.w<=0){camDelta=0;return;}// Broadcast at rest (or not joined): no work at all
+      if(!goal&&camCtl.w<=0){camDelta=0;lookAhead(camera,dt,reduced);return;}// Broadcast at rest (or not joined): only the big pitches' ball lookahead
       camCtl.step(dt,reduced,goal);
       if(camCtl.w<=0){camDelta=0;return;}
       const p=camera.position;camBase.x=p.x;camBase.y=p.y;camBase.z=p.z;camSaved=true;
@@ -409,7 +446,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
     },
     /** Let go of every held button without firing it (QA round 2, Nov 6 2026: a tab switch / phone call / page hide while Sprint, Pass
      *  or Shoot was held never delivered the release, so sprint or the Stay jockey stayed on after resume). Town's keys are cleared by its own blur. */
-    release(){held.a=held.b=held.s=false;pressed.a=pressed.b=pressed.t=false;aDownAt=bDownAt=0;aMode=bMode='';chase=false;aiming=false;joinAim.on=false;joinAim.x=joinAim.y=0;forwardKey=trickKey=pressKey=false;},
+    release(){held.a=held.b=held.s=false;pressed.a=pressed.b=pressed.t=false;aDownAt=bDownAt=0;aMode=bMode='';aPendAt=0;chase=false;aiming=false;joinAim.on=false;joinAim.x=joinAim.y=0;forwardKey=trickKey=pressKey=false;},
     dispose(){markers.dispose();keeperMarks.dispose();window.removeEventListener('keydown',onKey,true);window.removeEventListener('pointerdown',onTap,true);window.removeEventListener('blur',api.release);window.removeEventListener('pagehide',api.release);document.removeEventListener('visibilitychange',onHidden);},
   };
   // Keyboard: Enter on a joinable pitch = Play; in the picker Enter / Space = Start, Esc = back to the bar. A capture
@@ -466,6 +503,16 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
   const kGoal={x:0,z:0,yaw:0,width:0};
   function keeperGoal(v:typeof view){kGoal.x=v.ownGoalX;kGoal.z=v.ownGoalZ;kGoal.yaw=v.outYaw;kGoal.width=v.goalWidth;return kGoal;}
   /** The drawn ball of a live field (an index walk: no closure per frame). */
+  /** Broadcast at rest: on 9v9 / 11v11 slide Town's follow camera toward the ball (liveJoinCamera BALL_LOOK), eased; translation
+   *  only, restored by cameraRestore. `view` is this frame's (update ran first). No work on the small pitches once eased to 0. */
+  function lookAhead(camera:T.PerspectiveCamera,dt:number,reduced:boolean){
+    lookT.x=lookT.z=0;
+    if(!reduced&&state.phase==='joined'&&format&&(format==='11v11'||format==='9v9')&&!replayShown){const b=fieldBall(format);if(b)ballLookTarget(format,b.position.x-view.x,b.position.z-view.z,lookT,camera.aspect);}
+    if(lookX===0&&lookZ===0&&lookT.x===0&&lookT.z===0)return;
+    const k=reduced?1:1-Math.exp(-dt*BALL_LOOK.rate);lookX+=(lookT.x-lookX)*k;lookZ+=(lookT.z-lookZ)*k;
+    if(lookT.x===0&&lookT.z===0&&Math.abs(lookX)+Math.abs(lookZ)<.02){lookX=lookZ=0;return;}
+    const p=camera.position;if(!camSaved){camBase.x=p.x;camBase.y=p.y;camBase.z=p.z;camSaved=true;}p.x+=lookX;p.z+=lookZ;
+  }
   function fieldBall(f:LiveFormat){const es=games.entries;for(let i=0;i<es.length;i++)if(es[i].venue.id===f)return es[i].ball;return null;}
   window.addEventListener('pointerdown',onTap,{capture:true,passive:true});
   function popWord(word:string){const pop=el('[data-join-pop]');if(pop){text(pop,word);pop.removeAttribute('data-show');void pop.offsetWidth;pop.setAttribute('data-show','');}popT=.9;}
@@ -543,6 +590,8 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
   }
   /** The buttons for now (lib/town/liveControls.ts joinModes; one reused object, read at once by each caller). */
   function modes():JoinModes{return joinModes(view,rangeL,nearL,modeOut);}
+  /** The Pass button's mode for a press now: a Pass pressed just after the ball got away still latches Pass (liveControls.graceA). */
+  function latchA(now:number):Mode{const cur=modes().a;return cur!==aCurMode?graceA(aCurMode,cur,0):graceA(aPrevMode,cur,now-aChangedAt);}
   const LABEL:Record<Mode,string>={pass:'Pass',shoot:'Shoot',forward:'Forward',call:'Call',tackle:'Tackle',stay:'Stay',go:'Go!',save:'Dive',throw:'Throw',kick:'Kick',trick:'Trick',press:'Press','':''};
   const KEY_HINT:Record<Mode,string>={pass:'Space (hold for a long ball)',shoot:'J (hold for power)',forward:'J or K',call:'Space',tackle:'Space',stay:'J (hold)',go:'Space (hold)',save:'Space (stick picks a side)',throw:'Space (hold for power)',kick:'J or K (hold for power)',trick:'L',press:'P','':''};
   let dock=0,lastRestart=false,lastG=-1,lastB=-1;
@@ -563,7 +612,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
         /* a goal: the bar shakes and the scoring side's pill pops (CSS, transform/scale only; a layout read once per goal) */
         if(lastG>=0&&(g>lastG||b>lastB)&&view.keeper)bannerOwed=true;// the keeper banner again at the kick-off
         if(lastG>=0&&(g>lastG||b>lastB)&&chip){chip.removeAttribute('data-goal');void chip.offsetWidth;chip.setAttribute('data-goal',g>lastG?'gold':'blue');window.setTimeout(()=>chip.removeAttribute('data-goal'),1100);}
-        if(lastG>=0&&(g>lastG||b>lastB))api.onMatch?.({type:'goal',mine:(g>lastG?'gold':'blue')===team});// analytics: a transition, once per goal
+        if(lastG>=0&&(g>lastG||b>lastB)){api.onMatch?.({type:'goal',mine:(g>lastG?'gold':'blue')===team});phraseHud.goal();}// analytics: a transition, once per goal
         lastG=g;lastB=b;}
       
       const m=modes(),a=el('[data-join-a]'),b=el('[data-join-b]'),now=performance.now();
@@ -579,6 +628,15 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
       if(held.s!==heldS){heldS=held.s;set(el('[data-join-s]'),'data-held',heldS?'':null);}
       // Long ball: past LONG_BALL.ms the Pass ring turns purple (the long ball's trail colour).
       const la=held.a&&aDownAt>0&&aMode==='pass'&&m.a==='pass'&&now-aDownAt>=LONG_BALL.ms;if(la!==longA){longA=la;set(a,'data-long',la?'':null);}
+      // The charge's haptic ticks (Nov 7 2026; Vibration setting, liveControls.hapticTick: a no-op where the browser cannot
+      // vibrate, e.g. iPhone Safari): one buzz as Pass turns into the long ball, one as Pass or Shoot reaches full charge.
+      {const ta=ca===20?2:la?1:0,tb=cb===20?1:0;if(ta>tickA)hapticTick(ta===2?HAPTIC.fullMs:HAPTIC.tickMs);if(tb>tickB)hapticTick(HAPTIC.fullMs);tickA=ta;tickB=tb;}
+      // Button emphasis (Nov 7 2026, liveControls.hotButton): the ONE good idea now (Shoot in range, Pass to a teammate calling
+      // for it, Tackle in reach) gets a soft pulsing ring, the others dim. Attributes on change only; the CSS holds the ring
+      // still with reduced motion or Match effects Light (data-calm). The flipped layout mirrors the buttons, so it follows.
+      {const hot=view.restart||replayShown||view.keeper?'':hotButton(m,view.onBall&&Number.isFinite(view.passX)&&Math.max(view.callAW,view.callBW)>=OPEN_CALL_W);
+        if(hot!==hotShown){hotShown=hot;set(a,'data-hot',hot==='a'?'':null);set(b,'data-hot',hot==='b'?'':null);set(actions,'data-focus',hot?'':null);}
+        const calm=matchFxLevel()==='light';if(calm!==calmShown){calmShown=calm;set(actions,'data-calm',calm?'':null);}}
       // Trick (offense) / Press (defense): one button, its mode's colour; the cooldown ring (quantised, written on change).
       const t=el('[data-join-t]');hide(t,!m.c);
       if(m.c){text(el('[data-join-t-label]'),LABEL[m.c]);set(t,'data-mode',m.c);set(t,'title',`${LABEL[m.c]} · ${KEY_HINT[m.c]}`);

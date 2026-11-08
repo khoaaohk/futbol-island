@@ -82,3 +82,7 @@
 .story{margin-top:8px;padding:10px 12px 12px;border-radius:14px;background:#ffffff8c}
 .story .tag{background:#c2643f}
 .story p{margin-top:6px!important}
+/* Nov 7 2026 return hooks: a species caught golden at least once wears a gold edge (stamp-only, docs/fishing.md "Return hooks"). */
+.grid li[data-golden]{border:3px solid #e3b53c}
+/* Delight pass (Nov 7 2026): a species caught since the book was last open carries the "New!" stamp (FishbookExtras.module.css). */
+.grid li[data-fresh]{position:relative}

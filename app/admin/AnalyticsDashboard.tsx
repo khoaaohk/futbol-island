@@ -39,7 +39,7 @@ import so from './SponsorOverview.module.css';
 type Preset='today'|'yesterday'|'7d'|'14d'|'30d'|'90d'|'all'|'custom';
 const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'yesterday',label:'Yesterday'},{id:'7d',label:'7 days'},{id:'14d',label:'14 days'},{id:'30d',label:'30 days'},{id:'90d',label:'90 days'},{id:'all',label:'All'},{id:'custom',label:'Custom'}];
 /** Nov 6 2026 (owner: "rebuild it so I can see trends better"): the dashboard opens on the last 30 days; a reload or a pull comes back to it. */
-const DEFAULT_RANGE:Preset='30d';
+const DEFAULT_RANGE:Preset='today';
 /** Oct 20 2026: tabs instead of one long page (owner: "fix the admin portal so it's easier to find this"). Overview = the sponsor
  *  view (SponsorOverview.tsx); Engagement = engagement, product usage and the learning / title-screen detail; Players = headline,
  *  acquisition and save health; Live = who is on now and each day's players. The sections keep their investor order in source. */
@@ -138,7 +138,7 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
  // Pull-to-refresh (mobile, drag down from the top): re-fetches through this same `load`, never a page reload, so
  // the admin session and the current date-range filter survive.
  // Pull-to-refresh is the phone's page reload, so like a reload it always comes back to Today (Oct 15 2026, user request).
- // Nov 6 2026: a reload now opens on the last 30 days (DEFAULT_RANGE), so a pull, "like a reload", comes back to it.
+ // Nov 7 2026 (owner ruling): the dashboard always opens on Today (DEFAULT_RANGE) on load, and a pull comes back to it.
  const pullRefresh=useCallback(()=>{setPreset(DEFAULT_RANGE);return load('range='+DEFAULT_RANGE);},[load]);
  const refresh=()=>void load(query.current);
 
