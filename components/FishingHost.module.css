@@ -81,6 +81,8 @@
 .catchClose:focus-visible{outline:var(--btn-focus);outline-offset:2px}
 .catchTop{padding-right:40px}
 .catch[data-side=right]{transform:translate(0,-50%)}
+.catch[data-side=center]{transform:translate(-50%,-50%)}
+.catch[data-side=center]::after{display:none}
 .catch[data-side=below]{transform:translate(-50%,0)}
 .catch[data-side=top]{transform:translate(-50%,0)}
 .catch[data-side=top]::after{display:none}
@@ -232,12 +234,8 @@
 
 /* Calm HUD (Oct 21 2026): while the tutorial shows its step, the message (the same words) waits, so the two never overlap. */
 .hud:has([data-fish-tutorial]) .message{visibility:hidden}
-/* Back vs Play with friends (landscape audit Oct 23, every size): the HUD row keeps the friends button in its slot right of the
-   (hidden) Paths button, so Back moves right of it: row left + Paths + gap + friends (+1 px party badge) + gap. All 44 px circles.
-   <= 340 px the friends button sits under Paths (second row), so Back keeps the Paths slot there. */
-:global(.town-app:has(nav[data-hud-triggers]>[data-party-open])) .back{--fish-back-left:calc(var(--btn-icon,44px) * 2 + var(--island-hud-pair-gap,8px) * 2 + 1px);left:calc(24px + env(safe-area-inset-left,0px) + var(--fish-back-left))}
-@media(max-width:600px),(pointer:coarse){:global(.town-app:has(nav[data-hud-triggers]>[data-party-open])) .back{left:calc(18px + env(safe-area-inset-left,0px) + var(--fish-back-left))}}
-@media(max-width:340px){:global(.town-app:has(nav[data-hud-triggers]>[data-party-open])) .back{left:calc(18px + env(safe-area-inset-left,0px))}}
+/* Nov 8 2026 (owner): the friends button is hidden while fishing (it is not needed there), so Back keeps the top-left corner slot. */
+/* (the hide rule itself lives in IslandSettings.module.css: a CSS module needs a local class in every selector) */
 /* Nov 6 2026: the fish tale on the catch card, and Fishbook progress as a small pill under the book icon (regular sans, calm). */
 .catchStory{font-size:11.5px;line-height:1.45;color:#5a4a34;margin-top:6px!important;padding-top:6px;border-top:1px dashed #d9caa2}
 .catchStory span{display:block;font-size:9.5px;font-weight:800;letter-spacing:.07em;text-transform:uppercase;color:#a8552f}

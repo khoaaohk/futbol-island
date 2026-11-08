@@ -26,7 +26,7 @@ import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
 import {DEMOTE_FADE,capGate,planRigs,stepCapGate} from './rigCap';
 import {emoteSeconds} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
-import {applyHighFive} from './highFivePose';import {actorMotion,clearBallMotion,createPassBallOut,friendBallMotion,pickBallRoutine,type PassBallOut} from '../town/emotePass';import {createDuetOut,duetAt,duetSeconds,type DuetOut} from '../town/emoteDuet';import {applyRideEmote} from './celebrations';import {emoteCtxOfMode,flourishAt,flourishForWire,friendFlourishLapsed,type Flourish} from '../town/emoteContexts';import {cycleFrame,type BubbleFrame} from '../town/emoteBubbleMotion';import {MOVE_ROLE,friendMoveEnd,moveForWire,moveWeight,pickMoveVariant} from '../town/moveEmotes';import {applyMoveEmote} from './moveEmotePose';
+import {applyHighFive} from './highFivePose';import {actorMotion,clearBallMotion,createPassBallOut,friendBallMotion,pickBallRoutine,type PassBallOut} from '../town/emotePass';import {createDuetOut,duetAt,duetSeconds,type DuetOut} from '../town/emoteDuet';import {applyRideEmote} from './celebrations';import {createIdleWave,stepIdleWave,IDLE_SPEED,type IdleWave} from '../town/jetpackIdleWave';import {applyIdleGesture} from './jetpackIdlePose';import {emoteCtxOfMode,flourishAt,flourishForWire,friendFlourishLapsed,type Flourish} from '../town/emoteContexts';import {cycleFrame,type BubbleFrame} from '../town/emoteBubbleMotion';import {MOVE_ROLE,friendMoveEnd,moveForWire,moveWeight,pickMoveVariant} from '../town/moveEmotes';import {applyMoveEmote} from './moveEmotePose';
 import {HIGH_FIVES,createHighFiveBag,highFivePlan,highFiveSkill} from '../town/highFive';
 import type {SkillMotion} from './skillMoves';
 import {beanLookFor,playerOutfit} from '../town/customization';
@@ -131,6 +131,8 @@ type Entry={
  pd2:number;plan:number;dem:boolean;out:number;
  motion:PlayerMotion;swim:SwimPose;
  emote:number;emoteAge:number;hidden:boolean;muted:boolean;
+ /** Jetpack idle gestures (Nov 8 2026): the same machine as the local player, driven by their mode + speed (no extra network field). */
+ iw:IdleWave;
  /** The sender's last mode (so a wire emote picks the flying / swimming flourish) and whether a flourish rotation is on the rig. */
  lastMode:number;flOn:boolean;
  /** The sender's mode when the emote arrived: its flourish is picked from this and ends when their context changes (friendFlourishLapsed). */
@@ -455,7 +457,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,kit:null,kitKey:'',ballKey:'',colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
-     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,du:null,lastMode:0,emMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
+     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,iw:createIdleWave(id*2654435761),du:null,lastMode:0,emMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
 shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion(),bump:createBumpReact(),rb:false,ra:0,ca:0};
     byId.set(id,e);list.push(e);e.labelTexture=makeLabelTexture(name,e.style);ensureLabel(e);tryAdmit(e);return;
    }
@@ -550,7 +552,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     const moving=!shield&&pose.speed>.3; // inside the field they stand still (the speed byte carries the activity)
     e.spd=shield?0:pose.speed;
     if(period===0||e.acc>=period+e.slot*period||e.needResume){
-     const step=Math.min(e.acc,.1);e.acc=0;
+     const step=Math.min(e.acc,.1),idleStep=Math.min(e.acc,.6)/* a far friend updates less often: the idle gestures keep real time */;e.acc=0;
      const mode=pose.mode;e.lastMode=mode;
      motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=shield&&mode!==Mode.Jetpack?undefined:travelFor(mode);/* an away friend keeps the jetpack backpack (and the blue downwash while hovering); rides are not drawn inside the field, so they stand */
      motion.parachute=!shield&&(mode===Mode.Parachute||mode===Mode.Zipline);
@@ -572,6 +574,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
      if(e.emote>=0&&e.mv>=0&&!reduced)applyMoveEmote(rig.root,e.mv,e.mvV,e.emoteAge,moveWeight(e.emoteAge,e.mvDur));/* a moving emote: layered on their own walk / run cycle */
      else if(e.emote>=0&&!reduced&&e.hf<0&&!fs0&&e.emote!==Emote.JuggleWithMe&&e.emote!==Emote.PassBall)applyEmoteArms(rig.root,e.emote,e.emoteAge,emoteSeconds(e.emote));
      else if(fs0&&!reduced&&fs0.arm>=0&&e.emoteAge>=fs0.armFrom)applyRideEmote(rig.root,fs0.arm,e.emoteAge,Math.max(0,Math.min(1,(e.emoteAge-fs0.armFrom)/.2,(fs0.seconds-e.emoteAge)/.2)));
+     {const iw=e.iw;if(mode===Mode.Jetpack||iw.kind>=0){if(stepIdleWave(iw,idleStep,mode===Mode.Jetpack&&!shield&&pose.speed<IDLE_SPEED&&e.emote<0&&!(e.du&&e.du.on),reduced)>0)applyIdleGesture(rig.root,iw.kind,iw.age,iw.w);}}/* a hovering friend waves too (lib/town/jetpackIdleWave.ts) */
      root3.position.set(pose.x,pose.y,pose.z);
      // A friend's high five: an "air five" toward the camera side (their own random variation, shown on every screen alike).
      if(e.hf>=0&&!reduced)applyHighFive(rig.root,e.hf,0,e.emoteAge,1,FACE_CAMERA,BODY_SCALE*k*e.out);

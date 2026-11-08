@@ -77,3 +77,19 @@ No polling, timers or loops. The board UI (`components/arcade/*`) is lazy: loade
 Leaderboard/Scores button is tapped. A game's boards are fetched once at game over (only when the device holds a play
 session) or when a board opens, then reused for 20 s. The arcade room sleeps (setCovered) under the Hall. One small POST per
 play starts the session. Validated by `tests/arcade-leaderboard.cjs`.
+
+
+## Futbol Tennis tours (Nov 8 2026)
+
+Two more boards beside 'tennis' (best rally, unchanged): 'tenpro' (Tennis Pro Tour) and 'tenlgnd' (Tennis Legend Tour), scored in tour points (every touch: 10 × touch multiplier × combo × ramp bonus; won points add 50 × combo × ramp). Rules in lib/arcade/leaderboard.ts BOARD_RULES (max 200000 / 300000, 300 / 450 points a second, 20 s minimum). The island store needs supabase/migrations/20261108_tennis_tier_boards.sql (owner runs it by hand; it also keeps Pinball's 'pinderby' / 'pinfinal').
+
+## Pass Puzzles cups (Nov 8 2026)
+
+Two more boards beside 'puzzle' (total stars, unchanged): 'puzpro' (Pass Puzzles Pro Cup) and 'puzlgnd' (Pass Puzzles Legend Cup),
+scored in cup points: every cup puzzle scores stars × 100 × a skill multiplier (×1, +0.5 first try, +0.25 no extra passes,
++0.25 a through ball, +0.25 per one-touch pass up to 2, +0.25 with a quarter of the clock left; at most ×2.75 = 825). The board
+score is the sum of the child's best per puzzle (6 puzzles, at most 4950), a running total like the star board, so the same
+letters keep one row (`RUNNING_TOTAL_BOARDS` in lib/arcade/leaderboard.ts). Rules: ceiling 5000, no per-second rule, 8 s minimum,
+a play token per puzzle start (beginBoardSession with the puzzle's own board). Cup stars never count toward the classic star
+board. Coins are unchanged (the same first-solve + new-star payout). SQL: supabase/migrations/20261110_puzzle_tier_boards.sql
+(lists every board; dated to run after 20261109_pinball_tier_boards.sql). Tests: tests/puzzle-polish-nov8.cjs.

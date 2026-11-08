@@ -8,6 +8,7 @@ import {CHALLENGE_PACK,CHALLENGE_SCENARIOS,CHALLENGE_SOLUTIONS} from './challeng
 import {EXTRA_PACKS,EXTRA_SCENARIOS,EXTRA_SOLUTIONS,type Step} from './packs';
 import {YOUTH_SOLUTIONS} from './youth';
 import {EXPERT_PACKS,EXPERT_SCENARIOS,EXPERT_SOLUTIONS} from './expert';
+import {TIER_SOLUTIONS} from './tiers';
 import type {DailyTemplate} from './daily';
 import {DIFFICULTY} from './curve';
 
@@ -21,6 +22,9 @@ export const ALL_SOLUTIONS:Record<string,{solution:Step[];naive:Step[]}>={
   ...Object.fromEntries(Object.entries(CHALLENGE_SOLUTIONS).map(([k,v])=>[k,{solution:v.solution,naive:[v.naive]}])),
   ...EXTRA_SOLUTIONS,
   ...EXPERT_SOLUTIONS,
+  // Nov 8 2026: the Pro Cup / Legend Cup routes (lib/passPuzzle/tiers.ts). Their puzzles stay out of ALL_SCENARIOS and MAP_ORDER
+  // (own boards, own tiles), but the coach's route and the hint spot read routes from here.
+  ...TIER_SOLUTIONS,
 };
 /** The route in the mode being played: with heading off, the youth route (headers become chest control). */
 export function routeFor(id:string,heading:boolean):Step[]{

@@ -71,3 +71,30 @@
 @media(min-width:900px){.chips{top:96px}}
 @media(max-width:360px){.chip{width:42px;height:52px}.touches{grid-template-columns:1fr}}
 @media(max-height:520px){.title{margin:0 0 8px!important}.chip{height:46px}.bigScore{font-size:34px!important}.earned{font-size:30px!important}.chips{top:52px}}
+/* Nov 8 2026: tours row, tour HUD chips, the "why it ended" line, confetti + personal-best flash. Transform/opacity only. */
+.tours{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tourChip{display:grid;gap:2px;min-height:48px;padding:6px 8px;border:2px solid #5a3a1c;border-radius:14px;background:#2a1d14;color:#fff2dc;font:inherit;text-align:center;cursor:pointer;touch-action:manipulation}
+.tourChip b{font-size:15px;font-weight:900;line-height:1.1}
+.tourChip span{font-size:12px;font-weight:700;color:#ffcf8a;line-height:1.1}
+.tourChip[aria-pressed=true]{border-color:#ffc93c;background:#4a3212;transform:translateY(-2px)}
+.tourChip:disabled{opacity:.5;cursor:default}
+.tourChip:focus-visible{outline:3px solid #fff08a;outline-offset:2px}
+.why{margin:0 0 10px!important;padding:8px 10px;border-radius:12px;background:#3a1f33;border-left:4px solid #ff83d3;text-align:left;font-size:14px!important;line-height:1.35!important;color:#ffe6f4}
+.tourStrip{position:absolute;z-index:3;left:50%;top:calc(env(safe-area-inset-top) + 74px);transform:translateX(-50%);display:flex;gap:6px;align-items:center;pointer-events:none;white-space:nowrap}
+.tourStrip>span{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:999px;background:#13192ee6;border:1px solid #416b86;color:#dffcff;font-size:12px;font-weight:800}
+.tourStrip b{font-size:15px;font-variant-numeric:tabular-nums}
+.livesChip i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#3a4366}
+.livesChip i[data-on]{background:#ffd24a}
+.livesChip[data-low]{border-color:#ff83d3!important}
+.multChip{animation:chipPop .35s ease-out;color:#dffcff}
+.multChip[data-mult="3"]{border-color:#73fff1!important;color:#c9fff8!important}
+.multChip[data-mult="4"]{border-color:#ffc93c!important;color:#ffe084!important}
+.multChip em{font-style:normal;font-size:11px;color:#ffe084}
+.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:inherit}
+.confetti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;opacity:0;animation:confettiFall 1.6s cubic-bezier(.2,.6,.4,1) both}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translateY(340px) rotate(540deg)}}
+.pb[data-new]{color:#ffe084!important;font-weight:900;font-size:14px!important;animation:pbFlash .5s ease-in-out 3}
+@keyframes pbFlash{50%{opacity:.35}}
+.card[data-new-best] .result,.card[data-tennis-tour-over] .result{background:#3b3214;color:#ffe084}
+@media(prefers-reduced-motion:reduce){.confetti{display:none}.pb[data-new],.multChip{animation:none}.tourChip[aria-pressed=true]{transform:none}}
+.card{position:relative}

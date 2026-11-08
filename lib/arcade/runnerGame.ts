@@ -38,6 +38,11 @@ export const RUNNER_SKILL_WINDOW={early:.72,late:.07,perfectEarly:.42,perfectLat
 export const RUNNER_TUNING={powerTouches:8,powerSeconds:3,powerShield:true};
 /** Seconds of the full-time beat (stumble, slow-down, whistle) before the result card. */
 export const RUNNER_OUTRO=1.35;
+/** Perfect dodge (Nov 8 2026): beat a tackle by cutting lanes in the last `window` seconds before it reaches you. Perfect dodges
+ * within `chain` seconds of each other chain up; the dodge reward is multiplied by 1 + chain (×2 … ×5), shown as "PERFECT ×n". */
+export const RUNNER_PERFECT_DODGE={window:.35,chain:3.5,maxChain:4} as const;
+/** The dodge multiplier for a chain length (1 → ×2, capped at ×5). */
+export const runnerPerfectMultiplier=(chain:number)=>1+Math.max(1,Math.min(RUNNER_PERFECT_DODGE.maxChain,Math.floor(chain)||1));
 /** Forward closing speed of a presser, m/s. Read-to-contact stays above one second at max speed. */
 export const RUNNER_PRESS_SPEED=4.2;
 /** Keeper sway period (s) and how far from the keeper a placed/power shot must go to score. */
@@ -83,6 +88,8 @@ export function createRunnerGame(){const mode=selectedRunnerMode();const id=++ru
  bestToBeat:0,newBest:false,
  /** Times a save/miss dropped the multiplier a tier (presentation + audio cue only). */
  comboDrops:0,
+ /** Nov 8 2026: perfect dodges (count, live chain, best chain, last time) and the tip from the tackle that ended the run. */
+ perfectDodges:0,perfectChain:0,bestPerfectChain:0,perfectAt:-9,lossTip:'',
  coach:'' as ''|'lane'|'jump'|'skill'|'shoot',coachPrompt:'',coachButton:'' as ''|'left'|'right'|'jump'|'skill'|'shoot',coachWord:'',coachScale:1,coachCount:0,
  /* Mission counters. */
  skills:0,perfectSkills:0,beatScores:0,shotsFired:0,lastBeatAt:-99,cleanStage:1,skillKinds:[] as string[],oneTwos:0,chips:0,headers:0,bosses:0,hurdles:0,puddleJumps:0,cornerGoals:0,rounded:0,shieldSaves:0,wingRuns:0,middleRuns:0,closersBeaten:0};}
@@ -209,12 +216,12 @@ export const RUNNER_DEFENDER_REACH={rest:{x:.85,z:.9},jockey:{x:.92,z:1.2},tackl
 export function runnerDefenderReach(o:RunnerObject){return (o.tackle??0)>.08&&(o.tackle??0)<.7?RUNNER_DEFENDER_REACH[o.role??'jockey']:RUNNER_DEFENDER_REACH.rest;}
 /** Big moments own their frame: a ball collected (or a small bonus) in the SAME tick as a tackle, goal or skill move
  * must not overwrite it, or the hit's message, hit-stop, shake and sound are lost (seen in ~1 of 12 kid-bot hits). */
-const RUNNER_MAJOR_EVENTS=new Set(['hit','goal','save','shield','boss','skillmove','onetwo','best','early','close','return','block']);
+const RUNNER_MAJOR_EVENTS=new Set(['hit','goal','save','shield','boss','skillmove','onetwo','best','early','close','return','block','perfect']);
 function feedback(s:RunnerGame,kind:string,x:number,z:number,message:string){if(s.eventAt===s.time&&RUNNER_MAJOR_EVENTS.has(s.eventKind)&&!RUNNER_MAJOR_EVENTS.has(kind))return;s.event++;s.eventAt=s.time;s.eventKind=kind;s.eventX=x;s.eventZ=z;s.message=message;}
 /** A defender was beaten (skill, dodge, hurdle, one-two, back line): opens the beat-then-score window. */
 function beat(s:RunnerGame){s.lastBeatAt=s.time;}
 /** One place for losing a chance: a short kind slow-down, then the full-time beat. */
-function loseChance(s:RunnerGame,message:string){s.lives--;s.refillCount=0;s.adapt=Math.min(1,s.adapt+.5);s.lastBeatAt=-99;s.hurt=1.2;s.combo=s.streak=s.energy=0;s.nearStreak=0;s.hits++;s.recover=1.6;s.easeNext=true;s.skill='';if(s.boss)s.boss=-1;if(s.lives<=0){s.outro=RUNNER_OUTRO;s.charging=false;s.charge=0;}feedback(s,'hit',s.x,0,s.lives?message:'Full time! Great effort. One more run?');}
+function loseChance(s:RunnerGame,message:string){s.lives--;s.lossTip=message;s.perfectChain=0;s.refillCount=0;s.adapt=Math.min(1,s.adapt+.5);s.lastBeatAt=-99;s.hurt=1.2;s.combo=s.streak=s.energy=0;s.nearStreak=0;s.hits++;s.recover=1.6;s.easeNext=true;s.skill='';if(s.boss)s.boss=-1;if(s.lives<=0){s.outro=RUNNER_OUTRO;s.charging=false;s.charge=0;}feedback(s,'hit',s.x,0,s.lives?message:'Full time! Great effort. One more run?');}
 /** A power-run shield takes one tackle instead of a chance. */
 function absorb(s:RunnerGame,o:RunnerObject|undefined,x:number,z:number){s.shield=false;s.shieldSaves++;s.hurt=.35;if(o){o.passed=true;o.knock=.65;}s.score+=50;feedback(s,'shield',x,z,'Strong on the ball! Your power run rode that tackle. +50');}
 /** Advances only the full-time beat after the last chance. The match clock
@@ -507,7 +514,11 @@ export function tickRunner(s:RunnerGame,dt:number){
   if(defender&&!o.passed&&o.z>(reach?.z??.9)){o.passed=true;
    if(o.closeThreat&&!o.beaten&&s.hurt===0&&s.lives>0)s.closersBeaten++;
    if(o.threat&&!o.beaten&&s.hurt===0&&!invincible&&s.lives>0){s.nearMisses++;beat(s);s.nearStreak++;if(s.grade<-ROUTE_STEEP)s.downhillBeats++;const reward=25*runnerMultiplier(s);s.score+=reward;cleanPlay(s);
-    feedback(s,'skill',s.x,0,s.nearStreak>1?`${s.nearStreak} tackles beaten! +${reward} · great scanning`:`Beat the tackle! +${reward}`);}}
+    // Perfect dodge (Nov 8 2026): the lane cut came in the last instant. A chain multiplies the dodge reward (×2 … ×5).
+    if(s.cutAge<=RUNNER_PERFECT_DODGE.window&&s.cutDir!==0){s.perfectChain=s.time-s.perfectAt<=RUNNER_PERFECT_DODGE.chain?s.perfectChain+1:1;s.perfectAt=s.time;s.perfectDodges++;
+     s.bestPerfectChain=Math.max(s.bestPerfectChain,s.perfectChain);const k=runnerPerfectMultiplier(s.perfectChain),extra=reward*(k-1);s.score+=extra;cleanPlay(s);
+     feedback(s,'perfect',s.x,0,`PERFECT DODGE ×${k}! Late cut, clean escape. +${reward+extra}`);}
+    else feedback(s,'skill',s.x,0,s.nearStreak>1?`${s.nearStreak} tackles beaten! +${reward} · great scanning`:`Beat the tackle! +${reward}`);}}
  }
  // Boss resolution: both back lines passed without losing a chance.
  if(s.boss&&!s.objects.some(o=>o.boss&&!o.passed)){if(s.boss>0){s.bosses++;beat(s);const reward=300*runnerMultiplier(s);s.score+=reward;cleanPlay(s);feedback(s,'boss',s.x,0,`BACK LINE BEATEN! +${reward} · now pick your finish.`);}s.boss=0;}

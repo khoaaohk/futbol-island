@@ -17,10 +17,14 @@ import {TERRAINS,type TerrainId} from '../../components/games/runnerRoute';
  * Reduced motion: no rain, no lightning flash (no flashing light), rollers do not spin.
  */
 type SkyPalette={top:string;horizon:string;hills:string;towers:string;hemi:string;hemiI:number;sunI:number;glowK:number};
-const SKIES:Record<'arcade'|'night'|'storm',SkyPalette>={
+/* Nov 8 2026: 'final' (Cup Final: floodlit stadium, warm gold horizon) and 'legend' (Legend: royal violet dusk). Uniform colours only:
+ * no new light, mesh or draw call. Neither rains (rain stays a Storm Final feature). */
+const SKIES:Record<'arcade'|'night'|'storm'|'final'|'legend',SkyPalette>={
  arcade:{top:'#05061a',horizon:'#150f36',hills:'#0f0b2c',towers:'#151236',hemi:'#b7eaff',hemiI:1.55,sunI:2.1,glowK:1},
  night:{top:'#010210',horizon:'#080a20',hills:'#05061a',towers:'#0b0c26',hemi:'#8fa8ff',hemiI:1.05,sunI:1.55,glowK:.55},
  storm:{top:'#0a0d16',horizon:'#1d2433',hills:'#121722',towers:'#161c2a',hemi:'#a6b6cc',hemiI:1.1,sunI:1.1,glowK:.4},
+ final:{top:'#03040f',horizon:'#241a12',hills:'#0c0a12',towers:'#1a1520',hemi:'#ffe6b0',hemiI:1.3,sunI:1.9,glowK:.9},
+ legend:{top:'#0a0420',horizon:'#2a0f3a',hills:'#140a26',towers:'#1e1236',hemi:'#d8c2ff',hemiI:1.2,sunI:1.6,glowK:1.15},
 };
 /** Horizon glow per terrain: the time of day drifts along the route (sunset on the beach and roofs, blue hour on the bridge). */
 const GLOW:Record<TerrainId,string>={grass:'#5a2a7a',sand:'#c2552e',cobbles:'#6a3a6a',snow:'#6f8fc0',mud:'#5a3a2a',neon:'#a02a8a',rooftop:'#d0603a',bridge:'#2a6a9a'};

@@ -48,3 +48,25 @@ export function wildBugCount(o:{tier:number;reduced:boolean;night:boolean;phone?
  if(o.night)return FIREFLY_AMBIENT[o.phone?'phone':'desktop'][t4];
  if(o.tier>=3)return 0;return bugMapCount(Math.min(2,t4));
 }
+
+/** Island life pass (Nov 8 2026, owner: "show the details when walking, scootering and closer up"): the full-detail radius rides
+ *  with the player's speed (m/s, the swarm's own eased estimate), so a scooter / bike / moped still sees wings, legs and patterns
+ *  before it is on top of a bug: 14 m walking, growing 2.4 m per m/s above a jog to 32 m (kept inside NEAR_M, where bugs step every
+ *  frame). Out = in + 6 m (hysteresis). Pure. */
+export function fullDetailRadius(speed:number):number{
+ return Math.min(WILD_BUG_RANGE.NEAR_M-3,WILD_BUG_RANGE.FULL_IN_M+Math.max(0,(Number.isFinite(speed)?speed:0)-1.5)*2.4);
+}
+/** The out radius is the in radius plus this (no per-frame object). */
+export const FULL_DETAIL_HYST=WILD_BUG_RANGE.FULL_OUT_M-WILD_BUG_RANGE.FULL_IN_M;
+/** At most this many species meshes in full detail at once (each is one draw), nearest first: the day swarm stays within
+ *  1 far draw + NEAR_DETAIL_MAX (the bug-flight budget of 4). A species mesh draws every near copy of that species in that one draw. */
+export const NEAR_DETAIL_MAX={desktop:3,phone:2} as const;
+/** Garden company (Nov 8 2026, "more bugs"): extra butterflies / moths / bees of today's flower-loving species, fluttering round
+ *  their homes. Decoration only: never queried, caught or counted, hidden during a Bug squad shift (the owner's rule: no bug you
+ *  can't catch). They ride in the far draw and their species' near draw: 0 new draws. By heat tier 0 / 1 / 2 (none at 3-4 or
+ *  with reduced motion, like the swarm), desktop / phone. */
+export const GARDEN_COMPANY={desktop:[6,4,2],phone:[4,2,0]} as const;
+export const GARDEN_MOVES:readonly string[]=['butterfly-glide','moth-flutter','bee-hover'];
+export function gardenCompanyCount(o:{tier:number;reduced:boolean;phone?:boolean}){
+ if(o.reduced||o.tier>=3)return 0;const t=Math.max(0,Math.min(2,Math.floor(o.tier)||0));return GARDEN_COMPANY[o.phone?'phone':'desktop'][t];
+}

@@ -6156,3 +6156,37 @@ Validation: `tests/live-ball-physics.cjs` (air spin follows travel and is capped
 - Sim: human-gated only (a guard timer, one rng roll per tackle as before, a mates/foes loop for two supporters on the
   existing ~3 Hz think clock while a human has the ball). AI-only matches: zero cost, fixture byte-identical.
   No iPhone thermal claim.
+
+## Futbol Tennis polish: Pro Tour and Legend Tour (Nov 8 2026, local, not deployed)
+
+- Two endless tours (lib/games/soccerTennis.ts TENNIS_TOURS / TENNIS_TOUR_RULES) on the same court, meshes and materials:
+  the surface swap is the existing shared-material swap (clay / neon), so a tour adds no mesh, light, texture or draw call.
+  Sim cost: a few multiplies per touch / point (touch multiplier, combo, ramp); no allocation in the frame loop.
+- Perfect-touch ripple reuses the pooled aerial impact ring (+1 draw only for 0.35 s after a Perfect; off with reduced motion).
+- Tour HUD: one DOM strip (balls left, level, last touch ×N) under the score, updated on the existing 100 ms HUD tick; the
+  classic courts keep the clean court (chips hidden). Result card confetti: 12 CSS pieces, one 1.6 s burst, card only, none
+  with reduced motion. New sounds (combo chime, level-up, ball lost, new best, UI tap) go through the existing 14-voice pool.
+- Measured headless (Chrome/Metal, dev build, `--mute-audio`, auto-rally bot, 4 s, draws/triangles averaged per render):
+  phone 390 x 844 DPR 2 at 30 fps: before court 7 = 43.2 draws / 16.7k tris; after court 7 = 43.2 / 16.7k; Pro Tour = 43.2 /
+  17.0k; Legend Tour = 38.7 / 16.3k. Desktop 1280 x 800 at 60 fps: before 47.2 / 18.3k (mid-rally), after 43.9 / 17.3k,
+  Pro 44.0 / 17.3k, Legend 39.5 / 16.8k (draws vary ±4 with which rings are up at the sample). Same programs (21-22),
+  geometries (32-34), textures (8). No iPhone thermal claim.
+
+## Pass Puzzles polish: Pro Cup and Legend Cup (Nov 8 2026, local, not deployed)
+
+- Two cups (lib/passPuzzle/tiers.ts), 6 new puzzles each, on the same pitch, rigs, meshes and materials. A cup adds no mesh,
+  light, texture or draw call: the pass trail takes the cup tint (existing gold / violet) through the existing trail colour set,
+  and a steal flashes the pooled pass-pop ring red (same mesh, a reused Color, no allocation).
+- In-play dock: one row (Scan + Auto/Ground/Lift/Shoot); the power slider shows only in a manual mode. Light shake (goal, steal)
+  is a CSS translate on the canvas only (no re-render), none with reduced motion. Result card: multiplier chips + points are DOM
+  only, animated once with CSS (none with reduced motion). New sounds (snap tick, steal buzz, UI tap, skill chimes, new best)
+  go through the existing 8-voice pool; the snap tick fires only when the locked receiver or lane changes (primitive refs).
+- Measured headless (Chrome/Metal, dev build, `--mute-audio`, the coach's route through `__passPuzzle.kick`, ~4 s of ball flight,
+  draws/triangles averaged per rendered frame; WebGL draw calls counted in the page):
+  phone 390 x 844 DPR 2 at 30 fps: classic 1 (fp-find-a-friend) before 90.6 draws / 65.0k tris, after 90.7 / 65.0k; Pro Cup 1
+  (9 players) 109.2 / 106.6k; Legend Cup 1 (6 players) 93.1 / 75.5k; for comparison the existing Expert Combos 2 (9 players) is
+  109.1 / 106.5k. Desktop 1280 x 800 at 60 fps: classic before 89.8 / 65.2k, after 89.8 / 65.2k, Pro 108.3 / 106.8k, Legend
+  93.9 / 75.7k. The cups cost exactly what an Expert puzzle with the same number of players costs (+20% draws vs the 5-player
+  first puzzle, inside the 25% budget). Aiming sleeps on the classic puzzle (0 draws in 2 s); clock / moving-defender puzzles
+  keep the existing low-rate intent arrows (~4 frames/s while aiming), the same before and after and the same as Expert.
+  No iPhone thermal claim.

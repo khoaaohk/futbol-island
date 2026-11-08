@@ -65,7 +65,8 @@ for(const [tier,n] of [[0,12],[1,10],[2,8]]){const sc=new T.Scene(),sw=S.createB
 // ---- 3. Draw calls ----
 {const sc=new T.Scene(),sw=S.createBugSwarm(sc,{floor,seed:77});let worst=0,full=0,checked=0;
  for(let x=480;x<=780;x+=12)for(let z=10;z<=240;z+=12){if(!SI.onSummitIsle(x,z))continue;frame(sw,{x,z},2);checked++;
-  const near=sw.bugs.filter(b=>Math.hypot(b.x-x,b.z-z)<W.WILD_BUG_RANGE.FULL_OUT_M).length;worst=Math.max(worst,sw.drawCalls);full=Math.max(full,near);
+  // Nov 8 2026 island life pass: the full-detail radius rides with speed (sw.detail) and garden company shares its species' draw.
+  const near=Math.min(W.NEAR_DETAIL_MAX.desktop,new Set([...sw.bugs,...sw.company].filter(b=>Math.hypot(b.x-x,b.z-z)<sw.detail.outM).map(b=>b.id.split('~')[0])).size);worst=Math.max(worst,sw.drawCalls);full=Math.max(full,near);
   assert(sw.drawCalls<=1+near,`draws ${sw.drawCalls} ≤ 1 + ${near} near species at (${x}, ${z})`);}
  assert(worst<=4,'never more than 4 bug draws on the island: '+worst);
  for(let i=0;i<60;i++)frame(sw,{...on,night:true});assert.equal(sw.set,'fireflies','night: the fireflies');assert.equal(sw.drawCalls,2,'night: two draws (bodies + glows)');

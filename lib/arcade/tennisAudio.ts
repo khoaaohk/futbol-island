@@ -8,8 +8,12 @@ import {isSoundEnabled,getSoundVolume} from '../games/sound';
  * - no crowd (Oct 27 2026: the court is the focus; no murmur, gasp, cheer or applause);
  * - an adaptive bassline: from the 3rd touch, each touch plays the next note. */
 const noiseBuffers=new WeakMap<AudioContext,AudioBuffer>(),voices=new WeakMap<AudioContext,number>();
-const MAX_VOICES=14;
 const BASS=[110,130.81,146.83,164.81,196,164.81,146.83,130.81]; // A minor pentatonic walk
+/** Tour combo chime notes (×1…×4): C5 E5 G5 C6, so a growing combo is heard as a climbing line. */
+export const TENNIS_COMBO_NOTES=[523.25,659.25,783.99,1046.5] as const;
+/** Voice pool cap (shared by every tennis one-shot): a busy rally never stacks more than this many live nodes. */
+export const TENNIS_MAX_VOICES=14;
+const MAX_VOICES=TENNIS_MAX_VOICES;
 let lastHaptic=0;
 
 function musicOn(){try{return localStorage.getItem('fi2-music-enabled')!=='false';}catch{return true;}}
@@ -104,6 +108,14 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
  if(kind==='coach'){tone(ctx,t,'triangle',659.25,659.25,.12,.035*v);tone(ctx,t+.1,'triangle',880,880,.16,.035*v);return;} // the coach's two-note 'look here'
  if(kind==='target'){tone(ctx,t,'triangle',880,880,.16,.06*v);tone(ctx,t+.08,'triangle',1318.5,1318.5,.22,.05*v);return;}
  if(kind==='tempo'){const step=Number(a)||1;if(musicOn())tone(ctx,t,'triangle',BASS[0]*(1+step*.25),BASS[0]*(1+step*.25),.3,.05*v,.02);noise(ctx,t+.05,.6,.04*v,'bandpass',500,800,.9,.2);return;}
+ // Nov 8 2026 (tours + chrome): combo chime climbing the C-major pentatonic with the combo step (a second, brighter note for
+ // a ×3/×4 touch), a level-up sweep with a crowd-like swell, a soft falling knock when a ball is lost, the new-best fanfare and a UI tap.
+ if(kind==='mult'){const mult=Number(a)||1,combo=Math.max(1,Math.min(TENNIS_COMBO_NOTES.length,Number(b)||1)),hz=TENNIS_COMBO_NOTES[combo-1]*jitter(.004);
+  if(mult>=2||combo>=2)tone(ctx,t+.11,'triangle',hz,hz,.13,(.028+combo*.006)*v,.004);if(mult>=3)tone(ctx,t+.17,'sine',hz*2,hz*2,.16,.022*v,.004);return;}
+ if(kind==='rampup'){[392,523.25,659.25].forEach((hz,i)=>tone(ctx,t+i*.06,'triangle',hz,hz*1.01,.16,.04*v,.006));noise(ctx,t+.04,.7,.05*v,'bandpass',600,1500,.6,.18);return;}
+ if(kind==='life'){tone(ctx,t+.2,'sine',220,165,.2,.05*v,.01);tone(ctx,t+.36,'sine',165,110,.26,.045*v,.01);return;}
+ if(kind==='best'){[523.25,659.25,783.99,1046.5,1318.5].forEach((hz,i)=>tone(ctx,t+i*.07,'triangle',hz,hz,i===4?.5:.15,.05*v));noise(ctx,t+.3,.6,.035*v,'highpass',5000,7000,.7,.05);haptic([14,30,20,30,30]);return;}
+ if(kind==='ui'){tone(ctx,t,'sine',880*jitter(.03),660,.05,.035*v,.003);return;}
  if(kind==='net'){
   if(a==='net'){tone(ctx,t,'sine',80,45,.14,.13*v);noise(ctx,t,.22,.06*v,'lowpass',900,300,.7);} // net thud
   else{tone(ctx,t,'sine',1318,1290,.13,.06*v);tone(ctx,t+.005,'triangle',1976,1950,.09,.03*v);} // tape "tick"

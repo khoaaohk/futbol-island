@@ -260,3 +260,15 @@
 @media(max-height:520px){.game[data-arcade-kind=pinball]{--pb-pad-h:96px}.game[data-arcade-kind=pinball] .controls{grid-template-columns:minmax(0,200px) 150px minmax(0,200px);justify-content:space-between}.game[data-arcade-kind=pinball] .controls>button[data-pinball-pad]{min-height:96px}.game[data-arcade-kind=pinball] .message{bottom:calc(var(--pb-bottom) + 64px)}}
 @media(max-width:370px){.game[data-arcade-kind=pinball] .controls{grid-template-columns:minmax(0,1fr) 140px minmax(0,1fr)}.game[data-arcade-kind=pinball] .controls>button[data-pinball-launch]{font-size:15px}}
 @media(prefers-reduced-motion:reduce){.game[data-arcade-kind=pinball] .controls>button{transition:none}.game[data-arcade-kind=pinball] .message{animation-duration:6s}}
+/* Nov 8 2026 pinball polish: balls-in-hand pips + the PERFECT ×N streak badge under the score (DOM only, no canvas cost).
+   The badge pops once per new streak value (key change); reduced motion keeps it static. */
+.game[data-arcade-kind=pinball] .pbHud{position:absolute;z-index:2;left:50%;top:calc(env(safe-area-inset-top,0px) + 62px);transform:translateX(-50%);display:flex;align-items:center;gap:8px;pointer-events:none}
+.game[data-arcade-kind=pinball] .pbHud i{display:flex;gap:4px;padding:5px 8px;border-radius:999px;background:#0b1024b3}
+.game[data-arcade-kind=pinball] .pbHud i b{width:9px;height:9px;border-radius:50%;background:#35415c}
+.game[data-arcade-kind=pinball] .pbHud i b[data-on]{background:#ffe86d;box-shadow:0 0 6px #ffe86d88}
+/* Nov 8 2026: match clock chip (was a floor decal the phone camera cropped under the left flipper pad). */
+.game[data-arcade-kind=pinball] .pbHud .pbClock{padding:3px 9px;border-radius:999px;background:#0b1024b3;border:1.5px solid #73fff1;color:#fff6dc;font-style:normal;font-size:12px;font-weight:900;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
+.game[data-arcade-kind=pinball] .pbHud .pbClock[data-late]{border-color:#ff7a8a;color:#ff7a8a}
+.game[data-arcade-kind=pinball] .pbHud strong{padding:4px 10px;border-radius:999px;background:#ffe86d;color:#2a2310;font-size:13px;font-weight:900;line-height:1.2;white-space:nowrap;animation:pbStreak .35s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes pbStreak{from{transform:scale(1.5)}to{transform:scale(1)}}
+@media(prefers-reduced-motion:reduce){.game[data-arcade-kind=pinball] .pbHud strong{animation:none}}

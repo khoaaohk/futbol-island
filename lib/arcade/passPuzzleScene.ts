@@ -169,6 +169,10 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   confettiAge=0;confetti.count=CONFETTI;}
  // A completed pass: a quick sparkle ring at the receiver's feet.
  const passPop=flatRing(.6,.78,'#fff3d2',.9);passPop.name='puzzle-pass-pop';let passPopAge=-1;
+ // Nov 8 2026: the same pooled ring flashes red where a defender steals the ball (no new mesh or draw), and the cups tint the
+ // pass trail (Pro Cup gold, Legend Cup violet: existing arcade colours). popColor/passTint are reused Colors (no allocation).
+ const popMat=passPop.material as T.MeshBasicMaterial,POP_RECEIVE=new T.Color('#fff3d2'),POP_STEAL=new T.Color('#ff6b7d');let passTint='#70fff0';
+ function setTier(look:'gold'|'violet'|null){passTint=look==='gold'?'#ffd45c':look==='violet'?'#c39bff':'#70fff0';}
  function clearBeats(){confettiAge=-1;confetti.count=0;passPopAge=-1;passPop.visible=false;failAge=-1;assister=-2;flightReceiver=lastKicker=-1;stopBy={defender:-1,keeper:false};}
  const ball=stage.football(BALL_R),ballShadow=new T.Mesh(new T.CircleGeometry(.24,16),new T.MeshBasicMaterial({color:'#193e37',transparent:true,opacity:.35,depthWrite:false}));ballShadow.rotation.x=-Math.PI/2;scene.add(ballShadow);
  let net:{attribute:T.BufferAttribute;rest:Float32Array;hit:number;x:number}|null=null;
@@ -299,11 +303,11 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  function onEvent(e:PuzzleEvent){
   const att=e.attacker!==undefined?attackers[e.attacker]:undefined,def=e.defender!==undefined?defenders[e.defender]:undefined;
   switch(e.type){
-   case 'kick':lastKicker=e.attacker??-1;trailCount=trailHead=trailClock=0;trailLife=.35;trailMaterial.color.set(e.kind==='shot'?'#ff75cb':e.kind==='header'?'#b994ff':'#70fff0');if(att){att.kickLeft=.34;att.motion.squash=e.kind==='header'?3.2:2.4;att.motion.squashSerial=(att.motion.squashSerial??0)+1;if(e.kind==='header')react(att,'header');}break;
+   case 'kick':lastKicker=e.attacker??-1;trailCount=trailHead=trailClock=0;trailLife=.35;trailMaterial.color.set(e.kind==='shot'?'#ff75cb':e.kind==='header'?'#b994ff':passTint);if(att){att.kickLeft=.34;att.motion.squash=e.kind==='header'?3.2:2.4;att.motion.squashSerial=(att.motion.squashSerial??0)+1;if(e.kind==='header')react(att,'header');}break;
    case 'receive':if(att){if(e.touch==='chest')react(att,'chest',-2.6);else if(e.touch==='thigh')react(att,'thigh',-2.2);else if(e.touch==='header')react(att,'header',2.8);else{att.receiveLeft=.45;att.motion.squash=-1.8;att.motion.squashSerial=(att.motion.squashSerial??0)+1;}
-    if(!stage.reduced){passPopAge=0;passPop.visible=true;passPop.position.set(e.at.x,.05,e.at.z);}}break;
+    if(!stage.reduced){passPopAge=0;popMat.color.copy(POP_RECEIVE);passPop.visible=true;passPop.position.set(e.at.x,.05,e.at.z);}}break;
    case 'heavy_touch':react(att,'stumble',-3);break;
-   case 'intercept':react(def,(e.speed??0)>9?'slide':'deflect',-2.2);stopBy={defender:e.defender??-1,keeper:false};break;
+   case 'intercept':react(def,(e.speed??0)>9?'slide':'deflect',-2.2);stopBy={defender:e.defender??-1,keeper:false};if(!stage.reduced){passPopAge=0;popMat.color.copy(POP_STEAL);passPop.visible=true;passPop.position.set(e.at.x,.05,e.at.z);}break;
    case 'deflect':react(def,'deflect',-2);stopBy={defender:e.defender??-1,keeper:false};break;
    case 'save':case 'parry':stopBy={defender:-1,keeper:true};if(keeper){keeperDive.outcome=e.type==='save'?'catch':'parry';if(keeperDiveAge<0){keeperDiveAge=.2;keeperDive.kind='stand';keeperDive.height=Math.min(1,e.at.y/2.5);}keeper.motion.squash=-2.4;keeper.motion.squashSerial=(keeper.motion.squashSerial??0)+1;}break;
    case 'goal':goalAge=0;goalSerial++;assister=-2;scorer=e.attacker??0;for(const r of goalRings)r.position.set(e.at.x,.065,e.at.z-.5);for(const d of defenders){react(d,'dejected');d.dejected=true;}if(keeper){react(keeper,'dejected');}
@@ -413,6 +417,6 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  // The stage first, while the pooled rigs are still in the scene: its walk then releases their shared bean geometries from this
  // renderer (a rig's dispose detaches its meshes; disposed after, they kept this game's WebGL context alive, one per visit).
  stage.dispose();for(const rig of [...pool.attack,...pool.defend,...(pool.keeper?[pool.keeper]:[])])rig.dispose();}
- return{stage,debug,load,fit,update,setAim,setClock,setCalls,setHint,setScan,setReplayRuns,followPlayer,onEvent,resetActors,showStop,setReplayFocus,pick,toScreen,render:stage.render,dispose,get replayAmount(){return replayAmount;}};
+ return{stage,debug,setTier,load,fit,update,setAim,setClock,setCalls,setHint,setScan,setReplayRuns,followPlayer,onEvent,resetActors,showStop,setReplayFocus,pick,toScreen,render:stage.render,dispose,get replayAmount(){return replayAmount;}};
 }
 export type PassPuzzleScene=ReturnType<typeof createPassPuzzleScene>;

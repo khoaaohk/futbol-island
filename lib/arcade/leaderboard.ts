@@ -8,8 +8,25 @@
  *  - the score and the day it was played.
  * No account, no device id, no IP, no save code (or its pictures: they would leak part of the secret code).
  */
-export const BOARD_GAMES=['runner','pinball','tennis','live','puzzle','kick'] as const;
+/** Nov 8 2026: 'cupfinal' and 'legend' are Breakaway Run's elite tiers (lib/arcade/runnerModes.ts), each with its own board so they
+ * never mix into (or reset) the original 'runner' board. Ids stay [a-z]{2,8} (the session token pattern in leaderboardServer.ts) and
+ * need supabase/migrations/20261108_runner_tier_boards.sql on the island store. */
+/** Nov 8 2026: 'livepro' and 'livelgnd' are Island Strikers' Pro and Legend leagues (lib/arcade/strikerTiers.ts), each with its own
+ * board beside 'live' (never mixed, never reset). They need supabase/migrations/20261108_strikers_league_boards.sql. */
+/** Nov 8 2026: 'tenpro' and 'tenlgnd' are Futbol Tennis' Pro Tour and Legend Tour (lib/games/soccerTennis.ts TENNIS_TOURS), each with its
+ * own board beside 'tennis' (never mixed, never reset). They need supabase/migrations/20261108_tennis_tier_boards.sql. */
+/** Nov 8 2026: 'pinderby' and 'pinfinal' are Futbol Pinball's elite tiers (lib/games/soccerPinballTiers.ts: Derby Night, World
+ * Final), each with its own board beside 'pinball' (never mixed, never reset). They need supabase/migrations/20261109_pinball_tier_boards.sql. */
+/** Nov 8 2026: 'puzpro' and 'puzlgnd' are Pass Puzzles' Pro Cup and Legend Cup (lib/passPuzzle/tiers.ts), each with its own board
+ * beside 'puzzle' (never mixed, never reset). Their score is the child's cup points total (best per puzzle), a running total like
+ * the star board. They need supabase/migrations/20261110_puzzle_tier_boards.sql (dated to run after every other board file). */
+export const BOARD_GAMES=['runner','pinball','tennis','live','puzzle','kick','cupfinal','legend','livepro','livelgnd','tenpro','tenlgnd','pinderby','pinfinal','puzpro','puzlgnd'] as const;
 export type BoardGame=typeof BOARD_GAMES[number];
+/** Nov 8 2026: the Hall of High Scores' tab DISPLAY order: each elite tier board sits right after its parent game's board
+ * (BOARD_GAMES keeps the data order and ids unchanged). */
+export const BOARD_TIER_TABS:Partial<Record<BoardGame,readonly BoardGame[]>>={runner:['cupfinal','legend'],pinball:['pinderby','pinfinal'],tennis:['tenpro','tenlgnd'],live:['livepro','livelgnd'],puzzle:['puzpro','puzlgnd']};
+const TIER_TAB_SET=new Set<BoardGame>(Object.values(BOARD_TIER_TABS).flat() as BoardGame[]);
+export const BOARD_TAB_ORDER:readonly BoardGame[]=BOARD_GAMES.filter(g=>!TIER_TAB_SET.has(g)).flatMap(g=>[g,...(BOARD_TIER_TABS[g]??[])]);
 export const isBoardGame=(g:unknown):g is BoardGame=>typeof g==='string'&&(BOARD_GAMES as readonly string[]).includes(g);
 
 /**
@@ -25,6 +42,28 @@ export const BOARD_RULES:Record<BoardGame,{name:string;unit:string;max:number;ba
  puzzle:{name:'Pass Puzzles',unit:'stars',max:300,base:300,perSecond:0,minSeconds:8,learn:'Every star is a pass you learned to see.'},
  // Summit Kick (Summit Isle, Oct 12 2026; lib/town/summitKick.ts): at most 780 a round (5 hoops, accuracy, speed), so 1000 is the ceiling.
  kick:{name:'Summit Kick',unit:'points',max:1_000,base:400,perSecond:60,minSeconds:6,learn:'Pick a corner: keepers stand in the middle.'},
+ // Breakaway elite tiers (Nov 8 2026): faster, denser routes that start at stage 5/6, so a slightly higher rate; the ceiling stays
+ // inside the table's 400000 check.
+ cupfinal:{name:'Cup Final Run',unit:'points',max:400_000,base:3_000,perSecond:1_800,minSeconds:12,learn:'Scan early: every defender moves.'},
+ legend:{name:'Legend Run',unit:'points',max:400_000,base:3_000,perSecond:1_800,minSeconds:12,learn:'Two hearts. Pick the open lane every time.'},
+ // Strikers leagues (Nov 8 2026, strikerTiers.ts): 2-minute matches, league points × 2 / × 3. A dream Legend match (10 goals with
+ // every skill, a full combo and a streak, 60 passes, a win) is about 37000, so the ceilings sit above it and the rates above the
+ // best real pace (goal pauses and replays make a 120 s match last 150 s or more); the table's own check is 1..400000.
+ livepro:{name:'Strikers Pro League',unit:'league points',max:40_000,base:1_000,perSecond:170,minSeconds:30,learn:'Faster Blue. Pass in a combo, then finish.'},
+ livelgnd:{name:'Strikers Legend League',unit:'league points',max:60_000,base:1_500,perSecond:250,minSeconds:30,learn:'Small goals. Combos and skill shots win it.'},
+ // Tennis tours (Nov 8 2026, soccerTennis.ts TENNIS_TOURS): a touch scores at most 10 × 4 (golden) × 4 (combo) × 1.8 (ramp) × scale (1 Pro,
+ // 1.5 Legend) and you touch at most about once a second, plus a won-point bonus, so the rates sit above the best real pace; endless
+ // tours stop when the balls run out, and the ceilings sit far above a very long run (the table's own check is 1..400000).
+ tenpro:{name:'Tennis Pro Tour',unit:'tour points',max:200_000,base:1_000,perSecond:300,minSeconds:20,learn:'Perfect touches score triple. Keep the combo.'},
+ tenlgnd:{name:'Tennis Legend Tour',unit:'tour points',max:300_000,base:1_500,perSecond:450,minSeconds:20,learn:'Two balls. Read the landing ring, plant, strike.'},
+ // Pinball elite tiers (Nov 8 2026, soccerPinballTiers.ts): the table runs ×1.12 / ×1.22 faster and every point is ×2 / ×3, so the
+ // classic rate (2500/s, already far above a real run) scales by speed × multiplier; the ceiling stays the table's 400000.
+ pinderby:{name:'Pinball Derby Night',unit:'points',max:400_000,base:10_000,perSecond:5_600,minSeconds:20,learn:'Faster ball, shorter flippers: read the drop early.'},
+ pinfinal:{name:'Pinball World Final',unit:'points',max:400_000,base:15_000,perSecond:9_200,minSeconds:20,learn:'Two balls, no ball save. Every block counts.'},
+ // Pass Puzzles cups (Nov 8 2026, lib/passPuzzle/tiers.ts): cup points = stars × 100 × skill (at most ×2.75), summed over the cup's 6
+ // puzzles, so at most 4950. Like the star board it is a running total (no per-second rule); the ceiling sits just above the max.
+ puzpro:{name:'Pass Puzzles Pro Cup',unit:'cup points',max:5_000,base:5_000,perSecond:0,minSeconds:8,learn:'Beat the clock. First-try passes score more.'},
+ puzlgnd:{name:'Pass Puzzles Legend Cup',unit:'cup points',max:5_000,base:5_000,perSecond:0,minSeconds:8,learn:'Two tries, hunters everywhere. Pass early.'},
 };
 /** Rows shown per board. */
 export const BOARD_SIZE=10;
@@ -130,11 +169,13 @@ export function sanitizeLocalBoards(v:unknown):LocalBoards{
  }
  return out;
 }
+/** Nov 8 2026: boards whose score is a running total (the Pass Puzzles cups), so the same letters keep one row, like 'puzzle'. */
+export const RUNNING_TOTAL_BOARDS:ReadonlySet<string>=new Set(['puzpro','puzlgnd']);
 /** Adds a score to the device board for `game`; returns the new boards and the entry's rank (null when it didn't make the top 10). */
 export function addLocalScore(b:LocalBoards,game:BoardGame,e:{initials:string;icon:string;score:number;now:number}):{boards:LocalBoards;rank:number|null;entry:LocalEntry}{
  const seq=b.seq+1,entry:LocalEntry={initials:e.initials,icon:e.icon,score:e.score,day:dayOf(e.now),week:weekOf(e.now),seq};
  // Pass Puzzles' score is a running total of stars, so the same letters keep one row (their best), not one row per new star.
- const kept=(b.boards[game]??[]).filter(r=>!(game==='puzzle'&&r.initials===e.initials&&r.score<=e.score));
+ const kept=(b.boards[game]??[]).filter(r=>!((game==='puzzle'||RUNNING_TOTAL_BOARDS.has(game))&&r.initials===e.initials&&r.score<=e.score));
  const rows=[...kept,entry].sort(compareRows),rank=rows.indexOf(entry)+1;
  return {boards:{...b,seq,boards:{...b.boards,[game]:rows.slice(0,BOARD_SIZE)}},rank:rank<=BOARD_SIZE?rank:null,entry};
 }

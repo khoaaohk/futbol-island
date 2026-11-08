@@ -1,5 +1,5 @@
 'use client';
-import {TENNIS_COURTS,TENNIS_DRILL,tennisCourtTouches,type TennisTouchGuide} from '@/lib/games/soccerTennis';
+import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_TOURS,TENNIS_TOUR_RULES,tennisCourtTouches,type TennisTouchGuide} from '@/lib/games/soccerTennis';
 import styles from './TennisCourtPicker.module.css';
 
 /** Futbol Tennis court picker (round 3, Oct 26 2026): a compact row of court chips (number, stars, lock), the HARD
@@ -14,21 +14,26 @@ export function tennisCourtPills(level:number):string[]{const c=TENNIS_COURTS[le
  return out.slice(0,3);}
 const Lock=()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>;
 
-export function TennisCourtPicker({unlocked,level,stars,onPick}:{unlocked:number;level:number;stars:number[];onPick:(level:number)=>void}){
+/** `tour` (Nov 8 2026): while a tour is picked no court chip is pressed and the info line describes the tour instead. */
+export function TennisCourtPicker({unlocked,level,stars,onPick,tour=0}:{unlocked:number;level:number;stars:number[];onPick:(level:number)=>void;tour?:number}){
  const top=Math.max(1,Math.min(TENNIS_COURTS.length,unlocked)),court=TENNIS_COURTS[level-1]??TENNIS_COURTS[0],best=stars[level-1]??0;
  const chip=(i:number)=>{const n=i+1,locked=n>top,c=TENNIS_COURTS[i];
-  return <button key={c.name} type="button" className={styles.chip} data-court={n} data-hard={c.hard||undefined} aria-pressed={n===level} disabled={locked}
+  return <button key={c.name} type="button" className={styles.chip} data-court={n} data-hard={c.hard||undefined} aria-pressed={!tour&&n===level} disabled={locked}
    aria-label={`Court ${n}, ${c.name}${locked?', locked: win the court before it':`, ${stars[i]??0} of 3 stars`}`} onClick={()=>onPick(n)}>
    <b>{n}</b>{locked?<i className={styles.lock}><Lock/></i>:<i className={styles.chipStars} aria-hidden="true">{tennisStarText(stars[i]??0)}</i>}</button>;};
  const hardFrom=TENNIS_COURTS.findIndex(c=>c.hard);
  return <div className={styles.picker} data-testid="tennis-court-picker">
   <div className={styles.row} role="group" aria-label="Courts">{TENNIS_COURTS.slice(0,hardFrom).map((_,i)=>chip(i))}</div>
   <div className={styles.row} role="group" aria-label="Hard courts"><span className={styles.hardTag}>HARD</span>{TENNIS_COURTS.slice(hardFrom).map((_,i)=>chip(hardFrom+i))}</div>
-  <div className={styles.info} data-hard={court.hard||undefined}>
+  {tour===1||tour===2?<div className={styles.info} data-hard data-tour-info>
+   <strong>{TENNIS_TOURS[tour-1].name}</strong>
+   <span className={styles.rival}>{TENNIS_TOURS[tour-1].lesson}</span>
+   <span className={styles.pills}><em>{TENNIS_TOUR_RULES[tour-1].lives} balls</em><em>Perfect ×3</em><em>Gets faster</em></span>
+  </div>:<div className={styles.info} data-hard={court.hard||undefined}>
    <strong>{level}. {court.name}</strong>
    <span className={styles.rival}><b>{court.rival}</b> {court.habit}</span>
    <span className={styles.pills}>{tennisCourtPills(level).map(p=><em key={p}>{p}</em>)}<em className={styles.best} aria-label={`Best: ${best} of 3 stars`}>{tennisStarText(best)}</em></span>
-  </div>
+  </div>}
  </div>;
 }
 

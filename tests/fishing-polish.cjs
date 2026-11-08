@@ -105,8 +105,8 @@ const uw=e.load('lib/town/fishing/underwater.ts'),cat=e.load('lib/town/fishing/f
 // Back vs Play with friends (landscape audit Oct 23, every size, portrait too): with the friends button in the HUD row, Back sits right
 // of it (Paths slot + gap + friends + badge + gap) and the phone bar starts after Back; <= 340 px (friends under Paths) Back keeps the Paths slot.
 {const css=src('components/FishingHost.module.css'),jobs=src('components/IslandJobs.module.css');
- ok(/:global\(\.town-app:has\(nav\[data-hud-triggers\]>\[data-party-open\]\)\) \.back\{--fish-back-left:calc\(var\(--btn-icon,44px\) \* 2 \+ var\(--island-hud-pair-gap,8px\) \* 2 \+ 1px\)/.test(css),'Back moves right of the friends button');
- ok(/@media\(max-width:340px\)\{:global\(\.town-app:has\(nav\[data-hud-triggers\]>\[data-party-open\]\)\) \.back\{left:calc\(18px \+ env\(safe-area-inset-left,0px\)\)\}\}/.test(css),'narrow phones keep the Paths slot');
+ ok(/\.town-app\[data-fishing\]\) \.triggers \.circle\[data-party-open\]\{display:none\}/.test(fs.readFileSync(path.join(__dirname,'..','components/IslandSettings.module.css'),'utf8')),'the friends button is hidden while fishing, so Back keeps the top-left corner (owner Nov 8 2026)');
+ ok(/\.catch\[data-side=center\]\{transform:translate\(-50%,-50%\)\}/.test(css),'the catch card is centred on screen when it clears the angler');
  ok(/\.town-app\[data-fishing\]:has\(nav\[data-hud-triggers\]>\[data-party-open\]\)\) \.wallet\[data-job-wallet\]\{max-width:none;left:calc\(var\(--island-hud-edge,18px\) \+ env\(safe-area-inset-left,0px\) \+ var\(--btn-icon,44px\) \* 2 \+ var\(--island-hud-pair-gap,8px\) \* 3 \+ 1px \+ var\(--btn-nav-width,76px\)\)/.test(jobs),'phone bar starts after the moved Back pill');}
 
 console.log(`PASS fishing polish: heat-gated sway / life / particles, shader hooks, overlay sleeps at rest, fewer draws, seabed ≤ +15 %, continuous biter, shark fin on the body (${checks} checks)`);

@@ -42,6 +42,7 @@ import {TREE_KICK,kickStance,leanFor,kickTarget,kickLeaves,TREE_KICK_LESSON,TREE
 import {FORAGE,FRUIT_LOOK,FORAGE_TIP,FOLLOW_CAMERA,fruitTreeSteps,hangingNow,capLeft,recordPick,dropCount,ballDropCount,readForage,writeForage,forageStore,forageActions,
  localForageDay,fruitingToday,fruitToday,dayHash,contactAt,type FruitLook,type FruitTree,type ForageSave,type TreeSite} from '../town/summitForage';
 import {SUMMIT_TREE_SITES,SUMMIT_TREE_SWAY,swayWeight} from '../town/summitIsleWorld';
+import {canopyHang} from '../town/summitOrchard';
 import {countFruitShake} from '../analytics/summitEvents';
 import {SUMMIT_BOX,SUMMIT_PATHS,SUMMIT_LANDMARKS,SUMMIT_CENTER,SUMMIT_VISUAL_DROP,summitGround,onSummitIsle,beachPoint,summitCameraPull} from '../town/summitIsle';
 import {insideObstacle,type Obstacle} from '../town/simulation';
@@ -177,17 +178,22 @@ export function bananaLayout(n:number,lying:boolean):readonly T.Matrix4[]{
 export const REST_LIFT=.035;
 export function restHeight(L:FruitLook,banana:boolean){return L.r*(banana?L.width:L.elong>1.2?L.width*(1+.2*L.taper):L.elong)*.94+REST_LIFT;}
 
-/** Where fruit k hangs today: on the canopy's surface on the follow camera's side (it looks from +x +z), or clustered under a
- *  palm's, banana's or papaya's crown; the day's hash turns the positions round, so they differ from day to day. */
+/** Where fruit k hangs today: on the canopy's leaves on the follow camera's side (it looks from +x +z), or clustered under a
+ *  palm's, banana's or papaya's crown; the day's hash turns the positions round, so they differ from day to day. Canopy fruit sits on
+ *  the baked lobes' real faceted surface (rig.lobes; Nov 8 2026, owner: fruit was floating beside the lobed trees), a third of its
+ *  radius proud of the leaves; tests/fruit-on-tree.cjs checks every tree, form, kind, slot and day. */
 export function hangPoint(t:FruitTree,k:number,day=''):T.Vector3{
  const c=t.rig.crown,j=dayHash(day,t.id,3)-.5,cam=1.03;
- // Bananas: the hands up the bunch's stalk (the day turns the bunch, so the hands sit a little differently each day).
- const st=t.rig.stalk;if(t.fruit==='banana'&&st){const f=[.08,.34,.6][k%3]+j*.1,a=cam+j*2.4+k*1.9,o=.1;
-  return new T.Vector3(c.x+(st.x-c.x)*f+Math.cos(a)*o,c.y+(st.y-c.y)*f,c.z+(st.z-c.z)*f+Math.sin(a)*o);}
+ // Bananas: the hands up the bunch's stalk, each fanned out from the stalk itself (the day turns the bunch a little).
+ const st=t.rig.stalk;if(t.fruit==='banana'&&st){const f=[.1,.36,.6][(k+Math.floor((j+.5)*3))%3]+j*.12;
+  return new T.Vector3(c.x+(st.x-c.x)*f,c.y+(st.y-c.y)*f,c.z+(st.z-c.z)*f);}
  if(c.hang==='under'){const a=cam+(k-1)*1.1+j*1.2;return new T.Vector3(c.x+Math.cos(a)*(c.rx+.3*(t.kind==='palm'?0:.4)),c.y-(k%2)*c.ry,c.z+Math.sin(a)*(c.rx+.3*(t.kind==='palm'?0:.4)));}
  const a=cam+(k-1)*.95+j*1.4,el=[-.18,.22,-.45][(k+Math.floor((j+.5)*3))%3];
- return new T.Vector3(c.x+Math.cos(el)*Math.cos(a)*c.rx*.97,c.y+Math.sin(el)*c.ry*.97,c.z+Math.cos(el)*Math.sin(a)*c.rx*.97);
+ const d=new T.Vector3(Math.cos(el)*Math.cos(a),Math.sin(el),Math.cos(el)*Math.sin(a));
+ if(t.rig.lobes){const proud=.3*FRUIT_LOOK[t.fruit].r;for(let n=0;n<6;n++){const p=canopyHang(t.rig.lobes,c,d,proud);if(p)return p;d.applyAxisAngle(Y_AXIS,.5);}}
+ return new T.Vector3(c.x+d.x*c.rx*.8,c.y+d.y*c.ry*.8,c.z+d.z*c.rx*.8);
 }
+const Y_AXIS=new T.Vector3(0,1,0);
 
 export function createSummitForage(scene:T.Scene,ports:Ports){
  const now=ports.now??(()=>Date.now()),rand=ports.random??Math.random,cue=(k:string)=>ports.cue?.(k),U=ports.sway??SUMMIT_TREE_SWAY;

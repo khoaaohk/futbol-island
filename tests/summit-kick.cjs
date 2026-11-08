@@ -127,7 +127,10 @@ await ok('leaderboard: registered with a sane ceiling, rate and min play time',a
  // The SQL allow-list: an additive migration after the boards one, ending with its OK row.
  const files=fs.readdirSync(path.join(ROOT,'supabase/migrations')).sort(),f=files.find(x=>/_summit_kick_board\.sql$/.test(x));assert(f,'migration present');
  assert(files.indexOf(f)>files.indexOf('20261013_arcade_leaderboards.sql'));
- const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES)assert(sql.includes(`'${g}'`),'SQL allows '+g);
+ const sql=read('supabase/migrations/'+f);for(const g of ['runner','pinball','tennis','live','puzzle','kick'])assert(sql.includes(`'${g}'`),'SQL allows '+g);
+ // Nov 8 2026: later boards (Breakaway tiers, Strikers leagues) widen the same check in their own later migrations; the LAST
+ // migration that rewrites arcade_scores_game_check must allow every board game.
+ {const widen=files.filter(x=>/arcade_scores_game_check/.test(read('supabase/migrations/'+x))).pop(),last=read('supabase/migrations/'+widen);for(const g of L.BOARD_GAMES)assert(last.includes(`'${g}'`),`latest allow-list (${widen}) allows ${g}`);}
  assert.match(sql.trim().split('\n').slice(-1)[0],/\) as missing\) x;$/);assert(/'OK, summit kick board installed'/.test(sql));
  assert(!/\bdrop\s+(table|function|column)|truncate|delete from/i.test(sql.replace(/--.*$/gm,'')),'additive: only the check is widened');
 });

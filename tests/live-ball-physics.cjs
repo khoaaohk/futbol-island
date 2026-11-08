@@ -62,10 +62,14 @@ const fake=()=>({kicks:0,lastKick:{height:0,loft:0,dur:0},ball:{height:0}});
 {
  const {createLiveBallSound,LIVE_BALL_SOUND}=load('lib/town/liveBallSound.ts'),{VENUES,BEACH_VENUE}=load('lib/town/venues.ts');
  const venue=VENUES.find(v=>v.id==='7v7'),sim=new MatchSim(270+41,'7v7'),b=createLiveBallPhysics(SCALE,venue),s=createLiveBallSound(venue,SCALE),heard={kick:0,bounce:0,receive:0},gains=[];
- const play=(kind,gain)=>{heard[kind]++;gains.push(gain);};
+ // Nov 8 2026: the Nov 5 layered one-shots (thump/tick/thud/poke/swish/crowd) also go through `play`. The pass 'tick' is
+ // deliberately S.tick*level (0.55 × kick level, ~0.19-0.55) so it sits under the kick, i.e. below `quiet` by design.
+ // So [quiet, 1] is checked on the three base sounds only; layers just need a gain in (0, 1].
+ const layers=[];const play=(kind,gain)=>{if(kind in heard){heard[kind]++;gains.push(gain);}else layers.push(gain);};
  for(let i=0;i<60*90;i++){sim.step(DT);b.step(sim,DT,!sim.ball.owner);s.update(sim,b.landing,play);}
  assert(heard.kick>10&&heard.receive>5&&heard.bounce>0,'a 7v7 match plays kicks, traps and bounces: '+JSON.stringify(heard));
  assert(gains.every(g=>g>=LIVE_BALL_SOUND.quiet-1e-9&&g<=1),'gains stay in [quiet, 1]');
+ assert(layers.length>0&&layers.every(g=>g>0&&g<=1),'layered one-shot gains stay in (0, 1]');
  assert(new Set(gains.map(g=>g.toFixed(2))).size>3,'volume varies with ball speed');
  const before={...heard};for(let i=0;i<60*20;i++){sim.step(DT);b.step(sim,DT,!sim.ball.owner);s.update(sim,b.landing,null);}
  s.update(sim,0,play);assert.deepEqual(heard,before,'touches made while unheard never replay later');

@@ -32,7 +32,9 @@ await ok('initials: three letters A–Z, blocklist, pictures',()=>{
 });
 
 await ok('score bounds and plausibility',()=>{
- assert.deepEqual([...L.BOARD_GAMES],['runner','pinball','tennis','live','puzzle','kick']);// kick: Summit Kick (tests/summit-kick.cjs)
+ // Nov 8 2026: Breakaway Run's elite tiers got their own boards (cupfinal, legend; tests/runner-polish-nov8.cjs).
+ // Nov 8 2026: Island Strikers' Pro and Legend leagues too (livepro, livelgnd; tests/striker-polish-nov8.cjs).
+ assert.deepEqual([...L.BOARD_GAMES],['runner','pinball','tennis','live','puzzle','kick','cupfinal','legend','livepro','livelgnd','tenpro','tenlgnd','pinderby','pinfinal','puzpro','puzlgnd']);/* Nov 8 2026: Pass Puzzles Pro / Legend Cup boards (tests/puzzle-polish-nov8.cjs) *//* Nov 8 2026: Tennis Pro / Legend Tour boards; Pinball Derby Night / World Final (tests/pinball-polish-nov8.cjs) */// kick: Summit Kick (tests/summit-kick.cjs)
  for(const g of L.BOARD_GAMES){const r=L.BOARD_RULES[g];
   for(const bad of [0,-1,1.5,NaN,Infinity,r.max+1,'10',null])assert.equal(L.scoreInBounds(g,bad),false,`${g} ${bad}`);
   for(const good of [1,r.max])assert.equal(L.scoreInBounds(g,good),true,`${g} ${good}`);
@@ -243,7 +245,11 @@ await ok('wiring: lazy UI, no timers or polling, device key, route, npm test',()
  for(const f of ['components/games/ArcadeGame3D.tsx','components/LiveArcadeMatch.tsx','components/games/PassPuzzleGame.tsx','components/ArcadeRoom.tsx']){const src=read(f);
   assert(!/^import [^;]*(HighScoreEntry|ArcadeBoards|BoardsPanel)/m.test(src),'board UI is never a static import: '+f);
   assert(/dynamic\(\(\)=>import\('\.{1,2}\/arcade\/ArcadeBoards'\)/.test(src),'lazy hall: '+f);}
- for(const f of ['components/games/ArcadeGame3D.tsx','components/LiveArcadeMatch.tsx','components/games/PassPuzzleGame.tsx'])assert(/beginBoardSession\('?\w*'?\)|beginBoardSession\(kind\)/.test(read(f))&&/HighScoreEntry/.test(read(f)),'session + high score: '+f);
+ for(const f of ['components/games/ArcadeGame3D.tsx','components/LiveArcadeMatch.tsx','components/games/PassPuzzleGame.tsx'])assert(/beginBoardSession\('?\w*'?\)|beginBoardSession\(kind\)|beginBoardSession\(boardRef\.current\)/.test(read(f))&&/HighScoreEntry/.test(read(f)),'session + high score: '+f);
+ // Nov 8 2026: hall tab display order puts each tier board right after its parent; data order/ids unchanged; selected tab scrolled into view.
+ assert.deepEqual([...L.BOARD_TAB_ORDER],['runner','cupfinal','legend','pinball','pinderby','pinfinal','tennis','tenpro','tenlgnd','live','livepro','livelgnd','puzzle','puzpro','puzlgnd','kick']);
+ assert.equal(L.BOARD_TAB_ORDER.length,L.BOARD_GAMES.length);assert.equal(L.BOARD_GAMES[0],'runner');assert.equal(L.BOARD_GAMES[15],'puzlgnd');
+ assert(/scrollIntoView\(\{inline:'nearest'[^}]*reduced\?'instant'/.test(read('components/arcade/ArcadeBoards.tsx')),'selected tab scrolled into view (instant under reduced motion)');
  for(const f of ['lib/arcade/boardClient.ts','components/arcade/HighScoreEntry.tsx','components/arcade/BoardsPanel.tsx','components/arcade/ArcadeBoards.tsx','components/arcade/BoardTable.tsx'])
   assert(!/setInterval|setTimeout|requestAnimationFrame/.test(read(f)),'no timers or loops: '+f);
  assert(/\/top\?game=/.test(read('lib/arcade/boardClient.ts'))&&/20_000/.test(read('lib/arcade/boardClient.ts')),'boards fetched on open, reused briefly');

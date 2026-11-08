@@ -6,6 +6,7 @@ import {sideGameDress} from '../town/beanLooks';
 import type {ArcadePoseOptions} from './arcadePlayerMotion';
 import {readRunnerProgress,runnerBallFor} from './runnerMissions';
 import {readArcadeRecord} from './arcadeRecords';
+import {runnerBoardFor,runnerTierBest} from './runnerModes';
 import {districtAt,DISTRICTS,routeGrade} from '../../components/games/runnerRoute';
 import {createRunnerTrack} from './runnerTrack';
 import {createRunnerCinema,CINEMA,type CinemaKind} from './runnerCinema';
@@ -317,6 +318,9 @@ export function createRunnerFx(stage:ArcadeStage){
     pop('GOAL!','#ffe07a',5.2,1.5,beatFirst?'Beat the tackle, found the goal!':s.streak>1?`${Math.min(3,s.streak)} in a row!`:'');}
    else if(kind==='save'){keeperCheer=1.4;const dropped=s.comboDrops!==seen.drops;pop('SAVED!','#ff9bd2',3.2,.9,dropped?`Combo now ×${runnerMultiplier(s)}. Shoot where the keeper is not`:'Shoot where the keeper is not');}
    else if(kind==='onetwo')pop('ONE-TWO!','#ffe07a',3.8,1);
+   // Perfect dodge (Nov 8 2026): reuses the existing pools only (speed-line flare, the multiplier aura pulse, two dust kicks and,
+   // from a ×3 chain, a few stand photo flashes). No new mesh, light or draw call; reduced motion keeps only the aura pulse.
+   else if(kind==='perfect'){auraFlash=1;if(!reduced){lineFlash=1;puff(s.x-s.cutDir*.3,.1,4,1.2,.5);if(s.perfectChain>=2)photoFlashes(stage.mobile?6:10);}}
    else if(kind==='boss'&&s.boss===0&&s.lives>0&&/BEATEN/.test(s.message))pop('BACK LINE BEATEN!','#ffe07a',4.6,1.2);
    else if(kind==='shield')pop('RODE IT!','#9ff6ff',3.4,.9);
    else if(kind==='mission')pop('★ MISSION!','#ffe07a',4,1.3);
@@ -378,7 +382,8 @@ export function createRunnerFx(stage:ArcadeStage){
  }
  function reset(s:RunnerGame){
   // Replay hook: the record to beat is read once per run (no per-frame storage reads).
-  s.bestToBeat=typeof localStorage==='undefined'?0:readArcadeRecord('runner').best;s.newBest=false;
+  // Nov 8 2026: an elite tier (Cup Final, Legend) races its own best, not the classic record.
+  s.bestToBeat=typeof localStorage==='undefined'?0:runnerBoardFor(s.mode)==='runner'?readArcadeRecord('runner').best:runnerTierBest(s.mode);s.newBest=false;
   trauma=hitstop=lineFlash=follow=descent=punch=0;hitstopScale=1;cinema.reset();scenery.reset();camX=camY=camZ=camPitch=0;introPending=true;lastDuel=null;pending.heart=false;word.visible=false;wordMaterial.opacity=0;wordAge=wordLife=0;hype=0;track.reset();dustLife.fill(0);confLife.fill(0);dust.visible=confetti.visible=false;seen.state=null;
   flashLife.fill(0);flashDelay.fill(0);flashes.visible=aura.visible=false;auraMaterial.opacity=auraFlash=0;auraTier=1;pendingTier=0;keeperCheer=0;body.state=null;
   shield.visible=keeper.root.visible=passBall.visible=callout.visible=mud.visible=fork.visible=openSide.visible=false;for(const m of mates)m.rig.root.visible=false;

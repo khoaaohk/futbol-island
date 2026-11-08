@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {patchTuftWind} from './islandWind';
 import {effectiveTier,subscribeHeatTier} from './heatTier';
 
 /**
@@ -115,7 +116,7 @@ export function buildGroundDecals(parent:T.Object3D,plan:DecalPlan,name:string){
  const macro=(h:MacroHost):Inst[]=>plan.macro.filter(m=>MACRO_HOST[m.k]===h);
  const make=(label:string,geo:T.BufferGeometry,insts:Inst[],double=false)=>{
   if(!insts.length){geo.dispose();return;}
-  const mat=new T.MeshLambertMaterial({color:'#ffffff',side:double?T.DoubleSide:T.FrontSide});owned.push(geo,mat);
+  const mat=new T.MeshLambertMaterial({color:'#ffffff',side:double?T.DoubleSide:T.FrontSide});owned.push(geo,mat);if(label==='tufts')patchTuftWind(mat);/* island wind: blade tips sway (islandWind.ts), same draw */
   const mesh=new T.InstancedMesh(geo,mat,insts.length),o=new T.Object3D(),col=new T.Color();
   insts.forEach((s,i)=>{o.position.set(s.x,s.y,s.z);o.rotation.set(0,s.r,0);o.scale.set(s.sx,s.sy,s.sz);o.updateMatrix();mesh.setMatrixAt(i,o.matrix);mesh.setColorAt(i,col.set(s.col));});
   mesh.instanceMatrix.needsUpdate=true;if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;

@@ -34,25 +34,31 @@ export type FlightProfile={
  legHz:number;stride:number;
  /** Body sway at rest (stick insect, mantis head-scan) in rad. */
  sway:number;
+ /** Natural-motion pass (Nov 8 2026, "bug movements more natural"): lazy figure-eight share of the weave (butterflies: the lift
+  *  at twice the side-to-side rate), a buzz wobble of the body in rad (bees), the chance a hover ends on a flower (bees dip in
+  *  more), stop-go micro-pauses while walking (beetles, ladybirds, ants: 0 none .. 1 full stops), and a head / body twitch at rest
+  *  or in a hover in rad (antenna-turn look for crawlers, scan for dragonflies). */
+ figure8:number;buzz:number;perchP:number;stopGo:number;twitch:number;
 };
 const P=(o:Partial<FlightProfile>):FlightProfile=>({air:true,flies:true,speed:1.5,accel:2,walk:.3,lo:.6,hi:2,hz:3,amp:.9,base:.3,restBase:0,restAmp:0,restHz:.3,
- glide:0,weave:.4,hover:false,busy:[5,9],rest:[3,6],flyChance:0,hop:0,dash:false,legHz:9,stride:.04,sway:0,...o});
+ glide:0,weave:.4,hover:false,busy:[5,9],rest:[3,6],flyChance:0,hop:0,dash:false,legHz:9,stride:.04,sway:0,
+ figure8:0,buzz:0,perchP:.2,stopGo:0,twitch:0,...o});
 export const FLIGHT_PROFILES:Record<BugMove,FlightProfile>={
- 'butterfly-glide':P({speed:1.6,accel:1.5,lo:.9,hi:2.8,hz:2.4,amp:.95,base:.4,restBase:1.25,restAmp:.3,restHz:.35,glide:.35,weave:.7,busy:[6,11],rest:[3,6]}),
- 'moth-flutter':P({speed:1.3,accel:2.6,lo:.6,hi:2.2,hz:5.5,amp:.8,base:.25,restBase:.05,restAmp:.04,restHz:.5,weave:1.5,busy:[6,10],rest:[3,6]}),
- 'bee-hover':P({speed:2.1,accel:3.2,lo:.35,hi:1.4,hz:26,amp:.55,base:.2,restBase:-.05,weave:.6,hover:true,busy:[5,8],rest:[2,4]}),
- 'dragonfly-dart':P({speed:5.2,accel:5.5,lo:.7,hi:1.9,hz:17,amp:.28,base:.04,restBase:.02,restAmp:.02,restHz:.4,weave:.15,hover:true,busy:[6,10],rest:[2.5,5]}),
- 'damsel-hover':P({speed:1.4,accel:2.4,lo:.35,hi:1.2,hz:12,amp:.5,base:.25,restBase:1.4,restAmp:.04,weave:.3,hover:true,busy:[5,8],rest:[3,6]}),
+ 'butterfly-glide':P({speed:1.6,accel:1.5,lo:.9,hi:2.8,hz:2.4,amp:.95,base:.4,restBase:1.25,restAmp:.3,restHz:.35,glide:.35,weave:.7,busy:[6,11],rest:[3,6],figure8:.5}),
+ 'moth-flutter':P({speed:1.3,accel:2.6,lo:.6,hi:2.2,hz:5.5,amp:.8,base:.25,restBase:.05,restAmp:.04,restHz:.5,weave:1.5,busy:[6,10],rest:[3,6],figure8:.2,buzz:.05}),
+ 'bee-hover':P({speed:2.1,accel:3.2,lo:.35,hi:1.4,hz:26,amp:.55,base:.2,restBase:-.05,weave:.6,hover:true,busy:[5,8],rest:[1.5,3.5],buzz:.13,perchP:.45}),
+ 'dragonfly-dart':P({speed:5.2,accel:5.5,lo:.7,hi:1.9,hz:17,amp:.28,base:.04,restBase:.02,restAmp:.02,restHz:.4,weave:.06,hover:true,busy:[6,10],rest:[2.5,5],twitch:.7}),
+ 'damsel-hover':P({speed:1.4,accel:2.4,lo:.35,hi:1.2,hz:12,amp:.5,base:.25,restBase:1.4,restAmp:.04,weave:.3,hover:true,busy:[5,8],rest:[3,6],twitch:.3}),
  'firefly-drift':P({speed:.75,accel:.9,lo:.5,hi:2.4,hz:9,amp:.45,base:.25,weave:.8,busy:[1e9,1e9],rest:[0,0]}),
- 'beetle-trundle':P({air:false,speed:1.8,accel:2.2,walk:.32,lo:.6,hi:1.6,hz:13,amp:.55,base:.2,busy:[3,6],rest:[2,5],flyChance:.25,legHz:10,stride:.05}),
+ 'beetle-trundle':P({air:false,speed:1.8,accel:2.2,walk:.32,lo:.6,hi:1.6,hz:13,amp:.55,base:.2,busy:[3,6],rest:[2,5],flyChance:.25,legHz:10,stride:.05,stopGo:.7,twitch:.45}),
  'ground-dash':P({air:false,speed:2.2,accel:3,walk:2.1,lo:.4,hi:1,hz:15,amp:.5,base:.2,busy:[.5,1.4],rest:[1,2.6],flyChance:.12,dash:true,legHz:28,stride:.06}),
- 'hop-arc':P({air:false,speed:1.6,accel:3,walk:.22,lo:.3,hi:.8,hz:13,amp:.5,base:.2,busy:[1.5,3],rest:[1,3],hop:.65,legHz:8,stride:.04}),
+ 'hop-arc':P({air:false,speed:1.6,accel:3,walk:.22,lo:.3,hi:.8,hz:13,amp:.5,base:.2,busy:[1.5,3],rest:[1,3],hop:.65,legHz:8,stride:.04,twitch:.3}),
  'cicada-hop':P({air:false,speed:2.4,accel:3,walk:.12,lo:.6,hi:1.5,hz:18,amp:.45,base:.2,busy:[1,2],rest:[4,8],flyChance:.7,legHz:6,stride:.03}),
- 'ant-march':P({air:false,flies:false,walk:.5,busy:[3,7],rest:[.4,1.2],legHz:16,stride:.05}),
+ 'ant-march':P({air:false,flies:false,walk:.5,busy:[3,7],rest:[.4,1.2],legHz:16,stride:.05,stopGo:.35,twitch:.5}),
  'inchworm-crawl':P({air:false,flies:false,walk:.14,busy:[4,8],rest:[1,3],legHz:5,stride:.6}),
  'still-sway':P({air:false,flies:false,walk:.09,busy:[1,2.5],rest:[5,9],legHz:3,stride:.04,sway:.12}),
  'mantis-stalk':P({air:false,flies:false,walk:.16,busy:[1.5,3],rest:[3,6],legHz:4,stride:.05,sway:.35}),
- 'spider-jump':P({air:false,flies:false,walk:.25,busy:[.8,1.6],rest:[1.5,4],hop:.7,legHz:14,stride:.04}),
+ 'spider-jump':P({air:false,flies:false,walk:.25,busy:[.8,1.6],rest:[1.5,4],hop:.7,legHz:14,stride:.04,twitch:.6}),
 };
 
 export const enum Mode{Fly=0,Hover=1,Perch=2,Walk=3,Idle=4,Hop=5,Hidden=6}
@@ -72,6 +78,9 @@ export type FlightBug={
  /** Hop arc (start, length, time). */
  h0x:number;h0z:number;h0y:number;hT:number;hD:number;
  gliding:number;clock:number;fade:number;respawn:number;landing:boolean;hoverT:number;ftx:number;ftz:number;
+ /** Its own rhythm (seeded, fixed): a frequency factor (0.75-1.25) and phase for the smooth-noise wobbles, so no two bugs weave,
+  *  beat or pause in step; `yt` = a twitch's yaw offset still to turn through. */
+ nf:number;np:number;yt:number;
 };
 export type Floor=(x:number,z:number)=>number;
 
@@ -80,12 +89,17 @@ export function rand(b:FlightBug){b.seed=(b.seed+0x6d2b79f5)>>>0;let t=b.seed;t=
 const range=(b:FlightBug,r:readonly [number,number])=>r[0]+(r[1]-r[0])*rand(b);
 const ease=(k:number,dt:number)=>1-Math.exp(-k*dt);
 function angleTo(a:number,b:number){let d=b-a;while(d>Math.PI)d-=Math.PI*2;while(d<-Math.PI)d+=Math.PI*2;return d;}
+/** Smooth seeded noise in about [-1, 1] at rate f (Hz-ish): two incommensurate sines on the bug's own rhythm (no repeating loop). */
+export function wob(b:FlightBug,f:number,k=0){const t=b.clock*f*b.nf+b.np+k;return Math.sin(t)*.62+Math.sin(t*1.618+1.7+k)*.38;}
 
+/** Integer hash (so neighbouring seeds get unrelated rhythms). */
+const mix=(n:number)=>{let h=Math.imul((n>>>0)^((n>>>0)>>>16),0x45d9f3b)>>>0;h=Math.imul(h^(h>>>16),0x45d9f3b)>>>0;return (h^(h>>>16))>>>0;};
 export function createFlightBug(o:{id:string;move:BugMove;x:number;z:number;wander:number;alert:number;sneak:number;seed:number},floor:Floor):FlightBug{
  const prof=FLIGHT_PROFILES[o.move],g=floor(o.x,o.z);
  const b:FlightBug={id:o.id,prof,hx:o.x,hz:o.z,wander:Math.max(1.5,o.wander),alert:o.alert,sneak:o.sneak,x:o.x,y:g,z:o.z,vx:0,vy:0,vz:0,tx:o.x,ty:g,tz:o.z,g,
   yaw:0,pitch:0,roll:0,mode:prof.air?Mode.Fly:Mode.Idle,timer:0,fleeT:0,seed:o.seed>>>0,flap:0,fhz:prof.hz,famp:0,fbase:prof.restBase,open:0,leg:0,legAmp:0,legHz:prof.legHz,
-  h0x:0,h0z:0,h0y:0,hT:0,hD:1,gliding:0,clock:0,fade:1,respawn:0,landing:false,hoverT:0,ftx:0,ftz:0};
+  h0x:0,h0z:0,h0y:0,hT:0,hD:1,gliding:0,clock:0,fade:1,respawn:0,landing:false,hoverT:0,ftx:0,ftz:0,
+  nf:.75+(mix(o.seed)%1000)/2000,np:((mix(o.seed)>>>10)%6283)/1000,yt:0};
  placeHome(b,floor);return b;
 }
 /** (Re)start at a random spot near home, settled (perched / idle, or drifting for fireflies). */
@@ -139,10 +153,15 @@ function startHop(b:FlightBug,floor:Floor,flee=false){
 
 /** Steer the velocity towards the target (eased), with a sideways weave so paths curve; arrive slowly. */
 function steer(b:FlightBug,dt:number,speed:number,arrive:number,threeD:boolean){
- const dx=b.tx-b.x,dy=threeD?b.ty-b.y:0,dz=b.tz-b.z,d=Math.hypot(dx,dy,dz)||1e-6,want=speed*Math.min(1,d/arrive);
- const w=b.prof.weave*Math.sin(b.clock*1.3+(b.seed&255)*.1);
+ const p=b.prof,dx=b.tx-b.x,dy=threeD?b.ty-b.y:0,dz=b.tz-b.z,d=Math.hypot(dx,dy,dz)||1e-6;
+ // Speed breathes (±18 %) on the bug's own rhythm; the side weave is smooth noise, not one sine (no metronome zig-zag).
+ const want=speed*Math.min(1,d/arrive)*(1+.18*wob(b,.7));
+ const w=p.weave*wob(b,1.3);
  let ux=dx/d*want+(-dz/d)*w,uy=dy/d*want,uz=dz/d*want+(dx/d)*w;
- if(threeD)uy+=Math.sin(b.clock*2.1+(b.seed&63))*b.prof.weave*.25;
+ if(threeD){uy+=wob(b,2.1,2)*p.weave*.25;
+  // Lazy figure-eight (butterflies): the lift runs at twice the side-to-side rate; a glide sinks a little, the next flaps lift it.
+  if(p.figure8>0)uy+=Math.sin(2*(b.clock*1.3*b.nf+b.np))*p.weave*p.figure8*.55;
+  if(b.gliding>0)uy-=.3;}
  const k=ease(b.prof.accel,dt);b.vx+=(ux-b.vx)*k;b.vz+=(uz-b.vz)*k;b.vy+=(uy-b.vy)*k;
  const s=Math.hypot(b.vx,b.vy,b.vz);if(s>BUG_MAX_SPEED){const f=BUG_MAX_SPEED/s;b.vx*=f;b.vy*=f;b.vz*=f;}
  return d;
@@ -174,7 +193,8 @@ export function stepBug(b:FlightBug,dt:number,c:StepCtx):boolean{
    break;}
   case Mode.Hover:{flying=true;// hold position (a tiny jitter), then dart / bumble on
    const k=ease(p.accel*1.4,dt);b.vx+=(Math.sin(b.clock*3.1)*.12-b.vx)*k;b.vz+=(Math.cos(b.clock*2.7)*.12-b.vz)*k;b.vy+=(Math.sin(b.clock*4.3)*.08-b.vy)*k;
-   b.hoverT-=dt;if(b.hoverT<=0){if(b.timer<=0||rand(b)<.2){b.mode=Mode.Perch;pickTarget(b,c.floor,.4);b.ty=c.floor(b.tx,b.tz)+perchY(b);b.timer=range(b,p.rest);}else{b.mode=Mode.Fly;pickTarget(b,c.floor,1.3);}}
+   if(p.twitch>0&&rand(b)<dt*.9)b.yt=(rand(b)-.5)*p.twitch*2;// a dragonfly's hover: sudden little heading scans
+   b.hoverT-=dt;if(b.hoverT<=0){if(b.timer<=0||rand(b)<p.perchP){b.mode=Mode.Perch;pickTarget(b,c.floor,.4);b.ty=c.floor(b.tx,b.tz)+perchY(b);b.timer=range(b,p.rest);}else{b.mode=Mode.Fly;pickTarget(b,c.floor,1.3);}}
    break;}
   case Mode.Perch:{// fly in to the perch, settle, rest (wings slowly opening / closing), take off
    const d=Math.hypot(b.tx-b.x,b.ty-b.y,b.tz-b.z);
@@ -183,11 +203,14 @@ export function stepBug(b:FlightBug,dt:number,c:StepCtx):boolean{
    if(b.timer<=0&&d<.3){b.mode=Mode.Fly;pickTarget(b,c.floor);b.timer=range(b,p.busy);}
    break;}
   case Mode.Walk:{walking=true;
-   const sp=p.walk*(fleeing?3:1);steer(b,dt,sp,.25,false);b.vy=0;
+   // Stop-go: crawlers walk in little bursts with micro-pauses (the legs stop with them: legAmp follows the speed).
+   const go=p.stopGo>0&&!fleeing?1-p.stopGo*(1-Math.min(1,Math.max(0,(wob(b,1.6,4)+.15)*2.2))):1;
+   const sp=p.walk*(fleeing?3:1)*go;steer(b,dt,sp,.25,false);b.vy=0;
    if(Math.hypot(b.tx-b.x,b.tz-b.z)<.15)pickWalkTarget(b);
    if(b.timer<=0&&!fleeing){b.mode=Mode.Idle;b.timer=range(b,p.rest);}
    break;}
   case Mode.Idle:{const k=ease(6,dt);b.vx-=b.vx*k;b.vz-=b.vz*k;b.vy=0;
+   if(p.twitch>0&&rand(b)<dt*.7)b.yt=(rand(b)-.5)*p.twitch*2;// at rest: a look round (antennae / head turn with the body)
    if(b.timer<=0){const r=rand(b);
     if(p.flies&&r<p.flyChance){b.mode=Mode.Fly;pickTarget(b,c.floor,1.4);b.timer=range(b,p.busy)+1;}
     else if(p.hop>0&&r<p.flyChance+p.hop)startHop(b,c.floor);
@@ -215,16 +238,21 @@ function orient(b:FlightBug,dt:number,floor:Floor,walking:boolean){
  const p=b.prof,h=Math.hypot(b.vx,b.vz);let yawRate=0;
  if(h>.05){const d=angleTo(b.yaw,Math.atan2(b.vx,b.vz)),k=ease(walking?5:p.speed>4?9:4,dt);b.yaw+=d*k;yawRate=d*k/dt;}
  else if(p.sway>0&&b.mode===Mode.Idle)b.yaw+=Math.sin(b.clock*.6+(b.seed&31))*p.sway*dt*.6;// the mantis turns its head to scan
+ if(b.yt!==0){const k=ease(walking?3:7,dt),dy=b.yt*k;b.yaw+=dy;b.yt-=dy;if(Math.abs(b.yt)<.01)b.yt=0;}
  if(b.yaw>Math.PI)b.yaw-=Math.PI*2;else if(b.yaw<-Math.PI)b.yaw+=Math.PI*2;
  let pitch=0,roll=0;
  if(b.mode===Mode.Walk||b.mode===Mode.Idle){const s=Math.sin(b.yaw),c=Math.cos(b.yaw),ga=floor(b.x+s*.3,b.z+c*.3),gb=floor(b.x-s*.3,b.z-c*.3);pitch=-Math.atan2(ga-gb,.6);
   if(p.sway>0)roll=Math.sin(b.clock*1.1+(b.seed&15))*p.sway;}
  else{pitch=-Math.atan2(b.vy,Math.max(h,.3))*.7;roll=Math.max(-.6,Math.min(.6,-yawRate*h*.12));if(b.mode===Mode.Perch&&h<.1)pitch=0;}
  const k=ease(5,dt);b.pitch+=(pitch-b.pitch)*k;b.roll+=(roll-b.roll)*k;
+ // Buzz wobble (bees, moths in the air): a quick small roll / pitch tremble on top of the eased pose, never into the integration.
+ if(p.buzz>0&&(b.mode===Mode.Fly||b.mode===Mode.Hover)){b.roll+=(Math.sin(b.clock*23+b.np)*.6+Math.sin(b.clock*37+b.np*2)*.4)*p.buzz*k;b.pitch+=Math.sin(b.clock*29+b.np)*p.buzz*.5*k;}
 }
 function animate(b:FlightBug,dt:number,flying:boolean,walking:boolean,fleeing:boolean){
  const p=b.prof;let hz=p.restHz,amp=p.restAmp,base=p.restBase,open=0;
- if(flying&&b.mode!==Mode.Hop){hz=p.hz*(fleeing?1.25:1);amp=b.gliding>0?.06:p.amp;base=b.gliding>0?p.base*.6:p.base;open=1;}
+ if(flying&&b.mode!==Mode.Hop){hz=p.hz*(fleeing?1.25:1)*(1+.22*wob(b,.9,1));amp=b.gliding>0?.06:p.amp*(1+.12*wob(b,1.4,3));base=b.gliding>0?p.base*.6:p.base;open=1;}
+ // A perched butterfly opens and closes its wings unevenly: slow basks with pauses (amplitude follows a slow wobble).
+ else if(b.mode===Mode.Perch&&p.restAmp>.1){amp=p.restAmp*Math.max(.15,.55+.45*wob(b,.35,5));hz=p.restHz*(1+.3*wob(b,.5,6));}
  else if(b.mode===Mode.Hop&&p.flies){hz=p.hz;amp=p.amp*.8;base=p.base;open=.7;}
  if(p.air&&p.rest[1]===0)open=1;// fireflies always flying
  const k=ease(flying?8:3,dt);b.fhz+=(hz-b.fhz)*k;b.famp+=(amp-b.famp)*k;b.fbase+=(base-b.fbase)*k;b.open+=(open-b.open)*ease(open>b.open?7:2.5,dt);

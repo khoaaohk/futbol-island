@@ -91,3 +91,29 @@ export function puzzleStreak(ctx:AudioContext|null,n:number,delay=0){
  if(!ready(ctx)||n<2)return;const v=getSoundVolume(),t=ctx.currentTime+delay,scale=[523,659,784,988,1175];
  for(let i=0;i<Math.min(5,n);i++)tone(ctx,scale[i],t+i*.08,.12,v*.03,'triangle');
 }
+
+/* Nov 8 2026 polish voices (same pool: MAX_VOICES, shared noise buffer, nodes disconnect on end; no assets, loops or timers). */
+/** Aim snap: a tiny tick when the drawn pass locks onto a teammate (higher when the lane is clear, lower when blocked). */
+export function puzzleSnapTick(ctx:AudioContext|null,clear:boolean){
+ if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime,j=jitter();
+ tone(ctx,(clear?1320:660)*(1+j*.04),t,.035,v*.022,clear?'triangle':'square');
+}
+/** A defender steals it: a soft low buzz under the crowd's "ooh" (never harsh: a kid hears it a lot). */
+export function puzzleIntercept(ctx:AudioContext|null){
+ if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime;
+ tone(ctx,150,t,.16,v*.03,'sawtooth',.8);thump(ctx,t,.07,v*.12,500);
+}
+/** Menu and card taps: one short click. */
+export function puzzleUiTap(ctx:AudioContext|null){
+ if(!ready(ctx))return;const v=getSoundVolume(),j=jitter();tone(ctx,880*(1+j*.05),ctx.currentTime,.04,v*.02,'triangle');
+}
+/** The cup multiplier counting up on the result card: one rising chime per skill (step 0..4). */
+export function puzzleSkillChime(ctx:AudioContext|null,step:number,delay=0){
+ if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime+delay,scale=[659,784,880,988,1175,1319];
+ tone(ctx,scale[Math.max(0,Math.min(scale.length-1,step))],t,.1,v*.028,'triangle');
+}
+/** A new personal best (cup points or a full 3 stars): a bright four-note rise with a sparkle on top. */
+export function puzzleNewBest(ctx:AudioContext|null,delay=0){
+ if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime+delay;
+ [523,659,784,1047].forEach((hz,i)=>tone(ctx,hz,t+i*.075,.16,v*.03,'triangle'));air(ctx,t+.3,.3,v*.03,'highpass',5200,7000,.7,.02);
+}

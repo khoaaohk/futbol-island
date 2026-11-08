@@ -105,6 +105,9 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   api.session.mods={hot,spook};api.setWater(spook>=.3?'spooked':hot>=.3?'hot':'calm');visuals?.setCast?.(cast,cast.dir);};
  /** Near a spot (45 m) or fishing: the visuals exist; 80 m away and idle: they are disposed (docs/fishing-visuals-HANDOFF.md). */
  let catchLabelHeight=0;
+ /** Nov 8 2026 QA: the one-time "You did it!" tutorial toast (FishingHost.module.css .tutorial, top 168 px on desktop) covered the
+  * catch card's fish name; while it shows, the card's top clears its bottom. Measured once per toast element (no per-frame layout). */
+ let toastEl:HTMLElement|null=null,toastBottom=0;
  const nearAnySpot=(x:number,z:number,r:number)=>FISH_SPOTS.some(s=>Math.abs(x-s.x)<r&&Math.abs(z-s.z)<r);
  const makeVisuals=()=>{if(visualsModule&&player)return visualsModule.createFishingVisuals(scene,player,renderer);void loadFishingVisuals();return null;};
  const beat=(e:SessionEvent)=>{if(!visuals)return;if(e==='run')visuals.splash('small');else if(e==='leap')visuals.splash('hook');else if(e==='slip')visuals.nibble();if(e==='splash')visuals.splash('land');else if(e==='reel')visuals.nibble();else if(e==='nibble')visuals.nibble();else if(e==='bite')visuals.splash('bite');else if(e==='hooked')visuals.splash('hook');else if(e==='scared'||e==='escaped')visuals.splash('small');};
@@ -178,8 +181,9 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
     // QA11 D-2: beside the angler the card is centred on the fish, so its top must clear the status card ("Lanternfish! Keep
     // fishing or stop.", top 88px + one ~46px line, FishingHost.module.css): its height is read once per catch (not per frame).
     if(!narrow&&!catchLabelHeight&&label.dataset.dismissed===undefined)catchLabelHeight=label.offsetHeight;
-    const minY=Math.max(150,CATCH_MESSAGE_BOTTOM+catchLabelHeight/2);
-    label.dataset.side=narrow?'dock':'right';c.place(label,narrow?c.width/2:T.MathUtils.clamp(px+46,16,c.width-330),narrow?c.height-CATCH_DOCK_BOTTOM:Math.max(minY,Math.min(py,c.height-150)));}
+    const toast=narrow?null:c.ui<HTMLElement>('[data-fish-tutorial][data-step=done]')??null;if(toast!==toastEl){toastEl=toast;toastBottom=toast?toast.offsetTop+toast.offsetHeight+10:0;}
+    const minY=Math.max(150,CATCH_MESSAGE_BOTTOM+catchLabelHeight/2,toastBottom+catchLabelHeight/2);
+    const mid=!narrow&&c.width/2-150>=px+46;/* Nov 8 2026 (owner: "the fish info is not centered"): centred under the status card whenever that leaves the angler clear, else beside the angler as before */label.dataset.side=narrow?'dock':mid?'center':'right';c.place(label,narrow||mid?c.width/2:T.MathUtils.clamp(px+46,16,c.width-330),narrow?c.height-CATCH_DOCK_BOTTOM:Math.max(minY,Math.min(py,c.height-150)));}
    else catchLabelHeight=0;
    c.hide(label,!show);}
   return fishing?-1:near;

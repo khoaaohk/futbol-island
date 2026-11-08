@@ -55,6 +55,8 @@ type SoundtrackState = {
   stride?: number; y?: number; slide?: number; balls?: number; comboDrops?: number;
   /** Round 3 (Oct 26 2026): terrain under the boots, finished route, won route, thunder claps, hearts back. */
   terrain?: string; finished?: boolean; won?: boolean; thunder?: number; heartsBack?: number;
+  /** Nov 8 2026: the live perfect-dodge chain (1, 2, 3 …): its chime climbs one step per link. */
+  perfectChain?: number;
 };
 /** Footstep colour per terrain: [thud Hz, crunch filter Hz, crunch level, extra click]. */
 const STEP_SOUND: Record<string, readonly [number, number, number, number]> = {
@@ -255,6 +257,9 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
       else if (kind === "finalhill") { roar(now, 0.1, 1.6); [392, 523.25, 659.25].forEach((hz, i) => tone(sfx!, now + i * 0.12, hz, 0.05, 0.2, "triangle")); }
       else if (kind === "combo") { tone(sfx, now, 330, 0.05, 0.1, "square", 330); tone(sfx, now + 0.12, 494, 0.05, 0.14, "square", 494); }
       else if (kind === "power") { whoosh(now, 0.08, 0.5, 0, 3000); PENTA.slice(0, 4).forEach((hz, i) => tone(sfx!, now + i * 0.05, hz, 0.045, 0.15, "triangle")); }
+      // Perfect dodge (Nov 8 2026): the near-miss whoosh already plays; on top, a two-note chime that climbs one pentatonic step per
+      // link of the chain, so a kid hears the multiplier grow. Two pooled voices (VOICE_CAP still bounds everything).
+      else if (kind === "perfect") { const c = Math.max(1, Math.min(4, s.perfectChain ?? 1)); tone(sfx, now + 0.06, PENTA[c] * 2 * jitter(0.01), 0.05, 0.1, "triangle"); tone(sfx, now + 0.13, PENTA[c + 1] * 2 * jitter(0.01), 0.05, 0.18 + c * 0.03, "triangle"); }
       else if (kind === "mission") { tone(sfx, now, 784, 0.06, 0.12, "sine", 784); tone(sfx, now + 0.1, 988, 0.06, 0.12, "sine", 988); tone(sfx, now + 0.2, 1319, 0.07, 0.3, "sine", 1319); }
     }
     last.drops = s.comboDrops ?? 0; last.multiplier = multiplier; last.level = s.level; last.cuts = s.cuts; last.jumps = s.jumps; last.landings = s.landings; last.slides = s.slides; last.nearMisses = s.nearMisses; last.collected = s.collected; last.event = s.event; last.thunder = s.thunder ?? 0; last.hearts = s.heartsBack ?? 0; last.coach = s.coachCount ?? 0;

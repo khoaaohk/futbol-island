@@ -53,7 +53,7 @@ assert.match(live,/\[optionsOpen,setOptionsOpen\]=useState\(false\)/);
 assert.match(start,/className=\{styles\.goals\} aria-label="Star goals">[^\n]*?<li>Win<\/li>/,'star goals as three chips (hard rounds add a modifier chip first, round 3)');
 assert.match(start,/\{firstTime&&<ol className=\{styles\.howTo\}/,'how-to strip only for first-timers');
 assert.match(live,/localStorage\.setItem\(HOWTO_SEEN_KEY,'1'\)/,'hidden once they have kicked off');
-assert.match(start,/3 coins per match/);assert.match(start,/Leaderboard/);assert.match(start,/disabled=\{!cupOpen\}/,'Island Cup unlock state kept');
+assert.match(start,/3 coins per match/);assert.match(start,/Leaderboard/);assert.match(start,/\{matchTypes\}/);assert.match(live,/disabled=\{!cupOpen\}/,'Island Cup unlock state kept');// Nov 8 2026: the match type picker is shared by the start card and More (leagues added)
 assert.match(start,/disabled=\{i\+1>unlocked\}/,'locked rounds stay locked');
 assert.match(css,/\.root \.seg>button\{flex:1;min-width:0;display:grid;place-items:center;align-content:center;min-height:48px/,'48 px option targets');
 assert.match(css,/\.root \.startRow>\.optionsToggle,\.root \.startRow>\.boards\{[^}]*min-height:48px/);

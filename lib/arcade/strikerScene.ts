@@ -9,11 +9,14 @@ import {neonColor} from './neonPalette';
 import {stripedPlaneGeometry} from '../graphics/pitchStripes';
 import {strikerGaugeZone,STRIKER_OVERHIT} from './strikerFeel';
 import {createStrikerCinema} from './strikerCinema';
+/** Pitch stripe colours and floodlight beam per league tier (0 rounds and cup, 1 Pro, 2 Legend). */
+const TIER_MOODS=[{grass:['#193440','#203f4c'],beam:'#fff3cf',beamOpacity:.035},{grass:['#14303f','#1c3d52'],beam:'#d8f1ff',beamOpacity:.045},{grass:['#1a2540','#232f52'],beam:'#ffd98a',beamOpacity:.055}] as const;
 export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  const stage=createArcadeStage(canvas);stage.scenery.visible=false;const nets:{side:number;attribute:T.BufferAttribute;rest:Float32Array;dirty:boolean}[]=[];
  stage.box(0,-.09,0,52,.16,30,'#427f6c').castShadow=false;
  // Ten 5 m mown bands goal to goal in one mesh, two draws (pitchStripes.ts; was ten meshes, one per band).
- {const grass=new T.Mesh(stripedPlaneGeometry(28,50,10,'x'),['#193440','#203f4c'].map(color=>new T.MeshStandardMaterial({color,roughness:1})));grass.name='striker-grass';grass.position.y=.012;grass.receiveShadow=true;stage.scene.add(grass);}
+ const grassMaterials=['#193440','#203f4c'].map(color=>new T.MeshStandardMaterial({color,roughness:1}));
+ {const grass=new T.Mesh(stripedPlaneGeometry(28,50,10,'x'),grassMaterials);grass.name='striker-grass';grass.position.y=.012;grass.receiveShadow=true;stage.scene.add(grass);}
  for(const z of [-14,14]){stage.box(0,.35,z,52,.7,.35,'#f1ce83');stage.box(0,.04,z,50,.025,.09,'#fff1d5');}
  for(const side of [-1,1]){for(const z of [-9.5,9.5])stage.box(side*25,.35,z,.35,.7,9,'#f1ce83');const goal=stage.goal(side*25,0,9.2);goal.rotation.y=-side*Math.PI/2;goal.scale.y=1.32;const net=goal.children.find(child=>child instanceof T.LineSegments) as T.LineSegments;const attribute=net.geometry.getAttribute('position') as T.BufferAttribute;nets.push({side,attribute,rest:new Float32Array(attribute.array),dirty:false});for(const z of [-5,5])stage.box(side*21,.04,z,8,.025,.09,'#fff1d5');stage.box(side*17,.04,0,.09,.025,10,'#fff1d5');}
  stage.box(0,.04,0,.08,.025,28,'#fff1d5');stage.ring(0,0,4,'#fff1d5');
@@ -25,7 +28,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
  const flags:T.Object3D[]=[],flagGeometry=new T.PlaneGeometry(.62,.42),flagMaterials=['#ffe36e','#ff8fc8'].map(color=>new T.MeshStandardMaterial({color,emissive:color,emissiveIntensity:.35,side:T.DoubleSide,roughness:.8}));
  for(const sx of [-1,1])for(const sz of [-1,1]){const arc=new T.Mesh(arcGeometry,lineMaterial);arc.rotation.x=-Math.PI/2;arc.rotation.z=-sx>0?(sz>0?0:Math.PI*1.5):(sz>0?Math.PI/2:Math.PI);arc.position.set(sx*24.75,.045,sz*13.75);stage.scene.add(arc);
   stage.cylinder(sx*24.55,.8,sz*13.55,.035,1.6,'#fff4da');const flag=new T.Group();flag.position.set(sx*24.55,1.42,sz*13.55);const cloth=new T.Mesh(flagGeometry,flagMaterials[sx>0?0:1]);cloth.position.x=.31;cloth.castShadow=false;flag.add(cloth);flag.rotation.y=sx>0?Math.PI:0;flag.userData.base=flag.rotation.y;flag.userData.phase=sx*1.3+sz*.7;stage.scene.add(flag);flags.push(flag);}
- const beamMaterial=new T.MeshBasicMaterial({color:'#fff3cf',transparent:true,opacity:.035,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide}),beamGeometry=new T.ConeGeometry(4.5,15,18,1,true);beamGeometry.translate(0,-7.5,0);
+ let beamBase=.035;const beamMaterial=new T.MeshBasicMaterial({color:'#fff3cf',transparent:true,opacity:.035,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide}),beamGeometry=new T.ConeGeometry(4.5,15,18,1,true);beamGeometry.translate(0,-7.5,0);
  for(const sx of [-1,1])for(const sz of [-1,1]){const x=sx*30,z=sz*20.5;stage.cylinder(x,6,z,.22,12,'#324f56');const head=stage.box(x,12.3,z,2.6,1.3,.35,'#fff6d8');head.rotation.y=Math.atan2(-x,-z);head.rotation.x=-.5;head.castShadow=false;const lamp=head.material as T.MeshStandardMaterial;lamp.emissive.set('#fff1c4');lamp.emissiveIntensity=1.4;
   const beam=new T.Mesh(beamGeometry,beamMaterial);beam.position.set(x,12.1,z);beam.lookAt(sx*12,0,sz*5);beam.rotateX(-Math.PI/2);beam.renderOrder=1;stage.scene.add(beam);}
  let fireworks=0,fireworkClock=0,fireworkSide=1;
@@ -265,7 +268,7 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   glassFloor.update(dt,s.ball.x,s.ball.z,s.charge,Math.max(shotFlash,stage.reduced?0:goalFlash));
   // Fireworks over the scoring end: three staggered bursts from the shared particle pool (stage.burst skips reduced motion).
   if(fireworks>0&&dt>0){fireworkClock+=dt;if(fireworkClock>=.18){fireworkClock=0;fireworks--;stage.burst(fireworkSide*(23+fireworks*1.2),3.2+fireworks*.9,(fireworks-1)*6.5,1.6);}}
-  if(!stage.reduced&&dt>0){for(const f of flags)f.rotation.y=f.userData.base+Math.sin(clock*(3.4+s.crowd*1.4)+f.userData.phase)*.32;const beam=.035+goalFlash*.045+(s.charge>.6?.01:0);if(Math.abs(beamMaterial.opacity-beam)>.002)beamMaterial.opacity=beam;}
+  if(!stage.reduced&&dt>0){for(const f of flags)f.rotation.y=f.userData.base+Math.sin(clock*(3.4+s.crowd*1.4)+f.userData.phase)*.32;const beam=beamBase+goalFlash*.045+(s.charge>.6?.01:0);if(Math.abs(beamMaterial.opacity-beam)>.002)beamMaterial.opacity=beam;}
   stepFans(dt,s.crowd);stepConfetti(anim>0?dt:0);
   stage.effects(anim>0?dt:0);stage.lighting(s.time);
   // Portrait play attacks upward; controls are transformed into this view.
@@ -275,5 +278,8 @@ export function createStrikerScene(canvas:HTMLCanvasElement,match:StrikerMatch){
   /** Impact hit-stop (strikerFeel.strikerImpact): freeze the bodies for `seconds` and punch the camera by `kick`. */
   impact:(seconds:number,kick:number)=>{hold=Math.max(hold,seconds);punch=Math.max(punch,kick);},get holding(){return hold>0;},get replaying(){return replay>=0;},get replayDone(){return replay>=0&&replay*RF>=replayLen-1;},get portrait(){return portrait;},
   /** Full-time outro: a few seconds of win / lose / draw body language after the whistle. Returns its length (0 = none, reduced motion). */
-  startOutro:(winner:number)=>{if(stage.reduced)return 0;outroWinner=winner;outroStar=strikerOutroStar(match.state.players,match.state.goalsBy,winner);outroT=STRIKER_OUTRO;if(winner===0)throwConfetti(20,0);return STRIKER_OUTRO;},get outroing(){return outroT>0;}};
+  startOutro:(winner:number)=>{if(stage.reduced)return 0;outroWinner=winner;outroStar=strikerOutroStar(match.state.players,match.state.goalsBy,winner);outroT=STRIKER_OUTRO;if(winner===0)throwConfetti(20,0);return STRIKER_OUTRO;},get outroing(){return outroT>0;},
+  /** League mood (Nov 8 2026): Pro plays under cool white floodlights on a deeper pitch, Legend under gold light on a
+   *  midnight pitch. Only colour / opacity writes on materials that already exist: no new mesh, light, draw call or shader. */
+  setTier:(tier:number)=>{const m=TIER_MOODS[tier===1||tier===2?tier:0];grassMaterials[0].color.set(m.grass[0]);grassMaterials[1].color.set(m.grass[1]);beamMaterial.color.set(m.beam);beamBase=m.beamOpacity;beamMaterial.opacity=m.beamOpacity;}};
 }

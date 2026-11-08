@@ -11,6 +11,8 @@ export type RunnerHud={score:string;detail:string;message:string;over:boolean;re
 /** One short word for the moments worth a flash; everything else stays off screen while playing. */
 export function runnerFlash(r:RunnerGame){
  if(r.time-r.eventAt>=1.3||runnerOver(r))return '';
+ // Nov 8 2026: the perfect-dodge chain shows through its flare, aura, photo flashes, sound and the score, not a word: the owner's
+ // Oct 27 clean-UI rule keeps the in-play flash to a goal or a tackle.
  return r.eventKind==='goal'?'GOAL!':r.eventKind==='hit'?'Tackled!':'';
 }
 // Action first, in a 7-year-old's words: what to do, then the named skill that also works.
@@ -25,7 +27,7 @@ const ROLE_TIP={
 } as const;
 /** Chances as hearts: a child reads ♥♥♡ faster than "2 chances". */
 export const runnerHearts=(lives:number,max=3)=>'♥'.repeat(Math.max(0,Math.min(max,lives)))+'♡'.repeat(Math.max(0,max-Math.max(0,lives)));
-const FRESH=new Set(['best','inside','skillmove','early','onetwo','mission','boss','route','shield','goal','save','mud','close','hit','terrain','finalhill','combo','power']);
+const FRESH=new Set(['perfect','best','inside','skillmove','early','onetwo','mission','boss','route','shield','goal','save','mud','close','hit','terrain','finalhill','combo','power']);
 /** Round 3: one line about the route for the full-time card. */
 export function runnerFinishLine(r:RunnerGame){
  const m=RUNNER_MODES[r.mode];if(!m.finish)return '';
@@ -33,6 +35,8 @@ export function runnerFinishLine(r:RunnerGame){
  if(r.finished)return `${m.name}: you reached the goal line!`;
  return `${m.name}: ${Math.floor(r.distance)} of ${m.finish} m`;
 }
+/** Nov 8 2026: why the run ended, in one line for the full-time card ('' when it ended at the goal line or is still going). */
+export function runnerLossLine(r:RunnerGame){return r.lives<=0&&r.lossTip?r.lossTip:'';}
 /** One short after-run takeaway about the game's lesson: beat the tackle, then find the goal. */
 export function runnerLessonTakeaway(r:RunnerGame){
  if(r.beatScores>0)return `Beat the tackle, then scored: ${r.beatScores}×!`;

@@ -13,10 +13,18 @@
 .stars span[data-on]{color:#fff08a;text-shadow:0 0 14px #ffd25e88}
 .stars em{display:inline-block;margin-left:6px;font:800 13px/1 system-ui,sans-serif;font-style:normal;letter-spacing:0;color:#8dffb0;vertical-align:middle}
 .line{margin:3px 0;font-size:14px;line-height:1.3;color:#cfe3f5}
+/* Nov 8 2026 simplified full time: the reason the run ended gets its own line; a new best gets one pill and a score pop. */
+.why{margin:6px auto 4px;max-width:34ch;padding:7px 10px;border-radius:12px;background:#2a1d2c;font:700 14px/1.3 system-ui,sans-serif;color:#ffd2c2}
+.newBest{display:inline-block;margin:6px 0 0;padding:5px 12px;border-radius:999px;background:#7ff0e2;color:#08202a;font:800 13px/1 system-ui,sans-serif}
+.score[data-new-best]{animation:runnerBestPop .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes runnerBestPop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
+.keys{margin:8px 0 0;font:600 12px/1.3 system-ui,sans-serif;color:#9fb3cc}
 .routes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 6px}
 .route{display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;align-items:center;column-gap:6px;min-height:60px;padding:6px 10px;border:2px solid #35415c;border-radius:16px;background:#1d2440;color:#eff8ff;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .route[aria-checked=true]{border-color:#fff08a;background:#3a3420;box-shadow:0 0 0 2px #ffe86d55,0 0 14px #ffe86d44}
 .route[data-hard]{background:#2a1a24;border-color:#7a3d1c}
+.route[data-elite]{background:#2a2414;border-color:#8a6a1c}
+.route[data-elite][aria-checked=true]{background:#4a3a10;border-color:#ffd36e;box-shadow:0 0 0 2px #ffd36e66,0 0 16px #ffd36e55}
 .route[data-hard][aria-checked=true]{background:#4a2614;border-color:#ffb067;box-shadow:0 0 0 2px #ff8a2a66,0 0 16px #ff8a2a55}
 .route:disabled{opacity:.55;cursor:default}
 .icon{grid-row:1/3;font-size:24px;line-height:1;text-align:center}
@@ -27,27 +35,34 @@
 .lineMode{margin:2px 0 8px;font-size:13px;color:#b5c7dc}
 .hint{margin:0 0 8px;padding:8px 10px;border-radius:12px;background:#2a2148;border-left:4px solid #fff08a;font-size:13px;line-height:1.3;color:#fff6c8;text-align:left}
 .status{margin:0 0 8px;font-size:13px;color:#ffd6f1}
-.play{width:100%;min-height:var(--arcade-primary-h);border:var(--btn-rim-width,3px) solid var(--btn-rim,#81fbed);border-radius:var(--btn-radius,999px);background:var(--btn-gold,#24223e) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#e9f5ff);font:700 20px/1.2 var(--btn-font,var(--font-body)),Arial,sans-serif;box-shadow:var(--btn-shadow-gold,0 4px 0 #121329);cursor:pointer;touch-action:manipulation}
+.play{width:100%;font-weight:800;min-height:var(--arcade-primary-h);border:var(--btn-rim-width,3px) solid var(--btn-rim,#81fbed);border-radius:var(--btn-radius,999px);background:var(--btn-gold,#24223e) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#e9f5ff);font:800 20px/1.2 var(--font-body,system-ui),Arial,sans-serif;box-shadow:var(--btn-shadow-gold,0 4px 0 #121329);cursor:pointer;touch-action:manipulation}
 .play:active{transform:translateY(3px);box-shadow:var(--btn-shadow-gold-pressed,0 1px 0 #121329)}
 .play:disabled{opacity:.6}
 .row{display:flex;justify-content:center;gap:8px;margin-top:10px}
-.small{display:grid;place-items:center;gap:1px;min-width:56px;min-height:var(--arcade-small-h);padding:4px 6px;border:2px solid #81fbed66;border-radius:14px;background:#151c35;color:#e8ffff;box-shadow:0 3px 0 #0b1024;cursor:pointer;touch-action:manipulation}
+.small{display:grid;place-items:center;gap:1px;min-width:96px;min-height:var(--arcade-small-h);padding:4px 6px;border:2px solid #81fbed66;border-radius:14px;background:#151c35;color:#e8ffff;box-shadow:0 3px 0 #0b1024;cursor:pointer;touch-action:manipulation}
 .small span{font-size:18px;line-height:1;font-weight:900}
-.small small{font:700 10px/1 system-ui,sans-serif;color:#b5c7dc}
+.small small{font:800 14px/1 var(--font-body,system-ui),system-ui,sans-serif;color:#e8ffff}
 .small[aria-expanded=true]{border-color:#fff08a;color:#fff08a}
 .help{list-style:none;margin:10px 0 0;padding:10px 12px;border-radius:14px;background:#1d2440;text-align:left;font-size:13px;line-height:1.45;color:#cfe3f5}
 .coins{margin:8px 0 0;font-size:11px;color:#9fb3cc}
-@media (prefers-reduced-motion:reduce){.play:active{transform:none}}
+@media (prefers-reduced-motion:reduce){.play:active{transform:none}.score[data-new-best]{animation:none}}
 /* Landscape / short windows: a two-column card so nothing scrolls. */
 @media (max-height:560px) and (min-width:640px){
  .overlay{padding:calc(var(--arcade-bar-clear) + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px))}
  .card{width:min(640px,100%);display:grid;grid-template-columns:1fr 1fr;column-gap:14px;text-align:left}
- .top,.title,.result,.lineMode,.hint,.status{grid-column:1}
+ .top,.title,.result,.lineMode,.hint,.status,.keys{grid-column:1}
  .routes{grid-column:2;grid-row:1/7;align-self:start}
  /* Consistency audit (Oct 27 2026): Play and the small row share the last row so the card fits a 390 px tall phone. */
  .play{grid-column:1;grid-row:7;align-self:end}
  .row{grid-column:2;grid-row:7;align-self:end;margin-top:0}
  .help,.coins{grid-column:1/3}
  .title{margin:6px 0}
+ /* Full time (Nov 8 2026): no route picker, so the result sits left and Retry / Back / Scores stack on the right. */
+ .overlay[data-runner-menu=over] .card{grid-template-columns:1.15fr 1fr;align-items:center}
+ .overlay[data-runner-menu=over] .result{grid-column:1;grid-row:2/6;text-align:center}
+ .overlay[data-runner-menu=over] .top{grid-column:1/3}
+ .overlay[data-runner-menu=over] .play{grid-column:2;grid-row:2/4;align-self:end}
+ .overlay[data-runner-menu=over] .row{grid-column:2;grid-row:4;align-self:start;margin-top:8px}
+ .overlay[data-runner-menu=over] .keys{grid-column:2;grid-row:5;align-self:start}
 }
 .card :is(.play,.small,.route):focus-visible{outline:var(--btn-focus,3px solid #73fff1);outline-offset:var(--btn-focus-offset,2px)}

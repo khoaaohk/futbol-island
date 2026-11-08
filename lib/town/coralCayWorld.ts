@@ -4,6 +4,7 @@
 // colours, no animation, no per-frame work. Shapes come from coralCay.ts, which movement, flight and the maps also read.
 import * as T from 'three';
 import {trunkCollider,type Obstacle} from './simulation';
+import {canopyHang} from './canopyHang';
 import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,CAY_BOULEVARD,CAY_PLAZA,BEACH_COURT,CAY_HOUSES,CAY_HUTS,CAY_HUT_RADIUS,MAIN_SHORE_X,SHARKS_BEACH,COURT_BEACH,COURT_SCOREBOARD,onCourtBeach,ROUNDABOUT,WELCOME_ARCH,CAY_KONBINI,CAY_KONBINI_DOOR,FARM,FARM_FENCE_OBSTACLES,HOSTEL,CAY_HOMES,HOSTEL_PATHS,MINI_GOAL,inHostelArea,shoulderWidth,causewayRuns,offsetPoint,onCay,onSandbarStop,distanceToCayShore,cayJitter as jitter,type Sandbar,type PathSample,type RoadSide} from './coralCay';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
 import {tintGroundMesh} from '../graphics/groundTint';
@@ -31,6 +32,16 @@ export type CayTools={
 };
 export type CayLampSite={x:number;z:number;ground:number;region:'coral-cay';poolWidth?:number;poolDepth?:number};
 const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
+/** The farm orchard (Coral Cay Farm): mango and citrus trees in rows, papayas at the ends. */
+const CORAL_ORCHARD:[number,number,'mango'|'citrus'|'papaya'][]=[[655,-124,'mango'],[664,-124,'citrus'],[673,-124,'mango'],[682,-124,'citrus'],[655,-117.5,'citrus'],[664,-117.5,'mango'],[673,-117.5,'citrus'],[682,-117.5,'papaya'],[651.5,-120.5,'papaya']];
+/** A farm fruit tree's canopy (an icosahedron of radius r at y 2.4, squashed to 0.85 high) and its five fruit, sitting on the real
+ *  faceted leaves (lib/town/canopyHang.ts; Nov 8 2026: they floated beside the citrus canopies). */
+function coralTreeFruit(x:number,z:number,kind:'mango'|'citrus',i:number){const r=kind==='mango'?1.55:1.3,L=new T.Matrix4().compose(V(x,2.4,z),new T.Quaternion(),V(r,r*.85,r)),out:T.Vector3[]=[];
+ for(let k=0;k<5;k++){const a=k*1.3+i,el=Math.atan2(-.5+jitter(i,k)*.7,1.05),d=V(Math.cos(el)*Math.cos(a),Math.sin(el),Math.cos(el)*Math.sin(a));
+  out.push(canopyHang([L],{x,y:2.4,z},d,.3*.13)??V(x+d.x*r*.8,2.4+d.y*r*.68,z+d.z*r*.8));}
+ return out;}
+/** For tests/fruit-on-tree.cjs: each farm fruit tree's canopy and fruit. */
+export function coralOrchardFruit(){return CORAL_ORCHARD.flatMap(([x,z,kind],i)=>kind==='papaya'?[]:[{kind,x,z,cy:2.4,r:kind==='mango'?1.55:1.3,fruit:coralTreeFruit(x,z,kind,i)}]);}
 /** Merge simple same-attribute boxes (the farm's soil rows) into one geometry. */
 function mergeRows(parts:T.BufferGeometry[]){const pos:number[]=[],nor:number[]=[],idx:number[]=[];let o=0;for(const g of parts){const p=g.getAttribute('position'),n=g.getAttribute('normal');for(let i=0;i<p.count;i++){pos.push(p.getX(i),p.getY(i),p.getZ(i));nor.push(n.getX(i),n.getY(i),n.getZ(i));}const index=g.index!;for(let i=0;i<index.count;i++)idx.push(index.getX(i)+o);o+=p.count;}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));g.setIndex(idx);return g;}
@@ -407,11 +418,11 @@ export function buildCoralCay(t:CayTools){
   for(const z of rowsIn(-110,-104.5))for(const x of along(3)){if(Math.hypot(x-F.scarecrow.x,z-F.scarecrow.z)<1.4)continue;const m=put(new T.IcosahedronGeometry(.34,0),'#8b6a4a',x,.05,z);m.scale.y=.4;put(new T.IcosahedronGeometry(.18,0),'#739568',x,.22,z);n++;} // Sweet potatoes
   for(const z of rowsIn(-104,-91))for(const x of along(4)){put(new T.IcosahedronGeometry(.26,0),'#5b895e',x,.3,z);box(.08,.14,.08,n%3?'#e8a33d':'#d9534a',x+.12,.34,z+.1);n++;} // Peppers
   // Orchard: mango and citrus trees in rows, papayas at the ends, bananas along the east fence.
-  const trees:[number,number,'mango'|'citrus'|'papaya'][]=[[655,-124,'mango'],[664,-124,'citrus'],[673,-124,'mango'],[682,-124,'citrus'],[655,-117.5,'citrus'],[664,-117.5,'mango'],[673,-117.5,'citrus'],[682,-117.5,'papaya'],[651.5,-120.5,'papaya']];
+  const trees=CORAL_ORCHARD;
   trees.forEach(([x,z,kind],i)=>{prop('tree',()=>{
    if(kind==='papaya'){cylinder(.12,3.2,'#9d805b',x,1.6,z);for(let k=0;k<6;k++){const leaf=box(1.3,.04,.3,'#739568',x+Math.cos(k)*.55,3.25,z+Math.sin(k)*.55);leaf.rotation.y=-k;leaf.rotation.z=.25;}for(let k=0;k<4;k++)put(new T.IcosahedronGeometry(.16,0),'#e8be71',x+Math.cos(k*1.6)*.18,2.8,z+Math.sin(k*1.6)*.18);}
    else{cylinder(.16,1.6,'#9d805b',x,.8,z);const c=put(new T.IcosahedronGeometry(kind==='mango'?1.55:1.3,0),kind==='mango'?'#5b895e':'#739568',x,2.4,z);c.scale.y=.85;
-    for(let k=0;k<5;k++)put(new T.IcosahedronGeometry(.13,0),kind==='mango'?'#e6a341':'#f4a53d',x+Math.cos(k*1.3+i)*1.05,1.9+rnd(i,k)*.7,z+Math.sin(k*1.3+i)*1.05);}});
+    for(const f of coralTreeFruit(x,z,kind,i))put(new T.IcosahedronGeometry(.13,0),kind==='mango'?'#e6a341':'#f4a53d',f.x,f.y,f.z);}});
    obstacles.push(trunkCollider(x,z,kind==='papaya'?.12:.16));assets.push({kind:'fruit-tree',x,z,w:.5,d:.5,visualW:3.2,visualD:3.2,canopyHeight:3.4});
   });
   for(let z=-127;z<=-116;z+=2.8){const x=687;prop('bush',()=>{cylinder(.16,1.8,'#8baa69',x,.9,z);for(let k=0;k<5;k++){const leaf=box(1.5,.03,.38,'#7a9e67',x+Math.cos(k*1.25)*.55,1.95,z+Math.sin(k*1.25)*.55);leaf.rotation.y=-k*1.25;leaf.rotation.z=-.35;}put(new T.IcosahedronGeometry(.2,0),'#e8d25a',x+.2,1.4,z);});obstacles.push({x,z,w:.4,d:.4});}

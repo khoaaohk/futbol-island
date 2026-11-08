@@ -21,8 +21,8 @@ export const LIGHTHOUSE_HIDE_DISTANCE=220;
 export const LIGHTHOUSE_ANIMATE_DISTANCE=140;
 export type LighthouseMode='day'|'sunset'|'night';
 /** Subtle by design: low peak opacity so the sweep never washes out the scene. */
-const TARGET_OPACITY:Record<LighthouseMode,number>={day:0,sunset:.09,night:.22};
-const TARGET_HALO:Record<LighthouseMode,number>={day:0,sunset:.25,night:.6};
+const TARGET_OPACITY:Record<LighthouseMode,number>={day:0,sunset:0,night:.22};// Nov 8 2026 (owner): no spinning beam at sunset, night only
+const TARGET_HALO:Record<LighthouseMode,number>={day:0,sunset:0,night:.6};
 
 /** Folds an angle (radians) into (−π/2, π/2]: the lighthouse has two beam arms 180° apart, so "closest alignment" only
  *  needs the angle modulo π. Pure, exported for tests. */

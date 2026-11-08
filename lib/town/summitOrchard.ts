@@ -19,6 +19,7 @@
  * Tests: tests/summit-forage.cjs.
  */
 import * as T from 'three';
+import {canopyHang} from './canopyHang';
 import {SUMMIT_PATHS,SUMMIT_LANDMARKS,SUMMIT_PITCH,SUMMIT_FENCE,SUMMIT_PEAK,TERRACE,SUMMIT_VISUAL_DROP,summitGround,summitSlope,onSummitIsle,terraceWeight,
  summitTrailDistance,summitEdgeRadius,heightPoint,beachPoint,summitCameraPull,isleJitter as jitter,type IslePoint} from './summitIsle';
 import {kickLayout} from './summitKick';
@@ -51,6 +52,9 @@ export type TreeRig={
  sway:{h:number;bend:number};
  /** Banana plants: the top of the baked bunch stalk (the crown is its foot above the purple bud); the hands hang along it. */
  stalk?:{x:number;y:number;z:number};
+ /** Canopy trees: the baked leaf lobes, each the world matrix of a unit icosahedron (three's IcosahedronGeometry(1, 0)). The fruit
+  *  sits on their real faceted surface (canopyHang), not on the `crown` ellipsoid (which only bounds the canopy for hit tests). */
+ lobes?:T.Matrix4[];
 };
 
 /** Clear zones: nothing planted within r metres of these (the lookout and the zipline tower get ≥ 4 m of open grass). */
@@ -147,6 +151,15 @@ function trunkOf(p:OrchardPlan){const s=p.s,th=p.th;switch(p.form){
  case 'round':return {h:2*s*th,r:.19*s,top:.15*s};case 'oval':return {h:1.7*s*th,r:.18*s,top:.14*s};case 'umbrella':return {h:2.3*s*th,r:.21*s,top:.17*s};
  case 'lobed':return {h:1.8*s*th,r:.18*s,top:.14*s};case 'columnar':return {h:1.3*s*th,r:.15*s,top:.12*s};
  case 'banana':return {h:2.1*s*th,r:.17,top:.13};case 'papaya':return {h:3.3*s*th,r:.14,top:.09};}}
+/** The canopy lobes of a canopy form (tree space): low-poly icosahedra of radius r at m (seeded spin, a squash for oval, umbrella and
+ *  columnar), coloured leaf(k). The one source for the baked parts and for where the fruit hangs (lib/town/canopyHang.ts). */
+function lobesOf(p:OrchardPlan,h:number):{r:number;leaf:number;m:T.Matrix4}[]{const s=p.s,i=p.seed;switch(p.form){
+ case 'round':return [{r:1.55*s,leaf:0,m:local(0,h+.95*s,0,0,i,0)},{r:1*s,leaf:1,m:local(.55*s,h+1.75*s,-.25*s,0,i*2,0)}];
+ case 'oval':return [{r:1.15*s,leaf:0,m:local(0,h+1.55*s,0,0,i,0,1,1.65,1)}];
+ case 'umbrella':return [{r:1.95*s,leaf:0,m:local(0,h+.5*s,0,0,i,0,1,.48,1)},{r:1.2*s,leaf:2,m:local(.3*s,h+1*s,.2*s,0,i*2,0,1,.5,1)}];
+ case 'lobed':{const n=2+(i%2),out=[];for(let k=0;k<n;k++){const a=k/n*Math.PI*2+i;out.push({r:(1-.12*k)*s,leaf:k,m:local(Math.cos(a)*.72*s,h+(.8+.25*(k%2))*s,Math.sin(a)*.72*s,0,i+k,0)});}return out;}
+ case 'columnar':return [{r:.85*s,leaf:0,m:local(0,h+1.7*s,0,0,i,0,1,2.3,1)},{r:.55*s,leaf:1,m:local(0,h+3.55*s,0,0,i*2,0,1,1.4,1)}];
+ default:return [];}}
 /** The parts of one orchard plant (trunk first). */
 export function orchardParts(p:OrchardPlan):OrchardPart[]{
  const W=worldOf(p),s=p.s,i=p.seed,t=trunkOf(p),h=t.h,parts:OrchardPart[]=[];
@@ -155,11 +168,7 @@ export function orchardParts(p:OrchardPlan):OrchardPart[]{
  add(()=>new T.CylinderGeometry(t.top,t.r,h,6),trunkColor,local(0,h/2,0));
  const leaf=(k:number)=>LEAVES[(i+k)%LEAVES.length],bright=(k:number)=>BRIGHT[(i+k)%BRIGHT.length];
  switch(p.form){
-  case 'round':add(()=>new T.IcosahedronGeometry(1.55*s,0),leaf(0),local(0,h+.95*s,0,0,i,0));add(()=>new T.IcosahedronGeometry(1*s,0),leaf(1),local(.55*s,h+1.75*s,-.25*s,0,i*2,0));break;
-  case 'oval':add(()=>new T.IcosahedronGeometry(1.15*s,0),leaf(0),local(0,h+1.55*s,0,0,i,0,1,1.65,1));break;
-  case 'umbrella':add(()=>new T.IcosahedronGeometry(1.95*s,0),leaf(0),local(0,h+.5*s,0,0,i,0,1,.48,1));add(()=>new T.IcosahedronGeometry(1.2*s,0),leaf(2),local(.3*s,h+1*s,.2*s,0,i*2,0,1,.5,1));break;
-  case 'lobed':{const n=2+(i%2);for(let k=0;k<n;k++){const a=k/n*Math.PI*2+i;add(()=>new T.IcosahedronGeometry((1-.12*k)*s,0),leaf(k),local(Math.cos(a)*.72*s,h+(.8+.25*(k%2))*s,Math.sin(a)*.72*s,0,i+k,0));}break;}
-  case 'columnar':add(()=>new T.IcosahedronGeometry(.85*s,0),leaf(0),local(0,h+1.7*s,0,0,i,0,1,2.3,1));add(()=>new T.IcosahedronGeometry(.55*s,0),leaf(1),local(0,h+3.55*s,0,0,i*2,0,1,1.4,1));break;
+  case 'round':case 'oval':case 'umbrella':case 'lobed':case 'columnar':for(const L of lobesOf(p,h))add(()=>new T.IcosahedronGeometry(L.r,0),leaf(L.leaf),L.m);break;
   case 'banana':for(let k=0;k<7;k++){const a=k/7*Math.PI*2+i*.7,len=2.3*s,tilt=.42-.27*(k%3);
     // A paddle leaf from the stem's top: the young ones rise, the older ones arch out and droop.
     add(()=>new T.BoxGeometry(len,.05,.72*s),bright(k),local(Math.cos(a)*len*.45,h+.12+Math.sin(tilt)*len*.45,Math.sin(a)*len*.45,0,-a,tilt));}
@@ -175,6 +184,7 @@ export function orchardParts(p:OrchardPlan):OrchardPart[]{
 export function orchardTriangles(p:OrchardPlan){let n=0;for(const part of orchardParts(p)){const g=part.geo();n+=(g.index?g.index.count:g.getAttribute('position').count)/3;g.dispose();}return n;}
 /** The foraging rig of an orchard plant (see TreeRig). Grip at 1.05 m: the character's chest. */
 export const GRIP_HEIGHT=1.05;
+export {canopyHang};
 export function orchardRig(p:OrchardPlan):TreeRig{
  const W=worldOf(p),t=trunkOf(p),s=p.s,v=new T.Vector3();
  const at=(x:number,y:number,z:number)=>v.set(x,y,z).applyMatrix4(W).clone();
@@ -186,15 +196,19 @@ export function orchardRig(p:OrchardPlan):TreeRig{
   case 'umbrella':{const c=at(0,t.h+.5*s,0);crown={x:c.x,y:c.y,z:c.z,rx:1.95*s,ry:.94*s,hang:'canopy'};h=t.h+1.6*s;break;}
   case 'lobed':{const c=at(0,t.h+.9*s,0);crown={x:c.x,y:c.y,z:c.z,rx:1.6*s,ry:1.05*s,hang:'canopy'};h=t.h+1.9*s;break;}
   case 'columnar':{const c=at(0,t.h+1.7*s,0);crown={x:c.x,y:c.y,z:c.z,rx:.85*s,ry:1.95*s,hang:'canopy'};h=t.h+4*s;break;}
-  case 'banana':{const c=at(.42,t.h-.55,0);crown={x:c.x,y:c.y,z:c.z,rx:.16,ry:.2,hang:'under'};stalk=at(.15,t.h+.06,0);h=t.h+.6;bend=1.3;break;}
+  case 'banana':{const c=at(.49,t.h-.56,0);crown={x:c.x,y:c.y,z:c.z,rx:.16,ry:.2,hang:'under'};stalk=at(.15,t.h+.06,0);h=t.h+.6;bend=1.3;break;}
   case 'papaya':{const c=at(0,t.h-.32,0);crown={x:c.x,y:c.y,z:c.z,rx:.2,ry:.12,hang:'under'};h=t.h+.5;bend=1.7;break;}
  }
- return {grip:{x:g.x,y:g.y,z:g.z,r:rGrip},baseR:t.r,crown:crown!,sway:{h:h!,bend},...stalk?{stalk}:{}};
+ const lobes=lobesOf(p,t.h).map(L=>new T.Matrix4().multiplyMatrices(W,L.m).multiply(new T.Matrix4().makeScale(L.r,L.r,L.r)));
+ return {grip:{x:g.x,y:g.y,z:g.z,r:rGrip},baseR:t.r,crown:crown!,sway:{h:h!,bend},...stalk?{stalk}:{},...lobes.length?{lobes}:{}};
 }
 /** Rig of the island's own round trees (summitIsleWorld.ts tree(): trunk r 0.2 s, canopy centre 2.9 s up, r 1.7 s). */
-export function roundTreeRig(x:number,z:number,y:number,s:number):TreeRig{
- return {grip:{x,y:y+GRIP_HEIGHT,z,r:.2*s},baseR:.2*s,crown:{x,y:y+2.9*s,z,rx:1.7*s,ry:1.7*s,hang:'canopy'},sway:{h:5*s,bend:1}};}
+export function roundTreeRig(x:number,z:number,y:number,s:number,i:number):TreeRig{
+ const lobe=(cx:number,cy:number,cz:number,r:number,spin:number)=>new T.Matrix4().compose(new T.Vector3(cx,cy,cz),new T.Quaternion().setFromAxisAngle(UP,spin),new T.Vector3(r,r,r));
+ return {grip:{x,y:y+GRIP_HEIGHT,z,r:.2*s},baseR:.2*s,crown:{x,y:y+2.9*s,z,rx:1.7*s,ry:1.7*s,hang:'canopy'},sway:{h:5*s,bend:1},
+  lobes:[lobe(x,y+2.9*s,z,1.7*s,i),lobe(x+.6*s,y+3.9*s,z-.3*s,1.15*s,i*2)]};}
 /** Rig of a palm (summitIsleWorld.ts palm(): a leaning trunk 0.21 → 0.11 m from base to crown at `top`): the grip follows the lean. */
 export function palmRig(x:number,z:number,y:number,top:{x:number;y:number;z:number}):TreeRig{
  const h=Math.max(1,top.y-y),f=GRIP_HEIGHT/h;
- return {grip:{x:x+(top.x-x)*f,y:y+GRIP_HEIGHT,z:z+(top.z-z)*f,r:.21+(.11-.21)*f},baseR:.21,crown:{x:top.x,y:top.y-.62,z:top.z,rx:.46,ry:.14,hang:'under'},sway:{h,bend:1.8}};}
+ return {grip:{x:x+(top.x-x)*f,y:y+GRIP_HEIGHT,z:z+(top.z-z)*f,r:.21+(.11-.21)*f},baseR:.21,crown:{x:top.x,y:top.y-.62,z:top.z,rx:.4,ry:.1,hang:'under'},sway:{h,bend:1.8}};}
+

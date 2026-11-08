@@ -368,3 +368,5 @@
 /* Smallest phones (QA audit Oct 25 2026, docs/QA_AUDIT_OCT25.md #7): at 320-359 px the one-line clamp bottomed out at 18 px and the
    title read "Make it your…". There it wraps onto two 22 px lines instead, which together fill the 44 px header row exactly. */
 @media(max-width:359px){.fullModal .header h2.settingsTitle{white-space:normal;text-wrap:balance;overflow:visible;text-overflow:clip;font-size:18px;line-height:22px}}
+/* Nov 8 2026 (owner): the friends button is not needed while fishing (FishingHost sets data-fishing on .town-app); Back keeps the top-left corner. */
+:global(.town-app[data-fishing]) .triggers .circle[data-party-open]{display:none}

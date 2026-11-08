@@ -12,7 +12,7 @@ import {isSoundEnabled,getSoundVolume} from '../games/sound';
  *   full-time win / lose / draw stings. Still no files, timers or always-on nodes.
  * - Voices are capped; every node disconnects when it ends.
  */
-export type StrikerCue='pass'|'shot'|'touch'|'tackle'|'hit'|'save'|'post'|'miss'|'board'|'goal'|'concede'|'intercept'|'focus'|'switch'|'kickoff'|'fulltime'|'charge'|'perfect'|'skill'|'beat'|'foul'|'spirit'|'special'|'star'|'call'|'chain'|'band'|'ole'|'cheer'|'win'|'lose'|'draw';
+export type StrikerCue='pass'|'shot'|'touch'|'tackle'|'hit'|'save'|'post'|'miss'|'board'|'goal'|'concede'|'intercept'|'focus'|'switch'|'kickoff'|'fulltime'|'charge'|'perfect'|'skill'|'beat'|'foul'|'spirit'|'special'|'star'|'call'|'chain'|'band'|'ole'|'cheer'|'win'|'lose'|'draw'|'bonus'|'best'|'horn'|'net'|'bounce';
 const MAX_VOICES=14;
 export function createStrikerAudio(){
  let ctx:AudioContext|null=null,out:GainNode|null=null,noise:AudioBuffer|null=null,voices=0;
@@ -89,6 +89,16 @@ export function createStrikerAudio(){
    case 'win':[[523,1.3],[659,1.42],[784,1.54],[1046,1.7],[1318,1.86]].forEach(([hz,d])=>tone(at+d,hz,hz*1.005,.34,v*.06,'triangle'));tone(at+1.86,262,262,.6,v*.07,'triangle',900);break;
    case 'lose':tone(at+1.3,392,370,.5,v*.05,'triangle');tone(at+1.75,330,311,.8,v*.05,'triangle');break;
    case 'draw':tone(at+1.3,440,440,.35,v*.05,'triangle');tone(at+1.6,440,442,.55,v*.05,'triangle');break;
+   // League cues (Nov 8 2026): all synthesized through the same capped voice pool, no files.
+   // Bonus: a combo / skill goal. power = combo (1..2.5): more notes and a higher top note as the combo grows.
+   case 'bonus':{const steps=Math.max(2,Math.min(5,Math.round(power*2)));for(let i=0;i<steps;i++){const hz=[784,988,1175,1319,1568][i];tone(at+.55+i*.07,hz,hz*1.004,.18,v*.05,'triangle');}break;}
+   // New personal best on a league board: a bright bell pair over the win sting.
+   case 'best':tone(at+2.1,1568,1572,.5,v*.06,'sine');tone(at+2.22,2093,2098,.7,v*.05,'sine');tone(at+2.1,784,786,.6,v*.04,'triangle',1600);break;
+   // League kick-off: a low stadium horn (two detuned saws through a lowpass) under the whistle.
+   case 'horn':tone(at,146.8,146,.7,v*.06,'sawtooth',700);tone(at,147.6,147,.7,v*.05,'sawtooth',650);break;
+   // Net swish for a goal (layered under the roar; the shot speed sets the brightness) and a ball bounce on the turf.
+   case 'net':hiss(at+.02,.28,v*(.08+Math.min(1,power)*.06),'bandpass',2400*j,1200,1.6,.01);hiss(at+.04,.18,v*.05,'highpass',5200,4200,.7,.01);break;
+   case 'bounce':tone(at,150*j,95,.05,v*Math.min(.16,.05+power*.1),'sine');break;
    case 'chain':{const step=Math.max(0,Math.min(5,Math.round(power)-2)),hz=[523,587,659,784,880,1047][step];tone(at,hz,hz*1.005,.16,v*.06,'triangle');if(step>=2)tone(at+.05,hz*1.5,hz*1.505,.2,v*.035,'sine');break;}
   }}
  /** Island groove, one step: a syncopated marimba bass on the bar's root and a pentatonic pluck that joins as play heats up.

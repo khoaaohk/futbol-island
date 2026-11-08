@@ -240,6 +240,8 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
   case 'halfTime':whistle(ctx,v,now,[[0,.18],[.26,.3]],vol);break;
   case 'stoppage':whistle(ctx,v,now,[[0,.12]],vol);break;
   // The referee's full-time whistle: short, short, long.
+  // Nov 8 2026: a new personal best (any board): a rising pentatonic fanfare over a small roar, once per run (pooled voices).
+  case 'pb-best':if(!throttled(v,cue,now,2)){arpeggio(ctx,v,[PENTA[2],PENTA[4],PENTA[5],PENTA[7]],now+.05,.09,.045*vol);roar(ctx,v,now,vol*.8,.8);}break;
   case 'fullTime':whistle(ctx,v,now,[[0,.16],[.24,.16],[.48,.6]],vol);break;
   case 'pb-over':arpeggio(ctx,v,[783.99,659.25,523.25,392],now+.15,.12,.05*vol,'sine',.22);break;
   default:tone(ctx,v,'sine',240*jitter(.05),180,now,.06,.04*vol);

@@ -305,7 +305,7 @@ export function buildSummitIsle(t:SummitTools){
   bake(piece,new T.IcosahedronGeometry(1.7*s,0),i%3?'#5b895e':'#4f7f55',at(x,y+2.9*s,z,0,i));
   bake(piece,new T.IcosahedronGeometry(1.15*s,0),i%2?'#6f9a62':'#5b895e',at(x+.6*s,y+3.9*s,z-.3*s,0,i*2));
   piece.tid=0;
-  obstacles.push(trunkCollider(x,z,.2*s));assets.push({kind:'tree',x,z,w:.5*s,d:.5*s,visualW:3.6*s,visualD:3.6*s,canopyHeight:y+5*s,baseY:y});SUMMIT_TREE_SITES.push({kind:'tree',x,z,y,size:s,seed:i,top:{x,y:y+5*s,z},tid,rig:roundTreeRig(x,z,y,s)});}
+  obstacles.push(trunkCollider(x,z,.2*s));assets.push({kind:'tree',x,z,w:.5*s,d:.5*s,visualW:3.6*s,visualD:3.6*s,canopyHeight:y+5*s,baseY:y});SUMMIT_TREE_SITES.push({kind:'tree',x,z,y,size:s,seed:i,top:{x,y:y+5*s,z},tid,rig:roundTreeRig(x,z,y,s,i)});}
  function rock(x:number,z:number,r:number,i:number,piece=propsAt(x,z)){const y=yAt(x,z),sx=1+jitter(i,3)*.4,sy=.55+jitter(i,8)*.3,sz=1+jitter(i,4)*.3;
   bake(piece,new T.IcosahedronGeometry(r,0),['#9b9e90','#878b7e','#b1b3a6'][i%3],at(x,y+r*.25,z,0,jitter(i,5)*6,0,sx,sy,sz));
   // Solid to the size it shows (Oct 15 2026, user: "fix running through rocks"): a round collider out to the rock's widest reach

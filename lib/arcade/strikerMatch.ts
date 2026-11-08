@@ -95,9 +95,16 @@ export const STRIKER_EVENT_FIRST=40,STRIKER_EVENT_GAP=45,STRIKER_WIND=1.6,STRIKE
 export const STRIKER_ADAPT={speed:.18,tackleThink:-.15,keeperReact:-.015};
 /** Eased retry after a loss or draw, one notch only and said out loud on the ready card. */
 export const STRIKER_ASSIST={speed:-.25,tackleWindup:.05,tackleThink:.25,keeperReact:.03,keeperDive:-.7,interceptSkill:.85};
+/** League tiers (Nov 8 2026, lib/arcade/strikerTiers.ts): Pro and Legend play on top of the Round 6 Blue, one fair notch at a time.
+ *  Index 0 = no league (rounds and cup are untouched). Blue never outruns Gold's jog (8) or sprint (12); the eased retry and the
+ *  gentle first minute never apply in a league match. Sim lock: tests/striker-polish-nov8.cjs. */
+export const STRIKER_TIER_BOOST=[
+ {speed:0,tackleThink:0,keeperReact:0,keeperDive:0,interceptSkill:0},
+ {speed:.3,tackleThink:-.12,keeperReact:-.02,keeperDive:.5,interceptSkill:.05},
+ {speed:.45,tackleThink:-.22,keeperReact:-.035,keeperDive:.9,interceptSkill:.1}] as const;
 export function createStrikerMatch(){
  const players:StrikerPlayer[]=Array.from({length:8},(_,id)=>({id,team:(id<4?0:1) as 0|1,keeper:id%4===3,x:0,z:0,vx:0,vz:0,yaw:id<4?Math.PI/2:-Math.PI/2,stamina:1,receive:0,receiveX:0,receiveZ:0,kick:0,stun:0,tackle:0,cooldown:0,think:.6+id*.13,run:0,windup:0,keeperAim:0,tackleX:0,tackleZ:0,jockey:0,strikeYaw:0,strikeKind:'pass',strikePower:.35,saveSide:1,saveHeight:0,saveWide:false,dive:0,react:0,caught:false,skill:0,skillKind:'stepover',skillSide:1,skillCount:0,skillAt:-9,skillYaw:0,heavy:0,touchCycle:1,receiveHeight:0,header:0,wall:0,callRun:0,callKind:'behind',strikeCharge:0}));
- const state={level:1,players,ball:{x:-7,z:0,y:.25,vx:0,vz:0,vy:0,owner:0,lastTeam:0,lock:0,spin:0},selected:0,score:[0,0],time:0,goalPause:0,charge:0,finished:false,message:'Attack right. Pass into space, then finish!',event:0,eventKind:'kickoff',eventX:0,eventZ:0,queuedPass:0,queuedThrough:false,queuedX:0,queuedZ:0,passTarget:-1,aim:0,gentle:false,adapt:0,/** Match events (round 3): a short gust of wind (the loose ball drifts) or a power zone (first player in gets full sprint and a
+ const state={level:1,players,ball:{x:-7,z:0,y:.25,vx:0,vz:0,vy:0,owner:0,lastTeam:0,lock:0,spin:0},selected:0,score:[0,0],time:0,goalPause:0,charge:0,finished:false,message:'Attack right. Pass into space, then finish!',event:0,eventKind:'kickoff',eventX:0,eventZ:0,queuedPass:0,queuedThrough:false,/** League tier 0..2 (STRIKER_TIER_BOOST); set by configure. */tier:0,queuedX:0,queuedZ:0,passTarget:-1,aim:0,gentle:false,adapt:0,/** Match events (round 3): a short gust of wind (the loose ball drifts) or a power zone (first player in gets full sprint and a
   * spirit boost). One at a time, never in the first 25 s, the last 15 s, a set piece, a goal pause or a first-ever match. */
   windT:0,windZ:0,zoneT:0,zoneX:0,zoneZ:0,eventClock:0,nextEvent:40,timeScale:1,/** Cinematic slow-mo from the match loop (lib/arcade/strikerCinema.ts), 0.3..1; the sim runs at the slower of this and the charge slow-mo. */cinemaScale:1,shotMoment:0,passes:[0,0],shots:[0,0],passChain:0,lastPasser:-1,
   /** Goal moment: frozen frames, who scored (-1 own goal), crowd energy 0..1.6 for sound and stands. */
@@ -132,10 +139,10 @@ export function createStrikerMatch(){
   goalStory:{chain:0,habit:false,firstTime:false,teamStrike:false,chip:false,curled:false,setPiece:false,clean:false,at:-1}};
  const clamp=(v:number,a:number,b:number)=>Math.max(a,Math.min(b,v));
  const b0=()=>state.ball;
- const T=STRIKER_TUNING,A=STRIKER_ASSIST,lv=()=>clamp(state.level,1,STRIKER_ROUNDS.length)-1,eased=()=>state.assist&&state.assistLevel===state.level;
- const warm=()=>state.gentle&&state.time<STRIKER_GENTLE_SECONDS?1-state.time/STRIKER_GENTLE_SECONDS:0,G=STRIKER_GENTLE,D=STRIKER_ADAPT;
-  const tune={speed:()=>T.speed[lv()]+(eased()?A.speed:0)+warm()*G.speed+state.adapt*D.speed,windup:()=>T.tackleWindup[lv()]+(eased()?A.tackleWindup:0),think:()=>T.tackleThink[lv()]+(eased()?A.tackleThink:0)+warm()*G.tackleThink+state.adapt*D.tackleThink,
-  react:()=>T.keeperReact[lv()]+(eased()?A.keeperReact:0)+warm()*G.keeperReact+state.adapt*D.keeperReact,dive:()=>T.keeperDive[lv()]+(eased()?A.keeperDive:0),skill:()=>T.interceptSkill[lv()]*(eased()?A.interceptSkill:1)*(1-warm()*(1-G.interceptSkill))};
+ const T=STRIKER_TUNING,A=STRIKER_ASSIST,lv=()=>clamp(state.level,1,STRIKER_ROUNDS.length)-1,eased=()=>state.assist&&state.assistLevel===state.level&&!state.tier,TB=()=>STRIKER_TIER_BOOST[state.tier]??STRIKER_TIER_BOOST[0];
+ const warm=()=>state.gentle&&!state.tier&&state.time<STRIKER_GENTLE_SECONDS?1-state.time/STRIKER_GENTLE_SECONDS:0,G=STRIKER_GENTLE,D=STRIKER_ADAPT;
+  const tune={speed:()=>T.speed[lv()]+TB().speed+(eased()?A.speed:0)+warm()*G.speed+state.adapt*D.speed,windup:()=>T.tackleWindup[lv()]+(eased()?A.tackleWindup:0),think:()=>T.tackleThink[lv()]+TB().tackleThink+(eased()?A.tackleThink:0)+warm()*G.tackleThink+state.adapt*D.tackleThink,
+  react:()=>T.keeperReact[lv()]+TB().keeperReact+(eased()?A.keeperReact:0)+warm()*G.keeperReact+state.adapt*D.keeperReact,dive:()=>T.keeperDive[lv()]+TB().keeperDive+(eased()?A.keeperDive:0),skill:()=>Math.min(.95,T.interceptSkill[lv()]+TB().interceptSkill)*(eased()?A.interceptSkill:1)*(1-warm()*(1-G.interceptSkill))};
  const emit=(kind:string,x:number,z:number,message:string)=>{state.event++;state.eventKind=kind;state.eventX=x;state.eventZ=z;state.message=message;};
  function addSpirit(team:0|1,amount:number){const before=state.spirit[team],gain=(team===1?amount*T2.blueScale[lv()]:amount)*(state.mods.spirit?2:1);state.spirit[team]=Math.min(1,before+gain);
   if(before<1&&state.spirit[team]>=1){state.spiritEvent++;state.spiritTeam=team;}}
@@ -506,7 +513,7 @@ export function createStrikerMatch(){
   }
  }
  reset();/** Island Cup: set length and modifiers before reset(). Rounds mode uses the defaults. */
- function configure(o:{duration?:number;mods?:Partial<StrikerMods>;gentle?:boolean}){state.gentle=!!o.gentle;state.baseDuration=o.duration??STRIKER_SECONDS;Object.assign(state.mods,{rain:false,small:false,golden:false,spirit:false},o.mods??{});state.goalHalf=state.mods.small?STRIKER_SMALL_GOAL_HALF:STRIKER_GOAL_HALF;}
+ function configure(o:{duration?:number;mods?:Partial<StrikerMods>;gentle?:boolean;tier?:number}){state.gentle=!!o.gentle;state.tier=o.tier===1||o.tier===2?o.tier:0;state.baseDuration=o.duration??STRIKER_SECONDS;Object.assign(state.mods,{rain:false,small:false,golden:false,spirit:false},o.mods??{});state.goalHalf=state.mods.small?STRIKER_SMALL_GOAL_HALF:STRIKER_GOAL_HALF;}
  return{state,step,reset,configure};
 }
 export type StrikerMatch=ReturnType<typeof createStrikerMatch>;

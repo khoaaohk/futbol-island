@@ -65,7 +65,8 @@ assert(/Pocket futsal court[\s\S]{0,400}box\(16,\.012,9,'#648c72'/.test(src('lib
  assert.equal(pos.count,40);assert.equal(g.getIndex().count,60);assert.deepEqual(g.groups.map(x=>[x.count,x.materialIndex]),[[30,0],[30,1]]);assert(!g.getAttribute('color'));
  const first=g.getIndex().array.slice(0,6),xs=[...first].map(i=>pos.getX(i));assert.equal(Math.min(...xs),-25,'band 0 (material 0) starts at the west goal line');assert.equal(Math.max(...xs),-20);
  const st=src('lib/arcade/strikerScene.ts'),pp=src('lib/arcade/passPuzzleScene.ts');
- assert(/stripedPlaneGeometry\(28,50,10,'x'\),\['#193440','#203f4c'\]\.map/.test(st)&&!/for\(let i=0;i<10;i\+\+\)\{const patch/.test(st),'Strikers: one grass mesh');
+ // Nov 8 2026: the league tiers recolour the two stripe materials, so they are hoisted into grassMaterials; still one mesh.
+ assert(/grassMaterials=\['#193440','#203f4c'\]\.map/.test(st)&&(st.match(/stripedPlaneGeometry\(/g)||[]).length===1&&/new T\.Mesh\(stripedPlaneGeometry\(28,50,10,'x'\),grassMaterials\)/.test(st)&&!/for\(let i=0;i<10;i\+\+\)\{const patch/.test(st),'Strikers: one grass mesh');
  assert(/stripedPlaneGeometry\(hw\*2,L,stripes\),stripeMaterials/.test(pp)&&!/new T\.PlaneGeometry\(hw\*2,L\/stripes\)/.test(pp),'pass puzzles: one grass mesh');
  assert(/stripeMaterials\.forEach\(m=>m\.dispose\(\)\)/.test(pp),'pass puzzle stripe materials are released on rebuild');
  assert(!/vertexColors/.test(st)&&!/vertexColors/.test(pp),'no vertex-colour variant in the arcade');}

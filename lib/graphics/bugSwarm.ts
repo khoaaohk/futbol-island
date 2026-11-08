@@ -6,7 +6,9 @@
  * walks legs per instance (iFlap = rate, amplitude, mid angle, phase offset; iPose = case opening, leg phase offset, stride, leg
  * rate) and whose fragment adds the morpho / dragonfly sheen and the firefly lantern. Per species near the player: one
  * InstancedMesh with that species' full model; every other bug: one shared far-silhouette InstancedMesh tinted per instance. At
- * Night: firefly bodies + one additive glow-sprite draw. Draw calls: day 1 + (species within FULL_IN_M, usually 0–2); night 2.
+ * Night: firefly bodies + one additive glow-sprite draw. Draw calls: day 1 + (the NEAR_DETAIL_MAX nearest species within the
+ * ride-aware fullDetailRadius, ≤ 3 desktop / 2 phone); night 2. Nov 8 2026 island life pass: garden company (wildBugsCore
+ * GARDEN_COMPANY, decoration only) rides in the same far draw and its species' near draw (0 new draws).
  *
  * API for the catching lane: query(x, y, z, r) → nearby bugs (a reused array), startle(id, from), catch(id) → where + what,
  * setSet('bugs' | 'fireflies') with a fade, position(id, out) for the zoom camera. No per-frame allocation in update().
@@ -19,7 +21,7 @@ import {countWildFlutter} from '../analytics/summitEvents';
 import {createBugFarGeometry,createBugModel,triangleCount} from './bugModels';
 import {bugMaterial,glowMaterial} from './bugMaterial';
 import {Mode,createFlightBug,hideBug,startle as startleBug,stepBug,type FlightBug,type StepCtx} from './bugFlight';
-import {FIREFLY_SIZE,bugVisualSize,WILD_BUG_HINT,WILD_BUG_RANGE,WILD_FLEE,wildBugCount,FIREFLY_MAP_CAP} from './wildBugsCore';
+import {FIREFLY_SIZE,bugVisualSize,WILD_BUG_HINT,WILD_BUG_RANGE,WILD_FLEE,wildBugCount,FIREFLY_MAP_CAP,fullDetailRadius,FULL_DETAIL_HYST,NEAR_DETAIL_MAX,GARDEN_MOVES,gardenCompanyCount} from './wildBugsCore';
 import {bugMapCount,inBugNorthZone,onSummitSand} from '../town/jobs/bugSpecies';
 import {onSummitIsle} from '../town/summitIsle';
 import {hideBug as hideFor} from './bugFlight';
@@ -42,7 +44,9 @@ let hinted=false;// once per visit (page load)
 function attr(n:number){const a=new T.InstancedBufferAttribute(new Float32Array(n*4),4);a.setUsage(T.DynamicDrawUsage);return a;}
 
 type Slot={score?:number;bug:FlightBug;sp:BugSpecies|null;call:FireflyCall|null;size:number;color:T.Color;near:boolean;counted:number;
- mesh:T.InstancedMesh|null;flap:T.InstancedBufferAttribute|null;pose:T.InstancedBufferAttribute|null;
+ /** Its species' full-detail mesh (index into kinds; -1 none), garden company (decoration only), this frame's distance and
+  *  whether it is out this frame (simulated, not hidden). */
+ kind:number;decor:boolean;d:number;vis:boolean;
  /** Seconds since it turned up near the player (local density; < 0 = not a local spawn) and whether its species is already in
   *  today's jar (shown with a check, not a glint). */
  spawnT:number;dup:boolean;
@@ -61,12 +65,16 @@ export function fireflyHomes(n:number):{id:string;call:string;x:number;z:number;
  return out;
 }
 
+/** One species' full-detail mesh (Nov 8 2026 island life pass): one draw for every near copy of that species (the species' bug
+ *  plus its garden company), drawn only while it is among the NEAR_DETAIL_MAX nearest species. */
+type Kind={mesh:T.InstancedMesh;flap:T.InstancedBufferAttribute;pose:T.InstancedBufferAttribute;n:number;minD:number;on:boolean};
+
 export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>number;seed?:number}={}){
  const floor=opts.floor??fieldSurfaceHeight;
  const U={uTime:{value:0},uFade:{value:1}};
  const root=new T.Group();root.name='bug-swarm';
  let material:T.MeshStandardMaterial|null=null,glowMat:T.ShaderMaterial|null=null;
- let slots:Slot[]=[],far:T.InstancedMesh|null=null,farFlap:T.InstancedBufferAttribute|null=null,farPose:T.InstancedBufferAttribute|null=null;
+ let slots:Slot[]=[],decor:Slot[]=[],kinds:Kind[]=[],far:T.InstancedMesh|null=null,farFlap:T.InstancedBufferAttribute|null=null,farPose:T.InstancedBufferAttribute|null=null;
  let glow:T.InstancedMesh|null=null,lantern=new T.Vector3(),fx:BugSpotFx|null=null,cam:T.Camera|null=null,spots=0,jobOn=false;
  let built:SwarmSet|null=null,want:SwarmSet='bugs',cap=0,fading=false,lastNight:boolean|null=null,time:'day'|'sunset'='day';
  let recalls=0,seedOverride:number|null=null,pinned:{sl:Slot;at:{x:number;y:number;z:number};t:number}|null=null;
@@ -78,10 +86,10 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
 
  function drop(){
   pinned=null;if(!built)return;root.removeFromParent();for(const c of [...root.children]){root.remove(c);(c as T.InstancedMesh).dispose?.();}for(const o of owned)o.dispose();owned.length=0;
-  slots=[];far=null;farFlap=farPose=null;glow=null;fx=null;material=null;glowMat=null;built=null;cap=0;
+  slots=[];decor=[];kinds=[];far=null;farFlap=farPose=null;glow=null;fx=null;material=null;glowMat=null;built=null;cap=0;
  }
  function own<X extends {dispose():void}>(x:X){owned.push(x);return x;}
- function build(set:SwarmSet,n:number,tier:number){
+ function build(set:SwarmSet,n:number,tier:number,company=0){
   built=set;cap=n;builds++;U.uFade.value=0;fading=false;
   material=own(bugMaterial(U));tris=0;
   const seed=seedOverride??opts.seed??bugRotationSeed(Math.floor(Date.now()/864e5));
@@ -89,15 +97,23 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
    const list=pickBugsOnMap(seed,tier,time).slice(0,n);
    slots=list.map((sp,i)=>{const h=BUG_HOMES.find(h=>h.id===sp.id)!;
     const bug=createFlightBug({id:sp.id,move:sp.move,x:h.x,z:h.z,wander:h.wander,alert:sp.alert,sneak:sp.sneak,seed:(seed^Math.imul(i+1,0x9e3779b1))>>>0},floor);
-    return {bug,sp,call:null,size:bugVisualSize(sp.look.size),color:new T.Color(sp.look.palette[0]),near:false,counted:-99,mesh:null,flap:null,pose:null,spawnT:-1,dup:false,holdT:0};});
-   const fg=own(createBugFarGeometry());farFlap=attr(n);farPose=attr(n);fg.setAttribute('iFlap',farFlap);fg.setAttribute('iPose',farPose);
-   far=new T.InstancedMesh(fg,material,n);far.name='bug-swarm-far';far.instanceMatrix.setUsage(T.DynamicDrawUsage);far.setColorAt(0,new T.Color('#ffffff'));
+    return {bug,sp,call:null,size:bugVisualSize(sp.look.size),color:new T.Color(sp.look.palette[0]),near:false,counted:-99,kind:i,decor:false,d:0,vis:false,spawnT:-1,dup:false,holdT:0};});
+   // Garden company: extra copies of today's flower lovers on rings 3-8 m round their species' home (Summit Isle ground only).
+   const lovers=slots.filter(sl=>GARDEN_MOVES.includes(sl.sp!.move)),copies=new Array<number>(slots.length).fill(0);
+   for(let k=0;k<company&&lovers.length;k++){const base=lovers[k%lovers.length],sp=base.sp!;let x=0,z=0,ok=false;
+    for(let j=0;j<8&&!ok;j++){const a=k*2.399+j*1.13,r=3+((k*5+j*3)%6);x=base.bug.hx+Math.cos(a)*r;z=base.bug.hz+Math.sin(a)*r;ok=onSummitIsle(x,z)&&!(inBugNorthZone(x,z)&&!onSummitSand(x,z));}
+    if(!ok)continue;
+    const bug=createFlightBug({id:sp.id+'~g'+k,move:sp.move,x,z,wander:Math.min(6,Math.max(3,base.bug.wander*.7)),alert:sp.alert,sneak:sp.sneak,seed:(seed^Math.imul(k+101,0x27d4eb2f))>>>0},floor);
+    copies[base.kind]++;decor.push({bug,sp,call:null,size:base.size*(.88+(k%3)*.08),color:base.color,near:false,counted:-99,kind:base.kind,decor:true,d:0,vis:false,spawnT:-1,dup:false,holdT:0});}
+   const all=n+decor.length;
+   const fg=own(createBugFarGeometry());farFlap=attr(all);farPose=attr(all);fg.setAttribute('iFlap',farFlap);fg.setAttribute('iPose',farPose);
+   far=new T.InstancedMesh(fg,material,all);far.name='bug-swarm-far';far.instanceMatrix.setUsage(T.DynamicDrawUsage);far.setColorAt(0,new T.Color('#ffffff'));
    far.instanceColor!.setUsage(T.DynamicDrawUsage);far.boundingSphere=new T.Sphere(new T.Vector3(SUMMIT_CENTER.x,30,SUMMIT_CENTER.z),220);far.count=0;root.add(far);
    fx=own(createBugSpotFx());root.add(fx.halo);fx.hide();
-   for(const sl of slots){// one full-model mesh per species out today (drawn only while near)
-    const g=own(createBugModel(sl.sp));tris+=triangleCount(g);sl.flap=attr(1);sl.pose=attr(1);g.setAttribute('iFlap',sl.flap);g.setAttribute('iPose',sl.pose);
-    const mm=new T.InstancedMesh(g,material,1);mm.name='bug-'+sl.bug.id;mm.instanceMatrix.setUsage(T.DynamicDrawUsage);mm.visible=false;
-    mm.boundingSphere=new T.Sphere(new T.Vector3(sl.bug.hx,floor(sl.bug.hx,sl.bug.hz)+2,sl.bug.hz),sl.bug.wander+8);sl.mesh=mm;root.add(mm);}
+   for(const sl of slots){// one full-model mesh per species out today (drawn only while near; its garden company shares the draw)
+    const cap=1+copies[sl.kind],g=own(createBugModel(sl.sp));tris+=triangleCount(g);const flap=attr(cap),pose=attr(cap);g.setAttribute('iFlap',flap);g.setAttribute('iPose',pose);
+    const mm=new T.InstancedMesh(g,material,cap);mm.name='bug-'+sl.bug.id;mm.instanceMatrix.setUsage(T.DynamicDrawUsage);mm.visible=false;mm.count=0;
+    mm.boundingSphere=new T.Sphere(new T.Vector3(sl.bug.hx,floor(sl.bug.hx,sl.bug.hz)+2,sl.bug.hz),sl.bug.wander+8);kinds.push({mesh:mm,flap,pose,n:0,minD:Infinity,on:false});root.add(mm);}
   }else{
    // The eight calls at their homes first, then (Oct 21 2026, "more fireflies on the mountain island") ambient copies of the calls
    // over the whole island: the day bugs' homes (four bands, already checked walkable and clear), then rings round them, every
@@ -105,7 +121,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
    const homes=fireflyHomes(n);
    slots=homes.map((h,i)=>{const call=FIREFLY_SET.find(f=>f.id===h.call)??null;
     const bug=createFlightBug({id:h.id,move:'firefly-drift',x:h.x,z:h.z,wander:h.wander,alert:3,sneak:.3,seed:(seed^Math.imul(i+7,0x85ebca6b))>>>0},floor);
-    return {bug,sp:null,call,size:FIREFLY_SIZE,color:new T.Color('#ffffff'),near:true,counted:-99,mesh:null,flap:null,pose:null,spawnT:-1,dup:false,holdT:0};});
+    return {bug,sp:null,call,size:FIREFLY_SIZE,color:new T.Color('#ffffff'),near:true,counted:-99,kind:-1,decor:false,d:0,vis:false,spawnT:-1,dup:false,holdT:0};});
    const g=own(createBugModel(null));tris=triangleCount(g);farFlap=attr(n);farPose=attr(n);g.setAttribute('iFlap',farFlap);g.setAttribute('iPose',farPose);
    // The lantern's middle in model space (the glow-flagged vertices), where each glow sprite sits.
    const pa=g.getAttribute('position'),ma=g.getAttribute('aMisc');let k=0;lantern.set(0,0,0);for(let i=0;i<pa.count;i++)if(ma.getW(i)>0){lantern.x+=pa.getX(i);lantern.y+=pa.getY(i);lantern.z+=pa.getZ(i);k++;}if(k)lantern.multiplyScalar(1/k);
@@ -122,6 +138,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   a.setXYZW(i,b.fhz,b.famp,b.fbase,(b.flap-t*b.fhz*TAU)%(TAU*1000));
   pa.setXYZW(i,b.open,(b.leg-t*b.legHz)%(TAU*1000),b.legAmp,b.legHz);
  }
+ let fullIn:number=WILD_BUG_RANGE.FULL_IN_M,fullOut:number=WILD_BUG_RANGE.FULL_OUT_M;
  function matrixOf(sl:Slot,boost=1){const b=sl.bug;
   const bob=b.mode===Mode.Fly||b.mode===Mode.Hover?-Math.sin(b.flap)*.035*b.famp*sl.size:0;
   e.set(b.pitch,b.yaw,b.roll);q.setFromEuler(e);s.setScalar(sl.size*b.fade*boost);return m4.compose(p.set(b.x,b.y+bob,b.z),q,s);}
@@ -138,7 +155,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   if(built&&(!n||(n!==cap&&!fading&&built===want)))drop();
   if(!n){havePlayer=false;return;}
   if(built&&built!==want)fading=true;// fade out, then swap sets
-  if(!built)build(want,n,Math.min(2,Math.max(0,Math.floor(f.tier)||0)));
+  if(!built)build(want,n,Math.min(2,Math.max(0,Math.floor(f.tier)||0)),f.job?0:gardenCompanyCount(ask));
   root.visible=!f.busy;
   if(f.dt<=0)return;
   const dt=Math.min(f.dt,.25);
@@ -152,24 +169,35 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   farAcc+=dt;const farStep=farAcc>=1/WILD_BUG_RANGE.FAR_HZ;const fdt=Math.min(farAcc,.25);if(farStep){farAcc=0;farSteps++;}
   ctx.px=f.x;ctx.pz=f.z;ctx.pspeed=pspeed;updates++;
   const live=far!;let fi=0,haloD:number=SPOT_FX.haloRange,haloSl:Slot|null=null;const isBugs=built==='bugs';jobOn=!!f.job;const spot=fx&&jobOn&&isBugs?fx:null;if(spot)spot.begin(clock);else fx?.hide();
-  for(let i=0;i<slots.length;i++){const sl=slots[i],b=sl.bug,d=Math.hypot(b.x-f.x,b.z-f.z);
-   if(d>WILD_BUG_RANGE.SIM_M&&b.mode!==Mode.Hidden){if(sl.mesh)sl.mesh.visible=false;continue;}
+  // Full detail rides with speed (fullDetailRadius): a scooter / bike sees wings and legs from farther. Nearest species first, capped.
+  fullIn=fullDetailRadius(pspeed);fullOut=fullIn+FULL_DETAIL_HYST;const nearMax=NEAR_DETAIL_MAX[f.phone?'phone':'desktop'];
+  for(let k=0;k<kinds.length;k++){kinds[k].minD=Infinity;kinds[k].n=0;}
+  const ns=slots.length,total=ns+decor.length;
+  for(let i=0;i<total;i++){const sl=i<ns?slots[i]:decor[i-ns],b=sl.bug;sl.vis=false;
+   if(sl.decor&&jobOn)continue;// garden company sits out a Bug squad shift (only catchable bugs about)
+   const d=Math.hypot(b.x-f.x,b.z-f.z);
+   if(d>WILD_BUG_RANGE.SIM_M&&b.mode!==Mode.Hidden)continue;
    const near=d<WILD_BUG_RANGE.NEAR_M,step=near?dt:farStep?fdt:0;
    if(pinned&&pinned.sl===sl){const a=pinned.at;pinned.t+=dt;b.x=a.x;b.y=a.y;b.z=a.z;b.yaw+=Math.sin(pinned.t*14)*.08;b.roll=Math.sin(pinned.t*19)*.35;b.pitch=Math.sin(pinned.t*11)*.25;b.fade=1;}
    else if(sl.holdT>0){sl.holdT-=dt;b.vx=b.vy=b.vz=0;/* Oct 25 2026 (catch upgrade): the locked bug notices the net, a nervous little tremble (a roll and pitch, never a move: it stays fair to catch) */if(!f.reduced){b.roll=Math.sin(sl.holdT*38)*.22;b.pitch=Math.sin(sl.holdT*29)*.12;}}
-   else if(step>0&&stepBug(b,step,ctx))flutter(sl);
-   if(b.mode===Mode.Hidden){if(sl.mesh)sl.mesh.visible=false;continue;}
+   else if(step>0&&stepBug(b,step,ctx)&&!sl.decor)flutter(sl);
+   if(b.mode===Mode.Hidden)continue;
    if(sl.spawnT>=0){sl.spawnT+=dt;if(sl.spawnT>2.5)sl.spawnT=-1;}
-   if(spot&&!sl.dup&&b.fade>.3&&d<haloD&&pinned?.sl!==sl){haloD=d;haloSl=sl;}
-   if(isBugs){sl.near=sl.near?d<WILD_BUG_RANGE.FULL_OUT_M:d<WILD_BUG_RANGE.FULL_IN_M;
-    // The near model's culling sphere follows the bug: local density and recalls move a bug far from the home its sphere was built
-    // round, and a stale sphere culled the body (user: "some of the bugs have check marks", only the mark was drawn).
-    if(sl.near&&sl.mesh){sl.mesh.visible=true;sl.mesh.boundingSphere!.center.set(b.x,b.y,b.z);sl.mesh.boundingSphere!.radius=sl.size*1.5+.5;sl.mesh.setMatrixAt(0,matrixOf(sl));sl.mesh.instanceMatrix.needsUpdate=true;writeAttrs(sl.flap!,sl.pose!,0,b);sl.flap!.needsUpdate=true;sl.pose!.needsUpdate=true;continue;}
-    if(sl.mesh)sl.mesh.visible=false;}
-   live.setMatrixAt(fi,matrixOf(sl,isBugs?1+.45*Math.min(1,Math.max(0,(d-WILD_BUG_RANGE.FULL_IN_M)/26)):1));if(isBugs)live.setColorAt(fi,sl.color);writeAttrs(farFlap!,farPose!,fi,b);
+   if(spot&&!sl.decor&&!sl.dup&&b.fade>.3&&d<haloD&&pinned?.sl!==sl){haloD=d;haloSl=sl;}
+   sl.vis=true;sl.d=d;
+   if(isBugs&&sl.kind>=0){sl.near=sl.near?d<fullOut:d<fullIn;if(sl.near&&d<kinds[sl.kind].minD)kinds[sl.kind].minD=d;}}
+  // The nearest NEAR_DETAIL_MAX species with a bug in range draw in full (O(kinds²), ≤ 12²); the rest stay silhouettes.
+  for(let k=0;k<kinds.length;k++){const m=kinds[k].minD;let closer=0;if(m!==Infinity)for(let j=0;j<kinds.length;j++){const o=kinds[j].minD;if(o<m||(o===m&&j<k))closer++;}kinds[k].on=m!==Infinity&&closer<nearMax;}
+  for(let i=0;i<total;i++){const sl=i<ns?slots[i]:decor[i-ns],b=sl.bug;if(!sl.vis)continue;const d=sl.d;
+   if(isBugs&&sl.near&&sl.kind>=0&&kinds[sl.kind].on){const k=kinds[sl.kind];if(k.n<k.mesh.instanceMatrix.count){k.mesh.setMatrixAt(k.n,matrixOf(sl));writeAttrs(k.flap,k.pose,k.n,b);k.n++;continue;}}
+   live.setMatrixAt(fi,matrixOf(sl,isBugs?1+.45*Math.min(1,Math.max(0,(d-fullIn)/26)):1));if(isBugs)live.setColorAt(fi,sl.color);writeAttrs(farFlap!,farPose!,fi,b);
    // Glows read brighter (bigger) near the player: × 1.35 at the player easing to × 1 by 24 m.
    if(glow){p.copy(lantern).applyMatrix4(m4);glow.setMatrixAt(fi,m4.compose(p,q.identity(),s.setScalar(2.6*b.fade*(1+.35*Math.max(0,1-d/24)))));}
    fi++;}
+  for(let k=0;k<kinds.length;k++){const kd=kinds[k],mm=kd.mesh;mm.count=kd.n;mm.visible=kd.n>0;if(!kd.n)continue;
+   // The culling sphere follows the near copies (local density and recalls move bugs far from home: a stale sphere culled the body).
+   mm.getMatrixAt(0,m4);mm.boundingSphere!.center.setFromMatrixPosition(m4);mm.boundingSphere!.radius=fullOut*2+2;
+   mm.instanceMatrix.needsUpdate=true;kd.flap.needsUpdate=true;kd.pose.needsUpdate=true;}
   live.count=fi;live.visible=fi>0;live.instanceMatrix.needsUpdate=true;if(live.instanceColor)live.instanceColor.needsUpdate=true;farFlap!.needsUpdate=true;farPose!.needsUpdate=true;
   if(glow){glow.count=fi;glow.visible=fi>0;glow.instanceMatrix.needsUpdate=true;}
   if(spot){if(haloSl){const b=haloSl.bug;spot.haloAt(b.x,b.y+haloSl.size*.25,b.z,haloSize(haloSl.size),Math.min(1,b.fade));}spot.end();}
@@ -209,7 +237,7 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   startle(id:string,from:{x:number;z:number}){const sl=find(id);if(sl)startleBug(sl.bug,from.x,from.z,floor);return !!sl;},
   /** Catch one: it disappears (a new one turns up at its home later); returns where it was and what it is. */
   catch(id:string):SwarmCatch|null{const sl=find(id);if(!sl||sl.bug.mode===Mode.Hidden)return null;const b=sl.bug;
-   const out={id:b.id,kind:sl.sp?'bug' as const:'firefly' as const,species:sl.sp,call:sl.call,x:b.x,y:b.y,z:b.z};if(pinned?.sl===sl)pinned=null;hideBug(b);if(sl.mesh)sl.mesh.visible=false;return out;},
+   const out={id:b.id,kind:sl.sp?'bug' as const:'firefly' as const,species:sl.sp,call:sl.call,x:b.x,y:b.y,z:b.z};if(pinned?.sl===sl)pinned=null;hideBug(b);return out;},
   /** Hold one bug in the net (the catch zoom): it follows `at` (a live point the caller moves) and wiggles; null lets it go. */
   /** A swing locked on to this bug: it holds still for `secs` (until the hit frame). */
   hold(id:string,secs:number){const sl=find(id);if(sl)sl.holdT=secs;return !!sl;},
@@ -263,6 +291,9 @@ export function createBugSwarm(scene:T.Scene,opts:{floor?:(x:number,z:number)=>n
   dispose(){drop();},
   get set(){return built;},get count(){return slots.length;},get ids(){return slots.map(sl=>sl.bug.id);},
   get bugs(){return slots.map(sl=>sl.bug) as readonly FlightBug[];},
+  /** Garden company out now (decoration; tests and probes). */get company(){return decor.map(sl=>sl.bug) as readonly FlightBug[];},
+  /** Full-detail radius in use (m, rides with speed) and how many species meshes draw in full this frame. */
+  get detail(){let on=0;for(const k of kinds)if(k.mesh.visible)on++;return {inM:fullIn,outM:fullOut,species:on};},
   get playerSpeed(){return pspeed;},get builds(){return builds;},get updates(){return updates;},get farSteps(){return farSteps;},get root(){return built?root:null;},
   /** Visible draws this frame. */
   get drawCalls(){if(!built||!root.visible)return 0;let n=0;root.traverse(o=>{if((o as T.InstancedMesh).isInstancedMesh&&o.visible&&(o as T.InstancedMesh).count>0)n++;});return n;},

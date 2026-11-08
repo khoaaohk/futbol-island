@@ -51,7 +51,7 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-shop-jersey-v1','fi2-shop-boots-v1','fi2-shop-ball-v1','fi2-shop-owned-v1',// Kit Shop designs + bought items (lib/shop)
  // Arcade (plus fi2-arcade-record-<game>-v1, ARCADE_RECORD_KEY)
  'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-runner-coach-v1','fi2-runner-routes-v1','fi2-tennis-stars-v1',
- 'fi2-pinball-stars-v1','fi2-pass-puzzles-v1','fi.game.runner.best',
+ 'fi2-strikers-tiers-v1'/* Nov 8 2026: Strikers Pro / Legend League bests (strikerTiers.ts) */,'fi2-pinball-stars-v1','fi2-pinball-tiers-v1'/* Nov 8 2026: Pinball Derby Night / World Final bests (soccerPinballTiers.ts) */,'fi2-pass-puzzles-v1','fi.game.runner.best',
  // Grown-ups & IDP (the IDP with its free text removed: stripIdpText). fi2-idp-v2 (Oct 9 2026) holds ids, dates and picture
  // choices only; its typed words live in the device key fi2-idp-text-v1 (DEVICE_KEYS), which never syncs.
  'fi2-grownups-format-v1','fi2-idp-plan-v1','fi2-idp-v2',

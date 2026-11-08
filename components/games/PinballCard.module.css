@@ -44,3 +44,26 @@
 .tutorial span[data-side=right]{right:6%;top:52%;border-color:#ff83d3}
 @keyframes pbHint{from{opacity:.75}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.tutorial span{animation:none}}
+
+/* Nov 8 2026: the two elite tiers (Derby Night, World Final) under the ladder, each on its own board; a picked tier tints the
+   card with the pads' pink / gold. The full-time card gets a plain "why it ended" line and a NEW BEST flash (static when
+   reduced motion is on). */
+.tiers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 0}
+.card .tiers button{display:grid;align-content:center;gap:2px;min-height:52px;padding:6px 8px;border-radius:16px;border:2px solid #5a2f55;background:#241a33;color:#ffe5f6;font:inherit;text-align:center;cursor:pointer;touch-action:manipulation}
+.card .tiers button+button{border-color:#5c5330;background:#25231a;color:#fff8bb}
+.card .tiers button strong{display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:15px;font-weight:900;line-height:1.1}
+.card .tiers button span{font-size:12px;line-height:1.2;color:#cfd8ea}
+.card .tiers button[data-on]{border-color:#ff83d3;background:#402340;box-shadow:0 0 0 2px #ff83d355,0 0 16px #ff62c244}
+.card .tiers button+button[data-on]{border-color:#ffe86d;background:#353323;box-shadow:0 0 0 2px #ffe86d55,0 0 16px #ffe86d44}
+.card .tiers button:disabled{opacity:.5;cursor:default}
+.card .tiers button:focus-visible{outline:3px solid #73fff1;outline-offset:2px}
+.card[data-tier="1"]{border-color:#ff83d3;box-shadow:0 0 34px #ff62c240,0 10px 0 #0b0f1f}
+.card[data-tier="2"]{border-color:#ffe86d;box-shadow:0 0 34px #ffe86d40,0 10px 0 #0b0f1f}
+.card[data-tier="1"] .ladder,.card[data-tier="2"] .ladder{opacity:.55}
+.sub{margin:0;font-size:13px;line-height:1.3;color:#9fb3cc;max-width:320px}
+.badge[data-fresh]{background:#ffe86d;color:#2a2310;animation:pbFresh .5s cubic-bezier(.2,1.6,.4,1) both}
+.score[data-fresh]{animation:pbBest 1.2s ease-out 2}
+@keyframes pbFresh{from{transform:scale(.6)}to{transform:scale(1)}}
+@keyframes pbBest{0%,100%{text-shadow:0 0 18px #ffe86d55}40%{text-shadow:0 0 30px #ffe86dcc}}
+@media(max-height:520px){.tiers{margin-top:6px}.card .tiers button{min-height:48px;padding:4px 8px}}
+@media(prefers-reduced-motion:reduce){.badge[data-fresh],.score[data-fresh]{animation:none}}

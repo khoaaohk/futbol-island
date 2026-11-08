@@ -15,7 +15,10 @@ import {scanLanes,shutLanes} from '@/lib/passPuzzle/scan';
 import {coachRun} from '@/lib/passPuzzle/coach';
 import {dailyPuzzle} from '@/lib/passPuzzle/daily';
 import {arcadeFeedback} from '@/lib/arcade/arcadeFeedback';
-import {puzzleStrike,puzzleTouch,puzzlePassChime,puzzleWhistle,puzzleStar,puzzleShotWhoosh,puzzleGoalRoar,puzzleCrowdOoh,puzzleCombo,puzzleStreak} from '@/lib/arcade/passPuzzleAudio';
+import {puzzleStrike,puzzleTouch,puzzlePassChime,puzzleWhistle,puzzleStar,puzzleShotWhoosh,puzzleGoalRoar,puzzleCrowdOoh,puzzleCombo,puzzleStreak,puzzleSnapTick,puzzleIntercept,puzzleUiTap,puzzleSkillChime,puzzleNewBest} from '@/lib/arcade/passPuzzleAudio';
+// Nov 8 2026: Pro Cup / Legend Cup tiers (own boards), the skill multiplier and cup points (lib/passPuzzle/tiers.ts).
+import {TIER_SCENARIOS,TIER_PACKS,PUZZLE_TIERS,PUZZLE_TIER_IDS,tierOfPack,isTierPuzzle,boardForPuzzle,skillMultiplier,cupPoints,tierBoardScore,type SkillPart} from '@/lib/passPuzzle/tiers';
+import type {BoardGame} from '@/lib/arcade/leaderboard';
 import {passCallout,goalCallout,nextStreak,streakLabel,type Callout} from '@/lib/passPuzzle/combo';
 
 import {FIRST_TIME} from '@/lib/passPuzzle/sim';
@@ -37,9 +40,9 @@ import {beginBoardSession} from '@/lib/arcade/boardClient';
 const HighScoreEntry=dynamic(()=>import('../arcade/HighScoreEntry'),{ssr:false});
 const ArcadeBoards=dynamic(()=>import('../arcade/ArcadeBoards'),{ssr:false});
 /** Total stars across the puzzles (the daily remix is a bonus and doesn't count toward the board). */
-const boardStars=(stars:Record<string,number>)=>Object.entries(stars).reduce((n,[k,v])=>k.startsWith('daily')?n:n+v,0);
+const boardStars=(stars:Record<string,number>)=>Object.entries(stars).reduce((n,[k,v])=>k.startsWith('daily')||isTierPuzzle(k)?n:n+v,0);// Nov 8 2026: cup puzzles score on their own cup boards
 
-const SCENARIOS=ALL_SCENARIOS,PACKS=ALL_PACKS;
+const SCENARIOS=[...ALL_SCENARIOS,...TIER_SCENARIOS],PACKS=[...ALL_PACKS,...TIER_PACKS];
 /** Daily remix of a learned idea, built (and engine-checked) only when the child opens it. */
 let dailyCache:ReturnType<typeof dailyPuzzle>|undefined,dailyHard=false;
 /** Round 3: on Saturday and Sunday a child who has opened the Expert tier gets an expert remix (same id, same rules). */
@@ -53,6 +56,8 @@ const levelById=(id:string)=>SCENARIOS.find(s=>s.id===id)??(todaysDaily()?.scena
 const PROGRESS_KEY='fi2-pass-puzzles-v1';
 /** heading: the child's explicit choice; undefined = the default (no heading in 7v7, US Soccer under-11 rule). */
 type Progress={stars:Record<string,number>;masks?:Record<string,number>;format?:Format;heading?:boolean;
+ /** Nov 8 2026: best cup points per Pro / Legend Cup puzzle (the cup boards add these up) */
+ cup?:Record<string,number>;
  /** the child's own Scan choice (undefined = on in the first packs, where looking up is the lesson) */
  scan?:boolean;
  /** round 3: the replay speed the child picked (undefined = slow) */
@@ -63,12 +68,14 @@ type Outcome={success:boolean;stars:number;mask:number;fresh:number;passes:numbe
  /** the coach's takeaway: why the move worked, or why it didn't and what to try */
  why:string[];fix?:string;
  /** first-try solves in a row this visit (session only: never saved, never paid) */
- streak:number};
+ streak:number;
+ /** Nov 8 2026: a cup puzzle's skill multiplier, its points and the cup total (undefined on classic puzzles) */
+ skill?:{mult:number;parts:SkillPart[];points:number;best:number;newBest:boolean;total:number;cup:string}};
 const STAR_SOLVE=1,STAR_MOVE=2,STAR_BONUS=4;const starCount=(m:number)=>(m&1)+(m>>1&1)+(m>>2&1);
 const FORMATS:Format[]=['7v7','9v9','11v11'];
 const RUN_GRAB=2.1,BALL_GRAB=2.4,RESULT_SETTLE_MS=2900,REPLAY_SPEED=.38,HOLD_LOFT_SECONDS=1.1,MIN_STROKE_METRES=1.2;
 
-function readProgress():Progress{try{const v=JSON.parse(localStorage.getItem(PROGRESS_KEY)??'null');if(v&&typeof v==='object'&&v.stars&&typeof v.stars==='object'){const stars:Record<string,number>={};for(const [k,n] of Object.entries(v.stars))if(typeof n==='number'&&n>=0&&n<=3)stars[k]=Math.round(n);const masks:Record<string,number>={};if(v.masks&&typeof v.masks==='object')for(const [k,n] of Object.entries(v.masks))if(typeof n==='number'&&n>=0&&n<=7)masks[k]=n|0;return{stars,masks,format:FORMATS.includes(v.format)?v.format:undefined,heading:typeof v.heading==='boolean'?v.heading:undefined,scan:typeof v.scan==='boolean'?v.scan:undefined,replay:v.replay==='1x'||v.replay==='slow'?v.replay:undefined};}}catch{}return{stars:{}};}
+function readProgress():Progress{try{const v=JSON.parse(localStorage.getItem(PROGRESS_KEY)??'null');if(v&&typeof v==='object'&&v.stars&&typeof v.stars==='object'){const stars:Record<string,number>={};for(const [k,n] of Object.entries(v.stars))if(typeof n==='number'&&n>=0&&n<=3)stars[k]=Math.round(n);const masks:Record<string,number>={};if(v.masks&&typeof v.masks==='object')for(const [k,n] of Object.entries(v.masks))if(typeof n==='number'&&n>=0&&n<=7)masks[k]=n|0;const cup:Record<string,number>={};if(v.cup&&typeof v.cup==='object')for(const [k,n] of Object.entries(v.cup))if(isTierPuzzle(k)&&typeof n==='number'&&n>0&&n<=100_000)cup[k]=Math.floor(n);return{stars,masks,cup,format:FORMATS.includes(v.format)?v.format:undefined,heading:typeof v.heading==='boolean'?v.heading:undefined,scan:typeof v.scan==='boolean'?v.scan:undefined,replay:v.replay==='1x'||v.replay==='slow'?v.replay:undefined};}}catch{}return{stars:{}};}
 function writeProgress(p:Progress){try{localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));}catch{/* Private browsing keeps this visit's stars. */}}
 /** The child's own format from their development plan when they have one; 9v9 otherwise. */
 function childFormat():Format|undefined{try{const goal=loadIdp().plan?.goalId;const f=goal?goalById(goal)?.format:undefined;return f&&(FORMATS as string[]).includes(f)?f as Format:undefined;}catch{return undefined;}}
@@ -99,6 +106,12 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const [levelId,setLevelId]=useState<string>(SCENARIOS[0]?.id??''),[view,setViewState]=useState<View>('levels');
  const [hud,setHud]=useState({attempt:1,attempts:3,passes:0,phase:'aiming' as string});
  const [boardScore,setBoardScore]=useState<number|null>(null),[boardsOpen,setBoardsOpen]=useState(false);
+ /** Nov 8 2026: the board this puzzle scores on ('puzzle' stars, or a cup's points); set when a level loads. */
+ const boardRef=useRef<BoardGame>('puzzle'),[boardGame,setBoardGame]=useState<BoardGame>('puzzle');
+ /** Aim snap tick: the receiver and lane the drawn pass last locked onto (primitives, no allocation per move). */
+ const snapReceiver=useRef(-2),snapClear=useRef(false),rootRef=useRef<HTMLDivElement>(null);
+ /** Light shake (CSS transform on the canvas only): a goal or a steal. Restarted by toggling the attribute. */
+ const shake=(kind:'goal'|'steal')=>{const el=rootRef.current;if(!el)return;el.removeAttribute('data-shake');void el.offsetWidth;el.setAttribute('data-shake',kind);};
  /** The name-entry sheet waits for the goal celebration and the stars (Oct 25: it used to cover the goal at once). */
  const [boardReady,setBoardReady]=useState(false);
  useEffect(()=>{setBoardReady(false);if(boardScore===null||view!=='result')return;const id=setTimeout(()=>setBoardReady(true),2600);return()=>clearTimeout(id);},[boardScore,view]);
@@ -155,7 +168,8 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   if(e.type==='heavy_touch'){puzzleTouch(ctx,e.touch,true);return;}
   if(e.type==='offside'){puzzleWhistle(ctx);return;}
   if(e.type==='goal'){const w=replayRef.current?.world??worldRef.current,chain=w?.state.chain??[],passes=w?.state.passes??0;puzzleGoalRoar(ctx,passes);if(!replayRef.current)shout.current(goalCallout(passes,!!chain.at(-1)?.firstTime));}
-  else if(e.type==='intercept'||e.type==='save'||e.type==='parry')puzzleCrowdOoh(ctx);
+  else if(e.type==='intercept'||e.type==='save'||e.type==='parry'){puzzleCrowdOoh(ctx);if(e.type==='intercept')puzzleIntercept(ctx);}
+  if((e.type==='goal'||e.type==='intercept')&&!replayRef.current&&!sceneRef.current?.stage.reduced)shake(e.type==='goal'?'goal':'steal');
   const cue=e.type==='goal'?'goal':e.type==='save'||e.type==='parry'?'save':e.type==='intercept'||e.type==='deflect'?'block':'miss';
   arcadeFeedback(ctx,cue);
  },[]);
@@ -169,7 +183,14 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   const move=success&&r.passes>=sc.require.minPasses,mask=success?STAR_SOLVE|(move?STAR_MOVE:0)|(r.bonus?STAR_BONUS:0):0;
   const before=progressRef.current.masks?.[id]??0,merged=before|mask,fresh=mask&~before,stars=Math.max(starCount(merged),progressRef.current.stars[id]??0);
   if(success&&coinAttempt.current&&!id.startsWith('daily-'))void recordPuzzleBest(id,stars,coinAttempt.current,coinVisit.current);
-  if(success&&fresh&&!id.startsWith('daily')){const total=boardStars({...progressRef.current.stars,[id]:Math.max(progressRef.current.stars[id]??0,stars)});if(total>0)setBoardScore(total);}
+  // Nov 8 2026: a cup puzzle scores cup points (stars × 100 × skill) on its own cup board; the star board never sees it.
+  let skill:Outcome['skill'];const cupTier=tierOfPack(sc.pack);
+  if(success&&cupTier){const chain=s.chain,clock=sc.require.clock,input={stars:starCount(mask),firstTry:s.attempt===1&&!rewound.current,passes:r.passes,minPasses:sc.require.minPasses,throughBall:chain.some(c=>c.kind==='pass-space'),oneTouch:chain.filter(c=>c.firstTime).length,clock,clockLeft:clock?Math.max(0,clock-s.t):undefined};
+   const m=skillMultiplier(input),points=cupPoints(input),prev=progressRef.current.cup?.[id]??0,best=Math.max(prev,points),cup={...(progressRef.current.cup??{}),[id]:best},total=tierBoardScore(cup,cupTier.id);
+   skill={mult:m.mult,parts:m.parts,points,best,newBest:points>prev,total,cup:cupTier.title};
+   if(points>prev){setProgress(p=>{const next={...p,cup:{...(p.cup??{}),[id]:Math.max(p.cup?.[id]??0,points)}};writeProgress(next);return next;});if(total>0){setBoardGame(cupTier.board);setBoardScore(total);}}
+   m.parts.forEach((_,i)=>puzzleSkillChime(audio.current,i,1.25+i*.14));if(points>prev)puzzleNewBest(audio.current,1.4+m.parts.length*.14);}
+  if(success&&fresh&&!id.startsWith('daily')&&!cupTier){setBoardGame('puzzle');const total=boardStars({...progressRef.current.stars,[id]:Math.max(progressRef.current.stars[id]??0,stars)});if(total>0)setBoardScore(total);}
   if(success){setProgress(p=>{const next={...p,stars:{...p.stars,[id]:Math.max(p.stars[id]??0,stars)},masks:{...p.masks,[id]:(p.masks?.[id]??0)|mask}};writeProgress(next);return next;});
    [STAR_SOLVE,STAR_MOVE,STAR_BONUS].filter(b=>mask&b).forEach((_,i)=>puzzleStar(audio.current,i+1,.85+i*.22));}
   // First try = attempt 1 with no rewind; a fail resets, a later-try solve keeps the streak.
@@ -178,7 +199,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   try{const nums=shirtNumbersFor(sc),f=formatRef.current,kept=notes.current.slice(0,world.inputs().length);
    if(success)why=explainSuccess(kept,sc,nums,f,2);
    else{const stop=attemptEvents.current.filter(e=>['intercept','deflect','save','parry','offside'].includes(e.type)).at(-1),x=explainFail(r.reason,stop,kept.at(-1),nums,f);if(x){why=[x.why];fix=x.fix;}}}catch{/* the generic copy stays */}
-  setOutcome({success,stars:starCount(mask),mask,fresh,passes:r.passes,bonus:r.bonus,move,reason:r.reason,attemptsLeft:s.attemptsLeft,why,fix,streak:streak.current});setView('result');stroke.current=null;
+  setOutcome({success,stars:starCount(mask),mask,fresh,passes:r.passes,bonus:r.bonus,move,reason:r.reason,attemptsLeft:s.attemptsLeft,why,fix,streak:streak.current,skill});setView('result');stroke.current=null;
   // The failure beat: mark where the move was stopped and lean the camera in before the card lands.
   if(!stopShown.current){failStop.current=success?null:stopPoint(world,attemptEvents.current);if(failStop.current)sceneRef.current?.showStop(failStop.current.at,failStop.current.kind);}stopShown.current=false;
  },[]);
@@ -231,6 +252,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
     else if(st){const tail=st.points.at(-1)!,held=now/1000-st.lastMove;
      if(now-st.predictionAt>=80&&(st.dirty||held>.2&&held<1.2)){st.predictionAt=now;st.dirty=false;const points=held>.02?[...st.points,{x:tail.x,z:tail.z,t:now/1000}]:st.points;try{st.kick=points.length>1?readStroke(points,world,controls.current):null;st.prediction=st.kick?predict(world,st.kick):null;}catch{st.kick=null;st.prediction=null;}warn(st.prediction?.end==='offside'?'offside':null);
       const status=laneStatus(st.prediction);
+      {const r=st.kick?.receiver??-1,clear=status!=='blocked'&&status!=='offside';if(r!==snapReceiver.current||clear!==snapClear.current){if(r>=0)puzzleSnapTick(audio.current,clear);snapReceiver.current=r;snapClear.current=clear;}}
       scene.setAim({prediction:st.prediction,receiver:st.kick?.receiver,loft:st.kick?.loft??0,stroke:st.points,status:status??undefined},state);}
      if(controls.current.power===undefined&&st.kick&&powerSlider.current)powerSlider.current.value=String(Math.round(st.kick.power*100/5)*5);
      const loft=st.kick?.loft??0,meter=loftMeter.current;if(meter){meter.style.setProperty('--loft',String(loft));meter.dataset.active=String(controls.current.mode==='auto'&&held>.12&&!!st.kick);}
@@ -295,12 +317,12 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  /** Build the frozen moment for a level: the pitch shows behind the brief card. */
  const resetCine=()=>{clockText.current='';const chip=clockChip.current,cl=worldRef.current?.scenario.require.clock;if(chip&&cl){chip.dataset.left=`${cl.toFixed(1)} s`;chip.dataset.low='false';}finishAt.current=0;stopShown.current=false;arrived.current=false;cine.skip();cine.resetBudget();sceneRef.current?.setReplayFocus(null);};
  const loadLevel=(s:Scenario)=>{resetCine();setCallout(null);rewindPoint.current=null;rewound.current=false;notes.current=[];setSpotHint(false);spotHintRef.current=false;const scene=sceneRef.current;if(!scene)return;replayRef.current=null;setReplaying(false);stroke.current=null;attemptEvents.current=[];
-  try{const played=playable(s,headingRef.current);const world=createPuzzle(played);worldRef.current=world;scene.load(played);scene.setAim(null,world.state);scene.setCalls(world.state,null);scene.update(world.state,0);}catch{setError(true);return;}
+  try{const played=playable(s,headingRef.current);const world=createPuzzle(played);worldRef.current=world;scene.load(played);scene.setTier?.(tierOfPack(s.pack)?.look??null);boardRef.current=boardForPuzzle(s.id,s.pack);scene.setAim(null,world.state);scene.setCalls(world.state,null);scene.update(world.state,0);}catch{setError(true);return;}
   setLevelId(s.id);setPackId(s.pack);setOutcome(null);setShowHint(false);syncHud();settleUntil.current=performance.now()+300;wake.current();};
  const openLevel=(s:Scenario)=>{loadLevel(s);setView('brief');};
  const dailyId=`daily-${new Date().getFullYear()}-${String(new Date().getMonth()+1).padStart(2,'0')}-${String(new Date().getDate()).padStart(2,'0')}`;
  const openDaily=()=>{const d=todaysDaily();if(d)openLevel(d.scenario);};
- const play=async()=>{unlock();const id=await entry.enter();if(!id)return;setBoardScore(null);beginBoardSession('puzzle');aimSince.current=performance.now();coinVisit.current||=beginArcadeRun('puzzle');coinAttempt.current=beginArcadeRun('puzzle');recordExploreActivity('arcade');setView('play');const w=worldRef.current;if(w){sceneRef.current?.setAim(null,w.state);
+ const play=async()=>{unlock();const id=await entry.enter();if(!id)return;setBoardScore(null);beginBoardSession(boardRef.current);aimSince.current=performance.now();coinVisit.current||=beginArcadeRun('puzzle');coinAttempt.current=beginArcadeRun('puzzle');recordExploreActivity('arcade');setView('play');const w=worldRef.current;if(w){sceneRef.current?.setAim(null,w.state);
   if(w.state.attempt===1&&w.state.passes===0&&w.inputs().length===0){const c=w.state.attackers[w.state.carrier]?.p;let free:{x:number;z:number}|undefined;try{free=lanesNow(w).find(l=>l.status==='clear')?.to;}catch{/* no tour stop */}
    if(c){cine.resetBudget();cine.intro(c.x,c.z,free?.x,free?.z);}}}settleUntil.current=performance.now()+1200;wake.current();};
  const retry=async()=>{aimSince.current=performance.now();const worldBefore=worldRef.current;if(!worldBefore)return;if(worldBefore.state.attemptsLeft<=0||worldBefore.state.phase==='success'){const id=await entry.enter();if(!id)return;}setCallout(null);resetCine();rewindPoint.current=null;rewound.current=false;coinVisit.current||=beginArcadeRun('puzzle');coinAttempt.current=beginArcadeRun('puzzle');const world=worldRef.current,scene=sceneRef.current;if(!world||!scene)return;replayRef.current=null;setReplaying(false);if(!world.retry()){loadLevel(world.scenario);setView('play');return;}attemptEvents.current=[];notes.current=[];scene.resetActors();scene.update(world.state,0);scene.setAim(null,world.state);scene.setCalls(world.state,null);applyHint.current();applyScan.current();syncHud();setOutcome(null);setShowHint(true);setView('play');settleUntil.current=performance.now()+600;wake.current();};
@@ -343,9 +365,10 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const unlocked=(s:Scenario,list:Scenario[])=>{const i=list.indexOf(s);return i<=0||(progress.stars[list[i-1].id]??0)>0||(progress.stars[s.id]??0)>0;};
  const totalStars=Object.values(progress.stars).reduce((a,b)=>a+b,0);dailyStars=totalStars;
  const expertOpen=totalStars>=EXPERT_GATE,dailyIsHard=hardDailyDay(new Date(),totalStars),dailySeason=season(new Date());
- const corePacks=PACKS.filter(p=>p.tier!=='expert'),expertPacks=PACKS.filter(p=>p.tier==='expert');
+ const corePacks=PACKS.filter(p=>p.tier!=='expert'&&!tierOfPack(p.id)),expertPacks=PACKS.filter(p=>p.tier==='expert');
  /** "Next puzzle" follows the pack map (not the file order), and stops at a pack that is still closed. */
- const next=level?nextOnMap(level.id,totalStars):null,nextLevel=next&&'scenario' in next?next.scenario:undefined;
+ const cupList=level&&tierOfPack(level.pack)?TIER_SCENARIOS.filter(s=>s.pack===level.pack):null,cupNext=cupList&&level?cupList[cupList.indexOf(level)+1]:undefined;
+ const next=level?(cupList?(cupNext?{scenario:cupNext,newPack:false}:null):nextOnMap(level.id,totalStars)):null,nextLevel=next&&'scenario' in next?next.scenario:undefined;
  /** Play = continue: the first unsolved puzzle along the pack map in an open pack (level 1 on a first run),
   *  then the first one still missing stars, so the big button never asks a question first. */
  const packOpen=(s:Scenario)=>{const p=packInfo(s.pack);return !p||packGateOpen(p,totalStars);};
@@ -353,7 +376,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const continueNumber=continueLevel?MAP_ORDER.filter(s=>s.pack===continueLevel.pack).indexOf(continueLevel)+1:1;
  const firstRun=totalStars===0;
  const quickPlay=()=>{if(!continueLevel)return;loadLevel(continueLevel);void play();};
- const openPack=(id:string)=>{setPackId(id);setMenu('pack');};
+ const openPack=(id:string)=>{puzzleUiTap(audio.current);setPackId(id);setMenu('pack');};
 
  /** The three star goals in words, for the brief and result cards. */
  const goals=(s:Scenario)=>['Solve the puzzle',s.require.minPasses===0?'Score with a clean shot':`Use the move: ${s.require.minPasses} pass${s.require.minPasses===1?'':'es'} first`,`Bonus: ${s.bonus?.label??'Finish first time'}`];
@@ -388,7 +411,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  useEffect(()=>{if(view!=='levels'&&view!=='brief')return;const key=(e:KeyboardEvent)=>{if(e.code!=='Escape'||e.defaultPrevented||boardsOpen||boardScore!==null||(e.target instanceof HTMLElement&&e.target.closest('input,select,textarea')))return;e.preventDefault();if(view==='levels'&&menu!=='home'){setMenu('home');return;}if(view==='brief')setView('levels');else{cancelDrawing.current();exitRef.current();}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[view,boardsOpen,boardScore,menu]);
  const levelTitle=(s:Scenario)=>heading||!usesHeading(s.id)?s.title:youthScenario(s).title;
 
- return <div className={`${arcade.game} ${styles.game}`} data-arcade-kind="pass-puzzle" data-view={view} data-shot-height={controlMode==='shoot'}>
+ return <div className={`${arcade.game} ${styles.game}`} ref={rootRef} data-arcade-kind="pass-puzzle" data-cup={level&&tierOfPack(level.pack)?.look||undefined} data-view={view} data-shot-height={controlMode==='shoot'}>
   <canvas ref={canvas} tabIndex={0} aria-label="Pass Puzzles pitch. Draw from the ball to pass."/>
   {/* The shared arcade score bar (docs/ARCADE_CHROME_OCT27.md): the pass count toward the move; tries live on the brief / result cards. */}
   <ArcadeTopBar game="pass-puzzle" className={styles.topBar} backTitle="Back to arcade" onBack={()=>{cancelDrawing.current();onExit();}} value={view!=='levels'?progressHud.count:undefined} word={progressHud.label} live met={progressHud.met} pillHidden={view==='brief'||view==='result'} paused={paused} canPause={view==='play'} onPause={()=>setPause(!pausedRef.current)} pauseLabel="Pause puzzle" resumeLabel="Resume puzzle"/>
@@ -397,11 +420,12 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   {/* Clean pitch (owner, Oct 27 2026): no tip, hint, lesson or modifier text while playing; the start and result cards teach. */}
   {inPlay&&level?.require.clock?<span ref={clockChip} className={styles.clockChip} role="timer" aria-label="Counter clock" data-clock data-left={`${level.require.clock.toFixed(1)} s`}/>:null}
   {inPlay&&hud.phase==='aiming'&&rewindPoint.current&&!rewound.current&&<button type="button" className={styles.undo} data-undo onClick={rewindPass} aria-label="Undo the last pass (once per try)"><Icon name="reset" size={22}/><span>Undo</span></button>}
-  {inPlay&&hud.phase==='aiming'&&<div className={styles.passControls}>
-   <div className={styles.passModes} role="group" aria-label="Ball flight">{(['auto','ground','lift','shoot'] as const).map(mode=><button key={mode} aria-pressed={controlMode===mode} onClick={()=>{cancelDrawing.current();controls.current.mode=mode;setControlMode(mode);}}>{mode==='auto'?'Auto':mode==='ground'?'Ground':mode==='lift'?'Lift':'Shoot'}</button>)}</div>
-   {controlMode==='shoot'&&<label className={`${styles.powerControl} ${styles.shotHeight}`}><span>Height <b>{shotHeight===0?'Low':shotHeight===100?'Top bins':`${shotHeight}%`}</b></span><input aria-label="Shot height" aria-valuetext={shotHeight===0?'Low shot':shotHeight===100?'Top bins':`${shotHeight}% goal height`} type="range" min="0" max="100" step="5" value={shotHeight} onChange={e=>{const value=Number(e.target.value);controls.current.shotHeight=value/100;setShotHeight(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" onClick={()=>{const value=shotHeight===100?0:100;controls.current.shotHeight=value/100;setShotHeight(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}>{shotHeight===100?'Low':'Top bins'}</button></label>}
+  {/* Nov 8 2026 simpler dock: one row (Scan + ball flight). Auto picks the power, so the power slider shows only in a manual mode. */}
+  {inPlay&&hud.phase==='aiming'&&<div className={styles.passControls} data-compact={controlMode==='auto'||undefined}>
    <div className={styles.aidRow}><button type="button" className={styles.scanToggle} aria-pressed={scanOn} onClick={toggleScan} data-scan={scanOn} aria-label={scanOn?'Hide the scan':'Scan: show which passes are open'}><Icon name="target" size={18}/>Scan</button>
-   <label className={styles.powerControl}><span>Power <b>{power===null?'Auto':`${power}%`}</b></span><input ref={powerSlider} aria-label="Pass and shot power" aria-valuetext={power===null?'Automatic power from distance':`${power}% power`} type="range" min="10" max="100" step="5" defaultValue={power??60} onChange={e=>{const value=Number(e.target.value);controls.current.power=value/100;setPower(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" aria-label="Use automatic power" onClick={()=>{controls.current.power=undefined;setPower(null);if(stroke.current)stroke.current.dirty=true;wake.current();}}>Auto</button></label></div>
+   <div className={styles.passModes} role="group" aria-label="Ball flight">{(['auto','ground','lift','shoot'] as const).map(mode=><button key={mode} aria-pressed={controlMode===mode} onClick={()=>{cancelDrawing.current();controls.current.mode=mode;if(mode==='auto'){controls.current.power=undefined;setPower(null);}setControlMode(mode);}}>{mode==='auto'?'Auto':mode==='ground'?'Ground':mode==='lift'?'Lift':'Shoot'}</button>)}</div></div>
+   {controlMode==='shoot'&&<label className={`${styles.powerControl} ${styles.shotHeight}`}><span>Height <b>{shotHeight===0?'Low':shotHeight===100?'Top bins':`${shotHeight}%`}</b></span><input aria-label="Shot height" aria-valuetext={shotHeight===0?'Low shot':shotHeight===100?'Top bins':`${shotHeight}% goal height`} type="range" min="0" max="100" step="5" value={shotHeight} onChange={e=>{const value=Number(e.target.value);controls.current.shotHeight=value/100;setShotHeight(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" onClick={()=>{const value=shotHeight===100?0:100;controls.current.shotHeight=value/100;setShotHeight(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}>{shotHeight===100?'Low':'Top bins'}</button></label>}
+   {controlMode!=='auto'&&<label className={styles.powerControl}><span>Power <b>{power===null?'Auto':`${power}%`}</b></span><input ref={powerSlider} aria-label="Pass and shot power" aria-valuetext={power===null?'Automatic power from distance':`${power}% power`} type="range" min="10" max="100" step="5" defaultValue={power??60} onChange={e=>{const value=Number(e.target.value);controls.current.power=value/100;setPower(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" aria-label="Use automatic power" onClick={()=>{controls.current.power=undefined;setPower(null);if(stroke.current)stroke.current.dirty=true;wake.current();}}>Auto</button></label>}
   </div>}
   {replaying&&<><div className={styles.replayChip} role="status"><Icon name="play" size={14}/> {replayKind==='coach'?`Coach’s route · ${progress.replay==='1x'?'1':'0.6'}×`:`Replay · ${progress.replay==='1x'?'1':'0.38'}×`}{replayLine&&<span className={styles.replayCall} aria-live="polite" data-replay-call>{replayLine}</span>}<button className={styles.camToggle} aria-pressed={playerCam} onClick={togglePlayerView}>{playerCam?'Broadcast view':'Player view'}</button><button className={styles.camToggle} data-replay-speed={progress.replay??'slow'} aria-label={progress.replay==='1x'?'Replay speed: normal. Tap for slow motion':'Replay speed: slow motion. Tap for normal'} onClick={()=>{const next:'slow'|'1x'=progress.replay==='1x'?'slow':'1x';progressRef.current={...progressRef.current,replay:next};setProgress(p=>{const n={...p,replay:next};writeProgress(n);return n;});if(replayKind==='coach')watchCoach();else watchAgain();}}>{progress.replay==='1x'?'1×':'Slow'}</button></div><button className={`pixel-btn ${styles.skip}`} onClick={skipReplay}>Skip</button></>}
   {callout&&(view==='play'||view==='result')&&!replaying&&<div key={callout.key} className={styles.callout} data-tier={callout.tier} role="status" aria-live="polite" data-callout><b>{callout.text}</b></div>}
@@ -418,16 +442,19 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
     {/* The pack map: each pack opens with stars earned anywhere (skill unlocks, never coins). */}
     <ol className={styles.packMap} role="group" aria-label="Puzzle packs">{corePacks.map((p,i)=>{const list=packs.find(([id])=>id===p.id)?.[1]??[],got=list.reduce((n,s)=>n+(progress.stars[s.id]??0),0),open=packGateOpen(p,totalStars);
      return <li key={p.id} data-open={open} data-done={got===list.length*3||undefined} data-current={continueLevel?.pack===p.id||undefined}><button data-pack={p.id} aria-label={`${p.title}, ${open?`${got} of ${list.length*3} stars`:`locked, needs ${p.gate} stars`}`} onClick={()=>openPack(p.id)}><b>{open?i+1:'🔒'}</b><span>{p.title}</span><small>{open?`${got}/${list.length*3} ★`:`${p.gate} ★`}</small></button></li>;})}</ol>
-    {expertPacks.length>0&&<button type="button" className={styles.expertTile} data-expert-tile data-open={expertOpen} onClick={()=>setMenu('expert')} aria-label={expertOpen?'Expert puzzles':`Expert puzzles, locked, needs ${EXPERT_GATE} stars`}><Icon name="star" size={20}/><b>Expert</b><small>{expertOpen?`${expertPacks.reduce((n,p)=>n+(packs.find(([id])=>id===p.id)?.[1]??[]).reduce((m,s)=>m+(progress.stars[s.id]??0),0),0)} ★`:`🔒 ${EXPERT_GATE} ★`}</small></button>}
+    {expertPacks.length>0&&<button type="button" className={styles.expertTile} data-expert-tile data-open={expertOpen} onClick={()=>setMenu('expert')} aria-label={expertOpen?'Expert puzzles':`Expert puzzles, locked, needs ${EXPERT_GATE} stars`}><Icon name="star" size={20}/><b>Expert</b><small>{expertOpen?`${expertPacks.reduce((n,p)=>n+(packs.find(([id])=>id===p.id)?.[1]??[]).reduce((m,s)=>m+(progress.stars[s.id]??0),0),0)} ★`:`🔒 ${EXPERT_GATE} ★`}<i className={styles.cupHint}>+ 2 Cups</i></small></button>}
    </>}
    {menu==='expert'&&<div className={styles.pack} data-expert-sheet>
     <div className={styles.sheetHead}><button type="button" className={styles.chip} onClick={()=>setMenu('home')} aria-label="Back to all packs"><Icon name="back" size={20}/></button><h4>Expert</h4><small>{totalStars} ★</small></div>
     <p className={styles.blurb}>{expertOpen?'Hard moves for big thinkers. Hunters, traps and the clock.':`Collect ${EXPERT_GATE} ★ to open. You have ${totalStars}.`}</p>
     <ol className={styles.packMap} role="group" aria-label="Expert packs">{expertPacks.map((p,i)=>{const list=packs.find(([id])=>id===p.id)?.[1]??[],got=list.reduce((n,s)=>n+(progress.stars[s.id]??0),0),open=packGateOpen(p,totalStars);
      return <li key={p.id} data-open={open} data-done={got===list.length*3||undefined}><button data-pack={p.id} aria-label={`${p.title}, ${open?`${got} of ${list.length*3} stars`:`locked, needs ${p.gate} stars`}`} onClick={()=>openPack(p.id)}><b>{open?`E${i+1}`:'🔒'}</b><span>{p.title}</span><small>{open?`${got}/${list.length*3} ★`:`${p.gate} ★`}</small></button></li>;})}</ol>
+    {/* Nov 8 2026: the cups (own boards). One row each: title, rule, best cup points or the stars it needs. */}
+    <h5 className={styles.cupHead}>Cups</h5><ol className={`${styles.packMap} ${styles.cupMap}`} role="group" aria-label="Cups">{PUZZLE_TIER_IDS.map(t=>{const c=PUZZLE_TIERS[t],open=totalStars>=c.gate,pts=tierBoardScore(progress.cup??{},t);
+     return <li key={t} data-open={open} data-cup={c.look}><button data-pack={c.pack} data-cup-tile={t} aria-label={`${c.title}, ${open?`${pts} cup points. ${c.rule}`:`locked, needs ${c.gate} stars`}`} onClick={()=>openPack(c.pack)}><b>{open?(t==='pro'?'P':'L'):'🔒'}</b><span>{c.title}<em>{c.rule}</em></span><small>{open?`${pts} pts`:`${c.gate} ★`}</small></button></li>;})}</ol>
    </div>}
    {menu==='pack'&&packs.filter(([pack])=>pack===packId).map(([pack,list])=>{const info=packInfo(pack),open=!info||packGateOpen(info,totalStars);return <div key={pack} className={styles.pack}>
-    <div className={styles.sheetHead}><button type="button" className={styles.chip} onClick={()=>setMenu(info?.tier==='expert'?'expert':'home')} aria-label="Back to all packs"><Icon name="back" size={20}/></button><h4>{info?.title??pack}</h4><small>{list.reduce((n,s)=>n+(progress.stars[s.id]??0),0)}/{list.length*3} ★</small></div>
+    <div className={styles.sheetHead}><button type="button" className={styles.chip} onClick={()=>setMenu(info?.tier==='expert'||tierOfPack(pack)?'expert':'home')} aria-label="Back to all packs"><Icon name="back" size={20}/></button><h4>{info?.title??pack}</h4><small>{list.reduce((n,s)=>n+(progress.stars[s.id]??0),0)}/{list.length*3} ★</small></div>
     {info?.blurb&&<p className={styles.blurb}>{pack==='in-the-air'&&!heading?YOUTH_PACK_BLURB:info.blurb}</p>}{!open&&<p className={styles.gate} role="status">Earn {info!.gate-totalStars} more ★ to open this pack.</p>}<div className={styles.grid}>
     {list.map((s,i)=>{const lvl=open&&unlocked(s,list),got=progress.stars[s.id]??0,title=levelTitle(s),d=pips(s.id);return <button key={s.id} className={styles.level} disabled={!lvl} onClick={()=>openLevel(s)} data-level={s.id} aria-label={`${i+1}. ${title}${lvl?`, ${got} of 3 stars, difficulty ${d} of 3`:', locked'}`}><b>{i+1}</b><span>{title}</span><em>{[0,1,2].map(n=>star(n<got,n))}<i className={styles.pips} data-pips={d} aria-hidden="true">{'●'.repeat(d)}{'○'.repeat(3-d)}</i></em></button>;})}
    </div></div>;})}
@@ -441,10 +468,10 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   </section></div>}
 
   {view==='brief'&&level&&<div className={`${arcade.overlay} ${styles.lowOverlay}`}><section className={arcade.card}>
-   <span className={arcade.badge}>{format.toUpperCase()} BRIEF · {level.require.minPasses} PASS{level.require.minPasses===1?'':'ES'} IN THE ROUTE</span><h3>{level.title}</h3>{expertIdea&&<p className={styles.idea} data-idea><b>Big idea</b> {expertIdea}</p>}{modifiers(level).length>0&&<ul className={styles.modifiers} data-inline>{modifiers(level).map(m=><li key={m}>{m}</li>)}</ul>}<p>{briefText}</p>{level.require.finish==='goal'&&<p className={styles.directHint}>See a clear shooting lane? You can also score directly from the opening ball.</p>}
+   <span className={arcade.badge}>{format.toUpperCase()} BRIEF · {level.require.minPasses} PASS{level.require.minPasses===1?'':'ES'} IN THE ROUTE</span><h3>{level.title}</h3>{expertIdea&&<p className={styles.idea} data-idea><b>Big idea</b> {expertIdea}</p>}{modifiers(level).length>0&&<ul className={styles.modifiers} data-inline>{modifiers(level).map(m=><li key={m}>{m}</li>)}</ul>}<p>{briefText}</p>{tierOfPack(level.pack)&&<p className={styles.cupRule} data-cup-rule><b>{tierOfPack(level.pack)!.title}</b> First try, through balls and one-touch passes multiply your points.</p>}
    {showHint?<p className={styles.hint}><Icon name="book" size={16}/> {hintText}</p>:<button className={`${arcade.exit} ${styles.briefHint}`} onClick={()=>setShowHint(true)}>Show a hint</button>}
    <ul className={styles.goals} aria-label="Star goals">{goals(level).map((g,i)=><li key={g} data-on={!!((progress.masks?.[level.id]??0)&1<<i)}>{g}</li>)}</ul>
-   <p className={styles.coinNote}>Free to play · a first solve earns 5 coins, plus 1 per new best star</p>{entry.message&&<p role="status">{entry.message}</p>}<button className={`${arcade.primary} ${styles.go}`} disabled={entry.pending} onClick={play}>Start puzzle</button><button className={arcade.exit} onClick={()=>{setMenu('pack');setView('levels');}}>All puzzles</button>
+   <p className={styles.coinNote}>Free · first solve +5 coins, +1 per new star</p>{entry.message&&<p role="status">{entry.message}</p>}<button className={`${arcade.primary} ${styles.go}`} disabled={entry.pending} onClick={play}>Start puzzle</button><button className={arcade.exit} onClick={()=>{setMenu('pack');setView('levels');}}>All puzzles</button>
    {(level.pack==='first-passes'||totalStars<6)&&<small>Drag to a teammate or open grass, then release. Curve your line to bend the pass. Hold the tip to lift it. Red rings warn of defenders.</small>}
   </section></div>}
 
@@ -452,22 +479,25 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    <span className={arcade.badge}>{outcome.success?'PUZZLE SOLVED':outcome.attemptsLeft>0?`${outcome.attemptsLeft} ${outcome.attemptsLeft===1?'TRY':'TRIES'} LEFT`:'OUT OF TRIES'}</span>
    <h3>{outcome.success?(outcome.passes===0?'What a finish!':'That’s the move!'):<span className={styles.soClose}>So close!</span>}</h3>
    {outcome.success?<><div className={styles.stars} aria-label={`${outcome.stars} of 3 stars`}>{[0,1,2].map(n=>star(n<outcome.stars,n))}</div>
+    {outcome.skill&&<div className={styles.skill} data-skill data-new-best={outcome.skill.newBest||undefined} aria-label={`${outcome.skill.points} cup points, times ${outcome.skill.mult}`}><b className={styles.mult}>×{outcome.skill.mult}</b><span className={styles.points}>{outcome.skill.points}<small> pts</small></span>{outcome.skill.newBest?<em className={styles.best}>New best!</em>:<em>Best {outcome.skill.best}</em>}
+     <ul className={styles.skillParts}>{outcome.skill.parts.length?outcome.skill.parts.map(p=><li key={p.key}>{p.label} +{p.add}</li>):<li data-none>Solve it first try for ×1.5</li>}</ul><small className={styles.cupTotal}>{outcome.skill.cup}: {outcome.skill.total} pts</small></div>}
     {streakLabel(outcome.streak)&&<p className={styles.streak} data-streak={outcome.streak}><b>{streakLabel(outcome.streak)}</b> solved first try in a row</p>}
-    <ul className={styles.earned}>{goals(level).map((g,i)=>{const bit=1<<i;return <li key={g} data-on={!!(outcome.mask&bit)} data-new={!!(outcome.fresh&bit)||undefined}>{g}{outcome.fresh&bit?<b className={styles.newStar}> new</b>:null}</li>;})}</ul>
-    {outcome.why.length>0&&<div className={styles.why} data-why><b>Why it worked</b><ul>{outcome.why.map(w=><li key={w}>{w}</li>)}</ul></div>}
+    {/* Nov 8 2026: a cup card shows the multiplier chips instead of the goal list (one less block on a phone). */}
+    {!outcome.skill&&<ul className={styles.earned}>{goals(level).map((g,i)=>{const bit=1<<i;return <li key={g} data-on={!!(outcome.mask&bit)} data-new={!!(outcome.fresh&bit)||undefined}>{g}{outcome.fresh&bit?<b className={styles.newStar}> new</b>:null}</li>;})}</ul>}
+    {outcome.why.length>0&&<div className={styles.why} data-why><b>Why it worked</b><ul>{outcome.why.slice(0,outcome.skill?1:2).map(w=><li key={w}>{w}</li>)}</ul></div>}
     <p className={styles.lesson}>{!outcome.move?'You spotted a clear shooting lane. Now try the passing move for the next star.':level.lesson}</p></>
    :<><p data-why>{outcome.why[0]??reasonCopy[outcome.reason??'']??'Look again at who can reach the ball.'}</p>{outcome.fix&&<p className={styles.fix}><b>Try this:</b> {outcome.fix}</p>}{outcome.reason==='intercept'&&!scanOn&&<p className={styles.fix} data-scan-tip><b>Look up:</b> tap Scan before you draw to see which passes are open.</p>}{/* the level's hint teaches the move, so it stays for move failures; a missed finish keeps just its specific fix */}{(!outcome.fix||outcome.reason==='intercept'||outcome.reason==='too-few-passes')&&<p className={styles.hint}><Icon name="book" size={16}/> {hintText}</p>}</>}
    {outcome.success&&next&&'locked' in next&&<p className={styles.nextNote} role="status" data-next-locked>Next up: <b>{next.locked.title}</b>. Earn {next.need} more ★ to open it. Replay a puzzle for its missing stars.</p>}
    {outcome.success&&next&&'scenario' in next&&next.newPack&&<p className={styles.nextNote} data-next-pack>Pack complete! Next up: <b>{packInfo(next.scenario.pack)?.title}</b>.</p>}
    {outcome.success?(nextLevel?<button className={`${arcade.primary} ${styles.go}`} onClick={()=>openLevel(nextLevel)}>Next puzzle</button>:<button className={arcade.primary} onClick={()=>{if(next&&'locked' in next)openPack(next.locked.id);else setMenu('home');setView('levels');}}>All puzzles</button>)
     :<button className={`${arcade.primary} ${styles.go}`} disabled={entry.pending} onClick={retry}>{outcome.attemptsLeft>0?'Try again':'Start over'}</button>}
-   {!outcome.success&&rewindPoint.current&&!rewound.current&&<><button className={styles.rewind} onClick={rewindPass}>Rewind last pass</button><small className={styles.rewindNote}>Try a different angle from that moment. One rewind per try.</small></>}
-   <div className={styles.row}><button className={`pixel-btn ${styles.secondary}`} onClick={watchAgain}><Icon name="play" size={16}/> Watch again</button>{!outcome.success&&!spotHint&&outcome.attemptsLeft>0&&<button className={`pixel-btn ${styles.secondary}`} data-spot-hint onClick={()=>{setShowHint(true);setSpotHint(true);}}><Icon name="target" size={16}/> Show me where</button>}{(outcome.success||outcome.attemptsLeft===0)&&<button className={`pixel-btn ${styles.secondary}`} onClick={watchCoach}><Icon name="book" size={16}/> Coach’s route</button>}{outcome.success&&<button className={`pixel-btn ${styles.secondary}`} disabled={entry.pending} onClick={retry}><Icon name="reset" size={16}/> Replay level · free</button>}</div>
+   {!outcome.success&&rewindPoint.current&&!rewound.current&&<button className={styles.rewind} onClick={rewindPass}>Rewind last pass</button>}
+   <div className={`${styles.row} ${styles.quietRow}`}><button className={`pixel-btn ${styles.secondary}`} onClick={watchAgain}><Icon name="play" size={16}/> Watch again</button>{!outcome.success&&!spotHint&&outcome.attemptsLeft>0&&<button className={`pixel-btn ${styles.secondary}`} data-spot-hint onClick={()=>{setShowHint(true);setSpotHint(true);}}><Icon name="target" size={16}/> Show me where</button>}{(outcome.success||outcome.attemptsLeft===0)&&<button className={`pixel-btn ${styles.secondary}`} onClick={watchCoach}><Icon name="book" size={16}/> Coach’s route</button>}{outcome.success&&<button className={`pixel-btn ${styles.secondary}`} disabled={entry.pending} onClick={retry}><Icon name="reset" size={16}/> Replay level · free</button>}</div>
    {entry.message&&view==='result'&&<p role="status">{entry.message}</p>}<button className={arcade.exit} onClick={()=>{setMenu('home');setView('levels');}}>All puzzles</button>
   </section></div>}
 
   {error&&<div className={arcade.overlay}><section className={arcade.card}><span className={arcade.badge}>TAKE A BREATHER</span><h3>The pitch couldn’t load.</h3><p>Return to the arcade and try again.</p><button className={arcade.exit} onClick={onExit}>Back to arcade</button></section></div>}
-  {boardScore!==null&&boardReady&&view==='result'&&<HighScoreEntry game="puzzle" score={boardScore} detail="Your total stars across every puzzle." onClose={()=>setBoardScore(null)}/>}
+  {boardScore!==null&&boardReady&&view==='result'&&<HighScoreEntry game={boardGame} score={boardScore} detail={boardGame==='puzzle'?'Your total stars across every puzzle.':`Your ${PUZZLE_TIERS[boardGame==='puzpro'?'pro':'legend'].title} points: your best on each puzzle, added up.`} onClose={()=>setBoardScore(null)}/>}
   {boardsOpen&&<ArcadeBoards game="puzzle" onClose={()=>setBoardsOpen(false)}/>}
  </div>;
 }

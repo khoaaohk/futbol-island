@@ -322,3 +322,23 @@
 .root .overlay>.start.start>.primary.primary{min-height:var(--arcade-primary-h)}
 .root .overlay>.start.start>.startRow>button{min-height:var(--arcade-small-h)}
 .root .overlay>.start.start .startTitle{font-size:var(--arcade-card-title)!important}
+/* League tiers (Nov 8 2026, lib/arcade/strikerTiers.ts): the live points pill, the combo badge, the goal points pop, the full-time
+   total and the one-line "Pro League is open" nudge. DOM only, CSS animations that run once per change (no loop, no canvas cost). */
+.leagueHud{position:absolute;z-index:2;top:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;padding:4px 14px;border-radius:999px;background:#151a30;color:#fff08a;font:800 18px/1.2 Arial,sans-serif;font-variant-numeric:tabular-nums;pointer-events:none}
+.leagueHud .combo{padding:1px 8px;border-radius:999px;background:#ff83d3;color:#1b1030;font-size:14px;animation:comboIn .35s cubic-bezier(.2,1.6,.4,1) both}
+.pointsPop{position:absolute;z-index:2;left:50%;top:47%;display:grid;justify-items:center;gap:2px;transform:translateX(-50%);pointer-events:none;text-align:center;animation:pointsRise 1.7s ease-out both}
+.pointsPop strong{font:44px/1 IslandBrush,Arial,sans-serif;color:#fff08a;text-shadow:0 4px 0 #6b3a1f}
+.pointsPop span{font:800 15px/1.3 Arial,sans-serif;color:#eff8ff;text-shadow:0 2px 0 #121329;white-space:nowrap}
+.leagueTotal{margin:0!important;font-size:16px!important;color:#cef7ff}
+.leagueTotal b{display:block;font:40px/1.05 IslandBrush,Arial,sans-serif;color:#fff08a}
+.leagueTotal[data-best] b{animation:bestFlash .9s ease-out 2 both}
+.leagueTotal .newBest{margin-left:8px;color:#ff8fc8;font-weight:800}
+.leagueNudge{min-height:44px;padding:8px 16px;border:2px solid #ff83d3!important;border-radius:999px;background:#151c35;color:#ffe5f6;font:700 14px/1.2 Arial,sans-serif;cursor:pointer}
+.leagueNudge:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.seg button[data-league]:not(:disabled){border-color:#ff83d3}
+@keyframes comboIn{0%{transform:scale(1.8)}100%{transform:scale(1)}}
+@keyframes pointsRise{0%{opacity:0;transform:translate(-50%,14px) scale(.7)}12%{opacity:1;transform:translate(-50%,0) scale(1.06)}20%{transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-18px)}}
+@keyframes bestFlash{0%{transform:scale(1.25);color:#ffffff}100%{transform:scale(1);color:#fff08a}}
+@media(prefers-reduced-motion:reduce){.leagueHud .combo,.leagueTotal[data-best] b{animation:none}.pointsPop{animation:bannerFade 1.7s linear both}}
+/* Locked league tiles show their unlock hint as text (QA Nov 8 2026): wraps to two balanced lines in a 390 px row, never overflows. */
+.root .seg>button small.lockHint{max-width:100%;overflow-wrap:anywhere;text-wrap:balance;letter-spacing:.03em}
