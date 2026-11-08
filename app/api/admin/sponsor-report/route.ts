@@ -11,8 +11,8 @@ import {sponsorLabels} from '@/lib/analytics/sponsorLabels';
 
 /**
  * GET /api/admin/sponsor-report?week=YYYY-Www: the weekly Sponsor report (app/admin/SponsorReport.tsx; lib/analytics/sponsorReport.ts).
- * Admin session only. Combined totals only, groups under 10 withheld and reach rounded on the server: the player list behind the
- * reach number never leaves this route (only its size). Internal draft until the privacy policy wording is approved.
+ * Admin session only. Combined totals only, exact numbers (Nov 8 2026 owner ruling: exact numbers; no withholding, reach not
+ * rounded): the player list behind the reach number never leaves this route (only its size). Internal draft until the privacy policy wording is approved.
  */
 export const dynamic='force-dynamic';
 export const runtime='nodejs';

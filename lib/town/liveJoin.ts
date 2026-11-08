@@ -77,9 +77,11 @@ export const JOIN_ROLE_TIP:Record<JoinRole,string>={def:'Defender: stay goal-sid
 const SLOT_NAMES:Record<string,string>={gk:'Goalkeeper',lb:'Left Back',cb:'Centre Back',rb:'Right Back',lcb:'Left Centre Back',rcb:'Right Centre Back',lm:'Left Mid',cm:'Centre Mid',rm:'Right Mid',lcm:'Left Centre Mid',rcm:'Right Centre Mid',lw:'Left Wing',rw:'Right Wing',st:'Striker'};
 /** Futsal's own position names (owner Nov 5 2026): fixo (the back), the two alas (the sides), the pivot (the target man up front). */
 const FUTSAL_SLOT_NAMES:Record<string,string>={cb:'Fixo',lm:'Left Ala',rm:'Right Ala',st:'Pivot'};
+/** Beach soccer's names (Nov 8 2026): plain kid-friendly words for its keeper + diamond of four (same slot ids as futsal). */
+const BEACH_SLOT_NAMES:Record<string,string>={gk:'Keeper',cb:'Defender',lm:'Left Wing',rm:'Right Wing',st:'Striker'};
 const ROLE_FALLBACK:Record<string,string>={gk:'Goalkeeper',def:'Defender',mid:'Midfield',fwd:'Forward'};
 /** The dropdown name for a slot: "Left Centre Back", "Striker"… (falls back to the role). */
-export function slotName(id:string,team:HumanTeam,role:string,format?:string){const k=team==='blue'&&id.startsWith('d')?id.slice(1):id;return (format==='futsal'?FUTSAL_SLOT_NAMES[k]:undefined)??SLOT_NAMES[k]??ROLE_FALLBACK[role]??'Player';}
+export function slotName(id:string,team:HumanTeam,role:string,format?:string){const k=team==='blue'&&id.startsWith('d')?id.slice(1):id;return (format==='futsal'?FUTSAL_SLOT_NAMES[k]:format==='beach'?BEACH_SLOT_NAMES[k]:undefined)??SLOT_NAMES[k]??ROLE_FALLBACK[role]??'Player';}
 /** Slot order in the dropdown: keeper first, then back to front (defence, midfield, attack), left to right as the team faces. */
 export const SLOT_ORDER:Record<string,number>={gk:0,def:1,mid:2,fwd:3};
 /** One row of the picker's Position dropdown (components/IslandSelect option shape). */

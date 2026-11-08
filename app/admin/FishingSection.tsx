@@ -42,7 +42,7 @@ export default function FishingSection({report}:{report:Report}){
  const island=rows.filter(r=>['fi:request','fi:clue','fi:legend','fi:book','fi:new_species','fi:basket_full','fi:sold'].includes(r.id));
  const misses=rows.filter(r=>['fi:miss_early','fi:miss_late','fi:miss'].includes(r.id));
  const tutorial=rows.filter(r=>['fi:tutorial_done','fi:tutorial_skip'].includes(r.id));
- const bucketRows:BarRow[]=f?.buckets?FIGHT_BUCKETS.filter(k=>k in f.buckets!).map(k=>({key:k,label:k==='0'?'Fished, never hooked':`${k} fight${k==='1'?'':'s'}`,value:f.buckets![k]??0,text:f.buckets![k]===null?'<5':undefined})):[];
+ const bucketRows:BarRow[]=f?.buckets?FIGHT_BUCKETS.filter(k=>k in f.buckets!).map(k=>({key:k,label:k==='0'?'Fished, never hooked':`${k} fight${k==='1'?'':'s'}`,value:f.buckets![k]??0})):[];// exact counts (fishingAdminMetrics num()): never null
  const steps=fn?.steps??[];
  return <section className={styles.island} aria-labelledby="fishing-heading">
   <div className={styles.sectionHead}>

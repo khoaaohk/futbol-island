@@ -47,7 +47,7 @@ export async function sellOneGood(id:string,ports:SellPorts):Promise<SaleResult>
  // Worth under a coin right now: it goes on Rosa's tally (the next one pays the coin), so there is no wallet run to make.
  const credited=plan.coins?await ports.credit(`market:${plan.next.day}:${plan.next.sales}`,plan.coins,`Farmers market · 1 ${plan.name}`.slice(0,110)):0;
  const half=s.soldToday>=MARKET_FULL_PRICE_COINS;
- return {ok:true,coins:plan.coins,credited,lines:[{id,name:plan.name,count:1,coins:plan.coins}],halfPrice:half,message:(plan.coins?'':'That one goes on Rosa’s tally: the next one makes a coin. ')+(plan.plenty?plentyLine([id])+' ':'')+(plan.next.soldToday>=MARKET_FULL_PRICE_COINS?'Great trading today! More sales today earn half price; prices reset tomorrow.':`Full prices until you have sold ${MARKET_FULL_PRICE_COINS} coins of goods today.`)};
+ return {ok:true,coins:plan.coins,credited,lines:[{id,name:plan.name,count:1,coins:plan.coins}],halfPrice:half,message:(plan.coins?'':'Rosa is keeping count of that one: the next one makes a coin. ')+(plan.plenty?plentyLine([id])+' ':'')+(plan.next.soldToday>=MARKET_FULL_PRICE_COINS?'Great trading today! More sales today earn half price; prices reset tomorrow.':`Full prices until you have sold ${MARKET_FULL_PRICE_COINS} coins of goods today.`)};
 }
 export {MARKET_STORAGE_KEY};
 

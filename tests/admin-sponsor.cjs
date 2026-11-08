@@ -228,11 +228,11 @@ await ok('social + emotes cards: not tracked before the build, then totals, stat
 
 // ---- The weekly Sponsor report.
 const W=load('lib/analytics/sponsorReport.ts');
-await ok('weekly report: ISO weeks, reach rounding, ≥10 suppression, not tracked yet, CSV and print',()=>{
+await ok('weekly report: ISO weeks, exact numbers (Nov 8 2026 owner ruling), not tracked yet, CSV and print',()=>{
  assert.equal(W.isoWeekOf('2026-10-22'),'2026-W43');assert.deepEqual(W.weekRange('2026-W43'),{from:'2026-10-19',to:'2026-10-25'});
  assert.equal(W.isoWeekOf('2027-01-01'),'2026-W53');assert.deepEqual(W.weekRange('2026-W53'),{from:'2026-12-28',to:'2027-01-03'});assert.equal(W.weekRange('2025-W53'),null);
  assert.equal(W.shiftWeek('2026-W53',1),'2027-W01');assert.equal(W.shiftWeek('2026-W43',-1),'2026-W42');assert.equal(W.validWeek('2026-43'),false);
- assert.deepEqual([4,9,10,14,15,994,995,1000,1049,1050,12345].map(W.roundReach),[0,10,10,10,20,990,1000,1000,1000,1100,12300]);
+ assert.equal(W.roundReach,undefined,'no reach rounding (Nov 8 2026 owner ruling: exact numbers)');assert.equal(W.SPONSOR_MIN,undefined,'no withholding');
  // A week with 30 party sessions and a few small groups.
  const days={};for(let i=0;i<7;i++){const d=C.addDays('2026-10-19',i);days[d]=[...partyDay(d,i<3?4:2,{'mp:peak_3_4':1,'le:learn7_roles':1,'ls:learn7_roles':1,'mp:lesson':1}),...many(3,d,{'em:e45':1,'em:pick':1})];}
  const rollups=Object.entries(days).map(([d,ss])=>C.rollupDay(d,ss)),merged=C.mergeRollups(rollups);
@@ -240,7 +240,7 @@ await ok('weekly report: ISO weeks, reach rounding, ≥10 suppression, not track
  const rep=W.buildSponsorWeekly({week:'2026-W43',now:new Date('2026-10-26T12:00:00Z'),merged,prev:prevMerged,players:437,prevPlayers:8,returning:{share:0.42,sessions:40},relay:null,emoteLabel:n=>({0:'Wave',8:'Dance',64:'Kickflip',45:'Juggle'})[n]});
  const K2=Object.fromEntries(rep.kpis.map(k=>[k.id,k]));
  assert.deepEqual(rep.kpis.map(k=>k.id),['reach','minutes','social','emotes','return','learning']);
- assert.equal(K2.reach.value,440,'rounded to 10');assert.equal(K2.reach.prev,null,'8 players last week: withheld');assert.equal(K2.reach.change,null);
+ assert.equal(K2.reach.value,437,'exact');assert.equal(K2.reach.prev,8,'8 players last week: exact');assert.equal(K2.reach.change,(437-8)/8);
  const sessions=merged.totals.sessions;assert.equal(sessions,41);assert.equal(K2.minutes.value,20*10+21*2,'10 min per party session, 2 min for the rest');assert.equal(K2.minutes.status,'ok');
  assert.equal(K2.social.value,20*6,'20 party sessions × 6 min');assert.equal(K2.social.prev,72);assert.equal(K2.social.change,(120-72)/72);
  const sub=(k,l)=>k.sub.find(s=>s.label===l);
@@ -248,16 +248,18 @@ await ok('weekly report: ISO weeks, reach rounding, ≥10 suppression, not track
  assert.equal(K2.emotes.value,(20*4+21)/20,'all picks ÷ emoting sessions');assert.equal(sub(K2.emotes,'Sessions that emoted').value,20/41);
  assert.equal(K2.return.value,0.42);assert.equal(K2.learning.value,20);assert.equal(sub(K2.learning,'Learning with friends').value,20);
  assert.deepEqual(rep.partySize.bands.map(b=>[b.key,b.value]),[['peak_1',0],['peak_2',0],['peak_3_4',20],['peak_5_8',0],['peak_9_12',0],['peak_13_20',0]]);assert.equal(rep.partySize.source,'client');
- assert.deepEqual(rep.topEmotes.map(b=>[b.label,b.value]),[['Wave',40],['Juggle',21],['Dance',20],['Kickflip',20]],'each emote with 10+ sessions');
- // Relay totals win for party size when the relay reports parties; a band under 10 parties is withheld.
+ assert.deepEqual(rep.topEmotes.map(b=>[b.label,b.value]),[['Wave',40],['Juggle',21],['Dance',20],['Kickflip',20]],'every emote played, exact');
+ // Relay totals win for party size when the relay reports parties.
  const RT=load('lib/analytics/relayStatsTypes.ts'),relay=RT.shapeRelayStats(RT.relayStatsFixture('2026-10-19',7)).totals;
  const withRelay=W.buildSponsorWeekly({week:'2026-W43',merged,prev:null,players:9,prevPlayers:null,returning:null,relay});
  assert.equal(withRelay.partySize.source,'relay');assert.equal(withRelay.partySize.bands.find(b=>b.key==='peak_13_20').value,0);assert(withRelay.partySize.bands.find(b=>b.key==='peak_9_12').value>=10);
- const WK=Object.fromEntries(withRelay.kpis.map(k=>[k.id,k]));assert.equal(WK.reach.value,null,'9 players: withheld');assert.equal(WK.reach.status,'withheld');assert.equal(WK.return.status,'unavailable');
- // Small week: every number under 10 sessions is withheld; before PARTY_SINCE the party KPIs say not tracked yet.
+ const WK=Object.fromEntries(withRelay.kpis.map(k=>[k.id,k]));assert.equal(WK.reach.value,9,'9 players: exact');assert.equal(WK.reach.status,'ok');assert.equal(WK.return.status,'unavailable');
+ // Small week: exact numbers, nothing withheld (Nov 8 2026 owner ruling); before PARTY_SINCE the party KPIs say not tracked yet.
  const tiny=W.buildSponsorWeekly({week:'2026-W43',merged:C.mergeRollups([C.rollupDay('2026-10-20',partyDay('2026-10-20',6))]),prev:null,players:6,prevPlayers:null,returning:{share:0.5,sessions:6},relay:null});
- for(const k of tiny.kpis)assert(k.value===null||k.value===0,k.id+' withheld: '+k.value);
- assert(tiny.partySize.bands.every(b=>b.value===null||b.value===0));assert.deepEqual(tiny.topEmotes,[]);
+ const TK=Object.fromEntries(tiny.kpis.map(k=>[k.id,k]));
+ assert.deepEqual([TK.reach.value,TK.minutes.value,TK.social.value,TK.return.value,TK.emotes.value],[6,60,36,0.5,4],'6 sessions: every number shown exactly');
+ assert(tiny.kpis.every(k=>k.status==='ok'),'no withheld status');assert.equal(sub(TK.minutes,'Sessions').value,6);
+ assert(tiny.partySize.bands.every(b=>b.value===0));assert.deepEqual(tiny.topEmotes.map(b=>b.value),[12,6,6]);
  // Audit Nov 6 2026: the week in progress (W43 on Thu Oct 22) is not compared with the whole of last week.
  const mid=W.buildSponsorWeekly({week:'2026-W43',now:new Date('2026-10-22T20:00:00Z'),merged,prev:prevMerged,players:437,prevPlayers:8,returning:null,relay:null});
  assert(mid.kpis.every(k=>k.change===null),'no change for a week still in progress');assert.match(mid.notes[0],/still in progress \(to 2026-10-22/);
@@ -265,13 +267,13 @@ await ok('weekly report: ISO weeks, reach rounding, ≥10 suppression, not track
  const old=W.buildSponsorWeekly({week:'2026-W40',merged:C.mergeRollups([C.rollupDay('2026-10-01',many(30,'2026-10-01',{'le:learn7_roles':1}))]),prev:null,players:null,prevPlayers:null,returning:null,relay:null});
  const OK2=Object.fromEntries(old.kpis.map(k=>[k.id,k]));for(const id of ['social','emotes'])assert.equal(OK2[id].status,'not_yet',id);
  assert.equal(OK2.reach.status,'unavailable');assert.equal(OK2.learning.value,30);
- // CSV: banner first, combined totals only, "<10" for withheld, the export line; never a player id, a day row or a code.
+ // CSV: banner first, combined totals only, exact numbers (no "<10"), the export line; never a player id, a day row or a code.
  const csv=W.sponsorWeeklyCsv(rep),lines=csv.trim().split('\n');
  assert.equal(lines[0],'Internal draft: do not share outside the company until the privacy policy wording is approved.');
- assert(lines.includes('"Aggregate, anonymous counts; groups under 10 withheld; no personal information."'),'export line');
- assert.match(csv,/^Reach,440,,,/m);assert.match(csv,/^Social engagement,120,72,67%,/m);assert.match(csv,/^ {2}Average party size,3\.5,,,/m);assert.match(csv,/^Return rate,42%,/m);
+ assert(lines.includes('"Aggregate, anonymous counts; exact totals; no personal information."'),'export line');
+ assert.match(csv,/^Reach,437,8,5363%,/m);assert(!/<\d/.test(csv),'no "<10"');assert.match(csv,/^Social engagement,120,72,67%,/m);assert.match(csv,/^ {2}Average party size,3\.5,,,/m);assert.match(csv,/^Return rate,42%,/m);
  assert(!/2026-10-2[0-5],|[0-9a-f]{12}|player_id|pid/.test(csv.replace('(2026-10-19 to 2026-10-25)','')),'no day rows or ids');
- assert.match(W.sponsorWeeklyCsv(tiny),/^Reach,<10,/m);assert.match(W.sponsorWeeklyCsv(old),/^Social engagement,not tracked yet,/m);
+ assert.match(W.sponsorWeeklyCsv(tiny),/^Reach,6,/m);assert.match(W.sponsorWeeklyCsv(old),/^Social engagement,not tracked yet,/m);
  // The tab: draft banner, CSV + Print, print CSS (A4 / two cards per row), and nothing server-side in the client.
  const tab=read('app/admin/SponsorReport.tsx');
  for(const x of ['Internal draft: do not share outside the company until the privacy policy wording is approved.','data-sponsor-report-csv','window.print()','@media print','@page{size:A4','grid-template-columns:repeat(2,minmax(0,1fr))!important'])assert(tab.includes(x),x);
@@ -295,9 +297,9 @@ await ok('weekly report: fixture render (desktop + phone screenshot input)',()=>
  const rep=W.buildSponsorWeekly({week:'2026-W43',now:new Date('2026-10-26T09:00:00Z'),merged,prev,players:1234,prevPlayers:1100,returning:{share:0.42,sessions:800},
   relay:RT.shapeRelayStats(RT.relayStatsFixture('2026-10-19',7)).totals,emoteLabel:n=>({0:'Wave',8:'Dance',64:'Kickflip (scooter)',45:'Juggle (juggler)'})[n]});
  const html=renderToStaticMarkup(React.createElement(Tab,{week:'2026-W43',onWeek:()=>{},initial:rep}));
- assert(/Sponsor report/.test(html)&&/Internal draft: do not share outside the company/.test(html)&&/data-kpi="reach"/.test(html)&&/1,200/.test(html),'reach rounded to 100 over 1,000');
+ assert(/Sponsor report/.test(html)&&/Internal draft: do not share outside the company/.test(html)&&/data-kpi="reach"/.test(html)&&/1,234/.test(html),'reach exact');
  for(const id of ['reach','minutes','social','emotes','return','learning'])assert(html.includes(`data-kpi="${id}"`),id);
- assert(/Party size \(party service\)/.test(html)&&/Top emotes/.test(html)&&/Aggregate, anonymous counts; groups under 10 withheld; no personal information\./.test(html));
+ assert(/Party size \(party service\)/.test(html)&&/Top emotes/.test(html)&&/Aggregate, anonymous counts; exact totals; no personal information\./.test(html)&&!/groups under 10|rounded|&lt;10/.test(html));
  assert(!/[23456789BCDFGHJKMNPQRSTVWXYZ]{6}/.test(html.replace(/<[^>]+>/g,' ')),'no code-shaped text');
  if(process.env.SPONSOR_REPORT_OUT){
   const raw=f=>read(f).replace(/\.([A-Za-z][\w-]*)/g,(m,c)=>'.'+c);// identity class names (the proxy above)

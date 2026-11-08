@@ -2,9 +2,9 @@
 /**
  * The weekly Sponsor report tab (Oct 22 2026, Phase B of docs/analytics-multiplayer-plan.md §8 'e'): one ISO week of combined
  * totals (reach, engagement minutes, social and emote engagement, return rate, learning), with the week before for comparison,
- * a CSV download and a print stylesheet (Print → Save as PDF; no PDF library, no server rendering). Built and suppressed on the
- * server (/api/admin/sponsor-report, lib/analytics/sponsorReport.ts): groups under 10 are withheld and reach is rounded, in the
- * view and in every export. INTERNAL DRAFT until the privacy policy wording is approved (the banner says so, on screen and on paper).
+ * a CSV download and a print stylesheet (Print → Save as PDF; no PDF library, no server rendering). Built on the server
+ * (/api/admin/sponsor-report, lib/analytics/sponsorReport.ts) with EXACT numbers like the rest of /admin (Nov 8 2026 owner ruling:
+ * exact numbers): nothing withheld, reach not rounded, in the view and in every export. INTERNAL DRAFT until the privacy policy wording is approved (the banner says so, on screen and on paper).
  */
 import {useEffect,useState} from 'react';
 import {fmtKpi,shiftWeek,sponsorWeeklyCsv,type SponsorKpi,type SponsorWeekly} from '@/lib/analytics/sponsorReport';
@@ -42,7 +42,7 @@ export default function SponsorReport({week,onWeek,initial}:{week:string;onWeek:
   <p className={s.draft} role="note" data-sponsor-draft><b>Internal draft: do not share outside the company until the privacy policy wording is approved.</b></p>
   <div className={s.head}>
    <div className={styles.sectionHead}><h2 id="sec-sponsor-report">Sponsor report</h2>
-    <p>{data?`Week ${data.week.slice(6)} (${fmtDay(data.from)} – ${fmtDay(data.to)})`:week}. All numbers are combined totals; groups under 10 are hidden; reach is rounded. No personal data.</p></div>
+    <p>{data?`Week ${data.week.slice(6)} (${fmtDay(data.from)} – ${fmtDay(data.to)})`:week}. All numbers are exact combined totals. No personal data.</p></div>
    <div className={s.actions} data-no-print>
     <button type="button" className={styles.secondary} onClick={()=>onWeek(shiftWeek(week,-1))} aria-label="Previous week">‹ Prev</button>
     <button type="button" className={styles.secondary} onClick={()=>onWeek(shiftWeek(week,1))} aria-label="Next week">Next ›</button>
@@ -56,7 +56,7 @@ export default function SponsorReport({week,onWeek,initial}:{week:string;onWeek:
    <ul className={s.cards} aria-label="Sponsor KPIs" data-sponsor-cards>
     {data.kpis.map(k=><li key={k.id} className={s.card} data-kpi={k.id} data-status={k.status}>
      <span className={s.label}>{k.label}</span>
-     <b className={k.status==='ok'||k.status==='withheld'?s.value:s.none}>{fmtKpi(k.value,k.format,k.status)}{k.status==='ok'&&k.format==='min'?<small> min</small>:k.status==='ok'&&k.id==='reach'?<small> players</small>:k.status==='ok'&&k.id==='emotes'?<small> per emoter</small>:k.status==='ok'&&k.id==='learning'?<small> lessons</small>:null}</b>
+     <b className={k.status==='ok'?s.value:s.none}>{fmtKpi(k.value,k.format,k.status)}{k.value===null?null:k.status==='ok'&&k.format==='min'?<small> min</small>:k.status==='ok'&&k.id==='reach'?<small> players</small>:k.status==='ok'&&k.id==='emotes'?<small> per emoter</small>:k.status==='ok'&&k.id==='learning'?<small> lessons</small>:null}</b>
      {changeText(k)&&<small className={s.change}>{changeText(k)}</small>}
      {k.sub.length>0&&<dl className={s.sub}>{k.sub.map(x=><div key={x.label}><dt>{x.label}</dt><dd>{fmtKpi(x.value,x.format,x.status)}</dd></div>)}</dl>}
      {k.note&&<small className={s.note}>{k.note}</small>}
@@ -64,11 +64,11 @@ export default function SponsorReport({week,onWeek,initial}:{week:string;onWeek:
    </ul>
    <div className={s.bars}>
     <div className={s.block}><h3>Party size {data.partySize.source==='relay'?'(party service)':data.partySize.source==='client'?'(hosts’ devices)':''}</h3>
-     {data.partySize.bands.length?<ul className={s.bandList}>{data.partySize.bands.map(b=><li key={b.key}><span>{b.label}</span><b>{b.value===null?`<${data.min}`:b.value}</b></li>)}</ul>
+     {data.partySize.bands.length?<ul className={s.bandList}>{data.partySize.bands.map(b=><li key={b.key}><span>{b.label}</span><b>{b.value}</b></li>)}</ul>
       :<p className={styles.note}>Not tracked yet for this week.</p>}</div>
     <div className={s.block}><h3>Top emotes</h3>
      {data.topEmotes.length?<ul className={s.bandList}>{data.topEmotes.map(b=><li key={b.key}><span>{b.label}</span><b>{b.value}</b></li>)}</ul>
-      :<p className={styles.note}>None with {data.min}+ sessions this week.</p>}</div>
+      :<p className={styles.note}>No emotes played this week.</p>}</div>
    </div>
    <details className={s.how} open>
     <summary>How these are counted</summary>

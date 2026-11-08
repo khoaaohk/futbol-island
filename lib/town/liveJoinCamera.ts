@@ -88,7 +88,10 @@ export const createReplayCamShot=():ReplayCamShot=>({bx:0,by:0,bz:0,sx:NaN,sz:Na
  *  before the shot, the shooter all sit inside the frame (a closed-form fit per point in the camera's own axes, the HUD bands kept
  *  clear). `tight` 0 → 1: the build-up's wider framing → the finish (goal + ball only, nearer). No allocation. */
 export function replayCamFrame(s:ReplayCamShot,aspect:number,tight:number,out:JoinCamFrame){
-  const t=Math.max(0,Math.min(1,(aspect-.6)/.9)),yaw=(22+36*t)*Math.PI/180,pitch=(36-8*t)*Math.PI/180;
+  // Nov 8 2026 (portrait phones: the replay sat low, the ball and scorer near the bottom edge): below a square aspect the eye rises
+  // (up to +10° of pitch at 0.55 and narrower) and backs off up to 10% more; aspect ≥ 1 (landscape) is unchanged.
+  const pt=aspect<1?Math.min(1,(1-aspect)/.45):0;
+  const t=Math.max(0,Math.min(1,(aspect-.6)/.9)),yaw=(22+36*t)*Math.PI/180,pitch=(36-8*t+10*pt)*Math.PI/180;
   // ground forward: the attack direction turned toward the TV side (az, −ax); then down by `pitch`
   const cy=Math.cos(yaw),sy=Math.sin(yaw),gfx=s.ax*cy+s.az*sy,gfz=s.az*cy-s.ax*sy,cp=Math.cos(pitch),fx=gfx*cp,fy=-Math.sin(pitch),fz=gfz*cp;
   const rl=Math.hypot(fz,fx)||1,rx=-fz/rl,rz=fx/rl,ux=-rz*fy,uy=rz*fx-rx*fz,uz=rx*fy;// right = f × up, up = right × f
@@ -101,7 +104,7 @@ export function replayCamFrame(s:ReplayCamShot,aspect:number,tight:number,out:Jo
   fitPoint(s.gx+s.ax*1.2,g,s.gz+s.az*1.2);// the back of the net
   fitPoint(s.bx,s.by,s.bz);
   if(tight<.5&&Number.isFinite(s.sx))fitPoint(s.sx,g+1.6,s.sz);// the shooter (head height)
-  const d=Math.min(75,Math.max(11+7*(1-tight),F.d*(1.12-.12*tight)));
+  const d=Math.min(75,Math.max(11+7*(1-tight),F.d*(1.12-.12*tight)*(1+.1*pt)));
   out.lx=lx;out.ly=ly;out.lz=lz;out.ex=lx-fx*d;out.ey=ly-fy*d;out.ez=lz-fz*d;
 }
 

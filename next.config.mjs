@@ -16,6 +16,45 @@ const cacheAssets = [
   { source: '/stories/eleven/:film/:file([a-z0-9]+-[0-9a-f]{12}\\.m4a)', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
   { source: '/stories/paths/chapters/:file(ink-[0-9a-f]{12}\\.webp)', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
 ];
+// Security headers on every response (Nov 8 2026). The rule is FIRST so the specific rules below still win; Next sends the
+// headers of every matching rule, and none of these keys (no Cache-Control, no X-Robots-Tag) collides with a later rule.
+//  - Frames: only our own pages may frame the site (the certificate/print iframes are same-origin about:blank; nothing embeds
+//    the game or /marketing elsewhere). YouTube clips are frames we embed, not the other way round.
+//  - Permissions: TitleScene's tilt reads deviceorientation (accelerometer + gyroscope); clip players and the phone controller
+//    go fullscreen (YouTube's own frame keeps its fullscreen button). Nothing uses the camera, mic, location, Payment Request
+//    (Stripe is a redirect to its own checkout), USB, MIDI or screen capture. Screen orientation lock and vibrate are not policies.
+//  - CSP is REPORT-ONLY (never enforcing): it lists what the site actually loads, so violations show in the console without
+//    breaking anything. Sources: Supabase realtime (https + wss), the multiplayer relay (party.futbolisland.app, or
+//    NEXT_PUBLIC_MULTIPLAYER_URL), /learn clips on the Cloudflare media worker, YouTube's iframe API + nocookie player + ytimg
+//    thumbnails, blob:/data: for canvas exports, narration buffers and the QR code, vercel.live (the preview-deploy toolbar).
+//    Next's inline bootstrap scripts and inline styles need 'unsafe-inline'; dev also needs 'unsafe-eval' (React refresh).
+const relayOrigin = (() => { try { const u = new URL(process.env.NEXT_PUBLIC_MULTIPLAYER_URL || ''); return /^https?:$/.test(u.protocol) ? u.origin : ''; } catch { return ''; } })();
+const RELAY = ['https://party.futbolisland.app', 'wss://party.futbolisland.app', ...(relayOrigin ? [relayOrigin, relayOrigin.replace(/^http/, 'ws')] : [])].join(' ');
+const MEDIA_HOST = 'https://futbol-media.khoa0aohk.workers.dev';// lib/site/learnMedia.ts MEDIA_BASE
+const YT = 'https://www.youtube.com https://www.youtube-nocookie.com';
+const csp = dev => [
+  "default-src 'self'",
+  `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ''} https://www.youtube.com https://s.ytimg.com https://vercel.live`,
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https://i.ytimg.com https://vercel.live",
+  "font-src 'self' data:",
+  `media-src 'self' blob: data: ${MEDIA_HOST}`,
+  `connect-src 'self' blob: data: https://*.supabase.co wss://*.supabase.co ${RELAY} ${MEDIA_HOST} https://vercel.live`,
+  `frame-src 'self' ${YT} https://vercel.live`,
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'self'",
+].join('; ');
+const securityHeaders = dev => ({ source: '/:path*', headers: [
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
+  { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+  { key: 'Permissions-Policy', value: `accelerometer=(self), gyroscope=(self), fullscreen=(self "https://www.youtube.com" "https://www.youtube-nocookie.com"), camera=(), microphone=(), geolocation=(), payment=(), usb=(), midi=(), display-capture=()` },
+  { key: 'Content-Security-Policy-Report-Only', value: csp(dev) },
+] });
 const cacheStatic = [
   ...cacheAssets,
   { source: '/players/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
@@ -50,4 +89,4 @@ const GAME_QUERY_TO_PLAY = [
 // working with a permanent redirect (search results and shared links); /learn/lessons itself is excluded from the pattern.
 // Nov 3 2026: the feature tour moved to the home page, so /learn itself is a permanent redirect to `/`.
 const redirects = [{ source: '/learn', destination: '/', permanent: true }, { source: '/learn/:slug((?!lessons$)[A-Za-z0-9_-]+)', destination: '/learn/lessons/:slug', permanent: true }, ...GAME_QUERY_TO_PLAY];
-export default phase => ({ reactStrictMode: true, distDir: process.env.NEXT_DIST_DIR || (phase === 'phase-development-server' ? '.next-dev' : '.next'), async headers() { return cacheStatic; }, async rewrites() { return rewrites; }, async redirects() { return redirects; } });
+export default phase => ({ reactStrictMode: true, distDir: process.env.NEXT_DIST_DIR || (phase === 'phase-development-server' ? '.next-dev' : '.next'), async headers() { return [securityHeaders(phase === 'phase-development-server'), ...cacheStatic]; }, async rewrites() { return rewrites; }, async redirects() { return redirects; } });

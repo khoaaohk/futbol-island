@@ -87,7 +87,6 @@ export const joinSlots={get:()=>slotStore.view,subscribe(f:()=>void){slotStore.s
 const publishSlots=(options:SlotOption[],value:string)=>{slotStore.view={options,value};slotStore.subs.forEach(f=>f());};
 
 export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|null){
-  const goalV=new T.Vector3();
   const state=createJoinState(),view=createHumanView(),markers=createJoinMarkers(scene),keeperMarks=createKeeperMarkers(scene),venues=LIVE_VENUES.filter(v=>joinableFormat(v.id));
   let format:LiveFormat|null=null,pickFormat:LiveFormat|null=null,team:'gold'|'blue'='gold',colour='#ffd23f';
   // The Play flow (owner decisions Nov 4 2026): the pitch bar's Play opens the side + position picker; Start joins once
@@ -290,7 +289,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
         // Start: the picker shrinks back into the bar's Play first (the Join with a code close), then the slot is taken and Town's arrival plays.
         shrink(reduced,()=>{if(state.phase!=='joined')return;const slot=games.joinMatch(f,ME,x,z,dressFor,null,pick);if(!slot){api.lastEvent='join-failed';state.phase='idle';return;}format=f;games.humanView(format,ME,view);team=view.team;colour=bibColour(format,team==='gold');markers.setColour(colour);keeperMarks.setColour(colour);if(view.keeper)bannerT=KEEPER_FX.banner;if(f==='beach'&&!view.keeper){tip=BEACH_JOIN_TIP;tipT=3.6;}/* no bibs on sand: the format's own lesson */else showTip(view.keeper?'keeper':'join',false);
           api.onMatch?.({type:'join',format:f,role:view.keeper?'gk':simOf(f)?.players[slot]?.role??null,others:othersOn(f),...slotsOn(f)});});}
-      if(ev==='leave'){lastTrick=-1;fxAge=-1;kickSeen=tackleSeen=-1;saveSeen=beatSeen=-1;bannerT=0;bannerOwed=false;keeperMarks.hide();if(format){api.onMatch?.({type:'leave',reason:byUser?'leave':'forced',others:othersOn(format)});left=games.leaveMatch(format,ME,{x:0,z:0});}format=null;markers.hide();pin(0,0,0,null);held.a=held.b=held.s=false;aDownAt=bDownAt=0;bMode='';aPendAt=0;chase=edgeSprint=false;if(edgeShown){edgeShown=false;set(el('.touch-controls .joystick'),'data-sprint',null);}hide(el('[data-join-badge]'),true);if(cueShown){cueShown=false;set(el('[data-join-ballcue]'),'data-show',null);}hotShown='x';lookX=lookZ=0;phraseHud.frame(0,false,null,'','',null,0,camera,false,false);}
+      if(ev==='leave'){lastTrick=-1;fxAge=-1;kickSeen=tackleSeen=-1;saveSeen=beatSeen=-1;bannerT=0;bannerOwed=false;keeperMarks.hide();if(format){api.onMatch?.({type:'leave',reason:byUser?'leave':'forced',others:othersOn(format)});left=games.leaveMatch(format,ME,{x:0,z:0});}format=null;markers.hide();pin(0,0,0,null);held.a=held.b=held.s=false;aDownAt=bDownAt=0;bMode='';aPendAt=0;chase=edgeSprint=false;if(edgeShown){edgeShown=false;set(el('.touch-controls .joystick'),'data-sprint',null);}if(cueShown){cueShown=false;set(el('[data-join-ballcue]'),'data-show',null);}hotShown='x';lookX=lookZ=0;phraseHud.frame(0,false,null,'','',null,0,camera,false,false);}
       if(ev==='cancel'||ev==='dismiss'){pickFormat=null;shrink(reduced);}
       // Friends-ready: a side filling up while the picker is open (slice 2's remote humans) re-renders the pick.
       if(state.phase==='pick'&&pickFormat){const sim=simOf(pickFormat);if(sim&&(sim.humanOn.gold!==seenGold||sim.humanOn.blue!==seenBlue||friendsKey===''))renderPick();text(el('[data-join-start]'),state.startPending?'Landing…':'Start');}
@@ -313,10 +312,6 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
         const fwd=view.onBall&&!view.inShotRange&&view.forwardX!==view.passX;markers.forwardTarget(fwd?view.forwardX:NaN,y,view.forwardZ,Math.atan2(view.goalX-view.forwardX,view.goalZ-view.forwardZ));
         markers.callPing(0,view.callAX,y,view.callAZ,view.callAW,time,reduced);markers.callPing(1,view.callBX,y,view.callBZ,view.callBW,time,reduced);// teammates calling for it (arm up + a ping)
         pin(view.x,y,view.z,colour);}
-        // Fallback direction cue: a goal badge at the screen edge while the goal you attack is off screen.
-        goalV.set(view.goalX,y+1,view.goalZ).project(camera);const behind=goalV.z>1,gx=behind?-goalV.x:goalV.x,gy=behind?-goalV.y:goalV.y,off=!replaying&&(behind||Math.abs(gx)>.94||Math.abs(gy)>.9);
-        const badge=el('[data-join-badge]');hide(badge,!off);
-        if(off&&badge){const k=Math.max(Math.abs(gx)/.86,Math.abs(gy)/.74,1);badge.style.left=((gx/k+1)*50).toFixed(1)+'%';badge.style.top=((1-gy/k)*50).toFixed(1)+'%';badge.style.setProperty('--bib',colour);}
         // The ball off screen (Nov 7 2026 audit: on 11v11 it is > 25 m from you ~11% of the time): a small ball + arrow at the screen
         // edge pointing at it, clear of the score bar and both thumbs; hidden while the ball is on screen or a replay plays. One
         // pooled element, transform + opacity only, written when its whole-pixel spot or whole-degree angle changes.
@@ -496,7 +491,7 @@ export function createLiveJoin(scene:T.Scene,games:Games,root:()=>HTMLElement|nu
    *  markers in the scoring side's colour for the ball + scorer rings, my bib colour back after. */
   function replayHud(on:boolean,goldScored:boolean){
     hide(el('[data-join-replay]'),!on);set(el('[data-join-actions]'),'data-replaying',on?'':null);{const tc=root()?.querySelector<HTMLElement>('.touch-controls');if(tc){tc.style.transition=on&&!matchMedia('(prefers-reduced-motion: reduce)').matches?'opacity .2s ease-out':'';tc.style.opacity=on?'0':'';}}
-    if(on){tipT=0;popT=0;set(el('[data-join-pop]'),'data-show',null);hide(el('[data-join-badge]'),true);if(format)markers.setColour(bibColour(format,goldScored));}
+    if(on){tipT=0;popT=0;set(el('[data-join-pop]'),'data-show',null);if(format)markers.setColour(bibColour(format,goldScored));}
     else if(colour)markers.setColour(colour);
   }
   /** My goal for the keeper markers (one reused object). */

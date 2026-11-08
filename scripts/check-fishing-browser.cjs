@@ -1,12 +1,26 @@
-const {chromium}=require('/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
-const OUT=process.env.FISHING_SHOTS||require('os').tmpdir()+'/fishing-ac/';require('fs').mkdirSync(OUT,{recursive:true});
+const fs=require('fs'),path=require('path'),os=require('os');
+const {chromium}=require('playwright');
+// Nov 8 2026: resolve the browser instead of a pinned build (it pointed at chromium_headless_shell-1243 after 1248 was installed).
+// PW_EXE wins; then the build this playwright expects; else the newest headless shell / Chromium in the playwright cache.
+function browserPath(){
+ const isFile=p=>{try{return !!p&&fs.statSync(p).isFile();}catch{return false;}};
+ if(isFile(process.env.PW_EXE))return process.env.PW_EXE;
+ try{const own=chromium.executablePath();if(isFile(own))return own;}catch{}
+ const cache=process.env.PLAYWRIGHT_BROWSERS_PATH||path.join(os.homedir(),'Library/Caches/ms-playwright');
+ const dirs=(()=>{try{return fs.readdirSync(cache);}catch{return [];}})().map(d=>/^(chromium_headless_shell|chromium)-(\d+)$/.exec(d)).filter(Boolean)
+  .sort((a,b)=>Number(b[2])-Number(a[2])||(a[1]==='chromium_headless_shell'?-1:1));
+ for(const m of dirs){const exe=m[1]==='chromium'?'chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing':'chrome-headless-shell-mac-arm64/chrome-headless-shell';
+  const p=path.join(cache,m[0],exe);if(isFile(p))return p;}
+ return undefined;// let playwright report what is missing
+}
+const OUT=process.env.FISHING_SHOTS||os.tmpdir()+'/fishing-ac/';fs.mkdirSync(OUT,{recursive:true});
 const [,,mode='desktop',spot='west-cove']=process.argv;
 // FISHING_RARE=1 biases Math.random for the second fish only, so the rarer end of the spot's catch list bites (for a rare-catch screenshot).
 const RARE=process.env.FISHING_RARE==='1';
 const VP={desktop:{width:1280,height:800},mobile:{width:390,height:844},landscape:{width:844,height:390}}[mode];const touch=mode!=='desktop';
 const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,-237],'west-pier':[63,211.4],'west-cove':[-94.5,24],'east-pier':[371.2,68.4],'causeway-gate':[254.8,-169.2],'causeway-channel':[359.2,-176.1],'turtle-bank':[486.2,-124.8],'coral-garden':[514.8,-226.5],'sharks-beach':[697.3,-200.2],'farm-beach':[651,-68.1],'summit-cove':[546.9,234.2],'summit-palm':[780.3,53.3],'summit-lookout':[540.6,35.8]};
 (async()=>{
- const browser=await chromium.launch({headless:true,executablePath:'/Users/khoado/Library/Caches/ms-playwright/chromium_headless_shell-1243/chrome-headless-shell-mac-arm64/chrome-headless-shell',args:['--mute-audio','--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
+ const browser=await chromium.launch({headless:true,executablePath:browserPath(),args:['--mute-audio','--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
  const ctx=await browser.newContext({viewport:VP,isMobile:touch,hasTouch:touch,deviceScaleFactor:touch?2:1});
  const page=await ctx.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text().slice(0,160));});
  const [x,z]=spots[spot];
@@ -26,8 +40,9 @@ const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,
  await waitPhase('ready');await page.waitForTimeout(200);
  await press('[data-fish-reel]');await waitPhase('floating');await page.waitForTimeout(500);await shot('2-cast');
  // 15 Oct 2026 layout: the Fishbook bottom left, the big spin reel centred (160 px on phones), the lure bottom right at the island action size.
- const layout=await page.evaluate(()=>{const reel=document.querySelector('[data-fish-reel]').getBoundingClientRect(),back=document.querySelector('[data-fish-stop]'),b=document.querySelector('[aria-label="Fishbook"]').getBoundingClientRect(),l=document.querySelector('[data-fish-lure]').getBoundingClientRect(),j=document.querySelector('.touch-controls');return{reel:{x:reel.x,y:reel.y,width:reel.width,height:reel.height},bookSize:b.width,bookRight:b.right,lureLeft:l.x,lureSize:l.width,lureBottom:l.bottom,back:back.textContent,backRect:{x:back.getBoundingClientRect().x,y:back.getBoundingClientRect().y},joystickVisible:j&&getComputedStyle(j).visibility!=='hidden'&&getComputedStyle(j).display!=='none'};});
- if(!layout.back.includes('Back')||layout.backRect.x>50||layout.backRect.y>60)throw Error('Fishing Back is not in the top-left');
+ const layout=await page.evaluate(()=>{const reel=document.querySelector('[data-fish-reel]').getBoundingClientRect(),back=document.querySelector('[data-fish-stop]'),b=document.querySelector('[aria-label="Fishbook"]').getBoundingClientRect(),l=document.querySelector('[data-fish-lure]').getBoundingClientRect(),j=document.querySelector('.touch-controls');return{reel:{x:reel.x,y:reel.y,width:reel.width,height:reel.height},bookSize:b.width,bookRight:b.right,lureLeft:l.x,lureSize:l.width,lureBottom:l.bottom,back:back.getAttribute('aria-label')||back.textContent,backNav:back.dataset.navigation,backRect:{x:back.getBoundingClientRect().x,y:back.getBoundingClientRect().y},joystickVisible:j&&getComputedStyle(j).visibility!=='hidden'&&getComputedStyle(j).display!=='none'};});
+ // The shared BackButton (aria-label "Back", data-navigation="back") sits top left; it moves right of the party pair when that shows.
+ if(!/Back/.test(layout.back)||layout.backNav!=='back'||layout.backRect.x>Math.min(200,VP.width/3)||layout.backRect.y>80)throw Error('Fishing Back is not in the top-left: '+JSON.stringify(layout.backRect));
  const reelCentre=layout.reel.x+layout.reel.width/2;
  if(touch&&(layout.joystickVisible||Math.abs(reelCentre-VP.width/2)>1||layout.reel.width<140||layout.bookSize!==originalControls.width||layout.lureSize!==originalControls.width||layout.bookRight>layout.reel.x||layout.lureLeft<layout.reel.x+layout.reel.width||Math.abs(layout.lureBottom-(originalControls.y+originalControls.height))>1))throw Error('Fishing controls do not match the island layout (book left, reel centred, lure right at the action size): '+JSON.stringify({layout,originalControls}));
  console.log('fishing controls',JSON.stringify(layout));

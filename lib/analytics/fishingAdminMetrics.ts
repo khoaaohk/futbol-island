@@ -20,7 +20,7 @@ export const FIGHT_BUCKETS:readonly FightBucket[]=['0','1','2-3','4-6','7+'];
 export type FishingAdminMetrics={status:FishingAdminStatus;
  /** Sessions that started at least one fight in range. */sessions:number|null;
  fights:number|null;landed:number|null;
- /** Sessions by how many fights they started ('0' only with the Nov 6 2026 function). */buckets:Partial<Record<FightBucket,number|null>>|null;
+ /** Sessions by how many fights they started ('0' only with the Nov 6 2026 function). */buckets:Partial<Record<FightBucket,number>>|null;
  /** Nov 6 2026 (analytics_fishing_sessions): sessions that fished at all (tapped Fish, cast, fought or landed), those that never
   *  hooked a fish, and those that cast but never hooked. null until FISHING_SESSIONS_MIGRATION has run (`sessionsStatus`). */
  fished:number|null;neverHooked:number|null;castNeverHooked:number|null;sessionsStatus:FishingAdminStatus;

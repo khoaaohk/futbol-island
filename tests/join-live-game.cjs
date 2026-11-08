@@ -83,7 +83,7 @@ assert.equal(J.LIVE_JOIN_FORMATS['11v11'].humanSpeedCap,null,'11v11: adult pace,
  // the position dropdown names every slot of the side from the sim's own slot ids
  const names=sim.ids.filter(id=>sim.players[id].team==='gold').map(id=>J.slotName(id,'gold',sim.players[id].role));
  assert.equal(JSON.stringify(names.slice().sort()),JSON.stringify(['Centre Mid','Goalkeeper','Left Centre Back','Left Mid','Right Centre Back','Right Mid','Striker']),'7v7 gold: '+names.join(', '));
- assert.equal(J.slotName('dst','blue','fwd'),'Striker');assert.deepEqual(['cb','lm','rm','st'].map(i=>J.slotName(i,'gold','mid','futsal')),['Fixo','Left Ala','Right Ala','Pivot'],'futsal position names');assert.equal(J.slotName('dst','blue','fwd','futsal'),'Pivot');assert.equal(J.slotName('dlb','blue','def'),'Left Back');assert.equal(J.slotName('zz','gold','mid'),'Midfield','role fallback');
+ assert.equal(J.slotName('dst','blue','fwd'),'Striker');assert.deepEqual(['cb','lm','rm','st'].map(i=>J.slotName(i,'gold','mid','futsal')),['Fixo','Left Ala','Right Ala','Pivot'],'futsal position names');assert.equal(J.slotName('dst','blue','fwd','futsal'),'Pivot');assert.deepEqual(['gk','cb','lm','rm','st'].map(i=>J.slotName(i,'gold','mid','beach')),['Keeper','Defender','Left Wing','Right Wing','Striker'],'beach position names (Nov 8 2026)');assert.equal(J.slotName('dlm','blue','mid','beach'),'Left Wing');assert.equal(J.slotName('dlb','blue','def'),'Left Back');assert.equal(J.slotName('zz','gold','mid'),'Midfield','role fallback');
  for(const f of ['9v9','11v11','futsal']){const m=new MatchSim(3,f);for(const id of m.ids)assert(!/Player|Defender|Midfield|Forward/.test(J.slotName(id,m.players[id].team,m.players[id].role)),f+' '+id+' has a real name');}
  assert.equal(sim.humanKeepers,true,'the Goalkeeper is a pickable position (human keepers, Nov 4 2026)');}
 
@@ -951,11 +951,11 @@ console.log('PASS join-live-game (quick goal reset): fade in the net, arrival on
  assert.match(rt,/if\(b==='skip'\)\{if\(down&&format\)skipRep\(format\);return;\}/);assert.match(rt,/function onTap\(\)\{[^\n]*skipRep\(format\)/,'a tap anywhere skips');assert.match(rt,/!e\.repeat\)skipRep\(format\)/,'a key skips');
  assert.match(rt,/replayCamFrame\(repShot,camera\.aspect,cut\?want:repTight,repGoal\)/,'the replay camera frames goal + ball + shooter');assert.match(rt,/cut=reduced\|\|!!rep\?\.calm/,'reduced motion: the camera cuts');
  assert.match(rt,/if\(!cut\|\|fresh\|\|want!==repCutTight\)/,'reduced motion: held shots, recomputed only on a cut (no easing)');
- // the live goal overlays are off while it plays: the field's GOAL! card / light / rings (ended, not back after), the pop, tip, goal badge, aim marks; the controls fade
+ // the live goal overlays are off while it plays: the field's GOAL! card / light / rings (ended, not back after), the pop, tip, aim marks; the controls fade
  const fxs=fs.readFileSync('lib/town/matchEffects.ts','utf8');assert.match(fxs,/function quiet\(\)\{celebration=9;badge\.visible=light\.visible=false;rings\[0\]\.visible=rings\[1\]\.visible=false;\}/,'quiet(): the GOAL! card, burst and rings hidden');
  assert.match(fr,/e\.effects\.update\([^\n]*\);if\(rp\)e\.effects\.quiet\(\);/,'the field runtime quiets the GOAL! card on every replay frame (after update)');
- assert.match(rt,/function replayHud\(on:boolean,goldScored:boolean\)\{[\s\S]{0,400}?tipT=0;popT=0;set\(el\('\[data-join-pop\]'\),'data-show',null\);hide\(el\('\[data-join-badge\]'\),true\)/,'replay start: pop, tip and goal badge off');
- assert.match(rt,/off=!replaying&&\(behind/,'no goal badge during a replay');assert.match(rt,/aiming&&view\.onBall&&!replaying\?aimPts/,'no aim marks during a replay');
+ assert.match(rt,/function replayHud\(on:boolean,goldScored:boolean\)\{[\s\S]{0,400}?tipT=0;popT=0;set\(el\('\[data-join-pop\]'\),'data-show',null\);/,'replay start: pop and tip off');
+ assert(!rt.includes('data-join-badge'),'the unused goal-edge badge lookup is gone (no element ever carried data-join-badge)');assert.match(rt,/aiming&&view\.onBall&&!replaying\?aimPts/,'no aim marks during a replay');
  assert.match(css,/\.actions\[data-replaying\]\{opacity:0;/,'the action buttons fade (opacity) during a replay');assert.match(rt,/tc\.style\.opacity=on\?'0':''/,'the stick fades too (inline: it is Town\'s)');
  assert.match(css,/\.replaySkip\{min-height:44px;/,'Skip: a 44 px touch target');
  assert.match(hud,/data-join-replay className=\{styles\.replay\}[\s\S]*data-join-replay-skip[^>]*onClick=\{\(\)=>onPress\('skip',true\)\}[^>]*>Skip<\/button>/,'REPLAY tag + Skip');
