@@ -143,7 +143,8 @@ t('gating: phrases only while joined and with the setting on; others\' bubbles h
   const ib=w.sim.ids.indexOf(w.g[2]);w.hud.bus.show(ib,6);assert.equal(w.hud.pool.items.filter(b=>b.live&&b.key===w.g[2]).length,1,'a friend\'s bubble');
   Q.setPhrasesEnabled(false);w.frame();assert.equal(w.dom.el('[data-join-phrases]').hidden,true,'button hidden with the setting off');assert.equal(w.hud.pool.active,0,'bubbles cleared');
   w.hud.bus.show(ib,6);assert.equal(w.hud.pool.active,0,'others\' phrases hidden');w.clock.t+=5000;assert.equal(w.hud.say(1),false,'no sending either');
-  Q.setPhrasesEnabled(true);w.frame();assert.equal(w.dom.el('[data-join-phrases]').hidden,false);
+  Q.setPhrasesEnabled(true);w.frame();assert.equal(w.dom.el('[data-join-phrases]').hidden,true,'Nov 8 2026: no phrase button at all');
+  let rk='kickoff';Object.defineProperty(w.sim,'restartKind',{get:()=>rk,configurable:true});w.frame();assert.equal(w.dom.el('[data-join-phrases]').hidden,true,'button stays hidden even on a dead ball');
   w.frame(0,false);w.hud.bus.show(ib,6);assert.equal(w.hud.pool.active,0,'left the match: nothing shows');
 });
 t('bubbles: a fixed pool of 4, one per speaker, ~2 s, pop restarted per phrase, fade at the end, transform only',()=>{

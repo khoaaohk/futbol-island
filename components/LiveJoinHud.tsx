@@ -96,7 +96,7 @@ export function LiveJoinActions({onPress,onSlot}:{onPress:Press;onSlot:(slot:str
     </div>
     {/* The ball off screen (Nov 7 2026; big pitches): a small ball with an arrow at the screen edge pointing at it. The runtime
         writes its spot (transform) and angle (--cue-deg) on change and data-show; hidden while the ball is on screen. */}
-    <div data-join-ballcue className={styles.ballCue} aria-hidden="true"><i className={styles.cueArrow}/><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="10" fill="#fff" stroke="#294f43" strokeWidth="2.4"/><path d="M12 7.2l3.6 2.6-1.4 4.2H9.8L8.4 9.8z" fill="#294f43"/></svg></div>
+    <div data-join-ballcue className={styles.ballCue} aria-hidden="true"><i className={styles.cueArrow}/><svg viewBox="0 0 24 24" focusable="false"><circle cx="12" cy="12" r="10" fill="#fff"/></svg></div>
     {/* Quick phrase bubbles over players' heads: a fixed pool; the runtime writes the spot (transform) and data-show / data-out. */}
     <div data-join-bubbles className={styles.bubbles} aria-hidden="true">{Array.from({length:BUBBLE.pool},(_,i)=><div key={i} data-join-bubble={i} className={styles.bubble}><span/></div>)}</div>
     {/* The goal's assist (feature-detected from the sim's goal event): a small caption under the score bar for ~2 s. */}

@@ -110,6 +110,11 @@ await ok('locked league tiles show the unlock hint as visible text, not only a h
  const hint=new Function('unlock',`return (${/const strikerLockHint=([^\n]*);\n/.exec(live)[1].replace(':string','')})(unlock)`);
  assert.equal(hint('Win Round 4 to open'),'win Round 4');assert.equal(hint('Win a Pro League match to open'),'win a Pro match');
  assert.match(css,/\.root \.seg>button small\.lockHint\{[^}]*overflow-wrap:anywhere/,'wraps inside a 390 px tile');
+ // Nov 8 2026 (owner): the league unlock hints also sit on the start card (not only inside Options), as one small plain line.
+ assert.match(live,/const lockedTiers=STRIKER_TIER_IDS\.filter\(id=>!tiersOpen\[id\]\);/);
+ assert.match(live,/\{lockedTiers\.length>0&&<p className=\{styles\.unlockHint\} data-league-hint="">/,'start card hint line');
+ assert(live.indexOf('data-league-hint')<live.indexOf('id="strikers-options"'),'outside (before) the Options panel');
+ assert.match(css,/\.unlockHint\{[^}]*font:400 12px/,'small regular sans');
 });
 
 if(failed){console.log(`striker-polish-nov8: ${failed} failed`);process.exit(1);}console.log('striker-polish-nov8: all passed');

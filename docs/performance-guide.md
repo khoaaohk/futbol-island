@@ -6172,6 +6172,21 @@ Validation: `tests/live-ball-physics.cjs` (air spin follows travel and is capped
   Pro 44.0 / 17.3k, Legend 39.5 / 16.8k (draws vary ±4 with which rings are up at the sample). Same programs (21-22),
   geometries (32-34), textures (8). No iPhone thermal claim.
 
+## Breakaway Run: one-draw footballs and fork arches (Nov 8 2026, local, not deployed)
+
+- Each pooled coin ball, shot ball, one-two pass ball and the goal's caught ball was `stage.football()`: a white sphere plus 8
+  patch spheres = 9 draws per ball. `stage.footballMerged()` (lib/arcade/arcadeStage.ts) bakes the same sphere and patches (same
+  sizes, positions and colours) into ONE vertex-coloured mesh with one shared geometry per radius and one shared material: 1 draw
+  per ball. The runner's own ball keeps `football()` (its mission skins swap the patch materials). Built before the track's
+  bend pass, so the merged balls still follow the bends. Falls back to `football()` if a neon palette ever makes the colours emissive.
+- The route-fork arches (5 boxes, 5 draws) bake into one vertex-coloured mesh (runnerFx.ts): 1 draw while a fork is ahead.
+- No gameplay, scoring, spawn or word change (flash words still only after a goal or a tackle, Oct 27 rule).
+- Measured headless (Chrome/Metal, dev build, `--mute-audio`, phone landscape 844 x 390 DPR 2, 30 s scripted run from the
+  start screen: defenders auto-beaten, shield on, so both routes run the same way; draws averaged per rendered frame):
+  before: Breakaway (classic) 67.1, Legend 70.6 (peak 126); after: classic 44.6, Legend 48.5 (peak 78). Legend is +8.7% over
+  classic after (both about a third cheaper). Ready screen unchanged at 30-31 draws. The earlier +47% (92.8 vs 63) report was
+  not reproduced with this harness. No iPhone thermal claim.
+
 ## Pass Puzzles polish: Pro Cup and Legend Cup (Nov 8 2026, local, not deployed)
 
 - Two cups (lib/passPuzzle/tiers.ts), 6 new puzzles each, on the same pitch, rigs, meshes and materials. A cup adds no mesh,

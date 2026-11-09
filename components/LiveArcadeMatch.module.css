@@ -198,6 +198,9 @@
 .root .startRow>.optionsToggle,.root .startRow>.boards{display:flex;align-items:center;justify-content:center;gap:6px;margin:0;min-height:48px;padding:8px 14px;border:2px solid #81fbed66;border-radius:999px;background:#151c35;color:#e8ffff;font-size:14px;font-weight:800;box-shadow:0 3px 0 #0b1024}
 .root .startRow>.optionsToggle[aria-expanded=true]{border-color:#fff08a;color:#fff08a}
 .coins{margin:0!important;font-size:11px!important;text-align:center;opacity:.8}
+/* Nov 8 2026: league unlock hints on the start card (one small plain line under the coin note). */
+.unlockHint{margin:0!important;font:400 12px/1.35 var(--font-body),Arial,sans-serif!important;text-align:center;opacity:.85;text-wrap:balance}
+@media(max-height:500px){.start>.unlockHint{font-size:11px!important;margin-top:-4px!important}}
 .options{display:grid;gap:8px;padding-top:8px;border-top:1px solid #ffffff22}
 .seg{display:flex;gap:6px}
 .root .seg>button{flex:1;min-width:0;display:grid;place-items:center;align-content:center;min-height:48px;padding:4px 6px;border:2px solid #81fbed55;border-radius:12px;background:#151c35;color:#e8ffff;box-shadow:0 3px 0 #0b1024;font-size:13px;font-weight:800;line-height:1.15;opacity:.8}

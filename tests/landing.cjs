@@ -61,6 +61,12 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert.match(block('restored'),/<WaterPill card="restored" label="Play" autoStart apply=\{\(\)=>applyRestore\.current\?\.\(\)\}\/>/);
  assert.match(block('break'),/<WaterPill card="break" label="Play"\/>/);
  assert.equal((strip(actions).match(/<WaterPill /g)||[]).length,4,'Play appears only in returning, ready, restored and break');
+ // Nov 8 2026 (owner): one Play only. A pill the save flow starts by itself says "Loading…" from its first frame (it used to land as a
+ // second "Play" after the sheet's own Play, fade its label in, then switch), and its label no longer fades in late.
+ {const pill=read('components/landing/WaterPill.tsx');
+  assert.match(pill,/\{loading\|\|autoStart\?'Loading…':label\}/,'autoStart pills say Loading… from the start');
+  assert.match(pill,/data-loading=\{loading\|\|autoStart\|\|undefined\}/);assert.match(pill,/disabled=\{loading\|\|autoStart\}/);
+  assert(!/:scope>span,:scope>small/.test(actions),'no late label fade on the landing pill');}
  assert(!/PlayButton/.test(strip(actions)),'the title screen no longer uses the nav-button Play');
  for(const f of tsx)assert(!/Play without a code|No code\? You can still play|showNotNow/.test(strip(read(f))),`${f}: no skip-the-code path`);
  // Returning fast path: a stored code goes straight to Welcome back + Play.

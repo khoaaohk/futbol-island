@@ -39,13 +39,15 @@ export default function WaterPill({label='Play',sub,card,autoStart=false,apply}:
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[autoStart]);
  return <div ref={wrap} className={styles.pillWrap}>
-  <button ref={button} type="button" className={`${styles.start} ${styles.waterPill}`} data-landing-play="hero" data-loading={loading||undefined}
-   aria-busy={loading||undefined} aria-label={loading?`Loading the island: ${level}%`:undefined} disabled={loading} onClick={go}>
+  <button ref={button} type="button" className={`${styles.start} ${styles.waterPill}`} data-landing-play="hero" data-loading={loading||autoStart||undefined}
+   aria-busy={loading||autoStart||undefined} aria-label={loading||autoStart?`Loading the island: ${level}%`:undefined} disabled={loading||autoStart} onClick={go}>
    <i className={styles.water} aria-hidden="true"><i ref={fill} className={styles.waterFill}>
     <svg className={`${styles.waterCrest} ${styles.waterCrestBack}`} viewBox="0 0 240 24" preserveAspectRatio="none" focusable="false"><path d="M0 12C20 4 40 4 60 12S100 20 120 12 160 4 180 12 220 20 240 12V24H0Z"/></svg>
     <svg className={styles.waterCrest} viewBox="0 0 240 24" preserveAspectRatio="none" focusable="false"><path d="M0 12C20 4 40 4 60 12S100 20 120 12 160 4 180 12 220 20 240 12V24H0Z"/></svg>
    </i></i>
-   <span data-long={label.length>10?'':undefined}>{loading?'Loading…':label}</span>{sub&&!loading&&<small>{sub}</small>}
+   {/* Nov 8 2026 (owner): a pill the save flow starts by itself (autoStart: a new code, a restored island) says "Loading…" from its
+       first frame. It used to land as a second "Play" (right after the sheet's own Play) and then switch label. */}
+   <span data-long={label.length>10?'':undefined}>{loading||autoStart?'Loading…':label}</span>{sub&&!loading&&!autoStart&&<small>{sub}</small>}
   </button>
  </div>;
 }

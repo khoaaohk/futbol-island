@@ -7,7 +7,7 @@
  *
  * Trust rules (the owner shows these to a potential partner):
  *  - every metric says exactly which counters it adds up (`parts`, `how`), and nothing is estimated or extrapolated;
- *  - a total resting on fewer than MIN_SESSIONS (5) different sessions is withheld (null, "<5"), like every admin number;
+ *  - EXACT numbers (Nov 8 2026 owner ruling): no "<5" withholding; MIN_SESSIONS is 1, so every total is the real count;
  *  - a part counted by the `en:` events added on Oct 20 2026 is "not tracked yet" until the first of them arrives in the range
  *    or the period before (the build that sends them is live), so a missing feature never shows as a real zero.
  */
@@ -22,10 +22,11 @@ export const SPONSOR_METRICS=['games','shirts','cleats','cards','watched','books
 export type SponsorMetricId=typeof SPONSOR_METRICS[number];
 /** The day the `en:` events were added (the build that sends them). Nothing before can carry them. */
 export const ENGAGE_SINCE='2026-10-20';
-/** Same small-number rule as lib/analytics/learning.ts MIN_SESSIONS (repeated so the client bundle never loads the lesson text). */
-export const MIN_SESSIONS=5;
-/** Party-band rule (lib/analytics/partyReport.ts MIN_PARTIES): averages from the party histogram need 5 parties. */
-export const MIN_PARTIES=5;
+/** Same rule as lib/analytics/learning.ts MIN_SESSIONS (repeated so the client bundle never loads the lesson text). 1 = EXACT
+ *  numbers (Nov 8 2026 owner ruling): nothing is withheld; a total with no session behind it is a real 0. */
+export const MIN_SESSIONS=1;
+/** Party-band rule (lib/analytics/partyReport.ts MIN_PARTIES, also 1): exact bands; averages need one party. */
+export const MIN_PARTIES=1;
 export {PARTY_SINCE};
 
 /**
@@ -162,16 +163,16 @@ const DEFS:Def[]=[
   detail:(c,_live,l,x)=>{const st=guarded(c,pre('ls:')),fin=guarded(c,pre('lf:')),all=guarded(c,pre('la:'));
    return {breakdowns:[{id:'top',title:'Most taken quizzes',unit:'started',items:itemsBy(c,'ls:',k=>l.lesson?.(k)??k,10,k=>{const s=c.counts['ls:'+k]||0,f=c.counts['lf:'+k]||0;return s?`${Math.round(Math.min(1,f/s)*100)}% finished`:undefined;})}],
     stats:[{label:'Finished',value:fin,format:'int'},{label:'Finished per start',value:ratio(fin,st),format:'pct'},{label:'All right first try',value:all,format:'int'},
-     {label:'First-try answers right',value:x.firstTry&&x.firstTry.tries?x.firstTry.right/x.firstTry.tries:null,format:'pct',hint:'Every question’s first attempt, questions with 5+ sessions'}]};}},
+     {label:'First-try answers right',value:x.firstTry&&x.firstTry.tries?x.firstTry.right/x.firstTry.tries:null,format:'pct',hint:'Every question’s first attempt'}]};}},
  {id:'social',label:'Minutes with friends',unit:'minutes',
   how:'Whole foreground minutes played while in a live Play with friends party (each player’s own device counts its own minutes once each minute is complete; hidden tabs do not count). Never a party code, a name or who played with whom.',
   gap:'Party sizes come from the host’s device when a party ends (approximate until the party service’s own totals are live).',
   parts:[{key:'min',label:'Minutes in a party',test:k=>k==='mp:min',engage:false,party:true}],
   detail:(c,_live,_l,_x,pl)=>{const mins=one(c,'mp:min'),created=one(c,'mp:created'),inParty=sess(c,'mp:in'),islandMin=Math.round(c.islandMs/60000);
-   return {breakdowns:[{id:'size',title:'Party size',unit:'parties',pending:!pl,note:`One per party, from the host’s device; bands under ${MIN_PARTIES} parties are withheld.`,items:partyBands(c,PARTY_PEAK_BUCKETS)},
+   return {breakdowns:[{id:'size',title:'Party size',unit:'parties',pending:!pl,note:'One per party, from the host’s device.',items:partyBands(c,PARTY_PEAK_BUCKETS)},
      {id:'length',title:'Party length',unit:'parties',pending:!pl,items:partyBands(c,PARTY_LEN_BUCKETS)}],
     stats:[{label:'Share of island minutes in a party',value:mins===null||!islandMin?null:Math.min(1,mins/islandMin),format:'pct',pending:!pl},
-     {label:'Average party size',value:avgPartySize(c),format:'dec',hint:`Players at once, from the size bands (${MIN_PARTIES}+ parties)`,pending:!pl},
+     {label:'Average party size',value:avgPartySize(c),format:'dec',hint:'Players at once, from the size bands',pending:!pl},
      {label:'Parties per active player',value:created===null||!c.visitors?null:created/c.visitors,format:'dec',hint:'Parties started ÷ daily players (visitor-days)',pending:!pl},
      {label:'Sessions in a party',value:inParty,format:'int',pending:!pl},{label:'Share of sessions in a party',value:inParty===null||!c.sessions?null:Math.min(1,inParty/c.sessions),format:'pct',pending:!pl}]};}},
  {id:'emotes',label:'Emotes used',unit:'emotes',
@@ -249,7 +250,7 @@ export function change(cur:Cell,prev:Cell|null):number|null{
 /** The Overview as CSV (one row per metric, then its parts): what the "Download CSV" button saves. */
 export function sponsorCsv(r:SponsorReport,extra:{label:string;value:string}[]=[]):string{
  const q=(v:unknown)=>{const s=v===null||v===undefined?'':String(v);return /[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s;};
- const cell=(v:Cell)=>v===null?'<5':String(v);
+ const cell=(v:Cell)=>v===null?'':String(v);
  const rows:unknown[][]=[['Futbol Island engagement',`${r.from} to ${r.to}`,'previous period',r.prevFrom?`${r.prevFrom} to ${r.prevTo}`:'none (no data recorded before this range)'],[],
   ['Metric','Part','Total','Previous period','Change','Unit','Status','How it is counted']];
  for(const m of r.metrics){
@@ -258,6 +259,6 @@ export function sponsorCsv(r:SponsorReport,extra:{label:string;value:string}[]=[
   for(const p of m.parts)if(m.parts.length>1)rows.push(['',p.label,p.pending?'not tracked yet':cell(p.value),'','',m.unit,'','']);
  }
  if(extra.length){rows.push([]);for(const e of extra)rows.push([e.label,'',e.value]);}
- rows.push([],[`Totals under ${r.min} sessions are shown as <5. Days are Pacific days.`]);
+ rows.push([],['Exact numbers (nothing withheld). Days are Pacific days.']);
  return rows.map(r=>r.map(q).join(',')).join('\n')+'\n';
 }

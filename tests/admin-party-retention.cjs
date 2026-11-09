@@ -19,6 +19,7 @@ const {createLoader}=require('./summit-harness.cjs');
 const read=f=>fs.readFileSync(f,'utf8');
 const strip=s=>s.replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[^:])\/\/.*$/gm,'$1');
 const MIGRATION='supabase/migrations/20261022_analytics_party_retention.sql',OK_ROW='OK, party retention installed';
+const EXACT='supabase/migrations/20261108_party_retention_exact.sql',EXACT_OK='OK, party retention exact';
 const SWITCH='NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION';
 delete process.env[SWITCH];
 let passed=0;const ok=async(name,fn)=>{try{const r=await fn();if(r!=='skip')passed++;}catch(e){console.error('FAIL',name);throw e;}};
@@ -143,25 +144,26 @@ function plan(){
  for(let i=0;i<3;i++)add(null,d(-4),false,{'mp:open_link':1});// no player key: counted as sessions, never as a player
  return s;
 }
-await ok('reference aggregation: cohorts, windows, suppression, split, k; no player id',()=>{
+await ok('reference aggregation: cohorts, windows, exact numbers, split, k; no player id',()=>{
  const r=PR.computeRetention(plan(),d(-30),d(0),TODAY);
  assert.equal(r.from,d(-14));assert.equal(r.to,TODAY);assert.equal(r.lastCompleteDay,d(-1));
  assert.deepEqual(r.groups.party,{players:16,d1Eligible:12,d1Rate:0.5833,d7Eligible:12,d7Rate:0.75},'today’s party players count, but their windows are not finished');
  assert.deepEqual(r.groups.solo,{players:20,d1Eligible:15,d1Rate:0.2,d7Eligible:15,d7Rate:0.4},'party later than the first day stays solo; yesterday’s cohort waits');
  assert.deepEqual(r.newPlayers,{sessions:35,invited:15,organic:20});
- assert.deepEqual(r.virality,{guestNew:11,created:null,k:null},'one party started is under 10');
- // Suppression: a range holding only the party cohort's first day.
+ assert.deepEqual(r.virality,{guestNew:11,created:1,k:11},'exact numbers (Nov 8 2026): one party started is 1, not "<10"');
+ // Exact small numbers (Nov 8 2026 owner ruling): a range holding only the party cohort's first day shows its real counts; the
+ // rates stay empty only because no return window has finished (nothing to divide by).
  const small=PR.computeRetention(plan().filter(x=>x.day===d(-10)).slice(0,9),d(-10),d(-10),TODAY);
- assert.deepEqual(small.groups.party,{players:null,d1Eligible:null,d1Rate:null,d7Eligible:null,d7Rate:null});
- assert.deepEqual(small.newPlayers,{sessions:null,invited:null,organic:null});
+ assert.deepEqual(small.groups.party,{players:9,d1Eligible:0,d1Rate:null,d7Eligible:0,d7Rate:null});
+ assert.deepEqual(small.newPlayers,{sessions:9,invited:9,organic:0});
  const keys=[];const walk=o=>{if(o&&typeof o==='object')for(const [k,v] of Object.entries(o)){keys.push(k);walk(v);}};walk(r);
  assert(!keys.some(k=>/player_?id|^pid$|session_?id|^id$/i.test(k)),'no id key: '+keys.join(','));
  assert(!/[0-9a-f]{32}/.test(JSON.stringify(r)),'no 32-hex id value');
- // shapeRetention keeps only known keys and re-applies the floor.
+ // shapeRetention keeps only known keys; counts are exact (no floor).
  const sh=PR.shapeRetention({from:'a',to:'b',last_complete_day:'c',groups:{party:{players:9,d1_eligible:9,d1_rate:0.5,player_id:'x'},solo:{players:30,d1_eligible:30,d1_rate:0.4,d7_eligible:3,d7_rate:1}},
   new_players:{sessions:40,invited:12,organic:28},virality:{guest_new:12,created:24},pid:'deadbeef'},[{week_start:'2026-10-05',data:{players:120,minutes:8,party_players:30}}]);
- assert.deepEqual(sh.groups.party,{players:null,d1Eligible:null,d1Rate:null,d7Eligible:null,d7Rate:null});
- assert.equal(sh.groups.solo.d7Rate,null);assert.equal(sh.virality.k,0.5);assert.equal(sh.weekly[0].minutes,null);
+ assert.deepEqual(sh.groups.party,{players:9,d1Eligible:9,d1Rate:0.5,d7Eligible:null,d7Rate:null});
+ assert.equal(sh.groups.solo.d7Rate,1);assert.equal(sh.virality.k,0.5);assert.equal(sh.weekly[0].minutes,8);
  assert(!JSON.stringify(sh).includes('deadbeef')&&!JSON.stringify(sh).includes('player_id'));
 });
 
@@ -183,6 +185,15 @@ await ok('sql (static): service_role only, aggregates only, suppression under 10
  assert.equal((ret.match(/>= 10/g)||[]).length,10,'every count and rate is floored at 10');
 });
 
+await ok('sql (static): the Nov 8 2026 exact-numbers function: no floor, service_role only, aggregates only',()=>{
+ const sql=read(EXACT),body=sql.replace(/--.*$/gm,'');
+ assert(/create or replace function public\.analytics_party_retention\(p_from date, p_to date\)/.test(body),'replaces the function');
+ assert(!/>= ?10/.test(body),'no "<10" floor');assert(/'min_group', 1/.test(body));
+ assert(/revoke all on function public\.analytics_party_retention\(date, date\) from public, anon, authenticated/.test(body)&&/grant execute on function public\.analytics_party_retention\(date, date\) to service_role/.test(body),'service_role only');
+ assert(!/'player_id'|'pid'|'session_id'/.test(body),'no id in the output');
+ assert(body.trim().endsWith("else 'OK, party retention exact' end as status;"),'self-check row last');
+});
+
 await ok('sql: the retention on a throwaway Postgres matches the TypeScript',async()=>{
  const bin=n=>{for(const dir of (process.env.PATH||'').split(':').concat(['/opt/homebrew/bin','/usr/local/bin','/usr/lib/postgresql/16/bin','/usr/lib/postgresql/15/bin','/usr/lib/postgresql/14/bin'])){const f=path.join(dir,n);if(fs.existsSync(f))return f;}return null;};
  const initdb=bin('initdb'),pgctl=bin('pg_ctl'),psqlBin=bin('psql');
@@ -200,6 +211,7 @@ await ok('sql: the retention on a throwaway Postgres matches the TypeScript',asy
   const results=files.map(f=>[f,runFile(path.join('supabase/migrations',f))]);
   assert.equal(results.find(([f])=>f===path.basename(MIGRATION))[1],OK_ROW,'self-check row');
   assert.equal(runFile(MIGRATION),OK_ROW,'safe to run twice');
+  assert.equal(runFile(EXACT),EXACT_OK,'the exact-numbers function goes back on top (and is safe to run twice)');
   const today=psql(`select (now() at time zone 'utc')::date`),D=n=>PR.addDays(today,n);
   const q=s=>`'${s.replace(/'/g,"''")}'`,svc={role:'service_role'};
   const ingest=p=>psql(`select analytics_ingest(${q(JSON.stringify(p))}::jsonb)`,svc);
@@ -256,7 +268,7 @@ await ok('route, loader states, card render, docs and policy',async()=>{
  try{
   const {view,card}=renderCard({...PR.computeRetention(plan(),'2026-10-01','2026-10-22',TODAY),weekly:PR.shapeWeekly([{week_start:'2026-10-12',data:{players:340,party_players:60,minutes:5200}},{week_start:'2026-10-05',data:{players:290,party_players:null,minutes:4100}}])});
   assert(card.includes('Loading'),'switched on: the card renders (and would fetch)');
-  assert(/Friends &amp; coming back/.test(view)&&/58%/.test(view)&&/75%/.test(view)&&/20%/.test(view)&&/&lt;10/.test(view)&&/data-status="ok"/.test(view)&&/data-retention-weekly/.test(view)&&/5,200/.test(view),'fixture render');
+  assert(/Friends &amp; coming back/.test(view)&&/58%/.test(view)&&/75%/.test(view)&&/20%/.test(view)&&!/&lt;10/.test(view)&&/data-status="ok"/.test(view)&&/data-retention-weekly/.test(view)&&/5,200/.test(view),'fixture render');
   const missing=renderCard({...PR.emptyRetention('needs-migration')}).view;
   assert(/Not available yet/.test(missing)&&/20261022_analytics_party_retention\.sql/.test(missing),'graceful not-migrated state');
   assert(!/[0-9a-f]{32}/.test(view),'no id in the card');

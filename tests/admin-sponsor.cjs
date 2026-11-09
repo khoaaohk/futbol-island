@@ -108,7 +108,7 @@ await ok('before the new build is live: old counters count, new ones say "not tr
  const csv=S.sponsorCsv(r);assert.match(csv,/Player cards found,,not tracked yet/);assert.match(csv,/^Metric,Part,Total,Previous period,Change,Unit,Status,How it is counted$/m);
 });
 
-await ok('after it is live: every part counts, items by name, small numbers withheld, change vs before',()=>{
+await ok('after it is live: every part counts, items by name, exact small numbers (Nov 8 2026), change vs before',()=>{
  const day='2026-10-21',prevDay='2026-10-20';
  const r=build({[day]:[...many(5,day,{'en:game_runner':2,'en:game_tennis':1,'en:card_ball':1,'en:cardtier_regular':1,'en:cardn_7':1,'en:bookbuy_messi':1,'en:bookopen_messi':2,'en:bookend_messi':1,'en:read_3m':1,'en:film_open':1,'en:film_end':1,'le:learn7_roles':1},{book:240_000}),
    ...many(2,day,{'en:game_pinball':3,'en:card_pack':1})]},
@@ -116,16 +116,16 @@ await ok('after it is live: every part counts, items by name, small numbers with
  assert.equal(r.engageLive,true);
  const g=M(r,'games');assert.equal(g.status,'ok');
  assert.equal(g.total,21,'5×(2+1) + 2×3: the total rests on the busiest id (5 sessions), so the 2-session pinball still adds up');
- const byGame=g.breakdowns.find(b=>b.id==='parts').items;assert.deepEqual(byGame.map(i=>[i.label,i.value]),[['Breakaway Run',10],['Futbol Tennis',5],['Futbol Pinball',null]],'an item under 5 sessions is withheld');
+ const byGame=g.breakdowns.find(b=>b.id==='parts').items;assert.deepEqual(byGame.map(i=>[i.label,i.value]),[['Breakaway Run',10],['Futbol Pinball',6],['Futbol Tennis',5]],'exact numbers: the 2-session pinball shows its real 6');
  assert.equal(g.prev,5);assert.equal(S.change(g.total,g.prev),3.2);
  const cards=M(r,'cards');assert.equal(cards.total,7);assert.equal(cards.breakdowns.find(b=>b.id==='top').items[0].label,'Lionel Messi');
  assert.equal(M(r,'books').total,5);assert.equal(M(r,'books').breakdowns[0].items[0].label,'Messi: Keep going, together');assert.equal(M(r,'books').stats[0].value,500,'100 coins each');
  assert.equal(M(r,'watched').total,15,'lessons + films + books');assert.equal(M(r,'watched').stats.find(s=>s.label==='Finished per start').value,15/15);
  const rd=M(r,'reading');assert.equal(rd.total,20,'5 × 4 min');assert.equal(rd.stats.find(s=>s.label==='Average minutes per open').value,2,'20 min / 10 opens');
  assert.deepEqual(M(r,'reading').breakdowns.find(b=>b.id==='length').items.map(i=>[i.label,i.value]),[['1–3 minutes',5]]);
- const small=build({[day]:many(3,day,{'en:game_runner':4})});assert.equal(M(small,'games').total,null,'3 sessions: <5');assert.equal(M(small,'cleats').total,0,'a real zero stays 0');
+ const small=build({[day]:many(3,day,{'en:game_runner':4})});assert.equal(M(small,'games').total,12,'3 sessions: the exact 12, never "<5"');assert.equal(M(small,'cleats').total,0,'a real zero stays 0');
  assert.equal(S.change(null,3),null);assert.equal(S.change(3,0),null,'no % change from nothing');
- const csv=S.sponsorCsv(r);assert.match(csv,/Games played,,21,5,320%,plays,ok,/);assert.match(csv,/,Futbol Pinball,<5,/);
+ const csv=S.sponsorCsv(r);assert.match(csv,/Games played,,21,5,320%,plays,ok,/);assert.match(csv,/,Futbol Pinball,6,/);assert(!/<5/.test(csv),'no "<5" in the CSV');
  assert(!/Lionel|Messi/.test(JSON.stringify(r.metrics.map(m=>m.parts))),'parts carry no names');
 });
 
@@ -203,7 +203,7 @@ await ok('sql: the split on a throwaway Postgres matches the TypeScript',async()
 
 // ---- Phase B: Minutes with friends and Emotes used.
 const partyDay=(day,n,extra={})=>many(n,day,{'mp:min':6,'mp:in':1,'mp:created':1,'em:pick':4,'em:e0':2,'em:e8':1,'em:e64':1,'em:reach_1':1,'em:to_npc':1,...extra},{ms:600000});
-await ok('social + emotes cards: not tracked before the build, then totals, stats, suppression, CSV rows',()=>{
+await ok('social + emotes cards: not tracked before the build, then totals, stats, exact small numbers, CSV rows',()=>{
  const before=build({'2026-10-18':many(6,'2026-10-18',{'sh:save_jersey':1})});
  for(const id of ['social','emotes']){assert.equal(M(before,id).status,'none',id);assert.equal(M(before,id).total,null);assert.match(M(before,id).gap,/2026-10-22/);}
  assert.match(S.sponsorCsv(before),/Minutes with friends,,not tracked yet/);assert.match(S.sponsorCsv(before),/Emotes used,,not tracked yet/);
@@ -221,7 +221,7 @@ await ok('social + emotes cards: not tracked before the build, then totals, stat
  assert.equal(em.breakdowns.find(b=>b.id==='top').items[0].label,'Wave');
  assert.deepEqual(em.breakdowns.find(b=>b.id==='parts').items.map(i=>i.key).sort(),['ride','wheel']);
  const small=S.buildSponsor({from:day,to:day,merged:C.mergeRollups([C.rollupDay(day,partyDay(day,3))]),rollups:[],prev:null});
- assert.equal(M(small,'social').total,null,'3 sessions: <5');assert.equal(M(small,'social').stats.find(s=>s.label==='Average party size').value,null);
+ assert.equal(M(small,'social').total,18,'3 sessions: the exact 18 minutes (Nov 8 2026), never "<5"');assert.equal(M(small,'social').stats.find(s=>s.label==='Average party size').value,null,'no size bands: nothing to average');
  const csv=S.sponsorCsv(r);assert.match(csv,/^Minutes with friends,,48,,,minutes,ok,/m);assert.match(csv,/^Emotes used,,32,,,emotes,ok,/m);assert.match(csv,/^,On foot \(the wheel\),24,,,emotes,,/m);
  const ov=read('app/admin/SponsorOverview.tsx');assert(/const NO_SPLIT=new Set<SponsorMetricId>\(\['social','emotes'\]\)/.test(ov)&&/data-split-na/.test(ov),'no fake device split for the new cards');
 });
@@ -313,6 +313,12 @@ await ok('audit: walking emotes count in "Emotes used" (the report-level checks 
  const r=S.buildSponsor({from:day,to:day,merged:C.mergeRollups(rollups),rollups,prev:null});
  assert.equal(M(r,'emotes').total,12,'6 sessions × 2 picks: the moving emote (50–59) is in the total, like em:pick');
  assert(M(r,'emotes').breakdowns.find(b=>b.id==='parts').items.some(i=>i.key==='walk'),'a "Walking or running" part');
+});
+
+await ok('exact numbers on the Overview (Nov 8 2026 owner ruling): no "<5" cell, stat or note',()=>{
+ const ov=read('app/admin/SponsorOverview.tsx');
+ assert(!/'<5'|<5 or not enough|&lt;5|under 5 sessions not shown|Every item is under 5/.test(ov),'Overview shows exact counts');
+ assert.equal(S.MIN_SESSIONS,1);assert.equal(S.MIN_PARTIES,1);
 });
 
 console.log(`admin-sponsor: ${passed} checks passed`);

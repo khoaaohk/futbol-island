@@ -3,7 +3,8 @@
  * "Friends & coming back" (Oct 22 2026, Phase C of docs/analytics-multiplayer-plan.md §6): do players who play with friends come
  * back more (D1 / D7, party vs solo), how many new players arrive through an invite vs on their own, new players per hosted
  * party, and the weekly reach kept for sponsors. Data: /api/admin/party-retention (lib/analytics/partyRetention.ts), aggregates
- * only; a number resting on fewer than 10 players shows as "<10".
+ * only, EXACT numbers (Nov 8 2026 owner ruling: no "<10" floor; supabase/migrations/20261108_party_retention_exact.sql). "—" = no
+ * number (a rate with no finished window, or a database still on the older floored function).
  *
  * HIDDEN unless the build sets NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1 (legal sign-off first), and then it fetches nothing until
  * it renders. Types only from the server module (no server code in the client bundle).
@@ -15,7 +16,7 @@ import styles from './admin.module.css';
 
 const MIGRATION='20261022_analytics_party_retention.sql';
 export const partyRetentionCardOn=()=>process.env.NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION==='1';
-const n=(v:number|null)=>v===null?'<10':fmtInt(v);
+const n=(v:number|null)=>v===null?'—':fmtInt(v);
 const rate=(v:number|null)=>v===null?'—':fmtPct(v);
 
 function Group({label,g}:{label:string;g:RetentionGroup}){
@@ -30,7 +31,7 @@ export function PartyRetentionView({data}:{data:PartyRetention|null}){
   <h2 id="retention-heading">Friends &amp; coming back</h2>
   <p>Do players who play with friends come back more often, and how many new players arrive through an invite? Rates over the last
    14 days only, for players whose first day here in the range has a finished return window. Totals and rates only: never who played
-   with whom. A number resting on fewer than 10 players shows as “&lt;10”.</p>
+   with whom. Exact numbers: nothing is withheld.</p>
  </div>;
  if(!data||data.status!=='ok'){
   const why=!data?'Loading…':data.status==='needs-migration'||data.status==='not-configured'

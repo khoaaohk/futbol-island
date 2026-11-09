@@ -4,6 +4,7 @@ import {createIslandArcadePlayer} from './islandArcadePlayer';
 import type {BeanDress} from '../town/beanLooks';
 export type {ArcadePoseOptions} from './arcadePlayerMotion';
 import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 /** Shared, original arcade art. One sun, bounded effects, no postprocessing chain. */
 export function createArcadeStage(canvas:HTMLCanvasElement){
@@ -25,6 +26,20 @@ export function createArcadeStage(canvas:HTMLCanvasElement){
  function ring(x:number,z:number,r:number,color:string){const m=new T.Mesh(new T.RingGeometry(r-.035,r,64),new T.MeshBasicMaterial({color:neonColor(color),side:T.DoubleSide}));m.rotation.x=-Math.PI/2;m.position.set(x,.03,z);scene.add(m);return m;}
  function goal(x:number,z:number,width:number){const root=new T.Group();root.position.set(x,0,z);scene.add(root);for(const side of[-1,1]){cylinder(side*width/2,1.05,0,.065,2.1,'#fff4da',root);bar(side*width/2,0,side*width/2,-1.1,.08,.045,'#fff4da',root);cylinder(side*width/2,.8,-1.1,.04,1.6,'#fff4da',root);}bar(-width/2,0,width/2,0,2.1,.065,'#fff4da',root);const points:number[]=[];for(let x=-width/2;x<=width/2+.01;x+=.25)points.push(x,.08,-1.1,x,1.6,-1.1,x,1.6,-1.1,x,2.1,0);for(let y=.1;y<=1.61;y+=.25)points.push(-width/2,y,-1.1,width/2,y,-1.1);const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(points,3));root.add(new T.LineSegments(geo,new T.LineBasicMaterial({color:'#95bce3',transparent:true,opacity:.6})));return root;}
  function football(radius=.22){const root=new T.Group();sphere(0,0,0,radius,'#fff8e3',root);for(let i=0;i<8;i++){const a=i*Math.PI*.763,y=1-2*(i+.5)/8,r=Math.sqrt(1-y*y);const patch=sphere(Math.cos(a)*r*radius*.96,y*radius*.96,Math.sin(a)*r*radius*.96,radius*.28,'#294c49',root);patch.scale.multiplyScalar(.95);}scene.add(root);return root;}
+ /* Heat (Nov 8 2026): the same ball as football() (white sphere + 8 dark patches, same sizes and colours) baked into ONE
+  * vertex-coloured mesh: 1 draw instead of 9. Used for Breakaway's pooled coin balls, shot balls and one-two pass ball
+  * (the runner's own ball keeps football(): its mission skins swap the patch materials). Geometry + material shared. */
+ const flatBalls=new Map<number,T.BufferGeometry>();let flatBallMat:T.MeshStandardMaterial|undefined;
+ function footballMerged(radius=.22){
+  const white=mat('#fff8e3'),dark=mat('#294c49');
+  if(white.emissiveIntensity>0||dark.emissiveIntensity>0)return football(radius);
+  let geo=flatBalls.get(radius);
+  if(!geo){const parts:T.BufferGeometry[]=[],add=(x:number,y:number,z:number,r:number,c:T.Color)=>{const g=sphereGeo.clone();g.scale(r,r,r);g.translate(x,y,z);const n=g.attributes.position.count,col=new Float32Array(n*3);for(let i=0;i<n;i++){col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}g.setAttribute('color',new T.BufferAttribute(col,3));parts.push(g);};
+   add(0,0,0,radius,white.color);
+   for(let i=0;i<8;i++){const a=i*Math.PI*.763,y=1-2*(i+.5)/8,r=Math.sqrt(1-y*y);add(Math.cos(a)*r*radius*.96,y*radius*.96,Math.sin(a)*r*radius*.96,radius*.28*.95,dark.color);}
+   geo=mergeGeometries(parts)!;for(const g of parts)g.dispose();flatBalls.set(radius,geo);}
+  flatBallMat??=new T.MeshStandardMaterial({vertexColors:true,roughness:.65});
+  const root=new T.Group(),mesh=new T.Mesh(geo,flatBallMat);mesh.castShadow=true;root.add(mesh);scene.add(root);return root;}
  const islandPlayers:ReturnType<typeof createIslandArcadePlayer>[]=[];
  function player(color:string,dress?:BeanDress){const rig=createIslandArcadePlayer(color,reduced,islandPlayers.length,dress);islandPlayers.push(rig);scene.add(rig.root);return rig;}
 
@@ -75,6 +90,6 @@ export function createArcadeStage(canvas:HTMLCanvasElement){
  const textures=new Set<T.Texture>();const addTexture=(v:unknown)=>{if((v as T.Texture|null)?.isTexture)textures.add(v as T.Texture);};
  // Maps on the material, and uniform holders such as BeanMaterial.beanUniforms ({beanFace:{value:atlas},…}).
  mats.forEach(m=>{for(const v of Object.values(m)){addTexture(v);if(v&&typeof v==='object'&&!(v as T.Texture).isTexture&&!Array.isArray(v))for(const u of Object.values(v as Record<string,unknown>))addTexture((u as {value?:unknown}|null)?.value);}m.dispose();});textures.forEach(t=>t.dispose());grain.dispose();sun.shadow.map?.dispose();renderer.dispose();}
- return{resetPlayers:()=>islandPlayers.forEach(p=>p.resetPose()),scenery,effectsActive:()=>alive,scene,camera,renderer,mobile,reduced,box,sphere,cylinder,bar,ring,goal,football,player,burst,effects,lighting,scrollScenery,fit,pick,render,dispose};
+ return{resetPlayers:()=>islandPlayers.forEach(p=>p.resetPose()),scenery,effectsActive:()=>alive,scene,camera,renderer,mobile,reduced,box,sphere,cylinder,bar,ring,goal,football,footballMerged,player,burst,effects,lighting,scrollScenery,fit,pick,render,dispose};
 }
 export type ArcadeStage=ReturnType<typeof createArcadeStage>;

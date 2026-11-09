@@ -23,8 +23,8 @@ const DEVICE_LABEL:Record<string,string>={phone:'Phone',tablet:'Tablet',desktop:
 const NO_SPLIT=new Set<SponsorMetricId>(['social','emotes']);
 const shortDay=(day:string)=>new Date(day+'T00:00:00Z').toLocaleDateString('en',{month:'short',day:'numeric',timeZone:'UTC'});
 const daysBetween=(a:string,b:string)=>Math.round((Date.parse(b+'T00:00:00Z')-Date.parse(a+'T00:00:00Z'))/86_400_000)+1;
-const fmtCell=(v:number|null)=>v===null?'<5':fmtInt(v);
-const fmtStat=(v:number|null,f:'int'|'pct'|'min'|'dec')=>v===null?'<5 or not enough data':f==='pct'?fmtPct(v):f==='dec'?v.toFixed(1):fmtInt(v);
+const fmtCell=(v:number|null)=>v===null?'—':fmtInt(v);
+const fmtStat=(v:number|null,f:'int'|'pct'|'min'|'dec')=>v===null?'Not enough data':f==='pct'?fmtPct(v):f==='dec'?v.toFixed(1):fmtInt(v);
 
 function barRows(items:{key:string;label:string;value:number|null;detail?:string}[]):{rows:BarRow[];hidden:number}{
  return {rows:items.filter(i=>i.value!==null&&i.value>0).map(i=>({key:i.key,label:i.label,value:i.value as number,detail:i.detail})),hidden:items.filter(i=>i.value===null).length};
@@ -91,7 +91,7 @@ export default function SponsorOverview({report,rangeText,playerCount,countryNam
     <div><dt>Players, players per day, returning, avg session</dt><dd>Players = anonymous player ids (a save code, else one device) seen in the range, from the last 14 days of raw rows.
      Players per day = the average of each day’s unique visitors (complete days only). Returning = sessions from a device that had played before, over the last 14 days.
      Avg session = foreground time per session (hidden tabs and 10+ idle minutes do not count).</dd></div>
-    <div><dt>Small numbers</dt><dd>A total that rests on fewer than {sp.min} different sessions is shown as “&lt;5”. Days are Pacific days (Los Angeles midnight to midnight). Nothing here is estimated or projected.</dd></div>
+    <div><dt>Exact numbers</dt><dd>Every total is the exact count (nothing withheld, Nov 8 2026). Days are Pacific days (Los Angeles midnight to midnight). Nothing here is estimated or projected.</dd></div>
    </dl>
   </details>
 
@@ -139,16 +139,15 @@ function MetricPanel({metric,onClose,prevLabel,split,from,to,today,countryName}:
 
     {m.status!=='none'&&m.daily.length>1&&<section className={s.block}><h3>By day</h3>
      {m.daily.some(d=>d.value)?<DayColumns rows={m.daily.map(d=>({key:d.day,label:shortDay(d.day),value:d.value}))} unit={m.unit} ariaLabel={`${m.label} by day`}/>
-      :<p className={styles.note}>{m.daily.some(d=>d.value===null)?'Every day is under 5 sessions on its own, so the days are not shown one by one (the range total above is).':'None on any day in this range.'}</p>}</section>}
+      :<p className={styles.note}>None on any day in this range.</p>}</section>}
 
     {m.stats.length>0&&<section className={s.block}><h3>Averages and rates</h3>
      <dl className={s.stats}>{m.stats.map(st=><div key={st.label}><dt>{st.label}</dt><dd>{st.pending?'Not tracked yet':fmtStat(st.value,st.format)}</dd>{st.hint&&<small>{st.hint}</small>}</div>)}</dl></section>}
 
-    {m.breakdowns.map(b=>{const {rows,hidden}=barRows(b.items);
+    {m.breakdowns.map(b=>{const {rows}=barRows(b.items);
      return <section key={b.id} className={s.block}><h3>{b.title}</h3>
       {b.pending?<p className={styles.note}>Not tracked yet: starts counting with the new build.</p>
-       :rows.length?<BarList rows={rows} unit={b.unit}/>:<p className={styles.note}>{hidden?'Every item is under 5 sessions so far.':'None in this range.'}</p>}
-      {!b.pending&&rows.length>0&&hidden>0&&<p className={styles.note}>{hidden} more under 5 sessions not shown.</p>}
+       :rows.length?<BarList rows={rows} unit={b.unit}/>:<p className={styles.note}>None in this range.</p>}
       {b.note&&<p className={styles.note}>{b.note}</p>}
      </section>;})}
 
@@ -167,7 +166,7 @@ function MetricPanel({metric,onClose,prevLabel,split,from,to,today,countryName}:
     </section>
 
     <section className={s.block}><h3>How it is counted</h3><p className={s.howText}>{m.how}</p>
-     <p className={styles.note}>Totals resting on fewer than 5 different sessions show as “&lt;5”. Nothing here is estimated.</p></section>
+     <p className={styles.note}>Exact numbers: nothing is withheld or estimated.</p></section>
    </div>}
   </aside>
  </div>;

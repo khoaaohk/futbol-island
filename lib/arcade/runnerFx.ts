@@ -1,4 +1,5 @@
 import * as T from 'three';
+import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type {ArcadeStage} from './arcadeStage';
 import {RUNNER_DEFENDER_REACH,RUNNER_SKILLS,RUNNER_SKILL_WINDOW,runnerContactTime,runnerMultiplier,type RunnerGame,type RunnerObject} from './runnerGame';
 import {skillBall,skillFrame,type SkillMove} from '../graphics/skillMoves';
@@ -140,7 +141,7 @@ export function createRunnerFx(stage:ArcadeStage){
  const keeperPose:ArcadePoseOptions={keeper:1,anticipate:.6,vx:0,vz:0,dive:undefined};const keeperDive={progress:0,dir:1 as -1|1};
  // Teammates for the one-two: two pooled rigs in the runner's own colours, on the wing.
  const mates=[0,1].map(i=>{const rig=stage.player('#efbd58',sideGameDress('runner-mate-'+i,'home',7+i));rig.root.name='runner-mate-'+i;rig.root.visible=false;rig.root.scale.setScalar(1.08);return{rig,pose:{vx:0,vz:0,anticipate:.4} as ArcadePoseOptions};});
- const passBall=stage.football(.22);passBall.name='runner-pass-ball';passBall.visible=false;
+ const passBall=stage.footballMerged(.22);passBall.name='runner-pass-ball';passBall.visible=false;
  const callout=new T.Mesh(new T.RingGeometry(.5,.62,24),new T.MeshBasicMaterial({color:'#efbd58',transparent:true,opacity:.8,depthWrite:false,side:T.DoubleSide,toneMapped:false}));callout.rotation.x=-Math.PI/2;callout.position.y=.04;callout.visible=false;scene.add(callout);
  // Puddles: one instanced draw for up to four flat patches.
  const MUD=4,mud=new T.InstancedMesh(new T.CircleGeometry(1,20),new T.MeshBasicMaterial({color:'#6b4a2f',transparent:true,opacity:.82,depthWrite:false}),MUD);
@@ -150,6 +151,12 @@ export function createRunnerFx(stage:ArcadeStage){
  const fork=new T.Group();fork.name='runner-fork';fork.visible=false;scene.add(fork);
  for(const x of[-3.6,-1.2,3.6])stage.box(x,1.3,0,.14,2.6,.14,x===-1.2?'#ffe084':'#fff3d9',fork).castShadow=false;
  stage.box(-2.4,2.6,-.05,2.5,.12,.12,'#7ff0e2',fork).castShadow=false;stage.box(1.2,2.6,-.05,4.9,.12,.12,'#ff7aa8',fork).castShadow=false;
+ // Heat (Nov 8 2026): the five boxes bake into one vertex-coloured mesh (1 draw instead of 5; same shapes and colours).
+ {const parts=fork.children.filter((c):c is T.Mesh=>c instanceof T.Mesh),plain=parts.every(m=>!((m.material as T.MeshStandardMaterial).emissiveIntensity>0));
+  if(plain&&parts.length){const geos=parts.map(m=>{m.updateMatrix();const g=m.geometry.clone().applyMatrix4(m.matrix),c=(m.material as T.MeshStandardMaterial).color,n=g.attributes.position.count,col=new Float32Array(n*3);
+    for(let i=0;i<n;i++){col[i*3]=c.r;col[i*3+1]=c.g;col[i*3+2]=c.b;}g.setAttribute('color',new T.BufferAttribute(col,3));return g;});
+   const merged=mergeGeometries(geos);for(const g of geos)g.dispose();
+   if(merged){fork.clear();const arch=new T.Mesh(merged,new T.MeshStandardMaterial({vertexColors:true,roughness:.65}));arch.name='runner-fork-arches';arch.castShadow=false;arch.receiveShadow=true;fork.add(arch);}}}
  // Back line (boss): gold chevrons painted in the lane the line leaves open. The boss is the run's biggest test (a
  // kid-like bot lost ~80% of its chances there) and its lesson is "attack the side they leave open", so show the side.
  // One plane + one canvas texture drawn once; hidden (no draw call) unless a back line is ahead. Fades while it shifts.

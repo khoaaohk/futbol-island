@@ -23,7 +23,7 @@ export function createPhraseHud(d:Deps){
   const now=d.now??(()=>performance.now()),rnd=d.random??Math.random;
   const pool=createBubblePool(),limiter=createPhraseLimiter(),v=new T.Vector3();
   const px=new Int32Array(BUBBLE.pool).fill(-1e6),py=new Int32Array(BUBBLE.pool).fill(-1e6),off=new Uint8Array(BUBBLE.pool);
-  let sim:PhraseSim|null=null,format='',mySlot='',joined=false,trayOpen=false,canShown:boolean|null=null,btnShown:boolean|null=null,calmShown:boolean|null=null;
+  let sim:PhraseSim|null=null,format='',mySlot='',joined=false,trayOpen=false,canShown:boolean|null=null,btnShown:boolean|null=null,enabledShown:boolean|null=null,calmShown:boolean|null=null;
   let replyKey='',replyT=-1,lastOwner:string|null=null,mineCool=0,assistT=0,teleT=0,teleShown=false,serial=0;
   const bus:PhraseBus={
     out:{id:0,serial:0,at:-1e12},
@@ -57,7 +57,9 @@ export function createPhraseHud(d:Deps){
     frame(dt:number,on:boolean,s:PhraseSim|null,f:string,slot:string,venue:Pick<LiveVenue,'x'|'z'|'width'|'length'|'yaw'>|null,ground:number,camera:T.Camera,onBall:boolean,calm:boolean){
       const enabled=phrasesEnabled(),was=joined;joined=on&&!!s&&!!slot;sim=s;format=f;mySlot=slot;
       if(!joined){if(was){pool.clear();for(let i=0;i<BUBBLE.pool;i++)hideBubble(i);setTray(false);replyT=-1;lastOwner=null;if(assistT>0){assistT=0;d.set(d.el('[data-join-assist]'),'data-show',null);}if(teleShown){teleShown=false;d.set(d.el('[data-join-telegraph]'),'data-show',null);}}return;}
-      const show=enabled;if(show!==btnShown){btnShown=show;const t=tray();if(t&&t.hidden!==!show)t.hidden=!show;if(!show){setTray(false);pool.clear();}}
+      // Nov 8 2026 (owner: "speech button shouldn't be showing at all"): the phrase button and tray stay hidden in every state; friends' bubbles and the AI answers still show.
+      const show=false;if(show!==btnShown){btnShown=show;const t=tray();if(t&&t.hidden!==!show)t.hidden=!show;if(!show)setTray(false);}
+      if(enabled!==enabledShown){enabledShown=enabled;if(!enabled)pool.clear();}
       if(calm!==calmShown){calmShown=calm;d.set(d.el('[data-join-bubbles]'),'data-calm',calm?'':null);}
       if(trayOpen){const can=limiter.can(now());if(can!==canShown){canShown=can;for(const sel of CHIP_SEL)d.set(d.el(sel),'aria-disabled',can?null:'true');}}
       // AI answers: "Nice!" after a cheer, "Mine!" now and then as an AI teammate near me takes the ball

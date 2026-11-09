@@ -622,6 +622,10 @@ Run with the project's quiet test script.
    `supabase/migrations/20261022_analytics_party_retention.sql` and run it (or `supabase db push`). The last result must be one
    row: `status = OK, party retention installed`. Any `NOT INSTALLED: …` row names the missing piece. Running the file twice is
    harmless.
+   **Then** (Nov 8 2026 owner ruling: exact numbers) run `supabase/migrations/20261108_party_retention_exact.sql` the same way:
+   it replaces `analytics_party_retention` with the same computation without the "<10" floor (last row:
+   `status = OK, party retention exact`). Until it runs, the card shows "—" where the old function withholds a small number.
+   The weekly sponsor snapshot (`analytics_sponsor_weekly`) still stores rounded reach.
 3. **Check the lock-down.** In the SQL editor, `select has_function_privilege('anon','public.analytics_party_retention(date,date)','execute');`
    and `select relrowsecurity from pg_class where oid='public.analytics_sponsor_weekly'::regclass;` must return `false` and
    `true`.

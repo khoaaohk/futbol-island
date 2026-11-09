@@ -162,7 +162,7 @@ await ok('sql: day sessions, players and one player on a throwaway Postgres',asy
   psql('alter default privileges in schema public grant all on tables to anon, authenticated, service_role; alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;');
   const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
   // Nov 8 2026: arcade leaderboard allow-list migrations (*_tier_boards.sql / *_league_boards.sql) are not analytics; ignore them here.
-  assert.equal(files.filter(f=>f>path.basename(MIGRATION)&&!/_(tier|league)_boards\.sql$/.test(f)).join(),'20261020_admin_save_returning_range.sql,20261021_analytics_sponsor_split.sql,20261022_analytics_party_retention.sql,20261106_analytics_fishing_sessions.sql','only the save-metrics range, the sponsor split, the party retention and the fishing sessions (separate read functions) run after it');
+  assert.equal(files.filter(f=>f>path.basename(MIGRATION)&&!/_(tier|league)_boards\.sql$/.test(f)).join(),'20261020_admin_save_returning_range.sql,20261021_analytics_sponsor_split.sql,20261022_analytics_party_retention.sql,20261106_analytics_fishing_sessions.sql,20261108_party_retention_exact.sql','only the save-metrics range, the sponsor split, the party retention (and its Nov 8 exact-numbers replacement) and the fishing sessions (separate read functions) run after it');
   const results=files.map(f=>[f,runFile(path.join('supabase/migrations',f))]);
   assert.equal(results.find(([f])=>f===path.basename(MIGRATION))[1],OK_ROW,'self-check row');
   assert.equal(runFile(MIGRATION),OK_ROW,'safe to run twice');

@@ -8,12 +8,14 @@
  * OFF BY DEFAULT behind NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION=1 (legal sign-off first: the report links party play to the
  * anonymous player id on the server). Off: the loader answers status 'off' without calling Supabase.
  *
- * Aggregates only: every count under MIN_RETENTION_GROUP is null, and so is a rate resting on fewer eligible players. No player
- * id, session id or per-player row is ever returned.
+ * Aggregates only, EXACT numbers (Nov 8 2026 owner ruling; supabase/migrations/20261108_party_retention_exact.sql): every count is
+ * the real number (0 included), and a rate is null only when no eligible player's window has finished (nothing to divide by).
+ * No player id, session id or per-player row is ever returned.
  */
 import {rpc} from './liveAdmin';
 
-export const MIN_RETENTION_GROUP=10;
+/** A rate needs at least this many eligible players (1: exact numbers, no small-group floor since Nov 8 2026). */
+export const MIN_RETENTION_GROUP=1;
 export const RETENTION_WINDOW_DAYS=14;
 export const RETENTION_MIGRATION='supabase/migrations/20261022_analytics_party_retention.sql',RETENTION_OK_ROW='OK, party retention installed';
 export const RETENTION_CACHE_MS=60_000;
@@ -38,13 +40,13 @@ export const emptyRetention=(status:RetentionStatus,from='',to=''):PartyRetentio
 const num=(v:unknown):number|null=>typeof v==='number'&&Number.isFinite(v)?v:typeof v==='string'&&v.trim()!==''&&Number.isFinite(Number(v))?Number(v):null;
 const obj=(v:unknown):Record<string,unknown>=>v&&typeof v==='object'&&!Array.isArray(v)?v as Record<string,unknown>:{};
 const str=(v:unknown)=>typeof v==='string'?v:'';
-/** A count is shown only at MIN_RETENTION_GROUP or more (defence in depth: the SQL already nulls smaller ones). */
-const sup=(v:unknown)=>{const n=num(v);return n!==null&&n>=MIN_RETENTION_GROUP?n:null;};
+/** A count: exact (Nov 8 2026: no "<10" floor); null only when the answer has no number for it. */
+const sup=(v:unknown)=>num(v);
 const kOf=(g:number|null,c:number|null)=>g!==null&&c!==null&&c>0?Math.round(g/c*100)/100:null;
 
 function shapeGroup(raw:unknown):RetentionGroup{
  const g=obj(raw),d1=sup(g.d1_eligible),d7=sup(g.d7_eligible);
- return {players:sup(g.players),d1Eligible:d1,d1Rate:d1===null?null:num(g.d1_rate),d7Eligible:d7,d7Rate:d7===null?null:num(g.d7_rate)};
+ return {players:sup(g.players),d1Eligible:d1,d1Rate:d1===null||d1<MIN_RETENTION_GROUP?null:num(g.d1_rate),d7Eligible:d7,d7Rate:d7===null||d7<MIN_RETENTION_GROUP?null:num(g.d7_rate)};
 }
 /** The SQL answer (jsonb) → PartyRetention. Unknown keys are dropped, so nothing else can reach the card. */
 export function shapeRetention(raw:unknown,weeklyRaw:unknown=[]):PartyRetention{
@@ -85,11 +87,11 @@ export function computeRetention(sessions:RetentionSession[],from:string,to:stri
   if(addDays(c,7)<=l){g.d7n++;if(d7)g.d7b++;}
  }
  const grp=(g:typeof acc.party):RetentionGroup=>{const ok=(n:number)=>n>=MIN_RETENTION_GROUP;
-  return {players:ok(g.players)?g.players:null,d1Eligible:ok(g.d1n)?g.d1n:null,d1Rate:ok(g.d1n)?r4(g.d1b/g.d1n):null,
-   d7Eligible:ok(g.d7n)?g.d7n:null,d7Rate:ok(g.d7n)?r4(g.d7b/g.d7n):null};};
+  return {players:g.players,d1Eligible:g.d1n,d1Rate:ok(g.d1n)?r4(g.d1b/g.d1n):null,
+   d7Eligible:g.d7n,d7Rate:ok(g.d7n)?r4(g.d7b/g.d7n):null};};
  const fresh=s.filter(x=>x.returning===false),invited=fresh.filter(x=>has(x.counts,'mp:open_link')||has(x.counts,'mp:guest_new'));
  const total=(k:string)=>s.reduce((a,x)=>a+(x.counts[k]||0),0);
- const c=(n:number)=>n>=MIN_RETENTION_GROUP?n:null;
+ const c=(n:number):number|null=>n;// exact (Nov 8 2026)
  const guestNew=c(total('mp:guest_new')),created=c(total('mp:created'));
  return {status:'ok',from:f,to:t,lastCompleteDay:l,windowDays:RETENTION_WINDOW_DAYS,minGroup:MIN_RETENTION_GROUP,
   groups:{party:grp(acc.party),solo:grp(acc.solo)},

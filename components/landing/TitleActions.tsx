@@ -72,10 +72,9 @@ export default function TitleActions(){
  },[sheet?.mode,!!sheet]);
  // After the sheet leaves into a new state, the landing card (Play / break) pops from where the sheet was.
  useLayoutEffect(()=>{const from=pendingMorph.current;if(!from||!landing.current)return;pendingMorph.current=null;
-  // A gold pill landing (ready / restored): the sheet folds into the pill itself and its label fades in as it lands, so no text is
-  // ever stretched; other cards morph whole.
+  // A gold pill landing (ready / restored): the sheet folds into the pill itself; other cards morph whole. The pill already says
+  // "Loading…" (WaterPill autoStart) and its label no longer fades in late (Nov 8 2026: it read as a second Play button).
   const pill=state==='ready'||state==='restored'?landing.current.querySelector<HTMLElement>('[data-landing-play]'):null;
-  if(pill&&!reduced())for(const c of pill.querySelectorAll(':scope>span,:scope>small'))c.animate([{opacity:0},{opacity:1}],{delay:300,duration:220,fill:'backwards'});
   void morph(pill??landing.current,from,{duration:520});},[state]);
  /** Close the sheet into `next` (shared element: the sheet shrinks into the card that replaces it). */
  const leave=useCallback(async(next:TitleState|null)=>{
