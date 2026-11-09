@@ -9,6 +9,9 @@ import CoffeeGate from "./CoffeeGate";
 export const metadata = {
   title: "Support Futbol Island",
   description: "The app is free — tips go to local youth-soccer non-profits.",
+  // SEO (Nov 8 2026): the donation picker is a grown-up tool, not a page to find in search: own canonical, noindex.
+  alternates: { canonical: "/coffee" },
+  robots: { index: false, follow: true },
 };
 
 const TIERS = [

@@ -55,7 +55,7 @@ export const LEARN_GROUPS:readonly LearnGroup[]=[
  {id:'together',title:'Play together',blurb:'Private parties for friends who know each other: same island, own kits, football calls instead of chat.'},
  {id:'collect',title:'Collect and read',blurb:'Cards, books and costumes that carry real football history, earned by playing and learning.'},
  {id:'yours',title:'Make it yours',blurb:'Design a kit, pick a number and travel the island your way.'},
- {id:'safe',title:'Safe and simple',blurb:'Free, no ads, no chat, no accounts, and a place for grown-ups to see progress and practise.'},
+ {id:'safe',title:'Safe and simple',blurb:'Free, no ads, no open chat, no accounts, and a place for grown-ups to see progress and practise.'},
 ];
 
 export const LEARN_HERO={
@@ -63,7 +63,7 @@ export const LEARN_HERO={
  subhead:'Futbol Island is a free football learning game for kids aged 7 to 12. They explore an island and learn positions, team shape and the Laws of the Game in 7v7, 9v9, 11v11 and futsal, one short lesson at a time.',
  trust:[
   'Free, with no ads, and coins are earned by playing, never bought',
-  'No accounts and no chat: a save code with no personal details',
+  'No accounts and no open chat: a save code with no personal details',
   'Built in San Diego with White Sports Ventures and local non-profits',
  ],
  cta:'Start Playing',
@@ -73,7 +73,7 @@ export const LEARN_HERO={
 export const LEARN_TOGETHER_TRUST:readonly string[]=[
  'A grown-up check comes before starting or joining every party.',
  'Grown-ups can switch Play with friends off in Settings, behind the same check.',
- 'No chat of any kind: friends talk with preset football calls and emotes.',
+ 'No free-text or voice chat: friends talk with preset football calls and emotes.',
  'First name only, letters only, shown only to the party and never stored.',
  'Private parties by code, never with strangers: no lobbies and no friend lists.',
 ];
@@ -378,7 +378,8 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
 export type LearnHighlightId='top'|'learn'|'explore'|'fuel'|'together'|'safe';
 export type LearnHighlight={id:LearnHighlightId;title:string;line:string;shot:string;chips:readonly string[];features:readonly string[]};
 export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
- {id:'top',title:LEARN_HERO.headline,line:'A free football game made for kids.',shot:'town_overview',chips:[],features:[]},
+ // Nov 8 2026 (SEO): the home h1 and first line say what the page is for searchers ("learn football (soccer) for kids").
+ {id:'top',title:'Learn football for kids, the fun and safe way.',line:'Lessons and quizzes on positions, tactics and soccer rules. Free, no ads, no accounts.',shot:'town_overview',chips:[],features:[]},
  {id:'learn',title:'Learn the game',line:'Short lessons and quizzes show real football ideas on a moving pitch.',shot:'lesson_field',
   chips:['Paths, lessons and quizzes','Story films and books','A football museum'],features:['learning-paths','lesson-quiz','path-stories','pop-up-books','history-museum']},
  {id:'explore',title:'Explore the island',line:'Every corner hides a football idea to find.',shot:'explore',
@@ -387,10 +388,10 @@ export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
  // for rides, flying and sprinting; walking always works), and every item shows one sourced football-nutrition line.
  {id:'fuel',title:'Fuel up like a footballer.',line:'Snacks from the Konbini (convenience store) refill your energy and teach food tips.',shot:'fuel_konbini',
   chips:['Eat to refill your fuel','Water comes first','Tips from real sources'],features:['konbini']},
- {id:'together',title:'Play with friends',line:'Private parties by code. Same island, no chat, just football calls.',shot:'mp_sidebyside',
-  chips:['Private code only','Football calls, no chat','Own kits and names'],features:['party-start','friends-kits','friends-emotes','friends-safety']},
- {id:'safe',title:'Safe for kids',line:'Free, with no ads, no chat and no accounts.',shot:'save_code',
-  chips:['Free, no ads','No chat','A save code, not an account'],features:['free-no-ads','save-code','grown-ups']},
+ {id:'together',title:'Play with friends',line:'Private parties by code. Same island, no open chat, just football calls.',shot:'mp_sidebyside',
+  chips:['Private code only','Football calls, no open chat','Own kits and names'],features:['party-start','friends-kits','friends-emotes','friends-safety']},
+ {id:'safe',title:'Safe for kids',line:'Free, with no ads, no open chat and no accounts.',shot:'save_code',
+  chips:['Free, no ads','No open chat','A save code, not an account'],features:['free-no-ads','save-code','grown-ups']},
 ];
 /**
  * "See it in action" (Nov 3 2026, owner: an apple.com/apple-vision-pro style horizontal clip carousel right after the hero).
@@ -455,6 +456,6 @@ export const LEARN_FAQ:readonly LearnFaq[]=[
  {group:'parents',q:'Who made it?',a:'Futbol Island is built in San Diego in partnership with White Sports Ventures, founded by former U.S. Men\'s National Team player Jeremiah White III. It also works with the local non-profits FC YAP, Street Soccer San Diego and Ronin Futsal.'},
  {group:'parents',q:'What data does it collect?',a:'Most progress lives only in the browser on the device. With a save code, the allowlisted progress is saved against a scrambled version of the code, never a name or email. The game also counts anonymous usage totals to run and improve it and to show sponsors combined totals; nothing is sold, and nothing about an individual child is shared. The privacy policy explains what is kept and for how long.'},
  {group:'together',q:'How do friends play together?',a:'A grown-up taps Play with friends, passes the grown-up check and starts a party. Friends join with the 6-character code or a share link, type their first name and arrive on the same island. Up to 20 players can be in one party.'},
- {group:'together',q:'Can strangers join, or can kids message each other?',a:'Parties are private and join by code only: there are no public lobbies, matchmaking or friend lists. A code takes new friends for 8 hours, and the host can make a new code or remove someone at any time. There is no chat; friends use preset football calls and emotes.'},
+ {group:'together',q:'Can strangers join, or can kids message each other?',a:'Parties are private and join by code only: there are no public lobbies, matchmaking or friend lists. A code takes new friends for 8 hours, and the host can make a new code or remove someone at any time. There is no free-text chat; friends use preset football calls and emotes.'},
  {group:'together',q:'Can I turn Play with friends off?',a:'Yes. In Settings, behind the grown-up check, Play with friends can be set to Allowed or Off. A first name typed for a party is shown only to that party and is never stored.'},
 ];

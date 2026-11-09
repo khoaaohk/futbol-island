@@ -63,6 +63,8 @@ const cacheStatic = [
   // same name reaches everyone within a week).
   { source: '/learn/:file([a-z0-9_]+\\.webp)', headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }] },
   { source: '/learn/video/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }] },
+  // robots.txt, llms.txt, llms-full.txt (Nov 8 2026, AI search): an hour fresh, a day at the CDN, a week stale while it refreshes.
+  { source: '/:file(robots\\.txt|llms\\.txt|llms-full\\.txt)', headers: [{ key: 'Cache-Control', value: 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' }] },
   { source: '/splash/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
   // Admin analytics (Oct 7 2026): never indexed, never cached.
   { source: '/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Cache-Control', value: 'no-store' }] },
@@ -88,5 +90,7 @@ const GAME_QUERY_TO_PLAY = [
 // Nov 2 2026: /learn became the feature tour and the lesson index moved to /learn/lessons. Old lesson URLs /learn/<id> keep
 // working with a permanent redirect (search results and shared links); /learn/lessons itself is excluded from the pattern.
 // Nov 3 2026: the feature tour moved to the home page, so /learn itself is a permanent redirect to `/`.
-const redirects = [{ source: '/learn', destination: '/', permanent: true }, { source: '/learn/:slug((?!lessons$)[A-Za-z0-9_-]+)', destination: '/learn/lessons/:slug', permanent: true }, ...GAME_QUERY_TO_PLAY];
+// Nov 8 2026 (SEO): the topic hubs live at /learn/<slug> too, so the old-lesson redirect leaves them alone. Keep in step with
+// lib/site/hubs.ts HUBS (tests/seo-pages.cjs checks it): the second lookahead lists their slugs.
+const redirects = [{ source: '/learn', destination: '/', permanent: true }, { source: '/learn/:slug((?!lessons$)(?!(?:football-rules-for-kids|soccer-quiz-for-kids|passing-and-support|futsal-for-kids|7v7-9v9-11v11)$)[A-Za-z0-9_-]+)', destination: '/learn/lessons/:slug', permanent: true }, ...GAME_QUERY_TO_PLAY];
 export default phase => ({ reactStrictMode: true, distDir: process.env.NEXT_DIST_DIR || (phase === 'phase-development-server' ? '.next-dev' : '.next'), async headers() { return [securityHeaders(phase === 'phase-development-server'), ...cacheStatic]; }, async rewrites() { return rewrites; }, async redirects() { return redirects; } });

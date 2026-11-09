@@ -164,7 +164,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
 
 // 6. Accessibility basics.
 {const all=tsx.map(read).join('\n');
- assert.equal((all.match(/<h1[\s>]/g)||[]).length,1,'one h1');assert.match(landing,/<h1 className=\{styles\.title\} aria-label="Futbol Island">/,'the split title keeps its name');
+ assert.equal((all.match(/<h1[\s>]/g)||[]).length,1,'one h1');assert.match(landing,/<h1 className=\{styles\.title\} aria-label="Play Futbol Island">/,'the split title keeps its name (SEO Nov 8: "Play Futbol Island")');
  for(const f of tsx){const s=read(f);for(const m of s.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/g)){const [,attrs,body]=m;
   assert(/aria-label=/.test(attrs)||body.replace(/<[^>]+>/g,'').replace(/\{[^}]*\}/g,'x').trim().length>0,`${f}: button labelled: ${m[0].slice(0,80)}`);}}
  assert.match(read(`${DIR}/PlayButton.tsx`),/<NavigationButton label=\{label\}/,'Play has its label');

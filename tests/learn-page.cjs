@@ -55,9 +55,9 @@ for(const f of ['app/(site)/page.tsx','app/play/page.tsx','app/(site)/learn/less
 assert(!has('app/(site)/learn/[slug]'),'the old /learn/[slug] route is gone (moved to lessons/[slug])');
 const page=read('app/(site)/page.tsx');
 assert.match(page,/export const dynamic='force-static';/,'the home page is static');
-assert.match(page,/pageMeta\(TITLE,DESC,'\/',\{whole:true,type:'website'\}\)/,'the home page has its own metadata and canonical /');
+assert.match(page,/pageMeta\(HOME_TITLE,HOME_DESC,'\/',\{whole:true,type:'website'\}\)/,'the home page has its own metadata and canonical /');
 assert.match(page,/const PLAY_URL=PLAY_PATH;/,'Play goes to the game');assert.equal(L('lib/site/seo.ts').PLAY_PATH,'/play','the game is at /play');
-assert.match(read('app/(site)/learn/lessons/page.tsx'),/pageMeta\('Football lessons',META,'\/learn\/lessons'\)/,'the lesson index canonical is /learn/lessons');
+assert.match(read('app/(site)/learn/lessons/page.tsx'),/pageMeta\('Football Lessons and Quizzes for Kids',META,'\/learn\/lessons'\)/,'the lesson index canonical is /learn/lessons');
 const lessons=L('lib/site/lessons.ts');
 assert.equal(lessons.lessonPath('x'),'/learn/lessons/x','lesson pages live under /learn/lessons');
 const nc=read('next.config.mjs');
@@ -72,8 +72,8 @@ assert.match(red[1],/\{ source: '\/learn', destination: '\/', permanent: true \}
 const paths=L('lib/site/paths.ts').sitePaths();
 assert(!paths.some(p=>p.path==='/learn'),'/learn (a redirect) is not in the sitemap');assert.equal(paths.find(p=>p.path==='/')?.priority,1,'the tour (/) is the main entry');
 assert(paths.some(p=>p.path==='/learn/lessons'),'/learn/lessons in the sitemap');
-assert(!paths.some(p=>/^\/learn\/(?!lessons)[^/]+$/.test(p.path)),'no old /learn/<id> path in the sitemap');
-const llms=read('public/llms.txt');
+{const HUBP=L('lib/site/hubs.ts').HUB_PATHS;assert(!paths.some(p=>/^\/learn\/(?!lessons)[^/]+$/.test(p.path)&&!HUBP.includes(p.path)),'no old /learn/<id> path in the sitemap (the Nov 8 topic hubs aside)');}
+const llms=read('lib/site/llms.ts');/* Nov 8 2026: /llms.txt is built from lib/site/llms.ts (URLs written out in full there) */
 assert.match(llms,/\(https:\/\/futbolisland\.app\/\): the feature tour/,'llms.txt describes / as the feature tour');assert.match(llms,/\(https:\/\/futbolisland\.app\/play\): the title screen/,'llms.txt: /play is the game');assert.doesNotMatch(llms,/futbolisland\.app\/learn\)/,'llms.txt: no /learn link');
 assert.match(llms,/\(https:\/\/futbolisland\.app\/learn\/lessons\): every lesson/,'llms.txt points the lesson index at /learn/lessons');
 const full=read('app/llms-full.txt/route.ts');

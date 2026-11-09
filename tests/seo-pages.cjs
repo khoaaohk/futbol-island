@@ -35,7 +35,7 @@ const L=rel=>load(path.join(root,rel));
 
 // ---- 1. sources ---------------------------------------------------------------------------------------------------------------
 const walk=d=>fs.readdirSync(path.join(root,d),{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(`${d}/${e.name}`):[`${d}/${e.name}`]);
-const SITE_FILES=[...walk('app/(site)'),...walk('lib/site'),'components/seo/JsonLd.tsx','components/site/Breadcrumbs.tsx','app/robots.ts','app/sitemap.ts','app/llms-full.txt/route.ts'].filter(f=>/\.tsx?$/.test(f));
+const SITE_FILES=[...walk('app/(site)'),...walk('lib/site'),'components/seo/JsonLd.tsx','components/site/Breadcrumbs.tsx','components/site/LessonHub.tsx','app/robots.ts','app/sitemap.ts','app/manifest.ts','app/llms.txt/route.ts','app/llms-full.txt/route.ts'].filter(f=>/\.tsx?$/.test(f));
 for(const f of SITE_FILES){const s=read(f);
  assert(!/^\s*['"]use client['"]/.test(s),`${f} is a server module`);
  assert(!/process\.env|supabase|stripe|from 'three'|@babylonjs/i.test(s.replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[^:])\/\/.*$/gm,'$1')),`${f} reads no env, server keys or 3D code`);}
@@ -68,19 +68,59 @@ for(const p of ['/','/about','/privacy','/play','/marketing','/learn/lessons','/
 assert(!PATHS.includes('/learn'),'/learn redirects to / (next.config.mjs), so it is not listed');
 {const sp=paths.sitePaths(),pr=p=>sp.find(x=>x.path===p).priority;assert.equal(pr('/'),1,'/ is the main entry');assert(pr('/play')<pr('/about')&&pr('/play')>0,'/play listed, low priority');assert(sp.find(x=>x.path==='/').lastmod,'/ has a lastmod');}
 assert(!PATHS.some(p=>p==='/'+'start'),'the removed landing page is not listed');
-assert.equal(PATHS.length,9+/* / /about /privacy /play /marketing + the 4 index pages */ lessons.LESSONS.length+fish.SITE_FISH.length+cards.SITE_CARDS.length+exhibits.SITE_EXHIBITS.length);
+const hubs=L('lib/site/hubs.ts'),GUIDES=paths.GUIDE_PATHS;
+assert.equal(PATHS.length,9+/* / /about /privacy /play /marketing + the 4 index pages */ GUIDES.length+lessons.LESSONS.length+fish.SITE_FISH.length+cards.SITE_CARDS.length+exhibits.SITE_EXHIBITS.length);
 // robots.ts names every bot and closes the private routes (checked again on the built file below).
 const robotsSrc=read('app/robots.ts');
-const BOTS=['GPTBot','ClaudeBot','Claude-Web','anthropic-ai','PerplexityBot','Google-Extended','CCBot','Bingbot','Googlebot'];
+// Nov 8 2026 (owner, AI search): every answer engine's search and user-fetch agent by name.
+const BOTS=['GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','Claude-Web','Claude-SearchBot','Claude-User','anthropic-ai','PerplexityBot','Perplexity-User','Google-Extended','Applebot','Applebot-Extended','CCBot','Bingbot','Googlebot'];
 for(const b of BOTS)assert(robotsSrc.includes(`'${b}'`),`robots.ts names ${b}`);
 // the game's routes are untouched by the group: no (site) page shadows a game route.
 for(const r of ['museum','arcade','konbini','shop','privacy','admin','api','controller','coffee','plan'])assert(!fs.existsSync(path.join(root,'app/(site)',r)),`(site) leaves /${r} alone`);
 // llms.txt: a title line, a summary, and the sections.
-const llms=read('public/llms.txt');
+const llms=L('lib/site/llms.ts').llmsText();/* /llms.txt, app/llms.txt/route.ts (Nov 8 2026: built from data) */
 assert.match(llms,/^# Futbol Island\n\n> .{200,}/,'title line and one-paragraph summary');
 for(const s of ['About','Learn','Fish','Cards','Museum','Privacy'])assert(new RegExp(`^## ${s}$`,'m').test(llms),`llms.txt has ## ${s}`);
 const llmsLinks=[...llms.matchAll(/\]\((https:\/\/futbolisland\.app[^)]*)\)/g)].map(m=>m[1].slice(SITE.length)||'/');
 assert(llmsLinks.length>=8);
+// Nov 8 2026: llms.txt links only live pages (sitemap) or the two served text files; it names every hub and the parents' guide.
+for(const p of llmsLinks)assert(PATHS.includes(p)||['/llms-full.txt','/sitemap.xml'].includes(p),`llms.txt link ${p} is a sitemap page`);
+for(const p of GUIDES)assert(llmsLinks.includes(p),`llms.txt lists ${p}`);
+assert(!fs.existsSync(path.join(root,'public/llms.txt')),'no static public/llms.txt shadowing the route');
+
+// ---- Nov 8 2026 (SEO, organic discovery): topic hubs, the parents' guide, safety wording, counts, manifest ----------------------
+{const safety=L('lib/site/safety.ts');
+ for(const h of hubs.HUBS){
+  assert(PATHS.includes(h.path)&&fs.existsSync(path.join(root,'app/(site)',h.path,'page.tsx')),`${h.path}: a page in the sitemap`);
+  assert(h.groups.length>0&&h.groups.every(g=>g.lessons.length>0&&g.lessons.every(l=>lessons.lessonById(l.id))),`${h.path}: groups of real lessons`);
+  assert(h.faq.length>=3&&h.faq.length<=6,`${h.path}: 3-6 FAQs`);
+  assert(h.title.length+' · Futbol Island'.length<=60&&h.description.length>=70&&h.description.length<=155,`${h.path}: title and description fit`);}
+ assert(PATHS.includes(hubs.SAFE_GUIDE.path),'the parents\' guide is in the sitemap');
+ const futsal=hubs.hubBySlug('futsal-for-kids');assert.equal(futsal.groups.reduce((a,g)=>a+g.lessons.length,0),lessons.LESSONS.filter(l=>l.format==='futsal').length,'the futsal hub lists every futsal lesson');
+ const quiz=hubs.hubBySlug('soccer-quiz-for-kids');assert.equal(quiz.groups.reduce((a,g)=>a+g.lessons.length,0),lessons.LESSONS.filter(l=>l.questions.length).length,'the quiz hub lists every lesson quiz');
+ const nQ=lessons.LESSONS.reduce((a,l)=>a+l.questions.length,0);assert(quiz.description.includes(String(nQ))&&quiz.lead.includes(String(nQ)),'the quiz count is the data\'s');
+ // the old /learn/<id> redirect (next.config.mjs) leaves the hubs alone
+ const red=read('next.config.mjs').match(/source: '\/learn\/:slug\((.*)\)', destination/);assert(red,'lesson redirect');const re=new RegExp('^/learn/(?:'+red[1]+')$');
+ for(const h of hubs.HUBS)assert(!re.test(h.path),`${h.path} is not redirected to /learn/lessons`);
+ for(const l of lessons.LESSONS)assert(re.test('/learn/'+l.id),`/learn/${l.id} still redirects`);
+ // no hard-coded counts in the copy sources: every "N lessons / quizzes / questions" is computed
+ for(const f of ['lib/site/hubs.ts','lib/site/llms.ts','lib/site/safety.ts','app/(site)/page.tsx','app/(site)/learn/lessons/page.tsx','app/(site)/learn/lessons/[slug]/page.tsx','components/site/LessonHub.tsx','app/(site)/safe-football-game-for-kids/page.tsx','app/llms-full.txt/route.ts'])
+  assert(!/\b\d+ (?:futsal |football |lesson )?(?:lessons|quizzes|questions|sea animals|cards|exhibits)\b/.test(read(f).replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[^:])\/\/.*$/gm,'$1')),`${f}: no hard-coded count`);
+ // safety wording (owner): never "COPPA compliant", "certified", "no data collected" or a bare "no chat"
+ const llmsFull=read('app/llms-full.txt/route.ts');
+ for(const [name,t] of [['llms.txt',llms],['llms-full source',llmsFull],...SITE_FILES.map(f=>[f,read(f)]),['Landing',read('components/landing/Landing.tsx')]])
+  if(!/lib\/site\/safety\.ts$/.test(name))for(const b of safety.BANNED_CLAIMS)assert(!b.test(t.replace(/\/\*[\s\S]*?\*\//g,'').replace(/(^|[^:])\/\/.*$/gm,'$1')),`${name}: no "${b.source}" claim`);
+ // the web manifest
+ const m=L('app/manifest.ts').default();
+ assert(m.name==='Futbol Island'&&m.short_name&&m.start_url==='/play'&&m.display==='standalone'&&/^#[0-9a-f]{6}$/i.test(m.theme_color)&&/^#[0-9a-f]{6}$/i.test(m.background_color),'manifest: name, start_url /play, standalone, colours');
+ assert(m.icons.some(i=>i.sizes==='512x512'),'manifest: a 512 icon');for(const i of m.icons)assert(fs.existsSync(path.join(root,'app',i.src.slice(1))),`manifest icon ${i.src} exists`);
+ // sitemap dates: every path has a real content date (lib/site/updated.ts), no build-time now, no changefreq
+ for(const x of paths.sitePaths())assert(/^\d{4}-\d{2}-\d{2}$/.test(x.lastmod),`${x.path}: lastmod`);
+ assert(!/changeFrequency|new Date\(/.test(read('app/sitemap.ts')+read('lib/site/paths.ts')+read('lib/site/updated.ts')),'no changefreq, no build-time date');
+ // no page inherits the root canonical "/"
+ assert(!/canonical/.test(read('app/layout.tsx').replace(/\/\/.*$/gm,'')),'the root layout sets no canonical');
+ for(const r of ['arcade','shop','museum','konbini'])assert.match(read(`app/${r}/page.tsx`),new RegExp(`noindexMeta\\([^;]*'/${r}'\\)`),`/${r}: own canonical, noindex`);
+ for(const r of ['controller','coffee'])assert.match(read(`app/${r}/page.tsx`),new RegExp(`canonical: "/${r}"[\\s\\S]*index: false`),`/${r}: own canonical, noindex`);}
 // Nov 7 2026 audit: pageMeta keeps every title <= 60 and every description 70-160 characters.
 {const seo=L('lib/site/seo.ts');
  assert(seo.fitTitle('A short one').length<=60&&seo.fitTitle('Quick football lesson about switching play (11v11 lesson)').length<=60,'fitTitle <= 60');
@@ -109,7 +149,7 @@ for(const p of PATHS){
  const h=html(p);
  assert.match(h,/<html lang="en"/,`${p}: lang="en"`);
  assert.match(h,/<title>[^<]+<\/title>/,`${p}: title`);
- if(p!=='/'&&p!=='/play'&&!/^\/learn\/lessons\/./.test(p))assert.match(h,/<title>[^<]+ · Futbol Island<\/title>/,`${p}: "X · Futbol Island"`);/* long lesson titles drop the suffix to stay <= 60 (lib/site/seo.ts fitTitle) */
+ if(!['/','/play','/privacy','/marketing'].includes(p)&&!/^\/learn\/lessons\/./.test(p))assert.match(h,/<title>[^<]+ · Futbol Island<\/title>/,`${p}: "X · Futbol Island"`);/* long lesson titles drop the suffix to stay <= 60 (lib/site/seo.ts fitTitle) */
  assert.match(h,/<meta name="description" content="[^"]{20,}"/,`${p}: description`);
  assert(h.includes(`<link rel="canonical" href="${p==='/'?SITE:SITE+p}"/>`),`${p}: canonical`);
  if(GENERATED.includes(p)){const ld=[...h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m=>JSON.parse(m[1]));
@@ -174,7 +214,10 @@ assert.notEqual(attr(html('/'),/<title>([^<]*)<\/title>/),attr(html('/play'),/<t
 // Nov 7 2026 audit: every sitemap page (incl. the 150 fish) has a title <= 60 and a 70-160 character description; fish are distinct.
 {const dec=x=>x.replace(/&#x27;/g,"'").replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>'),seen=new Map();
  for(const p of PATHS){const h=html(p),t=dec((h.match(/<title>([^<]*)<\/title>/)||[])[1]||''),d=dec((h.match(/<meta name="description" content="([^"]*)"/)||[])[1]||'');
-  assert(t.length>0&&t.length<=60,`${p}: title <= 60 (${t.length}): ${t}`);assert(d.length>=70&&d.length<=160,`${p}: description 70-160 (${d.length}): ${d}`);
+  assert(t.length>0&&t.length<=60,`${p}: title <= 60 (${t.length}): ${t}`);assert(d.length>=70&&d.length<=155,`${p}: description 70-155 (${d.length}): ${d}`);
+  assert.equal((h.match(/<h1[\s>]/g)||[]).length,1,`${p}: exactly one h1`);
+  const tx=text(h);for(const b of L('lib/site/safety.ts').BANNED_CLAIMS)assert(!b.test(tx),`${p}: no "${b.source}" claim`);
+  for(const m of h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)){const x=JSON.parse(m[1]);if(x['@type']==='FAQPage')for(const q of x.mainEntity)assert(tx.includes(q.name)&&tx.includes(q.acceptedAnswer.text),`${p}: FAQ "${q.name}" is shown with its exact answer`);}
   assert(!seen.has(t),`${p}: title unique (also ${seen.get(t)})`);seen.set(t,p);
   assert(/<meta property="og:image" content="[^"]+"/.test(h)&&/<meta name="twitter:image"/.test(h),`${p}: social image`);}}
 console.log(`seo built site ok: ${PATHS.length} pages checked in ${path.relative(root,dist)}`);

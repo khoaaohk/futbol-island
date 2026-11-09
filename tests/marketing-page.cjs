@@ -29,7 +29,7 @@ const cfg=read('next.config.mjs');
 assert(!/source: '\/marketing', headers/.test(cfg),'no X-Robots-Tag rule on /marketing itself');
 for(const src of ["'/marketing/:path+'"])assert(new RegExp(`source: ${src.replace(/[*+/]/g,'\\$&')}, headers: \\[\\{ key: 'X-Robots-Tag', value: 'noindex, nofollow`).test(cfg),`X-Robots-Tag noindex for ${src}`);
 assert(!/marketing/.test(strip(read('app/robots.ts'))),'robots.txt does not name /marketing (that would advertise it)');
-assert(!/marketing/i.test(read('public/llms.txt')),'llms.txt does not list /marketing');
+assert(!/marketing/i.test(read('lib/site/llms.ts')),'llms.txt does not list /marketing');
 assert(!/marketing/.test(strip(read('app/llms-full.txt/route.ts'))),'llms-full.txt does not list /marketing');
 assert(/path:'\/marketing'/.test(strip(read('lib/site/paths.ts'))),'paths.ts (the sitemap) lists /marketing');
 assert(!/marketing\/overview/.test(strip(read('lib/site/paths.ts'))),'the print page /marketing/overview is not in the sitemap');

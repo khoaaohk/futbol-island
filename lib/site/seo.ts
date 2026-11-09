@@ -25,11 +25,12 @@ export function fitTitle(title:string,whole?:boolean):string{
  if(bare.length>0&&bare.length<=60)return bare;
  return title.slice(0,59).replace(/\s+\S*$/,'')+'…';
 }
-/** Descriptions stay 70-160 characters: a very short one gets a plain tail, a long one is cut on a word. */
+/** Descriptions stay 70-155 characters (Nov 8 2026: 155, the snippet length): a very short one gets a plain tail, a long one
+ *  is cut on a word. */
 export function fitDescription(d:string):string{
  let s=d.replace(/\s+/g,' ').trim();
  if(s.length<70)s=`${s} A page of Futbol Island, a free football learning game for kids.`;
- if(s.length>160)s=s.slice(0,159).replace(/\s+\S*$/,'')+'…';
+ if(s.length>155)s=s.slice(0,154).replace(/\s+\S*$/,'')+'…';
  return s;
 }
 /** Page metadata: "X · Futbol Island" (or the title as given with `whole`, for the home page), description, canonical, Open Graph. */
@@ -39,6 +40,21 @@ export function pageMeta(title:string,description:string,path:string,o:{whole?:b
   openGraph:{title:full,description,url:path,siteName:SITE_NAME,type:o.type??'article',images:[{url:'/opengraph-image.png',width:1200,height:630,alt:SITE_NAME}]},
   twitter:{card:'summary_large_image',title:full,description,images:['/opengraph-image.png']}};
 }
+/** A page kept out of search (thin app screens: the game's rooms, the controller, the donation picker): its own canonical, never
+ *  the root's, and robots noindex (links still followed). */
+export function noindexMeta(title:string,description:string,path:string):Metadata{
+ return {title,description,alternates:{canonical:path},robots:{index:false,follow:true}};
+}
+/** Home `/` (SEO, Nov 8 2026: "learn football (soccer) for kids, lessons and quizzes, fun and safe, free in your browser"). */
+export const HOME_TITLE='Learn Football for Kids: Free Lessons and Quizzes';
+export const HOME_DESC='Free football (soccer) lessons and quizzes for kids 7 to 12, played on a fun island. No ads, no accounts, no open chat. Play in your browser.';
+/** FAQPage JSON-LD: pass exactly the questions and answers the page shows. */
+export const faqLd=(faq:readonly {q:string;a:string}[])=>({'@context':'https://schema.org','@type':'FAQPage',mainEntity:faq.map(x=>({'@type':'Question',name:x.q,acceptedAnswer:{'@type':'Answer',text:x.a}}))});
+/** A collection page (the topic hubs) with real content dates (lib/site/updated.ts). */
+export const collectionLd=(o:{name:string;path:string;description:string;published:string;modified:string;items:{name:string;path:string}[]})=>({'@context':'https://schema.org','@type':'CollectionPage',
+ name:o.name,url:abs(o.path),description:o.description,inLanguage:'en',datePublished:o.published,dateModified:o.modified,isAccessibleForFree:true,audience:KIDS_AUDIENCE,
+ isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,
+ mainEntity:{'@type':'ItemList',numberOfItems:o.items.length,itemListElement:o.items.map((x,i)=>({'@type':'ListItem',position:i+1,name:x.name,url:abs(x.path)}))}});
 export type Crumb={name:string;path:string};
 export const breadcrumbLd=(crumbs:readonly Crumb[])=>({'@context':'https://schema.org','@type':'BreadcrumbList',
  itemListElement:crumbs.map((c,i)=>({'@type':'ListItem',position:i+1,name:c.name,item:abs(c.path)}))});
@@ -48,7 +64,7 @@ export const PUBLISHER={'@type':'Organization',name:SITE_NAME,url:SITE_URL+'/'};
 export const PLAY_PATH='/play';
 export const siteLd=()=>({'@context':'https://schema.org','@type':['WebApplication','VideoGame'],
  name:SITE_NAME,url:abs(PLAY_PATH),
- description:'A free football learning game for kids aged 7 to 12. Explore an island, learn positions, tactics and the rules of 7v7, 9v9, 11v11 and futsal through short lessons and quizzes, and discover football history and culture.',
+ description:'Futbol Island is a free football (soccer) learning game for kids aged 7 to 12. Explore an island, learn positions, tactics and the rules of 7v7, 9v9, 11v11 and futsal through short lessons and quizzes, and discover football history and culture.',
  applicationCategory:'GameApplication',operatingSystem:'Any (web browser, phone first)',genre:['Educational','Sports'],
  gamePlatform:'Web browser',playMode:'SinglePlayer',
  inLanguage:'en',isAccessibleForFree:true,offers:{'@type':'Offer',price:0,priceCurrency:'USD'},
@@ -57,8 +73,11 @@ export const siteLd=()=>({'@context':'https://schema.org','@type':['WebApplicati
  publisher:PUBLISHER,image:SITE_URL+'/opengraph-image.png'});
 /** The home page `/` (the feature tour, Nov 3 2026): the site and its publisher. */
 export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/',inLanguage:'en',
- description:'A free football learning game for kids aged 7 to 12, played in the web browser.',publisher:PUBLISHER});
-export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png'});
+ description:'Futbol Island is a free football (soccer) learning game for kids aged 7 to 12, played in the web browser.',publisher:PUBLISHER});
+/** No sameAs: Futbol Island has no social profile of its own yet (the Instagram on `/` is the partner founder's personal
+ *  account, not the game's), and sameAs must name the same entity. Add its own profiles here when they exist. */
+export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png',
+ description:'Futbol Island makes a free football (soccer) learning game for kids aged 7 to 12, built in San Diego with White Sports Ventures.'});
 /** A plain-text page about one thing (a fish, a card, an exhibit). */
 export const creativeWorkLd=(o:{name:string;path:string;description:string;about:Record<string,unknown>|Record<string,unknown>[]})=>({'@context':'https://schema.org','@type':'CreativeWork',
  name:o.name,url:abs(o.path),description:o.description,inLanguage:'en',isAccessibleForFree:true,audience:KIDS_AUDIENCE,

@@ -18,8 +18,9 @@ export const metadata: Metadata = {
   title: 'Futbol Island',
   description,
   applicationName: 'Futbol Island',
-  alternates: { canonical: '/' },
-  openGraph: { title: 'Futbol Island', description, url: '/', siteName: 'Futbol Island', type: 'website' },
+  // No root canonical / og:url (SEO audit, Nov 8 2026): a canonical "/" here was inherited by every page without its own
+  // (/arcade, /shop, /museum …) and pointed them at the home page. Each indexable page sets its own (lib/site/seo.ts pageMeta).
+  openGraph: { title: 'Futbol Island', description, siteName: 'Futbol Island', type: 'website' },
   twitter: { card: 'summary_large_image', title: 'Futbol Island', description },
 };
 // The IslandBrush font preload lives on the routes that use it at once (lib/islandBrushPreload.ts), not here: the museum warned.

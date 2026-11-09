@@ -7,6 +7,9 @@ import Controller from "./Controller";
 // this standalone when these apple-web-app tags are present.
 export const metadata: Metadata = {
   title: "Futbol Island Controller",
+  // SEO (Nov 8 2026): an app screen (the phone controller), kept out of search with its own canonical.
+  alternates: { canonical: "/controller" },
+  robots: { index: false, follow: true },
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "FIQ Controller" },
 };
 

@@ -5,6 +5,8 @@ import {SITE_CARDS} from '@/lib/site/cards';
 import {SITE_EXHIBITS,exhibitPath} from '@/lib/site/exhibits';
 import {LEARN_FAQ} from '@/lib/site/learnFeatures';
 import {abs} from '@/lib/site/seo';
+import {HUBS,SAFE_GUIDE} from '@/lib/site/hubs';
+import {SAFE_FACTS,SAFE_FAQ} from '@/lib/site/safety';
 /**
  * /llms-full.txt (Oct 16 2026): the About text, the grown-ups' FAQ (Nov 3 2026) plus the lesson and museum index as one plain-text file for AI assistants.
  * Built once at build time from the same data as the pages (no file to keep in step by hand).
@@ -13,7 +15,7 @@ export const dynamic='force-static';
 export function GET(){
  const out=[
   '# Futbol Island','',
-  `> A free, phone-first football (soccer) learning game for kids aged 7 to 12. Home page and feature tour: ${abs('/')}. Play it (runs in the web browser): ${abs('/play')}. No ads, no chat, no accounts.`,'',
+  `> A free, phone-first football (soccer) learning game for kids aged 7 to 12. Home page and feature tour: ${abs('/')}. Play it (runs in the web browser): ${abs('/play')}. No ads, no accounts, no open chat.`,'',
   '## About','',
   `### ${G.whyTitle}`,G.why,'',`### ${G.learnsTitle}`,G.learns,'',`### ${G.privacyTitle}`,`${G.privacy} Privacy policy: ${abs('/privacy')}`,'',
   `### ${G.free}`,G.freeWhy,'',`### ${G.partnerTitle}`,`${G.partnerLead}${G.partnerName}${G.partnerRest}`,'',
@@ -26,6 +28,11 @@ export function GET(){
   `- ${SITE_CARDS.length} player and coach cards: ${abs('/cards')}`,
   `- ${SITE_EXHIBITS.length} History Museum exhibits: ${abs('/exhibits')}`,
   `- More about the game: ${abs('/about')}`,'',
+  '## Safety facts for parents','',`Parents' guide: ${abs(SAFE_GUIDE.path)}`,'',
+  ...SAFE_FACTS.map(f=>`- ${f.title}: ${f.text}`),'',
+  ...SAFE_FAQ.flatMap(f=>[`### ${f.q}`,f.a,'']),
+  '## Topic guides','',
+  ...HUBS.flatMap(h=>[`### ${h.h1}`,`${abs(h.path)}`,h.lead,'',...h.groups.flatMap(g=>[`#### ${g.title}`,...g.lessons.map(l=>`- [${l.title} (${l.formatLabel})](${abs(lessonPath(l.id))}): ${l.concept}`),'']),...h.faq.flatMap(f=>[`Q: ${f.q}`,`A: ${f.a}`,'']),'']),
   '## Questions grown-ups ask','',
   ...LEARN_FAQ.flatMap(f=>[`### ${f.q}`,f.a,'']),
   '## Lessons','',

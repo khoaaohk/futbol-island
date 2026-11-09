@@ -121,7 +121,7 @@ export default function Overview(){
     <div className={s.pillars}>
      <div><b>{G.free}</b><p>{G.freeWhy}</p></div>
      <div><b>No ads</b><p>{faqA('Are there ads?')}</p></div>
-     <div><b>No chat</b><p>{faqA('Can my child chat with other people?')}</p></div>
+     <div><b>No open chat</b><p>{faqA('Can my child chat with other people?')}</p></div>
     </div>
    </div>
   </Slide>

@@ -237,7 +237,7 @@ ok('privacy policy: says we collect, names sponsors and totals, never claims to 
  assert(/never stored, logged or counted/.test(text),'the first name stays out of analytics');
  assert(/14 days/.test(text)&&/Do Not Track/.test(text));
  const about=read('lib/site/aboutCopy.ts');assert(/anonymous usage data/.test(about)&&/sponsors/.test(about)&&/nothing is sold/.test(about));
- assert(/sponsors/.test(read('public/llms.txt')));
+ assert(/sponsors/.test(read('lib/site/llms.ts')));
 });
 
 ok('fixture render: Friends & parties and Emotes sections',()=>{

@@ -15,7 +15,7 @@ import styles from '../site.module.css';
  * sheet); privacy statements follow components/privacy/PrivacyPolicy.tsx and must never say more than it does.
  */
 export const dynamic='force-static';
-const DESC='Futbol Island is a free football learning game for kids aged 7 to 12. Explore an island and learn positions, tactics, rules and football history through short lessons and quizzes. No ads, no chat, no accounts.';
+const DESC='Futbol Island is a free football learning game for kids aged 7 to 12. Explore an island and learn positions, tactics, rules and football history through short lessons and quizzes. No ads, no open chat, no accounts.';
 // the search-result description is kept under 155 characters; the page lead above stays the full sentence
 const META='A free football learning game for kids aged 7 to 12: explore an island and learn positions, tactics, rules and football history.';
 export const metadata=pageMeta('About',META,'/about');
@@ -65,7 +65,7 @@ export default function About(){
    <ul>
     <li><b>{G.free}</b> {G.freeWhy}</li>
     <li><b>Phone first.</b> It runs in the web browser on phones, tablets and computers. No download, no sign-up.</li>
-    <li><b>No ads, no chat.</b> There is no chat with other players and no advertising.</li>
+    <li><b>No ads, no open chat.</b> There is no free-text chat with other players and no advertising.</li>
     <li><b>Save codes, not accounts.</b> {G.privacy} The code carries no personal details.</li>
     <li><b>For grown-ups.</b> The title screen has a For grown-ups page and the full <a href="/privacy">privacy policy</a>.</li>
    </ul>

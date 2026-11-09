@@ -16,7 +16,8 @@ import {GAME_SHEET,LOGO_COLOURS,MARKETING_PATH,MARKETING_PDF,SITE_SHEET,type Des
  */
 export const dynamic='force-static';
 /** Nov 6 2026 (owner): the page itself is open to search engines (canonical, Open Graph, in the sitemap); its print page and the PDF under /marketing/ stay noindex. Content unchanged. */
-export const metadata=pageMeta('Marketing','Futbol Island marketing material: the overview PDF and the design system of the site and the game.',MARKETING_PATH,{type:'website'});
+// Nov 8 2026 (SEO): indexable (owner, Nov 6), retitled for partners, press and coaches (was "Marketing").
+export const metadata=pageMeta('Futbol Island Overview: Free Football Learning Game for Kids','Futbol Island overview for partners, press and coaches: a free football (soccer) learning game for kids 7 to 12. Download the PDF and the design system.',MARKETING_PATH,{type:'website',whole:true});
 
 /** The PDF's size on disk at build time ("3.4 MB"); null while the file has not been built. */
 function pdfSize():string|null{

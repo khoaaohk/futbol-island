@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {LESSON_TABLE} from '@/lib/analytics/learningIds.generated';
 import paths from '@/lib/paths/formatPaths.json';
+import {firstSentence} from './seo';
 /**
  * The lessons as plain reading pages (/learn/lessons, /learn/lessons/<id>): read-only views of public/lessons/*.json, the same files the game
  * plays. Only the words are kept: title, format, concept, the coach's step text, and each quiz question with its options and
@@ -37,3 +38,12 @@ export const lessonById=(id:string)=>LESSONS.find(l=>l.id===id);
 export const lessonPath=(id:string)=>`/learn/lessons/${id}`;
 /** The lesson index (Nov 2 2026: moved from /learn, which is now the feature tour; old /learn/<id> URLs redirect, next.config.mjs). */
 export const LESSONS_INDEX='/learn/lessons';
+
+/** Nov 8 2026 (SEO): "{title}: {format} Football Lesson and Quiz for Kids", the longest form that fits 60 characters. */
+/** "7v7 football (soccer)" / "futsal": how a lesson's format reads in a sentence. */
+export const formatPhrase=(f:string)=>f==='Futsal'?'futsal':`${f} football (soccer)`;
+export const lessonTitle=(l:{title:string;formatLabel:string})=>{const f=l.formatLabel,k=f==='Futsal'?'Futsal':`${f} Football`;
+ return [`${l.title}: ${k} Lesson and Quiz for Kids`,`${l.title}: ${f} Lesson and Quiz for Kids`,`${l.title}: ${f} Football Quiz for Kids`,`${l.title} (${f} Lesson and Quiz)`,`${l.title} (${f} lesson)`].find(t=>t.length<=60)??l.title;};
+/** The concept's first sentence, then what the page is; cut back to <= 155 characters by dropping the tail first. */
+export const lessonDescription=(l:{concept:string;formatLabel:string})=>{const c=firstSentence(l.concept,120),f=l.formatLabel;
+ return [`${c} A free ${formatPhrase(f)} lesson and quiz for kids. No ads.`,`${c} A free ${formatPhrase(f)} lesson and quiz for kids.`,`${c} Free ${f} lesson and quiz for kids.`,c].find(d=>d.length<=155)??c.slice(0,155);};
