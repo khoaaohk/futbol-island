@@ -34,7 +34,7 @@ export default function ChartView({slug}:{slug:string}){
   {c.sections.map(s=><Section key={s.id} id={s.id} title={s.title}><Bullets items={s.items}/></Section>)}
   <QA id="faq" title={`Questions about ${c.crumb.toLowerCase()}`} faq={c.faq}/>
   <Section id="lessons" title="Free lessons to start with"><LessonList lessons={c.lessons}/></Section>
-  <Section id="related" title="Keep reading"><LinkList links={c.links}/></Section>
+  <Section id="related" title="Keep reading"><LinkList links={[...c.links,{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Share the game fairly: a substitution plan for any squad'}]}/></Section>
   <GuideEnd/>
  </>;
 }

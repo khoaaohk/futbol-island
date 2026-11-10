@@ -2,6 +2,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {HUBS,SAFE_GUIDE,type Hub} from '@/lib/site/hubs';
 import {GUIDE_HUBS} from '@/lib/site/guides';
+import {TOOL_HUBS} from '@/lib/site/tools/registry';
 import {LESSONS_INDEX,lessonPath} from '@/lib/site/lessons';
 import {SAFE_TRUST_LINE} from '@/lib/site/safety';
 import {breadcrumbLd,collectionLd,faqLd,PLAY_PATH} from '@/lib/site/seo';
@@ -20,7 +21,7 @@ export function QA({id,title,faq}:{id:string;title:string;faq:readonly {q:string
 }
 
 export function MoreToLearn({except}:{except?:string}){
- const links=[...HUBS.filter(h=>h.path!==except).map(h=>({path:h.path,name:h.h1})),...GUIDE_HUBS.map(g=>({path:g.path,name:g.name[0].toUpperCase()+g.name.slice(1)})),/* guide clusters (lib/site/guides.ts) */{path:LESSONS_INDEX,name:'All football lessons'},{path:SAFE_GUIDE.path,name:'For parents: a safe football game'}].filter(l=>l.path!==except);
+ const links=[...HUBS.filter(h=>h.path!==except).map(h=>({path:h.path,name:h.h1})),...GUIDE_HUBS.map(g=>({path:g.path,name:g.name[0].toUpperCase()+g.name.slice(1)})),/* guide clusters (lib/site/guides.ts) */...TOOL_HUBS.map(t=>({path:t.path,name:t.name[0].toUpperCase()+t.name.slice(1)})),/* coach tools (lib/site/tools/registry.ts) */{path:LESSONS_INDEX,name:'All football lessons'},{path:SAFE_GUIDE.path,name:'For parents: a safe football game'}].filter(l=>l.path!==except);
  return <section className={styles.section} aria-labelledby="more"><h2 className={styles.h2} id="more">More to learn</h2>
   <ul className={styles.list}>{links.map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span></a></li>)}</ul>
  </section>;

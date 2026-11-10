@@ -4,6 +4,9 @@ import {LESSONS_INDEX} from './lessons';
 import {RULES,RULES_HUB} from './rules';
 import {CHARTS} from './sizes';
 import {TERM_PAGES,TERMS_HUB} from './terms';
+import {DRILLS,DRILLS_HUB} from './drills';
+import {DRILL_GUIDES} from './drillGuides';
+import {PLANS,PLANS_HUB} from './plans';
 /**
  * The guide clusters (SEO, Nov 10 2026): evergreen reading pages that answer what parents and coaches search for
  * ("7v7 soccer formations", "what does a center mid do"), each leading into the free lessons. One registry for all of them,
@@ -54,12 +57,27 @@ export const REFERENCE_PAGES:readonly GuidePage[]=[
  ...RULES.map(r=>({path:r.path,name:r.h1,title:r.title,description:r.desc,lessonIds:r.lessons.map(l=>l.id),image:diagramUrl(r.picture)})),
  ...TERM_PAGES.map(t=>({path:t.path,name:t.h1,title:t.title,description:t.desc,lessonIds:t.lessons.map(l=>l.id),image:diagramUrl(t.picture)})),
 ];
-export const ALL_GUIDE_PAGES:readonly GuidePage[]=[...GUIDE_PAGES,...REFERENCE_PAGES];
+/**
+ * Cluster 3 (Nov 10 2026): drills (lib/site/drills.ts), their age and skill guides (lib/site/drillGuides.ts) and the practice
+ * plans (lib/site/plans.ts), for coaches and parents; tested by tests/seo-drills-plans.cjs. Only the two hubs are hub-level
+ * (llms.txt, "More to learn"); the pictures are COACH_FILES (<slug>-drill.png), served by the same /learn/diagrams route.
+ */
+export const COACH_FILES:readonly string[]=DRILLS.map(d=>d.picture);
+export const COACH_PAGES:readonly GuidePage[]=[
+ {path:DRILLS_HUB.path,name:DRILLS_HUB.h1,title:DRILLS_HUB.title,description:DRILLS_HUB.description,blurb:DRILLS_HUB.blurb,hub:true,lessonIds:DRILLS_HUB.lessons.map(l=>l.id),image:diagramUrl('sharks-and-minnows-drill.png')},
+ {path:PLANS_HUB.path,name:PLANS_HUB.h1,title:PLANS_HUB.title,description:PLANS_HUB.description,blurb:PLANS_HUB.blurb,hub:true,lessonIds:PLANS_HUB.lessons.map(l=>l.id),image:diagramUrl('three-v-three-game-drill.png')},
+ ...DRILL_GUIDES.map(g=>({path:g.path,name:g.h1,title:g.title,description:g.desc,blurb:g.blurb,lessonIds:[] as string[],image:diagramUrl(g.picture)})),
+ ...DRILLS.map(d=>({path:d.path,name:d.h1,title:d.title,description:d.desc,lessonIds:d.lessons.map(l=>l.id),image:diagramUrl(d.picture)})),
+ ...PLANS.map(p=>({path:p.path,name:p.h1,title:p.title,description:p.desc,lessonIds:[] as string[],image:diagramUrl(p.picture)})),
+];
+export const ALL_GUIDE_PAGES:readonly GuidePage[]=[...GUIDE_PAGES,...REFERENCE_PAGES,...COACH_PAGES];
 export const GUIDE_HUBS=ALL_GUIDE_PAGES.filter(g=>g.hub);
 export const guideByPath=(path:string)=>ALL_GUIDE_PAGES.find(g=>g.path===path);
 /** The guide pages that teach from a lesson (lesson pages link back to them: "Related guides"); at most four, the formation and
  *  position pages first, hubs and charts never (a lesson links to the page that explains its idea, not to a list). */
-export const guidesForLesson=(id:string)=>[...GUIDE_PAGES,...REFERENCE_PAGES.filter(g=>!g.hub)].filter(g=>g.lessonIds.includes(id)).slice(0,4);
+/* Nov 10 2026: the last of the four places goes to a drill that trains the lesson, when there is one (COACH_PAGES). */
+export const guidesForLesson=(id:string)=>{const d=COACH_PAGES.filter(g=>g.path.startsWith(DRILLS_HUB.path+"/")&&g.lessonIds.includes(id)).slice(0,1);
+ return [...[...GUIDE_PAGES,...REFERENCE_PAGES.filter(g=>!g.hub)].filter(g=>g.lessonIds.includes(id)).slice(0,4-d.length),...d];};
 export const guideCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:'Lessons',path:LESSONS_INDEX},...tail];
 /** The one shared line that ends every guide page. */
 export const GUIDE_FOOT='Futbol Island is a free football (soccer) learning game for kids aged 7 to 12. Every idea on this page is taught on a pitch with moving players, then checked with a quick quiz.';

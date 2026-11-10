@@ -3,6 +3,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {TERMS_HUB,TERM_PAGES,termBySlug} from '@/lib/site/terms';
 import {RULES_HUB} from '@/lib/site/rules';
+import {drillLinksFor} from '@/lib/site/drills';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {Bullets,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import {lessonPath} from '@/lib/site/lessons';
@@ -35,6 +36,8 @@ export default function TermPage({params}:{params:{slug:string}}){
   <Section id="formats" title="In 7v7, 9v9, 11v11 and futsal"><p>{t.formats}</p></Section>
   <QA id="faq" title={`Questions about the ${t.name.toLowerCase()}`} faq={t.faq}/>
   <Section id="lessons" title="Lessons that teach it"><LessonList lessons={t.lessons}/></Section>
+  {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
+  {drillLinksFor(t.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(t.path)}/></Section>}
   <Section id="related" title="Related soccer terms"><LinkList links={related}/></Section>
   <p className={styles.caption}>{GUIDE_FOOT}</p>
   <p className={styles.end}>{t.cta?<a className={styles.cta} href={lessonPath(t.cta.id)}>Play the lesson: {t.cta.title}</a>:<a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>}</p>

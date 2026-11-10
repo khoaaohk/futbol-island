@@ -74,3 +74,28 @@ the hubs, `llms.txt` / `llms-full.txt`, the sitemap and each other.
 - Facts: each data module starts with its source list and the date checked. Laws from theifab.com, US youth standards from
   U.S. Soccer and US Youth Soccer, futsal from FIFA's Futsal Laws. Where organisations differ the page says so and names the
   source per row. Detail pages may link out to the cited law only.
+
+## Coach tools and printables (Nov 10 2026)
+
+Free tools under `/tools`, built to be bookmarked, shared and linked: `/tools` (hub), the lineup builder
+(`/tools/soccer-lineup-builder` + `7v7-`, `9v9-`, `11v11-`, `futsal-lineup-builder`), the playing-time planner
+(`/tools/soccer-playing-time-calculator` + `7v7-` and `9v9-substitution-rotation`) and the printables
+(`/tools/soccer-field-diagrams`, one page per sheet, files under `/tools/soccer-field-diagrams/files/<name>.svg|.png`).
+Like the guide clusters they are not linked from the home page.
+
+- Registry: `lib/site/tools/registry.ts` (`TOOL_PAGES`, `TOOL_HUBS`, all page words, JSON-LD helpers). It feeds the sitemap,
+  `llms.txt`, `llms-full.txt`, "More to learn" and `/sitemap-images.xml` (`lib/site/tools/imageSitemap.ts`; Next 14.2 has no
+  `images` field in `MetadataRoute.Sitemap`). Test: `tests/seo-tools.cjs`.
+- The two tools are client components (`components/site/tools/LineupBuilder.tsx`, `RotationPlanner.tsx`): the one allowed
+  exception to "no client JavaScript on reading pages", because the coach drives them. Rules: SVG and pointer / key events
+  only, no timers, no animation loops, no WebGL, no network, no analytics of anything typed. State lives in the component,
+  in `localStorage` (try/catch) and, only on "Copy link", in the URL fragment (`#l=` / `#r=`), never the query string. The
+  server renders the default diagram or plan, so the page is real content without JavaScript. They must not import
+  `lib/site/formations.ts` (it reads the lesson catalog from disk): the page passes `SHAPES` in as a prop.
+- The scheduler is a pure function, `lib/site/tools/rotation.ts` (test: `tests/tools-rotation.cjs`).
+- Sheets: `lib/site/tools/sheet.ts` holds a printable as data (shapes and text on a US Letter page). One layout, three
+  renderers: inline SVG (`SheetSvg.tsx`), the `.svg` file (`toSvgString`) and the `.png` (`sheetImage.tsx`). Printables are
+  black on white with the licence line and a `futbolisland.app` credit on the sheet. Printing a tool or printable page
+  prints the sheet alone (`tools.module.css`: `.screen` / `.printOnly`).
+- Look: `components/site/tools/tools.module.css` adds controls only (inputs, chips, dark pill buttons at weight 800 in the UI
+  sans) from the same variables; everything else uses `site.module.css`.

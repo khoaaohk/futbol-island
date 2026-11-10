@@ -31,7 +31,7 @@ export default function FormationsHub(){
    </Section>;})}
   <Section id="lessons" title="Lessons that teach team shape"><LessonList lessons={HUB.lessons}/></Section>
   <QA id="faq" title="Questions about formations" faq={HUB.faq}/>
-  <Section id="related" title="Keep reading"><LinkList links={[{path:POSITIONS_HUB.path,name:POSITIONS_HUB.h1,line:POSITIONS_HUB.blurb},{path:'/learn/7v7-9v9-11v11',name:'7v7, 9v9 and 11v11 lessons',line:'Every lesson by team size'},{path:'/learn/futsal-for-kids',name:'Futsal lessons for kids',line:'Every futsal lesson, grouped by topic'}]}/></Section>
+  <Section id="related" title="Keep reading"><LinkList links={[{path:'/tools/soccer-field-diagrams',name:'Formation cheat sheets and blank fields',line:'Every shape of a game on one printable page'},{path:'/tools/soccer-lineup-builder',name:'Soccer lineup builder',line:'Put your players’ names on a formation and print it'},{path:POSITIONS_HUB.path,name:POSITIONS_HUB.h1,line:POSITIONS_HUB.blurb},{path:'/learn/7v7-9v9-11v11',name:'7v7, 9v9 and 11v11 lessons',line:'Every lesson by team size'},{path:'/learn/futsal-for-kids',name:'Futsal lessons for kids',line:'Every futsal lesson, grouped by topic'}]}/></Section>
   <GuideEnd cta={false}/>
  </>;
 }

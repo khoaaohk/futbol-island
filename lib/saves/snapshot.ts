@@ -104,7 +104,7 @@ export const SAVE_CODE_KEY='fi2-save-code-v1',SAVE_SYNC_KEY='fi2-save-sync-v1',S
  /** Set when a grown-up deletes the save (behind the ParentGate): this device is not asked for a code again. */
  SAVE_OPTOUT_KEY='fi2-save-deleted-v1';
 /** Doc §4.1 table C, plus the save system's own keys. */
-export const NEVER_KEYS:readonly string[]=['fi2-join-tips-v1'/* join a live game: lessons this device has shown (lib/town/liveJoinRuntime.ts) */,'fi2-join-cam-v1'/* live match camera angle, sessionStorage (lib/town/liveJoinCamera.ts) */,'fi2-parent-gate-lock-v1','fi2-arcade-departure-v1','fi-card-back-tab','fi2-dev-unlock-toast',
+export const NEVER_KEYS:readonly string[]=['fi-lineup-v1','fi-rotation-v1'/* free coach tools on the reading site (Nov 10 2026): a lineup's typed names and a rotation plan; not game data, never part of a save (components/site/tools/) */,'fi2-join-tips-v1'/* join a live game: lessons this device has shown (lib/town/liveJoinRuntime.ts) */,'fi2-join-cam-v1'/* live match camera angle, sessionStorage (lib/town/liveJoinCamera.ts) */,'fi2-parent-gate-lock-v1','fi2-arcade-departure-v1','fi-card-back-tab','fi2-dev-unlock-toast',
  'fi-visit','fi-visit-off','fi2-cards-dev-v1','fi2-cards-dev-progress-v1','fi2-card-trade-dev-v1','fi2-ride-dev-paths-v1','fi2-path-art-source',
  SAVE_CODE_KEY,SAVE_SYNC_KEY,SAVE_BACKUP_KEY,SAVE_TRIES_KEY,SAVE_NUDGE_KEY,SAVE_APPLIED_KEY,SAVE_OPTOUT_KEY,SAVE_PLAYED_KEY];
 export const IDP_KEY_NAME='fi2-idp-plan-v1',IDP2_KEY_NAME='fi2-idp-v2',WALLET_KEY_NAME='fi2-arcade-wallet-v1';

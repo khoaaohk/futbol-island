@@ -6,6 +6,7 @@ import {formationImage,guideByPath,guideCrumbs} from './guides';
 import {Bullets,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from './GuideParts';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from './seo';
 import {SITE_UPDATED} from './updated';
+import {cheatSheetPath} from './tools/printables';
 import styles from '@/app/(site)/site.module.css';
 /**
  * One format guide (/learn/7v7-soccer-formations, /learn/9v9-soccer-formations, /learn/11v11-soccer-formations): that format's
@@ -36,7 +37,7 @@ export default function FormatGuideView({format}:{format:FormatGuide['format']})
   <Section id="basics" title={`${format} soccer in short`}><Bullets items={g.basics}/></Section>
   <QA id="faq" title={`Questions about ${format} formations`} faq={g.faq}/>
   <Section id="lessons" title={`${format} lessons to start with`}><LessonList lessons={g.lessons}/></Section>
-  <Section id="related" title="Keep reading"><LinkList links={[...others.map(o=>({path:o.path,name:o.h1,line:o.blurb})),{path:FORMATIONS_HUB.path,name:'All soccer formations',line:FORMATIONS_HUB.blurb},{path:POSITIONS_HUB.path,name:POSITIONS_HUB.h1,line:POSITIONS_HUB.blurb},{path:'/learn/7v7-9v9-11v11',name:'7v7, 9v9 and 11v11 lessons',line:'Every lesson by team size'}]}/></Section>
+  <Section id="related" title="Keep reading"><LinkList links={[...others.map(o=>({path:o.path,name:o.h1,line:o.blurb})),{path:cheatSheetPath(g.format),name:`${g.format} formations cheat sheet`,line:'Every shape on one printable page'},{path:`/tools/${g.format}-lineup-builder`,name:`${g.format} lineup builder`,line:'Put your players’ names on the field and print it'},{path:FORMATIONS_HUB.path,name:'All soccer formations',line:FORMATIONS_HUB.blurb},{path:POSITIONS_HUB.path,name:POSITIONS_HUB.h1,line:POSITIONS_HUB.blurb},{path:'/learn/7v7-9v9-11v11',name:'7v7, 9v9 and 11v11 lessons',line:'Every lesson by team size'}]}/></Section>
   <GuideEnd cta={false}/>
  </>;
 }

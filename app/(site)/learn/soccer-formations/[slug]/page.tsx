@@ -9,6 +9,7 @@ import {lessonById,lessonPath} from '@/lib/site/lessons';
 import {PLAYERS_PER_TEAM} from '@/lib/site/pitch';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
+import {lineupLinkFor} from '@/lib/site/tools/registry';
 import styles from '../../../site.module.css';
 
 /** One formation (lib/site/formations.ts): the answer first, a pitch diagram, every role, strengths, weak spots, how it moves, FAQ, lessons. */
@@ -33,6 +34,7 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <GuideIntro crumbs={crumbs} h1={f.h1} lead={f.answer}/>
   <Section id="diagram" title={`${f.name} diagram`}>
    <Diagram id="base" format={f.format} lines={f.lines} what={what} image={formationImage(f.slug)}/>
+   <p><a href={lineupLinkFor(f.slug)}>Build this lineup</a>: put your players’ names on the {f.shape} in the free lineup builder, then print it or share a link.</p>
    {futsal
     ?<p>{f.shape} counts the four outfield players from the back to the front. The goalkeeper is counted separately, so a futsal team has {PLAYERS_PER_TEAM.futsal} players on the court.</p>
     :<p>Coaches write this shape in two ways. <b>{f.shape}</b> counts the {PLAYERS_PER_TEAM[f.format]-1} outfield players, from the defense forward. U.S. Soccer counts the goalkeeper first and writes <b>{withKeeper(f)}</b>. Both mean the same formation. The numbers on the dots are a common coaching custom, not a rule: players can wear any shirt number.</p>}

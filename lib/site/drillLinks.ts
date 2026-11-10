@@ -1,0 +1,75 @@
+/**
+ * Links from the drill pages (lib/site/drills.ts, Nov 10 2026) to the guide pages that explain the rule, position, term or
+ * formation a drill is about. Plain paths; tests/seo-drills-plans.cjs checks that every one is a real page.
+ * SOURCES (checked Nov 10 2026): the pages themselves (lib/site/rules.ts, positions.ts, terms.ts, formations.ts, sizes.ts).
+ */
+const R='/learn/soccer-rules/',P='/learn/soccer-positions/',T='/learn/soccer-terms/';
+export const G={
+ throwIn:{path:R+'throw-in',name:'The throw-in rule',line:'Both feet down, both hands, from behind and over the head'},
+ heading:{path:R+'heading-rules-for-kids',name:'Heading rules for kids in the US',line:'No heading at 10 and under'},
+ buildOut:{path:R+'build-out-line',name:'The build-out line in 7v7',line:'Why the other team backs off on a goal kick'},
+ goalKick:{path:R+'goal-kick',name:'The goal kick rule',line:'How play restarts from the goal area'},
+ backPass:{path:R+'back-pass-rule',name:'The back-pass rule',line:'When the goalkeeper must use their feet'},
+ fouls:{path:R+'fouls-and-free-kicks',name:'Fouls and free kicks',line:'What a fair challenge looks like'},
+ offside:{path:R+'offside',name:'The offside rule',line:'Why the timing of a run matters'},
+ kickOff:{path:R+'kick-off',name:'The kick-off rule',line:'How a game starts and restarts'},
+ gk:{path:P+'goalkeeper',name:'Goalkeeper in soccer',line:'The job, the skills and where to stand'},
+ cb:{path:P+'center-back',name:'Center back in soccer',line:'The defender who protects the middle'},
+ fb:{path:P+'fullback',name:'Fullback in soccer',line:'The defender on the side of the field'},
+ cm:{path:P+'central-midfielder',name:'Central midfielder in soccer',line:'The link player who receives on the turn'},
+ dm:{path:P+'defensive-midfielder',name:'Defensive midfielder in soccer',line:'The player who protects the middle'},
+ wg:{path:P+'winger',name:'Winger in soccer',line:'The wide attacker who takes players on'},
+ st:{path:P+'striker',name:'Striker in soccer',line:'The player who finishes chances'},
+ giveGo:{path:T+'give-and-go',name:'Give-and-go (soccer term)',line:'Pass, run past the defender, get it back'},
+ firstTouch:{path:T+'first-touch',name:'First touch (soccer term)',line:'The touch you take as the ball arrives'},
+ twoVone:{path:T+'two-v-one',name:'2v1 (soccer term)',line:'Two attackers against one defender'},
+ goalSide:{path:T+'goal-side',name:'Goal-side (soccer term)',line:'Between the attacker and your own goal'},
+ pressing:{path:T+'pressing',name:'Pressing (soccer term)',line:'Closing down the player on the ball'},
+ tackle:{path:T+'tackle',name:'Tackle (soccer term)',line:'Winning the ball fairly with your foot'},
+ cross:{path:T+'cross',name:'Cross (soccer term)',line:'A pass from wide into the goal area'},
+ cutback:{path:T+'cutback',name:'Cutback (soccer term)',line:'A pass pulled back from the end line'},
+ switching:{path:T+'switching-play',name:'Switching play (soccer term)',line:'Moving the ball to the empty side'},
+ nutmeg:{path:T+'nutmeg',name:'Nutmeg (soccer term)',line:'The ball played through a defender’s legs'},
+ counter:{path:T+'counterattack',name:'Counterattack (soccer term)',line:'Attacking fast after winning the ball'},
+ marking:{path:T+'marking',name:'Marking (soccer term)',line:'Staying with an opponent'},
+ f7:{path:'/learn/7v7-soccer-formations',name:'7v7 soccer formations',line:'Shapes for U9 and U10 teams'},
+ f9:{path:'/learn/9v9-soccer-formations',name:'9v9 soccer formations',line:'Shapes for U11 and U12 teams'},
+ field:{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},
+ ball:{path:'/learn/soccer-ball-size-by-age',name:'Soccer ball size by age',line:'Size 3, 4 or 5 for each age group'},
+ ages:{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},
+} as const;
+/**
+ * The other direction (Nov 10 2026): which drills an existing guide page links to ("Drills to practice this"), keyed by the
+ * guide's path. Read by drillLinksFor() in lib/site/drills.ts and rendered by the position, rule and glossary pages.
+ */
+export const GUIDE_DRILLS:Record<string,string[]>={
+ [P+'goalkeeper']:['goalkeeper-catching-w-and-basket','goalkeeper-footwork-and-set','goalkeeper-angles','goalkeeper-distribution'],
+ [P+'center-back']:['one-v-one-defending','pressure-and-cover-2v2','build-out-game'],
+ [P+'fullback']:['recover-goal-side','one-v-one-defending','throw-in-game'],
+ [P+'wingback']:['recover-goal-side','crossing-and-finishing','one-v-one-to-end-zones'],
+ [P+'defensive-midfielder']:['receive-and-turn','rondo-4v2','shoulder-check-colors'],
+ [P+'central-midfielder']:['receive-across-the-body','rondo-3v1','shoulder-check-colors'],
+ [P+'attacking-midfielder']:['receive-and-turn','give-and-go','end-zone-game'],
+ [P+'winger']:['one-v-one-to-end-zones','one-v-one-two-goals','crossing-and-finishing'],
+ [P+'striker']:['lay-off-and-shoot','follow-the-shot','two-v-one-to-goal'],
+ [R+'throw-in']:['throw-in-game'],
+ [R+'heading-rules-for-kids']:['thigh-and-chest-control'],
+ [R+'build-out-line']:['build-out-game','goalkeeper-distribution'],
+ [R+'goal-kick']:['build-out-game'],
+ [R+'back-pass-rule']:['goalkeeper-distribution','build-out-game'],
+ [R+'offside']:['end-zone-game'],
+ [R+'fouls-and-free-kicks']:['one-v-one-defending'],
+ [T+'give-and-go']:['give-and-go','wall-passing'],
+ [T+'first-touch']:['receive-across-the-body','first-touch-gates','wall-passing'],
+ [T+'two-v-one']:['two-v-one-to-goal','three-v-two-to-goal'],
+ [T+'pressing']:['pressure-and-cover-2v2','rondo-4v2'],
+ [T+'goal-side']:['recover-goal-side','one-v-one-defending'],
+ [T+'tackle']:['one-v-one-defending'],
+ [T+'cross']:['crossing-and-finishing'],
+ [T+'cutback']:['crossing-and-finishing'],
+ [T+'switching-play']:['four-goal-game','three-team-keep-away'],
+ [T+'through-ball']:['end-zone-game'],
+ [T+'marking']:['pressure-and-cover-2v2'],
+ [T+'counterattack']:['three-v-two-to-goal','two-v-one-to-goal'],
+ [T+'nutmeg']:['one-v-one-to-end-zones'],
+};

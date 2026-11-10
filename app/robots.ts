@@ -13,5 +13,5 @@ const AI_AND_SEARCH_BOTS=['GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','C
 const DISALLOW=['/admin','/api',...LAB_ROUTES,'/coffee/checkout'];
 export default function robots():MetadataRoute.Robots{
  return {rules:[...AI_AND_SEARCH_BOTS.map(userAgent=>({userAgent,allow:'/',disallow:DISALLOW})),{userAgent:'*',allow:'/',disallow:DISALLOW}],
-  sitemap:`${SITE_URL}/sitemap.xml`,host:SITE_URL};
+  sitemap:[`${SITE_URL}/sitemap.xml`,`${SITE_URL}/sitemap-images.xml`/* pictures per page: lib/site/tools/imageSitemap.ts */],host:SITE_URL};
 }

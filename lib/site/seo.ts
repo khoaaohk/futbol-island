@@ -93,3 +93,8 @@ export const ogPath=(pagePath:string)=>`${pagePath}/og.png`;
 export const creativeWorkLd=(o:{name:string;path:string;description:string;about:Record<string,unknown>|Record<string,unknown>[];image?:string})=>({'@context':'https://schema.org','@type':'CreativeWork',
  name:o.name,url:abs(o.path),description:o.description,...(o.image?{image:abs(o.image)}:{}),inLanguage:'en',isAccessibleForFree:true,audience:KIDS_AUDIENCE,
  isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,about:o.about});
+/** /play (Nov 10 2026): the same game entity with its own @id, the page it is the main thing of, and real screenshots (the
+ *  home page's captures, public/learn). No ratings and no reviews: none exist, so none are stated. */
+export const PLAY_SCREENSHOTS=['/learn/town_overview.webp','/learn/lesson_field.webp','/learn/quiz_question.webp'] as const;
+export const playLd=()=>({...siteLd(),'@id':abs(PLAY_PATH)+'#game',mainEntityOfPage:abs(PLAY_PATH),
+ screenshot:PLAY_SCREENSHOTS.map(s=>({'@type':'ImageObject',contentUrl:SITE_URL+s,encodingFormat:'image/webp'}))});

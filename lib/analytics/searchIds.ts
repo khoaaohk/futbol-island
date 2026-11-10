@@ -48,10 +48,10 @@ export function engineOf(host:string|null|undefined):string|null{
  return null;
 }
 /** The public sections whose pages are named; anything else is "other". */
-export const PUBLIC_SECTIONS=['play','about','privacy','marketing','cards','fish','exhibits','learn','safe-football-game-for-kids'] as const;
+export const PUBLIC_SECTIONS=['play','about','privacy','marketing','cards','fish','exhibits','learn','safe-football-game-for-kids','tools'/* the free coach tools (lib/site/tools/registry.ts): the landing page only, never anything typed into a tool */] as const;
 const PATH_RE=/^\/[a-z0-9_.-]+(\/[a-z0-9_.-]+){0,2}$/;
 /** Short codes for the busy sections (a key that starts with a capital names one), so long page ids still fit. */
-const PREFIX:readonly (readonly [string,string])[]=[['learn/lessons/','L'],['learn/','H'],['cards/','C'],['fish/','F'],['exhibits/','X']];
+const PREFIX:readonly (readonly [string,string])[]=[['learn/lessons/','L'],['learn/','H'],['cards/','C'],['fish/','F'],['exhibits/','X'],['tools/soccer-field-diagrams/','G'],['tools/','T']];
 /** "/cards/45" → "C45", "/learn/futsal-for-kids" → "HfutsalDforDkids", "/" → "home": lower-case letters, digits and _ stay; "/" is S,
  *  "-" is D, "." is P. At most 52 characters (40 in the id's first part + 12 in its last), else "other". */
 export function landingKey(pathname:string):string{

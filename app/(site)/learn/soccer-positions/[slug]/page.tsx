@@ -5,6 +5,7 @@ import {FORMATIONS_HUB,formationBySlug,formationsUsing} from '@/lib/site/formati
 import {POSITIONS,POSITIONS_HUB,positionBySlug} from '@/lib/site/positions';
 import {guideCrumbs,positionImage} from '@/lib/site/guides';
 import {Bullets,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {drillLinksFor} from '@/lib/site/drills';
 import {SITE_CARDS,cardPath} from '@/lib/site/cards';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -50,6 +51,8 @@ export default function PositionPage({params}:{params:{slug:string}}){
    <p className={styles.caption}>{p.cardNote}</p>
    <LinkList links={cards.map(c=>({path:cardPath(c.number),name:c.displayName,line:[c.roleLabel,c.country].filter(Boolean).join(' · ')}))}/>
   </Section>}
+  {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
+  {drillLinksFor(p.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(p.path)}/></Section>}
   <Section id="related" title="Other positions"><LinkList links={[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}/></Section>
   <GuideEnd/>
  </>;

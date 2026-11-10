@@ -122,7 +122,7 @@ for(const g of guides.GUIDE_PAGES){
  // one way into the game, internal links resolve
  assert.equal((h.match(/class="cta"/g)||[]).length,1,`${where}: one Play button`);
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);assert(links.length>=8,`${where}: internal links`);
- for(const l of links){assert(l.startsWith('/'),`${where}: internal link ${l}`);assert(PATHS.has(l)||SERVED.has(l),`${where}: link target ${l} exists`);}
+ for(const l of links){assert(l.startsWith('/'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||SERVED.has(l),`${where}: link target ${l} exists`);}/* a #fragment is allowed: the lineup builder deep link */
  assert(links.some(l=>l.startsWith('/learn/lessons/')),`${where}: links to lessons`);
  for(const m of h.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)){const t=text(m[1]);if(t.length>=90){if(!paraPages.has(t))paraPages.set(t,new Set());paraPages.get(t).add(g.path);}}
 }
