@@ -37,7 +37,15 @@ export const codeHash=(pepper:string,normal:string)=>createHmac('sha256',pepper)
 export const pepperOk=(p:string|undefined):p is string=>typeof p==='string'&&p.length>=MIN_PEPPER_LENGTH;
 export function clientIp(h:HeaderBag):string{return (h.get('x-vercel-forwarded-for')||h.get('x-forwarded-for')||h.get('x-real-ip')||'').split(',')[0].trim();}
 /** 'ip:' + sha256(today's random salt + IP), truncated. The IP itself is never stored; the salt is deleted nightly. */
-export const ipBucket=(salt:string,ip:string)=>'ip:'+createHash('sha256').update(salt).update('\u0000').update(ip).digest('hex').slice(0,32);
+/** Nov 10 2026: an IPv6 address is bucketed by its /64 (one home or phone network holds a whole /64), IPv4 as is. */
+export function ipSource(ip:string):string{
+ const v=ip.trim().toLowerCase().replace(/^\[|\]$/g,'');
+ if(!v.includes(':')||/^::ffff:\d+\.\d+\.\d+\.\d+$/.test(v))return v.replace(/^::ffff:/,'');
+ const [head,tail]=v.split('::'),h=head?head.split(':'):[],t=tail!==undefined&&tail?tail.split(':'):[];
+ const full=tail===undefined?h:[...h,...Array(Math.max(0,8-h.length-t.length)).fill('0'),...t];
+ return full.slice(0,4).map(x=>(x||'0').replace(/^0+(?=.)/,'')).join(':')+'::/64';
+}
+export const ipBucket=(salt:string,ip:string)=>'ip:'+createHash('sha256').update(salt).update('\u0000').update(ipSource(ip)).digest('hex').slice(0,32);
 
 /** Decodes a request body: gzip (application/x-fi-save+gzip) or JSON. Null when too big, broken or not an object. */
 export function decodeBody(bytes:Uint8Array,contentType:string|null):Record<string,unknown>|null{
@@ -80,7 +88,8 @@ export async function handleSave(route:SaveRoute,req:{bytes:Uint8Array;contentTy
    const snap=storedSnapshot(body.snapshot??{format:1,game:'',keys:{}},t);
    if(!snap.ok)return {status:snap.reason==='too-big'?413:400,body:{ok:false,tooBig:snap.reason==='too-big'||undefined,newer:snap.reason==='newer'||undefined}};
    // Creation caps (not code-dependent, so they may say "busy").
-   if(!await store.hit('c:'+bucket,LIMITS.createPerIp,60,t)||!await store.hit('c:global',LIMITS.createPerDay,1440,t))return {status:429,body:{ok:false,busy:true}};
+   // Nov 10 2026: the per-IP hour, then the per-IP day, then the site-wide day (short-circuit: a blocked IP spends no global budget).
+   if(!await store.hit('c:'+bucket,LIMITS.createPerIp,60,t)||!await store.hit('cd:'+bucket,LIMITS.createPerIpDay,1440,t)||!await store.hit('c:global',LIMITS.createPerDay,1440,t))return {status:429,body:{ok:false,busy:true}};
    const rand=deps.randomInt??(max=>cryptoRandomInt(max));
    for(let i=0;i<5;i++){
     const code=generateCode(rand),normal=formatCode(code);
@@ -92,7 +101,11 @@ export async function handleSave(route:SaveRoute,req:{bytes:Uint8Array;contentTy
   // Every other route carries a code. A code that doesn't parse is a wrong code: same answer, same timing.
   const parsed=route==='restore'||route==='email'?parseCode(typeof body.code==='string'?body.code:''):isNormalCode(body.code)?parseCode(body.code):null;
   if(route==='email'&&!validEmail(body.email))return {status:400,body:{ok:false,badEmail:true}};
-  if(route==='email'&&(!await store.hit('m:'+bucket,LIMITS.mailPerIp,60,t)||!await store.hit('m:global',LIMITS.mailPerDay,1440,t)))return {status:429,body:{ok:false,busy:true}};
+  if(route==='email'&&(!await store.hit('m:'+bucket,LIMITS.mailPerIp,60,t)||!await store.hit('md:'+bucket,LIMITS.mailPerIpDay,1440,t)||!await store.hit('m:global',LIMITS.mailPerDay,1440,t)))return {status:429,body:{ok:false,busy:true}};
+  // Nov 10 2026: code lookups per IP per day. Over budget answers exactly like a wrong code (same body, same padded timing),
+  // so the budget never tells whether a code exists, and the site-wide failure counters are not touched.
+  if((route==='check'||route==='restore'||route==='email')&&!await store.hit('ld:'+bucket,LIMITS.lookupPerIpDay,1440,t))
+   return padded({status:200,body:route==='email'?{ok:true}:FAIL});
   // A code that can't parse still costs a failed try (the store counts it), so typing junk is no faster than guessing.
   const hash=parsed?codeHash(pepper,formatCode(parsed)):'0'.repeat(64);
   if(route==='sync'){

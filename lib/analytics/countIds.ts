@@ -43,6 +43,8 @@
  *                                  ended; lm:reach_<n> = tab sessions with n+ matches; Nov 6 2026: goals for / against, goal
  *                                  replays shown / skipped, AI and human slots at the join (totals only). Never a name, slot,
  *                                  side, a match's score or time
+ *   se:<landing>:<engine>          search arrivals (searchIds.ts; Nov 10 2026): a session whose first page came from a search engine
+ *                                  or AI assistant, per landing page and engine NAME. Never search words, a URL or an id.
  *   mm:<event>                     the investor page /marketing (MARKETING_VISIT_COUNT_IDS, lib/analytics/marketingVisit.ts;
  *                                  Nov 5 2026): views, stay seconds and stay band from the browser; where (mm:g_<geo>) and
  *                                  when (mm:h_<weekday>_<hour>) are added by the ingest only (marketingVisitGeo.ts)
@@ -51,6 +53,7 @@ import {LESSON_TABLE} from './learningIds.generated';
 import {START_COUNT_IDS} from './startIds';
 import {MARKETING_COUNT_IDS} from './marketingIds';
 import {MARKETING_VISIT_COUNT_IDS} from './marketingVisit';
+import {isSearchId} from './searchIds';
 
 export const LEARN_FORMATS=['7v7','9v9','11v11','futsal'] as const;
 export type LearnFormat=typeof LEARN_FORMATS[number];
@@ -345,6 +348,8 @@ export const lessonsOf=(format:LearnFormat)=>LESSON_TABLE.filter(l=>l[0]===forma
 export function isCountId(id:string):boolean{
  if(typeof id!=='string'||!COUNT_KEY_RE.test(id))return false;
  if(FIXED.has(id)||ENGAGE_CARD_NUMBER_RE.test(id))return true;
+ // se:<landing>:<engine> (Nov 10 2026, searchIds.ts): a search or AI-assistant arrival on a public page; engine names are a fixed list.
+ if(id.startsWith('se:'))return isSearchId(id);
  const p=id.split(':');
  if(p.length===2&&/^l[oesfa]$/.test(p[0]))return !!lessonInfo(p[1]);
  const l=lessonInfo(p[1]);if(!l)return false;

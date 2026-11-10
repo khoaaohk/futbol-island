@@ -24,6 +24,12 @@ export const LIMITS={
  createPerIp:60,createPerDay:2000,
  /** Grown-up emails per IP bucket per hour and site-wide per day. */
  mailPerIp:3,mailPerDay:300,
+ /** Nov 10 2026 (abuse audit): per-IP DAILY budgets, so one source hits its own limit long before a site-wide cap locks real
+  *  children out: new saves 150/day per IP (7.5% of createPerDay; a class of 30 behind a school IP still fits five times),
+  *  emails 10/day per IP (3% of mailPerDay), code lookups (check/restore/email) 400/day per IP (the hourly hardStop is 600
+  *  failures site-wide; the per-IP failure lockout above already caps one IP at 60/h). Checked BEFORE the global bucket, so a
+  *  blocked source no longer spends the site-wide budget. IPv6 sources share one bucket per /64 (lib/saves/server.ts ipBucket). */
+ createPerIpDay:150,mailPerIpDay:10,lookupPerIpDay:400,
 } as const;
 
 export type LookupResult={ok:true;rev:number;snapshot?:unknown}|{ok:false};

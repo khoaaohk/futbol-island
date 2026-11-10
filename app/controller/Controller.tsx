@@ -126,7 +126,7 @@ export default function Controller() {
     const heartbeat = createInputHeartbeat((axes) => send({ type: "input", ...axes }));
     const id = setInterval(() => {
       if (!document.hidden) heartbeat(stick.current);
-    }, 33);
+    }, 66); // Nov 10 2026 (audit): 15 Hz, was 33 ms (~30 msgs/s over Supabase Realtime while the stick moves)
     return () => clearInterval(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

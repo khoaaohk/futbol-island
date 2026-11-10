@@ -1,0 +1,29 @@
+{
+ "_doc": "Test runner manifest (scripts/run-tests.cjs, Nov 10 2026). Every tests/*.cjs|*.mjs file runs unless listed in skip or tests/quarantine.json. The core set (npm run test:quiet -- --core) is every `node [flags] tests/x.cjs` named in package.json scripts.test (the old hand-kept chain, now inside TEST_CORE_CHAIN='...'; many tests assert they are named there, so keep adding new tests to it). flags = extra node flags per file. env = extra environment per file. noCache = run without the TypeScript transpile cache (timing-dependent tests), with the reason. extra = non-tests/ scripts that run as tests. serial = run one at a time after the pool (launch a browser or bind a port). skip = helpers in tests/ that are not tests.",
+ "flags": {
+  "tests/ride-splash.cjs": [
+   "--expose-gc"
+  ],
+  "tests/friend-bump.cjs": [
+   "--expose-gc"
+  ]
+ },
+ "env": {
+  "tests/card-collection.cjs": {
+   "FI_SKIP_BROWSER": "1"
+  }
+ },
+ "noCache": {
+  "tests/tennis-hold-power.cjs": "'haptics on press (rate limited)' only passes when >150 ms of transpiling separates two haptic() calls (performance.now rate limiter); with the cache it fails"
+ },
+ "extra": [
+  "scripts/check-soccer-pinball.mjs"
+ ],
+ "serial": [
+  "tests/bean-skin.cjs"
+ ],
+ "skip": {
+  "tests/summit-harness.cjs": "shared loader for summit-kick/zipline",
+  "tests/water-tropical-glslcost.cjs": "CLI helper (needs two file args), required by another test"
+ }
+}

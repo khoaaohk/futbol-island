@@ -1,4 +1,5 @@
 import {preloadIslandBrush} from '@/lib/islandBrushPreload';
+import SiteNav from '@/components/site/SiteNav';
 import styles from './site.module.css';
 /**
  * The static reading pages (Oct 16 2026: "make the site easier to find through ChatGPT, Claude and search"): `/` (home), /about,
@@ -10,12 +11,11 @@ import styles from './site.module.css';
 export default function SiteLayout({children}:{children:React.ReactNode}){
  preloadIslandBrush();
  return <div className={styles.page} data-reading-page="">
-  <style>{'html,body{background:#fff8e7;color-scheme:light}'}</style>
-  <header className={styles.header}><div className={styles.headerInner}>
-   <a className={styles.brand} href="/">Futbol Island</a>
-   {/* Oct 16 2026 (user): no section navigation. These are reference pages for search engines and AI assistants; a visitor who
-       lands on one sees that page and the way into the game, not a browsable mini-site. The sitemap and llms.txt connect them. */}
-  </div></header>
+  <style>{'html,body{background:#fbf7ee;color-scheme:light}'}</style>
+  {/* Nov 10 2026 (owner: "fix all these pages to match more with the main site"): the home page's bar, static (SiteNav). This
+      replaces the Oct 16 "brand only, no section navigation" header. It stays a direct <header> child: the home page and
+      /marketing bring their own bar and hide this one (learn.module.css / marketing.module.css, `>header`). */}
+  <header className={styles.header}><div className={styles.headerInner}><SiteNav/></div></header>
   <main className={styles.main}>{children}</main>
   <footer className={styles.footer}><div className={styles.footerInner}>
    <span>Futbol Island · a free football learning game for kids.</span>

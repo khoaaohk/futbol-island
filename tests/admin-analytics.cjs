@@ -163,7 +163,8 @@ await ok('auth',async()=>{
  const lock=A.createLockout();for(let i=0;i<4;i++)lock.fail('1.2.3.4',now);assert.equal(lock.locked('1.2.3.4',now),false);
  lock.fail('1.2.3.4',now);assert.equal(lock.locked('1.2.3.4',now),true,'locked after 5 failures');assert.equal(lock.locked('5.6.7.8',now),false);
  assert.equal(lock.locked('1.2.3.4',now+15*60_000+1),false,'the lock lifts after 15 minutes');
- const g=A.createLockout();for(let i=0;i<50;i++)g.fail('10.0.0.'+i,now);assert.equal(g.locked('9.9.9.9',now),true,'global ceiling against spread-out guessing');
+ {const g=A.createLockout();for(let i=0;i<50;i++)g.fail('10.0.0.'+i,now);assert.equal(g.locked('9.9.9.9',now),false,'Nov 10 2026: 50 spread-out failures no longer lock the owner out');
+  for(let i=50;i<A.GLOBAL_MAX_FAILS;i++)g.fail('10.0.'+(i>>8)+'.'+(i&255),now);assert.equal(g.locked('9.9.9.9',now),true,'global ceiling (1000) against spread-out guessing');}
  assert.equal(A.sameOrigin('https://futbolisland.app','futbolisland.app'),true);assert.equal(A.sameOrigin('https://evil.app','futbolisland.app'),false);assert.equal(A.sameOrigin(null,'x'),false);
  const secret='0123456789abcdef-cron';
  assert.equal(A.cronAuthorized(`Bearer ${secret}`,secret),true);assert.equal(A.cronAuthorized(`Bearer ${secret}x`,secret),false);

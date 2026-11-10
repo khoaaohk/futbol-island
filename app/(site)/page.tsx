@@ -15,13 +15,7 @@ import PageStats from '@/components/learn/PageStats';
 import {CONTACT_EMAIL,GROWN_UPS as G,WSV_LINKS} from '@/lib/site/aboutCopy';
 import s from '@/components/learn/learn.module.css';
 import {LEARN_FAQ,LEARN_FAQ_TOP,LEARN_FEATURES,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,type LearnHighlight,type LearnHighlightId} from '@/lib/site/learnFeatures';
-import {LESSONS_INDEX} from '@/lib/site/lessons';
 import {HOME_DESC,HOME_TITLE,organizationLd,pageMeta,PLAY_PATH,siteLd,SITE_NAME,websiteLd} from '@/lib/site/seo';
-import {DEFINITION,HUBS,HUB_COUNTS,SAFE_GUIDE} from '@/lib/site/hubs';
-import {SAFE_FACTS} from '@/lib/site/safety';
-import {SITE_FISH} from '@/lib/site/fish';
-import {SITE_CARDS} from '@/lib/site/cards';
-import {SITE_EXHIBITS} from '@/lib/site/exhibits';
 
 /**
  * The home page `/` (owner, Nov 3 2026: the feature tour moved here from /learn, which now 308-redirects here; the game moved
@@ -48,15 +42,6 @@ const PLAY_URL=PLAY_PATH;
 
 const hl=(id:LearnHighlightId)=>LEARN_HIGHLIGHTS.find(h=>h.id===id)!;
 const FAQ=LEARN_FAQ_TOP.map(q=>LEARN_FAQ.find(x=>x.q===q)!);
-const PARENT_FACTS=['No open chat','No accounts','No tracking cookies','No personal details from children'].map(t=>SAFE_FACTS.find(f=>f.title===t)!);
-const READ_LINKS:{href:string;name:string;line:string}[]=[
- {href:LESSONS_INDEX,name:'All football lessons',line:`${HUB_COUNTS.lessons} lessons in 7v7, 9v9, 11v11 and futsal`},
- ...HUBS.map(h=>({href:h.path,name:h.h1,line:h.blurb})),
- {href:'/fish',name:'The Fishbook',line:`${SITE_FISH.length} sea animals, each with a real football fact`},
- {href:'/cards',name:'Player cards',line:`${SITE_CARDS.length} cards of players and coaches`},
- {href:'/exhibits',name:'History Museum',line:`${SITE_EXHIBITS.length} exhibits on the history of the game`},
- {href:'/about',name:'About Futbol Island',line:'Who makes it, and how it teaches'},
-];
 const NAV:[string,string][]=[['learn','Learn'],['explore','Explore'],['together','Friends'],['safe','Safety'],['about','About']];
 
 /** Wide (about square or wider) shots get the wide card; upright phone screens the tall one. */
@@ -170,27 +155,8 @@ export default function Home(){
   {/* ---- 5. safe ---- */}
   <Chapter h={safe}/>
 
-  {/* ---- 5a. parents and coaches (Nov 8 2026, SEO): the answer-first definition and four verified safety facts
-      (lib/site/safety.ts), then the reading pages a parent or coach can open: the parents' guide, privacy, about, the lessons,
-      the topic hubs, the Fishbook, the cards and the museum (crawl paths into the site; counts from the data). ---- */}
-  <section className={`${s.ch} ${s.light}`} id="parents" aria-labelledby="parents-h">
-   <div className={s.head} data-reveal="">
-    <h2 className={s.h2} id="parents-h">For parents and coaches</h2>
-    <p className={s.sub}>{DEFINITION}</p>
-    <ul className={s.facts}>{PARENT_FACTS.map(f=><li key={f.title}><h3>{f.title}</h3><p>{f.text}</p></li>)}</ul>
-    <div className={s.ctaRow}><a className={s.more} href={SAFE_GUIDE.path}>Read the parents’ guide<Chevron/></a><a className={s.more} href="/privacy">Privacy policy<Chevron/></a></div>
-   </div>
-  </section>
-
-  {/* ---- 5a'. read and learn more: links to every reading section ---- */}
-  <section className={`${s.ch} ${s.light}`} id="read" aria-labelledby="read-h">
-   <div className={s.head} data-reveal="">
-    <h2 className={s.h2} id="read-h">Read the lessons first</h2>
-    <p className={s.sub}>Every lesson, quiz and fact on the island has its own page for grown-ups.</p>
-    <ul className={s.linkGrid}>{READ_LINKS.map(l=><li key={l.href}><a href={l.href}><b>{l.name}</b><span>{l.line}</span></a></li>)}</ul>
-   </div>
-  </section>
-
+  {/* Nov 10 2026 (owner): the "For parents and coaches" and "Read the lessons first" sections were removed from the home page;
+      the reading pages are for search and are not linked from here. */}
   {/* ---- 5b. about: the partnership, in the owner's words (lib/site/aboutCopy.ts, the same as /about) ---- */}
   <section className={`${s.ch} ${s.dark}`} id="about" aria-labelledby="about-h">
    <NavMark/>

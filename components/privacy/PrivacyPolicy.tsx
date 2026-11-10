@@ -37,9 +37,17 @@ import styles from './PrivacyPolicy.module.css';
  *    the next day or within a week more or less often than players who played alone, how many first-time players arrived through an
  *    invite link, and how steady the party connection was (in broad bands, such as "under 80 milliseconds"). To work this out we
  *    use the same anonymous player number described in section 4; we never record who played with whom."
+ * [LAWYER] Nov 10 2026 PRIVACY AUDIT (owner: "reword the policy AND tighten the code"): changed paragraphs carry a [LAWYER] comment.
+ * (1) Sponsors receive EXACT combined totals (Nov 8 2026 owner ruling, lib/analytics/sponsorReport.ts): the old "small groups left
+ * out" promise is removed from sections 1, 7, 13 and the retention table; still never anything about one child. (2) The counter's
+ * random player number: made on the device (a save code is hashed one-way on the device and never sent), keyed again on the server
+ * with a key that changes every 90 days; it lets our own reports count return visits and see the order of a visit's screens
+ * without knowing who the child is (the old "does not identify anyone" / "never the order of a visitor's actions" lines are
+ * replaced). (3) New: one anonymous daily count per landing page and search engine/AI assistant (lib/analytics/searchIds.ts).
+ * The operator's postal address and the privacy contact are still missing (owner must supply them before launch).
  * Keep this file in step with the code: if a feature starts collecting something new, it must be listed here first.
  */
-export const POLICY_UPDATED='October 22, 2026';
+export const POLICY_UPDATED='November 10, 2026';
 /** Operator's legal name and postal address for the notice (COPPA §312.4(d)(1)). Set before launch. */
 export const OPERATOR:{name:string;address:string|null}={name:'Futbol Island',address:null};
 /** The address for privacy questions and requests. Set before launch (docs/save-codes.md). */
@@ -78,7 +86,8 @@ export default function PrivacyPolicy(){
    <li><b>No ads, no free-text chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b> Friends in a party can only use preset emotes.</li>
    <li><b>A save code instead of an account.</b> Three easy words and a number (for example <i>striker · volley · corner · 4271</i>) keep a copy of game progress so it can be opened on another device. The code is not linked to anyone’s identity.</li>
    <li><b>We do collect anonymous usage data.</b> Things like how many visits there are, how long the game is played, which lessons and parts of the game are used, party sizes and how often emotes are used, and the kind of device. It is counted without names, and it is used for two things only: to run and improve the game, and to give sponsors <b>combined totals</b> (for example “players spent 18,000 minutes on the island this week”) so the game can stay free (section 7).</li>
-   <li><b>Sponsors never get anything about one child.</b> No names or first names, no save codes or party codes, no internet addresses, and no small groups: only overall numbers.</li>
+   {/* [LAWYER] Nov 10 2026: exact combined totals; the small-groups promise is removed (owner ruling Nov 8 2026). */}
+   <li><b>Sponsors never get anything about one child.</b> No names or first names, no save codes or party codes, no internet addresses and no player numbers: only exact combined totals of everyone together.</li>
    <li><b>Links that leave the game, donations and grown-up tools sit behind a grown-up check.</b></li>
    <li><b>We never sell or rent information,</b> there are no ads, and we do not use information for targeted advertising or to build profiles of children.</li>
    <li><b>Grown-ups can see and delete a save at any time,</b> right in the game, without contacting us.</li>
@@ -117,9 +126,10 @@ export default function PrivacyPolicy(){
   </section>
 
   <section id="pp-visits"><h2 tabIndex={-1}>7. Anonymous usage data (visit counts and statistics)</h2>
-   <p>Yes, the game collects usage data. We run our own counter (no third-party analytics), and it does not use cookies or identify anyone. We use what it collects for <b>two purposes only</b>:</p><ul>
+   {/* [LAWYER] Nov 10 2026: reworded to match the code (see the file header). */}
+   <p>Yes, the game collects usage data. We run our own counter (no third-party analytics). It does not use cookies, and it never learns a child’s name or who they are. We use what it collects for <b>two purposes only</b>:</p><ul>
     <li><b>to run and improve the game:</b> to see whether it works, fix problems, and learn which parts help children learn football;</li>
-    <li><b>to report combined totals to sponsors</b> who help fund the game: for example how many players visited in a week, how many minutes were played, how many lessons were watched, or how many parties were played. Sponsors only ever receive overall numbers; groups too small to stay anonymous are left out (section 13).</li>
+    <li><b>to report combined totals to sponsors</b> who help fund the game: for example how many players visited in a week, how many minutes were played, how many lessons were watched, or how many parties were played. Sponsors only ever receive combined totals (exact counts of everyone together), never anything about one child (section 13).</li>{/* [LAWYER] Nov 10 2026: exact totals, small-groups wording removed. */}
    </ul>
    <p><b>For each visit we record:</b></p><ul>
     <li>a visitor code: a scrambled value made from the network address, browser type and a random key that is replaced every day, so the same visitor can’t be recognised on another day. The network address itself is not stored;</li>
@@ -134,11 +144,17 @@ export default function PrivacyPolicy(){
     <li>counts from Play with friends, from fixed lists: how often a party is opened, started or joined (and why a join did not work), party sizes and lengths in broad bands (such as “3–4 friends” or “15–30 minutes”), minutes played in a party, invite links shared or opened, and which preset emotes are used and where (such as on a scooter or near a townsperson). Never the party code, a name or first name, or who played with whom;</li>
     <li>which buttons and links on the start page are tapped (for example Start, For grown-ups or Donate), counted as totals;</li>
     <li>a few settings at the start of a visit, such as whether sound or the coach’s voice is switched off;</li>
-    <li>whether the device has played before and whether a save code is in use on it: a yes or no each, never the code.</li>
+    <li>whether the device has played before and whether a save code is in use on it: a yes or no each, never the code;</li>
+    {/* [LAWYER] Nov 10 2026: new count (lib/analytics/searchIds.ts, searchReport.ts). */}
+    <li>when a visit starts from a search engine or an AI assistant: one anonymous daily count for the page it landed on and the name of that search engine or assistant (for example “Google” or “ChatGPT”). Never the search words.</li>
+    {/* [LAWYER] Nov 10 2026: new (app/api/error-report, app/api/csp-report; lib/siteReports.ts). */}
+    <li>when the game hits an error or a page is stopped from loading something: a daily count of the kind of problem, the part of our code it came from and the page it happened on. Never a full web address, the browser type, a save code or anything about the player.</li>
    </ul>
-   <p>We never record typed text, names or first names, save codes, party codes, network addresses or the order of a visitor’s actions. Small numbers are hidden in our day-by-day reports, and anything shown to a sponsor is a combined total with small groups left out.</p>
+   {/* [LAWYER] Nov 10 2026: reworded to match the code (see the file header). */}
+   <p>We never record typed text, names or first names, save codes, party codes or network addresses. Our own reports can see the order of the screens in one visit (for example the island, then the arcade), linked to the random player number below and never to who the child is. Anything shown to a sponsor is a combined total of everyone together, never anything about one child.</p>
    <p><b>Visits under way:</b> we see each visit happening now as an anonymous session: the country and region it connects from, the website that linked to the game or our campaign tag, the part of the game it is in, and its time and counts so far, and we can look back at each day’s visits the same way for the 14 days we keep them. Never a name, an account, a network address or a precise location.</p>
-   <p><b>Players:</b> the game keeps a random player number on the device (and, when a save code is in use, a number made one-way from the code), so our own reports can tell visits from the same player apart over time. It is not a name, an account, an email, a network address or a location, and it is never shared. Deleting the save or clearing this site’s data in the browser removes it from the device; the visits we already counted are deleted after 14 days.</p>
+   {/* [LAWYER] Nov 10 2026: reworded to match the code (see the file header). */}
+   <p><b>Players:</b> the game keeps a random player number on the device (and, when a save code is in use, a number made one-way from the code right on the device, so the code itself is never sent to the counter). Our server scrambles that number again with a secret key that changes every 90 days, so the same player gets a new number every 90 days and old numbers can’t be matched to new ones. It lets our own reports count return visits and see the order of the screens in a visit, without knowing who the child is. It is not a name, an account, an email, a network address or a location, and it is never shared. Deleting the save or clearing this site’s data in the browser removes it from the device; the visits we already counted are deleted after 14 days.</p>
    <p><b>Do Not Track:</b> if the browser sends a “Do Not Track” or “Global Privacy Control” signal, the counter sends nothing at all.</p>
   </section>
 
@@ -185,7 +201,7 @@ export default function PrivacyPolicy(){
 
   <section id="pp-sharing"><h2 tabIndex={-1}>13. Sharing and selling</h2>
    <p><b>We do not sell or rent personal information, and we never share anything that identifies a child.</b> We share information only with the services above to run the game, or if the law requires it (for example, a valid legal order).</p>
-   <p><b>Sponsors:</b> we do share combined, anonymous totals with sponsors and supporters who help fund the game (for example, “players spent 18,000 minutes on the island this week” or “400 parties were played”). These totals never describe any one player: they contain no names or first names, save codes, party codes, internet addresses, player numbers or anything about an individual child, and groups too small to stay anonymous are left out. Sponsors do not get access to our systems and cannot use these totals to reach or advertise to any child.</p>
+   <p><b>Sponsors:</b> we do share combined, anonymous totals with sponsors and supporters who help fund the game (for example, “players spent 18,000 minutes on the island this week” or “400 parties were played”). These totals never describe any one player: they contain no names or first names, save codes, party codes, internet addresses, player numbers or anything about an individual child. They are exact combined counts of everyone together.{/* [LAWYER] Nov 10 2026: small-groups wording removed (exact totals, owner ruling Nov 8 2026). */} Sponsors do not get access to our systems and cannot use these totals to reach or advertise to any child.</p>
    <p> If Futbol Island ever changed hands, this policy would continue to apply to information already collected, and we would tell you about any change in advance.</p>
   </section>
 
@@ -198,7 +214,8 @@ export default function PrivacyPolicy(){
      <tr><td>The one-time email address</td><td>To send the code once</td><td>Not kept: discarded after sending</td></tr>
      <tr><td>Visit-count details</td><td>Understanding use, fixing problems</td><td>14 days, then only daily totals are kept</td></tr>
      <tr><td>Daily totals (no visitor codes)</td><td>Long-term trends, and the combined totals shown to sponsors</td><td>Kept long-term, as they contain no information about any one visitor</td></tr>
-     <tr><td>Totals reported to sponsors</td><td>Funding the game</td><td>Kept in reports; they describe no one and leave out small groups</td></tr>
+     <tr><td>Totals reported to sponsors</td><td>Funding the game</td><td>Kept in reports; they are combined totals and describe no one</td></tr>{/* [LAWYER] Nov 10 2026 */}
+     <tr><td>The scrambled player number on our server</td><td>Counting return visits, the order of a visit’s screens</td><td>A new number every 90 days; visit details holding it are deleted after 14 days</td></tr>
      <tr><td>The daily random key for visitor codes</td><td>Making visitor codes unlinkable between days</td><td>Deleted the next day</td></tr>
      <tr><td>Information on the device</td><td>Playing the game</td><td>Until the browser’s site data is cleared</td></tr>
     </tbody>
@@ -236,7 +253,8 @@ export default function PrivacyPolicy(){
   </section>
 
   <section id="pp-contact"><h2 tabIndex={-1}>19. Contact</h2>
-   <p>{OPERATOR.name}{OPERATOR.address?<>, {OPERATOR.address}</>:null}.</p>
+   {/* [LAWYER] Nov 10 2026: the operator's postal address is still to be supplied by the owner. */}
+   <p>{OPERATOR.name}{OPERATOR.address?<>, {OPERATOR.address}.</>:<>. Our postal address and contact details are being added.</>}</p>
    <p>{PRIVACY_CONTACT?<>Privacy questions and requests: <a href={`mailto:${PRIVACY_CONTACT}`}>{PRIVACY_CONTACT}</a>.</>:<>A contact address for privacy questions will be listed here. Meanwhile, “Delete my save” in the game removes a save straight away.</>}</p>
   </section>
  </article>;

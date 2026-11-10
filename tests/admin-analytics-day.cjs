@@ -24,10 +24,10 @@ const T=load('lib/analytics/tracker.ts'),C=load('lib/analytics/core.ts'),I=load(
  SV=load('lib/saves/server.ts'),SN=load('lib/saves/snapshot.ts'),CO=load('lib/saves/code.ts');
 let seed=7;CODE=CO.formatCode(CO.generateCode(m=>{seed=(seed*48271)%2147483647;return seed%m;}));assert(CO.isNormalCode(CODE),CODE);
 
-await ok('readPlayerKey: the code when one is active, else one install id made once and kept',()=>{
+await ok('readPlayerKey: the code\'s device-made hash when one is active, else one install id made once and kept',()=>{
  const mem=o=>({o,getItem:k=>o[k]??null,setItem:(k,v)=>{o[k]=v;}});
  const rnd=n=>new Uint8Array(n).map((_,i)=>i*17+3);
- assert.deepEqual(F.readPlayerKey(mem({'fi2-save-code-v1':CODE}),rnd),{pc:CODE});
+ assert.deepEqual(F.readPlayerKey(mem({'fi2-save-code-v1':CODE}),rnd),{ph:crypto.createHash('sha256').update('futbol-island analytics player v1|'+CODE).digest('hex')},'Nov 10 2026: a hash, never the code');
  const st=mem({});const a=F.readPlayerKey(st,rnd);
  assert.match(a.pi,/^[0-9a-f]{32}$/);assert.equal(st.o['fi2-install-v1'],a.pi,'kept in fi2-install-v1');
  assert.deepEqual(F.readPlayerKey(st,()=>new Uint8Array(16)),a,'made once: the same id next time');
@@ -50,40 +50,44 @@ await ok('tracker + validateEvent: one player key, on a start only',()=>{
  const s=sent.find(b=>b.t==='start');assert.equal(s.pi,'0123456789abcdef0123456789abcdef');assert.equal(s.pc,undefined);
  assert(C.validateEvent(JSON.stringify(s)).ok);
  const base={v:1,t:'start',s:s.s,p:'/'};
- assert(C.validateEvent(JSON.stringify({...base,pc:CODE})).ok);
- for(const bad of [{pc:CODE,pi:s.pi},{pc:'DROP TABLE'},{pi:'xyz'},{pi:'A'.repeat(32)},{pc:7}])assert.equal(C.validateEvent(JSON.stringify({...base,...bad})).ok,false,JSON.stringify(bad));
+ const PH='ab'.repeat(32);assert(C.validateEvent(JSON.stringify({...base,ph:PH})).ok);
+ {const v=C.validateEvent(JSON.stringify({...base,pc:CODE}));assert(v.ok&&v.event.pc===undefined,'Nov 10 2026: an old page\'s raw code is dropped unread');}
+ for(const bad of [{ph:PH,pi:s.pi},{ph:CODE},{ph:'DROP TABLE'},{pi:'xyz'},{pi:'A'.repeat(32)},{ph:7}])assert.equal(C.validateEvent(JSON.stringify({...base,...bad})).ok,false,JSON.stringify(bad));
  assert.equal(C.validateEvent(JSON.stringify({v:1,t:'beat',s:s.s,p:'/',e:1000,pi:s.pi})).ok,false,'never on a beat');
 });
 
 await ok('playerId: keyed, one-way, never the code, the code hash or the install id',()=>{
- const sec={pepper:'pepper-for-tests-0123456789',salt:'salt-for-analytics-0123456789'};
- const a=P.derivePlayerId({pc:CODE},sec),b=P.derivePlayerId({pc:CODE},sec),i=P.derivePlayerId({pi:'0123456789abcdef0123456789abcdef'},sec);
+ const sec={pepper:'pepper-for-tests-0123456789',salt:'salt-for-analytics-0123456789'},T0=Date.UTC(2026,10,10);
+ const PH=crypto.createHash('sha256').update('futbol-island analytics player v1|'+CODE).digest('hex');
+ const a=P.derivePlayerId({ph:PH},sec,T0),b=P.derivePlayerId({ph:PH},sec,T0),i=P.derivePlayerId({pi:'0123456789abcdef0123456789abcdef'},sec,T0);
  assert.match(a,/^[0-9a-f]{32}$/);assert.equal(a,b,'stable for one code');assert.match(i,/^[0-9a-f]{32}$/);assert.notEqual(a,i);
  const norm=CO.formatCode(CO.parseCode(CODE)),ch=SV.codeHash(sec.pepper,norm);
  assert.equal(norm,CODE,'a code as the game stores it');
  assert(!ch.includes(a)&&!a.includes(ch.slice(0,32)),'not the save store\'s key');
  assert.notEqual(i,'0123456789abcdef0123456789abcdef');
- assert.equal(a,crypto.createHmac('sha256',sec.salt).update('c:'+ch).digest('hex').slice(0,32),'HMAC(analytics salt, code hash)');
- assert.notEqual(P.derivePlayerId({pc:CODE},{...sec,salt:'another-salt-0123456789abc'}),a,'a different salt, a different id');
- assert.notEqual(P.derivePlayerId({pc:CODE},{pepper:sec.pepper}),null,'without ANALYTICS_PLAYER_SALT: a salt derived from the pepper');
+ {const pk=crypto.createHmac('sha256',sec.salt).update('player id period '+Math.floor(T0/864e5/90)).digest();
+  assert.equal(a,crypto.createHmac('sha256',pk).update('h:'+PH).digest('hex').slice(0,32),'HMAC(period key, device hash)');}
+ assert.notEqual(P.derivePlayerId({ph:PH},{...sec,salt:'another-salt-0123456789abc'},T0),a,'a different salt, a different id');
+ assert.notEqual(P.derivePlayerId({ph:PH},{pepper:sec.pepper},T0),null,'without ANALYTICS_PLAYER_SALT: a salt derived from the pepper');
  assert.notEqual(P.playerSalt({pepper:sec.pepper}),sec.pepper,'never the pepper itself');
- assert.equal(P.derivePlayerId({pc:CODE},{}),null,'no secret: no id');
+ assert.equal(P.derivePlayerId({ph:PH},{}),null,'no secret: no id');
  assert.equal(P.derivePlayerId({pi:'0123456789abcdef0123456789abcdef'},{}),null);
- assert.equal(P.derivePlayerId({pc:CODE},{salt:sec.salt}),null,'a code needs the pepper (its own keyed hash)');
+ assert.equal(P.derivePlayerId({pc:CODE},sec,T0),null,'a raw code is never turned into an id');
  assert.equal(P.derivePlayerId({pi:'nope'},sec),null);
- assert.equal(P.derivePlayerId({pc:'happy-blue-tiger-4271'},sec),null,'not a stored code (no fuzzy matching here)');
+ assert.equal(P.derivePlayerId({ph:CODE},sec,T0),null,'a code is not a hash');
 });
 
 await ok('ingest: the start keeps only the derived id (memory store)',async()=>{
  const mem=S.createMemoryStore(),lim=I.createLimiter({capacity:1e6}),now=new Date(),secrets={pepper:'pepper-for-tests-0123456789',salt:'salt-for-analytics-0123456789'};
  const h={get:k=>({'user-agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148','host':'futbolisland.app'})[k]??null};
  const go=b=>I.handleIngest({body:JSON.stringify(b),headers:h,store:mem,limiter:lim,now,vercelEnv:'production',secrets});
- assert.equal((await go({v:1,t:'start',s:'dayMemA0000000000001',p:'/',pc:CODE,hc:1,rt:1})).reason,'ok');
+ const PH=crypto.createHash('sha256').update('futbol-island analytics player v1|'+CODE).digest('hex');
+ assert.equal((await go({v:1,t:'start',s:'dayMemA0000000000001',p:'/',ph:PH,hc:1,rt:1})).reason,'ok');
  assert.equal((await go({v:1,t:'start',s:'dayMemB0000000000001',p:'/',pi:'0123456789abcdef0123456789abcdef'})).reason,'ok');
  assert.equal((await go({v:1,t:'start',s:'dayMemC0000000000001',p:'/'})).reason,'ok');
  const txt=JSON.stringify(mem.data);
- for(const raw of [CODE,'0123456789abcdef0123456789abcdef',SV.codeHash(secrets.pepper,CODE)])assert(!txt.includes(raw),'never stored: '+raw.slice(0,12));
- assert.equal(mem.data.starts.dayMemA0000000000001.playerId,P.derivePlayerId({pc:CODE},secrets));
+ for(const raw of [CODE,PH,'0123456789abcdef0123456789abcdef',SV.codeHash(secrets.pepper,CODE)])assert(!txt.includes(raw),'never stored: '+raw.slice(0,12));
+ assert.equal(mem.data.starts.dayMemA0000000000001.playerId,P.derivePlayerId({ph:PH},secrets,now.getTime()));
  assert.match(mem.data.starts.dayMemB0000000000001.playerId,/^[0-9a-f]{32}$/);assert.equal(mem.data.starts.dayMemC0000000000001.playerId,null);
  assert.match(read('lib/analytics/store.ts'),/player_id:ev\.playerId\?\?null/,'the Supabase store sends it');
 });
@@ -162,7 +166,7 @@ await ok('sql: day sessions, players and one player on a throwaway Postgres',asy
   psql('alter default privileges in schema public grant all on tables to anon, authenticated, service_role; alter default privileges in schema public grant execute on functions to anon, authenticated, service_role;');
   const files=fs.readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql')).sort();
   // Nov 8 2026: arcade leaderboard allow-list migrations (*_tier_boards.sql / *_league_boards.sql) are not analytics; ignore them here.
-  assert.equal(files.filter(f=>f>path.basename(MIGRATION)&&!/_(tier|league)_boards\.sql$/.test(f)).join(),'20261020_admin_save_returning_range.sql,20261021_analytics_sponsor_split.sql,20261022_analytics_party_retention.sql,20261106_analytics_fishing_sessions.sql,20261108_party_retention_exact.sql','only the save-metrics range, the sponsor split, the party retention (and its Nov 8 exact-numbers replacement) and the fishing sessions (separate read functions) run after it');
+  assert.equal(files.filter(f=>f>path.basename(MIGRATION)&&!/_(tier|league)_boards\.sql$/.test(f)&&!/^20261111_(admin_session_epoch|board_hidden_rows|site_reports)\.sql$/.test(f)/* Nov 10 2026: separate tables */).join(),'20261020_admin_save_returning_range.sql,20261021_analytics_sponsor_split.sql,20261022_analytics_party_retention.sql,20261106_analytics_fishing_sessions.sql,20261108_party_retention_exact.sql','only the save-metrics range, the sponsor split, the party retention (and its Nov 8 exact-numbers replacement) and the fishing sessions (separate read functions) run after it');
   const results=files.map(f=>[f,runFile(path.join('supabase/migrations',f))]);
   assert.equal(results.find(([f])=>f===path.basename(MIGRATION))[1],OK_ROW,'self-check row');
   assert.equal(runFile(MIGRATION),OK_ROW,'safe to run twice');

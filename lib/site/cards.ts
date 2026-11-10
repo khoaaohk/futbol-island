@@ -2,6 +2,7 @@ import {CARD_ENTRIES,cardDisplayName,isCoachCard,type CardEntry} from '@/lib/tow
 import profiles from '@/lib/town/playerProfiles.json';
 import careers from '@/lib/town/playerCareers.json';
 import appearance from '@/lib/town/playerAppearance.json';
+import plays from './cardPlays.generated.json';
 /**
  * The player-card binder as plain reading pages (/cards, /cards/<number>): read-only views of the card roster
  * (lib/town/cardCollection.ts), playerProfiles.json (blurb, strengths), playerCareers.json (clubs, national team) and the
@@ -13,13 +14,19 @@ type Career={clubs?:Stint[];national?:{team:string;from:number|null;to:number|nu
 const PROFILES=profiles as unknown as Record<string,{blurb?:string;strengths?:string[]}>;
 const CAREERS=careers as unknown as Record<string,Career>;
 const LOOKS=appearance as unknown as Record<string,{country?:string}>;
-export type SiteCard=CardEntry&{displayName:string;coach:boolean;country?:string;blurb:string;strengths:string[];career:string[];national?:string};
+/** The player's iconic-play film: its title and the football idea it teaches, copied from the film sources (Nov 10 2026,
+ *  scripts/gen-card-plays.mjs → cardPlays.generated.json; tests/seo-discovery.cjs checks it is up to date). */
+const PLAYS=plays as Record<string,{title:string;theme:string}>;
+export type SiteCard=CardEntry&{displayName:string;coach:boolean;country?:string;blurb:string;strengths:string[];career:string[];national?:string;
+ /** Club names in career order (for the "more from this club" links), and the iconic play when the player has a film. */
+ clubs:string[];play?:{title:string;theme:string}};
 const years=(from:number|null,to:number|null)=>from==null?'':to==null?`${from}–present`:from===to?`${from}`:`${from}–${to}`;
 export const SITE_CARDS:SiteCard[]=CARD_ENTRIES.map(e=>{
  const p=PROFILES[e.name]??{},c=CAREERS[e.name]??{};
  return {...e,displayName:cardDisplayName(e.name),coach:isCoachCard(e.name),country:typeof LOOKS[e.name]==='object'?LOOKS[e.name].country:undefined,
   blurb:p.blurb??'',strengths:p.strengths??[],
   career:(c.clubs??[]).map(s=>`${s.club}${s.loan?' (loan)':''}${years(s.from,s.to)?`, ${years(s.from,s.to)}`:''}`),
+  clubs:[...new Set((c.clubs??[]).map(s=>s.club))],play:PLAYS[e.name],
   national:c.national?`${c.national.team}${years(c.national.from,c.national.to)?`, ${years(c.national.from,c.national.to)}`:''}`:undefined};
 });
 export const cardByNumber=(n:number)=>SITE_CARDS.find(c=>c.number===n);

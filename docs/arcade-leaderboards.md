@@ -19,9 +19,9 @@ one per pass the child learned to see).
 | Game | Board score | Sanity ceiling | Rate rule (base + per second) | Minimum play |
 |---|---|---|---|---|
 | Breakaway Run | points | 300,000 | 3,000 + 1,500/s | 12 s |
-| Futbol Pinball | points | 400,000 | 5,000 + 2,500/s | 20 s |
+| Futbol Pinball | points | 400,000 | 3,000 + 1,200/s (Nov 10 2026; was 5,000 + 2,500/s) | 20 s |
 | Futbol Tennis | longest touch rally | 500 | 10 + 2/s | 15 s |
-| Island Strikers | match points: goal 100, completed pass 10, win 200 | 20,000 | 400 + 40/s | 30 s |
+| Island Strikers | match points: goal 100, completed pass 10, win 200 | 20,000 | 300 + 25/s (Nov 10 2026; was 400 + 40/s) | 30 s |
 | Pass Puzzles | total stars (the daily remix not counted) | 300 (40 puzzles × 3 = 120 today) | none (a running total) | 8 s |
 
 ## Privacy
@@ -93,3 +93,11 @@ letters keep one row (`RUNNING_TOTAL_BOARDS` in lib/arcade/leaderboard.ts). Rule
 a play token per puzzle start (beginBoardSession with the puzzle's own board). Cup stars never count toward the classic star
 board. Coins are unchanged (the same first-solve + new-star payout). SQL: supabase/migrations/20261110_puzzle_tier_boards.sql
 (lists every board; dated to run after 20261109_pinball_tier_boards.sql). Tests: tests/puzzle-polish-nov8.cjs.
+
+## Removing a row (Nov 10 2026)
+
+/admin → Live now → Arcade boards lists a board's best 30 rows with "Remove row" / "Restore" (`/api/admin/board`, admin
+session + same origin). A removed row is soft-deleted (`arcade_scores.hidden_at`): hidden from every board and from ranking at
+once, purged nightly like any other row. Needs `supabase/migrations/20261111_board_hidden_rows.sql`; before it runs the list
+shows the top 10 and removal answers "migration needed". Tier ceilings: Derby Night 6,000 + 2,700/s, World Final 9,000 + 4,400/s
+(the classic rate × speed × multiplier). The rate rules are in `lib/arcade/leaderboard.ts` BOARD_RULES with the reasoning.

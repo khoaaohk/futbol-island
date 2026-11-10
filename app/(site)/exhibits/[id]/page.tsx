@@ -1,8 +1,10 @@
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
+import RelatedLinks from '@/components/site/RelatedLinks';
 import {exhibitById,exhibitPath,SITE_EXHIBITS} from '@/lib/site/exhibits';
-import {breadcrumbLd,creativeWorkLd,firstSentence,pageMeta} from '@/lib/site/seo';
+import {exhibitRelated} from '@/lib/site/related';
+import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta} from '@/lib/site/seo';
 import styles from '../../site.module.css';
 
 /** One museum case as plain text: era, facts, the experience's story text and the sources (titles only, no outside links). */
@@ -11,13 +13,14 @@ export const dynamicParams=false;
 export const generateStaticParams=()=>SITE_EXHIBITS.map(e=>({id:e.id}));
 export function generateMetadata({params}:{params:{id:string}}){
  const e=exhibitById(params.id);if(!e)return {};
- return pageMeta(`${e.title} (${e.year})`,firstSentence(e.facts[0]??e.galleryBlurb),exhibitPath(e.id));
+ return pageMeta(`${e.title} (${e.year})`,firstSentence(e.facts[0]??e.galleryBlurb),exhibitPath(e.id),
+  {image:{url:ogPath(exhibitPath(e.id)),alt:`${e.title} (${e.year}), a case in the Futbol Island history museum`}});
 }
 export default function ExhibitPage({params}:{params:{id:string}}){
  const e=exhibitById(params.id);if(!e)notFound();
  const crumbs=[{name:'Home',path:'/'},{name:'Museum',path:'/exhibits'},{name:e.title,path:exhibitPath(e.id)}];
  return <>
-  <JsonLd data={creativeWorkLd({name:e.title,path:exhibitPath(e.id),description:e.facts.join(' '),
+  <JsonLd data={creativeWorkLd({name:e.title,path:exhibitPath(e.id),description:e.facts.join(' '),image:ogPath(exhibitPath(e.id)),
    about:{'@type':'Thing',name:`${e.title} (${e.year})`,description:e.galleryTitle}})}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <header className={styles.intro}>
@@ -35,6 +38,7 @@ export default function ExhibitPage({params}:{params:{id:string}}){
   {e.sources.length>0&&<section className={styles.section} aria-labelledby="sources"><h2 className={styles.h3} id="sources">Sources</h2>
    <ul className={styles.caption}>{e.sources.map(s=><li key={s.url}>{s.title}</li>)}</ul>
   </section>}
+  <RelatedLinks related={exhibitRelated(e)} heading="More from the museum" readHeading="Learn it on the pitch"/>
   <p className={styles.end}><a className={styles.cta} href="/museum">See it in the museum on the island</a></p>
  </>;
 }

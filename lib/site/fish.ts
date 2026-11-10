@@ -17,3 +17,6 @@ export const fishPlaces=(f:FishSpecies)=>FISH_SPOTS.filter(s=>f.spots.includes(s
 export const fishWhen=(f:FishSpecies)=>f.when?WHEN_LABEL[f.when]:null;
 export const fishById=(id:string)=>SITE_FISH.find(f=>f.id===id);
 export const fishPath=(id:string)=>`/fish/${id}`;
+/** The drawing as a picture (Nov 10 2026): /fish/<id>/art.png, built at build time (app/(site)/fish/[id]/art.png/route.tsx). */
+export const fishArtPath=(id:string)=>`/fish/${id}/art.png`;
+export const FISH_ART_SIZE={width:920,height:560} as const;

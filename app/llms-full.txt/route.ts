@@ -7,6 +7,7 @@ import {LEARN_FAQ} from '@/lib/site/learnFeatures';
 import {abs} from '@/lib/site/seo';
 import {HUBS,SAFE_GUIDE} from '@/lib/site/hubs';
 import {SAFE_FACTS,SAFE_FAQ} from '@/lib/site/safety';
+import {ALL_GUIDE_PAGES} from '@/lib/site/guides';
 /**
  * /llms-full.txt (Oct 16 2026): the About text, the grown-ups' FAQ (Nov 3 2026) plus the lesson and museum index as one plain-text file for AI assistants.
  * Built once at build time from the same data as the pages (no file to keep in step by hand).
@@ -33,6 +34,8 @@ export function GET(){
   ...SAFE_FAQ.flatMap(f=>[`### ${f.q}`,f.a,'']),
   '## Topic guides','',
   ...HUBS.flatMap(h=>[`### ${h.h1}`,`${abs(h.path)}`,h.lead,'',...h.groups.flatMap(g=>[`#### ${g.title}`,...g.lessons.map(l=>`- [${l.title} (${l.formatLabel})](${abs(lessonPath(l.id))}): ${l.concept}`),'']),...h.faq.flatMap(f=>[`Q: ${f.q}`,`A: ${f.a}`,'']),'']),
+  '## Guides: formations, positions, rules, size charts and soccer terms','',/* every guide page (lib/site/guides.ts), Nov 10 2026 */
+  ...ALL_GUIDE_PAGES.map(g=>`- [${g.title}](${abs(g.path)}): ${g.description}`),'',
   '## Questions grown-ups ask','',
   ...LEARN_FAQ.flatMap(f=>[`### ${f.q}`,f.a,'']),
   '## Lessons','',

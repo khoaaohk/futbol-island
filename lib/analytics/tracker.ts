@@ -28,6 +28,7 @@
  */
 import type {Area} from './core';
 import {MAX_BEAT_COUNTS,MAX_COUNT_VALUE,isCountId,type StartFlags} from './countIds';
+import {engineOf,searchId} from './searchIds';
 import {ACTIVITY_IDS,ACTIVITY_IDLE_MS,MAX_BEAT_CELLS,PASSIVE_ACTIVITIES,SAMPLE_MAX_MS,SAMPLE_MS,cellOf,type ActivityId,type PlaceId} from './islandIds';
 
 export const ENDPOINT='/api/visit';
@@ -55,7 +56,7 @@ export type TrackerEnv={
  /** Oct 15 2026 (live sessions): two yes/no marks for the start (lib/analytics/deviceMarks.ts readDeviceMarks). Once per new session. */
  marks?:()=>{returning:boolean;hasCode:boolean}|null;
  /** Oct 16 2026 (players): the start's one player key, a save code or the install id (lib/analytics/deviceMarks.ts readPlayerKey). */
- player?:()=>{pc:string}|{pi:string}|null;
+ player?:()=>{ph:string}|{pi:string}|null;
  allowLocalhost?:boolean;
 };
 
@@ -255,8 +256,11 @@ export function startTracker(env:TrackerEnv){
    // A printed link's tag (Oct 15 2026: the QR card is https://futbolisland.app/?from=flyer) rides as the source when no utm_source.
    const tag=campaignTag(w.location.search);if(tag&&!u.source)u.source=tag;
    if(Object.keys(u).length)body.u=u;
+   // Nov 10 2026 (searchIds.ts): an arrival from a search engine or AI assistant counts once per (landing page, engine name),
+   // on the next beat. The engine comes from the referrer host above, else from a link's utm_source; no query text is read.
+   {const eng=engineOf(r)||engineOf(u.source);if(eng)count(searchId(p,eng));}
    startRt=null;try{const m=env.marks?.();if(m){body.rt=m.returning?1:0;body.hc=m.hasCode?1:0;startRt=body.rt as 0|1;}}catch{}
-   try{const k=env.player?.();if(k)Object.assign(body,'pc' in k?{pc:k.pc}:{pi:k.pi});}catch{}
+   try{const k=env.player?.();if(k)Object.assign(body,'ph' in k?{ph:k.ph}:{pi:k.pi});}catch{}
    if((n.maxTouchPoints||0)>1)body.tp=1;
    try{const f=env.flags?.();if(f&&Object.keys(f).length)body.f=f;}catch{}
   }

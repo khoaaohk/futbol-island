@@ -33,12 +33,19 @@ export const isBoardGame=(g:unknown):g is BoardGame=>typeof g==='string'&&(BOARD
  * Per-game rules. `max`: the sanity ceiling (far above any real run). A score must also fit `base + perSecond × seconds played`
  * since the session started, and the session must have lasted `minSeconds` (a real play, not a scripted post).
  * Pass Puzzles' score is the child's total stars, which grows across visits, so it has no per-second rule.
+ * Nov 10 2026 (abuse audit: "anyone gets a /start token, waits, posts the ceiling"): rates re-read from each game's scoring and
+ * set to about 1.5x the best sustained pace (session time includes menus, countdowns and goal pauses):
+ *  pinball 3000 + 1200/s (soccerPinball.ts: goal 500-650 + rebound/wall-pass/PERFECT-streak bonuses, ~500-800/s great; 1500 end
+ *   bonus in the base), pinderby ×1.12 speed ×2 = 6000 + 2700/s, pinfinal ×1.22 ×3 = 9000 + 4400/s; live 300 + 25/s (goal 100,
+ *   pass 10, win 200: a superb 180 s match ~3200, ~16/s).
+ *  Runner family, Strikers leagues, Summit Kick (a real 5/5 can land in ~7 s: tests/summit-kick.cjs) and the tennis tours (a best touch, 288 Pro / 432 Legend, can land about once a second:
+ *  tests/tennis-polish-nov8.cjs) were already at ~1.5x their best pace and are unchanged. Not play-tested.
  */
 export const BOARD_RULES:Record<BoardGame,{name:string;unit:string;max:number;base:number;perSecond:number;minSeconds:number;learn:string}>={
  runner:{name:'Breakaway Run',unit:'points',max:300_000,base:3_000,perSecond:1_500,minSeconds:12,learn:'Read the open lane, then finish.'},
- pinball:{name:'Futbol Pinball',unit:'points',max:400_000,base:5_000,perSecond:2_500,minSeconds:20,learn:'Time your strike as the ball arrives.'},
+ pinball:{name:'Futbol Pinball',unit:'points',max:400_000,base:3_000,perSecond:1_200,minSeconds:20,learn:'Time your strike as the ball arrives.'},
  tennis:{name:'Futbol Tennis',unit:'touch rally',max:500,base:10,perSecond:2,minSeconds:15,learn:'A clean first touch keeps the rally alive.'},
- live:{name:'Island Strikers',unit:'match points',max:20_000,base:400,perSecond:40,minSeconds:30,learn:'Passes and goals both score. Win as a team.'},
+ live:{name:'Island Strikers',unit:'match points',max:20_000,base:300,perSecond:25,minSeconds:30,learn:'Passes and goals both score. Win as a team.'},
  puzzle:{name:'Pass Puzzles',unit:'stars',max:300,base:300,perSecond:0,minSeconds:8,learn:'Every star is a pass you learned to see.'},
  // Summit Kick (Summit Isle, Oct 12 2026; lib/town/summitKick.ts): at most 780 a round (5 hoops, accuracy, speed), so 1000 is the ceiling.
  kick:{name:'Summit Kick',unit:'points',max:1_000,base:400,perSecond:60,minSeconds:6,learn:'Pick a corner: keepers stand in the middle.'},
@@ -58,8 +65,8 @@ export const BOARD_RULES:Record<BoardGame,{name:string;unit:string;max:number;ba
  tenlgnd:{name:'Tennis Legend Tour',unit:'tour points',max:300_000,base:1_500,perSecond:450,minSeconds:20,learn:'Two balls. Read the landing ring, plant, strike.'},
  // Pinball elite tiers (Nov 8 2026, soccerPinballTiers.ts): the table runs ×1.12 / ×1.22 faster and every point is ×2 / ×3, so the
  // classic rate (2500/s, already far above a real run) scales by speed × multiplier; the ceiling stays the table's 400000.
- pinderby:{name:'Pinball Derby Night',unit:'points',max:400_000,base:10_000,perSecond:5_600,minSeconds:20,learn:'Faster ball, shorter flippers: read the drop early.'},
- pinfinal:{name:'Pinball World Final',unit:'points',max:400_000,base:15_000,perSecond:9_200,minSeconds:20,learn:'Two balls, no ball save. Every block counts.'},
+ pinderby:{name:'Pinball Derby Night',unit:'points',max:400_000,base:6_000,perSecond:2_700,minSeconds:20,learn:'Faster ball, shorter flippers: read the drop early.'},
+ pinfinal:{name:'Pinball World Final',unit:'points',max:400_000,base:9_000,perSecond:4_400,minSeconds:20,learn:'Two balls, no ball save. Every block counts.'},
  // Pass Puzzles cups (Nov 8 2026, lib/passPuzzle/tiers.ts): cup points = stars × 100 × skill (at most ×2.75), summed over the cup's 6
  // puzzles, so at most 4950. Like the star board it is a running total (no per-second rule); the ceiling sits just above the max.
  puzpro:{name:'Pass Puzzles Pro Cup',unit:'cup points',max:5_000,base:5_000,perSecond:0,minSeconds:8,learn:'Beat the clock. First-try passes score more.'},

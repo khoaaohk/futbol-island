@@ -1,6 +1,7 @@
 import {cookies} from 'next/headers';
 import {ADMIN_COOKIE,adminPassword,cookieOptions,createLockout,passwordMatches,sameOrigin,signSession} from '@/lib/analytics/adminAuth';
 import {clientIp} from '@/lib/analytics/ingest';
+import {loadSessionEpoch,loginBudget} from '@/lib/analytics/adminSession';
 
 export const dynamic='force-dynamic';
 export const runtime='nodejs';
@@ -17,10 +18,13 @@ export async function POST(req:Request){
  try{const text=await req.text();if(text.length>512)return json(413,{error:'too-large'});const b=JSON.parse(text);if(typeof b?.password==='string')password=b.password;}catch{return json(400,{error:'bad-request'});}
  if(!passwordMatches(password,actual)){
   lockout.fail(ip,now);
+  // Nov 10 2026: 20 failures per IP per hour across every instance; past it this IP is locked here for the hour.
+  if(!await loginBudget(ip))lockout.lockFor(ip,now,60*60_000);
   await new Promise(r=>setTimeout(r,400));
   return json(lockout.locked(ip,now)?429:401,{error:lockout.locked(ip,now)?'locked':'wrong'});
  }
  lockout.succeed(ip);
+ await loadSessionEpoch();// sign with the current epoch
  cookies().set(ADMIN_COOKIE,signSession(now)!,cookieOptions());
  return json(200,{ok:true});
 }

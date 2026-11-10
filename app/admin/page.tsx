@@ -1,5 +1,6 @@
 import {cookies} from 'next/headers';
 import {ADMIN_COOKIE,adminPassword,verifySession} from '@/lib/analytics/adminAuth';
+import {loadSessionEpoch} from '@/lib/analytics/adminSession';
 import {resolveRange} from '@/lib/analytics/core';
 import {buildReportFor} from '@/lib/analytics/report';
 import {getStore} from '@/lib/analytics/store';
@@ -21,6 +22,7 @@ export const runtime='nodejs';
  *  a one-day trial of 30 days with the trend rebuild). The report and the trend data (the daily layer) are built in parallel on the server, so the first
  *  paint has the charts. Without a valid signed session cookie only the sign-in card is rendered. */
 export default async function AdminPage(){
+ await loadSessionEpoch();// Nov 10 2026: "Sign out everywhere" (lib/analytics/adminSession.ts)
  if(!adminPassword()||!verifySession(cookies().get(ADMIN_COOKIE)?.value,Date.now()))return <AdminLogin configured={!!adminPassword()}/>;
  const now=new Date(),store=getStore();
  const dashP:Promise<DashboardData|null>=store?(async()=>{let mode:'pacific'|'utc'='pacific';try{mode=await store.timeMode();}catch{mode='utc';}

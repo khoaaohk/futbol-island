@@ -30,11 +30,13 @@ import type {KickAdminMetrics} from '../arcade/kickAdminMetrics';
 import type {FishingAdminMetrics} from './fishingAdminMetrics';
 import type {FishingFunnel} from './fishingFunnel';
 import type {SourcesSummary} from './live';
+import type {SearchReport} from './searchReport';
 import type {SponsorReport} from './sponsor';
 import type {EmoteReport,PartyReport} from './partyReport';
 import type {MarketingReport} from './marketingReport';
 import type {LiveMatchReport} from './liveMatchReport';
 import type {MarketingVisitReport} from './marketingVisitReport';
+import {PLAYER_HASH_RE} from './playerHash';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
 
 /** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the start-page
@@ -86,8 +88,10 @@ export type RawEvent={v?:number;t:EventType;s:string;p:string;r?:string;u?:Utm;e
  rt?:0|1;hc?:0|1;
  /** Oct 16 2026 (players; 20261019_analytics_day_sessions.sql): on a start only, ONE of: `pc` the save code active on this device,
   *  or `pi` this device's random install id (fi2-install-v1, 32 hex). The server turns it into a keyed one-way player id
-  *  (lib/analytics/playerId.ts) and discards it; neither is ever stored, logged or sent on. */
- pc?:string;pi?:string};
+  *  (lib/analytics/playerId.ts) and discards it; neither is ever stored, logged or sent on.
+  *  Nov 10 2026: `ph` (SHA-256 of an app string + the code, made on the device: lib/analytics/playerHash.ts) replaces `pc`;
+  *  a `pc` from an old cached page is DROPPED by validateEvent (never read, never hashed). */
+ ph?:string;pi?:string;pc?:never};
 /** Seconds per heat-map cell (key = cell index as a string). */
 export type CellMap=Record<string,number>;
 
@@ -168,6 +172,8 @@ export function sanitizeRegion(raw:string|null|undefined):string|null{const v=(r
 
 /** The shapes a start's player key may take (a save code as the game stores it; a 16-byte install id in hex). */
 export const PLAYER_CODE_RE=/^[a-z]{3,9}-[a-z]{3,9}-[a-z]{3,9}-[1-9]\d{2,3}$/,INSTALL_ID_RE=/^[0-9a-f]{32}$/;
+/** Nov 10 2026: anything shaped like a save code ANYWHERE in a page path, referrer or campaign tag refuses the event. */
+export const CODE_SHAPED_RE=/[a-z]{3,9}-[a-z]{3,9}-[a-z]{3,9}-[1-9]\d{2,3}/i;
 export type Validated={ok:true;event:RawEvent}|{ok:false;reason:string};
 
 /** Strict schema: unknown keys, wrong types and out-of-range numbers are rejected rather than repaired. */
@@ -177,8 +183,11 @@ export function validateEvent(body:string):Validated{
  let o:unknown;try{o=JSON.parse(body);}catch{return {ok:false,reason:'json'};}
  if(!o||typeof o!=='object'||Array.isArray(o))return {ok:false,reason:'shape'};
  const r=o as Record<string,unknown>;
- const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c','k','f','rt','hc','pc','pi']);
+ const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c','k','f','rt','hc','pc','ph','pi']);
  for(const k of Object.keys(r))if(!allowed.has(k))return {ok:false,reason:'unknown-key'};
+ // Nov 10 2026: a raw save code never becomes analytics data. An old page's `pc` is removed unread (the visit still counts).
+ delete r.pc;
+ for(const v of [r.p,r.r,...(r.u&&typeof r.u==='object'?Object.values(r.u as Record<string,unknown>):[])])if(typeof v==='string'&&CODE_SHAPED_RE.test(v))return {ok:false,reason:'code-shaped'};
  if(!(EVENT_TYPES as readonly unknown[]).includes(r.t))return {ok:false,reason:'type'};
  if(typeof r.s!=='string'||!SESSION_RE.test(r.s))return {ok:false,reason:'session'};
  if(typeof r.p!=='string'||r.p.length>200||!r.p.startsWith('/'))return {ok:false,reason:'path'};
@@ -186,7 +195,7 @@ export function validateEvent(body:string):Validated{
  if(r.e!==undefined&&(typeof r.e!=='number'||!Number.isFinite(r.e)||r.e<0||r.e>3_600_000))return {ok:false,reason:'engaged'};
  if(r.tp!==undefined&&r.tp!==0&&r.tp!==1)return {ok:false,reason:'touch'};
  for(const k of ['rt','hc'] as const)if(r[k]!==undefined&&((r[k]!==0&&r[k]!==1)||r.t!=='start'))return {ok:false,reason:'marks'};
- if((r.pc!==undefined||r.pi!==undefined)&&(r.t!=='start'||(r.pc!==undefined&&r.pi!==undefined)||(r.pc!==undefined&&(typeof r.pc!=='string'||!PLAYER_CODE_RE.test(r.pc)))
+ if((r.ph!==undefined||r.pi!==undefined)&&(r.t!=='start'||(r.ph!==undefined&&r.pi!==undefined)||(r.ph!==undefined&&(typeof r.ph!=='string'||!PLAYER_HASH_RE.test(r.ph)))
   ||(r.pi!==undefined&&(typeof r.pi!=='string'||!INSTALL_ID_RE.test(r.pi)))))return {ok:false,reason:'player'};
  if(r.u!==undefined){
   if(!r.u||typeof r.u!=='object'||Array.isArray(r.u))return {ok:false,reason:'utm'};
@@ -576,6 +585,8 @@ export type Report={
  liveMatches?:LiveMatchReport|null;
  /** Nov 5 2026: the Marketing tab's "Investor page visits" (lib/analytics/marketingVisitReport.ts): /marketing only, exact. */
  marketingVisits?:MarketingVisitReport|null;
+ /** Nov 10 2026: the Marketing tab's "Search arrivals" (lib/analytics/searchReport.ts): by engine and landing page, exact. */
+ search?:SearchReport|null;
 };
 
 /** How the report's days and comparisons were cut (Oct 12 2026). Shown on /admin wherever it changes how a number reads. */

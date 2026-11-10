@@ -12,6 +12,7 @@ import type {MkRow} from '@/lib/analytics/marketingReport';
 import {BarList,ChartCard,LineChart,fmtDuration,fmtInt,fmtPct,type BarRow} from './charts';
 import {Steps} from './StartSection';
 import MarketingVisitsSection from './MarketingVisitsSection';
+import SearchSection from './SearchSection';
 import styles from './admin.module.css';
 
 const EMPTY='No marketing-page visits in this range yet. Counting starts with the Nov 3 2026 release; a visit’s numbers arrive when the visitor leaves the tab, or every few minutes.';
@@ -37,7 +38,8 @@ export default function MarketingSection({report,rangeText,dayLabel}:{report:Rep
  const labels=useMemo(()=>(m?.daily??[]).map(d=>dayLabel(d.day)),[m]);// eslint-disable-line react-hooks/exhaustive-deps
  const values=useMemo(()=>({views:(m?.daily??[]).map(d=>d.views),visitors:(m?.daily??[]).map(d=>d.visitors),play:(m?.daily??[]).map(d=>d.play),played:(m?.daily??[]).map(d=>d.played??0)}),[m]);
  // Nov 5 2026: the investor page /marketing (where, when, how long) sits under the tour page's numbers, with or without them.
- const visits=<MarketingVisitsSection report={report} rangeText={rangeText} dayLabel={dayLabel}/>;
+ // Nov 10 2026: search and AI-assistant arrivals (SearchSection) close the tab.
+ const visits=<><MarketingVisitsSection report={report} rangeText={rangeText} dayLabel={dayLabel}/><SearchSection report={report} rangeText={rangeText} dayLabel={dayLabel}/></>;
  if(!m||!m.hasData)return <><section className={styles.island} aria-labelledby="sec-marketing">
   <div className={styles.sectionHead}><h2 id="sec-marketing">Marketing page</h2><p>The tour page at futbolisland.app/ for {rangeText}.</p></div>
   <p className={styles.empty}>{EMPTY}</p>

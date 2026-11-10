@@ -231,7 +231,8 @@ ok('privacy policy: says we collect, names sponsors and totals, never claims to 
  assert(/collect[^.]*anonymous usage data/i.test(text),'says it collects anonymous usage data');
  assert(/sponsors?/i.test(text)&&/combined[^.]*totals/i.test(text),'sponsors get combined totals');
  assert(/two purposes only/i.test(text));
- assert(/small groups|too small to stay anonymous/i.test(text),'small groups left out');
+ // Nov 10 2026 (owner ruling Nov 8: sponsors get EXACT totals): the small-groups promise is gone; still never anything about one child.
+ assert(!/small groups|too small to stay anonymous/i.test(text)&&/exact combined/i.test(text)&&/never anything about one child/i.test(text),'exact combined totals, never one child');
  assert(/do not sell/i.test(text)&&!/\bwe (may |might |will |can )?(sell|rent)\b/i.test(text),'never claims to sell');
  assert(!/almost no personal details|do not share any information|we collect nothing|or share information for money/i.test(text),'old wording gone');
  assert(/never stored, logged or counted/.test(text),'the first name stays out of analytics');

@@ -1,26 +1,58 @@
-/* The static reading pages (/about, /learn/lessons, /fish, /cards, /exhibits): plain HTML and this one sheet, no scripts, no animation.
-   Island tokens: cream paper #fff8e7, dark green ink #244d40, the gold button tokens from app/globals.css (--btn-gold …) and the
-   brush face for the page title (same file and gold shadow family as the title screen). Design notes: docs/seo/DESIGN.md.
-   Type scale: title 40/56 · section 22/26 · sub 18/20 · body 17/18 (lh 1.55, ≤68ch) · lead 19/21 · caption 14 · eyebrow/label 12.
-   Spacing scale (8-pt): 8 / 16 / 24 / 40 / 64. Phone gutters 16, desktop 24; 24 between sections. */
+/* The static reading pages (/about, /learn/**, /fish, /cards, /exhibits, the parents' guide): plain HTML and this one sheet, no
+   scripts, no animation. Since Nov 10 2026 they wear the home page's look (tokens, type and buttons from
+   components/learn/learn.module.css and app/globals.css --btn-*). Rules: docs/seo/DESIGN.md.
+   Type: title clamp 38-72 (600, -.028em) · section 28/36 · sub 19/22 · body 17/18 (lh 1.55) · lead 20/24 · caption 15 · label 13.
+   Spacing scale (8-pt): 8 / 16 / 24 / 40 / 64. Phone gutters 16, desktop 24; 40/56 between sections. */
 @font-face{font-family:IslandBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
 
+/* Nov 10 2026 (owner: "fix all these pages to match more with the main site"): ONE site. The tokens below are the home page's
+   (components/learn/learn.module.css .root): paper #fbf7ee, tint #ecefdf, ink #14221d, soft ink #5b675f, gold #e9c16b, gold ink
+   #8a6620, pitch #1d6b55, the system sans, tight 600 headlines. Every class name is unchanged; only its look moved. The old
+   values in the header comment above (cream #fff8e7, green ink, brush title) are history. New rules: docs/seo/DESIGN.md.
+   --s3 / --s5 and .main's top / bottom padding must keep their values: the home page's full-bleed root undoes them. */
 .page{
- --ink:#244d40;--ink-soft:#4f6259;--paper:#fff8e7;--surface:#f7f0db;--rule:#e6d9b5;--accent:#7a5a1e;--link:#1d6b55;
- --s1:8px;--s2:16px;--s3:24px;--s4:40px;--s5:64px;--gutter:16px;--measure:68ch;
- --t-title:40px;--t-h2:22px;--t-h3:18px;--t-body:17px;--t-lead:19px;--t-cap:14px;--t-label:12px;
+ --ink:#14221d;--ink-soft:#5b675f;--paper:#fbf7ee;--surface:#ecefdf;--well:#efe8d7;--rule:rgb(20 34 29 / .12);--accent:#8a6620;--link:#1d6b55;--gold:#e9c16b;
+ --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI Variable Display','Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;
+ --s1:8px;--s2:16px;--s3:24px;--s4:40px;--s5:64px;--gutter:16px;--measure:68ch;--col:736px;--gap:40px;
+ --t-title:clamp(38px,3.6vw + 24px,72px);--t-h2:28px;--t-h3:19px;--t-body:17px;--t-lead:20px;--t-cap:15px;--t-label:13px;
  color-scheme:light;min-height:100dvh;margin:0;background:var(--paper);color:var(--ink);
- font:var(--t-body)/1.55 Arial,Helvetica,sans-serif;display:flex;flex-direction:column;overflow-x:clip;-webkit-text-size-adjust:100%}
-@media(min-width:720px){.page{--gutter:24px;--t-title:56px;--t-h2:26px;--t-h3:20px;--t-body:18px;--t-lead:21px}}
+ font:var(--t-body)/1.55 var(--sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;display:flex;flex-direction:column;overflow-x:clip;-webkit-text-size-adjust:100%}
+@media(min-width:720px){.page{--gutter:24px;--gap:56px;--t-h2:36px;--t-h3:22px;--t-body:18px;--t-lead:24px}}
 .page a{color:var(--link);text-underline-offset:.18em}
 .page a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px;border-radius:4px}
 
-/* Header: the brand only (no section navigation, Oct 16 2026). */
-.header{background:var(--ink);padding:calc(var(--s1) + env(safe-area-inset-top,0px)) var(--gutter) var(--s1)}
-.headerInner{max-width:calc(1040px - 2 * var(--gutter));margin:0 auto}
-.page .brand{display:inline-flex;align-items:center;min-height:44px;font-family:IslandBrush,Arial,sans-serif;font-size:24px;line-height:1;color:var(--paper);text-decoration:none}
+/* Header: the home page's bar as static HTML (components/site/SiteNav.tsx). Same 68px sticky bar, hairline, IslandBrush wordmark
+   with one colour per letter, five text links and the gold Play pill; phones get menu button / logo / Play like home. It is the
+   home bar's calm form: a plain paper fill (no backdrop blur), no moving chip, no scripts. */
+.header{position:sticky;top:0;z-index:20;box-sizing:border-box;height:calc(68px + env(safe-area-inset-top,0px));padding:env(safe-area-inset-top,0px) 0 0;background:var(--paper);box-shadow:0 1px 0 var(--rule)}
+.headerInner{height:100%}
+.nav{position:relative;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;height:100%;box-sizing:border-box;padding:0 max(var(--gutter),env(safe-area-inset-left,0px),env(safe-area-inset-right,0px)) 3px}
+.page .brand{justify-self:start;display:inline-flex;align-items:center;min-height:44px;font-family:IslandBrush,Arial,sans-serif;font-size:26px;line-height:1;color:var(--ink);text-decoration:none;white-space:nowrap}
+.navLinks{display:flex;gap:6px;margin:0;padding:0;list-style:none}
+.page .navLinks a{display:inline-flex;align-items:center;justify-content:center;width:92px;min-height:44px;color:var(--ink);font-size:13px;opacity:.78;text-decoration:none;white-space:nowrap}
+@media(hover:hover){.page .navLinks a:hover{opacity:1;color:var(--link)}}
+.page .nav a.play{justify-self:end;align-self:center}/* weight and size come from DoneButton.module.css, exactly as the home bar's Play */
+.menu{display:none}
+.menuBtn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:76px;height:44px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);list-style:none;cursor:pointer}
+.menuBtn::-webkit-details-marker{display:none}
+.menuBtn:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 var(--btn-mint-edge,#8bac9d)}
+.menuBtn:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+.menuIco{position:relative;display:block;width:20px;height:10px}
+.menuIco i{position:absolute;left:0;width:20px;height:2px;border-radius:1px;background:currentColor}
+.menuIco i:first-child{top:0}
+.menuIco i:last-child{top:8px}
+.menu[open] .menuIco i:first-child{transform:translateY(4px) rotate(45deg)}
+.menu[open] .menuIco i:last-child{transform:translateY(-4px) rotate(-45deg)}
+.menuPanel{position:absolute;top:100%;left:0;right:0;max-height:calc(100svh - 68px - env(safe-area-inset-top,0px));overflow-y:auto;overscroll-behavior:contain;padding:8px var(--gutter) 20px;background:var(--paper);box-shadow:0 1px 0 var(--rule),0 30px 60px -20px rgb(12 23 20 / .35)}
+.menuList{margin:0;padding:0;list-style:none}
+.menuList li+li{border-top:1px solid var(--rule)}
+.page .menuList a{display:flex;align-items:center;min-height:64px;padding:0 4px;color:var(--ink);font-size:28px;font-weight:600;line-height:1.1;letter-spacing:-.02em;text-decoration:none}
+@media(max-width:640px){.navLinks{display:none}.menu{display:block;grid-column:1;grid-row:1;justify-self:start}.page .brand{grid-column:2;grid-row:1;justify-self:center}.page .nav a.play{grid-column:3;grid-row:1}}
+@media(min-width:641px) and (max-width:759px){.navLinks{gap:4px}.page .navLinks a{width:82px}}
+@media print{.header{display:none}}
 
-.main{flex:1;width:100%;max-width:1040px;margin:0 auto;padding:var(--s3) var(--gutter) var(--s5);box-sizing:border-box;display:grid;gap:var(--s3);align-content:start}
+/* One reading column, centred (736px: about 70 characters of 18px text), under a wider centred page head. */
+.main{flex:1;width:100%;max-width:calc(var(--col) + 2 * var(--gutter));margin:0 auto;padding:var(--s3) var(--gutter) var(--s5);box-sizing:border-box;display:grid;gap:var(--gap);align-content:start}
 .main>*{min-width:0}
 .main p,.main li,.main h1,.main h2,.main h3{margin:0}
 .main ul,.main ol{margin:0;padding-left:1.4em;display:grid;gap:var(--s1)}
@@ -28,62 +60,98 @@
 .main li::marker{color:var(--accent)}
 
 /* Opening block: crumbs, eyebrow, title, lead and (index pages) the CTA. */
-.intro{display:grid;gap:var(--s2);justify-items:start;padding-bottom:var(--s2)}
+/* The page head is the home chapter head: centred, breadcrumb above a huge tight 600 headline in the system sans (no brush face,
+   no text shadow), the lead in soft ink at weight 500. From 1100px it spreads past the reading column so a long title has room. */
+.intro{display:grid;gap:var(--s2);justify-items:center;text-align:center;padding:clamp(8px,4vh,48px) 0 var(--s2)}
+@media(min-width:1100px){.intro{margin-inline:-140px}}
+.main .intro p{max-width:60ch}
 .crumbs{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
-.crumbs ol{list-style:none;padding:0!important;display:flex!important;flex-wrap:wrap;gap:0 var(--s1)}
-.page .crumbs a{color:var(--ink-soft);text-decoration:none}
-.page .crumbs a:hover{text-decoration:underline}
+.crumbs ol{list-style:none;padding:0!important;display:flex!important;flex-wrap:wrap;align-items:center;gap:0 var(--s1)}
+.intro .crumbs ol{justify-content:center}
+/* one text line per row; each link carries an invisible 44px tall tap area (the home bar's logo does the same) */
+.crumbs li{display:inline-flex;align-items:center;padding:6px 0}
+.page .crumbs a{position:relative;color:var(--ink-soft);text-decoration:none}
+.crumbs a::after{content:"";position:absolute;inset:-12px -4px}
+.page .crumbs a:hover{color:var(--ink)}
 .crumbs li+li::before{content:'›';margin-right:var(--s1);opacity:.6}
 .crumbs [aria-current]{color:var(--ink)}
-.eyebrow{font-size:var(--t-label);line-height:1.4;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
-.title{font-family:IslandBrush,Arial,sans-serif;font-weight:400;font-size:var(--t-title);line-height:1.12;letter-spacing:-.01em;color:var(--ink);
- text-shadow:0 3px 0 var(--btn-gold,#e9c16b),0 8px 22px #a8863d33;overflow-wrap:anywhere;text-wrap:balance}
-.lead{max-width:var(--measure);font-size:var(--t-lead);line-height:1.5}
+.eyebrow{font-size:var(--t-cap);line-height:1.4;font-weight:600;color:var(--accent)}
+.title{font-family:var(--sans);font-weight:600;font-size:var(--t-title);line-height:1.04;letter-spacing:-.028em;color:var(--ink);overflow-wrap:anywhere;text-wrap:balance}
+.lead{max-width:var(--measure);font-size:var(--t-lead);font-weight:500;line-height:1.3;letter-spacing:-.01em;color:var(--ink-soft);text-wrap:balance}
 
-/* Sections: a heading, then its blocks 16 apart. */
+/* Sections: a heading, then its blocks 16 apart. Headings follow the home scale (600, tight tracking). */
 .section{display:grid;gap:var(--s2);align-content:start}
-.h2{font-size:var(--t-h2);line-height:1.25;font-weight:700;color:var(--ink);text-wrap:balance}
-.h3{font-size:var(--t-h3);line-height:1.3;font-weight:700;color:var(--ink)}
+.h2{font-size:var(--t-h2);line-height:1.1;font-weight:600;letter-spacing:-.025em;color:var(--ink);text-wrap:balance}
+.section .section .h2{font-size:var(--t-h3)}
+.h3{font-size:var(--t-h3);line-height:1.2;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
 .count{font-weight:400;color:var(--ink-soft)}
 .caption{max-width:var(--measure);font-size:var(--t-cap);line-height:1.45;color:var(--ink-soft)}
 .bare{list-style:none;padding-left:0!important}
+/* Links in running text: ink with the home page's gold underline (learn.module.css .linkGrid), not the browser default. */
+.main :where(.lead,.caption,.card,.figure,.table,.pair,.h2,.h3,.section>p,.section>ul,.section>ol,.section>dl,.intro>p) a,.main>p a,.main>ul a{color:var(--ink);font-weight:600;text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:.2em}
+@media(hover:hover){.main :where(.lead,.caption,.card,.figure,.table,.pair,.h2,.h3,.section>p,.section>ul,.section>ol,.section>dl,.intro>p) a:hover{text-decoration-color:var(--ink)}}
 
-/* Cream card (the island's dialog surface, components/ModalShell.module.css): facts, quizzes, FAQ. */
-.card{max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--surface);border:1px solid var(--rule);border-radius:16px;
- padding:var(--s2);box-shadow:0 2px 0 #193f3712,0 8px 24px #193f3710;display:grid;gap:var(--s2);align-content:start}
-@media(min-width:720px){.card{padding:var(--s3)}}
+/* Card (facts, quizzes, FAQ): a step in tone (the home page's tint), 24 radius like its boxes, no outline and no shadow at rest. */
+.card{max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--surface);border:0;border-radius:24px;
+ padding:20px;display:grid;gap:var(--s2);align-content:start}
+@media(min-width:720px){.card{padding:28px}}
 .stack{list-style:none;padding:0!important;display:grid;gap:var(--s2)!important}
 .options{list-style:upper-alpha}
 /* The one label for what kind of text a card holds: "Real football fact" (true) or "Island story" (game fiction). */
-.label{justify-self:start;display:inline-block;padding:4px 10px;border-radius:999px;background:var(--ink);color:var(--paper);
- font-size:var(--t-label);line-height:1.3;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.label{justify-self:start;display:inline-block;padding:5px 12px;border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);
+ font-size:var(--t-label);line-height:1.3;font-weight:700}
+.card .label{background:var(--paper)}
 
-/* Picture panel (fish art). */
-.art{display:flex;justify-content:center;max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:#e9f3ee;border-radius:16px;padding:var(--s2)}
+/* Picture panel (fish art, pitch diagrams): the home media frame, a large rounded well with its soft shadow. */
+.art{display:flex;justify-content:center;max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--well);border-radius:clamp(24px,2.4vw,32px);padding:var(--s2);box-shadow:0 30px 60px -28px rgb(12 23 20 / .35)}
+@media(min-width:720px){.art{padding:var(--s3)}}
 .art svg{max-width:100%;height:auto}
+.art img{display:block;width:100%;max-width:368px;height:auto;border-radius:16px}
 
-/* Index lists: a stacked list on phones (one cream card, hairline rows), a card grid from 720 px. */
-.list{list-style:none;padding:0!important;gap:0!important;background:var(--surface);border:1px solid var(--rule);border-radius:16px;overflow:hidden;box-shadow:0 2px 0 #193f3712}
-.list>li+li{border-top:1px solid var(--rule)}
-.page .list a{display:grid;gap:2px;min-height:44px;padding:12px var(--s2);box-sizing:border-box;color:var(--ink);text-decoration:none}
-.page .list a:hover .itemTitle{text-decoration:underline}
-.itemTitle{font-weight:700;line-height:1.3}
+/* Index lists: the home page's "Read the lessons first" links (learn.module.css .linkGrid). Plain rows, the title underlined in
+   gold, one soft line under it; one column on phones, two from 720 px. No boxes. */
+.list{list-style:none;padding:0!important;gap:0!important}
+.page .list a{display:grid;gap:4px;min-height:44px;padding:12px 0;box-sizing:border-box;color:var(--ink);text-decoration:none}
+.list a .itemTitle{text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:3px;text-underline-offset:.22em}
+@media(hover:hover){.page .list a:hover .itemTitle{text-decoration-color:var(--ink)}}
+.itemTitle{font-size:clamp(18px,.4vw + 15px,21px);font-weight:700;letter-spacing:-.015em;line-height:1.3}
 .itemMeta{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
 @media(min-width:720px){
- .list{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:var(--s2)!important;background:none;border:0;border-radius:0;overflow:visible;box-shadow:none}
- .list>li+li{border-top:0}
- .page .list a{height:100%;padding:var(--s2);background:var(--surface);border:1px solid var(--rule);border-radius:16px;box-shadow:0 2px 0 #193f3712,0 8px 24px #193f3710}
+ .list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px var(--s4)!important}
 }
 
-/* The one way into the game: the island's gold button (title screen .start). */
-.page .cta{display:inline-flex;align-items:center;justify-content:center;min-height:52px;max-width:100%;box-sizing:border-box;padding:6px var(--s3) 8px;
+/* The one way into the game: the home page's gold button (learn.module.css .cta), same box, face and type. */
+.page .cta{display:inline-flex;align-items:center;justify-content:center;min-height:56px;max-width:100%;box-sizing:border-box;padding:0 30px;
  border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
- color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:inherit;font-weight:800;font-size:20px;line-height:1.15;text-align:center;text-decoration:none;
- transition:translate .16s,box-shadow .16s}
+ color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:var(--btn-font,Arial,Helvetica,sans-serif);font-weight:800;font-size:19px;line-height:1.15;letter-spacing:0;text-align:center;text-decoration:none;
+ transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+@media(hover:hover){.page .cta:hover{scale:1.03}}
 .page .cta:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
+@media(prefers-reduced-motion:reduce){.page .cta{transition:none}}
 .end{padding-top:var(--s3)}
+/* Previous / next in a collection (Nov 10 2026): a quiet line in the breadcrumb's voice, 44 px tap targets. */
+.pager{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 var(--s3);max-width:calc(var(--measure) + 2 * var(--s3));font-size:var(--t-cap);line-height:1.4}
+.page .pager a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink-soft);font-weight:600;text-decoration:none}
+.page .pager a:hover{color:var(--ink)}
 
-/* Quiet footer: one line and the privacy link. */
-.footer{border-top:1px solid var(--rule);padding:var(--s2) var(--gutter) calc(var(--s2) + env(safe-area-inset-bottom,0px));font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
-.footerInner{max-width:calc(1040px - 2 * var(--gutter));margin:0 auto;display:flex;flex-wrap:wrap;gap:0 var(--s2);align-items:center;justify-content:center;text-align:center}
-.page .footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink-soft);font-weight:700}
+/* Quiet footer (the same one the home page ends on): one line and plain links, as the home page's end links. */
+.footer{border-top:1px solid var(--rule);padding:var(--s2) var(--gutter) calc(var(--s2) + env(safe-area-inset-bottom,0px));font-size:15px;line-height:1.4;color:var(--ink-soft)}
+.footerInner{max-width:calc(1040px - 2 * var(--gutter));margin:0 auto;display:flex;flex-wrap:wrap;gap:0 var(--s3);align-items:center;justify-content:center;text-align:center}
+.page .footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink-soft);font-weight:600;text-decoration:none}
+.page .footer a:hover{color:var(--ink)}
+
+/* Guide pages (formations, positions; Nov 10 2026): pitch diagrams as inline SVG and comparison tables. Same tokens, no new
+   colours beyond the pitch green inside the SVG; no scripts, no animation. */
+.figure{margin:0;display:grid;gap:var(--s1);max-width:calc(var(--measure) + 2 * var(--s3))}
+.figure .art{max-width:none}
+.pair{display:grid;gap:var(--s3);max-width:calc(var(--measure) + 2 * var(--s3));align-items:start}
+.pair>*{display:grid;gap:var(--s1);align-content:start;min-width:0}
+.pair svg{width:100%;max-width:240px}
+@media(min-width:720px){.pair{grid-template-columns:1fr 1fr}}
+.pair .list{grid-template-columns:minmax(0,1fr)}
+.tableWrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--surface);border:0;border-radius:24px}
+.table{width:100%;border-collapse:collapse;font-size:16px;line-height:1.4}
+.table th,.table td{padding:14px var(--s2);text-align:left;vertical-align:top;border-top:1px solid var(--rule)}
+.table thead th{border-top:0;font-size:var(--t-cap);font-weight:600;color:var(--ink-soft)}
+.table tbody th{font-weight:700;white-space:nowrap}
+.table td{min-width:9em}/* phones: a wide table scrolls inside .tableWrap instead of crushing its columns */

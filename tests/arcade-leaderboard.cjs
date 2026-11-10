@@ -195,7 +195,7 @@ await ok('migration: self-check, idempotent, locked down, SQL = TypeScript twin'
    for(const fn of [`board_top('runner','2026-10-12')`,`board_purge('2026-10-12')`,`board_submit('runner',5,'AAA','','${'a'.repeat(32)}',null,null,null,'2026-10-12','2026-10-12')`])assert.match(fails(`select ${fn}`,role),/permission denied/,`${role} ${fn}`);
   }
   assert.equal(psql(`select count(*) from pg_policies where tablename='arcade_scores'`),'0');assert.equal(psql(`select relrowsecurity from pg_class where relname='arcade_scores'`),'t');
-  assert.deepEqual(psql(`select column_name from information_schema.columns where table_name='arcade_scores' order by ordinal_position`).split('\n'),['id','game','score','initials','icon','played_on','week','session_nonce','claim_hash'],'only these columns: no IP, device or name');
+  {const cols=psql(`select column_name from information_schema.columns where table_name='arcade_scores' order by ordinal_position`).split('\n');assert.deepEqual(cols,['id','game','score','initials','icon','played_on','week','session_nonce','claim_hash',...(cols.includes('hidden_at')?['hidden_at']:[])],'only these columns: no IP, device or name (Nov 10 2026: hidden_at, the admin Remove row)');}
   // The table refuses what the API refuses.
   for(const bad of [`'runner',0,'AAA',''`,`'island',5,'AAA',''`,`'runner',5,'aaa',''`,`'runner',5,'AAAA',''`,`'runner',5,'AAA','🦁'`,`'runner',500000,'AAA',''`])
    assert.match(fails(`insert into arcade_scores (game,score,initials,icon,played_on,week,session_nonce) values (${bad},'2026-10-14','2026-10-12','${'b'.repeat(32)}')`,'service_role'),/violates check constraint/,bad);

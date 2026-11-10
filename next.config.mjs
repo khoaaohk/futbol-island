@@ -47,6 +47,9 @@ const csp = dev => [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'self'",
+  // Nov 10 2026: still report-only; violations go to our own counter (app/api/csp-report: daily counts, no URLs or user agents).
+  'report-uri /api/csp-report',
+  'report-to csp',
 ].join('; ');
 const securityHeaders = dev => ({ source: '/:path*', headers: [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -54,6 +57,7 @@ const securityHeaders = dev => ({ source: '/:path*', headers: [
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: `accelerometer=(self), gyroscope=(self), fullscreen=(self "https://www.youtube.com" "https://www.youtube-nocookie.com"), camera=(), microphone=(), geolocation=(), payment=(), usb=(), midi=(), display-capture=()` },
   { key: 'Content-Security-Policy-Report-Only', value: csp(dev) },
+  { key: 'Reporting-Endpoints', value: 'csp="/api/csp-report"' },
 ] });
 const cacheStatic = [
   ...cacheAssets,
@@ -92,5 +96,10 @@ const GAME_QUERY_TO_PLAY = [
 // Nov 3 2026: the feature tour moved to the home page, so /learn itself is a permanent redirect to `/`.
 // Nov 8 2026 (SEO): the topic hubs live at /learn/<slug> too, so the old-lesson redirect leaves them alone. Keep in step with
 // lib/site/hubs.ts HUBS (tests/seo-pages.cjs checks it): the second lookahead lists their slugs.
-const redirects = [{ source: '/learn', destination: '/', permanent: true }, { source: '/learn/:slug((?!lessons$)(?!(?:football-rules-for-kids|soccer-quiz-for-kids|passing-and-support|futsal-for-kids|7v7-9v9-11v11)$)[A-Za-z0-9_-]+)', destination: '/learn/lessons/:slug', permanent: true }, ...GAME_QUERY_TO_PLAY];
+// Nov 10 2026 (SEO, docs/seo/DISCOVERY.md): https://www.futbolisland.app answered 200 with a full copy of every page. One
+// permanent redirect to the apex, FIRST so it wins before any path rule. It only fires when the Host header is exactly
+// www.futbolisland.app (Next anchors a `has` value as ^…$), so the apex, *.vercel.app previews and localhost never match and
+// the destination (apex) can never match it again: no loop.
+export const WWW_TO_APEX = { source: '/:path*', has: [{ type: 'host', value: 'www\\.futbolisland\\.app' }], destination: 'https://futbolisland.app/:path*', permanent: true };
+const redirects = [WWW_TO_APEX, { source: '/learn', destination: '/', permanent: true }, { source: '/learn/:slug((?!lessons$)(?!(?:football-rules-for-kids|soccer-quiz-for-kids|passing-and-support|futsal-for-kids|7v7-9v9-11v11|soccer-formations|soccer-positions|7v7-soccer-formations|9v9-soccer-formations|11v11-soccer-formations|soccer-rules|soccer-ball-size-by-age|soccer-field-size-by-age|soccer-age-groups|soccer-terms)$)[A-Za-z0-9_-]+)', destination: '/learn/lessons/:slug', permanent: true }, ...GAME_QUERY_TO_PLAY];
 export default phase => ({ reactStrictMode: true, distDir: process.env.NEXT_DIST_DIR || (phase === 'phase-development-server' ? '.next-dev' : '.next'), async headers() { return [securityHeaders(phase === 'phase-development-server'), ...cacheStatic]; }, async rewrites() { return rewrites; }, async redirects() { return redirects; } });

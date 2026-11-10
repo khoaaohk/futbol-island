@@ -1,0 +1,25 @@
+/* The error screen in the island's look (owner, Nov 10 2026: "more of the island style, with font, colors and btns; fix spacing"):
+   a cream card on the island green, IslandBrush for the title only, the gold primary button in regular sans. */
+/* IslandBrush is only declared on the routes that use it, so the error screen brings its own face (downloaded only when shown). */
+@font-face{font-family:ErrorBrush;src:url('/stories/films/assets/IslandBrush-Regular.ttf') format('truetype');font-display:swap}
+.screen{position:fixed;inset:0;display:grid;place-items:center;padding:max(24px,env(safe-area-inset-top)) 24px max(24px,env(safe-area-inset-bottom));background:#244d40;color:#244d40;overflow:auto}
+.card{box-sizing:border-box;width:min(100%,420px);display:flex;flex-direction:column;align-items:center;gap:12px;padding:32px 28px 28px;border-radius:28px;background:#fff1d3;text-align:center;
+ box-shadow:0 0 0 3px #fff2cd,0 8px 0 #a8863d}
+.title{margin:0 0 4px;font-family:ErrorBrush,IslandBrush,Arial,Helvetica,sans-serif;font-weight:400;font-size:34px;line-height:1.1;text-wrap:balance}
+.text{margin:0 0 12px;font-family:Arial,Helvetica,sans-serif;font-size:17px;line-height:1.45;font-weight:700;color:#4d6f60;text-wrap:balance}
+.button{min-height:52px;padding:10px 32px;border:3px solid #fff2cd;border-radius:999px;background:#e9c16b;color:#244d40;font-family:Arial,Helvetica,sans-serif;font-weight:800;font-size:18px;cursor:pointer;box-shadow:0 4px 0 #a8863d}
+.button:active:not(:disabled){translate:0 2px;box-shadow:0 2px 0 #a8863d}
+.button:disabled{opacity:.55;cursor:default}
+.button:focus-visible{outline:3px solid #244d40;outline-offset:3px}
+/* Nov 10 2026: the 404 (app/not-found.tsx) and the root-layout error screen (app/global-error.tsx) reuse this card. The 404 is a
+   page, not an overlay: it scrolls with the document, and its three links are buttons in the same sans (never IslandBrush). */
+.page{min-height:100svh;display:grid;place-items:center;box-sizing:border-box;padding:max(24px,env(safe-area-inset-top)) 16px max(24px,env(safe-area-inset-bottom));background:#244d40;color:#244d40}
+.links{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;width:100%}
+.link{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:10px 26px;border:3px solid #fff2cd;border-radius:999px;background:#e9c16b;color:#244d40;font-family:Arial,Helvetica,sans-serif;font-weight:800;font-size:18px;text-decoration:none;box-shadow:0 4px 0 #a8863d;transition:translate .12s,box-shadow .12s}
+.link:hover{background:#efcd80}
+.link:active{translate:0 2px;box-shadow:0 2px 0 #a8863d}
+.link:focus-visible{outline:3px solid #244d40;outline-offset:3px}
+.linkQuiet{background:#fff8e6;box-shadow:0 4px 0 #cbb68a}
+.linkQuiet:hover{background:#fffdf5}
+.linkQuiet:active{box-shadow:0 2px 0 #cbb68a}
+@media (prefers-reduced-motion:reduce){.link{transition:none}}

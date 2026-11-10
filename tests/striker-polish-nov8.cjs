@@ -17,7 +17,7 @@ await ok('tiers: two leagues with their own boards, beside (never mixed into) li
  assert.deepEqual([...T.STRIKER_TIER_IDS],['pro','legend']);
  const boards=T.STRIKER_TIER_IDS.map(id=>T.STRIKER_TIERS[id].board);assert.deepEqual(boards,['livepro','livelgnd']);
  for(const b of boards){assert(L.isBoardGame(b),b+' is a board game');assert.notEqual(b,'live');assert.match(b,/^[a-z]{2,8}$/,'fits the session token id pattern');}
- assert(L.isBoardGame('live'),'the original Strikers board is kept');assert.deepEqual(L.BOARD_RULES.live,{name:'Island Strikers',unit:'match points',max:20_000,base:400,perSecond:40,minSeconds:30,learn:'Passes and goals both score. Win as a team.'},'live rules unchanged');
+ assert(L.isBoardGame('live'),'the original Strikers board is kept');assert.deepEqual(L.BOARD_RULES.live,{name:'Island Strikers',unit:'match points',max:20_000,base:300,perSecond:25,minSeconds:30,learn:'Passes and goals both score. Win as a team.'},'live rules (Nov 10 2026: 300 + 25/s from the real scoring rate)');
  assert.equal(T.STRIKER_TIERS.pro.tier,1);assert.equal(T.STRIKER_TIERS.legend.tier,2);assert.equal(T.STRIKER_TIERS.legend.mods.small,true,'Legend plays small goals');
  assert(T.STRIKER_TIERS.legend.mult>T.STRIKER_TIERS.pro.mult&&T.STRIKER_TIERS.pro.mult>1);
 });

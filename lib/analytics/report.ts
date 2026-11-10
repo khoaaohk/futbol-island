@@ -29,6 +29,8 @@ import {buildMarketing} from './marketingReport';
 import {buildLiveMatches} from './liveMatchReport';
 import {buildFishingFunnel} from './fishingFunnel';
 import {buildMarketingVisits} from './marketingVisitReport';
+import {buildSearch} from './searchReport';
+import {SEARCH_SINCE} from './searchIds';
 import {LIVE_WINDOW_MS,SCHEMA_VERSION,addDays,dailySeries,dayBounds,dayIn,dayList,displayDistribution,emptyReport,hoursInDay,mergeRollups,rollupDay,
  type DailyRollup,type Report,type ReportTime,type TimeZoneMode} from './core';
 
@@ -131,6 +133,12 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  report.fishingFunnel=buildFishingFunnel(merged,range);
  // Nov 5 2026: the investor page /marketing: where (state / country), when (Pacific hour) and how long (marketingVisitReport.ts).
  report.marketingVisits=buildMarketingVisits(merged,rollups);
+ // Nov 10 2026: search and AI-assistant arrivals by engine and landing page (searchReport.ts), same rollups. A landing page's
+ // "first seen" also looks at up to 120 earlier days back to the counters' first day (best effort: without them it is the
+ // first day inside the range).
+ {let earlier:DailyRollup[]=[];const a=addDays(range.from,-120)<SEARCH_SINCE?SEARCH_SINCE:addDays(range.from,-120),b=addDays(range.from,-1);
+  if(a<=b)try{earlier=(await loadRollups(store,dayList(a,b),now,mode)).rollups;}catch{}
+  report.search=buildSearch(rollups,earlier);}
 
  if(len===1&&days[0]>=oldestRaw){report.series=await store.hourly(days[0]);report.granularity='hour';
   /* no future hours drawn as zeros */if(days[0]===today)report.series=report.series.slice(0,Math.floor((now.getTime()-dayBounds(today,mode)[0])/3_600_000)+1);}

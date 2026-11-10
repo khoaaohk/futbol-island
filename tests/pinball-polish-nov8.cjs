@@ -20,7 +20,7 @@ await ok('tiers: two tiers with their own boards, beside (never mixed into) pinb
  assert.deepEqual([...T.PINBALL_TIER_IDS],['derby','final']);
  const boards=T.PINBALL_TIER_IDS.map(id=>T.PINBALL_TIERS[id].board);assert.deepEqual(boards,['pinderby','pinfinal']);
  for(const b of boards){assert(L.isBoardGame(b),b+' is a board game');assert.notEqual(b,'pinball');assert.match(b,/^[a-z]{2,8}$/,'fits the session token id pattern');}
- assert.deepEqual(L.BOARD_RULES.pinball,{name:'Futbol Pinball',unit:'points',max:400_000,base:5_000,perSecond:2_500,minSeconds:20,learn:'Time your strike as the ball arrives.'},'pinball rules untouched');
+ assert.deepEqual(L.BOARD_RULES.pinball,{name:'Futbol Pinball',unit:'points',max:400_000,base:3_000,perSecond:1_200,minSeconds:20,learn:'Time your strike as the ball arrives.'},'pinball rules untouched');
  assert.equal(T.pinballBoardFor(0),'pinball');assert.equal(T.pinballBoardFor(1),'pinderby');assert.equal(T.pinballBoardFor(2),'pinfinal');assert.equal(T.pinballBoardFor(7),'pinball');
  const d=T.PINBALL_TIERS.derby,f=T.PINBALL_TIERS.final;
  assert(f.speed>d.speed&&d.speed>1,'faster, then fastest');assert(f.flipper<d.flipper&&d.flipper<57,'shorter bats than Champions Night (57)');

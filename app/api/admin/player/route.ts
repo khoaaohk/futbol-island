@@ -1,5 +1,6 @@
 import {cookies} from 'next/headers';
 import {ADMIN_COOKIE,verifySession} from '@/lib/analytics/adminAuth';
+import {loadSessionEpoch} from '@/lib/analytics/adminSession';
 import {loadPlayer} from '@/lib/analytics/dayAdmin';
 import {PID_RE} from '@/lib/analytics/day';
 
@@ -9,6 +10,7 @@ export const runtime='nodejs';
 const headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow'};
 
 export async function GET(req:Request){
+ await loadSessionEpoch();// Nov 10 2026: "Sign out everywhere" (lib/analytics/adminSession.ts)
  if(!verifySession(cookies().get(ADMIN_COOKIE)?.value,Date.now()))return Response.json({error:'unauthorized'},{status:401,headers});
  const pid=new URL(req.url).searchParams.get('pid')||'';
  if(!PID_RE.test(pid))return Response.json({error:'pid'},{status:400,headers});

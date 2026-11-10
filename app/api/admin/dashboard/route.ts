@@ -1,5 +1,6 @@
 import {cookies} from 'next/headers';
 import {ADMIN_COOKIE,verifySession} from '@/lib/analytics/adminAuth';
+import {loadSessionEpoch} from '@/lib/analytics/adminSession';
 import {resolveRange} from '@/lib/analytics/core';
 import {getStore} from '@/lib/analytics/store';
 import {loadDashboard} from '@/lib/analytics/dashboardAdmin';
@@ -14,6 +15,7 @@ export const runtime='nodejs';
 const headers={'Cache-Control':'no-store','X-Robots-Tag':'noindex, nofollow'};
 
 export async function GET(req:Request){
+ await loadSessionEpoch();// Nov 10 2026: "Sign out everywhere" (lib/analytics/adminSession.ts)
  if(!verifySession(cookies().get(ADMIN_COOKIE)?.value,Date.now()))return Response.json({error:'unauthorized'},{status:401,headers});
  const q=new URL(req.url).searchParams,now=new Date(),store=getStore();
  if(!store)return Response.json({error:'not-configured'},{status:503,headers});

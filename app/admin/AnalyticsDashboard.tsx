@@ -23,6 +23,7 @@ import LivePanel,{type PanelView} from './LivePanel';
 import SourcesSection from './SourcesSection';
 import liveStyles from './LivePanel.module.css';
 import styles from './admin.module.css';
+import SiteHealthSection from './SiteHealthSection';
 import SponsorOverview from './SponsorOverview';
 import SponsorReport from './SponsorReport';
 import OverviewStory from './OverviewStory';
@@ -279,6 +280,7 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
       <button type="button" className={so.liveCard} aria-haspopup="dialog" onClick={()=>openPanel({mode:'players',from:report.from,to:report.to})}><span>Players in this range</span><b>{playerCount===null?'Players':fmtInt(playerCount)} ›</b><small>One row per anonymous player; tap one for their sessions.</small></button>
      </div>
     </section>}
+    {tab==='live'&&<SiteHealthSection/>}
 
     {tab==='players'&&strip('Players trends',[{key:K.players,label:'Players per day'},...(dash?.people.status==='ok'?[{key:K.distinct,label:'Distinct players a day'},{key:K.returningShare,label:'Returning sessions'},{key:K.fresh,label:'New sessions'}]:[]),{key:K.sessions,label:'Sessions'},{key:K.mpp,label:'Minutes per player'},{key:K.avgSession,label:'Average session'},{key:K.bounce,label:'Bounce rate'}],
      dash&&dash.people.status!=='ok'?'Distinct players, returning and new sessions per day need the people function (docs/analytics-proposed/analytics_daily_people.sql, not run yet); they appear here by themselves once it exists.':'Distinct players, returning and new: raw rows, the last 14 days only.')}

@@ -34,8 +34,11 @@ export function fitDescription(d:string):string{
  return s;
 }
 /** Page metadata: "X · Futbol Island" (or the title as given with `whole`, for the home page), description, canonical, Open Graph. */
-export function pageMeta(title:string,description:string,path:string,o:{whole?:boolean;type?:'article'|'website'}={}):Metadata{
+export function pageMeta(title:string,description:string,path:string,o:{whole?:boolean;type?:'article'|'website';image?:{url:string;alt:string}}={}):Metadata{
  const full=fitTitle(title,o.whole);description=fitDescription(description);
+ if(o.image)return {title:full,description,alternates:{canonical:path},/* a page with its own picture (guide diagrams, lib/site/guides.ts) */
+  openGraph:{title:full,description,url:path,siteName:SITE_NAME,type:o.type??'article',images:[{url:o.image.url,width:1200,height:630,alt:o.image.alt}]},
+  twitter:{card:'summary_large_image',title:full,description,images:[o.image.url]}};
  return {title:full,description,alternates:{canonical:path},
   openGraph:{title:full,description,url:path,siteName:SITE_NAME,type:o.type??'article',images:[{url:'/opengraph-image.png',width:1200,height:630,alt:SITE_NAME}]},
   twitter:{card:'summary_large_image',title:full,description,images:['/opengraph-image.png']}};
@@ -78,7 +81,15 @@ export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite',n
  *  account, not the game's), and sameAs must name the same entity. Add its own profiles here when they exist. */
 export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png',
  description:'Futbol Island makes a free football (soccer) learning game for kids aged 7 to 12, built in San Diego with White Sports Ventures.'});
+/** A guide page (formations, positions and later clusters, lib/site/guides.ts): an Article for kids with real content dates. */
+export const articleLd=(o:{headline:string;path:string;description:string;published:string;modified:string;about:string;teaches?:string;image?:string})=>({'@context':'https://schema.org','@type':'Article',
+ headline:o.headline,name:o.headline,url:abs(o.path),mainEntityOfPage:abs(o.path),description:o.description,inLanguage:'en',isAccessibleForFree:true,
+ datePublished:o.published,dateModified:o.modified,learningResourceType:'Guide',educationalLevel:'Beginner',audience:KIDS_AUDIENCE,
+ about:{'@type':'Thing',name:o.about},...(o.teaches?{teaches:o.teaches}:{}),...(o.image?{image:abs(o.image)}:{}),
+ author:PUBLISHER,publisher:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
 /** A plain-text page about one thing (a fish, a card, an exhibit). */
-export const creativeWorkLd=(o:{name:string;path:string;description:string;about:Record<string,unknown>|Record<string,unknown>[]})=>({'@context':'https://schema.org','@type':'CreativeWork',
- name:o.name,url:abs(o.path),description:o.description,inLanguage:'en',isAccessibleForFree:true,audience:KIDS_AUDIENCE,
+/** A long-tail page's own 1200×630 share picture (/cards/<n>/og.png, /exhibits/<id>/og.png, /fish/<id>/og.png; lib/site/ogImage.tsx, built statically). */
+export const ogPath=(pagePath:string)=>`${pagePath}/og.png`;
+export const creativeWorkLd=(o:{name:string;path:string;description:string;about:Record<string,unknown>|Record<string,unknown>[];image?:string})=>({'@context':'https://schema.org','@type':'CreativeWork',
+ name:o.name,url:abs(o.path),description:o.description,...(o.image?{image:abs(o.image)}:{}),inLanguage:'en',isAccessibleForFree:true,audience:KIDS_AUDIENCE,
  isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,about:o.about});

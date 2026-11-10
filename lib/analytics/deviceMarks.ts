@@ -8,6 +8,7 @@
  */
 import {FLAG_KEYS} from './startFlags';
 import {INSTALL_ID_KEY} from '../saves/snapshot';
+import {playerHash} from './playerHash';
 
 /** The game's own keys (tests/admin-analytics-live.cjs checks they match the code that writes them). */
 export const MARK_KEYS={lastVisit:'fi2-last-visit-day-v1',quest:'futbol-island-quests-v1',quiz:FLAG_KEYS.quiz,code:'fi2-save-code-v1'} as const;
@@ -27,15 +28,16 @@ export function readDeviceMarks(storage:Pick<Storage,'getItem'>|null):{returning
 
 /**
  * Players (Oct 16 2026; user: "i basically want to know by individual level"). The one player key a session's start sends: the
- * save code when one is active (the server turns it into a keyed one-way id, as the save store does, and drops it), else this
+ * save code's one-way hash when one is active (made here on the device; the server keys it again per 90 days), else this
  * device's install id: 16 random bytes made once and kept in fi2-install-v1 (a DEVICE key: never synced; deleting the save
  * removes it). Not a name, account, network address or location. `random(16)` is crypto.getRandomValues in the browser.
  */
-export function readPlayerKey(storage:Pick<Storage,'getItem'|'setItem'>|null,random:(n:number)=>Uint8Array):{pc:string}|{pi:string}|null{
+export function readPlayerKey(storage:Pick<Storage,'getItem'|'setItem'>|null,random:(n:number)=>Uint8Array):{ph:string}|{pi:string}|null{
  if(!storage)return null;
  const get=(k:string)=>{try{return storage.getItem(k);}catch{return null;}};
  const code=get(MARK_KEYS.code)||'';
- if(CODE_RE.test(code))return {pc:code};
+ // Nov 10 2026: only a one-way hash of the code leaves the device, never the code (lib/analytics/playerHash.ts).
+ if(CODE_RE.test(code))return {ph:playerHash(code)};
  let id=get(INSTALL_ID_KEY)||'';
  if(!/^[0-9a-f]{32}$/.test(id)){
   id=[...random(16)].map(b=>b.toString(16).padStart(2,'0')).join('');

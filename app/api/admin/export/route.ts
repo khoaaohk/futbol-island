@@ -1,5 +1,6 @@
 import {cookies} from 'next/headers';
 import {ADMIN_COOKIE,verifySession} from '@/lib/analytics/adminAuth';
+import {loadSessionEpoch} from '@/lib/analytics/adminSession';
 import {resolveRange} from '@/lib/analytics/core';
 import {getStore} from '@/lib/analytics/store';
 import {loadDailyLayer} from '@/lib/analytics/dailyAdmin';
@@ -21,6 +22,7 @@ const KINDS=['summary','daily','definitions','hours','zip','json'] as const;
 type Kind=typeof KINDS[number];
 
 export async function GET(req:Request){
+ await loadSessionEpoch();// Nov 10 2026: "Sign out everywhere" (lib/analytics/adminSession.ts)
  if(!verifySession(cookies().get(ADMIN_COOKIE)?.value,Date.now()))return Response.json({error:'unauthorized'},{status:401,headers:noStore});
  const q=new URL(req.url).searchParams,now=new Date();
  const kind=(KINDS as readonly string[]).includes(q.get('kind')||'')?q.get('kind') as Kind:'summary';

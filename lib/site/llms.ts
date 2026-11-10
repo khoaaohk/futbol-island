@@ -4,6 +4,7 @@ import {SITE_CARDS} from './cards';
 import {SITE_EXHIBITS} from './exhibits';
 import {HUBS,HUB_COUNTS,SAFE_GUIDE} from './hubs';
 import {SAFE_FACTS} from './safety';
+import {GUIDE_HUBS} from './guides';
 /**
  * /llms.txt (llmstxt.org format; served by app/llms.txt/route.ts, moved from a hand-kept public/llms.txt on Nov 8 2026 so the
  * counts come from the data). A factual summary for AI assistants: what Futbol Island is, who it is for, what it teaches, the
@@ -25,7 +26,8 @@ export function llmsText():string{
   ...SAFE_FACTS.map(f=>`- ${f.title}: ${f.text}`),'',
   '## Learn','',
   `- [Football lessons](https://futbolisland.app/learn/lessons): every lesson (${LESSONS.length}) in 7v7, 9v9, 11v11 and futsal, each with the coach's teaching text and its quiz questions (the answers are not marked).`,
-  ...['football-rules-for-kids','soccer-quiz-for-kids','passing-and-support','futsal-for-kids','7v7-9v9-11v11'].map(slug=>{const h=hub(slug);return `- [${h.h1}](https://futbolisland.app${h.path}): ${h.blurb}.`;}),'',
+  ...['football-rules-for-kids','soccer-quiz-for-kids','passing-and-support','futsal-for-kids','7v7-9v9-11v11'].map(slug=>{const h=hub(slug);return `- [${h.h1}](https://futbolisland.app${h.path}): ${h.blurb}.`;}),
+  ...GUIDE_HUBS.map(g=>`- [${g.name[0].toUpperCase()+g.name.slice(1)}](https://futbolisland.app${g.path}): ${g.blurb}.`),'',
   '## Fish','',
   `- [Fishbook](https://futbolisland.app/fish): all ${SITE_FISH.length} sea animals on the island and the real football club, team or story each one is linked to, with a source credit.`,'',
   '## Cards','',

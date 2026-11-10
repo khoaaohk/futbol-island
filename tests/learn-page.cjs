@@ -72,7 +72,7 @@ assert.match(red[1],/\{ source: '\/learn', destination: '\/', permanent: true \}
 const paths=L('lib/site/paths.ts').sitePaths();
 assert(!paths.some(p=>p.path==='/learn'),'/learn (a redirect) is not in the sitemap');assert.equal(paths.find(p=>p.path==='/')?.priority,1,'the tour (/) is the main entry');
 assert(paths.some(p=>p.path==='/learn/lessons'),'/learn/lessons in the sitemap');
-{const HUBP=L('lib/site/hubs.ts').HUB_PATHS;assert(!paths.some(p=>/^\/learn\/(?!lessons)[^/]+$/.test(p.path)&&!HUBP.includes(p.path)),'no old /learn/<id> path in the sitemap (the Nov 8 topic hubs aside)');}
+{const HUBP=L('lib/site/hubs.ts').HUB_PATHS;assert(!paths.some(p=>/^\/learn\/(?!lessons)[^/]+$/.test(p.path)&&!HUBP.includes(p.path)&&!L('lib/site/guides.ts').ALL_GUIDE_PAGES.some(g=>g.path===p.path)),'no old /learn/<id> path in the sitemap (the Nov 8 topic hubs and Nov 10 guide hubs aside)');}
 const llms=read('lib/site/llms.ts');/* Nov 8 2026: /llms.txt is built from lib/site/llms.ts (URLs written out in full there) */
 assert.match(llms,/\(https:\/\/futbolisland\.app\/\): the feature tour/,'llms.txt describes / as the feature tour');assert.match(llms,/\(https:\/\/futbolisland\.app\/play\): the title screen/,'llms.txt: /play is the game');assert.doesNotMatch(llms,/futbolisland\.app\/learn\)/,'llms.txt: no /learn link');
 assert.match(llms,/\(https:\/\/futbolisland\.app\/learn\/lessons\): every lesson/,'llms.txt points the lesson index at /learn/lessons');
@@ -85,7 +85,10 @@ assert.match(read('components/landing/Landing.tsx'),/<LandingBack\/>/,'title scr
 assert.match(read('components/landing/LandingBack.tsx'),/BackButton[\s\S]*assign\('\/'\)/,'title screen Back goes to the home page /');
 assert.match(read('app/(site)/layout.tsx'),/<a href="\/">What’s inside<\/a>\s*<a href="\/privacy">Privacy<\/a>/,'site footer: What’s inside (/) beside Privacy');
 assert.match(read('components/learn/learn.module.css'),/:global\(\[data-reading-page\]\):has\(\.root\) :global\(footer\) a\[href="\/"\]\{display:none\}/,'the tour hides the footer link to itself');
-assert.doesNotMatch(read('app/(site)/layout.tsx').replace(/\{\/\*[\s\S]*?\*\/\}/g,''),/<header[\s\S]*href="\/(learn|play)"[\s\S]*<\/header>/,'no section navigation in the header (Oct 16 2026)');
+// Nov 10 2026 (owner: reading pages match the main site): the Oct 16 "no section navigation" header became the home bar, static.
+assert.match(read('app/(site)/layout.tsx'),/<header className=\{styles\.header\}><div className=\{styles\.headerInner\}><SiteNav\/><\/div><\/header>/,'reading pages: the shared header is the static home bar (a direct <header>, which / and /marketing hide)');
+{const nav=read('components/site/SiteNav.tsx');assert(!/['"]use client['"]|useEffect|useState|addEventListener/.test(nav),'SiteNav is server-rendered: no client code (phone heat)');
+ assert.match(nav,/href=\{PLAY_PATH\}/,'SiteNav Play goes to /play');for(const l of ['Learn','Explore','Friends','Safety','About'])assert(nav.includes(`'${l}'`),`SiteNav has the home bar's "${l}" link`);}
 assert.match(read('app/(site)/about/page.tsx'),/<a href="\/">See what’s inside the game<\/a>/,'about links to the tour at /');assert.match(read('app/(site)/about/page.tsx'),/className=\{styles\.cta\} href="\/play"/,'about Play goes to /play');
 assert.match(read('components/GrownUps.tsx'),/<a href="\/" target="_blank" rel="noopener">futbolisland\.app<\/a>/,'in-game Grown-ups panel links to the tour (/) in a new tab');
 assert.match(page,/href=\{PLAY_URL\}/,'the tour links to Play');assert.match(page,/<a className=\{s\.logo\} href="\/"/,'the logo goes home (/)');assert.match(page,/<NavPlay className=\{s\.pill\} href=\{PLAY_URL\}\/>/,'the bar Play goes to /play');

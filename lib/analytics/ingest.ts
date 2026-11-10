@@ -80,8 +80,8 @@ export async function handleIngest({body,headers,store,limiter,now=new Date(),ve
   counts:start?{}:clampCounts(ev.k),flags:start?(checkFlags(ev.f)||{}):{},
   // Live sessions (Oct 15 2026): two yes/no marks on a start (validateEvent refuses them on a beat). Never a code or an id.
   returning:start&&ev.rt!==undefined?ev.rt===1:null,hasCode:start&&ev.hc!==undefined?ev.hc===1:null,
-  // Players (Oct 16 2026): the start's code or install id becomes a keyed one-way id here and is not kept (lib/analytics/playerId.ts).
-  playerId:start&&(ev.pc!==undefined||ev.pi!==undefined)?derivePlayerId({pc:ev.pc,pi:ev.pi},secrets):null,
+  // Players (Oct 16 2026; Nov 10: device-made hash `ph` or install id, keyed again per 90-day period; lib/analytics/playerId.ts).
+  playerId:start&&(ev.ph!==undefined||ev.pi!==undefined)?derivePlayerId({ph:ev.ph,pi:ev.pi},secrets,now.getTime()):null,
  };
  // Nov 5 2026: a /marketing visit's place (US state, else country) and Pacific weekday/hour become fixed counter ids here, from
  // the geo headers; the headers themselves are not kept (lib/analytics/marketingVisitGeo.ts).

@@ -2,37 +2,75 @@
 
 The static reference pages under `app/(site)/` (about, learn + 96 lessons, fish + 97 species (Nov 6 2026; grows with the Fishbook), cards + 450 cards, exhibits + 22
 exhibits) exist for search engines and AI assistants. They teach the same football as the island (positions, tactics, rules, club
-history), so they should read clearly. The rule from Oct 16 still holds: **no section navigation**. A visitor sees the page, one gold
-"Play" button into the island and the privacy link. SEO pieces (titles, descriptions, canonicals, JSON-LD, breadcrumb markup) are
+history), so they should read clearly. Since Nov 10 2026 (owner: "fix all these pages to match more with the main site") they share the home
+page's bar and look; the Oct 16 "no section navigation" rule is retired. Each page still has one gold "Play" button of its own
+(near the top of index pages, at the end of detail pages). SEO pieces (titles, descriptions, canonicals, JSON-LD, breadcrumb markup) are
 unchanged, and lessons never show the correct quiz answer.
 
 All styling is in one module, `app/(site)/site.module.css`. Pages use its named classes only. They add no scripts and no animation,
 and the one shared image is the button grain the title screen already uses (phone heat, AGENTS.md).
 
-## Audit (before, production build, 390 px and 1280 px, 9 page types)
+## Look (Nov 10 2026): one site with the home page
 
-| Area | Finding before | Change |
-|---|---|---|
-| Line length | Body ran the full 828 px column at 1280 (~95 characters per line) | Paragraphs and list items capped at 68ch |
-| Type sizes | h1 32/48, h2 21 at both widths, body 17, lead 19. Weak step from h2 to body on desktop | Title 40/56, h2 22/26, h3 18/20, body 17/18 (lh 1.55), lead 19/21, caption 14, label 12 |
-| Hierarchy | Detail eyebrow, "Real football fact" and "Island story" all used the same brown caps `.tag` | Eyebrow (brown caps) is separate from the one green pill `.label` for fact or fiction |
-| Spacing | 18 px grid gap everywhere; h2 margins of 10/6 px; headings sat close to the previous block | 8-pt scale 8/16/24/40/64: 24 between sections, 16 inside, an intro block with 16 rhythm, 64 page bottom |
-| Card styles | Cards had uneven radius (20/26/18/16) and a hard 4 px shadow. Quiz cards were indented by the `ol` and squeezed at 390 | One cream card: `#f7f0db` with a hairline rule, 16 radius, soft shadow, 16/24 padding. Quiz is a flush stack of cards with a "Question N" eyebrow |
-| Index lists | 3-column grid of tiles at every width, so 77 striker tiles made a long phone scroll | Phone: one cream card of hairline rows (title + one meta line). Desktop: card grid (min 240 px) |
-| Labels | Fish fact and story labels looked like body eyebrows. Cards and exhibits had no fact/fiction label | `.label` pill "Real football fact" on fish, card and exhibit facts, "Island story" on fish places |
-| Colour | Green ink, brown tags, plain yellow pill button (#f2c230) that was not the island's gold. Footer was a heavy tan band | Island tokens only: cream paper, green ink, `--btn-gold` / rim / grain / gold shadow. Quiet footer with a hairline top border |
-| CTA placement | Varied: lessons at the top, fish/cards/exhibits at the bottom, fish and cards index had none. A footer Play link was repeated on every page | Index pages and About: once near the top in the intro. Detail pages: once at the end. Footer is the line plus Privacy |
-| Breadcrumbs | Underlined green links, the same weight as body links | Quiet 14 px line in muted ink, underline on hover |
-| Extra links | "All lessons", "The whole Fishbook" and similar back-links duplicated the breadcrumbs | Removed (breadcrumbs keep the way up and their JSON-LD) |
-| Small widths | No horizontal scroll at 320 | Same (checked scrollWidth on all 9 page types at 320) |
+The home page `/` (`app/(site)/page.tsx`, `components/learn/learn.module.css`) is the design source of truth. Reading pages add
+no visual language of their own: no other fonts, colours, radii or shadows than home uses. The Oct 17 look (cream `#fff8e7`,
+green ink, dark green header, IslandBrush title with a gold shadow, beige outlined cards) is gone.
 
-## Scale
+- **Shell** (`app/(site)/layout.tsx`): `components/site/SiteNav.tsx` is the home bar as static HTML: 68 px sticky bar on paper
+  with a hairline, the IslandBrush wordmark with one logo colour per letter, Learn / Explore / Friends / Safety / About, and the
+  gold Play pill (`DoneButton.module.css` face on a plain link to `/play`). Phones (640 px and under): menu button, logo, Play;
+  the menu is a native `<details>`. Links go to the hubs (`/learn/lessons`, the parents' guide, `/about`) or a home chapter
+  (`/#explore`, `/#together`). The footer is the one home ends on. The header must stay a direct `<header>` child: `/` and
+  `/marketing` bring their own bar and hide it.
+- **Colour**: paper `#fbf7ee`, tint `#ecefdf` (cards, tables), well `#efe8d7` (picture panels), ink `#14221d`, soft ink
+  `#5b675f`, gold `#e9c16b`, gold ink `#8a6620`, pitch `#1d6b55`, hairline `rgb(20 34 29 / .12)`, buttons from `--btn-*`.
+- **Type**: the system sans (no download). Title `clamp(38px, 3.6vw + 24px, 72px)`, weight 600, tracking -.028em, line-height
+  1.04. Section h2 28 / 36, weight 600, -.025em. h3 19 / 22, weight 700. Body 17 / 18, line-height 1.55. Lead 20 / 24, weight
+  500, soft ink. Caption 15. Label 13, sentence case. IslandBrush is the wordmark only; never on buttons (AGENTS.md).
+- **Layout**: one centred reading column of 736 px; the page head (`intro`: breadcrumb, title, lead, button) is centred and
+  spreads to about 1016 px from 1100 px wide. Gutters 16 on phones, 24 from 720 px. 40 / 56 between sections, 16 inside.
+- **Parts**: `card` is a tint step with a 24 radius, no outline, no shadow. `art` is the home media frame (well, large radius,
+  soft shadow). `list` is home's link list: plain rows, title underlined in gold, two columns from 720 px. Links in running
+  text are ink with a gold underline. `cta` is home's gold button. Tables sit in a tint `tableWrap` that scrolls sideways on
+  its own; the page never does. Pitch diagrams: pitch-green grass, white lines, gold numbered players, white goalkeeper.
+- **Classes** (names are stable; pages use these only): `intro`, `crumbs`, `eyebrow`, `title`, `lead`, `section`, `h2`, `h3`,
+  `count`, `caption`, `card`, `stack`, `label`, `art`, `list`/`itemTitle`/`itemMeta`, `cta`, `end`, `pager`, `bare`, `options`,
+  `figure`, `pair`, `tableWrap`/`table`.
 
-- Type: title IslandBrush 40 / 56 with a gold `0 3px 0 var(--btn-gold)` shadow. Section h2 bold green 22 / 26. h3 18 / 20. Body 17 / 18, line-height 1.55, max 68ch. Lead 19 / 21. Caption 14. Eyebrow and label 12, caps, letter-spaced.
-- Spacing: `--s1..--s5` = 8 / 16 / 24 / 40 / 64. Gutters 16 on phone, 24 from 720 px. Content column max 1040 px, with the header and footer aligned to it.
-- Classes: `intro`, `crumbs`, `eyebrow`, `title`, `lead`, `section`, `h2`, `h3`, `count`, `caption`, `card`, `stack`, `label`, `art`, `list`/`itemTitle`/`itemMeta`, `cta`, `end`, `bare`, `options`.
-- `color-scheme: light` on the pages and on html/body.
+## Rules that did not change
 
-## Screenshots (after)
+- Static pages: `force-static`, server components only, no client JavaScript, no video, no WebGL, no animation loops, no
+  scroll listeners (AGENTS.md, phone heat). The bar is not blurred and nothing in it moves.
+- Tap targets at least 44 px, body text at least 16 px, no horizontal page scroll (checked at 390 px on 13 page types).
+- `color-scheme: light` on the pages and on html/body. Breadcrumbs sit above the title; the H1 is the first heading.
+- Content rules: fact / fiction labels, CTA placement (index pages near the top, detail pages at the end), no duplicate
+  back-links beside the breadcrumbs.
 
-`docs/seo/about-390.png`, `docs/seo/lesson-390.png`, `docs/seo/fish-1280.png`, `docs/seo/card-1280.png`.
+## Guide clusters (Nov 10 2026)
+
+Search-targeted reading pages under `/learn`. They lead with "soccer" (title, H1, first sentence) and say "football" once near
+the top. They are SEO-only: not linked from the home page; reached from lesson pages ("Related guides"), "More to learn" on
+the hubs, `llms.txt` / `llms-full.txt`, the sitemap and each other.
+
+| Cluster | URLs | Data module | Test |
+|---|---|---|---|
+| Formations | `/learn/soccer-formations`, `/learn/soccer-formations/<slug>`, `/learn/{7v7,9v9,11v11}-soccer-formations` | `lib/site/formations.ts` | `tests/seo-formations-positions.cjs` |
+| Positions | `/learn/soccer-positions`, `/learn/soccer-positions/<slug>` | `lib/site/positions.ts` | same |
+| Rules | `/learn/soccer-rules`, `/learn/soccer-rules/<slug>` (16) | `lib/site/rules.ts` | `tests/seo-rules-terms-sizes.cjs` |
+| Size charts | `/learn/soccer-ball-size-by-age`, `/learn/soccer-field-size-by-age`, `/learn/soccer-age-groups` | `lib/site/sizes.ts` (view: `app/(site)/learn/ChartView.tsx`) | same |
+| Glossary | `/learn/soccer-terms` (A-Z, one anchor per term, `DefinedTermSet`), `/learn/soccer-terms/<slug>` (18) | `lib/site/terms.ts` | same |
+
+- Registry: `lib/site/guides.ts`. `GUIDE_PAGES` = formations + positions, `REFERENCE_PAGES` = rules, charts, glossary,
+  `ALL_GUIDE_PAGES` = both (sitemap, llms, lesson back-links).
+- Diagrams: `lib/site/PitchDiagram.tsx` (inline SVG) and `lib/site/pitchImage.tsx` (PNG at `/learn/diagrams/<file>.png`).
+  Formations place a team from `lib/site/pitch.ts`. Rules and terms use a scene (`lib/site/scenes.ts`): dots for two teams
+  (gold attacks up, dark green defends), a ball, an optional dashed line, an optional shaded zone, run and pass arrows. Each
+  scene has a hand-written caption that is also the SVG `<desc>`.
+- Shared sections: `lib/site/GuideParts.tsx` (`GuideIntro`, `Section`, `Diagram`, `SceneDiagram`, `DataTable`, `LessonList`,
+  `LinkList`, `GuideEnd`). Tables always have column and row header cells. Classes from `site.module.css` only.
+- To add a page: add one entry to the data module (the module throws on a wrong lesson or exhibit id, and a rule's answer
+  must be exactly two sentences). The route, sitemap, llms files and picture follow. A new single-segment `/learn/<slug>`
+  must also go in the exclusion list of the `/learn/:slug` redirect in `next.config.mjs`.
+- Facts: each data module starts with its source list and the date checked. Laws from theifab.com, US youth standards from
+  U.S. Soccer and US Youth Soccer, futsal from FIFA's Futsal Laws. Where organisations differ the page says so and names the
+  source per row. Detail pages may link out to the cited law only.
