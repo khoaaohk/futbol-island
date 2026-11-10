@@ -428,8 +428,9 @@
 @media(max-width:640px){.root .note{text-align:center;margin-inline:auto}}
 /* only the word "free" in the hero line is bold (owner, Nov 3): no highlight, no colour */
 .root .bold{font-weight:800;color:inherit}
-/* phones (owner, Nov 3): the hero title is exactly two lines, "Explore Futbol Island." then "Learn the game."; the size follows the width so line one never wraps */
-@media(max-width:640px){.root .h1{max-width:none;font-size:min(52px,calc((100vw - 2 * var(--gut,20px)) / 9.4))}.root .h1Line{white-space:nowrap}}
+/* phones (Nov 10 2026): the hero title is now one long sentence ("Learn football for kids, the fun and safe way."), so it wraps
+   (balanced, about three lines) instead of the old no-wrap two-liner, which pushed the whole hero off the right edge. */
+@media(max-width:640px){.root .h1{max-width:100%;font-size:clamp(32px,9.6vw,48px)}.root .hero .head,.root .hero .stage{min-width:0;max-width:100%}}
 .root #about .sub{max-width:44ch}
 .root .head .aboutBoxes{margin-top:clamp(44px,8vh,80px)}
 /* Nov 8 2026 (SEO): "For parents and coaches" (four verified safety facts, two columns, left-aligned under the centred head) and
