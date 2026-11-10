@@ -13,6 +13,6 @@ export function trophiesFrom(record:GraduationRecord):TrophySource[]{
  return out;
 }
 registerBackpackCategory({kind:'trophy',label:'Trophy shelf',order:80,
- lesson:'Each certificate lists the football ideas you learned on that path. Save it, print it or show a grown-up.',
- emptyHint:'Graduate a path (all 12 starter lessons) to put your first certificate on the shelf.',
+ lesson:'Each certificate lists the football ideas you learned on that path. Arcade trophies name the skill you mastered on a machine. Save, print or show a grown-up.',
+ emptyHint:'Graduate a path (all 12 starter lessons), or master an arcade machine, to put your first trophy on the shelf.',
  collect:s=>(s.trophies??[]).map((t):BackpackItem=>({id:`trophy:${t.id}`,kind:'trophy',ref:t.id,label:t.label,detail:t.detail,source:'reward',acquiredAt:t.at}))});

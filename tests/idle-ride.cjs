@@ -33,5 +33,5 @@ const town=fs.readFileSync('components/Town.tsx','utf8');
 assert.match(town,/const idleFrame=idleRide\.interval\(now,rideRef\.current!=='walk'\|\|waterIdle\|\|footRest,footRest\?IDLE_FOOT_AFTER_MS:undefined,quietNear\);[^\n]*\s*renderStats\.idleRide=idleFrame;[^\n]*\n[^\n]*\n\s*if\(idleFrame\|\|coarse\|\|heat\.cap30\)\{const slot=frameCapSlot\(now,lastRendered,Math\.max\(idleFrame,heat\.frameMs\)\)/);
 assert.match(town,/idleRide\.sample\(now,player\.root\.position,camera\.position\)/);
 assert.match(town,/for\(const type of \['pointerdown','pointermove','keydown','wheel'\]\)window\.addEventListener\(type,stir,\{capture:true,passive:true,signal:idleInput\.signal\}\)/);
-assert.match(town,/return\(\)=>\{idleInput\.abort\(\);/);
+assert.match(town,/disposers\.add\(\(\)=>idleInput\.abort\(\)\);/);assert.match(town,/return\(\)=>\{disposers\.runAll\(\);/,'the unmount runs every registered disposer (lib/town/townCleanup.ts)');
 console.log('IDLE_RIDE_PASS still hover → 20 fps after 4 s, input/travel/descent/pan restore, walking never capped, 20 fps on 120 Hz');

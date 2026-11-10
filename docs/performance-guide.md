@@ -1,5 +1,89 @@
 # Performance reference for future Futbol Island updates
 
+## Town split, first steps (Nov 10 2026, local, not deployed): no behaviour change intended
+
+`components/Town.tsx` is being split one system at a time (owner-approved). Done so far:
+- **Cleanup registry** (`lib/town/townCleanup.ts`): the ~5.4k-character unmount line is gone. Each resource registers its cleanup with `disposers.add(...)` right after Town creates it; unmount runs them newest first, then `disposeTownSceneResources(scene)` (the texture / material / geometry sweep, unchanged), then `renderer.dispose()`, `forceContextLoss()` and the canvas removal, as before. Pairs whose order mattered stay together in one disposer (`swimClear` + `clearWin`, `dive` + `diveBuoys`, `emoteBus` + `onEmoteVariant`). Only the order between unrelated disposers changed (reverse creation order instead of the old hand-written order).
+- **DOM writers** (`lib/town/townDom.ts`): `placeEntryPrompt`, `placeUI`, `setUIHidden`, unchanged.
+- **Frame steps** (`lib/town/frame/`): `focusFrame.ts` (fishing / easel focus mode), `jetTwist.ts` (jetpack blast / dash spin), `knockoutLabels.ts` (Kick / Dodge labels in the knockout arena). Each takes one long-lived context object built once before `animate`; same code, same place in the frame, no new per-frame allocation.
+- Verified: `tsc` clean, `npm run lint` 0 errors (Town's 5 dependency warnings kept on purpose), the ~150 tests that read Town after each step, the full suite once, and a headless Chrome check (390x844 touch: frames advance while walking, leaving to the Arcade clears `__fi2` and the canvas, coming back renders again, no console or page errors). **Nothing measured on a phone**; the ~790 ms setup task when Town mounts was not touched.
+- Next: the larger frame blocks (camera follow, movement, HUD tick) need per-frame values (`dt`, `active`) and a few loop `let`s in the context object; then `buildTownScene(ctx)` for the world build (warm and cold paths).
+
+## Heat audit follow-ups: clear window gate, shadow levers, warm room return, Town cleanup (Nov 10 2026, local, not deployed)
+
+Owner-approved items from the Nov 10 audit. The "Ocean, land and buildings look" entry below is unchanged (no shader, draw or program change here).
+- **Clear window closes high up (Oct 19 rec. d)** (`lib/town/water/clearWindow.ts` `CLEAR_HIGH`): with the camera more than 25 m over the water (jetpack, high rides) the window eases shut (0.6 s fade) and the ocean is opaque again; it reopens under 22 m (hysteresis). Below 25 m the radius/centre/look are exactly as before (the 0.7x-to-full growth with height still applies between 8 and 25 m). Effect: jetpack flight over the shallows no longer blends the whole ocean or draws the seabed, coral and sea life (Oct 19 numbers: the window's own 8 draws / 24.7-45.5k triangles at tiers 1/0).
+- **Window only at tiers 0-1 (rec. a)** (`CLEAR_OPEN_TIER=2`): tier 2 used to keep a 28 m window. Found while checking: Town already passes `heat.tier+1` on phones from tier 2, so **phones already closed it at heat tier 2**; this change only closes it on desktop/tablet-governed tier 2 (Battery saver was already off). Per tier: 0-1 unchanged; 2+ opaque sea. `CLEAR_TIERS[2]` is kept but unused.
+- **Opaque ocean + blended disc (rec. b): NOT done; what it needs.** The ocean is one 2-triangle 2100x1700 m plane with ONE material whose blend state is shared by three holders (`swimClear.ts createOceanBlend`: clear window, swim disc; `underwater.ts createOceanClear`: fishing). A clean version: (1) replace the plane by an 8-triangle "picture frame" (outer corners + 4 inner corners, no T-junctions) whose inner square follows the window centre/radius each frame (16 vertex positions + matching stretched UVs rewritten in place, no allocation), plus a 2-triangle hole quad drawn with a second material that shares the ocean's `onBeforeCompile` and cache key (`island-ocean-water-v10`) in its blended state, so its program is the already-known blended variant (warm it in `islandWarm.ts`, rec. e, which is also still open); no `discard` anywhere, the frame stays opaque; (2) move all three holders to the hole mesh; (3) the swim disc thins the WHOLE open sea to alpha .86 while swimming (`SWIM_CLEAR`), so either that thinning is confined to the hole (a look change while swimming) or swimming keeps blending everything. Expected gain is smaller than it sounds at tier 0: the window square is 200 m wide around the look point, which covers most near-camera ocean pixels from a low camera; the saving is largest at tier 1 (140 m) and in oblique/far views. Needs an iPhone A/B (blending cost on Apple TBDR is mostly lost hidden-surface removal, not bandwidth).
+- **Shadow levers (item 2): NOT enabled, on purpose.** (i) Every-2nd-frame shadow refresh at tiers 3+: this is exactly the lever removed by the Sep 26 "players on the live games are flashing" hotfix (real iPhone: at 15-20 fps shadows lagged and snapped at 5-7 Hz; a hot phone at tier 3 is by definition the slow one), and `tests/heat-tiers.cjs` guards it. The static-shadow cache (`shadowCache`) covers scenery already, so what a skipped refresh would freeze is exactly the moving part: the player, townsfolk, field players, cars, balls and animals; the rest/focus every-2nd cadence stays limited to scenes where nothing near moves. (ii) PCF instead of PCFSoft at tier 2+: in three 0.169 `PCFShadowMap` is 17 compare taps and `PCFSoftShadowMap` 16 taps + bilinear mixes (`shadowmap_pars_fragment`), so PCF saves nothing per fragment; also `shadowMapType` is in every lit program's cache key but not in three's needs-program-change check, so a runtime switch would need `needsUpdate` on every material (a full recompile hitch). Only `BasicShadowMap` (1 tap, hard aliased edges) would cut cost: a visible look change, not approved. `lambertScenery` stays off.
+- **Warm room return (item 3a)** (`components/IslandReturnWarm.tsx`, `app/island-return/page.tsx`): the return page shows `IslandReturnLoading` while `warmIslandSteps` builds the island in task slices (MessageChannel tasks, batched to 24 ms of work each; setTimeout(0) was tried first and its 4 ms nesting clamp added ~0.5 s) and runs its `renderer.compileAsync`; then Town mounts and takes the warm island. Fallbacks: Town mounts anyway after 8 s (takeWarmIsland finishes leftover slices); `?returnWarm=0` keeps the old path; an untaken warm island is disposed on unmount. The sign's arrival animation does not replay on the hand-off (`html[data-return-warm]`). No rAF, no work while hidden.
+  - **Measured (production build, headless desktop Chrome/Metal, 390x844 DPR 2 touch, `/play?from=arcade`, 3 interleaved runs each; desktop numbers, not a phone):** longest main-thread task 1719-1730 -> 860-868 ms; longest loading-screen freeze (rAF gap) 1933-1950 -> 983-1033 ms; long-task total 1992-2008 -> 1456-1482 ms; Town's first frame 192-197 -> 129-170 ms; loading screen gone at 3216-3246 vs 3210-3305 ms (unchanged); the first frames after the screen leaves were 17 ms in both (the compiles already happened behind the screen). Remaining: Town's own setup after taking the warm island (scene-start -> built, ~790 ms single task: townsfolk, rigs, systems) and the first frame's character programs; slicing those belongs to the Town.tsx split.
+- **Back/forward cache (item 3b): evaluated, NOT implemented.** No `Cache-Control: no-store` on game pages and no `unload` handlers (one `beforeunload` in `LiveArcadeMatch.tsx`, games only), but: the party relay / multiplayer WebSocket (`lib/multiplayer/connection.ts`, `lib/relayClient.ts`) makes Chrome refuse or evict the entry; iOS evicts large frozen pages under memory pressure, and the island context plus the room's own WebGL context are both large; and a restored island would be stale: the arcade wallet, shop items, Konbini purchases and museum progress change in the room and Town reads them at mount, the heat governor would judge the frozen gap, and loops, audio (islandMusic already handles `pageshow`) and multiplayer would each need a `pageshow.persisted` resume path. Navigation left as is.
+- **Town cleanup (item 4)** (`Town.tsx` unmount, arcadeStage pattern): textures from material maps and uniform holders (shared module-level ones included: a live renderer re-uploads on its next use; dispose frees only GPU copies), scene background/environment, Line/Points/Sprite materials and custom depth/distance materials are disposed, then `renderer.forceContextLoss()`. A warm renderer taken mid-compile (`islandWarm.ts`) defers both dispose and context loss until three's compile poll settles.
+- Tests: `clear-window` (tier 2 closed, 25/22 m hysteresis), `museum-room` (wrapper), new `tests/return-warm.cjs` (not yet in the `package.json` chain). Also run: `swim-clear`, `dive-see-through`, `water-*` (incl. `water-tropical-cost`, allowance untouched), `heat-*`, `quality-pass`, `static-shadow-batches`, `frame-cap`, `island-return-position`, `shop-room`, `landing`, `explore-v2`, `mp-avatars`, `dive-edge`; tsc clean.
+- **Not verified on an iPhone.** Device checks: (1) jetpack over a beach: the sea should turn opaque above ~25 m and the see-through shallows return on landing/swimming; (2) a room round trip (Arcade, Konbini, Museum, Shop): the "Back to island" sign should keep animating instead of freezing, the island appearing about as soon as before; (3) Web Inspector Timelines on the return: longest task should be Town's setup, not the world build.
+
+## Ocean, land and buildings look (Nov 10 2026, local, not deployed)
+
+Owner: "enhance the oceans, land and buildings without major heat". No new draws, passes, textures, render targets, lights, shadow casters or programs; lighting changes are intensities/colours only (ACES unchanged). Shader instructions added per fragment:
+- **Ocean (`waterSurface.ts`), every tier:** wind lanes (2 `sin` + ~9 ALU, folded into the open-sea mix), night tint (1 multiply by `uWaterNight`, a vec3 set once per time-of-day change from `world.updateTrafficSignals`). Far whitecaps were built and removed the same day (owner's call: ~45 ALU for small white dashes). Glitter density and caustic web: constants only. Static estimate (`tests/water-tropical-cost.cjs`): ocean far 767 baseline -> 790, near phone 1262 baseline -> 1280 ALU (+3 % / +1.4 %), texture reads unchanged; the test carries an explicit Nov 10 allowance of +25 / +20 on those two paths (every other path stays under the Oct 26 baseline).
+- **Shore strip and sea-veil animals:** 1 multiply each (night tint). Strip estimate 566 -> 567 (still under baseline).
+- **Ground (`groundTint.ts`):** grass hue mottle (1 `mix` + 1 multiply, every tier, grass only); grain cell rotated (+1 mat2 multiply) and weaker (grass .09, sand/path/land .11, mixed .07); cloud shadows (2 `sin` + ~8 ALU) inside the existing `uGroundGrain` branch, so **tier 0 only**; `uGroundTime` advanced at most 10 Hz from `stepWaterTime` (no new loop, frozen when the water is still). Carriageways (main island and Coral Cay road/roundabout) and main sidewalks now use the ground-tint program (`asphalt`/`path` kinds): mottle at every tier (4 `sin` + ~14 ALU) where they used plain Standard before; unshadowed pieces keep one batch per chunk.
+- **Buildings (load time only):** per-vertex baked light in the paint batching pass (wall foot 0.68 linear over the lowest 4 m from the piece's base, undersides 0.62, tops 1.03; pieces under 0.15 m skipped); inset roof decks (+12 triangles per building) merged into the existing paint batches. Museum pilasters skipped.
+- **Draw calls (headless Chrome 390x844 DPR 2, same teleports as the study):** plaza 151 -> 145-146, shore 132 -> 131, lawn 102 -> 99, jetpack 33 -> 33, swim 32 -> 32, night shore 174 -> 168 (differences are townsfolk positions; none higher). No thermal measurement; not verified on an iPhone.
+
+## Rare activities load on demand: dive room, fishing host, easel tray (Nov 10 2026, local, not deployed)
+
+Goal: a smaller island boot chunk. Code for activities most visits never open now loads when the player comes near them. It follows the Oct 7 pattern ("Load parts of the island when they are opened", below).
+
+**What now loads on demand.**
+
+| Part | Loaded by | Lazy chunk (raw / gzip −9) |
+|---|---|---|
+| The dive room (`lib/graphics/diveRoom.ts`: the reef, the fish shader, the creatures) | `import()` in `lib/town/water/diveRuntime.ts`. It starts when the HUD tick (`slots`) finds a dive zone within 120 m plus the zone's radius. Until it lands, the Dive prompt and its focus slot stay hidden and the edge entry is refused, so a dive never starts without its room. A failed load is forgotten, and the next tick near the water retries. | 58.0 / 21.3 KB |
+| `FishingHost` (the cast, reel and catch UI, tutorial, lure button, and the Fishbook and stand wrappers) | `components/FishingHostLazy.tsx` mounts it the first time any of these happens: the player comes within the fishing visuals' 100 m prefetch range (`fishingSignals.markFishingNear`, fired from `loadFishingVisuals`); a session becomes active; or the market stand is requested (`OPEN_MARKET_STAND` is kept and replayed once the host is mounted). If the chunk fails, a waiting session is stopped and the next want retries. | 33.0 / 11.6 KB |
+| The easel's tray (`components/PaintEaselStudio.tsx`) | `components/PaintEasel.tsx` keeps only the world prompt. The tray loads on the prompt's `pointerdown` or on sitting down (`lib/ui/useLazyPart.ts`). If the load fails, the child is stood up again, and the next sit-down retries. | 24.9 / 8.8 KB |
+
+- **Light data and builders split out, so the boot chunk can keep the markers:**
+  - `lib/town/fishing/fishSpots.ts` holds the spots, the market stand and the shared types, with no species data. `fishCatalog.ts` re-exports it. Town, presence, the minimap, the market, clear water, beachcombing, sea-life areas and the orchard now import it.
+  - `lib/graphics/diveWreck.ts` holds the `Merge`, wreck and arch builders. The island's above-water wreck tops (`diveWreckTop.ts`) use it.
+  - `lib/town/fishing/fishingSignals.ts` holds `OPEN_MARKET_STAND` and the near signal. `IslandJobs` imports it instead of `FishingHost`, which would have pulled the host back into the boot chunk.
+- **No new hitch, no new loop:**
+  - None of these chunks builds geometry or materials when it arrives. The room is still built on entry, exactly as before, so shader compilation timing is unchanged.
+  - The chunks parse well before use: 120 m for the room, 100 m for the host.
+  - No timers or polling. One `import()` per part, triggered by checks that already ran (the HUD tick, the fishing distance check, pointer events).
+- **Multiplayer:** remote anglers, divers and stand visitors are drawn by presence and fishingWorld, which stay in the boot chunk. Presence now uses `fishSpots`.
+
+**Measured** (production `next build --no-lint`, `NEXT_DIST_DIR=.next-bundle`, `NODE_OPTIONS=--max-old-space-size=6144`, same machine and tree, one build before and one after; `/layout` + `/island-return/page` JS from `app-build-manifest.json`, gzip −9):
+
+| | Before | After |
+|---|---|---|
+| `next build` First Load JS, `/island-return` | 1.89 MB | 1.84 MB |
+| Island boot JS, 43 files | 5,596 KB raw / 1,906 KB gz | 5,416 KB raw / 1,848 KB gz (**−180 KB raw, −58 KB gz**) |
+| Island mega-chunk | 2,635 KB raw / 934 KB gz | 2,453 KB raw / 875 KB gz |
+
+**Not moved, and why.**
+- **The species catalogue (`fishCatalog` and `shoreSignatures`, `fishSpecials`, `legendary`, `fishStories`).** The boot chunk still needs it synchronously:
+  - the fishing save stores (`fishingLog` / `fishingLogStore`, `fishingHooks` / `fishingHooksStore`, `fishingDelightStore`, which Town reads for the cheer event);
+  - the market goods price list (`lib/town/market/goods.ts`, through `IslandJobs`);
+  - `boatCaptains` → `legendary`;
+  - the session code in `fishingWorld` (`fishingCore`, `fishingSession`).
+  It ends up in a shared boot chunk (161 KB raw / 50 KB gz). Moving it means making those stores and the price list read species asynchronously: a separate refactor.
+- **Bug catching (`bugCatch`).** `lib/town/jobs/jobScene.ts`, `bugNet` and `bugJar` import it, and the island jobs stay on the boot path on purpose (Oct 7).
+- **Live join (`liveJoinRuntime`, `liveJoin`, `LiveJoinHud`).** Town calls `liveJoin` in about 30 places in the frame loop, and its `update()` is the venue proximity prompt itself. Deferring it needs its trigger split from the match code first.
+- **`divePreview`.** It is the dive zones' look from above, shown from 260 m. It sets up the ocean blend and the decal shader at mount, so deferring it would move a shader compile into play.
+- **The 3D easel (`lib/graphics/paintEasel.ts`).** It is a visible Summit Isle prop and owns the prompt placement.
+
+**Owner, on a phone:**
+1. Swim out to a dive zone: the Explore prompt appears as before, and the first dive has no extra pause.
+2. Walk to a pier and fish: the cast UI appears at once. The market stand opens from Rosa and from a boat captain's "Sell my fish".
+3. Sit at the Summit Isle easel: the tray appears.
+4. On a slow connection, check that none of these shows a half-open state.
+
+**Tests.**
+- New: `tests/rare-activities-lazy.cjs` (static boot-graph check, fail-soft wiring, the near signal fires once, the hint state stays gone).
+- Updated for the moved code: `dive-edge`, `explore-delight`, `explore-swim-oct25`, `explore-v2` and `water-dive` (they hand the room module over with `provideDiveRoom`), `paint-easel` (it reads the shell and the studio), `water-dive` (the wreck kinds live in `diveWreck.ts`), `join-live-game` (no `setHint`).
+
 ## Match focus: the island holds still during a joined live match (Nov 5 2026, local, not deployed)
 
 While a human is joined in a live match (`liveJoin.joined`), `lib/town/matchFocus.ts` holds the townsfolk (one held pass, then `islandNpcs.update` returns), traffic, the volleyball / coach groups, ferry, lighthouse, sea life, bugs, fruit and beach finds, and sleeps the ball hunt; it reuses the fishing focus `backgroundFrozen` gates. Shadows stay every frame, the pixel ratio and water clock are untouched. Measured (headless Chrome 390x844 DPR 3, 4x CPU, production build, 3 alternating 20 s runs): main-thread script -10 % (9v9) / -17 % (beach), heap growth 14.0 -> 10.9 / 10.3 -> 8.9 MB/s, draw calls 93 -> 84 / 80 -> 79. Ranking, numbers and the leave check: docs/join-live-game-design.md "Match focus". Desktop emulation only; no iPhone heat claim.
@@ -11,6 +95,10 @@ The two deep-sea boats now differ (`BOAT_LOOKS` in `lib/town/fishing/deepSeaBoat
 ## Fishing post variants (Oct 26 2026, local, not deployed)
 
 Each of the 16 shore fishing posts now has its own deterministic look (`lib/town/fishing/fishingKiosk.ts`, seeded by post id: wood tone, awning colour/stripes, roof shape/tilt, counter and ground props, eave hangings, topper, and beach / pier / rocks / river props). Cost: build-time only; parts are transformed copies of ≤ 11 shared low-poly primitives written straight into one geometry per post, still merged into the single `fishing-posts` mesh (one draw + one shadow draw, no new material/texture, nothing per frame). Triangles ≈ 4k → ≈ 9.5k for all posts (cap 720 per post, 600 average). Cabinet and collision footprint unchanged. Pinned by `tests/fishing-kiosk-variants.cjs`. No device measurement.
+
+## Fishing stall styles (Nov 10 2026, local, not deployed)
+
+Owner: "all of them are the same. give them variety in shape and styles". The Oct 26 variants above only changed colours, roof tilt and small props on one shared 1.2 × 1.25 × 0.7 m cabinet, so the posts still read as one model. `lib/town/fishing/fishingKiosk.ts` is now a kit of seven stall types with their own silhouettes (shack, two-wheel beach cart, tiki hut, lighthouse lean-to, rowboat counter with a mast sign, harbour-master booth, market table with parasol), assigned per spot in `STALL_BY_SPOT` (neighbours and any post within 150 m differ), two or three palettes per type. Every type keeps the cream fish sign and two rods. Cost unchanged in kind: still transformed copies of ≤ 11 shared primitives merged into the one `fishing-posts` mesh (one draw + one shadow draw, no new material, texture, light or per-frame work); 9,362 triangles for all 16 posts (was ≈ 9.5k). Colliders are now 1-3 round colliders per type, turned with the stall (`stallColliders`, ≥ 0.85 m from the standing spot and the cast line, on walkable ground); the glow box and the "Fish" prompt height follow the type. The kit stays where the cabinet was (statically imported by `fishingWorld.ts`, as before; it imports three only). Pinned by `tests/fishing-stall-styles.cjs`, `tests/fishing-kiosk-variants.cjs` (updated), `tests/fishing.cjs` (footprint rule updated). Draw calls on a phone screenshot (scene totals, NPCs vary): South Pier 141 → 137/140, Harbour Wall 126 → 126. No device measurement.
 
 ## Ride splash in the shallows (Oct 23 2026, local, not deployed)
 
@@ -6205,3 +6293,14 @@ Validation: `tests/live-ball-physics.cjs` (air spin follows travel and is capped
   first puzzle, inside the 25% budget). Aiming sleeps on the classic puzzle (0 draws in 2 s); clock / moving-defender puzzles
   keep the existing low-rate intent arrows (~4 frames/s while aiming), the same before and after and the same as Expert.
   No iPhone thermal claim.
+
+## Gashapon toy viewer, round 3B studio (Nov 9 2026)
+
+While the toy viewer is open the island draws nothing (`holdIslandCover`), so HD toys (`lib/gashapon/toyModels/index.ts`
+HD_MACHINES, the Onigiri Pals pilot so far) spend that budget in the viewer only: physical materials, a 4-light studio with ONE
+shadow map (1024², 512² on phones), a PMREM room reflection built on the first HD show, a CPU soft body (every vertex of the toy,
+13.5k–35k triangles, only while a mode is moving) and kind physics. Caps: ≤ 120 draws / 60k triangles per toy; 60 fps
+(`frameCapSlot`), 30 fps under reduced motion, heat tier ≥ 1 or a low-end phone; DPR ≤ 1.5 on phones; the loop sleeps ~8 s after
+the last touch; everything (env target, shadow map, textures, geometries) is disposed on close. Validation: tests/gashapon-viewer.cjs
+(50-show leak check) and scripts/check-gashapon-toys-browser.cjs (renderer.info.memory flat over 50 shows, 50 open / close cycles
+leave no canvas). Desktop / headless measurements only; no iPhone thermal data yet.

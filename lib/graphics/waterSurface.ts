@@ -1,6 +1,7 @@
 import * as T from 'three';
 import {DIVE_SLOTS,DIVE_BLOB_MAX,diveBlobParams} from '../town/water/diveSpots';
 import {SHOAL_HEART_D,SHOAL_OPAQUE_D,WATER_Y} from './waterTokens';
+import {stepGroundTime} from './groundTint';
 /** The dive patch's blob test (diveSpots.ts diveBlobR, same formula): q < 1 inside; q > 1 past the widest reach skips the atan. */
 // Oct 20 2026 (user: "look more like the shore where it's see through", "blend in more on the edges"): the patch's look reaches past
 // the dive blob (q < 1, where Dive shows) and dissolves over a wide noise-broken band out to q = DIVE_SHOAL.fade, so the quick reject
@@ -58,6 +59,9 @@ export const WATER_UNIFORMS={
  uWaterTime:{value:0},
  /** Waves elapsed (swashClock(uWaterTime)), set with the clock. */uSwashClock:{value:0},
  /** 0..2, see above. */uWaterDetail:{value:2},
+ /** Night water tint (Nov 10 2026): mix(1, (.38,.5,.72), k) with k = 0 day, .35 sunset, 1 night, so the sea sinks toward a moonlit
+  *  blue. Set once per time-of-day change (setWaterNight from world.ts updateTrafficSignals), never per frame; one multiply in the
+  *  ocean, the shoreline strip and the sea-veil (seaVeil.ts). */uWaterNight:{value:new T.Vector3(1,1,1)},
  /** 0..1 sun glitter + shallow caustic light near the camera (tropical water, Oct 26 2026; docs/TROPICAL_WATER_OCT26.md): 1 cool,
   *  0 at heat tier >= 2, the governor's "slow" state, Battery saver and reduced motion (the still water path draws none anyway).
   *  Set by setSunGlitter once per frame (Town); the shaders skip the work on a uniform branch when it is 0. */uSunGlitter:{value:1},
@@ -78,7 +82,9 @@ export function setDiveSpots(spots:readonly {x:number;z:number;radius:number;blo
  for(let i=0;i<DIVE_SLOTS;i++){const s=spots[i];if(s){WATER_UNIFORMS.uDiveSpots.value[i].set(s.x,s.z,s.radius,1);WATER_UNIFORMS.uDiveTint.value[i].set(s.tint);WATER_UNIFORMS.uDiveBlob.value[i].fromArray(diveBlobParams(s.blob));}else WATER_UNIFORMS.uDiveSpots.value[i].w=0;}
 }
 /** Advance the shared water clock. Call once per rendered frame; `still` (reduced motion, static-ambience heat tiers) holds it. */
-export function stepWaterTime(dt:number,still:boolean){if(!still&&dt>0){const t=WATER_UNIFORMS.uWaterTime.value=(WATER_UNIFORMS.uWaterTime.value+Math.min(dt,.05))%WATER_WRAP;WATER_UNIFORMS.uSwashClock.value=swashClock(t);}}
+export function stepWaterTime(dt:number,still:boolean){stepGroundTime(dt,still);/* cloud shadows, <= 10 Hz (groundTint.ts) */if(!still&&dt>0){const t=WATER_UNIFORMS.uWaterTime.value=(WATER_UNIFORMS.uWaterTime.value+Math.min(dt,.05))%WATER_WRAP;WATER_UNIFORMS.uSwashClock.value=swashClock(t);}}
+export const WATER_NIGHT_TINT=[.38,.5,.72] as const;
+export function setWaterNight(mode:string){const k=mode==='night'?1:mode==='sunset'?.35:0,[r,g,b]=WATER_NIGHT_TINT;WATER_UNIFORMS.uWaterNight.value.set(1+(r-1)*k,1+(g-1)*k,1+(b-1)*k);}
 export function setWaterDetail(level:number){WATER_UNIFORMS.uWaterDetail.value=level;}
 /** Glitter / shallow caustics gate (uSunGlitter): off when hot (tier >= 2), slow, in Battery saver or with reduced motion. */
 export function sunGlitterLevel(tier:number,saver:boolean,slow:boolean,reduced:boolean){return saver||slow||reduced||tier>=2?0:1;}
@@ -92,7 +98,7 @@ export function setShore(texture:T.Texture|null,box:T.Vector4|null,strength:numb
 
 /** GLSL shared by the ocean and the shoreline strip. `shoreSample(xz)` returns (signed distance m, noise, noise, beach 1 / hard edge 0). */
 export const SHORE_GLSL=/* glsl */`
-uniform float uWaterTime,uSwashClock,uWaterDetail,uShore,uIsle;uniform sampler2D uShoreTex,uIsleTex;uniform vec4 uShoreBox,uIsleBox;uniform vec3 uSunDir;
+uniform float uWaterTime,uSwashClock,uWaterDetail,uShore,uIsle;uniform vec3 uWaterNight;uniform sampler2D uShoreTex,uIsleTex;uniform vec4 uShoreBox,uIsleBox;uniform vec3 uSunDir;
 const float SWASH_P=${SWASH_PERIOD.toFixed(2)},SWELL_L=${SWELL_LENGTH.toFixed(2)};
 vec4 shoreSample(vec2 xz){return texture2D(uShoreTex,clamp((xz-uShoreBox.xy)/uShoreBox.zw,0.,1.));}
 /** 0 outside the box, rising to 1 a little inside it (no hard edge where the box ends). */
@@ -246,7 +252,7 @@ vec3 waterGlitter(vec2 xz,float pxm,float lobe,float clump){
  #if NUM_DIR_LIGHTS>0
  if(uWaterDetail<.5)return vec3(0.);// the still path (reduced motion, heat tiers 3-4, governor slow): no glitter
  float k=uSunGlitter*(1.-smoothstep(.055,.11,pxm));if(k<=0.)return vec3(0.);
- vec2 p=xz*1.8+uWaterTime*vec2(.05,.021),c=floor(p),f=p-c;float h=glimHash(c);if(h>(.03+.2*lobe*lobe)*smoothstep(.3,.75,clump)*1.5)return vec3(0.);
+ vec2 p=xz*1.8+uWaterTime*vec2(.05,.021),c=floor(p),f=p-c;float h=glimHash(c);if(h>(.008+.3*lobe*lobe)*smoothstep(.3,.75,clump)*1.5)return vec3(0.);
  float h2=fract(h*61.7+.13),h3=fract(h*23.3+.37),tw=.5-.5*cos(6.2832*(uWaterTime*(.3+.35*h2)+h3)),r=min(max(.6,12.*pxm),.95);
  // A sharp core with a little four-point cross (a glint of sun, not a bubble), clustered in drifting patches (clump: the sea noise + ripple tile),
  // white-gold whatever the sun's tint.
@@ -308,7 +314,12 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
      float nearK=1.-smoothstep(3.,24.,dd);
      diffuseColor.rgb=mix(diffuseColor.rgb,shallowC*(.92+.08*ripple.r),nearK*.85);
      // Open sea (Oct 19 2026 audit, Tide Bound "deeper blue past the drop-off"): past ~40 m the teal sinks toward a deeper blue. 2 ALU.
-     diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.015,.2,.47),smoothstep(25.,110.,dd)*.55);
+     // Nov 10 2026: broad wind patches (slow, warped lighter/darker lanes ~130 m apart, out past ~15 m; 2 sin + ~9 ALU, every tier),
+     // folded into the open-sea factor so they cost no extra smoothstep.
+     {float sea=smoothstep(25.,110.,dd),wp=sin(vWaterXZ.x*.024+1.6*sin(vWaterXZ.y*.019-vWaterXZ.x*.008)+uWaterTime*.015);
+      diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.015,.2,.47),sea*.55)*(1.+.075*wp*min(1.,dd*.04-.6));}
+     // Nov 10 2026: night water, a moonlit blue instead of the day teal lit dimly (uniform set per time-of-day change; 1 ALU).
+     diffuseColor.rgb*=uWaterNight;
      float crest=0.;
      if(uWaterDetail>.5){
       // Swells rolling in toward every shore as broken crest lines, not evenly spaced contour rings (beach waves, Oct 12 2026): each
@@ -332,14 +343,15 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
      if(reachS>0.){float t=uWaterTime;
       float k1=1.-smoothstep(.25,.6,pxS),st=k1*waterRibbon(mat2(.86,.51,-.51,.86)*vWaterXZ,nS,t,1.,pxS)+.04*(1.-k1);
       if(uWaterDetail>1.5){float k2=1.-smoothstep(.4,.9,pxS);st=max(st,.6*k2*waterRibbon(mat2(.93,.37,-.37,.93)*vWaterXZ+vec2(37.,11.),-nS,-t*.8,1.45,pxS));}
-      float nearS=1.-smoothstep(10.,45.,dd);// the shoals get the shallows' light net too (no extra reads)// Oct 19 2026: the net reads strongest in the shallows by the beaches
+      float nearS=smoothstep(30.,8.,dd);// the shoals get the shallows' light net too (no extra reads)// Oct 19 2026: the net reads strongest in the shallows by the beaches
       // A low camera (the fishing view, ~5 m up; Oct 19 2026 one shore) sees the ribbons big and near: they read as a white fog
       // over the clear window, so they fade to a hint below ~18 m of camera height (the walking / flying views are unchanged).
       // A high (jetpack) camera sees many cells at once: the net eases to ~60% above ~20 m so it never becomes a sheet.
-      waterStreak=st*reachS*(.75+.25*waterLobe)*(.2+1.3*nearS)*mix(.8,1.,smoothstep(7.,18.,cameraPosition.y+.43))*mix(1.,.6,smoothstep(20.,60.,H))*(uWaterDetail<.5?.55:1.);
+      waterStreak=st*reachS*(.75+.25*waterLobe)*(.12+1.38*nearS)*mix(.8,1.,smoothstep(7.,18.,cameraPosition.y+.43))*mix(1.,.6,smoothstep(20.,60.,H))*(uWaterDetail<.5?.55:1.);
       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.55,.86,.9),min(waterStreak*.17,.27));
       // Sun glitter (waterGlitter): near the camera only (this branch), off the strip's swash (dd), on a uniform gate.
-      if(uSunGlitter>0.)waterGlim=waterGlitter(vWaterXZ,pxS,waterLobe,nS+.5*ripple.r)*smoothstep(1.,3.5,dd);}// peak ~26% lighter in the shallows, ~6% at sea (the net is a shallows thing; the open sea reads as depth, not cracked glass)
+      if(uSunGlitter>0.)waterGlim=waterGlitter(vWaterXZ,pxS,waterLobe,nS+.5*ripple.r)*smoothstep(1.,3.5,dd);}
+     // (Nov 10 2026: far whitecaps were tried and removed the same day, owner's call: ~45 ALU for small white dashes.)
      #endif
      // Dive shoals: no tint of their own; the depth colour above already reads dd (the shore's shallows palette).
     }`)

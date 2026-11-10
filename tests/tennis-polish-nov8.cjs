@@ -38,7 +38,7 @@ for(const n of [1,2]){const top=t.tennisTourGain(n,'touch',t.TENNIS_TOUCH_MULT.g
 const files=fs.readdirSync(path.join(ROOT,'supabase/migrations')).sort(),f='20261108_tennis_tier_boards.sql';assert(files.includes(f));
 assert(files.indexOf(f)>files.indexOf('20261108_strikers_league_boards.sql')&&files.indexOf(f)>files.indexOf('20261108_runner_tier_boards.sql'));
 // Nov 8 2026: the Pass Puzzles cup boards came later in their own file (20261110_puzzle_tier_boards.sql, which now runs last).
-const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['puzpro','puzlgnd'].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
+const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily'].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
 assert(/'OK, tennis tour boards installed'/.test(sql));assert(!/\bdrop\s+(table|function|column)|truncate|delete from|update\s+public/i.test(sql.replace(/--.*$/gm,'')),'additive');
 
 // 3. Touch multiplier + combo (a scrappy touch never breaks it; only a lost point resets it).
@@ -86,7 +86,7 @@ for(let i=0;i<60;i++)A.tennisSound(ctx,i%2?'tennis:best':'tennis:mult:4:4');asse
 
 // 8. Wiring + reduced motion + CSS modules: the result card, HUD, impact ring and confetti.
 const game=read('components/games/ArcadeGame3D.tsx'),card=read('components/games/TennisCard.tsx'),css=read('components/games/TennisCourtPicker.module.css'),ag=read('lib/arcade/arcadeGames.ts');
-assert(/tennisBoardFor\(game\.current\?\.state\.tennis\.tour\?\?0\)/.test(game)&&/tennis-pro/.test(game)&&/!pinTier&&!tour\)setRecord/.test(game),'tour board + own best; classic record untouched by a tour');
+assert(/tennisBoardFor\(game\.current\?\.state\.tennis\.tour\?\?0\)/.test(game)&&/tennis-pro/.test(game)&&/record:tour\?null:/.test(read('lib/arcade/results/tennisResult.ts'))&&/beforeRecord:\(\)=>\{if\(kind==='tennis'\)tennisOver\(/.test(game),'tour board + own best; classic record untouched by a tour');
 assert(/data-tennis-tour=\{n\}/.test(card)&&/data-tennis-why/.test(card)&&/styles\.confetti/.test(card),'tour chips, why line, confetti');
 assert(/perfRing/.test(ag)&&/tennisImpact\.visible=!stage\.reduced&&/.test(ag),'perfect ripple reuses the pooled ring, off for reduced motion');
 assert(/prefers-reduced-motion:reduce\)\{\.confetti\{display:none\}/.test(css),'no confetti for reduced motion');

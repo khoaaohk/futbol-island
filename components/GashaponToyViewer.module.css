@@ -1,0 +1,40 @@
+/* The gashapon toy viewer (components/GashaponToyViewer.tsx): the museum ball viewer's studio sweep (WorldCupBalls.module.css), the
+ * toy in the middle, a plain name card under it in the island's green ink. Regular UI sans everywhere (no IslandBrush on
+ * buttons, owner Nov 4 2026). One fade in, off with reduced motion. */
+.root{--ink:#244d40;--soft:#5d7a6f;position:fixed;inset:0;z-index:90;overflow:hidden;color:var(--ink);font-family:var(--font-body,Arial,sans-serif);
+ background:radial-gradient(120% 70% at 50% 34%,#ffffff 0%,#fbf7ee 46%,#f1eadb 78%,#e8dfcc 100%);touch-action:none;-webkit-user-select:none;user-select:none;animation:in .28s ease-out both}
+@keyframes in{from{opacity:0}to{opacity:1}}
+.canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;outline:none;touch-action:none}
+.canvas:active{cursor:grabbing}
+.canvas:focus-visible{outline:3px solid #ffd451;outline-offset:-6px}
+.header{position:absolute;z-index:2;left:0;right:0;top:0;display:flex;align-items:center;padding:calc(20px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-right,0px)) 12px calc(24px + env(safe-area-inset-left,0px));pointer-events:none}
+.header>*{pointer-events:auto}
+@media(max-width:600px),(pointer:coarse){.header{padding:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) 10px calc(16px + env(safe-area-inset-left,0px))}}
+.card{position:absolute;z-index:2;left:50%;transform:translateX(-50%);bottom:calc(28px + env(safe-area-inset-bottom,0px));width:min(480px,calc(100% - 32px));display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;pointer-events:none}
+.name{margin:0;font:800 26px/1.1 var(--font-body,Arial,sans-serif);letter-spacing:-.01em}
+.meta{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0;font-size:15px;font-weight:700;color:var(--ink)}
+.rarity{padding:2px 10px;border-radius:999px;background:#efe3c6}
+.root[data-rarity=uncommon] .rarity{background:#cfe6f7}
+.root[data-rarity=rare] .rarity{background:#f9d665}
+.line{margin:2px 0 0;max-width:36ch;font-size:16px;line-height:1.4}
+.hint{margin:6px 0 0;padding:6px 14px;border-radius:999px;background:#244d4012;color:var(--soft);font-size:14px;font-weight:700;transition:opacity .4s}
+.hint[data-touched]{opacity:.55}
+.error{position:absolute;inset:40% 10% auto;text-align:center;color:var(--soft);font-weight:700}
+/* Round 3B (Nov 9 2026): the kind's first-use chip (fades for good once that kind has been played), its label, the action row
+ * (keyboard and screen-reader route to every kind; ≥ 44 px targets) and a polite live status line. Flat fills, fully round. */
+.chip{position:absolute;z-index:2;left:50%;top:calc(30px + env(safe-area-inset-top,0px));transform:translateX(-50%);margin:0;padding:10px 18px;border-radius:999px;background:var(--ink);color:#fff8e6;
+ font:800 16px/1.1 var(--font-body,Arial,sans-serif);white-space:nowrap;pointer-events:none;transition:opacity .5s ease,transform .5s ease;animation:nudge 2.4s ease-in-out .6s 2 both}
+.chip[data-used]{opacity:0;transform:translate(-50%,-8px);animation:none}
+@keyframes nudge{0%,100%{transform:translateX(-50%)}50%{transform:translate(-50%,4px)}}
+.kind{padding:2px 10px;border-radius:999px;background:#244d4014}
+.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:8px;pointer-events:auto}
+.act{min-height:44px;padding:0 18px;border:0;border-radius:999px;background:#244d4016;color:var(--ink);font:800 15px/1 var(--font-body,Arial,sans-serif);cursor:pointer;
+ transition:transform .12s ease,background-color .15s ease;-webkit-tap-highlight-color:transparent}
+.act[data-primary]{background:var(--ink);color:#fff8e6}
+.act:hover{background:#244d4024}.act[data-primary]:hover{background:#1b3c32}
+.act:active{transform:scale(.96)}
+.act:focus-visible{outline:3px solid #ffd451;outline-offset:2px}
+.status{min-height:1.3em;margin:4px 0 0;font-size:15px;font-weight:700;color:var(--ink)}
+@media(max-width:600px),(pointer:coarse){.chip{top:calc(78px + env(safe-area-inset-top,0px))}}
+@media(max-height:560px){.actions{margin-top:2px}.status{display:none}.card{bottom:calc(12px + env(safe-area-inset-bottom,0px));gap:3px}.name{font-size:22px}.line{display:none}}
+@media(prefers-reduced-motion:reduce){.root{animation:none}.hint,.chip,.act{transition:none}.chip{animation:none}}

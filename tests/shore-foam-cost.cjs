@@ -31,7 +31,7 @@ ok('cost caps: a 4-slot ring buffer, uniforms only (no mesh, no texture, no draw
  const town=src('components/Town.tsx');
  assert.equal((town.match(/shoreFoam\.update\(/g)||[]).length,1,'one update per frame');
  assert(/shoreFoam\.update\(active\?dt:0,shoreFoamMode\(heat\.tier,heat\.saver,reduced\)/.test(town),'heat tier, Battery saver and reduced motion gate it');
- assert(/return\(\)=>\{[^\n]*shoreFoam\.reset\(\)/.test(town),'reset on unmount');});
+ assert(/disposers\.add\(\(\)=>shoreFoam\.reset\(\)\)/.test(town)&&/return\(\)=>\{disposers\.runAll\(\);/.test(town),'reset on unmount');});
 
 ok('strip shader: same texture reads (field + ONE lace fetch), none of the lace past STRIP_FAR, interaction on a uniform branch',()=>{
  const shore=src('lib/graphics/islandShore.ts'),glsl=shore.slice(shore.indexOf('const STRIP_GLSL='),shore.indexOf('/** The island shoreline: call'));

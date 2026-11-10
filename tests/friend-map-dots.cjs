@@ -42,13 +42,13 @@ assert.equal(F.friendDotText({presence:'active'}),'is here');
  assert.equal(F.friendDotsChanged(a,a.slice(1),1),true,'a friend left');
  const b=a.map(d=>({...d}));b[0].presence='busy';assert.equal(F.friendDotsChanged(a,b,1),true,'state change');}
 
-// 4. The key: "Friends" only with a party; 6 entries otherwise (unchanged), 7 with (phones: 4 + 3).
-eq(Array.from(M.mapLegend(false),i=>i.label),['Vending','Fishing','Jobs','Explore','Fly there','You']);
-eq(Array.from(M.mapLegend(true),i=>i.label),['Vending','Fishing','Jobs','Explore','Fly there','You','Friends']);
-assert.equal(M.mapLegend(true)[6].tip,'friend');assert.match(M.legendTipText('friend'),/^Friends: /);
+// 4. The key: "Friends" only with a party; 7 entries otherwise (Gashapon joined on Nov 9 2026), 8 with (phones: 4 + 3 / 4 + 4).
+eq(Array.from(M.mapLegend(false),i=>i.label),['Vending','Fishing','Jobs','Gashapon','Explore','Fly there','You']);
+eq(Array.from(M.mapLegend(true),i=>i.label),['Vending','Fishing','Jobs','Gashapon','Explore','Fly there','You','Friends']);
+assert.equal(M.mapLegend(true)[7].tip,'friend');assert.match(M.legendTipText('friend'),/^Friends: /);
 {const map=read('components/IslandTravelMap.tsx'),css=read('components/IslandTravelMap.module.css'),dots=read('components/FriendMapDots.tsx'),o=read('components/IslandOverview.tsx');
  assert.match(map,/mapLegend\(usePartyHasFriends\(open\)\)/,'the key asks for Friends only while the map is open with a party');
- assert.match(css,/\.legend\[data-legend-count="7"\]\{grid-template-columns:repeat\(4,max-content\)/,'phones: 4 + 3 with Friends');
+ assert.match(css,/\.legend\[data-legend-count="7"\],\.legend\[data-legend-count="8"\]\{grid-template-columns:repeat\(4,max-content\)/,'phones: 4 + 3 with Friends');
  // 5. Heat: no loop, no interval, no network; listeners only while live; You drawn after the friends (stays on top).
  assert(!/requestAnimationFrame|setInterval|sendPose|send\(/.test(dots),'no loop, no polling, no messages');
  assert.match(dots,/if\(!live\|\|!multiplayerEnabled\(\)\)\{setDots\(NONE\);return;\}/,'nothing subscribes when not live / multiplayer off');

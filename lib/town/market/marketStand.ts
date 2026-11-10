@@ -7,7 +7,7 @@
 import {GOODS,goodById,type GoodKind} from './goods';
 import {MARKET_FULL_PRICE_COINS,MARKET_STORAGE_KEY,localMarketDay,quoteSale,sanitizeMarket,nextUnitValue,plentyToday,plentyLine,withTallies,type MarketState,type SaleResult} from './market';
 import {MARKET_BUYERS,perItemText,type MarketBuyer} from '../../economy';
-import {FISH_SPOTS,MARKET_STAND} from '../fishing/fishCatalog';
+import {FISH_SPOTS,MARKET_STAND} from '../fishing/fishSpots';
 import {DEEP_SEA_BOATS} from '../fishing/deepSeaBoatData';
 
 /** What the NEXT item of this good is worth right now (full price, lowered by the same-kind ladder, halved after today's

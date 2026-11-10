@@ -50,6 +50,9 @@ export interface TennisState{
  gold:number;goldReady:boolean;goldenShot:boolean;goldenUsed:number;
  /** Two-touch courts: a cushioned trap sets the ball up on your own side for a stronger second touch. */
  youTrapped:boolean;rivalTrapped:boolean;setBonus:number;trapEvents:number;trapSide:TennisSide;trapGrade:TennisGrade;
+ /** Nov 10 2026 first-touch target (read only, no physics): the set-up spot in front of you that a cushioned trap aims for
+  * (trapSpotX/Y, the trap's own aim before its wobble), whether your last trap put the ball down inside it, and the match count. */
+ trapSpotX:number;trapSpotY:number;trapOnTarget:boolean;firstTouchOnTarget:number;firstTouchTries:number;
  /** Trickster fake: the rival shows a sole-roll, then switches sides. */
  rivalFake:boolean;fakeReads:number;fakeShown:boolean;
  /** Personality habit beaten (drop vs deep defender, lob vs net rusher …) and your last shot. */
@@ -98,6 +101,10 @@ export interface TennisState{
 export type TennisGrade='perfect'|'good'|'heavy'|'early'|'late'|'stretched'|'';
 export type TennisPointKind='space'|'letgo'|'net'|'out'|'miss'|'target'|'';
 /** Contact quality grades. The early/late/stretched names tell the player which habit to fix. */
+/** First-touch target (two-touch courts): a trap that sets the ball down within `r` m of the spot in front of you is on target. */
+export const TENNIS_FIRST_TOUCH={r:.3,ahead:.45,tip:'On target: a soft touch into the space in front of you.'} as const;
+/** Where a cushioned trap should set the ball: a stride in front of you, toward the net, a little toward the ball. Pure. */
+export const tennisFirstTouchSpot=(px:number,py:number,bx:number)=>({x:clamp(px+(bx-px)*.35,-4.4,4.4),y:clamp(py-TENNIS_FIRST_TOUCH.ahead,.7,7.4)});
 export const TENNIS_GRADE_TIPS:Record<Exclude<TennisGrade,''>,string>={perfect:'Early bounce, balanced feet.',good:'Clean touch.',heavy:'Heavy: slow your feet before the touch.',early:'Too early: let it bounce first.',late:'Late: meet it before it drops.',stretched:'Stretched: get your body beside the ball.'};
 /** The tennis ladder. Each stop adds one football decision, a court surface or rule, and a rival
  * personality with a habit you can read and beat (`counter`). `tier` is the difficulty (1–5).
@@ -215,7 +222,7 @@ const player=(y:number):TennisPlayer=>({x:0,y,vx:0,vy:0,targetX:0,targetY:y,kick
 const mkball=(x:number,y:number,last:TennisSide):TennisBall=>({x,y,z:.23,vx:0,vy:0,vz:0,wx:0,wy:0,wz:0,rot:0,squash:0,netHit:false,last,bounces:0,crossed:false,wind:0});
 export function createTennis(seed=47,level=1,tour:TennisTour=0):TennisState{const t:TennisTour=tour===1||tour===2?tour:0;return {level:clamp(Math.floor(level)||1,1,TENNIS_COURTS.length),courtsWon:0,drillTries:0,aiReadErrorX:0,aiReadErrorY:0,bounceAge:99,perfectTouches:0,perfectFlash:0,phase:'ready',you:player(5.3),rival:player(-5.3),ball:mkball(.3,4.95,'you'),score:{you:0,rival:0},server:'you',rally:0,bestRally:0,message:'A little court. A good rally.',version:0,clock:0,phaseTime:0,queuedKick:0,aim:null,aiThink:0,aiReaction:0,seed:seed>>>0,winner:null,
  queuedShot:'auto',lastShot:'auto',lastKicker:'you',kickCount:0,aiSlam:false,fxSlam:0,fxSlamX:0,fxSlamY:0,fxSlamZ:0,fxLand:0,fxLandX:0,fxLandY:0,fxLandI:0,pointWinner:null,shotAim:0,cleanReturns:0,cleanStreak:0,bestCleanStreak:0,rivalIntent:'Ready at the baseline',
- touchGrade:'',touchSide:'you',touchQuality:0,rivalPlan:null,rivalPlanX:0,rivalPlanAt:0,rivalStumble:0,rivalLetGo:false,wrongFooted:0,kickHold:0,pressCount:0,gold:0,goldReady:false,goldenShot:false,goldenUsed:0,youTrapped:false,rivalTrapped:false,setBonus:0,trapEvents:0,trapSide:'you',trapGrade:'',rivalFake:false,fakeReads:0,fakeShown:false,habitWins:0,lastYouShot:'auto',assist:0,winRun:0,lossRun:0,drillLeft:0,drillHits:0,targetX:0,targetY:-4.6,targetEvents:0,stars:0,gradeCounts:{perfect:0,good:0,heavy:0,early:0,late:0,stretched:0},perfectStreak:0,touchVolley:false,aiHeader:false,rivalFinish:false,landX:0,landY:0,incomingOut:false,headSpot:false,headX:0,headY:0,outEvents:0,caught:0,bounceEvents:0,netEvents:0,netKind:'net',netX:0,netPace:0,pointKind:'',centerRun:0,chargeShot:null,chargeTime:0,charge:0,shotPower:0,depthAim:0,powerGrade:'',powerEvents:0,sweetShots:0,overShots:0,rivalPower:0,rivalPowerGrade:'',
+ touchGrade:'',touchSide:'you',touchQuality:0,rivalPlan:null,rivalPlanX:0,rivalPlanAt:0,rivalStumble:0,rivalLetGo:false,wrongFooted:0,kickHold:0,pressCount:0,gold:0,goldReady:false,goldenShot:false,goldenUsed:0,youTrapped:false,rivalTrapped:false,setBonus:0,trapEvents:0,trapSide:'you',trapGrade:'',trapSpotX:0,trapSpotY:0,trapOnTarget:false,firstTouchOnTarget:0,firstTouchTries:0,rivalFake:false,fakeReads:0,fakeShown:false,habitWins:0,lastYouShot:'auto',assist:0,winRun:0,lossRun:0,drillLeft:0,drillHits:0,targetX:0,targetY:-4.6,targetEvents:0,stars:0,gradeCounts:{perfect:0,good:0,heavy:0,early:0,late:0,stretched:0},perfectStreak:0,touchVolley:false,aiHeader:false,rivalFinish:false,landX:0,landY:0,incomingOut:false,headSpot:false,headX:0,headY:0,outEvents:0,caught:0,bounceEvents:0,netEvents:0,netKind:'net',netX:0,netPace:0,pointKind:'',centerRun:0,chargeShot:null,chargeTime:0,charge:0,shotPower:0,depthAim:0,powerGrade:'',powerEvents:0,sweetShots:0,overShots:0,rivalPower:0,rivalPowerGrade:'',
  pointsPlayed:0,wind:0,sets:{you:0,rival:0},setEvents:0,setWinner:null,rallyMilestone:0,milestoneEvents:0,bestMilestone:0,
  tour:t,tourScore:0,tourLives:t?TENNIS_TOUR_RULES[t-1].lives:0,tourWins:0,tourHeat:0,tourClean:0,touchMult:0,comboStep:1,tourGain:0,tourEvents:0,bestCombo:1,lossKinds:{net:0,out:0,space:0,letgo:0,miss:0}};}
 /** Rally milestones (touches in one point) that pop a "RALLY 10!" call, a crowd roar and +1 Golden Touch meter. */
@@ -609,10 +616,11 @@ function trap(s:TennisState,side:TennisSide){
  const fx=clamp(p.x+(b.x-p.x)*.35+(random(s)-.5)*wild*1.6,-4.4,4.4),fy=side==='you'?clamp(p.y+dir*.45+(random(s)-.5)*wild*1.4,.7,7.4):clamp(p.y+dir*.45+(random(s)-.5)*wild*1.4,-7.4,-.7);
  b.vx=(fx-b.x)/T;b.vy=(fy-b.y)/T;b.vz=(.55-b.z)/T+.5*TENNIS.gravity*T;b.wx=b.wy=b.wz=0;b.bounces=0;s.bounceAge=99;s.incomingOut=s.headSpot=false;
  p.kickSpan=.55;p.kick=p.kickSpan;p.kickFacing=Math.atan2(b.x-p.x,b.y-p.y);p.kickStyle=chest?5:8;p.kickKind='pass';p.kickPower=.2;p.kickHeight=b.z;p.kickContactX=0;p.kickContactZ=.4;
- if(side==='you'){s.youTrapped=true;s.setBonus=1.6;s.queuedKick=0;s.queuedShot='auto';s.trapGrade=q>=.72?'good':pace*.06>reach*.7?'heavy':'stretched';s.lastYouShot='trap';}
+ if(side==='you'){const spot=tennisFirstTouchSpot(p.x,p.y,b.x);s.trapSpotX=spot.x;s.trapSpotY=spot.y;s.trapOnTarget=Math.hypot(fx-spot.x,fy-spot.y)<=TENNIS_FIRST_TOUCH.r;s.firstTouchTries++;if(s.trapOnTarget)s.firstTouchOnTarget++;
+  s.youTrapped=true;s.setBonus=1.6;s.queuedKick=0;s.queuedShot='auto';s.trapGrade=q>=.72?'good':pace*.06>reach*.7?'heavy':'stretched';s.lastYouShot='trap';}
  else{s.rivalTrapped=true;s.aiReaction=.12;s.rivalIntent=INTENT.trap;}
  s.trapSide=side;s.trapEvents++;
- s.message=side==='you'?(q>=.72?'SOFT TRAP · it sits up for you. Now strike!':'A heavy trap — get to it and strike!'):'The rival TRAPS it — get set, a strike is coming.';s.version++;
+ s.message=side==='you'?(s.trapOnTarget?`${TENNIS_FIRST_TOUCH.tip} Now strike!`:q>=.72?'SOFT TRAP · it sits up for you. Now strike!':'A heavy trap — get to it and strike!'):'The rival TRAPS it — get set, a strike is coming.';s.version++;
 }
 /** Kid-readable point reasons that name the football idea, not just the rule. */
 function pointReason(s:TennisState,winner:TennisSide,kind:TennisPointKind){

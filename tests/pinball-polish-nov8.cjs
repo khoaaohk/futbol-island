@@ -54,7 +54,7 @@ await ok('server: a tier session posts to its own board and only there; SQL wide
  const files=fs.readdirSync(path.join(ROOT,'supabase/migrations')).sort(),f='20261109_pinball_tier_boards.sql';assert(files.includes(f));
  // Nov 8 2026: the Pass Puzzles cup boards came later (20261110_puzzle_tier_boards.sql runs last and repeats this whole list).
  const widen=files.filter(x=>/arcade_scores_game_check/.test(read('supabase/migrations/'+x))).filter(x=>x<'20261110');assert.equal(widen.pop(),f,'runs after every earlier board migration (each replaces the same allow-list)');
- const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['puzpro','puzlgnd'].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
+ const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily'].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
  assert(/'OK, pinball tier boards installed'/.test(sql));assert(!/\bdrop\s+(table|function|column)|truncate|delete from|\bupdate\s+public/i.test(sql.replace(/--.*$/gm,'')),'additive');
 });
 
@@ -125,7 +125,8 @@ await ok('wiring: board per tier, classic record untouched, same coins, npm test
  assert(/const boardKind=[^;]*kind==='pinball'\?pinballBoardFor\(game\.current\?\.state\.pinball\.tier\?\?0\)/.test(g)&&/beginBoardSession\(boardKind\)/.test(g),'board session per tier');
  assert(/<HighScoreEntry game=\{[^}]*kind==='pinball'\?pinballBoardFor\(/.test(g),'high-score entry posts to the tier board');
  assert(/<ArcadeBoards game=\{[^}]*kind==='pinball'\?pinballBoardFor\(/.test(g),'leaderboard opens on the tier board');
- assert(/savePinballTier\(pinTier\.id,/.test(g)&&/else if\(!pinTier[^)]*\)setRecord\(/.test(g),'a tier run keeps its own best, never the classic record');
+ {const pr=read('lib/arcade/results/pinballResult.ts'),st=read('lib/arcade/results/settle.ts');/* Nov 10 2026: game over moved to lib/arcade/results */
+  assert(/record:tier\?null:/.test(pr)&&/pinballTier:tier\?\{id:tier\.id/.test(pr)&&/savePinballTier\(r\.pinballTier\.id,/.test(st)&&/settleArcadeResult\(/.test(g),'a tier run keeps its own best, never the classic record');}
  assert(/if\(game==='pinball'\)value=n\(s\.goals\)\*3\+n\(s\.moves\)\*2;/.test(read('lib/arcade/arcadeWalletCore.ts')),'coins from goals and moves only (the multiplier never pays coins)');
  const arcade=read('lib/arcade/arcadeGames.ts');assert(/floorBase\.setHex\(pinball\.tier===2\?0x353323:pinball\.tier===1\?0x402340:/.test(arcade),'tier look = a floor colour, no extra draw');
  assert(/"test":[^\n]*node tests\/pinball-polish-nov8\.cjs/.test(read('package.json')),'in npm test');

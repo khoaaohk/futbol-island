@@ -46,7 +46,7 @@ assert.equal(J.LIVE_JOIN_FORMATS['11v11'].humanSpeedCap,null,'11v11: adult pace,
  assert.match(town,/const canOffer=!busy&&[^;]*;/,'the bar offers Play while riding or flying');assert(!/const canOffer=[^;]*rideRef\.current==='walk'/.test(town),'rides and flying are allowed for the bar');
  assert.match(town,/const canJoin=canOffer&&rideRef\.current==='walk'&&!pendingRide\.current&&!animalRides\.riding/,'the join itself waits for feet on the ground');
  assert.match(town,/liveJoin\.ground=\(\)=>\{if\(animalRides\.riding\)animalRides\.letGo\('off'\);if\(rideRef\.current!=='walk'&&pendingRide\.current!=='walk'\)selectRide\('walk'\);\}/,'Play / Learn reuse the existing dismount and jetpack landing');
- assert.match(town,/onLaunch=\{\(\)=>\{setHint\(false\);liveJoinRef\.current\?\.ground\(\);\}\} onPlay=\{\(\)=>liveJoinRef\.current\?\.press\('play',true\)\}/,'Learn lands too; Play feeds the picker');
+ assert.match(town,/onLaunch=\{\(\)=>\{liveJoinRef\.current\?\.ground\(\);\}\} onPlay=\{\(\)=>liveJoinRef\.current\?\.press\('play',true\)\}/,'Learn lands too; Play feeds the picker');
  const card=fs.readFileSync('components/FieldPathCard.tsx','utf8');
  assert.match(card,/data-live-bar=""/);assert.match(card,/className="field-go" data-field-learn="" onClick=\{launch\}[^>]*>Learn<\/button>/,'Learn, no arrow');
  assert.match(card,/\{say&&<button/,'no lesson: Play alone');assert.match(card,/className="field-play" data-join-play=""[^>]*>Play<\/button>/);}

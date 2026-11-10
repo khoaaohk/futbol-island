@@ -4,7 +4,8 @@
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),ts=require('typescript');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const src=read('lib/arcade/strikerCinema.ts'),mod={exports:{}};
-new Function('module','exports',ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(mod,mod.exports);
+const tsRequire=id=>{const m={exports:{}};new Function('module','exports','require',ts.transpileModule(read(path.join('lib/arcade',id+'.ts')),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(m,m.exports,tsRequire);return m.exports;};// the cinema imports ./beatDirector
+new Function('module','exports','require',ts.transpileModule(src,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(mod,mod.exports,tsRequire);
 const C=mod.exports,run=(c,seconds,step=1/60,fn)=>{let min=1;for(let t=0;t<seconds;t+=step){c.update(step);min=Math.min(min,c.timeScale);fn?.(c);}return min;};
 // Through on goal: dips to the slow-mo floor quickly, holds <= .9 s real, ramps back to exactly 1x.
 {const c=C.createStrikerCinema({reduced:false});assert.equal(c.trigger('through',10,0,25,0),true);

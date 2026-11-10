@@ -1011,3 +1011,6 @@ html[data-game-guard] canvas{touch-action:none}
 @media(min-width:601px) and (hover:hover){.town-app .hud-stack:has(>.field-learn-card:not([hidden])){width:max-content;min-width:min(420px,calc(100% - 2 * var(--phone-gutter)));max-width:min(680px,calc(100% - 2 * var(--phone-gutter)))}.town-app .hud-stack>.field-learn-card:not([hidden]){width:auto;max-width:100%}}
 /* Room between the lesson text and the Learn / Play buttons (owner, Nov 4). */
 .field-learn-card[data-live-bar]>:is(span:first-child,strong){margin-right:48px}
+/* Gashapon machine open (components/GashaponMachineFace.tsx, Nov 9 2026; html[data-gashapon-open]): the machine is the interface, so the island's own controls
+   step aside, the coins bar and the settings / HUD buttons too (the price pill under the knob shows the balance). */
+html[data-gashapon-open] .town-minimap,html[data-gashapon-open] .minimap-toggle,html[data-gashapon-open] .touch-controls,html[data-gashapon-open] .touch-actions,html[data-gashapon-open] .travel-actions,html[data-gashapon-open] .joystick,html[data-gashapon-open] .hud-stack,html[data-gashapon-open] .store-enter-prompt,html[data-gashapon-open] [data-job-wallet],html[data-gashapon-open] nav[data-hud-triggers]{visibility:hidden!important}

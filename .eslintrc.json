@@ -1,0 +1,47 @@
+{
+  "root": true,
+  "extends": "next/core-web-vitals",
+  "plugins": ["@typescript-eslint"],
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "@next/next/no-html-link-for-pages": "error",
+    "react-hooks/exhaustive-deps": "warn",
+    "@next/next/no-img-element": "warn",
+    "jsx-a11y/role-supports-aria-props": "warn",
+    "import/no-anonymous-default-export": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "components/museum/experiences/boots/boot.ts",
+        "lib/museum/museumBoot.ts",
+        "lib/shop/bootScene.ts",
+        "lib/town/ballReset.ts"
+      ],
+      "rules": { "react-hooks/rules-of-hooks": "off" }
+    },
+    {
+      "files": ["components/PlayerCard.tsx"],
+      "noInlineConfig": true
+    }
+  ],
+  "ignorePatterns": [
+    "node_modules/",
+    ".next/",
+    ".next-*/",
+    "out/",
+    "public/",
+    "scratchpad/",
+    "shots/",
+    "var-shots/",
+    "audit/",
+    "vendor/",
+    "docs/",
+    ".claude/",
+    "test-results/",
+    "playwright-report/",
+    "*.generated.ts",
+    "*.generated.tsx",
+    "next-env.d.ts"
+  ]
+}

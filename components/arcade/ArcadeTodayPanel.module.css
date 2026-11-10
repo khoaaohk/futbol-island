@@ -1,0 +1,28 @@
+/* Today in the arcade (Nov 10 2026): rows follow the Coins panel's machine cards (ArcadeCoinsPanel.module.css .machine). */
+/* The title matches the Scores panel title (Leaderboard.module.css .head h2: 32px), a touch smaller and tighter so it and the Done button share one line on a 390 px phone. */
+header h2.title{font-size:30px;letter-spacing:-.01em}
+.intro{font-size:14px!important;color:#e6dcf5!important;margin:0 0 6px!important}
+.list{list-style:none;margin:0;padding:0}
+.row{border:1px solid #6c5b824d;border-left:3px solid var(--cabinet);background:#1b182e;border-radius:14px;padding:14px 16px;margin:12px 0}
+.row[data-done]{background:#182a2a;border-color:#91f58f55;border-left-color:#91f58f}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.row h3{margin:0!important;font-size:15px!important;color:#f7f0ff}
+.state{font-size:12px;white-space:nowrap;color:var(--cabinet);font-variant-numeric:tabular-nums}
+.row[data-done] .state{color:#91f58f}
+.row p.line{font-size:15px;line-height:1.4;margin:8px 0 4px;color:#fff6ff;font-weight:700}
+.row p.point{font-size:13px;line-height:1.5;margin:0 0 12px;color:#c9bddc}
+.play{min-height:44px;min-width:96px;padding:8px 18px;border:2px solid #ceffbf;border-radius:24px;background:#91f58f;color:#113a2a;font:inherit;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 3px 0 #347a49;transition:transform .16s,background-color .16s}
+.row[data-done] .play{border-color:#70f5ec;background:#202c3d;color:#e8ffff;box-shadow:0 3px 0 #0c1220}
+.play:hover{background:#b1ffa5}
+.row[data-done] .play:hover{background:#293d4f}
+.play:active{transform:translateY(var(--btn-press,3px)) scale(.96)}
+.play:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset,3px)}
+.pennant{display:flex;gap:14px;align-items:flex-start;margin:20px 0 8px;padding:16px;border-radius:14px;background:#242039}
+.pennant[data-lit]{background:#2d2a1f}
+.pennant svg{flex-shrink:0}
+.pennant h3{margin:0 0 4px!important;font-size:16px!important}
+.pennant p{margin:0 0 8px!important}
+.days{display:flex;gap:8px}
+.days i{width:22px;height:8px;border-radius:4px;background:#3a3452}
+.days i[data-on]{background:#ffe58c}
+@media(prefers-reduced-motion:reduce){.play{transition:none}.play:active{transform:none}}

@@ -37,7 +37,7 @@ ok('the island is frozen while under: the dive branch runs first in the frame an
 });
 
 ok('the room rests: dive.resting only when nothing the player moved is moving (then the 20 fps rest cap applies)',()=>{
- const RT=load('lib/town/water/diveRuntime.ts'),root=new T.Group(),scene=new T.Scene();scene.add(root);
+ const RT=(m=>(m.provideDiveRoom(load('lib/graphics/diveRoom.ts')),m))(load('lib/town/water/diveRuntime.ts')),root=new T.Group(),scene=new T.Scene();scene.add(root);
  const ports={scene,renderer:{render(){}},camera:new T.PerspectiveCamera(50,390/844),player:{root,update(){}},phone:true,reduced:()=>false,ui:()=>null,place(){},hide(){},
   entered(){},surfaced(){},found(){},credit(){},low(){},out(){},fly:()=>false};
  const spot=D.diveSpotById('captains-cup'),rt=RT.createDiveRuntime(ports);rt.scan(.2,spot.x,spot.z,true);assert(rt.start());
@@ -76,7 +76,7 @@ ok('the reef journey: 8 pickups per zone on the path, on the sand, inside the ro
 });
 
 ok('the runtime: swim through a pickup collects it, finishing the zone restores it once (coins, card, formation), the ball scores',()=>{
- const RT=load('lib/town/water/diveRuntime.ts'),root=new T.Group(),scene=new T.Scene();scene.add(root);const credits=[],events=[];
+ const RT=(m=>(m.provideDiveRoom(load('lib/graphics/diveRoom.ts')),m))(load('lib/town/water/diveRuntime.ts')),root=new T.Group(),scene=new T.Scene();scene.add(root);const credits=[],events=[];
  const ports={scene,renderer:{render(){}},camera:new T.PerspectiveCamera(50,390/844),player:{root,update(){}},phone:true,reduced:()=>false,ui:()=>null,place(){},hide(){},
   entered(){},surfaced(){},found(){},credit:(id,c)=>credits.push([id,c]),low(){},out(){},fly:()=>false,picked:k=>events.push('pick:'+k),restored:()=>events.push('restored'),goal:()=>events.push('goal')};
  const spot=D.diveSpotById('pauls-grotto'),rt=RT.createDiveRuntime(ports);rt.scan(.2,spot.x,spot.z,true);assert(rt.start());

@@ -11,12 +11,13 @@ import {FLIGHT_BOUNDS,FLIGHT_WATER_MARGIN} from '@/lib/town/simulation';
 import {onLand} from '@/lib/town/landmass';
 import {CAY_SHORE,CAY_SAND,CAY_LAWN,CAUSEWAY_PATH,CAUSEWAY_BEACHES,SANDBARS,FARM,HOSTEL,ROUNDABOUT,CAY_HOMES,HOSTEL_PATHS,CAY_PLAZA,BEACH_COURT,COURT_BEACH,CAY_HUTS,CAY_HUT_RADIUS,CORAL_CAY_ARRIVAL} from '@/lib/town/coralCay';
 import {VENDING_MACHINES} from '@/lib/town/vendingCatalog';
-import {FISH_SPOTS,MARKET_STAND} from '@/lib/town/fishing/fishCatalog';
+import {FISH_SPOTS,MARKET_STAND} from '@/lib/town/fishing/fishSpots';
 import {DIVE_SPOTS} from '@/lib/town/water/diveSpots';
 import {farDiveSpotIds,reefStore} from '@/lib/town/water/reefDiscovery';
 import {JOBS} from '@/lib/town/jobs/jobCatalog';
 import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
-import {placeJobMarkers} from '@/lib/town/mapMarkers';
+import {placeJobMarkers,placeGashaponMarkers,capsuleGlyph} from '@/lib/town/mapMarkers';
+import {islandGashaponMachines} from '@/lib/gashapon/machines';
 import SummitIsleMap from './SummitIsleMap';
 import ZiplineMapMark from './ZiplineMapMark';
 import FriendMapDots from './FriendMapDots';
@@ -37,7 +38,13 @@ const VENDING_MARKERS=VENDING_MACHINES.reduce<{id:string;x:number;z:number;names
  const near=list.find(o=>Math.hypot(o.x-m.x,o.z-m.z)<6);if(near){near.names.push(m.name);near.ids.push(m.id);}else list.push({id:m.id,x:m.x,z:m.z,names:[m.name],ids:[m.id]});return list;},[]);
 /** Job board markers ("J", full map only): one per board in JOBS (new jobs appear by themselves), nudged clear of the V/F
  *  markers, field names and Rosa's label (lib/town/mapMarkers.ts). Static, computed once. */
-const JOB_MARKERS=placeJobMarkers(JOBS,[...VENDING_MARKERS,...FISH_SPOTS],VENUES,MARKET_STAND,[{x:ARCADE_DOOR.x,z:ARCADE_DOOR.z+30,w:64,h:20},{x:MUSEUM_MAP_POINT.x,z:MUSEUM_MAP_POINT.z+28,w:74,h:20},{x:SHOP_MAP_POINT.x,z:SHOP_MAP_POINT.z-26,w:78,h:20}]);// the full map's ARCADE, MUSEUM and KIT SHOP labels
+/** Gashapon marks (Nov 9 2026, owner: "add the gashapon to the map"): the 12 island machines (the Arcade's 2 are indoors), a
+ *  Konbini pair sharing one mark, nudged clear of the V / F marks (lib/town/mapMarkers.ts placeGashaponMarkers). Static. */
+const GASHA_MARKERS=placeGashaponMarkers(islandGashaponMachines(),[...VENDING_MARKERS,...FISH_SPOTS]);
+function GashaponMark({x,z,localMap}:{x:number;z:number;localMap:boolean}){const r=localMap?5.4:9.5,c=capsuleGlyph(x,z,r*.58);
+ return <><circle cx={x} cy={z} r={r} fill="#ffe1ef" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/><path d={c.top} fill="#e94b3c"/><path d={c.bottom} fill="#ffffff"/>
+  <circle cx={x} cy={z} r={r*.58} fill="none" stroke="#294f43" strokeWidth={localMap?.9:1.3}/><path d={c.seam} stroke="#294f43" strokeWidth={localMap?.9:1.3}/></>;}
+const JOB_MARKERS=placeJobMarkers(JOBS,[...VENDING_MARKERS,...FISH_SPOTS,...GASHA_MARKERS],VENUES,MARKET_STAND,[{x:ARCADE_DOOR.x,z:ARCADE_DOOR.z+30,w:64,h:20},{x:MUSEUM_MAP_POINT.x,z:MUSEUM_MAP_POINT.z+28,w:74,h:20},{x:SHOP_MAP_POINT.x,z:SHOP_MAP_POINT.z-26,w:78,h:20}]);// the full map's ARCADE, MUSEUM and KIT SHOP labels
 /** The jetpack glyph (TravelIcon's jetpack strokes), for the far-reef badge and the map key. */
 export const JETPACK_GLYPH='M6 5h4v12H6z M14 5h4v12h-4z M10 9h4 M7 20v2 M17 20v2 M12 3v3';
 /** Reef zones to explore (Oct 20 2026; the user renamed Dive to Explore, so the mark reads E): one per zone at its buoy, the same
@@ -133,6 +140,9 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   <g className="map-vending-markers" pointerEvents="none">{VENDING_MARKERS.map(m=><g key={m.id} aria-label={`${m.names.join(' and ')} vending machine${m.names.length>1?'s':''}`} data-vending-marker={m.id} data-vending-machines={m.ids.join(' ')}>
    <circle cx={m.x} cy={m.z} r={localMap?5.4:9.5} fill="#fff8e5" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/>
    <text x={m.x} y={m.z+(localMap?2.7:4.6)} textAnchor="middle" fill="#294f43" fontSize={localMap?7.6:13} fontWeight="900" style={{stroke:'none'}}>V</text>
+  </g>)}</g>
+  <g className="map-gashapon-markers" pointerEvents="none">{GASHA_MARKERS.map(m=><g key={m.id} aria-label={`${m.names.join(' and ')} gashapon machine${m.names.length>1?'s':''}`} data-gashapon-marker={m.id} data-gashapon-machines={m.ids.join(' ')}>
+   <GashaponMark x={m.x} z={m.z} localMap={localMap}/>
   </g>)}</g>
   <g className="map-fishing-markers" pointerEvents="none">{FISH_SPOTS.map(spot=><g key={spot.id} aria-label={`${spot.name} fishing spot`} data-fishing-marker={spot.id}>
    <circle cx={spot.x} cy={spot.z} r={localMap?5.4:9.5} fill="#b9e1df" stroke="#294f43" strokeWidth={localMap?1.3:1.8}/>

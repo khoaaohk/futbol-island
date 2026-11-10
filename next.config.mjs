@@ -70,6 +70,10 @@ const cacheStatic = [
   // robots.txt, llms.txt, llms-full.txt (Nov 8 2026, AI search): an hour fresh, a day at the CDN, a week stale while it refreshes.
   { source: '/:file(robots\\.txt|llms\\.txt|llms-full\\.txt)', headers: [{ key: 'Cache-Control', value: 'public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800' }] },
   { source: '/splash/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
+  // /shop flags and the /marketing PDF (Nov 10 2026 load-time pass): only the static FILES, by extension (/shop and /marketing are
+  // page routes and keep Next's defaults). Plain names that may be replaced in place, so a day + a week of SWR, like ASSET_DIRS.
+  { source: '/shop/flags/:file([a-z-]+\\.(?:svg|txt))', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
+  { source: '/marketing/:file([a-z0-9-]+\\.pdf)', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
   // Admin analytics (Oct 7 2026): never indexed, never cached.
   { source: '/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Cache-Control', value: 'no-store' }] },
   { source: '/admin', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Cache-Control', value: 'no-store' }] },

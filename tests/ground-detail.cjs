@@ -32,7 +32,7 @@ for(const kind of ['grass','sand','path','land','mixed']){let lo=9,hi=0;for(let 
  range[kind]=[lo,hi];const a=tint.GROUND_TINT[kind].amp;assert.ok(lo>=1-a-1e-9&&hi<=1+a+1e-9,kind+' within 1+-'+a+': '+lo+' '+hi);}
 assert.equal([tint.GROUND_TINT.grass.amp,tint.GROUND_TINT.sand.amp,tint.GROUND_TINT.land.amp].join(),'0.12,0.09,0.09','final mottle strengths (land = sand since Oct 17 2026)');
 assert.equal(JSON.stringify(tint.GROUND_TINT.path),JSON.stringify({amp:tint.GROUND_TINT.sand.amp,grain:tint.GROUND_TINT.sand.grain,wet:false}),'sand paths get exactly the sand mottle and grain (no waterline term)');
-assert.ok(tint.GROUND_TINT.grass.grain>=.14-1e-9&&tint.GROUND_TINT.sand.grain>=.16-1e-9,'grain 1.4x/1.33x the first pass (backed off from 1.6x: it read as a checkerboard)');
+assert.ok(Math.abs(tint.GROUND_TINT.grass.grain-.09)<1e-9&&Math.abs(tint.GROUND_TINT.sand.grain-.11)<1e-9,'grain .09/.11 on a rotated cell (Nov 10 2026: the axis-aligned .14/.16 cells read as a checkerboard)');
 assert.ok(range.grass[1]-range.grass[0]>range.sand[1]-range.sand[0]+.02,'grass range is wider than sand');
 assert.ok(range.grass[1]-range.grass[0]>.08,'grass mottle is visible (not flat)');
 assert.ok(tint.GROUND_TINT.grass.amp>tint.GROUND_TINT.sand.amp);

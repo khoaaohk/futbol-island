@@ -43,6 +43,10 @@
  *                                  ended; lm:reach_<n> = tab sessions with n+ matches; Nov 6 2026: goals for / against, goal
  *                                  replays shown / skipped, AI and human slots at the join (totals only). Never a name, slot,
  *                                  side, a match's score or time
+ *   gs:<event>                     gashapon capsule machines (GASHAPON_COUNT_IDS below, lib/analytics/gashaponEvents.ts; Nov 8 2026):
+ *                                  spins (per machine, per toy, rarity word, new vs repeat, coins spent and refunded as sums),
+ *                                  toy viewer opens (from the result card / the shelf, per toy), squeezes / pokes / head taps
+ *                                  (≤ 3 of each per open, per toy), Toy Shelf opens with a found-count band. Totals only
  *   se:<landing>:<engine>          search arrivals (searchIds.ts; Nov 10 2026): a session whose first page came from a search engine
  *                                  or AI assistant, per landing page and engine NAME. Never search words, a URL or an id.
  *   mm:<event>                     the investor page /marketing (MARKETING_VISIT_COUNT_IDS, lib/analytics/marketingVisit.ts;
@@ -54,6 +58,7 @@ import {START_COUNT_IDS} from './startIds';
 import {MARKETING_COUNT_IDS} from './marketingIds';
 import {MARKETING_VISIT_COUNT_IDS} from './marketingVisit';
 import {isSearchId} from './searchIds';
+import {GASHAPON_TOYS} from '../gashapon/toys';
 
 export const LEARN_FORMATS=['7v7','9v9','11v11','futsal'] as const;
 export type LearnFormat=typeof LEARN_FORMATS[number];
@@ -313,6 +318,19 @@ export const LM_FORMAT_EVENTS:readonly string[]=['visit','join','leave','min','s
 export const lmId=(format:LiveMatchFormat,event:string)=>`lm:${format}_${event}`;
 export const LIVE_MATCH_COUNT_IDS:readonly string[]=[...LIVE_MATCH_FORMATS.flatMap(f=>LM_FORMAT_EVENTS.map(e=>lmId(f,e))),...LM_REACH.map(n=>'lm:reach_'+n)];
 
+/** Gashapon (Nov 8 2026, lib/analytics/gashaponEvents.ts): ids use the machine / toy id with '-' → '_' (the key shape allows no '-'). */
+export const gsKey=(id:string)=>id.replace(/-/g,'_');
+export const GASHAPON_RARITY_WORDS=['common','uncommon','rare'] as const;
+export const GASHAPON_FOUND_BANDS=[['found_0','No toys yet'],['found_1_5','1–5 toys'],['found_6_20','6–20 toys'],['found_21_50','21–50 toys'],['found_51_83','51–83 toys'],['found_all','All 84']] as const;
+export const GASHAPON_COUNT_EVENTS=[['spin','Capsules spun'],['new','New toys'],['dup','Repeat toys'],['coins','Coins spent on capsules (sum)'],['refund','Coins refunded for repeats (sum)'],
+ ['view_result','Toy viewer opened from the result card'],['view_shelf','Toy viewer opened from the Toy Shelf'],['squeeze','Toy squeezes'],['poke','Toy pokes'],['tap','Toy head taps'],['shelf','Toy Shelf opened']] as const;
+/** Round 3C (Nov 9 2026): one total per toy kind's own interaction (pull a piece, wind, spin, bump, twist open, work a part, swing
+ * a charm, change a pose), ≤ 3 per kind per viewer open (lib/analytics/gashaponEvents.ts createInteractCounter). */
+export const GASHAPON_ACT_KINDS=[['puzzle','Puzzle pieces pulled or put back'],['windup','Wind-ups wound'],['spintop','Toys flicked to spin'],['bobble','Bobble heads bumped'],
+ ['capsule','Secret capsules twisted'],['mechanism','Working parts worked (lids, levers, wheels, cranks)'],['charm','Charms swung'],['figure','Figure poses changed']] as const;
+export const GASHAPON_COUNT_IDS:readonly string[]=[...GASHAPON_COUNT_EVENTS.map(([e])=>'gs:'+e),...GASHAPON_ACT_KINDS.map(([k])=>'gs:act_'+k),...GASHAPON_RARITY_WORDS.map(r=>'gs:r_'+r),...GASHAPON_FOUND_BANDS.map(([b])=>'gs:'+b),
+ ...[...new Set(GASHAPON_TOYS.map(t=>t.machine))].map(m=>'gs:spin_'+gsKey(m)),...GASHAPON_TOYS.flatMap(t=>['t','v','i'].map(f=>`gs:${f}_${gsKey(t.id)}`))];
+
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
  ...LEARN_FORMATS.map(f=>'pf:'+f),...LEARN_FORMATS.map(f=>'gr:'+f),'gr:finale','rv:q','rv:ok','rv:done',
@@ -327,6 +345,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...MARKETING_COUNT_IDS,// mk: the marketing page at `/` (marketingIds.ts, Nov 3 2026)
  ...LIVE_MATCH_COUNT_IDS,// lm: live matches (liveMatchEvents.ts, Nov 5 2026)
  ...MARKETING_VISIT_COUNT_IDS,// mm: the investor page /marketing (marketingVisit.ts, Nov 5 2026)
+ ...GASHAPON_COUNT_IDS,// gs: gashapon machines, the toy viewer and the Toy Shelf (gashaponEvents.ts, Nov 8 2026)
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 

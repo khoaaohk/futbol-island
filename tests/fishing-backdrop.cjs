@@ -150,7 +150,7 @@ ok(FISH_SPOTS.length>=18,`all fishing spots audited (${FISH_SPOTS.length})`);
   audit(w,s,spot.x,spot.z,spot.id);ok(s.restored,`${spot.id}: visibility restored after the pass`);s.focus.dispose();}}
 
 // ---- 3. Wiring: Town gives focus the renderer and the main camera; world.ts records the pieces; the old distance cut is gone ----
-{const town=src('components/Town.tsx'),fm=src('lib/graphics/focusMode.ts'),wd=src('lib/town/world.ts');
+{const town=src('components/Town.tsx')+src('lib/town/frame/focusFrame.ts'),fm=src('lib/graphics/focusMode.ts'),wd=src('lib/town/world.ts');
  ok(/createFocusMode\(scene,renderer,camera\)/.test(town),'Town wires focus mode to the renderer and the main (fishing) camera');
  ok(/focus\.enter\(s\.x,s\.z,!easel\.focused/.test(town),'fishing uses the backdrop, the easel does not');
  ok(!/chunkRadius|aspect<1\?90:200/.test(fm+town),'no distance cut by material batch any more');

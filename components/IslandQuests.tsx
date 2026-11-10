@@ -65,7 +65,7 @@ export default function IslandQuests({onDiscover,onExplore,onCards,exploration=f
   <div className={styles.exploreIntro}><p>Activities check off automatically as you complete them.</p><strong>{doneCount} / {EXPLORE_ITEMS.length} completed</strong></div>
   <progress className={styles.exploreProgress} value={doneCount} max={EXPLORE_ITEMS.length} aria-label="Explore checklist progress"/>
   <ul className={styles.exploreList}>{items.map(item=><li key={item.id}><div className={styles.exploreRow} data-complete={item.complete}><span className={styles.exploreCopy}><strong>{item.title}</strong><small>{item.detail}</small></span><span className={styles.exploreIndicator} data-complete={item.complete} aria-label={item.complete?'Completed':item.target>1?`${item.value} of ${item.target} ${item.unit}`:'Not yet completed'}>{item.complete?<Icon name="check" size={20}/>:item.target>1?<><strong>{item.value}/{item.target}</strong><small>{item.unit}</small></>:<span className={styles.explorePending}/>}</span></div></li>)}</ul>
-  <p className={styles.exploreSaved}>Your checklist saves in this browser.</p>
+  <p className={styles.exploreSaved}>Saved with your island and save code.</p>
  </section>}
  </div>;
 }

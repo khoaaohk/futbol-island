@@ -27,6 +27,9 @@
 .route[data-elite][aria-checked=true]{background:#4a3a10;border-color:#ffd36e;box-shadow:0 0 0 2px #ffd36e66,0 0 16px #ffd36e55}
 .route[data-hard][aria-checked=true]{background:#4a2614;border-color:#ffb067;box-shadow:0 0 0 2px #ff8a2a66,0 0 16px #ff8a2a55}
 .route:disabled{opacity:.55;cursor:default}
+/* Nov 10 2026 Daily Run: one full-width row under the six-route ladder (same card, its own calm blue). */
+.route[data-daily]{grid-column:1/-1;min-height:52px;background:#16304a;border-color:#2f6f9a}
+.route[data-daily][aria-checked=true]{background:#1d4a6e;border-color:#8fd8ff;box-shadow:0 0 0 2px #8fd8ff55,0 0 14px #8fd8ff44}
 .icon{grid-row:1/3;font-size:24px;line-height:1;text-align:center}
 .name{font:800 15px/1.1 system-ui,sans-serif}
 .sub{font:700 11px/1.2 system-ui,sans-serif;color:#b5c7dc;display:flex;gap:6px;align-items:center}

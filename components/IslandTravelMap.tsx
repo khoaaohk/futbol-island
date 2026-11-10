@@ -7,7 +7,8 @@ import IslandOverview,{JETPACK_GLYPH,type MapDestination,type MapFootprint} from
 import {FLIGHT_BOUNDS} from '@/lib/town/simulation';
 import {CAY_SHORE} from '@/lib/town/coralCay';
 import {SUMMIT_SHORE} from '@/lib/town/summitIsle';
-import {LEGEND_TIPS,legendTipText,mapLegend,type MapMarkKind} from '@/lib/town/mapMarkers';
+import {LEGEND_TIPS,legendTipText,mapLegend,capsuleGlyph,type MapMarkKind} from '@/lib/town/mapMarkers';
+const GASHA_KEY=capsuleGlyph(12,12,5.8);// the Gashapon entry's capsule (Nov 9 2026)
 import {usePartyHasFriends} from './FriendMapDots';
 import type {FriendDot} from '@/lib/town/friendMarks';
 import styles from './IslandTravelMap.module.css';
@@ -29,7 +30,7 @@ const ARROWS:{dir:Direction;label:string;rotate:number}[]=[{dir:'up',label:'Move
  *  The marks on the map are plain drawings; tapping V, F or J here shows what it is (Sep 30 2026, user: "the legend above is
  *  enough"). Rosa's market and "Places: tap to travel" left the key (the market and places keep their labels on the map).
  *  The entries live in lib/town/mapMarkers.ts mapLegend: "Friends" joins them only while a party is live (Oct 23 2026). */
-function LegendMark({mark,fill,ring,friend}:{mark:string;fill:string;ring?:boolean;friend?:boolean}){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">{friend?<><circle cx="15.4" cy="9" r="7" fill="#0072B2" stroke="#294f43" strokeWidth="1.6"/><circle cx="9" cy="14.6" r="7.6" fill={fill} stroke="#fff7db" strokeWidth="1.8"/><circle cx="9" cy="14.6" r="8.6" fill="none" stroke="#294f43" strokeWidth="1.2"/></>:ring?<><circle cx="12" cy="12" r="9" fill={fill} stroke="#294f43" strokeWidth="2"/><circle cx="12" cy="12" r="3.4" fill="#fff7db"/></>:<><circle cx="12" cy="12" r="10" fill={fill} stroke="#294f43" strokeWidth="1.8"/>{mark==='jet'?<path d={JETPACK_GLYPH} transform="translate(5.4 5.4) scale(.55)" fill="none" stroke="#294f43" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/>:<text x="12" y="16.6" textAnchor="middle" fill="#294f43" fontSize="13" fontWeight="900">{mark}</text>}</>}</svg>;}
+function LegendMark({mark,fill,ring,friend}:{mark:string;fill:string;ring?:boolean;friend?:boolean}){return <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">{friend?<><circle cx="15.4" cy="9" r="7" fill="#0072B2" stroke="#294f43" strokeWidth="1.6"/><circle cx="9" cy="14.6" r="7.6" fill={fill} stroke="#fff7db" strokeWidth="1.8"/><circle cx="9" cy="14.6" r="8.6" fill="none" stroke="#294f43" strokeWidth="1.2"/></>:ring?<><circle cx="12" cy="12" r="9" fill={fill} stroke="#294f43" strokeWidth="2"/><circle cx="12" cy="12" r="3.4" fill="#fff7db"/></>:<><circle cx="12" cy="12" r="10" fill={fill} stroke="#294f43" strokeWidth="1.8"/>{mark==='gasha'?<><path d={GASHA_KEY.top} fill="#e94b3c"/><path d={GASHA_KEY.bottom} fill="#ffffff"/><circle cx="12" cy="12" r="5.8" fill="none" stroke="#294f43" strokeWidth="1.4"/><path d={GASHA_KEY.seam} stroke="#294f43" strokeWidth="1.4"/></>:mark==='jet'?<path d={JETPACK_GLYPH} transform="translate(5.4 5.4) scale(.55)" fill="none" stroke="#294f43" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/>:<text x="12" y="16.6" textAnchor="middle" fill="#294f43" fontSize="13" fontWeight="900">{mark}</text>}</>}</svg>;}
 /** One key tooltip at a time, in dialog px: `x` the mark's centre, `top`/`bottom` its edges (above, or below if no room). */
 type Tip={kind:MapMarkKind;x:number;top:number;bottom:number;
  /** A friend's dot (kind 'friend' from the map, not the key): their name and where they are, keyed by their id. */

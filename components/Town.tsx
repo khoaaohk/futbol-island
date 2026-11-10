@@ -14,7 +14,7 @@ import {createGroundBallRoll} from '../lib/graphics/groundBallRoll';
 import {FORMAT_PATH_LAUNCH,validPathLaunch,type FormatPathLaunch} from '@/lib/paths/formatPaths';
 import {createTruckReactions} from '@/lib/graphics/truckReactions';
 import {truckHitsCharacter,rideHitsCharacter} from '@/lib/town/truckCollisions';
-import {isVideoPlaying,subscribeVideoPlayback} from '@/lib/videoPlayback';
+import {isFilmPlaying,isVideoPlaying,subscribeVideoPlayback} from '@/lib/videoPlayback';
 import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
 import {rideSurfacePose,rideSlopePose} from '@/lib/town/rideSurfacePose';
 import {createDrawnGround} from '@/lib/town/drawnGround';
@@ -63,6 +63,11 @@ import IslandLoading from './IslandLoading';
 import {rememberInGame} from '@/lib/rootView';
 import {bootMark} from '@/lib/boot/perfMarks';
 import {takeWarmIsland} from '@/lib/town/islandWarm';
+import {createTownDisposers,disposeTownSceneResources} from '@/lib/town/townCleanup';
+import {placeEntryPrompt,placeUI,setUIHidden} from '@/lib/town/townDom';
+import {stepFocusMode,type FocusFrame} from '@/lib/town/frame/focusFrame';
+import {applyJetTwist,type JetTwistFrame} from '@/lib/town/frame/jetTwist';
+import {syncKnockoutLabels,type KnockoutLabelsFrame} from '@/lib/town/frame/knockoutLabels';
 /** <html data-island-handoff="tan">: Town's loader is the title screen's plain tan sheet (components/landing/waterLaunch.ts). */
 const tanHandoff=()=>{const v=document.documentElement.dataset.islandHandoff;return v==='tan'||v==='pill';};/* "pill": a restored save's reload, the same plain-sheet timing (Nov 5 2026) */
 import IslandReturnLoading from './IslandReturnLoading';
@@ -113,7 +118,7 @@ import {createCoinHunt} from '@/lib/graphics/coinHunt';
 import CoinHuntHud from './CoinHuntHud';
 import IslandJobs from './IslandJobs';
 const IslandBalanceDrawer=dynamic(()=>import('./IslandBalanceDrawer'),{ssr:false});
-import FishingHost from './FishingHost';
+import FishingHost from './FishingHostLazy';// Nov 10 2026 load-time pass: the host loads near the water (components/FishingHostLazy.tsx)
 import {createFishingWorld,fishingKioskObstacles} from '@/lib/town/fishing/fishingWorld';
 import {inGarden} from '@/lib/town/jobs/garden';
 import {jobById} from '@/lib/town/jobs/jobCatalog';
@@ -161,7 +166,7 @@ import {createVolleyballGame} from '@/lib/graphics/volleyballGame';
 import {createTreeDebris} from '@/lib/graphics/treeDebris';
 import {createPropReactions} from '@/lib/graphics/propReactions';
 import {stallKickNote,stallLessonStorage} from '@/lib/town/market/stallKick';
-import {MARKET_STAND} from '@/lib/town/fishing/fishCatalog';
+import {MARKET_STAND} from '@/lib/town/fishing/fishSpots';
 import {forageStore} from '@/lib/town/summitForage';
 import {createStreetTraffic} from '@/lib/graphics/streetTraffic';
 import {createFlightTrail,FLIGHT_TRAIL_COLORS} from '@/lib/graphics/flightTrail';
@@ -231,7 +236,7 @@ import RayLessonToast from './RayLessonToast';import ReefHintToast from './ReefH
 import DiveHud from './DiveHud';
 import {createDiveRuntime,diveStore,diveLift} from '@/lib/town/water/diveRuntime';import {divePixelCap,diveRestFrame} from '@/lib/town/water/diveCurrent';import {DIVE_SPOTS,DIVE_PROMPT} from '@/lib/town/water/diveSpots';import {DIVE_LOW_NOTE,DIVE_OUT_NOTE} from '@/lib/town/water/diveSession';import {createDiveBuoys} from '@/lib/graphics/diveBuoys';import {createDiveWreckTops} from '@/lib/graphics/diveWreckTop';import {createDivePreview} from '@/lib/graphics/divePreview';// Water P2: diving spots
 import PaintEasel from './PaintEasel';
-import {createBallCannon} from '@/lib/graphics/ballCannon';import BallCannonHud from './BallCannonHud';// Summit Isle Ball Cannon (Oct 14 2026)
+import {createBallCannon} from '@/lib/graphics/ballCannon';import BallCannonHud from './BallCannonHud';import {createGashaponPrompt} from '@/lib/graphics/gashaponPrompt';import GashaponHud from './GashaponHud';import {gashaponPanel,gashaponOpener} from '@/lib/gashapon/gashaponBrowser';// gashapon capsule machines (Nov 8 2026)// Summit Isle Ball Cannon (Oct 14 2026)
 import {createBeachFinds} from '@/lib/graphics/beachFinds';import BeachcombHud from './BeachcombHud';import {islandJobWallet as beachWallet,islandMarket as beachMarket} from '@/lib/town/jobs/islandWallet';// Beachcombing (Oct 14 2026, docs/beachcombing.md)
 import {createSummitForage} from '@/lib/graphics/fruitTrees';import ForagePrompt from './ForagePrompt';import {islandMarket} from '@/lib/town/jobs/islandWallet';// Summit Isle fruit trees (Oct 13 2026)
 
@@ -306,7 +311,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const [formatPathRequest,setFormatPathRequest]=useState<FormatPathLaunch|null>(null);
   // Shared lesson-launch path (QA11): a lesson can start from inside Make it yours (book check, Spot it) or the
   // coin drawer, so close every overlay that would sit over the pitch or keep the island loop asleep (settingsRef).
-  const closeForLesson=()=>{setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setCustomizerOpen(false);setBalancesOpen(false);setMap(false);setHint(false);};
+  const closeForLesson=()=>{setSettingsOpen(false);setStoreOpen(false);setConversationOpen(false);setCustomizerOpen(false);setBalancesOpen(false);setMap(false);};
   useEffect(()=>watchLiveMatchEnd(),[]);// a match open when the tab closes is booked ('hide') before the final beat (Nov 5 2026)
   useEffect(()=>watchPartyEnd(),[]);// the host's party bands ride the final beat when the tab closes mid-party
   useEffect(()=>watchPartyAway(partyLive),[]);// mp:min_away (background minutes in a live party); a no-op while the Phase C switch is off
@@ -339,7 +344,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const lazyMounted=useRef<Record<string,true>>({});const mountWhen=(part:string,wanted:boolean)=>wanted?(lazyMounted.current[part]=true):lazyMounted.current[part]===true;
   /** Opens a vending machine: the given one, or the nearest. The camera zooms straight onto its face (vendingMachines.ts), then the machine face itself is the UI (VendingMachine.tsx). */
   const openVending=(id?:VendingMachineId,itemId?:string)=>{const p=positionStore.getSnapshot(),m=(id&&vendingMachine(id))||nearestVendingMachine(p.x,p.z),request=vendingItemFor(itemId);
-    setStoreItemRequest(request?{id:request,nonce:Date.now()}:null);setSettingsOpen(false);setCustomizerOpen(false);setConversationOpen(false);setMap(false);setHint(false);setVendingId(m.id);
+    setStoreItemRequest(request?{id:request,nonce:Date.now()}:null);setSettingsOpen(false);setCustomizerOpen(false);setConversationOpen(false);setMap(false);setVendingId(m.id);
     const v=vendingRef.current;if(v){v.focus(m.id,()=>setStoreOpen(true));wakeLoopRef.current();}else setStoreOpen(true);};// in-world machine: always zoom onto its face (from afar the camera flies over)
   /** Old Store entry points (Settings, quests, ?store= links) redirect to the nearest vending machine. */
   const openStore=(itemId?:string)=>openVending(undefined,itemId);
@@ -427,7 +432,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const waterView=useSyncExternalStore(waterStore.subscribe,waterStore.get,waterStore.server),waterCluster=waterButtonsFor(waterView);
   const actionCluster:readonly JobButton[]|null=zipRiding?ZIP_BUTTONS:waterCluster??jobButtons;
   const pressCluster=(b:JobButton,phase:'tap'|'down'|'up')=>{if(zipRiding)zipActions.press(b.id as ZipActionId,phase);else if(waterCluster)waterActions.press(b.id as WaterActionId,phase);else pressJob(b,phase);};
-  const selectRide=(mode:TravelMode)=>{if(waterStore.get().inWater)return;/* rides stop at the waterline (decision 11): walk out first */const jobId=getJobRuntime()?.run?.def.id??null;if(!rideAllowed(mode,jobActiveRef.current,jobId)){jobNoteRef.current(jobId==='bug-scout'?BUG_FLY_NOTE:RIDE_WAIT_NOTE);return;}if(!fuelAllowsRide(mode))return;if(mode==='jetpack'){pendingRide.current=null;cancelLanding.current=true;}if(rideRef.current==='jetpack'&&mode!=='jetpack'){pendingRide.current=mode;setHint(false);return;}rideRef.current=mode;setRideMode(mode);setHint(false);};
+  const selectRide=(mode:TravelMode)=>{if(waterStore.get().inWater)return;/* rides stop at the waterline (decision 11): walk out first */const jobId=getJobRuntime()?.run?.def.id??null;if(!rideAllowed(mode,jobActiveRef.current,jobId)){jobNoteRef.current(jobId==='bug-scout'?BUG_FLY_NOTE:RIDE_WAIT_NOTE);return;}if(!fuelAllowsRide(mode))return;if(mode==='jetpack'){pendingRide.current=null;cancelLanding.current=true;}if(rideRef.current==='jetpack'&&mode!=='jetpack'){pendingRide.current=mode;return;}rideRef.current=mode;setRideMode(mode);};
   const cycleRide=()=>{const order:TravelMode[]=['walk','scooter','bike','moped','jetpack'];selectRide(order[(order.indexOf(rideRef.current)+1)%order.length]);};
   const [fieldCatalog,setFieldCatalog]=useState<Format|null>(null),learningFormat=useRef<Format|null>(null);learningFormat.current=fieldCatalog;
   const gamesRef=useRef<ReturnType<typeof createFieldRuntime>|null>(null);
@@ -436,10 +441,10 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const resetQuizView=useRef<()=>void>(()=>{});
   const fieldSession=useRef<FieldSession|null>(null),fieldTravel=useRef<Format|null>(null),fieldMenu=useRef(false);
   fieldMenu.current=fieldCatalog!==null;
-  const goField=(id:Format)=>{if(lessonRef.current)lessonCommand.current='exit';travel.current=null;fieldSession.current=null;setFieldCatalog(null);fieldTravel.current=id;setMap(false);setHint(false);};
+  const goField=(id:Format)=>{if(lessonRef.current)lessonCommand.current='exit';travel.current=null;fieldSession.current=null;setFieldCatalog(null);fieldTravel.current=id;setMap(false);};
   const [lesson,setLesson]=useState<LessonPhase|null>(null),[laneOpen,setLaneOpen]=useState(false),[coachFeedback,setCoachFeedback]=useState('');
   const lessonRef=useRef<LessonPhase|null>(null),lessonCommand=useRef<LessonPhase|'exit'|null>(null);
-  const requestLesson=(phase:LessonPhase|'exit')=>{selectRide('walk');lessonCommand.current=phase;setHint(false);setMap(false);setCoachFeedback('');if(phase==='intro'||phase==='practice'){setPassAttempts(newAttempts(passFormat));setAimStatus('none');}};
+  const requestLesson=(phase:LessonPhase|'exit')=>{selectRide('walk');lessonCommand.current=phase;setMap(false);setCoachFeedback('');if(phase==='intro'||phase==='practice'){setPassAttempts(newAttempts(passFormat));setAimStatus('none');}};
   // Draw-the-pass lesson flow (lib/town/learningPass.ts): brief → hint → 3 attempts, wording scaled by format.
   const [passFormat,setPassFormat]=useState<LessonFormat>('7v7'),[passAttempts,setPassAttempts]=useState<AttemptState>(()=>newAttempts('7v7')),[aimStatus,setAimStatus]=useState<'none'|'clear'|'threat'|'nobody'>('none');
   const passAttemptsRef=useRef(passAttempts);passAttemptsRef.current=passAttempts;
@@ -505,7 +510,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
    if(d.target==='paths'){if(d.format)try{localStorage.setItem('fi2-path-format-v1',d.format);}catch{}setPathsRequest({nonce:Date.now()});setSettingsOpen(true);}
    else{setSettingsOpen(false);if(d.target==='ferry')setFerryOpen(true);else if(d.target==='museum')setMuseumOpen(true);else setCoachesOpen(true);}};
    window.addEventListener(ENDGAME_OPEN,open);return()=>window.removeEventListener(ENDGAME_OPEN,open);},[]);
-  const [positionStore]=useState(()=>createPositionStore(initialSpawn)),[hint,setHint]=useState(!returningFromArcade);
+  const [positionStore]=useState(()=>createPositionStore(initialSpawn));
   const zoneAt=(x:number,z:number)=>(nearestVenue(x,z)?1:0)|(Math.abs(x-ISLAND_SQUARE.x)<40&&Math.abs(z-ISLAND_SQUARE.z)<35?2:0);
   const [locationZone,setLocationZone]=useState(()=>zoneAt(initialSpawn.x,initialSpawn.z)),zoneRef=useRef(locationZone),hudRenders=useRef(0);hudRenders.current++;
   const joystickPointer=useRef<number|null>(null),stickRaw=useRef(0)/* the touch stick's raw deflection 0..1 (live matches: push to sprint) */,spinGesture=useRef(createSpinGesture()),spinRequested=useRef(false);
@@ -555,10 +560,11 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   mapRef.current=map||mapMounted;
   // Moving emotes end when a menu, dialog or room opens (lib/town/moveEmotes.ts moveEmoteStop).
   const moveUiOpen=useRef(false);moveUiOpen.current=!!(talkingNpc||arcadeOpen||storeOpen||coachesOpen||ferryOpen||learningOpen||museumOpen||shopOpen||cardOfferOpen||customizerOpen||fishingOpen||balancesOpen||settingsOpen||playsPickerOpen||konbiniDoor||onboardingOpen);
-  const go=(to:District|'square'|'coaches'|'store'|'cay'|'museum'|'shop'|'summit')=>{if(to==='coast'||to==='oldtown'){goField(to==='coast'?'futsal':'7v7');return;}fieldSession.current=null;setFieldCatalog(null);if(lessonRef.current)lessonCommand.current='exit';travel.current=to;setMap(false);setHint(false);};
+  const go=(to:District|'square'|'coaches'|'store'|'cay'|'museum'|'shop'|'summit')=>{if(to==='coast'||to==='oldtown'){goField(to==='coast'?'futsal':'7v7');return;}fieldSession.current=null;setFieldCatalog(null);if(lessonRef.current)lessonCommand.current='exit';travel.current=to;setMap(false);};
   useEffect(()=>{
     const parent=host.current;if(!parent)return;
     bootMark('town:effect');
+    const disposers=createTownDisposers();// lib/town/townCleanup.ts: each resource registers its cleanup where it is made; unmount runs them newest first
     const departure=returningFromArcade?readIslandReturnPosition():null;
     const sceneSpawn=departure?{x:departure.x,z:departure.z}:initialSpawn;
     if(departure){rideRef.current=departure.ride;setRideMode(departure.ride);positionStore.publish(sceneSpawn);const zone=zoneAt(sceneSpawn.x,sceneSpawn.z);zoneRef.current=zone;setLocationZone(zone);}
@@ -574,8 +580,10 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     let useNewAudioMix=true;try{useNewAudioMix=localStorage.getItem('fi2-audio-mix')!=='4-50-v1';if(useNewAudioMix){localStorage.setItem('fi2-music-volume','.04');localStorage.setItem('fi2-sound-volume','.5');localStorage.setItem('fi2-audio-mix','4-50-v1');}}catch{}
     const initialSoundVolume=useNewAudioMix?.5:savedVolume('fi2-sound-volume',.5),initialMusicVolume=useNewAudioMix?.04:savedVolume('fi2-music-volume',.04);setSoundVolume(initialSoundVolume);setMusicVolume(initialMusicVolume);
     const sound=createIslandSound(savedMuted,initialSoundVolume);soundRef.current=sound;setSoundMuted(savedMuted);
+    disposers.add(()=>{sound.dispose();soundRef.current=null;});
     let savedMusic=true;try{savedMusic=localStorage.getItem('fi2-music-enabled')!=='false';}catch{}
     const music=createIslandMusic(savedMusic,initialMusicVolume,sound.getContext,sound.setMusicAudible,{active:()=>isVideoPlaying()||lessonVoiceSpeaking()||Boolean(fieldSession.current?.playing),onIdle:sound.setIdle});musicRef.current=music;setMusicEnabled(savedMusic);
+    disposers.add(()=>{music.dispose();musicRef.current=null;});
     const quality=graphicsQuality(),budget=new FrameBudget();renderer.setPixelRatio(quality.pixelRatio);
     // Phones/tablets: 1.5x pixel ratio while the view moves, full sharpness after 0.5 s still (heat audit pass 2, proposal A).
     // Phones hold one resolution (the governor's tier sets it); the moving/still switch stays a desktop-free no-op on them.
@@ -586,11 +594,17 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     // A ball-hunt hint (e.g. "Land inside the ring…") owns the top prompt slot: the Learn-plays card steps aside while it shows.
     const focusArbiter=createFocusArbiter();let hudFocusNow:HudFocus|null=null;// HUD stack arbiter (lib/ui/hudStack.ts), decided on the HUD tick
     let coinHintShown=false,seaNoteShown=false,pierNoteTimer:ReturnType<typeof setTimeout>|undefined;const pierTarget=createPierTarget(scene);// East Pier shooting ring (eastPierChallenge.ts): static, moved only on a hit.
+    disposers.add(()=>{clearTimeout(pierNoteTimer);pierTarget.dispose();});
 const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHintShown=!!text;setCoinNear(text);},c=>{earnForBall(c);setBallLessons(queue=>queue.includes(c.id)?queue:[...queue,c.id]);});
+    disposers.add(()=>coinHunt.dispose());
     let bugTapOff=()=>{};
+    disposers.add(()=>bugTapOff());
     const jobs=createJobScene(scene,{timeOfDay:()=>timeRef.current,bugs:()=>wildBugs,tier:()=>heat.tier});// the Bug squad catches from the swarm (catching lane)// island jobs + Community Garden (docs/island-jobs.md)
+    disposers.add(()=>jobs.dispose());
     const wildBugs=createWildBugs(scene);// Summit Isle bug swarm (Oct 20 2026, lib/graphics/bugSwarm.ts): the 20 species at their homes, fireflies at night
+    disposers.add(()=>wildBugs.dispose());
     let suppressInitialArrival=returningFromArcade;const characterArrival=createCharacterArrival(scene);arrivalRestartRef.current=()=>{suppressInitialArrival=false;characterArrival.restart();wakeLoopRef.current();};
+    disposers.add(()=>characterArrival.dispose());
     const camera=new T.PerspectiveCamera(40,1,1,500);let swimFovOff=0,swimFovBase=40;/* Oct 27 2026: the Swim fast FOV ease (swimMotion.ts fovKick) */if(returningFromArcade)camera.position.set(initialSpawn.x+18,23+fieldSurfaceHeight(initialSpawn.x,initialSpawn.z),initialSpawn.z+30);
     const hemi=new T.HemisphereLight('#ffe0aa','#9b785c',2.0);scene.add(hemi);
     const sun=new T.DirectionalLight('#ffc477',3.0);sun.position.set(-288,252,198);sun.castShadow=true;sun.shadow.mapSize.set(quality.shadowSize,quality.shadowSize);Object.assign(sun.shadow.camera,{left:-35,right:35,top:35,bottom:-35,near:1,far:100});sun.shadow.normalBias=.12*2048/quality.shadowSize;/* bias scales with the texel: 1024² phones would show acne stripes on flat roofs at .12 (heat pass 4) */sun.shadow.bias=-.0002;sun.shadow.radius=3;scene.add(sun);scene.add(sun.target);
@@ -599,36 +613,51 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     let wasSettingsOpen=false;
     const learningView=createLearningView();let wasLearning=false;
     const quizView=createQuizViewControls(renderer.domElement,camera,()=>Boolean(learningFormat.current));resetQuizView.current=quizView.reset;
+    disposers.add(()=>{quizView.dispose();resetQuizView.current=()=>{};});
     const LEARNING_HIDE=['vending-machines','fishing-spots','fishing-spot-selection','market-stand-selection','fishing-live','fishing-shore-water','fishing-ambient-fish'];let learningHidden:[T.Object3D,boolean][]|null=null;
     bootMark('town:scene-start');
     const world=warm?.world??buildTown(scene),vending=warm?.vending??createVendingMachines(scene,{coins:()=>readArcadeWallet().balance});world.obstacles.push(...vending.obstacles,...fishingKioskObstacles());vendingRef.current=vending;
+    disposers.add(()=>{vending.dispose();vendingRef.current=null;world.dispose();});
     const fields=buildFormatFields(scene),ballReactions=createBallReactions(scene),games=createFieldRuntime(scene,ballReactions);gamesRef.current=games;const liveJoin=createLiveJoin(scene,games,()=>parent.parentElement);liveJoinRef.current=liveJoin;liveJoin.onMatch=e=>liveMatch.on(e);/* join / leave transitions only */liveJoin.ground=()=>{if(animalRides.riding)animalRides.letGo('off');if(rideRef.current!=='walk'&&pendingRide.current!=='walk')selectRide('walk');};/* Play / Learn on the pitch bar while riding or flying: the existing dismount / jetpack landing */const joinPoint={x:0,z:0};let liveJoinWas=false,packOn:T.Object3D|null=null;/* join/leave replays the first-load arrival (characterArrival) as the uniform change *//* join a live game (lib/town/liveJoinRuntime.ts) */const fieldBump=createFieldCollision();
+    disposers.add(()=>{liveJoin.dispose();liveJoinRef.current=null;ballReactions.dispose();games.dispose();fields.dispose();});
     games.setBallSound((kind,gain)=>kind==='kick'||kind==='bounce'||kind==='receive'?sound.ball(kind,gain,':match'):sound.match(kind,gain));/* + the layered kick / tackle / goal one-shots (Nov 5 2026) */// live-match ball: the walking ball's kick/bounce/receive sounds, own throttle (lib/town/liveBallSound.ts)
     const shadowBatches=createStaticShadowBatches(renderer,scene,window.matchMedia("(pointer: coarse)").matches);
+    disposers.add(()=>shadowBatches.dispose());
     const npcShadows=createNpcShadowBatch(renderer,scene);/* heat pass 6b: wrapped inside shadowVisibility, so it batches only casters that survive its culling */
+    disposers.add(()=>npcShadows.dispose());
     const shadowVisibility=createShadowVisibility(renderer,scene,sun);
+    disposers.add(()=>shadowVisibility.dispose());
     const shadowCache=createStaticShadowCache(renderer,scene,sun,!window.matchMedia("(pointer: coarse)").matches);
+    disposers.add(()=>shadowCache.dispose());
     coinHunt.connectCollisions(world.obstacles,world.roofObstacles);
     const ballObstacleGrid=createObstacleGrid(world.obstacles),ballRoofGrid=createObstacleGrid(world.roofObstacles),ballWallGrid=createObstacleGrid(world.walls),playerOcclusion=createOcclusionProbe((x,z,r)=>ballWallGrid.query(x,z,r));
     const footprint=(o:{x:number;z:number;w:number;d:number})=>`${o.x}:${o.z}:${o.w}:${o.d}`;
     const ballBuildingHeights=new Map(world.buildings.map(b=>[footprint(b),b.height]));
     const ballAboveBuilding=(o:{x:number;z:number;w:number;d:number},height:number)=>(ballBuildingHeights.get(footprint(o))??Infinity)<=height;
     const treeDebris=createTreeDebris(scene,world.assets,fieldSurfaceHeight);
+    disposers.add(()=>treeDebris.dispose());
     // Kicked props sway, rustle, jolt or ripple for <1 s with a soft cue (lib/graphics/propReactions.ts); idle = one check.
     const propSpecs=[...world.propSpecs,...fields.propSpecs],propReactions=createPropReactions(propSpecs);
+    disposers.add(()=>propReactions.dispose());
     games.setNetHit((x,y,z,vx,vz,calm)=>{propReactions.hit(x,y,z,vx,vz,calm);});// a live-match goal billows the net (lib/town/kickFx.ts)
     const propCue=(cue:string|null)=>{if(cue)document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:cue}));};
     const coachPractice=createCoachPractice(scene,ballReactions);
+    disposers.add(()=>coachPractice.dispose());
     const chooseFieldTarget=(event:PointerEvent)=>{const s=fieldSession.current;if(!s?.quiz||s.answer!==null||quizView.blocksSelection())return;const r=renderer.domElement.getBoundingClientRect(),view=renderer.getViewport(new T.Vector4()),top=r.height-view.y-view.w;const answer=games.pickQuiz(new T.Vector2((event.clientX-r.left-view.x)/view.z*2-1,1-(event.clientY-r.top-top)/view.w*2),camera);if(answer!==undefined){tapHaptic();s.onAnswer?.(answer);}};
     renderer.domElement.addEventListener('pointerup',chooseFieldTarget);
+    disposers.add(()=>renderer.domElement.removeEventListener('pointerup',chooseFieldTarget));
     setMapFootprints({roads:world.roads,buildings:world.buildings});
     const liveKnockout=createLiveKnockout(scene);
+    disposers.add(()=>liveKnockout.dispose());
     const player=createPlayer('you','home',true,true);player.setShirtNumber(DEFAULT_PLAYER_NUMBER);player.setBeanLook(beanLookFor(customizationRef.current),playerOutfit(customizationRef.current));player.setProfile(profileFor('you',0));player.setDribbleFeel?.(true);scene.add(player.root);player.root.scale.setScalar(1.12);player.root.name='main-character';player.root.rotation.y=departure?.yaw??(returningFromArcade?0:Math.atan2(16,33));const characterGlow=createCharacterGlow(player.root);
+    disposers.add(()=>{characterGlow.dispose();player.dispose();});
     const characterRay=new T.Raycaster();let hoverPoint:T.Vector2|null=null,characterHovered=false;
     const ferryGlow=createBuildingGlow(world.ferry,8.3,17.3,4.8,'ferry');
+    disposers.add(()=>ferryGlow.dispose());
     // Lane 2: the ferry's lock (and its sparkles) leave once all four paths graduate; one visibility write per change, no loop.
     const showFerryLock=()=>{const locked=!ferryUnlocked(readGraduations());for(const name of ['matchday-ferry-locked','ferry-lock-particles']){const lock=world.ferry.getObjectByName(name);if(lock&&lock.visible!==locked){lock.visible=locked;wakeLoopRef.current?.();}}};
     showFerryLock();window.addEventListener(GRADUATIONS_CHANGED,showFerryLock);
+    disposers.add(()=>window.removeEventListener(GRADUATIONS_CHANGED,showFerryLock));
     let ferryWasHovered=false;
     const ferryHit=new T.Vector3(),pointsAtFerry=()=>characterRay.ray.intersectBox(world.ferryLockBounds,ferryHit)!==null||characterRay.ray.intersectBox(world.ferryBounds,ferryHit)!==null;
     const characterTapPoint=new T.Vector2(),characterFoot=new T.Vector3(),characterHead=new T.Vector3();
@@ -644,6 +673,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const trackCharacterHover=(event:PointerEvent)=>{if(event.pointerType==='touch')return;const rect=renderer.domElement.getBoundingClientRect();hoverPoint=new T.Vector2((event.clientX-rect.left)/rect.width*2-1,1-(event.clientY-rect.top)/rect.height*2);};
     const clearCharacterHover=(event?:PointerEvent)=>{if(event?.relatedTarget instanceof Element&&event.relatedTarget.closest('.store-enter-prompt'))return;hoverPoint=null;renderer.domElement.style.cursor='';};
     renderer.domElement.addEventListener('pointermove',trackCharacterHover);renderer.domElement.addEventListener('pointerleave',clearCharacterHover);
+    disposers.add(()=>{renderer.domElement.removeEventListener('pointermove',trackCharacterHover);renderer.domElement.removeEventListener('pointerleave',clearCharacterHover);});
     const arcadeHit=new T.Vector3();
     // Konbinis (Sep 29 2026): enterable like the Arcade, with the same building highlight, hover and from-the-air Enter.
     const konbiniBox=(d:KonbiniDoor)=>{const b=KONBINI_BUILDINGS[d];return new T.Box3(new T.Vector3(b.x-b.w/2,0,b.z-b.d/2),new T.Vector3(b.x+b.w/2,b.h,b.z+b.d/2));};
@@ -660,8 +690,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       {name:'museum-wing',bounds:world.museumWingBounds,z:186,w:14,d:26,h:5},
       {name:'shop',bounds:shopBounds,z:KIT_SHOP.z,w:KIT_SHOP.w,d:KIT_SHOP.d,h:KIT_SHOP.h}
     ] as const).map(({name,bounds,z,w,d,h})=>{const center=bounds.getCenter(new T.Vector3()),root=new T.Group();root.name=name+'-selection';root.position.set(center.x,0,z);scene.add(root);const glow=createBuildingGlow(root,w,d,h,name);return{glow,dispose(){glow.dispose();root.removeFromParent();}};});
+    disposers.add(()=>{buildingEffects.forEach(effect=>effect.dispose());});
     world.islandShore.bake(renderer,scene);// island-wide shore field, once per world (lib/graphics/islandShore.ts)
     const fishing=createFishingWorld(scene,player.root,fishingSession,renderer);// fishing posts + market stand prompts (docs/fishing.md)
+    disposers.add(()=>fishing.dispose());
     // Rosa's stall kick: the fishing world's "we buy" sign and fish crate (world-space meshes on the stall) wobble with it.
     {const parts=['market-stand-sign','market-stand-frame'].flatMap(name=>{const m=scene.getObjectByName(name);const a=m instanceof T.Mesh?m.geometry.getAttribute('position'):null;return a instanceof T.BufferAttribute?[{attribute:a,start:0,count:a.count}]:[];});
      propReactions.attach('stall',MARKET_STAND.x,MARKET_STAND.z,parts);}
@@ -672,11 +704,13 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const coachesHit=new T.Vector3();
     const pointsAtCoaches=()=>characterRay.ray.intersectBox(world.coachesBounds,coachesHit)!==null;const storePromptPoint=new T.Vector3();
     const livePlayerGlow=createNpcHover(scene,'live-player-hover-glow');let livePlayerHover:ReturnType<typeof games.pickPlayer>=null;
+    disposers.add(()=>livePlayerGlow.dispose());
     const inspectLivePlayer=(event:PointerEvent)=>{if(liveJoinRef.current?.joined||fieldSession.current||lessonRef.current||mapRef.current||settingsRef.current||quizView.blocksSelection())return false;const r=renderer.domElement.getBoundingClientRect(),point=new T.Vector2((event.clientX-r.left)/r.width*2-1,1-(event.clientY-r.top)/r.height*2),hit=games.pickPlayer(point,camera,r.width,r.height,learningFormat.current,event.pointerType==='touch');if(!hit)return false;games.setHoverPaused(hit.format);setPositionSelection(hit);sound.ui('click');return true;};
     let pointerStart:{x:number;y:number}|null=null;
     const beginCharacterTap=(event:PointerEvent)=>{pointerStart={x:event.clientX,y:event.clientY};};
-    const pickCharacter=(event:PointerEvent)=>{const start=pointerStart;pointerStart=null;if(!start||Math.hypot(event.clientX-start.x,event.clientY-start.y)>10||lessonRef.current||mapRef.current||settingsRef.current)return;if(inspectLivePlayer(event))return;if(fieldMenu.current)return;const rect=renderer.domElement.getBoundingClientRect();characterTapPoint.set((event.clientX-rect.left)/rect.width*2-1,1-(event.clientY-rect.top)/rect.height*2);characterRay.setFromCamera(characterTapPoint,camera);if(characterRay.intersectObject(player.root,true).length||nearCharacter(characterTapPoint,event.pointerType==='touch')){tapHaptic();sound.ui('click');setCustomizerOpen(true);setHint(false);return;}const npc=keepUpBusy.current?null:islandNpcs.pick(characterRay)??coachPractice.pick(characterRay)??volleyballGame.pick(characterRay);if(npc){tapHaptic();sound.ui('click');openConversation(npc);setHint(false);return;}const machine=vending.pick(characterRay);if(machine){tapHaptic();sound.ui('click');openVendingRef.current(machine);return;}if(pointsAtFerry()){tapHaptic();sound.ui('click');setFerryOpen(true);return;}if(pointsAtMuseum()){tapHaptic();sound.ui('click');setMuseumOpen(true);return;}if(pointsAtShop()){tapHaptic();sound.ui('click');setShopOpen(true);return;}if(pointsAtArcade()){tapHaptic();sound.ui('click');setArcadeOpen(true);return;}if(pointsAtKonbini('main')||pointsAtKonbini('cay')){tapHaptic();sound.ui('click');setKonbiniDoor(pointsAtKonbini('main')?'main':'cay');return;}if(pointsAtCoaches()){tapHaptic();sound.ui('click');setCoachesOpen(true);}};
+    const pickCharacter=(event:PointerEvent)=>{const start=pointerStart;pointerStart=null;if(!start||Math.hypot(event.clientX-start.x,event.clientY-start.y)>10||lessonRef.current||mapRef.current||settingsRef.current)return;if(inspectLivePlayer(event))return;if(fieldMenu.current)return;const rect=renderer.domElement.getBoundingClientRect();characterTapPoint.set((event.clientX-rect.left)/rect.width*2-1,1-(event.clientY-rect.top)/rect.height*2);characterRay.setFromCamera(characterTapPoint,camera);if(characterRay.intersectObject(player.root,true).length||nearCharacter(characterTapPoint,event.pointerType==='touch')){tapHaptic();sound.ui('click');setCustomizerOpen(true);return;}const npc=keepUpBusy.current?null:islandNpcs.pick(characterRay)??coachPractice.pick(characterRay)??volleyballGame.pick(characterRay);if(npc){tapHaptic();sound.ui('click');openConversation(npc);return;}const machine=vending.pick(characterRay);if(machine){tapHaptic();sound.ui('click');openVendingRef.current(machine);return;}{const gm=gashaponPanel.get()===null&&rideRef.current!=='jetpack'?gashaPrompt.pick(characterRay):null;if(gm){tapHaptic();sound.ui('click');gashaponOpener.open(gm.id);return;}}/* a gashapon machine (Nov 9 2026): before the Konbini behind it */if(pointsAtFerry()){tapHaptic();sound.ui('click');setFerryOpen(true);return;}if(pointsAtMuseum()){tapHaptic();sound.ui('click');setMuseumOpen(true);return;}if(pointsAtShop()){tapHaptic();sound.ui('click');setShopOpen(true);return;}if(pointsAtArcade()){tapHaptic();sound.ui('click');setArcadeOpen(true);return;}if(pointsAtKonbini('main')||pointsAtKonbini('cay')){tapHaptic();sound.ui('click');setKonbiniDoor(pointsAtKonbini('main')?'main':'cay');return;}if(pointsAtCoaches()){tapHaptic();sound.ui('click');setCoachesOpen(true);}};
     renderer.domElement.addEventListener('pointerdown',beginCharacterTap);renderer.domElement.addEventListener('pointerup',pickCharacter);
+    disposers.add(()=>{renderer.domElement.removeEventListener('pointerdown',beginCharacterTap);renderer.domElement.removeEventListener('pointerup',pickCharacter);});
     // Bug squad (catching lane): a quick tap on the screen near a bug swings the net at it (bugCatch.ts TAP_RANGE, on foot only).
     let bugTap:{x:number;y:number;t:number}|null=null;
     const bugTapDown=(e:PointerEvent)=>{bugTap=jobs.swarmJob&&rideRef.current==='walk'?{x:e.clientX,y:e.clientY,t:performance.now()}:null;};
@@ -685,31 +719,47 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     renderer.domElement.addEventListener('pointerdown',bugTapDown);renderer.domElement.addEventListener('pointerup',bugTapUp);
     bugTapOff=()=>{renderer.domElement.removeEventListener('pointerdown',bugTapDown);renderer.domElement.removeEventListener('pointerup',bugTapUp);};
     const flightMotion=createFlightMotion(),idleWave=createIdleWave((Math.random()*4294967296)>>>0)/* jetpack idle gestures (owner, Nov 8 2026) */,boundaryFeedback=createBoundaryFeedback();scene.add(boundaryFeedback.root);
+    disposers.add(()=>boundaryFeedback.dispose());
     const jetExhaust=createJetExhaust();scene.add(jetExhaust.root);
+    disposers.add(()=>jetExhaust.dispose());
     const splatMaterial=new T.MeshBasicMaterial({color:'#edcf94',transparent:true,opacity:0,depthWrite:false});
+    disposers.add(()=>splatMaterial.dispose());
     const dizzyStars=new T.Group();dizzyStars.name='player-dazed-stars';scene.add(dizzyStars);
+    disposers.add(()=>dizzyStars.removeFromParent());
     const starShape=new T.Shape();
     for(let i=0;i<10;i++){const a=i*Math.PI/5+Math.PI/2,r=i%2?.13:.3;i?starShape.lineTo(Math.cos(a)*r,Math.sin(a)*r):starShape.moveTo(Math.cos(a)*r,Math.sin(a)*r);}starShape.closePath();
     const starGeometry=new T.ShapeGeometry(starShape),starMaterial=new T.MeshBasicMaterial({color:'#ffdf60',side:T.DoubleSide,depthWrite:false});
+    disposers.add(()=>{starGeometry.dispose();starMaterial.dispose();});
     for(let i=0;i<5;i++)dizzyStars.add(new T.Mesh(starGeometry,starMaterial));
     dizzyStars.visible=false;
     const splat=new T.Mesh(new T.RingGeometry(.6,1,16),splatMaterial);splat.rotation.x=-Math.PI/2;splat.visible=false;scene.add(splat);
+    disposers.add(()=>{splat.geometry.dispose();splat.removeFromParent();});
     const rideTrail=createRideTrail(),flightTrail=createFlightTrail();scene.add(rideTrail.root,flightTrail.root);
+    disposers.add(()=>{rideTrail.dispose();flightTrail.dispose();});
     // Ride splash in the shallows (lib/graphics/rideSplash.ts): one pooled InstancedMesh for me + the 2 nearest riding friends; idle = no work, no draw.
     const rideSplash=createRideSplash(()=>world.islandShore.field),splashNear=new Int32Array(RIDE_SPLASH.friends),splashDist=new Float32Array(RIDE_SPLASH.friends),SPLASH_SOUND={cue:'splash-soft',gain:.22};scene.add(rideSplash.mesh);
+    disposers.add(()=>rideSplash.dispose());
     // Shore foam interactions (lib/graphics/shoreFoamFx.ts, Oct 26 2026): the swash foam parts round my ankles, steps and the ball leave foam rings. Uniforms only: no mesh, no draw.
     const shoreFoam=createShoreFoamFx(()=>world.islandShore.field);
+    disposers.add(()=>shoreFoam.reset());
     const stairRidePose={height:0,pitch:0},slopeRidePose={height:0,pitch:0,roll:0},slopeGrad={gx:0,gz:0};
     // The Bug squad's catch stage (Oct 21 2026, lib/graphics/catchStage.ts): it borrows the rig and draws with the island's renderer.
     jobs.setStagePorts({player,renderer,scene,host:()=>host.current});
     const vehicle=createVehicle();scene.add(vehicle.root);/* Oct 20 2026: the always-worn backpack (backpack.ts) morphs into the classic jet */const backpack=createBackpack();backpack.attach(player.root);jobs.setBackpack({socket:backpack.sockets.sideRight,morph:()=>backpack.morph});wildBugs.setCamera(camera);/* bug-polish: the net rests on the pack's side socket while riding; the swarm spawns bugs out of the camera's view */backpack.setKit(playerOutfit(customizationRef.current));vehicle.setBackpackJet(true);const knockFace=createKnockdownFace(e=>player.setExpression(e));vehicle.root.scale.setScalar(1.12);let appliedCustomization:CharacterCustomization|null=null,appliedGear:IslandGear|null=null;let appliedTeamLook=false;let previousRide:TravelMode=rideRef.current;let arrivalFacing:number|undefined=departure?.yaw??(returningFromArcade?0:Math.atan2(16,33));
+    disposers.add(()=>{vehicle.dispose();backpack.dispose();});
     const npcs=Array.from({length:2},(_,i)=>{const rig=createPlayer('local'+i,i%2?'away':'home');rig.setShirtNumber(i?4:8);const dress=sideGameDress('local'+i,i%2?'away':'home',i?4:8);rig.setBeanLook(dress.look,dress.outfit);scene.add(rig.root);return rig;});
+    disposers.add(()=>{npcs.forEach(r=>r.dispose());});
     const ballMaterial=new T.MeshStandardMaterial({color:CLASSIC_BALL.color,roughness:CLASSIC_BALL.roughness});const ballAppearance=createBallAppearance(ballMaterial),shopBallSkin=createShopBallSkin(ballMaterial);let shopBallOn=false;const ball=new T.Mesh(new T.SphereGeometry(CLASSIC_BALL.radius,CLASSIC_BALL.widthSegments,CLASSIC_BALL.heightSegments),ballMaterial);ball.castShadow=true;ball.name='player-ball';scene.add(ball);
+    disposers.add(()=>{ballAppearance.dispose();shopBallSkin.dispose();});
     addBallPatches(ball,.19);const ballPatches=ball.children.slice();// six dark pentagons (hidden under a Kit Shop ball, whose skin has its own panels); the shop snapshots (StorePreviews) add the same ones
     const ring=new T.Mesh(new T.RingGeometry(.48,.54,48),new T.MeshBasicMaterial({color:'#fff0b7',transparent:true,opacity:.8,side:T.DoubleSide}));ring.name='player-foot-ring';ring.rotation.x=-Math.PI/2;scene.add(ring);const RING_LINE=.026;let ringLineAt=0;const ringNormal=new T.Vector3(0,1,0),ringFace=new T.Vector3(0,0,1);const hiddenMarker=createHiddenPlayerMarker(ring);scene.add(hiddenMarker.root);
+    disposers.add(()=>hiddenMarker.dispose());
     const rideChange=createRideChange();scene.add(rideChange.root);
+    disposers.add(()=>rideChange.dispose());
     const guideMaterial=new T.LineDashedMaterial({color:'#e79e6b',dashSize:.35,gapSize:.22,depthTest:false});
+    disposers.add(()=>guideMaterial.dispose());
     const guide=new T.Line(new T.BufferGeometry().setFromPoints([new T.Vector3(11,.16,21),new T.Vector3(11,.16,9)]),guideMaterial);guide.renderOrder=2;guide.visible=false;scene.add(guide);
+    disposers.add(()=>guide.geometry.dispose());
     const receiveRing=new T.Mesh(new T.RingGeometry(.65,.72,48),new T.MeshBasicMaterial({color:'#b7e7a6',side:T.DoubleSide,transparent:true,opacity:.8}));receiveRing.rotation.x=-Math.PI/2;receiveRing.visible=false;scene.add(receiveRing);
     let lessonTime=0,lastLane=false;
     const setPhase=(phase:LessonPhase|null)=>{lessonRef.current=phase;setLesson(phase);lessonTime=0;};
@@ -717,8 +767,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // runs only on pointer move; while the child aims, the frozen scene sleeps until the stroke changes.
     // The path is a flat ground ribbon (a 1px line vanishes on a phone), rewritten only when the stroke changes.
     const AIM_POINTS=37,aimGeometry=new T.BufferGeometry();aimGeometry.setAttribute('position',new T.BufferAttribute(new Float32Array(AIM_POINTS*6),3));
+    disposers.add(()=>aimGeometry.dispose());
     aimGeometry.setIndex(Array.from({length:AIM_POINTS-1},(_,i)=>[i*2,i*2+1,i*2+2,i*2+1,i*2+3,i*2+2]).flat());
     const aimMaterial=new T.MeshBasicMaterial({color:'#b7f1a4',depthTest:false,transparent:true,opacity:.85,side:T.DoubleSide});
+    disposers.add(()=>aimMaterial.dispose());
     const aimLine=new T.Mesh(aimGeometry,aimMaterial);aimLine.renderOrder=3;aimLine.visible=false;aimLine.frustumCulled=false;scene.add(aimLine);
     const threatRing=new T.Mesh(new T.RingGeometry(.62,.8,48),new T.MeshBasicMaterial({color:'#e0533d',side:T.DoubleSide,transparent:true,opacity:.9,depthTest:false}));threatRing.rotation.x=-Math.PI/2;threatRing.renderOrder=3;threatRing.visible=false;scene.add(threatRing);
     const aimTarget=new T.Mesh(new T.RingGeometry(.4,.48,40),new T.MeshBasicMaterial({color:'#ffd17b',side:T.DoubleSide,transparent:true,opacity:.9,depthTest:false}));aimTarget.rotation.x=-Math.PI/2;aimTarget.renderOrder=3;aimTarget.visible=false;scene.add(aimTarget);
@@ -749,6 +801,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(stroke.length>=64)stroke.splice(1,1);stroke.push({x:p.x,z:p.z,t:event.timeStamp/1000});updateAim();wakeLoop();};
     const aimUp=(event:PointerEvent)=>{if(event.pointerId!==strokePointer)return;strokePointer=-1;if(lessonRef.current==='aim'&&aimRecord)startLessonPass(aimRecord);else{stroke=null;updateAim();}wakeLoop();};
     renderer.domElement.addEventListener('pointerdown',aimDown);renderer.domElement.addEventListener('pointermove',aimMove);renderer.domElement.addEventListener('pointerup',aimUp);renderer.domElement.addEventListener('pointercancel',aimUp);
+    disposers.add(()=>{renderer.domElement.removeEventListener('pointerdown',aimDown);renderer.domElement.removeEventListener('pointermove',aimMove);renderer.domElement.removeEventListener('pointerup',aimUp);renderer.domElement.removeEventListener('pointercancel',aimUp);});
     // Keyboard / switch access: preview a straight pass to the receiver, then play it.
     lessonAim.current={
       straight:()=>{if(lessonRef.current!=='aim')return;stroke=[{x:PASSER.x,z:PASSER.z,t:0},{x:location.x,z:location.z,t:.3}];updateAim();wakeLoop();},
@@ -756,11 +809,16 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       cancel:()=>{if(lessonRef.current!=='aim')return;stroke=null;updateAim();setPhase('practice');wakeLoop();},
       replay:()=>{const last=passAttemptsRef.current.last;if(!last||lessonRef.current==='replay'||lessonRef.current==='passing')return;replayReturn=lessonRef.current==='complete'?'complete':'practice';lessonPass=last;const run=replayLessonPass(last.start,last.inputs,REPLAY_SPEED);lessonSim={state:()=>run.world.state,advance:dt=>{run.advance(dt);}};lessonHold=0;showAim(last.prediction);setPhase('replay');wakeLoop();},
     };
+    disposers.add(()=>{lessonAim.current=null;});
     const location={...sceneSpawn},velocity={x:0,z:0},orb={x:sceneSpawn.x+.7,z:sceneSpawn.z,vx:0,vz:0};
     const volleyballGame=createVolleyballGame(scene,ballReactions);
+    disposers.add(()=>volleyballGame.dispose());
     const truckReactions=createTruckReactions(scene);
+    disposers.add(()=>truckReactions.dispose());
     const rideRamps=[...planRideRamps(world.roads,world.obstacles,world.surfaceAreas.filter(area=>area.kind==='path')),...planRoofRamps(world.buildings)],rampVisuals=createRideRampVisuals(rideRamps),rampMotion=createRampMotion(rideRamps,world.obstacles,world.buildings,world.walls);scene.add(rampVisuals.root);
+    disposers.add(()=>rampVisuals.dispose());
     const streetTraffic=createStreetTraffic(scene,world.obstacles,world.roads,rideRamps);
+    disposers.add(()=>streetTraffic.dispose());
     const rooftop=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,location,world.roofObstacles,(x,z)=>rampSurface(rideRamps,x,z),world.landingExclusions,world.canopies);
     // Landing from the sky (jetpack, parachute): canopies over open ground count (canopySurfaces.ts); the ground's view leaves them out.
     const skySurface=(x:number,z:number)=>rooftop.surface(x,z,Infinity);
@@ -772,11 +830,14 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // ball waits on the sand (decision 3). Ride launches may end over splashable water (rooftopJump.ts canSplash).
     const clearWin=createClearWindow(scene,()=>world.islandShore.field);// the clear water window over the shallows (lib/town/water/clearWindow.ts)
     const swimClear=createSwimClear(scene);// the swimmer's clear disc + seabed shadow + underwater body tint (lib/graphics/swimClear.ts)
+    disposers.add(()=>{swimClear.dispose();clearWin.dispose();});
     const waterProbe=createWaterProbe(),water=createWaterState(waterProbe,()=>reduced,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z)+WATER_LEVEL-UW_SURFACE:Infinity;}),/* the dive keeps the body above the drawn seabed (Oct 19 2026, diving to a shore lost the diver in the bed) */waterWalk={allow:(x:number,z:number)=>waterProbe.allowed(x,z),speed:1};let swimEdgeHold=0,swimEdgeQuiet=0;
     // Water P1a (lib/town/water/sharks.ts): sharks circle a swimmer; the "Uh oh!" bubble, the sting, the lesson, a camera nudge.
     const sharkCircle=createSharkCircle(onLand,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z)+WATER_LEVEL-UW_SURFACE:Infinity;}/* the drawn seabed: orbiting sharks stay above it (Oct 20 2026) */),sharkHead=new T.Vector3();let sharkBubbleUntil=0;world.sharks.attend(sharkCircle);
+    disposers.add(()=>world.sharks.attend(null));
     const sharkEvents=(se:SharkEvents)=>{if(se.ended)countSharksEscape();if(!se.started)return;countSharksCircle();sharkBubbleUntil=performance.now()+SHARK_BUBBLE_S*1000;
       playCues([['fi2-job-cue','sting',0]]);waterStore.set({sharkLesson:waterStore.get().sharkLesson+1});if(!reduced)water.state.shake=BELLY_SHAKE_TIME;};
+    disposers.add(()=>waterStore.reset());
     rooftop.setSplashTest(canSplashDown);let splashSource:SplashSource='fall',launchFall=false,waterTintUntil=0,waterIdleWas=false;
     /** A scooter / bike / moped that splashed down (a ride launch into the sea): the swim state takes over and the ride is handed
      *  back on the first dry step (cheaper than parking it on the sand like the ball: nothing to draw, nothing to walk back to). */
@@ -784,6 +845,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     /** The splash-down sound: existing cues through the island sound's event channels (waterHud.ts SPLASH_CUES), the only timers
      *  the sea runs (≤ 5 short ones per splash, cleared on unmount). */
     const cueTimers=new Set<ReturnType<typeof setTimeout>>();
+    disposers.add(()=>{for(const t of cueTimers)clearTimeout(t);cueTimers.clear();});
     const playCues=(cues:readonly (readonly [string,string,number])[])=>{for(const [event,detail,delay] of cues){if(!delay){document.dispatchEvent(new CustomEvent(event,{detail}));continue;}
       const t=setTimeout(()=>{cueTimers.delete(t);document.dispatchEvent(new CustomEvent(event,{detail}));},delay);cueTimers.add(t);}};
     const waterFxOn=()=>!(reduced||heat.staticAmbience||heat.governor.last.state==='slow')&&heat.tier<2;/* decorative ripples: the fishingLife gate */
@@ -814,6 +876,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(id==='dive'&&phase==='tap'&&!water.diveActive&&!water.canDive()){if(water.state.phase==='swim'||water.state.phase==='wade')fuelStore.say('Too shallow',DIVE_SHALLOW_NOTE);return;}// greyed Dive answers with a hint
       if(id==='dive'&&phase==='tap'&&!water.diveActive&&!dive.session.duckReady){fuelStore.say('Catch your breath','Float a moment, then dive again.');return;}// one breath for both dives (diveSession.ts DUCK_DRAIN)
       if(id!=='letgo'&&water.press(id,phase)){if(phase!=='up'){tapHaptic();sound.ui('click');}wakeLoop();}};
+    disposers.add(()=>{waterActions.press=()=>{};});
     /** Space / 1 = Sprint (hold), Q / J / 2 = Dive / Surface (tap), E / R / 3 = the ride switcher while in the sea. */
     const waterKey=(e:KeyboardEvent,down:boolean)=>{if(!water.inWater||fieldMenu.current||lessonRef.current)return false;const id=waterKeyAction(e.code,e.key);if(!id)return false;e.preventDefault();
       if(animalRides.riding){if(down&&!e.repeat&&id!=='dive')waterActions.press('letgo','tap');return true;}if(id==='swimride'&&ridePromptShown){if(down&&!e.repeat)grabRide();return true;}/* water P1b: Let go / Hang on! */if(id==='swimride'&&dive.promptShown&&e.key.toLowerCase()==='e'){if(down&&!e.repeat)diveActions.current();return true;}/* water P2: E dives at a zone's buoy; R (and the switcher) is ALWAYS the jetpack take-off (water audit P0) */
@@ -822,9 +885,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // The "Hang on!" proximity test runs at the probe's 10 Hz while swimming; a ride is a few scalars a frame and ends after one lap.
     // Open-sea whale sharks and rays (openSeaLife.ts, lib/town/seaLifeAreas.ts, Oct 20 2026): ridable friends like the island ones.
     const openSea=createOpenSeaLife(scene);
+    disposers.add(()=>openSea.dispose());
     // The ray lesson (seaLifeAreas.ts RAY_LESSONS): once per ray kind per visit, the first time a swimmer spots that kind.
     const raysTaught=new Set<string>();let rayLessons=0;const reefHints=createReefHints();
     const rideFriends=[...world.mantas.friends,world.whaleShark.friend,...openSea.friends],animalRides=createAnimalRides(()=>rideFriends),ridePromptPoint={x:0,z:0,yaw:0},rideSteer={x:0,z:0},dartPoint={x:0,z:0,yaw:0},ridePromptV=new T.Vector3();let ridePromptShown=false,ridePromptKind='',rideSeat=0;/* 0..1: the rider's root lifted onto the animal's back (RIDE_SEAT_LIFT, eased at RIDE_RISE) */
+    disposers.add(()=>{if(animalRides.riding)animalRides.letGo('gone');});
     // The ride's sound (islandSound.ts rideCue): a rushing-water bed while held; Let go / the lap's end swells it as the animal darts off.
     const rideSound=(cue:'ride-start'|'ride-stop'|'ride-dart',gain=1)=>document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:{cue,gain}}));
     const rideEnded=(re:RideEvents)=>{if(!re.ended)return;if(re.ended==='lap'||re.ended==='time')countRideLap();else if(re.ended==='off'||re.ended==='shore')countRideOff();rideSound(re.ended==='gone'?'ride-stop':'ride-dart');
@@ -836,17 +901,22 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       waterStore.set({riding:true,rideLesson:waterStore.get().rideLesson+1});wakeLoop();
       try{if(!localStorage.getItem('fi2-ride-steer-hint-v1')){localStorage.setItem('fi2-ride-steer-hint-v1','1');fuelStore.say('Steer with the stick','Push the stick to turn. Tap Let go to swim again.');}}catch{}return true;};
     rideActions.current=()=>{grabRide();};
+    disposers.add(()=>{rideActions.current=()=>{};});
     // The lighthouse ladder (lib/town/lighthouseLadder.ts, run inside rooftop.update): its pose, the prompt, sounds and the ride note.
     const ladderPose=createTrickPose(),ladderPromptV=new T.Vector3();const ladderSeen={rungs:0,slides:0,landed:0,ride:0};let ladderNoteAt=-1e9,ladderPromptDown=false;
     ladderActions.current=()=>{rooftop.ladder.request();tapHaptic();sound.ui('click');};
     const islandNpcs=createIslandNpcs(scene,{isWalkable:(x,z)=>rooftop.canLand(x,z)&&Math.abs(rooftop.surface(x,z)-fieldSurfaceHeight(x,z))<.2&&!world.roads.some(road=>Math.abs(x-road.x)<road.w/2+.4&&Math.abs(z-road.z)<road.d/2+.4),heightAt:fieldSurfaceHeight},ballReactions);
+    disposers.add(()=>islandNpcs.dispose());
     shadowVisibility.addDynamicRoots([islandNpcs.root,streetTraffic.root]);npcShadows.addRoots([islandNpcs.root]);
     // Heat audit Sep 30 2026 ("only what's in view"): for each render, hide static chunks and units whose sun-swept volume misses the view (pixel-identical).
     const viewGate=createViewGate(renderer,scene,sun);viewGate.addUnitRoots([islandNpcs.root,streetTraffic.root,coinHunt.root]);
+    disposers.add(()=>viewGate.dispose());
     // Emotes (user, Oct 22 2026): the Emote button is always on the island. A pick plays on you (pose + 1.5 s bubble), goes to friends
     // while a party is live, and wakes the nearest free townsperson within 5 m (lib/town/emoteReact.ts, islandNpcs.react).
     /* ambient NPC thoughts + banter (Nov 1 2026, lib/town/npcChatter.ts): local only, authored lines, seeded per day; 5 Hz scan, 2 pooled sprites */const npcChatter=createNpcChatter(THOUGHTS,Math.floor(Date.now()/864e5)),chatterOut=createChatterOut(),chatterBubbles=createChatterBubbles(scene),chatFrustum=new T.Frustum(),chatMat=new T.Matrix4(),chatSphere=new T.Sphere(new T.Vector3(),1.2),chatIn={x:0,y:0,z:0,speed:0,canTrigger:false,blocked:true,quiet:false,tier:0,saver:false},chatView={stale:true},chatOnScreen=(a:ChatterActor)=>{if(chatView.stale){chatView.stale=false;chatMat.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);chatFrustum.setFromProjectionMatrix(chatMat);}chatSphere.center.set(a.position.x,a.position.y+1.6,a.position.z);return chatFrustum.intersectsSphere(chatSphere);};
+    disposers.add(()=>chatterBubbles.dispose());
     const emoteBubbles=createEmoteBubbles(scene),emoteFx={kind:-1,age:0,v:-1,dur:EMOTE_SECONDS},hfBag=createHighFiveBag(),hfSkill={type:'highFive' as 'highFive'|'fistBump',progress:0,side:1 as -1|1},hfPt={x:0,y:0,z:0},npcCool=new Map<string,number>(),emoteCands:EmoteCandidate[]=[],emoteFacing={x:0,z:1};let onRideNow=false,emoteRide:string='walk',emoteYaw=0,emoteSteer=0,emoteYaw0=0;let passOnBall=false,ballSay=0;/* the ONE ball (`ball`, the player's own) is driven by Pass it / Juggle with me: no second ball mesh exists */const passOut=createPassBallOut(),NOPASS:Partial<PlayerMotion>={},PASSM:Partial<PlayerMotion>={},passAir={x:0,y:0,z:0},passFeet={x:0,y:0,z:0},passPartnerFeet={x:0,y:0,z:0};let passAirOn=false;let emoteNpc:(typeof islandNpcs.entries)[number]|null=null;
+    disposers.add(()=>emoteBubbles.dispose());
     // Emote contexts (user, Oct 22 2026; lib/town/emoteContexts.ts): FLYING (only beside a flying friend) and SWIMMING sets. Visual only: `flour` is added to the rig after the pose each frame.
     const ctxFx={script:null as CtxScript|null,side:1 as -1|1,friendD:-1,rip:0},flour:Flourish={roll:0,pitch:0,yaw:0,lift:0,ripple:0},friendFly={x:0,y:0,z:0};const ctxOn=()=>ctxFx.script!==null&&emoteFx.kind>=0;
     // Moving emotes (user, Oct 22 2026; lib/town/moveEmotes.ts): while you walk / run the wheel shows ten emotes layered on the walk cycle. Separate from emoteFx: they never stop you, never zoom (only the eased nudge), and end on a ride / menu / job / lesson / room.
@@ -1000,6 +1070,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     });
     // Analytics (Phase B): the dance / show-off / wave / cheer / laugh move the graphics picked for YOU, and a townsperson's show-off reaction (lib/town/emoteVariantHook.ts).
     onEmoteVariant((family,v,root)=>{if(family==='react'||root===player.root)countEmoteVariant(family,v);});
+    disposers.add(()=>{emoteBus.set(null);onEmoteVariant(null);});
     // High five + emote camera (user, Oct 22 2026): the local half of the sequence (lib/town/highFive.ts), the spark at each hit, the camera zoom.
     const emoteCam=createEmoteCamera(),ecs:EmoteCamState={reduced:false,riding:false,swimming:false,flying:false,inJob:false,cutscene:false,lesson:false,menuOpen:false,moving:false,cameraDist:99,onRide:false,rideSpeed:0,steer:0,rideChanged:false};
     const emoteMoving=()=>Math.hypot(velocity.x,velocity.z)>.3||Math.hypot(input.current.x,input.current.z)>.05||keys.has('w')||keys.has('a')||keys.has('s')||keys.has('d')||keys.has('arrowup')||keys.has('arrowdown')||keys.has('arrowleft')||keys.has('arrowright');
@@ -1038,23 +1109,29 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // Ball knock-overs with party friends (relay v1.6, lib/town/ballKnock.ts): my own tumble when a friend's ball knocks ME over (S.Hit),
     // a cosmetic overlay on the drawn frame only (applyLocalTumble / restoreLocalTumble around the render); steering skips to the get-up.
     const meTumble:Tumble=createTumble(),knockWords=createKnockWords(scene);
+    disposers.add(()=>knockWords.dispose());
     const onKnock=(victim:number,d:number,x:number,y:number,z:number)=>{if(victim<0){if(batterySaverOn()||rideRef.current!=='walk'||water.inWater||dive.diving||animalRides.riding||zipline.active||liveKnockout.joined||liveJoin.joined||!!lessonRef.current||!!learningFormat.current||rooftop.state.falling)return;if(!startTumble(meTumble,byteToDir(d),reduced))return;}else if(batterySaverOn())return;knockWords.show(knockWord(d),x,y+(victim<0?2.7:3.45),z,reduced);};/* a friend's word floats over their name label */
     const party=createPartyRuntime({scene,viewGate,onKnock,local:()=>{partyFlags.lesson=!!lessonRef.current||!!learningFormat.current;partyFlags.quiz=!!fieldSession.current?.quiz;partyFlags.map=mapRef.current;partyFlags.reef=waterStore.get().reef;partyFlags.zoom=vending.focused!==null;return partyLocal(location,player.root,velocity,rideRef.current,water.swimming,dive.diving,document.hidden,townActivity(partyFlags),partyPitch);},groundAt:fieldSurfaceHeight,phone:quality.phone,onFriendEmote:id=>{glance.id=id;glance.t=EMOTE_SECONDS;},reducedMotion:()=>reduced,onEmoteSeen:countEmoteSeen,doors:ROOM_DOOR_HINTS});const friendAt=(id:number)=>party?party.friendPose(id):null;/* a party friend's drawn pose (duets, glances) */
+    disposers.add(()=>party?.dispose());
     // Multiplayer slice 2 (lib/multiplayer/matchLink.ts): party friends on the same live pitch play ONE shared match (relay v1.8, Cap.Match; an old relay: everyone keeps a local match).
     const matchLink=party?createMatchLink({conn:partyConnection(),games,join:liveJoin,me:()=>party.you??-1,nameOf:id=>party.nameOf(id),setMatchFriends,dressOf:id=>(home,kits,keeper)=>{const c=wireToLook(partyStore.get().members.find(q=>q.id===id)?.look??[]);return ownKitLook(beanLookFor(c),matchPlayerDress('mp'+id,home?'home':'away',!!keeper,null,kits??DEFAULT_MATCH_KITS),playerOutfit(c),null);}}):null;
+    disposers.add(()=>{matchLink?.dispose();setMatchFriends(new Set());});
     const emoteAsk=party?createEmoteAskClient(partyConnection(),{now:()=>performance.now(),nameOf:id=>party.nameOf(id),
       canShow:from=>{const fp=party.friendPose(from),me=player.root.position;return !!fp&&!hiddenFriends().has(from)&&!mutedFriends().has(from)&&Math.hypot(fp.x-me.x,fp.z-me.z)<=EMOTE_ASK.rangeM+3&&rideRef.current==='walk'&&!water.inWater&&!lessonRef.current&&!learningFormat.current&&!fieldMenu.current&&jobFrame===NO_JOB_FRAME&&!liveKnockout.joined&&!animalRides.riding&&!zipline.active&&streetTraffic.rider.index<0&&!mapRef.current&&!settingsRef.current;},
       onReply:(by,emote,reply)=>{if(reply===AskReply.Yes)return;/* S.Duet follows */askBypass=true;emoteBus.fire(emote);askBypass=false;/* it plays alone */const fp=party.friendPose(by);if(reply===AskReply.No&&fp)emoteBubbles.showText('Maybe later!',2.2,fp.x,fp.y+2.7,fp.z);},
       onDuet:(a,b,emote,seed)=>{const you=party.you;if(a!==you&&b!==you){party.duet(a,b,0,emote,seed);party.duet(b,a,1,emote,seed);return;}/* two friends: both avatars play it */
         duetNext.role=a===you?0:1;duetNext.friend=a===you?b:a;duetNext.emote=emote;duetNext.seed=seed;duetFire=true;emoteBus.fire(emote);duetFire=false;
         if(duet.on&&emoteFx.kind===emote)party.duet(duetNext.friend,-1,1-duetNext.role,emote,seed);}}):null;// friends' balls look like this ball (live feel)
+    disposers.add(()=>emoteAsk?.dispose());
     const noObstacles:Parameters<typeof blocked>[2]=[],fieldBumpCtx={entries:games.entries,npcs:islandNpcs.entries,height:0,ride:'walk',disabled:false,canMove:(x:number,z:number)=>!blocked(x,z,noObstacles,0)};
     const onboardingNpcFocus=createOnboardingNpcFocus(islandNpcs),npcHover=createNpcHover(scene);
+    disposers.add(()=>{npcHover.dispose();onboardingNpcFocus.dispose();});
     let hoveredNpcId:string|null=null;
     const leftHand=new T.Vector3(),rightHand=new T.Vector3();
     const rollWalkingBall=createGroundBallRoll();
     const airBallFrom=new T.Vector3(),airBallTo=new T.Vector3(),dribblePlayer={x:0,y:0,z:0,yaw:0};
     const walkBall=createWalkBall(),ballEffects=createBallEffects(),rideTricks=createRideTricks(),jetActions=createJetpackActions(),parachute=createParachute(),sonicBurst=createSonicBurst(),parachuteTrail=createParachuteTrail(),craterEffect=createCraterEffect(),landingDust=createLandingDust();scene.add(landingDust.root);scene.add(ballEffects.root,parachute.root,sonicBurst.root,parachuteTrail.root,craterEffect.root);
+    disposers.add(()=>{craterEffect.dispose();landingDust.dispose();parachuteTrail.dispose();sonicBurst.dispose();parachute.dispose();ballEffects.dispose();});
     const ballFloor=(x:number,z:number)=>Math.max(rooftop.surface(x,z),lighthouseFloor(x,z,walkBall.state.y-.15+Math.max(0,-walkBall.state.vy)/30,.25));
     // Sky keep-up (Oct 24 2026, lib/town/walkBall.ts KEEPUP_SKY): ONE pooled flat red ring (1 draw call, made once, hidden by default)
     // at the predicted landing spot while the ball is way up (shrinks, and pulses unless reduced motion / Battery saver, as it nears);
@@ -1062,6 +1139,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // Thin ring (owner, Oct 24: "SKINNIER … a little BIGGER"): a 0.09 m band, ~1/3 of the old 0.27; scaled so its outer edge = the
     // catch radius (KEEPUP_SKY.catchRadius, 1.5 m) as the ball lands, bigger while it is still high (shrinks as it nears).
     const SKY_MARK_OUTER=1.05,SKY_MARK_SCALE=KEEPUP_SKY.catchRadius/SKY_MARK_OUTER,skyMarkGeometry=new T.RingGeometry(SKY_MARK_OUTER-.045,SKY_MARK_OUTER,64),skyMarkMaterial=new T.MeshBasicMaterial({color:0xff2d2d,transparent:true,opacity:.9,depthWrite:false,side:T.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    disposers.add(()=>{skyMarkGeometry.dispose();skyMarkMaterial.dispose();});
     const skyMark=new T.Mesh(skyMarkGeometry,skyMarkMaterial);skyMark.rotation.x=-Math.PI/2;skyMark.visible=false;skyMark.renderOrder=3;skyMark.frustumCulled=false;skyMark.name='keepup-sky-mark';scene.add(skyMark);let skyCamLift=0;
     // Keep-up cues (owner, Oct 24: "very intuitive"): the button's charge ring / state (a CSS var + data attribute written only on
     // change), an edge arrow toward the mark, and first-time hints (max 3 runs, localStorage). No per-frame allocation.
@@ -1076,22 +1154,33 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     openSea.setClearBed({strength:()=>clearWin.strength,depth:(x,z)=>{const f=world.islandShore.field;return f?uwDepthAt(f.distance(x,z),CLEAR_BED.floor):-1;}});openSea.setFx(ballEffects);
     // Kicked vending machines shake and vibrate with a thunk (lib/graphics/vendingKick.ts); idle = no work.
     const vendingKick=createVendingKick({scene,entries:vending.entries,material:vending.material,size:vending.size,host:parent.parentElement});
+    disposers.add(()=>vendingKick.dispose());
     const walkingFrameHit:FrameHit={x:0,y:0,z:0,t:0,nx:0,ny:0,nz:0,part:'post'};
     const landingMarker=createLandingMarker();scene.add(landingMarker.root);
+    disposers.add(()=>landingMarker.dispose());
     let landingPreview:{x:number;z:number}|null=null,previewX=Infinity,previewZ=Infinity,previewAge=1;
     const flight={cruiseHeight:departure?.ride==='jetpack'?departure.flightHeight:INITIAL_FLIGHT_HEIGHT,height:departure?.flightHeight??(returningFromArcade?fieldSurfaceHeight(location.x,location.z):INITIAL_FLIGHT_HEIGHT),takeoffTime:1.05,startHeight:fieldSurfaceHeight(location.x,location.z),landTime:-1,landHeight:0,landing:null as {x:number;z:number}|null};
     saveArcadeDeparture.current=()=>saveIslandReturnPosition({version:1,x:location.x,z:location.z,yaw:player.root.rotation.y,ride:rideRef.current,flightHeight:flight.height,camera:{x:camera.position.x,y:camera.position.y,z:camera.position.z}});
+    disposers.add(()=>{saveArcadeDeparture.current=()=>{};});
     // Summit Isle activities (lib/graphics/summitActivities.ts): built on demand; idle = a few comparisons per frame.
     const summitTravel=createSummitTravelTracker();// admin analytics: Sandbar crossings + how players arrive on Summit Isle
     const summitFun=createSummitActivities(scene,{teleport:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.y=yaw;arrivalFacing=yaw;walkBall.reset({x,y:rooftop.state.height,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;},impact:(x,y,z)=>ballEffects.impact(x,y,z)});
+    disposers.add(()=>summitFun.dispose());
     const cannon=createBallCannon(scene,{teleport:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.y=yaw;arrivalFacing=yaw;},kick:()=>sound.ball('kick'),impact:(x,y,z)=>ballEffects.impact(x,y,z),splash:(x,y,z)=>ballEffects.splash(x,y,z)});// Summit Isle Ball Cannon (idle: flag checks)
+    disposers.add(()=>cannon.dispose());
+    const gashaPrompt=createGashaponPrompt(scene,world.gashaponStatic);let gashaHovered=false;const gashaCanHover=(()=>{try{return matchMedia('(hover: hover)').matches;}catch{return true;}})();/* QA Nov 9 2026: a phone's tap leaves the Gashapon button :hover (sticky), which held the LAST machine hovered from anywhere, so the next machine's button opened the previous one */// gashapon machines: 12 distance checks per frame, the prompt only when near; desktop hover glow (12 ray/box tests while the pointer is on the canvas)
+    disposers.add(()=>gashaPrompt.dispose());
+    gashaponOpener.set(id=>gashaPrompt.focus(id,()=>gashaponPanel.open(id)));// Nov 9 2026 (owner): opening zooms onto the machine's glass first, like the vending machines
+    disposers.add(()=>gashaponOpener.set(null));
     const easel=createPaintEasel(scene,renderer,{wake:()=>wakeLoopRef.current(),player:()=>player.root});let easelSlot=0;// Summit Isle painting easel: idle = one compare per frame
+    disposers.add(()=>easel.dispose());
     // Play-test hooks. The ones that MOVE the player (teleport, location, velocity, rooftop) are left off on the live site
     // (lib/dev/debugHooks.ts, Nov 8 2026); the game's own moves use the summitFun/cannon teleport ports above, not __fi2.
     const debugMove=debugMoveHooksAllowed(window.location.hostname);
     (window as unknown as {__fi2?:unknown}).__fi2={summitFun,cannon,get hudRenders(){return hudRenders.current;},get lessonPass(){return {phase:lessonRef.current,time:lessonTime,sleeping:loopSleeping,prediction:aimPrediction,record:lessonPass,defender:{...lessonDefender},threatVisible:threatRing.visible,aimVisible:aimLine.visible,camera,canvas:renderer.domElement};},positionStore,get hiddenTransforms(){return hiddenTransforms;},get renderStats(){return renderStats;},shadowCache,shadowVisibility,viewGate,shadowBatches,npcShadows,liveKnockout,player,characterArrival,coinHunt,treeDebris,rideRamps,rampMotion,streetTraffic,volleyballGame,music:music.getState,sound:sound.debug,scene,renderer,camera,games,world,openSea,coachPractice,islandNpcs,truckReactions,walkBall,rideTricks,jetActions,ballReactions,fieldSession,fieldTravel,...(debugMove?{location,velocity,rooftop}:{}),rideRef,vehicle,flight,flightPoses:flightMotion.poses,pendingRide,vending,vendingKick,pierTarget,bounds:ISLAND_BOUNDS,selectRide:(m:TravelMode)=>selectRide(m),get jobFrame(){return jobFrame;},jobMoves:()=>jobMoves,ball,emote:(e:number)=>emoteBus.fire(e),party,get emoteAsk(){return emoteAsk;},get duet(){return {...duet};},get emoteFx(){return {kind:emoteFx.kind,age:emoteFx.age,dur:emoteFx.dur};}};
+    disposers.add(()=>{delete (window as unknown as {__fi2?:unknown}).__fi2;});
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.meTumble=meTumble;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.liveJoin=liveJoin;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.liveGames=games;/* headless checks: join a live game *//* headless checks: my ball knock-over tumble (lib/town/ballKnock.ts) */
-    (window as unknown as {__fi2:Record<string,unknown>}).__fi2.motionResolution=motionResolution;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.easel=easel;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.wildBugs=wildBugs;/* play-tests (scripts/check-bug-squad-browser.cjs): place the player like the summit rides do */if(debugMove)(window as unknown as {__fi2:Record<string,unknown>}).__fi2.teleport=(x:number,z:number,yaw=0)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.y=yaw;arrivalFacing=yaw;walkBall.reset({x,y:rooftop.state.height,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;};
+    (window as unknown as {__fi2:Record<string,unknown>}).__fi2.motionResolution=motionResolution;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.easel=easel;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.gasha=gashaPrompt;/* headless checks: gashapon hover + zoom */(window as unknown as {__fi2:Record<string,unknown>}).__fi2.wildBugs=wildBugs;/* play-tests (scripts/check-bug-squad-browser.cjs): place the player like the summit rides do */if(debugMove)(window as unknown as {__fi2:Record<string,unknown>}).__fi2.teleport=(x:number,z:number,yaw=0)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.y=yaw;arrivalFacing=yaw;walkBall.reset({x,y:rooftop.state.height,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;};
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.rides=animalRides;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.rideSplash=rideSplash;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.emoteTest={emoteFx,moveFx,moveWheelState,get nudge(){return moveNudge.amount;},hfBag,emoteCam,ctxFx,fakeFriends,passOut,get passOn(){return passOnBall;},ball,get npc(){return emoteNpc;},get why(){return rideScript.why+'|'+emoteCam.why;},get rideScript(){return rideScript.s?{label:rideScript.s.label,emote:rideScript.s.emote,age:rideScript.age,brake:rideScript.brake,on:rideScript.on}:null;},...(debugMove?{velocity,location}:{})};/* play-tests: force the shuffled bag, read the running variation */// water P1b probes
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.water=water;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.sharkCircle=sharkCircle;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.waterProbe=waterProbe;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.partyHeat=()=>party?{shown:party.shown,rigs:party.rigs}:null;/* heat checks (scripts/check-mp-heat-recheck.cjs) */(window as unknown as {__fi2:Record<string,unknown>}).__fi2.water=water;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.sharkCircle=sharkCircle;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.waterProbe=waterProbe;
     // Heat pass 4: thermal fallback tiers + Battery saver (lib/graphics/heatTier). Tier 0 (default) changes nothing.
@@ -1099,6 +1188,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // Since Oct 12 2026 (user: "dont have npcs move in at all") everything holds still while fishing, near or far; ?fishfocus=near
     // brings back the old live ring (anything within FOCUS_LIVE_M of the angler kept moving) and ?fishfocus=0 turns it off (A/B).
     const focusParam=new URLSearchParams(window.location.search).get('fishfocus'),focus=createFocusMode(scene,renderer,camera),focusAllowed=focusParam!=='0',focusNearLive=focusParam==='near',FOCUS_LIVE_M=30;
+    disposers.add(()=>focus.dispose());
     const focusLive={games:true,traffic:true,volleyball:true,coaches:true};
     // Match focus (owner, Nov 5 2026: "pause everything else on the island while playing the game"; lib/town/matchFocus.ts): while I am
     // JOINED in a live match the background holds still (townsfolk, traffic, groups, ferry, lighthouse, sea life, bugs, fruit, beach finds)
@@ -1106,6 +1196,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const matchFocus=createMatchFocus(new URLSearchParams(window.location.search).get('matchfocus')!=='0');(window as unknown as {__fi2:Record<string,unknown>}).__fi2.matchFocus=matchFocus;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.waterClock=()=>WATER_UNIFORMS.uWaterTime.value;
     const MATCH_HOLD={x:0,z:0,r:-1,still:true};
     const heat=createIslandHeat({renderer,sun,resolution:motionResolution,npcs:islandNpcs,traffic:streetTraffic,governed:quality.phone});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.heat=heat;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.chatter={slots:npcChatter.slots,where:(id:string)=>islandNpcs.entries.find(e=>e.id===id)?.position};(window as unknown as {__fi2:Record<string,unknown>}).__fi2.focus=focus;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.islandWater=world.islandShore;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.clearWin=clearWin;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.propReactions=propReactions;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.propSpecs=propSpecs;if(quality.phone&&heatOptions().lambertScenery)applyLambertScenery(scene);// visible option, off by default
+    disposers.add(()=>heat.dispose());
     sharpenSceneTextures(scene,renderer.capabilities.getMaxAnisotropy());// quality pass: crisp textures at grazing angles
     // Water P2 (lib/town/water/diveSpots.ts, diveSession.ts, diveRuntime.ts; lib/graphics/diveRoom.ts, diveBuoys.ts): the diving
     // spots. At the surface: a lighter patch in the ocean shader (uniforms written once, here) and the dive-flag buoy (one instanced
@@ -1113,7 +1204,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // sealed underwater room (the island is neither stepped nor drawn while you dive) until you surface; the room is then disposed.
     const diveBuoys=createDiveBuoys(DIVE_SPOTS);scene.add(diveBuoys.root);
     const diveWreckTops=createDiveWreckTops(scene);// the stranded wrecks' tops out of the water near a wreck zone (lib/graphics/diveWreckTop.ts; HUD tick, hidden at heat tier 3+)
+    disposers.add(()=>diveWreckTops.dispose());
     const divePreview=createDivePreview(scene,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z):Infinity;},clearWin.shoalMaterial());// the see-through shoal's seabed preview under the 2 nearest patches (lib/graphics/divePreview.ts)
+    disposers.add(()=>divePreview.dispose());
     // The reef's going under / coming up (water audit #6): a short soft blend through the zone's own water colour (the room's fog),
     // never brighter than the water (`.water-under.is-reef`, app/globals.css), instead of the bright splash-down flash.
     const showUnderTint=(color?:string)=>{if(reduced)return;const tint=uiElement<HTMLElement>('[data-water-under]');if(tint){tint.hidden=false;tint.classList.remove('is-on');tint.classList.toggle('is-reef',!!color);tint.style.backgroundColor=color??'';void tint.offsetWidth;tint.classList.add('is-on');waterTintUntil=performance.now()+(color?REEF_TINT_MS:UNDER_TINT_MS);}};
@@ -1147,8 +1240,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       /* Explore v2: a pickup, a restored reef, an underwater goal (sounds from the existing set, haptics, totals-only analytics) */
       picked:(kind,first)=>{if(first)countDivePick();tapHaptic();sound.ui(kind==='treasure'?'path-pop':'click');},
       restored:()=>{countDiveRestore();tapHaptic();sound.ui('expand');},goal:()=>{countDiveGoal();tapHaptic();sound.ui('expand');}});
+    disposers.add(()=>{dive.dispose();diveBuoys.dispose();});
     dive.slots(location.x,location.z);
     diveActions.current=()=>{if(dive.diving){dive.use();return;}if(water.state.phase==='swim'&&!animalRides.riding&&dive.start())sound.ui('click');};
+    disposers.add(()=>{diveActions.current=()=>{};});
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.dive=dive;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.diveBuoys=diveBuoys;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.divePreview=divePreview;
     const targetMovement=(target:BallHitTarget):{canMove:(nx:number,nz:number)=>boolean;move:(nx:number,nz:number)=>void}=>( {canMove:(nx,nz)=>rooftop.canLand(nx,nz)&&Math.abs(rooftop.surface(nx,nz)-target.y)<.3,move:(nx,nz)=>{const npc=islandNpcs.entries.find(e=>'npc:'+e.id===target.id);if(npc){npc.position.x=nx;npc.position.z=nz;return;}const volleyball=volleyballGame.entries.find(e=>'npc:'+e.id===target.id);if(volleyball){volleyball.position.x=nx;volleyball.position.z=nz;return;}const coach=coachPractice.entries.find(e=>'npc:'+e.id===target.id);if(coach){coach.offset.x+=nx-coach.position.x;coach.offset.z+=nz-coach.position.z;coach.position.x=nx;coach.position.z=nz;return;}for(const field of games.entries){const prefix='field:'+field.venue.id+':';if(target.id.startsWith(prefix)){const actor=field.sim.players[target.id.slice(prefix.length)];if(actor){const f=liveFieldPoint(field.venue,nx,nz);actor.x=f.x;actor.y=f.y;actor.vx=actor.vy=0;}break;}}}} );
     // Friends' kicked balls vs MY townspeople (relay v1.2 balls; each screen knocks its own NPCs, the same reaction and threshold as my ball).
@@ -1158,6 +1253,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const previousLocation={...location},visualLocation={...location};let previousFlightHeight=NaN;// the flight height drawn between ticks (lib/town/flightRender.ts)
     const keys=new Set<string>(),camTarget=new T.Vector3(),lookAt=new T.Vector3(),walkOffset={x:18,z:30},walkLead={x:0,z:0},landscapeDolly=createDollyEase();
     const jetpackBreakup=createJetpackBreakup();scene.add(jetpackBreakup.root);
+    disposers.add(()=>jetpackBreakup.dispose());
     let spinCrashAge=Infinity;
     const renderStats={rendered:0,skipped:0,sleeps:0,idleRide:0};let loopSleeping=false,resizeRevision=0,idleSince=0,idleRevision=-1,idleAppearance:CharacterCustomization|null=null,idleTimeOfDay='',idleGrace=0;
     // A quiz question waiting for its answer (or answered, once its replay has ended or paused) sleeps like a menu once the camera
@@ -1165,14 +1261,12 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     let idleQuiz='',quizInput=0,cameraMoving=false,lastCameraZoom=1;const lastCameraPosition=new T.Vector3(),lastCameraQuaternion=new T.Quaternion();
     const wakeQuizInput=(event:Event)=>{if(!fieldSession.current?.quiz||event.type==='pointermove'&&!(event as PointerEvent).buttons)return;quizInput++;wakeLoop();};
     for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.addEventListener(name,wakeQuizInput,{passive:true});
+    disposers.add(()=>{for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.removeEventListener(name,wakeQuizInput);});
     const domCache=new Map<string,HTMLElement>();const uiElement=<E extends HTMLElement>(selector:string)=>{const previous=domCache.get(selector);if(previous?.isConnected)return previous as E;const el=parent.parentElement?.querySelector<E>(selector);if(el)domCache.set(selector,el);return el;};
     /** Door "Enter" prompts (QA11 A-1): the projected door point, but globals.css keeps the pill below the HUD row and below a
      *  "Talk to …" prompt (the same :has() stacking rule as the ball-hunt hint), so it never overlaps another tap target. */
-    const placeEntryPrompt=(el:HTMLElement,left:number,top:number)=>{if(el.dataset.entryPrompt===undefined)el.dataset.entryPrompt='';if(el.style.left!=='0px')el.style.left='0px';if(el.style.top!=='0px')el.style.top='0px';const x=`${Math.round(left*2)/2}px`,y=`${Math.round(top*2)/2}px`;if(el.style.getPropertyValue('--entry-x')!==x)el.style.setProperty('--entry-x',x);if(el.style.getPropertyValue('--entry-y')!==y)el.style.setProperty('--entry-y',y);};
-    const placeUI=(el:HTMLElement,left:number,top:number)=>{const position=`${Math.round(left*2)/2}px ${Math.round(top*2)/2}px`;if(el.style.left!=='0px')el.style.left='0px';if(el.style.top!=='0px')el.style.top='0px';if(el.style.translate!==position)el.style.translate=position;};
     let hudX=NaN,hudZ=NaN,hudJuggling:boolean|undefined,signalMode='',hudStreak=0,streakKey=0;
     let viewportW=1,viewportH=1;
-    const setUIHidden=(el:HTMLElement,hidden:boolean)=>{if(el.hidden!==hidden)el.hidden=hidden;};
     // Heat (overnight audit F2): a leaving field card used to rewrite disabled/tabindex on every frame of its 350 ms fade (each write is a
     // mutation that can restyle the page's :has() rules). Write only on change, like setUIHidden.
     const setCardInactive=(button:HTMLButtonElement)=>{if(!button.disabled)button.disabled=true;if(button.tabIndex!==-1)button.tabIndex=-1;};
@@ -1185,6 +1279,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const shadowRight=new T.Vector3().setFromMatrixColumn(shadowBasis,0),shadowUp=new T.Vector3().setFromMatrixColumn(shadowBasis,1);
     const islandShadowFit=createIslandShadowFit(sun);// the sun's shadow box follows the camera's view, terrain heights included (Summit Isle cut-off fix)
     let last=performance.now(),frame=0,elapsed=0,accumulator=0,disposed=false,lastDistrict:District='coast',lastHud=0,goalTimer=0,lastFieldCheck=-Infinity,cachedVisibleVenue:LiveFormat|null=null,lmVenue:LiveFormat|null=null;
+    disposers.add(()=>{disposed=true;cancelAnimationFrame(frame);});
     const resetInputs=(preserveMovement=false)=>{cancelShotHold();heldRidePointers.current.clear();spinGesture.current.reset();spinRequested.current=false;if(!preserveMovement)keys.clear();input.current={x:preserveMovement?input.current.x:0,z:preserveMovement?input.current.z:0,sprint:preserveMovement&&input.current.sprint,kick:false,juggle:false};if(!preserveMovement)releaseStick();};
     /** A job's action cluster owns Space / J / R while it runs (hold steps: key down = press, key up = release). */
     const jobKey=(e:KeyboardEvent,down:boolean)=>{const list=jobButtonsRef.current;if(!list||fieldMenu.current||lessonRef.current)return false;const key=e.code==='Space'?'Space':e.key.toLowerCase()==='j'?'J':e.key.toLowerCase()==='r'?'R':e.key.toLowerCase()==='e'&&list.some(b=>b.key==='E')?'E':'';if(!key)return false;
@@ -1197,8 +1292,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const finishJoystick=(event:PointerEvent)=>{releaseStick(event);releaseRideAction(event.pointerId);};
     const finishTouches=(event:TouchEvent)=>{if(event.touches.length===0)releaseStick();};
     window.addEventListener('pointerup',finishJoystick,true);window.addEventListener('pointercancel',finishJoystick,true);window.addEventListener('touchend',finishTouches,{passive:true});window.addEventListener('touchcancel',finishTouches,{passive:true});window.addEventListener('pagehide',blur);
+    disposers.add(()=>{window.removeEventListener('pointerup',finishJoystick,true);window.removeEventListener('pointercancel',finishJoystick,true);window.removeEventListener('touchend',finishTouches);window.removeEventListener('touchcancel',finishTouches);window.removeEventListener('pagehide',blur);});
     window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);window.addEventListener('blur',blur);document.addEventListener('visibilitychange',visibility);
+    disposers.add(()=>{window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);});
     const resize=()=>{resizeRevision++;shadowCache.invalidate();wakeLoop();const w=parent.clientWidth,h=parent.clientHeight;if(w===viewportW&&h===viewportH)return;viewportW=w;viewportH=h;renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix();islandShadowFit.invalidate();islandShadowFit.setAreaCap(shadowAreaCap(w/h,isPhoneViewport(w,h,coarse)));/* phone landscape: shadow box <= 1.25x the portrait area */};const observer=new ResizeObserver(resize);observer.observe(parent);window.addEventListener('resize',resize);window.visualViewport?.addEventListener('resize',resize);resize();
+    disposers.add(()=>{observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);});
     const reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     // ---- Island job character moves (docs/island-jobs.md §10, lib/town/jobs/jobMoves.ts): poses, Kick the tree, the ball set aside.
     const jobMoves=createJobMoves(),NO_JOB_FRAME:JobFrame={pose:null,stand:null,ball:null,still:false,caught:false};let jobFrame=NO_JOB_FRAME,jobWas=false,jobStroke=9,jobKickLast=0;
@@ -1219,9 +1317,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       return m;};
     const offJobView=jobs.subscribe(()=>{const a=jobs.getView().active,next=a?.buttons??null;if(jobActiveRef.current!==!!a)setJobRunning(!!a);jobActiveRef.current=!!a;
       if(JSON.stringify(next)!==JSON.stringify(jobButtonsRef.current)){jobButtonsRef.current=next;setJobButtons(next);}});
+    disposers.add(()=>offJobView());
     const offJobEvents=jobs.onEvent((e,def)=>{if(e.type==='pump')jobStroke=0;if(rideRef.current!=='walk')return;const p=poseForEvent(def,e);if(!p)return;
       const target=p.at==='spot'&&e.index!==undefined?jobs.spot(e.index):p.at==='item'&&e.x!==undefined&&e.z!==undefined?{x:e.x,z:e.z}:p.at==='deliver'?jobs.deliverPoint():null;
       jobMoves.start(p.kind,jobPlayer(),target,jobFloor,reduced,jobBallNow(),!!p.basket);wakeLoop();});
+    disposers.add(()=>offJobEvents());
     jobPressRef.current=(b,phase)=>{if(!b.enabled&&phase!=='up'){if(b.id==='kick')jobs.note('Walk up to a tree with ripe fruit (follow the arrow), then Kick the tree.');else{const h=jobs.disabledHint(b.id);if(h)jobs.note(h);}return;}
       // Bug squad (catching lane): Ride cycles walk → scooter → bike → moped (never flying); bugs are caught on foot, so Swing net
       // while riding hops off first (user: "you must walk to catch the bugs").
@@ -1243,15 +1343,18 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         const phase=jetActions.state.phase;if(rideRef.current!=='jetpack'||pendingRide.current||flight.landing||phase!=='idle'&&phase!=='parachute')return false;if(phase==='parachute')jetActions.reset();
         pendingRide.current='walk';cancelLanding.current=false;const at=rooftop.canLand(spot.x,spot.z,Infinity)?spot:rooftop.findLanding(spot.x,spot.z);flight.landing=at?{x:at.x,z:at.z}:null;wakeLoop();return true;},
       touchdown:()=>{const y=rooftop.state.height;landingDust.trigger(location.x,y,location.z,.7,y<.6,reduced);sound.land(.6);}});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.forage=forage;
+    disposers.add(()=>{forage.dispose();});
     // The zipline (lib/graphics/zipline.ts): the tower's prompt, the ride on the tick (input locked), the rider, camera and effects.
     const zipline=createZipline(scene,{place:(x,z,y)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z,y);},
       land:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.set(0,yaw,0);arrivalFacing=yaw;walkBall.reset({x,y:rooftop.state.height,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;},
       dismount:()=>{if(rideRef.current==='walk'||rideRef.current==='jetpack')return false;selectRide('walk');wakeLoop();return (rideRef.current as TravelMode)==='walk';},
       where:()=>({x:location.x,z:location.z,y:rooftop.state.height}),touchdown:(x,y,z)=>{landingDust.trigger(x,y,z,.8,false,reduced);sound.land(.8);},whoosh:()=>sound.boost('forward'),swish:()=>sound.boost('up'),haptic:tapHaptic,
       busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing',hold:on=>{heat.hold(on);islandShadowFit.hold(on);}});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.zipline=zipline;
+    disposers.add(()=>zipline.dispose());
     // Beachcombing (lib/graphics/beachFinds.ts, docs/beachcombing.md): shells and sea creatures on every island's beaches.
     const beach=createBeachFinds(scene,{obstacles:[...world.obstacles,...world.buildings],paved:[...world.surfaceAreas,...world.roads],busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run,dismount:()=>{if(rideRef.current==='walk'||rideRef.current==='jetpack')return false;selectRide('walk');wakeLoop();return (rideRef.current as TravelMode)==='walk';},gather:id=>beachMarket.gather(id),
       reward:(id,coins,reason)=>{void beachWallet.credit(id,coins,reason);},cue:propCue,haptic:tapHaptic,pose:(kind,at)=>{jobMoves.start(kind,jobPlayer(),at,jobFloor,reduced,jobBallNow());wakeLoop();}});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.beach=beach;
+    disposers.add(()=>beach.dispose());
     const summitFlight=createSummitFlightLift(),summitCamera=createSummitCameraPull(),rideSuspension=createRideSuspension();
     // Rides rest on Summit Isle's DRAWN grass (lib/town/drawnGround.ts), which stands above the walked height where its coarse mesh
     // strays; the triangle index is built on the first ride there. Elsewhere: the walked height, unchanged.
@@ -1558,6 +1661,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     wakeLoopRef.current=wakeLoop;
     // Idle ride / flight (lib/town/idleRide.ts, Oct 1 2026): no input and no travel for 4 s on a ride or the jetpack → 20 fps.
     let diveRestAt=-1;const idleRide=createIdleRide(),idleInput=new AbortController(),stir=()=>idleRide.stir(performance.now());
+    disposers.add(()=>idleInput.abort());
     renderer.domElement.addEventListener('pointerdown',emoteCam.tap,{signal:idleInput.signal});// tapping the screen ends the emote zoom at once
     for(const type of ['pointerdown','pointermove','keydown','wheel'])window.addEventListener(type,stir,{capture:true,passive:true,signal:idleInput.signal});
     // Fishing delight pass (Nov 7 2026, docs/fishing.md "Delight pass"): a big, rare, golden or legend catch gets a cheer from the nearest free
@@ -1568,6 +1672,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const dailyPlay=createDailyPlay({now:Date.now,claim:grantDailyPlayCoins,earned:amount=>window.dispatchEvent(new CustomEvent('fi2-daily-play-earned',{detail:{amount}}))});
     let dailyX=location.x,dailyZ=location.z;
     const exploreZones=createExploreZones(exploreActivityNow(),kind=>recordExploreActivity(kind));// Coral Cay / East Jetty checklist items (G-13)
+    // Frame-loop steps moved to lib/town/frame (Nov 10 2026 split): each takes one long-lived context built here, once.
+    const jetTwistFrame:JetTwistFrame={reduced,jetActions,customizationRef,player,vehicle};
+    const knockoutLabelsFrame:KnockoutLabelsFrame={uiElement,liveKnockout};
+    const focusFrame:FocusFrame={focusAllowed,focusNearLive,focusParam,FOCUS_LIVE_M,fishing,easel,learningFormat,lessonRef,fieldMenu,focus,islandNpcs,heat,focusLive,games,streetTraffic,volleyballGame,coachPractice};
     function animate(now:number){
       loopSleeping=false;if(firstFrame)bootMark('town:frame0-start');
       if(disposed||isVideoPlaying()){last=now;accumulator=0;return;}frame=requestAnimationFrame(animate);
@@ -1592,7 +1700,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(dive.diving){const rest0=idleRide.interval(now,dive.resting,IDLE_FOOT_AFTER_MS,true);if(rest0>0){if(diveRestAt<0)diveRestAt=now;}else diveRestAt=-1;const restFrame=diveRestFrame(rest0,rest0>0?now-diveRestAt:0);/* Explore life: 12 fps after a minute's rest */heat.setRest(restFrame>0,restFrame);renderStats.idleRide=restFrame;
         if(restFrame||coarse||heat.cap30){const slot=frameCapSlot(now,lastRendered,Math.max(restFrame,heat.frameMs));if(slot<0)return;lastRendered=slot;}else lastRendered=now;
         idleRide.sample(now,player.root.position,player.root.position);
-        const ms=now-last;last=now;const dt=Math.max(0,Math.min(ms/1000,FRAME_DT_MAX)),active=!mapRef.current&&!settingsRef.current&&!vending.zooming;
+        const ms=now-last;last=now;const dt=Math.max(0,Math.min(ms/1000,FRAME_DT_MAX)),active=!mapRef.current&&!settingsRef.current&&!vending.zooming&&!gashaPrompt.zooming;
         {const res=motionResolution.update(now,!dive.resting,!active,restFrame>0,divePixelCap(quality.phone,!dive.resting));/* Explore life: the soft fogged room draws at 1.25 moving / 1.5 still on phones */if(res){renderer.setPixelRatio(res);renderer.setViewport(0,0,viewportW,viewportH);}}
         const sx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.current.x,sy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.current.z;
         dive.frame(active?dt:0,{sx,sy,lift:(keys.has('q')?1:0)-(keys.has('z')?1:0)},viewportW,viewportH);{const ss=SWIM_SOUND_IN,st=dive.session.state;ss.in=dive.diving;ss.under=st.phase==='rising'?Math.max(0,1-st.rise/.45):1;ss.kind=st.effort>.12?'crawl':'tread';ss.phase=dive.strokePhase;/* Oct 25 2026: was 0, so the reef's strokes were silent */ss.speed=st.effort;ss.fast=false;ss.lite=!waterFxOn();ss.reduced=reduced;sound.swim(active?dt:0,ss);}/* the reef sounds under water: the duck-dive's low-pass bed */
@@ -1611,23 +1719,13 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(idleFrame||coarse||heat.cap30){const slot=frameCapSlot(now,lastRendered,Math.max(idleFrame,heat.frameMs));if(slot<0)return;lastRendered=slot;}else lastRendered=now;
       idleRide.sample(now,player.root.position,camera.position);
       const ms=now-last;last=now;
-      const dt=Math.max(0,Math.min(ms/1000,FRAME_DT_MAX)),active=!mapRef.current&&!settingsRef.current&&!vending.zooming;
+      const dt=Math.max(0,Math.min(ms/1000,FRAME_DT_MAX)),active=!mapRef.current&&!settingsRef.current&&!vending.zooming&&!gashaPrompt.zooming;
       if(rideScript.s)rideScriptStep(active?dt:0);
       // The Bug squad's catch stage (Oct 21 2026; jobScene.ts stageFrame): a swing that connects plays on a sealed stage; the island is
       // neither stepped nor drawn while it does (one stage render instead). Menus hold it (dt 0).
       if(jobs.staging){if(active)elapsed+=dt;jobs.stageFrame(active?dt:0,elapsed);renderStats.rendered++;return;}
       // Focus mode: on once the fishing camera has arrived, off the moment fishing stops (the camera eases out over a live island).
-      const focusWanted=focusAllowed&&(fishing.focused||easel.focused)&&!learningFormat.current&&!lessonRef.current&&!fieldMenu.current;
-      if(focusWanted!==focus.active){
-        // User (Oct 12 2026): "when fishing, have the npcs not move around ... don't have npcs move in at all": EVERYTHING holds still,
-        // near ones too (r −1 holds every townsperson); ?fishfocus=near brings back the old 30 m live ring for A/B runs.
-        if(focusWanted){const s=easel.focused?easel.stand:fishing.stand,near=(x:number,z:number,r=0)=>focusNearLive&&Math.hypot(x-s.x,z-s.z)-r<FOCUS_LIVE_M;
-          focus.enter(s.x,s.z,!easel.focused&&focusParam!=='hold');/* fishing: low-detail backdrop past the near cells (?fishfocus=hold: full detail) */islandNpcs.setFocus({x:s.x,z:s.z,r:focusNearLive?FOCUS_LIVE_M:-1});heat.setFocus(true);
-          focusLive.games=games.entries.some(e=>near(e.venue.x,e.venue.z,Math.hypot(e.venue.width,e.venue.length)/2));
-          focusLive.traffic=streetTraffic.cars.some(car=>near(car.group.position.x,car.group.position.z));
-          focusLive.volleyball=focusNearLive&&focus.near(volleyballGame.root,FOCUS_LIVE_M);focusLive.coaches=focusNearLive&&focus.near(coachPractice.root,FOCUS_LIVE_M);}
-        else{focus.exit();islandNpcs.setFocus(null);heat.setFocus(false);focusLive.games=focusLive.traffic=focusLive.volleyball=focusLive.coaches=true;}
-      }
+      stepFocusMode(focusFrame);// lib/town/frame/focusFrame.ts
       // Match focus: decided before any held system runs; `heldDt` is 0 while joined and clamped for the first frames after leaving.
       {const mf=matchFocus.step(liveJoin.joined,liveJoin.format,active?dt:0);if(mf==='enter'){MATCH_HOLD.x=location.x;MATCH_HOLD.z=location.z;islandNpcs.setFocus(MATCH_HOLD);}else if(mf==='exit'&&!focus.active)islandNpcs.setFocus(null);}
       const backgroundFrozen=focus.active||matchFocus.active,live=matchFocus.active?MATCH_FOCUS_LIVE:focusLive,heldDt=matchFocus.dt;
@@ -1716,7 +1814,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Team colours for the player's own character while the draw-the-pass lesson or rooftop knockout is on (lib/town/beanLooks mainPlayerDress); own look restored after.
       {const inTeam=Boolean(lessonRef.current)||liveKnockout.joined;if(inTeam!==appliedTeamLook||inTeam&&customizationChanged){appliedTeamLook=inTeam;const c=customizationRef.current,g=gearRef.current,d=mainPlayerDress(beanLookFor(c),gearOutfit(playerOutfit(c),g),inTeam,DEFAULT_PLAYER_NUMBER);player.setBeanLook(d.look,inTeam?teamOutfitWithBoots(d.outfit,g):d.outfit);}}
       const isParachuting=jetActions.state.phase==='parachute',airJuggling=isParachuting&&jetActions.state.juggleAge>=0,airJuggleCycle=jetActions.state.juggleAge/.8,airJugglePhase=airJuggleCycle-Math.floor(airJuggleCycle),airJuggleSide=(Math.floor(airJuggleCycle)%2===0?1:-1) as -1|1;if(skyJugglingRef.current!==airJuggling){skyJugglingRef.current=airJuggling;setSkyJuggling(airJuggling);}if(parachutingRef.current!==isParachuting){parachutingRef.current=isParachuting;setParachuting(isParachuting);}
-      const vendingHide=vending.hidesPlayer;player.root.visible=!fieldMenu.current&&!vendingHide&&!liveJoin.joined;ring.visible=!fieldMenu.current&&!vendingHide&&rideRef.current!=='jetpack'&&!party?.meRing&&!(water.inWater&&water.state.phase==='swim')&&!liveJoin.joined;// no static foot ring in the sea: swim ripples instead
+      const vendingHide=vending.hidesPlayer||gashaPrompt.hidesPlayer;player.root.visible=!fieldMenu.current&&!vendingHide&&!liveJoin.joined;ring.visible=!fieldMenu.current&&!vendingHide&&rideRef.current!=='jetpack'&&!party?.meRing&&!(water.inWater&&water.state.phase==='swim')&&!liveJoin.joined;// no static foot ring in the sea: swim ripples instead
       ball.visible=!fieldMenu.current&&!vendingHide&&(rideRef.current==='walk'||airJuggling);
       if(Math.hypot(velocity.x,velocity.z)>.1)arrivalFacing=undefined;
       const flightPose=rideRef.current==='jetpack'?flightMotion.update(active?dt:0,elapsed,velocity.x,velocity.z,flightHeading,flight.landTime>=0?'landing':flight.takeoffTime<1.05?'takeoff':'cruise',flight.landTime>=0?flight.landTime/.95:flight.takeoffTime/1.05,reduced,location.x,location.z,flight.height,jetActions.state.phase,customizationRef.current.jetpack):undefined;
@@ -1746,7 +1844,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       hfPose();
       if(animalRides.riding)player.root.rotation.y=animalRides.state.drawYaw;// riding (Oct 20 2026): face the animal's drawn heading exactly (the grab's turn glides in at RIDE_RISE)
       flightHeading=player.root.rotation.y;
-      vehicle.update(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,active?dt:0,Math.hypot(velocity.x,velocity.z)+(rideScript.on&&!reduced?rideScript.pose[RT.WHEEL]:0)/* a burnout / rev spins the wheels on the spot */,flightPose);vehicle.root.visible=vehicle.root.visible&&!fieldMenu.current&&!vending.hidesPlayer&&(customizationRef.current.jetpack==='ironman'||!['parachute','fall'].includes(jetActions.state.phase));
+      vehicle.update(rideRef.current,visualLocation.x,visualLocation.z,player.root.rotation.y,active?dt:0,Math.hypot(velocity.x,velocity.z)+(rideScript.on&&!reduced?rideScript.pose[RT.WHEEL]:0)/* a burnout / rev spins the wheels on the spot */,flightPose);vehicle.root.visible=vehicle.root.visible&&!fieldMenu.current&&!vending.hidesPlayer&&!gashaPrompt.hidesPlayer&&(customizationRef.current.jetpack==='ironman'||!['parachute','fall'].includes(jetActions.state.phase));
       let groundY=rooftop.state.height;let ridePitch=0,slopeRoll=0;
       // In a hop the ride flies level, easing into a small wheelie, and the suspension carries on from it, so the touchdown
       // compresses it and springs back (rideSlope.ts createRideSuspension).
@@ -1774,11 +1872,15 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       nearStore=false;nearArcade=nearEntrance(103,-50,8);nearCoaches=nearEntrance(161,-34,11);
       const konbiniNear=(door:KonbiniDoor)=>canEnter&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&Math.abs(groundY)<1&&konbiniDoorNear(door,location.x,location.z),nearKonbiniMain=konbiniNear('main'),nearKonbiniCay=konbiniNear('cay');
       const flightNear=(bounds:T.Box3)=>canEnter&&rideRef.current==='jetpack'&&flight.height<bounds.max.y+40&&Math.hypot(Math.max(bounds.min.x-location.x,0,location.x-bounds.max.x),Math.max(bounds.min.z-location.z,0,location.z-bounds.max.z))<12;
-      const overMuseum=!!(hoverPoint&&canEnter&&pointsAtMuseum());
+      // Gashapon machines (Nov 9 2026, owner): hovering one glows it and offers its button; it wins over the building behind it (the
+      // Konbini pairs stand against the shopfront), also while the pointer sits on its button (hoverPoint stays latched there).
+      {const btn=uiElement<HTMLButtonElement>('[data-gashapon-go]');if(btn&&!btn.hidden&&gashaCanHover&&btn.matches(':hover'))gashaPrompt.holdHover(btn.dataset.gashaponGo,now);else gashaPrompt.hover(hoverPoint&&canEnter&&rideRef.current!=='jetpack'?characterRay:null,now);}
+      const overGasha=gashaPrompt.hovered!==null;if(overGasha){if(!gashaHovered)sound.sceneHover(false);buildingHoverUntil=0;}gashaHovered=overGasha;
+      const overMuseum=!!(hoverPoint&&canEnter&&!overGasha&&pointsAtMuseum());
       if(overMuseum&&!museumHovered)sound.sceneHover(rideRef.current==='jetpack');museumHovered=overMuseum;
-      const overShop=!!(hoverPoint&&canEnter&&pointsAtShop());
+      const overShop=!!(hoverPoint&&canEnter&&!overGasha&&pointsAtShop());
       if(overShop&&!shopHovered)sound.sceneHover(rideRef.current==='jetpack');shopHovered=overShop;
-      const overStore=false,overArcade=!!(hoverPoint&&canEnter&&pointsAtArcade()),overCoaches=!!(hoverPoint&&canEnter&&pointsAtCoaches()),overKonbiniMain=!!(hoverPoint&&canEnter&&pointsAtKonbini('main')),overKonbiniCay=!!(hoverPoint&&canEnter&&pointsAtKonbini('cay'));
+      const buildingHover=!!hoverPoint&&canEnter&&!overGasha,overStore=false,overArcade=buildingHover&&pointsAtArcade(),overCoaches=buildingHover&&pointsAtCoaches(),overKonbiniMain=buildingHover&&pointsAtKonbini('main'),overKonbiniCay=buildingHover&&pointsAtKonbini('cay');
       if(overStore&&!storeHovered||overArcade&&!arcadeHovered||overCoaches&&!coachesHovered)sound.sceneHover(rideRef.current==='jetpack');storeHovered=overStore;arcadeHovered=overArcade;coachesHovered=overCoaches;
       const hoveredBuilding=overStore?'store':overArcade?'arcade':overCoaches?'coaches':overMuseum?'museum':overShop?'shop':overKonbiniMain?'konbini':overKonbiniCay?'caykonbini':'';if(hoveredBuilding){buildingHoverKind=hoveredBuilding;buildingHoverUntil=now+450;}
       const buildingTargets=[{index:0,kind:'arcade',x:103,z:-53,active:overArcade||nearArcade||flightNear(world.arcadeBounds)},{index:1,kind:'coaches',x:161,z:-37,active:overCoaches||nearCoaches||flightNear(world.coachesBounds)},{index:2,kind:'museum',x:168,z:186,active:overMuseum||nearMuseum||flightNear(world.museumBounds)},{index:3,kind:'konbini',x:KONBINI_BUILDINGS.main.x,z:KONBINI_BUILDINGS.main.z,active:overKonbiniMain||nearKonbiniMain||flightNear(konbiniBounds.main)},{index:4,kind:'caykonbini',x:KONBINI_BUILDINGS.cay.x,z:KONBINI_BUILDINGS.cay.z,active:overKonbiniCay||nearKonbiniCay||flightNear(konbiniBounds.cay)},{index:5,kind:'museum',x:168,z:186,active:overMuseum||nearMuseum||flightNear(world.museumBounds)||flightNear(world.museumWingBounds)},{index:6,kind:'shop',x:KIT_SHOP.x,z:KIT_SHOP.z,active:overShop||nearShop||flightNear(shopBounds)}];
@@ -1791,7 +1893,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const hoveredEntry=hoveredNpc?(islandNpcs.entries.find(e=>e.id===hoveredNpc.id)??coachPractice.entries.find(e=>e.id===hoveredNpc.id)??volleyballGame.entries.find(e=>e.id===hoveredNpc.id)):undefined;
       if(hoveredNpc&&hoveredNpc.id!==hoveredNpcId)sound.sceneHover(rideRef.current==='jetpack');hoveredNpcId=hoveredNpc?.id??null;
       npcHover.update(hoveredEntry?{id:hoveredEntry.id,...hoveredEntry.position}:null,dt,reduced);
-      renderer.domElement.style.cursor=hovering||hoveredNpc||overStore||overArcade||overCoaches||overMuseum||overShop||overKonbiniMain||overKonbiniCay?'pointer':'';
+      renderer.domElement.style.cursor=hovering||hoveredNpc||overStore||overArcade||overCoaches||overMuseum||overShop||overKonbiniMain||overKonbiniCay||overGasha?'pointer':'';
       characterGlow.update(hovering,dt,reduced);
       player.root.scale.set(1+squash*.65,1-squash*.82,1+squash*.65);vehicle.root.scale.setScalar(1.12);
       // Hop landing: the rider crouches into the landing and rises, the ride's body squashes on its springs (a damped bounce,
@@ -1848,7 +1950,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(flour.ripple>0&&cs.ctx==='swim'&&elapsed-ctxFx.rip>.35){ctxFx.rip=elapsed;ballEffects.swimRipple(location.x,WATER_LEVEL,location.z,1.7,.9,.7,1,0,0);ballEffects.swimRipple(location.x+Math.sin(player.root.rotation.y)*.4,WATER_LEVEL,location.z+Math.cos(player.root.rotation.y)*.4,1.1,.7,.6,1,0,0);}
         else if(flour.ripple>0&&cs.ctx==='fly'&&elapsed-ctxFx.rip>.35){ctxFx.rip=elapsed;emoteBubbles.spark(location.x+Math.sin(player.root.rotation.y)*.5,player.root.position.y+2.1,location.z+Math.cos(player.root.rotation.y)*.5);}/* the glowing star / comet: one sparkle ring (no allocation) */}
       if(wallSplat){const yaw=rampMotion.state.ramp!.yaw,flatten=reduced?.55:.2;player.root.rotation.set(0,yaw,0,'YXZ');player.root.scale.set(1.28,1.1,flatten);player.root.position.x+=Math.sin(yaw)*.6;player.root.position.z+=Math.cos(yaw)*.6;vehicle.root.rotation.set(.3,yaw,.55,'YXZ');vehicle.root.position.y=groundY+Math.max(0,rampMotion.state.lift-.8);}
-      if(!reduced&&(jetActions.state.phase==='blast'||jetActions.state.phase==='dash')){const t=Math.min(1,jetActions.state.age/(jetActions.state.phase==='dash'?.45:1.05)),twist=Math.PI*(customizationRef.current.jetpack==='helicopter'?4:2)*t*t*(3-2*t);if(customizationRef.current.jetpack==='mini-plane'&&jetActions.state.phase==='blast'){player.root.rotateX(-twist);vehicle.root.rotateX(-twist);}else if(['flying-car','mini-plane'].includes(customizationRef.current.jetpack)){player.root.rotateZ(twist);vehicle.root.rotateZ(twist);}else if(customizationRef.current.jetpack==='rocketboard'){if(jetActions.state.phase==='blast'){player.root.rotateY(twist*1.5);vehicle.root.rotateY(twist*1.5);}else{player.root.rotateX(twist);vehicle.root.rotateX(twist);}}else if(customizationRef.current.jetpack==='ironman'){const surge=Math.sin(t*Math.PI)*.3;player.root.rotateX(-surge);vehicle.root.rotateX(-surge);}else{player.root.rotateY(twist);vehicle.root.rotateY(twist);}}
+      applyJetTwist(jetTwistFrame);// lib/town/frame/jetTwist.ts: the blast / dash spin
       const arrivalScale=characterArrival.update(dt,visualLocation.x,groundY,visualLocation.z,reduced||suppressInitialArrival,!fieldMenu.current&&!lessonRef.current);if(suppressInitialArrival&&characterArrival.getState().done)suppressInitialArrival=false;
       player.root.scale.multiplyScalar(arrivalScale);vehicle.root.scale.multiplyScalar(arrivalScale);
       // Falls with bean bodies (lane F): keep a squashed or knocked-over body on the ground, and show the fall on the face.
@@ -1965,7 +2067,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
        if(left){location.x=left.x;location.z=left.z;rooftop.reset(location.x,location.z);velocity.x=velocity.z=0;walkBall.reset({...location,y:rooftop.state.height,yaw:player.root.rotation.y});}
        if(liveJoin.joined)ball.visible=false;}
       const arenaStatus=uiElement<HTMLElement>('[data-knockout-status]');if(arenaStatus){setUIHidden(arenaStatus,!liveKnockout.joined||Boolean(liveKnockout.countdown));const message=liveKnockout.status;if(arenaStatus.textContent!==message)arenaStatus.textContent=message;}
-      {const actions=uiElement<HTMLElement>('.travel-actions'),arena=liveKnockout.joined;if(actions&&actions.hasAttribute('data-knockout')!==arena){actions.toggleAttribute('data-knockout',arena);const kick=actions.querySelector<HTMLElement>('.touch-shoot'),dodge=actions.querySelector<HTMLElement>('.touch-juggle');for(const [el,label,tip] of [[kick,'Kick','Kick · Space'],[dodge,'Dodge','Dodge sideways · J']] as const){if(!el)continue;if(arena){el.dataset.koLabel=el.getAttribute('aria-label')??'';el.dataset.koTitle=el.getAttribute('title')??'';el.setAttribute('aria-label',label);el.setAttribute('title',tip);}else if(el.dataset.koLabel!==undefined){el.setAttribute('aria-label',el.dataset.koLabel);el.setAttribute('title',el.dataset.koTitle??'');delete el.dataset.koLabel;delete el.dataset.koTitle;}}}}
+      syncKnockoutLabels(knockoutLabelsFrame);// lib/town/frame/knockoutLabels.ts: Kick/Dodge labels in the knockout arena
       // Live feel: my ball for friends (relay v1.2; visual only there): at my feet while dribbling, juggling, or free (a shot / loose ball).
       if(party){const bm=walkBall.state.mode,feet=walkingBall&&(bm==='attached'||bm==='charging'||bm==='windup')&&!jobFrame.ball&&!(passOnBall&&emoteFx.kind>=0),jug=walkingBall&&(bm==='juggle'||bm==='wall-juggle')&&!airJuggling;
        party.ball(!ball.visible||fieldMenu.current?0:feet?1:jug?2:3,ball.position.x,ball.position.y,ball.position.z);}
@@ -2024,7 +2126,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Keep the viewing direction constant even while the follow position eases.
       lookAt.set(camera.position.x-16,camera.position.y-23,camera.position.z-33);
       if(!learningFormat.current)camera.lookAt(lookAt);
-      if(!learningFormat.current){vending.applyCamera(camera,dt,reduced);fishing.applyCamera(camera,dt,reduced);}
+      if(!learningFormat.current){vending.applyCamera(camera,dt,reduced);gashaPrompt.applyCamera(camera,dt,reduced);fishing.applyCamera(camera,dt,reduced);}
       // Live match: the camera button's angle (Broadcast = this view; Behind you / Wide / Close ease in over it). Free at rest.
       if(!learningFormat.current)liveJoin.cameraApply(camera,active?dt:0,reduced);
       if(!learningFormat.current){if(emoteCam.active){const pv=player.root.position,n=emoteNpc,close=n&&(n.fx.kind>=0||n.ix!==null)&&Math.hypot(n.position.x-pv.x,n.position.z-pv.z)<(rideScript.s?EMOTE_BOUNDS.pairMaxGap:ecsRide()?7:12);emoteCam.track(rideScript.s?location.x:pv.x,pv.y,rideScript.s?location.z:pv.z,ctxOn()&&ctxFx.script!.ctx==='fly'?((ctxFx.friendD=nearestFlyingFriend(pv,friendsNow(),friendFly))>=0&&ctxFx.friendD<=FLY_CAMERA_PAIR_RANGE?friendFly:null):close?n!.position:passAirOn&&emoteFx.kind===EMOTE.PassBall?passAir:null);}emoteCam.apply(camera,dt,emoteCamSync(),reduced);{const pv=player.root.position;moveNudge.apply(camera,dt,moveFx.s?moveNudgeGoal({reduced,zooming:emoteCam.active,speed:Math.hypot(velocity.x,velocity.z),age:moveFx.age,end:moveFx.end}):0,pv.x,pv.y+1.2,pv.z);}/* a moving emote: no zoom, only a gentle eased nudge (emoteCameraMath.ts moveNudgeGoal) */}
@@ -2158,6 +2260,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const cannonWant=cannon.update({dt,reduced,camera,width:fullWidth,height:fullHeight,x:location.x,z:location.z,onFoot:active&&rideRef.current==='walk'&&!rooftop.state.falling&&streetTraffic.rider.index<0,canEnter,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden});// Ball Cannon
       wildBugs.update({dt:active&&!backgroundFrozen?heldDt:0,x:location.x,z:location.z,night:timeRef.current==='night',sunset:timeRef.current==='sunset',tier:heat.tier,reduced,phone:quality.phone,busy:!!jobs.run&&!jobs.swarmJob,job:jobs.swarmJob});
       const easelWant=easel.update({x:location.x,z:location.z,onGround:active&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&streetTraffic.rider.index<0,canEnter,camera,width:fullWidth,height:fullHeight,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden});// Summit Isle painting easel
+      const gashaWant=gashaPrompt.update({x:location.x,z:location.z,groundY:player.root.position.y,onFoot:active&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&streetTraffic.rider.index<0&&!water.inWater,canEnter,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,panelOpen:gashaponPanel.get()!==null,camera,width:fullWidth,height:fullHeight,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden,dt,reduced});// gashapon capsule machines
       const zipWant=zipline.update({x:location.x,z:location.z,onFoot:active&&rideRef.current==='walk'&&!rooftop.state.falling&&streetTraffic.rider.index<0,onRide:active&&rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&streetTraffic.rider.index<0&&rampMotion.state.phase!=='air',canEnter,reduced,camera,width:fullWidth,height:fullHeight,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden});// the zipline tower
       const forageWant=forage.update({dt,x:location.x,z:location.z,onFoot:active&&rideRef.current==='walk'&&!rooftop.state.falling&&streetTraffic.rider.index<0,
         arrival:!active||streetTraffic.rider.index>=0||rooftop.state.falling?null:rideRef.current==='jetpack'?((jetActions.state.phase==='idle'||jetActions.state.phase==='parachute')&&!pendingRide.current&&!flight.landing&&flight.takeoffTime>=1.05?'fly':null):rideRef.current!=='walk'&&rampMotion.state.phase!=='air'?'ride':null,
@@ -2194,7 +2297,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(vendingTarget)cands.push({kind:'vending',key:vendingTarget,distance:vending.targetDistance});
         if(fishingHover.wants)cands.push({kind:fishingHover.wants,distance:fishingHover.wantsDistance});
         if(summitWant)cands.push({kind:'enter',key:summitWant.key,distance:summitWant.distance});if(cannonWant)cands.push({kind:'enter',key:cannonWant.key,distance:cannonWant.distance});// Summit Kick post / Ball Cannon
-        if(easelWant)cands.push({kind:'enter',key:easelWant.key,distance:easelWant.distance});// Summit Isle painting easel
+        if(easelWant)cands.push({kind:'enter',key:easelWant.key,distance:easelWant.distance});if(gashaWant)cands.push({kind:'enter',key:gashaWant.key,distance:gashaWant.distance});/* gashapon */// Summit Isle painting easel
         if(zipWant)cands.push({kind:'enter',key:zipWant.key,distance:zipWant.distance});// the zipline tower
         if(forageWant)cands.push({kind:'enter',key:forageWant.key,distance:forageWant.distance});// Summit Isle fruit tree
         if(beachWant)cands.push({kind:'enter',key:beachWant.key,distance:beachWant.distance});// Beachcombing find
@@ -2224,15 +2327,17 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     }
     if(new URLSearchParams(window.location.search).get('lesson')==='space'){rideRef.current='walk';setRideMode('walk');previousRide='walk';lessonCommand.current='intro';}
     const hiddenTransforms=createHiddenTransformGate(scene);
+    disposers.add(()=>hiddenTransforms.dispose());
     const initialFlying=rideRef.current==='jetpack',initialHeight=initialFlying?flight.height:fieldSurfaceHeight(sceneSpawn.x,sceneSpawn.z);
     const stopVideoSubscription=subscribeVideoPlayback(playing=>{
-      setVideoPlaying(playing);sound.setMediaPaused(playing);music.setMediaPaused(playing);
+      setVideoPlaying(playing&&isFilmPlaying());sound.setMediaPaused(playing);music.setMediaPaused(playing);
       cancelAnimationFrame(frame);last=performance.now();accumulator=0;
       if(playing)resetInputs();else if(!disposed)frame=requestAnimationFrame(animate);
     });
+    disposers.add(()=>stopVideoSubscription());
     bootMark('town:built');
     camera.position.set(sceneSpawn.x+(initialFlying?16:18),23+initialHeight,sceneSpawn.z+(initialFlying?33:30));if(departure?.camera)camera.position.set(departure.camera.x,departure.camera.y,departure.camera.z);camera.lookAt(camera.position.x-16,initialHeight,camera.position.z-33);cancelAnimationFrame(frame);if(!isVideoPlaying())frame=requestAnimationFrame(animate);
-    return()=>{idleInput.abort();swimClear.dispose();clearWin.dispose();openSea.dispose();saveArcadeDeparture.current=()=>{};clearTimeout(pierNoteTimer);for(const t of cueTimers)clearTimeout(t);cueTimers.clear();pierTarget.dispose();fishing.dispose();heat.dispose();liveJoin.dispose();liveJoinRef.current=null;shoreFoam.reset();matchLink?.dispose();setMatchFriends(new Set());party?.dispose();emoteAsk?.dispose();emoteBus.set(null);onEmoteVariant(null);emoteBubbles.dispose();chatterBubbles.dispose();knockWords.dispose();waterStore.reset();world.sharks.attend(null);rideActions.current=()=>{};if(animalRides.riding)animalRides.letGo('gone');dive.dispose();diveBuoys.dispose();diveWreckTops.dispose();divePreview.dispose();diveActions.current=()=>{};waterActions.press=()=>{};focus.dispose();summitFun.dispose();zipline.dispose();easel.dispose();wildBugs.dispose();bugTapOff();cannon.dispose();forage.dispose();beach.dispose();hiddenMarker.dispose();propReactions.dispose();liveKnockout.dispose();hiddenTransforms.dispose();shadowCache.dispose();viewGate.dispose();shadowVisibility.dispose();shadowBatches.dispose();npcShadows.dispose();characterArrival.dispose();coinHunt.dispose();offJobView();offJobEvents();jobs.dispose();treeDebris.dispose();rampVisuals.dispose();livePlayerGlow.dispose();npcHover.dispose();onboardingNpcFocus.dispose();buildingEffects.forEach(effect=>effect.dispose());vendingKick.dispose();vending.dispose();vendingRef.current=null;ferryGlow.dispose();window.removeEventListener(GRADUATIONS_CHANGED,showFerryLock);jetpackBreakup.dispose();quizView.dispose();resetQuizView.current=()=>{};rideChange.dispose();craterEffect.dispose();landingDust.dispose();parachuteTrail.dispose();ballReactions.dispose();sonicBurst.dispose();characterGlow.dispose();parachute.dispose();ballAppearance.dispose();shopBallSkin.dispose();ballEffects.dispose();skyMarkGeometry.dispose();skyMarkMaterial.dispose();islandNpcs.dispose();landingMarker.dispose();stopVideoSubscription();music.dispose();musicRef.current=null;sound.dispose();soundRef.current=null;disposed=true;cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('resize',resize);window.visualViewport?.removeEventListener('resize',resize);window.removeEventListener('pointerup',finishJoystick,true);window.removeEventListener('pointercancel',finishJoystick,true);window.removeEventListener('touchend',finishTouches);window.removeEventListener('touchcancel',finishTouches);window.removeEventListener('pagehide',blur);window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);window.removeEventListener('blur',blur);document.removeEventListener('visibilitychange',visibility);boundaryFeedback.dispose();starGeometry.dispose();starMaterial.dispose();dizzyStars.removeFromParent();splat.geometry.dispose();splatMaterial.dispose();splat.removeFromParent();jetExhaust.dispose();rideTrail.dispose();rideSplash.dispose();flightTrail.dispose();truckReactions.dispose();streetTraffic.dispose();volleyballGame.dispose();vehicle.dispose();backpack.dispose();player.dispose();npcs.forEach(r=>r.dispose());coachPractice.dispose();renderer.domElement.removeEventListener('pointermove',trackCharacterHover);renderer.domElement.removeEventListener('pointerleave',clearCharacterHover);renderer.domElement.removeEventListener('pointerdown',beginCharacterTap);renderer.domElement.removeEventListener('pointerup',pickCharacter);renderer.domElement.removeEventListener('pointerup',chooseFieldTarget);for(const name of ['pointerdown','pointermove','wheel','touchstart','touchmove'] as const)renderer.domElement.removeEventListener(name,wakeQuizInput);games.dispose();fields.dispose();world.dispose();delete (window as unknown as {__fi2?:unknown}).__fi2;guide.geometry.dispose();aimGeometry.dispose();aimMaterial.dispose();lessonAim.current=null;renderer.domElement.removeEventListener('pointerdown',aimDown);renderer.domElement.removeEventListener('pointermove',aimMove);renderer.domElement.removeEventListener('pointerup',aimUp);renderer.domElement.removeEventListener('pointercancel',aimUp);guideMaterial.dispose();scene.traverse(object=>{if(object instanceof T.Mesh){object.geometry.dispose();const mats=Array.isArray(object.material)?object.material:[object.material];mats.forEach(m=>m.dispose());}});renderer.dispose();renderer.domElement.remove();};
+    return()=>{disposers.runAll();disposeTownSceneResources(scene);renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();};
   },[]);
   useEffect(()=>{musicRef.current?.setDucked(Boolean(fieldCatalog||lesson));},[fieldCatalog,lesson]);
   // The card code (PlayerCard, PlayerArt, photo manifests, film registry) is no longer in the island bundle: warm it while
@@ -2247,7 +2352,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
   useEffect(()=>{if(!ready)return;if(hudFocus==='talk')prefetchWhenIdle(loadCoachLesson);const part=hudFocus==='talk'?loadConversation:hudFocus==='vending'?loadVending:hudFocus==='learn'?loadFieldLearning:hudFocus==='enter'?loadCoaches:null;if(part)prefetchWhenIdle(part);},[hudFocus,ready]);
   useEffect(()=>{if(!returningFromArcade&&shouldShowIslandOnboarding())prefetchPart(loadOnboarding);},[]);
   /* Travel = ring radius − knob radius from the live bounds, so a bigger (or floating) ring keeps the same dead zone and full-tilt ratios. */
-  const updateStick=(e:{clientX:number;clientY:number;pointerType:string})=>{const rect=joystickBounds.current??(joystickBounds.current=joystick.current!.getBoundingClientRect()),T=stickTravelPx.current=stickTravel(rect.width),v=stickInput(e.clientX-rect.left-rect.width/2,e.clientY-rect.top-rect.height/2,T);setStick({x:v.px,y:v.py});stickRaw.current=Math.hypot(v.x,v.y);shapeStick(v.x,v.y,input.current);/* A7: dead zone + walk floor (lib/town/walkControl.ts) */if(spinGesture.current.update(v.x,v.y,performance.now(),e.pointerType==='touch'&&window.matchMedia('(pointer:coarse)').matches))spinRequested.current=true;if(hint)setHint(false);};
+  const updateStick=(e:{clientX:number;clientY:number;pointerType:string})=>{const rect=joystickBounds.current??(joystickBounds.current=joystick.current!.getBoundingClientRect()),T=stickTravelPx.current=stickTravel(rect.width),v=stickInput(e.clientX-rect.left-rect.width/2,e.clientY-rect.top-rect.height/2,T);setStick({x:v.px,y:v.py});stickRaw.current=Math.hypot(v.x,v.y);shapeStick(v.x,v.y,input.current);/* A7: dead zone + walk floor (lib/town/walkControl.ts) */if(spinGesture.current.update(v.x,v.y,performance.now(),e.pointerType==='touch'&&window.matchMedia('(pointer:coarse)').matches))spinRequested.current=true;};
   updateStickRef.current=updateStick;
   // Secondary touches do not reliably synthesize click while the joystick is captured.
   const travelControlDown=(e:React.PointerEvent<HTMLButtonElement>,activate:()=>void)=>{if(e.pointerType==='mouse')return;e.preventDefault();e.currentTarget.dataset.touchActionUntil=String(performance.now()+700);activate();tapHaptic();soundRef.current?.ui('click');};
@@ -2289,7 +2394,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {ready&&!failed&&!settingsRef.current&&!map&&!fieldCatalog&&!lesson&&<CoinHuntHud near={hudFocus==='hint'?coinNear||seaNote:''}/>}
     {balancesOpen&&<IslandBalanceDrawer onClose={()=>setBalancesOpen(false)}/>}
     {ready&&!failed&&<FishingHost paused={balancesOpen} onOpenChange={setFishingOpen} onDialogChange={setFishingDialog}/>}
-    {ready&&!failed&&<BeachcombHud blocked={stackCovered}/>}{ready&&!failed&&<ForagePrompt/>}{ready&&!failed&&<SummitKickHud/>}{ready&&!failed&&<ZiplineHud/>}{ready&&!failed&&<BallCannonHud/>}{ready&&!failed&&<PaintEasel/>}{/* Summit Isle: Summit Kick, the zipline, the Ball Cannon, the easel */}
+    {ready&&!failed&&<BeachcombHud blocked={stackCovered}/>}{ready&&!failed&&<ForagePrompt/>}{ready&&!failed&&<SummitKickHud/>}{ready&&!failed&&<ZiplineHud/>}{ready&&!failed&&<BallCannonHud/>}{ready&&!failed&&<PaintEasel/>}{ready&&!failed&&<GashaponHud/>}{/* Summit Isle: Summit Kick, the zipline, the Ball Cannon, the easel */}
     {ready&&!failed&&<LearningHost blocked={map||storeOpen||conversationOpen||customizerOpen||arcadeOpen||onboardingOpen} spotAllowed={hudFocus==='spot'} onSpotChange={onSpotChange} onOpenChange={setLearningOpen}/>/* Lane 3: the daily warm-up and live-match Spot it */}
     {/* The welcome's "Earn coins" step rings the coin pocket ([data-job-wallet]), so the pocket stays on screen behind the welcome
         (the modal keeps it inert); job offers and toasts wait until it closes. */}
@@ -2300,7 +2405,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {ready&&!failed&&isDrinkMachine(vendingId)&&<DrinkMachine machineId={vendingId} open={storeOpen} onOpenChange={open=>{setStoreOpen(open);if(!open)leaveVending();}} machines={getVendingMachines}/>}
     {ready&&!failed&&mountWhen('vending',storeOpen&&!isDrinkMachine(vendingId))&&<VendingMachine machineId={vendingId} itemRequest={storeItemRequest} open={storeOpen&&!isDrinkMachine(vendingId)} onOpenChange={open=>{setStoreOpen(open);if(!open)leaveVending();}} value={customization} onChange={changeCustomization} onEquipRide={selectRide} machines={getVendingMachines}/>}
     {ready&&!failed&&mountWhen('customizer',customizerOpen)&&<CharacterCustomizer open={customizerOpen} onOpenChange={setCustomizerOpen} value={customization} onChange={changeCustomization} completedQuizCount={quizProgress.completed} totalQuizCount={quizProgress.total} onEquipRide={selectRide}/>}
-    {ready&&!failed&&!fieldCatalog&&!lesson&&<IslandSettings onGrownUpsOpenChange={setGrownUpsOpen} pathsRequest={pathsRequest} onRestartOnboarding={()=>setOnboardingOpen(true)} onOpenStore={openStore} onStartLearning={()=>{setFieldCatalog(nearestVenue(positionStore.getSnapshot().x,positionStore.getSnapshot().z)?.id??'futsal');setHint(false);}} voiceEnabled={voiceEnabled} onVoiceChange={value=>{setVoiceEnabled(value);savePreference('fi2-voice-enabled',String(value));}} coachVoice={coachVoice} onCoachVoiceChange={value=>{setCoachVoice(value);savePreference('fi2-coach-voice',value);}} controlsFlipped={controlsFlipped} onControlsFlippedChange={value=>{releaseStick();setControlsFlipped(value);savePreference('fi2-controls-flipped',String(value));}} onOpenMap={()=>setMap(true)} open={settingsOpen} onOpenChange={value=>{setSettingsOpen(value);if(value)setMap(false);}} musicEnabled={musicEnabled} musicVolume={musicVolume} soundVolume={soundVolume} onMusicVolumeChange={value=>{setMusicVolume(value);musicRef.current?.setVolume(value);savePreference('fi2-music-volume',String(value));}} onSoundVolumeChange={value=>{setSoundVolume(value);soundRef.current?.setVolume(value);savePreference('fi2-sound-volume',String(value));}} onMusicChange={value=>{setMusicEnabled(value);musicRef.current?.setEnabled(value);try{localStorage.setItem('fi2-music-enabled',String(value));}catch{}}} soundMuted={soundMuted} onSoundMutedChange={value=>{setSoundMuted(value);soundRef.current?.setMuted(value);try{localStorage.setItem('fi2-sound-muted',String(value));}catch{}}} timeOfDay={timeOfDay} onTimeOfDayChange={changeTime}/>}
+    {ready&&!failed&&!fieldCatalog&&!lesson&&<IslandSettings onGrownUpsOpenChange={setGrownUpsOpen} pathsRequest={pathsRequest} onRestartOnboarding={()=>setOnboardingOpen(true)} onOpenStore={openStore} onStartLearning={()=>{setFieldCatalog(nearestVenue(positionStore.getSnapshot().x,positionStore.getSnapshot().z)?.id??'futsal');}} voiceEnabled={voiceEnabled} onVoiceChange={value=>{setVoiceEnabled(value);savePreference('fi2-voice-enabled',String(value));}} coachVoice={coachVoice} onCoachVoiceChange={value=>{setCoachVoice(value);savePreference('fi2-coach-voice',value);}} controlsFlipped={controlsFlipped} onControlsFlippedChange={value=>{releaseStick();setControlsFlipped(value);savePreference('fi2-controls-flipped',String(value));}} onOpenMap={()=>setMap(true)} open={settingsOpen} onOpenChange={value=>{setSettingsOpen(value);if(value)setMap(false);}} musicEnabled={musicEnabled} musicVolume={musicVolume} soundVolume={soundVolume} onMusicVolumeChange={value=>{setMusicVolume(value);musicRef.current?.setVolume(value);savePreference('fi2-music-volume',String(value));}} onSoundVolumeChange={value=>{setSoundVolume(value);soundRef.current?.setVolume(value);savePreference('fi2-sound-volume',String(value));}} onMusicChange={value=>{setMusicEnabled(value);musicRef.current?.setEnabled(value);try{localStorage.setItem('fi2-music-enabled',String(value));}catch{}}} soundMuted={soundMuted} onSoundMutedChange={value=>{setSoundMuted(value);soundRef.current?.setMuted(value);try{localStorage.setItem('fi2-sound-muted',String(value));}catch{}}} timeOfDay={timeOfDay} onTimeOfDayChange={changeTime}/>}
     <div className="job-spot-arrow" data-job-spot-arrow hidden aria-hidden="true"><svg viewBox="0 0 24 24" width="30" height="30"><path d="M4 12h13 M12 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/></svg></div>
     <button type="button" className="store-enter-prompt" data-vending-go aria-label="Go to the vending machine" hidden onClick={e=>{const id=e.currentTarget.dataset.vending as VendingMachineId|undefined;if(id)openVending(id);}}>Go</button>
     <button type="button" className="store-enter-prompt" data-arcade-enter aria-label="Enter Arcade" hidden onClick={()=>setArcadeOpen(true)}>Enter</button>
@@ -2328,9 +2433,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     <button type="button" className="store-enter-prompt" data-hud-slot="task" data-truck-land hidden onPointerDown={e=>travelControlDown(e,landOnTruck)} onClick={e=>travelControlClick(e,landOnTruck)}>Land on truck</button>
     {ready&&!failed&&nearbyNpc&&hudFocus==='talk'&&<button className="npc-talk-prompt" data-hud-slot="focus" data-tour="npcs" aria-keyshortcuts="E" onClick={()=>openConversation(nearbyNpc)}>Talk to {nearbyNpc.name}</button>}
     {/* Clear path (Oct 4 2026): the pitch card starts or continues this pitch's Paths lesson (components/FieldPathCard.tsx). */}
-    {VENUES.map(v=><FieldPathCard key={v.id} venue={v} onPlays={()=>setFieldCatalog(v.id)} onLaunch={()=>{setHint(false);liveJoinRef.current?.ground();}} onPlay={()=>liveJoinRef.current?.press('play',true)}/>)}
+    {VENUES.map(v=><FieldPathCard key={v.id} venue={v} onPlays={()=>setFieldCatalog(v.id)} onLaunch={()=>{liveJoinRef.current?.ground();}} onPlay={()=>liveJoinRef.current?.press('play',true)}/>)}
     {/* The Sharks Beach court (Nov 4 2026): a Play-only bar (no beach lesson), shown when its live match is joinable. */}
-    {BEACH_BAR.map(v=><FieldPathCard key={v.id} venue={v} onPlays={()=>{}} onLaunch={()=>{setHint(false);liveJoinRef.current?.ground();}} onPlay={()=>liveJoinRef.current?.press('play',true)}/>)}
+    {BEACH_BAR.map(v=><FieldPathCard key={v.id} venue={v} onPlays={()=>{}} onLaunch={()=>{liveJoinRef.current?.ground();}} onPlay={()=>liveJoinRef.current?.press('play',true)}/>)}
     </div>
 
     {ready&&!failed&&<><aside className={'town-minimap'+(minimapCollapsed?' is-minimized':'')}>

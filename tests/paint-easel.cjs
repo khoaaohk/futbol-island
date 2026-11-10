@@ -148,7 +148,7 @@ await ok('the key is DEVICE-only: never synced, never sent',()=>{
  // A snapshot of a device with paintings never carries them.
  const mem=new Map([[E.PAINT_SAVE_KEY,'{"version":1,"items":[]}'],['fi2-telescope-v1','{}']]),port={getItem:k=>mem.get(k)??null,setItem:(k,v)=>mem.set(k,v),removeItem:k=>mem.delete(k),get length(){return mem.size;},key:i=>[...mem.keys()][i]??null};
  assert(!(E.PAINT_SAVE_KEY in S.buildSnapshot(port,Date.now()).keys),'not in a save snapshot');
- for(const f of ['lib/town/paintEasel.ts','lib/graphics/paintEasel.ts','components/PaintEasel.tsx'])assert(!/fetch\(|sendBeacon|XMLHttpRequest/.test(read(f)),f+': no network');
+ for(const f of ['lib/town/paintEasel.ts','lib/graphics/paintEasel.ts','components/PaintEasel.tsx','components/PaintEaselStudio.tsx'])assert(!/fetch\(|sendBeacon|XMLHttpRequest/.test(read(f)),f+': no network');
 });
 
 await ok('the painting framing: the board large in the foreground (phone: lower middle; wide: lower left), the view open above',()=>{
@@ -354,7 +354,7 @@ await ok('picture styles: the cycle order, each a distinct picture, deterministi
 });
 
 await ok('the style picture is saved with the paint (what you see is what you save); Trace is not',()=>{
- const ui=read('components/PaintEasel.tsx').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
+ const ui=(read('components/PaintEasel.tsx')+read('components/PaintEaselStudio.tsx')).replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
  assert(/const composed=useCallback\(\(withPaper=true\)=>\{[^]*?g\.fillRect\(0,0,PAINT_W,PAINT_H\);\}if\(layer\)g\.drawImage\(layer,0,0,PAINT_W,PAINT_H\);g\.drawImage\(sheet,0,0\);return out;\}/.test(ui),'paper, then the style picture, then the paint');
  assert(/const doSave=useCallback\(\(\)=>\{const out=composed\(\);/.test(ui),'Save encodes that composite');
  assert(/const layer=v\.layer;/.test(ui),'the picture is the runtime\'s (null for Blank paper and Trace)');
@@ -385,7 +385,7 @@ await ok('My paintings: hang on easel, delete (the easel shows the next newest o
  let rot=E.hangPainting(E.addPainting(E.emptyPaintSave(),{id:'old',at:1,img:img(10)}).save,'old');for(let i=0;i<5;i++)rot=E.addPainting(rot,{id:'n-'+i,at:10+i,img:img(10)}).save;
  assert.equal(rot.hung,undefined,'the hung one rotated out: the newest hangs');assert.equal(E.hungPainting(rot).id,'n-4');
  // The UI: its own tray button on phones, the gallery on the desktop board, per-painting actions, delete by a second tap.
- const ui=read('components/PaintEasel.tsx'),code=ui.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
+ const ui=(read('components/PaintEasel.tsx')+read('components/PaintEaselStudio.tsx')),code=ui.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
  for(const id of ['data-easel-gallery-open','data-easel-pop="gallery"','data-easel-keep','data-easel-hang','data-easel-delete','data-easel-hung','data-easel-gallery-note','data-easel-thumb'])assert(ui.includes(id),id);
  assert(/Saved on this device · up to \$\{PAINT_BUDGET\.max\} paintings/.test(ui),'the clarity line');
  assert(/const remove=\(p:Painting\)=>\{if\(!confirmDelete\)\{setConfirmDelete\(true\);return;\}/.test(code)&&/'Delete\?'/.test(code),'delete asks for a second tap (no popup)');
@@ -397,7 +397,7 @@ await ok('My paintings: hang on easel, delete (the easel shows the next newest o
 });
 
 await ok('heat and UI wiring: drawing on the board only on pointer events, no Back, Done saves, the tray, 44 px, HUD aside, counts, Town',()=>{
- const ui=read('components/PaintEasel.tsx'),code=ui.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,''),rtSrc=read('lib/graphics/paintEasel.ts').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
+ const ui=(read('components/PaintEasel.tsx')+read('components/PaintEaselStudio.tsx')),code=ui.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,''),rtSrc=read('lib/graphics/paintEasel.ts').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'');
  assert(!/setInterval|setTimeout/.test(code),'the painting UI starts no timers');
  const rafs=code.match(/requestAnimationFrame\(/g)||[];assert.equal(rafs.length,1,'one requestAnimationFrame call…');
  assert(/const move=[^;]*;[\s\S]*?if\(!s\.raf\)s\.raf=requestAnimationFrame\(flush\)/.test(code),'…only in the pointer-move handler, while a finger is down (coalesced)');
@@ -436,7 +436,7 @@ await ok('heat and UI wiring: drawing on the board only on pointer events, no Ba
  const ids=load('lib/analytics/countIds.ts');for(const e of ['easel_open','easel_save'])assert(ids.SUMMIT_COUNT_EVENTS.some(([k])=>k===e),'count id su:'+e);
  assert(/countEaselOpen\(\)/.test(read('lib/graphics/paintEasel.ts'))&&/countEaselSave\(\)/.test(ui),'counted where it happens');
  assert(/paintSound\.seaStart\(\)/.test(ui)&&/paintSound\.seaStop\(\)/.test(ui)&&/paintSound\.brush\(/.test(ui),'the sea and the brush sounds');
- const town=read('components/Town.tsx');
+ const town=read('components/Town.tsx')+read('lib/town/frame/focusFrame.ts');// Nov 10 2026 split: focus mode is a frame step there
  assert(/createPaintEasel\(scene,renderer,\{wake:\(\)=>wakeLoopRef\.current\(\),player:\(\)=>player\.root\}\)/.test(town),'created with a wake port');
  assert(/if\(easel\.holdPlayer\(input\.current\)\)\{velocity\.x=velocity\.z=0;return;\}/.test(town),'seated: no walking');
  assert(/const focusWanted=focusAllowed&&\(fishing\.focused\|\|easel\.focused\)/.test(town)&&/focus\.enter\(s\.x,s\.z,!easel\.focused&&/.test(town),'focus mode holds the background still (no backdrop, nothing hidden at the easel: the view is far)');

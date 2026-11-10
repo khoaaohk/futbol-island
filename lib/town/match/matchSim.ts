@@ -3183,11 +3183,16 @@ export class MatchSim {
         const xc = prevBX + (this.ball.x - prevBX) * f; // x where it actually crossed the line
         const shotHeight=this.ballIsShot&&this.lastKick.shotHeight>0?shotHeightAt(this.lastKick,shotProgress(this.lastKick,lineY),this.goalVenue.goalHeight):0;
         const crossHeight=this.ballIsShot?shotHeight:Math.max(shotHeight,this.ball.height);
-        if (Math.abs(xc - 135) < GHALF&&crossHeight+.295+.19<this.goalVenue.goalHeight+.105&&this.directBan) {
+        // Audit Nov 10 2026: a shot is drawn remapped into the real mouth (shotPlacement.shotMouthX maps GHALF onto it), but a
+        // loose ball (rebound, deflection, own goal) is drawn where it is, so it never scores outside the DRAWN goal of this venue
+        // (11v11: 7.32 m, not GHALF's 9.6 m). Narrowing only: where the drawn goal is wider than GHALF (beach) the full drawn width
+        // added ~0.2 goals a game (tests/beach-match.cjs bound), and match rebalancing was out of scope. Shots keep GHALF.
+        const mouth=this.ballIsShot?GHALF:Math.min(GHALF,this.goalVenue.goalWidth/2*250/this.goalVenue.width);
+        if (Math.abs(xc - 135) < mouth&&crossHeight+.295+.19<this.goalVenue.goalHeight+.105&&this.directBan) {
           // Beach: straight in from the keeper's hands, a kick-in or a kick-off does not count — a goal clearance.
           this.teach("No goal: it went straight in", "In beach soccer a keeper's throw, a kick-in or a kick-off can't score directly; it's a goal clearance");
           this.tellHuman(this.lastFrom, BEACH_HUMAN_NOTES.noGoal);
-        } else if (Math.abs(xc - 135) < GHALF&&crossHeight+.295+.19<this.goalVenue.goalHeight+.105) {
+        } else if (Math.abs(xc - 135) < mouth&&crossHeight+.295+.19<this.goalVenue.goalHeight+.105) {
           if (crossedTop) { this.score.gold++; this.msg = "GOAL — Gold!"; this.goalNet = "top"; }
           else { this.score.blue++; this.msg = "GOAL — Blue!"; this.goalNet = "bottom"; }
           this.msgT = 2.4;
@@ -3196,7 +3201,7 @@ export class MatchSim {
           this.noteGoal(crossedTop ? "gold" : "blue"); // the assist (cosmetic: lastGoal + the goal touch's assist / assistSlot + the feed line)
           this.goalQuick = this.humans.size > 0; this.goalHold = this.goalQuick ? GOAL_RESET.hold * this.wsReal() : 1.8;
           if (this.goalQuick) this.quickTaker = this.spotTaker(crossedTop ? "blue" : "gold"); this.ballImpact = Math.min(1, sp / 220);
-          this.ball.x = clamp(xc, 135 - GHALF + 1.5, 135 + GHALF - 1.5); // nestle inside the posts for the net bulge
+          this.ball.x = clamp(xc, 135 - mouth + 1.5, 135 + mouth - 1.5); // nestle inside the posts for the net bulge
           this.ball.owner = null; this.ballIsShot = false; this.shotIsGoal = false; this.ball.target = null; this.ball.intBy = null;
           return;
         }

@@ -40,6 +40,7 @@ export const SYNC_KEYS:readonly string[]=[
  // fi2-market-v1 also holds today's per-good sales and part-coin tallies (Oct 14 2026 economy rebalance, docs/economy.md): synced, so a
  // second device cannot reset Rosa's same-kind ladder.
  'fi2-island-jobs-v1','fi2-garden-v1','fi2-market-v1','fi2-fishbook-v1','fi2-konbini-v1','fi2-konbini-collection-v1','fi2-konbini-ball-v1',
+ 'fi2-gashapon-v1',// Gashapon capsule toys (Nov 8 2026, docs/gashapon-design.md, lib/gashapon/store.ts): owned toys + counts, recent spin receipts, today's spins
  'fi2-summit-forage-v1',// Summit Isle fruit trees (Oct 13 2026): fruit picked per tree (regrow clock), today's count, the tip seen
  'fi2-fishing-log-v1',// Fishing content (Oct 15 2026, docs/fishing.md "Content systems"): legends, clues, requests, the lure on the line, Fishbook rewards
  'fi2-fishing-hooks-v1',// Fishing return hooks (Nov 7 2026, docs/fishing.md "Return hooks"): sets claimed, Visitor marks, golden catches, legend chapters (a few KB)
@@ -50,7 +51,7 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-dive-reef-v1',// Explore v2 (Oct 21 2026, lib/town/water/diveJourney.ts): each zone's collected pickups and the restored zones (the reward pays once ever)// Diving spots (Oct 16 2026, docs/swimming-research.md "P2 implemented"): the finds used per spot (a treasure pays once ever)
  'fi2-shop-jersey-v1','fi2-shop-boots-v1','fi2-shop-ball-v1','fi2-shop-owned-v1',// Kit Shop designs + bought items (lib/shop)
  // Arcade (plus fi2-arcade-record-<game>-v1, ARCADE_RECORD_KEY)
- 'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-runner-coach-v1','fi2-runner-routes-v1','fi2-tennis-stars-v1',
+ 'fi2-strikers-stars-v1','fi2-strikers-cup-v1','fi2-strikers-shape-v1','fi2-runner-missions-v1','fi2-runner-coach-v1','fi2-runner-routes-v1','fi2-runner-daily-v1'/* Nov 10 2026: Daily Run day, board run used, today's best (runnerModes.ts) */,'fi2-arcade-today-v1'/* Nov 10 2026: Today in the arcade: challenges done per day, weekly pennants, arcade trophy dates (arcadeTodayCore.ts) */,'fi2-tennis-stars-v1',
  'fi2-strikers-tiers-v1'/* Nov 8 2026: Strikers Pro / Legend League bests (strikerTiers.ts) */,'fi2-pinball-stars-v1','fi2-pinball-tiers-v1'/* Nov 8 2026: Pinball Derby Night / World Final bests (soccerPinballTiers.ts) */,'fi2-pass-puzzles-v1','fi.game.runner.best',
  // Grown-ups & IDP (the IDP with its free text removed: stripIdpText). fi2-idp-v2 (Oct 9 2026) holds ids, dates and picture
  // choices only; its typed words live in the device key fi2-idp-text-v1 (DEVICE_KEYS), which never syncs.
@@ -58,7 +59,7 @@ export const SYNC_KEYS:readonly string[]=[
 ];
 export const ARCADE_RECORD_KEY=/^fi2-arcade-record-[a-z0-9]{1,24}(?:-[a-z0-9]{1,24}){0,2}-v1$/;
 /** Doc §4.1 table B: each device keeps its own. */
-export const DEVICE_KEYS:readonly string[]=['fi2-npc-fresh-v1','fi2-goal-replays-v1'/* live matches: Goal replays on / off (lib/town/goalReplay.ts) */,'fi2-stick-sprint-v1'/* live matches: Push stick to sprint on / off (lib/town/liveControls.ts) */,'fi2-match-fx-v1'/* live matches: Match effects Full / Light (lib/town/matchFxSetting.ts) */,'fi2-match-11-mode-v1'/* live matches: 11v11 kid / adult balance (lib/town/match/matchModeSetting.ts) */,'fi2-match-haptics-v1'/* live matches: Vibration on / off (lib/town/liveControls.ts) */,'fi2-match-phrases-v1'/* live matches: Quick phrases on / off (lib/town/quickPhrases.ts) */,'fi2-pinball-prefs-v1','fi2-pinball-tutorial-v1','fi2-music-enabled','fi2-runner-hint-v1','fi2-bug-pill-v1','fi2-multiplayer-allowed-v1','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
+export const DEVICE_KEYS:readonly string[]=['fi2-toy-hints-v1','fi2-toy-opened-v1'/* gashapon 3D toy viewer: gesture hints seen, capsules whose opening played (components/GashaponToyViewer.tsx; QA Nov 9 2026) */,'fi2-npc-fresh-v1','fi2-goal-replays-v1'/* live matches: Goal replays on / off (lib/town/goalReplay.ts) */,'fi2-stick-sprint-v1'/* live matches: Push stick to sprint on / off (lib/town/liveControls.ts) */,'fi2-match-fx-v1'/* live matches: Match effects Full / Light (lib/town/matchFxSetting.ts) */,'fi2-match-11-mode-v1'/* live matches: 11v11 kid / adult balance (lib/town/match/matchModeSetting.ts) */,'fi2-match-haptics-v1'/* live matches: Vibration on / off (lib/town/liveControls.ts) */,'fi2-match-phrases-v1'/* live matches: Quick phrases on / off (lib/town/quickPhrases.ts) */,'fi2-pinball-prefs-v1','fi2-pinball-tutorial-v1','fi2-music-enabled','fi2-runner-hint-v1','fi2-bug-pill-v1','fi2-multiplayer-allowed-v1','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
  'fi2-voice-enabled','fi2-coach-voice','fi2-controls-flipped','fi2-battery-saver','fi2-time-of-day','fi2-cards-field-v1','fi-card-dots',
  'fi2-last-visit-day-v1','fi2-bottle-open-date','fi2-idp-text-v1',
  // The energy bar (Oct 12 2026): refilled on each device's first visit of the day and redrawn as the player walks (a float),
@@ -267,6 +268,9 @@ export function hasProgress(keys:Record<string,string|null|undefined>):boolean{
  const wallet=json(WALLET_KEY_NAME);
  if(wallet&&wallet.runs&&typeof wallet.runs==='object')for(const id of Object.keys(wallet.runs))if(!id.startsWith('island-starter-coins')&&!id.startsWith('daily-play:'))return true;
  const fish=json('fi2-fishbook-v1');if(fish&&typeof fish==='object'&&Object.keys(fish.species??fish.caught??{}).length)return true;
+ // Gashapon toys (QA Nov 9 2026, owner recommended): a toy can be bought with the starter coins alone (no run receipt), so owned
+ // toys count as progress on their own.
+ const toys=json('fi2-gashapon-v1');if(toys&&typeof toys.owned==='object'&&toys.owned&&Object.values(toys.owned).some(o=>!!o&&typeof o==='object'&&Number((o as {n?:unknown}).n)>0))return true;
  return false;
 }
 export function localKeys(storage:Pick<StoragePort,'getItem'|'length'|'key'>):Record<string,string>{return buildSnapshot(storage,0).keys;}

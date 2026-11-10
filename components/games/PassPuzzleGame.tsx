@@ -1,4 +1,5 @@
 'use client';
+import {noteArcadeToday,takeTodayLaunch} from '@/lib/arcade/arcadeToday';
 import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import type {PuzzleSnapshot} from '@/lib/passPuzzle/types';
 import {appendStroke,createPointerFilter,filterPointer,type PointerFilter} from '@/lib/passPuzzle/drawing';
@@ -23,6 +24,7 @@ import {passCallout,goalCallout,nextStreak,streakLabel,type Callout} from '@/lib
 
 import {FIRST_TIME} from '@/lib/passPuzzle/sim';
 import {createPassPuzzleScene,shirtNumbersFor,type PassPuzzleScene} from '@/lib/arcade/passPuzzleScene';
+import {puzzleConceptWords,puzzleConceptLesson,notePuzzleFail,PRACTISE_AFTER} from '@/lib/passPuzzle/conceptLessons';
 import {laneStatus,noteFor,explainSuccess,explainFail,replayCall,type PassNote,type Numbers} from '@/lib/passPuzzle/explain';
 import {isCall,type Step} from '@/lib/passPuzzle/packs';
 import {stopPoint,passProgress} from '@/lib/passPuzzle/feel';
@@ -67,6 +69,8 @@ type View='levels'|'brief'|'play'|'result';
 type Outcome={success:boolean;stars:number;mask:number;fresh:number;passes:number;bonus:boolean;move:boolean;reason?:string;attemptsLeft:number;
  /** the coach's takeaway: why the move worked, or why it didn't and what to try */
  why:string[];fix?:string;
+ /** Nov 10 2026: a solve names the scenario's concept in kid words; a second fail of one concept this visit offers its lesson. */
+ concept?:{name:string;line:string|null}|null;practise?:{title:string;href:string}|null;
  /** first-try solves in a row this visit (session only: never saved, never paid) */
  streak:number;
  /** Nov 8 2026: a cup puzzle's skill multiplier, its points and the cup total (undefined on classic puzzles) */
@@ -79,7 +83,7 @@ function readProgress():Progress{try{const v=JSON.parse(localStorage.getItem(PRO
 function writeProgress(p:Progress){try{localStorage.setItem(PROGRESS_KEY,JSON.stringify(p));}catch{/* Private browsing keeps this visit's stars. */}}
 /** The child's own format from their development plan when they have one; 9v9 otherwise. */
 function childFormat():Format|undefined{try{const goal=loadIdp().plan?.goalId;const f=goal?goalById(goal)?.format:undefined;return f&&(FORMATS as string[]).includes(f)?f as Format:undefined;}catch{return undefined;}}
-const reasonCopy:Record<string,string>={offside:'Offside! Your teammate was past the last defender when the ball was played. Wait for them, or pass sooner.',intercept:'A defender got to it first.',save:'The keeper read it.',out:'That one ran out of play.',rest:'The ball stopped before anyone reached it.','too-few-passes':'Right idea, but this one needs more passes first.',timeout:'Too slow! The defence got back before the finish.'};
+const reasonCopy:Record<string,string>={offside:'Offside! Your teammate was past the second-last defender when the ball was played. Wait for them, or pass sooner.',intercept:'A defender got to it first.',save:'The keeper read it.',out:'That one ran out of play.',rest:'The ball stopped before anyone reached it.','too-few-passes':'Right idea, but this one needs more passes first.',timeout:'Too slow! The defence got back before the finish.'};
 const headingAllowed=(p:Progress,f:Format)=>p.heading??f!=='7v7';
 /** The puzzle as played: direct shots allowed, and the no-heading youth version when heading is off. */
 const playable=(s:Scenario,heading=true):Scenario=>{const base=heading?s:youthScenario(s);return{...base,require:{...base.require,allowDirectShot:base.require.finish==='goal'}};};
@@ -124,7 +128,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const aimWarnRef=useRef<null|'offside'>(null);
  const warn=(w:null|'offside')=>{aimWarnRef.current=w;};
  /** One note per kick of this attempt (what the release looked like), for the takeaway. */
- const notes=useRef<PassNote[]>([]),numbersRef=useRef<Numbers>({attackers:[],defenders:[],keeper:1}),formatRef=useRef<Format>('9v9');
+ const notes=useRef<PassNote[]>([]),numbersRef=useRef<Numbers>({attackers:[],defenders:[],keeper:1}),formatRef=useRef<Format>('9v9'),conceptFails=useRef(new Map<string,number>());
  /** Replay commentary: the current call and the inputs it reads receivers and runs from. */
  const [replayLine,setReplayLine]=useState(''),replayInputs=useRef<{kick:Kick;calls?:{attacker:number}[]}[]>([]),replayKicks=useRef(0),replayHold=useRef(0);
  /** Hints in tiers: 1 = the words, 2 = a glowing spot on the pitch for the next pass of the coach's route. */
@@ -138,7 +142,9 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const packs=useMemo(()=>{const map=new Map<string,Scenario[]>();for(const s of SCENARIOS){if(!map.has(s.pack))map.set(s.pack,[]);map.get(s.pack)!.push(s);}return [...map.entries()].sort((a,b)=>(packInfo(a[0])?.order??9)-(packInfo(b[0])?.order??9));},[]);
  const setView=(v:View)=>{cancelDrawing.current();warn(null);if(v==='result')resultAt.current=performance.now();viewRef.current=v;setViewState(v);};
 
- useEffect(()=>{const p=readProgress();setProgress(p);setFormat(p.format??childFormat()??'9v9');},[]);
+ useEffect(()=>{const p=readProgress();setProgress(p);setFormat(p.format??childFormat()??'9v9');
+  // A "Today in the arcade" row opens today's puzzle (dailyStars first, so the same daily the menu would show).
+  if(takeTodayLaunch('puzzle')){dailyStars=Object.values(p.stars).reduce((a,b)=>a+b,0);requestAnimationFrame(()=>openDaily());}},[]);
  const chooseFormat=(f:Format)=>{setFormat(f);setProgress(p=>{const next={...p,format:f};writeProgress(next);return next;});};
  const chooseHeading=(on:boolean)=>setProgress(p=>{const next={...p,heading:on};writeProgress(next);return next;});
  /** Done in the settings sheet: the shown defaults become the child's remembered choice (asked once, never again). */
@@ -183,6 +189,8 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   const move=success&&r.passes>=sc.require.minPasses,mask=success?STAR_SOLVE|(move?STAR_MOVE:0)|(r.bonus?STAR_BONUS:0):0;
   const before=progressRef.current.masks?.[id]??0,merged=before|mask,fresh=mask&~before,stars=Math.max(starCount(merged),progressRef.current.stars[id]??0);
   if(success&&coinAttempt.current&&!id.startsWith('daily-'))void recordPuzzleBest(id,stars,coinAttempt.current,coinVisit.current);
+  // Nov 10 2026: the daily puzzle pays LEARN_COINS.arcade the first time each day's puzzle is solved (Today in the arcade, once per day).
+  if(success&&id.startsWith('daily-'))void noteArcadeToday({kind:'puzzle',id});
   // Nov 8 2026: a cup puzzle scores cup points (stars × 100 × skill) on its own cup board; the star board never sees it.
   let skill:Outcome['skill'];const cupTier=tierOfPack(sc.pack);
   if(success&&cupTier){const chain=s.chain,clock=sc.require.clock,input={stars:starCount(mask),firstTry:s.attempt===1&&!rewound.current,passes:r.passes,minPasses:sc.require.minPasses,throughBall:chain.some(c=>c.kind==='pass-space'),oneTouch:chain.filter(c=>c.firstTime).length,clock,clockLeft:clock?Math.max(0,clock-s.t):undefined};
@@ -195,11 +203,12 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    [STAR_SOLVE,STAR_MOVE,STAR_BONUS].filter(b=>mask&b).forEach((_,i)=>puzzleStar(audio.current,i+1,.85+i*.22));}
   // First try = attempt 1 with no rewind; a fail resets, a later-try solve keeps the streak.
   streak.current=nextStreak(streak.current,success,s.attempt===1&&!rewound.current);if(success&&streak.current>=2)puzzleStreak(audio.current,streak.current,1.05);
-  let why:string[]=[],fix:string|undefined;
+  let why:string[]=[],fix:string|undefined,concept:Outcome['concept']=null,practise:Outcome['practise']=null;
+  try{const f=formatRef.current;if(success)concept=puzzleConceptWords(sc.concept,f);else if(notePuzzleFail(conceptFails.current,sc.concept)>=PRACTISE_AFTER)practise=puzzleConceptLesson(sc.concept,f);}catch{/* no concept line */}
   try{const nums=shirtNumbersFor(sc),f=formatRef.current,kept=notes.current.slice(0,world.inputs().length);
    if(success)why=explainSuccess(kept,sc,nums,f,2);
    else{const stop=attemptEvents.current.filter(e=>['intercept','deflect','save','parry','offside'].includes(e.type)).at(-1),x=explainFail(r.reason,stop,kept.at(-1),nums,f);if(x){why=[x.why];fix=x.fix;}}}catch{/* the generic copy stays */}
-  setOutcome({success,stars:starCount(mask),mask,fresh,passes:r.passes,bonus:r.bonus,move,reason:r.reason,attemptsLeft:s.attemptsLeft,why,fix,streak:streak.current,skill});setView('result');stroke.current=null;
+  setOutcome({success,stars:starCount(mask),mask,fresh,passes:r.passes,bonus:r.bonus,move,reason:r.reason,attemptsLeft:s.attemptsLeft,why,fix,concept,practise,streak:streak.current,skill});setView('result');stroke.current=null;
   // The failure beat: mark where the move was stopped and lean the camera in before the card lands.
   if(!stopShown.current){failStop.current=success?null:stopPoint(world,attemptEvents.current);if(failStop.current)sceneRef.current?.showStop(failStop.current.at,failStop.current.kind);}stopShown.current=false;
  },[]);
@@ -484,9 +493,9 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
     {streakLabel(outcome.streak)&&<p className={styles.streak} data-streak={outcome.streak}><b>{streakLabel(outcome.streak)}</b> solved first try in a row</p>}
     {/* Nov 8 2026: a cup card shows the multiplier chips instead of the goal list (one less block on a phone). */}
     {!outcome.skill&&<ul className={styles.earned}>{goals(level).map((g,i)=>{const bit=1<<i;return <li key={g} data-on={!!(outcome.mask&bit)} data-new={!!(outcome.fresh&bit)||undefined}>{g}{outcome.fresh&bit?<b className={styles.newStar}> new</b>:null}</li>;})}</ul>}
-    {outcome.why.length>0&&<div className={styles.why} data-why><b>Why it worked</b><ul>{outcome.why.slice(0,outcome.skill?1:2).map(w=><li key={w}>{w}</li>)}</ul></div>}
+    {outcome.why.length>0&&<div className={styles.why} data-why><b>Why it worked</b><ul>{outcome.why.slice(0,outcome.skill?1:2).map(w=><li key={w}>{w}</li>)}</ul>{outcome.concept&&<p className={styles.whyConcept} data-concept>You played: <strong>{outcome.concept.name}</strong>{outcome.concept.line?`. ${outcome.concept.line}`:''}</p>}</div>}
     <p className={styles.lesson}>{!outcome.move?'You spotted a clear shooting lane. Now try the passing move for the next star.':level.lesson}</p></>
-   :<><p data-why>{outcome.why[0]??reasonCopy[outcome.reason??'']??'Look again at who can reach the ball.'}</p>{outcome.fix&&<p className={styles.fix}><b>Try this:</b> {outcome.fix}</p>}{outcome.reason==='intercept'&&!scanOn&&<p className={styles.fix} data-scan-tip><b>Look up:</b> tap Scan before you draw to see which passes are open.</p>}{/* the level's hint teaches the move, so it stays for move failures; a missed finish keeps just its specific fix */}{(!outcome.fix||outcome.reason==='intercept'||outcome.reason==='too-few-passes')&&<p className={styles.hint}><Icon name="book" size={16}/> {hintText}</p>}</>}
+   :<><p data-why>{outcome.why[0]??reasonCopy[outcome.reason??'']??'Look again at who can reach the ball.'}</p>{outcome.fix&&<p className={styles.fix}><b>Try this:</b> {outcome.fix}</p>}{outcome.practise&&<p className={styles.fix} data-practise><a className={styles.practise} href={outcome.practise.href} target="_blank" rel="noopener">Practise this: {outcome.practise.title}</a></p>}{outcome.reason==='intercept'&&!scanOn&&<p className={styles.fix} data-scan-tip><b>Look up:</b> tap Scan before you draw to see which passes are open.</p>}{/* the level's hint teaches the move, so it stays for move failures; a missed finish keeps just its specific fix */}{(!outcome.fix||outcome.reason==='intercept'||outcome.reason==='too-few-passes')&&<p className={styles.hint}><Icon name="book" size={16}/> {hintText}</p>}</>}
    {outcome.success&&next&&'locked' in next&&<p className={styles.nextNote} role="status" data-next-locked>Next up: <b>{next.locked.title}</b>. Earn {next.need} more ★ to open it. Replay a puzzle for its missing stars.</p>}
    {outcome.success&&next&&'scenario' in next&&next.newPack&&<p className={styles.nextNote} data-next-pack>Pack complete! Next up: <b>{packInfo(next.scenario.pack)?.title}</b>.</p>}
    {outcome.success?(nextLevel?<button className={`${arcade.primary} ${styles.go}`} onClick={()=>openLevel(nextLevel)}>Next puzzle</button>:<button className={arcade.primary} onClick={()=>{if(next&&'locked' in next)openPack(next.locked.id);else setMenu('home');setView('levels');}}>All puzzles</button>)

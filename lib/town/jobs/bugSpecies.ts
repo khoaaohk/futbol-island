@@ -322,7 +322,7 @@ export const bugHomeAllowed=(h:{band:BugBand;x:number;z:number})=>!inBugNorthZon
 export const BUG_JOB_SPOTS:readonly {x:number;z:number}[]=[{x:606,z:130},{x:604.5,z:126.5},{x:607.6,z:126}];
 export const BUG_HOMES:readonly BugHome[]=[
  // HIGH (≥ 30 m up, off the trail)
- {id:'monarch',band:'high',x:666,z:114,wander:5},       // summit shoulder, just east of the Summit 5s
+ {id:'monarch',band:'high',x:672,z:118,wander:5},       // summit shoulder, just east of the Summit 5s
  {id:'swallowtail',band:'high',x:668,z:138,wander:6},   // south-east summit shoulder (swallowtails gather on hilltops)
  {id:'mantis',band:'high',x:572,z:154,wander:3},        // west face, watching from up high
  // TRAIL (within 10 m of a path; three of them high on the climb)
@@ -348,7 +348,7 @@ export const BUG_HOMES:readonly BugHome[]=[
 ];
 /** Night homes for the eight fireflies, in the same bands and under the same rules. */
 export const FIREFLY_HOMES:readonly BugHome[]=[
- {id:'man-on',band:'high',x:664,z:140,wander:6},
+ {id:'man-on',band:'high',x:672,z:142,wander:6},
  {id:'time',band:'trail',x:770,z:122,wander:6},
  {id:'turn',band:'water',x:480,z:144,wander:6},
  {id:'square',band:'meadow',x:534,z:204,wander:6},

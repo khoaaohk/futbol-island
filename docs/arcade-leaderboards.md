@@ -101,3 +101,13 @@ session + same origin). A removed row is soft-deleted (`arcade_scores.hidden_at`
 once, purged nightly like any other row. Needs `supabase/migrations/20261111_board_hidden_rows.sql`; before it runs the list
 shows the top 10 and removal answers "migration needed". Tier ceilings: Derby Night 6,000 + 2,700/s, World Final 9,000 + 4,400/s
 (the classic rate × speed × multiplier). The rate rules are in `lib/arcade/leaderboard.ts` BOARD_RULES with the reasoning.
+
+## Breakaway route boards and the Daily Run (Nov 10 2026)
+
+Four more boards beside 'runner' (the endless Breakaway classic board, unchanged): 'runwarm' (Warm-up), 'runnight' (Night Derby)
+and 'runstorm' (Storm Final) give the finite routes their own boards, ranked by score, so the endless run no longer buries them;
+'rundaily' is the Daily Run, one seeded course a day that is the same for everyone (the first finished run of the day counts, later
+runs that day are practice). They show as tabs under Breakaway (`BOARD_TIER_TABS.runner`, with 'cupfinal' and 'legend'). Rules in
+`lib/arcade/leaderboard.ts` BOARD_RULES; routes in `lib/arcade/runnerModes.ts`. SQL: `supabase/migrations/20261112_runner_route_boards.sql`
+(lists every board; dated to run last), applied in production by the owner on Nov 10 2026. The admin "Remove row" above works on these
+boards too.

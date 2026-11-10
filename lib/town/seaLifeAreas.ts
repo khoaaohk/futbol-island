@@ -16,7 +16,7 @@
 import {SHARK_LOOPS,type CayPoint} from './coralCay';
 import {MANTA_LOOPS,type RayLoop} from './mantaLoops';
 import {SUMMIT_SHARK_LOOPS,WHALE_SHARK_LOOP} from './summitSeaLife';
-import {FISH_SPOTS} from './fishing/fishCatalog';
+import {FISH_SPOTS} from './fishing/fishSpots';
 import {DIVE_SPOTS,diveBlobR,type DiveSignature} from './water/diveSpots';
 import type {HeatTier} from '../graphics/heatTier';
 

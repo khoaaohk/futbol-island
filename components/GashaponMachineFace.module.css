@@ -1,0 +1,144 @@
+/* The island gashapon machine's own controls (components/GashaponMachineFace.tsx, round 5). No dialog, no scrim: each control is
+   pinned on the 3D machine by CSS variables in px (--k knob, --kr knob ring radius, --c coin plate, --t/--tw/--th tray, --m crown,
+   --r cabinet's right edge, --b cabinet base). Island cream and green, the shared button tokens (docs/ui/BUTTONS.md), regular UI
+   sans on every button (owner, Nov 4 2026: no IslandBrush on buttons). Motion: transform/opacity only; reduced motion drops it. */
+/* The layer itself takes the taps (transparent): nothing reaches the island under it while the machine is open (no walking off,
+   no Konbini door behind the machine), like the old scrim did. */
+.face{position:fixed;inset:0;z-index:60;touch-action:none;font-family:var(--font-body,Arial,Helvetica,sans-serif);color:#244d40}
+.face[data-placed=false] .knob,.face[data-placed=false] .price,.face[data-placed=false] .tray,.face[data-placed=false] .marquee,.face[data-placed=false] .tag{visibility:hidden}
+.face button{font-family:var(--btn-font,Arial,Helvetica,sans-serif)}
+.face button:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:var(--btn-focus-offset,3px)}
+
+/* The top row (owner, Nov 10 2026: "simplify this to fit between Toy Shelf and Done btn on mobile"): Toy Shelf left, ONE status
+   pill between, Done (the shared DoneButton) right; one row from 320 px up, nothing wraps. */
+.bar{position:absolute;left:calc(var(--island-hud-edge,24px) + env(safe-area-inset-left,0px));right:calc(var(--island-hud-edge,24px) + env(safe-area-inset-right,0px));top:var(--island-hud-row-top,20px);
+ display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}
+.bar>*{pointer-events:auto}
+.done{flex:none}
+
+/* The marquee: the machine's name over its topper. */
+.marquee{position:absolute;left:var(--mx);top:max(calc(var(--island-hud-row-top,20px) + 56px),calc(var(--my) - 62px));transform:translateX(-50%);margin:0;max-width:min(320px,calc(100vw - 32px));
+ padding:7px 16px 8px;border-radius:16px;background:#244d40;color:#fff3d2;text-align:center;pointer-events:none}
+.marquee strong{display:block;font-size:18px;line-height:1.15;font-weight:800;letter-spacing:-.01em}
+.marquee span{display:block;margin-top:2px;font-size:14px;line-height:1.3;color:#fff3d2}
+
+/* The knob: a ring round the 3D knob, its label beside it on the left. */
+.knob{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;position:absolute;left:var(--kx);top:var(--ky);width:calc(var(--kr) * 2);height:calc(var(--kr) * 2);transform:translate(-50%,-50%);padding:0;border:0;background:none;cursor:pointer}
+.ring{position:absolute;inset:0;box-sizing:border-box;border-radius:50%;
+ border:4px solid #ffd451;background:#ffd45122;animation:ring 1.6s ease-in-out 3}/* a few pulses on arrival, then still (heat) */
+@keyframes ring{50%{transform:scale(1.06)}}
+.knobLabel{position:absolute;right:calc(100% + 8px);top:50%;transform:translateY(-50%);display:flex;align-items:center;min-height:48px;padding:8px 18px;white-space:nowrap;
+ border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
+ color:var(--btn-ink,#244d40);font-weight:800;font-size:18px;line-height:1.1;box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);transition:translate .08s,box-shadow .08s}
+.knob:active:not(:disabled) .knobLabel{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
+.knob:active:not(:disabled) .ring{transform:scale(.94)}
+.face .knob:focus-visible{outline:none}
+.knob:focus-visible .ring{outline:var(--btn-focus,3px solid #ffd451);outline-offset:4px}
+.knob:disabled{cursor:default}
+/* Hand turn (Nov 10 2026): a grip mark on the ring shows the turn while dragged (the 3D knob turns with it); hidden at rest. */
+.knob:not(:disabled){cursor:grab}
+.knob[data-turning]{cursor:grabbing}
+.grip{position:absolute;left:50%;top:-2px;width:12px;height:12px;margin-left:-6px;border-radius:50%;background:#ffd451;opacity:0}
+.knob[data-turning] .ring{animation:none;rotate:var(--turn,0rad)}
+.knob[data-turning] .grip{opacity:1}
+.knob:disabled .ring{animation:none;border-color:#fff3d2aa;background:none}
+.knob:disabled .knobLabel{background:#fff1d3;box-shadow:0 3px 0 #193f3733}
+@media(hover:hover){.knob:hover:not(:disabled) .knobLabel{background-color:var(--btn-gold-bright,#f9d665)}.knob:hover:not(:disabled) .ring{background:#ffd45144}}
+
+/* A neighbour on the left (a Konbini pair, QA Nov 9 2026): the label sits above the knob, on this machine's own cabinet. */
+.face[data-neighbour=left] .knobLabel{right:auto;left:50%;top:auto;bottom:calc(100% + 6px);transform:translateX(-50%)}
+/* The price on the coin plate. */
+.price{position:absolute;left:var(--cx);top:var(--cy);transform:translate(-50%,-50%);display:flex;align-items:center;gap:5px;margin:0;padding:4px 10px 4px 6px;border-radius:999px;
+ background:#244d40;color:#fff3d2;font-size:18px;font-weight:800;font-variant-numeric:tabular-nums;pointer-events:none}
+.coin{width:20px;height:20px;border-radius:50%;background:#f4c542;box-shadow:inset 0 0 0 3px #d69e1f}
+.balance{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+/* Not enough coins / today's capsules: a small tag by the plate (left of it, under the knob's label). */
+.tag{position:absolute;right:calc(100vw - var(--cx) + 34px);top:calc(var(--cy) - 8px);width:max-content;max-width:min(230px,calc(var(--cx) - 50px));margin:0;padding:8px 12px;border-radius:14px;
+ background:#fde2d8;color:#7a2a12;font-size:14px;line-height:1.35;animation:pop .22s ease-out}
+.tag b{display:block;font-size:15px}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}}
+
+/* …and the tag under the coin plate (not over the neighbour's tray). */
+.face[data-neighbour=left] .tag{right:auto;left:var(--cx);top:calc(var(--cy) + 24px);transform:translateX(-50%);max-width:min(240px,calc(100vw - 32px))}
+.face[data-neighbour=left] .tag{animation-name:pop-under}
+@keyframes pop-under{from{opacity:0;translate:0 6px}}
+/* The tray: the capsule waits here; the whole tray is the button. */
+.tray{position:absolute;left:var(--tx);top:var(--ty);width:var(--tw);height:var(--th);transform:translate(-50%,-50%);padding:0;border:4px solid #ffd451;border-radius:18px;background:#ffd45126;cursor:pointer;
+ animation:glow 1.2s ease-in-out 5}/* fades, never scales: the box stays on the capsule */
+@keyframes glow{50%{opacity:.55}}
+.tray[hidden]{display:none}
+.trayLabel{position:absolute;left:50%;top:calc(100% + 8px);transform:translateX(-50%);padding:6px 14px;border-radius:999px;background:#244d40;color:#fff3d2;font-size:16px;font-weight:800;white-space:nowrap}
+
+/* Chips centred on the top row between Toy Shelf and Done (desktop, owner Nov 10 2026) / in the row just under it (phone). */
+.dock{display:contents}
+.status{flex:0 1 auto;min-width:0;display:flex;align-items:center;gap:7px;min-height:36px;margin:0;padding:6px 14px;border-radius:999px;background:#fff6e4;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden}
+.statusIcon{flex:none;width:18px;height:18px}
+.count{font-weight:800}
+.fact{margin-right:-8px;padding:2px 8px;border-radius:999px;background:#f1e2c0}/* a tone step inside the pill */
+.status[data-gashapon-status=cap] .fact,.status[data-gashapon-status=coins] .fact{color:#8a3b1f}
+.dots{display:inline-flex;gap:4px}
+.dots i{width:10px;height:10px;border-radius:50%;background:#e2d3b0}
+.dots i[data-on=true]{background:var(--dot);box-shadow:inset 0 0 0 2px #244d40}
+.shelf{flex:none;white-space:nowrap;min-height:44px;padding:6px 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);
+ font-weight:800;font-size:15px;cursor:pointer;box-shadow:0 3px 0 var(--btn-mint-edge,#8bac9d)}
+.shelf:active:not(:disabled){translate:0 2px;box-shadow:0 1px 0 var(--btn-mint-edge,#8bac9d)}
+.shelf:disabled{opacity:.6;cursor:default}
+
+/* The toy's card: beside the machine on a wide screen. */
+.card{position:absolute;left:calc(var(--rx) + 28px);top:var(--ry);transform:translateY(-50%);box-sizing:border-box;width:310px;display:flex;gap:14px;align-items:flex-start;padding:14px;border-radius:20px;
+ background:#fff6e4;animation:card .32s ease-out}
+@keyframes card{from{opacity:0;translate:-14px 0}}
+.art{flex:none;width:64px;height:64px}
+.cardText{min-width:0;flex:1}
+.toyName{margin:0;font-size:20px;line-height:1.15;font-weight:800}
+.meta{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 0;font-size:14px;font-weight:700}
+.rarity,.fresh,.repeat{padding:3px 9px;border-radius:999px;background:#f3e7cb}
+.card[data-rarity=uncommon] .rarity{background:#cfe6f7}
+.card[data-rarity=rare] .rarity{background:#f9d665}
+.fresh{background:#244d40;color:#fff3d2}
+.blurb{margin:8px 0 10px;font-size:15px;line-height:1.4}
+.cardActions{display:flex;flex-wrap:wrap;gap:8px}
+.secondary,.again{min-height:44px;padding:6px 16px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;font-weight:800;font-size:15px;cursor:pointer}
+.secondary{background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 3px 0 var(--btn-mint-edge,#8bac9d)}
+.again{background:var(--btn-gold,#e9c16b);color:var(--btn-ink,#244d40);box-shadow:0 3px 0 var(--btn-gold-edge,#a8863d)}
+.secondary:active,.again:active:not(:disabled){translate:0 2px}
+.again:disabled{cursor:default;opacity:.75}
+.srOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);margin:0}
+
+/* No room beside the machine (phones, narrow windows): the card and the chips share a dock at the bottom. */
+.face[data-room=false] .dock{display:flex;flex-direction:column;align-items:stretch;gap:10px;position:absolute;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.face[data-room=false] .card{position:static;transform:none;width:auto;animation-name:rise}
+/* Phones / narrow: the island's own bar is hidden; the status pill drops its six dots (the count says it). */
+.face[data-room=false] .dots{display:none}
+.face[data-room=false] .marquee{top:max(calc(var(--island-hud-row-top,16px) + 56px),calc(var(--my) - 62px))}
+.face[data-room=false] .status{min-height:32px;padding:5px 12px;font-size:14px;gap:6px}
+@keyframes rise{from{opacity:0;translate:0 14px}}
+/* Phones: a compact card (one-line blurb, both actions in one row) and one row of short chips, so the dock stays under the machine. */
+@media(max-width:520px){
+ .marquee span{display:none}
+ .marquee strong{font-size:17px}
+ .knobLabel{font-size:17px;padding:8px 14px}
+ .card{padding:12px;gap:12px}
+ .art{width:48px;height:48px}
+ .toyName{font-size:18px}
+ .blurb{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden;margin:6px 0 8px;font-size:14px}
+ .cardActions{flex-wrap:nowrap}
+ .secondary,.again{padding:6px 12px;font-size:14px;white-space:nowrap}
+ .dots{display:none}
+ .status{padding:5px 10px;font-size:13px;gap:5px}
+ .face[data-room=false] .status{padding:5px 10px;font-size:13px;gap:5px}
+ .statusIcon{width:16px;height:16px}
+ .fact{margin-right:-6px;padding:2px 6px}
+ .shelf{padding:6px 12px;font-size:14px;white-space:nowrap}
+}
+/* 320-360 px: a touch tighter so Toy Shelf, the pill and Done still share one row. */
+@media(max-width:360px){
+ .bar{gap:4px}
+ .shelf{padding:6px 8px;font-size:13px}
+ .status,.face[data-room=false] .status{padding:4px 6px;font-size:12px;gap:3px}
+ .statusIcon{width:14px;height:14px}
+ .fact{margin-right:-2px;padding:2px 4px}
+}
+@media(prefers-reduced-motion:reduce){
+ .ring,.tray,.card,.tag{animation:none!important}
+}

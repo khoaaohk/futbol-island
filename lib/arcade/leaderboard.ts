@@ -20,11 +20,15 @@
 /** Nov 8 2026: 'puzpro' and 'puzlgnd' are Pass Puzzles' Pro Cup and Legend Cup (lib/passPuzzle/tiers.ts), each with its own board
  * beside 'puzzle' (never mixed, never reset). Their score is the child's cup points total (best per puzzle), a running total like
  * the star board. They need supabase/migrations/20261110_puzzle_tier_boards.sql (dated to run after every other board file). */
-export const BOARD_GAMES=['runner','pinball','tennis','live','puzzle','kick','cupfinal','legend','livepro','livelgnd','tenpro','tenlgnd','pinderby','pinfinal','puzpro','puzlgnd'] as const;
+/** Nov 10 2026: 'runwarm', 'runnight', 'runstorm' are Breakaway's finite routes (Warm-up, Night Derby, Storm Final), ranked by score on
+ * their own boards so the endless classic run ('runner') no longer buries them; 'rundaily' is the Daily Run (the same seeded course for
+ * everyone that day; the first finished run of the day posts). The old 'runner' rows stay where they are. They need
+ * supabase/migrations/20261112_runner_route_boards.sql (dated to run after every other board file). */
+export const BOARD_GAMES=['runner','pinball','tennis','live','puzzle','kick','cupfinal','legend','livepro','livelgnd','tenpro','tenlgnd','pinderby','pinfinal','puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily'] as const;
 export type BoardGame=typeof BOARD_GAMES[number];
 /** Nov 8 2026: the Hall of High Scores' tab DISPLAY order: each elite tier board sits right after its parent game's board
  * (BOARD_GAMES keeps the data order and ids unchanged). */
-export const BOARD_TIER_TABS:Partial<Record<BoardGame,readonly BoardGame[]>>={runner:['cupfinal','legend'],pinball:['pinderby','pinfinal'],tennis:['tenpro','tenlgnd'],live:['livepro','livelgnd'],puzzle:['puzpro','puzlgnd']};
+export const BOARD_TIER_TABS:Partial<Record<BoardGame,readonly BoardGame[]>>={runner:['runwarm','runnight','runstorm','cupfinal','legend','rundaily'],pinball:['pinderby','pinfinal'],tennis:['tenpro','tenlgnd'],live:['livepro','livelgnd'],puzzle:['puzpro','puzlgnd']};
 const TIER_TAB_SET=new Set<BoardGame>(Object.values(BOARD_TIER_TABS).flat() as BoardGame[]);
 export const BOARD_TAB_ORDER:readonly BoardGame[]=BOARD_GAMES.filter(g=>!TIER_TAB_SET.has(g)).flatMap(g=>[g,...(BOARD_TIER_TABS[g]??[])]);
 export const isBoardGame=(g:unknown):g is BoardGame=>typeof g==='string'&&(BOARD_GAMES as readonly string[]).includes(g);
@@ -71,6 +75,14 @@ export const BOARD_RULES:Record<BoardGame,{name:string;unit:string;max:number;ba
  // puzzles, so at most 4950. Like the star board it is a running total (no per-second rule); the ceiling sits just above the max.
  puzpro:{name:'Pass Puzzles Pro Cup',unit:'cup points',max:5_000,base:5_000,perSecond:0,minSeconds:8,learn:'Beat the clock. First-try passes score more.'},
  puzlgnd:{name:'Pass Puzzles Legend Cup',unit:'cup points',max:5_000,base:5_000,perSecond:0,minSeconds:8,learn:'Two tries, hunters everywhere. Pass early.'},
+ // Breakaway finite routes and the Daily Run (Nov 10 2026). Same rate as the 'runner' board they used to post to (3000 + 1500/s, not
+ // loosened), and a ceiling from the route length: a goal is at most (500 x 3 streak + 300 precision) x3 multiplier = 5400, x2 in a
+ // danger lane, one every 180 m (about 60 points a metre at the very best), plus lines, dodges and pickups (about 25 a metre) and the
+ // boss keeper's double goal; so length x 100 + 25000, rounded up. Not play-tested: real runs sit far below.
+ runwarm:{name:'Warm-up Run',unit:'points',max:120_000,base:3_000,perSecond:1_500,minSeconds:12,learn:'Move into the open lane early.'},
+ runnight:{name:'Night Derby Run',unit:'points',max:180_000,base:3_000,perSecond:1_500,minSeconds:12,learn:'Watch a defender drift, then take the gap.'},
+ runstorm:{name:'Storm Final Run',unit:'points',max:210_000,base:3_000,perSecond:1_500,minSeconds:12,learn:'Jump the tackle, then slide the line.'},
+ rundaily:{name:'Daily Run',unit:'points',max:150_000,base:3_000,perSecond:1_500,minSeconds:12,learn:'Same course for everyone today. Your first run counts.'},
 };
 /** Rows shown per board. */
 export const BOARD_SIZE=10;

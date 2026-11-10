@@ -10,7 +10,7 @@
 // Initiatives; IFAB Laws 11 and 15) and the habits its lessons teach (lib/paths/formatPaths.json, learn9_* / nx9_*):
 //  - the ball comes back in from the touchline with a THROW-IN (kick-ins are futsal and beach);
 //  - offside applies (no build-out line: that is 7v7 only), but never directly from a throw-in, goal kick or corner;
-//  - forwards stay onside, level with the last defender, and time the run as the pass is shaped;
+//  - forwards stay onside, level with the second-last defender, and time the run as the pass is shaped;
 //  - the keeper steps up behind a high back line (sweeper keeper) and is a back-pass outlet under pressure.
 import type { LiveFormat } from "../venues";
 
@@ -105,7 +105,7 @@ export function onsideDepth(offsideLine: number, ballDepth: number, hold: number
 /** The live feed's coaching lines for 9v9 (text, reason). */
 export const NINE_NOTES = {
   throwIn: (team: string) => [`Throw-in for ${team}`, "In 9v9 the ball comes back in with both hands, from behind and over the head, with both feet on the ground"],
-  offside: ["Offside!", "He was past the last defender when the pass was played. Wait level with the defender, then run"],
+  offside: ["Offside!", "He was past the second-last defender when the pass was played. Wait level with him, then run"],
   onside: ["Onside run", "He stayed level until the pass was played, then ran in behind: that's how to beat the offside line"],
   keeper: ["Back to the keeper", "Under pressure with nothing ahead? Your keeper is a free player: pass back and start again"],
   cover: ["One presses, one covers", "The first defender wins it while a team-mate covers behind him"],

@@ -35,4 +35,6 @@
 @media (max-height:520px){.flash{top:calc(62px + env(safe-area-inset-top,0px));font-size:18px;padding:6px 16px}}
 @media (max-height:380px){.cluster{transform:scale(.86);transform-origin:100% 100%}}
 /* Mouse windows: keyboard only (A/D or ←/→ lanes, W/↑ jump, S/↓ slide, Space shoot, E skill); the pause card shows the keys. */
-@media (pointer:fine){.zone,.movement.movement,.cluster{display:none}}
+/* Nov 10 2026 swipe layer: the track right of the stick zone, under the cluster (DOM order keeps the buttons on top). */
+.swipe{position:absolute;left:45%;right:0;top:calc(var(--arcade-bar-clear) + env(safe-area-inset-top,0px));bottom:0;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+@media (pointer:fine){.zone,.swipe,.movement.movement,.cluster{display:none}}

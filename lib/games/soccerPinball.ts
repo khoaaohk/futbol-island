@@ -1033,6 +1033,10 @@ export function stepPinball(s: PinballState, input: PinballInput, elapsed: numbe
     tick(s, input, PINBALL_STEP);
     s.accumulator -= PINBALL_STEP;
     }
+    // Nov 10 2026: at a fast tier a long frame (up to .0915 s) can exceed the 40-substep cap (.0833 s); drop that debt so a slow
+    // phone never runs every frame at the cap and the table never fast-forwards when the frame rate recovers. Normal frames
+    // leave less than one step, so this changes nothing for them.
+    if (s.accumulator > PINBALL_STEP * 2) s.accumulator = PINBALL_STEP * 2;
     if (mult > 1 && s.score > before) s.score = before + Math.round((s.score - before) * mult);
     unstick(s, dt);
 }

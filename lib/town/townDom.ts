@@ -1,0 +1,5 @@
+/* Town's per-frame DOM writers (moved out of the scene effect, Nov 10 2026 split; unchanged): each writes only when the value
+   differs, so a still HUD costs no style recalculation. */
+export const placeEntryPrompt=(el:HTMLElement,left:number,top:number)=>{if(el.dataset.entryPrompt===undefined)el.dataset.entryPrompt='';if(el.style.left!=='0px')el.style.left='0px';if(el.style.top!=='0px')el.style.top='0px';const x=`${Math.round(left*2)/2}px`,y=`${Math.round(top*2)/2}px`;if(el.style.getPropertyValue('--entry-x')!==x)el.style.setProperty('--entry-x',x);if(el.style.getPropertyValue('--entry-y')!==y)el.style.setProperty('--entry-y',y);};
+export const placeUI=(el:HTMLElement,left:number,top:number)=>{const position=`${Math.round(left*2)/2}px ${Math.round(top*2)/2}px`;if(el.style.left!=='0px')el.style.left='0px';if(el.style.top!=='0px')el.style.top='0px';if(el.style.translate!==position)el.style.translate=position;};
+export const setUIHidden=(el:HTMLElement,hidden:boolean)=>{if(el.hidden!==hidden)el.hidden=hidden;};

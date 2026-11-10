@@ -124,6 +124,20 @@ export function standsOnSummit(s:VendingSpot,pathClear=SUMMIT_PATH_CLEAR){
  return Math.max(...grounds)-Math.min(...grounds)<=SUMMIT_LEVEL_SPREAD;
 }
 
+/** A machine standing in the line just outside the Summit 5s' EAST fence, back to the rail, glass facing east (yaw π/2). Same
+ *  ground rules as standsOnSummit (on the isle, flat, level, clear of the hand-placed props), but measured for this spot: the
+ *  whole footprint is outside the fence line, and the fence rails behind it are the one obstacle it is allowed to touch. */
+export function standsAtSummitFence(s:VendingSpot){
+ const fx=Math.sin(s.yaw),fz=Math.cos(s.yaw),rx=fz,rz=-fx,fenceX=SUMMIT_PITCH.x+SUMMIT_FENCE.halfX;
+ const pts=[[0,0],[HALF_W,HALF_D],[-HALF_W,HALF_D],[HALF_W,-HALF_D],[-HALF_W,-HALF_D]].map(([a,b])=>[s.x+rx*a+fx*b,s.z+rz*a+fz*b] as [number,number]);
+ pts.push([s.x+fx*FRONT,s.z+fz*FRONT]);
+ if(!pts.every(([x,z])=>x>fenceX&&onSummitIsle(x,z)&&summitSlope(x,z)<=SUMMIT_FLAT_SLOPE&&clearOfSummitHandProps(x,z,SUMMIT_PROP_PAD)))return false;
+ // Other obstacles (goal frames, masts) still count: only pieces that sit ON the east fence line are skipped.
+ if(pts.some(([x,z])=>SUMMIT_OBSTACLES.some(o=>Math.abs(o.x-fenceX)>.5&&Math.abs(x-o.x)<o.w/2+SUMMIT_OBSTACLE_PAD&&Math.abs(z-o.z)<o.d/2+SUMMIT_OBSTACLE_PAD)))return false;
+ const grounds=pts.map(([x,z])=>summitGround(x,z));
+ return Math.max(...grounds)-Math.min(...grounds)<=SUMMIT_LEVEL_SPREAD;
+}
+
 /**
  * Summit Isle's Konbini snack stand (moved Oct 13 2026, user: "move the vending machines on top of the mountain"): now
  * stands on the summit terrace itself, on the walkway just outside the Summit 5s' fence, a few steps past the south gate
@@ -140,6 +154,15 @@ export function standsOnSummit(s:VendingSpot,pathClear=SUMMIT_PATH_CLEAR){
  */
 export function summitSnackSpot():VendingSpot{
  const gate=SUMMIT_LANDMARKS.gate;
+ // Nov 9-10 2026 (owner: "move the vending machines behind the goals"; then "face south east, the back of the machines lined up
+ // against the fence for the field", answered: east side, facing east): outside the east fence, backs flat against it, fronts
+ // facing east (yaw π/2: the glass faces (sin yaw, cos yaw)), centred on the goal mouth. The drink machine is on the player's right
+ // (−z) and the gashapon on the left (+z, 1.97 m), all in one line along the fence.
+ // Nov 10 2026 (owner: the machines were NOT against the fence): standsOnSummit keeps every machine a metre outside the fence and
+ // clear of its rails, so this line of spots was always refused and the search below stood the pair by the gate instead. A spot
+ // on the fence line has its own check (standsAtSummitFence): backs 15 cm off the east rail, everything else still enforced.
+ for(const dz of [0,-2,2,-4,4]){const s=spot(SUMMIT_PITCH.x+SUMMIT_FENCE.halfX+HALF_D+.15,SUMMIT_PITCH.z+dz,Math.PI/2);
+  if(standsAtSummitFence(s)&&standsAtSummitFence(drinkSpotBeside(s))&&standsAtSummitFence({x:s.x,z:s.z+1.97,yaw:s.yaw}))return s;}
  for(const r of [4,5,6,8,10,13,16,20,24,28]){
   for(let k=0;k<16;k++){
    const a=k/16*Math.PI*2,s=spot(gate.x+Math.cos(a)*r,gate.z+Math.sin(a)*r,0);

@@ -3,6 +3,8 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createPlayer,profileFor,type PlayerMotion} from '../graphics/player';
 import {defaultBeanLookFor,DEFAULT_CASUAL_OUTFIT} from '../graphics/beanLook';
+import {mergedGashapon,gashaponGlassMaterial} from '../graphics/gashaponMesh';
+import {GASHAPON_MACHINES,GASHA_STYLE_SIZE,gashaStyleOf} from '../gashapon/machines';
 
 export type ArcadePropCollider={x:number;z:number;halfX:number;halfZ:number;yaw?:number};
 /** Merged dressing, a few pooled attract parts and one attendant, driven only by the room clock. */
@@ -83,12 +85,17 @@ export function createArcadeRoomProps(scene:T.Scene){
  placement.copy(prizePlacement);tube(10.9,1.28,-7.85,.15,.17,coral);tube(10.9,1.38,-7.85,.065,.015,ink);
  const ticketFeed=animated('arcade-ticket-feed',()=>{for(let i=0;i<5;i++){box(10.88,1.15-i*.09,-7.17,.16,.1,.02,i%2?cream:coral);box(10.88,1.15-i*.09,-7.155,.08,.025,.01,ink);}});
  placement.identity();
+ // Gashapon pair on the back wall (Nov 8 2026, lib/gashapon/machines.ts): the shared machine (lib/graphics/gashaponMesh.ts) merged
+ // into one vertex-coloured mesh plus one glass mesh: two draws for both, no lights, static.
+ const gashaMachines=GASHAPON_MACHINES.filter(m=>m.zone==='arcade');
+ {const g=mergedGashapon(gashaMachines);geometries.push(g.solid,g.glass);const solid=new T.MeshStandardMaterial({vertexColors:true,roughness:.6}),glass=gashaponGlassMaterial();materials.push(solid,glass);
+  const a=new T.Mesh(g.solid,solid),b=new T.Mesh(g.glass,glass);a.name='arcade-gashapon';b.name='arcade-gashapon-glass';b.renderOrder=1;root.add(a,b);}
  // Most furniture stays one immutable batch per palette colour.
  merge(batches,root);boxBase.dispose();ballBase.dispose();cylinderBase.dispose();
  const attendant=createPlayer('arcade-prize-attendant','neutral',true,true);attendant.root.name='arcade-prize-attendant';attendant.setProfile(profileFor('npc',82));const look=defaultBeanLookFor('arcade-prize-attendant');attendant.setBeanLook(look,{...DEFAULT_CASUAL_OUTFIT,shirt:cream,shirt2:teal});root.add(attendant.root);
  const motion:PlayerMotion={travelMode:'walk',facing:-Math.PI/3,lookX:10,lookZ:-2,lookY:1.4,ready:.2};attendant.update(attendantPosition.x,attendantPosition.z,0,0,false,motion);
  let attentive=false;let disposed=false,social:SocialRoutine|null=null,socialAge=-1;const socialPose=createSocialPose();
- const colliders:ArcadePropCollider[]=[{x:counterPosition.x,z:counterPosition.z,halfX:2.75,halfZ:.75,yaw:-Math.PI/3},{x:shelfPosition.x,z:shelfPosition.z,halfX:2.85,halfZ:.55,yaw:-Math.PI/3},{x:-10,z:-1,halfX:1.55,halfZ:2.4},{x:-12,z:8,halfX:1.615,halfZ:1.596},{x:12,z:8,halfX:1.374,halfZ:1.428}];
+ const colliders:ArcadePropCollider[]=[...gashaMachines.map(m=>({x:m.x,z:m.z,halfX:GASHA_STYLE_SIZE[gashaStyleOf(m)].w/2+.03,halfZ:GASHA_STYLE_SIZE[gashaStyleOf(m)].d/2+.03,yaw:m.yaw}))/* each body style its own size (Nov 10 2026) */,{x:counterPosition.x,z:counterPosition.z,halfX:2.75,halfZ:.75,yaw:-Math.PI/3},{x:shelfPosition.x,z:shelfPosition.z,halfX:2.85,halfZ:.55,yaw:-Math.PI/3},{x:-10,z:-1,halfX:1.55,halfZ:2.4},{x:-12,z:8,halfX:1.615,halfZ:1.596},{x:12,z:8,halfX:1.374,halfZ:1.428}];
  // Triangle reflection gives exact table-edge bounces; paddles arrive at each
  // interception point before the puck instead of orbiting independently.
  const reflect=(phase:number)=>1-Math.abs(((phase%4)+4)%4-2);
@@ -105,7 +112,7 @@ export function createArcadeRoomProps(scene:T.Scene){
   stockMaterial.emissiveIntensity=reduced?.28:.25+(1+Math.sin(t*.9))*.14;
  }
  animate(0,true);let greeting=0,wasNear=false,greetTime=0;
- return{setAttention(value:boolean){attentive=value;},beginSocial(routine:SocialRoutine){social=routine;socialAge=-1;},setSocialAge(age:number){socialAge=age;},releaseSocial(){social=null;socialAge=-1;},interactionPoint:prizePoint(10,-6.1),colliders,attendantBody:{x:attendantPosition.x,z:attendantPosition.z},get debug(){return{claw:[claw.position.x,claw.position.z],puck:[puck.position.x,puck.position.z],paddles:paddles.map(p=>[p.position.x,p.position.z]),stock:stockMaterial.emissiveIntensity,greeting,attendant:!!attendant.root.userData.beanBody,attendantPosition:{x:attendantPosition.x,z:attendantPosition.z},serviceAisle:1.4,social:!!social,socialAge};},update(dt:number,time:number,playerX=0,playerZ=0,reduced=false){if(disposed||dt<=0)return;animate(time,reduced);const near=Math.hypot(playerX-attendantPosition.x,playerZ-attendantPosition.z)<(wasNear?5.8:5);if(near&&!wasNear)greetTime=2.4;wasNear=near;greetTime=Math.max(0,greetTime-dt);
+ return{gashapon:gashaMachines,setAttention(value:boolean){attentive=value;},beginSocial(routine:SocialRoutine){social=routine;socialAge=-1;},setSocialAge(age:number){socialAge=age;},releaseSocial(){social=null;socialAge=-1;},interactionPoint:prizePoint(10,-6.1),colliders,attendantBody:{x:attendantPosition.x,z:attendantPosition.z},get debug(){return{claw:[claw.position.x,claw.position.z],puck:[puck.position.x,puck.position.z],paddles:paddles.map(p=>[p.position.x,p.position.z]),stock:stockMaterial.emissiveIntensity,greeting,attendant:!!attendant.root.userData.beanBody,attendantPosition:{x:attendantPosition.x,z:attendantPosition.z},serviceAisle:1.4,social:!!social,socialAge};},update(dt:number,time:number,playerX=0,playerZ=0,reduced=false){if(disposed||dt<=0)return;animate(time,reduced);const near=Math.hypot(playerX-attendantPosition.x,playerZ-attendantPosition.z)<(wasNear?5.8:5);if(near&&!wasNear)greetTime=2.4;wasNear=near;greetTime=Math.max(0,greetTime-dt);
   greeting=T.MathUtils.damp(greeting,near&&greetTime>0?1:0,4,Math.min(.1,dt));motion.ready=.2;motion.called=reduced?0:greeting*.85;motion.lookX=near?playerX:10;motion.lookZ=near?playerZ:-2;motion.skill=undefined;motion.jump=undefined;if(!social)motion.facing=attentive?Math.atan2(playerX-attendantPosition.x,playerZ-attendantPosition.z):-Math.PI/3;if(social){motion.facing=Math.atan2(playerX-attendantPosition.x,playerZ-attendantPosition.z);socialPose(motion,social,socialAge,true,reduced);}attendant.setExpression(near||social?'happy':'neutral');attendant.update(attendantPosition.x,attendantPosition.z,Math.min(.1,dt),time,reduced,motion);
  },dispose(){if(disposed)return;disposed=true;attendant.dispose();root.removeFromParent();for(const g of geometries)g.dispose();for(const m of materials)m.dispose();for(const t of textures)t.dispose();}};
 }

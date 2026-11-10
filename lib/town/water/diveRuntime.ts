@@ -8,7 +8,17 @@
  * idle 20 fps cap after 4 s without input (Town's idleRide rule), and nothing of the room survives surfacing (dispose).
  */
 import * as T from 'three';
-import {createDiveRoom,type DiveRoom} from '../../graphics/diveRoom';
+import type {DiveRoom} from '../../graphics/diveRoom';
+// Load-time pass (Nov 10 2026, docs/performance-guide.md): the sealed room (diveRoom.ts, ~90 KB of source plus the caught-animal
+// models it shares with fishing) is not in the island boot chunk. Its chunk is fetched once the player is within
+// DIVE_ROOM_PREFETCH m of a dive zone (slots(), the HUD tick); until it lands the Dive prompt stays hidden and the edge entry is
+// refused, so a dive never starts without its room. A failed load is forgotten, so the next tick near the water retries.
+const DIVE_ROOM_PREFETCH=120;
+let roomModule:typeof import('../../graphics/diveRoom')|null=null,roomLoading:Promise<void>|null=null;
+export const loadDiveRoom=()=>{if(roomModule)return Promise.resolve();roomLoading??=import('../../graphics/diveRoom').then(m=>{roomModule=m;},()=>{roomLoading=null;});return roomLoading;};
+export const diveRoomReady=()=>roomModule!==null;
+/** Tests and headless checks: hand the room module over synchronously (the island always goes through loadDiveRoom). */
+export function provideDiveRoom(m:typeof import('../../graphics/diveRoom')){roomModule=m;}
 import type {SwimRigPose} from '../../graphics/swimPose';
 import {createDiveSession,parseDiveFinds,addDiveFind,diveRunId,DIVE_FINDS_KEY,BREATH_LOW,DIVE_OUT_NOTE,type DiveFindsSave,type DiveInput,type SurfaceReason} from './diveSession';
 import {DIVE_PROMPT,DIVE_PROMPT_LABEL,DIVE_REST_PROMPT,DIVE_SPOTS,diveTaskFinds,nearestDiveSpots,type DiveFind,type DiveSpot} from './diveSpots';
@@ -128,7 +138,7 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   friend=DIVE_FRIENDS[s.id]??null;if(friend){friendHome(s,home);fr.x=home.x;fr.y=home.y;fr.z=home.z;fr.yaw=Math.atan2(-home.x,13-home.z);}friendNear=false;emotedThisDive=false;emo.kind='';emo.t=emo.cd=0;
   sparkDate=ports.date?.()??localDate();spark=sparkleDone(reefSave.spark,s.id,sparkDate)?null:sparkleSpot(s,sparkDate);
   whale.at=calm?-1:whalePlan(rnd(),rnd(),!!reefSave.whale?.includes(s.id));whale.t=-1;whale.done=whale.stamped=false;
-  room=createDiveRoom(s,{phone:ports.phone,reduced:ports.reduced(),lite:ports.lite?.()??false,found:save.spots[s.id]??[],pickups:picks,got,
+  room=roomModule!.createDiveRoom(s,{phone:ports.phone,reduced:ports.reduced(),lite:ports.lite?.()??false,found:save.spots[s.id]??[],pickups:picks,got,
    friend:friend?{kind:friend.kind,x:home.x,y:home.y,z:home.z}:null,sparkle:spark,calm});clock=0;session.setSolids(room.solids);/* Explore (Oct 22 2026): solid wreck, rocks, arch, goal, crates */
   formT=-1;joy=0;pickedThisDive=0;still=0;ballGoalT=-1;secretSaid=false;hasBall=s.finds.some(f=>f.kind==='ball');bud.x=session.state.x+.8;bud.y=session.state.y+.3;bud.z=session.state.z-1;bud.vx=bud.vy=bud.vz=0;
   if(room.goal){ball.x=room.goal.cx;ball.z=room.goal.cz;ball.y=diveFloor(ball.x,ball.z,s.floor)+DIVE_BALL.r;ball.vx=ball.vy=ball.vz=0;ball.lz=0;}
@@ -163,13 +173,13 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
   whaleNow(){if(session.diving){whale.at=clock;whale.done=false;whale.stamped=false;}},
   /** The patch test at the surface (the island step, at the probe's 10 Hz), plus the breath refill there. */
   /** The ocean's patch slots: the DIVE_SLOTS nearest zones (Town's HUD tick; a write only when the set changes). */
-  slots(x:number,z:number){nearestDiveSpots(x,z,near);let k='';for(const s of near)k+=s.id+'|';if(k!==slotKey){slotKey=k;setDiveSpots(near);}},
+  slots(x:number,z:number){nearestDiveSpots(x,z,near);if(!roomModule&&near[0]&&(near[0].x-x)**2+(near[0].z-z)**2<(DIVE_ROOM_PREFETCH+near[0].radius)**2)void loadDiveRoom();let k='';for(const s of near)k+=s.id+'|';if(k!==slotKey){slotKey=k;setDiveSpots(near);}},
   scan(dt:number,x:number,z:number,swimming:boolean){const s=session.scan(dt,x,z,swimming);if(swimming!==swimmingNow){swimmingNow=swimming;drawBreath(true);}else if(session.events.breathUi)drawBreath();return s;},
   /** The arbiter candidate (Town's HUD tick): the Dive prompt wants the focus slot while in a patch. */
-  want(){const s=session.state.near;return s&&!session.diving?{key:'dive',distance:0}:null;},
+  want(){const s=session.state.near;return s&&!session.diving&&roomModule?{key:'dive',distance:0}:null;},
   /** The floating Dive prompt over the buoy (each island frame while in a patch; `allowed` = the arbiter gave it the slot). */
   prompt(camera:T.Camera,width:number,height:number,allowed:boolean){
-   const el=ports.ui<HTMLButtonElement>('[data-dive-go]');if(!el)return;const s=session.state.near;let hidden=!(s&&allowed&&!session.diving);
+   const el=ports.ui<HTMLButtonElement>('[data-dive-go]');if(!el)return;const s=session.state.near;let hidden=!(s&&allowed&&!session.diving&&roomModule);
    if(!hidden&&s){v.set(s.x,WATER_LEVEL+3.2,s.z).project(camera);hidden=v.z< -1||v.z>1;
     if(!hidden){ports.place(el,Math.max(90,Math.min(width-90,(v.x+1)*width/2)),Math.max(90,Math.min(height-160,(1-v.y)*height/2)));
      const label=session.ready?DIVE_PROMPT:DIVE_REST_PROMPT;if(label!==promptLabel){promptLabel=label;el.textContent=label;el.setAttribute('aria-label',session.ready?DIVE_PROMPT_LABEL:'Catch your breath first: float here a moment');el.dataset.diveGo=session.ready?'dive':'rest';}}}
@@ -183,12 +193,12 @@ export function createDiveRuntime(ports:DiveRuntimePorts){
    *  DIVE_EDGE.enterIn m into a zone's blob enters its room at the matching point (no tap). The host calls it each island frame while
    *  duck-diving; a quick distance reject keeps it cheap. True when the room was entered. */
   edgeEnter(x:number,z:number,yaw:number,speed:number,islandDive:number){
-   const st=session.state;if(session.diving||st.edgeCd>0||st.hold>0)return false;const s=diveEdgeSpotAt(x,z,DIVE_SPOTS);if(!s)return false;
+   const st=session.state;if(session.diving||st.edgeCd>0||st.hold>0)return false;if(!roomModule){void loadDiveRoom();return false;}const s=diveEdgeSpotAt(x,z,DIVE_SPOTS);if(!s)return false;
    diveEdgeToRoom(s,x,z,yaw,toRoom);if(!session.enterAt(s,toRoom.x,toRoom.z,toRoom.yaw,speed,diveEdgeDepthT(islandDive)))return false;enter(true);return true;},
   /** Where the last swim out across the edge put the diver on the island (Town's surfaced('edge') reads it). */
   get edgeExit():Readonly<DiveEdgeExit>{return exitPt;},
   /** "Dive" (the prompt's tap or E): go under. False when not in a patch or out of breath. */
-  start(){if(!session.start())return false;enter();return true;},
+  start(){if(!roomModule){void loadDiveRoom();return false;}if(!session.start())return false;enter();return true;},
   /** One dive frame instead of the island's: the swim, the breath, the room, the rig, the find prompt, one render. */
   frame(dt:number,input:DiveInput,width:number,height:number){
    if(!room)return;const s=session.state.spot;

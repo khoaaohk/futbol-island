@@ -5,7 +5,7 @@
  * docs/explore-ball-lessons.md; tests/explore-balls.cjs compares every lesson's topic words with the game's other content).
  *
  * Pure data (no three.js, no DOM). diveSpots.ts turns each row into the zone's `ball` find (the finds store, the prompt, the card,
- * coins once through the Training meter); lib/graphics/diveBall.ts draws it (one mesh, no textures). Positions are room-local
+ * coins once, never metered since Nov 10 2026); lib/graphics/diveBall.ts draws it (one mesh, no textures). Positions are room-local
  * metres. Oct 25 2026 (user: "instead of the pearl in the treasure chest. have it be a ball ... when collected give a mini lesson
  * and allow to choose a card"): each ball now sits in its zone's treasure chest (the chest is drawn at the ball find's x, z, where
  * the old matchday coin was), and the first pick-up also earns a card choice (cardRewardTriggers.ts earnForDiveBall).
@@ -26,7 +26,8 @@ export type DiveBall={
  topic:readonly string[];
 };
 
-/** The dive's coins for a ball, once ever through the Training meter (≤ a hidden island ball's LEARN_COINS.ball). Since Oct 25 2026
+/** The dive's coins for a ball, once ever (≤ a hidden island ball's LEARN_COINS.ball); learning, so NOT metered since the Nov 10
+ *  2026 audit (lib/town/dailyMeter.ts DIVE_BALL_RUN; before, a ball found after a day of jobs paid the 1-coin tip). Since Oct 25 2026
  *  (user: "yes pay") the first find also pays an island ball's learning coins on top (LEARN_COINS.ball, once ever, never metered:
  *  earnForDiveBall in lib/town/cardRewardTriggers.ts, wallet run `learn:ball:dive:<zone>`). */
 export const DIVE_BALL_COINS=5;

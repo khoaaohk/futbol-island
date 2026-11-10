@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
+import styles from './error.module.css';
 
 /**
  * The game's last-resort error screen (QA audit Oct 25 2026, docs/QA_AUDIT_OCT25.md #13). There was no error boundary anywhere:
@@ -22,9 +23,9 @@ export default function GameError({error,reset}:{error:Error&{digest?:string};re
   window.addEventListener('online',sync);window.addEventListener('offline',sync);
   return()=>{window.removeEventListener('online',sync);window.removeEventListener('offline',sync);};
  },[]);
- return <div className="town-app"><div className="town-loading" role="alert" data-game-error="">
-  <h2>{offline?'No internet right now':'Oops! The island tripped over the ball.'}</h2>
-  <p>{offline?'Connect to Wi-Fi or data, then tap Try again. Your island is saved.':'Tap Try again to jump back in. Your island is saved.'}</p>
-  <button type="button" className="pixel-button" disabled={offline} onClick={()=>{if(isChunkError(error))window.location.reload();else reset();}}>TRY AGAIN</button>
+ return <div className={styles.screen}><div className={styles.card} role="alert" data-game-error="">
+  <h2 className={styles.title}>{offline?'No internet right now':'Oops! The island tripped over the ball.'}</h2>
+  <p className={styles.text}>{offline?'Connect to Wi-Fi or data, then tap Try again. Your island is saved.':'Tap Try again to jump back in. Your island is saved.'}</p>
+  <button type="button" className={styles.button} disabled={offline} onClick={()=>{if(isChunkError(error))window.location.reload();else reset();}}>Try again</button>
  </div></div>;
 }

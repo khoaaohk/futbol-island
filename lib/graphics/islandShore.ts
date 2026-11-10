@@ -256,6 +256,7 @@ const STRIP_GLSL=/* glsl */`
  // Inside the clear water window (clearWindow.ts) the sheet over the skirt thins, so the shallows read clear, not as a band.
  waterA*=1.-.35*clearWinMask(vWaterXZ,1.);// Oct 26 2026 tropical water: .55 -> .35, the skirt reads lagoon turquoise, not olive
  wet=max(wet,mark*.8);
+ waterC*=uWaterNight;// Nov 10 2026: night water (the ocean's moonlit blue)
  vec3 col=mix(wetSand*(1.-.16*mark),waterC,cover);float alpha=max(cover*waterA,(1.-cover)*wet*.7);
  // Foam: a bright soft edge with some body that breaks into lacy patches as the wave slows and slides back (big lace R and the
  // bubbles B), lacy patches with bubble holes trailing behind it, and the bubbles left along the high-water mark.

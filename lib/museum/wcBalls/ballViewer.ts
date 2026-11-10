@@ -168,6 +168,6 @@ export function createBallViewer(canvas:HTMLCanvasElement,opts:{reducedMotion?:b
   pose(x,y,z){q.setFromEuler(new T.Euler(x,y,z));omega.set(0,0,0);idleMix=0;held=false;lastInput=-Infinity;wake();},
   setPaused(p){paused=p;if(p){cancelAnimationFrame(frame);frame=0;}else wake();},
   resize,
-  dispose(){disposed=true;cancelAnimationFrame(frame);ro.disconnect();document.removeEventListener('visibilitychange',vis);for(const m of materials.values())m.dispose();for(const t of decalTex)t.dispose();env?.dispose();for(const p of models.values())p.then(o=>o?.traverse(x=>{if(x instanceof T.Mesh){x.geometry.dispose();(Array.isArray(x.material)?x.material:[x.material]).forEach(mm=>{for(const v of Object.values(mm))if(v instanceof T.Texture)v.dispose();mm.dispose();});}}));geo.dispose();shadowTex.dispose();shadow.geometry.dispose();(shadow.material as T.Material).dispose();renderer.dispose();},
+  dispose(){disposed=true;cancelAnimationFrame(frame);ro.disconnect();document.removeEventListener('visibilitychange',vis);for(const m of materials.values())m.dispose();for(const t of decalTex)t.dispose();env?.dispose();for(const p of models.values())p.then(o=>o?.traverse(x=>{if(x instanceof T.Mesh){x.geometry.dispose();(Array.isArray(x.material)?x.material:[x.material]).forEach(mm=>{for(const v of Object.values(mm))if(v instanceof T.Texture)v.dispose();mm.dispose();});}}));geo.dispose();shadowTex.dispose();shadow.geometry.dispose();(shadow.material as T.Material).dispose();renderer.dispose();renderer.forceContextLoss();},
  };
 }

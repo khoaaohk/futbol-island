@@ -2,12 +2,15 @@ import {Color,MathUtils,type HemisphereLight,type DirectionalLight,type Scene,ty
 export type TimeOfDay='day'|'sunset'|'night';
 const presets={
  // Clear daytime: blue sky, neutral sunlight and a soft natural ground bounce.
- day:{sky:'#a9d4ed',upper:'#eaf4ff',lower:'#929887',sun:'#fff5e6',hemi:2,direct:3,exposure:1},
+ // Nov 10 2026: a touch more sun and less flat fill so faces separate (was lower '#929887', hemi 2, direct 3).
+ day:{sky:'#a9d4ed',upper:'#eaf4ff',lower:'#8a8f7c',sun:'#fff5e6',hemi:1.6,direct:3.4,exposure:1},
  // Honey-gold sunlight, apricot sky and warm ochre bounce across the island.
- sunset:{sky:'#efb477',upper:'#ffdda6',lower:'#ad8254',sun:'#ffbf72',hemi:1.7,direct:2.95,exposure:1},
+ sunset:{sky:'#efb477',upper:'#ffdda6',lower:'#ad8254',sun:'#ffbf72',hemi:1.45,direct:3.2,exposure:1},// Nov 10 2026: was hemi 1.7, direct 2.95
  // Keep the night sky while warm broad fill reaches trees, paths and pitches.
  // Reusing these lights brightens shadowed scenery without extra light passes.
- night:{sky:'#0d1830',upper:'#d4c6af',lower:'#706653',sun:'#c8d0e4',hemi:1.15,direct:1.05,exposure:.98},
+ // Nov 10 2026: a cooler moonlit fill. One-line revert to the earlier deliberate warm night fill:
+ // night:{sky:'#0d1830',upper:'#d4c6af',lower:'#706653',sun:'#c8d0e4',hemi:1.15,direct:1.05,exposure:.98},
+ night:{sky:'#0d1830',upper:'#9fb0cf',lower:'#4a5163',sun:'#a8bce6',hemi:1.15,direct:.85,exposure:.98},
 };
 /** The island's light presets, shared with the shop snapshots (components/StorePreviews.tsx) so a ball picture is lit like the island. */
 export const ISLAND_LIGHT_PRESETS=presets;

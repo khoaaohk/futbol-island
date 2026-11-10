@@ -1,7 +1,7 @@
 // Clear water window (Oct 19 2026, docs/water-look-research.md §3, docs/performance-guide.md "Clear water window"): the ocean
-// blends and the seabed + coral show only near the shallows on heat tiers 0-2 (never tiers 3-4 / Battery saver, never while
-// fishing); the ocean's render state comes back exactly when it closes (also when the swim disc shares it); coral counts stay
-// capped, inside the depth band, under the surface; tier 2 keeps coral near; update() allocates nothing.
+// blends and the seabed + coral show only near the shallows on heat tiers 0-1 (Nov 10 2026: never tiers 2-4 / Battery saver, never
+// with the camera over ~25 m, never while fishing); the ocean's render state comes back exactly when it closes (also when the swim
+// disc shares it); coral counts stay capped, inside the depth band, under the surface; update() allocates nothing.
 // Run: node tests/clear-window.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs');
 const {createLoader}=require('./summit-harness.cjs');
@@ -41,8 +41,8 @@ ok('coral + grass: capped, one InstancedMesh per kind, in the depth band, off la
  assert.equal(n,win.stats.formations+win.stats.grass);
  const a=[];each((k,P)=>a.push(k+P.x.toFixed(2)+P.z.toFixed(2)));step(1,12,3,0);step(1,5,3,0);const b=[];each((k,P)=>b.push(k+P.x.toFixed(2)+P.z.toFixed(2)));assert.deepEqual(b,a,'seeded on the world grid: same coral after a re-snap');
 });
-ok('tier 2: coral only near the player, the window still open',()=>{
- step(2,5,3,2);assert.equal(win.open,true);assert.equal(win.stats.radius,CW.CLEAR_TIERS[2].win+16);assert(win.stats.formations<=CW.CLEAR_TIERS[2].cap&&win.stats.grass<=CW.CLEAR_TIERS[2].grass);assert.equal(win.stats.fish+win.stats.turtles+win.stats.jellies+win.stats.crabs,0,'no sea life at tier 2');
+ok('tier 2 (Nov 10 2026): the window eases shut (the ocean opaque again); tier 1 smaller caps; tier 0 back',()=>{
+ assert.equal(CW.CLEAR_OPEN_TIER,2);step(60,5,3,2);assert.equal(win.open,false,'tier 2: closed');assert.equal(group.visible,false);assert.equal(U.z,0);
  step(2,5,3,1);assert(win.stats.formations<=CW.CLEAR_TIERS[1].cap);step(2,5,3,0);assert.equal(win.stats.radius,CW.CLEAR_TIERS[0].win+16);
 });
 ok('stable: moving the window never changes the coral, grass or creatures inside it (world-anchored)',()=>{
@@ -59,8 +59,13 @@ ok('sea life: per tier counts, in water, one mesh per kind, off at tier 2 and re
  for(const [kind,l] of Object.entries(win.life))for(let i=0;i<l.mesh.count;i++){const M=new T.Matrix4(),P=new T.Vector3();l.mesh.getMatrixAt(i,M);P.setFromMatrixPosition(M);const d=field.distance(P.x,P.z),depth=UW.uwDepthAt(d,CW.CLEAR_BED.floor);if(kind==='crab')assert(depth>=L.crab.depth[0]-1e-6&&depth<=L.crab.depth[1]+1e-6,'crab depth '+depth);else assert(d>=L[kind].minD,kind+' home '+d);assert(Math.abs(P.y-UW.UW_SURFACE)<1e-5);}
  step(2,5,3,1);assert(win.stats.fish<=L.fish.tier[1]&&win.stats.crabs<=L.crab.tier[1]);step(2,5,3,2);assert.equal(win.stats.fish+win.stats.crabs+win.stats.jellies+win.stats.turtles,0);step(2,5,3,0);
  // The camera: a high camera looking down-ahead pulls the window centre toward the water point it sees (within the tier's reach).
- const cam=new T.PerspectiveCamera(40,1,1,500);cam.position.set(5,UW.UW_SURFACE+40,3);cam.lookAt(60,UW.UW_SURFACE,3);cam.updateMatrixWorld(true);
- for(let i=0;i<300;i++)win.update(1/60,5,3,0,false,cam);assert(win.stats.look[0]>20&&win.stats.look[0]<=5+CW.CLEAR_TIERS[0].reach+.01,'look '+win.stats.look[0]);assert.equal(U.w,CW.CLEAR_TIERS[0].win,'full radius high up');
+ const cam=new T.PerspectiveCamera(40,1,1,500);cam.position.set(5,UW.UW_SURFACE+20,3);cam.lookAt(60,UW.UW_SURFACE,3);cam.updateMatrixWorld(true);
+ for(let i=0;i<300;i++)win.update(1/60,5,3,0,false,cam);assert(win.stats.look[0]>20&&win.stats.look[0]<=5+CW.CLEAR_TIERS[0].reach+.01,'look '+win.stats.look[0]);assert(win.open&&U.w>CW.CLEAR_TIERS[0].win*.7&&U.w<CW.CLEAR_TIERS[0].win,'bigger radius higher up '+U.w);
+ // Nov 10 2026: over CLEAR_HIGH.close m (jetpack) the window eases shut, the sea opaque; it stays shut until under CLEAR_HIGH.open m.
+ const hi=h=>{cam.position.set(5,UW.UW_SURFACE+h,3);cam.lookAt(60,UW.UW_SURFACE,3);cam.updateMatrixWorld(true);for(let i=0;i<60;i++)win.update(1/60,5,3,0,false,cam);};
+ hi(CW.CLEAR_HIGH.close+1);assert.equal(win.open,false,'closed high up');assert.equal(group.visible,false);
+ hi((CW.CLEAR_HIGH.close+CW.CLEAR_HIGH.open)/2);assert.equal(win.open,false,'hysteresis: still closed between the two heights');
+ hi(CW.CLEAR_HIGH.open-1);assert.equal(win.open,true,'open again lower down');
  cam.position.set(5,UW.UW_SURFACE+3,3);cam.updateMatrixWorld(true);win.update(1/60,5,3,0,false,cam);assert(Math.abs(U.w-CW.CLEAR_TIERS[0].win*.7)<1e-6,'smaller radius with a low camera');
  for(let i=0;i<400;i++)win.update(1/60,5,3,0,false,null);
  // Gate off or still path: no creatures.

@@ -89,22 +89,24 @@ assert.equal(FISH_SPOTS.length,18,'18 fishing spots: 6 main-island posts, 2 deep
  const causeway=FISH_SPOTS.filter(s=>s.area==='causeway'),cay=FISH_SPOTS.filter(s=>s.area==='cay');
  assert.equal(causeway.length,3,'three causeway spots');assert.equal(cay.length,3,'three Coral Cay spots');
  const sharks=cayCat.SHARK_LOOPS.flatMap(l=>l.points),onIsland=e.load('lib/town/shoreline.ts').onIsland;
- // The post (kiosk) footprint exactly as fishingWorld.ts kioskAt/fishingKioskObstacles place it (that module needs WebGL-side three imports).
- assert(/KIOSK_OFFSET=2\.1/.test(world)&&/size=\(1\.2\+\.7\)\*c/.test(world),'kiosk rule unchanged');
- const kioskOf=s=>{const dx=s.buoy.x-s.x,dz=s.buoy.z-s.z,l=Math.hypot(dx,dz),size=(1.2+.7)*Math.SQRT1_2;return {x:s.x-dz/l*2.1,z:s.z+dx/l*2.1,w:size,d:size};};
+ // The post (stall) footprint exactly as fishingWorld.ts fishingKioskObstacles places it: since Nov 10 2026 each stall type's round
+ // colliders (fishingKiosk.ts stallColliders; tests/fishing-stall-styles.cjs checks every post's clearances).
+ const kit=e.load('lib/town/fishing/fishingKiosk.ts');
+ assert(/flatMap\(s=>stallColliders\(s\)\)/.test(world),'kiosk rule: the stall colliders');
+ const kioskOf=s=>kit.kioskAt(s),stallCircles=s=>kit.stallColliders(s);
  for(const s of [...causeway,...cay]){
   const k=kioskOf(s);
   assert(onLand(s.x,s.z)&&!onIsland(s.x,s.z),`${s.id}: stands on walkable Coral Cay ground`);
-  for(const [dx,dz] of [[-1,-1],[1,-1],[-1,1],[1,1]])assert(onLand(k.x+dx*k.w/2,k.z+dz*k.d/2),`${s.id}: the post stands on sand, not in the sea`);
+  for(const o of stallCircles(s))for(let a=0;a<8;a++)assert(onLand(o.x+Math.cos(a*Math.PI/4)*o.cornerRadius,o.z+Math.sin(a*Math.PI/4)*o.cornerRadius),`${s.id}: the post stands on sand, not in the sea`);
   assert(core.inOpenWater(s.buoy.x,s.buoy.z),`${s.id}: the idle float sits in open water`);
   const c=core.castPoint(s,s);assert(core.inOpenWater(c.x,c.z)&&Math.hypot(c.x-s.buoy.x,c.z-s.buoy.z)<3,`${s.id}: the cast lands in open water by the float`);
   // Spread out: at least 60 m from every other fishing spot.
   for(const o of FISH_SPOTS)if(o!==s)assert(Math.hypot(o.x-s.x,o.z-s.z)>60,`${s.id}: 60+ m from ${o.id}`);
  }
- for(const s of causeway){const f=cayCat.causewayFrame(s.x,s.z,true),kf=cayCat.causewayFrame(kioskOf(s).x,kioskOf(s).z,true);
+ for(const s of causeway){const f=cayCat.causewayFrame(s.x,s.z,true),kfs=stallCircles(s).map(o=>({f:cayCat.causewayFrame(o.x,o.z,true),r:o.cornerRadius}));
   assert(f.s>cayCat.CAUSEWAY.sWater0&&f.s<cayCat.CAUSEWAY.sWater1,`${s.id}: over the water stretch of the causeway`);
   // Lanes are ±2 m (cayTraffic.ts CAY_LANE_OFFSET), lamps 6.65 m, the deck edge 7 m: the angler and the post stand on the bank beyond.
-  assert(f.dist>cayCat.CAUSEWAY.deckHalf+1&&kf.dist-1>cayCat.CAUSEWAY.deckHalf,`${s.id}: angler and post stand on the sand bank, off the deck and clear of traffic`);
+  assert(f.dist>cayCat.CAUSEWAY.deckHalf+1&&kfs.every(({f:kf,r})=>kf.dist-Math.max(1,r)>cayCat.CAUSEWAY.deckHalf),`${s.id}: angler and post stand on the sand bank, off the deck and clear of traffic`);
   assert(Math.min(...sharks.map(p=>Math.hypot(p.x-s.buoy.x,p.z-s.buoy.z)))>=9,`${s.id}: the float is clear of the causeway sharks' patrols`);
   assert(cayCat.SANDBARS.every(b=>Math.hypot(b.x-s.x,b.z-s.z)>b.radius+10),`${s.id}: not on a sandbar stop`);}
  for(const s of cay){assert(cayCat.onCay(s.x,s.z)&&cayCat.distanceToCayShore(s.x,s.z)<6,`${s.id}: on the cay's beach, near the water`);

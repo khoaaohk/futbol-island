@@ -160,7 +160,8 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   if(s.bounceEvents!==bounceSeen){bounceSeen=s.bounceEvents;const sand=tennisCourtOf(s).surface==='sand';emit(`tennis:bounce:${s.fxLandI.toFixed(2)}:${b.y>0?'you':'rival'}:${sand?'sand':'hard'}:${s.rally}`);if(sand)stage.burst?.(b.x,.06,b.y,.35);}
   // Trap: name the touch (thigh/chest) and what it sets up.
   if(s.trapEvents!==trapSeen){trapSeen=s.trapEvents;const who=s[s.trapSide],chest=who.kickStyle===5;
-   if(s.trapSide==='you'){const good=s.trapGrade==='good';draw(touch,good?(chest?'CHEST TRAP · SET!':'THIGH TRAP · SET!'):'HEAVY TRAP',good?'#73fff1':'#ffb27a',good?'Now strike it':s.trapGrade==='heavy'?'Slow your feet first':'Get your body in line');show(touch,who.x,2.6,who.y,.9,.45);}
+   if(s.trapSide==='you'&&s.trapOnTarget){draw(touch,'ON TARGET · SET!','#ffc93c','Soft touch into space. Strike!');show(touch,who.x,2.6,who.y,.9,.45);}/* Nov 10 2026 first-touch target */
+   else if(s.trapSide==='you'){const good=s.trapGrade==='good';draw(touch,good?(chest?'CHEST TRAP · SET!':'THIGH TRAP · SET!'):'HEAVY TRAP',good?'#73fff1':'#ffb27a',good?'Now strike it':s.trapGrade==='heavy'?'Slow your feet first':'Get your body in line');show(touch,who.x,2.6,who.y,.9,.45);}
    else{draw(intent,'IT TRAPS · GET SET','#ffc0e8');show(intent,who.x,3.1,who.y,1,.15,1.35);}
    emit(`tennis:trap:${s.trapSide}:${chest?'chest':'thigh'}`);}
   if(s.outEvents!==outSeen){outSeen=s.outEvents;if(s.incomingOut&&s.phase==='rally'){draw(intent,'GOING OUT · LET IT GO','#ff8a8a');show(intent,s.you.x,3.3,s.you.y,1.3,.15,1.2);emit('tennis:out');}}

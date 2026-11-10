@@ -22,3 +22,5 @@
 @keyframes returnDetailsAway{to{opacity:0}}
 @keyframes returnReveal{to{opacity:0}}
 @media(prefers-reduced-motion:reduce){.exiting,.exiting .land,.exiting .copy,.exiting .signpost,.exiting .shoreLine{animation:none}.exiting{opacity:0}}
+/* Nov 10 2026: the warm return (IslandReturnWarm.tsx) hands its loading screen to Town's copy; the sign is already in place. */
+:global(html[data-return-warm]) .signpost{animation:none}

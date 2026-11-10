@@ -57,7 +57,7 @@ export function buildCoralCay(t:CayTools){
  // ---- Curved strips along the centre line. Each strip is cut into ≤12-sample (~24 m) pieces, built relative to the
  // piece's middle and placed there, so it joins its own 50 m chunk. inner/outer are signed offsets (+ = right of
  // travel) and may vary along the road (beach widths); yInner/yOuter give sloped faces (the beach running into the sea).
- function strip(from:number,to:number,inner:(p:PathSample)=>number,outer:(p:PathSample)=>number,yInner:number,yOuter:number,color:string,shadow=false,piece=12,tint?:'sand'|'path'){
+ function strip(from:number,to:number,inner:(p:PathSample)=>number,outer:(p:PathSample)=>number,yInner:number,yOuter:number,color:string,shadow=false,piece=12,tint?:'sand'|'path'|'asphalt'){
   for(let a=from;a<to;a+=piece){
    const b=Math.min(to,a+piece),mid=P[(a+b)>>1],positions:number[]=[],indices:number[]=[];
    for(let i=a;i<=b;i++){const p=P[i],q=offsetPoint(p,inner(p)),r=offsetPoint(p,outer(p));positions.push(q.x-mid.x,yInner,q.z-mid.z,r.x-mid.x,yOuter,r.z-mid.z);if(i<b){const k=(i-a)*2;indices.push(k,k+2,k+1,k+1,k+2,k+3);}}
@@ -74,7 +74,7 @@ export function buildCoralCay(t:CayTools){
  const ARM_END=ROUNDABOUT.roadOuter+5,inRing=(p:{x:number;z:number})=>Math.hypot(p.x-ROUNDABOUT.x,p.z-ROUNDABOUT.z)<ARM_END;
  const iW=P.findIndex(inRing),iE=P.length-1-[...P].reverse().findIndex(inRing);
  for(const [a,b] of [[0,iW],[iE,last]] as [number,number][]){
-  strip(a,b,()=>-4,()=>4,-.01,-.01,'#737c75');
+  strip(a,b,()=>-4,()=>4,-.01,-.01,'#737c75',false,12,'asphalt');// Nov 10 2026: tinted like the main island's carriageways
   for(const side of [-1,1])strip(a,b,()=>side*4,()=>side*deck,-.02,-.02,'#eddfbb',false,12,'path');
  }
  // Over the water the embankment slopes gently into the sea (no vertical cliff): a stone skirt, then — wherever sand or
@@ -169,7 +169,7 @@ export function buildCoralCay(t:CayTools){
    outline.push(...arc(R.roadOuter,m.hi,next.lo).slice(1,-1));});
   const shape=new T.Shape();outline.forEach((q,i)=>{const x=q.x-R.x,y=-(q.z-R.z);i?shape.lineTo(x,y):shape.moveTo(x,y);});shape.closePath();
   const hole=new T.Path();hole.absarc(0,0,R.roadInner,0,Math.PI*2,true);shape.holes.push(hole);
-  {const g=new T.ShapeGeometry(shape,24);g.rotateX(-Math.PI/2);flat(put(g,'#737c75',R.x,-.01,R.z));}
+  {const g=new T.ShapeGeometry(shape,24);g.rotateX(-Math.PI/2);tintGroundMesh(flat(put(g,'#737c75',R.x,-.01,R.z)),'asphalt');}
   // Pavement: fillet strips between the asphalt and pavement fillets, and sectors between the arms (same sample counts).
   const quadStrip=(inner:{x:number;z:number}[],outer:{x:number;z:number}[],color:string,y:number)=>{const positions:number[]=[],indices:number[]=[];
    inner.forEach((q,i)=>{const o=outer[i];positions.push(q.x-R.x,y,q.z-R.z,o.x-R.x,y,o.z-R.z);if(i<inner.length-1){const k=i*2;indices.push(k,k+2,k+1,k+1,k+2,k+3);}});
@@ -219,11 +219,11 @@ export function buildCoralCay(t:CayTools){
   sign('CORAL CAY',1.8,.5,x+2.8,2.55,front+.23,'#fff4dc','#3f8f6c');
   box(1.8,.6,1.3,'#bac5bc',x+2.4,4.85,z-2);
   palm(x-K.w/2-2,front-1.5,6);planter(x+K.w/2+2.8,front+1.4);// 1 m further east: clear of the drinks machine (Sep 29 2026)
-  // A potted tropical plant west of the doors (outside the door's 2.2 m clearance). The east one was dropped when the
-  // snack + drinks machines moved in flush beside the doors (Sep 29 2026).
-  for(const px of [door-2.25]){prop('planter',()=>{cylinder(.34,.55,'#bd7657',px,.27,front+.6);for(let k=0;k<4;k++){const leaf=put(new T.IcosahedronGeometry(.34,0),k%2?'#3f7a4f':'#5b895e',px+Math.cos(k*1.6)*.22,.85+(k%2)*.22,front+.6+Math.sin(k*1.6)*.22);leaf.scale.set(1,.55,1.5);leaf.rotation.y=k*1.6;}});obstacles.push({x:px,z:front+.6,w:.7,d:.7});}
-  // Bench in front of the west window, facing the roundabout.
-  {const bx=x-3.4,bz=front+2.2;prop('bench',()=>{box(2.2,.1,.55,'#a67d55',bx,.48,bz);box(2.2,.45,.08,'#a67d55',bx,.78,bz-.25);for(const ex of [-.9,.9])box(.1,.45,.5,'#385a4e',bx+ex,.23,bz);});obstacles.push({x:bx,z:bz,w:2.2,d:.7});}
+  // No potted plants by the doors any more: the east one went for the snack + drinks machines (Sep 29 2026) and the west one
+  // for the two gashapon capsule machines (Nov 8 2026, lib/gashapon/machines.ts), which stand flush west of the doors.
+  // Bench in front of the west window, facing the roundabout: 2 m further west since Nov 8 2026, so the gashapon pair's buying
+  // spot in front of them stays clear.
+  {const bx=x-5.4,bz=front+2.2;prop('bench',()=>{box(2.2,.1,.55,'#a67d55',bx,.48,bz);box(2.2,.45,.08,'#a67d55',bx,.78,bz-.25);for(const ex of [-.9,.9])box(.1,.45,.5,'#385a4e',bx+ex,.23,bz);});obstacles.push({x:bx,z:bz,w:2.2,d:.7});}
   // Chalkboard A-frame at the east corner, past the drinks machine (clear of the machines' buying spots): the day's refuel pick.
   {const cx=x+K.w/2+.7,cz=front+1.6;prop('sign',()=>{for(const dz of [-.16,.16]){const leg=box(.72,1.05,.05,'#384443',cx,.5,cz+dz);leg.rotation.x=dz>0?-.28:.28;}
    sign('WATER + FRUIT',.6,.34,cx,.62,cz+.33,'#384443','#fff4dc');});obstacles.push({x:cx,z:cz,w:.8,d:.6});}

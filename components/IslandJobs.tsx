@@ -26,7 +26,7 @@ import PocketFishIcon from './PocketFishIcon';
 import FuelCount from './FuelCount';
 import {useFuel} from '@/lib/town/fuelStore';
 import {FruitArt} from './PocketArt';
-import {OPEN_MARKET_STAND} from './FishingHost';
+import {OPEN_MARKET_STAND} from '@/lib/town/fishing/fishingSignals';
 import styles from './IslandJobs.module.css';
 import {parLine,jobPar} from '@/lib/town/jobs/jobCoach';
 import {useCardOffers} from '@/lib/town/cardRewardStore';
@@ -129,7 +129,7 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,c
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[note]);
  // One-time welcome coins (idempotent: ledger flag + fixed wallet run id).
- useEffect(()=>{let live=true;void islandJobWallet.grantStarter().then(n=>{if(live&&n>0)setToast({title:`Welcome! +${n} coins`,detail:'Spend them in the arcade, or earn more at the island job signs.'});});return()=>{live=false;};},[]);
+ useEffect(()=>{let live=true;void islandJobWallet.grantStarter().then(n=>{if(live&&n>0)setToast({title:`Welcome! +${n} coins`,detail:'Earn more with lessons, the ball hunt and island jobs.'});});return()=>{live=false;};},[]);
  // The toast's short timer starts once the HUD is visible again, so a coin toast earned inside a lesson is still seen after it.
  useEffect(()=>{if(!toast||toastHeld)return;const t=setTimeout(()=>setToast(null),toast.ms??toastDuration(toasts.length-1));return()=>clearTimeout(t);},[toast,toastHeld,toasts.length]);
  useEffect(()=>{const earned=(event:Event)=>{const amount=(event as CustomEvent<{amount:number}>).detail?.amount;if(amount===DAILY_PLAY_COINS)setToast({title:`+${DAILY_PLAY_COINS} daily play coins`,detail:`You explored and played today. Come back tomorrow for another ${DAILY_PLAY_COINS}.`});};window.addEventListener('fi2-daily-play-earned',earned);return()=>window.removeEventListener('fi2-daily-play-earned',earned);},[]);

@@ -16,6 +16,8 @@
  *  - Reduced motion: no slow motion, no zoom, no camera offsets (the beat is ignored).
  * No allocation after creation: every beat is a preset copied into fixed numeric fields.
  */
+import {createBeatDirector,smoothstep} from './beatDirector';
+
 export type CinemaKind='dodge'|'hurdle'|'goal'|'duel'|'finish'|'save'|'power'|'intro'|'bigair';
 type Beat={slow:number;attack:number;hold:number;release:number;zoom:number;low:number;lift:number;back:number;flare:number};
 export const CINEMA={minGap:6,maxBeat:1.8,minSlow:.35,maxFov:.12,skipRamp:.12} as const;
@@ -36,21 +38,23 @@ export const CINEMA_BEATS:Record<CinemaKind,Beat>={
  // Stadium run-in at kick-off: the camera starts high and back and settles behind the runner.
  intro:{slow:1,attack:0,hold:.35,release:1.25,zoom:0,low:0,lift:3.6,back:7,flare:0},
 };
-const smooth=(u:number)=>u<=0?0:u>=1?1:u*u*(3-2*u);
+const smooth=smoothstep;
 
 export function createRunnerCinema(reduced:boolean){
- let kind:CinemaKind|''='',t=0,attack=0,hold=0,release=0,slow=1,zoom=0,low=0,lift=0,back=0,flare=0,clock=0,lastSlow=-99,skipAt=-1,count=0,skipped=0;
+ // Shared beat director (lib/arcade/beatDirector.ts): real-time clock, the one-slow-mo-per-minGap gate, reduced motion.
+ const d=createBeatDirector({reduced,gaps:{slow:CINEMA.minGap}});
+ let kind:CinemaKind|''='',t=0,attack=0,hold=0,release=0,slow=1,zoom=0,low=0,lift=0,back=0,flare=0,skipAt=-1,count=0,skipped=0;
  let outScale=1,outEnv=0;
  /** Start a beat. Returns true if it played (false when reduced motion is on or a bigger beat is running). */
  function trigger(k:CinemaKind){
-  if(reduced)return false;
+  if(d.reduced)return false;
   const b=CINEMA_BEATS[k];
   // A running duel/finish is never interrupted by smaller beats.
   if(kind&&(kind==='duel'||kind==='finish')&&k!=='finish'&&envelope()>.05)return false;
   kind=k;t=0;attack=b.attack;hold=b.hold;release=b.release;zoom=b.zoom;low=b.low;lift=b.lift;back=b.back;flare=b.flare;skipAt=-1;
   // One slow beat per minGap seconds; later beats keep their camera move but play at full speed.
-  const wantsSlow=b.slow<1;slow=wantsSlow&&clock-lastSlow>=CINEMA.minGap?Math.max(CINEMA.minSlow,b.slow):1;
-  if(slow<1)lastSlow=clock;
+  const wantsSlow=b.slow<1;slow=wantsSlow&&d.ready('slow')?Math.max(CINEMA.minSlow,b.slow):1;
+  if(slow<1)d.mark('slow');
   // Hard cap on the beat length.
   const total=attack+hold+release;if(total>CINEMA.maxBeat){const k2=CINEMA.maxBeat/total;attack*=k2;hold*=k2;release*=k2;}
   count++;return true;
@@ -64,17 +68,17 @@ export function createRunnerCinema(reduced:boolean){
   // Keep continuity: scale offsets by the current envelope so nothing snaps.
   zoom*=e;low*=e;lift*=e;back*=e;flare*=e;slow=1-(1-slow)*e;}
  /** Advance in REAL seconds (not slowed time). */
- function step(dt:number){clock+=dt;if(!kind){outScale=1;outEnv=0;return;}t+=dt;const e=envelope();
+ function step(dt:number){d.tick(dt);if(!kind){outScale=1;outEnv=0;return;}t+=dt;const e=envelope();
   outEnv=e;outScale=1-(1-slow)*e;
   const end=skipAt>=0?skipAt+CINEMA.skipRamp:attack+hold+release;if(t>=end){kind='';outScale=1;outEnv=0;}}
- function reset(){kind='';t=0;outScale=1;outEnv=0;lastSlow=-99;skipAt=-1;}
+ function reset(){kind='';t=0;outScale=1;outEnv=0;d.resetGates();skipAt=-1;}
  return{trigger,skip,step,reset,
   timeScale:()=>outScale,
   /** 0..1 punch-in amount (map to FOV <= CINEMA.maxFov). */zoom:()=>zoom*outEnv,
   /** Camera offsets (m): lower for a hero shot, lift for a rise, back for a pull-back (negative = push in). */
   low:()=>low*outEnv,lift:()=>lift*outEnv,back:()=>back*outEnv,flare:()=>flare*outEnv,
   active:()=>kind!=='',kind:()=>kind,
-  debug:()=>({kind,t,slow,scale:outScale,env:outEnv,count,skipped,lastSlow,clock}),
+  debug:()=>({kind,t,slow,scale:outScale,env:outEnv,count,skipped,lastSlow:d.last('slow'),clock:d.clock}),
  };
 }
 export type RunnerCinema=ReturnType<typeof createRunnerCinema>;

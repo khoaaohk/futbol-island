@@ -1,16 +1,17 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createBuildingGlow} from '../../graphics/buildingGlow';
-import {FISH_SPOTS,MARKET_STAND,type FishSpot} from './fishCatalog';
+import {FISH_SPOTS,MARKET_STAND,type FishSpot} from './fishSpots';
 import type {FishingVisuals} from './fishingVisuals';
+import {markFishingNear} from './fishingSignals';// Nov 10 2026: mounts the lazy FishingHost (components/FishingHostLazy.tsx)
 // Lazy-load pass (Oct 7 2026, docs/performance-guide.md): the angler/shoreline art (fishingVisuals.ts) and the caught-animal models
 // (fishModels.ts) are not in the boot bundle. Their chunk is fetched once the player is within VISUALS_PREFETCH m of a spot, well
 // before the 45 m at which the visuals are built; if a session starts first, the visuals join it as soon as the chunk lands.
 const VISUALS_PREFETCH=100;
 let visualsModule:typeof import('./fishingVisuals')|null=null,visualsLoading:Promise<void>|null=null;
-const loadFishingVisuals=()=>{visualsLoading??=import('./fishingVisuals').then(m=>{visualsModule=m;},()=>{visualsLoading=null;});return visualsLoading;};
+const loadFishingVisuals=()=>{markFishingNear();visualsLoading??=import('./fishingVisuals').then(m=>{visualsModule=m;},()=>{visualsLoading=null;});return visualsLoading;};
 import {createFishingCamera} from './fishingCamera';
-import {buildKioskGeometry,kioskVariant} from './fishingKiosk';
+import {buildKioskGeometry,kioskAt,kioskVariant,stallColliders,stallType,stallYaw,STALL_TYPES} from './fishingKiosk';
 import {CAST_TIME,castPoint,planApproach,stepSession,type SessionEvent} from './fishingCore';
 import {fishById} from './fishCatalog';
 import {createDeepSeaBoat} from './deepSeaBoat';
@@ -48,7 +49,7 @@ export type FishingUpdate={
  hide:(el:HTMLElement,hidden:boolean)=>void;
 };
 
-const SPOT_REACH=6.2,BOB_RANGE=45,KIOSK_OFFSET=2.1;
+const SPOT_REACH=6.2,BOB_RANGE=45;
 /** Bottom of the fishing status card plus a gap on wide screens (FishingHost.module.css .message: top 88px, one line). */
 const CATCH_MESSAGE_BOTTOM=88+48+10;
 /** Phones: the catch card's bottom edge sits this far above the screen's bottom (the reel: 160 px + 28 px + a gap; safe area added by CSS). */
@@ -62,16 +63,17 @@ function paint({geometry,color}:Colored){
 }
 const place=(g:T.BufferGeometry,x:number,y:number,z:number,rx=0,ry=0,rz=0,s:[number,number,number]=[1,1,1])=>g.applyMatrix4(new T.Matrix4().compose(new T.Vector3(x,y,z),new T.Quaternion().setFromEuler(new T.Euler(rx,ry,rz)),new T.Vector3(...s)));
 
-/** A small "fishing post": tackle chest, notice board with a fish emblem, a little roof and two rods (matches the cabinet glow);
- *  each post gets its own deterministic look in ./fishingKiosk.ts. */
-/** Where a fishing post's kiosk (the little bait/fish stall) stands: beside the standing spot, square to the cast. */
-function kioskAt(s:FishSpot){if(s.boat)return {x:s.boat.prompt.x,z:s.boat.prompt.z};const dx=s.buoy.x-s.x,dz=s.buoy.z-s.z,l=Math.hypot(dx,dz)||1;return {x:s.x+(-dz/l)*KIOSK_OFFSET,z:s.z+(dx/l)*KIOSK_OFFSET};}
-/** Solid footprints for every kiosk (Sep 30 2026: players walked straight through them). The cabinet is 1.2 × 0.7 m turned 45°,
- *  so its axis-aligned box is ≈1.34 m square; the standing spot (2.1 m away) stays clear. Pushed into world.obstacles in Town.tsx
- *  before the collision grids are built, so walking, rides and the ball all stop at the stall. */
-export function fishingKioskObstacles():{x:number;z:number;w:number;d:number}[]{
- const c=Math.SQRT1_2,size=(1.2+.7)*c;return FISH_SPOTS.filter(s=>!s.boat).map(s=>{const k=kioskAt(s);return {x:k.x,z:k.z,w:size,d:size};});
+/** Each fishing post is one stall from the seven-type kit in ./fishingKiosk.ts (Nov 10 2026: shack, cart, tiki hut, lighthouse
+ *  lean-to, rowboat counter, harbour booth, market table), standing at kioskAt (2.1 m beside the standing spot, square to the cast). */
+/** Solid footprints for every stall (Sep 30 2026: players walked straight through them). Since Nov 10 each type's footprint is 1-3
+ *  round colliders turned with the stall (fishingKiosk.ts stallColliders); tests/fishing-stall-styles.cjs keeps them off the standing
+ *  spot, the cast, the sea and the paths. Pushed into world.obstacles in Town.tsx before the collision grids are built, so walking,
+ *  rides and the ball all stop at the stall. */
+export function fishingKioskObstacles():{x:number;z:number;w:number;d:number;cornerRadius:number}[]{
+ return FISH_SPOTS.filter(s=>!s.boat).flatMap(s=>stallColliders(s));
 }
+/** Where the "Fish here" prompt floats over a post: above the stall's main mass (3.6 m as before for the low types). */
+const kioskPromptY=(s:FishSpot)=>Math.max(3.6,STALL_TYPES[stallType(s.id)].top+.45);
 function signTexture(){
  const c=document.createElement('canvas');c.width=512;c.height=96;const g=c.getContext('2d');
  if(g){g.fillStyle='#294f43';g.fillRect(0,0,512,96);g.strokeStyle='#f4cc7c';g.lineWidth=6;g.strokeRect(5,5,502,86);g.fillStyle='#fff0cf';g.font='bold 40px system-ui,Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('ROSA BUYS · FISH · PRODUCE · CARDS',256,50,480);}
@@ -193,8 +195,8 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  // The Deep Sea Boat has no post: its prompt floats over the rod holders (./deepSeaBoatData.ts).
  // One merged, vertex-coloured mesh for every fishing post.
  const all:T.BufferGeometry[]=[];
- // Each post has its own deterministic look (./fishingKiosk.ts, Oct 26 2026): same cabinet/footprint, still merged into this one mesh.
- for(const s of FISH_SPOTS){if(s.boat)continue;const k=kioskAt(s);all.push(buildKioskGeometry(kioskVariant(s.id),k.x,k.z,Math.PI/4));}
+ // Each post is one stall type from the kit (./fishingKiosk.ts, Nov 10 2026), still merged into this one mesh (one draw + one shadow draw).
+ for(const s of FISH_SPOTS){if(s.boat)continue;const k=kioskAt(s),v=kioskVariant(s.id);all.push(buildKioskGeometry(v,k.x,k.z,v.yaw));}
  const merged=mergeGeometries(all)!;all.forEach(g=>g.dispose());geometries.push(merged);
  const kioskMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.85});materials.push(kioskMaterial);
  const kiosks=new T.Mesh(merged,kioskMaterial);kiosks.name='fishing-posts';kiosks.castShadow=true;kiosks.receiveShadow=true;kiosks.matrixAutoUpdate=false;kiosks.updateMatrix();root.add(kiosks);
@@ -228,7 +230,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  const spotGlow=createBuildingGlow(spotGlowRoot,1.2,.7,2.9,'cabinet');
  const standGlowRoot=new T.Group();standGlowRoot.name='market-stand-selection';standGlowRoot.position.set(MARKET_STAND.x,0,MARKET_STAND.z);standGlowRoot.scale.set(7.8/8.4,4/4.74,9.2/17.4);scene.add(standGlowRoot);
  const standGlow=createBuildingGlow(standGlowRoot,8.4,17.4,4.7,'ferry');
- const kioskBoxes=FISH_SPOTS.map(s=>{const a=s.boat?boatBySpot(s.id)?.afloat:null;if(a)return new T.Box3(new T.Vector3(a.x0,-.4,a.z0),new T.Vector3(a.x1,3,a.z1));const k=kioskAt(s);return new T.Box3(new T.Vector3(k.x-1.2,0,k.z-1.2),new T.Vector3(k.x+1.2,3.3,k.z+1.2));});
+ const kioskBoxes=FISH_SPOTS.map(s=>{const a=s.boat?boatBySpot(s.id)?.afloat:null;if(a)return new T.Box3(new T.Vector3(a.x0,-.4,a.z0),new T.Vector3(a.x1,3,a.z1));const k=kioskAt(s),g=STALL_TYPES[stallType(s.id)].glow,e=Math.max(1.2,Math.hypot(g.w,g.d)/2);return new T.Box3(new T.Vector3(k.x-e,0,k.z-e),new T.Vector3(k.x+e,Math.max(3.3,g.h+.3),k.z+e));});
  const standBox=new T.Box3(new T.Vector3(MARKET_STAND.x-3.8,0,MARKET_STAND.z-4.6),new T.Vector3(MARKET_STAND.x+3.8,5.1,MARKET_STAND.z+4.6));
  const hit=new T.Vector3(),anchor=new T.Vector3();
  let glowSpot=-1,hoverKind='',hoverSpot=-1,hoverUntil=0,bobbing=false,lastHover=-1;
@@ -271,11 +273,11 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
    const s=FISH_SPOTS[activeSpot];
    if(s&&fishPrompt.dataset.spot!==s.id){fishPrompt.dataset.spot=s.id;fishPrompt.setAttribute('aria-label',`Fish at ${s.name}`);}
    // The Fish prompt needs you at the water's edge (hovering from afar only highlights the post).
-   const k=s?kioskAt(s):null;show(fishPrompt,!!s&&activeSpot===near,k?.x??0,s?.boat?.prompt.y??3.6,k?.z??0);
+   const k=s?kioskAt(s):null;show(fishPrompt,!!s&&activeSpot===near,k?.x??0,s?.boat?.prompt.y??(s?kioskPromptY(s):3.6),k?.z??0);
   }
   show(standPrompt,activeStand,MARKET_STAND.x-1,4.8,MARKET_STAND.z+3);
   // Glows (hidden draws when inactive).
-  if(activeSpot>=0&&activeSpot!==glowSpot){const k=kioskAt(FISH_SPOTS[activeSpot]);spotGlowRoot.position.set(k.x,0,k.z);glowSpot=activeSpot;}
+  if(activeSpot>=0&&activeSpot!==glowSpot){const s=FISH_SPOTS[activeSpot],k=kioskAt(s),g=STALL_TYPES[stallType(s.id)].glow;spotGlowRoot.position.set(k.x,0,k.z);spotGlowRoot.rotation.y=stallYaw(s.id);spotGlowRoot.scale.set(g.w/1.2,g.h/2.9,g.d/.7);spotGlowRoot.updateMatrixWorld();glowSpot=activeSpot;}
   spotGlow.update(activeSpot>=0&&!FISH_SPOTS[activeSpot].boat,c.dt,c.reduced);standGlow.update(activeStand,c.dt,c.reduced);
   // Floats bob only while the player is close enough to see them; reset once on leaving.
   const bob=!c.reduced&&closestFloat<BOB_RANGE;

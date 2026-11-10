@@ -73,6 +73,7 @@ export function TennisCard(p:Props){
    <li><b>{t.perfectTouches}</b><span>perfect</span></li>
    <li><b>{t.sweetShots}</b><span>sweet</span></li>
   </ul>}
+  {t&&t.firstTouchTries>0&&<p className={styles.status} data-tennis-first-touch>First touches on target: <b>{t.firstTouchOnTarget}</b></p>}
   {confetti}
   {over&&!won&&!drill&&tennisLossLine(t!)?<p className={styles.why} data-tennis-why>{tennisLossLine(t!)}</p>:null}
   {!(over&&!won&&!drill&&tennisLossLine(t!))&&<p className={styles.tip}>{unlockedNow?`Next up: court ${t!.level+1}, ${TENNIS_COURTS[t!.level].name}${TENNIS_COURTS[t!.level].hard?' (HARD)':''}`:won?(earned<3?`3rd ★: ${court.star3}`:'All 3 stars. You are the champion!'):`So close! Best here ${tennisStarText(readSafe(t?.level??1))}`}</p>}

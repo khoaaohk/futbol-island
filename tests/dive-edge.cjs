@@ -92,7 +92,7 @@ ok('no toggle storm: wobbling along the edge for 60 s crosses at most once per c
 });
 
 ok('runtime: edgeEnter builds the room at the matching point (banner, no tap), the way out hands the island point back, rig home',()=>{
- const RT=load('lib/town/water/diveRuntime.ts');const islandScene=new T.Scene(),root=new T.Group();islandScene.add(root);let entered=null,surfaced='';
+ const RT=(m=>(m.provideDiveRoom(load('lib/graphics/diveRoom.ts')),m))(load('lib/town/water/diveRuntime.ts'));const islandScene=new T.Scene(),root=new T.Group();islandScene.add(root);let entered=null,surfaced='';
  const ports={scene:islandScene,renderer:{render:()=>{}},camera:new T.PerspectiveCamera(50,1),player:{root,update:()=>{}},phone:true,reduced:()=>false,ui:()=>null,place:()=>{},hide:()=>{},
   entered:(_,e)=>{entered=e;},surfaced:(_,r)=>{surfaced=r;},found:()=>{},credit:()=>{},low:()=>{},out:()=>{},fly:()=>false,water:()=>'dive'};
  const rt=RT.createDiveRuntime(ports),s=D.DIVE_SPOTS[6],R=D.diveBlobR(s,Math.PI/2);rt.session.state.breath=.7;

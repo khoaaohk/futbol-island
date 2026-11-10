@@ -69,7 +69,7 @@ export const ARCADE_ROOM:RoomDescriptor={
   {flag:'hall',priority:2,anchor:'here',label:'Looking at high scores',receiverLabel:'Looking at high scores'},
   {flag:'list',priority:1,anchor:'here',label:'Choosing a game',receiverLabel:'Looking at high scores'},
  ],
- notBusy:['socialNear','revealed','entryDone','minimumLoadingDone','exiting','queryReady','near','ready','failed'],
+ notBusy:['socialNear','gashaNear'/* standing at a gashapon machine (Nov 8 2026) */,'today'/* Today in the arcade sheet (Nov 10 2026): not a flag of its own, it is sent as `list` (setArcadeBusy(game,list||today,hall)): "Choosing a game" */,'revealed','entryDone','minimumLoadingDone','exiting','queryReady','near','ready','failed'],
  caps:{friendsMax:8,npcBasePhone:3,npcBaseDesktop:5,replaceNpcs:true,fieldRadius:.8},
  // The hub never fully sleeps while visible (15 fps floor; arcadeRoomScene tick). Remote-only motion: 20/30 fps for 300 ms.
  wake:{sleepsWhenIdle:false,idleFps:15,localFpsPhone:30,localFpsDesktop:60,remoteFpsPhone:20,remoteFpsDesktop:30,remoteSettleMs:300},

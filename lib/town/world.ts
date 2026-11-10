@@ -10,6 +10,7 @@ import {buildSummitIsle} from './summitIsleWorld';
 import {buildSummitActivityProps} from './summitActivitiesWorld';
 import {buildZiplineProps,type ZiplineRail} from './ziplineWorld';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {buildPaintEasel} from './paintEaselWorld';
+import {buildGashaponProps} from './gashaponWorld';
 import {createCanopyCollector} from './canopySurfaces';// landable canopies (Oct 14 2026)
 import {createCaySharks} from '../graphics/caySharks';
 import {createCayMantas} from '../graphics/cayMantas';
@@ -24,11 +25,11 @@ import {MUSEUM_WING} from '../museum/museumDoors';
 import {buildMuseumExterior,MUSEUM_CANOPY,MUSEUM_ACCENT} from './museumExterior';
 import {buildKitShopExterior} from './kitShopExterior';
 import {createWaterRipples} from '../graphics/waterRipples';
-import {patchOceanMaterial,stepWaterTime} from '../graphics/waterSurface';
+import {patchOceanMaterial,stepWaterTime,setWaterNight} from '../graphics/waterSurface';
 import {createIslandShore} from '../graphics/islandShore';
 import {createSchemePicker,awningColour,type BuildingScheme} from './buildingStyles';
 import {createShapePicker} from './buildingShapes';
-import {buildSoftHouse} from './softHouses';
+import {buildSoftHouse,roofDeckColour} from './softHouses';
 import * as T from 'three';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
@@ -178,6 +179,8 @@ export function* buildTownSteps(scene: T.Scene) {
     const roofPaint=scheme?.roof??'#eddfbb',plinth='#d2bc94',sill=scheme?.trim??'#f0debb',mullion=scheme?.trim??'#d7c49e';
     if(rounded){roundedBlock(w,h,d,radius,color,x,0,z);roundedBlock(w+.45,.23,d+.5,radius+.2,roofPaint,x,h-.035,z);roundedBlock(w+.15,.35,d+.16,radius+.1,plinth,x,.005,z);}
     else{box(w,h,d,color,x,h/2,z);box(w+.45,.23,d+.5,roofPaint,x,h+.08,z);box(w+.15,.35,d+.16,plinth,x,.18,z);}
+    // Nov 10 2026: inset roof deck (a shade darker/cooler than the roof slab), folded into the chunk's paint batch (no draw call).
+    if(!knockout){const deck=rounded?roundedBlock(w-.9,.02,d-.9,Math.max(.1,radius-.45),roofDeckColour(roofPaint),x,h+.195,z):box(w-.9,.02,d-.9,roofDeckColour(roofPaint),x,h+.205,z);deck.userData.skipRoofObstacle=true;}
     obstacles.push({x,z,w,d,...(rounded?{cornerRadius:radius}:{})});
     const floors=Math.min(label==='CAFE BY THE SEA'?2:4,Math.floor(h/2.5)),columns=Math.max(2,Math.min(6,Math.floor(front/2)));
     for(let floor=0;floor<floors;floor++)for(let col=0;col<columns;col++){
@@ -1346,6 +1349,9 @@ export function* buildTownSteps(scene: T.Scene) {
   const ziplineRails:ZiplineRail[]=[];try{buildZiplineProps({box,cylinder,put,line,sign,obstacles,walkSurfaces,rails:ziplineRails});}catch(error){console.error('Zipline props failed to build',error);}
   // Summit Isle painting easel (lib/town/paintEaselWorld.ts, Oct 14 2026): easel, stool and paint table, static and batched.
   try{buildPaintEasel({box,cylinder,put,obstacles});}catch(error){console.error('Summit Isle painting easel failed to build',error);}
+  // Gashapon capsule machines (lib/town/gashaponWorld.ts, Nov 8 2026): 12 island machines, solid pieces in the paint batches,
+  // the globes in one shared glass material; footprints become obstacles.
+  try{buildGashaponProps({put,town,obstacles,materials});}catch(error){console.error('Gashapon machines failed to build',error);}
 
   // Canonical centre lines remove offsets and duplicated dash phases. Touching
   // collinear sections become one street before any road surface is generated.
@@ -1390,6 +1396,7 @@ export function* buildTownSteps(scene: T.Scene) {
     for(const chunk of chunks.values()){
       const geometry=new T.BufferGeometry();geometry.setAttribute('position',new T.Float32BufferAttribute(chunk.positions,3));geometry.computeVertexNormals();
       const mesh=put(geometry,carriageway?'#737c75':'#eddfbb',chunk.x,0,chunk.z);mesh.castShadow=false;
+      tintGroundMesh(mesh,carriageway?'asphalt':'path');// Nov 10 2026: asphalt and sidewalks get the ground mottle/grain (same batch count)
     }
   }
   roadSurface(false);roadSurface(true);
@@ -1584,6 +1591,7 @@ export function* buildTownSteps(scene: T.Scene) {
   yield;
   type Batch={material:T.Material;castShadow:boolean;geometries:T.BufferGeometry[];mesh?:T.Mesh;starts?:number[];kinds:string[]};
   // Where each tagged prop's pieces go: batch + index in that batch (→ vertex start once merged) + world bounds.
+  const gashaponPieces=new Map<string,{batch:Batch;index:number}[]>();
   const propRecords=new Map<PropTag,{pieces:{batch:Batch;index:number}[];bounds:T.Box3}>();
   const batches=new Map<string,Batch>(),original:T.Mesh[]=[],mergedMeshes:T.Mesh[]=[];
   // Plain palette paints share the same shader. Store paint in linear vertex
@@ -1616,13 +1624,19 @@ export function* buildTownSteps(scene: T.Scene) {
     if(paint){
       const color=(object.material as T.MeshStandardMaterial).color;
       const colors=new Float32Array(geom.getAttribute('position').count*3);
-      for(let i=0;i<colors.length;i+=3){colors[i]=color.r;colors[i+1]=color.g;colors[i+2]=color.b;}
+      // Baked light (Nov 10 2026, load time only): walls darken toward their foot over the lowest 4 m (to 0.68 linear, ~0.84 on
+      // screen), undersides 0.62, tops 1.03, measured from the piece's own base (roofs and Summit Isle are not at y=0). Flat trim (< 0.15 m) stays flat.
+      geom.computeBoundingBox();const gb=geom.boundingBox!,gy=gb.min.y,nrm=gb.max.y-gy>=.15?geom.getAttribute('normal'):undefined,pos=geom.getAttribute('position');
+      for(let i=0,v=0;i<colors.length;i+=3,v++){let f=1;
+        if(nrm){const ny=nrm.getY(v);if(ny<-.5)f=.62;else if(ny>.7)f=1.03;else if(Math.abs(ny)<.5){const t=Math.min(1,Math.max(0,(pos.getY(v)-gy)/4));f=.68+.32*t*t*(3-2*t);}}
+        colors[i]=color.r*f;colors[i+1]=color.g*f;colors[i+2]=color.b*f;}
       geom.setAttribute('color',new T.BufferAttribute(colors,3));
     }
     if(!geom.getAttribute('uv'))geom.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(geom.getAttribute('position').count*2),2));
     if(!geom.index)geom.setIndex(Array.from({length:geom.getAttribute('position').count},(_,i)=>i));
     let batch=batches.get(key);if(!batch){batch={material,castShadow:object.castShadow,geometries:[],kinds:[]};batches.set(key,batch);}batch.geometries.push(geom);batch.kinds.push((object.userData.propTag as PropTag|undefined)?.kind??'');original.push(object);
     const tag=object.userData.propTag as PropTag|undefined;
+    const gid=object.userData.gashaponId as string|undefined;if(gid){let list=gashaponPieces.get(gid);if(!list)gashaponPieces.set(gid,list=[]);list.push({batch,index:batch.geometries.length-1});}// gashapon live swap (gashaponStatic)
     if(tag){let record=propRecords.get(tag);if(!record){record={pieces:[],bounds:new T.Box3()};propRecords.set(tag,record);}geom.computeBoundingBox();record.bounds.union(geom.boundingBox!);record.pieces.push({batch,index:batch.geometries.length-1});}
   };
   {const all:T.Object3D[]=[];town.traverse(o=>{all.push(o);});for(let i=0;i<all.length;i++){batchObject(all[i]);if(i%500===499)yield;}}
@@ -1713,6 +1727,19 @@ export function* buildTownSteps(scene: T.Scene) {
     const pool=tag.kind==='lamp'?poolInstances.find(p=>Math.abs(p.site.x-cx)<.6&&Math.abs(p.site.z-cz)<.6):undefined;
     propSpecs.push({kind:tag.kind,parts,min:{x:bounds.min.x,y:bounds.min.y,z:bounds.min.z},max:{x:bounds.max.x,y:bounds.max.y,z:bounds.max.z},...(pool?{light:{mesh:pool.mesh,index:pool.index}}:{})});
   }
+  // Gashapon (Nov 9 2026): each island machine's vertex runs in the merged chunks. hide(id) folds them to one point (the open
+  // machine is drawn by its animated live copy, lib/graphics/gashaponLive.ts), show(id) puts them back. Nothing per frame.
+  const gashaponRuns=new Map<string,{attribute:T.BufferAttribute;start:number;count:number;saved?:Float32Array}[]>();
+  for(const [id,pieces] of gashaponPieces){const runs:{attribute:T.BufferAttribute;start:number;count:number}[]=[];
+    for(const {batch,index} of pieces){const attribute=batch.mesh?.geometry.getAttribute('position') as T.BufferAttribute|undefined;if(!attribute||!batch.starts)continue;
+      const start=batch.starts[index],count=(batch.starts[index+1]??attribute.count)-start,run=runs.find(r=>r.attribute===attribute&&r.start+r.count===start);if(run)run.count+=count;else runs.push({attribute,start,count});}
+    gashaponRuns.set(id,runs);}
+  const gashaponStatic={
+    hide(id:string){for(const r of gashaponRuns.get(id)??[]){if(r.saved)continue;const a=r.attribute.array as Float32Array,from=r.start*3,n=r.count*3;r.saved=a.slice(from,from+n);
+      for(let i=from+3;i<from+n;i+=3){a[i]=a[from];a[i+1]=a[from+1];a[i+2]=a[from+2];}r.attribute.clearUpdateRanges();r.attribute.addUpdateRange(from,n);r.attribute.needsUpdate=true;}},
+    show(id:string){for(const r of gashaponRuns.get(id)??[]){if(!r.saved)continue;(r.attribute.array as Float32Array).set(r.saved,r.start*3);r.attribute.clearUpdateRanges();r.attribute.addUpdateRange(r.start*3,r.saved.length);r.attribute.needsUpdate=true;r.saved=undefined;}},
+    has:(id:string)=>(gashaponRuns.get(id)?.length??0)>0,
+  };
   nightRoot.userData.lampSites=lampSites;nightRoot.userData.lampCount=lampSites.length;nightRoot.userData.poolChunkCount=poolChunks.size;
   const sceneryRoots=scene.children.filter(root=>!existingRoots.has(root));
   // Coral Cay region gate (heat audit Sep 29 2026): the ~200 static batches east of x 250 (causeway, sandbars, cay) are
@@ -1728,6 +1755,6 @@ export function* buildTownSteps(scene: T.Scene) {
   const isleRegion=new T.Box3(new T.Vector3(440,-2,-30),new T.Vector3(870,50,300));let isleShown=true;
   const applyCayVisibility=()=>{for(const m of cayChunks)m.visible=sceneryShown&&cayShown;for(const m of isleChunks)m.visible=sceneryShown&&isleShown;};
   const updateCoralCay=(dt:number,reduced:boolean,camera:T.Camera,player:{x:number;z:number})=>{sharks.update(dt,reduced,camera,player);mantas.update(dt,reduced,sharks.frustum,player);whaleShark.update(dt,reduced,sharks.frustum,player);const show=sharks.frustum.intersectsBox(cayRegion),isle=sharks.frustum.intersectsBox(isleRegion);if(show!==cayShown||isle!==isleShown){cayShown=show;isleShown=isle;applyCayVisibility();}};
-  return {sharks,mantas,whaleShark,farmDecor,updateSharks:updateCoralCay,updateLighthouse:lighthouseBeam.update,cayChunkCount:cayChunks.size,get cayShown(){return cayShown;},ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{sceneryShown=visible;for(const root of sceneryRoots)root.visible=visible&&(!cayChunks.has(root as T.Mesh)||cayShown)&&(!isleChunks.has(root as T.Mesh)||isleShown);},dynamicScenery:town,umbrellaReaction,propSpecs,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,MUSEUM_ACCENT.h+.2,185.5+MUSEUM_CANOPY.depth+.1)),museumWingBounds:new T.Box3(new T.Vector3(MUSEUM_WING.x-MUSEUM_WING.w/2-.3,0,MUSEUM_WING.z-MUSEUM_WING.d/2-.3),new T.Vector3(MUSEUM_WING.x+MUSEUM_WING.w/2,8,MUSEUM_WING.z+MUSEUM_WING.d/2+.3)),walkSurfaces,canopies,landingExclusions,updateWater:(dt:number,still:boolean)=>{stepWaterTime(dt,still);stepIslandWind(dt,still);},updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';for(const lens of signalLenses)lens.emissiveIntensity=night?.85:dusk?.55:.35;const glow=night?.82:dusk?.16:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?1.7:dusk?.4:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;if(arcadeNeonGlow)arcadeNeonGlow.opacity=night?1:dusk?.9:.8;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,oceanMat,islandShore,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
+  return {sharks,mantas,whaleShark,farmDecor,updateSharks:updateCoralCay,updateLighthouse:lighthouseBeam.update,cayChunkCount:cayChunks.size,get cayShown(){return cayShown;},ferry,ferryBounds:new T.Box3(new T.Vector3(241.5,-.4,190),new T.Vector3(250.5,5.1,208)),ferryLockBounds:new T.Box3(new T.Vector3(243,6.8,196),new T.Vector3(249,12.4,202)),setFerryLockHovered:(hovered:boolean)=>{lockMaterial.opacity=hovered?1:.48;},setVisible:(visible:boolean)=>{sceneryShown=visible;for(const root of sceneryRoots)root.visible=visible&&(!cayChunks.has(root as T.Mesh)||cayShown)&&(!isleChunks.has(root as T.Mesh)||isleShown);},dynamicScenery:town,umbrellaReaction,propSpecs,gashaponStatic,arenaBounds:new T.Box3(new T.Vector3(ar.x-ar.w/2,0,ar.z-ar.d/2),new T.Vector3(ar.x+ar.w/2,ar.height+5,ar.z+ar.d/2)),updateFerry,museumBounds:new T.Box3(new T.Vector3(152.7,0,176.2),new T.Vector3(183.3,MUSEUM_ACCENT.h+.2,185.5+MUSEUM_CANOPY.depth+.1)),museumWingBounds:new T.Box3(new T.Vector3(MUSEUM_WING.x-MUSEUM_WING.w/2-.3,0,MUSEUM_WING.z-MUSEUM_WING.d/2-.3),new T.Vector3(MUSEUM_WING.x+MUSEUM_WING.w/2,8,MUSEUM_WING.z+MUSEUM_WING.d/2+.3)),walkSurfaces,canopies,landingExclusions,updateWater:(dt:number,still:boolean)=>{stepWaterTime(dt,still);stepIslandWind(dt,still);},updateTrafficSignals:(mode:string)=>{const night=mode==='night',dusk=mode==='sunset';for(const lens of signalLenses)lens.emissiveIntensity=night?.85:dusk?.55:.35;const glow=night?.82:dusk?.16:0;const windowColor=night?'#ffc176':'#ffd294';windowPaint.emissive.set(windowColor);windowPaint.emissiveIntensity=glow;setWaterNight(mode);for(const material of windowSources){material.emissive.set(windowColor);material.emissiveIntensity=glow;}lampLens.emissive.set(night?'#ffcb82':'#ffd294');lampLens.emissiveIntensity=night?1.7:dusk?.4:0;for(const state of signStates)state.material.emissiveIntensity=Math.max(state.intensity,night?.75:dusk?.12:0);for(const material of gardenPlantMaterials.values())material.emissiveIntensity=night?.09:0;nightPools.visible=night;if(arcadeNeonGlow)arcadeNeonGlow.opacity=night?1:dusk?.9:.8;},coachesBounds:new T.Box3(new T.Vector3(149.7,0,-49.3),new T.Vector3(172.3,11,-36.4)),arcadeBounds:new T.Box3(new T.Vector3(95.7,0,-65.3),new T.Vector3(110.3,9.45,-52.3)),storeBounds:new T.Box3(new T.Vector3(77.7,0,-65.3),new T.Vector3(92.3,10.5,-52.4)),storeDoor:{x:85,z:-50},walls:[...buildings.map(b=>({...b,top:b.height,floor:0})),...roofObstacles,{x:156,z:-29.5,w:26,d:.35,top:2.4,floor:0}],obstacles,roofObstacles,oceanMat,islandShore,squareArrival,arcadeDoor,buildings,roads,roadJunctions,assets,surfaceAreas,destinations,// The roof neon is static (heat): kept as a no-op so callers need no change.
     updateArcade:(_time:number,_reduced:boolean)=>{},dispose:()=>{sharks.dispose();mantas.dispose();whaleShark.dispose();farmDecor.dispose();groundDecals.dispose();lighthouseBeam.dispose();nightPools.traverse(o=>{if(o instanceof T.InstancedMesh)o.dispose();});nightRoot.removeFromParent();poolGeometry.dispose();umbrellaReaction.dispose();ferry.traverse(o=>{if(o instanceof T.Mesh||o instanceof T.Points)o.geometry.dispose();});ferry.removeFromParent();water.removeFromParent();water.geometry.dispose();islandShore.dispose();shoreGroup.removeFromParent();for(const mesh of mergedMeshes){mesh.removeFromParent();mesh.geometry.dispose();}textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());}};
 }

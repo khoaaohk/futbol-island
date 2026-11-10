@@ -82,7 +82,7 @@ assert.match(npcs,/if\(entry\.seat&&!entry\.near&&!entry\.stunned&&entry\.seatHe
 assert.match(npcs,/rig\.setProfile\(AGE_PROFILES\[definition\.age\]\)/,'age height profile');
 assert.match(npcs,/radius<=12&&!authoredRoute&&!definition\.pose;/,'still poses keep their exact bench / towel spot');
 assert.match(src('lib/graphics/npcSeatPose.ts'),/stancePose\('lie',ctx,o\)[\s\S]*stancePose\('sit',ctx,o\)/,'existing freestyle stances');
-assert.match(src('components/Town.tsx'),/islandNpcs\.setFocus\(\{x:s\.x,z:s\.z,r:focusNearLive\?FOCUS_LIVE_M:-1\}\)/,'fishing focus freezes all townsfolk');
+assert.match(src('components/Town.tsx')+src('lib/town/frame/focusFrame.ts'),/islandNpcs\.setFocus\(\{x:s\.x,z:s\.z,r:focusNearLive\?FOCUS_LIVE_M:-1\}\)/,'fishing focus freezes all townsfolk');
 assert.match(src('lib/town/npcDialogues.ts'),/if\(townsfolkCastEnabled\(\)\)\{/,'?npcmore=0 A/B switch');
 assert.match(src('components/NpcConversation.tsx'),/planNpcVisit\(npc\)/,'conversations open with the rotating line (fresh picker)');
 console.log('PASS runtime: focus mode, 10 Hz far poses, still poses, age profiles and rotating openers cover the cast');

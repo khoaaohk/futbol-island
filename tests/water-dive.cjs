@@ -128,13 +128,13 @@ ok('breath: the pace lesson (glide > swim > push), gentler on the shallow reef (
  assert.equal(S.DIVE_LESSON.kind,'Coaching idea');assert.equal(S.DIVE_LESSON_KEY,'fi2-dive-lesson-v1');
 });
 
-ok('each find is credited once (and once ever, by the save); the chest’s ball is a metered `dive:` wallet run',()=>{
+ok('each find is credited once (and once ever, by the save); the chest’s ball is an unmetered `dive:` wallet run (learning)',()=>{
  let save=S.parseDiveFinds(null);const s=S.createDiveSession(D.DIVE_SPOTS,id=>save.spots[id]??[]);s.scan(.2,spot.x,spot.z,true);s.start();
  const chest=spot.finds.find(f=>f.kind==='ball'),p=D.diveFindPoint(chest,undefined,spot.floor);
  s.state.x=p.x;s.state.y=p.y;s.state.z=p.z;s.step(1/30,{sx:0,sy:0,lift:0});assert.equal(s.state.find?.id,'hidden-ball','in reach');
  let e=s.use();assert.equal(e.firstFind,true);assert.equal(e.coins,5);save=S.addDiveFind(save,spot.id,'hidden-ball');e=s.use();assert.equal(e.coins,0,'not twice');
  assert.equal(JSON.stringify(S.parseDiveFinds({spots:{'pauls-grotto':['relic','relic','nope',3],'elsewhere':['x']}})),JSON.stringify({version:1,spots:{'pauls-grotto':['relic']}}),'the save is sanitised');
- const M=load('lib/town/dailyMeter.ts');assert.equal(M.isTrainingRun(S.diveRunId(spot.id,'hidden-ball'),'island'),true,'metered by the Training meter');
+ const M=load('lib/town/dailyMeter.ts');assert.equal(M.isTrainingRun(S.diveRunId(spot.id,'hidden-ball'),'island'),false,'a reef ball is learning: never metered (audit Nov 10 2026)');assert.equal(M.isTrainingRun(S.diveRunId(spot.id,'chest'),'island'),true,'dive treasure stays metered');assert.equal(load('lib/town/water/diveBalls.ts').DIVE_BALL_FIND,'hidden-ball','the meter matches the reef ball find id');
 });
 
 ok('every zone’s room: rich but bounded by the same caps (draws, triangles, fish), instanced fish with precomputed paths; lite is lighter; cost flat across zones',()=>{
@@ -148,7 +148,7 @@ ok('every zone’s room: rich but bounded by the same caps (draws, triangles, fi
   const lite=R.createDiveRoom(z,{phone,reduced:false,found:[],lite:true});assert(lite.stats().triangles<st.triangles,'lite (heat tier 2+ / Battery saver) is lighter '+z.id);lite.dispose();
   room.dispose();}
  const t=tris.map(x=>+x.split('/')[1]);assert(Math.max(...t)/Math.min(...t)<2.4&&Math.max(...t)<80000,'cost bounded the same way in every zone (the caps): '+tris.join(' '));console.log('     phone rooms (draws/triangles): '+tris.join(' '));
- const src=read('lib/graphics/diveRoom.ts');for(const kind of ['galleon','trawler','cargo','trophy','kitbag','balls'])assert(src.includes(kind),kind);assert(!/skeleton|skull/i.test(src),'kid-friendly wrecks');
+ const src=read('lib/graphics/diveRoom.ts')+read('lib/graphics/diveWreck.ts');/* Nov 10 2026: the wreck/arch builders moved to diveWreck.ts */for(const kind of ['galleon','trawler','cargo','trophy','kitbag','balls'])assert(src.includes(kind),kind);assert(!/skeleton|skull/i.test(src),'kid-friendly wrecks');
 });
 
 ok('stranded wrecks: wedged on the crest, tilted, part of the hull out of the water (seen from the island), clear of the buoy; built only near, hidden when hot',()=>{
@@ -185,7 +185,7 @@ ok('one breath for both dives (the near-shore duck-dive is a lighter dip on the 
 });
 
 ok('the Breath pill only shows while diving or swimming (refilling), never on land',()=>{
- const RT=load('lib/town/water/diveRuntime.ts'),el={hidden:true,style:{setProperty(){}},dataset:{},setAttribute(){}};
+ const RT=(m=>(m.provideDiveRoom(load('lib/graphics/diveRoom.ts')),m))(load('lib/town/water/diveRuntime.ts')),el={hidden:true,style:{setProperty(){}},dataset:{},setAttribute(){}};
  const ports={scene:new T.Scene(),renderer:{render(){}},camera:new T.PerspectiveCamera(),player:{root:new T.Group(),update(){}},phone:true,reduced:()=>false,
   ui:sel=>sel==='[data-dive-breath]'?el:null,place(){},hide:(e,h)=>{e.hidden=h;},entered(){},surfaced(){},found(){},credit(){},low(){},out(){},fly:()=>false};
  const rt=RT.createDiveRuntime(ports);rt.session.state.breath=.5;
@@ -194,7 +194,7 @@ ok('the Breath pill only shows while diving or swimming (refilling), never on la
 });
 
 ok('dispose leaves no meshes, materials, geometries or timers (the runtime with a fake renderer)',()=>{
- const RT=load('lib/town/water/diveRuntime.ts');
+ const RT=(m=>(m.provideDiveRoom(load('lib/graphics/diveRoom.ts')),m))(load('lib/town/water/diveRuntime.ts'));
  const islandScene=new T.Scene(),root=new T.Group();islandScene.add(root);let renders=0;
  const ports={scene:islandScene,renderer:{render:()=>{renders++;}},camera:new T.PerspectiveCamera(50,390/844),player:{root,update:()=>{}},phone:true,reduced:()=>false,
   ui:()=>null,place:()=>{},hide:()=>{},entered:()=>{},surfaced:()=>{},found:()=>{},credit:()=>{},low:()=>{},out:()=>{},fly:()=>false};
@@ -214,7 +214,7 @@ ok('dispose leaves no meshes, materials, geometries or timers (the runtime with 
 });
 
 ok('jetpack takeoff in the zone: R and the switcher fly up from under the water (fuel allowing); the dive keys never swallow R',()=>{
- const RT=load('lib/town/water/diveRuntime.ts');const islandScene=new T.Scene(),root=new T.Group();islandScene.add(root);let flew=0,surfaced='',rt=null;
+ const RT=(m=>(m.provideDiveRoom(load('lib/graphics/diveRoom.ts')),m))(load('lib/town/water/diveRuntime.ts'));const islandScene=new T.Scene(),root=new T.Group();islandScene.add(root);let flew=0,surfaced='',rt=null;
  const ports={scene:islandScene,renderer:{render:()=>{}},camera:new T.PerspectiveCamera(50,1),player:{root,update:()=>{}},phone:true,reduced:()=>false,ui:()=>null,place:()=>{},hide:()=>{},entered:()=>{},surfaced:(_,r)=>{surfaced=r;},found:()=>{},credit:()=>{},low:()=>{},out:()=>{},fly:()=>{flew++;return rt.exitForFlight();}};
  rt=RT.createDiveRuntime(ports);rt.scan(.2,spot.x,spot.z,true);assert(rt.start());
  const key=(k)=>({key:k,code:'Key'+k.toUpperCase(),repeat:false,preventDefault(){}});

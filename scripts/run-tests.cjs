@@ -38,6 +38,10 @@ const chain = (readJson('package.json', {}).scripts || {}).test || '';
 const core = [...chain.matchAll(/node\s+(?:--[\w-]+\s+)*((?:tests|scripts)\/[\w.\/-]+\.[cm]?js)/g)].map(m => m[1]).filter(f => f !== 'scripts/run-tests.cjs');
 for (const f of core) if (!all.includes(f) && !skip[f] && fs.existsSync(path.join(root, f))) all.push(f);
 let pool = coreOnly ? core.filter(f => all.includes(f)) : all;
+// CI=true (GitHub Actions): drop manifest `ciSkip` tests (they need something a hosted runner lacks; reason per entry).
+const ciSkip = process.env.CI === 'true' ? (manifest.ciSkip || {}) : {}, ciCount = pool.filter(f => ciSkip[f]).length;
+pool = pool.filter(f => !ciSkip[f]);
+if (ciCount) console.log(`CI=true: ${ciCount} tests skipped (tests/manifest.json ciSkip).`);
 const qCount = pool.filter(f => quarantine[f]).length;
 pool = quarantinedOnly ? pool.filter(f => quarantine[f]) : pool.filter(f => !quarantine[f]);
 if (filters.length) pool = pool.filter(f => filters.some(s => f.includes(s)));

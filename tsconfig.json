@@ -33,12 +33,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next-dev/types/**/*.ts",
-    ".next-push/types/**/*.ts",
-    ".next-agent-8471/types/**/*.ts",
-    ".next-agent-8771/types/**/*.ts",
-    ".next-agent-8131/types/**/*.ts",
-    ".next-coord/types/**/*.ts"
+    ".next-dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

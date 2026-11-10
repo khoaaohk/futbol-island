@@ -8,7 +8,10 @@
  *  - `daily-play:<day>` runs: only today's day can be granted;
  *  - `puzzle:<attempt>` runs: the attempt id stays in `attempts`, which is what blocks a repeat;
  *  - earlier folds (`fold:*`), so folding again keeps the list short;
- *  - arcade spends `play:<random id>` (a play's fee). Vending spends are kept: they are what proves an item is owned.
+ *  - arcade spends `play:<random id>` (a play's fee). Vending spends are kept: they are what proves an item is owned;
+ *  - gashapon spends `gashapon:<random spin id>` and their repeat-toy refunds `gashapon-refund:<random spin id>` (QA Nov 9 2026,
+ *    owner recommended): a spin id is made per press and never charged or refunded again once its receipt is older than 90 days
+ *    (the toy itself is owned in fi2-gashapon-v1, not proven by the spend).
  *
  * Folded totals are written as ordinary receipts of the existing format (`fold:<game>:<n>`, each at most that game's per-run
  * cap; `fold:play:<n>` spends of at most 10,000), so sanitizeArcadeWallet, older open tabs and older clients read them
@@ -27,12 +30,12 @@ type Wallet={version?:number;runs?:Record<string,Run>;spends?:Record<string,Spen
 export function foldableRun(id:string,run:Run,cutoff:number):boolean{
  if(id.startsWith('fold:'))return true;
  if(typeof run.at!=='number'||run.at>=cutoff)return false;
- return RANDOM_ID.test(id)||/^daily-play:\d{4}-\d{2}-\d{2}$/.test(id)||(id.startsWith('puzzle:')&&run.game==='puzzle');
+ return RANDOM_ID.test(id)||/^daily-play:\d{4}-\d{2}-\d{2}$/.test(id)||(id.startsWith('puzzle:')&&run.game==='puzzle')||(id.startsWith('gashapon-refund:')&&run.game==='island'&&RANDOM_ID.test(id.slice(16)));
 }
 export function foldableSpend(id:string,s:Spend,cutoff:number):boolean{
  if(s.source!=='arcade')return false;
  if(id.startsWith('fold:play:'))return true;
- return typeof s.at==='number'&&s.at<cutoff&&id.startsWith('play:')&&RANDOM_ID.test(id.slice(5));
+ return typeof s.at==='number'&&s.at<cutoff&&(id.startsWith('play:')&&RANDOM_ID.test(id.slice(5))||id.startsWith('gashapon:')&&RANDOM_ID.test(id.slice(9)));
 }
 
 /** Returns the compacted ledger string, or the input unchanged when there is nothing to fold or it does not parse. */

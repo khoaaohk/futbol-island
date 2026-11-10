@@ -4,7 +4,6 @@ import {checkWelcomeBack,markWelcomeBackSeen,welcomeBackLine,WELCOME_BACK_SHOW_M
 import {useGraduations} from '@/lib/endgame/graduationStore';
 import {ferryUnlocked,finaleComplete} from '@/lib/endgame/graduationModel';
 import {suggestedNextStep} from '@/lib/paths/pathContinue';
-import {FORMAT_PATHS} from '@/lib/paths/formatPaths';
 import {useQuestEvidence} from '@/lib/town/questProgress';
 import {useQuizCompletions} from '@/lib/town/quizProgress';
 import {DAILY_PLAY_COINS,DAILY_PLAY_SECONDS} from '@/lib/town/dailyPlay';
@@ -43,11 +42,11 @@ export default function WelcomeBack({blocked,held=false}:{blocked:boolean;held?:
  if(!open)return null;
  let storage:Storage|null=null;try{storage=localStorage;}catch{}
  const target=suggestedNextStep(storage,new Set(evidence.steps),answers);
- const title=target.kind==='lesson'?`${FORMAT_PATHS.find(p=>p.format===target.format)?.title??target.format} · ${target.index+1}. ${target.lesson.name}`:null;
+ const title=target.kind==='lesson'?target.lesson.name:null;
  return <HudSlot><button type="button" className={`${toast.toast} ${styles.card}`} role="status" data-hud-slot="guide" data-welcome-back hidden={blocked} onClick={()=>setOpen(false)}>
   <b>Welcome back!</b>
   <span>{welcomeBackLine(title,ferryUnlocked(graduations),finaleComplete(graduations))}</span>
-  <span className={styles.note}>Walk, ride or fly for {DAILY_PLAY_SECONDS} seconds today for a {DAILY_PLAY_COINS}-coin bonus.</span>
+  <span className={styles.note}>Move for {DAILY_PLAY_SECONDS} seconds today: +{DAILY_PLAY_COINS} coins.</span>
   {nudge&&<span className={styles.note} data-save-nudge>Want to keep this? Get a save code in Settings.</span>}
  </button></HudSlot>;
 }

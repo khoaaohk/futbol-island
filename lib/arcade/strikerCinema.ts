@@ -14,6 +14,8 @@
  *  priority beat never interrupts a higher one, skip() ends it at once (tap to skip). Reduced motion: nothing triggers (no slow-mo, no
  *  zoom). No motion sickness: smoothstep envelopes, no roll, zoom within ±CINEMA_ZOOM_CAP (12%), push-ins are a capped dolly toward
  *  a look point that stays between the player and the goal (strikerScene keeps ball and goal on screen). */
+import {createBeatDirector,smoothstep} from './beatDirector';
+
 export type CinemaBeat='through'|'charge'|'setpiece'|'strike'|'goal'|'save'|'tackle'|'kickoff'|'fulltime';
 type Spec={len:number;slow:number;slowFor:number;zoom:number;dolly:number;low:number;sweep:number;pri:number;gap:number};
 export const CINEMA_SLOW_GAP=8,CINEMA_MIN_SCALE=.3,CINEMA_MAX_SLOW=.9,CINEMA_MAX_LEN=2.4,CINEMA_ZOOM_CAP=.12,CINEMA_RAMP_IN=.14,CINEMA_RAMP_OUT=.28;
@@ -28,23 +30,27 @@ export const CINEMA_SPECS:Record<CinemaBeat,Spec>={
  kickoff:{len:1.8,slow:1,slowFor:0,zoom:-.1,dolly:0,low:0,sweep:-1,pri:1,gap:0},
  fulltime:{len:2.2,slow:1,slowFor:0,zoom:-.1,dolly:0,low:0,sweep:1,pri:5,gap:0},
 };
-const smooth=(x:number)=>{const t=Math.max(0,Math.min(1,x));return t*t*(3-2*t);};
+const smooth=smoothstep;
+/** Gap gates for the beat director: one channel per beat (its own `gap`) plus the shared slow-mo channel. */
+const GAPS=Object.assign(Object.fromEntries(Object.entries(CINEMA_SPECS).map(([k,s])=>[k,s.gap])),{slow:CINEMA_SLOW_GAP}) as Record<CinemaBeat|'slow',number>;
 
 export function createStrikerCinema(options:{reduced:boolean}){
- let spec:Spec|null=null,t=0,len=0,slowLeft=0,depth=0,slowTarget=1,clock=0,lastSlow=-1e9,released=false;
- const last:Record<string,number>={};
+ // Shared beat director (lib/arcade/beatDirector.ts): real-time clock and the per-beat + slow-mo gaps. `c.reduced` stays the
+ // public reduced-motion switch (the scene may flip it).
+ const d=createBeatDirector({reduced:options.reduced,gaps:GAPS,never:-1e9});
+ let spec:Spec|null=null,t=0,len=0,slowLeft=0,depth=0,slowTarget=1,released=false;
  const c={reduced:options.reduced,beat:'' as CinemaBeat|'',timeScale:1,amount:0,zoom:1,dolly:0,low:0,sweep:0,tx:0,tz:0,gx:0,gz:0,slowCount:0,
   /** Starts a beat at (x,z) looking toward (gx,gz) (defaults to the point itself). Returns whether it plays. */
   trigger(beat:CinemaBeat,x:number,z:number,gx=x,gz=z){
    if(c.reduced)return false;const s=CINEMA_SPECS[beat];
    if(c.beat===beat&&spec){if(beat==='charge'){t=Math.min(t,len-.45);c.tx+=(x-c.tx)*.5;c.tz+=(z-c.tz)*.5;c.gx=gx;c.gz=gz;return true;}return false;}
    if(spec&&s.pri<spec.pri&&c.amount>.05)return false;
-   if(s.gap&&clock-(last[beat]??-1e9)<s.gap)return false;
-   const wantsSlow=s.slow<1&&clock-lastSlow>=CINEMA_SLOW_GAP;
+   if(s.gap&&!d.ready(beat))return false;
+   const wantsSlow=s.slow<1&&d.ready('slow');
    if(s.slow<1&&!wantsSlow&&beat==='through')return false;// a through beat is only worth it with its slow-mo
-   spec=s;c.beat=beat;t=0;len=Math.min(CINEMA_MAX_LEN,s.len);released=false;last[beat]=clock;
+   spec=s;c.beat=beat;t=0;len=Math.min(CINEMA_MAX_LEN,s.len);released=false;d.mark(beat);
    c.tx=x;c.tz=z;c.gx=gx;c.gz=gz;
-   if(wantsSlow){slowLeft=Math.min(CINEMA_MAX_SLOW,s.slowFor);slowTarget=Math.max(CINEMA_MIN_SCALE,s.slow);lastSlow=clock;c.slowCount++;}else slowLeft=0;
+   if(wantsSlow){slowLeft=Math.min(CINEMA_MAX_SLOW,s.slowFor);slowTarget=Math.max(CINEMA_MIN_SCALE,s.slow);d.mark('slow');c.slowCount++;}else slowLeft=0;
    return true;},
   /** Moves the look target (the ball after a strike); damped in update(). */
   follow(x:number,z:number){c.gx=x;c.gz=z;},
@@ -54,7 +60,7 @@ export function createStrikerCinema(options:{reduced:boolean}){
   skip(){spec=null;c.beat='';t=len=0;slowLeft=0;depth=0;c.timeScale=1;c.amount=0;c.zoom=1;c.dolly=c.low=c.sweep=0;},
   /** Real seconds. Eases the time scale and the camera blend; no allocation. */
   update(dt:number){
-   dt=Math.max(0,Math.min(.1,dt));clock+=dt;
+   dt=Math.max(0,Math.min(.1,dt));d.tick(dt);
    // Slow-mo depth 0..1: ramps in, holds while slowLeft (real seconds, capped) lasts, then ramps back to 1x. Floor CINEMA_MIN_SCALE.
    if(slowLeft>0){slowLeft-=dt;depth=Math.min(1,depth+dt/CINEMA_RAMP_IN);}else depth=Math.max(0,depth-dt/CINEMA_RAMP_OUT);
    c.timeScale=depth>0?1-(1-slowTarget)*smooth(depth):1;

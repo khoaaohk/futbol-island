@@ -1,5 +1,8 @@
 import type {PinballState} from './soccerPinball';
 import type {PinballShot} from './soccerPinballCamera';
+// Shared beat director helpers (gap rule + easing). Pinball keeps its plain state record (clock/lastSlow/lastCam are read by
+// the camera and the tests), so it uses the director's pure functions rather than a director object.
+import {beatGateOpen,smoothstep} from '../arcade/beatDirector';
 
 /* Futbol Pinball cinematic beats (round 3, Oct 26 2026, docs/ARCADE_PINBALL_R3_OCT26.md).
  *
@@ -54,7 +57,7 @@ export function triggerCinema(c:PinballCinema,kind:CinemaKind,x:number,y:number)
  if(!c.enabled)return false;
  const spec=CINEMA_BEATS[kind],slow=spec.slow<1;
  if(c.kind&&!(kind==='goal'&&c.kind!=='goal'))return false;
- if(slow?c.clock-c.lastSlow<SLOW_GAP:c.clock-c.lastCam<CAM_GAP)return false;
+ if(!(slow?beatGateOpen(c.clock,c.lastSlow,SLOW_GAP):beatGateOpen(c.clock,c.lastCam,CAM_GAP)))return false;
  c.kind=kind;c.age=0;c.dur=spec.dur;c.slow=spec.slow;c.k=spec.k;c.follow=spec.follow;c.skipped=0;
  c.ax=wx(x);c.az=wz(y);c.ay=kind==='goal'||kind==='keeper'?.8:0;
  if(slow)c.lastSlow=c.clock;else c.lastCam=c.clock;c.count++;
@@ -67,7 +70,7 @@ export function cinemaWeight(c:PinballCinema){
  if(!c.kind)return 0;
  if(c.skipped>0)return Math.min(1,c.age/SLOW_IN)*(c.skipped/SKIP_OUT);
  const inn=Math.min(1,c.age/SLOW_IN),out=Math.min(1,Math.max(0,(c.dur-c.age)/(c.dur*EASE_OUT)));
- const w=Math.min(inn,out);return w*w*(3-2*w);
+ return smoothstep(Math.min(inn,out));
 }
 /** Simulation time scale for this frame (1 = normal). Flippers are never slowed: a press calls skipCinema first. */
 export function cinemaTimeScale(c:PinballCinema){if(!c.kind||c.slow>=1)return 1;return 1-(1-c.slow)*cinemaWeight(c);}

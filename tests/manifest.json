@@ -25,5 +25,7 @@
  "skip": {
   "tests/summit-harness.cjs": "shared loader for summit-kick/zipline",
   "tests/water-tropical-glslcost.cjs": "CLI helper (needs two file args), required by another test"
- }
+ },
+ "_ciSkipDoc": "ciSkip = tests dropped only when CI=true (GitHub Actions, .github/workflows/ci.yml): they need something a hosted Ubuntu runner lacks (dev server on :8092, Chrome, macOS tools). One-line reason each. Empty on Nov 10 2026: every core test passed with CI=true, the browser parts self-skip without their env vars, the runner-* suites get Node 24 via NODE22, and the Postgres parts use the runner's /usr/lib/postgresql. See docs/tooling/CI.md.",
+ "ciSkip": {}
 }

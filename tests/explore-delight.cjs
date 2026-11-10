@@ -12,7 +12,7 @@ const read=f=>fs.readFileSync(path.join(base,f),'utf8');
 let passed=0;const ok=(name,fn)=>{try{fn();passed++;console.log('ok  ',name);}catch(e){console.error('FAIL',name);throw e;}};
 const mem=new Map();G.localStorage={getItem:k=>mem.has(k)?mem.get(k):null,setItem:(k,v)=>mem.set(k,String(v)),removeItem:k=>mem.delete(k)};
 const D=load('lib/town/water/diveSpots.ts'),S=load('lib/town/water/diveSession.ts'),J=load('lib/town/water/diveJourney.ts'),X=load('lib/town/water/diveDelight.ts'),SP=load('lib/town/water/diveSparkle.ts');
-const RT=load('lib/town/water/diveRuntime.ts'),R=load('lib/graphics/diveRoom.ts');
+const RT=(m=>(m.provideDiveRoom(load('lib/graphics/diveRoom.ts')),m))(load('lib/town/water/diveRuntime.ts')),R=load('lib/graphics/diveRoom.ts');
 const DATE='2026-10-21';
 function runtime(over={}){const root=new T.Group(),scene=new T.Scene();scene.add(root);const log={credits:[],whale:[],emote:[],sparkle:0};
  const ports={scene,renderer:{render(){}},camera:new T.PerspectiveCamera(50,390/844),player:{root,update(){}},phone:true,reduced:()=>false,ui:()=>null,place(){},hide(){},

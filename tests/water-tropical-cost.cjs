@@ -16,6 +16,10 @@ const BASE={
  ocean:{far:{alu:767,tex:4},nearPhone:{alu:1262,tex:4},nearPhoneHot:{alu:1262,tex:4},nearDesk:{alu:1723,tex:5},still:{alu:1124,tex:4}},
  shore:{still:{alu:333,tex:1},far:{alu:564,tex:1},nearPhone:{alu:568,tex:2},nearPhoneHot:{alu:568,tex:2},nearDesk:{alu:589,tex:2}},
 };
+// Nov 10 2026 (owner: "enhance the oceans ... without major heat"; docs/performance-guide.md "Ocean, land and buildings look"):
+// wind lanes (2 sin) and the night tint (1 mul) were added on purpose; far whitecaps were removed the same day (owner's call).
+// Allowance on the two tier-0 phone ocean paths that had no headroom left; every other path still sits at or under its baseline.
+BASE.ocean.far.alu+=25;BASE.ocean.nearPhone.alu+=20;// measured 790 and 1280 (+3 % / +1.4 %)
 const now=waterPaths(src('lib/graphics/waterSurface.ts'),src('lib/graphics/islandShore.ts'));
 
 ok('fragment cost per path is not higher than before (ALU and texture reads; ocean + shore strip; phone, desktop, hot, still, far)',()=>{

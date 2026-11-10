@@ -95,7 +95,7 @@ export function createVendingLedger(ports:Ports){
   if(item.kind==='display'&&!HOME_DECOR_ENABLED&&!readableBook(item))return {ok:false,reason:'Preview only. Home decorating is coming later.'};
   if(item.kind==='pack'&&item.pack){
    const fresh=packFreshness(item.pack);if(!fresh.available)return {ok:false,reason:fresh.restock?PACK_RESTOCK_MESSAGE:'You already have every card this pack can give. Try another pack.'};
-   if(spendable()<item.price)return {ok:false,reason:'Not enough coins yet. Play in the arcade to earn more.'};
+   if(spendable()<item.price)return {ok:false,reason:'Not enough coins yet. Earn more with lessons and jobs.'};
    try{const result=await ports.buyPack({...item.pack,legends:fresh.legends,regular:fresh.regular,extra:fresh.extra});return result.ok?{ok:true,packId:result.pack.id}:{ok:false,reason:result.reason};}
    catch{return {ok:false,reason:'The pack could not be opened. Your coins were not spent.'};}
   }
@@ -105,7 +105,7 @@ export function createVendingLedger(ports:Ports){
    if(!unlockState(item).unlocked)return {ok:false,reason:'This one is still locked.'} as BuyResult;
    const balance=spendable();
    if(!Number.isInteger(item.price)||item.price<1)return {ok:false,reason:'This item has no price.'} as BuyResult;
-   if(balance<item.price)return {ok:false,reason:'Not enough coins yet. Play in the arcade to earn more.'} as BuyResult;
+   if(balance<item.price)return {ok:false,reason:'Not enough coins yet. Earn more with lessons and jobs.'} as BuyResult;
    if(ports.payItem){const paid=await ports.payItem(item);if(!paid.ok)return paid;recover();return {ok:true} as BuyResult;}
    const next:State={...latest,owned:[...latest.owned,item.id],spend:[...latest.spend,{id:item.id,cost:item.price,at:ports.now()}]};
    return (save(next)?{ok:true}:{ok:false,reason:'This browser could not save. Your coins were not spent.'}) as BuyResult;

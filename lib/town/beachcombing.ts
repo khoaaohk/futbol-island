@@ -16,7 +16,7 @@
 import {SHORE_SAND,NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland,distanceToShore} from './shoreline';
 import {CAY_SAND,CAY_HUTS,CAY_HUT_RADIUS,onCay,onCourtBeach,onCauseway,distanceToCayShore} from './coralCay';
 import {SUMMIT_CENTER,SUMMIT_PATHS,SUMMIT_PATH_WIDTH,SUMMIT_VISUAL_DROP,SANDBAR_PATH,sandbarHalfWidth,beachPoint,summitGround,summitSlope,onSummitIsle,onSummitSandbar,distanceToSummitShore,type IslePoint} from './summitIsle';
-import {FISH_SPOTS} from './fishing/fishCatalog';
+import {FISH_SPOTS} from './fishing/fishSpots';
 import {beachFindValue} from '../economy';
 import {count} from '../analytics/tracker';
 

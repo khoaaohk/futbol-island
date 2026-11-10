@@ -5,7 +5,7 @@
  * Learning pays coins as well as cards, once ever per lesson/ball/story/stage/item/path (idempotent wallet ids
  * `learn:<kind>:<id>` through the wallet's creditOnce). Learning coins are never capped and never metered by the Training meter.
  */
-export type LearnKind='quiz'|'ball'|'story'|'journey'|'explore'|'path'|'review'|'book';
+export type LearnKind='quiz'|'ball'|'story'|'journey'|'explore'|'path'|'review'|'book'|'arcade';
 /** Coins per learning moment. A quiz pays LEARN_COINS.quiz on its first completion, plus quizPerfect when that first run is
  *  perfect on the first try (the same run that earns the quiz card).
  *  ball 5 → 10 (29 Sep 2026, docs/economy/ECONOMY_UPDATE_2026-09-29.md): the hunt grew to 100 balls with the 20 far Coral Cay

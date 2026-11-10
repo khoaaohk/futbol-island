@@ -53,8 +53,13 @@ const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,
  if(!after.vertices.some((v,i)=>Math.abs(v-before.vertices[i])>.001))throw Error('Swimming tail has no motion');
  console.log('fish nose/travel alignment',dot.toFixed(3));await shot('3-shadow');
  await waitPhase('nibble');{const end=await shadowAt();if(start1&&end)approaches.push(Math.round(Math.atan2(start1.x-end.x,start1.z-end.z)*180/Math.PI));}
- // An early tap must visibly scare the fish, then allow a natural retry.
- await press('[data-fish-reel]');await waitPhase('scared');if(RARE)await page.evaluate(()=>{window.__fishBias=true;});
+ // Nov 6 2026 (lib/town/fishing/fishingSession.ts tap()): on a nibble the reel reads Wait… and is disabled, and a tap is ignored with no
+ // scare. Tap it anyway (at its centre, past the disabled state, as a child would), check nothing happened, then miss the bite on
+ // purpose: the fish must escape and swim off nose-first, then a new fish comes for a natural retry.
+ {const r=await page.evaluate(()=>{const b=document.querySelector('[data-fish-reel]').getBoundingClientRect();return {x:b.x+b.width/2,y:b.y+b.height/2};});
+  if(touch)await page.touchscreen.tap(r.x,r.y);else await page.mouse.click(r.x,r.y);await page.waitForTimeout(150);
+  const p=await phase();if(p!=='nibble'&&p!=='bite')throw Error('A tap on a nibble must be ignored (no scare), found '+p);}
+ await waitPhase('bite');await waitPhase('escaped',5000);if(RARE)await page.evaluate(()=>{window.__fishBias=true;});
  const fleeingBefore=await fishPose();await page.waitForTimeout(140);const fleeingAfter=await fishPose(),fx=fleeingAfter.x-fleeingBefore.x,fz=fleeingAfter.z-fleeingBefore.z;
  const fleeDot=(fx*fleeingAfter.nx+fz*fleeingAfter.nz)/(Math.hypot(fx,fz)*Math.hypot(fleeingAfter.nx,fleeingAfter.nz));
  if(!(fleeDot>.85))throw Error('Escaping fish is not swimming nose-first: '+fleeDot);
@@ -89,8 +94,13 @@ const spots={'south-pier':[217,211.4],'harbour-wall':[236,66],'north-rocks':[60,
  // A first catch completes the "Catch a fish" task, and its card offer pauses the island loop (by design, for heat), which can
  // freeze the last splash ring mid-fade. Answer the offer like a player, then the loop resumes and the visuals must sleep.
  for(let i=0;i<8&&await page.locator('dialog[open][class*=CardOffer]').count();i++){const b=page.locator('dialog[open][class*=CardOffer] button',{hasText:/Open this card|Done/}).first();if(await b.count())await b.click({timeout:3000}).catch(()=>{});else await page.keyboard.press('Escape');await page.waitForTimeout(1500);}
- await page.waitForTimeout(1600);
- const st=await page.evaluate(()=>({hud:!!document.querySelector('[data-fishing-hud]'),live:window.__fi2.scene.getObjectByName('fishing-live')?.visible}));
+ // Nov 10 2026: wait on the state, not a fixed 1.6 s: the offer can open after the loop above looked (one Nov 10 run still showed the fishing
+ // visuals 1.6 s after Stop), so keep answering a late offer and give the last ring up to 8 s to fade. The assertion itself is unchanged.
+ const sleepState=()=>page.evaluate(()=>({hud:!!document.querySelector('[data-fishing-hud]'),live:window.__fi2.scene.getObjectByName('fishing-live')?.visible}));
+ let st=await sleepState();
+ for(const until=Date.now()+8000;(st.hud||st.live)&&Date.now()<until;st=await sleepState()){
+  const late=page.locator('dialog[open][class*=CardOffer] button',{hasText:/Open this card|Done/}).first();
+  if(await late.count())await late.click({timeout:3000}).catch(()=>{});await page.waitForTimeout(400);}
  console.log(tag,'book',caught,'after',JSON.stringify(st),'errors',errors.slice(0,4));
  if(st.hud||st.live)throw Error('Fishing did not sleep after Stop');
  if(errors.length)throw Error('Browser errors: '+errors.join('; '));

@@ -25,7 +25,7 @@ import {SUMMIT_PATHS,SUMMIT_LANDMARKS,SUMMIT_PITCH,SUMMIT_FENCE,SUMMIT_PEAK,TERR
 import {kickLayout} from './summitKick';
 import {ZIP_TOWER} from './zipline';
 import {summitSnackSpot} from './vendingPlaces';
-import {FISH_SPOTS} from './fishing/fishCatalog';
+import {FISH_SPOTS} from './fishing/fishSpots';
 import {SUMMIT_ISLE_NPCS} from './summitIsleNpcs';
 import {FOLLOW_CAMERA,MIN_VIEW,type FruitKind} from './summitForage';
 

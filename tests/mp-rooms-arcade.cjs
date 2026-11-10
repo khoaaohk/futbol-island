@@ -48,7 +48,7 @@ const R=A.ARCADE_ROOM,B=R.bounds,inside=(p,m=0)=>p.x>=B.minX-m&&p.x<=B.maxX+m&&p
  assert(flags.length>=12,'source scan found the page state');const busy=R.busy.map(b=>b.flag);
  for(const f of flags)assert(busy.includes(f)!==R.notBusy.includes(f),`page flag "${f}" is classified exactly once (busy or not)`);
  for(const f of [...busy,...R.notBusy])assert(flags.includes(f),`descriptor flag "${f}" exists in ArcadeRoom.tsx`);
- same([...busy].sort(),['game','hall','list']);assert(page.includes('setCovered(list||hall)'),'list / hall are the covered overlays');
+ same([...busy].sort(),['game','hall','list']);assert(page.includes('setCovered(list||hall||today||toyCovering)'),'list / hall / today are the covered overlays');assert(page.includes('setArcadeBusy(game,list||today,hall)'),'the Today sheet is sent as list');
  const ids=arcadeCabinets.map(c=>c.id),pageIds=new Set([...page.matchAll(/game===['"](\w+)['"]/g)].map(m=>m[1]));
  for(const id of pageIds)assert(ids.includes(id),`page game "${id}" is a catalog cabinet`);
  const games=fs.readdirSync(path.join(ROOT,'components/games')).join(' ');assert(games.includes('ArcadeGame3D')&&games.includes('PassPuzzleGame'));
@@ -88,7 +88,7 @@ const R=A.ARCADE_ROOM,B=R.bounds,inside=(p,m=0)=>p.x>=B.minX-m&&p.x<=B.maxX+m&&p
  // Scene wiring: registration once at build, frame hook inside tick, unregister in dispose, remote cadence only via the layer.
  const scene=src('lib/arcade/arcadeRoomScene.ts'),tick=scene.slice(scene.indexOf('function tick('),scene.indexOf('function myJugglePoint'));
  assert.equal(scene.split('registerArcadeHost(').length,2,'registered once');assert(!tick.includes('registerArcadeHost('));assert(tick.includes('if(arcadeLayerFrame(dt,now))remoteHold='));
- assert(scene.includes('dispose(){unregisterHost();'));assert(src('components/ArcadeRoom.tsx').includes('useEffect(()=>setArcadeBusy(game,list,hall),[game,list,hall]);'));
+ assert(scene.includes('dispose(){unregisterHost();'));assert(src('components/ArcadeRoom.tsx').includes('useEffect(()=>setArcadeBusy(game,list||today,hall),[game,list,today,hall]);'));
  console.log('MP_ROOMS_ARCADE_HOOKS_PASS');
 }
 
@@ -191,7 +191,7 @@ const R=A.ARCADE_ROOM,B=R.bounds,inside=(p,m=0)=>p.x>=B.minX-m&&p.x<=B.maxX+m&&p
  // Page + scene wiring (source scans).
  const page=src('components/ArcadeRoom.tsx'),scene=src('lib/arcade/arcadeRoomScene.ts'),town=src('components/Town.tsx'),bridge=src('lib/multiplayer/townBridge.ts');
  assert(page.indexOf('useArcadeRoomParty()')<page.indexOf("import('@/lib/arcade/arcadeRoomScene')"),'the layer hook is declared before the scene effect');
- assert(page.includes('<RoomPartyChip party={party} hidden={list||hall} align="right"/>'),'Leave-only chip, hidden under overlays (the game hides the hub UI)');
+ assert(page.includes('<RoomPartyChip party={party} hidden={list||hall||today} align="right"/>'),'Leave-only chip, hidden under overlays (the game hides the hub UI)');
  assert(scene.includes('separateArcadeBody(body,person);arcadeLayerPushOut(body,.3);'),'force fields are obstacles in the walk collide step');
  assert(/dispose\(\)\{unregisterHost\(\);/.test(scene),'unregister first: the layer takes its group out before the scene traversal disposes meshes');
  assert(/ROOM_DOOR_HINTS=\[[^\]]*ARCADE_DOOR_HINT[^\]]*\]/.test(town)&&town.includes('doors:ROOM_DOOR_HINTS'),'island door hint registered');

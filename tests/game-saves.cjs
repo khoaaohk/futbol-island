@@ -217,6 +217,10 @@ await ok('allowlist',()=>{
  assert.equal(S.hasProgress({...fresh,'fi2-player-cards-v1':JSON.stringify(['Mary Earps','Marta'])}),true,'an earned card');
  assert.equal(S.hasProgress({...fresh,'futbol-island-quiz-progress-v1':'["7v7:a:0"]'}),true,'a quiz answer');
  assert.equal(S.hasProgress(fullDevice()),true);
+ // QA Nov 9 2026: gashapon toys bought with the starter coins alone are progress; an empty or corrupt toy save is not.
+ assert.equal(S.hasProgress({...fresh,'fi2-gashapon-v1':JSON.stringify({version:1,owned:{'onigiri-ollie':{n:1,first:1}},spins:{},day:'',today:0,last:0})}),true,'an owned gashapon toy');
+ assert.equal(S.hasProgress({...fresh,'fi2-gashapon-v1':JSON.stringify({version:1,owned:{},spins:{},day:'',today:0,last:0})}),false,'no toys yet');
+ assert.equal(S.hasProgress({...fresh,'fi2-gashapon-v1':'{bad'}),false,'a corrupt toy save');
  // Restoring onto the same device puts its own text back.
  const back=S.mergeIdpText(s.keys['fi2-idp-plan-v1'],IDP_RAW);assert(back.includes('Oak Hill School')&&back.includes('Sam did well')&&back.includes('Sam is fast'));
 });
@@ -253,6 +257,18 @@ await ok('caps, versions, conflicts',async()=>{
  assert(w.spends['vending:ball:sunset']&&w.spends['vending:ride:scooter'],'vending receipts kept (ownership)');
  for(const [id,r] of Object.entries(bigSave().runs))if(r.at>=NOW-90*DAY)assert(w.runs[id],'recent receipts kept: '+id);
  assert.equal(WC.compactWallet(out,NOW),out,'folding again changes nothing');
+ // QA Nov 9 2026: old gashapon spends (gashapon:<uuid>) and repeat refunds (gashapon-refund:<uuid>) fold; recent ones and
+ // non-random ids stay; the balance and the sanitiser agree.
+ {const U=n=>`0000000${n}-1111-4222-8333-444455556666`.slice(-36),old=NOW-120*DAY,recent=NOW-5*DAY;
+  const g={version:1,packs:[],runs:{'island-starter-coins':{game:'island',paid:20,at:old},[`gashapon-refund:${U(1)}`]:{game:'island',paid:5,at:old},[`gashapon-refund:${U(2)}`]:{game:'island',paid:5,at:recent},'gashapon-refund:not-random':{game:'island',paid:5,at:old},[U(9)]:{game:'runner',paid:10,at:old}},
+   spends:{[`gashapon:${U(1)}`]:{cost:20,source:'arcade',reason:'Gashapon',at:old},[`gashapon:${U(3)}`]:{cost:20,source:'arcade',reason:'Gashapon',at:old},[`gashapon:${U(2)}`]:{cost:20,source:'arcade',reason:'Gashapon',at:recent},'gashapon:x':{cost:20,source:'arcade',reason:'Gashapon',at:old}}};
+  const raw=JSON.stringify(g),c=JSON.parse(WC.compactWallet(raw,NOW));
+  assert(!c.runs[`gashapon-refund:${U(1)}`]&&!c.spends[`gashapon:${U(1)}`]&&!c.spends[`gashapon:${U(3)}`],'old gashapon receipts fold');
+  assert(c.runs[`gashapon-refund:${U(2)}`]&&c.spends[`gashapon:${U(2)}`]&&c.runs['gashapon-refund:not-random']&&c.spends['gashapon:x']&&c.runs['island-starter-coins'],'recent and non-random ids kept');
+  assert.equal(WC.walletBalance(JSON.stringify(c)),WC.walletBalance(raw),'same balance');
+  assert.equal(WC.compactWallet(JSON.stringify(c),NOW),JSON.stringify(c),'folding again changes nothing');
+  const valid=new Set();const sum=s=>{const v=AW.sanitizeArcadeWallet(JSON.parse(s),valid);return Object.values(v.runs).reduce((n,r)=>n+r.paid,0)-Object.values(v.spends).reduce((n,d)=>n+d.cost,0);};
+  assert.equal(sum(JSON.stringify(c)),sum(raw),'the sanitiser sees the same balance');}
  assert.equal(WC.walletBalance(WC.compactWallet(out,NOW+400*DAY)),WC.walletBalance(raw),'a later fold keeps the balance');
  // The real wallet loads the compacted ledger with the same balance.
  const wallet=AW.createArcadeWallet({read:()=>JSON.parse(out),write:()=>{},lock:fn=>Promise.resolve().then(fn),valid,grant:()=>true,notify:()=>{},now:()=>NOW,id:()=>'id',random:()=>0.5});
@@ -684,7 +700,7 @@ await ok('sql',async()=>{
   // Oct 11 2026: 20261011_admin_save_metrics.sql (read-only admin metrics, tests/admin-save-metrics.cjs) runs after it.
   // Later files are admin-only add-ons (20261011 save metrics, 20261020 returning in range, 20261012 Pacific time, 20261012 museum exhibit analytics keys,
   // 20261015 Summit Isle + Kit Shop + more museum exhibit keys, 20261016 the Kit Shop's activity keys, 20261017 the fishing summary and the water activity keys, 20261018 the live sessions, 20261019 the day sessions and players); none may touch the save tables (checked below).
-  assert.deepEqual(files.filter(f=>f>'20261010_game_saves.sql'),['20261011_admin_save_metrics.sql','20261012_admin_pacific_time.sql','20261012_analytics_museum_exhibits.sql','20261013_arcade_leaderboards.sql','20261014_summit_kick_board.sql','20261015_analytics_summit_kit.sql','20261016_analytics_kit_shop_activity.sql','20261017_analytics_fishing.sql','20261017_analytics_water.sql','20261018_analytics_live.sql','20261019_analytics_day_sessions.sql','20261020_admin_save_returning_range.sql','20261021_analytics_sponsor_split.sql','20261022_analytics_party_retention.sql','20261106_analytics_fishing_sessions.sql','20261108_party_retention_exact.sql','20261108_runner_tier_boards.sql','20261108_strikers_league_boards.sql','20261108_tennis_tier_boards.sql','20261109_pinball_tier_boards.sql','20261110_puzzle_tier_boards.sql'/* Nov 8 2026: Tennis tours, Pinball tiers, Pass Puzzles cups (dated 20261110 so it runs last) */,'20261111_admin_session_epoch.sql','20261111_board_hidden_rows.sql','20261111_site_reports.sql'/* Nov 10 2026 security audit: admin sign-out-everywhere, board Remove row, CSP/error counts */],'only admin add-ons (and the arcade boards, tests/arcade-leaderboard.cjs) run after the save migration');
+  assert.deepEqual(files.filter(f=>f>'20261010_game_saves.sql'),['20261011_admin_save_metrics.sql','20261012_admin_pacific_time.sql','20261012_analytics_museum_exhibits.sql','20261013_arcade_leaderboards.sql','20261014_summit_kick_board.sql','20261015_analytics_summit_kit.sql','20261016_analytics_kit_shop_activity.sql','20261017_analytics_fishing.sql','20261017_analytics_water.sql','20261018_analytics_live.sql','20261019_analytics_day_sessions.sql','20261020_admin_save_returning_range.sql','20261021_analytics_sponsor_split.sql','20261022_analytics_party_retention.sql','20261106_analytics_fishing_sessions.sql','20261108_party_retention_exact.sql','20261108_runner_tier_boards.sql','20261108_strikers_league_boards.sql','20261108_tennis_tier_boards.sql','20261109_pinball_tier_boards.sql','20261110_puzzle_tier_boards.sql'/* Nov 8 2026: Tennis tours, Pinball tiers, Pass Puzzles cups (dated 20261110 so it runs last) */,'20261111_admin_session_epoch.sql','20261111_board_hidden_rows.sql','20261111_site_reports.sql'/* Nov 10 2026 security audit: admin sign-out-everywhere, board Remove row, CSP/error counts */,'20261112_runner_route_boards.sql'/* Nov 10 2026: Breakaway route + Daily Run boards */],'only admin add-ons (and the arcade boards, tests/arcade-leaderboard.cjs) run after the save migration');
   const results=files.map(f=>runFile(path.join('supabase/migrations',f)));
   assert.equal(results[files.indexOf('20261010_game_saves.sql')],'OK, game saves installed','self-check row');
   assert.equal(runFile('supabase/migrations/20261010_game_saves.sql'),'OK, game saves installed','idempotent');

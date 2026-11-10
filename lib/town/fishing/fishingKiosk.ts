@@ -1,67 +1,101 @@
 import * as T from 'three';
 
 /**
- * Fishing post kiosks, one look per post (Oct 26 2026, owner: "the fishing posts' little bait/fish kiosks all look identical; make
- * each one look slightly different so they feel hand-placed, while still clearly the same family").
+ * Fishing post stalls: a kit of seven stall types (Nov 10 2026, owner: "all of them are the same. give them variety in shape and
+ * styles"). Before this pass every post was the same 1.2 × 1.25 × 0.7 m cabinet with the same notice board, roof slab and rods;
+ * only colours, the roof tilt and small props varied (Oct 26 2026), so at the island camera's distance they all read as one model.
  *
- * The family (never varies): the 1.2 × 1.25 × 0.7 m cabinet with its counter, the cream notice board with the fish emblem, a roof
- * over it and the two leaning rods with their reels. The cabinet is the collision footprint (fishingWorld.ts fishingKioskObstacles),
- * so it is the same box at every post, and nothing solid is added.
+ * Now each post is one of seven types with its own silhouette, height, footprint, roof and props, picked per spot to suit the place
+ * (STALL_BY_SPOT) so that no two neighbouring spots share a type:
+ *   shack       weathered plank shack, pitched plank roof, rod rack, lifebuoy           2.0 × 1.5 m, 3.0 m ridge
+ *   cart        beach cart on two big wheels with a striped canopy and handles          1.8 × 0.9 m, 2.4 m (pennant 2.9)
+ *   tiki        thatched tiki hut on bamboo posts, two-tier straw roof, torch           2.3 × 2.3 m roof, 3.5 m
+ *   lighthouse  keeper's lean-to against a striped mini lighthouse, buoy stack          2.3 × 1.3 m, 3.65 m lamp
+ *   rowboat     rowboat turned on its side as the counter, oars, a mast with the sign   2.5 × 0.5 m hull, 3.4 m mast
+ *   booth       tall harbour-master booth: window band, hipped roof, flag, tide board   1.4 × 1.4 m, 3.0 m (flag 4.35)
+ *   market      trestle table under a round parasol, crates, fish on ice               2.6 × 0.9 m, 2.6 m
+ * The one cue every type keeps: the cream fish sign (teal rim, fish emblem) and a pair of rods, so each stall still reads as
+ * "you can fish here".
  *
- * What varies, seeded by the post id (FNV-1a hash → mulberry32; no runtime randomness, so every load and every player sees the same post):
- * plank wood tone, awning colours + stripe pattern, roof shape and tilt, the counter prop, the ground prop beside the cabinet and its
- * side, what hangs from the eave, a topper (flag, bunting, vane, sign), and props that fit the spot (kioskSetting): a shell garland
- * and conch on the beach, a rope coil and lifebuoy on piers, rocks and a crab pot on rocky shores, mossy stones and reeds by the river.
- *
- * Cost: build-time only. Each part is a transformed copy of a shared low-poly primitive (one cache for the whole module, built once),
- * written straight into ONE vertex-coloured geometry per post; fishingWorld.ts merges every post into its single static mesh, so the
- * draw count is unchanged (one draw + one shadow draw for all posts) and nothing runs per frame. KIOSK_TRI_CAP bounds each post.
+ * Cost, unchanged in kind from Oct 26: build-time only. Each part is a transformed copy of one of ≤ 11 shared low-poly primitives,
+ * written straight into ONE vertex-coloured geometry per post; fishingWorld.ts merges every post into its single static mesh
+ * ('fishing-posts': one draw + one shadow draw, no new material, texture, light or animation). KIOSK_TRI_CAP bounds each post.
+ * Colliders: each type's solid footprint is 1-3 circles (STALL_TYPES.solids) turned with the stall, pushed into world.obstacles by
+ * Town.tsx through fishingKioskObstacles (tests/fishing-stall-styles.cjs keeps them off the standing spot, the cast and the sea).
  */
-export type KioskSetting='beach'|'pier'|'rocks'|'river';
-export type KioskVariant={
- id:string;setting:KioskSetting;
- wood:number;awning:number;pattern:'plain'|'stripes'|'wide'|'valance';roof:'flat'|'shed'|'gable';tilt:number;
- counter:'crate'|'bucket'|'jars'|'scale'|'tray';counterSide:-1|1;
- ground:'barrel'|'crates'|'icebox'|'creel'|'none';groundSide:-1|1;
- hang:'net'|'floats'|'fish'|'lantern'|'buoys';topper:'flag'|'bunting'|'vane'|'sign'|'none';
- emblem:number;board:number;
- /** Everything above as one string: two posts with the same signature would look the same. */
- signature:string;
+export type StallType='shack'|'cart'|'tiki'|'lighthouse'|'rowboat'|'booth'|'market';
+type Circle=readonly [x:number,z:number,r:number];
+export type StallSpec={label:string;yaw:number;solids:readonly Circle[];glow:{w:number;d:number;h:number};top:number};
+/** The kit. Local frame: counter/front faces +z, ground at y = 0, the stall centred on the kiosk point. `yaw` turns it in the world
+ *  (π/4 faces the island camera, which looks from the south-east). `top` is the main mass's height (thin poles and flags excluded). */
+export const STALL_TYPES:Record<StallType,StallSpec>={
+ shack:{label:'weathered pier shack',yaw:.5,solids:[[-.48,0,.74],[.5,0,.74]],glow:{w:2.1,d:1.6,h:3},top:3},
+ cart:{label:'striped beach cart',yaw:1,solids:[[-.38,0,.46],[.42,0,.46]],glow:{w:1.9,d:1.2,h:2.45},top:2.45},
+ tiki:{label:'thatched tiki hut',yaw:Math.PI/4,solids:[[-.42,.05,.68],[.42,.05,.68]],glow:{w:2.2,d:2.2,h:3.45},top:3.45},
+ lighthouse:{label:"lighthouse keeper's lean-to",yaw:.6,solids:[[.55,-.1,.55],[-.45,.05,.6],[1.02,.42,.26]],glow:{w:2.3,d:1.4,h:3.65},top:3.65},
+ rowboat:{label:'rowboat counter with a mast sign',yaw:.3,solids:[[-.8,0,.34],[0,0,.36],[.78,0,.34]],glow:{w:2.5,d:.7,h:1.2},top:1.2},
+ booth:{label:"harbour-master's booth",yaw:Math.PI/4,solids:[[0,0,.8]],glow:{w:1.45,d:1.45,h:3},top:3},
+ market:{label:'market table with a parasol',yaw:.8,solids:[[-.45,0,.46],[.4,0,.46],[1.15,-.1,.32]],glow:{w:2.6,d:1,h:2.6},top:2.6},
 };
-/** The cabinet every post shares: it IS the collision footprint (1.2 × 0.7 m, turned 45° in fishingWorld.ts). */
-export const KIOSK_CABINET={w:1.2,h:1.25,d:.7} as const;
-/** Triangle budget per post (the old identical post was ≈ 240 triangles, ≈ 320 with its rocks). */
-export const KIOSK_TRI_CAP=720;
-
-const SETTINGS:Record<string,KioskSetting>={
- 'south-pier':'pier','west-pier':'pier','east-pier':'pier','harbour-wall':'pier',
- 'north-rocks':'rocks','summit-cove':'rocks','summit-lookout':'rocks','summit-ledge':'rocks',
- 'west-cove':'river',
+export const STALL_TYPE_IDS=Object.keys(STALL_TYPES) as StallType[];
+/** Which stall stands at which post, chosen for the place; the two nearest posts (and any within 150 m) never share a type. */
+export const STALL_BY_SPOT:Readonly<Record<string,StallType>>={
+ 'south-pier':'shack','west-pier':'lighthouse','harbour-wall':'booth','north-rocks':'rowboat','west-cove':'market','east-pier':'cart',
+ 'causeway-gate':'cart','causeway-channel':'lighthouse','turtle-bank':'rowboat',
+ 'coral-garden':'tiki','sharks-beach':'booth','farm-beach':'market',
+ 'summit-cove':'cart','summit-palm':'tiki','summit-lookout':'lighthouse','summit-ledge':'shack',
 };
-/** What the ground around a post is like (unknown ids: beach, the commonest). */
-export const kioskSetting=(id:string):KioskSetting=>SETTINGS[id]??'beach';
-
-const WOOD:[string,string][]=[['#a67d55','#7a5a3e'],['#8f6a48','#634631'],['#b8916a','#86654a'],['#8a7a68','#5f5246'],['#9c7550','#6d4f37'],['#c2a07a','#8c6c4f']];
-const AWNING:[string,string][]=[['#bd7657','#fff0cf'],['#3f7a9a','#f4efe2'],['#c9a23f','#fff4dc'],['#4f8a6a','#f1ecd8'],['#c45d5d','#fbf6ee'],['#e08a4f','#fde9d0'],['#2f6f78','#e9e0c8'],['#7a6a9e','#f1ebf6']];
-const EMBLEM=['#3f7a78','#2f5f86','#c9655a','#6f8fa6','#9b6a3e'];
-const BOARD=['#fff0cf','#f3e3c3','#e8efe6','#fbe6d6'];
+/** Per-spot turn where a type's default yaw would bring its colliders within 0.85 m of the standing spot (radians). */
+const YAW_BY_SPOT:Readonly<Record<string,number>>={'west-pier':1.25,'farm-beach':1.4,'summit-ledge':-.35};
 
 function hashId(s:string){let h=2166136261;for(let i=0;i<s.length;i++)h=Math.imul(h^s.charCodeAt(i),16777619);return h>>>0;}
-function mulberry(seed:number){let a=seed|0;return ()=>{a=(a+0x6D2B79F5)|0;let t=Math.imul(a^(a>>>15),1|a);t=(t+Math.imul(t^(t>>>7),61|t))^t;return ((t^(t>>>14))>>>0)/4294967296;};}
-const pick=<V,>(r:()=>number,list:readonly V[])=>list[Math.floor(r()*list.length)%list.length];
+export const stallType=(id:string):StallType=>STALL_BY_SPOT[id]??STALL_TYPE_IDS[hashId(id)%STALL_TYPE_IDS.length];
+export const stallYaw=(id:string)=>YAW_BY_SPOT[id]??STALL_TYPES[stallType(id)].yaw;
 
-/** The post's look, from its id alone (deterministic). */
-export function kioskVariant(id:string,setting:KioskSetting=kioskSetting(id)):KioskVariant{
- const r=mulberry(hashId('kiosk:'+id));
- const wood=Math.floor(r()*WOOD.length),awning=Math.floor(r()*AWNING.length);
- const pattern=pick(r,['plain','stripes','wide','valance'] as const),roof=pick(r,['flat','shed','gable'] as const);
- const tilt=Math.round((r()*2-1)*100)/100;
- const counter=pick(r,['crate','bucket','jars','scale','tray'] as const),counterSide=r()<.5?-1:1;
- const ground=pick(r,['barrel','crates','icebox','creel','none'] as const),groundSide=r()<.5?-1:1;
- const hang=pick(r,['net','floats','fish','lantern','buoys'] as const),topper=pick(r,['flag','bunting','vane','sign','none'] as const);
- const emblem=Math.floor(r()*EMBLEM.length),board=Math.floor(r()*BOARD.length);
- const signature=[setting,'w'+wood,'a'+awning,pattern,roof,tilt.toFixed(2),counter+(counterSide<0?'L':'R'),ground+(groundSide<0?'L':'R'),hang,topper,'e'+emblem,'b'+board].join('|');
- return {id,setting,wood,awning,pattern,roof,tilt,counter,counterSide,ground,groundSide,hang,topper,emblem,board,signature};
+/** How far the stall stands from the standing spot, square to the cast (the rule since Sep 30 2026). */
+export const KIOSK_OFFSET=2.1;
+type SpotLike={x:number;z:number;buoy:{x:number;z:number};boat?:{prompt:{x:number;z:number}}};
+/** Where a fishing post's stall stands: beside the standing spot, square to the cast (boats: over the rod holders). */
+export function kioskAt(s:SpotLike){if(s.boat)return {x:s.boat.prompt.x,z:s.boat.prompt.z};const dx=s.buoy.x-s.x,dz=s.buoy.z-s.z,l=Math.hypot(dx,dz)||1;return {x:s.x+(-dz/l)*KIOSK_OFFSET,z:s.z+(dx/l)*KIOSK_OFFSET};}
+/** A local stall point (x right, z front) in the world, for a stall at k turned `yaw` (same rotation as buildKioskGeometry). */
+export const stallToWorld=(k:{x:number;z:number},yaw:number,x:number,z:number)=>({x:k.x+x*Math.cos(yaw)+z*Math.sin(yaw),z:k.z-x*Math.sin(yaw)+z*Math.cos(yaw)});
+/** The solid footprint as round colliders ({x,z,w,d,cornerRadius} like trunkCollider), turned with the stall. */
+export function stallColliders(s:SpotLike&{id:string}){
+ const k=kioskAt(s),yaw=stallYaw(s.id);
+ return STALL_TYPES[stallType(s.id)].solids.map(([x,z,r])=>{const p=stallToWorld(k,yaw,x,z);return {x:p.x,z:p.z,w:2*r,d:2*r,cornerRadius:r};});
+}
+
+export type KioskVariant={id:string;type:StallType;yaw:number;palette:number;emblem:number;board:number;
+ /** Everything above as one string: two posts with the same signature would look the same. */
+ signature:string};
+/** Triangle budget per post (the old identical post was ≈ 240 triangles; the Oct 26 variants ≈ 600). */
+export const KIOSK_TRI_CAP=720;
+
+const EMBLEM=['#3f7a78','#2f5f86','#c9655a','#6f8fa6','#9b6a3e'];
+const BOARD=['#fff0cf','#f3e3c3','#e8efe6','#fbe6d6'];
+/** Two or three palettes per type; the n-th post of a type (STALL_BY_SPOT order) takes the n-th, so two posts of one type differ. */
+const PALETTES:Record<StallType,readonly (readonly string[])[]>={
+ // wall, trim/dark, roof, roof stripe, accent
+ shack:[['#a08c74','#5f5246','#6b5646','#836b56','#c45d5d'],['#7f908a','#4f5a55','#6b4f3a','#80634b','#e0b04f']],
+ // body, trim, canopy, canopy stripe, accent
+ cart:[['#3f8fb0','#fbf6ee','#e0513f','#fff3df','#e8c040'],['#f0b43f','#fbf6ee','#2f8f8a','#f4efe2','#e0513f'],['#e0513f','#fbf6ee','#3f8fb0','#fbf6ee','#e8c040']],
+ // bamboo, dark bamboo, straw, dark straw, accent
+ tiki:[['#c9a66b','#8c6c4f','#d9b56a','#b08a4a','#e0703f'],['#b8955c','#7a5a3e','#cfae6e','#a3823f','#d9483b']],
+ // band red, band white, roof, roof stripe, accent
+ lighthouse:[['#d9483b','#f4efe2','#2f4f6f','#f4efe2','#e8c040'],['#2f6f9a','#f4efe2','#c94f3f','#f4efe2','#e0703f'],['#3f8a5a','#f4efe2','#2f4f6f','#f4efe2','#e0513f']],
+ // hull, stripe, boot-top, wood, accent
+ rowboat:[['#2f6f9a','#fbf6ee','#d9483b','#a67d55','#e8c040'],['#4f8a6a','#fbf6ee','#c9a23f','#9c7550','#e0513f']],
+ // lower walls, frame, roof, flag, accent
+ booth:[['#2f4f6f','#f4efe2','#c94f3f','#e8c040','#d9483b'],['#3f7a78','#fbf6ee','#2f4f6f','#e0513f','#e8c040']],
+ // wood, cloth A, cloth B, parasol, parasol trim
+ market:[['#a67d55','#e0513f','#fff3df','#3f8fb0','#fbf6ee'],['#8f6a48','#4f8a6a','#f1ecd8','#e08a4f','#fde9d0']],
+};
+
+/** The post's look, from its id alone (deterministic: no runtime randomness, every load and every player sees the same stall). */
+export function kioskVariant(id:string):KioskVariant{
+ const type=stallType(id),yaw=stallYaw(id),h=hashId('kiosk:'+id),nth=Object.keys(STALL_BY_SPOT).filter(k=>STALL_BY_SPOT[k]===type).indexOf(id);
+ const palette=(nth<0?h:nth)%PALETTES[type].length,emblem=(h>>>3)%EMBLEM.length,board=(h>>>7)%BOARD.length;
+ return {id,type,yaw,palette,emblem,board,signature:[type,yaw.toFixed(2),'p'+palette,'e'+emblem,'b'+board].join('|')};
 }
 
 // ---- Shared primitives: built once per module, non-indexed, position + normal only (colour is written per post).
@@ -78,92 +112,133 @@ function prim(k:Prim):T.BufferGeometry{
 export const kioskPrimitiveCount=()=>PRIM_CACHE.size;
 export const kioskPrimitive=(k:Prim)=>prim(k);
 
-export type KioskPart={prim:Prim;m:T.Matrix4;color:string;tag?:'cabinet'|'ground'|'setting'};
+export type KioskPart={prim:Prim;m:T.Matrix4;color:string;tag?:'sign'|'rod'};
 const _q=new T.Quaternion(),_e=new T.Euler(),_p=new T.Vector3(),_s=new T.Vector3();
 const mat=(x:number,y:number,z:number,rx=0,ry=0,rz=0,sx=1,sy=1,sz=1)=>new T.Matrix4().compose(_p.set(x,y,z),_q.setFromEuler(_e.set(rx,ry,rz)),_s.set(sx,sy,sz));
 const tint=(hex:string,k:number)=>'#'+new T.Color(hex).multiplyScalar(k).getHexString();
 
-/** The parts of one post in its local frame (counter faces +z, the cabinet centred on the origin, ground at y = 0). */
+/** The parts of one stall in its local frame (front faces +z, centred on the origin, ground at y = 0). */
 export function kioskPlan(v:KioskVariant):KioskPart[]{
- const r=mulberry(hashId('props:'+v.id));
- const parts:KioskPart[]=[];
- const add=(p:Prim,color:string,m:T.Matrix4,tag?:KioskPart['tag'])=>{parts.push({prim:p,m,color,tag});};
- const box=(color:string,x:number,y:number,z:number,w:number,h:number,d:number,rx=0,ry=0,rz=0,tag?:KioskPart['tag'])=>add('box',color,mat(x,y,z,rx,ry,rz,w,h,d),tag);
- const [wood,trim]=WOOD[v.wood],[awn,stripe]=AWNING[v.awning],emblem=EMBLEM[v.emblem];
- // The family: cabinet (the footprint), counter top, drawer pull, notice board on its rail, fish emblem, rods and reels.
- box(wood,0,.625,0,KIOSK_CABINET.w,KIOSK_CABINET.h,KIOSK_CABINET.d,0,0,0,'cabinet');
- box(trim,0,1.28,0,1.26,.12,.76);
- box('#e6c477',0,.95,.37,.5,.1,.04);
- box(tint(wood,.82),0,.42,.36,1.1,.05,.02);/* a plank seam across the front */
- box(BOARD[v.board],0,2.02,-.2,1.12,1.3,.08);
- box('#477c6a',0,1.38,-.2,1.22,.1,.12);
- add('ico',emblem,mat(0,2.08,-.14,0,0,0,.26*1.5,.26*.7,.26*.25));
- add('cone3',emblem,mat(.5,2.08,-.14,0,0,-Math.PI/2,.17,.3,.17));
- add('sphere','#fff0cf',mat(-.2,2.14,-.08,0,0,0,.04,.04,.04));
- for(const side of [-1,1]){
-  add('cyl5','#6e5540',mat(side*.42,1.95,.36,.28,0,side*.12,.026,2.6,.026));
-  add('cyl5','#d6a15d',mat(side*.42,1.05,.46,Math.PI/2,0,0,.07,.08,.07));
- }
- // Roof: a slab (or two for a gable), split into stripes; the eave's front edge sits at ~2.7 m whatever the shape.
- const slab=(cx:number,cy:number,cz:number,rx:number,w:number,d:number)=>{
-  const base=mat(cx,cy,cz,rx,0,0);
-  const strips=v.pattern==='stripes'?5:v.pattern==='wide'?3:1;
-  for(let i=0;i<strips;i++){const sw=w/strips,x=-w/2+sw*(i+.5);
-   add('box',i%2?stripe:awn,base.clone().multiply(mat(x,0,0,0,0,0,sw,.11,d)));}
-  if(v.pattern==='plain')add('box',stripe,base.clone().multiply(mat(0,-.02,d/2+.015,0,0,0,w,.14,.03)));
-  if(v.pattern==='valance')for(let i=0;i<6;i++)add('cone3',i%2?stripe:awn,base.clone().multiply(mat(-w/2+w/6*(i+.5),-.13,d/2,Math.PI,0,0,.12,.16,.03)));
- };
- if(v.roof==='flat')slab(0,2.8,.05,v.tilt*.06,1.4,.9);
- else if(v.roof==='shed')slab(0,2.84,.1,.18+v.tilt*.05,1.46,.98);
- else{const a=.4+v.tilt*.06,h=.29;
-  slab(0,3-Math.sin(a)*h,.05+Math.cos(a)*h,a,1.44,.6);slab(0,3-Math.sin(a)*h,.05-Math.cos(a)*h,-a,1.44,.6);
-  box(trim,0,3.01,.05,1.5,.07,.07,Math.PI/4);}
- const eave=2.68;
- // Counter prop (on the counter top, left or right of the middle).
- const cx=v.counterSide*.27,top=1.34;
+ const parts:KioskPart[]=[];let tag:KioskPart['tag'];
+ const add=(p:Prim,color:string,m:T.Matrix4)=>{parts.push({prim:p,m,color,tag});};
+ const box=(c:string,x:number,y:number,z:number,w:number,h:number,d:number,rx=0,ry=0,rz=0)=>add('box',c,mat(x,y,z,rx,ry,rz,w,h,d));
+ /** A cylinder / cone of radius r and height h centred at (x, y, z). */
+ const cyl=(k:Prim,c:string,x:number,y:number,z:number,r:number,h:number,rx=0,ry=0,rz=0)=>add(k,c,mat(x,y,z,rx,ry,rz,r,h,r));
+ const P=PALETTES[v.type][v.palette],emblem=EMBLEM[v.emblem],board=BOARD[v.board];
  const fish=(x:number,y:number,z:number,ry:number,col:string,s=1)=>{add('ico',col,mat(x,y,z,0,ry,0,.11*s,.045*s,.04*s));add('cone3',col,mat(x+Math.cos(ry)*.13*s,y,z-Math.sin(ry)*.13*s,0,ry,-Math.PI/2,.05*s,.08*s,.02*s));};
- if(v.counter==='crate'){box(trim,cx,top+.08,0,.34,.16,.26);fish(cx-.05,top+.18,-.04,.2,'#6f8fa6');fish(cx+.04,top+.19,.06,-.3,'#3f7a78');}
- else if(v.counter==='bucket'){add('cyl8',pick(r,['#3f7a9a','#c45d5d','#e0b04f']),mat(cx,top+.11,0,0,0,0,.12,.22,.12));add('ico','#d98a6a',mat(cx,top+.23,0,0,0,0,.07,.04,.07));}
- else if(v.counter==='jars'){for(let i=0;i<3;i++){const x=cx+(i-1)*.12;add('cyl5',['#d9a441','#8fb08a','#e8d9c0'][i],mat(x,top+.07,0,0,0,0,.05,.14,.05));box('#c94f3f',x,top+.155,0,.09,.03,.09);}}
- else if(v.counter==='scale'){box('#4a4f55',cx,top+.02,0,.22,.04,.16);add('cyl5','#b8893a',mat(cx,top+.12,0,0,0,0,.02,.18,.02));add('cyl8','#d6a15d',mat(cx,top+.22,0,0,0,0,.12,.02,.12));fish(cx,top+.25,0,.5,'#9b8a5e',.8);}
- else{box('#e9f2f2',cx,top+.02,0,.42,.04,.28);fish(cx-.08,top+.06,-.06,.1,'#6f8fa6',.9);fish(cx+.08,top+.06,.06,.1,'#c9655a',.9);}
- // Ground prop beside the cabinet (inside ~1.1 m of the centre: tucked against the footprint, never in the walkway to the spot).
- const gx=v.groundSide*.86;
- if(v.ground==='barrel'){add('cyl8',tint(wood,.9),mat(gx,.28,.02,0,0,0,.22,.56,.22),'ground');for(const y of [.12,.44])add('cyl6','#4a4f55',mat(gx,y,.02,0,0,0,.226,.04,.226),'ground');}
- else if(v.ground==='crates'){box(trim,gx,.18,0,.36,.36,.36,0,0,0,'ground');box(wood,gx,.52,0,.32,.32,.32,0,.3,0,'ground');}
- else if(v.ground==='icebox'){box('#eef3f2',gx,.17,.02,.34,.34,.5,0,0,0,'ground');box(pick(r,['#3f7a9a','#c45d5d']),gx,.36,.02,.36,.05,.52,0,0,0,'ground');}
- else if(v.ground==='creel'){add('cyl6','#b99a62',mat(gx,.16,0,0,0,0,.19,.32,.19),'ground');add('cyl6','#8a6e44',mat(gx,.34,0,0,0,0,.2,.04,.2),'ground');}
- // Hanging from the eave (between the rods).
- const hz=.47;
- if(v.hang==='net'){box('#2f4d4a',0,eave-.06,hz,.62,.03,.02);box('#5d7a70',0,eave-.27,hz,.56,.38,.012);for(let i=0;i<3;i++)add('ico','#e0703f',mat(-.2+i*.2,eave-.47,hz,0,0,0,.04,.04,.04));}
- else if(v.hang==='floats'){box('#e9dcc0',0,eave-.04,hz,.6,.012,.012);for(let i=0;i<3;i++){const y=eave-.18-.06*(i%2);add('cone3','#e9dcc0',mat(-.2+i*.2,eave-.1-.03*(i%2),hz,Math.PI,0,0,.012,.14,.012));add('sphere',['#e0513f','#fff3df','#e8c040'][i],mat(-.2+i*.2,y,hz,0,0,0,.06,.06,.06));}}
- else if(v.hang==='fish'){add('cyl5',trim,mat(0,eave-.05,hz,0,0,Math.PI/2,.015,.62,.015));for(let i=0;i<3;i++){const x=-.2+i*.2;add('ico',['#9aa6aa','#8a9aa0','#b0a07a'][i],mat(x,eave-.2,hz,0,0,0,.05,.12,.025));add('cone3','#7d8a8e',mat(x,eave-.36,hz,0,0,Math.PI,.04,.07,.015));}}
- else if(v.hang==='lantern'){const x=v.counterSide*-.18;box('#3a3a3a',x,eave-.06,hz,.01,.12,.01);box('#f2c25c',x,eave-.2,hz,.1,.14,.1);add('cone4','#3a3a3a',mat(x,eave-.1,hz,0,Math.PI/4,0,.09,.07,.09));}
- else{for(let i=0;i<2;i++){const x=-.14+i*.28,len=.1+.08*i;box('#e9dcc0',x,eave-.02-len/2,hz,.008,len,.008);add('cyl8',i?stripe:awn,mat(x,eave-.1-len,hz,0,0,0,.07,.2,.07));}}
- // Topper.
- const roofTop=v.roof==='gable'?3.04:v.roof==='shed'?2.98:2.88;
- if(v.topper==='flag'){const x=-v.groundSide*.56;add('cyl5','#6e5540',mat(x,roofTop+.32,-.25,0,0,0,.02,.7,.02));box(pick(r,[stripe,awn,'#e0513f','#3f7a9a']),x+.17,roofTop+.56,-.25,.32,.2,.015);}
- else if(v.topper==='bunting'){box('#e9dcc0',0,3.12,.68,.86,.01,.01);for(let i=0;i<5;i++)add('cone3',i%2?stripe:['#e0513f','#3f7a9a','#e8c040'][i%3],mat(-.32+i*.16,3.05,.68,Math.PI,0,0,.06,.12,.012));}
- else if(v.topper==='vane'){add('cyl5','#4a4f55',mat(0,roofTop+.2,-.05,0,0,0,.016,.4,.016));fish(0,roofTop+.42,-.05,0,emblem,1.4);}
- else if(v.topper==='sign'){box(trim,0,roofTop+.12,-.1,.74,.2,.04);box(stripe,0,roofTop+.12,-.077,.6,.12,.01);add('ico',emblem,mat(0,roofTop+.12,-.07,0,0,0,.12,.05,.012));}
- // Setting props.
- const opp=-v.groundSide;
- if(v.setting==='beach'){
-  for(let i=0;i<7;i++){const t=i/6-.5;add('cone4',['#f4d6c8','#fff3df','#e9b8a0','#f1e1b0'][i%4],mat(t*1.0,1.17-.07*(1-4*t*t),.39,Math.PI,i,0,.05,.07,.03),'setting');}
-  add('cone6','#f0c9b0',mat(opp*.5,.08,.62,0,0,Math.PI/2*opp,.09,.22,.09),'setting');
-  add('cyl8',pick(r,['#e8c040','#e0703f','#5fa3c0']),mat(opp*.88,.1,-.12,0,0,0,.1,.2,.1),'setting');
- }else if(v.setting==='pier'){
-  for(let k=0;k<4;k++)add('arc',k%2?'#fff3df':'#d9483b',mat(opp*.635,.78,0,0,Math.PI/2,k*Math.PI/2,.2,.2,.2),'setting');
-  add('torus','#c8b27e',mat(opp*.86,.05,.28,Math.PI/2,0,0,.2,.2,.32),'setting');
-  add('cyl6','#4a4f55',mat(v.groundSide*.5,.15,.6,0,0,0,.07,.3,.07),'setting');
- }else if(v.setting==='rocks'){
-  for(const [x,z,s] of [[-1.3,.6,.42],[1.5,.2,.5],[-.6,1.4,.3],[1.1,1.3,.36]] as const){const j=.85+r()*.3,rad=s*j;
-   add('ico',pick(r,['#a39a88','#968e80','#b0a796']),mat(x+(r()-.5)*.2,rad*.35,z+(r()-.5)*.2,0,x+r(),0,rad,rad*.62,rad),'setting');}
-  box('#5d4a3a',opp*.85,.16,.2,.34,.3,.3,0,.4,0,'setting');box('#c9a56a',opp*.85,.32,.2,.36,.03,.32,0,.4,0,'setting');
+ /** The shared cue: the cream fish sign (teal rim, fish emblem with tail and eye), facing +z, centred at (x, y, z). */
+ const sign=(x:number,y:number,z:number,s=1)=>{tag='sign';
+  box('#2f5f58',x,y,z-.02*s,.98*s,.6*s,.04*s);box(board,x,y,z+.01*s,.88*s,.5*s,.03*s);
+  add('ico',emblem,mat(x-.06*s,y,z+.04*s,0,0,0,.25*s,.12*s,.03*s));add('cone3',emblem,mat(x+.26*s,y,z+.04*s,0,0,-Math.PI/2,.11*s,.16*s,.03*s));
+  add('sphere','#fff0cf',mat(x-.2*s,y+.03*s,z+.07*s,0,0,0,.03*s,.03*s,.03*s));tag=undefined;};
+ /** The shared rods: two rods leaning out from a base at (x, z), tipping toward `lean` (+1 right, -1 left), with one reel each. */
+ const rods=(x:number,z:number,lean:number,base=0)=>{tag='rod';
+  for(const k of [-1,1]){const zz=z+k*.09;add('cyl5','#6e5540',mat(x+lean*.22,base+1.2,zz,k*.06,0,-lean*.18,.022,2.4,.022));add('cyl5','#d6a15d',mat(x+lean*.05,base+.5,zz+.06,Math.PI/2,0,0,.06,.07,.06));}
+  tag=undefined;};
+ if(v.type==='shack'){
+  const [wall,dark,roof,roofB,accent]=P,seam=tint(wall,.78);
+  box(dark,0,.06,0,2.1,.12,1.6);
+  box(wall,0,1.17,-.66,1.9,2.1,.08);for(const sx of [-1,1])box(wall,sx*.91,1.17,0,.08,2.1,1.4);
+  box(wall,0,.62,.66,1.9,1,.08);box(dark,0,1.14,.76,2,.06,.38);box(wall,0,2.05,.66,1.9,.34,.08);
+  for(const sx of [-1,1])for(const y of [.5,1,1.55])box(seam,sx*.956,y,0,.012,.05,1.4);
+  for(const y of [.36,.8])box(seam,0,y,.705,1.9,.05,.012);
+  box(wall,0,2.22,0,1.84,1.03,1.03,Math.PI/4);/* the gable ends */
+  const a=.62;for(const sz of [-1,1])for(let i=0;i<4;i++)box(i%2?roofB:roof,-.86+i*.573,2.6,sz*.5,.573,.09,1.26,sz*a);
+  box(dark,0,2.97,0,2.4,.08,.08);
+  sign(0,2.02,.74,.9);
+  box(dark,1.12,.8,-.38,.06,1.6,.06);box(dark,1.12,.8,.38,.06,1.6,.06);box(dark,1.12,1.45,0,.06,.06,.84);/* rod rack */
+  for(let i=0;i<3;i++)add('cyl5',['#6e5540','#4a4f55','#8a5a3a'][i],mat(1.14,1.3,-.25+i*.25,0,0,-.08,.02,2.5,.02));
+  add('torus',accent,mat(-.97,1.45,.1,0,Math.PI/2,0,.24,.24,.24));
+  cyl('cyl8','#4a4f55',.62,.18,1.02,.14,.34);fish(.6,.38,1.02,.4,'#6f8fa6',.8);
+  box('#3a3a3a',-.86,1.85,.84,.01,.2,.01);box('#f2c25c',-.86,1.68,.84,.12,.16,.12);
+  rods(-.62,.9,-1);
+ }else if(v.type==='cart'){
+  const [body,trim,canopy,stripe,accent]=P;
+  box(body,0,.86,0,1.3,.7,.72);box(trim,0,1.24,0,1.38,.07,.8);box(tint(body,.8),0,.52,0,1.34,.06,.76);
+  sign(-.22,.92,.38,.82);
+  for(const sz of [-1,1]){cyl('cyl8','#3a3a3a',.4,.38,sz*.43,.38,.07,Math.PI/2);cyl('cyl6',accent,.4,.38,sz*.475,.1,.04,Math.PI/2);}
+  box('#4a4f55',-.52,.26,0,.06,.52,.5);
+  for(const sz of [-1,1])add('cyl5',trim,mat(.85,1.02,sz*.26,0,0,Math.PI/2+.12,.025,.5,.025));
+  add('cyl5','#3a3a3a',mat(1.1,1.05,0,Math.PI/2,0,0,.03,.6,.03));
+  for(const [px,pz] of [[-.6,-.33],[.6,-.33],[-.6,.33],[.6,.33]])add('cyl5',trim,mat(px,1.77,pz,0,0,0,.022,1.06,.022));
+  for(let i=0;i<5;i++)box(i%2?stripe:canopy,-.72+i*.36,2.33,0,.36,.07,1.16,.07);
+  for(let i=0;i<5;i++)add('cone3',i%2?stripe:canopy,mat(-.72+i*.36,2.2,.6,Math.PI,0,0,.12,.2,.03));
+  add('cyl5','#4a4f55',mat(0,2.6,0,0,0,0,.015,.5,.015));box(accent,.15,2.77,0,.28,.16,.012);
+  box('#eef3f2',.32,1.45,-.05,.5,.36,.42);box(canopy,.32,1.66,-.05,.52,.06,.44);
+  box('#e9f2f2',-.32,1.3,.1,.42,.04,.3);fish(-.4,1.34,.05,.1,'#6f8fa6',.9);fish(-.24,1.34,.16,.1,'#c9655a',.9);
+  rods(-.7,0,-1,.35);
+ }else if(v.type==='tiki'){
+  const [bamboo,dark,straw,strawB,accent]=P;
+  for(const [px,pz] of [[-.72,-.55],[.72,-.55],[-.72,.55],[.72,.55]])cyl('cyl5',bamboo,px,1.05,pz,.07,2.1);
+  box(dark,0,.55,.56,1.6,1.1,.3);for(const x of [-.5,0,.5])box(bamboo,x,.55,.715,.12,1.1,.02);
+  box(tint(dark,.85),0,1.13,.6,1.8,.07,.46);
+  cyl('cone4',strawB,0,2.18,0,1.72,.42,0,Math.PI/4);
+  cyl('cone4',straw,0,2.78,0,1.42,1.3,0,Math.PI/4);
+  cyl('cone4',strawB,0,3.4,0,.3,.22,0,Math.PI/4);add('sphere',dark,mat(0,3.5,0,0,0,0,.07,.07,.07));
+  for(let i=0;i<7;i++)add('cone3',i%2?strawB:straw,mat(-1.05+i*.35,1.9,1.2,Math.PI,0,0,.1,.22,.03));
+  for(const sx of [-1,1])for(let i=0;i<3;i++)add('cone3',i%2?strawB:straw,mat(sx*1.2,1.9,-.7+i*.7,Math.PI,Math.PI/2,0,.1,.22,.03));
+  for(let i=0;i<3;i++)add('cone3','#4f8a4a',mat(Math.cos(i*2.1)*.35,3.38,Math.sin(i*2.1)*.35,Math.PI/2.4,-i*2.1+Math.PI/2,0,.14,.7,.02));
+  cyl('cyl5',dark,.95,.85,.95,.04,1.7);cyl('cone4',accent,.95,1.82,.95,.08,.24);cyl('cone4','#f7d36b',.95,1.78,.95,.05,.14);
+  for(const x of [-.55,-.36])add('sphere','#6b4a2e',mat(x,1.23,.6,0,0,0,.09,.09,.09));
+  box('#e9dcc0',-.38,1.86,1.02,.01,.18,.01);box('#e9dcc0',.38,1.86,1.02,.01,.18,.01);
+  sign(0,1.55,1.02,.85);
+  rods(-.95,-.1,-1);
+ }else if(v.type==='lighthouse'){
+  const [band,white,roof,roofB,accent]=P,tx=.55,tz=-.1;
+  for(let i=0;i<4;i++){const r=.5-.035*i;cyl('cyl8',i%2?white:band,tx,.36+.7*i,tz,r,.72);}
+  cyl('cyl8','#3a3a3a',tx,2.86,tz,.48,.08);cyl('cyl6','#f7d36b',tx,3.1,tz,.28,.42);cyl('cone6',band,tx,3.46,tz,.38,.34);
+  add('sphere','#3a3a3a',mat(tx,3.66,tz,0,0,0,.05,.05,.05));
+  for(const pz of [-.48,.52])cyl('cyl5',tint(roof,1.15),-1.0,.95,pz,.05,1.9);
+  for(let i=0;i<3;i++)box(i%2?roofB:roof,-.4,2.08,-.5+i*.5,1.42,.07,.5,0,0,.36);
+  box('#a67d55',-.45,.5,.28,1,1,.5);box(tint('#a67d55',.75),-.45,1.03,.32,1.08,.06,.58);
+  sign(-.45,1.58,.62,.82);
+  for(let i=0;i<3;i++)cyl('cyl8',[accent,white,band][i],1.02,.16+.32*i,.42,.21-.02*i,.3);cyl('cone6',band,1.02,1.08,.42,.16,.2);
+  add('torus',band,mat(tx+.08,1.2,tz+.5,-.25,.25,0,.22,.22,.22));
+  box('#4a4f55',-.15,.16,.45,.34,.3,.3,0,.4,0);
+  rods(-.95,.1,-1);
+ }else if(v.type==='rowboat'){
+  const [hull,stripe,boot,wood,accent]=P;
+  box(hull,-.25,.48,0,1.7,.86,.42);box(stripe,-.25,.78,.215,1.7,.12,.01);box(boot,-.25,.13,.215,1.7,.16,.01);
+  add('cone4',hull,mat(.88,.48,0,0,0,-Math.PI/2,.43,.56,.21));
+  box(tint(hull,.8),-1.12,.48,0,.08,.88,.44,0,0,.12);
+  box(wood,-.2,.94,.02,2.1,.06,.5);box(tint(wood,.8),-.2,.9,.27,2.1,.04,.03);
+  box('#e9f2f2',.1,1,.05,.6,.04,.34);fish(.02,1.04,0,.1,'#6f8fa6',.9);fish(.18,1.04,.1,.1,'#c9655a',.9);
+  cyl('cyl8',accent,-.65,1.08,0,.12,.24);
+  add('cone6','#4f6f5a',mat(.75,.98,.05,0,0,-.3,.3,.12,.26));
+  const mx=-.45,mz=-.12;
+  cyl('cyl5',tint(wood,.85),mx,1.7,mz,.045,3.4);cyl('cyl5',tint(wood,.85),mx,2.95,mz,.03,1.2,0,0,Math.PI/2);
+  box('#e9dcc0',mx-.4,2.75,mz,.01,.4,.01);box('#e9dcc0',mx+.4,2.75,mz,.01,.4,.01);
+  sign(mx,2.32,mz+.05,.9);
+  add('cone3',boot,mat(mx+.2,3.32,mz,0,0,-Math.PI/2,.08,.4,.01));
+  for(const k of [-1,1]){add('cyl5',tint(wood,1.1),mat(-1.32,1,k*.15,k*.12,0,.18,.025,2,.025));box(tint(wood,1.1),-1.5,.12,k*.2,.12,.42,.03,k*.12,0,.18);}
+  rods(.85,-.1,1,.12);
+ }else if(v.type==='booth'){
+  const [lower,frame,roof,flag,accent]=P;
+  box('#b8b0a0',0,.08,0,1.42,.16,1.42);
+  box(lower,0,.66,0,1.15,1,1.15);box('#bfe3ee',0,1.62,0,1.05,.92,1.05);
+  for(const [px,pz] of [[-.55,-.55],[.55,-.55],[-.55,.55],[.55,.55]])box(frame,px,1.62,pz,.1,.92,.1);
+  box(frame,0,1.14,0,1.2,.06,1.2);box(lower,0,2.17,0,1.17,.2,1.17);box(frame,0,2.29,0,1.38,.05,1.38);
+  cyl('cone4',roof,0,2.64,0,.98,.7,0,Math.PI/4);
+  cyl('cyl5','#4a4f55',0,3.66,0,.025,1.4);box(flag,.27,4.12,0,.5,.32,.015);box(accent,.27,4.04,.01,.5,.08,.012);
+  box('#f4efe2',.8,1.35,.42,.26,2.1,.04);for(let i=0;i<6;i++)box(i%2?'#2f4f6f':'#d9483b',.74,.55+i*.3,.445,.12,.04,.012);
+  box('#4a4f55',.8,1.2,.38,.05,2.4,.05);
+  sign(0,.72,.6,.82);
+  add('torus',accent,mat(-.6,1.5,0,0,Math.PI/2,0,.22,.22,.22));
+  rods(-.75,.6,-1);
  }else{
-  for(const [x,z,s] of [[-1.3,.6,.4],[1.45,.3,.46],[-.7,1.35,.3]] as const){const rad=s*(.85+r()*.3);
-   add('ico','#8e9184',mat(x,rad*.35,z,0,x,0,rad,rad*.6,rad),'setting');add('cone6','#5f8a4a',mat(x,rad*.9,z,0,x+1,0,rad*.72,rad*.22,rad*.72),'setting');}
-  for(let i=0;i<3;i++)add('cone4','#6f9a52',mat(opp*.9+(i-1)*.1,.3+.06*i,.45+(i%2)*.08,0,i,(i-1)*.12,.035,.6+.12*i,.035),'setting');
+  const [wood,clothA,clothB,parasol,trim]=P;
+  box(wood,0,.86,0,1.7,.07,.8);for(const [px,pz] of [[-.78,-.33],[.78,-.33],[-.78,.33],[.78,.33]])box(tint(wood,.8),px,.41,pz,.06,.82,.06);
+  for(let i=0;i<4;i++)box(i%2?clothB:clothA,-.6375+i*.425,.66,.41,.425,.34,.01);
+  box('#e9f2f2',-.3,.93,.05,.8,.06,.55);fish(-.5,.98,-.05,.2,'#6f8fa6');fish(-.25,.98,.12,-.2,'#3f7a78');fish(-.08,.98,-.05,.1,'#c9655a');
+  cyl('cyl8','#4a4f55',.45,.97,.1,.12,.16);fish(.42,1.08,.1,.4,'#9b8a5e',.8);
+  box(tint(wood,1.1),1.15,.22,-.1,.46,.44,.46);box(tint(wood,.85),1.15,.62,-.1,.42,.36,.42,0,.3,0);
+  for(const y of [.12,.32])box(tint(wood,.7),1.15,y,.135,.46,.04,.01);
+  cyl('cyl5','#4a4f55',-.1,1.3,-.28,.03,2.6);
+  cyl('cone6',parasol,-.1,2.38,-.28,1.3,.5);
+  for(let i=0;i<6;i++){const a=i/6*Math.PI*2+Math.PI/6;add('cone3',i%2?trim:parasol,mat(-.1+Math.sin(a)*1.13,2.06,-.28+Math.cos(a)*1.13,Math.PI,a,0,.16,.18,.03));}
+  add('sphere',trim,mat(-.1,2.66,-.28,0,0,0,.06,.06,.06));
+  sign(-.1,1.5,-.24,.82);
+  rods(-.95,-.1,-1);
  }
  return parts;
 }
@@ -173,10 +248,10 @@ export const kioskTriangles=(parts:readonly KioskPart[])=>parts.reduce((n,p)=>n+
 
 const _n=new T.Matrix3(),_w=new T.Matrix4(),_m=new T.Matrix4(),_v=new T.Vector3(),_c=new T.Color();
 /**
- * One post as ONE non-indexed, vertex-coloured geometry (position, normal, color) placed at (x, z) and turned `yaw`: the shared
+ * One stall as ONE non-indexed, vertex-coloured geometry (position, normal, color) placed at (x, z) and turned `yaw`: the shared
  * primitives are transformed straight into three typed arrays (no per-part geometry, nothing to dispose but the result).
  */
-export function buildKioskGeometry(v:KioskVariant,x:number,z:number,yaw=Math.PI/4):T.BufferGeometry{
+export function buildKioskGeometry(v:KioskVariant,x:number,z:number,yaw=v.yaw):T.BufferGeometry{
  const parts=kioskPlan(v);let count=0;for(const p of parts)count+=prim(p.prim).getAttribute('position').count;
  const pos=new Float32Array(count*3),nor=new Float32Array(count*3),col=new Float32Array(count*3);
  _w.makeRotationY(yaw).setPosition(x,0,z);let o=0;

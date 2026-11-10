@@ -113,7 +113,7 @@ export const SUMMIT_BALL_SPOTS:CoinSpot[]=[
   clue:'On Summit Isle’s west lawn, the sunset hut wears a ball on the tip of its straw roof.',
   detail:'Fly to the round hut on the west lawn, above the whale shark’s sea. Hover over the roof and land the jetpack on it, or open your parachute above it and steer down onto the very tip.',
   teaching:'A goal kick is in play as soon as it moves. Your keeper can pass to a teammate inside the penalty area, but the other team must wait outside the area until the ball is kicked.',lesson:'support'},
- {id:'summit-north-rim',name:'Summit Isle · summit’s north rim',...ground({x:660,z:120}),kind:'landing',summit:true,concept:'law5-referee-decides',
+ {id:'summit-north-rim',name:'Summit Isle · summit’s north rim',...ground({x:662,z:108}),kind:'landing',summit:true,concept:'law5-referee-decides',
   clue:'On the summit, east of the pitch, a padded crate sits on the grass at the very top of the mountain.',
   detail:'Walk round the Summit 5s fence to its east side. Land on the padded crate from the jetpack, or face it and kick its target.',
   teaching:'The referee has the final say. Their decisions stand even if you disagree, and arguing can earn a yellow card. Play on and think about the next ball.',lesson:'support'},

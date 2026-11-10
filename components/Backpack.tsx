@@ -14,6 +14,10 @@ import {BallPicture,StorePreview,useStorePreviews} from './StorePreviews';
 import {useCostumePreviews} from './CostumePreviews';
 import styles from './Backpack.module.css';
 import {KonbiniCollection,snackRenderer} from './KonbiniCollection';
+import {useGashapon} from '@/lib/gashapon/gashaponBrowser';
+import {ToyShelfGrid} from './GashaponToyShelf';
+import GashaponToyLayer from './GashaponToyLayer';
+import {shelfCounts} from '@/lib/gashapon/toys';
 import {trophyRenderer} from './TrophyShelf';
 
 /**
@@ -93,10 +97,10 @@ export default function Backpack({active,...ctx}:BackpackActions&{active:boolean
   <p className={styles.status} role="status" aria-live="polite">{status}</p>
   {shown.map(g=>{const r=RENDERERS[g.kind]??FALLBACK;const cards=g.kind==='card';const list=cards&&!allCards?g.items.slice(0,CARD_PREVIEW):g.items;
    return <section key={g.kind} className={styles.group} data-backpack-group={g.kind} aria-labelledby={`backpack-${g.kind}`}>
-    <div className={styles.groupHead}><h4 id={`backpack-${g.kind}`}>{g.label} <span className={styles.count}>{g.items.length}</span></h4>
+    <div className={styles.groupHead}><h4 id={`backpack-${g.kind}`}>{g.label} <span className={styles.count}>{g.kind==='toy'?<ToyCount/>:g.items.length}</span></h4>
      {cards&&g.items.length>0&&<button type="button" className={styles.secondary} onClick={()=>ctx.onShowCard(g.items[0].ref)}>Open my binder</button>}</div>
     <p className={styles.lesson}>{g.items.length?g.lesson:g.emptyHint}</p>
-    {g.kind==='konbini'?<KonbiniCollection/>:g.items.length?<ul className={styles.grid} role="list">{list.map(item=>{const action=r.action?.(item,ctx)??null;const isNew=fresh.has(item.id);
+    {g.kind==='konbini'?<KonbiniCollection/>:g.kind==='toy'?<div className={styles.toys} data-backpack-toys><ToyShelfGrid heading="h5" idPrefix="backpack-toy"/>{active&&<GashaponToyLayer nested/>/* the 3D viewer opens inside Make it yours (a modal dialog) */}</div>:g.items.length?<ul className={styles.grid} role="list">{list.map(item=>{const action=r.action?.(item,ctx)??null;const isNew=fresh.has(item.id);
      const source=item.source==='starter'?'Starter':item.source==='bought'?'Bought':'Earned';
      return <li key={item.id}><button type="button" className={styles.tile} data-backpack-item={item.id} data-kind={item.kind} data-active={action?.active||undefined}
       aria-label={`${item.label}${item.detail?`, ${item.detail}`:''}. ${source}.${isNew?' New.':''}${action?` ${action.verb}.`:''}`}
@@ -111,6 +115,10 @@ export default function Backpack({active,...ctx}:BackpackActions&{active:boolean
    </section>;})}
  </section>;
 }
+
+/** Toys (Nov 9 2026, owner: "the gashapon toys should live in the backpack"): "N / 84" beside the heading; the grid is the Toy
+ *  Shelf's own (ToyShelfGrid), inline: found toys open the 3D viewer, the rest are "?" silhouettes. */
+function ToyCount(){const {found,total}=shelfCounts(useGashapon().owned);return <span data-backpack-toy-count={found}>{found} / {total}</span>;}
 
 /** The island's own gear meshes, snapshotted once per session (the vending machine's shelf framing). */
 let gearCache:Record<string,string>|null=null;

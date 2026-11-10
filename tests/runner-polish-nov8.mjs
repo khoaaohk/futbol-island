@@ -27,7 +27,7 @@ assert.deepEqual([...RUNNER_MODE_ORDER],['warmup','classic','night','storm','cup
   assert(b<=a,`${k} never grows up the ladder`);assert(b>=.06,`${k} keeps a readable floor (${RUNNER_MODE_ORDER[i]} ${b})`);}}
 
 // 2. Own boards: the four original routes keep 'runner'; Cup Final and Legend post to their own boards, which the server accepts.
-for(const id of ['warmup','classic','night','storm'])assert.equal(runnerBoardFor(id),'runner');
+/* Nov 10 2026: the finite routes have their own boards; Breakaway keeps 'runner' (tests/runner-daily-boards.cjs) */assert.equal(runnerBoardFor('classic'),'runner');assert.equal(runnerBoardFor('warmup'),'runwarm');assert.equal(runnerBoardFor('night'),'runnight');assert.equal(runnerBoardFor('storm'),'runstorm');
 assert.equal(runnerBoardFor('cup'),'cupfinal');assert.equal(runnerBoardFor('legend'),'legend');assert.equal(runnerBoardFor('nope'),'runner');
 {const sqlCap=Number(/score between 1 and (\d+)/.exec(read('supabase/migrations/20261013_arcade_leaderboards.sql'))[1]),mig=read('supabase/migrations/20261108_runner_tier_boards.sql');
  for(const g of ['cupfinal','legend']){assert(L.isBoardGame(g));assert(/^[a-z]{2,8}$/.test(g),'fits the session token pattern');const r=L.BOARD_RULES[g];
@@ -49,7 +49,7 @@ assert.deepEqual(runnerRunStars({mode:'legend',finished:false,won:false,goals:0,
 resetRunnerRoutes(blank);assert.equal(runnerTierBest('legend'),0);assert(saveRunnerTierBest('legend',1234));assert(!saveRunnerTierBest('legend',900),'only a better score');
 assert.equal(runnerTierBest('legend'),1234);assert.equal(runnerTierBest('cup'),0);
 resetRunnerRoutes({v:1,mode:'storm',stars:{warmup:1,classic:2,night:2,storm:1},played:4});assert.equal(readRunnerRoutes().stars.storm,1);assert.equal(runnerTierBest('cup'),0,'old saves read');
-{const g=read('components/games/ArcadeGame3D.tsx');assert(/const eliteRun=kind==='runner'&&runnerBoardFor\(runtime\.state\.runner\.mode\)!=='runner';[^]{0,200}?if\(eliteRun\)saveRunnerTierBest/.test(g),'elite runs skip the classic record');
+{const g=read('components/games/ArcadeGame3D.tsx'),rr=read('lib/arcade/results/runnerResult.ts');/* Nov 10 2026: game over moved to lib/arcade/results */assert(/const own=runnerKeepsOwnBest\(s\.mode\);[^]{0,300}?record:own\?null:/.test(rr)&&/if\(r\.runnerTierBest\)saveRunnerTierBest[^;]*;\s*else if\(r\.record\)/.test(read('lib/arcade/results/settle.ts')),'elite runs skip the classic record');
  assert(/beginBoardSession\(boardKind\)/.test(g)&&/<HighScoreEntry game=\{kind==='runner'\?runnerBoardFor\(/.test(g),'session and high-score entry use the tier board');}
 
 // 5. Coins: an elite run pays exactly the classic rate (goals and footballs) inside the same per-run cap.

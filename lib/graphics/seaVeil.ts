@@ -24,11 +24,12 @@
 //    normals) softens the silhouette; a slow wobble of the outline stands in for refraction.
 // Heat: no extra draws, no textures, no uniform but one shared clock value per consumer; ~three projections per vertex.
 import type * as T from 'three';
+import {WATER_UNIFORMS} from './waterSurface';
 export const SEA_LEVEL=-.43;
 /** The surrounding sea's teal as seen from above (linear working space, close to the ocean material's colour). */
 export const SEA_COLOR='vec3(.05,.27,.33)';// Oct 19 2026 audit: lighter, so submerged animals read as soft blue shapes, not dark holes
 export const SEA_VEIL_VERTEX_HEAD=`uniform float uVeilTime;varying float vVeilY;varying vec2 vVeilXZ;varying vec3 vVeilW;varying vec3 vVeilN;const float VEIL_SEA=${SEA_LEVEL.toFixed(2)};const float SEA_DEPTH_SPAN=6.;const float SEA_DEPTH_NEAR=.12;const float SEA_DEPTH_STEP=.015;`;
-export const SEA_VEIL_FRAGMENT_HEAD=`uniform float uVeilTime;varying float vVeilY;varying vec2 vVeilXZ;varying vec3 vVeilW;varying vec3 vVeilN;const float VEIL_SEA=${SEA_LEVEL.toFixed(2)};const vec3 VEIL_COLOR=${SEA_COLOR};`;
+export const SEA_VEIL_FRAGMENT_HEAD=`uniform float uVeilTime;varying float vVeilY;varying vec2 vVeilXZ;varying vec3 vVeilW;varying vec3 vVeilN;const float VEIL_SEA=${SEA_LEVEL.toFixed(2)};uniform vec3 uWaterNight;const vec3 VEIL_COLOR=${SEA_COLOR};`;
 /** After project_vertex (so after any vertex animation in `transformed`). */
 export const SEA_VEIL_VERTEX=`
 {vec4 vlP=vec4(transformed,1.);vec3 vlN=normal;
@@ -53,7 +54,7 @@ export const seaVeilFragment=(fade:boolean)=>`
  vec3 shade=diffuseColor.rgb;
  float dep=max(0.,VEIL_SEA-vVeilY),veil=smoothstep(0.,.5,dep)*(.55+.2*(1.-exp(-dep*.9)));
  shade=mix(shade,vec3(dot(shade,vec3(.3,.59,.11))),.3*step(.01,dep));
- shade=mix(shade,VEIL_COLOR,veil);
+ shade=mix(shade,VEIL_COLOR*uWaterNight,veil);// Nov 10 2026: night sea colour (WATER_UNIFORMS.uWaterNight)
  float b1=sin(vVeilXZ.x*.9+uVeilTime*.6+sin(vVeilXZ.y*.7-uVeilTime*.4)*1.3),b2=sin(vVeilXZ.y*1.1-uVeilTime*.5+sin(vVeilXZ.x*.8+uVeilTime*.3)*1.1);
  shade+=vec3(.07,.12,.12)*smoothstep(.55,1.,.25*(b1+b2)+.5)*smoothstep(0.,.4,dep);
  diffuseColor.rgb=shade;
@@ -61,7 +62,7 @@ ${fade?' float face=abs(dot(normalize(cameraPosition-vVeilW),normalize(vVeilN)))
 }`;
 /** Patch a material's compiled shader. `vertexAnim` runs after begin_vertex, `colorBody` before the veil (a pattern). */
 export function patchSeaVeil(shader:T.WebGLProgramParametersWithUniforms,time:{value:number},o:{fade?:boolean;vertexHead?:string;vertexAnim?:string;fragmentHead?:string;colorBody?:string}={}){
- shader.uniforms.uVeilTime=time;
+ shader.uniforms.uVeilTime=time;shader.uniforms.uWaterNight=WATER_UNIFORMS.uWaterNight;
  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\n'+SEA_VEIL_VERTEX_HEAD+(o.vertexHead??'')).replace('#include <begin_vertex>','#include <begin_vertex>'+(o.vertexAnim??'')).replace('#include <project_vertex>','#include <project_vertex>'+SEA_VEIL_VERTEX);
  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\n'+SEA_VEIL_FRAGMENT_HEAD+(o.fragmentHead??'')).replace('#include <color_fragment>','#include <color_fragment>'+(o.colorBody??'')+seaVeilFragment(!!o.fade));
 }

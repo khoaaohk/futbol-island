@@ -20,6 +20,7 @@ __pycache__/
 /shots/
 
 # scratch output (audit maps, screenshots)
+/gashapon-*.png
 /audit/
 /var-shots/
 

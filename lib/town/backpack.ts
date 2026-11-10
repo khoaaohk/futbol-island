@@ -6,6 +6,7 @@ import {STORE_ITEMS,type StoreCategory} from './store';
 import {VENDING_SPECIALS} from './vendingCatalog';
 import {VENDING_STARTERS} from './vendingLedger';
 import {consumable} from '../konbini/food';
+import {gashaponToy,GASHAPON_TOYS} from '../gashapon/toys';
 
 /**
  * Backpack (user, Sep 28 2026: "Make it yours → Backpack shows everything you own"). Pure model; browser wiring in
@@ -48,6 +49,8 @@ export type BackpackSources={
  snacks?:readonly {id:string;item:string;at:number}[];konbini?:{items:Readonly<Record<string,number>>};
  /** Lane 2 (Sep 30 2026): graduation certificates for the Trophy shelf (lib/endgame/backpackTrophies.ts). */
  trophies?:readonly {id:string;label:string;detail:string;at:number}[];
+ /** Gashapon toys found (Nov 9 2026; lib/gashapon/store.ts `owned`: count + first-found time per toy). */
+ toys?:Readonly<Record<string,{n:number;first:number}>>;
 };
 export type BackpackCategory={kind:BackpackKind;label:string;order:number;
  /** Where to get more (shown when the category is empty, and under its heading). */
@@ -167,6 +170,12 @@ registerBackpackCategory({kind:'konbini',label:'Konbini Collection',order:70,
  lesson:'Every Konbini sells its own snacks. Try them all: each one teaches how food fuels football.',
  emptyHint:'Buy something at a Konbini to start your collection. Each store has its own menu.',
  collect:s=>Object.entries(s.konbini?.items??{}).map(([id,at])=>({id:`konbini:${id}`,kind:'konbini',ref:id,label:consumable(id)?.label??id,detail:consumable(id)?.jp,source:'bought' as const,acquiredAt:at})).sort(newestFirst)});
+// Gashapon toys (Nov 9 2026, owner: "the gashapon toys should live in the backpack"): one item per toy found, newest first. The
+// section renders the whole toy grid inline (components/GashaponToyShelf.tsx ToyShelfGrid: per machine, "?" for toys not found).
+registerBackpackCategory({kind:'toy',label:'Toys',order:75,
+ lesson:`Capsule toys from the gashapon machines: ${GASHAPON_TOYS.length} to find, six in every machine. Tap a toy to play with it.`,
+ emptyHint:'Spin a gashapon machine at a Konbini, the Arcade or around the island to find your first toy.',
+ collect:s=>Object.entries(s.toys??{}).flatMap(([id,o])=>{const t=gashaponToy(id);return t&&o.n>0?[{id:`toy:${id}`,kind:'toy',ref:id,label:t.name,detail:o.n>1?`${t.rarity} · ×${o.n}`:t.rarity,source:'bought' as const,acquiredAt:o.first}]:[];}).sort(newestFirst)});
 // Home items (prints, lamps, trophies) are no longer sold, so there is no Home items category; vending displays are books.
 
 

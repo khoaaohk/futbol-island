@@ -2,6 +2,7 @@
 import {useEffect,useRef,type PointerEvent} from 'react';
 import {useFloatingStick} from '@/lib/arcade/useFloatingStick';
 import {runnerSteer,runnerSteerState} from '@/lib/arcade/runnerSteer';
+import {runnerSwipeAction,runnerSwipeMove,runnerSwipeStart,type RunnerSwipe,type RunnerSwipeState} from '@/lib/arcade/runnerSwipe';
 import styles from './RunnerControls.module.css';
 
 type Press={onPointerDown:(e:PointerEvent<HTMLButtonElement>)=>void;onClick:(e:{detail:number})=>void};
@@ -15,15 +16,28 @@ type RunnerPadHud={coach?:string;skillLabel?:string;skillReady?:boolean;flash?:s
  * cluster of round buttons around the big Shoot in the corner (Jump above, Slide to its left, Skill on the diagonal).
  * Everything fires on touch-down (handlers from ArcadeGame3D). While playing, the only text is a short flash after a goal or
  * a tackle (runnerHud flash). Mouse windows hide the pad and use the keyboard.
+ * Swipes (Nov 10 2026, lib/arcade/runnerSwipe): flick left / right on the track to change lane, up to jump, down to slide. The
+ * swipe layer covers the track right of the stick zone, under the button cluster (a touch that starts on a button is that
+ * button's, never a swipe); in the stick zone only up / down flicks count (the stick already owns sideways). Both layers are
+ * touch-action:none, so a swipe never scrolls or zooms the page.
  */
-export function RunnerControls({hud,steer,pressAction,shoot}:{hud:RunnerPadHud;steer:(d:number)=>void;pressAction:(id:number)=>Press;shoot:Hold}){
+export function RunnerControls({hud,steer,pressAction,act,shoot}:{hud:RunnerPadHud;steer:(d:number)=>void;pressAction:(id:number)=>Press;act?:(id:number)=>void;shoot:Hold}){
  const steerState=useRef(runnerSteerState()),lastX=useRef(0),repeat=useRef(0);
  const step=(x:number)=>{lastX.current=x;const d=runnerSteer(steerState.current,x,performance.now()/1000);if(d)steer(d);};
  const stick=useFloatingStick((x)=>{step(x);clearInterval(repeat.current);if(x)repeat.current=window.setInterval(()=>step(lastX.current),80);},()=>true);
  useEffect(()=>()=>{clearInterval(repeat.current);},[]);
+ const swipe=useRef<RunnerSwipeState>(null);
+ const fire=(w:RunnerSwipe|'',lanes:boolean)=>{if(!w)return;const a=runnerSwipeAction(w);if('lane' in a){if(lanes)steer(a.lane);}else act?.(a.action);};
+ const swipeDown=(e:PointerEvent<HTMLElement>)=>{if(!e.isPrimary||(e.target as HTMLElement).closest?.('button'))return;swipe.current=runnerSwipeStart(e.pointerId,e.clientX,e.clientY,e.timeStamp/1000);};
+ const swipeMove=(e:PointerEvent<HTMLElement>,lanes:boolean)=>fire(runnerSwipeMove(swipe.current,e.pointerId,e.clientX,e.clientY,e.timeStamp/1000),lanes);
+ const swipeEnd=(e:PointerEvent<HTMLElement>,lanes:boolean)=>{swipeMove(e,lanes);if(swipe.current?.id===e.pointerId)swipe.current=null;};
+ const layer={onPointerDown:(e:PointerEvent<HTMLDivElement>)=>{e.preventDefault();swipeDown(e);try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* capture optional */}},onPointerMove:(e:PointerEvent<HTMLDivElement>)=>swipeMove(e,true),onPointerUp:(e:PointerEvent<HTMLDivElement>)=>swipeEnd(e,true),onPointerCancel:()=>{swipe.current=null;}};
+ // The stick zone keeps the stick's handlers; up / down flicks there jump and slide too.
+ const zone={...stick.zone,onPointerDown:(e:PointerEvent<HTMLDivElement>)=>{swipeDown(e);stick.zone.onPointerDown(e);},onPointerMove:(e:PointerEvent<HTMLDivElement>)=>{swipeMove(e,false);stick.zone.onPointerMove(e);},onPointerUp:(e:PointerEvent<HTMLDivElement>)=>{swipeEnd(e,false);stick.zone.onPointerUp(e);}};
  const coachStick=hud.coach==='left'||hud.coach==='right';
  return <div className={styles.pad} data-runner-pad>
-  <div className={styles.zone} aria-hidden="true" data-runner-stick-zone {...stick.zone}/>
+  <div className={styles.zone} aria-hidden="true" data-runner-stick-zone {...zone}/>
+  <div className={styles.swipe} aria-hidden="true" data-runner-swipe-zone {...layer}/>
   <div className={`touch-controls ${styles.movement}`}><div ref={stick.joy} className="joystick" data-floating="true" data-runner-stick data-coach={coachStick||undefined} role="group" aria-label="Change lane: press anywhere on the left and push left or right"><i className="joystick-contact" aria-hidden="true"><i className="joystick-contact-arc"/></i><span/></div></div>
   <div className={styles.cluster} role="group" aria-label="Actions">
    <button className={`${styles.btn} ${styles.skill}`} data-runner-skill data-ready={hud.skillReady||undefined} data-coach={hud.coach==='skill'||undefined} aria-label={`Skill move: ${hud.skillLabel??'Skill'}`} {...pressAction(6)}><span>{hud.skillLabel??'Skill'}</span></button>

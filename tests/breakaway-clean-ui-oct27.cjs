@@ -14,12 +14,12 @@ const hud=read('lib/arcade/runnerHud.ts'),fx=read('lib/arcade/runnerFx.ts');
 assert.match(pad,/useFloatingStick\(/,'pad uses the shared floating stick hook');
 assert.match(pad,/className="joystick" data-floating="true"/,'Strikers joystick markup (global .joystick)');
 assert.match(pad,/joystick-contact-arc/,'rim-glow contact arc like Strikers');
-assert.match(pad,/data-runner-stick-zone \{\.\.\.stick\.zone\}/,'press anywhere in the left zone anchors the stick');
+assert.match(pad,/data-runner-stick-zone \{\.\.\.zone\}/);assert.match(pad,/const zone=\{\.\.\.stick\.zone,/,/* Nov 10 2026: the zone adds up/down swipes over the stick's own handlers */'press anywhere in the left zone anchors the stick');
 assert.doesNotMatch(pad,/Move one lane|pressLane|styles\.lane\b/,'no left/right lane buttons');
 assert.doesNotMatch(padCss,/\.lane\.lane|\.lanes\{/,'no lane button styles');
 for(const name of ['paintJoystick','clampAnchor','stickTravel','shapeStick'])assert.match(hook,new RegExp(name+'\\('),`hook uses Strikers' ${name}`);
 assert.match(padCss,/\.zone\{[^}]*width:45%[^}]*touch-action:none/,'left 45% stick zone like Strikers');
-assert.match(padCss,/@media \(pointer:fine\)\{\.zone,\.movement\.movement,\.cluster\{display:none\}\}/,'mouse windows hide the pad (keyboard play)');
+assert.match(padCss,/@media \(pointer:fine\)\{\.zone,(\.swipe,)?\.movement\.movement,\.cluster\{display:none\}\}/,'mouse windows hide the pad (keyboard play)');
 // Steering: one lane per push past the threshold, hold to repeat, back inside the dead band to re-arm.
 {const m={exports:{}};vm.runInNewContext(ts.transpileModule(read('lib/arcade/runnerSteer.ts'),{compilerOptions:{module:1,target:7}}).outputText,{exports:m.exports,module:m,Math});
  const {runnerSteer,runnerSteerState,RUNNER_STEER}=m.exports,s=runnerSteerState();
@@ -38,7 +38,7 @@ assert.match(game,/\{phase==='playing'&&kind==='runner'&&<RunnerControls /,'runn
 assert.match(game,/\{phase==='playing'&&kind!=='runner'&&<>/,'the shared message line is not rendered for the runner');
 assert.doesNotMatch(game,/<footer className=\{styles\.controls\}>\{kind==='runner'/,'runner pad is not inside the shared footer');
 assert.match(pad,/\{hud\.flash&&<p key=\{hud\.flashId\}[^>]*data-runner-flash/,'the only in-play text is the flash');
-assert.doesNotMatch(pad.slice(pad.indexOf(' return <div')),/hud\.message|hold to|swipe/i,'no coach line or hold-to captions on the pad');
+assert.doesNotMatch(pad.slice(pad.indexOf(' return <div')),/hud\.message|hold to|swipe (to|left|right|up|down)/i,'no coach line or hold-to captions on the pad'/* Nov 10 2026: the silent swipe layer (data-runner-swipe-zone) is not a caption */);
 assert.match(hud,/return r\.eventKind==='goal'\?'GOAL!':r\.eventKind==='hit'\?'Tackled!':'';/,'flash only after a goal or a tackle');
 assert.match(fx,/export const RUNNER_WORD_POPS:boolean=false;/,'floating caption words are off');
 assert.match(fx,/if\(!RUNNER_WORD_POPS\|\|!wordCtx/,'pop() honours the switch');

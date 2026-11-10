@@ -92,7 +92,7 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
   if(CAY_MACHINES.includes(m.id)){assert(isOnCayLand(m.x,m.z)&&standsOnCay(m),m.id+' stands on walkable Coral Cay ground (cabinet and walk-up point)');assert.equal(m.y,0);
    const s=cayVendingSpots[m.id==='cayplaza'?'cafe':m.id==='caykonbini'?'konbini':m.id]();same([m.x,m.z,m.yaw],[s.x,s.z,s.yaw],m.id+' placed from the Coral Cay anchors');
    assert((Math.sin(m.yaw)*16+Math.cos(m.yaw)*33)/Math.hypot(16,33)>.3,m.id+' glass front reads from the island camera');continue;}
-  if(SUMMIT_MACHINES.includes(m.id)){assert(onSummitIsle(m.x,m.z)&&standsOnSummit(m),m.id+' stands on flat, walkable ground outside the Summit 5s fence');
+  if(SUMMIT_MACHINES.includes(m.id)){assert(onSummitIsle(m.x,m.z)&&(standsOnSummit(m)||load('lib/town/vendingPlaces.ts').standsAtSummitFence(m)),m.id+' stands on flat, walkable ground outside the Summit 5s fence (Nov 10 2026: or in the line against its east fence)');
    assert.equal(m.y,summitGround(m.x,m.z),m.id+' stands on the summit terrace, not floating or sunk at sea level');
    assert(Math.hypot(m.x-SUMMIT_LANDMARKS.gate.x,m.z-SUMMIT_LANDMARKS.gate.z)<25,m.id+' is near the pitch gate, up on the summit');
    same([m.x,m.z,m.yaw],(({x,z,yaw})=>[x,z,yaw])(summitSnackSpot()),m.id+' placed from the Summit Isle anchors');
@@ -122,7 +122,7 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
   same([m.x,m.z,m.yaw],(({x,z,yaw})=>[x,z,yaw])(D.drinkSpotBeside(b)),id+' placed from '+beside+"'s spot");
   assert.equal(m.yaw,b.yaw,id+' faces the same way as its neighbour');assert.equal(m.y,b.y);
   const along=(m.x-b.x)*Math.cos(b.yaw)-(m.z-b.z)*Math.sin(b.yaw),out=(m.x-b.x)*Math.sin(b.yaw)+(m.z-b.z)*Math.cos(b.yaw),gap=Math.abs(along)-D.CABINET_WIDTH;
-  assert(gap>.05&&gap<.4&&Math.abs(out)<1e-6,id+' stands side by side with a small gap: '+gap.toFixed(2)+' m');
+  assert(gap>.05&&gap<.4&&Math.abs(out)<1e-4/* Nov 10 2026: 1e-4, the summit pair faces east with yaw stored to 4 decimals (1.5708) */,id+' stands side by side with a small gap: '+gap.toFixed(2)+' m');
   for(const o of M)if(o!==m&&o!==b)assert(Math.hypot(o.x-m.x,o.z-m.z)>20,id+' is the only machine near '+beside+' (not '+o.id+')');
   const fx=m.x+Math.sin(m.yaw)*1.5,fz=m.z+Math.cos(m.yaw)*1.5;
   // Summit Isle's kiosk is a small stand, not a full Konbini building, so it has no KONBINI_DOORS entry to check against.

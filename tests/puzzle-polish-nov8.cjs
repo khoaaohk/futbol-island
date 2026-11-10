@@ -81,8 +81,8 @@ for(const g of ['puzpro','puzlgnd']){assert(L.isBoardGame(g),g);assert(/^[a-z]{2
 assert.equal(L.BOARD_RULES.puzzle.max,300,'classic star board rules unchanged');
 {const SV=require(path.join(ROOT,'lib','arcade','leaderboardServer.ts'));assert.equal(typeof SV.handleBoard,'function');}
 const files=fs.readdirSync(path.join(ROOT,'supabase/migrations')).sort(),f='20261110_puzzle_tier_boards.sql';assert(files.includes(f));
-const widen=files.filter(x=>/arcade_scores_game_check/.test(read('supabase/migrations/'+x)));assert.equal(widen.pop(),f,'runs last (each board migration replaces the same allow-list)');
-const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES)assert(sql.includes(`'${g}'`),'SQL allows '+g);
+const widen=files.filter(x=>/arcade_scores_game_check/.test(read('supabase/migrations/'+x)));/* Nov 10 2026: 20261112_runner_route_boards.sql now runs after it (and names every board, puzzle cups included) */assert(widen.includes(f)&&widen.indexOf(f)>=widen.length-2,'runs after the earlier board files');{const last=read('supabase/migrations/'+widen[widen.length-1]);for(const g of L.BOARD_GAMES)assert(last.includes(`'${g}'`),'the last allow-list keeps '+g);}
+const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['runwarm','runnight','runstorm','rundaily'].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
 assert(/'OK, puzzle cup boards installed'/.test(sql));assert(!/\bdrop\s+(table|function|column)|truncate|delete from|\bupdate\s+public/i.test(sql.replace(/--.*$/gm,'')),'additive');
 // Economy: cup puzzles pay through the same recordPuzzleBest path (first solve + new stars), nothing new.
 assert(!/puzpro|puzlgnd|cupPoints/.test(read('lib/arcade/arcadeWalletCore.ts'))&&!/puzpro|puzlgnd/.test(read('lib/economy.ts')),'no new coin source');

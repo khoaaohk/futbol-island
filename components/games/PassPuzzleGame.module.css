@@ -111,6 +111,9 @@
 .why{margin:0 0 12px;padding:10px 12px;border-radius:10px;background:#173d2e;color:#eaffef;font-size:14px}
 .why b{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8cff9e;margin-bottom:4px}
 .why ul{margin:0;padding-left:18px;display:grid;gap:4px;line-height:1.45}
+/* Nov 10 2026: the solved concept in kid words, and the practise link after two fails of one concept. */
+.whyConcept{margin:8px 0 0;line-height:1.45}.whyConcept strong{color:#8cff9e;font-weight:800}
+.game .practise{color:#ffc457;font-weight:800;text-decoration:underline;text-underline-offset:3px}
 .game .fix{font-size:14px!important;margin:0 0 10px}.game .fix b{color:#ffc457}
 .game .spotHint{width:100%;margin-top:10px}
 .game .spotHint.secondary{display:flex;min-height:var(--btn-height);padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);font:700 14px/1.2 var(--btn-font);box-shadow:0 4px 0 var(--btn-mint-edge)}

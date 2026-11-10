@@ -7,7 +7,7 @@ import {sideGameDress} from '../town/beanLooks';
 import type {ArcadePoseOptions} from './arcadePlayerMotion';
 import {readRunnerProgress,runnerBallFor} from './runnerMissions';
 import {readArcadeRecord} from './arcadeRecords';
-import {runnerBoardFor,runnerTierBest} from './runnerModes';
+import {runnerKeepsOwnBest,runnerTierBest} from './runnerModes';
 import {districtAt,DISTRICTS,routeGrade} from '../../components/games/runnerRoute';
 import {createRunnerTrack} from './runnerTrack';
 import {createRunnerCinema,CINEMA,type CinemaKind} from './runnerCinema';
@@ -390,7 +390,7 @@ export function createRunnerFx(stage:ArcadeStage){
  function reset(s:RunnerGame){
   // Replay hook: the record to beat is read once per run (no per-frame storage reads).
   // Nov 8 2026: an elite tier (Cup Final, Legend) races its own best, not the classic record.
-  s.bestToBeat=typeof localStorage==='undefined'?0:runnerBoardFor(s.mode)==='runner'?readArcadeRecord('runner').best:runnerTierBest(s.mode);s.newBest=false;
+  s.bestToBeat=typeof localStorage==='undefined'?0:runnerKeepsOwnBest(s.mode)?runnerTierBest(s.mode):readArcadeRecord('runner').best;s.newBest=false;
   trauma=hitstop=lineFlash=follow=descent=punch=0;hitstopScale=1;cinema.reset();scenery.reset();camX=camY=camZ=camPitch=0;introPending=true;lastDuel=null;pending.heart=false;word.visible=false;wordMaterial.opacity=0;wordAge=wordLife=0;hype=0;track.reset();dustLife.fill(0);confLife.fill(0);dust.visible=confetti.visible=false;seen.state=null;
   flashLife.fill(0);flashDelay.fill(0);flashes.visible=aura.visible=false;auraMaterial.opacity=auraFlash=0;auraTier=1;pendingTier=0;keeperCheer=0;body.state=null;
   shield.visible=keeper.root.visible=passBall.visible=callout.visible=mud.visible=fork.visible=openSide.visible=false;for(const m of mates)m.rig.root.visible=false;

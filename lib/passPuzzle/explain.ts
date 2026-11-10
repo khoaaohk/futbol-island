@@ -31,7 +31,7 @@ export function laneWords(status:LaneStatus,p:Prediction,nums:Numbers,f:Format):
   switch(status){
     case 'blocked':{const who=p.threats[0]??p.closest?.defender;return young(f)?`${d(who)} can reach that. Find another way!`:`${d(who)} can cut that out. Change the angle, lift it or bend it.`;}
     case 'save':return young(f)?'The keeper can get that one. Aim away from them.':'The keeper reaches that. Pick the far side or play another pass.';
-    case 'offside':return young(f)?'Offside! Your friend is past the last defender.':'Offside! The flagged teammate is past the last defender. Pass sooner or to someone onside.';
+    case 'offside':return young(f)?'Offside! Your friend is past the second-last defender.':'Offside! The flagged teammate is past the second-last defender. Pass sooner or to someone onside.';
     case 'tight':return young(f)?`Tight! ${d(p.closest?.defender).replace('A d','a d')} is close. A bit more room is safer.`:`Tight lane: ${d(p.closest?.defender)} nearly gets there. More angle makes it safe.`;
     default:return p.end==='goal'?(young(f)?'Clear shot! Let it go.':'Clear sight of goal. Release to shoot.'):(young(f)?'Clear! No one can reach it.':'Clear lane: no defender can reach it in time.');
   }
@@ -78,7 +78,7 @@ export function explainSuccess(notes:PassNote[],sc:Scenario,nums:Numbers,f:Forma
     if(pass&&n.loft>=.3&&n.inLine!==undefined)out.push({w:8,t:y?`You lifted it over ${d(n.inLine)}, so they could not reach it.`:`The lofted pass cleared ${d(n.inLine)}, who stood in the ground lane.`});
     else if(Math.abs(n.curl)>=.35&&n.inLine!==undefined)out.push({w:8,t:y?`You bent it around ${d(n.inLine)}.`:`The curl took the ball around ${d(n.inLine)} and back onto target.`});
     if(pass&&n.beaten>=1)out.push({w:7+n.beaten,t:y?`Your pass to ${a(n.receiver)} went past ${n.beaten===1?'a defender':`${n.beaten} defenders`} in one go.`:`The pass to ${a(n.receiver)} broke a line: ${n.beaten} defender${n.beaten===1?'':'s'} taken out with one ball.`});
-    if(n.onsideBy!==undefined&&n.onsideBy>=-.1&&n.onsideBy<2.5)out.push({w:7,t:y?`${a(n.receiver)} stayed onside, just behind the last defender when you passed.`:`${a(n.receiver)} timed it: onside at the moment of the pass, then through.`});
+    if(n.onsideBy!==undefined&&n.onsideBy>=-.1&&n.onsideBy<2.5)out.push({w:7,t:y?`${a(n.receiver)} stayed onside, just behind the second-last defender when you passed.`:`${a(n.receiver)} timed it: onside at the moment of the pass, then through.`});
     if(pass&&n.closest&&n.closest.slack>=TIGHT_SLACK)out.push({w:5,t:y?`${d(n.closest.defender)} was the closest defender, but too far away to reach it.`:`Safe lane: ${d(n.closest.defender)} was the nearest threat and still ${n.closest.slack.toFixed(1)} s too late.`});
     else if(pass&&n.closest&&n.closest.slack>=0)out.push({w:3,t:y?`Just in time! ${d(n.closest.defender)} nearly got there.`:`It only just got past ${d(n.closest.defender)}: more angle would make it safer.`});
     if(last&&n.kind==='shot'){
@@ -113,7 +113,7 @@ export function explainFail(reason:string|undefined,stop:PuzzleEvent|undefined,n
       return{why:y?'The keeper got to it.':'The keeper reached it.',fix:y?'Shoot to the side away from the keeper, or pass to a friend first.':'Aim for the side the keeper is not covering, or move the ball to change the angle.'};
     case 'out':return{why:y?'The ball ran out of play.':'Too much on it: the ball ran out.',fix:y?'Draw a shorter line for a softer pass.':'A shorter stroke means less power.'};
     case 'rest':return{why:y?'The ball stopped before anyone got it.':'Under-hit: it died before a teammate arrived.',fix:y?'Draw a longer line for a harder pass.':'Lengthen the stroke for more pace.'};
-    case 'offside':return{why:y?'Your friend was past the last defender when you passed.':'The receiver was beyond the second-last defender at the pass.',fix:y?'Pass sooner, or drag your friend back first.':'Release earlier, or drop the runner back onside first.'};
+    case 'offside':return{why:y?'Your friend was past the second-last defender when you passed.':'The receiver was beyond the second-last defender at the pass.',fix:y?'Pass sooner, or drag your friend back first.':'Release earlier, or drop the runner back onside first.'};
     case 'too-few-passes':return{why:y?'This puzzle needs more passes first.':'Right finish, but not enough passes for this puzzle.',fix:y?'Pass to a friend before you shoot.':'Build the move first: the brief says how many passes.'};
     case 'timeout':return{why:y?'Too slow! The defence got back.':'The defence recovered before the finish.',fix:y?'Pass forward quickly.':'Fewer, forward passes: go before they get back.'};
     default:return null;

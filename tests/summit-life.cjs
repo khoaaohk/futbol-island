@@ -28,11 +28,12 @@ const summit=load('lib/town/summitIsle.ts');
  const places=load('lib/town/vendingPlaces.ts'),cat=load('lib/town/vendingCatalog.ts'),D=load('lib/town/drinkMachines.ts');
  const snack=places.summitSnackSpot();
  assert(summit.onSummitIsle(snack.x,snack.z),'the kiosk stands on walkable Summit Isle ground');
- assert(places.standsOnSummit(snack),'the kiosk footprint is flat, walkable and clear of the pitch, its props and the trail');
+ assert(places.standsOnSummit(snack)||places.standsAtSummitFence(snack),'the kiosk footprint is flat, walkable and clear of the pitch, its props and the trail (Nov 10 2026: or backs against the east fence, owner request)');
+ assert(Math.abs(snack.x-(summit.SUMMIT_PITCH.x+summit.SUMMIT_FENCE.halfX))<1&&Math.abs(snack.z-summit.SUMMIT_PITCH.z)<=4,'Nov 10 2026: the stand is lined up against the east fence, behind the goal');
  const gate=summit.SUMMIT_LANDMARKS.gate;
  assert(Math.hypot(snack.x-gate.x,snack.z-gate.z)<25,'the kiosk is near the pitch gate, not across the island');
  assert(Math.abs(snack.z-summit.TERRACE.z)<summit.TERRACE.b+6,'the kiosk is up on the summit terrace, not down at sea level');
- assert.equal(snack.yaw,0,'the kiosk is axis-aligned (so the drink machine beside it cancels its centimetre rounding)');
+ assert(Math.abs(Math.sin(2*snack.yaw))<1e-3,'the kiosk is axis-aligned (so the drink machine beside it cancels its centimetre rounding; Nov 10 2026: it faces east, yaw 1.5708, against the fence)');
  const m=cat.VENDING_MACHINES.find(x=>x.id==='summit');
  assert(m&&m.x===snack.x&&m.z===snack.z&&m.yaw===snack.yaw,'the catalogue machine is placed from summitSnackSpot()');
  assert.equal(m.y,summit.summitGround(m.x,m.z),'the kiosk stands on the terrace, not floating or sunk at sea level');
@@ -43,7 +44,7 @@ const summit=load('lib/town/summitIsle.ts');
  assert.equal(D.drinksAt('drinksummit').length,6,'six drinks, like the other two machines');
  assert(D.drinksAt('drinksummit').some(d=>d.label==='Water'),'water is on the menu');
  const along=(drink.x-m.x)*Math.cos(m.yaw)-(drink.z-m.z)*Math.sin(m.yaw),out=(drink.x-m.x)*Math.sin(m.yaw)+(drink.z-m.z)*Math.cos(m.yaw);
- assert(along>0&&Math.abs(out)<1e-6,'the drink machine sits cleanly beside the kiosk (no stray yaw rounding)');
+ assert(along>0&&Math.abs(out)<1e-4/* Nov 10 2026: 1e-4, yaw is stored to 4 decimals (1.5708) now that the pair faces east */,'the drink machine sits cleanly beside the kiosk (no stray yaw rounding)');
 }
 
 // ---- 2. Boulder Cove: a rocky cove on the far side, with its own three species. ----

@@ -272,3 +272,8 @@
 .game[data-arcade-kind=pinball] .pbHud strong{padding:4px 10px;border-radius:999px;background:#ffe86d;color:#2a2310;font-size:13px;font-weight:900;line-height:1.2;white-space:nowrap;animation:pbStreak .35s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes pbStreak{from{transform:scale(1.5)}to{transform:scale(1)}}
 @media(prefers-reduced-motion:reduce){.game[data-arcade-kind=pinball] .pbHud strong{animation:none}}
+/* Nov 10 2026: the football pattern chip (wall pass, rebound, 2v1). One element, always mounted; data-on fades it in. */
+.game[data-arcade-kind=pinball] .pbHud .pbPattern{position:absolute;top:calc(100% + 8px);left:50%;width:max-content;max-width:min(300px,calc(100vw - 32px));padding:5px 12px;border-radius:999px;background:#0b1024e0;color:#fff6dc;font-size:13px;font-weight:800;line-height:1.25;text-align:center;opacity:0;transform:translate(-50%,-4px);transition:opacity .2s ease,transform .2s ease}
+.game[data-arcade-kind=pinball] .pbHud .pbPattern b{color:#ffe86d;font-weight:900}
+.game[data-arcade-kind=pinball] .pbHud .pbPattern[data-on]{opacity:1;transform:translate(-50%,0)}
+@media(prefers-reduced-motion:reduce){.game[data-arcade-kind=pinball] .pbHud .pbPattern{transition:none;transform:translate(-50%,0)}}

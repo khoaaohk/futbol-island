@@ -53,7 +53,7 @@ export type CoachNotes = {
 export const ELEVEN_NOTES: CoachNotes = {
   throwIn: (team: string) => [`Throw-in for ${team}`, "The other team touched it last over the touchline: both hands, from behind the head, both feet on the ground"],
   offside: ["Offside!", "He was past the second-last defender when the pass was played. Stay level, then run as the pass is struck"],
-  onside: ["Onside run", "He waited level with the last defender, then ran as the pass was played: that beats the offside trap"],
+  onside: ["Onside run", "He waited level with the second-last defender, then ran as the pass was played: that beats the offside trap"],
   keeper: ["Back to the keeper", "No safe pass forward? The keeper is the spare player: play it back and build again"],
   cover: ["One presses, one covers", "The first defender closes the ball while a team-mate covers behind him"],
   corner: (team: string) => [`Corner for ${team}`, "A defender touched it last over his own goal line, so the attackers restart from the corner"],

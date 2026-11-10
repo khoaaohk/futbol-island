@@ -17,9 +17,12 @@ export type TrainingTier='full'|'half'|'tip';
 /** Arcade machines whose payouts count as training (every arcade game, puzzles included). */
 export const TRAINING_GAMES:readonly string[]=['runner','pinball','tennis','live','puzzle'];
 /** Island wallet runs that count as training: job shifts, market sales, card trade-ins, Summit Kick rounds. */
-const TRAINING_ISLAND_RUN=/^(island-job:|market:|market-sale:|card-trade:|summit-kick:|dive:)/;// summit-kick: the Summit Kick rounds (lib/town/summitKick.ts); dive: a diving spot's treasure (lib/town/water/diveSession.ts diveRunId, once ever)
+const TRAINING_ISLAND_RUN=/^(island-job:|market:|market-sale:|card-trade:|summit-kick:|dive:)/;// summit-kick: the Summit Kick rounds (lib/town/summitKick.ts); dive: a diving spot's treasure (lib/town/water/diveSession.ts diveRunId, once ever; NOT its Explore ball, see DIVE_BALL_RUN)
 /** Whether a wallet run is repeatable training (metered) rather than a one-off grant or a learning reward. */
-export function isTrainingRun(id:string,game:string):boolean{return TRAINING_GAMES.includes(game)||game==='island'&&TRAINING_ISLAND_RUN.test(id);}
+/** A reef zone's Explore ball (`dive:<zone>:hidden-ball`, lib/town/water/diveBalls.ts DIVE_BALL_FIND) is a football-tip find, i.e.
+ *  learning: never metered (audit Nov 10 2026). Same run id as before, so a ball already paid is never paid again. */
+const DIVE_BALL_RUN=/^dive:[^:]+:hidden-ball$/;
+export function isTrainingRun(id:string,game:string):boolean{return TRAINING_GAMES.includes(game)||game==='island'&&TRAINING_ISLAND_RUN.test(id)&&!DIVE_BALL_RUN.test(id);}
 const whole=(n:number)=>Number.isFinite(n)?Math.max(0,Math.floor(n)):0;
 /** The tier the next earning pays at, given the training coins already paid today. */
 export function trainingTier(paidToday:number):TrainingTier{const p=whole(paidToday);return p<TRAINING_FULL_COINS?'full':p<TRAINING_HALF_COINS?'half':'tip';}

@@ -96,6 +96,9 @@
 @media(max-height:500px){.inline{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:8px;font-size:13px}}
 .inline select{font-size:max(16px,1em)}
 .takeaway{font-size:13px!important;line-height:1.45;margin:8px 0 4px;padding:8px 10px;border-radius:14px;background:#73fff11f;text-align:left}.takeaway b{color:inherit}
+/* Nov 10 2026: the dead-ball "Scan first" cue reuses the coach line, floated over the pitch (never blocks a tap). */
+.scanCue{position:absolute;z-index:3;left:50%;top:58%;transform:translateX(-50%);width:max-content;max-width:min(320px,calc(100% - 32px));margin:0;background:#0b1830e6;color:#effffd;font-weight:700;pointer-events:none}
+.scanCue b{color:#73fff1;font-weight:800}
 .modes button:disabled{opacity:.55;cursor:not-allowed;filter:grayscale(.4)}
 
 /* Oct 9 2026 playtest pass: score bump, pass-chain pill, desktop key prompt, context-pulsed touch buttons, the

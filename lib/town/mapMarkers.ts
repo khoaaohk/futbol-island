@@ -2,7 +2,7 @@
  * Travel-map marks (V vending, F fishing, J jobs, E reefs to explore; was D for dive spots before Oct 20 2026): the map key's tap tooltips and where the J marks sit.
  * The marks on the map are plain drawings (not buttons); the key explains them in general, not per place (tests/map-markers.cjs).
  */
-export type MapMarkKind='vending'|'fishing'|'job'|'dive'|'far'|'friend';
+export type MapMarkKind='vending'|'fishing'|'job'|'dive'|'far'|'friend'|'gashapon';
 type Point={x:number;z:number};
 
 /** The key's tooltips, one per kind, in words a child can read: shown as "<title>: <text>". */
@@ -10,6 +10,8 @@ export const LEGEND_TIPS:Record<MapMarkKind,{title:string;text:string}>={
  vending:{title:'Vending machines:',text:'spend coins on books, packs and gear'},
  fishing:{title:'Fishing spots:',text:'catch fish to sell at Rosa’s market'},
  job:{title:'Jobs:',text:'help out to earn coins'},
+ // Nov 9 2026 (owner: "add the gashapon to the map"): the capsule machines, one mark per spot (a Konbini pair shares one).
+ gashapon:{title:'Gashapon:',text:'spin a capsule machine for a surprise toy'},
  dive:{title:'Reefs to explore:',text:'swim out to the flag and explore the shallow coral reef'},
  // Oct 21 2026 (reefDiscovery.ts): the jetpack badge on the E marks whose reef is beyond the 60 m swim range.
  far:{title:'Fly there:',text:'too far to swim, so take your jetpack to these reefs'},
@@ -19,11 +21,11 @@ export const LEGEND_TIPS:Record<MapMarkKind,{title:string;text:string}>={
 /** One entry of the map key. `ring` = the You marker, `friend` = the party dots' mark. */
 export type LegendItem={mark:string;fill:string;label:string;ring?:boolean;friend?:boolean;tip?:MapMarkKind};
 const BASE_LEGEND:readonly LegendItem[]=[
- {mark:'V',fill:'#fff8e5',label:'Vending',tip:'vending'},{mark:'F',fill:'#b9e1df',label:'Fishing',tip:'fishing'},{mark:'J',fill:'#f4cc7c',label:'Jobs',tip:'job'},{mark:'E',fill:'#a9dcf5',label:'Explore',tip:'dive'},{mark:'jet',fill:'#f4cc7c',label:'Fly there',tip:'far'},
+ {mark:'V',fill:'#fff8e5',label:'Vending',tip:'vending'},{mark:'F',fill:'#b9e1df',label:'Fishing',tip:'fishing'},{mark:'J',fill:'#f4cc7c',label:'Jobs',tip:'job'},{mark:'gasha',fill:'#ffe1ef',label:'Gashapon',tip:'gashapon'},{mark:'E',fill:'#a9dcf5',label:'Explore',tip:'dive'},{mark:'jet',fill:'#f4cc7c',label:'Fly there',tip:'far'},
  {mark:'',fill:'#7b4fd6',label:'You',ring:true}];
 const FRIEND_LEGEND:readonly LegendItem[]=[...BASE_LEGEND,{mark:'',fill:'#D62828',label:'Friends',friend:true,tip:'friend'}];
 /** The travel map's key (G-13): "Friends" is listed ONLY while a party is live with someone in it (no party = the key as before).
- *  Phones lay 6 entries out 3 + 3 and 7 entries 4 + 3 (Fly there, You and Friends share the second row). */
+ *  Phones lay 7 entries out 4 + 3 and 8 entries 4 + 4 (the Gashapon entry joined the key on Nov 9 2026). */
 export const mapLegend=(friends:boolean):readonly LegendItem[]=>friends?FRIEND_LEGEND:BASE_LEGEND;
 export const legendTipText=(kind:MapMarkKind)=>`${LEGEND_TIPS[kind].title} ${LEGEND_TIPS[kind].text}`;
 
@@ -52,3 +54,24 @@ export function placeJobMarkers(
   placed.push({id:job.id,title:job.title,place:job.place,x,z});}
  return placed;
 }
+
+/**
+ * Gashapon marks (Nov 9 2026, owner: "add the gashapon to the map"): one per spot, machines standing side by side (each Konbini
+ * pair, 0.9 m apart) share one, then nudged just clear of the V / F marks they often stand near (the Konbini's own V is a few
+ * metres east of its pair). Static: computed once at module load.
+ */
+export function placeGashaponMarkers(
+ machines:readonly {id:string;name:string;x:number;z:number}[],
+ marks:readonly Point[],
+):{id:string;ids:string[];names:string[];x:number;z:number}[]{
+ const groups:{id:string;ids:string[];names:string[];x:number;z:number}[]=[];
+ for(const m of machines){const g=groups.find(o=>Math.hypot(o.x-m.x,o.z-m.z)<6);
+  if(g){g.x=(g.x*g.ids.length+m.x)/(g.ids.length+1);g.z=(g.z*g.ids.length+m.z)/(g.ids.length+1);g.ids.push(m.id);g.names.push(m.name);}
+  else groups.push({id:m.id,ids:[m.id],names:[m.name],x:m.x,z:m.z});}
+ for(const g of groups)for(let pass=0;pass<4;pass++)for(const o of marks){const dx=g.x-o.x,dz=g.z-o.z,d=Math.hypot(dx,dz);
+  if(d<20){const k=d<.01?-1:dx/d,l=d<.01?0:dz/d;g.x=o.x+k*20;g.z=o.z+l*20;}}
+ return groups.map(g=>({...g,x:Math.round(g.x*100)/100,z:Math.round(g.z*100)/100}));
+}
+/** The Gashapon mark's capsule (map + key): a red top half and a white bottom half split by a seam, centre (cx, cy), radius r. */
+export function capsuleGlyph(cx:number,cy:number,r:number){const f=(v:number)=>Math.round(v*100)/100,a=f(cx-r),b=f(cx+r),y=f(cy);
+ return {top:`M${a} ${y}A${f(r)} ${f(r)} 0 0 1 ${b} ${y}Z`,bottom:`M${a} ${y}A${f(r)} ${f(r)} 0 0 0 ${b} ${y}Z`,seam:`M${a} ${y}H${b}`};}

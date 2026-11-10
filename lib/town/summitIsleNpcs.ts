@@ -29,7 +29,9 @@ const P0=SUMMIT_PATHS[0],P1=SUMMIT_PATHS[1],P2=SUMMIT_PATHS[2];
 const at=(path:typeof P0,i:number)=>path[Math.min(path.length-1,i)];
 const snack=summitSnackSpot();
 /** The seated hiker sits just off the stand's walk-up side, facing it (no `pose` radius search, so this must already be sand). */
-const HAMISH={x:snack.x-2.3,z:snack.z+.4};
+// QA Nov 9 2026: the stand moved behind the east goal with the Summit Orchard gashapon on its west side (lib/gashapon/machines.ts,
+// x − 1.97), right where Hamish sat (x − 2.3): he now sits off the drink machine's east end, facing the stand.
+const HAMISH={x:snack.x+4.3,z:snack.z+.4};
 const hamishYaw=Math.atan2(snack.x-HAMISH.x,snack.z-HAMISH.z);
 
 export const SUMMIT_ISLE_NPCS:NpcDefinition[]=[
@@ -96,7 +98,7 @@ export const SUMMIT_ISLE_NPCS:NpcDefinition[]=[
   greeting:'Before you climb, have you got water? Climbing in the sun is thirsty work, just like a hot match.',
   lines:[
    'Drink water before you start climbing, not just once you feel thirsty.',
-   'The little Konbini stand by the sandbar sells water and snacks for the climb.',
+   'The little Konbini stand behind the summit pitch sells water and snacks for the climb.',
    'A tired, thirsty body makes more mistakes. Hikers and footballers both need to stay topped up.',
   ],
   topics:[{id:'water',question:'Why drink water before I climb?',

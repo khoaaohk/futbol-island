@@ -1,6 +1,6 @@
 import {JUMP_V,crossesPickup,goalPoints} from '../../components/games/runnerPhysics';
 import {routeCurve,routeGrade,routeGradeChange,terrainAt,terrainFeel,TERRAINS,TERRAIN_ZONE,ROUTE_BEND_MIN,ROUTE_STEEP,type TerrainId} from '../../components/games/runnerRoute';
-import {selectedRunnerMode,type RunnerModeId} from './runnerModes';
+import {selectedRunnerMode,runnerDailyDay,runnerDailySeed,type RunnerModeId} from './runnerModes';
 export const RUNNER_STRIKE_X=-.3;
 /** Each stage introduces a football decision before adding another defensive line. */
 export const RUNNER_STAGES=[
@@ -64,13 +64,24 @@ export type RunnerShot={active:boolean;x:number;z:number;age:number;power:boolea
 /** Each run gets its own id: the arcade resets a run with Object.assign on the SAME object, so per-run side
  * tables (missions, coach) key on this, not on object identity. */
 let runSerial=0;
-/** Forgiving touch windows (round 3) are per route (runnerModes.ts): input buffer, late-jump coyote, late lane-cut grace. */
-export function createRunnerGame(){const mode=selectedRunnerMode();const id=++runSerial;return{runId:id,
+/**
+ * Course seeds (Nov 10 2026). The old seed was 47 + runId x 7, so run N after a page load was the same course for every player and could
+ * be memorised. The game now asks a seed source: the default (tests, node) keeps that old formula so every test stays deterministic;
+ * the browser game installs freshRunnerSeed (useRunnerFreshSeeds), so each normal run gets its own course. The Daily Run always uses
+ * the day's seed (runnerDailySeed: the same course for everyone that day); the classic Breakaway keeps its authored lane order.
+ */
+let seedSource:(runId:number)=>number=id=>47+id*7;
+export function setRunnerSeedSource(fn:((runId:number)=>number)|null){seedSource=fn??(id=>47+id*7);}
+/** A fresh course seed: crypto random where available, else the clock (never the same two runs in a row). */
+export function freshRunnerSeed(){try{const a=new Uint32Array(1);globalThis.crypto.getRandomValues(a);return 1000+a[0]%2_000_000_000;}catch{return 1000+Math.floor((Date.now()*7919+Math.random()*1e6)%2_000_000_000);}}
+/** Forgiving touch windows (round 3) are per route (runnerModes.ts): input buffer, late-jump coyote, late lane-cut grace.
+ * `seed` (tests) fixes the course; `idle` builds a placeholder for the tennis and pinball cabinets without using a run id. */
+export function createRunnerGame(opts:{seed?:number;idle?:boolean}={}){const mode=selectedRunnerMode();const id=opts.idle?0:++runSerial;const day=mode.id==='daily'?runnerDailyDay():'';return{runId:id,day,
  /* Round 3 route: mode, hearts cap and refill, pace/gap scale, modifiers, finish line and forgiveness windows. */
  mode:mode.id as RunnerModeId,maxLives:mode.maxLives,refillGoals:mode.refill,refillCount:0,heartsBack:0,levelBase:mode.startLevel,paceMul:mode.pace,gapMul:mode.gap,moving:mode.moving,combos:mode.combos,doubleJump:mode.doubleJump,hazards:mode.hazards,
  finish:mode.finish,bossKeeper:mode.bossKeeper,finishPhase:'' as ''|'approach'|'hill'|'keeper'|'done',finishTimer:0,bossTries:0,won:false,finished:false,
  buffer:mode.buffer,coyote:mode.coyote,laneGrace:mode.laneGrace,jumpAt:-9,doubled:false,doubleJumps:0,bigAirs:0,graceSaves:0,
- terrain:terrainAt(0) as TerrainId,terrainChanges:0,terrainAnnounce:0,adapt:0,magnet:0,magnets:0,rollersJumped:0,gauntlets:0,thunder:0,time:0,distance:0,x:0,vx:0,lean:0,slidePose:0,jumpPrep:0,landing:0,stride:0,lane:0,y:0,vy:0,jumping:false,slide:0,boost:0,energy:0,balls:1,collected:0,charging:false,charge:0,queuedMove:'' as ''|'jump'|'slide',moveBuffer:0,shotBuffer:0,bufferedPower:0,lastBlast:0,lastVolley:false,kick:0,shotCooldown:0,celebrate:0,score:0,goals:0,streak:0,lives:mode.lives,hurt:0,spawn:0,nextGoal:90,seed:mode.id==='classic'?47:47+id*7,wave:0,level:mode.startLevel,stageName:RUNNER_STAGES[Math.min(5,mode.startLevel-1)].name as string,stageProgress:0,combo:0,bestCombo:0,readLane:0,pattern:'Follow the footballs',objects:[] as RunnerObject[],shots:Array.from({length:4},()=>({active:false,x:0,z:0,age:0,power:false} as RunnerShot)),event:0,eventKind:'touch',eventX:0,eventZ:0,eventAt:-9,message:'Collect footballs. Line up your lane, then shoot.',
+ terrain:terrainAt(0) as TerrainId,terrainChanges:0,terrainAnnounce:0,adapt:0,magnet:0,magnets:0,rollersJumped:0,gauntlets:0,thunder:0,time:0,distance:0,x:0,vx:0,lean:0,slidePose:0,jumpPrep:0,landing:0,stride:0,lane:0,y:0,vy:0,jumping:false,slide:0,boost:0,energy:0,balls:1,collected:0,charging:false,charge:0,queuedMove:'' as ''|'jump'|'slide',moveBuffer:0,shotBuffer:0,bufferedPower:0,lastBlast:0,lastVolley:false,kick:0,shotCooldown:0,celebrate:0,score:0,goals:0,streak:0,lives:mode.lives,hurt:0,spawn:0,nextGoal:90,seed:opts.seed??(mode.id==='daily'?runnerDailySeed(day):mode.id==='classic'?47:seedSource(id)),wave:0,level:mode.startLevel,stageName:RUNNER_STAGES[Math.min(5,mode.startLevel-1)].name as string,stageProgress:0,combo:0,bestCombo:0,readLane:0,pattern:'Follow the footballs',objects:[] as RunnerObject[],shots:Array.from({length:4},()=>({active:false,x:0,z:0,age:0,power:false} as RunnerShot)),event:0,eventKind:'touch',eventX:0,eventZ:0,eventAt:-9,message:'Collect footballs. Line up your lane, then shoot.',
  /* Feel/presentation state: read by the renderer and audio, never by collisions. */
  speed:13,prevLane:0,cutDir:0,cutAge:9,cuts:0,jumps:0,slides:0,landings:0,nearMisses:0,nearStreak:0,recover:0,outro:0,hits:0,
  /* Depth systems (Oct 4 2026, round 2). */

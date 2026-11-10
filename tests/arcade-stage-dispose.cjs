@@ -17,6 +17,10 @@ assert.match(body,/textures\.forEach\(t=>t\.dispose\(\)\)/,'and disposed');
 assert.ok(body.indexOf('textures.forEach(t=>t.dispose())')<body.indexOf('renderer.dispose()'),'before the renderer itself');
 assert.match(body,/o instanceof T\.Sprite/,"sprites are walked (three's Sprite geometry is one module-level BufferGeometry)");
 assert.match(body,/customDepthMaterial/,'shadow-pass materials (e.g. runnerTrack bend depth material) are collected');
+// Nov 10 2026: the WebGL context is released too (house pattern: renderer.dispose() then forceContextLoss()), here and in the museum ball viewer.
+assert.match(body,/renderer\.dispose\(\);renderer\.forceContextLoss\(\)/,'arcade stage forces its WebGL context loss after disposing the renderer');
+const bv=fs.readFileSync(path.join(__dirname,'../lib/museum/wcBalls/ballViewer.ts'),'utf8');
+assert.match(bv.slice(bv.indexOf('dispose(){disposed=true')),/renderer\.dispose\(\);renderer\.forceContextLoss\(\)/,'museum ball viewer forces its WebGL context loss');
 // Pass Puzzles builds its players outside the stage: the stage must be disposed while they are still in the scene.
 const pp=fs.readFileSync(path.join(__dirname,'../lib/arcade/passPuzzleScene.ts'),'utf8'),ppd=pp.slice(pp.lastIndexOf('function dispose(){'));
 const sd=ppd.indexOf('stage.dispose()'),rd=ppd.indexOf('rig.dispose()');

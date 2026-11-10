@@ -31,8 +31,13 @@
  * never metered). Oct 14 2026: quiz 12 → 15 and hidden ball 10 → 12, so learning stays the best pay per minute after the
  * rebalance (docs/economy.md §4): a lesson quiz ≈ 4.7 coins a minute, a hidden ball ≈ 3.4, every fish / fruit / beach find ≤ 2.6.
  * Forward-only: lessons and balls already paid keep their saved amount (creditOnce never pays an id twice).
+ * arcade 2 (Nov 10 2026, "Today in the arcade", lib/arcade/arcadeTodayCore.ts): each of the five daily cabinet challenges (one of
+ * them is the daily Pass Puzzle) pays 2 the first time it is done that day, ids `learn:arcade:<day>:<cabinet>`, like the Daily
+ * warm-up's review coins: at most 10 a day, still less than one new lesson quiz, so new learning keeps paying best.
  */
-export const LEARN_COINS={quiz:15,quizPerfect:6,ball:12,story:10,journey:8,explore:5,path:75,review:2,book:5} as const;
+export const LEARN_COINS={quiz:15,quizPerfect:6,ball:12,story:10,journey:8,explore:5,path:75,review:2,book:5,arcade:2} as const;
+/** The daily arcade challenges (and the daily Pass Puzzle among them): at most this many paid a day. */
+export const ARCADE_TODAY_PER_DAY=5;
 /** The wallet's per-run cap for learning runs (also its save clamp: never lower it). */
 export const LEARN_RUN_CAP=75;
 
@@ -198,6 +203,9 @@ export const BALL_PRICES={base:160,layout:{classic32:0,panel26:25,panel14:25,pro
  *  with its own nutrition note). They are consumables, not goals; these bands are what the tests hold them to. */
 export const KONBINI_PRICE_BAND=[3,12] as const;
 export const DRINK_PRICE_BAND=[3,6] as const;
+/** Gashapon capsule toys (Nov 8 2026, docs/gashapon-design.md, lib/gashapon/store.ts): a flat price per spin through the arcade
+ *  wallet; a toy you already own gives a few coins back (a one-off wallet credit per spin); a daily cap and a short cool-down. */
+export const GASHAPON={price:20,repeatRefund:5,spinsPerDay:12,minSpinMs:1500} as const;
 
 // ==== MARKET LADDER (pure) =====================================================================================================
 

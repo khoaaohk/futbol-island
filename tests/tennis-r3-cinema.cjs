@@ -1,7 +1,7 @@
 // Futbol Tennis round 3: the cinematic beat helper (lib/arcade/tennisCinema.ts). Slow-mo ramps back to 1x, hard caps
 // on length and frequency, any tap skips, the rival's incoming ball cancels slow-mo, reduced motion = flash only.
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm'),path=require('node:path');
-function load(file){const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.resolve(file),'utf8'),{compilerOptions:{module:1,target:7}}).outputText,{exports:m.exports,module:m,Math,Number,JSON,console,require});return m.exports;}
+function load(file){const m={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(path.resolve(file),'utf8'),{compilerOptions:{module:1,target:7}}).outputText,{exports:m.exports,module:m,Math,Number,JSON,console,require:id=>id.startsWith('.')?load(path.join(path.dirname(path.resolve(file)),id+'.ts')):require(id)});return m.exports;}
 const {createTennisCinema,TENNIS_BEAT:B}=load('lib/arcade/tennisCinema.ts');
 const dt=1/60;
 function run(c,seconds,opts={}){const trace=[];for(let t=0;t<seconds;t+=dt)trace.push({...c.update(dt,!!opts.charging,!!opts.serving,!!opts.rivalBall)});return trace;}

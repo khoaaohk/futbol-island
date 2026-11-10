@@ -12,20 +12,29 @@ import {effectiveTier,subscribeHeatTier} from './heatTier';
  * Cost per fragment: mottle = 4 sin + ~14 ALU, grain = 1 sin + ~8 ALU (skipped when off), +1 varying vec3, +1 shared uniform
  * (uGroundGrain). The vertex shader adds one matrix*vec4. Documented in docs/performance-guide.md ("Ground detail").
  */
-export type GroundKind='grass'|'sand'|'path'|'land'|'mixed';
+export type GroundKind='grass'|'sand'|'path'|'land'|'mixed'|'asphalt';
 export const GROUND_TINT:Record<GroundKind,{amp:number;grain:number;wet:boolean}>={
- grass:{amp:.12,grain:.14,wet:false},
- sand:{amp:.09,grain:.16,wet:true},
+ // Nov 10 2026: grain .14/.16/.09 -> .09/.11/.07 with a rotated cell (the axis-aligned 0.29 m cells read as a pixel checkerboard).
+ grass:{amp:.12,grain:.09,wet:false},
+ sand:{amp:.09,grain:.11,wet:true},
  /** Sand-coloured paths, promenades and plazas: exactly the sand's mottle and grain (no waterline term), colour nudged toward the sand. */
- path:{amp:.09,grain:.16,wet:false},
+ path:{amp:.09,grain:.11,wet:false},
  /** The land base is the visible inner beach band (user Oct 17 2026: "inner sand still different"): exactly the sand's mottle and grain, no waterline term. */
- land:{amp:.09,grain:.16,wet:false},
- mixed:{amp:.095,grain:.09,wet:false},
+ land:{amp:.09,grain:.11,wet:false},
+ mixed:{amp:.095,grain:.07,wet:false},
+ /** Carriageways (Nov 10 2026): a faint patchy wear and fine aggregate, so the roads are not one flat grey. */
+ asphalt:{amp:.06,grain:.07,wet:false},
 };
 /** Shared by every ground material: 1 = grain on, 0 = off (tiers 1-4, Battery saver). Heat offsets Oct 19 2026: off from tier 1
  * (was 3): a warm phone already draws at 1.5 or less, where the fine grain is barely visible; tier 0 (and desktop) keep it. */
 export const GROUND_GRAIN={value:1};
 export const GROUND_GRAIN_OFF_TIER=1;
+/** Cloud shadows (Nov 10 2026): seconds for the slow drift, wrapped at the pattern's period (2*PI/0.02 s) so it never jumps.
+ *  Advanced from the island's existing water step (stepWaterTime, rendered frames only) at most 10 times a second; frozen when the water is still. */
+export const GROUND_TIME={value:0};
+export const GROUND_TIME_WRAP=Math.PI*2/.02;
+let groundTimeAcc=0;
+export function stepGroundTime(dt:number,still:boolean){if(still||!(dt>0))return;groundTimeAcc+=Math.min(dt,.1);if(groundTimeAcc<.1)return;GROUND_TIME.value=(GROUND_TIME.value+groundTimeAcc)%GROUND_TIME_WRAP;groundTimeAcc=0;}
 const syncGrain=()=>{GROUND_GRAIN.value=effectiveTier()>=GROUND_GRAIN_OFF_TIER?0:1;};
 let subscribed=false;
 function ensureSubscribed(){if(subscribed)return;subscribed=true;syncGrain();subscribeHeatTier(syncGrain);}
@@ -44,14 +53,16 @@ export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kin
  const {amp,grain,wet}=GROUND_TINT[kind],f=(v:number)=>v.toFixed(3);
  material.customProgramCacheKey=()=>'ground-tint-'+kind;
  material.onBeforeCompile=sh=>{
-  sh.uniforms.uGroundGrain=GROUND_GRAIN;
+  sh.uniforms.uGroundGrain=GROUND_GRAIN;sh.uniforms.uGroundTime=GROUND_TIME;
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vGT;')
    .replace('#include <project_vertex>','#include <project_vertex>\nvGT=(modelMatrix*vec4(transformed,1.)).xyz;');
-  sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>\nvarying vec3 vGT;uniform float uGroundGrain;\n${GROUND_TINT_GLSL}`)
+  sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>\nvarying vec3 vGT;uniform float uGroundGrain,uGroundTime;\n${GROUND_TINT_GLSL}`)
    .replace('#include <color_fragment>',`#include <color_fragment>
 {float n=groundMottle(vGT.xz),w=max(n,0.);diffuseColor.rgb*=(1.+${f(amp)}*n)*vec3(1.+${f(amp*.5)}*w,1.,1.-${f(amp*.8)}*w);
+${kind==='grass'?'diffuseColor.rgb*=mix(vec3(.94,.99,1.03),vec3(1.07,1.05,.9),.5+.5*n);':''}
 ${wet?'float wt=smoothstep(-.11,-.30,vGT.y);diffuseColor.rgb*=vec3(1.-.14*wt,1.-.12*wt,1.-.08*wt);':''}
-${grain>0?`if(uGroundGrain>0.){float g=fract(sin(dot(floor(vGT.xz*3.5),vec2(12.9898,78.233)))*43758.5453);diffuseColor.rgb*=1.+${f(grain)}*uGroundGrain*(g-.5);}`:''}}`);
+${grain>0?`if(uGroundGrain>0.){float g=fract(sin(dot(floor(mat2(.83,.56,-.56,.83)*vGT.xz*3.5),vec2(12.9898,78.233)))*43758.5453);diffuseColor.rgb*=1.+${f(grain)}*uGroundGrain*(g-.5);
+ vec2 q=vGT.xz;diffuseColor.rgb*=1.-.07*smoothstep(.35,.8,sin(q.x*.013+uGroundTime*.02+sin(q.y*.011)*1.5)*.5+.5);}`:''}}`);
  };
  return material;
 }

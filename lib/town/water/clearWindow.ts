@@ -7,7 +7,7 @@ import {createWaterNoise} from '../fishing/shoreWater';
 import {creatureGeometry,type CreatureKind} from './clearCreatures';
 import {SEA_TURTLE_GLSL} from '../../graphics/seaTurtle';
 import {distanceToLandableDeck} from '../landableDecks';
-import {FISH_SPOTS} from '../fishing/fishCatalog';
+import {FISH_SPOTS} from '../fishing/fishSpots';
 
 /**
  * The clear water window (Oct 19 2026, user: the turquoise bay water near the beaches should be see-through with a sea floor and
@@ -23,7 +23,8 @@ import {FISH_SPOTS} from '../fishing/fishCatalog';
  *  - coral and sea grass: the fishing reef kit (underwater.ts clearReefKit), scattered from a seeded WORLD grid (the same coral at
  *    the same place every time) over the window, nearest first, capped (CLEAR_REEF): ONE InstancedMesh per kind, static, the tips
  *    sway in the vertex shader off the shared water clock (held on the still path and with reduced motion).
- * Gate: heat tiers 0-2 (tier 2: coral only within CLEAR_REEF.near m), never at tiers 3-4 / Battery saver (effective tier 4), never
+ * Gate: heat tiers 0-1 (Nov 10 2026; tier 2 used to keep a small window), never at tiers 2-4 / Battery saver (effective tier 4), never
+ * with the camera over CLEAR_HIGH.close m above the water, never
  * while fishing (its own clear water owns the ocean then), and only while the player is near the shallows. Off: the ocean's render
  * state is restored exactly (the shared createOceanBlend count), every mesh hidden, the uniform's strength 0: today's opaque sea.
  * Per frame: one field lookup, one Vector4 write; the scatter runs only on a 16 m snap or a tier change. No allocation per frame.
@@ -42,6 +43,12 @@ export function clearBedDepthAt(f:IsleCpuField,x:number,z:number){
  if(u+v<=1){const A=at(x0,z0);return A+(D-A)*u+(B-A)*v;}
  const C=at(x0+c,z0+c);return C+(B-C)*(1-u)+(D-C)*(1-v);
 }
+/**
+ * Nov 10 2026 heat: the window opens at heat tiers 0-1 only (`CLEAR_OPEN_TIER`; tier 2 used to keep a 28 m window, which still
+ * blended the whole ocean), and closes while the camera is more than `CLEAR_HIGH.close` m over the water (jetpack, high rides:
+ * the seabed reads as noise from there), reopening under `CLEAR_HIGH.open` m (hysteresis, no flicker at the boundary).
+ */
+export const CLEAR_OPEN_TIER=2,CLEAR_HIGH={close:25,open:22} as const;
 export const CLEAR_TIERS=[{win:100,reach:60,cap:200,grass:260},{win:70,reach:40,cap:70,grass:90},{win:28,reach:12,cap:40,grass:56}] as const;
 /**
  * Ambient sea life per heat tier [tier 0, tier 1] (tier 2+, reduced motion, the still path: none). Fish go in schools of `per`.
@@ -225,7 +232,7 @@ export function createClearWindow(scene:T.Scene,field:()=>IsleCpuField|null){
   const mesh=new T.InstancedMesh(g,underMaterial(kind,uniforms),n);mesh.name='clear-window-'+kind+'-life';mesh.count=0;mesh.visible=false;mesh.instanceColor=new T.InstancedBufferAttribute(new Float32Array(n*3),3);
   mesh.castShadow=mesh.receiveShadow=false;mesh.raycast=()=>{};mesh.matrixAutoUpdate=false;mesh.frustumCulled=false;group.add(mesh);life[kind]={mesh,a,b,want:0,found:0};}
  const reducedMotion=typeof window!=='undefined'&&typeof window.matchMedia==='function'&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
- let k=0,cx=NaN,cz=NaN,radius=0,formations=0,capF=0,capG=0,lx=0,lz=0,look=false,winR=0;
+ let k=0,cx=NaN,cz=NaN,radius=0,formations=0,capF=0,capG=0,lx=0,lz=0,look=false,winR=0,high=false;
  const M=new T.Matrix4(),Q=new T.Quaternion(),P=new T.Vector3(),S=new T.Vector3(),UP=new T.Vector3(0,1,0),COL=new T.Color();
  const placeOk=(f:IsleCpuField,x:number,z:number,lo:number,hi:number)=>{const d=f.distance(x,z);if(d<1.5||d*clearWinK(x,z)>CLEAR_WIN.band[0]+2)return -1;
   const depth=uwDepthAt(d,CLEAR_BED.floor);if(depth<lo||depth>hi||f.lift(x,z)>-.45||distanceToLandableDeck(x,z)<2.5)return -1;return depth;};
@@ -304,10 +311,11 @@ export function createClearWindow(scene:T.Scene,field:()=>IsleCpuField|null){
    * the water, and the camera (the window centres on the water point it looks at, smoothed; without one, on the player).
    */
   update(dt:number,x:number,z:number,tier:number,fishing:boolean|number,camera?:T.Camera|null){
-   const f=field(),tc=CLEAR_TIERS[tier<3?Math.max(0,tier):0],fs=typeof fishing==='number'?Math.min(1,Math.max(0,fishing)):fishing?1:0;
+   const f=field(),tc=CLEAR_TIERS[tier<CLEAR_OPEN_TIER?Math.max(0,tier):0],fs=typeof fishing==='number'?Math.min(1,Math.max(0,fishing)):fishing?1:0;
    let target=0;
    // Whether the window can show the water here (a fishing session lets it serve as the fishing water then: underwater.ts CLEAR_SHARE).
-   const near=!!f&&tier<3&&(()=>{const d=f.distance(x,z);return d>-tc.win&&d<CLEAR_WIN.band[1]+tc.win;})();CLEAR_SHARE.available=near;
+   const camH=camera?camera.position.y-UW_SURFACE:0;if(camH>CLEAR_HIGH.close)high=true;else if(camH<CLEAR_HIGH.open)high=false;
+   const near=!!f&&tier<CLEAR_OPEN_TIER&&!high&&(()=>{const d=f.distance(x,z);return d>-tc.win&&d<CLEAR_WIN.band[1]+tc.win;})();CLEAR_SHARE.available=near;
    if(near&&fs<1)target=1-fs;
    if(target===0&&k===0){if(group.visible||blend.held)off();look=false;return;}
    if(target>k)k=Math.min(1,k+dt/CLEAR_REEF.fade);else if(target<k)k=Math.max(0,k-dt/CLEAR_REEF.fade);
@@ -315,8 +323,8 @@ export function createClearWindow(scene:T.Scene,field:()=>IsleCpuField|null){
    if(k<=0||!f){k=0;look=false;off();return;}
    blend.hold();group.visible=true;
    // Where the camera looks: its forward ray down to the water, kept within `reach` of the player, eased (no jumps on a turn).
-   let tx=x,tz=z,camH=0;
-   if(camera){const e=camera.matrixWorld.elements,dy=-e[9];camH=camera.position.y-UW_SURFACE;
+   let tx=x,tz=z;
+   if(camera){const e=camera.matrixWorld.elements,dy=-e[9];
     if(dy<-.05&&camH>0){const t=camH/-dy;tx=camera.position.x-e[8]*t;tz=camera.position.z-e[10]*t;
      const ox=tx-x,oz=tz-z,od=Math.hypot(ox,oz);if(od>tc.reach){tx=x+ox/od*tc.reach;tz=z+oz/od*tc.reach;}}}
    if(!look||!camera){lx=tx;lz=tz;look=true;}else{const a=1-Math.exp(-3*Math.min(dt,.1));lx+=(tx-lx)*a;lz+=(tz-lz)*a;}

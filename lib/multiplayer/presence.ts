@@ -1,6 +1,6 @@
 // Presence for the island (docs/multiplayer-design.md 4.4.1): what the local player is doing (Town flags -> Activity) and the
 // kid-facing words / icon friends see over the force field and in the party list. Pure: no three.js, no React.
-import { MARKET_STAND } from '../town/fishing/fishCatalog';
+import { MARKET_STAND } from '../town/fishing/fishSpots';
 import { Activity, MAX_SPEED_MS, Mode, ROOM_ACTIVITIES, RoomCode, WORLD_BOUNDS, Zone, roomBody, roomOf, type Presence, type PoseBody } from '../../multiplayer/protocol';
 
 /** The Town state that makes a player "busy". One object, reused: Town writes the fields, townActivity reads them (no allocation). */

@@ -11,31 +11,35 @@
  *   scale never below slowScale, and every curve is a smoothstep (bounded camera speed, no roll, no FOV punch: the
  *   push is a ≤ pushMax dolly toward the subject).
  * - Reduced motion: no slow-mo, no close-up, no push; a beat becomes a short `flash` (0..1) for a light flare only. */
+import {createBeatDirector,smoothstep} from './beatDirector';
+
 export const TENNIS_BEAT={slowScale:.3,slowMin:.4,slowMax:.7,rampIn:.1,rampOut:.35,slowGap:6,pushGap:2.5,pushTime:.9,pushMax:.1,close:.62,serveClose:.42,flashTime:.35} as const;
 export type TennisBeatKind=''|'strike'|'push';
 export type TennisBeatState={scale:number;close:number;follow:number;push:number;flash:number;kind:TennisBeatKind};
-const smooth=(a:number,b:number,t:number)=>{const x=Math.max(0,Math.min(1,(t-a)/Math.max(1e-6,b-a)));return x*x*(3-2*x);};
+const smooth=(a:number,b:number,t:number)=>smoothstep((t-a)/Math.max(1e-6,b-a));
 
 export function createTennisCinema(reduced:boolean){
  const out:TennisBeatState={scale:1,close:0,follow:0,push:0,flash:0,kind:''};
- let clock=0,kind:TennisBeatKind='',age=0,hold=0,power=0,lastSlow=-99,lastPush=-99,pushAge=9,pushPower=0,flashAge=9,windup=0,skipped=false,exitScale=1,exitClose=0;
+ // Shared beat director (lib/arcade/beatDirector.ts): real-time clock, the slow-mo and push-in gaps, reduced motion.
+ const d=createBeatDirector({reduced,gaps:{slow:TENNIS_BEAT.slowGap,push:TENNIS_BEAT.pushGap}});
+ let kind:TennisBeatKind='',age=0,hold=0,power=0,pushAge=9,pushPower=0,flashAge=9,windup=0,skipped=false,exitScale=1,exitClose=0;
  /** Your strike. `strength` 0..1 (a sweet power strike or a golden touch is 1, a slam ~.8). Returns true if a slow-mo
   * beat started (false = capped or reduced motion: the caller keeps its plain hit-stop). */
  function strike(strength:number){
-  if(reduced){flashAge=0;return false;}
-  if(clock-lastSlow<TENNIS_BEAT.slowGap){push(strength*.7);return false;} // capped: a push-in at most
-  kind='strike';age=0;skipped=false;power=Math.max(0,Math.min(1,strength));hold=TENNIS_BEAT.slowMin+(TENNIS_BEAT.slowMax-TENNIS_BEAT.slowMin)*power;lastSlow=clock;return true;}
+  if(d.reduced){flashAge=0;return false;}
+  if(!d.ready('slow')){push(strength*.7);return false;} // capped: a push-in at most
+  kind='strike';age=0;skipped=false;power=Math.max(0,Math.min(1,strength));hold=TENNIS_BEAT.slowMin+(TENNIS_BEAT.slowMax-TENNIS_BEAT.slowMin)*power;d.mark('slow');return true;}
  /** A short push-in + settle (match point, ace, save, long rally). Capped; ignored during a strike beat. */
  function push(strength=1){
-  if(reduced){flashAge=0;return false;}
-  if(kind==='strike'||clock-lastPush<TENNIS_BEAT.pushGap)return false;
-  pushAge=0;pushPower=Math.max(.3,Math.min(1,strength));lastPush=clock;return true;}
+  if(d.reduced){flashAge=0;return false;}
+  if(kind==='strike'||!d.ready('push'))return false;
+  pushAge=0;pushPower=Math.max(.3,Math.min(1,strength));d.mark('push');return true;}
  /** Any tap: hand the clock straight back (a quick .12 s ramp from wherever the beat is). */
  function skip(){if(kind==='strike'&&!skipped){skipped=true;exitScale=out.scale;exitClose=out.close;age=0;}pushAge=Math.max(pushAge,TENNIS_BEAT.pushTime*.7);}
  /** Call once per real frame. `charging`: you hold a wind-up; `serving`: it is your serve; `rivalBall`: the rival has
   * struck and the ball is coming to you (the critical return: any slow-mo is cancelled at once). */
  function update(dt:number,charging:boolean,serving:boolean,rivalBall:boolean){
-  clock+=dt;
+  d.tick(dt);
   if(kind==='strike'&&rivalBall&&!skipped)skip();
   if(kind==='strike'){age+=dt;
    if(skipped){const k=smooth(0,.12,age);out.scale=exitScale+(1-exitScale)*k;out.close=exitClose*(1-k);out.follow=1;if(k>=1){kind='';}}
@@ -47,11 +51,11 @@ export function createTennisCinema(reduced:boolean){
   }
   if(kind!=='strike'){out.scale=1;out.follow=Math.max(0,out.follow-dt*3);
    // Wind-up: on your serve, swing gently into the 3/4 shot; in a rally only a small dolly (you must see the ball).
-   const want=reduced?0:charging&&serving?TENNIS_BEAT.serveClose:0;windup+=(want-windup)*Math.min(1,dt*4);out.close=windup;}
+   const want=d.reduced?0:charging&&serving?TENNIS_BEAT.serveClose:0;windup+=(want-windup)*Math.min(1,dt*4);out.close=windup;}
   else windup=Math.max(0,windup-dt*2);
   pushAge+=dt;const pIn=smooth(0,.25,pushAge),pOut=1-smooth(.45,TENNIS_BEAT.pushTime,pushAge);
-  const rallyWind=reduced||serving?0:charging?.35:0;
-  out.push=reduced?0:Math.min(1,Math.max(pIn*pOut*pushPower,rallyWind))*TENNIS_BEAT.pushMax;
+  const rallyWind=d.reduced||serving?0:charging?.35:0;
+  out.push=d.reduced?0:Math.min(1,Math.max(pIn*pOut*pushPower,rallyWind))*TENNIS_BEAT.pushMax;
   flashAge+=dt;out.flash=flashAge<TENNIS_BEAT.flashTime?1-flashAge/TENNIS_BEAT.flashTime:0;
   out.kind=kind||(out.push>0?'push':'');
   return out;}
@@ -59,5 +63,5 @@ export function createTennisCinema(reduced:boolean){
  function reset(){kind='';age=0;windup=0;pushAge=9;flashAge=9;skipped=false;out.scale=1;out.close=out.follow=out.push=out.flash=0;out.kind='';}
  return{strike,push,skip,update,active,reset,state:out,
   /** Seconds of real time since the last slow-mo (tests + debug). */
-  sinceSlow:()=>clock-lastSlow};
+  sinceSlow:()=>d.since('slow')};
 }

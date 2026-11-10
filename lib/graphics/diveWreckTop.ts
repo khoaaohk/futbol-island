@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {Merge,addDiveArch,addDiveWreck} from './diveRoom';
+import {Merge,addDiveArch,addDiveWreck} from './diveWreck';
 import {DIVE_SPOTS,DIVE_SURFACE_Y,diveWreckIslandScale,type DiveSpot} from '../town/water/diveSpots';
 import {diveLayout} from '../town/water/diveLayout';
 import {WATER_Y} from './waterTokens';

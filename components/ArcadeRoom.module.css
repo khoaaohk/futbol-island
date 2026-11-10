@@ -51,3 +51,9 @@
 
 /* Party chip (rooms Phase 3): its own slot under the header's right buttons, so the arcade header button skin never applies to it. */
 .partySlot{position:absolute;z-index:3;right:26px;top:calc(max(18px,env(safe-area-inset-top)) + 62px)}@media(max-width:600px){.partySlot{right:14px}}@media(max-height:520px){.partySlot{top:62px}}
+
+/* Gashapon pair (Nov 8 2026): a fixed prompt above the action buttons while you stand at a capsule machine's glass. */
+.root .gashaPrompt{left:50%;top:auto;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translate(-50%,0);z-index:5;font:800 16px/1.1 var(--btn-font,Arial,sans-serif)}
+
+/* Nov 10 2026: Today joins Scores and Coins; three header buttons fit beside Exit on a 390 px phone. */
+@media(max-width:430px){.headerActions{gap:6px}.header .headerActions button{min-width:0}.header .headerActions .buttonFace{padding:8px 13px}}

@@ -30,7 +30,7 @@ export function sevenWideX(homeX:number,ballX:number,width:number){
 export const SEVEN_NOTES={
  buildOut:['Build-out line','On a goal kick, or when the keeper holds the ball, the other team waits behind the build-out line until the ball is played'],
  backPass:['Back to the keeper','The way forward was blocked, so the keeper helps keep the ball. A back pass is played with the feet: the keeper can’t pick it up'],
- onside:['Wait on the line','In 7v7 offside only counts past the build-out line, so the forward waits level with the last defender until the pass'],
+ onside:['Wait on the line','In 7v7 offside only counts past the build-out line, so the forward waits level with the second-last defender until the pass'],
  spread:['Spread out','Your team has the ball: wide players run to the sidelines to make room, and the other team squeezes together to guard the middle'],
- offside:['Offside!','He was past the build-out line and the last defender when the pass was played. In 7v7 that is the only place offside counts'],
+ offside:['Offside!','He was past the build-out line and the second-last defender when the pass was played. In 7v7 that is the only place offside counts'],
 } as const;

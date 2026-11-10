@@ -63,7 +63,7 @@ export function* warmIslandSteps():Generator<void|Promise<unknown>,boolean,unkno
  if(currentPhase()!=='building')return false;
  if(renderer){
   phase='compiling';bootMark('warm:compile-start');
-  const camera=new T.PerspectiveCamera(40,1,1,500),hemi=new T.HemisphereLight('#ffe0aa','#9b785c',2.0),sun=new T.DirectionalLight('#ffc477',3.0);
+  const camera=new T.PerspectiveCamera(40,1,1,500),hemi=new T.HemisphereLight('#ffe0aa','#9b785c',1.6),sun=new T.DirectionalLight('#ffc477',3.4);// intensities mirror the day preset (Nov 10 2026); they do not change the program
   sun.castShadow=true;sun.shadow.mapSize.set(quality.shadowSize,quality.shadowSize);standIns=[hemi,sun,sun.target];scene.add(...standIns);
   const job=renderer.compileAsync(scene,camera).catch(()=>undefined).finally(()=>{if(compiling===job)compiling=null;bootMark('warm:compile-end');});
   compiling=job;yield job;
@@ -91,7 +91,7 @@ export function takeWarmIsland():WarmIsland|null{
  let r=renderer;if(r&&antialias!==graphicsQuality().antialias){r.dispose();r.forceContextLoss();r=null;}
  // Taken mid-compile: three's compileAsync still polls this renderer's programs, so a dispose (Town's cleanup, e.g. React's dev
  // double mount) waits for it to settle instead of pulling the properties out from under the poll.
- const job=compiling;if(r&&job){const dispose=r.dispose.bind(r);r.dispose=()=>{void job.then(dispose);};}
+ const job=compiling;if(r&&job){const dispose=r.dispose.bind(r),lose=r.forceContextLoss.bind(r);r.dispose=()=>{void job.then(dispose);};r.forceContextLoss=()=>{void job.then(lose);};}// lose after dispose (registration order)
  const out={renderer:r,scene,world,vending};
  renderer=null;scene=null;world=null;vending=null;
  return out;

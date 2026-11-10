@@ -11,7 +11,7 @@ const loaded=new Map();function load(file){file=path.resolve(base,file);if(loade
 const resolveTs=p=>fs.existsSync(p+'.ts')?p+'.ts':fs.existsSync(p+'.tsx')?p+'.tsx':p+'/index.ts';
 const read=f=>fs.readFileSync(path.join(base,f),'utf8');
 let passed=0;const ok=(name,fn)=>{try{fn();passed++;console.log('ok  ',name);}catch(e){console.error('FAIL',name);throw e;}};
-const D=load('lib/town/water/diveSpots.ts'),RT=load('lib/town/water/diveRuntime.ts'),R=load('lib/town/water/reefDiscovery.ts');
+const D=load('lib/town/water/diveSpots.ts'),RT=(m=>(m.provideDiveRoom(load('lib/graphics/diveRoom.ts')),m))(load('lib/town/water/diveRuntime.ts')),R=load('lib/town/water/reefDiscovery.ts');
 const mkRuntime=(extra={})=>{const root=new T.Group(),scene=new T.Scene();scene.add(root);
  return RT.createDiveRuntime({scene,renderer:{render(){}},camera:new T.PerspectiveCamera(50,390/844),player:{root,update(){}},phone:true,reduced:()=>false,ui:()=>null,place(){},hide(){},
   entered(){},surfaced(){},found(){},credit(){},low(){},out(){},fly:()=>false,calm:()=>true,...extra});};

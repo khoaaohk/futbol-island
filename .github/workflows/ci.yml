@@ -1,0 +1,86 @@
+# CI gates (Nov 10 2026, docs/tooling/CI.md). Checks only: no deploy steps, no secrets. Vercel still deploys every push to
+# main on its own; this workflow reports whether that commit typechecks, lints and passes the core tests.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Matches the local toolchain (node -v = v20.x; there is no .nvmrc or engines field).
+  NODE_VERSION: '20'
+
+jobs:
+  typecheck:
+    name: Typecheck (app)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx tsc --noEmit -p .
+
+  typecheck-relay:
+    name: Typecheck (multiplayer relay)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx tsc --noEmit -p multiplayer/relay
+
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npm run lint
+
+  test:
+    name: Core tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      # The runner-* tests use Node's TypeScript hooks and look for a Node >= 23 in $NODE22 (locally /opt/homebrew/bin/node).
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - run: echo "NODE22=$(command -v node)" >> "$GITHUB_ENV"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          # A second dependency file gives this job its own cache key, so the transpile cache below is saved here and not
+          # lost to whichever other job saved the shared npm cache first.
+          cache-dependency-path: |
+            package-lock.json
+            tests/manifest.json
+      - run: npm ci --no-audit --no-fund
+      # No actions/cache (only checkout + setup-node are allowed): the TypeScript transpile cache lives inside ~/.npm, which
+      # setup-node saves and restores with the npm cache (saved when the key misses, i.e. when package-lock.json or the test
+      # manifest changes; entries are keyed by source hash, so a stale cache only costs speed, never correctness).
+      - run: echo "FI_TS_CACHE_DIR=$HOME/.npm/_fi-ts-transpile" >> "$GITHUB_ENV"
+      - run: npm run test:quiet -- --core --jobs 3

@@ -49,7 +49,8 @@ import {coinsText,newestUnitValue} from '@/lib/town/market/marketStand';
 const MarketStand=dynamic(()=>import('./MarketStand'),{ssr:false});
 type Place=MarketBuyer;// rosa, farm (Mele), marina, kofi: one market state (lib/economy.ts MARKET_BUYERS)
 const Fishbook=dynamic(()=>import('./Fishbook'),{ssr:false});
-export const OPEN_MARKET_STAND='fi2-open-market-stand';
+import {OPEN_MARKET_STAND} from '@/lib/town/fishing/fishingSignals';
+export {OPEN_MARKET_STAND};
 type Tab='fish'|'produce'|'beach'|'cards';
 const useFishing=()=>useSyncExternalStore(fishingSession.subscribe,fishingSession.getView,fishingSession.getView);
 /** The chosen float / rod (Fishbook rewards) and the float's glow after dark (the night water mood), set as a session starts (looks only). */
