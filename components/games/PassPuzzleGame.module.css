@@ -524,3 +524,25 @@
 .shotLine{margin:6px 0 0;font-weight:800}
 .aimPanel[data-risky=true] .aimRing{fill:#ff8a3c66}
 .aimPanel[data-on=true]~.aimCue{visibility:hidden}
+/* Tablet and desktop tray (Nov 11 2026, owner on a tablet: "the controls cover the players"). Upright tablets: a bottom dock, Scan and the
+ * four flight keys on one row and the two Shoot sliders side by side under it (two rows at most). Wide landscape screens (tablets
+ * across, desktop) have spare width: the tray docks at the right edge as a slim column and the camera fit keeps every piece left of it
+ * (measureRoom reads --pp-dock). The fit always reserves the tray's measured box, so neither layout can cover a piece. */
+@media(min-width:700px) and (min-height:521px) and (orientation:portrait){
+ .game .passControls{display:flex;flex-wrap:wrap;column-gap:14px;width:min(620px,calc(100% - 48px));bottom:calc(18px + env(safe-area-inset-bottom))}
+ .passControls>.aidRow{flex:1 0 100%}.passControls>.powerControl{flex:1 1 0;min-width:0;flex-wrap:wrap;row-gap:0;column-gap:8px}
+ .passControls>.powerControl>span{flex:1 0 100%;min-width:0;line-height:1.2}
+}
+@media(min-width:900px) and (min-height:521px) and (orientation:landscape){
+ .game .passControls{--pp-dock:side;left:auto;right:calc(var(--arcade-edge-x,16px) + env(safe-area-inset-right,0px));transform:none;bottom:calc(20px + env(safe-area-inset-bottom));width:224px;max-height:calc(100% - var(--arcade-bar-clear,72px) - 96px);overflow-y:auto}
+ .passControls>.aidRow{flex-direction:column;align-items:stretch;gap:10px}
+ .game .scanToggle.scanToggle{justify-content:center}
+ .aidRow>.passModes{display:grid;grid-template-columns:1fr 1fr;flex:none}
+ .passControls>.powerControl{flex-wrap:wrap;row-gap:2px;column-gap:8px;margin-top:10px}.passControls>.powerControl>span{flex:1 0 100%;min-width:0;line-height:1.2}
+ .game .undo{bottom:calc(20px + env(safe-area-inset-bottom))}
+}
+/* Narrow phones: the five comic keys fit inside the tray (Shoot overflowed its right edge by ~7 px at 390 wide). */
+@media(max-width:420px){.game[data-game=puzzle] .aidRow{gap:6px}.game[data-game=puzzle] .aidRow>.passModes{gap:6px}.game[data-game=puzzle] .aidRow>.passModes button,.game[data-game=puzzle] .scanToggle.scanToggle{min-width:0;padding-inline:4px;letter-spacing:0}}
+/* Tablets and laptop heights (Nov 11 2026): a long result card (stars, why, lesson, high-score strip) ran past the bottom of a 1024x768
+ * screen with Next puzzle below the fold. The main action sticks to the bottom of the scrolling overlay at every size, as on short phones. */
+@media(min-height:521px){.game .lowOverlay>section>.go{position:sticky;bottom:6px;z-index:1}}

@@ -38,7 +38,7 @@ export default function PositionsHub(){
   </Section>
   <Section id="lessons" title="Lessons that introduce the positions"><LessonList lessons={HUB.lessons}/></Section>
   <QA id="faq" title="Questions about positions" faq={HUB.faq}/>
-  <Section id="related" title="Keep reading"><LinkList links={[gameLink('snake'),/* the arcade game that builds formations (lib/site/games.ts) */{path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.h1,line:FORMATIONS_HUB.blurb},{path:'/learn/lessons',name:'All football lessons',line:'Every lesson in 7v7, 9v9, 11v11 and futsal'}]}/></Section>
+  <Section id="related" title="Keep reading"><LinkList links={[gameLink('snake'),gameLink('airhockey'),/* Air Futbol: the goalkeeper's rule (Nov 11 2026) *//* the arcade game that builds formations (lib/site/games.ts) */{path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.h1,line:FORMATIONS_HUB.blurb},{path:'/learn/lessons',name:'All football lessons',line:'Every lesson in 7v7, 9v9, 11v11 and futsal'}]}/></Section>
   <GuideEnd cta={false}/>
  </>;
 }

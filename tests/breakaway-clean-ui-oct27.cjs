@@ -3,7 +3,7 @@
 // 1. Strikers' floating stick replaces the lane buttons; the thumb cluster is round, big and does not overlap.
 // 2. While playing the only text is a short GOAL! / Tackled! flash (no coach line, tips, header detail or floating captions).
 // 3. Strikers-style top bar (Back, one points pill, Pause) and pause card (Paused, big Resume, Arcade / Restart, keycaps on desktop).
-// 4. Landscape on phones via requestLandscape (RotateLock turns upright phones).
+// 4. Orientation: upright AND sideways since Nov 11 2026 (requestAnyOrientation: no RotateLock card either way; was landscape-only).
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript'),vm=require('node:vm');
 const read=f=>fs.readFileSync(f,'utf8');
 const pad=read('components/games/RunnerControls.tsx'),padCss=read('components/games/RunnerControls.module.css'),hook=read('lib/arcade/useFloatingStick.ts');
@@ -60,8 +60,8 @@ assert.match(pauseCss,/@media \(pointer:coarse\)\{\.keys\.keys\{display:none\}\}
 assert.match(pauseCss,/\.resume\.resume\{[^}]*min-height:var\(--arcade-primary-h,56px\)/,'Resume is the big button (56 px, 48 px sideways)');
 assert.match(game,/const restart=\(\)=>\{change\('ready'\);void start\(\);\};/,'Restart begins a fresh run');
 
-// 4. Landscape.
-assert.match(game,/useEffect\(\(\)=>kind==='runner'\?requestLandscape\(\):undefined,\[kind\]\);/,'Breakaway asks for landscape on phones');
+// 4. Orientation (Nov 11 2026, owner: "the break away game should not be turned sideways to play"; tests/runner-upright.cjs has the rest).
+assert.match(game,/useEffect\(\(\)=>kind==='runner'\?requestAnyOrientation\(\):undefined,\[kind\]\);/,'Breakaway plays upright or sideways on phones: no rotate card');
 // Nov 11 2026 (owner, iPhone: the stick got stuck): both arcade sticks hear the release on the window too (pointerup / pointercancel / a
 // touchend that leaves no finger on the stick) and a new press takes a stale stick over; browser proof: check-*-browser.cjs --touch.
 {const guard=read('lib/arcade/stickRelease.ts'),shell=read('components/games/ArcadeGame3D.tsx');
@@ -69,4 +69,4 @@ assert.match(game,/useEffect\(\(\)=>kind==='runner'\?requestLandscape\(\):undefi
  assert.match(hook,/useEffect\(\(\)=>watchStickRelease\(\(\)=>zoneEl\.current,\(\)=>id\.current/,'Breakaway stick');assert.match(hook,/e\.pointerId===id\.current\|\|!el/,'a new press takes a stale stick over');
  assert.match(shell,/useEffect\(\(\)=>watchStickRelease\(\(\)=>stick\.current,\(\)=>stickId\.current/,'tennis stick');assert.match(shell,/onPointerDown=\{e=>\{if\(stickId\.current===e\.pointerId\)return;/,'tennis: a new press takes a stale stick over');
  assert(!/if\(stickId\.current!==null\)return;/.test(shell),'no stick locks itself out on a lost release');}
-console.log('PASS breakaway clean UI: floating stick, round thumb cluster, flash-only play, Strikers bar + pause card, landscape');
+console.log('PASS breakaway clean UI: floating stick, round thumb cluster, flash-only play, Strikers bar + pause card, upright or sideways');

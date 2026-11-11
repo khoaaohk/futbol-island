@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake] [--suspended] [--headed]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey] [--suspended] [--headed]
 // pinball (Nov 10 2026): windows flipper (KeyA, KeyD), bumper (ball sent into rondo cone 0), goal (ball in the goal mouth) and drain
 // (ball at the bottom, ball save off) are driven on the live table through window.__arcade3d after the launch window.
 // kitrush (Nov 10 2026): windows slice, combo and life-lost are driven through the game's own swipe() on its three teaching waves
@@ -27,7 +27,7 @@ const probe=()=>{const st=window.__audioProbe={contexts:[],connections:0,peak:0,
 const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStorage.removeItem('fi2-sound-muted');localStorage.setItem('fi2-sound-volume','0.5');localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,spends:{},runs:{fixture:{game:'island',paid:5000,reason:'playtest entry',at:1}},packs:[]}));}catch{}};
 (async()=>{const args=['--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist'];if(!suspended)args.push('--autoplay-policy=no-user-gesture-required');
  const browser=await chromium.launch({channel:'chrome',headless:!process.argv.includes('--headed'),args,ignoreDefaultArgs:['--mute-audio']});let fail=false;
- try{const landscape=game==='live'||game==='runner',ctx=await browser.newContext({viewport:landscape?{width:844,height:390}:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
+ try{/* Nov 11 2026: Breakaway Run plays upright (390x664, the iPhone with its browser bars); --landscape probes it sideways as before */const landscape=game==='live'||game==='runner'&&process.argv.includes('--landscape'),ctx=await browser.newContext({viewport:landscape?{width:844,height:390}:game==='runner'?{width:390,height:664}:{width:390,height:844},deviceScaleFactor:2,isMobile:true,hasTouch:true});
   await ctx.addInitScript(probe);await ctx.addInitScript(seed);const page=await ctx.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message.slice(0,200)));
   const label=l=>page.evaluate(l=>window.__audioLabel(l),l),wait=ms=>page.waitForTimeout(ms),read=()=>page.evaluate(()=>({connections:window.__audioProbe.connections,peak:+window.__audioProbe.peak.toFixed(5),states:window.__audioStates(),windows:Object.fromEntries(Object.entries(window.__audioProbe.windows).map(([k,v])=>[k,+v.toFixed(5)]))}));
   await page.goto(BASE+'/arcade?game='+game,{waitUntil:'domcontentloaded',timeout:120000});await page.waitForSelector('canvas',{timeout:60000});await wait(3500);
@@ -68,6 +68,24 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await page.waitForFunction(()=>{const s=window.__snake.game.state;return s.over||(s.beat<=0&&s.ready<=0&&s.level>=2);},null,{timeout:8000});
    await page.evaluate(()=>{const s=window.__snake.game.state;s.saves=0;s.picks[0].on=s.picks[1].on=false;window.__audioLabel('crash');});
    await page.waitForFunction(()=>window.__snake.game.state.over,null,{timeout:30000});await wait(900);must.push('crash');await label('');
+  }else if(game==='airhockey'){quiet.push('menu');
+   // Air Futbol (Nov 11 2026): a real finger (CDP touch) holds the striker and serves; each window then sets the puck up on the live
+   // table through the dev handle (window.__airhockey) and lets the game's own physics fire the cue: serve = the whistle; hit = the
+   // finger drives the striker through a resting puck (clack); wall = the puck flies at a side board (tick); hum = the puck slides
+   // through open table, nothing else sounding; goal = the puck goes into the top goal (horn + claps). paused: P is pressed while
+   // the puck is still moving, and the table hum must be gone. menu / paused must be SILENT.
+   await page.waitForFunction(()=>window.__airhockey&&window.__airhockey.phase==='playing',null,{timeout:30000});
+   const cdp=await ctx.newCDPSession(page),T=(type,pts)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:pts});
+   const at=(x,y)=>page.evaluate(([x,y])=>{const k=window.__airhockey,l=k.layout,r=document.querySelector('[data-air-stage]').getBoundingClientRect();return {x:r.left+l.cx+(x-50)*l.scale,y:r.top+l.cy+(y-80)*l.scale,id:1};},[x,y]);
+   const put=(px,py,vx,vy)=>page.evaluate(([px,py,vx,vy])=>{const s=window.__airhockey.game.state;s.phase='play';s.inGoal=false;s.px=px;s.py=py;s.pvx=vx;s.pvy=vy;s.lastHit=0;s.tx[1]=92;s.ty[1]=8;},[px,py,vx,vy]);
+   await label('serve');await T('touchStart',[await at(50,145)]);await page.waitForFunction(()=>window.__airhockey.game.state.phase==='play',null,{timeout:5000}).catch(()=>errors.push('no serve'));await wait(450);must.push('serve');
+   await label('');await put(50,120,0,0);await wait(250);await label('hit');for(let i=1;i<=6;i++){await T('touchMove',[await at(50,145-i*6)]);await wait(16);}await wait(300);must.push('hit');
+   await label('');await T('touchMove',[await at(50,150)]);await put(50,60,0,0);await wait(500);await put(20,60,-220,0);await label('wall');await wait(220);must.push('wall');
+   await label('');await put(50,60,0,0);await wait(500);await put(20,70,45,0);await wait(120);await label('hum');await wait(500);must.push('hum');
+   if(!(await page.evaluate(()=>window.__airhockey.audio.humming)))errors.push('the hum voice was not running while the puck moved');
+   await label('');await put(50,60,0,0);await wait(400);await put(50,8,0,-220);await label('goal');await page.waitForFunction(()=>window.__airhockey.game.state.goals[0]>=1,null,{timeout:3000}).catch(()=>errors.push('no goal'));await wait(1300);must.push('goal');
+   await label('');await page.waitForFunction(()=>window.__airhockey.game.state.phase==='play',null,{timeout:8000}).catch(()=>{});await wait(900);await put(20,70,50,0);await wait(300);
+   await page.keyboard.press('KeyP');await wait(350);if(await page.evaluate(()=>window.__airhockey.audio.humming))errors.push('the hum kept running under the pause card');await label('paused');await wait(900);quiet.push('paused');await T('touchEnd',[]).catch(()=>{});
   }else if(game==='puzzle'){quiet.push('menu');
    // Pass Puzzles (Nov 10 2026, comic pass): three event windows on the first puzzle. draw = a real finger stroke from the ball to
    // the solution's target (brush foley while it moves, the snap tick when it locks on); pass-complete = the release (strike, first

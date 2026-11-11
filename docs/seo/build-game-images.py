@@ -2,8 +2,9 @@
 """Pictures for the arcade games' search pages (lib/site/games.ts, Nov 10 2026).
 Reads the builders' screenshots in docs/arcade-aaa/shots and writes public/games/*.webp (page pictures) and *-og.jpg
 (1200x630 share pictures: the screenshot on the site's paper background with the game's name). Needs Pillow only.
-usage: python3 docs/seo/build-game-images.py   (from the repo root; re-run after a screenshot is re-shot)"""
-import os
+usage: python3 docs/seo/build-game-images.py [name-prefix ...]   (from the repo root; re-run after a screenshot is re-shot;
+with prefixes, e.g. `air-futbol`, only those games are rebuilt; the hub picture is always rebuilt)"""
+import os, sys
 from PIL import Image, ImageDraw, ImageFont
 SRC, OUT = 'docs/arcade-aaa/shots', 'public/games'
 PAPER, TINT, INK, SOFT, GOLD = '#fbf7ee', '#ecefdf', '#14221d', '#5b675f', '#e9c16b'
@@ -16,6 +17,7 @@ GAMES = [
  ('breakaway-run-soccer-runner-game', ['runner-phone', 'runner-strike'], ['breakaway-run-soccer-runner-game', 'breakaway-run-goal'], 'Breakaway Run', 'Free soccer runner game'),
  ('futbol-tennis-soccer-tennis-game', ['tennis-phone', 'tennis-point'], ['futbol-tennis-soccer-tennis-game', 'futbol-tennis-point'], 'Futbol Tennis', 'Free soccer tennis game'),
  ('futbol-pinball-soccer-pinball-game', ['pinball-phone', 'pinball-goal'], ['futbol-pinball-soccer-pinball-game', 'futbol-pinball-goal'], 'Futbol Pinball', 'Free soccer pinball game'),
+ ('air-futbol-air-hockey-soccer-game', ['airhockey-phone', 'airhockey-goal'], ['air-futbol-air-hockey-soccer-game', 'air-futbol-goal-bank-shot'], 'Air Futbol', 'Free air hockey soccer game'),
  ('pass-puzzles-soccer-passing-puzzle-game', ['puzzle-phone', 'puzzle-endless'], ['pass-puzzles-soccer-passing-puzzle', 'pass-puzzles-endless-run'], 'Pass Puzzles', 'Free soccer passing puzzle game'),
 ]
 def shot(n): return Image.open(f'{SRC}/{n}.png').convert('RGB')
@@ -42,10 +44,12 @@ def og(file, shots, name, line):
     else:
         d.rounded_rectangle([600, 40, 1160, 700], 36, fill=TINT)
         for i, im in enumerate(ims[:2]):
-            a = rounded(im.resize((250, 541), Image.LANCZOS), 22); c.paste(a, (624 + i * 262, 64 + i * 20), a)
+            a = rounded(im.resize((250, min(541, round(im.height * 250 / im.width))), Image.LANCZOS), 22); c.paste(a, (624 + i * 262, 64 + i * 20), a)  # 541 for a 390x844 shot; shorter shots keep their shape
         words(d, name, line, 60, 180, 500)
     c.save(f'{OUT}/{file}-og.jpg', quality=72, optimize=True, progressive=True)
+ONLY = sys.argv[1:]  # e.g. `air-futbol hub`: rebuild only the games whose file name starts with one of these (and the hub picture)
 for file, shots, outs, name, line in GAMES:
+    if ONLY and not any(file.startswith(o) for o in ONLY): continue
     for s, o in zip(shots, outs):
         im = shot(s); w = 960 if im.width > im.height else 480
         im.resize((w, round(im.height * w / im.width)), Image.LANCZOS).save(f'{OUT}/{o}.webp', quality=74, method=6)
@@ -54,7 +58,7 @@ for file, shots, outs, name, line in GAMES:
 c = Image.new('RGB', (1200, 630), PAPER); d = ImageDraw.Draw(c); d.rounded_rectangle([560, 40, 1170, 700], 36, fill=TINT)
 for i, s in enumerate(['kitrush-phone', 'snake-fullsquad', 'puzzle-phone']):
     a = rounded(shot(s).resize((180, 390), Image.LANCZOS), 18); c.paste(a, (582 + i * 192, 120 + (i % 2) * 24), a)
-words(d, 'Free soccer games', 'Six browser games for kids', 50, 180, 480)
+words(d, 'Free soccer games', 'Seven browser games for kids', 50, 180, 480)
 c.save(f'{OUT}/free-soccer-games-for-kids-og.jpg', quality=72, optimize=True, progressive=True)
 tot = 0
 for f in sorted(os.listdir(OUT)):

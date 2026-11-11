@@ -48,7 +48,7 @@ const Crack=()=><svg viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidde
 export function RunnerControls({hud,steer,pressAction,act,shoot}:{hud:RunnerPadHud;steer:(d:number)=>void;pressAction:(id:number)=>Press;act?:(id:number)=>void;shoot:Hold}){
  const steerState=useRef(runnerSteerState()),lastX=useRef(0),repeat=useRef(0);
  const step=(x:number)=>{lastX.current=x;const d=runnerSteer(steerState.current,x,performance.now()/1000);if(d)steer(d);};
- const stick=useFloatingStick((x)=>{step(x);clearInterval(repeat.current);if(x)repeat.current=window.setInterval(()=>step(lastX.current),80);},()=>true);
+ const stick=useFloatingStick((x)=>{step(x);clearInterval(repeat.current);if(x)repeat.current=window.setInterval(()=>step(lastX.current),80);},()=>true,true);
  useEffect(()=>()=>{clearInterval(repeat.current);},[]);
  const swipe=useRef<RunnerSwipeState>(null);
  const fire=(w:RunnerSwipe|'',lanes:boolean)=>{if(!w)return;const a=runnerSwipeAction(w);if('lane' in a){if(lanes)steer(a.lane);}else act?.(a.action);};

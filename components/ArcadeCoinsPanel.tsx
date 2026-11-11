@@ -5,7 +5,7 @@ import {useArcadeWallet} from '@/lib/arcade/arcadeWallet';
 import {arcadeCabinets,type ArcadeCabinetId} from '@/lib/arcade/arcadeCatalog';
 import styles from './ArcadeCoinsPanel.module.css';
 import {PACK_PRICES,PUZZLE_FIRST_SOLVE_COINS} from '@/lib/economy';
-const earning:Record<ArcadeCabinetId,string>={runner:'2 per goal · 1 per 5 balls',pinball:'3 per goal · 2 per completed passing move',tennis:'1 per 3 clean returns · 2 per point · 4 per win',kitrush:'1 per 150 points',snake:'1 per 150 points',puzzle:`Free to play · ${PUZZLE_FIRST_SOLVE_COINS} for a first solve · 1 per new best star`};
+const earning:Record<ArcadeCabinetId,string>={runner:'2 per goal · 1 per 5 balls',pinball:'3 per goal · 2 per completed passing move',tennis:'1 per 3 clean returns · 2 per point · 4 per win',kitrush:'1 per 150 points',snake:'1 per 150 points',airhockey:'1 per 250 points against the machine',puzzle:`Free to play · ${PUZZLE_FIRST_SOLVE_COINS} for a first solve · 1 per new best star`};
 export default function ArcadeCoinsPanel({ready,onClose,onPlay,onWalk,onStore}:{ready:boolean;onClose:()=>void;onPlay:(id:ArcadeCabinetId)=>void;onWalk:(id:ArcadeCabinetId)=>void;onStore:()=>void}){
  const wallet=useArcadeWallet(),dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null);
  useEffect(()=>{const restore=document.activeElement as HTMLElement;dialog.current?.showModal();close.current?.focus();return()=>restore?.focus?.();},[]);

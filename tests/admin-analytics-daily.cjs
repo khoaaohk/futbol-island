@@ -193,7 +193,7 @@ await ok('trackedSince: earlier days are null (never 0), introduction vs first d
  const ses=D.seriesByKey(L,'audience.sessions');assert.equal(ses.trackedSince,'2026-10-08');assert.equal(ses.sinceFrom,'first-session');
  assert.equal(D.previousPeriod(ses,'2026-10-08','2026-10-10','2026-11-06').status,'not-tracked','nothing before the first session');
  assert.equal(D.previousPeriod(ses,'2026-10-30','2026-11-06','2026-11-06').status,'ok');
- const gamesTotal=D.seriesByKey(L,'engagement.games');assert.equal(gamesTotal.trackedSince,'2026-10-14');assert.equal(gamesTotal.fullSince,'2026-11-10','Summit Kick from Oct 14, arcade games from Oct 20, Squad Snake (the sixth cabinet, en:game_snake) from Nov 10 2026');
+ const gamesTotal=D.seriesByKey(L,'engagement.games');assert.equal(gamesTotal.trackedSince,'2026-10-14');assert.equal(gamesTotal.fullSince,'2026-11-11','Summit Kick from Oct 14, arcade games from Oct 20, Squad Snake (the sixth cabinet, en:game_snake) from Nov 10 2026, Air Futbol (the seventh, en:game_airhockey) from Nov 11 2026');
  // weeks: Mon Nov 2 – Sun Nov 8 holds Nov 2..6 (5 days, partial)
  const wk=D.weekly(ses);deq(J(wk).map(w=>[w.week,w.days,w.value,w.complete,w.partial]),[['2026-10-26',3,15,false,false],['2026-11-02',5,25,false,true]]);
  const wd=D.byWeekday(ses);assert.equal(wd.length,7);assert.equal(wd[5].label,'Fri');assert.equal(wd[5].days,1,'Fri Oct 30 (today, Fri Nov 6, is partial and left out)');assert.equal(wd[5].value,5);

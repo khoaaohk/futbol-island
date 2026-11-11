@@ -89,7 +89,7 @@ export function flagOf(code:string|null|undefined):string{
 const SPOT_LABEL:Record<string,string>={island:'island',paths:'paths',arcade:'arcade',museum:'museum',konbini:'konbini',shop:'kit shop',controller:'phone controller',other:'other page',
  starting:'just arrived',walk:'island',ride:'riding',fly:'flying',boat:'on a boat',swim:'swimming',fishing:'fishing',job:'island job',lesson:'lesson',watch:'watching a match',quiz:'quiz',
  book:'pop-up book',cards:'cards',films:'card films',vending:'vending machine',talk:'talking to islanders',coaches:'Coaches Centre',menu:'menus',idle:'idle',
- arcade_lobby:'arcade',arcade_live:'Kit Rush',arcade_runner:'Breakaway Run',arcade_tennis:'Futbol Tennis',arcade_pinball:'Futbol Pinball',arcade_puzzle:'Pass Puzzles',arcade_snake:'Squad Snake',
+ arcade_lobby:'arcade',arcade_live:'Kit Rush',arcade_runner:'Breakaway Run',arcade_tennis:'Futbol Tennis',arcade_pinball:'Futbol Pinball',arcade_puzzle:'Pass Puzzles',arcade_snake:'Squad Snake',arcade_airhockey:'Air Futbol',
  museum_hall:'museum',konbini_shop:'konbini',kit_shop:'kit shop',kit_studio:'kit studio'};
 export const spotLabel=(k:string|null|undefined)=>!k?'just arrived':SPOT_LABEL[k]??(k.startsWith('exhibit_')?'museum exhibit':k.replace(/_/g,' '));
 /** The island's own icons where one fits (emoji, no images to load). */

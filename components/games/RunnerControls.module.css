@@ -108,3 +108,9 @@
 /* Nov 10 2026 swipe layer: the track right of the stick zone, under the cluster (DOM order keeps the buttons on top). */
 .swipe{position:absolute;left:45%;right:0;top:calc(var(--arcade-bar-clear) + env(safe-area-inset-top,0px));bottom:0;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
 @media (pointer:fine){.zone,.swipe,.movement.movement,.cluster{display:none}}
+/* Upright phones (Nov 11 2026, owner: "the break away game should not be turned sideways to play"). The same stick and the same four
+   discs at the same token sizes, packed tighter round Shoot so the cluster is 174 px tall (lib/arcade/runnerFrame.ts RUNNER_UPRIGHT.pad
+   keeps the runner's feet above it) and 178 px wide (a 132 px stick still clears it on a 360 px phone). Swipes work over the whole road. */
+@media (pointer:coarse) and (orientation:portrait){.pad{--cw:178px;--ch:174px;--stick:min(var(--arcade-stick),132px)}.jump.jump{--x:-6px;--y:-92px}.slide.slide{--x:-96px;--y:8px}.skill.skill{--x:-86px;--y:-74px}
+ .flash[data-kind=goal]{top:27%}.flash[data-kind=goal] span{font-size:clamp(54px,21vw,96px)}.inset{left:calc(5% + env(safe-area-inset-left,0px));top:39%;width:min(46vw,26vh)}}
+

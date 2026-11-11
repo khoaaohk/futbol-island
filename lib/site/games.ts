@@ -20,7 +20,7 @@ export const GAMES_PATH='/games';
 export const GAMES_UPDATED='2026-11-10';
 export const GAMES_DIR='/games';
 export const GAME_NAMES='Soccer is called football in most of the world. This game is part of Futbol Island, a free football learning game for kids aged 7 to 12.';
-/** All six machines are free to play (owner, 11 Nov 2026: lib/economy.ts ARCADE_PLAY_COST=0); coins are only earned by playing. */
+/** All seven machines are free to play (owner, 11 Nov 2026: lib/economy.ts ARCADE_PLAY_COST=0); coins are only earned by playing. */
 export const GAMES_NAMES='Soccer is called football in most of the world. These games are part of Futbol Island, a free football learning game for kids aged 7 to 12.';
 /** The line that ends every game page. */
 export const GAME_FOOT='Futbol Island is a free football (soccer) learning game for kids aged 7 to 12. The arcade is one room of the island; the lessons, quizzes and the museum teach the rest of the game.';
@@ -28,13 +28,15 @@ export const COIN_LINE='Every play is free, like every game in the arcade. Playi
 const DEVICE:Faq['a']='It runs in a web browser with nothing to install, and it is built for phones first. It also works on tablets and on computers, so a Chromebook is fine as long as the school’s filter allows futbolisland.app.';
 export type GameShot={src:string;w:number;h:number;alt:string;caption:string};
 export type GuideLink={path:string;name:string;line:string};
-export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle';
+export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey';
 export type GamePage={id:GameId;slug:string;path:string;name:string;play:string;title:string;h1:string;description:string;lead:string;blurb:string;genre:string[];skill:string;
  og:string;ogAlt:string;shots:GameShot[];about:string[];phone:string[];desktop:string[];rules:string[];teaches:string[];guides:GuideLink[];tips:string[];harder:string[];parents:string[];faq:Faq[]};
 const page=(slug:string)=>`${GAMES_PATH}/${slug}`;
 const play=(id:GameId)=>`/arcade?game=${id}`;
 const img=(file:string)=>`${GAMES_DIR}/${file}`;
 const phone=(file:string,alt:string,caption:string):GameShot=>({src:img(file),w:480,h:1039,alt,caption});
+/** A phone picture taken with the browser bars showing (390x664): Air Futbol's shots. */
+const tall=(file:string,alt:string,caption:string):GameShot=>({src:img(file),w:480,h:817,alt,caption});
 const wide=(file:string,alt:string,caption:string):GameShot=>({src:img(file),w:960,h:444,alt,caption});
 const R='/learn/soccer-rules/',P='/learn/soccer-positions/',T='/learn/soccer-terms/',D='/learn/soccer-drills/',F='/learn/soccer-formations';
 const free=(name:string,coins:boolean):Faq=>({q:`Is ${name} free?`,a:`Yes. There is nothing to buy, no advert and no account to create. ${coins?COIN_LINE:'Like every arcade game, Pass Puzzles need no coins: every puzzle is free to try as often as you like.'}`});
@@ -107,11 +109,11 @@ export const GAME_PAGES:readonly GamePage[]=[
   lead:'An endless runner with a ball at your feet. Dribble along an island coast road at sunset, change lanes to find space, beat each tackle and finish past the goalkeeper.',
   blurb:'Endless dribbling runner: beat the tackle, find the goal',genre:['Endless runner','Sports','Educational'],skill:'Beating a tackle, timing and finishing',
   og:img('breakaway-run-soccer-runner-game-og.jpg'),ogAlt:'Breakaway Run, a soccer runner game: a player dribbles along a coast road toward a defender',
-  shots:[wide('breakaway-run-soccer-runner-game.webp','Breakaway Run on a phone held sideways: a player dribbles down a three-lane coast road toward a defender, with Jump, Slide and Shoot buttons','Three lanes, a defender ahead and footballs to collect on the way.'),
+  shots:[wide('breakaway-run-soccer-runner-game.webp','Breakaway Run: a player dribbles down a three-lane coast road toward a defender, with Jump, Slide and Shoot buttons','Three lanes, a defender ahead and footballs to collect on the way.'),
    wide('breakaway-run-goal.webp','Breakaway Run after a shot: the ball hits the net and GOAL! appears as comic lettering','A goal clears the round and the road carries on.')],
   about:['Breakaway Run is a football (soccer) version of the three-lane endless runner. The road bends and climbs along the coast, defenders step into your lane, and every so often a goal appears with a goalkeeper to beat.',
    'Reaching the goal line does not end the run: it banks a bonus, gives a heart back and starts the next round. The run ends only when your hearts are gone.'],
-  phone:['Hold the phone sideways. Press anywhere on the left side and push left or right to change lane; hold to keep moving across.','On the right are Jump, Slide and Shoot. Hold Shoot to charge the shot and let go to strike.','When a defender is close, a Skill button lights up with the name of the move, such as a drag-back.'],
+  phone:['Hold the phone upright (sideways works too). Swipe left or right on the road to change lane, or press on the left side and push the stick; hold it to keep moving across.','Under your right thumb are Jump, Slide and Shoot; a swipe up jumps and a swipe down slides. Hold Shoot to charge the shot and let go to strike.','When a defender is close, a Skill button lights up with the name of the move, such as a drag-back.'],
   desktop:['Left and right arrows (or A and D) change lane. Up (or W) jumps, down (or S) slides.','Space shoots, E plays the skill move, and Escape or P pauses.'],
   rules:['A defender standing in your lane is a tackle: move into the open lane beside you.','A slide tackle coming along the ground can be jumped, or beaten with the skill move.','Collect the footballs along the road and line up with the gap in the goal before you shoot.',
    'Every hard moment has one clear answer: a lane, a jump or a slide is always open.','There are several routes, from the Warm-up (five hearts, slower) to the Night Derby, the Storm Final, the Cup Final and Legend, plus a Daily Run with a new course each day.'],
@@ -123,7 +125,7 @@ export const GAME_PAGES:readonly GamePage[]=[
    'Line up with the gap in the goal before you charge the shot.','Clearing a round gives a heart back, so reaching the goal line matters more than collecting every ball.'],
   harder:['Inside a run the pace and the patterns build with distance, and hills and bends get steeper.','Each cleared round then adds a little more: the pace rises by a few percent, defensive lines stand closer together and more defenders drift across lanes before they set.',
    'From the second round rolling balls appear, and later rounds add jump-then-slide combinations and defenders in front of the goal. One lane always stays open.','The round bonus grows too: 1,000 points for the first round, 1,500 for the second, and so on.'],
-  parents:[PARENTS_SAFE,'Skill: reading a defender early, timing a move and finishing. The phone layout is held sideways, with large buttons.','Session length: a few minutes a run, and the end of a round is a natural place to stop.'],
+  parents:[PARENTS_SAFE,'Skill: reading a defender early, timing a move and finishing. The phone layout is played upright with one or two thumbs, with large buttons.','Session length: a few minutes a run, and the end of a round is a natural place to stop.'],
   faq:[free('Breakaway Run',true),{q:'Does Breakaway Run work on a phone or a school Chromebook?',a:DEVICE+' On a computer it is played with the arrow keys and the space bar.'},
    {q:'How do you play Breakaway Run?',a:'Change lane to run round defenders, jump over slide tackles, slide under the line when the game calls for it, and use the skill move when a defender is close. At the goal, line up with the gap and shoot. You lose a heart when you are tackled, and the run ends when the hearts are gone.'},
    {q:'What age is Breakaway Run for?',a:'Futbol Island is made for children aged 7 to 12. The Warm-up route is the gentle start; Night Derby and above are for players who want a hard game.'},
@@ -153,7 +155,7 @@ export const GAME_PAGES:readonly GamePage[]=[
    'Session length: a few minutes a court, with a natural stop after each one.'],
   faq:[free('Futbol Tennis',true),{q:'Does Futbol Tennis work on a phone or a school Chromebook?',a:DEVICE+' On a computer it is played with the keyboard.'},
    {q:'How do you play soccer tennis online?',a:'Move your player to where the ball will land, then play it back over the net with a kick, a lob, a drop shot, a header or a scissor kick. Use the trap to control a hard ball with your first touch before you strike it.'},
-   {q:'What age is Futbol Tennis for?',a:'Futbol Island is made for children aged 7 to 12. Futbol Tennis has the most buttons of the six arcade games, so it suits children who already play the others comfortably.'},
+   {q:'What age is Futbol Tennis for?',a:'Futbol Island is made for children aged 7 to 12. Futbol Tennis has the most buttons of the seven arcade games, so it suits children who already play the others comfortably.'},
    {q:'What is soccer tennis?',a:'A training game that football players of every level use: two sides play a ball over a low net with feet, thighs, chest and head, never hands. It builds touch and control. Futbol Tennis is a one-against-one video game version of it.'}]},
  {id:'pinball',slug:'soccer-pinball',path:page('soccer-pinball'),name:'Futbol Pinball',play:play('pinball'),
   title:'Soccer Pinball Game: Futbol Pinball, Free Online',h1:'Soccer pinball: Futbol Pinball',
@@ -180,7 +182,7 @@ export const GAME_PAGES:readonly GamePage[]=[
   parents:[PARENTS_SAFE,'Skill: timing, reading angles and rebounds, and the idea of following a shot. The coaching lines are one short sentence each.','Session length: a match is three minutes, and a run lasts for as many matches as a child can keep a ball in play.'],
   faq:[free('Futbol Pinball',true),{q:'Does Futbol Pinball work on a phone or a school Chromebook?',a:DEVICE+' On a computer the flippers are the A and D keys or the left and right arrows.'},
    {q:'How do you play soccer pinball?',a:'Launch the ball, then use the left and right flippers to keep it on the table and send it up the pitch. Knock down the wall, then shoot past the goalkeeper to score. If the ball drains between the flippers you lose it, and the run ends when the last ball is lost.'},
-   {q:'What age is Futbol Pinball for?',a:'Futbol Island is made for children aged 7 to 12. Two buttons are enough to play, so it is one of the easiest of the six games to start.'},
+   {q:'What age is Futbol Pinball for?',a:'Futbol Island is made for children aged 7 to 12. Two buttons are enough to play, so it is one of the easiest of the seven games to start.'},
    {q:'Do I need to download anything to play?',a:'No. Futbol Pinball runs in the web browser on futbolisland.app. There is no app to install and no plug-in.'}]},
  {id:'puzzle',slug:'soccer-passing-puzzle-game',path:page('soccer-passing-puzzle-game'),name:'Pass Puzzles',play:play('puzzle'),
   title:'Soccer Passing Puzzle Game: Pass Puzzles, Free',h1:'Soccer passing puzzle game: Pass Puzzles',
@@ -206,33 +208,65 @@ export const GAME_PAGES:readonly GamePage[]=[
    'Solve at the first try when you can: it is worth an extra star, and every fifth first-try solve in a row adds a bonus star.','When the direct route is blocked, look for a third player or play backwards to go forwards.','Keep the ball on the ground in the wind, and lift it only when a defender stands in the lane.'],
   harder:['Endless Run opens with two gentle puzzles with Scan switched on.','From level 5 Scan is gone and only the hint key remains. From level 6 there is a thinking clock: 45 seconds at first, shorter at each level, down to 15.',
    'From level 7 an extra defender is added beside the lanes; from level 10 there are no hints; later the extra defender presses, and then there are two.','Every remixed puzzle is checked by the game before it is shown, so there is always a solution.'],
-  parents:[PARENTS_SAFE,'Skill: reading space and passing lanes, patience, and the offside rule. It is the calmest of the six games: no timer on the early levels and soft sound.','Session length: a puzzle takes ten seconds to a minute, so it fits any spare moment. No coins are needed to play.'],
+  parents:[PARENTS_SAFE,'Skill: reading space and passing lanes, patience, and the offside rule. It is the calmest of the seven games: no timer on the early levels and soft sound.','Session length: a puzzle takes ten seconds to a minute, so it fits any spare moment. No coins are needed to play.'],
   faq:[free('Pass Puzzles',false),{q:'Does Pass Puzzles work on a phone or a school Chromebook?',a:DEVICE+' On a computer you draw the pass with the mouse or a trackpad.'},
    {q:'How do you play Pass Puzzles?',a:'Drag from the player with the ball to a team-mate, or to the goal to shoot. If no defender can reach the line, the pass arrives. Link the passes until you score. A line that turns red is blocked: look for another lane.'},
    {q:'What age is Pass Puzzles for?',a:'Futbol Island is made for children aged 7 to 12. The first puzzles need one pass and no reading; the later ones are a real test for older children and for adults.'},
    {q:'Does Pass Puzzles teach the offside rule?',a:'Yes. Several puzzles draw the offside line on the pitch and flag a pass to a player beyond it, so children see when a run starts too early. The offside guide on this site explains the rule with diagrams.'},
    {q:'How many levels are there?',a:'There are 46 authored puzzles in packs, and Endless Run has no last level: it remixes the puzzles (mirrored, shifted, with extra defenders) and gets harder as you go.'}]},
+ {id:'airhockey',slug:'air-hockey-soccer-game',path:page('air-hockey-soccer-game'),name:'Air Futbol',play:play('airhockey'),
+  title:'Free Air Hockey Soccer Game: Air Futbol, 1 or 2 Players',h1:'Soccer air hockey game: Air Futbol',
+  description:'Air Futbol is a free air hockey soccer game for one or two players on one phone. Slide your striker, guard your goal and score off the boards. No ads.',
+  lead:'Air hockey on a small football pitch. Drag your striker, knock the puck into the other goal, and play alone against a line of opponents or against a friend on the same phone.',
+  blurb:'Air hockey on a football pitch, for one or two',genre:['Arcade','Sports','Educational'],skill:'Angles and rebounds, and the goalkeeper’s job of staying between the ball and the goal',
+  og:img('air-futbol-air-hockey-soccer-game-og.jpg'),ogAlt:'Air Futbol, an air hockey soccer game: two round strikers and a football puck on a small pitch',
+  shots:[tall('air-futbol-air-hockey-soccer-game.webp','Air Futbol on a phone: a teal striker and a red striker on a small football pitch with the puck moving between them','Your half is the bottom of the table. The big numbers printed on the pitch are the score.'),
+   tall('air-futbol-goal-bank-shot.webp','Air Futbol showing GOAL! and a bank shot bonus after the puck went in off the side board','A goal off the side boards is a bank shot and pays extra.')],
+  about:['Air Futbol is the air hockey table that stands in the Futbol Island arcade, made playable. The table is drawn as a small football (soccer) pitch, the puck is a flat football, and each player has one round striker and one goal to defend.',
+   'The puck rebounds off the boards, so every shot is a question of angles. Playing alone, you meet a line of named opponents: beat one and the next walks on, a little quicker and smarter. With a friend, you take one end of the table each.'],
+  phone:['Hold the phone upright and put a finger on your striker at the bottom of the table. It follows your finger anywhere in your own half.',
+   'Two players: lay the phone flat between you. Player 1 has the bottom half and player 2 the top half, one finger each; a striker only listens to the finger that started in its own half.','A phone held sideways works too: the table turns on its side.'],
+  desktop:['Move the mouse to drive your striker; no button is needed. The arrow keys work as well.','Two players on a computer: one uses the mouse or the arrow keys, the other uses W, A, S and D.'],
+  rules:['A goal counts when the whole puck is over the line. The puck is then served from the centre toward the side that conceded, once a finger is on the table.','Your striker cannot cross the halfway line.',
+   'Playing alone, a match is first to five goals. Win and the next opponent walks on; your points carry over.','You have three lives. Losing a match costs one and you meet the same opponent again; every third win gives a life back.',
+   'Points: 100 for a goal, 75 more off the side boards, 50 more within four seconds of the serve or just after a save, 300 for a match won without conceding, and a bonus for each win.',
+   'Two players play first to seven. That match never goes on the high-score board; the results card keeps today’s tally between the two of you.'],
+  teaches:['Angles and rebounds. The puck leaves a board at the angle it arrived, the way a pass off a wall comes back. ',
+   'The goalkeeper’s rule: stay between the ball and the goal, and cover the near post first. The results card ends with one coaching line about how the goals went in.',
+   'The counter-attack. The best moment to score is just after a save, before the other player is back in position, and the game pays a bonus for it.'],
+  guides:[{path:P+'goalkeeper',name:'Goalkeeper',line:'Where a keeper stands and why'},{path:D+'wall-passing',name:'Wall passing drill',line:'Angles off a wall, the real-life version of a bank shot'},
+   {path:T+'counterattack',name:'Counterattack',line:'Attacking the moment the ball is won'}],
+  tips:['After every shot, bring your striker straight back in front of your goal.','When the puck is on one side, slide to that side: guard the near post first.','If the keeper is in the way, aim at the side board about halfway to the goal.',
+   'A short, quick push sends the puck faster than a long slow one.'],
+  harder:['The first opponent, Sandy, is slow, stands in the middle of the goal and rarely attacks.','Each one after that reacts sooner, moves faster, shoots harder and reads rebounds more often; from the fourth they use the boards themselves.',
+   'There are twelve named opponents. After the twelfth the strongest plays on, so the run only ends when your lives do.'],
+  parents:[PARENTS_SAFE,'Skill: angles, positioning in front of goal and quick recovery after a shot.',
+   'Two-player mode is local only: both children use the same device and no score is posted. A match takes one to three minutes.'],
+  faq:[free('Air Futbol',true),{q:'Does Air Futbol work on a phone or a school Chromebook?',a:DEVICE},
+   {q:'Can two people play Air Futbol on one phone?',a:'Yes. Choose 2 players on the start card. One player takes the bottom half of the screen and the other the top half, each with one finger. The first to seven goals wins, and a rematch is one tap.'},
+   {q:'How do you play Air Futbol?',a:'Drag your round striker with a finger (or the mouse) to hit the puck into the goal at the far end, and keep it out of your own. Shots can rebound off the side boards.'},
+   {q:'What age is Air Futbol for?',a:'Futbol Island is made for children aged 7 to 12. One finger is all it takes, and the first opponent is gentle, so it is one of the easiest arcade games to start.'}]},
 ];
 export const gameBySlug=(slug:string)=>GAME_PAGES.find(g=>g.slug===slug);
 export const gameById=(id:GameId)=>GAME_PAGES.find(g=>g.id===id)!;
 /** A ready link to a game page for a guide's own "related" list (lib/site/rules.ts, lib/site/drillLinks.ts, the two hubs). */
 export const gameLink=(id:GameId):GuideLink=>{const g=gameById(id);return {path:g.path,name:`${g.name}: a free ${g.h1.split(':')[0].toLowerCase()}`,line:g.blurb};};
 export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Play Online, No Ads',h1:'Free soccer games for kids',
- description:'Six free soccer games for kids to play online: pinball, snake, an endless runner, soccer tennis, a swipe game and passing puzzles. No ads, no sign-up.',
- lead:'Six arcade games from Futbol Island, each built around one football idea. They are free, they run in the browser on a phone, tablet or computer, and there are no ads and no accounts.',
- blurb:'Six free browser games, each teaching one football idea',
+ description:'Seven free soccer games for kids to play online: pinball, snake, air hockey, an endless runner, soccer tennis, a swipe game and puzzles. No ads.',
+ lead:'Seven arcade games from Futbol Island, each built around one football idea. They are free, they run in the browser on a phone, tablet or computer, and there are no ads and no accounts.',
+ blurb:'Seven free browser games, each teaching one football idea',
  og:`${GAMES_DIR}/free-soccer-games-for-kids-og.jpg`,ogAlt:'Three free soccer games for kids: Kit Rush, Squad Snake and Pass Puzzles on phone screens',
- intro:['These are the six machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, an endless runner, a swipe game, a puzzle game, a net game) and rebuilds it around something a young player needs: knowing your team at a glance, the order of the positions, beating a tackle, a soft first touch, reading a rebound, seeing a passing lane.',
+ intro:['These are the seven machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a swipe game, a puzzle game, a net game) and rebuilds it around something a young player needs: knowing your team at a glance, the order of the positions, beating a tackle, a soft first touch, reading a rebound, guarding a goal, seeing a passing lane.',
   'Every game opens straight from its page. They get harder the longer you play, and a run lasts a few minutes.'],
  pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels.'],
-  ['For two-button fun','Futbol Pinball.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.']] as [string,string][],
- faq:[{q:'Are these soccer games really free?',a:'Yes. There is nothing to buy, no advert and no account. All six games are free to play, every time. The island’s own coins are earned by playing and learning on Futbol Island and are never sold for real money.'},
+  ['For two-button fun','Futbol Pinball.'],['For two friends on one phone','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.']] as [string,string][],
+ faq:[{q:'Are these soccer games really free?',a:'Yes. There is nothing to buy, no advert and no account. All seven games are free to play, every time. The island’s own coins are earned by playing and learning on Futbol Island and are never sold for real money.'},
   {q:'Can kids play these soccer games at school?',a:'They run in a web browser with nothing to install, so they work on a Chromebook, a tablet or a phone as long as the school’s filter allows futbolisland.app. There is no open chat and no advertising.'},
   {q:'What ages are the games for?',a:'Futbol Island is made for children aged 7 to 12. Kit Rush, Squad Snake and Futbol Pinball are the easiest to start; Futbol Tennis and the later Pass Puzzles suit older children.'},
   {q:'Do the games teach real soccer?',a:'Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds and passing lanes. Each page links to the guides and drills that explain the same idea.'},
   {q:'Do I need an account or an app?',a:'No. Nothing is downloaded and nothing is signed up for. Progress is kept on the device.'}] as Faq[]};
 export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:GAMES_HUB.crumb,path:GAMES_HUB.path},...tail];
-/** For the sitemap, llms.txt and the image sitemap: the hub first, then the six pages. */
+/** For the sitemap, llms.txt and the image sitemap: the hub first, then the seven pages. */
 export type GameListing={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;images:string[]};
 export const GAME_LISTINGS:readonly GameListing[]=[
  {path:GAMES_HUB.path,name:GAMES_HUB.h1,title:GAMES_HUB.title,description:GAMES_HUB.description,blurb:GAMES_HUB.blurb,hub:true,images:[GAMES_HUB.og,...GAME_PAGES.map(g=>g.shots[0].src)]},

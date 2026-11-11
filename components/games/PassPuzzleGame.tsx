@@ -29,7 +29,7 @@ import {passCallout,goalCallout,nextStreak,streakLabel,type Callout} from '@/lib
 
 import {FIRST_TIME} from '@/lib/passPuzzle/sim';
 import {puzzlePencil,puzzleWoodwork,puzzleNetHigh} from '@/lib/arcade/passPuzzleAudio';
-import {createPassPuzzleScene,shirtNumbersFor,type PassPuzzleScene} from '@/lib/arcade/passPuzzleScene';
+import {createPassPuzzleScene,shirtNumbersFor,type PassPuzzleScene,type FitRoom} from '@/lib/arcade/passPuzzleScene';
 import {puzzleConceptWords,puzzleConceptLesson,notePuzzleFail,PRACTISE_AFTER} from '@/lib/passPuzzle/conceptLessons';
 import {laneStatus,noteFor,explainSuccess,explainFail,replayCall,type PassNote,type Numbers} from '@/lib/passPuzzle/explain';
 import {isCall,type Step} from '@/lib/passPuzzle/packs';
@@ -132,6 +132,17 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  /** Aim snap tick: the receiver and lane the drawn pass last locked onto (primitives, no allocation per move). */
  const snapReceiver=useRef(-2),snapClear=useRef(false),rootRef=useRef<HTMLDivElement>(null);
  /** Light shake (CSS transform on the canvas only): a goal or a steal. Restarted by toggling the attribute. */
+ // Nov 11 2026 (owner, tablet: "the controls cover the players"): the camera fit reserves the HUD's REAL boxes. measureRoom reads the
+ // control tray (bottom dock, or the side dock on wide landscape screens: --pp-dock), the top bar and the Endless chips, and re-fits
+ // (eased) when they change. While the tray is hidden (a pass in flight) the last tray box at this size is kept, so nothing jumps.
+ const trayRoom=useRef<{w:number;h:number;bottom:number;right:number}|null>(null),trayObserver=useRef<ResizeObserver|null>(null);
+ const measureRoom=useRef((smooth:boolean)=>{const root=rootRef.current,scene=sceneRef.current,cv=canvas.current;if(!root||!scene||!cv)return;const r=cv.getBoundingClientRect();if(r.width<2||r.height<2){scene.fit();return;}
+  let top=0;for(const el of root.querySelectorAll<HTMLElement>(`.${styles.topBar},[data-endless-hud],.${styles.hintDock}`)){const b=el.getBoundingClientRect();if(b.height>0&&b.top<r.top+r.height*.4)top=Math.max(top,b.bottom-r.top);}
+  const tray=root.querySelector<HTMLElement>('[data-pp-tray]');let t=trayRoom.current;
+  if(tray){const b=tray.getBoundingClientRect(),side=getComputedStyle(tray).getPropertyValue('--pp-dock').trim()==='side';t={w:r.width,h:r.height,bottom:side?0:Math.max(0,r.bottom-b.top),right:side?Math.max(0,r.right-b.left):0};trayRoom.current=t;root.style.setProperty('--pp-controls',`${Math.round(r.bottom-b.top+12)}px`);}
+  else if(t&&(Math.abs(t.w-r.width)>1||Math.abs(t.h-r.height)>1))t=null;/* resized while hidden: the tray's next showing measures again */
+  const room:FitRoom|null=t?{top:Math.round(top+10),bottom:Math.round(t.bottom+(t.bottom>0?16:18)),left:0,right:Math.round(t.right+(t.right>0?12:0))}:null;scene.fit(room,smooth);wake.current();});
+ const trayRef=useCallback((el:HTMLDivElement|null)=>{trayObserver.current?.disconnect();trayObserver.current=null;if(!el||typeof ResizeObserver==='undefined')return;const o=new ResizeObserver(()=>measureRoom.current(true));o.observe(el);trayObserver.current=o;},[]);
  const shake=(kind:'goal'|'steal')=>{const el=rootRef.current;if(!el)return;el.removeAttribute('data-shake');void el.offsetWidth;el.setAttribute('data-shake',kind);};
  /** The name-entry sheet waits for the goal celebration and the stars (Oct 25: it used to cover the goal at once). */
  const [boardReady,setBoardReady]=useState(false);
@@ -319,7 +330,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   };
   wake.current=()=>{thinkingUntil=performance.now()+4000;if(!disposed&&!document.hidden&&!frame)frame=requestAnimationFrame(draw);};
   const visibility=()=>{if(!document.hidden)wake.current();else{cancelAnimationFrame(frame);frame=0;last=0;slot=0;}};
-  const observer=new ResizeObserver(()=>{cancelDrawing.current();scene.fit();wake.current();});observer.observe(el);document.addEventListener('visibilitychange',visibility);
+  const observer=new ResizeObserver(()=>{cancelDrawing.current();measureRoom.current(true);});observer.observe(el);document.addEventListener('visibilitychange',visibility);
   // ── Aim anywhere (Nov 11 2026): the finger's ray onto the goal face picks the spot. On the grass in front of the line it is the plain
   // low shot, exactly as before; on the net it is a placed shot (corner, top bins, or an honest miss over / wide). A small goal on a
   // phone aims as if it were AIM_MIN_PX tall, so a thumb can reach the top without pixel hunting. All of it runs on input only.
@@ -393,7 +404,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   const placeMeter=(e:PointerEvent)=>{const m=loftMeter.current,r=stroke.current?.bounds??el.getBoundingClientRect();if(m){m.style.left=`${e.clientX-r.left}px`;m.style.top=`${e.clientY-r.top}px`;}};
   const hideMeter=()=>{const m=loftMeter.current;if(m){m.dataset.active='false';m.style.setProperty('--loft','0');}};
   el.addEventListener('pointerdown',down);el.addEventListener('pointermove',move);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',cancel);el.addEventListener('lostpointercapture',cancel);
-  if(process.env.NODE_ENV!=='production')(window as unknown as {__passPuzzle:unknown}).__passPuzzle={cine,get world(){return worldRef.current;},get replay(){return replayRef.current;},scene,wake:()=>wake.current(),kick:(k:Kick)=>{const w=worldRef.current;if(!w)return false;const note=w.state.phase==='aiming'?takeNote(w,k):null;const ok=w.kick(k);if(ok&&note)notes.current[w.inputs().length-1]=note;syncHud();wake.current();return ok;},solution:(id:string)=>(id.startsWith('daily-')?todaysDaily()?.solution:routeOf(id,headingRef.current))?.filter(st=>!('call' in st)),route:(id:string)=>id.startsWith('daily-')?todaysDaily()?.solution:routeOf(id,headingRef.current),naive:(id:string)=>ALL_SOLUTIONS[id]?.naive[0],callRun:(i:number,x:number,z:number)=>{const w=worldRef.current;const ok=!!w&&w.callRun(i,{x,z});if(w)sceneRef.current?.setCalls(w.state);wake.current();return ok;},daily:()=>todaysDaily()};
+  if(process.env.NODE_ENV!=='production')(window as unknown as {__passPuzzle:unknown}).__passPuzzle={cine,scenarios:()=>SCENARIOS,endlessScenario:(seed:string,lvl:number)=>endlessPuzzle(seed,lvl).scenario,/* layout check (scripts/check-pass-puzzle-layout.cjs): frame a scenario with the live HUD and return the screen boxes */layout:(sc:Scenario)=>{scene.load(sc);return scene.layoutProbe();},measureRoom:(smooth=false)=>measureRoom.current(smooth),get world(){return worldRef.current;},get replay(){return replayRef.current;},scene,wake:()=>wake.current(),kick:(k:Kick)=>{const w=worldRef.current;if(!w)return false;const note=w.state.phase==='aiming'?takeNote(w,k):null;const ok=w.kick(k);if(ok&&note)notes.current[w.inputs().length-1]=note;syncHud();wake.current();return ok;},solution:(id:string)=>(id.startsWith('daily-')?todaysDaily()?.solution:routeOf(id,headingRef.current))?.filter(st=>!('call' in st)),route:(id:string)=>id.startsWith('daily-')?todaysDaily()?.solution:routeOf(id,headingRef.current),naive:(id:string)=>ALL_SOLUTIONS[id]?.naive[0],callRun:(i:number,x:number,z:number)=>{const w=worldRef.current;const ok=!!w&&w.callRun(i,{x,z});if(w)sceneRef.current?.setCalls(w.state);wake.current();return ok;},daily:()=>todaysDaily()};
   // The level list sits over the first puzzle's frozen pitch: one static frame, then sleep.
   if(SCENARIOS[0])try{const w=createPuzzle(playable(SCENARIOS[0],headingRef.current));worldRef.current=w;scene.load(SCENARIOS[0]);scene.update(w.state,0);}catch{/* the play button reports real failures */}
   wake.current();
@@ -562,7 +573,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   {inPlay&&level?.require.clock?<span ref={clockChip} className={styles.clockChip} role="timer" aria-label="Counter clock" data-clock data-left={`${level.require.clock.toFixed(1)} s`}/>:null}
   {inPlay&&hud.phase==='aiming'&&rewindPoint.current&&!rewound.current&&<button type="button" className={styles.undo} data-undo onClick={rewindPass} aria-label="Undo the last pass (once per try)"><Icon name="reset" size={22}/><span>Undo</span></button>}
   {/* Nov 8 2026 simpler dock: one row (Scan + ball flight). Auto picks the power, so the power slider shows only in a manual mode. */}
-  {inPlay&&hud.phase==='aiming'&&<div className={styles.passControls} data-compact={controlMode==='auto'||undefined}>
+  {inPlay&&hud.phase==='aiming'&&<div ref={trayRef} className={styles.passControls} data-pp-tray data-compact={controlMode==='auto'||undefined}>
    <div className={styles.aidRow}><button type="button" className={styles.scanToggle} hidden={!!endHud&&endHud.aid!=='scan'} aria-pressed={scanOn} onClick={toggleScan} data-scan={scanOn} aria-label={scanOn?'Hide the scan':'Scan: show which passes are open'}><Icon name="target" size={18}/>Scan</button>
    <div className={styles.passModes} role="group" aria-label="Ball flight">{(['auto','ground','lift','shoot'] as const).map(mode=><button key={mode} aria-pressed={controlMode===mode} onClick={()=>{cancelDrawing.current();controls.current.mode=mode;if(mode==='auto'){controls.current.power=undefined;setPower(null);}setControlMode(mode);}}>{mode==='auto'?'Auto':mode==='ground'?'Ground':mode==='lift'?'Lift':'Shoot'}</button>)}</div></div>
    {controlMode==='shoot'&&<label className={`${styles.powerControl} ${styles.shotHeight}`}><span>Height <b>{shotHeight===0?'Low':shotHeight===100?'Top bins':`${shotHeight}%`}</b></span><input aria-label="Shot height" aria-valuetext={shotHeight===0?'Low shot':shotHeight===100?'Top bins':`${shotHeight}% goal height`} type="range" min="0" max="100" step="5" value={shotHeight} onChange={e=>{const value=Number(e.target.value);controls.current.shotHeight=value/100;setShotHeight(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" onClick={()=>{const value=shotHeight===100?0:100;controls.current.shotHeight=value/100;setShotHeight(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}>{shotHeight===100?'Low':'Top bins'}</button></label>}

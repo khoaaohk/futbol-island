@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Free arcade check (Nov 11 2026, owner: "make all arcade games free"). A clean profile (no localStorage at all, so 0 coins)
-// opens every /arcade?game=<id> link on the phone profile (390x844; Breakaway Run at 844x390), checks the start card shows no
+// opens every /arcade?game=<id> link on the phone profile (390x844; Breakaway Run upright too since Nov 11 2026), checks the start card shows no
 // price ("coins" next to Play, "You need … more coins"), taps Play and asserts a round really starts, no coin was spent and the
 // balance is never negative. --shots also writes docs/arcade-aaa/shots/free-start-cards.png (the six start cards tiled).
 //   node scripts/check-arcade-free.cjs --port=<n> [--shots] [--headed]
@@ -17,7 +17,7 @@ const arcade3d=()=>window.__arcade3d?.phaseRef.current==='playing';
 const GAMES=[
  {id:'kitrush',name:'Kit Rush',card:'[data-kitrush-card="start"]',play:'[data-kitrush-play]',running:()=>window.__kitrush?.phase==='playing'},
  {id:'snake',name:'Squad Snake',card:'[data-snake-card="start"]',play:'[data-snake-play]',running:()=>window.__snake?.phase==='playing'},
- {id:'runner',name:'Breakaway Run',landscape:true,card:'[data-arcade-kind="runner"]',play:null,running:arcade3d},
+ {id:'runner',name:'Breakaway Run',card:'[data-arcade-kind="runner"]',play:null,running:arcade3d},
  {id:'tennis',name:'Futbol Tennis',card:'[data-arcade-kind="tennis"]',play:null,running:arcade3d},
  {id:'pinball',name:'Futbol Pinball',card:'[data-arcade-kind="pinball"]',play:null,running:arcade3d},
  {id:'puzzle',name:'Pass Puzzles',card:'[data-arcade-kind="pass-puzzle"]',play:null,running:()=>window.__passPuzzle?.world?.state.phase==='aiming'&&!/Endless Run/.test(document.body.innerText)}];// the chooser closes on Play

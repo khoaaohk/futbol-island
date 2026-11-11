@@ -1,4 +1,5 @@
-// Breakaway Run endless-play check (Nov 10 2026). Phone landscape profile (844x390, touch). The scripted bot of
+// Breakaway Run endless-play check (Nov 10 2026). Upright phone profile since Nov 11 2026 (390x664 touch: the game plays upright;
+// --landscape = the sideways phone, 844x390; --desktop = 1280x800). The scripted bot of
 // tests/runner-endless-bot.cjs plays in the page (lane, jump, shoot through the game's own action hook) across goal lines and asserts:
 //  - the run is never forced over while hearts remain (phase stays 'playing', no outro, no full time);
 //  - no input-dead interval over 1 s: the sim clock never stands still for a second, and a REAL touch on the Jump button right at every
@@ -19,11 +20,11 @@ const {botStep}=require('../tests/runner-endless-bot.cjs');
 const arg=n=>(process.argv.find(a=>a.startsWith('--'+n+'='))||'').slice(n.length+3);
 const portArg=arg('port')||process.env.PORT,BASE=process.env.FUTBOL_BASE_URL||(portArg?`http://localhost:${portArg}`:'');
 if(!BASE){console.error('Pass your own server: --port=<port>, PORT=<port> or FUTBOL_BASE_URL=<url>. There is no default port.');process.exit(1);}
-const MODE=arg('mode')||'warmup',ROUNDS=Number(arg('rounds'))||3,FULL=process.argv.includes('--full'),OBSERVE=process.argv.includes('--observe'),DESKTOP=process.argv.includes('--desktop'),SHOT=arg('shot');
+const MODE=arg('mode')||'warmup',ROUNDS=Number(arg('rounds'))||3,FULL=process.argv.includes('--full'),OBSERVE=process.argv.includes('--observe'),DESKTOP=process.argv.includes('--desktop'),LANDSCAPE=process.argv.includes('--landscape'),SHOT=arg('shot');
 /** Longest frame allowed around a seam (ms). The game draws at 30 fps (33 ms); a dev build on a busy laptop jitters to ~60 ms. */
 const HITCH_MS=120,DEAD_MS=1000,DRAW_PEAK=90;
 (async()=>{const browser=await chromium.launch({headless:true,channel:'chrome',args:['--mute-audio']});try{
- const page=await browser.newPage({viewport:DESKTOP?{width:1280,height:800}:{width:844,height:390},isMobile:!DESKTOP,hasTouch:!DESKTOP}),errors=[];page.on('pageerror',e=>errors.push(e.message));
+ const page=await browser.newPage({viewport:DESKTOP?{width:1280,height:800}:LANDSCAPE?{width:844,height:390}:{width:390,height:664},isMobile:!DESKTOP,hasTouch:!DESKTOP}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.addInitScript(mode=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-sound-muted','true');localStorage.setItem('fi2-music-enabled','false');localStorage.setItem('fi2-voice-enabled','false');localStorage.setItem('fi2-audio-mix','4-50-v1');
   if(!localStorage.getItem('fi2-arcade-wallet-v1'))localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,spends:{},runs:{'baseline-grant':{game:'island',paid:5000,reason:'baseline',at:Date.now()}},best:{},attempts:{},visits:{},packs:[]}));
   // Every route open and the wanted one remembered, the first-run coach done (it slows time for its lessons).
@@ -69,7 +70,7 @@ const HITCH_MS=120,DEAD_MS=1000,DRAW_PEAK=90;
   const hitch=r.seams.map(m=>m.hitch??-1),all=r.frames.map(f=>f[1]).sort((a,b)=>a-b);
   return{seams:r.seams.map(({from,to,score,bonus,lives})=>({from,to,score,bonus,lives})),hitch,medianFrame:Math.round(all[all.length>>1]),p99Frame:Math.round(all[Math.floor(all.length*.99)]),rounds:r.rounds,forced:r.forced.slice(0,3),maxSimGap:Math.round(r.maxSimGap),topUps:r.topUps,
    end:{phase:window.__arcade3d.phaseRef.current,round:s.round,lives:s.lives,score:s.score,distance:Math.round(s.distance),sky:s.sky,geometries:i.memory.geometries,textures:i.memory.textures},tag:document.querySelector('[data-runner-round]')?.textContent||''};});
- const out={mode:MODE,fast:!FULL,profile:DESKTOP?'desktop 1280x800':'phone landscape 844x390',seconds:Math.round((Date.now()-t0)/1000),...rec,taps,errors};
+ const out={mode:MODE,fast:!FULL,profile:DESKTOP?'desktop 1280x800':LANDSCAPE?'phone landscape 844x390':'phone upright 390x664',seconds:Math.round((Date.now()-t0)/1000),...rec,taps,errors};
  console.log(JSON.stringify(out,null,1));
  if(OBSERVE)return;
  assert.deepEqual(errors,[],'no page errors');

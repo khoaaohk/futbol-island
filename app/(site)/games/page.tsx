@@ -6,7 +6,7 @@ import {GAME_FOOT,GAME_PAGES,GAMES_HUB,gameCrumbs,gameListLd} from '@/lib/site/g
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import site from '../site.module.css';
 
-/** /games (lib/site/games.ts): the six arcade games as a reading page for search. Static, no client code, no game canvas. */
+/** /games (lib/site/games.ts): the seven arcade games as a reading page for search. Static, no client code, no game canvas. */
 export const dynamic='force-static';
 const H=GAMES_HUB;
 export const metadata=pageMeta(H.title,H.description,H.path,{whole:true,type:'website',image:{url:H.og,alt:H.ogAlt}});
@@ -17,7 +17,7 @@ export default function GamesHub(){
   <JsonLd data={gameListLd()}/>
   <JsonLd data={faqLd(H.faq)}/>
   <GameIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
-  <Section id="games" title="The six games">
+  <Section id="games" title="The seven games">
    {H.intro.map(x=><p key={x}>{x}</p>)}
    <ul className={gamesCss.games}>{GAME_PAGES.map(g=><GameRow key={g.id} game={g}/>)}</ul>
   </Section>

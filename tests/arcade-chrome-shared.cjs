@@ -64,7 +64,7 @@ assert.doesNotMatch(read('components/games/comic/comic.module.css'),/data-naviga
 // Results before initials: in the six arcade games a top-10 score shows a strip (in the card's [data-hs-slot], or docked under the bar),
 // never the entry dialog over the results card; the strip opens the same entry, and leaving it saves as Skip does (device only).
 {const hs=read('components/arcade/HighScoreEntry.tsx'),lb=read('components/arcade/Leaderboard.module.css');
- assert.match(hs,/const RESULTS_FIRST=\['kitrush','snake','runner','tennis','pinball','pass-puzzle'\]/,'results first in all six games');
+ assert.match(hs,/const RESULTS_FIRST=\['kitrush','snake','airhockey','runner','tennis','pinball','pass-puzzle'\]/,'results first in all seven games');/* Nov 11 2026: Air Futbol added */
  assert.match(hs,/if\(!open\)\{[\s\S]*data-hs-prompt=\{slot\?'inline':'docked'\}[\s\S]*data-hs-open onClick=\{\(\)=>setOpen\(true\)\}/,'the strip opens the entry on a tap');
  assert.match(hs,/leave\.current=!open&&place&&!saving&&!result\?\(\)=>\{void postScore\(game,score,valid\?initials:'AAA',valid\?icon:'',false\);closeRef\.current\(\);\}:null/,'an unopened strip saves like Skip: this device only');
  assert.match(kitrushSrc,/data-kitrush-near>\{result\.near\}<\/ComicPanel>\n\s*<div className=\{styles\.hsSlot\} data-hs-slot\/>/,'Kit Rush hosts the strip under the near-miss line');

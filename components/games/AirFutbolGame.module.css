@@ -1,0 +1,102 @@
+/* Air Futbol shell (Nov 11 2026): an upright comic page. Phone: the stage is the whole screen and the table fills the height
+ * between the top bar and the visible bottom edge. Desktop: a centred 9:16 page with an ink border and a hard shadow on a Ben-Day
+ * sunburst backdrop, with two margin strips of caption boxes. Tokens: ../games/comic. */
+.game{position:relative;width:100%;height:100vh;height:100dvh;max-height:100%;overflow:hidden;display:grid;place-items:center;color:var(--cm-ink);font-family:var(--cm-ui);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+ background:var(--cm-dots-orange),#ffcf7a}
+.game button{font-family:var(--cm-ui)}
+.stage{position:relative;width:100%;height:100%;overflow:hidden;background:#ffcf7a;isolation:isolate;touch-action:none;overscroll-behavior:none}
+.scene,.play{position:absolute;inset:0 0 auto 0;display:block;width:100%;height:calc(100% - var(--air-cut,0px));touch-action:none;outline:none}
+.play{z-index:1}
+.probe{position:absolute;left:0;top:0;width:1px;height:calc(var(--arcade-bar-clear,56px) + env(safe-area-inset-top,0px));visibility:hidden;pointer-events:none}
+.srOnly{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* The standard Arcade back button, exactly as in the other cabinets (dark with the teal rim): the shared button reads these. */
+.topBar{z-index:5;--btn-gold:#24223e;--btn-gold-bright:#313154;--btn-gold-bright-edge:#121329;--btn-gold-edge:#121329;--btn-ink:#e9f5ff;--btn-rim:#81fbed;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e}
+/* Over a start / results card the Arcade back button stays above the dot scrim, exactly as in the other games: the bar drops its
+   own layer and only the back button is lifted. */
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar{z-index:auto}
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar>button:first-child{position:relative;z-index:5}
+/* Serve hints: a caption box in each player's half until a finger lands. Touches pass through. Player 2's reads from the top end. */
+.hint{position:absolute;z-index:4;left:50%;translate:-50% -50%;display:grid;justify-items:center;gap:2px;padding:7px 13px 8px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);pointer-events:none;white-space:nowrap;animation:airHint .3s cubic-bezier(.2,1.6,.4,1) both}
+.hint[data-end=bottom]{top:calc(50% + 21% - var(--air-cut,0px)/2);rotate:-2deg}
+.hint[data-end=top]{top:calc(50% - 15% - var(--air-cut,0px)/2);rotate:178deg}
+.game:not([data-coarse]) .hint[data-end=top]{rotate:-2deg}
+.hint b{font:italic 900 17px/1.1 var(--cm-title);color:var(--cm-ink)}
+.hint small{font:800 13px/1.2 var(--cm-ui);color:var(--cm-muted,#51465f)}
+@keyframes airHint{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
+/* The next opponent walks on: name, level and the one thing to try against them. */
+.next{position:absolute;z-index:4;left:50%;top:calc(50% - var(--air-cut,0px)/2);translate:-50% -50%;display:grid;justify-items:center;gap:3px;width:min(300px,calc(100% - 44px));box-sizing:border-box;padding:10px 14px 12px;text-align:center;pointer-events:none;animation:airHint .3s cubic-bezier(.2,1.6,.4,1) both}
+.next small{font:800 13px/1.2 var(--cm-ui);color:var(--cm-muted,#51465f)}
+.next strong{font:italic 900 26px/1.05 var(--cm-title);color:var(--cm-ink)}
+.next span{font:700 14px/1.3 var(--cm-ui)}
+
+/* cards */
+.idea{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px;margin:2px 0 10px;text-align:left}
+.diagram{display:block;rotate:-2deg;filter:drop-shadow(3px 3px 0 var(--cm-ink))}
+.learn{margin:0;font:700 14px/1.35 var(--cm-ui);color:var(--cm-ink)}
+.learn b{font-weight:800}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 12px}
+.chips>*{flex:1 1 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px 12px;padding:0 6px 6px 0}
+.actions>:first-child{grid-column:1/-1}
+.actions>[data-air-duo]{grid-column:1/-1}
+.actions>[data-air-scores]{grid-column:1/-1}
+.actions button{flex-direction:column;gap:2px}
+.status{margin:0 0 10px;font:800 14px/1.3 var(--cm-ui);color:var(--cm-ink)}
+.scoreRow{position:relative;display:grid;place-items:center;margin:6px 0 2px}
+.score{--cm-numeral-size:68px;display:block}
+.score[data-new-best]{animation:airPop .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes airPop{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
+.stamp{position:absolute;right:-16px;top:-20px}
+.near{display:inline-block;margin:2px 0 12px;font:800 16px/1.2 var(--cm-ui)}
+/* Results first: the shared high-score strip (components/arcade/HighScoreEntry.tsx) lands here, under the near-miss line. */
+.hsSlot{margin:0 4px 14px 0}.hsSlot:empty{display:none}
+.coach{background:var(--cm-white);border-left-width:10px;margin:0 0 12px;text-align:left;font:600 14px/1.4 var(--cm-ui)}
+.coach b{display:block;font:800 14px/1.3 var(--cm-ui)}
+.boardLearn{margin:0 0 6px;text-align:center}
+/* two-player results: the winner in their colour, the final score, and a line turned round for the player at the top end */
+.winner{margin:4px 0 2px;font:italic 900 30px/1.05 var(--cm-title);color:var(--cm-ink);-webkit-text-stroke:0}
+.winner[data-side="0"]{color:#0c7f74}.winner[data-side="1"]{color:var(--cm-red)}
+.final{display:flex;align-items:center;justify-content:center;gap:14px;margin:2px 0 8px}
+.final span{display:grid;justify-items:center}
+.final small{font:800 13px/1.2 var(--cm-ui)}
+.final strong{--cm-numeral-size:56px}
+.final i{align-self:end;padding-bottom:12px;font:900 30px/1 var(--cm-title);font-style:normal}
+.tally{display:inline-grid;justify-items:center;gap:2px}
+.tally small{font:800 13px/1.2 var(--cm-ui)}
+.tally span{display:flex;align-items:center;gap:8px;font:800 15px/1.2 var(--cm-ui)}
+.tally b{font:400 26px/1 var(--cm-numeral)}
+.tally i{font-style:normal;font-weight:900}
+.flip{display:none;margin:0 0 8px;padding:6px 10px;border:3px solid var(--cm-ink);background:var(--cm-sun);font:800 15px/1.2 var(--cm-ui);rotate:180deg}
+.game[data-coarse] .flip{display:block}
+
+/* desktop: the page in the middle, caption strips in the margins */
+.side{display:none}
+@media (min-width:700px) and (min-height:520px){
+ .game{background:var(--cm-dots-orange),repeating-conic-gradient(from 4deg at 50% 62%,#ffc24a 0 8deg,#ffcf7a 8deg 16deg)}
+ .stage{width:auto;height:calc(100dvh - 28px);aspect-ratio:9/16;max-width:calc(100vw - 28px);border:5px solid var(--cm-ink);box-shadow:12px 12px 0 var(--cm-ink)}
+}
+@media (min-width:1080px) and (min-height:560px){
+ .side{position:absolute;top:50%;translate:0 -50%;display:grid;gap:18px;width:min(250px,calc((100vw - (100dvh - 28px)*9/16)/2 - 64px));font:700 15px/1.35 var(--cm-ui)}
+ .side[data-side=left]{left:calc((100vw - (100dvh - 28px)*9/16)/4);translate:-50% -50%}
+ .side[data-side=right]{right:calc((100vw - (100dvh - 28px)*9/16)/4);translate:50% -50%}
+ .sidePoints{display:grid;gap:6px}
+ .sidePoints span{display:grid;grid-template-columns:1fr auto;align-items:center;gap:8px}
+ .sidePoints em{font:400 20px/1 var(--cm-numeral);font-style:normal}
+}
+/* Short phones with their browser bars (390x664, 375x553, 360x560): the primary button comes straight after the result and the
+   near-miss line; the coach line and the stats follow under it (the card scrolls). The start card drops its drawing and chips. */
+@media (max-height:700px){
+ .learn{font-size:13px}.score{--cm-numeral-size:52px}.diagram{width:96px;height:67px}.stamp{display:none}/* the Best chip and the near-miss line already say it */
+ .game [data-air-card=results],.game [data-air-card=duo]{display:flex;flex-direction:column;align-items:center}
+ .game :is([data-air-card=results],[data-air-card=duo])>*{max-width:100%}
+ .game :is([data-air-card=results],[data-air-card=duo])>:is(.actions,.chips,.coach,.hsSlot){align-self:stretch}
+ .game :is([data-air-card=results],[data-air-card=duo])>.actions{order:1;margin-bottom:12px}
+ .game :is([data-air-card=results],[data-air-card=duo])>:is(.chips,.coach,.status){order:2}
+}
+@media (max-height:600px){.game [data-air-card=start] .chips{display:none}.diagram{display:none}.idea{grid-template-columns:1fr;margin-bottom:10px}.winner{font-size:24px}.final strong{--cm-numeral-size:42px}}
+/* a phone held sideways: the cards are short and wide */
+@media (orientation:landscape) and (max-height:559px){.game [data-air-card=start] .chips,.diagram{display:none}.idea{grid-template-columns:1fr}
+ .hint[data-end=bottom]{top:calc(50% + 31px);left:71%}.hint[data-end=top]{top:calc(50% + 31px);left:29%}
+ /* two players sit at the two short ends: player 1 at the right, player 2 at the left, each reading toward the middle */
+ .game[data-mode=duo][data-coarse] .hint[data-end=bottom]{rotate:-90deg;left:74%}.game[data-mode=duo][data-coarse] .hint[data-end=top]{rotate:90deg;left:26%}}
+@media (prefers-reduced-motion:reduce){.hint,.next{animation:none}.hint[data-end=bottom]{rotate:none}.hint[data-end=top]{rotate:180deg}.score[data-new-best]{animation:none}.diagram{rotate:none}}

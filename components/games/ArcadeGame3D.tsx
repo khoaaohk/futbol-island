@@ -27,7 +27,7 @@ import {RunnerControls} from './RunnerControls';
 import {RunnerMenu} from './RunnerMenu';
 import {ArcadeTopBar} from '../arcade/ArcadeTopBar';
 import {ArcadePauseCard,type ArcadeKey} from '../arcade/ArcadePauseCard';
-import {requestLandscape} from '@/lib/orientationMode';
+import {requestAnyOrientation} from '@/lib/orientationMode';
 import {arcadeSkin} from './skins'
 import styles from './ArcadeGame3D.module.css';
 import dynamic from 'next/dynamic';
@@ -81,9 +81,9 @@ export default function ArcadeGame3D({kind,onExit}:{kind:ArcadeKind;onExit:()=>v
  const info=descriptions[kind];
  const [touchDevice,setTouchDevice]=useState(false);
  useEffect(()=>{setTouchDevice(matchMedia('(pointer:coarse)').matches);},[]);
- // Breakaway Run plays sideways on phones like Strikers (owner, Oct 27 2026); RotateLock asks upright phones to turn.
- useEffect(()=>kind==='runner'?requestLandscape():undefined,[kind]);
- const touchHelp={tennis:'Left thumb: move. Right thumb: tap Kick, Lob or Drop for a normal shot, or HOLD to wind up and let go as the ring turns gold for a sweet strike (too long = overhit). Push the stick as you let go to place it: sideways for the open space, up = deeper, down = shorter. 5 perfect touches = a Golden Touch.',pinball:'Hold Launch, then let go. Tap the left or right half of the screen to kick with that flipper. Strike as the ball reaches the ring. Nudge rescues a falling ball.',runner:'Left thumb: push the stick (or swipe) to change lanes. Tap Shoot for a quick kick. Hold and release for a power blast. Jump then Shoot for an aerial volley, or Slide past defenders. The Skill button names the move that beats the defender ahead: tap it when they are close. Shoot beside a teammate for a one-two.'}[kind];
+ // Breakaway Run plays UPRIGHT on phones (owner, Nov 11 2026: "should not be turned sideways to play") and still plays sideways: no turn-your-phone card either way.
+ useEffect(()=>kind==='runner'?requestAnyOrientation():undefined,[kind]);
+ const touchHelp={tennis:'Left thumb: move. Right thumb: tap Kick, Lob or Drop for a normal shot, or HOLD to wind up and let go as the ring turns gold for a sweet strike (too long = overhit). Push the stick as you let go to place it: sideways for the open space, up = deeper, down = shorter. 5 perfect touches = a Golden Touch.',pinball:'Hold Launch, then let go. Tap the left or right half of the screen to kick with that flipper. Strike as the ball reaches the ring. Nudge rescues a falling ball.',runner:'Hold the phone upright (sideways works too). Swipe left or right on the road, or push the stick with your left thumb, to change lanes; swipe up to jump and down to slide. Tap Shoot for a quick kick. Hold and release for a power blast. Jump then Shoot for an aerial volley, or Slide past defenders. The Skill button names the move that beats the defender ahead: tap it when they are close. Shoot beside a teammate for a one-two.'}[kind];
  // Futbol Tennis hold-to-power (Oct 26 2026): one held shot at a time (finger, mouse or key). The sim owns the
  // charge level; this layer paints the button ring, plays the wind-up voice + haptics, and releases or cancels.
  const tennisHold=useRef<{pointer:number;key:string;id:number;el:HTMLElement|null;voice:ReturnType<typeof tennisChargeVoice>|null;level:number;kicks:number}|null>(null);

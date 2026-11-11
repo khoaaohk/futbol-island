@@ -24,7 +24,7 @@ const List=({items}:{items:readonly string[]})=><ul>{items.map(x=><li key={x}>{x
 export default function GamePageView({params}:{params:{slug:string}}){
  const g=gameBySlug(params.slug);if(!g)notFound();
  const crumbs=gameCrumbs({name:g.name,path:g.path});
- const others=[...GAME_PAGES.filter(x=>x!==g).map(x=>({path:x.path,name:`${x.name}: ${x.h1.split(':')[0].toLowerCase()}`,line:x.blurb})),{path:GAMES_HUB.path,name:'All six free soccer games',line:GAMES_HUB.blurb}];
+ const others=[...GAME_PAGES.filter(x=>x!==g).map(x=>({path:x.path,name:`${x.name}: ${x.h1.split(':')[0].toLowerCase()}`,line:x.blurb})),{path:GAMES_HUB.path,name:'All seven free soccer games',line:GAMES_HUB.blurb}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={videoGameLd(g)}/>

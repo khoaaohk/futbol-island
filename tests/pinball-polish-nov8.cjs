@@ -55,7 +55,7 @@ await ok('server: a tier session posts to its own board and only there; SQL wide
  const files=fs.readdirSync(path.join(ROOT,'supabase/migrations')).sort(),f='20261109_pinball_tier_boards.sql';assert(files.includes(f));
  // Nov 8 2026: the Pass Puzzles cup boards came later (20261110_puzzle_tier_boards.sql runs last and repeats this whole list).
  const widen=files.filter(x=>/arcade_scores_game_check/.test(read('supabase/migrations/'+x))).filter(x=>x<'20261110');assert.equal(widen.pop(),f,'runs after every earlier board migration (each replaces the same allow-list)');
- const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily','kitrush','kitdaily','snake','snakedaily'/* Nov 10 2026: Kit Rush and Squad Snake boards come in later files */].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
+ const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily','kitrush','kitdaily','snake','snakedaily','airhockey'/* Nov 11 2026: Air Futbol's board too *//* Nov 10 2026: Kit Rush and Squad Snake boards come in later files */].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
  assert(/'OK, pinball tier boards installed'/.test(sql));assert(!/\bdrop\s+(table|function|column)|truncate|delete from|\bupdate\s+public/i.test(sql.replace(/--.*$/gm,'')),'additive');
 });
 

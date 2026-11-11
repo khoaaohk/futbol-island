@@ -97,7 +97,7 @@ ok('save: best, medal, daily first run, day streak, rotating facts, near-miss li
  assert(isSyncKey(S.KITRUSH_KEY),'the save travels with a save code');
 });
 ok('arcade wiring: cabinet, boards, coins, today, skin, routing',()=>{
- assert(arcadeCabinets.some(c=>c.id==='kitrush'&&c.name==='Kit Rush'&&c.short==='KIT RUSH'));assert(!arcadeCabinets.some(c=>c.id==='live'),'Kit Rush took the Strikers cabinet');assert.equal(arcadeCabinets.length,6);/* Nov 10 2026: Squad Snake is the sixth cabinet (tests/snake-core.cjs) */
+ assert(arcadeCabinets.some(c=>c.id==='kitrush'&&c.name==='Kit Rush'&&c.short==='KIT RUSH'));assert(!arcadeCabinets.some(c=>c.id==='live'),'Kit Rush took the Strikers cabinet');assert.equal(arcadeCabinets.length,7);/* Nov 10 2026: Squad Snake is the sixth cabinet (tests/snake-core.cjs) */
  assert(L.isBoardGame('kitrush')&&L.isBoardGame('kitdaily')&&L.isBoardGame('live'),'old live board stays');assert.deepEqual(L.BOARD_TIER_TABS.kitrush,['kitdaily']);
  assert.equal(L.scorePlausible('kitrush',3000,60_000),'ok');assert.equal(L.scorePlausible('kitrush',30_000,20_000),'fast');assert.equal(L.scorePlausible('kitrush',300,3000),'short');assert(L.scoreInBounds('kitdaily',60_000)&&!L.scoreInBounds('kitdaily',60_001));
  // the fastest honest scoring fits the board's rate: six kits a swipe with the armband, a wave every gapFloor seconds
@@ -108,7 +108,7 @@ ok('arcade wiring: cabinet, boards, coins, today, skin, routing',()=>{
  const room=read('components/ArcadeRoom.tsx');assert(/raw==='live'\?'kitrush':raw/.test(room),'old ?game=live links open Kit Rush');assert(/game==='kitrush'\?<KitRush onExit=\{back\}\/>/.test(room));assert(!/<Strikers /.test(room),'Strikers is not reachable from the room');
  assert(fs.existsSync('components/LiveArcadeMatch.tsx')&&fs.existsSync('lib/arcade/strikerMatch.ts'),'Strikers code stays in the repo');
  assert(/kitrush:kitrush\.skin/.test(read('components/games/skins/index.ts')));assert(/data-game="kitrush"/.test(read('components/games/KitRushGame.tsx')));
- const sql=read('docs/arcade-aaa/kitrush-supabase.sql');for(const g of L.BOARD_GAMES.filter(g=>!['snake','snakedaily'/* Nov 10 2026: Squad Snake's boards come in docs/arcade-aaa/endless-supabase.sql, the one file that names every board */].includes(g)))assert(sql.includes(`'${g}'`),'SQL allow-list names '+g);
+ const sql=read('docs/arcade-aaa/kitrush-supabase.sql');for(const g of L.BOARD_GAMES.filter(g=>!['airhockey'/* Nov 11 2026: Air Futbol's board comes in docs/arcade-aaa/airhockey-supabase.sql */,'snake','snakedaily'/* Nov 10 2026: Squad Snake's boards come in docs/arcade-aaa/endless-supabase.sql, the one file that names every board */].includes(g)))assert(sql.includes(`'${g}'`),'SQL allow-list names '+g);
 });
 ok('sound: one limiter, wired to the output and nowhere else; made on the first tap',()=>{
  const a=read('lib/arcade/kitrush/audio.ts');assert.equal((a.match(/createDynamicsCompressor\(\)/g)||[]).length,1);assert(/master\.connect\(limiter\);limiter\.connect\(ctx\.destination\);/.test(a));

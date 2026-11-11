@@ -13,8 +13,8 @@ const letterAt=(s:string,i:number)=>s.charCodeAt(i)-A;
 const withLetter=(s:string,i:number,n:number)=>s.slice(0,i)+String.fromCharCode(A+((n%26)+26)%26)+s.slice(i+1);
 /** Where the score lands: island week / island all-time (when a play session is held) and this device. */
 type Place={week:number|null;all:number|null;device:number|null;island:IslandBoards|null};
-/** The six arcade-room games show their results card first (owner, Nov 10 2026); anywhere else the entry opens at once, as before. */
-const RESULTS_FIRST=['kitrush','snake','runner','tennis','pinball','pass-puzzle'].map(k=>`[data-arcade-kind="${k}"]`).join(',');
+/** The seven arcade-room games show their results card first (owner, Nov 10 2026); anywhere else the entry opens at once, as before. */
+const RESULTS_FIRST=['kitrush','snake','airhockey','runner','tennis','pinball','pass-puzzle'].map(k=>`[data-arcade-kind="${k}"]`).join(',');
 const ISLAND_WHY:Record<string,string>={short:'The island board needs a full game. Play a little longer next time!',fast:'That score couldn’t be checked, so it stayed on this device.',
  'not-top':'Someone just beat that score on the island. It’s saved on this device.',busy:'The island board is busy. Your score is saved on this device.',unavailable:'The island board can’t be reached right now. Your score is saved on this device.',
  invalid:'The island board couldn’t take that score. It’s saved on this device.',none:''};
@@ -24,7 +24,7 @@ const ISLAND_WHY:Record<string,string>={short:'The island board needs a full gam
  * Lazy-loaded by the games only after a scored game ends; renders nothing (and calls onClose) when the score doesn't qualify.
  * The player picks three letters on arcade wheels (no typing, no names) and, if they like, a picture. Skip saves on this
  * device only.
- * Results first (Nov 10 2026): in the six arcade games a qualifying score no longer opens the dialog over the results card. A short
+ * Results first (Nov 10 2026): in the seven arcade games a qualifying score no longer opens the dialog over the results card. A short
  * strip ("New high score! · Add my initials") sits in the card's `[data-hs-slot]` (or docks just under the score bar when the game
  * has no slot), so the score, medal and near-miss line stay readable and Play again stays one tap away. The strip opens the same
  * dialog; leaving without opening it saves exactly as Skip does (this device only, under the letters used last time).

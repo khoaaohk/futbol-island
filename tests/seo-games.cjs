@@ -49,7 +49,7 @@ function size(file){
 const pub=p=>path.join(root,'public',p);
 
 // ---- 1. registry, catalog, sitemap, titles --------------------------------------------------------------------------------
-const WANT=['/games','/games/soccer-swipe-game','/games/soccer-snake-game','/games/soccer-runner-game','/games/soccer-tennis-game','/games/soccer-pinball','/games/soccer-passing-puzzle-game'];
+const WANT=['/games','/games/soccer-swipe-game','/games/soccer-snake-game','/games/soccer-runner-game','/games/soccer-tennis-game','/games/soccer-pinball','/games/soccer-passing-puzzle-game','/games/air-hockey-soccer-game'];
 assert.deepEqual(ALL.map(p=>p.path),WANT,'the seven game URLs, hub first');
 assert.deepEqual(PAGES.map(g=>g.id).sort(),catalog.arcadeCabinets.map(c=>c.id).sort(),'every cabinet that stands in the arcade room has a page, and only those');
 for(const g of PAGES){const c=catalog.arcadeCabinets.find(x=>x.id===g.id);
@@ -86,7 +86,7 @@ function check(p,meta,el,game){
  const h=renderToStaticMarkup(el);html.set(p.path,h);
  assert.equal((h.match(/<h1[ >]/g)||[]).length,1,`${where}: one h1`);assert(h.includes(`>${p.name}</h1>`),`${where}: the h1 is the registry's`);
  const t=text(h);assert(/football/i.test(t.slice(0,700)),`${where}: "football" near the top`);
- const n=t.split(" ").length;if(process.env.WORDS)console.log(where,n);assert(n>=450&&n<=1250,`${where}: ${n} words`);
+ const n=t.split(" ").length;if(process.env.WORDS)console.log(where,n);assert(n>=450&&n<=1270/* Nov 11 2026: was 1250; the seventh game adds one entry (about 15 words) to every page's list of the other games */,`${where}: ${n} words`);
  assert(!/Strikers/.test(h),`${where}: Island Strikers is not an arcade game any more`);
  assert(!/aggregateRating|ratingValue|reviewCount|millions? of players/i.test(h),`${where}: no ratings, no invented numbers`);
  assert(!/<(canvas|video|iframe|audio)\b/.test(h),`${where}: no game canvas, video or frame (phone heat)`);
@@ -111,7 +111,7 @@ function check(p,meta,el,game){
  return {h,t,ld,links,by};
 }
 {const r=check(ALL[0],hubMod.metadata,React.createElement(hubMod.default),null);
- const list=r.by('ItemList');assert(list&&list.numberOfItems===6&&list.itemListElement.length===6,'hub: ItemList of six');
+ const list=r.by('ItemList');assert(list&&list.numberOfItems===7&&list.itemListElement.length===7,'hub: ItemList of seven');
  list.itemListElement.forEach((x,i)=>{assert.equal(x.position,i+1);assert.equal(x.url,seo.abs(PAGES[i].path));assert.equal(x.name,PAGES[i].name);});
  for(const g of PAGES){assert(r.links.includes(g.path)&&r.links.includes(g.play),`hub links ${g.path} and its deep link`);assert(r.t.includes(g.name),`hub names ${g.name}`);}
  assert(/free soccer games for kids/i.test(r.t)&&/no ads/i.test(r.t)&&/no accounts?/i.test(r.t),'hub: the free / no ads / no account promise');}
@@ -143,7 +143,7 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
  const ui=['components/ArcadeRoom.tsx',...fs.readdirSync(path.join(root,'components/games')).filter(f=>/\.tsx?$/.test(f)).map(f=>'components/games/'+f)].map(read).join('\n');
  assert(!/['"`]\/games[\/'"`]|site\/games/.test(ui),'the game UI does not link the game pages');}
 {const A='app/(site)/learn',R=(file,params)=>{const m=L(file);return renderToStaticMarkup(params?m.default({params}):React.createElement(m.default));};
- const inbound=[[`${A}/soccer-formations/page.tsx`,null,'snake'],[`${A}/soccer-positions/page.tsx`,null,'snake'],[`${A}/soccer-rules/[slug]/page.tsx`,{slug:'offside'},'puzzle'],
+ const inbound=[[`${A}/soccer-positions/page.tsx`,null,'airhockey'],[`${A}/soccer-formations/page.tsx`,null,'snake'],[`${A}/soccer-positions/page.tsx`,null,'snake'],[`${A}/soccer-rules/[slug]/page.tsx`,{slug:'offside'},'puzzle'],
   [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'shoulder-check-colors'},'kitrush'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'wall-passing'},'pinball'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'first-touch-gates'},'tennis'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'dribble-and-shoot'},'runner']];
  const reached=new Set();for(const [file,params,id] of inbound){const g=games.gameById(id);assert(R(file,params).includes(`href="${g.path}"`),`${file} ${params?params.slug:''} links ${g.path}`);reached.add(id);}
  assert.equal(reached.size,PAGES.length,'every game page has a link from a guide page (no orphans)');

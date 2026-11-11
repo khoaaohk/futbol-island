@@ -2,7 +2,7 @@ import * as T from 'three';
 import type {ArcadeCabinetId} from './arcadeCatalog';
 
 const INK='#152e38',CREAM='#fff0cd',GOLD='#efc060',CORAL='#ee927e',TEAL='#388d7d',BLUE='#83cce0';
-const TITLES:Record<ArcadeCabinetId,string>={runner:'BREAKAWAY',tennis:'FUTBOL TENNIS',pinball:'FUTBOL PINBALL',puzzle:'PASS PUZZLES',kitrush:'KIT RUSH',snake:'SQUAD SNAKE'};
+const TITLES:Record<ArcadeCabinetId,string>={runner:'BREAKAWAY',tennis:'FUTBOL TENNIS',pinball:'FUTBOL PINBALL',puzzle:'PASS PUZZLES',kitrush:'KIT RUSH',snake:'SQUAD SNAKE',airhockey:'AIR FUTBOL'};
 const DASH=[5,4],SOLID:number[]=[];
 const PINBALL_PATH=[128,153,69,103,110,65,186,90,150,139,119,101,153,43,128,25];
 const PUZZLE_PATH=[60,144,105,113,171,86,136,34];

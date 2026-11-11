@@ -88,7 +88,7 @@ const EMOTE_GROUPS:readonly (readonly [string,string,number,number])[]=[['wheel'
  // Audit Nov 6 2026: the moving (walking / running) emotes 50–59 (Oct 23 2026) were left out, so this card read lower than em:pick.
  ['walk','Walking or running',50,59]];
 
-const GAME_LABEL:Record<string,string>={live:'Island Strikers',runner:'Breakaway Run',tennis:'Futbol Tennis',pinball:'Futbol Pinball',puzzle:'Pass Puzzles',snake:'Squad Snake'};
+const GAME_LABEL:Record<string,string>={live:'Island Strikers',runner:'Breakaway Run',tennis:'Futbol Tennis',pinball:'Futbol Pinball',puzzle:'Pass Puzzles',snake:'Squad Snake',airhockey:'Air Futbol'};
 const SOURCE_LABEL:Record<string,string>={ball:'Hidden ball found',npc:'Islander gift',quiz:'Perfect quiz',explore:'Exploring',journey:'Learning Journey',story:'Story finished',path:'Path finished',pack:'Card pack',starter:'Starter kit'};
 const TIER_LABEL:Record<string,string>={icon:'Icon',elite:'Elite',regular:'Regular'};
 

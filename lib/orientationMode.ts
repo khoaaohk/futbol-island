@@ -3,7 +3,9 @@
  *  requestLandscape() while mounted; RotateLock then shows its "turn sideways" card for upright phones instead of the
  *  "turn upright" card for sideways ones, and pauses the game the same way (a window blur). Releasing it restores portrait.
  *  No polling: one tiny subscriber list, notified only when the mode changes. */
-export type OrientationMode = 'portrait' | 'landscape';
+/** 'any' (Nov 11 2026, owner: "the break away game should not be turned sideways to play"): Breakaway Run plays upright AND sideways,
+ *  so while it is open no card shows in either direction (requestAnyOrientation). */
+export type OrientationMode = 'portrait' | 'landscape' | 'any';
 
 /** Phones held sideways (touch, short side): the portrait-only app shows "Turn your phone upright". */
 export const PORTRAIT_ONLY_QUERY = '(pointer:coarse) and (orientation:landscape) and (max-height:500px) and (min-width:540px)';
@@ -14,9 +16,9 @@ export const PORTRAIT_ONLY_QUERY = '(pointer:coarse) and (orientation:landscape)
 export const LANDSCAPE_ONLY_QUERY = '(pointer:coarse) and (orientation:portrait) and (max-width:500px)';
 
 /** The media query that shows the wrong-orientation card in a mode. */
-export const wrongOrientationQuery = (mode: OrientationMode) => mode === 'landscape' ? LANDSCAPE_ONLY_QUERY : PORTRAIT_ONLY_QUERY;
+export const wrongOrientationQuery = (mode: OrientationMode) => mode === 'any' ? 'not all' : mode === 'landscape' ? LANDSCAPE_ONLY_QUERY : PORTRAIT_ONLY_QUERY;
 
-let mode: OrientationMode = 'portrait', holders = 0;
+let mode: OrientationMode = 'portrait', holders = 0, anyHolders = 0;
 const listeners = new Set<() => void>();
 
 export const getOrientationMode = () => mode;
@@ -30,7 +32,7 @@ export function lockScreenOrientation(next: OrientationMode) {
 function setMode(next: OrientationMode) {
   if (next === mode) return;
   mode = next;
-  if (typeof document !== 'undefined') { if (next === 'landscape') document.documentElement.dataset.orientation = 'landscape'; else delete document.documentElement.dataset.orientation; }
+  if (typeof document !== 'undefined') { if (next !== 'portrait') document.documentElement.dataset.orientation = next; else delete document.documentElement.dataset.orientation; }
   lockScreenOrientation(next);
   for (const listener of listeners) listener();
 }
@@ -39,5 +41,12 @@ function setMode(next: OrientationMode) {
 export function requestLandscape() {
   holders++; setMode('landscape');
   let released = false;
-  return () => { if (released) return; released = true; holders = Math.max(0, holders - 1); if (!holders) setMode('portrait'); };
+  return () => { if (released) return; released = true; holders = Math.max(0, holders - 1); if (!holders) setMode(anyHolders ? 'any' : 'portrait'); };
+}
+
+/** Either way up while a screen is mounted (Breakaway Run); returns the release. A landscape request wins while both are held. */
+export function requestAnyOrientation() {
+  anyHolders++; if (!holders) setMode('any');
+  let released = false;
+  return () => { if (released) return; released = true; anyHolders = Math.max(0, anyHolders - 1); if (!anyHolders && !holders) setMode('portrait'); };
 }

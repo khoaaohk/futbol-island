@@ -3,7 +3,7 @@ import {LEGEND_PACK_PRICE,MYSTERY_PACK_OPTIONS,PACKS_PER_DAY,PACK_RESTOCK_MESSAG
 import {trainingPay} from '../town/dailyMeter';
 import {ARCADE_PLAY_COST as PLAY_COST,ARCADE_COIN_CAPS as COIN_CAPS,PUZZLE_FIRST_SOLVE_COINS as PUZZLE_FIRST} from '../economy';
 /** `learn`: one-off learning coins (lessons, hidden balls, stories, journeys, explore, paths), paid once ever and never metered. */
-export type ArcadeCoinGame='runner'|'pinball'|'tennis'|'live'|'puzzle'|'island'|'learn'|'kitrush'|'snake';
+export type ArcadeCoinGame='runner'|'pinball'|'tennis'|'live'|'puzzle'|'island'|'learn'|'kitrush'|'snake'|'airhockey';
 export const ARCADE_PLAY_COST=PLAY_COST;// lib/economy.ts
 /** Explicit one-time local testing credit; ordinary gameplay caps remain unchanged. */
 export const TEST_COIN_GRANT_ID='testing-credit-2026-09-27';
@@ -22,11 +22,11 @@ type State={version:1;spends:Record<string,ArcadeSpend>;runs:Record<string,Run>;
 export const ARCADE_COIN_CAPS=COIN_CAPS;// lib/economy.ts (never lower: also the save clamp)
 /** Pass Puzzles (economy pass, 28 Sep 2026): free to play, first solve pays PUZZLE_FIRST_SOLVE_COINS + new stars, a repeat pays 0. */
 export const PUZZLE_FIRST_SOLVE_COINS=PUZZLE_FIRST;// lib/economy.ts
-const games:ArcadeCoinGame[]=['runner','pinball','tennis','live','puzzle','island','learn','kitrush','snake'];
+const games:ArcadeCoinGame[]=['runner','pinball','tennis','live','puzzle','island','learn','kitrush','snake','airhockey'];
 const integer=(n:unknown,max=1e9)=>typeof n==='number'&&Number.isFinite(n)?Math.max(0,Math.min(max,Math.floor(n))):0;
 const key=(s:unknown):s is string=>typeof s==='string'&&s.length>0&&s.length<180&&s!=='__proto__'&&s!=='constructor'&&s!=='prototype';
 const empty=():State=>({version:1,spends:{},runs:{},best:{},attempts:{},visits:{},packs:[]});
-export const EMPTY_ARCADE_WALLET:ArcadeWalletSnapshot={balance:0,lifetimeEarned:0,byGame:{runner:0,pinball:0,tennis:0,live:0,puzzle:0,island:0,learn:0,kitrush:0,snake:0},history:[],packs:[],vendingPurchases:[],training:{day:'',earned:0}};
+export const EMPTY_ARCADE_WALLET:ArcadeWalletSnapshot={balance:0,lifetimeEarned:0,byGame:{runner:0,pinball:0,tennis:0,live:0,puzzle:0,island:0,learn:0,kitrush:0,snake:0,airhockey:0},history:[],packs:[],vendingPurchases:[],training:{day:'',earned:0}};
 /** Training coins (metered runs) paid on a local day. */
 const trainingPaidOn=(runs:Record<string,Run>,day:string)=>Object.values(runs).reduce((n,r)=>n+(r.raw!==undefined&&localPlayDay(r.at)===day?r.paid:0),0);
 export function sanitizeArcadeWallet(value:unknown,valid:ReadonlySet<string>):State{
@@ -62,6 +62,7 @@ export function arcadeCoinTarget(game:Exclude<ArcadeCoinGame,'puzzle'|'island'>,
  if(game==='tennis')value=Math.floor(n(s.cleanReturns)/3)+n(s.points)*2+(s.won?4:0);
  if(game==='live'&&s.engaged)value=Math.floor(n(s.passes)/3)+n(s.goals)*3+(s.finished?5+(s.won?3:0):0);
  if(game==='snake')value=Math.floor(n(s.points)/150);// Squad Snake (Nov 10 2026): `points` is the run's score, 1 coin per 150
+ if(game==='airhockey')value=Math.floor(n(s.points)/250);// Air Futbol (Nov 11 2026): `points` is the solo run's score, 1 coin per 250 (two-player matches pay nothing)
  if(game==='kitrush')value=Math.floor(n(s.points)/150);// Kit Rush (Nov 10 2026): `points` is the run's score, 1 coin per 150
  return Math.min(ARCADE_COIN_CAPS[game],value);
 }

@@ -39,6 +39,15 @@
 - Lower chase camera than before so the horizon sits about a third down the screen: sea, sun, headlands and clouds are always in frame.
 - Parallax stack: road props, sea wall and palms, village terraces on the hillside, two headland silhouettes, cut clouds, gulls.
 
+## Upright phones (Nov 11 2026, owner: "the break away game should not be turned sideways to play")
+- Upright is the phone default; sideways and desktop keep the framings above. No turn-your-phone card either way (`requestAnyOrientation`).
+- `lib/arcade/runnerFrame.ts` solves the tall frame once per resize: fov 48, horizon 36 % down (32 % on screens under 560 px tall) so the
+  sun, headland, lighthouse and clouds fill the top third; the runner's feet sit 26 px above the 174 px thumb cluster; 0.115 x width px per
+  metre at the runner (side lanes 22 % of the width off centre). 390x664: camera 4.6 m up, 16.2 m back, pitched 7.2 degrees down.
+- Fairness: a 1.7 m tackler is 24 px tall 36 m ahead at 390x664 (46 m at 390x844, 29.5 m at 375x553 and 360x560) against 27.4 m sideways.
+- Controls: swipe left / right anywhere on the road (up = jump, down = slide), the same floating stick bottom left, the same four discs at
+  the same sizes packed round Shoot bottom right. Shots: `shots/runner-upright*.png`, `shots/runner-landscape-check.png`.
+
 ## HUD concept
 - A comic page: score in a tilted caption box, a margin strip under it with hearts, balls and distance as inked icons and numerals.
 - Controls are inked discs with a paper face and a hard shadow that collapses when pressed; Shoot is the big sun-yellow one and fills

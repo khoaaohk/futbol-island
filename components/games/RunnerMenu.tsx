@@ -88,7 +88,7 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
      </button>;})}
    </div>}
    {phase==='ready'&&<p className={styles.lineMode} data-runner-line>{m.line}{m.finish?` · ${m.finish} m rounds, endless`:''}{daily?(today?.counted?' · Practice':' · First run counts'):elite?' · own scoreboard':''}</p>}
-   {hint&&phase==='ready'&&touch&&<p className={styles.hint}>Left thumb: push the stick to change lane. Big yellow button = shoot!</p>}
+   {hint&&phase==='ready'&&touch&&<p className={styles.hint}>Swipe left or right (or push the stick) to change lane. Big yellow button = shoot!</p>}
    {message&&<p className={styles.status} role="status">{message}</p>}
    <button className={styles.play} disabled={pending} onClick={play} data-runner-play>{paused?'Resume':over?(nextLabel&&nextLabel!=='Play again'?nextLabel:'Retry'):'Play'}</button>
    {!paused&&<div className={styles.row}>

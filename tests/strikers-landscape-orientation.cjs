@@ -34,8 +34,12 @@ assert.match(live,/useEffect\(\(\)=>requestLandscape\(\),\[\]\);/,'Strikers asks
 assert.match(live,/addEventListener\('blur',blur\)/,'the wrong-orientation card pauses Strikers (blur)');
 assert.match(live,/addEventListener\('orientationchange',release\)/,'turning the phone lets go of held thumbs');
 const users=require('node:child_process').execSync("grep -rl 'requestLandscape' components app lib",{cwd:root,encoding:'utf8'}).trim().split('\n').sort();
-// Oct 27 2026: Breakaway Run (ArcadeGame3D, kind==='runner' only) also plays sideways (tests/breakaway-clean-ui-oct27.cjs); Tennis stays portrait.
-assert.deepEqual(users,['components/LiveArcadeMatch.tsx','components/games/ArcadeGame3D.tsx','lib/orientationMode.ts'],'only Strikers and Breakaway change orientation');
+// Oct 27 2026: Breakaway Run (ArcadeGame3D, kind==='runner' only) also played sideways; Tennis stays portrait. Nov 11 2026 (owner: "the break away
+// game should not be turned sideways to play"): Breakaway now asks for EITHER orientation instead (requestAnyOrientation, tests/runner-upright.cjs),
+// so Strikers is the one screen that asks for landscape; Breakaway lifts the portrait-only rule while it is open.
+assert.deepEqual(users,['components/LiveArcadeMatch.tsx','lib/orientationMode.ts'],'only Strikers asks for landscape');
+{const either=require('node:child_process').execSync("grep -rl 'requestAnyOrientation' components app lib",{cwd:root,encoding:'utf8'}).trim().split('\n');for(const f of ['components/games/ArcadeGame3D.tsx','lib/orientationMode.ts'])assert(either.includes(f),`${f}: Breakaway plays either way up`);assert(!either.includes('components/LiveArcadeMatch.tsx'),'Strikers stays sideways');}
+{const any=M.requestAnyOrientation();assert.equal(M.getOrientationMode(),'any');assert.equal(html.dataset.orientation,'any');assert.equal(M.wrongOrientationQuery('any'),'not all','no card either way');any();assert.equal(M.getOrientationMode(),'portrait');assert.equal(html.dataset.orientation,undefined);}
 // The landscape camera: a .9-wide fit (clear of notch insets), lifted so the goal mouths clear the corner controls.
 const scene=read('lib/arcade/strikerScene.ts');
 // Arcade AAA pass 2 (Nov 10 2026): the landscape camera sits lower (LANDSCAPE_TILT 1.7, fov 50) so the far stand and sky are in frame; the

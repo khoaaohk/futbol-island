@@ -9,7 +9,10 @@ import {shapeStick} from '@/lib/town/walkControl';
  *  stickDown / moveStick / releaseStick), packaged for the other arcade games. A press anywhere in the zone anchors the ring
  *  under the thumb (clamped inside the zone), the knob follows within the ring's travel, the vector goes through Strikers'
  *  dead zone (shapeStick), and on release the ring glides home. onMove gets (x, y) with y down-positive, 0,0 on release. */
-export function useFloatingStick(onMove:(x:number,y:number)=>void,enabled:()=>boolean){
+/** `pressOrigin` (Breakaway Run, Nov 11 2026): the push is measured from where the thumb landed, not from the ring's clamped centre. On an
+ *  upright phone the zone is barely wider than the ring, so the ring cannot slide under most presses and a plain press read as a push
+ *  (an instant lane change). The ring is still drawn clamped inside the zone; the other games keep the ring-centre origin. */
+export function useFloatingStick(onMove:(x:number,y:number)=>void,enabled:()=>boolean,pressOrigin=false){
  const joy=useRef<HTMLDivElement>(null),id=useRef<number|null>(null),rect=useRef<DOMRect|null>(null),travel=useRef(36),glide=useRef(0),shaped=useRef({x:0,z:0}),zoneEl=useRef<HTMLElement|null>(null);
  const move=useRef(onMove);move.current=onMove;
  const floatHome=()=>{const el=joy.current;if(!el?.dataset.anchored)return;delete el.dataset.anchored;delete el.dataset.active;clearTimeout(glide.current);
@@ -25,7 +28,7 @@ export function useFloatingStick(onMove:(x:number,y:number)=>void,enabled:()=>bo
   const home=el.getBoundingClientRect(),r=home.width/2,zr=z.getBoundingClientRect(),cs=getComputedStyle(z),pad=(v:string)=>parseFloat(v)||0;
   const a=clampAnchor(e.clientX,e.clientY,{left:zr.left+pad(cs.paddingLeft),top:zr.top+pad(cs.paddingTop),right:zr.right-pad(cs.paddingRight),bottom:zr.bottom-pad(cs.paddingBottom)},r);
   el.style.translate=`${a.x-home.left-r}px ${a.y-home.top-r}px`;el.dataset.anchored='true';el.dataset.active='true';
-  rect.current=new DOMRect(a.x-r,a.y-r,r*2,r*2);travel.current=stickTravel(r*2);id.current=e.pointerId;try{z.setPointerCapture(e.pointerId);}catch{}moveStick(e);};
+  rect.current=pressOrigin?new DOMRect(e.clientX-r,e.clientY-r,r*2,r*2):new DOMRect(a.x-r,a.y-r,r*2,r*2);travel.current=stickTravel(r*2);id.current=e.pointerId;try{z.setPointerCapture(e.pointerId);}catch{}moveStick(e);};
  useEffect(()=>watchStickRelease(()=>zoneEl.current,()=>id.current,()=>release()),[]);// eslint-disable-line react-hooks/exhaustive-deps
  return {joy,release,zone:{onPointerDown:down,onPointerMove:moveStick,onPointerUp:release,onPointerCancel:release,onLostPointerCapture:release}};
 }

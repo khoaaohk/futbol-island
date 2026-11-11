@@ -3,7 +3,7 @@
 // (lib/multiplayer/roomParty.ts, branch mp-rooms-phase1) owns the real type; the integrator maps names as listed in
 // docs/multiplayer-rooms-design.md "Arcade prep status". Pure data + pure helpers: no three.js, no DOM, no allocation in the
 // per-frame helpers (they write into caller-owned `out` objects).
-import {arcadeCabinets,arcadeHubCabinets,type ArcadeCabinetId} from '../../arcade/arcadeCatalog';
+import {arcadeCabinets,arcadeHubCabinets,arcadeStand,type ArcadeCabinetId} from '../../arcade/arcadeCatalog';
 
 export type RoomBounds={minX:number;maxX:number;minZ:number;maxZ:number};
 export type RoomPoint={x:number;z:number};
@@ -51,7 +51,7 @@ export const ARCADE_ROOM:RoomDescriptor={
  spawnSlots:[{x:0,z:10.3},{x:-1.2,z:10.3},{x:1.2,z:10.3},{x:-2.4,z:10.1},{x:2.4,z:10.1},{x:-.6,z:9.2},{x:.6,z:9.2},{x:-1.8,z:9.2},{x:1.8,z:9.2}],
  exit:{halfWidth:2.1,z:11.5},
  areas:[
-  ...hub.map(c=>({id:c.id,kind:'cabinet' as const,x:c.x,z:c.z,r:1.25,label:c.name,standX:c.x+Math.sin(c.yaw)*STAND,standZ:c.z+Math.cos(c.yaw)*STAND,standYaw:c.yaw+Math.PI})),
+  ...hub.map(c=>({id:c.id,kind:'cabinet' as const,x:c.x,z:c.z,r:1.25,label:c.name,standX:c.x+Math.sin(c.yaw)*Math.max(STAND,arcadeStand(c.id)),standZ:c.z+Math.cos(c.yaw)*Math.max(STAND,arcadeStand(c.id)),/* Nov 11 2026: the Air Futbol table's play spot is further out (arcadeStand) */standYaw:c.yaw+Math.PI})),
   {id:'prize-counter',kind:'counter',x:counter.x,z:counter.z,r:1.2,label:'At the prize counter'},
   {id:'air-hockey',kind:'table',x:-10,z:-1,r:2.4,label:'Watching air hockey'},
   {id:'claw',kind:'machine',x:-12,z:8,r:1.6,label:'At the claw machine'},

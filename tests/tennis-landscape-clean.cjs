@@ -15,7 +15,8 @@ function load(file){file=path.resolve(root,file);if(cache.has(file))return cache
 
 // 1. Tennis stays PORTRAIT (owner, Oct 27 2026: "football tennis should not play horizontal"): it never asks for landscape; only Breakaway does.
 const game3d=read('components/games/ArcadeGame3D.tsx');
-assert.match(game3d,/useEffect\(\(\)=>kind==='runner'\?requestLandscape\(\):undefined,\[kind\]\);/,'only the runner kind asks for landscape');
+// Nov 11 2026: Breakaway no longer asks for landscape either; it plays upright or sideways (requestAnyOrientation, tests/runner-upright.cjs).
+assert.match(game3d,/useEffect\(\(\)=>kind==='runner'\?requestAnyOrientation\(\):undefined,\[kind\]\);/,'only the runner kind changes the orientation rule (either way up)');assert.doesNotMatch(game3d,/requestLandscape/,'no 3D arcade game asks for landscape');
 assert.doesNotMatch(game3d,/kind==='tennis'\?requestLandscape/,'tennis does not ask for landscape');
 const css=read('components/games/ArcadeGame3D.module.css');
 assert.doesNotMatch(css,/Sideways phones: stick on the left thumb/,'no sideways tennis layout');

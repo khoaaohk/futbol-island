@@ -59,6 +59,8 @@ export function shirtNumbersFor(s:Scenario){
  return{attackers:assign(s.attackers,p=>half-p.z,true,true),defenders:assign(s.defenders,p=>half-p.z,false,false),keeper:1};
 }
 
+/** The HUD's measured screen insets in CSS px (PassPuzzleGame measureRoom): no piece is framed under them. */
+export type FitRoom={top:number;bottom:number;left:number;right:number};
 export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  const stage=createArcadeStage(canvas,puzzleLook),{scene,camera}=stage,reducedMotion=stage.reduced;
  const sun=scene.children.find(o=>(o as T.DirectionalLight).isDirectionalLight) as T.DirectionalLight|undefined;
@@ -322,15 +324,26 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
 
  // Seated coach's view from behind the attack: fixed pitch angle, distance solved on load/resize only.
  const base={pos:new T.Vector3(),target:new T.Vector3()},focus=new T.Vector3(),corner=new T.Vector3();let replayFocus:T.Vector3|null=null,replayAmount=0;
- function fit(){
+ // Nov 11 2026 (owner, tablet: "the controls cover the players"): the frame-up reserves the HUD's REAL boxes, measured from the DOM by the
+ // game (PassPuzzleGame measureRoom: the control tray, the top bar, the Endless chips) and passed in as screen insets. A change of tray
+ // (Shoot opens its sliders, rotation) re-fits with a short eased move, instant under reduced motion; the move ends and the game sleeps.
+ let room:FitRoom|null=null;const view={x:0,y:0,w:1,h:1},glide={t:1,dur:.34,pos:new T.Vector3(),ox:0,oy:0,toPos:new T.Vector3(),tox:0,toy:0};
+ function fit(next?:FitRoom|null,smooth=false){
+  if(next!==undefined)room=next;
+  const was=scenario&&view.w>1?{pos:base.pos.clone(),ox:glide.t<1?glide.ox+(glide.tox-glide.ox)*easeGlide(glide.t):view.x,oy:glide.t<1?glide.oy+(glide.toy-glide.oy)*easeGlide(glide.t):view.y,w:view.w,h:view.h}:null;
+  if(was&&glide.t<1)was.pos.lerpVectors(glide.pos,glide.toPos,easeGlide(glide.t));
   const w=canvas.clientWidth,h=canvas.clientHeight;stage.renderer.setSize(w,h,false);camera.clearViewOffset();camera.aspect=w/Math.max(1,h);camera.zoom=1;camera.updateProjectionMatrix();
   if(!scenario)return;
   const s=scenario,portrait=camera.aspect<.8;if(portrait!==builtPortrait)buildPitch(s);/* the board is cropped for the way it is looked at */
   const fr=framing(s,portrait),{cx,cz,dx,dz}=fr,short=h<520,desk=!portrait&&!short;let pts=fr.pts;base.target.set(cx,0,cz);
+  // Each piece's footprint (feet ring and body width, not just its centre) joins the frame-up, so a near player's boots never dip under the tray.
+  {const foot:[number,number,number][]=[];for(const p of [...s.attackers,...s.defenders,...(s.keeper?[s.keeper]:[])])for(const [ox,oz] of [[-.55,-.55],[.55,-.55],[-.55,.55],[.55,.55]]){foot.push([p.x+ox,0,p.z+oz]);foot.push([p.x+ox,HEAD_TOP+1.2,p.z+oz]);}pts=[...pts,...foot];}
   // A wide screen has room for the whole board as an object on the sand: its corners (and a little sand) join the frame-up.
   const play=pts;if(desk){const b=boardBounds(s.pitch.halfWidth,s.pitch.length,fr.view.crop),m=b.frame+2.5;pts=[...pts];for(const x of [b.x0-m,b.x1+m])for(const z of [b.z0-m,b.z1+m])pts.push([x,0,z]);}
   // Upright phone: the play sits between the top props and the control tray, with room under it for the near frame and the sand.
-  const top=desk?64:short?56:portrait?178:86,bottom=portrait?188:short?108:desk?34:165,roomY=Math.max(.3,(h-top-bottom)/h),roomX=portrait?.8:desk?.95:.82;
+  // Measured room (fitRoom): the HUD insets in px; an upright phone keeps its painted coast band above the play (up to 178 px).
+  const R=room,top=R?Math.max(R.top,portrait?Math.min(178,h*.21):0):desk?64:short?56:portrait?178:86,bottom=R?R.bottom:portrait?188:short?108:desk?34:165,left=R?R.left:0,right=R?R.right:0,
+   roomY=Math.max(.12,(h-top-bottom)/h),roomX=(portrait?.8:desk?.95:.82)*Math.max(.3,(w-left-right)/w);
   let tilt=portrait?.76:.68;
   const place=(d:number)=>{camera.position.set(cx-dx*Math.cos(tilt)*d,Math.sin(tilt)*d,cz-dz*Math.cos(tilt)*d);camera.lookAt(base.target);camera.updateMatrixWorld();};
   const extent=()=>{let x0=1,x1=-1,y0=1,y1=-1;for(const p of pts){corner.set(p[0],p[1],p[2]).project(camera);x0=Math.min(x0,corner.x);x1=Math.max(x1,corner.x);y0=Math.min(y0,corner.y);y1=Math.max(y1,corner.y);}return{x0,x1,y0,y1};};
@@ -342,10 +355,13 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
    for(let i=0;i<24;i++){const d=(low+high)/2;place(d);const e=extent();if(e.x1-e.x0<=roomX*2&&e.y1-e.y0<=roomY*2)high=d;else low=d;}
    high=Math.max(high,minD);place(high);const e=extent();if(e.y1-e.y0>=roomY*2*.9)break;}
   // A board much bigger than its play runs off the screen rather than shrinking the players: the play alone never frames smaller than about two thirds of the screen.
-  if(desk){const all=pts;pts=play;let low=4,cap=240;for(let i=0;i<24;i++){const d=(low+cap)/2;place(d);const e=extent();if(e.x1-e.x0<=1.24&&e.y1-e.y0<=roomY*1.3)cap=d;else low=d;}const whole=high;high=Math.max(minD,Math.min(high,cap));pts=high<whole-.01?play:all;/* an overflowing board is centred on its play */}
+  if(desk){const all=pts;pts=play;let low=4,cap=240;for(let i=0;i<24;i++){const d=(low+cap)/2;place(d);const e=extent();if(e.x1-e.x0<=Math.min(1.24,roomX*2)&&e.y1-e.y0<=roomY*1.3)cap=d;else low=d;}const whole=high;high=Math.max(minD,Math.min(high,cap));pts=high<whole-.01?play:all;/* an overflowing board is centred on its play */}
   place(high);base.pos.copy(camera.position);const e=extent();
   // Centre the action in the room between the HUD and the tip (off-centre projection, no second viewport).
-  camera.setViewOffset(w,h,(e.x0+e.x1)/2*w/2,(bottom-top)/2-(e.y0+e.y1)/2*h/2,w,h);camera.far=high+300;camera.updateProjectionMatrix();
+  view.x=(e.x0+e.x1)/2*w/2+(right-left)/2;view.y=(bottom-top)/2-(e.y0+e.y1)/2*h/2;view.w=w;view.h=h;camera.far=high+300;
+  // The re-fit glide: from where the camera was to the new seat, eased (update() steps it; it ends, so the game goes back to sleep).
+  if(smooth&&was&&!stage.reduced&&was.pos.distanceTo(base.pos)+Math.abs(was.ox-view.x)+Math.abs(was.oy-view.y)>.5){glide.pos.copy(was.pos);glide.ox=was.ox;glide.oy=was.oy;glide.toPos.copy(base.pos);glide.tox=view.x;glide.toy=view.y;glide.t=0;applyGlide();}
+  else{glide.t=1;camera.setViewOffset(w,h,view.x,view.y,w,h);camera.updateProjectionMatrix();}
   // Upright phone: the seat is too high to ever see a far horizon, so the painted coast stands just behind the boards, square to the
   // lens (a screen-space horizon in effect, as Tennis has): a strip of painted sea, the horizon line, the poster sun and the
   // headlands fill the frame above the pitch. The play keeps its size: it sits 40 px lower, in room the near sand had to spare.
@@ -356,6 +372,18 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   // No haze: the fog range is pushed past everything that is drawn.
   const fog=scene.fog as T.Fog;fog.near=high+500;fog.far=high+1400;
  }
+ function easeGlide(t:number){return t<=0?0:t>=1?1:1-Math.pow(1-t,3);}
+ function applyGlide(){const k=easeGlide(glide.t);camera.position.lerpVectors(glide.pos,glide.toPos,k);camera.lookAt(base.target);camera.updateMatrixWorld();
+  camera.setViewOffset(view.w,view.h,glide.ox+(glide.tox-glide.ox)*k,glide.oy+(glide.toy-glide.oy)*k,view.w,view.h);camera.updateProjectionMatrix();}
+ /** Steps the re-fit glide; true while it is still moving (a bounded few frames, never a loop). */
+ function stepGlide(dt:number){if(glide.t>=1)return false;glide.t=Math.min(1,glide.t+dt/glide.dur);if(!replayFocus&&!playerCam)applyGlide();else{camera.setViewOffset(view.w,view.h,glide.ox+(glide.tox-glide.ox)*easeGlide(glide.t),glide.oy+(glide.toy-glide.oy)*easeGlide(glide.t),view.w,view.h);camera.updateProjectionMatrix();}return glide.t<1;}
+ /** Layout probe (tests): every piece's screen box from feet to flag at the coach's seat, the ball, the goal mouth and the reserved room. */
+ function layoutProbe(){if(!scenario)return null;const s=scenario,r=canvas.getBoundingClientRect(),P=(x:number,y:number,z:number)=>{projected.set(x,y,z).project(camera);return{x:r.left+(projected.x+1)/2*r.width,y:r.top+(1-projected.y)/2*r.height};};
+  const box=(x:number,z:number,y0:number,y1:number,rad:number)=>{let x0=1e9,x1=-1e9,ya=1e9,yb=-1e9;for(const dx of [-rad,rad])for(const dz of [-rad,rad])for(const y of [y0,y1]){const q=P(x+dx,y,z+dz);x0=Math.min(x0,q.x);x1=Math.max(x1,q.x);ya=Math.min(ya,q.y);yb=Math.max(yb,q.y);}return{x0,x1,y0:ya,y1:yb};};
+  const pieces=[...s.attackers.map((p,i)=>({kind:'attacker',i,...box(p.x,p.z,0,HEAD_TOP+.3+.9,.45)})),...s.defenders.map((p,i)=>({kind:'defender',i,...box(p.x,p.z,0,HEAD_TOP+.3+.9,.45)})),...(s.keeper?[{kind:'keeper',i:0,...box(s.keeper.x,s.keeper.z,0,HEAD_TOP+.3+.9,.45)}]:[])];
+  const b=s.attackers[s.carrier]??s.attackers[0];const half=s.pitch.length/2,bar=crossbar(s.pitch.goalWidth)*Y_SCALE,g=s.pitch.goalWidth/2;
+  const goal=box(0,half,0,bar,0);{const a=P(-g,0,half),d=P(g,bar,half);goal.x0=Math.min(a.x,d.x);goal.x1=Math.max(a.x,d.x);}
+  return{room,pieces,ball:box(b.x,b.z,0,BALL_R*2,BALL_R),goal:s.require.finish==='goal'?goal:null,canvas:{x:r.left,y:r.top,w:r.width,h:r.height}};}
  /** Replay camera: ease toward the key moment, a gentle push-in. amount 0..1. */
  const look=new T.Vector3(),push=new T.Vector3();
  function setReplayFocus(point:Vec2|null,amount=0){replayFocus=point?focus.set(point.x,0,point.z):null;replayAmount=replayFocus?amount:0;const t=replayAmount;
@@ -457,7 +485,7 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   flagPos.needsUpdate=true;}
  /** Advance visuals by dt (0 = re-pose only). Returns true while an animation still needs frames. */
  function update(state:PuzzleState,dt:number,idleThinking=false):boolean{
-  elapsed+=dt;if(goalAge>=0)goalAge+=dt;let busy=false;const reduced=stage.reduced,ballP=state.ball.p;
+  elapsed+=dt;if(goalAge>=0)goalAge+=dt;let busy=stepGlide(dt);const reduced=stage.reduced,ballP=state.ball.p;
   {const v=state.ball.v,sp=Math.hypot(v.x,v.z);if(sp>.5){ballVX=v.x/sp;ballVZ=v.z/sp;}}
   const pose=(a:Actor,s:{p:Vec2;facing:number},extra:(o:ArcadePoseOptions)=>boolean)=>{
    const o=a.o,moved=!a.placed||Math.abs(s.p.x-a.x)+Math.abs(s.p.z-a.z)>1e-4||Math.abs(s.facing-a.stateFace)>1e-3;let vx=0,vz=0;
@@ -584,6 +612,6 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
   // Every mark and painted canvas lives in the scene, and the bean rigs belong to the stage (stage.player), so the stage's walk and
   // its own rig disposal free the geometries, materials and textures; the comic clones of the rig materials are freed here; the shared maps are named here too in case nothing visible was using them.
   stage.dispose();for(const m of rigMats.values())m.dispose();rigMats.clear();coast.dispose();coastMat.dispose();starGeo.dispose();for(const m of goalStars)(m.material as T.Material).dispose();marks.dispose();flagsMap.dispose();setMat.dispose();pieceMat.dispose();apronMat.dispose();lineMat.dispose();lineShadeMat.dispose();netMat.dispose();}
- return{stage,debug,setTier,load,fit,update,setAim,clearStroke,setClock,setCalls,setHint,setScan,setReplayRuns,followPlayer,onEvent,resetActors,showStop,setReplayFocus,pick,pickGoal,toScreen,render,dispose,get replayAmount(){return replayAmount;}};
+ return{stage,debug,setTier,load,fit,layoutProbe,update,setAim,clearStroke,setClock,setCalls,setHint,setScan,setReplayRuns,followPlayer,onEvent,resetActors,showStop,setReplayFocus,pick,pickGoal,toScreen,render,dispose,get replayAmount(){return replayAmount;}};
 }
 export type PassPuzzleScene=ReturnType<typeof createPassPuzzleScene>;

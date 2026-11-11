@@ -27,6 +27,12 @@ async function run(browser,mobile){
  // After input the defence scans for a bounded 4 s (15 fps), then aiming sleeps completely.
  await page.waitForTimeout(4600);const idle=Number(await canvas.getAttribute('data-frames'));await page.waitForTimeout(600);
  assert.equal(Number(await canvas.getAttribute('data-frames')),idle,'aiming idle sleeps');
+ // Nov 11 2026: opening Shoot grows (or, on a wide screen, keeps) the tray; the fit re-measures it with a short glide, then sleeps again.
+ await page.locator('[data-pp-tray] [role=group] button').filter({hasText:'Shoot'}).click();await page.waitForTimeout(4800);const idle2=Number(await canvas.getAttribute('data-frames'));await page.waitForTimeout(600);
+ assert.equal(Number(await canvas.getAttribute('data-frames')),idle2,'after the Shoot re-fit the game sleeps');
+ const clear=await page.evaluate(()=>{const p=window.__passPuzzle.scene.layoutProbe(),t=document.querySelector('[data-pp-tray]').getBoundingClientRect();return [...p.pieces,p.ball].every(b=>b.y1<t.top||b.x1<t.left||b.x0>t.right);});
+ assert(clear,'no piece sits under the Shoot tray');
+ await page.locator('[data-pp-tray] [role=group] button').filter({hasText:'Auto'}).click();await page.waitForTimeout(4800);
  // Draw a stroke from the ball toward the solution's first target (or the nearest teammate).
  const plan=await page.evaluate(()=>{const g=window.__passPuzzle,w=g.world,s=w.state,sol=g.solution?.(w.scenario.id);
   const b=s.ball.p,target=sol?.[0]?.target??(()=>{let best=null,d=1e9;s.attackers.forEach((a,i)=>{if(i===s.carrier)return;const dd=Math.hypot(a.p.x-b.x,a.p.z-b.z);if(dd<d){d=dd;best=a.p;}});return best;})();

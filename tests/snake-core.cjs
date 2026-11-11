@@ -156,7 +156,7 @@ ok('device save: best, medal, shapes album, Daily Squad claim, day streak, facts
  assert.equal(S.builtLine(stats({bestCode:352}),[1,2,0,0]),'3-5-2');assert.equal(S.builtLine(stats(),[0,0,0,0]),'No keeper yet');assert.equal(S.builtLine(stats(),[1,3,1,0]),'Keeper + 3 defenders + 1 mid');
 });
 ok('arcade wiring: sixth cabinet, boards, coins, today, save code, room route, SQL',()=>{
- assert.equal(arcadeCabinets.length,6);const cab=arcadeCabinets.find(c=>c.id==='snake');assert(cab&&cab.name==='Squad Snake'&&cab.short==='SQUAD SNAKE');assert.equal(arcadeAnalyticsId('snake'),'snake');
+ assert.equal(arcadeCabinets.length,7);/* Nov 11 2026: Air Futbol, the table, is the seventh (tests/airhockey-core.cjs) */const cab=arcadeCabinets.find(c=>c.id==='snake');assert(cab&&cab.name==='Squad Snake'&&cab.short==='SQUAD SNAKE');assert.equal(arcadeAnalyticsId('snake'),'snake');
  for(const c of arcadeCabinets)if(c!==cab)assert(Math.abs(c.x-cab.x)>=4||Math.abs(c.z-cab.z)>=4,'clear of '+c.id);assert(Math.abs(cab.x)<=12&&cab.z>=-10.5,'inside the room');
  assert(L.isBoardGame('snake')&&L.isBoardGame('snakedaily'));assert.deepEqual(L.BOARD_TIER_TABS.snake,['snakedaily']);assert(L.HALL_MACHINES.includes('snake'));assert.equal(L.HALL_MACHINES.length,arcadeCabinets.length,'one Hall chip per machine in the room');assert.equal(L.hallMachineOf('snakedaily'),'snake');
  assert.deepEqual(L.BOARD_GAMES.slice(0,22),['runner','pinball','tennis','live','puzzle','kick','cupfinal','legend','livepro','livelgnd','tenpro','tenlgnd','pinderby','pinfinal','puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily','kitrush','kitdaily'],'no existing board is renamed or moved');
@@ -168,9 +168,9 @@ ok('arcade wiring: sixth cabinet, boards, coins, today, save code, room route, S
  const room=read('components/ArcadeRoom.tsx');assert(/game==='snake'\?<SquadSnake onExit=\{back\}\/>/.test(room));assert(/import\('\.\/games\/SquadSnakeGame'\)/.test(room));
  assert(/snake:snake\.skin/.test(read('components/games/skins/index.ts')));const shell=read('components/games/SquadSnakeGame.tsx');assert(/data-game="snake"/.test(shell));assert(/snake:'SQUAD SNAKE'/.test(read('lib/arcade/arcadeCabinetAttract.ts')));
  // the owner's ONE file names every board and checks the new ones; the newest board migration does too
- const sql=read('docs/arcade-aaa/endless-supabase.sql'),code=sql.replace(/--.*$/gm,'');const list=/check \(game in \(([^)]*)\)\)/.exec(code)[1].split(',').map(v=>v.trim().replace(/'/g,''));assert.deepEqual(list,[...L.BOARD_GAMES]);
+ const sql=read('docs/arcade-aaa/endless-supabase.sql'),code=sql.replace(/--.*$/gm,'');const list=/check \(game in \(([^)]*)\)\)/.exec(code)[1].split(',').map(v=>v.trim().replace(/'/g,''));assert.deepEqual(list,L.BOARD_GAMES.slice(0,24));/* Nov 11 2026: this file is the list as of Squad Snake; docs/arcade-aaa/airhockey-supabase.sql restates it with 'airhockey' (tests/airhockey-core.cjs) */
  assert(/like '%''snake''%' and pg_get_constraintdef\(oid\) like '%''snakedaily''%'/.test(sql),'the self-check verifies the two new boards');assert(/prosrc like '%arcade_snake%'/.test(sql)&&/'arcade_puzzle','arcade_snake'/.test(sql),'and the analytics key');assert(/drop constraint if exists arcade_scores_game_check/.test(code),'idempotent');
- const mig=read('supabase/migrations/20261114_snake_boards.sql');for(const g of L.BOARD_GAMES)assert(mig.includes(`'${g}'`),'migration names '+g);assert(/'arcade_puzzle','arcade_snake'/.test(read('supabase/migrations/20261115_analytics_snake.sql')));
+ const mig=read('supabase/migrations/20261114_snake_boards.sql');for(const g of L.BOARD_GAMES.slice(0,24))assert(mig.includes(`'${g}'`),'migration names '+g);assert(/'arcade_puzzle','arcade_snake'/.test(read('supabase/migrations/20261115_analytics_snake.sql')));
  const ids2=require('../lib/analytics/islandIds.ts');assert(ids2.ARCADE_GAMES.includes('snake')&&ids2.ACTIVITY_IDS.includes('arcade_snake'));
 });
 ok('sound: one limiter, wired to the output and nowhere else; made on the first tap; a rising squad tune',()=>{

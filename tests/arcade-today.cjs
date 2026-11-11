@@ -16,7 +16,7 @@ const {localPlayDay}=require('../lib/town/dailyPlay.ts');
 (async()=>{
 // 1. Daily selection: one challenge per cabinet, deterministic per day, varied across days.
 {const day='2026-11-10',a=T.todayChallenges(day),b=T.todayChallenges(day);
- assert.deepEqual(a.map(c=>c.cabinet),['runner','puzzle','kitrush','snake','tennis','pinball']);/* Nov 10 2026: Squad Snake, the sixth cabinet (tests/snake-core.cjs) *//* Nov 10 2026: Kit Rush took Island Strikers' cabinet and its row on the card (tests/kitrush-core.cjs); the 'live' pool stays for Strikers' own code */
+ assert.deepEqual(a.map(c=>c.cabinet),['runner','puzzle','kitrush','snake','tennis','pinball','airhockey']);/* Nov 11 2026: Air Futbol, the seventh game (tests/airhockey-core.cjs) *//* Nov 10 2026: Squad Snake, the sixth cabinet (tests/snake-core.cjs) *//* Nov 10 2026: Kit Rush took Island Strikers' cabinet and its row on the card (tests/kitrush-core.cjs); the 'live' pool stays for Strikers' own code */
  assert.deepEqual(a.map(c=>c.id),b.map(c=>c.id),'same day, same challenges');
  for(const c of a){assert(c.line.length>0&&c.line.length<=48,`short line: ${c.line}`);assert(c.point.length>0&&c.point.length<=64,`football point: ${c.point}`);}
  const days=Array.from({length:30},(_,i)=>localPlayDay(new Date(2026,10,1+i,12).getTime()));

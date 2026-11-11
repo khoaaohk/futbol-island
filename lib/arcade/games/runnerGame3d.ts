@@ -21,6 +21,7 @@ import {inkedPart,bakeParts,partAt} from '../runnerTrack';
 import {comicStarGeometry} from '../comic/ink';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {RUNNER_INK,RUNNER_PAPER} from '../looks/runner';
+import {RUNNER_UPRIGHT,runnerUprightFrame} from '../runnerFrame';
 import {createRunnerSoundtrack} from '../../../components/games/runnerAudio';
 import type {ArcadeInput,ArcadeHUD} from '../arcadeGameTypes';
 export function createRunnerGame3d(canvas:HTMLCanvasElement,onSound:(goal:boolean,cue?:string)=>void,audioContext:()=>AudioContext|null=()=>null){
@@ -115,12 +116,18 @@ export function createRunnerGame3d(canvas:HTMLCanvasElement,onSound:(goal:boolea
  // Construct reusable runner visuals once; no geometry creation during play.
  for(let i=0;i<26;i++)decorate(runnerObjects[i],i<6?'defender':i<12?'cone':i<24?'coin':'goal');
  // Breakaway feel layer (runnerFx) and synthesized soundtrack (runnerAudio): pooled, runner-only.
- const runnerFx=(createRunnerFx(stage)),runnerSoundtrack=(createRunnerSoundtrack(audioContext)),runnerBaseFov=stage.camera.fov;
+ const runnerFx=(createRunnerFx(stage)),runnerSoundtrack=(createRunnerSoundtrack(audioContext)),runnerFov0=stage.camera.fov;let runnerBaseFov=runnerFov0;
  if(runnerFx){for(let i=0;i<6;i++)runnerFx.prepareDefender(runnerObjects[i]);runnerFx.reset(runner);}
  function fit(){stage.fit(((10)),((17.6)),true,false,false);
   // Desktop: a lower chase view than the shared framing, so the horizon (sea, sun, headlands) sits a third down the picture.
   if(!stage.mobile){stage.camera.position.set(0,6.2,14);shotLook.set(0,1.77,-14);stage.camera.lookAt(shotLook);stage.camera.updateMatrixWorld();}
+  // Upright phones (Nov 11 2026, lib/arcade/runnerFrame.ts): a chase view for a tall frame, horizon a third down, the runner above the thumb controls.
+  const upright=stage.mobile&&stage.camera.aspect<1,fov=upright?RUNNER_UPRIGHT.fov:runnerFov0;
+  if(upright){const el=stage.renderer.domElement,f=runnerUprightFrame(el.clientWidth,el.clientHeight,RUNNER_UPRIGHT.pad+padBottom());stage.camera.position.set(0,f.y,f.z);shotLook.set(0,f.lookY,f.lookZ);stage.camera.lookAt(shotLook);}
+  if(stage.camera.fov!==fov||runnerBaseFov!==fov){runnerBaseFov=stage.camera.fov=fov;stage.camera.updateProjectionMatrix();}stage.camera.updateMatrixWorld();
   cameraHome.copy(stage.camera.position);cameraRotation.copy(stage.camera.quaternion);cinema=0;}
+ /** The bottom gutter under the thumb controls (the --arcade-edge-bottom token + the safe area), measured on resize only. */
+ function padBottom(){const host=stage.renderer.domElement.parentElement;if(!host)return 16;const probe=document.createElement('i');probe.style.cssText='position:absolute;visibility:hidden;pointer-events:none;width:0;height:calc(var(--arcade-edge-bottom,16px) + env(safe-area-inset-bottom,0px))';host.appendChild(probe);const px=probe.offsetHeight;probe.remove();return px||16;}
  function reset(){freeze=0;Object.assign(runner,createRunnerGame());runnerFx?.reset(runner);runnerSoundtrack?.reset();elapsed=event=0;cinema=cinemaKick=pointSound=chargeTone=cameraFocus=0;notedLevel=1;cameraBeat(0);stage.resetPlayers();}
  function action(id:number){freeze=0;if(id===3)runnerCharge(runner,true);else if(id===4)runnerRelease(runner);else if(id===5)runnerCharge(runner,false);else if(id===0)runnerShoot(runner);else if(id===1)runnerJump(runner);else if(id===6)runnerSkill(runner);else runnerSlide(runner);}
  function target(x:number,y:number){const p=stage.pick(x,y);}
