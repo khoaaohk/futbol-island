@@ -1,5 +1,7 @@
 import {pinballDivision,pinballMinute,plungerPull,pinballReadShow,PERFECT_POINTS,READ_POINTS,WALL_PASS_POINTS,type PinballState} from './soccerPinball';
 import {createPinballCrew,triggerPinballCrew,stepPinballCrew,pinballCrewActive,type PinballCrew} from './soccerPinballCrew';
+import {pinballModeNeed,PINBALL_MAX_BALLS} from './soccerPinballEndless';
+import {pinballMatchFocus} from './soccerPinballPatterns';
 import {COACH_TIPS,PINBALL_MODES,TRAINING_GOAL,ladderRung,flagWord,pinballModeInfo,savePinballStars,starCount,type PinballTable} from './soccerPinballTable';
 
 /* Game-feel layer for Futbol Pinball. Pure and allocation-free per frame: it
@@ -131,7 +133,8 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
    case 'wallPass':ring(f,s.hitX,s.hitY,1.1);popup(f,s.hitX,s.hitY-18,`WALL PASS +${WALL_PASS_POINTS}`,'lit');break;
    case 'halfTime':popup(f,180,300,"HALF TIME · 45'",'lit');break;
    case 'stoppage':popup(f,180,300,'STOPPAGE TIME!','warn');break;
-   case 'fullTime':ring(f,180,300,2);confetti(f,2);popup(f,180,280,s.fullTimeBonus>0?`FULL TIME +${formatPinballPoints(s.fullTimeBonus)}`:'FULL TIME','goal');break;
+   case 'fullTime':ring(f,180,300,2);confetti(f,2);popup(f,180,280,s.fullTimeBonus>0?`FULL TIME +${formatPinballPoints(s.fullTimeBonus)}`:'FULL TIME','goal');if(s.phase!=='over')popup(f,180,230,`LEVEL ${s.match}`,'lit');break;
+   case 'extraBall':ring(f,180,300,1.4);popup(f,180,300,'EXTRA BALL!','lit');break;
    case 'attack':popup(f,s.hitX,s.hitY,'SHOT!','warn');break;
    case 'rescue':f.rescueFlash=1;popup(f,180,560,'BALL SAVED','rescue');break;
    case 'nudge':kick(f,.22);break;
@@ -228,7 +231,10 @@ function timingMessage(s:PinballState):string|null{
 /** One short line for the playfield features; null leaves the base HUD copy. */
 export function pinballTableMessage(s:PinballState):string|null{
  const t=s.table,m=pinballModeInfo(t);
- if(s.phase==='over')return `${s.stoppage<0?`Out of balls at ${pinballMinute(s)}`:'Full time'}${s.fullTimeBonus>0?` · +${s.fullTimeBonus.toLocaleString('en-US')} for balls kept`:''} · ${pinballTakeaway(s)}`;
+ if(s.phase==='over')return `Out of balls at ${pinballMinute(s)}${s.match>1?` · level ${s.match}`:''} · ${pinballTakeaway(s)}`;
+ // Endless play: the whistle starts the next match. The line names the level and the pattern to look for in it; it leads every
+ // other line for its 2.6 s (except the launch-power read while the plunger is pulled).
+ if(s.cue==='fullTime'&&!(s.phase==='ready'&&s.plunger>.02))return `FULL TIME! +${s.fullTimeBonus} · LEVEL ${s.match} kicks off. ${pinballMatchFocus(s.match)}`;
  if(s.phase==='ready'){if(s.cue==='rescue')return null;if(s.plunger>.02){const pull=plungerPull(s.plunger);return `Power ${Math.round(pull*100)}% · ${ladderRung(pull)===t.skillBand?'LET GO NOW!':'let go on the blue light for a perfect first touch'}`;}if(s.clock===0&&s.score===0)return 'KICK-OFF! Hold LAUNCH, then let go.';const d=t.stars[s.level-1];if(t.assist)return 'Coach: extra help this ball. The saver is on!';const div=pinballDivision(s);return `${pinballMinute(s)} · ${stars(d)} ${m?`${m.name} · ${m.goal}`:t.mode==='final'?'CUP FINAL · launch!':`${div.name} · ${div.objective}`}`;}
  if(s.phase!=='playing')return null;
  if(s.cueTime>0)switch(s.cue){
@@ -259,7 +265,8 @@ export function pinballTableMessage(s:PinballState):string|null{
   case 'mbSave':return 'Breakaway save: that ball is played back in.';
   case 'mbEnd':return 'Back to one ball. Keep attacking!';
   case 'halfTime':return "HALF TIME · 45'. Keep switching feet!";
-  case 'stoppage':return 'STOPPAGE TIME! Last chance with this ball.';
+  case 'stoppage':return 'STOPPAGE TIME! Score before the whistle.';
+  case 'extraBall':return `EXTRA BALL! ${s.balls} in hand${s.balls>=PINBALL_MAX_BALLS?' (a full hand)':''}. Keep the move going.`;
  }
  {const tm=timingMessage(s);if(tm)return tm;}
  // First touches of a run: one plain instruction until the first real strike.
@@ -269,7 +276,7 @@ export function pinballTableMessage(s:PinballState):string|null{
  if(s.extraLive)return `2v1 BREAKAWAY · two balls · goals count double${s.mbSave>0?` · save ${Math.ceil(s.mbSave)}s`:''}`;
  if(s.stoppage>=0)return `STOPPAGE TIME · ${pinballMinute(s)} · score with this ball!`;
  if(t.mode==='final')return `CUP FINAL · ${Math.ceil(t.modeTime)}s · every goal counts double!`;
- if(m&&(s.cue==='scan'||s.cue==='strike'))return `${m.name} · ${m.goal}${m.need>1?` (${t.modeProgress}/${m.need})`:''} · ${Math.ceil(t.modeTime)}s`;
+ if(m&&(s.cue==='scan'||s.cue==='strike'))return `${m.name} · ${m.goal}${m.need>1?` (${t.modeProgress}/${pinballModeNeed(m.need,s.match)})`:''} · ${Math.ceil(t.modeTime)}s`;
  if(t.hold>0)return COACH_TIPS[t.holdTip];
  return null;
 }

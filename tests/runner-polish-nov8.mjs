@@ -29,14 +29,15 @@ assert.deepEqual([...RUNNER_MODE_ORDER],['warmup','classic','night','storm','cup
 // 2. Own boards: the four original routes keep 'runner'; Cup Final and Legend post to their own boards, which the server accepts.
 /* Nov 10 2026: the finite routes have their own boards; Breakaway keeps 'runner' (tests/runner-daily-boards.cjs) */assert.equal(runnerBoardFor('classic'),'runner');assert.equal(runnerBoardFor('warmup'),'runwarm');assert.equal(runnerBoardFor('night'),'runnight');assert.equal(runnerBoardFor('storm'),'runstorm');
 assert.equal(runnerBoardFor('cup'),'cupfinal');assert.equal(runnerBoardFor('legend'),'legend');assert.equal(runnerBoardFor('nope'),'runner');
-{const sqlCap=Number(/score between 1 and (\d+)/.exec(read('supabase/migrations/20261013_arcade_leaderboards.sql'))[1]),mig=read('supabase/migrations/20261108_runner_tier_boards.sql');
+// Endless play (Nov 10 2026): the Breakaway ceilings rose to 5,000,000; the table's ceiling in force is docs/arcade-aaa/endless-supabase.sql (9,000,000).
+{const sqlCap=Math.max(Number(/score between 1 and (\d+)/.exec(read('supabase/migrations/20261013_arcade_leaderboards.sql'))[1]),Number(/score between 1 and (\d+)/.exec(read('docs/arcade-aaa/endless-supabase.sql'))[1])),mig=read('supabase/migrations/20261108_runner_tier_boards.sql');
  for(const g of ['cupfinal','legend']){assert(L.isBoardGame(g));assert(/^[a-z]{2,8}$/.test(g),'fits the session token pattern');const r=L.BOARD_RULES[g];
   assert(r.max<=sqlCap,'inside the SQL ceiling');assert(r.perSecond<=2_000&&r.minSeconds>=12,'rate and minimum play time stay strict');
   assert(new RegExp(`'${g}'`).test(mig),'migration widens the game check');
   const tok=Srv.makeToken('x'.repeat(40),g,Date.now());assert.equal(Srv.readToken('x'.repeat(40),tok)?.game,g,'session token round-trips');
-  assert.equal(L.scorePlausible(g,500_000,60_000),'fast');assert.equal(L.scoreInBounds(g,400_001),false);}
+  assert.equal(L.scorePlausible(g,500_000,60_000),'fast');assert.equal(L.scoreInBounds(g,400_001),true,'an honest long run posts');assert.equal(L.scoreInBounds(g,5_000_001),false);}
  for(const g of ['runner','pinball','tennis','live','puzzle','kick'])assert(new RegExp(`'${g}'`).test(mig),`migration keeps '${g}'`);
- assert.equal(L.BOARD_RULES.runner.max,300_000,'the original runner board rules are untouched');}
+ assert.equal(L.BOARD_RULES.runner.max,5_000_000,'endless play: the runner ceiling rose');assert.deepEqual([L.BOARD_RULES.runner.base,L.BOARD_RULES.runner.perSecond,L.BOARD_RULES.runner.minSeconds],[3000,1500,12],'the original runner rate rules are untouched');}
 
 // 3. Unlocks and stars: Cup Final after 2 Storm stars, Legend after 2 Cup stars; Legend's stars are distance and goals.
 resetRunnerRoutes(blank);assert(!isRunnerModeOpen('cup',6)&&!isRunnerModeOpen('legend',6));
@@ -79,14 +80,19 @@ const dodge=(s,cutAt)=>{s.objects.push(def('jockey',-30,s.lane));let cut=false;
 
 // 6c. Full-time card (QA Nov 8 2026): a completed Warm-up keeps its goals and metres for the card. The menu remounts at full time and
 // used to apply the default route there, resetting the finished run to 0 goals · 0 m; only the ready screen may do that now.
-{const w=game('warmup',{lives:1e6});for(let i=0;i<60*400&&!w.finished;i++){if(i%40===0)runnerShoot(w);tickRunner(w,1/60);}
+// Endless play (Nov 10 2026): the goal line clears round 1 and the run carries on; full time comes when the hearts run out, and the run
+// then reads as a finished route (it reached a goal line).
+{const w=game('warmup',{lives:1e6});for(let i=0;i<60*400&&!w.clears;i++){if(i%40===0)runnerShoot(w);tickRunner(w,1/60);}
+ assert(w.clears===1&&w.round===2&&!w.finished&&!R.runnerOver(w),'the warm-up goal line clears the round, the run goes on');
+ run(w,3);/* the road goes on past the goal line */
+ for(let n=0;n<40&&w.lives>0;n++){w.lives=1;w.boost=0;w.shield=false;w.hurt=0;w.spawn=99;w.objects=[{...def('tackler',-1.2,w.lane),read:1,aim:w.lane,tackle:.2}];run(w,.3);}
  for(let i=0;i<600&&!R.runnerOver(w);i++)R.runnerOutro(w,1/60);
- assert(w.finished&&R.runnerOver(w),'the warm-up route completes');assert(w.goals>0&&w.distance>=RUNNER_MODES.warmup.finish,'goals and metres survive full time');
+ assert(w.lives<=0&&w.finished&&R.runnerOver(w),'the warm-up route completes');assert(w.goals>0&&w.distance>=RUNNER_MODES.warmup.finish,'goals and metres survive full time');
  const m=read('components/games/RunnerMenu.tsx'),mount=/useEffect\(\(\)=>\{if\(phase!=='ready'\)\{setMode\(selectedRunnerMode\(\)\.id\);\}else\{const id=defaultRunnerMode[^\n]*onPreview\(\)/.exec(m);
  assert(mount,'the first-open default (and its reset) only runs on the ready screen');
  // Header matches the outcome: full time + trophy for a finished route, Tackled! (no trophy) for a tackle-out; the why line stays.
- assert(/completed\?'FULL TIME! 🏆':state&&state\.lives<=0\?'TACKLED!':'RUN OVER'/.test(m)&&/const completed=over&&!!state&&\(state\.finished\|\|state\.won\)/.test(m));
- assert(/over&&!completed\?'Best':'🏆'/.test(m),'no trophy on a lost run');assert(/data-runner-why/.test(m));}
+ assert(/completed\?'FULL TIME!':state&&state\.lives<=0\?'TACKLED!':'RUN OVER'/.test(m)&&/const completed=over&&!!state&&\(state\.finished\|\|state\.won\)/.test(m));
+ /* Nov 10 2026 arcade AAA: the comic card uses no emoji, so the best score reads 'Best N' on every card (never a trophy). */assert(/>Best \{shownBest\}</.test(m)&&!/🏆/.test(m),'no trophy on a lost run');assert(/data-runner-why/.test(m));}
 
 // 7. Why you lost: the tackle's own tip, on the full-time card.
 {const s=game('classic',{spawn:99,nextGoal:1e6,lives:1});s.objects=[{...def('tackler',-1.2),read:1,aim:0,tackle:.2}];tickRunner(s,.02);assert.equal(s.lives,0);
@@ -95,10 +101,10 @@ const dodge=(s,cutAt)=>{s.objects.push(def('jockey',-30,s.lane));let cut=false;
 // 8. Fair and bounded: elite speed never passes the measured fairness ceiling; every lane line keeps an open lane (jump/slide
 // gauntlets fill all three lanes on purpose: their answer is the jump, then the slide); long runs stay bounded.
 for(const id of ['cup','legend']){const s=game(id,{lives:1e6});let most=0,fast=0;
- for(let i=0;i<60*200&&!s.finished;i++){if(i%40===0)runnerShoot(s);tickRunner(s,1/60);most=Math.max(most,s.objects.length);fast=Math.max(fast,s.speed/runnerTopSpeed(s.distance));
+ for(let i=0;i<60*200&&!(s.lap&&s.clears);i++){if(i%40===0)runnerShoot(s);tickRunner(s,1/60);most=Math.max(most,s.objects.length);fast=Math.max(fast,s.speed/runnerTopSpeed(s.distance));
   if(i%30===0)for(const z of new Set(s.objects.filter(o=>o.kind==='defender'&&!o.passed&&!o.boss&&!o.gauntlet&&o.drift===undefined&&o.z<-26).map(o=>o.z))){const lanes=new Set(s.objects.filter(o=>o.kind==='defender'&&o.z===z&&!o.passed).map(o=>o.lane));assert(lanes.size<3,`${id}: a line at ${z} leaves a lane open`);}}
  assert(fast<=1.1+1e-9,`${id}: speed stays under the fairness ceiling (${fast.toFixed(3)})`);assert(most<34,`${id}: bounded objects (${most})`);
- if(id==='cup')assert(s.finished,'Cup Final reaches its goal line');else assert(s.distance>2000,'Legend keeps going');}
+ if(id==='cup')assert(s.clears===1,'Cup Final reaches its goal line');else assert(s.distance>2000,'Legend keeps going');}
 
 // 9. Heat, reduced motion and sound: no new meshes or lights for the tiers or the perfect dodge; pooled voices only.
 {const fx=read('lib/arcade/runnerFx.ts'),perfect=/else if\(kind==='perfect'\)\{[^\n]*/.exec(fx)[0];assert(/if\(!reduced\)\{lineFlash=1/.test(perfect),'reduced motion: no flare, dust or flashes');assert(!/new T\./.test(perfect));

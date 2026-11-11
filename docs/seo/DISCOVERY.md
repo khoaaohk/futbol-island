@@ -108,3 +108,19 @@ before Nov 10 2026 (without landing pages).
 3. Run `node scripts/indexnow.mjs` once (everything), then `--changed-since <day>` after later content changes.
 4. Add the search-arrival line above to the privacy policy's list of what is counted.
 5. Links from other sites are what gets a new domain crawled by Google: `docs/seo/LISTINGS.md`.
+
+## Game pages (Nov 10 2026)
+
+Seven search pages for the arcade (registry `lib/site/games.ts`, routes `app/(site)/games`, test `tests/seo-games.cjs`). Static reading pages: no game canvas. Not linked from the home page or the game UI; reached from `/games`, each other, "More to learn", the formations and positions hubs, the offside rule and four drill pages. All seven are in `/sitemap.xml`, `/sitemap-images.xml` (screenshots + share pictures), `llms.txt` and `llms-full.txt`; `scripts/indexnow.mjs` reads the live sitemap, so `node scripts/indexnow.mjs --changed-since 2026-11-10` sends them after the deploy. `/arcade` stays noindex with the canonical `/arcade` for every `?game=` deep link.
+
+| URL | Game | Target queries |
+| --- | --- | --- |
+| `/games` | hub | free soccer games for kids, soccer games online no ads, soccer games for school Chromebook, football games for kids free |
+| `/games/soccer-swipe-game` | Kit Rush | soccer swipe game, soccer slice game, soccer reaction game for kids, kit rush game |
+| `/games/soccer-snake-game` | Squad Snake | soccer snake game, football snake game, soccer formation game, learn soccer positions game |
+| `/games/soccer-runner-game` | Breakaway Run | soccer runner game, endless soccer runner, soccer dribbling game online, football running game |
+| `/games/soccer-tennis-game` | Futbol Tennis | soccer tennis game online, football tennis game, what is soccer tennis, first touch game |
+| `/games/soccer-pinball` | Futbol Pinball | soccer pinball, football pinball game online, free pinball game no download |
+| `/games/soccer-passing-puzzle-game` | Pass Puzzles | soccer puzzle game, soccer passing game, soccer tactics puzzle, offside game for kids |
+
+Pictures: `public/games/` (12 WebP screenshots, 7 share pictures, about 1.1 MB in all), rebuilt with `python3 docs/seo/build-game-images.py` from `docs/arcade-aaa/shots`. Queue for Search Console: `docs/seo/GAME-PAGES-QUEUE.md`.

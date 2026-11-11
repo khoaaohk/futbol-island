@@ -6,6 +6,9 @@
 .bar.bar[data-overlay]{position:absolute;top:0;left:0;right:0}
 .bar.bar>*{pointer-events:auto}
 .bar.bar>:first-child{justify-self:start;align-self:center}
+/* The Arcade back button is the one thing common to every game (owner rule): its face is fixed HERE, on the bar, so no host game
+   (Kit Rush rendered it island gold: its root never set these) or skin can change it. Dark face, teal rim, the same in all six. */
+.bar.bar{--btn-gold:#24223e;--btn-gold-bright:#313154;--btn-gold-bright-edge:#121329;--btn-gold-edge:#121329;--btn-ink:#e9f5ff;--btn-rim:#81fbed;--btn-rim-width:3px;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e;--btn-shadow-gold-pressed:0 1px 0 #121329;--btn-height:44px;--btn-radius:999px;--btn-press:3px;--btn-font:Arial,Helvetica,sans-serif;--btn-grain:url('/stories/films/assets/entry-grain.png');--btn-focus:3px solid #ffd451;--btn-focus-offset:3px}
 .pill.pill{justify-self:center;display:flex;align-items:baseline;gap:8px;width:max-content;max-width:100%;box-sizing:border-box;margin:0;padding:7px 16px;min-height:0;
  border-radius:20px;background:#26223d;color:#eeebff;border:1px solid #65dfda;box-shadow:0 0 16px #4debd520;pointer-events:none;white-space:nowrap;text-shadow:none}
 .pill b{font-size:26px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums;color:#fff08a}

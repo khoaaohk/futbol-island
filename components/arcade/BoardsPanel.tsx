@@ -11,10 +11,10 @@ export function BoardDialog({label,title,gold,closeLabel,onClose,children,onKeyD
  const dialog=useRef<HTMLDialogElement>(null),done=useRef<HTMLButtonElement>(null),closeRef=useRef(onClose);closeRef.current=onClose;
  useEffect(()=>{const restore=document.activeElement as HTMLElement|null;const d=dialog.current;try{if(d&&!d.open)d.showModal();}catch{d?.setAttribute('open','');}(d?.querySelector<HTMLElement>('[data-autofocus]')??done.current)?.focus({preventScroll:true});return()=>{try{d?.close();}catch{}restore?.focus?.({preventScroll:true});};},[]);
  // Keys and taps stay in the dialog: the game underneath listens on window (Escape leaves a game, Space kicks).
- return <dialog ref={dialog} className={styles.dialog} aria-label={label} onCancel={e=>{e.preventDefault();closeRef.current();}} onClick={e=>{if(e.target===e.currentTarget)closeRef.current();}}
+ return <dialog ref={dialog} className={styles.dialog} data-arcade-board={gold?'entry':'boards'} aria-label={label} onCancel={e=>{e.preventDefault();closeRef.current();}} onClick={e=>{if(e.target===e.currentTarget)closeRef.current();}}
   onKeyDown={e=>{e.stopPropagation();onKeyDown?.(e);}} onKeyUp={e=>e.stopPropagation()} onPointerDown={e=>e.stopPropagation()}>
-  <header className={styles.head}><h2 data-gold={gold||undefined}>{title}</h2><DoneButton ref={done} label={closeLabel} onDone={()=>closeRef.current()}/></header>
-  <div className={styles.body}>{children}</div>
+  <header className={styles.head} data-board-head><h2 data-board-title data-gold={gold||undefined}>{title}</h2><DoneButton ref={done} label={closeLabel} onDone={()=>closeRef.current()}/></header>
+  <div className={styles.body} data-board-body>{children}</div>
  </dialog>;
 }
 
@@ -31,12 +31,12 @@ export function BoardsPanel({game,tab:initialTab='week',island:given,fresh}:{gam
  const deviceRows=(local.boards[game]??[]).map(e=>({key:'d'+e.seq,initials:e.initials,icon:e.icon,score:e.score,day:e.day}));
  const islandRows=(tab==='all'?island?.all:island?.weekly)??[];
  return <>
-  <div className={styles.tabs} role="tablist" aria-label="Which board">{BOARD_TABS.map(t=><button key={t.id} type="button" role="tab" className={styles.chip} aria-selected={tab===t.id} onClick={()=>setTab(t.id)}>{t.label}</button>)}</div>
+  <div className={styles.tabs} data-board-tabs role="tablist" aria-label="Which board">{BOARD_TABS.map(t=><button key={t.id} type="button" role="tab" className={styles.chip} data-board-chip aria-selected={tab===t.id} onClick={()=>setTab(t.id)}>{t.label}</button>)}</div>
   {tab==='device'?<BoardTable game={game} rows={deviceRows} fresh={fresh?.seq?'d'+fresh.seq:null} empty="No scores on this device yet. Play a game to start the board!"/>
-   :island===undefined?<p className={styles.empty} role="status">Loading the island board…</p>
-   :island===null?<p className={styles.empty}>The island board can’t be reached right now. Your scores still save on this device.</p>
+   :island===undefined?<p className={styles.empty} data-board-empty role="status">Loading the island board…</p>
+   :island===null?<p className={styles.empty} data-board-empty>The island board can’t be reached right now. Your scores still save on this device.</p>
    :<BoardTable game={game} rows={islandRows.map(r=>({...r,key:'i'+r.id}))} mine={r=>r.id!==undefined&&mine.has(r.id)} fresh={fresh?.id?'i'+fresh.id:null}
      empty={tab==='week'?'No island scores yet this week. Be the first!':'No island scores yet. Be the first!'}/>}
-  {tab!=='device'&&island&&<p className={styles.note}>{tab==='week'?'The week board starts fresh every Monday.':'The best scores ever played on Futbol Island.'} Players show three letters only.</p>}
+  {tab!=='device'&&island&&<p className={styles.note} data-board-note>{tab==='week'?'The week board starts fresh every Monday.':'The best scores ever played on Futbol Island.'} Players show three letters only.</p>}
  </>;
 }

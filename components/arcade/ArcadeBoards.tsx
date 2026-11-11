@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
-import {BOARD_RULES,BOARD_TAB_ORDER,type BoardGame} from '@/lib/arcade/leaderboard';
+import {BOARD_RULES,HALL_MACHINES,hallMachineOf,type BoardGame} from '@/lib/arcade/leaderboard';
 import {BoardDialog,BoardsPanel} from './BoardsPanel';
 import styles from './Leaderboard.module.css';
 
@@ -11,16 +11,22 @@ import styles from './Leaderboard.module.css';
  * into view on open and on change (opening on Tennis or a tier board no longer hides the selected tab off the strip).
  */
 export default function ArcadeBoards({game:initial,onClose}:{game?:BoardGame;onClose:()=>void}){
- const [game,setGame]=useState<BoardGame>(initial??'runner');
+ const [game,setGame]=useState<BoardGame>(initial??HALL_MACHINES[0]);
+ // Nov 10 2026 (owner): one chip per machine in the room; one board each.
+ const machine=hallMachineOf(game);
  const chips=useRef<HTMLDivElement>(null);
  useEffect(()=>{
-  const tab=chips.current?.querySelector<HTMLElement>('[aria-selected="true"]');if(!tab)return;
+  const tabs=chips.current?.querySelectorAll<HTMLElement>('[aria-selected="true"]');if(!tabs?.length)return;
   let reduced=false;try{reduced=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch{}
-  tab.scrollIntoView({inline:'nearest',block:'nearest',behavior:reduced?'instant':'smooth'});
+  tabs.forEach(tab=>tab.scrollIntoView({inline:'nearest',block:'nearest',behavior:reduced?'instant':'smooth'}));
  },[game]);
  return <BoardDialog label="Hall of High Scores" title="High scores" onClose={onClose}>
-  <div ref={chips} className={styles.chips} role="tablist" aria-label="Choose a game">{BOARD_TAB_ORDER.map(g=><button key={g} type="button" role="tab" className={styles.chip} aria-selected={g===game} onClick={()=>setGame(g)}>{BOARD_RULES[g].name}</button>)}</div>
-  <p className={styles.learn}>{BOARD_RULES[game].learn} Scores are {BOARD_RULES[game].unit}.</p>
+  <div ref={chips}>
+   {machine&&<div className={styles.chips} data-board-games role="tablist" aria-label="Choose a machine">{HALL_MACHINES.map(g=><button key={g} type="button" role="tab" className={styles.chip} data-board-chip aria-selected={g===machine} onClick={()=>setGame(g)}>{BOARD_RULES[g].name}</button>)}</div>}
+   {/* Nov 11 2026 (owner: "keep it simple"): no row of mode boards. A card that opens the Hall on a mode board (after a Pro Cup or Daily run) shows that one board, named here; tapping the machine chip goes to its main board. */}
+   {machine&&game!==machine&&<p className={styles.learn} data-board-mode>{BOARD_RULES[game].name}</p>}
+  </div>
+  <p className={styles.learn} data-board-learn>{BOARD_RULES[game].learn} Scores are {BOARD_RULES[game].unit}.</p>
   <BoardsPanel game={game}/>
  </BoardDialog>;
 }

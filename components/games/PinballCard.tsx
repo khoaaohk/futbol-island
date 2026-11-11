@@ -4,9 +4,11 @@ import {Icon} from '../Icon';
 import {PINBALL_DIVISIONS} from '@/lib/games/soccerPinball';
 import {loadPinballStars,starCount} from '@/lib/games/soccerPinballTable';
 import {PINBALL_TIERS,PINBALL_TIER_IDS,pinballTiersOpen,pinballTipOnly,readPinballTiers,type PinballTierProgress} from '@/lib/games/soccerPinballTiers';
+import {ComicButton,comicLettering,comicNumeral} from './comic';
 import styles from './PinballCard.module.css';
 
-/* Futbol Pinball start / pause / full-time card (round 3, Oct 26 2026, docs/ARCADE_PINBALL_R3_OCT26.md).
+/* Futbol Pinball start / pause / full-time card (round 3, Oct 26 2026, docs/ARCADE_PINBALL_R3_OCT26.md). Nov 10 2026: drawn as a
+ * comic page from the arcade kit (components/games/comic: ComicButton, lettering, numerals, --cm-* tokens on the game root).
  * One big Play button, the six divisions as a compact ladder (1-4, then HARD 5-6), small icon buttons for the
  * leaderboard, options (gear) and leaving. Options hold the nudge switch and the controls help. Fits a 390x844
  * phone without scrolling. Static UI: no animation loop. Prefs are per-device conveniences in localStorage. */
@@ -43,9 +45,9 @@ export function PinballCard({phase,score,detail,takeaway,ended,fresh,best,unlock
  return <section className={styles.card} data-pinball-card={phase} data-hard={!tier&&division.hard||undefined} data-tier={tier?.tier} aria-label="Futbol Pinball">
   <header className={styles.top}>
    <span className={styles.badge} data-fresh={over&&fresh||undefined}>{paused?'TIME OUT':over?(fresh?'NEW BEST!':'FULL TIME'):tier?tier.short:'FUTBOL PINBALL'}</span>
-   {over?<><strong className={styles.score} data-pinball-final data-fresh={fresh||undefined}>{score}</strong>{ended&&<p className={styles.line} data-pinball-ended>{ended}</p>}<p className={ended?styles.sub:styles.line}>{detail}</p>{takeaway&&<p className={styles.tip} data-pinball-takeaway>{ended?pinballTipOnly(takeaway):takeaway}</p>}</>
-    :paused?<h3 className={styles.title}>Paused</h3>
-    :<><h3 className={styles.title}>{tier?tier.name:division.name}</h3><p className={styles.line}>{tier?tier.objective:division.objective}</p></>}
+   {over?<><strong className={`${styles.score} ${comicNumeral}`} data-pinball-final data-fresh={fresh||undefined}>{score}</strong>{ended&&<p className={styles.line} data-pinball-ended>{ended}</p>}<p className={ended?styles.sub:styles.line}>{detail}</p>{takeaway&&<p className={styles.tip} data-pinball-takeaway>{ended?pinballTipOnly(takeaway):takeaway}</p>}</>
+    :paused?<h3 className={`${styles.title} ${comicLettering}`}>Paused</h3>
+    :<><h3 className={`${styles.title} ${comicLettering}`}>{tier?tier.name:division.name}</h3><p className={styles.line}>{tier?tier.objective:division.objective}</p></>}
   </header>
   {!paused&&<div className={styles.ladder} role="radiogroup" aria-label="Start division">
    {PINBALL_DIVISIONS.map((d,i)=>{const n=i+1,locked=n>top,on=n===level;
@@ -60,7 +62,7 @@ export function PinballCard({phase,score,detail,takeaway,ended,fresh,best,unlock
      <strong>{locked&&<Lock/>}{t.name}</strong><span>{locked?t.unlock:b>0?`Best ${b.toLocaleString('en-US')}`:`Points ×${t.mult}`}</span>
     </button>;})}
   </div>}
-  <button className={styles.play} data-pinball-play disabled={pending} onClick={()=>onPlay({...prefs,level,tier:tier?.tier??0})}><Icon name="play" size={26}/>{paused?'Resume':over?'Play again':'Play'}</button>
+  <ComicButton variant="primary" wide className={styles.play} data-pinball-play disabled={pending} onClick={()=>onPlay({...prefs,level,tier:tier?.tier??0})}><Icon name="play" size={26}/>{paused?'Resume':over?'Play again':'Play'}</ComicButton>
   <div className={styles.row}>
    {!paused&&<button type="button" aria-label="Leaderboard" onClick={onBoards}><Icon name="chart" size={22}/></button>}
    <button type="button" aria-label="Options" aria-expanded={options} data-pinball-options onClick={()=>setOptions(v=>!v)}><Icon name="settings" size={22}/></button>
@@ -70,6 +72,6 @@ export function PinballCard({phase,score,detail,takeaway,ended,fresh,best,unlock
    <label><input type="checkbox" checked={prefs.nudge} onChange={e=>setNudge(e.target.checked)}/> Nudge button</label>
    <small>{help}</small>
   </div>}
-  <p className={styles.foot}>{status??(paused?'':`3 coins per play${tier?(tiers[tier.id].best>0?` · Best ${tiers[tier.id].best.toLocaleString('en-US')}`:''):best>0?` · Best ${best.toLocaleString('en-US')}`:''}`)}</p>
+  <p className={styles.foot}>{status??(paused?'':`Free to play${tier?(tiers[tier.id].best>0?` · Best ${tiers[tier.id].best.toLocaleString('en-US')}`:''):best>0?` · Best ${best.toLocaleString('en-US')}`:''}`)}</p>
  </section>;
 }

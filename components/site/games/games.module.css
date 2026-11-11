@@ -1,0 +1,23 @@
+/* The arcade games' search pages (app/(site)/games, Nov 10 2026). Only what app/(site)/site.module.css does not have: the
+   screenshot well and the hub's picture rows. Same tokens (set on .page), a step in tone instead of lines, no shadows, no
+   animation, no scripts (AGENTS.md, phone heat). */
+.shots{margin:0;display:grid;gap:var(--s1)}
+.well{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2);align-items:start;box-sizing:border-box;padding:var(--s2);background:var(--surface);border-radius:clamp(24px,2.4vw,32px)}
+@media(min-width:720px){.well{padding:var(--s3);gap:var(--s3)}}
+.wide{grid-template-columns:minmax(0,1fr)}
+.shot{margin:0;display:grid;gap:var(--s1);min-width:0}
+.shot img{display:block;width:100%;height:auto;border-radius:16px;background:var(--well)}
+.shot figcaption{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
+/* The page's own Play link sits under the lead, centred like the home chapter heads. */
+.playRow{display:grid;justify-items:center;gap:var(--s1)}
+/* Hub: one row per game, its screenshot beside its words. */
+.games{list-style:none;padding:0!important;display:grid;gap:var(--s2)!important}
+.game{display:grid;grid-template-columns:96px minmax(0,1fr);gap:var(--s2);align-items:center;max-width:none!important;padding:var(--s2);background:var(--surface);border-radius:24px}
+@media(min-width:720px){.game{grid-template-columns:132px minmax(0,1fr);gap:var(--s3);padding:var(--s3)}}
+.game img{display:block;width:100%;height:auto;border-radius:12px;background:var(--well)}
+.gameWords{display:grid;gap:6px;min-width:0}
+.gameWords p{max-width:none!important}
+.page .gameName{font-size:clamp(20px,.6vw + 17px,26px);font-weight:700;letter-spacing:-.02em;line-height:1.2;color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:3px;text-underline-offset:.22em}
+.gameKind{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
+.gameLinks{display:flex;flex-wrap:wrap;gap:0 var(--s3);font-size:var(--t-cap)}
+.gameLinks a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:.2em}

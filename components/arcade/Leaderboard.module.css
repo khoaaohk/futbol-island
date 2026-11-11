@@ -47,7 +47,7 @@
 .rank{font-weight:800;font-size:15px;color:#c2b5d5}
 .rows li[data-rank="1"] .rank{color:#ffe58c}
 .who{font:800 22px/1 ui-monospace,'SF Mono',Menlo,Consolas,monospace;letter-spacing:.18em;color:#f7f0ff}
-.pic{font-size:22px;line-height:1;text-align:center}
+.pic{display:grid;place-items:center;font-size:22px;line-height:1;text-align:center}
 .pts{font-weight:800;font-size:16px;color:#e8ffff}
 .rows li[data-mine]{border-color:var(--cyan);background:#16303a;box-shadow:0 0 14px #4debd533}
 .rows li[data-new]{border:2px solid var(--gold);background:#3a3220;box-shadow:0 0 18px #f4c94e55;animation:rowGlow 1.2s ease 2}
@@ -92,3 +92,24 @@
 @media(max-height:520px){.head{padding-top:10px;padding-bottom:8px}.head h2{font-size:24px}.lead strong{font-size:30px}.dialog .tile{height:60px;width:64px;font-size:38px}.dialog .step{min-height:44px}.wheels{margin:6px 0 2px}}
 /* Phones held sideways (Strikers is landscape-only): letters on the left, pictures and Save on the right, so Save stays in view. */
 @media(max-height:520px) and (min-width:601px){.pick{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start}.pick .label{margin-top:4px}.lead em{margin-top:4px;font-size:14px}.lead span{font-size:11px}}
+
+/* Results first (Nov 10 2026): the "New high score!" strip the six arcade games show instead of opening the entry over the results
+   card (HighScoreEntry.tsx). Comic print values (ink #231a2e, teal #19b5a5, sun #ffc83a, paper #fff3d6): square, hard shadow, no
+   blur. Inline in a card's [data-hs-slot]; docked at the foot of the screen when a game has no slot. Static: nothing animates. */
+.prompt{box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;margin:0;padding:8px 8px 8px 12px;border:3px solid #231a2e;border-radius:0;background:#19b5a5;color:#231a2e;box-shadow:4px 4px 0 #231a2e;font-family:Arial,Helvetica,sans-serif;text-align:left}
+.prompt p{display:grid;gap:2px;min-width:0;margin:0}
+.prompt b{white-space:nowrap;font:italic 900 15px/1.1 "Arial Black",Arial,sans-serif;color:#fff3d6;-webkit-text-stroke:3px #231a2e;paint-order:stroke fill;letter-spacing:.01em}
+.prompt span{font-size:13px;line-height:1.2;font-weight:700}
+.prompt button{flex:none;min-height:44px;margin:0;padding:0 14px;border:3px solid #231a2e;border-radius:0;background:#ffc83a;color:#231a2e;box-shadow:3px 3px 0 #231a2e;font:800 15px/1.1 Arial,Helvetica,sans-serif;white-space:nowrap;cursor:pointer;touch-action:manipulation}
+.prompt button:active{translate:3px 3px;box-shadow:0 0 0 #231a2e}
+.prompt button:focus-visible{outline:3px solid #fff3d6;outline-offset:2px}
+/* Docked (a game whose results card has no slot): a slim strip just under the score bar, above the card, so it never covers the
+   card's score lines or its buttons; on a phone held sideways it sits in the bar row between Back and Pause (the card repeats the score). */
+.prompt[data-hs-prompt=docked]{position:fixed;z-index:60;left:50%;translate:-50% 0;top:calc(var(--arcade-edge-top,14px) + var(--arcade-bar-h,44px) + 4px + env(safe-area-inset-top,0px));width:min(400px,calc(100vw - 28px));padding:3px 4px 3px 10px;box-shadow:3px 3px 0 #231a2e}
+.prompt[data-hs-prompt=docked] button{min-height:44px;box-shadow:none;border-width:2px}
+@media(max-height:520px){.prompt[data-hs-prompt=docked]{top:calc(var(--arcade-edge-top,6px) - 3px + env(safe-area-inset-top,0px));width:min(400px,calc(100vw - 250px))}}
+@media(max-width:340px){.prompt b{font-size:15px}.prompt button{padding:0 10px;font-size:14px}}
+@media(prefers-reduced-motion:reduce){.prompt button:active{translate:none}}
+/* Drawn board pictures (BoardIcon.tsx): ink line art needs a light ground, so on the dark island / neon boards each sits on a small
+   paper disc. The comic page (components/games/comic) is already paper and drops the disc. */
+.pic svg,.dialog .icon svg{box-sizing:content-box;padding:3px;border-radius:50%;background:#fff3d6}

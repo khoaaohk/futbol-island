@@ -1,8 +1,9 @@
 import * as T from 'three';
 import type {ArcadePoseOptions} from './arcadePlayerMotion';
 import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_GOLD,TENNIS_HEAD_HEIGHT,TENNIS_RALLY_MILESTONES,tennisPointsToWin,tennisTempo,tennisOpenSide,tennisAimSide,tennisDrillLinedUp,tennisRivalTire,tennisCourtOf,type TennisState,type TennisGrade} from '@/lib/games/soccerTennis';
+import {tennisOpponent} from './tennisEndless';
 import {MOVE_PHASE,type PlayerMotion} from '@/lib/graphics/player';
-import {createTennisArena} from './tennisArena';
+import {createTennisArena,tennisAtlas,tennisAtlasUv,TENNIS_ATLAS} from './tennisArena';
 
 /** Futbol Tennis game-feel layer: touch-grade call-outs, the rival's telegraph,
  * point banners, net wobble, a ball drop-line, split-step hops and hit-stop.
@@ -19,9 +20,11 @@ export const TENNIS_GRADE_LABEL:Record<Exclude<TennisGrade,''>,{text:string;colo
 };
 /** Colours of the one pooled flight-read ring: a ball flying out, or the spot to head a high ball. */
 const TENNIS_EDGE={x:4.95,y:7.75};
-export const TENNIS_SPOT_COLOR={out:'#ff6b6b',head:'#74d6f2'};
+export const TENNIS_SPOT_COLOR={out:'#f0452e',head:'#7fd0f0'};
 /** The open-space ring (where to aim) uses the rival call-out pink, distinct from your yellow aim ring. */
-export const TENNIS_SPACE_COLOR='#ff83d3';
+export const TENNIS_SPACE_COLOR='#19b5a5';
+/** Club board band colours: the old neon call colours mapped to the club's paint (sun yellow = yours, parasol red = the rival's). */
+export const TENNIS_BOARD_BAND:Record<string,string>={'#73fff1':'#ffc83a','#ffe084':'#ffc83a','#ffc93c':'#ffc83a','#ff9fc8':'#f0452e','#ffc0e8':'#f0452e','#ff8a8a':'#f0452e'};
 /** Rival call-out text, from the player's view (camera looks up the court: -x is screen-left). */
 export function tennisIntentLabel(shot:string|null,x:number){return shot==='drop'?'SHORT BALL!':shot==='lob'?'HIGH LOB!':x<0?'◀ YOUR LEFT':'YOUR RIGHT ▶';}
 /** Long rallies warm the court: 0 until the 5th touch, then a gentle rise to 0.45. */
@@ -71,56 +74,60 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
  function draw(l:Label,text:string,color:string,sub=''){
   if(!pointLine)return;sub='';
   if(l.text===text+sub)return;l.text=text+sub;const {ctx}=l,W=ctx.canvas.width,H=ctx.canvas.height;ctx.clearRect(0,0,W,H);
-  if(l.pill){ctx.fillStyle='rgba(8,18,34,.62)';ctx.beginPath();ctx.roundRect(W*.06,H*.06,W*.88,H*.88,H*.3);ctx.fill();}
-  ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';
-  const big=Math.round(H*(sub?.46:.62));let size=big;ctx.font=`900 ${size}px system-ui,-apple-system,Segoe UI,sans-serif`;
-  while(ctx.measureText(text).width>W*.92&&size>10){size-=2;ctx.font=`900 ${size}px system-ui,-apple-system,Segoe UI,sans-serif`;}
-  const y=sub?H*.36:H*.52;ctx.lineWidth=Math.max(4,size*.2);ctx.strokeStyle='rgba(8,18,34,.92)';ctx.strokeText(text,W/2,y);ctx.fillStyle=color;ctx.fillText(text,W/2,y);
-  if(sub){let subSize=Math.round(H*.22);ctx.font=`800 ${subSize}px system-ui,-apple-system,Segoe UI,sans-serif`;
-   while(ctx.measureText(sub).width>W*.94&&subSize>9){subSize-=1;ctx.font=`800 ${subSize}px system-ui,-apple-system,Segoe UI,sans-serif`;} /* long fixes shrink to fit instead of clipping */ctx.lineWidth=6;ctx.strokeText(sub,W/2,H*.78);ctx.fillStyle='#fff6df';ctx.fillText(sub,W/2,H*.78);}
+  ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.lineCap='round';
+  if(l.pill){
+   // Comic house style: your point is a starburst word panel (cut star, ink edge, hard shadow, heavy italic lettering) in the
+   // Breakaway manner; a lost point is a small cracked paper panel.
+   const INK='#231a2e',band=TENNIS_BOARD_BAND[color]??color,lost=band==='#f0452e',letter='italic 900 ';const face='"Arial Black",Impact,system-ui,sans-serif';
+   ctx.save();ctx.translate(W/2,H/2);ctx.rotate(lost?.035:-.06);
+   if(lost){const pw=W*.6,ph=H*.36,crack=[[.14,-.5],[.2,-.22],[.1,-.02],[.21,.2],[.13,.5]];
+    ctx.fillStyle=INK;ctx.fillRect(-pw/2+7,-ph/2+8,pw,ph);ctx.fillStyle='#fff3d6';ctx.fillRect(-pw/2,-ph/2,pw,ph);ctx.strokeStyle=INK;ctx.lineWidth=7;ctx.strokeRect(-pw/2,-ph/2,pw,ph);
+    let size=Math.round(ph*.5);ctx.font=letter+size+'px '+face;while(ctx.measureText(text).width>pw*.84&&size>10){size-=2;ctx.font=letter+size+'px '+face;}ctx.fillStyle='#f0452e';ctx.fillText(text,0,ph*.03);
+    ctx.lineWidth=7;ctx.strokeStyle=INK;ctx.beginPath();crack.forEach(([x,y],i)=>i?ctx.lineTo(x*pw,y*ph):ctx.moveTo(x*pw,y*ph));ctx.stroke();ctx.lineWidth=2.4;ctx.strokeStyle='#fff3d6';ctx.stroke();
+    ctx.lineWidth=5;ctx.strokeStyle=INK;for(const[x0,y0,x1,y1]of[[.2,-.22,.3,-.3],[.1,-.02,-.01,.06],[.21,.2,.3,.24]]){ctx.beginPath();ctx.moveTo(x0*pw,y0*ph);ctx.lineTo(x1*pw,y1*ph);ctx.stroke();}}
+   else{const star=(dx:number,dy:number,grow:number)=>{ctx.beginPath();for(let i=0;i<28;i++){const r=(i%2?.78:1)+grow,a=Math.PI*i/14+.1;ctx.lineTo(dx+Math.cos(a)*r*W*.455,dy+Math.sin(a)*r*H*.43);}ctx.closePath();ctx.fill();};
+    ctx.fillStyle=INK;star(9,10,.035);star(0,0,.035);ctx.fillStyle=band==='#ffc83a'?'#f0452e':'#ff8a3c';star(0,0,0);
+    let size=Math.round(H*.4);ctx.font=letter+size+'px '+face;while(ctx.measureText(text).width>W*.66&&size>10){size-=2;ctx.font=letter+size+'px '+face;}
+    ctx.fillStyle=INK;ctx.fillText(text,size*.08,size*.1);ctx.lineWidth=Math.max(5,size*.24);ctx.strokeStyle=INK;ctx.strokeText(text,0,0);ctx.fillStyle=band==='#ffc83a'?'#ffc83a':'#fff3d6';ctx.fillText(text,0,0);}
+   ctx.restore();
+  }else{const ui='system-ui,-apple-system,Segoe UI,sans-serif';let size=Math.round(H*.62);ctx.font=`800 ${size}px ${ui}`;while(ctx.measureText(text).width>W*.92&&size>10){size-=2;ctx.font=`800 ${size}px ${ui}`;}
+   ctx.lineWidth=Math.max(4,size*.2);ctx.strokeStyle='#231a2e';ctx.strokeText(text,W/2,H*.52);ctx.fillStyle=color;ctx.fillText(text,W/2,H*.52);}
   l.tex.needsUpdate=true;
  }
  function show(l:Label,x:number,y:number,z:number,life:number,rise:number,size=1){if(!pointLine)return;l.x=x;l.y=y;l.z=z;l.age=0;l.life=life;l.rise=rise;l.size=size;l.mesh.visible=true;}
  // Far-court labels are drawn larger so perspective doesn't shrink the rival's cues.
- const touch=label(3.3,.95,512),intent=label(3.2,.74,512),banner=label(6.6,1.8,768);banner.pill=true;
+ const touch=label(3.3,.95,512),intent=label(3.2,.74,512),banner=label(6.6,3,768);banner.pill=true;
  touch.mesh.name='tennis-touch-label';intent.mesh.name='tennis-intent-label';banner.mesh.name='tennis-banner';
  // Ball drop-line: a thin vertical stalk joins a high ball to its shadow, so height reads from above.
- const stalk=new T.Mesh(new T.CylinderGeometry(.018,.018,1,6,1,true),new T.MeshBasicMaterial({color:'#fff6c8',transparent:true,opacity:.35,depthWrite:false}));stalk.visible=false;stalk.name='tennis-drop-line';scene.add(stalk);
+ const stalk=new T.Mesh(new T.CylinderGeometry(.018,.018,1,6,1,true),new T.MeshBasicMaterial({color:'#231a2e',transparent:true,opacity:.35,depthWrite:false}));stalk.visible=false;stalk.name='tennis-drop-line';scene.add(stalk);
  const net=scene.getObjectByName('tennis-net'),tape=scene.getObjectByName('tennis-tape');
  let kickSeen=tennis.kickCount,bounceSeen=tennis.bounceEvents,netSeen=tennis.netEvents,pointSeen=tennis.pointsPlayed,planSeen=false,setSeen=tennis.setEvents,windSeen=-1;
- let tourSeen=tennis.tourEvents,livesSeen=tennis.tourLives,heatSeen=tennis.tourHeat;
+ let tourSeen=tennis.tourEvents,livesSeen=tennis.tourLives,heatSeen=tennis.tourHeat,endSeen=tennis.matchEvents,matchNo=tennis.match;
  let hitStop=0,realDt=0,wrongSeen=tennis.wrongFooted,netWobble=0,netAge=0,netAmp=0,lastRallyCall=0;
- let holdSeen=tennis.pressCount,nudges=0,nudgeSeen=0,nudgeLevel=tennis.level,outSeen=tennis.outEvents,trapSeen=tennis.trapEvents,targetSeen=tennis.targetEvents,goldSeen=false,fakeSeen=false,fakeAge=1,tempoSeen=0,introLevel=0,surfaceLevel=0;
+ let holdSeen=tennis.pressCount,nudges=0,nudgeSeen=0,nudgeLevel=tennis.level,outSeen=tennis.outEvents,trapSeen=tennis.trapEvents,targetSeen=tennis.targetEvents,goldSeen=false,fakeSeen=false,fakeAge=1,tempoSeen=0,introLevel=0;
  // Pooled move poses (no per-frame allocation): bicycle, shark (airborne scissor), rival sole-roll fake, flick-up serve wind-up.
  const movePose:Array<NonNullable<PlayerMotion['move']>>=[{kind:'bicycle',progress:0,side:1,height:1},{kind:'bicycle',progress:0,side:1,height:1}];
  const skillPose:Array<NonNullable<PlayerMotion['skill']>>=[{type:'rainbowFlick',progress:0,side:1},{type:'rainbowFlick',progress:0,side:1}];
- // Drill target: one gold ring (+1 draw only on the drill court). Sand: one shared material swap, no new draws.
- const target=new T.Mesh(new T.RingGeometry(TENNIS_DRILL.radius-.17,TENNIS_DRILL.radius,48),new T.MeshBasicMaterial({color:'#ffc93c',transparent:true,opacity:.9,side:T.DoubleSide,depthWrite:false,toneMapped:false}));
- const TARGET_OFF=new T.Color('#ffc93c'),TARGET_ON=new T.Color('#fff2a8');let targetOn=false;
- target.rotation.x=-Math.PI/2;target.position.set(0,.04,-4.6);target.name='tennis-drill-target';target.visible=false;target.renderOrder=2;scene.add(target);
+ // Drill target: one gold ring (+1 draw only on the drill court). The court surface itself is the world's painted sheet (tennisWorld.ts).
+ // Court rings are cells of the shared ink decal sheet (a paper band with an ink keyline), so they read on every surface.
+ const sheet=tennisAtlas(scene),inkRing=(r:number,color:string,opacity:number)=>{const g=tennisAtlasUv(new T.PlaneGeometry(2*r/.766,2*r/.766),TENNIS_ATLAS.ring);g.rotateX(-Math.PI/2);return new T.Mesh(g,new T.MeshBasicMaterial({map:sheet,color,transparent:true,opacity,depthWrite:false,toneMapped:false}));};
+ const target=inkRing(TENNIS_DRILL.radius-.08,'#ffc83a',1);
+ const TARGET_OFF=new T.Color('#ffc83a'),TARGET_ON=new T.Color('#fff3d6');let targetOn=false;
+ target.position.set(0,.04,-4.6);target.name='tennis-drill-target';target.visible=false;target.renderOrder=2;scene.add(target);
  // Flight read: one ring, shown only while an incoming ball is in the air (+1 draw then). Red = flying out, let it go.
  // Blue = where a high ball drops through head height: stand there to head it.
- const spot=new T.Mesh(new T.RingGeometry(.42,.58,40),new T.MeshBasicMaterial({color:TENNIS_SPOT_COLOR.head,transparent:true,opacity:.9,side:T.DoubleSide,depthWrite:false,toneMapped:false}));
- spot.rotation.x=-Math.PI/2;spot.name='tennis-flight-spot';spot.visible=false;spot.renderOrder=3;scene.add(spot);let spotKick=-1,spotAge=0;
+ const spot=inkRing(.5,TENNIS_SPOT_COLOR.head,1);
+ spot.name='tennis-flight-spot';spot.visible=false;spot.renderOrder=3;scene.add(spot);let spotKick=-1,spotAge=0;
  // Open space: one pink ring on the side of the rival's court it has left empty, shown while you receive (+1 draw then).
  // Aim there (stick / arrow keys as you kick) and the yellow aim ring slides onto it.
- const space=new T.Mesh(new T.RingGeometry(.5,.74,40),new T.MeshBasicMaterial({color:TENNIS_SPACE_COLOR,transparent:true,opacity:.85,side:T.DoubleSide,depthWrite:false,toneMapped:false}));
- space.rotation.x=-Math.PI/2;space.position.set(0,.045,-5.2);space.name='tennis-open-space';space.visible=false;space.renderOrder=3;scene.add(space);let spaceAge=0,tireSeen=false,spaceSide=0;
- const halves:T.Mesh[]=[];scene.traverse(o=>{if(o.name==='tennis-court-half'&&(o as T.Mesh).isMesh)halves.push(o as T.Mesh);});
- const hardMats=halves.map(h=>h.material);const sandMat=new T.MeshStandardMaterial({color:'#c99448',roughness:1,emissive:'#4a2e0c',emissiveIntensity:.35});
- // Round 3 surfaces: shared materials swapped onto the two court halves (no new draws). Clay = terracotta, neon = a
- // glowing purple bounce floor, grass = striped-looking two-tone green (one shade per half).
- const surfMats:Record<string,T.Material[]>={sand:[sandMat,sandMat],
-  clay:[new T.MeshStandardMaterial({color:'#c56a3e',roughness:.95,emissive:'#4a1a08',emissiveIntensity:.3}),new T.MeshStandardMaterial({color:'#bb6238',roughness:.95,emissive:'#4a1a08',emissiveIntensity:.3})],
-  neon:[new T.MeshStandardMaterial({color:'#3a2b84',roughness:.35,metalness:.2,emissive:'#6a32ff',emissiveIntensity:.42}),new T.MeshStandardMaterial({color:'#33287a',roughness:.35,metalness:.2,emissive:'#ff3fb4',emissiveIntensity:.28})],
-  grass:[new T.MeshStandardMaterial({color:'#3f9a4c',roughness:.9,emissive:'#0d3315',emissiveIntensity:.25}),new T.MeshStandardMaterial({color:'#37894a',roughness:.9,emissive:'#0d3315',emissiveIntensity:.25})]};
- function surface(){const key=tennis.level+tennis.tour*100;if(surfaceLevel===key)return;surfaceLevel=key;const set=surfMats[tennisCourtOf(tennis).surface];halves.forEach((h,i)=>{h.material=set?set[i]:hardMats[i];});}
+ const space=inkRing(.62,TENNIS_SPACE_COLOR,1);
+ space.position.set(0,.045,-5.2);space.name='tennis-open-space';space.visible=false;space.renderOrder=3;scene.add(space);let spaceAge=0,tireSeen=false,spaceSide=0;
  const hop=new Float32Array(2),hopAge=new Float32Array([1,1]);
  const arena=createTennisArena(stage,tennis);
  // Plant / skid reads and celebrations (pooled scalars, no allocation).
  const plantAge=new Float32Array([1,1]),peakSpeed=new Float32Array(2),plantCool=new Float32Array(2);let cheerAge=9,youRun=0,rivalRun=0,matchSeen=-1;
- function reset(){tourSeen=tennis.tourEvents;livesSeen=tennis.tourLives;heatSeen=tennis.tourHeat;kickSeen=tennis.kickCount;bounceSeen=tennis.bounceEvents;netSeen=tennis.netEvents;pointSeen=tennis.pointsPlayed;setSeen=tennis.setEvents;windSeen=-1;planSeen=false;hitStop=netWobble=netAge=netAmp=lastRallyCall=realDt=0;wrongSeen=tennis.wrongFooted;hop.fill(0);hopAge.fill(1);
-  trapSeen=tennis.trapEvents;targetSeen=tennis.targetEvents;goldSeen=false;fakeSeen=false;fakeAge=1;tempoSeen=0;introLevel=0;surface();nudgeSeen=0;if(nudgeLevel!==tennis.level){nudgeLevel=tennis.level;nudges=0;}
+ function reset(){endSeen=tennis.matchEvents;matchNo=tennis.match;tourSeen=tennis.tourEvents;livesSeen=tennis.tourLives;heatSeen=tennis.tourHeat;kickSeen=tennis.kickCount;bounceSeen=tennis.bounceEvents;netSeen=tennis.netEvents;pointSeen=tennis.pointsPlayed;setSeen=tennis.setEvents;windSeen=-1;planSeen=false;hitStop=netWobble=netAge=netAmp=lastRallyCall=realDt=0;wrongSeen=tennis.wrongFooted;hop.fill(0);hopAge.fill(1);
+  trapSeen=tennis.trapEvents;targetSeen=tennis.targetEvents;goldSeen=false;fakeSeen=false;fakeAge=1;tempoSeen=0;introLevel=0;nudgeSeen=0;if(nudgeLevel!==tennis.level){nudgeLevel=tennis.level;nudges=0;}
   for(const l of[touch,intent,banner]){l.mesh.visible=false;l.life=0;}arena.reset();plantAge.fill(1);peakSpeed.fill(0);plantCool.fill(0);cheerAge=9;youRun=rivalRun=0;matchSeen=-1;stalk.visible=false;spot.visible=false;spotKick=-1;space.visible=false;spaceAge=0;spaceSide=0;tireSeen=false;outSeen=tennis.outEvents;if(net)net.position.z=0;if(tape)tape.position.z=0;}
  /** Scales the simulation step: returns 0 while a hit-stop holds the contact frame. */
  function scale(dt:number){realDt=dt;if(hitStop<=0)return dt;hitStop-=dt;return 0;}
@@ -173,7 +180,8 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   if(s.targetEvents!==targetSeen){targetSeen=s.targetEvents;draw(touch,'TARGET!','#ffc93c');show(touch,s.fxLandX,1.6,s.fxLandY,.9,.4,1.35);emit('tennis:target');}
   const tempo=s.phase==='rally'?tennisTempo(s):0;if(tempo>tempoSeen&&s.phase==='rally'){draw(banner,'TEMPO UP!','#ffe084',`Rally ${s.rally} · the ball is faster`);show(banner,0,2.3,-1.5,.9,.2,.72);emit(`tennis:tempo:${tempo}`);}tempoSeen=tempo;
   // Court intro: shown on the first rally touch (never during the idle serve, so the serve loop can sleep).
-  if(introLevel!==s.level&&s.phase==='rally'&&s.rally===1){introLevel=s.level;const c=tennisCourtOf(s),best=s.tour?0:readTennisStars()[s.level-1]??0;draw(intent,c.rival,'#ffc0e8');show(intent,s.rival.x,3.1,s.rival.y,1.6,.15,1.35);if(c.style==='drill'){draw(banner,'YELLOW RING ON GOLD','#ffc93c','Drop = short · Kick = middle · Lob = deep');show(banner,0,2.3,1.6,2,.2);/* on your side: the rings it names stay visible */}
+  if(s.match!==matchNo){matchNo=s.match;introLevel=0;nudges=0;nudgeLevel=s.level;}/* endless: every new opponent is introduced by its match name, and the coach's nudges start again for the new match */
+  if(introLevel!==s.level&&s.phase==='rally'&&s.rally===1){introLevel=s.level;const c=tennisCourtOf(s),best=s.tour?0:readTennisStars()[s.level-1]??0;draw(intent,tennisOpponent(c.rival,s.match).toUpperCase(),'#ffc0e8');show(intent,s.rival.x,3.1,s.rival.y,1.6,.15,1.35);if(c.style==='drill'){draw(banner,'YELLOW RING ON GOLD','#ffc93c','Drop = short · Kick = middle · Lob = deep');show(banner,0,2.3,1.6,2,.2);/* on your side: the rings it names stay visible */}
    else if(best){draw(banner,`BEST ${starText(best)}`,'#ffe084',`3rd star: ${c.star3}`);show(banner,0,2.3,-1.5,1.4,.2);}}
   // Match point: said once per point on its first touch (never during the idle serve, so the serve can sleep).
   {const mp=s.phase==='rally'&&s.rally===1?tennisMatchPoint(s):'',total=s.pointsPlayed;
@@ -188,20 +196,23 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   if(s.tourHeat!==heatSeen){heatSeen=s.tourHeat;if(s.tourHeat>0)emit(`tennis:rampup:${s.tourHeat}`);}
   if(s.tourLives!==livesSeen){if(s.tourLives<livesSeen&&s.tourLives>0)emit(`tennis:life:${s.tourLives}`);livesSeen=s.tourLives;}
   const points=s.pointsPlayed;
-  if(points!==pointSeen){pointSeen=points;const you=s.pointWinner==='you',over=s.phase==='over';
+  if(points!==pointSeen){pointSeen=points;
+   // Endless play (Nov 10 2026): `over` is a match just decided (the starburst, the stars, the big cheer); the RUN is over only when
+   // the balls are gone (`runOver`). A won match is `won` while play carries on.
+   const you=s.pointWinner==='you',runOver=s.phase==='over',over=runOver||s.matchEvents!==endSeen,won=runOver?s.winner==='you':s.matchWinner==='you';endSeen=s.matchEvents;
    // Best-of-3: a set won is its own moment (the score has just reset to 0 : 0).
    if(s.setEvents!==setSeen&&!over){setSeen=s.setEvents;const mine=s.setWinner==='you';cheerAge=0;arena.cheer(mine?'you':'rival',mine);if(mine){youRun++;rivalRun=0;}else{rivalRun++;youRun=0;}
-    draw(banner,mine?'SET TO YOU!':'SET TO RIVAL',mine?'#ffc93c':'#ff9fc8',`Sets ${s.sets.you} : ${s.sets.rival} · ${mine?'one more set wins the cup':'win the next set to level it'}`);show(banner,0,2.3,-1.5,2,.2);emit(`tennis:${mine?'streak:3':'comeback'}`);emit(`tennis:point:${s.pointWinner}:${s.rally}:${s.pointKind}`);return;}
+    pointLine=true;draw(banner,mine?'SET TO YOU!':'SET TO RIVAL',mine?'#ffc93c':'#ff9fc8',`Sets ${s.sets.you} : ${s.sets.rival} · ${mine?'one more set wins the cup':'win the next set to level it'}`);show(banner,0,2.3,-1.5,2,.2,mine?1.25:.8);pointLine=false;emit(`tennis:${mine?'streak:3':'comeback'}`);emit(`tennis:point:${s.pointWinner}:${s.rally}:${s.pointKind}`);return;}
    const sub=s.pointKind==='space'?(you?'Into the open space':'It found the open space'):s.pointKind==='letgo'?(you?'The rival let it go':'Never let it go'):s.pointKind==='net'?(you?'The rival hit the net':'Lift it over the net'):s.pointKind==='out'?(you?(s.incomingOut?'Good leave: you judged it out':'The rival hit it out'):'Aim inside the lines'):'Get it over the net';
    const drill=tennisCourtOf(s).style==='drill',best=over&&!s.tour?saveTennisStars(s.level,s.stars):0;
-   if(s.pointWinner&&(!drill||over)){cheerAge=0;arena.cheer(s.pointWinner,over&&(!drill||s.winner==='you'));}
+   if(s.pointWinner&&(!drill||over)){cheerAge=0;arena.cheer(s.pointWinner,over&&(!drill||won));}
    if(drill&&!over)return;
    // Streaks and comebacks: three in a row is ON FIRE; three behind gets a warm "you can come back".
    if(you){youRun++;rivalRun=0;}else{rivalRun++;youRun=0;}
    const fire=you&&!over&&youRun>=TENNIS_STREAK_CALL,gap=s.score.rival-s.score.you,comeback=!you&&!over&&(gap===TENNIS_COMEBACK_GAP||gap===TENNIS_COMEBACK_GAP+2);
-   pointLine=true;draw(banner,over?(s.tour?`TOUR OVER · ${s.tourScore}`:drill?`DRILL ${starText(s.stars)}`:you?`COURT WON! ${starText(s.stars)}`:'GOOD GAME!'):fire?`ON FIRE! ${youRun} IN A ROW`:you?'YOUR POINT!':'RIVAL POINT',fire?'#ffc93c':you||drill&&s.stars>0?'#73fff1':'#ff9fc8',over?(s.tour?`Level ${s.tourHeat+1} · best rally ${s.bestRally}`:drill?`${s.drillHits} targets · best ${starText(best)}`:`${tennisCourtOf(s).sets?`Sets ${s.sets.you} : ${s.sets.rival}`:`${s.score.you} : ${s.score.rival}`} · best ${starText(best)}`):comeback?'Shake it off · you can come back!':sub);show(banner,0,2.3,-1.5,over?2.2:1.35,.2);pointLine=false;
+   pointLine=true;draw(banner,over?(s.tour?(runOver?`TOUR OVER · ${s.tourScore}`:`MATCH WON! +${s.matchBonus}`):drill?`DRILL ${starText(s.stars)}`:you?`COURT WON! ${starText(s.stars)}`:runOver?'GOOD GAME!':'GOOD TRY!'):fire?`ON FIRE! ${youRun} IN A ROW`:you?'YOUR POINT!':'RIVAL POINT',fire?'#ffc93c':you||drill&&s.stars>0?'#73fff1':'#ff9fc8',over?(s.tour?(runOver?`Level ${s.tourHeat+1} · best rally ${s.bestRally}`:`${s.lifeBack?'A ball back · ':''}next: ${tennisOpponent(tennisCourtOf(s).rival,s.match+1)}`):!runOver&&!won?`${s.tourLives} ball${s.tourLives===1?'':'s'} left · same court again`:!runOver&&!drill?`+${s.matchBonus}${s.lifeBack?' · ball back':''} · best ${starText(best)}`:drill?`${s.drillHits} targets · best ${starText(best)}`:`${tennisCourtOf(s).sets?`Sets ${s.sets.you} : ${s.sets.rival}`:`${s.score.you} : ${s.score.rival}`} · best ${starText(best)}`):comeback?'Shake it off · you can come back!':sub);show(banner,0,over?2.9:2.3,-1.5,over?2.2:1.35,.2,over?(you||drill?1.4:.95):you?1:.85);pointLine=false;
    if(fire)emit(`tennis:streak:${youRun}`);else if(comeback)emit('tennis:comeback');
-   emit(`tennis:${over?'match':'point'}:${s.pointWinner}:${s.rally}:${s.pointKind}`);touch.life=Math.min(touch.life,touch.age+.15);intent.life=0;intent.mesh.visible=false;
+   emit(`tennis:${runOver?'match':'point'}:${s.pointWinner}:${s.rally}:${s.pointKind}`);if(over&&!runOver&&won)emit('tennis:next');/* endless: match won, the next opponent walks on */touch.life=Math.min(touch.life,touch.age+.15);intent.life=0;intent.mesh.visible=false;
   }
  }
  const ease=(t:number)=>{const c=1.7;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);};
@@ -216,7 +227,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   if(intent.mesh.visible&&intent.text!=='GOING OUT · LET IT GO'){intent.x=tennis.rival.x;intent.z=tennis.rival.y;}
   // Net cord: the whole net and tape shiver from the hit point, decaying quickly.
   if(netWobble>0){netWobble=Math.max(0,netWobble-ui);netAge+=ui;const z=stage.reduced?0:Math.sin(netAge*42)*netAmp*(netWobble/.6);if(net)net.position.z=z;if(tape)tape.position.z=z*.6;}
-  surface();{const drill=tennisCourtOf(tennis).style==='drill';target.visible=drill&&tennis.phase!=='over';if(target.visible){target.position.x=tennis.targetX;target.position.z=tennis.targetY;
+  {const drill=tennisCourtOf(tennis).style==='drill';target.visible=drill&&tennis.phase!=='over';if(target.visible){target.position.x=tennis.targetX;target.position.z=tennis.targetY;
    // Lined up (the aim ring would land on it): the gold ring lights up, so "yellow on gold" is a visible yes.
    const on=tennisDrillLinedUp(tennis);target.scale.setScalar(on?1.12:1);if(on!==targetOn){targetOn=on;target.material.color.copy(on?TARGET_ON:TARGET_OFF);}}}
   if(fakeAge<1)fakeAge=Math.min(1,fakeAge+ui/.8);
@@ -255,7 +266,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   const ended=s.phase==='point'||s.phase==='over';
   if(ended&&s.pointWinner&&s.pointWinner!==side){p.reaction='dejected';p.reactionProgress=Math.min(1,s.phaseTime/.8);}
   let jump=0;
-  if(ended&&s.pointWinner===side){const over=s.phase==='over';if(over)p.celebrate=cheerAge<2.2?1:Math.max(0,1-(cheerAge-2.2)/.4);jump=stage.reduced?0:tennisCelebrateLift(cheerAge,over);}
+  if(ended&&s.pointWinner===side){const over=s.phase==='over'||s.seam>0;/* a decided match gets the big celebration; the run plays on */if(over)p.celebrate=cheerAge<2.2?1:Math.max(0,1-(cheerAge-2.2)/.4);jump=stage.reduced?0:tennisCelebrateLift(cheerAge,over);}
   // Plant: sink into the knees for a beat after a hard stop, then push off again.
   if(plantAge[i]<1)p.anticipate=Math.max(p.anticipate??0,Math.sin(Math.PI*plantAge[i])*.9);
   // Ready stance: while the other side has the ball and you are set, bounce lightly on your toes.
@@ -263,7 +274,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   return Math.max(jump,hop[i],ready);
  }
  function active(){return arena.active()||plantAge[0]<1||plantAge[1]<1||cheerAge<2.6&&(tennis.phase==='point'||tennis.phase==='over')||fakeAge<1||hitStop>0||netWobble>0||touch.mesh.visible||intent.mesh.visible||banner.mesh.visible||hopAge[0]<1||hopAge[1]<1;}
- function dispose(){arena.dispose();for(const k of['clay','neon','grass'])for(const m of surfMats[k])m.dispose();sandMat.dispose();target.geometry.dispose();target.material.dispose();target.removeFromParent();halves.forEach((h,i)=>{h.material=hardMats[i];});for(const l of[touch,intent,banner]){l.tex.dispose();l.mesh.geometry.dispose();l.mesh.material.dispose();l.mesh.removeFromParent();}stalk.geometry.dispose();stalk.material.dispose();stalk.removeFromParent();spot.geometry.dispose();spot.material.dispose();spot.removeFromParent();space.geometry.dispose();space.material.dispose();space.removeFromParent();}
+ function dispose(){arena.dispose();target.geometry.dispose();target.material.dispose();target.removeFromParent();for(const l of[touch,intent,banner]){l.tex.dispose();l.mesh.geometry.dispose();l.mesh.material.dispose();l.mesh.removeFromParent();}stalk.geometry.dispose();stalk.material.dispose();stalk.removeFromParent();spot.geometry.dispose();spot.material.dispose();spot.removeFromParent();space.geometry.dispose();space.material.dispose();space.removeFromParent();}
  return{scale,sync,pose,reset,active,dispose,
   /** Reduced-motion stand-in for a cinematic beat: your light pool flares (no camera move, no slow-mo). */
   flare(level:number){if(level>.9)arena.flash(0);},heat:()=>tennisRallyHeat(tennis),spaceSide:()=>spaceSide};

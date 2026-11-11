@@ -7,14 +7,16 @@ const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('n
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 const css=read('components/LiveArcadeMatch.module.css'),scene=read('lib/arcade/strikerScene.ts'),stageSrc=read('lib/arcade/arcadeStage.ts');
 // The scene numbers this model copies; if one changes, re-check the pill's band.
-assert.match(stageSrc,/new T\.PerspectiveCamera\(38,1,/,'fov 38');
+assert.match(stageSrc,/new T\.PerspectiveCamera\(look\.camera\.fov,1,/,'stage fov comes from the look');assert.match(read('lib/arcade/looks/neonCabinet.ts'),/camera:\{fov:38,/,'fov 38');assert.doesNotMatch(read('lib/arcade/looks/strikers.ts'),/fov:(?!38\b)/,'Strikers look keeps fov 38 (this test\'s camera maths assumes it)');
 assert.match(scene,/const PORTRAIT_LIFT=\.1;/);
 assert.match(scene,/FOLLOW_ZOOM_PORTRAIT=stage\.mobile\?1\.5:/);
 assert.ok(scene.includes('const limX=27*(1-1/followZoom)+.6,limZ=14*(1-1/followZoom)+.4'),'pan limits');
-assert.ok(scene.includes('const panX=wide?limX*LANDSCAPE_PAN:limX;')&&scene.includes('Math.max(-panX-(portrait?2:0),Math.min(panX+(portrait?4:0),'),'portrait pan overshoot (portrait is never `wide`)');
-assert.ok(scene.includes('camera.position.set(portrait?-d*.52:0,d,portrait?0:d*.78)'),'portrait camera angle');
+assert.ok(scene.includes('const panX=wide?limX*LANDSCAPE_PAN:limX;')&&scene.includes('Math.max(-panX-(portrait?2:0),Math.min(wide?LANDSCAPE_PAN_RIGHT:panX+(portrait?4:0),'),'portrait pan overshoot (portrait is never `wide`)');
+// Arcade AAA pass 2 (Nov 10 2026): landscape has its own tilt and lens (LANDSCAPE_TILT / LANDSCAPE_FOV); portrait keeps -d*.52 and fov 38.
+assert.ok(scene.includes('camera.position.set(portrait?-d*.52:0,d,portrait?0:d*tilt)'),'portrait camera angle');assert.ok(scene.includes('PORTRAIT_FOV=38,')&&scene.includes('camera.fov=portrait?PORTRAIT_FOV:stage.mobile?LANDSCAPE_FOV:DESKTOP_FOV;'),'portrait lens stays fov 38');
 assert.ok(scene.includes('(stage.mobile?[-14.6,14.6]:[-18,18])')&&scene.includes('Math.abs(corner.x)>(wide?LANDSCAPE_X:.94)||Math.abs(corner.y)>.91'),'fit bounds');
-assert.ok(scene.includes('for(const z of [-5,5])stage.box(side*21,.04,z,8,')&&scene.includes('stage.box(side*17,.04,0,.09,.025,10,'),'box lines x 17..25, z -5..5');
+// Arcade AAA pass 1 (Nov 10 2026): the chalk moved into the stadium's one merged line mesh (lib/arcade/strikerStadium.ts); same box.
+{const stadium=read('lib/arcade/strikerStadium.ts');assert.ok(stadium.includes('for(const z of [-5,5])rect(side*17-.05,z-.05,side*24.75,z+.05)')&&stadium.includes('rect(side*17-.05,-5,side*17+.05,5)'),'box lines x 17..25, z -5..5');}
 // The pill rule (last portrait block): right-aligned, vertically centred at a share of the root height plus a header share.
 const blocks=[...css.matchAll(/@media\(pointer:coarse\) and \(orientation:portrait\) and \(max-width:500px\)\{([\s\S]*?)\n\}/g)].map(m=>m[1]);
 const last=blocks[blocks.length-1],i=last.lastIndexOf('.root .footer>p{'),pill=last.slice(i,last.indexOf('}',i));

@@ -46,8 +46,8 @@
   },
   "arcade": {
    "src": "/stories/island-tutorial/arcade.m4a",
-   "duration": 10.6,
-   "sha256": "3acfd13c82de0a15558580ba79ed075b36d2c20fb90df2461e2d5acf2267c0a3"
+   "duration": 9.9,
+   "sha256": "8ca1f1925563bc82249cefa540cf0d151bba0edb13a2417beb00aa78b001ef60"
   },
   "explore": {
    "src": "/stories/island-tutorial/explore.m4a",

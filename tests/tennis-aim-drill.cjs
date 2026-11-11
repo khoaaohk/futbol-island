@@ -43,10 +43,14 @@ strike(0);strike(.1);strike(-.2);assert.equal(c.centerRun,3);strike(1);assert.eq
 const dc=lane('auto',3.7);dc.centerRun=2;t.requestTennisKick(dc,0);t.tickTennis(dc,1/120);assert.equal(dc.centerRun,2,'the drill does not count');
 // 5. Soft gate: a missed drill lowers the pass mark (6 → 5 → 4, floor 4); a pass resets it; stars stay 9/12.
 const g=t.createTennis(5,3);assert.equal(t.tennisDrillPass(g),6);
-const finish=(hits)=>{t.beginTennis(g);g.drillHits=hits;g.drillLeft=1;g.phase='rally';Object.assign(g.ball,{x:0,y:-3,z:.17,vx:0,vy:0,vz:-1,last:'you',crossed:true,bounces:0});g.targetX=4;g.targetY=-7;t.tickTennis(g,1/120);assert.equal(g.phase,'over');return g;};
-finish(5);assert.equal(g.winner,'rival');assert.equal(g.stars,0);assert.match(g.message,/hit 5 to pass next time/);t.resetTennis(g);assert.equal(g.level,3);assert.equal(t.tennisDrillPass(g),5);
-finish(5);assert.equal(g.winner,'you','five rings pass after one miss');assert.equal(g.stars,1);t.resetTennis(g);assert.equal(g.level,4);assert.equal(g.drillTries,0);
-const floor=t.createTennis(5,3);for(let i=0;i<5;i++){floor.phase='over';floor.winner='rival';t.resetTennis(floor);}assert.equal(t.tennisDrillPass(floor),t.TENNIS_DRILL_MIN_PASS);
+// Endless play (Nov 10 2026): the drill ends its MATCH, not the run. A missed drill costs a ball and the drill is fed again with the
+// lower pass mark; a passed drill brings the next court on. (Was: phase 'over' and resetTennis after every drill.)
+const seam=(g)=>{for(let i=0;i<200;i++)t.tickTennis(g,1/100);};
+const finish=(hits,g2=g)=>{const n=g2.matchEvents;t.beginTennis(g2);g2.drillHits=hits;g2.drillLeft=1;g2.phase='rally';Object.assign(g2.ball,{x:0,y:-3,z:.17,vx:0,vy:0,vz:-1,last:'you',crossed:true,bounces:0});g2.targetX=4;g2.targetY=-7;t.tickTennis(g2,1/120);assert.equal(g2.matchEvents,n+1,'the last ball ends the drill match');return g2;};
+finish(5);assert.equal(g.phase,'point','a missed drill does not end the run');assert.equal(g.matchWinner,'rival');assert.equal(g.stars,0);assert.match(g.message,/hit 5 to pass next time/);assert.equal(g.tourLives,2,'it costs one ball');seam(g);assert.equal(g.level,3);assert.equal(g.drillLeft,15,'the drill is fed again');assert.equal(t.tennisDrillPass(g),5);
+finish(5);assert.equal(g.matchWinner,'you','five rings pass after one miss');assert.equal(g.stars,1);assert.equal(g.tourLives,3,'a passed drill brings a ball back');seam(g);assert.equal(g.level,4);assert.equal(g.drillTries,0);
+const floor=t.createTennis(5,3);for(let i=0;i<5;i++){floor.tourLives=3;finish(0,floor);seam(floor);}assert.equal(floor.level,3);assert.equal(t.tennisDrillPass(floor),t.TENNIS_DRILL_MIN_PASS);
+{const last=t.createTennis(5,3);last.tourLives=1;finish(0,last);assert.equal(last.phase,'over','the last ball lost ends the run');assert.equal(last.winner,'rival');t.resetTennis(last);assert.equal(last.level,3);assert.equal(last.tourLives,3);assert.equal(last.drillTries,1,'the easier pass mark is kept for the next run');}
 const m=t.createTennis(5,1);m.phase='over';m.winner='rival';t.resetTennis(m);assert.equal(m.drillTries,0,'match-court losses do not touch the drill mark');
 const top=t.createTennis(5,3);t.beginTennis(top);top.drillHits=12;top.drillLeft=0;top.winner='you';assert.equal(t.tennisStars(top),3);top.drillHits=9;assert.equal(t.tennisStars(top),2);
 assert.match(t.tennisStatus(g.level===3?g:floor),/rings to pass/);

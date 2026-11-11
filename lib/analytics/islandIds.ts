@@ -37,14 +37,14 @@ export const PLACE_LABEL:Record<string,string>=Object.fromEntries(PLACES);
 // Oct 14 2026: the west wing's ten history cases (the Your Collection pieces were never exhibits, so nothing is retired here).
 export const MUSEUM_EXHIBITS=['timeline','laws-1863','penalty-1891','stadiums','boots','var-2018','worldcup-1930','wwc-1991','futsal-1989','laced-leather','telstar-1970','shirts','hall-of-fame',
  'first-international-1872','offside-rules','formations-history','floodlights-1878','copa-america-1916','keeper-hands-1912','ballon-dor','free-kick-wall','ball-curve','throw-in'] as const;
-export const ARCADE_GAMES=['live','runner','tennis','pinball','puzzle'] as const;
+export const ARCADE_GAMES=['live','runner','tennis','pinball','puzzle','snake'] as const;
 export const ACTIVITIES=[
  ['walk','Walking'],['ride','Riding (scooter, bike, moped, truck)'],['fly','Flying (jetpack, parachute)'],['boat','On a boat'],['swim','In the sea (wading, swimming)'],
  ['fishing','Fishing'],['job','Island jobs'],['lesson','Watching a lesson'],['watch','Watching a match or play'],['quiz','Quiz'],
  ['book','Pop-up book'],['cards','Cards & binder'],['films','Card films & clips'],['vending','Vending machine'],['talk','Talking to islanders'],
  ['coaches','Coaches Centre'],['paths','Paths'],['menu','Menus & settings'],
- ['arcade_lobby','Arcade (walking around)'],['arcade_live','Arcade: Island Strikers'],['arcade_runner','Arcade: Breakaway Run'],
- ['arcade_tennis','Arcade: Futbol Tennis'],['arcade_pinball','Arcade: Futbol Pinball'],['arcade_puzzle','Arcade: Pass Puzzles'],
+ ['arcade_lobby','Arcade (walking around)'],['arcade_live','Arcade: Kit Rush (Island Strikers before Nov 10 2026)'],['arcade_runner','Arcade: Breakaway Run'],
+ ['arcade_tennis','Arcade: Futbol Tennis'],['arcade_pinball','Arcade: Futbol Pinball'],['arcade_puzzle','Arcade: Pass Puzzles'],['arcade_snake','Arcade: Squad Snake'],
  ['museum_hall','Museum (walking around)'],
  ['exhibit_timeline','Exhibit: Timeline'],['exhibit_laws-1863','Exhibit: Laws of 1863'],['exhibit_penalty-1891','Exhibit: First penalty, 1891'],
  ['exhibit_stadiums','Exhibit: Stadiums of the World'],['exhibit_boots','Exhibit: Boots through time'],['exhibit_var-2018','Exhibit: VAR, 2018'],

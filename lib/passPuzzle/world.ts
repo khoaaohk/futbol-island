@@ -21,7 +21,8 @@ export function createPuzzle(sc:Scenario):PuzzleWorld{
     },
     kick(k:Kick){
       const calls=s.attackers.flatMap((a,i)=>a.call&&a.call.startAt==null?[{attacker:i,to:{x:a.call.to.x,z:a.call.to.z}}]:[]);
-      if(!beginKick(s,k,sc.require.noHeading))return false;
+      // `place.ideal` is the aim preview's no-scatter flag: a real kick never carries it.
+      if(!beginKick(s,k.place?.ideal?{...k,place:{x:k.place.x,y:k.place.y}}:k,sc.require.noHeading))return false;
       recorded.push(calls.length?{tick:s.tick,kick:clone(s.pending!.kick),calls}:{tick:s.tick,kick:clone(s.pending!.kick)});
       return true;
     },

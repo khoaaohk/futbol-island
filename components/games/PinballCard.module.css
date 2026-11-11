@@ -1,69 +1,68 @@
-/* Futbol Pinball start / pause / full-time card (round 3, Oct 26 2026). Neon arcade card, one primary button.
-   Sized to fit a 390x844 phone (and 844x390 / desktop) without scrolling; every tap target >= 48px. */
-.card{box-sizing:border-box;width:min(var(--arcade-card-wide),100%);padding:var(--arcade-card-pad);border-radius:var(--arcade-card-r);background:#151a30;color:#eff8ff;border:2px solid #ef64c5;box-shadow:0 0 32px #d849b333,0 10px 0 #0b0f1f;text-align:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
-.card[data-hard]{border-color:#ff8a2a;box-shadow:0 0 34px #ff8a2a40,0 10px 0 #0b0f1f}
+/* Futbol Pinball start / pause / full-time card. Nov 10 2026 comic restyle (owner: "make the pinball game the same style as
+   Breakaway"): a printed comic page from the arcade kit (components/games/comic; the --cm-* tokens come from `comicRoot` on the game
+   root). Paper, a heavy ink border, square corners, hard offset shadows that collapse when pressed, lettered title, hand-cut
+   numerals for the final score, button labels in the UI sans at 800. Flat ink only: no gradients, glow or blur. Sized to fit a
+   390x844 phone (and 844x390 / desktop) without scrolling; every tap target >= 48px. */
+.card{box-sizing:border-box;width:min(var(--arcade-card-wide),100%);padding:var(--arcade-card-pad);--arcade-card-r:0px;border-radius:var(--arcade-card-r);background:var(--cm-paper);color:var(--cm-ink);border:var(--cm-line-heavy) solid var(--cm-ink);box-shadow:var(--cm-shadow-card) var(--cm-shadow-card) 0 var(--cm-ink);text-align:center;font-family:var(--cm-ui);user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.card[data-hard]{box-shadow:var(--cm-shadow-card) var(--cm-shadow-card) 0 var(--cm-red)}
 .top{display:grid;justify-items:center;gap:6px}
-.badge{display:inline-block;padding:5px 12px;border-radius:999px;background:#2c2649;color:#ffb4e4;font-size:11px;font-weight:900;letter-spacing:.14em}
-.title{margin:4px 0 0;font-size:var(--arcade-card-title);line-height:1.05;color:#fff6dc;font-family:var(--btn-font,inherit)}
-.line{margin:0;font-size:15px;line-height:1.3;color:#cfe3f5;max-width:320px}
-.score{font-size:46px;line-height:1;color:#ffe86d;font-variant-numeric:tabular-nums;text-shadow:0 0 18px #ffe86d55}
-.tip{margin:4px 0 0;padding:8px 12px;border-radius:12px;background:#2a2148;color:#fff6c8;border-left:4px solid #ffe86d;font-size:14px;line-height:1.35;text-align:left}
-/* The ladder: six round chips in one row; 5 and 6 sit on an orange HARD rail. */
-.ladder{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:16px 0 4px;padding-top:14px}
-.card .ladder button{position:relative;display:grid;justify-items:center;align-content:center;gap:2px;min-width:0;min-height:56px;padding:4px 0;border-radius:16px;border:2px solid #35415c;background:#1d2440;color:#eff8ff;font:inherit;cursor:pointer;touch-action:manipulation}
-.card .ladder button em{font-style:normal;font-size:20px;font-weight:900;line-height:1}
-.card .ladder button[data-hard]{border-color:#7a3d1c;background:#2a1a24}
-.card .ladder button[data-on]{border-color:#ffe86d;background:#3a3420;box-shadow:0 0 0 2px #ffe86d55,0 0 14px #ffe86d44}
-.card .ladder button[data-hard][data-on]{border-color:#ffb067;background:#4a2614;box-shadow:0 0 0 2px #ff8a2a66,0 0 16px #ff8a2a55}
-.card .ladder button:disabled{opacity:.45;cursor:default}
-.card .ladder button:focus-visible{outline:3px solid #73fff1;outline-offset:2px}
-.hardTag{position:absolute;top:0;right:0;width:calc(33.3% - 2px);font-size:10px;font-weight:900;letter-spacing:.16em;color:#ffb067;border-top:2px solid #ff8a2a;padding-top:1px;line-height:1}
-.stars{font-style:normal;font-size:10px;letter-spacing:-.5px;color:#ffe86d;line-height:1}
-.stars b{font-weight:inherit;color:#3c4766}
-.card .play{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;min-height:var(--arcade-primary-h);margin:14px 0 0;border:3px solid #fff2cd;border-radius:var(--btn-radius,999px);background:linear-gradient(180deg,#ffe57a,#f2bd3c);color:#2a2310;font:inherit;font-size:22px;font-weight:900;letter-spacing:.02em;box-shadow:0 6px 0 #a8863d,0 0 22px #ffe86d44;cursor:pointer;touch-action:manipulation}
-.card[data-hard] .play{background:linear-gradient(180deg,#ffc58a,#ff8a2a);box-shadow:0 6px 0 #a5521d,0 0 22px #ff8a2a55}
-.play:not(:disabled):active{translate:0 4px;box-shadow:0 2px 0 #a8863d}
-.play:disabled{opacity:.6}
-.play:focus-visible,.card .row button:focus-visible{outline:3px solid #73fff1;outline-offset:3px}
+.badge{display:inline-block;padding:6px 10px 5px;border:var(--cm-line) solid var(--cm-ink);background:var(--cm-red);color:var(--cm-paper);font:italic 900 13px/1 var(--cm-title);text-transform:uppercase;rotate:-2deg}
+.card .title{margin:6px 0 2px;--cm-letter-size:var(--arcade-card-title);--cm-letter-stroke:4px;font-size:var(--arcade-card-title);line-height:1.02}
+.line{margin:0;font-size:15px;font-weight:700;line-height:1.3;color:var(--cm-ink);max-width:320px}
+.card .score{--cm-numeral-size:52px;line-height:1;color:var(--cm-ink)}
+.tip{margin:4px 0 0;padding:8px 12px;border:var(--cm-line-thin) solid var(--cm-ink);background:#fff;color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);font-size:14px;font-weight:700;line-height:1.35;text-align:left;rotate:-.6deg}
+/* The ladder: six ruled boxes in one row; 5 and 6 sit under a red HARD bar. The picked box is inked solid with a sun numeral. */
+.ladder{position:relative;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin:16px 0 4px;padding-top:16px}
+.card .ladder button{position:relative;display:grid;justify-items:center;align-content:center;gap:2px;min-width:0;min-height:56px;padding:4px 0;border-radius:0;border:var(--cm-line-thin) solid var(--cm-ink);background:#fff;color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);font:inherit;cursor:pointer;touch-action:manipulation}
+.card .ladder button em{font:400 22px/1 var(--cm-numeral);font-style:normal}
+.card .ladder button[data-hard]{background:#ffe1d6}
+.card .ladder button[data-on]{background:var(--cm-ink);color:var(--cm-sun);box-shadow:3px 3px 0 var(--cm-orange)}
+.card .ladder button[data-hard][data-on]{background:var(--cm-red);color:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink)}
+.card .ladder button:not(:disabled):active{translate:3px 3px;box-shadow:0 0 0 var(--cm-ink)}
+.card .ladder button:disabled{background:#e9dcc2;color:#7a6a70;box-shadow:none;cursor:default}
+.card .ladder button:focus-visible{outline:var(--cm-focus);outline-offset:2px}
+.hardTag{position:absolute;top:0;right:0;width:calc(33.3% - 2px);font:italic 900 11px/1 var(--cm-title);color:var(--cm-red);border-top:3px solid var(--cm-red);padding-top:1px}
+.stars{font-style:normal;font-size:10px;letter-spacing:-.5px;color:var(--cm-orange);line-height:1}
+.stars b{font-weight:inherit;color:#c9bca3}
+.card .ladder button[data-on] .stars{color:var(--cm-sun)}.card .ladder button[data-on] .stars b{color:var(--cm-muted)}
+/* Play is the kit's primary sun button (ComicButton): hard shadow that collapses under the thumb. */
+.card .play.play{display:flex;gap:10px;width:100%;min-height:var(--arcade-primary-h);margin:14px 0 0;font-size:20px;touch-action:manipulation}
+.card[data-hard] .play.play{background:var(--cm-orange)}
+.card .play.play:disabled{opacity:.7}
 .row{display:flex;justify-content:center;gap:14px;margin-top:14px}
-.card .row button{display:grid;place-items:center;width:var(--arcade-small-h);height:var(--arcade-small-h);border-radius:16px;border:2px solid #35415c;background:#1d2440;color:#eff8ff;cursor:pointer;touch-action:manipulation}
-.card .row button[aria-expanded=true]{border-color:#73fff1}
-.options{margin-top:12px;padding:10px 12px;border-radius:14px;background:#1d2440;text-align:left}
+.card .row button{display:grid;place-items:center;width:var(--arcade-small-h);height:var(--arcade-small-h);border-radius:0;border:var(--cm-line-thin) solid var(--cm-ink);background:#fff;color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);cursor:pointer;touch-action:manipulation}
+.card .row button:active{translate:3px 3px;box-shadow:0 0 0 var(--cm-ink)}
+.card .row button[aria-expanded=true]{background:var(--cm-ink);color:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-orange)}
+.card .row button:focus-visible{outline:var(--cm-focus);outline-offset:3px}
+.options{margin-top:12px;padding:10px 12px;border:var(--cm-line-thin) solid var(--cm-ink);background:#fff;text-align:left}
 .options label{display:flex;align-items:center;gap:10px;min-height:48px;font-size:15px;font-weight:800}
-.options input{width:26px;height:26px;accent-color:#73fff1}
-.options small{display:block;font-size:12px;line-height:1.4;color:#b5c7dc}
-.foot{margin:10px 0 0;font-size:12px;color:#9fb3cc;min-height:14px}
-@media(max-height:520px){.card{width:min(560px,100%)}.score{font-size:32px}.line{font-size:13px}.ladder{margin-top:8px}.card .ladder button{min-height:48px}.play{font-size:22px;margin-top:8px}.row{margin-top:8px}.tip{font-size:12px;padding:6px 10px}}
-@media(prefers-reduced-motion:reduce){.play:active{translate:none}}
+.options input{width:26px;height:26px;accent-color:var(--cm-teal)}
+.options small{display:block;font-size:12px;font-weight:600;line-height:1.4;color:var(--cm-muted)}
+.foot{margin:10px 0 0;font-size:12px;font-weight:700;color:var(--cm-muted);min-height:14px}
+@media(max-height:520px){.card{width:min(560px,100%)}.card .score{--cm-numeral-size:34px}.line{font-size:13px}.ladder{margin-top:8px}.card .ladder button{min-height:48px}.card .play.play{font-size:19px;margin-top:8px}.row{margin-top:8px}.tip{font-size:12px;padding:6px 10px}}
+@media(prefers-reduced-motion:reduce){.card .ladder button:active,.card .row button:active{translate:none}.badge,.tip{rotate:none}}
 
-/* First-time hint over the waiting table (shown once ever): two half-screen labels. */
-.tutorial{position:absolute;inset:0;z-index:3;pointer-events:none}
-.tutorial span{position:absolute;display:grid;gap:2px;padding:10px 14px;border-radius:16px;background:#0b1024d9;border:2px solid #73fff1;color:#eff8ff;font-size:14px;font-weight:700;text-align:center;animation:pbHint .8s ease-in-out 4 alternate}
-.tutorial b{font-size:18px;color:#ffe86d}
-.tutorial span[data-side=left]{left:6%;top:52%}
-.tutorial span[data-side=right]{right:6%;top:52%;border-color:#ff83d3}
-@keyframes pbHint{from{opacity:.75}to{opacity:1}}
-@media(prefers-reduced-motion:reduce){.tutorial span{animation:none}}
-
-/* Nov 8 2026: the two elite tiers (Derby Night, World Final) under the ladder, each on its own board; a picked tier tints the
-   card with the pads' pink / gold. The full-time card gets a plain "why it ended" line and a NEW BEST flash (static when
-   reduced motion is on). */
+/* Nov 8 2026: the two elite tiers (Derby Night, World Final) under the ladder, each on its own board; a picked tier inks its
+   box (red / sun) and the card's shadow. The full-time card gets a plain "why it ended" line and a NEW BEST stamp that pops in
+   (two finite stepped runs; static when reduced motion is on). */
 .tiers{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 0}
-.card .tiers button{display:grid;align-content:center;gap:2px;min-height:52px;padding:6px 8px;border-radius:16px;border:2px solid #5a2f55;background:#241a33;color:#ffe5f6;font:inherit;text-align:center;cursor:pointer;touch-action:manipulation}
-.card .tiers button+button{border-color:#5c5330;background:#25231a;color:#fff8bb}
-.card .tiers button strong{display:inline-flex;align-items:center;justify-content:center;gap:5px;font-size:15px;font-weight:900;line-height:1.1}
-.card .tiers button span{font-size:12px;line-height:1.2;color:#cfd8ea}
-.card .tiers button[data-on]{border-color:#ff83d3;background:#402340;box-shadow:0 0 0 2px #ff83d355,0 0 16px #ff62c244}
-.card .tiers button+button[data-on]{border-color:#ffe86d;background:#353323;box-shadow:0 0 0 2px #ffe86d55,0 0 16px #ffe86d44}
-.card .tiers button:disabled{opacity:.5;cursor:default}
-.card .tiers button:focus-visible{outline:3px solid #73fff1;outline-offset:2px}
-.card[data-tier="1"]{border-color:#ff83d3;box-shadow:0 0 34px #ff62c240,0 10px 0 #0b0f1f}
-.card[data-tier="2"]{border-color:#ffe86d;box-shadow:0 0 34px #ffe86d40,0 10px 0 #0b0f1f}
+.card .tiers button{display:grid;align-content:center;gap:2px;min-height:52px;padding:6px 8px;border-radius:0;border:var(--cm-line-thin) solid var(--cm-ink);background:#fff;color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);font:inherit;text-align:center;cursor:pointer;touch-action:manipulation}
+.card .tiers button strong{display:inline-flex;align-items:center;justify-content:center;gap:5px;font:italic 900 15px/1.1 var(--cm-title);text-transform:uppercase}
+.card .tiers button span{font-size:12px;font-weight:700;line-height:1.2;color:var(--cm-muted)}
+.card .tiers button[data-on]{background:var(--cm-red);color:var(--cm-paper)}
+.card .tiers button+button[data-on]{background:var(--cm-sun);color:var(--cm-ink)}
+.card .tiers button[data-on] span{color:inherit}
+.card .tiers button:not(:disabled):active{translate:3px 3px;box-shadow:0 0 0 var(--cm-ink)}
+.card .tiers button:disabled{background:#e9dcc2;color:#7a6a70;box-shadow:none;cursor:default}
+.card .tiers button:disabled span{color:#7a6a70}
+.card .tiers button:focus-visible{outline:var(--cm-focus);outline-offset:2px}
+.card[data-tier="1"]{box-shadow:var(--cm-shadow-card) var(--cm-shadow-card) 0 var(--cm-red)}
+.card[data-tier="2"]{box-shadow:var(--cm-shadow-card) var(--cm-shadow-card) 0 var(--cm-sun)}
 .card[data-tier="1"] .ladder,.card[data-tier="2"] .ladder{opacity:.55}
-.sub{margin:0;font-size:13px;line-height:1.3;color:#9fb3cc;max-width:320px}
-.badge[data-fresh]{background:#ffe86d;color:#2a2310;animation:pbFresh .5s cubic-bezier(.2,1.6,.4,1) both}
-.score[data-fresh]{animation:pbBest 1.2s ease-out 2}
-@keyframes pbFresh{from{transform:scale(.6)}to{transform:scale(1)}}
-@keyframes pbBest{0%,100%{text-shadow:0 0 18px #ffe86d55}40%{text-shadow:0 0 30px #ffe86dcc}}
+.sub{margin:0;font-size:13px;font-weight:600;line-height:1.3;color:var(--cm-muted);max-width:320px}
+.badge[data-fresh]{background:var(--cm-sun);color:var(--cm-ink);animation:pbFresh .3s steps(3) both}
+.score[data-fresh]{animation:pbBest .6s steps(4) 2}
+@keyframes pbFresh{from{transform:scale(.6) rotate(-8deg)}to{transform:scale(1)}}
+@keyframes pbBest{0%,100%{transform:scale(1)}50%{transform:scale(1.1) rotate(-2deg)}}
 @media(max-height:520px){.tiers{margin-top:6px}.card .tiers button{min-height:48px;padding:4px 8px}}
 @media(prefers-reduced-motion:reduce){.badge[data-fresh],.score[data-fresh]{animation:none}}

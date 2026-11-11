@@ -1,0 +1,138 @@
+/* Comic HUD kit (Nov 10 2026): the arcade's house style, taken value for value from Breakaway Run's comic page
+ * (components/games/skins/runner.module.css, RunnerMenu.module.css, RunnerControls.module.css; docs/arcade-aaa/runner-direction.md).
+ * Ink outlines, flat colour, paper, square corners, hard offset shadows that collapse when pressed, one Ben-Day dot screen (the only
+ * gradient call in the kit is that dot tile), heavy condensed italic capitals for lettering, IslandBrush for big numerals only.
+ * Buttons: UI sans weight 800, never IslandBrush; 44 px minimum; focus-visible ring; reduced motion drops tilt and travel.
+ * Use: put `.comic` (tokens) on the game root; add `.chrome` there too to draw the shared pause card, boards and high-score entry
+ * (components/arcade/*) as a comic page. A game re-colours the kit by overriding the --cm-* tokens on its own skin class. */
+.comic{--cm-ink:#231a2e;--cm-paper:#fff3d6;--cm-white:#fff;--cm-sun:#ffc83a;--cm-orange:#ff8a3c;--cm-red:#f0452e;--cm-teal:#19b5a5;--cm-violet:#8f78b8;--cm-muted:#51465f;
+ --cm-sky-top:#2f5fa8;--cm-sky-mid:#f08a5a;--cm-sky-haze:#ffcf7a;
+ --cm-line:3px;--cm-line-thin:2px;--cm-line-heavy:4px;--cm-shadow:4px;--cm-shadow-card:8px;
+ --cm-letter:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--font-body),Arial,sans-serif;
+ --cm-title:"Arial Black",Impact,system-ui,sans-serif;--cm-numeral:IslandBrush,"Arial Black",sans-serif;--cm-ui:var(--font-body),system-ui,Arial,sans-serif;
+ --cm-dots:radial-gradient(circle,#ffc24a 1.6px,transparent 1.9px) 0 0/8px 8px;
+ --cm-dots-ink:radial-gradient(circle,#231a2e3d 1.5px,transparent 1.9px) 0 0/8px 8px;
+ --cm-dots-orange:radial-gradient(circle,var(--cm-orange) 1.6px,transparent 1.9px) 0 0/8px 8px;
+ --cm-focus:3px solid var(--cm-teal)}
+
+/* Button: inked paper with a hard shadow that collapses under the thumb. */
+.button{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:48px;min-width:44px;padding:10px 18px;border:var(--cm-line) solid var(--cm-ink);border-radius:0;background:var(--cm-white);color:var(--cm-ink);box-shadow:var(--cm-shadow) var(--cm-shadow) 0 var(--cm-ink);font:800 16px/1.15 var(--cm-ui);letter-spacing:0;text-align:center;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:translate .06s ease,box-shadow .06s ease}
+.button[data-variant=primary]{background:var(--cm-sun);font-size:19px;min-height:56px}
+.button[data-variant=ink]{background:var(--cm-ink);color:var(--cm-paper);box-shadow:var(--cm-shadow) var(--cm-shadow) 0 var(--cm-orange)}
+.button[data-variant=teal]{background:var(--cm-teal);color:var(--cm-ink)}
+.button[data-size=small]{min-height:44px;padding:8px 14px;border-width:var(--cm-line-thin);box-shadow:3px 3px 0 var(--cm-ink);font-size:14px}
+.button[data-wide]{width:100%}
+.button:not(:disabled):active{translate:var(--cm-shadow) var(--cm-shadow);box-shadow:0 0 0 var(--cm-ink)}
+.button[data-size=small]:not(:disabled):active{translate:3px 3px}
+.button:disabled{background:#e9dcc2;color:#7a6a70;box-shadow:none;cursor:default}
+.button:focus-visible{outline:var(--cm-focus);outline-offset:3px}
+.button small{display:block;font:700 12px/1.2 var(--cm-ui);color:var(--cm-muted)}
+
+/* Caption box: paper, ink border, square, tilted a touch. */
+.panel{box-sizing:border-box;padding:8px 12px;border:var(--cm-line) solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);font:700 14px/1.3 var(--cm-ui);rotate:var(--cm-tilt,0deg)}
+.panel[data-tone=dots]{background:var(--cm-dots),var(--cm-white)}
+.panel[data-tone=sun]{background:var(--cm-sun)}
+.panel[data-tone=red]{background:#ffe1d6}
+.panel[data-tone=teal]{background:#c9f1ea}
+.panel[data-tone=ink]{background:var(--cm-ink);color:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-orange)}
+.panel[data-flat]{box-shadow:none}
+
+/* Lettering: heavy italic capitals, ink outline, hard block shadow. */
+.lettering{margin:0;font:italic 900 var(--cm-letter-size,32px)/1 var(--cm-title);letter-spacing:-.02em;text-transform:uppercase;color:var(--cm-letter-fill,var(--cm-sun));-webkit-text-stroke:var(--cm-letter-stroke,5px) var(--cm-ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--cm-ink)}
+.numeral{font:400 var(--cm-numeral-size,52px)/1 var(--cm-numeral);color:var(--cm-ink);font-variant-numeric:tabular-nums}
+
+/* Starburst word panel: an SVG star cut behind one loud word. */
+.burst{position:relative;display:inline-grid;place-items:center;padding:.5em 1.1em;rotate:var(--cm-tilt,-3deg)}
+.burst svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.burst svg polygon{fill:var(--cm-burst,var(--cm-red));stroke:var(--cm-ink);stroke-width:3;stroke-linejoin:round;vector-effect:non-scaling-stroke}
+.burst svg polygon[data-shadow]{fill:var(--cm-ink);stroke:none;translate:5px 5px}
+.burst span{position:relative;font:italic 900 var(--cm-letter-size,22px)/1 var(--cm-title);letter-spacing:-.01em;text-transform:uppercase;color:var(--cm-letter-fill,var(--cm-sun));-webkit-text-stroke:var(--cm-letter-stroke,4px) var(--cm-ink);paint-order:stroke fill;white-space:nowrap}
+
+/* Stat chip: a numeral over a short word, in a ruled paper box. */
+.stat{box-sizing:border-box;display:grid;justify-items:center;gap:1px;min-width:64px;padding:6px 10px 5px;border:var(--cm-line-thin) solid var(--cm-ink);background:var(--cm-white);color:var(--cm-ink)}
+.stat b{font:400 24px/1 var(--cm-numeral);font-variant-numeric:tabular-nums}
+.stat span{font:800 11px/1.15 var(--cm-ui);color:var(--cm-muted)}
+.stat[data-tone=sun]{background:var(--cm-sun)}
+.stat[data-tone=teal]{background:#c9f1ea}
+.stat[data-tone=dots]{background:var(--cm-dots),var(--cm-white)}
+
+/* Card for start and results: paper page, heavy border, the deepest shadow. */
+.cardWrap{position:absolute;inset:0;z-index:4;display:grid;place-items:center;box-sizing:border-box;padding:calc(var(--arcade-bar-clear,56px) + 10px + env(safe-area-inset-top,0px)) calc(14px + env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) calc(14px + env(safe-area-inset-left,0px));background:var(--cm-dots-ink),#fff3d61f;overflow:auto}
+.card{box-sizing:border-box;width:min(400px,100%);padding:16px 18px 18px;border:var(--cm-line-heavy) solid var(--cm-ink);border-radius:0;background:var(--cm-paper);color:var(--cm-ink);box-shadow:var(--cm-shadow-card) var(--cm-shadow-card) 0 var(--cm-ink);text-align:center}
+.cardTop{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:28px}
+.badge{font:italic 900 13px/1 var(--cm-title);color:var(--cm-paper);background:var(--cm-red);padding:6px 10px 5px;border:var(--cm-line) solid var(--cm-ink);rotate:-2deg}
+.badge[data-tone=teal]{background:var(--cm-teal)}
+.badge[data-tone=sun]{background:var(--cm-sun);color:var(--cm-ink)}
+.best{font:800 13px/1 var(--cm-ui);color:var(--cm-ink);background:var(--cm-sun);border:var(--cm-line) solid var(--cm-ink);padding:5px 8px}
+.cardTitle{margin:10px 0 8px;--cm-letter-size:var(--arcade-card-title,32px)}
+
+/* ===== Shared overlays as a printed comic page: pause card, boards, high-score entry (hooks in components/arcade/*) ===== */
+.chrome [data-arcade-pill]{border:3.5px solid var(--cm-ink)!important;border-radius:0!important;background:var(--cm-paper)!important;color:var(--cm-ink)!important;box-shadow:4px 4px 0 var(--cm-ink)!important;transform:rotate(-1.5deg);padding:2px 14px!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.chrome [data-arcade-pill] b{color:var(--cm-ink)!important;font-family:var(--cm-numeral)!important;font-weight:400!important;text-shadow:none!important}
+.chrome [data-arcade-pill] span{color:var(--cm-red)!important;font:800 11px/1 system-ui,sans-serif!important;letter-spacing:.02em!important;text-transform:none!important}
+.chrome [data-arcade-pause]{border:3.5px solid var(--cm-ink)!important;border-radius:50%!important;background:var(--cm-paper)!important;color:var(--cm-ink)!important;box-shadow:4px 4px 0 var(--cm-ink)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.chrome [data-arcade-pause]:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--cm-ink)!important}
+.chrome.chrome.chrome.chrome [data-arcade-pause]:focus-visible{outline:var(--cm-focus);outline-offset:3px}
+.chrome.chrome.chrome.chrome [data-arcade-paused]{background:#231a2ecc}
+.chrome.chrome.chrome.chrome [data-arcade-pause-card]{gap:12px;padding:20px 20px 22px;border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-paper);color:var(--cm-ink);box-shadow:7px 7px 0 var(--cm-ink);rotate:-.8deg}
+.chrome.chrome.chrome.chrome [data-arcade-pause-title]{font:italic 800 46px/.95 var(--cm-letter);letter-spacing:.01em;text-transform:uppercase;color:var(--cm-sun);-webkit-text-stroke:2px var(--cm-ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-arcade-pause-score]{align-self:center;padding:7px 14px 6px;border:2px solid var(--cm-ink);background:var(--cm-dots),#fff;color:var(--cm-ink);font:800 15px/1.2 var(--cm-ui);letter-spacing:.02em;rotate:1.2deg;box-shadow:3px 3px 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-arcade-pause-status]{color:var(--cm-red);font-weight:800}
+.chrome.chrome.chrome.chrome [data-arcade-resume]{border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-sun);color:var(--cm-ink);box-shadow:4px 4px 0 var(--cm-ink);font:800 19px/1.2 var(--cm-ui);margin:4px 4px 4px 0}
+.chrome.chrome.chrome.chrome [data-arcade-resume]:active{translate:4px 4px;box-shadow:0 0 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-arcade-pause-row]{gap:10px;padding-right:3px}
+.chrome.chrome.chrome.chrome :is([data-arcade-exit],[data-arcade-restart],[data-arcade-pause-extra]){border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);font:800 14px/1 var(--cm-ui)}
+.chrome.chrome.chrome.chrome :is([data-arcade-exit],[data-arcade-restart],[data-arcade-pause-extra]):active{translate:3px 3px;box-shadow:0 0 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-arcade-pause-keys]{color:var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-arcade-pause-keys] kbd{border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-arcade-paused] button:focus-visible{outline:var(--cm-focus);outline-offset:3px}
+.chrome.chrome.chrome.chrome [data-arcade-board]{border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-paper);color:var(--cm-ink);box-shadow:8px 8px 0 var(--cm-ink);--btn-focus:3px solid var(--cm-teal)}
+.chrome.chrome.chrome.chrome [data-arcade-board]::backdrop{background:#231a2ecc}
+.chrome.chrome.chrome.chrome [data-board-head]{border-bottom:3px solid var(--cm-ink);background:var(--cm-dots-orange),var(--cm-sun)}
+.chrome.chrome.chrome.chrome [data-board-title]{font:italic 800 34px/1 var(--cm-letter);text-transform:uppercase;color:#fff;-webkit-text-stroke:2px var(--cm-ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-board-body]{scrollbar-color:var(--cm-ink) transparent}
+.chrome.chrome.chrome.chrome [data-board-body] p{color:var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-board-body] :is([data-board-learn],[data-board-note],[data-board-small]){color:var(--cm-muted)!important}
+.chrome.chrome.chrome.chrome [data-board-chip]{border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);font:800 13px/1.1 var(--cm-ui)}
+.chrome.chrome.chrome.chrome [data-board-chip][aria-selected=true]{background:var(--cm-ink);color:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-orange)}
+.chrome.chrome.chrome.chrome :is([data-board-games],[data-board-tabs]){padding-right:4px;padding-bottom:12px}
+.chrome.chrome.chrome.chrome [data-board-tabs]{gap:9px;padding-bottom:4px}
+.chrome.chrome.chrome.chrome [data-board-rows]{padding-right:4px}
+.chrome.chrome.chrome.chrome [data-board-rows] li{grid-template-columns:44px 30px 1fr auto;margin:0 0 8px;padding:0 12px 0 0;border:2px solid var(--cm-ink);border-radius:0;background:#fff;box-shadow:none;animation:none}
+.chrome.chrome.chrome.chrome [data-board-rank]{align-self:stretch;display:grid;place-items:center;background:var(--cm-ink);color:var(--cm-paper);font:italic 800 19px/1 var(--cm-letter)}
+.chrome.chrome.chrome.chrome [data-board-rows] li[data-rank="1"]{background:var(--cm-dots),#fff;box-shadow:4px 4px 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-board-rows] li[data-rank="1"] [data-board-rank]{background:var(--cm-sun);color:var(--cm-ink);border-right:2px solid var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-board-who]{font:italic 800 25px/1 var(--cm-letter);letter-spacing:.12em;color:var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-board-pts]{font:italic 800 22px/1 var(--cm-letter);color:var(--cm-ink);font-variant-numeric:tabular-nums}
+.chrome.chrome.chrome.chrome [data-board-rows] li[data-mine]{background:#c9f1ea;box-shadow:none}
+.chrome.chrome.chrome.chrome [data-board-rows] li[data-new]{border:2px solid var(--cm-ink);background:var(--cm-sun);box-shadow:4px 4px 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-board-rows] li[data-new] :is([data-board-who],[data-board-pts]){color:var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-board-you]{padding:3px 7px 2px;border-radius:0;background:var(--cm-red);color:#fff;font:800 11px/1.2 var(--cm-ui);rotate:-6deg}
+.chrome.chrome.chrome.chrome [data-board-body] p[data-board-empty]{padding:22px 16px;border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);font-weight:800}
+.chrome.chrome.chrome.chrome [data-board-body] [data-board-cheer]{border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-sun);color:var(--cm-ink)!important;font:italic 800 24px/1.05 var(--cm-letter)!important;text-transform:uppercase;box-shadow:4px 4px 0 var(--cm-ink);rotate:-1deg;margin-right:4px!important}
+.chrome.chrome.chrome.chrome [data-hs-lead] strong{font:italic 800 68px/1 var(--cm-letter);color:var(--cm-sun);-webkit-text-stroke:2.5px var(--cm-ink);paint-order:stroke fill;text-shadow:4px 4px 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-hs-lead] span{color:var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-hs-lead] em{color:var(--cm-red);font-weight:800}
+.chrome.chrome.chrome.chrome [data-hs-label]{color:var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-hs-step]{border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-hs-step]:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-wheel]{border:3px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);font:italic 800 58px/1 var(--cm-letter);text-shadow:none;box-shadow:none}
+.chrome.chrome.chrome.chrome [data-wheel][aria-current=true]{background:var(--cm-dots),var(--cm-paper);box-shadow:5px 5px 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-hs-icon]{border:2px solid var(--cm-ink);border-radius:0;background:#fff;box-shadow:none}
+.chrome.chrome.chrome.chrome [data-hs-icon][aria-pressed=true]{background:var(--cm-sun);box-shadow:3px 3px 0 var(--cm-ink)}
+.chrome.chrome.chrome.chrome [data-hs-icon] small{color:var(--cm-ink)}
+/* Drawn pictures (components/arcade/BoardIcon.tsx) sit straight on the page: no paper disc under them here. */
+.chrome.chrome.chrome.chrome :is([data-hs-icon],[data-board-pic]) svg{padding:0;border-radius:0;background:none}
+.chrome.chrome.chrome.chrome [data-board-actions]{padding-right:5px}
+.chrome.chrome.chrome.chrome [data-board-btn]{border:3px solid var(--cm-ink);border-radius:0;color:var(--cm-ink);box-shadow:4px 4px 0 var(--cm-ink);font:800 16px/1.2 var(--cm-ui)}
+.chrome.chrome.chrome.chrome [data-board-btn=primary]{background:var(--cm-sun)}
+.chrome.chrome.chrome.chrome [data-board-btn=secondary]{background:#fff}
+.chrome.chrome.chrome.chrome [data-board-btn]:not(:disabled):active{translate:4px 4px;box-shadow:0 0 0 var(--cm-ink)}
+@media (max-width:600px){.chrome.chrome.chrome.chrome [data-arcade-board]{box-shadow:none}}
+@media (prefers-reduced-motion:reduce){
+ .button{transition:none}.button:not(:disabled):active{translate:none}
+ .panel,.burst,.badge{rotate:none}
+ .chrome [data-arcade-pill]{transform:none}
+ .chrome.chrome.chrome.chrome [data-arcade-pause]:active{transform:none}
+ .chrome.chrome.chrome.chrome :is([data-arcade-pause-card],[data-arcade-pause-score],[data-board-you],[data-board-cheer]){rotate:none}
+ .chrome.chrome.chrome.chrome :is([data-arcade-resume],[data-arcade-exit],[data-arcade-restart],[data-arcade-pause-extra],[data-board-btn],[data-hs-step]):active{translate:none;transform:none}}

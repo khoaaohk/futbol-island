@@ -64,8 +64,8 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
  return <div className={styles.overlay} data-runner-menu={phase}>
   <section className={styles.card} aria-label="Breakaway Run menu" data-elite={elite||undefined}>
    <div className={styles.top}>
-    <span className={styles.badge} data-runner-outcome={over?(completed?'finished':'tackled'):undefined}>{paused?'PAUSED':over?(completed?'FULL TIME! 🏆':state&&state.lives<=0?'TACKLED!':'RUN OVER'):'BREAKAWAY RUN'}</span>
-    {!paused&&shownBest>0&&<span className={styles.best} title={`Personal best${elite?` on ${m.name}`:''}`}>{over&&!completed?'Best':'🏆'} {shownBest}</span>}
+    <span className={styles.badge} data-runner-outcome={over?(completed?'finished':'tackled'):undefined}>{paused?'PAUSED':over?(completed?'FULL TIME!':state&&state.lives<=0?'TACKLED!':'RUN OVER'):'BREAKAWAY RUN'}</span>
+    {!paused&&shownBest>0&&<span className={styles.best} title={`Personal best${elite?` on ${m.name}`:''}`}>Best {shownBest}</span>}
    </div>
    {over?<div className={styles.result}>
      <strong className={styles.score} data-new-best={state?.newBest||undefined}>{score}</strong>
@@ -87,8 +87,8 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
       <span className={styles.sub}>{open&&id==='daily'?'Same course for everyone today':open?<><i aria-hidden="true">{starRow(stars[id]??0)}</i>{r.hard&&<b>{r.short.toUpperCase()}</b>}</>:runnerModeLockHint(id)}</span>
      </button>;})}
    </div>}
-   {phase==='ready'&&<p className={styles.lineMode} data-runner-line>{m.line}{m.finish?` · ${m.finish} m`:''}{daily?(today?.counted?' · Practice':' · First run counts'):elite?' · own scoreboard':''}</p>}
-   {hint&&phase==='ready'&&touch&&<p className={styles.hint}>👆 Left thumb: push the stick to change lane. Big pink button = shoot!</p>}
+   {phase==='ready'&&<p className={styles.lineMode} data-runner-line>{m.line}{m.finish?` · ${m.finish} m rounds, endless`:''}{daily?(today?.counted?' · Practice':' · First run counts'):elite?' · own scoreboard':''}</p>}
+   {hint&&phase==='ready'&&touch&&<p className={styles.hint}>Left thumb: push the stick to change lane. Big yellow button = shoot!</p>}
    {message&&<p className={styles.status} role="status">{message}</p>}
    <button className={styles.play} disabled={pending} onClick={play} data-runner-play>{paused?'Resume':over?(nextLabel&&nextLabel!=='Play again'?nextLabel:'Retry'):'Play'}</button>
    {!paused&&<div className={styles.row}>
@@ -99,7 +99,7 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
    </div>}
    {panel==='missions'&&phase==='ready'&&<RunnerMissionCard state={state} phase={phase}/>}
    {!touch&&!panel&&<p className={styles.keys}>← → lane · ↑ jump · ↓ slide · Space shoot · E skill · Enter {over?'retry':'play'}</p>}
-   {phase==='ready'&&!panel&&<p className={styles.coins}>3 coins per play</p>}
+   {phase==='ready'&&!panel&&<p className={styles.coins}>Free to play</p>}
   </section>
  </div>;
 }

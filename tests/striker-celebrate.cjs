@@ -54,5 +54,5 @@ assert(/if\(stage\.reduced\)return 0;/.test(scene),'no outro under reduced motio
 assert(/STRIKER_HEADLINES\[s\.headline\]/.test(ui),'call-out banner');
 for(const cue of ['ole','cheer','win','lose','draw'])assert(new RegExp(`case '${cue}':`).test(audio),'audio cue '+cue);
 assert(/function groove\(/.test(audio)&&/if\(music\)\{/.test(audio),'groove only with music on');
-assert(/STRIKER_PENALTY_X/.test(scene)&&/flags\.push\(flag\)/.test(scene),'arena: penalty spots, corner flags');
+assert(/STRIKER_PENALTY_X/.test(scene)&&/flags=new T\.InstancedMesh\(flagGeometry,/.test(scene)&&/flags\.name='striker-corner-flags'/.test(scene),'arena: penalty spots, corner flags (pass 3: the four flags are one instanced draw)');
 console.log('striker-celebrate: ok');

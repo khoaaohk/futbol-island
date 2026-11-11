@@ -66,7 +66,10 @@ assert(/Pocket futsal court[\s\S]{0,400}box\(16,\.012,9,'#648c72'/.test(src('lib
  const first=g.getIndex().array.slice(0,6),xs=[...first].map(i=>pos.getX(i));assert.equal(Math.min(...xs),-25,'band 0 (material 0) starts at the west goal line');assert.equal(Math.max(...xs),-20);
  const st=src('lib/arcade/strikerScene.ts'),pp=src('lib/arcade/passPuzzleScene.ts');
  // Nov 8 2026: the league tiers recolour the two stripe materials, so they are hoisted into grassMaterials; still one mesh.
- assert(/grassMaterials=\['#193440','#203f4c'\]\.map/.test(st)&&(st.match(/stripedPlaneGeometry\(/g)||[]).length===1&&/new T\.Mesh\(stripedPlaneGeometry\(28,50,10,'x'\),grassMaterials\)/.test(st)&&!/for\(let i=0;i<10;i\+\+\)\{const patch/.test(st),'Strikers: one grass mesh');
+ // Arcade AAA pass 1 (Nov 10 2026): Strikers' pitch is now ONE unlit mesh with one painted canvas (ten mown bands, wear, floodlight
+ // pools) in lib/arcade/strikerStadium.ts; the league tiers tint that one material. Still one grass mesh, and no vertex-colour variant.
+ const sd=src('lib/arcade/strikerStadium.ts');
+ assert(!/stripedPlaneGeometry\(/.test(st)&&(sd.match(/paintTurf\(/g)||[]).length===2&&/turf=new T\.Mesh\(new T\.PlaneGeometry\(IX\*2,IZ\*2\),turfMaterial\)/.test(sd)&&/for\(let i=0;i<10;i\+\+\)\{g\.fillStyle=i%2\?/.test(sd)&&/stadium\.turfMaterial\.color\.set\(m\.turf\)/.test(st)&&!/vertexColors/.test(sd),'Strikers: one grass mesh');
  assert(/stripedPlaneGeometry\(hw\*2,L,stripes\),stripeMaterials/.test(pp)&&!/new T\.PlaneGeometry\(hw\*2,L\/stripes\)/.test(pp),'pass puzzles: one grass mesh');
  assert(/stripeMaterials\.forEach\(m=>m\.dispose\(\)\)/.test(pp),'pass puzzle stripe materials are released on rebuild');
  assert(!/vertexColors/.test(st)&&!/vertexColors/.test(pp),'no vertex-colour variant in the arcade');}

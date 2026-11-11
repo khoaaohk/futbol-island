@@ -24,7 +24,7 @@ export const DRILLS_C:RawDrill[]=[
   mistakes:['One line of twelve children and one goal. Two or three lanes triple the number of shots.','Leaning back and scooping the ball over the goal. Head and chest stay over the ball.','A big last touch that runs away. The touch before the shot goes a step ahead, slightly to the side of the kicking foot.'],
   game:'Most shots in a game come while a player is moving with the ball and a defender is chasing. The step after the shot matters too, and our lesson on reacting to a shot teaches it: follow in, because the ball may come back.',
   home:'A goal can be two trees, two shoes or a chalk square on a wall. Ten shots with each foot, moving the ball first every time.',
-  lessons:['next7_shotreaction','learn7_carry','learnf_farpost'],links:[G.st,G.wg,G.field],related:['world-cup-shooting-game','lay-off-and-shoot','follow-the-shot','clean-your-room'],
+  lessons:['next7_shotreaction','learn7_carry','learnf_farpost'],links:[G.st,G.wg,G.field,G.runner],related:['world-cup-shooting-game','lay-off-and-shoot','follow-the-shot','clean-your-room'],
   faq:[{q:'How do I teach a young child to shoot?',a:'Laces, not toes: point the toe down, lock the ankle, put the standing foot beside the ball and kick through its middle. Then practice with a ball that is rolling.'},
    {q:'Do U6 and U8 players need a goalkeeper for shooting?',a:'No. Games at these ages are played without goalkeepers, so shoot at small goals. A coach standing in goal and moving slowly is fine for fun.'},
    {q:'How far out should kids shoot from?',a:'About 6 to 8 yards at U6 and U8, and 10 to 12 yards at U10. The ball should reach the goal with pace along the ground.'}]},

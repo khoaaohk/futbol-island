@@ -3,7 +3,7 @@ import {LEGEND_PACK_PRICE,MYSTERY_PACK_OPTIONS,PACKS_PER_DAY,PACK_RESTOCK_MESSAG
 import {trainingPay} from '../town/dailyMeter';
 import {ARCADE_PLAY_COST as PLAY_COST,ARCADE_COIN_CAPS as COIN_CAPS,PUZZLE_FIRST_SOLVE_COINS as PUZZLE_FIRST} from '../economy';
 /** `learn`: one-off learning coins (lessons, hidden balls, stories, journeys, explore, paths), paid once ever and never metered. */
-export type ArcadeCoinGame='runner'|'pinball'|'tennis'|'live'|'puzzle'|'island'|'learn';
+export type ArcadeCoinGame='runner'|'pinball'|'tennis'|'live'|'puzzle'|'island'|'learn'|'kitrush'|'snake';
 export const ARCADE_PLAY_COST=PLAY_COST;// lib/economy.ts
 /** Explicit one-time local testing credit; ordinary gameplay caps remain unchanged. */
 export const TEST_COIN_GRANT_ID='testing-credit-2026-09-27';
@@ -22,11 +22,11 @@ type State={version:1;spends:Record<string,ArcadeSpend>;runs:Record<string,Run>;
 export const ARCADE_COIN_CAPS=COIN_CAPS;// lib/economy.ts (never lower: also the save clamp)
 /** Pass Puzzles (economy pass, 28 Sep 2026): free to play, first solve pays PUZZLE_FIRST_SOLVE_COINS + new stars, a repeat pays 0. */
 export const PUZZLE_FIRST_SOLVE_COINS=PUZZLE_FIRST;// lib/economy.ts
-const games:ArcadeCoinGame[]=['runner','pinball','tennis','live','puzzle','island','learn'];
+const games:ArcadeCoinGame[]=['runner','pinball','tennis','live','puzzle','island','learn','kitrush','snake'];
 const integer=(n:unknown,max=1e9)=>typeof n==='number'&&Number.isFinite(n)?Math.max(0,Math.min(max,Math.floor(n))):0;
 const key=(s:unknown):s is string=>typeof s==='string'&&s.length>0&&s.length<180&&s!=='__proto__'&&s!=='constructor'&&s!=='prototype';
 const empty=():State=>({version:1,spends:{},runs:{},best:{},attempts:{},visits:{},packs:[]});
-export const EMPTY_ARCADE_WALLET:ArcadeWalletSnapshot={balance:0,lifetimeEarned:0,byGame:{runner:0,pinball:0,tennis:0,live:0,puzzle:0,island:0,learn:0},history:[],packs:[],vendingPurchases:[],training:{day:'',earned:0}};
+export const EMPTY_ARCADE_WALLET:ArcadeWalletSnapshot={balance:0,lifetimeEarned:0,byGame:{runner:0,pinball:0,tennis:0,live:0,puzzle:0,island:0,learn:0,kitrush:0,snake:0},history:[],packs:[],vendingPurchases:[],training:{day:'',earned:0}};
 /** Training coins (metered runs) paid on a local day. */
 const trainingPaidOn=(runs:Record<string,Run>,day:string)=>Object.values(runs).reduce((n,r)=>n+(r.raw!==undefined&&localPlayDay(r.at)===day?r.paid:0),0);
 export function sanitizeArcadeWallet(value:unknown,valid:ReadonlySet<string>):State{
@@ -61,6 +61,8 @@ export function arcadeCoinTarget(game:Exclude<ArcadeCoinGame,'puzzle'|'island'>,
  if(game==='pinball')value=n(s.goals)*3+n(s.moves)*2;
  if(game==='tennis')value=Math.floor(n(s.cleanReturns)/3)+n(s.points)*2+(s.won?4:0);
  if(game==='live'&&s.engaged)value=Math.floor(n(s.passes)/3)+n(s.goals)*3+(s.finished?5+(s.won?3:0):0);
+ if(game==='snake')value=Math.floor(n(s.points)/150);// Squad Snake (Nov 10 2026): `points` is the run's score, 1 coin per 150
+ if(game==='kitrush')value=Math.floor(n(s.points)/150);// Kit Rush (Nov 10 2026): `points` is the run's score, 1 coin per 150
  return Math.min(ARCADE_COIN_CAPS[game],value);
 }
 /** `meter`: which credits the Training meter applies to (browser wiring passes dailyMeter.isTrainingRun); omitted = none. */
@@ -113,7 +115,8 @@ export function createArcadeWallet(ports:Ports){
    return save({...next,spends:{...next.spends,[id]:{cost,source,reason:reason.slice(0,120),at:ports.now(),...(itemId?{itemId}:{})}}})?{ok:true as const}:{ok:false as const,reason:'Your payment could not be saved. Your coins were not spent.'};
   },true).catch(()=>({ok:false as const,reason:'Your payment could not be saved. Your coins were not spent.'}));
  }
- function payArcadePlay(game:Exclude<ArcadeCoinGame,'island'>,id:string){return spend(`play:${id}`,ARCADE_PLAY_COST,`${game} arcade play`);}
+ function payArcadePlay(game:Exclude<ArcadeCoinGame,'island'>,id:string):Promise<SpendResult>{if(ARCADE_PLAY_COST<1)return Promise.resolve({ok:true});// free play (11 Nov 2026): nothing is spent, no coin wall
+  return spend(`play:${id}`,ARCADE_PLAY_COST,`${game} arcade play`);}
  function recordPuzzleBest(levelId:string,stars:number,attemptID:string,visitID:string){if(![levelId,attemptID,visitID].every(key))return Promise.resolve(0);return ports.lock(()=>{load();const next=current();if(next.attempts[attemptID])return 0;const best=next.best[levelId]??0,value=integer(stars,3);if(!value||value<=best)return 0;const amount=(best===0?PUZZLE_FIRST_SOLVE_COINS:0)+Math.max(0,value-best);const id=`puzzle:${attemptID}`;const run=amount?runRecord(next.runs,id,'puzzle',amount,best===0?'First puzzle solve':'New puzzle stars'):null;save({...next,best:{...next.best,[levelId]:Math.max(best,value)},attempts:{...next.attempts,[attemptID]:true},runs:run?{...next.runs,[id]:run}:next.runs},true);return run?.paid??0;},false).catch(()=>0);}
  async function purchaseLegendPack(candidates:readonly string[],cost=LEGEND_PACK_PRICE):Promise<{ok:true;pack:LegendPack}|{ok:false;reason:string}>{try{return await ports.lock(()=>{load();const next=current(),price=integer(cost,1000);if(!price||cost!==price)return{ok:false as const,reason:'Invalid pack price.'};const pool=[...new Set(candidates)].filter(n=>ports.valid.has(n)&&!next.packs.some(p=>p.player===n));if(!pool.length)return{ok:false as const,reason:'You have collected every legend in this series.'};const earned=Object.values(next.runs).reduce((n,r)=>n+r.paid,0),spent=next.packs.reduce((n,p)=>n+p.cost,0)+Object.values(next.spends).reduce((n,d)=>n+d.cost,0);if(earned-spent<price)return{ok:false as const,reason:'Earn more arcade coins to open this pack.'};const player=pool[Math.min(pool.length-1,Math.floor(Math.max(0,ports.random())*pool.length))],pack={id:ports.id(),player,cost:price,at:ports.now()};const updated={...next,packs:[...next.packs,pack]};if(!save(updated))return{ok:false as const,reason:'This browser could not save the pack. Your coins were not spent.'};reconcile(updated);return{ok:true as const,pack};},true);}catch{return{ok:false,reason:'Purchases need browser storage and a secure tab lock. Your coins were not spent.'};}}
  /** Opens a pack. `legendCandidates`/`regularCandidates` are the pack's own missing cards (the caller filters out owned cards and

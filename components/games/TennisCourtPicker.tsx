@@ -1,5 +1,8 @@
 'use client';
+import {useEffect,useState} from 'react';
 import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_TOURS,TENNIS_TOUR_RULES,tennisCourtTouches,type TennisTouchGuide} from '@/lib/games/soccerTennis';
+import {tennisVenueFor,tennisVenueThumb} from '@/lib/arcade/tennisVenues';
+import {TENNIS_RUN} from '@/lib/arcade/tennisEndless';
 import styles from './TennisCourtPicker.module.css';
 
 /** Futbol Tennis court picker (round 3, Oct 26 2026): a compact row of court chips (number, stars, lock), the HARD
@@ -12,6 +15,9 @@ export function tennisCourtPills(level:number):string[]{const c=TENNIS_COURTS[le
  if(c.style==='drill')out.push('Targets');if(c.surface==='sand')out.push('Sand');if(c.surface==='clay')out.push('Clay');if(c.surface==='grass')out.push('Grass');
  if(c.wind)out.push('Wind');if(c.bounce>1.1)out.push('Bouncy');if(c.spin)out.push('Spin');if(c.sets)out.push('Best of 3');if(c.touches>1&&c.style!=='drill')out.push('2 touches');if(c.to<7)out.push(`First to ${c.to}`);
  return out.slice(0,3);}
+/** The chosen court's painted preview (canvas-rendered once per stop and cached; a plain <img>, so the menu still draws 0 frames). */
+function CourtThumb({level,tour}:{level:number;tour:number}){const v=tennisVenueFor(level,tour),[src,setSrc]=useState('');useEffect(()=>{setSrc(tennisVenueThumb(v));},[v]);
+ return <span className={styles.thumb} data-tennis-thumb={v.id} aria-hidden="true">{src?<img src={src} alt="" width={104} height={68} draggable={false}/>:null}</span>;}
 const Lock=()=><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>;
 
 /** `tour` (Nov 8 2026): while a tour is picked no court chip is pressed and the info line describes the tour instead. */
@@ -26,13 +32,16 @@ export function TennisCourtPicker({unlocked,level,stars,onPick,tour=0}:{unlocked
   <div className={styles.row} role="group" aria-label="Courts">{TENNIS_COURTS.slice(0,hardFrom).map((_,i)=>chip(i))}</div>
   <div className={styles.row} role="group" aria-label="Hard courts"><span className={styles.hardTag}>HARD</span>{TENNIS_COURTS.slice(hardFrom).map((_,i)=>chip(hardFrom+i))}</div>
   {tour===1||tour===2?<div className={styles.info} data-hard data-tour-info>
+   <CourtThumb level={level} tour={tour}/>
    <strong>{TENNIS_TOURS[tour-1].name}</strong>
    <span className={styles.rival}>{TENNIS_TOURS[tour-1].lesson}</span>
-   <span className={styles.pills}><em>{TENNIS_TOUR_RULES[tour-1].lives} balls</em><em>Perfect ×3</em><em>Gets faster</em></span>
+   <span className={styles.pills}><em>{TENNIS_TOUR_RULES[tour-1].lives} balls</em><em>Perfect ×3</em><em>Gets faster</em><em data-tennis-run>{TENNIS_RUN.tourMatch} points: ball back</em></span>
   </div>:<div className={styles.info} data-hard={court.hard||undefined}>
+   <CourtThumb level={level} tour={0}/>
    <strong>{level}. {court.name}</strong>
+   <span className={styles.venue} data-tennis-venue>{tennisVenueFor(level).place} · {tennisVenueFor(level).hour}</span>
    <span className={styles.rival}><b>{court.rival}</b> {court.habit}</span>
-   <span className={styles.pills}>{tennisCourtPills(level).map(p=><em key={p}>{p}</em>)}<em className={styles.best} aria-label={`Best: ${best} of 3 stars`}>{tennisStarText(best)}</em></span>
+   <span className={styles.pills}><em data-tennis-run>Endless · {TENNIS_RUN.lives} balls</em>{tennisCourtPills(level).map(p=><em key={p}>{p}</em>)}<em className={styles.best} aria-label={`Best: ${best} of 3 stars`}>{tennisStarText(best)}</em></span>
   </div>}
  </div>;
 }
@@ -47,6 +56,7 @@ export function TennisHowTo({level,touch,help}:{level:number;touch:boolean;help:
    {guide.map(g=><li key={g.touch} data-touch={g.touch}><b>{TOUCH_NAME[g.touch]}</b><span>{g.when}</span></li>)}
   </ul>
   <p className={styles.starsHow}>{court.style==='drill'?`Stars: hit ${TENNIS_DRILL.stars.join(' · ')} targets`:`★ win · ★ 4 perfect touches · ★ ${court.star3}`}</p>
+  <p className={styles.starsHow} data-tennis-run-how>Endless: win a match and the next court walks on. Lose a match, lose a ball. A win brings one back.</p>
   <small>{help}</small>
  </div>;
 }

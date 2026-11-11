@@ -73,9 +73,12 @@ export type Kick={
   power:number;
   /** Optional goal height: 0 = low, 1 = just below the crossbar. Independent of chip loft. */
   shotHeight?:number;
+  /** (aim anywhere, Nov 11 2026) The spot on the goal face the player pointed at: x across the line, y metres up; it may be
+   *  off the frame. Turns on the scatter and the spatial keeper (lib/passPuzzle/aim.ts). Absent = the plain shot, unchanged. */
+  place?:{x:number;y:number;ideal?:boolean};
 };
 
-export type PuzzleEventType='kick'|'receive'|'intercept'|'save'|'heavy_touch'|'deflect'|'parry'|'goal'|'out'|'offside';
+export type PuzzleEventType='kick'|'receive'|'intercept'|'save'|'heavy_touch'|'deflect'|'parry'|'goal'|'out'|'offside'|'woodwork';
 export type Touch='feet'|'thigh'|'chest'|'header';
 
 export type PuzzleEvent={
@@ -92,6 +95,8 @@ export type PuzzleEvent={
   kind?:KickKind;         // kick
   touch?:Touch;           // receive / heavy_touch
   speed?:number;          // ball speed at the moment (m/s)
+  /** woodwork only: which part of the frame the ball struck. */
+  part?:'post'|'bar';
   /** kick only: the real turn the kicker made (radians) and the windup it cost. */
   turn?:number;
   windup?:number;
@@ -130,6 +135,8 @@ export type KeeperState={
   react:number;
   dive:number;            // 0..1 dive extension (for the rig)
   diveDir:number;         // −1 / +1 along x
+  /** (aim anywhere) 0..1: how high the placed shot being saved is (slower across, shorter reach; the rig dives up to it). */
+  high?:number;
   target?:Vec2;
 };
 
@@ -168,7 +175,11 @@ export type PuzzleState={
     /** A defender or the keeper touched it: a later receive is not a completed pass. */
     dirty:boolean;
     /** Attackers caught in an offside position when this ball was played (empty when offside is off). */
-    offside:number[]}|null;
+    offside:number[];
+    /** (aim anywhere) A placed shot: where the strike really went, its scatter and the chance it came from. */
+    aim?:{x:number;y:number;aimX:number;aimY:number;sigma:number;pressure:number;dist:number};
+    /** Tick of the last woodwork event (one event per knock). */
+    wood?:number}|null;
   /** Kicks this attempt, used for bonus evaluation. */
   chain:{kind:KickKind;curl:number;loft:number;kicker:number;header:boolean;firstTime:boolean}[];
   result:PuzzleResult|null;

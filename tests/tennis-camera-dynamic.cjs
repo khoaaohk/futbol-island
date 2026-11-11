@@ -35,10 +35,10 @@ c.update(1/60,s,{x:0,y:4.6});assert(c.state().blend>.9&&c.state().blend<1,'eases
 for(let i=0;i<120;i++)c.update(1/60,s,{x:0,y:4.6});const far=c.state();assert(far.blend===0,'settles into the rally view');
 assert(far.zoom<1.08,'ball far away: wide shot');
 Object.assign(s.ball,{x:.6,y:4,z:.6});for(let i=0;i<180;i++)c.update(1/60,s,{x:.5,y:4.8});const near=c.state();
-assert(near.zoom>1.25,'ball arriving: pushed in');assert(near.z>0,'looking at your half');
+assert(near.zoom>1.15,'ball arriving: pushed in');/* Club Marea (Nov 10 2026): the phone push-in is capped at 1.22 so the beach stays in frame */assert(near.z>-3,'the focus stays on the court');
 // Bigger on screen than the serve view, and no dead floor below the near baseline.
 const youTop=px(camera,0,5.3,H,1.6),youFeet=px(camera,0,5.3);assert(youFeet-youTop>0,'you are drawn');const edge=L.length/2;assert(px(camera,0,edge)>=H-L.bottom-2,'the frame edge 0.5 m past the near baseline sits at/below the controls band (no dead floor)');
-assert(px(camera,0,-edge)<=L.top+2,'and past the far baseline at/above the HUD band');
+assert(px(camera,0,-8)>=L.top+40,'and the far baseline (with the rival on it) stays in view under the scoreboard: above it is the beach, not dead floor');
 assert(youFeet<H-150,'you stay above the joystick and buttons');assert(Math.abs(ndc(camera,s.ball.x,s.ball.y,s.ball.z).x)<.95,'the ball stays on screen');
 const rallyScale=(px(camera,0,6)-px(camera,0,4))/2,serveScale=serveSpan/16;assert(rallyScale>serveScale*1.3,`rally court reads bigger (${rallyScale.toFixed(1)} vs ${serveScale.toFixed(1)} px/m)`);
 
@@ -58,7 +58,7 @@ s.phase='serve';c.update(1/60,s,null);assert.equal(c.state().blend,1,'reduced mo
 for(const [w,h,mobile] of [[1440,900,false],[820,1180,true],[844,390,true]]){const r=rig(w,h,mobile);const v=state('serve');r.c.update(0,v,null,true);for(const z of [-8,8]){const p=ndc(r.camera,0,z);assert(Math.abs(p.y)<=1,`${w}x${h} serve shows baseline ${z}`);}}
 
 // 7. Wiring + the coaching tip: centred, faded, never in a corner; the stage camera follows the dynamic camera.
-const games=fs.readFileSync(path.join(root,'lib/arcade/arcadeGames.ts'),'utf8'),ui=fs.readFileSync(path.join(root,'components/games/ArcadeGame3D.tsx'),'utf8'),css=fs.readFileSync(path.join(root,'components/games/ArcadeGame3D.module.css'),'utf8');
+const games=fs.readFileSync(path.join(root,'lib/arcade/games/tennisGame.ts'),'utf8'),ui=fs.readFileSync(path.join(root,'components/games/ArcadeGame3D.tsx'),'utf8'),css=fs.readFileSync(path.join(root,'components/games/ArcadeGame3D.module.css'),'utf8');
 assert(/tennisCam\.update\(dt,tennis/.test(games)&&/tennisCam\.fit\(/.test(games),'the tennis stage camera is driven per frame and solved on resize');
 assert(/tennisCam\?\.moving\(\)/.test(games),'the frame loop stays awake while the camera eases');
 assert(/data-tip=\{kind==='tennis'\|\|undefined\}/.test(ui)&&/key=\{kind==='tennis'\?hud\.message:undefined\}/.test(ui),'each new tip remounts (restarts its fade)');

@@ -19,7 +19,7 @@ for(const [k,p] of Object.entries(P.PINBALL_PATTERNS)){const n=p.why.split(/\s+/
 // A new game (stats back to 0) re-arms without a false label.
 s.stats={wallPasses:0,rebounds:0,mbStarts:0};P.resetPinballPatternWatch(w);assert.equal(run(1),0);
 // Wiring: one chip, always mounted, fed by the HUD; the watcher runs after watchPinballCinema; stepPinball untouched.
-const games=fs.readFileSync('lib/arcade/arcadeGames.ts','utf8'),view=fs.readFileSync('components/games/ArcadeGame3D.tsx','utf8'),css=fs.readFileSync('components/games/ArcadeGame3D.module.css','utf8');
+const games=fs.readFileSync('lib/arcade/games/pinballGame.ts','utf8'),view=fs.readFileSync('components/games/ArcadeGame3D.tsx','utf8'),css=fs.readFileSync('components/games/ArcadeGame3D.module.css','utf8');
 assert.match(games,/watchPinballCinema\(pinballCine,pinball\);watchPinballPatterns\(pinballPatterns,pinball,dt\);/);
 assert.match(games,/resetPinballPatternWatch\(pinballPatterns\)/);
 assert.match(view,/<span className=\{styles\.pbPattern\} data-pinball-pattern data-on=\{hud\.pinballPatternOn\|\|undefined\}>/);

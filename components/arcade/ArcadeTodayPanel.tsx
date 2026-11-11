@@ -28,7 +28,7 @@ export default function ArcadeTodayPanel({onClose,onPlay}:{onClose:()=>void;onPl
      <p className={styles.line}>{c.line}</p>
      <p className={styles.point}>{c.point}</p>
      {locked&&<p className={styles.point}>Opens after 1 ★ on Warm-up or Breakaway.</p>}
-     <button type="button" className={styles.play} aria-label={btn.today?`${btn.label} ${cab.name}`:`Play ${cab.name}`} onClick={()=>{if(btn.today)requestTodayLaunch(c.cabinet);onPlay(c.cabinet);}}>{btn.label}</button>
+     <button type="button" className={styles.play} aria-label={btn.today?`${btn.label} ${cab.name}`:`Play ${cab.name}`} onClick={()=>{if(btn.today)requestTodayLaunch(c.cabinet);onPlay(cab.id);}}>{btn.label}</button>
     </li>;})}</ul>
    <section className={styles.pennant} data-lit={lit||undefined} aria-label="Weekly pennant">
     <svg viewBox="0 0 40 48" width="40" height="48" aria-hidden="true"><path d="M5 3v43" stroke="#c9bddc" strokeWidth="3" strokeLinecap="round"/><path d="M7 5h28l-8 10 8 10H7z" fill={lit?'#ffe58c':'#3a3452'}/></svg>

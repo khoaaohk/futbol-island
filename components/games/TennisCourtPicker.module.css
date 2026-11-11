@@ -1,100 +1,103 @@
-/* Futbol Tennis card + court picker (round 3, Oct 26 2026). Scoped under the tennis card so other cabinets are untouched. */
-.card{padding:var(--arcade-card-pad)!important;border-radius:var(--arcade-card-r)!important;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-.title{margin:2px 0 14px!important;font-size:var(--arcade-card-title)!important}
+/* Futbol Tennis card + court picker (round 3, Oct 26 2026), drawn as a comic page (arcade house style, Nov 10 2026): the kit's
+ * tokens (--cm-*, components/games/comic, composed into the tennis skin class on the game root) with ink borders, flat colour,
+ * paper, square corners and hard offset shadows. Scoped under the tennis card so other cabinets are untouched. Doubled/tripled
+ * classes out-rank the shared .game .card / .primary rules. Buttons: UI sans 800; lettering and numerals from the kit's stacks. */
+.card.card.card{position:relative;padding:var(--arcade-card-pad)!important;border:var(--cm-line-heavy,4px) solid var(--cm-ink);border-radius:0!important;background:var(--cm-paper);color:var(--cm-ink);box-shadow:var(--cm-shadow-card,8px) var(--cm-shadow-card,8px) 0 var(--cm-ink);text-align:left;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+.card.card.card small{color:var(--cm-muted);border-color:#231a2e33}
+.card .title.title{margin:0 0 12px!important;font:italic 900 calc(var(--arcade-card-title) + 2px)/1 var(--cm-title)!important;letter-spacing:-.02em;text-transform:uppercase;color:var(--cm-sun);-webkit-text-stroke:5px var(--cm-ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--cm-ink);rotate:-1.5deg}
 .picker{display:grid;gap:8px;margin:0 0 12px;text-align:left}
-.row{display:flex;gap:6px;justify-content:center;align-items:center}
-.chip{flex:0 0 auto;width:48px;height:56px;display:grid;place-items:center;align-content:center;gap:1px;padding:0;border:2px solid #35415c;border-radius:14px;background:#1b2340;color:#f0fffb;font:inherit;cursor:pointer;touch-action:manipulation;transition:transform .12s,border-color .12s}
-.chip b{font-size:20px;line-height:1}
-.chipStars{font-style:normal;font-size:10px;letter-spacing:-.04em;color:#ffe084;line-height:1}
-.chip[aria-pressed=true]{border-color:#88ffef;background:#20425a;box-shadow:0 0 0 2px #88ffef55,0 0 14px #64ffee44;transform:translateY(-2px)}
-.chip[data-hard]{border-color:#7a3156;background:#2a1830}
-.chip[data-hard][aria-pressed=true]{border-color:#ff83d3;background:#45204c;box-shadow:0 0 0 2px #ff83d355,0 0 14px #ff6bc644}
-.chip:disabled{opacity:.5;cursor:default}
-.chip:focus-visible{outline:3px solid #fff08a;outline-offset:2px}
-.lock{font-style:normal;color:#b5c7dc;line-height:1}
-.hardTag{font-size:11px;font-weight:900;letter-spacing:.14em;color:#ff83d3;padding:0 4px}
-.info{display:grid;gap:4px;margin-top:4px;padding:10px 12px;border-radius:14px;background:#1b2340;border-left:4px solid #88ffef}
-.info[data-hard]{border-left-color:#ff83d3}
-.info strong{font-size:17px;color:#f0fffb}
-.rival{font-size:13px;line-height:1.35;color:#d5edff}
-.rival b{font-size:11px;letter-spacing:.12em;color:#ffb4e4}
+.row{display:flex;gap:6px;justify-content:flex-start;align-items:center}
+.chip{flex:0 1 44px;min-width:0;width:44px;height:54px;display:grid;place-items:center;align-content:center;gap:1px;padding:0;border:var(--cm-line-thin,2px) solid var(--cm-ink);border-radius:0;background:var(--cm-white);color:var(--cm-ink);box-shadow:2px 2px 0 var(--cm-ink);font:inherit;cursor:pointer;touch-action:manipulation;transition:translate .06s ease,box-shadow .06s ease}
+.chip b{font:400 24px/1 var(--cm-numeral);font-variant-numeric:tabular-nums}
+.chipStars{font-style:normal;font-size:10px;letter-spacing:-.04em;color:var(--cm-orange);line-height:1}
+.chip[aria-pressed=true]{background:var(--cm-sun);translate:2px 2px;box-shadow:0 0 0 var(--cm-ink)}
+.chip[aria-pressed=true] .chipStars{color:var(--cm-ink)}
+.chip[data-hard]{background:#ffe1d6}
+.chip[data-hard][aria-pressed=true]{background:var(--cm-red);color:var(--cm-paper)}
+.chip[data-hard][aria-pressed=true] .chipStars{color:var(--cm-paper)}
+.chip:disabled{background:#e9dcc2;color:#7a6a70;box-shadow:none;cursor:default}
+.chip:focus-visible,.iconBtn:focus-visible,.tourChip:focus-visible{outline:var(--cm-focus,3px solid #19b5a5);outline-offset:2px}
+.lock{font-style:normal;color:currentColor;line-height:1}
+.hardTag{font:italic 900 12px/1 var(--cm-title);color:var(--cm-paper);background:var(--cm-red);border:var(--cm-line-thin,2px) solid var(--cm-ink);padding:5px 6px 4px;rotate:-3deg}
+.info{position:relative;display:grid;gap:4px;align-content:start;margin-top:4px;min-height:94px;padding:10px 128px 10px 12px;border:var(--cm-line-thin,2px) solid var(--cm-ink);background:var(--cm-dots),var(--cm-white)}
+.info[data-hard]{background:var(--cm-dots-orange),var(--cm-white)}
+.info strong{font:italic 900 19px/1.05 var(--cm-title);letter-spacing:-.01em;text-transform:uppercase;color:var(--cm-ink)}
+.venue{font-size:13px;font-weight:800;color:#0f7a70}
+.rival{font-size:14px;line-height:1.35;color:var(--cm-ink)}
+.rival b{font-size:13px;color:var(--cm-red)}
 .pills{display:flex;flex-wrap:wrap;gap:5px;align-items:center}
-.pills em{font-style:normal;font-size:11px;font-weight:800;padding:3px 8px;border-radius:999px;background:#2c3556;color:#cfe9ff}
-.pills .best{background:none;color:#ffe084;font-size:15px;letter-spacing:.06em;margin-left:auto;padding:0}
-.hint{margin:0 0 10px!important;padding:8px 10px;border-radius:12px;background:#2a2148;color:#fff6c8;font-size:14px!important;line-height:1.35!important}
-.hint b{color:#ffc93c}
-.status{margin:0 0 8px!important;font-size:13px!important}
-.play{display:flex!important;align-items:center;justify-content:center;gap:10px;width:100%;min-height:var(--arcade-primary-h);font-size:24px;font-weight:900;letter-spacing:.02em}
-.play small{display:inline!important;font-size:12px!important;font-weight:700;opacity:.75;padding:0!important;border:0!important;margin-left:4px}
-.smallRow{display:flex;justify-content:center;gap:10px;margin-top:12px}
-.iconBtn{display:grid;place-items:center;gap:2px;min-width:64px;min-height:var(--arcade-small-h);padding:6px 8px;border:2px solid #35415c;border-radius:16px;background:#1b2340;color:#e9fbff;font:inherit;font-size:11px;font-weight:800;cursor:pointer;touch-action:manipulation}
-.iconBtn:active{transform:translateY(2px)}
-.iconBtn:focus-visible{outline:3px solid #fff08a;outline-offset:2px}
+.pills em{font-style:normal;font-size:12px;font-weight:800;padding:2px 7px;border:var(--cm-line-thin,2px) solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink)}
+.pills .best{border:0;background:none;color:var(--cm-orange);font-size:15px;letter-spacing:.06em;margin-left:auto;padding:0;-webkit-text-stroke:.6px var(--cm-ink)}
+/* Court preview: the stop's comic panel (lib/arcade/tennisVenues.ts tennisVenueThumb), pinned beside the court's name. */
+.thumb{position:absolute;top:10px;right:10px;width:104px;height:68px;border:var(--cm-line,3px) solid var(--cm-ink);background:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);rotate:1.5deg;overflow:hidden}
+.thumb img{display:block;width:100%;height:100%;object-fit:cover}
+.hint{margin:0 0 10px!important;padding:7px 10px;border:var(--cm-line-thin,2px) solid var(--cm-ink);background:var(--cm-sun);color:var(--cm-ink);font-size:14px!important;font-weight:700;line-height:1.35!important}
+.hint b{color:var(--cm-ink);font-weight:900;text-decoration:underline}
+.status{margin:0 0 8px!important;font-size:13px!important;color:var(--cm-ink)}
+.card .play.play.play{display:flex!important;align-items:center;justify-content:center;gap:10px;width:100%;min-height:var(--arcade-primary-h);border:var(--cm-line,3px) solid var(--cm-ink);border-radius:0;background:var(--cm-sun);color:var(--cm-ink);box-shadow:var(--cm-shadow,4px) var(--cm-shadow,4px) 0 var(--cm-ink);font:800 22px/1.15 var(--cm-ui);letter-spacing:0;transition:translate .06s ease,box-shadow .06s ease}
+.card .play.play.play:not(:disabled):active{translate:var(--cm-shadow,4px) var(--cm-shadow,4px);box-shadow:0 0 0 var(--cm-ink)}
+.play small{display:inline!important;font-size:12px!important;font-weight:700;color:var(--cm-ink)!important;padding:0!important;border:0!important;margin-left:4px}
+.smallRow{display:flex;justify-content:flex-start;gap:10px;margin-top:16px}
+.iconBtn{display:grid;place-items:center;gap:2px;min-width:64px;min-height:var(--arcade-small-h);padding:6px 8px;border:var(--cm-line-thin,2px) solid var(--cm-ink);border-radius:0;background:var(--cm-white);color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);font:inherit;font-size:12px;font-weight:800;cursor:pointer;touch-action:manipulation;transition:translate .06s ease,box-shadow .06s ease}
+.iconBtn:active{translate:3px 3px;box-shadow:0 0 0 var(--cm-ink)}
 .how{display:grid;gap:8px;margin:0 0 12px;text-align:left}
-.lesson{margin:0!important;font-size:14px!important;line-height:1.4!important;color:#fff6c8}
+.lesson,.tip{margin:0!important;font-size:14px!important;line-height:1.4!important;color:var(--cm-ink)}
+.tip{margin:0 0 8px!important}
 .touches{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.touches li{display:grid;align-content:start;gap:2px;padding:6px 8px;border:1px solid #35415c;border-left:4px solid #88ffef;border-radius:10px;background:#1b2340;font-size:12px;line-height:1.3;color:#d5edff}
-.touches li b{font-size:13px;color:#f0fffb}
-.touches li[data-touch=kick]{border-left-color:#fff08a}
-.touches li[data-touch=trap]{border-left-color:#73fff1}
-.touches li[data-touch=header]{border-left-color:#8bcbff}
-.touches li[data-touch=aim]{border-left-color:#ff83d3}
-.starsHow{margin:0!important;font-size:12px!important;line-height:1.35!important;color:#ffe084}
+.touches li{display:grid;align-content:start;gap:2px;padding:6px 8px;border:var(--cm-line-thin,2px) solid var(--cm-ink);border-left-width:7px;background:var(--cm-white);font-size:12px;line-height:1.3;color:var(--cm-ink)}
+.touches li b{font-size:13px}
+.touches li[data-touch=kick]{background:#fff0bf}.touches li[data-touch=trap]{background:#e6dcf2}.touches li[data-touch=header]{background:#c9f1ea}.touches li[data-touch=aim]{background:#ffe1d6}
+.starsHow{margin:0!important;font-size:12px!important;font-weight:700;line-height:1.35!important;color:var(--cm-muted)}
 .how small{font-size:11px!important;line-height:1.4!important;padding:0!important;border:0!important}
 /* Pause + full time */
-.result{display:inline-block;padding:6px 14px;border-radius:999px;background:#2c2649;color:#ffb4e4;font-size:13px;font-weight:900;letter-spacing:.14em}
-.card[data-won] .result{background:#3b3214;color:#ffe084;box-shadow:0 0 18px #ffc93c44}
-.bigScore{margin:10px 0 2px!important;font-size:46px!important;line-height:1!important;font-weight:900;font-variant-numeric:tabular-nums;color:#f0fffb}
-.bigScore small{display:block!important;font-size:12px!important;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:0!important;border:0!important}
-.earned{display:flex;justify-content:center;gap:8px;margin:6px 0 10px!important;font-size:40px!important;line-height:1!important}
-.earned i{font-style:normal;color:#3a4366}
-.earned i[data-on]{color:#ffd24a;text-shadow:0 0 16px #ffc93c88;animation:starPop .5s cubic-bezier(.3,1.6,.5,1) both}
+.result{display:inline-block;padding:6px 10px 5px;border:var(--cm-line,3px) solid var(--cm-ink);background:var(--cm-red);color:var(--cm-paper);font:italic 900 14px/1 var(--cm-title);rotate:-2deg}
+.card[data-won] .result,.card[data-new-best] .result,.card[data-tennis-tour-over] .result{background:var(--cm-sun);color:var(--cm-ink)}
+.card .bigScore{margin:12px 0 4px!important;font:400 64px/1 var(--cm-numeral)!important;font-variant-numeric:tabular-nums;color:var(--cm-ink)}
+.bigScore small{display:block!important;font:800 13px/1.3 var(--cm-ui)!important;padding:0!important;border:0!important}
+.earned{display:flex;justify-content:flex-start;gap:8px;margin:6px 0 10px!important;font-size:40px!important;line-height:1!important}
+.earned i{font-style:normal;color:var(--cm-white);-webkit-text-stroke:2px var(--cm-ink);paint-order:stroke fill}
+.earned i[data-on]{color:var(--cm-sun);text-shadow:3px 3px 0 var(--cm-ink);animation:starPop .5s cubic-bezier(.3,1.6,.5,1) both}
 @keyframes starPop{from{transform:scale(0) rotate(-40deg);opacity:0}to{transform:none;opacity:1}}
 .stats{list-style:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 10px;padding:0}
-.stats li{display:grid;gap:1px;padding:8px 4px;border-radius:12px;background:#1b2340}
-.stats b{font-size:22px;color:#88ffef;font-variant-numeric:tabular-nums}
-.stats span{font-size:11px;font-weight:800;color:#b5c7dc;text-transform:uppercase;letter-spacing:.06em}
-.card{text-align:center}
-.coach{margin:0 0 12px!important;padding:8px 10px;border-radius:12px;background:#2a2148;border-left:4px solid #ffe86d;text-align:left;font-size:13px!important;line-height:1.35!important;color:#fff6c8}
-.tip{margin:0 0 8px!important;font-size:14px!important;line-height:1.35!important;color:#fff6c8}
+.stats li{display:grid;gap:1px;padding:7px 10px 6px;border:var(--cm-line-thin,2px) solid var(--cm-ink);background:var(--cm-white);text-align:left}
+.stats li:first-child{background:var(--cm-dots),var(--cm-white)}
+.stats b{font:400 26px/1 var(--cm-numeral);color:var(--cm-ink);font-variant-numeric:tabular-nums}
+.stats span{font-size:12px;font-weight:800;color:var(--cm-muted)}
+.coach{margin:0 0 12px!important;padding:8px 10px;border:var(--cm-line-thin,2px) solid var(--cm-ink);background:#fff0bf;text-align:left;font-size:13px!important;line-height:1.35!important;color:var(--cm-ink)}
+.why{margin:0 0 10px!important;padding:8px 10px;border:var(--cm-line-thin,2px) solid var(--cm-ink);background:#ffe1d6;text-align:left;font-size:14px!important;line-height:1.35!important;color:var(--cm-ink)}
 .pb{margin-top:8px;font-size:11px!important;padding:0!important;border:0!important}
-/* In-play HUD chips (pointer-events none: never steal a touch) */
-.chips{position:absolute;z-index:3;left:calc(14px + env(safe-area-inset-left));top:calc(env(safe-area-inset-top) + 86px);display:flex;gap:6px;align-items:center;pointer-events:none;white-space:nowrap}
-.chips>span{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:999px;background:#13192ee6;border:1px solid #416b86;color:#dffcff;font-size:12px;font-weight:800}
-.chips b{font-size:15px;font-variant-numeric:tabular-nums}
-.rallyChip{animation:chipPop .35s ease-out}
-.rallyChip[data-hot]{border-color:#ffc93c!important;color:#ffe084!important;box-shadow:0 0 12px #ffc93c55}
-.windChip{color:#bfe9ff!important}
-.setChip{color:#ffb4e4!important}
+.pb[data-new]{color:var(--cm-red)!important;font-weight:900;font-size:14px!important;animation:pbFlash .5s ease-in-out 3}
+@keyframes pbFlash{50%{opacity:.35}}
+/* Tours row: two inked keys under the courts. */
+.tours{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tourChip{display:grid;gap:2px;min-height:48px;padding:7px 10px;border:var(--cm-line-thin,2px) solid var(--cm-ink);border-radius:0;background:var(--cm-ink);color:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-orange);font:inherit;text-align:left;cursor:pointer;touch-action:manipulation;transition:translate .06s ease,box-shadow .06s ease}
+.tourChip b{font:italic 900 15px/1.1 var(--cm-title);text-transform:uppercase}
+.tourChip span{font-size:12px;font-weight:700;color:var(--cm-sun);line-height:1.1}
+.tourChip[aria-pressed=true]{background:var(--cm-red);translate:3px 3px;box-shadow:0 0 0 var(--cm-orange)}
+.tourChip:disabled{background:#e9dcc2;color:#7a6a70;box-shadow:none;cursor:default}
+.tourChip:disabled span{color:#7a6a70}
+/* In-play chips (pointer-events none: never steal a touch): caption boxes. The classic courts keep the owner's clean court
+ * (rally/wind/set chips hidden by ArcadeGame3D.module.css); the tour strip sits under the score panel. */
+.chips,.tourStrip{position:absolute;z-index:3;display:flex;gap:6px;align-items:center;pointer-events:none;white-space:nowrap}
+.chips{left:calc(14px + env(safe-area-inset-left));top:calc(env(safe-area-inset-top) + 86px)}
+.tourStrip{left:50%;top:calc(env(safe-area-inset-top) + 104px);transform:translateX(-50%)}
+.chips>span,.tourStrip>span{display:inline-flex;align-items:center;gap:5px;height:24px;padding:0 9px;border:var(--cm-line-thin,2px) solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);box-shadow:2px 2px 0 var(--cm-ink);font-size:12px;font-weight:800}
+.chips b,.tourStrip b{font:400 15px/1 var(--cm-numeral);font-variant-numeric:tabular-nums}
+.rallyChip,.multChip{animation:chipPop .35s ease-out}
+.rallyChip[data-hot],.multChip[data-mult="3"],.multChip[data-mult="4"]{background:var(--cm-sun)}
+.windChip{background:#c9f1ea!important}
+.setChip{background:#ffe1d6!important}
+.livesChip i{display:inline-block;box-sizing:border-box;width:10px;height:10px;border-radius:50%;border:2px solid var(--cm-ink);background:var(--cm-white)}
+.livesChip i[data-on]{background:var(--cm-red)}
+.livesChip[data-low]{background:#ffe1d6}
+.multChip em{font-style:normal;font-size:11px;color:var(--cm-red)}
 @keyframes chipPop{from{transform:scale(1.35)}to{transform:none}}
-@media(prefers-reduced-motion:reduce){.earned i[data-on]{animation:none}.chip{transition:none}.rallyChip{animation:none}}
+/* New best: a confetti burst in print colours (CSS, card only, once). Transform/opacity only. */
+.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.confetti i{position:absolute;top:-12px;width:8px;height:12px;border:1.5px solid var(--cm-ink);opacity:0;animation:confettiFall 1.6s cubic-bezier(.2,.6,.4,1) both}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translateY(340px) rotate(540deg)}}
 @media(min-width:900px){.chips{top:96px}}
 @media(max-width:360px){.chip{width:42px;height:52px}.touches{grid-template-columns:1fr}}
-@media(max-height:520px){.title{margin:0 0 8px!important}.chip{height:46px}.bigScore{font-size:34px!important}.earned{font-size:30px!important}.chips{top:52px}}
-/* Nov 8 2026: tours row, tour HUD chips, the "why it ended" line, confetti + personal-best flash. Transform/opacity only. */
-.tours{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.tourChip{display:grid;gap:2px;min-height:48px;padding:6px 8px;border:2px solid #5a3a1c;border-radius:14px;background:#2a1d14;color:#fff2dc;font:inherit;text-align:center;cursor:pointer;touch-action:manipulation}
-.tourChip b{font-size:15px;font-weight:900;line-height:1.1}
-.tourChip span{font-size:12px;font-weight:700;color:#ffcf8a;line-height:1.1}
-.tourChip[aria-pressed=true]{border-color:#ffc93c;background:#4a3212;transform:translateY(-2px)}
-.tourChip:disabled{opacity:.5;cursor:default}
-.tourChip:focus-visible{outline:3px solid #fff08a;outline-offset:2px}
-.why{margin:0 0 10px!important;padding:8px 10px;border-radius:12px;background:#3a1f33;border-left:4px solid #ff83d3;text-align:left;font-size:14px!important;line-height:1.35!important;color:#ffe6f4}
-.tourStrip{position:absolute;z-index:3;left:50%;top:calc(env(safe-area-inset-top) + 74px);transform:translateX(-50%);display:flex;gap:6px;align-items:center;pointer-events:none;white-space:nowrap}
-.tourStrip>span{display:inline-flex;align-items:center;gap:5px;height:26px;padding:0 10px;border-radius:999px;background:#13192ee6;border:1px solid #416b86;color:#dffcff;font-size:12px;font-weight:800}
-.tourStrip b{font-size:15px;font-variant-numeric:tabular-nums}
-.livesChip i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#3a4366}
-.livesChip i[data-on]{background:#ffd24a}
-.livesChip[data-low]{border-color:#ff83d3!important}
-.multChip{animation:chipPop .35s ease-out;color:#dffcff}
-.multChip[data-mult="3"]{border-color:#73fff1!important;color:#c9fff8!important}
-.multChip[data-mult="4"]{border-color:#ffc93c!important;color:#ffe084!important}
-.multChip em{font-style:normal;font-size:11px;color:#ffe084}
-.confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none;border-radius:inherit}
-.confetti i{position:absolute;top:-12px;width:8px;height:12px;border-radius:2px;opacity:0;animation:confettiFall 1.6s cubic-bezier(.2,.6,.4,1) both}
-@keyframes confettiFall{0%{opacity:1;transform:translateY(0) rotate(0)}80%{opacity:1}100%{opacity:0;transform:translateY(340px) rotate(540deg)}}
-.pb[data-new]{color:#ffe084!important;font-weight:900;font-size:14px!important;animation:pbFlash .5s ease-in-out 3}
-@keyframes pbFlash{50%{opacity:.35}}
-.card[data-new-best] .result,.card[data-tennis-tour-over] .result{background:#3b3214;color:#ffe084}
-@media(prefers-reduced-motion:reduce){.confetti{display:none}.pb[data-new],.multChip{animation:none}.tourChip[aria-pressed=true]{transform:none}}
-.card{position:relative}
+@media(max-width:340px){.info{padding-right:12px;min-height:0}.thumb{display:none}}
+@media(max-height:520px){.card .title.title{margin:0 0 8px!important}.chip{height:46px}.card .bigScore{font-size:40px!important}.earned{font-size:30px!important}.chips{top:52px}.tourStrip{top:calc(env(safe-area-inset-top) + 92px)}}
+@media(prefers-reduced-motion:reduce){.confetti{display:none}.earned i[data-on],.rallyChip,.multChip,.pb[data-new]{animation:none}.chip,.iconBtn,.tourChip,.card .play.play.play{transition:none}.card .title.title,.hardTag,.result,.thumb{rotate:none}}

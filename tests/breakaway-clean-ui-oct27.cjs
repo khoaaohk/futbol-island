@@ -51,10 +51,10 @@ assert.match(fx,/if\(!RUNNER_WORD_POPS\|\|!wordCtx/,'pop() honours the switch');
 
 // 3. Header and pause card: the shared arcade bar and pause card (docs/ARCADE_CHROME_OCT27.md; tests/arcade-chrome-shared.cjs).
 // Nov 8 2026: the Pinball tiers add a 'pts ×N' word for pinball only; the runner (every other kind) still falls through to plain 'pts'.
-assert.match(game,/<ArcadeTopBar game=\{kind\}[^>]*value=\{hud\.score\} word=\{kind==='tennis'\?undefined:kind==='pinball'[^\n]*?:'pts'\} /,'runner: Back · one points pill · Pause');
+assert.match(game,/<ArcadeTopBar game=\{kind\}[^>]*value=\{kind==='tennis'\?undefined:hud\.score\} word=\{kind==='tennis'\?undefined:kind==='pinball'[^\n]*?:'pts'\} /,'runner: Back · one points pill · Pause');
 assert.doesNotMatch(bar.slice(bar.indexOf(' return <header')),/detail/,'no second detail line');
 assert.match(game,/\{phase==='paused'&&!error&&<ArcadePauseCard game=\{kind\}[^>]*onRestart=\{restart\}/,'shared pause card with Restart');
-assert.match(pause,/<h2 className=\{styles\.title\}>Paused<\/h2>/);assert.equal((pause.match(/className=\{styles\.resume\}/g)||[]).length,1,'one big Resume');
+assert.match(pause,/<h2 className=\{styles\.title\} data-arcade-pause-title>Paused<\/h2>/);assert.equal((pause.match(/className=\{styles\.resume\}/g)||[]).length,1,'one big Resume');
 assert.match(pause,/>Resume<\/button>/);assert.match(pause,/>Arcade<\/button>/);assert.match(pause,/onClick=\{onRestart\}[^>]*>Restart<\/button>/);
 assert.match(pauseCss,/@media \(pointer:coarse\)\{\.keys\.keys\{display:none\}\}/,'keycaps on desktop only');
 assert.match(pauseCss,/\.resume\.resume\{[^}]*min-height:var\(--arcade-primary-h,56px\)/,'Resume is the big button (56 px, 48 px sideways)');

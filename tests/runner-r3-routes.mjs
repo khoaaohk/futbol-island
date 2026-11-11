@@ -95,9 +95,12 @@ assert.equal(TERRAIN_ZONE,240);assert(TERRAIN_BLEND>=10);
  const goal=s.objects.find(o=>o.kind==='goal'&&o.final);assert(goal&&goal.keeper,'boss keeper on the goal line');
  // Wait until the keeper is far from the runner's lane, shoot to the open side.
  let shot=false;run(s,6,60,g=>{const o=g.objects.find(o=>o.kind==='goal'&&o.final&&!o.passed);if(!o||shot)return;if(o.z>-20&&o.z<-10&&Math.abs((o.kx??0)-g.x)>2.4){runnerShoot(g);shot=true;}else if(o.z>-22)g.lane=(o.kx??0)>0?-1:1;});
- assert(s.won,'beat the boss keeper');run(s,3);assert(s.finished);for(let i=0;i<200;i++)runnerOutro(s,1/60);assert(runnerOver(s),'full time after the finish beat');
- assert.deepEqual(runnerRunStars(s),[true,true,false],'finish + boss (hearts lost via test lives)');
- const miss=game('storm',{lives:1e6});miss.distance=miss.finish-205;run(miss,40,30,g=>{g.balls=0;});assert(miss.finished&&!miss.won,'three misses still finish the route');assert.equal(miss.bossTries,RUNNER_BOSS_KEEPER.tries);
+ assert(s.won,'beat the boss keeper');
+ // Endless play (Nov 10 2026): the goal line clears the round, the run carries on; full time only when the hearts run out.
+ run(s,3);assert(s.clears===1&&s.round===2&&!s.finished&&!runnerOver(s)&&s.finishPhase===''&&s.finish===2*RUNNER_MODES.night.finish,'the goal line clears round 1 and the run goes on');
+ s.hits=1;s.lives=1;s.spawn=99;s.objects=[def('tackler',-1.2,s.lane,{read:1,aim:s.lane,tackle:.2})];run(s,.3);assert.equal(s.lives,0);assert(s.finished&&s.won,'the run facts are set at full time');for(let i=0;i<200;i++)runnerOutro(s,1/60);assert(runnerOver(s),'full time after the last heart');
+ assert.deepEqual(runnerRunStars(s),[true,true,s.cleanClears>0],'finish + boss + (round cleared with every heart)');
+ const miss=game('storm',{lives:1e6});miss.distance=miss.finish-205;run(miss,40,30,g=>{g.balls=0;});assert(miss.clears===1&&miss.lineGoals===0&&miss.round===2&&!miss.won,'three misses still clear the round (no keeper bonus)');assert.equal(miss.bossTries,0,'the next goal line starts with three fresh tries');
  const w=game('warmup',{lives:5});w.distance=w.finish-62;run(w,.2);const wg=w.objects.find(o=>o.kind==='goal'&&o.final);assert(wg&&!wg.keeper&&wg.openLane===0,'Warm-up ends with an open goal, centre lane');}
 
 // 11. Seeded per-run shuffle is deterministic; classic order is untouched.
@@ -124,8 +127,8 @@ assert.equal(TERRAIN_ZONE,240);assert(TERRAIN_BLEND>=10);
  assert(C.CINEMA.maxFov<=.12,'FOV change <= 12 %');}
 
 // 14. Long hard runs stay bounded and reach the goal line (lives pinned high: a wiring check, not a skill check).
-for(const id of ['night','storm','warmup']){const s=game(id,{lives:1e6});let most=0;for(let i=0;i<60*240&&!s.finished;i++){if(i%40===0)runnerShoot(s);tickRunner(s,1/60);most=Math.max(most,s.objects.length);}
- assert(s.finished,`${id}: the route reaches full time`);assert(most<34,`${id}: bounded objects (${most})`);assert(s.terrainChanges>=2,`${id}: terrain zones change along the route`);}
+for(const id of ['night','storm','warmup']){const s=game(id,{lives:1e6});let most=0;for(let i=0;i<60*240&&!s.clears;i++){if(i%40===0)runnerShoot(s);tickRunner(s,1/60);most=Math.max(most,s.objects.length);}
+ assert(s.clears===1,`${id}: the route reaches its goal line`);assert(most<34,`${id}: bounded objects (${most})`);assert(s.terrainChanges>=2,`${id}: terrain zones change along the route`);}
 
 // 15. Source contract: kid pad sizes, the menu replaces the shared card for the runner, no per-frame allocation hints.
 {const css=fs.readFileSync('components/games/RunnerControls.module.css','utf8');for(const [cls,tok] of [['jump','arcade-btn'],['slide','arcade-btn'],['skill','arcade-btn-sm'],['shoot','arcade-btn-main']])assert(new RegExp(`\\.${cls}\\.${cls}\\{[^}]*--d:var\\(--${tok}\\)`).test(css),`${cls} is --${tok}`);

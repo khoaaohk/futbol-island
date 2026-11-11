@@ -8,7 +8,7 @@ const track=read('lib/arcade/runnerTrack.ts');
 assert.match(track,/function dispose\(\)\{if\(activeRenderer===stage\.renderer\)activeRenderer=null;\}/,'track dispose clears its renderer hold when it matches');
 assert.match(track,/return\{update,pose,reset,dispose,/,'and is exposed');
 assert.match(read('lib/arcade/runnerFx.ts'),/dispose:track\.dispose/,'runnerFx forwards it');
-const games=read('lib/arcade/arcadeGames.ts');
+const games=read('lib/arcade/games/runnerGame3d.ts');
 // Other games may dispose their own layers in between (e.g. the tennis trail); the runner layer must still go before the stage.
 assert.match(games,/dispose\(\)\{runnerFx\?\.dispose\(\);[^}]*stage\.dispose\(\);\}/,'the runtime disposes the runner layer, then the stage');
 const comp=read('components/games/ArcadeGame3D.tsx');

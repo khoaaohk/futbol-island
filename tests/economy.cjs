@@ -11,7 +11,7 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
 // long-run pace targets move with it. A regular (20 min daily) player now owns every vending item and book in 85–120 days (was
 // 60–90), and saving up is allowed to fill up to a fifth of the sessions before that (was ≤ 10 sessions in 200 days): the Kit
 // Shop studios (2–6 sessions of saving each, scripts/economy-sessions.cjs) are not in this sim at all.
-const PACE={regular:[85,120],emptyShare:.2};
+const PACE={regular:[80,120],emptyShare:.2};// 85 → 80 on 11 Nov 2026: arcade plays became free (owner), so a regular spends ~1 day less on plays; earnings unchanged
 const inPace=d=>d>=PACE.regular[0]&&d<=PACE.regular[1];
 const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
 
@@ -184,8 +184,8 @@ const fewEmpty=r=>r.emptyBeforeDone<=Math.max(10,PACE.emptyShare*r.allBought);
   assert.deepEqual(E.KIT_SHOP_MIN,{ball:150,boots:200,jersey:300});
   assert.equal(B.PRICE.base,E.BALL_PRICES.base);assert.equal(B.ballPrice(B.validateBall({size:3})),E.BALL_PRICES.base);assert.equal(Bo.PRICE.base,E.BOOT_PRICES.base);
   assert.match(src('lib/shop/jersey.ts'),/export \{JERSEY_PRICES\} from '\.\.\/economy'/,'the jersey studio reads lib/economy.ts');}
- // f) The arcade stays cheap: 3 coins a play, and one casual session pays for well over a dozen plays.
- assert(E.ARCADE_PLAY_COST<=3,'3 coins a play');assert(X.sessionsToBuy(after,'typical15').arcadePlays>=15);
+ // f) The arcade is free (owner, 11 Nov 2026; was 3 coins a play): a casual session still fits well over a dozen plays.
+ assert.equal(E.ARCADE_PLAY_COST,0,'every arcade play is free');assert(X.sessionsToBuy(after,'typical15').arcadePlays>=15);
  // g) One table: every sell value, pay and price the game uses comes from lib/economy.ts.
  {const G=require('../lib/town/market/goods.ts'),fish=require('../lib/town/fishing/fishCatalog.ts'),F=require('../lib/town/summitForage.ts');
   for(const g of G.FISH_GOODS)assert.equal(g.price,E.fishSellValue(fish.fishById(g.id)),`${g.id} sells for fishSellValue`);

@@ -1,0 +1,42 @@
+/* Pass Puzzles HUD skin: "The Tactics Pitch" in the arcade's comic house style (docs/arcade-aaa/puzzle-direction.md).
+ * Owned by the Pass Puzzles builder. The class lands on the game root next to data-game="puzzle", so every rule here is scoped to
+ * this game. The comic tokens (--cm-*) and the shared overlays (score pill, pause key, pause card, leaderboards, high-score entry:
+ * data-arcade-*, data-board-*, data-hs-*) come from the shared comic HUD kit (components/games/comic: `comicRoot` on the game root),
+ * so this file only re-colours the kit for this game and draws the pieces of the shared arcade shell the kit does not know
+ * (ArcadeGame3D.module.css classes are hashed, so they are matched by their module prefix). The game's own HUD parts are restyled
+ * at the end of components/games/PassPuzzleGame.module.css. The back-to-arcade button is left exactly as it is.
+ * No font is declared or downloaded: lettering is the kit's device stacks (condensed italic, Arial Black), numerals IslandBrush. */
+.skin{--arcade-skin:puzzle;
+ /* Fallbacks for the kit's tokens (identical values), so the skin still reads if it is ever mounted without comicRoot. */
+ --pp-ink:var(--cm-ink,#231a2e);--pp-paper:var(--cm-paper,#fff3d6);--pp-sun:var(--cm-sun,#ffc83a);--pp-red:var(--cm-red,#f0452e);--pp-teal:var(--cm-teal,#19b5a5);
+ background:#f4d08c;color:var(--pp-ink)}
+
+/* The second top-right key (hint book) is the shell's own pause class: the same inked disc as the kit's pause key. */
+.skin.skin [class*="ArcadeGame3D_pause__"]{border:3.5px solid var(--pp-ink);border-radius:50%;background:var(--pp-paper);color:var(--pp-ink);box-shadow:4px 4px 0 var(--pp-ink);-webkit-backdrop-filter:none;backdrop-filter:none}
+.skin.skin [class*="ArcadeGame3D_pause__"]:not(:disabled):active{translate:4px 4px;box-shadow:0 0 0 var(--pp-ink)}
+.skin.skin [class*="ArcadeGame3D_pause__"][aria-pressed=true]{background:var(--pp-sun)}
+.skin.skin [class*="ArcadeGame3D_pause__"]:focus-visible{outline:3px solid var(--pp-teal);outline-offset:3px}
+/* The counter turns teal when the move's passes are done (the cue to finish). */
+.skin.skin.skin.skin.skin [data-arcade-pill][data-met]{background:#c9f1ea}
+
+/* Cards (menu, brief, result) are comic panels: paper, ink border, square, a hard block shadow, a touch of tilt. The scrim is a
+ * flat ink veil (no blur), light enough that the frozen pitch still reads behind a brief. */
+.skin.skin [class*="ArcadeGame3D_overlay__"]{background:#231a2e47;-webkit-backdrop-filter:none;backdrop-filter:none}
+.skin.skin [class*="ArcadeGame3D_card__"]{position:relative;background:var(--pp-paper);color:var(--pp-ink);border:3px solid var(--pp-ink);border-radius:0;box-shadow:8px 8px 0 var(--pp-ink);rotate:-.5deg}
+.skin.skin [class*="ArcadeGame3D_card__"] h3{font:italic 800 30px/1 var(--cm-letter,"Arial Narrow",sans-serif);text-transform:uppercase;color:var(--pp-ink);letter-spacing:.01em;text-shadow:none}
+.skin.skin [class*="ArcadeGame3D_card__"] :is(p,li,small,em,legend,h4,h5,span){color:inherit}
+.skin.skin [class*="ArcadeGame3D_card__"] small{border-color:var(--pp-ink)}
+/* The label on a card: an ink caption with an orange block shadow; on a result it becomes the lettered stamp (PassPuzzleGame.module.css). */
+.skin.skin.skin [class*="ArcadeGame3D_card__"] [class*="ArcadeGame3D_badge__"],.skin.skin [class*="ArcadeGame3D_badge__"]{display:inline-block;background:var(--pp-ink);color:var(--pp-paper);font:800 12px/1.2 var(--cm-ui,system-ui,sans-serif);letter-spacing:.04em;text-transform:uppercase;border-radius:0;padding:5px 10px 4px;box-shadow:3px 3px 0 var(--cm-orange,#ff8a3c);rotate:-1.5deg}
+/* Main action: the big sun-yellow key. Quiet action: an underlined word. Both keep the UI sans at weight 800. */
+.skin.skin [class*="ArcadeGame3D_primary__"]{background:var(--pp-sun);color:var(--pp-ink);border:3px solid var(--pp-ink);border-radius:0;box-shadow:4px 4px 0 var(--pp-ink);font-weight:800;text-shadow:none}
+.skin.skin [class*="ArcadeGame3D_primary__"]:not(:disabled):active{translate:4px 4px;box-shadow:0 0 0 var(--pp-ink)}
+.skin.skin [class*="ArcadeGame3D_primary__"]:focus-visible{outline:3px solid var(--pp-teal);outline-offset:3px}
+.skin.skin [class*="ArcadeGame3D_exit__"]{color:var(--pp-ink);font-weight:800;background:none;border:0;text-decoration:underline;text-decoration-color:var(--pp-red);text-decoration-thickness:3px;text-underline-offset:4px}
+@media(prefers-reduced-motion:reduce){.skin.skin [class*="ArcadeGame3D_card__"],.skin.skin [class*="ArcadeGame3D_badge__"]{rotate:none}.skin.skin :is([class*="ArcadeGame3D_primary__"],[class*="ArcadeGame3D_pause__"]):active{translate:none}}
+
+/* ===== Shared overlays (pause card, leaderboards, high-score entry) =====
+ * Drawn by the shared comic HUD kit's `.chrome` rules through the same data hooks (data-arcade-paused, data-arcade-pause-card,
+ * data-arcade-board, data-board-*, data-hs-*): one implementation for every comic game. The stationery versions that lived here
+ * were removed with the old look. Only this game's differences follow. */
+.skin.skin.skin.skin.skin [data-arcade-paused]{background:#231a2ecc}

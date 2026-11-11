@@ -1,0 +1,72 @@
+/* Futbol Tennis HUD skin: "Club Marea, printed" in the arcade's comic house style (docs/arcade-aaa/tennis-direction.md).
+ * Owned by the Futbol Tennis builder. The class lands on the game root next to data-game="tennis", so every rule here is scoped to
+ * this game:  .skin [data-...]{...}  or  .skin :global(.someSharedClass){...}
+ * The skin class composes the shared comic HUD kit (components/games/comic): `comic` = the --cm-* tokens, `chrome` = the shared
+ * top-bar pause key, pause card, leaderboards and high-score entry (data-arcade-*, data-board-*, data-hs-*) drawn as a comic
+ * page. This file only draws what is tennis: the score panel, the shot discs and the stick. Ink, flat colour, paper, hard offset
+ * shadows that collapse when pressed; no gradient but the kit's dot screen and the charge gauge; buttons in the UI sans at 800.
+ * The back-to-arcade button is left exactly as it is.
+ * `SKIN6` below = the skin class six times: it out-ranks the shared .game[data-arcade-kind=tennis] rules without !important. */
+.skin{composes:comic chrome from '../comic/comic.module.css';--arcade-skin:tennis}
+/* (The top-bar score pill is not rendered for tennis: ArcadeGame3D passes no value. The score panel below is the score.) */
+/* ---- the comic score panel: names, hand-cut numerals, set pips, server dot, rally and a wind pennant ---- */
+.scoreboard{position:absolute;z-index:3;top:calc(8px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;rotate:-1.2deg;box-sizing:border-box;width:172px;padding:4px 7px 4px;border:3px solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);box-shadow:4px 4px 0 var(--cm-ink);pointer-events:none;font-family:var(--cm-ui)}
+.sbRow{display:grid;grid-template-columns:10px 1fr auto 32px;align-items:center;gap:6px;height:24px}
+.sbRow+.sbRow{border-top:2px solid var(--cm-ink)}
+.sbRow::before{content:'';box-sizing:border-box;width:10px;height:10px;border-radius:50%;border:2px solid transparent}
+.sbRow[data-serving]::before{background:var(--cm-red);border-color:var(--cm-ink)}
+.sbName{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sbRow[data-side=rival] .sbName{color:var(--cm-muted)}
+.sbSets{display:flex;gap:3px}
+.sbSets i{box-sizing:border-box;width:9px;height:9px;border-radius:50%;border:2px solid var(--cm-ink);background:var(--cm-white)}
+.sbSets i[data-on]{background:var(--cm-sun)}
+.sbSlat{display:grid;place-items:center;box-sizing:border-box;width:32px;height:20px;border:2px solid var(--cm-ink);background:var(--cm-sun);color:var(--cm-ink);font:400 19px/1 var(--cm-numeral);font-variant-numeric:tabular-nums;animation:tnStamp .22s cubic-bezier(.3,1.5,.5,1)}
+.sbRow[data-side=rival] .sbSlat{background:var(--cm-white)}
+.sbSlat[data-wide]{width:auto;min-width:58px;padding:0 6px}
+.sbMatch{display:flex;align-items:center;justify-content:space-between;gap:6px;padding-bottom:3px;margin-bottom:1px;border-bottom:2px dashed var(--cm-ink);font-size:10px;font-weight:800;line-height:1;letter-spacing:.03em;text-transform:uppercase;white-space:nowrap}
+.sbMatch>span:first-child{overflow:hidden;text-overflow:ellipsis}
+.sbBalls{display:flex;gap:3px;flex:none}
+.sbBalls i{box-sizing:border-box;width:8px;height:8px;border-radius:50%;border:2px solid var(--cm-ink);background:var(--cm-white)}
+.sbBalls i[data-on]{background:var(--cm-red)}
+.sbRun{display:inline-flex;align-items:baseline;gap:2px;min-width:0}.sbRun b{color:var(--cm-ink)}.sbRun small{font-size:9px;font-weight:800;color:var(--cm-muted)}
+.sbFoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:1px;padding-top:3px;white-space:nowrap;border-top:2px dashed var(--cm-ink);font-size:11px;font-weight:800;line-height:1}
+.sbFoot b{font:400 15px/1 var(--cm-numeral);font-variant-numeric:tabular-nums}
+.sbRally{color:var(--cm-muted)}.sbRally[data-on]{color:var(--cm-ink)}.sbRally[data-hot] b{color:var(--cm-red)}
+.sbWind{display:inline-flex;align-items:center;gap:5px}
+.sbWind svg{width:26px;height:14px;overflow:visible}
+.sbWind svg path{fill:var(--cm-teal);stroke:var(--cm-ink);stroke-width:1.4;stroke-linejoin:round;transform-origin:13px 7px;transition:transform .5s}
+.sbWind[data-dir=left] svg path{transform:scaleX(-1)}
+.sbWind[data-strength="0"]{color:var(--cm-muted)}.sbWind[data-strength="0"] svg path{transform:scaleX(.25)}
+.sbWind[data-strength="2"] svg path{fill:var(--cm-red)}
+@keyframes tnStamp{0%{scale:1.5;rotate:-8deg}100%{scale:1;rotate:0deg}}
+@media(max-height:520px){.scoreboard{top:6px;width:178px}}
+@media(min-width:900px){.scoreboard{width:236px;padding:7px 10px 6px;border-width:4px;box-shadow:5px 5px 0 var(--cm-ink)}.sbRow{height:36px;grid-template-columns:12px 1fr auto 44px}.sbRow::before{width:12px;height:12px}.sbSlat{width:44px;height:30px;font-size:28px}.sbName{font-size:16px}.sbSets i{width:11px;height:11px}.sbFoot{font-size:13px;padding-top:5px}.sbFoot b{font-size:18px}.sbMatch{font-size:12px;padding-bottom:5px}.sbBalls i{width:10px;height:10px}}
+@media(prefers-reduced-motion:reduce){.scoreboard{rotate:none}.sbSlat{animation:none}.sbWind svg path{transition:none}}
+/* ---- shot discs: inked paper discs with a hard shadow that collapses under the thumb (same positions and hit areas) ---- */
+.skin.skin.skin.skin.skin.skin [data-tennis-action]{background:var(--cm-paper);color:var(--cm-ink);border:3.5px solid var(--cm-ink);border-radius:50%;font-family:var(--cm-ui);font-weight:800;letter-spacing:0;text-shadow:none;outline:none;box-shadow:4px 5px 0 var(--cm-ink);transition:translate .06s ease,box-shadow .06s ease}
+.skin.skin.skin.skin.skin.skin [data-tennis-action=kick]{background:var(--cm-sun)}
+.skin.skin.skin.skin.skin.skin [data-tennis-action=header]{background:var(--cm-teal)}
+.skin.skin.skin.skin.skin.skin [data-tennis-action=scissor]{background:var(--cm-red);color:var(--cm-paper)}
+.skin.skin.skin.skin.skin.skin [data-tennis-action=trap]{background:var(--cm-ink);color:var(--cm-paper);box-shadow:4px 5px 0 var(--cm-orange)}
+.skin.skin.skin.skin.skin.skin [data-tennis-action]:active,.skin.skin.skin.skin.skin.skin [data-tennis-action][data-charging]{translate:3px 4px;box-shadow:1px 1px 0 var(--cm-ink)}
+.skin.skin.skin.skin.skin.skin [data-tennis-action][data-ready=true]{outline:3px solid var(--cm-paper);outline-offset:2px}
+.skin.skin.skin.skin.skin.skin [data-tennis-action][data-best]{outline:3px solid var(--cm-ink);outline-offset:3px}
+.skin.skin.skin.skin.skin.skin [data-tennis-action][data-best]::after{border-color:var(--cm-sun)}
+.skin.skin.skin.skin.skin.skin [data-tennis-action=kick][data-call=perfect]{background:var(--cm-paper);outline:4px solid var(--cm-teal);outline-offset:3px}
+.skin.skin.skin.skin.skin.skin [data-tennis-action=kick][data-call=perfect]::after{border-color:var(--cm-teal)}
+/* Hold-to-power: a printed gauge inks in around the disc; the sun band is the sweet window, red is overhit. */
+.skin.skin.skin.skin.skin.skin [data-tennis-action][data-charging]{--charge-fill:var(--cm-paper)}
+.skin.skin.skin.skin.skin.skin [data-tennis-action][data-power=sweet]{--charge-fill:var(--cm-paper);outline:4px solid var(--cm-sun);outline-offset:14px}
+.skin.skin.skin.skin.skin.skin [data-tennis-action][data-power=over]{--charge-fill:var(--cm-red);animation:tnOver .09s linear infinite}
+.skin.skin.skin.skin.skin.skin [data-tennis-action][data-charging]::before{inset:-14px;background:conic-gradient(var(--charge-fill) 0turn calc(var(--charge,0) * 1turn),transparent 0),conic-gradient(var(--cm-ink) 0turn .571turn,var(--cm-sun) .571turn .714turn,var(--cm-red) .714turn);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 9px),#000 calc(100% - 8px));mask:radial-gradient(farthest-side,transparent calc(100% - 9px),#000 calc(100% - 8px))}
+@keyframes tnOver{0%{translate:1.5px 4px}50%{translate:4.5px 4px}100%{translate:1.5px 4px}}
+@media(prefers-reduced-motion:reduce){.skin.skin.skin.skin.skin.skin [data-tennis-action]{transition:none}.skin.skin.skin.skin.skin.skin [data-tennis-action][data-power=over]{animation:none}}
+/* ---- joystick: Breakaway's stick. An inked ring on a dot screen with a paper lip inside it and a paper knob stamped with the
+ * ball's patch; the knob goes sun-yellow under the thumb. Hard offset shadows only; the hit area is unchanged. ---- */
+.skin.skin.skin.skin.skin.skin :global(.joystick){border:3.5px solid var(--cm-ink);background:radial-gradient(circle,#231a2e66 1.2px,transparent 1.5px) 0 0/7px 7px,#fff3d680;box-shadow:inset 0 0 0 3.5px #fff3d6e6,inset 0 0 0 6px var(--cm-ink),4px 5px 0 #231a2ecc}
+.skin.skin.skin.skin.skin.skin :global(.joystick)::after{border-color:var(--cm-sun)}
+/* The shared island thumb (app/globals.css) is painted with !important and 50% opacity: the same weight is needed to repaint it as paper. */
+.skin.skin.skin.skin.skin.skin :global(.joystick)>span{opacity:1;background:#fff3d6 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 27 73 44 64 71H36L27 44z' fill='%23231a2e'/%3E%3Cpath d='M50 27V8M73 44 91 38M64 71 75 87M36 71 25 87M27 44 9 38' stroke='%23231a2e' stroke-width='5' fill='none'/%3E%3C/svg%3E") center/78% no-repeat!important;background-blend-mode:normal;border:3.5px solid var(--cm-ink)!important;box-shadow:3px 4px 0 var(--cm-ink)!important;overflow:hidden}
+.skin.skin.skin.skin.skin.skin :global(.joystick)[data-active=true]>span{background-color:var(--cm-sun)!important;box-shadow:1px 2px 0 var(--cm-ink)!important}
+/* The start / results card sits on a dot scrim (the kit's card page). */
+.skin.skin.skin.skin.skin.skin div:has(>[data-tennis-card]){background:var(--cm-dots-ink),#fff3d63d}

@@ -339,7 +339,7 @@ await ok('wiring',()=>{
   assert(read(f).includes(`enterActivity(${id}`),f+' marks its activity');
  for(const g of IDS.ARCADE_GAMES)assert(IDS.ACTIVITY_IDS.includes('arcade_'+g),g);
  for(const e of IDS.MUSEUM_EXHIBITS)assert(IDS.ACTIVITY_IDS.includes('exhibit_'+e),e);
- const arcadeIds=[...read('lib/arcade/arcadeCatalog.ts').matchAll(/\{id:'([a-z]+)'/g)].map(m=>m[1]);assert.deepEqual(arcadeIds,[...IDS.ARCADE_GAMES],'arcade games match the catalog');
+ const arcadeIds=[...read('lib/arcade/arcadeCatalog.ts').matchAll(/\{id:'([a-z]+)'/g)].map(m=>m[1]==='kitrush'?'live':m[1]);/* Nov 10 2026: Kit Rush reports on the analytics slot it took over ('live'): arcadeCatalog.ts arcadeAnalyticsId */assert.deepEqual(arcadeIds,[...IDS.ARCADE_GAMES],'arcade games match the catalog');
  const exp=read('components/museum/experiences/index.tsx').match(/const IDS=\[([^\]]*)\]/)[1].split(',').map(s=>s.trim().replace(/'/g,''));assert.deepEqual(exp,[...IDS.MUSEUM_EXHIBITS],'exhibits match the museum');
  // The heavy geometry stays out of the every-page tracker bundle.
  assert(!/^import[^\n]*(islandPlaces|lib\/town|\.\.\/town)/m.test(read('lib/analytics/tracker.ts')+read('lib/analytics/islandIds.ts')+read('lib/analytics/core.ts')),'tracker/core never import the island geometry');

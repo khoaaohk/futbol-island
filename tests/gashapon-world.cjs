@@ -88,7 +88,7 @@ await ok('arcade room: the pair is one solid + one glass mesh (2 draws), with co
  const g=G.mergedGashapon(arcade);assert(g.solid.getAttribute('color')&&g.solid.getAttribute('position').count>0&&g.glass.getAttribute('position').count>0,'solid (vertex colours) + glass');
  const box=new T.Box3().setFromBufferAttribute(g.solid.getAttribute('position'));assert(box.min.z> -10.7&&box.max.y<2.1,'inside the room, under 2.1 m');g.solid.dispose();g.glass.dispose();
  assert(/onGashaponNear\?:\(id:string\|null\)=>void/.test(read('lib/arcade/arcadeRoomScene.ts'))&&/props\.gashapon/.test(read('lib/arcade/arcadeRoomScene.ts')),'proximity in the room scene');
- const room=read('components/ArcadeRoom.tsx');assert(/setSocialNear,setGashaNear\)/.test(room)&&/gashaponPanel\.open\(gashaNear\)/.test(room)&&/<GashaponPanel\/>/.test(room),'ArcadeRoom shows the prompt and the panel');
+ const room=read('components/ArcadeRoom.tsx');assert(/setSocialNear,setGashaNear,\(x,y,visible\)=>/.test(room)&&/placeGasha\(gashaPrompt\.current\)/.test(room)&&/onGashaponPrompt\(\(projected\.x/.test(read('lib/arcade/arcadeRoomScene.ts'))/* Nov 10: the button is placed above the machine */&&/gashaponPanel\.open\(gashaNear\)/.test(room)&&/<GashaponPanel\/>/.test(room),'ArcadeRoom shows the prompt and the panel');
 });
 
 await ok('island prompt: nearest machine within reach on foot, HUD-stack key, hidden while the panel is open',()=>{

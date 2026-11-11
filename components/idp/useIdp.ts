@@ -35,7 +35,7 @@ export function useIdpState(){
 }
 
 /** Arcade cabinets with any saved progress on this device ("played": evidence of exploring, not of skill). */
-const ARCADE_KEYS:Record<ArcadeId,string[]>={live:['fi2-strikers-stars-v1','fi2-strikers-cup-v1'],runner:['fi2-runner-missions-v1','fi.game.runner.best'],tennis:['fi2-tennis-stars-v1'],pinball:['fi2-pinball-stars-v1'],puzzle:['fi2-pass-puzzles-v1']};
+const ARCADE_KEYS:Record<ArcadeId,string[]>={live:['fi2-strikers-stars-v1','fi2-strikers-cup-v1'],runner:['fi2-runner-missions-v1','fi.game.runner.best'],tennis:['fi2-tennis-stars-v1'],pinball:['fi2-pinball-stars-v1'],puzzle:['fi2-pass-puzzles-v1'],kitrush:['fi2-kitrush-v1']};
 const hasProgress=(raw:string|null):boolean=>{if(!raw)return false;let v:unknown;try{v=JSON.parse(raw);}catch{return /[1-9]/.test(raw);}
  const walk=(x:unknown,d:number):boolean=>d>4?false:typeof x==='number'?x>0:Array.isArray(x)?x.some(y=>walk(y,d+1)):!!x&&typeof x==='object'&&Object.values(x as object).some(y=>walk(y,d+1));return walk(v,0);};
 export function readArcadePlayed():Set<ArcadeId>{

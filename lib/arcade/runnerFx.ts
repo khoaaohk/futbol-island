@@ -25,14 +25,14 @@ export const RUNNER_WORD_POPS:boolean=false;
  * Effects hide themselves (no draw call) while idle. Reduced motion removes
  * speed lines, confetti, crowd bob, camera follow, shake and FOV changes.
  */
-export const RUNNER_ROLE_COLOURS={jockey:'#b993ff',tackler:'#ff7d5e',sweeper:'#62c9ff',presser:'#7fe08e',wall:'#ffd166',pair:'#ff9bd2',line:'#e8eef7'} as const;
-const LINES=26,DUST=18,CONFETTI=42,ARC_SEGMENTS=24,STAND_PERIOD=70,STAND_LENGTH=15,FANS_PER_ROW=17,ROWS=3;
+export const RUNNER_ROLE_COLOURS={jockey:'#9a6ae0',tackler:'#f0452e',sweeper:'#2f8fd6',presser:'#19b5a5',wall:'#ffc83a',pair:'#e8569c',line:'#fff3d6'} as const;
+const LINES=26,DUST=26,CONFETTI=42,ARC_SEGMENTS=24,STAND_PERIOD=70,STAND_LENGTH=15,FANS_PER_ROW=17,ROWS=3;
 const clamp01=(v:number)=>Math.max(0,Math.min(1,v));
 
 export function createRunnerFx(stage:ArcadeStage){
  const {scene,reduced}=stage;
  const dummy=new T.Object3D(),colour=new T.Color();
- let descent=0,elapsed=0,trauma=0,hitstop=0,hitstopScale=1,follow=0,fov=0,lineFlash=0,hype=0,slideDust=0,punch=0;
+ let descent=0,elapsed=0,trauma=0,hitstop=0,hitstopScale=1,follow=0,fov=0,lineFlash=0,hype=0,slideDust=0,punch=0,lastFoot=false,whooshAge=0,whooshSide=1;
  const seen={event:0,cuts:0,landings:0,nearMisses:0,hurdles:0,beatScores:0,coach:0,drops:0,state:null as RunnerGame|null,
   /* round 3 */bigAirs:0,doubleJumps:0,graceSaves:0,heartsBack:0,inputs:0,boost:false,rollers:0};
  /* Round 3 cinematic beats (runnerCinema.ts) and the dynamic chase camera's smoothed offsets. */
@@ -46,19 +46,26 @@ export function createRunnerFx(stage:ArcadeStage){
  for(let i=0;i<LINES;i++){const side=i%2?1:-1;lineSeed[i*4]=side*(4.9+((i*37)%23)/23*4.2);lineSeed[i*4+1]=.12+((i*53)%17)/17*2.4;lineSeed[i*4+2]=-62+((i*29)%31)/31*70;lineSeed[i*4+3]=1.4+((i*13)%7)/7*1.8;}
  const lineGeometry=new T.BufferGeometry();lineGeometry.setAttribute('position',new T.BufferAttribute(linePos,3).setUsage(T.DynamicDrawUsage));lineGeometry.setIndex(lineIndex);
  lineGeometry.boundingSphere=new T.Sphere(new T.Vector3(0,1,-27),60);
- const lineMaterial=new T.MeshBasicMaterial({color:'#c9f6ff',transparent:true,opacity:0,depthWrite:false,blending:T.AdditiveBlending,side:T.DoubleSide,toneMapped:false});
+ const lineMaterial=new T.MeshBasicMaterial({color:'#fff3d6',transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide});
  const lines=new T.Mesh(lineGeometry,lineMaterial);lines.name='runner-speed-lines';lines.visible=false;lines.frustumCulled=false;scene.add(lines);
 
  /* ---------- pooled plant dust ---------- */
- const dust=new T.InstancedMesh(new T.IcosahedronGeometry(.13,0),new T.MeshBasicMaterial({color:'#efd9ad',transparent:true,opacity:.5,depthWrite:false}),DUST);
+ const dust=new T.InstancedMesh(new T.IcosahedronGeometry(.19,0),new T.MeshBasicMaterial({color:'#fff3d6',transparent:true,opacity:.9,depthWrite:false}),DUST);
  dust.name='runner-dust';dust.instanceMatrix.setUsage(T.DynamicDrawUsage);dust.frustumCulled=false;dust.visible=false;scene.add(dust);
  const dustLife=new Float32Array(DUST),dustPos=new Float32Array(DUST*3),dustVel=new Float32Array(DUST*3);let dustCursor=0;
  function puff(x:number,z:number,count:number,spread:number,lift=.6){for(let n=0;n<count;n++){const i=dustCursor++%DUST,j=i*3,a=(n/count)*Math.PI*2+elapsed*7;dustLife[i]=.38+((n*7)%5)*.04;dustPos[j]=x+Math.cos(a)*.12;dustPos[j+1]=.08;dustPos[j+2]=z+Math.sin(a)*.1;dustVel[j]=Math.cos(a)*spread;dustVel[j+1]=lift*(.6+((n*3)%4)*.15);dustVel[j+2]=Math.sin(a)*spread*.5;}dust.visible=true;}
 
+ /* ---------- near-miss whoosh: one inked swoosh that whips past the runner's hip (pooled, drawn for a third of a second) ---------- */
+ const whoosh=(()=>{const N=14,v:number[]=[],c:number[]=[],idx:number[]=[],ink=new T.Color('#231a2e'),pap=new T.Color('#fff3d6');
+  for(let layer=0;layer<2;layer++)for(let i=0;i<=N;i++){const u=i/N,a=-1.25+u*2.5,w=Math.pow(Math.sin(u*Math.PI),.7)*(layer?.17:.27),r=1.05+u*.3,col=layer?pap:ink;
+   v.push(Math.sin(a)*(r-w),layer*.015,-Math.cos(a)*(r-w),Math.sin(a)*(r+w),layer*.015,-Math.cos(a)*(r+w));c.push(col.r,col.g,col.b,col.r,col.g,col.b);if(i<N){const o=layer*(N+1)*2+i*2;idx.push(o,o+1,o+2,o+1,o+3,o+2);}}
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(v,3));g.setAttribute('color',new T.Float32BufferAttribute(c,3));g.setIndex(idx);
+  const m=new T.Mesh(g,new T.MeshBasicMaterial({vertexColors:true,transparent:true,opacity:0,depthWrite:false,side:T.DoubleSide}));m.name='runner-whoosh';m.visible=false;m.frustumCulled=false;m.renderOrder=3;scene.add(m);return m;})();
+
  /* ---------- goal confetti ---------- */
  const confetti=new T.InstancedMesh(new T.PlaneGeometry(.16,.1),new T.MeshBasicMaterial({side:T.DoubleSide,toneMapped:false}),CONFETTI);
  confetti.name='runner-confetti';confetti.instanceMatrix.setUsage(T.DynamicDrawUsage);confetti.frustumCulled=false;confetti.visible=false;scene.add(confetti);
- const palette=['#ffe07a','#ff7aa8','#7ff0e2','#ffffff','#b993ff','#ff9b5e'];for(let i=0;i<CONFETTI;i++)confetti.setColorAt(i,colour.set(palette[i%palette.length]));
+ const palette=['#ffc83a','#f0452e','#19b5a5','#fff3d6','#2f6fb0','#ff8a3c'];for(let i=0;i<CONFETTI;i++)confetti.setColorAt(i,colour.set(palette[i%palette.length]));
  const confLife=new Float32Array(CONFETTI),confPos=new Float32Array(CONFETTI*3),confVel=new Float32Array(CONFETTI*3),confSpin=new Float32Array(CONFETTI*3);
  function celebrate(x:number,z:number){if(reduced)return;for(let i=0;i<CONFETTI;i++){const j=i*3,a=i*2.399,r=.3+(i%5)*.12;confLife[i]=1.25+(i%7)*.08;confPos[j]=x+Math.cos(a)*.4;confPos[j+1]=1.6+(i%3)*.25;confPos[j+2]=z;confVel[j]=Math.cos(a)*r*7;confVel[j+1]=4+(i%4)*1.1;confVel[j+2]=3+Math.sin(a)*2.5;confSpin[j]=a;confSpin[j+1]=a*1.7;confSpin[j+2]=3+(i%5);}confetti.visible=true;}
 
@@ -73,12 +80,14 @@ export function createRunnerFx(stage:ArcadeStage){
   shader.vertexShader='attribute float aBob;\nuniform float uTime;uniform float uAmp;uniform float uRate;\n#define RUNNER_WORLD_HOOK rbW.y+=step(.5,aBob)*abs(sin(uTime*uRate+aBob*6.2831))*uAmp;\n'+shader.vertexShader;};
  crowdMaterial.customProgramCacheKey=()=>'runner-crowd-bob-2';
  const crowdGeometry=new T.BoxGeometry(1,1,1);const bob=new Float32Array(perBlock);
- for(let side=0;side<2;side++){const base=side*perSide;for(let f=0;f<fansPerSide;f++){const phase=1+((f*0.618)%1);bob[base+structurePerSide+f*2]=phase;bob[base+structurePerSide+f*2+1]=phase;}}
+ // Heat (pass 2): the eight structure boxes come first, then only the fans that turned up (the mesh's count), so a half-empty
+ // stand no longer draws its empty seats.
+ for(let i=structurePerSide*2;i<perBlock;i++)bob[i]=1+((Math.floor((i-structurePerSide*2)/2)*0.618)%1);
  crowdGeometry.setAttribute('aBob',new T.InstancedBufferAttribute(bob,1));
  type Stand={mesh:T.InstancedMesh;base:number;z:number};
  const stands:Stand[]=[0,1].map(i=>{const mesh=new T.InstancedMesh(crowdGeometry,crowdMaterial,perBlock);mesh.name=`runner-crowd-${i}`;mesh.castShadow=mesh.receiveShadow=false;mesh.frustumCulled=false;mesh.visible=false;scene.add(mesh);return{mesh,base:i*STAND_PERIOD/2-STAND_LENGTH/2,z:999};});
- const shirtSets=[['#ffd36e','#7ff0e2','#ffffff','#ff8fb1'],['#e8b9a6','#a8d8c8','#f3e3b4','#c4b4e8'],['#5fd6c8','#f6c453','#fff4da','#ef8a6a']];
- const terrace=['#2a3f6e','#3b3366','#24505a'];
+ const shirtSets=[['#ffc83a','#f0452e','#fff3d6','#2f6fb0'],['#19b5a5','#ff8a3c','#fff3d6','#e8569c'],['#2f6fb0','#ffc83a','#f0452e','#fff3d6']];
+ const terrace=['#fff3d6','#f3dfbd','#e6cda4'];
  /** Rebuild one stand when it re-enters at the far end, under the fog. */
  function fillStand(stand:Stand,distance:number,goalNear:boolean){
   const district=districtAt(distance+60),kind=district.kind,fill=goalNear?.95:kind===0?.9:kind===1?.55:0;
@@ -86,14 +95,12 @@ export function createRunnerFx(stage:ArcadeStage){
   const shirts=shirtSets[DISTRICTS.indexOf(district)%3];let n=0;
   for(const side of[-1,1]){
    for(let r=0;r<ROWS;r++){const h=.3+r*.42;dummy.position.set(side*(5.55+r*.78),h/2-.1,0);dummy.scale.set(.76,h,STAND_LENGTH);dummy.rotation.set(0,0,0);dummy.updateMatrix();stand.mesh.setMatrixAt(n,dummy.matrix);stand.mesh.setColorAt(n++,colour.set(terrace[(r+kind)%3]));}
-   dummy.position.set(side*(5.55+ROWS*.78),.95,0);dummy.scale.set(.18,2.1,STAND_LENGTH);dummy.updateMatrix();stand.mesh.setMatrixAt(n,dummy.matrix);stand.mesh.setColorAt(n++,colour.set(kind===0?'#ffd36e':'#7ff0e2'));
-   for(let r=0;r<ROWS;r++)for(let f=0;f<FANS_PER_ROW;f++){
-    const h=.3+r*.42,x=side*(5.55+r*.78),z=-STAND_LENGTH/2+.45+f*(STAND_LENGTH-.9)/(FANS_PER_ROW-1),hash=((f*73+r*31+Math.floor(distance))%97)/97,present=hash<fill;
-    dummy.position.set(x,h+.18,z);dummy.scale.set(present?.36:0,present?.46:0,present?.32:0);dummy.updateMatrix();stand.mesh.setMatrixAt(n,dummy.matrix);stand.mesh.setColorAt(n++,colour.set(shirts[(f+r*2)%shirts.length]));
-    dummy.position.set(x,h+.55,z);dummy.scale.set(present?.25:0,present?.25:0,present?.25:0);dummy.updateMatrix();stand.mesh.setMatrixAt(n,dummy.matrix);stand.mesh.setColorAt(n++,colour.set(hash<.5?'#e9b48f':'#8a5a3c'));
-   }
-  }
-  stand.mesh.instanceMatrix.needsUpdate=true;if(stand.mesh.instanceColor)stand.mesh.instanceColor.needsUpdate=true;
+   dummy.position.set(side*(5.55+ROWS*.78),.95,0);dummy.scale.set(.18,2.1,STAND_LENGTH);dummy.updateMatrix();stand.mesh.setMatrixAt(n,dummy.matrix);stand.mesh.setColorAt(n++,colour.set(kind===0?'#f0452e':'#19b5a5'));}
+  for(const side of[-1,1])for(let r=0;r<ROWS;r++)for(let f=0;f<FANS_PER_ROW;f++){
+    const h=.3+r*.42,x=side*(5.55+r*.78),z=-STAND_LENGTH/2+.45+f*(STAND_LENGTH-.9)/(FANS_PER_ROW-1),hash=((f*73+r*31+Math.floor(distance))%97)/97;if(hash>=fill)continue;
+    dummy.position.set(x,h+.18,z);dummy.scale.set(.36,.46,.32);dummy.updateMatrix();stand.mesh.setMatrixAt(n,dummy.matrix);stand.mesh.setColorAt(n++,colour.set(shirts[(f+r*2)%shirts.length]));
+    dummy.position.set(x,h+.55,z);dummy.scale.set(.25,.25,.25);dummy.updateMatrix();stand.mesh.setMatrixAt(n,dummy.matrix);stand.mesh.setColorAt(n++,colour.set(hash<.5?'#f0c09a':'#9a6444'));}
+  stand.mesh.count=n;stand.mesh.instanceMatrix.needsUpdate=true;if(stand.mesh.instanceColor)stand.mesh.instanceColor.needsUpdate=true;
  }
 
  /* ---------- tackle telegraphs (attached once to each pooled defender) ---------- */
@@ -102,8 +109,8 @@ export function createRunnerFx(stage:ArcadeStage){
  const defenders:T.Group[]=[];
  function prepareDefender(g:T.Group){
   if(g.userData.tele)return;defenders.push(g);
-  const strip=new T.Mesh(stripGeometry,new T.MeshBasicMaterial({color:'#ff7d5e',transparent:true,opacity:0,depthWrite:false,toneMapped:false}));strip.name='runner-tackle-lane';strip.position.y=.03;strip.renderOrder=1;
-  const arc=new T.Mesh(new T.RingGeometry(.7,.84,ARC_SEGMENTS,1,Math.PI/2,Math.PI*2),new T.MeshBasicMaterial({color:'#ff7d5e',transparent:true,opacity:.9,depthWrite:false,side:T.DoubleSide,toneMapped:false}));arc.name='runner-read-arc';arc.rotation.x=-Math.PI/2;arc.position.y=.045;arc.renderOrder=2;
+  const strip=new T.Mesh(stripGeometry,new T.MeshBasicMaterial({color:'#f0452e',transparent:true,opacity:0,depthWrite:false}));strip.name='runner-tackle-lane';strip.position.y=.03;strip.renderOrder=1;
+  const arc=new T.Mesh(new T.RingGeometry(.68,.88,ARC_SEGMENTS,1,Math.PI/2,Math.PI*2),new T.MeshBasicMaterial({color:'#f0452e',transparent:true,opacity:1,depthWrite:false,side:T.DoubleSide}));arc.name='runner-read-arc';arc.rotation.x=-Math.PI/2;arc.position.y=.045;arc.renderOrder=2;
   strip.visible=arc.visible=false;g.add(strip,arc);g.userData.tele={strip,arc,role:''} as Tele;
  }
  /** Read arc fills while the defender reads you; the lane strip shows where the
@@ -128,29 +135,29 @@ export function createRunnerFx(stage:ArcadeStage){
   const nextLane=o.closeTo!==undefined?o.closeTo:role==='line'&&o.z<-18&&((o.lineClock??0)%1.7)>1.25?(o.lane===(o.slot??0)?o.lane-1:o.lane+1):undefined;
   const ox=g.position.x,dx=nextLane!==undefined?(nextLane*2.4-ox)*.85:committed?Math.max(-1.2,Math.min(1.2,(o.aim??ox)-ox)):0,length=reach.z+.5+(o.press??0)*2.5;
   tele.strip.position.x=dx*.5;tele.strip.scale.set(reach.x*2,1,length);
-  tele.strip.material.opacity=t>=.7?Math.max(0,.4*(1-(t-.7)/.3)):t>.08?.5:committed?.3+(reduced?0:Math.sin(elapsed*18)*.06):.07+read*.12;
+  tele.strip.material.opacity=t>=.7?Math.max(0,.5*(1-(t-.7)/.3)):t>.08?.62:committed?.42+(reduced?0:Math.sin(elapsed*18)*.08):.1+read*.16;
  }
 
 
  /* ---------- round 2 depth visuals (all pooled, hidden when idle) ---------- */
  // Power-run shield: one ring at the runner's feet while it can still ride a tackle.
- const shield=new T.Mesh(new T.TorusGeometry(.62,.045,6,28),new T.MeshBasicMaterial({color:'#9ff6ff',transparent:true,opacity:.75,depthWrite:false,toneMapped:false}));
+ const shield=new T.Mesh(new T.TorusGeometry(.62,.06,6,28),new T.MeshBasicMaterial({color:'#19b5a5',transparent:true,opacity:.95,depthWrite:false}));
  shield.name='runner-shield';shield.rotation.x=-Math.PI/2;shield.visible=false;scene.add(shield);
  // Keeper: one pooled island rig in goalkeeper colours, shown only for keeper goals.
- const keeper=stage.player('#3fd18b',sideGameDress('runner-keeper','away',1));keeper.root.name='runner-keeper';keeper.root.visible=false;keeper.root.scale.setScalar(1.12);
+ const keeper=stage.player('#19b5a5',sideGameDress('runner-keeper','away',1));keeper.root.name='runner-keeper';keeper.root.visible=false;keeper.root.scale.setScalar(1.12);
  const keeperPose:ArcadePoseOptions={keeper:1,anticipate:.6,vx:0,vz:0,dive:undefined};const keeperDive={progress:0,dir:1 as -1|1};
  // Teammates for the one-two: two pooled rigs in the runner's own colours, on the wing.
  const mates=[0,1].map(i=>{const rig=stage.player('#efbd58',sideGameDress('runner-mate-'+i,'home',7+i));rig.root.name='runner-mate-'+i;rig.root.visible=false;rig.root.scale.setScalar(1.08);return{rig,pose:{vx:0,vz:0,anticipate:.4} as ArcadePoseOptions};});
  const passBall=stage.footballMerged(.22);passBall.name='runner-pass-ball';passBall.visible=false;
- const callout=new T.Mesh(new T.RingGeometry(.5,.62,24),new T.MeshBasicMaterial({color:'#efbd58',transparent:true,opacity:.8,depthWrite:false,side:T.DoubleSide,toneMapped:false}));callout.rotation.x=-Math.PI/2;callout.position.y=.04;callout.visible=false;scene.add(callout);
+ const callout=new T.Mesh(new T.RingGeometry(.5,.62,24),new T.MeshBasicMaterial({color:'#ffc83a',transparent:true,opacity:.95,depthWrite:false,side:T.DoubleSide}));callout.rotation.x=-Math.PI/2;callout.position.y=.04;callout.visible=false;scene.add(callout);
  // Puddles: one instanced draw for up to four flat patches.
- const MUD=4,mud=new T.InstancedMesh(new T.CircleGeometry(1,20),new T.MeshBasicMaterial({color:'#6b4a2f',transparent:true,opacity:.82,depthWrite:false}),MUD);
+ const MUD=4,mud=new T.InstancedMesh(new T.CircleGeometry(1,20),new T.MeshBasicMaterial({color:'#5a3d2e',transparent:true,opacity:.9,depthWrite:false}),MUD);
  mud.name='runner-mud';mud.rotation.x=0;mud.frustumCulled=false;mud.visible=false;mud.renderOrder=1;scene.add(mud);
  // Route fork: two coloured arches, no words (owner, Oct 29 2026: the WING / MIDDLE text signs are gone; the lanes, the
  // arch colours and the route flash still tell the fork). Plain boxes only: no canvas textures, two fewer draw calls.
  const fork=new T.Group();fork.name='runner-fork';fork.visible=false;scene.add(fork);
- for(const x of[-3.6,-1.2,3.6])stage.box(x,1.3,0,.14,2.6,.14,x===-1.2?'#ffe084':'#fff3d9',fork).castShadow=false;
- stage.box(-2.4,2.6,-.05,2.5,.12,.12,'#7ff0e2',fork).castShadow=false;stage.box(1.2,2.6,-.05,4.9,.12,.12,'#ff7aa8',fork).castShadow=false;
+ for(const x of[-3.6,-1.2,3.6])stage.box(x,1.3,0,.14,2.6,.14,x===-1.2?'#ffc83a':'#fff3d6',fork).castShadow=false;
+ stage.box(-2.4,2.6,-.05,2.5,.16,.16,'#19b5a5',fork).castShadow=false;stage.box(1.2,2.6,-.05,4.9,.16,.16,'#f0452e',fork).castShadow=false;
  // Heat (Nov 8 2026): the five boxes bake into one vertex-coloured mesh (1 draw instead of 5; same shapes and colours).
  {const parts=fork.children.filter((c):c is T.Mesh=>c instanceof T.Mesh),plain=parts.every(m=>!((m.material as T.MeshStandardMaterial).emissiveIntensity>0));
   if(plain&&parts.length){const geos=parts.map(m=>{m.updateMatrix();const g=m.geometry.clone().applyMatrix4(m.matrix),c=(m.material as T.MeshStandardMaterial).color,n=g.attributes.position.count,col=new Float32Array(n*3);
@@ -163,23 +170,21 @@ export function createRunnerFx(stage:ArcadeStage){
  const openSide=new T.Mesh(new T.PlaneGeometry(2.1,5.4),new T.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,toneMapped:false}));
  openSide.name='runner-open-side';openSide.rotation.x=-Math.PI/2;openSide.position.y=.05;openSide.renderOrder=1;openSide.visible=false;scene.add(openSide);
  if(typeof document!=='undefined'){const c=document.createElement('canvas');c.width=128;c.height=240;const g=c.getContext('2d');
-  if(g){g.lineJoin='round';g.lineCap='round';for(const [y,a] of[[70,1],[140,.75],[210,.5]] as const){g.globalAlpha=a;g.strokeStyle='#1a1036';g.lineWidth=30;g.beginPath();g.moveTo(18,y);g.lineTo(64,y-46);g.lineTo(110,y);g.stroke();g.strokeStyle='#ffe07a';g.lineWidth=18;g.stroke();}}
+  if(g){g.lineJoin='round';g.lineCap='round';for(const [y,a] of[[70,1],[140,.75],[210,.5]] as const){g.globalAlpha=a;g.strokeStyle='#231a2e';g.lineWidth=30;g.beginPath();g.moveTo(18,y);g.lineTo(64,y-46);g.lineTo(110,y);g.stroke();g.strokeStyle='#ffc83a';g.lineWidth=18;g.stroke();}}
   const t=new T.CanvasTexture(c);t.colorSpace=T.SRGBColorSpace;openSide.material.map=t;}
  let openX=0;
  /* ---------- Oct 25 2026: combo aura and crowd camera flashes (pooled, hidden when idle) ---------- */
  // Combo aura: one additive disc under the runner while the clean-play multiplier is ×2 (cyan) or ×3 (gold), so kids
  // can SEE the reward they are building. One draw call, only while a multiplier is live.
- const auraMaterial=new T.MeshBasicMaterial({color:'#7ff0e2',transparent:true,opacity:0,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false});
- const auraCyan=new T.Color('#7ff0e2'),auraGold=new T.Color('#ffd36e');
- if(typeof document!=='undefined'){const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');
-  if(g){const r=g.createRadialGradient(32,32,2,32,32,32);r.addColorStop(0,'rgba(255,255,255,0)');r.addColorStop(.5,'rgba(255,255,255,.35)');r.addColorStop(.8,'rgba(255,255,255,1)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);}
-  const t=new T.CanvasTexture(c);auraMaterial.map=t;}
- const aura=new T.Mesh(new T.PlaneGeometry(2,2),auraMaterial);aura.name='runner-combo-aura';aura.rotation.x=-Math.PI/2;aura.position.y=.035;aura.renderOrder=1;aura.visible=false;scene.add(aura);
+ const auraMaterial=new T.MeshBasicMaterial({color:'#19b5a5',transparent:true,opacity:0,depthWrite:false});
+ const auraCyan=new T.Color('#19b5a5'),auraGold=new T.Color('#ffc83a');
+ // Heat (pass 2): the two rings are geometry (no canvas texture).
+ const aura=new T.Mesh(mergeGeometries([new T.RingGeometry(.64,.8,40),new T.RingGeometry(.92,.97,40)])!,auraMaterial);aura.name='runner-combo-aura';aura.rotation.x=-Math.PI/2;aura.position.y=.035;aura.renderOrder=1;aura.visible=false;scene.add(aura);
  let auraTier=1,auraFlash=0,pendingTier=0;
  // Camera flashes in the stands on a goal or a new best: one instanced draw (24 quads), staggered over ~1 s, riding the
  // visible stand. Skipped under reduced motion (no flashing lights).
  const FLASHES=24;
- const flashes=new T.InstancedMesh(new T.PlaneGeometry(.34,.34),new T.MeshBasicMaterial({color:'#fffbe8',transparent:true,opacity:.95,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false}),FLASHES);
+ const flashes=new T.InstancedMesh(new T.PlaneGeometry(.34,.34),new T.MeshBasicMaterial({color:'#ffffff',transparent:true,opacity:1,depthWrite:false}),FLASHES);
  flashes.name='runner-crowd-flashes';flashes.instanceMatrix.setUsage(T.DynamicDrawUsage);flashes.frustumCulled=false;flashes.visible=false;scene.add(flashes);
  const flashDelay=new Float32Array(FLASHES),flashLife=new Float32Array(FLASHES),flashPos=new Float32Array(FLASHES*3);let flashSeed=7;
  const flashRand=()=>{flashSeed=(flashSeed*16807)%2147483647;return flashSeed/2147483647;};
@@ -191,7 +196,7 @@ export function createRunnerFx(stage:ArcadeStage){
   if(placed)flashes.visible=true;
  }
  // Keeper personality: a fist pump after a save (seconds left), and character body impulses for the runner.
- let keeperCheer=0;
+ let keeperCheer=0,keeperNear:boolean|undefined,keeperCasters:T.Object3D[]|undefined;
  const body={state:null as RunnerGame|null,cuts:0,landings:0,event:0,serial:0,plant:0,at:0};
  const skillOut={x:0,y:0,z:0},frameOut={x:0,z:0,heading:0};
  const skillMotion={type:'stepover' as SkillMove,progress:0,side:1 as -1|1};
@@ -199,7 +204,7 @@ export function createRunnerFx(stage:ArcadeStage){
  let ballSkin='classic';const skinMaterials=new Map<string,[T.Material,T.Material]>();
  /** The ball unlocked by missions (cosmetic): swaps the runner ball's two materials once. */
  function skinBall(ball:T.Object3D){const skin=runnerBallFor(readRunnerProgress());if(skin.id===ballSkin)return;ballSkin=skin.id;
-  let mats=skinMaterials.get(skin.id);if(!mats){mats=[new T.MeshStandardMaterial({color:skin.base,roughness:.55}),new T.MeshStandardMaterial({color:skin.patch,roughness:.6})];skinMaterials.set(skin.id,mats);}
+  let mats=skinMaterials.get(skin.id);if(!mats){mats=[new T.MeshStandardMaterial({color:skin.base,roughness:.55}),new T.MeshStandardMaterial({color:skin.patch,roughness:.6})];for(const m of mats)m.userData.runnerRim=true;skinMaterials.set(skin.id,mats);}
   ball.children.forEach((child,i)=>{if(child instanceof T.Mesh){if(!child.userData.baseMaterial)child.userData.baseMaterial=child.material;child.material=skin.id==='classic'?child.userData.baseMaterial:mats![i===0?0:1];}});}
  function player(s:RunnerGame,pose:ArcadePoseOptions,ball:T.Object3D){
   skinBall(ball);
@@ -221,6 +226,8 @@ export function createRunnerFx(stage:ArcadeStage){
   // Keeper
   const goal=s.objects.find(o=>o.kind==='goal'&&o.keeper&&o.z<1.5&&!(o.scored&&(o.goalBurst??0)>1.1));
   keeper.root.visible=!!goal;
+  // Heat (pass 2): the keeper joins the shadow map only inside 24 m.
+  if(goal){const near=goal.z>-24;if(keeperNear!==near){keeperNear=near;if(!keeperCasters){keeperCasters=[];keeper.root.traverse(c=>{if((c as T.Mesh).isMesh&&c.castShadow)keeperCasters!.push(c);});}for(const c of keeperCasters)c.castShadow=near;}}
   if(goal){const out=goal.kout??0,z=goal.z+.55+out*7;keeper.root.position.set(goal.kx??0,0,z);keeper.root.scale.setScalar(goal.final?1.45:1.12);
    const saving=(goal.reaction??0)>0;keeperPose.vx=goal.vx??0;keeperPose.vz=out>0&&out<1?7:0;
    // Set position (Oct 25 2026): the keeper sinks lower and readier as the runner closes in, the cue to shoot early.
@@ -290,14 +297,15 @@ export function createRunnerFx(stage:ArcadeStage){
   elapsed+=dt;
   if(seen.state!==s){seen.state=s;seen.coach=s.coachCount;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;seen.hurdles=s.hurdles;seen.beatScores=s.beatScores;seen.drops=s.comboDrops;auraTier=runnerMultiplier(s);
    seen.bigAirs=s.bigAirs;seen.doubleJumps=s.doubleJumps;seen.graceSaves=s.graceSaves;seen.heartsBack=s.heartsBack;seen.inputs=s.jumps+s.slides+s.cuts+s.skills+s.shotsFired;seen.boost=s.boost>0;seen.rollers=s.rollersJumped;}
-  // Any input skips a running cinematic beat (never the goal-line duel or the finish replay).
-  const inputs=s.jumps+s.slides+s.cuts+s.skills+s.shotsFired;if(inputs!==seen.inputs){seen.inputs=inputs;const k=cinema.kind();if(k&&k!=='duel'&&k!=='finish')cinema.skip();}
+  // Any input skips a running cinematic beat (never the goal-line duel). Endless play (Nov 10 2026): the goal-line strike beat is
+  // skippable too, because the run carries on through it.
+  const inputs=s.jumps+s.slides+s.cuts+s.skills+s.shotsFired;if(inputs!==seen.inputs){seen.inputs=inputs;const k=cinema.kind();if(k&&k!=='duel')cinema.skip();}
   // Stadium run-in: the first played frame of a run starts the camera sweep from high and wide.
   if(introPending&&s.time>0){introPending=false;cinema.trigger('intro');}
   // Counters → one-shot juice. Nothing here allocates.
   if(s.cuts!==seen.cuts){seen.cuts=s.cuts;puff(s.x-s.cutDir*.25,.1,3,.9,.45);}
   if(s.landings!==seen.landings){seen.landings=s.landings;puff(s.x,0,4,1.1,.5);}
-  if(s.nearMisses!==seen.nearMisses){lineFlash=1;hitstop=.11;hitstopScale=.45;pop(s.nearStreak>2?`${s.nearStreak} IN A ROW!`:'DODGED!','#7ff0e2',3.4,.8);}
+  if(s.nearMisses!==seen.nearMisses){lineFlash=1;hitstop=.11;hitstopScale=.45;if(!reduced){whooshAge=.32;whooshSide=-(s.cutDir||1);}pop(s.nearStreak>2?`${s.nearStreak} IN A ROW!`:'DODGED!','#7ff0e2',3.4,.8);}
   if(s.hurdles!==seen.hurdles){seen.hurdles=s.hurdles;pop('HURDLED!','#7ff0e2',3.4,.8);beat('hurdle',s);}
   if(s.nearMisses!==seen.nearMisses){seen.nearMisses=s.nearMisses;beat('dodge',s);}
   if(s.bigAirs!==seen.bigAirs){seen.bigAirs=s.bigAirs;beat('bigair',s);pop('BIG AIR!','#9ff6ff',3.4,.8);}
@@ -338,14 +346,15 @@ export function createRunnerFx(stage:ArcadeStage){
    else if(kind==='finalhill')pop(s.bossTries?'ANOTHER GO!':'FINAL HILL!','#ffd36e',4.4,1.4,s.bossKeeper?'Beat the boss keeper':'Run to the goal line');
    else if(kind==='combo')pop('JUMP + SLIDE!','#ffd36e',4,1.3,'Jump the tackles, then slide');
    else if(kind==='power'){pop('MAGNET!','#ff9bd2',4,1.1,'Footballs fly to you');lineFlash=1;beat('power',s);}
-   if(kind==='goal'){if(s.won){beat('finish',s);pop(s.bossKeeper?'BOSS BEATEN!':'GOAL LINE!','#ffe07a',5.4,2,'Route complete!');photoFlashes(stage.mobile?14:22);}else beat('goal',s);if(pending.heart){pending.heart=false;}}
+   else if(kind==='round')pop(`ROUND ${s.round-1} CLEAR!`,'#ffe07a',4.6,1.4,`+${s.roundBonus} · on to round ${s.round}`);
+   if(kind==='goal'){if(s.won){beat('finish',s);pop(s.bossKeeper?'BOSS BEATEN!':'GOAL LINE!','#ffe07a',5.4,1.6,`Round ${s.round-1} clear · +${s.roundBonus}`);photoFlashes(stage.mobile?14:22);}else beat('goal',s);if(pending.heart){pending.heart=false;}}
    else if(kind==='save'&&lastDuel&&!lastDuel.scored)beat('save',s);
   }
   seen.drops=s.comboDrops;keeperCheer=Math.max(0,keeperCheer-dt);
   // Combo aura and the tier-up word (queued behind a bigger word such as GOAL! so neither is lost).
-  const tier=s.lives>0?runnerMultiplier(s):1;if(tier>auraTier){pendingTier=tier;auraFlash=1;}auraTier=tier;
+  const tier=s.lives>0?runnerMultiplier(s):1;if(tier>auraTier){pendingTier=tier;auraFlash=1;/* tier-up: the panel shakes and the lines flare */if(!reduced){trauma=Math.min(1,trauma+.3);lineFlash=1;}}auraTier=tier;
   if(pendingTier&&(!word.visible||wordAge>wordLife*.65)){pop(`COMBO ×${pendingTier}!`,pendingTier>2?'#ffd36e':'#7ff0e2',3.8,1.1,pendingTier>2?'Top multiplier! Every point counts ×3':'Clean touches build your multiplier');pendingTier=0;}
-  auraFlash=Math.max(0,auraFlash-dt*2.2);const auraWant=tier>1?(tier>2?.6:.4):0;
+  auraFlash=Math.max(0,auraFlash-dt*2.2);const auraWant=tier>1?(tier>2?.95:.8):0;
   auraMaterial.opacity+=(Math.min(.9,auraWant+auraFlash*.35)-auraMaterial.opacity)*(1-Math.exp(-dt*8));aura.visible=auraMaterial.opacity>.02;
   if(aura.visible){if(auraWant>0)auraMaterial.color.copy(tier>2?auraGold:auraCyan);const k=(reduced?1:1+Math.sin(elapsed*(tier>2?9:6))*.06)*(1+(reduced?0:auraFlash*.6));aura.scale.setScalar(.9*k);aura.position.set(s.x,.035,-.15);}
   if(s.slide>.15&&s.lives>0){slideDust-=dt;if(slideDust<=0){slideDust=.07;puff(s.x+.2,.25,1,.5,.35);}}
@@ -360,9 +369,12 @@ export function createRunnerFx(stage:ArcadeStage){
   // Speed lines: invisible at kick-off pace, building with speed, boost and near misses.
   // Descents add streaks: the slope is doing the work, so speed reads as the ground falls away.
   descent+=(clamp01((-routeGrade(s.distance)-.025)/.07)*(s.lives>0?1:0)-descent)*(1-Math.exp(-dt*4));
-  const strength=reduced?0:Math.min(.8,clamp01((s.speed-13.4)/4.6)*.32+(s.boost>0?.32:0)+lineFlash*.4+descent*.36+cinema.flare()*.45+(s.magnet>0?.12:0));
-  lineMaterial.opacity=strength;lines.visible=strength>.015;
-  if(lines.visible){const stretch=.6+s.speed/9;for(let i=0;i<LINES;i++){const k=i*4;lineSeed[k+2]+=travel*1.7;if(lineSeed[k+2]>8)lineSeed[k+2]-=70;const x=lineSeed[k],y=lineSeed[k+1],z=lineSeed[k+2],len=lineSeed[k+3]*stretch,w=.022+(i%3)*.008,j=i*12;
+  // Pass 2: everything scales with pace (0 at a jog, 1 flat out): how many streaks, how long, how strong, and the dust at each footfall.
+  const pace=clamp01((s.speed-12.4)/6.6)*(s.lives>0?1:0),strength=reduced?0:Math.min(.85,pace*.46+(s.boost>0?.3:0)+lineFlash*.4+descent*.32+cinema.flare()*.45+(s.magnet>0?.12:0));
+  lineMaterial.opacity=Math.min(.9,strength*1.25);lines.visible=strength>.015;
+  {const foot=Math.sin(s.stride)>=0;if(foot!==lastFoot){lastFoot=foot;if(!reduced&&pace>.12&&s.lives>0&&s.y<.05&&s.slidePose<.1)puff(s.x+(foot?.16:-.16),.2,pace>.55?2:1,.3+pace*.7,.18+pace*.4);}}
+  whooshAge=Math.max(0,whooshAge-dt);whoosh.visible=whooshAge>0;if(whoosh.visible){const t=1-whooshAge/.32;whoosh.position.set(s.x,.85+t*.15,.1);whoosh.rotation.set(0,-whooshSide*(Math.PI/2-.9+t*1.9),whooshSide*.12);whoosh.scale.setScalar(1+t*.35);whoosh.material.opacity=Math.min(1,whooshAge*7);}
+  if(lines.visible){const stretch=.5+pace*1.5+(s.boost>0?.5:0)+lineFlash*.6;lineGeometry.setDrawRange(0,Math.max(6,Math.round(LINES*Math.min(1,.3+pace*.7+lineFlash*.5+(s.boost>0?.3:0))))*6);for(let i=0;i<LINES;i++){const k=i*4;lineSeed[k+2]+=travel*1.7;if(lineSeed[k+2]>8)lineSeed[k+2]-=70;const x=lineSeed[k],y=lineSeed[k+1],z=lineSeed[k+2],len=lineSeed[k+3]*stretch,w=.03+(i%3)*.018,j=i*12;
    linePos[j]=x-w;linePos[j+1]=y;linePos[j+2]=z;linePos[j+3]=x+w;linePos[j+4]=y;linePos[j+5]=z;linePos[j+6]=x+w;linePos[j+7]=y;linePos[j+8]=z+len;linePos[j+9]=x-w;linePos[j+10]=y;linePos[j+11]=z+len;}
    lineGeometry.attributes.position.needsUpdate=true;}
 
@@ -391,7 +403,7 @@ export function createRunnerFx(stage:ArcadeStage){
   // Replay hook: the record to beat is read once per run (no per-frame storage reads).
   // Nov 8 2026: an elite tier (Cup Final, Legend) races its own best, not the classic record.
   s.bestToBeat=typeof localStorage==='undefined'?0:runnerKeepsOwnBest(s.mode)?runnerTierBest(s.mode):readArcadeRecord('runner').best;s.newBest=false;
-  trauma=hitstop=lineFlash=follow=descent=punch=0;hitstopScale=1;cinema.reset();scenery.reset();camX=camY=camZ=camPitch=0;introPending=true;lastDuel=null;pending.heart=false;word.visible=false;wordMaterial.opacity=0;wordAge=wordLife=0;hype=0;track.reset();dustLife.fill(0);confLife.fill(0);dust.visible=confetti.visible=false;seen.state=null;
+  trauma=hitstop=lineFlash=follow=descent=punch=whooshAge=0;whoosh.visible=false;hitstopScale=1;cinema.reset();scenery.reset();camX=camY=camZ=camPitch=0;introPending=true;lastDuel=null;pending.heart=false;word.visible=false;wordMaterial.opacity=0;wordAge=wordLife=0;hype=0;track.reset();dustLife.fill(0);confLife.fill(0);dust.visible=confetti.visible=false;seen.state=null;
   flashLife.fill(0);flashDelay.fill(0);flashes.visible=aura.visible=false;auraMaterial.opacity=auraFlash=0;auraTier=1;pendingTier=0;keeperCheer=0;body.state=null;
   shield.visible=keeper.root.visible=passBall.visible=callout.visible=mud.visible=fork.visible=openSide.visible=false;for(const m of mates)m.rig.root.visible=false;
   for(const stand of stands){stand.z=((stand.base+s.distance+62)%STAND_PERIOD+STAND_PERIOD)%STAND_PERIOD-62;stand.mesh.position.z=stand.z;fillStand(stand,s.distance,false);}
@@ -401,10 +413,10 @@ export function createRunnerFx(stage:ArcadeStage){
  function camera(cam:T.PerspectiveCamera,s:RunnerGame,dt:number,baseFov:number){
   // Landscape phones: the shared runner framing leaves the runner ~20 px tall. Frame
   // closer and lower so the runner, lanes and next defender line read at a glance.
-  if(stage.mobile&&cam.aspect>1.45){cam.position.set(cam.position.x,8.6,12.6);lookTarget.set(cam.position.x*.5,0,-12);cam.lookAt(lookTarget);}
+  if(stage.mobile&&cam.aspect>1.45){cam.position.set(cam.position.x,5.4,12);lookTarget.set(cam.position.x*.5,1.66,-13);cam.lookAt(lookTarget);}
   // Desktop / tablet landscape: pitch the view down a touch so the runner sits above the coaching line
   // instead of behind it (the line lives at the bottom of the screen, just above the controls).
-  else if(!stage.mobile&&cam.aspect>1.2)cam.rotateX(-.055);
+  
   // Heat: three updates every world matrix each frame, hidden or not. The runner keeps ~1,500 objects in pools
   // (six defender rigs, two exploding goal frames, spare rigs), most of them hidden. Skip hidden top-level
   // subtrees; a pool item that turns visible recomputes its whole subtree on that same frame.
@@ -440,7 +452,7 @@ export function createRunnerFx(stage:ArcadeStage){
   timeScale:()=>Math.min(hitstop>0?hitstopScale:1,cinema.timeScale()),
   cinema,scenery,
   /** Any effect still animating keeps frames coming briefly after play stops. */
-  active:()=>dust.visible||confetti.visible||flashes.visible||trauma>0||hitstop>0||word.visible||cinema.active()||scenery.active(),
+  active:()=>dust.visible||confetti.visible||flashes.visible||whoosh.visible||trauma>0||hitstop>0||word.visible||cinema.active()||scenery.active(),
   debug:()=>({cinema:cinema.debug(),scenery:scenery.debug(),cam:{x:camX,y:camY,z:camZ,pitch:camPitch,fov},aura:aura.visible?auraMaterial.opacity:0,auraTier,flashes:flashes.visible,keeperCheer,plant:body.plant,squashSerial:body.serial,word:word.visible?wordText:'',wordOpacity:wordMaterial.opacity,punch,route:track.debug(),descent,lines:lines.visible,lineOpacity:lineMaterial.opacity,dust:dust.visible,confetti:confetti.visible,stands:stands.map(s=>s.mesh.visible),hype,trauma}),
  };
 }

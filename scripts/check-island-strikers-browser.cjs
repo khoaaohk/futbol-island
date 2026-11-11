@@ -1,12 +1,15 @@
 // Oct 25 2026: phones play Strikers upright (portrait); no rotation step.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
 const assert=require('node:assert/strict');
+// Nov 10 2026: the server comes from --port=<n>, PORT or FUTBOL_BASE_URL and there is no default (8092 is the owner's dev server).
+// Coins are seeded straight into the throwaway profile's wallet (as scripts/measure-arcade-games.cjs does); the old /play?testCoins
+// visit never landed its grant. Full time is the broadcast strap (role=status) followed by the end card, not a heading.
+const portArg=(process.argv.find(a=>a.startsWith('--port='))||'').slice(7)||process.env.PORT,BASE=process.env.FUTBOL_BASE_URL||(portArg?`http://localhost:${portArg}`:'');
+if(!BASE){console.error('Pass your own server: --port=<port>, PORT=<port> or FUTBOL_BASE_URL=<url>. There is no default port.');process.exit(1);}
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});try{
- const mobile=process.argv.includes('--mobile'),page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile}),errors=[];
- page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-audio-mix','4-50-v1');localStorage.setItem('fi2-sound-muted','false');localStorage.setItem('fi2-music-enabled','false');localStorage.setItem('fi2-voice-enabled','false');});
- // Arcade plays cost coins (economy pass): take the developer test grant first.
- await page.goto(new URL('/play?preview=all&testCoins=50000',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href,{waitUntil:'domcontentloaded',timeout:90000});await page.waitForTimeout(15000);
- await page.goto(new URL('/arcade?game=live',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href,{waitUntil:'domcontentloaded',timeout:90000});
+ const mobile=process.argv.includes('--mobile'),page=await browser.newPage({viewport:mobile?{width:844,height:390}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile}),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-audio-mix','4-50-v1');localStorage.setItem('fi2-sound-muted','false');localStorage.setItem('fi2-music-enabled','false');localStorage.setItem('fi2-voice-enabled','false');if(!localStorage.getItem('fi2-arcade-wallet-v1'))localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,spends:{},runs:{'baseline-grant':{game:'island',paid:5000,reason:'baseline',at:Date.now()}},best:{},attempts:{},visits:{},packs:[]}));});
+ await page.goto(new URL('/arcade?game=live',BASE).href,{waitUntil:'domcontentloaded',timeout:90000});
  const root=page.getByRole('region',{name:'Island Strikers arcade match'}),canvas=root.locator('canvas');
  await page.waitForFunction(()=>window.__fi2Live);
  const framing=await page.evaluate(()=>{const {camera,scene}=window.__fi2Live,d=camera.position.length(),p=camera.position.clone();let extent=0;for(const x of [-26,26])for(const z of [-14,14]){p.set(x,2,z).project(camera);extent=Math.max(extent,Math.abs(p.x),Math.abs(p.y));}return{extent,d,far:camera.far,fogNear:scene.fog.near};});
@@ -30,7 +33,9 @@ const assert=require('node:assert/strict');
  await page.evaluate(()=>{const s=window.__fi2Live.sim;s.ball.owner=-1;Object.assign(s.ball,{x:24.8,z:3,y:1,vx:40,vz:0,vy:0,lock:1});});await page.waitForFunction(()=>window.__fi2Live.sim.score[0]===1);
  await page.waitForFunction(()=>document.querySelector('section[aria-label="Island Strikers arcade match"] header b')?.textContent==='1');
  await page.screenshot({path:`/tmp/fi-strikers-${mobile?'mobile':'desktop'}.png`});
- await page.evaluate(()=>window.__fi2Live.sim.time=179.99);await page.getByRole('heading',{name:'Full time.'}).waitFor();await page.waitForTimeout(200);const endFrames=await canvas.getAttribute('data-frames');await page.waitForTimeout(300);assert.equal(await canvas.getAttribute('data-frames'),endFrames);
+ await page.evaluate(()=>window.__fi2Live.sim.time=179.99);await page.getByRole('status',{name:/^Full time\. Gold/}).waitFor();await page.locator('[data-end=finished]').waitFor({timeout:30000});
+ const entry=page.locator('[data-arcade-board=entry]');await entry.waitFor({timeout:5000}).catch(()=>{});if(await entry.isVisible().catch(()=>false)){await entry.getByRole('button',{name:'Skip',exact:true}).last().click();await entry.waitFor({state:'detached',timeout:5000});}// a first score on a fresh profile opens the high-score entry
+ await page.waitForTimeout(600);const endFrames=await canvas.getAttribute('data-frames');await page.waitForTimeout(300);assert.equal(await canvas.getAttribute('data-frames'),endFrames);
  await page.getByRole('button',{name:/^(Play again|Next round)$/}).click();await page.waitForFunction(()=>window.__fi2Live.getElapsed()>0&&window.__fi2Live.getElapsed()<2&&!window.__fi2Live.sim.finished);assert.equal(await page.evaluate(()=>window.__fi2Live.sim.score[0]),0);
  assert.deepEqual(errors,[]);console.log('ISLAND_STRIKERS_BROWSER_PASS',JSON.stringify({mobile,shot,pausedFrames:frames,errors}));
  }finally{await browser.close();}})().catch(e=>{console.error(e);process.exit(1);});

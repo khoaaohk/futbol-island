@@ -1,6 +1,7 @@
 import {createPinballHot,stepPinballMissions,stepSweeper,hypeStrike,rushTime,RUSH_BONUS,SWEEPER_Y,type PinballHot} from './soccerPinballMissions';
-import {pinballTierOf,pinballTierSpeed,pinballTierMult,PINBALL_STALL_SPEED,PINBALL_STALL_TIME,PINBALL_STALL_KICK} from './soccerPinballTiers';
-import {createPinballTable,tableLaunch,tableStrike,tableGoal,tableLevelUp,tableChallenge,tableDrain,tableProtects,tableTimers,tableHold,tableContacts,tableCounterMode,tableDivisionCleared,type PinballTable,type TableHelpers} from './soccerPinballTable';
+import {pinballRamp,pinballRampSave,pinballExtraBallScore,pinballLevelGivesBall,PINBALL_MAX_BALLS,PINBALL_PRESS_CAP,PINBALL_BAT_MIN,PINBALL_FULLTIME_GOAL,PINBALL_FULLTIME_GOALS_MAX} from './soccerPinballEndless';
+import {pinballTierOf,pinballTierSpeed,pinballTierMult,PINBALL_STALL_SPEED,PINBALL_STALL_TIME,PINBALL_STALL_KICK,PINBALL_TRAP_RADIUS,PINBALL_TRAP_TIME} from './soccerPinballTiers';
+import {createPinballTable,tableLaunch,tableStrike,tableGoal,tableLevelUp,tableChallenge,tableNewMatch,tableDrain,tableProtects,tableTimers,tableHold,tableContacts,tableCounterMode,tableDivisionCleared,type PinballTable,type TableHelpers} from './soccerPinballTable';
 export const PINBALL_WIDTH = 360, PINBALL_HEIGHT = 620, PINBALL_STEP = 1 / 480;
 /* Goal mouth, widened to DOMINATE the top of the table (108 -> 160 wide; the
  * arch entry at 318 and the left rail at 20 still get clean top-wall runs).
@@ -61,7 +62,7 @@ export type PinballBall = {
 export type PinballDefender = { x: number; y: number; r: number };
 export type PinballCue = 'scan' | 'strike' | 'save' | 'corner' | 'goal' | 'dazed' | 'block' | 'nudge' | 'rescue' | 'control' | 'pass' | 'attack' | 'concede'
     | 'sling' | 'drop' | 'wallDown' | 'flag' | 'goalWord' | 'lane' | 'crest' | 'skill' | 'cone' | 'spin' | 'dugout' | 'mode' | 'modeDone' | 'modeEnd' | 'onetwo' | 'greatBlock' | 'clear' | 'final' | 'finalEnd' | 'goalWordPts'
-    | 'wallPass' | 'multiball' | 'mbGoal' | 'mbSave' | 'mbEnd' | 'halfTime' | 'stoppage' | 'fullTime' | 'hotZone';
+    | 'wallPass' | 'multiball' | 'mbGoal' | 'mbSave' | 'mbEnd' | 'halfTime' | 'stoppage' | 'fullTime' | 'hotZone' | 'extraBall';
 /** Strike timing coach ("time your block"). The flipper's swing position at
  * the moment it meets the ball says how well the press was timed: met mid-
  * swing is a full-power PERFECT strike; met at the very top of the swing (the
@@ -94,7 +95,8 @@ export const pinballTop = (s: Pick<PinballState, 'startLevel'>) => s.startLevel 
 /** Flipper reach by division: the hard tier plays shorter bats, so the centre gap widens (49 -> ~57 / ~61 px). */
 /** Nov 8 2026: the elite tiers (soccerPinballTiers.ts) play shorter bats still (Derby Night 56, World Final 54). */
 export const pinballFlipperLength = (level: number) => level >= 6 ? 57 : level === 5 ? 59 : 63;
-export const pinballBatLength = (level: number, tier = 0) => pinballTierOf(tier)?.flipper ?? pinballFlipperLength(level);
+/** Endless play (Nov 10 2026): the level's ramp takes `bat` px off (0 at levels 1-2), never under PINBALL_BAT_MIN. */
+export const pinballBatLength = (level: number, tier = 0, match = 1) => Math.max(PINBALL_BAT_MIN, (pinballTierOf(tier)?.flipper ?? pinballFlipperLength(level)) - pinballRamp(match).bat);
 /** Set up a new run: the starting division (from the ladder), the beginner ball save and the nudge option. */
 export function beginPinballRun(s: PinballState, o: { level?: number; beginner?: boolean; nudge?: boolean; tier?: number } = {}) {
     // Nov 8 2026: an elite tier (1 Derby Night, 2 World Final) plays Champions Night's table, harder, on its own board.
@@ -129,6 +131,14 @@ export type PinballState = {
     /** Dead-ball watchdog: seconds the ball has barely moved away from the flippers, and the kicks it took. */
     stall: number;
     unstuck: number;
+    /** Jitter trap: seconds the ball has stayed inside a small circle around (trapX, trapY) while it reads as moving. */
+    trap: number; trapX: number; trapY: number;
+    /** Endless play (soccerPinballEndless.ts): the LEVEL is the match number, 1-based; it rises at every full-time whistle. */
+    match: number;
+    /** Goals scored in the current match (the full-time result bonus) and score-milestone extra balls already counted. */
+    matchGoals: number; extraBalls: number;
+    /** Balls won from milestones this run (level and score). */
+    ballsWon: number;
     /** Hot zone mission and the table's hype level (soccerPinballMissions). */
     hot: PinballHot;
     hype: number;
@@ -209,7 +219,7 @@ export type PinballState = {
     /** -1 before 90'; then seconds of stoppage time played. */
     stoppage: number;
     halfTime: boolean;
-    /** Points paid at full time for the balls still in hand. */
+    /** Points paid at the last full-time whistle (balls in hand and the match's goals); the run plays on. */
     fullTimeBonus: number;
     /** Seconds left to score a REBOUND goal after the keeper parries. */
     rebound: number;
@@ -291,7 +301,7 @@ function readyFootFor(b:PinballBall): -1|0|1 {
  return x>=88&&x<=166?0:x>=194&&x<=272?1:-1;
 }
 function freshBall(): PinballBall { return { x: LANE_X, y: PLUNGER_TIP - 7, vx: 0, vy: 0, r: 7, spin: 0, omega: 0, contact: 0, contactX: 0, contactY: 1 }; }
-export function createPinballState(): PinballState { return { tier:0,stall:0,unstuck:0,level:1,startLevel:1,beginner:false,nudgeOn:true,keeper2:180,keeper2Velocity:0,rush:0,lastRush:false,mbAuto:false,hot:createPinballHot(),hype:0,challengeComplete:false,lastChallengeBonus:0,challengeBall:false,banked:false,openingRescue:true,launchGrace:0,nudges:1,nudgeCooldown:0,ball: freshBall(), phase: 'ready', score: 0, goals: 0, balls: 3, time: 0, timer: 0, left: 0, right: 0, keeper: 180, keeperVelocity: 0, cue: 'scan', cueTime: 0, lastGoalPoints: 500, moveTime: 0, moves: 0, lastGoalBonus: 0, combination: 0, lastFoot: -1, lastStrikeAt: -10, defenders: pinballDefenders(0), previousDefenders: pinballDefenders(0), keeperCommit: 0, keeperDirection: 1, defenderAI: Array.from({length:3},()=>({offset:0,velocity:0,target:0,think:0,block:0,cooldown:0,aim:0,dazed:0,hitX:0,hitY:0,fallYaw:0})), keeperDive: 0, keeperTarget: 180, possession:-1,possessionTime:0,attackReceiver:-1,counterAttack:false,attackPasses:0,passTarget:-1,passTime:0,keeperThink: 0, flash: 0, hitX: 0, hitY: 0, hitId: 0, bumperCooldown: [0, 0, 0], flipperCooldown: [0, 0], flipperPulse:[0,0], accumulator: 0, plunger: 0, plungerSnap: 0, launchPower: 0, defs: 1, defJoin: 0, table: createPinballTable(), clock: 0, stoppage: -1, halfTime: false, fullTimeBonus: 0, rebound: 0, lastRebound: false, keeperParry: 0, reboundAt: -10, extra: freshBall(), extraLive: false, mbSave: 0, stats: { parries: 0, rebounds: 0, wallPasses: 0, corners: 0, mbStarts: 0, mbGoals: 0, perfect: 0, early: 0, late: 0, reads: 0 }, timing: { grade: 'none', at: -10, streak: 0, best: 0, read: false, held: [0, 0], passedAt: -10, cool: 0 }, read: { live: false, x: 0, side: -1, eta: 0, at: -10, dirty: true, fromRebound: false, lastSide: -1, lastAt: -10, n: 0, dots: new Float32Array(PINBALL_READ_DOTS * 2) }, sfx: { wall: 0, wallV: 0, bumper: 0, bumperI: 0, flipper: 0, flipperV: 0, keeper: 0, keeperV: 0, gate: 0, join: 0, parry: 0, grade: 0, tip: 0, tipAt: -10, hot: 0, sweeper: 0 } }; }
+export function createPinballState(): PinballState { return { tier:0,stall:0,unstuck:0,trap:0,trapX:0,trapY:0,match:1,matchGoals:0,extraBalls:0,ballsWon:0,level:1,startLevel:1,beginner:false,nudgeOn:true,keeper2:180,keeper2Velocity:0,rush:0,lastRush:false,mbAuto:false,hot:createPinballHot(),hype:0,challengeComplete:false,lastChallengeBonus:0,challengeBall:false,banked:false,openingRescue:true,launchGrace:0,nudges:1,nudgeCooldown:0,ball: freshBall(), phase: 'ready', score: 0, goals: 0, balls: 3, time: 0, timer: 0, left: 0, right: 0, keeper: 180, keeperVelocity: 0, cue: 'scan', cueTime: 0, lastGoalPoints: 500, moveTime: 0, moves: 0, lastGoalBonus: 0, combination: 0, lastFoot: -1, lastStrikeAt: -10, defenders: pinballDefenders(0), previousDefenders: pinballDefenders(0), keeperCommit: 0, keeperDirection: 1, defenderAI: Array.from({length:3},()=>({offset:0,velocity:0,target:0,think:0,block:0,cooldown:0,aim:0,dazed:0,hitX:0,hitY:0,fallYaw:0})), keeperDive: 0, keeperTarget: 180, possession:-1,possessionTime:0,attackReceiver:-1,counterAttack:false,attackPasses:0,passTarget:-1,passTime:0,keeperThink: 0, flash: 0, hitX: 0, hitY: 0, hitId: 0, bumperCooldown: [0, 0, 0], flipperCooldown: [0, 0], flipperPulse:[0,0], accumulator: 0, plunger: 0, plungerSnap: 0, launchPower: 0, defs: 1, defJoin: 0, table: createPinballTable(), clock: 0, stoppage: -1, halfTime: false, fullTimeBonus: 0, rebound: 0, lastRebound: false, keeperParry: 0, reboundAt: -10, extra: freshBall(), extraLive: false, mbSave: 0, stats: { parries: 0, rebounds: 0, wallPasses: 0, corners: 0, mbStarts: 0, mbGoals: 0, perfect: 0, early: 0, late: 0, reads: 0 }, timing: { grade: 'none', at: -10, streak: 0, best: 0, read: false, held: [0, 0], passedAt: -10, cool: 0 }, read: { live: false, x: 0, side: -1, eta: 0, at: -10, dirty: true, fromRebound: false, lastSide: -1, lastAt: -10, n: 0, dots: new Float32Array(PINBALL_READ_DOTS * 2) }, sfx: { wall: 0, wallV: 0, bumper: 0, bumperI: 0, flipper: 0, flipperV: 0, keeper: 0, keeperV: 0, gate: 0, join: 0, parry: 0, grade: 0, tip: 0, tipAt: -10, hot: 0, sweeper: 0 } }; }
 function gradeStrike(s: PinballState, grade: PinballGrade, read = false) {
     const t = s.timing;
     t.grade = grade; t.at = s.time; t.read = read; t.cool = .7;
@@ -361,7 +371,7 @@ export function launchPinball(s: PinballState, power?: number) {
     s.ball = { x: LANE_X, y: PLUNGER_TIP - 7, vx: 0, vy: -(430 + 810 * p), r: 7, spin: 0, omega: 0, contact: 0, contactX: 0, contactY: 1 };
     s.possession=-1;s.possessionTime=0;s.counterAttack=false;s.attackPasses=0;s.passTarget=-1;s.passTime=0;
     s.nudges=1;s.nudgeCooldown=0;s.banked=false;s.lastChallengeBonus=0;s.challengeBall=false;
-    s.launchGrace = s.openingRescue && (pinballTierOf(s.tier)?.ballSave ?? true) ? pinballBallSaveTime(s.level, s.beginner) : 0;
+    s.launchGrace = s.openingRescue && (pinballTierOf(s.tier)?.ballSave ?? true) ? pinballRampSave(pinballBallSaveTime(s.level, s.beginner), s.match) : 0;
     s.rush = rushTime(s.level); s.mbAuto = s.level >= 6;
     s.read.live = false; s.read.dirty = true; s.read.lastSide = -1; s.timing.passedAt = -10;
     tableLaunch(s, p);
@@ -374,6 +384,10 @@ export function launchPinball(s: PinballState, power?: number) {
     s.phase = 'playing';
     return true;
 }
+/** No dead time (Nov 10 2026): the goal beat runs 1.5 s and the lost-ball beat 1 s; a press of Launch once a beat has under
+ * PINBALL_BEAT_SKIP seconds left ends it, so the plunger is live at most about a second after any stop in play. */
+export const PINBALL_BEAT_SKIP=.6;
+export function skipPinballBeat(s:PinballState){if((s.phase!=='goal'&&s.phase!=='lost')||s.timer>PINBALL_BEAT_SKIP||s.timer<=0)return false;s.timer=0;return true;}
 /** Seconds of on-table ball save per new ball. Generous while learning, then
  * tighter as the divisions ramp up (it never disappears for kids). Tuned on
  * the kid-bot playtest (Oct 10 2026): at 3s over half of a 7-year-old's balls
@@ -438,10 +452,14 @@ function attackReceiver(s:PinballState,owner:number){
  * (pivots 99/261, length 63 vs the old 105/255 x 66): the uncovered center
  * gap between resting tips is ~49px — a centered dribble usually drains
  * unless actively flipped — while a flipped side is still fully covered. */
-export function pinballFlippers(s: Pick<PinballState, 'left' | 'right'> & { level?: number; tier?: number }) { const length = pinballBatLength(s.level ?? 1, s.tier ?? 0); return [{ x: 99, y: 535, angle: .46 - s.left * .97, length }, { x: 261, y: 535, angle: Math.PI - .46 + s.right * .97, length }]; }
+export function pinballFlippers(s: Pick<PinballState, 'left' | 'right'> & { level?: number; tier?: number; match?: number }) { const length = pinballBatLength(s.level ?? 1, s.tier ?? 0, s.match ?? 1); return [{ x: 99, y: 535, angle: .46 - s.left * .97, length }, { x: 261, y: 535, angle: Math.PI - .46 + s.right * .97, length }]; }
 const clamp = (v: number, a: number, b: number) => Math.max(a, Math.min(b, v));
 /** The goal that clears the top division of this run's ladder (2 goals in it): 8 from Build Up, as before. */
-function divisionCleared(s: PinballState) { return s.goals === 2 * (pinballTop(s) - s.startLevel + 1); }
+/** The top division's two goals. Endless play: the count comes round again (every N goals), so the Cup Final can return in a
+ * later match (the table allows one per match). */
+function divisionCleared(s: PinballState) { const n = 2 * (pinballTop(s) - s.startLevel + 1); return s.goals > 0 && s.goals % n === 0; }
+/** Defender sharpness: the division's step plus the endless ramp's press (0 at level 1), capped so every timer stays positive. */
+function press(s: Pick<PinballState, 'level' | 'match'>) { return Math.min(PINBALL_PRESS_CAP, s.level - 1 + pinballRamp(s.match).press); }
 function hit(s: PinballState, x: number, y: number, points = 0) { s.flash = 1; s.hitX = x; s.hitY = y; s.hitId++; s.score += points; }
 /** Impulse-based contact response against a surface moving at (svx, svy).
  * Normal: restitution `e`, fully damped under DEAD_BOUNCE so the ball can rest.
@@ -506,6 +524,8 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
         s.mbSave = s.extraLive ? Math.max(0, s.mbSave - dt) : 0;
         // Match clock. Half time is just a whistle; at 90' the ball in play
         // gets stoppage time, then full time (the Cup Final always finishes).
+        // Endless play (Nov 10 2026): full time is a whistle too. The ball stays
+        // in play and the next match kicks off at once, one level up.
         s.clock += dt;
         if (!s.halfTime && s.clock >= PINBALL_MATCH_TIME / 2) { s.halfTime = true; s.cue = 'halfTime'; s.cueTime = 2.4; hit(s, 180, 310); }
         if (s.clock >= PINBALL_MATCH_TIME) {
@@ -550,13 +570,14 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
                 // from the sideline while the next ball waits on the plunger.
                 const nextLevel = Math.min(pinballTop(s), s.startLevel + Math.floor(s.goals / 2));
                 if(nextLevel !== s.level){tableLevelUp(s,s.level);s.level=nextLevel;s.challengeComplete=false;}
-                const want = Math.min(3, 1 + s.goals);
+                const want = Math.min(3, Math.max(1 + s.goals, pinballRamp(s.match).defs));
                 if (s.phase === 'ready' && want > s.defs) {
                     s.defs = want;
                     s.defJoin = 1;
                     s.sfx.join++;
                 }
-                // Past 90': the whistle goes once this ball is over.
+                // Past 90': the whistle goes once this ball is over, and the next
+                // match kicks off from the plunger (the run only ends on the last ball).
                 if (s.phase === 'ready' && s.stoppage >= 0 && !tableProtects(s)) fullTime(s);
             }
         }
@@ -577,13 +598,13 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
     // than the full back three (~125 px/s). In a 2v1 he watches the ball that
     // will arrive first.
     const tb = threatBall(s);
-    const keeperPace = 98 + 9 * s.defs + (s.level - 1) * 10;
+    const ramp = pinballRamp(s.match), keeperPace = (98 + 9 * s.defs + (s.level - 1) * 10) * ramp.keeper;
     s.keeperThink -= dt;
     if (s.keeperThink <= 0) {
         s.keeperThink = .15 - s.level * .01;
         if (tb.vy < -120 && tb.y < 240) {
             const eta = clamp((83 - tb.y) / tb.vy, 0, .55);
-            s.keeperTarget = clamp(tb.x + tb.vx * eta * (.45 + (s.level - 1) * .06), 140, 220);
+            s.keeperTarget = clamp(tb.x + tb.vx * eta * (.45 + (s.level - 1) * .06), 140 - ramp.reach, 220 + ramp.reach);
         }
         else
             s.keeperTarget = 180 + Math.sin(s.time * .8) * 20;
@@ -599,7 +620,7 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
     const desiredVelocity = diving ? s.keeperDirection*keeperPace*1.35 : s.keeperCommit>0 ? 0 : clamp((s.keeperTarget - s.keeper) * 12, -keeperPace, keeperPace);
     s.keeperVelocity += clamp(desiredVelocity - s.keeperVelocity, -720 * dt, 720 * dt);
     const previousKeeper = s.keeper;
-    s.keeper = clamp(s.keeper + s.keeperVelocity * dt, 140, 220);
+    s.keeper = clamp(s.keeper + s.keeperVelocity * dt, 140 - ramp.reach, 220 + ramp.reach);
     const keeperStep = s.keeper - previousKeeper;
     if ((s.keeper === 140 && s.keeperVelocity < 0) || (s.keeper === 220 && s.keeperVelocity > 0)) s.keeperVelocity = 0;
     s.keeperDive = s.keeperCommit>0 ? s.keeperDirection*Math.sin(Math.PI*Math.min(1,(.65-s.keeperCommit)/.65)) : 0;
@@ -613,8 +634,8 @@ function tick(s: PinballState, input: PinballInput, dt: number) {
         if(ai.think<=0){
             // The central player screens; wide players anticipate the passing
             // lane. Decisions remain committed during an extended foot block.
-            ai.think=.16-(s.level-1)*.02+i*.012;
-            if(ai.block===0){const lead=.10+(s.level-1)*.012+i*.014;ai.target=Math.hypot(b.x-d.x,b.y-d.y)<150 ? clamp(b.x+b.vx*lead-d.x,-22,22) : 0;}
+            ai.think=.16-press(s)*.02+i*.012;
+            if(ai.block===0){const lead=.10+press(s)*.012+i*.014;ai.target=Math.hypot(b.x-d.x,b.y-d.y)<150 ? clamp(b.x+b.vx*lead-d.x,-22,22) : 0;}
         }
         const oldOffset=ai.offset;
         ai.velocity+=clamp((ai.target-ai.offset)*9-ai.velocity,-420*dt,420*dt);
@@ -670,14 +691,24 @@ export function startMultiball(s: PinballState) {
     s.cue = 'multiball'; s.cueTime = 2.6; hit(s, 300, 330);
     return true;
 }
-/** End of the 90 minutes (plus stoppage): pay the end-of-ball bonus and a
- * reward for every ball still in hand, then blow the whistle. */
+/** Full time (90' plus stoppage). Endless play (Nov 10 2026, owner: "the user can play as long as they want"): the whistle
+ * never ends a run and never takes the ball away. It pays the result (every ball in hand and the match's goals), raises the
+ * level by one (soccerPinballEndless.ts PINBALL_RAMP), hands out the level-milestone ball and restarts the clock at 0'. The
+ * phase is left alone: a ball in flight plays on with no pause, a ball waiting on the plunger kicks the new match off. The
+ * division challenge, the modes and the Cup Final are re-armed, so they come round again in every match. */
 function fullTime(s: PinballState) {
-    tableDrain(s);
-    s.fullTimeBonus = s.balls * PINBALL_FULLTIME_BALL; s.score += s.fullTimeBonus;
-    s.extraLive = false; s.mbSave = 0; s.moveTime = 0; s.counterAttack = false; s.possession = -1;
-    s.ball.vx = s.ball.vy = s.ball.omega = 0;
-    s.phase = 'over'; s.cue = 'fullTime'; s.cueTime = 4; hit(s, 180, 310);
+    s.fullTimeBonus = s.balls * PINBALL_FULLTIME_BALL + Math.min(PINBALL_FULLTIME_GOALS_MAX, s.matchGoals) * PINBALL_FULLTIME_GOAL; s.score += s.fullTimeBonus;
+    s.match++; s.matchGoals = 0; s.clock = 0; s.stoppage = -1; s.halfTime = false;
+    s.challengeComplete = false; tableNewMatch(s);
+    s.cue = 'fullTime'; s.cueTime = 2.6; hit(s, 180, 310);
+    if (pinballLevelGivesBall(s.match)) extraBall(s, false);
+}
+/** A milestone ball (capped at PINBALL_MAX_BALLS in hand; a full hand wins nothing). `call` shows the EXTRA BALL cue. */
+function extraBall(s: PinballState, call = true) {
+    if (s.balls >= PINBALL_MAX_BALLS) return false;
+    s.balls++; s.ballsWon++;
+    if (call) { s.cue = 'extraBall'; s.cueTime = 2.2; s.hitX = 180; s.hitY = 310; s.hitId++; }
+    return true;
 }
 /** One ball's flight and contacts for a substep. `extra` is the multiball's
  * second ball (it is swapped into s.ball by the caller, so every helper that
@@ -729,7 +760,7 @@ function stepBall(s: PinballState, dt: number, extra: boolean, oldLeft: number, 
         touched = true;
     }
     if (b.y < 42 && b.x > GOAL_LEFT + b.r && b.x < GOAL_RIGHT - b.r) {
-        s.goals++;
+        s.goals++; s.matchGoals++;
         const lit = s.moveTime > 0;
         const corner = b.x < GOAL_LEFT + 32 || b.x > GOAL_RIGHT - 32;
         // A follow-up after the keeper's parry is a REBOUND goal.
@@ -843,14 +874,14 @@ function stepBall(s: PinballState, dt: number, extra: boolean, oldLeft: number, 
         if(s.possession>=0&&(!extra||i===s.possession))continue;
         // A soft ball can be cushioned at the feet. Fast body hits retain knockdowns.
         const receiving=s.passTarget===i&&s.passTime>0,counterMode=tableCounterMode(s);
-        if(!extra&&s.possession<0&&s.bumperCooldown[i]===0&&distance<(receiving?38:30)&&Math.hypot(b.vx-dvx,b.vy-dvy)<(receiving?520:counterMode?380:230+(s.level-1)*35)&&dx*(b.vx-dvx)+dy*(b.vy-dvy)<10){
-            s.possession=i;s.counterAttack=false;s.possessionTime=.72-(s.level-1)*.05;s.passTarget=-1;s.passTime=0;
+        if(!extra&&s.possession<0&&s.bumperCooldown[i]===0&&distance<(receiving?38:30)&&Math.hypot(b.vx-dvx,b.vy-dvy)<(receiving?520:counterMode?380:230+press(s)*35)&&dx*(b.vx-dvx)+dy*(b.vy-dvy)<10){
+            s.possession=i;s.counterAttack=false;s.possessionTime=.72-press(s)*.05;s.passTarget=-1;s.passTime=0;
             if(!receiving)s.attackPasses=0;
             s.attackReceiver=attackReceiver(s,i);
             ai.block=0;ai.aim=Math.atan2(dx,dy);s.cue='control';s.cueTime=1.2;hit(s,b.x,b.y);
             b.vx=b.vy=b.omega=0;continue;
         }
-        if(ai.cooldown===0&&distance<85&&dx*b.vx+dy*b.vy<0){ai.block=.38;ai.cooldown=1.04-(s.level-1)*.065+i*.04;ai.aim=Math.atan2(dx,dy);}
+        if(ai.cooldown===0&&distance<85&&dx*b.vx+dy*b.vy<0){ai.block=.38;ai.cooldown=1.04-press(s)*.065+i*.04;ai.aim=Math.atan2(dx,dy);}
         const reach=ai.block>0?Math.sin(Math.PI*(1-ai.block/.38))*14:0;
         // Only the extended boot can earn a block; the torso is a separate target.
         const boot=reach>3 ? capsuleContact(b,d.x+Math.sin(ai.aim)*10,d.y+Math.cos(ai.aim)*10,d.x+Math.sin(ai.aim)*(10+reach),d.y+Math.cos(ai.aim)*(10+reach),5) : null;
@@ -890,7 +921,7 @@ function stepBall(s: PinballState, dt: number, extra: boolean, oldLeft: number, 
         }else{
             // Alternate threats toward reachable flipper lanes, not an unavoidable centre drain.
             targetY=525;targetX=pinballCounterLane(s,owner);
-            flight=.78-(s.level-1)*.04;s.passTarget=-1;s.attackPasses=0;s.counterAttack=true;s.cue='attack';
+            flight=.78-press(s)*.04;s.passTarget=-1;s.attackPasses=0;s.counterAttack=true;s.cue='attack';
         }
         // Release on the target-facing boot, never through the kicker's own torso.
         const aim=Math.atan2(targetX-d.x,targetY-d.y);b.x=d.x+Math.sin(aim)*27;b.y=d.y+Math.cos(aim)*27;
@@ -943,7 +974,7 @@ function stepBall(s: PinballState, dt: number, extra: boolean, oldLeft: number, 
         const angle = i ? Math.PI - .46 + s.right * .97 : .46 - s.left * .97;
         const oldAngle = i ? Math.PI - .46 + oldRight * .97 : .46 - oldLeft * .97;
         const omega = (angle - oldAngle) / dt;
-        const reach = pinballBatLength(s.level, s.tier);
+        const reach = pinballBatLength(s.level, s.tier, s.match);
         const c = capsuleContact(b, x, y, x + Math.cos(angle) * reach, y + Math.sin(angle) * reach, 7);
         if (c) {
             touched = true;
@@ -1028,7 +1059,8 @@ function stepBall(s: PinballState, dt: number, extra: boolean, oldLeft: number, 
 }
 export function stepPinball(s: PinballState, input: PinballInput, elapsed: number) {
     // Nov 8 2026: an elite tier runs the whole table faster and multiplies every point it scores (one multiply per frame).
-    const before = s.score, mult = pinballTierMult(s.tier), dt = clamp(elapsed, 0, .075) * pinballTierSpeed(s.tier);
+    // Endless play: the level's ramp speed multiplies the tier's (level 1 is exactly 1).
+    const before = s.score, mult = pinballTierMult(s.tier), dt = clamp(elapsed, 0, .075) * pinballTierSpeed(s.tier) * pinballRamp(s.match).speed;
     s.accumulator += dt; let n = 0; while (s.accumulator >= PINBALL_STEP && n++ < 40) {
     tick(s, input, PINBALL_STEP);
     s.accumulator -= PINBALL_STEP;
@@ -1038,17 +1070,24 @@ export function stepPinball(s: PinballState, input: PinballInput, elapsed: numbe
     // leave less than one step, so this changes nothing for them.
     if (s.accumulator > PINBALL_STEP * 2) s.accumulator = PINBALL_STEP * 2;
     if (mult > 1 && s.score > before) s.score = before + Math.round((s.score - before) * mult);
+    // Score milestones: an extra ball at each mark (the marks scale with the tier's points multiplier).
+    while (s.phase !== 'over' && s.score >= pinballExtraBallScore(s.extraBalls) * mult) { s.extraBalls++; extraBall(s); }
     unstick(s, dt);
 }
-/** Dead-ball watchdog (Nov 8 2026): a ball resting or crawling up the table, away from the flippers, the launch lane, the
- * dugout scoop and a defender's feet, gets a small kick back into play after PINBALL_STALL_TIME, so no run ever stalls. */
+/** Dead-ball watchdog (Nov 8 2026; widened Nov 10 2026 for endless play, "no dead time"): a ball in play that rests or crawls for
+ * PINBALL_STALL_TIME gets a small kick back into play, so no run ever stalls. Left alone: the launch lane (a ball that settles
+ * there goes back on the plunger), the dugout scoop and a defender's feet (both timed), and a ball cradled on a RAISED flipper
+ * (that is the player's choice). Since Nov 10 a ball resting down by the flippers with both bats down is kicked too, and a ball
+ * that reads as moving but stays inside a PINBALL_TRAP_RADIUS circle (wedged and jittering between two parts) is kicked after
+ * PINBALL_TRAP_TIME. */
 export function unstick(s: PinballState, dt: number) {
-    const b = s.ball;
-    if (s.phase !== 'playing' || b.x >= LANE_WALL || b.y > 450 || s.possession >= 0 || s.table.hold > 0 || Math.hypot(b.vx, b.vy) > PINBALL_STALL_SPEED) { s.stall = 0; return false; }
-    s.stall += dt;
-    if (s.stall < PINBALL_STALL_TIME) return false;
-    s.stall = 0; s.unstuck++;
-    b.vy = -PINBALL_STALL_KICK; b.vx += (180 - b.x) * .9 + (b.x < 180 ? 40 : -40);
+    const b = s.ball, low = b.y > 450;
+    if (s.phase !== 'playing' || b.x >= LANE_WALL || s.possession >= 0 || s.table.hold > 0 || low && (s.left > .08 || s.right > .08)) { s.stall = s.trap = 0; s.trapX = b.x; s.trapY = b.y; return false; }
+    if (Math.hypot(b.x - s.trapX, b.y - s.trapY) > PINBALL_TRAP_RADIUS) { s.trap = 0; s.trapX = b.x; s.trapY = b.y; } else s.trap += dt;
+    if (Math.hypot(b.vx, b.vy) > PINBALL_STALL_SPEED) s.stall = 0; else s.stall += dt;
+    if (s.stall < PINBALL_STALL_TIME && s.trap < PINBALL_TRAP_TIME) return false;
+    s.stall = s.trap = 0; s.unstuck++;
+    b.vy = -PINBALL_STALL_KICK; b.vx = (low ? 0 : b.vx) + (180 - b.x) * .9 + (b.x < 180 ? 40 : -40);
     s.sfx.wall++; s.sfx.wallV = 220; s.hitX = b.x; s.hitY = b.y; s.hitId++; s.read.dirty = true;
     return true;
 }

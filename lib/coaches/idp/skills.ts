@@ -16,9 +16,10 @@ export type MissionWhere='home'|'training'|'island';
 export type LinkKind='lesson'|'arcade'|'card'|'story';
 export type Mission={id:string;where:MissionWhere;title:string;steps:string[];minutes:number;link:LinkKind};
 /** lib/arcade/arcadeCatalog.ts cabinet ids; /arcade?game=<id> opens one. */
-export type ArcadeId='live'|'runner'|'tennis'|'pinball'|'puzzle';
+export type ArcadeId='live'|'runner'|'tennis'|'pinball'|'puzzle'|'kitrush';// 'live' (Island Strikers) left the arcade Nov 10 2026: no skill links to it now
 export const ARCADE_NAMES:Record<ArcadeId,{name:string;skill:string}>={
  live:{name:'Island Strikers',skill:'Look for the free teammate, then pass.'},
+ kitrush:{name:'Kit Rush',skill:'Know your team at a glance. Scan, then swipe.'},
  runner:{name:'Breakaway Run',skill:'Carry the ball past the tackle.'},
  tennis:{name:'Futbol Tennis',skill:'Control your first touch.'},
  pinball:{name:'Futbol Pinball',skill:'Read the bounce and time your block.'},
@@ -58,9 +59,9 @@ export const SKILLS:Record<SkillId,Skill>={
   missions:[
    {id:'scan-fingers',where:'home',title:'Finger flash',steps:['A grown-up passes you the ball.','Before it reaches you, look at their hand: 1 finger or 2?','1 = turn with it. 2 = pass it back.'],minutes:10,link:lesson},
    {id:'scan-two-looks',where:'training',title:'Two looks',steps:['Before a pass comes to you, look over your shoulder.','Try it two times in one game.','Tell your coach what you saw.'],minutes:0,link:card},
-   {id:'scan-strikers',where:'island',title:'Spot the free player',steps:['Play Island Strikers.','Before you pass, find the teammate with no one near them.'],minutes:5,link:arcade},
+   {id:'scan-strikers',where:'island',title:'Spot your team',steps:['Play Kit Rush in the arcade.','Before you swipe, find every kit in your colour.'],minutes:5,link:arcade},
   ],
-  arcade:'live',card:{name:'Xavi Hernández',role:'Midfielder'},
+  arcade:'kitrush',card:{name:'Xavi Hernández',role:'Midfielder'},
   session:{play:'4v4 small-sided game, two small goals each end. Let them play.',practice:'Rondo 4v1 in a square: before every pass you receive, say the colour of a bib the coach holds up behind you.',playAgain:'4v4 again: a goal counts double if the scorer checked their shoulder before receiving.'},
   cues:['Check your shoulder before the pass.','Look, then choose: turn or pass back.','Two looks before the ball.']},
  space:{id:'space',kid:'Get free',grownWhy:'A teammate can only pass to you if no defender is in the way. Taking a couple of steps to the side opens a line for the ball.',
@@ -166,9 +167,9 @@ export const SKILLS:Record<SkillId,Skill>={
   missions:[
    {id:'runs-cue',where:'home',title:'Run when I look',steps:['A grown-up dribbles slowly.','When they look at you, run into space.','If you go too soon, reset and try again.'],minutes:10,link:lesson},
    {id:'runs-wait',where:'training',title:'Wait, then go',steps:['Watch the passer’s head.','Start your run when it comes up.'],minutes:0,link:lesson},
-   {id:'runs-strikers',where:'island',title:'Run into space',steps:['Play Island Strikers.','Make a run before you ask for the pass.'],minutes:5,link:arcade},
+   {id:'runs-strikers',where:'island',title:'Run into space',steps:['Play Breakaway Run.','Look up, then run into the open lane.'],minutes:5,link:arcade},
   ],
-  arcade:'live',card:{name:'Erling Haaland',role:'Striker'},
+  arcade:'runner',card:{name:'Erling Haaland',role:'Striker'},
   session:{play:'5v5 game with an end zone to score in. Watch when runs start.',practice:'Through-ball game: a runner may only start when the passer has looked up; a pass into the end zone scores.',playAgain:'5v5 again: celebrate well-timed runs even when the pass doesn’t come.'},
   cues:['Head up? Go!','Wait, then burst.','Run where the passer can see you.']},
  brave:{id:'brave',kid:'Keep going',grownWhy:'Mistakes happen in every game. Being able to reset quickly (a breath, a word, back to the next job) is a skill that can be practised like any other.',

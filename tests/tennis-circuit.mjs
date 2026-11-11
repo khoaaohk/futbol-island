@@ -6,7 +6,9 @@ const run=createTennis();
 for(let level=1;level<=TENNIS_COURTS.length;level++){
  assert.equal(run.level,level);beginTennis(run);assert(run.message.includes(TENNIS_COURTS[level-1].name));
  run.phase='over';run.winner='rival';resetTennis(run);assert.equal(run.level,level,'loss preserves practice tier');
- run.phase='over';run.winner='you';resetTennis(run);assert.equal(run.level,Math.min(TENNIS_COURTS.length,level+1));assert.equal(run.courtsWon,level);
+ // Endless play (Nov 10 2026): a won match walks the next court on inside the run (tests/tennis-endless.cjs plays it for real);
+ // the replay action no longer advances. Here the pick moves up the ladder, as the court picker does.
+ run.level=Math.min(TENNIS_COURTS.length,level+1);
 }
 assert.equal(createTennis(1,100).level,TENNIS_COURTS.length);assert.equal(createTennis(1,-10).level,1);
 for(const hz of [30,60,120])for(let level=1;level<=TENNIS_COURTS.length;level++){
@@ -17,12 +19,12 @@ for(const hz of [30,60,120])for(let level=1;level<=TENNIS_COURTS.length;level++)
  while(s.rally===1&&s.phase==='rally'&&s.clock<4){tickTennis(s,1/hz);assert.deepEqual([s.aiReadErrorX,s.aiReadErrorY],error,'read error stays committed through incoming flight');}
  assert(s.rally>=2,`court ${level} returns reachable serve at ${hz}Hz`);}
  // A deterministic input driver covers full matches without assuming it wins.
- for(let i=0;i<480*hz&&s.phase!=="over";i++){
+ for(let i=0;i<480*hz&&!s.matchEvents;i++){
   if(s.phase==='serve')requestTennisKick(s);
   if(s.phase==='rally'&&s.ball.last==='rival'){const land=tennisLanding(s);setTennisTarget(s,land.x,land.y);requestTennisKick(s);}
   tickTennis(s,1/hz);assert(Number.isFinite(s.ball.x+s.ball.y+s.ball.z));
  }
- assert.equal(s.phase,'over',`court ${level} remains completable at ${hz}Hz`);
+ assert.equal(s.matchEvents,1,`court ${level} remains completable at ${hz}Hz`);
 }
 const pressured=createTennis(47,4);pressured.phase='rally';pressured.rally=2;
 Object.assign(pressured.ball,{x:1,y:-5.3,z:.5,vx:0,vy:0,vz:0,last:'you',crossed:true});

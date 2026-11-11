@@ -6,6 +6,7 @@ import {HUBS,HUB_COUNTS,SAFE_GUIDE} from './hubs';
 import {SAFE_FACTS} from './safety';
 import {GUIDE_HUBS} from './guides';
 import {TOOL_HUBS} from './tools/registry';
+import {GAME_LISTINGS} from './games';
 /**
  * /llms.txt (llmstxt.org format; served by app/llms.txt/route.ts, moved from a hand-kept public/llms.txt on Nov 8 2026 so the
  * counts come from the data). A factual summary for AI assistants: what Futbol Island is, who it is for, what it teaches, the
@@ -31,6 +32,8 @@ export function llmsText():string{
   ...GUIDE_HUBS.map(g=>`- [${g.name[0].toUpperCase()+g.name.slice(1)}](https://futbolisland.app${g.path}): ${g.blurb}.`),'',
   '## Free tools for coaches','',/* lib/site/tools/registry.ts */
   ...TOOL_HUBS.map(t=>`- [${t.name[0].toUpperCase()+t.name.slice(1)}](https://futbolisland.app${t.path}): ${t.blurb}.`),'',
+  '## Free soccer games','',/* lib/site/games.ts */
+  ...GAME_LISTINGS.map(g=>`- [${g.name[0].toUpperCase()+g.name.slice(1)}](https://futbolisland.app${g.path}): ${g.blurb}.`),'',
   '## Fish','',
   `- [Fishbook](https://futbolisland.app/fish): all ${SITE_FISH.length} sea animals on the island and the real football club, team or story each one is linked to, with a source credit.`,'',
   '## Cards','',

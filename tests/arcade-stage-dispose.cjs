@@ -18,13 +18,16 @@ assert.ok(body.indexOf('textures.forEach(t=>t.dispose())')<body.indexOf('rendere
 assert.match(body,/o instanceof T\.Sprite/,"sprites are walked (three's Sprite geometry is one module-level BufferGeometry)");
 assert.match(body,/customDepthMaterial/,'shadow-pass materials (e.g. runnerTrack bend depth material) are collected');
 // Nov 10 2026: the WebGL context is released too (house pattern: renderer.dispose() then forceContextLoss()), here and in the museum ball viewer.
-assert.match(body,/renderer\.dispose\(\);renderer\.forceContextLoss\(\)/,'arcade stage forces its WebGL context loss after disposing the renderer');
+assert.match(body,/renderer\.dispose\(\);[^;]*setTimeout\(\(\)=>\{if\(!canvas\.isConnected\)renderer\.forceContextLoss\(\);\},0\)/,'arcade stage forces its WebGL context loss after disposing the renderer, once the canvas has left the page (a StrictMode remount reuses the canvas)');
 const bv=fs.readFileSync(path.join(__dirname,'../lib/museum/wcBalls/ballViewer.ts'),'utf8');
 assert.match(bv.slice(bv.indexOf('dispose(){disposed=true')),/renderer\.dispose\(\);renderer\.forceContextLoss\(\)/,'museum ball viewer forces its WebGL context loss');
 // Pass Puzzles builds its players outside the stage: the stage must be disposed while they are still in the scene.
 const pp=fs.readFileSync(path.join(__dirname,'../lib/arcade/passPuzzleScene.ts'),'utf8'),ppd=pp.slice(pp.lastIndexOf('function dispose(){'));
-const sd=ppd.indexOf('stage.dispose()'),rd=ppd.indexOf('rig.dispose()');
-assert.ok(sd>=0&&rd>sd,'passPuzzleScene disposes the stage before its pooled rigs detach their meshes');
+// Nov 10 2026 (owner: "the pass puzzle should be using the bean characters"): the players are the shared arcade bean rigs again, but
+// obtained THROUGH the stage (stage.player), so the stage's scene walk and its own rig disposal free them: the scene must build no
+// rig of its own (no createPlayer), must still dispose the stage, and must free the comic clones of the rig materials.
+const sd=ppd.indexOf('stage.dispose()');
+assert.ok(sd>=0&&!/createPlayer\(|rig\.dispose\(\)/.test(pp)&&/stage\.player\(PITCH\[team\]/.test(pp)&&/for\(const m of rigMats\.values\(\)\)m\.dispose\(\)/.test(ppd),'passPuzzleScene takes its rigs from the stage, disposes the stage and frees its rig material clones');
 // BeanMaterial still exposes its shared atlases through beanUniforms (what the walk relies on).
 const bean=fs.readFileSync(path.join(__dirname,'../lib/graphics/beanSkin.ts'),'utf8');
 assert.match(bean,/beanUniforms:BeanUniforms=/,'BeanMaterial.beanUniforms');

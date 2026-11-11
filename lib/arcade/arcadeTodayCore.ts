@@ -12,8 +12,10 @@
  *    streak counter, nothing lost by skipping a day.
  * Football first (AGENTS.md): every challenge carries the one football idea it practises.
  */
-export type TodayCabinet='runner'|'puzzle'|'pinball'|'tennis'|'live';
-export const TODAY_CABINETS:readonly TodayCabinet[]=['runner','puzzle','live','tennis','pinball'];
+/** Nov 10 2026: Kit Rush took Island Strikers' cabinet, so 'kitrush' takes its row on the card. 'live' stays in the type (Strikers'
+ *  code still builds its facts) but is no longer one of today's cabinets; old 'live' marks in a save are dropped on read. */
+export type TodayCabinet='runner'|'puzzle'|'pinball'|'tennis'|'live'|'kitrush'|'snake';
+export const TODAY_CABINETS:readonly TodayCabinet[]=['runner','puzzle','kitrush','snake','tennis','pinball'];// Nov 10 2026: 'snake' = Squad Snake, the sixth cabinet
 
 /** What a finished game tells the card (one shape per cabinet). */
 export type TodayFacts=
@@ -21,6 +23,8 @@ export type TodayFacts=
  |{kind:'puzzle';id:string}
  |{kind:'pinball';hot:number;moves:number;goals:number}
  |{kind:'tennis';court:number;won:boolean;rally:number;perfect:number;clean:number;tour:number}
+ |{kind:'kitrush';daily:boolean;day:string;score:number;bestCombo:number;clean:number}
+ |{kind:'snake';daily:boolean;day:string;score:number;squads:number;calls:number;level:number}
  |{kind:'live';passes:number;openPasses:number;firstTimeGoals:number;cleanWin:boolean;setPieceGoals:number};
 
 export type TodayChallenge={cabinet:TodayCabinet;id:string;line:string;point:string;met:(f:TodayFacts,day:string)=>boolean};
@@ -46,6 +50,16 @@ const POOLS:Record<TodayCabinet,readonly Rule[]>={
   {id:'rally-12',line:'Keep a 12-touch rally.',point:'Be patient: keep the ball alive and wait for the gap.',met:f=>f.kind==='tennis'&&f.rally>=12},
   {id:'win-beach',line:`Win a match on ${TODAY_TENNIS_COURTS[1]}.`,point:'On sand the bounce is low: move early, bend your knees.',met:f=>f.kind==='tennis'&&!f.tour&&f.court===2&&f.won},
   {id:'clean-10',line:'Make 10 clean returns in one match.',point:'Clean contact sends the ball where you aim.',met:f=>f.kind==='tennis'&&f.clean>=10},
+ ],
+ kitrush:[
+  {id:'daily-rush',line:'Score 300 in today’s Daily Rush.',point:'Know your team at a glance: colour and pattern.',met:(f,day)=>f.kind==='kitrush'&&f.daily&&f.day===day&&f.score>=300},
+  {id:'combo-4',line:'Strike 4 of your kit with one swipe.',point:'Scan first: find the line through your colours, then swipe.',met:f=>f.kind==='kitrush'&&f.bestCombo>=4},
+  {id:'clean-15',line:'Strike 15 of your kit in a row without a miss.',point:'Stay switched on: the next ball is already coming.',met:f=>f.kind==='kitrush'&&f.clean>=15},
+ ],
+ snake:[
+  {id:'daily-squad',line:'Build a Full Squad in today’s Daily Squad.',point:'Eleven players: a keeper, then defenders, midfielders, forwards.',met:(f,day)=>f.kind==='snake'&&f.daily&&f.day===day&&f.squads>=1},
+  {id:'coach-call',line:'Build the shape the coach calls for.',point:'A formation counts from the back: 4-3-3 is four defenders, three midfielders, three forwards.',met:f=>f.kind==='snake'&&f.calls>=1},
+  {id:'level-3',line:'Reach level 3 in one run.',point:'Head up: see the press coming and move into space.',met:f=>f.kind==='snake'&&f.level>=3},
  ],
  live:[
   {id:'passes-8',line:'Complete 8 passes in one match.',point:'Pass and move: the ball runs faster than any player.',met:f=>f.kind==='live'&&f.passes>=8},

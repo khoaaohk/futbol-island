@@ -78,11 +78,11 @@ for(const g of ['puzpro','puzlgnd']){assert(L.isBoardGame(g),g);assert(/^[a-z]{2
  // a running total keeps one row per letters (the best), like the classic star board
  let b=L.emptyLocalBoards();b=L.addLocalScore(b,g,{initials:'ABC',icon:'',score:300,now:Date.parse('2026-11-08T12:00:00Z')}).boards;b=L.addLocalScore(b,g,{initials:'ABC',icon:'',score:900,now:Date.parse('2026-11-08T12:00:00Z')}).boards;
  assert.deepEqual(b.boards[g].map(x=>x.score),[900]);assert.equal(b.boards.puzzle,undefined,'classic board untouched');}
-assert.equal(L.BOARD_RULES.puzzle.max,300,'classic star board rules unchanged');
+assert.equal(L.BOARD_RULES.puzzle.max,3000,'classic star board: ceiling raised Nov 10 2026 for the Endless Run (same board, same unit)');assert.equal(L.BOARD_RULES.puzzle.base,300,'a star total still posts with no play-time rule');/* was max 300 */
 {const SV=require(path.join(ROOT,'lib','arcade','leaderboardServer.ts'));assert.equal(typeof SV.handleBoard,'function');}
 const files=fs.readdirSync(path.join(ROOT,'supabase/migrations')).sort(),f='20261110_puzzle_tier_boards.sql';assert(files.includes(f));
-const widen=files.filter(x=>/arcade_scores_game_check/.test(read('supabase/migrations/'+x)));/* Nov 10 2026: 20261112_runner_route_boards.sql now runs after it (and names every board, puzzle cups included) */assert(widen.includes(f)&&widen.indexOf(f)>=widen.length-2,'runs after the earlier board files');{const last=read('supabase/migrations/'+widen[widen.length-1]);for(const g of L.BOARD_GAMES)assert(last.includes(`'${g}'`),'the last allow-list keeps '+g);}
-const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['runwarm','runnight','runstorm','rundaily'].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
+const widen=files.filter(x=>/arcade_scores_game_check/.test(read('supabase/migrations/'+x)));/* Nov 10 2026: 20261112_runner_route_boards.sql now runs after it (and names every board, puzzle cups included) */assert(widen.includes(f)&&widen.indexOf(f)>=widen.length-4/* Nov 10 2026: 20261113_kitrush_boards.sql runs after the route boards, 20261114_snake_boards.sql after that */,'runs after the earlier board files');{const last=read('supabase/migrations/'+widen[widen.length-1]);for(const g of L.BOARD_GAMES)assert(last.includes(`'${g}'`),'the last allow-list keeps '+g);}
+const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['runwarm','runnight','runstorm','rundaily','kitrush','kitdaily','snake','snakedaily'/* Nov 10 2026: Kit Rush and Squad Snake boards come in later files */].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
 assert(/'OK, puzzle cup boards installed'/.test(sql));assert(!/\bdrop\s+(table|function|column)|truncate|delete from|\bupdate\s+public/i.test(sql.replace(/--.*$/gm,'')),'additive');
 // Economy: cup puzzles pay through the same recordPuzzleBest path (first solve + new stars), nothing new.
 assert(!/puzpro|puzlgnd|cupPoints/.test(read('lib/arcade/arcadeWalletCore.ts'))&&!/puzpro|puzlgnd/.test(read('lib/economy.ts')),'no new coin source');
@@ -111,7 +111,8 @@ assert(!/puzpro|puzlgnd|cupPoints/.test(read('lib/arcade/arcadeWalletCore.ts'))&
  assert.match(scene,/case 'intercept':[^\n]*popMat\.color\.copy\(POP_STEAL\)/);assert.match(scene,/function setTier\(look:'gold'\|'violet'\|null\)/);
  const added=scene.slice(scene.indexOf('// Nov 8 2026: the same pooled ring'),scene.indexOf("function clearBeats"));assert(!/new T\.(Mesh|\w*Light|\w*Texture|\w*Geometry)\(/.test(added),'no new mesh/light/texture');
  // reduced motion: shake, pops and the best flash only under no-preference; the shake also checks stage.reduced; hit-stop unchanged
- const rm=css.slice(css.indexOf('/* Nov 8 2026 polish'));assert.match(rm,/@media\(prefers-reduced-motion:no-preference\)\{\n \.skill \.mult/);
+ /* Comic house style (Nov 10 2026): the comic layer replaced the stationery layer; it is appended after the Nov 8 block, so the block ends where that layer starts. */
+ const rm=css.slice(css.indexOf('/* Nov 8 2026 polish'),css.indexOf('/* ── Comic house style (Nov 10 2026)'));assert(css.includes('/* ── Comic house style (Nov 10 2026)'),'comic layer present');assert(!/--pp-(hand|type|kraft|tape)/.test(css),'no stationery tokens left');assert.match(rm,/@media\(prefers-reduced-motion:no-preference\)\{\n \.skill \.mult/);
  assert(!/\n\.game\[data-shake/.test(rm),'shake is only inside the no-preference block');assert.match(tsx,/!sceneRef\.current\?\.stage\.reduced\)shake\(/);
  assert.match(tsx,/hitStop\.current=performance\.now\(\)\+\(e\.type==='goal'\?90:45\)/,'hit-stop unchanged');
  // CSS modules rule: every new selector starts from a local class

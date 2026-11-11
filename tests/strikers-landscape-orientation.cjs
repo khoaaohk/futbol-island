@@ -38,6 +38,10 @@ const users=require('node:child_process').execSync("grep -rl 'requestLandscape' 
 assert.deepEqual(users,['components/LiveArcadeMatch.tsx','components/games/ArcadeGame3D.tsx','lib/orientationMode.ts'],'only Strikers and Breakaway change orientation');
 // The landscape camera: a .9-wide fit (clear of notch insets), lifted so the goal mouths clear the corner controls.
 const scene=read('lib/arcade/strikerScene.ts');
-assert.match(scene,/const LANDSCAPE_LIFT=\.16,LANDSCAPE_X=\.9,LANDSCAPE_PAN=\.4;/);
+// Arcade AAA pass 2 (Nov 10 2026): the landscape camera sits lower (LANDSCAPE_TILT 1.7, fov 50) so the far stand and sky are in frame; the
+// pitch is shorter on screen, so the lift that keeps the goal mouths above the Sprint / Through keys is .06 (was .16 at the steep tilt).
+// Arcade AAA pass 3 (Nov 10 2026): the near stand left the phone frame, so the picture sits lower (negative lift) on a steeper, longer lens;
+// the goals are kept outside the action keys by a full-width fit and a follow cam that never pans toward the attacked goal.
+assert.match(scene,/const LANDSCAPE_LIFT=-\.05,LANDSCAPE_X=1,LANDSCAPE_PAN=1;/);assert.match(scene,/const LANDSCAPE_TILT=1\.4,LANDSCAPE_FOV=40,PORTRAIT_FOV=38,DESKTOP_TILT=1\.3,DESKTOP_LIFT=-\.05,DESKTOP_FOV=50;/);assert.match(scene,/const LANDSCAPE_PAN_RIGHT=0,LANDSCAPE_PAN_NEAR=3\.2,LANDSCAPE_PAN_FAR=\.5,LANDSCAPE_PAN_DEPTH=\.3;/);assert.ok(scene.includes('Math.min(wide?LANDSCAPE_PAN_RIGHT:panX+(portrait?4:0),'),'landscape never pans toward the attacked goal (it would slide under the Sprint key)');
 assert.ok(scene.includes('if(wide){camera.setViewOffset(w,h,0,h*LANDSCAPE_LIFT,w,h);'),'lift after the fit, so the pitch keeps its size');
 console.log('strikers-landscape-orientation ok');

@@ -13,7 +13,7 @@
  * skill in it (first-time, clean strike, chip, curler, set piece, Team Strike), times a COMBO from the passes in the move
  * (2 passes ×1.5, 4 ×2, 6+ ×2.5), plus a scoring-streak bonus for goals in a row. Conceding only ends the streak; no points are
  * ever taken away. Passes score 10 and a win 200, as in the rounds. The tier multiplier applies to the whole total.
- * Same coins as any Strikers match (3 coins entry, the usual payout): the economy is untouched.
+ * Same coins as any Strikers match (free entry like every arcade play, the usual payout): the economy is untouched.
  */
 import type {BoardGame} from './leaderboard';
 

@@ -71,6 +71,6 @@ const letgo=t.createTennis();letgo.phase='rally';letgo.aiReaction=99;letgo.rival
 assert.equal(letgo.pointKind,'letgo');assert.match(letgo.message,/let it go/);assert.equal(letgo.score.you,1);
 // 6. Deterministic, finite, completable with the new layers in place.
 const a=t.createTennis(8),b=t.createTennis(8);for(const g of [a,b]){t.beginTennis(g);t.requestTennisKick(g);advance(g,8);}assert.deepEqual(a,b,'seeded simulation stays repeatable');
-for(const level of [1,3,5]){const s=t.createTennis(21,level);t.beginTennis(s);for(let i=0;i<120*480&&s.phase!=='over';i++){if(s.phase==='serve')t.requestTennisKick(s);if(s.phase==='rally'&&s.ball.last==='rival'){const l=t.tennisReceivingPoint(s);t.setTennisTarget(s,l.x,l.y);t.requestTennisKick(s);}t.tickTennis(s,1/120);}
- assert.equal(s.phase,'over',`court ${level} completes`);assert(Number.isFinite(s.ball.x+s.ball.y+s.ball.z));}
+for(const level of [1,3,5]){const s=t.createTennis(21,level);t.beginTennis(s);for(let i=0;i<120*480&&!s.matchEvents;i++){if(s.phase==='serve')t.requestTennisKick(s);if(s.phase==='rally'&&s.ball.last==='rival'){const l=t.tennisReceivingPoint(s);t.setTennisTarget(s,l.x,l.y);t.requestTennisKick(s);}t.tickTennis(s,1/120);}
+ assert.equal(s.matchEvents,1,`court ${level} completes its match`);assert(Number.isFinite(s.ball.x+s.ball.y+s.ball.z));}
 console.log('PASS tennis touch grades (heavy, volley, streak, coach takeaway), rival telegraph + commit ramp, wrong-footing, rally tempo, point reasons, event counters');

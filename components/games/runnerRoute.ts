@@ -80,7 +80,9 @@ const sign01 = (i: number) => (i % 2 ? 1 : -1);
 /** For finite routes: 0 = the finishing segment, 1..3 = the final hill segments before it, -1 otherwise. */
 function finishSegment(i: number) {
   if (!profile.finish) return -1;
-  const last = routeSegmentAt(profile.finish), back = last - i;
+  const last = routeSegmentAt(profile.finish); let back = last - i;
+  // Endless play (Nov 10 2026): the road goes on past the goal line and the same final hill returns every `lap` metres.
+  if (back < 0 && profile.lap > 0) { const per = Math.max(4, Math.round(profile.lap / L)); back = (per - ((i - last) % per)) % per; }
   return back >= 0 && back <= 3 ? back : -1;
 }
 /* ------------------------------------------------------------------------------------------
@@ -88,9 +90,9 @@ function finishSegment(i: number) {
  * a final hill to the goal line, and each route has its own sequence of terrain zones. The default
  * profile is the classic endless route, so every existing rule and test is unchanged.
  * ---------------------------------------------------------------------------------------- */
-export type RouteProfile = { rise: number; turn: number; finish: number; salt: number; stage: number; terrains: readonly TerrainId[] };
+export type RouteProfile = { rise: number; turn: number; finish: number; salt: number; stage: number; terrains: readonly TerrainId[]; /** Metres between goal lines after the first (0 = the route has one goal line or none). */ lap: number };
 export const DEFAULT_TERRAINS: readonly TerrainId[] = ['grass', 'cobbles', 'neon', 'sand', 'bridge', 'rooftop'];
-const DEFAULT_PROFILE: RouteProfile = { rise: 1, turn: 1, finish: 0, salt: 0, stage: 0, terrains: DEFAULT_TERRAINS };
+const DEFAULT_PROFILE: RouteProfile = { rise: 1, turn: 1, finish: 0, salt: 0, stage: 0, terrains: DEFAULT_TERRAINS, lap: 0 };
 let profile: RouteProfile = DEFAULT_PROFILE;
 /** Select the route profile (called when a run starts). Clears the segment memo and height cache. */
 export function setRouteProfile(p: Partial<RouteProfile> = {}) {

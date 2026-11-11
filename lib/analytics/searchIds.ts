@@ -48,7 +48,7 @@ export function engineOf(host:string|null|undefined):string|null{
  return null;
 }
 /** The public sections whose pages are named; anything else is "other". */
-export const PUBLIC_SECTIONS=['play','about','privacy','marketing','cards','fish','exhibits','learn','safe-football-game-for-kids','tools'/* the free coach tools (lib/site/tools/registry.ts): the landing page only, never anything typed into a tool */] as const;
+export const PUBLIC_SECTIONS=['play','about','privacy','marketing','cards','fish','exhibits','learn','safe-football-game-for-kids','tools'/* the free coach tools (lib/site/tools/registry.ts): the landing page only, never anything typed into a tool */,'games'/* the arcade games' search pages (lib/site/games.ts) */] as const;
 const PATH_RE=/^\/[a-z0-9_.-]+(\/[a-z0-9_.-]+){0,2}$/;
 /** Short codes for the busy sections (a key that starts with a capital names one), so long page ids still fit. */
 const PREFIX:readonly (readonly [string,string])[]=[['learn/lessons/','L'],['learn/','H'],['cards/','C'],['fish/','F'],['exhibits/','X'],['tools/soccer-field-diagrams/','G'],['tools/','T']];

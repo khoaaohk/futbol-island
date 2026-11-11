@@ -1,0 +1,101 @@
+/* Squad Snake shell (Nov 10 2026): an upright comic page. Phone: the stage is the whole screen. Desktop: a centred 9:16 page with an
+ * ink border and a hard shadow on a Ben-Day sunburst backdrop, with two margin strips of caption boxes. Tokens: ../games/comic. */
+.game{position:relative;width:100%;height:100dvh;overflow:hidden;display:grid;place-items:center;color:var(--cm-ink);font-family:var(--cm-ui);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+ background:var(--cm-dots-orange),#ffcf7a}
+.game button{font-family:var(--cm-ui)}
+.stage{position:relative;width:100%;height:100%;overflow:hidden;background:#ffcf7a;isolation:isolate}
+.scene,.play{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
+.play{z-index:1}
+.probe{position:absolute;left:0;top:0;width:1px;height:calc(var(--arcade-bar-clear,56px) + env(safe-area-inset-top,0px));visibility:hidden;pointer-events:none}
+/* The standard Arcade back button, exactly as in the other cabinets (dark with the teal rim): the shared button reads these. */
+.topBar{z-index:5;--btn-gold:#24223e;--btn-gold-bright:#313154;--btn-gold-bright-edge:#121329;--btn-gold-edge:#121329;--btn-ink:#e9f5ff;--btn-rim:#81fbed;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e}
+/* Nov 10 2026 touch-up: over a start / results card the Arcade back button stays above the dot scrim, exactly as in the 3D games
+   (ArcadeGame3D.module.css): the bar drops its own layer and only the back button is lifted. The shared bar fixes the button's face. */
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar{z-index:auto}
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar>button:first-child{position:relative;z-index:5}
+/* The team sheet: eleven slots that fill in position colours, the coach's call, the level, the save glove. */
+.sheet{position:absolute;z-index:3;left:50%;translate:-50% 0;top:calc(var(--arcade-bar-clear,56px) + 7px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:7px;box-sizing:border-box;max-width:calc(100% - 12px);height:36px;padding:0 8px 0 0;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);rotate:-.8deg;pointer-events:none;white-space:nowrap}
+.lv{align-self:stretch;display:grid;place-items:center;min-width:34px;padding:0 5px;background:var(--cm-ink);color:var(--cm-paper);font:italic 900 15px/1 var(--cm-title)}
+.slots{display:flex;gap:2px}
+.slots i{width:14px;height:20px;box-sizing:border-box;border:2px solid var(--cm-ink);border-radius:7px;background:#e9dcc2}
+.slots i[data-pos]{animation:sqSlot .3s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes sqSlot{0%{scale:.3}100%{scale:1}}
+.call{display:grid;justify-items:center;padding-left:7px;border-left:3px solid var(--cm-ink);font:italic 900 15px/1 var(--cm-title);color:var(--cm-ink)}
+.call small{font:800 10px/1.1 var(--cm-ui);font-style:normal}
+.glove{width:16px;height:18px;box-sizing:border-box;border:2.5px solid var(--cm-ink);border-radius:7px 7px 4px 4px;background:#e9dcc2}
+.glove[data-on]{background:var(--cm-teal)}
+.game[data-dash] .sheet{background:#c9f1ea}
+.bean{display:block;flex:none;overflow:visible}
+/* optional d-pad, in the sand below the pitch */
+.pad{position:absolute;z-index:3;left:50%;translate:-50% 0;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template:"a u b" 50px "l c r" 50px "d e f" 50px/50px 50px 50px;gap:2px}
+.pad button{display:grid;place-items:center;border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);cursor:pointer;touch-action:none;padding:0}
+.pad button:active{translate:2px 2px;box-shadow:1px 1px 0 var(--cm-ink);background:var(--cm-sun)}
+.pad [data-dir="0"]{grid-area:u}.pad [data-dir="3"]{grid-area:l}.pad [data-dir="1"]{grid-area:r}.pad [data-dir="2"]{grid-area:d}
+
+/* cards */
+.order{display:flex;justify-content:center;align-items:center;gap:6px;margin:2px 0 8px;padding:0;list-style:none}
+.order li{display:flex;align-items:center;gap:6px}
+.order li span{display:grid;justify-items:center;gap:2px}
+.order li b{min-width:38px;padding:2px 3px 1px;border:2px solid var(--cm-ink);font:900 11px/1.1 var(--cm-title);color:var(--cm-ink)}
+.order li+li::before{content:"";width:0;height:0;border-left:9px solid var(--cm-ink);border-top:6px solid transparent;border-bottom:6px solid transparent}
+.learn{margin:0 0 10px;font:700 14px/1.35 var(--cm-ui);color:var(--cm-ink)}
+.learn b{font-weight:800}
+.album{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin:0 0 10px;padding:0;list-style:none}
+.album li{padding:5px 0 4px;white-space:nowrap;border:2px solid var(--cm-ink);background:#e9dcc2;color:#7a6a70;font:italic 900 11px/1 var(--cm-title);letter-spacing:-.02em}
+.album li[data-on]{background:var(--cm-teal);color:var(--cm-ink)}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 12px}
+.chips>*{flex:1 1 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px 12px;padding:0 6px 6px 0}
+.actions>:first-child{grid-column:1/-1}
+.actions>[data-snake-daily]{grid-column:1/-1}
+.actions button{flex-direction:column;gap:2px}
+.status{margin:0 0 10px;font:800 14px/1.3 var(--cm-ui);color:var(--cm-ink)}
+.scoreRow{position:relative;display:grid;place-items:center;margin:6px 0 2px}
+.score{--cm-numeral-size:68px;display:block}
+.score[data-new-best]{animation:sqPop .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes sqPop{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
+.stamp{position:absolute;right:-16px;top:-20px}
+.medalRow{display:inline-flex;align-items:center;justify-content:center;gap:5px;margin:2px 0 8px}
+.chips .medal{width:16px;height:16px;border-width:2.5px}.chips .medal i{width:4px;height:4px}.chips .medalRow{gap:3px;margin:3px 0 4px}
+.medalRow em{margin-left:6px;font:800 14px/1 var(--cm-ui);font-style:normal;color:var(--cm-ink)}
+.medal{display:inline-grid;place-items:center;width:22px;height:22px;box-sizing:border-box;border:3px solid var(--cm-ink);border-radius:50%;background:#e9dcc2}
+.medal i{width:6px;height:6px;border-radius:50%;background:#cdb99a}
+.medal[data-on][data-level="1"]{background:#d98a4a}
+.medal[data-on][data-level="2"]{background:#dfe3ea}
+.medal[data-on][data-level="3"]{background:var(--cm-sun)}
+.medal[data-on][data-level="4"]{background:var(--cm-teal)}
+.medal[data-on] i{background:var(--cm-ink)}
+.near{display:inline-block;margin:2px 0 12px;font:800 16px/1.2 var(--cm-ui)}
+.built{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 12px;margin:0 0 10px;padding:6px 10px}
+.built small{font:800 13px/1.2 var(--cm-ui)}
+.built strong{font:800 16px/1.2 var(--cm-ui)}
+.built[data-shape] strong{--cm-numeral-size:40px}
+.built em{padding:3px 7px 2px;border:2px solid var(--cm-ink);background:var(--cm-sun);font:italic 900 12px/1 var(--cm-title);rotate:-2deg}
+/* Results first (Nov 10 2026): the shared high-score strip (components/arcade/HighScoreEntry.tsx) lands here, under the near-miss line. */
+.hsSlot{margin:0 4px 14px 0}.hsSlot:empty{display:none}
+.coach{margin:0 0 8px;font:700 14px/1.35 var(--cm-ui)}
+.fact{background:var(--cm-white);border-left-width:10px;margin:0 0 12px;text-align:left;font:600 14px/1.4 var(--cm-ui)}
+.fact b{display:block;font:800 14px/1.3 var(--cm-ui)}
+.boardTabs{display:flex;gap:9px;justify-content:center}
+.boardTabs button{min-height:44px;padding:8px 14px;cursor:pointer}
+.boardLearn{margin:0 0 6px;text-align:center}
+
+/* desktop: the page in the middle, caption strips in the margins */
+.side{display:none}
+@media (min-width:700px) and (min-height:520px){
+ .game{background:var(--cm-dots-orange),repeating-conic-gradient(from 4deg at 50% 62%,#ffc24a 0 8deg,#ffcf7a 8deg 16deg)}
+ .stage{width:auto;height:calc(100dvh - 28px);aspect-ratio:9/16;max-width:calc(100vw - 28px);border:5px solid var(--cm-ink);box-shadow:12px 12px 0 var(--cm-ink)}
+}
+@media (min-width:1080px) and (min-height:560px){
+ .side{position:absolute;top:50%;translate:0 -50%;display:grid;gap:18px;width:min(250px,calc((100vw - (100dvh - 28px)*9/16)/2 - 64px));font:700 15px/1.35 var(--cm-ui)}
+ .side[data-side=left]{left:calc((100vw - (100dvh - 28px)*9/16)/4);translate:-50% -50%}
+ .side[data-side=right]{right:calc((100vw - (100dvh - 28px)*9/16)/4);translate:50% -50%}
+ .sideRow{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px}
+ .sideShape{font:400 30px/1 var(--cm-numeral)}
+ .sideMedals{display:grid;gap:7px}
+ .sideMedals span{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
+ .sideMedals em{font:400 20px/1 var(--cm-numeral);font-style:normal}
+}
+@media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.album{display:none}.score{--cm-numeral-size:52px}.coach{display:none}.order{margin-bottom:6px}}
+@media (max-width:374px){.sheet{gap:5px}.slots i{width:13px}.call{padding-left:5px}}
+@media (prefers-reduced-motion:reduce){.sheet{rotate:none}.slots i[data-pos],.score[data-new-best]{animation:none}}

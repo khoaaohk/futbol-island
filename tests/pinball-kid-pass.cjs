@@ -70,8 +70,8 @@ assert.equal(P.PINBALL_MATCH_TIME,180);
  assert.match(src,/if\(canceled&&game\.current\)game\.current\.state\.pinball\.flipperPulse\[side\]=0/,'a cancelled touch never flicks');
  assert.match(src,/const nextSlot=urgentFrame\.current\?now:frameCapSlot\(now,slot,interval\);urgentFrame\.current=false;/,'a fresh press skips the 30 fps slot once');
  assert.match(src,/kind==='pinball'&&shownHud&&sameHud\(view,shownHud\)/,'unchanged pinball HUD does not re-render');
- const games=fs.readFileSync(path.join(base,'lib/arcade/arcadeGames.ts'),'utf8');
- assert.match(games,/mergePinballStatic\(pinballRails,'pinball-rails'\);mergePinballStatic\(pinballLampBases,'pinball-lamp-bases'\)/);
+ const games=fs.readFileSync(path.join(base,'lib/arcade/games/pinballGame.ts'),'utf8');
+ assert.match(games,/mergePinballStatic\(pinballRails,'pinball-rails'\);/);// AAA pass 2: the three lamp bases are gone (they covered the printed insert plastics); the rails are still one merged draw
  const fx=fs.readFileSync(path.join(base,'lib/games/soccerPinballFx.ts'),'utf8');
  assert.match(fx,/halo\.name='pinball-ball-halo'/);assert.match(fx,/haloMaterial\.color\.copy\(danger\?coral:gold\)/,'coral when heading for the gap');}
 console.log('PASS pinball kid pass: beginner goal-line saver, ball-save ramp, 3-minute 90\', first-ball coaching, merged rails, touch zones + urgent frame + HUD de-dupe + ball tracker');

@@ -11,37 +11,47 @@ import {isSoundEnabled,getSoundVolume} from '../games/sound';
  *   with music on, brightening as attacks build; an "Olé" chant for long passing moves; claps after a goal; call-out and
  *   full-time win / lose / draw stings. Still no files, timers or always-on nodes.
  * - Voices are capped; every node disconnects when it ends.
+ * - Pass 3 audit (Nov 10 2026): a soft limiter sits on the output (a goal can stack the roar, two stings, claps, drums and a call-out,
+ *   which summed past full scale at top volume); notes scheduled well ahead (full-time win / best / star stings) no longer lose their
+ *   slot to the whistle's voices (MAX_QUEUED); a context swap stops the old crowd bed on its OWN clock and resets the voice count
+ *   (nodes on a closed context never fire `ended`, which could mute every later cue); noise bursts longer than the buffer's tail loop.
  */
 export type StrikerCue='pass'|'shot'|'touch'|'tackle'|'hit'|'save'|'post'|'miss'|'board'|'goal'|'concede'|'intercept'|'focus'|'switch'|'kickoff'|'fulltime'|'charge'|'perfect'|'skill'|'beat'|'foul'|'spirit'|'special'|'star'|'call'|'chain'|'band'|'ole'|'cheer'|'win'|'lose'|'draw'|'bonus'|'best'|'horn'|'net'|'bounce';
 const MAX_VOICES=14;
+/** Hard cap that also counts notes queued more than .3 s ahead: they hold a slot while silent, so they get their own headroom. */
+const MAX_QUEUED=26;
 export function createStrikerAudio(){
- let ctx:AudioContext|null=null,out:GainNode|null=null,noise:AudioBuffer|null=null,voices=0;
+ let ctx:AudioContext|null=null,out:GainNode|null=null,limiter:DynamicsCompressorNode|null=null,noise:AudioBuffer|null=null,voices=0;
+ const full=(at:number,spare=0)=>voices>=(ctx&&at-ctx.currentTime>.3?MAX_QUEUED:MAX_VOICES)-spare;
  let crowd:{src:AudioBufferSourceNode;filter:BiquadFilterNode;gain:GainNode}|null=null,crowdTarget=-1;
  let nextBeat=0,beat=0,drum=0,music=true;
  const jitter=(amount:number)=>1+(Math.random()*2-1)*amount;
  const musicOn=()=>{try{return localStorage.getItem('fi2-music-enabled')!=='false';}catch{return true;}};
- function attach(next:AudioContext|null){if(!next||next===ctx)return;ctx=next;out=next.createGain();out.gain.value=1;out.connect(next.destination);
+ function attach(next:AudioContext|null){if(!next||next===ctx)return;stopCrowd();try{out?.disconnect();limiter?.disconnect();}catch{}voices=0;crowdTarget=-1;ctx=next;out=next.createGain();out.gain.value=.9;limiter=null;
+  try{limiter=next.createDynamicsCompressor();limiter.threshold.value=-9;limiter.knee.value=6;limiter.ratio.value=10;limiter.attack.value=.003;limiter.release.value=.18;out.connect(limiter);limiter.connect(next.destination);}catch{limiter=null;out.connect(next.destination);}
   const length=Math.floor(next.sampleRate*1.3),buffer=next.createBuffer(1,length,next.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<length;i++)data[i]=Math.random()*2-1;noise=buffer;}
  function live(){return ctx&&out&&ctx.state==='running'&&isSoundEnabled()&&typeof document!=='undefined'&&!document.hidden?ctx:null;}
  function end(nodes:AudioNode[]){voices=Math.max(0,voices-1);for(const n of nodes)try{n.disconnect();}catch{}}
  /** Pitch-swept oscillator with a fast attack and exponential decay. */
- function tone(at:number,hz:number,toHz:number,duration:number,level:number,type:OscillatorType='sine',lowpass=0){const c=ctx!;if(voices>=MAX_VOICES)return;voices++;
+ function tone(at:number,hz:number,toHz:number,duration:number,level:number,type:OscillatorType='sine',lowpass=0){const c=ctx!;if(full(at)||!(level>0)||!(hz>0)||!(duration>0))return;voices++;
   const osc=c.createOscillator(),gain=c.createGain(),filter=lowpass?c.createBiquadFilter():null;osc.type=type;osc.frequency.setValueAtTime(hz,at);osc.frequency.exponentialRampToValueAtTime(Math.max(20,toHz),at+duration);
   gain.gain.setValueAtTime(.0001,at);gain.gain.linearRampToValueAtTime(level,at+.006);gain.gain.exponentialRampToValueAtTime(.0001,at+duration);
   if(filter){filter.type='lowpass';filter.frequency.value=lowpass;osc.connect(filter);filter.connect(gain);}else osc.connect(gain);gain.connect(out!);
   osc.start(at);osc.stop(at+duration+.02);osc.onended=()=>end(filter?[osc,filter,gain]:[osc,gain]);}
  /** Filtered noise burst, optionally sweeping the filter (whoosh, roar, scuff). */
- function hiss(at:number,duration:number,level:number,type:BiquadFilterType,hz:number,toHz=hz,q=1,attack=.004){const c=ctx!;if(voices>=MAX_VOICES||!noise)return;voices++;
-  const src=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain();src.buffer=noise;src.loop=duration>1.2;filter.type=type;filter.Q.value=q;filter.frequency.setValueAtTime(hz,at);filter.frequency.exponentialRampToValueAtTime(Math.max(30,toHz),at+duration);
+ function hiss(at:number,duration:number,level:number,type:BiquadFilterType,hz:number,toHz=hz,q=1,attack=.004){const c=ctx!;if(full(at)||!noise||!(level>0)||!(hz>0)||!(duration>0))return;voices++;
+  const src=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain();src.buffer=noise;src.loop=duration>.75;filter.type=type;filter.Q.value=q;filter.frequency.setValueAtTime(hz,at);filter.frequency.exponentialRampToValueAtTime(Math.max(30,toHz),at+duration);
   gain.gain.setValueAtTime(.0001,at);gain.gain.linearRampToValueAtTime(level,at+attack);gain.gain.exponentialRampToValueAtTime(.0001,at+duration);src.connect(filter);filter.connect(gain);gain.connect(out!);
   src.start(at,Math.random()*.5);src.stop(at+duration+.02);src.onended=()=>end([src,filter,gain]);}
  /** Crowd vowel: two formant bands over noise. "ooh" for near misses, "ahh" for saves. */
  function vowel(at:number,duration:number,level:number,f1:number,f2:number,rise=1.2){hiss(at,duration,level,'bandpass',f1,f1*rise,5,duration*.3);hiss(at,duration,level*.6,'bandpass',f2,f2*rise,6,duration*.3);}
  /** Referee whistle: a pea-whistle trill (fast vibrato) plus breath. */
- function whistle(at:number,duration:number,level:number){const c=ctx!;if(voices>=MAX_VOICES-1)return;voices++;
+ function whistle(at:number,duration:number,level:number){const c=ctx!;if(full(at,1)||!(level>0))return;voices++;
   const osc=c.createOscillator(),lfo=c.createOscillator(),depth=c.createGain(),gain=c.createGain();osc.type='sine';osc.frequency.value=2650*jitter(.02);lfo.frequency.value=34;depth.gain.value=170;lfo.connect(depth);depth.connect(osc.frequency);
-  gain.gain.setValueAtTime(.0001,at);gain.gain.linearRampToValueAtTime(level,at+.02);gain.gain.setValueAtTime(level,at+duration-.05);gain.gain.exponentialRampToValueAtTime(.0001,at+duration);osc.connect(gain);gain.connect(out!);
+  gain.gain.setValueAtTime(.0001,at);gain.gain.linearRampToValueAtTime(level,at+.02);gain.gain.setValueAtTime(level,at+Math.max(.03,duration-.05));gain.gain.exponentialRampToValueAtTime(.0001,at+Math.max(.06,duration));osc.connect(gain);gain.connect(out!);
   osc.start(at);lfo.start(at);osc.stop(at+duration+.02);lfo.stop(at+duration+.02);osc.onended=()=>end([osc,lfo,depth,gain]);hiss(at,duration,level*.25,'bandpass',3200,3000,2,.02);}
+ /** Broadcast sting (arcade AAA pass 1, Nov 10 2026): a short brass-like rising figure, two lowpassed saws a fifth apart per note. Four voices. */
+ function sting(at:number,level:number){tone(at,196,196,.16,level,'sawtooth',1100);tone(at,294,294,.16,level*.7,'sawtooth',1100);tone(at+.15,262,262,.42,level,'sawtooth',1400);tone(at+.15,392,392,.42,level*.7,'sawtooth',1400);}
  function cue(kind:StrikerCue,power=.5){const c=live();if(!c)return;const v=getSoundVolume();if(v<=0)return;const at=c.currentTime+.005,j=jitter(.07);
   switch(kind){
    case 'pass':tone(at,190*j,85,.09,v*.32);hiss(at,.035,v*.09,'highpass',2600*j);break;
@@ -53,7 +63,7 @@ export function createStrikerAudio(){
    case 'post':for(const [hz,l] of [[1180,.13],[1730,.08],[2550,.05]] as const)tone(at,hz*j,hz*.995,.55,v*l,'sine');tone(at,140,60,.1,v*.3);vowel(at+.08,1.1,v*.15,360,820,1.25);break;
    case 'miss':vowel(at,1.05,v*.15,340,800,1.3);break;
    case 'board':tone(at,135*j,68,.1,v*.22);hiss(at,.06,v*.08,'lowpass',420);break;
-   case 'goal':whistle(at,.32,v*.09);hiss(at,2.4,v*.24,'bandpass',480,1100,.7,.22);hiss(at+.05,1.8,v*.1,'highpass',2400,3400,.5,.3);
+   case 'goal':whistle(at,.32,v*.09);sting(at+.35,v*.06);hiss(at,2.4,v*.24,'bandpass',480,1100,.7,.22);hiss(at+.05,1.8,v*.1,'highpass',2400,3400,.5,.3);
     // Short brass-like stinger (the only "music" a goal needs): a rising triad through a lowpass.
     [[233,0],[294,.09],[349,.18],[466,.3]].forEach(([hz,d])=>tone(at+d,hz,hz*1.01,.5,v*.06,'sawtooth',1500));
     // The stands clap it in: three claps once the roar peaks.
@@ -62,7 +72,7 @@ export function createStrikerAudio(){
    case 'intercept':tone(at,210*j,110,.07,v*.2);vowel(at+.05,.7,v*.07,320,760,.85);break;
    case 'focus':tone(at,880,885,.12,v*.07);tone(at+.08,1320,1325,.18,v*.06);break;
    case 'switch':tone(at,620*j,700,.05,v*.06,'triangle');break;
-   case 'kickoff':whistle(at,.55,v*.1);break;
+   case 'kickoff':whistle(at,.55,v*.1);sting(at+.5,v*.05);break;
    case 'fulltime':whistle(at,.18,v*.1);whistle(at+.28,.18,v*.1);whistle(at+.56,.75,v*.1);hiss(at+.6,2.2,v*.12,'bandpass',600,900,.7,.4);break;
    // Charge (Oct 10 2026): power 0..1 sets the pitch, so the build tick (.3) and the overhit warning (1) sound different.
    case 'charge':{const p=Math.max(0,Math.min(1,power));tone(at,(220+p*260)*j,(440+p*520),.12,v*(.05+p*.03),p>=1?'square':'triangle',p>=1?1800:0);break;}
@@ -109,8 +119,13 @@ export function createStrikerAudio(){
   if(energy>.25&&(s16===2||s16===10||(energy>.8&&(s16===5||s16===13)))){const hz=PLUCK[(step*3+Math.floor(step/16))%5];tone(at,hz,hz*.995,.13,v*.022,'sine');}
   if(energy>.45&&s16%4===2)hiss(at,.03,v*.025,'highpass',7000,7000,.7,.002);}
  /** Start the crowd bed when play starts; stop it on pause, hide or full time. */
- function startCrowd(){const c=live();if(!c||crowd||!noise)return;const src=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain();src.buffer=noise;src.loop=true;filter.type='bandpass';filter.Q.value=.55;filter.frequency.value=520;gain.gain.value=.0001;src.connect(filter);filter.connect(gain);gain.connect(out!);src.start();crowd={src,filter,gain};crowdTarget=-1;music=musicOn();}
- function stopCrowd(){if(!crowd)return;const c=ctx!,{src,filter,gain}=crowd;crowd=null;try{gain.gain.setTargetAtTime(.0001,c.currentTime,.12);src.stop(c.currentTime+.5);}catch{}src.onended=()=>{for(const n of [src,filter,gain])try{n.disconnect();}catch{}};}
+ function startCrowd(){const c=live();if(!c||crowd||!noise)return;const src=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain();src.buffer=noise;src.loop=true;filter.type='bandpass';filter.Q.value=.55;filter.frequency.value=520;gain.gain.value=.0001;src.connect(filter);filter.connect(gain);gain.connect(out!);
+  // Night-stadium voices (arcade AAA pass 1): a second 'aah' formant on the same noise, breathing on a slow LFO, so the bowl sounds like people.
+  const aah=c.createBiquadFilter(),aahGain=c.createGain(),lfo=c.createOscillator(),lfoGain=c.createGain();aah.type='bandpass';aah.frequency.value=1150;aah.Q.value=1.4;aahGain.gain.value=.4;lfo.frequency.value=.19;lfoGain.gain.value=.3;src.connect(aah);aah.connect(aahGain);aahGain.connect(gain);lfo.connect(lfoGain);lfoGain.connect(aahGain.gain);lfo.start();src.addEventListener('ended',()=>{try{lfo.stop();}catch{}for(const n of [aah,aahGain,lfo,lfoGain])try{n.disconnect();}catch{}});
+  src.start();crowd={src,filter,gain};crowdTarget=-1;music=musicOn();}
+ function stopCrowd(){if(!crowd)return;const {src,filter,gain}=crowd;crowd=null;src.onended=()=>{for(const n of [src,filter,gain])try{n.disconnect();}catch{}};
+  // The bed's own context clock (never the module's current one: after a context swap that is a different timeline and the loop would play on).
+  try{const t=src.context.currentTime;gain.gain.setTargetAtTime(.0001,t,.12);src.stop(t+.5);}catch{try{src.stop();}catch{}}}
  /** Called from the game loop only while playing: energy 0..1.6. Starts the bed lazily once the context is running; writes automation only when the level changes. */
  function setCrowd(energy:number){const c=live();if(!c)return;if(!crowd)startCrowd();if(!crowd)return;const v=getSoundVolume();
   // Stadium drums join only when an attack builds; a short lookahead from the game loop, no timer.
@@ -119,6 +134,6 @@ export function createStrikerAudio(){
    if(energy>.55){if([1,0,1,0,1,1,1,0][drum%8])tone(nextBeat,98*jitter(.03),46,.2,v*.16*Math.min(1,energy));if(drum%8===6)hiss(nextBeat,.07,v*.05,'bandpass',1500,1400,1.2);drum++;}else drum=0;nextBeat+=.2;beat++;}}
   const target=v*(.016+Math.min(1.6,energy)*.05);if(Math.abs(target-crowdTarget)<.003)return;crowdTarget=target;
   crowd.gain.gain.setTargetAtTime(target,c.currentTime,energy>1?.08:.35);crowd.filter.frequency.setTargetAtTime(430+Math.min(1.6,energy)*420,c.currentTime,.3);}
- function dispose(){stopCrowd();try{out?.disconnect();}catch{}ctx=null;out=null;noise=null;voices=0;}
+ function dispose(){stopCrowd();try{out?.disconnect();limiter?.disconnect();}catch{}ctx=null;out=null;limiter=null;noise=null;voices=0;}
  return{attach,cue,startCrowd,stopCrowd,setCrowd,dispose};
 }

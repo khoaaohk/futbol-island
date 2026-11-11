@@ -82,7 +82,7 @@ const rivalKick=t.createTennis(47,5);rivalKick.phase='rally';rivalKick.rally=4;O
 advance(rivalKick,1/60);assert.equal(rivalKick.lastKicker,'rival');assert.equal(rivalKick.rivalPower,0,'the rival power is spent on its kick');assert(['sweet','power'].includes(rivalKick.rivalPowerGrade));
 
 // 7. UI wiring: hold on touch / mouse / keys, clean cancel paths, the charge ring, the help text.
-const ui=fs.readFileSync(path.join(root,'components/games/ArcadeGame3D.tsx'),'utf8'),css=fs.readFileSync(path.join(root,'components/games/ArcadeGame3D.module.css'),'utf8'),games=fs.readFileSync(path.join(root,'lib/arcade/arcadeGames.ts'),'utf8');
+const ui=fs.readFileSync(path.join(root,'components/games/ArcadeGame3D.tsx'),'utf8'),css=fs.readFileSync(path.join(root,'components/games/ArcadeGame3D.module.css'),'utf8'),games=fs.readFileSync(path.join(root,'lib/arcade/games/tennisGame.ts'),'utf8');
 for(const [i,name] of [[0,'kick'],[1,'lob'],[2,'drop']])assert(new RegExp(`data-tennis-action="${name}"[^>]*\\{\\.\\.\\.holdShot\\(${i}\\)\\}`).test(ui),`${name} button holds`);
 assert(/onPointerCancel:[^\n]*endTennisHold\(false\)/.test(ui)&&/onLostPointerCapture:[^\n]*endTennisHold\(false\)/.test(ui),'pointer cancel / lost capture cancels the hold (no shot)');
 assert(/onPointerUp:[^\n]*endTennisHold\(true\)/.test(ui),'lifting the finger strikes');

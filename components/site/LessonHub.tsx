@@ -21,7 +21,7 @@ export function QA({id,title,faq}:{id:string;title:string;faq:readonly {q:string
 }
 
 export function MoreToLearn({except}:{except?:string}){
- const links=[...HUBS.filter(h=>h.path!==except).map(h=>({path:h.path,name:h.h1})),...GUIDE_HUBS.map(g=>({path:g.path,name:g.name[0].toUpperCase()+g.name.slice(1)})),/* guide clusters (lib/site/guides.ts) */...TOOL_HUBS.map(t=>({path:t.path,name:t.name[0].toUpperCase()+t.name.slice(1)})),/* coach tools (lib/site/tools/registry.ts) */{path:LESSONS_INDEX,name:'All football lessons'},{path:SAFE_GUIDE.path,name:'For parents: a safe football game'}].filter(l=>l.path!==except);
+ const links=[...HUBS.filter(h=>h.path!==except).map(h=>({path:h.path,name:h.h1})),...GUIDE_HUBS.map(g=>({path:g.path,name:g.name[0].toUpperCase()+g.name.slice(1)})),/* guide clusters (lib/site/guides.ts) */...TOOL_HUBS.map(t=>({path:t.path,name:t.name[0].toUpperCase()+t.name.slice(1)})),/* coach tools (lib/site/tools/registry.ts) */{path:LESSONS_INDEX,name:'All football lessons'},{path:'/games',name:'Free soccer games for kids'},/* the arcade games' search pages (lib/site/games.ts) */{path:SAFE_GUIDE.path,name:'For parents: a safe football game'}].filter(l=>l.path!==except);
  return <section className={styles.section} aria-labelledby="more"><h2 className={styles.h2} id="more">More to learn</h2>
   <ul className={styles.list}>{links.map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span></a></li>)}</ul>
  </section>;

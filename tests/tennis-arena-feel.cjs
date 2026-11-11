@@ -32,7 +32,9 @@ function setup(mobile,reduced=false){const scene=new T.Scene(),bursts=[];const s
  const s=game.createTennis(47,1),cues=[];const feel=feelMod.createTennisFeel(stage,s,c=>cues.push(c));return{scene,stage,s,feel,cues,bursts};}
 const desk=setup(false),phone=setup(true);
 const count=(scene,name)=>{let n=0;scene.traverse(o=>{if(o.name===name)n++;});return n;};
-for(const name of['tennis-court-paint','tennis-floodlights','tennis-pool-you','tennis-pool-rival','tennis-confetti'])assert.equal(count(desk.scene,name),1,name);
+for(const name of['tennis-pool-you','tennis-pool-rival','tennis-confetti'])assert.equal(count(desk.scene,name),1,name);assert.equal(count(desk.scene,'tennis-floodlights'),0,'comic house style (Nov 10 2026): no floodlight glow quad; the evening lamp pools are part of the comic shading (tennisWorld.ts)');
+// Final polish (Nov 10 2026): the hidden 'tennis-court-paint' quad list is gone; the marks are pinned on the real court sheet (tennisWorld paints tennisCourtMarks() into 'tennis-court-surface').
+assert.equal(count(desk.scene,'tennis-court-paint'),0,'no hidden paint mesh');{const worldSrc=fs.readFileSync(path.join(root,'lib/arcade/tennisWorld.ts'),'utf8');assert(/court\.name='tennis-court-surface'/.test(worldSrc),'the court sheet is a named mesh');assert(/\.\.\.tennisCourtMarks\(\)\.map\(m=>\[\.\.\.m\]\)/.test(worldSrc),'the court sheet paints the service lines and centre marks from tennisCourtMarks()');assert(/function paintCourt\(/.test(worldSrc)&&/paintCourt\(courtCanvas,v,ppm,CW,CL\);courtTex\.needsUpdate=true/.test(worldSrc),'the sheet is repainted once per tour stop');}
 for(const name of['tennis-crowd','tennis-crowd-heads','tennis-stands'])assert.equal(count(desk.scene,name)+count(phone.scene,name),0,`${name}: no crowd on desktop or phone`);
 let meshes=0;phone.scene.traverse(o=>{if(o.isMesh)meshes++;});assert(meshes<=12,`phone arena adds few meshes (${meshes})`);
 
@@ -71,7 +73,7 @@ assert.equal(calmMax,0,'reduced motion: no bounce');
 calm.s.score.you=1;calm.s.pointsPlayed++;calm.s.pointWinner='you';calm.s.phase='point';calm.feel.sync(1/30,0);assert.equal(calm.scene.getObjectByName('tennis-confetti').visible,false,'reduced motion: no confetti');
 
 // Dispose removes every arena mesh.
-desk.feel.dispose();for(const name of['tennis-court-paint','tennis-floodlights','tennis-pool-you','tennis-confetti','tennis-crowd','tennis-stands'])assert.equal(count(desk.scene,name),0,`${name} removed`);
+desk.feel.dispose();for(const name of['tennis-floodlights','tennis-pool-you','tennis-confetti','tennis-crowd','tennis-stands'])assert.equal(count(desk.scene,name),0,`${name} removed`);
 
 // 3. Sound cues: each new cue schedules voices on the game's context, stays under the voice cap, frees every node.
 let live=0,made=0;const param=()=>({value:0,setValueAtTime(){},linearRampToValueAtTime(){},exponentialRampToValueAtTime(){}});

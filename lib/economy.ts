@@ -161,10 +161,10 @@ export const FORAGE_DAILY_CAP=8;
  *  Oct 14 2026: 2 + 4 (max 14) → 1 + 3 (max 8). A round is a 90-second shooting game, so it pays like an arcade round. */
 export const SUMMIT_KICK_COINS={perHoop:1,perfect:3} as const;
 
-/** Arcade (lib/arcade/arcadeWalletCore.ts). Plays stay cheap: 3 coins (Pass Puzzles free). Payout caps per round; these are also
+/** Arcade (lib/arcade/arcadeWalletCore.ts). Every arcade play is free (owner, 11 Nov 2026: "make all arcade games free"; was 3 coins). Payout caps per round; these are also
  *  the wallet's save clamps, so NEVER lower them (raise only). The Training meter is what limits a day of arcade earning. */
-export const ARCADE_PLAY_COST=3;
-export const ARCADE_COIN_CAPS={runner:12,pinball:15,tennis:18,live:20,puzzle:8,island:20,learn:LEARN_RUN_CAP} as const;
+export const ARCADE_PLAY_COST=0;
+export const ARCADE_COIN_CAPS={runner:12,pinball:15,tennis:18,live:20,puzzle:8,kitrush:12,snake:12,island:20,learn:LEARN_RUN_CAP} as const;
 export const PUZZLE_FIRST_SOLVE_COINS=5;
 
 /** Card trade-ins at Rosa's stand (lib/town/market/cardSelling.ts), metered. */

@@ -36,9 +36,9 @@ assert(curled>5,`the spring king bananas its drives (${curled})`);
 
 // 5. Best of 3: court 9 plays sets to 4; the match ends when one side wins 2 sets; the score resets between sets.
 const cup=t.createTennis(47,9);t.beginTennis(cup);let resets=0,last=0;
-for(let i=0;i<600*120&&cup.phase!=='over';i++){if(cup.phase==='serve')t.requestTennisKick(cup);if(cup.phase==='rally'&&cup.ball.last==='rival'){const l=t.tennisLanding(cup);t.setTennisTarget(cup,l.x,l.y);t.requestTennisKick(cup);}
+for(let i=0;i<600*120&&!cup.matchEvents;i++){if(cup.phase==='serve')t.requestTennisKick(cup);if(cup.phase==='rally'&&cup.ball.last==='rival'){const l=t.tennisLanding(cup);t.setTennisTarget(cup,l.x,l.y);t.requestTennisKick(cup);}
  t.tickTennis(cup,1/120);const sum=cup.score.you+cup.score.rival;if(sum<last)resets++;last=sum;}
-assert.equal(cup.phase,'over','the cup finishes');const winner=cup.winner;assert.equal(cup.sets[winner],2,'two sets win the cup');assert(cup.setEvents>=1&&resets>=1,'a set ends and the score resets');
+assert.equal(cup.matchEvents,1,'the cup finishes (endless play: the match ends, the run goes on)');const winner=cup.matchWinner;assert.equal(cup.sets[winner],2,'two sets win the cup');assert(cup.setEvents>=1&&resets>=1,'a set ends and the score resets');
 assert(cup.pointsPlayed>=8&&cup.pointsPlayed<=21);
 // Match point is set-aware; stars: the 3rd star on the cup is a win without dropping a set.
 const fm=load('lib/arcade/tennisFeel.ts');

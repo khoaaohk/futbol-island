@@ -1,0 +1,83 @@
+/* Breakaway Run HUD skin. Owned by the Breakaway Run builder.
+ * The class lands on the game root next to data-game="runner", so every rule here is scoped to this game:
+ *   .skin [data-...]{...}  or  .skin :global(.someSharedClass){...}
+ * Shared chrome (back button, pause card, results, top bar) reads CSS custom properties: prefer setting those here over
+ * overriding shared rules. Keep the back-to-arcade button as it is (the one common element across games). */
+.skin{--arcade-skin:runner;--rk-ink:#231a2e;--rk-paper:#fff3d6;--rk-sun:#ffc83a;--rk-red:#f0452e;--rk-teal:#19b5a5;background:#ffd386}
+/* Score: a tilted caption box with hand-cut numerals (Nov 10 2026, docs/arcade-aaa/runner-direction.md). */
+.skin [data-arcade-pill]{border:3.5px solid var(--rk-ink)!important;border-radius:0!important;background:var(--rk-paper)!important;color:var(--rk-ink)!important;box-shadow:4px 4px 0 var(--rk-ink)!important;transform:rotate(-1.5deg);padding:2px 14px!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.skin [data-arcade-pill] b{color:var(--rk-ink)!important;font-family:IslandBrush,"Arial Black",sans-serif!important;font-weight:400!important;text-shadow:none!important}
+.skin [data-arcade-pill] span{color:var(--rk-red)!important;font:800 11px/1 system-ui,sans-serif!important;letter-spacing:.02em!important;text-transform:none!important}
+.skin [data-arcade-pause]{border:3.5px solid var(--rk-ink)!important;border-radius:50%!important;background:var(--rk-paper)!important;color:var(--rk-ink)!important;box-shadow:4px 4px 0 var(--rk-ink)!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.skin [data-arcade-pause]:active{transform:translate(4px,4px);box-shadow:0 0 0 var(--rk-ink)!important}
+.skin canvas:focus-visible{outline:4px solid var(--rk-ink);outline-offset:-4px}
+
+/* The shared card overlay dims the stage with a dark scrim; the comic title card sits on the live coast instead (its own light scrim). */
+.skin div:has(>[data-runner-menu]){background:transparent!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+
+/* ===== Shared overlays as a printed comic page (overlay pass, Nov 10 2026) =====
+ * The pause card, leaderboards and high-score entry are shared components (components/arcade/*), drawn here through their data
+ * hooks: paper, ink border, square corners, a hard offset block shadow that collapses when pressed, one Ben-Day dot screen (the
+ * only gradient call is that dot tile), heavy condensed italic capitals for lettering. No blur, glow or pill. Buttons keep the UI
+ * sans at weight 800. The builder's caption-box pill and pause key above are kept; this adds the pause key's focus ring and its
+ * reduced-motion press. Appended; the builder's rules above are untouched. */
+.skin.skin.skin.skin [data-arcade-pause]:focus-visible{outline:3px solid var(--rk-teal);outline-offset:3px}
+@media (prefers-reduced-motion:reduce){.skin.skin.skin.skin [data-arcade-pause]:active{transform:none}}
+.skin{--rn-ink:#231a2e;--rn-paper:#fff3d6;--rn-sun:#ffc83a;--rn-orange:#ff8a3c;--rn-red:#f0452e;--rn-teal:#19b5a5;--rn-violet:#8f78b8;
+ --rn-letter:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--font-body),Arial,sans-serif;--rn-dots:radial-gradient(circle,#ffc24a 1.6px,transparent 1.9px) 0 0/8px 8px}
+.skin.skin.skin.skin [data-arcade-paused]{background:#231a2ecc}
+.skin.skin.skin.skin [data-arcade-pause-card]{gap:12px;padding:20px 20px 22px;border:3px solid var(--rn-ink);border-radius:0;background:var(--rn-paper);color:var(--rn-ink);box-shadow:7px 7px 0 var(--rn-ink);rotate:-.8deg}
+.skin.skin.skin.skin [data-arcade-pause-title]{font:italic 800 46px/.95 var(--rn-letter);letter-spacing:.01em;text-transform:uppercase;color:var(--rn-sun);-webkit-text-stroke:2px var(--rn-ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-arcade-pause-score]{align-self:center;padding:7px 14px 6px;border:2px solid var(--rn-ink);background:var(--rn-dots),#fff;color:var(--rn-ink);font:800 15px/1.2 var(--font-body),Arial,sans-serif;letter-spacing:.02em;rotate:1.2deg;box-shadow:3px 3px 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-arcade-pause-status]{color:var(--rn-red);font-weight:800}
+.skin.skin.skin.skin [data-arcade-resume]{border:3px solid var(--rn-ink);border-radius:0;background:var(--rn-sun);color:var(--rn-ink);box-shadow:4px 4px 0 var(--rn-ink);font:800 19px/1.2 var(--font-body),Arial,sans-serif;margin:4px 4px 4px 0}
+.skin.skin.skin.skin [data-arcade-resume]:active{translate:4px 4px;box-shadow:0 0 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-arcade-pause-row]{gap:10px;padding-right:3px}
+.skin.skin.skin.skin :is([data-arcade-exit],[data-arcade-restart],[data-arcade-pause-extra]){border:2px solid var(--rn-ink);border-radius:0;background:#fff;color:var(--rn-ink);box-shadow:3px 3px 0 var(--rn-ink);font:800 14px/1 var(--font-body),Arial,sans-serif}
+.skin.skin.skin.skin :is([data-arcade-exit],[data-arcade-restart],[data-arcade-pause-extra]):active{translate:3px 3px;box-shadow:0 0 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-arcade-pause-keys]{color:var(--rn-ink)}
+.skin.skin.skin.skin [data-arcade-pause-keys] kbd{border:2px solid var(--rn-ink);border-radius:0;background:#fff;color:var(--rn-ink)}
+.skin.skin.skin.skin [data-arcade-paused] button:focus-visible{outline:3px solid var(--rn-teal);outline-offset:3px}
+/* The score page. */
+.skin.skin.skin.skin [data-arcade-board]{border:3px solid var(--rn-ink);border-radius:0;background:var(--rn-paper);color:var(--rn-ink);box-shadow:8px 8px 0 var(--rn-ink);--btn-focus:3px solid var(--rn-teal)}
+.skin.skin.skin.skin [data-arcade-board]::backdrop{background:#231a2ecc}
+.skin.skin.skin.skin [data-board-head]{border-bottom:3px solid var(--rn-ink);background:radial-gradient(circle,var(--rn-orange) 1.6px,transparent 1.9px) 0 0/8px 8px,var(--rn-sun)}
+.skin.skin.skin.skin [data-board-title]{font:italic 800 34px/1 var(--rn-letter);text-transform:uppercase;color:#fff;-webkit-text-stroke:2px var(--rn-ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-board-body]{scrollbar-color:var(--rn-ink) transparent}
+.skin.skin.skin.skin [data-board-body] p{color:var(--rn-ink)}
+.skin.skin.skin.skin [data-board-body] :is([data-board-learn],[data-board-note],[data-board-small]){color:#51465f!important}
+.skin.skin.skin.skin [data-board-chip]{border:2px solid var(--rn-ink);border-radius:0;background:#fff;color:var(--rn-ink);box-shadow:3px 3px 0 var(--rn-ink);font:800 13px/1.1 var(--font-body),Arial,sans-serif}
+.skin.skin.skin.skin [data-board-chip][aria-selected=true]{background:var(--rn-ink);color:var(--rn-paper);box-shadow:3px 3px 0 var(--rn-orange)}
+.skin.skin.skin.skin :is([data-board-games],[data-board-tabs]){padding-right:4px;padding-bottom:12px}
+.skin.skin.skin.skin [data-board-tabs]{gap:9px;padding-bottom:4px}
+.skin.skin.skin.skin [data-board-rows]{padding-right:4px}
+.skin.skin.skin.skin [data-board-rows] li{grid-template-columns:44px 30px 1fr auto;margin:0 0 8px;padding:0 12px 0 0;border:2px solid var(--rn-ink);border-radius:0;background:#fff;box-shadow:none;animation:none}
+.skin.skin.skin.skin [data-board-rank]{align-self:stretch;display:grid;place-items:center;background:var(--rn-ink);color:var(--rn-paper);font:italic 800 19px/1 var(--rn-letter)}
+.skin.skin.skin.skin [data-board-rows] li[data-rank="1"]{background:var(--rn-dots),#fff;box-shadow:4px 4px 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-board-rows] li[data-rank="1"] [data-board-rank]{background:var(--rn-sun);color:var(--rn-ink);border-right:2px solid var(--rn-ink)}
+.skin.skin.skin.skin [data-board-who]{font:italic 800 25px/1 var(--rn-letter);letter-spacing:.12em;color:var(--rn-ink)}
+.skin.skin.skin.skin [data-board-pts]{font:italic 800 22px/1 var(--rn-letter);color:var(--rn-ink);font-variant-numeric:tabular-nums}
+.skin.skin.skin.skin [data-board-rows] li[data-mine]{background:#c9f1ea;box-shadow:none}
+.skin.skin.skin.skin [data-board-rows] li[data-new]{border:2px solid var(--rn-ink);background:var(--rn-sun);box-shadow:4px 4px 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-board-rows] li[data-new] :is([data-board-who],[data-board-pts]){color:var(--rn-ink)}
+.skin.skin.skin.skin [data-board-you]{padding:3px 7px 2px;border-radius:0;background:var(--rn-red);color:#fff;font:800 11px/1.2 var(--font-body),Arial,sans-serif;rotate:-6deg}
+.skin.skin.skin.skin [data-board-body] p[data-board-empty]{padding:22px 16px;border:2px solid var(--rn-ink);border-radius:0;background:#fff;color:var(--rn-ink);font-weight:800}
+.skin.skin.skin.skin [data-board-body] [data-board-cheer]{border:3px solid var(--rn-ink);border-radius:0;background:var(--rn-sun);color:var(--rn-ink)!important;font:italic 800 24px/1.05 var(--rn-letter)!important;text-transform:uppercase;box-shadow:4px 4px 0 var(--rn-ink);rotate:-1deg;margin-right:4px!important}
+.skin.skin.skin.skin [data-hs-lead] strong{font:italic 800 68px/1 var(--rn-letter);color:var(--rn-sun);-webkit-text-stroke:2.5px var(--rn-ink);paint-order:stroke fill;text-shadow:4px 4px 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-hs-lead] span{color:var(--rn-ink)}
+.skin.skin.skin.skin [data-hs-lead] em{color:var(--rn-red);font-weight:800}
+.skin.skin.skin.skin [data-hs-label]{color:var(--rn-ink)}
+.skin.skin.skin.skin [data-hs-step]{border:2px solid var(--rn-ink);border-radius:0;background:#fff;color:var(--rn-ink);box-shadow:3px 3px 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-hs-step]:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-wheel]{border:3px solid var(--rn-ink);border-radius:0;background:#fff;color:var(--rn-ink);font:italic 800 58px/1 var(--rn-letter);text-shadow:none;box-shadow:none}
+.skin.skin.skin.skin [data-wheel][aria-current=true]{background:var(--rn-dots),var(--rn-paper);box-shadow:5px 5px 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-hs-icon]{border:2px solid var(--rn-ink);border-radius:0;background:#fff;box-shadow:none}
+.skin.skin.skin.skin [data-hs-icon][aria-pressed=true]{background:var(--rn-sun);box-shadow:3px 3px 0 var(--rn-ink)}
+.skin.skin.skin.skin [data-hs-icon] small{color:var(--rn-ink)}
+.skin.skin.skin.skin [data-board-actions]{padding-right:5px}
+.skin.skin.skin.skin [data-board-btn]{border:3px solid var(--rn-ink);border-radius:0;color:var(--rn-ink);box-shadow:4px 4px 0 var(--rn-ink);font:800 16px/1.2 var(--font-body),Arial,sans-serif}
+.skin.skin.skin.skin [data-board-btn=primary]{background:var(--rn-sun)}
+.skin.skin.skin.skin [data-board-btn=secondary]{background:#fff}
+.skin.skin.skin.skin [data-board-btn]:not(:disabled):active{translate:4px 4px;box-shadow:0 0 0 var(--rn-ink)}
+@media (max-width:600px){.skin.skin.skin.skin [data-arcade-board]{box-shadow:none}}
+@media (prefers-reduced-motion:reduce){.skin.skin.skin.skin :is([data-arcade-pause-card],[data-arcade-pause-score],[data-board-you],[data-board-cheer]){rotate:none}.skin.skin.skin.skin :is([data-arcade-resume],[data-arcade-exit],[data-arcade-restart],[data-arcade-pause-extra],[data-board-btn],[data-hs-step]):active{translate:none;transform:none}}

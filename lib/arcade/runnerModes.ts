@@ -1,5 +1,6 @@
 import {setRouteProfile,type TerrainId} from '../../components/games/runnerRoute';
 import {localPlayDay} from '../town/dailyPlay';
+import {RUNNER_SCORE_MAX} from './runnerEndless';
 
 /**
  * Breakaway Run routes (round 3, Oct 26 2026): a clear difficulty ladder.
@@ -75,7 +76,7 @@ let selected:RunnerModeId='classic';
 export function selectRunnerMode(id:RunnerModeId){selected=id in RUNNER_MODES?id:'classic';applyRunnerRoute(selected);}
 export const selectedRunnerMode=()=>RUNNER_MODES[selected];
 /** Route shape for a mode (hills, bends, finish, terrain zones). */
-export function applyRunnerRoute(id:RunnerModeId){const m=RUNNER_MODES[id];setRouteProfile({rise:m.rise,turn:m.turn,finish:m.finish,salt:id==='daily'?runnerDailySalt(runnerDailyDay()):SALT[id],stage:m.startLevel-1,terrains:m.terrains});}
+export function applyRunnerRoute(id:RunnerModeId){const m=RUNNER_MODES[id];setRouteProfile({rise:m.rise,turn:m.turn,finish:m.finish,lap:m.finish,salt:id==='daily'?runnerDailySalt(runnerDailyDay()):SALT[id],stage:m.startLevel-1,terrains:m.terrains});}
 
 /* ---- Daily Run (Nov 10 2026): one seeded course per local play day, the same for everyone that day ---- */
 let dailyClock:()=>number=()=>Date.now();
@@ -92,7 +93,7 @@ export type RunnerDailySave={day:string;counted:boolean;best:number;runs:number}
 const DAILY_KEY='fi2-runner-daily-v1';
 export function readRunnerDaily(day=runnerDailyDay()):RunnerDailySave{
  try{const p=JSON.parse(typeof localStorage!=='undefined'?localStorage.getItem(DAILY_KEY)??'null':'null');
-  if(p&&p.day===day)return {day,counted:p.counted===true,best:Math.max(0,Math.min(400_000,Math.floor(Number(p.best)||0))),runs:Math.max(0,Math.floor(Number(p.runs)||0))};}catch{/* storage optional */}
+  if(p&&p.day===day)return {day,counted:p.counted===true,best:Math.max(0,Math.min(RUNNER_SCORE_MAX,Math.floor(Number(p.best)||0))),runs:Math.max(0,Math.floor(Number(p.runs)||0))};}catch{/* storage optional */}
  return {day,counted:false,best:0,runs:0};}
 function saveRunnerDaily(v:RunnerDailySave){try{localStorage.setItem(DAILY_KEY,JSON.stringify(v));}catch{/* storage optional */}}
 /**
@@ -100,7 +101,7 @@ function saveRunnerDaily(v:RunnerDailySave){try{localStorage.setItem(DAILY_KEY,J
  * (false: no board entry, still coins and a personal best). Device-local, like every arcade best (no accounts).
  */
 export function claimRunnerDailyRun(day:string,score:number){const v=readRunnerDaily(day),first=!v.counted;
- saveRunnerDaily({day,counted:true,best:Math.max(v.best,Math.max(0,Math.min(400_000,Math.floor(score)))),runs:v.runs+1});return first;}
+ saveRunnerDaily({day,counted:true,best:Math.max(v.best,Math.max(0,Math.min(RUNNER_SCORE_MAX,Math.floor(score)))),runs:v.runs+1});return first;}
 
 /* ---- stars and unlocks: their own key, written only when a run ends ---- */
 /** `best` (Nov 8 2026): personal best per elite tier (their scores never touch the classic arcade record). Optional, so old saves read as-is. */
@@ -112,7 +113,7 @@ export function readRunnerRoutes():RunnerRouteSave{
  if(cache)return cache;let v=blank();
  try{const raw=typeof localStorage!=='undefined'?localStorage.getItem(KEY):null;if(raw){const p=JSON.parse(raw);
   if(p&&p.v===1){v={v:1,mode:p.mode in RUNNER_MODES?p.mode:'warmup',stars:{...v.stars},played:Math.max(0,Number(p.played)||0),best:{}};for(const id of [...RUNNER_MODE_ORDER,'daily'] as const)v.stars[id]=Math.max(0,Math.min(3,Math.floor(Number(p.stars?.[id])||0)));
-   for(const id of ['cup','legend'] as const){const b=Math.floor(Number(p.best?.[id])||0);if(b>0&&b<=400_000)v.best![id]=b;}}}}catch{/* storage optional */}
+   for(const id of ['cup','legend'] as const){const b=Math.floor(Number(p.best?.[id])||0);if(b>0&&b<=RUNNER_SCORE_MAX)v.best![id]=b;}}}}catch{/* storage optional */}
  return cache=v;
 }
 function saveRoutes(v:RunnerRouteSave){cache=v;try{localStorage.setItem(KEY,JSON.stringify(v));}catch{/* storage optional */}}
@@ -121,7 +122,7 @@ export function resetRunnerRoutes(v?:RunnerRouteSave){cache=v?{...v,stars:{...v.
 /** Personal best on an elite tier (0 = none yet); the Daily Run's is today's best. The four original routes use the arcade record. */
 export const runnerTierBest=(id:RunnerModeId)=>id==='daily'?readRunnerDaily().best:readRunnerRoutes().best?.[id]??0;
 /** Saves an elite tier's best; returns true when it is a new best. Called once per run end. */
-export function saveRunnerTierBest(id:RunnerModeId,score:number){if(id==='daily')return false;/* the Daily Run's best is saved by claimRunnerDailyRun */const v=readRunnerRoutes(),old=v.best?.[id]??0,n=Math.max(0,Math.min(400_000,Math.floor(score)));if(n<=old)return false;saveRoutes({...v,best:{...v.best,[id]:n}});return true;}
+export function saveRunnerTierBest(id:RunnerModeId,score:number){if(id==='daily')return false;/* the Daily Run's best is saved by claimRunnerDailyRun */const v=readRunnerRoutes(),old=v.best?.[id]??0,n=Math.max(0,Math.min(RUNNER_SCORE_MAX,Math.floor(score)));if(n<=old)return false;saveRoutes({...v,best:{...v.best,[id]:n}});return true;}
 /** Remember the route the player picked (the menu opens on it next time). */
 export function rememberRunnerMode(id:RunnerModeId){const v=readRunnerRoutes();if(v.mode!==id)saveRoutes({...v,mode:id});}
 /** Default for the menu: first-timers start on the Warm-up; players with a classic record keep the classic run. */
@@ -141,13 +142,13 @@ export function isRunnerModeOpen(id:RunnerModeId,recordStage:number){const s=rea
 export function runnerModeLockHint(id:RunnerModeId){return id==='night'?'Get 2 ★ on Warm-up or Breakaway':id==='storm'?'Get 2 ★ on Night Derby':id==='cup'?'Get 2 ★ on Storm Final':id==='legend'?'Get 2 ★ on Cup Final':id==='daily'?'Get 1 ★ on Warm-up or Breakaway':'';}
 
 /** Minimal shape read for stars (avoids an import cycle with runnerGame). */
-type RunResult={mode:string;finished:boolean;won:boolean;goals:number;level:number;hits:number;lives:number;distance?:number};
+type RunResult={mode:string;finished:boolean;won:boolean;goals:number;level:number;hits:number;lives:number;distance?:number;/** Endless play: rounds cleared with no heart lost (a run now always ends on a lost heart). */cleanClears?:number};
 /** Stars earned by one run (0..3 flags). */
 export function runnerRunStars(r:RunResult):[boolean,boolean,boolean]{
  const m=RUNNER_MODES[(r.mode in RUNNER_MODES?r.mode:'classic') as RunnerModeId];
  if(m.starRule){const d=r.distance??0;return[d>=m.starRule.far,r.goals>=m.starRule.goals,d>=m.starRule.farther];}
  if(!m.finish)return[r.level>=3,r.goals>=5,r.level>=6];
- return[r.finished,m.bossKeeper?r.won:r.goals>=2,r.finished&&r.hits===0];
+ return[r.finished,m.bossKeeper?r.won:r.goals>=2,r.finished&&(r.cleanClears!==undefined?r.cleanClears>0:r.hits===0)];
 }
 /** Save the best star count for a route; returns {stars this run, best, newly earned}. Called once per run end. */
 export function recordRunnerStars(r:RunResult){

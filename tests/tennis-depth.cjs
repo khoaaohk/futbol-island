@@ -66,8 +66,8 @@ assert.equal(Math.sign(t.tennisLanding(honest.s).x),Math.sign(honest.planX),'wit
 
 // 7. Target drill: the feeder serves 15 balls; hits are counted on the gold ring; stars by hits.
 const drill=t.createTennis(3,3);t.beginTennis(drill);assert.equal(drill.drillLeft,15);assert.equal(drill.server,'rival');
-for(let i=0;i<120*200&&drill.phase!=='over';i++){if(drill.phase==='rally'&&drill.ball.last==='rival'){const l=t.tennisSweetPoint(drill);t.setTennisTarget(drill,l.x,l.y+.15);if(t.canTennisKick(drill,'you')){const sh=t.tennisTargetShot(drill);t.requestTennisKick(drill,Math.max(-1,Math.min(1,drill.targetX/(3.7*(sh==='drop'?.7:1)))),sh);}}t.tickTennis(drill,1/120);}
-assert.equal(drill.phase,'over');assert.equal(drill.drillLeft,0);assert.equal(drill.score.you+drill.score.rival,15);
+for(let i=0;i<120*200&&!drill.matchEvents;i++){if(drill.phase==='rally'&&drill.ball.last==='rival'){const l=t.tennisSweetPoint(drill);t.setTennisTarget(drill,l.x,l.y+.15);if(t.canTennisKick(drill,'you')){const sh=t.tennisTargetShot(drill);t.requestTennisKick(drill,Math.max(-1,Math.min(1,drill.targetX/(3.7*(sh==='drop'?.7:1)))),sh);}}t.tickTennis(drill,1/120);}
+assert.equal(drill.matchEvents,1,'the drill ends its match (endless play: the run goes on)');assert.equal(drill.drillLeft,0);assert.equal(drill.score.you+drill.score.rival,15);
 assert(drill.drillHits>=t.TENNIS_DRILL.stars[0],`an aimed, patient drill passes (${drill.drillHits})`);assert.equal(drill.stars,t.TENNIS_DRILL.stars.filter(n=>drill.drillHits>=n).length);
 assert(t.TENNIS_TARGET_DEPTHS.every(y=>y<0),'targets sit on the rival court');
 

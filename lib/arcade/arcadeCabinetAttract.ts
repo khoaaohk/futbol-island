@@ -2,7 +2,7 @@ import * as T from 'three';
 import type {ArcadeCabinetId} from './arcadeCatalog';
 
 const INK='#152e38',CREAM='#fff0cd',GOLD='#efc060',CORAL='#ee927e',TEAL='#388d7d',BLUE='#83cce0';
-const TITLES:Record<ArcadeCabinetId,string>={runner:'BREAKAWAY',tennis:'FUTBOL TENNIS',pinball:'FUTBOL PINBALL',puzzle:'PASS PUZZLES',live:'ISLAND STRIKERS'};
+const TITLES:Record<ArcadeCabinetId,string>={runner:'BREAKAWAY',tennis:'FUTBOL TENNIS',pinball:'FUTBOL PINBALL',puzzle:'PASS PUZZLES',kitrush:'KIT RUSH',snake:'SQUAD SNAKE'};
 const DASH=[5,4],SOLID:number[]=[];
 const PINBALL_PATH=[128,153,69,103,110,65,186,90,150,139,119,101,153,43,128,25];
 const PUZZLE_PATH=[60,144,105,113,171,86,136,34];
@@ -51,11 +51,29 @@ export function createArcadeCabinetAttract(id:ArcadeCabinetId){
   const progress=clamp(p/.42);c.setLineDash(DASH);for(let i=0;i<3;i++){const q=clamp(progress*3-i);line(PUZZLE_PATH[i*2],PUZZLE_PATH[i*2+1],PUZZLE_PATH[i*2]+(PUZZLE_PATH[i*2+2]-PUZZLE_PATH[i*2])*q,PUZZLE_PATH[i*2+1]+(PUZZLE_PATH[i*2+3]-PUZZLE_PATH[i*2+1])*q,BLUE,3);}c.setLineDash(SOLID);
   const play=clamp((p-.45)/.43);pathBall(PUZZLE_PATH,play);football(ballX,ballY,4);if(p<.42){pathBall(PUZZLE_PATH,progress);ring(ballX,ballY,7,CREAM,2);}burst(136,34,clamp((p-.88)/.12));label(p<.45?'DRAW THE PASS INTO SPACE':p>.88?'TEAM GOAL!':'PASS · RECEIVE · FINISH',p<.45?BLUE:GOLD);
  }
+ // Kit Rush (Nov 10 2026): kit flies up out of the bag, a swipe cuts through the gold ones, the teal one is left alone.
+ function drawKitRush(t:number){
+  const p=(t%6)/6,up=(k:number,x:number,h:number)=>{const q=clamp((p-k)/.55);return{x,y:176-h*4*q*(1-q),on:q>0&&q<1};},cut=clamp((p-.42)/.16);
+  rect(0,18,256,84,BLUE);circle(190,88,34,GOLD);rect(0,100,256,74,TEAL);line(0,100,256,100,INK,3);rect(96,160,64,14,CORAL);
+  const a=up(.1,60,128),b=up(.14,128,150),d=up(.18,196,128),e=up(.16,96,96);
+  for(const [k,col] of [[a,GOLD],[b,GOLD],[d,GOLD],[e,BLUE]] as const){if(!k.on)continue;const struck=col===GOLD&&cut>=1&&p<.7;if(struck){circle(k.x-7,k.y+4,7,col);circle(k.x+7,k.y-4,7,col);}else{circle(k.x,k.y,11,INK);circle(k.x,k.y,9,col);}}
+  if(cut>0&&p<.7)line(40,a.y+6,40+176*cut,d.y-6,CREAM,4);if(p>.58&&p<.9)burst(128,60,clamp((p-.58)/.2));
+  label(p<.3?'KNOW YOUR TEAM':p<.58?'SCAN, THEN SWIPE':p<.9?'HAT-TRICK!':'LEAVE THEIR KIT',p>.58&&p<.9?GOLD:CREAM);
+ }
+ // Squad Snake (Nov 10 2026): the captain's line winds round the pitch in position colours (keeper, defenders, midfielders, forwards).
+ function drawSnake(t:number){
+  const p=(t%8)/8,n=2+Math.floor(clamp(p/.8)*10),head=p*46;rect(0,18,256,156,TEAL);for(let y=18;y<174;y+=26)rect(0,y,256,13,'#3f9a8a');line(8,24,248,24,CREAM,2);line(8,168,248,168,CREAM,2);line(8,24,8,168,CREAM,2);line(248,24,248,168,CREAM,2);ring(128,96,22,CREAM,2);
+  // a rounded-rectangle lap: each player sits a fixed distance behind the one in front
+  const at=(d:number)=>{const L=440,q=((d%L)+L)%L;return q<140?[58+q,52]:q<220?[198,52+(q-140)]:q<360?[198-(q-220),132]:[58,132-(q-360)];};
+  for(let i=n-1;i>=0;i--){const [x,y]=at(head*9.5-i*17),col=i===0?CREAM:i===1?CORAL:i<6?BLUE:i<10?GOLD:'#f0452e';circle(x,y+1,8.5,INK);circle(x,y,7,col);}
+  if(p>.8)burst(128,96,clamp((p-.8)/.2));
+  label(p<.25?'CALL YOUR KEEPER FIRST':p<.55?'DEFENDERS, THEN MIDFIELD':p<.8?'FORWARDS LAST':'FULL SQUAD! 4-4-2',p>.8?GOLD:CREAM);
+ }
  function drawStrikers(t:number){
   const p=(t%7)/7;pitch();const run=ease((p-.33)/.3);bean(67,142,GOLD);bean(155+18*run,124-52*run,GOLD);bean(181,111,CORAL,-.9*ease((p-.35)/.12),0,ease((p-.35)/.12));bean(93,74,CORAL);bean(128+Math.sin(t*2)*15,45,CORAL);bean(48,86,GOLD);
   pathBall(STRIKER_PATH,clamp(p/.85));for(let n=3;n>0;n--)circle(ballX+n*2,ballY+n*3,1.5,GOLD);football(ballX,ballY,4);burst(124,31,clamp((p-.85)/.15));label(p<.3?'PASS TO YOUR TEAMMATE':p<.62?'MOVE BEYOND THE TACKLE':p<.85?'PLACE THE FINISH':'GOAL!',p>.85?GOLD:CREAM);
  }
- function draw(time:number){c.setTransform(1,0,0,1,0,0);rect(0,0,256,192,INK);c.lineCap='round';c.fillStyle=CREAM;c.font='bold 12px sans-serif';c.textAlign='center';c.fillText(TITLES[id],128,14);if(id==='runner')drawRunner(time);else if(id==='tennis')drawTennis(time);else if(id==='pinball')drawPinball(time);else if(id==='puzzle')drawPuzzle(time);else drawStrikers(time);texture.needsUpdate=true;frames++;}
+ function draw(time:number){c.setTransform(1,0,0,1,0,0);rect(0,0,256,192,INK);c.lineCap='round';c.fillStyle=CREAM;c.font='bold 12px sans-serif';c.textAlign='center';c.fillText(TITLES[id],128,14);if(id==='runner')drawRunner(time);else if(id==='tennis')drawTennis(time);else if(id==='pinball')drawPinball(time);else if(id==='puzzle')drawPuzzle(time);else if(id==='kitrush')drawKitRush(time);else if(id==='snake')drawSnake(time);else drawStrikers(time);texture.needsUpdate=true;frames++;}
  draw(id==='tennis'?2.65:id==='runner'?4.7:id==='puzzle'?3.2:2.7);
  return{texture,get frames(){return frames;},update(_dt:number,time:number,active:boolean,reduced:boolean){if(disposed||!active)return;if(reduced){if(!lastReduced){draw(id==='tennis'?2.65:id==='runner'?4.7:id==='puzzle'?3.2:2.7);lastReduced=true;}return;}lastReduced=false;const slot=Math.floor(time*8);if(slot===lastSlot)return;lastSlot=slot;draw(time);},dispose(){if(disposed)return;disposed=true;texture.dispose();canvas.width=canvas.height=1;}};
 }

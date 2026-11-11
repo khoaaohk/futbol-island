@@ -5,34 +5,104 @@
 .movement.movement{position:absolute;left:calc(var(--arcade-edge-x) + env(safe-area-inset-left,0px));right:auto;bottom:var(--bottom);width:var(--stick);height:var(--stick);margin:0;pointer-events:none}
 .movement :global(.joystick){width:var(--stick);height:var(--stick);pointer-events:none;touch-action:none}
 .movement :global(.joystick)>span{width:62%;height:62%}
-.movement :global(.joystick):not([data-active=true]){opacity:.55}
+.movement :global(.joystick):not([data-active=true]){opacity:.78}
 .movement :global(.joystick)[data-active=true]{opacity:1}
-.movement :global(.joystick)[data-coach]{opacity:1;border-color:#ffe36b;box-shadow:0 0 0 4px #fff2cd,0 0 22px #ffe36b}
+/* The stick as a printed control (pass 2): an inked ring with a paper inner line, a dot-screen face with the two lane arrows printed on
+   it, and a paper knob stamped with the ball's patch. Hard offset shadows only; same size and hit area as before. */
+.movement :global(.joystick){border:3.5px solid #231a2e;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M9 50 22 39v22zM91 50 78 39v22z' fill='%23231a2e' stroke='%23fff3d6' stroke-width='1.6' stroke-linejoin='round'/%3E%3C/svg%3E") center/100% 100% no-repeat,radial-gradient(circle,#231a2e66 1.2px,transparent 1.5px) 0 0/7px 7px,#fff3d680;box-shadow:inset 0 0 0 3.5px #fff3d6e6,inset 0 0 0 6px #231a2e,4px 5px 0 #231a2ecc}
+.movement :global(.joystick)>span{opacity:1;background:#fff3d6 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 27 73 44 64 71H36L27 44z' fill='%23231a2e'/%3E%3Cpath d='M50 27V8M73 44 91 38M64 71 75 87M36 71 25 87M27 44 9 38' stroke='%23231a2e' stroke-width='5' fill='none'/%3E%3C/svg%3E") center/78% no-repeat!important;background-blend-mode:normal;border:3.5px solid #231a2e!important;box-shadow:3px 4px 0 #231a2e!important;overflow:hidden}
+.movement :global(.joystick)[data-active=true]>span{background-color:#ffc83a!important;box-shadow:1px 2px 0 #231a2e!important}
+.movement :global(.joystick)[data-coach]{opacity:1;border-color:#231a2e;background-color:#ffc83acc}
 .cluster{position:absolute;right:calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px));bottom:var(--bottom);width:var(--cw);height:var(--ch);pointer-events:none;touch-action:none}
-.btn.btn{--d:var(--arcade-btn);--x:0px;--y:0px;position:absolute;left:calc(var(--cw) - 46px + var(--x) - var(--d) / 2);top:calc(var(--ch) - 46px + var(--y) - var(--d) / 2);
- box-sizing:border-box;display:grid;place-items:center;align-content:center;gap:0;width:var(--d);min-width:0;height:var(--d);min-height:0;margin:0;padding:3px;border:3px solid #fff2d3;border-radius:50%;
- font:800 13px/1.05 system-ui,sans-serif;letter-spacing:.01em;color:#e8ffff;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;
- box-shadow:0 4px 0 var(--base),0 0 12px #4debd52e;background:var(--paper);transition:transform .07s ease,box-shadow .07s ease}
-.btn.btn:active{transform:translateY(3px) scale(.96);filter:brightness(1.25);box-shadow:0 1px 0 var(--base),0 0 18px #81fbed55}
-.btn.btn b{display:block;font-size:22px;line-height:1;font-weight:900}
-.btn.btn span{display:block;font-size:12px}
-.shoot.shoot{--d:var(--arcade-btn-main);--paper:#402340;--base:#201428;color:#ffe5f6;border-color:#ff83d3;box-shadow:0 4px 0 var(--base),0 0 14px #ff62c22b}
-.shoot.shoot b{font-size:30px}
+.btn.btn{--d:var(--arcade-btn);--x:0px;--y:0px;--paper:#fff3d6;--ink:#231a2e;--drop:5px;position:absolute;left:calc(var(--cw) - 46px + var(--x) - var(--d) / 2);top:calc(var(--ch) - 46px + var(--y) - var(--d) / 2);
+ box-sizing:border-box;display:grid;place-items:center;align-content:center;gap:1px;width:var(--d);min-width:0;height:var(--d);min-height:0;margin:0;padding:3px;border:3.5px solid var(--ink);border-radius:50%;overflow:hidden;
+ font:800 12px/1.05 system-ui,sans-serif;letter-spacing:.01em;color:var(--ink);pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent;
+ /* Printed disc: flat paper face, ink ring, a hard offset shadow that collapses when pressed (no glow, no blur). */
+ background:var(--paper);box-shadow:var(--drop) var(--drop) 0 var(--ink);transition:transform .06s ease,box-shadow .06s ease,background-color .06s ease}
+.btn.btn:active{transform:translate(var(--drop),var(--drop));box-shadow:0 0 0 var(--ink);background:var(--hit,#ffc83a)}
+.btn.btn b{display:block;width:26px;height:26px;line-height:0}
+.btn.btn b svg{width:100%;height:100%;fill:var(--ink);stroke:var(--ink);stroke-width:1.2;stroke-linejoin:round}
+.btn.btn span{display:block;position:relative;font-size:12px}
+.shoot.shoot{--d:var(--arcade-btn-main);--paper:#ffc83a;--hit:#fff3d6;--drop:6px}
+.shoot.shoot b{position:relative;width:36px;height:36px}
+.shoot.shoot b svg circle{fill:#fff3d6;stroke-width:1.6}
 .shoot.shoot span{font-size:14px}
-.jump.jump{--d:var(--arcade-btn);--x:-8px;--y:-104px;--paper:#302744;--base:#101629;border-color:#bf9aff}
-.slide.slide{--d:var(--arcade-btn);--x:-110px;--y:6px;--paper:#21334b;--base:#101629;border-color:#8bcbff}
-.skill.skill{--d:var(--arcade-btn-sm);--x:-104px;--y:-94px;--paper:#193441;--base:#101629;border-color:#81fbed;font-size:11px}
+/* Charge: while Shoot is held the face fills from the bottom like a printed gauge (1.1 s = a full charge in the rules). */
+.gauge{position:absolute;inset:0;background:#f0452e;transform:translateY(101%);pointer-events:none}
+.shoot.shoot:active .gauge{animation:runnerGauge 1.1s linear .12s forwards}
+@keyframes runnerGauge{from{transform:translateY(101%)}to{transform:translateY(0)}}
+.jump.jump{--d:var(--arcade-btn);--x:-8px;--y:-104px;--paper:#fff3d6;--hit:#7fd9cf}
+.slide.slide{--d:var(--arcade-btn);--x:-110px;--y:6px;--paper:#fff3d6;--hit:#7fd9cf}
+.skill.skill{--d:var(--arcade-btn-sm);--x:-104px;--y:-94px;--paper:#f6e2c2;--hit:#7fd9cf;font-size:11px}
 .skill.skill span{font-size:11px;line-height:1.05;white-space:normal;overflow-wrap:normal;hyphens:manual;max-width:60px;text-align:center}
-.skill.skill[data-ready]{--paper:#fff1a8;--base:#b99b2f;color:#2a1d00;border-color:#ffe36b;box-shadow:0 5px 0 var(--base),0 0 0 4px #fff2cd80,0 0 16px #ffe36b}
-/* First-run coach: the one button to press glows (the coach line itself is gone while playing). */
-.btn.btn[data-coach]{--paper:#fff1a8;--base:#b99b2f;color:#2a1d00;border-color:#ffe36b}
-/* The one in-play text: a short GOAL! / Tackled! flash, centred under the top bar. */
-.flash{position:absolute;left:50%;top:calc(84px + env(safe-area-inset-top,0px));transform:translateX(-50%);margin:0;padding:8px 20px;border-radius:16px;background:#fff1a8;color:#2a1d00;
- font:900 22px/1 system-ui,sans-serif;letter-spacing:.04em;white-space:nowrap;box-shadow:0 4px 0 #b99b2f;pointer-events:none;animation:runnerFlash 1.3s ease-out both}
-@keyframes runnerFlash{0%{opacity:0;transform:translateX(-50%) scale(.7)}12%{opacity:1;transform:translateX(-50%) scale(1.08)}22%{transform:translateX(-50%) scale(1)}80%{opacity:1}100%{opacity:0}}
-@media (prefers-reduced-motion:reduce){.btn.btn{transition:none}.flash{animation:none}}
+.skill.skill[data-ready]{--paper:#19b5a5;color:#fff3d6;animation:runnerReady .5s steps(2,jump-none) infinite}
+@keyframes runnerReady{from{transform:rotate(-4deg)}to{transform:rotate(4deg)}}
+/* First-run coach: the one button to press turns sun yellow and rocks (the coach line itself is gone while playing). */
+.btn.btn[data-coach]{--paper:#ffc83a;animation:runnerReady .5s steps(2,jump-none) infinite}
+/* Page-margin strip: two tilted caption boxes under the top bar. Icons and numerals only. */
+.margin{position:absolute;left:calc(var(--arcade-edge-x) + env(safe-area-inset-left,0px));right:calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px));top:calc(var(--arcade-bar-clear) + env(safe-area-inset-top,0px) + 4px);display:flex;justify-content:space-between;align-items:flex-start;pointer-events:none}
+.margin p{display:flex;align-items:center;gap:5px;margin:0;padding:4px 8px;border:3px solid #231a2e;background:#fff3d6;color:#231a2e;box-shadow:3px 3px 0 #231a2e;transform:rotate(-2deg)}
+.margin .run{transform:rotate(2deg);gap:8px;background:transparent;border:0;box-shadow:none;padding:0}
+.lives i{display:block;width:17px;height:17px}
+.lives i svg{width:100%;height:100%;fill:#fff3d6;stroke:#231a2e;stroke-width:2.6;stroke-linejoin:round}
+.lives i[data-on] svg{fill:#f0452e}
+.balls{display:flex;gap:3px;margin-left:5px;padding-left:7px;border-left:3px solid #231a2e}
+.balls u{width:9px;height:9px;border:2.5px solid #231a2e;border-radius:50%;background:transparent;box-sizing:border-box}
+.balls u[data-on]{background:#231a2e}
+.run b{padding:2px 9px 0;border:3px solid #231a2e;background:#fff3d6;box-shadow:3px 3px 0 #231a2e;font:400 22px/1.15 IslandBrush,"Arial Black",sans-serif;color:#231a2e;font-variant-numeric:tabular-nums}
+.run b[data-left]{background:#ffc83a}
+/* Endless play (Nov 10 2026): the round tag, an ink caption beside the distance box; it stamps in when a round is cleared. */
+.run i{align-self:center;padding:3px 6px 2px;background:#231a2e;color:#fff3d6;font:800 11px/1 system-ui,sans-serif;font-style:normal;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.run i[data-up]{animation:runnerStamp .28s cubic-bezier(.2,1.6,.4,1) both}
+.run b small{margin-left:3px;font:800 11px/1 system-ui,sans-serif}
+.run em{padding:1px 8px 0;border:3px solid #231a2e;background:#f0452e;color:#fff3d6;box-shadow:3px 3px 0 #231a2e;font:400 22px/1.15 IslandBrush,"Arial Black",sans-serif;font-style:normal;animation:runnerStamp .28s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes runnerStamp{from{transform:scale(2.2) rotate(-14deg);opacity:0}to{transform:scale(1) rotate(-4deg);opacity:1}}
+/* The strike splash: a freeze-frame panel (ink frame + burst rays) snaps over the picture and the word lands as lettering. */
+.panel{position:absolute;inset:0;border:10px solid #231a2e;box-sizing:border-box;pointer-events:none;overflow:hidden;animation:runnerPanel .95s steps(1,end) .14s both}
+.panel::before{content:"";position:absolute;left:50%;top:44%;width:240vmax;height:240vmax;margin:-120vmax 0 0 -120vmax;background:repeating-conic-gradient(from 0deg,#fff3d6 0 3deg,transparent 3deg 9deg);-webkit-mask:radial-gradient(circle,transparent 0 17vmax,#000 30vmax);mask:radial-gradient(circle,transparent 0 17vmax,#000 30vmax);opacity:.6;animation:runnerRays .95s linear .14s both}
+.panel::after{content:"";position:absolute;inset:0;background:#fff3d6;animation:runnerSnap .95s linear .14s both}
+@keyframes runnerPanel{0%{opacity:0}1%{opacity:1}85%{opacity:1}100%{opacity:0}}
+@keyframes runnerRays{from{transform:rotate(0) scale(1.25)}to{transform:rotate(7deg) scale(1)}}
+@keyframes runnerSnap{0%{opacity:.9}9%{opacity:0}100%{opacity:0}}
+.flash{position:absolute;left:50%;top:calc(84px + env(safe-area-inset-top,0px));transform:translateX(-50%) rotate(-3deg);margin:0;padding:6px 16px;border:3.5px solid #231a2e;background:#f0452e;color:#fff3d6;
+ font:italic 900 22px/1 "Arial Black",Impact,system-ui,sans-serif;letter-spacing:.01em;white-space:nowrap;box-shadow:4px 4px 0 #231a2e;pointer-events:none;animation:runnerFlash 1.3s ease-out both}
+.flash[data-kind=goal]{top:24%;padding:0;border:0;background:none;box-shadow:none;transform:translateX(-50%) rotate(-6deg);animation:runnerGoal 1.16s cubic-bezier(.2,1.5,.4,1) .14s both}
+.flash[data-kind=goal]::before{content:"";position:absolute;inset:-34% -16%;z-index:-1;background:#f0452e;clip-path:polygon(0 38%,9% 30%,4% 8%,19% 20%,27% 0,36% 17%,50% 2%,60% 16%,74% 0,80% 19%,97% 9%,91% 33%,100% 47%,92% 62%,99% 88%,82% 80%,74% 100%,63% 84%,49% 99%,39% 83%,25% 100%,20% 80%,3% 92%,9% 64%);filter:drop-shadow(5px 5px 0 #231a2e)}
+.flash[data-kind=goal] span{display:block;font-size:clamp(54px,15vh,96px);line-height:.9;letter-spacing:-.01em;color:#ffc83a;-webkit-text-stroke:9px #231a2e;paint-order:stroke fill;text-shadow:5px 6px 0 #231a2e}
+@keyframes runnerFlash{0%{opacity:0;transform:translateX(-50%) rotate(-3deg) scale(.7)}12%{opacity:1;transform:translateX(-50%) rotate(-3deg) scale(1.08)}22%{transform:translateX(-50%) rotate(-3deg) scale(1)}80%{opacity:1}100%{opacity:0}}
+@keyframes runnerGoal{0%{opacity:0;transform:translateX(-50%) rotate(-14deg) scale(2.6)}14%{opacity:1;transform:translateX(-50%) rotate(-6deg) scale(1)}82%{opacity:1;transform:translateX(-50%) rotate(-6deg) scale(1.04)}100%{opacity:0;transform:translateX(-50%) rotate(-6deg) scale(1.1)}}
+/* ---- pass 2: the page answers the state ---- */
+/* Strike beat: the picture freezes (runtime), an inset close-up of boot on ball slams in as its own panel, then the wide goal panel
+   (frame, rays, the word) lands .14 s later. Any touch skips the panels. */
+.inset{position:absolute;left:calc(5% + env(safe-area-inset-left,0px));top:24%;width:min(31vw,46vh);aspect-ratio:4/3;box-sizing:border-box;border:5px solid #231a2e;background:#19b5a5;box-shadow:7px 7px 0 #231a2e;overflow:hidden;pointer-events:none;transform:rotate(-5deg);animation:runnerInset 1.2s cubic-bezier(.2,1.4,.4,1) both}
+.inset svg{display:block;width:100%;height:100%}
+@keyframes runnerInset{0%{opacity:0;transform:rotate(-13deg) scale(2)}9%{opacity:1;transform:rotate(-5deg) scale(1)}80%{opacity:1;transform:rotate(-5deg) scale(1)}100%{opacity:0;transform:rotate(-8deg) translate(-40%,6%) scale(.9)}}
+/* Multiplier tiers: a coloured page frame with an ink keyline and a Ben-Day screen growing in from the corners (denser at x3); the
+   frame shakes once when a tier is gained (the 3D camera shakes with it). */
+.page{--tier:#19b5a5;--dot:2px;--cell:10px;--band:15%;position:absolute;inset:0;box-sizing:border-box;border:5px solid var(--tier);box-shadow:inset 0 0 0 3px #231a2e;pointer-events:none}
+.page::before,.page::after{content:"";position:absolute;top:27%;bottom:3px;width:var(--band);background:radial-gradient(circle,var(--tier) var(--dot),transparent calc(var(--dot) + .4px)) 0 0/var(--cell) var(--cell)}
+.page::before{left:3px;-webkit-mask:linear-gradient(to right,#000,transparent);mask:linear-gradient(to right,#000,transparent)}
+.page::after{right:3px;-webkit-mask:linear-gradient(to left,#000,transparent);mask:linear-gradient(to left,#000,transparent)}
+.page[data-runner-tier="3"]{--tier:#ffc83a;--dot:2.9px;--cell:9px;--band:24%;border-width:7px}
+.page[data-up]{animation:runnerTierUp .42s steps(5,jump-none) both}
+@keyframes runnerTierUp{0%{transform:translate(0,0) scale(1.05)}25%{transform:translate(-6px,4px) scale(1.03)}50%{transform:translate(5px,-4px) scale(1.02)}75%{transform:translate(-3px,2px)}100%{transform:none}}
+/* Lost heart: the panel cracks from the runner outwards (ink with a paper misprint edge), an ink blot and drops, a red print flash. */
+.crack{position:absolute;inset:0;pointer-events:none;overflow:hidden;animation:runnerCrack .8s linear both}
+.crack svg{display:block;width:100%;height:100%;filter:drop-shadow(2.5px 2.5px 0 #fff3d6)}
+.crack svg>path{fill:none;stroke:#231a2e;stroke-width:4.5px;stroke-linejoin:miter;vector-effect:non-scaling-stroke}
+.crack svg g{fill:#231a2e}
+.crack::before{content:"";position:absolute;inset:0;background:#f0452e;animation:runnerSnap .8s linear both}
+@keyframes runnerCrack{0%{opacity:1;transform:scale(1.07)}9%{transform:scale(1)}70%{opacity:1}100%{opacity:0;transform:scale(1)}}
+.lives i[data-lost] svg{animation:runnerHeartBreak .6s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes runnerHeartBreak{0%{transform:scale(2.2) rotate(-18deg);fill:#f0452e}60%{fill:#f0452e}100%{transform:none}}
+/* Near miss: two inked streaks whip across the lower panel. */
+.whoosh,.whoosh::after{position:absolute;left:-46%;top:61%;width:46%;height:13px;box-sizing:border-box;border:3px solid #231a2e;background:#fff3d6;clip-path:polygon(0 50%,72% 0,100% 50%,72% 100%);pointer-events:none}
+.whoosh{transform:rotate(-3deg);animation:runnerWhoosh .34s cubic-bezier(.3,.6,.4,1) both}
+.whoosh::after{content:"";left:-34%;top:26px;width:70%;height:8px;background:#19b5a5}
+@keyframes runnerWhoosh{0%{translate:0 0;opacity:1}85%{opacity:1}100%{translate:330vw 0;opacity:0}}
+@media (prefers-reduced-motion:reduce){.btn.btn,.btn.btn[data-coach],.skill.skill[data-ready]{transition:none;animation:none}.inset,.whoosh,.crack::before{display:none}.page[data-up],.lives i[data-lost] svg{animation:none}.crack{animation:runnerPanel .6s steps(1,end) both}.flash,.flash[data-kind=goal],.run em,.run i[data-up]{animation:none}.panel::before,.panel::after{display:none}.panel{animation:runnerPanel .95s steps(1,end) both}.shoot.shoot:active .gauge{animation-duration:1.1s}}
 /* Short landscape phones: header is slimmer, cluster scales down from the corner so it clears the top bar. */
-@media (max-height:520px){.flash{top:calc(62px + env(safe-area-inset-top,0px));font-size:18px;padding:6px 16px}}
+@media (max-height:520px){.flash{top:calc(62px + env(safe-area-inset-top,0px));font-size:18px;padding:6px 16px}.flash[data-kind=goal]{top:20%;padding:0}}
 @media (max-height:380px){.cluster{transform:scale(.86);transform-origin:100% 100%}}
 /* Mouse windows: keyboard only (A/D or ←/→ lanes, W/↑ jump, S/↓ slide, Space shoot, E skill); the pause card shows the keys. */
 /* Nov 10 2026 swipe layer: the track right of the stick zone, under the cluster (DOM order keeps the buttons on top). */

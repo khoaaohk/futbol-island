@@ -21,8 +21,8 @@ Mo.selectRunnerMode('night');
  R.setRunnerSeedSource(R.freshRunnerSeed);const seeds=new Set(Array.from({length:20},()=>R.createRunnerGame().seed));assert(seeds.size>=19,'fresh seeds differ run to run');
  for(const s of seeds)assert(Number.isInteger(s)&&s>=1000,'fresh seed is a positive integer');
  Mo.selectRunnerMode('classic');assert.equal(R.createRunnerGame().seed,47,'classic keeps its authored course');R.setRunnerSeedSource(null);
- assert(/setRunnerSeedSource\(freshRunnerSeed\)/.test(read('lib/arcade/arcadeGames.ts'))&&/createTennis\(freshRunnerSeed\(\)\)/.test(read('lib/arcade/arcadeGames.ts')),'the browser game installs fresh seeds (runner + tennis)');
- assert(/createRunnerGame\(kind==='runner'\?\{\}:\{idle:true\}\)/.test(read('lib/arcade/arcadeGames.ts')),'tennis and pinball sessions build an idle runner');}
+ assert(/setRunnerSeedSource\(freshRunnerSeed\)/.test(read('lib/arcade/games/runnerGame3d.ts'))&&/createTennis\(freshRunnerSeed\(\)\)/.test(read('lib/arcade/games/tennisGame.ts')),'the browser game installs fresh seeds (runner + tennis)');
+ assert(/createRunnerGame\(\{\}\)/.test(read('lib/arcade/games/runnerGame3d.ts'))&&/createRunnerGame\(\{idle:true\}\)/.test(read('lib/arcade/games/tennisGame.ts'))&&/createRunnerGame\(\{idle:true\}\)/.test(read('lib/arcade/games/pinballGame.ts')),'tennis and pinball sessions build an idle runner');}
 
 // 2. Daily Run seed and course.
 {const day=t=>{Mo.setRunnerDailyClock(()=>t);return Mo.runnerDailyDay();};
@@ -59,13 +59,13 @@ Mo.selectRunnerMode('night');
  for(const [id,b] of Object.entries(want)){assert.equal(Mo.runnerBoardFor(id),b,id);assert(L.isBoardGame(b),b+' is a board');assert(/^[a-z]{2,8}$/.test(b),'fits the session token pattern');}
  for(const id of ['warmup','classic','night','storm'])assert.equal(Mo.runnerKeepsOwnBest(id),false,id+' still writes the classic record');
  for(const g of ['runwarm','runnight','runstorm','rundaily']){const r=L.BOARD_RULES[g],base=L.BOARD_RULES.runner;
-  assert(r.max<base.max,g+': a tighter ceiling than the endless board');assert(r.perSecond<=base.perSecond&&r.base<=base.base&&r.minSeconds>=base.minSeconds,g+': never looser than runner');
+  assert.equal(r.max,base.max,g+': every route is endless now (Nov 10 2026), so it has the runner board\'s ceiling');assert(r.perSecond<=base.perSecond&&r.base<=base.base&&r.minSeconds>=base.minSeconds,g+': never looser than runner');
   const route=Object.values(Mo.RUNNER_MODES).find(m=>m.board===g);assert(r.max>=route.finish*100+25_000,g+': ceiling = length x 100 + 25000');}
  assert.deepEqual([L.BOARD_RULES.pinball.base,L.BOARD_RULES.pinball.perSecond,L.BOARD_RULES.live.base,L.BOARD_RULES.live.perSecond],[3000,1200,300,25],'today\'s pinball/strikers ceilings unchanged');
  assert.deepEqual([...L.BOARD_TIER_TABS.runner],['runwarm','runnight','runstorm','cupfinal','legend','rundaily']);
  const files=fs.readdirSync('supabase/migrations').filter(f=>/arcade_scores_game_check/.test(read('supabase/migrations/'+f))).sort(),last=files[files.length-1];
- assert.equal(last,'20261112_runner_route_boards.sql','the route boards migration runs last');const sql=read('supabase/migrations/'+last);
- for(const g of L.BOARD_GAMES)assert(sql.includes(`'${g}'`),'SQL allows '+g);assert(/OK, runner route boards installed/.test(sql));
+ assert.equal(last,'20261114_snake_boards.sql','the newest board file runs last (Nov 10 2026: Squad Snake boards, after the Kit Rush boards)');assert.equal(files[files.length-2],'20261113_kitrush_boards.sql','the Kit Rush boards migration runs right before it');assert.equal(files[files.length-3],'20261112_runner_route_boards.sql','and the route boards before that');const sql=read('supabase/migrations/'+last),routeSql=read('supabase/migrations/20261112_runner_route_boards.sql');
+ for(const g of L.BOARD_GAMES)assert(sql.includes(`'${g}'`),'SQL allows '+g);for(const g of ['runwarm','runnight','runstorm','rundaily'])assert(routeSql.includes(`'${g}'`),'route SQL allows '+g);assert(/OK, runner route boards installed/.test(routeSql));assert(/OK, Kit Rush boards installed/.test(read('supabase/migrations/20261113_kitrush_boards.sql')));assert(/OK, Squad Snake boards installed/.test(sql));
  assert(!/\bdrop table\b|\btruncate\b|\bdelete from\b/i.test(sql.replace(/--.*$/gm,'')),'additive');}
 
 console.log('runner daily + boards: fresh seeds, Daily Run course, one board run a day, route boards OK');

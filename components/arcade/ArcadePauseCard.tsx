@@ -14,17 +14,17 @@ export function ArcadePauseCard({game,score,onResume,onExit,onRestart,restartDis
  game:string;score?:string;onResume:()=>void;onExit:()=>void;onRestart?:()=>void;restartDisabled?:boolean;extra?:{label:string;onClick:()=>void};
  keys?:readonly ArcadeKey[];status?:string}){
  return <div className={styles.overlay} data-arcade-paused={game}>
-  <section className={styles.card} role="dialog" aria-modal="false" aria-label="Paused">
-   <h2 className={styles.title}>Paused</h2>
+  <section className={styles.card} role="dialog" aria-modal="false" aria-label="Paused" data-arcade-pause-card>
+   <h2 className={styles.title} data-arcade-pause-title>Paused</h2>
    {score&&<p className={styles.score} data-arcade-pause-score>{score}</p>}
-   {status&&<p className={styles.status} role="status">{status}</p>}
+   {status&&<p className={styles.status} role="status" data-arcade-pause-status>{status}</p>}
    <button type="button" className={styles.resume} onClick={onResume} data-arcade-resume>Resume</button>
-   <div className={styles.row}>
+   <div className={styles.row} data-arcade-pause-row>
     <button type="button" className={styles.small} onClick={onExit} data-arcade-exit>Arcade</button>
-    {extra&&<button type="button" className={styles.small} onClick={extra.onClick}>{extra.label}</button>}
+    {extra&&<button type="button" className={styles.small} onClick={extra.onClick} data-arcade-pause-extra>{extra.label}</button>}
     {onRestart&&<button type="button" className={styles.small} onClick={onRestart} disabled={restartDisabled} data-arcade-restart>Restart</button>}
    </div>
-   {keys&&keys.length>0&&<ul className={styles.keys} aria-label="Keyboard controls">{keys.map(([k,what])=><li key={k}><kbd>{k}</kbd>{what}</li>)}</ul>}
+   {keys&&keys.length>0&&<ul className={styles.keys} aria-label="Keyboard controls" data-arcade-pause-keys>{keys.map(([k,what])=><li key={k}><kbd>{k}</kbd>{what}</li>)}</ul>}
   </section>
  </div>;
 }

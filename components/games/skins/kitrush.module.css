@@ -1,0 +1,14 @@
+/* Kit Rush HUD skin. Owned by the Kit Rush builder (Nov 10 2026, docs/arcade-aaa/kitrush-direction.md).
+ * The class lands on the game root next to data-game="kitrush" together with the comic kit's classes
+ * (components/games/comic: `.comic` tokens + `.chrome`, which draws the shared top-bar pill and pause key, the pause card
+ * (data-arcade-pause-card), the boards (data-arcade-board, data-board-*) and the high-score entry (data-hs-*, data-wheel) as a
+ * comic page). This file only sets what is Kit Rush's own: the page colour behind the stage and the kit-colour accents.
+ * The back-to-arcade button stays as it is (the one common element across games). */
+.skin{--arcade-skin:kitrush;background:#ffcf7a}
+/* The score pill's word takes the ink (the kit colour lives on the banner and the page frame, never on small text). */
+.skin [data-arcade-pill] span{color:var(--cm-ink)!important}
+/* Paused: the scrim is the page's violet evening shadow, and the score strip shows the kit colour as a flat band. */
+.skin.skin.skin.skin [data-arcade-paused]{background:#231a2ed9}
+.skin.skin.skin.skin [data-arcade-pause-score]{border-left:10px solid var(--kr-team,var(--cm-sun))}
+.skin.skin.skin.skin [data-arcade-board]{max-height:min(92dvh,760px)}
+.skin canvas:focus-visible{outline:4px solid var(--cm-ink);outline-offset:-4px}

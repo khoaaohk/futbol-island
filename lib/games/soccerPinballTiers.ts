@@ -10,7 +10,7 @@
  *    (the 2v1 multiball save still plays). Points ×3.
  *
  * The multiplier applies to every point the sim scores (stepPinball multiplies each frame's gain), so the HUD always shows the
- * real board score. Same coins as any pinball run (3 coins entry, coins from goals and moves only): the economy is untouched.
+ * real board score. Same coins as any pinball run (free entry like every arcade play, coins from goals and moves only): the economy is untouched.
  */
 import type {BoardGame} from '../arcade/leaderboard';
 
@@ -43,8 +43,10 @@ export function pinballTiersOpen(ladderTop:number,p:PinballTierProgress){
 export const pinballStreakBadge=(streak:number)=>Number.isFinite(streak)&&streak>=2?`PERFECT ×${Math.min(5,Math.floor(streak))}`:'';
 
 /** Plain "why it ended" line for the full-time card. */
-export function pinballEndReason(s:{balls:number;fullTimeBonus:number},minute=''){
- if(s.balls<=0)return `Out of balls${minute?` at ${minute}`:''}. The last ball slipped past the flippers.`;
+/** Nov 10 2026 (endless play): a run ends only when the last ball is lost, so the first line is the one players see; from the
+ * second match on it names the level reached. The whistle line is kept for a state that still has balls (never shown by a run). */
+export function pinballEndReason(s:{balls:number;fullTimeBonus:number;match?:number},minute=''){
+ if(s.balls<=0)return `Out of balls${minute?` at ${minute}`:''}${(s.match??1)>1?` in match ${s.match}`:''}. The last ball slipped past the flippers.`;
  return `Full-time whistle! ${s.balls} ball${s.balls===1?'':'s'} kept${s.fullTimeBonus>0?`: +${s.fullTimeBonus.toLocaleString('en-US')}`:''}.`;
 }
 /** The full-time card's coach tip without the "why it ended" lead the HUD message starts with (the card shows that line itself). */
@@ -52,6 +54,8 @@ export function pinballTipOnly(message:string){const i=message.lastIndexOf(' · 
 
 /** Dead-ball watchdog: a ball that has barely moved for this long away from the flippers gets a fair little kick. */
 export const PINBALL_STALL_SPEED=28,PINBALL_STALL_TIME=2.2,PINBALL_STALL_KICK=300;
+/** Nov 10 2026: a ball that keeps some speed but never leaves a small circle (wedged, jittering) is kicked as well. */
+export const PINBALL_TRAP_RADIUS=7,PINBALL_TRAP_TIME=2.5;
 
 export type PinballTierProgress=Record<PinballTierId,{best:number;goals:number}>;
 const KEY='fi2-pinball-tiers-v1';

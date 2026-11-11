@@ -1,16 +1,17 @@
 'use client';
-import {BOARD_RULES,iconEmoji,type BoardGame,type BoardRow} from '@/lib/arcade/leaderboard';
+import {BOARD_RULES,type BoardGame,type BoardRow} from '@/lib/arcade/leaderboard';
+import {BoardIcon,boardIconLabel} from './BoardIcon';
 import styles from './Leaderboard.module.css';
 
 export type BoardTab='week'|'all'|'device';
 export const BOARD_TABS:{id:BoardTab;label:string}[]=[{id:'week',label:'Island · week'},{id:'all',label:'Island · all-time'},{id:'device',label:'This device'}];
 /** One board: rank, picture, three letters, score. `mine` rows get a YOU tag; `fresh` is the entry just posted. */
 export function BoardTable({game,rows,mine,fresh,empty}:{game:BoardGame;rows:(BoardRow&{key:string})[];mine?:(r:BoardRow&{key:string})=>boolean;fresh?:string|null;empty:string}){
- if(!rows.length)return <p className={styles.empty}>{empty}</p>;
+ if(!rows.length)return <p className={styles.empty} data-board-empty>{empty}</p>;
  const unit=BOARD_RULES[game].unit;
- return <ol className={styles.rows} aria-label={`Top ${rows.length}, ${unit}`}>{rows.map((r,i)=>{const own=mine?.(r)??false,now=fresh===r.key;
+ return <ol className={styles.rows} data-board-rows aria-label={`Top ${rows.length}, ${unit}`}>{rows.map((r,i)=>{const own=mine?.(r)??false,now=fresh===r.key;
   return <li key={r.key} data-rank={i+1} data-mine={own||undefined} data-new={now||undefined} aria-current={now?'true':undefined}>
-   <span className={styles.rank}>#{i+1}</span><span className={styles.pic} aria-hidden="true">{iconEmoji(r.icon)}</span>
-   <span className={styles.who} aria-label={r.initials.split('').join(' ')}>{r.initials}{own&&<b className={styles.you}>YOU</b>}</span>
-   <span className={styles.pts}>{r.score.toLocaleString('en-US')}</span></li>;})}</ol>;
+   <span className={styles.rank} data-board-rank>#{i+1}</span><span className={styles.pic} data-board-pic>{r.icon&&<BoardIcon id={r.icon} size={24} label={boardIconLabel(r.icon)}/>}</span>
+   <span className={styles.who} data-board-who aria-label={r.initials.split('').join(' ')}>{r.initials}{own&&<b className={styles.you} data-board-you>YOU</b>}</span>
+   <span className={styles.pts} data-board-pts>{r.score.toLocaleString('en-US')}</span></li>;})}</ol>;
 }

@@ -22,7 +22,9 @@ export function passCallout(chain:readonly ChainKick[],receiver:number,passes:nu
 }
 
 /** The goal callout: how the move was finished. */
-export function goalCallout(passes:number,firstTime:boolean):Callout{
+export function goalCallout(passes:number,firstTime:boolean,topCorner=false):Callout{
+ // Aim anywhere (Nov 11 2026): a finish into the top corner gets its own word.
+ if(topCorner)return{text:'GOAL! Top bins',teach:passes<=0?'You picked the top corner: no keeper reaches that.':'The passes opened the goal and you picked the top corner.',tier:3};
  if(passes<=0)return{text:'GOAL! Straight in',teach:'You saw the shooting lane and took it.',tier:3};
  return{text:`GOAL! ${passes}-pass move`,teach:firstTime?'Finished first time, before the keeper could set.':'The passes opened the goal.',tier:3};
 }

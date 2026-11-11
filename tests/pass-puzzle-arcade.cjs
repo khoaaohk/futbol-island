@@ -1,16 +1,19 @@
-// Pass Puzzles arcade browser check (lane E). Needs a dev server: PORT (default 8092), or FUTBOL_BASE_URL for a full origin.
-// node tests/pass-puzzle-arcade.cjs [--mobile]   (both viewports run when no flag is given)
+// Pass Puzzles arcade browser check (lane E). Needs YOUR dev server: --port=<n>, PORT=<n> or FUTBOL_BASE_URL for a full origin.
+// There is no default port (Nov 10 2026: 8092 is the owner's dev server and is never assumed).
+// node tests/pass-puzzle-arcade.cjs --port=<n> [--mobile]   (both viewports run when no --mobile flag is given)
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
 const assert=require('node:assert/strict');
 const shots=process.env.PASS_PUZZLE_SHOTS||'/tmp';
+const portArg=(process.argv.find(a=>a.startsWith('--port='))||'').slice(7)||process.env.PORT,BASE=process.env.FUTBOL_BASE_URL||(portArg?`http://localhost:${portArg}`:'');
+if(!BASE){console.error('Pass your own server: --port=<port>, PORT=<port> or FUTBOL_BASE_URL=<url>. There is no default port.');process.exit(1);}
 async function run(browser,mobile){
  const size=mobile?{width:390,height:844}:{width:1280,height:800},tag=mobile?'390':'1280';
  const page=await browser.newPage({viewport:size,isMobile:mobile,hasTouch:mobile}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
  await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.removeItem('fi2-pass-puzzles-v1');
-  // Puzzles cost 3 coins from the shared wallet: seed earned coins the same way the book/vending checks do.
+  // Puzzles are free (every arcade game is, since Nov 11 2026); the seed keeps the old fixture: seed earned coins the same way the book/vending checks do.
   if(!localStorage.getItem('ppa-coins-seeded')){localStorage.setItem('ppa-coins-seeded','1');localStorage.setItem('fi2-island-jobs-v1',JSON.stringify({version:1,day:'',today:{},lifetime:{},earned:0,best:{},starter:true}));localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs:Object.fromEntries(Array.from({length:10},(_,i)=>['ppa-fixture-'+i,{game:'island',paid:20,reason:'fixture',at:i}])),packs:[]}));}});
- await page.goto((process.env.FUTBOL_BASE_URL||`http://localhost:${process.env.PORT||8092}`)+'/arcade?game=puzzle',{waitUntil:'domcontentloaded',timeout:120000});
+ await page.goto(BASE+'/arcade?game=puzzle',{waitUntil:'domcontentloaded',timeout:120000});
  await page.waitForFunction(()=>window.__passPuzzle?.world,null,{timeout:120000});
  const canvas=page.locator('[data-arcade-kind="pass-puzzle"] canvas');
  await page.waitForTimeout(400);await page.screenshot({path:`${shots}/pass-puzzle-levels-${tag}.png`});
@@ -48,8 +51,11 @@ async function run(browser,mobile){
  assert(threat.threatRings>0,'a defender on the line gets a red threat ring');
  // Threat preview: an arrow from the defender to where they reach the ball, a cross where it is stopped,
  // a red path, and the coach's live read naming the defender by shirt number.
- assert(threat.dangerArrows>0,'the threat defender gets a red arrow to the ball');assert.equal(threat.pathColor,'#ff6a4d','a blocked lane draws a red path');
- const laneTip=await page.locator('[data-lane]').first();assert.equal(await laneTip.getAttribute('data-lane'),'blocked','the lane read says blocked');assert.match(await laneTip.textContent(),/#\d+ can/,'the lane read names the defender');
+ assert(threat.dangerArrows>0,'the threat defender gets a red arrow to the ball');/* Comic house style (Nov 10 2026): the path is an inked brush stroke now; blocked = red ink (PITCH.markBlocked in lib/arcade/looks/puzzle.ts). */assert.equal(threat.pathColor,'#ff5a3c','a blocked lane draws a red ink path');
+ // Retired Nov 10 2026: the written lane tip ([data-lane], "#4 can reach it") was removed on purpose on Oct 27 2026 (commit 49c03eac,
+ // "clean pitch while playing: no tip, hint words..."). The blocked read is the ring, the arrow and the red chalk asserted above;
+ // this now pins that no tip text comes back while aiming.
+ assert.equal(await page.locator('[data-lane]').count(),0,'clean pitch: no written lane tip while aiming');
  await page.screenshot({path:`${shots}/pass-puzzle-threat-${tag}.png`});
  await page.mouse.move(a.x,a.y);await page.mouse.up();
  await page.waitForTimeout(200);assert.equal(await page.evaluate(()=>window.__passPuzzle.world.state.phase),'aiming','a stroke back to the ball does not kick');

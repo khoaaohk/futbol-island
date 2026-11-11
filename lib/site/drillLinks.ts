@@ -3,6 +3,7 @@
  * formation a drill is about. Plain paths; tests/seo-drills-plans.cjs checks that every one is a real page.
  * SOURCES (checked Nov 10 2026): the pages themselves (lib/site/rules.ts, positions.ts, terms.ts, formations.ts, sizes.ts).
  */
+import {gameLink} from './games';
 const R='/learn/soccer-rules/',P='/learn/soccer-positions/',T='/learn/soccer-terms/';
 export const G={
  throwIn:{path:R+'throw-in',name:'The throw-in rule',line:'Both feet down, both hands, from behind and over the head'},
@@ -36,6 +37,8 @@ export const G={
  f9:{path:'/learn/9v9-soccer-formations',name:'9v9 soccer formations',line:'Shapes for U11 and U12 teams'},
  field:{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},
  ball:{path:'/learn/soccer-ball-size-by-age',name:'Soccer ball size by age',line:'Size 3, 4 or 5 for each age group'},
+ /* Nov 10 2026: the arcade game that trains the same idea (lib/site/games.ts). */
+ kitRush:gameLink('kitrush'),pinball:gameLink('pinball'),tennis:gameLink('tennis'),runner:gameLink('runner'),puzzles:gameLink('puzzle'),
  ages:{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},
 } as const;
 /**

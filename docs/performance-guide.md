@@ -6304,3 +6304,273 @@ shadow map (1024², 512² on phones), a PMREM room reflection built on the first
 the last touch; everything (env target, shadow map, textures, geometries) is disposed on close. Validation: tests/gashapon-viewer.cjs
 (50-show leak check) and scripts/check-gashapon-toys-browser.cjs (renderer.info.memory flat over 50 shows, 50 open / close cycles
 leave no canvas). Desktop / headless measurements only; no iPhone thermal data yet.
+
+## Arcade AAA pass 1: Futbol Pinball becomes a physical machine (Nov 10 2026, local, not deployed)
+
+Direction: `docs/arcade-aaa/pinball-direction.md`. What changed for heat, and what it costs:
+
+- **Removed:** the neon spill plane, the 112-tile reactive floor (112 instance colours every frame), the slab, glass sheet, centre
+  ring and halfway bar, and the 9-draw shared football. **Added:** one playfield plane with ONE canvas texture painted once
+  (644x1071 on phones, 920x1530 on desktop), one vertex-coloured cabinet mesh, one chrome trim mesh, one additive instanced mesh
+  of 29 insert lamps, one small additive glass-sheen quad, a 1-draw steel ball, and a 128x64 painted room environment map (three
+  converts it to a tiny PMREM once) for the chrome and the ball. Desktop only: the room floor, two dark neighbour cabinets and
+  the backglasses (3 draws); the room group stays hidden on phones.
+- **Lighting is free:** the general-illumination dim, goal breathing and hit kicks only change the intensity of the stage's own
+  hemisphere and directional light. No extra lights, no passes. Lamps follow a filament model (fast on, slow off) in instance colours.
+- **Dot-matrix display** (`lib/games/soccerPinballDmd.ts`): a DOM 2D canvas, 88x24 dots. It redraws only dots that changed and runs
+  a 15 fps timer only while a count-up or a call is playing; a still display has no timer and no rAF.
+- **Audio:** same capped one-shot voices (14). One new sustained voice, the ball rolling on wood: a single looped noise source
+  that stops itself about a second after the last frame that fed it.
+- **Sleep fix:** a cone or kickboard flash frozen on the plunger (the rules do not decay it there) kept the waiting table
+  rendering at 30 fps after any goal off a cone. It no longer counts as motion; lamp easing snaps on the plunger too.
+- **Measured** (`scripts/measure-arcade-games.cjs pinball`, dev server, headless Chrome/Metal, 390x844 DPR 3, same scripted launch,
+  which scores and leaves two defenders on the table): draw calls 79 median / 80 max (HANDOFF baseline 93 / 95 open play, 106 / 107
+  goal beat); triangles 42.5k with two defenders (baseline 34.6k open play with one, 48k goal beat); JS 1.1-1.4 ms; frames
+  rendered in the 5 s sample 114 of 301 (was 150 before the sleep fix); menu 0 draws. Live GL textures 21-22 (baseline 11-12):
+  the extra ones are the playfield print, the bulb sprite, the ball engraving, the sheen and the small env-map set.
+- **Not verified on an iPhone.** Desktop / headless numbers only; no thermal claim.
+
+### Futbol Pinball pass 3: final polish (Nov 10 2026, local, not deployed)
+
+What changed for heat, and what it costs:
+
+- **Figure shadows:** the keeper, defenders and sweeper no longer cast shadows from their own meshes (about 5k triangles per figure
+  in the shadow pass). One instanced proxy (`pinball-figure-shadows`: a peg body and a head, 44 triangles each, colour writes off)
+  casts them all: 1 draw in each pass instead of 2 per figure in the shadow pass. The figures stand rigid (no run cycle), so the
+  simpler shadow matches what they do. Shirt-number meshes are moved off the camera layer inside this scene (shared rigs untouched).
+- **Room reflection:** the 128 x 64 env map is prefiltered once at build with a throwaway `PMREMGenerator`; the renderer used to keep
+  the source, the filtered map and two blur targets alive for the session. 4 GL textures became 1. Same filtered result.
+- **Counter-shot aim line:** eight dash quads in one geometry instead of a 16 x 64 repeat texture.
+- **Light shows:** one `showAt(x,z)` formula in `lib/arcade/games/pinballGame.ts` is sampled by the inserts, the 23 state lamps and
+  the 26 rail bulbs (they used to ignore the chases). No new draws; the extra cost is ~50 function calls per frame while a show
+  runs (1.1-2.8 s). A game-over show (2.8 s, 1.2 s under reduced motion) plays before the results open: `hud().over` waits for
+  it, so the frame loop stays awake for that long once per run, then the table sleeps as before.
+- **Camera:** the frame lines (goal under the display, flipper tips above the controls) are held in every phase by a pan and, when
+  that cannot fit both, a 9-step bisection on the zoom (about 60 projections) on that frame only; the launch shot's scale is
+  solved once per resize, so the waiting table still draws 0 frames (checked by `scripts/check-soccer-pinball-browser.cjs`).
+- **Audio:** every voice goes through one `DynamicsCompressor` per AudioContext (clip guard); the voice counter heals itself if
+  `onended` is dropped; node creation is wrapped so a closed or interrupted context cannot throw into the frame loop.
+- **Desktop only:** the two neighbouring machines are one vertex-coloured merged draw with real silhouettes (about 560 triangles,
+  was 48) and their unlit backglasses share one 256 x 80 canvas (was our 384 x 224 art drawn twice). Never built into a phone frame.
+- **Measured** (same script and scripted launch as above, dev server, headless Chrome/Metal, 390x844 DPR 3, two figures on the
+  table): draw calls 78 median / 79 max (pass 2: 82 / 83); triangles 33.8k median / 33.9k max (pass 2: 48.2k; pre-rebuild
+  baseline 34.6k); live GL textures 15 (pass 2: 18; 8 of the 15 are the renderer's own 1x1 placeholders, then shadow map, env,
+  playfield, bulb sprite, ball engraving, the shared bean atlas and one shared 880 x 128 atlas); JS 1.3-1.4 ms; 113 of 301 frames
+  rendered in the 5 s sample; menu 0 draws. With four figures (late divisions) the saving grows to about 20k triangles per frame.
+- **Not verified on an iPhone.** Desktop / headless numbers only; no thermal claim.
+
+## Arcade AAA pass 1: Futbol Tennis becomes a beach club, "Club Marea" (Nov 10 2026, local, not deployed)
+
+Direction: `docs/arcade-aaa/tennis-direction.md`. New: `lib/arcade/tennisWorld.ts` (sky dome, procedural sea, shoreline sand, one baked court sheet per surface, cord net + tape, merged vertex-coloured club props, wind props with vertex-shader sway, pooled dust / ball marks / sand drift, lantern string) and `lib/arcade/tennisVenues.ts` (nine tour stops + two tours: sun, sky, sea, floor, breeze).
+
+- Budget, phone profile (390x844, DPR 3 clamped to 1.5, dev server, `scripts/measure-arcade-games.cjs tennis`): 62 draws / 29.7k triangles / 12 textures before; 51 draws (max 53) / 48.3k triangles / 19 textures after; JS 1.2 ms per frame; the menu still renders 0 frames.
+- Kept: `powerPreference:'low-power'`, 1.5 mobile pixel-ratio cap, one shadow-casting sun (1024 map on phones, tighter frustum), no postprocessing, the 30 fps cap, `needsFrames()` sleeping (the world's wind only animates while the game loop is already awake; a waiting serve is a still frame), pooled particles, reduced-motion paths (no sway, no drift, small ripple), full disposal through `stage.dispose()` plus the world's own textures.
+- Added runtime cost: a cheap procedural sea fragment shader over the top of the frame, the props in the shadow pass (+18k triangles), a 820x1312 canvas court texture repainted only when the tour stop changes (once per play start), a CPU net deform of 186 vertices only while the net moves, one cached 2.6 s applause buffer and one surf-swell voice scheduled from game cues (no timers, no loops; silent a few seconds after play stops).
+- Tradeoff: triangles are above the old tennis baseline (inside the 55k allowance the brief gave). Not validated on a real iPhone: this is reduced/bounded work measured in desktop Chrome, not a temperature claim.
+
+## Arcade AAA final polish: Futbol Tennis, Club Marea pass 2 (Nov 10 2026, local, not deployed)
+
+Files: `lib/arcade/tennisWorld.ts`, `tennisVenues.ts`, `tennisArena.ts` (decal atlas), `tennisAudio.ts`, `tennisCamera.ts`, `games/tennisGame.ts`, `components/games/TennisCourtPicker.*`, `skins/tennis.module.css`, `scripts/check-arcade-audio.cjs` (new probe).
+
+- Budget, phone profile (390x844, DPR 3 clamped to 1.5, dev server, `scripts/measure-arcade-games.cjs tennis`, court 1): pass 1 was 51 draws (max 53) / 48.3k triangles / 19 textures; now 48 draws (max 50) / 45.5k triangles / 16 textures, cpu 1.2 ms, menu 0 frames. Centre-court stops (grandstand + 50 members) are about +3k triangles and the lantern evening about +7k (39 additive bulbs with a glow shell, the rig): roughly 49k and 53k, estimated from the main-pass difference, not separately measured at GL level.
+- Paid for by: the ball as one merged draw (was 9); its shadow as a sun-projected decal, not a shadow caster; small and far props (loungers, boats, jetty, buoys, headland, planters, roof tiles) moved to a mesh that skips the shadow pass; static figures replaced by ONE instanced members draw with no shadow pass; six small canvases (dot, smudge, glow, bounce spot, first-touch ring, rings) merged into one 512x256 decal atlas; the unused per-surface court materials and the hidden `tennis-court-paint` mesh removed.
+- Added runtime cost: the members' vertex shader (idle, head turn toward the ball, clap, stand, lean, umpire arm: four uniforms, no CPU per member); reactions keep the loop awake at most about 2.8 s after a point, then it sleeps as before (checked: settled serve sleeps, also under reduced motion). Court thumbnails on the start card are 2D canvases painted once per stop and cached as data URLs: the menu still draws 0 frames.
+- Audio: one limiter (+ makeup gain) on the tennis output, explicit `stop()` on every looping noise voice, and a `tennis:hush` cue that ends the surf bed when the loop sleeps or the game pauses (probe: RMS 0 within 1 s of pause). `scripts/check-arcade-audio.cjs` measures real output RMS per event.
+- Phone rally camera sits lower (tilt 1.06, serve 1.2) so a band of club and sea shows under the scoreboard; court width on screen unchanged. Reduced motion keeps the fixed shot.
+- Not validated on a real iPhone: reduced/bounded work measured in desktop Chrome, not a temperature claim.
+
+## Arcade AAA pass 3: Island Strikers final polish (Nov 10 2026, local, not deployed)
+
+Direction: `docs/arcade-aaa/strikers-direction.md` (pass 3 section). Files: `lib/arcade/strikerScene.ts`, `strikerStadium.ts`, `strikerAudio.ts`, `components/LiveArcadeMatch.module.css`.
+
+- Budget, phone profile (844x390 landscape, DPR 3 clamped to 1.5, dev server, `scripts/measure-arcade-games.cjs live`): pass 2 was 53 draws (max 63) / 53.6k triangles (max 54.5k); pass 3 is 52 draws (max 59) / 50.1k triangles (max 51.0k); JS 0.9 ms per frame; 18 live GL textures (unchanged); the menu still renders 0 frames.
+- Reduced work: on phones the near stand and its supporters (about 3.5k triangles of the crowd draw) are not built (a dark gantry deck of about 40 quads takes their place, inside the existing bowl mesh); the four corner flags are one instanced draw (four small matrices a frame, skipped under reduced motion). Desktop keeps the near stand.
+- No added draws: kit colours, trim and shirt numbers go through the shared bean skin's existing per-instance data (the scene only passes its own kits and numbers); the selected-player ring, pass reticle and pointer replace the meshes they supersede one for one.
+- Camera (phone landscape only): tilt 1.7 -> 1.4, fov 50 -> 40, lift .06 -> -.05, fit band .9 -> 1, follow zoom 1.16 -> 1.08, no pan toward the attacked goal, one-sided depth pan. The pitch is 225 px deep on an 844x390 screen (was 180). Canvas size is unchanged (1266x585). Portrait and desktop framing are unchanged.
+- Audio: one `DynamicsCompressorNode` on the game's own output as a limiter (it exists only while the game's AudioContext does); the voice cap is unchanged at 14 for sounds that start now, with separate headroom (26) for notes queued more than .3 s ahead.
+- Kept: `powerPreference:'low-power'`, the 1.5 mobile pixel-ratio cap, no shadow pass, no postprocessing, the 30 fps cap, `needsFrames()` sleeping, pooled particles, reduced-motion paths, full disposal.
+- **Not verified on an iPhone.** Headless desktop Chrome numbers only; no thermal claim.
+
+## Pass Puzzles final polish: "The Coach's Table" pass 2 (Nov 10 2026, local, not deployed)
+
+Phone profile (390x844 touch, DPR 3 clamped to 1.5, canvas 585x1266), `scripts/measure-arcade-games.cjs puzzle`, dev server, headless Chrome.
+
+| | Draw calls | Triangles | Live GL textures | cpu ms | Menu | Aiming idle |
+|---|---|---|---|---|---|---|
+| Foundation baseline | 95 | 63.9k | 15 | 1.5 | 0 frames | 4 frames / 5 s |
+| After pass 1 | 30 | 24.3k | 15 | 0.8 | 0 frames | 0 frames |
+| After pass 2 | 31 | 27.7k | 16 | 0.8 | 0 frames | 0 frames (0 in 1.5 s after the 4 s thinking window) |
+
+- Added: one 256 px surface atlas (wood grain + paper tooth) used as both `map` and `roughnessMap` of the two baked-colour set materials (one GL texture, no pass); one extra mesh for the out-of-focus far desk props (it casts no shadow, so the shadow pass draws less); a 720-triangle painted wooden ball in the pieces' material (replaces the shared stage ball); two eye dots and a back patch per piece (about 28 triangles each, instanced); three pooled strips for the sweeper zone outline (drawn only on sweeper levels). The felt tile, the atlas and the desk set are still painted/built once per visit or once per level, never per frame.
+- Fake depth of field is geometry and colour only: far props have their detail colours melted into the body colour and drifted toward the fog colour, and get one soft blob shadow each from the existing contact-shadow instanced mesh (4 pooled slots). No render target, no postprocessing.
+- The board is cropped to the play per level and orientation (`framing()` in `lib/arcade/passPuzzleScene.ts`), rebuilt once if the orientation class changes. The camera fit is still solved on load/resize only.
+- Motion: the lean spring is stiffer and better damped (260 / 17, was 110 / 7.5), so pieces settle sooner and the loop goes back to sleep sooner. The scan lanes fade for 0.2 s after a strike, then hide. Per-frame trace of a pass: kicker settles under 0.02 rad within about 130 ms of the strike; receiver rock peaks at 0.055 rad and is under 0.005 rad in about 230 ms.
+- Audio: all voices go through one gain + `DynamicsCompressorNode` per AudioContext (a limiter; it lives only while the game's context does). Voice cap unchanged at 8; the count self-heals after an interrupted context. Still one-shots only, no loops or timers.
+- Kept: `powerPreference:'low-power'`, the 1.5 mobile pixel-ratio cap, one shadow-casting light, no postprocessing, on-demand rendering (menu, brief and result draw 0 frames), pooled particles, reduced-motion paths, full disposal.
+- **Not verified on an iPhone or an Android phone.** Headless desktop Chrome numbers only; no thermal claim. The font `size-adjust` values in `skins/puzzle.module.css` are estimates, not device-measured.
+
+## Breakaway Run: final-polish pass (Nov 10 2026, local, not deployed)
+
+Second pass on the comic coast road (`docs/arcade-aaa/runner-direction.md`). More is drawn and less is submitted.
+Phone profile, headless desktop Chrome, dev server, `scripts/measure-arcade-games.cjs runner` (GL level, shadow pass included):
+
+| | Draw calls (median / max) | Triangles (median / max) | Live GL textures |
+|---|---|---|---|
+| Foundation baseline | 56-59 / 64 | 45-48k / 54k | 11 |
+| After pass 1 | 52 / 66 | 59.3k / 73.8k | 13 |
+| After pass 2 (two runs) | 43 / 54 | 39.2k-39.8k / 51.0k-51.6k | 12 |
+
+A longer GL-level trace (scratch script, same wrap): 25 s of natural play 42.9k median / 57.0k max; a staged pile-up (a goal with its
+three blockers, two defenders inside 20 m, five pick-ups, both stands, a shot in flight) peaks at 69k. That pile-up is the worst case left.
+
+- **Where the triangles went.** (1) Pick-up balls were the shared 1.5k-triangle match ball, drawn twice (colour + shadow map) for up to
+  twelve pick-ups: now one 320-triangle inked ball geometry with painted patches and no shadow (`runnerGame3d.ts`). (2) The route's
+  instanced props drew every slot of every chunk, most scaled to nothing: chunks now write to staging arrays and the live instance
+  buffers are packed, so each mesh draws only what was placed (`pack()` in `runnerTrack.ts`); chunks wholly behind the camera are not
+  built. (3) The run ball and shot balls left the shadow map (they keep the blob shadow). (4) Goal blockers cast no shadow; defenders
+  and the keeper join the shadow map only inside 24 m (casters noted once, flipped on crossing). (5) Stands draw only the fans present
+  (structure first, `mesh.count`). (6) The chequered line and the combo rings are geometry now: two canvas textures fewer.
+- **What was added for it.** Five more terrain columns on the land side (+560 triangles) so hills have shape; cypress (28 triangles)
+  and sail-boat (about 50) instanced meshes with baked ink, packed like the rest (+2 draws at most); an inverted-hull ink line for the
+  goal frame (1 draw while a goal is in view); a commit alarm over a defender (1 draw only while it commits); a near-miss swoosh
+  (1 draw for 0.3 s). The village silhouette, the lighthouse and its night beam, terraces, hedgerows, the wall top and the hill
+  shading are all fragment work in the existing sky and terrain shaders. Characters get a constant-width ink line (`fwidth` on the
+  grazing term), the night lamp pools and a lightning rim inside the existing comic shading edit: no light, pass or render target.
+- **Strike beat.** The freeze-frame is a render hold: for 0.11 s after a goal the stage skips its draw (the last frame stays on the
+  glass), while time, scoring and the scene graph run on. Input, reset and reduced motion skip it. The inset panel, cracked panel,
+  tier frame and near-miss streak are DOM, keyed to typed HUD fields (`runnerLives` ... `runnerNear` on `ArcadeHUD`), animated with
+  transform/opacity only and removed or stilled under reduced motion.
+- **Audio review** (`components/games/runnerAudio.ts`, read, not heard): both buses now pass one `DynamicsCompressorNode` limiter
+  (threshold -6 dB, ratio 20); the music bus sits behind a gate that every played frame re-arms and that closes on the audio thread
+  0.3 s after frames stop (pause, sleeping tab, leaving), with a hold for the full-time phrase; the groove is capped at 20 of the 28
+  voices so effects are never the dropped voice; the voice counter heals if an `ended` event is lost; contexts without a compressor
+  or `setTargetAtTime` play straight through instead of throwing; the runtime disposes the soundtrack on exit.
+- Kept: `powerPreference:'low-power'`, the 1.5 mobile pixel-ratio cap, one shadow-casting sun, no postprocessing, the 30 fps cap,
+  `needsFrames()` sleeping (menu draws 0 frames), pooled effects, reduced-motion paths, full disposal.
+- **Not verified on an iPhone or an Android phone.** Headless desktop Chrome on a dev build only: reduced work, not measured cooling.
+  `fwidth` needs WebGL2 (the stage already requires it). Validation: `tsc` clean, `tests/runner-*`, `breakaway-*`, `arcade-*`
+  (37 files, including the new `runner-pass2-nov10.cjs`), `scripts/check-breakaway-browser.cjs` plain / `--mobile` / `--reduced`.
+
+## Nov 10 2026: arcade comic kit extracted; Pass Puzzles converted to the comic house style
+
+- **Kit (`lib/arcade/comic/`, see its README):** Breakaway Run's print shading (shadow / light bands, halftone turn, tinted shadows,
+  sun rim, constant-pixel ink edge), the inverted-hull prop helper, the impact star and the look base now live in one place and
+  Breakaway imports them. No behaviour or cost change to Breakaway: the generated fragment shader is the same text after
+  preprocessing for all four (rim, terrain) variants, uniform values and `inkedPart` geometry are equal, and the phone profile still
+  measures 43 draws (max 52) / 39.5-39.6k triangles (varies with what has spawned) / 12 textures. Still a material edit: no pass,
+  light, render target or texture.
+- **Pass Puzzles ("The Tactics Pitch"):** phone profile 30 draws (was 31), 18.7k triangles (was 27.7k), 13 GL textures (was 16);
+  menu 0 frames, aiming idle 5 frames in 5 s (was 6). The realistic look's four canvases (felt, surface atlas, window gobo, desk),
+  the gobo quad, the far desk mesh, tone mapping, fog haze and the CSS vignette are gone; colour is vertex colour. Added: one
+  512x256 horizon canvas (painted once per visit), two unlit star draws for about 0.6 s per goal, one splat quad on a fail. The
+  pitch side is two merged meshes per level (ground receives shadows, props cast them: a baked ink hull must not do both).
+- Kept: on-demand rendering (no loop; update/render only while something moves), three instanced player meshes, one shadow-casting
+  sun (re-aimed per level, same 1024 px map on phones), the 1.5 pixel-ratio cap, pooled effects, reduced-motion paths, disposal.
+- Audio: same 8-voice pool and single trim + limiter bus; `scripts/check-arcade-audio.cjs puzzle` now has draw / pass-complete /
+  solved windows (0.004 / 0.038 / 0.061 peak RMS, menu and after-result silent).
+- **Not verified on a phone.** Headless desktop Chrome on a dev build: reduced work, not measured cooling.
+
+## Nov 10 2026: Futbol Pinball converted to the comic house style ("The Beach Board"; local, not deployed)
+
+Direction: `docs/arcade-aaa/pinball-direction.md`. Third user of `lib/arcade/comic/*` and `components/games/comic/*` (no kit changes).
+Supersedes the machine-look entries above for pinball (dot-matrix display, filament lamps, env map, general illumination dimming).
+
+- **Removed:** the room environment map and its PMREM target, tone mapping, the glass sheen quad, the shared bloom sprite and every
+  additive lamp, the cabinet/backbox/neighbour-machine meshes and two backglass textures, the dot-matrix canvas renderer
+  (`soccerPinballDmd.ts`, `PinballDmd.tsx`), the desktop DOM-display projection (`placeDmd`), the ball's blob shadow, the dugout draw.
+- **Added:** one comic uniform set for the game; one receiving beach mesh; the kit's painted coast on one unlit quad (512x128 on
+  phones, 1024x256 otherwise); a drain splat quad (1 draw only while a ball is lost). Hit rings became 3 pooled star quads (same count).
+- **Lamps:** every lamp (29 inserts, 23 state lamps, 3 bumper skirts, 26 rail studs, ball save) uses one unlit shader
+  (`printLampMaterial`) that discards unlit pixels and cuts the level into four printed steps; no texture, no blending. The easing
+  that lets the table sleep is unchanged (`lampStep`, was `filamentStep`).
+- **Merging:** kerbs, hoardings, posts, slingshots, dugout, palms and parasols are ONE hulled, shadow-casting draw (it never
+  receives); the goal frame's seven parts are one draw (were seven, plus seven in the shadow pass); palms and parasols exist off
+  phones only. Lights are never dimmed: drain / goal / full time tint the two comic bands (uniform writes).
+- **HUD:** the display band is gone (owner: "less of the sign at the top"); the score is the shared pill, a 16 px status tab hangs
+  under it, calls are DOM bursts that exist only while they play (one timeout per call; no rAF, interval or infinite animation).
+- **Camera:** `pinballCameraLayout` top line = the top bar row's foot (72 px; 62 px on a short sideways phone; +4% of the height on
+  roomy screens); upright phones are solved on the drain mouth instead of the plunger ball. 390x844 wide frame: goal crossbar y 106
+  (was 182), flipper tips 582 (was 660), table bottom edge 636 (was behind the pads, about 765). Both frame lines still hold in every phase.
+- **Measured** (phone profile, `scripts/measure-arcade-games.cjs pinball`, dev server, desktop Chrome; NOT a phone temperature):
+  draws 69 / max 70 (was 78), triangles 33.3k (was 33.8k), GL textures 14 (was 15), menu 0 frames, ready table 0 frames (it settles
+  about 3 s after a ball returns to the plunger, as before). Audio probe peak RMS: flipper 0.016, bumper 0.027, goal 0.051, drain 0.042.
+- **Validation:** `tests/pinball-*`, `tests/arcade-*`, `scripts/check-soccer-pinball.mjs`, `scripts/check-soccer-pinball-browser.cjs`
+  in four modes (new assertions: status tab inside the top bar row, table right under it, drain mouth above the pads on phones).
+- **Trade-offs:** ink hulls roughly double the triangles of every standing part, paid for by fewer segments on phones (ball 14x9,
+  bumpers 8 sides, kerbs 10 blocks a side) and by the removed room. The game-over sequence is 1.4 s (was 2.8 s) and skippable.
+- **Not done:** the rules still end a run at full time with balls left; the endless-run and difficulty-ramp ruling is open.
+
+## Nov 10 2026: Futbol Tennis converted to the comic house style ("Club Marea, printed"; local, not deployed)
+
+Owner ruling: "the tennis game should be in that style too". Rules (`lib/games/soccerTennis.ts`), camera, wind, first touch and
+hold-power are untouched; rendering, HUD and sound palette changed. Direction: `docs/arcade-aaa/tennis-direction.md`.
+
+- **Shading:** `looks/tennis.ts` is `comicLook()`; `tennisWorld.ts` owns one comic uniform set and `comic()` options that every lit
+  tennis material takes (court, sand, props, wind props, members, tape; players and ball through `comicTree` / `comicMaterial` in
+  `tennisGame.ts`). No pass, light, render target or texture added. A venue only moves the sun and swaps the two band tints.
+- **Night panel:** one extra GLSL hook (`afterLit`) keeps the light band inside analytic lamp pools on lantern stops: about 8 more
+  fragment instructions on those two stops, 0 by day (a uniform test). The additive floodlight quad and the bulb halo shells are gone.
+- **Sky and sea in one draw:** the sky dome is removed. The sea mesh (plane + far wall + two side walls) draws flat sea bands, a
+  glitter path and whitecaps below a screen-space horizon line and the sky panel above it (bands, stacked-disc sun or moon and
+  stars, clouds, headlands), so the sun and sky are in frame in the phone rally view (the rally camera looks down: a true horizon
+  never is). `world.frame(camera)` sets three uniforms per rendered frame; no texture.
+- **Repainted flat / removed:** `paintCourt()` tone blobs, grain pattern, net shade strip, dusk wash, lantern pools and rim
+  gradient; the builder's vertex-colour AO; roof tile courses, lounger slats, trunk rings, the second parasol row, far headland
+  meshes; `sandTexture()` (sand is vertex colour), the net cord texture (the cord is drawn from UVs in a 6-line fragment shader),
+  the net shade quad (the tape's own shadow-map shadow stays), the lantern rig mesh + instanced bulbs (now one static unlit mesh).
+- **Added:** ink hulls on standing props (triangles, 0 draws), ink backing sheets on flags, bunting and fronds, 8 gust-line
+  billboards (replace 14 sand-drift decals; none on a still day or under reduced motion), 8 speed-line instances inside the existing
+  charge-ring draw, two decal-sheet cells (gust, puff). The point banner is still one canvas quad (now a starburst word panel).
+- **Flag:** `TENNIS_CLUB_CROWD` (`tennisWorld.ts`, default on). Off: no member, umpire or grandstand is built (1 draw and about
+  4k triangles less on centre court).
+- **Audio:** hand-percussion palette on the same single limiter and voice cap; `TENNIS_MIX_LIFT` 2.3 (was 1.7). Fixed: a tapped
+  serve started and stopped the charge voice in one audio quantum, the cancelled ramp fell back to the gain node's default of 1 and
+  sent a full-scale burst into the limiter (probe: 0.24 peak RMS on every tapped serve); the gain now starts at 0.0001. The strike
+  cue's power is clamped to 1. `tennis:hush` unchanged.
+- **Measured** (phone profile 390x844, DPR 3 clamped to 1.5, the `scripts/measure-arcade-games.cjs` counters with the court seeded
+  through `fi2-arcade-record-tennis-v1`, dev server, desktop Chrome; NOT a phone temperature). Median draws (max) / triangles / GL textures:
+
+  | Stop | Before | After |
+  | --- | --- | --- |
+  | 1 practice court | 48 / 45.5k / 16 | 46 (49) / 34.9k / 14 |
+  | 6 lantern evening | about 53k triangles | 42 (50) / 39.0k / 14 |
+  | 9 the lawn (grandstand) | not recorded | 45 (52) / 37.6k / 14 |
+  | 7 pier | not recorded | 41 (44) / 31.6k / 14 |
+
+  Menu: 0 frames, 13 textures. CPU per frame 0.7 to 1.0 ms. The maximum is a transient (rings, puff, smudge, gust lines, banner in
+  one frame); the median is inside the 48-draw limit on every stop measured, the lawn's maximum is not.
+- **Audio probe** (`scripts/check-arcade-audio.cjs --port=8124 tennis`, plain / `--suspended`), peak RMS: serve 0.040 / 0.043,
+  bounce 0.037 / 0.038, point call 0.072 / 0.078, sea bed 0.010 / 0.012, menu 0, one second after pause 0. Pinball on the same
+  probe: play 0.040, goal 0.054.
+- **Validation:** `tsc` clean; `tests/tennis-*` (13) and `tests/arcade-*` (16) pass; `scripts/check-soccer-tennis-browser.cjs` plain
+  and `--mobile` pass; reduced motion checked on the lawn (no gust lines, no speed lines, fixed shot). Pins moved:
+  `tennis-arena-feel` and `tennis-landscape-clean` (no floodlight quad: the lamp pools are shading), `arcade-consistency` (the
+  square comic card no longer reads `--arcade-card-r`).
+- **Trade-offs:** casters with ink hulls do not receive shadows (kit rule), so a palm shadow no longer falls across the wall or
+  the clubhouse. The beach is 4 m shallower so the sea and horizon fit above the far wall on a phone.
+
+## Nov 10 2026: Pass Puzzles, real bean rigs and the Endless Run
+
+- **What changed.** The rigid instanced figures became the shared arcade bean rigs (`stage.player`; `lib/arcade/passPuzzleScene.ts`), and an Endless Run (`lib/passPuzzle/endless.ts`) was added. No new pass, light or render target.
+- **Rig cost controls.** No rig mesh casts a shadow: one instanced proxy (`puzzle-rig-shadows`, 44 triangles a player, colour writes off) casts them all. Rig materials are cloned once per source material with the comic shading. The printed back number is off the camera layer. Body and limbs draw through coarser index views of the shared bean geometry (`farView`: body 1920 to 480 triangles, limbs 3032 to about 1830; the same vertex buffers, one small index buffer each, with a layout check that falls back to the full geometry). The stage's spark pool and the pass ribbon are hidden while empty (a draw call each).
+- **Posing is on demand.** A rig is posed only while it moves, reacts, winds up, celebrates or dives, and for 0.5 s after (`SETTLE`); otherwise it keeps its matrices. A frozen moment poses nothing and the loop sleeps as before.
+- **Measured** (phone profile 390x844 DPR 3 clamped to 1.5, dev server, desktop Chrome): first puzzle, 5 players: 38 draws / 22.8k triangles / 15 GL textures (rigid figures: 30 / 18.7k / 13; the pre-rebuild bean version: 95 / 63.9k). Largest puzzle, 11 players: 55-56 draws, 61 for about 0.6 s in a goal beat / 40.3k triangles, 42.3k max. Menu 0 frames; aiming idle 3 frames in 5 s; 0 frames in the 4 s after a result.
+- **Endless Run runtime cost.** A puzzle is generated and engine-checked in under 10 ms on a laptop (worst of 500: 7 ms), once per puzzle, while the previous one is being read. The thinking clock is one CSS animation and one timer (no frames). The change-over is a 0.34 s CSS wipe; the teaching caption is static markup removed by a timer.
+- **Tradeoffs.** Two more GL textures than the rigid figures (the bean data rows and face atlas). Coarser limbs show slightly faceted elbows up close in the result push-in. The proxy shadow does not follow a dive.
+- **Validation.** `tests/pass-puzzle-endless.cjs`, `tests/pass-puzzle-*`, `tests/puzzle-polish-nov8.cjs`, `tests/arcade-*`, `tests/pass-puzzle-arcade.cjs --port`, `scripts/check-arcade-audio.cjs puzzle`. Emulation numbers only: no iPhone temperature was measured, and nothing here is deployed.
+
+## Nov 10 2026: Futbol Tennis endless play (rules only; local, not deployed)
+- **What changed.** A tennis run is now a chain of matches and ends only when the balls run out (`lib/arcade/tennisEndless.ts`, `lib/games/soccerTennis.ts`). A won match moves the world on to the next of the nine stops inside the same run; the look, camera and comic kit are untouched.
+- **The venue seam costs nothing new.** It reuses the world's existing `applyVenue` (`lib/arcade/tennisWorld.ts`, not edited): every stop's props are already built and are only shown or hidden, the palette is uniforms, and the one court sheet is repainted into the same canvas texture (one 2D repaint and one texture upload per seam). No geometry, material, texture or canvas is created at a seam, so there is nothing to dispose. The runtime times each swap (`runtime.tennisSeam()`).
+- **Measured (dev server, headless desktop Chrome, phone profile 390x844, `scripts/check-tennis-endless.cjs`).** Venue swap under 3 ms (0.2 to 2.6); longest frame from 0.5 s before to 1.5 s after a seam 18 to 19 ms (40 ms once, at the first showing of the pier; the check's limit is 120 ms); control back 0.43 to 0.60 s after the winning point when Kick is pressed (1.53 to 1.57 s unpressed, the ordinary point beat). Over ten seams through the whole loop of stops (court 8 round to court 9): GL textures 6, scene nodes 293 and scene geometries 190 at every seam. `renderer.info` geometries 39 to 46 and programs 23 to 25: they count on first draw, so they step up as each stop's own props (stand, pier, lanterns) are first shown, and were flat once every stop had been seen (46 and 25 at the last three seams). A Pro Tour run (three seams, stops 5, 6, 7) measured the same.
+- **Runtime cost.** The sim reads a ramped court object per match, cached per court and row (no allocation in the frame loop). The score panel gains one line (match, three ball pips) and one number; no new loops, timers or animations. One new synthesised cue (`tennis:next`, four voices through the existing limiter).
+- **Tradeoff: longer sessions.** A run used to stop after one match (about 0.5 to 2 minutes for a seeded bot); it now lasts as long as the player keeps winning. The frame loop still sleeps on the menus and at a waiting serve, but a long run is more minutes of 30 fps play. No iPhone temperature was measured; emulation numbers only.
+- **Validation.** `tests/tennis-endless.cjs`, all `tests/tennis-*`, `tests/arcade-*`, `scripts/check-tennis-endless.cjs --port=<n>`, `scripts/check-soccer-tennis-browser.cjs --port=<n>` (plain and `--mobile`), `scripts/check-arcade-audio.cjs --port=<n> tennis`.
+
+## Nov 11 2026: Pass Puzzles, aim anywhere in the goal (local, not deployed)
+- **What it is.** A finish can be pointed at any spot on the goal face (corners, top bins, or an honest miss over / wide) by drawing the stroke onto the net; a stroke that ends on the grass is the plain low shot, unchanged. Engine: `lib/passPuzzle/aim.ts` (scatter, spatial keeper, coaching line), `Kick.place`; scene: `pickGoal`, a reticle on the goal face, the net bulge at the ball's height; HUD: the aim panel and a one-time cue.
+- **On-demand rendering kept.** The aim panel is a DOM node filled by attribute writes from the existing stroke preview (at most every 80 ms, only while the pointer moves or is held under 1.2 s); it has no animation, no `requestAnimationFrame` and no timer of its own. Idle aiming still draws 0 frames (measured: 0 frames in 3 s in an Endless puzzle after the 4 s settle; `tests/pass-puzzle-arcade.cjs` "aiming idle sleeps" passes on phone and desktop).
+- **Draw calls.** 0 added at rest, in flight and in the goal beat (the bigger top-corner star is the same two star meshes scaled; post / bar sparks are the stage's pooled burst). +2 only while the finger is on the net (the reticle and its scatter ring, one shared mark atlas, no new texture). Measured peak during a shot, dev server, headless desktop Chrome, phone profile: 41 to 42 on the first puzzle (5 players, 38 at rest), 50 across five Endless puzzles. The largest puzzle (Two Hunters, 55 to 56 at rest, 61 in a goal beat) was not re-measured; by the same arithmetic it is 57 to 58 while pointing at the net and 61 in the goal beat.
+- **CPU.** A placed shot's preview runs up to four engine look-aheads instead of one (the clean strike, plus three at the edge of the scatter ring when the clean strike scores), and the launch refines onto the spot with up to five short ball-only sims. All of it is on input; nothing runs while the player is only looking.
+- **Sound.** Two new synthesised one-shots through the existing trim and limiter (woodwork knock, high net ripple); `scripts/check-arcade-audio.cjs --port=<n> puzzle` passes (peak RMS 0.060, menu 0).
+- **Validation.** `tests/pass-puzzle-aim.cjs` (92 routes and 420 plain strokes identical to the pre-change baseline in `tests/fixtures/pass-puzzle-aim-baseline.json`), all `tests/pass-puzzle-*`, `tests/puzzle-polish-nov8.cjs`, `tests/arcade-*`, `tests/pass-puzzle-arcade.cjs --port=<n>`. No iPhone temperature was measured; emulation numbers only.

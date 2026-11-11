@@ -1,0 +1,120 @@
+/* Futbol Pinball HUD skin. Owned by the Futbol Pinball builder (docs/arcade-aaa/pinball-direction.md).
+ * The class lands on the game root next to data-game="pinball" and the comic kit's `comicRoot` (components/games/comic: the --cm-*
+ * tokens, and `.chrome`, which draws the top-bar pill, pause key, pause card, boards and high-score entry as a comic page), so every
+ * rule here is scoped to this game. Nov 10 2026 comic restyle (owner: "make the pinball game the same style as Breakaway"): the
+ * cabinet look is retired (and, owner: "the sign is not as important", the backbox display band with it). The status tab, the call bursts, the flipper keys, Launch / Nudge and the coaching caption are inked paper with hard
+ * 3-4 px shadows that collapse under the thumb. Control sizes and positions are unchanged at every breakpoint (the camera framing
+ * solver reads the top of the controls). Flat ink only: no gradients, glow or blur. The back button is untouched. */
+.skin{--arcade-skin:pinball;background:var(--cm-ink)}
+/* The score is the shared top-bar pill (the kit's `.chrome` draws it as a comic caption). Under it hangs a small status tab
+ * (components/games/PinballScorePanel.tsx: match minute, balls left as inked discs, division), tucked behind the pill and kept INSIDE
+ * the top bar row: its foot is the bar's foot (edge-top + 52 = 66 px; 54 px on short landscape), centred between Arcade and Pause.
+ * It keeps the `data-pinball-dmd` hook the framing checks read as "the display". No band under the bar: the table starts there. */
+.skin [data-pinball-dmd]{position:absolute;z-index:2;top:calc(var(--arcade-edge-top,14px) + env(safe-area-inset-top,0px) + 41px);left:50%;transform:translateX(-50%);box-sizing:border-box;height:16px;max-width:186px;display:flex;align-items:center;gap:5px;padding:0 7px;border:2px solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);font:800 10px/1 var(--cm-ui);white-space:nowrap;pointer-events:none}
+.skin [data-pinball-dmd] em{font-style:normal;font-variant-numeric:tabular-nums}
+.skin [data-pinball-dmd] em[data-late]{color:var(--cm-red)}
+.skin [data-pinball-dmd] [data-pb-balls]{display:flex;gap:2px}
+.skin [data-pinball-dmd] [data-pb-balls] b{box-sizing:border-box;width:7px;height:7px;border:1.5px solid var(--cm-ink);border-radius:50%;background:transparent}
+.skin [data-pinball-dmd] [data-pb-balls] b[data-on]{background:var(--cm-ink)}
+.skin [data-pinball-dmd] [data-pb-div]{overflow:hidden;text-overflow:clip;text-transform:uppercase}
+/* Endless play: the level (match number), a sun block at the end of the tab. Flat print, no motion. */
+.skin [data-pinball-dmd] [data-pb-level]{align-self:stretch;display:flex;align-items:center;margin-right:-7px;padding:0 5px;border-left:2px solid var(--cm-ink);background:var(--cm-sun);font-variant-numeric:tabular-nums}
+@media(max-height:520px){.skin [data-pinball-dmd]{top:calc(var(--arcade-edge-top,6px) + env(safe-area-inset-top,0px) + 32px)}}
+/* Calls: `data-pinball-call` exists only while a call plays, a comic burst over the upper table (below the goal mouth): GOAL! is the
+ * kit's ComicBurst with the points in a sun caption under it; the others are tilted ComicPanel caption boxes. Each snaps in (two
+ * stepped frames), holds, and is removed when its life ends; its drawn art runs 6-12 stepped frames once. Reduced motion: it just
+ * appears and goes. */
+.skin [data-pinball-call]{position:absolute;z-index:3;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 76px + 5vh);box-sizing:border-box;width:min(320px,calc(100vw - 48px));max-height:120px;margin:0 auto;display:flex;align-items:center;justify-content:center;container-type:inline-size;pointer-events:none;--cm-letter-fill:var(--cm-sun);animation:pbSnap .16s steps(2) both}
+@media(max-height:520px){.skin [data-pinball-call]{top:calc(env(safe-area-inset-top,0px) + 64px)}}
+/* Short sideways phone: the status tab sits beside the score pill (the row is too short to hang it under). */
+@media(max-height:520px){.skin [data-pinball-dmd]{top:calc(var(--arcade-edge-top,14px) + env(safe-area-inset-top,0px) + 12px);left:calc(50% + 62px);transform:none}}
+.skin [data-pinball-call] [data-pb-box]{display:flex;align-items:center;gap:10px;max-width:100%;padding:8px 14px}
+.skin [data-pinball-call=goal]{gap:6px}
+.skin [data-pinball-call=lost]{--cm-letter-fill:var(--cm-red)}
+.skin [data-pinball-call=save]{--cm-letter-fill:var(--cm-teal)}
+.skin [data-pinball-call=best]{--cm-letter-fill:var(--cm-sun)}
+.skin [data-pinball-call=mode]{--cm-letter-fill:#fff}
+.skin [data-pinball-call]:is([data-pinball-call=combo],[data-pinball-call=kick]){--cm-letter-fill:var(--cm-orange)}
+.skin [data-pinball-call=text]{--cm-letter-fill:var(--cm-ink)}
+/* Passing calls (save, combo, kick-off, coaching text) are a smaller caption so the keeper and the wall stay readable under them;
+   goal, drain, mode, new best and full time keep the full burst. */
+.skin [data-pinball-call]:is([data-pinball-call=save],[data-pinball-call=combo],[data-pinball-call=kick],[data-pinball-call=text]){width:min(228px,calc(100vw - 110px))}
+.skin [data-pinball-call] [data-pb-words]{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
+.skin [data-pinball-call=goal] [data-pb-words]{align-items:center}
+.skin [data-pinball-call] [data-pb-words] strong{--cm-letter-size:min(30px,calc((100cqw - 104px) / (var(--len) * .74)));--cm-letter-stroke:clamp(2px,calc(var(--cm-letter-size) * .16),4px);white-space:nowrap;text-shadow:2px 2px 0 var(--cm-ink)}
+.skin [data-pinball-call=text] [data-pb-words] strong{--cm-letter-stroke:0px}
+.skin [data-pinball-call] [data-pb-words] small{padding:2px 6px;border:2px solid var(--cm-ink);background:#fff;color:var(--cm-ink);font:italic 900 14px/1 var(--cm-title);white-space:nowrap}
+.skin [data-pinball-call] [data-pb-sub]{padding:3px 10px;font:italic 900 16px/1 var(--cm-title)}
+.skin [data-pinball-call] [data-pb-art]{flex:none;width:52px;height:52px;overflow:visible;fill:none;stroke:var(--cm-ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.skin [data-pinball-call=goal] [data-pb-art]{padding:3px;border:3px solid var(--cm-ink);background:#fff;box-shadow:3px 3px 0 var(--cm-ink)}
+.skin [data-pinball-call=over] [data-pb-art]{stroke:var(--cm-paper)}
+.skin [data-pinball-call] [data-pb-art] *{transform-box:fill-box;transform-origin:center}
+.skin [data-pinball-call] [data-pb-ball] circle{fill:#fff}
+.skin [data-pinball-call] [data-pb-ball] path{fill:var(--cm-ink);stroke:none}
+.skin [data-pinball-call] [data-pb-net]{stroke-width:1.6;transform-origin:left center}
+.skin [data-pinball-call] [data-pb-splat]{fill:var(--cm-ink);stroke:none}
+.skin [data-pinball-call] [data-pb-star]{fill:var(--cm-red)}
+.skin [data-pinball-call=mode] [data-pb-star]{fill:var(--cm-orange)}
+.skin [data-pinball-call=over] [data-pb-star]{fill:var(--cm-sun);stroke:var(--cm-paper)}
+.skin [data-pinball-call] [data-pb-spark]{fill:var(--cm-sun)}
+.skin [data-pinball-call=goal] [data-pb-ball]{animation:pbShot .48s steps(6) both}
+.skin [data-pinball-call=goal] [data-pb-net]{animation:pbNet .3s steps(3) .48s both}
+.skin [data-pinball-call=save] [data-pb-ball]{animation:pbParry .64s steps(8) both}
+.skin [data-pinball-call=save] [data-pb-post]{animation:pbShake .24s steps(3) .3s both}
+.skin [data-pinball-call=lost] [data-pb-ball]{animation:pbDrop .4s steps(5) both}
+.skin [data-pinball-call=lost] [data-pb-splat]{animation:pbPop .3s steps(4) .4s both}
+.skin [data-pinball-call]:is([data-pinball-call=kick],[data-pinball-call=combo]) [data-pb-ball]{animation:pbRun .45s steps(6) both}
+.skin [data-pinball-call]:is([data-pinball-call=kick],[data-pinball-call=combo]) [data-pb-lines]{transform-origin:right center;animation:pbLines .3s steps(4) both}
+.skin [data-pinball-call] [data-pb-star]{animation:pbStar .5s steps(6) both}
+.skin [data-pinball-call] [data-pb-spark]{animation:pbPop .24s steps(3) .3s both}
+.skin [data-pinball-call] g:last-child>[data-pb-spark]{animation-delay:.45s}
+@keyframes pbSnap{from{transform:scale(1.12) rotate(-2deg)}to{transform:none}}
+@keyframes pbShot{from{transform:translate(-4px,6px)}to{transform:translate(19px,-3px)}}
+@keyframes pbNet{0%,100%{transform:scaleX(1)}50%{transform:scaleX(1.14)}}
+@keyframes pbParry{0%{transform:translate(-16px,2px)}50%{transform:translate(0,0)}100%{transform:translate(-13px,-10px)}}
+@keyframes pbShake{0%,100%{transform:none}50%{transform:translateX(2px)}}
+@keyframes pbDrop{from{transform:translateY(-22px)}to{transform:translateY(4px)}}
+@keyframes pbPop{from{transform:scale(0)}to{transform:scale(1)}}
+@keyframes pbRun{from{transform:translate(-14px,0)}to{transform:translate(4px,0)}}
+@keyframes pbLines{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes pbStar{from{transform:scale(.4) rotate(-40deg)}to{transform:scale(1) rotate(0deg)}}
+@media(prefers-reduced-motion:reduce){.skin [data-pinball-call],.skin [data-pinball-call] *{animation:none!important}}
+/* Balls, minute, streak and every call are on the panel. The one thing left in this layer is the coaching line, a paper caption box
+ * (ink border, hard 3 px shadow) in the gap above Launch / Nudge: it never covers the playfield. */
+.skin.skin.skin [data-pinball-hud]{top:auto;left:0;right:0;bottom:0;height:0;transform:none;display:block}
+.skin.skin.skin [data-pinball-hud]>i,.skin.skin.skin [data-pinball-hud]>[data-pinball-clock],.skin.skin.skin [data-pinball-hud]>strong{display:none}
+.skin.skin.skin [data-pinball-hud] [data-pinball-pattern]{top:auto;left:50%;bottom:calc(var(--pb-bottom) + 59px);box-sizing:border-box;width:min(168px,calc(100vw - 232px));max-width:none;padding:3px 5px 4px;border-radius:0;border:3px solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);font:700 11px/1.22 var(--cm-ui);text-align:center;transform:translate(-50%,5px)}
+.skin.skin.skin [data-pinball-hud] [data-pinball-pattern][data-on]{transform:translate(-50%,0)}
+.skin.skin.skin [data-pinball-hud] [data-pinball-pattern] b{display:block;color:var(--cm-red);font:italic 900 11px/1.1 var(--cm-title);text-transform:uppercase}
+@media(min-width:601px){.skin.skin.skin [data-pinball-hud] [data-pinball-pattern]{left:calc(var(--arcade-edge-x,16px) + env(safe-area-inset-left,0px));bottom:calc(var(--pb-bottom) + var(--pb-pad-h) + 14px);width:240px;padding:6px 10px 7px;font-size:13px;transform:translate(0,5px)}.skin.skin.skin [data-pinball-hud] [data-pinball-pattern][data-on]{transform:translate(0,0)}.skin.skin.skin [data-pinball-hud] [data-pinball-pattern] b{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.skin.skin.skin [data-pinball-hud] [data-pinball-pattern]{transform:translate(-50%,0)}}
+@media(prefers-reduced-motion:reduce) and (min-width:601px){.skin.skin.skin [data-pinball-hud] [data-pinball-pattern]{transform:none}}
+/* Flipper keys: an inked paper key with a printed disc. Left foot = sun / orange, right foot = teal / blue. Resting discs are the
+ * pale tint; the flipper to use next fills its disc in full colour; held, the disc turns the deep colour and the key presses into
+ * its shadow. The whole key is the hit area (unchanged size). */
+.skin.skin.skin footer>button[data-pinball-pad]{--pb-btn:calc(var(--pb-pad-h) - 56px);--face:#ffe39a;--lit:var(--cm-sun);--held:var(--cm-orange);justify-content:flex-end;gap:0;padding:0 0 8px;border-radius:0;border:3px solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);box-shadow:4px 4px 0 var(--cm-ink);font:800 13px/1 var(--cm-ui);letter-spacing:.02em;text-transform:uppercase;transform:none}
+.skin.skin.skin footer>button[data-pinball-pad=right]{--face:#c9f1ea;--lit:var(--cm-teal);--held:#2f7fd0;border-color:var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);box-shadow:4px 4px 0 var(--cm-ink)}
+.skin.skin.skin footer>button[data-pinball-pad] svg{display:none}
+.skin.skin.skin footer>button[data-pinball-pad] span{position:relative;font-size:13px;font-weight:800}
+.skin.skin.skin footer>button[data-pinball-pad]::before{content:"";position:absolute;left:50%;top:11px;width:var(--pb-btn);height:var(--pb-btn);margin-left:calc(var(--pb-btn) / -2);box-sizing:border-box;border-radius:50%;border:3px solid var(--cm-ink);background:var(--face);box-shadow:3px 3px 0 var(--cm-ink)}
+.skin.skin.skin footer>button[data-pinball-pad][data-ready=true]{border-color:var(--cm-ink);box-shadow:4px 4px 0 var(--cm-ink)}
+.skin.skin.skin footer>button[data-pinball-pad][data-ready=true]::before{background:var(--lit)}
+.skin.skin.skin footer>button[data-pinball-pad][data-held],.skin.skin.skin footer>button[data-pinball-pad]:active{transform:none;translate:4px 4px;background:var(--cm-paper);color:var(--cm-ink);border-color:var(--cm-ink);box-shadow:0 0 0 var(--cm-ink)!important}
+.skin.skin.skin footer>button[data-pinball-pad][data-held]::before{background:var(--held);box-shadow:0 0 0 var(--cm-ink);translate:3px 3px}
+/* Launch is the sun key with a printed pull gauge (orange fill, the --charge read). In play it becomes the paper Nudge key you shove
+ * (it presses into its shadow, and greys while a nudge is not available). */
+.skin.skin.skin footer>button[data-pinball-launch]{border-radius:0;border:3px solid var(--cm-ink);background:var(--cm-sun);color:var(--cm-ink);box-shadow:4px 4px 0 var(--cm-ink);font:800 17px/1 var(--cm-ui);letter-spacing:.02em;text-transform:uppercase}
+.skin.skin.skin footer>button[data-pinball-launch] i{background:var(--cm-orange);opacity:1}
+.skin.skin.skin footer>button[data-pinball-launch] span{position:relative;text-shadow:none}
+.skin.skin.skin footer>button[data-pinball-launch=launch][data-held]{transform:none;translate:4px 4px;border-color:var(--cm-ink);box-shadow:0 0 0 var(--cm-ink)!important}
+.skin.skin.skin footer>button[data-pinball-launch=nudge]{background:var(--cm-paper);color:var(--cm-ink);font-size:14px}
+.skin.skin.skin footer>button[data-pinball-launch=nudge] span::before{content:"\2039\2039\00a0\00a0"}
+.skin.skin.skin footer>button[data-pinball-launch=nudge] span::after{content:"\00a0\00a0\203a\203a"}
+.skin.skin.skin footer>button[data-pinball-launch=nudge][data-held]{transform:none;translate:4px 4px;background:var(--cm-sun);border-color:var(--cm-ink);box-shadow:0 0 0 var(--cm-ink)!important}
+.skin.skin.skin footer>button[data-pinball-launch=nudge]:disabled{opacity:1;background:#e9dcc2;color:#7a6a70;box-shadow:none}
+.skin.skin.skin footer>button:is([data-pinball-pad],[data-pinball-launch]):focus-visible{outline:var(--cm-focus);outline-offset:3px}
+@media(pointer:fine) and (min-width:601px){.skin.skin.skin footer>button[data-pinball-pad]{--pb-btn:calc(var(--pb-pad-h) - 42px)}.skin.skin.skin footer>button[data-pinball-pad]::before{top:9px}}
+/* Pass 3, sideways phone (520 px or shorter): Launch / Nudge leaves the centre, where it covered the flipper gap, and sits on the right
+ * rail above the right flipper button (the coaching card mirrors it on the left). The camera's flip line then runs near the bottom edge. */
+@media(max-height:520px) and (orientation:landscape){.skin.skin.skin footer>button[data-pinball-launch]{position:absolute;right:calc(var(--arcade-edge-x,16px) + env(safe-area-inset-right,0px));bottom:calc(var(--pb-bottom) + var(--pb-pad-h) + 10px);width:min(200px,calc(50vw - 240px));min-width:132px;height:48px;min-height:48px}.skin.skin.skin footer>button[data-pinball-launch=nudge]{height:48px;min-height:48px}.skin.skin.skin footer>button[data-pinball-pad=right]{grid-column:3}}
+@media(prefers-reduced-motion:reduce){.skin.skin.skin footer>button:is([data-pinball-pad],[data-pinball-launch])[data-held],.skin.skin.skin footer>button[data-pinball-pad]:active{translate:none}.skin.skin.skin footer>button[data-pinball-pad][data-held]::before{translate:none}}

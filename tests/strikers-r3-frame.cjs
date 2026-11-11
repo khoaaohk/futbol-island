@@ -15,7 +15,7 @@ const i=css.indexOf(FRAME);assert.ok(i>0,'frame block for tall non-phone windows
 assert.match(block,/\.root\.root\{inset:auto 0;top:calc\(50dvh - 37\.5vw\);height:75vw;/,'4:3 frame, centred, beats ArcadeRoom section height:100%');
 assert.match(block,/\.backdrop\{display:block;position:fixed;inset:0;z-index:139;/,'a backdrop under the frame that also blocks taps to the room behind');
 assert.match(block,/\.root \.overlay\{position:fixed;inset:0;z-index:6;/,'menus use the whole window');
-assert.match(css,/\.backdrop\{display:none\}/);assert.match(live,/<div className=\{styles\.backdrop\} aria-hidden="true"\/><section className=\{styles\.root\}/);
+assert.match(css,/\.backdrop\{display:none\}/);assert.match(live,/<div className=\{styles\.backdrop\} aria-hidden="true"\/><section className=\{`\$\{styles\.root\} \$\{arcadeSkin\.live\}`\}/);
 // No containment on the root: fixed modals (leaderboards) must still cover the window.
 assert.doesNotMatch(css,/container-type/);
 assert.match(css,/@media\(pointer:fine\) and \(orientation:portrait\)\{\n \.root \.touchControls\{display:none\}/,'mouse windows: keyboard, no touch buttons');

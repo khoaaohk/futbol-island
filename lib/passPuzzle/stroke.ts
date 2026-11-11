@@ -2,6 +2,7 @@
 import type {StrokePoint,PuzzleWorld,Kick,Vec2} from './types';
 import {clamp,travel,MEET_SPEED} from './sim';
 import {geoOf} from './physics';
+import {clampPlace} from './aim';
 
 export const HOLD_R=0.4;          // m: how still "holding still" is
 export const HOLD_MIN=0.25;       // s before loft starts
@@ -74,7 +75,10 @@ function readGesture(points:StrokePoint[],world:PuzzleWorld):Kick{
 }
 
 export type PassControlMode='auto'|'ground'|'lift'|'shoot';
-export type PassControlOptions={mode?:PassControlMode;power?:number;shotHeight?:number};
+export type PassControlOptions={mode?:PassControlMode;power?:number;shotHeight?:number;
+  /** Aim anywhere (Nov 11 2026): the spot on the goal face the finger is pointing at (from the arcade's camera ray).
+   *  The stroke becomes a shot placed there; without it a stroke reads exactly as before. */
+  place?:{x:number;y:number;ideal?:boolean}};
 /** Explicit controls share one interpretation for preview and actual release. */
 export function readStroke(points:StrokePoint[],world:PuzzleWorld,options:PassControlOptions={}):Kick{
  const kick=readGesture(points,world),mode=options.mode??'auto';
@@ -89,6 +93,11 @@ export function readStroke(points:StrokePoint[],world:PuzzleWorld,options:PassCo
   kick.kind='shot';kick.receiver=undefined;kick.target={x:clamp(x,-geo.halfGoal+.25,geo.halfGoal-.25),z:geo.goalZ};kick.loft=0;
   if(Number.isFinite(options.shotHeight))kick.shotHeight=clamp(options.shotHeight!,0,1);
   else kick.shotHeight=gestureLoft;
+ }
+ if(options.place&&Number.isFinite(options.place.x+options.place.y)){
+  const geo=geoOf(world.scenario),place=clampPlace(geo,options.place);if(options.place.ideal)place.ideal=true;
+  kick.kind='shot';kick.receiver=undefined;kick.loft=0;kick.shotHeight=undefined;kick.place=place;
+  kick.target={x:clamp(place.x,-geo.halfGoal+.25,geo.halfGoal-.25),z:geo.goalZ};
  }
  if(options.power!==undefined&&Number.isFinite(options.power))kick.power=clamp(options.power,.1,1);
  return kick;

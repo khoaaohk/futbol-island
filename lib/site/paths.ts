@@ -6,6 +6,7 @@ import {HUB_PATHS,SAFE_GUIDE} from './hubs';
 import {SITE_UPDATED} from './updated';
 import {ALL_GUIDE_PAGES} from './guides';
 import {TOOL_PAGES,TOOLS_UPDATED} from './tools/registry';
+import {GAME_LISTINGS,GAMES_UPDATED} from './games';
 /**
  * Every public, indexable path (app/sitemap.ts, tests/seo-pages.cjs). Nov 3 2026 (owner): `/` is the home page (the feature tour,
  * formerly /learn, which now redirects to `/`) and the main entry; the game is /play, indexable at a low priority.
@@ -25,6 +26,7 @@ export function sitePaths():{path:string;priority:number;lastmod:string}[]{
   ...GUIDE_PATHS.map(path=>({path,priority:.8,lastmod:U.hubs})),
   ...ALL_GUIDE_PAGES.map(g=>({path:g.path,priority:g.hub?.8:.7,lastmod:U.guides})),/* guide clusters: formations, positions, rules, size charts, glossary (lib/site/guides.ts) */
   ...TOOL_PAGES.map(t=>({path:t.path,priority:t.hub?.8:.7,lastmod:TOOLS_UPDATED})),/* the free coach tools and printables (lib/site/tools/registry.ts) */
+  ...GAME_LISTINGS.map(g=>({path:g.path,priority:g.hub?.8:.7,lastmod:GAMES_UPDATED})),/* the arcade games' search pages (lib/site/games.ts) */
   ...LESSONS.map(l=>({path:lessonPath(l.id),priority:.6,lastmod:U.lessons})),...SITE_FISH.map(f=>({path:fishPath(f.id),priority:.4,lastmod:U.fish})),
   ...SITE_CARDS.map(c=>({path:cardPath(c.number),priority:.4,lastmod:U.cards})),...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),priority:.5,lastmod:U.exhibits}))];
 }

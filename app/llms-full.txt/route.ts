@@ -9,6 +9,7 @@ import {HUBS,SAFE_GUIDE} from '@/lib/site/hubs';
 import {SAFE_FACTS,SAFE_FAQ} from '@/lib/site/safety';
 import {ALL_GUIDE_PAGES} from '@/lib/site/guides';
 import {TOOL_PAGES} from '@/lib/site/tools/registry';
+import {GAME_LISTINGS} from '@/lib/site/games';
 /**
  * /llms-full.txt (Oct 16 2026): the About text, the grown-ups' FAQ (Nov 3 2026) plus the lesson and museum index as one plain-text file for AI assistants.
  * Built once at build time from the same data as the pages (no file to keep in step by hand).
@@ -39,6 +40,8 @@ export function GET(){
   ...ALL_GUIDE_PAGES.map(g=>`- [${g.title}](${abs(g.path)}): ${g.description}`),'',
   '## Free tools and printables for coaches','',/* lib/site/tools/registry.ts, Nov 10 2026 */
   ...TOOL_PAGES.map(t=>`- [${t.title}](${abs(t.path)}): ${t.description}`),'',
+  '## Free soccer games (the arcade)','',/* lib/site/games.ts, Nov 10 2026 */
+  ...GAME_LISTINGS.map(g=>`- [${g.title}](${abs(g.path)}): ${g.description}`),'',
   '## Questions grown-ups ask','',
   ...LEARN_FAQ.flatMap(f=>[`### ${f.q}`,f.a,'']),
   '## Lessons','',

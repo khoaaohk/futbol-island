@@ -144,13 +144,15 @@ for(const hz of [30,60,120]){const s=active(WALL_X[0],WALL_Y+60,0,-700);advance(
 {const s=active(150,420,300,0);assert.ok(P.startMultiball(s));s.ball.vy=0;Object.assign(s.extra,{x:166,y:420,vx:-300,vy:0});sub(s,8);assert.ok(s.ball.vx<0&&s.extra.vx>0,'two balls knock into each other');}
 {const s=active(180,200,0,-300);P.startMultiball(s);Object.assign(s.extra,{x:130,y:480,vx:0,vy:350});assert.equal(P.pinballReadyFoot(s),0,'the timing light also reads the second ball');}
 // 18. Match clock: half time, stoppage time, full time with a kept-ball bonus; the Cup Final always finishes.
+// Nov 10 2026 (endless play): full time no longer ends the run (these four cases pinned phase 'over'). The whistle pays the bonus, the
+// level rises, the clock restarts and the ball plays on; the run is over only when the last ball is lost (tests/pinball-endless.cjs).
 {const s=active(60,300,0,0);s.clock=P.PINBALL_MATCH_TIME/2-1e-4;sub(s);assert.equal(s.halfTime,true);assert.equal(s.cue,'halfTime');assert.equal(P.pinballMinute(s),"45'");
  s.clock=P.PINBALL_MATCH_TIME-1e-4;sub(s);assert.ok(s.stoppage>=0);assert.equal(s.cue,'stoppage');assert.equal(P.pinballMinute(s),"90+1'");
- const score=s.score;s.stoppage=P.PINBALL_STOPPAGE-1e-4;sub(s,2);assert.equal(s.phase,'over','stoppage time runs out: full time');assert.equal(s.fullTimeBonus,3*P.PINBALL_FULLTIME_BALL);assert.ok(s.score-score>=1500);
- assert.match(F.pinballTableMessage(s),/^Full time · \+1,500 for balls kept · /);}
+ const score=s.score;s.stoppage=P.PINBALL_STOPPAGE-1e-4;sub(s,2);assert.equal(s.phase,'playing','stoppage time runs out: full time, and the ball plays on');assert.equal(s.cue,'fullTime');assert.equal(s.match,2);assert.equal(s.fullTimeBonus,3*P.PINBALL_FULLTIME_BALL);assert.ok(s.score-score>=1500);
+ assert.equal(P.pinballMinute(s),"0'");assert.equal(s.stoppage,-1);assert.equal(s.halfTime,false);assert.match(F.pinballTableMessage(s),/^FULL TIME! \+1500 · LEVEL 2 kicks off\. /);}
 {const s=active(60,300,0,0);s.clock=P.PINBALL_MATCH_TIME;s.stoppage=P.PINBALL_STOPPAGE+1;s.table.mode='final';s.table.modeTime=30;sub(s,4);assert.equal(s.phase,'playing','the Cup Final plays on past full time');
- s.table.modeTime=1e-4;sub(s,4);assert.equal(s.phase,'over');}
-{const s=active(180,49,0,-400);s.clock=P.PINBALL_MATCH_TIME;s.stoppage=3;advance(s,.03);assert.equal(s.phase,'goal','a stoppage-time winner still counts');advance(s,1.6);assert.equal(s.phase,'over');assert.equal(s.cue,'fullTime');}
+ assert.equal(s.match,1,'no whistle during the Cup Final');s.table.modeTime=1e-4;sub(s,4);assert.equal(s.phase,'playing');assert.equal(s.match,2,'the whistle goes when the Cup Final ends');}
+{const s=active(180,49,0,-400);s.clock=P.PINBALL_MATCH_TIME;s.stoppage=3;advance(s,.03);assert.equal(s.phase,'goal','a stoppage-time winner still counts');advance(s,1.6);assert.equal(s.phase,'ready','the next match kicks off from the plunger');assert.equal(s.cue,'fullTime');assert.equal(s.match,2);assert.equal(s.balls,3);assert.equal(s.fullTimeBonus,3*P.PINBALL_FULLTIME_BALL+100,'balls in hand and the goal');}
 {const s=createPinballState();launchPinball(s);const t=s.clock;s.phase='ready';advance(s,2);assert.equal(s.clock,t,'the clock stops while the ball waits on the plunger');}
 // 19. Full-time takeaway is one kid-sized next step.
 {const s=createPinballState();assert.match(F.pinballTakeaway(s),/reach your flipper/);s.goals=2;assert.match(F.pinballTakeaway(s),/kickboard/);s.stats.wallPasses=1;s.stats.parries=2;assert.match(F.pinballTakeaway(s),/rebound/);s.stats.rebounds=1;assert.match(F.pinballTakeaway(s),/posts/);s.stats.corners=1;assert.match(F.pinballTakeaway(s),/ring/,'a run that never read a rebound points at the landing ring');s.stats.reads=2;s.stats.perfect=3;assert.match(F.pinballTakeaway(s),/strikers/);assert.match(F.pinballTakeaway(s),/2 rebounds read, 3 perfect/);

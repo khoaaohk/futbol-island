@@ -1,0 +1,103 @@
+/* Island Strikers HUD skin. Owned by the Island Strikers builder.
+ * The class lands on the game root next to data-game="live", so every rule here is scoped to this game:
+ *   .skin [data-...]{...}  or  .skin :global(.someSharedClass){...}
+ * Shared chrome (back button, pause card, results, top bar) reads CSS custom properties: prefer setting those here over
+ * overriding shared rules. Keep the back-to-arcade button as it is (the one common element across games). */
+.skin{--arcade-skin:live;}
+/* Arcade AAA pass 1 (Nov 10 2026, docs/arcade-aaa/strikers-direction.md): "Tide Sport Live", a TV broadcast package.
+ * Flat slabs, hard corners, condensed caps, one signal yellow. No glow, no gradient, no pill. --bc is the broadcast face
+ * (system condensed sans, no network font); LiveArcadeMatch.module.css uses it for the in-match graphics. */
+.skin{--bc:"Avenir Next Condensed","Roboto Condensed","Arial Narrow",var(--font-body),Arial,sans-serif;--bc-ink:#0d1015;--bc-slab:#171b22;--bc-paper:#f3f1ea;--bc-signal:#f2d21b;--bc-live:#e5372b;--bc-gold:#f0b429;--bc-blue:#2f7fd6}
+/* Scorebug: ident tab · GOLD tag · score · clock on paper · score · BLUE tag. One slab, cells split by colour, not by lines. */
+.skin.skin [data-arcade-pill=versus]{display:grid;grid-auto-flow:column;align-items:stretch;gap:0;padding:0;border:0;border-radius:3px;overflow:hidden;background:var(--bc-ink);box-shadow:none;font-family:var(--bc);height:36px}
+.skin.skin [data-arcade-pill=versus]::before{content:'TIDE';display:grid;place-items:center;padding:1px 9px 0;background:var(--bc-ink);color:var(--bc-signal);font:700 13px/1 var(--bc);letter-spacing:.1em;border-left:4px solid var(--bc-live)}
+.skin.skin [data-arcade-pill=versus] span{display:grid;place-items:center;padding:1px 11px 0;font:700 15px/1 var(--bc);letter-spacing:.05em;text-transform:uppercase;background:var(--bc-gold);color:var(--bc-ink)}
+.skin.skin [data-arcade-pill=versus] span:last-child{background:var(--bc-blue);color:#fff}
+.skin.skin [data-arcade-pill=versus] b{display:grid;place-items:center;min-width:36px;padding-top:1px;background:var(--bc-slab);color:var(--bc-paper);font:700 25px/1 var(--bc);font-variant-numeric:tabular-nums}
+.skin.skin [data-arcade-pill=versus] time{display:grid;place-items:center;align-self:stretch;min-width:50px;padding:1px 8px 0;background:var(--bc-paper);color:var(--bc-ink);font:700 17px/1 var(--bc);font-variant-numeric:tabular-nums}
+.skin.skin [data-arcade-pause]{border:2px solid #f3f1ea8c;border-radius:4px;background:#10141be6;box-shadow:none;color:var(--bc-paper)}
+@media (max-height:520px){.skin.skin [data-arcade-pill=versus]{height:32px;padding:0}.skin.skin [data-arcade-pill=versus] b{font-size:22px;min-width:32px}}
+@media (max-width:360px){.skin.skin [data-arcade-pill=versus]{padding:0;gap:0}.skin.skin [data-arcade-pill=versus] span{padding-inline:7px;font-size:13px}.skin.skin [data-arcade-pill=versus]::before{display:none}}
+/* Pass 2: the picture is full-bleed in landscape (phone sideways and desktop). The top bar floats over the stadium like broadcast
+ * graphics instead of sitting on a black strip, which gives the far stand, the gantry and the sky the top of the frame. */
+@media (orientation:landscape){.skin.skin [data-arcade-bar]{position:absolute;top:0;left:0;right:0;z-index:5;background:transparent;pointer-events:none}}
+/* Pass 2: the scorebug drops in when the match goes live, the pause key is a square broadcast key, and the shared pause card wears
+ * the match-card look (styled from here through its data hooks; no markup change). */
+.skin.skin[data-phase=playing] [data-arcade-pill=versus]{animation:strikerBugIn .55s cubic-bezier(.2,.8,.2,1) both}
+@keyframes strikerBugIn{from{opacity:0;transform:translateY(-56px)}to{opacity:1;transform:none}}
+.skin.skin [data-arcade-pill=versus]{border-radius:0}
+.skin.skin [data-arcade-pause]{border:0;border-radius:0;background:#0d1015e6}
+.skin.skin [data-arcade-resume]{border:0;border-radius:0;background:var(--bc-signal);color:var(--bc-ink);box-shadow:none;font-weight:800}
+.skin.skin [data-arcade-exit],.skin.skin [data-arcade-restart]{border:0;border-radius:0;background:#1f2530;color:var(--bc-paper);box-shadow:none;font-weight:800}
+.skin.skin [data-arcade-pause-score]{font-family:var(--bc);font-weight:600;text-transform:uppercase;color:var(--bc-paper)}
+.skin.skin section[role=dialog][aria-label=Paused]{border:0;border-top:8px solid var(--bc-signal);border-radius:0;background:#12161d;color:var(--bc-paper);box-shadow:none}
+.skin.skin section[role=dialog][aria-label=Paused] h2{font-family:var(--bc);font-weight:800;text-transform:uppercase;letter-spacing:-.01em;color:var(--bc-paper)}
+@media (prefers-reduced-motion:reduce){.skin.skin[data-phase=playing] [data-arcade-pill=versus]{animation:none}}
+
+/* ===== Shared overlays in this game's language (overlay pass, Nov 10 2026) =====
+ * The pause card, the leaderboards and the high-score entry are shared components (components/arcade/*); here they are drawn as
+ * Tide Sport broadcast graphics through their data hooks: a full-time style match card, a league table and score cells. Flat slabs
+ * split by tone, square corners, condensed caps, one signal yellow. No markup, copy, focus order or hit size changes. Appended;
+ * the builder's rules above are untouched (these out-rank them with the skin class four times). */
+.skin.skin.skin.skin [data-arcade-paused]{background:#05070ddb}
+.skin.skin.skin.skin [data-arcade-pause-card]{gap:0;padding:0;border:0;border-top:8px solid var(--bc-signal);border-radius:0;background:var(--bc-slab);color:var(--bc-paper);box-shadow:none;text-align:left}
+.skin.skin.skin.skin [data-arcade-pause-title]{padding:14px 18px 10px;font:800 44px/.9 var(--bc);letter-spacing:-.01em;text-transform:uppercase;color:var(--bc-paper)}
+.skin.skin.skin.skin [data-arcade-pause-score]{padding:9px 18px 8px;background:var(--bc-paper);color:var(--bc-ink);font:600 19px/1.1 var(--bc);letter-spacing:.02em;text-transform:uppercase;font-variant-numeric:tabular-nums}
+.skin.skin.skin.skin [data-arcade-pause-status]{padding:8px 18px;background:var(--bc-ink);color:var(--bc-signal);font:600 15px/1.25 var(--bc)}
+.skin.skin.skin.skin [data-arcade-resume]{margin:0;border:0;border-radius:0;background:var(--bc-signal);color:var(--bc-ink);box-shadow:none;font:800 19px/1.2 var(--font-body),Arial,sans-serif;text-align:left;padding:10px 18px;transition:background-color .12s}
+.skin.skin.skin.skin [data-arcade-resume]:active{translate:none;background:#fff;box-shadow:none}
+.skin.skin.skin.skin [data-arcade-pause-row]{gap:2px;margin-top:2px;background:var(--bc-ink)}
+.skin.skin.skin.skin :is([data-arcade-exit],[data-arcade-restart],[data-arcade-pause-extra]){border:0;border-radius:0;background:#232a36;color:var(--bc-paper);box-shadow:none;font:800 14px/1 var(--font-body),Arial,sans-serif}
+.skin.skin.skin.skin :is([data-arcade-exit],[data-arcade-restart],[data-arcade-pause-extra]):active{background:#2f3847}
+.skin.skin.skin.skin [data-arcade-pause-keys]{justify-content:flex-start;gap:6px 14px;margin:0;padding:10px 18px 12px;background:var(--bc-ink);color:#aab3c2;font:600 14px/1 var(--bc);text-transform:uppercase;letter-spacing:.03em}
+.skin.skin.skin.skin [data-arcade-pause-keys] kbd{border:0;border-radius:0;background:var(--bc-paper);color:var(--bc-ink);font:700 13px/1.5 var(--bc)}
+.skin.skin.skin.skin [data-arcade-paused] button:focus-visible{outline:3px solid #fff;outline-offset:-5px}
+/* League table and score entry: one slab, a yellow key bar, cells split by tone. */
+.skin.skin.skin.skin [data-arcade-board]{border:0;border-top:8px solid var(--bc-signal);border-radius:0;background:var(--bc-slab);color:var(--bc-paper);box-shadow:none;--btn-focus:3px solid #fff}
+.skin.skin.skin.skin [data-arcade-board]::backdrop{background:#05070ddb}
+.skin.skin.skin.skin [data-board-head]{border-bottom:0;background:var(--bc-ink)}
+.skin.skin.skin.skin [data-board-title]{font:800 34px/.95 var(--bc);text-transform:uppercase;letter-spacing:-.01em;color:var(--bc-paper);text-shadow:none}
+.skin.skin.skin.skin [data-board-title][data-gold]{color:var(--bc-signal);text-shadow:none}
+.skin.skin.skin.skin [data-board-body] p{color:#c3cad6}
+.skin.skin.skin.skin [data-board-body] :is([data-board-learn],[data-board-note],[data-board-small]){color:#aab3c2!important;text-align:left}
+.skin.skin.skin.skin [data-board-games]{gap:2px}
+.skin.skin.skin.skin [data-board-tabs]{gap:2px}
+.skin.skin.skin.skin [data-board-chip]{border:0;border-radius:0;background:#232a36;color:var(--bc-paper);box-shadow:none;font:800 13px/1.1 var(--font-body),Arial,sans-serif}
+.skin.skin.skin.skin [data-board-chip][aria-selected=true]{background:var(--bc-signal);color:var(--bc-ink);box-shadow:none}
+.skin.skin.skin.skin [data-board-rows] li{grid-template-columns:44px 30px 1fr auto;gap:10px;min-height:44px;margin:0 0 2px;padding:0 14px 0 0;border:0;border-radius:0;background:#1e242e;box-shadow:none;animation:none}
+.skin.skin.skin.skin [data-board-rows] li:nth-child(even){background:#232a36}
+.skin.skin.skin.skin [data-board-rank]{align-self:stretch;display:grid;place-items:center;background:var(--bc-ink);color:var(--bc-paper);font:700 19px/1 var(--bc);font-variant-numeric:tabular-nums}
+.skin.skin.skin.skin [data-board-rows] li[data-rank="1"] [data-board-rank]{background:var(--bc-signal);color:var(--bc-ink)}
+.skin.skin.skin.skin [data-board-who]{font:700 24px/1 var(--bc);letter-spacing:.14em;color:var(--bc-paper)}
+.skin.skin.skin.skin [data-board-pts]{font:700 22px/1 var(--bc);font-variant-numeric:tabular-nums;color:var(--bc-paper)}
+.skin.skin.skin.skin [data-board-rows] li[data-mine] [data-board-rank]{background:var(--bc-blue);color:#fff}
+.skin.skin.skin.skin [data-board-rows] li[data-new]{background:var(--bc-paper)}
+.skin.skin.skin.skin [data-board-rows] li[data-new] :is([data-board-who],[data-board-pts]){color:var(--bc-ink)}
+.skin.skin.skin.skin [data-board-rows] li[data-new] [data-board-rank]{background:var(--bc-live);color:#fff}
+.skin.skin.skin.skin [data-board-you]{padding:3px 6px 2px;border-radius:0;background:var(--bc-blue);color:#fff;font:700 12px/1.1 var(--bc);letter-spacing:.08em}
+.skin.skin.skin.skin [data-board-body] p[data-board-empty]{border:0;border-left:6px solid var(--bc-signal);border-radius:0;background:#1e242e;color:var(--bc-paper);text-align:left;padding:18px 16px}
+.skin.skin.skin.skin [data-board-body] [data-board-cheer]{border:0;border-radius:0;background:var(--bc-signal);color:var(--bc-ink)!important;font:800 22px/1.1 var(--bc)!important;text-transform:uppercase;text-align:left}
+.skin.skin.skin.skin [data-hs-lead]{text-align:left}
+.skin.skin.skin.skin [data-hs-lead] strong{font:800 72px/.9 var(--bc);color:var(--bc-paper);text-shadow:none;font-variant-numeric:tabular-nums}
+.skin.skin.skin.skin [data-hs-lead] span{font:700 15px/1.2 var(--bc);letter-spacing:.06em;color:var(--bc-signal)}
+.skin.skin.skin.skin [data-hs-lead] em{color:var(--bc-paper)}
+.skin.skin.skin.skin [data-hs-label]{font:700 15px/1.2 var(--bc);letter-spacing:.06em;color:#aab3c2}
+.skin.skin.skin.skin [data-hs-wheels]{justify-content:flex-start;gap:4px}
+.skin.skin.skin.skin [data-hs-wheel]{gap:4px}
+.skin.skin.skin.skin [data-hs-step]{border:0;border-radius:0;background:#232a36;color:var(--bc-paper);box-shadow:none;width:72px}
+.skin.skin.skin.skin [data-hs-step]:active{transform:none;background:#2f3847;box-shadow:none}
+.skin.skin.skin.skin [data-wheel]{border:0;border-radius:0;background:var(--bc-ink);color:var(--bc-paper);font:800 60px/1 var(--bc);text-shadow:none;box-shadow:none}
+.skin.skin.skin.skin [data-wheel][aria-current=true]{background:var(--bc-paper);color:var(--bc-ink);box-shadow:inset 0 -6px 0 var(--bc-signal)}
+.skin.skin.skin.skin [data-hs-icons]{gap:2px}
+.skin.skin.skin.skin [data-hs-icon]{border:0;border-radius:0;background:#232a36;box-shadow:none}
+.skin.skin.skin.skin [data-hs-icon][aria-pressed=true]{background:var(--bc-paper);box-shadow:inset 0 -5px 0 var(--bc-signal)}
+.skin.skin.skin.skin [data-hs-icon] small{color:inherit}
+.skin.skin.skin.skin [data-hs-icon][aria-pressed=true] small{color:var(--bc-ink)}
+.skin.skin.skin.skin [data-board-actions]{gap:2px}
+.skin.skin.skin.skin [data-board-btn]{border:0;border-radius:0;box-shadow:none;font:800 16px/1.2 var(--font-body),Arial,sans-serif;text-align:left;transition:background-color .12s}
+.skin.skin.skin.skin [data-board-btn=primary]{background:var(--bc-signal);color:var(--bc-ink)}
+.skin.skin.skin.skin [data-board-btn=secondary]{background:#232a36;color:var(--bc-paper)}
+.skin.skin.skin.skin [data-board-btn]:active{translate:none;box-shadow:none}
+.skin.skin.skin.skin [data-board-btn=primary]:not(:disabled):active{background:#fff}
+@media (prefers-reduced-motion:reduce){.skin.skin.skin.skin :is([data-arcade-resume],[data-board-btn]){transition:none}}
+.skin.skin.skin.skin [data-arcade-paused] [data-arcade-resume]:focus-visible{outline-color:var(--bc-ink)}

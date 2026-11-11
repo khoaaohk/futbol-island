@@ -5,6 +5,7 @@ import {SITE_CARDS,cardPath} from '../cards';
 import {SITE_EXHIBITS,exhibitPath} from '../exhibits';
 import {fileUrl,PRINTABLES,PRINTABLES_HUB_PATH} from './printables';
 import {TOOL_PAGES} from './registry';
+import {GAME_LISTINGS} from '../games';
 /**
  * /sitemap-images.xml (Nov 10 2026): the pictures of each page for image search, as Google's image sitemap extension. Next
  * 14.2.15's MetadataRoute.Sitemap has no `images` field (it arrived in a later release), so this is its own static file,
@@ -18,6 +19,7 @@ export function imageEntries():ImageEntry[]{
  return [
   ...ALL_GUIDE_PAGES.filter(g=>g.image).map(g=>({path:g.path,images:[g.image!]})),
   ...TOOL_PAGES.map(t=>({path:t.path,images:printable.get(t.path)??(t.path===PRINTABLES_HUB_PATH?PRINTABLES.map(p=>fileUrl(p.files[0].name,'png')):t.image?[t.image]:[])})).filter(e=>e.images.length>0),
+  ...GAME_LISTINGS.map(g=>({path:g.path,images:g.images})),/* the arcade games' screenshots and share pictures (lib/site/games.ts) */
   ...SITE_FISH.map(f=>({path:fishPath(f.id),images:[fishArtPath(f.id),ogPath(fishPath(f.id))]})),
   ...SITE_CARDS.map(c=>({path:cardPath(c.number),images:[ogPath(cardPath(c.number))]})),
   ...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),images:[ogPath(exhibitPath(e.id))]})),

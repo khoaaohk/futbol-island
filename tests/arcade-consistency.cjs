@@ -28,8 +28,8 @@ uses('bar',['edge-top','edge-x','bar-h'],'score bar gutters + Back / Pause size'
 uses('pause',['card-w','card-r','card-pad','card-title','primary-h','small-h'],'pause card');
 uses('strikers',['stick','edge-x','edge-bottom','bar-clear','btn-main','btn','btn-sm','card-wide','card-r','card-pad','card-title','primary-h','small-h'],'Strikers stick, thumb arc, start / full-time card');
 uses('breakawayPad',['stick','edge-x','edge-bottom','bar-clear','btn-main','btn','btn-sm'],'Breakaway stick + thumb cluster');
-uses('breakawayCard',['card-wide','card-r','card-pad','card-title','primary-h','small-h','bar-clear'],'Breakaway menu card');
-uses('tennisCard',['card-pad','card-r','card-title','primary-h','small-h'],'Tennis card');
+/* Nov 10 2026 arcade AAA: Breakaway's comic title card is square-cornered by direction (docs/arcade-aaa/runner-direction.md), so it no longer reads --arcade-card-r. */uses('breakawayCard',['card-wide','card-pad','card-title','primary-h','small-h','bar-clear'],'Breakaway menu card');
+/* Nov 10 2026 comic house style: the Tennis card is square-cornered like Breakaway's (docs/arcade-aaa/tennis-direction.md), so it no longer reads --arcade-card-r. */uses('tennisCard',['card-pad','card-title','primary-h','small-h'],'Tennis card');
 uses('pinballCard',['card-wide','card-r','card-pad','card-title','primary-h','small-h'],'Pinball card');
 uses('puzzle',['edge-x','bar-clear'],'Pass Puzzles hint dock / undo / clock');
 const tennis=css.a3d.slice(css.a3d.indexOf("/* ===== Consistency audit (Oct 27 2026"),css.a3d.indexOf('/* Futbol Pinball full-screen cabinet'));

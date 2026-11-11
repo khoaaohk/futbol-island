@@ -3,6 +3,7 @@ import {QA} from '@/components/site/LessonHub';
 import {FORMATIONS_HUB,formationBySlug,formatGuide} from '@/lib/site/formations';
 import {NUMBERS,POSITIONS,POSITIONS_HUB as HUB,positionPath} from '@/lib/site/positions';
 import {formationImage,guideCrumbs} from '@/lib/site/guides';
+import {gameLink} from '@/lib/site/games';
 import {Bullets,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -37,7 +38,7 @@ export default function PositionsHub(){
   </Section>
   <Section id="lessons" title="Lessons that introduce the positions"><LessonList lessons={HUB.lessons}/></Section>
   <QA id="faq" title="Questions about positions" faq={HUB.faq}/>
-  <Section id="related" title="Keep reading"><LinkList links={[{path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.h1,line:FORMATIONS_HUB.blurb},{path:'/learn/lessons',name:'All football lessons',line:'Every lesson in 7v7, 9v9, 11v11 and futsal'}]}/></Section>
+  <Section id="related" title="Keep reading"><LinkList links={[gameLink('snake'),/* the arcade game that builds formations (lib/site/games.ts) */{path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.h1,line:FORMATIONS_HUB.blurb},{path:'/learn/lessons',name:'All football lessons',line:'Every lesson in 7v7, 9v9, 11v11 and futsal'}]}/></Section>
   <GuideEnd cta={false}/>
  </>;
 }

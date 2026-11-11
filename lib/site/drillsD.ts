@@ -26,7 +26,7 @@ export const DRILLS_D:RawDrill[]=[
   mistakes:['Looking too late, when the ball is already at the feet, which leads to a bad touch.','Turning the whole body to look. It is a turn of the head with the body side on.','Calling a color and then ignoring it. Tie the look to a decision as soon as you can.'],
   game:'Our first receiving lesson starts with these words: look for pressure before receiving. A player who has looked knows whether to turn or to give the ball back, and plays faster than one who finds out after the first touch.',
   home:'A parent stands behind and holds up fingers, and the child calls the number before a wall pass comes back.',
-  lessons:['learn7_receive','learn9_receive','dbz_7_dontballwatch','bld_11_throughlines'],links:[G.cm,G.dm,G.firstTouch],related:['receive-and-turn','receive-across-the-body','busy-square-dribbling','rondo-3v1'],
+  lessons:['learn7_receive','learn9_receive','dbz_7_dontballwatch','bld_11_throughlines'],links:[G.cm,G.dm,G.firstTouch,G.kitRush],related:['receive-and-turn','receive-across-the-body','busy-square-dribbling','rondo-3v1'],
   faq:[{q:'What is scanning in soccer?',a:'Looking around, away from the ball, to see where teammates, opponents and space are. Coaches also call it checking your shoulder.'},
    {q:'At what age can kids learn to scan?',a:'From about U8 with simple games like this one. Younger players are still learning to control the ball, which takes all their attention.'},
    {q:'When should a player look?',a:'While the ball is travelling to a teammate or to them, not while it is at their own feet. The last look comes just before the pass arrives.'}]},

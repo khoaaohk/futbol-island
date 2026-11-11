@@ -310,3 +310,217 @@
 @keyframes ppBestFlash{0%{box-shadow:0 0 0 0 #ffd45c00}30%{box-shadow:0 0 0 3px #ffd45c,0 0 22px #ffd45c80}100%{box-shadow:0 0 0 0 #ffd45c00}}
 @keyframes ppShakeGoal{0%,100%{translate:0 0}25%{translate:0 -3px}50%{translate:2px 2px}75%{translate:-1px 0}}
 @keyframes ppShakeSteal{0%,100%{translate:0 0}33%{translate:-3px 0}66%{translate:2px 0}}
+
+/* ── Comic house style (Nov 10 2026): "The Tactics Pitch" HUD (docs/arcade-aaa/puzzle-direction.md). ──
+   Everything above keeps its layout, sizes and behaviour; this layer only changes what the parts are made of, with the shared
+   comic HUD kit's tokens (--cm-*, components/games/comic/comic.module.css, put on the game root by comicRoot): paper, ink
+   borders, square corners, hard offset shadows that collapse when pressed, one Ben-Day dot tile, condensed italic lettering.
+   Buttons stay in the UI sans at weight 800. No blur, glow, pill or soft shadow. */
+.game[data-game=puzzle] canvas{cursor:crosshair}
+.game[data-game=puzzle][data-view=levels] canvas{filter:none}
+.game[data-game=puzzle] .lowOverlay{background:none}
+/* Controls: a paper caption strip of inked keys. The chosen mode is the sun-yellow key, pushed in (its shadow collapsed);
+ * Scan on is the same key in teal. */
+.game[data-game=puzzle] .passControls{border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-paper);color:var(--cm-ink);box-shadow:5px 5px 0 var(--cm-ink);padding:9px 10px 10px 9px}
+.game[data-game=puzzle] .passControls:focus-within{border:3px solid var(--cm-ink)}
+.game[data-game=puzzle] .passModes button,.game[data-game=puzzle] .scanToggle.scanToggle{position:relative;border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);font-weight:800;font-size:13px;box-shadow:3px 3px 0 var(--cm-ink);transition:translate .08s}
+.game[data-game=puzzle] .passModes button:active,.game[data-game=puzzle] .scanToggle:active{translate:3px 3px;box-shadow:0 0 0 var(--cm-ink)}
+.game[data-game=puzzle] .passModes button[aria-pressed=true],.game[data-game=puzzle] .scanToggle.scanToggle[aria-pressed=true]{background:var(--pp-tab,var(--cm-sun));color:var(--cm-ink);translate:2px 2px;box-shadow:1px 1px 0 var(--cm-ink)}
+.game[data-game=puzzle] .scanToggle.scanToggle[aria-pressed=true]{--pp-tab:var(--cm-teal)}
+.game[data-game=puzzle] :is(.passModes button,.scanToggle):focus-visible{--btn-focus:var(--cm-focus);outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.game[data-game=puzzle] .passModes button[aria-pressed=true]:active,.game[data-game=puzzle] .scanToggle.scanToggle[aria-pressed=true]:active{translate:3px 3px}
+.game[data-game=puzzle] .powerControl{color:var(--cm-ink);font-weight:700;font-size:12px}
+.game[data-game=puzzle] .powerControl b{color:var(--cm-red);font:italic 800 15px/1 var(--cm-letter)}
+.game[data-game=puzzle] .powerControl input{accent-color:var(--cm-red)}
+.game[data-game=puzzle] .powerControl button{border:2px solid var(--cm-ink);border-radius:0;color:var(--cm-ink);background:#fff;box-shadow:2px 2px 0 var(--cm-ink)}
+.game[data-game=puzzle] .directHint{color:var(--cm-ink)}
+/* The coach's read while drawing: a caption box whose colour block is the lane (clear teal, tight sun, blocked red). */
+.game[data-game=puzzle] .tip{background:var(--cm-paper);color:var(--cm-ink);border:2px solid var(--cm-ink);border-left:9px solid var(--cm-ink);border-radius:0;box-shadow:3px 3px 0 var(--cm-ink);font-weight:700}
+.game[data-game=puzzle] .tip[data-lane=clear]{border:2px solid var(--cm-ink);border-left:9px solid var(--cm-teal);background:#fff;color:var(--cm-ink)}
+.game[data-game=puzzle] .tip[data-lane=tight],.game[data-game=puzzle] .tip[data-warn=offside]{border:2px solid var(--cm-ink);border-left:9px solid var(--cm-orange);background:var(--cm-sun);color:var(--cm-ink)}
+.game[data-game=puzzle] .tip[data-lane=blocked],.game[data-game=puzzle] .tip[data-lane=save]{border:2px solid var(--cm-ink);border-left:9px solid var(--cm-red);background:#ffe1d6;color:var(--cm-ink)}
+/* Caption labels: replay, modifiers. */
+.game[data-game=puzzle] .replayChip{background:var(--cm-ink);color:var(--cm-paper);border-radius:0;font:italic 800 15px/1.1 var(--cm-letter);letter-spacing:.04em;text-transform:uppercase;box-shadow:3px 3px 0 var(--cm-orange);rotate:-1.5deg}
+.game[data-game=puzzle] .replayCall{color:var(--cm-ink);font-family:var(--font-body),Arial,sans-serif}
+.game[data-game=puzzle] .camToggle{border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);font-weight:800;box-shadow:3px 3px 0 var(--cm-ink)}
+.game[data-game=puzzle] .modifiers li{background:var(--cm-dots),#fff;border:2px solid var(--cm-ink);border-radius:0;color:var(--cm-ink);font:800 12px/1.2 var(--cm-ui);box-shadow:2px 2px 0 var(--cm-ink)}
+.game[data-game=puzzle] .modifiers li:nth-child(odd){rotate:-1.2deg}.game[data-game=puzzle] .modifiers li:nth-child(even){rotate:1deg}
+/* The splash word (Breakaway's GOAL! panel): a red star burst cut behind sun-yellow lettering with an ink outline and a block
+ * shadow. Tier 3 is the loudest (bigger, teal star). The label of a result card is the same lettering; a fail is a cracked panel. */
+.game[data-game=puzzle] .callout{background:none;border:0;border-radius:0;color:var(--cm-ink);box-shadow:none;rotate:-4deg;padding:16px 30px 14px;isolation:isolate}
+.game[data-game=puzzle] .callout::before{content:"";position:absolute;inset:-22% -9%;z-index:-1;background:var(--pp-burst,var(--cm-red));clip-path:polygon(0 38%,9% 30%,4% 8%,19% 20%,27% 0,36% 17%,50% 2%,60% 16%,74% 0,80% 19%,97% 9%,91% 33%,100% 47%,92% 62%,99% 88%,82% 80%,74% 100%,63% 84%,49% 99%,39% 83%,25% 100%,20% 80%,3% 92%,9% 64%);filter:drop-shadow(5px 5px 0 var(--cm-ink))}
+.game[data-game=puzzle] .callout b{color:var(--cm-sun);font:italic 900 30px/1 var(--cm-title);text-transform:uppercase;letter-spacing:-.01em;-webkit-text-stroke:5px var(--cm-ink);paint-order:stroke fill;text-shadow:4px 4px 0 var(--cm-ink)}
+.game[data-game=puzzle] .callout span{display:inline-block;margin-top:5px;padding:2px 8px;background:var(--cm-paper);border:2px solid var(--cm-ink);color:var(--cm-ink);font-weight:800}
+.game[data-game=puzzle] .callout[data-tier="2"]{background:none;border:0}.game[data-game=puzzle] .callout[data-tier="2"] b{color:var(--cm-sun)}
+.game[data-game=puzzle] .callout[data-tier="3"]{background:none;border:0;rotate:-6deg;--pp-burst:var(--cm-teal)}.game[data-game=puzzle] .callout[data-tier="3"] b{color:#fff;text-shadow:4px 4px 0 var(--cm-ink)}
+.game[data-game=puzzle] :is(.goalResult,.failResult)>section>span:first-child{background:var(--cm-sun);border:3px solid var(--cm-ink);border-radius:0;color:var(--cm-ink);font:italic 800 17px/1 var(--cm-letter);letter-spacing:.06em;text-transform:uppercase;padding:6px 12px 5px;box-shadow:3px 3px 0 var(--cm-ink);rotate:-2deg}
+.game[data-game=puzzle] .failResult>section>span:first-child{background:var(--cm-red);color:#fff;rotate:-3deg;clip-path:polygon(0 0,46% 0,50% 34%,55% 0,100% 0,100% 100%,60% 100%,53% 62%,49% 100%,0 100%)}
+@media(prefers-reduced-motion:no-preference){.game[data-game=puzzle] :is(.goalResult,.failResult)>section>span:first-child{animation:ppStamp .26s .95s cubic-bezier(.2,1.5,.4,1) both}}
+@media(max-width:600px){.game[data-game=puzzle] .callout{max-width:calc(100% - 56px);padding:12px 22px 10px}.game[data-game=puzzle] .callout b{font-size:24px}.game[data-game=puzzle] .callout[data-tier="3"] b{font-size:28px}}
+@keyframes ppStamp{0%{opacity:0;scale:2.1}60%{opacity:1;scale:.94}100%{scale:1}}
+/* Stars are cut in sun yellow with an ink edge (the pop animation above already staggers them). */
+.game[data-game=puzzle] .starOn.starOn.starOn{color:var(--cm-sun);-webkit-text-stroke:1.5px var(--cm-ink);paint-order:stroke fill;text-shadow:2px 2px 0 var(--cm-ink)}.game[data-game=puzzle] .starOff.starOff.starOff{color:#231a2e2e}
+.game[data-game=puzzle] .daily .starOff.starOff{color:#231a2e45}
+/* Notes on the cards: flat caption boxes. */
+.game[data-game=puzzle] .hint{background:#fff;color:var(--cm-ink);border:2px solid var(--cm-ink);border-radius:0}
+.game[data-game=puzzle] .lesson{background:var(--cm-sun);color:var(--cm-ink);border:2px solid var(--cm-ink);border-radius:0;box-shadow:3px 3px 0 var(--cm-ink);rotate:.5deg}
+.game[data-game=puzzle] .why{background:#c9f1ea;color:var(--cm-ink);border:2px solid var(--cm-ink);border-radius:0}.game[data-game=puzzle] .why b{color:var(--cm-ink)}
+.game[data-game=puzzle] .whyConcept strong{color:#0d7468}
+.game[data-game=puzzle] .fix b,.game[data-game=puzzle] .practise{color:#c4301c}
+.game[data-game=puzzle] .nextNote{background:#fff;color:var(--cm-ink);border:2px solid var(--cm-ink);border-radius:0}.game[data-game=puzzle] .nextNote b{color:#c4301c}
+.game[data-game=puzzle] :is(.blurb,.coinNote,.menuTitle p,.streak,.cupHead,.rewindNote){color:var(--cm-muted)!important}
+.game[data-game=puzzle] .menuTitle p[data-first-run]{color:#c4301c!important}
+.game[data-game=puzzle] :is(.gate,.menuNote){color:#c4301c!important}
+.game[data-game=puzzle] .streak b{color:var(--cm-ink);font:italic 800 1.15em/1 var(--cm-letter)}
+.game[data-game=puzzle] .goals li::before,.game[data-game=puzzle] .earned li::before{color:#231a2e38}
+.game[data-game=puzzle] .goals li[data-on=true]::before,.game[data-game=puzzle] .earned li[data-on=true]::before{color:#e89a12}
+.game[data-game=puzzle] .earned li[data-on=false]{color:var(--cm-muted)}
+.game[data-game=puzzle] .newStar{color:#c4301c}
+.game[data-game=puzzle] .briefHint{color:var(--cm-ink)}
+.game[data-game=puzzle] .idea,.game[data-game=puzzle] .ask,.game[data-game=puzzle] .cupRule{background:var(--cm-dots),#fff;color:var(--cm-ink);border:2px solid var(--cm-ink);border-radius:0}
+.game[data-game=puzzle] .idea b,.game[data-game=puzzle] .cupRule b{color:#c4301c}
+/* Quiet buttons are small paper keys; the tertiary row is flat outlined paper. */
+.game[data-game=puzzle] .rewind,.game[data-game=puzzle] .row>.secondary.secondary,.game[data-game=puzzle] .skip.skip,.game[data-game=puzzle] .spotHint.secondary{border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);font-weight:800;box-shadow:3px 3px 0 var(--cm-ink)}
+.game[data-game=puzzle] :is(.rewind,.row>.secondary.secondary,.skip.skip,.spotHint.secondary):not(:disabled):active{translate:3px 3px;box-shadow:0 0 0 var(--cm-ink)}
+.game[data-game=puzzle] .quietRow>.secondary.secondary{background:var(--cm-paper);border:2px solid var(--cm-ink);box-shadow:none;color:var(--cm-ink)}
+.game[data-game=puzzle] .lowOverlay>section>.go{box-shadow:4px 4px 0 var(--cm-ink)}
+.game[data-game=puzzle] .undo{border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-paper);color:var(--cm-ink);box-shadow:4px 4px 0 var(--cm-ink);font-weight:800}
+.game[data-game=puzzle] .undo:not(:disabled):active{translate:4px 4px;box-shadow:0 0 0 var(--cm-ink)}
+.game[data-game=puzzle] .clockChip{border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-paper);color:var(--cm-ink);font:italic 800 18px/1 var(--cm-letter);box-shadow:3px 3px 0 var(--cm-ink);rotate:1.5deg}
+.game[data-game=puzzle] .clockChip[data-low=true]{background:var(--cm-red);color:#fff}
+.game[data-game=puzzle] .hintDock>button[data-nudge]{background:var(--cm-sun);box-shadow:4px 4px 0 var(--cm-red)}
+.game[data-game=puzzle] .loft i{background:conic-gradient(var(--cm-sun) calc(var(--loft,0)*360deg),#fff3d6 0);box-shadow:0 0 0 3px var(--cm-ink),3px 3px 0 3px var(--cm-ink)}
+.game[data-game=puzzle] .loft span{color:var(--cm-paper);font:italic 800 12px/1 var(--cm-letter);letter-spacing:.04em;-webkit-text-stroke:3px var(--cm-ink);paint-order:stroke fill;text-shadow:none}
+/* Menu: a comic title page. */
+.game[data-game=puzzle] .levels::before{top:0}
+.game[data-game=puzzle] .menuTitle h3{font:italic 900 34px/.95 var(--cm-title);text-transform:uppercase;letter-spacing:-.02em;color:var(--cm-sun);-webkit-text-stroke:5px var(--cm-ink);paint-order:stroke fill;text-shadow:4px 4px 0 var(--cm-ink)}
+.game[data-game=puzzle] .sheetHead h4{font:italic 800 28px/1 var(--cm-letter);text-transform:uppercase;color:var(--cm-ink)}
+.game[data-game=puzzle] .chip{border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink)}
+.game[data-game=puzzle] .chip[data-unset]::after{background:var(--cm-red);box-shadow:0 0 0 2px var(--cm-ink)}
+.game[data-game=puzzle] .playBig{box-shadow:5px 5px 0 var(--cm-ink)}
+.game[data-game=puzzle] .daily{border:3px solid var(--cm-ink);border-left:12px solid var(--cm-teal);border-radius:0;background:var(--cm-dots),#fff;color:var(--cm-ink);box-shadow:4px 4px 0 var(--cm-ink);font-weight:800}
+.game[data-game=puzzle] .daily[data-season=autumn]{border-color:var(--cm-ink);border-left-color:var(--cm-orange);background:var(--cm-dots),#fff}.game[data-game=puzzle] .daily[data-season=winter]{border-color:var(--cm-ink);border-left-color:#2f6fb0;background:var(--cm-dots),#fff}
+.game[data-game=puzzle] .daily[data-season=spring]{border-color:var(--cm-ink);border-left-color:var(--cm-teal);background:var(--cm-dots),#fff}.game[data-game=puzzle] .daily[data-season=summer]{border-color:var(--cm-ink);border-left-color:var(--cm-sun);background:var(--cm-dots),#fff}
+.game[data-game=puzzle] .packMap button,.game[data-game=puzzle] .level{border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink)}
+.game[data-game=puzzle] .packMap button small{color:var(--cm-muted)}
+.game[data-game=puzzle] .packMap button b,.game[data-game=puzzle] .level b{background:var(--cm-sun);color:var(--cm-ink);border:2px solid var(--cm-ink);border-radius:50%;font:italic 800 1em/1 var(--cm-letter)}
+.game[data-game=puzzle] .packMap li[data-current] button{background:var(--cm-sun);box-shadow:4px 4px 0 var(--cm-ink)}
+.game[data-game=puzzle] .packMap li[data-current] button b{background:#fff}
+.game[data-game=puzzle] .packMap li[data-open=false] b,.game[data-game=puzzle] .level:disabled b{background:#e9dcc2;color:var(--cm-muted)}
+.game[data-game=puzzle] :is(.packMap li[data-open=false] button,.level:disabled){background:#f3e8cf;box-shadow:none}
+.game[data-game=puzzle] .packMap li[data-done=true] b{background:var(--cm-teal);color:var(--cm-ink)}
+.game[data-game=puzzle] .pips.pips.pips{color:#e89a12}
+.game[data-game=puzzle] .sheetHead.sheetHead small{color:var(--cm-muted)}
+.game[data-game=puzzle] .expertTile{border:2px solid var(--cm-ink);border-radius:0;background:var(--cm-ink);color:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-orange)}
+.game[data-game=puzzle] .expertTile.expertTile small{color:var(--cm-sun)}
+.game[data-game=puzzle] [data-expert-sheet] .packMap li button b{background:var(--cm-red);color:#fff}
+.game[data-game=puzzle] [data-expert-sheet] .packMap li[data-open=false] button b{background:#e9dcc2;color:var(--cm-muted)}
+.game[data-game=puzzle] .hardTag{background:var(--cm-red);color:#fff;border:2px solid var(--cm-ink);border-radius:0;font:800 11px/1.2 var(--cm-ui)}
+.game[data-game=puzzle] .cupMap li[data-cup=gold] button{box-shadow:3px 3px 0 #e89a12}.game[data-game=puzzle] .cupMap li[data-cup=violet] button{box-shadow:3px 3px 0 var(--cm-violet)}
+.game[data-game=puzzle] .cupMap li[data-cup=gold] b{color:var(--cm-ink)}.game[data-game=puzzle] .cupMap li[data-cup=violet] b{background:#c9b3ee;color:var(--cm-ink)}
+.game[data-game=puzzle] .cupMap.cupMap em,.game[data-game=puzzle] .cupHint.cupHint.cupHint{color:var(--cm-muted)}
+.game[data-game=puzzle] .seg>div{background:#fff;border:2px solid var(--cm-ink);border-radius:0}
+.game[data-game=puzzle] .seg button{color:var(--cm-ink);border-radius:0}
+.game[data-game=puzzle] .seg button[aria-pressed=true]{background:var(--cm-ink);color:var(--cm-paper);box-shadow:none}
+.game[data-game=puzzle] .seg.seg>p{color:var(--cm-muted)}
+/* Cup result: the score panel. */
+.game[data-game=puzzle] .skill{background:var(--cm-dots),#fff;color:var(--cm-ink);border:2px solid var(--cm-ink);border-radius:0}
+.game[data-game=puzzle] .mult,.game[data-game=puzzle][data-cup=violet] .mult{color:#c4301c;font:italic 800 1.1em/1 var(--cm-letter)}
+.game[data-game=puzzle] .points{font-family:var(--cm-numeral)}
+.game[data-game=puzzle] .skill.skill :is(em,small),.game[data-game=puzzle] .skill .points small,.game[data-game=puzzle] .skill .cupTotal,.game[data-game=puzzle] .skillParts li[data-none]{color:var(--cm-muted)}
+.game[data-game=puzzle] .skill.skill.skill .best{color:#0d7468}
+.game[data-game=puzzle] .skillParts li{background:var(--cm-sun);border:1.5px solid var(--cm-ink);border-radius:0;color:var(--cm-ink)}
+.game[data-game=puzzle] .skillParts li[data-none]{background:none;border-color:transparent}
+@keyframes ppBestFlash{0%{box-shadow:0 0 0 0 #f0452e00}30%{box-shadow:0 0 0 3px #f0452e}100%{box-shadow:0 0 0 0 #f0452e00}}
+@media(max-height:520px) and (orientation:landscape){.game[data-game=puzzle] .lowOverlay>section>.go{box-shadow:4px 4px 0 var(--cm-ink)}}
+@media(prefers-reduced-motion:reduce){.game[data-game=puzzle] :is(.replayChip,.callout,.lesson,.modifiers li,.clockChip){rotate:none}.game[data-game=puzzle] .passModes button,.game[data-game=puzzle] .scanToggle.scanToggle{transition:none}.game[data-game=puzzle] :is(.passModes button,.scanToggle,.undo,.rewind,.skip):active{translate:none}}
+/* ── Endless Run (Nov 10 2026): the run strip under the score bar, the teaching note, the wipe between puzzles, the menu entry and
+ * the full-time card, all from the comic kit's tokens. Nothing here loops: the clock bar is one CSS animation per puzzle. */
+.endHud{position:absolute;z-index:4;top:calc(var(--arcade-bar-clear) + 10px + env(safe-area-inset-top,0px));left:calc(var(--arcade-edge-x) + env(safe-area-inset-left,0px));right:calc(var(--arcade-edge-x) + env(safe-area-inset-right,0px));padding-right:60px;display:flex;align-items:center;gap:10px;pointer-events:none;color:var(--cm-ink)}
+.endHud[data-aid=none]{padding-right:0}
+.endLevel{display:grid;grid-template-columns:auto auto;align-items:baseline;gap:5px;padding:5px 10px 4px;background:var(--cm-ink);color:var(--cm-paper);rotate:-2deg;box-shadow:3px 3px 0 var(--cm-sun)}
+.endLevel small{font:800 10px/1 var(--cm-ui);letter-spacing:.09em;text-transform:uppercase}
+.endLevel b{font:400 24px/1 var(--cm-numeral);color:var(--cm-sun)}
+.endLives{display:flex;gap:5px}
+.endLives i{display:block;width:20px;height:20px;border:3px solid var(--cm-ink);border-radius:50%;background:var(--cm-red);box-shadow:2px 2px 0 var(--cm-ink)}
+.endLives i[data-on=false]{background:var(--cm-paper);box-shadow:none;opacity:.55}
+.endClock{flex:1;min-width:36px;height:14px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);overflow:hidden}
+.endClock i{display:block;height:100%;background:var(--cm-teal);transform-origin:0 50%;animation:ppClockRun var(--pp-clock,30s) linear forwards,ppClockHot var(--pp-clock,30s) steps(1,end) forwards}
+.endClock[data-paused] i{animation-play-state:paused}
+@keyframes ppClockRun{to{transform:scaleX(0)}}
+@keyframes ppClockHot{0%{background:var(--cm-teal)}55%{background:var(--cm-sun)}80%,100%{background:var(--cm-red)}}
+.endSkip{pointer-events:auto;margin-left:auto;display:flex;align-items:center;gap:6px;min-height:44px;padding:0 12px;border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-paper);color:var(--cm-ink);font:800 14px/1 var(--cm-ui);box-shadow:3px 3px 0 var(--cm-ink);cursor:pointer}
+.endSkip small{padding:3px 5px;background:var(--cm-red);color:#fff;font:800 11px/1 var(--cm-ui)}
+.endSkip:not(:disabled):active{translate:3px 3px;box-shadow:none}
+.endSkip:disabled{opacity:.45;box-shadow:none;cursor:default}
+.endSkip:focus-visible,.endNote button:focus-visible,.endlessBig:focus-visible{outline:var(--cm-focus);outline-offset:3px}
+.endNote{position:absolute;z-index:4;top:calc(var(--arcade-bar-clear) + 68px + env(safe-area-inset-top,0px));left:50%;translate:-50% 0;width:min(calc(100% - 28px),440px);box-sizing:border-box;display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:10px 12px 10px 14px;border:3px solid var(--cm-ink);border-left:12px solid var(--cm-teal);background:var(--cm-dots),var(--cm-paper);color:var(--cm-ink);box-shadow:5px 5px 0 var(--cm-ink);rotate:-1deg}
+.endNote[data-endless-note=fail],.endNote[data-endless-note=clock]{border-left-color:var(--cm-red)}.endNote[data-endless-note=skip]{border-left-color:var(--cm-orange)}
+.endNote b{grid-column:1;font:italic 800 21px/1.05 var(--cm-letter);text-transform:uppercase;letter-spacing:.01em}
+.endNote b em{display:inline-block;margin-left:8px;padding:2px 7px 1px;background:var(--cm-sun);border:2px solid var(--cm-ink);font:800 14px/1.1 var(--cm-ui);font-style:normal;vertical-align:2px}
+.endNote span{grid-column:1;font:700 13px/1.3 var(--cm-ui);color:var(--cm-muted,#51465f)}
+.endNote button{grid-column:2;grid-row:1/span 2;min-width:64px;min-height:44px;padding:0 12px;border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-ink);color:var(--cm-paper);font:800 14px/1 var(--cm-ui);box-shadow:3px 3px 0 var(--cm-sun);cursor:pointer}
+.endNote button:active{translate:3px 3px;box-shadow:none}
+@media(prefers-reduced-motion:no-preference){.endNote{animation:ppNoteIn .22s cubic-bezier(.2,1.4,.4,1) both}}
+@keyframes ppNoteIn{from{opacity:0;translate:-50% -14px;scale:.94}to{opacity:1;translate:-50% 0;scale:1}}
+/* The change-over: an ink panel with a sun stripe crosses the pitch in a third of a second (the new puzzle loads under it). */
+.wipe{position:absolute;inset:0;z-index:3;pointer-events:none;background:linear-gradient(100deg,#0000 0 8%,var(--cm-sun) 8% 13%,var(--cm-ink) 13% 87%,var(--cm-sun) 87% 92%,#0000 92%);translate:-110% 0;animation:ppWipe .34s cubic-bezier(.5,0,.5,1) both}
+@keyframes ppWipe{from{translate:-110% 0}to{translate:110% 0}}
+@media(prefers-reduced-motion:reduce){.wipe{display:none}.endLevel,.endNote{rotate:none}.endClock i{animation:none}}
+.endlessBig{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px;width:100%;min-height:76px;margin:0 0 12px;padding:10px 16px;border:4px solid var(--cm-ink);border-radius:0;background:var(--cm-dots-orange,var(--cm-dots)),var(--cm-sun);color:var(--cm-ink);text-align:left;box-shadow:6px 6px 0 var(--cm-ink);rotate:-1deg;cursor:pointer}
+.endlessBig span{display:grid;gap:3px}
+.endlessBig b{font:800 22px/1 var(--cm-ui);letter-spacing:-.01em}
+.endlessBig small{font:700 12.5px/1.25 var(--cm-ui)}
+.endlessBig:not(:disabled):active{translate:6px 6px;box-shadow:none}
+.endlessBig:disabled{opacity:.6}
+@media(prefers-reduced-motion:reduce){.endlessBig{rotate:none}.endlessBig:active,.endSkip:active,.endNote button:active{translate:none}}
+/* Play (the learning path) steps down to a paper key beside the run entry. */
+.game[data-game=puzzle] [data-endless]+.playBig{background:var(--cm-paper);color:var(--cm-ink);box-shadow:4px 4px 0 var(--cm-ink);min-height:60px}
+.endStats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0 12px}
+.endStats span{display:grid;justify-items:center;gap:2px;padding:8px 4px 7px;border:3px solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink)}
+.endStats span:first-child{background:var(--cm-sun);box-shadow:3px 3px 0 var(--cm-ink)}
+.endStats b{font:400 34px/1 var(--cm-numeral)}
+.endStats small{font:800 10.5px/1.1 var(--cm-ui);letter-spacing:.06em;text-transform:uppercase;text-align:center}
+.endBestLine{display:block;margin:0 0 10px;font:800 12px/1 var(--cm-ui);color:var(--cm-muted,#51465f)}
+.scanToggle[hidden]{display:none!important}
+.lock{display:block;width:14px;height:14px}
+.expertTile .lock{display:inline-block;vertical-align:-2px}
+/* Mode keys (owner review, Nov 10): bold inked comic keys in the family of Breakaway's buttons, 48 px tall, the chosen one sun
+ * yellow and pressed in, with a teal focus ring. */
+.game[data-game=puzzle] .passModes{gap:8px}
+.game[data-game=puzzle] .passModes button,.game[data-game=puzzle] .scanToggle.scanToggle{min-height:48px;border:3px solid var(--cm-ink);background:var(--cm-paper);font:800 15px/1 var(--cm-ui);letter-spacing:.01em;text-transform:uppercase;box-shadow:4px 4px 0 var(--cm-ink)}
+.game[data-game=puzzle] .passModes button[aria-pressed=true],.game[data-game=puzzle] .scanToggle.scanToggle[aria-pressed=true]{background:var(--cm-dots-orange,var(--cm-dots)),var(--pp-tab,var(--cm-sun));translate:3px 3px;box-shadow:1px 1px 0 var(--cm-ink)}
+.game[data-game=puzzle] .passModes button:active,.game[data-game=puzzle] .scanToggle.scanToggle:active{translate:4px 4px;box-shadow:none}
+.game[data-game=puzzle] :is(.passModes button,.scanToggle):focus-visible{--btn-focus:3px solid var(--cm-teal);outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+@media(max-width:420px){.game[data-game=puzzle] .passModes button,.game[data-game=puzzle] .scanToggle.scanToggle{font-size:13px;padding-inline:6px}}
+/* The goal splash: capped so a long combo name wraps onto a second line instead of becoming a strip across the phone. */
+.game[data-game=puzzle] .callout{max-width:min(calc(100% - 72px),360px);text-align:center}
+.game[data-game=puzzle] .callout b{display:block;text-wrap:balance;overflow-wrap:anywhere;line-height:1.02}
+@media(max-width:600px){.game[data-game=puzzle] .callout{max-width:min(calc(100% - 72px),300px)}}
+/* Menu title: the skin's card heading rule set it in ink on an ink stroke (a black bar); it is the sun-yellow lettering again. */
+.game[data-game=puzzle] .menuTitle.menuTitle h3{color:var(--cm-sun);font:italic 900 32px/.95 var(--cm-title);letter-spacing:0;-webkit-text-stroke:5px var(--cm-ink);paint-order:stroke fill;text-shadow:4px 4px 0 var(--cm-ink)}
+.endlessBig.endlessBig b,.endlessBig.endlessBig small{display:block;border:0;margin:0;padding:0;background:none;width:auto;height:auto;text-decoration:none}
+.game[data-game=puzzle] .packMap button span{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.15}
+.game[data-game=puzzle] .expertTile .cupHint.cupHint.cupHint{color:var(--cm-paper);opacity:.8}
+/* Aim anywhere (Nov 11 2026): the goal face beside the finger. A paper panel with an ink edge and block shadow; the frame, net, keeper, reticle and scatter ring are inked. Shown and filled on input only (no animation loop). */
+.aimPanel{position:absolute;z-index:5;left:8px;top:8px;width:176px;padding:6px 6px 4px;pointer-events:none;background:#fff3d6;border:3px solid #231a2e;border-radius:4px;box-shadow:4px 4px 0 #231a2e;transform:rotate(-1.5deg);display:grid;gap:1px;opacity:0;visibility:hidden}
+.aimPanel[data-on=true]{opacity:1;visibility:visible}
+.aimPanel svg{display:block;width:100%;height:auto;overflow:hidden;background:linear-gradient(#bfe9f2 0 78%,#57b56a 78%)}
+.aimPanel b{min-height:14px;font:900 italic 12px/14px var(--font-ui,system-ui),sans-serif;letter-spacing:.06em;text-align:center;color:#231a2e;text-transform:uppercase}
+.aimPanel[data-miss=true] b{color:#f0452e}
+.aimNet{fill:none;stroke:#231a2e;stroke-width:.03;opacity:.35}.aimGrass{fill:none;stroke:#231a2e;stroke-width:.08}
+.aimFrame{fill:none;stroke:#231a2e;stroke-width:.3;stroke-linejoin:miter;paint-order:stroke}
+.aimKeeper path,.aimKeeper circle{fill:#f0452e;stroke:#231a2e;stroke-width:.1;stroke-linecap:round;stroke-linejoin:round}
+.aimRing{fill:#ffc83a55;stroke:#231a2e;stroke-width:.07;stroke-dasharray:.22 .16}
+.aimPanel[data-miss=true] .aimRing{fill:#f0452e44}
+.aimSpot circle{fill:#ffc83a;stroke:#231a2e;stroke-width:.08}.aimSpot path{fill:none;stroke:#231a2e;stroke-width:.1;stroke-linecap:round}
+@media (pointer:fine){.aimPanel{width:208px}}
+/* The one-time aim cue: a small tilted sticker under the score bar, a drawn goal with the stroke going up to the corner, three words. */
+.aimCue{position:absolute;z-index:3;left:50%;top:calc(132px + env(safe-area-inset-top));transform:translateX(-50%) rotate(-2deg);display:flex;align-items:center;gap:8px;padding:6px 12px 6px 8px;pointer-events:none;background:#fff3d6;border:3px solid #231a2e;border-radius:4px;box-shadow:4px 4px 0 #231a2e;color:#231a2e;animation:aimCueIn .28s cubic-bezier(.2,1.4,.4,1) both}
+.aimCue svg{width:54px;height:34px;flex:none}.aimCue b{font:900 italic 14px/1 var(--font-ui,system-ui),sans-serif;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.aimCueFrame{fill:#bfe9f2;stroke:#231a2e;stroke-width:4;stroke-linejoin:miter}.aimCuePath{fill:none;stroke:#f0452e;stroke-width:3.5;stroke-linecap:round;stroke-dasharray:5 5}.aimCueSpot{fill:#ffc83a;stroke:#231a2e;stroke-width:2.5}
+@keyframes aimCueIn{from{opacity:0;transform:translateX(-50%) rotate(-2deg) scale(.7)}to{opacity:1;transform:translateX(-50%) rotate(-2deg) scale(1)}}
+@media (prefers-reduced-motion:reduce){.aimCue{animation:none}}
+.shotLine{margin:6px 0 0;font-weight:800}
+.aimPanel[data-risky=true] .aimRing{fill:#ff8a3c66}
+.aimPanel[data-on=true]~.aimCue{visibility:hidden}

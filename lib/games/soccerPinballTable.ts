@@ -1,4 +1,5 @@
 import type {PinballBall,PinballState} from './soccerPinball';
+import {pinballRamp,pinballModeNeed} from './soccerPinballEndless';
 
 /* Futbol Pinball playfield features, themed for the island club:
  *  - kickboards (slingshots) above each flipper: read the rebound;
@@ -35,6 +36,8 @@ export const coneX=(t:Pick<PinballTable,'coneSpin'>,i:number)=>t.coneSpin===0?CO
 export const coneY=(t:Pick<PinballTable,'coneSpin'>,i:number)=>t.coneSpin===0?CONES[i].y:CONE_CY+(CONES[i].x-CONE_CX)*Math.sin(t.coneSpin)+(CONES[i].y-CONE_CY)*Math.cos(t.coneSpin);
 export const SPINNER={x0:20,x1:52,y:210} as const;
 export const DUGOUT={x:306,y:262,r:9} as const;
+/** Seconds the scoop holds the ball (Nov 10 2026: 1.1 -> .7, so no designed stop in play lasts a full second). */
+export const DUGOUT_HOLD=.7;
 export const SAVER={x:180,y:576,half:28} as const;
 export const TRAINING_GOAL=12;
 export const PINBALL_MODES=[
@@ -96,7 +99,7 @@ function award(s:PinballState,x:number,y:number,points:number,cue:PinballState['
 }
 function addTraining(s:PinballState,n:number){const t=s.table;if(t.dugoutLit||t.mode!=='none')return;t.training=Math.min(TRAINING_GOAL,t.training+n);if(t.training>=TRAINING_GOAL)t.dugoutLit=true;}
 /** One-Two: a kickboard opens a 4s window; the next target hit completes a pass. */
-function oneTwoTarget(s:PinballState,x:number,y:number){const t=s.table;if(t.mode!=='onetwo'||t.oneTwo<=0)return;t.oneTwo=0;t.modeProgress++;award(s,x,y,300,'onetwo',1.6);if(t.modeProgress>=PINBALL_MODES[1].need)completeMode(s);}
+function oneTwoTarget(s:PinballState,x:number,y:number){const t=s.table;if(t.mode!=='onetwo'||t.oneTwo<=0)return;t.oneTwo=0;t.modeProgress++;award(s,x,y,300,'onetwo',1.6);if(t.modeProgress>=pinballModeNeed(PINBALL_MODES[1].need,s.match))completeMode(s);}
 function completeMode(s:PinballState){
  const t=s.table,i=PINBALL_MODES.findIndex(m=>m.id===t.mode);if(i<0)return;
  t.modesDone|=1<<i;t.mode='none';t.modeTime=0;t.modeProgress=0;t.oneTwo=0;t.nextMode=(i+1)%3;t.training=0;
@@ -113,7 +116,7 @@ function startMode(s:PinballState){
  s.openingRescue=true;s.launchGrace=Math.max(s.launchGrace,3);
  t.sfx.mode++;s.hitId++;s.hitX=180;s.hitY=300;s.cue='mode';s.cueTime=2.6;
 }
-function startFinal(s:PinballState){const t=s.table;t.mode='final';t.modeTime=CUP_FINAL_TIME;t.modeProgress=0;t.dugoutLit=false;t.sfx.final++;s.moveTime=Math.max(s.moveTime,4);s.openingRescue=true;s.launchGrace=Math.max(s.launchGrace,3);s.hitId++;s.hitX=180;s.hitY=300;s.cue='final';s.cueTime=3;}
+function startFinal(s:PinballState){const t=s.table;t.mode='final';t.modeTime=Math.round(CUP_FINAL_TIME*pinballRamp(s.match).window);t.modeProgress=0;t.dugoutLit=false;t.sfx.final++;s.moveTime=Math.max(s.moveTime,4);s.openingRescue=true;s.launchGrace=Math.max(s.launchGrace,3);s.hitId++;s.hitX=180;s.hitY=300;s.cue='final';s.cueTime=3;}
 
 /** Skill shot: one rung of the 7-lamp launch ladder is marked; letting go
  * with exactly that rung lit is a PERFECT FIRST TOUCH (a 1/7 power window).
@@ -129,7 +132,8 @@ export function tableLaunch(s:PinballState,pull:number){
  // Build Up (division 1) starts every ball with the goal-line saver up: the centre gap is where most beginner balls
  // drain (kid-bot playtest: 50-65% of drains), so the coach puts a defender on the line until the first promotion.
  // From Find the Corner on it has to be earned by spelling G-O-A-L. One clearance per ball, as ever.
- if(s.level===1&&!t.saverUsed)t.saver=true;
+ // Endless play (Nov 10 2026): from level 3 of a long run the free saver is gone (soccerPinballEndless.ts PINBALL_RAMP.saver).
+ if(s.level===1&&!t.saverUsed&&pinballRamp(s.match).saver)t.saver=true;
 }
 /** Real flipper strike. A strike that returns a defender's counter shot is a
  * GREAT BLOCK: points, a fast break (lit goal) and the goal-line saver. */
@@ -139,7 +143,7 @@ export function tableStrike(s:PinballState,wasCounter:boolean){
  t.blocks++;t.stars[s.level-1]|=4;t.sfx.block++;
  s.moveTime=Math.max(s.moveTime,6);
  award(s,s.ball.x,s.ball.y,250,'greatBlock',2);
- if(t.mode==='counter'){t.modeProgress++;if(t.modeProgress>=PINBALL_MODES[2].need)completeMode(s);}
+ if(t.mode==='counter'){t.modeProgress++;if(t.modeProgress>=pinballModeNeed(PINBALL_MODES[2].need,s.match))completeMode(s);}
  return true;
 }
 /** Goal scored: returns extra points; handles Free Kick and the Cup Final. */
@@ -157,6 +161,8 @@ export function tableGoal(s:PinballState,lit:boolean){
 export function tableDivisionCleared(s:PinballState){const t=s.table;t.stars[s.level-1]|=1;if(!t.finalPlayed&&t.mode!=='final')startFinal(s);}
 export function tableLevelUp(s:PinballState,from:number){s.table.stars[from-1]|=1;}
 export function tableChallenge(s:PinballState){s.table.stars[s.level-1]|=2;}
+/** Endless play (Nov 10 2026): a new match re-arms the Cup Final (one per match) and, when no mode is running, the three modes. */
+export function tableNewMatch(s:PinballState){const t=s.table;t.finalPlayed=false;if(t.mode==='none')t.modesDone=0;}
 /** A real drain: pays the end-of-ball bonus x crest multiplier, tracks quick
  * drains for the quiet assist, and resets the per-ball lamps. */
 export function tableDrain(s:PinballState){
@@ -236,7 +242,7 @@ export function tableContacts(s:PinballState,H:TableHelpers,prevY:number,extra=f
   for(let i=0;i<3;i++){if(!t.wall[i])continue;const x=WALL_X[i],c=H.contact(b,x-WALL_HALF,WALL_Y,x+WALL_HALF,WALL_Y,WALL_RAD);if(!c)continue;touched=true;
    const a=H.resolve(b,c.nx,c.ny,0,0,.5,.15);
    if(a>50){t.wall[i]=0;t.sfx.drop++;addTraining(s,2);oneTwoTarget(s,x,WALL_Y);
-    if(t.wall[0]+t.wall[1]+t.wall[2]===0){t.wallLit=wallLitTime(s.level);t.wallReset=-1;s.moveTime=Math.max(s.moveTime,t.wallLit);t.sfx.wallDown++;award(s,180,WALL_Y,300,'wallDown',2.4);if(t.mode==='freekick')completeMode(s);}
+    if(t.wall[0]+t.wall[1]+t.wall[2]===0){t.wallLit=wallLitTime(s.level)*pinballRamp(s.match).window;t.wallReset=-1;s.moveTime=Math.max(s.moveTime,t.wallLit);t.sfx.wallDown++;award(s,180,WALL_Y,300,'wallDown',2.4);if(t.mode==='freekick')completeMode(s);}
     else award(s,x,WALL_Y,30,'drop',1.4);
    }
   }
@@ -282,7 +288,7 @@ export function tableContacts(s:PinballState,H:TableHelpers,prevY:number,extra=f
  // Dugout scoop: a soft ball drops in; a fast one rattles over the lip.
  if(!extra&&t.hold===0&&t.ejectCool===0){const dx=b.x-DUGOUT.x,dy=b.y-DUGOUT.y;
   if(dx*dx+dy*dy<DUGOUT.r*DUGOUT.r&&b.vx*b.vx+b.vy*b.vy<650*650&&s.possession<0){
-   t.hold=1.1;t.sfx.dugout++;b.vx=b.vy=b.omega=0;t.holdTip=(t.holdTip+1)%COACH_TIPS.length;
+   t.hold=DUGOUT_HOLD;t.sfx.dugout++;b.vx=b.vy=b.omega=0;t.holdTip=(t.holdTip+1)%COACH_TIPS.length;
    oneTwoTarget(s,DUGOUT.x,DUGOUT.y);
    if(t.dugoutLit&&t.mode==='none')startMode(s);else if(s.cue!=='onetwo'&&s.cue!=='modeDone')award(s,DUGOUT.x,DUGOUT.y,100,'dugout',2.2);else s.score+=100;
   }

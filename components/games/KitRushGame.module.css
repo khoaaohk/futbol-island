@@ -1,0 +1,82 @@
+/* Kit Rush shell (Nov 10 2026): an upright comic page. Phone: the stage is the whole screen. Desktop: a centred 9:16 page with an
+ * ink border and a hard shadow on a Ben-Day sunburst backdrop, with two margin strips of caption boxes. Tokens: ../games/comic. */
+.game{position:relative;width:100%;height:100dvh;overflow:hidden;display:grid;place-items:center;color:var(--cm-ink);font-family:var(--cm-ui);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+ background:var(--cm-dots-orange),#ffcf7a}
+.game button{font-family:var(--cm-ui)}
+.stage{position:relative;width:100%;height:100%;overflow:hidden;background:#3f9a5c;isolation:isolate}
+.scene,.play{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
+.play{z-index:1;cursor:crosshair}
+/* The page frame is your kit colour: the cue you can read without looking at it. */
+.frame{position:absolute;inset:0;z-index:2;pointer-events:none;border:7px solid var(--kr-team);box-shadow:inset 0 0 0 3px var(--cm-ink)}
+.game[data-phase=menu] .frame,.game[data-phase=over] .frame{display:none}
+.topBar{z-index:5}
+/* Nov 10 2026 touch-up: over a start / results card the Arcade back button stays above the dot scrim, exactly as in the 3D games
+   (ArcadeGame3D.module.css): the bar drops its own layer and only the back button is lifted. The shared bar fixes the button's face. */
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar{z-index:auto}
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar>button:first-child{position:relative;z-index:5}
+.banner{position:absolute;z-index:3;left:calc(16px + env(safe-area-inset-left,0px));top:calc(var(--arcade-bar-clear,56px) + 8px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:7px;padding:4px 10px 4px 6px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);rotate:-1.5deg;pointer-events:none}
+.banner b{font:italic 900 17px/1 var(--cm-title);text-transform:uppercase;color:var(--kr-team);-webkit-text-stroke:3px var(--cm-ink);paint-order:stroke fill;letter-spacing:-.01em}
+.banner svg{animation:krKit .32s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes krKit{0%{scale:.4;rotate:-25deg}100%{scale:1;rotate:0deg}}
+.lives{display:flex;gap:4px;margin-left:6px;padding-left:9px;border-left:3px solid var(--cm-ink)}
+.lives i{width:16px;height:16px;box-sizing:border-box;border:3px solid var(--cm-ink);border-radius:50%;background:#e9dcc2}
+.lives i[data-on]{background:var(--cm-red)}
+.shirt{display:block;flex:none;overflow:visible}
+
+/* cards */
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:2px 0 10px;padding:0;list-style:none}
+.how li{display:grid;justify-items:center;gap:5px;padding:9px 4px 8px;border:2px solid var(--cm-ink);background:var(--cm-white);font:700 13px/1.2 var(--cm-ui)}
+.how li:last-child{background:#ffe1d6}
+.how b{font-weight:800}
+.learn{margin:0 0 10px;font:700 14px/1.35 var(--cm-ui);color:var(--cm-ink)}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 12px}
+.chips>*{flex:1 1 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px 12px;padding:0 6px 6px 0}
+.actions>:first-child{grid-column:1/-1}
+.actions>[data-kitrush-daily]{grid-column:1/-1}
+.actions>[data-kitrush-scores]{grid-column:1/-1}
+.actions button{flex-direction:column;gap:2px}
+.status{margin:0 0 10px;font:800 14px/1.3 var(--cm-ui);color:var(--cm-ink)}
+.scoreRow{position:relative;display:grid;place-items:center;margin:6px 0 2px}
+.score{--cm-numeral-size:72px;display:block}
+.score[data-new-best]{animation:krPop .6s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes krPop{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
+.stamp{position:absolute;right:-16px;top:-20px}
+.medalRow{display:inline-flex;align-items:center;justify-content:center;gap:5px;margin:2px 0 8px}
+.chips .medal{width:16px;height:16px;border-width:2.5px}.chips .medal i{width:4px;height:4px}.chips .medalRow{gap:3px;margin:3px 0 4px}
+.medalRow em{margin-left:6px;font:800 14px/1 var(--cm-ui);font-style:normal;color:var(--cm-ink)}
+.medal{display:inline-grid;place-items:center;width:22px;height:22px;box-sizing:border-box;border:3px solid var(--cm-ink);border-radius:50%;background:#e9dcc2}
+.medal i{width:6px;height:6px;border-radius:50%;background:#cdb99a}
+.medal[data-on][data-level="1"]{background:#d98a4a}
+.medal[data-on][data-level="2"]{background:#dfe3ea}
+.medal[data-on][data-level="3"]{background:var(--cm-sun)}
+.medal[data-on][data-level="4"]{background:var(--cm-teal)}
+.medal[data-on] i{background:var(--cm-ink)}
+.near{display:inline-block;margin:2px 0 12px;font:800 16px/1.2 var(--cm-ui)}
+/* Results first (Nov 10 2026): the shared high-score strip (components/arcade/HighScoreEntry.tsx) lands here, under the near-miss line. */
+.hsSlot{margin:0 4px 14px 0}.hsSlot:empty{display:none}
+.coach{margin:0 0 8px;font:700 14px/1.35 var(--cm-ui)}
+.fact{background:var(--cm-white);border-left-width:10px;margin:0 0 12px;text-align:left;font:600 14px/1.4 var(--cm-ui)}
+.fact b{display:block;font:800 14px/1.3 var(--cm-ui)}
+.boardTabs{display:flex;gap:9px;justify-content:center}
+.boardTabs button{min-height:44px;padding:8px 14px;cursor:pointer}
+.boardLearn{margin:0 0 6px;text-align:center}
+
+/* desktop: the page in the middle, caption strips in the margins */
+.side{display:none}
+@media (min-width:700px) and (min-height:520px){
+ .game{background:var(--cm-dots-orange),repeating-conic-gradient(from 4deg at 50% 62%,#ffc24a 0 8deg,#ffcf7a 8deg 16deg)}
+ .stage{width:auto;height:calc(100dvh - 28px);aspect-ratio:9/16;max-width:calc(100vw - 28px);border:5px solid var(--cm-ink);box-shadow:12px 12px 0 var(--cm-ink)}
+ .frame{border-width:8px}
+}
+@media (min-width:1080px) and (min-height:560px){
+ .side{position:absolute;top:50%;translate:0 -50%;display:grid;gap:18px;width:min(250px,calc((100vw - (100dvh - 28px)*9/16)/2 - 64px));font:700 15px/1.35 var(--cm-ui)}
+ .side[data-side=left]{left:calc((100vw - (100dvh - 28px)*9/16)/4);translate:-50% -50%}
+ .side[data-side=right]{right:calc((100vw - (100dvh - 28px)*9/16)/4);translate:50% -50%}
+ .sideRow{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:10px}
+ .sideMedals{display:grid;gap:7px}
+ .sideMedals span{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
+ .sideMedals em{font:400 20px/1 var(--cm-numeral);font-style:normal}
+}
+@media (max-height:700px){.learn{display:none}.how li{padding:6px 4px}.score{--cm-numeral-size:56px}.coach{display:none}}
+@media (prefers-reduced-motion:reduce){.banner{rotate:none}.banner svg,.score[data-new-best]{animation:none}}

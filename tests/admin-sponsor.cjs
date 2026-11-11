@@ -28,7 +28,7 @@ await ok('ids: allowlisted, well formed, lists match the game',()=>{
  assert(K.isCountId('en:cardn_1')&&K.isCountId('en:cardn_999'));
  for(const bad of ['en:cardn_0','en:cardn_1000','en:game_doom','en:bookbuy_nobody','en:jerseyp_tartan','en:read_5m'])assert(!K.isCountId(bad),bad);
  assert.equal(new Set(K.ENGAGE_FIXED_IDS).size,K.ENGAGE_FIXED_IDS.length,'no duplicates');
- const cab=[...read('lib/arcade/arcadeCatalog.ts').matchAll(/\{id:'([a-z]+)',name:/g)].map(m=>m[1]);
+ const cab=[...read('lib/arcade/arcadeCatalog.ts').matchAll(/\{id:'([a-z]+)',name:/g)].map(m=>m[1]==='kitrush'?'live':m[1]);/* Nov 10 2026: Kit Rush reports on the analytics slot it took over ('live'): arcadeCatalog.ts arcadeAnalyticsId */
  assert.deepEqual([...K.ENGAGE_ARCADE_GAMES].sort(),cab.sort(),'arcade cabinets');
  const jersey=read('lib/shop/jersey.ts'),boots=read('lib/shop/boots.ts');
  assert.deepEqual([...K.ENGAGE_JERSEY_PATTERNS],/export type PatternId=([^;]+);/.exec(jersey)[1].split('|').map(s=>s.trim().replace(/'/g,'')),'jersey patterns');

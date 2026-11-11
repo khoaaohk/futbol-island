@@ -69,7 +69,7 @@ assert(!PATHS.includes('/learn'),'/learn redirects to / (next.config.mjs), so it
 {const sp=paths.sitePaths(),pr=p=>sp.find(x=>x.path===p).priority;assert.equal(pr('/'),1,'/ is the main entry');assert(pr('/play')<pr('/about')&&pr('/play')>0,'/play listed, low priority');assert(sp.find(x=>x.path==='/').lastmod,'/ has a lastmod');}
 assert(!PATHS.some(p=>p==='/'+'start'),'the removed landing page is not listed');
 const hubs=L('lib/site/hubs.ts'),GUIDES=paths.GUIDE_PATHS;
-assert.equal(PATHS.length,9+/* / /about /privacy /play /marketing + the 4 index pages */ GUIDES.length+L('lib/site/guides.ts').ALL_GUIDE_PAGES.length/* both guide clusters */+L('lib/site/tools/registry.ts').TOOL_PAGES.length/* coach tools and printables */+lessons.LESSONS.length+fish.SITE_FISH.length+cards.SITE_CARDS.length+exhibits.SITE_EXHIBITS.length);
+assert.equal(PATHS.length,9+/* / /about /privacy /play /marketing + the 4 index pages */ GUIDES.length+L('lib/site/guides.ts').ALL_GUIDE_PAGES.length/* both guide clusters */+L('lib/site/tools/registry.ts').TOOL_PAGES.length/* coach tools and printables */+L('lib/site/games.ts').GAME_LISTINGS.length/* the arcade games' search pages (tests/seo-games.cjs) */+lessons.LESSONS.length+fish.SITE_FISH.length+cards.SITE_CARDS.length+exhibits.SITE_EXHIBITS.length);
 // robots.ts names every bot and closes the private routes (checked again on the built file below).
 const robotsSrc=read('app/robots.ts');
 // Nov 8 2026 (owner, AI search): every answer engine's search and user-fetch agent by name.

@@ -1,63 +1,180 @@
 import * as T from 'three';
 import type {ArcadeStage} from './arcadeStage';
+import {RUNNER_INK,RUNNER_PAPER} from './looks/runner';
+import {comicShaderEdit,createComicUniforms} from './comic/shading';
+import {bakeParts,flipFaces,inkedPart,partAt} from './comic/ink';
 import {routeBendTable,routeCurve,routeGrade,routeHeadingAhead,routeHeight,terrainAt,terrainOfZone,terrainZoneAt,TERRAINS,TERRAIN_ZONE,ROUTE_BEND_MIN,type TerrainId} from '../../components/games/runnerRoute';
 
-/* ---- terrain zones (round 3): one shader on the one terrain mesh, no extra draws ----
- * The road and land colours, the surface pattern (pitch stripes, sand ripples, cobbles, snow sparkle, mud,
- * neon grid, roof tiles, bridge planks) and a height tint (green valleys, rocky ridges, snowy peaks) are
- * computed per fragment from the absolute route distance and height. Off the road, far land rolls into
- * hills and valleys (vertex offset only beyond the prop band, so houses never float). Two zones at most
- * are visible (zone 240 m > the 180 m window), so two colour sets and one boundary are enough. */
-const terrainUniforms={uTerr:{value:new T.Vector4()},uZone:{value:new T.Vector4(1e9,0,0,0)},
- uRoadA:{value:new T.Color()},uLandA:{value:new T.Color()},uRoadB:{value:new T.Color()},uLandB:{value:new T.Color()}};
-const TERRAIN_VERT_PARS=/* glsl */`uniform vec4 uTerr;varying float vAlong;varying float vSide;varying float vTH;`;
+/* ---- the coast road (Nov 10 2026, docs/arcade-aaa/runner-direction.md): one shader on the one terrain mesh, no extra draws ----
+ * Road surface per terrain zone (turf stripes, sand ripples, cobbles, chalk, wet mud, a painted pier court, roof tiles, boards),
+ * painted lane dashes and edge lines, a striped kerb, the promenade, the sea wall, the beach, a moving foam line and the sea with
+ * its glitter path toward the sun are all computed per fragment from the absolute route distance. The sea side drops in the
+ * vertex shader (wall, beach, sea level); the land side rolls into a terraced hillside from 22 m out (past every near prop).
+ * Two zones at most are visible (zone 240 m > the 180 m window), so two colour sets and one boundary are enough. */
+const terrainUniforms={uTerr:{value:new T.Vector4()},uZone:{value:new T.Vector4(1e9,0,0,0)},uSeaSide:{value:new T.Vector2()},
+ uRoadA:{value:new T.Color()},uLandA:{value:new T.Color()},uAccA:{value:new T.Color()},uRoadB:{value:new T.Color()},uLandB:{value:new T.Color()},uAccB:{value:new T.Color()},
+ uPaper:{value:new T.Color(RUNNER_PAPER)},uSand:{value:new T.Color('#f2d49a')},uSeaNear:{value:new T.Color('#1f8f96')},uSeaFar:{value:new T.Color('#2b6fa3')},uGlitter:{value:new T.Color('#fff1b0')},
+ /** x: sun azimuth (radians from straight ahead), y: night lamp pools 0..1, z: glitter strength, w: foam/wave clock. */uSea:{value:new T.Vector4(-.4,0,1,0)},uLampCol:{value:new T.Color('#ffb14a')},
+ /** The sun in the straight frame (x across, y up, z along): shades the hillside per fragment. */uSunS:{value:new T.Vector3(-.3,.27,-.9)}};
+const TERRAIN_VERT_PARS=/* glsl */`uniform vec4 uTerr;uniform vec4 uZone;uniform vec2 uSeaSide;varying float vAlong;varying float vSide;varying float vHill;varying vec3 vWpos;`;
 const TERRAIN_VERT_BEGIN=/* glsl */`#include <begin_vertex>
-{float ax=abs(transformed.x);
- // Rolling hills off the road: grows from 22 m out (past every prop), scrolls with the route.
- float sAbs=uTerr.x-transformed.z,k=clamp((ax-22.)/40.,0.,1.);
- transformed.y+=k*(3.2*sin(sAbs*.045+transformed.x*.07)+1.8*sin(sAbs*.11-transformed.x*.05)+2.2)*(1.+k);}`;
+{float ax=abs(transformed.x),sAbs=uTerr.x-transformed.z;
+ // Land side: a terraced hillside from 22 m out (scrolls with the route). Sea side: wall, beach, sea level.
+ float k=clamp((ax-22.)/40.,0.,1.),hill=k*(3.2*sin(sAbs*.045+ax*.07)+1.8*sin(sAbs*.11-ax*.05)+3.4)*(1.+k*1.6);
+ float coast=-(smoothstep(8.2,9.2,ax)*1.5+smoothstep(9.2,16.,ax)*.9);
+ float seaR=mix(uSeaSide.x,uSeaSide.y,smoothstep(uZone.x-14.,uZone.x+14.,sAbs)),sea=transformed.x<0.?1.:seaR;
+ vHill=mix(hill,coast,sea);transformed.y+=vHill;}`;
 const TERRAIN_VERT_PROJECT=/* glsl */`#include <project_vertex>
-vAlong=-transformed.z;vSide=transformed.x;
-vTH=uTerr.y+(rbW.y-transformed.y)+uTerr.z*vAlong+uTerr.w*max(0.,vAlong)*max(0.,vAlong);`;
-const TERRAIN_FRAG_PARS=/* glsl */`uniform vec4 uTerr;uniform vec4 uZone;uniform vec3 uRoadA,uLandA,uRoadB,uLandB;varying float vAlong;varying float vSide;varying float vTH;
+vAlong=-transformed.z;vSide=transformed.x;vWpos=rbW.xyz;`;
+const TERRAIN_FRAG_PARS=/* glsl */`uniform vec4 uTerr;uniform vec4 uZone;uniform vec2 uSeaSide;uniform vec4 uSea;uniform vec3 uRoadA,uLandA,uAccA,uRoadB,uLandB,uAccB,uPaper,uSand,uSeaNear,uSeaFar,uGlitter,uLampCol,uSunS;
+varying float vAlong;varying float vSide;varying float vHill;varying vec3 vWpos;
+vec4 rtGlow=vec4(0.);float rtShade=1.;
 float rbHash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}`;
 const TERRAIN_FRAG=/* glsl */`#include <color_fragment>
-{float s=uTerr.x+vAlong,side=abs(vSide),tB=smoothstep(uZone.x-7.,uZone.x+7.,s),pat=tB<.5?uZone.y:uZone.z;
- vec3 road=mix(uRoadA,uRoadB,tB),land=mix(uLandA,uLandB,tB),col;
- if(side<=4.5){col=road;
-  if(pat<.5)col*=.9+.1*step(.5,fract(s/6.));
-  else if(pat<1.5)col*=.92+.08*sin(s*2.1+sin(vSide*1.3)*2.);
-  else if(pat<2.5){vec2 c=vec2(vSide*1.5+floor(s*1.5)*.5,s*1.5),f=fract(c);float e=min(min(f.x,1.-f.x),min(f.y,1.-f.y));col*=mix(.55,1.,smoothstep(.03,.14,e))*(.9+.2*rbHash(floor(c)));}
-  else if(pat<3.5)col+=vec3(.22)*step(.975,rbHash(floor(vec2(vSide,s)*7.)));
-  else if(pat<4.5)col*=.72+.38*smoothstep(.35,.75,sin(s*.7+vSide*1.1)*.5+.5);
-  else if(pat<5.5){float g=max(step(.94,fract(s/3.)),step(.95,fract(vSide/2.4+.5)));col=mix(col,vec3(.45,1.,.95),g*.55);}
-  else if(pat<6.5)col*=1.-.32*step(.88,fract(s*1.2))-.12*step(.9,fract(vSide*.8));
-  else col*=1.-.42*step(.9,fract(s*1.6));}
- else if(side<=5.4)col=mix(road,land,.5)*.75;
- else{col=land;
-  // Height tint: green valleys, rocky ridges, snowy peaks (absolute route height in metres).
-  col=mix(col,vec3(.13,.32,.2),smoothstep(-2.,-7.,vTH)*.6);
-  col=mix(col,vec3(.36,.35,.42),smoothstep(5.,10.,vTH)*.75);
-  col=mix(col,vec3(.9,.93,.97),smoothstep(12.,18.,vTH)*.85);
-  col=mix(col,col*.5,clamp((side-5.4)/40.,0.,1.));}
+{float s=uTerr.x+vAlong,ax=abs(vSide),tB=smoothstep(uZone.x-7.,uZone.x+7.,s),pat=tB<.5?uZone.y:uZone.z,line=0.;
+ vec3 road=mix(uRoadA,uRoadB,tB),land=mix(uLandA,uLandB,tB),acc=mix(uAccA,uAccB,tB),ink=vec3(.016,.01,.027),col;
+ if(ax<=4.5){col=road;
+  if(pat<.5)col*=.88+.12*step(.5,fract(s/6.));
+  else if(pat<1.5)line=.16*step(.82,fract(s*.9+sin(vSide*1.3)*1.2));
+  else if(pat<2.5){vec2 c=vec2(vSide*1.5+floor(s*1.5)*.5,s*1.5),f=fract(c);float e=min(min(f.x,1.-f.x),min(f.y,1.-f.y));line=.5*(1.-smoothstep(.03,.1,e));col*=.86+.22*rbHash(floor(c));}
+  else if(pat<3.5){col*=.94+.06*step(.5,fract(s/5.));line=.1*step(.93,rbHash(floor(vec2(vSide,s)*3.)));}
+  else if(pat<4.5)col*=.78+.3*step(.5,sin(s*.7+vSide*1.1)*.5+.5+.2*sin(s*2.3-vSide*3.));
+  else if(pat<5.5){float g=max(step(.95,fract(s/6.)),step(.94,fract(vSide/2.4+.5)));col=mix(col,uPaper,g*.75);col=mix(col,acc,.8*step(abs(fract(s/12.)-.5),.012*12./6.)*step(ax,1.2));}
+  else if(pat<6.5){line=.34*step(.9,fract(s*1.2));col*=.9+.14*step(.5,fract(vSide*.8+floor(s*1.2)*.5));}
+  else{line=.5*step(.93,fract(s*1.6));col*=.9+.16*rbHash(vec2(floor(s*1.6),1.));}
+  // Painted lines: two dashed lane lines and a solid edge line each side.
+  col=mix(col,uPaper,.94*max(step(abs(ax-1.2),.075)*step(fract(s/4.),.5),step(abs(ax-4.12),.07)));
+  // Night: a pool of lamp light every 30 m, on the lamp's side (runnerTrack puts the lamp post at the same spot).
+  if(uSea.y>.01){float cell=floor(s/30.),sd=mod(cell,2.)<.5?-1.:1.;vec2 lp=vec2(vSide-sd*3.6,(s-cell*30.-15.)*.72);float pool=1.-smoothstep(2.2,5.2,length(lp));rtGlow.a=pool*uSea.y;rtGlow.rgb=uLampCol*pool*pool*uSea.y*.22;}}
+ else if(ax<=5.4){col=mix(uPaper,acc,step(.5,fract(s/3.)));line=max(step(ax,4.58),step(5.32,ax));}
+ else if(vSide<0.||mix(uSeaSide.x,uSeaSide.y,tB)>.5){
+  if(ax<=8.2){col=uPaper*vec3(.95,.86,.76);vec2 f=fract(vec2(ax*.72,s*.36+floor(ax*.72)*.5));line=max(.3*step(min(f.x,f.y),.035),step(7.9,ax));}
+  else if(ax<=9.25){col=uPaper*vec3(.78,.66,.66);line=max(.45*step(fract(s*.9+ax*3.),.1),.9*step(9.15,ax));}
+  else{float shore=13.4+sin(s*.21)*.9+sin(s*.057+1.7)*.7,foam=shore+.55+.4*sin(uSea.w*1.2+s*.35);
+   if(ax<shore){col=uSand;line=.14*step(.86,fract(ax*1.7+sin(s*.5)*.4));col*=.9+.1*step(shore-1.1,ax);}
+   else if(ax<foam)col=mix(uPaper,vec3(1.),.6);
+   else{float d=ax-foam+sin(s*.13)*1.6;col=d<5.?mix(uSeaNear,uPaper,.28):d<22.?uSeaNear:d<70.?mix(uSeaNear,uSeaFar,.55):uSeaFar;
+    // Wave strokes: short pale dashes in rows parallel to the shore, drifting.
+    vec2 gd=vWpos.xz-cameraPosition.xz;float dist=length(gd),row=floor(ax*.7),seg=fract(s*.09+rbHash(vec2(row,3.))*9.+uSea.w*.04*(1.+rbHash(vec2(row,7.))));
+    col=mix(col,uPaper,.5*step(seg,.3)*step(fract(ax*.7),.2)*(1.-smoothstep(45.,95.,dist)));
+    // Glitter path: dashes that crowd toward the sun's bearing.
+    float az=atan(gd.x,-gd.y),gl=exp(-pow((az-uSea.x)/.12,2.)),gv=log(max(dist,1.))*19.-uSea.w*.7,gr=floor(gv),gu=az*22.+rbHash(vec2(gr,1.))*7.;
+    float gdash=step(fract(gv),.38)*step(abs(fract(gu)-.5),.36)*step(rbHash(vec2(floor(gu),gr)),gl*1.15);
+    col=mix(col,uGlitter,gdash*uSea.z);}}}
+ else if(ax<=6.55){col=mix(land,road,.3)*.94;line=.4*step(.93,rbHash(floor(vec2(vSide*3.,s*1.5))));}
+ // A dry-stone wall top between the verge and the fields.
+ else if(ax<=7.1){col=uPaper*vec3(.9,.82,.78)*(.9+.14*rbHash(vec2(floor(s*.9+floor(ax*3.6)*.5),floor(ax*3.6))));line=max(max(step(ax,6.62),step(7.03,ax)),.5*step(.88,fract(s*.9+floor(ax*3.6)*.5)));}
+ else{// Land: the slope of the hill (same function as the vertex shader) decides its print band, so hills have a lit and a shaded side.
+  float k=clamp((ax-22.)/40.,0.,1.),p1=s*.045+ax*.07,p2=s*.11-ax*.05,hA=3.2*sin(p1)+1.8*sin(p2)+3.4,hK=k*(1.+k*1.6);
+  float hx=(k>0.&&k<1.?(1.+3.2*k)/40.:0.)*hA+hK*(.224*cos(p1)-.09*cos(p2)),hs=hK*(.144*cos(p1)+.198*cos(p2));
+  rtShade=(.175+.83*max(0.,dot(normalize(vec3(-hx*sign(vSide),1.,hs)),uSunS)))/(.175+.83*uSunS.y);
+  if(vHill>.9){// Terraces: a dry-stone riser every 2.4 m of height, planted rows that follow the contour on each step.
+   float tv=vHill*.42,ti=floor(tv),tf=fract(tv),th=rbHash(vec2(ti,floor(s*.025+ti*.37)));
+   col=land*(.78+.36*th);col=mix(col,acc,step(.8,th)*.25);col=mix(col,uSand,step(th,.22)*.45);
+   line=.22*step(.3,tf)*step(fract(tf*4.3+th),.2);
+   if(tf<.2){col=mix(uPaper,land,.25)*vec3(.92,.84,.8);line=max(.9*step(tf,.03),max(.9*step(.172,tf),.4*step(.84,fract(s*.8+ti*.37))));}}
+  else{// Patchwork fields with planted rows, parted by hedgerows.
+   vec2 fc=vec2(ax*.085+sin(s*.02)*.6,s*.04),cell=floor(fc),ff=fract(fc);float h=rbHash(cell),he=min(min(ff.x,1.-ff.x)/.085,min(ff.y,1.-ff.y)/.04);
+   col=land*(.84+.3*h);col=mix(col,acc,step(.86,h)*.3);col=mix(col,uSand,step(h,.14)*.5);
+   col*=1.-.2*step(.45,h)*step(fract((h>.72?ax:s)*.9),.2);
+   if(he<.6){col=vec3(.1,.36,.25)*(.85+.4*rbHash(floor(vec2(ax,s)*1.3)));line=.8*step(.46,he);}}}
+ col=mix(col,ink,clamp(line,0.,1.));
  diffuseColor.rgb*=col;}`;
 function terrainShader(m:T.Material){
  m.onBeforeCompile=sh=>{Object.assign(sh.uniforms,terrainUniforms);
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+TERRAIN_VERT_PARS).replace('#include <begin_vertex>',TERRAIN_VERT_BEGIN).replace('#include <project_vertex>',TERRAIN_VERT_PROJECT);
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+TERRAIN_FRAG_PARS).replace('#include <color_fragment>',TERRAIN_FRAG);};
- m.customProgramCacheKey=()=>'runner-terrain-zones-1';
+ m.customProgramCacheKey=()=>'runner-terrain-coast-2';
 }
-/** Prop colours per terrain: [house, roof, trim glow, leaves, pole]. */
-const PROP_PALETTE:Record<TerrainId,readonly [string,string,string,string,string]>={
- grass:['#2f3f3a','#3f8a52','#ffe07a','#2f6b3e','#40545a'],
- sand:['#c9a36a','#e8c879','#ff9b5e','#3c8f55','#7a5a3a'],
- cobbles:['#5a3d3a','#8a3f35','#ffd36e','#2b3c5e','#343052'],
- snow:['#dfe7f2','#ffffff','#9ff6ff','#e9f2fb','#8fa3bd'],
- mud:['#4a3526','#6b4a2f','#ffb36e','#3d4a2a','#3b2a1e'],
- neon:['#292841','#8749bc','#ff62c2','#2b3c5e','#324f56'],
- rooftop:['#5a4050','#7a3b35','#73fff1','#3a4a5e','#58505e'],
- bridge:['#3c5a78','#9a6b42','#ffd36e','#2b3c5e','#c9d6ff'],
+/** JS mirrors of the terrain vertex offsets, so props stand on the beach and on the hillside. */
+const coastY=(ax:number)=>{const a=Math.min(1,Math.max(0,ax-8.2)),b=Math.min(1,Math.max(0,(ax-9.2)/6.8));return-(a*a*(3-2*a)*1.5+b*b*(3-2*b)*.9);};
+const hillY=(ax:number,s:number)=>{const k=Math.min(1,Math.max(0,(ax-22)/40));return k*(3.2*Math.sin(s*.045+ax*.07)+1.8*Math.sin(s*.11-ax*.05)+3.4)*(1+k*1.6);};
+/** The coast road per terrain zone: road surface, land beside it, accent (kerb stripe, shutters, bunting), sea on both sides? */
+const COAST:Record<TerrainId,{road:string;land:string;accent:string;seaR:number}>={
+ grass:{road:'#57b56a',land:'#86c867',accent:'#f0452e',seaR:0},
+ sand:{road:'#f4d08c',land:'#e7c27e',accent:'#19b5a5',seaR:0},
+ cobbles:{road:'#b3a3b0',land:'#cdb78c',accent:'#2f6fb0',seaR:0},
+ snow:{road:'#f6f0e4',land:'#d9d0bd',accent:'#2f6fb0',seaR:0},
+ mud:{road:'#96694c',land:'#7fae62',accent:'#ffc83a',seaR:0},
+ neon:{road:'#2f66b3',land:'#cdb78c',accent:'#ffc83a',seaR:0},
+ rooftop:{road:'#dd6a42',land:'#ecd9b8',accent:'#2f6fb0',seaR:0},
+ bridge:{road:'#c2915e',land:'#2b6fa3',accent:'#f0452e',seaR:1},
 };
+
+/* ---- comic shading (Nov 10 2026): chained onto every lit runner material next to the bend, so it costs no pass and no draw ----
+ * The shading itself (shadow / light bands, the 45 degree halftone turn, tinted shadows, the sun rim and the ink edge of constant
+ * pixel width) is the shared arcade kit: lib/arcade/comic/shading.ts. This file keeps what only the coast road has: the hill-slope
+ * print band and lamp glow on the terrain, the lamp pools and lightning rim on characters, and the switch that keeps materials
+ * shared with other scenes unshaded there (runnerBendCfg.w, the same switch as the bend). */
+const inkUniforms={...createComicUniforms({ink:RUNNER_INK}),
+ /** x: route distance, y: lamp pools 0..1, z: lightning 0..1. Characters walk through the same pools the road shows. */uInkLamp:{value:new T.Vector4()},uInkLampCol:terrainUniforms.uLampCol};
+const INK_PARS=/* glsl */`uniform vec4 uInkLamp;uniform vec3 uInkLampCol;
+#ifdef RUNNER_RIM
+varying vec2 vRbS;
+#endif
+#ifndef RUNNER_BEND_FRAG
+#define RUNNER_BEND_FRAG
+uniform vec4 runnerBendCfg;
+#endif`;
+const INK_HOOKS={
+ terrainLit:/* glsl */`rkLit*=rtShade;rkT=max(clamp((rkLit-uInkBand.x)/(uInkBand.y-uInkBand.x),0.,1.),rtGlow.a);`,
+ terrainGlow:/* glsl */`rkCol+=rtGlow.rgb;`,
+ // Night: the street-lamp pools the road shows (same cells, same side) warm whoever runs through them.
+ lamp:/* glsl */`if(uInkLamp.y>.01){float rs=uInkLamp.x-vRbS.y,cell=floor(rs/30.),sd=mod(cell,2.)<.5?-1.:1.;vec2 lp=vec2(vRbS.x-sd*3.6,(rs-cell*30.-15.)*.72);
+  float pool=(1.-smoothstep(2.4,5.8,length(lp)))*uInkLamp.y;rkCol=mix(rkCol,rkBase*uInkLampCol*1.12,pool*.9);rkCol=mix(rkCol,uInkLampCol*1.15,pool*smoothstep(.4,.52,rkNV)*.75);}`,
+ // Lightning prints a white rim all round.
+ lightning:/* glsl */`rkCol=mix(rkCol,vec3(1.),uInkLamp.z*smoothstep(.3,.45,rkNV));`,
+};
+/** Exposed for tests: the comic shading edit (fragment side) with the runner's hooks. Skips unlit and depth shaders. */
+export function runnerInkShader(shader:{fragmentShader?:string;uniforms:Record<string,T.IUniform>},rim=false,terrain=false){
+ return comicShaderEdit(shader,{uniforms:{...inkUniforms,...bendUniforms},rim,gate:'runnerBendCfg.w>.5',defines:(rim?'#define RUNNER_RIM\n':'')+(terrain?'#define RUNNER_TERRAIN\n':''),pars:INK_PARS,
+  afterLit:terrain?INK_HOOKS.terrainLit:'',afterTone:terrain?INK_HOOKS.terrainGlow:'',rimLight:INK_HOOKS.lamp,rimAfter:INK_HOOKS.lightning});
+}
+
+/* ---- props with their ink outline baked in: inkedPart / partAt / bakeParts are the kit's (lib/arcade/comic/ink.ts) ---- */
+export {inkedPart,partAt,bakeParts};
+const at=partAt;
+/** Whitewashed village house: plinth band, terracotta hip roof, chimney, blue door and shutters. Door faces +z (the camera). */
+function houseGeometry(){const out:T.BufferGeometry[]=[];
+ inkedPart(out,new T.BoxGeometry(3.6,2.5,3.2),'#ffffff',at(0,1.25,0),.075);
+ inkedPart(out,new T.BoxGeometry(3.66,2.4,3.26),'#e9b35a',at(0,-.65,0),0);
+ const roof=new T.ConeGeometry(2.75,1.3,4,1);roof.scale(1,1,.9);inkedPart(out,roof,'#e2643c',at(0,3.15,0,Math.PI/4),.075,true);
+ inkedPart(out,new T.BoxGeometry(.42,.95,.42),'#ffffff',at(1,3.35,.35),.05);
+ inkedPart(out,new T.BoxGeometry(.78,1.4,.1),'#2f6fb0',at(-.65,.7,1.63),.04);
+ inkedPart(out,new T.BoxGeometry(.66,.72,.1),'#2f6fb0',at(.8,1.55,1.63),.04);
+ for(const z of[-.75,.75])inkedPart(out,new T.BoxGeometry(.1,.72,.6),'#2f6fb0',at(-1.83,1.55,z),.04);
+ return bakeParts(out);}
+/** Coconut palm: leaning three-part trunk and six cut-paper fronds, each with a dark under-leaf as its outline. */
+function palmGeometry(){const out:T.BufferGeometry[]=[];let x=0,y=0;const lean=[.08,.17,.27];
+ for(let i=0;i<3;i++){const h=1.4,l=lean[i];inkedPart(out,new T.CylinderGeometry(.12-i*.015,.16-i*.015,h+.06,5,1,true),i%2?'#c79763':'#b5834f',at(x+Math.sin(l)*h/2,y+Math.cos(l)*h/2,0,0,-l),.05,true);x+=Math.sin(l)*h;y+=Math.cos(l)*h;}
+ const P=[[0,0,.03],[.95,.4,.36],[1.9,-.2,.27],[2.4,-.95,0]];
+ const blade=(grow:number,drop:number)=>{const v:number[]=[],p=P.map(([px,py,w])=>[px*grow,py-drop,w*grow]),tri=(a:number[],b:number[],c:number[])=>v.push(...a,...b,...c),L=(i:number)=>[p[i][0],p[i][1],-p[i][2]],R=(i:number)=>[p[i][0],p[i][1],p[i][2]];
+  tri(L(0),R(1),L(1));tri(L(1),R(1),L(2));tri(R(1),R(2),L(2));tri(L(2),R(2),L(3));
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(v,3));return g;};
+ for(let k=0;k<6;k++){const m=at(x,y,0,k/6*Math.PI*2+.35,(k%2)*.14-.02);
+  const top=blade(1,0);top.computeVertexNormals();inkedPart(out,top,k%2?'#3f9f5f':'#2f8a5a',m,0);
+  const under=flipFaces(blade(1,0));under.computeVertexNormals();inkedPart(out,under,'#27765a',m,0);
+  const edge=blade(1.13,.045);edge.computeVertexNormals();inkedPart(out,edge,RUNNER_INK,m,0);}
+ return bakeParts(out);}
+/** Beach parasol: striped canopy, pole and a towel. */
+function parasolGeometry(){const out:T.BufferGeometry[]=[];
+ inkedPart(out,new T.CylinderGeometry(.035,.035,2,5,1,true),'#fff3d6',at(0,1,0),0);
+ inkedPart(out,new T.ConeGeometry(1.3,.52,8,1,true),tri=>tri%2?'#ffffff':'#f0452e',at(0,2.1,0,0,.12),.06,true);
+ inkedPart(out,new T.BoxGeometry(1.7,.05,.8),'#19b5a5',at(1.1,.03,.5,.3),0);
+ return bakeParts(out);}
+
+/** Cypress: the dark flame-shaped tree of every terraced hillside. */
+function cypressGeometry(){const out:T.BufferGeometry[]=[];
+ inkedPart(out,new T.CylinderGeometry(.09,.12,.6,4,1,true),'#8a5a3c',at(0,.3,0),0);
+ inkedPart(out,new T.ConeGeometry(.62,3.6,5,1),tri=>tri%2?'#2f7a52':'#256a4e',at(0,2.3,0),.075,true);
+ return bakeParts(out);}
+/** Sail boat for the bay: inked hull, mast, a mainsail and a jib (both sides drawn). */
+function boatGeometry(){const out:T.BufferGeometry[]=[];
+ const hull=new T.CylinderGeometry(.6,.34,.5,4,1);hull.rotateY(Math.PI/4);hull.scale(2.5,1,.85);inkedPart(out,hull,'#ffffff',at(0,.22,0),.07,true);
+ inkedPart(out,new T.BoxGeometry(.08,2.9,.08),RUNNER_INK,at(.1,1.75,0),0);
+ const sail=(p:number[],hex:string)=>{const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute([...p,p[0],p[1],p[2],p[6],p[7],p[8],p[3],p[4],p[5]],3));g.computeVertexNormals();inkedPart(out,g,hex,at(0,0,0),0);};
+ sail([.2,.62,0,1.55,.62,0,.2,3.1,0],'#ffffff');sail([0,.62,0,-1.25,.62,0,0,2.6,0],'#ffc83a');
+ return bakeParts(out);}
 
 /**
  * Breakaway Run winding route (Oct 9 2026).
@@ -85,6 +202,7 @@ let activeRenderer:T.WebGLRenderer|null=null;
 const BEND_PARS=/* glsl */`
 uniform vec4 runnerBendData[${BEND_N}];
 uniform vec4 runnerBendCfg;
+varying vec2 vRbS;
 #ifndef RUNNER_WORLD_HOOK
 #define RUNNER_WORLD_HOOK
 #endif
@@ -121,6 +239,7 @@ vec4 rbW=vec4(transformed,1.0);
 #endif
 rbW=modelMatrix*rbW;
 RUNNER_WORLD_HOOK
+vRbS=rbW.xz;
 rbW.xyz=runnerBend(rbW.xyz);
 vec4 mvPosition=viewMatrix*rbW;
 gl_Position=projectionMatrix*mvPosition;
@@ -150,8 +269,10 @@ const defaultKey=T.Material.prototype.customProgramCacheKey;
 export function bendMaterial(m:T.Material){
  if(m.userData.runnerBend||(m as T.ShaderMaterial).isShaderMaterial)return;m.userData.runnerBend=true;
  const base=m.onBeforeCompile,baseKey=m.customProgramCacheKey,key=baseKey===defaultKey?base.toString():null,before=m.onBeforeRender;
- m.onBeforeCompile=(shader,renderer)=>{base.call(m,shader,renderer);runnerBendShader(shader);};
- m.customProgramCacheKey=()=>(key??baseKey.call(m))+'|runner-bend-1';
+ // Comic shading rides the same edit. Characters (bean skin) and anything flagged userData.runnerRim also get the rim and ink edge.
+ const rim=!!m.userData.runnerRim||'beanUniforms' in m,terrain=!!m.userData.runnerTerrain;
+ m.onBeforeCompile=(shader,renderer)=>{base.call(m,shader,renderer);runnerBendShader(shader);runnerInkShader(shader,rim,terrain);};
+ m.customProgramCacheKey=()=>(key??baseKey.call(m))+'|runner-bend-1'+(rim?'|rim':'')+'|ink-2';
  // Materials can be shared with other scenes (e.g. costume parts): only the runner's renderer bends.
  m.onBeforeRender=(renderer,scene,camera,geometry,object,group)=>{before.call(m,renderer,scene,camera,geometry,object,group);bendCfg.w=renderer===activeRenderer?1:0;};
  m.needsUpdate=true;
@@ -167,75 +288,74 @@ const patchOne=(o:T.Object3D)=>{
 export function bendTree(root:T.Object3D){root.traverse(patchOne);}
 
 const smoothTo=(v:number,target:number,rate:number,dt:number)=>v+(target-v)*(1-Math.exp(-rate*dt));
-const CHUNK=30,SLOTS=7,PER={box:16,leaf:4,glow:8,flag:8};
+const CHUNK=30,SLOTS=7,PER={box:16,house:5,palm:4,parasol:1,glow:1,flag:8,tree:6,boat:1};
 type RouteState={distance:number;speed:number;lives:number};
 
 export function createRunnerTrack(stage:ArcadeStage){
  const {scene,mobile,reduced}=stage;
  activeRenderer=stage.renderer;bendCfg.w=1;
-
- /* ---- remove the straight stage pieces this route replaces (they cannot bend: 2-triangle boxes, 100 m lines) ---- */
- const remove:T.Object3D[]=[];let grain:T.Texture|null=null;
- for(const o of scene.children){
-  const m=o as T.Mesh,s=o.scale;
-  if((o as T.GridHelper).isLineSegments&&o.type==='GridHelper')remove.push(o);
-  else if(m.isMesh&&Math.abs(s.x-90)<.01&&Math.abs(s.z-100)<.01){remove.push(o);grain=(m.material as T.MeshStandardMaterial).map;}
-  else if(m.isMesh&&Math.abs(s.x-8.8)<.01&&Math.abs(s.z-76)<.01)remove.push(o);
-  else if(m.isMesh&&Math.abs(s.y-70)<.5&&Math.abs(s.x-.06)<.01)remove.push(o);
- }
- for(const o of remove)scene.remove(o);
- // ~150 palm/house meshes, one draw each: replaced by four instanced prop meshes that follow the route.
+ // The look's environment is empty for the runner (lib/arcade/looks/runner.ts); the stage scenery group stays unused.
  stage.scenery.clear();stage.scenery.visible=false;
- // The glass floor skin and its neon spill are single long quads: tessellate them so they bend.
- scene.traverse(o=>{const m=o as T.Mesh;if(!m.isMesh)return;const g=m.geometry as T.PlaneGeometry;
-  if((o.name==='glass-surface'||o.name==='neon-court-spill')&&g.parameters&&g.parameters.heightSegments===1){const p=g.parameters,spill=o.name==='neon-court-spill';
-   // The spill's glowing rim marked a hard "end of the road": stretch it past the fog line instead.
-   m.geometry=new T.PlaneGeometry(p.width,p.height*(spill?2.3:1),1,Math.ceil(p.height/2.5));g.dispose();
-   // Round 3: the ground is now visible (terrain zones), so the spill glazes it lightly instead of tinting it.
-   if(spill)(m.material as T.MeshBasicMaterial).opacity*=.4;}});
+ let sunLight:T.DirectionalLight|null=null;scene.traverse(o=>{if((o as T.DirectionalLight).isDirectionalLight)sunLight=o as T.DirectionalLight;});
+ const sun=sunLight as T.DirectionalLight|null,dotCell=stage.renderer.getPixelRatio();
+ inkUniforms.uInkBand.value.z=3.4*dotCell;
 
- /* ---- terrain + road: one tessellated mesh in the straight frame, bent by the shader ---- */
- const XS=[-160,-90,-55,-32,-22,-15,-10,-7,-5.4,-4.5,-2.4,0,2.4,4.5,5.4,7,10,15,22,32,55,90,160],Z0=36,Z1=-144,ROW=3,rows=Math.round((Z0-Z1)/ROW)+1;
- // Vertex colours stay white: the terrain shader paints road, verge and land per zone (see terrainShader).
- const road=new T.Color('#ffffff'),verge=new T.Color('#ffffff'),land=new T.Color('#ffffff'),far=new T.Color('#ffffff'),c=new T.Color();
- const pos:number[]=[],col:number[]=[],uv:number[]=[],idx:number[]=[];
- for(let r=0;r<rows;r++){const z=Z0-r*ROW;for(const x of XS){const ax=Math.abs(x);
-  if(ax<=4.5)c.copy(road);else if(ax<=5.4)c.copy(verge);else c.copy(land).lerp(far,Math.min(1,(ax-5.4)/30));
-  pos.push(x,-.005,z);col.push(c.r,c.g,c.b);uv.push(x/6,-z/6);}}
+ /* ---- terrain + road + sea: one tessellated mesh in the straight frame, bent by the shader ---- */
+ const XS=[-230,-130,-75,-44,-26,-16,-13,-10.5,-9.2,-8.2,-7,-5.4,-4.5,-2.4,0,2.4,4.5,5.4,7,8.2,9.2,10.5,13,16,22,27,33,40,48,58,72,90,120,160],Z0=21,Z1=-147,ROW=3,rows=Math.round((Z0-Z1)/ROW)+1;
+ const pos:number[]=[],idx:number[]=[];
+ for(let r=0;r<rows;r++){const z=Z0-r*ROW;for(const x of XS)pos.push(x,-.005,z);}
  const W=XS.length;for(let r=0;r<rows-1;r++)for(let i=0;i<W-1;i++){const a=r*W+i,b=a+W;idx.push(a,a+1,b,a+1,b+1,b);}
- const terrainGeo=new T.BufferGeometry();terrainGeo.setAttribute('position',new T.Float32BufferAttribute(pos,3));terrainGeo.setAttribute('color',new T.Float32BufferAttribute(col,3));terrainGeo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));terrainGeo.setIndex(idx);terrainGeo.computeVertexNormals();
- // Mowing stripes (with the stage paper grain) scroll with the route, so flat ground still reads as speed.
- const stripeCanvas=typeof document!=='undefined'?document.createElement('canvas'):null;let stripes:T.Texture|null=null;
- if(stripeCanvas){stripeCanvas.width=stripeCanvas.height=64;const g=stripeCanvas.getContext('2d');if(g){g.fillStyle='#ffffff';g.fillRect(0,0,64,64);g.fillStyle='#d9dbe8';g.fillRect(0,32,64,32);for(let i=0;i<700;i++){g.fillStyle=`rgba(40,40,70,${.04+((i*37)%10)/200})`;g.fillRect((i*29)%64,(i*53)%64,1,1);}}
-  stripes=new T.CanvasTexture(stripeCanvas);stripes.wrapS=stripes.wrapT=T.RepeatWrapping;stripes.colorSpace=T.SRGBColorSpace;}
- else stripes=grain;
- const terrainMaterial=new T.MeshLambertMaterial({vertexColors:true,map:stripes});terrainShader(terrainMaterial);
+ /** The hillside as the mesh draws it (straight between its columns), so houses and trees stand on the ground, not on the formula. */
+ const LAND=XS.filter(x=>x>=22),hillAt=(ax:number,s:number)=>{let i=0;while(i<LAND.length-2&&ax>LAND[i+1])i++;const a=LAND[i],b=LAND[i+1],t=Math.min(1,Math.max(0,(ax-a)/(b-a))),ha=hillY(a,s);return ha+(hillY(b,s)-ha)*t;};
+ const terrainGeo=new T.BufferGeometry();terrainGeo.setAttribute('position',new T.Float32BufferAttribute(pos,3));terrainGeo.setIndex(idx);terrainGeo.computeVertexNormals();
+ const terrainMaterial=new T.MeshLambertMaterial({color:'#ffffff'});terrainMaterial.userData.runnerTerrain=true;terrainShader(terrainMaterial);
  const terrain=new T.Mesh(terrainGeo,terrainMaterial);terrain.name='runner-terrain';terrain.receiveShadow=true;terrain.frustumCulled=false;scene.add(terrain);
- // Neon edge rails along the road, segmented so they follow the bends.
- const railPos:number[]=[],railIdx:number[]=[];
- for(const side of[-1,1]){const base=railPos.length/3;for(let r=0;r<rows;r++){const z=Z0-r*ROW;railPos.push(side*4.4-.07,.03,z,side*4.4+.07,.03,z);}for(let r=0;r<rows-1;r++){const a=base+r*2;railIdx.push(a,a+2,a+1,a+1,a+2,a+3);}}
- const railGeo=new T.BufferGeometry();railGeo.setAttribute('position',new T.Float32BufferAttribute(railPos,3));railGeo.setIndex(railIdx);
- const rails=new T.Mesh(railGeo,new T.MeshBasicMaterial({color:'#73fff1',toneMapped:false,side:T.DoubleSide}));rails.name='runner-rails';rails.frustumCulled=false;scene.add(rails);
 
- // Lane dashes beyond the stage's 70 m set, so the road ahead keeps its markings into the fog (scrolls like them).
- const dash:number[]=[];for(const x of[-1.2,1.2])for(let z=-66;z>-142;z-=4)dash.push(x,.026,z,x,.026,z+2);
- const dashGeo=new T.BufferGeometry();dashGeo.setAttribute('position',new T.Float32BufferAttribute(dash,3));
- const farDashes=new T.LineSegments(dashGeo,new T.LineBasicMaterial({color:'#fff0cf',transparent:true,opacity:.5}));farDashes.name='runner-far-dashes';farDashes.frustumCulled=false;scene.add(farDashes);
-
- /* ---- sky: one dome with a horizon glow and two procedural skyline layers that turn with the route ---- */
- const fogColor=new T.Color('#150f36');
- const skyUniforms={uYaw:{value:0},uTop:{value:new T.Color('#05061a')},uHorizon:{value:fogColor},uGlow:{value:new T.Color('#5a2a7a')},uHills:{value:new T.Color('#0f0b2c')},uTowers:{value:new T.Color('#151236')},uWindow:{value:new T.Color('#ff62c2')}};
- const sky=new T.Mesh(new T.SphereGeometry(140,32,12),new T.ShaderMaterial({uniforms:skyUniforms,side:T.BackSide,depthWrite:false,fog:false,
-  vertexShader:'varying vec3 vDir;void main(){vDir=normalize(position);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
-  fragmentShader:`varying vec3 vDir;uniform float uYaw;uniform vec3 uTop,uHorizon,uGlow,uHills,uTowers,uWindow;
+ /* ---- sky: one dome. Posterised bands, the stacked-disc sun (or moon), cut clouds, headlands, gulls, the far sea ---- */
+ const fogColor=new T.Color('#ffcf7a');
+ const skyUniforms={uYaw:{value:0},uTime:{value:0},uDot:{value:5*dotCell},uStars:{value:0},uStorm:{value:0},uSun:{value:new T.Vector3(-.4,.1,.085)},
+  uTop:{value:new T.Color('#2f5fa8')},uMid:{value:new T.Color('#f08a5a')},uHaze:{value:fogColor},uSunCore:{value:new T.Color('#fff1b0')},uSunRing:{value:new T.Color('#ffb040')},
+  uCloudLit:{value:new T.Color('#ffe1b0')},uCloudShade:{value:new T.Color('#d9707a')},uHeadA:{value:new T.Color('#7a4a78')},uHeadB:{value:new T.Color('#c9788a')},uSeaFar:{value:terrainUniforms.uSeaFar.value},uInkCol:{value:new T.Color(RUNNER_INK)}};
+ const sky=new T.Mesh(new T.SphereGeometry(300,32,14),new T.ShaderMaterial({uniforms:skyUniforms,side:T.BackSide,depthWrite:false,fog:false,
+  vertexShader:'varying vec3 vDir;void main(){vDir=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+  fragmentShader:`varying vec3 vDir;uniform float uYaw,uTime,uDot,uStars,uStorm;uniform vec3 uSun,uTop,uMid,uHaze,uSunCore,uSunRing,uCloudLit,uCloudShade,uHeadA,uHeadB,uSeaFar,uInkCol;
 float h1(float n){return fract(sin(n*91.7)*43758.5);}
-void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
- vec3 col=mix(uHorizon,uTop,smoothstep(0.,.42,e))+uGlow*exp(-max(e,0.)*11.)*.55;
- float b=a*.8+uYaw*.8,cell=floor(b*9.),r=h1(cell),tower=r>.45?.025+.06*h1(cell+.5):0.;
- if(e<tower){col=uTowers;float wx=fract(b*9.*6.),wy=fract(e*90.);if(wx>.55&&wy>.5&&h1(floor(b*54.)+floor(e*90.)*3.1)>.82)col=mix(col,uWindow,.7);}
- float q=a+uYaw,hills=.03+.02*sin(q*3.+1.3)+.012*sin(q*7.+.4)+.005*sin(q*17.);
- if(e<hills)col=mix(uHills,uHorizon,.25);
- if(e<.002)col=uHorizon;
+void main(){vec3 d=normalize(vDir);float e=d.y/max(.05,length(d.xz)),a=atan(d.x,-d.z);
+ vec2 hp=mat2(.7071,-.7071,.7071,.7071)*gl_FragCoord.xy/uDot;float hd=length(fract(hp)-.5)*1.4142;
+ // Posterised sky: six flat bands; the step from one band to the next is a dot screen.
+ float gq=pow(clamp(e/.5,0.,1.),.72)*6.,q=(floor(gq)+step(hd*.5+.5,fract(gq)))/6.;
+ vec3 col=q<.4?mix(uHaze,uMid,q/.4):mix(uMid,uTop,(q-.4)/.6);
+ if(uStars>0.){vec2 sp=vec2(a*46.,e*46.),sc=floor(sp);float sh=h1(sc.x*7.3+sc.y*113.1);col+=uStars*step(.9,sh)*step(.1,e)*step(length(fract(sp)-.5),.07+.1*fract(sh*31.))*(.6+.4*sin(uTime*2.+sh*40.));}
+ // Sun: stacked discs; the lower half is cut by widening slits, like a printed poster sun.
+ vec2 sd=vec2(a-uSun.x,e-uSun.y);float sr=length(sd)/uSun.z;
+ col=mix(col,uSunRing,.26*step(sr,2.7));col=mix(col,uSunRing,.5*step(sr,1.75));
+ // Cut clouds: two layers of flat-bottomed cumulus, lit above, shaded below.
+ for(int L=0;L<2;L++){float fl=float(L),b=(a+uYaw*(.5+.2*fl))*(3.2-fl)+uTime*(.004+.003*fl)+fl*7.3,cell=floor(b),x=fract(b)-.5,r=h1(cell+fl*31.);
+  if(r>.36){float e0=.075+.07*fl+.05*h1(cell+3.),w=.3+.15*h1(cell+5.);
+   float p=max(max(sqrt(max(0.,w*w-x*x)),.8*sqrt(max(0.,w*w*.5-(x-.17)*(x-.17)))),.7*sqrt(max(0.,w*w*.4-(x+.2)*(x+.2))))*(.17+.05*fl),y=e-e0;
+   if(y>0.&&y<p)col=y<p*.34?uCloudShade:uCloudLit;}}
+ // The disc goes in front of the clouds (it is the picture's anchor); the slits let the cloud colour through.
+ if(sr<1.){float v=-sd.y/uSun.z,slit=step(0.,v)*step(.82-.5*v,fract(v*4.5));col=mix(uSunCore,col,slit);}
+ // Storm front: a dark shelf of cloud with a scalloped edge; the sunset burns in the slit under it.
+ if(uStorm>0.){float sb=a+uYaw*.6,edge=.2-.07*uStorm+.03*sin(sb*5.)+.02*abs(sin(sb*13.+uTime*.05));
+  if(e>edge){float t=clamp((e-edge)/.22,0.,1.);col=mix(col,mix(uCloudShade,uTop,step(hd*.6+.2,t)),uStorm);}}
+ // Gulls: three inked ticks that flap.
+ for(int i=0;i<3;i++){float fi=float(i);vec2 gp=vec2(a+uYaw*.3-(-.45+fi*.4+.22*sin(uTime*.11+fi*2.)),e-(.2+.05*fi+.02*sin(uTime*.3+fi)));
+  float gx=abs(gp.x),flap=.5+.45*sin(uTime*5.+fi*2.1);if(gx<.024&&abs(gp.y-gx*flap)<.0028+.0022*(1.-gx/.024))col=uInkCol;}
+ // Far sea under the horizon (the terrain's sea runs into it), then two layers of headland.
+ if(e<0.){col=mix(uSeaFar,uHaze,.3);float gl=exp(-pow((a-uSun.x)/.1,2.));col=mix(col,uSunCore,gl*step(.5,fract(e*240.+h1(floor(a*90.))*3.+uTime*.3)));}
+ float q1=a+uYaw*.85,q2=a+uYaw,m1=sin(q1*3.1+1.)-.15,m2=sin(q2*2.3+2.9)-.3;
+ if(e>-.004&&m1>0.&&e<.05*m1+.008*sin(q1*9.+.4)*min(1.,m1*4.))col=mix(uHeadB,uHaze,.4);
+ float r2=.075*m2+.008*sin(q2*13.)*min(1.,m2*4.);
+ if(e>-.006&&m2>0.&&e<r2){col=uHeadA;
+  // A village on the near headland: whitewashed blocks with terracotta caps (windows lit once the stars are out).
+  float vq=q2*62.,vc=floor(vq),vx=fract(vq),vh=h1(vc*3.7),vb=r2*(.16+.36*h1(vc+9.)),vt=vb+.008+.008*vh;
+  if(m2>.2&&h1(floor(vq/7.)+.5)>.42&&vh>.3&&vx>.1&&vx<.9&&e>vb&&e<vt&&vt<r2*.92)col=e>vt-.0034?mix(vec3(.86,.36,.2),uHeadA,.15+.5*uStars):mix(mix(uCloudLit,vec3(1.),.35),vec3(1.,.8,.4),uStars*step(.55,fract(vx*2.6+vh))*step(vb+.002,e)*step(e,vt-.004));}
+ // The lighthouse on the headland's seaward tip: striped tower, lantern, and a beam after dark.
+ {float lu=(mod(q2*2.3+2.9-2.667+3.14159,6.28318)-3.14159)/2.3,lt=(e-.006)/.062,lw=.0062*(1.-.35*lt);
+  if(lt>0.&&lt<1.){if(abs(lu)<lw+.0016)col=uInkCol;if(abs(lu)<lw)col=lt>.8?mix(uSunCore,vec3(1.),.4):mod(floor(lt*6.),2.)<.5?mix(uCloudLit,vec3(1.),.5):uSunRing;}
+  if(lt>=1.&&lt<1.16&&abs(lu)<.0075*(1.16-lt)/.16)col=uInkCol;
+  if(uStars>.05){vec2 lv=vec2(lu,(e-.058)*.8);float ld=length(lv),lb=abs(dot(lv/max(ld,1e-4),vec2(cos(uTime*.7),sin(uTime*.7)*.3)));col+=uSunCore*uStars*.34*step(.955,lb)*step(ld,.3)*(1.-ld/.3);}}
  gl_FragColor=vec4(col,1.);
  #include <colorspace_fragment>
 }`}));
@@ -243,10 +363,16 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
 
  /* ---- route props: instanced, recycled in 30 m chunks that know the bend they sit on ---- */
  const props=new T.Group();props.name='runner-props';scene.add(props);
- const lambert=()=>new T.MeshLambertMaterial({color:'#ffffff'});
+ const lambert=(vertexColors=false)=>new T.MeshLambertMaterial({color:'#ffffff',vertexColors});
  const boxes=new T.InstancedMesh(new T.BoxGeometry(1,1,1),lambert(),SLOTS*PER.box);boxes.castShadow=true;boxes.receiveShadow=true;
- const leaves=new T.InstancedMesh(new T.IcosahedronGeometry(1,1),lambert(),SLOTS*PER.leaf);leaves.castShadow=true;
- const glows=new T.InstancedMesh(new T.BoxGeometry(1,1,1),new T.MeshBasicMaterial({color:'#ffffff',toneMapped:false}),SLOTS*PER.glow);
+ const houses=new T.InstancedMesh(houseGeometry(),lambert(true),SLOTS*PER.house);houses.name='runner-houses';houses.receiveShadow=true;
+ const palms=new T.InstancedMesh(palmGeometry(),lambert(true),SLOTS*PER.palm);palms.name='runner-palms';palms.castShadow=true;
+ const parasols=new T.InstancedMesh(parasolGeometry(),lambert(true),SLOTS*PER.parasol);parasols.name='runner-parasols';
+ /** Lamp lanterns: paper by day, lit by night (runnerWeather sets the colour). */
+ const glowMaterial=new T.MeshBasicMaterial({color:RUNNER_PAPER});
+ const glows=new T.InstancedMesh(new T.BoxGeometry(1,1,1),glowMaterial,SLOTS*PER.glow);
+ const trees=new T.InstancedMesh(cypressGeometry(),lambert(true),SLOTS*PER.tree);trees.name='runner-cypress';
+ const boats=new T.InstancedMesh(boatGeometry(),lambert(true),SLOTS*PER.boat);boats.name='runner-boats';
  const flagGeo=new T.PlaneGeometry(1.1,.66,6,1);flagGeo.translate(.55,0,0);
  const flagUniforms={uFlagTime:{value:0},uFlagAmp:{value:.08},uFlagRate:{value:7}};
  const flagMaterial=new T.MeshLambertMaterial({color:'#ffffff',side:T.DoubleSide});
@@ -255,45 +381,60 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
   float amp=uFlagAmp+near*.18;transformed.z+=sin(position.x*5.-uFlagTime*(uFlagRate+near*6.)+instanceMatrix[3].z*.7)*amp*fw;transformed.y-=fw*fw*max(0.,.14-amp*.6);}`);};
  flagMaterial.customProgramCacheKey=()=>'runner-flag-wave-1';
  const flags=new T.InstancedMesh(flagGeo,flagMaterial,SLOTS*PER.flag);
- for(const m of[boxes,leaves,glows,flags]){m.frustumCulled=false;m.instanceMatrix.setUsage(T.DynamicDrawUsage);props.add(m);}
+ const kinds=[[boxes,PER.box],[houses,PER.house],[palms,PER.palm],[parasols,PER.parasol],[glows,PER.glow],[flags,PER.flag],[trees,PER.tree],[boats,PER.boat]] as const;
  const dummy=new T.Object3D(),zero=new T.Matrix4().makeScale(0,0,0),colour=new T.Color();
- for(const [m,n] of [[boxes,SLOTS*PER.box],[leaves,SLOTS*PER.leaf],[glows,SLOTS*PER.glow],[flags,SLOTS*PER.flag]] as const)for(let i=0;i<n;i++){m.setMatrixAt(i,zero);m.setColorAt(i,colour.set('#ffffff'));}
+ for(const [m,n] of kinds){m.frustumCulled=false;m.instanceMatrix.setUsage(T.DynamicDrawUsage);props.add(m);for(let i=0;i<SLOTS*n;i++){m.setMatrixAt(i,zero);m.setColorAt(i,colour.set('#ffffff'));}m.count=0;}
+ // Heat (Nov 10 2026, pass 2): chunks write into staging arrays and the live instance buffers are packed, so a mesh only draws
+ // the instances a chunk really placed (it used to draw every slot, most of them scaled to nothing).
+ const stageM=kinds.map(([,n])=>new Float32Array(SLOTS*n*16)),stageC=kinds.map(([,n])=>new Float32Array(SLOTS*n*3)),usedN=kinds.map(()=>new Uint8Array(SLOTS));
+ function pack(){for(let k=0;k<kinds.length;k++){const [m,per]=kinds[k],M=m.instanceMatrix.array as Float32Array,C=m.instanceColor!.array as Float32Array;let c=0;
+   for(let slot=0;slot<SLOTS;slot++){const u=usedN[k][slot],o=slot*per;M.set(stageM[k].subarray(o*16,(o+u)*16),c*16);C.set(stageC[k].subarray(o*3,(o+u)*3),c*3);c+=u;}
+   m.count=c;m.instanceMatrix.needsUpdate=true;m.instanceColor!.needsUpdate=true;}}
  const slotChunk=new Int32Array(SLOTS).fill(-99999);
  const hash=(a:number,b:number)=>{const x=Math.sin(a*127.1+b*311.7)*43758.5453;return x-Math.floor(x);};
- const FLAG_COLOURS=['#ffd36e','#73fff1','#ff62c2','#ffffff'];
+ const FLAG_COLOURS=['#ffc83a','#f0452e','#19b5a5','#fff3d6','#2f6fb0'],WALLS=['#fff6e6','#ffe6cf','#ffdcdc','#e6efff','#fff0b4'],SHADES=['#ffffff','#ffe9a8','#bfeee6','#ffc9c0'];
  function buildChunk(slot:number,chunk:number){
-  slotChunk[slot]=chunk;let nb=0,nl=0,ng=0,nf=0;
-  const put=(m:T.InstancedMesh,base:number,i:number,x:number,y:number,s:number,sx:number,sy:number,sz:number,hex:string,ry=0)=>{dummy.position.set(x,y,-s);dummy.rotation.set(0,ry,0);dummy.scale.set(sx,sy,sz);dummy.updateMatrix();m.setMatrixAt(base+i,dummy.matrix);m.setColorAt(base+i,colour.set(hex));};
-  const box=(x:number,y:number,s:number,w:number,h:number,d:number,hex:string)=>{if(nb<PER.box)put(boxes,slot*PER.box,nb++,x,y,s,w,h,d,hex);};
-  const glow=(x:number,y:number,s:number,w:number,h:number,d:number,hex:string)=>{if(ng<PER.glow)put(glows,slot*PER.glow,ng++,x,y,s,w,h,d,hex);};
+  slotChunk[slot]=chunk;const n=[0,0,0,0,0,0,0,0];
+  const put=(k:number,x:number,y:number,s:number,sx:number,sy:number,sz:number,hex:string,ry=0)=>{const [m,per]=kinds[k];if(n[k]>=per)return;dummy.position.set(x,y,-s);dummy.rotation.set(0,ry,0);dummy.scale.set(sx,sy,sz);dummy.updateMatrix();const i=slot*per+n[k]++;dummy.matrix.toArray(stageM[k],i*16);colour.set(hex).toArray(stageC[k],i*3);void m;};
+  const box=(x:number,y:number,s:number,w:number,h:number,d:number,hex:string)=>put(0,x,y,s,w,h,d,hex);
   const s0=chunk*CHUNK,curve=routeCurve(s0+CHUNK/2),bend=Math.abs(curve)>ROUTE_BEND_MIN*.8,outside=curve>0?-1:1;
-  const tid=terrainAt(s0+CHUNK/2),pal=PROP_PALETTE[tid];
- // Bridge: railings and cable posts both sides instead of houses. Rooftops: chimneys and vents close by.
- if(tid==='bridge'){for(const side of[-1,1]){for(let p=0;p<3;p++)box(side*5.6,.55,s0+p*10+2,.12,1.1,.12,pal[4]);box(side*5.6,1.1,s0+15,.08,.08,30,pal[1]);glow(side*5.6,1.16,s0+15,.05,.05,30,pal[2]);}
-  if(hash(chunk,9)<.5)for(const side of[-1,1]){box(side*7.5,4,s0+15,.3,8,.3,pal[4]);glow(side*7.5,8.1,s0+15,.4,.2,.4,pal[2]);}}
- else for(const side of[-1,1]){const k=hash(chunk,side);
-  if(tid==='rooftop'&&k<.5){const x=side*(7+hash(chunk,side+3)*4),s=s0+5+k*16;box(x,.7,s,1.1,1.4,1.1,pal[0]);box(x,1.5,s,.5,.5,.5,pal[4]);glow(x,1.8,s,.3,.06,.3,pal[2]);box(side*(6.2),.25,s0+15,.2,.5,30,pal[1]);continue;}
-   if(bend&&side===outside){
-    // Flags line the outside of every bend: they mark the curve early and wave as you pass.
-    for(let f=0;f<4&&nf<PER.flag;f++){const s=s0+3+f*7.5,x=side*6.1;box(x,1.3,s,.07,2.6,.07,'#c9d6ff');put(flags,slot*PER.flag,nf++,x,2.25,s,1,1,1,FLAG_COLOURS[(chunk+f)%FLAG_COLOURS.length],side<0?Math.PI:0);}
+  const tid=terrainAt(s0+CHUNK/2),pal=COAST[tid],sea2=pal.seaR>.5;
+  // One street lamp per chunk, alternating sides: at night the terrain shader paints its pool of light at this very spot.
+  {const side=(((chunk%2)+2)%2)?1:-1,x=side*8,s=s0+15;box(x,2.1,s,.11,4.2,.11,RUNNER_INK);box(x-side*.45,4.2,s,1,.09,.09,RUNNER_INK);box(x-side*.9,4.24,s,.52,.09,.52,RUNNER_INK);put(4,x-side*.9,4.03,s,.36,.32,.36,'#ffffff');}
+  for(const side of[-1,1]){const k=hash(chunk,side),seaSide=side<0||sea2;
+   // Bunting lines the outside of every bend: it marks the curve early and waves as you pass.
+   if(bend&&side===outside)for(let f=0;f<4;f++){const s=s0+3+f*7.5,x=side*8.05;box(x,1.4,s,.08,2.8,.08,RUNNER_PAPER);put(5,x,2.35,s,1,1,1,FLAG_COLOURS[(chunk+f)%FLAG_COLOURS.length],side<0?Math.PI:0);}
+   if(seaSide){
+    // Sea side: palms rooted on the beach rise over the sea wall; parasols and towels on the sand.
+    if(sea2){for(let p=0;p<3;p++)box(side*8.05,.55,s0+p*10+2,.14,1.1,.14,RUNNER_PAPER);box(side*8.05,1.08,s0+15,.1,.1,30,pal.accent);if(k<.5){box(side*8.5,3.6,s0+15,.34,7.2,.34,RUNNER_PAPER);box(side*8.5,7.3,s0+15,.6,.2,.6,pal.accent);}continue;}
+    for(let p=0;p<2;p++){const h=hash(chunk+p*13,side+2);if(h<.62){const ax=10.1+h*3.2,g=.95+h*.6;put(2,side*ax,coastY(ax)-.1,s0+4+p*14+h*8,g,g,g,'#ffffff',h*17);}}
+    if(k<.6){const ax=11.2+k*2.6;put(3,side*ax,coastY(ax),s0+9+k*22,1,1,1,SHADES[Math.floor(k*40)%SHADES.length],k*9);}
+    // A sail boat out in the bay, most chunks.
+    {const b=hash(chunk,side+21);if(b<.7){const ax=24+b*52,g=1.5+b*1.4;put(7,side*ax,-2.42,s0+4+b*30,g,g,g,b<.3?'#ffd9c2':'#ffffff',b*40);}}
     continue;}
+   // Land side: a house or a pair of palms by the road, and the village climbing the hillside behind.
    const s=s0+4+k*20;
-   if(k<.34){const x=side*(13+hash(chunk,side+5)*5);box(x,1.3,s,3.6,2.6,3.2,pal[0]);box(x,2.72,s,3.9,.24,3.5,pal[1]);glow(x,2.5,s-1.62,3.4,.1,.08,pal[2]);
-     for(const dz of[-.8,.8])glow(x-side*1.82,1.45,s+dz,.06,.5,.55,'#73fff1');}
-   else if(k<.67){for(const dz of[0,8]){const x=side*(9.5+hash(chunk+dz,side)*4);box(x,1.3,s+dz,.24,2.6,.24,pal[4]);if(nl<PER.leaf)put(leaves,slot*PER.leaf,nl++,x,3,s+dz,1.5,.9,1.5,pal[3]);}}
-   else if(k<.9){const x=side*8.8;box(x,2.2,s,.12,4.4,.12,pal[4]);glow(x,4.45,s,.42,.24,.42,pal[2]);}
+   if(tid==='rooftop'&&k<.5){const x=side*(9.6+k*4);box(x,.7,s,1.1,1.4,1.1,WALLS[1]);box(x,1.6,s,.5,.5,.5,pal.accent);}
+   else if(k<.42){const x=side*(12.6+hash(chunk,side+5)*4.5),g=.95+k*.5;put(1,x,0,s,g,g,g,WALLS[Math.floor(k*50)%WALLS.length],-side*.12+k);}
+   else if(k<.82){for(const dz of[0,9]){const ax=9.4+hash(chunk+dz,side)*3.4,g=1+hash(chunk+dz,side+7)*.45;put(2,side*ax,0,s+dz,g,g,g,'#ffffff',(chunk+dz)*1.7);}}
+   // The village on the terraces: each house sits on the drawn slope (its plinth runs into the ground) with a cypress beside it.
+   for(let v=0;v<3;v++){const h=hash(chunk*3+v,side+11);if(h>.82)continue;const ax=27+h*26,sv=s0+3+v*10+h*5,g=1.15+h*.8;put(1,side*ax,Math.min(hillAt(ax-2.2*g,sv),hillAt(ax+2.2*g,sv))+.15,sv,g,g,g,WALLS[(chunk+v)%WALLS.length],h*6);
+    {const tx=ax+2.6*g+1,ts=sv-1.5,tg=1+h*.9;put(6,side*tx,hillAt(tx,ts)-.2,ts,tg,tg,tg,'#ffffff',h*9);}}
+   // Mid-ground: cypresses along the field edges (the hedgerows are drawn on the fields), so the land steps back in layers.
+   for(let v=0;v<3;v++){const h=hash(chunk*5+v,side+17);if(h>.7)continue;const ax=14.5+h*9,ts=s0+2+v*10+h*6,tg=.8+h*.7;put(6,side*ax,0,ts,tg,tg,tg,'#ffffff',h*5);}
+
   }
-  for(;nb<PER.box;nb++)boxes.setMatrixAt(slot*PER.box+nb,zero);for(;nl<PER.leaf;nl++)leaves.setMatrixAt(slot*PER.leaf+nl,zero);
-  for(;ng<PER.glow;ng++)glows.setMatrixAt(slot*PER.glow+ng,zero);for(;nf<PER.flag;nf++)flags.setMatrixAt(slot*PER.flag+nf,zero);
-  for(const m of[boxes,leaves,glows,flags]){m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;}
+  for(let k=0;k<kinds.length;k++)usedN[k][slot]=n[k];
  }
 
  bendTree(scene);
 
  /* ---- per frame ---- */
- let yaw=0,viewSlope=0,lean=0,pitch=0,heading=0,lastS=NaN,patchClock=0,elapsed=0,zoneShown=-1;
+ let yaw=0,viewSlope=0,lean=0,pitch=0,heading=0,lastS=NaN,patchClock=0,elapsed=0,zoneShown=-1,sunAz=-.4;
  const player=scene.getObjectByName('runner-player'),body=player?.getObjectByName('arcade-body-offset');
  const bendOptions={d0:BEND_D0,step:BEND_STEP,n:BEND_N,yaw:0,viewSlope:0,drop:.0006};
+ /** Where the sun sits and how it lights: base azimuth (rad from straight ahead, negative = sea side), light elevation. runnerWeather tunes these per sky. */
+ const sunAim={az:-.36,elev:.27,swing:.13},sunDir=new T.Vector3(),sunQ=new T.Quaternion();
  /** Yaw that centres the route point LOOK m ahead, measured from the last table (a damped feedback loop). */
  const LOOK=40,lookK=(LOOK-BEND_D0)/BEND_STEP*4,lookTarget=()=>Math.max(-.32,Math.min(.32,yaw+Math.atan2(bendData[lookK],-bendData[lookK+1])));
  function update(dt:number,s:RouteState,hype:number){
@@ -309,14 +450,18 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
   viewSlope=smoothTo(viewSlope,(reduced?.6:.2)*routeGrade(d),reduced?1.5:3,dt);
   bendOptions.yaw=yaw;bendOptions.viewSlope=viewSlope;routeBendTable(d,bendData,bendOptions);
   // Terrain zones: the boundary in view (or the next one) and its two looks.
-  const zone=terrainZoneAt(d),start=zone*TERRAIN_ZONE,behind=zone>0&&d-start<40,za=behind?zone-1:zone,a=TERRAINS[terrainOfZone(za)],b=TERRAINS[terrainOfZone(za+1)];
-  terrainUniforms.uTerr.value.set(d,routeHeight(d),viewSlope,bendOptions.drop);terrainUniforms.uZone.value.set((za+1)*TERRAIN_ZONE,a.pattern,b.pattern,elapsed);
-  if(zoneShown!==za){zoneShown=za;terrainUniforms.uRoadA.value.set(a.road);terrainUniforms.uLandA.value.set(a.land);terrainUniforms.uRoadB.value.set(b.road);terrainUniforms.uLandB.value.set(b.land);}
-  skyUniforms.uYaw.value=heading+yaw;
-  props.position.z=d;farDashes.position.z=d%4;
-  const first=Math.floor((d-36)/CHUNK),last=Math.floor((d+146)/CHUNK);
-  for(let chunk=first;chunk<=last;chunk++){const slot=((chunk%SLOTS)+SLOTS)%SLOTS;if(slotChunk[slot]!==chunk)buildChunk(slot,chunk);}
-  if(stripes&&stripes!==grain){stripes.offset.y=(d/6)%1;}
+  const zone=terrainZoneAt(d),start=zone*TERRAIN_ZONE,behind=zone>0&&d-start<40,za=behind?zone-1:zone,ta=terrainOfZone(za),tb=terrainOfZone(za+1),a=COAST[ta],b=COAST[tb];
+  terrainUniforms.uTerr.value.set(d,routeHeight(d),viewSlope,bendOptions.drop);terrainUniforms.uZone.value.set((za+1)*TERRAIN_ZONE,TERRAINS[ta].pattern,TERRAINS[tb].pattern,elapsed);
+  if(zoneShown!==za){zoneShown=za;terrainUniforms.uRoadA.value.set(a.road);terrainUniforms.uLandA.value.set(a.land);terrainUniforms.uAccA.value.set(a.accent);terrainUniforms.uRoadB.value.set(b.road);terrainUniforms.uLandB.value.set(b.land);terrainUniforms.uAccB.value.set(b.accent);terrainUniforms.uSeaSide.value.set(a.seaR,b.seaR);}
+  // The sun slides along the horizon as the route turns (bounded, so it never leaves the picture); the light follows it,
+  // swung further to the side than the disc so shadows rake across the lanes instead of straight down them.
+  sunAz=sunAim.az+sunAim.swing*Math.sin(heading*1.3)-yaw*.6;
+  skyUniforms.uYaw.value=heading+yaw;skyUniforms.uTime.value=reduced?0:elapsed;skyUniforms.uSun.value.x=sunAz;terrainUniforms.uSea.value.x=sunAz;terrainUniforms.uSea.value.w=reduced?0:elapsed;
+  {const la=sunAz*2.1,ce=Math.cos(sunAim.elev);sunDir.set(Math.sin(la)*ce,Math.sin(sunAim.elev),-Math.cos(la)*ce);terrainUniforms.uSunS.value.copy(sunDir);inkUniforms.uInkLamp.value.x=d;inkUniforms.uInkLamp.value.y=terrainUniforms.uSea.value.y;if(sun){sun.target.position.set(0,0,-24);sun.position.copy(sun.target.position).addScaledVector(sunDir,70);}}
+  props.position.z=d;
+  // Chunks wholly behind the camera are not built (pass 2: nothing 16 m behind the runner is ever in view).
+  const first=Math.floor((d-16)/CHUNK),last=Math.floor((d+146)/CHUNK);
+  {let built=false;for(let chunk=first;chunk<=last;chunk++){const slot=((chunk%SLOTS)+SLOTS)%SLOTS;if(slotChunk[slot]!==chunk){buildChunk(slot,chunk);built=true;}}if(built)pack();}
   flagUniforms.uFlagTime.value=elapsed;flagUniforms.uFlagAmp.value=reduced?.04:.07+hype*.14;flagUniforms.uFlagRate.value=reduced?4:6+hype*6;
   // Lean into the bend (centripetal) and into the climb; reset by the rig's own pose each frame.
   const k=routeCurve(d),g=routeGrade(d),alive=s.lives>0?1:0;
@@ -329,7 +474,8 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
  function pose(cam:T.Camera){
   if(body){body.rotation.z-=lean;body.rotation.x+=pitch;}
   sky.position.copy(cam.position);
-  const fog=scene.fog as T.Fog,len=cam.position.length();fog.color.copy(fogColor);fog.near=len+30;fog.far=len+115;
+  inkUniforms.uInkSunV.value.copy(sunDir).applyQuaternion(sunQ.copy(cam.quaternion).invert());
+  const fog=scene.fog as T.Fog,len=cam.position.length();fog.color.copy(fogColor);fog.near=len+48;fog.far=len+128;
  }
  function reset(){lastS=NaN;heading=0;lean=pitch=0;slotChunk.fill(-99999);zoneShown=-1;}
  // Fill the table before the first (ready-screen) render, or every vertex would sit on the origin line.
@@ -338,10 +484,10 @@ void main(){float e=vDir.y,a=atan(vDir.x,-vDir.z);
   * context reachable after leaving), unless a newer runner has already taken over. */
  function dispose(){if(activeRenderer===stage.renderer)activeRenderer=null;}
  return{update,pose,reset,dispose,patch:bendTree,
-  /** Sky and fog colours, retinted per route sky and terrain by runnerWeather (mutated in place, no allocation). */
-  sky:skyUniforms,fogColor,
+  /** Sky, shading and sea colours, retinted per route sky by runnerWeather (mutated in place, no allocation). */
+  sky:skyUniforms,fogColor,ink:inkUniforms,sea:terrainUniforms,lantern:glowMaterial.color,sunAim,
   /** Current camera pitch smoothing of the route grade (for the cinematic camera). */viewSlope:()=>viewSlope,
-  debug:()=>({yaw,viewSlope,lean,pitch,heading,table:Array.from(bendData.slice(0,8))}),
+  debug:()=>({yaw,viewSlope,lean,pitch,heading,sunAz,table:Array.from(bendData.slice(0,8))}),
   /** Exposed for tests/debug: where a straight-frame point is drawn. */
   bendPoint(x:number,y:number,z:number,out:T.Vector3){const f=Math.max(0,Math.min(BEND_N-1.001,(-z-BEND_D0)/BEND_STEP)),i=Math.floor(f),t=f-i,j=i*4,
    cx=bendData[j]+(bendData[j+4]-bendData[j])*t,cz=bendData[j+1]+(bendData[j+5]-bendData[j+1])*t,h=bendData[j+2]+(bendData[j+6]-bendData[j+2])*t,H=bendData[j+3]+(bendData[j+7]-bendData[j+3])*t,extra=(-z-BEND_D0)-f*BEND_STEP,

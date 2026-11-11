@@ -1,54 +1,64 @@
 /* Breakaway Run menu card (round 3): fits a 390×844 phone without scrolling; tap targets >= 48 px. Consistency audit (Oct 27 2026):
    the same neon card as the other arcade cards (Strikers start card, ArcadePauseCard, PinballCard) and the shared card tokens
    (components/arcade/arcadeChrome.css); it used to be the one cream card in the arcade. */
-.overlay{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:calc(var(--arcade-bar-clear) + 12px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px));background:#04050dcc;overflow:auto;box-sizing:border-box}
-.card{box-sizing:border-box;width:min(var(--arcade-card-wide),100%);padding:var(--arcade-card-pad);border-radius:var(--arcade-card-r);background:#151a30;color:#eff8ff;border:2px solid #ef64c5;box-shadow:0 0 32px #d849b320;text-align:center}
+.overlay{position:absolute;inset:0;z-index:4;display:grid;place-items:center;padding:calc(var(--arcade-bar-clear) + 12px + env(safe-area-inset-top,0px)) calc(12px + env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) calc(12px + env(safe-area-inset-left,0px));background:radial-gradient(circle,#231a2e3d 1.5px,transparent 1.9px) 0 0/8px 8px,#fff3d61f;overflow:auto;box-sizing:border-box}
+/* Nov 10 2026 comic title card (docs/arcade-aaa/runner-direction.md): paper, ink borders, square corners, hard offset shadows,
+   lettering for the title and score; every button label is the UI sans at weight 800. The route's own sky shows behind the card. */
+.card{--ink:#231a2e;--paper:#fff3d6;--sun:#ffc83a;--red:#f0452e;--teal:#19b5a5;box-sizing:border-box;width:min(var(--arcade-card-wide),100%);padding:var(--arcade-card-pad);border-radius:0;background:var(--paper);color:var(--ink);border:4px solid var(--ink);box-shadow:8px 8px 0 var(--ink);text-align:center}
 .top{display:flex;justify-content:space-between;align-items:center;gap:8px}
-.badge{font:800 11px/1 system-ui,sans-serif;letter-spacing:.12em;color:#ffb4e4;background:#2c2649;padding:6px 10px;border-radius:999px}
-.best{font:800 13px/1 system-ui,sans-serif;color:#fff08a}
-.title{font:var(--arcade-card-title)/1.1 IslandBrush,Arial,sans-serif;margin:10px 0 10px;color:#eff8ff}
+.badge{font:italic 900 13px/1 "Arial Black",Impact,system-ui,sans-serif;color:var(--paper);background:var(--red);padding:6px 10px 5px;border:3px solid var(--ink);transform:rotate(-2deg)}
+.badge[data-runner-outcome=finished]{background:var(--teal)}
+.best{font:800 13px/1 system-ui,sans-serif;color:var(--ink);background:var(--sun);border:3px solid var(--ink);padding:5px 8px}
+.title{font:italic 900 var(--arcade-card-title)/1 "Arial Black",Impact,system-ui,sans-serif;letter-spacing:-.02em;margin:12px 0 10px;color:var(--sun);-webkit-text-stroke:5px var(--ink);paint-order:stroke fill;text-shadow:3px 3px 0 var(--ink)}
 .result{margin:6px 0 8px}
-.score{display:block;font:900 40px/1 system-ui,sans-serif;color:#fff08a}
-.stars{margin:4px 0 2px;font-size:30px;line-height:1;letter-spacing:4px;color:#5d6a8c}
-.stars span[data-on]{color:#fff08a;text-shadow:0 0 14px #ffd25e88}
-.stars em{display:inline-block;margin-left:6px;font:800 13px/1 system-ui,sans-serif;font-style:normal;letter-spacing:0;color:#8dffb0;vertical-align:middle}
-.line{margin:3px 0;font-size:14px;line-height:1.3;color:#cfe3f5}
-/* Nov 8 2026 simplified full time: the reason the run ended gets its own line; a new best gets one pill and a score pop. */
-.why{margin:6px auto 4px;max-width:34ch;padding:7px 10px;border-radius:12px;background:#2a1d2c;font:700 14px/1.3 system-ui,sans-serif;color:#ffd2c2}
-.newBest{display:inline-block;margin:6px 0 0;padding:5px 12px;border-radius:999px;background:#7ff0e2;color:#08202a;font:800 13px/1 system-ui,sans-serif}
+.score{display:block;font:400 52px/1 IslandBrush,"Arial Black",sans-serif;color:var(--ink)}
+.stars{margin:4px 0 2px;font-size:30px;line-height:1;letter-spacing:4px;color:#cdb99a}
+.stars span[data-on]{color:var(--sun);-webkit-text-stroke:2px var(--ink);paint-order:stroke fill}
+.stars em{display:inline-block;margin-left:6px;font:800 13px/1 system-ui,sans-serif;font-style:normal;letter-spacing:0;color:#0e7a6e;vertical-align:middle}
+.line{margin:3px 0;font-size:14px;line-height:1.3;color:var(--ink)}
+/* Full time: the reason the run ended gets its own caption box; a new best gets one stamp and a score pop. */
+.why{margin:6px auto 4px;max-width:34ch;padding:7px 10px;border:3px solid var(--ink);background:#ffe1d6;font:700 14px/1.3 system-ui,sans-serif;color:var(--ink)}
+.newBest{display:inline-block;margin:6px 0 0;padding:5px 12px;border:3px solid var(--ink);background:var(--teal);color:var(--paper);font:800 13px/1 system-ui,sans-serif;transform:rotate(-3deg)}
 .score[data-new-best]{animation:runnerBestPop .6s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes runnerBestPop{0%{transform:scale(.6);opacity:0}100%{transform:scale(1);opacity:1}}
-.keys{margin:8px 0 0;font:600 12px/1.3 system-ui,sans-serif;color:#9fb3cc}
-.routes{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 6px}
-.route{display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;align-items:center;column-gap:6px;min-height:60px;padding:6px 10px;border:2px solid #35415c;border-radius:16px;background:#1d2440;color:#eff8ff;text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
-.route[aria-checked=true]{border-color:#fff08a;background:#3a3420;box-shadow:0 0 0 2px #ffe86d55,0 0 14px #ffe86d44}
-.route[data-hard]{background:#2a1a24;border-color:#7a3d1c}
-.route[data-elite]{background:#2a2414;border-color:#8a6a1c}
-.route[data-elite][aria-checked=true]{background:#4a3a10;border-color:#ffd36e;box-shadow:0 0 0 2px #ffd36e66,0 0 16px #ffd36e55}
-.route[data-hard][aria-checked=true]{background:#4a2614;border-color:#ffb067;box-shadow:0 0 0 2px #ff8a2a66,0 0 16px #ff8a2a55}
-.route:disabled{opacity:.55;cursor:default}
-/* Nov 10 2026 Daily Run: one full-width row under the six-route ladder (same card, its own calm blue). */
-.route[data-daily]{grid-column:1/-1;min-height:52px;background:#16304a;border-color:#2f6f9a}
-.route[data-daily][aria-checked=true]{background:#1d4a6e;border-color:#8fd8ff;box-shadow:0 0 0 2px #8fd8ff55,0 0 14px #8fd8ff44}
-.icon{grid-row:1/3;font-size:24px;line-height:1;text-align:center}
+.keys{margin:8px 0 0;font:600 12px/1.3 system-ui,sans-serif;color:#5a4a5e}
+.routes{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;margin:4px 0 8px}
+.route{--sky:#f39a62;--disc:#fff4bc;--seaC:#1f9aa0;display:grid;grid-template-columns:34px 1fr;grid-template-rows:auto auto;align-items:center;column-gap:8px;min-height:60px;padding:6px 10px;border:3px solid var(--ink);border-radius:0;background:#fffaf0;color:var(--ink);text-align:left;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;box-shadow:3px 3px 0 var(--ink);transition:transform .06s ease,box-shadow .06s ease}
+.route:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.route[aria-checked=true]{background:var(--sun);box-shadow:5px 5px 0 var(--ink);transform:translate(-2px,-2px) rotate(-1deg)}
+.route[data-hard],.route[data-elite]{background:#ffe9c9}
+.route[data-elite][aria-checked=true],.route[data-hard][aria-checked=true]{background:var(--sun)}
+.route:disabled{background:#e9dcc2;color:#7a6a70;box-shadow:none;cursor:default}
+/* Each route's swatch is its sky: a disc (sun or moon) over a strip of sea, drawn in flat colour instead of an emoji. */
+.route[data-route=night]{--sky:#1d2a6a;--disc:#f4f1dc;--seaC:#16347a}
+.route[data-route=storm]{--sky:#4a566a;--disc:#ffb35a;--seaC:#2a6a72}
+.route[data-route=final]{--sky:#c8457a;--disc:#ffe2a0;--seaC:#3a5aa8}
+.route[data-route=legend]{--sky:#3a1650;--disc:#ff5a3a;--seaC:#3a2a7a}
+.route[data-route=warm]{--sky:#ffd386;--disc:#fff4bc}
+.route[data-daily]{grid-column:1/-1;min-height:52px;--sky:#3a67b0;--disc:#fff4bc}
+.icon{grid-row:1/3;position:relative;width:32px;height:32px;box-sizing:border-box;border:3px solid var(--ink);background:var(--sky);font-size:0;overflow:hidden}
+.icon::before{content:"";position:absolute;left:6px;top:5px;width:14px;height:14px;border-radius:50%;background:var(--disc)}
+.icon::after{content:"";position:absolute;left:0;right:0;bottom:0;height:9px;background:var(--seaC);border-top:3px solid var(--ink)}
+.route:disabled .icon{background:#b9a99a}.route:disabled .icon::before{left:5px;top:10px;width:16px;height:6px;border-radius:0;background:var(--ink)}.route:disabled .icon::after{display:none}
 .name{font:800 15px/1.1 system-ui,sans-serif}
-.sub{font:700 11px/1.2 system-ui,sans-serif;color:#b5c7dc;display:flex;gap:6px;align-items:center}
-.sub i{font-style:normal;color:#fff08a;letter-spacing:1px;font-size:13px}
-.sub b{font-size:10px;color:#fff;background:#8a5ad6;border-radius:6px;padding:2px 5px;letter-spacing:.04em}
-.lineMode{margin:2px 0 8px;font-size:13px;color:#b5c7dc}
-.hint{margin:0 0 8px;padding:8px 10px;border-radius:12px;background:#2a2148;border-left:4px solid #fff08a;font-size:13px;line-height:1.3;color:#fff6c8;text-align:left}
-.status{margin:0 0 8px;font-size:13px;color:#ffd6f1}
-.play{width:100%;font-weight:800;min-height:var(--arcade-primary-h);border:var(--btn-rim-width,3px) solid var(--btn-rim,#81fbed);border-radius:var(--btn-radius,999px);background:var(--btn-gold,#24223e) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#e9f5ff);font:800 20px/1.2 var(--font-body,system-ui),Arial,sans-serif;box-shadow:var(--btn-shadow-gold,0 4px 0 #121329);cursor:pointer;touch-action:manipulation}
-.play:active{transform:translateY(3px);box-shadow:var(--btn-shadow-gold-pressed,0 1px 0 #121329)}
+.sub{font:700 11px/1.2 system-ui,sans-serif;color:#5a4a5e;display:flex;gap:6px;align-items:center}
+.sub i{font-style:normal;color:var(--red);letter-spacing:1px;font-size:13px}
+.sub b{font-size:10px;color:var(--paper);background:var(--ink);padding:2px 5px}
+.lineMode{margin:2px 0 8px;font-size:13px;font-weight:700;color:var(--ink)}
+.hint{margin:0 0 8px;padding:8px 10px;border:3px solid var(--ink);background:#d6f3ee;font-size:13px;line-height:1.3;color:var(--ink);text-align:left}
+.status{margin:0 0 8px;font-size:13px;font-weight:700;color:#b02a1a}
+.play{width:100%;min-height:var(--arcade-primary-h);border:4px solid var(--ink);border-radius:0;background:var(--sun);color:var(--ink);font:800 20px/1.2 var(--font-body,system-ui),system-ui,sans-serif;letter-spacing:.01em;box-shadow:5px 5px 0 var(--ink);cursor:pointer;touch-action:manipulation;transition:transform .06s ease,box-shadow .06s ease}
+.play:active{transform:translate(5px,5px);box-shadow:0 0 0 var(--ink)}
 .play:disabled{opacity:.6}
-.row{display:flex;justify-content:center;gap:8px;margin-top:10px}
-.small{display:grid;place-items:center;gap:1px;min-width:96px;min-height:var(--arcade-small-h);padding:4px 6px;border:2px solid #81fbed66;border-radius:14px;background:#151c35;color:#e8ffff;box-shadow:0 3px 0 #0b1024;cursor:pointer;touch-action:manipulation}
+.row{display:flex;justify-content:center;gap:10px;margin-top:12px}
+.small{display:grid;place-items:center;gap:1px;min-width:96px;min-height:var(--arcade-small-h);padding:4px 6px;border:3px solid var(--ink);border-radius:0;background:#fffaf0;color:var(--ink);box-shadow:3px 3px 0 var(--ink);cursor:pointer;touch-action:manipulation}
+.small:active{transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
 .small span{font-size:18px;line-height:1;font-weight:900}
-.small small{font:800 14px/1 var(--font-body,system-ui),system-ui,sans-serif;color:#e8ffff}
-.small[aria-expanded=true]{border-color:#fff08a;color:#fff08a}
-.help{list-style:none;margin:10px 0 0;padding:10px 12px;border-radius:14px;background:#1d2440;text-align:left;font-size:13px;line-height:1.45;color:#cfe3f5}
-.coins{margin:8px 0 0;font-size:11px;color:#9fb3cc}
-@media (prefers-reduced-motion:reduce){.play:active{transform:none}.score[data-new-best]{animation:none}}
+.small small{font:800 14px/1 var(--font-body,system-ui),system-ui,sans-serif;color:var(--ink)}
+.small[aria-expanded=true]{background:var(--teal)}.small[aria-expanded=true] small{color:var(--paper)}
+.help{list-style:none;margin:10px 0 0;padding:10px 12px;border:3px solid var(--ink);background:#fffaf0;text-align:left;font-size:13px;line-height:1.45;color:var(--ink)}
+.coins{margin:8px 0 0;font-size:11px;font-weight:700;color:#5a4a5e}
+@media (prefers-reduced-motion:reduce){.play,.route,.small{transition:none}.score[data-new-best]{animation:none}}
 /* Landscape / short windows: a two-column card so nothing scrolls. */
 @media (max-height:560px) and (min-width:640px){
  .overlay{padding:calc(var(--arcade-bar-clear) + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px))}
@@ -59,7 +69,12 @@
  .play{grid-column:1;grid-row:7;align-self:end}
  .row{grid-column:2;grid-row:7;align-self:end;margin-top:0}
  .help,.coins{grid-column:1/3}
- .title{margin:6px 0}
+ .title{margin:8px 0 6px;font-size:21px;white-space:nowrap}
+ .routes{gap:6px 8px;margin:0}
+ .route{grid-template-columns:26px 1fr;min-height:48px;padding:3px 8px}
+ .route[data-daily]{min-height:44px}
+ .icon{width:26px;height:26px}.icon::before{left:4px;top:3px;width:11px;height:11px}.icon::after{height:7px}
+ .name{font-size:13.5px}.sub{font-size:10.5px;line-height:1.1}
  /* Full time (Nov 8 2026): no route picker, so the result sits left and Retry / Back / Scores stack on the right. */
  .overlay[data-runner-menu=over] .card{grid-template-columns:1.15fr 1fr;align-items:center}
  .overlay[data-runner-menu=over] .result{grid-column:1;grid-row:2/6;text-align:center}
@@ -68,4 +83,6 @@
  .overlay[data-runner-menu=over] .row{grid-column:2;grid-row:4;align-self:start;margin-top:8px}
  .overlay[data-runner-menu=over] .keys{grid-column:2;grid-row:5;align-self:start}
 }
-.card :is(.play,.small,.route):focus-visible{outline:var(--btn-focus,3px solid #73fff1);outline-offset:var(--btn-focus-offset,2px)}
+/* Desktop windows (pass 2): the page is large, so the card is too. */
+@media (min-width:1100px) and (min-height:760px){.card{zoom:1.2}}
+.card :is(.play,.small,.route):focus-visible{outline:4px solid #19b5a5;outline-offset:3px}

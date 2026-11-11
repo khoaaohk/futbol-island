@@ -1,14 +1,18 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
 const assert=require('node:assert/strict');
+// Nov 10 2026: the server comes from --port=<n>, PORT or FUTBOL_BASE_URL; there is no default (8092 is the owner's dev server).
+const portArg=(process.argv.find(a=>a.startsWith('--port='))||'').slice(7)||process.env.PORT,BASE=process.env.FUTBOL_BASE_URL||(portArg?`http://localhost:${portArg}`:'');
+if(!BASE){console.error('Pass your own server: --port=<port>, PORT=<port> or FUTBOL_BASE_URL=<url>. There is no default port.');process.exit(1);}
 const captureTag=process.argv.find(arg=>arg.startsWith('--capture='))?.slice(10)||'motion';
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});try{
  const mobile=process.argv.includes('--mobile'),page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile}),errors=[];
  page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs:{fixture:{game:'island',paid:30,reason:'playtest entry',at:1}},packs:[]}));});
- await page.goto(new URL('/arcade?game=tennis',process.env.FUTBOL_BASE_URL||'http://localhost:8092').href,{waitUntil:'domcontentloaded',timeout:90000});
- await page.getByRole('button',{name:'Play',exact:true}).click();
+ await page.goto(new URL('/arcade?game=tennis',BASE).href,{waitUntil:'domcontentloaded',timeout:90000});
+ await page.getByRole('button',{name:/^play/i}).first().click();
  await page.waitForFunction(()=>window.__arcade3d?.phaseRef.current==='playing');
  const canvas=page.locator('[data-arcade-kind="tennis"] canvas');
  if(mobile){
+  await page.waitForFunction(()=>!document.querySelector('[data-tennis-action="header"]'),null,{timeout:5000}).catch(()=>{});// the HUD's first push (tennisAerial) lands a frame after phase flips to playing
   assert.equal(await page.locator('[data-tennis-action="header"]').count(),0,'court 1 hides the aerial buttons');
   for(const action of ['kick','lob','drop']){const box=await page.locator(`[data-tennis-action="${action}"]`).boundingBox();assert(box&&box.width>=44&&box.height>=44,`${action} touch target is at least 44px`);assert(box.x>=0&&box.y+box.height<=844,`${action} remains inside mobile viewport`);}
   const stick=await page.getByRole('group',{name:'Movement joystick'}).boundingBox(),cdp=await page.context().newCDPSession(page);
@@ -62,7 +66,8 @@ const captureTag=process.argv.find(arg=>arg.startsWith('--capture='))?.slice(10)
    }else{const next=[...(x>.2?['KeyD']:x<-.2?['KeyA']:[]),...(y>.2?['KeyS']:y<-.2?['KeyW']:[])];for(const key of held)if(!next.includes(key))await page.keyboard.up(key);for(const key of next)if(!held.includes(key))await page.keyboard.down(key);held=next;}
   };
   const started=Date.now();let result,lastView,lastScore=-1;
-  while(Date.now()-started<240000){
+  while(Date.now()-started<420000){// Nov 10 2026 endless play: the run is over only when three matches are lost (was one match: 240 s)
+
    const v=await page.evaluate(()=>{const g=window.__arcade3d.runtime,s=g.state.tennis,guide=g.stage.scene.getObjectByName('tennis-landing');return{viewPhase:window.__arcade3d.phaseRef.current,phase:s.phase,server:s.server,you:{x:s.you.x,y:s.you.y},ball:{x:s.ball.x,y:s.ball.y,z:s.ball.z,vz:s.ball.vz,last:s.ball.last,crossed:s.ball.crossed,bounces:s.ball.bounces},land:guide?.visible?{x:guide.position.x,y:guide.position.z}:null,kickCount:s.kickCount,lastShot:s.lastShot,headerReady:g.hud().headerReady,scissorReady:g.hud().scissorReady,rally:s.rally,best:s.bestRally,clean:s.cleanReturns,score:s.score};});
    if(v.viewPhase==='paused'){await page.getByRole('button',{name:'Resume',exact:true}).click();continue;}
    assert.notEqual(v.phase,'ready','HMR replaced the active match; rerun on a stable server');

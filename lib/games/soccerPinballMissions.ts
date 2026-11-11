@@ -1,4 +1,5 @@
 import type {PinballState} from './soccerPinball';
+import {pinballRamp} from './soccerPinballEndless';
 
 /* Futbol Pinball round 3 (Oct 26 2026, docs/ARCADE_PINBALL_R3_OCT26.md): the living-table rules.
  *  - HOT ZONE ("find the space"): a lit circle appears on one of five open spots for a few seconds. Rolling the ball
@@ -17,6 +18,8 @@ export type PinballHot={i:number;time:number;wait:number;n:number};
 export const createPinballHot=():PinballHot=>({i:1,time:0,wait:6,n:0});
 /** Seconds a hot zone stays lit (shorter at the top of the ladder). */
 export const hotZoneTime=(level:number)=>level>=5?7:level>=3?9:11;
+/** The hot zone's life in this run: the division's time, tightened by the endless ramp (level 1: unchanged). */
+export const pinballHotTime=(s:Pick<PinballState,'level'|'match'>)=>hotZoneTime(s.level)*pinballRamp(s.match).window;
 /** Hard divisions: seconds of RUSH clock per new ball. */
 export const rushTime=(level:number)=>level>=6?20:level===5?25:0;
 export const RUSH_BONUS=800;
@@ -36,7 +39,7 @@ export function stepPinballMissions(s:PinballState,dt:number){
   }else if(h.time===0)h.wait=4;
  }else{
   h.wait-=dt;
-  if(h.wait<=0){h.i=(h.i+2)%HOT_SPOTS.length;h.time=hotZoneTime(s.level);}
+  if(h.wait<=0){h.i=(h.i+2)%HOT_SPOTS.length;h.time=pinballHotTime(s);}
  }
 }
 /** The sweeper-keeper (Champions Night only): shadows the ball's x at a lazy pace. */

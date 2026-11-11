@@ -18,6 +18,10 @@ const qp=/const quickPlay=\(\)=>\{([^\n]*)\};/.exec(tsx);assert(qp,'quickPlay de
 assert.match(qp[1],/loadLevel\(continueLevel\)/);assert.match(qp[1],/play\(\)/);assert.doesNotMatch(qp[1],/setView\('brief'\)|setMenu/,'no brief or sheet before play');
 assert.match(tsx,/const continueLevel=MAP_ORDER\.find\(s=>packOpen\(s\)&&!\(progress\.stars\[s\.id\]>0\)\)/,'continue = first unsolved puzzle in an open pack');
 
+// Nov 10 2026 (owner: "the user can play as long as they want"): the Endless Run is the main arcade entry, above Play. It starts in
+// one tap too (no brief, no sheet); Play stays the one arcade.primary and still continues the learning path.
+assert.match(home,/data-endless[^>]*onClick=\{\(\)=>\{void startEndless\(\);\}\}/,'Endless Run entry on the home menu');assert(home.indexOf('data-endless')<home.indexOf('data-play'),'Endless Run sits above Play');
+assert.match(tsx,/const startEndless=async\(\)=>\{[^\n]*beginBoardSession\('puzzle'\)/,'the run opens a session on the one puzzle board');assert(!/[\u{1F512}]/u.test(tsx),'no lock emoji: a drawn padlock');
 // 2. The old clutter is gone from the menu: the chip, the blurb, the inline format/heading questions, the big leaderboard pill.
 for(const gone of ['FREEZE · DRAW · PLAY','Find the open teammate. Draw a pass, then watch','How do you play football?','Heading the ball','Small-sided','stars collected · saved on this device','arcade.boards'])
  assert(!menu.includes(gone),'removed from the menu: '+gone);

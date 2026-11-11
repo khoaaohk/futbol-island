@@ -1,6 +1,7 @@
 import {lessonById,type SiteLesson} from './lessons';
 import {exhibitById,exhibitPath} from './exhibits';
 import type {Faq} from './safety';
+import {gameLink} from './games';
 import {scene,type RawScene,type Scene} from './scenes';
 /**
  * The RULES cluster (SEO cluster 2, Nov 10 2026): /learn/soccer-rules and one page per rule under it. All page words live here
@@ -103,7 +104,7 @@ export const RULES:readonly Rule[]=([
    {q:'Is it offside if you are level with the last defender?',a:'No. Level with the second-last opponent is onside. Arms and hands are not counted when the referee compares positions.'},
    {q:'What does the referee give for offside?',a:'An indirect free kick to the other team, taken from where the offside player got involved in the play.'},
    {q:'Is there offside in 7v7 soccer?',a:'In the U.S. Soccer standards, yes, but only between the build-out line and the goal line. Your league may differ, so check its rules.'}],
-  lessonIds:['gap11_runoncue','next7_offsideboundary','bld_11_throughlines','nx9_twostrikers'],cta:'gap11_runoncue',exhibitIds:['offside-rules'],links:[L.st,L.cb,L.f433]},
+  lessonIds:['gap11_runoncue','next7_offsideboundary','bld_11_throughlines','nx9_twostrikers'],cta:'gap11_runoncue',exhibitIds:['offside-rules'],links:[L.st,L.cb,L.f433,gameLink('puzzle')]},
  // ---- throw-in -----------------------------------------------------------------------------------------------------------
  {slug:'throw-in',name:'Throw-in',law:'Law 15',lawPage:'the-throw-in/',
   title:'Soccer Throw-In Rules for Kids: How to Take One',h1:'Soccer throw-in rules for kids',

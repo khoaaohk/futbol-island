@@ -16,11 +16,11 @@ const {localPlayDay}=require('../lib/town/dailyPlay.ts');
 (async()=>{
 // 1. Daily selection: one challenge per cabinet, deterministic per day, varied across days.
 {const day='2026-11-10',a=T.todayChallenges(day),b=T.todayChallenges(day);
- assert.deepEqual(a.map(c=>c.cabinet),['runner','puzzle','live','tennis','pinball']);
+ assert.deepEqual(a.map(c=>c.cabinet),['runner','puzzle','kitrush','snake','tennis','pinball']);/* Nov 10 2026: Squad Snake, the sixth cabinet (tests/snake-core.cjs) *//* Nov 10 2026: Kit Rush took Island Strikers' cabinet and its row on the card (tests/kitrush-core.cjs); the 'live' pool stays for Strikers' own code */
  assert.deepEqual(a.map(c=>c.id),b.map(c=>c.id),'same day, same challenges');
  for(const c of a){assert(c.line.length>0&&c.line.length<=48,`short line: ${c.line}`);assert(c.point.length>0&&c.point.length<=64,`football point: ${c.point}`);}
  const days=Array.from({length:30},(_,i)=>localPlayDay(new Date(2026,10,1+i,12).getTime()));
- for(const cab of ['pinball','tennis','live']){const ids=new Set(days.map(d=>T.todayChallenge(d,cab).id));assert(ids.size>=3,`${cab} varies across days (${ids.size})`);}
+ for(const cab of ['pinball','tennis','live','kitrush']){const ids=new Set(days.map(d=>T.todayChallenge(d,cab).id));assert(ids.size>=3,`${cab} varies across days (${ids.size})`);}
  const sig=d=>T.todayChallenges(d).map(c=>c.id).join();assert(new Set(days.map(sig)).size>=10,'different days give different sets');}
 // 2. Checks read the result facts.
 {const day='2026-11-10',pick=c=>T.todayChallenge(day,c);
@@ -72,7 +72,7 @@ const {localPlayDay}=require('../lib/town/dailyPlay.ts');
  assert.deepEqual(T.todayPlayButton('runner',{done:false,runnerOpen:true}),{label:'Play',today:true},'unlocked: Play opens the Daily Run');
  assert.deepEqual(T.todayPlayButton('runner',{done:true,runnerOpen:true}),{label:'Play again',today:true});
  assert.deepEqual(T.todayPlayButton('pinball',{done:false,runnerOpen:false}),{label:'Play',today:true},'the lock is the Breakaway row only');
- {const panelSrc=fs.readFileSync('components/arcade/ArcadeTodayPanel.tsx','utf8');assert(/if\(btn\.today\)requestTodayLaunch\(c\.cabinet\);onPlay\(c\.cabinet\)/.test(panelSrc),'only a today button requests the today launch');
+ {const panelSrc=fs.readFileSync('components/arcade/ArcadeTodayPanel.tsx','utf8');assert(/if\(btn\.today\)requestTodayLaunch\(c\.cabinet\);onPlay\(cab\.id\)/.test(panelSrc),'only a today button requests the today launch');
   assert(/>\{btn\.label\}<\/button>/.test(panelSrc),'the button shows the helper label');
   assert(/\.play\{[^}]*font:inherit[^}]*font-weight:800/.test(fs.readFileSync('components/arcade/ArcadeTodayPanel.module.css','utf8')),'Play buttons: the UI sans at 800, never the brush');}
  const card=fs.readFileSync('components/arcade/ArcadeTodayPanel.tsx','utf8');assert(!/\b(streak|missed|lose|lost)\b/i.test(card),'no streak or missed-day copy');

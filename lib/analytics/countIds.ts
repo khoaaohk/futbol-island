@@ -184,7 +184,7 @@ export const WATER_COUNT_EVENTS=[
  * The lists below are repeated (not imported) so the every-page tracker bundle never loads the shop, the books or the card
  * data; tests/admin-sponsor.cjs checks they match the real ones.
  */
-export const ENGAGE_ARCADE_GAMES=['live','runner','tennis','pinball','puzzle'] as const;
+export const ENGAGE_ARCADE_GAMES=['live','runner','tennis','pinball','puzzle','snake'] as const;
 export const ENGAGE_JERSEY_PATTERNS=['solid','stripes','hoops','pinstripes','sash','halves','quarters','chevron','checkers','fade','waves'] as const;
 export const ENGAGE_BOOT_PATTERNS=['solid','fade','speckle','stripes','camo','zigzag'] as const;
 export const ENGAGE_BOOT_MODELS=['speed','retro','classic','feather','fins','track','longflap','cage','offset','wrap','pro','knit','sock','laceless','indoor'] as const;

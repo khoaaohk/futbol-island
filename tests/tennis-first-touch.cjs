@@ -39,7 +39,7 @@ assert.ok(tries>0,'the bot trapped at least once');
 // 3. A fresh match starts the stat at zero; one-touch courts never count a try.
 {const s=A.createTennis(47,1);assert.equal(s.firstTouchTries,0);assert.equal(s.firstTouchOnTarget,0);const p=play(A,1);assert.equal(p.s.firstTouchTries,0);}
 // 4. Wiring: the ring module (bounce-spot pattern), the upgraded trap call and the full-time line.
-const ring=fs.readFileSync('lib/arcade/tennisFirstTouch.ts','utf8'),games=fs.readFileSync('lib/arcade/arcadeGames.ts','utf8'),feel=fs.readFileSync('lib/arcade/tennisFeel.ts','utf8'),card=fs.readFileSync('components/games/TennisCard.tsx','utf8');
+const ring=fs.readFileSync('lib/arcade/tennisFirstTouch.ts','utf8'),games=fs.readFileSync('lib/arcade/games/tennisGame.ts','utf8'),feel=fs.readFileSync('lib/arcade/tennisFeel.ts','utf8'),card=fs.readFileSync('components/games/TennisCard.tsx','utf8');
 assert.match(ring,/if\(!set&&!ready\)\{if\(mesh\.visible\)/,'hidden outside a live trappable/set ball');
 assert.doesNotMatch(ring.slice(ring.indexOf('function sync')),/new T\./,'no allocation per frame');
 assert.match(games,/if\(tennisTouchRing\?\.sync\(dt,tennis\)\)tennisFxLive=true;/);

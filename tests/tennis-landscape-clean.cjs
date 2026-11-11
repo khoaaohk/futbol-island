@@ -26,7 +26,8 @@ assert.match(game3d,/window\.addEventListener\('blur',pause\)/);
 // 2. No crowd in the tennis scene, on desktop or phone (fewer draws): only paint, floodlights, two pools and confetti.
 const arenaSrc=read('lib/arcade/tennisArena.ts');
 assert.doesNotMatch(arenaSrc,/tennis-crowd|tennis-stands|umpire\b.*InstancedMesh|tennisFanLift|fansPerRow/,'no crowd code left');
-assert.match(read('lib/arcade/arcadeGames.ts'),/ if\(kind==='tennis'\)\{\n[^\n]*\n  stage\.scenery\.visible=false;/,'plain backdrop: no palms, huts or lamps beside the court');
+// Club Marea (Nov 10 2026, arcade AAA rebuild): the plain backdrop is replaced by the beach-club world built by the look's environment.
+assert.match(read('lib/arcade/games/tennisGame.ts'),/const world=stage\.scenery\.userData\.tennisWorld as TennisWorld/,'the court sits in the Club Marea world (lib/arcade/tennisWorld.ts)');assert.doesNotMatch(read('lib/arcade/games/tennisGame.ts'),/createGlassFloor|stage\.scenery\.visible=false/,'no neon glass floor, the world stays visible');
 const game=load('lib/games/soccerTennis.ts'),arenaMod=load('lib/arcade/tennisArena.ts'),feelMod=load('lib/arcade/tennisFeel.ts'),audio=load('lib/arcade/tennisAudio.ts');
 const banned=/crowd|fan|stand|spectator|audience|umpire|bleacher/i;
 for(const mobile of[false,true]){
@@ -34,7 +35,7 @@ for(const mobile of[false,true]){
  const s=game.createTennis(47,1),arena=arenaMod.createTennisArena(stage,s);
  const names=[];let meshes=0;scene.traverse(o=>{if(o.name)names.push(o.name);if(o.isMesh)meshes++;});
  assert.deepEqual(names.filter(n=>banned.test(n)),[],`${mobile?'phone':'desktop'}: no crowd objects`);
- assert.equal(meshes,5,`${mobile?'phone':'desktop'}: arena = paint + floodlights + 2 pools + confetti (${meshes})`);
+ assert.equal(meshes,3,`${mobile?'phone':'desktop'}: arena = 2 player discs + confetti (${meshes}); comic house style dropped the floodlight glow quad, and the court marks are baked into the world's court sheet`);
  arena.cheer('you',true);arena.roar(12);for(let i=0;i<120;i++)arena.sync(1/30);assert.equal(arena.active(),false,'celebrations settle without a crowd');
  arena.dispose();
 }
@@ -58,5 +59,8 @@ let made=0;const param=()=>({value:0,setValueAtTime(){},linearRampToValueAtTime(
 const node=(x={})=>({connect(){},disconnect(){},...x}),ac={state:'running',currentTime:0,sampleRate:800,destination:{},
  createOscillator(){made++;return node({type:'',frequency:param(),start(){},stop(){}});},createBufferSource(){made+=100;return node({buffer:null,start(){},stop(){}});},
  createGain:()=>node({gain:param()}),createBiquadFilter:()=>node({type:'',Q:{value:0},frequency:param()}),createBuffer:(c,n)=>({getChannelData:()=>new Float32Array(n)})};
-for(const cue of['tennis:match:you:12','tennis:point:rival:3','tennis:matchpoint:you','tennis:tire']){made=0;audio.tennisSound(ac,cue);assert(made<100,`${cue}: no crowd noise layer`);}
+// Club Marea (Nov 10 2026, arcade AAA rebuild; the brief asks for a sea bed and polite club applause): points now end with the umpire's bell and
+// applause (one cached clap buffer, one voice) over a surf swell; still no gasps, murmurs or 'ooh' reactions (regex above), no timers, no loops.
+for(const cue of['tennis:point:rival:3']){/* one cue: this fake context never ends a voice, so a second cue would hit the voice cap */made=0;audio.tennisSound(ac,cue);assert(made>=100&&made<400,`${cue}: bell + one applause voice + at most one surf swell`);}
+assert.match(audioSrc,/function applause\(/);assert.match(audioSrc,/function surf\(/);assert.doesNotMatch(audioSrc,/setInterval|setTimeout/,'the bed is scheduled from cues: no timers');
 console.log('PASS tennis clean court: stays portrait, no crowd meshes or crowd sounds, only the point line over the court');

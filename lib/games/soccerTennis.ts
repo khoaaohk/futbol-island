@@ -5,6 +5,7 @@
  * friction (spin converts to roll), and the net tape is a live object — a ball
  * can thud into the mesh, clip the tape and dribble over, or fall back. */
 import {TENNIS_CHARGE,tennisChargeLevel,tennisPowerGrade,tennisPowerAmount,tennisPowerQuality,tennisShapeDepth,tennisShapeFlight,tennisChargeable,tennisChargeFeet,tennisPowerLine,type TennisPowerGrade,type TennisShape} from './tennisPower';
+import {TENNIS_RUN,TENNIS_SHARP_MAX,TENNIS_SWEET_FLOOR,tennisRampRow,tennisNextStop,tennisRunLap,tennisRunStop,tennisLadderScale,tennisOpponent,tennisMatchLabel,tennisMatchTip} from '../arcade/tennisEndless';
 export type TennisSide='you'|'rival';
 export type TennisPhase='ready'|'serve'|'rally'|'point'|'over';
 /** shot intents: auto picks drive/loop from contact; drop = soft short ball, lob = high & deep,
@@ -97,6 +98,16 @@ export interface TennisState{
  /** How the rival won its points (your return into the net, out, beaten by open space, a ball you let go, no return): the result
   * card's "why it ended" line names the most common one. */
  lossKinds:{net:number;out:number;space:number;letgo:number;miss:number};
+ /** Nov 10 2026 endless play (lib/arcade/tennisEndless.ts): a run is a chain of matches and ends only when the balls (tourLives, on
+  * every entry now) run out. `match` is the match being played (1-based, the TENNIS_RAMP row), `matchesWon` the matches won this run,
+  * `startLevel` the court the run began on, `topLevel` the highest court reached (9 once the stops have looped), `lap` the lap of the
+  * nine stops, `venueStop` the stop whose panel is on screen. A finished match raises `matchEvents` and leaves who won it, the court
+  * it was on, its stars, the bonus banked and whether a ball came back; `seam` is the pending change at the next serve (1 = the next
+  * opponent walks on, 2 = the same court again). `matchRally` and `mark` keep the star conditions per match; `pointsWon` counts the
+  * whole run (coins). */
+ match:number;matchesWon:number;startLevel:number;topLevel:number;lap:number;venueStop:number;
+ matchEvents:number;matchWinner:TennisSide|null;matchLevel:number;matchStars:number;matchBonus:number;lifeBack:boolean;seam:0|1|2;
+ matchRally:number;mark:{perfect:number;habit:number;golden:number;fakes:number};pointsWon:number;
 }
 export type TennisGrade='perfect'|'good'|'heavy'|'early'|'late'|'stretched'|'';
 export type TennisPointKind='space'|'letgo'|'net'|'out'|'miss'|'target'|'';
@@ -181,7 +192,17 @@ export const TENNIS_HARD_FROM=TENNIS_COURTS.findIndex(c=>c.hard)+1;
 export type TennisCourt=typeof TENNIS_COURTS[number];
 /** The court in play: a tour's own court on a tour, otherwise the ladder court. */
 const courtOf=(s:{level:number;tour?:number})=>s.tour===1||s.tour===2?TENNIS_TOURS[s.tour-1]:TENNIS_COURTS[s.level-1];
-const court=(s:TennisState)=>courtOf(s);
+/** Endless play: the court the SIM reads is the base court under the match's TENNIS_RAMP row. Match 1 on lap 1 is the base object
+ * itself (nothing changes for a first match). From the second lap of the nine stops every rival keeps its style, surface and rules
+ * but plays with at least the Legend Cup rival's feet and touch, so a loop never gets easier. Cached: no allocation in the frame loop. */
+const LAP_SKILL=TENNIS_COURTS[TENNIS_COURTS.length-1],rampCache=new Map<TennisCourt,TennisCourt[]>();
+function rampCourt(base:TennisCourt,match:number,lap:number):TennisCourt{const row=tennisRampRow(match),looped=lap>1&&base.style!=='drill';if(row.match===1&&!looped)return base;
+ let list=rampCache.get(base);if(!list)rampCache.set(base,list=[]);const key=row.match*2+(looped?1:0);if(list[key])return list[key];
+ const b=looped?{...base,aim:Math.max(base.aim,LAP_SKILL.aim),sharp:Math.max(base.sharp,LAP_SKILL.sharp),pace:Math.min(base.pace,LAP_SKILL.pace),speed:Math.max(base.speed,LAP_SKILL.speed),reaction:Math.min(base.reaction,LAP_SKILL.reaction),error:Math.min(base.error,LAP_SKILL.error),read:Math.min(base.read,LAP_SKILL.read)}:base;
+ return list[key]={...b,speed:b.speed*row.speed,reaction:b.reaction*row.reaction,aim:b.aim*row.aim,sharp:Math.min(TENNIS_SHARP_MAX,b.sharp+row.sharp),error:b.error*row.error,wind:b.wind+row.wind} as TennisCourt;}
+/** The court as the sim plays it this match (base court × ramp). Names, lessons and star rules always read the base court. */
+export const tennisRampedCourt=(s:{level:number;tour?:number;match?:number;lap?:number})=>rampCourt(courtOf(s),s.match??1,s.lap??1);
+const court=(s:TennisState)=>rampCourt(courtOf(s),s.match,s.lap);
 export const tennisCourt=court;
 export const tennisCourtOf=courtOf;
 /** Tour ramp step (0 off a tour), capped. */
@@ -224,18 +245,18 @@ export function createTennis(seed=47,level=1,tour:TennisTour=0):TennisState{cons
  queuedShot:'auto',lastShot:'auto',lastKicker:'you',kickCount:0,aiSlam:false,fxSlam:0,fxSlamX:0,fxSlamY:0,fxSlamZ:0,fxLand:0,fxLandX:0,fxLandY:0,fxLandI:0,pointWinner:null,shotAim:0,cleanReturns:0,cleanStreak:0,bestCleanStreak:0,rivalIntent:'Ready at the baseline',
  touchGrade:'',touchSide:'you',touchQuality:0,rivalPlan:null,rivalPlanX:0,rivalPlanAt:0,rivalStumble:0,rivalLetGo:false,wrongFooted:0,kickHold:0,pressCount:0,gold:0,goldReady:false,goldenShot:false,goldenUsed:0,youTrapped:false,rivalTrapped:false,setBonus:0,trapEvents:0,trapSide:'you',trapGrade:'',trapSpotX:0,trapSpotY:0,trapOnTarget:false,firstTouchOnTarget:0,firstTouchTries:0,rivalFake:false,fakeReads:0,fakeShown:false,habitWins:0,lastYouShot:'auto',assist:0,winRun:0,lossRun:0,drillLeft:0,drillHits:0,targetX:0,targetY:-4.6,targetEvents:0,stars:0,gradeCounts:{perfect:0,good:0,heavy:0,early:0,late:0,stretched:0},perfectStreak:0,touchVolley:false,aiHeader:false,rivalFinish:false,landX:0,landY:0,incomingOut:false,headSpot:false,headX:0,headY:0,outEvents:0,caught:0,bounceEvents:0,netEvents:0,netKind:'net',netX:0,netPace:0,pointKind:'',centerRun:0,chargeShot:null,chargeTime:0,charge:0,shotPower:0,depthAim:0,powerGrade:'',powerEvents:0,sweetShots:0,overShots:0,rivalPower:0,rivalPowerGrade:'',
  pointsPlayed:0,wind:0,sets:{you:0,rival:0},setEvents:0,setWinner:null,rallyMilestone:0,milestoneEvents:0,bestMilestone:0,
- tour:t,tourScore:0,tourLives:t?TENNIS_TOUR_RULES[t-1].lives:0,tourWins:0,tourHeat:0,tourClean:0,touchMult:0,comboStep:1,tourGain:0,tourEvents:0,bestCombo:1,lossKinds:{net:0,out:0,space:0,letgo:0,miss:0}};}
+ tour:t,tourScore:0,tourLives:t?TENNIS_TOUR_RULES[t-1].lives:TENNIS_RUN.lives,tourWins:0,tourHeat:0,tourClean:0,touchMult:0,comboStep:1,tourGain:0,tourEvents:0,bestCombo:1,lossKinds:{net:0,out:0,space:0,letgo:0,miss:0},
+ match:1,matchesWon:0,startLevel:clamp(Math.floor(level)||1,1,TENNIS_COURTS.length),topLevel:clamp(Math.floor(level)||1,1,TENNIS_COURTS.length),lap:1,venueStop:t?TENNIS_RUN.tourStops[t-1]:clamp(Math.floor(level)||1,1,TENNIS_COURTS.length),matchEvents:0,matchWinner:null,matchLevel:0,matchStars:0,matchBonus:0,lifeBack:false,seam:0,matchRally:0,mark:{perfect:0,habit:0,golden:0,fakes:0},pointsWon:0};}
 /** Rally milestones (touches in one point) that pop a "RALLY 10!" call, a crowd roar and +1 Golden Touch meter. */
 export const TENNIS_RALLY_MILESTONES=[5,10,15,20,30] as const;
 /** A fresh wind for the next point on windy courts: a random side, 60–100% of the court's peak. */
-function newWind(s:TennisState){const w=court(s).wind;s.wind=w?(random(s)<.5?-1:1)*w*(.6+random(s)*.4):0;}
+function newWind(s:TennisState){const w=court(s).wind;s.wind=w?(random(s)<.5?-1:1)*w*(.6+random(s)*(.4+tennisRampRow(s.match).gust)):0;}
 /** The existing replay action advances a won court; a loss keeps its practice tier. */
-export function resetTennis(s:TennisState){const won=s.winner==='you'&&!s.tour,level=Math.min(TENNIS_COURTS.length,s.level+(won?1:0)),courtsWon=s.courtsWon+(won?1:0),
- drillTries=isDrill(s)&&s.phase==='over'?(won?0:s.drillTries+1):s.drillTries;Object.assign(s,createTennis(s.seed,level,s.tour));s.courtsWon=courtsWon;s.drillTries=drillTries;}
+export function resetTennis(s:TennisState){const courtsWon=s.courtsWon,drillTries=s.drillTries;Object.assign(s,createTennis(s.seed,s.level,s.tour));s.courtsWon=courtsWon;s.drillTries=drillTries;}
 /** Picks the ladder (0) or a tour for the next run (the start card's tour chips). The ladder level is kept. */
 export function setTennisTour(s:TennisState,tour:number){const t:TennisTour=tour===1||tour===2?tour:0;if(s.tour===t)return;Object.assign(s,createTennis(s.seed,s.level,t));}
 function random(s:TennisState){s.seed=(Math.imul(s.seed,1664525)+1013904223)>>>0;return s.seed/4294967296;}
-export function beginTennis(s:TennisState){s.phase='serve';s.phaseTime=0;const c=court(s);
+export function beginTennis(s:TennisState){s.phase='serve';s.phaseTime=0;s.startLevel=s.topLevel=s.level;s.venueStop=s.tour?TENNIS_RUN.tourStops[s.tour-1]:s.level;const c=court(s);
  if(isDrill(s)){s.server='rival';s.drillLeft=TENNIS_DRILL.balls;s.drillHits=0;moveTarget(s);s.ball=mkball(s.rival.x+.3,s.rival.y+.35,'rival');}
  newWind(s);
  s.message=s.tour?`${c.name.toUpperCase()} · ${c.lesson}`:`COURT ${s.level} · ${c.name} · ${c.lesson}`;/* the rival's habit is on the court card and its call-out */s.version++;}
@@ -262,7 +283,7 @@ export function setTennisMovement(s:TennisState,x:number,y:number){
 /** Input buffer (seconds): a press made a little before the ball is in reach is kept this long and fires the moment the touch
  * becomes possible (aerial presses wait longer, a ball still rising to head height takes time). Named Nov 8 2026, values unchanged. */
 export const TENNIS_INPUT_BUFFER={kick:.32,aerial:.48,trap:.36} as const;
-export function requestTennisKick(s:TennisState,aim?:number,shot:TennisShot='auto'){if(s.phase!=='rally'&&!(s.phase==='serve'&&s.server==='you'))return;if(s.phase==='serve'&&(shot==='header'||shot==='scissor')){s.message='Serve with your foot. Save aerial moves for the return.';s.version++;return;}s.queuedKick=shot==='header'||shot==='scissor'?TENNIS_INPUT_BUFFER.aerial:shot==='trap'?TENNIS_INPUT_BUFFER.trap:TENNIS_INPUT_BUFFER.kick;s.kickHold=0;s.shotPower=0;s.depthAim=0;s.pressCount++;s.queuedShot=shot;s.aim=aim===undefined?s.shotAim:clamp(aim,-1,1);if(shot==='header'&&!canTennisHeader(s,'you')){s.message='Header: get underneath a high incoming ball.';s.version++;}if(shot==='scissor'&&!canTennisScissor(s,'you')){s.message='Scissor: get close as the high ball drops.';s.version++;}
+export function requestTennisKick(s:TennisState,aim?:number,shot:TennisShot='auto'){if(s.phase==='point'&&s.seam&&s.phaseTime>=TENNIS_RUN.seamSkip){nextServe(s);return;}/* endless: a press skips the match beat */if(s.phase!=='rally'&&!(s.phase==='serve'&&s.server==='you'))return;if(s.phase==='serve'&&(shot==='header'||shot==='scissor')){s.message='Serve with your foot. Save aerial moves for the return.';s.version++;return;}s.queuedKick=shot==='header'||shot==='scissor'?TENNIS_INPUT_BUFFER.aerial:shot==='trap'?TENNIS_INPUT_BUFFER.trap:TENNIS_INPUT_BUFFER.kick;s.kickHold=0;s.shotPower=0;s.depthAim=0;s.pressCount++;s.queuedShot=shot;s.aim=aim===undefined?s.shotAim:clamp(aim,-1,1);if(shot==='header'&&!canTennisHeader(s,'you')){s.message='Header: get underneath a high incoming ball.';s.version++;}if(shot==='scissor'&&!canTennisScissor(s,'you')){s.message='Scissor: get close as the high ball drops.';s.version++;}
  if(shot==='trap'&&court(s).touches<2){s.queuedKick=0;s.message='One touch on this court. Two-touch courts allow a trap.';s.version++;}}
 /** Hold-to-power: start winding up a shot (Kick/Lob/Drop). Allowed while a point is live or before a serve. */
 export function startTennisCharge(s:TennisState,shot:TennisShot){if(!(s.phase==='rally'||s.phase==='serve')||!tennisChargeable(shot))return false;s.chargeShot=shot;s.chargeTime=0;s.charge=0;return true;}
@@ -295,12 +316,13 @@ export function tennisLanding(s:TennisState){const f=flight(s.ball);return {x:f.
  * ball reaches a comfortable foot height, rather than erasing the destination.
  * Uses the same drag/spin path and existing throttled visual prediction. */
 export function tennisReceivingPoint(s:TennisState){const f=flight(s.ball,s.ball.bounces>0?.7:TENNIS.ballRadius);return {x:f.x,y:f.y,time:f.time};}
-export function canTennisKick(s:TennisState,side:TennisSide){if(s.phase!=='rally'||s.ball.last===side||!s.ball.crossed)return false;const p=s[side],b=s.ball;return (side==='you'?b.y>.15:b.y<-.15)&&b.z<1.15&&Math.hypot(p.x-b.x,p.y-b.y)<1.3;}
+export function canTennisKick(s:TennisState,side:TennisSide){if(s.phase!=='rally'||s.ball.last===side||!s.ball.crossed)return false;const p=s[side],b=s.ball;return (side==='you'?b.y>.15:b.y<-.15)&&b.z<1.15&&Math.hypot(p.x-b.x,p.y-b.y)<1.3+(side==='rival'?tennisRampRow(s.match).reach:0);}
 /** The same contact test drives the mint timing cue and its reward. */
 /** Perfect-window forgiveness by court (seconds after the bounce, contact reach). Courts 1–3 are generous, the rest of the
  * ladder standard, and the tours tighter (Nov 8 2026: forgiveness tightens with the level). */
-export function tennisPerfectWindow(s:Pick<TennisState,'level'|'tour'>):{after:number;reach:number}{if(s.tour===1||s.tour===2){const r=TENNIS_TOUR_RULES[s.tour-1];return {after:r.perfectAfter,reach:r.perfectReach};}
- const easy=courtOf(s).tier<=2;return {after:easy?.32:.26,reach:easy?.9:.8};}
+export function tennisPerfectWindow(s:Pick<TennisState,'level'|'tour'>&{match?:number}):{after:number;reach:number}{const k=tennisRampRow(s.match??1).sweet,win=(after:number)=>k===1?after:Math.max(TENNIS_SWEET_FLOOR,after*k);
+ if(s.tour===1||s.tour===2){const r=TENNIS_TOUR_RULES[s.tour-1];return {after:win(r.perfectAfter),reach:r.perfectReach};}
+ const easy=courtOf(s).tier<=2;return {after:win(easy?.32:.26),reach:easy?.9:.8};}
 export function canTennisPerfect(s:TennisState){const p=s.you,b=s.ball,w=tennisPerfectWindow(s);return canTennisKick(s,'you')&&b.bounces===1&&s.bounceAge>=.045&&s.bounceAge<=w.after&&Math.hypot(p.x-b.x,p.y-b.y)<w.reach&&Math.hypot(p.vx,p.vy)<3;}
 /** Comfortable contact distance: inside it a planted touch grades clean. */
 export const TENNIS_SWEET_REACH=.6;
@@ -378,6 +400,8 @@ function planRival(s:TennisState){
  // Otherwise each personality plays its own mix, so every court asks a different read.
  const deep=s.you.y>(steady?6.3:5.6),close=s.you.y<(steady?2.5:3.1);
  let shot:TennisShot=deep?'drop':close?'lob':tier(s)>=2&&s.you.vy>.8?'drop':RIVAL_MIX[style](r);
+ // Endless ramp: later opponents break their habit now and then (no extra dice at match 1, so a first match plays as it always did).
+ {const v=tennisRampRow(s.match).variety;if(v&&!deep&&!close&&style!=='drill'&&random(s)<v)shot=RIVAL_VARIETY[Math.floor(random(s)*RIVAL_VARIETY.length)];}
  // You're pulled wide: the rival drives into the open side (the same lesson, used against you).
  const wide=!steady&&Math.abs(s.you.x)>2.2&&s.you.y>=3.1&&s.you.y<=5.6&&r<.55+tier(s)*.08;if(wide)shot='drive';
  if(deep||close||wide)s.caught++;
@@ -394,6 +418,7 @@ function planRival(s:TennisState){
  if(court(s).tier<=2&&s.rally>1){s.message=`READ IT · ${deep?'you stayed deep, so ':close?'you are close to the net, so ':''}${shot==='drop'?'a short ball is coming':shot==='lob'?'a high lob is coming':'it goes '+(s.rivalPlanX<0?'to your left':'to your right')}${deep||close?'. Recover to the middle!':''}`;s.version++;}
 }
 /** Each personality's everyday shot mix (r is one uniform draw). */
+const RIVAL_VARIETY:readonly TennisShot[]=['lob','drop','drive'];
 const RIVAL_MIX:Record<TennisStyle,(r:number)=>TennisShot>={
  steady:r=>r<.9?'auto':'lob',
  baseliner:r=>r<.66?'auto':r<.86?'lob':'drop',
@@ -491,8 +516,8 @@ function kick(s:TennisState,side:TennisSide){
  // Touch multiplier (every court, for the HUD) and tour scoring (Nov 8 2026): touch × combo × ramp bonus. A scrappy touch scores ×1 and
  // never breaks the combo; only a lost point resets it.
  if(side==='you'&&!serve){s.touchMult=tennisTouchMult(s.touchGrade,golden,q);
-  if(s.tour){if(s.touchMult>=TENNIS_TOUCH_MULT.clean)s.tourClean++;s.comboStep=tennisComboStep(s.tourClean);s.bestCombo=Math.max(s.bestCombo,s.comboStep);
-   s.tourGain=tennisTourGain(s.tour,'touch',s.touchMult,s.comboStep,s.tourHeat);s.tourScore+=s.tourGain;s.tourEvents++;}}
+  /* endless play: every entry scores its touches now (courts too), one system */{if(s.touchMult>=TENNIS_TOUCH_MULT.clean)s.tourClean++;s.comboStep=tennisComboStep(s.tourClean);s.bestCombo=Math.max(s.bestCombo,s.comboStep);
+   s.tourGain=tennisRunGain(s,'touch',s.touchMult);s.tourScore+=s.tourGain;s.tourEvents++;}}
  const err=(1-q)*(shot==='slam'||shot==='scissor'||shot==='shark'?2.2:1.6);
  let tx=side==='you'
   ?tennisAimX(s.aim??s.shotAim,'auto')
@@ -550,7 +575,7 @@ function kick(s:TennisState,side:TennisSide){
  b.vx+=(random(s)-.5)*n*2.4;b.vy+=(random(s)-.5)*n*2.2;b.vz+=(random(s)-.65)*n*2;
  // Wrong-footing: a return sent against the rival's momentum costs it a visible stumble.
  const gap=tx-s.rival.x,wrong=side==='you'&&!serve&&Math.abs(s.rival.vx)>1.1&&Math.sign(s.rival.vx)!==Math.sign(gap)&&Math.abs(gap)>1.4;
- if(wrong){s.rivalStumble=.55;s.wrongFooted++;}
+ if(wrong){s.rivalStumble=.55*tennisRampRow(s.match).reaction;/* endless ramp: later opponents recover their feet sooner */s.wrongFooted++;}
  b.last=side;b.bounces=0;b.crossed=false;b.netHit=false;s.rivalPlan=null;s.rivalLetGo=false;s.youTrapped=s.rivalTrapped=false;s.setBonus=0;
  p.kickSpan=shot==='scissor'?.85:shot==='bicycle'?1.25:shot==='shark'?.72:shot==='dive'?.9:shot==='flick'?.7:shot==='header'?.58:shot==='chest'?.52:TENNIS.kickDuration;p.kick=p.kickSpan;p.kickFacing=Math.atan2(b.vx,b.vy);p.kickStyle=shot==='chest'?5:shot==='bicycle'?6:shot==='shark'?7:shot==='dive'?9:shot==='flick'?10:shot==='scissor'?4:shot==='header'?3:shot==='slam'?2:shot==='drop'?0:1;
  p.down=shot==='bicycle'?.85:shot==='dive'?.75:shot==='shark'?.25:0;
@@ -562,13 +587,13 @@ function kick(s:TennisState,side:TennisSide){
  s.lastShot=shot==='auto'?(drive?'drive':'auto'):shot;s.lastKicker=side;s.kickCount++;
  const powerGrade=powered?tennisPowerGrade(powerLevel):'';if(side==='you'){s.powerGrade=powerGrade;s.shotPower=0;s.depthAim=0;if(powerGrade){s.powerEvents++;if(powerGrade==='sweet')s.sweetShots++;if(powerGrade==='over')s.overShots++;}}else{s.rivalPowerGrade=powerGrade;s.rivalPower=0;}
  if(shot==='slam'||shot==='header'||shot==='scissor'||shot==='bicycle'||shot==='shark'){s.fxSlam=shot==='scissor'||shot==='bicycle'?.65:.42;s.fxSlamX=b.x;s.fxSlamY=b.y;s.fxSlamZ=b.z;}
- s.rally++;s.bestRally=Math.max(s.bestRally,s.rally);s.phase='rally';
+ s.rally++;s.bestRally=Math.max(s.bestRally,s.rally);s.matchRally=Math.max(s.matchRally,s.rally);s.phase='rally';
  // Rally milestones: a call-out, a crowd roar and +1 on the Golden Touch meter (not on the drill: no rally there).
  if(!isDrill(s)&&TENNIS_RALLY_MILESTONES.includes(s.rally as 5)){s.rallyMilestone=s.rally;s.milestoneEvents++;s.bestMilestone=Math.max(s.bestMilestone,s.rally);if(!s.goldReady){s.gold=Math.min(TENNIS_GOLD,s.gold+1);if(s.gold>=TENNIS_GOLD)s.goldReady=true;}}s.queuedKick=0;s.queuedShot='auto';
  readIncoming(s);
  // a slam travels ~half a second — the rival gets a hurried (imperfect) chance to dig it out;
  // and the rival only WANTS to spike some of your returns (decided here, per kick)
- s.aiReaction=((shot==='slam'||shot==='scissor'||shot==='shark'||shot==='bicycle')&&side==='you'?.16+random(s)*.2:profile.reaction+random(s)*.24)+(wrong?.16-tier(s)*.02:0)+(golden?.15:0)+(side==='you'?Math.max(0,s.assist)*.06+tennisRivalTire(s)*.12:0);if(side==='you'&&s.tour)s.aiReaction=Math.max(.06,s.aiReaction-tennisTourRamp(s)*.008);s.aiThink=0;
+ s.aiReaction=((shot==='slam'||shot==='scissor'||shot==='shark'||shot==='bicycle')&&side==='you'?.16+random(s)*.2:profile.reaction+random(s)*.24*tennisRampRow(s.match).reaction/* endless ramp: the slow half of its reactions tightens too (×1 at match 1) */)+(wrong?.16-tier(s)*.02:0)+(golden?.15:0)+(side==='you'?Math.max(0,s.assist)*.06+tennisRivalTire(s)*.12:0);if(side==='you'&&s.tour)s.aiReaction=Math.max(.06,s.aiReaction-tennisTourRamp(s)*.008);s.aiThink=0;
  if(isDrill(s)&&side==='you')s.aiReaction=99;
  if(side==='you'){
   s.aiSlam=random(s)<.45+tier(s)*.07||q<.5; // a floating return invites the spike
@@ -633,20 +658,22 @@ function pointReason(s:TennisState,winner:TennisSide,kind:TennisPointKind){
 }
 /** Stars for the court just finished: win, 4 perfect touches, and beating the rival's habit.
  * The drill awards stars by targets hit. Pure. */
-export function tennisStars(s:TennisState){const c=court(s);
+export function tennisStars(s:TennisState,won=s.winner==='you'){const c=courtOf(s);
  if(c.style==='drill')return s.drillHits<tennisDrillPass(s)?0:1+TENNIS_DRILL.stars.slice(1).filter(n=>s.drillHits>=n).length;
- if(s.winner!=='you')return 0;
- const third=c.sets?s.sets.rival===0:c.wind?s.bestRally>=10:c.spin?s.goldenUsed>=2:c.style==='steady'?s.bestRally>=8:c.style==='trickster'?s.fakeReads>=2:c.style==='champion'?s.goldenUsed>=1:s.habitWins>=2;
- return 1+(s.perfectTouches>=4?1:0)+(third?1:0);}
+ if(!won)return 0;
+ // Endless play: the same three conditions, counted over the match just won (a run's first match counts exactly as a court did).
+ const rally=s.matchEvents?s.matchRally:s.bestRally,golden=s.goldenUsed-s.mark.golden,fakes=s.fakeReads-s.mark.fakes,habit=s.habitWins-s.mark.habit,perfect=s.perfectTouches-s.mark.perfect;
+ const third=c.sets?s.sets.rival===0:c.wind?rally>=10:c.spin?golden>=2:c.style==='steady'?rally>=8:c.style==='trickster'?fakes>=2:c.style==='champion'?golden>=1:habit>=2;
+ return 1+(perfect>=4?1:0)+(third?1:0);}
 function drillPoint(s:TennisState,hit:boolean,kind:TennisPointKind){
  s.drillLeft=Math.max(0,s.drillLeft-1);s.pointsPlayed++;if(hit){s.drillHits++;s.targetEvents++;}
  s.score.you=s.drillHits;s.score.rival=TENNIS_DRILL.balls-s.drillLeft-s.drillHits;
  s.pointKind=kind;s.pointWinner=hit?'you':'rival';s.rivalPlan=null;s.phaseTime=0;s.queuedKick=0;const b=s.ball;b.vx=b.vy=b.vz=0;b.wx=b.wy=b.wz=0;b.squash=0;
  s.you.direct=false;s.you.moveX=s.you.moveY=0;s.you.targetX=0;s.you.targetY=5.3;
+ if(hit){s.pointsWon++;s.tourGain=tennisRunGain(s,'win',1);s.tourScore+=s.tourGain;s.tourEvents++;}
  s.message=hit?`TARGET! ${s.drillHits} hit · ${s.drillLeft} balls left`:`${kind==='target'?'Close! Missed the ring':kind==='net'?'Into the net':kind==='out'?'Out':'Missed'} · ${s.drillLeft} balls left`;
  if(hit)moveTarget(s);s.phase='point';s.version++;
- if(s.drillLeft<=0){s.winner=s.drillHits>=tennisDrillPass(s)?'you':'rival';s.phase='over';s.stars=tennisStars(s);s.you.vx=s.you.vy=0;
-  s.message=`DRILL DONE · ${s.drillHits} of ${TENNIS_DRILL.balls} targets${s.winner==='you'?'':` · hit ${Math.max(TENNIS_DRILL_MIN_PASS,tennisDrillPass(s)-1)} to pass next time`}`;}
+ if(s.drillLeft<=0)endMatch(s,s.drillHits>=tennisDrillPass(s)?'you':'rival');
 }
 function point(s:TennisState,winner:TennisSide,kind:TennisPointKind){if(isDrill(s)){drillPoint(s,false,kind);return;}const reason=pointReason(s,winner,kind);s.pointKind=kind;s.rivalPlan=null;s.rivalStumble=0;s.score[winner]++;
  if(winner==='you'&&(kind==='space'||kind==='letgo')&&s.lastKicker==='you'&&s.lastYouShot===court(s).counter&&court(s).counter!=='auto')s.habitWins++;
@@ -655,19 +682,59 @@ function point(s:TennisState,winner:TennisSide,kind:TennisPointKind){if(isDrill(
  if(winner==='rival'&&kind in s.lossKinds)s.lossKinds[kind as keyof TennisState['lossKinds']]++;s.phaseTime=0;s.queuedKick=0;const b=s.ball;b.vx=b.vy=b.vz=0;b.wx=b.wy=b.wz=0;b.squash=0;s.pointWinner=winner;s.you.direct=s.rival.direct=false;s.you.moveX=s.you.moveY=0;s.you.targetX=s.rival.targetX=0;s.you.targetY=5.3;s.rival.targetY=-5.3;
  s.cleanStreak=0;s.message=`${winner==='you'?'YOUR POINT':'RIVAL POINT'} · ${reason}${s.rally>=5?' · '+s.rally+'-touch rally!':''}`;s.phase='point';s.version++;
  s.pointsPlayed++;
- const c=court(s);let won=s.score[winner]>=c.to;
+ const c=court(s);let won=s.score[winner]>=c.to;if(winner==='you')s.pointsWon++;
  // Tours: a won point scores (× combo × ramp) and every TENNIS_TOUR_RULES.rampEvery wins the rival steps up; a lost point costs a ball
  // and resets the combo. The tour ends when the balls run out (never by reaching a score).
  if(s.tour){const r=TENNIS_TOUR_RULES[s.tour-1];won=false;
-  if(winner==='you'){s.tourWins++;s.tourGain=tennisTourGain(s.tour,'win',1,s.comboStep,s.tourHeat);s.tourScore+=s.tourGain;s.tourEvents++;const heat=Math.min(TENNIS_TOUR_RAMP_MAX,Math.floor(s.tourWins/r.rampEvery));
-   if(heat>s.tourHeat){s.tourHeat=heat;s.message=`YOUR POINT · ${reason} · LEVEL UP! The rival is faster (level ${heat+1})`;}}
+  if(winner==='you'){s.tourWins++;s.tourGain=tennisRunGain(s,'win',1);s.tourScore+=s.tourGain;s.tourEvents++;const heat=Math.min(TENNIS_TOUR_RAMP_MAX,Math.floor(s.tourWins/r.rampEvery));
+   if(heat>s.tourHeat){s.tourHeat=heat;s.message=`YOUR POINT · ${reason} · LEVEL UP! The rival is faster (level ${heat+1})`;}
+   if(s.tourWins%TENNIS_RUN.tourMatch===0)endMatch(s,'you');/* endless: every TENNIS_RUN.tourMatch won points is a tour match won */}
   else{s.tourLives=Math.max(0,s.tourLives-1);s.tourClean=0;s.comboStep=1;if(s.tourLives>0)s.message=`RIVAL POINT · ${reason} · ${s.tourLives} ball${s.tourLives===1?'':'s'} left`;}
   if(s.tourLives<=0){s.you.vx=s.you.vy=s.rival.vx=s.rival.vy=0;s.winner='rival';s.phase='over';s.stars=0;s.message=`${r.name.toUpperCase()} OVER · ${s.tourScore} points · best rally ${s.bestRally}`;}
   return;}
+ // Courts (endless play): a won point banks points too, a lost point resets the combo; the match score decides the match.
+ if(winner==='you'){s.tourGain=tennisRunGain(s,'win',1);s.tourScore+=s.tourGain;s.tourEvents++;}else{s.tourClean=0;s.comboStep=1;}
  // Best-of-3 courts: a set goes to the first to `to`; the score resets and the match goes on until `sets` are won.
- if(won&&c.sets){s.sets[winner]++;if(s.sets[winner]<c.sets){won=false;s.setEvents++;s.setWinner=winner;s.score.you=s.score.rival=0;s.message=`SET ${winner==='you'?'TO YOU':'TO THE RIVAL'}! Sets ${s.sets.you} : ${s.sets.rival} · ${winner==='you'?'one more set wins the cup':'win the next set to level it'}`;}}
- if(won){s.you.vx=s.you.vy=s.rival.vx=s.rival.vy=0;s.winner=winner;s.phase='over';s.stars=tennisStars(s);s.message=`${winner==='you'?(s.level===TENNIS_COURTS.length?'CIRCUIT WON':'COURT '+s.level+' WON'):'COURT '+s.level+' · TRY AGAIN'} · ${s.cleanReturns} clean returns · best rally ${s.bestRally}`;}}
-function nextServe(s:TennisState){s.pointWinner=null;s.touchMult=0;s.rivalPower=0;s.shotPower=0;s.incomingOut=s.headSpot=s.rivalFinish=false;s.rivalPlan=null;s.rivalLetGo=false;s.rivalStumble=0;s.touchGrade='';s.youTrapped=s.rivalTrapped=false;s.setBonus=0;s.rivalFake=false;s.server=isDrill(s)?'rival':(s.score.you+s.score.rival)%2?'rival':'you';s.you=player(5.3);s.rival=player(-5.3);const p=s[s.server];s.ball=mkball(p.x+.3,p.y+(s.server==='you'?-.35:.35),s.server);s.rally=0;s.rallyMilestone=0;newWind(s);s.phase='serve';s.phaseTime=0;s.message=isDrill(s)?`Ball ${TENNIS_DRILL.balls-s.drillLeft+1} of ${TENNIS_DRILL.balls} · get ready`:s.server==='you'?'Your serve. Kick, or Lob for a rainbow flick, Drop for a short serve.':'Rival serving. Find a comfortable position.';s.version++;}
+ if(won&&c.sets){s.sets[winner]++;if(s.sets[winner]<c.sets){won=false;s.setEvents++;s.setWinner=winner;s.score.you=0;s.score.rival=tennisHeadStart(s);s.message=`SET ${winner==='you'?'TO YOU':'TO THE RIVAL'}! Sets ${s.sets.you} : ${s.sets.rival} · ${winner==='you'?'one more set wins the cup':'win the next set to level it'}`;}}
+ if(won)endMatch(s,winner);}
+/** Balls a run can hold: the tour's own count, or TENNIS_RUN.lives on a court. */
+export const tennisRunLives=(s:{tour?:number})=>s.tour===1||s.tour===2?TENNIS_TOUR_RULES[s.tour-1].lives:TENNIS_RUN.lives;
+/** The run's score scale: the tour's, or the court's tier scale (lib/arcade/tennisEndless.ts tennisLadderScale). */
+export const tennisRunScale=(s:{level:number;tour?:number})=>s.tour===1||s.tour===2?TENNIS_TOUR_RULES[s.tour-1].scale:tennisLadderScale(courtOf(s).tier);
+/** Points for one touch or one won point on any entry: the tour formula (touch × combo × tour ramp × scale) × the match row's points.
+ * At match 1 a tour scores exactly what tennisTourGain always paid. */
+export function tennisRunGain(s:Pick<TennisState,'level'|'tour'|'match'|'comboStep'|'tourHeat'>,kind:'touch'|'win',mult:number){
+ return Math.round((kind==='touch'?TENNIS_TOUR_POINTS.touch*mult:TENNIS_TOUR_POINTS.win)*s.comboStep*tennisRampBonus(s.tour?s.tourHeat:0)*tennisRunScale(s)*tennisRampRow(s.match).points);}
+/** "Match 4 · Harbour Net Rusher": the readout on the score panel and the results card. */
+export const tennisMatchName=(s:Pick<TennisState,'level'|'tour'|'match'>)=>tennisMatchLabel(s.match,courtOf(s).rival);
+/** A match is decided. Won: the bonus banks, a ball comes back (never past the run's count), and the next serve brings the next
+ * opponent on (`seam` 1). Lost on a court: a ball is spent and the same court is played again (`seam` 2); with no ball left the run is
+ * over, the only way a run ends. Stars are judged here, per match, on the court just played. */
+function endMatch(s:TennisState,winner:TennisSide){const c=courtOf(s),you=winner==='you',drill=c.style==='drill';
+ s.matchWinner=winner;s.matchLevel=s.level;s.matchStars=s.stars=s.tour?0:tennisStars(s,you);s.matchEvents++;s.lifeBack=false;s.matchBonus=0;
+ if(you){s.matchBonus=Math.round(tennisRampRow(s.match).bonus*tennisRunScale(s));s.tourScore+=s.matchBonus;s.tourGain=s.matchBonus;s.tourEvents++;s.matchesWon++;s.courtsWon++;if(drill)s.drillTries=0;
+  if(s.tourLives<tennisRunLives(s)){s.tourLives++;s.lifeBack=true;}s.seam=1;
+  const next=s.tour?c:TENNIS_COURTS[tennisNextStop(s.level)-1];
+  s.message=`${drill?`DRILL PASSED · ${s.drillHits} of ${TENNIS_DRILL.balls} targets`:s.tour?'MATCH WON':s.level===TENNIS_COURTS.length?'CIRCUIT WON':'COURT '+s.level+' WON'} · +${s.matchBonus}${s.lifeBack?' · a ball back':''} · Next: ${s.tour?'':next.name+' vs '}${tennisOpponent(next.rival,s.match+1)}`;return;}
+ const pass=drill?Math.max(TENNIS_DRILL_MIN_PASS,tennisDrillPass(s)-1):0;if(drill)s.drillTries++;
+ s.tourLives=Math.max(0,s.tourLives-1);s.tourClean=0;s.comboStep=1;
+ const head=drill?`DRILL DONE · ${s.drillHits} of ${TENNIS_DRILL.balls} targets · hit ${pass} to pass next time`:`COURT ${s.level} · TRY AGAIN`;
+ if(s.tourLives>0){s.seam=2;s.message=`${head} · ${s.tourLives} ball${s.tourLives===1?'':'s'} left · ${s.cleanReturns} clean returns · best rally ${s.bestRally}`;return;}
+ s.you.vx=s.you.vy=s.rival.vx=s.rival.vy=0;s.winner='rival';s.phase='over';s.message=`${head} · RUN OVER · ${tennisMatchName(s)} · ${s.tourScore} points · best rally ${s.bestRally}`;}
+/** Points the rival starts this court match (and each of its sets) with: 0 for the first TENNIS_RAMP_TOP matches of a run. */
+export const tennisHeadStart=(s:Pick<TennisState,'level'|'tour'|'match'>)=>{const c=courtOf(s);return s.tour||c.style==='drill'?0:Math.min(c.to-1,tennisRampRow(s.match).start);};
+/** The seam, run at the serve after a decided match: the next stop (or the same court again), a clean match score, and the per-match
+ * marks the star rules read. The run's score, balls, combo, Golden Touch meter and coach counts carry on. */
+function advanceMatch(s:TennisState){const won=s.seam===1;s.seam=0;
+ if(won){s.match++;if(!s.tour){s.level=tennisNextStop(s.level);s.lap=tennisRunLap(s.startLevel,s.matchesWon);s.topLevel=s.lap>1?TENNIS_COURTS.length:Math.max(s.topLevel,s.level);}
+  s.venueStop=s.tour?tennisRunStop(TENNIS_RUN.tourStops[s.tour-1],s.matchesWon):s.level;}
+ if(!s.tour){s.score.you=0;s.score.rival=tennisHeadStart(s);s.sets.you=s.sets.rival=0;}
+ s.matchRally=0;s.mark.perfect=s.perfectTouches;s.mark.habit=s.habitWins;s.mark.golden=s.goldenUsed;s.mark.fakes=s.fakeReads;
+ if(isDrill(s)){s.drillLeft=TENNIS_DRILL.balls;s.drillHits=0;moveTarget(s);}}
+/** The line that brings a match on: its number, the court and opponent, and one lesson (the court's own on the first lap, a rotating
+ * shot tip after that and on the tours). */
+export function tennisMatchIntro(s:TennisState){const c=courtOf(s);return `MATCH ${s.match} · ${s.tour?'':c.name+' vs '}${tennisOpponent(c.rival,s.match)} · ${!s.tour&&s.lap<=1?c.lesson:tennisMatchTip(s.match)}${tennisHeadStart(s)?` · the rival starts ${tennisHeadStart(s)} up`:''}`;}
+function nextServe(s:TennisState){const seam=s.seam;if(seam)advanceMatch(s);s.pointWinner=null;s.touchMult=0;s.rivalPower=0;s.shotPower=0;s.incomingOut=s.headSpot=s.rivalFinish=false;s.rivalPlan=null;s.rivalLetGo=false;s.rivalStumble=0;s.touchGrade='';s.youTrapped=s.rivalTrapped=false;s.setBonus=0;s.rivalFake=false;s.server=isDrill(s)?'rival':(s.score.you+s.score.rival)%2?'rival':'you';s.you=player(5.3);s.rival=player(-5.3);const p=s[s.server];s.ball=mkball(p.x+.3,p.y+(s.server==='you'?-.35:.35),s.server);s.rally=0;s.rallyMilestone=0;newWind(s);s.phase='serve';s.phaseTime=0;s.message=isDrill(s)?`Ball ${TENNIS_DRILL.balls-s.drillLeft+1} of ${TENNIS_DRILL.balls} · get ready`:s.server==='you'?'Your serve. Kick, or Lob for a rainbow flick, Drop for a short serve.':'Rival serving. Find a comfortable position.';if(seam)s.message=tennisMatchIntro(s);s.version++;}
 function move(p:TennisPlayer,speed:number,dt:number){
  const dx=p.targetX-p.x,dy=p.targetY-p.y,d=Math.hypot(dx,dy);
  // Arrival speed falls with distance, avoiding overshoot/orbiting a close target.
@@ -686,7 +753,7 @@ function step(s:TennisState,dt:number){
  s.fxSlam=Math.max(0,s.fxSlam-dt);s.fxLand=Math.max(0,s.fxLand-dt);s.setBonus=Math.max(0,s.setBonus-dt);s.you.down=Math.max(0,s.you.down-dt);s.rival.down=Math.max(0,s.rival.down-dt);
  if(s.chargeShot){if(s.phase!=='rally'&&s.phase!=='serve')cancelTennisCharge(s);else{s.chargeTime+=dt;s.charge=tennisChargeLevel(s.chargeTime);}}
  if(s.phase==='ready'||s.phase==='over')return;
- if(s.phase==='point'){s.you.direct=false;move(s.you,TENNIS.humanSpeed*.8,dt);move(s.rival,TENNIS.aiSpeed*1.3,dt);s.ball.squash=Math.max(0,s.ball.squash-dt*2.2);if(s.phaseTime>1.55)nextServe(s);return;}
+ if(s.phase==='point'){s.you.direct=false;move(s.you,TENNIS.humanSpeed*.8,dt);move(s.rival,TENNIS.aiSpeed*1.3,dt);s.ball.squash=Math.max(0,s.ball.squash-dt*2.2);if(s.phaseTime>(s.seam?TENNIS_RUN.seamBeat:TENNIS_RUN.pointBeat))nextServe(s);return;}
  move(s.you,TENNIS.humanSpeed*(sandy(s)?.88:1)*(s.chargeShot?tennisChargeFeet(s.charge):1)*(s.you.kickStyle===4&&s.you.kick>.22?.45:1)*(s.you.down>0?.3:1),dt);contain(s.you,.9,7.5);
  if(s.phase==='serve'){
   const p=s[s.server];s.ball.x=p.x+.3;s.ball.y=p.y+(s.server==='you'?-.35:.35);s.ball.z=.23;

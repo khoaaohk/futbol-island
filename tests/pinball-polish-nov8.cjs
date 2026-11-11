@@ -20,7 +20,7 @@ await ok('tiers: two tiers with their own boards, beside (never mixed into) pinb
  assert.deepEqual([...T.PINBALL_TIER_IDS],['derby','final']);
  const boards=T.PINBALL_TIER_IDS.map(id=>T.PINBALL_TIERS[id].board);assert.deepEqual(boards,['pinderby','pinfinal']);
  for(const b of boards){assert(L.isBoardGame(b),b+' is a board game');assert.notEqual(b,'pinball');assert.match(b,/^[a-z]{2,8}$/,'fits the session token id pattern');}
- assert.deepEqual(L.BOARD_RULES.pinball,{name:'Futbol Pinball',unit:'points',max:400_000,base:3_000,perSecond:1_200,minSeconds:20,learn:'Time your strike as the ball arrives.'},'pinball rules untouched');
+ assert.deepEqual(L.BOARD_RULES.pinball,{name:'Futbol Pinball',unit:'points',max:3_000_000,base:3_000,perSecond:1_200,minSeconds:20,learn:'Time your strike as the ball arrives.'},'pinball rules: only the ceiling rose for endless play (Nov 10 2026, was 400000); the rate, base and minimum time are untouched');
  assert.equal(T.pinballBoardFor(0),'pinball');assert.equal(T.pinballBoardFor(1),'pinderby');assert.equal(T.pinballBoardFor(2),'pinfinal');assert.equal(T.pinballBoardFor(7),'pinball');
  const d=T.PINBALL_TIERS.derby,f=T.PINBALL_TIERS.final;
  assert(f.speed>d.speed&&d.speed>1,'faster, then fastest');assert(f.flipper<d.flipper&&d.flipper<57,'shorter bats than Champions Night (57)');
@@ -29,7 +29,8 @@ await ok('tiers: two tiers with their own boards, beside (never mixed into) pinb
 });
 
 await ok('tiers: ceilings inside the SQL table, rates scale by speed × multiplier, junk is refused',()=>{
- const sqlCap=Number(/score between 1 and (\d+)/.exec(read('supabase/migrations/20261013_arcade_leaderboards.sql'))[1]);
+ // Nov 10 2026 (endless play): the table's ceiling in force is the one docs/arcade-aaa/endless-supabase.sql installs (was the first migration's 400000).
+ const sqlCap=Number(/score between 1 and (\d+)/.exec(read('docs/arcade-aaa/endless-supabase.sql'))[1]);
  for(const id of T.PINBALL_TIER_IDS){const t=T.PINBALL_TIERS[id],r=L.BOARD_RULES[t.board];
   assert(r.max<=sqlCap,'inside the SQL ceiling');assert(r.minSeconds>=L.BOARD_RULES.pinball.minSeconds,'minimum play time as strict as classic');
   assert(r.perSecond>=Math.ceil(L.BOARD_RULES.pinball.perSecond*t.speed*t.mult*.99),`${id}: rate covers classic pace × speed × mult`);
@@ -54,7 +55,7 @@ await ok('server: a tier session posts to its own board and only there; SQL wide
  const files=fs.readdirSync(path.join(ROOT,'supabase/migrations')).sort(),f='20261109_pinball_tier_boards.sql';assert(files.includes(f));
  // Nov 8 2026: the Pass Puzzles cup boards came later (20261110_puzzle_tier_boards.sql runs last and repeats this whole list).
  const widen=files.filter(x=>/arcade_scores_game_check/.test(read('supabase/migrations/'+x))).filter(x=>x<'20261110');assert.equal(widen.pop(),f,'runs after every earlier board migration (each replaces the same allow-list)');
- const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily'].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
+ const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily','kitrush','kitdaily','snake','snakedaily'/* Nov 10 2026: Kit Rush and Squad Snake boards come in later files */].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
  assert(/'OK, pinball tier boards installed'/.test(sql));assert(!/\bdrop\s+(table|function|column)|truncate|delete from|\bupdate\s+public/i.test(sql.replace(/--.*$/gm,'')),'additive');
 });
 
@@ -89,7 +90,8 @@ await ok('feel: input buffer and timing windows kept, PERFECT ×N badge, dead-ba
  assert.equal(P.unstick(w,1),false);assert.equal(P.unstick(w,1),false);assert.equal(P.unstick(w,.3),true);assert.equal(w.unstuck,1);
  assert.equal(w.ball.vy,-T.PINBALL_STALL_KICK);assert(w.ball.vx>0,'kicked toward the middle');assert.equal(w.stall,0);
  Object.assign(w.ball,{x:120,y:300,vx:0,vy:0});P.unstick(w,1.5);w.ball.vx=200;P.unstick(w,.01);assert.equal(w.stall,0,'a moving ball resets the clock');
- for(const [x,y] of [[150,500],[354,585]]){const q=P.createPinballState();q.phase='playing';Object.assign(q.ball,{x,y,vx:0,vy:0});P.unstick(q,5);assert.equal(q.unstuck,0,`no kick at ${x},${y}`);}
+ // Nov 10 2026 (no dead time): a ball down by the flippers is left alone only while a flipper is RAISED (a cradle is the player's choice); with both bats down it is kicked too.
+ for(const [x,y,left] of [[150,500,1],[354,585,0]]){const q=P.createPinballState();q.phase='playing';q.left=left;Object.assign(q.ball,{x,y,vx:0,vy:0});P.unstick(q,5);assert.equal(q.unstuck,0,`no kick at ${x},${y}`);}
  const h=P.createPinballState();h.phase='playing';h.table.hold=1;Object.assign(h.ball,{x:306,y:262,vx:0,vy:0});P.unstick(h,5);assert.equal(h.unstuck,0,'dugout hold left alone');
  const r=P.createPinballState();Object.assign(r.ball,{x:120,y:300,vx:0,vy:0});P.unstick(r,5);assert.equal(r.unstuck,0,'only while playing');
 });
@@ -128,7 +130,7 @@ await ok('wiring: board per tier, classic record untouched, same coins, npm test
  {const pr=read('lib/arcade/results/pinballResult.ts'),st=read('lib/arcade/results/settle.ts');/* Nov 10 2026: game over moved to lib/arcade/results */
   assert(/record:tier\?null:/.test(pr)&&/pinballTier:tier\?\{id:tier\.id/.test(pr)&&/savePinballTier\(r\.pinballTier\.id,/.test(st)&&/settleArcadeResult\(/.test(g),'a tier run keeps its own best, never the classic record');}
  assert(/if\(game==='pinball'\)value=n\(s\.goals\)\*3\+n\(s\.moves\)\*2;/.test(read('lib/arcade/arcadeWalletCore.ts')),'coins from goals and moves only (the multiplier never pays coins)');
- const arcade=read('lib/arcade/arcadeGames.ts');assert(/floorBase\.setHex\(pinball\.tier===2\?0x353323:pinball\.tier===1\?0x402340:/.test(arcade),'tier look = a floor colour, no extra draw');
+ const arcade=read('lib/arcade/games/pinballGame.ts');assert(/if\(pinball\.tier===2\)toneTier\.setRGB\(1,\.99,\.97\);else if\(pinball\.tier===1\)toneTier\.setRGB\(1,\.84,\.7\);/.test(arcade),'tier look = the light band tint of the comic page (Nov 10 2026 comic look; was the general illumination colour), no extra draw');
  assert(/"test":[^\n]*node tests\/pinball-polish-nov8\.cjs/.test(read('package.json')),'in npm test');
 });
 

@@ -7,7 +7,11 @@ import {routeCurve,routeGrade,ROUTE_BEND_MIN,ROUTE_STEEP} from '../../components
  * Skill button's live label (it names the real move that beats the defender ahead). */
 export type RunnerHud={score:string;detail:string;message:string;over:boolean;ready:boolean;skillLabel:string;skillReady:boolean;
  /** First-run coach: the one button to light ('' = none). */coach:string;
- /** Clean in-play UI (Oct 27 2026): the only text while playing, a short word after a goal or a tackle ('' = none). */flash:string;flashId:number};
+ /** Clean in-play UI (Oct 27 2026): the only text while playing, a short word after a goal or a tackle ('' = none). */flash:string;flashId:number;
+ /** Nov 10 2026 (pass 2): the margin strip's numbers as typed fields (the pad used to parse them out of `detail`). Hearts held / route
+  * maximum, balls in hand (0-5), clean-play multiplier (1-3), metres run or metres to go on a finite route, near misses so far. */
+ runnerLives:number;runnerMaxLives:number;runnerBalls:number;runnerMult:number;runnerMeters:number;runnerToGo:boolean;runnerNear:number;
+ /** Endless play (Nov 10 2026, runnerEndless.ts): the round being played (1 = the route as it always was; +1 at every goal line cleared). */runnerStage:number};
 /** One short word for the moments worth a flash; everything else stays off screen while playing. */
 export function runnerFlash(r:RunnerGame){
  if(r.time-r.eventAt>=1.3||runnerOver(r))return '';
@@ -27,12 +31,13 @@ const ROLE_TIP={
 } as const;
 /** Chances as hearts: a child reads ♥♥♡ faster than "2 chances". */
 export const runnerHearts=(lives:number,max=3)=>'♥'.repeat(Math.max(0,Math.min(max,lives)))+'♡'.repeat(Math.max(0,max-Math.max(0,lives)));
-const FRESH=new Set(['perfect','best','inside','skillmove','early','onetwo','mission','boss','route','shield','goal','save','mud','close','hit','terrain','finalhill','combo','power']);
+const FRESH=new Set(['perfect','best','inside','skillmove','early','onetwo','mission','boss','route','shield','goal','save','mud','close','hit','terrain','finalhill','combo','power','round']);
 /** Round 3: one line about the route for the full-time card. */
 export function runnerFinishLine(r:RunnerGame){
- const m=RUNNER_MODES[r.mode];if(!m.finish)return '';
- if(r.won)return m.bossKeeper?`${m.name}: BOSS KEEPER BEATEN!`:`${m.name}: goal-line finish!`;
- if(r.finished)return `${m.name}: you reached the goal line!`;
+ // Endless play (Nov 10 2026): a run ends when the hearts run out; the line says how many rounds (goal lines) it cleared.
+ const m=RUNNER_MODES[r.mode],n=r.clears,rounds=`${n} round${n===1?'':'s'} cleared`;if(!m.finish)return n?`${m.name}: ${rounds}`:'';
+ if(r.won)return m.bossKeeper?`${m.name}: BOSS KEEPER BEATEN! ${rounds}`:`${m.name}: goal-line finish! ${rounds}`;
+ if(r.finished)return `${m.name}: you reached the goal line! ${rounds}`;
  return `${m.name}: ${Math.floor(r.distance)} of ${m.finish} m`;
 }
 /** Nov 8 2026: why the run ended, in one line for the full-time card ('' when it ended at the goal line or is still going). */
@@ -101,5 +106,6 @@ export function runnerHud(runner:RunnerGame):RunnerHud{
   :mate&&runner.balls>0?(runner.lane===mate.lane?'TEAMMATE · Shoot to pass: ONE-TWO':`TEAMMATE ON THE ${mate.lane<0?'LEFT':'RIGHT'} · move over for a one-two`)
   :goal&&!goal.keeper&&goal.z> -22&&goal.z< -8&&Math.abs(runner.x-goal.openLane*2.4)<.65?'FINISH NOW · timed shots earn +150'
   :(!goal&&routeTip(runner))||runner.message;
- return{score:String(runner.score),detail,message,over,ready:false,skillLabel,skillReady,coach:over?'':runner.coachButton,flash:runnerFlash(runner),flashId:runner.event};
+ return{score:String(runner.score),detail,message,over,ready:false,skillLabel,skillReady,coach:over?'':runner.coachButton,flash:runnerFlash(runner),flashId:runner.event,
+  runnerLives:Math.max(0,runner.lives),runnerMaxLives:runner.maxLives,runnerBalls:runner.balls,runnerMult:runnerMultiplier(runner),runnerMeters:runner.finish?Math.max(0,Math.ceil(runner.finish-runner.distance)):Math.floor(runner.distance),runnerToGo:!!runner.finish,runnerNear:runner.nearMisses,runnerStage:runner.round};
 }

@@ -4,7 +4,8 @@
  * runs only during windup and flight, so scripted runs start when play starts.
  */
 import type {Scenario,Kick,PuzzleState,PuzzleEvent,PuzzleEventType,Vec2,Vec3,AttackerState,DefenderState,KeeperState,FailReason,Touch} from './types';
-import {STEP,G,R,ROLL,geoOf,stepBall,solveLaunch,solveLob,groundSpeedFor,hyp,F_GOAL,F_OUT,type Geo} from './physics';
+import {STEP,G,R,ROLL,geoOf,stepBall,solveLaunch,solveLob,groundSpeedFor,hyp,F_GOAL,F_OUT,F_POST,F_BAR,type Geo} from './physics';
+import {resolvePlace,keeperHigh,keeperReachScale,keeperSpeedScale,KEEPER_HIGH_SPEED} from './aim';
 
 /* ── tuning (metres, seconds) ── */
 export const ATT_SPEED=6.6, MEET_SPEED=7.0, DEF_SPEED=6.3, DEF_JOG=5.4, ACCEL=11;
@@ -68,7 +69,9 @@ export function apexFor(loft:number,d:number):number{return Math.min(1.2+6.8*lof
 export function crossApex(loft:number,d:number):number{return Math.min(3+5*Math.max(loft,0.5),8,1.5+0.3*d);}
 export function spaceArrive(power:number):number{return 3+8*power;}
 
-export function kickLaunch(geo:Geo,o:Vec3,k:Kick,fromHead:boolean):{v:Vec3;spin:number}{
+export function kickLaunch(geo:Geo,o:Vec3,k:Kick,fromHead:boolean,at?:{x:number;y:number}):{v:Vec3;spin:number}{
+  // A placed shot (aim anywhere): strike at the resolved spot on the goal face instead of the low target.
+  if(at&&k.kind==='shot')k={...k,target:{x:at.x,z:geo.goalZ}};else at=undefined;
   const spin=clamp(k.curl||0,-1,1)*SPIN_MAX*(fromHead?0.3:1);
   const pw=clamp(k.power||0,0,1),loft=clamp(k.loft||0,0,1);
   const d=hyp(k.target.x-o.x,k.target.z-o.z);
@@ -80,15 +83,28 @@ export function kickLaunch(geo:Geo,o:Vec3,k:Kick,fromHead:boolean):{v:Vec3;spin:
   };
   if(k.kind==='shot'){
     let h=15+15*pw;
-    const aimed=Number.isFinite(k.shotHeight);
+    const aimed=!!at||Number.isFinite(k.shotHeight);
     if(!aimed&&loft>0.4)h+=(10-h)*((loft-0.4)/0.6);
     if(fromHead)h=Math.min(h,14);
-    const yT=aimed?0.3+clamp(k.shotHeight!,0,1)*(geo.barH-0.55):Math.min(geo.barH-0.35,0.3+loft*(geo.barH-0.7));
+    const yT=at?at.y:aimed?0.3+clamp(k.shotHeight!,0,1)*(geo.barH-0.55):Math.min(geo.barH-0.35,0.3+loft*(geo.barH-0.7));
     const v=aimed?lofted(yT,h,6.5):lofted(yT,h,Math.min(2.5+4*loft,0.9+0.3*d));
     // An aim solver must not manufacture pace to hit any distance at a low apex.
     // Long low shots can land and bounce before goal; loft trades pace for clearance.
     const speed=hyp(v.x,v.z,v.y),limit=18+20*pw;
     if(speed>limit){const scale=limit/speed;v.x*=scale;v.y*=scale;v.z*=scale;}
+    // A placed shot goes where it was pointed: a few passes of the real step put the strike on the spot to the centimetre
+    // (the solver alone is good to about 0.2 m, which is the width of a crossbar miss). The best pass is kept.
+    if(at){let best=1e9,bx=v.x,by=v.y;
+      for(let it=0;it<5;it++){
+        const b={p:{x:o.x,y:o.y,z:o.z},v:{x:v.x,y:v.y,z:v.z},spin};let t=0,ex=0,ey=0,hit=false;
+        for(let n=0;n<720;n++){const px=b.p.x,py=b.p.y,pz=b.p.z;stepBall(b,null);t+=STEP;
+          if(b.p.z>=geo.goalZ){const q=(geo.goalZ-pz)/Math.max(1e-9,b.p.z-pz);ex=px+(b.p.x-px)*q-at.x;ey=py+(b.p.y-py)*q-at.y;hit=true;break;}
+          if(b.v.z<=0.05)break;}
+        if(!hit)break;
+        const err=Math.abs(ex)+Math.abs(ey);if(err<best){best=err;bx=v.x;by=v.y;}
+        if(err<0.01)break;
+        v.x-=ex/Math.max(0.15,t);v.y-=ey/Math.max(0.15,t);}
+      v.x=bx;v.y=by;}
     return {v,spin};
   }
   let h=8+14*pw;
@@ -124,6 +140,7 @@ export function beginKick(s:PuzzleState,k:Kick,noHeading=false):boolean{
   const kick:Kick={kind,target:{x:k.target.x,z:k.target.z},curl:clamp(k.curl||0,-1,1),loft:clamp(k.loft||0,0,1),power:clamp(k.power||0,0,1)};
   if(k.receiver!=null)kick.receiver=k.receiver;
   if(Number.isFinite(k.shotHeight))kick.shotHeight=clamp(k.shotHeight!,0,1);
+  if(kind==='shot'&&k.place&&Number.isFinite(k.place.x+k.place.y)){kick.place={x:clamp(k.place.x,-60,60),y:clamp(k.place.y,0,8)};if(k.place.ideal)kick.place.ideal=true;}
   s.pending={kick,kicker:s.carrier,left:windup,total:windup,turn,fromHead:s.ball.atHead};
   for(const a of s.attackers)if(a.call&&a.call.startAt==null)a.call.startAt=s.t; // called runs go with the wind-up
   s.phase='windup';
@@ -141,6 +158,17 @@ export function computePath(ctx:Ctx,s:PuzzleState){
     if(b.p.y<=R+1e-6&&b.v.x*b.v.x+b.v.z*b.v.z<0.0025&&Math.abs(b.v.y)<1e-6)break;
   }
   s.path={tick0:s.tick,pts};
+}
+
+/** The keeper against a placed shot: the earliest path sample inside a reach and a speed that both shrink with the ball's height. */
+export function planKeeperPlaced(path:{tick0:number;pts:number[]},nowTick:number,p:Vec2,reactLeft:number):{k:number;x:number;y:number;z:number;dt:number}|null{
+  const pts=path.pts,n=pts.length/3;
+  for(let k=Math.max(0,Math.ceil((nowTick-path.tick0)/SAMPLE));k<n;k++){
+    const y=pts[3*k+1];if(y>GK_HEIGHT)continue;
+    const x=pts[3*k],z=pts[3*k+2],tk=(path.tick0+k*SAMPLE-nowTick)*STEP,d=hyp(x-p.x,z-p.z),reach=(GK_REACH+GK_DIVE)*keeperReachScale(y);
+    if((d<=reach?0:reactLeft+travel(d-reach,GK_SPEED*keeperSpeedScale(y)))<=tk)return {k,x,y,z,dt:tk};
+  }
+  return null;
 }
 
 /** Earliest path sample the mover can reach before the ball. */
@@ -340,7 +368,8 @@ function windupTick(ctx:Ctx,s:PuzzleState,emit:Emit){
   pd.left-=STEP;
   if(pd.left>1e-9)return;
   // launch
-  const {v,spin}=kickLaunch(ctx.geo,s.ball.p,pd.kick,pd.fromHead);
+  const aim=resolvePlace(ctx.geo,s,pd.kick,pd.kicker);
+  const {v,spin}=kickLaunch(ctx.geo,s.ball.p,pd.kick,pd.fromHead,aim?{x:aim.x,y:aim.y}:undefined);
   const b=s.ball;b.v.x=v.x;b.v.y=v.y;b.v.z=v.z;b.spin=spin;b.owner=null;b.atHead=false;b.lastTouch={side:'att',i:pd.kicker};b.still=0;
   kk.mode='idle';kk.passedAt=s.t;
   if(!ctx.sc.attackers[pd.kicker].run?.afterPass)kk.runLeg=Math.max(kk.runLeg,ctx.sc.attackers[pd.kicker].run?.path.length??0);
@@ -348,9 +377,10 @@ function windupTick(ctx:Ctx,s:PuzzleState,emit:Emit){
   s.chain.push({kind:pd.kick.kind,curl:pd.kick.curl,loft:pd.kick.loft,kicker:pd.kicker,header:pd.fromHead,firstTime});
   let receiver:number|null=pd.kick.receiver??null;
   s.flight={kick:pd.kick,kicker:pd.kicker,elapsed:0,receiver,header:pd.fromHead,firstTime,dirty:false,offside:offsideAttackers(ctx,s,pd.kicker)};
+  if(aim)s.flight.aim=aim;
   s.pending=null;s.phase='flight';
   for(const d of s.defenders){d.react=0;d.target=undefined;}
-  if(s.keeper){s.keeper.react=0;s.keeper.target=undefined;}
+  if(s.keeper){s.keeper.react=0;s.keeper.target=undefined;if(aim)s.keeper.high=0;}
   computePath(ctx,s);
   if(receiver==null&&pd.kick.kind!=='shot')s.flight.receiver=bestChaser(s,pd.kicker,ctx.sc.require.noHeading);
   emit(ev(s,'kick',{attacker:pd.kicker,kind:pd.kick.kind,turn:pd.turn,windup:pd.total}));
@@ -375,6 +405,7 @@ function flightTick(ctx:Ctx,s:PuzzleState,emit:Emit){
   if(s.tick%2===0)movePlayers(ctx,s,f,path);
   // ball
   const flags=stepBall(b,g);
+  if(flags&(F_POST|F_BAR)&&(f.wood===undefined||s.tick-f.wood>12)){f.wood=s.tick;emit(ev(s,'woodwork',{part:flags&F_BAR?'bar':'post'}));}
   if(flags&F_GOAL){
     const scorer=b.lastTouch?.side==='att'?b.lastTouch.i:f.kicker;
     emit(ev(s,'goal',{attacker:scorer}));
@@ -435,13 +466,15 @@ function movePlayers(ctx:Ctx,s:PuzzleState,f:NonNullable<PuzzleState['flight']>,
   const k=s.keeper;
   if(k){
     if(k.react>=GK_REACT&&(replan||k.react-ADT<GK_REACT)){
-      const pl=planOnPath(path,s.tick,k.p,GK_SPEED,0,GK_REACH+GK_DIVE,GK_HEIGHT);
+      // A placed shot is a spatial save: a high ball is reached less far and more slowly (lib/passPuzzle/aim.ts).
+      const placed=f.aim?planKeeperPlaced(path,s.tick,k.p,0):null,pl=f.aim?placed:planOnPath(path,s.tick,k.p,GK_SPEED,0,GK_REACH+GK_DIVE,GK_HEIGHT);
+      if(f.aim)k.high=placed?keeperHigh(placed.y):0;
       k.target=pl&&inKeeperArea(g,pl.x,pl.z,!!ctx.sc.keeper?.sweeper)?{x:pl.x,z:pl.z}:undefined;
       if(k.target&&Math.abs(k.target.x-k.p.x)>1.0){k.mode='dive';k.diveDir=Math.sign(k.target.x-k.p.x);}
       else if(k.target)k.mode='claim';
     }
     if(k.target&&k.react>=GK_REACT){
-      moveTo(k,k.target.x,k.target.z,GK_SPEED,false);
+      moveTo(k,k.target.x,k.target.z,f.aim?GK_SPEED*(1-KEEPER_HIGH_SPEED*(k.high??0)):GK_SPEED,false);
       if(k.mode==='dive')k.dive=Math.min(1,k.dive+ADT/0.35);
       faceToward(k,b.p.x,b.p.z,k.p.x,k.p.z,10);
     }else keeperSet(ctx,s);
@@ -469,7 +502,7 @@ function contacts(ctx:Ctx,s:PuzzleState,emit:Emit):boolean{
   }
   const k=s.keeper;
   if(k&&k.react>=0){
-    const d=hyp(b.p.x-k.p.x,b.p.z-k.p.z),reach=GK_REACH+GK_DIVE*k.dive;
+    const d=hyp(b.p.x-k.p.x,b.p.z-k.p.z),reach=(GK_REACH+GK_DIVE*k.dive)*(f.aim?keeperReachScale(y):1);
     if(y<=GK_HEIGHT&&d<=reach&&d<bestD&&inKeeperArea(ctx.geo,b.p.x,b.p.z,!!ctx.sc.keeper?.sweeper)){bestD=d;who='gk';wi=0;}
   }
   if(!who)return false;

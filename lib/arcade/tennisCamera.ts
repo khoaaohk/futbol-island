@@ -4,6 +4,7 @@ import type {TennisState} from '@/lib/games/soccerTennis';
 /** Futbol Tennis dynamic camera (Oct 26 2026).
  * - SERVE: a raised, more tilted view from behind your baseline, solved on resize so the whole court (far
  *   baseline, both service boxes, both players) fits between the HUD and the controls.
+ * - Club Marea (Nov 10 2026): both views sit lower, behind your baseline, anchored to the controls band; the world shows above the far baseline.
  * - RALLY: a lower-tilt view that frames the play about to happen (you, the ball and its bounce spot): it pushes
  *   in as the ball comes to you and pulls back to the wide shot when the ball is far or the point is over. The
  *   framing never leaves the court: the near baseline stays at or below the controls band and the far baseline
@@ -11,17 +12,20 @@ import type {TennisState} from '@/lib/games/soccerTennis';
  * Everything is damped with capped pan speed and zoom rate. Reduced motion: a fixed rally shot (no pan, no
  * push-in) and a plain cut between the serve and rally views.
  * Cost: binary searches on resize only; per frame a few vector ops, no allocation. */
-export type TennisCameraLayout={width:number;length:number;top:number;bottom:number;rallyTilt:number;serveTilt:number;limitX:number;zoom:number};
+export type TennisCameraLayout={width:number;length:number;top:number;bottom:number;rallyTilt:number;serveTilt:number;limitX:number;zoom:number;/** px kept above the far baseline for the world (beach, shoreline, sea) on screens where the court would otherwise fill the height. */world:number};
 /** Layout per screen class. Portrait phones get a tighter court frame (10.5 m for the 10 m court). */
 export function tennisCameraLayout(w:number,h:number,mobile:boolean):TennisCameraLayout{
  const portrait=h>w*1.15,short=h<520;
  // Sideways phones (Tennis is landscape-only on phones since Oct 27 2026): the far baseline clears the score bar; the thumbs sit
  // beside the court, so the bottom band is small.
- if(short)return {width:10.8,length:17.2,top:74,bottom:40,rallyTilt:.95,serveTilt:1.15,limitX:.97,zoom:1.12};
- if(mobile&&portrait&&w>600)return {width:10.8,length:17.2,top:80,bottom:212,rallyTilt:.5,serveTilt:.82,limitX:.97,zoom:1.18}; // tablets: the court is already big
- if(mobile&&portrait)return {width:10.5,length:17,top:66,bottom:192,rallyTilt:.42,serveTilt:.8,limitX:.99,zoom:1.32};
- if(portrait)return {width:10.8,length:17.2,top:80,bottom:170,rallyTilt:.5,serveTilt:.82,limitX:.96,zoom:1.24};
- return {width:11.2,length:17.4,top:80,bottom:140,rallyTilt:.58,serveTilt:.86,limitX:.9,zoom:1.1};
+ if(short)return {width:10.8,length:17.2,top:74,bottom:40,rallyTilt:1.05,serveTilt:1.3,limitX:.97,zoom:1.12,world:34};
+ if(mobile&&portrait&&w>600)return {width:10.8,length:17.2,top:80,bottom:212,rallyTilt:.78,serveTilt:1.02,limitX:.97,zoom:1.18,world:120}; // tablets: the court is already big
+ // Club Marea (Nov 10 2026): a balcony view from behind your baseline (was near-overhead): the court is a trapezoid and the
+ // beach, shoreline and sea stack above the far baseline.
+ // Final polish: lower still (tilt 1.06 / 1.2), so the court keeps its full width but takes less height and a band of club and sea always shows between the docked scoreboard and the far baseline.
+ if(mobile&&portrait)return {width:10.5,length:17,top:62,bottom:192,rallyTilt:1.06,serveTilt:1.2,limitX:.99,zoom:1.22,world:0};
+ if(portrait)return {width:10.8,length:17.2,top:80,bottom:170,rallyTilt:.78,serveTilt:1.02,limitX:.96,zoom:1.24,world:60};
+ return {width:11.2,length:17.4,top:80,bottom:140,rallyTilt:.9,serveTilt:1.16,limitX:.9,zoom:1.1,world:150};
 }
 export type TennisCameraAim={x:number;z:number;zoom:number;serve:number};
 /** Where the camera wants to look and how close (before the court clamp). Pure: exported for tests.
@@ -49,23 +53,27 @@ export function createTennisCamera(camera:T.PerspectiveCamera,mobile:boolean,red
  const aim:TennisCameraAim={x:0,z:0,zoom:1,serve:1};let layout=tennisCameraLayout(1,1,mobile),w=1,h=1,zoom=1,blend=1,ready=false,moving=false;
  /** Same solve as the arcade stage fit: the largest view that keeps the court inside the safe band. */
  function solve(p:Pose,tilt:number){
-  const {width,length,top,bottom,limitX}=layout,usable=Math.max(1,h-top-bottom),room=Math.max(.3,usable/h);let low=5,high=250;look.set(0,0,0);
+  const {width,length,top,bottom,limitX}=layout,usable=Math.max(1,h-top-bottom-layout.world),room=Math.max(.3,usable/h);let low=5,high=250;look.set(0,0,0);
   camera.clearViewOffset();camera.updateProjectionMatrix();
   for(let i=0;i<22;i++){const d=(low+high)/2;camera.position.set(0,d,d*tilt);camera.lookAt(look);camera.updateMatrixWorld();let fits=true,minY=Infinity,maxY=-Infinity;
    for(let c=0;c<4;c++){corner.set(c&1?width/2:-width/2,0,c&2?length/2:-length/2).project(camera);minY=Math.min(minY,corner.y);maxY=Math.max(maxY,corner.y);if(Math.abs(corner.x)>limitX)fits=false;}
    if(maxY-minY>room*2)fits=false;if(fits)high=d;else low=d;}
   camera.position.set(0,high,high*tilt);camera.lookAt(look);camera.updateMatrixWorld();
   let minY=Infinity,maxY=-Infinity;for(let c=0;c<2;c++){corner.set(0,0,c?length/2:-length/2).project(camera);minY=Math.min(minY,corner.y);maxY=Math.max(maxY,corner.y);}
-  p.dir.copy(camera.position).normalize();p.dist=camera.position.length();p.quat.copy(camera.quaternion);p.offsetY=(bottom-top)/2-(minY+maxY)*h/4;
+  p.dir.copy(camera.position).normalize();p.dist=camera.position.length();p.quat.copy(camera.quaternion);// Anchored to the controls band: the near baseline sits just above the controls and all the slack goes above the far baseline.
+  p.offsetY=bottom-h/2-minY*h/2;
  }
  /** Screen y (NDC, view offset applied) of a baseline for the rally pose at this focus z and zoom. */
  function baselineY(fz:number,z:number,baseline:number){camera.position.copy(rally.dir).multiplyScalar(rally.dist/z);camera.position.z+=fz;camera.quaternion.copy(rally.quat);camera.updateMatrixWorld();return corner.set(0,0,baseline).project(camera).y;}
  /** Per zoom sample: the focus-z range that keeps the near baseline at/below the controls band and the far one at/above the HUD band. */
  function solveRange(){
-  const top=1-2*layout.top/h,bottom=-1+2*layout.bottom/h,half=layout.length/2;camera.setViewOffset(w,h,0,rally.offsetY,w,h);camera.updateProjectionMatrix();
+  const keep=Math.min(190,h*.215),top=1-2*(layout.top+keep)/h,bottom=-1+2*layout.bottom/h,half=layout.length/2; // `keep`: px of beach and sea always left under the scoreboard
+ camera.setViewOffset(w,h,0,rally.offsetY,w,h);camera.updateProjectionMatrix();
   for(let i=0;i<SAMPLES;i++){const z=1+(layout.zoom-1)*i/(SAMPLES-1);let lo=-6,hi=6;
    for(let k=0;k<24;k++){const m=(lo+hi)/2;if(baselineY(m,z,half)<=bottom+.002)lo=m;else hi=m;}zMax[i]=lo; // focus toward you lifts the near baseline
-   lo=-6;hi=6;for(let k=0;k<24;k++){const m=(lo+hi)/2;if(baselineY(m,z,-half)>=top-.002)hi=m;else lo=m;}zMin[i]=hi;}
+   // The far baseline (and the rival on it) must stay in view under the scoreboard: a second upper bound. Beyond it is the beach, not dead floor,
+   // so the focus may drift toward the rival freely (lower bound).
+   const near=lo;lo=-6;hi=6;for(let k=0;k<24;k++){const m=(lo+hi)/2;if(baselineY(m,z,-half)<=top-.002)lo=m;else hi=m;}zMax[i]=Math.min(near,lo);zMin[i]=Math.min(zMax[i],-2.5);}
  }
  function fit(width:number,height:number){w=Math.max(1,width);h=Math.max(1,height);layout=tennisCameraLayout(w,h,mobile);solve(rally,layout.rallyTilt);solve(serve,layout.serveTilt);solveRange();ready=true;}
  /** Clamp a focus to the court for this zoom (the table is linear between samples). */

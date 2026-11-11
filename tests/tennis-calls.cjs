@@ -56,13 +56,13 @@ assert.equal(errors(6,30),errors(6,30),'deterministic');
 // 5. Rallies end: a bot that reads the bounce and aims into the open space finishes court 1 in a few minutes.
 for(const hz of [30,60]){
  const s=t.createTennis(7919,1);t.beginTennis(s);const rallies=[];let seen=-1;
- for(let i=0;i<hz*600&&s.phase!=='over';i++){
+ for(let i=0;i<hz*600&&!s.matchEvents;i++){
   if(s.phase==='serve'&&s.server==='you'&&s.phaseTime>.5)t.requestTennisKick(s);
   if(s.phase==='rally'&&s.ball.last==='rival'){const l=t.tennisLanding(s);t.setTennisTarget(s,s.ball.bounces?s.ball.x:l.x,(s.ball.bounces?s.ball.y:l.y)+.35);
    if(t.canTennisKick(s,'you')&&seen!==s.kickCount){seen=s.kickCount;const side=t.tennisOpenSide(s)||(s.kickCount%2?1:-1);t.requestTennisKick(s,side*.75);}}
   const before=s.score.you+s.score.rival,rally=s.rally;t.tickTennis(s,1/hz);if(s.score.you+s.score.rival!==before)rallies.push(rally);
  }
- assert.equal(s.phase,'over',`court 1 finishes at ${hz}Hz`);rallies.sort((a,b)=>a-b);
+ assert.equal(s.matchEvents,1,`the court 1 match finishes at ${hz}Hz`);rallies.sort((a,b)=>a-b);
  assert(rallies[rallies.length>>1]<=16,`median rally stays kid-sized at ${hz}Hz: ${rallies}`);assert(s.clock<360,`a court-1 match fits in six minutes (${Math.round(s.clock)}s)`);
 }
 console.log('PASS tennis calls: one touch call per moment + its button, open-space cue, court touch guide, tiring early rivals, rallies that end');

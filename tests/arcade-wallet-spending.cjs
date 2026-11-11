@@ -5,9 +5,10 @@ let saved={version:1,runs:{'island-starter-coins:0':{game:'live',paid:20,reason:
 const ports={read:()=>structuredClone(saved),write:s=>{if(fail)throw Error('disk');saved=structuredClone(s);},lock:fn=>{const p=queue.then(fn);queue=p.catch(()=>{});return p;},valid:new Set(['A','B','C','D','E','F','G']),grant:()=>true,notify:()=>{},now:()=>100,id:()=>Math.random().toString(),random:()=>0};
 (async()=>{
  const w=createArcadeWallet(ports),other=createArcadeWallet(ports);assert.equal(w.load().balance,30);assert.equal(w.load().byGame.island,30);assert.equal(w.load().byGame.live,0);assert.equal(ARCADE_COIN_CAPS.island,20);
- assert((await w.payArcadePlay('tennis','run1')).ok);assert.equal(w.load().balance,27);
- assert((await w.payArcadePlay('tennis','run1')).ok);assert.equal(w.load().balance,27,'retry same transaction never pays twice');
- assert((await w.spend('vending:ball',20,'Ball','vending')).ok);assert.equal(w.load().balance,7);
+ assert((await w.payArcadePlay('tennis','run1')).ok);assert.equal(w.load().balance,30,'arcade plays are free (11 Nov 2026): nothing spent');
+ assert((await w.payArcadePlay('tennis','run2')).ok);assert.equal(w.load().balance,30,'a second play is free too');
+ {const poor=createArcadeWallet({...ports,read:()=>({version:1,runs:{},packs:[]}),write:()=>{}});const r=await poor.payArcadePlay('kitrush','run0');assert(r.ok,'a 0-coin wallet can still play');assert.equal(poor.load().balance,0,'never negative');}
+ assert((await w.spend('vending:ball',23,'Ball','vending')).ok);assert.equal(w.load().balance,7);
  assert(!(await w.purchaseMysteryPack(3,['A','B'],['C','D','E','F','G'])).ok,'packs cannot spend debited coins');
  const results=await Promise.all([w.spend('last1',5,'Play'),other.spend('last2',5,'Play')]);assert.equal(results.filter(r=>r.ok).length,1,'two tabs cannot overdraw');
  assert.equal(createArcadeWallet(ports).load().balance,2,'reload retains debits');
@@ -15,7 +16,7 @@ const ports={read:()=>structuredClone(saved),write:s=>{if(fail)throw Error('disk
  assert(!(await w.spend('negative',-1,'Bad')).ok);assert(!(await w.spend('float',.5,'Bad')).ok);
  await w.creditRun('job-new','island',7,'Island job');assert.equal(w.load().balance,9);assert.equal(w.load().byGame.island,37);
  await economyPass();
- console.log('PASS shared debits, 3-coin play, island-source migration, idempotency, reload, save failure and concurrent affordability; economy pass: Training meter, learning coins, free puzzles, pack top-ups, 3 packs a day');
+ console.log('PASS shared debits, free arcade play, island-source migration, idempotency, reload, save failure and concurrent affordability; economy pass: Training meter, learning coins, free puzzles, pack top-ups, 3 packs a day');
 })().catch(e=>{console.error(e);process.exit(1);});
 
 // Economy pass (docs/economy/ECONOMY_PROPOSAL.md, applied 28 Sep 2026).

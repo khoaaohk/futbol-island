@@ -25,12 +25,14 @@ assert(!t.tennisTourUnlocked(1,6)&&t.tennisTourUnlocked(1,7)&&!t.tennisTourUnloc
 
 // 2. Their own boards: new ids beside 'tennis' (never mixed, never reset), token pattern, inside the SQL ceiling, strict rates.
 assert.equal(t.tennisBoardFor(0),'tennis');assert.equal(t.tennisBoardFor(1),'tenpro');assert.equal(t.tennisBoardFor(2),'tenlgnd');
-const sqlCap=Number(/score between 1 and (\d+)/.exec(read('supabase/migrations/20261013_arcade_leaderboards.sql'))[1]);
+// Endless play (Nov 10 2026): the ceilings rose with the runs (a ball comes back every 5 won points, the match ramp doubles a touch), so they
+// are held under the pending table check in docs/arcade-aaa/endless-supabase.sql (was: the first migration's 400000, rates up to 500/s).
+const sqlCap=Math.max(...[...read('docs/arcade-aaa/endless-supabase.sql').matchAll(/score between 1 and (\d+)/g)].map(m=>Number(m[1])));assert.equal(sqlCap,9000000);
 for(const g of ['tenpro','tenlgnd']){assert(L.isBoardGame(g));assert(/^[a-z]{2,8}$/.test(g),'fits the session token pattern');const r=L.BOARD_RULES[g];
- assert(r.max<=sqlCap&&r.minSeconds>=20&&r.perSecond<=500,'inside the ceiling, strict rate and play time');
+ assert(r.max<=sqlCap&&r.minSeconds>=20&&r.perSecond<=900,'inside the ceiling, strict rate and play time');
  assert.equal(L.scoreInBounds(g,r.max+1),false);assert.equal(L.scorePlausible(g,5000,60_000),'ok','a strong minute is fine');
  assert.equal(L.scorePlausible(g,100_000,60_000),'fast','an impossible pace is refused');assert.equal(L.scorePlausible(g,500,10_000),'short');}
-assert.deepEqual({...L.BOARD_RULES.tennis},{name:'Futbol Tennis',unit:'touch rally',max:500,base:10,perSecond:2,minSeconds:15,learn:'A clean first touch keeps the rally alive.'},'the classic rally board is untouched');
+assert.deepEqual({...L.BOARD_RULES.tennis},{name:'Futbol Tennis',unit:'points',max:2_000_000,base:1_000,perSecond:400,minSeconds:15,learn:'A clean first touch keeps the rally alive.'},'the court board keeps its id, name and lesson; endless runs post run points to it (was: best rally, max 500)');
 // Server rate check covers a real tour: the best possible touch (golden × max combo × max ramp × scale) at one touch a second.
 for(const n of [1,2]){const top=t.tennisTourGain(n,'touch',t.TENNIS_TOUCH_MULT.golden,t.TENNIS_COMBO.max,t.TENNIS_TOUR_RAMP_MAX);
  assert(top<L.BOARD_RULES[t.tennisBoardFor(n)].perSecond,`best touch (${top}) under the per-second rate`);}
@@ -38,7 +40,7 @@ for(const n of [1,2]){const top=t.tennisTourGain(n,'touch',t.TENNIS_TOUCH_MULT.g
 const files=fs.readdirSync(path.join(ROOT,'supabase/migrations')).sort(),f='20261108_tennis_tier_boards.sql';assert(files.includes(f));
 assert(files.indexOf(f)>files.indexOf('20261108_strikers_league_boards.sql')&&files.indexOf(f)>files.indexOf('20261108_runner_tier_boards.sql'));
 // Nov 8 2026: the Pass Puzzles cup boards came later in their own file (20261110_puzzle_tier_boards.sql, which now runs last).
-const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily'].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
+const sql=read('supabase/migrations/'+f);for(const g of L.BOARD_GAMES.filter(g=>!['puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily','kitrush','kitdaily','snake','snakedaily'/* Nov 10 2026: Kit Rush and Squad Snake boards come in later files */].includes(g)))assert(sql.includes(`'${g}'`),'SQL allows '+g);
 assert(/'OK, tennis tour boards installed'/.test(sql));assert(!/\bdrop\s+(table|function|column)|truncate|delete from|update\s+public/i.test(sql.replace(/--.*$/gm,'')),'additive');
 
 // 3. Touch multiplier + combo (a scrappy touch never breaks it; only a lost point resets it).
@@ -70,8 +72,8 @@ assert.equal(t.tennisLossLine(s),t.TENNIS_LOSS_LINES.net);assert.equal(t.tennisL
 // Retry keeps the tour (and never advances the ladder); picking the courts again leaves the tour.
 const level=s.level;t.resetTennis(s);assert.equal(s.tour,1);assert.equal(s.level,level);assert.equal(s.tourLives,3);assert.equal(s.tourScore,0);
 t.setTennisTour(s,2);assert.equal(s.tourLives,2);assert.equal(t.tennisCourt(s).name,'Legend Tour');t.setTennisTour(s,0);assert.equal(s.tour,0);assert.equal(t.tennisCourt(s).name,C[level-1].name);
-// Ladder courts are unchanged by the tours: winning still advances, no lives, tour score stays 0.
-{const c=t.createTennis(5,2);c.score.you=6;winPt(c);assert.equal(c.phase,'over');assert.equal(c.winner,'you');assert.equal(c.tourScore,0);t.resetTennis(c);assert.equal(c.level,3);}
+// Endless play (Nov 10 2026, was: a won court ended the run with tour score 0): a won court banks its bonus and the next court walks on.
+{const c=t.createTennis(5,2);c.score.you=6;winPt(c);assert.equal(c.phase,'point');assert.equal(c.matchWinner,'you');assert.equal(c.winner,null);assert.equal(c.tourLives,3);assert(c.tourScore>0);tick(c,2);assert.equal(c.level,3);assert.equal(c.match,2);t.resetTennis(c);assert.equal(c.level,3);assert.equal(c.tourScore,0);}
 // Adaptive help on a tour is capped low (Legend: none).
 {const l=t.createTennis(5,1,2);t.beginTennis(l);for(let i=0;i<2;i++)lose(l);assert.equal(l.assist,0,'Legend Tour gives no hidden help');}
 
@@ -85,7 +87,7 @@ peak=0;
 for(let i=0;i<60;i++)A.tennisSound(ctx,i%2?'tennis:best':'tennis:mult:4:4');assert(peak<=A.TENNIS_MAX_VOICES,`voice cap holds (${peak})`);
 
 // 8. Wiring + reduced motion + CSS modules: the result card, HUD, impact ring and confetti.
-const game=read('components/games/ArcadeGame3D.tsx'),card=read('components/games/TennisCard.tsx'),css=read('components/games/TennisCourtPicker.module.css'),ag=read('lib/arcade/arcadeGames.ts');
+const game=read('components/games/ArcadeGame3D.tsx'),card=read('components/games/TennisCard.tsx'),css=read('components/games/TennisCourtPicker.module.css'),ag=read('lib/arcade/games/tennisGame.ts');
 assert(/tennisBoardFor\(game\.current\?\.state\.tennis\.tour\?\?0\)/.test(game)&&/tennis-pro/.test(game)&&/record:tour\?null:/.test(read('lib/arcade/results/tennisResult.ts'))&&/beforeRecord:\(\)=>\{if\(kind==='tennis'\)tennisOver\(/.test(game),'tour board + own best; classic record untouched by a tour');
 assert(/data-tennis-tour=\{n\}/.test(card)&&/data-tennis-why/.test(card)&&/styles\.confetti/.test(card),'tour chips, why line, confetti');
 assert(/perfRing/.test(ag)&&/tennisImpact\.visible=!stage\.reduced&&/.test(ag),'perfect ripple reuses the pooled ring, off for reduced motion');
