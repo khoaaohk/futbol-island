@@ -30,7 +30,10 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci --no-audit --no-fund
+      # Nov 11 2026: the app type-check ran out of heap on the runner (exit 134) once the arcade grew; give tsc more room.
       - run: npx tsc --noEmit -p .
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
 
   typecheck-relay:
     name: Typecheck (multiplayer relay)
@@ -83,4 +86,6 @@ jobs:
       # setup-node saves and restores with the npm cache (saved when the key misses, i.e. when package-lock.json or the test
       # manifest changes; entries are keyed by source hash, so a stale cache only costs speed, never correctness).
       - run: echo "FI_TS_CACHE_DIR=$HOME/.npm/_fi-ts-transpile" >> "$GITHUB_ENV"
-      - run: npm run test:quiet -- --core --jobs 3
+      # Nov 11 2026: tests/gashapon-viewer.cjs builds 84 toys six ways (about 2 min on a fast laptop) and passed the runner's
+      # default 240 s per-test limit on these machines, failing every run. A longer limit, not a skipped test.
+      - run: npm run test:quiet -- --core --jobs 3 --timeout 900
