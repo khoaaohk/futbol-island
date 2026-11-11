@@ -13,3 +13,9 @@ export function distanceToLand(x:number,z:number){
  if(onIsland(x,z)||onCayLand(x,z)||onLandableDeck(x,z)||onSummitLand(x,z))return 0;
  return Math.min(distanceToShore(x,z),distanceToCayLand(x,z),distanceToLandableDeck(x,z),distanceToSummitLand(x,z));
 }
+/** distanceToLand without the floating decks (the moored boats): the shore distance the water's DEPTH follows (waterDepth.ts). The
+ *  boats still count for the swim range and for landing (distanceToLand). */
+export function distanceToShelfLand(x:number,z:number){
+ if(onIsland(x,z)||onCayLand(x,z)||onSummitLand(x,z))return 0;
+ return Math.min(distanceToShore(x,z),distanceToCayLand(x,z),distanceToLandableDeck(x,z,false),distanceToSummitLand(x,z));
+}

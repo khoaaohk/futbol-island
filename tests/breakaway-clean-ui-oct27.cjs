@@ -62,4 +62,11 @@ assert.match(game,/const restart=\(\)=>\{change\('ready'\);void start\(\);\};/,'
 
 // 4. Landscape.
 assert.match(game,/useEffect\(\(\)=>kind==='runner'\?requestLandscape\(\):undefined,\[kind\]\);/,'Breakaway asks for landscape on phones');
+// Nov 11 2026 (owner, iPhone: the stick got stuck): both arcade sticks hear the release on the window too (pointerup / pointercancel / a
+// touchend that leaves no finger on the stick) and a new press takes a stale stick over; browser proof: check-*-browser.cjs --touch.
+{const guard=read('lib/arcade/stickRelease.ts'),shell=read('components/games/ArcadeGame3D.tsx');
+ assert.match(guard,/addEventListener\('touchend',touches,passive\)/);assert.match(guard,/addEventListener\('pointerup',up,capture\)/);
+ assert.match(hook,/useEffect\(\(\)=>watchStickRelease\(\(\)=>zoneEl\.current,\(\)=>id\.current/,'Breakaway stick');assert.match(hook,/e\.pointerId===id\.current\|\|!el/,'a new press takes a stale stick over');
+ assert.match(shell,/useEffect\(\(\)=>watchStickRelease\(\(\)=>stick\.current,\(\)=>stickId\.current/,'tennis stick');assert.match(shell,/onPointerDown=\{e=>\{if\(stickId\.current===e\.pointerId\)return;/,'tennis: a new press takes a stale stick over');
+ assert(!/if\(stickId\.current!==null\)return;/.test(shell),'no stick locks itself out on a lost release');}
 console.log('PASS breakaway clean UI: floating stick, round thumb cluster, flash-only play, Strikers bar + pause card, landscape');

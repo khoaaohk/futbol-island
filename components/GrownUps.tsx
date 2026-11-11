@@ -6,6 +6,8 @@ import ParentGate from './ParentGate';
 import IdpPlan from './IdpPlan';
 import shell from './ModalShell.module.css';
 import styles from './GrownUps.module.css';
+/** Nov 11 2026: mirrors IDP_ENABLED in components/CoachesCentre.tsx (kept separate so this sheet does not pull that component into its bundle); tests/parent-gate.cjs pins that both are off together. */
+const PLAN_OPEN=false;
 import {useQuestEvidence} from '@/lib/town/questProgress';
 import {useQuizCompletions} from '@/lib/town/quizProgress';
 import {useCoinProgress} from '@/lib/town/coinProgress';
@@ -54,7 +56,7 @@ export default function GrownUps({open,view:initialView,fromSettings=false,onClo
    <header className={shell.header}>{view==='plan'&&unlocked?<BackButton ref={nav} onBack={()=>setView('home')}/>:fromSettings?<BackButton ref={nav} onBack={onClose}/>:null}<div><h2 id="grownups-title">{view==='plan'&&unlocked?'Football plan':'For grown-ups'}</h2></div>{view==='plan'&&unlocked||fromSettings?<span aria-hidden="true" style={{visibility:'hidden',width:44}}/>:<DoneButton ref={nav} onDone={onClose}/>}</header>
    <div ref={body} className={shell.body}>
     {!unlocked?<ParentGate.Guard reason="Progress, the coach plan and settings for parents, carers and coaches." onCancel={onClose}><Unlock onUnlock={()=>setUnlocked(true)}/></ParentGate.Guard>
-    :view==='plan'?<IdpPlan audience="grownup" onLaunch={()=>{onClose();onLaunch();}}/>
+    :PLAN_OPEN&&view==='plan'?<IdpPlan audience="grownup" onLaunch={()=>{onClose();onLaunch();}}/>
     :<Home settings={settings} onPlan={()=>setView('plan')}/>}
    </div>
   </section>
@@ -107,10 +109,13 @@ function Home({settings,onPlan}:{settings?:GrownUpSettings;onPlan:()=>void}){
    <p className={styles.muted}>{PRACTICE_SAFETY}</p>
   </section>
   <section id="gu-plan" className={styles.card} aria-labelledby="gu-plan-t">
-   <h3 id="gu-plan-t">Development plan (IDP)</h3>
+   {/* Nov 11 2026 (owner): the plan is being rebuilt as the Individual Development Plan. Until it is ready this card says so and cannot be opened (same switch as the Coaches Centre card, components/CoachesCentre.tsx IDP_ENABLED). Saved plans are kept. */}
+   <h3 id="gu-plan-t">Individual Development Plan{!PLAN_OPEN&&<> <span className={styles.badge} data-plan-soon>Coming soon</span></>}</h3>
+   {!PLAN_OPEN?<p className={styles.muted}>One clear thing for your player to work on, simple practice, and an easy way to see progress. We are rebuilding it and it will open here when it is ready. Anything already saved on this device is kept.</p>:<>
    {goal&&hw&&week?<><p><b>Working on:</b> “{goal.ican}”{idp!.plan!.goals.length>1?` and one more goal`:''}</p><p className={styles.muted}>This week: {week.missions} mission{week.missions===1?'':'s'} and {week.checkins} check-in{week.checkins===1?'':'s'} · {hw.done} of {hw.total} linked island lessons · review by {new Date(idp!.plan!.reviewAt).toLocaleDateString(undefined,{month:'short',day:'numeric'})}</p>{week.help&&<p><b>They asked for some help with this.</b> Open the plan to see what to ask.</p>}</>
    :<p className={styles.muted}>One or two “I can…” goals your player chooses with you or their coach, weekly missions linked to island lessons, picture check-ins, and a calm weekly summary for you with what to ask and what to avoid. Saved on this device; nothing typed is ever uploaded.</p>}
    <button type="button" className={styles.primary} data-open-plan onClick={onPlan}>{goal?'Open this week’s plan':'Make a plan together'}</button>
+   </>}
   </section>
   <section id="gu-report" className={styles.card} aria-labelledby="gu-report-t">
    <h3 id="gu-report-t">Progress report</h3>

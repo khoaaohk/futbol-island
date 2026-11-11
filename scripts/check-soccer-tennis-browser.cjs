@@ -1,16 +1,24 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
 const assert=require('node:assert/strict');
+const {dropInit,runStickSequences}=require('./touch-stick-sequences.cjs');
 // Nov 10 2026: the server comes from --port=<n>, PORT or FUTBOL_BASE_URL; there is no default (8092 is the owner's dev server).
 const portArg=(process.argv.find(a=>a.startsWith('--port='))||'').slice(7)||process.env.PORT,BASE=process.env.FUTBOL_BASE_URL||(portArg?`http://localhost:${portArg}`:'');
 if(!BASE){console.error('Pass your own server: --port=<port>, PORT=<port> or FUTBOL_BASE_URL=<url>. There is no default port.');process.exit(1);}
 const captureTag=process.argv.find(arg=>arg.startsWith('--capture='))?.slice(10)||'motion';
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});try{
- const mobile=process.argv.includes('--mobile'),page=await browser.newPage({viewport:mobile?{width:390,height:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile}),errors=[];
+ // --touch (Nov 11 2026): the stuck-stick sequences (scripts/touch-stick-sequences.cjs) on an iPhone with its browser bars (390x664).
+ const touchRun=process.argv.includes('--touch'),mobile=process.argv.includes('--mobile')||touchRun,page=await browser.newPage({viewport:mobile?{width:390,height:touchRun?664:844}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile}),errors=[];if(touchRun)await page.addInitScript(dropInit);
  page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,runs:{fixture:{game:'island',paid:30,reason:'playtest entry',at:1}},packs:[]}));});
  await page.goto(new URL('/arcade?game=tennis',BASE).href,{waitUntil:'domcontentloaded',timeout:90000});
  await page.getByRole('button',{name:/^play/i}).first().click();
  await page.waitForFunction(()=>window.__arcade3d?.phaseRef.current==='playing');
  const canvas=page.locator('[data-arcade-kind="tennis"] canvas');
+ if(touchRun){await page.waitForTimeout(600);const stickEl=page.getByRole('group',{name:'Movement joystick'}),box=await stickEl.boundingBox(),kick=await page.locator('[data-tennis-action="kick"]').boundingBox(),cdp=await page.context().newCDPSession(page);
+  assert(box.y+box.height<=664&&kick.y+kick.height<=664,'stick and Kick sit inside the 664px visible height');
+  const read=()=>page.evaluate(()=>{const i=window.__arcade3d.input.current;return{x:i.x,y:i.y,steer:i.x,knob:document.querySelector('[aria-label="Movement joystick"]>span')?.style.transform??''};});
+  const stopped=()=>page.evaluate(()=>{const p=window.__arcade3d.runtime.state.tennis.you;return !p.direct||p.moveX===0&&p.moveY===0;});/* the stick no longer drives the player (a point beat walks it home on its own) */
+  const done=await runStickSequences(page,cdp,{stick:{x:box.x+box.width/2,y:box.y+box.height/2},reach:box.width*.3,button:{x:kick.x+kick.width/2,y:kick.y+kick.height/2},selector:'[aria-label="Movement joystick"]',read,stopped});
+  await page.waitForTimeout(300);await page.screenshot({path:'docs/arcade-aaa/shots/tennis-stick-released.png'});await cdp.detach();assert.deepEqual(errors,[]);console.log('SOCCER_TENNIS_TOUCH_PASS',JSON.stringify({sequences:done.length}));return;}
  if(mobile){
   await page.waitForFunction(()=>!document.querySelector('[data-tennis-action="header"]'),null,{timeout:5000}).catch(()=>{});// the HUD's first push (tennisAerial) lands a frame after phase flips to playing
   assert.equal(await page.locator('[data-tennis-action="header"]').count(),0,'court 1 hides the aerial buttons');

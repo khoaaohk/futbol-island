@@ -10,7 +10,8 @@ import {REEF_HINT_MS,REEF_HINT_TITLE,reefHintText,reefStore} from '@/lib/town/wa
  * toward an Explore zone not yet explored, the first time per visit the player flies or swims within ~300 m of it
  * (lib/town/water/reefDiscovery.ts; Town.tsx raises it at 2 Hz). The one toast lane (HUD stack rule: one note at a time): a hint that
  * arrives while another note shows waits for it, and one that waited too long is dropped (the player has moved on). The arrow turns
- * with the camera at most twice a second (10° steps). One wait and one hide timeout, no loop; nothing saved.
+ * with the camera at most twice a second (10° steps). One wait and one hide timeout, no loop; nothing saved. It never shares the screen
+ * with Welcome back (components/WelcomeBack.tsx holds the lane) and waits out the arrival quiet.
  */
 const STALE_MS=12000;
 export default function ReefHintToast({blocked:held}:{blocked:boolean}){
@@ -18,7 +19,12 @@ export default function ReefHintToast({blocked:held}:{blocked:boolean}){
  const hint=useSyncExternalStore(reefStore.subscribe,()=>reefStore.get().hint,()=>null);
  const angle=useSyncExternalStore(reefStore.subscribe,()=>reefStore.get().angle,()=>0);
  const [shown,setShown]=useState<number>(0),done=useRef(0),since=useRef(0),timer=useRef<ReturnType<typeof setTimeout>>();
- useEffect(()=>{if(!hint||shown||done.current>=hint.n)return;if(!since.current)since.current=Date.now();
+ useEffect(()=>{if(!hint||shown||done.current>=hint.n)return;
+  // Nov 11 2026 (owner: "welcome back first. the shimmer shows later"): while the lane is HELD (the arrival quiet, Welcome back and
+  // its gap) the stale clock does not run, so the hint shows after them instead of being dropped; one the player already reached is
+  // cleared from the store (reefDiscovery.ts: discovered or inside its blob) and never shows.
+  if(toastLane.held){since.current=0;toastLane.want('reef');return;}
+  if(!since.current)since.current=Date.now();
   if(Date.now()-since.current>STALE_MS){done.current=hint.n;since.current=0;toastLane.cancel('reef');reefStore.clearHint();return;}
   toastLane.want('reef');if(blocked)return;
   timer.current=setTimeout(()=>{if(!toastLane.request('reef'))return;done.current=hint.n;since.current=0;setShown(hint.n);},400);

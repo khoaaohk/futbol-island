@@ -1,5 +1,6 @@
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
 const assert=require('node:assert/strict');
+const {dropInit,runStickSequences}=require('./touch-stick-sequences.cjs');
 // Nov 10 2026: the server comes from --port=<n>, PORT or FUTBOL_BASE_URL; there is no default (8092 is the owner's dev server).
 // Coins are seeded into the throwaway profile's wallet (as scripts/measure-arcade-games.cjs does) instead of the /play?testCoins visit.
 // Lives follow the route's rule (lib/arcade/runnerModes.ts): the opening route is Warm-up with 5 lives (Breakaway and most others 3, Legend 2).
@@ -7,11 +8,17 @@ const portArg=(process.argv.find(a=>a.startsWith('--port='))||'').slice(7)||proc
 if(!BASE){console.error('Pass your own server: --port=<port>, PORT=<port> or FUTBOL_BASE_URL=<url>. There is no default port.');process.exit(1);}
 const WARMUP_LIVES=5;
 (async()=>{const browser=await chromium.launch({headless:true,executablePath:process.env.CHROMIUM_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'});try{
- const mobile=process.argv.includes('--mobile'),reduced=process.argv.includes('--reduced'),page=await browser.newPage({viewport:mobile?{width:844,height:390}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile,reducedMotion:reduced?'reduce':'no-preference'}),errors=[];
- page.on('pageerror',e=>errors.push(e.message));await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-audio-mix','4-50-v1');localStorage.setItem('fi2-sound-muted','true');localStorage.setItem('fi2-music-enabled','false');localStorage.setItem('fi2-voice-enabled','false');if(!localStorage.getItem('fi2-arcade-wallet-v1'))localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,spends:{},runs:{'baseline-grant':{game:'island',paid:5000,reason:'baseline',at:Date.now()}},best:{},attempts:{},visits:{},packs:[]}));});
+ // --touch (Nov 11 2026): the stuck-stick sequences (scripts/touch-stick-sequences.cjs) on the sideways phone.
+ const touchRun=process.argv.includes('--touch'),mobile=process.argv.includes('--mobile')||touchRun,reduced=process.argv.includes('--reduced'),page=await browser.newPage({viewport:mobile?{width:844,height:390}:{width:1280,height:800},isMobile:mobile,hasTouch:mobile,reducedMotion:reduced?'reduce':'no-preference'}),errors=[];
+ page.on('pageerror',e=>errors.push(e.message));if(touchRun)await page.addInitScript(dropInit);await page.addInitScript(()=>{localStorage.setItem('fi2-welcome-v1','completed');localStorage.setItem('fi2-audio-mix','4-50-v1');localStorage.setItem('fi2-sound-muted','true');localStorage.setItem('fi2-music-enabled','false');localStorage.setItem('fi2-voice-enabled','false');if(!localStorage.getItem('fi2-arcade-wallet-v1'))localStorage.setItem('fi2-arcade-wallet-v1',JSON.stringify({version:1,spends:{},runs:{'baseline-grant':{game:'island',paid:5000,reason:'baseline',at:Date.now()}},best:{},attempts:{},visits:{},packs:[]}));});
  await page.goto(new URL('/arcade?game=runner',BASE).href,{waitUntil:'domcontentloaded',timeout:120000});await page.getByRole('button',{name:/^play/i}).first().click();
  await page.waitForFunction(()=>window.__arcade3d?.phaseRef.current==='playing');
  const canvas=page.locator('[data-arcade-kind="runner"] canvas');
+ if(touchRun){await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.runner;s.spawn=99;s.nextGoal=1e6;s.objects=[];s.lives=99;});const joy=await page.locator('[data-runner-stick]').boundingBox(),jump=await page.getByRole('button',{name:'Jump',exact:true}).boundingBox(),cdp=await page.context().newCDPSession(page);
+  const read=()=>page.evaluate(()=>{const k=document.querySelector('[data-runner-stick]>span')?.style.transform??'',m=/translate\((-?[\d.]+)px,? (-?[\d.]+)px\)/.exec(k);const x=m?+m[1]:0,y=m?+m[2]:0;return{x,y,steer:x,knob:k};});
+  const stopped=async()=>{const a=await page.evaluate(()=>window.__arcade3d.runtime.state.runner.lane);await page.waitForTimeout(300);return a===await page.evaluate(()=>window.__arcade3d.runtime.state.runner.lane);};
+  const done=await runStickSequences(page,cdp,{stick:{x:joy.x+joy.width/2,y:joy.y+joy.height/2},reach:joy.width*.3,button:{x:jump.x+jump.width/2,y:jump.y+jump.height/2},selector:'[data-runner-stick-zone]',read,stopped});
+  await cdp.detach();assert.deepEqual(errors,[]);console.log('BREAKAWAY_TOUCH_PASS',JSON.stringify({sequences:done.length}));return;}
  const rigIdentity=await page.evaluate(()=>{const root=window.__arcade3d.runtime.stage.scene.getObjectByName('runner-player');return{island:!!root?.userData.islandRig,bean:!!root?.userData.beanBody&&!!root?.getObjectByName('bean-body')?.visible,joints:['player-pelvis','left-hip','right-hip','left-knee','right-knee','left-ankle','right-ankle'].every(name=>!!root?.getObjectByName(name))};});assert.deepEqual(rigIdentity,{island:true,bean:true,joints:true},'Breakaway uses the actual island character and articulated joints');
 
  const shoot=()=>mobile?page.getByRole('button',{name:'Shoot',exact:true}).tap():page.keyboard.press('Space');

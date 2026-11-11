@@ -193,4 +193,20 @@ ok('heat and input: the loop lives only while playing; pools, DPR cap, reduced m
  const {snakeLayout}=require('../lib/arcade/snake/view.ts');for(const [w,h] of [[390,844],[375,667],[360,640]]){const l=snakeLayout(w,h,122,false);assert(l.cell>=29,`${w}x${h}: cell ${l.cell}`);assert(l.x0>=4&&l.x0+l.pw<=w-4&&l.y0+l.ph<=h-20,`${w}x${h} fits`);}
  assert(snakeLayout(390,844,122,false).free>=150,'tall phones keep a swipe zone below the pitch');assert(snakeLayout(390,844,122,true).free>=176,'the d-pad has its own room');
 });
+ok('kick-off waits for the first input (Nov 11 2026): the clock stands still, the first press aims the lone captain, the rules then hold',()=>{
+ const {createSquadSnake}=K,g=createSquadSnake({seed:7,hold:true}),s=g.state;assert.equal(s.hold,true);for(let i=0;i<300;i++)g.step(1/60);assert.equal(s.ticks,0,'no tick before the first input');assert.equal(g.frac,0);assert(!s.over);
+ const x=s.xs[0];assert.equal(g.turn(3),true,'the first press is taken');assert.equal(s.hold,false);assert.equal(s.dir,3,'alone at kick-off the captain may face any way');assert.equal(g.turn(1),false,'then a reversal is refused as always');
+ for(let i=0;i<120&&s.ticks<1;i++)g.step(1/60);assert.equal(s.xs[0],x-1,'it runs the way it was aimed');
+ const h=createSquadSnake({seed:7,hold:true});assert.equal(h.turn(0),true,'a press along the heading just starts');assert.equal(h.state.dir,0);assert.equal(h.state.hold,false);
+ const plain=createSquadSnake({seed:7});assert.equal(plain.state.hold,false,'without the option nothing waits (rules tests, replays)');
+ const c=read('components/games/SquadSnakeGame.tsx'),css=read('components/games/SquadSnakeGame.module.css');assert(/createSquadSnake\(\{seed,daily,hold:true\}\)/.test(c));assert(/data-snake-hint/.test(c)&&/Swipe or tap the arrows/.test(c));
+});
+ok('phones (Nov 11 2026): the d-pad is on by default on touch screens, docked inside the visible viewport, and the pitch makes room',()=>{
+ const c=read('components/games/SquadSnakeGame.tsx'),css=read('components/games/SquadSnakeGame.module.css'),{snakeLayout}=require('../lib/arcade/snake/view.ts');
+ assert(/padOn=save\.pad\|\|coarse/.test(c)&&/matchMedia\('\(pointer:coarse\)'\)/.test(c),'touch screens always get the d-pad');assert(/visualViewport/.test(c)&&/--snake-cut/.test(c)&&/var\(--snake-cut,0px\)/.test(css),'laid out for the visible viewport');
+ assert(/height:100vh;height:100dvh/.test(css),'dynamic viewport height with a fallback');assert(/\.pad\{[^}]*pointer-events:none/.test(css)&&/58px "l d r" 58px\/62px 62px 62px/.test(css),'big keys; swipes pass between them');
+ assert(/el\.addEventListener\('pointerdown',down,opt\)/.test(c)&&/closest\('button'\)/.test(c),'the whole stage is the swipe surface; a d-pad key keeps its own press');assert(/el\.addEventListener\('touchmove',noScroll,opt\)/.test(c));
+ // cells (CSS px) with the measured pad room (~140 px) under the 122 px bar + team sheet
+ for(const [w,h,min] of [[390,844,34],[390,664,26],[375,553,18],[360,560,19]]){const l=snakeLayout(w,h,122,140);assert(l.cell>=min,`${w}x${h}: cell ${l.cell}`);assert(l.y0+l.ph<=h-140,`${w}x${h}: the pitch ends above the d-pad`);}
+});
 console.log(`snake-core: ${n} groups passed`);

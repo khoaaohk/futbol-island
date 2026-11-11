@@ -32,7 +32,7 @@ const SquadSnakeScores=dynamic(()=>import('./SquadSnakeScores'),{ssr:false});
 
 type Phase='menu'|'playing'|'paused'|'over';
 /** line: the positions joined so far, one digit each ("12223"). */
-type Hud={score:number;level:number;line:string;call:number;saves:number;dash:boolean};
+type Hud={score:number;level:number;line:string;call:number;saves:number;dash:boolean;wait:boolean};
 type Result={score:number;daily:boolean;level:number;squads:number;longest:number;built:string;hasShape:boolean;called:boolean;settled:SnakeSettled;near:string;coach:string;coins:number};
 export const SNAKE_COIN_REASON='Squad Snake: squad called together';
 const FRAME_MS=1000/60,SWIPE_PX=22,HUD_ROOM=66;
@@ -52,18 +52,20 @@ const lineOf=(g:SquadSnake)=>{const s=g.state;let out='';for(let i=1;i<s.len;i++
 
 export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
  const [phase,setPhase]=useState<Phase>('menu'),phaseRef=useRef<Phase>('menu');
- const [hud,setHud]=useState<Hud>({score:0,level:1,line:'',call:0,saves:1,dash:false}),hudRef=useRef(hud);
+ const [hud,setHud]=useState<Hud>({score:0,level:1,line:'',call:0,saves:1,dash:false,wait:false}),hudRef=useRef(hud);
  const [save,setSave]=useState<SnakeSave>(emptySnakeSave),[result,setResult]=useState<Result|null>(null),[today,setToday]=useState('');
  const [board,setBoard]=useState<{game:BoardGame;score:number}|null>(null),[scores,setScores]=useState(false),[dailyFirst,setDailyFirst]=useState(false);
  const entry=useArcadeEntry('snake');
- const stage=useRef<HTMLDivElement>(null),bg=useRef<HTMLCanvasElement>(null),fg=useRef<HTMLCanvasElement>(null),probe=useRef<HTMLElement>(null);
+ const stage=useRef<HTMLDivElement>(null),bg=useRef<HTMLCanvasElement>(null),fg=useRef<HTMLCanvasElement>(null),probe=useRef<HTMLElement>(null),padEl=useRef<HTMLDivElement>(null);
  const game=useRef<SquadSnake|null>(null),view=useRef<SnakeView|null>(null),audio=useRef<SnakeAudio|null>(null);
  const raf=useRef(0),last=useRef(0),slot=useRef(0),endAt=useRef(0),run=useRef({id:'',daily:false,day:'',done:true,board:'snake' as BoardGame});
  const size=useRef({w:1,h:1,dpr:1,left:0,top:0}),perf=useRef({frames:0,sum:0,max:0,window:0,windowSum:0,dropped:false});
  const reduced=useRef(false),pad=useRef(false),fitRef=useRef<()=>void>(()=>{});
+ // Touch screens always get the d-pad (Nov 11 2026, owner: "on mobile there are no controls to move"); swipes work as well.
+ const [coarse,setCoarse]=useState(false),coarseRef=useRef(false);
 
  const change=useCallback((p:Phase)=>{phaseRef.current=p;setPhase(p);},[]);
- useEffect(()=>{const s=readSnakeSave();setSave(s);pad.current=s.pad;fitRef.current();setToday(localPlayDay(Date.now()));setDailyFirst(takeTodayLaunch('snake'));},[]);
+ useEffect(()=>{const s=readSnakeSave(),touch=matchMedia('(pointer:coarse)').matches;coarseRef.current=touch;setCoarse(touch);setSave(s);pad.current=s.pad||touch;fitRef.current();setToday(localPlayDay(Date.now()));setDailyFirst(takeTodayLaunch('snake'));},[]);
 
  /* ---- the run's end: save, coins, today, board (once per run) ---- */
  const finish=useCallback(()=>{
@@ -106,7 +108,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   if(next>=0){slot.current=next;const dt=Math.min(.05,Math.max(0,(now-last.current)/1000));last.current=now;const t0=performance.now();
    g.step(dt);g.drain(onEvent);v.render(g,dt);
    const s=g.state,h=hudRef.current,dash=s.dash>0;
-   if(h.score!==s.score||h.level!==s.level||h.line.length!==s.len-1||h.call!==s.call||h.saves!==s.saves||h.dash!==dash){const n={score:s.score,level:s.level,line:lineOf(g),call:s.call,saves:s.saves,dash};hudRef.current=n;setHud(n);}
+   if(h.score!==s.score||h.level!==s.level||h.line.length!==s.len-1||h.call!==s.call||h.saves!==s.saves||h.dash!==dash||h.wait!==s.hold){const n={score:s.score,level:s.level,line:lineOf(g),call:s.call,saves:s.saves,dash,wait:s.hold};hudRef.current=n;setHud(n);}
    const cost=performance.now()-t0,p=perf.current;p.frames++;p.sum+=cost;if(cost>p.max)p.max=cost;p.window++;p.windowSum+=cost;
    if(p.window>=90){if(!p.dropped&&p.windowSum/p.window>7&&size.current.dpr>1.5){p.dropped=true;fitRef.current();}p.window=0;p.windowSum=0;}
    if(s.over){if(!endAt.current)endAt.current=now+(reduced.current?350:780);else if(now>=endAt.current){finish();return;}}
@@ -122,10 +124,10 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   const id=await entry.enter();if(!id)return;
   const day=localPlayDay(Date.now()),boardGame:BoardGame=daily?'snakedaily':'snake';
   const seed=daily?snakeDailySeed(day):1+Math.floor(Math.random()*2_000_000_000);
-  game.current=createSquadSnake({seed,daily});run.current={id,daily,day,done:false,board:boardGame};
+  game.current=createSquadSnake({seed,daily,hold:true});/* the captain waits on the spot for the first swipe or arrow */run.current={id,daily,day,done:false,board:boardGame};
   if(!daily||readSnakeSave().daily.day!==day||!readSnakeSave().daily.counted)beginBoardSession(boardGame);
   view.current?.reset();endAt.current=0;setResult(null);setBoard(null);setDailyFirst(false);setToday(day);
-  const s=game.current.state,n:Hud={score:0,level:1,line:'',call:s.call,saves:s.saves,dash:false};hudRef.current=n;setHud(n);
+  const s=game.current.state,n:Hud={score:0,level:1,line:'',call:s.call,saves:s.saves,dash:false,wait:s.hold};hudRef.current=n;setHud(n);
   change('playing');wake();
  },[change,entry,wake]);
  const pause=useCallback(()=>{if(phaseRef.current!=='playing')return;sleep();change('paused');},[change,sleep]);
@@ -133,28 +135,35 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
  const leave=useCallback(()=>{sleep();onExit();},[onExit,sleep]);
  /** A turn from any input. During the crash beat a press skips to the results. */
  const steer=useCallback((d:number)=>{const g=game.current;if(phaseRef.current!=='playing'||!g)return;audio.current?.unlock();if(g.state.over){endAt.current=1;return;}g.turn(d);},[]);
- const setPad=useCallback((on:boolean)=>{const s={...readSnakeSave(),pad:on};writeSnakeSave(s);setSave(s);pad.current=on;fitRef.current();},[]);
+ const setPad=useCallback((on:boolean)=>{const s={...readSnakeSave(),pad:on};writeSnakeSave(s);setSave(s);pad.current=on||coarseRef.current;fitRef.current();},[]);
 
  /* ---- canvases, size, swipes ---- */
  useEffect(()=>{
   const el=stage.current,b=bg.current,f=fg.current;if(!el||!b||!f)return;
   reduced.current=matchMedia('(prefers-reduced-motion: reduce)').matches;
   const v=view.current=createSnakeView(b,f,{reduced:reduced.current});
-  const fit=()=>{const r=el.getBoundingClientRect(),z=size.current;z.w=Math.max(1,r.width);z.h=Math.max(1,r.height);z.left=r.left;z.top=r.top;z.dpr=perf.current.dropped?1.5:Math.min(2,window.devicePixelRatio||1);
-   v.resize(z.w,z.h,z.dpr,(probe.current?.offsetHeight??56)+HUD_ROOM,pad.current);const g=game.current;if(g&&phaseRef.current==='paused')v.render(g,0);};
-  fitRef.current=fit;fit();const ro=new ResizeObserver(fit);ro.observe(el);
-  // one finger steers; a drag that keeps going can turn again (the origin moves to where the last turn was read)
+  // Nov 11 2026: lay out for the VISIBLE viewport. If the page box runs under the browser's bars (iOS with its toolbars), the part
+  // below visualViewport is cut off the stage (--snake-cut), and the pitch makes room for the docked d-pad by measuring it.
+  const fit=()=>{const r=el.getBoundingClientRect(),vv=window.visualViewport,cut=Math.max(0,Math.round(r.bottom-(vv?vv.offsetTop+vv.height:window.innerHeight)));el.style.setProperty('--snake-cut',`${cut}px`);
+   const z=size.current;z.w=Math.max(1,r.width);z.h=Math.max(1,r.height-cut);z.left=r.left;z.top=r.top;z.dpr=perf.current.dropped?1.5:Math.min(2,window.devicePixelRatio||1);
+   const pe=padEl.current,room=pad.current&&pe?Math.ceil(r.top+z.h-pe.getBoundingClientRect().top+8):pad.current;
+   v.resize(z.w,z.h,z.dpr,(probe.current?.offsetHeight??56)+HUD_ROOM,room);const g=game.current;if(g&&phaseRef.current==='paused')v.render(g,0);};
+  fitRef.current=fit;fit();const ro=new ResizeObserver(fit);ro.observe(el);window.visualViewport?.addEventListener('resize',fit);
+  // one finger steers; a drag that keeps going can turn again (the origin moves to where the last turn was read). Nov 11 2026: the
+  // swipe layer is the whole stage (a swipe may start on the team sheet, the hint or the sand around the d-pad; a d-pad key keeps its
+  // own press), and a new finger takes over a swipe whose release iOS never delivered instead of leaving the pitch deaf.
   let id=-1,sx=0,sy=0;
-  const down=(e:PointerEvent)=>{if(phaseRef.current!=='playing'||(e.pointerType==='mouse'&&e.button!==0))return;e.preventDefault();audio.current?.unlock();
-   if(game.current?.state.over){endAt.current=1;return;}if(id>=0)return;id=e.pointerId;sx=e.clientX;sy=e.clientY;try{f.setPointerCapture(e.pointerId);}catch{/* fine without */}};
+  const down=(e:PointerEvent)=>{if(phaseRef.current!=='playing'||(e.pointerType==='mouse'&&e.button!==0)||(e.target instanceof Element&&e.target.closest('button')))return;e.preventDefault();audio.current?.unlock();
+   if(game.current?.state.over){endAt.current=1;return;}id=e.pointerId;sx=e.clientX;sy=e.clientY;try{el.setPointerCapture(e.pointerId);}catch{/* fine without */}};
   const read=(x:number,y:number)=>{const dx=x-sx,dy=y-sy,ax=Math.abs(dx),ay=Math.abs(dy);if(Math.max(ax,ay)<SWIPE_PX||(ax>ay?ay>ax*.8:ax>ay*.8))return;game.current?.turn(ax>ay?(dx>0?1:3):(dy>0?2:0));sx=x;sy=y;};
   const move=(e:PointerEvent)=>{if(e.pointerId!==id||phaseRef.current!=='playing')return;e.preventDefault();const list=e.getCoalescedEvents?.();if(list&&list.length>1)for(let k=0;k<list.length;k++)read(list[k].clientX,list[k].clientY);else read(e.clientX,e.clientY);};
-  const up=(e:PointerEvent)=>{if(e.pointerId!==id)return;id=-1;try{f.releasePointerCapture(e.pointerId);}catch{/* gone */}};
+  const up=(e:PointerEvent)=>{if(e.pointerId!==id)return;id=-1;try{el.releasePointerCapture(e.pointerId);}catch{/* gone */}};
   const opt={passive:false} as const;
-  f.addEventListener('pointerdown',down,opt);f.addEventListener('pointermove',move,opt);f.addEventListener('pointerup',up);f.addEventListener('pointercancel',up);f.addEventListener('lostpointercapture',up);
+  el.addEventListener('pointerdown',down,opt);el.addEventListener('pointermove',move,opt);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up);
+  const noScroll=(e:TouchEvent)=>{if(phaseRef.current==='playing'&&e.cancelable)e.preventDefault();};el.addEventListener('touchmove',noScroll,opt);// no scroll, pull-to-refresh or page swipe steals a steer
   const noMenu=(e:Event)=>e.preventDefault();f.addEventListener('contextmenu',noMenu);
   if(process.env.NODE_ENV!=='production')(window as unknown as {__snake?:unknown}).__snake={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},perf:perf.current,size:size.current,get audio(){return audio.current;},get layout(){return view.current?.layout;}};
-  return()=>{ro.disconnect();f.removeEventListener('pointerdown',down);f.removeEventListener('pointermove',move);f.removeEventListener('pointerup',up);f.removeEventListener('pointercancel',up);f.removeEventListener('lostpointercapture',up);f.removeEventListener('contextmenu',noMenu);
+  return()=>{ro.disconnect();window.visualViewport?.removeEventListener('resize',fit);el.removeEventListener('pointerdown',down);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);el.removeEventListener('lostpointercapture',up);el.removeEventListener('touchmove',noScroll);f.removeEventListener('contextmenu',noMenu);
    if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;view.current=null;game.current=null;audio.current?.dispose();audio.current=null;fitRef.current=()=>{};delete (window as unknown as {__snake?:unknown}).__snake;};
  },[]);
  /* ---- keys; looked away: pause (RotateLock sends the same blur when a phone is turned sideways) ---- */
@@ -168,9 +177,10 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
  },[pause,resume,steer]);
 
  const streak=today?liveStreak(save,today):0,dailyToday=save.daily.day===today?save.daily:null,busy=entry.pending,call=CALLS[hud.call]??CALLS[0],callName=shapeName(call[0],call[1],call[2]);
- const live=phase==='playing'||phase==='paused',joined=hud.line.length;
+ const live=phase==='playing'||phase==='paused',joined=hud.line.length,padOn=save.pad||coarse;
+ useEffect(()=>{fitRef.current();},[padOn]);// the pitch makes room for the d-pad once it is in the page
  const tap=()=>{(audio.current??=createSnakeAudio()).unlock();audio.current.tap();};
- return <div className={`${styles.game} ${arcadeSkin.snake} ${comicRoot}`} data-game="snake" data-arcade-kind="snake" data-phase={phase} data-dash={hud.dash||undefined} data-pad={save.pad||undefined}>
+ return <div className={`${styles.game} ${arcadeSkin.snake} ${comicRoot}`} data-game="snake" data-arcade-kind="snake" data-phase={phase} data-dash={hud.dash||undefined} data-pad={padOn||undefined}>
   <aside className={styles.side} data-side="left" aria-hidden="true">
    <ComicPanel tilt={-1.5} tone="paper" className={styles.sideRow}><Bean pos={POS.gk}/><span>Call the keeper first, then defenders, midfielders, forwards.</span></ComicPanel>
    <ComicPanel tilt={1} tone="sun" className={styles.sideRow}><b className={styles.sideShape}>4-3-3</b><span>The numbers count from the back. The keeper is never counted.</span></ComicPanel>
@@ -190,9 +200,15 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
     <span className={styles.call} data-snake-call={callName}><small>Coach</small>{callName}</span>
     <i className={styles.glove} data-on={hud.saves>0||undefined} title="Last-ditch save"/>
    </div>}
-   {live&&save.pad&&<div className={styles.pad} data-snake-pad>
-    {([[0,'Up','M12 5 L20 17 H4 Z'],[3,'Left','M5 12 L17 4 V20 Z'],[1,'Right','M19 12 L7 4 V20 Z'],[2,'Down','M12 19 L20 7 H4 Z']] as const).map(([d,name,path])=>
-     <button key={d} type="button" data-dir={d} aria-label={`Turn ${name.toLowerCase()}`} onPointerDown={e=>{e.preventDefault();steer(d);}}><svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><path d={path} fill="#231a2e"/></svg></button>)}
+   {live&&hud.wait&&<div className={styles.hint} data-snake-hint aria-live="polite">
+    <svg viewBox="0 0 64 40" width="64" height="40" aria-hidden="true"><path d="M6 30 Q26 30 44 14" fill="none" stroke="#231a2e" strokeWidth="3" strokeLinecap="round" strokeDasharray="5 4"/><path d="M38 8 L49 10 L45 21" fill="none" stroke="#231a2e" strokeWidth="3.4" strokeLinejoin="round" strokeLinecap="round"/><circle cx="8" cy="30" r="6.5" fill="#ffc83a" stroke="#231a2e" strokeWidth="3"/></svg>
+    <b>{padOn?'Swipe or tap the arrows':'Swipe or use the arrow keys'}</b><small>to start your captain</small>
+   </div>}
+   {/* The d-pad (always on touch screens since Nov 11 2026; a setting on desktop): an inverted T of big inked keys docked under the pitch.
+       It stays in the page while hidden so the pitch can be laid out around it. */}
+   {padOn&&<div ref={padEl} className={styles.pad} data-snake-pad data-live={live||undefined} aria-hidden={!live||undefined}>
+    {([[0,'Up','M12 4 L21 17 H3 Z'],[3,'Left','M4 12 L17 3 V21 Z'],[2,'Down','M12 20 L21 7 H3 Z'],[1,'Right','M20 12 L7 3 V21 Z']] as const).map(([d,name,path])=>
+     <ComicButton key={d} data-dir={d} tabIndex={live?undefined:-1} aria-label={`Turn ${name.toLowerCase()}`} onPointerDown={e=>{e.preventDefault();steer(d);}}><svg viewBox="0 0 24 24" width="30" height="30" aria-hidden="true"><path d={path} fill="#231a2e" stroke="#231a2e" strokeWidth="1.5" strokeLinejoin="round"/></svg></ComicButton>)}
    </div>}
   </div>
   <ArcadeTopBar game="snake" className={styles.topBar} backTitle="Back to arcade" onBack={leave} value={live?hud.score:undefined} word="pts" bumpKey={hud.score} paused={phase==='paused'} canPause={live} onPause={()=>phase==='playing'?pause():resume()}/>
@@ -201,7 +217,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
    <ol className={styles.order} aria-label="Call the squad in this order">
     {[POS.gk,POS.def,POS.mid,POS.fwd].map(p=><li key={p}><span><Bean pos={p} size={38}/><b style={{background:POS_COLOR[p]}}>{POS_LABEL[p]}</b></span></li>)}
    </ol>
-   <p className={styles.learn}>Swipe to turn your captain. Call the keeper, then defenders, midfielders and forwards. Eleven make a <b>Full Squad</b>: build the coach’s shape for double points.</p>
+   <p className={styles.learn}>{coarse?'Swipe or tap the arrows':'Swipe or use the arrow keys'} to turn your captain. The kick-off waits for your first move. Call the keeper, then defenders, midfielders and forwards. Eleven make a <b>Full Squad</b>: build the coach’s shape for double points.</p>
    <ul className={styles.album} aria-label="Shapes you have built" data-snake-album>{SHAPES.map((sh,i)=><li key={sh} data-on={(save.shapes>>i&1)===1||undefined}>{sh}</li>)}</ul>
    <div className={styles.chips}>
     <ComicStat value={save.best||'–'} label="Best"/>
@@ -213,7 +229,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
     <ComicButton variant={dailyFirst?'paper':'primary'} wide disabled={busy} onClick={()=>{void start(false);}} data-snake-play autoFocus={!dailyFirst}>Play</ComicButton>
     <ComicButton variant={dailyFirst?'primary':'teal'} wide disabled={busy} onClick={()=>{void start(true);}} data-snake-daily autoFocus={dailyFirst}>Daily Squad<small>{dailyToday?.counted?`Today’s best ${dailyToday.best} · practice`:'Same squad list for everyone today'}</small></ComicButton>
     <ComicButton size="small" onClick={()=>{tap();setScores(true);}} data-snake-scores>Scores</ComicButton>
-    <ComicButton size="small" aria-pressed={save.pad} onClick={()=>{tap();setPad(!save.pad);}} data-snake-padtoggle>{save.pad?'D-pad: on':'D-pad: off'}</ComicButton>
+    {!coarse&&<ComicButton size="small" aria-pressed={save.pad} onClick={()=>{tap();setPad(!save.pad);}} data-snake-padtoggle>{save.pad?'D-pad: on':'D-pad: off'}</ComicButton>}
    </div>
   </ComicCard>}
   {phase==='over'&&result&&<ComicCard label="Full time" badge={result.daily?'Daily Squad':'Full time'} badgeTone={result.daily?'teal':'red'} best={result.daily?`Today ${result.settled.dailyBest}`:`Best ${result.settled.save.best}`} data-snake-card="results" data-snake-score={result.score}>

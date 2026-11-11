@@ -42,7 +42,11 @@
 .skin [data-pinball-call] [data-pb-words]{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0}
 .skin [data-pinball-call=goal] [data-pb-words]{align-items:center}
 .skin [data-pinball-call] [data-pb-words] strong{--cm-letter-size:min(30px,calc((100cqw - 104px) / (var(--len) * .74)));--cm-letter-stroke:clamp(2px,calc(var(--cm-letter-size) * .16),4px);white-space:nowrap;text-shadow:2px 2px 0 var(--cm-ink)}
-.skin [data-pinball-call=text] [data-pb-words] strong{--cm-letter-stroke:0px}
+/* Nov 11 2026 (owner: the call's paper box covered the goalie): calls are lettering only, with no box behind them. The words carry
+   their own ink outline and hard shadow so they read on the grass; the keeper, the wall and the ball stay visible through them. */
+.skin.skin [data-pinball-call] [data-pb-box]{background:transparent;background-image:none;border:0;box-shadow:none;padding:0}
+.skin [data-pinball-call=text]{--cm-letter-fill:#fff}
+.skin [data-pinball-call=text] [data-pb-words] strong{--cm-letter-stroke:clamp(2px,calc(var(--cm-letter-size) * .16),4px)}
 .skin [data-pinball-call] [data-pb-words] small{padding:2px 6px;border:2px solid var(--cm-ink);background:#fff;color:var(--cm-ink);font:italic 900 14px/1 var(--cm-title);white-space:nowrap}
 .skin [data-pinball-call] [data-pb-sub]{padding:3px 10px;font:italic 900 16px/1 var(--cm-title)}
 .skin [data-pinball-call] [data-pb-art]{flex:none;width:52px;height:52px;overflow:visible;fill:none;stroke:var(--cm-ink);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}

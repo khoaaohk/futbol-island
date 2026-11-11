@@ -4,6 +4,9 @@
 //   score and the line, a fast double swipe is a two-step U-turn (never a death), pause stops the loop, a crash ends the run,
 //   results card shows the score with a near-miss line and a fact and is idle, "Play again" is playing in under 1 s, no console errors.
 //   node scripts/check-snake-browser.cjs --port=<n> [--mobile] [--size=375x667] [--reduced] [--shots] [--headed]
+// Nov 11 2026 (owner: "on mobile there are no controls to move"): phones get the d-pad by default inside the VISIBLE viewport (short
+// sizes: --size=390x664, 375x553, 360x560), the kick-off waits for the first input, and real CDP touches turn the captain all four ways by
+// d-pad and by swipe (also swipes that start on the team sheet or between the d-pad keys), with the two-turn buffer and no reversal death.
 // --mobile: 390x844 touch profile with CDP touch events (default is a 1440x900 desktop with the keyboard).
 // --reduced: prefers-reduced-motion. --shots: writes docs/arcade-aaa/shots/snake-{start,phone,fullsquad,results}.png (mobile) or
 // snake-desktop.png (desktop). Prints the measured frame cost (rules + draw, ms) from the game's own counters.
@@ -64,7 +67,34 @@ const think=()=>{const k=window.__snake,g=k&&k.game;if(!g)return null;const s=g.
   await press('[data-snake-play]');
   await page.waitForFunction(()=>window.__snake&&window.__snake.phase==='playing'&&window.__snake.loop,null,{timeout:5000});
   let st=await state();const L=st.layout;
-  if(mobile){const below=vh-(L.y0+L.ph);zone=below>=120?{x:vw/2,y:L.y0+L.ph+below/2}:{x:vw/2,y:L.y0+L.ph*.72};check(L.cell>=29&&L.x0>=4&&L.y0+L.ph<=vh-20,'the pitch fits with cells a child can see',`cell ${L.cell}px, ${Math.round(below)}px below the pitch`);}
+  const minCell=vh>=800?29:vh>=640?24:18;
+  if(mobile){const padTop=await page.evaluate(()=>document.querySelector('[data-snake-pad]')?.getBoundingClientRect().top??innerHeight),below=padTop-(L.y0+L.ph);zone=below>=70?{x:vw/2,y:L.y0+L.ph+below/2}:{x:vw/2,y:L.y0+L.ph*.72};check(L.cell>=minCell&&L.x0>=4&&L.y0+L.ph<=padTop-4,'the pitch fits above the d-pad with cells a child can see',`cell ${L.cell}px at ${vw}x${vh}, ${Math.round(below)}px between pitch and d-pad`);}
+  // ---- kick-off waits for the first input; the hint and (phone) the d-pad are on screen ----
+  await wait(1200);st=await state();check(st.ticks===0&&!st.over,'the kick-off waits for the first input',`ticks ${st.ticks}`);
+  const hint=await page.locator('[data-snake-hint]').innerText().catch(()=>'');check(/Swipe or (tap the arrows|use the arrow keys)/.test(hint),'the first-move hint is shown',hint.replace(/\n/g,' '));
+  if(mobile){
+   const pad=await page.evaluate(()=>{const vv=window.visualViewport,bottom=vv?vv.offsetTop+vv.height:innerHeight,keys=[...document.querySelectorAll('[data-snake-pad] button')].map(b=>{const r=b.getBoundingClientRect(),hit=document.elementFromPoint(r.left+r.width/2,r.top+r.height/2);return{w:r.width,h:r.height,top:r.top,bottom:r.bottom,hit:!!hit&&b.contains(hit)};});return{n:keys.length,min:Math.min(...keys.map(k=>Math.min(k.w,k.h))),inView:keys.every(k=>k.top>=0&&k.bottom<=bottom),hit:keys.every(k=>k.hit),bottom:Math.round(Math.max(...keys.map(k=>k.bottom))),vv:Math.round(bottom)};});
+   check(pad.n===4&&pad.min>=56&&pad.inView&&pad.hit,'four d-pad keys of at least 56 px, inside the visible viewport and on top',JSON.stringify(pad));
+   const T=(type,pts)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:pts});
+   const key=async d=>{const b=await page.locator(`[data-snake-pad] [data-dir="${d}"]`).boundingBox();const pt={x:b.x+b.width/2,y:b.y+b.height/2,id:3};await T('touchStart',[pt]);await T('touchEnd',[]);};
+   const drag=async(x,y,d)=>{await T('touchStart',[{x,y,id:4}]);for(let k=1;k<=3;k++)await T('touchMove',[{x:x+VX[d]*12*k,y:y+VY[d]*12*k,id:4}]);await T('touchEnd',[]);};
+   const tick=async()=>{const t=(await state()).ticks;await page.waitForFunction(t=>window.__snake.game.state.ticks>=t+1,t,{timeout:4000});return state();};
+   const sheetBox=await page.locator('[data-snake-sheet]').boundingBox(),padBox=await page.locator('[data-snake-pad]').boundingBox();
+   // d-pad Right starts the run facing right
+   await key(1);st=await tick();check(st.moved===1&&!st.over,'d-pad Right starts the run and turns right',`moved ${st.moved}`);
+   check(await page.locator('[data-snake-hint]').count()===0,'the hint goes away after the first move');
+   await drag(zone.x,zone.y,0);st=await tick();check(st.moved===0,'swipe up turns up',`moved ${st.moved}`);
+   await key(3);st=await tick();check(st.moved===3,'d-pad Left turns left',`moved ${st.moved}`);
+   await drag(sheetBox.x+sheetBox.width/2,sheetBox.y+sheetBox.height/2,2);st=await tick();check(st.moved===2,'a swipe down that starts on the team sheet turns down',`moved ${st.moved}`);
+   await key(0);st=await tick();check(st.moved===2&&!st.over,'d-pad Up while heading down is refused, never a reversal death',`moved ${st.moved}, over ${st.over}`);
+   await drag(padBox.x+8,padBox.y+12,1);st=await tick();check(st.moved===1,'a swipe right that starts between the d-pad keys turns right',`moved ${st.moved}`);
+   await key(2);st=await tick();check(st.moved===2,'d-pad Down turns down',`moved ${st.moved}`);
+   await drag(zone.x,zone.y,3);st=await tick();check(st.moved===3,'swipe left turns left',`moved ${st.moved}`);
+   // two quick d-pad presses in one tick: the two-turn buffer (Up, then Right), never lost, never a reversal
+   await key(0);await key(1);st=await tick();const mid=st.moved;st=await tick();check(mid===0&&st.moved===1&&!st.over,'two quick d-pad presses are both kept (Up then Right)',`moved ${mid} -> ${st.moved}`);
+   await key(0);st=await tick();check(st.moved===0&&!st.over,'heading up again for the U-turn check',`moved ${st.moved}`);
+   if(shots)await page.screenshot({path:path.join(SHOTS,`snake-controls-${vh<700?'short':'tall'}.png`)});
+  }else{await page.keyboard.press('ArrowUp');}
   await page.waitForFunction(()=>window.__snake.game.state.ticks>=1,null,{timeout:4000});
   // a fast double swipe: a two-step U-turn, never a death
   st=await state();const before=st.moved;await swipe([1,2]);await page.waitForFunction(t=>window.__snake.game.state.ticks>=t+2,st.ticks,{timeout:4000});st=await state();

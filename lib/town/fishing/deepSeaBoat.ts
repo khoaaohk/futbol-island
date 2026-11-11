@@ -174,7 +174,7 @@ export function createDeepSeaBoat(scene:T.Scene,boat:DeepSeaBoat=DEEP_SEA_BOATS[
  const ride=createBoatRide(),seed=(M.x*.013)%1;let riding=false,kick=false,lean=0;const motion:BoatMotion={heave:0,pitch:0,roll:0,yaw:0};
  /** The stand's local offset (the deck floor height follows the heave and the tilt there). */
  const standLX=boat.standLocal.x,standLZ=boat.standLocal.z;
- const deck={...boat.deck};
+ const deck={...boat.deck,floating:true};// deep water: no shelf beside it (landableDecks.ts `floating`, boatHull.ts)
  const frustum=new T.Frustum(),pv=new T.Matrix4(),sphere=new T.Sphere(new T.Vector3(M.x,1.5,M.z),6.5*look.scale.length);
  function build(){
   const {geometry,material}=takeShared(look);

@@ -72,7 +72,8 @@ assert.match(html,/Kids, ask a grown-up/);
 // Where the gate is used.
 function grownSrc(){return fs.readFileSync(path.join(ROOT,'components/GrownUps.tsx'),'utf8');}
 const coaches=fs.readFileSync(path.join(ROOT,'components/CoachesCentre.tsx'),'utf8');
-assert.match(coaches,/export const IDP_ENABLED=true;/,'IDP is on');
+assert.match(fs.readFileSync(path.join(__dirname,'../components/GrownUps.tsx'),'utf8'),/const PLAN_OPEN=false;[^]*PLAN_OPEN&&view==='plan'[^]*data-plan-soon>Coming soon</,'the grown-ups plan card says Coming soon and cannot open while the plan is rebuilt');
+assert.match(coaches,/export const IDP_ENABLED=false;/,'the plan card is marked Coming soon while the Individual Development Plan is rebuilt (owner, Nov 11 2026)');
 // User decision (Oct 10 2026): the kid's plan opens WITHOUT the gate; only "For grown-ups and coaches" is gated.
 assert.doesNotMatch(coaches,/<ParentGate|import ParentGate/,'the kid\'s plan is not gated in the Coaches Centre');
 assert.equal((coaches.match(/<IdpPlan /g)||[]).length,1,'one IdpPlan');

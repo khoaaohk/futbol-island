@@ -18,7 +18,7 @@ export const TOAST_PRIORITY:Record<string,number>={card:5,payday:4,story:3,
 /** A waiting note is forgotten after this long (it stopped asking: unmounted, or dropped as stale). */
 export const WAIT_MS=6000;
 let owner:string|null=null;
-const holds=new Set<string>(),waiting=new Map<string,number>(),listeners=new Set<()=>void>();
+const holds=new Set<string>(),waiting=new Map<string,number>(),listeners=new Set<()=>void>(),quietTimers=new Map<string,ReturnType<typeof setTimeout>>();
 const emit=()=>listeners.forEach(fn=>fn());
 const prio=(id:string)=>TOAST_PRIORITY[id]??1;
 const now=()=>typeof performance!=='undefined'?performance.now():Date.now();
@@ -40,9 +40,15 @@ export const toastLane={
  cancel(id:string){waiting.delete(id);},
  /** A blocking card shows (on) or closes (off): while any hold is on, no note starts. */
  hold(id:string,on:boolean){const had=holds.has(id);if(on)holds.add(id);else holds.delete(id);if(had!==on)emit();},
+ /** A short quiet hold (Nov 11 2026, owner: "only show one message at a time ... welcome back first. the shimmer shows later"): holds
+  *  the lane for `ms`, then lets go (ONE timeout; calling again restarts it). The arrival settle and the gap after Welcome back. */
+ quiet(id:string,ms:number){const t=quietTimers.get(id);if(t!==undefined)clearTimeout(t);toastLane.hold(id,true);
+  const h=setTimeout(()=>{quietTimers.delete(id);toastLane.hold(id,false);},ms) as unknown as {unref?:()=>void};h?.unref?.();quietTimers.set(id,h as unknown as ReturnType<typeof setTimeout>);},
  subscribe(fn:()=>void){listeners.add(fn);return()=>{listeners.delete(fn);};},
  /** Tests only. */
- reset(){owner=null;holds.clear();waiting.clear();emit();},
+ reset(){owner=null;for(const t of quietTimers.values())clearTimeout(t);quietTimers.clear();holds.clear();waiting.clear();emit();},
 };
 /** True while another note holds the lane, a blocking card holds it, or a higher-priority note waits for it. */
 export function useToastLaneBusy(id:string){return useSyncExternalStore(toastLane.subscribe,()=>owner!==id&&(owner!==null||holds.size>0||outranked(id)),()=>false);}
+/** True while a note owns the lane (Welcome back waits for it to finish before it opens and holds the lane itself). */
+export function useToastLaneOwned(){return useSyncExternalStore(toastLane.subscribe,()=>owner!==null,()=>false);}

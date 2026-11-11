@@ -266,7 +266,7 @@ ok('simple',()=>{
  const strip=f=>read(f).replace(/\/\*[\s\S]*?\*\/|\/\/[^\n]*/g,'').replace(/import[^\n]*\n/g,'');
  for(const f of ['components/idp/PlayerPlan.tsx','components/idp/PlanBuilder.tsx','components/idp/Review.tsx','components/idp/GrownUpHub.tsx','components/idp/GrownUpWeek.tsx','components/idp/CoachTools.tsx','components/IdpPlan.tsx'])
   {const t=strip(f).replace(/<[^>]*>/g,m=>m.replace(/"[^"]*"|\{[^}]*\}/g,''));assert.ok(!/>[^<]*\b(IDP|Development Plan|development plan)\b/.test(t),f+': no IDP jargon in visible copy');}
- assert.match(read('components/CoachesCentre.tsx'),/<h3>Football plan<\/h3>/,'the Coaches Centre card says what it is');
+ assert.match(read('components/CoachesCentre.tsx'),/<h3>Individual Development Plan<\/h3>/,'the Coaches Centre card says what it is');
  // Motion: keyframes animate transform and opacity only.
  const css=read('components/idp/Idp.module.css');
  for(const m of css.matchAll(/@keyframes\s+\w+\{([^@]*?)\}\s*(?=@keyframes|\n)/g)){const props=[...m[1].matchAll(/([a-z-]+):/g)].map(x=>x[1]);for(const p of props)assert.ok(['opacity','transform'].includes(p),'keyframes animate '+p);}

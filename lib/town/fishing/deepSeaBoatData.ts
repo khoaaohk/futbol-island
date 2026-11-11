@@ -17,7 +17,8 @@
  *
  * Each bow points north (yaw π/2) and you cast off the starboard side, east, out over the deepest water. The open aft deck is
  * registered as a landable floor (lib/town/landableDecks.ts) while its boat is built, so the player can jetpack or
- * parachute onto it and walk; the wheelhouse and bow are not floor, so the water rule stops walking at the deck's edges.
+ * parachute onto it and walk; the wheelhouse and bow are not floor. Nov 11 2026: the hull is solid round the deck (./boatHull.ts:
+ * climb aboard from the water, hop off the side, the wheelhouse refuses) and the deck is `floating` (no shallows beside the boat).
  */
 type Pt={x:number;z:number};
 export type BoatSpotId='deep-sea-boat'|'deep-sea-boat-west';

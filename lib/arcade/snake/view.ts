@@ -14,9 +14,10 @@ const C=SN.cols,R=SN.rows;
 const star=(c:Ctx,x:number,y:number,ro:number,ri:number,n:number,rot:number,sx=1)=>{c.beginPath();for(let i=0;i<n*2;i++){const r=i%2?ri:ro,a=rot+Math.PI*i/n;if(i)c.lineTo(x+Math.cos(a)*r*sx,y+Math.sin(a)*r);else c.moveTo(x+Math.cos(a)*r*sx,y+Math.sin(a)*r);}c.closePath();};
 const capsule=(c:Ctx,x:number,y:number,w:number,h:number)=>{const r=w/2;c.beginPath();c.arc(x+r,y+r,r,Math.PI,0);c.lineTo(x+w,y+h-r);c.arc(x+r,y+h-r,r,0,Math.PI);c.closePath();};
 
-/** Where the pitch sits on the page (CSS px). `top` is the room the bar and the team sheet need; `pad` keeps room for the d-pad. */
-export function snakeLayout(w:number,h:number,top:number,pad:boolean){
- const side=8,bottom=pad?176:26,cell=Math.max(12,Math.floor(Math.min((w-side*2)/C,(h-top-bottom)/R)*2)/2);
+/** Where the pitch sits on the page (CSS px). `top` is the room the bar and the team sheet need; `pad` keeps room for the d-pad
+ *  (true = the old 176 px, or the px the shell measured from the docked pad to the visible bottom). */
+export function snakeLayout(w:number,h:number,top:number,pad:boolean|number){
+ const side=8,bottom=typeof pad==='number'?pad:pad?176:26,/* a number: the shell measured the docked d-pad's real room (Nov 11 2026) */cell=Math.max(12,Math.floor(Math.min((w-side*2)/C,(h-top-bottom)/R)*2)/2);
  const pw=cell*C,ph=cell*R,x0=Math.round((w-pw)/2),y0=Math.round(top);
  return {cell,x0,y0,pw,ph,free:h-y0-ph};
 }
@@ -141,10 +142,10 @@ export function createSnakeView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{
  function pop(x:number,y:number,text:string,color:string,big=false){for(const p of pops){if(p.on)continue;p.on=true;p.x=x;p.y=y;p.t=0;p.text=text;p.color=color;p.big=big;return;}}
  function say(text:string,sub:string,note:string,fill:string,burstColor:string,dur:number,x:number,y:number,size:number){word.on=true;word.t=0;word.dur=dur;word.text=text;word.sub=sub;word.note=note;word.fill=fill;word.burst=burstColor;word.x=x;word.y=y;word.size=size;}
 
- function resize(cssW:number,cssH:number,ratio:number,top:number,pad:boolean){
+ function resize(cssW:number,cssH:number,ratio:number,top:number,pad:boolean|number){
   dpr=ratio;W=Math.max(1,Math.round(cssW*dpr));H=Math.max(1,Math.round(cssH*dpr));L=snakeLayout(cssW,cssH,top,pad);cs=L.cell*dpr;ox=L.x0*dpr;oy=L.y0*dpr;
   for(const cv of [bg,fg]){cv.width=W;cv.height=H;}
-  paintScene(b,W,H,L,dpr,pad);
+  paintScene(b,W,H,L,dpr,pad!==false);
   S=Math.ceil(cs*1.5)+2;atlas.width=S*ATLAS_COLS;atlas.height=S*Math.ceil(ATLAS_N/ATLAS_COLS);a.setTransform(1,0,0,1,0,0);a.clearRect(0,0,atlas.width,atlas.height);
   for(let i=0;i<ATLAS_N;i++){a.setTransform(cs,0,0,cs,(i%ATLAS_COLS)*S+S/2,Math.floor(i/ATLAS_COLS)*S+S/2);
    if(i===0)paintBean(a,0,0,cs);else if(i<45)paintBean(a,1+Math.floor((i-1)/11),1+(i-1)%11,cs);else if(i===IDX_PRESS)paintBean(a,5,0,cs);else if(i===IDX_REF)paintBean(a,6,0,cs);else if(i===IDX_BALL)paintBall(a);else if(i===IDX_BOOT)paintBoot(a);else paintTag(a,i-IDX_TAG,cs);}
@@ -192,7 +193,7 @@ export function createSnakeView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{
  function render(g:SquadSnake,dt:number){
   const s=g.state,fr=g.frac;time+=dt;plain();f.clearRect(0,0,W,H);
   let shx=0,shy=0;if(fx.shake>0){fx.shake-=dt;const k=Math.max(0,fx.shake)/.3*cs*.16;shx=(rnd()-.5)*k;shy=(rnd()-.5)*k;}
-  const bx=ox+shx,by=oy+shy,X=(c:number)=>bx+(c+.5)*cs,Y=(c:number)=>by+(c+.5)*cs,run=!s.over&&s.ready<=0&&s.beat<=0&&!s.stall;
+  const bx=ox+shx,by=oy+shy,X=(c:number)=>bx+(c+.5)*cs,Y=(c:number)=>by+(c+.5)*cs,run=!s.over&&!s.hold&&s.ready<=0&&s.beat<=0&&!s.stall;
   // pressers' lanes: a dashed ink line, so the patrol is readable before it arrives
   f.lineWidth=Math.max(2,cs*.07);f.strokeStyle='rgba(35,26,46,.4)';f.setLineDash([cs*.22,cs*.2]);f.lineCap='butt';
   for(const o of s.foes){if(!o.on||o.kind!==0)continue;f.beginPath();if(o.dx){f.moveTo(X(o.lo)-cs*.4,Y(o.y)+cs*.36);f.lineTo(X(o.hi)+cs*.4,Y(o.y)+cs*.36);}else{f.moveTo(X(o.x),Y(o.lo)-cs*.2);f.lineTo(X(o.x),Y(o.hi)+cs*.42);}f.stroke();}

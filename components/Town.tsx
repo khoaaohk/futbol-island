@@ -110,6 +110,8 @@ import {COACH_VOICES,primeLessonVoice,lessonVoiceSpeaking} from '@/lib/town/useL
 import {createIslandLighting,type TimeOfDay} from '@/lib/graphics/islandLighting';
 import {captainSellActions} from '@/lib/town/fishing/boatCaptains';
 import {SET_TIME_EVENT} from '@/lib/town/fishing/timeOfDay';
+import {nearBoat,resolveBoatHull,boatUnstick} from '@/lib/town/fishing/boatHull';
+import {onLandableDeck} from '@/lib/town/landableDecks';
 import {createStaticShadowBatches} from '@/lib/graphics/staticShadowBatches';
 import {createNpcShadowBatch} from '@/lib/graphics/npcShadowBatch';
 import {createStaticShadowCache} from '@/lib/graphics/staticShadowCache';
@@ -1530,6 +1532,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         // QA Oct 25: pushing into the edge of the swimmable sea said nothing (the swimmer just stopped): after ~1 s of pushing, a note; again after 20 s.
         swimEdgeHold=water.state.phase==='swim'&&!holdStill&&swimEdgePush(location.x,location.z,{x:mx,z:mz},waterWalk.allow,onLand)?swimEdgeHold+dt:0;swimEdgeQuiet=Math.max(0,swimEdgeQuiet-dt);if(swimEdgeHold>1&&swimEdgeQuiet===0){swimEdgeQuiet=20;fuelStore.say(SWIM_EDGE_TITLE,SWIM_EDGE_NOTE);}
       }else if(!rampStep.owns){waterWalk.speed=water.speedScale;rooftop.update(dt,location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz,sprint:(input.current.sprint||keys.has('shift'))&&fuelCanSprint()&&water.state.zone!=='knee'&&water.state.zone!=='waist'},rideRef.current,rideRef.current==='walk'?waterWalk:undefined);}
+      // The boats' hulls are solid (Nov 11 2026, owner: "getting stuck here with the boat"; lib/town/fishing/boatHull.ts): from the water beside the open deck you climb aboard, off the deck's side you hop into the sea, the wheelhouse and bow push you back out, and a push that goes nowhere for 1.5 s beside a boat frees you. A box test when away from the boats; also frees a restored save inside a hull on the first frame.
+      if(rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.jump.active&&!animalRides.riding&&nearBoat(location.x,location.z)){const hr=resolveBoatHull(location,rampBefore,onLandableDeck,performance.now()/1000);if(hr==='board'||hr==='hop'){velocity.x=velocity.z=0;}if(boatUnstick(dt,location,moveLength>.3&&!holdStill,onLandableDeck(location.x,location.z)))velocity.x=velocity.z=0;}
       // A fall, a rooftop jump or a ride launch that ends over splashable water (decision 4): a water landing, not a knockdown.
       if(rooftop.jump.fall)launchFall=true;
       if(wasFalling&&!rooftop.state.falling&&canSplashDown(location.x,location.z)){const src:SplashSource=launchFall?'launch':'roof';rooftop.state.impact=false;rooftop.state.recovery=0;rooftop.state.landImpact=0;splashInto(src,rooftop.state.dropStart);}

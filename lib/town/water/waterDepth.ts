@@ -12,7 +12,8 @@
  * Heat (AGENTS.md): no loop, no timer, no allocation in step functions; every function here is a few comparisons.
  */
 import {diveSpotAt} from './diveSpots';
-import {onLand,distanceToLand} from '../landmass';
+import {onLand,distanceToLand,distanceToShelfLand} from '../landmass';
+import {distanceToLandableDeck} from '../landableDecks';
 import {flightBlocked} from '../simulation';
 import {SWIM_MOTION,swimVelocity} from './swimMotion';
 
@@ -59,7 +60,7 @@ export type WadeZone='none'|'ankle'|'knee'|'waist'|'swim';
 /** Depth of water at (x, z) from the analytic distance to land (0 on land). One distanceToLand call off land. */
 export function waterDepthAt(x:number,z:number){
  if(onLand(x,z))return 0;
- return Math.min(DEPTH_MAX,SHELF_SLOPE*distanceToLand(x,z));
+ return Math.min(DEPTH_MAX,SHELF_SLOPE*distanceToShelfLand(x,z));/* Nov 11 2026: a moored boat makes no shelf (landableDecks.ts floating) */
 }
 /** Depth for a known distance to land (the probe's cached sample). */
 export const depthForDistance=(d:number)=>d<=0?0:Math.min(DEPTH_MAX,SHELF_SLOPE*d);
@@ -96,7 +97,7 @@ export const SWIM_ROOT_Y=WATER_LEVEL-SWIM_ROOT_DEPTH;
  */
 export function canSplashDown(x:number,z:number){
  if(flightBlocked(x,z)||onLand(x,z))return false;
- return depthForDistance(distanceToLand(x,z))>=SPLASH_MIN_DEPTH;
+ return depthForDistance(distanceToShelfLand(x,z))>=SPLASH_MIN_DEPTH;
 }
 
 export type WaterProbe={
@@ -115,16 +116,20 @@ export type WaterProbe={
  reset():void;
 };
 /** The cached 10 Hz depth probe. `distance` and `land` default to the island's real tests (injectable for tests). */
-export function createWaterProbe(distance:(x:number,z:number)=>number=distanceToLand,land:(x:number,z:number)=>boolean=onLand,blockedAt:(x:number,z:number)=>boolean=flightBlocked):WaterProbe{
- let d=0,px=NaN,pz=NaN,acc=Infinity,calls=0,isLand=true;
+/** Nov 11 2026 (owner: "getting stuck here with the boat"): `d` (the swim range, the dive's room) counts the moored boats' decks as
+ *  land, but the DEPTH does not (`shelf`): next to a boat the sea is deep, so a swimmer swims up to it and climbs aboard
+ *  (lib/town/fishing/boatHull.ts) instead of wading on the open sea inside its hull. `floating` is the boats' deck distance (a box
+ *  test per boat); the extra shelf call only runs when a boat is the nearest land. */
+export function createWaterProbe(distance:(x:number,z:number)=>number=distanceToLand,land:(x:number,z:number)=>boolean=onLand,blockedAt:(x:number,z:number)=>boolean=flightBlocked,shelf:(x:number,z:number)=>number=distanceToShelfLand,floating:(x:number,z:number)=>number=(x,z)=>distanceToLandableDeck(x,z,true)):WaterProbe{
+ let d=0,s=0,px=NaN,pz=NaN,acc=Infinity,calls=0,isLand=true;
  const probe:WaterProbe={
-  get d(){return d;},get x(){return px;},get z(){return pz;},get depth(){return depthForDistance(d);},get land(){return isLand;},get calls(){return calls;},isLand:land,
+  get d(){return d;},get x(){return px;},get z(){return pz;},get depth(){return depthForDistance(s);},get land(){return isLand;},get calls(){return calls;},isLand:land,
   sample(x,z,dt,force=false){
    const nowLand=land(x,z);
-   if(nowLand){if(!isLand||d!==0){isLand=true;d=0;px=x;pz=z;acc=0;}else{px=x;pz=z;}return 0;}
+   if(nowLand){if(!isLand||d!==0){isLand=true;d=0;s=0;px=x;pz=z;acc=0;}else{px=x;pz=z;}return 0;}
    acc+=dt;
-   if(force||isLand||acc>=1/WATER_PROBE_HZ-1e-6||!Number.isFinite(px)){acc=0;isLand=false;d=distance(x,z);px=x;pz=z;calls++;}
-   return depthForDistance(d);
+   if(force||isLand||acc>=1/WATER_PROBE_HZ-1e-6||!Number.isFinite(px)){acc=0;isLand=false;d=distance(x,z);s=floating(x,z)<=d+1e-6?shelf(x,z):d;px=x;pz=z;calls++;}
+   return depthForDistance(s);
   },
   allowed(x,z){
    if(blockedAt(x,z)||land(x,z))return false;
@@ -138,7 +143,7 @@ export function createWaterProbe(distance:(x:number,z:number)=>number=distanceTo
    if(d-Math.hypot(x-px,z-pz)>limit)return false;
    calls++;return distance(x,z)<=limit;
   },
-  reset(){d=0;px=pz=NaN;acc=Infinity;isLand=true;},
+  reset(){d=0;s=0;px=pz=NaN;acc=Infinity;isLand=true;},
  };
  return probe;
 }

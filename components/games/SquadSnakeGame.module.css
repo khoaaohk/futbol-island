@@ -1,10 +1,12 @@
 /* Squad Snake shell (Nov 10 2026): an upright comic page. Phone: the stage is the whole screen. Desktop: a centred 9:16 page with an
  * ink border and a hard shadow on a Ben-Day sunburst backdrop, with two margin strips of caption boxes. Tokens: ../games/comic. */
-.game{position:relative;width:100%;height:100dvh;overflow:hidden;display:grid;place-items:center;color:var(--cm-ink);font-family:var(--cm-ui);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+.game{position:relative;width:100%;height:100vh;height:100dvh;max-height:100%;overflow:hidden;display:grid;place-items:center;color:var(--cm-ink);font-family:var(--cm-ui);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
  background:var(--cm-dots-orange),#ffcf7a}
 .game button{font-family:var(--cm-ui)}
 .stage{position:relative;width:100%;height:100%;overflow:hidden;background:#ffcf7a;isolation:isolate}
-.scene,.play{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
+.scene,.play{position:absolute;inset:0 0 auto 0;display:block;width:100%;height:calc(100% - var(--snake-cut,0px));touch-action:none;outline:none}
+/* Nov 11 2026: the whole stage is the swipe surface (the shell listens on it): nothing on it may scroll, zoom or pull to refresh. */
+.stage{touch-action:none;overscroll-behavior:none}
 .play{z-index:1}
 .probe{position:absolute;left:0;top:0;width:1px;height:calc(var(--arcade-bar-clear,56px) + env(safe-area-inset-top,0px));visibility:hidden;pointer-events:none}
 /* The standard Arcade back button, exactly as in the other cabinets (dark with the teal rim): the shared button reads these. */
@@ -26,11 +28,19 @@
 .glove[data-on]{background:var(--cm-teal)}
 .game[data-dash] .sheet{background:#c9f1ea}
 .bean{display:block;flex:none;overflow:visible}
-/* optional d-pad, in the sand below the pitch */
-.pad{position:absolute;z-index:3;left:50%;translate:-50% 0;bottom:calc(10px + env(safe-area-inset-bottom,0px));display:grid;grid-template:"a u b" 50px "l c r" 50px "d e f" 50px/50px 50px 50px;gap:2px}
-.pad button{display:grid;place-items:center;border:3px solid var(--cm-ink);border-radius:0;background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);cursor:pointer;touch-action:none;padding:0}
-.pad button:active{translate:2px 2px;box-shadow:1px 1px 0 var(--cm-ink);background:var(--cm-sun)}
+/* The d-pad (Nov 11 2026: on by default on touch screens): an inverted T of four big inked keys (the kit's ComicButton, 62x58),
+   docked in the sand under the pitch and kept above the VISIBLE bottom (--snake-cut, set by the shell from visualViewport). The
+   container lets swipes through; only the keys take a press. */
+.pad{position:absolute;z-index:3;left:50%;translate:-50% 0;bottom:calc(10px + env(safe-area-inset-bottom,0px) + var(--snake-cut,0px));display:grid;grid-template:". u ." 58px "l d r" 58px/62px 62px 62px;gap:6px 8px;pointer-events:none}
+.pad:not([data-live]){visibility:hidden}
+.pad button{min-width:0;min-height:0;width:100%;height:100%;padding:0;display:grid;place-items:center;pointer-events:auto;touch-action:none}
+.pad button:active{background:var(--cm-sun)}
 .pad [data-dir="0"]{grid-area:u}.pad [data-dir="3"]{grid-area:l}.pad [data-dir="1"]{grid-area:r}.pad [data-dir="2"]{grid-area:d}
+/* First-move hint: a caption box over the pitch until the first swipe or arrow starts the run. Swipes pass through it. */
+.hint{position:absolute;z-index:4;left:50%;top:44%;translate:-50% -50%;rotate:-2deg;display:grid;justify-items:center;gap:2px;padding:8px 14px 9px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);pointer-events:none;white-space:nowrap;animation:sqHint .32s cubic-bezier(.2,1.6,.4,1) both}
+.hint b{font:italic 900 19px/1.1 var(--cm-title);color:var(--cm-ink)}
+.hint small{font:800 13px/1.2 var(--cm-ui);color:var(--cm-muted,#51465f)}
+@keyframes sqHint{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
 
 /* cards */
 .order{display:flex;justify-content:center;align-items:center;gap:6px;margin:2px 0 8px;padding:0;list-style:none}
@@ -97,5 +107,16 @@
  .sideMedals em{font:400 20px/1 var(--cm-numeral);font-style:normal}
 }
 @media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.album{display:none}.score{--cm-numeral-size:52px}.coach{display:none}.order{margin-bottom:6px}}
+/* Short phones with their browser bars (Nov 11 2026: 390x664, 375x553, 360x560): Play again comes straight after the result, the near-miss
+   line and the high-score strip; what you built, the stats and the football fact follow under it (the card scrolls). Under 600 px the
+   start card drops its stat chips (Best stays in the card's top chip) so Play fits without scrolling. */
+@media (max-height:700px){
+ .game [data-snake-card=results]{display:flex;flex-direction:column;align-items:center}
+ .game [data-snake-card=results]>*{max-width:100%}
+ .game [data-snake-card=results]>:is(.actions,.chips,.fact,.built,.hsSlot){align-self:stretch}
+ .game [data-snake-card=results]>.actions{order:1;margin-bottom:12px}
+ .game [data-snake-card=results]>:is(.built,.chips,.fact,.status){order:2}
+}
+@media (max-height:600px){.game [data-snake-card=start] .chips{display:none}.learn{margin-bottom:10px}}
 @media (max-width:374px){.sheet{gap:5px}.slots i{width:13px}.call{padding-left:5px}}
-@media (prefers-reduced-motion:reduce){.sheet{rotate:none}.slots i[data-pos],.score[data-new-best]{animation:none}}
+@media (prefers-reduced-motion:reduce){.sheet,.hint{rotate:none}.slots i[data-pos],.score[data-new-best],.hint{animation:none}}

@@ -11,6 +11,12 @@ import toast from './CostumeMilestoneToast.module.css';
 import styles from './WelcomeBack.module.css';
 import HudSlot from './HudStack';
 import {SAVE_CODE_KEY,SAVE_NUDGE_KEY} from '@/lib/saves/snapshot';
+import {toastLane,useToastLaneOwned} from '@/lib/ui/toastLane';
+/** One message at a time (Nov 11 2026, owner: "don't show something shimmers and welcome back at the same time. welcome back first. the
+ *  shimmer shows later"): the first moments after arriving are quiet for every lane note (ARRIVE_QUIET_MS); Welcome back opens
+ *  only when no note owns the lane, HOLDS the lane while it is open (lib/ui/toastLane.ts: no note starts), then leaves a short gap
+ *  (WELCOME_GAP_MS) before the next note (the reef hint, a coin note) takes its turn. Two quiet timeouts, no loop. */
+export const ARRIVE_QUIET_MS=4000,WELCOME_GAP_MS=3000;
 /**
  * Welcome-back card (G-10, lib/town/welcomeBack.ts). Shown once on the first load of a new day, after the island is ready and
  * nothing else is open. A note, not a menu (user, Oct 1 2026): no buttons. It hides on its own after WELCOME_BACK_SHOW_MS, or
@@ -27,14 +33,18 @@ let decided:boolean|null=null,shown=false;
 const welcomeDwellMs=()=>{if(typeof window!=='undefined'&&(process.env.NODE_ENV!=='production'||navigator.webdriver===true)){const v=(window as unknown as {__fi2WelcomeMs?:number}).__fi2WelcomeMs;if(typeof v==='number'&&v>0)return v;}return WELCOME_BACK_SHOW_MS;};
 export default function WelcomeBack({blocked,held=false}:{blocked:boolean;held?:boolean}){
  const [due,setDue]=useState(false),[open,setOpen]=useState(false),[nudge,setNudge]=useState(false);
+ const laneOwned=useToastLaneOwned();
+ useEffect(()=>{toastLane.quiet('arrive',ARRIVE_QUIET_MS);},[]);
+ const waiting=due||open;// due (not yet shown) or open: every lane note waits for it
+ useEffect(()=>{if(!waiting)return;toastLane.hold('welcome',true);return()=>{toastLane.hold('welcome',false);if(shown)toastLane.quiet('welcome-gap',WELCOME_GAP_MS);};},[waiting]);
  const evidence=useQuestEvidence(),answers=useQuizCompletions(),graduations=useGraduations();
  // Decided once per page load (the module-level `decided` makes React's dev double effect a no-op). Today is recorded only when
  // the card actually shows, so a day it stayed blocked is offered again on the next load (bug audit B14).
  useEffect(()=>{if(decided===null){let storage:Storage|null=null;try{storage=localStorage;}catch{}decided=checkWelcomeBack(storage);}if(decided&&!shown)setDue(true);},[]);
- useEffect(()=>{if(due&&!blocked){shown=true;let storage:Storage|null=null;try{storage=localStorage;}catch{}
+ useEffect(()=>{if(due&&!blocked&&!laneOwned){shown=true;let storage:Storage|null=null;try{storage=localStorage;}catch{}
   // Save codes (Oct 10 2026, doc §3.1 "A later nudge"): once, after a first card or graduation earned without a code. Never again.
   try{if(storage?.getItem(SAVE_NUDGE_KEY)==='due'&&!storage.getItem(SAVE_CODE_KEY)){storage.setItem(SAVE_NUDGE_KEY,'shown');setNudge(true);}}catch{}
-  markWelcomeBackSeen(storage);setOpen(true);setDue(false);}},[due,blocked]);
+  markWelcomeBackSeen(storage);setOpen(true);setDue(false);}},[due,blocked,laneOwned]);
  const onScreen=open&&!blocked&&!held;
  useEffect(()=>{if(!onScreen)return;const t=setTimeout(()=>setOpen(false),welcomeDwellMs());return()=>clearTimeout(t);},[onScreen]);
  // Mounted once (Oct 15 2026): while blocked (a job, a lesson, a modal) the card stays in the DOM, `hidden` (display:none in the

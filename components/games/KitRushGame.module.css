@@ -79,4 +79,15 @@
  .sideMedals em{font:400 20px/1 var(--cm-numeral);font-style:normal}
 }
 @media (max-height:700px){.learn{display:none}.how li{padding:6px 4px}.score{--cm-numeral-size:56px}.coach{display:none}}
+/* Phones with their browser bars under 600 px (Nov 11 2026: 375x553, 360x560): Play again comes straight after the result, the near-miss
+   line and the high-score strip, with the stats and the football fact under it (the card scrolls); the start card drops its stat chips
+   (Best stays in the card's top chip) so Play fits without scrolling. */
+@media (max-height:600px){
+ .game [data-kitrush-card=results]{display:flex;flex-direction:column;align-items:center}
+ .game [data-kitrush-card=results]>*{max-width:100%}
+ .game [data-kitrush-card=results]>:is(.actions,.chips,.fact,.hsSlot){align-self:stretch}
+ .game [data-kitrush-card=results]>.actions{order:1;margin-bottom:12px}
+ .game [data-kitrush-card=results]>:is(.chips,.fact,.status){order:2}
+ .game [data-kitrush-card=start] .chips{display:none}
+}
 @media (prefers-reduced-motion:reduce){.banner{rotate:none}.banner svg,.score[data-new-best]{animation:none}}

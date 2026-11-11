@@ -74,12 +74,15 @@ export type SnakeState={
  gk:number;d:number;m:number;f:number;joined:number;call:number;
  picks:SnakePick[];ball:{on:boolean;x:number;y:number};ballIn:number;boot:{on:boolean;x:number;y:number;t:number;max:number};bootIn:number;
  foes:SnakeFoe[];dash:number;stall:number;saves:number;over:boolean;cause:number;stats:SnakeStats;
+ /** Kick-off waits for the first input (Nov 11 2026, owner: a child who has not found the controls crashed at once). While true the
+  *  clock stands still after the ready beat; the first turn() ends it and, with the captain still alone, may aim any way. */
+ hold:boolean;
 };
 
 function mulberry(seed:number){let a=seed>>>0;return()=>{a=(a+0x6d2b79f5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
 
 export type SquadSnake=ReturnType<typeof createSquadSnake>;
-export function createSquadSnake(opts:{seed:number;daily?:boolean}){
+export function createSquadSnake(opts:{seed:number;daily?:boolean;hold?:boolean}){
  const rnd=mulberry(opts.seed),int=(n:number)=>Math.floor(rnd()*n),range=(r:readonly [number,number])=>r[0]+rnd()*(r[1]-r[0]);
  const C=SN.cols,R=SN.rows,N=SN.maxLine;
  const s:SnakeState={cols:C,rows:R,seed:opts.seed,daily:!!opts.daily,level:1,score:0,t:0,ticks:0,
@@ -87,7 +90,7 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean}){
   dir:0,moved:0,q0:0,q1:0,qn:0,acc:0,step:RAMP[0].step,ready:SN.ready,beat:0,
   gk:0,d:0,m:0,f:0,joined:0,call:int(CALLS.length),
   picks:[{on:false,x:0,y:0,pos:0},{on:false,x:0,y:0,pos:0}],ball:{on:false,x:0,y:0},ballIn:SN.firstBall,boot:{on:false,x:0,y:0,t:0,max:1},bootIn:SN.firstBoot,
-  foes:Array.from({length:SN.maxFoes},()=>({on:false,kind:0,x:0,y:0,px:0,py:0,dx:0,dy:0,lo:0,hi:0})),dash:0,stall:0,saves:1,over:false,cause:0,
+  foes:Array.from({length:SN.maxFoes},()=>({on:false,kind:0,x:0,y:0,px:0,py:0,dx:0,dy:0,lo:0,hi:0})),dash:0,stall:0,saves:1,over:false,cause:0,hold:!!opts.hold,
   stats:{picks:0,squads:0,calls:0,bestCode:0,bestBonus:0,bestCall:false,shapes:0,balls:0,boots:0,knocks:0,cards:0,saves:0,skids:0,turns:0,longest:1}};
  s.xs[0]=s.pxs[0]=SN.startX;s.ys[0]=s.pys[0]=SN.startY;
  const events:SnakeEvent[]=Array.from({length:SN.maxEvents},()=>({type:'ready' as SnakeEventType,x:0,y:0,a:0,b:0,c:0}));let en=0;
@@ -207,7 +210,7 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean}){
  return {
   state:s,events,
   /** 0..1: how far through the current cell the drawing is. */
-  get frac(){return s.over||s.ready>0||s.beat>0?0:Math.min(1,s.acc/stepNow());},
+  get frac(){return s.over||s.hold||s.ready>0||s.beat>0?0:Math.min(1,s.acc/stepNow());},
   get stepSeconds(){return stepNow();},
   /** What the pitch offers now: [one more of this line, first of the next line] as positions (0 = not on offer). */
   offers(){options();return opt;},
@@ -215,6 +218,7 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean}){
    *  so a fast double swipe is the legal two-step U-turn. Returns whether it was taken. */
   turn(d:number):boolean{
    if(s.over||d<0||d>3||d!==Math.floor(d))return false;
+   if(s.hold){s.hold=false;if(s.len===1&&s.qn===0&&d!==s.dir){s.dir=s.moved=d;s.stats.turns++;emit('turn',s.xs[0],s.ys[0],d);}return true;}// kick-off: the first press starts the run (alone, the captain may face any way)
    const base=s.qn===0?s.dir:s.qn===1?s.q0:s.q1,prev=s.qn===2?s.q0:base;
    if(s.qn<2){if(d===base||d===(base+2)%4)return false;if(s.qn===0)s.q0=d;else s.q1=d;s.qn++;}
    else{if(d===prev||d===(prev+2)%4)return false;s.q1=d;}// a third quick swipe replaces the second held turn
@@ -222,7 +226,7 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean}){
   },
   step(dt:number){
    if(s.over||!(dt>0))return;s.t+=dt;
-   if(s.ready>0){s.ready-=dt;if(s.ready>0)return;dt=-s.ready;s.ready=0;}// the rest of the frame is played, so the tick times do not depend on the frame rate
+   if(s.ready>0){s.ready-=dt;if(s.ready>0)return;dt=-s.ready;s.ready=0;}if(s.hold)return;// the rest of the frame is played, so the tick times do not depend on the frame rate
    if(s.beat>0){s.beat-=dt;if(s.beat<=0){s.beat=0;nextLevel();}return;}
    if(!s.ball.on){s.ballIn-=dt;if(s.ballIn<=0){if(place(4,1)){s.ball.on=true;s.ball.x=spot.x;s.ball.y=spot.y;emit('ballIn',spot.x,spot.y);}else s.ballIn=2;}}
    if(s.boot.on){s.boot.t-=dt;if(s.boot.t<=0){s.boot.on=false;s.bootIn=range(SN.bootEvery);emit('bootGone',s.boot.x,s.boot.y);}}
