@@ -106,7 +106,7 @@ vec3 uwSurfaceOver(vec3 col,vec2 S,vec4 F,float vy,float L,float h,vec3 lit){
  float t=uWaterTime,d=F.r;vec4 lc=texture2D(uWaterNoise,S*.21+vec2(t*.004,t*.002));float lace=lc.g;
  // Light shafts (in-scattering): brighter where the light came in through a bright patch of surface, more over a longer path.
  col+=uwTint(h)*(lit+UW_GLOW*.4)*smoothstep(.45,.85,lc.b)*(1.-exp(-min(L,h*1.5+.3)*.35))*.07;
- float swell=smoothstep(.74,1.,swellPhase(d,F.g))*(.5+.5*smoothstep(.25,.75,lc.b))*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
+ float swell=smoothstep(.74,1.,swellPhase(d,F.g,S))*(.5+.5*smoothstep(.25,.75,lc.b))*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
  float lines=smoothstep(.5,.56,lace)*smoothstep(.64,.58,lace)*smoothstep(.3,2.,d);
  // Half the strip's crest brightening: a passing swell must not wash a whole fan pale (it reads as the coral losing colour).
  col=mix(col,vec3(.42,.72,.7)*lit+uwTint(0.)*UW_GLOW*.3,swell*.14+lines*.08);

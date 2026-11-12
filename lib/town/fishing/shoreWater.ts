@@ -228,7 +228,7 @@ export function createShoreStrip(field:ShoreField,noise:T.Texture){
    // Oct 14 2026 polish ("a gentle, layered surface"): the swell crest is broader and broken up by the soft noise (it used to draw
    // hard straight bands across the phone screen), and the ripple lines come and go in slow wind gusts drifting across the water
    // (one ALU wave over the noise already read: no extra texture reads). Period 20 s divides the water clock's wrap.
-   float sph=swellPhase(d,n1);swell=smoothstep(.74,1.,sph)*(.5+.5*smoothstep(.25,.75,laceT.b))*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
+   float sph=swellPhase(d,n1,vWaterXZ);swell=smoothstep(.74,1.,sph)*(.5+.5*smoothstep(.25,.75,laceT.b))*smoothstep(.2,1.5,d)*smoothstep(32.,6.,d);
    float gust=.5+.5*sin(dot(vWaterXZ,vec2(.19,.12))-t*.314159+n2*5.+laceT.b*3.);
    float lines=smoothstep(.5,.56,lace)*smoothstep(.64,.58,lace)*smoothstep(.3,2.,d)*(.45+.95*gust);
    float fres=vTrans.a;

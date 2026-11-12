@@ -6,7 +6,8 @@
 /* Hidden (not unmounted) while blocked, so the same node comes back (Oct 15 2026); the stack also hides [hidden], this covers outside it. */
 .card[hidden]{display:none}
 .card span{text-wrap:balance}
-.card .note{font-weight:600;font-size:13px;line-height:1.35;max-width:30ch;margin-inline:auto}
+/* Owner (Nov 12 2026): the coins note stays on ONE line (card = "Next up" line + note line), no 30ch cap. */
+.card .note{font-weight:600;font-size:13px;line-height:1.35;margin-inline:auto}
 
 /* Landscape phones (Sep 30 2026, leftover from the Deploy 11 audit): the centred card covered the screen centre (the player) and,
    with a job running, the docked job panel and its Stop job. A running job now owns the stack (Town blocks this card until the

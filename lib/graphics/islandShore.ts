@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {SHORE_FOAM_GLSL,SHORE_FOAM_UNIFORMS} from './shoreFoamFx';
-import {WATER_UNIFORMS,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SHORE_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,SHORE_VIS_LIFT,SHORE_VIS_SLOPE,SHORE_HIGH,setIsleField,shoreDrape,shoreRough} from './waterSurface';
+import {WATER_UNIFORMS,CLEAR_WIN_GLSL,CLEAR_WIN_UNIFORMS,SEA_STATE,SHORE_GLSL,SHORE_PULL_GLSL,SHORE_LAND_LIFT,SHORE_VIS_LIFT,SHORE_VIS_SLOPE,SHORE_HIGH,setIsleField,shoreDrape,shoreRough} from './waterSurface';
 
 // Self-contained (the fishing shoreline in lib/town/fishing/shoreWater.ts has its own copies and its own owner).
 const WATER_Y=-.42,STRIP_Y=-.403;
@@ -158,6 +158,35 @@ function smooth121(f:Float32Array,w:number,h:number,passes:number){
  }
 }
 /**
+ * Exposure to the open sea (Nov 11 2026 sea state, docs/performance-guide.md "Sea state"), baked ONCE with the field: 0 = a
+ * sheltered cove or lee shore, 1 = an exposed coast or the open sea. On an 8 m lattice of sea points (the 1 m signed distance
+ * `sdf`, w×h, + sea) 16 rays are sphere-traced over the distance field out to 200 m; each ray's open run counts, the rays
+ * looking toward where the swell comes from (SEA_STATE.swell) a little more. Land points borrow their sea neighbours' value and
+ * past ~40 m from land it eases to 1 by ~90 m. Returns the value per 2 m texel (tw×tz, texel centres at 2i+1 m), bilinear from the
+ * lattice. About 6k lattice points × 16 rays × ~8 steps on the island: a few ms, once.
+ */
+export function seaExposure(sdf:Float32Array,w:number,h:number,tw:number,tz:number,cell=8){
+ const gw=Math.ceil(w/cell)+1,gh=Math.ceil(h/cell)+1,lat=new Float32Array(gw*gh).fill(NaN),R=16,MAX=200;
+ const at=(x:number,z:number)=>{const ix=Math.round(x),iz=Math.round(z);return ix<0||iz<0||ix>=w||iz>=h?1e3:sdf[iz*w+ix];};
+ const sx=SEA_STATE.swell[0],sz=SEA_STATE.swell[1];
+ for(let j=0;j<gh;j++)for(let i=0;i<gw;i++){const x=i*cell,z=j*cell,sd=at(x,z);if(sd<1)continue;if(sd>90){lat[j*gw+i]=1;continue;}
+  let sum=0,wsum=0;
+  for(let k=0;k<R;k++){const a=(k+.5)/R*Math.PI*2,dx=Math.cos(a),dz=Math.sin(a);let t=0;
+   for(let n=0;n<40&&t<MAX;n++){const v=at(x+dx*t,z+dz*t);if(v<.5)break;t+=Math.max(v,2);}
+   const wt=1-.45*(dx*sx+dz*sz);sum+=wt*Math.min(t,MAX)/MAX;wsum+=wt;}
+  const e=Math.min(1,Math.max(0,(sum/wsum-.18)/.55));lat[j*gw+i]=e+(1-e)*Math.min(1,Math.max(0,(sd-40)/50));}
+ // Land and near-land lattice points: the mean of their sea neighbours (a few passes), else a middling .6.
+ for(let pass=0;pass<4;pass++){const next=lat.slice();
+  for(let j=0;j<gh;j++)for(let i=0;i<gw;i++){const k=j*gw+i;if(!Number.isNaN(lat[k]))continue;let s=0,n=0;
+   for(let dj=-1;dj<=1;dj++)for(let di=-1;di<=1;di++){const ii=i+di,jj=j+dj;if(ii<0||jj<0||ii>=gw||jj>=gh)continue;const v=lat[jj*gw+ii];if(!Number.isNaN(v)){s+=v;n++;}}
+   if(n)next[k]=s/n;}
+  lat.set(next);}
+ const out=new Float32Array(tw*tz),v=(i:number,j:number)=>{const q=lat[j*gw+i];return Number.isNaN(q)?.6:q;};
+ for(let y=0;y<tz;y++)for(let x=0;x<tw;x++){const fx=(2*x+1)/cell,fz=(2*y+1)/cell,ix=Math.min(gw-2,Math.floor(fx)),iz=Math.min(gh-2,Math.floor(fz)),tx=fx-ix,ty=fz-iz;
+  out[y*tw+x]=(v(ix,iz)*(1-tx)+v(ix+1,iz)*tx)*(1-ty)+(v(ix,iz+1)*(1-tx)+v(ix+1,iz+1)*tx)*ty;}
+ return out;
+}
+/**
  * The field: 1 m signed distances + lift (CPU, for the strip) and the 2 m texture (GPU, for the shaders).
  * Two waterlines (beach waves, Oct 12 2026: "the waves don't look good here"): `sdf` is the true one (where the ocean plane meets
  * the ground: the strip's drape and its fade into the ocean), `vis` the one drawn. Every beach ends in a sand skirt sloping 1–3 m
@@ -177,10 +206,13 @@ function buildIslandField(renderer:T.WebGLRenderer,scene:T.Scene){
  let coarse=new Float32Array(TX*TZ);const beach=new Float32Array(TX*TZ);
  for(let y=0;y<TZ;y++)for(let x=0;x<TX;x++){const a=(2*y)*NX+2*x,b=a+NX;coarse[y*TX+x]=(vis[a]+vis[a+1]+vis[b]+vis[b+1])/4;
   const h=Math.min(toHard[a],toHard[a+1],toHard[b],toHard[b+1]);beach[y*TX+x]=Math.min(1,Math.max(0,(h-1.5)/2.5));}
+ // Nov 11 2026 sea state: the texture's A is the exposure to the open sea (seaExposure); the beach flag went to the strip's own
+ // vertex attribute (`beach`, the same 2 m values sampled per vertex), the only place it was read.
+ const expo=seaExposure(sdf,NX,NZ,TX,TZ);
  {const next=new Float32Array(TX*TZ);for(let y=0;y<TZ;y++)for(let x=0;x<TX;x++){let sum=0,w=0;for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,yy=y+dy;if(xx<0||yy<0||xx>=TX||yy>=TZ)continue;const k=dx||dy?1:2;sum+=coarse[yy*TX+xx]*k;w+=k;}next[y*TX+x]=sum/w;}coarse=next;}
- // Noise: ~14 m sets of waves along the shore (G) and ~5 m detail (B).
+ // Noise: ~14 m sets of waves along the shore (G) and ~5 m detail (B); A: exposure (0 sheltered .. 1 open sea).
  const big=valueNoise(TX,7,7),small=valueNoise(TX,2.5,11),data=new Uint16Array(TX*TZ*4),h16=T.DataUtils.toHalfFloat;
- for(let i=0;i<TX*TZ;i++){data[i*4]=h16(coarse[i]);data[i*4+1]=h16(big[i]);data[i*4+2]=h16(small[i]);data[i*4+3]=h16(beach[i]);}
+ for(let i=0;i<TX*TZ;i++){data[i*4]=h16(coarse[i]);data[i*4+1]=h16(big[i]);data[i*4+2]=h16(small[i]);data[i*4+3]=h16(expo[i]);}
  const texture=new T.DataTexture(data,TX,TZ,T.RGBAFormat,T.HalfFloatType);texture.magFilter=texture.minFilter=T.LinearFilter;texture.generateMipmaps=false;texture.wrapS=texture.wrapT=T.ClampToEdgeWrapping;texture.needsUpdate=true;texture.name='island-shore-field';
  // The shader's copy of the true distance (the strip's fade into the ocean and its depth pull) is smoothed the same way.
  const sdfSmooth=sdf.slice();smooth121(sdfSmooth,NX,NZ,2);
@@ -188,7 +220,7 @@ function buildIslandField(renderer:T.WebGLRenderer,scene:T.Scene){
  // distance (the texture's R) and the highest ground in each 2 m cell (decks, rocks, sandbars). Two small arrays (~0.6 MB each).
  const high2=new Float32Array(TX*TZ);for(let y=0;y<TZ;y++)for(let x=0;x<TX;x++){const a=(2*y)*NX+2*x,b=a+NX;high2[y*TX+x]=Math.max(lift[a],lift[a+1],lift[b],lift[b+1]);}
  const cpu=isleCpuField(coarse,high2);
- return {sdf,sdfSmooth,vis,lift,texture,cpu,box:new T.Vector4(MIN_X,MIN_Z,SIZE_X,SIZE_Z)};
+ return {sdf,sdfSmooth,vis,lift,texture,cpu,beach,box:new T.Vector4(MIN_X,MIN_Z,SIZE_X,SIZE_Z)};
 }
 /** CPU lookups on the 2 m field, bilinear like the GPU's LinearFilter (texel centres), open sea (40 m) outside its rect. */
 export type IsleCpuField={distance(x:number,z:number):number;lift(x:number,z:number):number};
@@ -203,11 +235,32 @@ function isleCpuField(dist:Float32Array,high:Float32Array):IsleCpuField{
 // (darker damp line + bubbles that pop) after each wave, the foam edge breaking into lacy patches as it slows and slides back, thin
 // foam tinted see-through aqua, desktop glints, the player/ball interaction block (shoreFoamFx.ts), and no lace fetch far away.
 // Same two texture reads as before (field + one lace fetch, now four noises in it), one fewer far from the camera.
+/**
+ * The swash per strip VERTEX (Nov 11 2026 sea state; docs/performance-guide.md "Sea state"). Everything about a wave that depends
+ * only on the clock and the vertex (its cycle, size, set, run-up curve, the edge it reaches, the rush, the high-water mark's
+ * timing) is worked out at the 1 m grid's vertices and interpolated; the fragment keeps what needs the pixel (the wet sand, the
+ * lace, the foam shapes). The edge is continuous through a wave's wrap (it starts and ends at the waterline), and the cycle is
+ * passed unwrapped (vSw2.x) so the fragment's fract() never smears across a wrap.
+ * Per coast: the cycle is skewed by swellSkew (crests peel along the beach at the coast's own angle, so the shoreline never pulses
+ * all at once); the run-up is longer on exposed coasts (field A, in vBand.z); in sheltered water (A < ~.5) the laps come twice per
+ * wave and shorter (quick small laps), blended per vertex.
+ * vSw = (edge, rush, run-up top, wave size); vSw2 = (unwrapped cycle, high-water mark, mean run-up, hard edge 1 - beach).
+ */
+const STRIP_VERT_GLSL=/* glsl */`
+float swashRun(float ph){const float UP=.32;return ph<UP?sin(1.5708*ph/UP):pow(1.-(ph-UP)/(1.-UP),1.4);}
+float swashRush(float ph,float r){return ph<.32?mix(.5,1.,smoothstep(0.,.1,ph)):.25+.75*r;}
+void swashVertex(vec4 sh,float reachB,float beach){const float UP=.32;
+ float cyc=uSwashClock+sh.g*.35+swellSkew(vWaterXZ),ci=floor(cyc),ph=cyc-ci,ph2=fract(cyc*2.);
+ float nb=sh.b*3.,fb=floor(nb),amp=(.6+.4*mix(waterHash(ci+fb),waterHash(ci+fb+1.),smoothstep(0.,1.,nb-fb)))*waveSet(ci);
+ float q=smoothstep(.5,.2,sh.a),top=min(reachB*amp,1.95)*(1.-.45*q),r=swashRun(ph),r2=swashRun(ph2);
+ vSw=vec4(.1-top*mix(r,r2,q),mix(swashRush(ph,r),swashRush(ph2,r2),q),top,amp);
+ vSw2=vec4(cyc,step(UP,ph)*exp(-max(ph-UP,0.)*SWASH_P/2.2)*(1.-smoothstep(.84,.98,ph))*(1.-q),reachB*.8*(1.-.45*q),1.-beach);}
+`;
 const STRIP_GLSL=/* glsl */`
  // Tropical water (Oct 26 2026): the field's noises / beach flag and the fishing-box fade come from the vertex shader (vSh: the
  // 1 m strip grid over a 2 m bilinear field reads the same), so the fragment no longer fetches the field: one texture read and
  // ~30 ALU ops fewer per strip fragment, which pay for the shallow caustics, glints and wet sheen below.
- float n1=vSh.x,n2=vSh.y,beach=vSh.z;
+ float n1=vSh.x;// (vSh.yz: the 5 m noise and the exposure, used per vertex)
  // Inside a fishing box the fishing strip draws the shore instead (same fade, opposite sense).
  float own=vSh.w;
  // d: the drawn waterline (the flat sand's edge, + sea); dt: the true one. The strip never climbs a deck, a kerb or a rock (high),
@@ -228,25 +281,23 @@ const STRIP_GLSL=/* glsl */`
    if(uSunGlitter>0.){float k=uSunGlitter*(1.-vFar),lv=.5+.17*sin(t*.55+lz.b*4.);cau=k*max(1.-abs(lz.r-lv)*13.,0.);
     sparkle=k*smoothstep(.76,.95,lz.a)*max(sin(t*2.6+lz.r*31.+lz.b*17.)*4.-3.,0.);}}
   lace=lz.g;
-  // The swash cycle, in step with the ocean's swell (same irregular clock, same phase offset n1); each wave runs up a different
-  // height (blended between neighbouring noise bands so nothing seams along the beach), and every few waves a set runs further.
-  float cyc=uSwashClock+n1*.35,ci=floor(cyc),ph=fract(cyc);const float UP=.32;
-  float nb=n2*3.,fb=floor(nb),amp=(.6+.4*mix(waterHash(ci+fb),waterHash(ci+fb+1.),smoothstep(0.,1.,nb-fb)))*waveSet(ci);
-  float reachB=vBand.z*high,reachM=min(reachB*amp,1.95);
-  float r=ph<UP?sin(1.5708*ph/UP):pow(1.-(ph-UP)/(1.-UP),1.4);
-  e=.1-reachM*r;rush=ph<UP?mix(.5,1.,smoothstep(0.,.1,ph)):.25+.75*r;
+  // The swash cycle (in step with the ocean's swell, each wave its own height, sets, quick laps in the lee): per vertex since
+  // Nov 11 2026 (STRIP_VERT_GLSL, vSw / vSw2), so here only the edge, the rush, the run-up's top and the wave's size are read.
+  e=vSw.x;rush=vSw.y;float reachM=vSw.z,amp=vSw.w,ph=fract(vSw2.x);const float UP=.32;
   // Wet sand: when did the backwash last uncover this point? Dries over ~2.5 s; a damp band always stays by the water.
   // Uses the mean wave height (not this wave's), so nothing jumps where one wave hands over to the next along the beach.
-  float reachW=reachB*.8,x=.1-d,rr=clamp(x/max(reachW,.01),0.,1.),phU=UP+(1.-UP)*(1.-pow(rr,1./1.4)),since=(ph>=phU?ph-phU:ph+1.-phU)*SWASH_P;
+  float reachW=vSw2.z*high,x=.1-d,rr=clamp(x/max(reachW,.01),0.,1.),phU=UP+(1.-UP)*(1.-pow(rr,1./1.4)),since=(ph>=phU?ph-phU:ph+1.-phU)*SWASH_P;
   wet=max(smoothstep(reachW+.15,reachW-.15,x)*exp(-since/2.4),smoothstep(reachW+.6,0.,x)*.45)*high;
   // High-water mark: where this wave topped out stays a darker damp line, edged with bubbles that pop over ~2.5 s; it has faded
   // before the next wave (no seam at the cycle's wrap).
-  float markA=step(UP,ph)*exp(-max(ph-UP,0.)*SWASH_P/2.2)*(1.-smoothstep(.84,.98,ph))*high,ml=abs(x-reachM+.04+(lz.r-.5)*.14);
+  float markA=vSw2.y*high,ml=abs(x-reachM+.04+(lz.r-.5)*.14);
   mark=markA*(1.-smoothstep(.02,.13,ml));
   markBub=markA*(1.-smoothstep(.04,.3,ml))*smoothstep(.45+.4*(1.-markA),.6+.4*(1.-markA),lz.b);
   // The swell breaking over the slope just before it surges up the sand: a soft white line rolling in, a few small gaps in it
   // (fades out at the cycle's wrap: no seam along the beach).
   float dc=SWELL_L*(1.-ph)-.3,bl=1.-smoothstep(0.,.26+.06*dc,abs(d-dc));breaker=bl*bl*amp*smoothstep(3.2,1.,dc)*smoothstep(-.2,.6,dc)*smoothstep(.22,.5,lace+.08*n1)*.6;
+  // Rocks, walls and pier piles (Nov 11 2026): no run-up, a sharp bright slap line as each wave hits, lacing off as it drains.
+  breaker=max(breaker,vSw2.w*rush*rush*(1.-smoothstep(.02,.16,abs(vBand.w-e-.04)))*smoothstep(.25,.6,lace));
  }
  // Soft, slightly irregular edge (5 m noise + the lace), never a jittery line.
  float u=vBand.w+(lace-.5)*.16,cover=smoothstep(e-.05,e+.07,u),wd=max(u-e,0.);
@@ -288,7 +339,10 @@ export function createIslandShore(group:T.Group){
    if(stats.baked)return;stats.baked=true;const t0=performance.now();
    const field=buildIslandField(renderer,scene);texture=field.texture;cpu=field.cpu;noise=laceNoise();
    setIsleField(field.texture,field.box);
-   const {sdf,sdfSmooth,vis,lift}=field,rough=shoreRough(lift,NX,NZ,1),keepTall=(k:number)=>sdf[k]<=0&&lift[k]>.75;
+   const {sdf,sdfSmooth,vis,lift,beach}=field,
+   // The 2 m beach flag (1 beach, 0 a wall / kerb / deck edge) at a 1 m vertex, bilinear like the texture it used to be read from.
+   beachAt=(kx:number,kz:number)=>{const fx=Math.min(TX-1.001,Math.max(0,(kx+.5)/STEP-.5)),fz=Math.min(TZ-1.001,Math.max(0,(kz+.5)/STEP-.5)),ix=Math.floor(fx),iz=Math.floor(fz),tx=fx-ix,tz=fz-iz,i=iz*TX+ix;
+    return (beach[i]*(1-tx)+beach[i+1]*tx)*(1-tz)+(beach[i+TX]*(1-tx)+beach[i+TX+1]*tx)*tz;},rough=shoreRough(lift,NX,NZ,1),keepTall=(k:number)=>sdf[k]<=0&&lift[k]>.75;
    // Sand skirts drawn as shallow water (vis > 0, above the true water): shoreDrape keeps the strip off a boulder or a kerb and off
    // the ground next to it, which cut a tan hole round every rock on the causeway banks. Here the strip stays draped on the skirt,
    // on a rock at its foot (the lowest beach ground in 3×3), and the rock stands up through the water.
@@ -313,8 +367,8 @@ export function createIslandShore(group:T.Group){
    const wetRough=new Uint8Array(NX*NZ);for(let i=0;i<NX*NZ;i++)wetRough[i]=rough[i]&&sdf[i]>-1.5?1:0;
    const nearWetRough=(x:number,z:number)=>{for(let dz=-2;dz<=2;dz++)for(let dx=-2;dx<=2;dx++){const xx=x+dx,zz=z+dz;if(xx>=0&&zz>=0&&xx<NX&&zz<NZ&&wetRough[zz*NX+xx])return true;}return false;};
    // Quads in the band, bucketed into 128 m tiles.
-   const tiles=new Map<number,{index:Map<number,number>;positions:number[];lifts:number[];shores:number[];viss:number[];opens:number[];indices:number[]}>();
-   const tileOf=(x:number,z:number)=>{const key=Math.floor(x/TILE)*1000+Math.floor(z/TILE);let t=tiles.get(key);if(!t){t={index:new Map(),positions:[],lifts:[],shores:[],viss:[],opens:[],indices:[]};tiles.set(key,t);}return t;};
+   const tiles=new Map<number,{index:Map<number,number>;positions:number[];lifts:number[];shores:number[];viss:number[];opens:number[];beaches:number[];indices:number[]}>();
+   const tileOf=(x:number,z:number)=>{const key=Math.floor(x/TILE)*1000+Math.floor(z/TILE);let t=tiles.get(key);if(!t){t={index:new Map(),positions:[],lifts:[],shores:[],viss:[],opens:[],beaches:[],indices:[]};tiles.set(key,t);}return t;};
    // A boulder's rim on the dry beach (sand over DRY m beside it) isn't skipped like a deck: its quads are drawn on that sand (under
    // the rock), so the wet band and the foam run right up to the rock instead of stopping a texel short in a dry notch.
    const rockOnSand=(k:number)=>{if(vis[k]>0)return false;const x=k%NX,z=(k-x)/NX;for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const xx=x+dx,zz=z+dz;if(xx<0||zz<0||xx>=NX||zz>=NZ)continue;const i=zz*NX+xx;if(!rough[i]&&lift[i]>DRY&&lift[i]<=SHORE_HIGH)return true;}return false;};
@@ -326,22 +380,22 @@ export function createIslandShore(group:T.Group){
     if(!(lo<BAND_OUT&&hi>BAND_IN)||skip(c0)||skip(c1)||skip(c2)||skip(c3))continue;
     const tile=tileOf(x,z);
     const vertex=(k:number)=>{let i=tile.index.get(k);if(i===undefined){i=tile.positions.length/3;tile.index.set(k,i);const kx=k%NX,kz=(k-kx)/NX,[y,h,open]=skirtDrape(kx,kz,shoreDrape(lift,sdf,rough,NX,NZ,kx,kz,WATER_Y,STRIP_Y,2));
-     tile.positions.push(MIN_X+kx+.5,y,MIN_Z+kz+.5);tile.lifts.push(h);tile.shores.push(sdfSmooth[k]);tile.viss.push(vis[k]);tile.opens.push(open||!nearWetRough(kx,kz)?1:0);}return i;};
+     tile.positions.push(MIN_X+kx+.5,y,MIN_Z+kz+.5);tile.lifts.push(h);tile.shores.push(sdfSmooth[k]);tile.viss.push(vis[k]);tile.opens.push(open||!nearWetRough(kx,kz)?1:0);tile.beaches.push(beachAt(kx,kz));}return i;};
     const a=vertex(c0),b=vertex(c1),c=vertex(c2),d=vertex(c3);tile.indices.push(a,c,b,b,c,d);
    }
    material=new T.MeshLambertMaterial({color:'#ffffff',transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-2});
    const waterNoise=noise;
    material.onBeforeCompile=shader=>{
     Object.assign(shader.uniforms,WATER_UNIFORMS,CLEAR_WIN_UNIFORMS,SHORE_FOAM_UNIFORMS,{uWaterNoise:{value:waterNoise}});
-    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float lift,shore,vis,open;varying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;varying vec4 vSh,vBand;'+SHORE_GLSL+SHORE_PULL_GLSL)
-     .replace('#include <project_vertex>','#include <project_vertex>\nvLift=lift;vWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;vOpen=open;vVis=vis;vTrue=shore;vFar=smoothstep('+STRIP_FAR.near.toFixed(1)+','+STRIP_FAR.far.toFixed(1)+',-mvPosition.z);shorePull(mvPosition,shore,open);{vec4 sh=isleSample(vWaterXZ);vSh=vec4(sh.gba,1.-uShore*shoreEdge(vWaterXZ));vBand=vec4(1.-smoothstep(.2,1.7,shore),1.-smoothstep(1.9,2.5,shore),mix(.3,1.5*(.75+.5*sh.b),sh.a),vis+(sh.b-.5)*.32);}');
-    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;varying vec4 vSh,vBand;uniform sampler2D uWaterNoise;uniform float uSunGlitter;\n'+SHORE_GLSL+CLEAR_WIN_GLSL+SHORE_FOAM_GLSL)
+    shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nattribute float lift,shore,vis,open,beach;varying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;varying vec4 vSh,vBand,vSw,vSw2;'+SHORE_GLSL+SHORE_PULL_GLSL+STRIP_VERT_GLSL)
+     .replace('#include <project_vertex>','#include <project_vertex>\nvLift=lift;vWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;vOpen=open;vVis=vis;vTrue=shore;vFar=smoothstep('+STRIP_FAR.near.toFixed(1)+','+STRIP_FAR.far.toFixed(1)+',-mvPosition.z);shorePull(mvPosition,shore,open);{vec4 sh=isleSample(vWaterXZ);vSh=vec4(sh.gba,1.-uShore*shoreEdge(vWaterXZ));vBand=vec4(1.-smoothstep(.2,1.7,shore),1.-smoothstep(1.9,2.5,shore),mix(.3,1.5*(.75+.5*sh.b)*(.55+.6*sh.a),beach),vis+(sh.b-.5)*.32);swashVertex(sh,vBand.z*(1.-smoothstep(.38,.42,lift)),beach);}');
+    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying float vLift,vOpen,vVis,vTrue,vFar;varying vec2 vWaterXZ;varying vec4 vSh,vBand,vSw,vSw2;uniform sampler2D uWaterNoise;uniform float uSunGlitter;\n'+SHORE_GLSL+CLEAR_WIN_GLSL+SHORE_FOAM_GLSL)
      .replace('#include <map_fragment>',STRIP_GLSL)
      .replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\ntotalEmissiveRadiance+=waterLight*vec3(1.,.97,.9)+waterGlow;');
    };
    material.customProgramCacheKey=()=>'island-shore-strip-v7';
    for(const tile of tiles.values()){
-    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(tile.positions,3));g.setAttribute('lift',new T.Float32BufferAttribute(tile.lifts,1));g.setAttribute('shore',new T.Float32BufferAttribute(tile.shores,1));g.setAttribute('vis',new T.Float32BufferAttribute(tile.viss,1));g.setAttribute('open',new T.Float32BufferAttribute(tile.opens,1));
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(tile.positions,3));g.setAttribute('lift',new T.Float32BufferAttribute(tile.lifts,1));g.setAttribute('shore',new T.Float32BufferAttribute(tile.shores,1));g.setAttribute('vis',new T.Float32BufferAttribute(tile.viss,1));g.setAttribute('open',new T.Float32BufferAttribute(tile.opens,1));g.setAttribute('beach',new T.Float32BufferAttribute(tile.beaches,1));
     g.setAttribute('normal',new T.Float32BufferAttribute(new Float32Array(tile.positions.length).map((_,i)=>i%3===1?1:0),3));g.setIndex(tile.indices);g.computeBoundingSphere();geometries.push(g);
     const mesh=new T.Mesh(g,material);mesh.name='island-shore-water';mesh.renderOrder=.5;mesh.matrixAutoUpdate=false;mesh.castShadow=mesh.receiveShadow=false;mesh.raycast=()=>{};mesh.updateMatrix();group.add(mesh);
     stats.triangles+=tile.indices.length/3;

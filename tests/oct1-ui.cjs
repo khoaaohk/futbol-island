@@ -21,7 +21,7 @@ require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f
  assert.doesNotMatch(card,/setInterval|requestAnimationFrame/,'no loop');
  assert.match(town,/<WelcomeBack blocked=\{toastBlocked\|\|jobRunning\|\|jobCardShown\|\|actionFocus\} held=\{stackCovered\}\/>/,'Town pauses the dwell while the HUD stack is covered');
  // Balanced copy: the daily-play line wraps into two equal lines.
- assert.match(css,/\.card span\{text-wrap:balance\}/);assert.match(css,/\.card \.note\{[^}]*max-width:30ch;margin-inline:auto\}/,'the note has a sensible measure');
+ assert.match(css,/\.card span\{text-wrap:balance\}/);assert.match(css,/\.card \.note\{[^}]*margin-inline:auto\}/);assert.doesNotMatch(css,/\.card \.note\{[^}]*max-width/,'owner Nov 12: the coins note stays on one line');
  // Landscape docking kept (the hud-stack test pins the exact rule).
  assert.match(css,/@media \(orientation:landscape\) and \(max-height:500px\)\{[\s\S]*\.card\[data-welcome-back\]\{position:absolute;top:0;/);
  // Behaviour of the dwell logic, simulated with fake timers: shows, pauses while covered, restarts, hides; a tap hides at once.

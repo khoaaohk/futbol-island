@@ -45,6 +45,20 @@ float diveBlobQ(vec2 xz,int i){vec4 sp=uDiveSpots[i];vec2 d=xz-sp.xy;float l=len
  */
 export const SWASH_PERIOD=5.6,SWELL_LENGTH=5.5;
 /**
+ * Sea state (Nov 11 2026, owner: "have the water not all be uniform, and crashes at different angles and speeds. All of this can't
+ * increase heat"; docs/performance-guide.md "Sea state"). Paid for by moving work to the vertex shader (the ocean is two triangles,
+ * the shore strip a 1 m grid) and by cheaper per-wave hashing, so the per-fragment cost on phones went DOWN
+ * (tests/water-tropical-cost.cjs).
+ * - swell: the direction the long swell travels (world xz, unit) and how far it skews the shore crests (`skew`: crests move along
+ *   -shoreNormal + skew x swell, i.e. down the shore-distance gradient, straight at every coast; the small skew only staggers the
+ *   phase along the coast, a few degrees at most, so the shoreline never pulses all at once). skewV = -swell x skew / SWELL_LENGTH.
+ * - trains: two open-sea swell trains crossing (~70° apart, different lengths and speeds), drawn as soft light / dark bands whose
+ *   height follows the wind field. Their angular speeds are whole cycles per WATER_WRAP (seamless at the clock's wrap).
+ */
+const SEA_SWELL=[-.55,-.835] as const,SEA_SKEW=.06;// Nov 11 2026 owner: crests "hitting the island straight on": was .35 (a visible slant)
+export const SEA_STATE={swell:SEA_SWELL,skew:SEA_SKEW,skewV:[-SEA_SWELL[0]*SEA_SKEW/SWELL_LENGTH,-SEA_SWELL[1]*SEA_SKEW/SWELL_LENGTH] as const,
+ trains:[{length:24,dir:[-.55,-.835],cycles:529},{length:15.5,dir:[-.968,.25],cycles:724}] as const} as const;
+/**
  * Wave sets (Oct 26 2026, shore foam pass: "irregular period, a bigger set every few waves"). The swash clock (in waves) is the
  * plain t / SWASH_PERIOD warped by a slow sine, so wave gaps drift between ~4.5 s and ~7.5 s (never backwards: the warp's rate is
  * under the base rate). Its period is WATER_WRAP / 112 = 31.25 s, so the wrap stays seamless. Computed ONCE per frame on the CPU
@@ -99,7 +113,7 @@ export function setShore(texture:T.Texture|null,box:T.Vector4|null,strength:numb
 /** GLSL shared by the ocean and the shoreline strip. `shoreSample(xz)` returns (signed distance m, noise, noise, beach 1 / hard edge 0). */
 export const SHORE_GLSL=/* glsl */`
 uniform float uWaterTime,uSwashClock,uWaterDetail,uShore,uIsle;uniform vec3 uWaterNight;uniform sampler2D uShoreTex,uIsleTex;uniform vec4 uShoreBox,uIsleBox;uniform vec3 uSunDir;
-const float SWASH_P=${SWASH_PERIOD.toFixed(2)},SWELL_L=${SWELL_LENGTH.toFixed(2)};
+const float SWASH_P=${SWASH_PERIOD.toFixed(2)},SWELL_L=${SWELL_LENGTH.toFixed(2)};const vec2 SWELL_SKEW_V=vec2(${SEA_STATE.skewV.map(v=>v.toFixed(5)).join(',')});
 vec4 shoreSample(vec2 xz){return texture2D(uShoreTex,clamp((xz-uShoreBox.xy)/uShoreBox.zw,0.,1.));}
 /** 0 outside the box, rising to 1 a little inside it (no hard edge where the box ends). */
 float shoreEdge(vec2 xz){vec2 uv=(xz-uShoreBox.xy)/uShoreBox.zw;return smoothstep(0.,.14,min(min(uv.x,uv.y),min(1.-uv.x,1.-uv.y)));}
@@ -109,8 +123,10 @@ vec4 isleSample(vec2 xz){vec2 uv=(xz-uIsleBox.xy)/uIsleBox.zw;vec4 s=texture2D(u
  float inside=uIsle*smoothstep(0.,.03,min(min(uv.x,uv.y),min(1.-uv.x,1.-uv.y)));return mix(vec4(40.,.5,.5,1.),s,inside);}
 /** The field the ocean uses: the island's, with the sharper fishing field blended in over its box while fishing. */
 vec4 waterField(vec2 xz){vec4 s=isleSample(xz);if(uShore>0.){float k=uShore*shoreEdge(xz);if(k>0.)s=mix(s,shoreSample(xz),k);}return s;}
-/** Swell phase at signed distance d: crests where fract == 0, travelling toward the shore (d decreasing) once per wave (uSwashClock). */
-float swellPhase(float d,float alongNoise){return fract(d/SWELL_L+uSwashClock+alongNoise*.35);}
+/** Swell phase at signed distance d: crests where fract == 0, travelling toward the shore (d decreasing) once per wave (uSwashClock).
+ *  Nov 11 2026 sea state: plus swellSkew(xz), so each coast's crests arrive at its own angle and peel along the beach. */
+float swellSkew(vec2 xz){return dot(xz,SWELL_SKEW_V);}
+float swellPhase(float d,float alongNoise,vec2 xz){return fract(d/SWELL_L+uSwashClock+alongNoise*.35+swellSkew(xz));}
 /** Wave ci's size factor: 1, or up to 1+setBoost for the two waves of a set every ~setEvery waves (the set's start drifts). */
 float waveSet(float ci){float s=fract(ci/${SWASH_WARP.setEvery.toFixed(1)}+.31*waterHash(floor(ci/${SWASH_WARP.setEvery.toFixed(1)})));return 1.+${SWASH_WARP.setBoost.toFixed(2)}*smoothstep(.6,.76,s)*(1.-smoothstep(.9,1.,s));}
 `;
@@ -224,8 +240,6 @@ uniform float uSunGlitter;
 float glimHash(vec2 p){vec3 q=fract(vec3(p.xyx)*.1031);q+=dot(q,q.yzx+33.33);return fract((q.x+q.y)*q.z);}
 /** Two hashes for the price of ~one (tropical water, Oct 26 2026: the net's cells used two glimHash calls each, 18 per layer). */
 vec2 glimHash2(vec2 p){vec3 q=fract(vec3(p.xyx)*vec3(.1031,.103,.0973));q+=dot(q,q.yzx+33.33);return fract((q.xx+q.yz)*q.zy);}
-/** The point the camera looks at on the water (the view ray through the screen centre). */
-vec2 waterLook(){vec3 fw=-vec3(viewMatrix[0][2],viewMatrix[1][2],viewMatrix[2][2]);return cameraPosition.xz+fw.xz*(max(cameraPosition.y+.43,1.)/max(-fw.y,.15));}
 /** Sun-reflection weight, a wide lobe for a steep (jetpack) camera so it never vanishes. */
 float waterSunLobe(vec2 xz){vec3 v=normalize(vec3(xz.x,-.43,xz.y)-cameraPosition);float r=max(dot(vec3(v.x,-v.y,v.z),uSunDir),0.);
  return mix(.35+.65*r*r*r,.7+.3*r,smoothstep(.7,.95,-v.y));}
@@ -236,9 +250,11 @@ float waterSunLobe(vec2 xz){vec3 v=normalize(vec3(xz.x,-.43,xz.y)-cameraPosition
 float waterRibbon(vec2 q,float n,float t,float sc,float pxm){
  // Oct 19 2026 (user, "Tide Bound" caustic reference; the warped-sine net read as thick parallel stripes from the jetpack).
  float cs=sc*2.1;vec2 p=q/cs;p+=.18*vec2(sin(p.y*2.1+t*.6+n*3.),sin(p.x*1.9-t*.5-n*3.));
- vec2 c=floor(p),f=p-c;float d1=8.,d2=8.;
+ // Nov 11 2026: the per-cell drift t*(.3+.3h)+2πh is .3t + h(.3t+2π), and o+.5-f is o + (.5-f): the loop-invariant parts are
+ // taken out of the 9-cell loop (same values, ~36 ALU fewer per fragment).
+ vec2 c=floor(p),f=.5-(p-c);float d1=8.,d2=8.,ta=.3*t,tb=ta+6.2832;
  for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 o=vec2(x,y),h=glimHash2(c+o);
-  vec2 r=o+.5+.38*sin(t*(.3+.3*h)+6.2832*h)-f;float e=dot(r,r);if(e<d1){d2=d1;d1=e;}else d2=min(d2,e);}
+  vec2 r=o+f+.38*sin(ta+h*tb);float e=dot(r,r);if(e<d1){d2=d1;d1=e;}else d2=min(d2,e);}
  float w=.034+1.5*pxm/cs;// pxm: the pixel footprint (m), taken outside any branch
  return (1.-smoothstep(0.,w,sqrt(d2)-sqrt(d1)))*min(1.,.045/w*1.6)*(.3+.7*smoothstep(-.4,.9,sin(t*.7+p.x*2.3-p.y*1.7+n*4.)));}
 /** Sun glitter (tropical water, Oct 26 2026, owner: "more light on the water showing sparkles", docs/TROPICAL_WATER_OCT26.md).
@@ -263,18 +279,39 @@ vec3 waterGlitter(vec2 xz,float pxm,float lobe,float clump){
  #endif
 }
 `;
+/**
+ * The ocean's vertex work (Nov 11 2026 sea state). The ocean is ONE plane of two triangles, so anything linear in the world position
+ * or depending only on the camera / clock is computed at its 4 vertices and interpolated exactly, instead of per fragment:
+ * - vSeaA: the two swell trains' phases (x, y; clock term wrapped to one turn), the shore swell's skew (z, swellSkew) and the
+ *   sea-state strength by camera height (w: 1 below ~12 m, easing to .4 by ~60 m; owner Nov 11 2026: "more subtle when flying
+ *   from above"), so from the jetpack the swell and crest lines are a hint and they come in smoothly as the camera descends.
+ * - vSeaCam: the point the camera looks at on the water (xy, the view ray through the screen centre), the camera height H (z) and
+ *   the light net's camera-height factor (w).
+ * - vDiveHit: the dive see-through test point (the view ray carried DIVE_SEE.depth m under the surface).
+ */
+const OCEAN_VERT_GLSL=/* glsl */`
+uniform float uWaterTime;varying vec2 vWaterXZ,vDiveHit;varying vec4 vSeaA,vSeaCam;const vec2 SWELL_SKEW_V=vec2(${SEA_STATE.skewV.map(v=>v.toFixed(5)).join(',')});
+void oceanVaryings(vec2 p){float t=uWaterTime;
+ ${SEA_STATE.trains.map((tr,i)=>`const vec2 K${i}=vec2(${tr.dir.map(v=>(v*2*Math.PI/tr.length).toFixed(5)).join(',')});const float W${i}=${(2*Math.PI*tr.cycles/WATER_WRAP).toFixed(6)};`).join('')}
+ vec3 fw=-vec3(viewMatrix[0][2],viewMatrix[1][2],viewMatrix[2][2]);float h=cameraPosition.y+.43,H=max(h,8.);
+ vSeaA=vec4(dot(p,K0)-mod(t*W0,6.2831853),dot(p,K1)-mod(t*W1,6.2831853),dot(p,SWELL_SKEW_V),mix(1.,.4,smoothstep(12.,60.,h)));
+ vSeaCam=vec4(cameraPosition.xz+fw.xz*(max(h,1.)/max(-fw.y,.15)),H,mix(.8,1.,smoothstep(7.,18.,h))*mix(1.,.6,smoothstep(20.,60.,H)));
+ vDiveHit=p+(p-cameraPosition.xz)*(${DIVE_SEE.depth.toFixed(1)}/max(cameraPosition.y-(${WATER_LEVEL_GLSL}),.05));}
+`;
 /** Patch the island ocean material (MeshStandardMaterial with the ripple tile as `map`). Safe to call once per material. */
 export function patchOceanMaterial(material:T.MeshStandardMaterial){
  material.onBeforeCompile=shader=>{
   Object.assign(shader.uniforms,WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,CLEAR_WIN_UNIFORMS);
-  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ;')
-   .replace('#include <project_vertex>','#include <project_vertex>\nvWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ;\n'+DIVE_GLSL+SHORE_GLSL+SWIM_CLEAR_GLSL+CLEAR_WIN_GLSL)
+  shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\n'+OCEAN_VERT_GLSL)
+   .replace('#include <project_vertex>','#include <project_vertex>\nvWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;oceanVaryings(vWaterXZ);');
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ,vDiveHit;varying vec4 vSeaA,vSeaCam;\n'+DIVE_GLSL+SHORE_GLSL+SWIM_CLEAR_GLSL+CLEAR_WIN_GLSL)
    .replace('#include <lights_pars_begin>','#include <lights_pars_begin>\n'+WATER_GLIMMER_GLSL)
    .replace('#include <map_fragment>',/* glsl */`
     // Fishing clear water (lib/town/fishing/shoreWater.ts, Oct 12 2026): the opaque fishing strip covers the ocean here, skip its shading.
     if(uShore>.999&&shoreEdge(vWaterXZ)>.999){float cd=shoreSample(vWaterXZ).r;if(cd>.02&&cd<14.9){gl_FragColor=vec4(0.,0.,0.,1.);return;}}
     float waterStreak=0.,waterLobe=.5;vec3 waterGlim=vec3(0.);vec4 ripple=vec4(1.);vec4 s=waterField(vWaterXZ);float d=s.r;
+    // The pixel footprint (m), taken outside every branch (derivatives): the light net, the glitter and the swell trains fade by it.
+    float pxS=max(length(dFdx(vWaterXZ)),length(dFdy(vWaterXZ)));
     // Dive shoals (water P2; Oct 20 2026 see-through rework): diveK = the shoal's weight here (1 at the heart, dissolving over a wide
     // band broken by low-frequency noise: no rim, no hard line), diveClr = how see-through (uDiveClear, the preview's seabed under it).
     // DIVE_SLOTS (2) nearest zones; a distance reject per slot, the atan + three sines only inside a lit slot's reach. Not motion: also on the still path.
@@ -282,7 +319,8 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     // Oct 21 2026 ("sand on the north end"): the see-through only where the view ray, carried on to the seabed preview's depth
     // (DIVE_SEE.depth m), still lands on the preview (q < DIVE_SEE.cover). A low or far view looks past the far crest into nothing,
     // and the sky's clear colour showed through the water as a khaki band beyond the far edge. One more blob test per lit slot.
-    vec3 dvE=vec3(vWaterXZ.x,${WATER_LEVEL_GLSL},vWaterXZ.y)-cameraPosition;vec2 dvHit=vWaterXZ+dvE.xz*(${DIVE_SEE.depth.toFixed(1)}/max(-dvE.y,.05));
+    // (Nov 11 2026: the hit point is linear in the position, so it is computed per vertex: vDiveHit.)
+    vec2 dvHit=vDiveHit;
     for(int i=0;i<${DIVE_SLOTS};i++){vec4 sp=uDiveSpots[i];if(sp.w>0.){float q=diveBlobQ(vWaterXZ,i);if(q<${DIVE_SHOAL.fade.toFixed(2)}){
      float qn=q+(clearWinW(vWaterXZ,.19,.31,7.)-.5)*${DIVE_SHOAL.wobble.toFixed(2)}*smoothstep(.3,.8,q),k=sp.w*(1.-smoothstep(${DIVE_SHOAL.inner.toFixed(2)},${DIVE_SHOAL.fade.toFixed(2)},qn));k*=k*(3.-2.*k);
      diveK=max(diveK,k);diveClr=max(diveClr,uDiveClear[i]*k*(1.-smoothstep(${DIVE_SEE.cover[0].toFixed(2)},${DIVE_SEE.cover[1].toFixed(2)},diveBlobQ(dvHit,i))));}}}
@@ -296,16 +334,24 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     // reflects instead of letting the seabed show; through a see-through fringe a flat view reached past the preview's floor. The
     // see-through part eases out between ~${DIVE_GRAZE[1]}° and ~${DIVE_GRAZE[0]}° of view elevation (the shoal colour above, dd, stays).
     {vec3 ev=cameraPosition-vec3(vWaterXZ.x,${WATER_LEVEL_GLSL},vWaterXZ.y);diveClr*=smoothstep(${Math.sin(DIVE_GRAZE[1]*Math.PI/180).toFixed(3)},${Math.sin(DIVE_GRAZE[0]*Math.PI/180).toFixed(3)},ev.y/max(length(ev),1e-3));}
+    // Sea state (Nov 11 2026, SEA_STATE): the wind field (the Nov 10 wind lanes, now computed once and shared): slow warped lanes
+    // ~130 m apart; rough = 0 in a glassy lane, 1 in a ruffled one, and only half as rough in the lee (field A: exposure to the open
+    // sea, baked once in islandShore.ts), never under .25. It scales the chop, the swell trains and the open-sea tint below.
+    float wp=sin(vWaterXZ.x*.024+1.6*sin(vWaterXZ.y*.019-vWaterXZ.x*.008)+uWaterTime*.015),rough=.25+.75*smoothstep(-.75,.75,wp)*(.45+.55*s.a),seaN=.5;
     #ifdef USE_MAP
     // Two drifting layers of the painted ripple tile (one on phones and on the still path), their strokes bent by the field's
     // noise so they read as wavy ripples instead of long straight streaks.
     // (Two domain-warped sines stand in for the field's noise out at sea, past the field's rect.)
-    vec2 wq=vWaterXZ*.11;float seaN=.5+.5*sin(wq.x+1.7*sin(wq.y*.8))*sin(wq.y*1.2+1.7*sin(wq.x*.7));
+    vec2 wq=vWaterXZ*.11;seaN=.5+.5*sin(wq.x+1.7*sin(wq.y*.8))*sin(wq.y*1.2+1.7*sin(wq.x*.7));
     vec2 rUv=vMapUv+(s.gb-.5)*.24+(seaN-.5)*vec2(.12,-.1);
-    vec4 rippleA=texture2D(map,rUv+uWaterTime*vec2(.014,.006));ripple=rippleA;
-    if(uWaterDetail>1.5){vec4 rippleB=texture2D(map,vec2(rUv.y,-rUv.x)*1.37+uWaterTime*vec2(-.008,.012));ripple=max(rippleA,rippleB);}
-    // The tile repeats every 32 m: patches of it fade out on the 14 m noise, so its strokes never line up into long streaks.
-    diffuseColor*=mix(vec4(.95),ripple,.3+.7*smoothstep(.3,.7,s.g*.45+s.b*.4+seaN*.5-.15));
+    // The tile holds two stroke sets (waterRipples.ts: R ~east-west, G ~70° across): chopF picks one or the other or both, so the
+    // chop's heading changes across the sea from the same single fetch.
+    float chopF=clamp(seaN+s.b-.5,0.,1.);vec4 rippleA=texture2D(map,rUv+uWaterTime*vec2(.014,.006));float rp=mix(rippleA.r,rippleA.g,chopF);
+    if(uWaterDetail>1.5){vec4 rippleB=texture2D(map,vec2(rUv.y,-rUv.x)*1.37+uWaterTime*vec2(-.008,.012));rp=max(rp,mix(rippleB.g,rippleB.r,chopF));}
+    ripple=vec4(mix(vec3(.855,.913,1.),vec3(1.),rp),1.);// the old #eef5ff-to-white tile tint
+    // The tile repeats every 32 m: patches of it fade out on the 14 m noise, so its strokes never line up into long streaks; glassy
+    // lanes keep only a quarter of the chop.
+    diffuseColor.rgb*=mix(vec3(.95),ripple.rgb,(.3+.7*smoothstep(.3,.7,s.g*.45+s.b*.4+seaN*.5-.15))*rough);
     #endif
     {
      // Depth: pale sandy shallows at the waterline, turquoise over the first metres, back to the open-sea teal by ~24 m.
@@ -316,7 +362,7 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
      // Open sea (Oct 19 2026 audit, Tide Bound "deeper blue past the drop-off"): past ~40 m the teal sinks toward a deeper blue. 2 ALU.
      // Nov 10 2026: broad wind patches (slow, warped lighter/darker lanes ~130 m apart, out past ~15 m; 2 sin + ~9 ALU, every tier),
      // folded into the open-sea factor so they cost no extra smoothstep.
-     {float sea=smoothstep(25.,110.,dd),wp=sin(vWaterXZ.x*.024+1.6*sin(vWaterXZ.y*.019-vWaterXZ.x*.008)+uWaterTime*.015);
+     {float sea=smoothstep(25.,110.,dd);
       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.015,.2,.47),sea*.55)*(1.+.075*wp*min(1.,dd*.04-.6));}
      // Nov 10 2026: night water, a moonlit blue instead of the day teal lit dimly (uniform set per time-of-day change; 1 ALU).
      diffuseColor.rgb*=uWaterNight;
@@ -325,29 +371,37 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
       // Swells rolling in toward every shore as broken crest lines, not evenly spaced contour rings (beach waves, Oct 12 2026): each
       // crest's strength varies wave to wave and along the shore (14 m sets, blended so nothing seams), it breaks into pieces on the
       // 5 m noise and bends with it (less so close in, where it meets the swash in step), and it fades out at sea and close in.
-      float cyc=swellPhase(d,s.g)+(s.b-.5)*.45*smoothstep(1.,9.,d),ph=fract(cyc),wi=floor(d/SWELL_L+uSwashClock+s.g*.35+.5);
-      float nb=s.g*4.,fb=floor(nb),wset=mix(waterHash(wi*1.7+fb),waterHash(wi*1.7+fb+1.),smoothstep(0.,1.,nb-fb))*waveSet(wi);
+      // Swell trains (Nov 11 2026, SEA_STATE.trains): two trains crossing ~70° apart, 24 m and 15.5 m long at their own speeds
+      // (phases per vertex, vSeaA), bent by the sea noise so no crest runs straight; their height follows the wind field (rough),
+      // dies away over the shallows and fades out before a crest gets under ~4 px (no shimmer from high up). Soft light / dark
+      // bands, the crest a little paler (linear in the height: a threshold drew the two trains' peaks as a lattice of spots).
+      float sw=(sin(vSeaA.x+seaN*4.)*.6+sin(vSeaA.y+s.g*4.5)*.4)*rough*vSeaA.w*(1.-nearK)*(1.-smoothstep(1.,3.5,pxS));
+      diffuseColor.rgb=diffuseColor.rgb*(1.+.09*sw)+max(sw,0.)*vec3(.01,.024,.028);// Nov 11 2026: ~30% softer (owner: "lower opacity a bit")
+      // Per coast (Nov 11 2026): the swell's length follows the exposure (field A: shorter, slower crests in the lee and in coves),
+      // its crests arrive at the coast's own angle (vSeaA.z, swellSkew) and they reach further out and stronger on exposed coasts.
+      // From high up (vSeaA.w) they are a third as strong and stay close in.
+      // The size per wave is one smooth sine over the wave index and the 14 m noise (was two blended hashes: ~40 ALU fewer).
+      float cyc=d/(SWELL_L*(.7+.3*s.a))+uSwashClock+s.g*.35+vSeaA.z+(s.b-.5)*.45*smoothstep(1.,9.,d),ph=fract(cyc),wi=floor(cyc+.5);
+      float wset=(.7+.3*sin(wi*2.4+s.g*7.))*waveSet(wi);
       crest=smoothstep(.8,1.,ph)+1.-smoothstep(0.,.07,ph);
-      float reach=smoothstep(22.,8.,d)*smoothstep(.8,3.5,d)*wset*smoothstep(.3,.62,s.b+.45*wset-.2);
+      float reach=smoothstep(10.+20.*s.a*vSeaA.w,6.,d)*smoothstep(.8,3.5,d)*wset*(.3+.55*s.a)*vSeaA.w*smoothstep(.3,.62,s.b+.45*wset-.2);
       diffuseColor.rgb+=reach*crest*vec3(.1,.14,.12);
       // Animal Crossing-style white ripple lines on the crest close in, broken up by the ripple tile and the noise.
-      diffuseColor.rgb+=reach*smoothstep(.9,1.,ph)*smoothstep(11.,3.,d)*smoothstep(.9,1.,ripple.r+.1*s.b)*vec3(.35);
+      diffuseColor.rgb+=reach*smoothstep(.9,1.,ph)*smoothstep(11.,3.,d)*smoothstep(.9,1.,ripple.r+.1*s.b)*vec3(.3);
      }
      #ifdef USE_MAP
      // Light streaks (WATER_GLIMMER_GLSL notes): soft ribbons, ALU only (no texture read), one layer on phones / the still path,
      // two on desktop; each fades to its mean sheen before its bands get thinner than ~2 px (no moire out at sea).
-     float H=max(cameraPosition.y+.43,8.),lr=distance(vWaterXZ,waterLook()),cr=distance(vWaterXZ,cameraPosition.xz);
+     float H=vSeaCam.z,lr=distance(vWaterXZ,vSeaCam.xy),cr=distance(vWaterXZ,cameraPosition.xz);// vSeaCam: per vertex (look point, height)
      float reachS=smoothstep(1.5,7.,dd)*(1.-smoothstep(.5*H+15.,1.5*H+50.,lr))*(.5+.5*smoothstep(3.,.8*H+8.,cr));
-     waterLobe=waterSunLobe(vWaterXZ);
-     float pxS=max(length(dFdx(vWaterXZ)),length(dFdy(vWaterXZ))),nS=seaN+s.g-.5;
-     if(reachS>0.){float t=uWaterTime;
+     if(reachS>0.){float t=uWaterTime,nS=seaN+s.g-.5;waterLobe=waterSunLobe(vWaterXZ);// (Nov 11 2026: lobe + noise only where used)
       float k1=1.-smoothstep(.25,.6,pxS),st=k1*waterRibbon(mat2(.86,.51,-.51,.86)*vWaterXZ,nS,t,1.,pxS)+.04*(1.-k1);
       if(uWaterDetail>1.5){float k2=1.-smoothstep(.4,.9,pxS);st=max(st,.6*k2*waterRibbon(mat2(.93,.37,-.37,.93)*vWaterXZ+vec2(37.,11.),-nS,-t*.8,1.45,pxS));}
       float nearS=smoothstep(30.,8.,dd);// the shoals get the shallows' light net too (no extra reads)// Oct 19 2026: the net reads strongest in the shallows by the beaches
       // A low camera (the fishing view, ~5 m up; Oct 19 2026 one shore) sees the ribbons big and near: they read as a white fog
       // over the clear window, so they fade to a hint below ~18 m of camera height (the walking / flying views are unchanged).
       // A high (jetpack) camera sees many cells at once: the net eases to ~60% above ~20 m so it never becomes a sheet.
-      waterStreak=st*reachS*(.75+.25*waterLobe)*(.12+1.38*nearS)*mix(.8,1.,smoothstep(7.,18.,cameraPosition.y+.43))*mix(1.,.6,smoothstep(20.,60.,H))*(uWaterDetail<.5?.55:1.);
+      waterStreak=st*reachS*(.75+.25*waterLobe)*(.12+1.38*nearS)*vSeaCam.w*(uWaterDetail<.5?.55:1.);// vSeaCam.w: the camera-height factor, per vertex
       diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.55,.86,.9),min(waterStreak*.17,.27));
       // Sun glitter (waterGlitter): near the camera only (this branch), off the strip's swash (dd), on a uniform gate.
       if(uSunGlitter>0.)waterGlim=waterGlitter(vWaterXZ,pxS,waterLobe,nS+.5*ripple.r)*smoothstep(1.,3.5,dd);}

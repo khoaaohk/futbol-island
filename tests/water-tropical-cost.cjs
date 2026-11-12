@@ -20,6 +20,10 @@ const BASE={
 // wind lanes (2 sin) and the night tint (1 mul) were added on purpose; far whitecaps were removed the same day (owner's call).
 // Allowance on the two tier-0 phone ocean paths that had no headroom left; every other path still sits at or under its baseline.
 BASE.ocean.far.alu+=25;BASE.ocean.nearPhone.alu+=20;// measured 790 and 1280 (+3 % / +1.4 %)
+// Nov 11 2026 sea state (docs/performance-guide.md "Sea state"): swell trains, per-coast shore swell and swash, two-way chop, paid
+// for by moving work to the vertex shaders and cheaper per-wave hashing. Ratchet: the paths that went DOWN are pinned at the new figures.
+Object.assign(BASE.ocean.far,{alu:788});Object.assign(BASE.ocean.nearPhone,{alu:1254});Object.assign(BASE.ocean.nearDesk,{alu:1568});
+for(const [k,v] of Object.entries({still:301,far:432,nearPhone:473,nearPhoneHot:436,nearDesk:473}))BASE.shore[k].alu=v;
 const now=waterPaths(src('lib/graphics/waterSurface.ts'),src('lib/graphics/islandShore.ts'));
 
 ok('fragment cost per path is not higher than before (ALU and texture reads; ocean + shore strip; phone, desktop, hot, still, far)',()=>{
@@ -71,5 +75,18 @@ ok('no per-frame allocation: the gate + clock step keep the heap flat',()=>{
  if(typeof global.gc!=='function'){console.log('     (run with --expose-gc for the heap check; skipped)');return;}
  global.gc();const h0=process.memoryUsage().heapUsed;run(200000);global.gc();const h1=process.memoryUsage().heapUsed;
  assert(h1-h0<256*1024,'heap grew '+(h1-h0)+' bytes');assert(U.uSunGlitter.value===0||U.uSunGlitter.value===1);});
+
+ok('sea state (Nov 11 2026): exposure bake (cove < open coast), work per vertex, seamless train speeds, swash per strip vertex',()=>{
+ const S=load('lib/graphics/islandShore.ts'),w=200,h=200,sdf=new Float32Array(w*h);
+ // land everywhere x < 60, plus a cove: land walls z < 80 and z > 120 for x < 140 (water between them opens east at x 60..140)
+ const land=(x,z)=>x<60||(x<140&&(z<80||z>120));
+ for(let z=0;z<h;z++)for(let x=0;x<w;x++){let best=1e9;for(let r=0;r<=60&&best>r;r+=1)for(const [dx,dz] of [[r,0],[-r,0],[0,r],[0,-r]]){const xx=x+dx,zz=z+dz;if(xx>=0&&zz>=0&&xx<w&&zz<h&&land(xx,zz)!==land(x,z))best=Math.min(best,r);}sdf[z*w+x]=land(x,z)?-best:best;}
+ const E=S.seaExposure(sdf,w,h,w/2,h/2),at=(x,z)=>E[Math.floor(z/2)*(w/2)+Math.floor(x/2)];
+ assert(at(70,100)<at(180,100)-.25,'cove '+at(70,100).toFixed(2)+' vs open '+at(180,100).toFixed(2));
+ const ws=src('lib/graphics/waterSurface.ts'),shore=src('lib/graphics/islandShore.ts');
+ assert(/void oceanVaryings\(vec2 p\)/.test(ws)&&/oceanVaryings\(vWaterXZ\)/.test(ws),'ocean: phases, look point and dive hit per vertex');
+ for(const t of W.SEA_STATE.trains)assert(Number.isInteger(t.cycles),'whole cycles per wrap');
+ assert(/swashVertex\(sh,/.test(shore)&&/e=vSw\.x;rush=vSw\.y;/.test(shore),'swash per strip vertex');
+ assert(/data\[i\*4\+3\]=h16\(expo\[i\]\)/.test(shore),'field A = exposure (no new texture)');});
 
 if(failed){console.log(failed+' failed');process.exit(1);}
