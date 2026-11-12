@@ -21,14 +21,14 @@ import styles from './ArcadeRoom.module.css';
 import {setArcadeBusy} from '@/lib/arcade/arcadeRoomHooks';
 // Party in rooms (docs/multiplayer-rooms-design.md Phase 3): friends in the Arcade walk about the hub; a friend in a game shows at its
 // cabinet in a force field. The layer lives for the PAGE (a game replaces the hub); Leave-only chip under the header.
-import {useArcadeRoomParty} from './party/useArcadeRoomParty';
+import {useArcadeRoomParty} from './party/useArcadeRoomParty';import type {RoomPartyHandle} from './party/useRoomParty';
 const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});// only rendered with a live party (flag on)
 import {paintJoystick} from '@/lib/town/joystickFeedback';
 import {stickInput,stickTravel} from '@/lib/town/floatingStick';
 import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
-const Tennis=dynamic(()=>import('./games/ArcadeGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="tennis"/>});
-const Pinball=dynamic(()=>import('./games/ArcadeGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="pinball"/>});
-const Runner=dynamic(()=>import('./games/ArcadeGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="runner"/>});
+const Tennis=dynamic(()=>import('./games/TennisGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="tennis"/>});
+const Pinball=dynamic(()=>import('./games/PinballGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="pinball"/>});
+const Runner=dynamic(()=>import('./games/RunnerGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="runner"/>});
 const PassPuzzle=dynamic(()=>import('./games/PassPuzzleGame'),{ssr:false,loading:()=> <ArcadeGameLoading game="puzzle"/>});
 // Nov 10 2026: Kit Rush took Island Strikers' cabinet. Strikers (./LiveArcadeMatch, lib/arcade/striker*) stays in the repo but is no longer
 // reachable from the arcade; an old /arcade?game=live link opens Kit Rush.
@@ -36,6 +36,15 @@ const SquadSnake=dynamic(()=>import('./games/SquadSnakeGame'),{ssr:false,loading
 const AirFutbol=dynamic(()=>import('./games/AirFutbolGame'),{ssr:false,loading:()=> <ArcadeGameLoading game="airhockey"/>});
 const KitRush=dynamic(()=>import('./games/KitRushGame'),{ssr:false,loading:()=> <ArcadeGameLoading game="kitrush"/>});
 const gameComponents={tennis:Tennis,pinball:Pinball,runner:Runner};
+/* Nov 11 2026 (slow-connection loading, docs/qa/arcade-load-after.md): the same chunks as the dynamic() games above (webpack shares them).
+ * A deep link /arcade?game=<id> starts its game's download while this module evaluates, before hydration, instead of after it. */
+const gameChunks:Record<ArcadeCabinetId,()=>Promise<unknown>>={tennis:()=>import('./games/TennisGame3D'),pinball:()=>import('./games/PinballGame3D'),runner:()=>import('./games/RunnerGame3D'),puzzle:()=>import('./games/PassPuzzleGame'),snake:()=>import('./games/SquadSnakeGame'),airhockey:()=>import('./games/AirFutbolGame'),kitrush:()=>import('./games/KitRushGame')};
+let earlyGame:{id:string;chunk:Promise<unknown>}|null=null;
+if(typeof window!=='undefined'){const raw=new URLSearchParams(location.search).get('game'),id=raw==='live'?'kitrush':raw;if(id&&Object.prototype.hasOwnProperty.call(gameChunks,id))earlyGame={id,chunk:gameChunks[id as ArcadeCabinetId]().catch(()=>{})};}
+const gameChunk=(id:ArcadeCabinetId)=>earlyGame?.id===id?earlyGame.chunk:gameChunks[id]().catch(()=>{});
+/** The party layer (three.js + avatars, ~0.5 MB) mounts once the room has drawn or the game's code is in, on idle: it no longer competes
+ * with a deep-linked 2D game or the room for a slow connection. Late attach is supported (arcadeRoomHooks attachArcadeLayer/busy). */
+function ArcadePartyLayer({onParty}:{onParty:(p:RoomPartyHandle|null)=>void}){const party=useArcadeRoomParty();useEffect(()=>{onParty(party);},[party,onParty]);useEffect(()=>()=>onParty(null),[onParty]);return null;}
 // The Hall of High Scores (docs/arcade-leaderboards.md): lazy, loaded when Scores is tapped; the room sleeps under it.
 const ArcadeBoards=dynamic(()=>import('./arcade/ArcadeBoards'),{ssr:false});
 // Today in the arcade (Nov 10 2026): one daily challenge per cabinet; lazy, loaded when Today is tapped.
@@ -43,7 +52,7 @@ const ArcadeTodayPanel=dynamic(()=>import('./arcade/ArcadeTodayPanel'),{ssr:fals
 /** One play per launch + time per game for admin analytics. `game` is the cabinet's analytics id (arcadeCatalog.ts arcadeAnalyticsId: Kit Rush reports on the slot it took over). */
 function trackArcadeGame(game:string|null){if(!game)return;countArcadeGame(game);return enterActivity(`arcade_${game}` as ActivityId);}
 export default function ArcadeRoom(){
- const party=useArcadeRoomParty();// before the scene effect: on unmount the layer goes first, then the hub
+ const [party,takeParty]=useState<RoomPartyHandle|null>(null),[partyOn,startParty]=useState(false);// the layer: <ArcadePartyLayer> below (not a busy flag: tests/mp-rooms-arcade.cjs)
  const [socialNear,setSocialNear]=useState<number|null>(null);
  const [revealed,setRevealed]=useState(false),[entryDone,setEntryDone]=useState(false),[minimumLoadingDone,setMinimumLoadingDone]=useState(false);
  useEffect(()=>{const timer=setTimeout(()=>setMinimumLoadingDone(true),700/* Nov 11 2026 (owner: the arcade took a while to get into): was 3000 */);return()=>clearTimeout(timer);},[]);
@@ -75,8 +84,10 @@ export default function ArcadeRoom(){
  const actionButton=(kind:ArcadeRoomAction,className:string,label:string,key:string)=><button key={kind} className={className} data-arcade-action={kind} data-social={socialNear!==null} aria-label={label} title={`${label} · ${key}`} onContextMenu={e=>e.preventDefault()} onPointerDown={e=>{if(!ready||e.button!==0)return;e.preventDefault();e.currentTarget.dataset.actionUntil=String(performance.now()+700);e.currentTarget.setPointerCapture(e.pointerId);e.currentTarget.dataset.charging='true';room.current?.beginAction(kind);}} onPointerUp={e=>{e.preventDefault();e.currentTarget.dataset.actionUntil=String(performance.now()+700);delete e.currentTarget.dataset.charging;room.current?.endAction(kind);if(e.currentTarget.hasPointerCapture(e.pointerId))e.currentTarget.releasePointerCapture(e.pointerId);}} onPointerCancel={e=>{delete e.currentTarget.dataset.charging;room.current?.endAction(kind,true);}} onLostPointerCapture={e=>{delete e.currentTarget.dataset.charging;room.current?.endAction(kind,true);}} onClick={e=>{if(performance.now()<Number(e.currentTarget.dataset.actionUntil??0))return;room.current?.action(kind);}}>{kind==='wave'||kind==='applaud'||kind==='celebrate'?<Icon name={kind==='wave'?'gloves':kind==='applaud'?'handshake':'star'} size={28}/>:<TravelIcon kind={kind==='jump'?'jump':kind==='shoot'?'shoot':kind==='keepups'?'juggle':kind==='rainbow'?'spin':'ballFeint'}/>}</button>;
  const chosen=arcadeCabinets.find(c=>c.id===near);
  useEffect(()=>{if(revealed||!queryReady)return;if(failed||game){setRevealed(true);return;}/* Nov 10 2026: a deep-linked game (/arcade?game=) has its own loading card, so the room's 3 s minimum no longer holds this screen over a menu that is already up */if(!minimumLoadingDone)return;if(!ready)return;let frame=0;const reveal=()=>{if((room.current?.state.draws??0)>0)setRevealed(true);else frame=requestAnimationFrame(reveal);};frame=requestAnimationFrame(reveal);return()=>cancelAnimationFrame(frame);},[ready,failed,game,queryReady,revealed,minimumLoadingDone]);
+ useEffect(()=>{if(partyOn||!queryReady)return;const go=game?gameChunk(game):revealed?Promise.resolve():null;if(!go)return;let dead=false,idle=0,timer:ReturnType<typeof setTimeout>|undefined;const w=window as Window&{requestIdleCallback?:(cb:()=>void,o?:{timeout:number})=>number;cancelIdleCallback?:(id:number)=>void};const on=()=>{if(dead)return;if(w.requestIdleCallback)idle=w.requestIdleCallback(()=>{if(!dead)startParty(true);},{timeout:2500});else timer=setTimeout(()=>{if(!dead)startParty(true);},1200);};go.then(on,on);return()=>{dead=true;if(idle)w.cancelIdleCallback?.(idle);if(timer)clearTimeout(timer);};},[partyOn,queryReady,game,revealed]);// party layer on idle after the room drew / the game's code arrived
  const ArcadeGame=gameComponents[game==='tennis'||game==='runner'?game:'pinball'];
  return <main aria-label="The Arcade" className={styles.root} data-entering={!revealed} data-exiting={exiting} data-arcade-room={game?'playing':'room'}>
+ {partyOn&&<ArcadePartyLayer onParty={takeParty}/>}
  {game?<div className={styles.game}>{game==='kitrush'?<KitRush onExit={back}/>:game==='snake'?<SquadSnake onExit={back}/>:game==='airhockey'?<AirFutbol onExit={back}/>:game==='puzzle'?<PassPuzzle onExit={back}/>:<ArcadeGame kind={game} onExit={back}/>}</div>:<>
  {/* Nov 11 2026 (owner): Today and Scores on the left, Exit on the right; no Coins button now that every arcade game is free to play. */}<header className={styles.header}><div className={styles.headerActions}><button onClick={()=>{setList(false);setHall(false);setToday(true);}} aria-haspopup="dialog" data-arcade-today><span className={styles.buttonFace}>Today</span></button><button onClick={()=>{setList(false);setToday(false);setHall(true);}} aria-haspopup="dialog" data-arcade-scores><span className={styles.buttonFace}>Scores</span></button></div><NavigationButton back label="Exit" onNavigate={()=>leave()}/></header>
  {party&&<div className={styles.partySlot}><RoomPartyChip party={party} hidden={list||hall||today} align="right"/></div>}
