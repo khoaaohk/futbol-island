@@ -53,7 +53,7 @@
 .toast{position:absolute;z-index:31;left:50%;transform:translateX(-50%);display:grid;gap:2px;justify-items:center;width:max-content;max-width:min(400px,calc(100vw - 32px));box-sizing:border-box;min-height:44px;
  padding:9px 18px;border:3px solid #fff2cd;border-radius:22px;background:#fff1d3;color:#244d40;font:inherit;text-align:center;cursor:pointer;box-shadow:0 5px 0 #a8863d,0 14px 30px #0f2a2f55;animation:toastIn .3s ease both}
 .toast b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:20px;line-height:1.1}
-.toast span{font-size:13px;font-weight:700;color:#4d5d49;line-height:1.35}
+.toast span{font-size:13px;font-weight:700;color:#4d5d49;line-height:1.35;white-space:pre-line}/* a \n in a detail = the owner's chosen line break (daily coins: two lines, Nov 12 2026) */
 @keyframes cardIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,-8px)}to{opacity:1;transform:translate(-50%,0)}}
 @media(max-width:600px){.card{padding:14px 16px 12px}.card h2{font-size:26px}.card p{font-size:13px}.offer{font-size:14px}.hud{padding:8px 10px 8px 14px}.hud b{font-size:18px}.hud p{font-size:12px}}

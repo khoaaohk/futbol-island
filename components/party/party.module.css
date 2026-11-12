@@ -194,17 +194,19 @@
 .firstCard h2{margin:0;font-family:IslandBrush,var(--btn-font);font-weight:400;font-size:26px;line-height:1.15}
 .firstCard p{margin:0;font:600 15px/1.4 var(--btn-font)}
 .firstCard .row>button{flex:1 1 0;min-height:48px;font:800 15px/1 var(--btn-font)}
-.peopleHint{position:fixed;z-index:37;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:12px 12px 12px 16px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:20px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 8px 22px #193f3740;animation:partyIn .26s ease-out}
-.peopleHint p{flex:1 1 auto;margin:0;font:700 15px/1.35 var(--btn-font);text-align:left}
-.peopleHint>button{flex:none;min-width:64px;min-height:44px;font:800 15px/1 var(--btn-font)}
 /* Phase 2 (Nov 12 2026): the live count under the people button ("8 on now"); only in a public world with others, never at 0. */
 .peopleCount{position:absolute;top:calc(100% - 7px);left:50%;translate:-50% 0;height:20px;padding:0 8px;border-radius:10px;background:var(--btn-green);color:var(--btn-ink-on-dark);font:800 12px/20px var(--btn-font);white-space:nowrap;pointer-events:none}
+.peopleHint{position:fixed;z-index:37;left:50%;translate:-50% 0;display:grid;gap:2px;justify-items:center;width:max-content;max-width:min(400px,calc(100vw - 32px));box-sizing:border-box;min-height:44px;padding:9px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:22px;background:var(--btn-cream);color:var(--btn-ink);font:inherit;text-align:center;cursor:pointer;box-shadow:0 5px 0 var(--btn-gold-edge),0 14px 30px #193f3740;animation:partyIn .26s ease-out}
+.peopleHint b{font-family:IslandBrush,sans-serif;font-weight:400;font-size:20px;line-height:1.1}
+.peopleHint span{font-size:13px;font-weight:700;color:var(--btn-ink);opacity:.86;line-height:1.35;text-wrap:balance}
 .peoplePulse{animation:peoplePulse 1.4s ease-out 3}
 @keyframes peoplePulse{0%{box-shadow:0 0 0 0 #1f8a4c99}70%{box-shadow:0 0 0 14px #1f8a4c00}100%{box-shadow:0 0 0 0 #1f8a4c00}}
 @media(prefers-reduced-motion:reduce){.choice{transition:none}.choice:active{translate:none}.firstCard{animation:none}.peopleHint{animation:none}.peoplePulse{animation:none;outline:3px solid var(--btn-green);outline-offset:3px}}
 /* Nov 11 2026 (owner): in the public "Near you" list Hide and Report sit to the right of the name on one line, to save height
    (the party roster keeps its two-line rows). The name takes the free width and shortens with an ellipsis on narrow phones. */
 .member[data-public-member]{flex-wrap:nowrap;padding-bottom:4px;gap:8px}
+/* Owner Nov 12 2026: the dot's ink ring was cut by the roster's clip edge on phones: inset it a little. */
+.member[data-public-member] .dot{margin-left:3px}
 .member[data-public-member] .mname{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .member[data-public-member] .rowActions{flex:none;flex-basis:auto;flex-wrap:nowrap;margin-left:auto;padding-left:0;gap:6px}
 .member[data-public-member] .rowActions .act{flex:none;max-width:none;min-width:68px;min-height:44px;padding-inline:14px}

@@ -42,11 +42,11 @@ export const PUBLIC_FIRST_CARD={
 } as const;
 
 /** Phase 2 (Nov 12 2026): a player who had an island before the public island arrived, shown once beside the people button
- *  (PeopleButton.tsx) until OK or a tap on the button. It names the way back to playing alone. */
+ *  (PeopleButton.tsx) until a tap on it or on the button. It names the way back to playing alone. Owner Nov 12 2026: styled like the
+ *  daily-coins note (title + line, no OK button). */
 export const PUBLIC_EXISTING_HINT={
  line:'Other kids can be on your island now.',
- solo:'To play on your own, tap here and pick Just me.',
- ok:'OK',
+ solo:'To play on your own, tap the people button and pick Just me.',
 } as const;
 
 /** Switching mode while in a shared live match is an implicit leave: one line, then Switch / Stay. */

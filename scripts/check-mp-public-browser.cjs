@@ -172,7 +172,7 @@ async function existingRun(b, name, vp, mobile) {
   await toIsland(p); await tap(p);
   await p.waitForFunction(() => !!document.querySelector('[data-public-count]'), null, { timeout: 30000 }).catch(() => {});
   await p.waitForSelector('[data-public-hint]', { timeout: 20000 }).catch(() => {});
-  const h = await p.evaluate(() => ({ hint: document.querySelector('[data-public-hint] p')?.textContent ?? null, ok: !!document.querySelector('[data-public-hint-ok]'),
+  const h = await p.evaluate(() => ({ hint: document.querySelector('[data-public-hint]')?.textContent ?? null, ok: !!document.querySelector('[data-public-hint-ok]'),
     badge: document.querySelector('[data-public-badge]')?.textContent ?? null, n: +(document.querySelector('[data-public-count]')?.getAttribute('data-public-count') ?? -1),
     rect: (() => { const r = document.querySelector('[data-public-hint]')?.getBoundingClientRect(); return r ? [r.left, r.right, innerWidth] : null; })() }));
   check(`${name}: one-time hint explains others and Just me`, !!h.hint && /Just me/.test(h.hint) && h.ok && !!h.rect && h.rect[0] >= 0 && h.rect[1] <= h.rect[2], JSON.stringify(h));

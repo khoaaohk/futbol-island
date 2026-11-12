@@ -58,8 +58,8 @@ export default function PeopleButton({ className }: { className: string }) {
     if (!hint) { setAt(null); return; }
     const r = btn.current?.getBoundingClientRect();
     if (!r) return;
-    const w = Math.min(272, window.innerWidth - 32);
-    setAt({ top: r.bottom + (count ? 22 : 10), left: Math.max(16, Math.min(r.left + r.width / 2 - 28, window.innerWidth - 16 - w)), width: w });
+    // owner Nov 12 2026: the same note as the daily coins (IslandJobs .toast): centred, same width, title + line, tap to close
+    setAt({ top: r.bottom + (count ? 22 : 10) });
   }, [hint]); // eslint-disable-line react-hooks/exhaustive-deps -- placed once when it opens
   return (
     <button ref={btn} type="button" className={`${className}${hint ? ' ' + styles.peoplePulse : ''}`} data-party-open data-party-live={partyLive ? 'true' : undefined} data-public-count={pub ? others : undefined}
@@ -69,10 +69,9 @@ export default function PeopleButton({ className }: { className: string }) {
       {partyLive && <span data-party-badge aria-hidden="true" style={BADGE}>{party.members.length}</span>}
       {count && <span className={styles.peopleCount} data-public-badge aria-hidden="true">{count}</span>}
       {hint && at && createPortal(
-        <div id="people-hint" className={styles.peopleHint} style={at} role="status" data-public-hint>
-          <p>{PUBLIC_EXISTING_HINT.line} {PUBLIC_EXISTING_HINT.solo}</p>
-          <button type="button" className={styles.primary} data-public-hint-ok onClick={(e) => { e.stopPropagation(); close(); }}>{PUBLIC_EXISTING_HINT.ok}</button>
-        </div>, document.body)}
+        <button type="button" id="people-hint" className={styles.peopleHint} style={at} role="status" aria-live="polite" data-public-hint data-public-hint-ok onClick={(e) => { e.stopPropagation(); close(); }}>
+          <b>{PUBLIC_EXISTING_HINT.line}</b><span>{PUBLIC_EXISTING_HINT.solo}</span>
+        </button>, document.body)}
     </button>
   );
 }

@@ -63,7 +63,7 @@ ok('first-time card for new players only; the hint for old players only; once ea
  assert(/setExisting\(playerSince\(\(\) => !shouldShowIslandOnboarding\(\)\) === 'old'\)/.test(btn),'hint: old players');
  assert(/const want = existing && pub && !hint && !seenMark\('hint'\) && !seenMark\('card'\);/.test(btn),'hint: once, in a live world, not after the card');
  assert(/toastLane\.request\(HINT_LANE\)/.test(btn)&&/setMark\('hint'\); setHint\(true\);/.test(btn),'through the one-message lane, marked when shown');
- assert(/data-public-hint-ok onClick=\{\(e\) => \{ e\.stopPropagation\(\); close\(\); \}\}/.test(btn),'dismissible (OK does not also open the panel)');
+ assert(/data-public-hint data-public-hint-ok onClick=\{\(e\) => \{ e\.stopPropagation\(\); close\(\); \}\}/.test(btn),'dismissible with a tap on the note (does not also open the panel)');
  assert(/if \(hint\) close\(\); openPartyMenu\(\);/.test(btn),'a tap on the people button closes it too');
  assert(/createPortal\(/.test(btn),'portalled: the HUD row markup (first / last child ordering) is unchanged');
  const C=createLoader()('lib/multiplayer/publicCopy.ts');
