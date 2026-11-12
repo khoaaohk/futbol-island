@@ -48,11 +48,11 @@ function harness({phone=true,room=false}={}){
 const ME={x:0,y:0,z:0,hex:'#0072B2'};
 const ok=(name,fn)=>{fn();console.log('ok  '+name);};
 
-ok('pools are sized for a 24-member world: rings 25, fields 24, near rings 8, near batch 5, batch 8 (one instanced ring draw call)',()=>{
+ok('pools are sized for a 30-member world: rings 31, fields 30, near rings 8, near batch 5, batch 8 (one instanced ring draw call)',()=>{
  const h=harness();
- assert.equal(h.mod.MAX_REMOTE,24);assert.equal(h.rings().instanceMatrix.count,25);assert.equal(h.near().instanceMatrix.count,h.mod.GHOST_RING_CAPACITY);
+ assert.equal(h.mod.MAX_REMOTE,30);assert.equal(h.rings().instanceMatrix.count,31);assert.equal(h.near().instanceMatrix.count,h.mod.GHOST_RING_CAPACITY);
  assert.equal(h.mod.GHOST_RING_CAPACITY,8);assert.equal(h.mod.GHOST_CAPACITY,5);
- const f=h.avatars.root.children.find(o=>o.isInstancedMesh&&o!==h.rings()&&o!==h.near());assert.ok(f&&f.instanceMatrix.count===24,'force fields: 24');
+ const f=h.avatars.root.children.find(o=>o.isInstancedMesh&&o!==h.rings()&&o!==h.near());assert.ok(f&&f.instanceMatrix.count===30,'force fields: 30');
  const src=read('lib/graphics/remoteAvatars.ts');
  assert(/BATCH_CAPACITY=8/.test(src)&&/playerBatch\(drawn,BATCH_CAPACITY\)/.test(src)&&/playerBatch\(ghostDrawn,GHOST_CAPACITY\)/.test(src),'one batch of 8 + the near batch of 5');
  assert(/ballD2=new Float64Array\(MAX_REMOTE\+12\)/.test(src)&&/candJet\.length<MAX_REMOTE/.test(src)&&/createForceFields\(MAX_REMOTE\)/.test(src));

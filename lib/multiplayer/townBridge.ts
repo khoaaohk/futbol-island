@@ -114,6 +114,8 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   local: LocalPoseSource; phone: boolean; reducedMotion: () => boolean;
   /** The ground height under x, z (flying friends' plumes settle on it). */
   groundAt?: (x: number, z: number) => number;
+  /** Dry land at x, z (the island's onLand): a remote's swim / dive pose is drawn only off land (a modified client cannot swim on a street). */
+  landAt?: (x: number, z: number) => boolean;
   /** A friend's emote was shown (Town counts it; this file stays analytics-free, tests/mp-isolation.cjs). Never says which friend. */
   onEmoteSeen?: () => void;
   /** Any friend's emote arrived (my character glances at a friend who waves nearby). */
@@ -132,7 +134,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   let meRingOn = false; // the party draws my colour ring (the island's cream foot ring then stays hidden)
   const hints: { d: RoomDoorHint; sprite: T3.Sprite; n: number }[] = [];
   let ready = false; // the core's first sync runs inside createFriendCore (before `avatars` below exists)
-  const core = createFriendCore({ scene: ctx.scene, phone: ctx.phone, onEmoteSeen: ctx.onEmoteSeen, onFriendEmote: ctx.onFriendEmote, groundAt: ctx.groundAt,
+  const core = createFriendCore({ scene: ctx.scene, phone: ctx.phone, onEmoteSeen: ctx.onEmoteSeen, onFriendEmote: ctx.onFriendEmote, groundAt: ctx.groundAt, landAt: ctx.landAt,
     admit(id, b) {
       const room = roomOf(b);
       if (room < 0) { const k = lastIsland.get(id); if (k) for (let i = 0; i < 8; i++) k[i] = b[i]; else lastIsland.set(id, b.slice()); return b; }

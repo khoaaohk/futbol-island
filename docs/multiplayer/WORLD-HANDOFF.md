@@ -20,22 +20,28 @@ Built in `multiplayer/**` only, not deployed. Private parties work exactly as be
 |---|---|---|
 | `C.Report` = 60 | `[60, memberId, ReportReason]` | Only when S.Caps has `Cap.Report`. Hide the player locally at once. The relay answers with `S.Left [id, Far]` and the two of you never see each other again this connection. Client ids are 0..19 and 60+; server ids are 20..59. |
 | `S.Quiet` = 41 | `[41, near]` | `Cap.Quiet`. `near` = others in sight within `QUIET_RANGE_M`. Sent after C.Caps and on change (checked at 1 Hz). When `near` is 0 you may send poses at 2 Hz. |
-| `S.World` = 42 | `[42, n]` | `Cap.World`. Members in my world, me included (0..24). Sent after C.Caps and on change. |
+| `S.World` = 42 | `[42, n]` | `Cap.World`. Members in my world, me included (0..30). Sent after C.Caps and on change. |
 | `S.Left` | reason 4 = `LeaveReason.Far` | Out of sight (distance, another room, a report, quarantine or the following guard: you are never told which). Fade them out with no "left" message. |
 | `NameIdx` | `[colour, animal]` | In a world, slot 1 indexes `WORLD_ANIMALS`. Show it with `worldNameFor(idx)` ("Teal Otter"). `nameFor` (colour only) still works, and old clients show just the colour. |
 | `S.Caps` / `C.Caps` | 0..`CAPS_MAX` | Parser widened. A party still gets exactly 255. |
-| Batch limits | Welcome / Poses / Live / Match roster up to `WORLD_HARD` (24) | They used to be capped at `PARTY_MAX` 20. |
+| Batch limits | Welcome / Poses / Live / Match roster up to `WORLD_HARD` (30) | They used to be capped at `PARTY_MAX` 20. |
 
 ## Capability bits
 `Cap.World` 256, `Cap.Quiet` 512, `Cap.Report` 1024. `CAPS_WORLD` = Live | Ball | EmoteAsk | Kit | Match | World | Quiet | Report (1995): no Rename, NameLock or Hit. Detect world support with `GET /world`: a 200 with `open:true` means it is supported, anything else means fall back to Just me. `PROTOCOL_VERSION` stays 1.
 
 ## Constants to import (`multiplayer/protocol`)
-`WORLD_SOFT` 20, `WORLD_HARD` 24, `WORLD_MAX_SHARDS` 64, `WORLD_SEE_M` 160 / `WORLD_SEE_BACK_M` 150, `QUIET_RANGE_M` 40, `WORLD_AWAY_GRACE_MS` 2 min, `WORLD_IDLE_MS` 5 min, `FOLLOW`, `REPORT` (window 10 min, 2 distinct reporters, hold 1 h, reporter bucket 0.1/s burst 3), `ReportReason` {Following 0, InMyWay 1, TooManyWaves 2, SomethingElse 3}, `REPORT_REASON_IDS`, `WORLD_ANIMALS` (32 reviewed), `WORLD_COLOUR_ORDER`, `worldNameFor`, `pickWorldName`, `CloseCode`, `CAPS_WORLD`, `CAPS_MAX`, `LeaveReason.Far`.
+`WORLD_SOFT` 26, `WORLD_HARD` 30 (raised from 20 / 24, owner, Nov 12 2026; member ids stay 0..31 with `WORLD_ID_SPARE` 2 spare, and seat holders count toward the cap), `WORLD_MAX_SHARDS` 64, `WORLD_SEE_M` 160 / `WORLD_SEE_BACK_M` 150, `QUIET_RANGE_M` 40, `WORLD_AWAY_GRACE_MS` 2 min, `WORLD_IDLE_MS` 5 min, `FOLLOW`, `REPORT` (window 10 min, 2 distinct reporters, hold 1 h, reporter bucket 0.1/s burst 3), `ReportReason` {Following 0, InMyWay 1, TooManyWaves 2, SomethingElse 3}, `REPORT_REASON_IDS`, `WORLD_ANIMALS` (32 reviewed), `WORLD_COLOUR_ORDER`, `worldNameFor`, `pickWorldName`, `CloseCode`, `CAPS_WORLD`, `CAPS_MAX`, `LeaveReason.Far`.
+
+## Lobby counts (Nov 12 2026, live stress test fix)
+- WorldLobby stores `counts` (`[shard, n, at]` rows, counts and times only) next to `public`: written on a change at most every 5 s and refreshed every 45 s while a world is known; reloaded on start (rows older than 90 s are dropped). A lobby restart no longer answers a full world as `n:0`.
+- A world that refuses a fresh join with Full pushes its count at once (at most 1/s). A plain lookup never picks a shard at `WORLD_SOFT` or above; `?in=N` still keeps a seat holder on a full world (the room resumes the seat or refuses with Full, then the client asks once without `in`).
+- The dev relay mirrors both, plus the 30 s heartbeat (it used to report on change only, so a stable world was pruned after 90 s).
+- Clients draw a remote's swim / dive pose only off land and a jetpack only 1 m or more above the ground (`drawnAs` in `lib/graphics/remoteAvatars.ts`); the wire is unchanged.
 
 ## Close codes on a world socket (what the client does)
 - `4007 WorldOff`: public play was switched off. Go to Just me quietly. Do not retry until a later `GET /world` (on the next visit or the next real input; never poll).
 - `4008 Idle`: no real movement, or away, for 5 min. Go to Just me quietly, and reconnect through `GET /world?in=<shard>` on the next real input.
-- `4006 Refused` + `S.Error Full`: the world is full (24). Call `GET /world` again once, without `in`.
+- `4006 Refused` + `S.Error Full`: the world is full (30). Call `GET /world` again once, without `in`. The room pushes its count to the lobby when it refuses, so that retry goes to another world.
 - These are unchanged from parties: `4005 Replaced`, `4002 Flood`, `4001 BadMessages`, `4000 HelloTimeout`, `1000` after your own Leave.
 
 ## What the relay enforces in world mode
@@ -48,7 +54,7 @@ Built in `multiplayer/**` only, not deployed. Private parties work exactly as be
 
 ## Dev relay and bots (port 8790; kill by PID or `lsof -ti :8790 | xargs kill`)
 - `MP_PORT=8790 MP_DEV=1 MP_WORLD_OPEN=1 node multiplayer/dev-relay/server.mjs`. `MP_WORLD_OPEN=1` opens public play locally (without it, the world starts closed, like production). `MP_CONTROL_TOKEN=<16+ chars>` enables `/control`. With `MP_DEV=1`, `?devip=<label>` on `/world` and `/ws` stands in for a distinct IP (needed so reports from bots count as distinct reporters), and `GET /dev/metrics` shows frames, the largest frame, tick ms and shard counts.
-- `node --experimental-websocket multiplayer/bots/bot.mjs --world --n 24 --ms 60000 --devip p1 --emote-every 7000 [--spread 3000] [--speed 1.5] [--follow 2] [--report] [--nick Emma] [--summary]`. Use a different `--devip` per process.
+- `node --experimental-websocket multiplayer/bots/bot.mjs --world --n 30 --ms 60000 --devip p1 --emote-every 7000 [--spread 3000] [--speed 1.5] [--follow 2] [--report] [--nick Emma] [--summary]`. Use a different `--devip` per process.
 - Open or close locally: `curl -X POST -H "Authorization: Bearer $MP_CONTROL_TOKEN" -d '{"public":false}' http://127.0.0.1:8790/control`.
 
 ## Owner: deploy steps (in order; nothing has been run)

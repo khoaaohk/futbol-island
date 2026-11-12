@@ -66,8 +66,11 @@ export const CAPS_MAX = 0xffff;
 // ---- relay v2.0: public worlds (strangers on one island). Shared by the client, the relay, the dev relay and the tests. ----
 /** A world fills to WORLD_SOFT before the lobby opens another; WORLD_HARD is the room's real cap (room for reconnects of members
  *  already assigned). The lobby never opens more than WORLD_MAX_SHARDS worlds (then GET /world answers open:false). */
-export const WORLD_SOFT = 20;
-export const WORLD_HARD = 24;
+/** Owner, Nov 12 2026: raised from soft 20 / hard 24. Member ids stay 0..MAX_MEMBER_ID (32 ids): WORLD_HARD leaves WORLD_ID_SPARE ids
+ *  free, and seat holders (dropped / away members within their grace) count toward WORLD_HARD, so a fresh join can never run out of ids. */
+export const WORLD_SOFT = 26;
+export const WORLD_HARD = 30;
+export const WORLD_ID_SPARE = 2;
 export const WORLD_MAX_SHARDS = 64;
 /** Interest between strangers (m, horizontal): nobody farther than WORLD_SEE_M is ever sent (no 1 Hz beacon either); one who left
  *  sight comes back at WORLD_SEE_BACK_M (no flicker at the edge). Indoors, only members in the same room are seen. */

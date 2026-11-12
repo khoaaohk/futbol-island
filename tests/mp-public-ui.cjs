@@ -69,8 +69,8 @@ t('first-time card: through the toast lane, once per device, never during lesson
  assert(/HINT_KEY = 'fi2-public-hint-v1'/.test(near)&&/'fi2-public-hint-v1'/.test(read('lib/saves/snapshot.ts')),'the device key named by the plan (classified)');
 });
 t('people button: label and badge from publicCopy, hint once through the lane, a new player sees today\'s button',()=>{
- assert.equal(C.peopleButtonLabel(null),'Who’s on your island?');assert.equal(C.peopleButtonLabel(8),'Players on your island, 8');assert.equal(C.peopleButtonLabel(30),'Players on your island, lots');
- assert.equal(C.peopleBadge(30),'lots on now');assert.equal(C.peopleBadge(3),'3 on now');assert.equal(C.peopleBadge(0),null);assert.equal(C.publicRoomChip(1),'1 player here');assert.equal(C.publicRoomChip(4),'4 players here');
+ assert.equal(C.peopleButtonLabel(null),'Who’s on your island?');assert.equal(C.peopleButtonLabel(8),'Players on your island, 8');assert.equal(C.peopleButtonLabel(31),'Players on your island, lots');
+ assert.equal(C.peopleBadge(31),'lots on now');assert.equal(C.peopleBadge(3),'3 on now');assert.equal(C.peopleBadge(0),null);assert.equal(C.publicRoomChip(1),'1 player here');assert.equal(C.publicRoomChip(4),'4 players here');
  assert(/ps\.tutorialDone \? peopleButtonLabel\(pub \? others : null\) : 'Play with friends'/.test(btn),'before the tour ends: today\'s label');
  assert(/const pub = ps\.tutorialDone && !partyLive && party\.kind === 'world'/.test(btn)&&/const count = !partyLive && pub \? peopleBadge\(others\) : null/.test(btn),'badge only in a world with others (hidden at 0)');
  assert(/toastLane\.request\(HINT_LANE\)/.test(btn)&&/seenMark\('hint'\)/.test(btn)&&/setMark\('hint'\)/.test(btn)&&/!seenMark\('card'\)/.test(btn),'hint once, through the lane, not after the card');

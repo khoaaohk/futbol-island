@@ -72,6 +72,8 @@ export function createFriendCore(ctx: {
   scene: THREE.Scene; phone: boolean; fieldScale?: number;
   /** The island's ground height under x, z (where a flying friend's plume settles). */
   groundAt?: (x: number, z: number) => number;
+  /** Dry land at x, z (the island's onLand): a remote's swim / dive pose is drawn only off land (a modified client cannot swim on a street). */
+  landAt?: (x: number, z: number) => boolean;
   /** A friend's emote was shown (the page counts it; this file stays analytics-free, tests/mp-isolation.cjs). Never says which friend. */
   onEmoteSeen?: () => void;
   /** Any friend's emote arrived (rooms: wake when the sender is here). */
@@ -82,7 +84,7 @@ export function createFriendCore(ctx: {
   onSync?: (live: boolean, welcome: boolean) => void;
 }): FriendCore {
   const conn = partyConnection();
-  const avatars = createRemoteAvatars(ctx.scene, { phone: ctx.phone, maxFor: (tier, phone) => remoteCap(tier, phone, batterySaverOn()), fieldScale: ctx.fieldScale, groundAt: ctx.groundAt });
+  const avatars = createRemoteAvatars(ctx.scene, { phone: ctx.phone, maxFor: (tier, phone) => remoteCap(tier, phone, batterySaverOn()), fieldScale: ctx.fieldScale, groundAt: ctx.groundAt, landAt: ctx.landAt });
   const interp = createInterp();
   // Friends' balls ride their own interpolators (the ball state in the mode slot), sampled at the same render time as the bodies,
   // so a shot leaves the friend's foot when their kick plays here.

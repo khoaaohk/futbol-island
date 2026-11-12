@@ -21,7 +21,7 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const P = loadTs(path.join(here, '../protocol/index.ts'));
 const { RoomCore } = loadTs(path.join(here, '../relay/src/roomCore.ts'));
 const SC = loadTs(path.join(here, '../relay/src/relayStatsCore.ts'));
-const { WorldLobbyCore } = loadTs(path.join(here, '../relay/src/worldLobbyCore.ts'));
+const { WorldLobbyCore, WORLD_HEARTBEAT_MS } = loadTs(path.join(here, '../relay/src/worldLobbyCore.ts'));
 
 export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet = false, statsToken = process.env.MP_STATS_TOKEN,
   controlToken = process.env.MP_CONTROL_TOKEN, worldOpen = process.env.MP_WORLD_OPEN === '1', dev = process.env.MP_DEV === '1' } = {}) {
@@ -37,14 +37,14 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
   const reported = new Map(); // room -> members reported live
   const rooms = new Map(); // code -> RoomCore
   const stats = { created: 0, joins: 0, ended: 0 };
-  // MP_DEV=1: POST /dev/advance?ms=N moves the relay clock forward (grace / away timeouts in checks without waiting minutes).
+  // MP_DEV=1: POST /dev/lobby-restart drops the in-process lobby and reloads its stored counts (the DO eviction path). POST /dev/advance?ms=N moves the relay clock forward (grace / away timeouts in checks without waiting minutes).
   let skew = 0;
   const clock = { now: () => Date.now() + skew };
   const random = (n) => randomFillSync(new Uint8Array(n));
   const LOCAL = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/;
 
   // ---- relay v2.0 worlds ----
-  const lobby = new WorldLobbyCore(() => clock.now(), () => (typeof controlToken === 'string' && controlToken.length >= 16) || worldOpen);
+  let lobby = new WorldLobbyCore(() => clock.now(), () => (typeof controlToken === 'string' && controlToken.length >= 16) || worldOpen);
   lobby.stored = worldOpen;
   const worlds = new Map(); // shard -> RoomCore (kind 'world')
   const worldN = new Map(); // shard -> count last given to the lobby
@@ -68,16 +68,18 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
       w = new RoomCore({ code: 'pub-' + shard, createdAt: Date.now(), clock, random, kind: 'world' });
       w.onStat = (id) => stat(() => statsCore.inc(id));
       w.onHold = (h) => lobby.hold(h);
+      w.onFull = () => syncWorld(shard, w, true); // as the DO: a Full refusal pushes the count so the client's retry goes elsewhere
       worlds.set(shard, w);
     }
     return w;
   };
-  const syncWorld = (shard, w) => { // the DO's syncLobby, in process: count changes to the lobby; public off closes the world
+  const worldAt = new Map(); // shard -> when the count was last given (the DO's 30 s heartbeat, so a stable world is not pruned)
+  const syncWorld = (shard, w, force = false) => { // the DO's syncLobby, in process: count changes to the lobby; public off closes the world
     const n = w.size;
-    if (worldN.get(shard) === n) return;
-    worldN.set(shard, n);
+    if (!force && worldN.get(shard) === n && clock.now() - (worldAt.get(shard) ?? 0) < WORLD_HEARTBEAT_MS) return;
+    worldN.set(shard, n); worldAt.set(shard, clock.now());
     if (!lobby.report(shard, n) && n > 0) { w.closeWorld(); worldN.set(shard, 0); lobby.report(shard, 0); }
-    if (n === 0 && w.idle) { worlds.delete(shard); worldN.delete(shard); } // empty, no socket waiting: forgotten (the DO hibernates)
+    if (n === 0 && w.idle) { worlds.delete(shard); worldN.delete(shard); worldAt.delete(shard); } // empty, no socket waiting: forgotten (the DO hibernates)
   };
   const closeAllWorlds = () => { for (const [shard, w] of worlds) { w.closeWorld(); syncWorld(shard, w); } lobby.clear(); };
 
@@ -135,6 +137,12 @@ export function startServer({ port = Number(process.env.MP_PORT ?? 8790), quiet 
       if (!allowWorld(ipKey(req, url), 'l')) { stat(() => statsCore.inc('rl:world_rate')); return json(res, 429, { error: 'rate_limited' }); }
       const q = url.searchParams.get('in');
       return json(res, 200, lobby.assign(q && /^\d{1,3}$/.test(q) ? Number(q) : undefined));
+    }
+    if (dev && req.method === 'POST' && url.pathname === '/dev/lobby-restart') { // the WorldLobby DO evicted: a fresh core reloads the stored counts
+      const rows = lobby.snapshot(), was = lobby.stored;
+      lobby = new WorldLobbyCore(() => clock.now(), () => (typeof controlToken === 'string' && controlToken.length >= 16) || worldOpen);
+      lobby.stored = was; lobby.restore(JSON.parse(JSON.stringify(rows)));
+      return json(res, 200, { restored: rows.length });
     }
     if (process.env.MP_DEV === '1' && req.method === 'POST' && url.pathname === '/dev/advance') { skew += Math.max(0, Number(url.searchParams.get('ms')) || 0); res.writeHead(200); return res.end(String(skew)); }
     if (req.method === 'POST' && url.pathname === '/party') {

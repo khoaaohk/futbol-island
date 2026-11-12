@@ -9,7 +9,7 @@ Status: APPROVED TO BUILD by the owner ("go ahead and build"). Phase 1 is built 
 4. A world holds about 16-20 players; when it is full the next player starts another world, and new arrivals always go to the fullest world with room.
 5. Build now; legal review of default-on happens before it is switched on for real players.
 
-Coordinator recommendations adopted unless the owner says otherwise: new players finish the tutorial in "Just me" and others appear afterwards with a one-time card; world cap soft 20 / hard 24; generated names are colour + animal and change every visit (strangers only); shirt numbers visible; strangers ARE shown in the Arcade, Shop and Museum in phase 1 (owner, Nov 11: "allow seeing strangers in arcade, shop, and museum for phase 1"; the Konbini follows the same rule unless the owner says otherwise); a 10% holdout arm is wired but its reading waits for legal sign-off; party friends do not also see the public world; the existing grown-up "Off" turns public play off too, with a new middle setting "Friends only".
+Coordinator recommendations adopted unless the owner says otherwise: new players finish the tutorial in "Just me" and others appear afterwards with a one-time card; world cap soft 26 / hard 30 (was 20 / 24 until Nov 12 2026); generated names are colour + animal and change every visit (strangers only); shirt numbers visible; strangers ARE shown in the Arcade, Shop and Museum in phase 1 (owner, Nov 11: "allow seeing strangers in arcade, shop, and museum for phase 1"; the Konbini follows the same rule unless the owner says otherwise); a 10% holdout arm is wired but its reading waits for legal sign-off; party friends do not also see the public world; the existing grown-up "Off" turns public play off too, with a new middle setting "Friends only".
 
 ## What exists (verified in code)
 - Relay: Cloudflare Worker `futbol-party-relay` (`multiplayer/relay/`), Durable Objects `PARTY` (PartyRoom) and `STATS` (RelayStats). One DO per party, hibernatable sockets, 10 Hz timer only while 2+ sockets are open. Pure room logic in `multiplayer/relay/src/roomCore.ts` (also used by the Node dev relay `multiplayer/dev-relay/server.mjs`).
@@ -24,7 +24,7 @@ Coordinator recommendations adopted unless the owner says otherwise: new players
 ## Architecture
 - Three modes on the one connection: Just me (no socket) / With other players (`/world/:shard/ws`) / With friends (`/party/:code/ws`). A pending or stored party always wins.
 - World = `PartyRoom`/`RoomCore` with `kind:'world'`, named `pub-1`, `pub-2`...: no host, no code, no expiry; host controls, Rename, Ping (FollowMe/MeetHere) and Hit refused; the nick in Hello is dropped; the relay assigns `[colour, animal]` using the reserved second name slot (old clients show the colour); away grace 2 min, idle > 5 min frees the slot.
-- Assignment: `GET /world` → new `WorldLobby` singleton DO (migration v3) with a live count per shard; returns `{shard, n, open}`; fill to soft 20, hard 24; a shard closes when empty.
+- Assignment: `GET /world` → new `WorldLobby` singleton DO (migration v3) with a live count per shard; returns `{shard, n, open}`; fill to soft 26, hard 30 (raised from 20 / 24 by the owner, Nov 12 2026); a shard closes when empty.
 - Strangers beyond 160 m are not sent at all; strangers never appear on the map. A `Cap.Quiet` hint lets a client send 2 Hz when nobody is within 40 m.
 - Connect lazily (after island ready, tutorial done, first input, ~3 s idle). Unreachable, full or switched off: fall back silently to Just me, retry quietly.
 - Indoor rooms: the Arcade, Shop and Museum pages (and the Konbini) DO connect in world mode in phase 1 (owner decision). They reconnect through the stored session like party rooms do today (`components/party/useRoomParty.ts`, `lib/arcade/arcadeRoomParty.ts`), to the same world shard. Rooms are small (about 11 x 10 m), so: cap drawn strangers per room (nearest first, e.g. 6 rigs/rings in a room regardless of heat tier headroom), keep the personal-space fade, no stranger duets or knock-overs indoors, and the same Hide/Report from the room's roster. The stranger rules (generated names, no pings, no map) apply unchanged indoors.
@@ -56,7 +56,7 @@ About $5-7/month at 10 average concurrent players, $35-40 at 100, about $330 at 
 | C | UI (after B) | `components/party/PartyHost.tsx`, new `PresenceChoice.tsx`, `ReportSheet.tsx`, `party.module.css`, `IslandSettings.tsx`, `tests/mp-ui.cjs`; the only agent that touches `components/Town.tsx` |
 | D | Drawing | `lib/graphics/remoteAvatars.ts`, `components/FriendMapDots.tsx`, `tests/mp-avatars.cjs` |
 | E | Copy and analytics | policy and safety copy (behind the flag), `lib/analytics/countIds.ts`, new `publicEvents.ts`, `app/admin/RelayHealth.tsx` |
-Then a verify pass: relay unit tests, 3 headless clients switching modes, load with 4 × 24 bots on the dev relay, heat with 23 bots on the phone profile.
+Then a verify pass: relay unit tests, 3 headless clients switching modes, load with 4 × 30 bots on the dev relay, heat with 23 bots on the phone profile.
 
 ## Owner tasks before switching on
 Lawyer answer on default-on (UK Children's Code standard 7; COPPA; state design codes); `wrangler deploy` of relay v3 with the new DO class and `CONTROL_TOKEN`; two Vercel flags; a Cloudflare billing alert; a two-iPhone heat check; a small family beta.

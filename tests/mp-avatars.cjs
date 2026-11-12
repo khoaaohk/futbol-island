@@ -154,7 +154,7 @@ function harness(phone=true){
 {
  const h=harness(),look=new Array(12).fill(0),ringsOf=()=>h.avatars.root.children.filter(o=>o.name==='remote-avatar-rings');
  assert.equal(ringsOf().length,1,'one ring mesh in the whole remote layer');
- const ring=ringsOf()[0];assert.ok(ring.isInstancedMesh&&ring.instanceMatrix.count===25,'instanced, capacity max(party max, world hard cap) + 1 = 25 (public island, Nov 11 2026)');
+ const ring=ringsOf()[0];assert.ok(ring.isInstancedMesh&&ring.instanceMatrix.count===31,'instanced, capacity max(party max, world hard cap) + 1 = 31 (world cap 30, Nov 12 2026)');
  assert.equal(ring.castShadow,false);assert.equal(ring.frustumCulled,false);
  h.avatars.upsert(1,look,'Blue',{hex:'#0072B2'});h.avatars.upsert(2,look,'Orange',{hex:'#E69F00'});
  h.all([1,2]);h.avatars.update(.016,h.poses,h.camera,false);
@@ -402,6 +402,25 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert.equal(RA.friendFlightPitch(0),0);assert.ok(RA.friendFlightPitch(30)>1.05&&RA.friendFlightPitch(30)<=1.1&&RA.friendFlightPitch(9)>0&&RA.friendFlightPitch(9)<RA.friendFlightPitch(15),'friend estimate: hover 0, rises smoothly with speed to ~1.1');
  const br=read('lib/multiplayer/townBridge.ts');assert(/ring\.pitch = l\.pitch/.test(br)&&/partyPitch/.test(read('components/Town.tsx')),'the local flight pitch reaches the ring');
 }
+{ // Nov 12 2026: the drawing guard. A swim / dive pose only off land, a jetpack only >= 1 m up (a modified client or a bot cannot swim
+  // down a street or hover at ground level); the island passes onLand, and both lookups run once per pose solve, only in those modes.
+ const RA=load('lib/graphics/remoteAvatars.ts',{player:{},playerBatch:{},heatTier:{},celebrations:{},emotePose:{},customization:{},look:{}});
+ const P=load('multiplayer/protocol/index.ts'),M=P.Mode,Z=P.Zone;
+ assert.deepEqual({...RA.drawnAs(M.Swim,Z.Sea,false,false,NaN)},{wet:true,jet:false},'swimming at sea: the swim pose');
+ assert.deepEqual({...RA.drawnAs(M.Swim,Z.Sea,false,true,NaN)},{wet:false,jet:false},'swim mode on dry land: walk / idle body');
+ assert.equal(RA.drawnAs(M.Dive,Z.Sea,false,true,0).wet,false,'dive on land: no dive pose');
+ assert.equal(RA.drawnAs(M.Busy,Z.Sea,true,false,NaN).wet,true,'an away friend in the sea treads water');
+ assert.equal(RA.drawnAs(M.Busy,Z.Sea,true,true,NaN).wet,false,'... but not on land');
+ assert.equal(RA.drawnAs(M.Walk,Z.Sea,false,false,NaN).wet,false);
+ assert.equal(RA.drawnAs(M.Jetpack,0,false,false,5).jet,true,'hovering 5 m up: the jetpack pose');
+ assert.equal(RA.drawnAs(M.Jetpack,0,false,false,.4).jet,false,'a jetpack at ground level: walk / idle, no plume');
+ assert.equal(RA.drawnAs(M.Jetpack,0,false,false,NaN).jet,true,'no ground lookup (a room): unchanged');
+ const src=read('lib/graphics/remoteAvatars.ts');
+ assert.match(src,/if\(e\.wet\)\{/,'the swim pose follows the guard');assert.match(src,/pose\.mode===Mode\.Jetpack&&e\.jet&&e\.door>=1/,'no plume for a grounded jetpack');
+ assert.match(src,/root3\.position\.set\(pose\.x,pose\.y\+e\.lift,pose\.z\)/,'a refused swimmer stands on the ground');
+ assert.match(read('components/Town.tsx'),/landAt:onLand/,'the island passes its land test');
+ assert.match(read('lib/multiplayer/roomParty.ts'),/landAt: ctx\.landAt \}\);/);assert.match(read('lib/multiplayer/townBridge.ts'),/landAt: ctx\.landAt,/);
+}
 { // Rooms Phase 1: rooms draw a smaller dome (r ~0.8 m) through the same instanced field; the island default stays 1.
  const ra=read('lib/graphics/remoteAvatars.ts'),rp=read0('lib/multiplayer/roomParty.ts');
  assert(/const FS=opts\.fieldScale\?\?1;/.test(ra)&&/FS\*\(shield\?/.test(ra),'field scale option, default 1');
@@ -431,8 +450,8 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
 {
  // Oct 23: an away friend keeps the jetpack backpack and the blue downwash (rides still stand inside the field).
  const src=read0('lib/graphics/remoteAvatars.ts');
- assert.match(src,/motion\.travelMode=shield&&mode!==Mode\.Jetpack\?undefined:travelFor\(mode\)/,'away friend keeps the jetpack backpack');
- assert.match(src,/if\(pose\.mode===Mode\.Jetpack&&e\.door>=1&&d2</,'away friend in the air keeps the jet plume');
+ assert.match(src,/motion\.travelMode=shield&&mode!==Mode\.Jetpack\|\|mode===Mode\.Jetpack&&!e\.jet\?undefined:travelFor\(mode\)/,'away friend keeps the jetpack backpack (a jetpack at ground level walks)');
+ assert.match(src,/if\(pose\.mode===Mode\.Jetpack&&e\.jet&&e\.door>=1&&d2</,'away friend in the air keeps the jet plume');
 }
 console.log('mp-avatars ok');
 

@@ -151,7 +151,7 @@ t('malformed inputs rejected (client)',()=>{
 t('malformed inputs rejected (server)',()=>{
   const j=JSON.stringify;
   const bad=['','{}','[]','[99]','[20]',j([20,1,0,tok,1,2,0]),j([20,1,0,'bad',1,2,0,[]]),j([20,1,32,tok,1,2,0,[]]),j([20,1,0,tok,1,2,2,[]]),
-    j([20,1,0,tok,1,2,0,new Array(25).fill(member)]),j([20,1,0,tok,1,2,0,[[0,[20,0],look,0,null]]]),j([20,1,0,tok,1,2,0,[[0,[0,32],look,0,null]]]),
+    j([20,1,0,tok,1,2,0,new Array(P.WORLD_HARD+1).fill(member)]),j([20,1,0,tok,1,2,0,[[0,[20,0],look,0,null]]]),j([20,1,0,tok,1,2,0,[[0,[0,32],look,0,null]]]),
     j([20,1,0,tok,1,2,0,[[0,[0,0],look,2,null]]]),j([20,1,0,tok,1,2,0,[[0,[0,0],look,0,[1,2]]]]),j([20,1,0,tok,1.5,2,0,[]]),
     j([21]),j([21,[1]]),j([22,1,5]),j([22,32,0]),j([23]),j([23,1,2]),j([23,1,2,...body.slice(1)]),j([23,1,32,...body]),j([23,1.5]),
     j([24,1,10]),j([25,1,2,0,0]),j([25,1,0,99999,0]),j([26]),j([26,32]),j([27,'k7mq4r',1]),j([27,'K7MQ4O',1]),j([27,'K7M-Q4R',1]),j([27,5,1]),j([28,3]),j([29,10]),j([29,-1]),j([30]),j([30,1.5]),
@@ -235,8 +235,8 @@ t('20 players: ids to 31, a 19-friend Poses frame parses and fits, a 21st roster
   const flat=[];for(let id=1;id<=19;id++)flat.push(id,1000+id*37,0,500,id*5,12,8,0,0);
   const frame=[23,77,...flat];const text=P.encode(frame);
   assert.ok(text.length<1100,'19 poses ~ '+text.length+' B');assert.ok(P.parseServer(text),'19-friend Poses parses');
-  const over=[23,1,...new Array(25).fill(0).flatMap((_,i)=>[i,1000,0,500,0,12,8,0,0])];assert.equal(P.parseServer(j(over)),null,'25 entries are refused (relay v2.0: WORLD_HARD 24, was 21 > PARTY_MAX)');
-  const w24=[23,1,...new Array(24).fill(0).flatMap((_,i)=>[i,1000,0,500,0,12,8,0,0])];assert.ok(P.parseServer(j(w24)),'24 entries parse (a full world)');
+  const over=[23,1,...new Array(P.WORLD_HARD+1).fill(0).flatMap((_,i)=>[i,1000,0,500,0,12,8,0,0])];assert.equal(P.parseServer(j(over)),null,'WORLD_HARD+1 (31) entries are refused (relay v2.0: WORLD_HARD 30 since Nov 12 2026, was 24)');
+  const w24=[23,1,...new Array(P.WORLD_HARD).fill(0).flatMap((_,i)=>[i,1000,0,500,0,12,8,0,0])];assert.ok(P.parseServer(j(w24)),'WORLD_HARD (30) entries parse (a full world)');
   const hello=j([0,1,[1,2,3,4,5,6,7,8,9,10,11,12],null,null,null,'Abcdefghijkl']);assert.ok(hello.length<=P.MAX_INBOUND_BYTES);
   const poseMsg=j([1,2147483647,-4000,-400,-6000,255,255,13,4,3]);assert.ok(poseMsg.length<=80,'client frames stay far below 512 B');
   assert.equal(P.NAME_COLOURS.length,P.PARTY_MAX,'a unique colour name for every seat');

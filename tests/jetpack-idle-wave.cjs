@@ -49,7 +49,7 @@ t('wiring: Town gates on jetpack idle and reuses the emote arm keyframes; friend
  const gate=/const ok=([^;]+);if\(stepIdleWave/.exec(town)[1];
  for(const need of ["rideRef.current==='jetpack'",'!steering','!input.current.sprint',"!keys.has('shift')",'IDLE_SPEED',"jetActions.state.phase==='idle'",'emoteFx.kind<0','!moveFx.s','!water.inWater'])assert(gate.includes(need),need);
  assert.match(pose,/applyRideEmote\(root, 0,/);assert.match(pose,/from '.\/celebrations'/);
- assert.match(remote,/stepIdleWave\(iw,idleStep,mode===Mode\.Jetpack&&!shield&&pose\.speed<IDLE_SPEED&&e\.emote<0/);
+ assert.match(remote,/stepIdleWave\(iw,idleStep,mode===Mode\.Jetpack&&e\.jet&&!shield&&pose\.speed<IDLE_SPEED&&e\.emote<0/);
  assert.doesNotMatch(pose,/\bnew [A-Z]|\[\s*\]|\{\s*\}\s*[,;)]/);assert.doesNotMatch(pure.replace(/export function createIdleWave[\s\S]*?\n}\n/,''),/\bnew [A-Z]|return \{/);
  assert.doesNotMatch(read('multiplayer/protocol/types.ts'),/idleWave|IdleGesture/i,'no new network fields');
 });

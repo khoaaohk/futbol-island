@@ -22,8 +22,8 @@ export const PRESENCE_CHOICES:readonly {id:PresenceChoiceId;label:string;line:st
  {id:'friends',label:'With friends',line:'Friends you know join with a code.'},
 ];
 
-/** Above this many other players the count reads "lots" (the world's hard cap is 24). */
-export const PUBLIC_COUNT_LOTS_ABOVE=24;
+/** Above this many other players the count reads "lots" (the world's hard cap, WORLD_HARD 30). */
+export const PUBLIC_COUNT_LOTS_ABOVE=30;
 /** The count beside "With other players": others in your world, never you. 0 → "Nobody else right now". */
 export function publicCountLabel(others:number):string{
  const n=Number.isFinite(others)?Math.max(0,Math.floor(others)):0;
@@ -94,12 +94,12 @@ export const PLAY_LOCK_SETTINGS:readonly {id:PlayLockId;label:string;line:string
 ];
 
 /** UI agent (C), Nov 11 2026: the lines the panel, the people button, the rooms and the lock need beyond the ones above. */
-/** The people button's screen-reader label: in a world with others, the count ("lots" above 24); otherwise the panel's question. */
+/** The people button's screen-reader label: in a world with others, the count ("lots" above 30); otherwise the panel's question. */
 export function peopleButtonLabel(others:number|null):string{
  if(others===null||!Number.isFinite(others)||others<=0)return 'Who’s on your island?';
  return `Players on your island, ${others>PUBLIC_COUNT_LOTS_ABOVE?'lots':Math.floor(others)}`;
 }
-/** The live count under the people button (phase 2): "8 on now", "lots on now" above 24; null at 0 (nothing shown; the panel
+/** The live count under the people button (phase 2): "8 on now", "lots on now" above 30; null at 0 (nothing shown; the panel
  *  says "Nobody else right now"). Fed only by counts already on the socket (presence.count): no timer, no poll. */
 export const peopleBadge=(others:number):string|null=>Number.isFinite(others)&&others>=1?publicCountLabel(others):null;
 /** One calm line under the choices when "With other players" cannot be on (presenceMode.ts PresenceReason). Never an error. */

@@ -112,8 +112,8 @@ ok('no banned claims, and the child-facing copy never says "safe"',()=>{
  for(const t of all)for(const b of S.BANNED_CLAIMS)assert(!b.test(t),`"${b.source}" in: ${t.slice(0,80)}`);
  for(const t of [...C.allPublicCopy(),gOn])assert(!/\bsafe(ly|ty)?\b/i.test(t),'never promise safety: '+t);
  assert.equal(C.PRESENCE_CHOICES.length,3);assert.equal(C.REPORT_REASONS.length,4);assert.equal(C.PLAY_LOCK_SETTINGS.length,3);
- assert.equal(C.publicCountLabel(0),'Nobody else right now');assert.equal(C.publicCountLabel(8),'8 on now');assert.equal(C.publicCountLabel(24),'24 on now');
- assert.equal(C.publicCountLabel(25),'lots on now');assert.equal(C.publicChoiceLabel(8),'With other players · 8 on now');
+ assert.equal(C.publicCountLabel(0),'Nobody else right now');assert.equal(C.publicCountLabel(8),'8 on now');assert.equal(C.publicCountLabel(30),'30 on now');
+ assert.equal(C.publicCountLabel(31),'lots on now');assert.equal(C.publicChoiceLabel(8),'With other players · 8 on now');
  assert.deepEqual(C.REPORT_REASONS.map(r=>r.id),[...withFlag(true,L=>L('lib/analytics/countIds.ts')).PUBLIC_REPORT_REASONS]);
 });
 

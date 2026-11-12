@@ -4,7 +4,7 @@
 //     the tour is done; the grown-up lock (friends / off) and Just me always win; flag off = Just me.
 //  2. New vs existing: fi2-public-since-v1 is decided once ('old' when the tour was already done on the first flag-on visit) and kept;
 //     the first-time card is for new players only, the people-button hint for old players only, never both, once each.
-//  3. Live count: "8 on now", "lots on now" above 24, nothing at 0; read from presence.count (socket counts), no timer or poll added.
+//  3. Live count: "8 on now", "lots on now" above 30, nothing at 0; read from presence.count (socket counts), no timer or poll added.
 //  4. Holdout reading: off by default (needs NEXT_PUBLIC_PUBLIC_HOLDOUT_READING=1 on top of the public flags); then per-arm totals
 //     only; ids allowlisted (client + SQL regex); the admin report answers 'off' and reads nothing while off.
 'use strict';
@@ -74,10 +74,10 @@ ok('first-time card for new players only; the hint for old players only; once ea
 });
 
 // ---- 3. live count --------------------------------------------------------------------------------------------------------
-ok('live count badge: "8 on now", "lots" above 24, nothing at 0; socket counts only',()=>{
+ok('live count badge: "8 on now", "lots" above 30, nothing at 0; socket counts only',()=>{
  const C=createLoader()('lib/multiplayer/publicCopy.ts');
  assert.equal(C.peopleBadge(0),null);assert.equal(C.peopleBadge(-3),null);assert.equal(C.peopleBadge(NaN),null);
- assert.equal(C.peopleBadge(1),'1 on now');assert.equal(C.peopleBadge(8),'8 on now');assert.equal(C.peopleBadge(24),'24 on now');assert.equal(C.peopleBadge(25),'lots on now');
+ assert.equal(C.peopleBadge(1),'1 on now');assert.equal(C.peopleBadge(8),'8 on now');assert.equal(C.peopleBadge(30),'30 on now');assert.equal(C.peopleBadge(31),'lots on now');
  assert.equal(C.publicCountLabel(0),'Nobody else right now','the panel line at 0');
  const btn=code(read('components/party/PeopleButton.tsx'));
  assert(/const others = pub \? ps\.count \?\? 0 : 0;/.test(btn)&&/const count = !partyLive && pub \? peopleBadge\(others\) : null;/.test(btn),'from presence.count, only in a live world');

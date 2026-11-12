@@ -155,6 +155,7 @@ export class PartyRoom {
     if (world) {
       core.onStat = (id) => this.report('/inc', { id, n: 1 });
       core.onHold = (h) => { void this.lobby('/hold', { h }); };
+      core.onFull = () => { if (Date.now() - this.lobbyAt >= 1000) this.syncLobby(core, true); }; // at most 1 push/s under a burst
       core.onGoal = (g) => { void this.state.storage.put('goal', g); }; // phase 3: the daily goal count {day, n} (a count only)
       return core;
     }

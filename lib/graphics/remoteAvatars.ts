@@ -111,7 +111,7 @@ export interface RemoteAvatars{
 
 const HF_SKILL={type:'highFive' as const,progress:0,side:1 as -1|1};
 const FACE_CAMERA=Math.atan2(16,33),hfBag=createHighFiveBag();
-/** Public island: a world holds WORLD_HARD (24) members, a party PARTY_MAX (20); every per-member pool is sized for the larger. */
+/** Public island: a world holds WORLD_HARD (30) members, a party PARTY_MAX (20); every per-member pool is sized for the larger. */
 export const MAX_REMOTE=Math.max(PARTY_MAX,WORLD_HARD);
 /** Strangers only (public mode): within PERSONAL_SPACE_M (horizontal) of me, or standing between a room's camera and my spot, a remote
 *  fades to PERSONAL_ALPHA over PERSONAL_FADE_S (nobody can block the view or crowd; there is no collision and none is added). At most
@@ -161,7 +161,7 @@ type Entry={
  /** Jetpack idle gestures (Nov 8 2026): the same machine as the local player, driven by their mode + speed (no extra network field). */
  iw:IdleWave;
  /** The sender's last mode (so a wire emote picks the flying / swimming flourish) and whether a flourish rotation is on the rig. */
- lastMode:number;flOn:boolean;
+ lastMode:number;flOn:boolean;/** the drawing guard (drawnAs, last pose solve): swim / jetpack pose allowed, and the lift that keeps a refused swimmer on the ground */wet:boolean;jet:boolean;lift:number;
  /** The sender's mode when the emote arrived: its flourish is picked from this and ends when their context changes (friendFlourishLapsed). */
  emMode:number;
  /** A moving emote (lib/town/moveEmotes.ts: the sender walked / ran when it arrived): its local id (-1 none), variant (their own bag here), length, and the friend's last speed. */
@@ -284,6 +284,16 @@ const FL:Flourish={roll:0,pitch:0,yaw:0,lift:0,ripple:0},BF:BubbleFrame={visible
 /** `fieldScale`: the force field size (rooms use ~0.7: an r 0.8 m dome in a small room instead of the island's 1.15 m). */
 /** Friends' balls: at most BALL_MAX drawn (nearest to the camera), within BALL_DRAW_RANGE; plumes for flying friends within JET_RANGE. */
 export const BALL_MAX=4,BALL_DRAW_RANGE=70,JET_RANGE=70,BALL_RADIUS=.19;
+/** A jetpack pose closer than this to the ground is drawn as walking / standing (no backpack hover, no plume). */
+export const JET_MIN_AGL=1;
+/** Nov 12 2026 (public island review, Low): what a remote's body may show, whatever its wire mode says. A swim / dive (or an away
+ *  friend in the sea) only off dry land (`land` = the island's onLand at their x, z); a jetpack only >= JET_MIN_AGL above the ground
+ *  (`agl` = their y minus groundAt; NaN = unknown, allowed). Otherwise the walk / idle body, so a modified client or a bot cannot swim
+ *  down a street or hover a jetpack at ground level. Cosmetic only: the wire and the relay are unchanged. */
+export function drawnAs(mode:number,zone:number,shield:boolean,land:boolean,agl:number):{wet:boolean;jet:boolean}{
+ const swimish=mode===Mode.Swim||mode===Mode.Dive||shield&&zone===Zone.Sea;
+ return {wet:swimish&&!land,jet:mode===Mode.Jetpack&&!(agl<JET_MIN_AGL)};
+}
 /** Relay v1.7: friends' Kit Shop ball skins alive at once (each one 256x128 texture + one material). */
 export const KIT_SKINS=2;
 const ballAxis=new T.Vector3(),ballSpin=new T.Quaternion(),feelSpot=new T.Vector3();
@@ -299,7 +309,7 @@ export function friendBallSpot(state:number,b:{x:number;y:number;z:number},pose:
 }
 /** `fieldScale`: the force field size (rooms use ~0.7: an r 0.8 m dome in a small room instead of the island's 1.15 m).
  *  `groundAt`: the island's ground height (m) under x, z, where a flying friend's plume settles (none: it falls 3 m and fades). */
-export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(tier:HeatTier,phone:boolean)=>number;fieldScale?:number;groundAt?:(x:number,z:number)=>number;
+export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(tier:HeatTier,phone:boolean)=>number;fieldScale?:number;groundAt?:(x:number,z:number)=>number;/** dry land at x, z (the island passes onLand): gates the swim pose (drawnAs) */landAt?:(x:number,z:number)=>boolean;
 /** A room page (the stranger room cap of ROOM_CAP); default: a layer with a fieldScale (only rooms pass one, createRoomParty). */room?:boolean}):RemoteAvatars{
  const FS=opts.fieldScale??1;
  const root=new T.Group();root.name='remote-avatars';scene.add(root);
@@ -535,7 +545,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
    let e=byId.get(id);const key=look.join(',');const st=style??null;
    if(!e){
     e={id,name,lookKey:key,look:look.slice(),style:st,kit:null,kitKey:'',ballKey:'',colour:new T.Color(st?st.hex:'#ffffff'),rig:null,label:null,labelTexture:null,bubble:null,admitted:false,shown:false,pd2:0,plan:0,dem:false,out:1,
-     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,iw:createIdleWave(id*2654435761),du:null,lastMode:0,emMode:0,flOn:false,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
+     motion:{facing:0},swim:{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0},emote:-1,emoteAge:0,iw:createIdleWave(id*2654435761),du:null,lastMode:0,emMode:0,flOn:false,wet:true,jet:true,lift:0,mv:-1,mvV:0,mvDur:0,spd:0,rp:0,hf:-1,ball:null,hidden:false,muted:false,acc:0,slot:(id*.618034)%1,needResume:true,ld2:0,d2:0,
 shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKey:'',prWas:'',actWas:-1,lineWas:'',bx:0,by:0,bz:0,bOn:false,bq:new T.Quaternion(),bump:createBumpReact(),rb:false,ra:0,ca:0,
      st:false,given:name,uh:false,ps:1,leaving:false,lv:1,lp:{x:0,y:0,z:0,yaw:0,speed:0,mode:Mode.Idle,zone:Zone.Main,fade:0,flags:0,activity:0},sel:true,em:new Float64Array(STRANGER_EMOTES_PER_MIN).fill(-Infinity),emI:0,pc:-1,pa:-1};
     syncPublic(false);e.st=pub;if(pub&&inRoom)e.sel=selCount()<ROOM_CAP;e.name=labelText(e);/* a stranger: the generated pair, never `name` */
@@ -627,7 +637,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     const k=Math.max(.001,pose.fade*saverFade*e.door*(e.st?e.lv*farFade(e.ld2):1));
     if(e.st){const near=local?e.ld2<PS2:focusOn&&(pose.x-fx)*(pose.x-fx)+(pose.z-fz)*(pose.z-fz)<PS2;
      e.ps=stepPersonal(e.ps,near||inRoom&&focusOn&&inSightLine(camPos.x,camPos.z,fx,fz,pose.x,pose.z)?PERSONAL_ALPHA:1,dt,reduced);}else e.ps=1;
-    if(pose.mode===Mode.Jetpack&&e.door>=1&&d2<JET_RANGE*JET_RANGE&&candJet.length<MAX_REMOTE&&!e.leaving)candJet.push(e);
+    if(pose.mode===Mode.Jetpack&&e.jet&&e.door>=1&&d2<JET_RANGE*JET_RANGE&&candJet.length<MAX_REMOTE&&!e.leaving)candJet.push(e);
     // The dome: grows in as they go busy, pops (swells and fades) as they come back; the ball's shake is skipped under reduced motion.
     if(e.field>.002)fields.add(pose.x,pose.y,pose.z,e.field*k,FS*(shield?.86+.14*e.field:1+(1-e.field)*.28),reduced?0:e.shake*e.shake,reduced?1:e.ripple,e.hx,e.hy,e.hz,e.slot);
     if(!rig||shown>=BATCH_CAPACITY){ // beyond the rig cap (or a full batch): colour ring + label (+ emote bubble) only, no body
@@ -637,7 +647,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     }
     // Far friends solve their pose at 10 Hz (> 20 m) / 5 Hz (> 60 m); the root still follows every frame.
     const root3=rig.root,motion=e.motion;unBump(root3,e.bump);
-    root3.position.set(pose.x,pose.y,pose.z);root3.scale.setScalar(BODY_SCALE*k*e.out);
+    root3.position.set(pose.x,pose.y+e.lift,pose.z);root3.scale.setScalar(BODY_SCALE*k*e.out);
     e.acc+=dt;
     // Live feel: the tier goes by the distance from the LOCAL player (ld2), not the camera: on the island the camera sits ~35 m back, so a
     // friend right next to you was posed at 10 Hz (legs stepping in jerks while the body glided). Near friends now pose every frame.
@@ -647,11 +657,14 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     if(period===0||e.acc>=period+e.slot*period||e.needResume){
      const step=Math.min(e.acc,.1),idleStep=Math.min(e.acc,.6)/* a far friend updates less often: the idle gestures keep real time */;e.acc=0;
      const mode=pose.mode;e.lastMode=mode;
-     motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=shield&&mode!==Mode.Jetpack?undefined:travelFor(mode);/* an away friend keeps the jetpack backpack (and the blue downwash while hovering); rides are not drawn inside the field, so they stand */
+     {const sw=mode===Mode.Swim||mode===Mode.Dive||shield&&pose.zone===Zone.Sea,jp=mode===Mode.Jetpack;/* one lookup per pose solve, only in those modes */
+      const land=sw&&!!opts.landAt&&opts.landAt(pose.x,pose.z),g=(jp||land)&&opts.groundAt?opts.groundAt(pose.x,pose.z):NaN,dr=drawnAs(mode,pose.zone,shield,land,pose.y-g);
+      e.wet=dr.wet;e.jet=dr.jet;e.lift=land&&g>pose.y?g-pose.y:0;}
+     motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=shield&&mode!==Mode.Jetpack||mode===Mode.Jetpack&&!e.jet?undefined:travelFor(mode);/* an away friend keeps the jetpack backpack (and the blue downwash while hovering); rides are not drawn inside the field, so they stand */
      motion.parachute=!shield&&(mode===Mode.Parachute||mode===Mode.Zipline);
      motion.dribbling=!shield&&onFoot(mode)&&balls?.get(e.id)?.state===BallState.Feet&&pose.zone!==Zone.Indoors;/* only with a ball at their feet */
      motion.called=0;motion.jump=undefined;motion.skill=e.hf>=0&&!reduced&&highFiveSkill(HF_SKILL,e.hf,0,e.emoteAge)?HF_SKILL as SkillMotion:undefined;
-     if(mode===Mode.Swim||mode===Mode.Dive||shield&&pose.zone===Zone.Sea){
+     if(e.wet){
       const s=e.swim;s.kind=moving?'crawl':'tread';s.effort=moving?Math.min(1,pose.speed/3):0;s.phase=reduced?0:s.phase+step*(moving?5:1.5);s.under=mode===Mode.Dive?.7:0;motion.swim=s;
      }else motion.swim=undefined;
      // Emotes: JuggleWithMe/Wave/HighFive raise the "called" arm; Cheer/WellPlayed celebrate. Reduced motion keeps only the bubble.
@@ -667,8 +680,8 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
      if(e.emote>=0&&e.mv>=0&&!reduced)applyMoveEmote(rig.root,e.mv,e.mvV,e.emoteAge,moveWeight(e.emoteAge,e.mvDur));/* a moving emote: layered on their own walk / run cycle */
      else if(e.emote>=0&&!reduced&&e.hf<0&&!fs0&&e.emote!==Emote.JuggleWithMe&&e.emote!==Emote.PassBall)applyEmoteArms(rig.root,e.emote,e.emoteAge,emoteSeconds(e.emote));
      else if(fs0&&!reduced&&fs0.arm>=0&&e.emoteAge>=fs0.armFrom)applyRideEmote(rig.root,fs0.arm,e.emoteAge,Math.max(0,Math.min(1,(e.emoteAge-fs0.armFrom)/.2,(fs0.seconds-e.emoteAge)/.2)));
-     {const iw=e.iw;if(mode===Mode.Jetpack||iw.kind>=0){if(stepIdleWave(iw,idleStep,mode===Mode.Jetpack&&!shield&&pose.speed<IDLE_SPEED&&e.emote<0&&!(e.du&&e.du.on),reduced)>0)applyIdleGesture(rig.root,iw.kind,iw.age,iw.w);}}/* a hovering friend waves too (lib/town/jetpackIdleWave.ts) */
-     root3.position.set(pose.x,pose.y,pose.z);
+     {const iw=e.iw;if(mode===Mode.Jetpack||iw.kind>=0){if(stepIdleWave(iw,idleStep,mode===Mode.Jetpack&&e.jet&&!shield&&pose.speed<IDLE_SPEED&&e.emote<0&&!(e.du&&e.du.on),reduced)>0)applyIdleGesture(rig.root,iw.kind,iw.age,iw.w);}}/* a hovering friend waves too (lib/town/jetpackIdleWave.ts) */
+     root3.position.set(pose.x,pose.y+e.lift,pose.z);
      // A friend's high five: an "air five" toward the camera side (their own random variation, shown on every screen alike).
      if(e.hf>=0&&!reduced)applyHighFive(rig.root,e.hf,0,e.emoteAge,1,FACE_CAMERA,BODY_SCALE*k*e.out);
      e.needResume=false;

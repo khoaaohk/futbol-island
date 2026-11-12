@@ -67,7 +67,7 @@ export const WORLD_ANIMALS: readonly string[] = [
   'Kitten', 'Puppy', 'Pony', 'Lamb', 'Toucan', 'Pelican', 'Chipmunk', 'Ladybird',
 ];
 /** Colours a world name may use: COLOUR_ORDER without Yellow, Peach, Brown, Black and White, so a colour + animal pair can never read
- *  as a remark about skin. 15 colours x 32 animals; the animal alone is unique per world (WORLD_HARD 24 < 32). */
+ *  as a remark about skin. 15 colours x 32 animals; the animal alone is unique per world (WORLD_HARD 30 < 32). */
 export const WORLD_COLOUR_ORDER: readonly number[] = COLOUR_ORDER.filter((c) => !['Yellow', 'Peach', 'Brown', 'Black', 'White'].includes(NAME_COLOURS[c]));
 
 /** 'Teal Otter' for a world member; a party name (animal slot 0 ignored) reads as the colour only, like nameFor. */

@@ -195,6 +195,9 @@ export class RoomCore {
   /** World: a daily counter to RelayStats ('rl:report_<reason>', 'rl:quarantine'); a quarantine hold on an IP hash (WorldLobby). */
   onStat: ((id: string) => void) | null = null;
   onHold: ((ipKey: string) => void) | null = null;
+  /** Relay v2.0 world: a fresh join was refused with Full. The host pushes its count to the lobby at once, so the client's one retry
+   *  without `in` is sent to another world (live stress test, Nov 12 2026). */
+  onFull: (() => void) | null = null;
   /** Phase 3 (Nov 12 2026), world only: the island-wide daily goal. goalDay = UTC day number (floor(ms / 86400000)), goalN = goals
    *  this world's kids' teams scored that day. A count only; onGoal hands {day, n} to the Durable Object to keep (storage 'goal'). */
   private goalDay = -1;
@@ -860,7 +863,7 @@ export class RoomCore {
       // unknown / lapsed token: fall through to a fresh join (graceful after a Durable Object eviction)
     }
     if (this.world) { // relay v2.0: no code, lock or expiry; the hard cap; a fresh random [colour, animal]; nobody hears a Joined yet
-      if (this.members.size >= WORLD_HARD) return this.refuse(peer, ErrorCode.Full);
+      if (this.members.size >= WORLD_HARD) { if (this.onFull) this.onFull(); return this.refuse(peer, ErrorCode.Full); }
       this.pending.delete(peer);
       const taken: NameIdx[] = [];
       this.members.forEach((x) => taken.push(x.name));

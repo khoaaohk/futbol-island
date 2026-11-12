@@ -66,7 +66,7 @@ const lastOf = (p, op) => { const l = p.of(op); return l.length ? l[l.length - 1
 const strings = (v, out = []) => { if (typeof v === 'string') out.push(v); else if (Array.isArray(v)) v.forEach((x) => strings(x, out)); return out; };
 
 t('protocol: world constants, caps, new frames', () => {
-  assert.equal(WORLD_SOFT, 20); assert.equal(WORLD_HARD, 24); assert.equal(P.WORLD_SEE_M, 160); assert.equal(P.QUIET_RANGE_M, 40);
+  assert.equal(WORLD_SOFT, 26); assert.equal(WORLD_HARD, 30); assert.ok(WORLD_HARD <= P.MAX_MEMBER_ID + 1 - P.WORLD_ID_SPARE, '2 member ids stay spare'); assert.equal(P.WORLD_SEE_M, 160); assert.equal(P.QUIET_RANGE_M, 40);
   assert.equal(P.WORLD_AWAY_GRACE_MS, 120000); assert.equal(P.WORLD_IDLE_MS, 300000);
   assert.deepEqual({ ...P.FOLLOW }, { nearM: 4, holdMs: 45000, movedM: 30, releaseM: 15, releaseMs: 30000 });
   assert.deepEqual({ ...P.ReportReason }, { Following: 0, InMyWay: 1, TooManyWaves: 2, SomethingElse: 3 });
@@ -80,7 +80,7 @@ t('protocol: world constants, caps, new frames', () => {
   assert.ok(P.parseClient(j([60, 5, 0]))); assert.ok(P.parseClient(j([60, 31, 3]))); assert.equal(P.parseClient(j([60, 5, 4])), null); assert.equal(P.parseClient(j([60, 32, 0])), null);
   assert.equal(P.parseClient(j([60, 5, 'Following'])), null, 'reasons are ints');
   assert.ok(P.encode([60, 1, 0]).length < 20);
-  assert.ok(P.parseServer(j([41, 0]))); assert.ok(P.parseServer(j([42, 24]))); assert.equal(P.parseServer(j([42, 25])), null); assert.equal(P.parseServer(j([41, 'x'])), null);
+  assert.ok(P.parseServer(j([41, 0]))); assert.ok(P.parseServer(j([42, WORLD_HARD]))); assert.equal(P.parseServer(j([42, WORLD_HARD + 1])), null); assert.equal(P.parseServer(j([41, 'x'])), null);
   assert.ok(P.parseServer(j([22, 3, 4])), 'S.Left Far'); assert.ok(P.parseServer(j([32, CAPS_WORLD]))); assert.ok(P.parseClient(j([11, CAPS_WORLD])));
 });
 
@@ -138,7 +138,7 @@ t('refused in world mode: Kick, Lock, Rotate, End, NameLock, Rename, Ping, Hit (
   assert.equal(a.closed, null, 'refused frames are never counted as bad');
 });
 
-t('names: unique animals per world, in range, re-rolled on a fresh join, kept on a resume; hard cap 24', () => {
+t('names: unique animals per world, in range, re-rolled on a fresh join, kept on a resume; hard cap WORLD_HARD', () => {
   const W = world();
   const ps = [];
   for (let i = 0; i < WORLD_HARD; i++) ps.push(join(W));
@@ -148,11 +148,12 @@ t('names: unique animals per world, in range, re-rolled on a fresh join, kept on
   const extra = join(W);
   assert.deepEqual(extra.of(S.Error).map((m) => m[1]), [ErrorCode.Full]); assert.equal(extra.closed, CLOSE.Refused);
   // a member who walks through a door of a FULL world (the lobby keeps ?in=) resumes its own seat; a fresh join is still refused
-  W.room.disconnect(ps[23]); W.run(1000);
-  const back = join(W, { resume: ps[23].token });
-  assert.equal(back.id, ps[23].id, 'a seat holder comes back into a full world'); assert.equal(back.of(S.Error).length, 0);
+  W.room.disconnect(ps[WORLD_HARD - 1]); W.run(1000);
+  const back = join(W, { resume: ps[WORLD_HARD - 1].token });
+  assert.equal(back.id, ps[WORLD_HARD - 1].id, 'a seat holder comes back into a full world'); assert.equal(back.of(S.Error).length, 0);
   assert.deepEqual(join(W).of(S.Error).map((m) => m[1]), [ErrorCode.Full], 'still full for a newcomer');
   // fresh joins: a new name (most of the time) and a new token
+  for (let k = 8; k < WORLD_HARD - 1; k++) send(W, ps[k], [C.Leave]); send(W, back, [C.Leave]); // the cap is 30 of 32 animals: re-roll in a part-full world
   let changed = 0;
   for (let k = 0; k < 8; k++) {
     const p = ps[k], old = names[k];
@@ -171,7 +172,7 @@ t('names: unique animals per world, in range, re-rolled on a fresh join, kept on
   assert.equal(r2.id, r.id); assert.deepEqual(r2.of(S.Welcome)[0][7][0][1], nm);
 });
 
-t('lobby: fill-first, soft 20 / hard 24, reservations, open and forget shards, counts only, default closed', () => {
+t('lobby: fill-first, soft 26 / hard 30, reservations, open and forget shards, counts only, default closed', () => {
   let now = 5_000_000, token = true;
   const L = new LC.WorldLobbyCore(() => now, () => token);
   assert.deepEqual(L.assign(), { open: false }, 'stored switch defaults to off');
@@ -180,23 +181,23 @@ t('lobby: fill-first, soft 20 / hard 24, reservations, open and forget shards, c
   assert.deepEqual(L.assign(), { open: true, shard: 1, n: 0 });
   L.report(1, 1);
   assert.equal(L.assign().shard, 1);
-  L.report(1, 20);
+  L.report(1, WORLD_SOFT);
   assert.deepEqual(L.assign(), { open: true, shard: 2, n: 0 }, 'shard 1 at the soft cap: a new shard');
-  L.report(2, 5); L.report(1, 19);
+  L.report(2, 5); L.report(1, WORLD_SOFT - 1);
   now += LC.RESERVE_MS; // reservations lapse
   assert.equal(L.assign().shard, 1, 'the fullest under the soft cap');
   now += LC.RESERVE_MS;
-  L.report(1, 22);
-  assert.deepEqual(L.assign(1), { open: true, shard: 1, n: 22 }, 'a member already assigned may come back up to the hard cap');
+  L.report(1, WORLD_SOFT + 2);
+  assert.deepEqual(L.assign(1), { open: true, shard: 1, n: WORLD_SOFT + 2 }, 'a member already assigned may come back up to the hard cap');
   assert.equal(L.assign().shard, 2, 'but nobody new is sent to a world over the soft cap');
-  now += LC.RESERVE_MS; L.report(1, 24);
-  assert.deepEqual(L.assign(1), { open: true, shard: 1, n: 23 }, 'a full world keeps a returning member (a door / reconnect usually still holds a seat; n leaves the caller out)');
+  now += LC.RESERVE_MS; L.report(1, WORLD_HARD);
+  assert.deepEqual(L.assign(1), { open: true, shard: 1, n: WORLD_HARD - 1 }, 'a full world keeps a returning member (a door / reconnect usually still holds a seat; n leaves the caller out)');
   assert.equal(L.assign().shard, 2, 'a newcomer never goes to a full world');
   assert.equal(L.assign(9).shard, 2, 'a gone world: assigned like a newcomer');
   // a burst of lookups before any socket arrives still fills in order
   const L2 = new LC.WorldLobbyCore(() => now, () => true); L2.stored = true;
-  const got = []; for (let i = 0; i < 45; i++) got.push(L2.assign().shard);
-  assert.deepEqual([got.filter((s) => s === 1).length, got.filter((s) => s === 2).length, got.filter((s) => s === 3).length], [20, 20, 5]);
+  const got = []; for (let i = 0; i < 2 * WORLD_SOFT + 5; i++) got.push(L2.assign().shard);
+  assert.deepEqual([got.filter((s) => s === 1).length, got.filter((s) => s === 2).length, got.filter((s) => s === 3).length], [WORLD_SOFT, WORLD_SOFT, 5]);
   // empty shards are forgotten; stale ones too
   L.report(2, 0);
   assert.deepEqual(L.state().shards.map((s) => s.shard), [1]);
@@ -206,9 +207,35 @@ t('lobby: fill-first, soft 20 / hard 24, reservations, open and forget shards, c
   assert.ok(!/name|id"|pos|hash/.test(st), 'state holds counts only: ' + st);
   // shard numbers stay in range; a full lobby says closed
   const L3 = new LC.WorldLobbyCore(() => now, () => true); L3.stored = true;
-  for (let s = 1; s <= P.WORLD_MAX_SHARDS; s++) L3.report(s, 20);
+  for (let s = 1; s <= P.WORLD_MAX_SHARDS; s++) L3.report(s, WORLD_SOFT);
   assert.deepEqual(L3.assign(), { open: false });
   assert.equal(L3.report(999, 5), true); assert.equal(L3.state().shards.length, P.WORLD_MAX_SHARDS);
+});
+
+t('lobby (Nov 12 2026 stress test): a restart keeps counts, a Full refusal pushes the count, a lookup never picks a full shard', () => {
+  let now = 9_000_000;
+  const L = new LC.WorldLobbyCore(() => now, () => true); L.stored = true;
+  L.report(1, WORLD_HARD); L.report(2, 4);
+  const v = L.version; L.report(1, WORLD_HARD); assert.equal(L.version, v, 'a heartbeat with the same count is not a change (no write)');
+  const rows = L.snapshot(); assert.deepEqual(rows.map((r) => [r[0], r[1]]), [[1, WORLD_HARD], [2, 4]]);
+  assert.ok(!/[a-z]/i.test(JSON.stringify(rows)), 'counts and times only');
+  now += 20_000;
+  const R = new LC.WorldLobbyCore(() => now, () => true); R.stored = true; R.restore(rows);
+  assert.deepEqual(R.assign(2), { open: true, shard: 2, n: 4 }, 'after a restart ?in=2 stays on pub-2 (was "shard 1, n 0")');
+  assert.equal(R.assign().shard, 2, 'a plain lookup goes to the fullest world with room, never the full one');
+  const R2 = new LC.WorldLobbyCore(() => now + LC.SHARD_STALE_MS, () => true); R2.stored = true; R2.restore(rows);
+  assert.deepEqual(R2.state().shards, [], 'stored rows older than the stale window are not restored');
+  R.restore([[1, 3, now], ['x', 1, now], [99, 1, now], [3, 0, now], [4, 2, now + 5]]); assert.deepEqual(R.state().shards.map((s) => s.shard), [1, 2], 'bad rows ignored, live wins');
+  // a forgotten full world: the room's Full refusal pushes its count before the client's one retry
+  const F = new LC.WorldLobbyCore(() => now, () => true); F.stored = true; F.report(2, 4);
+  const W = world(); const pushed = []; W.room.onFull = () => { pushed.push(W.room.size); F.report(1, W.room.size); };
+  for (let i = 0; i < WORLD_HARD; i++) join(W);
+  assert.deepEqual(pushed, [], 'no push while there is room');
+  const over = join(W); assert.ok(over.of(S.Error).some((m) => m[1] === ErrorCode.Full)); assert.deepEqual(pushed, [WORLD_HARD]);
+  assert.equal(F.assign().shard, 2, 'the retry without ?in= lands on pub-2');
+  // every known shard full: a new shard, never a full one
+  const G = new LC.WorldLobbyCore(() => now, () => true); G.stored = true; G.report(1, WORLD_HARD); G.report(2, WORLD_SOFT);
+  assert.equal(G.assign().shard, 3);
 });
 
 t('interest: nobody beyond 160 m is ever sent (no beacon); 150 m to come back; other rooms unseen', () => {
@@ -444,6 +471,11 @@ t('kill switch: closeWorld closes every socket with WorldOff; the world opens ag
     assert.deepEqual(w, { open: true, shard: 1, n: 0 });
     await env.LOBBY.get().fetch('https://do/count', { method: 'POST', body: JSON.stringify({ shard: 1, n: 7 }) });
     assert.deepEqual(await (await call(env, '/world?in=1', { headers: O })).json(), { open: true, shard: 1, n: 7 }, '"N on now" for my world');
+    { // the lobby object restarts (eviction / deploy): the stored counts come back (Nov 12 2026 stress test)
+      await new Promise((r) => setTimeout(r, 0));
+      const again = new WorldLobby({ storage: st }, env);
+      assert.deepEqual(await (await again.fetch(new Request('https://do/assign?in=1'))).json(), { open: true, shard: 1, n: 7 }, 'a restarted lobby keeps the count');
+    }
     const s = await (await call(env, '/control', { headers: auth })).json();
     assert.deepEqual(s.shards, [{ shard: 1, n: 7 }]); assert.equal(s.total, 7);
     assert.equal((await call(env, '/control', { method: 'POST', headers: auth, body: '{"public":"yes"}' })).status, 400);
@@ -465,7 +497,8 @@ t('kill switch: closeWorld closes every socket with WorldOff; the world opens ag
     await env.LOBBY.get().fetch('https://do/hold', { method: 'POST', body: JSON.stringify({ h: 'abcdef0123456789' }) });
     const ad = await (await env.LOBBY.get().fetch('https://do/admit', { method: 'POST', body: JSON.stringify({ shard: 1, h: 'abcdef0123456789' }) })).json();
     assert.equal(ad.held, true);
-    assert.deepEqual([...st.m.keys()], ['public'], 'the hash never reaches storage');
+    assert.deepEqual([...st.m.keys()].sort(), ['counts', 'public'], 'only the switch and the counts are stored');
+    assert.ok(!/abcdef/.test(JSON.stringify([...st.m.values()])), 'the hash never reaches storage');
   }
   {
     let now = 0; const L = new LC.WorldLobbyCore(() => now, () => true);
