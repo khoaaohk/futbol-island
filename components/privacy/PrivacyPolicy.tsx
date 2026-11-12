@@ -60,7 +60,7 @@ export const PRIVACY_CONTACT:string|null=null;
  * off every `PUB` branch below renders exactly today's text (tests/mp-public-copy.cjs pins it); with it on, the policy describes
  * public play. The "last updated" date moves only with the flag: POLICY_UPDATED_PUBLIC (set it to the day the flag is switched on).
  */
-export const POLICY_UPDATED_PUBLIC='November 11, 2026';
+export const POLICY_UPDATED_PUBLIC='November 12, 2026';
 
 export default function PrivacyPolicy(){
  const PUB=publicWorldEnabled();
