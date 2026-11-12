@@ -102,4 +102,10 @@ t('QA Nov 12 2026: same-choice pulse, count kept together, no count when locked,
  assert(/c\.id === 'public' && !off && count !== null/.test(choice),'no count on the locked option');
  assert(/const empty = !shown\.length && !hiddenHere\.length && !report;/.test(roomPub)&&/if \(hidden \|\| empty\) return null;/.test(roomPub),'no "0 players here" chip');
 });
+t('End party asks first, then the host gets the same choices as a guest who leaves (live QA Nov 12 2026)',()=>{
+ assert(/<ConfirmStep kind="end" question="End the party for everyone\?" yes="End party"/.test(host),'End party asks first');
+ assert(/onYes=\{\(\) => \{[^}]*connection\.host\.end\(\); selfEnded\.current = true; setConfirmEnd\(false\); setFrom\(null\); setView\(publicRef\.current \? 'choice' : 'none'\); \}\}/.test(host),'host: Just me / With other players next');
+ assert(/connection\.leave\(\); setFrom\(null\); setView\(publicRef\.current \? 'choice' : 'none'\);/.test(host),'guest Leave: the same choices');
+ assert(/const choose = \(selfLeft\.current \|\| selfEnded\.current\)[^;]*publicRef\.current;/.test(host)&&/setView\(choose \? 'choice' : 'none'\)/.test(host),'the ended status keeps the choices open, never for a remote end');
+});
 console.log(`mp-public-ui: ${n} checks passed`);

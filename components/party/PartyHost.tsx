@@ -174,6 +174,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   };
   const joining = useRef<'host' | 'guest' | null>(null);
   const selfLeft = useRef(false); // this player tapped Leave party: the status change that follows says "You left the party", not "The party ended"
+  const selfEnded = useRef(false); // the host confirmed End party: with the public panel on, the presence choices open next (QA Nov 12 2026)
   const joinVia = useRef<'link' | 'typed'>('typed'); // how the code being joined arrived (analytics: a link / the title screen vs typed)
   const prevIds = useRef<Set<number> | null>(null);
   const prevStatus = useRef(state.status);
@@ -321,8 +322,10 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     } else if (state.status === 'ended' || (state.status === 'idle' && (was === 'live' || was === 'reconnecting'))) {
       if ((was === 'live' || was === 'reconnecting') && selfLeft.current) text('You left the party'); // a guest's own Leave (E2E finding Oct 22 2026: it read 'The party ended')
       else if (was === 'live' || was === 'reconnecting') { track.current?.('ended'); trackHealth(); text(state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended'); }
-      selfLeft.current = false;
-      prevIds.current = null; setView('none'); setConfirmEnd(false);
+      // QA Nov 12 2026: the host (End party) and a guest (Leave party) both get "Who's on your island?" next: Just me or With other players.
+      const choose = (selfLeft.current || selfEnded.current) && (was === 'live' || was === 'reconnecting') && publicRef.current;
+      selfLeft.current = false; selfEnded.current = false;
+      prevIds.current = null; setFrom(null); setView(choose ? 'choice' : 'none'); setConfirmEnd(false);
     }
   }, [state.status, state.error, state.tab, state.members.length, text, world]);
   // Analytics: the member count while live (the host's peak and first-friend bands; only a number, never who).
@@ -445,7 +448,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       <p className={styles.small}>Go back to the party you were in.</p>
     </div>
   );
-  const leave = () => { selfLeft.current = true; track.current?.('leave'); trackHealth(); connection.leave(); setView('none'); text('You left the party'); };
+  const leave = () => { selfLeft.current = true; track.current?.('leave'); trackHealth(); connection.leave(); setFrom(null); setView(publicRef.current ? 'choice' : 'none'); text('You left the party'); };
 
   return (
     <>
@@ -559,7 +562,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
               {/* End (host) and Leave (guest) share the destructive red (.endLink) and both ask first (ConfirmStep). */}
               {state.isHost && (confirmEnd
                 ? <ConfirmStep kind="end" question="End the party for everyone?" yes="End party"
-                    onYes={() => { track.current?.('end'); trackHealth(); connection.host.end(); setConfirmEnd(false); }}
+                    onYes={() => { track.current?.('end'); trackHealth(); connection.host.end(); selfEnded.current = true; setConfirmEnd(false); setFrom(null); setView(publicRef.current ? 'choice' : 'none'); }}
                     onCancel={() => setConfirmEnd(false)} />
                 : <button type="button" className={styles.endLink} data-party-end onClick={askEnd}>End party for everyone</button>)}
               {!state.isHost && (confirmLeave

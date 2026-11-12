@@ -3,6 +3,7 @@
 // (lib/multiplayer/roomParty.ts, branch mp-rooms-phase1) owns the real type; the integrator maps names as listed in
 // docs/multiplayer-rooms-design.md "Arcade prep status". Pure data + pure helpers: no three.js, no DOM, no allocation in the
 // per-frame helpers (they write into caller-owned `out` objects).
+import {roomArrivalSpread} from '../../town/roomArrival';
 import {arcadeCabinets,arcadeHubCabinets,arcadeStand,type ArcadeCabinetId} from '../../arcade/arcadeCatalog';
 
 export type RoomBounds={minX:number;maxX:number;minZ:number;maxZ:number};
@@ -114,6 +115,14 @@ export function pickArcadeSpawn(friends:ArrayLike<number>,count:number,out:RoomP
  // Every slot busy: stagger behind the last row (still inside bounds and off the exit trigger).
  out.x=((count%5)-2)*.95;out.z=8.3;return out;
 }
+/** Live QA Nov 12 2026: the picked slot plus a 0.6-1.5 m spread (lib/town/roomArrival.ts): inside the bounds, off the exit trigger and the
+ *  door side, clear of every cabinet, table, counter and lounge (their areas). Writes `out`. */
+export function arcadeWalkable(x:number,z:number):boolean{
+ const b=ARCADE_ROOM.bounds;if(x<b.minX+.5||x>b.maxX-.5||z<b.minZ+.5||z>10.6)return false;
+ for(const a of ARCADE_ROOM.areas)if(a.kind!=='door'&&Math.hypot(x-a.x,z-a.z)<a.r)return false;
+ return true;
+}
+export function spreadArcadeSpawn<P extends {x:number;z:number}>(out:P,rand:()=>number=Math.random):P{return roomArrivalSpread(out,out.x,out.z,arcadeWalkable,rand);}
 /** Walk-in for a friend who just arrived (first same-room pose): from the door to their first pose over `seconds`. The layer can use it
  *  instead of the plain Warp fade. t in seconds since arrival; writes into `out`; returns false once finished. */
 export function arcadeWalkIn(toX:number,toZ:number,t:number,out:RoomPoint&{yaw:number},seconds=.9):boolean{

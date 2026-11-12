@@ -2,6 +2,7 @@ import {EXHIBITS} from '../../endgame/museum';
 import {ROOM,WING,FLOOR,CASE_PLACES,GALLERY_ORDER,museumPois,museumBlocked,museumObstacles,type Obstacle} from '../../museum/museumLayout';
 import {MUSEUM_DOOR_HINT as DOOR_HINT} from '../../museum/museumDoors';
 import {RoomCode,ROOM_BOUNDS} from '../roomPos';
+import {roomArrivalSpread} from '../../town/roomArrival';
 
 /**
  * The History Museum as a shared room (docs/multiplayer-rooms-design.md Phase 2, "Museum prep status"). Pure data + pure helpers,
@@ -138,6 +139,11 @@ let obstacles:Obstacle[]|null=null;
 export const museumWalkable=(x:number,z:number,r=.3)=>!museumBlocked(x,z,obstacles??=museumObstacles(),r);
 
 // ---- Arrival ---------------------------------------------------------------------------------------------------------------------
+/** Live QA Nov 12 2026: the picked slot plus a 0.6-1.5 m spread (lib/town/roomArrival.ts) on the walkable L, never into a case and never
+ *  toward the doors (the exit is at z D). Writes `out`. */
+export function spreadMuseumSpawn<P extends {x:number;z:number}>(out:P,rand:()=>number=Math.random):P{
+ return roomArrivalSpread(out,out.x,out.z,(x,z)=>z<D-1&&museumWalkable(x,z),rand);
+}
 /** The first spawn slot with nobody within `clear` m (friends already standing about, or other arrivals); all taken: the slot
  *  `seed` picks (e.g. the member's slot index), so simultaneous arrivals still spread. Writes `out`. */
 export function pickMuseumSpawn(out:Spot,occupied:ArrayLike<{x:number;z:number}>,seed=0,clear=.7):Spot{

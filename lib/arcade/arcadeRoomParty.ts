@@ -15,7 +15,7 @@ import { setStationText, type RoomLocal } from '../multiplayer/presence';
 import { Emote } from '../../multiplayer/protocol';
 import { arcadeHubCabinets, type ArcadeCabinetId } from './arcadeCatalog';
 import { arcadeRoomHooks, attachArcadeLayer, type ArcadeBusyFlags, type ArcadeHubPose, type ArcadeRoomHost, type ArcadeRoomLayer } from './arcadeRoomHooks';
-import { ARCADE_GAME_LABEL, ARCADE_ROOM, arcadeBusyCabinet, arcadeBusyPose, createArcadeBusyPose, pickArcadeSpawn } from '../multiplayer/rooms/arcade';
+import { ARCADE_GAME_LABEL, ARCADE_ROOM, arcadeBusyCabinet, arcadeBusyPose, createArcadeBusyPose, pickArcadeSpawn, spreadArcadeSpawn } from '../multiplayer/rooms/arcade';
 
 /** Local station codes (presence.ts, never on the wire): 120 = high scores / choosing a game, 121+ = the hub cabinets in catalog order. */
 export const ARCADE_STATION_SCORES = 120;
@@ -99,7 +99,7 @@ export function createArcadeParty(opts: { phone: boolean; reduced: boolean }): A
           for (const p of party.friendsHere()) { if (c >= 8) break; flat[c * 2] = p.x; flat[c * 2 + 1] = p.z; c++; }
           if (c) {
             spawnUntil = 0;
-            const s = pickArcadeSpawn(flat, c, { x: 0, z: 0 });
+            const s = spreadArcadeSpawn(pickArcadeSpawn(flat, c, { x: 0, z: 0 })); // + a 0.6-1.5 m spread (live QA Nov 12 2026)
             if (Math.abs(s.x - SPAWN.x) > 0.01 || Math.abs(s.z - SPAWN.z) > 0.01) host.place?.(s.x, s.z);
           }
         }

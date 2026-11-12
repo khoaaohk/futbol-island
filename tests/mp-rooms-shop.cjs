@@ -74,6 +74,12 @@ t('spawn slots: 9, slot 0 = today\'s arrival, inside, walkable, apart, clamp-sta
   deq(SH.pickShopSpawn(o, []), { x: Sp[0].x, z: Sp[0].z, yaw: Math.PI }, 'empty shop: today\'s arrival');
   deq([SH.pickShopSpawn(o, [{ x: Sp[0].x, z: Sp[0].z }]).x], [Sp[1].x], 'a friend on slot 0: the next slot');
   deq([SH.pickShopSpawn(o, Sp, 11).x], [Sp[11 % 9].x], 'all taken: the seed spreads');
+  // Live QA Nov 12 2026: two entering at once never share a spot: a 0.6-1.5 m spread, walkable (no shelf / bench), away from the doors.
+  for (const s of Sp) for (const k of [0, .13, .37, .61, .89]) {
+    const p = { x: s.x, z: s.z }; let q = 0; SH.spreadShopSpawn(p, () => [k, 1 - k][q++ % 2]); const d = Math.hypot(p.x - s.x, p.z - s.z);
+    assert.ok(d >= .6 - 1e-9 && d <= 1.5 + 1e-9, 'spread ' + d); assert.ok(SH.shopWalkable(p.x, p.z), 'spread stays walkable'); assert.ok(p.z < D.door.z - 1.2 + 1e-9, 'never toward the doors');
+  }
+  assert.match(read('lib/multiplayer/rooms/shopHooks.ts'), /pickShopSpawn\(spot,here,here\.length\);spreadShopSpawn\(spot\);source\?\.arrive/, 'arrival: free slot, then the spread');
   const c = SH.clampToShop({ x: 0, z: 0 }, 30, -30); assert.ok(inR(D.bounds, c.x, c.z), 'clamp brings a far point inside');
 });
 t('wake rule: remote wake, 20 fps remote frames on phones, 300 ms settle, Battery saver never wakes', () => {
@@ -130,7 +136,7 @@ t('hooks: no-op without a layer (frame false, pushOut moves nothing, no host bef
   const friend = { x: SH.SHOP_SPAWNS[0].x, z: SH.SHOP_SPAWNS[0].z };
   const layer = { shown: 1, meRing: true, update: () => true, pushOut: (q) => { q.x = 9; return true; }, nearestFriend: () => null, friendsHere: () => [friend] };
   host.setFriendLayer(layer); assert.equal(wakes, 1, 'attach wakes the shop once'); assert.equal(H.attached, true);
-  assert.equal(H.frame(.016, 100, {}), true); deq(slots, [1], 'one friend drawn: one shopper steps out'); deq(arrived, { x: SH.SHOP_SPAWNS[1].x, z: SH.SHOP_SPAWNS[1].z }, 'walk-in re-aimed to a free slot');
+  assert.equal(H.frame(.016, 100, {}), true); deq(slots, [1], 'one friend drawn: one shopper steps out'); { const d = Math.hypot(arrived.x - SH.SHOP_SPAWNS[1].x, arrived.z - SH.SHOP_SPAWNS[1].z); assert.ok(d >= .6 - 1e-9 && d <= 1.5 + 1e-9 && SH.shopWalkable(arrived.x, arrived.z), 'walk-in re-aimed to a free slot, spread 0.6-1.5 m'); }
   arrived = null; H.frame(.016, 200, {}); assert.equal(arrived, null, 'arrival re-aim happens once'); deq(slots, [1], 'no crowd churn while the count holds');
   assert.equal(H.pushOut(p, .3), true); assert.equal(H.meRing, true);
   H.setBusy('ball', false, null); assert.equal(H.busyFlag, 'studio'); assert.equal(H.busyText, 'Designing a kit');

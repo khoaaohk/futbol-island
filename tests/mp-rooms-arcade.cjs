@@ -113,6 +113,11 @@ const R=A.ARCADE_ROOM,B=R.bounds,inside=(p,m=0)=>p.x>=B.minX-m&&p.x<=B.maxX+m&&p
  const taken=[];for(let k=0;k<R.spawnSlots.length;k++){A.pickArcadeSpawn(friends,k,out);assert(inside(out));for(const t of taken)assert(Math.hypot(t.x-out.x,t.z-out.z)>=.9,'each newcomer gets a free slot');taken.push({...out});friends[k*2]=out.x;friends[k*2+1]=out.z;}
  A.pickArcadeSpawn(friends,R.spawnSlots.length,out);assert(inside(out)&&!(Math.abs(out.x)<R.exit.halfWidth&&out.z>R.exit.z),'overflow stays inside, off the exit');
  const w={x:0,z:0,yaw:0};assert.equal(A.arcadeWalkIn(1.2,10.3,0,w),true);assert(Math.abs(w.z-(R.door.z-.4))<1e-9);assert(inside(w));for(let t=0;t<1;t+=.1){A.arcadeWalkIn(1.2,10.3,t,w);assert(inside(w));}assert.equal(A.arcadeWalkIn(1.2,10.3,.9,w),false);same([w.x,w.z],[1.2,10.3]);
+ // Live QA Nov 12 2026: two entering at once never share a spot: a 0.6-1.5 m spread, inside, off the exit, clear of every cabinet.
+ for(const s of R.spawnSlots)for(const k of [0,.13,.37,.61,.89]){const p={x:s.x,z:s.z};let q=0;A.spreadArcadeSpawn(p,()=>[k,1-k][q++%2]);const d=Math.hypot(p.x-s.x,p.z-s.z);
+  assert(d>=.6-1e-9&&d<=1.5+1e-9,'spread '+d);assert(inside(p)&&A.arcadeWalkable(p.x,p.z)&&!(Math.abs(p.x)<R.exit.halfWidth&&p.z>R.exit.z),'spread stays walkable, off the exit');
+  for(const a of R.areas)if(a.kind!=='door')assert(Math.hypot(p.x-a.x,p.z-a.z)>=a.r,'not in '+a.id);}
+ assert(/spreadArcadeSpawn\(pickArcadeSpawn\(flat, c,/.test(src('lib/arcade/arcadeRoomParty.ts')),'arcade arrival: free slot, then the spread');
  console.log('MP_ROOMS_ARCADE_SPAWN_PASS');
 }
 
@@ -168,7 +173,7 @@ const R=A.ARCADE_ROOM,B=R.bounds,inside=(p,m=0)=>p.x>=B.minX-m&&p.x<=B.maxX+m&&p
  assert(host.scene.children.some(o=>o.name==='arcade-party'),'avatar group in the hub scene');
  // Friends replace NPCs (count = drawn friends), reported only on change; an entry spawn slot when a friend stands at the door.
  fake.shown=1;fake.friends=[{x:0,z:10.3}];assert.equal(H.arcadeLayerFrame(1/20,performance.now()),true);
- same(calls.filter(c=>c[0]==='slots'),[['slots',1]]);same(calls.find(c=>c[0]==='place'),['place',-1.2,10.3],'first free spawn slot');
+ same(calls.filter(c=>c[0]==='slots'),[['slots',1]]);{const pl=calls.find(c=>c[0]==='place'),d=Math.hypot(pl[1]+1.2,pl[2]-10.3);assert(d>=.6-1e-9&&d<=1.5+1e-9&&A.arcadeWalkable(pl[1],pl[2]),'first free spawn slot, spread 0.6-1.5 m');}
  H.arcadeLayerFrame(1/20,performance.now());assert.equal(calls.filter(c=>c[0]==='slots').length,1,'unchanged count: no call');
  fake.shown=0;H.arcadeLayerFrame(1/20,performance.now());same(calls.filter(c=>c[0]==='slots').at(-1),['slots',0],'friends gone: the crowd comes back');
  // Force field obstacle through the hook.

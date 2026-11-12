@@ -23,6 +23,7 @@ import {zoomTargets,nearestTarget,easeZoom,ZOOM_IN_SECONDS,ZOOM_OUT_SECONDS,type
 import {emoteBody,applyEmoteArms} from '../graphics/emotePose';
 import {emoteSeconds} from '../town/emoteReact';
 import type {EmoteBubbles} from '../graphics/emoteBubbles';
+import {roomArrivalSpread} from '../town/roomArrival';
 
 /** The party friend layer a room hosts (lib/multiplayer/roomParty.ts createRoomParty; docs/multiplayer-rooms-design.md 3.2). The scene
  *  only calls it: nothing here imports multiplayer code, and with no layer (flag off, no party) nothing below runs. */
@@ -297,7 +298,8 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  const sparkle=new T.Object3D();
 
  // ---- State ---------------------------------------------------------------------------------------------------------------
- let x=V.doorX,z=4.9,vx=0,vz=0,yaw=Math.PI,time=0,frame=0,last=0,slot=0,disposed=false,covered=false,leaving=false,settle=1,draws=0,frames=0,greet=reduced?0:1.6;
+ const START_Z=4.9;let spread=false;
+ let x=V.doorX,z=START_Z,vx=0,vz=0,yaw=Math.PI,time=0,frame=0,last=0,slot=0,disposed=false,covered=false,leaving=false,settle=1,draws=0,frames=0,greet=reduced?0:1.6;
  let leaveStarted=0,firstFrameSent=false;
  // Party (rooms Phase 1): the friend layer, remote-only frames, the local emote (lazy bubble), friend frames counted for the heat checks.
  const emoteFriend:EmoteSubject[]=[],emoteFriendPt:EmoteSubject={x:0,z:0};let emoteNear=false,emoteClock=0;let friends:KonbiniFriendLayer|null=null,remoteOnly=false,remoteFrames=0,emote:{kind:number;age:number;dur:number}|null=null,bubbles:EmoteBubbles|null=null;
@@ -488,7 +490,9 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   /** The three.js scene and camera the friend layer draws into. */
   threeScene:scene,camera,phone:mobile,reduced,
   /** Attach / detach the friend layer (null on Leave or unmount). */
-  setFriendLayer(layer:KonbiniFriendLayer|null){friends=layer;if(!layer){remoteOnly=false;if(emoteNear){emoteNear=false;callbacks.onEmoteNear?.(false);}}},
+  // Live QA Nov 12 2026: everyone entered on the same spot (inside each other). With a party or world layer (others can be here), a
+  // player still on the entry spot takes a short 0.6-1.5 m walk to a free bit of floor (lib/town/roomArrival.ts), once per visit.
+  setFriendLayer(layer:KonbiniFriendLayer|null){friends=layer;if(layer&&!spread&&!leaving){spread=true;if(x===V.doorX&&z===START_Z&&!target){const s=roomArrivalSpread({x,z},x,z,(px,pz)=>pz<5.2&&!blocked(px,pz,.35)) /* never toward the door: z>5.95 there is the exit */;if(s.x!==x||s.z!==z){route=findPath(s.x,s.z);target=route.shift()??null;wake();}}}if(!layer){remoteOnly=false;if(emoteNear){emoteNear=false;callbacks.onEmoteNear?.(false);}}},
   wakeRemote,stationAt,
   /** The local player, room-local (one reused object): what the party sends. */
   localPose(){localOut.x=x;localOut.z=z;localOut.facing=yaw;localOut.speed=Math.hypot(vx,vz);localOut.eating=!!eat;localOut.zoomed=zoomIndex!==null;return localOut;},

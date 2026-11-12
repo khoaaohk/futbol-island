@@ -1,3 +1,4 @@
+import {roomArrivalSpread} from '../../town/roomArrival';
 import {ROOM,DOOR,BENCH,WALL_M,BODY_R,stationPois,clerkPoi,segPoint,shopBlocked,shopObstacles,type Box,type ShopStation} from '../../shop/shopLayout';
 import {SHOP_CLERK,SHOP_SHOPPER_CAP} from '../../shop/shopCast';
 import {STATION,defineStationText} from '../presence';
@@ -116,6 +117,11 @@ let obstacles:Box[]|null=null;
 export const shopWalkable=(x:number,z:number,r=BODY_R)=>!shopBlocked(x,z,obstacles??=shopObstacles(),r);
 
 // ---- Arrival ---------------------------------------------------------------------------------------------------------------------
+/** Live QA Nov 12 2026: the picked slot plus a 0.6-1.5 m spread (lib/town/roomArrival.ts) on the shop floor, never into a shelf or bench and
+ *  never toward the doors (the exit is at the front). Writes `out`. */
+export function spreadShopSpawn<P extends {x:number;z:number}>(out:P,rand:()=>number=Math.random):P{
+ return roomArrivalSpread(out,out.x,out.z,(x,z)=>z<ROOM.front-1.2&&shopWalkable(x,z),rand);
+}
 /** The first spawn slot with nobody within `clear` m; all taken: the slot `seed` picks. Writes `out`. */
 export function pickShopSpawn(out:Spot,occupied:ArrayLike<{x:number;z:number}>,seed=0,clear=.7):Spot{
  for(const s of SHOP_SPAWNS){let free=true;for(let i=0;i<occupied.length;i++){const o=occupied[i];if(Math.hypot(o.x-s.x,o.z-s.z)<clear){free=false;break;}}

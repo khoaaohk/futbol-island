@@ -46,6 +46,9 @@ t('spawn slots: inside, walkable, apart, reachable from the door',()=>{
  R.pickMuseumSpawn(o,[{x:S[0].x+.1,z:S[0].z}]);assert.deepEqual([o.x,o.z],[S[1].x,S[1].z],'next free slot');
  R.pickMuseumSpawn(o,S,3);assert.deepEqual([o.x,o.z],[S[3].x,S[3].z],'all taken: seeded slot');
  R.pickMuseumSpawn(o,S,-1);assert.deepEqual([o.x,o.z],[S.at(-1).x,S.at(-1).z]);
+ // Live QA Nov 12 2026: two entering at once never share a spot: a 0.6-1.5 m spread, on the walkable L, away from the doors.
+ for(const s of S)for(const k of [0,.13,.37,.61,.89]){const p={x:s.x,z:s.z};let q=0;R.spreadMuseumSpawn(p,()=>[k,1-k][q++%2]);const d=Math.hypot(p.x-s.x,p.z-s.z);
+  assert.ok(d>=.6-1e-9&&d<=1.5+1e-9,'spread '+d);assert.ok(R.museumWalkable(p.x,p.z),'spread stays walkable');assert.ok(p.z<R.MUSEUM_ARRIVAL.z+.6,'never toward the doors');}
 });
 
 t('clamp: friends kept inside the L (door sill allowed)',()=>{
@@ -128,7 +131,7 @@ t('Phase 2 wiring: Phase 1 names, hook before the scene, chip Leave only, wake r
  // page: the hook resumes the party and is declared before the scene effect (disposed first); the chip sits in the header, right
  const h=mr.indexOf('useRoomParty(room,RoomCode.Museum,ready,covered||!!zoom)');assert.ok(h>0&&h<mr.indexOf("import('@/lib/museum/museumScene')"),'hook before the scene effect, busy = covered or zoomed');
  assert.match(mr,/\{party&&!zoom&&<span className=\{styles\.partySlot\}><RoomPartyChip party=\{party\} hidden=\{covered\} align="right"\/><\/span>\}/,'chip in the header, hidden while covered / zoomed');
- assert.match(mr,/pickMuseumSpawn\(spot,here,s\.you\?\?0\);museumRoomHooks\.arrive\(spot\.x,spot\.z\)/,'arrival: first free slot, then arrive()');
+ assert.match(mr,/pickMuseumSpawn\(spot,here,s\.you\?\?0\);spreadMuseumSpawn\(spot\);museumRoomHooks\.arrive\(spot\.x,spot\.z\)/,'arrival: first free slot, then arrive()');
  assert.match(hook,/station: host\.stationCode \?/,'useRoomParty takes a room\'s own station codes');
  // scene: the layer through museumRoomHooks (attach / detach), hidden while zoomed, remote wake without the local settle
  assert.match(sc,/setFriendLayer\(layer:MuseumFriendLayer\|null\)\{if\(layer\)\{friends=layer;museumRoomHooks\.attach\(hookLayer\);\}else\{museumRoomHooks\.detach\(hookLayer\);friends=null;remoteOnly=false;\}\}/);

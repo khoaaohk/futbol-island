@@ -29,7 +29,7 @@ import {passport,recordMuseumVisit,useMuseumVisits,museumVisitsNow} from '@/lib/
 import {enterActivity} from '@/lib/analytics/tracker';
 import {museumRoomHooks} from '@/lib/multiplayer/rooms/museumHooks';
 import {useRoomParty} from './party/useRoomParty';import {RoomPlayerCard,roomTapPlayer} from './party/RoomPlayerTap';const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
-import {partyStore} from '@/lib/multiplayer/store';import {pickMuseumSpawn} from '@/lib/multiplayer/rooms/museum';
+import {partyStore} from '@/lib/multiplayer/store';import {pickMuseumSpawn,spreadMuseumSpawn} from '@/lib/multiplayer/rooms/museum';
 import type {ActivityId} from '@/lib/analytics/islandIds';
 const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
 
@@ -114,7 +114,7 @@ function MuseumHall({counts,open,earned}:{counts:Counts;open:Record<string,boole
  // there keep theirs). Once per visit; the scene only re-aims while its arrival walk is still the target.
  useEffect(()=>{if(!party)return;let done=false,timer=0;const spot={x:0,z:0,yaw:0};
   const check=()=>{const s=partyStore.get();if(done||s.status!=='live')return;done=true;
-   timer=window.setTimeout(()=>{const here=party.layer.debugFriends().filter(f=>!f.gone);pickMuseumSpawn(spot,here,s.you??0);museumRoomHooks.arrive(spot.x,spot.z);},150);};
+   timer=window.setTimeout(()=>{const here=party.layer.debugFriends().filter(f=>!f.gone);pickMuseumSpawn(spot,here,s.you??0);spreadMuseumSpawn(spot);museumRoomHooks.arrive(spot.x,spot.z);},150);};
   check();const off=partyStore.subscribe(check);return()=>{off();clearTimeout(timer);};},[party]);
 
  // Done exits straight away (door slide, then the island), no walk to the door first (user, Oct 10 2026).

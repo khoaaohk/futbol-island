@@ -1,4 +1,4 @@
-import {SHOP_ROOM,shopBusyFlag,shopBusyFlags,shopBusyText,shopStationAt,clampToShop,pickShopSpawn,shopCrowdCount,type ShopBusyFlags,type Spot} from './shop';
+import {SHOP_ROOM,shopBusyFlag,shopBusyFlags,shopBusyText,shopStationAt,clampToShop,pickShopSpawn,spreadShopSpawn,shopCrowdCount,type ShopBusyFlags,type Spot} from './shop';
 
 /**
  * The Kit Shop page's side of the room party layer (docs/multiplayer-rooms-design.md Phase 4; the Museum's museumHooks.ts pattern).
@@ -79,7 +79,7 @@ export const shopRoomHooks={
   if(arrivalPending){
    if(nowMs-registeredAt>ARRIVE_WINDOW_MS)arrivalPending=false;
    else if(layer.friendsHere){here.length=0;for(const f of layer.friendsHere())here.push(f);
-    if(here.length){arrivalPending=false;pickShopSpawn(spot,here,here.length);source?.arrive(spot.x,spot.z);}}
+    if(here.length){arrivalPending=false;pickShopSpawn(spot,here,here.length);spreadShopSpawn(spot);source?.arrive(spot.x,spot.z);}}
   }
   return keep;
  },
