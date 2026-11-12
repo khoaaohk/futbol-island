@@ -4,6 +4,7 @@
 // it waits while another note owns the lane or a card holds it (Welcome back, the arrival quiet, the dive's find card), and while it
 // shows it holds the lane so nothing stacks on it. Never during a lesson, quiz, live match or an open menu (`blocked` from Town +
 // publicNear.busy()). New players only (phase 2: publicNear.playerSince 'new'). OK closes; "Just me" switches to Just me (no reload) and closes. Escape = OK.
+// QA Nov 12 2026: not right after a presence-panel action (publicNear.quiet: Just me = not this visit; else 8 s of play first).
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { toastLane, useToastLaneBusy } from '@/lib/ui/toastLane';
 import { isPublic, setMode } from '@/lib/multiplayer/publicWorld';
@@ -18,6 +19,7 @@ const SOLO_LABEL = PRESENCE_CHOICES.find((c) => c.id === 'solo')!.label;
 export default function PublicFirstCard({ blocked, onShown }: { blocked: boolean; onShown?: () => void }) {
   const near = useSyncExternalStore(publicNear.subscribe, publicNear.near, () => false);
   const busy = useSyncExternalStore(publicNear.subscribe, publicNear.busy, () => false);
+  const quiet = useSyncExternalStore(publicNear.subscribe, publicNear.quiet, () => false); // QA Nov 12 2026: never right after a panel action
   const laneBusy = useToastLaneBusy(FIRST_CARD_LANE);
   const [open, setOpen] = useState(false);
   const done = useRef(false);
@@ -28,11 +30,11 @@ export default function PublicFirstCard({ blocked, onShown }: { blocked: boolean
   // with the island, before a new player's tour can finish.
   useEffect(() => { done.current = seenMark('card') || seenMark('hint') || playerSince(() => !shouldShowIslandOnboarding()) === 'old'; }, []);
   useEffect(() => {
-    if (open || done.current || !near || !isPublic()) return;
+    if (open || done.current || !near || quiet || !isPublic()) return;
     toastLane.want(FIRST_CARD_LANE);
     if (blocked || busy || toastLane.held || !toastLane.settle(FIRST_CARD_LANE) || !toastLane.request(FIRST_CARD_LANE)) return; // settle: never over a note still animating out (the shimmer)
     done.current = true; setMark('card'); setOpen(true); shownCb.current?.();
-  }, [near, blocked, busy, laneBusy, open]);
+  }, [near, blocked, busy, quiet, laneBusy, open]);
   useEffect(() => {
     if (!open) return;
     toastLane.hold(FIRST_CARD_LANE, true);

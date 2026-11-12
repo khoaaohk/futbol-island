@@ -206,7 +206,7 @@ import {LiveJoinStack,LiveJoinActions} from '@/components/LiveJoinHud';
 import { DEFAULT_PLAYER_NUMBER } from '@/lib/graphics/shirtNumbers';
 import { graphicsQuality, FrameBudget, MotionResolution, dynamicResolutionEnabled } from '@/lib/graphics/quality';
 import { buildTown } from '@/lib/town/world';
-import { District, DISTRICTS, districtAt, stepPlayer, blocked, groundBlocked, flightBlocked, ISLAND_BOUNDS, insideObstacle, clearSpotNear } from '@/lib/town/simulation';
+import { District, DISTRICTS, districtAt, stepPlayer, blocked, groundBlocked, flightBlocked, ISLAND_BOUNDS, insideObstacle, clearSpotNear, publicArrivalSpot } from '@/lib/town/simulation';
 import {ballGround,OUT_OF_PLAY_NOTE} from '@/lib/town/ballSea';
 import {createPierTarget} from '@/lib/town/eastPierChallenge';
 import {CORAL_CAY_ARRIVAL} from '@/lib/town/coralCay';
@@ -580,7 +580,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     bootMark('town:effect');
     const disposers=createTownDisposers();// lib/town/townCleanup.ts: each resource registers its cleanup where it is made; unmount runs them newest first
     const departure=returningFromArcade?readIslandReturnPosition():null;
-    const sceneSpawn=departure?{x:departure.x,z:departure.z}:initialSpawn;
+    const sceneSpawn=departure?{x:departure.x,z:departure.z}:{...initialSpawn};
     if(departure){rideRef.current=departure.ride;setRideMode(departure.ride);positionStore.publish(sceneSpawn);const zone=zoneAt(sceneSpawn.x,sceneSpawn.z);zoneRef.current=zone;setLocationZone(zone);}
     let renderer:T.WebGLRenderer;
     // MSAA per lib/graphics/quality phoneGraphicsFor (kept on for phones after the Sep 26 2026 visual check; the lever is PHONE_ANTIALIAS_OFF_AT_DPR2).
@@ -824,6 +824,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       replay:()=>{const last=passAttemptsRef.current.last;if(!last||lessonRef.current==='replay'||lessonRef.current==='passing')return;replayReturn=lessonRef.current==='complete'?'complete':'practice';lessonPass=last;const run=replayLessonPass(last.start,last.inputs,REPLAY_SPEED);lessonSim={state:()=>run.world.state,advance:dt=>{run.advance(dt);}};lessonHold=0;showAim(last.prediction);setPhase('replay');wakeLoop();},
     };
     disposers.add(()=>{lessonAim.current=null;});
+    if(!departure&&!returningFromArcade&&publicWorldEnabled()){const spot=publicArrivalSpot(sceneSpawn.x,sceneSpawn.z,world.obstacles);sceneSpawn.x=spot.x;sceneSpawn.z=spot.z;positionStore.publish(sceneSpawn);}/* public island: kids arrive on a 1.5-4 m ring, not inside each other (QA Nov 12 2026) */
     const location={...sceneSpawn},velocity={x:0,z:0},orb={x:sceneSpawn.x+.7,z:sceneSpawn.z,vx:0,vz:0};
     const volleyballGame=createVolleyballGame(scene,ballReactions);
     disposers.add(()=>volleyballGame.dispose());

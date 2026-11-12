@@ -183,6 +183,10 @@
 .choice[aria-current=true] .choiceIcon{background:#fff}
 .choiceText{min-width:0}
 .choiceMark{display:inline-flex;justify-content:center;color:var(--btn-green)}
+/* QA Nov 12 2026: the count never starts a phone line ("· 3 on now" stays in one piece); a tap on the marked choice pulses its check */
+.choiceCount{white-space:nowrap}
+.choice[data-pulse] .choiceMark{animation:choicePulse .36s cubic-bezier(.3,1.6,.5,1)}
+@keyframes choicePulse{0%{scale:1}45%{scale:1.4}100%{scale:1}}
 .roster{display:flex;flex-direction:column;gap:8px;text-align:left}
 .rosterTitle{margin:6px 0 0;font:800 16px/1.2 var(--btn-font)}
 .reportSheet{display:flex;flex-direction:column;gap:12px}
@@ -201,7 +205,7 @@
 .peopleHint span{font-size:13px;font-weight:700;color:var(--btn-ink);opacity:.86;line-height:1.35;text-wrap:balance}
 .peoplePulse{animation:peoplePulse 1.4s ease-out 3}
 @keyframes peoplePulse{0%{box-shadow:0 0 0 0 #1f8a4c99}70%{box-shadow:0 0 0 14px #1f8a4c00}100%{box-shadow:0 0 0 0 #1f8a4c00}}
-@media(prefers-reduced-motion:reduce){.choice{transition:none}.choice:active{translate:none}.firstCard{animation:none}.peopleHint{animation:none}.peoplePulse{animation:none;outline:3px solid var(--btn-green);outline-offset:3px}}
+@media(prefers-reduced-motion:reduce){.choice{transition:none}.choice[data-pulse] .choiceMark{animation:none}.choice:active{translate:none}.firstCard{animation:none}.peopleHint{animation:none}.peoplePulse{animation:none;outline:3px solid var(--btn-green);outline-offset:3px}}
 /* Nov 11 2026 (owner): in the public "Near you" list Hide and Report sit to the right of the name on one line, to save height
    (the party roster keeps its two-line rows). The name takes the free width and shortens with an ellipsis on narrow phones. */
 .member[data-public-member]{flex-wrap:nowrap;padding-bottom:4px;gap:8px}

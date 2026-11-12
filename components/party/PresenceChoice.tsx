@@ -15,12 +15,14 @@ import { Icon } from '@/components/Icon';
 import { DoneButton } from '@/components/DoneButton';
 import FadeScroll from './FadeScroll';
 import ReportSheet from './ReportSheet';
-import { nearestFirst } from './publicNear';
+import { nearestFirst, publicNear } from './publicNear';
 import { islandLife, ISLAND_GOAL_TARGET } from '@/lib/multiplayer/islandLife';
 import { ISLAND_GOAL_COPY } from '@/lib/multiplayer/publicCopy';
 import styles from './party.module.css';
 
 export const ROSTER_MAX = 8;
+/** QA Nov 12 2026: a tap on the choice already marked pulses its check, then closes the panel (no silent tap). */
+export const SAME_CHOICE_CLOSE_MS = 360;
 const ICON: Record<PresenceChoiceId, string> = { solo: 'home', public: 'globe', friends: 'people' };
 
 /** Which choice is marked: a party is "With friends"; a grown-up lock shows "Just me"; otherwise the player's own choice. */
@@ -43,6 +45,10 @@ export default function PresenceChoice({ ps, onFriends, onClose }: { ps: Presenc
   const [ask, setAsk] = useState<PresenceChoiceId | null>(null); // the "You'll leave this match" step
   const [report, setReport] = useState<Member | null>(null);
   const stay = useRef<HTMLButtonElement>(null);
+  const [pulse, setPulse] = useState<PresenceChoiceId | null>(null);
+  const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (pulseTimer.current) clearTimeout(pulseTimer.current); }, []);
+  const close = () => { publicNear.panelAction(null); onClose(); };
   useEffect(() => { if (ask) stay.current?.focus({ preventScroll: true }); }, [ask]);
   const marked = markedChoice(ps);
   const locked = ps.lock !== 'all';
@@ -57,12 +63,20 @@ export default function PresenceChoice({ ps, onFriends, onClose }: { ps: Presenc
     setAsk(null);
     if (id === 'friends') { onFriends(); return; }
     setMode(id);
+    publicNear.panelAction(id); // the first-time card waits (Just me: not this visit)
     onClose(); // close at once: the others fade in / out on the island behind the shrinking card
   };
   const pick = (id: PresenceChoiceId) => {
     // Already marked does nothing, except "With other players" while it is not on (closed / unavailable): a tap retries at once
     // (publicWorld.setMode clears the 2-min slow retry). Verify pass, Nov 11 2026: the early return made that retry unreachable.
-    if (id === marked && id !== 'friends' && !(id === 'public' && ps.mode !== 'public' && (ps.reason === 'closed' || ps.reason === 'unavailable'))) return;
+    // QA Nov 12 2026: it is no longer silent: the check pulses, then the panel closes as any choice does.
+    if (id === marked && id !== 'friends' && !(id === 'public' && ps.mode !== 'public' && (ps.reason === 'closed' || ps.reason === 'unavailable'))) {
+      if (pulse) return;
+      setPulse(id);
+      const ms = matchMedia('(prefers-reduced-motion: reduce)').matches ? 120 : SAME_CHOICE_CLOSE_MS;
+      pulseTimer.current = setTimeout(() => { publicNear.panelAction(id); onClose(); }, ms);
+      return;
+    }
     if (ps.sharedMatch && id !== marked) { setAsk(id); return; }
     go(id);
   };
@@ -80,7 +94,7 @@ export default function PresenceChoice({ ps, onFriends, onClose }: { ps: Presenc
       <header className={styles.menuHeader}>
         <span aria-hidden="true" />
         <h2 id="presence-title">{PUBLIC_PANEL_TITLE}</h2>
-        <DoneButton onDone={onClose} />
+        <DoneButton onDone={close} />
       </header>
       {/* Nov 11 2026 (owner): the choices and the "Near you" heading stay put; only the list of players scrolls under the heading. */}
       <div className={styles.presenceFixed}>
@@ -88,13 +102,16 @@ export default function PresenceChoice({ ps, onFriends, onClose }: { ps: Presenc
           {PRESENCE_CHOICES.map((c) => {
             const on = marked === c.id;
             const off = c.id === 'public' && locked;
-            const label = c.id === 'public' && count !== null && (ps.connected || ps.relay === 'open') ? publicChoiceLabel(count) : c.label;
+            // Locked (Friends only): no count on the greyed-out option. The count rides in a no-wrap span after a no-break space so a
+            // phone never starts a line with "·" (QA Nov 12 2026).
+            const label = c.id === 'public' && !off && count !== null && (ps.connected || ps.relay === 'open') ? publicChoiceLabel(count) : c.label;
+            const [head, tail] = label.split(' · ');
             return (
               <button key={c.id} type="button" className={styles.choice} data-presence-choice={c.id} aria-pressed={c.id === 'friends' ? undefined : on}
-                aria-current={on ? 'true' : undefined} disabled={off} onClick={() => pick(c.id)}>
+                aria-current={on ? 'true' : undefined} data-pulse={pulse === c.id ? '' : undefined} disabled={off} onClick={() => pick(c.id)}>
                 <span className={styles.choiceIcon} aria-hidden="true"><Icon name={ICON[c.id]} size={22} /></span>
                 <span className={styles.choiceText}>
-                  <strong>{label}</strong>
+                  <strong>{head}{tail && <>{'\u00a0'}<span className={styles.choiceCount}>· {tail}</span></>}</strong>
                   <small>{c.line}</small>
                 </span>
                 <span className={styles.choiceMark} aria-hidden="true">{on ? <Icon name="check" size={20} /> : c.id === 'friends' ? <Icon name="arrow" size={18} /> : null}</span>

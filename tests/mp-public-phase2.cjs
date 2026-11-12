@@ -139,4 +139,16 @@ ok('admin reading: off answers "off" and reads nothing; on gives exact per-arm t
  assert(/if\(!h\|\|h\.status==='off'\)return null;/.test(card)&&!/fetch\(/.test(card),'the card fetches nothing');
  assert(/process\.env\.NEXT_PUBLIC_PUBLIC_HOLDOUT_READING === '1'/.test(read('lib/multiplayer/publicFlag.ts')),'its own build flag');
 });
+ok('first-time card: never right after a presence-panel action (QA Nov 12 2026)',()=>{
+ let {N}=nearModule();
+ assert.equal(N.publicNear.quiet(),false);
+ N.publicNear.panelAction('public',1000);assert.equal(N.publicNear.quiet(),true,'a mode choice: wait');
+ N.publicTick(1000+N.PANEL_QUIET_MS-1,0,0,false);assert.equal(N.publicNear.quiet(),true,'still within the quiet');
+ N.publicTick(1000+N.PANEL_QUIET_MS,0,0,false);assert.equal(N.publicNear.quiet(),false,'after 8 s of play: the next natural moment');
+ N.publicNear.panelAction('solo',2e4);N.publicTick(1e6,0,0,false);assert.equal(N.publicNear.quiet(),true,'Just me: never this visit');
+ N.publicNear.reset();assert.equal(N.publicNear.quiet(),false);
+ const first=code(read('components/party/PublicFirstCard.tsx')),choice=code(read('components/party/PresenceChoice.tsx'));
+ assert(/if \(open \|\| done\.current \|\| !near \|\| quiet \|\| !isPublic\(\)\) return;/.test(first),'the card waits while quiet');
+ assert(/setMode\(id\);\s*publicNear\.panelAction\(id\);/.test(choice)&&/const close = \(\) => \{ publicNear\.panelAction\(null\); onClose\(\); \};/.test(choice),'every panel choice and close is noted');
+});
 console.log(`mp-public-phase2: ${n} checks passed`);

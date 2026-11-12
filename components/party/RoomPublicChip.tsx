@@ -3,7 +3,7 @@
 // "N players here" chip (others in this room, hidden ones not counted) opens the same roster as the island panel: generated names,
 // Hide / Report (ReportSheet), hidden ones with Show again, and "Just me" (the presence choice: leaves the world here and is
 // remembered for the island). Never party controls: no code, invite, host tools, Mute, Leave party or End.
-import { useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { usePartyState, type Member } from '@/lib/multiplayer';
 import { partyConnection } from '@/lib/multiplayer/roomParty';
 import { hidden as hiddenSet, hideMember, reported, setMode, unhideMember } from '@/lib/multiplayer/publicWorld';
@@ -29,8 +29,12 @@ export default function RoomPublicChip({ room, hidden = false, align = 'left' }:
   const shown = here.filter((m) => !hid.has(m.id)), hiddenHere = here.filter((m) => hid.has(m.id) && !reported(m.id));
   const me = state.members.find((m) => m.id === state.you);
   const close = () => { setOpen(false); setReport(null); };
+  // QA Nov 12 2026: no "0 players here". With nobody else in the room (hidden ones aside: Show again lives here) there is no chip;
+  // a report already open stays until Done.
+  const empty = !shown.length && !hiddenHere.length && !report;
+  useEffect(() => { if (empty) setOpen(false); }, [empty]);
   const solo = () => { setMode('solo'); const c = partyConnection(); if (c.kind === 'world') c.leave(); close(); };
-  if (hidden) return null;
+  if (hidden || empty) return null;
   return (
     <div className={styles.roomParty} data-room-party data-room-public data-align={align}>
       <button type="button" className={styles.roomChip} data-room-party-chip data-here={shown.length} aria-label={publicRoomChip(shown.length)}

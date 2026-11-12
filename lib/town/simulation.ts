@@ -67,6 +67,15 @@ export function clearSpotNear(x:number,z:number,obstacles:Obstacle[],radius=.5,m
     for(let i=0;i<n;i++){const k=i&1?(i+1)/2:-i/2,a=Math.PI/2+k*2*Math.PI/n,nx=x+Math.cos(a)*r,nz=z+Math.sin(a)*r;if(!blocked(nx,nz,obstacles,radius))return {x:nx,z:nz};}}
   return {x,z};
 }
+/** Public island arrival (live QA Nov 12 2026): every kid spawned at exactly the same spot, so two kids landed inside each other
+ *  and the other's name tag sat over your own avatar. A spot on a 1.5-4 m ring round (x, z) at the angle and distance picked by
+ *  `rand` (0..1 twice); the first of 12 turns round the ring that is on land and clear of colliders (blocked(): no water, no
+ *  building). Falls back to (x, z). Called once at boot, only in a public world. */
+export function publicArrivalSpot(x:number,z:number,obstacles:Obstacle[],rand:()=>number=Math.random,radius=.5):{x:number;z:number}{
+  const a0=rand()*2*Math.PI,r=1.5+rand()*2.5;
+  for(let i=0;i<12;i++){const a=a0+i*Math.PI/6;for(const d of [r,1.5]){const nx=x+Math.cos(a)*d,nz=z+Math.sin(a)*d;if(!blocked(nx,nz,obstacles,radius))return {x:nx,z:nz};}}
+  return {x,z};
+}
 const RIDES_SLIDE:Record<TravelMode,boolean>={walk:false,scooter:true,bike:true,moped:true,jetpack:false};
 const SLIDE_TURNS=[.5,-.5,1,-1,1.57,-1.57];
 /** The ride's slide round a collider: the step turned 30°, 57° or 90° either side and slowed with the turn (at least 40%); a turn

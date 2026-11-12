@@ -26,7 +26,7 @@ t('flag on: "Who\'s on your island?" and the three choices come from publicCopy,
  assert(/PRESENCE_CHOICES\.map/.test(choice)&&/\{PUBLIC_PANEL_TITLE\}/.test(choice)&&/publicChoiceLabel\(count\)/.test(choice),'rendered from publicCopy');
  assert(/aria-current=\{on \? 'true' : undefined\}/.test(choice)&&/aria-pressed=/.test(choice),'current mode marked');
  assert(/onFriends=\{\(\) => \{ setFrom\(null\); setView\('menu'\); \}\}/.test(host),'With friends opens today\'s menu (gate, name, code)');
- assert(/setMode\(id\);\s*onClose\(\);/.test(choice),'one tap switches (no reload) and closes at once');
+ assert(/setMode\(id\);\s*publicNear\.panelAction\(id\);[^\n]*\n\s*onClose\(\);/.test(choice),'one tap switches (no reload) and closes at once');
  assert(/ps\.sharedMatch && id !== marked/.test(choice)&&/PUBLIC_MATCH_LEAVE\.line/.test(choice)&&/PUBLIC_MATCH_LEAVE\.stay/.test(choice),'in a shared match: You\'ll leave this match, Switch / Stay');
  assert(/PUBLIC_REASON_LINE\[r\]/.test(choice)&&/role="status" data-presence-reason/.test(choice),'a calm reason line, never an error');
  for(const k of ['locked-friends','locked-off','tutorial','closed','unavailable'])assert(typeof C.PUBLIC_REASON_LINE[k]==='string',k);
@@ -94,5 +94,12 @@ t('Town: the three signals, discrete inputs, counters on presence events, the fr
 t('targets and focus: 44 px+, focus-visible, Escape closes',()=>{
  assert(/\.choice\{[^}]*min-height:72px/.test(css)&&/\.choice:focus-visible\{outline/.test(css),'big choices with focus ring');
  assert(/e\.key === 'Escape'/.test(first)&&/e\.key === 'Escape'/.test(roomPub),'Escape closes the card and the room roster (the panel uses PartyHost\'s Card)');
+});
+t('QA Nov 12 2026: same-choice pulse, count kept together, no count when locked, no empty room chip',()=>{
+ assert(/if \(pulse\) return;\s*setPulse\(id\);/.test(choice)&&/setTimeout\(\(\) => \{ publicNear\.panelAction\(id\); onClose\(\); \}, ms\)/.test(choice),'a tap on the marked choice pulses, then closes');
+ assert(/data-pulse=\{pulse === c\.id \? '' : undefined\}/.test(choice)&&/\.choice\[data-pulse\] \.choiceMark\{animation:choicePulse/.test(css)&&/reduce\)\{[^}]*\}\.choice\[data-pulse\] \.choiceMark\{animation:none\}/.test(css),'the check pulse, none with reduced motion');
+ assert(/\{'\\u00a0'\}<span className=\{styles\.choiceCount\}>· \{tail\}<\/span>/.test(choice)&&/\.choiceCount\{white-space:nowrap\}/.test(css),'no phone line starts with "·"');
+ assert(/c\.id === 'public' && !off && count !== null/.test(choice),'no count on the locked option');
+ assert(/const empty = !shown\.length && !hiddenHere\.length && !report;/.test(roomPub)&&/if \(hidden \|\| empty\) return null;/.test(roomPub),'no "0 players here" chip');
 });
 console.log(`mp-public-ui: ${n} checks passed`);

@@ -13,7 +13,7 @@ const cayMod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync(
 // Summit Isle (Oct 12 2026): simulation.ts imports summitIsle.ts (which imports nothing) for its land and flight tests.
 const isleMod={exports:{}};vm.runInNewContext(ts.transpileModule(fs.readFileSync('lib/town/summitIsle.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText,{exports:isleMod.exports,module:isleMod,Math});
 const mod={exports:{}};vm.runInNewContext(output,{exports:mod.exports,module:mod,Math,require:id=>{if(id==='./travelModes')return travelMod.exports;if(id==='./shoreline')return shoreMod.exports;if(id==='./ferryBoarding')return ferryMod.exports;if(id==='./coralCay')return cayMod.exports;if(id==='./landableDecks')return decksMod.exports;if(id==='./eastPier')return pierMod.exports;if(id==='./summitIsle')return isleMod.exports;throw new Error(id);}});
-const {stepPlayer,blocked,districtAt,DISTRICTS,clearSpotNear}=mod.exports;
+const {stepPlayer,blocked,districtAt,DISTRICTS,clearSpotNear,publicArrivalSpot}=mod.exports;
 function run(input,steps=120){const pos={x:0,z:0},v={x:0,z:0};for(let i=0;i<steps;i++)stepPlayer(pos,v,input,1/60,[]);return {pos,v};}
 const straight=run({x:1,z:0,sprint:false});const diagonal=run({x:1,z:1,sprint:false});
 assert.ok(Math.abs(Math.hypot(diagonal.pos.x,diagonal.pos.z)-straight.pos.x)<.0001,'Diagonal movement must not be faster');
@@ -30,6 +30,15 @@ for(const [key,value] of Object.entries(DISTRICTS))assert.equal(districtAt(value
  assert.ok(Math.hypot(spot.x-11,spot.z+47.875)<2,'arrival stays beside the pitch entrance');assert.ok(spot.z>-47.875,'arrival steps out on the camera side');
  let moved=1;for(let i=0;i<60;i++){const p={...spot},v={x:0,z:0};stepPlayer(p,v,{x:0,z:1,sprint:false},1/60,machine);moved=Math.hypot(p.x-spot.x,p.z-spot.z);}assert.ok(moved>0,'the player can walk away from the arrival');
  const free=clearSpotNear(11,-40,machine);assert.equal(free.x,11);assert.equal(free.z,-40,'a clear arrival is unchanged');}
+// Public island arrival (QA Nov 12 2026): two kids no longer land inside each other at (103, -8); a 1.5-4 m ring spot, on land, clear.
+{assert.equal(blocked(103,-8,[],.5),false,'the island spawn is on land');const seq=[.1,.2,.7,.9,.35,.05];let k=0;const spots=[];
+ for(let i=0;i<3;i++){const s2=publicArrivalSpot(103,-8,[],()=>seq[k++%seq.length]);const d=Math.hypot(s2.x-103,s2.z+8);assert.ok(d>=1.5-1e-9&&d<=4+1e-9,'on the ring: '+d);assert.equal(blocked(s2.x,s2.z,[],.5),false,'arrival is on land and clear');spots.push(s2);}
+ assert.ok(Math.hypot(spots[0].x-spots[1].x,spots[0].z-spots[1].z)>.5,'two arrivals are apart');
+ const wall=[{x:103,z:-8,w:5,d:2}];const s3=publicArrivalSpot(103,-8,wall,()=>.5);assert.equal(blocked(s3.x,s3.z,wall,.5),false,'turns round the ring past a collider');
+ const sea=publicArrivalSpot(-999,-999,[],()=>.3);assert.equal(sea.x,-999);assert.equal(sea.z,-999,'nothing clear: the base spot');
+ const town=require('node:fs').readFileSync(require('node:path').join(__dirname,'../components/Town.tsx'),'utf8');
+ assert.ok(/if\(!departure&&!returningFromArcade&&publicWorldEnabled\(\)\)\{const spot=publicArrivalSpot\(sceneSpawn\.x,sceneSpawn\.z,world\.obstacles\);/.test(town),'Town: public worlds only, never a departure return');
+ assert.ok(/const sceneSpawn=departure\?\{x:departure\.x,z:departure\.z\}:\{\.\.\.initialSpawn\};/.test(town),'INITIAL_SPAWN itself is never mutated');}
 console.log('Town simulation: diagonal speed, sprint, collision, wall sliding, braking, boundaries, travel and clear arrivals passed.');
 const {crossedGoal}=mod.exports;
 assert.equal(crossedGoal({x:11,z:4},{x:11,z:3}),true,'Shot crossing goal line scores');

@@ -22,6 +22,10 @@ const SAMPLE_MS = 500;
 const spots = new Map<number, { x: number; z: number }>();
 const me = { x: 0, z: 0, ok: false };
 let busy = false, near = false, nextAt = 0, offPoses: (() => void) | null = null;
+/** QA Nov 12 2026: the first-time card never pops up right after a panel action. A choice of Just me keeps it away for this visit;
+ *  any other choice or close keeps it away for PANEL_QUIET_MS of play after it (the next natural moment). */
+export const PANEL_QUIET_MS = 8000;
+let quietUntil = 0, soloChosen = false;
 const subs = new Set<() => void>();
 const emit = () => { for (const f of Array.from(subs)) f(); };
 
@@ -34,6 +38,7 @@ function listen() {
 export function publicTick(t: number, x: number, z: number, isBusy: boolean): void {
   me.x = x; me.z = z; me.ok = true;
   if (isBusy !== busy) { busy = isBusy; emit(); }
+  if (quietUntil && t >= quietUntil) { quietUntil = 0; emit(); }
   if (near || t < nextAt) return;
   nextAt = t + SAMPLE_MS;
   if (!isPublic()) return;
@@ -51,9 +56,16 @@ export const publicNear = {
   /** Another real player came within FIRST_NEAR_M of this one at least once this visit. */
   near: () => near,
   busy: () => busy,
+  /** True while the card must wait: Just me chosen this visit, or within PANEL_QUIET_MS of a panel action. */
+  quiet: () => soloChosen || quietUntil > 0,
+  /** The presence panel's choice (or null: closed with Done). `now` = performance.now(). */
+  panelAction(choice: 'solo' | 'public' | 'friends' | null, now = performance.now()) {
+    if (choice === 'solo') soloChosen = true;
+    quietUntil = now + PANEL_QUIET_MS; emit();
+  },
   subscribe(fn: () => void) { subs.add(fn); return () => { subs.delete(fn); }; },
   /** Tests. */
-  reset() { near = false; busy = false; nextAt = 0; spots.clear(); me.ok = false; offPoses?.(); offPoses = null; },
+  reset() { near = false; busy = false; nextAt = 0; quietUntil = 0; soloChosen = false; spots.clear(); me.ok = false; offPoses?.(); offPoses = null; },
 };
 
 /** Squared distance from me (Infinity when unknown). */
