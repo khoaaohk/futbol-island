@@ -1,0 +1,15 @@
+/* Tap on a player (public island phase 1, Nov 11 2026): the small cream card. Island tokens only (--btn-*, app/globals.css); every
+   target >= 44px; button text is the UI sans (AGENTS.md button font), the name too (it is a label, not a title). */
+.card{position:fixed;z-index:37;box-sizing:border-box;width:min(300px,calc(100vw - 32px));display:flex;flex-direction:column;gap:8px;padding:8px 10px 10px 14px;
+ border:var(--btn-rim-width) solid var(--btn-rim);border-radius:22px;background:var(--btn-cream);color:var(--btn-ink);box-shadow:0 6px 0 rgb(0 0 0 / .12);
+ animation:cardIn .16s ease-out both}
+/* Phones (and any card without an on-screen anchor): docked above the thumb controls, centred, never under a thumb. */
+.card[data-docked]{left:50%;transform:translateX(-50%);bottom:calc(var(--player-card-bottom,184px) + env(safe-area-inset-bottom,0px));animation-name:cardInDocked}
+.head{display:flex;align-items:center;gap:8px;min-height:44px}
+.name{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font:800 16px/1.2 var(--btn-font);text-align:left}
+.actions{display:flex;gap:6px}
+.actions>button{flex:1 1 0;min-width:0}
+.card [data-report-sheet]{padding:0 4px 4px}
+@keyframes cardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes cardInDocked{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.card,.card[data-docked]{animation:none}}

@@ -36,3 +36,34 @@ export function planRigs<S extends RigSlot>(slots:readonly S[],order:S[],cap:num
  else for(let i=0;i<order.length&&n<cap;i++){const s=order[i];if(!s.admitted&&s.pd2<=range2){s.plan=1;n++;changes++;}}
  return changes;
 }
+
+// ---- Public island (phase 1, Nov 11 2026; docs/multiplayer-public-island-plan-2026-11-11.md) ----------------------------------------
+// Strangers are not "friends who joined first": the nearest ones should be the ones drawn as rigs (and, in a room, drawn at all). A
+// party keeps planRigs above (never swaps). planNearest adds a swap step WITH hysteresis: a waiting slot replaces the farthest held one
+// only when it is nearer by more than `hystM` metres, and at most `maxSwaps` per recheck, so two players at about the same distance
+// never flicker between rig and ring (or drawn and not drawn in a room). Same scratch `order`, no allocation once grown.
+
+/** Metres a waiting stranger must be nearer than the farthest held one before they swap (outdoors / in an 11 x 10 m room). */
+export const RIG_HYST_M=4,ROOM_HYST_M=1;
+/** Swaps per once-a-second recheck: a demoted rig shrinks for DEMOTE_FADE (0.4 s < 1 s), so the batch holds at most cap + this. */
+export const MAX_SWAPS=1;
+export interface NearSlot{pd2:number;plan:number}
+/** `on(s)` = held now (a rig, or drawn in the room). Writes `plan` (-1 drop, 1 take, 0 keep) and returns the number of changes. */
+export function planNearest<S extends NearSlot>(slots:readonly S[],order:S[],on:(s:S)=>boolean,max:number,range2:number,hystM:number,maxSwaps=MAX_SWAPS):number{
+ order.length=0;let n=0;
+ for(let i=0;i<slots.length;i++){const s=slots[i];s.plan=0;order.push(s);if(on(s))n++;}
+ for(let i=1;i<order.length;i++){const x=order[i];let j=i-1;while(j>=0&&order[j].pd2>x.pd2){order[j+1]=order[j];j--;}order[j+1]=x;}
+ let changes=0;
+ if(n>max){for(let i=order.length-1;i>=0&&n>max;i--)if(on(order[i])){order[i].plan=-1;n--;changes++;}return changes;}
+ for(let i=0;i<order.length&&n<max;i++){const s=order[i];if(!on(s)&&s.pd2<=range2&&s.pd2<Infinity){s.plan=1;n++;changes++;}}
+ let lo=0,hi=order.length-1;
+ for(let k=0;k<maxSwaps;k++){
+  while(lo<order.length&&(on(order[lo])||order[lo].plan!==0||!(order[lo].pd2<=range2&&order[lo].pd2<Infinity)))lo++;
+  while(hi>=0&&(!on(order[hi])||order[hi].plan!==0))hi--;
+  if(lo>=order.length||hi<0||lo>hi)break;
+  const w=order[lo],h=order[hi];
+  if(!(Math.sqrt(w.pd2)+hystM<Math.sqrt(h.pd2)))break;
+  w.plan=1;h.plan=-1;changes+=2;lo++;hi--;
+ }
+ return changes;
+}

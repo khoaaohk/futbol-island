@@ -129,7 +129,7 @@ t('drawn layer: hidden, muted, shielded, indoors, fading, not shown and Battery 
 
 t('wiring: remoteAvatars detects before its pass and overlays the rig, townBridge exposes the local overlay, Town applies it only around the render',()=>{
  const ra=read('lib/graphics/remoteAvatars.ts'),tb=read('lib/multiplayer/townBridge.ts'),town=read('components/Town.tsx'),pkg=read('package.json');
- assert(ra.indexOf('bumps.detect(dt,list,poses,local,reduced,saver)')<ra.indexOf('batch.begin();fields.begin();let shown=0;'));
+ assert(ra.indexOf('bumps.detect(dt,list,poses,local,reduced,saver')>0&&ra.indexOf('bumps.detect(dt,list,poses,local,reduced,saver')<ra.search(/batch\.begin\(\);(?:ghost[^;]*;)*fields\.begin\(\);let shown=0;/)); // public island (Nov 11): saver||pub (no bumps between strangers), ghost batch begins beside it
  assert(/unBump\(root3,e\.bump\)/.test(ra)&&/applyBump\(root3,e\.bump,reduced,BODY_SCALE\*k\*e\.out\)/.test(ra)&&/bumps\.dispose\(\)/.test(ra));
  assert(/get localBump\(\) \{ return core\.live && meRingOn \? avatars\.localBump : null; \}/.test(tb));
  assert(/if\(lb&&lb\.on\)applyLocalBump\(lb,player\.root,vehicle\.root\);\/\*[^*]*\*\/heat\.beforeRender\(location[^;]*\);renderer\.render\(scene,camera\);[^\n]*?islandFrameAt\.current=performance\.now\(\);if\(stickPaint\.current\)\{[^}]*\}if\(lb&&lb\.on\)restoreLocalBump\(player\.root,vehicle\.root\);/.test(town),'applied just before the render, restored right after');

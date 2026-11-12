@@ -4,14 +4,19 @@
 // way back up, not thrash on a flapping tier, and never leak (rigs alive == the cap once settled). Page errors fail the run.
 // Needs: a dev relay  MP_PORT=<relay port> MP_DEV=1 node multiplayer/dev-relay/server.mjs
 //        a production build with NEXT_PUBLIC_MULTIPLAYER=1 NEXT_PUBLIC_MULTIPLAYER_URL=<relay url>, served by `next start -p <app port>`.
-// Run:   PW_CHANNEL=chrome node --experimental-websocket scripts/check-mp-heat-recheck.cjs <appUrl> <relayUrl>   (OUT=/tmp/mp-heat)
+// Run:   PW_CHANNEL=chrome node --experimental-websocket scripts/check-mp-heat-recheck.cjs <appUrl> <relayUrl> [--world]   (OUT=/tmp/mp-heat)
+// --world (public island, Nov 11 2026): the six bots join a public world (bot.mjs --world, wandering from (100, 50) m) instead of a
+//         party, and the page starts in "With other players" (fi2-presence-mode-v1 = others) with no party session. Needs a relay with
+//         MP_WORLD_OPEN=1 and a build with NEXT_PUBLIC_PUBLIC_WORLD=1 whose island connects to a world. Never point it at port 8092.
 const { chromium, devices } = require('playwright');
 const { spawn } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const { loadTs } = require('../multiplayer/dev-relay/loadTs.cjs');
 const P = loadTs(path.join(__dirname, '../multiplayer/protocol/index.ts'));
-const url = (process.argv[2] || 'http://localhost:8641').replace(/\/$/, ''), relay = (process.argv[3] || 'http://127.0.0.1:8642').replace(/\/$/, '');
+const ARGS = process.argv.slice(2).filter((a) => !a.startsWith('--')), WORLD = process.argv.includes('--world');
+const url = (ARGS[0] || 'http://localhost:8641').replace(/\/$/, ''), relay = (ARGS[1] || 'http://127.0.0.1:8642').replace(/\/$/, '');
+if (/:8092\b/.test(url)) { console.error('never the owner\'s dev server (8092)'); process.exit(2); }
 const OUT = process.env.OUT || '/tmp/mp-heat';
 fs.mkdirSync(OUT, { recursive: true });
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -26,22 +31,31 @@ function kidSlot(code) {
   });
 }
 (async () => {
-  const made = await (await fetch(relay + '/party', { method: 'POST' })).json();
-  // Bots walk 6 m circles round (100 + 1.5 i, 50) m.
-  const bots = spawn('node', ['--experimental-websocket', 'multiplayer/bots/bot.mjs', '--url', relay, '--code', made.code, '--n', '6', '--spread', '15', '--ms', '400000'], { stdio: 'ignore' });
-  await wait(1500);
-  const token = await kidSlot(made.code);
-  const sess = JSON.stringify({ code: made.code, resumeToken: token, at: Date.now() });
+  let bots, sess = null;
+  if (WORLD) {
+    // Public world: six strangers wandering slowly from (100, 50) m (within 15 m), each its own dev IP label.
+    bots = spawn('node', ['--experimental-websocket', 'multiplayer/bots/bot.mjs', '--world', '--url', relay, '--n', '6', '--spread', '150', '--speed', '0.6', '--ms', '400000', '--devip', 'heat'], { stdio: 'ignore' });
+    await wait(1500);
+  } else {
+    const made = await (await fetch(relay + '/party', { method: 'POST' })).json();
+    // Bots walk 6 m circles round (100 + 1.5 i, 50) m.
+    bots = spawn('node', ['--experimental-websocket', 'multiplayer/bots/bot.mjs', '--url', relay, '--code', made.code, '--n', '6', '--spread', '15', '--ms', '400000'], { stdio: 'ignore' });
+    await wait(1500);
+    const token = await kidSlot(made.code);
+    sess = JSON.stringify({ code: made.code, resumeToken: token, at: Date.now() });
+  }
   const b = await chromium.launch({ channel: process.env.PW_CHANNEL || undefined, args: ['--mute-audio'] });
   const errs = [];
   try {
     const ctx = await b.newContext({ ...devices['iPhone 13'], viewport: { width: 390, height: 844 } });
-    await ctx.addInitScript((s) => { try { localStorage.setItem('fi2-party-session-v1', s); } catch { /* none */ } }, sess);
+    await ctx.addInitScript((s) => { try { if (s) localStorage.setItem('fi2-party-session-v1', s); else localStorage.setItem('fi2-presence-mode-v1', 'others'); } catch { /* none */ } }, sess);
     const p = await ctx.newPage();
     p.on('pageerror', (e) => errs.push(e.message));
-    await p.goto(url + '/', { waitUntil: 'domcontentloaded', timeout: 120000 });
+    await p.goto(url + '/play', { waitUntil: 'domcontentloaded', timeout: 120000 });
     await p.waitForTimeout(6000);
     await p.click('text=Get my save code', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
+    await p.click('button:has-text("Get my code")', { timeout: 8000 }).catch(() => {}); await p.waitForTimeout(1500);
+    await p.click('button:has-text("I saved it")', { timeout: 8000 }).catch(() => {}); // the Nov 2026 "Before you start" sheet
     await p.click('button:has-text("Play")', { timeout: 8000 }).catch(() => {});
     await p.waitForFunction(() => !!window.__fi2?.scene, null, { timeout: 90000 });
     await p.waitForTimeout(9000);

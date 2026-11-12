@@ -104,6 +104,24 @@ export function readPendingParty(): string | null {
   }
 }
 
+/** Public island: is a party invitation waiting (?party= in the address bar, or a fresh code in sessionStorage)? Read only: changes
+ *  nothing (readPendingParty moves / strips it). A pending party wins over the public world (presenceMode.ts). */
+export function hasPendingParty(): boolean {
+  try {
+    if (typeof location !== 'undefined') {
+      const raw = new URL(location.href).searchParams.get('party');
+      if (raw !== null && normalizeCode(raw)) return true;
+    }
+  } catch { /* ignore */ }
+  try {
+    const stored = session()?.getItem(PENDING_KEY) ?? null;
+    if (!stored) return false;
+    const [rawCode, rawAt] = stored.split(':');
+    const at = rawAt ? Number(rawAt) : Date.now();
+    return !!normalizeCode(rawCode) && Date.now() - at < PENDING_TTL_MS;
+  } catch { return false; }
+}
+
 /** Flag off (or any caller that must not join): take ?party= out of the address bar without keeping it. */
 export function stripPartyParam(): void {
   try {

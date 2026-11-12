@@ -4,7 +4,10 @@ const path = require('node:path');
 const { loadTs } = require('../multiplayer/dev-relay/loadTs.cjs');
 const ROOT = path.join(__dirname, '..');
 const P = loadTs(path.join(ROOT, 'multiplayer/protocol/index.ts'));
-const { RoomCore, CLOSE } = loadTs(path.join(ROOT, 'multiplayer/relay/src/roomCore.ts'));
+const { RoomCore: RoomCore0, CLOSE } = loadTs(path.join(ROOT, 'multiplayer/relay/src/roomCore.ts'));
+// Relay v2.0: tests/mp-world.cjs re-runs this whole file with MP_ROOM_KIND=party, so every party expectation also holds for an
+// explicit kind 'party' room (world mode must leave parties exactly as they were).
+const RoomCore = process.env.MP_ROOM_KIND ? class extends RoomCore0 { constructor(o) { super({ ...o, kind: process.env.MP_ROOM_KIND }); } } : RoomCore0;
 const { C, S, ErrorCode, LeaveReason, EndReason, Mode, Zone, PoseFlag, PROTOCOL_VERSION, PARTY_MAX,
   CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, EMPTY_CLOSE_MS } = P;
 

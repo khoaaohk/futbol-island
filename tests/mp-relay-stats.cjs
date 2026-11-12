@@ -179,7 +179,7 @@ const DAY = 86400000;
 
 // Cloudflare refuses random values / I/O / timers in the Worker's GLOBAL scope (deploy error 10021, Oct 23 2026): nothing at the top level of the entry may call them.
 { const fs=require('fs'),path=require('path');
-  for(const f of ['index.ts','partyRoom.ts','relayStats.ts','roomCore.ts','relayStatsCore.ts','origins.ts']){const p=path.join(__dirname,'..','multiplayer/relay/src',f);if(!fs.existsSync(p))continue;
+  for(const f of ['index.ts','partyRoom.ts','relayStats.ts','roomCore.ts','relayStatsCore.ts','origins.ts','worldLobby.ts','worldLobbyCore.ts']){const p=path.join(__dirname,'..','multiplayer/relay/src',f);if(!fs.existsSync(p))continue;
     const top=fs.readFileSync(p,'utf8').split('\n').filter(l=>/^(?:export\s+)?(?:const|let|var)\s/.test(l)&&/(getRandomValues|setTimeout|setInterval|fetch\(|Math\.random|crypto\.subtle)/.test(l));
     if(top.length)throw new Error(f+': global-scope call Cloudflare refuses: '+top[0].slice(0,100)); }
   console.log('mp-relay-stats: no global-scope random/I-O in the Worker'); }

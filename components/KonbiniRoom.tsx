@@ -40,7 +40,7 @@ import {isDrinkItem} from './KonbiniReveal';
 import {isSoundEnabled} from '@/lib/games/sound';
 import type {KonbiniScene,KonbiniPoi,KonbiniSlotView,KonbiniZoomView} from '@/lib/konbini/konbiniScene';
 // Party in rooms (docs/multiplayer-rooms-design.md Phase 1): friends in THIS Konbini walk about with you; Leave-only chip.
-import {useRoomParty} from './party/useRoomParty';const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});const RoomEmoteDock=dynamic(()=>import('./party/RoomPartyChip').then((m)=>m.RoomEmoteDock),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {konbiniRoom} from '@/lib/multiplayer/roomPos';
+import {useRoomParty} from './party/useRoomParty';import {RoomPlayerCard,roomTapPlayer,roomTapPlayerNearer} from './party/RoomPlayerTap';const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});const RoomEmoteDock=dynamic(()=>import('./party/RoomPartyChip').then((m)=>m.RoomEmoteDock),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {konbiniRoom} from '@/lib/multiplayer/roomPos';
 const NpcConversation=dynamic(()=>import('./NpcConversation'),{ssr:false});
 
 /**
@@ -273,13 +273,15 @@ function KonbiniInterior({door}:{door:KonbiniDoor}){
  return <main onClickCapture={e=>{if(konbiniClickTarget(e.target))konbiniSfx.click();}} aria-label={SHOP_NAMES[shop]} className={styles.root} data-konbini-room={shop} data-ready={ready} data-shop={shop} data-zoomed={!!zoom}>
   <header className={styles.header}>{zoom?<NavigationButton back className={styles.backLeft} label="Back" data-konbini-back onNavigate={()=>{setSelected(null);room.current?.zoomOut();}}/>:<NavigationButton label="Done" data-konbini-done key={exitTry} onNavigate={()=>{if(room.current){setWalkingOut(true);room.current.leave();const n=exitTry;setTimeout(()=>{if(!leavingRef.current){setExitTry(n+1);setWalkingOut(false);}},5000);}else leave();}}/>}
    {zoom&&<span className={styles.section} data-konbini-section={zoom.poi} aria-live="polite">{zoom.label}</span>}
-   <div className={styles.headerActions}>{party&&<span className={styles.hudParty}><RoomPartyChip party={party} hidden={covered||!!zoom} emoteDock/></span>}<span ref={walletRef} className={`${jobStyles.wallet} ${styles.hudWallet}`} data-konbini-wallet data-paying={shownBalance!==null||undefined} aria-label={`${shownBalance??wallet.balance} coins`}><span className={jobStyles.coin} aria-hidden="true"/><b>{compactCoins(shownBalance??wallet.balance)}</b><small>coins</small></span></div></header>
+   <div className={styles.headerActions}>{party&&<span className={styles.hudParty}><RoomPartyChip party={party} hidden={covered||!!zoom} emoteDock/></span>}<RoomPlayerCard party={party} blocked={covered||!!zoom}/><span ref={walletRef} className={`${jobStyles.wallet} ${styles.hudWallet}`} data-konbini-wallet data-paying={shownBalance!==null||undefined} aria-label={`${shownBalance??wallet.balance} coins`}><span className={jobStyles.coin} aria-hidden="true"/><b>{compactCoins(shownBalance??wallet.balance)}</b><small>coins</small></span></div></header>
   <canvas ref={canvas} tabIndex={0} className={styles.canvas} aria-label={`Walkable ${SHOP_NAMES[shop]}. Use WASD or arrow keys to walk, then Enter to look at a shelf. Tap a shelf to walk there.`}
    onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};swipe.current=zoom?{x:e.clientX,y:e.clientY}:null;}}
    onPointerUp={e=>{const p=tap.current,sw=swipe.current;tap.current=null;swipe.current=null;
     if(zoom&&sw&&Math.abs(e.clientX-sw.x)>50&&Math.abs(e.clientX-sw.x)>Math.abs(e.clientY-sw.y)){setSelected(null);room.current?.zoomStep(e.clientX<sw.x?1:-1);return;}
     if(zoom&&p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)<12){const n=nearestSlot(e.clientX,e.clientY,72);if(n)choose(n);return;}
-    if(!zoom&&p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)<12)room.current?.pick(e.clientX,e.clientY);}}/>
+    // Public island (owner, Nov 12 2026): a stranger standing IN FRONT of the shelf the tap hits wins (their card); else the shelf, as before.
+    if(!zoom&&p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)<12){const sd=party?room.current?.shelfDepth(e.clientX,e.clientY)??null:null;if(sd!==null&&roomTapPlayerNearer(party,e.clientX,e.clientY,e.currentTarget,sd))return;
+     if(!room.current?.pick(e.clientX,e.clientY))roomTapPlayer(party,e.clientX,e.clientY,e.currentTarget);}}}/>
   {failed&&<div className={styles.error}><h2>The Konbini couldn’t load.</h2><button type="button" onClick={leave}>Back to the island</button></div>}
   {near&&!zoom&&!overlay&&!reveal&&<button ref={promptRef} type="button" className={`store-enter-prompt ${styles.prompt}`} data-konbini-prompt={near.id} onClick={()=>look(near)}>{near.verb} · {near.label}</button>}
   {zoom&&<>

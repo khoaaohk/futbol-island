@@ -76,6 +76,15 @@ export const DEVICE_KEYS:readonly string[]=['fi2-toy-hints-v1','fi2-toy-opened-v
  // Party rejoin (Oct 22 2026): the active party's {code, resume token, host key, time} so a player who closed the tab can get back
  // in (lib/multiplayer/connection.ts SESSION_KEY). Cleared when the party ends / is left, 12 h cap; never the first name; never synced.
  'fi2-party-session-v1',
+ // Public island (Nov 11 2026, phase 1, behind NEXT_PUBLIC_PUBLIC_WORLD; docs/multiplayer-public-island-plan-2026-11-11.md): the people
+ // button's last choice, the one-time "other kids are here" card, and the holdout seed (lib/multiplayer/holdout.ts: random bytes made
+ // once on this device that pick the 1-in-10 "Just me by default" arm; never sent anywhere, never synced).
+ 'fi2-presence-mode-v1','fi2-public-hint-v1','fi2-holdout-v1',
+ // ...and the tab's world slot {shard, resume token, time} (sessionStorage, per tab: connection.ts WORLD_SESSION_KEY; never synced).
+ 'fi2-world-session-v1',
+ // Phase 2 (Nov 12 2026): 'old' or 'new', decided once on the first flag-on visit (components/party/publicNear.ts playerSince):
+ // an island from before public play gets the one-time people-button hint, a new player the first-time card. Never synced.
+ 'fi2-public-since-v1',
  // The sea (Oct 15 2026): the once-per-device shark ("Uh oh!") and manta/whale-shark ride lesson toasts.
  'fi2-shark-lesson-v1','fi2-ride-lesson-v1','fi2-ride-steer-hint-v1','fi2-dive-hint-v1',
  'fi2-tennis-r3-hint-v1', // Futbol Tennis first-time "hold, let go on gold" hint (round 3, Oct 26 2026)

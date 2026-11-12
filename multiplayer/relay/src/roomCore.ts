@@ -5,6 +5,8 @@ import {
   ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState, EMOTE_ASK, AskReply,
   HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, isKit, MatchKind, MATCH_ROSTER, MATCH_RATE, MATCH_JOIN_RATE, FLOOD_BURST, MATCH_OWNER_SILENT_MS,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
+  CAPS_WORLD, WORLD_HARD, WORLD_SEE_M, WORLD_SEE_BACK_M, QUIET_RANGE_M, WORLD_AWAY_GRACE_MS, WORLD_IDLE_MS, FOLLOW, REPORT, REPORT_REASON_IDS, CloseCode,
+  pickWorldName, ISLAND_GOAL,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
 import type { RoomSummary, FailReason } from './relayStatsCore';
@@ -14,11 +16,11 @@ import type { ClientMsg, Emote, PingKind, MemberInfo, NameIdx, PoseBody, ServerM
  *  pose said they stepped away on purpose (a room page: Zone.Indoors; a menu, lesson or the walkthrough: Mode.Busy; a background tab:
  *  the Hidden flag) gets AWAY_GRACE_MS (10 min); a plain drop keeps `plain` (60 s for a member, 30 s before the host migrates).
  *  The relay's own away mark (silence) does not count: only what the client announced. */
-export function graceFor(m: { pose: PoseBody | null; relayAway?: boolean }, plain: number): number {
+export function graceFor(m: { pose: PoseBody | null; relayAway?: boolean }, plain: number, away: number = AWAY_GRACE_MS): number {
   const p = m.pose;
   if (!p) return plain;
   const announcedHidden = (p[7] & PoseFlag.Hidden) !== 0 && !m.relayAway;
-  return p[6] === Zone.Indoors || p[5] === Mode.Busy || announcedHidden ? Math.max(plain, AWAY_GRACE_MS) : plain;
+  return p[6] === Zone.Indoors || p[5] === Mode.Busy || announcedHidden ? Math.max(plain, away) : plain;
 }
 
 export interface Peer { send(text: string): void; close(code: number): void }
@@ -42,12 +44,24 @@ const FAIL_OF: Partial<Record<number, FailReason>> = {
 /** Per-socket state a hibernating Durable Object keeps with serializeAttachment so members survive an eviction. */
 export interface MemberAttachment { id: number; name: NameIdx; look: number[]; token: string; joinSeq: number; host: boolean; nameLock?: 1;
   /** Relay v1.7: the worn kit (colours and indexes only), so an eviction keeps it; re-checked with isKit on restore. */
-  kit?: number[] }
+  kit?: number[];
+  /** Relay v2.0 world: this member is quarantined (a flag only), so an eviction never makes them visible again. */
+  q?: 1 }
 
 /** WebSocket close codes the relay uses (4xxx = application range). */
 export const CLOSE = {
   Normal: 1000, HelloTimeout: 4000, BadMessages: 4001, Flood: 4002, Kicked: 4003, Ended: 4004, Replaced: 4005, Refused: 4006,
+  /** Relay v2.0 world (protocol CloseCode): public play switched off / the slot freed after WORLD_IDLE_MS. */
+  WorldOff: CloseCode.WorldOff, Idle: CloseCode.Idle,
 } as const;
+
+/** Relay v2.0 world mode refuses these silently (no host, no names, no pings, no knock-overs between strangers). */
+const WORLD_REFUSED: ReadonlySet<number> = new Set([C.Kick, C.Lock, C.Rotate, C.End, C.NameLock, C.Rename, C.Ping, C.Hit, C.ResetName]);
+/** Relay v2.0 following guard: one ordered pair (follower a -> b, key a * 64 + b). since > 0 = a has been within FOLLOW.nearM of b since
+ *  then, path = b's distance walked in that time (m, sampled at 1 Hz); blocked = b no longer receives a, until farSince + releaseMs. */
+interface FollowPair { since: number; path: number; lx: number; lz: number; blocked: boolean; farSince: number }
+/** Meta the shell hands over with a world socket (worker -> Durable Object headers; the dev relay in process). Memory only. */
+export interface WorldMeta { ipKey?: string | null; held?: boolean }
 
 const HELLO_TIMEOUT_MS = 5000;
 const BAD_FRAME_LIMIT = 5;
@@ -87,6 +101,15 @@ interface Member {
   matchAt: number;
   /** Nov 5 2026 (C.Match Watch): the field this member watches without playing (-1 none): it gets that field's Snaps too. */
   matchWatch: number;
+  /** Relay v2.0 world mode (all memory only, never persisted except the quarantine flag in the attachment). known: the ids this
+   *  recipient has been told about (S.Joined) and not yet told Far; met: every id it has seen this connection (C.Report needs it);
+   *  hides: ids this member reported (they never see each other again this connection); ipKey: the worker's daily IP hash;
+   *  rkey: the reporter identity (ipKey, else the token); activeAt: last real movement or emote (WORLD_IDLE_MS);
+   *  quietSent / worldSent: the last S.Quiet / S.World value sent (-1 = none). */
+  known: Set<number>; met: Set<number>; hides: Set<number>; quarantined: boolean; ipKey: string | null; rkey: string; activeAt: number;
+  quietSent: number; worldSent: number; reportBucket: TokenBucket;
+  /** Phase 3 (Cap.Goal): the last S.Goal value sent (-1 = none) and this member's C.Goal bucket (ISLAND_GOAL.rate). */
+  goalSent: number; goalBucket: TokenBucket;
 }
 /** Relay v1.8: one shared live match. owner = the member running the MatchSim (-1 nobody); slots: member -> [team, slot] in join order
  *  (Map insertion order: the owner migrates to the earliest remaining joiner). Memory only: a match never survives an eviction. */
@@ -161,8 +184,26 @@ export class RoomCore {
   private fields = new Map<number, MatchField>();
   /** Called after Rotate so the worker / dev relay can re-register the room under the new code. */
   onRotate: ((oldCode: string, newCode: string) => void) | null = null;
+  /** Relay v2.0: 'party' (a code, a host, expiry: unchanged) or 'world' (a public shard pub-N: no host, no code, no expiry). */
+  readonly kind: 'party' | 'world';
+  readonly world: boolean;
+  /** World: following-guard pairs, and the reports filed against each target id (reporter key + time; memory only). */
+  private follow = new Map<number, FollowPair>();
+  private reports = new Map<number, { key: string; at: number }[]>();
+  private pendingMeta = new Map<Peer, WorldMeta>();
+  private worldStepNo = 0;
+  /** World: a daily counter to RelayStats ('rl:report_<reason>', 'rl:quarantine'); a quarantine hold on an IP hash (WorldLobby). */
+  onStat: ((id: string) => void) | null = null;
+  onHold: ((ipKey: string) => void) | null = null;
+  /** Phase 3 (Nov 12 2026), world only: the island-wide daily goal. goalDay = UTC day number (floor(ms / 86400000)), goalN = goals
+   *  this world's kids' teams scored that day. A count only; onGoal hands {day, n} to the Durable Object to keep (storage 'goal'). */
+  private goalDay = -1;
+  private goalN = 0;
+  onGoal: ((g: { day: number; n: number }) => void) | null = null;
 
-  constructor(opts: { code: string; createdAt: number; clock: RoomClock; random: (n: number) => Uint8Array; hostKeyHash?: string; restore?: RoomSnapshot }) {
+  constructor(opts: { code: string; createdAt: number; clock: RoomClock; random: (n: number) => Uint8Array; hostKeyHash?: string; restore?: RoomSnapshot; kind?: 'party' | 'world' }) {
+    this.kind = opts.kind === 'world' ? 'world' : 'party';
+    this.world = this.kind === 'world';
     this._code = opts.code;
     this.createdAt = opts.createdAt;
     this.codeIssuedAt = opts.createdAt;
@@ -213,6 +254,13 @@ export class RoomCore {
     if (a.host) { this.hostId = a.id; this.hadHost = true; }
     if (a.nameLock === 1) m.nickLocked = true; // relay v1.5: the host's name lock survives an eviction (the locked member's next frame syncs it)
     if (a.kit && isKit(a.kit)) { m.kit = a.kit.slice(); m.kitKey = m.kit.join(','); } // relay v1.7
+    if (this.world && a.q === 1) m.quarantined = true; // relay v2.0: a quarantine survives an eviction
+  }
+  /** World, after every socket of a woken Durable Object was restored: assume each client still shows every other member, so the next
+   *  visibility pass sends Far for anyone it should no longer see (an id it never knew is ignored by the client). */
+  restoredWorld(): void {
+    if (!this.world) return;
+    this.members.forEach((r) => { this.members.forEach((d) => { if (d !== r) { r.known.add(d.id); r.met.add(d.id); } }); });
   }
   attachmentFor(peer: Peer): MemberAttachment | null {
     const m = this.byPeer.get(peer);
@@ -220,6 +268,7 @@ export class RoomCore {
     const a: MemberAttachment = { id: m.id, name: m.name, look: m.look, token: m.token, joinSeq: m.joinSeq, host: m.id === this.hostId };
     if (m.nickLocked) a.nameLock = 1;
     if (m.kit) a.kit = m.kit;
+    if (m.quarantined) a.q = 1;
     return a;
   }
 
@@ -229,6 +278,7 @@ export class RoomCore {
 
   info(): { open: boolean; size: number; full: boolean } {
     const size = this.members.size;
+    if (this.world) return { open: size < WORLD_HARD, size, full: size >= WORLD_HARD };
     const full = size >= PARTY_MAX;
     const now = this.clock.now();
     const open = !this.ended && !this.isLocked(now) && !full && now < this.codeExpiresAt && now < this.partyEndsAt;
@@ -236,7 +286,8 @@ export class RoomCore {
   }
 
   /** `retired`: the socket came in through a code that Rotate replaced; it may only resume or present the host key. */
-  connect(peer: Peer, retired = false): void {
+  connect(peer: Peer, retired = false, meta?: WorldMeta): void {
+    if (this.world && meta) this.pendingMeta.set(peer, meta);
     if (this.ended) { this.counters.fails.closed = (this.counters.fails.closed || 0) + 1; this.countersDirty = true; this.send(peer, [S.Error, ErrorCode.Expired]); peer.close(CLOSE.Ended); return; }
     if (retired) this.retiredPeers.add(peer);
     this.pending.set(peer, this.clock.now() + HELLO_TIMEOUT_MS);
@@ -271,6 +322,7 @@ export class RoomCore {
     }
     const msg = parseClient(raw);
     if (!msg) { this.bad(m); return; }
+    if (this.world && WORLD_REFUSED.has(msg[0])) return; // relay v2.0: host tools, names, pings and knock-overs are refused silently
     switch (msg[0]) {
       case C.Hello: this.bad(m); return;
       case C.Pose: this.pose(m, msg as number[], now); return;
@@ -281,9 +333,12 @@ export class RoomCore {
         m.emoteTimes = m.emoteTimes.filter((t) => now - t < 60000);
         if (m.emoteTimes.length >= RATE.emotePerMin) return;
         m.emoteTimes.push(now);
+        if (this.world) { m.activeAt = now; this.worldCast([S.Emote, m.id, msg[1] as Emote], m); return; } // only those who can see me
         this.broadcast([S.Emote, m.id, msg[1] as Emote], m);
         return;
       }
+      case C.Report: this.report(m, msg[1] as number, msg[2] as number, now); return;
+      case C.Goal: this.goal(m, now); return;
       case C.Ping:
         if (!m.pingBucket.take(now)) return;
         this.broadcast([S.Ping, m.id, msg[1] as PingKind, msg[2] as number, msg[3] as number], m);
@@ -297,7 +352,7 @@ export class RoomCore {
       case C.EmoteAnswer: this.emoteAnswer(m, msg[1] as number, msg[2] === 1, now); return;
       case C.Hit: this.hit(m, msg[1] as number, msg[2] as number, now); return;
       case C.Kit: this.kitMsg(m, msg[1] as number[] | null, now); return;
-      case C.Match: this.matchMsg(m, msg as number[], now); return;
+      case C.Match: if (!m.quarantined) this.matchMsg(m, msg as number[], now); return;
       case C.ResetName: return; // retired (Oct 23 2026, replaced by C.NameLock): an old host client's frame is ignored, never an error
       default: break;
     }
@@ -340,6 +395,7 @@ export class RoomCore {
 
   disconnect(peer: Peer): void {
     this.pending.delete(peer);
+    this.pendingMeta.delete(peer);
     this.retiredPeers.delete(peer);
     const m = this.byPeer.get(peer);
     if (!m) return;
@@ -363,19 +419,32 @@ export class RoomCore {
     for (const [peer, deadline] of Array.from(this.pending)) {
       if (now >= deadline) { this.pending.delete(peer); peer.close(CLOSE.HelloTimeout); }
     }
-    if (now >= this.partyEndsAt) { this.end(EndReason.Expired); return; }
+    if (!this.world && now >= this.partyEndsAt) { this.end(EndReason.Expired); return; } // a world never expires
     for (const m of Array.from(this.members.values())) {
-      if (m.goneAt !== null && now - m.goneAt >= graceFor(m, RESUME_GRACE_MS)) {
+      if (m.goneAt !== null && now - m.goneAt >= this.graceOf(m, RESUME_GRACE_MS)) {
         this.remove(m, m.pose && m.pose[6] === Zone.Indoors ? LeaveReason.Indoors : LeaveReason.Timeout, null);
+      } else if (this.world && m.peer && now - m.activeAt >= WORLD_IDLE_MS) {
+        this.remove(m, LeaveReason.Timeout, CLOSE.Idle); // relay v2.0: idle or away for 5 min frees the world slot
       }
     }
     this.markAway(now);
     this.members.forEach((m) => { if (m.kitDue && m.kitBucket.take(now)) { m.kitDue = false; this.kitNews(m); } }); // relay v1.7: a rate-limited kit change
     this.migrateHost(now);
     this.promoteSilentOwners(now);
-    if (this.members.size === 0 && now - this.emptySince >= EMPTY_CLOSE_MS) { this.end(EndReason.Empty); return; }
+    if (!this.world && this.members.size === 0 && now - this.emptySince >= EMPTY_CLOSE_MS) { this.end(EndReason.Empty); return; }
+    if (this.world) {
+      const second = ++this.worldStepNo % BEACON_EVERY === 0; // 1 Hz: the following guard, then the hints
+      if (second) this.followStep(now);
+      this.visibility();
+      if (second) this.members.forEach((r) => this.worldHints(r));
+    }
     this.fanOut(false);
   }
+
+  /** Slot grace after a drop: party = graceFor (10 min for an announced away); world = 2 min for an announced away. */
+  private graceOf(m: Member, plain: number): number { return this.world ? graceFor(m, plain, WORLD_AWAY_GRACE_MS) : graceFor(m, plain); }
+  /** World: may recipient r be sent member d at all? (Party: always.) */
+  private vis(r: Member, d: Member): boolean { return !this.world || r.known.has(d.id); }
 
   /**
    * Interest management. Every 5 Hz tick each recipient gets the NEAREST INTEREST_NEAR (12) members whose pose it has not had yet
@@ -443,7 +512,7 @@ export class RoomCore {
    *  nearest INTEREST_NEAR in r's own room, plus anyone who changed room this tick. */
   private interest(r: Member, posed: Member[], beacon: boolean): Member[] {
     // dirty: changed since the last 5 Hz tick; farDirty: since the last beacon (the old pools), and not already sent to r (halfTick).
-    const fresh = (d: Member): boolean => d !== r && (beacon ? d.farDirty : d.dirty) && r.seen.get(d.id) !== d.poseNo;
+    const fresh = (d: Member): boolean => d !== r && (beacon ? d.farDirty : d.dirty) && r.seen.get(d.id) !== d.poseNo && this.vis(r, d);
     if (beacon) return posed.filter(fresh);
     const out: Member[] = [], flips: Member[] = [];
     for (const d of posed) { if (!fresh(d)) continue; if (d.room === r.room) out.push(d); else if (d.flipped) flips.push(d); }
@@ -457,7 +526,7 @@ export class RoomCore {
     if (!r.pose) return [];
     const R = LIVE_RANGE_M * 10, ox = r.pose[0], oz = r.pose[2], out: Member[] = [];
     for (const d of posed) {
-      if (d === r || d.room !== r.room || r.seen.get(d.id) === d.poseNo) continue;
+      if (d === r || d.room !== r.room || r.seen.get(d.id) === d.poseNo || !this.vis(r, d)) continue;
       const p = d.pose as PoseBody, dx = p[0] - ox, dz = p[2] - oz;
       if (dx * dx + dz * dz <= R * R) out.push(d);
     }
@@ -469,7 +538,7 @@ export class RoomCore {
     const out: Member[] = [];
     const R = BALL_RANGE_M * 10, ox = r.pose ? r.pose[0] : 0, oz = r.pose ? r.pose[2] : 0;
     for (const d of posed) {
-      if (d === r || !d.ball || d.room !== r.room || r.seenBall.get(d.id) === d.ballNo) continue;
+      if (d === r || !d.ball || d.room !== r.room || r.seenBall.get(d.id) === d.ballNo || !this.vis(r, d)) continue;
       const b = d.ball, p = d.pose as PoseBody, free = b[0] === BallState.Free;
       const dx = (free ? b[1] : p[0]) - ox, dz = (free ? b[3] : p[2]) - oz;
       if (!r.pose || dx * dx + dz * dz <= R * R || b[0] === BallState.None) out.push(d);
@@ -486,6 +555,7 @@ export class RoomCore {
   /** Can these two play a ball emote together now? Both connected new clients, on the island, on foot, outside the force field, near. */
   private duetOk(a: Member, b: Member): boolean {
     if (!a.peer || !b.peer || !(a.caps & Cap.EmoteAsk) || !(b.caps & Cap.EmoteAsk) || !a.pose || !b.pose || a.room >= 0 || b.room >= 0) return false;
+    if (this.world && (!a.known.has(b.id) || !b.known.has(a.id))) return false; // strangers: only two who can see each other
     for (const m of [a, b]) { const p = m.pose as PoseBody; if (shielded(presenceOf(p[5], p[6], p[7])) || p[6] === Zone.Indoors || !ON_FOOT(p[5])) return false; }
     const pa = a.pose, pb = b.pose, r = (EMOTE_ASK.rangeM + EMOTE_ASK.slackM) * 10;
     return Math.abs(pa[1] - pb[1]) <= EMOTE_ASK.yM * 10 && (pa[0] - pb[0]) ** 2 + (pa[2] - pb[2]) ** 2 <= r * r;
@@ -495,12 +565,14 @@ export class RoomCore {
     if (q.pendingUntil > 0 && now > q.pendingUntil + EMOTE_ASK.graceMs) { q.pendingUntil = 0; this.declined(q, q.lastAskAt + EMOTE_ASK.timeoutMs); }
   }
   private declined(q: AskPair, at: number): void {
+    if (this.world) { q.blockedUntil = Infinity; return; } // relay v2.0: one No (or a timed-out card) from a stranger ends asking them this connection
     if (++q.declines >= EMOTE_ASK.declinesToBlock) { q.declines = 0; q.blockedUntil = at + EMOTE_ASK.blockMs; }
   }
   /** C.EmoteAsk: rate limited like an emote; refused (S.EmoteAnswer Unavailable, so the asker plays it alone at once) unless the two can
    *  play together and the pair's anti-spam rules allow it (one open ask, a cooldown per pair, a block after repeated Nos). */
   private emoteAsk(m: Member, to: number, emote: Emote, now: number): void {
     if (!(m.caps & Cap.EmoteAsk) || !m.emoteBucket.take(now)) return;
+    if (m.quarantined) return; // relay v2.0: a quarantined member's asks reach nobody (no answer: their card simply times out)
     const t = this.members.get(to), key = m.id * 64 + to;
     let q = this.asks.get(key);
     if (q) this.settleAsk(q, now);
@@ -526,6 +598,7 @@ export class RoomCore {
     const duet = encode([S.Duet, a.id, m.id, q.emote, this.random(1)[0]]), oldA = encode([S.Emote, a.id, q.emote]), oldB = encode([S.Emote, m.id, q.emote]);
     this.members.forEach((r) => {
       if (!r.peer) return;
+      if (this.world && r !== a && r !== m && !r.known.has(a.id) && !r.known.has(m.id)) return; // world: only those who see one of them
       try { if (r.caps & Cap.EmoteAsk) r.peer.send(duet); else { r.peer.send(oldA); r.peer.send(oldB); } } catch { /* gone */ }
     });
   }
@@ -574,21 +647,193 @@ export class RoomCore {
     return this._code;
   }
 
+  // ---- relay v2.0: public worlds (strangers). Everything below runs only when kind === 'world'. ----
+
+  /** May r see d? Both posed in the same space (the island, or the same room), within WORLD_SEE_M (WORLD_SEE_BACK_M to come back),
+   *  d not quarantined, neither has reported the other, and d is not held back from r by the following guard. */
+  private canSee(r: Member, d: Member, had: boolean): boolean {
+    const a = r.pose, b = d.pose;
+    if (!a || !b || r === d || d.quarantined || r.hides.has(d.id) || d.hides.has(r.id)) return false;
+    const f = this.follow.get(d.id * 64 + r.id);
+    if (f && f.blocked) return false;
+    if (r.room !== d.room) return false;
+    if (r.room < 0 && (a[6] === Zone.Indoors || b[6] === Zone.Indoors)) return false; // a legacy door pose is nowhere
+    const R = (had ? WORLD_SEE_M : WORLD_SEE_BACK_M) * 10, dx = a[0] - b[0], dz = a[2] - b[2];
+    return dx * dx + dz * dz <= R * R;
+  }
+
+  /** 5 Hz: who each connected member may see. A newcomer to r's sight arrives as S.Joined (with its pose, then its kit); one who left
+   *  it goes as S.Left [id, Far]. Nothing about anyone else is ever sent to r. */
+  private visibility(): void {
+    this.members.forEach((r) => {
+      if (!r.peer) return;
+      const peer = r.peer;
+      this.members.forEach((d) => {
+        if (d === r) return;
+        const had = r.known.has(d.id), see = this.canSee(r, d, had);
+        if (see === had) return;
+        if (see) {
+          r.known.add(d.id); r.met.add(d.id);
+          this.send(peer, [S.Joined, this.memberInfo(d)]);
+          if (d.pose) r.seen.set(d.id, d.poseNo);
+          r.seenBall.delete(d.id);
+          if ((r.caps & Cap.Kit) && d.kit) this.send(peer, [S.Kit, d.id, d.kit]);
+        } else {
+          r.known.delete(d.id); r.seen.delete(d.id); r.seenBall.delete(d.id);
+          this.send(peer, [S.Left, d.id, LeaveReason.Far]);
+        }
+      });
+    });
+  }
+
+  /** World broadcast: to every connected member who can see `from` (a quarantined member: nobody). */
+  private worldCast(msg: ServerMsg, from: Member): void {
+    const text = encode(msg);
+    this.members.forEach((r) => { if (r !== from && r.peer && r.known.has(from.id)) { try { r.peer.send(text); } catch { /* gone */ } } });
+  }
+
+  /** 1 Hz following guard over pairs already in each other's sight (FOLLOW). A blocked pair is released after releaseMs apart. */
+  private followStep(now: number): void {
+    const dm = (a: Member, b: Member): number => {
+      if (!a.pose || !b.pose || a.room !== b.room) return Infinity;
+      return Math.hypot(a.pose[0] - b.pose[0], a.pose[2] - b.pose[2]) / 10;
+    };
+    this.follow.forEach((f, k) => {
+      const a = this.members.get(Math.floor(k / 64)), b = this.members.get(k % 64);
+      if (!a || !b) { this.follow.delete(k); return; }
+      if (!f.blocked) return;
+      if (dm(a, b) > FOLLOW.releaseM) { if (!f.farSince) f.farSince = now; else if (now - f.farSince >= FOLLOW.releaseMs) this.follow.delete(k); }
+      else f.farSince = 0;
+    });
+    this.members.forEach((a) => {
+      a.known.forEach((bid) => {
+        const b = this.members.get(bid);
+        if (!b || !b.known.has(a.id) || !b.pose) return;
+        const k = a.id * 64 + b.id;
+        let f = this.follow.get(k);
+        if (f && f.blocked) return;
+        if (dm(a, b) > FOLLOW.nearM) { if (f) this.follow.delete(k); return; }
+        const bx = b.pose[0], bz = b.pose[2];
+        if (!f) { f = { since: now, path: 0, lx: bx, lz: bz, blocked: false, farSince: 0 }; this.follow.set(k, f); return; }
+        f.path += Math.hypot(bx - f.lx, bz - f.lz) / 10; f.lx = bx; f.lz = bz;
+        if (now - f.since > FOLLOW.holdMs && f.path > FOLLOW.movedM) { f.blocked = true; f.farSince = 0; }
+      });
+    });
+  }
+
+  /** S.Quiet (others in sight within QUIET_RANGE_M) and S.World (members in this world), each only when it changed. */
+  private worldHints(r: Member): void {
+    if (!r.peer) return;
+    if (r.caps & Cap.Quiet) {
+      let n = 0;
+      const p = r.pose, R = QUIET_RANGE_M * 10;
+      if (p) r.known.forEach((id) => { const d = this.members.get(id); const q = d && d.pose; if (q && (q[0] - p[0]) ** 2 + (q[2] - p[2]) ** 2 <= R * R) n++; });
+      n = Math.min(255, n);
+      if (n !== r.quietSent) { r.quietSent = n; this.send(r.peer, [S.Quiet, n]); }
+    }
+    if (r.caps & Cap.World) {
+      const n = Math.min(WORLD_HARD, this.members.size);
+      if (n !== r.worldSent) { r.worldSent = n; this.send(r.peer, [S.World, n]); }
+    }
+    if (r.caps & Cap.Goal) {
+      const n = this.goalToday(this.clock.now());
+      if (n !== r.goalSent) { r.goalSent = n; this.send(r.peer, [S.Goal, n]); }
+    }
+  }
+
+  /** Phase 3: today's goal count (a new UTC day starts again at 0). */
+  private goalToday(now: number): number {
+    const day = Math.floor(now / 86_400_000);
+    if (day !== this.goalDay) { this.goalDay = day; this.goalN = 0; }
+    return this.goalN;
+  }
+  /** Phase 3, C.Goal (Cap.Goal): my team scored. World only, never from a quarantined member, over the member's bucket ignored. The new
+   *  count goes out on the next 1 Hz hint pass (only to whom it changed for), never per frame. */
+  private goal(m: Member, now: number): void {
+    if (!this.world || m.quarantined || !(m.caps & Cap.Goal) || !m.goalBucket.take(now)) return;
+    const n = this.goalToday(now);
+    if (n >= ISLAND_GOAL.max) return;
+    this.goalN = n + 1;
+    if (this.onGoal) { try { this.onGoal({ day: this.goalDay, n: this.goalN }); } catch { /* keeping it is best effort */ } }
+  }
+  /** Phase 3: a woken world's stored count (ignored unless it is today's). */
+  restoreGoal(g: { day?: unknown; n?: unknown } | null | undefined): void {
+    if (!this.world || !g || typeof g.day !== 'number' || typeof g.n !== 'number') return;
+    if (g.day !== Math.floor(this.clock.now() / 86_400_000) || !Number.isInteger(g.n) || g.n < 0) return;
+    this.goalDay = g.day; this.goalN = Math.min(ISLAND_GOAL.max, g.n);
+  }
+  /** Phase 3 (tests, the dev relay): today's count. */
+  get goalCount(): number { return this.goalToday(this.clock.now()); }
+
+  /** C.Report [target, reason] (Cap.Report). The reporter and the target stop seeing each other at once. DISTINCT reporters (by daily
+   *  IP hash) within REPORT.windowMs: REPORT.toQuarantine of them quarantine the target. A duplicate, a quarantined reporter, an id
+   *  never seen, or a report over the reporter's bucket changes nothing else. Only the daily counters leave the room. */
+  private report(m: Member, target: number, reason: number, now: number): void {
+    if (!this.world || !(m.caps & Cap.Report) || !m.reportBucket.take(now)) return;
+    const t = this.members.get(target);
+    if (!t || t === m || !m.met.has(t.id)) return;
+    m.hides.add(t.id);
+    this.hidePair(m, t);
+    if (m.quarantined) return;
+    const list = (this.reports.get(t.id) || []).filter((x) => now - x.at < REPORT.windowMs);
+    this.reports.set(t.id, list);
+    if (list.some((x) => x.key === m.rkey)) return; // the same reporter (or the same home) twice: ignored
+    list.push({ key: m.rkey, at: now });
+    this.stat('rl:report_' + (REPORT_REASON_IDS[reason] ?? 'something_else'));
+    if (!t.quarantined && list.length >= REPORT.toQuarantine) this.quarantine(t, true);
+  }
+
+  /** The two no longer see each other: S.Left Far to each at once (the visibility pass keeps it so). */
+  private hidePair(a: Member, b: Member): void {
+    for (const [r, d] of [[a, b], [b, a]] as const) {
+      if (r.known.delete(d.id)) { r.seen.delete(d.id); r.seenBall.delete(d.id); if (r.peer) this.send(r.peer, [S.Left, d.id, LeaveReason.Far]); }
+    }
+  }
+
+  /** Quarantine for this connection: nobody sees `t` any more (its poses, ball, kit, emotes, asks and matches reach nobody); `t` is
+   *  not told and still sees everyone. fresh = reached by reports now (counted, and the IP hash is held), not a held reconnect. */
+  private quarantine(t: Member, fresh: boolean): void {
+    t.quarantined = true;
+    this.matchDrop(t);
+    const text = encode([S.Left, t.id, LeaveReason.Far]);
+    this.members.forEach((r) => { if (r.known.delete(t.id)) { r.seen.delete(t.id); r.seenBall.delete(t.id); if (r.peer) { try { r.peer.send(text); } catch { /* gone */ } } } });
+    if (fresh) { this.stat('rl:quarantine'); if (t.ipKey && this.onHold) this.onHold(t.ipKey); }
+  }
+
+  private stat(id: string): void { if (this.onStat) { try { this.onStat(id); } catch { /* stats are best effort */ } } }
+
+  /** The owner's kill switch: every socket closes with CLOSE.WorldOff and the world forgets everyone (it stays usable: a later
+   *  connect after the switch is back on starts it fresh). */
+  closeWorld(): void {
+    if (!this.world) return;
+    this.members.forEach((m) => { if (m.peer) { try { m.peer.close(CLOSE.WorldOff); } catch { /* closed */ } } });
+    this.pending.forEach((_d, p) => { try { p.close(CLOSE.WorldOff); } catch { /* closed */ } });
+    this.members.clear(); this.byPeer.clear(); this.pending.clear(); this.pendingMeta.clear();
+    this.follow.clear(); this.reports.clear(); this.asks.clear(); this.hitPairs.clear(); this.fields.clear();
+    this.emptySince = this.clock.now();
+  }
+  /** Members holding a slot (connected or within their grace): the world's count for the lobby. */
+  get size(): number { return this.members.size; }
+  /** No member and no socket waiting for its Hello (the dev relay forgets such a world). */
+  get idle(): boolean { return this.members.size === 0 && this.pending.size === 0; }
+
   // ---- internals ----
   private hello(peer: Peer, msg: ClientMsg, now: number): void {
     const [, v, look, resumeToken, hostKey, , rawNick] = msg as [number, number, number[], string | null, string | null, (number | null)?, (string | null)?];
     const hasNickSlot = (msg as unknown[]).length >= 7; // new clients always send the name; old Hellos (5 / 6 elements) are colour-only
-    const nick = normalizeNick(rawNick ?? null); // parseClient already normalised; a name is only ever set here, at Hello
+    // relay v2.0: a world drops any nick unread (strangers only ever see the generated [colour, animal] name)
+    const nick = this.world ? null : normalizeNick(rawNick ?? null); // parseClient already normalised; a name is only ever set here, at Hello
+    const meta = this.pendingMeta.get(peer); this.pendingMeta.delete(peer);
     if (v !== PROTOCOL_VERSION) return this.refuse(peer, ErrorCode.BadVersion);
-    if (now >= this.partyEndsAt) return this.refuse(peer, ErrorCode.Expired);
+    if (!this.world && now >= this.partyEndsAt) return this.refuse(peer, ErrorCode.Expired);
     const viaRetired = this.retiredPeers.delete(peer);
-    const isHostKey = hostKey !== null && hostKey.length > 0 && ctEq(sha256Hex(hostKey), this.hostKeyHash);
+    const isHostKey = !this.world && hostKey !== null && hostKey.length > 0 && ctEq(sha256Hex(hostKey), this.hostKeyHash); // a world has no host
     if (resumeToken !== null) {
       if (this.revoked.some((t) => ctEq(t, resumeToken))) return this.refuse(peer, ErrorCode.Kicked);
       let found: Member | null = null;
       this.members.forEach((x) => { if (ctEq(x.token, resumeToken)) found = x; });
       const m = found as Member | null;
-      if (m && (m.goneAt === null || now - m.goneAt < graceFor(m, RESUME_GRACE_MS))) {
+      if (m && (m.goneAt === null || now - m.goneAt < this.graceOf(m, RESUME_GRACE_MS))) {
         const old = m.peer;
         if (old) { this.byPeer.delete(old); m.peer = null; old.close(CLOSE.Replaced); }
         this.pending.delete(peer);
@@ -603,11 +848,31 @@ export class RoomCore {
         // A resume never renames (the slot keeps its name); a self rename is only ever C.Rename (relay v1.3).
         const changed = Array.isArray(look) && (look.length !== m.look.length || look.some((v, i) => v !== m.look[i]));
         if (changed) m.look = look.slice();
+        if (this.world) { // relay v2.0: same slot and name; a held IP hash lands in quarantine again
+          m.activeAt = now;
+          if (meta) { m.ipKey = meta.ipKey ?? m.ipKey; if (meta.ipKey) m.rkey = meta.ipKey; }
+          if (meta?.held && !m.quarantined) this.quarantine(m, false);
+        }
         this.welcome(m);
-        if (changed) this.broadcast([S.Joined, this.memberInfo(m)], m);
+        if (changed) this.memberNews(m);
         return;
       }
       // unknown / lapsed token: fall through to a fresh join (graceful after a Durable Object eviction)
+    }
+    if (this.world) { // relay v2.0: no code, lock or expiry; the hard cap; a fresh random [colour, animal]; nobody hears a Joined yet
+      if (this.members.size >= WORLD_HARD) return this.refuse(peer, ErrorCode.Full);
+      this.pending.delete(peer);
+      const taken: NameIdx[] = [];
+      this.members.forEach((x) => taken.push(x.name));
+      const id = this.freeId();
+      const m = this.newMember(id, pickWorldName(taken, this.rnd()), null, look, b64url(this.random(16)), this.joinSeq++, peer, now);
+      if (meta?.ipKey) { m.ipKey = meta.ipKey; m.rkey = meta.ipKey; }
+      this.members.set(id, m);
+      this.byPeer.set(peer, m);
+      this.count('joins'); this.notePeak();
+      if (meta?.held) this.quarantine(m, false);
+      this.welcome(m); // the visibility pass introduces the newcomer to whoever can see them (S.Joined), and them to those
+      return;
     }
     if (hasNickSlot && nick === null) return this.refuse(peer, ErrorCode.BadName); // a new client must send a valid first name
     if (viaRetired && !isHostKey) return this.refuse(peer, ErrorCode.NotFound); // a leaked old code never admits a new face
@@ -619,16 +884,20 @@ export class RoomCore {
     this.pending.delete(peer);
     const taken: NameIdx[] = [];
     this.members.forEach((x) => taken.push(x.name));
-    const r = this.random(4);
-    const rnd = () => (r[0] * 16777216 + r[1] * 65536 + r[2] * 256 + r[3]) / 4294967296;
     const id = this.freeId();
-    const m = this.newMember(id, pickNameWith(taken, rnd), nick, look, b64url(this.random(16)), this.joinSeq++, peer, now);
+    const m = this.newMember(id, pickNameWith(taken, this.rnd()), nick, look, b64url(this.random(16)), this.joinSeq++, peer, now);
     this.members.set(id, m);
     this.byPeer.set(peer, m);
     this.count('joins'); this.notePeak();
     if (isHostKey && !this.members.has(this.hostId)) { this.hostId = id; this.hadHost = true; }
     this.welcome(m);
     this.broadcast([S.Joined, this.memberInfo(m)], m);
+  }
+
+  /** A [0,1) source from 4 random bytes (name picks). */
+  private rnd(): () => number {
+    const r = this.random(4);
+    return () => (r[0] * 16777216 + r[1] * 65536 + r[2] * 256 + r[3]) / 4294967296;
   }
 
   private newMember(id: number, name: NameIdx, nick: string | null, look: number[], token: string, joinSeq: number, peer: Peer, now: number): Member {
@@ -642,6 +911,9 @@ export class RoomCore {
       kit: null, kitKey: '', kitDue: false, kitBucket: new TokenBucket(KIT_RATE[0], KIT_RATE[1]),
       matchField: -1, matchWatch: -1, matchBucket: new TokenBucket(MATCH_RATE[0], MATCH_RATE[1]), matchJoinBucket: new TokenBucket(MATCH_JOIN_RATE[0], MATCH_JOIN_RATE[1]),
       matchAt: -1e12,
+      known: new Set(), met: new Set(), hides: new Set(), quarantined: false, ipKey: null, rkey: 't' + token, activeAt: now,
+      quietSent: -1, worldSent: -1, reportBucket: new TokenBucket(REPORT.rate[0], REPORT.rate[1]),
+      goalSent: -1, goalBucket: new TokenBucket(ISLAND_GOAL.rate[0], ISLAND_GOAL.rate[1]),
     };
   }
 
@@ -694,11 +966,12 @@ export class RoomCore {
   /** C.Caps: what this client understands. A Cap.NameLock client then hears every current name lock, a Cap.Kit client every friend's
    *  worn kit (a join or a resume). */
   private caps(m: Member, bits: number): void {
-    m.caps = bits & CAPS_ALL; this.matchUnwatch(m); // a (re)connect: the client sends its Watch again
+    m.caps = bits & (this.world ? CAPS_WORLD : CAPS_ALL); this.matchUnwatch(m); // a (re)connect: the client sends its Watch again
     if (!m.peer) return;
     const peer = m.peer;
     if (m.caps & Cap.NameLock) this.members.forEach((x) => { if (x.nickLocked) this.send(peer, [S.NameLock, x.id, 1]); });
-    if (m.caps & Cap.Kit) this.members.forEach((x) => { if (x !== m && x.kit) this.send(peer, [S.Kit, x.id, x.kit]); });
+    if (m.caps & Cap.Kit) this.members.forEach((x) => { if (x !== m && x.kit && this.vis(m, x)) this.send(peer, [S.Kit, x.id, x.kit]); });
+    if (this.world) { m.quietSent = -1; m.worldSent = -1; m.goalSent = -1; this.worldHints(m); } // relay v2.0: the first S.Quiet / S.World at once
     if (m.caps & Cap.Match) this.fields.forEach((_f, id) => this.send(peer, this.rosterMsg(id)));
     else this.matchDrop(m); // a socket that stopped understanding matches (an old tab resumed the slot) leaves its match
   }
@@ -809,7 +1082,7 @@ export class RoomCore {
   /** Relay v1.7: tell every other Cap.Kit member what `t` wears now (old clients never see S.Kit). */
   private kitNews(t: Member): void {
     const text = encode([S.Kit, t.id, t.kit]);
-    this.members.forEach((r) => { if (r !== t && r.peer && (r.caps & Cap.Kit)) { try { r.peer.send(text); } catch { /* gone */ } } });
+    this.members.forEach((r) => { if (r !== t && r.peer && (r.caps & Cap.Kit) && this.vis(r, t)) { try { r.peer.send(text); } catch { /* gone */ } } });
   }
 
   /** Relay v1.5: tell every Cap.NameLock member that `t`'s name lock changed (old clients never see S.NameLock). */
@@ -820,17 +1093,31 @@ export class RoomCore {
 
   private welcome(m: Member): void {
     const list: MemberInfo[] = [];
-    this.members.forEach((x) => list.push(this.memberInfo(x)));
-    this.send(m.peer as Peer, [S.Welcome, PROTOCOL_VERSION, m.id, m.token, this.codeExpiresAt, this.partyEndsAt, this.locked ? 1 : 0, list]);
+    if (this.world) { // relay v2.0: me + only those I can see now (no code, no expiry, never locked); the rest arrive as S.Joined
+      m.known.clear();
+      this.members.forEach((x) => { if (x === m) list.push(this.memberInfo(x)); else if (this.canSee(m, x, false)) { m.known.add(x.id); m.met.add(x.id); list.push(this.memberInfo(x)); } });
+      this.send(m.peer as Peer, [S.Welcome, PROTOCOL_VERSION, m.id, m.token, 0, 0, 0, list]);
+    } else {
+      this.members.forEach((x) => list.push(this.memberInfo(x)));
+      this.send(m.peer as Peer, [S.Welcome, PROTOCOL_VERSION, m.id, m.token, this.codeExpiresAt, this.partyEndsAt, this.locked ? 1 : 0, list]);
+    }
     // Relay v1.2: the roster carries every pose, so this socket has them all; a fresh socket starts as an old client (caps 0) until it
     // answers S.Caps (old clients cannot parse S.Caps and ignore it).
     m.seen.clear(); m.seenBall.clear(); m.caps = 0;
-    this.members.forEach((x) => { if (x !== m && x.pose) m.seen.set(x.id, x.poseNo); });
-    this.send(m.peer as Peer, [S.Caps, CAPS_ALL]);
+    this.members.forEach((x) => { if (x !== m && x.pose && this.vis(m, x)) m.seen.set(x.id, x.poseNo); });
+    this.send(m.peer as Peer, [S.Caps, this.world ? CAPS_WORLD : CAPS_ALL]);
   }
 
   private memberInfo(m: Member): MemberInfo {
+    if (this.world) return [m.id, m.name, m.look, 0, m.pose ? (m.pose.slice() as PoseBody) : null]; // no nick slot at all
     return [m.id, m.name, m.look, m.id === this.hostId ? 1 : 0, m.pose ? (m.pose.slice() as PoseBody) : null, m.nick];
+  }
+
+  /** A member's roster row changed (a resume with a new look): party = everyone else hears S.Joined; world = only those who see them. */
+  private memberNews(m: Member): void {
+    if (!this.world) { this.broadcast([S.Joined, this.memberInfo(m)], m); return; }
+    const text = encode([S.Joined, this.memberInfo(m)]);
+    this.members.forEach((r) => { if (r !== m && r.peer && r.known.has(m.id)) { try { r.peer.send(text); } catch { /* gone */ } } });
   }
 
   private pose(m: Member, msg: number[], now: number): void {
@@ -852,6 +1139,10 @@ export class RoomCore {
       m.lastWarpAt = now;
     } else if (m.pose && !speedOk(m.pose, body, now - m.poseAt)) {
       return; // speed cheat: dropped, never relayed; the last good pose stays
+    }
+    if (this.world) { // relay v2.0 idle clock: real movement or a mode change, not away (Hidden) and not frozen in a menu (Busy)
+      const p = m.pose;
+      if ((body[7] & PoseFlag.Hidden) === 0 && body[5] !== Mode.Busy && (!p || p[5] !== body[5] || room !== m.room || Math.abs(p[0] - body[0]) + Math.abs(p[2] - body[2]) >= 5)) m.activeAt = now;
     }
     m.lastSeq = seq; m.pose = body; m.poseAt = now; m.dirty = true; m.farDirty = true; m.relayAway = false; m.room = room; m.poseNo = ++this.stampSeq;
   }
@@ -876,6 +1167,17 @@ export class RoomCore {
       const p = m.peer;
       this.byPeer.delete(p); m.peer = null;
       if (closeCode !== null) p.close(closeCode);
+    }
+    if (this.world) { // relay v2.0: only those who could see them hear it; every trace of the id goes (ids are reused)
+      const text = encode([S.Left, m.id, reason]);
+      this.members.forEach((r) => {
+        if (r.known.delete(m.id) && r.peer) { try { r.peer.send(text); } catch { /* gone */ } }
+        r.met.delete(m.id); r.hides.delete(m.id); r.seen.delete(m.id); r.seenBall.delete(m.id);
+      });
+      this.follow.forEach((_f, k) => { if (Math.floor(k / 64) === m.id || k % 64 === m.id) this.follow.delete(k); });
+      this.reports.delete(m.id);
+      if (this.members.size === 0) this.emptySince = this.clock.now();
+      return;
     }
     this.broadcast([S.Left, m.id, reason], null);
     if (this.members.size === 0) this.emptySince = this.clock.now();

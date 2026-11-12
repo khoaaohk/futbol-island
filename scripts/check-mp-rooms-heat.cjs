@@ -1,13 +1,22 @@
 // Heat sanity, multiplayer rooms (verifier pass, Oct 22 2026): six bot friends walking in ONE room, per room, desktop and phone.
 // Reports friends drawn (the layer caps 5/5/3/1/0 by tier, Battery saver 0), layer update ms, render ms with / without friends,
 // draw calls, and the real frame cadence over 3 s. The player's slot is handed to the page through sessionStorage (as a reload).
-// Run: node --experimental-websocket scripts/check-mp-rooms-heat.cjs <appUrl> <relayUrl>
+// Run: node --experimental-websocket scripts/check-mp-rooms-heat.cjs <appUrl> <relayUrl> [--world]
+// --world (public island, Nov 11 2026): strangers in the room instead of party friends. World bots (bot.mjs --world) cannot walk into
+// a room yet (no --room in world mode, multiplayer/bots is Agent A's), so this mode says so and points at the synthetic room check
+// (scripts/check-mp-public-heat.cjs: 6 strangers in the Arcade, room cap 6). Never point it at port 8092.
 const { chromium, devices } = require('playwright');
 const { spawn } = require('child_process');
 const path = require('path');
 const { loadTs } = require('../multiplayer/dev-relay/loadTs.cjs');
 const P = loadTs(path.join(__dirname, '../multiplayer/protocol/index.ts'));
-const url = (process.argv[2] || 'http://localhost:8615').replace(/\/$/, ''), relay = (process.argv[3] || 'http://127.0.0.1:8616').replace(/\/$/, '');
+const ARGS = process.argv.slice(2).filter((a) => !a.startsWith('--')), WORLD = process.argv.includes('--world');
+const url = (ARGS[0] || 'http://localhost:8615').replace(/\/$/, ''), relay = (ARGS[1] || 'http://127.0.0.1:8616').replace(/\/$/, '');
+if (/:8092\b/.test(url)) { console.error('never the owner\'s dev server (8092)'); process.exit(2); }
+if (WORLD && !/'--room'/.test(require('fs').readFileSync(path.join(__dirname, '../multiplayer/bots/bot.mjs'), 'utf8').split('--world')[1] || '')) {
+  console.log('SKIP --world: world bots have no --room yet; run scripts/check-mp-public-heat.cjs (synthetic strangers, Arcade room cap 6)');
+  process.exit(0);
+}
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 const ROOMS = [
   { name: 'konbini', code: 8, page: '/konbini?door=main', w: 'window.__konbini', st: 'window.__konbini?.state' },

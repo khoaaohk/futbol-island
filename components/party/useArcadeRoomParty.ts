@@ -6,17 +6,20 @@
 // no stored party: nothing is created and the hub's hooks stay no-ops.
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import { multiplayerEnabled } from '@/lib/multiplayer/config';
-import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
+import { multiplayerLock, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
 import type { RoomPartyHandle } from './useRoomParty';
 
 export function useArcadeRoomParty(): RoomPartyHandle | null {
-  const allowed = useSyncExternalStore(subscribeMultiplayerAllowed, multiplayerAllowed, () => true);
+  // Public island (Agent C, Nov 11 2026): follow the three-way lock, not only Allowed / Off, so a change between "all" and "friends"
+  // re-runs the start (worldResumeAllowed() then forgets the world slot on Friends only, or resumes it on all).
+  const lock = useSyncExternalStore(subscribeMultiplayerAllowed, multiplayerLock, () => 'all' as const);
+  const allowed = lock !== 'off';
   const [handle, setHandle] = useState<RoomPartyHandle | null>(null);
   useEffect(() => {
     if (!multiplayerEnabled()) return;
     let dead = false, stop: (() => void) | null = null;
     import('@/lib/arcade/arcadeRoomParty').then((m) => { if (!dead) stop = m.startArcadeParty(allowed, setHandle); }).catch(() => {});
     return () => { dead = true; stop?.(); };
-  }, [allowed]);
+  }, [allowed, lock]);
   return handle;
 }

@@ -18,12 +18,14 @@ import { createInterp, type Interp, type RemotePose } from './interp';
 import { lookToWire } from './look';
 import { armEntryWarp, fillRoomBody, roomPoseState, type RoomLocal } from './presence';
 import { displayName, partyStore } from './store';
+import { attachWorldConnection } from './publicWorld';
+import { hiddenStrangers, onHiddenStrangers } from './strangers';
 
 // One connection per page, shared by the page's friend layer and its party UI (PartyHost on the island, RoomPartyChip in rooms).
 let shared: PartyConnection | null = null;
 let unbind: (() => void) | null = null;
 export function partyConnection(): PartyConnection {
-  if (!shared) { shared = createPartyConnection(); unbind = bindConnection(shared); }
+  if (!shared) { shared = createPartyConnection(); unbind = bindConnection(shared); attachWorldConnection(shared); }
   return shared;
 }
 // Local Hide / Mute choices from the party sheet (PartyHost) or the room roster. Module-level so a layer created later still applies them.
@@ -125,8 +127,17 @@ export function createFriendCore(ctx: {
     if (e && e.at !== lastEmoteAt) { lastEmoteAt = e.at; if (e.id !== s.you && avatars.emote(e.id, e.emote)) ctx.onEmoteSeen?.(); if (e.id !== s.you) ctx.onFriendEmote?.(e.id); }
     ctx.onSync?.(live, welcome);
   }
-  const applyFilters = () => { if (matchIds.size) avatars.setHidden(new Set([...Array.from(hiddenIds), ...Array.from(matchIds)])); else avatars.setHidden(hiddenIds); avatars.setMuted(mutedIds); };
+  // Public island: strangers hidden or reported (strangers.ts, this page session) are hidden too, only while in a world.
+  const applyFilters = () => {
+    const extra = conn.kind === 'world' ? hiddenStrangers() : null;
+    if (matchIds.size || (extra && extra.size)) avatars.setHidden(new Set([...Array.from(hiddenIds), ...Array.from(matchIds), ...(extra ? Array.from(extra) : [])]));
+    else avatars.setHidden(hiddenIds);
+    avatars.setMuted(mutedIds);
+  };
   filterSubs.add(applyFilters);
+  const offStrangers = onHiddenStrangers(applyFilters);
+  let lastKind = conn.kind;
+  const offKind = typeof conn.onStatus !== 'function' ? () => {} : conn.onStatus(() => { if (conn.kind !== lastKind) { lastKind = conn.kind; applyFilters(); } });
   const offStore = partyStore.subscribe(sync);
   const offPoses = onPoses((id, b, recvMs) => {
     if (id === you || !known.has(id)) return;
@@ -177,7 +188,7 @@ export function createFriendCore(ctx: {
       }
     },
     dispose() {
-      offStore(); offPoses(); offBalls(); offSeed(); filterSubs.delete(applyFilters); avatars.dispose(); kits.clear(); poses.clear(); balls.clear(); active.clear(); spare.clear(); ids.length = 0; known.clear();
+      offStore(); offPoses(); offBalls(); offSeed(); offStrangers(); offKind(); filterSubs.delete(applyFilters); avatars.dispose(); kits.clear(); poses.clear(); balls.clear(); active.clear(); spare.clear(); ids.length = 0; known.clear();
       // The shared connection (and its binding) belongs to the page: it closes on unload and via leave().
       void unbind;
     },
@@ -223,6 +234,8 @@ export interface RoomParty {
   readonly rigs: number;
   /** Check hook (scripts/check-mp-rooms.cjs; allocates, never per frame): every sampled friend with its drawn presence. */
   debugFriends(): { id: number; x: number; z: number; presence: string; fade: number; gone: boolean }[];
+  /** Tap on a player (remotePick.ts; allocates, on a tap only): who was drawn last frame, and that frame's camera. */
+  tapSpots(): ReturnType<RemoteAvatars['tapSpots']>;
   dispose(): void;
 }
 
@@ -241,11 +254,12 @@ export interface RoomPartyCtx {
   onEmoteSeen?: () => void;
 }
 
-/** Null when multiplayer is off or this tab holds no party (a room without a party costs nothing). */
+/** Null when multiplayer is off or this tab holds no party and no world slot (a room without either costs nothing). Public island:
+ *  in a world the relay sends only members in the same room, so the same layer draws strangers here (Hide / Report from the roster). */
 export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
   if (!multiplayerEnabled()) return null;
   const conn0 = partyConnection();
-  if (!conn0.hasSession() && conn0.status !== 'live' && conn0.status !== 'reconnecting') return null;
+  if (!conn0.hasSession() && !(typeof conn0.hasWorldSession === 'function' && conn0.hasWorldSession()) && conn0.status !== 'live' && conn0.status !== 'reconnecting' && conn0.status !== 'connecting') return null;
   const room = ctx.room;
   const last = new Map<MemberId, number[]>(); // the last same-room body per friend (change detection: wake only on a change)
   const gone = new Set<MemberId>(); // left this room (or went to the island): fade out at their last room spot
@@ -305,6 +319,7 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
     get meRing() { return meRingOn; },
     get shown() { return avatars.shown; },
     get rigs() { return avatars.rigs; },
+    tapSpots: () => avatars.tapSpots(),
     debugFriends() { return ids.filter((id) => poses.has(id)).map((id) => { const p = poses.get(id)!; return { id, x: +p.x.toFixed(2), z: +p.z.toFixed(2), presence: presenceOf(p.mode, p.zone, p.flags ?? 0), fade: +p.fade.toFixed(2), gone: gone.has(id) }; }); },
     friendsHere: () => active.values(),
     nearestFriend(x, z, maxM) {
@@ -326,6 +341,8 @@ export function createRoomParty(ctx: RoomPartyCtx): RoomParty | null {
     update(dt, nowMs, camera, hideFriends = false) {
       lastUpdateAt = nowMs;
       const live = core.live;
+      // Public island ("Just me"): keep the room awake while strangers fade out (~1 s), then flush, hide and sleep as before.
+      if (!live && drawnLast && avatars.fading && !ctx.reducedMotion() && !hideFriends) { avatars.root.visible = true; avatars.update(dt, poses, camera, false, null); return true; }
       if (!live) {
         if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, true, null); } // flush every fade (townBridge: ghost plume)
         avatars.root.visible = false;

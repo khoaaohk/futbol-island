@@ -30,3 +30,28 @@ new_sqlite_classes = ["PartyRoom"]
 [[migrations]]
 tag = "v2"
 new_sqlite_classes = ["RelayStats"]
+
+# Relay v2.0 (public worlds, Nov 11 2026; docs/multiplayer/WORLD-HANDOFF.md): the WorldLobby singleton (fill-first shard assignment,
+# the owner's kill switch, quarantine holds in memory). World rooms themselves reuse the PARTY class (named pub-1, pub-2...), so v3
+# adds one class only. Public play stays CLOSED until `wrangler secret put CONTROL_TOKEN` (>= 16 random chars) AND a
+# POST /control {"public":true}. Not deployed yet.
+[[durable_objects.bindings]]
+name = "LOBBY"
+class_name = "WorldLobby"
+
+[[migrations]]
+tag = "v3"
+new_sqlite_classes = ["WorldLobby"]
+
+# Workers Rate Limiting bindings (shared across isolates; the code falls back to in-isolate buckets without them).
+# namespace_id: any integer unique within the account. Periods may only be 10 or 60 seconds.
+# WORLD_RL: GET /world and /world/:shard/ws, per daily IP hash (keys "l:<hash>" and "s:<hash>"). JOIN_RL: party lookups / sockets.
+[[ratelimits]]
+name = "WORLD_RL"
+namespace_id = "7301"
+simple = { limit = 60, period = 60 }
+
+[[ratelimits]]
+name = "JOIN_RL"
+namespace_id = "7302"
+simple = { limit = 10, period = 60 }

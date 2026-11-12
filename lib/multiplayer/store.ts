@@ -1,13 +1,15 @@
 // Party state for React. Emits only on membership / status / emote / ping / error changes (and a member's zone or away
 // flag flipping), never because a Poses message arrived.
 import { useSyncExternalStore } from 'react';
-import { S, Cap, nameFor, presenceOf, activityOf, roomOf, type Presence, type Emote, type ErrorCode, type Look, type MemberId, type MemberInfo, type PingKind, type ServerMsg, type Zone } from '../../multiplayer/protocol';
+import { S, Cap, nameFor, worldNameFor, presenceOf, activityOf, roomOf, type Presence, type Emote, type ErrorCode, type Look, type MemberId, type MemberInfo, type PingKind, type ServerMsg, type Zone } from '../../multiplayer/protocol';
 import type { PartyStatus, TabState } from './connection';
 import { colourHex } from './names';
 import { roomActivity } from './presence';
 
 /** name = the colour name ('Red', always present); nick = the typed first name or null. Show displayName(member). */
-export type Member = { id: MemberId; name: string; nick: string | null; colourIdx: number; colourHex: string; look: Look; isHost: boolean; zone: Zone; away: boolean;
+export type Member = { id: MemberId; name: string; nick: string | null;
+  /** The wire name pair [colour, animal] (world: index into WORLD_ANIMALS; party: animal slot 0, ignored). */
+  nameIdx: [number, number]; colourIdx: number; colourHex: string; look: Look; isHost: boolean; zone: Zone; away: boolean;
   /** Presence (design 4.4.1): playing, busy (lesson / quiz / menu), indoors (Museum...) or away; activity = the Activity code (0 when playing). */
   presence: Presence; activity: number;
   /** The room code they are in (docs/multiplayer-rooms-design.md 2.2: a room pose), -1 on the island or at a legacy door pose. */
@@ -22,16 +24,18 @@ export type PartyState = {
   /** Relay v1.5 (Oct 23 2026): ids whose name the host locked (S.NameLock; re-sent after every Welcome), and whether this relay
    *  supports name locks at all (S.Caps carried Cap.NameLock; an old relay => the host's Lock name button is hidden). */
   nameLocks: MemberId[]; canLockNames: boolean;
+  /** Public island (Nov 11 2026): 'party' (a code), 'world' (strangers: generated names, no host / code / nick), or null. */
+  kind: 'party' | 'world' | null;
 };
 
-/** What to call a friend: their typed first name, else the colour name ('Red'). */
+/** What to call a friend: their typed first name, else the colour name ('Red'). In a world: the generated pair ('Teal Otter'), never a nick. */
 export const displayName = (m: Pick<Member, 'name' | 'nick'>): string => m.nick || m.name;
 
 export const PING_SHOW_MS = 8000;
 
 const initial = (): PartyState => ({
   status: 'idle', code: null, codeExpiresAt: 0, you: null, isHost: false, locked: false, members: [], lastEmote: null, pings: [], error: null, tab: null, lapsed: false,
-  nameLocks: [], canLockNames: false,
+  nameLocks: [], canLockNames: false, kind: null,
 });
 
 /** A friend walking in a room is 'indoors' with no Activity on the wire (the speed byte is the room code): read the room as the
@@ -39,8 +43,8 @@ const initial = (): PartyState => ({
 const activityFor = (mode: number, speedQ: number, room: number): number => (room >= 0 ? roomActivity(room) : activityOf(mode, speedQ));
 
 function toMember(m: MemberInfo): Member {
-  const pose = m[4], room = pose ? roomOf(pose) : -1;
-  return { id: m[0], name: nameFor(m[1]), nick: m[5] ?? null, colourIdx: m[1][0], colourHex: colourHex(m[1][0]), look: m[2], isHost: m[3] === 1, zone: (pose ? pose[6] : 0) as Zone, away: pose ? (pose[7] & 2) !== 0 : false,
+  const pose = m[4], room = pose ? roomOf(pose) : -1, world = state.kind === 'world';
+  return { id: m[0], name: world ? worldNameFor(m[1]) : nameFor(m[1]), nick: world ? null : m[5] ?? null, nameIdx: [m[1][0], m[1][1]] as [number, number], colourIdx: m[1][0], colourHex: colourHex(m[1][0]), look: m[2], isHost: m[3] === 1, zone: (pose ? pose[6] : 0) as Zone, away: pose ? (pose[7] & 2) !== 0 : false,
     presence: pose ? presenceOf(pose[5], pose[6], pose[7]) : 'active', activity: pose ? activityFor(pose[5], pose[4], room) : 0, room };
 }
 
@@ -70,10 +74,13 @@ export const partyStore = {
   setHealthSource(fn: (() => PartyHealth) | null): void { healthSource = fn; },
   subscribe(fn: () => void): () => void { subs.add(fn); return () => { subs.delete(fn); }; },
   /** Extra (not in the design API): connection status, and the code being joined. Emits only on change. */
-  setStatus(status: PartyStatus, code?: string | null): void {
+  setStatus(status: PartyStatus, code?: string | null, kind?: 'party' | 'world' | null): void {
     const c = code === undefined ? state.code : code;
-    if (status === state.status && c === state.code) return;
-    set({ ...state, status, code: c });
+    const k = kind === undefined ? state.kind : kind;
+    if (status === state.status && c === state.code && k === state.kind) return;
+    // Public island: leaving a world (or moving between a world and a party) forgets every stranger at once (no stale roster).
+    if (state.kind === 'world' && (k !== 'world' || status === 'idle')) { spots.clear(); set({ ...initial(), status, code: c, kind: k, tab: state.tab, lapsed: state.lapsed }); return; }
+    set({ ...state, status, code: c, kind: k });
   },
   /** Self rename (Your party > List): show my new first name right away (the relay's S.Joined echo confirms it; an old relay never
    *  sends one, so this is all the old-relay fallback has). Memory only. */

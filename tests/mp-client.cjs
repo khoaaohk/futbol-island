@@ -359,12 +359,24 @@ t('look round trip: default + 3 presets, bounds, unknown -> 0',()=>{
 
 t('privacy: no forbidden imports or storage keys in lib/multiplayer',()=>{
   for(const f of fs.readdirSync(path.join(ROOT,'lib/multiplayer'),{recursive:true}).filter(f=>/\.tsx?$/.test(f))){// recursive: lib/multiplayer/rooms/*
-    const src=fs.readFileSync(path.join(ROOT,'lib/multiplayer',f),'utf8');
-    // Party rejoin (Oct 22 2026): connection.ts may name localStorage ONLY in its deviceStorage() accessor (the one party session key).
-    const s2=f==='connection.ts'?src.replace(/typeof localStorage === 'undefined' \? null : localStorage/,''):src;
+    // Code only: a doc comment may name lib/saves or lib/analytics to explain the rule (holdout.ts does); imports and calls may not.
+    const src=fs.readFileSync(path.join(ROOT,'lib/multiplayer',f),'utf8').replace(/\/\*[\s\S]*?\*\//g,'').replace(/^\s*\/\/.*$/gm,'');
+    // Named exceptions, each ONE accessor naming localStorage and one device key (Nov 11 2026: mp-client failed when Agent E added
+    // holdout.ts, whose device seed fi2-holdout-v1 is read and written through its defaultStore(); it was not on this list):
+    //  - connection.ts deviceStorage(): the party session (Party rejoin, Oct 22 2026);
+    //  - holdout.ts defaultStore(): the holdout seed (public island phase 1). Never sent, never imported by analytics.
+    const ACCESSOR={'connection.ts':/typeof localStorage === 'undefined' \? null : localStorage/,'holdout.ts':/typeof localStorage !== 'undefined' \? localStorage : null/};
+    const s2=ACCESSOR[f]?src.replace(ACCESSOR[f],''):src;
     assert.ok(!/lib\/saves|lib\/analytics|\.\.\/saves|\.\.\/analytics|deviceMarks|fi2-install-v1|fi2-save-code-v1|localStorage/.test(s2),f);}
   const c=fs.readFileSync(path.join(ROOT,'lib/multiplayer/connection.ts'),'utf8');
-  assert.deepEqual([...c.matchAll(/storage\??\.setItem\(([A-Z_]+)/g)].map(m=>m[1]),['SESSION_KEY','SESSION_KEY'],'the only key written is the party session');
+  assert.deepEqual([...c.matchAll(/storage\??\.setItem\(([A-Z_]+)/g)].map(m=>m[1]),['SESSION_KEY','SESSION_KEY'],'the only device key written is the party session');
+  // Public island: the world slot lives per TAB (sessionStorage), never in device storage, and holds no name.
+  assert.deepEqual([...c.matchAll(/tabStorage\??\.setItem\(([A-Z_]+)/g)].map(m=>m[1]),['WORLD_SESSION_KEY'],'the only tab key written is the world session');
+  assert.ok(/JSON\.stringify\(\{ shard, resumeToken, at: now\(\) \}\)/.test(c),'the world session is {shard, resumeToken, at} only');
+  const h=fs.readFileSync(path.join(ROOT,'lib/multiplayer/holdout.ts'),'utf8');
+  assert.deepEqual([...h.matchAll(/store\.setItem\(([A-Z_]+)/g)].map(m=>m[1]),['HOLDOUT_KEY'],'holdout.ts writes only its seed');
+  // The presence choice and the grown-up lock are stored by lib/multiplayerAllowed.ts (outside this folder), never here.
+  for(const f of ['presenceMode.ts','publicWorld.ts','strangers.ts']){const x=fs.readFileSync(path.join(ROOT,'lib/multiplayer',f),'utf8');assert.ok(!/Storage|setItem|getItem/.test(x),f+' touches storage');}
 });
 
 

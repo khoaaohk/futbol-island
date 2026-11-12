@@ -1,11 +1,11 @@
 // parseClient / parseServer / encode. Never throw on bad input; return null.
-import { C, S, Emote, MatchKind, MATCH_FIELDS, MATCH_SLOT_MAX, MATCH_SNAP_MAX, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, PARTY_MAX, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
+import { C, S, Emote, MatchKind, MATCH_FIELDS, MATCH_SLOT_MAX, MATCH_SNAP_MAX, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, WORLD_HARD, CAPS_MAX, ISLAND_GOAL, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
 import { NAME_COLOURS, RESERVED_NAME_SLOTS, normalizeNick } from './names';
 
 const TOKEN_RE = /^[A-Za-z0-9_-]{16,32}$/;
-const MAX_SERVER_BYTES = 8192; // a full 20-member Welcome is ~3 KB, a 19-friend Poses batch ~0.9 KB
+const MAX_SERVER_BYTES = 8192; // a full 24-member Welcome is ~3.6 KB, a 23-member Poses batch ~1.1 KB
 const MAX_INT = Number.MAX_SAFE_INTEGER;
 
 const isInt = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n);
@@ -89,12 +89,12 @@ function matchClientOk(a: unknown[]): boolean {
 function matchServerOk(a: unknown[]): boolean {
   switch (a[1]) {
     case MatchKind.Join: {
-      if (a.length < 4 || (a.length - 4) % 3 !== 0 || (a.length - 4) / 3 > PARTY_MAX || !isField(a[2]) || !inRange(a[3], -1, MAX_MEMBER_ID)) return false;
+      if (a.length < 4 || (a.length - 4) % 3 !== 0 || (a.length - 4) / 3 > WORLD_HARD || !isField(a[2]) || !inRange(a[3], -1, MAX_MEMBER_ID)) return false;
       for (let i = 4; i < a.length; i += 3) if (!inRange(a[i], 0, MAX_MEMBER_ID) || !isBit(a[i + 1]) || !inRange(a[i + 2], 0, MATCH_SLOT_MAX)) return false;
       return true;
     }
     case MatchKind.In: return a.length === 12 && inRange(a[2], 0, MAX_MEMBER_ID) && inRange(a[3], 0, MAX_INT) && intsIn(a, 4, -1000, 1023);
-    case MatchKind.Watch: return a.length === 4 && isField(a[2]) && inRange(a[3], 0, PARTY_MAX);
+    case MatchKind.Watch: return a.length === 4 && isField(a[2]) && inRange(a[3], 0, WORLD_HARD);
     case MatchKind.Snap: return a.length >= 4 && a.length <= MATCH_SNAP_MAX + 3 && isField(a[2]) && intsIn(a, 3, -SNAP_ABS, SNAP_ABS);
     default: return false;
   }
@@ -156,8 +156,12 @@ export function parseClient(raw: string): ClientMsg | null {
       return a.length === 1 ? (a as ClientMsg) : null;
     case C.Beat:
       return a.length === 2 && inRange(a[1], 0, MAX_INT) ? (a as ClientMsg) : null;
-    case C.Caps:
-      return a.length === 2 && inRange(a[1], 0, 255) ? (a as ClientMsg) : null;
+    case C.Caps: // relay v2.0: up to CAPS_MAX (a client only sends bits the relay offered, so an old relay still sees <= 255)
+      return a.length === 2 && inRange(a[1], 0, CAPS_MAX) ? (a as ClientMsg) : null;
+    case C.Goal: // phase 3 (Cap.Goal): [61]
+      return a.length === 1 ? (a as ClientMsg) : null;
+    case C.Report: // relay v2.0 (Cap.Report): [60, member, ReportReason]
+      return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, 3) ? (a as ClientMsg) : null;
     case C.Rename: {
       if (a.length !== 2) return null;
       const n = normalizeNick(a[1]);
@@ -190,16 +194,16 @@ export function parseServer(raw: string): ServerMsg | null {
   switch (a[0]) {
     case S.Welcome:
       if (a.length === 8 && inRange(a[1], 0, 65535) && inRange(a[2], 0, MAX_MEMBER_ID) && isToken(a[3]) && inRange(a[4], 0, MAX_INT) &&
-        inRange(a[5], 0, MAX_INT) && isBit(a[6]) && Array.isArray(a[7]) && a[7].length <= PARTY_MAX && a[7].every(isMember)) {
+        inRange(a[5], 0, MAX_INT) && isBit(a[6]) && Array.isArray(a[7]) && a[7].length <= WORLD_HARD && a[7].every(isMember)) {
         return a as ServerMsg;
       }
       return null;
     case S.Joined:
       return a.length === 2 && isMember(a[1]) ? (a as ServerMsg) : null;
     case S.Left:
-      return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, 3) ? (a as ServerMsg) : null;
+      return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && inRange(a[2], 0, 4) ? (a as ServerMsg) : null; // 4 = Far (relay v2.0 world)
     case S.Poses: {
-      if (a.length < 2 || !inRange(a[1], 0, MAX_INT) || (a.length - 2) % 9 !== 0 || (a.length - 2) / 9 > PARTY_MAX) return null;
+      if (a.length < 2 || !inRange(a[1], 0, MAX_INT) || (a.length - 2) % 9 !== 0 || (a.length - 2) / 9 > WORLD_HARD) return null;
       for (let i = 2; i < a.length; i += 9) {
         if (!inRange(a[i], 0, MAX_MEMBER_ID) || !isPose(a.slice(i + 1, i + 9))) return null;
       }
@@ -223,7 +227,13 @@ export function parseServer(raw: string): ServerMsg | null {
     case S.Renamed:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && a[2] === null ? (a as ServerMsg) : null;
     case S.Caps:
+      return a.length === 2 && inRange(a[1], 0, CAPS_MAX) ? (a as ServerMsg) : null;
+    case S.Quiet: // relay v2.0 world
       return a.length === 2 && inRange(a[1], 0, 255) ? (a as ServerMsg) : null;
+    case S.World: // relay v2.0 world
+      return a.length === 2 && inRange(a[1], 0, WORLD_HARD) ? (a as ServerMsg) : null;
+    case S.Goal: // phase 3 world (Cap.Goal)
+      return a.length === 2 && inRange(a[1], 0, ISLAND_GOAL.max) ? (a as ServerMsg) : null;
     case S.NameLock:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isBit(a[2]) ? (a as ServerMsg) : null;
     case S.EmoteAsk:
@@ -241,8 +251,8 @@ export function parseServer(raw: string): ServerMsg | null {
     case S.Live: {
       if (a.length !== 4 || !inRange(a[1], 0, MAX_INT) || !Array.isArray(a[2]) || !Array.isArray(a[3])) return null;
       const p = a[2] as unknown[], b = a[3] as unknown[];
-      if (p.length % LIVE_POSE_STRIDE !== 0 || p.length / LIVE_POSE_STRIDE > PARTY_MAX) return null;
-      if (b.length % LIVE_BALL_STRIDE !== 0 || b.length / LIVE_BALL_STRIDE > PARTY_MAX) return null;
+      if (p.length % LIVE_POSE_STRIDE !== 0 || p.length / LIVE_POSE_STRIDE > WORLD_HARD) return null;
+      if (b.length % LIVE_BALL_STRIDE !== 0 || b.length / LIVE_BALL_STRIDE > WORLD_HARD) return null;
       for (let i = 0; i < p.length; i += LIVE_POSE_STRIDE) {
         if (!inRange(p[i], 0, MAX_MEMBER_ID) || !isPose(p.slice(i + 1, i + 9)) || !inRange(p[i + 9], 0, MAX_AGE_MS)) return null;
       }
@@ -259,7 +269,8 @@ export function parseServer(raw: string): ServerMsg | null {
 /** JSON.stringify; throws if the frame is over the size cap (client messages 512 B, server messages 8 KB). */
 export function encode(msg: ClientMsg | ServerMsg): string {
   const s = JSON.stringify(msg);
-  const cap = (msg[0] as number) < 20 ? MAX_INBOUND_BYTES : MAX_SERVER_BYTES;
+  const op = msg[0] as number; // client ids 0..19 and 60+ (C.Report), server ids 20..59
+  const cap = op < 20 || op >= 60 ? MAX_INBOUND_BYTES : MAX_SERVER_BYTES;
   if (utf8Len(s) > cap) throw new Error('multiplayer frame too large');
   return s;
 }

@@ -111,7 +111,7 @@ t('wiring: remoteAvatars draws the ride for shown rigs only (not in the field), 
  assert(ra.includes('rides.add(rk,e.rb,root3,RIDE_SCALE*BODY_SCALE*k*e.out,e.ra,e.ca,tr?FL.vyaw??0:0,tr?-(FL.rlift??0)*k:0)'));
  assert(/if\(rk===1&&e\.rb&&!reduced\)\{e\.ca\+=sdt\*bikeCrankRate\(pose\.speed\)/.test(ra),'the crank turns with their speed, still under reduced motion');
  assert(/const tr=fs0!==undefined&&!reduced/.test(ra)&&/e\.ra\+=sdt\*\(pose\.speed\+\(tr\?FL\.wheel\?\?0:0\)\)/.test(ra),'a trick\'s extra wheel spin');
- assert(ra.includes('batch.begin();batch.end();rides.begin();rides.end();'),'the last friend leaving clears the rides too');
+ assert(/batch\.begin\(\);batch\.end\(\);(?:ghost\.[^;]*;|ghostN=0;|prepGhost\(\);)*rides\.begin\(\);rides\.end\(\);/.test(ra),'the last friend leaving clears the rides too'); // public island (Nov 11): the near-ghost batch is cleared on the same path
  assert(ra.includes('rides.dispose()'));assert(ra.includes('e.rb=!!beanShapeOf(rig.root)'));
  assert(read('package.json').includes('tests/remote-rides.cjs'));
 });

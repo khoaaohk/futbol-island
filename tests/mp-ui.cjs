@@ -157,7 +157,7 @@ t('gate -> party card state machine (regression: the dialog closed after a corre
  assert(/data-party-creating/.test(host)&&/Making your code/.test(host),'placeholder inside the same card until live');
  assert(/if \('error' in r\) \{ setBusy\(false\); setView\('menu'\); text\(/.test(host),'a create error returns to the menu with the toast');
  assert(/join\(r\.code[\s\S]{0,160}setView\('sheet'\); setBusy\(false\)/.test(host),'busy stays on until the join has started (no bounce to the menu)');
- assert(/setView\(liveRef\.current \? 'sheet' : 'menu'\)/.test(host),'HUD button opens the party card while live');
+ assert(/setView\(liveRef\.current \? 'sheet' : publicRef\.current \? 'choice' : 'menu'\)/.test(host),'HUD button opens the party card while live (and, flag on + tour done, the presence panel first)');
  assert(/<PartyInvite code=\{state\.code\}/.test(host)&&/<div role="tabpanel" id="party-panel-code"/.test(host)&&/host=\{state\.isHost\}/.test(host),'code block inside the Code tab, for host and guests (guests read-only, Oct 22 2026)');
  assert(/Tap the friends button to manage your party/.test(host)&&/manageHint/.test(host),'one-time manage hint after Done');
  assert(/data-party-badge/.test(read('components/IslandSettings.tsx')),'HUD button shows a live count badge');
@@ -227,7 +227,7 @@ t('relay calls: offline / not found behave, nothing thrown',async()=>{});
  });
  {const sett=read('components/IslandSettings.tsx'),pa=read('lib/multiplayerAllowed.ts');
  t('Play with friends button + gated Settings switch (#8)',()=>{
-  assert(/\{friendsOn&&<button[^>]*aria-label=\{partyLive\?[\s\S]*?'Play with friends'\}[^>]*onClick=\{openPartyMenu\}/.test(sett),'icon-only circle button calling openPartyMenu');
+  assert(/\{friendsOn&&\(publicWorldEnabled\(\)\?<PeopleButton className=\{styles\.circle\}\/>:<button[^>]*aria-label=\{partyLive\?[\s\S]*?'Play with friends'\}[^>]*onClick=\{openPartyMenu\}/.test(sett),'icon-only circle button calling openPartyMenu');
   assert(/friendsOn=multiplayerEnabled\(\)&&friendsAllowed/.test(sett),'behind the flag and the switch');
   assert(/Play with friends: \{friendsAllowed\?'Allowed':'Off'\}/.test(sett)&&/parentGatePassed\(\)\)setMultiplayerAllowed/.test(sett)&&/<ParentGate/.test(sett),'gated toggle');
   assert(/fi2-multiplayer-allowed-v1/.test(pa)&&/function Allowed/.test(host)&&/if \(!allowed\) return null/.test(host),'PartyHost returns null when Off');

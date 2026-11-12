@@ -12,6 +12,7 @@ import FriendsSection from './FriendsSection';
 import LiveMatchesSection from './LiveMatchesSection';
 import EmoteSection from './EmoteSection';
 import PartyRetentionCard from './PartyRetentionCard';
+import HoldoutCard from './HoldoutCard';
 import LearningSection from './LearningSection';
 import StartSection from './StartSection';
 import MarketingSection from './MarketingSection';
@@ -369,6 +370,7 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
      <div className={dd.mx} data-metric="engagement.friends"><FriendsSection report={report}/></div>
      <div className={dd.mx} data-metric="engagement.emotes"><EmoteSection report={report}/></div>
      <div className={dd.mx} data-metric="engagement.party_retention"><PartyRetentionCard from={report.from} to={report.to}/></div>
+     {report.holdout&&report.holdout.status!=='off'&&<div className={dd.mx}><HoldoutCard h={report.holdout}/></div>}
      <p className={styles.note}>Fishing has its own tab now (Fishing).</p>
     </section>}
 

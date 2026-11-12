@@ -1,5 +1,5 @@
 // Identity = a server-assigned unique colour + the typed first name (REQUIRED for new clients; normalizeNick below): letters only,
-// 2 to 12, owner decision, see docs/multiplayer-design.md. No animals any more.
+// 2 to 12, owner decision, see docs/multiplayer-design.md. Parties: no animals. Public worlds (relay v2.0): [colour, animal], below.
 import type { NameIdx } from './types';
 
 export const NAME_COLOURS: readonly string[] = [
@@ -50,4 +50,45 @@ export function normalizeNick(raw: unknown): string | null {
   const head = up.length === 1 && NICK_LETTER_RE.test(up) ? up : first;
   const out = head + t.slice(1).toLowerCase();
   return NICK_RE.test(out) && out.length === t.length ? out : null;
+}
+
+// ---- Relay v2.0 (public worlds, Nov 11 2026): generated names for strangers, [colour, animal] ----
+/**
+ * The 32 animal nouns of a world name ('Teal Otter'), index = NameIdx[1]. Reviewed Nov 11 2026: every word is a gentle, familiar
+ * animal; none is rude or slang in UK / US English, none is scary or a pest, none teases a body shape or a trait (no pig, cow,
+ * donkey, monkey, chicken, sloth, snail, whale), and none is a football club's or national team's nickname that could start teasing
+ * (no Wolves, Foxes, Lions, Eagles, Magpies, Owls, Canaries, Seagulls, Hornets, Bees, Robins, Swans, Rams, Tigers, Zebras).
+ * Exactly RESERVED_NAME_SLOTS long, so every index fits the wire range old and new parsers already accept (0..31).
+ */
+export const WORLD_ANIMALS: readonly string[] = [
+  'Otter', 'Panda', 'Koala', 'Puffin', 'Penguin', 'Seal', 'Hedgehog', 'Rabbit',
+  'Hamster', 'Turtle', 'Parrot', 'Flamingo', 'Narwhal', 'Giraffe', 'Llama', 'Alpaca',
+  'Butterfly', 'Squirrel', 'Meerkat', 'Lemur', 'Gecko', 'Starfish', 'Seahorse', 'Octopus',
+  'Kitten', 'Puppy', 'Pony', 'Lamb', 'Toucan', 'Pelican', 'Chipmunk', 'Ladybird',
+];
+/** Colours a world name may use: COLOUR_ORDER without Yellow, Peach, Brown, Black and White, so a colour + animal pair can never read
+ *  as a remark about skin. 15 colours x 32 animals; the animal alone is unique per world (WORLD_HARD 24 < 32). */
+export const WORLD_COLOUR_ORDER: readonly number[] = COLOUR_ORDER.filter((c) => !['Yellow', 'Peach', 'Brown', 'Black', 'White'].includes(NAME_COLOURS[c]));
+
+/** 'Teal Otter' for a world member; a party name (animal slot 0 ignored) reads as the colour only, like nameFor. */
+export function worldNameFor(idx: NameIdx): string {
+  const c = NAME_COLOURS[idx[0]], a = WORLD_ANIMALS[idx[1]];
+  return c && a ? c + ' ' + a : c ?? 'Friend';
+}
+
+/**
+ * Picks a world name: a random animal nobody in the world has (always possible under WORLD_HARD), and a random colour from
+ * WORLD_COLOUR_ORDER, preferring one no member has. Random on every fresh join, so a stranger's name changes every visit.
+ * `rand` returns [0,1).
+ */
+export function pickWorldName(taken: NameIdx[], rand: () => number): NameIdx {
+  const usedA = new Set<number>(), usedC = new Set<number>();
+  for (const t of taken) { usedA.add(t[1]); usedC.add(t[0]); }
+  const pick = (pool: number[]): number => pool[Math.min(pool.length - 1, Math.floor(rand() * pool.length))];
+  const freeA: number[] = [];
+  for (let i = 0; i < WORLD_ANIMALS.length; i++) if (!usedA.has(i)) freeA.push(i);
+  const freeC = WORLD_COLOUR_ORDER.filter((c) => !usedC.has(c));
+  const a = pick(freeA.length ? freeA : WORLD_ANIMALS.map((_s, i) => i));
+  const c = pick(freeC.length ? freeC : WORLD_COLOUR_ORDER.slice());
+  return [c, a];
 }

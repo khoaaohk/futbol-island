@@ -42,6 +42,8 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   endDuet(id: MemberId): void;
   /** A friend's interpolated pose this frame (reused object; null when not drawn / unknown). */
   friendPose(id: MemberId): RemotePose | null;
+  /** Tap on a player (remotePick.ts; allocates, on a tap only): who was drawn last frame, and that frame's camera. */
+  tapSpots(): ReturnType<import('../graphics/remoteAvatars').RemoteAvatars['tapSpots']>;
   /** The nearest friend I may ask for a ball emote: active (not busy / away / indoors), on foot, not hidden or muted, within `range` m
    *  (and 4 m in height) of x, y, z; -1 = none. */
   nearestAskable(x: number, y: number, z: number, range: number): MemberId;
@@ -232,6 +234,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     duet: (id, partner, role, emote, seed) => avatars.duet(id, partner, role, emote, seed),
     endDuet: (id) => avatars.endDuet(id),
     friendPose: (id) => poses.get(id) ?? null,
+    tapSpots: () => avatars.tapSpots(),
     get you() { return core.you; },
     nearestAskable(x, y, z, range) {
       let best = -1, bd = range * range;
@@ -281,6 +284,9 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       // then sleep (the instanced ring mesh keeps its last count until it is told to draw nothing). Ghost (owner, Oct 23 2026): the
       // plume particles, bump bursts and field pops fade over LATER frames, so one frame froze a flying friend's plume on screen for good
       // (jets live 24 after the host ended): that frame flushes them (reduced = no fade) and the whole friend layer is then hidden.
+      // Public island ("Just me"): strangers fade out over ~1 s (remoteAvatars keeps them as leaving entries), so keep drawing until
+      // the fade ends, then the flush below hides the layer and the bridge sleeps again. Reduced motion: vanish at once, as before.
+      if (!live && drawnLast && avatars.fading && !ctx.reducedMotion()) { avatars.root.visible = true; avatars.update(dt, poses, camera, false, null); return; }
       if (!live) { if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, true, null); } avatars.root.visible = false; return; }
       drawnLast = true;
       // Friends: sample the interpolators into preallocated poses (friends() lists the 'active' ones).

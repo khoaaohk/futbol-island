@@ -2,19 +2,50 @@
 // All timers / clock / randomness / WebSocket / visibility are injectable. Design: docs/multiplayer-design.md 2.5, 4.3, 4.4, 5.1.
 import {
   C, PARTY_MAX_MS, PROTOCOL_VERSION, S, PoseFlag, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
-  Cap, CAPS_ALL, BallState, WORLD_BOUNDS, KIT_GAP_MS, type ClientMsg, type Kit, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
+  Cap, CAPS_ALL, CAPS_WORLD, CloseCode, WORLD_AWAY_GRACE_MS, BallState, WORLD_BOUNDS, KIT_GAP_MS, type ClientMsg, type Kit, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
-import { relayWsUrl } from './config';
+import { relayWsUrl, relayLobbyUrl, relayWorldWsUrl, validShard } from './config';
+import { admitStrangerEmote, isHiddenStranger, noteStrangerName } from './strangers';
 import { commitPose, governPose, poseGovernor, resetPoseGovernor } from './presence';
 
 export type PartyStatus = 'idle' | 'connecting' | 'live' | 'reconnecting' | 'ended' | 'error';
+/** Public island: why a world connection went back to Just me (always quietly; presenceMode.ts / publicWorld.ts decide what next).
+ *  closed = the relay said public play is off (open:false, close 4007); unavailable = an old relay or any non-200 lobby reply (404 / 429 /
+ *  500) or a refused socket; unreachable = the backoff (1/2/4/8/15 s) ran out; full = still full after asking the lobby again once;
+ *  idle = close 4008 (reconnect on the next real input, same shard); replaced = another tab took this slot (4005). */
+export type WorldFallback = 'closed' | 'unavailable' | 'unreachable' | 'full' | 'idle' | 'replaced';
+export type WorldEvent = { type: 'live' } | { type: 'count'; n: number | null } | { type: 'quiet'; near: number } | { type: 'fallback'; why: WorldFallback };
 export interface PartyConnection {
   /** nick: the typed first name (memory only: sent in Hello, never stored; the UI requires a valid one, the relay refuses a bad one with BadName). */
   join(code: string, opts: { look: Look; hostKey?: string; nick?: string | null }): void;
   /** Party persistence: back into the party this tab was in (a reload, a room page round trip, back / forward, an island remount).
    *  Uses the stored session ({code, resumeToken, hostKey}); sends no name (the relay keeps it on the slot). True when a resume
    *  started; false when there is no stored session or the connection is already in a party. Status goes 'reconnecting' then 'live'. */
-  resume(opts: { look: Look }): boolean;
+  resume(opts: { look: Look; world?: boolean }): boolean;
+  /** Public island (relay v2.0): connect to a world. GET /world[?in=shard] first (the stored world session's shard or the last one),
+   *  then /world/:shard/ws with world caps and NO nick. Silent: every failure ends in status 'idle' + an onWorld fallback event.
+   *  False (nothing done) while a party is joined or being joined: a party always wins. True when started or already in a world. */
+  joinWorld(opts: { look: Look }): boolean;
+  /** 'party' (a party code), 'world' (a public world), or null (no socket wanted: Just me). */
+  readonly kind: 'party' | 'world' | null;
+  /** The world shard (number) this tab is in or last used; null in a party / never. */
+  readonly shard: number | null;
+  /** Others in my world (not me): from the lobby reply before connecting, then from S.World. Null when unknown. */
+  readonly worldCount: number | null;
+  /** S.Quiet: others in sight within QUIET_RANGE_M (-1 = not told yet). 0 = poses go at 2 Hz. */
+  readonly near: number;
+  /** A world session this tab can resume (a room page round trip): within WORLD_AWAY_GRACE_MS, or the world socket now. */
+  hasWorldSession(): boolean;
+  /** Out of the world for good on this page (a room page found the lock or the choice no longer allows strangers): Leave if
+   *  connected, forget the tab's world slot. A party is never touched. */
+  forgetWorld(): void;
+  /** Relay v2.0 (Cap.Report): report stranger `id` (ReportReason 0..3). False when not sent (not a world, old relay, not live). */
+  report(id: MemberId, reason: number): boolean;
+  /** Phase 3 (Cap.Goal): my team just scored (the island-wide daily goal). False when not sent (not a world, an older relay, not live).
+   *  The count comes back as S.Goal [43, n] through onMessage. */
+  sendGoal(): boolean;
+  /** World lifecycle: Welcome, count, quiet and fallback events. */
+  onWorld(fn: (e: WorldEvent) => void): () => void;
   /** True while this device holds a party session (the stored one, within the party cap). */
   hasSession(): boolean;
   /** Party rejoin (Oct 22 2026): "Use it here". Like resume(), but takes the party over from another tab of this browser (that tab
@@ -94,6 +125,13 @@ export const HOLDER_LOCK = 'fi2-party-holder';
 /** The stored session lives as long as a party can (12 h cap); it is cleared only by Leave / End / Kicked / ended / expired.
  *  NOT by 4005 (another tab took the party over: that tab owns it now). */
 export const SESSION_TTL_MS = PARTY_MAX_MS;
+/** Public island: the world slot this tab holds ({shard, resumeToken, at}), per TAB (sessionStorage: never device storage, never a
+ *  name), so a room page or a reload resumes the same shard, slot and generated name. Lives WORLD_AWAY_GRACE_MS from `at` (refreshed at
+ *  every Welcome and when the page is hidden, which also fires on a page change). */
+export const WORLD_SESSION_KEY = 'fi2-world-session-v1';
+export const WORLD_SESSION_TTL_MS = WORLD_AWAY_GRACE_MS;
+/** Nobody within QUIET_RANGE_M (S.Quiet 0): moving poses at 2 Hz instead of ~10 Hz. */
+export const QUIET_MOVE_GAP_MS = 500;
 export type TabState = 'here' | 'elsewhere' | 'moved' | null;
 export const BACKOFF_MS = [1000, 2000, 4000, 8000, 15000] as const;
 export const JITTER = 0.3;
@@ -103,7 +141,7 @@ export const MAX_ATTEMPTS = 12;
 /** A resume (no Welcome yet in this page) gives up after this many failed sockets (~15 s): the relay refuses the upgrade (404) once a
  *  party is gone. Online at that point, the stored session is cleared (the party ended while away); offline, it is kept for next time. */
 export const RESUME_ATTEMPTS = 4;
-const CLOSE_KICKED = 4003, CLOSE_ENDED = 4004, CLOSE_REPLACED = 4005; // relay close codes (roomCore CLOSE)
+const CLOSE_KICKED = 4003, CLOSE_ENDED = 4004, CLOSE_REPLACED = 4005, CLOSE_REFUSED = 4006; // relay close codes (roomCore CLOSE)
 const MOVE_GAP_MS = 200; // 5 Hz (an old relay: its pose bucket is 8 / s)
 /** Live feel: ~10 Hz while moving once the relay said it is v1.2 (S.Caps with Cap.Live); its pose bucket is 12 / s. */
 export const LIVE_MOVE_GAP_MS = 90; // 90, not 100: on a 60 / 30 fps frame loop the real gap lands on 90-107 / 100 ms (never the 117-133 a 100 ms gap gives)
@@ -116,6 +154,8 @@ const MOVE_DM = 1.5; // 0.15 m
 const YAW_UNITS = (8 * 256) / 360; // 8 degrees
 
 type Session = { code: string; resumeToken: string | null; hostKey: string | null; at: number };
+type WorldSession = { shard: number; resumeToken: string | null; at: number };
+type FetchLike = (url: string) => PromiseLike<{ ok: boolean; status: number; json(): PromiseLike<unknown> }>;
 type WSLike = { send(s: string): void; close(): void; readyState: number; onopen: any; onmessage: any; onclose: any; onerror: any };
 type StorageLike = { getItem(k: string): string | null; setItem(k: string, v: string): void; removeItem(k: string): void };
 /** The navigator.locks shape used here (injectable: tests pass a fake). */
@@ -135,6 +175,12 @@ export type ConnectionDeps = {
   rttProbeMs?: number;
   /** navigator.onLine by default (a failed resume clears the stored session only while online). */
   online?: () => boolean;
+  /** Public island: fetch for GET /world (globalThis.fetch by default), the lobby / world socket URLs (config.ts by default) and the
+   *  per-tab storage for the world session (sessionStorage by default). */
+  fetch?: FetchLike | null;
+  lobbyUrl?: (inShard: number | null) => string | null;
+  worldUrl?: (shard: number) => string | null;
+  tabStorage?: StorageLike | null;
 };
 export const RTT_SAMPLES = 15;
 export const RTT_PROBE_MS = 30000;
@@ -151,6 +197,10 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   const locks = deps.locks === undefined ? defaultLocks() : deps.locks;
   const online = deps.online ?? (() => typeof navigator === 'undefined' || navigator.onLine !== false);
   const rttProbeMs = deps.rttProbeMs ?? (process.env.NEXT_PUBLIC_ANALYTICS_PARTY_RETENTION === '1' ? RTT_PROBE_MS : 0);
+  const fetchImpl: FetchLike | null = deps.fetch === undefined ? (typeof fetch === 'function' ? (u: string) => fetch(u) : null) : deps.fetch;
+  const lobbyUrlFor = deps.lobbyUrl ?? relayLobbyUrl;
+  const worldUrlFor = deps.worldUrl ?? relayWorldWsUrl;
+  const tabStorage = deps.tabStorage === undefined ? tabStore() : deps.tabStorage;
 
   let status: PartyStatus = 'idle';
   let code: string | null = null;
@@ -200,6 +250,14 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let opGen = 0; // bumped by every join / resume / leave / dispose: a late lock grant for an older request is let go
   let tab: TabState = null;
   let lapsed = false;
+  // Public island: a world socket wanted (no party code), its shard, the lobby request in flight, the counts, the one Full re-ask.
+  let worldOn = false, shard: number | null = null, lobbyGen = 0, worldCount: number | null = null, near = -1, fullRetried = false;
+  const worldSubs = new Set<(e: WorldEvent) => void>();
+  const emitWorld = (e: WorldEvent) => { for (const f of Array.from(worldSubs)) { try { f(e); } catch { /* a listener must not break the socket */ } } };
+  const setCount = (n: number | null) => { if (n !== worldCount) { worldCount = n; emitWorld({ type: 'count', n }); } };
+  const hasTarget = () => code !== null || worldOn;
+  /** A party joined or being joined (an ended / refused one keeps its code for the UI, but no longer counts). */
+  const partyActive = () => code !== null && status !== 'ended' && status !== 'error';
   const localSubs = new Set<() => void>();
   const msgSubs = new Set<(m: ServerMsg) => void>();
   const statusSubs = new Set<(s: PartyStatus) => void>();
@@ -239,7 +297,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   function movedAway() {
     opGen++;
     clearTimers(); dropSocket(); releaseLock();
-    code = null; resumeToken = null; hostKey = null; last = null; pendingResume = false; resuming = false;
+    code = null; resumeToken = null; hostKey = null; last = null; pendingResume = false; resuming = false; worldOn = false;
     setLocal('moved', false);
     setStatus('idle');
   }
@@ -259,6 +317,32 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     try { storage?.setItem(SESSION_KEY, JSON.stringify({ code, resumeToken, hostKey: hostKey ?? undefined, at: now() })); } catch { /* private mode */ }
   }
   function clearSession() { try { storage?.removeItem(SESSION_KEY); } catch { /* ignore */ } }
+  function readWorldSession(): WorldSession | null {
+    try {
+      const raw = tabStorage?.getItem(WORLD_SESSION_KEY);
+      if (!raw) return null;
+      const s = JSON.parse(raw) as WorldSession;
+      if (!s || !validShard(s.shard) || typeof s.at !== 'number') return null;
+      if (now() - s.at > WORLD_SESSION_TTL_MS) { clearWorldSession(); return null; }
+      return { shard: s.shard, resumeToken: typeof s.resumeToken === 'string' ? s.resumeToken : null, at: s.at };
+    } catch { return null; }
+  }
+  function writeWorldSession() {
+    if (!worldOn || shard === null) return;
+    try { tabStorage?.setItem(WORLD_SESSION_KEY, JSON.stringify({ shard, resumeToken, at: now() })); } catch { /* private mode */ }
+  }
+  function clearWorldSession() { try { tabStorage?.removeItem(WORLD_SESSION_KEY); } catch { /* ignore */ } }
+  /** Back to Just me after a world problem: no error status, no message, the socket and timers gone; onWorld says why. */
+  function worldFallback(why: WorldFallback) {
+    lobbyGen++;
+    clearTimers(); dropSocket();
+    if (why !== 'idle' && why !== 'unreachable') clearWorldSession();
+    if (why === 'full' || why === 'closed' || why === 'replaced') shard = null; // idle / unreachable / unavailable: ?in= the same world next time
+    worldOn = false; resumeToken = null; you = null; caps = 0; near = -1; attempt = 0; pendingResume = false; fullRetried = false; last = null;
+    if (why === 'closed') setCount(null);
+    emitWorld({ type: 'fallback', why }); // before the status: listeners decide what next before status listeners re-evaluate
+    setStatus('idle');
+  }
   /** The party is over for this page (left, ended, kicked, refused): forget it and free the holder lock. */
   function endHere() { clearSession(); releaseLock(); setLocal(null, false); }
 
@@ -281,11 +365,53 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   }
 
   function connect() {
-    if (disposed || !code) return;
+    if (disposed || !hasTarget()) return;
     if (vis.hidden()) { pendingResume = true; return; }
     pendingResume = false;
-    const url = urlFor(code);
+    if (worldOn) { lobby(); return; }
+    const url = urlFor(code!);
     if (!url || !WS) { setStatus('error'); return; }
+    openSocket(url);
+  }
+
+  /** Public island: GET /world[?in=shard] -> {open, shard, n}, then the world socket. Any non-200 or open:false: Just me (no fast
+   *  retry); a network error: the normal backoff. */
+  function lobby() {
+    const gen = ++lobbyGen;
+    const url = lobbyUrlFor(shard);
+    if (!url || !WS || !fetchImpl) { worldFallback('unavailable'); return; }
+    dropSocket();
+    setStatus(attempt === 0 && status !== 'reconnecting' ? 'connecting' : 'reconnecting');
+    const stale = () => gen !== lobbyGen || !worldOn || disposed;
+    let p: PromiseLike<{ ok: boolean; status: number; json(): PromiseLike<unknown> }>;
+    try { p = fetchImpl(url); } catch { scheduleRetry(); return; }
+    p.then((res) => {
+      if (stale()) return;
+      if (!res || !res.ok) { worldFallback('unavailable'); return; }
+      res.json().then((raw) => {
+        if (stale()) return;
+        const b = raw as { open?: unknown; shard?: unknown; n?: unknown } | null;
+        if (!b || b.open !== true || !validShard(b.shard)) { worldFallback(b && b.open === false ? 'closed' : 'unavailable'); return; }
+        if (b.shard !== shard) { shard = b.shard; resumeToken = null; } // another world: a fresh slot (and a fresh name)
+        setCount(typeof b.n === 'number' && b.n >= 0 ? Math.floor(b.n) : null);
+        const ws2 = worldUrlFor(b.shard);
+        if (!ws2) { worldFallback('unavailable'); return; }
+        if (vis.hidden()) { pendingResume = true; return; }
+        openSocket(ws2);
+      }, () => { if (!stale()) worldFallback('unavailable'); });
+    }, () => { if (!stale()) scheduleRetry(); });
+  }
+
+  function worldClosed(cc: number) {
+    if (cc === CloseCode.WorldOff) { worldFallback('closed'); return; }
+    if (cc === CloseCode.Idle) { worldFallback('idle'); return; }
+    if (cc === CLOSE_REPLACED) { worldFallback('replaced'); return; }
+    if (cc === CLOSE_REFUSED || cc === CLOSE_KICKED || cc === CLOSE_ENDED) { worldFallback('unavailable'); return; }
+    if (status === 'live') dropped = true;
+    scheduleRetry();
+  }
+
+  function openSocket(url: string) {
     dropSocket();
     setStatus(attempt === 0 && status !== 'reconnecting' ? 'connecting' : 'reconnecting');
     let w: WSLike;
@@ -296,7 +422,9 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       // Slot 5 is the reserved old animal field: always null. With no name (never from the UI; after a host reset) send the old 5-element Hello = colour name only.
       // A resume (no name in this page) sends an EMPTY name slot: a live slot resumes as before, a lapsed one is refused (BadName)
       // instead of becoming a nameless new slot, so the player is asked for the code and name again (Party rejoin).
-      const hello: ClientMsg = nick !== null ? [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey, null, nick]
+      // A world never gets a name, a host key or the 7-element form (the relay names strangers itself).
+      const hello: ClientMsg = worldOn ? [C.Hello, PROTOCOL_VERSION, look, resumeToken, null]
+        : nick !== null ? [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey, null, nick]
         : resuming ? [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey, null, null]
         : [C.Hello, PROTOCOL_VERSION, look, resumeToken, hostKey];
       raw(hello);
@@ -312,6 +440,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       ws = null;
       if (beatTimer) { ct(beatTimer); beatTimer = null; }
       const cc = ev && typeof ev.code === 'number' ? ev.code : 0;
+      if (worldOn) { worldClosed(cc); return; }
       // Terminal close codes (review #15): never reconnect after being kicked, after the party ended, or after another tab took over.
       if (cc === CLOSE_REPLACED) { movedAway(); return; } // another tab resumed this slot: it owns the stored session now
       if (cc === CLOSE_KICKED || cc === CLOSE_ENDED) {
@@ -327,18 +456,21 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   }
 
   function handle(m: ServerMsg) {
+    if (worldOn && !worldFirst(m)) return;
     if (m[0] === S.Welcome) {
       resumeToken = m[3];
       you = m[2];
       attempt = 0; resuming = false;
-      setLocal('here', false);
+      if (!worldOn) setLocal('here', false);
       if (dropped) { dropped = false; reconnects++; }
       last = null; // first pose after (re)connect is always sent
       caps = 0; ballSt = -1; // the relay sends S.Caps after every Welcome (an old relay never does)
       writeSession();
+      if (worldOn) { fullRetried = false; writeWorldSession(); }
       setStatus('live');
+      if (worldOn) emitWorld({ type: 'live' });
     } else if (m[0] === S.Caps) {
-      caps = m[1] & CAPS_ALL;
+      caps = m[1] & (worldOn ? CAPS_WORLD : CAPS_ALL); // never answer a bit the relay did not offer
       if (caps & Cap.NameLock) nameLocked = false; // a v1.5 relay re-sends every current lock right after our C.Caps
       if (caps) raw([C.Caps, caps]);
       if (renamePending && nick !== null && (caps & Cap.Rename) && !nameLocked && raw([C.Rename, nick])) renamePending = false;
@@ -381,9 +513,33 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     for (const f of Array.from(msgSubs)) f(m);
   }
 
+  /** World frames first: counts, the stranger filters (hidden members, the emote cap) and world errors. False = swallow it. */
+  function worldFirst(m: ServerMsg): boolean {
+    switch (m[0]) {
+      case S.World: setCount(Math.max(0, m[1] - 1)); return true;
+      case S.Quiet: if (m[1] !== near) { near = m[1]; emitWorld({ type: 'quiet', near }); } return true;
+      case S.Welcome: for (const r of m[7]) if (r[0] !== m[2]) noteStrangerName(r[0], r[1][0] + ':' + r[1][1]); return true;
+      case S.Joined: noteStrangerName(m[1][0], m[1][1][0] + ':' + m[1][1][1]); return true;
+      case S.Emote: return m[1] === you || admitStrangerEmote(m[1], now()); // over 6 a minute, or hidden: never reaches the scene
+      case S.EmoteAsk: return !isHiddenStranger(m[1]); // no asks from a hidden member (the relay times the card out as a No)
+      case S.Error: {
+        if (m[1] === ErrorCode.Full) {
+          if (fullRetried) { worldFallback('full'); return false; }
+          fullRetried = true; shard = null; resumeToken = null; clearWorldSession(); attempt = 0;
+          lobby(); // ask the lobby again once, without ?in=
+          return false;
+        }
+        if (m[1] !== ErrorCode.RateLimited && m[1] !== ErrorCode.BadMessage) worldFallback('unavailable');
+        return false;
+      }
+      default: return true;
+    }
+  }
+
   function scheduleRetry() {
-    if (disposed || !code || status === 'ended' || status === 'error' || status === 'idle') return;
+    if (disposed || !hasTarget() || status === 'ended' || status === 'error' || status === 'idle') return;
     if (retryTimer) return;
+    if (worldOn && attempt >= BACKOFF_MS.length) { worldFallback('unreachable'); return; }
     if (resuming && attempt >= RESUME_ATTEMPTS) {
       resuming = false; if (online()) clearSession();
       releaseLock(); setLocal(null, false);
@@ -419,13 +575,14 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   }
 
   const offVis = vis.on(() => {
-    if (disposed || !code) return;
+    if (disposed || !hasTarget()) return;
     if (vis.hidden()) {
       // Away at once (design 4.4.1): the last pose again with the Hidden flag, so friends see the zzz field instead of a statue.
       if (status === 'live' && last && (last[7] & PoseFlag.Hidden) === 0) {
         const away = last.slice() as PoseBody; away[7] = (away[7] | PoseFlag.Hidden) & ~PoseFlag.Warp;
         if (raw([C.Pose, seq, ...away] as ClientMsg)) { seq++; last = away; }
       }
+      if (worldOn && status === 'live') writeWorldSession(); // a page change hides the page first: the next page resumes within the grace
       if (hiddenTimer || status === 'idle' || status === 'ended' || status === 'error') return;
       hiddenTimer = st(() => {
         hiddenTimer = null;
@@ -478,10 +635,36 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     return true;
   }
 
+  /** A room page / reload back into this tab's world slot (same shard, same slot and name while the relay still holds it). */
+  function startWorld(opts: { look: Look }): boolean {
+    if (disposed || partyActive() || worldOn || acquiring || (status !== 'idle' && status !== 'error' && status !== 'ended')) return false;
+    const s = readWorldSession();
+    if (!s) return false;
+    resetForWorld(opts.look, s);
+    setStatus('reconnecting');
+    connect();
+    return true;
+  }
+  function resetForWorld(l: Look, s: WorldSession | null) {
+    clearTimers(); dropSocket();
+    worldOn = true; look = l; nick = null; you = null; hostKey = null; renamePending = false; code = null; // a finished party's code goes
+    if (s) { shard = s.shard; resumeToken = s.resumeToken; } else resumeToken = null;
+    attempt = 0; seq = 0; last = null; lastPoseAt = -1e12; localHidden = false; resetPoseGovernor(gov);
+    beatOut = null; lastProbeAt = -1e12; rtts = []; reconnects = 0; dropped = false; resuming = false; fullRetried = false; near = -1; caps = 0;
+  }
+  /** Leave the world (an explicit switch, or a party taking over): Leave is sent so others fade me out at once. */
+  function leaveWorld() {
+    if (open()) raw([C.Leave]);
+    lobbyGen++;
+    clearTimers(); dropSocket(); clearWorldSession();
+    worldOn = false; shard = null; resumeToken = null; you = null; caps = 0; near = -1; pendingResume = false; last = null; fullRetried = false;
+  }
+
   const self: PartyConnection = {
     join(c, opts) {
       const norm = normalizeCode(c);
       if (!norm || disposed) { setStatus('error'); return; }
+      if (worldOn) leaveWorld(); // a party always wins over the public world
       clearTimers();
       dropSocket();
       const gen = ++opGen;
@@ -508,7 +691,29 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       setStatus('idle'); // reset, then connecting
       connect();
     },
-    resume(opts) { return start(opts, false); },
+    resume(opts) { return start(opts, false) || (opts.world === true && startWorld(opts)); },
+    joinWorld(opts) {
+      if (disposed || partyActive() || acquiring) return false;
+      if (worldOn && status !== 'idle' && status !== 'error' && status !== 'ended') { look = opts.look; return true; }
+      const s = readWorldSession();
+      resetForWorld(opts.look, s && (shard === null || s.shard === shard) ? s : null);
+      setStatus('idle');
+      connect();
+      return true;
+    },
+    get kind() { return partyActive() ? 'party' : worldOn ? 'world' : null; },
+    get shard() { return worldOn || !partyActive() ? shard : null; },
+    get worldCount() { return worldCount; },
+    get near() { return near; },
+    hasWorldSession() { return worldOn || readWorldSession() !== null; },
+    forgetWorld() { if (worldOn) { leaveWorld(); setStatus('idle'); } else clearWorldSession(); },
+    report(id, reason) {
+      if (!worldOn || !(caps & Cap.Report) || !open() || status !== 'live') return false;
+      if (!Number.isInteger(reason) || reason < 0 || reason > 3) return false;
+      return raw([C.Report, id, reason as 0]);
+    },
+    sendGoal() { return worldOn && !!(caps & Cap.Goal) && open() && status === 'live' && raw([C.Goal]); },
+    onWorld(fn) { worldSubs.add(fn); return () => { worldSubs.delete(fn); }; },
     takeOver(opts) { return start(opts, true); },
     hasSession() { return readSession() !== null; },
     storedParty() {
@@ -530,7 +735,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       let send = false;
       if (!last) send = true;
       else if (body[5] !== last[5] || body[6] !== last[6] || (body[7] & 1) !== 0 || body[7] !== last[7]) send = true; // mode / zone / flags: immediate
-      else if (poseMoved(last, body)) send = nowMs - lastPoseAt >= ((caps & Cap.Live) ? LIVE_MOVE_GAP_MS : MOVE_GAP_MS);
+      else if (poseMoved(last, body)) send = nowMs - lastPoseAt >= (worldOn && near === 0 ? QUIET_MOVE_GAP_MS : (caps & Cap.Live) ? LIVE_MOVE_GAP_MS : MOVE_GAP_MS);
       else if (body.some((v, i) => v !== last![i])) send = nowMs - lastPoseAt >= IDLE_GAP_MS;
       if (!send) return;
       if (raw([C.Pose, seq, ...body] as ClientMsg)) { seq++; last = body; lastPoseAt = nowMs; commitPose(gov, body, nowMs); }
@@ -552,7 +757,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     get nameLocked() { return nameLocked; },
     rename(n) {
       const v = normalizeNick(n);
-      if (v === null || nameLocked || code === null || status === 'idle' || status === 'ended' || status === 'error') return null;
+      if (worldOn || v === null || nameLocked || code === null || status === 'idle' || status === 'ended' || status === 'error') return null;
       nick = v;
       if (!(caps & Cap.Rename)) return 'local';
       // Not connected right now: sent right after the next S.Caps (a resume Hello never renames).
@@ -587,21 +792,24 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       return raw(msg as unknown as ClientMsg);
     },
     sendHit(victim, dir) {
-      if (!(caps & Cap.Hit) || localHidden || !open() || status !== 'live') return false;
+      if (worldOn || !(caps & Cap.Hit) || localHidden || !open() || status !== 'live') return false;
       return raw([C.Hit, victim, Math.round(dir) & 255]);
     },
     sendPing(kind, x, z) {
-      if (localHidden || !open() || !pingBucket.take(now())) return false;
+      if (worldOn || localHidden || !open() || !pingBucket.take(now())) return false;
       return raw([C.Ping, kind, Math.round(x * 10), Math.round(z * 10)]);
     },
     host: {
-      kick: (id) => { raw([C.Kick, id]); },
-      lock: (on) => { raw([C.Lock, on ? 1 : 0]); },
-      rotate: () => { raw([C.Rotate]); },
-      end: () => { raw([C.End]); },
-      nameLock: (id, on) => { if (caps & Cap.NameLock) raw([C.NameLock, id, on ? 1 : 0]); },
+      // No host tools in a world (the relay refuses them anyway): nothing is sent.
+      kick: (id) => { if (!worldOn) raw([C.Kick, id]); },
+      lock: (on) => { if (!worldOn) raw([C.Lock, on ? 1 : 0]); },
+      rotate: () => { if (!worldOn) raw([C.Rotate]); },
+      end: () => { if (!worldOn) raw([C.End]); },
+      nameLock: (id, on) => { if (!worldOn && (caps & Cap.NameLock)) raw([C.NameLock, id, on ? 1 : 0]); },
     },
     leave() {
+      if (worldOn) { leaveWorld(); setStatus('idle'); return; }
+      clearWorldSession(); // the grown-up switch Off in a room: nothing public may resume either
       if (open()) raw([C.Leave]);
       opGen++; acquiring = false;
       clearTimers();
@@ -627,7 +835,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       dropSocket();
       releaseLock(); // the stored session stays (the next page resumes it)
       offVis();
-      msgSubs.clear(); statusSubs.clear(); localSubs.clear();
+      msgSubs.clear(); statusSubs.clear(); localSubs.clear(); worldSubs.clear();
       disposed = true;
     },
   };
@@ -660,6 +868,10 @@ function migrateTabSession(storage: StorageLike | null | undefined): string | nu
     storage.setItem(SESSION_KEY, old);
     return old;
   } catch { return null; }
+}
+/** Per-tab storage for the world session (WORLD_SESSION_KEY) only. */
+function tabStore(): StorageLike | null {
+  try { return typeof sessionStorage === 'undefined' ? null : sessionStorage; } catch { return null; }
 }
 function defaultLocks(): LockManagerLike | null {
   try { return typeof navigator !== 'undefined' && (navigator as any).locks && typeof (navigator as any).locks.request === 'function' ? (navigator as any).locks : null; } catch { return null; }

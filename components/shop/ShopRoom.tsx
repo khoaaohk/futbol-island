@@ -26,7 +26,7 @@ import {countStudioOpen,countMyKitOpen,countPurchase} from '@/lib/analytics/shop
 import {enterActivity} from '@/lib/analytics/tracker';
 // Party in rooms (docs/multiplayer-rooms-design.md Phase 4): friends in the Kit Shop walk the floor with you; studios, My kit and
 // chats are Busy (a force field at your spot, "Designing a kit" at a studio stand); Leave-only chip.
-import {useRoomParty} from '../party/useRoomParty';const RoomPartyChip=dynamic(()=>import('../party/RoomPartyChip'),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
+import {useRoomParty} from '../party/useRoomParty';const RoomPartyChip=dynamic(()=>import('../party/RoomPartyChip'),{ssr:false});import {RoomPlayerCard,roomTapPlayer} from '../party/RoomPlayerTap';/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
 import {shopRoomHooks} from '@/lib/multiplayer/rooms/shopHooks';
 const NpcConversation=dynamic(()=>import('../NpcConversation'),{ssr:false});
 
@@ -167,12 +167,12 @@ export default function ShopRoom(){
   onClickCapture={e=>{const cue=shopClickCue(e.target);if(cue)shopSfx[cue]();}}>
   <canvas ref={canvas} className={styles.canvas} tabIndex={0} aria-label="Walkable Kit Shop: jersey wall, boot wall, ball wall and the till. Use WASD or the arrow keys to walk, then E or Enter at a wall to design. Tap a wall or a person to walk there." data-shop-canvas
    onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};}} onPointerCancel={()=>{tap.current=null;}}
-   onPointerUp={e=>{const p=tap.current;tap.current=null;if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)<12)room.current?.pick(e.clientX,e.clientY);}}/>
+   onPointerUp={e=>{const p=tap.current;tap.current=null;if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)<12){if(!room.current?.pick(e.clientX,e.clientY))roomTapPlayer(party,e.clientX,e.clientY,e.currentTarget);}}}/>
   {!studio&&<header className={styles.top}>
    <NavigationButton className={styles.doneRight} label="Done" data-shop-done onNavigate={leave}/>
    <p className={styles.title}><b>KIT SHOP</b><span>Design your own kit</span></p>
    {/* The party chip (Leave only): in the header row on wide screens, its own row under the title on phones (the row is full). */}
-   {party&&<div className={styles.partySlot} data-shop-party><RoomPartyChip party={party} hidden={covered}/></div>}
+   {party&&<div className={styles.partySlot} data-shop-party><RoomPartyChip party={party} hidden={covered}/></div>}<RoomPlayerCard party={party} blocked={covered}/>
    <div className={styles.topRight}>
     <CoinPill balance={wallet.balance} data-shop-coins/>
     <button type="button" className={styles.myKitButton} onClick={()=>{setMyKit(true);countMyKitOpen();}} data-shop-mykit-open>My kit{owned.items.length?<b>{owned.items.length}</b>:null}</button>

@@ -461,6 +461,11 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
    let best:KonbiniPoi|null=null,bd=Infinity;for(const p of pois){const h=ray.ray.intersectBox(p.box,hit);if(h){const d=h.distanceToSquared(ray.ray.origin);if(d<bd){bd=d;best=p;}}}
    if(best){walkToPoi(best);return best.id;}
    if(ray.ray.intersectPlane(floor,hit)){route=findPath(T.MathUtils.clamp(hit.x,-7.4,7.4),T.MathUtils.clamp(hit.z,-5.5,5.6));target=route.shift()??null;arrivePoi=null;wake();}return null;},
+  /** Public island (owner, Nov 12 2026): the camera-space depth (m) of the shelf box a tap would pick, or null (no shelf, or pick()
+   *  would not run). Nothing moves; the room compares it with a stranger's body so the NEARER one wins (KonbiniRoom tap). */
+  shelfDepth(clientX:number,clientY:number):number|null{if(leaving||covered||zoomIndex!==null)return null;pointer.set((clientX-viewportLeft)/viewportW*2-1,1-(clientY-viewportTop)/viewportH*2);ray.setFromCamera(pointer,camera);
+   let bd=Infinity;for(const p of pois){const h=ray.ray.intersectBox(p.box,hit);if(h){const d=h.distanceToSquared(ray.ray.origin);if(d<bd){bd=d;projected.copy(h);}}}
+   return bd<Infinity?-projected.applyMatrix4(camera.matrixWorldInverse).z:null;},
   walkTo(id:ShelfId){const p=pois.filter(p=>p.id===id).sort((a,b)=>Math.hypot(segPoint(a,x,z).x-x,segPoint(a,x,z).z-z)-Math.hypot(segPoint(b,x,z).x-x,segPoint(b,x,z).z-z))[0];if(p)walkToPoi(p);},
   /** Walk out through the sliding doors (the Exit button); onExit fires as you cross them. */
   leave(){if(leaving)return;settleBall();if(zoomIndex!==null){zoom=null;zoomIndex=null;arrived=false;setClip(false);callbacks.onZoom?.(null);}

@@ -33,6 +33,7 @@ import type {SourcesSummary} from './live';
 import type {SearchReport} from './searchReport';
 import type {SponsorReport} from './sponsor';
 import type {EmoteReport,PartyReport} from './partyReport';
+import type {HoldoutReport} from './holdoutReport';
 import type {MarketingReport} from './marketingReport';
 import type {LiveMatchReport} from './liveMatchReport';
 import type {MarketingVisitReport} from './marketingVisitReport';
@@ -579,6 +580,8 @@ export type Report={
   *  built and small-number-suppressed on the server (<5 sessions, <5 parties), 'not_yet' before PARTY_SINCE. */
  party?:PartyReport|null;
  emotes?:EmoteReport|null;
+ /** Nov 12 2026: the public island's holdout reading (lib/analytics/holdoutReport.ts), status 'off' until legal sign-off. */
+ holdout?:HoldoutReport|null;
  /** Nov 3 2026: the "Marketing page" tab (lib/analytics/marketingReport.ts): the tour page at `/`, small-number-suppressed. */
  marketing?:MarketingReport|null;
  /** Nov 5 2026: the "Live matches" tab (lib/analytics/liveMatchReport.ts): per format visits, joins, minutes; <5 suppressed. */

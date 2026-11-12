@@ -214,7 +214,7 @@ ok('Town, EmoteControl and the title screen are wired',()=>{
  const bus=town.slice(town.indexOf('emoteBus.set(pickIn=>{'),town.indexOf('// High five + emote camera'));
  assert(/countEmote\(\{wire:pickIn,ctx:emoteCtx\(rideRef\.current,flyNow,swimNow\),npc:!!emoteNpc,party:toParty,refused:!!refV\}\)/.test(bus),'countEmote after the pick is accepted');
  assert(/const toParty=multiplayerEnabled\(\)&&partyConnection\(\)\.status==='live';/.test(bus));
- assert(/islandFrame\(location\.x[^\n]*\n\s*partyFrame\(performance\.now\(\)\);/.test(town),'party minutes on the frame sample path');
+ assert(/islandFrame\(location\.x[^\n]*\n(?:\s*if\(publicWorld\.current\)[^\n]*\n)?\s*partyFrame\(performance\.now\(\)\);/.test(town),'party minutes on the frame sample path'); // public island (Nov 11): publicFrame sits between them
  assert(/useEffect\(\(\)=>watchPartyEnd\(\),\[\]\)/.test(town));
  const ec=read('components/EmoteControl.tsx');for(const k of ['btn','wheel','wheel_close'])assert(ec.includes(`countEmoteUi('${k}')`),k);
  assert(/trackStart\('st:friends'\)/.test(read('components/landing/TitleActions.tsx')));

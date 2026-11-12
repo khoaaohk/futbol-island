@@ -61,6 +61,8 @@ Then a verify pass: relay unit tests, 3 headless clients switching modes, load w
 ## Owner tasks before switching on
 Lawyer answer on default-on (UK Children's Code standard 7; COPPA; state design codes); `wrangler deploy` of relay v3 with the new DO class and `CONTROL_TOKEN`; two Vercel flags; a Cloudflare billing alert; a two-iPhone heat check; a small family beta.
 
+Owner decision (Nov 11, later): Air Futbol will NOT get online play between two phones ("don't build the multi player if it takes too long. have that be a single player game with high score"). It stays a solo game with its scoreboard; drop the air hockey online item from phase 3 below.
+
 ## Later phases
 2: default on for everyone, onboarding card, existing-player hint, live count badge, holdout reading. 3: public match fields, "Match o'clock", island-wide daily goal, stranger duets, Arcade room in the world, air hockey online (owner-authoritative, 20 Hz, parties first). 4: second world and regional shards when `pub-1` is regularly full.
 

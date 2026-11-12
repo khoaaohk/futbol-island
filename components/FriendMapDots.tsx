@@ -10,6 +10,7 @@ import {multiplayerEnabled} from '@/lib/multiplayer/config';
 import {onPoses,partyStore} from '@/lib/multiplayer';
 import {hiddenFriends,onFriendFilters} from '@/lib/multiplayer/roomParty';
 import {roomText} from '@/lib/multiplayer/presence';
+import {publicDraw} from '@/lib/graphics/remotePublic';
 import {FLIGHT_BOUNDS} from '@/lib/town/simulation';
 import {friendDots,friendDotsChanged,friendDotText,type FriendDot,type FriendDoor} from '@/lib/town/friendMarks';
 import {KONBINI_DOOR_HINTS} from '@/lib/konbini/konbiniDoors';
@@ -20,7 +21,9 @@ import {ARCADE_DOOR_HINT} from '@/lib/town/arcadeDoorHint';
 /** The island doors of the rooms (Town's ROOM_DOOR_HINTS): a friend in a room is drawn at its building's door. */
 const DOORS:FriendDoor[]=[...KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT,SHOP_DOOR_HINT,ARCADE_DOOR_HINT].map(d=>({room:d.room,x:d.x,z:d.z}));
 const NONE:FriendDot[]=[];
-const partyLive=()=>{const s=partyStore.get().status;return s==='live'||s==='reconnecting';};
+// Public island (Nov 11 2026): strangers never appear on the map. In a world every remote is a stranger (party friends do not also see the
+// public world), so the dots are party friends only: none at all while the page is public.
+const partyLive=()=>{const s=partyStore.get().status;return (s==='live'||s==='reconnecting')&&!publicDraw.isPublic();};
 function readDots():FriendDot[]{if(!partyLive())return NONE;const s=partyStore.get();return friendDots(s.members,s.you,partyStore.spot,hiddenFriends(),DOORS,FLIGHT_BOUNDS);}
 
 /** The party's dots while `live`; [] (and no listeners at all) otherwise or with multiplayer off. */

@@ -17,7 +17,10 @@ export const TOAST_PRIORITY:Record<string,number>={card:5,payday:4,story:3,
  jobs:1,beach:1,fuel:1,'dive-edge':1,'dive-note':1};
 /** A waiting note is forgotten after this long (it stopped asking: unmounted, or dropped as stale). */
 export const WAIT_MS=6000;
-let owner:string|null=null;
+/** Nov 12 2026 (owner: "only show one message at a time"): a note that just left is still on screen for its exit animation
+ *  (components/HudStack.tsx HUD_EXIT_MS 260 + 80 ms until the clone goes). settle() keeps a card from opening over it. */
+export const EXIT_GAP_MS=340;
+let owner:string|null=null,releasedAt=-1e12;
 const holds=new Set<string>(),waiting=new Map<string,number>(),listeners=new Set<()=>void>(),quietTimers=new Map<string,ReturnType<typeof setTimeout>>();
 const emit=()=>listeners.forEach(fn=>fn());
 const prio=(id:string)=>TOAST_PRIORITY[id]??1;
@@ -33,7 +36,11 @@ export const toastLane={
    // a note waiting behind a higher one that never claims the lane gets asked again once that one is forgotten (one timeout)
    if(owner===null&&holds.size===0){const h=setTimeout(emit,WAIT_MS+20) as unknown as {unref?:()=>void};h?.unref?.();}}return false;}
   waiting.delete(id);owner=id;emit();return true;},
- release(id:string){waiting.delete(id);if(owner===id){owner=null;emit();}},
+ release(id:string){waiting.delete(id);if(owner===id){owner=null;releasedAt=now();emit();}},
+ /** Nov 12 2026 (the shimmer overlap): true when the last note left more than EXIT_GAP_MS ago (its exit animation is over). Otherwise
+  *  false, and a short quiet hold covers the rest of the gap (ONE timeout); its end re-asks every waiting note through the lane's emit.
+  *  The public cards, the people-button hint and the island life note (Match o'clock) ask this before request(). */
+ settle(id:string){const left=releasedAt+EXIT_GAP_MS-now();if(left<=0)return true;toastLane.quiet(id+':exit',Math.ceil(left));return false;},
  /** A note has something to show (before it asks): it is remembered as waiting, so a lower note does not take the lane first. */
  want(id:string){if(owner!==id)waiting.set(id,now());},
  /** Stop waiting (a note dropped as stale, or unmounted). */
@@ -46,7 +53,7 @@ export const toastLane={
   const h=setTimeout(()=>{quietTimers.delete(id);toastLane.hold(id,false);},ms) as unknown as {unref?:()=>void};h?.unref?.();quietTimers.set(id,h as unknown as ReturnType<typeof setTimeout>);},
  subscribe(fn:()=>void){listeners.add(fn);return()=>{listeners.delete(fn);};},
  /** Tests only. */
- reset(){owner=null;for(const t of quietTimers.values())clearTimeout(t);quietTimers.clear();holds.clear();waiting.clear();emit();},
+ reset(){owner=null;releasedAt=-1e12;for(const t of quietTimers.values())clearTimeout(t);quietTimers.clear();holds.clear();waiting.clear();emit();},
 };
 /** True while another note holds the lane, a blocking card holds it, or a higher-priority note waits for it. */
 export function useToastLaneBusy(id:string){return useSyncExternalStore(toastLane.subscribe,()=>owner!==id&&(owner!==null||holds.size>0||outranked(id)),()=>false);}

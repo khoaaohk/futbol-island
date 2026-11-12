@@ -7,6 +7,8 @@
 // Zero cost without a party: createArcadeParty returns null and the hub's hooks stay no-ops.
 import * as T from 'three';
 import { createRoomParty, partyConnection, partyLook, type RoomParty } from '../multiplayer/roomParty';
+import { worldResumeAllowed } from '../multiplayer/presenceMode';
+import { resumeRoomConnection } from '../multiplayer/publicWorld';
 import type { RoomPartyHandle } from '../../components/party/useRoomParty';
 import { RoomCode } from '../multiplayer/roomPos';
 import { setStationText, type RoomLocal } from '../multiplayer/presence';
@@ -137,8 +139,8 @@ export function createArcadeParty(opts: { phone: boolean; reduced: boolean }): A
  *  the connection stays open for the next page). */
 export function startArcadeParty(allowed: boolean, onHandle: (h: RoomPartyHandle | null) => void): () => void {
   const conn = partyConnection();
-  if (!allowed) { if (conn.hasSession() || conn.status !== 'idle') conn.leave(); return () => {}; }
-  conn.resume({ look: partyLook() });
+  if (!allowed) { if (conn.hasSession() || conn.hasWorldSession() || conn.status !== 'idle') conn.leave(); return () => {}; }
+  resumeRoomConnection(conn, partyLook(), worldResumeAllowed()); // public island: the same world shard, like a party
   const p = createArcadeParty({ phone: matchMedia('(pointer:coarse)').matches, reduced: matchMedia('(prefers-reduced-motion:reduce)').matches });
   if (!p) return () => {};
   const detach = attachArcadeLayer(p.layer);

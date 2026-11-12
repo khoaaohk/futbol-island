@@ -8,13 +8,16 @@
 import { useEffect, useRef, useState, useSyncExternalStore, type RefObject } from 'react';
 import type * as THREE from 'three';
 import { multiplayerEnabled } from '@/lib/multiplayer/config';
-import { multiplayerAllowed, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
+import { multiplayerLock, subscribeMultiplayerAllowed } from '@/lib/multiplayerAllowed';
 import type { RoomParty } from '@/lib/multiplayer/roomParty';
 import { STATION, type RoomLocal } from '@/lib/multiplayer/presence'; // pure constants (no connection, no three.js)
 import { Emote } from '../../multiplayer/protocol';
 // Flag off, the room pages load NO party code (verifier, Oct 22 2026: the Konbini, Museum and Kit Shop pages shipped the connection,
 // the avatar layer and the chip in their first chunks): the layer is a dynamic import behind multiplayerEnabled(), as in the Arcade.
-const loadLayer = () => import('@/lib/multiplayer/roomParty');
+// Public island (Nov 11 2026): the same dynamic chunk also brings the presence helpers (publicWorld.resumeRoomConnection: back into
+// the SAME world shard through the tab's world slot, like a party; owner decision: strangers in the Arcade, Shop, Museum, Konbini).
+const loadLayer = () => Promise.all([import('@/lib/multiplayer/roomParty'), import('@/lib/multiplayer/presenceMode'), import('@/lib/multiplayer/publicWorld')])
+  .then(([rp, pm, pw]) => ({ ...rp, worldResumeAllowed: pm.worldResumeAllowed, resumeRoomConnection: pw.resumeRoomConnection }));
 
 /** What a room scene exposes for its party layer (konbiniScene.ts, museumScene.ts; the Kit Shop through lib/multiplayer/rooms/shopHooks.ts; the Arcade next). */
 export interface RoomPartyHost {
@@ -33,7 +36,8 @@ export interface RoomPartyHandle { readonly layer: RoomParty; readonly room: num
   emote(kind: number): void }
 
 export function useRoomParty(hostRef: RefObject<RoomPartyHost | null>, room: number, ready: boolean, busy: boolean): RoomPartyHandle | null {
-  const allowed = useSyncExternalStore(subscribeMultiplayerAllowed, multiplayerAllowed, () => true);
+  const lock = useSyncExternalStore(subscribeMultiplayerAllowed, multiplayerLock, () => 'all' as const);
+  const allowed = lock !== 'off';
   const busyRef = useRef(busy);
   busyRef.current = busy;
   const [handle, setHandle] = useState<RoomPartyHandle | null>(null);
@@ -41,22 +45,22 @@ export function useRoomParty(hostRef: RefObject<RoomPartyHost | null>, room: num
   useEffect(() => {
     if (!multiplayerEnabled()) return;
     let dead = false;
-    loadLayer().then(({ partyConnection, partyLook }) => {
+    loadLayer().then(({ partyConnection, partyLook, worldResumeAllowed, resumeRoomConnection }) => {
       if (dead) return;
       const conn = partyConnection();
-      if (!allowed) { if (conn.hasSession() || conn.status !== 'idle') conn.leave(); return; }
-      conn.resume({ look: partyLook() });
+      if (!allowed) { if (conn.hasSession() || conn.hasWorldSession() || conn.status !== 'idle') conn.leave(); return; }
+      resumeRoomConnection(conn, partyLook(), worldResumeAllowed());
     }).catch(() => {});
     return () => { dead = true; };
-  }, [allowed]);
+  }, [allowed, lock]);
   useEffect(() => {
     const host = hostRef.current;
     if (!ready || !host || !allowed || !multiplayerEnabled()) return;
     let dead = false, layer: RoomParty | null = null;
-    loadLayer().then(({ createRoomParty, partyConnection, partyLook }) => {
+    loadLayer().then(({ createRoomParty, partyConnection, partyLook, worldResumeAllowed, resumeRoomConnection }) => {
       if (dead) return;
       // The resume effect's import may land after this one: resume here too (a no-op when already resuming / live).
-      partyConnection().resume({ look: partyLook() });
+      resumeRoomConnection(partyConnection(), partyLook(), worldResumeAllowed());
       const out: RoomLocal = { x: 0, y: 0, z: 0, facing: 0, speed: 0, busy: false, hidden: false };
       layer = createRoomParty({
         scene: host.threeScene, room, phone: host.phone, reducedMotion: () => host.reduced, wake: host.wakeRemote,
@@ -82,6 +86,6 @@ export function useRoomParty(hostRef: RefObject<RoomPartyHost | null>, room: num
       });
     }).catch(() => {});
     return () => { dead = true; if (layer) { host.setFriendLayer(null); layer.dispose(); layer = null; } setHandle(null); };
-  }, [ready, room, allowed, hostRef]);
+  }, [ready, room, allowed, lock, hostRef]);
   return handle;
 }

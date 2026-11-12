@@ -30,6 +30,8 @@ declare global {
     get(id: DurableObjectId): DurableObjectStub;
   }
   interface ExecutionContext { waitUntil(promise: Promise<unknown>): void }
+  /** Workers: a WebSocketPair end the Worker itself serves (relay v2.0 closedSocket). */
+  interface WebSocket { accept(): void }
   class WebSocketPair {
     0: WebSocket;
     1: WebSocket;

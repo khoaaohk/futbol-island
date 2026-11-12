@@ -154,7 +154,7 @@ function harness(phone=true){
 {
  const h=harness(),look=new Array(12).fill(0),ringsOf=()=>h.avatars.root.children.filter(o=>o.name==='remote-avatar-rings');
  assert.equal(ringsOf().length,1,'one ring mesh in the whole remote layer');
- const ring=ringsOf()[0];assert.ok(ring.isInstancedMesh&&ring.instanceMatrix.count===21,'instanced, capacity party max + 1 = 21');
+ const ring=ringsOf()[0];assert.ok(ring.isInstancedMesh&&ring.instanceMatrix.count===25,'instanced, capacity max(party max, world hard cap) + 1 = 25 (public island, Nov 11 2026)');
  assert.equal(ring.castShadow,false);assert.equal(ring.frustumCulled,false);
  h.avatars.upsert(1,look,'Blue',{hex:'#0072B2'});h.avatars.upsert(2,look,'Orange',{hex:'#E69F00'});
  h.all([1,2]);h.avatars.update(.016,h.poses,h.camera,false);
@@ -190,8 +190,8 @@ function harness(phone=true){
  const ring=src.slice(src.indexOf('function ringAdd'),src.indexOf('const labels='));
  assert.ok(body.length>500);
  for(const [what,b] of [['update',body],['ringAdd',ring]]){assert(!/\bnew\s/.test(b),what+' allocates nothing (no new)');assert(!/\.clone\(|\.map\(|\.filter\(|=>\s*\{?[^;]*\}/.test(b.replace(/=>\s*\{\s*\}/g,'')),what+' no closures / array copies');}
- assert.equal((src.match(/new T\.InstancedMesh/g)||[]).length,1,'exactly one instanced ring mesh');
- assert(/RING_CAPACITY=PARTY_MAX\+1/.test(src)&&/castShadow=false/.test(src.slice(src.indexOf('rings.name'),src.indexOf('rings.name')+300)),'capacity 21, no shadows');
+ assert.equal((src.match(/new T\.InstancedMesh/g)||[]).length,2,'two instanced ring meshes: every ring, plus the small near-ring mesh of the public personal-space fade');
+ assert(/RING_CAPACITY=MAX_REMOTE\+1/.test(src)&&/castShadow=false/.test(src.slice(src.indexOf('rings.name'),src.indexOf('rings.name')+300)),'capacity 21, no shadows');
  assert(/polygonOffset/.test(src)&&!/new T\.(Sprite|Mesh)\([^)]*ring/i.test(src),'no per-friend ring meshes');
  const bridge=read('lib/multiplayer/townBridge.ts');
  assert(/conn\.status === 'live' && meHex !== ''/.test(bridge)&&/showRing \? ring : null/.test(bridge),'local ring only while live');
@@ -312,7 +312,7 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  const h=harness(),look=new Array(12).fill(0),P=load('multiplayer/protocol/index.ts');
  const fieldOf=()=>h.avatars.root.children.find(o=>o.name==='remote-force-fields');
  const statusOf=()=>h.avatars.root.children.find(o=>o.name==='remote-avatar-labels').children.filter(o=>o.name==='remote-status');
- const f=fieldOf();assert.ok(f&&f.isInstancedMesh&&f.instanceMatrix.count===P.PARTY_MAX,'one instanced field mesh, capacity party max');
+ const f=fieldOf();assert.ok(f&&f.isInstancedMesh&&f.instanceMatrix.count===Math.max(P.PARTY_MAX,P.WORLD_HARD),'one instanced field mesh, capacity max(party max, world hard cap 24)');
  assert.equal(f.castShadow,false);assert.equal(f.count,0);
  assert.equal(f.material.uniforms.uColor.value.getHexString(),new T.Color('#5fe39a').getHexString(),'the field is green (the ring keeps the friend colour)');
  for(const id of [1,2])h.avatars.upsert(id,look,'Red',{hex:'#D55E00'});
@@ -435,3 +435,14 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert.match(src,/if\(pose\.mode===Mode\.Jetpack&&e\.door>=1&&d2</,'away friend in the air keeps the jet plume');
 }
 console.log('mp-avatars ok');
+
+{ // Public island (Nov 11 2026): the drawing reads strangers through ONE adapter (remotePublic.ts); a party keeps today's rules
+ const src=read('lib/graphics/remoteAvatars.ts');
+ assert(/from '\.\/remotePublic'/.test(src)&&!/from '\.\.\/multiplayer\/(publicWorld|strangers|store|connection)'/.test(src),'only the adapter, never the connection or store directly');
+ assert(/pub\?planNearest\(list,order,isAdmitted,cap,DRAW_RANGE\*DRAW_RANGE,inRoom\?ROOM_HYST_M:RIG_HYST_M\):planRigs\(list,order,cap,DRAW_RANGE\*DRAW_RANGE\)/.test(src),'party: first-come rigs (planRigs); strangers: nearest with hysteresis');
+ assert(/if\(e\.st&&!disposed\)\{e\.leaving=true;/.test(src),'only strangers fade out on remove (a party friend leaves at once, as before)');
+ const h=harness(),look=new Array(12).fill(0);h.avatars.upsert(1,look,'Mia',{hex:'#0072B2'});h.line([1]);h.avatars.update(.016,h.poses,h.camera,false);
+ assert.equal(h.avatars.debugPublic().pub,false,'outside a world: not public');assert.equal(h.avatars.debugPublic().strangers,0);
+ h.avatars.remove(1);assert.equal(h.avatars.fading,false);h.avatars.dispose();
+ console.log('mp-avatars: public island adapter + party rules ok');
+}

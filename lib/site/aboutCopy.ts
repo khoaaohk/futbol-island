@@ -3,13 +3,16 @@
  * (components/about/AboutGrownUps.tsx, components/landing/Donate.tsx, components/DonationLinks.tsx) and the static /about page
  * say exactly the same thing. Pure data: no React, no 'use client', so server components can read it.
  */
+import {publicWorldEnabled} from '../multiplayer/publicFlag';
+/** [PUBLIC-WORLD] Nov 11 2026: the privacy line gains one sentence with the public-island flag on (flag off = today's, tests/mp-public-copy.cjs). */
+const PUB=publicWorldEnabled();
 export const GROWN_UPS={
  whyTitle:'Why we built Futbol Island',
  why:'Many young players learn best by seeing it. Yet a lot of the basics, like where to stand, when to pass and how a team keeps its shape, rarely get taught at club or recreational practice, where time goes to drills and games. Futbol Island closes that gap: every idea is shown on the pitch, explained and checked with a quick quiz.',
  learnsTitle:'What your child learns',
  learns:'Positions, team shape and decisions in 7v7, 9v9, 11v11 and futsal, through short lessons and quizzes, plus the history and culture of the game in the museum.',
  privacyTitle:'Privacy',
- privacy:'No ads, no free-text chat, no contact details. A save code (three words and a number) instead of an account. The Play with friends feature asks a grown-up to type a first name, which is shown only to the friends in the same party and is not kept. The game does collect anonymous usage data (visits, play time, which lessons and features are used), only to run and improve the game and to show sponsors combined totals that help keep it free. Sponsors never get anything about an individual child, and nothing is sold.',
+ privacy:PUB?'No ads, no free-text chat, no contact details. A save code (three words and a number) instead of an account. The Play with friends feature asks a grown-up to type a first name, which is shown only to the friends in the same party and is not kept. Other kids playing at the same time can be seen on the island with a name the game makes up and preset waves and cheers; a grown-up can switch that off in Settings. The game does collect anonymous usage data (visits, play time, which lessons and features are used), only to run and improve the game and to show sponsors combined totals that help keep it free. Sponsors never get anything about an individual child, and nothing is sold.':'No ads, no free-text chat, no contact details. A save code (three words and a number) instead of an account. The Play with friends feature asks a grown-up to type a first name, which is shown only to the friends in the same party and is not kept. The game does collect anonymous usage data (visits, play time, which lessons and features are used), only to run and improve the game and to show sponsors combined totals that help keep it free. Sponsors never get anything about an individual child, and nothing is sold.',
  privacyLink:'Read the privacy policy',
  free:'Free, always.',
  freeWhy:'Learning the game shouldn’t cost money. Club soccer already prices too many kids out.',

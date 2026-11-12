@@ -5,9 +5,16 @@
  * "COPPA compliant", "certified" or "no data collected" (the game does count anonymous usage totals). Anything new here
  * must be in the policy first. tests/seo-pages.cjs scans every page for the banned phrases.
  */
+import {publicWorldEnabled} from '../multiplayer/publicFlag';
+/*
+ * [PUBLIC-WORLD] Nov 11 2026 (docs/multiplayer-public-island-plan-2026-11-11.md): the public island changes three lists. Each list
+ * below keeps today's wording byte for byte (…_TODAY) and adds the wording that is true once other players can be seen
+ * (…_PUBLIC); publicWorldEnabled() (a build flag, off by default) picks one at build time. Both versions are in the policy.
+ * tests/mp-public-copy.cjs pins the off version; docs/multiplayer/PUBLIC-COPY-REVIEW.md lists every change for the lawyer.
+ */
 export const SAFE_TRUST_LINE='Free. No ads, no accounts, no open chat.';
 export type SafeFact={title:string;text:string};
-export const SAFE_FACTS:readonly SafeFact[]=[
+export const SAFE_FACTS_TODAY:readonly SafeFact[]=[
  {title:'Free, with no ads',text:'Futbol Island is free to play and shows no advertising. Coins on the island are earned by playing and learning, never bought with real money.'},
  {title:'No open chat',text:'There is no free-text chat with other players and no voice chat. Friends in a private party can only use preset emotes, and islanders talk through preset topics a child taps.'},
  {title:'No accounts',text:'There is no sign-up. Progress is kept with a save code of football words and a number, made at random, that carries no personal details.'},
@@ -18,7 +25,7 @@ export const SAFE_FACTS:readonly SafeFact[]=[
 ];
 /** Short, direct answers (these get quoted by search and AI assistants). Shown on the page and mirrored in FAQPage JSON-LD. */
 export type Faq={q:string;a:string};
-export const SAFE_FAQ:readonly Faq[]=[
+export const SAFE_FAQ_TODAY:readonly Faq[]=[
  {q:'Is Futbol Island safe for kids?',a:'Futbol Island is built for kids aged 7 to 12: it has no ads, no accounts and no open chat, and it never asks a child for personal details such as a last name, age, email, photo, school or location.'},
  {q:'Can my child chat with strangers?',a:'No. There is no free-text chat and no voice chat. Friends in a private party, started by a grown-up and joined by code, can only use preset emotes.'},
  {q:'Does my child need an account or an email?',a:'No. Progress is kept with a random save code that carries no personal details. There is no sign-up.'},
@@ -26,9 +33,23 @@ export const SAFE_FAQ:readonly Faq[]=[
  {q:'Which privacy rules does it follow?',a:'The privacy policy says the game follows the principles of the US Children’s Online Privacy Protection Act (COPPA) and the UK Age Appropriate Design Code.'},
 ];
 /** Every hub and lesson page closes with these (all from SAFE_FACTS / the FAQ above). */
-export const HUB_COMMON_FAQ:readonly Faq[]=[
+export const HUB_COMMON_FAQ_TODAY:readonly Faq[]=[
  {q:'Is Futbol Island free?',a:'Yes. Futbol Island is free to play in the web browser on phones, tablets and computers, with nothing to download and nothing to buy.'},
  {q:'Is it safe for kids?',a:'Yes, it is made for kids aged 7 to 12: no ads, no accounts and no open chat. Friends can only use preset emotes.'},
 ];
+/** [PUBLIC-WORLD] The same lists once other players can be seen (only the changed entries differ; order and titles kept). */
+const swap=<T,>(list:readonly T[],at:(x:T)=>boolean,next:T):readonly T[]=>list.map(x=>at(x)?next:x);
+export const SAFE_FACTS_PUBLIC:readonly SafeFact[]=swap(swap(SAFE_FACTS_TODAY,f=>f.title==='No open chat',
+ {title:'No open chat',text:'There is no free-text chat with other players and no voice chat. Other kids playing at the same time, and friends in a private party, can only use preset emotes, and islanders talk through preset topics a child taps.'}),
+ f=>f.title==='Grown-ups stay in charge',
+ {title:'Grown-ups stay in charge',text:'Other kids playing at the same time can be seen on the island unless a grown-up changes it: in Settings, behind a grown-up check, a grown-up can choose Other players and friends, Friends only, or Off. A child can also tap the people button to play alone. Play with friends works only after a grown-up check. Links that leave the game and donations sit behind the same check.'});
+export const SAFE_FAQ_PUBLIC:readonly Faq[]=swap(SAFE_FAQ_TODAY,f=>f.q==='Can my child chat with strangers?',
+ {q:'Can my child chat with strangers?',a:'No. There is no free-text chat and no voice chat. Other kids playing at the same time can appear on the island, but they see only a name the game makes up, an outfit and preset waves and cheers. A child can hide or report another player, or tap the people button to play alone, and a grown-up can switch other players off in Settings.'});
+export const HUB_COMMON_FAQ_PUBLIC:readonly Faq[]=swap(HUB_COMMON_FAQ_TODAY,f=>f.q==='Is it safe for kids?',
+ {q:'Is it safe for kids?',a:'Yes, it is made for kids aged 7 to 12: no ads, no accounts and no open chat. Other players and friends can only use preset emotes, and a grown-up can switch other players off.'});
+const PUB=publicWorldEnabled();
+export const SAFE_FACTS:readonly SafeFact[]=PUB?SAFE_FACTS_PUBLIC:SAFE_FACTS_TODAY;
+export const SAFE_FAQ:readonly Faq[]=PUB?SAFE_FAQ_PUBLIC:SAFE_FAQ_TODAY;
+export const HUB_COMMON_FAQ:readonly Faq[]=PUB?HUB_COMMON_FAQ_PUBLIC:HUB_COMMON_FAQ_TODAY;
 /** Phrases no public page may contain (tests/seo-pages.cjs). */
 export const BANNED_CLAIMS=[/COPPA[- ]compliant/i,/\bcertified\b/i,/no data (?:is )?collected/i,/\bno chat\b/i,/collects? no data/i] as const;

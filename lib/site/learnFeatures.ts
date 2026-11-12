@@ -10,6 +10,11 @@
  * `imageKey` names a screenshot another agent captures to public/learn/<imageKey>.webp. Long-form copy: docs/learn-page-content.md.
  */
 
+import {publicWorldEnabled} from '../multiplayer/publicFlag';
+/** [PUBLIC-WORLD] Nov 11 2026: with the public-island build flag on, the few lines below that would become untrue switch (the `PUB?new:old`
+ *  ternaries); flag off = today's words byte for byte (tests/mp-public-copy.cjs). Old -> new: docs/multiplayer/PUBLIC-COPY-REVIEW.md. */
+const PUB=publicWorldEnabled();
+
 export type LearnGroupId='learn'|'explore'|'play'|'together'|'collect'|'yours'|'safe';
 
 /** Every number a proof line may state. tests/learn-content.cjs computes each from the source data. */
@@ -72,16 +77,16 @@ export const LEARN_HERO={
 /** Grown-up trust points for the Play together section (each one checked in the code and the privacy policy). */
 export const LEARN_TOGETHER_TRUST:readonly string[]=[
  'A grown-up check comes before starting or joining every party.',
- 'Grown-ups can switch Play with friends off in Settings, behind the same check.',
+ PUB?'In Settings, behind the same check, a grown-up can choose Other players and friends, Friends only, or Off.':'Grown-ups can switch Play with friends off in Settings, behind the same check.',
  'No free-text or voice chat: friends talk with preset football calls and emotes.',
  'First name only, letters only, shown only to the party and never stored.',
- 'Private parties by code, never with strangers: no lobbies and no friend lists.',
+ PUB?'Other kids playing at the same time can be seen, with names the game makes up. Parties are private, by code. No friend lists.':'Private parties by code, never with strangers: no lobbies and no friend lists.',
 ];
 
 /** What Play together deliberately does not have (confirmed in docs/multiplayer-design.md section 1 and the code). */
 export const LEARN_TOGETHER_NOT:readonly string[]=[
  'No free text chat and no voice chat',
- 'No public lobbies, matchmaking or browsing other parties',
+ PUB?'No browsing or joining other parties: a party joins by code only':'No public lobbies, matchmaking or browsing other parties',
  'No accounts, friend lists, email or phone numbers',
  'No trading, gifting or shared coins',
  'No scores against each other',
@@ -287,7 +292,7 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
   hook:'A grown-up check, an off switch and host controls.',
   description:'Starting or joining a party always passes a grown-up check, and a grown-up can turn Play with friends off in Settings. The host can remove a friend, lock a name or make a new code, and anyone can hide or mute a friend.',
   footballTie:'Fair play and looking out for each other, built into how a party works.',
-  where:'Settings, behind the grown-up check: Play with friends, Allowed or Off.',
+  where:PUB?'Settings, behind the grown-up check: Other players and friends, Friends only, or Off.':'Settings, behind the grown-up check: Play with friends, Allowed or Off.',
   proof:'First names are letters only, up to 12, and never stored; codes are 6 characters.',counts:{nameMaxLetters:12,codeLength:6}},
 
  // ---- Collect and read ------------------------------------------------------------------------------------------------------
@@ -456,6 +461,6 @@ export const LEARN_FAQ:readonly LearnFaq[]=[
  {group:'parents',q:'Who made it?',a:'Futbol Island is built in San Diego in partnership with White Sports Ventures, founded by former U.S. Men\'s National Team player Jeremiah White III. It also works with the local non-profits FC YAP, Street Soccer San Diego and Ronin Futsal.'},
  {group:'parents',q:'What data does it collect?',a:'Most progress lives only in the browser on the device. With a save code, the allowlisted progress is saved against a scrambled version of the code, never a name or email. The game also counts anonymous usage totals to run and improve it and to show sponsors combined totals; nothing is sold, and nothing about an individual child is shared. The privacy policy explains what is kept and for how long.'},
  {group:'together',q:'How do friends play together?',a:'A grown-up taps Play with friends, passes the grown-up check and starts a party. Friends join with the 6-character code or a share link, type their first name and arrive on the same island. Up to 20 players can be in one party.'},
- {group:'together',q:'Can strangers join, or can kids message each other?',a:'Parties are private and join by code only: there are no public lobbies, matchmaking or friend lists. A code takes new friends for 8 hours, and the host can make a new code or remove someone at any time. There is no free-text chat; friends use preset football calls and emotes.'},
- {group:'together',q:'Can I turn Play with friends off?',a:'Yes. In Settings, behind the grown-up check, Play with friends can be set to Allowed or Off. A first name typed for a party is shown only to that party and is never stored.'},
+ {group:'together',q:'Can strangers join, or can kids message each other?',a:PUB?'Other kids playing at the same time can appear on the island, with a name the game makes up, and can wave, cheer and play matches. Nobody can type messages or talk. A child can hide or report another player or tap the people button to play alone, and a grown-up can choose Friends only or Off in Settings. Parties stay private and join by code only: there are no friend lists. A code takes new friends for 8 hours, and the host can make a new code or remove someone at any time.':'Parties are private and join by code only: there are no public lobbies, matchmaking or friend lists. A code takes new friends for 8 hours, and the host can make a new code or remove someone at any time. There is no free-text chat; friends use preset football calls and emotes.'},
+ {group:'together',q:'Can I turn Play with friends off?',a:PUB?'Yes. In Settings, behind the grown-up check, a grown-up can choose Other players and friends, Friends only, or Off. A first name typed for a party is shown only to that party and is never stored; other players see only a name the game makes up.':'Yes. In Settings, behind the grown-up check, Play with friends can be set to Allowed or Off. A first name typed for a party is shown only to that party and is never stored.'},
 ];

@@ -20,6 +20,13 @@ import { DoneButton } from '@/components/DoneButton';
 import HudSlot from '@/components/HudStack';
 import styles from './party.module.css';
 import {growFrame,GROW_IN_MS,GROW_OUT_MS} from '@/lib/ui/growFrame';
+// Public island (Agent C, Nov 11 2026): only reached while publicWorldEnabled() (WithPresence below); flag off = today's card exactly.
+import { publicWorldEnabled } from '@/lib/multiplayer/publicFlag';
+import { usePresence, type PresenceState } from '@/lib/multiplayer/presenceMode';
+import { BackButton } from '@/components/BackButton';
+import PresenceChoice from './PresenceChoice';
+import PublicFirstCard from './PublicFirstCard';
+import { PUBLIC_PANEL_TITLE as PUBLIC_PANEL_LABEL } from '@/lib/multiplayer/publicCopy';
 
 /** Analytics event names (Oct 22 2026, docs/analytics-multiplayer-plan.md §3). This file never imports analytics: Town.tsx passes
  *  `onTrack`, which maps a name to an `mp:` count (partyEvents.ts PARTY_TRACK_EVENTS in the analytics folder; a test keeps the two lists equal).
@@ -30,7 +37,7 @@ type Track = 'open' | 'sheet' | 'open_link' | 'gate_show' | 'gate_skip' | 'gate_
   | 'rtt' | 'reconnect';
 /** Phase C (§7 RTT): the party's median heartbeat round trip as a fixed band, passed once at the party's end (never the number). */
 export const rttBand = (ms: number): string => (ms < 80 ? 'rtt_lt80' : ms < 150 ? 'rtt_80_150' : ms < 300 ? 'rtt_150_300' : 'rtt_300p');
-type View = 'none' | 'menu' | 'gate' | 'join' | 'sheet';
+type View = 'none' | 'choice' | 'menu' | 'gate' | 'join' | 'sheet';
 type Pending = { kind: 'create' } | { kind: 'join'; code: string };
 type Note = { kind: 'join'; names: string[] } | { kind: 'text'; text: string };
 
@@ -102,6 +109,8 @@ export default function PartyHost(props: {
   islandReady: boolean; introDone: boolean; connection: PartyConnection; look: () => Look; onTrack?: (event: Track, bucket?: string) => void;
   /** Local-only choices, so the avatar layer can hide a friend / skip their emotes. */
   onHiddenChange?: (hidden: ReadonlySet<number>) => void; onMutedChange?: (muted: ReadonlySet<number>) => void;
+  /** Public island: the first-time card waits while this is true (a lesson, menu or card on the island), and its one count. */
+  publicBlocked?: boolean; onPublicCard?: () => void;
 }) {
   if (!multiplayerEnabled()) return null;
   return <Allowed {...props} />;
@@ -113,11 +122,22 @@ function Allowed(props: Parameters<typeof PartyHost>[0]) {
   const conn = props.connection;
   useEffect(() => { if (!allowed) conn.leave(); }, [allowed, conn]);
   if (!allowed) return null;
-  return <Host {...props} />;
+  return publicWorldEnabled() ? <WithPresence {...props} /> : <Host {...props} />;
 }
 
-function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChange, onMutedChange }: Parameters<typeof PartyHost>[0]) {
+/** Public island (flag on only): the presence store feeds the "Who's on your island?" panel and the first-time card. */
+function WithPresence(props: Parameters<typeof PartyHost>[0]) {
+  const ps = usePresence();
+  return <Host {...props} ps={ps} />;
+}
+
+function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChange, onMutedChange, publicBlocked, onPublicCard, ps }: Parameters<typeof PartyHost>[0] & { ps?: PresenceState }) {
   const state = usePartyState();
+  // Public island: in a world partyStore's status is 'live' too, so every party-only branch below keys off `live`, which is false in a
+  // world (no party sheet, code, invite, host tools, Lock name, first-name field or party notes for strangers). `publicUi`: the panel
+  // is the first view once the island tour is done (until then a new player sees today's card).
+  const world = state.kind === 'world';
+  const publicUi = !!ps && ps.tutorialDone;
   const [view, setView] = useState<View>('none');
   const [pending, setPending] = useState<Pending | null>(null);
   const [from, setFrom] = useState<DOMRect | null>(null);
@@ -158,7 +178,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   const prevIds = useRef<Set<number> | null>(null);
   const prevStatus = useRef(state.status);
   const joinBuf = useRef<ReturnType<typeof createJoinBuffer> | null>(null);
-  const live = state.status === 'live' || state.status === 'reconnecting';
+  const live = !world && (state.status === 'live' || state.status === 'reconnecting');
 
   useEffect(() => bindConnection(connection), [connection]);
   // Party persistence (docs/multiplayer-design.md "Party persistence"): a party this tab was in comes back by itself on every island
@@ -191,6 +211,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   }), []);
   const text = useCallback((t: string) => note({ kind: 'text', text: t }), [note]);
   useEffect(() => {
+    if (world) return; // a public world is not a party: none of the party's notes
     if (state.status === 'live') {
       resumed.current = false;
       if (rejoinTap.current) { rejoinTap.current = false; setRejoining(false); setView((v) => (v === 'menu' ? 'none' : v)); text('You are back in your party'); }
@@ -201,7 +222,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     if (state.status !== 'error' || !resumed.current || state.error === ErrorCode.Kicked || state.lapsed) return;
     const manual = rejoinTap.current; rejoinTap.current = false; setRejoining(false);
     resumed.current = false; text(manual ? 'That party ended' : 'The party ended'); prevIds.current = null; setView('none'); setConfirmEnd(false);
-  }, [state.status, state.error, state.lapsed, text]);
+  }, [state.status, state.error, state.lapsed, text, world]);
   // The relay no longer has this player's slot (60 s, or 10 min indoors, ran out) but the party may still run: if it does, Join with the
   // code filled in (a new slot; the first name is asked again: it is never stored), else 'That party ended' and the session goes.
   const lapsedFallback = useCallback((code: string) => {
@@ -240,6 +261,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
 
   // ---- join / leave / status notes ----
   useEffect(() => {
+    if (world) { prevIds.current = null; return; } // strangers coming into sight are not "joined" news
     if (state.status !== 'live') return;
     const ids = new Set(state.members.map((m) => m.id));
     const before = prevIds.current;
@@ -248,12 +270,12 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     const added = state.members.filter((m) => !before.has(m.id) && m.id !== state.you).map((m) => displayName(m));
     // Big parties: joins within 1.5 s become ONE note ('3 friends joined'), never a stream of toasts.
     if (added.length) (joinBuf.current ??= createJoinBuffer((names) => note({ kind: 'join', names }))).add(added);
-  }, [state.members, state.status, state.you, note]);
+  }, [state.members, state.status, state.you, note, world]);
   useEffect(() => () => joinBuf.current?.cancel(), []);
   // A friend changed their first name (relay v1.3 C.Rename, re-announced as Joined for the same id): one short note.
   const prevNicks = useRef<Map<number, string | null> | null>(null);
   useEffect(() => {
-    if (state.status !== 'live') { if (state.status === 'idle') prevNicks.current = null; return; }
+    if (world || state.status !== 'live') { if (world || state.status === 'idle') prevNicks.current = null; return; }
     const before = prevNicks.current, next = new Map<number, string | null>();
     for (const m of state.members) {
       next.set(m.id, m.nick);
@@ -261,7 +283,7 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       if (before && before.has(m.id) && m.id !== state.you && m.nick && was !== m.nick) text(`${was || m.name} is now ${m.nick}`);
     }
     prevNicks.current = next;
-  }, [state.members, state.status, state.you, text]);
+  }, [state.members, state.status, state.you, text, world]);
   // Relay v1.5 name lock: one note to the locked player when the host locks (or unlocks) their name. lockSeen survives a resume, so the
   // lock list the relay re-sends after every Welcome is not news again.
   const lockSeen = useRef(false);
@@ -279,10 +301,12 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
     setNick(n); setNamed(true); partyStore.setOwnNick(n);
     text(r === 'sent' ? `You are now ${n}` : `You are now ${n} on this device. Friends see it after the next update.`);
   }, [connection, text]);
+  const prevWorld = useRef(world);
   useEffect(() => {
-    const was = prevStatus.current;
-    prevStatus.current = state.status;
+    const was = prevStatus.current, wasWorld = prevWorld.current;
+    prevStatus.current = state.status; prevWorld.current = world;
     if (state.status === was) return;
+    if (world || (wasWorld && !joining.current)) return; // joining / leaving a public world says nothing (the avatars fade)
     if (state.status === 'reconnecting') text('Reconnecting');
     if (state.status === 'live') selfLeft.current = false;
     if (state.status === 'live' && joining.current) {
@@ -300,9 +324,9 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       selfLeft.current = false;
       prevIds.current = null; setView('none'); setConfirmEnd(false);
     }
-  }, [state.status, state.error, state.tab, state.members.length, text]);
+  }, [state.status, state.error, state.tab, state.members.length, text, world]);
   // Analytics: the member count while live (the host's peak and first-friend bands; only a number, never who).
-  useEffect(() => { if (state.status === 'live') track.current?.('members', String(state.members.length)); }, [state.status, state.members.length]);
+  useEffect(() => { if (state.status === 'live' && !world) track.current?.('members', String(state.members.length)); }, [state.status, state.members.length, world]);
   useEffect(() => {
     if (live) everLive.current = true;
     if (!live) { setKickPrompt(false); setTab('code'); }
@@ -325,7 +349,8 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
   // ---- open from the HUD, and from a pending link ----
   // In a party the HUD button opens the party sheet (members, Invite, Lock, New code, End / Leave), never the Start menu again.
   const liveRef = useRef(live); liveRef.current = live;
-  const openMenu = useCallback(() => { track.current?.(liveRef.current ? 'sheet' : 'open'); setPending(null); setFrom(openerRect()); setView(liveRef.current ? 'sheet' : 'menu'); }, []);
+  const publicRef = useRef(publicUi); publicRef.current = publicUi;
+  const openMenu = useCallback(() => { track.current?.(liveRef.current ? 'sheet' : 'open'); setPending(null); setFrom(openerRect()); setView(liveRef.current ? 'sheet' : publicRef.current ? 'choice' : 'menu'); }, []);
   useEffect(() => { window.addEventListener(PARTY_EVENT, openMenu); return () => window.removeEventListener(PARTY_EVENT, openMenu); }, [openMenu]);
   // Take ?party= out of the URL as soon as the island mounts (the code waits in sessionStorage for the intro to finish).
   useEffect(() => { readPendingParty(); }, []);
@@ -427,13 +452,19 @@ function Host({ islandReady, introDone, connection, look, onTrack, onHiddenChang
       {/* The live-party chip is the HUD Play with friends button (IslandSettings badge); it opens the sheet while a party runs. */}
       {shown && <HudSlot><p className={styles.toast} role="status" data-hud-slot="toast" data-party-toast>{shown}</p></HudSlot>}
 
+      {ps && <PublicFirstCard blocked={!!publicBlocked || view !== 'none'} onShown={onPublicCard} />}
+      {view === 'choice' && ps && (
+        <Card label={PUBLIC_PANEL_LABEL} onClose={close} grow from={from}>
+          {(requestClose) => <PresenceChoice ps={ps} onClose={requestClose} onFriends={() => { setFrom(null); setView('menu'); }} />}
+        </Card>
+      )}
       {(view === 'menu' || (view === 'gate' && pending)) && (
-        <Card label={view === 'gate' ? 'For grown-ups' : 'Play with friends'} onClose={close} grow from={view === 'gate' && pending?.kind === 'join' ? null : from} onEscape={view === 'gate' ? () => setView(pending?.kind === 'join' ? 'join' : 'menu') : undefined}>
+        <Card label={view === 'gate' ? 'For grown-ups' : 'Play with friends'} onClose={close} grow from={view === 'gate' && pending?.kind === 'join' ? null : from} onEscape={view === 'gate' ? () => setView(pending?.kind === 'join' ? 'join' : 'menu') : publicUi ? () => { setFrom(null); setView('choice'); } : undefined}>
           {(requestClose) => view === 'gate' && pending ? (
             <ParentGate shell reason={pending.kind === 'create' ? 'Invite friends to play on your island. Nobody can chat.' : 'Join a friend’s party. Nobody can chat.'} onCancel={() => { track.current?.('gate_back'); setView(pending.kind === 'join' ? 'join' : 'menu'); }} onPass={() => { track.current?.('gate_ok'); run(pending); }} onWrong={() => track.current?.('gate_wrong')} />
           ) : <section className={`${styles.card} ${styles.menuCard}`} data-party-menu aria-labelledby="party-menu-title">
             <header className={styles.menuHeader}>
-              <span aria-hidden="true" />
+              {publicUi ? <BackButton onBack={() => { setFrom(null); setView('choice'); }} data-party-menu-back /> : <span aria-hidden="true" />}
               <h2 id="party-menu-title">Play with friends</h2>
               <DoneButton onDone={requestClose} />
             </header>

@@ -12,6 +12,7 @@
 // Kids first: no scores, coins or stats are counted for anyone; friends only ever see party nicknames.
 // Heat: idle (no party, or not on a shared field) this costs one caps check per frame. No timers: Town calls update() per frame.
 import { Cap, C, S, MatchKind, MATCH_FIELDS, type ServerMsg } from '../../multiplayer/protocol';
+import { setSharedMatch } from './sharedMatch';
 import { SNAP_GAP_MS, IN_GAP_MS, SNAP_MAX_LEN, SNAP_MAX_BYTES, encodeIn, decodeIn, type InAccum } from '../town/match/matchNet';
 import { PHRASE_WIRE, packInPhrase, readInPhrase, packSnapPhrase, readSnapPhrase, appendSnapPhrase, type PhraseBus } from '../town/quickPhrases';
 import type { HumanFrame, HumanTeam } from '../town/match/humanInputs';
@@ -162,6 +163,8 @@ export function createMatchLink(d: MatchLinkDeps) {
     matchIds.clear(); applied.forEach((_s, id) => matchIds.add(id)); watchApplied.forEach((_s, id) => matchIds.add(id));
     d.setMatchFriends?.(new Set(matchIds));
   }
+  /** Public island (sharedMatch.ts): on while my confirmed match has another player on it (a friend on my field, or I am a puppet). */
+  const syncShared = () => setSharedMatch(!!mine && mine.confirmed && (applied.size > 0 || d.games.isPuppet(mine.format)));
   /** Stop watching: the friends' slots go back to the AI and my local sim runs again from the last snapshot. */
   function unwatch() {
     if (!watch) return;
@@ -220,7 +223,9 @@ export function createMatchLink(d: MatchLinkDeps) {
 
   const api = {
     /** Per frame from Town, after liveJoin.update (which joins / leaves the local slot). */
-    update() {
+    update() { api.step(); syncShared(); },
+    /** update() without the shared-match flag (internal). */
+    step() {
       const t = now(), joined = d.join.joined && d.join.format !== null ? d.join.format : null;
       if (!active()) {
         unwatch(); watchSent = -1; stopAt = -1; // the relay forgets watchers on a reconnect (C.Caps): sent again once live
@@ -344,7 +349,7 @@ export function createMatchLink(d: MatchLinkDeps) {
     get state() { return { joined: !!mine?.confirmed, owner, friends: applied.size, field: mine?.field ?? -1, watching: watch ? watch.field : -1, watched: watchApplied.size }; },
     /** Headless checks: the "Waiting for …" line is up (a friend, no snapshot for STALL_HINT_MS). */
     get stalled() { return stalled && !owner && !!mine?.confirmed; },
-    dispose() { off(); offVis(); unwatch(); if (mine) teardown(mine.format, null); mine = null; d.join.friends = null; rosters.clear(); },
+    dispose() { off(); offVis(); unwatch(); if (mine) teardown(mine.format, null); mine = null; setSharedMatch(false); d.join.friends = null; rosters.clear(); },
   };
   return api;
 }

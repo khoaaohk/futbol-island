@@ -28,7 +28,7 @@ import ExperienceStage,{ExperienceAfterglow,type StageInfo} from './museum/exper
 import {passport,recordMuseumVisit,useMuseumVisits,museumVisitsNow} from '@/lib/museum/museumVisits';
 import {enterActivity} from '@/lib/analytics/tracker';
 import {museumRoomHooks} from '@/lib/multiplayer/rooms/museumHooks';
-import {useRoomParty} from './party/useRoomParty';const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
+import {useRoomParty} from './party/useRoomParty';import {RoomPlayerCard,roomTapPlayer} from './party/RoomPlayerTap';const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
 import {partyStore} from '@/lib/multiplayer/store';import {pickMuseumSpawn} from '@/lib/multiplayer/rooms/museum';
 import type {ActivityId} from '@/lib/analytics/islandIds';
 const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
@@ -196,7 +196,7 @@ function MuseumHall({counts,open,earned}:{counts:Counts;open:Record<string,boole
 
  const label=zoom?`${zoom.label} · ${zoom.index+1}/${zoom.count}`:'';
  return <main ref={rootRef} onClickCapture={e=>{if(museumClickTarget(e.target))museumSfx.click();}} aria-label="History Museum" className={styles.root} data-museum-room data-ready={ready} data-zoomed={!!zoom}>
-  <header className={styles.header}>{party&&!zoom&&<span className={styles.partySlot}><RoomPartyChip party={party} hidden={covered} align="right"/></span>}{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton className={styles.doneRight} label="Done" data-museum-done key={exitTry} onNavigate={leave}/>}
+  <header className={styles.header}>{party&&!zoom&&<span className={styles.partySlot}><RoomPartyChip party={party} hidden={covered} align="right"/></span>}<RoomPlayerCard party={party} blocked={covered||!!zoom}/>{zoom?<NavigationButton back label="Back" data-museum-back onNavigate={()=>room.current?.zoomOut()}/>:<NavigationButton className={styles.doneRight} label="Done" data-museum-done key={exitTry} onNavigate={leave}/>}
    {zoom&&<span className={styles.section} data-museum-section={zoom.id} aria-live="polite">{label}</span>}
   </header>
   {/* See exhibit: bottom centre, the one thing to do at an open case (Oct 14 2026, user). */}
@@ -212,7 +212,7 @@ function MuseumHall({counts,open,earned}:{counts:Counts;open:Record<string,boole
    onPointerUp={e=>{const p=tap.current,d=drag.current;tap.current=null;drag.current=null;
     if(d){if(d.moved>6&&spinning)room.current?.spinRelease(performance.now()-d.t<120?d.v:0);return;}
     if(zoom&&p&&Math.abs(e.clientX-p.x)>50&&Math.abs(e.clientX-p.x)>Math.abs(e.clientY-p.y)){room.current?.zoomStep(e.clientX<p.x?1:-1);return;}
-    if(!zoom&&p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)<12)room.current?.pick(e.clientX,e.clientY);}}/>
+    if(!zoom&&p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)<12){if(!room.current?.pick(e.clientX,e.clientY))roomTapPlayer(party,e.clientX,e.clientY,e.currentTarget);}}}/>
   {failed&&<div className={styles.error}><h2>The museum couldn’t load.</h2><button type="button" onClick={leave}>Back to the island</button></div>}
   {near&&!zoom&&!covered&&<button ref={promptRef} type="button" className={`store-enter-prompt ${styles.prompt}`} data-museum-prompt={near.id} onClick={()=>look(near)}>{near.verb} · {near.label}</button>}
   {zoom&&<>

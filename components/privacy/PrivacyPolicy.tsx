@@ -1,5 +1,6 @@
 import PolicyToc from './PolicyToc';
 import styles from './PrivacyPolicy.module.css';
+import {publicWorldEnabled} from '@/lib/multiplayer/publicFlag';
 
 /**
  * Futbol Island privacy policy (Oct 9 2026). One source of truth, rendered by /privacy (app/privacy/page.tsx) and by the
@@ -52,11 +53,20 @@ export const POLICY_UPDATED='November 10, 2026';
 export const OPERATOR:{name:string;address:string|null}={name:'Futbol Island',address:null};
 /** The address for privacy questions and requests. Set before launch (docs/save-codes.md). */
 export const PRIVACY_CONTACT:string|null=null;
+/**
+ * [PUBLIC-WORLD] [LAWYER] Nov 11 2026 (docs/multiplayer-public-island-plan-2026-11-11.md; owner list of every changed sentence:
+ * docs/multiplayer/PUBLIC-COPY-REVIEW.md). Other players on the island ("With other players", on by default after the tutorial)
+ * is built behind the build flag NEXT_PUBLIC_PUBLIC_WORLD (lib/multiplayer/publicFlag.ts), OFF on the live site. With the flag
+ * off every `PUB` branch below renders exactly today's text (tests/mp-public-copy.cjs pins it); with it on, the policy describes
+ * public play. The "last updated" date moves only with the flag: POLICY_UPDATED_PUBLIC (set it to the day the flag is switched on).
+ */
+export const POLICY_UPDATED_PUBLIC='November 11, 2026';
 
 export default function PrivacyPolicy(){
+ const PUB=publicWorldEnabled();
  return <article className={styles.policy}>
   <p className={styles.lede}>Futbol Island is a free game that teaches children how football is played. Because it is made for children, it is built to collect as little as possible. It does collect anonymous usage data (counts and totals, never a name), for two reasons only: to run and improve the game, and to show sponsors who help pay for it combined totals such as how many players visited and how long they played. This policy explains, in plain words, what the game keeps, why, where, for how long, and what you can do about it.</p>
-  <p className={styles.updated}>Last updated {POLICY_UPDATED}.</p>
+  <p className={styles.updated}>Last updated {PUB?POLICY_UPDATED_PUBLIC:POLICY_UPDATED}.</p>
 
   <nav className={styles.toc} aria-label="On this page"><ol>
    <li><PolicyToc href="#pp-short">The short version</PolicyToc></li>
@@ -66,7 +76,7 @@ export default function PrivacyPolicy(){
    <li><PolicyToc href="#pp-plan">The football plan and QR links</PolicyToc></li>
    <li><PolicyToc href="#pp-email">Sending a code to a grown-up</PolicyToc></li>
    <li><PolicyToc href="#pp-visits">Anonymous usage data (visit counts and statistics)</PolicyToc></li>
-   <li><PolicyToc href="#pp-friends">Play with friends (optional)</PolicyToc></li>
+   <li><PolicyToc href="#pp-friends">{PUB?'Other players and Play with friends':'Play with friends (optional)'}</PolicyToc></li>
    <li><PolicyToc href="#pp-tech">Technical information</PolicyToc></li>
    <li><PolicyToc href="#pp-never">What we never collect</PolicyToc></li>
    <li><PolicyToc href="#pp-use">How we use information</PolicyToc></li>
@@ -83,7 +93,9 @@ export default function PrivacyPolicy(){
 
   <section id="pp-short"><h2 tabIndex={-1}>1. The short version</h2><ul>
    <li><b>No accounts and no contact details.</b> We never ask a child for a last name, age, birthday, email, phone number, photo, voice, school or location. The one exception is the <i>Play with friends</i> feature, which asks a grown-up to type a <b>first name only</b> so friends can tell each other apart; it is shown only to that party and is never stored, logged or counted (section 7a).</li>
-   <li><b>No ads, no free-text chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b> Friends in a party can only use preset emotes.</li>
+   {PUB?<li><b>No ads, no free-text chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b> Other players and friends in a party can only use preset emotes.</li>:
+   <li><b>No ads, no free-text chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b> Friends in a party can only use preset emotes.</li>}
+   {PUB&&<li><b>Other players can be seen, unless you change it.</b> Other children playing at the same time can see each other on the island, with a name the game makes up, their outfit’s colours and shirt number, and preset waves and cheers. This is on by default once a new player has finished the welcome tutorial. One tap on the people button (<i>Just me</i>) hides everyone, any player can hide or report another, and a grown-up can choose <i>Friends only</i> or <i>Off</i> in Settings (section 7a).</li>}
    <li><b>A save code instead of an account.</b> Three easy words and a number (for example <i>striker · volley · corner · 4271</i>) keep a copy of game progress so it can be opened on another device. The code is not linked to anyone’s identity.</li>
    <li><b>We do collect anonymous usage data.</b> Things like how many visits there are, how long the game is played, which lessons and parts of the game are used, party sizes and how often emotes are used, and the kind of device. It is counted without names, and it is used for two things only: to run and improve the game, and to give sponsors <b>combined totals</b> (for example “players spent 18,000 minutes on the island this week”) so the game can stay free (section 7).</li>
    {/* [LAWYER] Nov 10 2026: exact combined totals; the small-groups promise is removed (owner ruling Nov 8 2026). */}
@@ -94,7 +106,7 @@ export default function PrivacyPolicy(){
   </ul></section>
 
   <section id="pp-children"><h2 tabIndex={-1}>2. Children and grown-ups</h2>
-   <p>Futbol Island is designed for children, including children under 13, and for the parents, carers and coaches who help them. We follow the principles of the US Children’s Online Privacy Protection Act (COPPA) and the UK Age Appropriate Design Code: we collect only what the game needs to work plus the anonymous usage totals described in section 7, we keep privacy-protective settings on by default, and we do not nudge children to share more.</p>
+   {PUB?<p>Futbol Island is designed for children, including children under 13, and for the parents, carers and coaches who help them. We follow the principles of the US Children’s Online Privacy Protection Act (COPPA) and the UK Age Appropriate Design Code: we collect only what the game needs to work plus the anonymous usage totals described in section 7, we keep privacy-protective settings on by default except one, seeing other players on the island, which is on by default and is explained in section 7a with how to switch it off, and we do not nudge children to share more.</p>:<p>Futbol Island is designed for children, including children under 13, and for the parents, carers and coaches who help them. We follow the principles of the US Children’s Online Privacy Protection Act (COPPA) and the UK Age Appropriate Design Code: we collect only what the game needs to work plus the anonymous usage totals described in section 7, we keep privacy-protective settings on by default, and we do not nudge children to share more.</p>}
    <p>Children are never asked to type personal information into the game. Places where a grown-up may type something (a note in the football plan, or an email address to receive a save code) are behind a grown-up check, and what is typed is handled as described below.</p>
   </section>
 
@@ -103,6 +115,7 @@ export default function PrivacyPolicy(){
    <p>This information is not sent to us unless a save code is used (section 4). Clearing this site’s data in the browser deletes it from the device.</p>
    <p>Some things always stay on the device and are never uploaded, even with a save code: notes typed into the football plan or the coach tools, volume and control settings, and battery-saver settings.</p>
    <p><b>Play with friends:</b> while a player is in a party, the game may remember that party’s code and a random resume token on this device (for the player who started it, also the party’s host key), so they can get back in if the tab is closed. It is removed when the party ends or the player leaves, and after 12 hours at most. It never includes the first name, is never sent to our visit counter, and is not part of a save code.</p>
+   {PUB&&<p><b>Other players:</b> the device remembers which choice was made on the people button (<i>Just me</i>, <i>With other players</i> or <i>With friends</i>) and whether the one-time card about other players has been shown. About 1 in 10 devices start as <i>Just me</i> instead of <i>With other players</i>, picked once on the device from its random install number (section 7) so we can compare, in totals only, how the island is used with and without other players; any player can still switch with one tap. These choices stay on the device and are not part of a save code.</p>}
   </section>
 
   <section id="pp-codes"><h2 tabIndex={-1}>4. Save codes</h2>
@@ -142,6 +155,7 @@ export default function PrivacyPolicy(){
     <li>counts of play from fixed lists: arcade games started, designs saved by their pattern or boot model (never the colours, name, number or drawing), cards added to the binder (how they were found and which footballer’s card), card films and pop-up books opened, finished or bought, and how long a book stayed open in broad bands (such as “1–3 minutes”);</li>
     <li>counts of island activities from fixed lists, such as fish caught, swims started, rides and Kit Shop designs saved (never a position, a route or a drawing);</li>
     <li>counts from Play with friends, from fixed lists: how often a party is opened, started or joined (and why a join did not work), party sizes and lengths in broad bands (such as “3–4 friends” or “15–30 minutes”), minutes played in a party, invite links shared or opened, and which preset emotes are used and where (such as on a scooter or near a townsperson). Never the party code, a name or first name, or who played with whom;</li>
+    {PUB&&<li>counts from playing with other players, from fixed lists: how often the island started with others shown or as <i>Just me</i> (the 1-in-10 comparison in section 3), connections made, visits in which another player was seen, minutes played with others around, switches to <i>Just me</i> and back, players hidden, reports by their reason (Following, In my way, Too many waves, Something else), how often the service was full or could not be reached, matches joined with others, and how often the one-time card was shown. Never a name or made-up name, which shared island, or who was near whom;</li>}
     <li>which buttons and links on the start page are tapped (for example Start, For grown-ups or Donate), counted as totals;</li>
     <li>a few settings at the start of a visit, such as whether sound or the coach’s voice is switched off;</li>
     <li>whether the device has played before and whether a save code is in use on it: a yes or no each, never the code;</li>
@@ -158,7 +172,15 @@ export default function PrivacyPolicy(){
    <p><b>Do Not Track:</b> if the browser sends a “Do Not Track” or “Global Privacy Control” signal, the counter sends nothing at all.</p>
   </section>
 
-  <section id="pp-friends"><h2 tabIndex={-1}>7a. Play with friends (optional)</h2>
+  <section id="pp-friends"><h2 tabIndex={-1}>{PUB?'7a. Other players and Play with friends':'7a. Play with friends (optional)'}</h2>
+   {PUB&&<>
+   <p><b>Other players:</b> children playing Futbol Island at the same time can see each other on the island, outdoors and in the Arcade, the Shop, the Museum and the Konbini. A shared island holds about 20 players; when it is full, new arrivals start another one. This is on by default (<i>With other players</i> on the people button) once a new player has finished the welcome tutorial. Players in a private party see only their party.</p>
+   <p><b>What other players see:</b> a name the game makes up (a colour and an animal), which changes every visit; the outfit’s colours and shirt number; where the player is and how they move; and preset waves, cheers and football calls. They never see the first name typed for a party, any drawing, crest or printed name from the Kit Shop, or anything from a save. There is no free-text chat, no voice, no photos and no way to send a link or a message. Other players are not shown on the map and cannot send map pings to each other.</p>
+   <p><b>Hide and Report:</b> any player can hide another player for the rest of the visit, or report them for one of four reasons: Following, In my way, Too many waves, or Something else. Reporting also hides that player straight away. If different players report the same player within a few minutes, that player is hidden from everyone for a while, and the service stops showing a player to someone they keep following. A report keeps no name, no made-up name and no message: the service keeps only how many reports were made each day for each reason. To make a short hide work, it keeps a scrambled, day-specific version of that connection’s internet address in memory for about an hour; it is never stored.</p>
+   <p><b>Turning it off:</b> a player can tap the people button and choose <i>Just me</i> at any time. In Settings, behind the grown-up check, a grown-up can choose <i>Other players and friends</i> (the default), <i>Friends only</i> (private parties by code, other players never shown) or <i>Off</i> (no other players and no parties).</p>
+   <p><b>What we keep:</b> nothing about who the players are. Movement and emotes pass through the same Cloudflare service as parties while players are on and are not stored. It keeps only daily totals, such as how many players connected, how many shared islands were open, and reports by reason, with no name, made-up name or internet address. We also count, as anonymous totals from fixed lists, how playing with others is used (section 7).</p>
+   <p><b>Mobile data:</b> while other players are near, seeing them uses about 15 MB of mobile data an hour (our estimate; it depends on how many players are near). <i>Just me</i> uses none for this.</p>
+   </>}
    <p>Play with friends lets a small group of friends see each other on the island. It works only after a grown-up passes the grown-up check, and a grown-up can switch it off in Settings.</p>
    <p><b>What the other players in a party can see:</b> a colour chosen by the game (such as Red or Blue), the <b>first name only</b> that the player typed when starting or joining (letters only, 2 to 12 letters, needed to play with friends so friends can tell each other apart), their outfit, where they are on the island, and simple preset emotes such as a wave. There is no free-text chat, no voice, no photos, and no way to send a link or a message. Please type only a first name: never a last name, school, address or contact details.</p>
    <p><b>What we keep:</b> nothing about who the players are. We do count, as anonymous totals from fixed lists, how Play with friends is used (section 7): for example how many parties started and their sizes in broad bands, never a code, a name or who played with whom. A party exists only while it is in use (an invite code works for 8 hours and a party lasts at most 12 hours). The first name is not saved on our servers once the party ends, is not kept on the device after the visit, and is never added to visit counts, save codes or reports. To let a player return after closing the tab, the device may remember the active party’s code and a resume token (section 3) until the party ends or 12 hours pass; never the first name, and never sent to analytics. Like any website, the party service sees the internet address a connection comes from; it keeps only a short-lived scrambled version in memory to stop abuse. The party service keeps only daily totals, such as how many parties started, their sizes and lengths in broad bands, and how many connections failed, with no code, name or internet address.</p>
@@ -190,7 +212,8 @@ export default function PrivacyPolicy(){
    <p>These companies process information only to provide their service to us, under contracts or terms that limit their use of it:</p><ul>
     <li><b>Vercel</b> hosts the website and works out the country and region for visit counts.</li>
     <li><b>Supabase</b> stores saves and visit counts.</li>
-    <li><b>Cloudflare</b> runs the party service for <i>Play with friends</i>: messages pass through it while a party is in use and are not stored afterwards.</li>
+    {PUB?<li><b>Cloudflare</b> runs the service for <i>Play with friends</i> and for seeing other players: messages (movement, outfit colours and preset emotes) pass through it while players are on and are not stored afterwards.</li>:
+    <li><b>Cloudflare</b> runs the party service for <i>Play with friends</i>: messages pass through it while a party is in use and are not stored afterwards.</li>}
     <li><b>Resend</b> sends the one email a grown-up asks for, only when they ask.</li>
     <li><b>YouTube</b> (in its privacy-enhanced mode) plays official football clips, only when a player taps a clip to play it. When a clip plays, YouTube receives the request and may collect information under its own policies. Nothing loads from YouTube until a clip is tapped.</li>
     <li><b>Stripe</b> processes donations, which only a grown-up can start after the grown-up check. Payment details go directly to Stripe; we do not receive card numbers.</li>
@@ -217,6 +240,8 @@ export default function PrivacyPolicy(){
      <tr><td>Totals reported to sponsors</td><td>Funding the game</td><td>Kept in reports; they are combined totals and describe no one</td></tr>{/* [LAWYER] Nov 10 2026 */}
      <tr><td>The scrambled player number on our server</td><td>Counting return visits, the order of a visit’s screens</td><td>A new number every 90 days; visit details holding it are deleted after 14 days</td></tr>
      <tr><td>The daily random key for visitor codes</td><td>Making visitor codes unlinkable between days</td><td>Deleted the next day</td></tr>
+     {PUB&&<><tr><td>Reports about another player</td><td>Keeping shared play pleasant</td><td>Only daily counts by reason; no names, made-up names or messages are kept</td></tr>
+     <tr><td>Scrambled internet address of a player many others reported</td><td>Hiding that player for a short time</td><td>In memory for about an hour; never stored</td></tr></>}
      <tr><td>Information on the device</td><td>Playing the game</td><td>Until the browser’s site data is cleared</td></tr>
     </tbody>
    </table></div>
@@ -237,6 +262,7 @@ export default function PrivacyPolicy(){
     <li><b>delete</b> the save: Settings → My save code → Delete my save, or For grown-ups → Saving progress. It is removed from our server immediately;</li>
     <li><b>stop further saving:</b> after deleting the save, that device won’t upload anything until a code is made or typed again;</li>
     <li><b>stop usage counting:</b> turn on “Do Not Track” or Global Privacy Control in the browser, and the counter sends nothing at all from that browser;</li>
+    {PUB&&<li><b>stop other players being shown:</b> tap the people button and choose <i>Just me</i>, or, in Settings behind the grown-up check, choose <i>Friends only</i> or <i>Off</i>;</li>}
     <li><b>clear everything on a device:</b> clear this site’s data in the browser settings.</li>
    </ul>
    <p>Because we hold no names or emails, we can find a save only from its code. If you contact us with a request, please include the save code so we can act on it, and we will then delete our copy of your message.</p>

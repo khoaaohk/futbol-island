@@ -69,7 +69,7 @@ async function shot(p, file) { try { await p.screenshot({ path: `${OUT}/${file}.
 const waitFor = async (p, fn, ms = 30000, every = 400) => { const t0 = Date.now(); while (Date.now() - t0 < ms) { try { if (await fn()) return true; } catch { /* page busy */ } await p.waitForTimeout(every); } return false; };
 
 // New player: save code, Play, skip the walkthrough. Returning: Play if asked.
-async function enter(p, pathQ = '/', fresh = true, reload = false) {
+async function enter(p, pathQ = '/play', fresh = true, reload = false) { // the game is /play (/ is the tour site since Nov 2026)
   if (reload) await p.reload({ waitUntil: 'domcontentloaded', timeout: 120000 }); else await p.goto(APP + pathQ, { waitUntil: 'domcontentloaded', timeout: 120000 });
   await p.waitForTimeout(6000);
   if (fresh) { await p.click('text=Get my save code', { timeout: 20000 }).catch(() => {}); await p.waitForTimeout(2000);
@@ -114,7 +114,9 @@ async function nick(p, name) {
   await p.waitForSelector(sel, { timeout: 15000 });
   for (let i = 0; i < 4 && (await p.evaluate((s) => document.querySelector(s).value, sel)) !== name; i++) { await p.fill(sel, name); await p.waitForTimeout(500); }
 }
-const openMenu = async (p) => { await clearOverlays(p); await p.evaluate(() => document.querySelector('[data-party-open]')?.click()); await p.waitForTimeout(900); };
+const openMenu = async (p) => { await clearOverlays(p); await p.evaluate(() => document.querySelector('[data-party-open]')?.click()); await p.waitForTimeout(900);
+  // NEXT_PUBLIC_PUBLIC_WORLD builds (public island, Nov 11 2026): the people button opens the three choices first; "With friends" is today's menu
+  if (await p.$('[data-presence-choice="friends"]')) { await p.click('[data-presence-choice="friends"]').catch(() => {}); await p.waitForTimeout(900); } };
 const closeCard = async (p) => { await p.click('[data-party-sheet] button:has-text("Done")', { timeout: 1500 }).catch(() => {}); await p.keyboard.press('Escape').catch(() => {}); await p.waitForTimeout(600); };
 const isLive = (p) => p.evaluate(() => document.querySelector('[data-party-open]')?.getAttribute('data-party-live') === 'true').catch(() => false);
 const session = (p) => p.evaluate((k) => { try { return JSON.parse(localStorage.getItem(k) || 'null'); } catch { return null; } }, KEY).catch(() => null);
@@ -122,7 +124,7 @@ const codeOf = async (p) => ((await p.textContent('[data-party-code]', { timeout
 const toastOf = (p) => p.evaluate(() => [...document.querySelectorAll('[data-party-toast],[data-room-party-note]')].map((e) => e.textContent).join(' | ')).catch(() => '');
 async function joinByCode(p, code, name) {
   await openMenu(p); await nick(p, name);
-  await p.click('button:has-text("Join with a code")');
+  await p.click('button:visible:has-text("Join with a code")');
   await p.waitForSelector('[data-party-join]', { timeout: 10000 });
   for (let i = 0; i < code.length; i++) { await p.locator('[data-party-join] [data-code-box]').nth(i).fill(code[i]); await p.waitForTimeout(60); } // fill, never page-level keys ('m' opens the map)
   await nick(p, name);
@@ -550,7 +552,7 @@ async function step7() {
   let a = st.A.p; const b = st.B.p;
   const s0 = await session(a);
   // Reload on the island.
-  await enter(a, '/', true, true); // this local build has no save service: the title may ask for a code again
+  await enter(a, '/play', true, true); // this local build has no save service: the title may ask for a code again
   rec(await waitFor(a, () => isLive(a), 40000), 'A reload on the island: party resumes by itself');
   const s1 = await session(a);
   rec(s1 && s1.resumeToken === s0.resumeToken, 'same slot after the reload');
@@ -568,7 +570,7 @@ async function step7() {
   await st.A.ctx.close();
   const A2 = st.A = await device('A', { storageState: state });
   a = A2.p;
-  await enter(a, '/'); // this local build has no save service: the title may ask for a code again (the party session is separate)
+  await enter(a, '/play'); // this local build has no save service: the title may ask for a code again (the party session is separate)
   rec(await waitFor(a, () => isLive(a), 40000), 'A closed + new context with its storage: rejoined by itself');
   const s2 = await session(a);
   await openMenu(a); await a.click('[data-party-tab="code"]').catch(() => {}); await a.waitForTimeout(400);
@@ -577,7 +579,7 @@ async function step7() {
   await closeCard(a);
   // A second tab for A.
   const a3 = await A2.ctx.newPage(); watch(a3, 'A-tab2');
-  await enter(a3, '/');
+  await enter(a3, '/play');
   await openMenu(a3);
   const elsewhere = await a3.textContent('[data-party-elsewhere]').catch(() => '');
   rec(/open in another tab/.test(elsewhere || '') && !(await isLive(a3)), 'second tab: "Your party is open in another tab"', JSON.stringify(elsewhere));
@@ -636,7 +638,7 @@ async function step8() {
   rec(await a.isVisible('[data-party-closed]'), 'Close to new friends: "Closed to new friends" badge');
   await shot(a, 's8-a-closed');
   await closeCard(a);
-  await enter(D.p, '/');
+  await enter(D.p, '/play');
   await joinByCode(D.p, nc, NAMES.D); await D.p.waitForTimeout(1500);
   if (await D.p.$('[data-parent-gate-answer]')) { await gate(D.p); await D.p.waitForTimeout(2500); }
   const closedMsg = await D.p.evaluate(() => [...document.querySelectorAll('[data-party-join] [role=status],[data-party-toast]')].map((e) => e.textContent).join(' | ')).catch(() => '');
@@ -672,7 +674,7 @@ async function step8() {
   if (!process.env.SKIP_KICK_WAIT) {
     await c.keyboard.press('Escape').catch(() => {});
     const left = 62000 - (Date.now() - t0); if (left > 0) await c.waitForTimeout(left);
-    await enter(c, '/');
+    await enter(c, '/play');
     await joinByCode(c, nc, NAMES.C); await c.waitForTimeout(1200); if (await c.$('[data-parent-gate-answer]')) await gate(c);
     rec(await waitFor(c, () => isLive(c), 15000), 'after 60 s C can join again');
   }

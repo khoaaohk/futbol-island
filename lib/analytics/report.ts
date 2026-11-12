@@ -23,6 +23,7 @@ import {buildOverview,type PerDay} from './overview';
 import {buildSponsor} from './sponsor';
 import {sponsorLabels} from './sponsorLabels';
 import {buildEmotes,buildParty} from './partyReport';
+import {buildHoldout} from './holdoutReport';
 import {emoteLabels} from './emoteLabels';
 import {emoteVariantLabels} from './emoteVariantLabels';
 import {buildMarketing} from './marketingReport';
@@ -125,6 +126,8 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
 
  // Oct 22 2026: Play with friends and emotes (lib/analytics/partyReport.ts), same rollups.
  report.party=buildParty(merged,range,rollups);report.emotes=buildEmotes(merged,range,emoteLabels(),emoteVariantLabels());
+ // Nov 12 2026: the public island's holdout reading (lib/analytics/holdoutReport.ts): status 'off' until legal sign-off.
+ report.holdout=buildHoldout(merged);
  // Nov 3 2026: the marketing page at `/` (lib/analytics/marketingReport.ts), same rollups.
  report.marketing=buildMarketing(merged,rollups);// named by the admin route / page (marketingLabels.ts)
  // Nov 5 2026: live matches (lib/analytics/liveMatchReport.ts): visits, joins and time per format, same rollups.

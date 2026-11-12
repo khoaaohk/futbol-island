@@ -12,6 +12,7 @@ import { Glyph } from './PartyChip';
 import type { RoomPartyHandle } from './useRoomParty';
 import styles from './party.module.css';
 import ConfirmStep from './ConfirmStep';
+import RoomPublicChip from './RoomPublicChip'; // public island (Agent C, Nov 11 2026): a world in a room, never party controls
 
 const ZONE_LINE: Record<number, string> = { [Zone.Main]: 'On the island', [Zone.Cay]: 'At Coral Cay', [Zone.Summit]: 'At the Summit', [Zone.Sea]: 'In the sea' };
 /** As PartyHost's memberActivityLine (not imported: the room bundle stays free of the island's party sheet). */
@@ -47,15 +48,17 @@ export default function RoomPartyChip({ party, hidden = false, align = 'left', e
   }, [open, confirmLeave]);
   // The party ends / the player is kicked / leaves while in a room: the chip goes, so say why once (as the island's PartyHost does).
   const [note, setNote] = useState<string | null>(null);
-  const was = useRef(state.status), selfLeft = useRef(false);
+  const was = useRef(state.status), selfLeft = useRef(false), wasWorld = useRef(state.kind === 'world');
   useEffect(() => {
-    const prev = was.current; was.current = state.status;
+    const prev = was.current, prevWorld = wasWorld.current; was.current = state.status; wasWorld.current = state.kind === 'world';
+    if (prevWorld || state.kind === 'world') return; // a public world is not a party: no "The party ended" 
     if ((prev !== 'live' && prev !== 'reconnecting') || state.status === 'live' || state.status === 'reconnecting' || state.status === 'connecting') return;
     setNote(selfLeft.current || state.error === ErrorCode.Kicked ? 'You left the party' : 'The party ended');
     selfLeft.current = false;
-  }, [state.status, state.error]);
+  }, [state.status, state.error, state.kind]);
   useEffect(() => { if (!note) return; const t = setTimeout(() => setNote(null), 4000); return () => clearTimeout(t); }, [note]);
   const live = state.status === 'live' || state.status === 'reconnecting';
+  if (state.kind === 'world') return live ? <RoomPublicChip room={party.room} hidden={hidden} align={align} /> : null;
   if (!live) return note ? <p className={styles.toast} role="status" data-room-party-note>{note}</p> : null;
   const me = state.members.find((m) => m.id === state.you);
   const others = state.members.filter((m) => m.id !== state.you);

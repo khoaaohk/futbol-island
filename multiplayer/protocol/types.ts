@@ -29,7 +29,9 @@ export const Emote = { Wave: 0, Cheer: 1, HighFive: 2, JuggleWithMe: 3, ShowOff:
 export type Emote = (typeof Emote)[keyof typeof Emote];
 export const PingKind = { MeetHere: 0, FollowMe: 1 } as const;
 export type PingKind = (typeof PingKind)[keyof typeof PingKind];
-export const LeaveReason = { Left: 0, Timeout: 1, Kicked: 2, Indoors: 3 } as const;
+/** Far (relay v2.0 world mode only): the member went out of sight for THIS recipient (beyond WORLD_SEE_M, another room, or the relay
+ *  stopped showing them). Fade them out quietly; they may come back with a new S.Joined. The recipient is never told which. */
+export const LeaveReason = { Left: 0, Timeout: 1, Kicked: 2, Indoors: 3, Far: 4 } as const;
 export type LeaveReason = (typeof LeaveReason)[keyof typeof LeaveReason];
 export const EndReason = { HostEnded: 0, Expired: 1, Empty: 2 } as const;
 export type EndReason = (typeof EndReason)[keyof typeof EndReason];
@@ -49,8 +51,56 @@ export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
  *  it (an old relay) the host's Lock name button is hidden.
  *  Hit (relay v1.6, Oct 23 2026) = a friend's kicked ball can knock a party friend over (C.Hit / S.Hit: a harmless ~1 s cartoon tumble).
  *  Without it (an old relay or an old client) friends are never knocked over; the NPC knock-over by my own ball is unchanged. */
-export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64, Match: 128 } as const;
+export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64, Match: 128, World: 256, Quiet: 512, Report: 1024, Goal: 2048 } as const;
+/** What a PARTY socket is offered (S.Caps): exactly 255, as before relay v2.0, so every old client keeps parsing S.Caps. */
 export const CAPS_ALL = 255;
+/** Relay v2.0 (public worlds, Nov 11 2026; docs/multiplayer/WORLD-HANDOFF.md). Only a WORLD socket (/world/:shard/ws) is offered
+ *  CAPS_WORLD: the party bits that stay between strangers (Live, Ball, EmoteAsk, Kit, Match; never Rename, NameLock, Hit) plus
+ *  World (S.World live count), Quiet (S.Quiet near count) and Report (C.Report). A client ANDs its bits with S.Caps, so it never sends
+ *  a bit above 255 to an old relay (whose parser takes 0..255). New parsers take 0..CAPS_MAX. */
+/** Phase 3 (Nov 12 2026): Cap.Goal (the island-wide daily goal: C.Goal / S.Goal) joins CAPS_WORLD. A client still ANDs with S.Caps, so a
+ *  relay without it never gets C.Goal. */
+export const CAPS_WORLD = Cap.Live | Cap.Ball | Cap.EmoteAsk | Cap.Kit | Cap.Match | Cap.World | Cap.Quiet | Cap.Report | Cap.Goal;
+export const CAPS_MAX = 0xffff;
+
+// ---- relay v2.0: public worlds (strangers on one island). Shared by the client, the relay, the dev relay and the tests. ----
+/** A world fills to WORLD_SOFT before the lobby opens another; WORLD_HARD is the room's real cap (room for reconnects of members
+ *  already assigned). The lobby never opens more than WORLD_MAX_SHARDS worlds (then GET /world answers open:false). */
+export const WORLD_SOFT = 20;
+export const WORLD_HARD = 24;
+export const WORLD_MAX_SHARDS = 64;
+/** Interest between strangers (m, horizontal): nobody farther than WORLD_SEE_M is ever sent (no 1 Hz beacon either); one who left
+ *  sight comes back at WORLD_SEE_BACK_M (no flicker at the edge). Indoors, only members in the same room are seen. */
+export const WORLD_SEE_M = 160;
+export const WORLD_SEE_BACK_M = 150;
+/** S.Quiet counts the others I can see within this range (m). 0 = nobody near: the client may send poses at 2 Hz. */
+export const QUIET_RANGE_M = 40;
+/** World slots: an announced away (room page, menu, background) keeps the slot WORLD_AWAY_GRACE_MS after a drop (party: 10 min);
+ *  a member who has not moved (or has been away) for WORLD_IDLE_MS is removed and closed with CloseCode.Idle. */
+export const WORLD_AWAY_GRACE_MS = 2 * 60_000;
+export const WORLD_IDLE_MS = 5 * 60_000;
+/** Following guard (relay, 1 Hz): A within nearM of B for more than holdMs while B moved more than movedM (path) in that time ->
+ *  B stops receiving A, until A has been farther than releaseM from B for releaseMs. */
+export const FOLLOW = { nearM: 4, holdMs: 45_000, movedM: 30, releaseM: 15, releaseMs: 30_000 } as const;
+/** C.Report reasons (ints on the wire). */
+export const ReportReason = { Following: 0, InMyWay: 1, TooManyWaves: 2, SomethingElse: 3 } as const;
+export type ReportReason = (typeof ReportReason)[keyof typeof ReportReason];
+/** Stats ids (relay counters), index = ReportReason. */
+export const REPORT_REASON_IDS = ['following', 'in_my_way', 'too_many_waves', 'something_else'] as const;
+/** Report rules: DISTINCT reporters (by daily IP hash) per target within windowMs; toQuarantine of them quarantine the target for
+ *  that connection and hold its IP hash for holdMs (memory only). Each reporter has a rate bucket [perSec, burst] and one report per target in that span. */
+export const REPORT = { windowMs: 10 * 60_000, toQuarantine: 2, holdMs: 60 * 60_000, rate: [0.1, 3] } as const;
+/** Phase 3 (Nov 12 2026), the island-wide daily goal: every world counts the goals its kids' teams score today (UTC day). A count only:
+ *  no id, name or position is kept. target = the day's goal shown to kids; max = where the count stops; rate = each member's C.Goal
+ *  bucket [perSec, burst] (one goal per 10 s sustained: a real live-match goal is rarer than that). */
+export const ISLAND_GOAL = { target: 50, max: 9999, rate: [0.1, 3] } as const;
+/** WebSocket close codes the client must handle on a world socket (the relay's full list is CLOSE in roomCore.ts). */
+export const CloseCode = {
+  /** Public play was switched off by the owner (POST /control): go to "Just me" quietly; do not retry until GET /world says open. */
+  WorldOff: 4007,
+  /** The slot was freed after WORLD_IDLE_MS idle / away: go to "Just me" quietly; reconnect (GET /world) on the next real input. */
+  Idle: 4008,
+} as const;
 /** Relay v1.8 (Cap.Match, Nov 4 2026; docs/join-live-game-design.md "Multiplayer slice 2"): friends play the SAME live match.
  *  ONE new client frame C.Match and ONE new server frame S.Match, each [code, MatchKind, ...]. An old client never answers Cap.Match in
  *  C.Caps, so it never gets S.Match (and could not parse it: parseServer -> null); an old relay never offers it, so a new client never
@@ -118,7 +168,8 @@ export const LIVE_RANGE_M = 40;
 export const BALL_RANGE_M = 80;
 export type Look = number[]; // length LOOK_LEN, ints 0..63
 export type MemberId = number; // 0..MAX_MEMBER_ID (31), server-assigned slot
-/** [colour, reserved]: the second slot used to be an animal index; the relay now always sends 0 and receivers ignore it. */
+/** [colour, animal]. Party: the second slot is reserved, the relay sends 0 and receivers ignore it. World (relay v2.0): the relay
+ *  assigns an index into WORLD_ANIMALS (names.ts) there; old clients still show the colour only. */
 export type NameIdx = [colour: number, reserved: number];
 /** Pose body: [x_dm, y_dm, z_dm, yaw256, speedQ, mode, zone, flags] */
 export type PoseBody = [number, number, number, number, number, Mode, Zone, number];
@@ -126,7 +177,11 @@ export type PoseBody = [number, number, number, number, number, Mode, Zone, numb
 export type MemberInfo = [id: MemberId, name: NameIdx, look: Look, isHost: 0 | 1, pose: PoseBody | null, nick?: string | null];
 
 // client -> server
-export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13, EmoteAsk: 14, EmoteAnswer: 15, NameLock: 16, Hit: 17, Kit: 18, Match: 19 } as const;
+export const C = { Hello: 0, Pose: 1, Emote: 2, Ping: 3, Kick: 4, Lock: 5, Rotate: 6, End: 7, Leave: 8, Beat: 9, ResetName: 10, Caps: 11, Ball: 12, Rename: 13, EmoteAsk: 14, EmoteAnswer: 15, NameLock: 16, Hit: 17, Kit: 18, Match: 19,
+  /** Relay v2.0, world sockets with Cap.Report only: [60, member, ReportReason]. Client ids are 0..19 and 60+; server ids 20..59. */
+  Report: 60,
+  /** Phase 3 (Nov 12 2026), world sockets with Cap.Goal only: [61]: my team just scored a goal (the island-wide daily goal). */
+  Goal: 61 } as const;
 export type C = (typeof C)[keyof typeof C];
 export type CHello = [typeof C.Hello, v: number, look: Look, resumeToken: string | null, hostKey: string | null,
   reservedAnimal?: number | null, nick?: string | null]; // slot 5 reserved (old animal index: parsed, ignored; send null). nick (slot 6) is REQUIRED for new clients: a 7-element Hello with a missing or invalid nick is refused with ErrorCode.BadName. Old 5 / 6-element Hellos (no nick) are still accepted as colour-name-only during the transition period.
@@ -169,12 +224,21 @@ export type CHit = [typeof C.Hit, victim: MemberId, dir: number];
 export type CKit = [typeof C.Kit, kit: Kit | null];
 /** Relay v1.8 (Cap.Match): see MatchKind. Integers only. */
 export type CMatch = [typeof C.Match, kind: MatchKind, ...rest: number[]];
-export type ClientMsg = CMatch | CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename | CEmoteAsk | CEmoteAnswer | CNameLock | CHit | CKit;
+/** Relay v2.0 (Cap.Report): report a stranger I have seen this connection. Nothing comes back but S.Left [id, Far] (the relay stops
+ *  showing us to each other). */
+export type CReport = [typeof C.Report, target: MemberId, reason: ReportReason];
+/** Phase 3 (Cap.Goal): my team scored. Nothing comes back but the next S.Goal. */
+export type CGoal = [typeof C.Goal];
+export type ClientMsg = CGoal | CReport | CMatch | CHello | CPose | CEmote | CPing | CKick | CLock | CRotate | CEnd | CLeave | CBeat | CResetName | CCaps | CBall | CRename | CEmoteAsk | CEmoteAnswer | CNameLock | CHit | CKit;
 
 // server -> client
 export const S = {
   Welcome: 20, Joined: 21, Left: 22, Poses: 23, Emote: 24, Ping: 25, Host: 26, Code: 27, Ended: 28, Error: 29, Beat: 30, Renamed: 31,
   Caps: 32, Live: 33, EmoteAsk: 34, EmoteAnswer: 35, Duet: 36, NameLock: 37, Hit: 38, Kit: 39, Match: 40,
+  /** Relay v2.0 world only: S.Quiet [41, near] (Cap.Quiet), S.World [42, n] (Cap.World). */
+  Quiet: 41, World: 42,
+  /** Phase 3 (Nov 12 2026), world only (Cap.Goal): S.Goal [43, n] = goals this world scored today (0..ISLAND_GOAL.max). */
+  Goal: 43,
 } as const;
 export type S = (typeof S)[keyof typeof S];
 export type SWelcome = [typeof S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
@@ -217,4 +281,10 @@ export type SHit = [typeof S.Hit, shooter: MemberId, victim: MemberId, dir: numb
 export type SKit = [typeof S.Kit, id: MemberId, kit: Kit | null];
 /** Relay v1.8 (Cap.Match): see MatchKind. Integers only. */
 export type SMatch = [typeof S.Match, kind: MatchKind, ...rest: number[]];
-export type ServerMsg = SMatch | SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;
+/** Relay v2.0 (Cap.Quiet): how many others I can see within QUIET_RANGE_M (0..255). Sent after C.Caps and when it changes (1 Hz). */
+export type SQuiet = [typeof S.Quiet, near: number];
+/** Relay v2.0 (Cap.World): members in my world now, me included (0..WORLD_HARD). Sent after C.Caps and when it changes (1 Hz). */
+export type SWorld = [typeof S.World, n: number];
+/** Phase 3 (Cap.Goal): goals this world scored today (UTC). Sent after C.Caps and when it changes (at most 1 Hz). */
+export type SGoal = [typeof S.Goal, n: number];
+export type ServerMsg = SGoal | SQuiet | SWorld | SMatch | SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;

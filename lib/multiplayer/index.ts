@@ -12,6 +12,11 @@ export * from './look';
 export * from './names';
 export * from './nick';
 export * from './liveClock';
+export * from './presenceMode';
+export * from './strangers';
+export * from './sharedMatch';
+export { createPublicWorld, setMode, resumeRoomConnection, attachWorldConnection, isPublic, publicCount, othersNear, hideMember, unhideMember, hidden, reportMember,
+  LAZY_CONNECT_MS, SLOW_RETRY_MS, type PublicWorld } from './publicWorld';
 
 export type PoseListener = (id: MemberId, body: PoseBody, recvMs: number) => void;
 const poseSubs = new Set<PoseListener>();
@@ -79,8 +84,9 @@ function bindOnce(conn: PartyConnection, now: () => number): () => void {
     }
     partyStore.apply(m, now());
   });
-  const offStatus = conn.onStatus((s) => partyStore.setStatus(s, conn.code));
-  partyStore.setStatus(conn.status, conn.code);
+  const kindOf = () => (conn as { kind?: 'party' | 'world' | null }).kind ?? (conn.code ? 'party' : null); // a test double may not have kind
+  const offStatus = conn.onStatus((s) => partyStore.setStatus(s, conn.code, kindOf()));
+  partyStore.setStatus(conn.status, conn.code, kindOf());
   // Party rejoin: tab ownership and a lapsed slot (set before the status they come with, so the UI reads both together).
   const hasLocal = typeof conn.onLocal === 'function'; // a test double may not have it
   const offLocal = hasLocal ? conn.onLocal(() => partyStore.setLocal(conn.tab ?? null, !!conn.lapsed)) : () => {};

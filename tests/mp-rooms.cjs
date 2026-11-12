@@ -354,12 +354,13 @@ t('Konbini wiring: layer in the loop, 20 fps remote frames on phones, one ring, 
   assert.ok(kr.indexOf('useRoomParty(room,konbiniRoom(shop)') > 0 && kr.indexOf('useRoomParty(room') < kr.indexOf("import('@/lib/konbini/konbiniScene')"), 'hook declared before the scene effect (disposed first)');
   assert.ok(/\{party&&<span className=\{styles\.hudParty\}><RoomPartyChip party=\{party\} hidden=\{covered\|\|!!zoom\} emoteDock\/><\/span>\}/.test(kr), 'chip in the header (count + roster only, the Emote button is in the action cluster), hidden while covered / zoomed');
   const hook = read('components/party/useRoomParty.ts');
-  assert.ok(/conn\.resume\(\{ look: partyLook\(\) \}\)/.test(hook) && !/useEffect\(\(\) => \(\) => [^\n]*leave/.test(hook), 'resume on load, never leave on unmount');
+  // Public island (Nov 11 2026): the resume goes through publicWorld.resumeRoomConnection (the party, or the tab's world slot when allowed).
+  assert.ok(/resumeRoomConnection\(conn, partyLook\(\), worldResumeAllowed\(\)\)/.test(hook) && !/useEffect\(\(\) => \(\) => [^\n]*leave/.test(hook), 'resume on load, never leave on unmount');
   // Verifier, Oct 22 2026: flag off, the room pages must load no party code (the Konbini / Museum / Kit Shop shipped it statically).
   const statics = (t) => [...t.matchAll(/^import\s+(?!type)[^;]*from\s+'([^']+)'/gm)].map((m) => m[1]);
   for (const f of ['components/KonbiniRoom.tsx', 'components/MuseumRoom.tsx', 'components/shop/ShopRoom.tsx', 'components/party/useRoomParty.ts'])
     for (const m of statics(read(f).replace(/;import /g, ';\nimport '))) assert.ok(!/roomParty|RoomPartyChip|remoteAvatars|connection|^three$|lib\/multiplayer$|lib\/multiplayer\/index/.test(m), f + ': static import of party code: ' + m);
-  assert.ok(/const loadLayer = \(\) => import\('@\/lib\/multiplayer\/roomParty'\)/.test(hook) && /if \(dead\) return;/.test(hook), 'the layer is a dynamic import, dropped when the effect is gone');
+  assert.ok(/const loadLayer = \(\) => Promise\.all\(\[import\('@\/lib\/multiplayer\/roomParty'\)/.test(hook) && /if \(dead\) return;/.test(hook), 'the layer is a dynamic import, dropped when the effect is gone');
   const rp = read('lib/multiplayer/roomParty.ts');
   assert.ok(!/requestAnimationFrame|setInterval|setTimeout/.test(rp) && !/lib\/analytics|\.\.\/analytics/.test(rp), 'no timers, no analytics');
   assert.ok(/KONBINI_DOOR_HINTS/.test(read('components/Town.tsx')), 'Town passes the door hints');

@@ -183,6 +183,43 @@ rendered frames, CDP TaskDuration and a heap *sampling* profile that counts coll
 - **Validation:** `tests/mp-avatars.cjs` (pure cap gate + plan: monotonic, hysteresis, farthest demoted, nearest kept, no churn on a
   flapping tier; the layer: mid-party drop, 0.4 s release, re-admit after 10 s, reduced motion, Battery saver, desktop, a room tier
   sequence); `scripts/check-mp-heat-recheck.cjs` (headless phone + 6 bots on the island, tier forced via `__fi2.heat.force`, rigs read
+## Public island: drawing strangers (Nov 11 2026, phase 1, local, behind NEXT_PUBLIC_PUBLIC_WORLD, not deployed)
+- **What:** `lib/graphics/remoteAvatars.ts` draws up to 23 strangers (world hard cap 24) with the same layer as parties; stranger rules are
+  read through ONE adapter, `lib/graphics/remotePublic.ts` (client accessors `isPublic()`, store `Member.nameIdx`, `isHiddenStranger`).
+  Party behaviour is unchanged (first-come rigs via `planRigs`, instant leave, no room cap, typed names).
+- **Pools (all fixed, no per-frame allocation):** `MAX_REMOTE = max(PARTY_MAX, WORLD_HARD) = 24`; ring mesh 25 instances (1 draw call),
+  force fields 24, near-ring mesh 8 (+1 draw call only while someone is within 1.2 m), body batch 8 (rigs stay 5/5/3/1/0 by heat tier),
+  near body batch 5 (its own groups, only while someone is near), ball distance scratch 36. Labels: one 512x128 canvas + sprite per
+  member made on upsert (~256 KB each, ~6 MB CPU for 23; GPU upload only once a label has been visible: nearest 8 within 25 m);
+  bubbles 6, balls 4, jet plumes 3. Per entry: a last-pose copy and a 6-slot emote-time ring (made on upsert).
+- **Stranger rules:** rigs go to the NEAREST with hysteresis (`rigCap.ts planNearest`: swap only when 4 m nearer outdoors / 1 m in a room,
+  1 swap per 1 s recheck, so the batch never holds more than cap + 1); room cap 6 nearest drawn at all (same planner, 1 m); personal-space
+  fade to 40% over 0.25 s within 1.2 m of me, and in rooms for anyone on the camera's sight line to my spot (+1.5 m past it, the machine;
+  when I am at a machine the focus is the camera ray's floor point); fade over the last 10 m before the 160 m cut-off; a removed stranger
+  fades over 1 s at its last spot then is released (`fading` getter; the bridges' flush frame passes reduced motion, so "Just me"
+  currently frees everything at once); hidden = nothing drawn; at most 6 emotes / min / stranger (backs up the client cap); no bumps,
+  no knock-overs, no duets indoors, no map dots.
+- **Measured (SYNTHETIC strangers, `scripts/check-mp-public-heat.cjs`, Next DEV server, headless Chrome, iPhone 13 viewport, CPU x4):**
+  island draw calls / triangles / layer update ms per frame: 0 strangers 132 / 99.6k / 0.04; 5: 145 / 137k / 0.61; 12: 145 / 133k / 0.49;
+  23: 147 / 132k / 0.36 (5 rigs, rings + 8 labels); party of 19 friends today: 151 / 138k / 0.42. Tier 1/2/3/4 at 23: 147/139/137/143
+  calls, 0.48/0.31/0.20/0.06 ms. Arcade: 0 -> 49 calls; 6 strangers 67 calls, 0.19 ms; 10 sent (cap draws 6, one inside personal
+  space) 73 calls, 0.54 ms. Rigs cost ~0.12 ms each at x4 (in line with the 0.11-0.13 ms design figure); ring-only strangers ~0.01 ms.
+  Dev build, synthetic poses, desktop CPU throttled: **no claim about real iPhone temperature.**
+- **Tradeoff:** the 40% fade needs a second batch (one draw call per rig mesh group, ~6 in the Arcade) while anyone stands within 1.2 m;
+  material switch compiles the transparent variant once on first use.
+- **Validation:** `tests/mp-public-draw.cjs` (pools, no allocation incl. a counted 400-frame run, names, hidden, personal space, hysteresis,
+  room cap, emote cap, fade-out frees pools, far fade, stranger rules), `tests/mp-avatars.cjs`; heat scripts take `--world`.
+- **Real sockets (verify pass, Nov 11 2026; `docs/multiplayer/PHASE1-VERIFY.md`):** the same phone profile (390x844, CPU x4, Next DEV
+  server, headless Chrome) but the island really joined a world on the dev relay and 5 / 12 / 23 world bots (`bot.mjs --world --in`)
+  walked within ~15 m. Draw calls / triangles / layer update ms: alone 121 / 101k / 0.06; 5: 132 / 126k / 0.67; 12: 134 / 132k / 0.75;
+  23: 134 / 122k / 0.77 (5 rigs). Tier 1/2/3/4 at 23: 138/128/123/122 calls, 0.68/0.42/0.33/0.14 ms, rigs 5/3/1/0. Close to the
+  synthetic figures above (update ms ~0.3 higher: real interpolation + labels for 23 members). Data received: 0.9 / 1.9 / 2.7 KB/s
+  with 5 / 12 / 23 near (~12-13 frames/s) = 3.3 / 6.8 / 9.6 MB per hour; sent while standing still ~3-5 B/s (delta suppression; the
+  5 s beat), so about 10 MB/h at the world cap with everyone near (the policy's "about 15 MB" is a conservative upper figure, not
+  changed). Arcade with 6 strangers: 57 calls (54 empty), 0.30 ms update, 1.06 KB/s in, 15-20 fps (the room cap). Alone in a world: 0.1 pose frames/s while idle, 3 B/s in, no added timers (the existing 5 s beat). The fade-out on
+  "Just me" now keeps the island / room layer updating for ~1 s (`avatars.fading`), then the layer is hidden and the room sleeps
+  again (`roomParty.update` returns false). Dev build, desktop CPU throttled: **no claim about real iPhone temperature.**
+
   from `__fi2.partyHeat()`).
 
 ## Realistic sea turtle (Oct 21 2026, local, not deployed)

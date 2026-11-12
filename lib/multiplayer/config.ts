@@ -17,3 +17,18 @@ export function relayWsUrl(code: string): string | null {
   if (!base || !/^[A-Z0-9]{1,16}$/.test(code)) return null;
   return `${base.replace(/^http/i, 'ws')}/party/${code}/ws`;
 }
+
+/** Public island (relay v2.0): a world shard number from the lobby (1..WORLD_MAX_SHARDS). Anything else never reaches a URL. */
+export const validShard = (n: unknown): n is number => typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= 999;
+/** `GET /world[?in=shard]` (the lobby), or null when the flag is off / no relay URL. */
+export function relayLobbyUrl(inShard: number | null): string | null {
+  const base = relayHttpUrl();
+  if (!base) return null;
+  return validShard(inShard) ? `${base}/world?in=${inShard}` : `${base}/world`;
+}
+/** `ws(s)://.../world/:shard/ws`, or null when disabled or the shard is not a plain number. */
+export function relayWorldWsUrl(shard: number): string | null {
+  const base = relayHttpUrl();
+  if (!base || !validShard(shard)) return null;
+  return `${base.replace(/^http/i, 'ws')}/world/${shard}/ws`;
+}

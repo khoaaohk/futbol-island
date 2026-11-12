@@ -30,7 +30,7 @@ t('protocol: new frames parse, bad ones do not, old frames unchanged',()=>{
  const j=JSON.stringify;
  assert.deepEqual(P.parseClient(j([C.Caps,3])),[11,3]);
  assert.deepEqual(P.parseClient(j([C.Ball,BallState.Free,1000,5,-200])),[12,3,1000,5,-200]);
- for(const b of [[11],[11,-1],[11,256],[11,1.5],[12,4,0,0,0],[12,3,99999,0,0],[12,3,0,0],[12,3,0,3000,0],[12,'3',0,0,0]])assert.equal(P.parseClient(j(b)),null,j(b));
+ for(const b of [[11],[11,-1],[11,65536],[11,1.5],[12,4,0,0,0],[12,3,99999,0,0],[12,3,0,0],[12,3,0,3000,0],[12,'3',0,0,0]])assert.equal(P.parseClient(j(b)),null,j(b));
  assert.deepEqual(P.parseServer(j([S.Caps,3])),[32,3]);
  const live=[S.Live,1760000000000,[4,...pose(10,20),35,5,...pose(30,40),0],[4,BallState.Free,12,3,22,10]];
  assert.ok(P.parseServer(j(live)),'S.Live parses');

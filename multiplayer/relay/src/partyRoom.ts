@@ -15,9 +15,23 @@
 // (they re-Hello as new faces). Phase 0 caveat: not exercised on real Cloudflare.
 import { RoomCore, CLOSE } from './roomCore';
 import type { MemberAttachment, Peer, RoomSnapshot } from './roomCore';
-import { generateCode, PARTY_MAX_MS } from '../../protocol';
+import { generateCode, PARTY_MAX_MS, WORLD_MAX_SHARDS } from '../../protocol';
+import { WORLD_HEARTBEAT_MS } from './worldLobbyCore';
 
-export interface Env { PARTY: DurableObjectNamespace; STATS: DurableObjectNamespace; STATS_TOKEN?: string; MP_ALLOWED_ORIGINS?: string; MP_DEV?: string }
+/** Workers Rate Limiting binding (wrangler.toml [[ratelimits]]). Optional: without it the worker uses its in-isolate buckets. */
+export interface RateLimiter { limit(o: { key: string }): Promise<{ success: boolean }> }
+export interface Env {
+  PARTY: DurableObjectNamespace; STATS: DurableObjectNamespace; STATS_TOKEN?: string; MP_ALLOWED_ORIGINS?: string; MP_DEV?: string;
+  /** Relay v2.0 (public worlds): the WorldLobby singleton, the owner's control secret, the rate-limit bindings. */
+  LOBBY?: DurableObjectNamespace; CONTROL_TOKEN?: string; WORLD_RL?: RateLimiter; JOIN_RL?: RateLimiter;
+}
+
+// WORLD ROOMS (relay v2.0, Nov 11 2026): the same class, named 'pub-N' (no party code can look like that). The worker opens them
+// with /ws?world=N plus two headers it sets itself (x-fi-ih: the daily IP hash, x-fi-held: 1 when WorldLobby holds that hash).
+// A world keeps nothing in storage but {world: N} (so a hibernated room knows what it is) and, phase 3, 'goal' {day, n} (today's island
+// goal count, a number only): no code, no host, no tombstone, no
+// expiry, no party summary. Its live count goes to WorldLobby (POST /count) on every change and every 30 s, never to the party gauge.
+// When it is empty it sets no alarm, so it simply hibernates. POST /world-close (the kill switch) closes every socket.
 
 interface Saved extends RoomSnapshot { name: string; createdAt: number; hostKeyHash: string }
 
@@ -36,6 +50,10 @@ export class PartyRoom {
   /** Members this room has reported to RelayStats as live (a number only; persisted under 'gauge' before each report). */
   private reported = 0;
   private summarySent = false;
+  /** World only: the shard number, the count last sent to WorldLobby, and when. */
+  private shard = 0;
+  private lobbyN = -1;
+  private lobbyAt = 0;
 
   constructor(private state: DurableObjectState, private env: Env) {}
 
@@ -44,6 +62,8 @@ export class PartyRoom {
     const alias = await this.state.storage.get<string>('alias');
     if (alias) return this.env.PARTY.get(this.env.PARTY.idFromName(alias)).fetch(request); // rotated code -> origin room
     if (url.pathname === '/init' && request.method === 'POST') return this.init(await request.json());
+    const worldQ = url.searchParams.get('world');
+    if (worldQ !== null || url.pathname === '/world-close') return this.worldFetch(request, url, worldQ);
     if (url.pathname === '/alias' && request.method === 'POST') {
       const b = (await request.json()) as { origin?: string };
       if (typeof b.origin === 'string') await this.state.storage.put('alias', b.origin);
@@ -98,6 +118,7 @@ export class PartyRoom {
     const core = await this.load();
     if (!core) return;
     core.tick();
+    if (core.world) { if (Date.now() - this.lobbyAt >= WORLD_HEARTBEAT_MS) this.syncLobby(core, true); this.afterEvent(); return; }
     if (core.countersDirty && !core.ended) await this.persist(core); // counters ride the 5 s alarm, not every message
     this.afterEvent();
   }
@@ -128,9 +149,15 @@ export class PartyRoom {
     return Response.json({ hostKey: core.hostKey, expiresAt: core.codeExpiresAt });
   }
 
-  private build(name: string, createdAt: number, hostKeyHash: string | null, restore: RoomSnapshot | null): RoomCore {
+  private build(name: string, createdAt: number, hostKeyHash: string | null, restore: RoomSnapshot | null, world = false): RoomCore {
     const random = (n: number): Uint8Array => { const a = new Uint8Array(n); crypto.getRandomValues(a); return a; };
-    const core = new RoomCore({ code: name, createdAt, clock: { now: () => Date.now() }, random, hostKeyHash: hostKeyHash ?? undefined, restore: restore ?? undefined });
+    const core = new RoomCore({ code: name, createdAt, clock: { now: () => Date.now() }, random, hostKeyHash: hostKeyHash ?? undefined, restore: restore ?? undefined, kind: world ? 'world' : 'party' });
+    if (world) {
+      core.onStat = (id) => this.report('/inc', { id, n: 1 });
+      core.onHold = (h) => { void this.lobby('/hold', { h }); };
+      core.onGoal = (g) => { void this.state.storage.put('goal', g); }; // phase 3: the daily goal count {day, n} (a count only)
+      return core;
+    }
     core.onRotate = (_old, next) => {
       const origin = this.base?.name;
       if (origin) void this.env.PARTY.get(this.env.PARTY.idFromName(next)).fetch('https://do/alias', { method: 'POST', body: JSON.stringify({ origin }) });
@@ -145,6 +172,8 @@ export class PartyRoom {
   }
 
   private async doLoad(): Promise<RoomCore | null> {
+    const w = await this.state.storage.get<number>('world');
+    if (typeof w === 'number') { const g = await this.state.storage.get<{ day: number; n: number }>('goal'); return this.buildWorld(w, true, g); }
     if (await this.state.storage.get('tombstone')) return null; // ended: never revived
     const s = await this.state.storage.get<Saved>('saved');
     if (!s) return null;
@@ -179,6 +208,7 @@ export class PartyRoom {
 
   private async persist(core: RoomCore): Promise<void> {
     core.countersDirty = false;
+    if (core.world) return; // a world keeps nothing but its shard number
     if (core.ended) { await this.reportEnded(core); await this.finish(); return; }
     if (this.base) await this.state.storage.put('saved', { ...this.base, ...core.snapshot() } satisfies Saved);
   }
@@ -222,7 +252,8 @@ export class PartyRoom {
     const core = this.core;
     if (!core) return;
     if (core.stateChanged) { core.stateChanged = false; void this.persist(core); }
-    if (!core.ended) this.syncGauge(core);
+    if (core.world) this.syncLobby(core, false);
+    else if (!core.ended) this.syncGauge(core);
     if (core.ended) {
       if (this.timer) clearInterval(this.timer);
       this.timer = null;
@@ -234,7 +265,71 @@ export class PartyRoom {
       this.timer = setInterval(() => { if (++step % 2) core.halfTick(); else core.tick(); if (core.ended || core.stateChanged) this.afterEvent(); }, TICK_MS);
     }
     else if (sockets < 2 && this.timer) { clearInterval(this.timer); this.timer = null; }
+    if (core.world && sockets === 0 && core.size === 0) return; // an empty world sets no alarm: it hibernates
     void this.ensureAlarm();
+  }
+
+  // ---- relay v2.0: world rooms ----
+  private async worldFetch(request: Request, url: URL, worldQ: string | null): Promise<Response> {
+    if (url.pathname === '/world-close') {
+      if (request.method !== 'POST') return new Response('not found', { status: 404 });
+      const core = await this.load();
+      if (core && core.world) { core.closeWorld(); this.afterEvent(); }
+      return new Response('ok');
+    }
+    const shard = Number(worldQ);
+    if (url.pathname !== '/ws' || !Number.isInteger(shard) || shard < 1 || shard > WORLD_MAX_SHARDS) return new Response('not found', { status: 404 });
+    if (request.headers.get('Upgrade') !== 'websocket') return new Response('expected websocket', { status: 426 });
+    let core = await this.load();
+    if (!core) { await this.state.storage.put('world', shard); core = this.buildWorld(shard, false); }
+    if (!core.world) return new Response('not found', { status: 404 });
+    const ih = request.headers.get('x-fi-ih');
+    const meta = { ipKey: ih && /^[0-9a-f]{8,64}$/.test(ih) ? ih : null, held: request.headers.get('x-fi-held') === '1' };
+    const pair = new WebSocketPair();
+    const server = pair[1] as HibernatableWebSocket;
+    this.state.acceptWebSocket(server);
+    const peer = this.makePeer(server);
+    this.peers.set(server, peer);
+    core.connect(peer, false, meta);
+    this.afterEvent();
+    return new Response(null, { status: 101, webSocket: pair[0] } as ResponseInit);
+  }
+
+  private buildWorld(shard: number, restoreSockets: boolean, goal?: { day: number; n: number } | null): RoomCore {
+    this.shard = shard;
+    const core = this.build('pub-' + shard, Date.now(), null, null, true);
+    core.restoreGoal(goal); // phase 3: today's island goal survives a hibernation
+    if (restoreSockets) {
+      for (const ws of this.state.getWebSockets()) {
+        const peer = this.makePeer(ws);
+        this.peers.set(ws, peer);
+        const a = ws.deserializeAttachment() as MemberAttachment | null;
+        if (a && typeof a.token === 'string') { core.restoreMember(peer, a); this.attSig.set(ws, JSON.stringify(a)); }
+        else core.connect(peer);
+      }
+      core.restoredWorld();
+    }
+    this.core = core;
+    return core;
+  }
+
+  /** The world's count to WorldLobby (on a change, or forced by the 30 s heartbeat). A lobby that says public play is off closes the
+   *  world (the kill switch's second path: it also works after the lobby forgot which shards exist). */
+  private syncLobby(core: RoomCore, force: boolean): void {
+    const n = core.size;
+    if (!force && n === this.lobbyN) return;
+    this.lobbyN = n; this.lobbyAt = Date.now();
+    void this.lobby('/count', { shard: this.shard, n }).then((r) => {
+      if (r && r.public === false && core.size > 0) { core.closeWorld(); this.afterEvent(); }
+    });
+  }
+
+  private async lobby(path: string, body: unknown): Promise<{ public?: boolean } | null> {
+    try {
+      if (!this.env.LOBBY) return null;
+      const res = await this.env.LOBBY.get(this.env.LOBBY.idFromName('lobby')).fetch('https://do' + path, { method: 'POST', body: JSON.stringify(body) });
+      return path === '/count' ? ((await res.json()) as { public?: boolean }) : null;
+    } catch { return null; }
   }
 }
 

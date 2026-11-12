@@ -41,13 +41,18 @@ export type FailReason = (typeof FAIL_REASONS)[number];
 /** Names for protocol ErrorCode 0..9 (index = code). */
 export const ERR_NAMES = ['bad_message', 'rate', 'full', 'not_found', 'expired', 'locked', 'not_host', 'bad_version', 'kicked', 'bad_name'] as const;
 export const END_REASONS = ['host', 'expired', 'empty'] as const; // index = protocol EndReason
+/** Relay v2.0: C.Report reasons (index = protocol ReportReason; equal to protocol REPORT_REASON_IDS, a test keeps them equal). */
+export const REPORT_REASONS = ['following', 'in_my_way', 'too_many_waves', 'something_else'] as const;
 
 const ids: string[] = [
   'rl:created', 'rl:welcome', 'rl:resume', 'rl:kick', 'rl:rotate', 'rl:lock', 'rl:name_reset', 'rl:rate_close', 'rl:msgs',
   'rl:room_oob', // relay v1.1: room poses dropped for standing outside their room (count only)
   'rl:origin_refused', 'rl:create_rate', 'rl:lookup_miss', 'rl:join_rate',
   'rl:live_parties_max', 'rl:live_players_max',
+  // relay v2.0 public worlds: daily counts only (never who reported whom)
+  'rl:world_rate', 'rl:quarantine',
 ];
+for (const r of REPORT_REASONS) ids.push('rl:report_' + r);
 for (const r of END_REASONS) ids.push('rl:ended_' + r);
 for (const b of PEAK_BUCKETS) ids.push('rl:' + b);
 for (const b of LEN_BUCKETS) ids.push('rl:' + b);

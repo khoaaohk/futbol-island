@@ -288,6 +288,30 @@ export const EMOTE_VARIANT_COUNTS={dance:10,show:10,react:4,hf:20,wave:6,cheer:6
 export type EmoteVariantFamily=keyof typeof EMOTE_VARIANT_COUNTS;
 export const EMOTE_VARIANT_IDS:readonly string[]=(Object.entries(EMOTE_VARIANT_COUNTS) as [EmoteVariantFamily,number][]).flatMap(([f,n])=>Array.from({length:n},(_,i)=>`em:${f}_${i}`));
 export const PARTY_FIXED_IDS:readonly string[]=PARTY_COUNT_EVENTS.map(([e])=>'mp:'+e);
+/**
+ * Public island (Nov 11 2026, phase 1, lib/analytics/publicEvents.ts; docs/multiplayer-public-island-plan-2026-11-11.md). Allowlisted
+ * now so the server accepts them; the CLIENT sends none unless the build flag NEXT_PUBLIC_PUBLIC_WORLD=1 (lib/multiplayer/
+ * publicFlag.ts). Totals only: never a name or made-up name, a member id, a world/shard, a position or who was near whom.
+ */
+export const PUBLIC_REPORT_REASONS=['following','inmyway','waves','other'] as const;
+export const PUBLIC_COUNT_EVENTS=[
+ ['pub_arm_on','Started with others shown by default (holdout arm "on")'],['pub_arm_hold','Started as Just me by default (holdout arm "hold")'],
+ ['pub_connect','Joined a shared island'],['pub_seen','Visits where another player was seen'],['pub_min','Minutes with other players around'],
+ ['pub_switch_solo','Switched to Just me'],['pub_switch_on','Switched to With other players'],['pub_hide','Player hidden'],
+ ...PUBLIC_REPORT_REASONS.map(r=>[`pub_report_${r}`,`Report: ${({following:'Following',inmyway:'In my way',waves:'Too many waves',other:'Something else'} as const)[r]}`] as const),
+ ['pub_full','Shared islands full (played as Just me)'],['pub_unreachable','Public service unreachable (played as Just me)'],
+ ['pub_hint','“Other kids are here” card shown'],['pub_match_join','Live match joined with other players near'],
+] as const;
+export const PUBLIC_FIXED_IDS:readonly string[]=PUBLIC_COUNT_EVENTS.map(([e])=>'mp:'+e);
+/**
+ * Phase 2 (Nov 12 2026): the holdout READING, per arm ('on' = others shown by default, 'hold' = Just me by default). Sent only when
+ * NEXT_PUBLIC_PUBLIC_HOLDOUT_READING=1 as well (lib/multiplayer/publicFlag.ts holdoutReadingEnabled(), OFF until legal sign-off).
+ * `hx_<arm>_min`: whole foreground island minutes in a tab that started in that arm; `hx_<arm>_back`: tab sessions on a device that
+ * already had its holdout seed (a returning device). The visits per arm are pub_arm_on / pub_arm_hold. Totals only.
+ */
+export const HOLDOUT_ARMS=['on','hold'] as const;
+export const HOLDOUT_COUNT_EVENTS=HOLDOUT_ARMS.flatMap(a=>[[`pub_hx_${a}_min`,`Island minutes (holdout arm "${a}")`],[`pub_hx_${a}_back`,`Returning visits (holdout arm "${a}")`]] as const);
+export const HOLDOUT_FIXED_IDS:readonly string[]=HOLDOUT_COUNT_EVENTS.map(([e])=>'mp:'+e);
 export const EMOTE_FIXED_IDS:readonly string[]=[...EMOTE_COUNT_EVENTS.map(([e])=>'em:'+e),...EMOTE_WIRE_IDS.map(n=>'em:e'+n),...EMOTE_VARIANT_IDS];
 
 /**
@@ -342,6 +366,8 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...WATER_COUNT_EVENTS.map(([e])=>'wa:'+e),
  ...ENGAGE_FIXED_IDS,
  ...PARTY_FIXED_IDS,...EMOTE_FIXED_IDS,...PARTY_RETENTION_IDS,
+ ...HOLDOUT_FIXED_IDS,// mp:pub_hx_* the holdout reading (publicEvents.ts, Nov 12 2026; sent only with NEXT_PUBLIC_PUBLIC_HOLDOUT_READING=1)
+ ...PUBLIC_FIXED_IDS,// mp:pub_* the public island (publicEvents.ts, Nov 11 2026; sent only with NEXT_PUBLIC_PUBLIC_WORLD=1)
  ...MARKETING_COUNT_IDS,// mk: the marketing page at `/` (marketingIds.ts, Nov 3 2026)
  ...LIVE_MATCH_COUNT_IDS,// lm: live matches (liveMatchEvents.ts, Nov 5 2026)
  ...MARKETING_VISIT_COUNT_IDS,// mm: the investor page /marketing (marketingVisit.ts, Nov 5 2026)
