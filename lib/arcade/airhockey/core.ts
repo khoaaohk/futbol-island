@@ -10,7 +10,7 @@
  * post), and the counter-attack after a save.
  */
 export const AH={W:100,H:160,PR:4.4,SR:8,GOAL0:27,GOAL1:73,HZ:120,VMAX:340,HUMAN_CAP:460,E_HIT:.55,E_WALL:.9,DRAG:.3,REST:3,
- SERVE_V:50,WAIT:.35,GOAL_BEAT:1.15,BETWEEN:2.2,DEAD_V:7,DEAD_S:2,DEAD_EDGE:2.5,NUDGE_V:46,SOLO_TO:5,DUO_TO:7,LIVES:3,LIFE_EVERY:3,
+ SERVE_V:50,WAIT:.35,GOAL_BEAT:1.15,BETWEEN:2.2,DEAD_V:7,DEAD_S:2,DEAD_EDGE:2.5,NUDGE_V:46,SOLO_TO:5,LIVES:3,LIFE_EVERY:3,
  QUICK_S:4,COUNTER_S:3.5,pts:{goal:100,quick:50,bank:75,counter:50,clean:300,win:250,winLevel:50},coinPer:250,coinCap:12} as const;
 const {W,H,PR,SR,GOAL0,GOAL1}=AH,R=PR+SR,STEP=1/AH.HZ;
 
@@ -40,10 +40,9 @@ export function opponentFor(level:number):AirOpponent{const n=RAMP.length,l=Math
 /** The simple scripted player the tests set against the ramp: beats level 1, loses to level 10. */
 export const SCRIPTED:AirBot={react:.24,speed:140,shot:180,predict:.3,guard:.55,attack:.7,err:9,bank:.1};
 
-export type AirMode='solo'|'duo';
 export type AirPhase='wait'|'play'|'goal'|'between'|'over';
 /** goal: a = scorer, b = flags (GOAL_*). hit: a = side, b = impact speed. wall / post: b = speed. win: a = level beaten, b = bonus
- *  points. lose: a = lives left. next: a = the level that walks on. life: a = lives now. over: a = winner side (duo) or -1. */
+ *  points. lose: a = lives left. next: a = the level that walks on. life: a = lives now. over: a = -1 (the run is over). */
 export type AirEvent={type:'ready'|'serve'|'hit'|'wall'|'post'|'goal'|'save'|'win'|'lose'|'next'|'life'|'nudge'|'over';a:number;b:number;x:number;y:number};
 export const GOAL_BANK=1,GOAL_QUICK=2,GOAL_OWN=4,GOAL_COUNTER=8;
 /** Run numbers for the results card and the coaching line. conc* = how the goals against went in. */
@@ -53,18 +52,16 @@ export const emptyAirStats=():AirStats=>({goalsFor:0,goalsAgainst:0,bank:0,quick
 export const airCoins=(score:number)=>Math.max(0,Math.min(AH.coinCap,Math.floor(score/AH.coinPer)));
 export const clampStrikerX=(x:number)=>Math.max(SR,Math.min(W-SR,x));
 export const clampStrikerY=(side:number,y:number)=>side===0?Math.max(H/2+SR,Math.min(H-SR,y)):Math.max(SR,Math.min(H/2-SR,y));
-/** Which half a table point belongs to (a touch that starts there drives that side's striker). */
-export const sideOf=(y:number)=>y>=H/2?0:1;
 
 export type AirFutbol=ReturnType<typeof createAirFutbol>;
-export function createAirFutbol(opts:{seed:number;mode?:AirMode;/** tests: scripted players per side (null = a finger) */bots?:readonly [AirBot|null,AirBot|null];level?:number}){
+/** One player against the machine: side 0 is the child's finger, side 1 the named opponent of the current level. */
+export function createAirFutbol(opts:{seed:number;/** tests: scripted players per side (null = a finger), in place of the ramp */bots?:readonly [AirBot|null,AirBot|null];level?:number}){
  let seed=(opts.seed>>>0)||1;const rng=()=>{seed=(seed+0x6D2B79F5)>>>0;let t=seed;t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return ((t^t>>>14)>>>0)/4294967296;};
- const mode:AirMode=opts.mode??'solo',solo=mode==='solo';
- const s={mode,phase:'wait' as AirPhase,over:false,winner:-1,t:0,level:Math.max(1,opts.level??1),lives:AH.LIVES as number,score:0,goals:[0,0],serveTo:0,serves:0,
+ const s={phase:'wait' as AirPhase,over:false,t:0,level:Math.max(1,opts.level??1),lives:AH.LIVES as number,score:0,goals:[0,0],serveTo:0,serves:0,
   px:W/2,py:H/2,pvx:0,pvy:0,ppx:W/2,ppy:H/2,inGoal:false,
   sx:[W/2,W/2],sy:[H-26,26],svx:[0,0],svy:[0,0],psx:[W/2,W/2],psy:[H-26,26],tx:[W/2,W/2],ty:[H-26,26],held:[false,false],
   lastHit:-1,lastHitT:-9,prevHit:-1,prevT:-9,bank:false,shotX:[W/2,W/2] as number[],shotDefY:[H,H] as number[],serveT:0,saveT:-99,beat:0,waitT:0,dead:0,matchT:0,stats:emptyAirStats()};
- const bots:[AirBot|null,AirBot|null]=[opts.bots?.[0]??null,opts.bots?.[1]??(solo?opponentFor(s.level):null)];
+ const bots:[AirBot|null,AirBot|null]=opts.bots?[opts.bots[0],opts.bots[1]]:[null,opponentFor(s.level)];
  const mem=[0,1].map(()=>({next:0,tx:W/2,ty:26,cap:60,mode:0,rest:0,ax:W/2,aimFor:0,since:0,until:0})),cap=[AH.HUMAN_CAP as number,AH.HUMAN_CAP as number],hitAt=[-9,-9];
  mem[0].ty=H-26;
  /* pooled events */
@@ -106,18 +103,15 @@ export function createAirFutbol(opts:{seed:number;mode?:AirMode;/** tests: scrip
   const st=s.stats,deflect=s.lastHit===1-scorer&&s.prevHit===scorer&&s.t-s.prevT<1.5,/* a save that went in is the shooter's goal */own=(s.lastHit===1-scorer&&!deflect)||s.lastHit<0;let flags=own?GOAL_OWN:0;
   if(!own&&s.bank)flags|=GOAL_BANK;if(!own&&s.t-s.serveT<=AH.QUICK_S)flags|=GOAL_QUICK;if(!own&&scorer===0&&s.t-s.saveT<=AH.COUNTER_S)flags|=GOAL_COUNTER;
   s.goals[scorer]++;
-  if(solo){
-   if(scorer===0){st.goalsFor++;let pts:number=AH.pts.goal;if(flags&GOAL_BANK){pts+=AH.pts.bank;st.bank++;}if(flags&GOAL_QUICK){pts+=AH.pts.quick;st.quick++;}if(flags&GOAL_COUNTER){pts+=AH.pts.counter;st.counters++;}s.score+=pts;}
-   else{st.goalsAgainst++;const sx=s.shotX[1];if(s.lastHit<0)st.concFar++;else if(own)st.own++;else if(s.bank&&!deflect)st.concBank++;else if(s.shotDefY[1]<H/2+30)st.concCaught++;else if(Math.abs(sx-W/2)>10&&(sx<W/2)===(s.px<W/2))st.concNear++;else st.concFar++;}
-  }
+  if(scorer===0){st.goalsFor++;let pts:number=AH.pts.goal;if(flags&GOAL_BANK){pts+=AH.pts.bank;st.bank++;}if(flags&GOAL_QUICK){pts+=AH.pts.quick;st.quick++;}if(flags&GOAL_COUNTER){pts+=AH.pts.counter;st.counters++;}s.score+=pts;}
+  else{st.goalsAgainst++;const sx=s.shotX[1];if(s.lastHit<0)st.concFar++;else if(own)st.own++;else if(s.bank&&!deflect)st.concBank++;else if(s.shotDefY[1]<H/2+30)st.concCaught++;else if(Math.abs(sx-W/2)>10&&(sx<W/2)===(s.px<W/2))st.concNear++;else st.concFar++;}
   s.phase='goal';s.beat=AH.GOAL_BEAT;s.serveTo=1-scorer;s.pvx=s.pvy=0;s.inGoal=true;emit('goal',scorer,flags);
  }
  function afterGoal(){
-  const to=solo?AH.SOLO_TO:AH.DUO_TO,g=s.goals;
+  const to=AH.SOLO_TO,g=s.goals;
   if(g[0]<to&&g[1]<to){resetPuck();s.phase='wait';emit('ready',s.serveTo,0,W/2,H/2);return;}
-  if(!solo){s.winner=g[0]>=to?0:1;s.over=true;s.phase='over';emit('over',s.winner,0,W/2,H/2);return;}
   if(g[0]>=to){const clean=g[1]===0,bonus=AH.pts.win+AH.pts.winLevel*Math.min(s.level,RAMP.length)/* the level bonus stops growing with the table */+(clean?AH.pts.clean:0);s.score+=bonus;s.stats.wins++;if(clean)s.stats.clean++;emit('win',s.level,bonus,W/2,H/2);
-   s.level++;bots[1]=opts.bots?.[1]??opponentFor(s.level);if(s.stats.wins%AH.LIFE_EVERY===0&&s.lives<AH.LIVES){s.lives++;emit('life',s.lives,0,W/2,H/2);}emit('next',s.level,0,W/2,H/2);}
+   s.level++;bots[1]=opts.bots?opts.bots[1]:opponentFor(s.level);if(s.stats.wins%AH.LIFE_EVERY===0&&s.lives<AH.LIVES){s.lives++;emit('life',s.lives,0,W/2,H/2);}emit('next',s.level,0,W/2,H/2);}
   else{s.lives--;emit('lose',s.lives,0,W/2,H/2);if(s.lives<=0){s.over=true;s.phase='over';emit('over',-1,0,W/2,H/2);return;}}
   g[0]=g[1]=0;s.matchT=0;s.serveTo=0;resetPuck();s.phase='between';s.beat=AH.BETWEEN;
  }
@@ -127,7 +121,7 @@ export function createAirFutbol(opts:{seed:number;mode?:AirMode;/** tests: scrip
   if(vn>=0)return;const j=-(1+AH.E_HIT)*vn;s.pvx+=j*nx;s.pvy+=j*ny;const bot=bots[i];
   if(bot){const sp=Math.hypot(s.pvx,s.pvy);if(sp>bot.shot){s.pvx*=bot.shot/sp;s.pvy*=bot.shot/sp;}}
   if(-vn<4)return;
-  if(before>60&&(i===0?s.py>H-52:s.py<52)){if(i===0&&solo){s.stats.saves++;s.saveT=s.t;}emit('save',i,-vn);}// it was heading for this side's goal
+  if(before>60&&(i===0?s.py>H-52:s.py<52)){if(i===0){s.stats.saves++;s.saveT=s.t;}emit('save',i,-vn);}// it was heading for this side's goal
   if(i===0)s.stats.hits++;if(s.lastHit!==i){s.prevHit=s.lastHit;s.prevT=s.lastHitT;}s.lastHit=i;s.lastHitT=s.t;s.bank=false;s.shotX[i]=s.px;s.shotDefY[i]=i===1?s.sy[0]:H-s.sy[1];
   if(s.t-hitAt[i]>.07){hitAt[i]=s.t;emit('hit',i,-vn);}
  }
@@ -158,7 +152,7 @@ export function createAirFutbol(opts:{seed:number;mode?:AirMode;/** tests: scrip
   if(s.phase!=='play'){for(let i=0;i<2;i++){s.sx[i]+=mx[i];s.sy[i]+=my[i];}
    if(s.phase==='goal'){s.beat-=dt;if(s.beat<=0)afterGoal();}
    else if(s.phase==='between'){s.beat-=dt;if(s.beat<=0){s.phase='wait';emit('ready',s.serveTo,0,W/2,H/2);}}
-   else if(s.phase==='wait'){if(s.held[0]||s.held[1]||bots[0]||(bots[1]&&!solo)){s.waitT+=dt;if(s.waitT>=AH.WAIT)launch();}else s.waitT=0;}
+   else if(s.phase==='wait'){if(s.held[0]||s.held[1]||bots[0]){s.waitT+=dt;if(s.waitT>=AH.WAIT)launch();}else s.waitT=0;}
    return;}
   s.matchT+=dt;
   const n=Math.max(1,Math.ceil((Math.hypot(s.pvx,s.pvy)*dt+far)/(PR*.4))),h=dt/n;
@@ -178,7 +172,7 @@ export function createAirFutbol(opts:{seed:number;mode?:AirMode;/** tests: scrip
  return {
   state:s,drain,opponentFor,
   get alpha(){return acc/STEP;},
-  get opponent():AirOpponent|null{return solo?opponentFor(s.level):null;},
+  get opponent():AirOpponent{return opponentFor(s.level);},
   /** Where a side's finger is (table units). The striker heads there at its speed cap, inside its own half. */
   aim(side:number,x:number,y:number){if(bots[side])return;s.tx[side]=clampStrikerX(x);s.ty[side]=clampStrikerY(side,y);},
   /** Finger down / up for a side. A held side serves the waiting puck; a released striker stops where it is. */

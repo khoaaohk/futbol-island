@@ -13,7 +13,7 @@ type Ctx=CanvasRenderingContext2D;
 const LETTER='"Arial Black",Impact,sans-serif';
 
 /** Where the table sits (CSS px). Upright: bottom-aligned under the top bar (your half by your thumb). `side`: a phone held
- *  sideways, the table lies on its side with player 1 at the right. scale = px per table unit; free = spare px above the table. */
+ *  sideways, the table lies on its side with your end at the right. scale = px per table unit; free = spare px above the table. */
 export function airLayout(w:number,h:number,top:number,bottom=8){
  const side=w>h*1.2&&h<560,aw=Math.max(40,w-12),ah=Math.max(40,h-top-bottom),scale=side?Math.min(aw/FH,ah/FW):Math.min(aw/FW,ah/FH);
  const fw=(side?FH:FW)*scale,fh=(side?FW:FH)*scale,cx=w/2,cy=side?top+ah/2:h-bottom-fh/2;
@@ -26,13 +26,13 @@ export const toScreenY=(L:AirLayout,x:number,y:number)=>L.side?L.cy-(x-W/2)*L.sc
 export const toTableX=(L:AirLayout,px:number,py:number)=>L.side?W/2-(py-L.cy)/L.scale:(px-L.cx)/L.scale+W/2;
 export const toTableY=(L:AirLayout,px:number,py:number)=>L.side?(px-L.cx)/L.scale+H/2:(py-L.cy)/L.scale+H/2;
 
-export type AirHud={top:string;bottom:string;goals:readonly [number,number];lives:number;duo:boolean};
+export type AirHud={top:string;bottom:string;goals:readonly [number,number];lives:number};
 export type AirView=ReturnType<typeof createAirView>;
 export function createAirView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{reduced?:boolean}={}){
  const b=bg.getContext('2d')!,f=fg.getContext('2d')!;let Wp=1,Hp=1,dpr=1,L=airLayout(390,700,62),top=62;
- let hud:AirHud={top:'',bottom:'',goals:[0,0],lives:-1,duo:false},spin=0;
+ let hud:AirHud={top:'',bottom:'',goals:[0,0],lives:-1},spin=0;
  const stars=Array.from({length:16},()=>({x:0,y:0,t:1,dur:.3,size:1,color:PAPER,rot:0}));
- const word={text:'',sub:'',t:9,dur:1,x:0,y:0,rot:0,color:SUN,fill:RED,size:1};
+ const word={text:'',sub:'',t:9,dur:1,x:0,y:0,color:SUN,fill:RED,size:1};
  const flash={t:9,end:0};
 
  function dots(c:Ctx,x:number,y:number,w:number,h:number,step:number,r:number,color:string){c.fillStyle=color;c.beginPath();let row=0;for(let yy=y+step/2;yy<y+h;yy+=step,row++)for(let xx=x+(row%2?step:step/2);xx<x+w;xx+=step){c.moveTo(xx+r,yy);c.arc(xx,yy,r,0,TAU);}c.fill();}
@@ -58,7 +58,7 @@ export function createAirView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{re
   // the pitch: mown bands, a printed dot grid, paper lines
   c.save();c.beginPath();c.rect(0,0,W,H);c.clip();for(let k=0;k<8;k++){c.fillStyle=k%2?'#4aa868':'#3f9a5c';c.fillRect(0,k*H/8,W,H/8+.2);}dots(c,0,0,W,H,5,.42,'#2f7d4a66');
   // the printed score: one big numeral in each half, facing its player
-  const upT=L.side&&!hud.duo?Math.PI/2:0;label(c,String(hud.goals[1]),W/2,H*.27,46,hud.duo?Math.PI:upT,'#231a2e2b');label(c,String(hud.goals[0]),W/2,H*.73,46,upT,'#231a2e2b');
+  const upT=L.side?Math.PI/2:0;label(c,String(hud.goals[1]),W/2,H*.27,46,upT,'#231a2e2b');label(c,String(hud.goals[0]),W/2,H*.73,46,upT,'#231a2e2b');
   c.strokeStyle=PAPER;c.lineWidth=1.1;c.beginPath();c.rect(3,3,W-6,H-6);c.moveTo(3,H/2);c.lineTo(W-3,H/2);c.moveTo(W/2+15,H/2);c.arc(W/2,H/2,15,0,TAU);
   for(let e=0;e<2;e++){const y=e?H-3:3,d=e?-1:1;c.moveTo(GOAL0-9,y);c.lineTo(GOAL0-9,y+d*24);c.lineTo(GOAL1+9,y+d*24);c.lineTo(GOAL1+9,y);c.moveTo(GOAL0+4,y);c.lineTo(GOAL0+4,y+d*9);c.lineTo(GOAL1-4,y+d*9);c.lineTo(GOAL1-4,y);
    c.moveTo(W/2+11,y+d*24);c.arc(W/2,y+d*24,11,e?0:0,Math.PI,!!e);}
@@ -70,9 +70,10 @@ export function createAirView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{re
   // corner bolts
   c.fillStyle=INK;for(const x of [-RAIL/2,W+RAIL/2])for(const y of [-END/2,H+END/2]){c.beginPath();c.arc(x,y,1,0,TAU);c.fill();}
   // rail labels: who is at each end, and the lives as small discs by your goal
-  const turnTop=hud.duo?Math.PI:upT,sideways=L.side&&!hud.duo;
-  if(hud.top)label(c,hud.top,sideways?GOAL0-4:(GOAL0-2.2)/2-RAIL/2+1,sideways?-END/2:-END/2,sideways?3.6:4.4,turnTop,INK);
-  if(hud.bottom)label(c,hud.bottom,sideways?GOAL0-4:(GOAL0-2.2)/2-RAIL/2+1,H+END/2,sideways?3.6:4.4,upT,INK);
+  // the names sit IN the end rails beside the goals; sideways they read along the rail (turned with the table) so they never spill onto
+  // the pitch (Nov 11 2026: turned upright they overhung the rail at 844x390)
+  if(hud.top)label(c,hud.top,(GOAL0-2.2)/2-RAIL/2+1,-END/2,4.4,0,INK);
+  if(hud.bottom)label(c,hud.bottom,(GOAL0-2.2)/2-RAIL/2+1,H+END/2,4.4,0,INK);
   if(hud.lives>=0)for(let i=0;i<AH.LIVES;i++){const x=GOAL1+8+i*6.4,y=H+END/2;c.fillStyle=i<hud.lives?TEAL:'#e9742a';c.strokeStyle=INK;c.lineWidth=2.2/u;c.beginPath();c.arc(x,y,2.3,0,TAU);c.fill();c.stroke();}
  }
  function resize(cssW:number,cssH:number,ratio:number,topRoom:number,bottom=8){
@@ -80,18 +81,18 @@ export function createAirView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{re
   L=airLayout(cssW,cssH,topRoom,bottom);paint();
  }
  /** The rail labels and the printed score. Repaints the static layer only when something changed. */
- function setHud(n:AirHud){if(n.top===hud.top&&n.bottom===hud.bottom&&n.goals[0]===hud.goals[0]&&n.goals[1]===hud.goals[1]&&n.lives===hud.lives&&n.duo===hud.duo)return;hud={...n,goals:[n.goals[0],n.goals[1]]};paint();}
+ function setHud(n:AirHud){if(n.top===hud.top&&n.bottom===hud.bottom&&n.goals[0]===hud.goals[0]&&n.goals[1]===hud.goals[1]&&n.lives===hud.lives)return;hud={...n,goals:[n.goals[0],n.goals[1]]};paint();}
  function star(x:number,y:number,size:number,color:string){if(opts.reduced)return;let best=stars[0];for(const s of stars){if(s.t>=s.dur){best=s;break;}if(s.t/s.dur>best.t/best.dur)best=s;}best.x=x;best.y=y;best.t=0;best.dur=.26+size*.05;best.size=size;best.color=color;best.rot=(x*7+y*3)%1.2;}
- function say(text:string,sub:string,x:number,y:number,dur:number,color:string,fill:string,size:number,rot:number){word.text=text;word.sub=sub;word.t=0;word.dur=dur;word.x=x;word.y=y;word.color=color;word.fill=fill;word.size=size;word.rot=rot;}
- function onEvent(e:AirEvent,duo:boolean){
+ function say(text:string,sub:string,x:number,y:number,dur:number,color:string,fill:string,size:number){word.text=text;word.sub=sub;word.t=0;word.dur=dur;word.x=x;word.y=y;word.color=color;word.fill=fill;word.size=size;}
+ function onEvent(e:AirEvent){
   if(e.type==='hit')star(e.x,e.y,Math.min(3,.9+e.b/130),e.a===0?'#bff3ea':'#ffd0c2');
   else if(e.type==='wall'||e.type==='post')star(e.x,e.y,Math.min(1.8,.5+e.b/220),PAPER);
-  else if(e.type==='save'){if(e.a===0||duo)say('SAVE!','',W/2,e.a===0?H-34:34,.6,TEAL,PAPER,.62,duo&&e.a===1?Math.PI:0);}
-  else if(e.type==='goal'){const own=(e.b&GOAL_OWN)!==0,mine=e.a===0,sub=own?(duo?'':mine?'':'Own goal'):e.b&GOAL_BANK?`BANK SHOT${duo?'':' +'+AH.pts.bank}`:e.b&GOAL_COUNTER?`COUNTER${duo?'':' +'+AH.pts.counter}`:e.b&GOAL_QUICK?`QUICK${duo?'':' +'+AH.pts.quick}`:'';
-   say('GOAL!',sub,W/2,H/2,AH.GOAL_BEAT,duo||mine?SUN:PAPER,duo?(mine?TEAL:RED):mine?RED:VIOLET,duo||mine?1:.74,duo&&e.a===1?Math.PI:0);flash.t=0;flash.end=e.a===0?0:1;
+  else if(e.type==='save'){if(e.a===0)say('SAVE!','',W/2,H-34,.6,TEAL,PAPER,.62);}
+  else if(e.type==='goal'){const own=(e.b&GOAL_OWN)!==0,mine=e.a===0,sub=own?(mine?'':'Own goal'):e.b&GOAL_BANK?`BANK SHOT +${AH.pts.bank}`:e.b&GOAL_COUNTER?`COUNTER +${AH.pts.counter}`:e.b&GOAL_QUICK?`QUICK +${AH.pts.quick}`:'';
+   say('GOAL!',sub,W/2,H/2,AH.GOAL_BEAT,mine?SUN:PAPER,mine?RED:VIOLET,mine?1:.74);flash.t=0;flash.end=e.a===0?0:1;
    for(let i=0;i<6;i++)star(GOAL0+(GOAL1-GOAL0)*(i+.5)/6,e.a===0?4+(i%2)*7:H-4-(i%2)*7,1.6+(i%3)*.5,i%2?SUN:PAPER);}
-  else if(e.type==='win')say('YOU WIN!',`+${e.b}`,W/2,H/2,1.6,SUN,RED,.82,0);
-  else if(e.type==='lose')say(e.a>0?'BEATEN!':'FULL TIME',e.a>0?`${e.a} ${e.a===1?'life':'lives'} left`:'',W/2,H/2,1.6,PAPER,VIOLET,.74,0);
+  else if(e.type==='win')say('YOU WIN!',`+${e.b}`,W/2,H/2,1.6,SUN,RED,.82);
+  else if(e.type==='lose')say(e.a>0?'BEATEN!':'FULL TIME',e.a>0?`${e.a} ${e.a===1?'life':'lives'} left`:'',W/2,H/2,1.6,PAPER,VIOLET,.74);
  }
  function reset(){for(const s of stars)s.t=s.dur;word.t=9;flash.t=9;}
  function clear(){f.setTransform(1,0,0,1,0,0);f.clearRect(0,0,Wp,Hp);}
@@ -122,7 +123,7 @@ export function createAirView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{re
    f.globalAlpha=k<.6?1:1-(k-.6)/.4;f.beginPath();for(let i=0;i<8;i++){const an=st.rot+i*TAU/8,rr=i%2?r*.42:r;if(i)f.lineTo(x+Math.cos(an)*rr,y+Math.sin(an)*rr);else f.moveTo(x+Math.cos(an)*rr,y+Math.sin(an)*rr);}f.closePath();f.fillStyle=st.color;f.fill();f.lineWidth=2;f.strokeStyle=INK;f.stroke();f.globalAlpha=1;}
   // the word burst (GOAL!, SAVE!, YOU WIN!)
   if(word.t<word.dur){word.t+=dt;const k=word.t/word.dur,pop=opts.reduced?1:k<.12?.5+k/.12*.62:k<.2?1.12-(k-.12)/.08*.12:1,x=toScreenX(L,word.x,word.y),y=toScreenY(L,word.x,word.y),base=Math.min(L.fw,L.side?L.fh*1.6:L.fw)*.3*word.size*pop;
-   const turn=(L.side?(hud.duo?(word.rot?Math.PI/2:-Math.PI/2):0):word.rot)+(opts.reduced?0:-.06);
+   const turn=opts.reduced?0:-.06;
    f.save();f.translate(x,y);f.rotate(turn);f.globalAlpha=k>.86&&!opts.reduced?1-(k-.86)/.14:1;
    burstPath(5,6,base*1.5,base*.86,0);f.fillStyle=INK;f.fill();burstPath(0,0,base*1.5,base*.86,0);f.fillStyle=word.color;f.fill();f.lineWidth=3.5;f.strokeStyle=INK;f.stroke();
    const fs=base*(word.text.length>6?.42:.62);f.font=`italic 900 ${fs}px ${LETTER}`;f.textAlign='center';f.textBaseline='middle';f.lineJoin='round';f.lineWidth=Math.max(5,fs*.2);f.strokeStyle=INK;f.strokeText(word.text,0,word.sub?-fs*.2:0);f.fillStyle=word.fill;f.fillText(word.text,0,word.sub?-fs*.2:0);

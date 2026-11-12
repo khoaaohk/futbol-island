@@ -265,6 +265,10 @@ await ok('wiring: lazy UI, no timers or polling, device key, route, npm test',()
 });
 
 fs.rmSync(tmp,{recursive:true,force:true});
+// Nov 11 2026: every board id must survive makeToken -> readToken (ids longer than 8 letters used to be refused: 'airhockey', 'snakedaily').
+{const S=require('node:module').createRequire(__filename);let Srv;try{Srv=load('lib/arcade/leaderboardServer.ts');}catch(e){Srv=null;}
+ if(Srv&&Srv.makeToken&&Srv.readToken){for(const g of L.BOARD_GAMES){const tok=Srv.makeToken('test-secret-test-secret',g,Date.now());const r=Srv.readToken('test-secret-test-secret',tok);assert.ok(r&&r.game===g,'every board id round-trips a play token: '+g);assert.ok(tok.length<=120,'token fits the length limit: '+g);}}
+ else{const src=require('node:fs').readFileSync(require('node:path').join(__dirname,'../lib/arcade/leaderboardServer.ts'),'utf8');const m=/\(\[a-z\]\{2,(\d+)\}\)/.exec(src);assert.ok(m,'token game-id pattern found');const longest=Math.max(...L.BOARD_GAMES.map(g=>g.length));assert.ok(Number(m[1])>=longest,'every board id round-trips a play token: pattern allows '+m[1]+' letters, longest id is '+longest);}}
 console.log(failed?`\n${failed} FAILED`:`\narcade-leaderboard: all ${results.length} groups passed${skipped?` (${skipped} skipped)`:''}`);
 process.exit(failed?1:0);
 })();

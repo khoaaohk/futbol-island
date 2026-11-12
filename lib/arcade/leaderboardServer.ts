@@ -47,7 +47,8 @@ export function makeToken(secret:string,game:BoardGame,issuedMs:number,nonce=ran
 }
 export function readToken(secret:string,token:unknown):{game:BoardGame;issued:number;nonce:string}|null{
  if(typeof token!=='string'||token.length>120)return null;
- const m=/^v1\.([a-z]{2,8})\.([0-9a-z]{1,12})\.([0-9a-f]{32})\.([A-Za-z0-9_-]{32})$/.exec(token);if(!m||!isBoardGame(m[1]))return null;
+ /* Nov 11 2026: the game id was limited to 8 letters, so tokens for 'airhockey' (9) and 'snakedaily' (10) were refused and those boards could never take a score. Ids are checked against BOARD_GAMES right after, so the length here only needs to cover the longest id (tests/arcade-leaderboard.cjs round-trips every id). */
+ const m=/^v1\.([a-z]{2,16})\.([0-9a-z]{1,12})\.([0-9a-f]{32})\.([A-Za-z0-9_-]{32})$/.exec(token);if(!m||!isBoardGame(m[1]))return null;
  const want=Buffer.from(sign(secret,`v1.${m[1]}.${m[2]}.${m[3]}`)),got=Buffer.from(m[4]);
  if(want.length!==got.length||!timingSafeEqual(want,got))return null;
  const issued=parseInt(m[2],36);return Number.isFinite(issued)?{game:m[1],issued,nonce:m[3]}:null;

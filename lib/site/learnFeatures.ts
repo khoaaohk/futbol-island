@@ -203,7 +203,7 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
  // ---- Play and practise -----------------------------------------------------------------------------------------------------
  {id:'arcade',title:'The Arcade',group:'play',imageKey:'arcade',
   hook:'Seven football games, one skill each.',
-  description:'The Arcade has Kit Rush, Breakaway Run, Squad Snake, Futbol Tennis, Futbol Pinball, Pass Puzzles and Air Futbol (the air hockey table, for one or two players). Each machine names the one skill it trains, and coins from the arcade spend at the vending machines.',
+  description:'The Arcade has Kit Rush, Breakaway Run, Squad Snake, Futbol Tennis, Futbol Pinball, Pass Puzzles and Air Futbol (the air hockey table, you against the computer). Each machine names the one skill it trains, and coins from the arcade spend at the vending machines.',
   footballTie:'One skill per game: know your team; beat the tackle; build your eleven; control the first touch; read the rebound; see the space.',
   where:'Tap Enter Arcade at the arcade building on the island.',
   proof:'7 arcade games, each with its own skill line.',counts:{arcadeGames:7}},

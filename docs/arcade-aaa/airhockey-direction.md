@@ -1,7 +1,7 @@
-# Air Futbol: game, two players, look and online findings (builder, Nov 11 2026)
+# Air Futbol: game, look and online findings (builder, Nov 11 2026; one player only since the owner's call the same day)
 
 **One line:** the air hockey table that already stood in the arcade room is now the seventh game (`airhockey`): football air hockey on a
-mini pitch, solo against a line of named opponents or two players on one device. Upright phone first, comic-print house style.
+mini pitch, one player against a line of named computer opponents. Upright phone first, comic-print house style.
 ## What it teaches (AGENTS.md)
 - **Angles and rebounds** (a board pass is a wall pass; a goal off a side board is a BANK SHOT), **the goalkeeper's rule** (stay between
   the puck and your goal, near post first) and **the counter-attack** (a goal within 3.5 s of your own save is a COUNTER).
@@ -24,12 +24,13 @@ mini pitch, solo against a line of named opponents or two players on one device.
   7 Kiko .19/170/210/.65/.79/.78/7/.25 · 8 Zuri .16/190/230/.74/.85/.83/6/.30 · 9 Dax .135/210/250/.82/.90/.88/5/.35 ·
   10 Vela .115/232/270/.90/.94/.92/4/.40 · 11 Captain Coral .10/255/290/.95/.97/.95/3.2/.45 · 12 The Lighthouse .085/280/310/1/1/.97/2.5/.50.
   Past 12 the last row plays on ("Sandy II"). Tests: monotone; a scripted player beats level 1 and loses to level 10.
-- **Two players, one device:** first to 7; player 1 bottom, player 2 top (their label, score, hint and a results line are turned 180
-  degrees). A touch that STARTS in a half drives only that half's striker; extra touches are ignored; a lost pointer-up cannot glue a striker
-  (`touch.ts`: window listeners + reconciliation against the real touch list, as `lib/arcade/stickRelease.ts`). Rematch is one tap. No
-  board, no coins, no record: only "today's head-to-head" in the save (`fi2-airhockey-v1`).
-- **Desktop:** the mouse drives player 1 without a press (arrows too); a second player uses W A S D. **Sideways phone:** the table lies on
-  its side (player 1 at the right), no rotate card (`requestAnyOrientation`).
+- **One player only (owner decision, Nov 11 2026):** the same-device two-player mode that first shipped was removed the same day
+  ("single player against the AI, no multi player"): no 2 players button, no W A S D second striker, no turned HUD, no head-to-head tally
+  (old saves of `fi2-airhockey-v1` that still carry `duo` load cleanly and drop it on the next write). Online play will not be built; the
+  findings below are kept for the record only. The first finger down drives the striker anywhere on the table; extra touches are ignored;
+  a lost pointer-up cannot glue it (`touch.ts`: window listeners + reconciliation against the real touch list, as `lib/arcade/stickRelease.ts`).
+- **Desktop:** the mouse drives the striker without a press (arrows or W A S D too). **Sideways phone or tablet:** the table lies on
+  its side (your end at the right), no rotate card (`requestAnyOrientation`).
 ## Look, sound, heat
 - Comic print in the house palette (ink `#231a2e`, paper `#fff3d6`, sun `#ffc83a`, orange `#ff8a3c`, red `#f0452e`, teal `#19b5a5`): a mown
   pitch with a printed dot grid and paper lines in an orange boardwalk frame on dotted sand, sea and a low sun above on tall phones. The score
@@ -39,7 +40,7 @@ mini pitch, solo against a line of named opponents or two players on one device.
   a table hum that exists only while the puck moves, pea-whistle serve, two-tone goal horn with claps, falling horn, brass for a match win.
 - Heat: 2D canvas. The static layer repaints only on resize or a score change. The loop runs only while playing AND something moves: start,
   pause, results, a hidden tab and "waiting for a serve with no finger down" draw nothing. 60 fps cap, DPR cap 2 (1.5 on long frames).
-## Online play with a friend: findings and proposal (NOT built in this pass)
+## Online play with a friend: findings and proposal (NOT built; owner, Nov 11 2026: will not be built)
 - What exists (read in `multiplayer/protocol/types.ts`, `limits.ts`, `multiplayer/relay/src/roomCore.ts`): besides 10 Hz poses, relay v1.8
   has a shared-match channel (`Cap.Match`, built for the island's live pitches). The first joiner of a "field" OWNS it and runs the only
   simulation; the others send `C.Match In` (integers, every 80 ms, relay cap 16/s burst 24) which go only to the owner; the owner sends
@@ -55,4 +56,4 @@ mini pitch, solo against a line of named opponents or two players on one device.
   are deterministic), blending to each new snapshot over about 100 ms; the other striker is drawn 80 ms behind. (5) Online only: puck cap
   260 u/s, and the owner swaps each rematch so the small advantage is shared. (6) Cheating: matches stay off the board and pay no coins,
   like same-device matches, so there is nothing to win by it. (7) Leaving the table or the party ends the match; no new text anywhere.
-  Size: about 5-6 days and a relay deploy, so it was left out; same-device two-player is the multi play for now.
+  Size: about 5-6 days and a relay deploy, so it was left out.

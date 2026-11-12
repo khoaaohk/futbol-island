@@ -1,21 +1,20 @@
 /**
- * Air Futbol device save, today's two-player tally and the results card's lines (Nov 11 2026). Pure rules with the storage passed in
+ * Air Futbol device save and the results card's lines (Nov 11 2026). Pure rules with the storage passed in
  * (tests/airhockey-core.cjs); the browser wrappers at the bottom read localStorage. One key: fi2-airhockey-v1.
  */
 import {AH,opponentFor,type AirStats} from './core';
 
 export const AIR_KEY='fi2-airhockey-v1';
-/** best: solo run best score. level: highest opponent level reached. beaten: opponents beaten, all runs. plays: finished solo runs.
- *  tip: which coaching line shows next. duo: today's head-to-head on this device (day = local play day; a new day starts at 0-0). */
-export type AirSave={v:1;best:number;level:number;beaten:number;plays:number;tip:number;duo:{day:string;p1:number;p2:number}};
-export const emptyAirSave=():AirSave=>({v:1,best:0,level:0,beaten:0,plays:0,tip:0,duo:{day:'',p1:0,p2:0}});
+/** best: run best score. level: highest opponent level reached. beaten: opponents beaten, all runs. plays: finished runs.
+ *  tip: which coaching line shows next. Saves written before Nov 11 2026 may also carry `duo` (the removed two-player mode's
+ *  daily tally): it is read without error and dropped on the next write. */
+export type AirSave={v:1;best:number;level:number;beaten:number;plays:number;tip:number};
+export const emptyAirSave=():AirSave=>({v:1,best:0,level:0,beaten:0,plays:0,tip:0});
 export const AIR_SCORE_MAX=2_000_000;
 const int=(v:unknown,max:number)=>typeof v==='number'&&Number.isFinite(v)?Math.max(0,Math.min(max,Math.floor(v))):0;
-const DAY=/^\d{4}-\d{2}-\d{2}$/,day=(v:unknown)=>typeof v==='string'&&DAY.test(v)?v:'';
 export function sanitizeAirSave(raw:unknown):AirSave{
  const out=emptyAirSave();if(!raw||typeof raw!=='object')return out;const r=raw as Partial<AirSave>;
  out.best=int(r.best,AIR_SCORE_MAX);out.level=int(r.level,9999);out.beaten=int(r.beaten,1e9);out.plays=int(r.plays,1e9);out.tip=int(r.tip,1e9);
- if(r.duo&&typeof r.duo==='object')out.duo={day:day(r.duo.day),p1:int(r.duo.p1,9999),p2:int(r.duo.p2,9999)};
  return out;
 }
 
@@ -45,16 +44,11 @@ export type AirRun={score:number;level:number;goals:readonly [number,number];sta
 export type AirSettled={save:AirSave;newBest:boolean;previousBest:number;coach:string;coachKey:AirCoachKey};
 /** Applies a finished solo run to the save. Called once per run end. */
 export function settleAir(s:AirSave,run:AirRun):AirSettled{
- const score=int(run.score,AIR_SCORE_MAX),next:AirSave={...s,duo:{...s.duo}};
+ const score=int(run.score,AIR_SCORE_MAX),next:AirSave={...s};
  next.plays=s.plays+1;next.beaten=Math.min(1e9,s.beaten+int(run.stats.wins,9999));next.level=Math.max(s.level,int(run.level,9999));next.tip=s.tip+1;
  const newBest=score>s.best&&score>0;next.best=Math.max(s.best,score);
  return {save:next,newBest,previousBest:s.best,coach:coachLine(run.stats,s.tip),coachKey:coachKey(run.stats)};
 }
-/** A finished two-player match: today's tally only (never a board, never coins). */
-export function settleDuo(s:AirSave,today:string,winner:number):AirSave{
- const d=s.duo.day===today?{...s.duo}:{day:today,p1:0,p2:0};if(winner===0)d.p1=Math.min(9999,d.p1+1);else if(winner===1)d.p2=Math.min(9999,d.p2+1);return {...s,duo:d};
-}
-export const duoToday=(s:AirSave,today:string)=>s.duo.day===today?s.duo:{day:today,p1:0,p2:0};
 /** The results card's "one more go" line: the nearest thing the child almost had. */
 export function nearLine(o:{score:number;best:number;newBest:boolean;level:number;goals:readonly [number,number]}):string{
  const name=opponentFor(o.level).name,left=AH.SOLO_TO-o.goals[0];

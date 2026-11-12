@@ -3,7 +3,7 @@
 -- NOT APPLIED. Paste once into the Supabase SQL editor. It is safe as the LAST file run and safe to run twice.
 -- This ONE file contains everything docs/arcade-aaa/endless-supabase.sql does (the endless score ceiling 1..9000000, the game
 -- allow-list with every board id, analytics_ingest with the 'arcade_snake' key), so it also works if that file never ran, plus:
---   * the board id 'airhockey' in the allow-list (Air Futbol's solo run against the machine; two-player matches never post);
+--   * the board id 'airhockey' in the allow-list (Air Futbol's one-player run against the machine);
 --   * the activity key 'arcade_airhockey' in analytics_ingest (Air Futbol play time in the admin activity chart).
 -- Additive in effect: no row, column or grant changes; no board is renamed or reset and every existing score stays. The game
 -- allow-list is replaced by the same list plus one id; analytics_ingest is replaced in place by the same body plus one key.
