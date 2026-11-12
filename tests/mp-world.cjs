@@ -420,6 +420,14 @@ t('slots: away grace 2 min, idle or away 5 min frees the slot (CloseCode.Idle)',
   assert.equal(p.closed, CLOSE.Idle, 'idle 5 min: closed with CloseCode.Idle');
   assert.equal(q.closed, null, 'a moving member stays');
   assert.ok(q.of(S.Left).some((m) => m[1] === p.id && m[2] === LeaveReason.Timeout));
+  // Nov 12 2026 live load test: a steady slow walk at 10 poses/s moves under 5 dm per pose; it must still count as activity
+  const W3 = world();
+  const w = join(W3), still = join(W3);
+  at(W3, w, 0, 0); at(W3, still, 300, 0); W3.run(400);
+  let x = 0;
+  for (let s = 0; s < 3300; s++) { x += 2; at(W3, w, x % 4000, 0); send(W3, still, [C.Beat, s]); W3.run(100); } // 330 s at 2 dm per pose
+  assert.equal(w.closed, null, 'a slow steady walker is never idle-kicked');
+  assert.equal(still.closed, CLOSE.Idle, 'standing still is still idle after 5 min');
 });
 
 t('kill switch: closeWorld closes every socket with WorldOff; the world opens again', () => {

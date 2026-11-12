@@ -106,7 +106,7 @@ interface Member {
    *  hides: ids this member reported (they never see each other again this connection); ipKey: the worker's daily IP hash;
    *  rkey: the reporter identity (ipKey, else the token); activeAt: last real movement or emote (WORLD_IDLE_MS);
    *  quietSent / worldSent: the last S.Quiet / S.World value sent (-1 = none). */
-  known: Set<number>; met: Set<number>; hides: Set<number>; quarantined: boolean; ipKey: string | null; rkey: string; activeAt: number;
+  known: Set<number>; met: Set<number>; hides: Set<number>; quarantined: boolean; ipKey: string | null; rkey: string; activeAt: number; /** idle clock anchor (dm): where activity was last counted */ ax: number; az: number;
   quietSent: number; worldSent: number; reportBucket: TokenBucket;
   /** Phase 3 (Cap.Goal): the last S.Goal value sent (-1 = none) and this member's C.Goal bucket (ISLAND_GOAL.rate). */
   goalSent: number; goalBucket: TokenBucket;
@@ -914,7 +914,7 @@ export class RoomCore {
       kit: null, kitKey: '', kitDue: false, kitBucket: new TokenBucket(KIT_RATE[0], KIT_RATE[1]),
       matchField: -1, matchWatch: -1, matchBucket: new TokenBucket(MATCH_RATE[0], MATCH_RATE[1]), matchJoinBucket: new TokenBucket(MATCH_JOIN_RATE[0], MATCH_JOIN_RATE[1]),
       matchAt: -1e12,
-      known: new Set(), met: new Set(), hides: new Set(), quarantined: false, ipKey: null, rkey: 't' + token, activeAt: now,
+      known: new Set(), met: new Set(), hides: new Set(), quarantined: false, ipKey: null, rkey: 't' + token, activeAt: now, ax: NaN, az: NaN,
       quietSent: -1, worldSent: -1, reportBucket: new TokenBucket(REPORT.rate[0], REPORT.rate[1]),
       goalSent: -1, goalBucket: new TokenBucket(ISLAND_GOAL.rate[0], ISLAND_GOAL.rate[1]),
     };
@@ -1144,8 +1144,10 @@ export class RoomCore {
       return; // speed cheat: dropped, never relayed; the last good pose stays
     }
     if (this.world) { // relay v2.0 idle clock: real movement or a mode change, not away (Hidden) and not frozen in a menu (Busy)
+      // Nov 12 2026 (live load test): measured from an anchor, not the previous pose: at 10 poses/s a steady walk or swim moves under
+      // 5 dm per pose and was kicked after WORLD_IDLE_MS while moving. Any 5 dm from where activity was last counted now counts.
       const p = m.pose;
-      if ((body[7] & PoseFlag.Hidden) === 0 && body[5] !== Mode.Busy && (!p || p[5] !== body[5] || room !== m.room || Math.abs(p[0] - body[0]) + Math.abs(p[2] - body[2]) >= 5)) m.activeAt = now;
+      if ((body[7] & PoseFlag.Hidden) === 0 && body[5] !== Mode.Busy && (!p || p[5] !== body[5] || room !== m.room || !(Math.abs(m.ax - body[0]) + Math.abs(m.az - body[2]) < 5))) { m.activeAt = now; m.ax = body[0]; m.az = body[2]; }
     }
     m.lastSeq = seq; m.pose = body; m.poseAt = now; m.dirty = true; m.farDirty = true; m.relayAway = false; m.room = room; m.poseNo = ++this.stampSeq;
   }
