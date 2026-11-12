@@ -106,8 +106,10 @@ await ok('islandLife: goal count, busy pitches (not me), glows; all cleared outs
  recv([40,0,0,9,9,0,0]);assert.deepEqual(L.islandLife.get().busy,['7v7','beach']);
  recv([40,0,0,-1]);assert.deepEqual(L.islandLife.get().busy,['beach'],'an empty roster');
  L.lifeFrame(0,Date.UTC(2026,10,12,16,30,0));assert.deepEqual(L.glowFields(),['beach'],'not Match o\'clock: busy only');
- L.lifeFrame(500,Date.UTC(2026,10,12,17,2,0));assert.equal(L.islandLife.get().clock.on,false,'sampled at most once a second');
- L.lifeFrame(1000,Date.UTC(2026,10,12,17,2,0));assert.equal(L.islandLife.get().clock.on,true);
+ L.lifeFrame(500,Date.UTC(2026,10,12,17,2,0),3);assert.equal(L.islandLife.get().clock.on,false,'sampled at most once a second');
+ L.lifeFrame(1000,Date.UTC(2026,10,12,17,2,0),0);assert.equal(L.islandLife.get().clock.on,true);
+ assert.deepEqual(L.glowFields(),['beach'],'owner Nov 12: nobody else online, no Match o\'clock glow');
+ L.lifeFrame(2000,Date.UTC(2026,10,12,17,2,0),2);assert.equal(L.islandLife.get().company,true);
  assert.deepEqual(L.glowFields(),[...new Set(['beach',L.islandLife.get().clock.field])].sort(),'plus the Match o\'clock pitch');
  assert.equal(L.noteTeamGoal(),true);assert.equal(c.sent,1);
  c.kind='party';st.forEach(f=>f());
@@ -121,12 +123,13 @@ await ok('islandLife: goal count, busy pitches (not me), glows; all cleared outs
 await ok('the note: Match o\'clock once an hour (pitch name, goal or a tip); the goal-reached note once a day, first',()=>{
  const T=createLoader({'CostumeMilestoneToast.module.css':{},'HudStack':{default:()=>null},'publicNear':{publicNear:{subscribe:()=>()=>{},busy:()=>false}}})('components/party/IslandLifeToast.tsx');
  const C=createLoader()('lib/multiplayer/publicCopy.ts');
- const hour=Math.floor(Date.UTC(2026,10,12,17,2,0)/3600000),s={inWorld:true,goal:23,busy:[],clock:{on:true,field:'beach',hour}};
+ const hour=Math.floor(Date.UTC(2026,10,12,17,2,0)/3600000),s={inWorld:true,company:true,goal:23,busy:[],clock:{on:true,field:'beach',hour}};
  T.resetLifeToast();
  const a=T.lifeNote(s,Date.now());assert.equal(a.kind,'clock');assert.equal(a.title,'It’s Match o’clock!');
  assert.equal(a.body,'Kids are meeting at Sharks Beach Court. Follow the gold light and join the match.');assert.equal(a.extra,'Island goal today: 23 of 50 goals');
  assert(C.MATCH_OCLOCK_TIPS.includes(T.lifeNote({...s,goal:null},Date.now()).extra),'no count yet: a football tip');
  assert.equal(T.lifeNote({...s,inWorld:false},Date.now()),null,'nothing outside a world');
+ assert.equal(T.lifeNote({...s,company:false},Date.now()),null,'owner Nov 12: no Match o\'clock note on an empty island');
  assert.equal(T.lifeNote({...s,clock:{...s.clock,on:false}},Date.now()),null);
  const g=T.lifeNote({...s,goal:50},Date.now());assert.equal(g.kind,'goal','the goal reached goes first');assert.equal(g.body,'Kids on this island scored 50 goals today. Great teamwork!');
  assert.equal(C.ISLAND_GOAL_COPY.line(61,50),'Island goal today: 50 of 50 goals','never over the target');
@@ -142,7 +145,7 @@ await ok('Town wiring behind the flag; no new timers, polling or loops; glows st
  assert(/offEvents\(\);offLife\(\);pub\.dispose\(\)/.test(town));
  assert(/if\(publicWorldEnabled\(\)\)\{const lm=liveJoin\.onMatch;liveJoin\.onMatch=e=>\{lm\?\.\(e\);if\(e\.type==='goal'&&e\.mine\)noteTeamGoal\(\);\};\}/.test(town),'my team\'s goal, flag on only');
  assert(/const activityGlows=publicWorldEnabled\(\)\?createActivityGlows\(scene\):null;/.test(town));
- assert(/if\(publicWorld\.current\)\{const t=performance\.now\(\);lifeFrame\(t,Date\.now\(\)\);/.test(town),'the clock rides the existing public frame');
+ assert(/if\(publicWorld\.current\)\{const t=performance\.now\(\);lifeFrame\(t,Date\.now\(\),publicCount\(\)\);activityGlows\?\.frame\(camera,t\);/.test(town),'the clock and the glow fade ride the existing public frame');
  assert(/\{publicWorldEnabled\(\)&&ready&&!failed&&<IslandLifeToast blocked=\{toastBlocked\}\/>\}/.test(town));
  assert(town.includes('liveJoin.onMatch=e=>liveMatch.on(e)'),'the live-match analytics hook is unchanged');
  for(const f of ['lib/multiplayer/islandLife.ts','lib/graphics/activityGlow.ts','components/party/IslandLifeToast.tsx'])assert.doesNotMatch(code(read(f)),/setInterval|requestAnimationFrame|fetch\(|localStorage/,f);

@@ -37,9 +37,11 @@ export type IslandLife = {
   inWorld: boolean;
   /** Pitches where another kid in my world plays now. */
   busy: readonly LiveFormat[];
+  /** Another kid is in my world right now (owner Nov 12 2026: no Match o'clock glow or note on an empty island). */
+  company: boolean;
 };
 
-let state: IslandLife = { goal: null, clock: matchOClock(0), inWorld: false, busy: [] };
+let state: IslandLife = { goal: null, clock: matchOClock(0), inWorld: false, busy: [], company: false };
 const subs = new Set<() => void>();
 const emit = () => { for (const f of Array.from(subs)) { try { f(); } catch { /* a listener must not break the socket */ } } };
 const set = (p: Partial<IslandLife>) => { state = { ...state, ...p }; emit(); };
@@ -57,7 +59,7 @@ const sameList = (a: readonly string[], b: readonly string[]) => a.length === b.
 function sync(): void {
   const live = !!conn && conn.kind === 'world' && conn.status === 'live';
   if (live === state.inWorld) return;
-  if (!live) { others.clear(); set({ inWorld: false, goal: null, busy: [] }); } else set({ inWorld: true });
+  if (!live) { others.clear(); set({ inWorld: false, goal: null, busy: [], company: false }); } else set({ inWorld: true });
 }
 
 /** The island (Town) attaches the page's one connection; `myId` = my member id (-1 before a Welcome). Returns the detach. */
@@ -77,14 +79,17 @@ export function attachIslandLife(c: LifeConn, myId: () => number): () => void {
   });
   const offStatus = c.onStatus(() => sync());
   sync();
-  return () => { offMsg(); offStatus(); if (conn === c) conn = null; others.clear(); state = { ...state, inWorld: false, goal: null, busy: [] }; emit(); };
+  return () => { offMsg(); offStatus(); if (conn === c) conn = null; others.clear(); state = { ...state, inWorld: false, goal: null, busy: [], company: false }; emit(); };
 }
 
-/** Town's existing frame: reads the clock at most once a second (`nowMs` = Date.now()). No timer of its own. */
-export function lifeFrame(t: number, nowMs: number): void {
+/** Town's existing frame: reads the clock at most once a second (`nowMs` = Date.now()). No timer of its own. `others` = other kids in my
+ *  world (the relay's count; null = unknown), sampled with the clock. */
+export function lifeFrame(t: number, nowMs: number, others: number | null = null): void {
   if (t < nextClockAt) return;
   nextClockAt = t + CLOCK_SAMPLE_MS;
   sync();
+  const company = state.inWorld && (others ?? 0) > 0;
+  if (company !== state.company) set({ company });
   const k = matchOClock(nowMs), c = state.clock;
   if (k.on !== c.on || k.field !== c.field || k.hour !== c.hour) set({ clock: k });
 }
@@ -96,7 +101,7 @@ export function noteTeamGoal(): boolean { return !!conn && conn.kind === 'world'
 export function glowFields(s: IslandLife = state): LiveFormat[] {
   if (!s.inWorld) return [];
   const out = new Set<LiveFormat>(s.busy);
-  if (s.clock.on) out.add(s.clock.field);
+  if (s.clock.on && s.company) out.add(s.clock.field);
   return Array.from(out).sort();
 }
 
@@ -104,5 +109,5 @@ export const islandLife = {
   get: () => state,
   subscribe(fn: () => void) { subs.add(fn); return () => { subs.delete(fn); }; },
   /** Tests only. */
-  reset() { others.clear(); nextClockAt = 0; conn = null; me = () => -1; state = { goal: null, clock: matchOClock(0), inWorld: false, busy: [] }; emit(); },
+  reset() { others.clear(); nextClockAt = 0; conn = null; me = () => -1; state = { goal: null, clock: matchOClock(0), inWorld: false, busy: [], company: false }; emit(); },
 };

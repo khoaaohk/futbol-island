@@ -30,7 +30,7 @@ export function lifeNote(s: ReturnType<typeof islandLife.get>, dayMs: number): N
   const day = Math.floor(dayMs / 86_400_000);
   if (s.goal !== null && s.goal >= ISLAND_GOAL_TARGET && !shownKeys.has('goal:' + day))
     return { kind: 'goal', key: 'goal:' + day, title: ISLAND_GOAL_COPY.doneTitle, body: ISLAND_GOAL_COPY.doneBody(ISLAND_GOAL_TARGET), extra: null };
-  if (s.clock.on && !shownKeys.has('clock:' + s.clock.hour)) {
+  if (s.clock.on && s.company && !shownKeys.has('clock:' + s.clock.hour)) {
     const tip = MATCH_OCLOCK_TIPS[((s.clock.hour % MATCH_OCLOCK_TIPS.length) + MATCH_OCLOCK_TIPS.length) % MATCH_OCLOCK_TIPS.length];
     return { kind: 'clock', key: 'clock:' + s.clock.hour, title: MATCH_OCLOCK.title, body: MATCH_OCLOCK.body(liveVenueById(s.clock.field).name),
       extra: s.goal !== null && s.goal < ISLAND_GOAL_TARGET ? ISLAND_GOAL_COPY.line(s.goal, ISLAND_GOAL_TARGET) : tip };
