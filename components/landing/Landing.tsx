@@ -31,7 +31,7 @@ export default function Landing(){
     </h1>
     {/* Nov 3 2026 (owner, SEO): /play is indexable, so its static HTML says in words what the page is. Visually hidden: the
         title screen's look is unchanged. */}
-    <p className={styles.srOnly}>Start your island or continue with your save code. Futbol Island is a free football learning game for kids aged 7 to 12: short lessons and quizzes on 7v7, 9v9, 11v11 and futsal, and play with friends using preset emotes. No ads, no accounts, no open chat.</p>
+    <p className={styles.srOnly}>Start your island or continue with your save code. Futbol Island is a free football learning game for kids aged 7 to 12: short lessons and quizzes on 7v7, 9v9, 11v11 and futsal, and play with friends using preset emotes. No pop-up or tracking ads, no accounts, no open chat.</p>
     {/* The island loader's track (IslandLoading): hidden until Play starts the hand-off into the game (handoffMotion.ts). */}
     <span className={`island-loading-track ${styles.track}`} data-landing-track aria-hidden="true"><span/></span>
    </header>

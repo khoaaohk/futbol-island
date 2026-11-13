@@ -155,7 +155,7 @@ function Home({settings,onPlan}:{settings?:GrownUpSettings;onPlan:()=>void}){
     <li>Without a save code, progress stays only in this browser; clearing this site’s data deletes it.</li>
     <li>The website counts visits with its own counter: no cookies and no personal identifiers. It never receives progress, plans, notes, names or save codes.</li>
     {/* [PUBLIC-WORLD] Nov 11 2026: true wording once other players can be seen (docs/multiplayer/PUBLIC-COPY-REVIEW.md); flag off = today's line. */}
-    <li>{publicWorldEnabled()?'No ads and no free-text chat with other players. Other children playing at the same time can appear on the island with a name the game makes up and preset waves and cheers; in Settings you can choose Friends only or Off. Printing a report or plan happens on this device.':'No ads and no chat with other players. Printing a report or plan happens on this device.'}</li>
+    <li>{publicWorldEnabled()?'No pop-up or tracking ads and no free-text chat with other players. Other children playing at the same time can appear on the island with a name the game makes up and preset waves and cheers; in Settings you can choose Friends only or Off. Printing a report or plan happens on this device.':'No pop-up or tracking ads and no chat with other players. Printing a report or plan happens on this device.'}</li>
     <li>The full notice, with what each part is used for and how long it is kept: <a href="/privacy" target="_blank" rel="noopener">futbolisland.app/privacy</a>.</li>
    </ul>
   </section>

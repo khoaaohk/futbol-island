@@ -1,6 +1,7 @@
 import PolicyToc from './PolicyToc';
 import styles from './PrivacyPolicy.module.css';
 import {publicWorldEnabled} from '@/lib/multiplayer/publicFlag';
+import {SPONSOR_BOARDS_LINE} from '@/lib/site/safety';
 
 /**
  * Futbol Island privacy policy (Oct 9 2026). One source of truth, rendered by /privacy (app/privacy/page.tsx) and by the
@@ -48,7 +49,7 @@ import {publicWorldEnabled} from '@/lib/multiplayer/publicFlag';
  * The operator's postal address and the privacy contact are still missing (owner must supply them before launch).
  * Keep this file in step with the code: if a feature starts collecting something new, it must be listed here first.
  */
-export const POLICY_UPDATED='November 10, 2026';
+export const POLICY_UPDATED='November 13, 2026';
 /** Operator's legal name and postal address for the notice (COPPA §312.4(d)(1)). Set before launch. */
 export const OPERATOR:{name:string;address:string|null}={name:'Futbol Island',address:null};
 /** The address for privacy questions and requests. Set before launch (docs/save-codes.md). */
@@ -60,7 +61,7 @@ export const PRIVACY_CONTACT:string|null=null;
  * off every `PUB` branch below renders exactly today's text (tests/mp-public-copy.cjs pins it); with it on, the policy describes
  * public play. The "last updated" date moves only with the flag: POLICY_UPDATED_PUBLIC (set it to the day the flag is switched on).
  */
-export const POLICY_UPDATED_PUBLIC='November 12, 2026';
+export const POLICY_UPDATED_PUBLIC='November 13, 2026';
 
 export default function PrivacyPolicy(){
  const PUB=publicWorldEnabled();
@@ -93,15 +94,16 @@ export default function PrivacyPolicy(){
 
   <section id="pp-short"><h2 tabIndex={-1}>1. The short version</h2><ul>
    <li><b>No accounts and no contact details.</b> We never ask a child for a last name, age, birthday, email, phone number, photo, voice, school or location. The one exception is the <i>Play with friends</i> feature, which asks a grown-up to type a <b>first name only</b> so friends can tell each other apart; it is shown only to that party and is never stored, logged or counted (section 7a).</li>
-   {PUB?<li><b>No ads, no free-text chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b> Other players and friends in a party can only use preset emotes.</li>:
-   <li><b>No ads, no free-text chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b> Friends in a party can only use preset emotes.</li>}
+   {PUB?<li><b>No pop-up or tracking ads, no free-text chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b> Other players and friends in a party can only use preset emotes.</li>:
+   <li><b>No pop-up or tracking ads, no free-text chat with other players, no tracking cookies, and no third-party analytics or advertising tools.</b> Friends in a party can only use preset emotes.</li>}
    {PUB&&<li><b>Other players can be seen, unless you change it.</b> Other children playing at the same time can see each other on the island, with a name the game makes up, their outfit’s colours and shirt number, and preset waves and cheers. This is on by default once a new player has finished the welcome tutorial. One tap on the people button (<i>Just me</i>) hides everyone, any player can hide or report another, and a grown-up can choose <i>Friends only</i> or <i>Off</i> in Settings (section 7a).</li>}
    <li><b>A save code instead of an account.</b> Three easy words and a number (for example <i>striker · volley · corner · 4271</i>) keep a copy of game progress so it can be opened on another device. The code is not linked to anyone’s identity.</li>
    <li><b>We do collect anonymous usage data.</b> Things like how many visits there are, how long the game is played, which lessons and parts of the game are used, party sizes and how often emotes are used, and the kind of device. It is counted without names, and it is used for two things only: to run and improve the game, and to give sponsors <b>combined totals</b> (for example “players spent 18,000 minutes on the island this week”) so the game can stay free (section 7).</li>
    {/* [LAWYER] Nov 10 2026: exact combined totals; the small-groups promise is removed (owner ruling Nov 8 2026). */}
+   <li><b>Stadium sponsor boards.</b> {SPONSOR_BOARDS_LINE}</li>
    <li><b>Sponsors never get anything about one child.</b> No names or first names, no save codes or party codes, no internet addresses and no player numbers: only exact combined totals of everyone together.</li>
    <li><b>Links that leave the game, donations and grown-up tools sit behind a grown-up check.</b></li>
-   <li><b>We never sell or rent information,</b> there are no ads, and we do not use information for targeted advertising or to build profiles of children.</li>
+   <li><b>We never sell or rent information,</b> there are no pop-up or tracking ads, and we do not use information for targeted advertising or to build profiles of children.</li>
    <li><b>Grown-ups can see and delete a save at any time,</b> right in the game, without contacting us.</li>
   </ul></section>
 

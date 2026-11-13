@@ -9,7 +9,7 @@ import PrivacySheetPage from '@/components/privacy/PrivacySheetPage';
  */
 // pageMeta (Nov 3 2026 bug hunt): its own og:url / og:title / twitter tags; it inherited the home page's og:url before.
 // Nov 8 2026 (SEO): a title for parents searching for a safe game; "COPPA principles" only here, where the policy says it (section 2).
-export const metadata:Metadata=pageMeta('Privacy for Parents: Safe Football Game for Kids','Plain words for parents on what Futbol Island keeps, why and for how long. No ads, no accounts, no open chat. Built with COPPA principles.','/privacy',{type:'website',whole:true});
+export const metadata:Metadata=pageMeta('Privacy for Parents: Safe Football Game for Kids','Plain words for parents on what Futbol Island keeps, why and for how long. No tracking ads, no accounts, no open chat. Built with COPPA principles.','/privacy',{type:'website',whole:true});
 
 import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 export default function PrivacyPage(){

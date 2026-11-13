@@ -111,6 +111,6 @@ export const hubsFor=(id:string)=>HUBS.filter(h=>h.slug!=='soccer-quiz-for-kids'
 /** The parents' guide (its own page, app/(site)/safe-football-game-for-kids). */
 export const SAFE_GUIDE={path:'/safe-football-game-for-kids',crumb:'A safe football game for kids',
  title:'Safe Football Game for Kids: Parents’ Guide',
- description:'A parents’ guide to Futbol Island, a free football learning game for kids 7 to 12: no ads, no accounts, no open chat and no tracking cookies.',
+ description:'A parents’ guide to Futbol Island, a free football learning game for kids 7 to 12: no tracking ads, no accounts, no open chat and no tracking cookies.',
  h1:'A safe football game for kids'} as const;
 export const HUB_COUNTS={lessons:LESSONS.length,quizzes:QUIZ_LESSONS.length,questions:QUIZ_QS,futsal:FUTSAL.length};

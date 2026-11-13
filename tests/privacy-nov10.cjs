@@ -49,7 +49,7 @@ ok('player ids rotate every 90 days and are stable inside a period',()=>{
 });
 ok('the privacy policy matches the code',()=>{
  const src=read('components/privacy/PrivacyPolicy.tsx'),text=src.replace(/^[\s\S]*?export default function/,'').replace(/\{\/\*[\s\S]*?\*\/\}/g,'').replace(/<[^>]+>/g,' ');
- assert.match(src,/POLICY_UPDATED='November 10, 2026'/);
+ assert.match(src,/POLICY_UPDATED='November 13, 2026'/);
  assert(!/small groups|too small to stay anonymous|identify anyone|order of a visitor’s actions/i.test(text),'old wording gone');
  assert(/exact combined/i.test(text)&&/never anything about one child/i.test(text),'sponsors: exact combined totals');
  assert(/every 90 days/.test(text)&&/right on the device/.test(text)&&/order of the screens/.test(text),'player number: on the device, 90 days, screen order');

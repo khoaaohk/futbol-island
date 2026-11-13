@@ -18,7 +18,7 @@ export const dynamic='force-static';
 export function GET(){
  const out=[
   '# Futbol Island','',
-  `> A free, phone-first football (soccer) learning game for kids aged 7 to 12. Home page and feature tour: ${abs('/')}. Play it (runs in the web browser): ${abs('/play')}. No ads, no accounts, no open chat.`,'',
+  `> A free, phone-first football (soccer) learning game for kids aged 7 to 12. Home page and feature tour: ${abs('/')}. Play it (runs in the web browser): ${abs('/play')}. No pop-up, video or tracking ads, no accounts, no open chat.`,'',
   '## About','',
   `### ${G.whyTitle}`,G.why,'',`### ${G.learnsTitle}`,G.learns,'',`### ${G.privacyTitle}`,`${G.privacy} Privacy policy: ${abs('/privacy')}`,'',
   `### ${G.free}`,G.freeWhy,'',`### ${G.partnerTitle}`,`${G.partnerLead}${G.partnerName}${G.partnerRest}`,'',

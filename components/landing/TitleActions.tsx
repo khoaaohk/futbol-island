@@ -160,7 +160,7 @@ export default function TitleActions(){
       {sheet.mode==='create'&&intro
        ?<saves.IntroShown onBack={()=>void leave(null)}
          top={<><span className={styles.introBadge} aria-hidden="true"><SafeLockArt size={64}/></span><span className={styles.introLead}>Futbol Island is made for kids.</span></>}
-         copy={'No sign-up. No ads. No name or email.\nYou get a secret code to save your island.'}
+         copy={'No sign-up. No pop-up ads. No name or email.\nYou get a secret code to save your island.'}
          go={<NavigationButton label="Get my code" icon="forward" data-save-intro-go disabled={making} onNavigate={()=>setMaking(true)}
           style={{'--navigation-width':'124px'} as CSSProperties}/>}/>
        :null}
