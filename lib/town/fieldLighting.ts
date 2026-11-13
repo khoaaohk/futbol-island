@@ -2,12 +2,18 @@ import {fieldLightLayout} from './fieldLightLayout';
 import * as T from 'three';
 import type {PropSpec} from '../graphics/propReactions';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import {VENUES,FIELD_SURFACE_Y,type Format,type Venue} from './venues';
+import {VENUES,STADIUM_VENUE,FIELD_SURFACE_Y,type Format,type Venue} from './venues';
+import {MASTS} from './stadiumSeats';
+import {STADIUM} from './westParkLayout';
+import {STADIUM_NIGHT} from './stadiumNight';
 import {KNOCKOUT_ROOF} from '../games/rooftopKnockout';
 import {createPitchVisibility} from './pitchVisibility';
 
-type LightingVenue=Omit<Venue,'id'>&{id:Format|'knockout'};
-type FieldEntry={venue:LightingVenue;root:T.Group;surface?:T.MeshStandardMaterial;height:number;side:number;dayColor:T.Color;nightColor:T.Color;nightEmission:T.Color};
+type LightingVenue=Omit<Venue,'id'>&{id:Format|'knockout'|'stadium'};
+/** reach: the pooled spots' corner offsets from the pitch centre (x across, z along). */
+type FieldEntry={venue:LightingVenue;root:T.Group;surface?:T.MeshStandardMaterial;height:number;side:number;reach:{x:number;z:number};dayColor:T.Color;nightColor:T.Color;nightEmission:T.Color};
+/** West Stadium mast heads (stadiumWorld.ts): 6 × 3.4 m faces 30.5 m up, turned to the pitch centre. */
+const MAST_HEAD={y:30.5,w:6,h:3.4,front:.25} as const;
 /** Four visible floodlight banks per court, with four shared real non-shadow lights
  * shared by the relevant pitch. Far pitches retain a modest material fill.
  * The light count is fixed within night (lessons and pitch changes never recompile); outside night the pool is hidden
@@ -50,8 +56,29 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
    parts:[{attribute:bodyMesh.geometry.getAttribute('position') as T.BufferAttribute,start:bodyStarts[b0],count:bodyStarts[b1]-bodyStarts[b0]},{attribute:glassMesh.geometry.getAttribute('position') as T.BufferAttribute,start:glassStarts[g0],count:glassStarts[g1]-glassStarts[g0]}]});});
   const surface=surfaces.get(v.id);if(surface){surface.emissive.copy(surface.color);surface.emissiveIntensity=0;}
   const dayColor=surface?.color.clone()??new T.Color(v.surface),nightColor=dayColor.clone(),nightEmission=v.id==='futsal'?dayColor.clone():new T.Color('#d0ccb7');
-  entries.push({venue:v,root,surface,height,side,dayColor,nightColor,nightEmission});
+  entries.push({venue:v,root,surface,height,side,reach:{x:side-.7,z:v.length/2+(v.id==='knockout'?1.5:2.3)},dayColor,nightColor,nightEmission});
  }
+ // West Stadium (Nov 13 2026): its masts are stadiumWorld.ts paint; here they get 4 × 12 lit lenses (the shared lens material, one
+ // merged mesh: 1 draw) and one soft glow per head (4 points, one additive draw, night only) that reads from across the island.
+ // The pitch, lines and lower stands take the night blend through STADIUM_NIGHT (stadiumNight.ts); the four pooled real spots
+ // move to the mast heads while the player is in or near the bowl (never by camera score: the bowl is huge from afar).
+ const stadiumRoot=new T.Group();stadiumRoot.name='stadium-floodlights';scene.add(stadiumRoot);
+ const stadiumLenses:T.BufferGeometry[]=[],glowPoints:number[]=[];
+ for(const m of MASTS){const yaw=Math.atan2(-m.sx,-m.sz),fx=Math.sin(yaw),fz=Math.cos(yaw);
+  for(let col=0;col<4;col++)for(let row=0;row<3;row++){const g=new T.BoxGeometry(1.25,.85,.08);g.translate((col-1.5)*1.42,(row-1)*1.02,MAST_HEAD.front+.04);g.rotateY(yaw);g.translate(m.x,MAST_HEAD.y,m.z);stadiumLenses.push(g);}
+  glowPoints.push(m.x+fx*1.2,MAST_HEAD.y,m.z+fz*1.2);}
+ const stadiumLensGeometry=mergeGeometries(stadiumLenses)!;stadiumLenses.forEach(g=>g.dispose());stadiumLensGeometry.computeBoundingSphere();owned.push(stadiumLensGeometry);
+ const stadiumLensMesh=new T.Mesh(stadiumLensGeometry,lenses);stadiumLensMesh.name='stadium-floodlight-panels';stadiumLensMesh.castShadow=stadiumLensMesh.receiveShadow=false;stadiumLensMesh.matrixAutoUpdate=false;stadiumRoot.add(stadiumLensMesh);fixtures.push(stadiumLensMesh);
+ const glowCanvas=document.createElement('canvas');glowCanvas.width=glowCanvas.height=64;
+ {const c=glowCanvas.getContext('2d');if(c){const grad=c.createRadialGradient(32,32,0,32,32,32);grad.addColorStop(0,'rgba(255,246,222,1)');grad.addColorStop(.25,'rgba(255,236,200,.55)');grad.addColorStop(1,'rgba(255,230,190,0)');c.fillStyle=grad;c.fillRect(0,0,64,64);}}
+ const glowMap=new T.CanvasTexture(glowCanvas),glowGeometry=new T.BufferGeometry();glowGeometry.setAttribute('position',new T.Float32BufferAttribute(glowPoints,3));glowGeometry.computeBoundingSphere();owned.push(glowGeometry);
+ const glowMaterial=new T.PointsMaterial({map:glowMap,size:18,sizeAttenuation:true,transparent:true,opacity:0,depthWrite:false,blending:T.AdditiveBlending,toneMapped:false});
+ const stadiumGlow=new T.Points(glowGeometry,glowMaterial);stadiumGlow.name='stadium-floodlight-glow';stadiumGlow.matrixAutoUpdate=false;stadiumGlow.visible=false;stadiumRoot.add(stadiumGlow);
+ const stadiumMast=Math.abs(MASTS[0].x-STADIUM.x),stadiumEnd=Math.abs(MASTS[0].z-STADIUM.z);
+ const stadiumEntry:FieldEntry={venue:{...STADIUM_VENUE,id:'stadium'},root:stadiumRoot,height:MAST_HEAD.y-.35-(STADIUM_VENUE.elevation??0),side:stadiumMast,reach:{x:stadiumMast-1,z:stadiumEnd-1},dayColor:new T.Color(),nightColor:new T.Color(),nightEmission:new T.Color()};
+ entries.push(stadiumEntry);
+ /** In the bowl or on its doorstep (the stands, the concourse, the ring), at any seat height. */
+ const nearStadium=(p:{x:number;y:number;z:number},margin:number)=>p.y<MAST_HEAD.y&&Math.abs(p.x-STADIUM.x)<=STADIUM.bowlW/2+margin&&Math.abs(p.z-STADIUM.z)<=STADIUM.bowlL/2+margin;
  const lightRoot=new T.Group();lightRoot.name='field-floodlight-pool';scene.add(lightRoot);
  const spots=[0,1,2,3].map(i=>{const light=new T.SpotLight('#fff0d5',0,180,1.18,.72,2);light.name='shared-pitch-floodlight-'+i;light.castShadow=false;lightRoot.add(light,light.target);return light;});
  const visibility=createPitchVisibility();let chosen:FieldEntry|undefined,lastMode='',blend=0,scanAge=1;
@@ -61,15 +88,16 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
   if(roofActive)return entries.find(e=>e.venue.id==='knockout');
   // Projected corners can cross the near plane when walking on a large pitch.
   // Occupancy wins before camera scoring, with a wider exit margin to avoid edge flicker.
-  if(player)for(const entry of entries){const v=entry.venue,margin=entry===chosen?5:2;if(entry.root.visible&&Math.abs(player.y-((v.elevation??0)+FIELD_SURFACE_Y))<4&&Math.abs(player.x-v.x)<=v.width/2+margin&&Math.abs(player.z-v.z)<=v.length/2+margin)return entry;}
+  if(player&&nearStadium(player,chosen===stadiumEntry?14:8))return stadiumEntry;
+  if(player)for(const entry of entries){if(entry===stadiumEntry)continue;const v=entry.venue,margin=entry===chosen?5:2;if(entry.root.visible&&Math.abs(player.y-((v.elevation??0)+FIELD_SURFACE_Y))<4&&Math.abs(player.x-v.x)<=v.width/2+margin&&Math.abs(player.z-v.z)<=v.length/2+margin)return entry;}
   let best:FieldEntry|undefined,bestScore=Infinity,currentScore=Infinity;
   camera.updateMatrixWorld();
-  for(const entry of entries){if(!entry.root.visible)continue;const v=entry.venue,score=visibility(camera,v.x,(v.elevation??0)+FIELD_SURFACE_Y,v.z,v.width,v.length);if(entry===chosen)currentScore=score;if(score<bestScore){bestScore=score;best=entry;}}
+  for(const entry of entries){if(!entry.root.visible||entry===stadiumEntry)continue;const v=entry.venue,score=visibility(camera,v.x,(v.elevation??0)+FIELD_SURFACE_Y,v.z,v.width,v.length);if(entry===chosen)currentScore=score;if(score<bestScore){bestScore=score;best=entry;}}
   return chosen&&currentScore<bestScore+.12?chosen:best;
  }
  function place(entry:FieldEntry){const v=entry.venue,y=(v.elevation??0)+entry.height;
-  for(let i=0;i<4;i++){const hand=i%2?1:-1,end=i<2?-1:1;spots[i].position.set(v.x+hand*(entry.side-.7),y,v.z+end*(v.length/2+(v.id==='knockout'?1.5:2.3)));spots[i].target.position.set(v.x-hand*v.width*.12,(v.elevation??0)+FIELD_SURFACE_Y,v.z-end*v.length*.12);spots[i].distance=Math.hypot(v.width,v.length)+entry.height+15;}
-  strength=Math.pow(Math.hypot(entry.side-.7,v.length/2+(v.id==='knockout'?1.5:2.3),entry.height),2)*.85*(v.id==='futsal'?.82:.5);lightRoot.userData.format=v.id;
+  for(let i=0;i<4;i++){const hand=i%2?1:-1,end=i<2?-1:1;spots[i].position.set(v.x+hand*entry.reach.x,y,v.z+end*entry.reach.z);spots[i].target.position.set(v.x-hand*v.width*.12,(v.elevation??0)+FIELD_SURFACE_Y,v.z-end*v.length*.12);spots[i].distance=Math.hypot(v.width,v.length)+entry.height+15;}
+  strength=Math.pow(Math.hypot(entry.reach.x,entry.reach.z,entry.height),2)*.85*(v.id==='futsal'?.82:.5);lightRoot.userData.format=v.id;
  }
  return {propSpecs,update(mode:string,camera:T.Camera,isolated:Format|null,dt:number,reduced=false,roofActive=false,player?:{x:number;y:number;z:number}){
   const nextTeaching=isolated!==null;
@@ -92,10 +120,11 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
   // them from the shader: pixel-identical, at the cost of one shader-variant switch when night starts and after it ends.
   // Within night (including zero-intensity teaching views) the pool stays visible, so lessons never recompile.
   lightRoot.visible=night||blend>0;
-  if(changed||oldBlend!==blend){lenses.emissiveIntensity=blend*2.1;
+  stadiumGlow.visible=blend>0&&!teaching;
+  if(changed||oldBlend!==blend){lenses.emissiveIntensity=blend*2.1;STADIUM_NIGHT.value=blend;glowMaterial.opacity=blend*.85;
   for(const entry of entries){if(!entry.surface)continue;entry.surface.color.copy(entry.dayColor).lerp(entry.nightColor,blend);entry.surface.emissive.copy(entry.nightEmission);entry.surface.emissiveIntensity=blend*(entry.venue.id==='futsal'?.246:.025);}
   goal.emissiveIntensity=blend*.16;markings.color.copy(dayMarkings).lerp(nightMarkings,blend);}
   if(changed||targetChanged||oldBlend!==blend||oldGain!==lightGain)for(const spot of spots)spot.intensity=strength*blend*lightGain;
   settled=blend===target;lightRoot.userData.blend=blend;lightRoot.userData.active=chosen?.venue.id??null;
- },dispose(){for(const geometry of owned)geometry.dispose();steel.dispose();lenses.dispose();lightRoot.removeFromParent();roofRoot.removeFromParent();}};
+ },dispose(){for(const geometry of owned)geometry.dispose();steel.dispose();lenses.dispose();glowMaterial.dispose();glowMap.dispose();STADIUM_NIGHT.value=0;lightRoot.removeFromParent();roofRoot.removeFromParent();stadiumRoot.removeFromParent();}};
 }
