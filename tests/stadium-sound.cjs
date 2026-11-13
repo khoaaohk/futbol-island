@@ -96,7 +96,8 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
  await run(bowl,20);assert.equal(offlines,o0,'no gesture yet: nothing built, nothing rendered');assert.equal(snd.ready,false);
  gesture=true;ok=false;await run(bowl,10);assert(snd.debug.builds===1&&offlines>o0,'after a gesture, the first approach renders the beds');assert.equal(snd.ready,false,'muted / hidden: no live graph');assert(host.woke>0,'asks the idle-suspended context to wake');
  ok=true;await run(bowl,2);assert.equal(snd.ready,true,'unmuted in the bowl: the live graph');assert.equal(snd.presence,1);assert.equal(snd.musicFade,1,'the music fades out in the bowl');
- sfx=false;await run(bowl,1);assert.equal(snd.musicFade,0,'effects muted: the music keeps playing');sfx=true;
+ sfx=false;await run(bowl,1);assert.equal(snd.musicFade,1,'effects muted: the island music still stops at the stadium');sfx=true;
+
  const liveSrc=()=>[...live].filter(n=>n.context===null&&n.started&&!n.dead&&n.buffer).length;assert(liveSrc()<=4,'between matches: murmur, roar, rumble only');assert.equal(snd.song,null,'no song without a match');
  // a match wakes: the mood's chant cycle → the song follows; it starts on a bar line
  const m={live:true,exhibition:true,goals:0,ball:{x:S.x,z:S.z}};let guard=0;while(Mo.stadiumMood().phase==='quiet'&&guard++<400)Mo.stepStadiumMood(.1,m);

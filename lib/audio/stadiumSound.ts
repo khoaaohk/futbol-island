@@ -68,6 +68,10 @@ const smooth=(t:number)=>{const k=Math.max(0,Math.min(1,t));return k*k*(3-2*k);}
 /** Metres outside the bowl's footprint, with height above the roof counted (flying over it). */
 export function bowlDistance(x:number,z:number,h=0){const dx=Math.max(0,Math.abs(x-STADIUM.x)-STADIUM.bowlW/2),dz=Math.max(0,Math.abs(z-STADIUM.z)-STADIUM.bowlL/2);
  return Math.hypot(dx,dz,Math.max(0,h-STADIUM_SOUND.roofH));}
+/** How far the island music fades for a presence (owner, Nov 13 2026: at the stadium the music must be gone, not just quieter, and
+ *  whatever the sound-effects switch says): twice as fast as the crowd comes in, so it is fully out (paused) from the gate end of the
+ *  plaza (presence ≥ plazaLevel) and inside the bowl. */
+export const musicFadeFor=(presence:number)=>Math.min(1,presence/STADIUM_SOUND.plazaLevel);
 /** The raw presence at distance d: 1 in the bowl, easing to plazaLevel at plazaD, to 0 at edgeD. */
 export function presenceAt(d:number){const S=STADIUM_SOUND;if(!(d>S.fullD))return 1;if(d>=S.edgeD)return 0;
  if(d<=S.plazaD)return 1-(1-S.plazaLevel)*smooth((d-S.fullD)/(S.plazaD-S.fullD));return S.plazaLevel*(1-smooth((d-S.plazaD)/(S.edgeD-S.plazaD)));}
@@ -551,7 +555,7 @@ export function createStadiumSound(host:StadiumSoundHost){
   /** Each frame (Town); the work runs at 10 Hz. */
   update(dt:number,f:StadiumSoundFrame){
    acc+=dt;if(acc<S.tick)return;const step=Math.min(1,acc);acc=0;debug.ticks++;
-   presence=presenceStep(presence,presenceAt(bowlDistance(f.x,f.z,f.h)));debug.presence=presence;musicFade=host.sfxOn()?presence:0;
+   presence=presenceStep(presence,presenceAt(bowlDistance(f.x,f.z,f.h)));debug.presence=presence;musicFade=musicFadeFor(presence);
    if(presence>0){away=0;quiet=0;}else{away+=step;quiet+=step;}
    if(presence===0){if(g){to(P_OUT,g.out.gain,0);if(quiet>S.stopAfter)stop(false);}if(bank&&away>S.teardown)teardown();return;}
    const c=host.ctx();if(!c)return;// no gesture yet: nothing is built
