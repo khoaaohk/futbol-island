@@ -9,11 +9,15 @@ import {STADIUM} from './westParkLayout';
 import {SCREEN} from './stadiumSeats';
 
 export const SCREEN_CANVAS={w:256,h:144} as const;
-/** The match clock as the screen shows it: whole minutes played (real seconds on the sim clock), like a stadium board ("12'"). */
-export const screenMinute=(seconds:number)=>Math.max(0,Math.floor(seconds/60));
-export type ScreenScore={home:string;away:string;gold:number;blue:number;minute:number};
+/** The match clock as the screen shows it: the minute being played (real seconds on the sim clock), like a stadium board: the
+ *  first minute is 1' (football's convention; phase 3b: the board no longer sat at 0' for the first minute after the match woke). */
+export const screenMinute=(seconds:number)=>Math.max(0,Math.floor(Number.isFinite(seconds)?seconds/60:0))+1;
+/** exhibition: nobody (me or a friend) is playing in it: an all-AI match kids can join or just watch (phase 3b). */
+export type ScreenScore={home:string;away:string;gold:number;blue:number;minute:number;exhibition?:boolean};
 /** What the board says (also the change key: a redraw happens only when this string changes). */
-export const screenText=(s:ScreenScore)=>`${s.home} ${s.gold}-${s.blue} ${s.away} ${s.minute}'`;
+export const screenText=(s:ScreenScore)=>`${s.exhibition?'EXHIBITION · ':''}${s.home.toUpperCase()} ${s.gold}-${s.blue} ${s.away.toUpperCase()} ${s.minute}'`;
+/** The stadium's pitch bar (FieldPathCard) while an exhibition is on vs a match with players in it. */
+export const stadiumBarText=(exhibition:boolean)=>exhibition?{tag:'WEST COAST STADIUM · EXHIBITION',action:'Join in or just watch'}:{tag:'WEST COAST STADIUM · BIG MATCH',action:'Join the match'};
 
 export function createStadiumScreen(parent:T.Object3D,colours:{home:string;away:string}){
  let mesh:T.Mesh|null=null,canvas:HTMLCanvasElement|null=null,texture:T.CanvasTexture|null=null,shown='',lastDraw=-Infinity;
@@ -29,7 +33,9 @@ export function createStadiumScreen(parent:T.Object3D,colours:{home:string;away:
  function draw(s:ScreenScore){
   const c=canvas!.getContext('2d');if(!c)return;const {w,h}=SCREEN_CANVAS;
   c.fillStyle='#0d1b22';c.fillRect(0,0,w,h);
-  c.fillStyle='#7fd1c7';c.font='800 15px system-ui, sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText('WEST COAST STADIUM',w/2,18);
+  c.textAlign='center';c.textBaseline='middle';
+  if(s.exhibition){c.fillStyle='#ffd23f';c.font='900 15px system-ui, sans-serif';c.fillText('EXHIBITION MATCH',w/2,18);}
+  else{c.fillStyle='#7fd1c7';c.font='800 15px system-ui, sans-serif';c.fillText('WEST COAST STADIUM',w/2,18);}
   // Team chips and names
   for(const [side,name,colour] of [[-1,s.home,colours.home],[1,s.away,colours.away]] as const){
    const x=w/2+side*78;c.fillStyle=colour;c.fillRect(x-34,36,68,8);

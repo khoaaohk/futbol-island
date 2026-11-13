@@ -27,8 +27,8 @@ export default function FieldPathCard({venue,onPlays,onLaunch,onPlay}:{venue:{id
  const launch=()=>{if(target&&path)launchPathLesson(path,target.lesson,steps,answers,'pitch');else onPlays();onLaunch?.();};
  if(onPlay&&joinableFormat(venue.id))return <div data-tour="plays" data-field={venue.id} data-field-lesson={target?.lesson.id} className="meet-coach field-learn-card" data-hud-slot="focus" data-live-bar="" role="group" hidden
   aria-label={say?`${venue.name}, ${format}: ${say.action}, ${say.name}, or play the match`:`${venue.name}: play the match`}>
-  <span>{venue.name.toUpperCase()} · {say?`${format.toUpperCase()} PATH`:`${format.toUpperCase()} MATCH`}</span>
-  <strong>{say?say.action:'Join the match'}</strong>
+  <span data-bar-tag="">{venue.name.toUpperCase()} · {say?`${format.toUpperCase()} PATH`:`${format.toUpperCase()} MATCH`}</span>
+  <strong data-bar-action="">{say?say.action:'Join the match'}</strong>
   {say&&<button type="button" className="field-go" data-field-learn="" onClick={launch} title={`Learn: ${say.name}`}>Learn</button>}
   <button type="button" className="field-play" data-join-play="" onClick={onPlay} title="Play · Enter">Play</button>
  </div>;
