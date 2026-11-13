@@ -24,6 +24,8 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   const cooldown=new Map<string,number>();
   // Each live source with the gain that shapes it, so a forced stop can fade instead of cutting mid-wave.
   const sources=new Map<AudioScheduledSourceNode,GainNode|null>();
+  /** The West Stadium crowd loop (stadiumCrowd below); declared here because audible() reads it. */
+  let crowdLoop:{source:AudioBufferSourceNode;gain:GainNode}|null=null;
   /** Stopping a sounding oscillator or loop at a non-zero level is a DC step: an audible click. Fade it first. */
   const RELEASE=.04;
   function release(source:AudioScheduledSourceNode,gain:GainNode|null,after?:()=>void){
@@ -43,7 +45,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   /** 3D scene hover (character, NPC, building, ferry under the cursor). Only a pointer that just moved: a held key moving the
    * camera sweeps a resting cursor's ray across the world. Off in flight (camera always drifts; flight is engine + music only). */
   function sceneHover(flying=false){if(flying||performance.now()-lastPointer>HOVER_INPUT_MS)return;ui('hover');}
-  const debug={water:null as unknown,unlocked:false,volume,muted,hidden,disposed:false,contextState:'locked',idleSuspends:0,idle:false,rush:false,counts:{} as Record<string,number>};
+  const debug={water:null as unknown,unlocked:false,volume,muted,hidden,disposed:false,contextState:'locked',idleSuspends:0,idle:false,rush:false,stadiumCrowd:0,counts:{} as Record<string,number>};
   function getContext(){
     if(disposed)return null;
     try{
@@ -65,7 +67,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   const water=createWaterSound({ctx:()=>context,master:()=>master,noise:()=>noise,ok:()=>!!context&&!!master&&context.state==='running'&&!muted&&!idleFaded&&volume>0&&!hidden&&!disposed,changed:()=>{if(!audible())scheduleIdle();}});
   debug.water=water.debug;
   const IDLE_SUSPEND_MS=2000;let musicAudible=false,idleSuspended=false,idleTimer:ReturnType<typeof setTimeout>|undefined;
-  const audible=()=>musicAudible||sources.size>0||!!engine||!!travelHum||!!rush||water.active();
+  const audible=()=>musicAudible||sources.size>0||!!engine||!!travelHum||!!rush||!!crowdLoop||water.active();
   function scheduleIdle(){if(typeof setTimeout!=='function')return;if(idleTimer!==undefined)clearTimeout(idleTimer);idleTimer=setTimeout(checkIdle,IDLE_SUSPEND_MS);}
   function checkIdle(){idleTimer=undefined;if(disposed||!context||context.state!=='running')return;if(audible())return;idleSuspended=true;debug.idleSuspends++;void context.suspend().catch(()=>{});}
   function wakeIdle(){if(!idleSuspended||!context||hidden||muted||disposed)return;idleSuspended=false;if(context.state==='suspended')void context.resume().catch(()=>{});}
@@ -78,7 +80,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(on===idleFaded||disposed)return;idleFaded=on;debug.idle=on;if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);idleFadeTimer=undefined;
     const c=context,g=master;
     if(on){
-      stopEngine();stopTravelHum();stopRush();water.stop(false);
+      stopEngine();stopTravelHum();stopRush();stopCrowd();water.stop(false);
       if(c&&g&&c.state==='running'){const t=c.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+IDLE_FADE);}
       idleFadeTimer=setTimeout(()=>{idleFadeTimer=undefined;if(!idleFaded||!context)return;silence(true);if(context.state==='running'){idleSuspended=true;void context.suspend().catch(()=>{});}},IDLE_FADE*1000+100);
       return;
@@ -388,15 +390,45 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(kind==='ride-start'){rushWant=typeof d==='object'&&d&&typeof d.gain==='number'?Math.max(.5,Math.min(1.2,d.gain)):1;stopRush(.05);startRush(rushWant);if(context&&context.state!=='running'&&!hidden&&!muted)wakeIdle();return true;}
     rushWant=0;if(kind==='ride-dart')stopRush(1.3,true);else stopRush();return true;
   }
+  /** The West Stadium crowd (phase 3b, Nov 12 2026; lib/town/stadiumSit.ts ambience): a soft murmur while a match is on and the
+   *  player is near the pitch. ONE looped 2 s noise buffer (band-passed, a slow swell baked in) → one gain on the effects bus, so
+   *  mute, volume, the idle fade and page-hide silence apply. Town calls stadiumCrowd(level) each frame; the gain only moves when the
+   *  level changes by a tenth (audio-param automation, no per-frame audio work), and nothing exists at level 0. The goal cheer is
+   *  match('crowd'). It never creates or resumes the context by itself (the first input unlock does). */
+  let crowdBuffer:AudioBuffer|null=null,crowdLevel=0;
+  const CROWD_GAIN=.05,CROWD_FADE=.6;
+  function crowdNoise(c:AudioContext){
+   if(crowdBuffer)return crowdBuffer;const n=c.sampleRate*2,b=c.createBuffer(1,n,c.sampleRate),d=b.getChannelData(0);let a=0,p=0;
+   // Two passes of a soft low-pass (the second starts from the first's end: no click at the seam), a murmur swell of whole periods.
+   for(let i=0;i<n;i++){const w=Math.random()*2-1;d[i]=w;a=a*.9+w*.1;p=p*.995+w*.005;}
+   for(let i=0;i<n;i++){const w=d[i];a=a*.9+w*.1;p=p*.995+w*.005;const ph=i/n,swell=.75+.15*Math.sin(2*Math.PI*ph*2)+.1*Math.sin(2*Math.PI*ph*5);d[i]=(a*1.6+p*6+w*.08)*swell;}
+   return crowdBuffer=b;
+  }
+  function stopCrowd(fade=CROWD_FADE){
+   const r=crowdLoop;if(!r)return;crowdLoop=null;debug.stadiumCrowd=0;const c=context;
+   if(!c||c.state!=='running'||fade<=0){try{r.source.stop();}catch{}return;}
+   const t=c.currentTime,g=r.gain.gain;g.cancelScheduledValues(t);g.setValueAtTime(g.value,t);g.linearRampToValueAtTime(0,t+fade);try{r.source.stop(t+fade+.01);}catch{}
+  }
+  function stadiumCrowd(level:number){
+   const want=Number.isFinite(level)?Math.round(Math.max(0,Math.min(1,level))*10)/10:0;
+   if(want<=0){crowdLevel=0;stopCrowd();return;}
+   const c=context;if(!crowdLoop){if(muted||idleFaded||volume===0||hidden||disposed||!c||!master||c.state!=='running')return;
+    const source=c.createBufferSource(),filter=c.createBiquadFilter(),gain=c.createGain(),t=c.currentTime;
+    source.buffer=crowdNoise(c);source.loop=true;filter.type='bandpass';filter.Q.value=.55;filter.frequency.value=720;
+    gain.gain.setValueAtTime(.0001,t);source.connect(filter);filter.connect(gain);gain.connect(master);source.start(t);
+    source.onended=()=>{source.disconnect();filter.disconnect();gain.disconnect();if(crowdLoop?.source===source)crowdLoop=null;if(!audible())scheduleIdle();};
+    crowdLoop={source,gain};crowdLevel=0;debug.counts['stadium-crowd']=(debug.counts['stadium-crowd']??0)+1;}
+   if(want===crowdLevel||!c)return;crowdLevel=want;debug.stadiumCrowd=want;crowdLoop!.gain.gain.setTargetAtTime(CROWD_GAIN*want,c.currentTime,.5);
+  }
   /** Fades live sources out (blur, mute). `now` = hard stop: the page is hiding and the context suspends at once anyway. */
-  function silence(now=false){water.stop(now);stopEngine();stopTravelHum();stopRush(now?0:RUSH_FADE);for(const [source,gain] of sources){release(source,now?null:gain);sources.delete(source);}}
+  function silence(now=false){water.stop(now);stopEngine();stopTravelHum();stopRush(now?0:RUSH_FADE);stopCrowd(now?0:CROWD_FADE);for(const [source,gain] of sources){release(source,now?null:gain);sources.delete(source);}}
   function setVolume(value:number){if(!Number.isFinite(value))return;volume=Math.max(0,Math.min(1,value));debug.volume=volume;if(volume===0)silence();else resumeRush();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);}
   function setMuted(value:boolean){muted=value;debug.muted=value;silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);if(!value)unlock();}
   function visibility(){hidden=document.hidden||mediaPaused;debug.hidden=hidden;silence(hidden);if(hidden){if(context?.state==='running')void context.suspend().catch(()=>{});}else if(debug.unlocked)unlock();}
   function dispose(){water.dispose();if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-job-cue',jobCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
   /** The sea, once per frame while swimming (a frame with `in:false` winds everything down). */
   function swim(dt:number,frame:WaterSoundFrame){if(frame.in&&idleSuspended&&context?.state==='suspended')wakeIdle();water.update(dt,frame);}
-  return {swim,waterPlunge:()=>water.plunge(),waterSurface:()=>water.surface(),setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,match,boost,whaleSong,honk,truck,setVolume,setMuted,visibility,silence,dispose};
+  return {swim,stadiumCrowd,waterPlunge:()=>water.plunge(),waterSurface:()=>water.surface(),setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,match,boost,whaleSong,honk,truck,setVolume,setMuted,visibility,silence,dispose};
 }
 
 // ---- lib/audio/waterSound (kept in this file: the tests load islandSound.ts alone) ----
