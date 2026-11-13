@@ -18,7 +18,7 @@ async function analyse({cell=.5,base=process.cwd()}={}){
  const {fieldSurfaceHeight}=env.venues;const {onSummitGround}=L('lib/town/summitIsle.ts');
  // Colliders: building-like (footprint of a roof or walk surface: blocks only when taller than the walker + STEP) or clutter.
  const fp=o=>[o.x,o.z,o.w,o.d].join(':'),roofByFp=new Map(roofs.map(r=>[fp(r),r]));
- const minX=-104,maxX=812,minZ=-268,maxZ=252,W=Math.ceil((maxX-minX)/cell)+1,H=Math.ceil((maxZ-minZ)/cell)+1,N=W*H;
+ const minX=-340/* West Stadium land, Nov 12 2026 (was -104) */,maxX=812,minZ=-268,maxZ=252,W=Math.ceil((maxX-minX)/cell)+1,H=Math.ceil((maxZ-minZ)/cell)+1,N=W*H;
  const BK=4,bw=Math.ceil((maxX-minX)/BK)+1,bh=Math.ceil((maxZ-minZ)/BK)+1,buckets=new Array(bw*bh);
  const solids=obstacles.map(o=>({x:o.x,z:o.z,w:o.w,d:o.d,cornerRadius:o.cornerRadius,src:o,roof:roofByFp.get(fp(o))})).filter(o=>o.w>0&&o.d>0);
  const props=world.roofObstacles.map(o=>({x:o.x,z:o.z,w:o.w,d:o.d,floor:o.floor,top:o.top,prop:true}));
