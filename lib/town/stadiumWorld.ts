@@ -160,6 +160,10 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   const P=FRAME_PROUD;
   piece(standRect(s,ROOF.back-.12,ROOF.back+P,a0-P,a1+P),ROOF.y-ROOF.frameBelow,ROOF.y+ROOF.frameAbove,'#244d49');// the fascia frame (sponsor slot)
   piece(standRect(s,ROOF.front-P,ROOF.front+.12,a0-P,a1+P),ROOF.y-FRONT_FRAME.below,ROOF.y+FRONT_FRAME.above,'#244d49');
+  // Owner, Nov 13 2026: a player landed on the roof walked into the tall fascia frame and sank through the sponsor banner. Both
+  // frames are solid walls for roof walkers (rails: blocked between floor and top) and never landing spots.
+  rails.push({...standRect(s,ROOF.back-.12,ROOF.back+P,a0-P,a1+P),floor:ROOF.y-ROOF.frameBelow,top:ROOF.y+ROOF.frameAbove,noLanding:true} as Rail);
+  rails.push({...standRect(s,ROOF.front-P,ROOF.front+.12,a0-P,a1+P),floor:ROOF.y-FRONT_FRAME.below,top:ROOF.y+FRONT_FRAME.above,noLanding:true} as Rail);
   const merged=mergeGeometries(parts)!;for(const g of parts)g.dispose();
   const roofMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.85,transparent:true,opacity:1});t.materials?.push(roofMaterial);// one each: they fade apart
   const roof=new T.Mesh(merged,roofMaterial);roof.name='stadium-roof-'+s.id;roof.position.copy(c);roof.castShadow=roof.receiveShadow=true;

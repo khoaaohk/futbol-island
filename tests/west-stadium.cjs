@@ -169,6 +169,12 @@ for(const [s,i] of [[W,4],[W,9],[N,6],[E,8]]){const p=Q.standWorld(s,s.inner+i*Q
  assert(!fell&&Math.abs(t.state.height-Q.rowHeight(i))<.01,`${s.id} row ${i}: the end rail holds`);}
 {const p=Q.standWorld(N,Q.standBack(N)-1,30),q=Q.standWorld(N,Q.standBack(N)+6,30);const t=travel(),pp={...p},v={x:0,z:0};t.reset(pp.x,pp.z,CH);let fell=false;
  for(let f=0;f<5*60;f++){t.update(1/60,pp,v,{x:(q.x-p.x)/7,z:(q.z-p.z)/7,sprint:false},'walk');if(t.state.falling)fell=true;}assert(!fell&&Math.abs(t.state.height-CH)<.01,'the concourse back rail holds');}
+// Owner, Nov 13 2026: walking on a roof into the tall fascia banner frame must stop at it, never sink through the banner.
+{const R=Q.STANDS.find(q=>q.roof),top=Q.ROOF.y+Q.ROOF.thick/2,p=Q.standWorld(R,(Q.ROOF.front+Q.ROOF.back)/2,0),q=Q.standWorld(R,Q.ROOF.back+4,0);
+ const t=travel(),pp={...p},v={x:0,z:0};t.reset(pp.x,pp.z,top);const dx=q.x-p.x,dz=q.z-p.z,l=Math.hypot(dx,dz);let fell=false;
+ for(let f=0;f<6*60;f++){t.update(1/60,pp,v,{x:dx/l,z:dz/l,sprint:false},'walk');if(t.state.falling)fell=true;}
+ const backX=Q.standWorld(R,Q.ROOF.back-.12,0);assert(!fell&&Math.abs(t.state.height-top)<.05,'roof walker stays on the roof at the fascia frame');
+ assert(Math.hypot(pp.x-p.x,pp.z-p.z)<Math.hypot(backX.x-p.x,backX.z-p.z),'stopped before the banner frame');}
 // Corners are open: from the ring out through each corner gap to the park.
 for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const r=walk([[S.x+sx*37.5,S.z+sz*50],[S.x+sx*38,S.z+sz*55],[S.x+sx*46,S.z+sz*60],[S.x+sx*60,S.z+sz*84]]);assert(r.reached&&!r.fell&&r.high<.1,'corner '+sx+','+sz+' open '+JSON.stringify({...r,t:0}));}
 // Rides go up an aisle and down a back stair too (no wedging, no falls).
