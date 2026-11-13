@@ -242,6 +242,10 @@ console.log('west stadium phase 3a: ok');
    const sz=S.z+Q.SCREEN.z;assert(inFrame(S.x,0,S.z),`seat ${st.id} ball ${JSON.stringify(ball)}: centre spot in frame`);
    for(const [dx,dy] of [[-1,-1],[1,-1],[-1,1],[1,1]])assert(inFrame(S.x+dx*Q.SCREEN.w/2,Q.SCREEN.y+dy*Q.SCREEN.h/2,sz),`seat ${st.id}: the big screen in frame`);
    ndc.set(st.x,st.y+1.5,st.z).project(pc);assert(ndc.y< -1||ndc.z>1,'the sitter\'s head is out of frame');}}
+ // The south stand has the big screen behind it: the portrait view still looks at the pitch (centre spot in frame, not sky).
+ for(const along of [-30,0,30])for(const row of [0,5,9]){const Sn=Q.STANDS[3],p=Q.standWorld(Sn,Sn.inner+row*Q.ROW_DEPTH+.3,along),st=Q.nearestSeat(p.x,p.z,Q.rowHeight(row));assert(st,'a south seat');
+  const view=Q.seatView(st,true);for(const ball of [null,{x:S.x+30,z:S.z-48}]){Q.portraitLook(view,st,ball,aspect,out);pc.position.set(view.x,view.y,view.z);pc.lookAt(out.x,out.y,out.z);pc.updateMatrixWorld();
+   assert(inFrame(S.x,0,S.z),`south seat ${st.id}: centre spot in frame`);}}
  {const sit=load('lib/town/stadiumSit.ts').createStadiumSit({parent:new T.Group(),wake:()=>{}}),N=Q.STANDS[2],p=Q.standWorld(N,N.inner+5*Q.ROW_DEPTH+.3,4),h=Q.rowHeight(5);
   sit.want(p.x,p.z,h,true);sit.press(true);const c=new T.PerspectiveCamera(40,aspect,1,500);sit.applyCamera(c,1/60);assert.equal(c.fov,Q.PORTRAIT_FOV,'seated on a portrait phone: the wider view');
   sit.holdPlayer(1/60,{x:1,z:0,kick:false,juggle:false},new Set(),{walk:true,x:sit.seat.x,z:sit.seat.z,reduced:true});sit.applyCamera(c,1/60);assert.equal(c.fov,40,'standing: the FOV restored');}

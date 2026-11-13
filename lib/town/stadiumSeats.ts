@@ -145,7 +145,10 @@ export function portraitLook(cam:{x:number;y:number;z:number},seat:{x:number;y:n
  if(Math.max(lo,slo)<=Math.min(hi,shi)){lo=Math.max(lo,slo);hi=Math.min(hi,shi);}
  const yaw=yC+Math.max(lo,Math.min(hi,wrap(yawTo(ax,az)-yC)));
  const eTop=Math.atan2(SCREEN.y+SCREEN.h/2-cam.y,ds),eHead=Math.atan2(seat.y+1.6-cam.y,Math.max(.5,Math.hypot(seat.x-cam.x,seat.z-cam.z)));
- const pitch=Math.max(eTop-vh+E*2,eHead+vh+E);
+ // The screen hangs behind the south stand: from there it is behind the sitter (|so| > 90°), so the pitch aims at the centre spot
+ // instead of tilting up to a screen nobody can see (phone QA round 2: the south stand showed only sky).
+ const eAim=Math.abs(so)<Math.PI/2?eTop-vh+E*2:Math.atan2(-cam.y,Math.max(1,Math.hypot(STADIUM.x-cam.x,STADIUM.z-cam.z)));
+ const pitch=Math.max(eAim,eHead+vh+E);
  out.x=cam.x+Math.sin(yaw)*Math.cos(pitch)*60;out.z=cam.z+Math.cos(yaw)*Math.cos(pitch)*60;out.y=cam.y+Math.sin(pitch)*60;return out;
 }
 
