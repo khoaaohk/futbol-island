@@ -153,3 +153,22 @@ The Players row:
   `/stats` address) and **`RELAY_STATS_TOKEN`** (its `STATS_TOKEN` secret) in the server environment (never `NEXT_PUBLIC_`).
   Without them the admin shows "Relay stats not configured". The payload contract is `lib/analytics/relayStatsTypes.ts`;
   `RELAY_STATS_FIXTURE=1` (not in production) serves the fixture for a local preview.
+
+## Stadium sponsor slots (Nov 12 2026)
+
+The west stadium (phase 4, `lib/stadium/sponsors/`) has six sponsor spots: the pitchside board ring (16 panels), the big screen
+(a sponsor card between matches), the gate arch (naming partner), the roof fascia on the two long stands, the plaza flags and the
+centre-circle logo. Fixed pictures only: no links, no tracking, no calls to action. The game adds a small "Sponsor" tag to every
+sponsor picture and shows Futbol Island's own coaching panels on any spot without one.
+
+- **Upload:** /admin → Island and games → Stadium sponsors. PNG, WebP or JPG, at most 1 MB, the spot's shape within 6% (boards and
+  fascia 8:1, screen 16:9, gate 4:1, flags 2:3, centre 1:1), checked from the file's bytes on the server. Each picture has a first
+  and last day (Pacific time) and an order within its spot.
+- **Owner step:** run `supabase/migrations/20261118_stadium_sponsors.sql` in the Supabase SQL editor (the last row must read
+  `OK, stadium sponsors installed`; safe to re-run). It creates the `stadium_sponsors` table (public read of active rows only,
+  writes by the server's service role only) and the public `stadium-sponsors` picture bucket. Until then the game shows its own
+  panels and /admin says "needs migration".
+- **Reach counters** (each at most once per session, anonymous totals): `en:stadium_visit` (walked into the stadium),
+  `en:stadium_boards_seen` (the pitchside boards drawn on screen while near, only when a sponsor is on them),
+  `en:stadium_screen_card` (a sponsor card on the big screen drawn while near). Never which sponsor, for how long, or anything
+  about the player.

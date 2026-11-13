@@ -37,6 +37,7 @@ import {DASH_TABS,OLD_TAB,type DashTab} from '@/lib/analytics/metricIndex';
 import dd from './dash.module.css';
 import {isoWeekOf} from '@/lib/analytics/sponsorReport';
 import so from './SponsorOverview.module.css';
+import StadiumSponsorsSection from './StadiumSponsorsSection';
 
 type Preset='today'|'yesterday'|'7d'|'14d'|'30d'|'90d'|'all'|'custom';
 const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'yesterday',label:'Yesterday'},{id:'7d',label:'7 days'},{id:'14d',label:'14 days'},{id:'30d',label:'30 days'},{id:'90d',label:'90 days'},{id:'all',label:'All'},{id:'custom',label:'Custom'}];
@@ -365,6 +366,7 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
       <div className={dd.mx} data-metric="engagement.plan"><PlanCard report={report}/></div>
      </div>
      <div className={dd.mx} data-metric="engagement.island"><IslandSection report={report}/></div>
+     <StadiumSponsorsSection/>
      <div className={dd.mx} data-metric="engagement.summit_kit"><SummitKitSection report={report}/></div>
      <div className={dd.mx} data-metric="engagement.water"><WaterSection report={report}/></div>
      <div className={dd.mx} data-metric="engagement.friends"><FriendsSection report={report}/></div>

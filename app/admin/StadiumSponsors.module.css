@@ -1,0 +1,25 @@
+/* Stadium sponsors (Nov 12 2026, StadiumSponsorsSection.tsx): the admin's own inputs, tokens and card; a slot-shaped preview. */
+.layout{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:18px;align-items:start}
+@media (max-width:900px){.layout{grid-template-columns:minmax(0,1fr)}}
+.field{display:grid;gap:6px;min-width:0}
+.field>span{font-size:13px;font-weight:800;color:var(--a-ink)}
+.field small{font-weight:600;color:var(--a-muted);margin-left:6px}
+.field input,.field select{min-height:var(--btn-height);max-width:100%;min-width:0;padding:0 12px;border:2px solid #a8b78d;border-radius:14px;background:#fffaf0;color:#244d40;font:700 16px var(--btn-font)}
+.field input[type=file]{padding:10px 12px;font-size:14px}
+.field input:focus-visible,.field select:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:420px){.pair{grid-template-columns:minmax(0,1fr)}}
+.preview{margin:0;display:grid;gap:6px}
+.preview figcaption{font-size:12px;color:var(--a-muted)}
+.stage{position:relative;width:100%;max-height:240px;overflow:hidden;background:#1b2430;border:3px solid #231a2e;border-radius:6px}
+.preview[data-slot=flag] .stage{width:auto;height:200px;justify-self:start}
+.preview[data-slot=centre] .stage{width:180px;border-radius:50%;background:#5fae5a}
+.art{position:absolute;inset:0;background-repeat:repeat-x;background-position:left center}
+.empty{position:absolute;inset:0;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff3d6aa}
+.tag{position:absolute;right:6px;bottom:6px;padding:1px 8px;border-radius:999px;background:#231a2edb;color:#fff3d6;font:800 11px/1.5 system-ui,-apple-system,sans-serif}
+.preview[data-slot=centre] .tag{right:50%;translate:50% 0;bottom:14%}
+.bad{margin:0;font-size:13px;font-weight:700;color:#b3361f}
+.thumb{display:inline-block;height:32px;max-width:128px;vertical-align:middle;background:#1b2430 center/100% 100% no-repeat;border-radius:4px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-color-scheme:dark){:global(:root:not([data-theme=light])) .bad{color:#ff9a7d}}
+:global(:root[data-theme=dark]) .bad{color:#ff9a7d}

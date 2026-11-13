@@ -21,7 +21,8 @@
  *                                  lure put on by id, fights started (spin reel), landed / escaped / missed, slips
  *                                  per fight (bucketed), runs stopped vs spun through, average spin rate (bucketed), Fishbook opens
  *   en:<event>                     sponsor engagement (ENGAGE_FIXED_IDS below, Oct 20 2026): arcade games, design styles,
- *                                  cards found, films, pop-up books opened / finished / bought, reading-time buckets
+ *                                  cards found, films, pop-up books opened / finished / bought, reading-time buckets, the
+ *                                  stadium's sponsor reach (ENGAGE_STADIUM_EVENTS)
  *   ip:<event>                     the development plan (IDP_COUNT_EVENTS; lib/coaches/idp/analytics.ts): totals only, never
  *                                  which goal, mission, sticker or feeling (docs/idp/DESIGN.md §7)
  *   mp:<event>                     Play with friends (PARTY_COUNT_EVENTS, lib/analytics/partyEvents.ts; Oct 22 2026): the funnel,
@@ -195,6 +196,12 @@ export const ENGAGE_CARD_TIERS=['icon','elite','regular'] as const;
 export const ENGAGE_BOOKS=['island','messi','falcao','marta','maldini','zidane','ronaldinho','pele','cruyff','modric','cristiano','iniesta','vardy','salah','kane','putellas','bronze','kerr','buffon','eriksen','debruyne','ibrahimovic','lukaku','rashford','ronaldo','garrincha','davies','eusebio','weah','drogba','mane','saka','hegerberg','cafu','nadim','kante','oshoala'] as const;
 /** A reading visit's foreground time (the pop-up book open, tab visible): under 1 min, 1–3, 3–10, 10+ minutes. */
 export const ENGAGE_READ_BUCKETS=[['read_1m','Under 1 minute'],['read_3m','1–3 minutes'],['read_10m','3–10 minutes'],['read_long','10+ minutes']] as const;
+/**
+ * The stadium's sponsor reach (Nov 12 2026, lib/stadium/sponsors; docs/admin-sponsor-insights.md): anonymous totals, each at most
+ * once per session. A visit to the stadium, the pitchside boards drawn on screen while near, a sponsor card shown on the big screen
+ * while near. Never which sponsor, how long, or anything about the player.
+ */
+export const ENGAGE_STADIUM_EVENTS=[['stadium_visit','Stadium visits'],['stadium_boards_seen','Pitchside boards seen'],['stadium_screen_card','Big-screen sponsor cards seen']] as const;
 export const ENGAGE_FIXED_IDS:readonly string[]=[
  ...ENGAGE_ARCADE_GAMES.map(g=>'en:game_'+g),
  ...ENGAGE_JERSEY_PATTERNS.map(p=>'en:jerseyp_'+p),...ENGAGE_BOOT_PATTERNS.map(p=>'en:bootp_'+p),...ENGAGE_BOOT_MODELS.map(m=>'en:bootm_'+m),
@@ -202,6 +209,7 @@ export const ENGAGE_FIXED_IDS:readonly string[]=[
  'en:film_open','en:film_end',
  ...ENGAGE_BOOKS.flatMap(b=>['en:bookopen_'+b,'en:bookend_'+b,'en:bookbuy_'+b]),
  ...ENGAGE_READ_BUCKETS.map(([b])=>'en:'+b),
+ ...ENGAGE_STADIUM_EVENTS.map(([e])=>'en:'+e),
 ];
 /** A card by its binder number (lib/town/cardCollection.ts cardNumber, 1-based): `en:cardn_<n>`, n 1..999. */
 export const ENGAGE_CARD_NUMBER_RE=/^en:cardn_[1-9][0-9]{0,2}$/;

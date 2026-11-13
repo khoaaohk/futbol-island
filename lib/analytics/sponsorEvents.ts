@@ -43,3 +43,11 @@ export function startReadClock(now:()=>number=()=>performance.now()):()=>void{
   if(total>=2000)count('en:'+readBucket(total));
  };
 }
+/**
+ * The stadium's sponsor reach (Nov 12 2026): each bucket at most once per page session (a module Set, no storage). The stadium
+ * calls countStadiumVisit when the player walks in; lib/stadium/sponsors/surfaces.ts calls countStadiumSeen from its render hook.
+ */
+const stadiumSeen=new Set<string>();
+export type StadiumBucket='visit'|'boards_seen'|'screen_card';
+export function countStadiumSeen(bucket:StadiumBucket){if(stadiumSeen.has(bucket))return;stadiumSeen.add(bucket);count('en:stadium_'+bucket);}
+export const countStadiumVisit=()=>countStadiumSeen('visit');
