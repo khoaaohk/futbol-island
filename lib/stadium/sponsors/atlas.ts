@@ -56,7 +56,7 @@ export function atlasItems(picks:Record<SponsorSlot,SlotPick[]>):AtlasItem[]{
 export type Ctx2D=Pick<CanvasRenderingContext2D,'drawImage'|'fillRect'|'fillStyle'|'save'|'restore'|'beginPath'|'arc'|'clip'|'fillText'|'font'|'textAlign'|'textBaseline'|'measureText'|'roundRect'|'fill'|'translate'|'rotate'|'moveTo'|'lineTo'|'closePath'|'stroke'|'strokeStyle'|'lineWidth'|'lineJoin'|'globalAlpha'|'rect'|'strokeText'|'quadraticCurveTo'|'setTransform'|'scale'|'imageSmoothingQuality'>;
 export const INK='#231a2e',PAPER='#fff3d6';
 
-/** The small "Sponsor" tag, bottom right of a sponsor cell (never on the placeholders, which are the game's own panels). */
+/** The small "Sponsor" tag, bottom right of a sponsor cell (also on the built-in Drip FC panels; never on the game's own panels). */
 export function drawSponsorLabel(c:Ctx2D,r:AtlasRect,round=false){
  const h=Math.max(9,Math.round(Math.min(r.h*.16,r.w*.09))),fs=Math.round(h*.72);
  c.save();c.font=`800 ${fs}px system-ui,-apple-system,"Segoe UI",sans-serif`;

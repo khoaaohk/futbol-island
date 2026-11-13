@@ -17,7 +17,7 @@ export function pitchStripePlan(v:Pick<Venue,'id'|'length'|'width'>):StripePlan|
  return stripePlan(v.length,{boxDepth,lanesWidth:v.id==='11v11'?v.width:undefined});
 }
 /** One goal's frame (round posts, crossbar and the back frame, merged) and net (line pairs), in venue-local metres: the goal line at
-z = side × length/2, the frame's foot at `base`. Shared by the island pitches (below) and the West Coast Stadium (stadiumWorld.ts). */
+z = side × length/2, the frame's foot at `base`. Shared by the island pitches (below) and the DRIP FC Stadium (the west stadium) (stadiumWorld.ts). */
 export function goalGeometry(v:Pick<Venue,'goalWidth'|'goalHeight'|'length'>&{id:string},side:number,base:number){
  const l=v.length/2;
  const goalPts:number[]=[];const line=(a:number[],b:number[])=>goalPts.push(...a,...b);

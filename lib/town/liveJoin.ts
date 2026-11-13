@@ -15,7 +15,7 @@ export const LIVE_JOIN_FORMATS:Record<LiveFormat,{enabled:boolean;maxHumansPerTe
   '9v9':{enabled:true,maxHumansPerTeam:9,humanSpeedCap:null},
   '11v11':{enabled:true,maxHumansPerTeam:11,humanSpeedCap:null},// Eleven Park: adult tuning (owner Nov 5 2026)
   'beach':{enabled:true,maxHumansPerTeam:5,humanSpeedCap:null},
-  'stadium':{enabled:true,maxHumansPerTeam:11,humanSpeedCap:null},// West Coast Stadium (Nov 12 2026): the big match, 11v11 rules// Sharks Beach (Nov 4 2026): Play-only bar, barefoot kits, the drawn 5.5 m goal for your shots, 4 s restarts
+  'stadium':{enabled:true,maxHumansPerTeam:11,humanSpeedCap:null},// DRIP FC Stadium (Nov 12 2026): the big match, 11v11 rules// Sharks Beach (Nov 4 2026): Play-only bar, barefoot kits, the drawn 5.5 m goal for your shots, 4 s restarts
 };
 export const joinableFormat=(format:LiveFormat)=>LIVE_JOIN_FORMATS[format].enabled;
 

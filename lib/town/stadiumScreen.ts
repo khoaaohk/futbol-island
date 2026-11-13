@@ -7,6 +7,7 @@
 import * as T from 'three';
 import {STADIUM} from './westParkLayout';
 import {SCREEN} from './stadiumSeats';
+import {STADIUM_NAME_CAPS} from '../stadium/dripfc';
 
 export const SCREEN_CANVAS={w:256,h:144} as const;
 /** The match clock as the screen shows it: the minute being played (real seconds on the sim clock), like a stadium board: the
@@ -17,7 +18,7 @@ export type ScreenScore={home:string;away:string;gold:number;blue:number;minute:
 /** What the board says (also the change key: a redraw happens only when this string changes). */
 export const screenText=(s:ScreenScore)=>`${s.exhibition?'EXHIBITION · ':''}${s.home.toUpperCase()} ${s.gold}-${s.blue} ${s.away.toUpperCase()} ${s.minute}'`;
 /** The stadium's pitch bar (FieldPathCard) while an exhibition is on vs a match with players in it. */
-export const stadiumBarText=(exhibition:boolean)=>exhibition?{tag:'WEST COAST STADIUM · EXHIBITION',action:'Join in or just watch'}:{tag:'WEST COAST STADIUM · BIG MATCH',action:'Join the match'};
+export const stadiumBarText=(exhibition:boolean)=>exhibition?{tag:`${STADIUM_NAME_CAPS} · EXHIBITION`,action:'Join in or just watch'}:{tag:`${STADIUM_NAME_CAPS} · BIG MATCH`,action:'Join the match'};
 
 export function createStadiumScreen(parent:T.Object3D,colours:{home:string;away:string}){
  let mesh:T.Mesh|null=null,canvas:HTMLCanvasElement|null=null,texture:T.CanvasTexture|null=null,shown='',lastDraw=-Infinity;
@@ -35,7 +36,7 @@ export function createStadiumScreen(parent:T.Object3D,colours:{home:string;away:
   c.fillStyle='#0d1b22';c.fillRect(0,0,w,h);
   c.textAlign='center';c.textBaseline='middle';
   if(s.exhibition){c.fillStyle='#ffd23f';c.font='900 15px system-ui, sans-serif';c.fillText('EXHIBITION MATCH',w/2,18);}
-  else{c.fillStyle='#7fd1c7';c.font='800 15px system-ui, sans-serif';c.fillText('WEST COAST STADIUM',w/2,18);}
+  else{c.fillStyle='#7fd1c7';c.font='800 14px system-ui, sans-serif';c.fillText(`${STADIUM_NAME_CAPS} · BIG MATCH`,w/2,18,w-16);}
   // Team chips and names
   for(const [side,name,colour] of [[-1,s.home,colours.home],[1,s.away,colours.away]] as const){
    const x=w/2+side*78;c.fillStyle=colour;c.fillRect(x-34,36,68,8);

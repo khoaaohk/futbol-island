@@ -1,6 +1,7 @@
 import {BEACH_COURT} from './coralCay';
 import {summitGround} from './summitIsle';
 import {STADIUM} from './westParkLayout';
+import {STADIUM_NAME} from '../stadium/dripfc';
 export type Format='futsal'|'7v7'|'9v9'|'11v11';
 export type Venue={id:Format;name:string;x:number;z:number;width:number;length:number;players:number;goalWidth:number;goalHeight:number;surface:string;shape:string;elevation?:number};
 export const VENUES:Venue[]=[
@@ -16,7 +17,7 @@ export const venueById=(id:Format)=>VENUES.find(v=>v.id===id)!;
 // one of VENUES (its sand, lines, goals, benches and walking obstacles are built by coralCayWorld.ts), so it has no
 // island pitch mesh, goal barriers, lessons or quests; it only hosts a live 5-a-side match (fieldRuntime).
 /** 'beach' = FIFA Beach Soccer, 5 a side including the keeper (lib/town/match/matchSim.ts). */
-/** 'stadium' = the West Coast Stadium's big match (Nov 12 2026, docs/stadium/PLAN.md phase 3): an 11v11 game on the stadium pitch.
+/** 'stadium' = the DRIP FC Stadium (the west stadium)'s big match (Nov 12 2026, docs/stadium/PLAN.md phase 3): an 11v11 game on the stadium pitch.
  *  It plays by the 11v11 rules (simFormat), on its own venue, so lessons/quests (VENUES) never move. */
 export type LiveFormat=Format|'beach'|'stadium';
 /** The rules a live venue plays by: the stadium is an 11v11 big match; every other venue is its own format. */
@@ -29,9 +30,9 @@ export type LiveVenue=Omit<Venue,'id'>&{id:LiveFormat;yaw?:number;sand?:boolean}
 export const BEACH_VENUE:LiveVenue={id:'beach',name:'Sharks Beach Court',x:BEACH_COURT.x,z:BEACH_COURT.z,width:BEACH_COURT.width,length:BEACH_COURT.length,players:5,goalWidth:BEACH_COURT.goalWidth,goalHeight:BEACH_COURT.goalHeight,surface:'#e8d5a3',shape:'1-2-1',yaw:Math.PI/2,sand:true};
 /** Top of the stadium's pitch (stadiumWorld.ts: the grass slab at ground level, under the island pitches' raised slabs). */
 export const STADIUM_PITCH_Y=-.045;
-/** The West Coast Stadium (westParkLayout STADIUM): 63 × 100 m, full-size 7.32 × 2.44 m goals, long axis north–south. Its
+/** The DRIP FC Stadium (the west stadium) (westParkLayout STADIUM): 63 × 100 m, full-size 7.32 × 2.44 m goals, long axis north–south. Its
  *  `elevation` puts the rigs (elevation + FIELD_SURFACE_Y) and the goal frames on the stadium grass. */
-export const STADIUM_VENUE:LiveVenue={id:'stadium',name:'West Coast Stadium',x:STADIUM.x,z:STADIUM.z,width:STADIUM.pitchW,length:STADIUM.pitchL,players:11,goalWidth:7.32,goalHeight:2.44,surface:'#6e9678',shape:'4–3–3',elevation:STADIUM_PITCH_Y-.105/* FIELD_SURFACE_Y, declared below */};
+export const STADIUM_VENUE:LiveVenue={id:'stadium',name:STADIUM_NAME,x:STADIUM.x,z:STADIUM.z,width:STADIUM.pitchW,length:STADIUM.pitchL,players:11,goalWidth:7.32,goalHeight:2.44,surface:'#6e9678',shape:'4–3–3',elevation:STADIUM_PITCH_Y-.105/* FIELD_SURFACE_Y, declared below */};
 export const LIVE_VENUES:readonly LiveVenue[]=[...VENUES,BEACH_VENUE,STADIUM_VENUE];
 /** Sim y (along the court) of the flags just outside the beach court's touchlines: the halfway flag and the 9 m (penalty-area)
  *  flags (coralCayWorld). A sitting-out player's cheering spot keeps clear of them (liveJoin.clearOfFlags). */

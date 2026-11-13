@@ -181,6 +181,9 @@ export const SCREEN={z:standBack(STANDS[3])+1.2,y:12.6,w:16,h:9} as const;
 export const ROOF={front:44.5,back:standBack(STANDS[0])+.6,y:12.4,thick:.45,frameBelow:.95,frameAbove:.75} as const;
 /** A roof's slab with its fascia frames (world box, the roof fade's occluder); `along` is the slab's overhang past the stand ends. */
 export const ROOF_OVERHANG=2;
+/** How far the roof's fascia frames stand proud of the slab (no coplanar faces), and the sponsor banner proud of the frame's face:
+ *  a clear depth gap even from the far overhead camera. */
+export const FRAME_PROUD=.04,FASCIA_PROUD=.12;
 export function roofBox(s:StandDef){return {...standRect(s,ROOF.front,ROOF.back,s.from-ROOF_OVERHANG,s.to+ROOF_OVERHANG),floor:ROOF.y-ROOF.frameBelow,top:ROOF.y+ROOF.frameAbove};}
 /** The sponsor layout matching this geometry (stadium-local: origin on the centre spot, +X east, +Z south). */
 /** The plaza's 14 flag poles (westPark.ts places them with this same rule). */
@@ -192,7 +195,7 @@ export function stadiumSponsorLayout(plazaFlags:readonly {x:number;z:number}[]=p
  for(let i=0;i<4;i++)boards.push({x:-22.5+i*15,y,z:54,w:14,h:H,yaw:Math.PI});
  for(let i=0;i<4;i++)boards.push({x:35.5,y,z:37.5-i*25,w:22,h:H,yaw:-E});
  for(let i=0;i<4;i++)boards.push({x:22.5-i*15,y,z:-54,w:14,h:H,yaw:0});
- const fy=ROOF.y-.1,fx=ROOF.back+.05;
+ const fy=ROOF.y-.1,fx=ROOF.back+FRAME_PROUD+FASCIA_PROUD;
  return {
   boards,
   screen:{x:0,y:SCREEN.y,z:SCREEN.z-.32,w:SCREEN.w,h:SCREEN.h,yaw:Math.PI},

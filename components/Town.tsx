@@ -147,7 +147,7 @@ import {joinableFormat} from '@/lib/town/liveJoin';
 /** Pitches with a HUD pitch bar: the island pitches, plus the Sharks Beach court once its live match is joinable (Play only, no lesson).
  *  The bar's stand-in box is in world axes, so the quarter-turned court enters with its x/z extents swapped (liveHalfX/Z). */
 const BEACH_BAR:readonly LiveVenue[]=joinableFormat('beach')?[{...BEACH_VENUE,width:2*liveHalfX(BEACH_VENUE),length:2*liveHalfZ(BEACH_VENUE),yaw:0}]:[];
-/** Play-only bars on live venues that are not lesson pitches: the Sharks Beach court and the West Coast Stadium (Nov 12 2026, big matches only). */
+/** Play-only bars on live venues that are not lesson pitches: the Sharks Beach court and the DRIP FC Stadium (the west stadium) (Nov 12 2026, big matches only). */
 const PLAY_BARS:readonly LiveVenue[]=[...BEACH_BAR,...(joinableFormat('stadium')?[STADIUM_VENUE]:[])];
 const PITCH_BARS:readonly LiveVenue[]=[...VENUES,...PLAY_BARS];
 import {buildFormatFields} from '@/lib/town/fields';

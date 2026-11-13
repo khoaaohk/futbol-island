@@ -54,7 +54,8 @@ assert(!scene.children.some(o=>o.name==='park-pond'),'the pond is batched into i
 
 // 4. The map draws the stadium, the park and the plaza.
 const map=fs.readFileSync(path.join(base,'components/IslandOverview.tsx'),'utf8');
-assert(/data-west-stadium="bowl"/.test(map)&&/data-west-stadium="park"/.test(map)&&/>STADIUM</.test(map)&&/STADIUM PLAZA/.test(map),'map shows the stadium');
+assert(/data-west-stadium="bowl"/.test(map)&&/data-west-stadium="park"/.test(map)&&/STADIUM PLAZA/.test(map),'map shows the stadium');
+assert(!/>STADIUM</.test(map),'no separate big STADIUM word: the name is the tappable place label (Drip FC, Nov 13 2026)');
 assert(!/lib\/town\/westPark'/.test(map),'the map imports the three-free layout module');
 console.log('west stadium phase 1: ok');
 
@@ -224,7 +225,7 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
  assert(f0.angleTo(f2)>.2,'it follows the ball');assert(f0.angleTo(f1)<f0.angleTo(f2)*.1,'one frame: a small part of the turn (smooth)');
  const pc=new T.PerspectiveCamera(40,.5,1,500);sit.applyCamera(pc,1/60);assert(pc.position.y>c.position.y-1e-6,'portrait: from the raised view');}
 // The map and travel: a Stadium destination like the other places.
-assert(/id:'stadium',label:'STADIUM GATE',point:STADIUM_ARRIVAL/.test(map)&&/\|'summit'\|'stadium';/.test(map),'the map has a Stadium destination');
+assert(/id:'stadium',label:'DRIP FC STADIUM',point:STADIUM_ARRIVAL/.test(map)&&!/STADIUM GATE/.test(map)&&/id==='stadium'\?'DRIP FC Stadium'/.test(map)&&/\|'summit'\|'stadium';/.test(map),'the map has a Stadium destination');
 {const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');assert(/travel\.current==='stadium'\?STADIUM_ARRIVAL/.test(town)&&/destination==='stadium'\)go\(destination\)/.test(town),'travel lands at the stadium gate');
  assert(L.STADIUM_ARRIVAL.x>L.STADIUM_GATE.x&&onIsland(L.STADIUM_ARRIVAL.x,L.STADIUM_ARRIVAL.z)&&!blocked(L.STADIUM_ARRIVAL.x,L.STADIUM_ARRIVAL.z),'the arrival is open plaza outside the gate');}
 console.log('west stadium phase 3a: ok');
@@ -287,4 +288,38 @@ console.log('west stadium phase 3b: ok');
 // The map draws four stands with open corners.
 assert(/data-stadium-stand=/.test(map),'the map draws the stands');
 console.log('west stadium phase 2: ok');
+// ---- DRIP FC Stadium (Nov 13 2026, owner): the name, the gate sign, the painted centre drop, the roof frames ------------------------
+{const D=load('lib/stadium/dripfc.ts'),V=load('lib/town/venues.ts'),SS=load('lib/town/stadiumScreen.ts'),W=load('lib/town/stadiumWorld.ts'),Q=load('lib/town/stadiumSeats.ts');
+ assert.equal(D.STADIUM_NAME,'DRIP FC Stadium');assert.equal(V.liveVenueById('stadium').name,'DRIP FC Stadium','the venue name the player sees');
+ assert(SS.stadiumBarText(false).tag.startsWith('DRIP FC STADIUM')&&SS.stadiumBarText(true).tag.startsWith('DRIP FC STADIUM'),'pitch bar');
+ const src=f=>fs.readFileSync(path.join(base,f),'utf8');
+ assert(/\['stadium','DRIP FC Stadium \(bowl & pitch\)'\]/.test(src('lib/analytics/islandIds.ts')),'admin place label renamed, id kept');
+ for(const f of ['lib/town/venues.ts','lib/town/stadiumSit.ts','lib/town/stadiumScreen.ts','components/IslandOverview.tsx','lib/analytics/islandIds.ts'])assert(!/West Coast Stadium|WEST COAST STADIUM/.test(src(f)),f+': old name gone');
+ // Assets: same origin, small, no link to the club anywhere in the game code.
+ let bytes=0;for(const u of [...Object.values(D.DRIP_FC_ART),D.PITCH_DROP]){assert(/^\/stadium\/dripfc\/[a-z-]+\.webp$/.test(u));bytes+=fs.statSync(path.join(base,'public',u)).size;}
+ assert(bytes<150e3,'Drip FC art '+bytes+' B');
+ for(const f of ['lib/stadium/dripfc.ts','lib/stadium/sponsors/placeholders.ts','lib/town/stadiumWorld.ts'])assert(!/https?:|dripfcofficial|adidas\.com/.test(src(f)),f+': pictures only, no links');
+ // Gate sign: ONE line, the wordmark then "Stadium" on the same baseline (lettered "DRIP FC" until the picture loads).
+ const calls=[],c={measureText:t=>({width:t.length*10}),fillRect(){},drawImage:(...a)=>calls.push(['img',...a]),fillText:(t,x,y)=>calls.push(['text',t,x,y])};
+ D.drawGateSign(c,512,87,{width:800,height:197});const img=calls.find(k=>k[0]==='img'),txt=calls.find(k=>k[0]==='text');
+ assert(img&&txt&&txt[1]==='Stadium'&&txt[2]>img[2]+img[4]-1,'wordmark, then Stadium to its right');
+ assert(Math.abs((img[3]+img[5]*D.WORDMARK_CAP)-txt[3])<.5,'same baseline as the wordmark letters');
+ calls.length=0;D.drawGateSign(c,512,87,null);assert.deepEqual(calls.map(k=>k[1]),['DRIP FC','Stadium'],'lettered fallback reads DRIP FC Stadium');
+ assert(/dressGateSign\(skip\(sign\(STADIUM_NAME,/.test(src('lib/town/stadiumWorld.ts')),'the gate sign is the stadium name');
+ // The painted drop: one flat quad in the centre circle, ~70% of its diameter, white semi-transparent lit paint, no depth fight.
+ const logo=scene.getObjectByName('stadium-pitch-logo');assert(logo&&logo.isMesh,'the centre drop mesh');
+ const m=logo.material,b=new T.Box3().setFromObject(logo),sz=b.getSize(new T.Vector3());
+ assert(m.isMeshLambertMaterial&&m.transparent&&!m.depthWrite&&m.polygonOffset&&m.polygonOffsetFactor<0,'lit (no night glow), transparent, depthWrite off, polygon offset');
+ assert(m.opacity>=.35&&m.opacity<=.45&&m.color.getHexString()==='ffffff','white paint at 35-45%');
+ assert(Math.abs(logo.position.x-S.x)<1e-6&&Math.abs(logo.position.z-S.z)<1e-6&&sz.y<1e-6,'flat on the centre spot');
+ assert(Math.abs(sz.z/(2*8.66)-.7)<.02&&sz.x<sz.z,'about 70% of the circle, upright along the pitch (width along the halfway line)');
+ assert(logo.position.y>-.034&&logo.position.y<0,'just above the line paint');
+ assert(logo.userData.ownDraw&&!logo.castShadow,'its own single draw, no shadow');
+ // Roof frames stand proud of the slab (no coplanar faces), and the fascia banner proud of the frame, on both roofs.
+ assert(Q.FRAME_PROUD>=.02&&Q.FASCIA_PROUD>=.08);const lay=Q.stadiumSponsorLayout();
+ for(const f of lay.fascia)assert(Math.abs(Math.abs(f.x)-(Q.ROOF.back+Q.FRAME_PROUD+Q.FASCIA_PROUD))<1e-9,'fascia banner off the frame face');
+ for(const r of W.createRoofFade?[0,1]:[]){const roof=scene.getObjectByName('stadium-roof-'+Q.STANDS.filter(q=>q.roof)[r].id),pos=roof.geometry.getAttribute('position'),xs=new Set();
+  for(let i=0;i<pos.count;i++)xs.add(Math.round((pos.getX(i)+roof.position.x)*1000));
+  const back=Q.standWorld(Q.STANDS.filter(q=>q.roof)[r],Q.ROOF.back,0).x;assert(xs.has(Math.round(back*1000))&&xs.has(Math.round((back+Math.sign(back-S.x)*Q.FRAME_PROUD)*1000)),'roof '+r+': slab back face and the frame face are apart');}
+ console.log('drip fc stadium: ok');}
 })().catch(e=>{console.error(e);process.exit(1);});

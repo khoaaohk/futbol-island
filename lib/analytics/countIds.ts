@@ -329,7 +329,7 @@ export const EMOTE_FIXED_IDS:readonly string[]=[...EMOTE_COUNT_EVENTS.map(([e])=
  * minutes and the leftover 0–59 s, capped at LM_CAP_S), a length band, an other-humans band (friends on the same match: a
  * number band, never who) and how it ended. Totals only, no order, no time of day.
  */
-export const LIVE_MATCH_FORMATS=['7v7','futsal','9v9','11v11','beach','stadium'] as const;// 'stadium': West Coast Stadium big match (Nov 12 2026)
+export const LIVE_MATCH_FORMATS=['7v7','futsal','9v9','11v11','beach','stadium'] as const;// 'stadium': DRIP FC Stadium big match (Nov 12 2026)
 export type LiveMatchFormat=typeof LIVE_MATCH_FORMATS[number];
 export const LM_ROLES=['gk','def','mid','fwd'] as const;
 export type LmRole=typeof LM_ROLES[number];

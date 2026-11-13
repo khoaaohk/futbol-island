@@ -24,7 +24,7 @@ export const PLACES=[
  ['summit_sandbar','Summit Sandbar'],['summit_pitch','Summit 5s (5v5 pitch)'],['summit_isle','Summit Isle (elsewhere)'],
  // West Stadium (Nov 12 2026): the land pushed 230 m west (lib/town/westParkLayout.ts). Needs
  // supabase/migrations/20261119_analytics_stadium.sql (place_ms allowlist + cells < CELL_COUNT) before time here is counted.
- ['stadium','West Coast Stadium (bowl & pitch)'],['stadium_plaza','Stadium Plaza'],['stadium_park','West Park'],['west_beach','West Beach'],
+ ['stadium','DRIP FC Stadium (bowl & pitch)'],['stadium_plaza','Stadium Plaza'],['stadium_park','West Park'],['west_beach','West Beach'],
  ['sea','Open sea & sky'],
 ] as const;
 export type PlaceId=typeof PLACES[number][0];

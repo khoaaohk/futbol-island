@@ -18,6 +18,7 @@ import {remoteSeatsTaken,remoteSeatSpots} from './stadiumSeatShare';
 import {BIB_COLOURS} from './beanLooks';
 import {ensureStadiumSponsors,SPONSOR_LOAD_RADIUS} from '../stadium/sponsors/index';
 import {countStadiumVisit} from '../analytics/sponsorEvents';
+import {STADIUM_NAME} from '../stadium/dripfc';
 
 export const SIT_KEY='stadium-seat';
 /** HUD tick (ms) in the bowl (Town's is 150 elsewhere): the Sit offer enters the focus arbiter on that tick, so it shows within ~one tick of stopping. */
@@ -103,7 +104,7 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:b
   get crowd(){return crowd;},
   /** The stadium's pitch bar (FieldPathCard): Exhibition vs Big match, written only on change. */
   bar(el:HTMLElement|null|undefined){if(!el)return;const t=stadiumBarText(live&&exhibition),key=t.tag+t.action;if(key===barShown)return;barShown=key;
-   const tag=el.querySelector('[data-bar-tag]'),act=el.querySelector('[data-bar-action]');if(tag)tag.textContent=t.tag;if(act)act.textContent=t.action;el.setAttribute('aria-label',`West Coast Stadium: ${t.action.toLowerCase()}`);},
+   const tag=el.querySelector('[data-bar-tag]'),act=el.querySelector('[data-bar-action]');if(tag)tag.textContent=t.tag;if(act)act.textContent=t.action;el.setAttribute('aria-label',`${STADIUM_NAME}: ${t.action.toLowerCase()}`);},
   /** After the follow camera is placed: ease to the stand view and back. */
   applyCamera(camera:T.PerspectiveCamera,dt=1/60){
    // Heat: the stand view looks level across the island (the follow camera looks down on ~100 m of it), so the far plane comes in

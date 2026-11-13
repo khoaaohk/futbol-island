@@ -12,7 +12,8 @@
 import * as T from 'three';
 import {atlasItems,composeAtlas,packAtlas,pickKey,uvOf,BLANK_KEY,DESKTOP_ATLAS_MAX,PHONE_ATLAS_MAX,type CellSource,type UvRect,type AtlasPlan} from './atlas';
 import {defaultStadiumLayout,layoutProblems,repeatsFor,type SponsorLayout,type SponsorQuad} from './layout';
-import {drawPlaceholder,PLACEHOLDER_COUNT} from './placeholders';
+import {drawPlaceholder,PLACEHOLDER_COUNT,type HouseArt} from './placeholders';
+import {DRIP_FC_ART,type DripArtKey} from '../dripfc';
 import {boardPick,parseFeed,pickSlots,rotationStep,SLOT_SPECS,type SlotPick,type SponsorFeed,type SponsorSlot} from './slots';
 import {countStadiumSeen} from '@/lib/analytics/sponsorEvents';
 
@@ -23,7 +24,8 @@ export const SCROLL_PER_SEC=.04;
 /** The ring animates and rotates only while the camera is this close to the stadium centre (metres). */
 export const ANIM_RADIUS=140;
 
-export type SponsorArt={picks:Record<SponsorSlot,SlotPick[]>;images:Map<string,CellSource>;feed:SponsorFeed};
+/** `house`: Drip FC's decoded pictures for the built-in panels (placeholders.ts); optional, lettering without them. */
+export type SponsorArt={picks:Record<SponsorSlot,SlotPick[]>;images:Map<string,CellSource>;feed:SponsorFeed;house?:HouseArt};
 export type SurfaceOptions={
  /** Atlas edge limit: defaults to 1024 on phones (coarse pointer), 2048 on desktop (used only if 1024 cannot hold the cells). */
  maxAtlas?:number;
@@ -106,7 +108,7 @@ export function buildAtlasTexture(art:SponsorArt,opt:SurfaceOptions={}){
  if(plan.scale<1&&max>PHONE_ATLAS_MAX)plan=packAtlas(items,max);
  const canvas=opt.canvas?opt.canvas(plan.size):Object.assign(document.createElement('canvas'),{width:plan.size,height:plan.size});
  const ctx=(canvas as HTMLCanvasElement).getContext('2d') as CanvasRenderingContext2D;
- composeAtlas(ctx,plan,art.picks,art.images,drawPlaceholder);
+ composeAtlas(ctx,plan,art.picks,art.images,(c,slot,i,r)=>drawPlaceholder(c,slot,i,r,art.house));
  const tex=new T.CanvasTexture(canvas as HTMLCanvasElement);
  tex.colorSpace=T.SRGBColorSpace;tex.generateMipmaps=true;tex.minFilter=T.LinearMipmapLinearFilter;tex.magFilter=T.LinearFilter;tex.anisotropy=4;
  tex.needsUpdate=true;
@@ -132,7 +134,8 @@ export function buildSponsorSurfaces(scene:T.Object3D,layout:SponsorLayout,art:S
  quad(sb,layout.gate,cellOf(pick('gate',0)),FX_PLAIN,1);
  layout.fascia.forEach((q,i)=>quad(sb,q,cellOf(pick('fascia',i)),FX_PLAIN,repeatsFor(q,SLOT_SPECS.fascia.aspect)));
  layout.flags.forEach((q,i)=>{const c=cellOf(pick('flag',i));quad(sb,q,c,FX_PLAIN,1);quad(sb,{...q,yaw:q.yaw+Math.PI},c,FX_PLAIN,1);});
- disc(sb,layout.centre,cellOf(pick('centre',0)));
+ // The centre disc only for an uploaded sponsor: otherwise the grass shows Drip FC's painted drop (stadiumWorld.ts pitchLogo).
+ if(art.picks.centre.some(p=>p.sponsor))disc(sb,layout.centre,cellOf(pick('centre',0)));
  const still=new T.Mesh(geometry(sb),material);still.name='stadium-sponsors-still';
  for(const m of [ring,still]){m.castShadow=false;m.receiveShadow=false;m.matrixAutoUpdate=false;m.updateMatrix();}
 
@@ -185,8 +188,14 @@ export async function loadSponsorArt(feed:SponsorFeed,fetchImpl:typeof fetch=fet
   }catch{/* placeholder instead */}
  }));
  const ok={...feed,entries:feed.entries.filter(e=>images.has(e.id))};
+ const picks=pickSlots(ok.entries,s=>PLACEHOLDER_COUNT[s]);
+ // Drip FC's three small pictures (same origin, ~26 KB), only while some slot still shows the built-in panels.
+ const house:HouseArt={};
+ if(Object.values(picks).some(l=>l.some(p=>!p.sponsor)))await Promise.all((Object.keys(DRIP_FC_ART) as DripArtKey[]).map(async k=>{
+  try{const r=await fetchImpl(DRIP_FC_ART[k],{credentials:'omit',signal:AbortSignal.timeout(8000)});if(r.ok)house[k]=await createImageBitmap(await r.blob());}catch{/* lettering instead */}
+ }));
  try{await Promise.race([document.fonts.load('400 48px IslandBrush'),new Promise(r=>setTimeout(r,1500))]);}catch{/* fallback font */}
- return {picks:pickSlots(ok.entries,s=>PLACEHOLDER_COUNT[s]),images,feed:ok};
+ return {picks,images,feed:ok,house};
 }
 
 /** GET /api/stadium-sponsors (CDN-cached). Any failure = placeholders. */
@@ -202,6 +211,6 @@ export async function fetchSponsorFeed(fetchImpl:typeof fetch=fetch):Promise<Spo
 export async function createSponsorSurfaces(scene:T.Object3D,layout:SponsorLayout=defaultStadiumLayout(),opt:SurfaceOptions&{feed?:SponsorFeed}={}):Promise<SponsorSurfaces>{
  const art=await loadSponsorArt(opt.feed??await fetchSponsorFeed());
  const s=buildSponsorSurfaces(scene,layout,art,opt);
- for(const img of art.images.values())(img as ImageBitmap).close?.();
+ for(const img of [...art.images.values(),...Object.values(art.house??{})])(img as ImageBitmap).close?.();
  return s;
 }

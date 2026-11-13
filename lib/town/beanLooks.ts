@@ -113,7 +113,7 @@ export const BIB_COLOURS={
   '9v9':{home:'#ff8a1f',away:'#5b3fd1'},'11v11':{home:'#22c3e6',away:'#ff7a1a'},
   // The beach court keeps its barefoot BEACH_MATCH_KITS (no bibs on sand): its HUD chip, ring and pills take those shirts.
   beach:{home:BEACH_KITS.home.shirt,away:BEACH_KITS.away.shirt},
-  // West Coast Stadium (Nov 12 2026): a big match in full kits, red (the east stand's colour) against blue (the west stand's).
+  // DRIP FC Stadium (Nov 12 2026): a big match in full kits, red (the east stand's colour) against blue (the west stand's).
   stadium:{home:'#d6453d',away:'#2f6fb5'},
 } as const;
 export const LIVE_BIB_KITS:Readonly<Record<Exclude<keyof typeof BIB_COLOURS,'beach'>,MatchKits>>={

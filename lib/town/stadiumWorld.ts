@@ -13,9 +13,10 @@ import {goalGeometry} from './fields';
 import {GOAL_DEPTH} from './goalCollisions';
 import {STADIUM_VENUE,STADIUM_PITCH_Y} from './venues';
 import {STADIUM,STADIUM_GATE} from './westParkLayout';
+import {STADIUM_NAME,DRIP_FC_ART,PITCH_DROP,drawGateSign} from '../stadium/dripfc';
 import {segmentHitsBox} from './walkControl';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
+import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,FRAME_PROUD,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
 
 export type StadiumTools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -28,6 +29,36 @@ export type StadiumTools={
 };
 export type StadiumStats={surfaces:number;rails:number;boxes:number;seatsStrips:number;seats:number};
 
+/** The gate's facade sign (Nov 13 2026): "DRIP FC Stadium" on one line (the club's wordmark, then Stadium), standing on the arch
+ *  (top 10.6 m) facing the plaza. 13 × 2.2 m: about 0.9 m letters, readable from the plaza on a phone. */
+export const GATE_SIGN_H=2.2;
+/** Redraw the sign's own canvas (no new texture or draw) with the wordmark once the small picture has loaded; until then, or if it
+ *  fails, the lettered fallback. Browser only: a test tool's sign without a canvas map is left as it is. */
+function dressGateSign(mesh:T.Mesh){
+ const m=mesh.material as T.MeshStandardMaterial,tex=m?.map,canvas=tex?.image as HTMLCanvasElement|undefined;
+ const ctx=canvas&&typeof canvas.getContext==='function'?canvas.getContext('2d'):null;if(!tex||!ctx)return;
+ const paint=(img:HTMLImageElement|null)=>{drawGateSign(ctx,canvas!.width,canvas!.height,img);tex.needsUpdate=true;};
+ paint(null);
+ if(typeof Image==='undefined')return;
+ const img=new Image();img.decoding='async';img.onload=()=>paint(img);img.src=DRIP_FC_ART.wordmarkLight;
+}
+/** Drip FC's drop (Nov 13 2026, owner): white paint, semi-transparent, flat in the centre circle (r 8.66 m), ~70% of its diameter,
+ *  its top to the north so it reads upright from overhead and its width runs along the halfway line. One quad, one lit
+ *  (Lambert) material so at night it darkens with the turf like paint instead of glowing; depthWrite off + polygon offset above the
+ *  line paint, so no z-fighting. Self-contained (its own mesh / material here), hidden until the 6 KB picture has loaded. */
+export const PITCH_LOGO={url:PITCH_DROP,height:12.1,aspect:217/273,opacity:.4} as const;
+function pitchLogo(y:number,materials?:T.Material[]){
+ const g=new T.PlaneGeometry(PITCH_LOGO.height*PITCH_LOGO.aspect,PITCH_LOGO.height);g.rotateX(-Math.PI/2);
+ const m=new T.MeshLambertMaterial({color:'#ffffff',transparent:true,opacity:PITCH_LOGO.opacity,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+ materials?.push(m);
+ const mesh=new T.Mesh(g,m);mesh.name='stadium-pitch-logo';mesh.position.set(STADIUM.x,y,STADIUM.z);mesh.visible=false;
+ mesh.castShadow=false;mesh.receiveShadow=false;mesh.userData.skipRoofObstacle=true;mesh.userData.ownDraw=true;mesh.matrixAutoUpdate=false;mesh.updateMatrix();
+ if(typeof Image==='undefined')return mesh;// tests: no picture, the mesh stays hidden
+ const img=new Image();img.decoding='async';
+ img.onload=()=>{const tex=new T.Texture(img);tex.colorSpace=T.SRGBColorSpace;tex.anisotropy=4;tex.needsUpdate=true;m.map=tex;m.needsUpdate=true;mesh.visible=true;m.addEventListener('dispose',()=>tex.dispose());};
+ img.src=PITCH_LOGO.url;
+ return mesh;
+}
 /** Height above a row of the low seat-back strip's top; the per-seat tops rise from there to 1.13 m. */
 const BACK_SPLIT=.92;
 const CONCRETE=['#d8cfbd','#cec4af'],TREAD_C='#c2b59c',CONCOURSE_C='#e3d9c3',RAIL_C='#315b50',STEEL='#e9e4d6';
@@ -116,8 +147,11 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
    for(let v=0;v<nrm.count;v++){const ny=nrm.getY(v),f=ny<-.5?.62:ny>.7?1.03:.8;out[v*3]=col.r*f;out[v*3+1]=col.g*f;out[v*3+2]=col.b*f;}
    g.setAttribute('color',new T.BufferAttribute(out,3));g.deleteAttribute('uv');parts.push(g);};
   piece(slab,ROOF.y-ROOF.thick/2,ROOF.y+ROOF.thick/2,STEEL);
-  piece(standRect(s,ROOF.back-.12,ROOF.back,a0,a1),ROOF.y-ROOF.frameBelow,ROOF.y+ROOF.frameAbove,'#244d49');// the fascia frame (sponsor slot)
-  piece(standRect(s,ROOF.front,ROOF.front+.12,a0,a1),ROOF.y-.5,ROOF.y+.3,'#244d49');
+  // The frames stand FRAME_PROUD proud of the slab's faces and ends (Nov 13 2026 owner bug: they shared the slab's back / front and
+  // end planes, so dark frame and tan slab z-fought in a flickering strip along the roof edge from afar).
+  const P=FRAME_PROUD;
+  piece(standRect(s,ROOF.back-.12,ROOF.back+P,a0-P,a1+P),ROOF.y-ROOF.frameBelow,ROOF.y+ROOF.frameAbove,'#244d49');// the fascia frame (sponsor slot)
+  piece(standRect(s,ROOF.front-P,ROOF.front+.12,a0-P,a1+P),ROOF.y-.5,ROOF.y+.3,'#244d49');
   const merged=mergeGeometries(parts)!;for(const g of parts)g.dispose();
   const roofMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.85,transparent:true,opacity:1});t.materials?.push(roofMaterial);// one each: they fade apart
   const roof=new T.Mesh(merged,roofMaterial);roof.name='stadium-roof-'+s.id;roof.position.copy(c);roof.castShadow=roof.receiveShadow=true;
@@ -141,6 +175,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
  for(const sz of [-1,1])lineBox(W,ln,S.x,S.z+sz*L/2);
  lineBox(W,ln,S.x,S.z);
  {const g=new T.RingGeometry(8.6,8.72,48);g.rotateX(-Math.PI/2);skip(put(g,white,S.x,ly+.004,S.z)).castShadow=false;}
+ if(t.add)t.add(pitchLogo(ly+.006,t.materials));// Drip FC's drop painted in the centre circle (own mesh, 1 draw)
  for(const sz of [-1,1]){
   const goalZ=S.z+sz*L/2,box16=15.4,width16=38;
   lineBox(width16,ln,S.x,goalZ-sz*box16);for(const sx of [-1,1])lineBox(ln,box16,S.x+sx*width16/2,goalZ-sz*box16/2);
@@ -173,7 +208,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   for(const sz of [-1,1]){box(1.6,11,1.6,'#e2c766',gx,5.5,G.z+sz*(G.halfWidth+.4));obstacles.push({x:gx,z:G.z+sz*(G.halfWidth+.4),w:1.6,d:1.6});
    for(const off of [3.4,5.4]){box(.5,1,.5,'#9aa7a6',gx-1.2,.5,G.z+sz*off);obstacles.push({x:gx-1.2,z:G.z+sz*off,w:.5,d:.5});}}
   t.box(1.4,2.4,G.halfWidth*2+3.2,'#e2c766',gx,9.4,G.z);boxes++;// not skipped: its top is a landable canopy (roof-landing audit)
-  skip(sign('STADIUM',G.halfWidth*2-1,1.3,gx+.72,11.35,G.z,'#244d49','#fff0cf',Math.PI/2));
+  dressGateSign(skip(sign(STADIUM_NAME,G.halfWidth*2-1,GATE_SIGN_H,gx+.72,10.7+GATE_SIGN_H/2,G.z,'#244d49','#fff0cf',Math.PI/2)));
  }
 
  // --- Floodlight masts at the open corners (static: no lights, the heads are paint) -----------------------------------------------
