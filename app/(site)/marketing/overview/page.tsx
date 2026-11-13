@@ -220,7 +220,7 @@ export default function Overview(){
     <p className={s.body}>{G.learns}</p>
     <div className={s.pillars}>
      <div><b>{G.free}</b><p>{G.freeWhy}</p></div>
-     <div><b>No pop-up or tracking ads</b><p>{faqA('Are there ads?')}</p></div>
+     <div><b>No pop-up or tracking ads</b><p>No pop-up, video or tracking ads. The stadium’s sponsor boards are pictures only: no links, no tracking, nothing to buy.</p></div>{/* short on the slide (the full FAQ answer runs past it) */}
      <div><b>No open chat</b><p>{faqA('Can my child chat with other people?')}</p></div>
     </div>
    </div>
