@@ -202,7 +202,7 @@ import {createRideTricks,isHeldRideAction} from '@/lib/town/rideTricks';
 import {createWalkBall,SHOT_WINDUP,SKY_MAX_APEX,KEEPUP_SKY,skyMarkShrink,strayAfterKeepUpPress} from '@/lib/town/walkBall';
 import {createBallEffects} from '@/lib/graphics/ballEffects';
 import {createSwimRipples,type SwimRippleInput} from '@/lib/graphics/swimRipples';
-import {createPondLife} from '@/lib/town/parkPond';import {POND_Y} from '@/lib/town/westParkLayout';// Stadium Park pond life: koi, dragonflies, wading splashes (Nov 13 2026)
+import {createPondLife} from '@/lib/town/parkPond';import {POND_Y,PARK_POND,pondQ} from '@/lib/town/westParkLayout';import {pondSkipEvents,type BallPond} from '@/lib/town/pondSkip';// Stadium Park pond life: koi, dragonflies, wading splashes (Nov 13 2026)
 import { createPlayer, profileFor, type PlayerMotion } from '@/lib/graphics/player';
 import { sideGameDress, mainPlayerDress, matchPlayerDress, ownKitLook, DEFAULT_MATCH_KITS } from '@/lib/town/beanLooks';
 import {createLiveJoin} from '@/lib/town/liveJoinRuntime';import {createMatchFocus,MATCH_FOCUS_LIVE} from '@/lib/town/matchFocus';
@@ -1161,7 +1161,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const rollWalkingBall=createGroundBallRoll();
     const airBallFrom=new T.Vector3(),airBallTo=new T.Vector3(),dribblePlayer={x:0,y:0,z:0,yaw:0};
     const walkBall=createWalkBall(),ballEffects=createBallEffects(),rideTricks=createRideTricks(),jetActions=createJetpackActions(),parachute=createParachute(),sonicBurst=createSonicBurst(),parachuteTrail=createParachuteTrail(),craterEffect=createCraterEffect(),landingDust=createLandingDust();scene.add(landingDust.root);scene.add(ballEffects.root,parachute.root,sonicBurst.root,parachuteTrail.root,craterEffect.root);
-    const pondLife=createPondLife(scene,{phone:quality.phone,sink:{splash:(x,z,size)=>ballEffects.splashDown(x,POND_Y,z,size,reduced),ring:(x,z,r)=>ballEffects.swimRipple(x,POND_Y,z,r,1.1,.32,1,0,0)}});disposers.add(()=>pondLife.dispose());
+    const pondLife=createPondLife(scene,{phone:quality.phone,sink:{splash:(x,z,size)=>ballEffects.splashDown(x,POND_Y,z,size,reduced),ring:(x,z,r)=>ballEffects.swimRipple(x,POND_Y,z,r,1.1,.32,1,0,0),wake:(x,z,r,stretch,angle)=>ballEffects.swimRipple(x,POND_Y,z,r,1.2,.28,stretch,angle,0)}});disposers.add(()=>pondLife.dispose());
+    // The ball on the park pond (lib/town/pondSkip.ts): a fast low shot skips, a slow one floats to the bank; each touch a splash ring.
+    const ballPond:BallPond={level:POND_Y,x:PARK_POND.x,z:PARK_POND.z,rx:PARK_POND.rx,rz:PARK_POND.rz,q:pondQ};
     disposers.add(()=>{craterEffect.dispose();landingDust.dispose();parachuteTrail.dispose();sonicBurst.dispose();parachute.dispose();ballEffects.dispose();});
     const ballFloor=(x:number,z:number)=>Math.max(rooftop.surface(x,z),lighthouseFloor(x,z,walkBall.state.y-.15+Math.max(0,-walkBall.state.vy)/30,.25));
     // Sky keep-up (Oct 24 2026, lib/town/walkBall.ts KEEPUP_SKY): ONE pooled flat red ring (1 draw call, made once, hidden by default)
@@ -1679,6 +1681,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         ballStyle:customizationRef.current.ball,
         floor:ballFloor,
         // Out to sea (ballSea.ts): open water no longer stops the ball; only real solids over it (the buoy, any obstacle) do.
+        pond:ballPond,pondSplash:(kind,x,z,strength,skip)=>{pondLife.splash(x,z,strength,reduced||heat.staticAmbience?2:waterFxOn()?0:1,reduced);pondSkipEvents.emit(kind,x,z,strength,skip);/* sound: subscribe to pondSkipEvents */},
         sea:ballGround,splash:(x,y,z)=>{ballEffects.splash(x,y,z);document.dispatchEvent(new CustomEvent('fi2-path-cue',{detail:'undock'}));const pierNote=pierTarget.splash(x,z,ballPlayer);if(pierNote){seaNoteShown=true;setSeaNote(pierNote);clearTimeout(pierNoteTimer);pierNoteTimer=setTimeout(()=>setSeaNote(''),6500);return;}if(!seaNoteShown){seaNoteShown=true;setSeaNote(OUT_OF_PLAY_NOTE);clearTimeout(pierNoteTimer);pierNoteTimer=setTimeout(()=>setSeaNote(''),5000);}},// one tracked timer for both notes (code review finding 10)
         blocked:(x,z,y)=>{if((walkBall.state.mode==='shot'||walkBall.state.mode==='wall-juggle')&&coinHunt.hit(x,y,z,walkBall.state.vx,walkBall.state.vz))return false;const react=()=>{if(walkBall.state.mode!=='shot'&&walkBall.state.mode!=='wall-juggle')return;const sp=Math.hypot(walkBall.state.vx,walkBall.state.vz);jobs.ballContact(x,y,z,walkBall.state.mode);treeDebris.hit(x,y,z,sp,reduced);forage.ballHit(x,y,z,walkBall.state.vx,walkBall.state.vz);coinHunt.treeHit(x,z,y);const propHit=propReactions.hit(x,y,z,walkBall.state.vx,walkBall.state.vz,reduced);propCue(propHit);if(propHit==='spring')world.plazaFlags.react(x,z,sp,reduced);/* a plaza flag flutters harder (lib/town/plazaFlags.ts) */
         // Rosa's fish stall: a little water/ice splash off the crates (pooled rings) and one line (the lesson once per device, then Rosa now and then).
@@ -2034,7 +2037,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
           if(fr){const n=nearestRiders(fr,visualLocation.x,visualLocation.z,RIDE_SPLASH.friends,splashNear,splashDist);for(let i=0;i<n;i++){const j=splashNear[i];rideSplash.rider(1+i,fr.x[j],fr.y[j],fr.z[j],fr.yaw[j],fr.speed[j]);}}
           rideSplash.end();}}
       {const bs=walkBall.state;if(shoreFoam.update(active?dt:0,shoreFoamMode(heat.tier,heat.saver,reduced),visualLocation.x,groundY,visualLocation.z,Math.hypot(velocity.x,velocity.z),player.root.rotation.y,bs.x,bs.y,bs.z,Math.hypot(bs.vx,bs.vz),ball.visible,Math.hypot(camera.position.x-visualLocation.x,camera.position.z-visualLocation.z)))ballEffects.splash(bs.x,WATER_LEVEL,bs.z);}/* one pooled splash when the ball drops into the swash */
-      {const bs=walkBall.state;pondLife.update(active?dt:0,{x:visualLocation.x,z:visualLocation.z,speed:Math.hypot(velocity.x,velocity.z),onGround:groundY<.05&&rideRef.current!=='jetpack',ballX:bs.x,ballY:bs.y,ballZ:bs.z,ballOn:ball.visible,shown:world.westShown,mode:reduced||heat.staticAmbience?2:waterFxOn()?0:1});}/* Stadium Park pond: koi, dragonflies, wading / ball splashes (only near it) */
+      {const bs=walkBall.state;pondLife.update(active?dt:0,{x:visualLocation.x,z:visualLocation.z,speed:Math.hypot(velocity.x,velocity.z),onGround:groundY<.05&&rideRef.current!=='jetpack',ballX:bs.x,ballY:bs.y,ballZ:bs.z,ballOn:ball.visible,shown:world.westShown,mode:reduced||heat.staticAmbience?2:waterFxOn()?0:1,
+        y:groundY,heading:player.root.rotation.y,riding:rideRef.current!=='walk'&&rideRef.current!=='jetpack',reduced,ballWet:bs.pondSkipsLeft>=0&&(bs.mode==='shot'||bs.mode==='drop')});}/* Stadium Park pond: koi, dragonflies, wading / ball splashes (only near it) */
       if(meTumble.age>=0)stepTumble(meTumble,active?dt:0,Math.hypot(input.current.x,input.current.z)>.1);/* my knock-over tumble: steering skips to the get-up (no input lock) */
       islandNpcs.update(active?heldDt:0,elapsed,reduced,{x:visualLocation.x,y:groundY,z:visualLocation.z},!active||!islandNpcs.root.visible,!coarse&&viewportW>600,hoveredNpcId,camera,(rideRef.current==='jetpack'&&flight.height>1.2)||vending.focused!==null||emoteCam.active||keepUpBusy.current||liveJoin.joined/* joined a live match (data-live-join): no townsfolk name tag over the pitch (Lua floated above the beach court); back on Leave */);fieldBump.applyNpcNudges();
       const hudTick=now-lastHud>(stadiumSit.hot?HOT_HUD_MS:150);// in the stadium bowl the Sit prompt joins the arbiter within ~50 ms
