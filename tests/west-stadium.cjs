@@ -162,6 +162,29 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
   const f=new T.Vector3(0,0,-1).applyQuaternion(c.quaternion),st=sit.seat;assert(f.x*(S.x-st.x)+f.z*(S.z-st.z)>0,'the stand view looks at the pitch');
   sit.holdPlayer(1/60,{x:1,z:0,kick:false,juggle:false},new Set(),{walk:true,x:st.x,z:st.z,reduced:true});sit.applyCamera(c);assert.equal(c.far,500,'standing: the far plane restored');}
  const cam=new T.PerspectiveCamera();cam.position.set(1,2,3);sit.applyCamera(cam);assert.deepEqual(cam.position.toArray(),[1,2,3],'standing: the camera is untouched');}
+// Polish Nov 13 2026: the aisle centre finds a seat on every row and at any depth in the row; the concourse back and the pitch ring do not; the prompt
+// sits above the player (never on them) and joins the HUD arbiter within ~250 ms.
+{const {createStadiumSit,HOT_HUD_MS}=load('lib/town/stadiumSit.ts');
+ for(const st of Q.STANDS)for(const a of st.aisles)for(let i=0;i<Q.ROWS;i++)for(const f of [.05,.35,.65,.95]){
+  const p=Q.standWorld(st,st.inner+(i+f)*Q.ROW_DEPTH,a),hs=[Q.rowHeight(i),Q.rowHeight(i)-Q.TREAD_RISE];
+  for(const h of hs){const s=Q.nearestSeat(p.x,p.z,h);assert(s&&s.stand===st.id&&s.row===i,`aisle centre ${st.id} ${a} row ${i} f ${f} h ${h}: a seat in the row beside it`);}}
+ for(const st of Q.STANDS){const a=st.aisles[st.aisles.length>>1],back=Q.standWorld(st,st.inner+Q.ROWS*Q.ROW_DEPTH+1.2,a),back2=Q.standWorld(st,Q.standBack(st)-1,a),ring=Q.standWorld(st,st.inner-2,a);
+  assert.equal(Q.nearestSeat(back.x,back.z,Q.CONCOURSE_HEIGHT),null,`${st.id}: no prompt on the concourse back`);assert.equal(Q.nearestSeat(back2.x,back2.z,Q.CONCOURSE_HEIGHT),null);
+  assert.equal(Q.nearestSeat(ring.x,ring.z,0),null,`${st.id}: no prompt on the pitch ring`);
+  const pitch=Q.standWorld(st,st.inner-.3,a);assert.equal(Q.nearestSeat(pitch.x,pitch.z,0),null,'no prompt on the grass at the front row');}
+ // The prompt hangs above the player's head on screen (phone), not on them.
+ const sit=createStadiumSit({parent:new T.Group(),wake:()=>{}}),W2=Q.STANDS[0],p=Q.standWorld(W2,W2.inner+5*Q.ROW_DEPTH+.65,6),h=Q.rowHeight(5);
+ const cam=new T.PerspectiveCamera(40,.5,.5,300);cam.position.set(p.x+9,h+7,p.z);cam.lookAt(p.x,h,p.z);cam.updateMatrixWorld();
+ let at=null;const el={hidden:true,dataset:{},textContent:'',setAttribute(){}};sit.want(p.x,p.z,h,true);sit.prompt(el,true,cam,400,800,(e,x,y)=>{at={x,y};},(e,hid)=>{e.hidden=hid;});
+ const feet=new T.Vector3(p.x,h,p.z).project(cam),head=new T.Vector3(p.x,h+1.7,p.z).project(cam);assert(at,'placed');
+ assert(at.y<=(1-head.y)*400-8,'the Sit button\'s anchor (its bottom edge) is above the player\'s head on screen: '+at.y+' vs '+(1-head.y)*400);assert(at.y<(1-feet.y)*400);
+ // Timing: the bowl runs the HUD tick fast (the arbiter sees the Sit offer within one tick of stopping); off the stadium, no extra cost.
+ assert(HOT_HUD_MS<=100,'the bowl HUD tick is at most 100 ms (well inside 250 ms with the arbiter\'s one tick)');
+ sit.want(0,0,0,true);assert.equal(sit.hot,false,'far from the stadium: the normal 150 ms tick');sit.want(S.x+300,S.z,2,true);assert.equal(sit.hot,false);
+ sit.want(p.x,p.z,h,true);assert.equal(sit.hot,true,'in the bowl, up on a row: the fast tick');
+ const arb=load('lib/ui/hudStack.ts').createFocusArbiter();let now=1000,shown=-1;const ctx={ridingTruck:false,flying:false,jobActive:false,inGarden:false};
+ for(let t=0;t<600&&shown<0;t+=16){now=1000+t;if(t%HOT_HUD_MS<16||t===0){const w=sit.want(p.x,p.z,h,true);if(arb.choose(w?[{kind:'enter',key:w.key,distance:w.distance}]:[],ctx,now)?.key===w.key)shown=t;}}
+ assert(shown>=0&&shown<=250,'the Sit offer wins the arbiter within 250 ms: '+shown);}
 // ---- Phase 3a: the stadium as a live venue, real goals, the big screen, watching from the seats, the map destination ----------
 {const V=load('lib/town/venues.ts'),v=V.liveVenueById('stadium');
  assert(v&&v.x===S.x&&v.z===S.z&&v.width===S.pitchW&&v.length===S.pitchL&&v.players===11&&v.goalWidth===7.32&&v.goalHeight===2.44,'the stadium venue: 63 × 100 m at the pitch, 11 a side, full-size goals');

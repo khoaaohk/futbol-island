@@ -218,7 +218,7 @@ import {createRideSuspension,nearSummit,summitGradient} from '@/lib/town/rideSlo
 import {createSummitActivities} from '@/lib/graphics/summitActivities';// Summit Kick (Oct 12 2026)
 import SummitKickHud from './SummitKickHud';
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
-import {createStadiumSit,SIT_KEY as STADIUM_SIT_KEY} from '@/lib/town/stadiumSit';import {STADIUM_ARRIVAL} from '@/lib/town/westParkLayout';// West Stadium: sit in the stands (Nov 12 2026)
+import {createStadiumSit,HOT_HUD_MS,SIT_KEY as STADIUM_SIT_KEY} from '@/lib/town/stadiumSit';import {STADIUM_ARRIVAL} from '@/lib/town/westParkLayout';// West Stadium: sit in the stands (Nov 12 2026)
 import {createPaintEasel} from '@/lib/graphics/paintEasel';// Summit Isle painting easel (Oct 14 2026)
 // The sea (Oct 15 2026, docs/swimming-research.md P0): wading, swimming, splash-downs, the water HUD, the parked ball.
 import {strokeSurge,fovKick,easeFov} from '@/lib/town/water/swimMotion';// Natural swimming (Oct 27 2026, docs/SWIM_NATURAL_OCT27.md)
@@ -2020,7 +2020,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       {const bs=walkBall.state;if(shoreFoam.update(active?dt:0,shoreFoamMode(heat.tier,heat.saver,reduced),visualLocation.x,groundY,visualLocation.z,Math.hypot(velocity.x,velocity.z),player.root.rotation.y,bs.x,bs.y,bs.z,Math.hypot(bs.vx,bs.vz),ball.visible,Math.hypot(camera.position.x-visualLocation.x,camera.position.z-visualLocation.z)))ballEffects.splash(bs.x,WATER_LEVEL,bs.z);}/* one pooled splash when the ball drops into the swash */
       if(meTumble.age>=0)stepTumble(meTumble,active?dt:0,Math.hypot(input.current.x,input.current.z)>.1);/* my knock-over tumble: steering skips to the get-up (no input lock) */
       islandNpcs.update(active?heldDt:0,elapsed,reduced,{x:visualLocation.x,y:groundY,z:visualLocation.z},!active||!islandNpcs.root.visible,!coarse&&viewportW>600,hoveredNpcId,camera,(rideRef.current==='jetpack'&&flight.height>1.2)||vending.focused!==null||emoteCam.active||keepUpBusy.current||liveJoin.joined/* joined a live match (data-live-join): no townsfolk name tag over the pitch (Lua floated above the beach court); back on Leave */);fieldBump.applyNpcNudges();
-      const hudTick=now-lastHud>150;
+      const hudTick=now-lastHud>(stadiumSit.hot?HOT_HUD_MS:150);// in the stadium bowl the Sit prompt joins the arbiter within ~50 ms
       if(hudTick)waterStore.set({inWater:water.inWater,swimming:water.swimming,diving:water.diveActive,diveOk:water.canDive(),flyOk:fuelStore.canUse('jetpack'),dropIn:rideRef.current==='jetpack'&&jetActions.state.phase==='idle'&&!flight.landing&&!pendingRide.current&&flight.takeoffTime>=1.05&&streetTraffic.rider.index<0&&canSplashDown(location.x,location.z),riding:animalRides.riding});
       if(hudTick){const visitor={x:visualLocation.x,y:groundY,z:visualLocation.z};const next=keepUpBusy.current?null:[islandNpcs.root.visible?islandNpcs.nearest(visitor):null,coachPractice.nearest(visitor),volleyballGame.nearest(visitor)].filter((npc):npc is NpcDefinition=>npc!==null).sort((a,b)=>Math.hypot(a.x-visitor.x,a.z-visitor.z)-Math.hypot(b.x-visitor.x,b.z-visitor.z))[0]??null;if(next?.id!==nearbyNpcRef.current?.id){nearbyNpcRef.current=next;setNearbyNpc(next);}}
       npcs.forEach((rig,i)=>{

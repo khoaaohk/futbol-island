@@ -92,8 +92,10 @@ export type Seat={id:string;stand:StandId;row:number;x:number;z:number;y:number;
 /** Seats along a span (centres, local along): SEAT_PITCH apart, centred in the span. */
 export function spanSeats(a0:number,a1:number){const n=Math.max(0,Math.floor((a1-a0)/SEAT_PITCH)),start=(a0+a1)/2-(n-1)*SEAT_PITCH/2;return {n,start};}
 export function seatCount(){let n=0;for(const s of STANDS){const {seats}=standSpans(s);for(const [a0,a1] of seats)n+=spanSeats(a0,a1).n*ROWS;}return n;}
-/** How far (m) from a seat the "Sit" prompt shows. */
-export const SIT_REACH=1.6;
+/** How far (m) from a seat the "Sit" prompt shows. Polish Nov 13 2026: 2.1 (was 1.6) so the exact centre of an aisle (1.1 m to its edge + half a
+ *  seat + the span's centring slack + the up-to-.9 m depth offset inside a row) always finds the row's nearest seat; the row/height gates
+ *  (not this reach) keep the concourse back and the pitch ring from offering one. */
+export const SIT_REACH=2.1;
 /** The nearest free seat for a player at (x, z) standing at `height` (a row or an aisle tread beside it), or null. */
 export function nearestSeat(x:number,z:number,height:number,occupied?:ReadonlySet<string>,reach=SIT_REACH):Seat|null{
  let best:Seat|null=null,bestD=reach;

@@ -20,6 +20,10 @@ import {ensureStadiumSponsors,SPONSOR_LOAD_RADIUS} from '../stadium/sponsors/ind
 import {countStadiumVisit} from '../analytics/sponsorEvents';
 
 export const SIT_KEY='stadium-seat';
+/** HUD tick (ms) in the bowl (Town's is 150 elsewhere): the Sit offer enters the focus arbiter on that tick, so it shows within ~one tick of stopping. */
+export const HOT_HUD_MS=50;
+/** The Sit button hangs this far (px) above the head of the player's screen position; the head is PLAYER_HEAD m above their feet. */
+const PROMPT_GAP=14,PLAYER_HEAD=2.1;
 /** The camera's far plane while seated (m): the whole bowl (the far stand's back is ~115 m away, the end stand from the other end ~150 m). */
 export const SEAT_FAR=175;
 /** The big screen's score shows within this distance of the stadium centre (m); beyond it the plane hides (heat). */
@@ -49,6 +53,8 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:b
   /** The seated pose (blended in and out with the camera), or undefined when standing. */
   trick():TrickPose|undefined{if(m.blend<=0)return undefined;pose.w=m.blend*m.blend*(3-2*m.blend);return pose;},
   get yaw(){return m.seat?.yaw??0;},
+  /** In or beside the bowl on a raised surface: Town runs its HUD tick at HOT_HUD_MS here so the Sit prompt appears fast (one compare a frame). */
+  get hot(){return dc<75&&me.h>.2;},
   /** Each frame (next to the ladder's prompt): what the prompt offers (null = nothing), the sponsor load and the gate count. canSit: on foot, on the ground,
    *  not falling, no menu. */
   want(x:number,z:number,height:number,canSit:boolean):{key:string;distance:number}|null{
@@ -122,7 +128,10 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:b
    if(!el)return;const seat=held()?m.seat:near;let hidden=!(show&&seat);
    if(!hidden&&seat){
     if(held()){place(el,width/2,height-150);}
-    else{v.set(seat.x,seat.y+1.7,seat.z).project(camera);hidden=v.z< -1||v.z>1;if(!hidden)place(el,T.MathUtils.clamp((v.x+1)*width/2,90,width-90),T.MathUtils.clamp((1-v.y)*height/2,90,height-160));}
+    else{// the button hangs from its point (translate -50% / -100%): put that point above the player's head as well as the seat's, so it never covers the player
+     v.set(seat.x,seat.y+1.7,seat.z).project(camera);hidden=v.z< -1||v.z>1;
+     if(!hidden){const seatTop=(1-v.y)*height/2;v.set(me.x,me.h+PLAYER_HEAD,me.z).project(camera);const top=Math.min(seatTop,v.z>-1&&v.z<1?(1-v.y)*height/2-PROMPT_GAP:seatTop);
+      place(el,T.MathUtils.clamp((v.x+1)*width/2,90,width-90),T.MathUtils.clamp(top,90,height-160));}}
     const seatedNow=held();if(seatedNow!==promptSeated||live!==promptLive){promptSeated=seatedNow;promptLive=live;const label=seatedNow?'Stand up':live?'Sit and watch':'Sit';el.textContent=label;el.setAttribute('aria-label',seatedNow?'Stand up':live?'Sit down and watch the match':'Sit down');}
    }
    if(el.hidden!==hidden)hide(el,hidden);
