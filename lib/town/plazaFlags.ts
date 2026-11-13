@@ -26,6 +26,21 @@ export function plazaFlagOrder(count=14):Nation[]{const half=Math.ceil(count/2),
 export const FLAG={poleH:7.2,poleR:.08,cap:.12,capR:.12,w:1.9,h:1.15,y:6.4,segW:12,segH:4} as const;
 /** The cloth's wave: base amplitude at the fly end (m), the extra while fluttering after a hit, wave number, speeds (rad/s). */
 export const FLAG_WAVE={amp:.1,kickAmp:.3,k:7,speed:3.4,kickSpeed:4.5,kickSeconds:1.6} as const;
+/** The KICK (Nov 13 2026, owner: "the pole shakes hard, the flag whips and flaps wildly, then settles"; lib/town/flagKick.ts): its own
+ *  animation, stronger than a ball's or a walker's sway (FLAG_WAVE.kickAmp + the 'flag' prop tilt). Shader-driven: per frame while it
+ *  runs the CPU writes one angle (+ the kick's direction) and one whip level per kicked flag; the vertex shader tilts the whole flag
+ *  (pole, finial, cloth) about its foot and whips the cloth. shake: the tilt (rad) at full strength, a damped `freq` Hz swing plus a
+ *  `shiverFreq` Hz shiver; whip: the cloth's extra wave (m) and speed (rad/s), a vertical flap (m) and the fly end's snap (m).
+ *  Reduced motion: the gentle version (a third of the tilt, no shiver, a light whip, shorter). */
+export const FLAG_KICK={shake:.46,shiver:.06,freq:2.4,shiverFreq:7.5,damp:1.2,whipAmp:.55,whipSpeed:9,flap:.24,snap:.16,whipDamp:1.05,seconds:2.6,
+ reduced:{shake:.12,whip:.3,seconds:1.4}} as const;
+/** The kick's tilt (rad) and whip (0..1) `age` s after it (CPU twin of what the shader is fed; the tests read it). */
+export function flagKickAt(age:number,reduced=false):{angle:number;whip:number}{
+ const K=FLAG_KICK,dur=reduced?K.reduced.seconds:K.seconds;if(!(age>=0)||age>=dur)return {angle:0,whip:0};
+ const fade=age<dur*.7?1:1-(age-dur*.7)/(dur*.3),env=Math.exp(-K.damp*age)*fade*fade,w=2*Math.PI;
+ const angle=reduced?K.reduced.shake*env*Math.sin(w*K.freq*age):env*(K.shake*Math.sin(w*K.freq*age)+K.shiver*Math.sin(w*K.shiverFreq*age));
+ return {angle,whip:(reduced?K.reduced.whip:1)*Math.exp(-K.whipDamp*age)*fade};
+}
 /** The walker counts as bumping a pole within this distance of its centre (the pole's collider 0.3 m + the walker's 0.32 m). */
 export const BUMP_RADIUS=.62;
 
@@ -122,32 +137,49 @@ export function createPlazaFlags(poles:readonly {x:number;z:number}[],order:read
  if(canvas){canvas.width=FLAG_CANVAS.w;canvas.height=FLAG_CANVAS.h;const c=canvas.getContext('2d');if(c)drawFlagCanvas(c);}
  const texture=new T.CanvasTexture(canvas as HTMLCanvasElement);texture.colorSpace=T.SRGBColorSpace;texture.anisotropy=4;
  const kick=new Float32Array(n),uTime={value:0},uKick={value:kick};
+ // The kick (FLAG_KICK): per flag its age (−1 = none), direction, and the shader's whip level, tilt + direction, and foot.
+ const kAge=new Float32Array(n).fill(-1),kDir=new Float32Array(n*2),whip=new Float32Array(n),shake=new Float32Array(n*3),foot=new Float32Array(n*2);
+ poles.forEach((p,k)=>{foot[k*2]=p.x;foot[k*2+1]=p.z;});
+ const uWhip={value:whip},uShake={value:shake},uFoot={value:foot};let kicking=0,kickReduced=false;
  const material=new T.MeshStandardMaterial({map:texture,roughness:.85,side:T.DoubleSide});
  material.onBeforeCompile=sh=>{
   sh.uniforms.uTime=uTime;sh.uniforms.uKick=uKick;
-  const W=FLAG_WAVE,f=(x:number)=>x.toFixed(4);
+  const W=FLAG_WAVE,K=FLAG_KICK,f=(x:number)=>x.toFixed(4);
+  sh.uniforms.uWhip=uWhip;sh.uniforms.uShake=uShake;sh.uniforms.uFoot=uFoot;
   sh.vertexShader=sh.vertexShader.replace('#include <common>',`#include <common>
-attribute float aWave;attribute float aFlag;uniform float uTime;uniform float uKick[${n}];`)
+attribute float aWave;attribute float aFlag;uniform float uTime;uniform float uKick[${n}];uniform float uWhip[${n}];uniform vec3 uShake[${n}];uniform vec2 uFoot[${n}];`)
    .replace('#include <beginnormal_vertex>',`#include <beginnormal_vertex>
-float fKick=uKick[int(aFlag+.5)],fU=max(aWave,0.),fAmp=${f(W.amp)}+${f(W.kickAmp)}*fKick,fArg=fU*${f(W.k)}-uTime*(${f(W.speed)}+${f(W.kickSpeed)}*fKick)+aFlag*1.7;
+int fI=int(aFlag+.5);float fKick=uKick[fI],fWhip=uWhip[fI],fU=max(aWave,0.),fAmp=${f(W.amp)}+${f(W.kickAmp)}*fKick+${f(K.whipAmp)}*fWhip,fArg=fU*${f(W.k)}-uTime*(${f(W.speed)}+${f(W.kickSpeed)}*fKick+${f(K.whipSpeed)}*fWhip)+aFlag*1.7;
 float fWave=fU*fAmp*sin(fArg);
 if(aWave>=0.){float dzdx=(fAmp*sin(fArg)+fU*fAmp*${f(W.k)}*cos(fArg))/${f(FLAG.w)};objectNormal=normalize(vec3(-dzdx,0.,1.));}`)
    .replace('#include <begin_vertex>',`#include <begin_vertex>
-if(aWave>=0.){transformed.z+=fWave;transformed.y+=fU*.035*sin(fArg*.7+1.3);transformed.x-=fU*fU*.04*(1.-cos(fArg));}`);
+if(aWave>=0.){transformed.z+=fWave;transformed.y+=fU*(.035+${f(K.flap)}*fWhip)*sin(fArg*.7+1.3);transformed.x-=fU*fU*(.04+${f(K.snap)}*fWhip)*(1.-cos(fArg));}
+{vec3 fSh=uShake[fI];if(fSh.x!=0.){vec2 fFt=uFoot[fI];vec3 fR=transformed-vec3(fFt.x,0.,fFt.y);float fAl=fR.x*fSh.y+fR.z*fSh.z,fC=cos(fSh.x),fS=sin(fSh.x),fN=fAl*fC+fR.y*fS-fAl;
+ transformed.x+=fN*fSh.y;transformed.z+=fN*fSh.z;transformed.y=fR.y*fC-fAl*fS;}}`);
  };
- material.customProgramCacheKey=()=>'plaza-flags-'+n;
+ material.customProgramCacheKey=()=>'plaza-flags-kick-'+n;
  const mesh=new T.Mesh(geometry,material);mesh.name='plaza-flags';mesh.castShadow=false;mesh.receiveShadow=true;
  mesh.userData.ownDraw=true;mesh.userData.skipRoofObstacle=true;mesh.matrixAutoUpdate=false;mesh.updateMatrix();geometry.computeBoundingSphere();
  const position=geometry.getAttribute('position') as T.BufferAttribute;
  const propSpecs:PropSpec[]=poles.map((p,k)=>({kind:'flag',parts:[{attribute:position,start:k*perFlag,count:perFlag}],
   min:{x:p.x-FLAG.capR,y:0,z:p.z-.6},max:{x:p.x+FLAG.poleR+FLAG.w,y:FLAG.poleH+FLAG.cap,z:p.z+.6},pivot:{x:p.x,y:0,z:p.z}}));
  let live=0,touching=-1;const xs=poles.map(p=>p.x),zs=poles.map(p=>p.z),area={x0:Math.min(...xs)-1,x1:Math.max(...xs)+1,z0:Math.min(...zs)-1,z1:Math.max(...zs)+1};
- const stats={reacts:0,bumps:0,kickUpdates:0};
+ const stats={reacts:0,bumps:0,kickUpdates:0,kicks:0};
  return {
-  mesh,material,texture,propSpecs,poles,order,kick,uniforms:{uTime,uKick},stats,perFlag,
+  mesh,material,texture,propSpecs,poles,order,kick,whip,shake,uniforms:{uTime,uKick,uWhip,uShake,uFoot},stats,perFlag,
+  get kicking(){return kicking>0;},
+  /** The player's KICK at flag k, the boot travelling along (dx, dz): the pole shakes hard, the cloth whips (FLAG_KICK). */
+  kickFlag(k:number,dx:number,dz:number,reduced=false){if(!(k>=0&&k<n))return false;const l=Math.hypot(dx,dz)||1;kDir[k*2]=dx/l;kDir[k*2+1]=dz/l;
+   if(kAge[k]<0)kicking++;kAge[k]=0;kickReduced=reduced;stats.kicks++;
+   if(!reduced){kick[k]=1;live=1;}return true;},
   /** Each frame: the wave's clock (held still under reduced motion) and the flutter's decay (only while one is running). */
   update(dt:number,reduced=false){
    if(!reduced&&dt>0)uTime.value=(uTime.value+dt)%(Math.PI*200);
+   if(kicking&&dt>0){const red=reduced||kickReduced;for(let k=0;k<n;k++){if(kAge[k]<0)continue;kAge[k]+=dt;const r=flagKickAt(kAge[k],red);
+    whip[k]=r.whip;shake[k*3]=r.angle;shake[k*3+1]=kDir[k*2];shake[k*3+2]=kDir[k*2+1];
+    if(r.angle===0&&r.whip===0){kAge[k]=-1;kicking--;whip[k]=0;shake[k*3]=0;}}
+    // Reduced motion keeps a slow cloth: the whip moves the wave's phase only while the clock runs, so give it a gentle tick.
+    if(red)uTime.value=(uTime.value+dt*.5)%(Math.PI*200);}
    if(!live)return;stats.kickUpdates++;let any=0;const d=dt/FLAG_WAVE.kickSeconds;
    for(let k=0;k<n;k++)if(kick[k]>0){kick[k]=reduced?0:Math.max(0,kick[k]-d);if(kick[k]>0)any++;}
    live=any;

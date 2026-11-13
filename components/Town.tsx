@@ -202,7 +202,7 @@ import {createRideTricks,isHeldRideAction} from '@/lib/town/rideTricks';
 import {createWalkBall,SHOT_WINDUP,SKY_MAX_APEX,KEEPUP_SKY,skyMarkShrink,strayAfterKeepUpPress} from '@/lib/town/walkBall';
 import {createBallEffects} from '@/lib/graphics/ballEffects';
 import {createSwimRipples,type SwimRippleInput} from '@/lib/graphics/swimRipples';
-import {createPondLife} from '@/lib/town/parkPond';import {POND_Y,PARK_POND,pondQ} from '@/lib/town/westParkLayout';import {pondSkipEvents,type BallPond} from '@/lib/town/pondSkip';import {travelArrival,type ArrivalFrom} from '@/lib/town/travelArrival';// Stadium Park pond life: koi, dragonflies, wading splashes (Nov 13 2026)
+import {createPondLife} from '@/lib/town/parkPond';import {POND_Y,PARK_POND,pondQ} from '@/lib/town/westParkLayout';import {pondSkipEvents,type BallPond} from '@/lib/town/pondSkip';import {travelArrival,type ArrivalFrom} from '@/lib/town/travelArrival';import {createFlagKick} from '@/lib/town/flagKick';// Stadium Park pond life: koi, dragonflies, wading splashes (Nov 13 2026)
 import { createPlayer, profileFor, type PlayerMotion } from '@/lib/graphics/player';
 import { sideGameDress, mainPlayerDress, matchPlayerDress, ownKitLook, DEFAULT_MATCH_KITS } from '@/lib/town/beanLooks';
 import {createLiveJoin} from '@/lib/town/liveJoinRuntime';import {createMatchFocus,MATCH_FOCUS_LIVE} from '@/lib/town/matchFocus';
@@ -1377,6 +1377,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         pendingRide.current='walk';cancelLanding.current=false;const at=rooftop.canLand(spot.x,spot.z,Infinity)?spot:rooftop.findLanding(spot.x,spot.z);flight.landing=at?{x:at.x,z:at.z}:null;wakeLoop();return true;},
       touchdown:()=>{const y=rooftop.state.height;landingDust.trigger(location.x,y,location.z,.7,y<.6,reduced);sound.land(.6);}});(window as unknown as {__fi2:Record<string,unknown>}).__fi2.forage=forage;
     disposers.add(()=>{forage.dispose();});
+    // Kicking a plaza flag pole (Nov 13 2026, owner; lib/town/flagKick.ts): a Kick press at a pole plays the tree kick's pose and the
+    // flag's own kick animation (plazaFlags.ts kickFlag: the pole shakes hard, the cloth whips), with the island's clank.
+    const flagKick=createFlagKick({poles:world.plazaFlags.poles,pressed:()=>shotHold.current,take:cancelShotHold,busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing',
+      pose:(pole,how)=>{jobMoves.start('treekick',jobPlayer(),pole,jobFloor,reduced,jobBallNow(),false,how);wakeLoop();},
+      strike:(k,dx,dz)=>{world.plazaFlags.kickFlag(k,dx,dz,reduced);propCue('clank');tapHaptic();wakeLoop();}});
     // The zipline (lib/graphics/zipline.ts): the tower's prompt, the ride on the tick (input locked), the rider, camera and effects.
     const zipline=createZipline(scene,{place:(x,z,y)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z,y);},
       land:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.set(0,yaw,0);arrivalFacing=yaw;walkBall.reset({x,y:rooftop.state.height,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;},
@@ -2324,6 +2329,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const easelWant=easel.update({x:location.x,z:location.z,onGround:active&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&streetTraffic.rider.index<0,canEnter,camera,width:fullWidth,height:fullHeight,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden});// Summit Isle painting easel
       const gashaWant=gashaPrompt.update({x:location.x,z:location.z,groundY:player.root.position.y,onFoot:active&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&streetTraffic.rider.index<0&&!water.inWater,canEnter,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,panelOpen:gashaponPanel.get()!==null,camera,width:fullWidth,height:fullHeight,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden,dt,reduced});// gashapon capsule machines
       const zipWant=zipline.update({x:location.x,z:location.z,onFoot:active&&rideRef.current==='walk'&&!rooftop.state.falling&&streetTraffic.rider.index<0,onRide:active&&rideRef.current!=='walk'&&rideRef.current!=='jetpack'&&!rooftop.state.falling&&streetTraffic.rider.index<0&&rampMotion.state.phase!=='air',canEnter,reduced,camera,width:fullWidth,height:fullHeight,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden});// the zipline tower
+      flagKick.update({dt,x:location.x,z:location.z,yaw:player.root.rotation.y,onFoot:active&&rideRef.current==='walk'&&!rooftop.state.falling&&streetTraffic.rider.index<0,canEnter:canEnter&&!jobs.run,reduced});// plaza flag pole kick
       const forageWant=forage.update({dt,x:location.x,z:location.z,onFoot:active&&rideRef.current==='walk'&&!rooftop.state.falling&&streetTraffic.rider.index<0,
         arrival:!active||streetTraffic.rider.index>=0||rooftop.state.falling?null:rideRef.current==='jetpack'?((jetActions.state.phase==='idle'||jetActions.state.phase==='parachute')&&!pendingRide.current&&!flight.landing&&flight.takeoffTime>=1.05?'fly':null):rideRef.current!=='walk'&&rampMotion.state.phase!=='air'?'ride':null,
         air:()=>flight.height-rooftop.surface(location.x,location.z,Infinity),canEnter:canEnter&&!jobs.run,frozen:backgroundFrozen,reduced,camera,width:fullWidth,height:fullHeight,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden});// Summit Isle fruit trees
