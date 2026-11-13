@@ -101,6 +101,7 @@ t('seat snap and occupied seats',()=>{
  const p={x:body[0]/10,y:body[1]/10,z:body[2]/10,yaw:0,seated:true};
  const s=share.seatFriend(3,p);assert.ok(s&&s.id===seat.id,'their seat');assert.equal(p.x,seat.x);assert.equal(p.z,seat.z);assert.equal(p.y,seat.y);assert.equal(p.yaw,seat.yaw);
  assert.ok(share.remoteSeatsTaken().has(seat.id));
+ assert.equal(share.remoteSeatSpots().map(q=>q.id).join(),seat.id,'the crowd is told where the friend sits (QA Nov 13: a fan was drawn in their seat)');
  const mine=seats.nearestSeat(seat.x,seat.z,seat.y,share.remoteSeatsTaken());assert.ok(mine&&mine.id!==seat.id,'I am offered the next seat');
  assert.ok(Math.hypot(mine.x-seat.x,mine.z-seat.z)<1.3,'a neighbour seat');
  // a second friend claiming the same seat this frame is drawn standing (never two in one seat)
@@ -108,7 +109,7 @@ t('seat snap and occupied seats',()=>{
  // off any seat (an older client slowing to a stop on the grass): not seated
  const g={x:-150,y:0,z:0,yaw:0,seated:true};assert.equal(share.seatFriend(5,g),null);assert.equal(g.seated,false);
  // next frame without them: the seat is free again
- share.beginSeatFrame();assert.ok(!share.remoteSeatsTaken().has(seat.id));
+ share.beginSeatFrame();assert.ok(!share.remoteSeatsTaken().has(seat.id));assert.equal(share.remoteSeatSpots().length,0);
  assert.equal(seats.nearestSeat(seat.x,seat.z,seat.y,share.remoteSeatsTaken()).id,seat.id);
  const r={x:1,y:2,z:3,yaw:0,seated:false};assert.equal(share.seatFriend(6,r),null);assert.deepEqual([r.x,r.y,r.z],[1,2,3],'standing friends untouched');
 });

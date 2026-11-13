@@ -14,7 +14,7 @@ import {STADIUM} from './westParkLayout';
 import {createStadiumCrowd,CROWD_RADIUS} from './stadiumCrowd';
 import {createSitMachine,inGate,nearestSeat,seatView,followLook,portraitLook,PORTRAIT_FOV,sitDown,standUp,stepSit,stadiumSponsorLayout,GATE_ARCH_X,FOLLOW_RATE,type Seat} from './stadiumSeats';
 import {createStadiumScreen,screenMinute,stadiumBarText,type ScreenScore} from './stadiumScreen';
-import {remoteSeatsTaken} from './stadiumSeatShare';
+import {remoteSeatsTaken,remoteSeatSpots} from './stadiumSeatShare';
 import {BIB_COLOURS} from './beanLooks';
 import {ensureStadiumSponsors,SPONSOR_LOAD_RADIUS} from '../stadium/sponsors/index';
 import {countStadiumVisit} from '../analytics/sponsorEvents';
@@ -83,7 +83,7 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:b
     const total=score.gold+score.blue;if(goals>=0&&total>goals&&dc<CROWD_RADIUS){crowd.cheer();ports.goal?.();}goals=total;}else goals=-1;
    // The crowd (stadiumCrowd.ts): near the stadium only; the fans round me clear while I am up in the stands.
    const dt=lastMs<0?0:Math.min(.1,Math.max(0,(nowMs-lastMs)/1000));lastMs=nowMs;
-   crowd.update(dc,me.x,me.z,me.h>.2&&dc<110,dt,reduced);
+   crowd.update(dc,me.x,me.z,me.h>.2&&dc<110,dt,reduced,remoteSeatSpots());
    ambience=live?ambienceLevel(me.x,me.z):0;
    if(sponsors&&screenSponsor===live){screenSponsor=!live;sponsors.setScreenSponsor(screenSponsor);}
    screen.update(live&&dc<SCREEN_RADIUS,live?score:null,nowMs);

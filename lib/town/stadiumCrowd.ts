@@ -19,6 +19,8 @@ export const CROWD_RADIUS=150;
 export const FAN_TRIS=20;
 /** The goal bounce (s) and the fans cleared round the player (m). */
 export const CHEER_TIME=2.6,CLEAR_RADIUS=1.1;
+/** Seated friends whose seats the crowd keeps clear (more than this many seated friends in view: the rest may share a fan). */
+export const CLEAR_FRIENDS=8;
 
 /** The fill key for this device and heat tier (lib/graphics/heatTier: 0 default … 4 lowest / Battery saver). About 0.72 × the
  *  key is the share of seats filled: desktop ~36 %, phone ~22 %, tier 2 ~16 / 9 %, saver ~5 %. */
@@ -59,19 +61,20 @@ export function fanGeometry(){const body=part(.4,.5,.3,0,0),head=part(.22,.24,.2
 
 export function createStadiumCrowd(parent:T.Object3D,phone:boolean){
  let mesh:T.InstancedMesh|null=null,fans:Fan[]=[],cheer=0,shownFill=-1;
- const uniforms={uCheer:{value:0},uTime:{value:0},uClear:{value:new T.Vector3(0,0,-1)}};
+ const uniforms={uCheer:{value:0},uTime:{value:0},uClear:{value:new T.Vector3(0,0,-1)},uClearF:{value:Array.from({length:CLEAR_FRIENDS},()=>new T.Vector3(0,0,-1))}};
  function build(){
   fans=crowdSeats();
   const mat=new T.MeshLambertMaterial();
   mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,uniforms);
-   sh.vertexShader='attribute float aHead;\nuniform float uCheer;\nuniform float uTime;\nuniform vec3 uClear;\n'+sh.vertexShader
+   sh.vertexShader='attribute float aHead;\nuniform float uCheer;\nuniform float uTime;\nuniform vec3 uClear;\nuniform vec3 uClearF[${CLEAR_FRIENDS}];\n'+sh.vertexShader
     .replace('#include <color_vertex>',`#include <color_vertex>
  vec3 fanAt=vec3(instanceMatrix[3][0],instanceMatrix[3][1],instanceMatrix[3][2]);
  float fanH=fract(sin(dot(fanAt.xz,vec2(12.9898,78.233)))*43758.5453);
  vColor=mix(vColor,mix(vec3(.96,.78,.62),vec3(.42,.28,.2),fanH),aHead);`)
     .replace('#include <begin_vertex>',`#include <begin_vertex>
  transformed.y+=uCheer*max(0.,sin(uTime*13.+fanH*6.2832))*.3;
- transformed*=1.-step(distance(fanAt.xz,uClear.xy),uClear.z);`);
+ transformed*=1.-step(distance(fanAt.xz,uClear.xy),uClear.z);
+ for(int i=0;i<${CLEAR_FRIENDS};i++)transformed*=1.-step(distance(fanAt.xz,uClearF[i].xy),uClearF[i].z);`);
   };
   mat.customProgramCacheKey=()=>'stadium-crowd';
   mesh=new T.InstancedMesh(fanGeometry(),mat,fans.length);mesh.name='stadium-crowd';mesh.castShadow=mesh.receiveShadow=false;
@@ -83,13 +86,15 @@ export function createStadiumCrowd(parent:T.Object3D,phone:boolean){
   parent.add(mesh);
  }
  return {
-  /** Each frame near the stadium: dc = the player's distance from the centre; (x, z, onStand) = where to keep fans away. */
-  update(dc:number,x:number,z:number,onStand:boolean,dt:number,reduced:boolean){
+  /** Each frame near the stadium: dc = the player's distance from the centre; (x, z, onStand) = where to keep fans away;
+   *  friends = seats other players sit in (stadiumSeatShare remoteSeatSpots), kept clear too. */
+  update(dc:number,x:number,z:number,onStand:boolean,dt:number,reduced:boolean,friends:readonly {x:number;z:number}[]=[]){
    const near=dc<CROWD_RADIUS;
    if(!near){if(mesh?.visible)mesh.visible=false;return;}
    if(!mesh)build();const me=mesh!;if(!me.visible)me.visible=true;
    const fill=crowdFill(phone,effectiveTier());if(fill!==shownFill){shownFill=fill;me.count=crowdCount(fans,fill);}
    const cl=uniforms.uClear.value;if(onStand){cl.set(x,z,CLEAR_RADIUS);}else if(cl.z>0)cl.z=-1;
+   const cf=uniforms.uClearF.value;for(let i=0;i<CLEAR_FRIENDS;i++){const f=friends[i],v=cf[i];if(f)v.set(f.x,f.z,SEAT_PITCH*.75);else if(v.z>0)v.z=-1;}
    if(cheer>0){cheer=Math.max(0,cheer-dt);uniforms.uTime.value+=dt;uniforms.uCheer.value=reduced?0:Math.min(1,cheer/.6)*Math.min(1,(CHEER_TIME-cheer)/.15);}
    else if(uniforms.uCheer.value)uniforms.uCheer.value=0;
   },
