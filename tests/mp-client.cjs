@@ -288,6 +288,48 @@ t('bindConnection is idempotent per connection (#4): second bind adds no subscri
 
 // ---- interp ----
 const R=()=>({x:0,y:0,z:0,yaw:0,speed:0,mode:0,zone:0,fade:0});
+t('interp: a beacon-tier (1 Hz) 34 m/s jetpack flyer with ±80 ms jitter is interpolated: no >5 m frame jumps, no stalls',()=>{
+  const it=ip.createInterp({delayMs:240}),out=R();let seed=11;const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+  const T0=10000,N=14,jit=[];for(let i=0;i<=N;i++)jit.push(Math.round((rnd()*2-1)*80));
+  let prev=null,run=0,worstRun=0,worst=0,pushed=0;
+  for(let now=T0;now<=T0+N*1000;now+=16){
+    while(pushed<=N&&T0+pushed*1000+jit[pushed]<=now){it.push(8,[pushed*340,300,0,0,136,5,0,0],T0+pushed*1000+jit[pushed]);pushed++;}
+    if(now<T0+3500)continue;
+    it.sample(8,now,out);
+    if(prev!==null){const d=out.x-prev;worst=Math.max(worst,Math.abs(d));if(Math.abs(d)<0.15){run++;worstRun=Math.max(worstRun,run);}else run=0;}
+    prev=out.x;
+  }
+  assert.ok(worst<5,`a ${worst.toFixed(2)} m frame jump`);assert.ok(worstRun<3,`${worstRun} frozen frames in a row`);
+  // it comes close (10 Hz): the extra delay drains, back on the shared 240 ms delay within ~3 s
+  let t=T0+N*1000,x=N*340;for(let i=1;i<=40;i++){t+=100;x+=34;it.push(8,[x,300,0,0,136,5,0,0],t);for(let k=0;k<6;k++)it.sample(8,t-100+k*16,out);}
+  it.sample(8,t,out);assert.ok(Math.abs(out.x-(x-24*3.4/10*10)/10)<1.5,`caught up: x ${out.x} vs ${(x-81.6)/10}`);
+});
+t('interp: tier transitions (10 -> 5 -> 1 -> 5 -> 10 Hz, and 1 -> 10 Hz) of a 32 m/s flyer with ±50 ms jitter are continuous',()=>{
+  // live QA Nov 12 2026: leaving the nearest 12 popped 16-20 m, coming near one 59 m frame then 14 m steps. Each scenario: phases of
+  // [rate Hz, seconds]; the flyer goes +x at 32 m/s and (turn) reverses once mid-way through the 1 Hz phase
+  // (frames within 1.5 s of the reversal are not counted as frozen: the apex is a real stop).
+  const V=32;
+  for(const [name,phases,turn] of [['10>5>1>5>10',[[10,3],[5,3],[1,7],[5,1.2],[10,5]],false],['1>10',[[10,2],[1,6],[10,5]],false],['5>1 turn',[[10,2],[5,2],[1,8],[5,1],[10,5]],true]]){
+    const it=ip.createInterp({delayMs:240}),out=R();let seed=5;const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+    const T0=10000;let tEnd=T0,last10=0;const snaps=[];
+    for(let p=0;p<phases.length;p++){const [hz,sec]=phases[p],iv=1000/hz,start=tEnd;if(p===phases.length-1)last10=start;
+      for(let s=start;s<start+sec*1000-1e-6;s+=iv)snaps.push(s);tEnd=start+sec*1000;}
+    const tTurn=turn?(()=>{let s=T0;for(const [hz,sec] of phases){if(hz===1)return s+sec*500+300;s+=sec*1000;}})():Infinity;
+    const xAt=s=>s<=tTurn?V*(s-T0)/1000:V*(2*tTurn-T0-s)/1000; // metres, reversal at tTurn
+    const st=snaps.map(s=>Math.round(s+(rnd()*2-1)*50)).sort((a,b)=>a-b);let k=0,prev=null,run=0,worstRun=0,worst=0,worstAt=0,lagLate=0,runAt=0;
+    for(let now=T0;now<=tEnd;now+=1000/60){
+      while(k<st.length&&st[k]<=now){it.push(9,[Math.round(xAt(st[k])*10),300,0,0,V*4,P.Mode.Jetpack,0,0],st[k]);k++;}
+      if(now<T0+800)continue;
+      it.sample(9,now,out);
+      if(prev!==null){const d=Math.abs(out.x-prev);if(d>worst){worst=d;worstAt=now-T0;}if(d<0.05&&Math.abs(now-tTurn)>1500){run++;if(run>worstRun){worstRun=run;runAt=now-T0;}}else run=0;}
+      prev=out.x;
+      if(now>=last10+3000)lagLate=Math.max(lagLate,Math.abs(xAt(now)-out.x)/V);
+    }
+    assert.ok(worst<5,`${name}: a ${worst.toFixed(2)} m frame step at +${worstAt.toFixed(0)} ms`);
+    assert.ok(worstRun<3,`${name}: ${worstRun} frozen frames in a row at +${runAt.toFixed(0)} ms`);
+    assert.ok(lagLate<=0.4,`${name}: ${lagLate.toFixed(2)} s behind 3 s after the stream is back at 10 Hz`);
+  }
+});
 t('interp: a far (quiet 2 Hz) 34 m/s jetpack flyer with ±80 ms jitter: no stall-then-leap (slow-stream cap)',()=>{
   for(const delayMs of [240,380]){
     const it=ip.createInterp({delayMs}),out=R();let seed=7;const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
@@ -303,6 +345,47 @@ t('interp: a far (quiet 2 Hz) 34 m/s jetpack flyer with ±80 ms jitter: no stall
     assert.ok(frames>300);assert.ok(worst<5,`delay ${delayMs}: a ${worst.toFixed(2)} m frame jump`);
     assert.ok(worstRun<3,`delay ${delayMs}: ${worstRun} frozen frames in a row (the stall before a leap)`);
   }
+});
+// Nov 13 2026 (fix10 harness: the real RoomCore + this client glue, 26 bots round a still watcher, one 32 m/s flyer by member id).
+// The fixture is the captured message sequence about the flyer: it leaves sight (160 m, S.Left) and comes back (S.Joined with an
+// UNSTAMPED roster pose, then the 1 Hz beacon). Before: a 1 s freeze then a 20-33 m leap, or a 0.8 s freeze then a 6-7 m step.
+t('interp: replay of a captured full-island flight (leave sight at 160 m, come back on the beacon): no >5 m step, no freeze',()=>{
+  const cap=JSON.parse(fs.readFileSync(path.join(ROOT,'tests/fixtures/mp-flyer-reentry.json'),'utf8'));
+  const lc=L('liveClock').createLiveClock(),it=ip.createInterp(),out=R(),ID=1;
+  let k=0,prev=null,worst=0,run=0,worstRun=0,shown=0,joins=0,shownAfterJoin=0,joinAt=-1;
+  for(let f=0,now=cap.start-2000;now<=cap.end;f++,now=cap.start-2000+f*1000/60){
+    for(;k<cap.msgs.length&&cap.msgs[k][0]<=now;k++){const m=cap.msgs[k];
+      if(m[1]==='L')it.push(ID,m[3],lc.map(m[2],m[4],m[0])); // index.ts: S.Live on the sender timeline
+      else if(m[1]==='J'){joins++;joinAt=m[0];if(ip.seedable(m[2]))it.push(ID,m[2].slice(),m[0]);} // roomParty.ts: the roster seed
+      else{it.drop(ID);prev=null;} // S.Left: out of sight
+    }
+    it.setDelay(lc.delay(now));
+    if(!it.sample(ID,now,out)||out.fade<0.05){prev=null;run=0;continue;}
+    shown++;if(joinAt>=0&&now-joinAt<2500)shownAfterJoin++;
+    if(prev){const s=Math.hypot(out.x-prev[0],out.y-prev[1],out.z-prev[2]);worst=Math.max(worst,s);
+      if(s<1e-4&&Math.hypot(out.x,out.z)>60){run++;worstRun=Math.max(worstRun,run);}else run=0;}
+    prev=[out.x,out.y,out.z];
+  }
+  assert.ok(joins>=2&&shown>1200,`the flyer is drawn (${shown} frames, ${joins} returns)`);
+  assert.ok(shownAfterJoin>40,`back in sight it shows within 2.5 s (${shownAfterJoin} frames)`);
+  assert.ok(worst<5,`a ${worst.toFixed(2)} m frame step`);
+  assert.ok(worstRun<3,`${worstRun} frozen frames in a row beyond 60 m`);
+});
+t('interp: a moving roster pose never seeds; a lone fast snapshot waits unseen, then the 1 Hz stream is drawn on the beacon delay',()=>{
+  assert.equal(ip.seedable([1000,150,0,0,128,5,0,0]),false,'moving jetpack roster pose');
+  assert.equal(ip.seedable([1000,0,0,0,0,13,0,0]),true,'standing still');
+  assert.equal(ip.seedable([1000,0,0,0,3,12,0,0]),true,'Busy (speed byte = activity)');
+  assert.equal(ip.seedable([10,600,10,0,32,1,4,0]),true,'a room pose (speed byte = room code)');
+  const it=ip.createInterp({delayMs:240}),out=R();
+  it.push(3,[1000,150,0,0,128,5,0,0],10000);
+  for(let now=10000;now<11000;now+=16){it.sample(3,now,out);assert.equal(out.fade,0,'one snapshot of a 32 m/s flyer: not drawn');}
+  it.push(3,[1320,150,0,0,128,5,0,0],11000); // 1 s later, 32 m on
+  let prev=null,worst=0;
+  for(let now=11000;now<11900;now+=16){it.sample(3,now,out);if(out.fade>0.05&&prev!==null)worst=Math.max(worst,Math.abs(out.x-prev));prev=out.fade>0.05?out.x:null;}
+  assert.ok(worst<1.5,`interpolated between the two real snapshots, ${worst.toFixed(2)} m worst step`);
+  assert.ok(out.x>100&&out.x<132,`drawn between them, ~1.15 s behind (x ${out.x.toFixed(1)})`);
+  // a room friend (Zone.Indoors, room code 32 in the speed byte) is never taken for a fast mover
+  const ri=ip.createInterp({delayMs:240});ri.push(4,[10,600,10,0,32,1,4,0],10000);ri.sample(4,10400,out);assert.equal(out.fade,1,'a lone room pose shows');
 });
 t('interp: a close 10 Hz take-off from standing still never freezes (round 6 regression guard)',()=>{
   const it=ip.createInterp({delayMs:240}),out=R();
