@@ -18,7 +18,7 @@
 import {useCallback,useEffect,useMemo,useRef,useState,type TouchEvent as ReactTouchEvent} from 'react';
 import {BackButton} from '@/components/BackButton';
 import {DoneButton} from '@/components/DoneButton';
-import {LIVE_COUNT_KEYS,LIVE_COUNT_LABEL,LIVE_MIGRATION,LIVE_OK_ROW,LIVE_WINDOWS,flagOf,fmtAgo,fmtSpent,sessionSource,sourceLabel,spotIcon,spotLabel,timeLine,
+import {LIVE_COUNT_KEYS,LIVE_COUNT_LABEL,LIVE_MIGRATION,LIVE_MODE_LABEL,LIVE_MODE_TITLE,LIVE_OK_ROW,LIVE_WINDOWS,MODE_UNKNOWN,flagOf,modeLabel,modeTally,fmtAgo,fmtSpent,sessionSource,sourceLabel,spotIcon,spotLabel,timeLine,
  type CountryTally,type LiveReport,type LiveRow,type LiveStatus,type LiveWindow,type Tally} from '@/lib/analytics/live';
 import {DAY_MIGRATION,DAY_OK_ROW,RAW_DAYS,addDays,dateClockPT,fmtClock,pacificDay,shortDay,stampPT,
  type AreaTally,type DayReport,type PlayerReport,type PlayerRow,type PlayersReport,type RowTotals} from '@/lib/analytics/day';
@@ -59,7 +59,10 @@ function PlayerLink({pid,onPlayer}:{pid:string|null;onPlayer?:(pid:string)=>void
  return <button type="button" className={styles.playerLink} onClick={()=>onPlayer(pid)} title="Open this player (an anonymous id, not a name)" data-pid={pid}>player #{pid.slice(0,6)}</button>;
 }
 
-function SessionCard({r,now,countryName,clock,onPlayer}:{r:LiveRow;now:number;countryName:(c:string)=>string;clock:'ago'|'time'|'date';onPlayer?:(pid:string)=>void}){
+/** Nov 13 2026: the live view's MODE strip ("Public 2 · Just me 1 · Party 1", then Mode unknown when any). */
+export function LiveModeStrip({rows}:{rows:Pick<LiveRow,'mode'>[]}){return <Strip label="Mode" items={tallyItems(modeTally(rows),modeLabel)}/>;}
+
+export function SessionCard({r,now,countryName,clock,onPlayer}:{r:LiveRow;now:number;countryName:(c:string)=>string;clock:'ago'|'time'|'date';onPlayer?:(pid:string)=>void}){
  const chips=LIVE_COUNT_KEYS.filter(k=>r.counts[k]>0);
  const where=r.country?`${flagOf(r.country)} ${countryName(r.country)}${r.regionName?` · ${r.regionName}`:''}`:'Location unknown';
  const line=timeLine(r);
@@ -71,6 +74,8 @@ function SessionCard({r,now,countryName,clock,onPlayer}:{r:LiveRow;now:number;co
    <span className={styles.badges}>
     {r.returning!==null&&<span className={styles.badge} data-kind={r.returning?'returning':'new'}>{r.returning?'Returning':'New'}</span>}
     {r.hasCode!==null&&<span className={styles.badge} data-kind={r.hasCode?'code':'nocode'}>{r.hasCode?'Save code':'No code'}</span>}
+    {clock==='ago'&&(r.mode?<span className={styles.badge} data-kind={'mode-'+r.mode} data-mode={r.mode} title={LIVE_MODE_TITLE[r.mode]}>{LIVE_MODE_LABEL[r.mode]}</span>
+     :<span className={styles.badge} data-kind="mode-unknown" data-mode="unknown" title="This session has not said how it is playing (an older tab, or no beat yet)">{MODE_UNKNOWN}</span>)}
    </span>
    <span className={styles.spent} title="Foreground time this session (hidden tabs and idle time do not count)">{clock==='ago'?fmtSpent(r.secondsActive):fmtClock(r.secondsActive)}</span>
   </div>
@@ -286,6 +291,7 @@ export default function LivePanel({view,onClose,countryName}:{view:PanelView|nul
      {status!=='ok'&&<Warn status={status} live/>}
      {status==='ok'&&<>
       <Strip label="Where" items={(data!.byArea).map(a=>({key:a.key,text:`${spotIcon(a.key)} ${spotLabel(a.key)} ${a.n}`}))}/>
+      <LiveModeStrip rows={data!.rows}/>
       <Strip label="Country" items={countryItems(cc)}/>
       <Strip label="Source" items={tallyItems(data!.bySource,sourceLabel)}/>
       {rows.length?<ul className={styles.cards}>{rows.map(r=><SessionCard key={r.sid+r.startedAt} r={r} now={now} countryName={countryName} clock="ago" onPlayer={openPlayer}/>)}</ul>

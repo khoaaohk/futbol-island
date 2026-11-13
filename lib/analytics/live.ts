@@ -28,7 +28,25 @@ export type LiveRow={sid:string;startedAt:string;lastSeen:string;
  deviceTodaySessions:number;deviceTodaySeconds:number;
  /** Oct 16 2026 (20261019_analytics_day_sessions.sql): 12 hex of a further hash of the session's anonymous player id (shown as 6;
   *  opens the player view); null for sessions without one (older tabs, rows before that file, the live RPC before it). */
- pid:string|null};
+ pid:string|null;
+ /** Nov 13 2026: how the island is being played at the newest beat that said ('s' Just me, 'w' With other players, 'p' With
+  *  friends; liveAdmin.ts reads it from the beat's `pm:` counter). null = Mode unknown (an older tab, a beat-less session, the
+  *  day and player views). */
+ mode:LiveMode|null};
+/** The same letters as countIds.ts PLAY_MODES (kept here so the admin bundle does not pull the counter allowlist). */
+export const LIVE_MODES=['w','s','p'] as const;
+export type LiveMode=typeof LIVE_MODES[number];
+export const isLiveMode=(m:unknown):m is LiveMode=>typeof m==='string'&&(LIVE_MODES as readonly string[]).includes(m);
+/** Badge words (owner: Public = with other players, Just me = solo, Party = with friends). */
+export const LIVE_MODE_LABEL:Record<LiveMode,string>={w:'Public',s:'Just me',p:'Party'};
+export const LIVE_MODE_TITLE:Record<LiveMode,string>={w:'With other players, on the shared public island',s:'Just me: playing solo',p:'With friends, in a code party'};
+export const MODE_UNKNOWN='Mode unknown';
+/** The MODE strip: "Public 2 · Just me 1 · Party 1", modes with nobody left out, then unknown when any. */
+export function modeTally(rows:Pick<LiveRow,'mode'>[]):Tally[]{
+ const n:Record<string,number>={};for(const r of rows){const k=r.mode??'unknown';n[k]=(n[k]||0)+1;}
+ return [...LIVE_MODES,'unknown'].filter(k=>n[k]).map(k=>({key:k,n:n[k]}));
+}
+export const modeLabel=(k:string|null|undefined)=>isLiveMode(k)?LIVE_MODE_LABEL[k]:MODE_UNKNOWN;
 export type Tally={key:string;n:number};
 export type CountryTally={country:string;n:number;regions:{region:string;name:string;n:number|null}[]};
 export type LiveReport={status:LiveStatus;minutes:number;generatedAt:string;sessions:number;byArea:Tally[];byCountry:CountryTally[];bySource:Tally[];rows:LiveRow[]};
@@ -64,7 +82,7 @@ export function shapeLiveRow(x:unknown,names?:Names):LiveRow{const o=obj(x),c=ob
    returning:bool(o.returning),hasCode:bool(o.has_code),area:str(o.area),activity:str(o.activity),previousArea:str(o.previous_area),spot:str(o.spot),
    areas:secs(o.areas),activities:secs(o.activities),counts:Object.fromEntries(LIVE_COUNT_KEYS.map(k=>[k,num(c[k])])) as Record<LiveCountKey,number>,
    deviceTodaySessions:num(o.device_today_sessions),deviceTodaySeconds:num(o.device_today_seconds),
-   pid:typeof o.pid==='string'&&/^[0-9a-f]{12}$/.test(o.pid)?o.pid:null};
+   pid:typeof o.pid==='string'&&/^[0-9a-f]{12}$/.test(o.pid)?o.pid:null,mode:isLiveMode(o.mode)?o.mode:null};
 }
 export const emptySources=(status:LiveStatus,from='',to=''):SourcesSummary=>({status,from,to,windowDays:14,minSessions:3,sessions:0,countries:[],countriesSuppressed:0,
  sources:[],sourcesSuppressed:0,returning:{new:null,returning:null,unknown:null},code:{with:null,without:null,unknown:null}});

@@ -389,6 +389,25 @@ export const MAX_COUNT_VALUE=50;
 /** The shape every id must have before the allowlist is even consulted (also enforced in SQL). */
 export const COUNT_KEY_RE=/^[a-z]{1,2}:[A-Za-z0-9_]{1,40}(:[A-Za-z0-9_]{1,12}){0,2}$/;
 
+/**
+ * How the island is being played (Nov 13 2026; owner: the "On now" cards show Public / Just me / Party). The beat carries ONE
+ * letter `m` (the mode at that beat): 's' Just me, 'w' With other players (the shared public island), 'p' With friends (a code
+ * party). Never who with, a party code or which shared island. The ingest (lib/analytics/ingest.ts) turns a valid letter into
+ * the counter `pm:<letter>` = 1 on that beat, so it lands in analytics_beats.counts with NO migration (the SQL allows any id of
+ * COUNT_KEY_RE's shape). Ingest-only: these ids are NOT on FIXED, so clampCounts drops a `pm:` sent in `k` by a tab.
+ * The live panel reads the newest beat's `pm:` (lib/analytics/liveAdmin.ts).
+ */
+export const PLAY_MODES=['s','w','p'] as const;
+export type PlayMode=typeof PLAY_MODES[number];
+export const isPlayMode=(m:unknown):m is PlayMode=>typeof m==='string'&&(PLAY_MODES as readonly string[]).includes(m);
+export const playModeId=(m:PlayMode)=>'pm:'+m;
+/** The mode a beat's counters carry (null when none: an older tab, a page off the island, a count-only drain beat). */
+export function playModeOf(counts:unknown):PlayMode|null{
+ if(!counts||typeof counts!=='object'||Array.isArray(counts))return null;
+ for(const m of PLAY_MODES)if(Number((counts as Record<string,unknown>)[playModeId(m)])>0)return m;
+ return null;
+}
+
 type LessonInfo={format:LearnFormat;id:string;options:number[]};
 let lessons:Map<string,LessonInfo>|null=null;
 export function lessonInfo(id:string):LessonInfo|undefined{

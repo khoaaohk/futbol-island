@@ -161,6 +161,9 @@ export default function PrivacyPolicy(){
     <li>which buttons and links on the start page are tapped (for example Start, For grown-ups or Donate), counted as totals;</li>
     <li>a few settings at the start of a visit, such as whether sound or the coach’s voice is switched off;</li>
     <li>whether the device has played before and whether a save code is in use on it: a yes or no each, never the code;</li>
+    {/* [LAWYER] Nov 13 2026: new (lib/analytics/tracker.ts `m`, countIds.ts PLAY_MODES): one letter per time report. */}
+    {PUB?<li>how the island is being played at the moment: <i>Just me</i>, <i>With other players</i> or <i>With friends</i> (a party), one of those three each time. Never who with, the party code or which shared island;</li>
+     :<li>how the island is being played at the moment: alone or with friends in a party, one of those two each time. Never who with or the party code;</li>}
     {/* [LAWYER] Nov 10 2026: new count (lib/analytics/searchIds.ts, searchReport.ts). */}
     <li>when a visit starts from a search engine or an AI assistant: one anonymous daily count for the page it landed on and the name of that search engine or assistant (for example “Google” or “ChatGPT”). Never the search words.</li>
     {/* [LAWYER] Nov 10 2026: new (app/api/error-report, app/api/csp-report; lib/siteReports.ts). */}
@@ -168,7 +171,7 @@ export default function PrivacyPolicy(){
    </ul>
    {/* [LAWYER] Nov 10 2026: reworded to match the code (see the file header). */}
    <p>We never record typed text, names or first names, save codes, party codes or network addresses. Our own reports can see the order of the screens in one visit (for example the island, then the arcade), linked to the random player number below and never to who the child is. Anything shown to a sponsor is a combined total of everyone together, never anything about one child.</p>
-   <p><b>Visits under way:</b> we see each visit happening now as an anonymous session: the country and region it connects from, the website that linked to the game or our campaign tag, the part of the game it is in, and its time and counts so far, and we can look back at each day’s visits the same way for the 14 days we keep them. Never a name, an account, a network address or a precise location.</p>
+   <p><b>Visits under way:</b> we see each visit happening now as an anonymous session: the country and region it connects from, the website that linked to the game or our campaign tag, the part of the game it is in, how it is being played (such as alone or with friends), and its time and counts so far, and we can look back at each day’s visits the same way for the 14 days we keep them. Never a name, an account, a network address or a precise location.</p>
    {/* [LAWYER] Nov 10 2026: reworded to match the code (see the file header). */}
    <p><b>Players:</b> the game keeps a random player number on the device (and, when a save code is in use, a number made one-way from the code right on the device, so the code itself is never sent to the counter). Our server scrambles that number again with a secret key that changes every 90 days, so the same player gets a new number every 90 days and old numbers can’t be matched to new ones. It lets our own reports count return visits and see the order of the screens in a visit, without knowing who the child is. It is not a name, an account, an email, a network address or a location, and it is never shared. Deleting the save or clearing this site’s data in the browser removes it from the device; the visits we already counted are deleted after 14 days.</p>
    <p><b>Do Not Track:</b> if the browser sends a “Do Not Track” or “Global Privacy Control” signal, the counter sends nothing at all.</p>

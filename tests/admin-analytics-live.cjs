@@ -79,6 +79,45 @@ await ok('ingest: the marks reach the store on a start (memory store), unknown s
  assert.match(read('lib/analytics/store.ts'),/is_returning:ev\.returning\?\?null,has_code:ev\.hasCode\?\?null/,'the Supabase store sends them');
 });
 
+await ok('play mode (Nov 13 2026): the beat carries one letter, the server keeps only s / w / p, stored as pm:<letter>',async()=>{
+ const K=load('lib/analytics/countIds.ts');
+ // The tracker: the island's reader rides the existing beat (no extra request); a bad value or a throwing reader sends nothing.
+ const sent=[],w={location:{hostname:'futbolisland.app',pathname:'/play',search:''},addEventListener(){},removeEventListener(){},setTimeout:()=>1,clearTimeout(){}};
+ const hooks={},d={visibilityState:'visible',referrer:'',addEventListener:(e,f)=>{hooks[e]=f;},removeEventListener(){}};
+ let clock=0;const t=T.startTracker({window:w,document:d,navigator:{sendBeacon:(u,b)=>{sent.push(JSON.parse(b));return true;},maxTouchPoints:0},storage:null,now:()=>clock,random:k=>new Uint8Array(k).map((_,i)=>i*7)});
+ t.pageview('/play');
+ let mode='w';const off=T.setPlayModeSource(()=>mode);
+ const beat=()=>{clock+=5000;d.visibilityState='hidden';hooks.visibilitychange?.();d.visibilityState='visible';hooks.visibilitychange?.();return sent.filter(b=>b.t==='beat').pop();};
+ const before=sent.length;let b=beat();assert(b,'a beat was sent');assert.equal(b.m,'w','the mode rides the beat');assert.equal(sent.length-before,1,'no extra request');
+ assert(C.validateEvent(JSON.stringify(b)).ok,'the server accepts it');
+ mode='p';assert.equal(beat().m,'p');mode='s';assert.equal(beat().m,'s');
+ mode='solo';assert(!('m' in beat()),'off the list: not sent');
+ T.setPlayModeSource(()=>{throw new Error('x');});assert.equal(T.playModeNow(),null,'a reader that throws: nothing');
+ off();T.setPlayModeSource(()=>'w')();assert.equal(T.playModeNow(),null,'cleanup removes the reader');
+ assert(!sent.some(x=>x.t==='start'&&'m' in x),'never on a start');
+ // The server allowlist: only s / w / p on a beat; anything else is dropped unread and the beat still counts.
+ const base={v:1,t:'beat',s:'liveModeA00000000001',p:'/play',e:4000};
+ for(const m of ['s','w','p'])assert.equal(C.validateEvent(JSON.stringify({...base,m})).event.m,m);
+ for(const m of ['x','solo','',1,null,{w:1},['w']]){const v=C.validateEvent(JSON.stringify({...base,m}));assert(v.ok,'still a beat: '+JSON.stringify(m));assert(!('m' in v.event),'dropped: '+JSON.stringify(m));}
+ const st=C.validateEvent(JSON.stringify({v:1,t:'start',s:'liveModeA00000000001',p:'/',m:'w'}));assert(st.ok&&!('m' in st.event),'not on a start');
+ assert.deepEqual([...K.PLAY_MODES],['s','w','p']);assert.equal(K.isCountId('pm:w'),false,'ingest-only: a tab cannot send pm: in k');
+ assert.deepEqual(C.clampCounts({'pm:w':1,'fi:land':1}),{'fi:land':1});
+ assert.equal(K.playModeOf({'fi:land':2,'pm:p':1}),'p');assert.equal(K.playModeOf({}),null);assert.equal(K.playModeOf(null),null);
+ // The ingest stores the letter as the counter pm:<letter> = 1 in the beat's existing counts (no migration); a forged pm: in k is gone.
+ const mem=S.createMemoryStore(),lim=I.createLimiter({capacity:1e6}),now=new Date();
+ const h={get:k=>({'user-agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148','host':'futbolisland.app'})[k]??null};
+ const go=body=>I.handleIngest({body:JSON.stringify(body),headers:h,store:mem,limiter:lim,now,vercelEnv:'production'});
+ assert.equal((await go({v:1,t:'start',s:'liveModeA00000000001',p:'/play'})).reason,'ok');
+ assert.equal((await go({...base,m:'w',k:{'pm:s':3}})).reason,'ok');
+ assert.equal((await go({...base,m:'bogus'})).reason,'ok');
+ assert.equal((await go({v:1,t:'beat',s:'liveModeA00000000001',p:'/play',m:'p'})).reason,'empty-beat','the mode alone is not worth a write');
+ const bs=mem.data.beats.filter(x=>x.sessionId==='liveModeA00000000001');
+ assert.deepEqual(bs[0].counts,{'pm:w':1});assert.deepEqual(bs[1].counts,{},'an off-list letter stores nothing');
+ // Town registers the reader: a party is 'p', the shared island connected is 'w', anything else 's'. Nothing about who.
+ const town=read('components/Town.tsx');
+ assert(town.includes(`setPlayModeSource(()=>partyLive()?'p':multiplayerEnabled()&&publicWorldEnabled()&&publicPresence.get().mode==='public'&&publicPresence.get().connected?'w':'s')`),'Town.tsx reads the mode');
+});
+
 await ok('rootView: ?from=flyer shows the title screen; the return trips still open the game',()=>{
  const R=load('lib/rootView.ts');
  assert.equal(R.isInGame('?from=flyer'),false);assert.equal(R.isInGame('?from=arcade'),true);assert.equal(R.isInGame('?panel=about'),true);
@@ -97,6 +136,10 @@ await ok('live.ts: shapes, labels, time',()=>{
  assert.equal(r.rows[0].regionName,'US/CA');assert.equal(r.byCountry[0].regions[0].name,'US/CA');assert.equal(r.rows[0].counts.fish,2);assert(!('bogus' in r.rows[0].counts));
  assert.equal(r.rows[0].returning,true);assert.equal(r.rows[0].hasCode,null);assert.equal(r.rows[0].areas.island,240);
  assert.equal(L.shapeLive({rows:[{sid:'<p>zz9f'}]}).rows[0].sid,'9f','sid: hex only');
+ assert.equal(r.rows[0].mode,null,'no mode: unknown');assert.equal(L.shapeLive({rows:[{sid:'ab',mode:'p'}]}).rows[0].mode,'p');assert.equal(L.shapeLive({rows:[{sid:'ab',mode:'party'}]}).rows[0].mode,null);
+ assert.deepEqual(L.modeTally([{mode:'s'},{mode:'w'},{mode:'p'},{mode:'w'},{mode:null}]),[{key:'w',n:2},{key:'s',n:1},{key:'p',n:1},{key:'unknown',n:1}]);
+ assert.deepEqual(L.modeTally([{mode:'s'}]),[{key:'s',n:1}],'modes with nobody left out');
+ assert.equal(L.modeLabel('w'),'Public');assert.equal(L.modeLabel('s'),'Just me');assert.equal(L.modeLabel('p'),'Party');assert.equal(L.modeLabel('unknown'),'Mode unknown');assert.equal(L.modeLabel(null),'Mode unknown');
  const s=L.shapeSources({sessions:6,countries:[{country:'US',n:3,regions:[{region:'CA',n:null}]}],returning:{new:null,returning:4,unknown:0},code:{with:3}});
  assert.equal(s.countries[0].regions[0].n,null);assert.equal(s.returning.returning,4);assert.equal(s.code.without,null);
 });
@@ -108,10 +151,21 @@ await ok('liveAdmin: not configured, needs migration, 5 s cache, windows',async(
  process.env.NEXT_PUBLIC_SUPABASE_URL='https://example.supabase.co';process.env.SUPABASE_SERVICE_ROLE_KEY='service';
  let calls=0;const f404=async()=>{calls++;return {ok:false,status:404,text:async()=>''};};
  assert.equal((await LA.loadLive(2,{fetchImpl:f404,now:0})).status,'needs-migration');
- const fok=async(url,init)=>{calls++;assert.match(url,/\/rest\/v1\/rpc\/analytics_live_sessions$/);assert.equal(JSON.parse(init.body).p_minutes,15);
-  return {ok:true,status:200,text:async()=>JSON.stringify({minutes:15,sessions:1,rows:[{sid:'abcdef',country:'US',region:'TX'}]})};};
+ let beatReads=0;const fok=async(url,init)=>{
+  if(url.includes('/rest/v1/analytics_beats?')){beatReads++;assert.equal(init.method,'GET');assert.match(url,/select=session_id,counts&ts=gte\.[^&]+&order=ts\.desc,id\.desc&limit=2000$/);
+   return {ok:true,status:200,text:async()=>JSON.stringify([{session_id:'liveRowX000000000001',counts:{'fi:land':1}},{session_id:'liveRowX000000000001',counts:{'pm:p':1}},{session_id:'liveRowX000000000001',counts:{'pm:s':1}}])};}
+  calls++;assert.match(url,/\/rest\/v1\/rpc\/analytics_live_sessions$/);assert.equal(JSON.parse(init.body).p_minutes,15);
+  return {ok:true,status:200,text:async()=>JSON.stringify({minutes:15,sessions:2,rows:[{sid:'abcdef',country:'US',region:'TX'},{sid:LA.liveSid('liveRowX000000000001')}]})};};
  calls=0;const a=await LA.loadLive(15,{fetchImpl:fok,now:1000}),b=await LA.loadLive(15,{fetchImpl:fok,now:5999});
  assert.equal(calls,1,'cached for 5 s');assert.equal(a,b);assert.equal(a.rows[0].regionName,'Texas');
+ assert.equal(beatReads,1,'one beat read per cache miss');assert.equal(a.rows[0].mode,null,'no beat with a mode: Mode unknown');
+ assert.equal(a.rows[1].mode,'p','the newest beat that carries a mode (an older one said s)');
+ assert.equal(LA.liveSid('liveSessionA00000001'),crypto.createHash('sha256').update('liveSessionA00000001:futbol-island-live-v1').digest('hex').slice(0,6),'the SQL sid');
+ assert(!JSON.stringify(a).includes('liveRowX'),'never the raw session id');
+ const fbad=async url=>url.includes('analytics_beats')?{ok:false,status:500,text:async()=>''}:{ok:true,status:200,text:async()=>JSON.stringify({rows:[{sid:'abcdef'}]})};
+ assert.equal((await LA.loadLive(2,{fetchImpl:fbad,now:50_000})).rows[0].mode,null,'a failed beat read: rows still shown, Mode unknown');
+ const fthrow=async url=>{if(url.includes('analytics_beats'))throw new Error('net');return {ok:true,status:200,text:async()=>JSON.stringify({rows:[{sid:'abcdef'}]})};};
+ assert.equal((await LA.loadLive(5,{fetchImpl:fthrow,now:60_000})).status,'ok','a beat read that throws never breaks the panel');
  await LA.loadLive(15,{fetchImpl:fok,now:6001});assert.equal(calls,2,'fresh after 5 s');
  assert.equal(LA.liveMinutes('7'),5);assert.equal(LA.liveMinutes('2'),2);
  const route=read('app/api/admin/live/route.ts');assert.match(route,/if\(!verifySession\(cookies\(\)\.get\(ADMIN_COOKIE\)\?\.value,Date\.now\(\)\)\)return Response\.json\(\{error:'unauthorized'\},\{status:401/);
@@ -124,6 +178,23 @@ await ok('the panel and the day section are wired',()=>{
  assert(dash.includes('<LivePanel view={panel} onClose={closeLive} countryName={countryName}/>')&&dash.includes('<SourcesSection report={report} countryName={countryName}/>'));
  assert.match(panel,/document\.visibilityState!=='visible'/,'polls only while visible');assert.match(panel,/POLL_MS=10_000/);
  assert.match(panel,/e\.key==='Escape'/);assert.match(panel,/<DoneButton ref=\{done\} onDone=\{onClose\}/);assert(panel.includes('Nobody right now.'));
+ assert(panel.includes('<LiveModeStrip rows={data!.rows}/>'),'the MODE strip with the Where / Country / Source strips');
+ assert(panel.indexOf('<LiveModeStrip')<panel.indexOf('<Strip label="Source" items={tallyItems(data!.bySource')&&panel.indexOf('<LiveModeStrip')>panel.indexOf('<Strip label="Where" items={(data!.byArea)'),'at the top, before the cards');
+ // Render: the badge next to New / Returning on live cards, the unknown fallback, none on day cards, and the strip's counts.
+ const React=require('react'),{renderToStaticMarkup}=require('react-dom/server'),css=new Proxy({},{get:(_,k)=>typeof k==='string'?k:undefined});
+ const P=createLoader({'LivePanel.module.css':css,'DoneButton.module.css':css,'Icon.module.css':css,'IslandTravelMap.module.css':css})('app/admin/LivePanel.tsx');
+ const row=o=>L.shapeLive({rows:[{sid:'ab12cd',started_at:'2026-11-13T10:00:00Z',last_seen:'2026-11-13T10:05:00Z',returning:false,has_code:true,...o}]}).rows[0];
+ const card=(o,clock='ago')=>renderToStaticMarkup(React.createElement(P.SessionCard,{r:row(o),now:Date.parse('2026-11-13T10:06:00Z'),countryName:c=>c,clock}));
+ for(const [m,word] of [['w','Public'],['s','Just me'],['p','Party']]){const h=card({mode:m});
+  assert(h.includes(`data-mode="${m}"`)&&h.includes(`>${word}</span>`),'badge '+word);assert(h.indexOf('>New</span>')<h.indexOf(`>${word}</span>`)&&h.indexOf('>Save code</span>')<h.indexOf(`>${word}</span>`),'next to New / Save code');}
+ {const h=card({});assert(h.includes('data-mode="unknown"')&&h.includes('>Mode unknown</span>'),'older sessions: Mode unknown');}
+ {const h=card({mode:'w'},'time');assert(!h.includes('data-mode='),'day / player cards: no mode badge');}
+ const strip=renderToStaticMarkup(React.createElement(P.LiveModeStrip,{rows:[{mode:'w'},{mode:'w'},{mode:'s'},{mode:'p'},{mode:null}]}));
+ assert(/aria-label="Mode"/.test(strip)&&strip.includes('<b>Public 2</b>')&&strip.includes('<b>Just me 1</b>')&&strip.includes('<b>Party 1</b>')&&strip.includes('<b>Mode unknown 1</b>'),'strip counts');
+ assert(strip.indexOf('Public 2')<strip.indexOf('Just me 1')&&strip.indexOf('Just me 1')<strip.indexOf('Party 1'),'Public · Just me · Party order');
+ assert.match(panel,/\{clock==='ago'&&\(r\.mode\?<span className=\{styles\.badge\} data-kind=\{'mode-'\+r\.mode\}[^>]*>\{LIVE_MODE_LABEL\[r\.mode\]\}<\/span>/,'the badge next to New / Returning, live cards only');
+ assert.match(panel,/data-kind="mode-unknown"[^>]*>\{MODE_UNKNOWN\}<\/span>/,'the unknown fallback');
+ {const pol=read('components/privacy/PrivacyPolicy.tsx');assert(pol.includes('how the island is being played at the moment')&&pol.includes('Never who with'),'the privacy page lists the mode');}
  for(const p of ['app/admin/page.tsx','app/api/admin/analytics/route.ts'])assert.match(read(p),/report\.sources=await loadSources\(report\.from,report\.to\);/,p);
  const pp=read('components/privacy/PrivacyPolicy.tsx');assert(pp.includes('a yes or no each, never the code')&&pp.includes('as an anonymous session'),'the privacy page says so');
 });

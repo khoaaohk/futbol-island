@@ -38,7 +38,7 @@ import type {MarketingReport} from './marketingReport';
 import type {LiveMatchReport} from './liveMatchReport';
 import type {MarketingVisitReport} from './marketingVisitReport';
 import {PLAYER_HASH_RE} from './playerHash';
-import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,type StartFlags} from './countIds';
+import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,isPlayMode,type PlayMode,type StartFlags} from './countIds';
 
 /** The analytics SQL this code expects: 3 = 20261009_analytics_counts.sql, 4 = 20261009_analytics_start.sql (the start-page
  *  traffic subset in the day's rollup) (public.analytics_schema_version()). */
@@ -92,7 +92,10 @@ export type RawEvent={v?:number;t:EventType;s:string;p:string;r?:string;u?:Utm;e
   *  (lib/analytics/playerId.ts) and discards it; neither is ever stored, logged or sent on.
   *  Nov 10 2026: `ph` (SHA-256 of an app string + the code, made on the device: lib/analytics/playerHash.ts) replaces `pc`;
   *  a `pc` from an old cached page is DROPPED by validateEvent (never read, never hashed). */
- ph?:string;pi?:string;pc?:never};
+ ph?:string;pi?:string;pc?:never;
+ /** Nov 13 2026 (beats only): how the island is being played right now, one letter (countIds.ts PLAY_MODES). Anything else is
+  *  dropped by validateEvent (the beat still counts). Never who with. */
+ m?:PlayMode};
 /** Seconds per heat-map cell (key = cell index as a string). */
 export type CellMap=Record<string,number>;
 
@@ -184,10 +187,12 @@ export function validateEvent(body:string):Validated{
  let o:unknown;try{o=JSON.parse(body);}catch{return {ok:false,reason:'json'};}
  if(!o||typeof o!=='object'||Array.isArray(o))return {ok:false,reason:'shape'};
  const r=o as Record<string,unknown>;
- const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c','k','f','rt','hc','pc','ph','pi']);
+ const allowed=new Set(['v','t','s','p','r','u','e','a','n','tp','pl','ac','c','k','f','rt','hc','pc','ph','pi','m']);
  for(const k of Object.keys(r))if(!allowed.has(k))return {ok:false,reason:'unknown-key'};
  // Nov 10 2026: a raw save code never becomes analytics data. An old page's `pc` is removed unread (the visit still counts).
  delete r.pc;
+ // Nov 13 2026: the play mode is an allowlisted letter on a beat; anything else (another value, on a start) is removed unread.
+ if(r.m!==undefined&&(r.t!=='beat'||!isPlayMode(r.m)))delete r.m;
  for(const v of [r.p,r.r,...(r.u&&typeof r.u==='object'?Object.values(r.u as Record<string,unknown>):[])])if(typeof v==='string'&&CODE_SHAPED_RE.test(v))return {ok:false,reason:'code-shaped'};
  if(!(EVENT_TYPES as readonly unknown[]).includes(r.t))return {ok:false,reason:'type'};
  if(typeof r.s!=='string'||!SESSION_RE.test(r.s))return {ok:false,reason:'session'};
