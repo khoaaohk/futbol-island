@@ -10,6 +10,8 @@ export const MUSIC_IDLE_MS=30000;
  * here, and `onIdle(true)` lets the sound context fade its master and suspend. The next trusted pointer/touch/key input undoes it. */
 export type IslandIdleHooks={active?:()=>boolean;onIdle?:(idle:boolean)=>void};
 export const IDLE_FADE_SECONDS=1.5;
+/** The stadium crossfade's time constant (s): setTargetAtTime reaches ~95% in 3 × this (~2.4 s). */
+export const STADIUM_MUSIC_TC=.8;
 const clock=()=>typeof performance!=='undefined'?performance.now():Date.now();
 const timers=typeof setTimeout==='function'&&typeof window!=='undefined'&&typeof window.addEventListener==='function';
 export function createIslandMusic(initialEnabled=true,initialVolume=.04,sharedContext?:()=>AudioContext|null,onAudible?:(audible:boolean)=>void,idleHooks:IslandIdleHooks={}){
@@ -19,10 +21,13 @@ export function createIslandMusic(initialEnabled=true,initialVolume=.04,sharedCo
   let mediaPaused=false,bottleOpen=false,sceneActive=true,pageActive=true;
   let enabled=initialEnabled,ducked=false,unlocked=false,disposed=false,idle=false,lastInput=clock(),audibleNow=false;
   let idleTimer:ReturnType<typeof setTimeout>|undefined;
+  /** DRIP FC Stadium (lib/audio/stadiumSound.ts): 0..1, how far the stadium's sound has faded the music out (1 = out, paused). */
+  let stadiumFade=0;
+  const level=()=>volume*(1-stadiumFade);
   const audible=(on:boolean)=>{if(on===audibleNow)return;audibleNow=on;onAudible?.(on);};
   let pauseTimer:ReturnType<typeof setTimeout>|undefined;
   let resumePending:Promise<void>|null=null,suspendPending:Promise<void>|null=null,playPending:Promise<void>|null=null,gainTarget=0,retryPlay=false;
-  const allowed=()=>enabled&&!bottleOpen&&!mediaPaused&&!ducked&&!idle&&sceneActive&&pageActive&&!(typeof window!=='undefined'&&/^\/arcade(?:\/|$)/.test(window.location?.pathname??''))&&!document.hidden&&!disposed;
+  const allowed=()=>enabled&&!bottleOpen&&!mediaPaused&&!ducked&&!idle&&sceneActive&&pageActive&&!(typeof window!=='undefined'&&/^\/arcade(?:\/|$)/.test(window.location?.pathname??''))&&stadiumFade<1&&!document.hidden&&!disposed;
   const clear=()=>{if(pauseTimer!==undefined)clearTimeout(pauseTimer);pauseTimer=undefined;};
   // Anything that starts the element while music is not allowed (iOS resuming it after an interruption, a lock-screen play) stops at once.
   if(typeof audio.addEventListener==='function')audio.addEventListener('play',()=>{if(!allowed())audio.pause();});
@@ -55,7 +60,7 @@ export function createIslandMusic(initialEnabled=true,initialVolume=.04,sharedCo
       if(!audio.getAttribute('src'))audio.src=TRACK_URL;
       // Pointer events may unlock repeatedly while steering. Only real state
       // changes fade the music, and a loading play request is never duplicated.
-      fade(volume,.3);audible(true);
+      fade(level(),stadiumFade>0?STADIUM_MUSIC_TC:.3);audible(true);
       if(audio.paused&&playPending){retryPlay=true;return;}
       if(audio.paused){
         try{
@@ -108,11 +113,15 @@ export function createIslandMusic(initialEnabled=true,initialVolume=.04,sharedCo
     unlock,
     setSceneActive(value:boolean){sceneActive=value;if(value)play();else pause(true);},
     setMediaPaused(value:boolean){mediaPaused=value;if(value)pause(true);else play();},
-    setVolume(value:number){if(!Number.isFinite(value))return;volume=Math.max(0,Math.min(1,value));if(allowed())fade(volume,.08);},
+    setVolume(value:number){if(!Number.isFinite(value))return;volume=Math.max(0,Math.min(1,value));if(allowed())fade(level(),.08);},
     setEnabled(value:boolean){enabled=value;if(value)unlock();else pause();},
+    /** The stadium crossfade (Town, from stadiumSound.musicFade, already quantised with hysteresis): the music eases to
+     *  volume × (1 − value) over ~2.4 s, and at 1 fades out and pauses (no decoding inside the bowl); it comes back the same way. */
+    setStadiumFade(value:number){const v=Number.isFinite(value)?Math.max(0,Math.min(1,value)):0;if(v===stadiumFade)return;const was=stadiumFade;stadiumFade=v;
+      if(v>=1){if(!audio.paused||playPending)pause(false,STADIUM_MUSIC_TC);return;}if(was>=1){play();return;}if(allowed())fade(level(),STADIUM_MUSIC_TC);},
     setDucked(value:boolean){if(ducked===value)return;ducked=value;if(value)pause();else play();},
     visibility(){if(document.hidden)pause(true);else play();},
-    getState(){return {sceneActive,pageActive,idle,enabled,ducked,unlocked,paused:audio.paused,time:audio.currentTime,track:'01-welcome',level:volume,volume:gain?.gain.value??0,contextState:context?.state??'locked',disposed,sharedContext:!!sharedContext,error:audio.error?.code??null};},
+    getState(){return {sceneActive,pageActive,idle,enabled,ducked,unlocked,paused:audio.paused,time:audio.currentTime,track:'01-welcome',level:volume,stadiumFade,volume:gain?.gain.value??0,contextState:context?.state??'locked',disposed,sharedContext:!!sharedContext,error:audio.error?.code??null};},
     dispose(){if(disposed)return;if(timers){window.removeEventListener('pagehide',pageHide);window.removeEventListener('pageshow',pageShow);}document.removeEventListener('fi2-bottle-ocean',bottle);if(timers){for(const type of INPUTS)window.removeEventListener(type,input,{capture:true});if(idleTimer!==undefined)clearTimeout(idleTimer);}disposed=true;clear();audible(false);audio.pause();audio.removeAttribute('src');audio.load();source?.disconnect();gain?.disconnect();if(context&&!sharedContext)void context.close().catch(()=>{});},
   };
 }

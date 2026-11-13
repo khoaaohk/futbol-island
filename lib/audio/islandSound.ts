@@ -26,6 +26,8 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   const sources=new Map<AudioScheduledSourceNode,GainNode|null>();
   /** The West Stadium crowd loop (stadiumCrowd below); declared here because audible() reads it. */
   let crowdLoop:{source:AudioBufferSourceNode;gain:GainNode}|null=null;
+  /** The DRIP FC Stadium soundscape (lib/audio/stadiumSound.ts, bound through stadiumHost()): audible() and silence() reach it. */
+  let stadium:{active():boolean;stop(now?:boolean):void}|null=null;
   /** Stopping a sounding oscillator or loop at a non-zero level is a DC step: an audible click. Fade it first. */
   const RELEASE=.04;
   function release(source:AudioScheduledSourceNode,gain:GainNode|null,after?:()=>void){
@@ -67,7 +69,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
   const water=createWaterSound({ctx:()=>context,master:()=>master,noise:()=>noise,ok:()=>!!context&&!!master&&context.state==='running'&&!muted&&!idleFaded&&volume>0&&!hidden&&!disposed,changed:()=>{if(!audible())scheduleIdle();}});
   debug.water=water.debug;
   const IDLE_SUSPEND_MS=2000;let musicAudible=false,idleSuspended=false,idleTimer:ReturnType<typeof setTimeout>|undefined;
-  const audible=()=>musicAudible||sources.size>0||!!engine||!!travelHum||!!rush||!!crowdLoop||water.active();
+  const audible=()=>musicAudible||sources.size>0||!!engine||!!travelHum||!!rush||!!crowdLoop||!!stadium?.active()||water.active();
   function scheduleIdle(){if(typeof setTimeout!=='function')return;if(idleTimer!==undefined)clearTimeout(idleTimer);idleTimer=setTimeout(checkIdle,IDLE_SUSPEND_MS);}
   function checkIdle(){idleTimer=undefined;if(disposed||!context||context.state!=='running')return;if(audible())return;idleSuspended=true;debug.idleSuspends++;void context.suspend().catch(()=>{});}
   function wakeIdle(){if(!idleSuspended||!context||hidden||muted||disposed)return;idleSuspended=false;if(context.state==='suspended')void context.resume().catch(()=>{});}
@@ -80,7 +82,7 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     if(on===idleFaded||disposed)return;idleFaded=on;debug.idle=on;if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);idleFadeTimer=undefined;
     const c=context,g=master;
     if(on){
-      stopEngine();stopTravelHum();stopRush();stopCrowd();water.stop(false);
+      stopEngine();stopTravelHum();stopRush();stopCrowd();stadium?.stop(false);water.stop(false);
       if(c&&g&&c.state==='running'){const t=c.currentTime;g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(0,t+IDLE_FADE);}
       idleFadeTimer=setTimeout(()=>{idleFadeTimer=undefined;if(!idleFaded||!context)return;silence(true);if(context.state==='running'){idleSuspended=true;void context.suspend().catch(()=>{});}},IDLE_FADE*1000+100);
       return;
@@ -420,15 +422,22 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
     crowdLoop={source,gain};crowdLevel=0;debug.counts['stadium-crowd']=(debug.counts['stadium-crowd']??0)+1;}
    if(want===crowdLevel||!c)return;crowdLevel=want;debug.stadiumCrowd=want;crowdLoop!.gain.gain.setTargetAtTime(CROWD_GAIN*want,c.currentTime,.5);
   }
+  /** The stadium soundscape's host (Town: createStadiumSound(sound.stadiumHost())): the shared context and effects bus, so mute,
+   *  volume, the idle fade and page-hide silence apply; it never creates or resumes the context before the first gesture. */
+  function stadiumHost(){return {ctx:()=>disposed?null:context,master:()=>master,
+   ok:()=>!!context&&!!master&&context.state==='running'&&!muted&&!idleFaded&&volume>0&&!hidden&&!disposed,
+   sfxOn:()=>!muted&&volume>0&&!disposed,changed:()=>{if(!audible())scheduleIdle();},
+   wake:()=>{if(!idleFaded&&idleSuspended&&context?.state==='suspended')wakeIdle();},
+   bind:(s:{active():boolean;stop(now?:boolean):void})=>{stadium=s;}};}
   /** Fades live sources out (blur, mute). `now` = hard stop: the page is hiding and the context suspends at once anyway. */
-  function silence(now=false){water.stop(now);stopEngine();stopTravelHum();stopRush(now?0:RUSH_FADE);stopCrowd(now?0:CROWD_FADE);for(const [source,gain] of sources){release(source,now?null:gain);sources.delete(source);}}
+  function silence(now=false){water.stop(now);stadium?.stop(now);stopEngine();stopTravelHum();stopRush(now?0:RUSH_FADE);stopCrowd(now?0:CROWD_FADE);for(const [source,gain] of sources){release(source,now?null:gain);sources.delete(source);}}
   function setVolume(value:number){if(!Number.isFinite(value))return;volume=Math.max(0,Math.min(1,value));debug.volume=volume;if(volume===0)silence();else resumeRush();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);}
   function setMuted(value:boolean){muted=value;debug.muted=value;silence();if(master&&context)master.gain.setTargetAtTime(level(),context.currentTime,.04);if(!value)unlock();}
   function visibility(){hidden=document.hidden||mediaPaused;debug.hidden=hidden;silence(hidden);if(hidden){if(context?.state==='running')void context.suspend().catch(()=>{});}else if(debug.unlocked)unlock();}
   function dispose(){water.dispose();if(idleFadeTimer!==undefined)clearTimeout(idleFadeTimer);if(idleTimer!==undefined&&typeof clearTimeout==='function')clearTimeout(idleTimer);for(const type of INPUT_EVENTS)document.removeEventListener(type,markInput,{capture:true});document.removeEventListener('fi2-path-cue',pathCue);document.removeEventListener('fi2-job-cue',jobCue);document.removeEventListener('fi2-bottle-pop',bottlePop);document.removeEventListener('fi2-vending-cue',vendingCue);document.removeEventListener('fi2-story-cue',storyCue);disposed=true;debug.disposed=true;silence();if(context){context.onstatechange=null;void context.close().catch(()=>{});}debug.contextState='closed';}
   /** The sea, once per frame while swimming (a frame with `in:false` winds everything down). */
   function swim(dt:number,frame:WaterSoundFrame){if(frame.in&&idleSuspended&&context?.state==='suspended')wakeIdle();water.update(dt,frame);}
-  return {swim,stadiumCrowd,waterPlunge:()=>water.plunge(),waterSurface:()=>water.surface(),setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,match,boost,whaleSong,honk,truck,setVolume,setMuted,visibility,silence,dispose};
+  return {swim,stadiumCrowd,stadiumHost,waterPlunge:()=>water.plunge(),waterSurface:()=>water.surface(),setMediaPaused(value:boolean){mediaPaused=value;visibility();},debug,getContext,unlock,setMusicAudible,setIdle,ui,sceneHover,ride,move,stair,boundary,fall,land,impact,ball,match,boost,whaleSong,honk,truck,setVolume,setMuted,visibility,silence,dispose};
 }
 
 // ---- lib/audio/waterSound (kept in this file: the tests load islandSound.ts alone) ----
