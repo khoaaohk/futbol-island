@@ -189,6 +189,17 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   const goalZ=S.z+sz*L/2,box16=15.4,width16=38;
   lineBox(width16,ln,S.x,goalZ-sz*box16);for(const sx of [-1,1])lineBox(ln,box16,S.x+sx*width16/2,goalZ-sz*box16/2);
   lineBox(17,ln,S.x,goalZ-sz*5.2);for(const sx of [-1,1])lineBox(ln,5.2,S.x+sx*8.5,goalZ-sz*2.6);
+  // Owner, Nov 13 2026: the corners were bare. Corner arcs (r 1 m), corner flags (1.5 m post, a small flag), the penalty spot and
+  // the penalty arc ("D", r 9.15 m from the spot, outside the box). Painted into the chunk batch like the other lines (no draw calls).
+  for(const sx of [-1,1]){const cx=S.x+sx*W/2,cz=goalZ;
+   const arc=new T.RingGeometry(.94,1.06,12,1,0,Math.PI/2);arc.rotateX(-Math.PI/2);// quarter ring in +x/+z, turned to face the pitch
+   arc.rotateY(sx<0?(sz<0?-Math.PI/2:0):(sz<0?Math.PI:Math.PI/2));skip(put(arc,white,cx,ly+.004,cz)).castShadow=false;
+   const post=new T.CylinderGeometry(.025,.025,1.5,6);skip(put(post,'#f4f1e6',cx,.75,cz));
+   const flag=new T.BoxGeometry(.012,.32,.42);flag.translate(0,0,-sz*.21);skip(put(flag,'#f2b134',cx,1.33,cz)).castShadow=false;}
+  {const spotZ=goalZ-sz*11;const spot=new T.CircleGeometry(.12,10);spot.rotateX(-Math.PI/2);skip(put(spot,white,S.x,ly+.004,spotZ)).castShadow=false;
+   // The arc's part outside the 16.5 m box: the circle meets the box line 5.5 m in front of the spot, a half-angle of acos(5.5/9.15).
+   const h=Math.acos((box16-11)/9.15),d=new T.RingGeometry(9.09,9.21,24,1,-h,2*h);d.rotateX(-Math.PI/2);d.rotateY(sz<0?-Math.PI/2:Math.PI/2);// open toward the halfway line
+   skip(put(d,white,S.x,ly+.004,spotZ)).castShadow=false;}
   // The real goals (phase 3): the island pitches' frame and net (fields.ts goalGeometry), full size (7.32 × 2.44 m). The frame
   // is painted into the chunk batch (no draw call of its own); both nets share one LineSegments (1 draw, frustum-culled).
   const {frame,net}=goalGeometry(STADIUM_VENUE,sz,STADIUM_PITCH_Y);frame.translate(0,0,-sz*L/2);skip(put(frame,'#fff6df',S.x,0,goalZ));
