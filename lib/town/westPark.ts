@@ -1,6 +1,5 @@
 // West Stadium, phase 1 (Nov 12 2026, docs/stadium/PLAN.md): Stadium Park on the new west land (shoreline.ts), Stadium Plaza in
-// place of two west houses, and the stadium's reserved footprint with a placeholder bowl of low stands (phase 2 rebuilds the
-// stands with a walkable concourse, stairs and seats).
+// place of two west houses, round the stadium's footprint (the stadium itself: stadiumWorld.ts, phase 2).
 // Everything here is static and built once inside buildTownSteps, so it is merged into the island's 50 m chunk batches with
 // the shared vertex-colour paint (one draw call per chunk and paint, wind sway on the trees and palms for free), and the whole
 // west region is hidden by one frustum-box test when it is out of view (world.ts, westRegion). No per-frame work, no new texture.
@@ -130,59 +129,4 @@ export function buildWestPark(t:Tools):WestParkStats{
   if(x>=-250)continue;palm(x,z,5.5+((z+150)/26%3)*.5);stats.palms++;
  }
  return stats;
-}
-
-/** Placeholder bowl (phase 1): four low stepped stands with open corners and a gate gap in the east stand, a striped pitch with
- *  its markings and a gate arch. Phase 2 replaces the stands (walkable concourse, aisles, seats). Not walkable: one obstacle per
- *  stand block, so the pitch is reached through the gate or the corners. */
-export function buildStadiumPlaceholder(t:Pick<Tools,'box'|'put'|'cylinder'|'sign'|'obstacles'|'surfaceAreas'>){
- const {box,put,cylinder,sign,obstacles,surfaceAreas}=t,S=STADIUM;
- const RISE=1.1,STEPS=4,seat=['#2f6f8f','#3b84a6'];
- // A stepped block: tiers climb away from the pitch along `out` (+1/-1 on the given axis).
- const stand=(cx:number,cz:number,along:number,depth:number,axis:'x'|'z',out:1|-1)=>{
-  const step=depth/STEPS;
-  for(let i=0;i<STEPS;i++){
-   const h=(i+1)*RISE,offset=-depth/2+(i+.5)*step,ox=axis==='x'?offset*out:0,oz=axis==='z'?offset*out:0;
-   const w=axis==='x'?step:along,d=axis==='x'?along:step;
-   box(w,h,d,'#d8cfbd',cx+ox,h/2,cz+oz);
-   box(axis==='x'?step*.55:along-1,.12,axis==='x'?along-1:step*.55,seat[i%2],cx+ox+(axis==='x'?-step*.15*out:0),h+.06,cz+oz+(axis==='z'?-step*.15*out:0));
-  }
-  // Back wall
-  const bx=axis==='x'?cx+out*(depth/2+.3):cx,bz=axis==='z'?cz+out*(depth/2+.3):cz;
-  box(axis==='x'?.6:along,STEPS*RISE+1.4,axis==='x'?along:.6,'#bfb39b',bx,(STEPS*RISE+1.4)/2,bz);
-  obstacles.push({x:axis==='x'?cx+out*.3:cx,z:axis==='z'?cz+out*.3:cz,w:axis==='x'?depth+.6:along,d:axis==='x'?along:depth+.6});
- };
- const inner=40,longDepth=S.bowlW/2-inner,endInner=56,endDepth=S.bowlL/2-endInner,longAlong=104,endAlong=70;
- stand(S.x-inner-longDepth/2,S.z,longAlong,longDepth,'x',-1);
- // East stand in two halves round the gate.
- const gap=STADIUM_GATE.halfWidth,half=(longAlong/2-gap);
- for(const sz of [-1,1])stand(S.x+inner+longDepth/2,S.z+sz*(gap+half/2),half,longDepth,'x',1);
- stand(S.x,S.z-endInner-endDepth/2,endAlong,endDepth,'z',-1);
- stand(S.x,S.z+endInner+endDepth/2,endAlong,endDepth,'z',1);
-
- // Pitch: runoff, mown stripes, white markings (0.12 m lines).
- const W=S.pitchW,L=S.pitchL;
- surfaceAreas.push({kind:'pitch',x:S.x,z:S.z,w:W+8,d:L+8});
- tintGroundMesh(box(W+8,.05,L+8,'#6e9678',S.x,-.07,S.z),'grass');
- for(let i=0;i<10;i+=2)box(W,.008,L/10,'#78a083',S.x,-.04,S.z-L/2+(i+.5)*L/10).castShadow=false;
- const white='#f4f1e6',ln=.12,ly=-.034;
- const lineBox=(w:number,d:number,x:number,z:number)=>{box(w,.008,d,white,x,ly,z).castShadow=false;};
- for(const sx of [-1,1])lineBox(ln,L,S.x+sx*W/2,S.z);
- for(const sz of [-1,1])lineBox(W,ln,S.x,S.z+sz*L/2);
- lineBox(W,ln,S.x,S.z);
- {const g=new T.RingGeometry(8.6,8.72,48);g.rotateX(-Math.PI/2);put(g,white,S.x,ly+.004,S.z).castShadow=false;}
- for(const sz of [-1,1]){
-  const goalZ=S.z+sz*L/2,box16=15.4,width16=38;
-  lineBox(width16,ln,S.x,goalZ-sz*box16);for(const sx of [-1,1])lineBox(ln,box16,S.x+sx*width16/2,goalZ-sz*box16/2);
-  lineBox(17,ln,S.x,goalZ-sz*5.2);for(const sx of [-1,1])lineBox(ln,5.2,S.x+sx*8.5,goalZ-sz*2.6);
-  // Simple goal frames (placeholder; phase 3 hands the pitch to the match venue's own goals).
-  for(const sx of [-1,1])cylinder(.07,2.3,white,S.x+sx*3.6,1.15,goalZ+sz*.1);
-  box(7.3,.14,.14,white,S.x,2.3,goalZ+sz*.1);
- }
-
- // Gate arch on the east side, facing the plaza.
- const G=STADIUM_GATE,gx=G.x+1;
- for(const sz of [-1,1]){box(1.6,9,1.6,'#e2c766',gx,4.5,G.z+sz*(G.halfWidth+.4));obstacles.push({x:gx,z:G.z+sz*(G.halfWidth+.4),w:1.6,d:1.6});}
- box(1.4,1.6,G.halfWidth*2+3.2,'#e2c766',gx,9.6,G.z);
- sign('STADIUM',G.halfWidth*2-1,1.3,gx+.72,9.6,G.z,'#244d49','#fff0cf',Math.PI/2);
 }

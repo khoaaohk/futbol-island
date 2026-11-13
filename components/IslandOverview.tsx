@@ -19,6 +19,7 @@ import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
 import {placeJobMarkers,placeGashaponMarkers,capsuleGlyph} from '@/lib/town/mapMarkers';
 import {islandGashaponMachines} from '@/lib/gashapon/machines';
 import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_GROVES,parkPathLines} from '@/lib/town/westParkLayout';
+import {STANDS,standBack,standRect,standSpans} from '@/lib/town/stadiumSeats';
 import SummitIsleMap from './SummitIsleMap';
 import ZiplineMapMark from './ZiplineMapMark';
 import FriendMapDots from './FriendMapDots';
@@ -137,7 +138,9 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <rect aria-label="Stadium Plaza" x={STADIUM_PLAZA.minX} y={STADIUM_PLAZA.minZ} width={STADIUM_PLAZA.maxX-STADIUM_PLAZA.minX} height={STADIUM_PLAZA.maxZ-STADIUM_PLAZA.minZ} rx="4" fill="#eddfbb"/>
   </g>
   <g aria-label="Stadium" data-west-stadium="bowl">
-   <rect x={STADIUM.x-STADIUM.bowlW/2} y={STADIUM.z-STADIUM.bowlL/2} width={STADIUM.bowlW} height={STADIUM.bowlL} rx="26" fill="#d8cfbd" stroke="#8d8270" strokeWidth="1.5"/>
+   {/* Phase 2 (stadiumSeats.ts): four stands with open corners (the gate splits the east one), roofs over the long sides. */}
+   <rect x={STADIUM.x-STADIUM.bowlW/2+2} y={STADIUM.z-STADIUM.bowlL/2+2} width={STADIUM.bowlW-4} height={STADIUM.bowlL-4} rx="20" fill="#c9b892"/>
+   {STANDS.flatMap(s=>standSpans(s).pieces.map(([a0,a1],i)=>{const r=standRect(s,s.inner,standBack(s),a0,a1);return <rect key={s.id+i} data-stadium-stand={s.id} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} rx="1.5" fill={s.roof?'#e9e4d6':'#d8cfbd'} stroke={s.team[0]} strokeWidth="1.5"/>;}))}
    <rect x={STADIUM.x-STADIUM.pitchW/2-4} y={STADIUM.z-STADIUM.pitchL/2-4} width={STADIUM.pitchW+8} height={STADIUM.pitchL+8} fill="#6e9678" stroke="#fff0cc" strokeWidth="1.5"/>
    <line x1={STADIUM.x-STADIUM.pitchW/2} y1={STADIUM.z} x2={STADIUM.x+STADIUM.pitchW/2} y2={STADIUM.z} stroke="#fff0cc" strokeWidth="1"/>
    <circle cx={STADIUM.x} cy={STADIUM.z} r="8.7" fill="none" stroke="#fff0cc" strokeWidth="1"/>

@@ -1,0 +1,131 @@
+// West Stadium, phase 2 (Nov 12 2026, docs/stadium/PLAN.md): the stands, pitch, gate, roofs, big screen and floodlight masts,
+// built once inside buildTownSteps from the pure layout in stadiumSeats.ts. Replaces phase 1's placeholder bowl.
+// Heat: every piece is a plain box / cylinder painted with the shared vertex-colour paint, so the batching pass merges it into the
+// island's 50 m chunks (one draw call per chunk and paint, frustum-culled per chunk, all behind world.ts's west region gate). No
+// texture, light, material or per-frame work of its own; the sponsor art (2 draws, one atlas) loads later, near the stadium.
+// The seats are long strips per row and block (team colours), never a mesh per seat; the stand pieces set skipRoofObstacle so the
+// canopy pass skips them (they are walk surfaces already); only the two roofs are left to it (landable from the sky).
+import * as T from 'three';
+import type {Obstacle} from './simulation';
+import {tintGroundMesh} from '../graphics/groundTint';
+import {STADIUM,STADIUM_GATE} from './westParkLayout';
+import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,GATE_ARCH_X,rowHeight,seatCount,type Rail,type Surface,type StandDef} from './stadiumSeats';
+
+export type StadiumTools={
+ box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
+ put:(g:T.BufferGeometry,c:string,x:number,y:number,z:number)=>T.Mesh;
+ cylinder:(r:number,h:number,c:string,x:number,y:number,z:number)=>T.Mesh;
+ sign:(text:string,w:number,h:number,x:number,y:number,z:number,bg?:string,ink?:string,rotation?:number)=>T.Mesh;
+ obstacles:Obstacle[];walkSurfaces:Surface[];rails:Rail[];surfaceAreas:{kind:string;x:number;z:number;w:number;d:number}[];
+};
+export type StadiumStats={surfaces:number;rails:number;boxes:number;seatsStrips:number;seats:number};
+
+const CONCRETE=['#d8cfbd','#cec4af'],TREAD_C='#c2b59c',CONCOURSE_C='#e3d9c3',RAIL_C='#315b50',STEEL='#e9e4d6';
+
+export function buildStadium(t:StadiumTools):StadiumStats{
+ const {put,cylinder,sign,obstacles,walkSurfaces,rails,surfaceAreas}=t,S=STADIUM;let boxes=0,strips=0,surfaces=0;const rails0=rails.length;
+ const skip=(m:T.Mesh)=>{m.userData.skipRoofObstacle=true;boxes++;return m;};
+ const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>skip(t.box(w,h,d,c,x,y,z));
+ const rectBox=(r:{x:number;z:number;w:number;d:number},y0:number,y1:number,c:string)=>box(r.w,y1-y0,r.d,c,r.x,(y0+y1)/2,r.z);
+
+ for(const s of STANDS){
+  const g=standGeometry(s);
+  for(const surf of g.surfaces){walkSurfaces.push(surf);obstacles.push(surf);surfaces++;}
+  rails.push(...g.rails);
+  // Rows (solid to the ground), aisle treads, concourse, back stairs.
+  for(const surf of g.surfaces){
+   const row=Math.round(surf.height/.5-1),colour=surf.height===CONCOURSE_HEIGHT?CONCOURSE_C:surf.stepAccess?TREAD_C:CONCRETE[row%2];
+   rectBox(surf,0,surf.height,colour);
+  }
+  seats(s);
+  railings(s,g.rails);
+  facade(s);
+ }
+
+ function seats(s:StandDef){
+  const {seats:spans}=standSpans(s);
+  for(let i=0;i<ROWS;i++){const d0=s.inner+i*ROW_DEPTH,h=rowHeight(i);
+   spans.forEach(([a0,a1],k)=>{
+    // Blocks: the team's two colours alternate by block, with the back rows of the middle blocks in the second colour (a stripe).
+    const c=s.team[(k+(i>=ROWS-3?1:0))%2],dark=new T.Color(c).multiplyScalar(.78).getStyle();
+    rectBox(standRect(s,d0+SEAT_DEPTH-.25,d0+SEAT_DEPTH+.25,a0+.05,a1-.05),h,h+SEAT_TOP,c);
+    rectBox(standRect(s,d0+SEAT_DEPTH+.2,d0+SEAT_DEPTH+.3,a0+.05,a1-.05),h+SEAT_TOP,h+1.13,dark);
+    strips+=2;
+   });
+  }
+ }
+ function railings(s:StandDef,list:readonly Rail[]){
+  const back=standBack(s),rowsEnd=s.inner+ROWS*ROW_DEPTH;
+  // The floor a rail guards at stand-local depth d: a row, the concourse or a back-stair tread.
+  const floorAt=(d:number)=>d<rowsEnd?rowHeight(Math.max(0,Math.floor((d-s.inner)/ROW_DEPTH))):d<back?CONCOURSE_HEIGHT:CONCOURSE_HEIGHT-TREAD_RISE*(Math.floor((d-back)/TREAD)+1);
+  for(const r of list){
+   const alongX=r.w>=r.d,long=Math.max(r.w,r.d);
+   // The concourse's back rail is level; an end or stair-side rail steps with the floor it guards (pieces of ~1.3 m).
+   const n=r.floor>1?1:Math.max(1,Math.round(long/1.3));
+   for(let k=0;k<n;k++){const f=(k+.5)/n-.5,x=alongX?r.x+f*r.w:r.x,z=alongX?r.z:r.z+f*r.d,pw=alongX?r.w/n:r.w,pd=alongX?r.d:r.d/n;
+    const h=r.floor>1?CONCOURSE_HEIGHT:floorAt(standLocal(s,x,z).d);
+    box(pw,.07,pd,RAIL_C,x,h+RAIL_TOP,z);box(.07,RAIL_TOP,.07,RAIL_C,x,h+RAIL_TOP/2,z);}
+   if(r.floor>1)for(let k=0;k<=Math.round(long/3);k++){const f=k/Math.max(1,Math.round(long/3))-.5;box(.07,RAIL_TOP,.07,RAIL_C,alongX?r.x+f*r.w:r.x,CONCOURSE_HEIGHT+RAIL_TOP/2,alongX?r.z:r.z+f*r.d);}
+  }
+ }
+ function facade(s:StandDef){
+  // A team-colour band along the stand's back wall (the face the park and the plaza see).
+  const back=standBack(s);for(const [a0,a1] of standSpans(s).pieces)rectBox(standRect(s,back,back+.06,a0,a1),3.6,4.3,s.team[0]);
+ }
+
+ // --- Roofs over the long stands (landable from the sky, like any canopy), on posts behind the concourse ---------------------------
+ for(const s of STANDS.filter(q=>q.roof)){
+  const slab=standRect(s,ROOF.front,ROOF.back,s.from-2,s.to+2);boxes++;
+  t.box(slab.w,ROOF.thick,slab.d,STEEL,slab.x,ROOF.y,slab.z);// not skipped: the canopy pass makes it a landable roof
+  rectBox(standRect(s,ROOF.back-.12,ROOF.back,s.from-2,s.to+2),ROOF.y-.95,ROOF.y+.75,'#244d49');// the fascia frame (sponsor slot)
+  rectBox(standRect(s,ROOF.front,ROOF.front+.12,s.from-2,s.to+2),ROOF.y-.5,ROOF.y+.3,'#244d49');
+  for(const a of [-50,-38,-12,12,38,50]){const p=standWorld(s,standBack(s)+.35,a);
+   skip(cylinder(.28,ROOF.y,STEEL,p.x,ROOF.y/2,p.z));obstacles.push({x:p.x,z:p.z,w:.6,d:.6});}
+ }
+
+ // --- Pitch: apron, runoff, mown stripes, white markings (0.12 m lines), goals ----------------------------------------------------
+ const W=S.pitchW,L=S.pitchL;
+ surfaceAreas.push({kind:'pitch',x:S.x,z:S.z,w:W+8,d:L+8});
+ tintGroundMesh(box(80,.02,115,'#c9b892',S.x,-.065,S.z),'path').castShadow=false;// the pitch-level ring round the boards
+ tintGroundMesh(box(20,.02,STADIUM_GATE.halfWidth*2,'#c9b892',S.x+50,-.065,S.z),'path').castShadow=false;// the gate's walk in
+ tintGroundMesh(box(W+8,.05,L+8,'#6e9678',S.x,-.07,S.z),'grass');
+ for(let i=0;i<10;i+=2)box(W,.008,L/10,'#78a083',S.x,-.04,S.z-L/2+(i+.5)*L/10).castShadow=false;
+ const white='#f4f1e6',ln=.12,ly=-.034;
+ const lineBox=(w:number,d:number,x:number,z:number)=>{box(w,.008,d,white,x,ly,z).castShadow=false;};
+ for(const sx of [-1,1])lineBox(ln,L,S.x+sx*W/2,S.z);
+ for(const sz of [-1,1])lineBox(W,ln,S.x,S.z+sz*L/2);
+ lineBox(W,ln,S.x,S.z);
+ {const g=new T.RingGeometry(8.6,8.72,48);g.rotateX(-Math.PI/2);skip(put(g,white,S.x,ly+.004,S.z)).castShadow=false;}
+ for(const sz of [-1,1]){
+  const goalZ=S.z+sz*L/2,box16=15.4,width16=38;
+  lineBox(width16,ln,S.x,goalZ-sz*box16);for(const sx of [-1,1])lineBox(ln,box16,S.x+sx*width16/2,goalZ-sz*box16/2);
+  lineBox(17,ln,S.x,goalZ-sz*5.2);for(const sx of [-1,1])lineBox(ln,5.2,S.x+sx*8.5,goalZ-sz*2.6);
+  for(const sx of [-1,1])skip(cylinder(.07,2.3,white,S.x+sx*3.6,1.15,goalZ+sz*.1));
+  box(7.3,.14,.14,white,S.x,2.3,goalZ+sz*.1);
+ }
+
+ // --- Pitchside boards: dark backs (the sponsor art lands on their faces later) and their colliders (the gaps stay open) ---------
+ const layout=stadiumSponsorLayout();
+ for(const b of layout.boards){const side=Math.abs(Math.sin(b.yaw))>.5,fx=Math.sin(b.yaw),fz=Math.cos(b.yaw);
+  box(side?.12:b.w,b.h,side?b.w:.12,'#20343a',S.x+b.x-fx*.07,b.h/2,S.z+b.z-fz*.07);}
+ obstacles.push(...boardColliders(layout));
+
+ // --- The big screen behind the south stand --------------------------------------------------------------------------------------
+ {const z=S.z+SCREEN.z;box(SCREEN.w+1,SCREEN.h+1,.5,'#1d2b33',S.x,SCREEN.y,z);box(SCREEN.w,SCREEN.h,.02,'#2b3f48',S.x,SCREEN.y,z-.26);
+  for(const sx of [-1,1]){skip(cylinder(.35,SCREEN.y,STEEL,S.x+sx*(SCREEN.w/2-1.5),SCREEN.y/2,z+.1));obstacles.push({x:S.x+sx*(SCREEN.w/2-1.5),z:z+.1,w:.8,d:.8});}}
+
+ // --- Main gate: arch over the east stand's gap, turnstiles either side of an open middle ------------------------------------------
+ {const G=STADIUM_GATE,gx=GATE_ARCH_X;
+  for(const sz of [-1,1]){box(1.6,11,1.6,'#e2c766',gx,5.5,G.z+sz*(G.halfWidth+.4));obstacles.push({x:gx,z:G.z+sz*(G.halfWidth+.4),w:1.6,d:1.6});
+   for(const off of [3.4,5.4]){box(.5,1,.5,'#9aa7a6',gx-1.2,.5,G.z+sz*off);obstacles.push({x:gx-1.2,z:G.z+sz*off,w:.5,d:.5});}}
+  box(1.4,2.4,G.halfWidth*2+3.2,'#e2c766',gx,9.4,G.z);
+  skip(sign('STADIUM',G.halfWidth*2-1,1.3,gx+.72,11.35,G.z,'#244d49','#fff0cf',Math.PI/2));
+ }
+
+ // --- Floodlight masts at the open corners (static: no lights, the heads are paint) -----------------------------------------------
+ for(const m of MASTS){skip(cylinder(.45,30,'#d9d6cc',m.x,15,m.z));obstacles.push({x:m.x,z:m.z,w:1,d:1});
+  const head=box(6,3.4,.5,'#f7f3e3',m.x,30.5,m.z);head.rotation.y=Math.atan2(-m.sx,-m.sz);head.rotation.x=0;
+  const frame=box(6.4,3.8,.3,'#53605f',m.x-m.sx*.2,30.5,m.z-m.sz*.2);frame.rotation.y=head.rotation.y;}
+
+ return {surfaces,rails:rails.length-rails0,boxes,seatsStrips:strips,seats:seatCount()};
+}
