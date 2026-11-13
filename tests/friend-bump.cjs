@@ -132,7 +132,7 @@ t('wiring: remoteAvatars detects before its pass and overlays the rig, townBridg
  assert(ra.indexOf('bumps.detect(dt,list,poses,local,reduced,saver')>0&&ra.indexOf('bumps.detect(dt,list,poses,local,reduced,saver')<ra.search(/batch\.begin\(\);(?:ghost[^;]*;)*fields\.begin\(\);let shown=0;/)); // public island (Nov 11): saver||pub (no bumps between strangers), ghost batch begins beside it
  assert(/unBump\(root3,e\.bump\)/.test(ra)&&/applyBump\(root3,e\.bump,reduced,BODY_SCALE\*k\*e\.out\)/.test(ra)&&/bumps\.dispose\(\)/.test(ra));
  assert(/get localBump\(\) \{ return core\.live && meRingOn \? avatars\.localBump : null; \}/.test(tb));
- assert(/if\(lb&&lb\.on\)applyLocalBump\(lb,player\.root,vehicle\.root\);\/\*[^*]*\*\/heat\.beforeRender\(location[^;]*\);renderer\.render\(scene,camera\);[^\n]*?islandFrameAt\.current=performance\.now\(\);if\(stickPaint\.current\)\{[^}]*\}if\(lb&&lb\.on\)restoreLocalBump\(player\.root,vehicle\.root\);/.test(town),'applied just before the render, restored right after');
+ assert(/(?:if\(lb&&lb\.on\)|stadiumFlight\.pose\.on\?stadiumFlight\.pose:null;if\(lb\))applyLocalBump\(lb,player\.root,vehicle\.root\);\/\*[^*]*\*\/heat\.beforeRender\(location[^;]*\);renderer\.render\(scene,camera\);[^\n]*?islandFrameAt\.current=performance\.now\(\);if\(stickPaint\.current\)\{[^}]*\}if\(lb&&lb\.on\)restoreLocalBump\(player\.root,vehicle\.root\);/.test(town),'applied just before the render, restored right after');
  for(const f of ['lib/graphics/friendBump.ts','lib/town/friendBump.ts'])for(const l of read(f).split('\n').filter(l=>/^import/.test(l)&&/protocol/.test(l)))assert(/protocol\/types'/.test(l),'no protocol change: reads the mode / zone enums only');
  assert(pkg.includes('tests/friend-bump.cjs'));
 });

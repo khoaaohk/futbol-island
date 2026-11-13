@@ -318,6 +318,9 @@ console.log('west stadium phase 2: ok');
  // Roof frames stand proud of the slab (no coplanar faces), and the fascia banner proud of the frame, on both roofs.
  assert(Q.FRAME_PROUD>=.02&&Q.FASCIA_PROUD>=.08);const lay=Q.stadiumSponsorLayout();
  for(const f of lay.fascia)assert(Math.abs(Math.abs(f.x)-(Q.ROOF.back+Q.FRAME_PROUD+Q.FASCIA_PROUD))<1e-9,'fascia banner off the frame face');
+ // Nov 13 2026: the taller banner (1.6–2× the old 1.6 m) sits inside the taller frame's face; the frame keeps clear of the slab.
+ for(const f of lay.fascia){assert(f.h>=2.56&&f.h<=3.2,'taller fascia banner');assert(f.y-f.h/2>Q.ROOF.y-Q.ROOF.frameBelow&&f.y+f.h/2<Q.ROOF.y+Q.ROOF.frameAbove,'banner inside the frame');}
+ assert(Q.ROOF.frameAbove-Q.ROOF.thick/2>1&&Q.ROOF.frameBelow-Q.ROOF.thick/2>.5,'frame clears the slab top and underside');
  for(const r of W.createRoofFade?[0,1]:[]){const roof=scene.getObjectByName('stadium-roof-'+Q.STANDS.filter(q=>q.roof)[r].id),pos=roof.geometry.getAttribute('position'),xs=new Set();
   for(let i=0;i<pos.count;i++)xs.add(Math.round((pos.getX(i)+roof.position.x)*1000));
   const back=Q.standWorld(Q.STANDS.filter(q=>q.roof)[r],Q.ROOF.back,0).x;assert(xs.has(Math.round(back*1000))&&xs.has(Math.round((back+Math.sign(back-S.x)*Q.FRAME_PROUD)*1000)),'roof '+r+': slab back face and the frame face are apart');}

@@ -176,6 +176,9 @@ await ok('built-in art: Drip FC naming sponsor, adidas fascia, Futbol Island pan
   assert(log.filter(k=>k[0]==='fill'&&k[1]instanceof Path2D).length===4*9,'all 9 logo paths per part');assert(tag,'adidas carries the Sponsor tag');
   const [mx0,my0,mx1,my1]=P.ADIDAS_PARTS.mark,[wx0,wy0,wx1,wy1]=P.ADIDAS_PARTS.word;assert.equal(my1,wy0,'parts split at the bars\' foot');assert(mx1-mx0>0&&wx1-wx0>0);
   const rects=log.filter(k=>k[0]==='rect');assert(rects[1][1]>rects[0][1]+rects[0][3],'wordmark beside the bars, not under them');
+  // Nov 13 2026 (taller banner): the two lock-ups centred on the quarter points, so 4 whole repeats space all 8 evenly along a roof.
+  {const cell=S.SLOT_SPECS.fascia.cell;assert(cell[0]/cell[1]===8&&cell[1]>=80,'fascia cell 8:1, 80 px tall');
+   assert(/for\(const f of \[\.25,\.75\]\)/.test(read('lib/stadium/sponsors/placeholders.ts')),'lock-ups at the quarter points');}
  }finally{delete globalThis.Path2D;}
  assert(/drawAdidas\(c,r\)/.test(read('lib/stadium/sponsors/placeholders.ts'))&&!/['"`][^'"`\n]*\.svg['"`]/.test(read('lib/stadium/sponsors/placeholders.ts')+read('lib/stadium/sponsors/surfaces.ts')),'no SVG loaded at runtime');
  // An upload replaces the built-in art exactly as before.

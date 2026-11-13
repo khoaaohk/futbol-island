@@ -32,7 +32,7 @@ export const SLOT_SPECS:Record<SponsorSlot,SlotSpec>={
  board:{name:'Pitchside boards',note:'The ring of 16 LED boards round the pitch. Pictures scroll slowly and take turns.',aspect:8,cell:[496,62],minWidth:800,maxSponsors:8,rotateMs:9000,label:true},
  screen:{name:'Big screen',note:'South end. Shows a sponsor card between matches, in turn.',aspect:16/9,cell:[384,216],minWidth:640,maxSponsors:4,rotateMs:12000,label:true},
  gate:{name:'Gate arch',note:'The naming partner over the east entrance.',aspect:4,cell:[496,124],minWidth:800,maxSponsors:1,rotateMs:null,label:true},
- fascia:{name:'Roof fascia',note:'Banners along the roof of the two long stands, seen from far away.',aspect:8,cell:[496,62],minWidth:800,maxSponsors:2,rotateMs:null,label:true},
+ fascia:{name:'Roof fascia',note:'Banners along the roof of the two long stands, seen from far away.',aspect:8,cell:[640,80],minWidth:800,maxSponsors:2,rotateMs:null,label:true},
  flag:{name:'Plaza flags',note:'Vertical banners under the national flags lining Stadium Plaza on the walk in. Shown only while a flag sponsor is booked.',aspect:2/3,cell:[128,192],minWidth:200,maxSponsors:3,rotateMs:null,label:true},
  centre:{name:'Centre circle',note:'A round logo painted on the grass. Keep the art inside the circle.',aspect:1,cell:[256,256],minWidth:400,maxSponsors:1,rotateMs:null,label:true},
 };

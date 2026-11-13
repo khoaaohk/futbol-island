@@ -178,7 +178,15 @@ export const inGate=(x:number,z:number)=>Math.abs(z-STADIUM_GATE.z)<GATE&&x<GATE
 export const SCREEN={z:standBack(STANDS[3])+1.2,y:12.6,w:16,h:9} as const;
 /** The long stands' roofs. front 44.5 (Nov 12 2026, was 37, over the boards): the roof covers rows 4–9 and the concourse, so the
  *  follow camera (above and south-east of the player) sees the whole pitch past the east roof's front edge. */
-export const ROOF={front:44.5,back:standBack(STANDS[0])+.6,y:12.4,thick:.45,frameBelow:.95,frameAbove:.75} as const;
+/** Nov 13 2026 (owner: the adidas banner read too thin): the back fascia frame is 3.3 m tall (was 1.7), grown mostly UP (frameAbove
+ *  2.2, was .75; frameBelow 1.1, was .95) so the banner (FASCIA.h, 3.125 m, was 1.6) reads from the plaza, the stands and overhead.
+ *  It is behind every seat (the seats face the pitch), so no sightline changes; the front frame (FRONT_FRAME) is untouched. */
+export const ROOF={front:44.5,back:standBack(STANDS[0])+.6,y:12.4,thick:.45,frameBelow:1.1,frameAbove:2.2} as const;
+/** The front frame along the roof's pitch-side edge (below / above ROOF.y): the only roof edge in a seated fan's view of the pitch. */
+export const FRONT_FRAME={below:.5,above:.3} as const;
+/** The fascia banner on the back frame: h × 100 m, centred `y` (ROOF.y + .55 = 12.95 m), 0.0875 m inside the frame's top and bottom edges. At the
+ *  fascia slot's 8:1 cell it repeats exactly 4 times (100 / (3.125 × 8)): adidas keeps its proportions, 8 lock-ups a roof. */
+export const FASCIA={w:100,h:3.125,y:ROOF.y+.55} as const;
 /** A roof's slab with its fascia frames (world box, the roof fade's occluder); `along` is the slab's overhang past the stand ends. */
 export const ROOF_OVERHANG=2;
 /** How far the roof's fascia frames stand proud of the slab (no coplanar faces), and the sponsor banner proud of the frame's face:
@@ -195,12 +203,12 @@ export function stadiumSponsorLayout(plazaFlags:readonly {x:number;z:number}[]=p
  for(let i=0;i<4;i++)boards.push({x:-22.5+i*15,y,z:54,w:14,h:H,yaw:Math.PI});
  for(let i=0;i<4;i++)boards.push({x:35.5,y,z:37.5-i*25,w:22,h:H,yaw:-E});
  for(let i=0;i<4;i++)boards.push({x:22.5-i*15,y,z:-54,w:14,h:H,yaw:0});
- const fy=ROOF.y-.1,fx=ROOF.back+FRAME_PROUD+FASCIA_PROUD;
+ const fy=FASCIA.y,fx=ROOF.back+FRAME_PROUD+FASCIA_PROUD;
  return {
   boards,
   screen:{x:0,y:SCREEN.y,z:SCREEN.z-.32,w:SCREEN.w,h:SCREEN.h,yaw:Math.PI},
   gate:{x:GATE_ARCH_X-STADIUM.x+.76,y:9.4,z:0,w:12,h:2,yaw:E},
-  fascia:[{x:-fx,y:fy,z:0,w:100,h:1.6,yaw:-E},{x:fx,y:fy,z:0,w:100,h:1.6,yaw:E}],
+  fascia:[{x:-fx,y:fy,z:0,w:FASCIA.w,h:FASCIA.h,yaw:-E},{x:fx,y:fy,z:0,w:FASCIA.w,h:FASCIA.h,yaw:E}],
   // A vertical banner under each plaza flag (uploaded flag sponsors only; the poles fly national flags, plazaFlags.ts).
   flags:plazaFlags.map(f=>({x:f.x-STADIUM.x+.62,y:4.6,z:f.z-STADIUM.z,w:1,h:1.8,yaw:0})),
   centre:{x:0,z:0,r:4.6},

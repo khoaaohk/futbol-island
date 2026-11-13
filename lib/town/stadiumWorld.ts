@@ -18,7 +18,7 @@ import {STADIUM_NAME,DRIP_FC_ART,PITCH_DROP,drawGateSign} from '../stadium/dripf
 import {segmentHitsBox} from './walkControl';
 import {SCREEN_FRAME} from './stadiumFeed';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,FRAME_PROUD,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
+import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,FRONT_FRAME,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,FRAME_PROUD,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
 
 export type StadiumTools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -159,7 +159,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   // end planes, so dark frame and tan slab z-fought in a flickering strip along the roof edge from afar).
   const P=FRAME_PROUD;
   piece(standRect(s,ROOF.back-.12,ROOF.back+P,a0-P,a1+P),ROOF.y-ROOF.frameBelow,ROOF.y+ROOF.frameAbove,'#244d49');// the fascia frame (sponsor slot)
-  piece(standRect(s,ROOF.front-P,ROOF.front+.12,a0-P,a1+P),ROOF.y-.5,ROOF.y+.3,'#244d49');
+  piece(standRect(s,ROOF.front-P,ROOF.front+.12,a0-P,a1+P),ROOF.y-FRONT_FRAME.below,ROOF.y+FRONT_FRAME.above,'#244d49');
   const merged=mergeGeometries(parts)!;for(const g of parts)g.dispose();
   const roofMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.85,transparent:true,opacity:1});t.materials?.push(roofMaterial);// one each: they fade apart
   const roof=new T.Mesh(merged,roofMaterial);roof.name='stadium-roof-'+s.id;roof.position.copy(c);roof.castShadow=roof.receiveShadow=true;

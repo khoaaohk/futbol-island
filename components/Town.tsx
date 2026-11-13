@@ -163,6 +163,7 @@ import {createBackpack} from '@/lib/graphics/backpack';
 import {createCoachPractice} from '@/lib/town/coachPractice';
 import {createFlightMotion} from '@/lib/graphics/flightMotion';import {createIdleWave,stepIdleWave,IDLE_SPEED} from '@/lib/town/jetpackIdleWave';import {applyIdleGesture} from '@/lib/graphics/jetpackIdlePose';
 import {createBoundaryFeedback} from '@/lib/graphics/boundaryFeedback';
+import {createStadiumFlight} from '@/lib/town/stadiumFlight';
 import {createLandingMarker} from '@/lib/graphics/landingMarker';
 import {createQuizViewControls} from '@/lib/town/quizViewControls';
 import {createLearningView,type LearningAngle} from '@/lib/town/learningView';
@@ -738,6 +739,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     renderer.domElement.addEventListener('pointerdown',bugTapDown);renderer.domElement.addEventListener('pointerup',bugTapUp);
     bugTapOff=()=>{renderer.domElement.removeEventListener('pointerdown',bugTapDown);renderer.domElement.removeEventListener('pointerup',bugTapUp);};
     const flightMotion=createFlightMotion(),idleWave=createIdleWave((Math.random()*4294967296)>>>0)/* jetpack idle gestures (owner, Nov 8 2026) */,boundaryFeedback=createBoundaryFeedback();scene.add(boundaryFeedback.root);
+    // DRIP FC Stadium flight bumps (Nov 13 2026): flying into a mast, roof, screen, stand wall, the gate or a plaza flag knocks the
+    // flyer back with the friend-bump flyer spin (lib/town/stadiumFlight.ts); flight only, one rectangle test a frame away from it.
+    const stadiumFlight=createStadiumFlight();
+    const stadiumBump=(y:number)=>{const c=stadiumFlight.contact,q=c.solid;if(!q)return;sound.boundary();if(!reduced)navigator.vibrate?.(18);
+      if(q.kind==='flag'&&q.flag>=0){const fp=world.plazaFlags.poles[q.flag],push=Math.max(4,Math.hypot(velocity.x,velocity.z)*.5);propCue(propReactions.hit(fp.x,Math.min(6.5,Math.max(1,y+1)),fp.z,-c.nx*push,-c.nz*push,reduced));world.plazaFlags.react(fp.x,fp.z,push,reduced);}};
     disposers.add(()=>boundaryFeedback.dispose());
     const jetExhaust=createJetExhaust();scene.add(jetExhaust.root);
     disposers.add(()=>jetExhaust.dispose());
@@ -1439,7 +1445,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(jetActions.state.phase!=='idle'){
           const sx=(keys.has('d')||keys.has('arrowright')?1:0)-(keys.has('a')||keys.has('arrowleft')?1:0)+input.current.x,sy=(keys.has('s')||keys.has('arrowdown')?1:0)-(keys.has('w')||keys.has('arrowup')?1:0)+input.current.z;
           let scanHeld=keys.has(' ');if(!scanHeld&&jetActions.state.phase==='parachute')for(const hold of heldRidePointers.current.values()){if(hold.action===0){scanHeld=true;break;}}
-          const phase=jetActions.state.phase,oldX=location.x,oldZ=location.z,result=jetActions.update(dt,location,flight.height,{blocked:(x,z)=>flightBlocked(x,z)||summitSolid(x,z,flight.height)||lighthouseSolid(x,z,flight.height),floor:skySurface,steer:{x:sx*.857+sy*.515,z:-sx*.515+sy*.857},scanHeld,reducedMotion:reduced,findLanding:rooftop.findLanding,splash:canSplashDown});flight.height=result.height;
+          let stadiumHit=false;const phase=jetActions.state.phase,oldX=location.x,oldZ=location.z,result=jetActions.update(dt,location,flight.height,{blocked:(x,z)=>flightBlocked(x,z)||summitSolid(x,z,flight.height)||lighthouseSolid(x,z,flight.height)||stadiumFlight.solid(x,z,flight.height)&&(stadiumHit=true),floor:skySurface,steer:{x:sx*.857+sy*.515,z:-sx*.515+sy*.857},scanHeld,reducedMotion:reduced,findLanding:rooftop.findLanding,splash:canSplashDown});flight.height=result.height;
+          // A dash / glide / parachute step blocked by a stadium solid, or a fall that drifted into one: the same knock-back and spin.
+          {const sb=stadiumFlight.resolve(location,oldX,oldZ,flight.height,null,reduced);if(sb.fresh)stadiumBump(flight.height);else if(stadiumHit&&stadiumFlight.knock(reduced))stadiumBump(flight.height);}
           if(phase==='charge'&&jetActions.state.phase==='blast'){sonicBurst.trigger(location.x,flight.height,location.z,0,true,FLIGHT_TRAIL_COLORS[customizationRef.current.jetpack],false,customizationRef.current.jetpack);sound.boost('up');}
           velocity.x=(location.x-oldX)/dt;velocity.z=(location.z-oldZ)/dt;
           if(result.landed&&result.splash){
@@ -1483,7 +1491,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         liftJetpack(dt);flight.height+=summitFlight.update(location.x,location.z,lookTakeoff?ix*lookTakeoff:velocity.x,lookTakeoff?iz*lookTakeoff:velocity.z,flight.height,dt,flight.cruiseHeight);
         if(flight.takeoffTime<1.05){velocity.x=velocity.z=0;return;}
         if(len>.01){const nx=ix/len,nz=iz/len;if(flightBlocked(location.x+nx*1.2,location.z+nz*1.2)){sound.boundary();boundaryFeedback.hit(location.x+nx*.8,flight.height,location.z+nz*.8,-nx,-nz,Math.max(.7,Math.hypot(velocity.x,velocity.z)/25));}}
-        stepPlayer(location,velocity,{x:ix,z:iz,sprint:false},dt,[],'jetpack');orb.x=location.x+.7;orb.z=location.z;return;
+        {const ox=location.x,oz=location.z;stepPlayer(location,velocity,{x:ix,z:iz,sprint:false},dt,[],'jetpack');
+          if(stadiumFlight.resolve(location,ox,oz,flight.height,velocity,reduced).fresh)stadiumBump(flight.height);}/* masts, roofs, screen, stands, gate, flags: knocked back */
+        orb.x=location.x+.7;orb.z=location.z;return;
       }
 
       const phase=lessonRef.current;
@@ -1975,7 +1985,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       }
       landingMarker.update(landingPreview,flight.height,skySurface,showLanding&&!overPickup,elapsed,reduced,showLanding&&!overPickup&&coinHunt.manholeTarget()?3.2:1);// the same ring, sized to sit around a manhole's rim
       if(streetTraffic.rider.index>=0&&!reduced&&streetTraffic.rider.landingAge<.85){const age=streetTraffic.rider.landingAge,settle=Math.exp(-age*5),compress=Math.sin(Math.min(1,age/.3)*Math.PI)*.18;player.root.scale.y*=1-compress;player.root.scale.x*=1+compress*.2;player.root.rotation.z+=Math.sin(age*20)*settle*.1;player.root.position.y+=Math.sin(age*16)*settle*.06;}
-      boundaryFeedback.update(active?dt:0,reduced,camera);boundaryFeedback.root.visible=!fieldMenu.current;
+      boundaryFeedback.update(active?dt:0,reduced,camera);stadiumFlight.update(active?dt:0,reduced);boundaryFeedback.root.visible=!fieldMenu.current;
       applyRoofJumpPose(rooftop.jump,rideRef.current,reduced,player.root,vehicle.root);
       player.root.position.y+=trickPose.lift;vehicle.root.position.y+=trickPose.lift;player.root.rotation.x+=trickPose.pitch;vehicle.root.rotation.x+=trickPose.pitch;player.root.rotation.y+=trickPose.yaw;vehicle.root.rotation.y+=trickPose.yaw;player.root.rotation.z+=trickPose.roll;vehicle.root.rotation.z+=trickPose.roll;
       if(rideScript.on&&!reduced){/* ride emote v2: the in-place trick (lib/town/rideEmotes.ts): pitch about its axle, yaw about its wheel, hops; the vehicle alone for a tail-whip */const p=rideScript.pose,o=trickRootOffset(p,player.root.rotation.y,rideScript.off);player.root.position.x+=o.x;player.root.position.z+=o.z;player.root.position.y+=o.y+p[RT.RLIFT];vehicle.root.position.x+=o.x;vehicle.root.position.z+=o.z;vehicle.root.position.y+=o.y;player.root.rotation.x+=p[RT.PITCH];vehicle.root.rotation.x+=p[RT.PITCH];player.root.rotation.z+=p[RT.ROLL];vehicle.root.rotation.z+=p[RT.ROLL];player.root.rotation.y+=p[RT.YAW];vehicle.root.rotation.y+=p[RT.YAW]+p[RT.VYAW];}
@@ -2361,7 +2371,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       updateHorizonHaze(scene,camera);// the camera is final for this frame (lib/graphics/horizonHaze.ts)
       if(resolution){renderer.setPixelRatio(resolution);renderer.setViewport(0,fullHeight-viewportHeight,viewportWidth,viewportHeight);}
       stadiumSit.feed(renderer,scene,camera,now,heat.tier);// the big screen's back face: a throttled low-res broadcast feed near a live stadium match (lib/town/stadiumFeed.ts)
-      if(meTumble.age>=0)applyLocalTumble(meTumble,player.root,player.root.position.y);/* knocked over by a friend's ball: cosmetic, restored right after the render */const lb=party?.localBump??null;if(lb&&lb.on)applyLocalBump(lb,player.root,vehicle.root);/* a friend bump: cosmetic, on the drawn frame only (restored right after the render; no gameplay code sees it) */heat.beforeRender(location,Boolean(learning&&!quiz?.quiz)||(!learning&&!viewMoved&&Math.hypot(velocity.x,velocity.z)<.05&&games.stats.visiblePlayers>0));renderer.render(scene,camera);renderStats.rendered++;heat.afterRender(now,ms,performance.now()-now,renderer.info.render.calls,learning??'');positionStore.frame(location.x,location.z);emitIslandFrame(now);islandFrameAt.current=performance.now();if(stickPaint.current){paintJoystick(joystick.current,stickPaint.current.x,stickPaint.current.y,stickTravelPx.current);stickPaint.current=null;}if(lb&&lb.on)restoreLocalBump(player.root,vehicle.root);restoreLocalTumble(player.root);// minimap and thumb move on this frame (heat pass 3)
+      if(meTumble.age>=0)applyLocalTumble(meTumble,player.root,player.root.position.y);/* knocked over by a friend's ball: cosmetic, restored right after the render */const lb=party?.localBump?.on?party.localBump:stadiumFlight.pose.on?stadiumFlight.pose:null;if(lb)applyLocalBump(lb,player.root,vehicle.root);/* a friend bump: cosmetic, on the drawn frame only (restored right after the render; no gameplay code sees it) */heat.beforeRender(location,Boolean(learning&&!quiz?.quiz)||(!learning&&!viewMoved&&Math.hypot(velocity.x,velocity.z)<.05&&games.stats.visiblePlayers>0));renderer.render(scene,camera);renderStats.rendered++;heat.afterRender(now,ms,performance.now()-now,renderer.info.render.calls,learning??'');positionStore.frame(location.x,location.z);emitIslandFrame(now);islandFrameAt.current=performance.now();if(stickPaint.current){paintJoystick(joystick.current,stickPaint.current.x,stickPaint.current.y,stickTravelPx.current);stickPaint.current=null;}if(lb&&lb.on)restoreLocalBump(player.root,vehicle.root);restoreLocalTumble(player.root);// minimap and thumb move on this frame (heat pass 3)
       cameraMoving=camera.position.distanceToSquared(lastCameraPosition)>1e-8||1-Math.abs(camera.quaternion.dot(lastCameraQuaternion))>1e-10||camera.zoom!==lastCameraZoom;lastCameraPosition.copy(camera.position);lastCameraQuaternion.copy(camera.quaternion);lastCameraZoom=camera.zoom;
       if(firstFrame){firstFrame=false;bootMark('town:frame0-end');setSceneReady(true);}
     }

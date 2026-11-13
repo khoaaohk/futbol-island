@@ -162,7 +162,7 @@ function drawAdidas(c:Ctx2D,r:AtlasRect){
  const {x,y,w,h}=r;c.fillStyle='#000000';c.fillRect(x-4,y-4,w+8,h+8);
  const mh=h*.66,[mx0,my0,mx1,my1]=ADIDAS_PARTS.mark,[wx0,wy0,wx1,wy1]=ADIDAS_PARTS.word;
  const mw=mh*(mx1-mx0)/(my1-my0),wh=mh*.52,ww=wh*(wx1-wx0)/(wy1-wy0),gap=mh*.22,unit=mw+gap+ww;
- for(const f of [.23,.69]){const ux=x+w*f-unit/2,top=y+(h-mh)/2;
+ for(const f of [.25,.75]){const ux=x+w*f-unit/2,top=y+(h-mh)/2;
   if(typeof Path2D==='undefined'){words(c,'adidas',x+w*f,y+h/2,h*.5,w*.4,PAPER_WHITE,'system-ui,-apple-system,sans-serif','800');continue;}
   adidasPart(c,'mark',ux,top,mh);adidasPart(c,'word',ux+mw+gap,top+mh-wh,wh);}
  drawSponsorLabel(c,r);
