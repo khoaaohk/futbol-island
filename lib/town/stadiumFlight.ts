@@ -7,12 +7,12 @@
 // Pure data + math (no three.js). Heat: the colliders are built once (about 70 boxes and upright cylinders); a frame away from the
 // stadium costs one rectangle test, near it one squared-distance reject per solid; no allocation per frame (one reused contact).
 // Walking never calls this: only the flight branches in Town.tsx do.
-import {STANDS,ROOF,FRONT_FRAME,ROOF_OVERHANG,FRAME_PROUD,FASCIA_PROUD,MASTS,SCREEN,GATE_ARCH_X,CONCOURSE_HEIGHT,standBack,standRect,standSpans,standWorld,plazaFlagPoles} from './stadiumSeats';
+import {STANDS,ROOF,FRONT_FRAME,ROOF_OVERHANG,FRAME_PROUD,FASCIA_PROUD,MASTS,SCREEN,GATE_ARCH_X,CONCOURSE_HEIGHT,ROWS,ROW_DEPTH,rowHeight,standBack,standRect,standSpans,standWorld,plazaFlagPoles} from './stadiumSeats';
 import {STADIUM,STADIUM_GATE} from './westParkLayout';
 import {createBumpReact,createBumpPose,startBump,stepBump,bumpPose,type BumpReact,type BumpPose} from './friendBump';
 import {Mode} from '../../multiplayer/protocol/types';
 
-export type FlightSolidKind='mast'|'head'|'roof'|'fascia'|'roofPost'|'screen'|'screenPost'|'stand'|'gate'|'sign'|'flag';
+export type FlightSolidKind='mast'|'head'|'roof'|'fascia'|'roofPost'|'screen'|'screenPost'|'stand'|'standEnd'|'gate'|'sign'|'flag';
 /** A solid: an oriented box (half sizes hw along (c, s), hd along (−s, c)) or, `round`, an upright cylinder of radius hw. y0..y1 world. */
 export type FlightSolid={kind:FlightSolidKind;x:number;z:number;hw:number;hd:number;c:number;s:number;y0:number;y1:number;round:boolean;flag:number;reach:number};
 /** The flyer's body: radius and height above the feet (flight.height is the feet). */
@@ -20,6 +20,9 @@ export const FLIGHT_BODY={r:.6,h:1.8} as const;
 /** The knock-back: the outward speed a fresh bump leaves (m/s, at least), the share of the inward speed bounced back, the spin
  *  reaction's re-arm (s: holding the stick into a mast slides along it without spinning every frame), sweep step (m). */
 export const FLIGHT_BUMP={minOut:8,restitution:.55,rearm:.9,step:.35} as const;
+/** The auto-land glide (Town's "glide to the landing spot", Nov 13 2026): a solid whose top is at most `hop` m above the feet is
+ *  climbed over at `climb` m/s (a stand's back or end wall); a taller one (a mast, the screen) is slid round. */
+export const LAND_GLIDE={hop:7,climb:9} as const;
 
 /** The stadium's flight colliders (world). Sizes follow stadiumWorld.ts / stadiumFeed.ts / plazaFlags.ts (checked by tests). */
 export function stadiumFlightSolids():FlightSolid[]{
@@ -43,6 +46,13 @@ export function stadiumFlightSolids():FlightSolid[]{
  // The stands' back walls up to the concourse (the face the park and the plaza see). The rows and the concourse are landable floors,
  // so the wall stops at the concourse floor: a parachute settling by the back rail is never pushed off it.
  for(const s of STANDS){const back=standBack(s);for(const [a0,a1] of standSpans(s).pieces)rect('stand',standRect(s,back-.16,back,a0,a1),0,CONCOURSE_HEIGHT);}
+ // Nov 13 2026: the stands' short END walls (every piece's two ends: the open corners, and the east stand's gate passage), 0.16 m
+ // thick like the back wall. Stepped with the rows (two rows a box, up to the lower row's top, then the concourse), so every row
+ // stays a landable floor: a flyer over a row is never blocked, and the last half-metre step is the floor the flight already rides.
+ for(const s of STANDS){const back=standBack(s),rowsEnd=s.inner+ROWS*ROW_DEPTH;
+  for(const [a0,a1] of standSpans(s).pieces)for(const [e0,e1] of [[a0,a0+.16],[a1-.16,a1]] as const){
+   for(let i=0;i<ROWS;i+=2)rect('standEnd',standRect(s,s.inner+i*ROW_DEPTH,s.inner+Math.min(ROWS,i+2)*ROW_DEPTH,e0,e1),0,rowHeight(i));
+   rect('standEnd',standRect(s,rowsEnd,back,e0,e1),0,CONCOURSE_HEIGHT);}}
  // The gate: two 1.6 m pillars (11 m), the arch beam (1.4 × 2.4 at 9.4 m) and the sign standing on it (13 × 2.2 m, 0.72 m east).
  {const G=STADIUM_GATE,gx=GATE_ARCH_X;for(const sz of [-1,1])box('gate',gx,G.z+sz*(G.halfWidth+.4),1.6,1.6,0,11);
   box('gate',gx,G.z,1.4,G.halfWidth*2+3.2,8.2,10.6);box('sign',gx+.72,G.z,.3,G.halfWidth*2-1,10.6,10.7+2.2);}
@@ -82,7 +92,7 @@ export function createStadiumFlight(solids:readonly FlightSolid[]=stadiumFlightS
   }
   return contact.solid!==null;
  }
- return {
+ const api={
   solids,bounds:b,contact,react,pose,stats,near,test,
   /** For jet actions' step tests (dash, glide, parachute): is the body at (x, z) with feet at y inside a stadium solid? */
   solid(x:number,z:number,y:number){if(!test(x,z,y))return false;held.solid=contact.solid;held.nx=contact.nx;held.nz=contact.nz;return true;},
@@ -113,9 +123,27 @@ export function createStadiumFlight(solids:readonly FlightSolid[]=stadiumFlightS
    else stats.slides++;
    lastResult.contact=contact;lastResult.fresh=fresh;return lastResult;
   },
+  /**
+   * The auto-land glide's step (Town.tsx: after choosing to land, the flyer glides to rooftop.findLanding's spot): from p toward
+   * `target` by `step` m at feet height y, through the same sweep as free flight. On a solid it stops at the face; a low one
+   * (top ≤ LAND_GLIDE.hop m above the feet) asks to climb (`lift`, m/s), a tall one is slid round (the rest of the step along its
+   * face, toward the target's side). `fresh` = a new bump (Town plays the bump feedback). p is moved in place.
+   */
+  glide(p:{x:number;z:number},target:{x:number;z:number},y:number,step:number,reduced=false):{hit:boolean;fresh:boolean;lift:number}{
+   const dx=target.x-p.x,dz=target.z-p.z,d=Math.hypot(dx,dz);if(d<1e-6)return {hit:false,fresh:false,lift:0};
+   const ux=dx/d,uz=dz/d,s=Math.min(step,d),ox=p.x,oz=p.z;p.x+=ux*s;p.z+=uz*s;
+   const r=api.resolve(p,ox,oz,y,null,reduced);if(!r.contact)return {hit:false,fresh:false,lift:0};
+   const q=r.contact.solid,fresh=r.fresh,nx=r.contact.nx,nz=r.contact.nz;
+   if(q&&q.y1-y<=LAND_GLIDE.hop)return {hit:true,fresh,lift:LAND_GLIDE.climb};
+   // Slide round: the step's remainder along the face (the tangent nearer the target; head-on, a fixed side).
+   const rest=Math.max(0,s-Math.hypot(p.x-ox,p.z-oz)),tx=-nz,tz=nx,side=ux*tx+uz*tz<0?-1:1,sx=p.x,sz=p.z;
+   p.x+=tx*side*Math.max(rest,s*.5);p.z+=tz*side*Math.max(rest,s*.5);api.resolve(p,sx,sz,y,null,reduced);
+   return {hit:true,fresh,lift:0};
+  },
   /** Each frame (also on foot, so a reaction never freezes mid-spin): ages the reaction and writes the drawn overlay into `pose`. */
   update(dt:number,reduced=false){cool=Math.max(0,cool-dt);stepBump(react,dt);bumpPose(react,reduced,pose);pose.on=react.on&&!reduced;pose.nx=react.nx;pose.nz=react.nz;},
   reset(){cool=0;react.on=false;pose.on=false;held.solid=null;},
  };
+ return api;
 }
 const NONE={contact:null,fresh:false} as const;

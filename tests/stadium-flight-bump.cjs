@@ -1,6 +1,7 @@
 // DRIP FC Stadium (Nov 13 2026, owner): the taller roof fascia banner (size, aspect, offsets, frame proud of the slab, seated
 // sightlines under the front frame) and flight bumps: flying into a floodlight mast or head, a roof, the big screen, the gate or a
 // plaza flag knocks the flyer back with the flyer spin instead of passing through; nothing is tested away from the stadium.
+// Nov 13 2026: the stands' stepped end walls, and the auto-land glide (glide to the landing spot) through the same sweep.
 // usage: node tests/stadium-flight-bump.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const base=path.resolve(__dirname,'..'),req=require('node:module').createRequire(base+'/package.json'),T=req('three');
@@ -47,7 +48,7 @@ const S=L.STADIUM,R=Q.ROOF;
 {const sol=FL.stadiumFlightSolids(),k=n=>sol.filter(q=>q.kind===n);
  assert.equal(k('mast').length,4);assert.equal(k('head').length,4);assert.equal(k('roof').length,4);assert.equal(k('fascia').length,2);
  assert.equal(k('screen').length,1);assert.equal(k('screenPost').length,2);assert(k('gate').length===3&&k('sign').length===1);
- assert.equal(k('flag').length,28);assert(k('stand').length>=5);assert(sol.length<90,'a cheap list');
+ assert.equal(k('flag').length,28);assert(k('stand').length>=5);assert.equal(k('standEnd').length,Q.STANDS.reduce((n,s)=>n+Q.standSpans(s).pieces.length*2,0)*(Q.ROWS/2+1),'every stand piece has its two stepped end walls (Nov 13 2026)');assert(sol.length<160,'a cheap list ('+sol.length+')');
  const w=src('lib/town/stadiumWorld.ts');assert(/cylinder\(\.45,30,'#d9d6cc',m\.x,15,m\.z\)/.test(w)&&/box\(6\.4,3\.8,\.3,/.test(w),'mast + head sizes as built');
  const scr=k('screen')[0];assert(Math.abs(scr.hw*2-FD.SCREEN_FRAME.w)<1e-9&&Math.abs(scr.y1-scr.y0-FD.SCREEN_FRAME.h)<1e-9,'screen frame');
  for(const [i,p] of W.screenPosts().entries()){const q=k('screenPost')[i];assert(Math.abs(q.x-p.x)<1e-9&&Math.abs(q.y1-p.top)<1e-9&&q.hw===W.SCREEN_POST.r);}
@@ -91,6 +92,30 @@ function fly(F,start,dir,y,seconds=1.6){
  const p=Q.plazaFlagPoles()[3];F=FL.createStadiumFlight();const p0={x:p.x,z:p.z-15},v={x:0,z:20};let flag=-1;
  for(let i=0;i<60;i++){const ox=p0.x,oz=p0.z;sim.stepPlayer(p0,v,{x:0,z:1,sprint:false},1/60,[],'jetpack');const rr=F.resolve(p0,ox,oz,3,v);if(rr.fresh){flag=rr.contact.solid.flag;break;}}
  assert.equal(flag,3,'into plaza flag 3: its index for the sway');}
+{// Nov 13 2026: the stands' short end walls. Into the north stand's open-corner end at 4 m (beside the back rows): a bump off the end;
+ // over the concourse, or just over a row (a landable floor): clear. Walking: the rows reach the end as obstacles, too tall to step.
+ const north=Q.STANDS.find(s=>s.id==='north');
+ const east=Q.STANDS.find(q=>q.id==='east');
+ for(const [s,a,startA] of [[north,north.from,north.from-20],[north,north.to,north.to+20],[Q.STANDS.find(q=>q.id==='south'),36,56],[east,east.gap[0],0]]){
+  const dB=s.inner+(Q.ROWS-1.5)*Q.ROW_DEPTH,start=Q.standWorld(s,dB,startA),end=Q.standWorld(s,dB,a),d0={x:Math.sign(end.x-start.x),z:Math.sign(end.z-start.z)};
+  let F=FL.createStadiumFlight(),r=fly(F,start,d0,4,1.2);assert(r.bumps>=1&&r.firstOut.kind==='standEnd',`${s.id} end at a ${a}: a bump (${r.firstOut&&r.firstOut.kind})`);
+  assert(r.firstOut.vx*d0.x+r.firstOut.vz*d0.z<-5,'knocked back out of the corner');
+  F=FL.createStadiumFlight();r=fly(F,start,d0,Q.CONCOURSE_HEIGHT+.05,1.2);assert.equal(r.bumps,0,`${s.id}: over the concourse, clear`);}
+ for(let i=0;i<Q.ROWS;i++){const p=Q.standWorld(north,north.inner+(i+.5)*Q.ROW_DEPTH,north.from+.05),F=FL.createStadiumFlight();
+  assert(!F.test(p.x,p.z,Q.rowHeight(i)+.01),`row ${i}: standing on its end seat is not inside a wall`);}
+ const geo=Q.standGeometry(north),edge=geo.surfaces.filter(f=>Math.abs(f.x-f.w/2-(S.x+north.from))<1e-6&&f.height>Q.ROW_STEP_UP);
+ assert(edge.length>=Q.ROWS-2,'walking: the rows reach the end wall as obstacles taller than a step ('+edge.length+')');}
+{// Nov 13 2026: the auto-land glide (Town: glide to rooftop.findLanding's spot) bumps too. Through the west stand's back wall at 3 m:
+ // it stops at the wall, climbs over (LAND_GLIDE) and arrives; into a mast head-on at 20 m: it slides round it and arrives.
+ const glideTo=(F,p,target,y,label)=>{let h=y,hits=0,fresh=0;for(let i=0;i<60*8&&Math.hypot(target.x-p.x,target.z-p.z)>.1;i++){const g=F.glide(p,target,h,Math.min(Math.hypot(target.x-p.x,target.z-p.z),20/60),false);
+   if(g.hit)hits++;if(g.fresh)fresh++;h+=g.lift/60;F.update(1/60,false);assert(!F.test(p.x,p.z,h),`${label}: never inside a solid (${p.x.toFixed(2)}, ${p.z.toFixed(2)}, ${h.toFixed(2)})`);}
+  return {hits,fresh,h,arrived:Math.hypot(target.x-p.x,target.z-p.z)<=.1};};
+ const west=Q.STANDS[0],p=Q.standWorld(west,Q.standBack(west)+12,6),t=Q.standWorld(west,Q.standBack(west)-2,6);
+ let r=glideTo(FL.createStadiumFlight(),{...p},t,3,'wall');assert(r.hits>=1&&r.fresh===1&&r.arrived&&r.h>=Q.CONCOURSE_HEIGHT-.02,'the landing glide meets the back wall, hops it and lands on the concourse '+JSON.stringify(r));
+ const m=Q.MASTS[0],mp={x:m.x-15,z:m.z},mt={x:m.x+15,z:m.z};
+ r=glideTo(FL.createStadiumFlight(),mp,mt,20,'mast');assert(r.hits>=1&&r.arrived&&r.h===20,'the landing glide slides round a mast at the same height '+JSON.stringify(r));
+ r=glideTo(FL.createStadiumFlight(),{x:m.x-15,z:m.z+30},{x:m.x+15,z:m.z+30},20,'clear');assert(r.hits===0&&r.arrived,'clear of everything: a straight glide');
+ assert(/const step=Math\.min\(d,dt\*20\),g=stadiumFlight\.glide\(location,target,flight\.height,step,reduced\);if\(g\.fresh\)stadiumBump\(flight\.height\);if\(g\.lift\)flight\.height\+=g\.lift\*dt;/.test(src('components/Town.tsx')),'Town routes the landing glide through the stadium sweep');}
 {// Jet actions: the step test refuses a stadium solid and knock() plays the reaction once per re-arm.
  const F=FL.createStadiumFlight(),m=Q.MASTS[1];assert(F.solid(m.x,m.z,20));assert(F.knock(false)&&F.react.on);assert(!F.solid(m.x,m.z,40),'over the masts');assert(!F.knock(false),'re-arm');}
 {// Far away: one rectangle test, no solid loop; the broad phase covers the bowl and the plaza.

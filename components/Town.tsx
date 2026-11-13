@@ -1500,7 +1500,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(target){
           if(!rooftop.canLand(target.x,target.z,Infinity)){flight.landing=null;flight.landTime=-1;return;}
           const dx=target.x-location.x,dz=target.z-location.z,d=Math.hypot(dx,dz);
-          if(d>.1){liftJetpack(dt);flight.height+=summitFlight.update(location.x,location.z,dx/d*20,dz/d*20,flight.height,dt,flight.cruiseHeight);if(flight.takeoffTime>=1.05){const step=Math.min(d,dt*20);location.x+=dx/d*step;location.z+=dz/d*step;}}
+          if(d>.1){liftJetpack(dt);flight.height+=summitFlight.update(location.x,location.z,dx/d*20,dz/d*20,flight.height,dt,flight.cruiseHeight);if(flight.takeoffTime>=1.05){const step=Math.min(d,dt*20),g=stadiumFlight.glide(location,target,flight.height,step,reduced);if(g.fresh)stadiumBump(flight.height);if(g.lift)flight.height+=g.lift*dt;}}/* the landing glide bumps off the stadium (walls: hop over; masts: round) */
           else{location.x=target.x;location.z=target.z;const floor=rooftop.surface(target.x,target.z,Infinity);
             if(flight.landTime<0){flight.landTime=0;flight.landHeight=flight.height;}
             flight.landTime=Math.min(.95,flight.landTime+dt);const t=flight.landTime/.95;
