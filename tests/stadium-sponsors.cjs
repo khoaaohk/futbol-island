@@ -161,14 +161,15 @@ await ok('picture sniffing and admin upload rules',async()=>{
 await ok('built-in art: Drip FC naming sponsor, adidas fascia, Futbol Island panels; uploads still override',()=>{
  const drip=(slot)=>Array.from({length:P.PLACEHOLDER_COUNT[slot]},(_,i)=>P.isDripPlaceholder(slot,i));
  assert.deepEqual(drip('board'),[false,true,false,false,true,false],'a third of the boards, never two side by side');
- assert.deepEqual(drip('screen'),[false,true,false]);assert.deepEqual(drip('gate'),[true],'the gate is the naming partner');
+ assert.deepEqual(drip('screen'),[false,true,false]);assert.deepEqual(drip('gate'),[false],'the gate panel is a welcome (the sign above names the stadium)');
  assert.deepEqual(drip('flag'),[false],'the flag placeholder is never shown (national flags)');assert.deepEqual(drip('fascia'),[false],'the fascia is adidas');assert.deepEqual(drip('centre'),[false]);
  // Drawn with the pictures: Drip panels draw the art and the Sponsor tag; Futbol Island's own panels draw no tag.
  const rec=()=>{const log=[];const ctx=new Proxy({},{get:(t,k)=>k==='measureText'?(s=>({width:String(s).length*7})):k in t?t[k]:((...a)=>{log.push([k,...a]);}),set:(t,k,v)=>{t[k]=v;return true;}});return {ctx,log};};
  const house={wordmarkLight:{width:800,height:197},wordmarkDark:{width:800,height:197},crest:{width:179,height:226}};
  const tagged=(slot,i)=>{const {ctx,log}=rec();const [w,h]=S.SLOT_SPECS[slot].cell;P.drawPlaceholder(ctx,slot,i,{x:0,y:0,w,h},house);return {log,tag:log.some(k=>k[0]==='fillText'&&k[1]==='Sponsor'),imgs:log.filter(k=>k[0]==='drawImage').length};};
- for(const [slot,i] of [['board',1],['board',4],['screen',1],['gate',0]]){const r=tagged(slot,i);assert(r.tag&&r.imgs>=1,`${slot} ${i}: Drip FC art + Sponsor tag`);}
- for(const [slot,i] of [['board',0],['screen',0]]){const r=tagged(slot,i);assert(!r.tag&&r.imgs===0,`${slot} ${i}: Futbol Island's own panel, no tag`);}
+ for(const [slot,i] of [['board',1],['board',4],['screen',1]]){const r=tagged(slot,i);assert(r.tag&&r.imgs>=1,`${slot} ${i}: Drip FC art + Sponsor tag`);}
+ for(const [slot,i] of [['board',0],['screen',0],['gate',0]]){const r=tagged(slot,i);assert(!r.tag&&r.imgs===0,`${slot} ${i}: Futbol Island's own panel, no tag`);}
+ {const {log}=tagged('gate',0),said=log.filter(k=>k[0]==='fillText').map(k=>k[1]);assert.deepEqual(said,[...P.WELCOME_LINES],'the gate welcomes, no Drip FC repeat');}
  // adidas: vector paths filled into the cell, white on black, uniform scale (never squashed), two lock-ups, Sponsor tag.
  globalThis.Path2D=class{constructor(d){this.d=d;}};
  try{const {log,tag}=tagged('fascia',0);

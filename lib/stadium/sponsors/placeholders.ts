@@ -28,12 +28,14 @@ const BRUSH='IslandBrush,"Arial Black",system-ui,sans-serif';
 export const BOARD_LINES:readonly [string,string][]=[['HEAD UP','LOOK BEFORE YOU GET THE BALL'],['PASS & MOVE','GIVE IT, THEN FIND SPACE'],['TALK!','CALL "MAN ON" FOR A TEAMMATE'],['RESPECT THE REF','PLAY FAIR, SHAKE HANDS']];
 /** The board panels in turn: Drip FC on every third, so neighbouring boards never show the same thing. */
 export const BOARD_PANELS:readonly (readonly [string,string]|'drip-paper'|'drip-ink')[]=[BOARD_LINES[0],'drip-paper',BOARD_LINES[1],BOARD_LINES[2],'drip-ink',BOARD_LINES[3]];
+/** The gate panel's welcome (big line, small line). */
+export const WELCOME_LINES=['WELCOME TO THE STADIUM','Enjoy the match and cheer loud!'] as const;
 export const PLACEHOLDER_COUNT:Record<SponsorSlot,number>={board:BOARD_PANELS.length,screen:3,gate:1,fascia:1,flag:1,centre:1};
 /** Plaza flags (Nov 13 2026, owner): the poles fly national flags (lib/town/plazaFlags.ts); the banner under each flag is built only
  *  for an uploaded flag sponsor (surfaces.ts), so the flag placeholder is a plain cell that is never shown. */
 /** Which placeholders are Drip FC's (tests; the rest are Futbol Island's own). */
 export const isDripPlaceholder=(slot:SponsorSlot,index:number)=>slot==='board'?typeof BOARD_PANELS[index%BOARD_PANELS.length]==='string':
- slot==='screen'?index%3===1:slot==='gate'?true:false;
+ slot==='screen'?index%3===1:false;// the gate panel is a welcome since Nov 13 (the sign above it already names DRIP FC Stadium)
 
 /** A deterministic wobble, so the torn edges look the same every load (and in the tests). */
 function rand(seed:number){let s=(seed*2654435761)>>>0||1;return ()=>{s=(s*16807)%2147483647;return s/2147483647;};}
@@ -112,8 +114,10 @@ export function drawPlaceholder(c:Ctx2D,slot:SponsorSlot,index:number,r:AtlasRec
   ball(c,x+w*.9,y+h*.15,h*.08);
  }else if(slot==='gate'){
   c.fillStyle=SUN;c.fillRect(x-4,y-4,w+8,h+8);dots(c,x,y,w,h,h*.09,ORANGE);
-  paper(c,x+w*.06,y+h*.18,w*.88,h*.6,RED,5);
-  words(c,'FUTBOL ISLAND',x+w/2,y+h*.48,h*.34,w*.8);// (the gate is Drip FC's today: drawDrip)
+  // A welcome under the stadium's name sign (owner, Nov 13 2026: the Drip FC panel here repeated the sign above it).
+  paper(c,x+w*.05,y+h*.1,w*.9,h*.5,RED,5);
+  words(c,WELCOME_LINES[0],x+w/2,y+h*.35,h*.3,w*.82);
+  words(c,WELCOME_LINES[1],x+w/2,y+h*.78,h*.17,w*.86,INK,'system-ui,-apple-system,sans-serif','800');
  }else{// flag: never shown (see PLACEHOLDER_COUNT)
   c.fillStyle=INK;c.fillRect(x-4,y-4,w+8,h+8);
  }
