@@ -48,7 +48,7 @@ await ok('new places',()=>{
  // The lookout shares the pitch's small terrace (just past its fence): close, but still "elsewhere on the island", not "on the pitch".
  assert.equal(P.placeAt(L.lookout.x,L.lookout.z),'summit_isle','the lookout, off the pitch');
  // Off Summit Isle entirely: the main island and Coral Cay still resolve as before (no regression from the new checks).
- assert.equal(P.placeAt(85,-35),'island_square');assert.equal(P.placeAt(-140,0),'sea');
+ assert.equal(P.placeAt(85,-35),'island_square');assert.equal(P.placeAt(-360,0),'sea');
  // Every place the lookup can return (including the new ones) is reachable somewhere on the map, like admin-analytics-places.cjs's own sweep.
  const seen=new Set();for(let x=-160;x<880;x+=4)for(let z=-320;z<300;z+=4)seen.add(P.placeAt(x,z));
  for(const id of ['summit_sandbar','summit_pitch','summit_isle'])assert(seen.has(id),id+' reachable in the scanned box');

@@ -46,8 +46,9 @@ export const EMOTE_ASK = {
   rangeM: 9, slackM: 3, yM: 4,
 } as const;
 
-/** Decimetres. Contains main island, Cay (612,-160), Summit (640,130) with margin for flight. */
-export const WORLD_BOUNDS = { minX: -4000, maxX: 10000, minZ: -6000, maxZ: 6000, minY: -400, maxY: 2000 } as const;
+/** Decimetres. Contains main island, Cay (612,-160), Summit (640,130) with margin for flight. minX -500 m since the West Stadium
+ *  land (Nov 12 2026: coast at x -332, map edge -416); absolute units, so old clients stay compatible, but the relay must be redeployed. */
+export const WORLD_BOUNDS = { minX: -5000, maxX: 10000, minZ: -6000, maxZ: 6000, minY: -400, maxY: 2000 } as const;
 
 export const MAX_SPEED_MS: Record<Mode, number> = {
   [Mode.Walk]: 3.7 * 1.7,

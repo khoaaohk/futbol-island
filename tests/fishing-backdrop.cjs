@@ -98,7 +98,7 @@ function audit(w,s,x,z,label){
 }
 
 // ---- 1. Main island + jetty + cay + summit cells, focused at the Deep Sea Boat ----
-const cells=[];for(let cx=-2;cx<=15;cx++)for(let cz=-6;cz<=5;cz++)cells.push([cx,cz]);
+const cells=[];for(let cx=-8/* West Stadium land since Nov 12 2026 (was -2) */;cx<=15;cx++)for(let cz=-6;cz<=5;cz++)cells.push([cx,cz]);
 {const w=world(cells),boat=FISH_SPOTS.find(s=>s.id==='deep-sea-boat');const s=session(w,boat.x,boat.z);
  ok(s.focus.backdrop.ready,'backdrop built (in slices)');ok(s.restored,'every visibility the colour pass changed is restored');
  audit(w,s,boat.x,boat.z,'deep-sea-boat');

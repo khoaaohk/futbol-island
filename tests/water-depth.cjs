@@ -14,7 +14,7 @@ ok('depth: 0 on land, the shelf slope off it, capped at DEPTH_MAX',()=>{
  assert.equal(W.depthForDistance(0),0);assert.equal(W.depthForDistance(1),W.SHELF_SLOPE);assert.equal(W.depthForDistance(100),W.DEPTH_MAX);
  assert.equal(W.waterDepthAt(85,-35),0,'the island square is dry');
  // North Beach: step off the coast and the water deepens with the distance to land.
- const z0=-243.5;let z=z0;while(onLand(60,z))z-=.25;
+ const z0=-230;let z=z0;while(onLand(60,z))z-=.25;// from the beach northwards (the coast's curve moved slightly with the West Stadium anchors, Nov 12 2026)
  const d1=W.waterDepthAt(60,z-1),d2=W.waterDepthAt(60,z-3),d3=W.waterDepthAt(60,z-60);
  assert(d1>0&&d1<d2&&d2<=W.DEPTH_MAX&&d3===W.DEPTH_MAX,`deepens offshore ${d1} ${d2} ${d3}`);
  assert(Math.abs(d1-Math.min(W.DEPTH_MAX,W.SHELF_SLOPE*distanceToLand(60,z-1)))<1e-9,'the shelf is the slope times the distance');
@@ -39,7 +39,7 @@ ok('zones with hysteresis: no flicker on a line',()=>{
 });
 
 ok('splash-downs: any knee-deep open water inside the flyable world, however far from land (no 60 m range)',()=>{
- const z0=-243.5;let z=z0;while(onLand(60,z))z-=.25;
+ const z0=-230;let z=z0;while(onLand(60,z))z-=.25;// from the beach northwards (the coast's curve moved slightly with the West Stadium anchors, Nov 12 2026)
  assert.equal(W.canSplashDown(60,z+2),false,'on the beach: no');
  assert.equal(W.canSplashDown(60,z-.3),false,'ankle water: an ordinary landing');
  assert.equal(W.canSplashDown(60,z-2),true,'knee deep and more: yes');
