@@ -64,7 +64,7 @@ ok('the public-world flag alone (multiplayer off) is still off',()=>{
  assert.equal(withFlag(true,L=>L('lib/multiplayer/publicFlag.ts').publicWorldEnabled()),true);
  assert.match(read('lib/multiplayer/publicFlag.ts'),/process\.env\.NEXT_PUBLIC_PUBLIC_WORLD === '1'/,'read literally so Next inlines it');
 });
-const GU_OFF='No ads and no chat with other players. Printing a report or plan happens on this device.';
+const GU_OFF='No pop-up or tracking ads and no chat with other players. Printing a report or plan happens on this device.';
 ok('flag off: the grown-ups line is today\'s (source pinned: the sheet is a client component with the whole game behind it)',()=>{
  const g=read('components/GrownUps.tsx');
  assert(g.includes(`<li>{publicWorldEnabled()?'`)&&g.includes(`':'${GU_OFF}'}</li>`),'one text child either way, the off branch is today\'s line');

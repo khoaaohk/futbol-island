@@ -60,14 +60,14 @@ export const LEARN_GROUPS:readonly LearnGroup[]=[
  {id:'together',title:'Play together',blurb:'Private parties for friends who know each other: same island, own kits, football calls instead of chat.'},
  {id:'collect',title:'Collect and read',blurb:'Cards, books and costumes that carry real football history, earned by playing and learning.'},
  {id:'yours',title:'Make it yours',blurb:'Design a kit, pick a number and travel the island your way.'},
- {id:'safe',title:'Safe and simple',blurb:'Free, no ads, no open chat, no accounts, and a place for grown-ups to see progress and practise.'},
+ {id:'safe',title:'Safe and simple',blurb:'Free, no pop-up or tracking ads, no open chat, no accounts, and a place for grown-ups to see progress and practise.'},
 ];
 
 export const LEARN_HERO={
  headline:'Explore Futbol Island. Learn the game.',
  subhead:'Futbol Island is a free football learning game for kids aged 7 to 12. They explore an island and learn positions, team shape and the Laws of the Game in 7v7, 9v9, 11v11 and futsal, one short lesson at a time.',
  trust:[
-  'Free, with no ads, and coins are earned by playing, never bought',
+  'Free, with no pop-up or tracking ads, and coins are earned by playing, never bought',
   'No accounts and no open chat: a save code with no personal details',
   'Built in San Diego with White Sports Ventures and local non-profits',
  ],
@@ -342,12 +342,12 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
   proof:'4 ride types: scooter, bike, moped and flight.',counts:{rideTypes:4}},
 
  // ---- Safe and simple -------------------------------------------------------------------------------------------------------
- {id:'free-no-ads',title:'Free, with no ads',group:'safe',imageKey:'free_no_ads',
-  hook:'Nothing to buy and no ads, ever.',
-  description:'Futbol Island costs nothing to play and shows no advertising. Coins are earned by playing and learning, never bought with real money.',
+ {id:'free-no-ads',title:'Free, no pop-up or tracking ads',group:'safe',imageKey:'free_no_ads',
+  hook:'Nothing to buy, and no pop-up or tracking ads.',
+  description:'Futbol Island costs nothing to play and has no pop-up, video or tracking ads. The stadium shows sponsor boards: pictures only, with no links, no tracking and nothing to buy. Coins are earned by playing and learning, never bought with real money.',
   footballTie:'Learning the game should not cost money; club soccer already prices too many kids out.',
   where:'Everywhere in the game. Donations to local non-profits sit behind a grown-up check.',
-  proof:'No ads, and coins cannot be bought.'},
+  proof:'No pop-up or tracking ads, and coins cannot be bought.'},
  {id:'save-code',title:'Save code, not an account',group:'safe',imageKey:'save_code',
   hook:'Three football words and a number keep your island safe.',
   description:'Instead of an account, each player gets a save code made of three football words and a number. Typing it on another device loads the same island.',
@@ -384,7 +384,7 @@ export type LearnHighlightId='top'|'learn'|'explore'|'fuel'|'together'|'safe';
 export type LearnHighlight={id:LearnHighlightId;title:string;line:string;shot:string;chips:readonly string[];features:readonly string[]};
 export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
  // Nov 8 2026 (SEO): the home h1 and first line say what the page is for searchers ("learn football (soccer) for kids").
- {id:'top',title:'Learn football for kids, the fun and safe way.',line:'Lessons and quizzes on positions, tactics and soccer rules. Free, no ads, no accounts.',shot:'town_overview',chips:[],features:[]},
+ {id:'top',title:'Learn football for kids, the fun and safe way.',line:'Lessons and quizzes on positions, tactics and soccer rules. Free, no tracking ads.',shot:'town_overview',chips:[],features:[]},
  {id:'learn',title:'Learn the game',line:'Short lessons and quizzes show real football ideas on a moving pitch.',shot:'lesson_field',
   chips:['Paths, lessons and quizzes','Story films and books','A football museum'],features:['learning-paths','lesson-quiz','path-stories','pop-up-books','history-museum']},
  {id:'explore',title:'Explore the island',line:'Every corner hides a football idea to find.',shot:'explore',
@@ -395,8 +395,8 @@ export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
   chips:['Eat to refill your fuel','Water comes first','Tips from real sources'],features:['konbini']},
  {id:'together',title:'Play with friends',line:'Private parties by code. Same island, no open chat, just football calls.',shot:'mp_sidebyside',
   chips:['Private code only','Football calls, no open chat','Own kits and names'],features:['party-start','friends-kits','friends-emotes','friends-safety']},
- {id:'safe',title:'Safe for kids',line:'Free, with no ads, no open chat and no accounts.',shot:'save_code',
-  chips:['Free, no ads','No open chat','A save code, not an account'],features:['free-no-ads','save-code','grown-ups']},
+ {id:'safe',title:'Safe for kids',line:'Free, with no pop-up or tracking ads, no open chat and no accounts.',shot:'save_code',
+  chips:['Free, no tracking ads','No open chat','A save code, not an account'],features:['free-no-ads','save-code','grown-ups']},
 ];
 /**
  * "See it in action" (Nov 3 2026, owner: an apple.com/apple-vision-pro style horizontal clip carousel right after the hero).
@@ -452,7 +452,7 @@ export type LearnFaq={q:string;a:string;group:'parents'|'together'};
 
 export const LEARN_FAQ:readonly LearnFaq[]=[
  {group:'parents',q:'Is Futbol Island free?',a:'Yes. It is free to play, and there is nothing to buy. The island\'s coins are earned by playing and learning, never bought with real money. Donations to local non-profits are optional and sit behind a grown-up check.'},
- {group:'parents',q:'Are there ads?',a:'No. The game shows no advertising, and it uses its own visit counter with no cookies and no third-party analytics.'},
+ {group:'parents',q:'Are there ads?',a:'There are no pop-up, video or tracking ads. The island’s stadium shows sponsor boards that help keep the game free. They are pictures only: no links, no tracking, and they never ask kids to buy anything. Sponsors only ever see combined totals, never anything about a child. The game also uses its own visit counter with no cookies and no third-party analytics.'},
  {group:'parents',q:'Can my child chat with other people?',a:'No. There is no free text chat and no voice chat. Islanders are part of the game and talk through preset topics a child taps. Play with friends uses preset football calls and emotes only.'},
  {group:'parents',q:'Does my child need an account?',a:'No. Each player gets a save code of three football words and a number instead. The code is made at random and carries no personal details. Typing it on another device loads the same island.'},
  {group:'parents',q:'What ages is it for?',a:'Kids aged about 7 to 12, and the parents, carers and coaches who help them. The 7v7 path comes first because it is the simplest.'},

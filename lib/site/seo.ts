@@ -50,7 +50,7 @@ export function noindexMeta(title:string,description:string,path:string):Metadat
 }
 /** Home `/` (SEO, Nov 8 2026: "learn football (soccer) for kids, lessons and quizzes, fun and safe, free in your browser"). */
 export const HOME_TITLE='Learn Football for Kids: Free Lessons and Quizzes';
-export const HOME_DESC='Free football (soccer) lessons and quizzes for kids 7 to 12, played on a fun island. No ads, no accounts, no open chat. Play in your browser.';
+export const HOME_DESC='Free football (soccer) lessons and quizzes for kids 7 to 12, on a fun island. No pop-up or tracking ads, no accounts, no open chat. Play in your browser.';
 /** FAQPage JSON-LD: pass exactly the questions and answers the page shows. */
 export const faqLd=(faq:readonly {q:string;a:string}[])=>({'@context':'https://schema.org','@type':'FAQPage',mainEntity:faq.map(x=>({'@type':'Question',name:x.q,acceptedAnswer:{'@type':'Answer',text:x.a}}))});
 /** A collection page (the topic hubs) with real content dates (lib/site/updated.ts). */

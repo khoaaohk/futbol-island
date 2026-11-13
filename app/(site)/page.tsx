@@ -184,7 +184,7 @@ export default function Home(){
    <NavMark/>
    <div className={s.head} data-reveal="">
     <h2 className={s.h2} id="end-h">Ready for the island?</h2>
-    <p className={s.sub}>Free, with no ads and no open chat.</p>
+    <p className={s.sub}>Free, with no pop-up or tracking ads and no open chat.</p>
     <div className={s.ctaRow}><a className={s.cta} href={PLAY_URL}>{LEARN_HERO.cta}</a></div>
    </div>
   </section>

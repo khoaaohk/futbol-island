@@ -2,6 +2,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {PRIVACY_CONTACT} from '@/components/privacy/PrivacyPolicy';
 import {GROWN_UPS as G,NONPROFITS,WSV_LINKS} from '@/lib/site/aboutCopy';
+import {SPONSOR_BOARDS_LINE} from '@/lib/site/safety';
 import {LESSONS} from '@/lib/site/lessons';
 import {SITE_FISH} from '@/lib/site/fish';
 import {SITE_CARDS} from '@/lib/site/cards';
@@ -15,7 +16,7 @@ import styles from '../site.module.css';
  * sheet); privacy statements follow components/privacy/PrivacyPolicy.tsx and must never say more than it does.
  */
 export const dynamic='force-static';
-const DESC='Futbol Island is a free football learning game for kids aged 7 to 12. Explore an island and learn positions, tactics, rules and football history through short lessons and quizzes. No ads, no open chat, no accounts.';
+const DESC='Futbol Island is a free football learning game for kids aged 7 to 12. Explore an island and learn positions, tactics, rules and football history through short lessons and quizzes. No pop-up or tracking ads, no open chat, no accounts.';
 // the search-result description is kept under 155 characters; the page lead above stays the full sentence
 const META='A free football learning game for kids aged 7 to 12: explore an island and learn positions, tactics, rules and football history.';
 export const metadata=pageMeta('About',META,'/about');
@@ -23,7 +24,7 @@ const CRUMBS=[{name:'Home',path:'/'},{name:'About',path:'/about'}];
 const CONTACT=PRIVACY_CONTACT?`Privacy questions and requests: ${PRIVACY_CONTACT}.`:'A contact address for privacy questions will be listed on the privacy page. Meanwhile, “Delete my save” in the game removes a save straight away.';
 const FAQ:[string,string][]=[
  ['What age is Futbol Island for?','Kids aged about 7 to 12, and the parents, carers and coaches who help them.'],
- ['How much does it cost?',`Nothing. ${G.free} There are no ads, and the island’s coins are earned by playing, never bought. Donations to local non-profits sit behind a grown-up check.`],
+ ['How much does it cost?',`Nothing. ${G.free} There are no pop-up or tracking ads, and the island’s coins are earned by playing, never bought. Donations to local non-profits sit behind a grown-up check.`],
  ['What devices does it work on?','It plays in the web browser on phones, tablets and computers, with nothing to download. It is made for phones first.'],
  ['Is it private and safe for kids?',`${G.privacy} Links that leave the site are behind a grown-up check. The privacy policy explains exactly what is kept and for how long.`],
  ['How do we contact you?',CONTACT],
@@ -43,7 +44,7 @@ export default function About(){
   </header>
 
   <section className={styles.section} aria-labelledby="who"><h2 className={styles.h2} id="who">Who it is for</h2>
-   <p>Kids who love football (soccer) and want to understand the game better: where to stand, when to pass, how a team keeps its shape. It is also for parents, carers and coaches who want a calm, ad-free way for children to learn the ideas behind the game between practices.</p>
+   <p>Kids who love football (soccer) and want to understand the game better: where to stand, when to pass, how a team keeps its shape. It is also for parents, carers and coaches who want a calm way for children to learn the ideas behind the game between practices.</p>
   </section>
 
   <section className={styles.section} aria-labelledby="why"><h2 className={styles.h2} id="why">{G.whyTitle}</h2><p>{G.why}</p></section>
@@ -65,7 +66,7 @@ export default function About(){
    <ul>
     <li><b>{G.free}</b> {G.freeWhy}</li>
     <li><b>Phone first.</b> It runs in the web browser on phones, tablets and computers. No download, no sign-up.</li>
-    <li><b>No ads, no open chat.</b> There is no free-text chat with other players and no advertising.</li>
+    <li><b>No pop-up or tracking ads, no open chat.</b> There is no free-text chat with other players and no pop-up, video or tracking advertising. {SPONSOR_BOARDS_LINE}</li>
     <li><b>Save codes, not accounts.</b> {G.privacy} The code carries no personal details.</li>
     <li><b>For grown-ups.</b> The title screen has a For grown-ups page and the full <a href="/privacy">privacy policy</a>.</li>
    </ul>

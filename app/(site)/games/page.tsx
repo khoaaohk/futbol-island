@@ -26,7 +26,7 @@ export default function GamesHub(){
   </Section>
   <Section id="safe" title="For parents and coaches">
    <ul>
-    <li>Free, with no advertising and nothing to buy. Coins on the island are earned by playing and learning, never bought with real money.</li>
+    <li>Free, with no pop-up or tracking ads and nothing to buy. Coins on the island are earned by playing and learning, never bought with real money.</li>
     <li>No account, no sign-up and no open chat. A high-score board takes a few arcade-style letters only.</li>
     <li>Nothing to install: the games run in the browser on phones, tablets, Chromebooks and computers.</li>
     <li>Short sessions: a run lasts a few minutes and ends on its own.</li>
