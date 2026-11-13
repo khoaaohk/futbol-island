@@ -138,7 +138,7 @@ for(const mode of ['scooter','bike','moped']){const t=createRooftopTravel([],obs
 // ---- Wiring.
 {const r=src('lib/town/rooftopTravel.ts'),t=src('components/Town.tsx');
  ok(/if\(ladder\.step\(dt,p,v,input\.x,input\.z,mode,state\.height,state\.falling\)\)\{state\.height=ladder\.state\.y;state\.air=false;return;\}/.test(r)&&/ladder\.cancel\(\)/.test(r)&&/return \{state,ladder,/.test(r),'rooftopTravel runs the ladder (and reset lets go)');
- ok(/trick:onLadder\?ladderPose:undefined/.test(t)&&/facing:onLadder\?LADDER_FACING:/.test(t),'Town poses and turns the climber');
+ ok(/trick:onLadder\?ladderPose:(undefined|stadiumSit\.trick\(\))/.test(t)&&/facing:onLadder\?LADDER_FACING:/.test(t),'Town poses and turns the climber');
  ok(/data-ladder-go/.test(t)&&/'Climb down':'Climb'/.test(t)&&/key:'ladder'/.test(t),'the Climb / Climb down prompt');
  ok(/Park your ride to climb/.test(t)&&/sound\.stair\('walk'/.test(t)&&/sound\.boost\('forward'\)/.test(t)&&/sound\.land\(ls\.impact\)/.test(t),'the ride note and the sounds (rung tread, slide whoosh, landing)');}
 console.log(`PASS lighthouse ladder: ${checks} checks (climb, step out, tap down, slide ramp + squat, ride rule, pose, drawing, ball, beam above the railing)`);

@@ -118,7 +118,7 @@ export function buildStadium(t:StadiumTools):StadiumStats{
  {const G=STADIUM_GATE,gx=GATE_ARCH_X;
   for(const sz of [-1,1]){box(1.6,11,1.6,'#e2c766',gx,5.5,G.z+sz*(G.halfWidth+.4));obstacles.push({x:gx,z:G.z+sz*(G.halfWidth+.4),w:1.6,d:1.6});
    for(const off of [3.4,5.4]){box(.5,1,.5,'#9aa7a6',gx-1.2,.5,G.z+sz*off);obstacles.push({x:gx-1.2,z:G.z+sz*off,w:.5,d:.5});}}
-  box(1.4,2.4,G.halfWidth*2+3.2,'#e2c766',gx,9.4,G.z);
+  t.box(1.4,2.4,G.halfWidth*2+3.2,'#e2c766',gx,9.4,G.z);boxes++;// not skipped: its top is a landable canopy (roof-landing audit)
   skip(sign('STADIUM',G.halfWidth*2-1,1.3,gx+.72,11.35,G.z,'#244d49','#fff0cf',Math.PI/2));
  }
 
