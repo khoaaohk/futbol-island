@@ -126,12 +126,12 @@ t('no nick, Ping, Hit, Rename or host frame is ever sent in a world (every frame
   void ws;
 });
 
-t('S.Quiet: 2 Hz while nobody is within 40 m, back to ~10 Hz when someone is',async()=>{
+t('S.Quiet: 5 Hz while nobody is within 40 m, back to ~10 Hz when someone is',async()=>{
   const W=world(),p=page(W);const ws=await live(p,W);
   const run=(ms,t0)=>{const before=ws.sent.length;for(let t=t0;t<t0+ms;t+=16)p.c.sendPose(pose(Math.round(t/32),0),t);return p.msgs(ws).slice(before).filter(m=>m[0]===1).length;};
   ws.recv([41,0]);assert.equal(p.c.near,0);const quiet=run(2000,10000);
   ws.recv([41,2]);assert.equal(p.c.near,2);const busy=run(2000,20000);
-  assert.ok(quiet>=4&&quiet<=5,'2 Hz: '+quiet);assert.ok(busy>=18&&busy<=23,'~10 Hz: '+busy);
+  assert.ok(quiet>=9&&quiet<=11,'5 Hz: '+quiet);assert.ok(busy>=18&&busy<=23,'~10 Hz: '+busy);
   assert.equal(W.pw.othersNear(),true);
 });
 
