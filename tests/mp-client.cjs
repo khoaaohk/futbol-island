@@ -358,6 +358,33 @@ t('interp: a 34 m/s jetpack stream at 10 Hz with ±30 ms jitter extrapolates smo
   }
 });
 
+t('interp: a far (quiet 2 Hz) 34 m/s jetpack flyer with ±80 ms jitter: no stalls, no >5 m frame jumps (per-member delay + cap)',()=>{
+  for(const delayMs of [240,380]){
+    const it=ip.createInterp({delayMs}),out=R();let seed=7;const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+    const T0=10000,N=16,jit=[];for(let i=0;i<=N;i++)jit.push(Math.round((rnd()*2-1)*80));
+    let prev=null,run=0,worstRun=0,worst=0,least=Infinity,frames=0,pushed=0; // 34 m/s = 0.54 m per 16 ms frame
+    for(let now=T0;now<=T0+N*500+2000;now+=16){ // snapshot i (x = 17 m * i) arrives at T0 + 500 i + jitter
+      while(pushed<=N&&T0+pushed*500+jit[pushed]<=now){it.push(8,[pushed*170,300,0,0,136,5,0,0],T0+pushed*500+jit[pushed]);pushed++;}
+      if(now<T0+1600||now>T0+N*500)continue;
+      assert.ok(it.sample(8,now,out));assert.equal(out.fade,1);
+      if(prev!==null){const d=out.x-prev;worst=Math.max(worst,Math.abs(d));least=Math.min(least,d);if(d<0.4){run++;worstRun=Math.max(worstRun,run);}else run=0;}
+      prev=out.x;frames++;
+    }
+    assert.ok(frames>300);assert.ok(worst<5,`delay ${delayMs}: a ${worst.toFixed(2)} m frame jump`);
+    assert.ok(least>0.2,`delay ${delayMs}: a frame moved only ${least.toFixed(3)} m (stall or backward step)`);
+    assert.ok(worstRun<3,`delay ${delayMs}: ${worstRun} frames in a row under 0.4 m (the stall before a leap)`);
+  }
+  // the extra delay follows the stream back down once it is fast again (no lasting lag), and idle 1 Hz poses do not count
+  const it=ip.createInterp({delayMs:240}),out=R();
+  for(let i=0;i<4;i++)it.push(9,[i*170,300,0,0,136,5,0,0],1000+i*500);
+  for(let i=1;i<=60;i++)it.push(9,[510+i*34,300,0,0,136,5,0,0],2500+i*100);
+  for(let now=2500;now<=8500;now+=16)it.sample(9,now,out);
+  it.sample(9,8500,out);assert.ok(Math.abs(out.x-(510+(8500-240-2500)/100*34)/10)<0.6,`back on the shared delay, x ${out.x}`);
+  const q=ip.createInterp({delayMs:240});for(let i=0;i<6;i++)q.push(1,[0,0,0,0,0,0,0,0],1000+i*1000);
+  q.push(1,[10,0,0,0,20,0,0,0],6100);q.push(1,[20,0,0,0,20,0,0,0],6200);q.push(1,[30,0,0,0,20,0,0,0],6300);
+  q.sample(1,6300+240,out);assert.ok(Math.abs(out.x-3)<1e-6,`idle beacons left the delay alone, x ${out.x}`);
+});
+
 t('interp: a >25 m vertical jump is a cut; landings never sink far below the ground pose',()=>{
   const it=ip.createInterp(),out=R();
   it.push(1,[0,0,0,0,0,0,0,0],1000);it.push(1,[0,300,0,0,0,0,0,0],1200); // 30 m straight up in one step
