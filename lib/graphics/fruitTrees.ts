@@ -145,7 +145,7 @@ const FRUIT_FRAG=`
   else{c=mix(c,vec3(0.16,0.11,0.05),smoothstep(0.88,0.96,-q.y)+smoothstep(0.93,0.98,q.y));}
   diffuseColor.rgb=c;}`;
 /** The fruit's material: MeshStandard plus the shape bend (vertex) and the pattern (fragment). One program for every kind. */
-function fruitMaterial(){
+export function fruitMaterial(){
  const m=new T.MeshStandardMaterial({color:'#ffffff',roughness:.55,emissive:'#4a3510',emissiveIntensity:.22});
  m.onBeforeCompile=sh=>{
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute vec4 aForm;attribute float aPattern;varying vec3 vFruitP;varying float vFruitPat;')

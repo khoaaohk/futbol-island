@@ -62,6 +62,8 @@ export const PARK_GROVES:readonly [number,number,number][]=[[-255,-185,30],[-160
 /** The LILY POND sign (Nov 13 2026, owner: it stood on the sandy path): on the grass verge north of the pond walk, facing walkers
  *  coming from the trail (east, rotation π/2), clear of the walk, the rim and the water. */
 export const POND_SIGN={x:-116,z:78.2,rotation:Math.PI/2} as const;
+/** Signs that trees keep clear of: STADIUM PARK, LILY POND (westPark.ts's trees and the stadium orchards, stadiumOrchard.ts). */
+export const PARK_SIGNS:readonly (readonly [number,number])[]=[[-114,30],[POND_SIGN.x,POND_SIGN.z]];
 /** The pond's two benches, on the rim verge looking over the water. */
 export const POND_BENCHES:readonly P[]=[150,35].map(a=>{const t=a*Math.PI/180;return [PARK_POND.x+Math.cos(t)*(PARK_POND.rx+POND_RIM+1.8),PARK_POND.z+Math.sin(t)*(PARK_POND.rz+POND_RIM+1.8)] as P;});
 

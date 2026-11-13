@@ -9,12 +9,12 @@ import {onIsland,distanceToShore} from './shoreline';
 import {trunkCollider,type Obstacle} from './simulation';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
+import {orchardParts,orchardRig} from './summitOrchard';
+import {stadiumOrchardTrees,orchardPlanOf,type StadiumOrchardTree} from './stadiumOrchard';
 import {createPondWaterMaterial,createPondPadMaterial,createPondBedMaterial,createTrailMaterial} from '../graphics/pondWater';
 
-import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PLAZA_FLAG_X,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_TRAILS,PARK_GROVES,BOWL_RING,BOWL_APRON,POND_RIM,POND_Y,POND_SIGN,POND_BENCHES,PLAZA_LABEL,TRAIL_WIDTH,
+import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PLAZA_FLAG_X,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_TRAILS,PARK_GROVES,BOWL_RING,BOWL_APRON,POND_RIM,POND_Y,POND_SIGN,POND_BENCHES,PLAZA_LABEL,PARK_SIGNS,TRAIL_WIDTH,
  inStadiumFootprint,parkPathLines,pathPoints,ringPoints,segDistance,trailBeachRun,onApron,inPond,onGrass,grassEdgeDistance,type P} from './westParkLayout';
-/** Signs that trees keep clear of: STADIUM PARK, LILY POND. */
-const PARK_SIGNS:readonly (readonly [number,number])[]=[[-114,30],[POND_SIGN.x,POND_SIGN.z]];
 export {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_GROVES,BOWL_RING,inStadiumFootprint,parkPathLines};
 type Tools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -26,7 +26,9 @@ type Tools={
  obstacles:Obstacle[];assets:{kind:string;x:number;z:number;w:number;d:number;visualW?:number;visualD?:number;canopyHeight?:number}[];
  surfaceAreas:{kind:string;x:number;z:number;w:number;d:number}[];materials:T.Material[];add:(o:T.Object3D)=>void;prop?:PropTagger;
 };
-export type WestParkStats={trees:number;palms:number;flags:number;hedges:number;beds:number;lilyPads:number};
+export type WestParkStats={trees:number;palms:number;flags:number;hedges:number;beds:number;lilyPads:number;
+ /** The fruit orchards' trees (stadiumOrchard.ts), baked here; the fruit runtime (stadiumOrchardFruit.ts) reads this list. */
+ orchard:StadiumOrchardTree[];orchardTriangles:number};
 /** A park tree on the sand, or within this distance inland of the grass / sand line, is a palm (Nov 13 2026, owner: the sand and
  *  the row along the grass edge; the West Beach's grass edge is ~17 m in from the waterline, the north shore's up to ~40 m). */
 export const PALM_EDGE_M=9;
@@ -40,7 +42,7 @@ const smooth=(a:number,b:number,v:number)=>{const k=Math.min(1,Math.max(0,(v-a)/
 
 export function buildWestPark(t:Tools):WestParkStats{
  const {box,put,cylinder,sign,palm,bench,planter,path,districtSign,obstacles,assets,surfaceAreas,materials}=t,prop=t.prop??untaggedProp;
- const stats:WestParkStats={trees:0,palms:0,flags:0,hedges:0,beds:0,lilyPads:0};
+ const stats:WestParkStats={trees:0,palms:0,flags:0,hedges:0,beds:0,lilyPads:0,orchard:[],orchardTriangles:0};
  const trailMat=createTrailMaterial();materials.push(trailMat);
  const pathC=new T.Color(PATH_C),sandC=new T.Color(SAND_COLOR),tmpC=new T.Color();
  /** A flat mesh in the trail paving (vertex colours), placed at its own centre so the batching pass files it under its own
@@ -158,6 +160,13 @@ export function buildWestPark(t:Tools):WestParkStats{
  const clear=(x:number,z:number,r:number)=>onIsland(x,z)&&distanceToShore(x,z)>=14&&x<=-100&&clearOfPaving(x,z,r);
  const beachPalm=(x:number,z:number,h:number)=>{placed.push([x,z]);stats.palms++;palm(x,z,h,rnd()*Math.PI*2,false);};// no midribs: ~150 triangles a palm, not ~2.4k
  const greens=['#4f7a57','#5e8c62','#6f9d6c','#739568'];
+ // --- Fruit orchards (Nov 13 2026, owner; stadiumOrchard.ts): Summit Isle's orchard forms, baked into the chunks like any park tree
+ // ('tree' prop: a kicked ball rustles them), each with its trunk collider; planted first so the park's own trees keep clear.
+ for(const o of stadiumOrchardTrees()){if(local.some(b=>Math.abs(o.x-b.x)<b.w/2+2.5&&Math.abs(o.z-b.z)<b.d/2+2.5))continue;
+  const plan=orchardPlanOf(o);placed.push([o.x,o.z]);stats.orchard.push(o);
+  prop('tree',()=>{assets.push({kind:'tree',x:o.x,z:o.z,w:.4,d:.4,visualW:3.4*o.s,visualD:3.4*o.s,canopyHeight:4.2*o.s});
+   for(const part of orchardParts(plan)){const g=part.geo();g.applyMatrix4(part.matrix);g.translate(-o.x,0,-o.z);stats.orchardTriangles+=(g.index?g.index.count:g.getAttribute('position').count)/3;put(g,part.color,o.x,0,o.z);}});
+  obstacles.push(trunkCollider(o.x,o.z,orchardRig(plan).baseR));}
  for(let n=0;n<5000&&stats.trees+stats.palms<340;n++){
   const x=-335+rnd()*240,z=-230+rnd()*360,s=.85+rnd()*.6;
   const inGrove=PARK_GROVES.some(([gx,gz,gr])=>Math.hypot(x-gx,z-gz)<gr);

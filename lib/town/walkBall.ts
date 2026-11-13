@@ -1,3 +1,4 @@
+import {pondTouch,pondFloatStep,POND_SKIP,type BallPond} from './pondSkip';
 /** Controlled touches progress up the body, then return to the feet. */
 export type JuggleTouch='foot'|'knee'|'shoulder'|'head'|'around-world';
 export const JUGGLE_ROUTINE:readonly JuggleTouch[]=['foot','foot','knee','knee','shoulder','head','head','shoulder','knee','foot','around-world','foot'];
@@ -116,11 +117,16 @@ type Player={x:number;z:number;y:number;yaw:number};
 export type JuggleHead={bottom:number;top:number;front:number;width:number};
 /** Sea (Sep 29 2026, lib/town/ballSea.ts): `sea` classifies a point; `splash` fires once when a shot lands in open water. */
 export const BALL_SEA_LEVEL=-.43,BALL_FLOAT_TIME=2.1;
-type Environment={sea?:(x:number,z:number)=>'land'|'sea'|'edge';splash?:(x:number,y:number,z:number)=>void;juggleHead?:JuggleHead;headTop?:number;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null};
+type Environment={
+ /** The Stadium Park pond (lib/town/pondSkip.ts): a fast low shot skips across it, a slow one floats to the bank. */
+ pond?:BallPond;pondSplash?:(kind:'skip'|'float'|'out',x:number,z:number,strength:number,skip:number)=>void;
+ sea?:(x:number,z:number)=>'land'|'sea'|'edge';splash?:(x:number,y:number,z:number)=>void;juggleHead?:JuggleHead;headTop?:number;moving?:boolean;ballStyle?:CharacterCustomization['ball'];floor:(x:number,z:number)=>number;blocked:(x:number,z:number,y:number)=>boolean;impact:(x:number,y:number,z:number)=>void;strike:()=>void;receive?:()=>void;hit?:(x:number,y:number,z:number,vx:number,vz:number)=>boolean;frame?:(from:FramePoint,to:FramePoint)=>FrameHit|null};
 export function createWalkBall(){
  const state={x:0,y:.2,z:0,vx:0,vy:0,vz:0,charge:0,mode:'attached' as 'attached'|'charging'|'windup'|'shot'|'return'|'juggle'|'wall-juggle'|'drop'|'sky',age:0,kick:0,yaw:0,jugglePhase:0,juggleTouch:'foot' as JuggleTouch,juggleSide:1 as -1|1,bounce:0,wallTarget:null as WallJuggleTarget|null,wallPhase:'kick' as 'kick'|'outbound'|'returning'|'receive',wallAge:0,
   /** Seconds a shot has been floating in the sea (0 = not in the water). The ball stays in 'shot' mode while it floats. */
   floating:0,
+  /** The park pond (pondSkip.ts): skips left this shot (−1 = not touched the water yet), skips made, seconds floating (0 = dry). */
+  pondSkipsLeft:-1,pondSkip:0,pondFloat:0,
   /** Counted keep-ups (keepUp()): on, the live count (0 = no run), the current touch's lift (1 = tap, ≤ 1.6 held). */
   counted:false,streak:0,keepLift:1,
   /** Sky keep-up: the predicted ground landing (ball-centre y) and seconds left; skyRing = the live press charge 0…1 (UI ring). */
@@ -160,7 +166,7 @@ export function createWalkBall(){
   }
   state.y=support+.2;state.vx=state.vy=state.vz=0;
  };
- const reset=(p:Player)=>{endRun();state.floating=0;state.mode='attached';state.charge=0;state.wallTarget=null;nextWall=undefined;finishTarget=undefined;state.wallAge=state.age=state.kick=state.jugglePhase=0;blendAge=1;normalTouchCycle=-1;wallKickCount=0;attach(p);};
+ const reset=(p:Player)=>{endRun();state.floating=0;state.pondSkipsLeft=-1;state.pondSkip=0;state.pondFloat=0;state.mode='attached';state.charge=0;state.wallTarget=null;nextWall=undefined;finishTarget=undefined;state.wallAge=state.age=state.kick=state.jugglePhase=0;blendAge=1;normalTouchCycle=-1;wallKickCount=0;attach(p);};
  const shoot=(p:Player,yaw:number,charge=0,finish?:{x:number;y:number;z:number})=>{if((state.mode==='windup'||state.mode==='shot')&&charge<=0)return;endRun();state.mode='windup';state.charge=Math.max(0,Math.min(1,charge));state.wallTarget=null;nextWall=undefined;finishTarget=finish;state.age=0;state.kick=0;state.yaw=finish?Math.atan2(finish.x-p.x,finish.z-p.z):yaw;attach({...p,yaw:state.yaw});};
  const beginCharge=(p:Player,yaw:number)=>{if(state.mode==='shot'||state.mode==='windup')return;reset(p);state.mode='charging';state.yaw=yaw;};
  const validWall=(p:Player,target?:WallJuggleTarget)=>{if(!target)return false;const distance=Math.hypot(target.x-p.x,target.z-p.z),facing=distance?((target.x-p.x)*Math.sin(p.yaw)+(target.z-p.z)*Math.cos(p.yaw))/distance:0;return Number.isFinite(distance)&&distance>=.8&&distance<=WALL_JUGGLE_DISTANCE&&facing>=-.1&&(target.top===undefined||Number.isFinite(target.top)&&target.top>p.y+.75);};
@@ -252,7 +258,7 @@ export function createWalkBall(){
   const h=state.y-p.y,lx=(state.x-p.x)*Math.cos(p.yaw)-(state.z-p.z)*Math.sin(p.yaw);state.skyKickSide=lx>=0?1:-1;state.skyTrap=pickSkyTrap(h);state.skyMoveAge=0;
   armed=false;keptHold=false;skyBuffer=0;settle=0;blendStart.x=state.x;blendStart.y=state.y;blendStart.z=state.z;state.mode='attached';state.vx=state.vy=state.vz=0;state.kick=0;
  };
- const recall=()=>{if(state.mode==='shot'||state.mode==='drop'){state.mode='return';state.age=0;state.floating=0;}};
+ const recall=()=>{if(state.mode==='shot'||state.mode==='drop'){state.mode='return';state.age=0;state.floating=0;state.pondFloat=0;state.pondSkipsLeft=-1;}};
  function update(dt:number,p:Player,env:Environment){
   state.age+=dt;state.bounce=Math.max(0,state.bounce-dt);impactCooldown=Math.max(0,impactCooldown-dt);
   const impact=()=>{state.bounce=.16;if(impactCooldown<=0){impactCooldown=.09;env.impact(state.x,state.y,state.z);}};
@@ -369,7 +375,7 @@ export function createWalkBall(){
    }
    state.y=Math.max(p.y+JUGGLE_CONTACT,state.y);if(touch!==normalTouchCycle&&blendAge>=.35){normalTouchCycle=touch;env.receive?.();}return;
   }
-  if(state.mode==='windup'){attach({...p,yaw:state.yaw},env.floor);state.kick=Math.min(.36,state.age/SHOT_WINDUP*.36);if(state.age<SHOT_WINDUP)return;state.mode='shot';shotAge=0;state.age=0;state.vx=Math.sin(state.yaw)*(S.speed+S.chargeSpeed*state.charge);state.vz=Math.cos(state.yaw)*(S.speed+S.chargeSpeed*state.charge);state.vy=S.lift+S.chargeLift*state.charge;
+  if(state.mode==='windup'){attach({...p,yaw:state.yaw},env.floor);state.kick=Math.min(.36,state.age/SHOT_WINDUP*.36);if(state.age<SHOT_WINDUP)return;state.mode='shot';shotAge=0;state.age=0;state.pondSkipsLeft=-1;state.pondSkip=0;state.pondFloat=0;state.vx=Math.sin(state.yaw)*(S.speed+S.chargeSpeed*state.charge);state.vz=Math.cos(state.yaw)*(S.speed+S.chargeSpeed*state.charge);state.vy=S.lift+S.chargeLift*state.charge;
    if(finishTarget){
     const dx=finishTarget.x-state.x,dz=finishTarget.z-state.z,d=Math.hypot(dx,dz),speed=S.speed+S.chargeSpeed*state.charge;
     const duration=-Math.log(Math.max(.01,1-.1*d/speed))/.1;
@@ -383,6 +389,10 @@ export function createWalkBall(){
    const x=state.x+state.vx*dt,z=state.z+state.vz*dt;if(env.sea?.(x,z)==='sea'){state.x=x;state.z=z;}else state.vx=state.vz=0;
    state.y=BALL_SEA_LEVEL+.1+Math.sin(state.floating*3.4)*.05;
    if(state.floating>BALL_FLOAT_TIME||Math.hypot(state.x-p.x,state.z-p.z)>floatFrom+4)recall();return;}
+  // Floating on the park pond (pondSkip.ts): drift to the nearest bank, then roll out onto the grass (the shot physics take over).
+  if(state.pondFloat>0&&env.pond){state.kick=0;shotAge+=dt;
+   if(pondFloatStep(state,env.pond,dt)){state.y=env.floor(state.x,state.z)+S.radius;env.pondSplash?.('out',state.x,state.z,.4,state.pondSkip);}
+   else{if(state.pondFloat>POND_SKIP.floatMax||Math.hypot(state.x-p.x,state.z-p.z)>POND_SKIP.leash)recall();return;}}
   shotAge+=dt;state.kick=shotAge<.6?.36+shotAge/.6*.64:0;
   const steps=Math.max(1,Math.ceil(Math.hypot(state.vx,state.vz)*dt/S.substep)),step=dt/steps;
   for(let i=0;i<steps;i++){
@@ -398,13 +408,19 @@ export function createWalkBall(){
    const x=state.x+state.vx*step;if(env.blocked(x,state.z,state.y)){state.vx*=-S.wallBounce;impact();}else state.x=x;
    const z=state.z+state.vz*step;if(env.blocked(state.x,z,state.y)){state.vz*=-S.wallBounce;impact();}else state.z=z;
    if(env.hit?.(state.x,state.y,state.z,state.vx,state.vz)){state.vx*=-S.hitBounce;state.vz*=-S.hitBounce;state.vy=S.hitLift;impact();}
-   state.vy-=S.gravity*step;state.y+=state.vy*step;let floor=env.floor(state.x,state.z)+S.radius;
+   state.vy-=S.gravity*step;state.y+=state.vy*step;
+   // The park pond: over the water there is no grass to bounce on; touching the surface skips or settles the ball (pondSkip.ts).
+   if(env.pond&&env.pond.q(state.x,state.z)<1){
+    if(state.y<=env.pond.level+S.radius&&state.vy<=0){const sp=Math.hypot(state.vx,state.vz),kind=pondTouch(state,env.pond,S.radius);finishTarget=undefined;
+     env.pondSplash?.(kind,state.x,state.z,Math.min(1,.25+sp/30),state.pondSkip);if(kind==='float')return;}
+    continue;}
+   let floor=env.floor(state.x,state.z)+S.radius;
    const ground=env.sea?.(state.x,state.z)??'land';if(ground==='edge'){recall();return;}
    if(ground==='sea'&&floor<=.25){floor=BALL_SEA_LEVEL+.1;if(state.y<floor){state.y=floor;state.vx*=.12;state.vz*=.12;state.vy=0;state.floating=1e-3;floatFrom=Math.hypot(state.x-p.x,state.z-p.z);finishTarget=undefined;env.splash?.(state.x,BALL_SEA_LEVEL,state.z);return;}continue;}
    if(state.y<floor){state.y=floor;if(state.vy<-S.bounceMinVy){state.vy=-state.vy*S.floorBounce;impact();}else state.vy=0;}
   }
   const drag=Math.exp(-(finishTarget||state.charge>0&&state.y>env.floor(state.x,state.z)+S.loftHeight?S.loftDrag:S.rollDrag)*dt);state.vx*=drag;state.vz*=drag;
-  if(shotAge>(state.charge>0?S.chargedAge:S.tapAge)||Math.hypot(state.x-p.x,state.z-p.z)>(state.charge>0?360:65)||Math.hypot(state.vx,state.vz)<S.restSpeed&&state.y<=env.floor(state.x,state.z)+S.restHeight)recall();
+  if(shotAge>(state.charge>0?S.chargedAge:S.tapAge)+(state.pondSkipsLeft>=0?POND_SKIP.floatMax:0)||Math.hypot(state.x-p.x,state.z-p.z)>(state.charge>0?360:65)||Math.hypot(state.vx,state.vz)<S.restSpeed&&state.y<=env.floor(state.x,state.z)+S.restHeight&&!(env.pond&&env.pond.q(state.x,state.z)<1))recall();
  }
  const syncDribble=(p:Player,contact:{x:number;z:number},floor:Environment['floor'])=>{if(state.mode==='attached')attach(p,floor,contact);};
  return {state,reset,beginCharge,shoot,juggle,keepUp,keepUpRelease,get keepUpHeld(){return pressing;},updateWallTarget,recall,update,syncDribble};
