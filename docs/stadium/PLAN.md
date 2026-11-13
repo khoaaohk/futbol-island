@@ -108,7 +108,17 @@ Original plan:
 - Placeholder Futbol Island art now; `/admin` swap later (`app/admin/*`, upload → rebuilt atlas, cached, loaded on demand when
   the west region first becomes visible).
 
-## Phase 5: multiplayer
+## Phase 5: multiplayer (seated pose DONE on branch stadium-mp, Nov 12 2026)
+- Seated on the v1 wire, NO relay redeploy: `multiplayer/protocol/seat.ts` = Mode.Idle + speed byte SEAT_SPEED_Q (1) at the seat
+  (x, row height, z) and its pitch-facing yaw. The deployed relay's clampPose / speed caps already accept it; old clients draw a still
+  Idle friend on the seat row (0.25 m/s < the 0.3 m/s walk threshold). New senders never send byte 1 in a plain Idle (`fillLocalBody`).
+- Sender: Town passes `stadiumSit.seated ? stadiumSit.seat : null` to `partyLocal`. Receiver: interp holds a seated friend exactly on
+  the seat (no slide in or out, no extrapolation); `lib/town/stadiumSeatShare.ts` checks the spot is a real seat, snaps onto it and
+  marks it taken (`remoteSeatsTaken()`, used by the Sit prompt's `nearestSeat`; a crowd should skip those seats); remoteAvatars wears
+  `npcSeatPose('bench')` with the name tag SEATED_LABEL_DROP lower. Seated friends are not ball-knock or ball-emote targets.
+- Open: the public world drops a member idle for WORLD_IDLE_MS (5 min without moving or emoting), seated or not (relay rule).
+  Two players pressing Sit on the same seat in the same instant can both sit (each sees the other drawn standing there).
+Original notes:
 - Public world: the stadium is Zone.Main land (no relay change for position). The relay has no island bounds
   (`multiplayer/protocol/limits.ts` WORLD_BOUNDS ±4–10 km; interest is nearest-N / LIVE_RANGE_M 40 m by distance), so the new
   land needs no relay change.

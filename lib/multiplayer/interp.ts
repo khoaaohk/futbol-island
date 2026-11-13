@@ -3,12 +3,15 @@
 // stop and glide back onto the last real pose (a quiet stream must never leave the avatar parked somewhere the sender never was).
 // A Warp flag or a >25 m jump (x, y or z) fades out/in over 300 ms. The drawn y never sinks more than Y_SINK_M below the poses it comes from (landings, warps).
 // sample() allocates nothing. Positions are metres, yaw radians (wire yaw256 * 2pi/256), speed m/s.
-import { MAX_SPEED_MS, activityOf, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
+import { MAX_SPEED_MS, activityOf, seatedWire, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
 
 /** flags: the pose flags of the newest snapshot at or before the render time (Hidden = away; design 4.4.1). Optional for old callers. */
 export type RemotePose = { x: number; y: number; z: number; yaw: number; speed: number; mode: Mode; zone: Zone; fade: number; flags?: number;
   /** The Activity a Busy pose carries in its speed byte (0 otherwise). */
-  activity?: number };
+  activity?: number;
+  /** Seated in the stadium's stands (multiplayer/protocol/seat.ts): drawn on the seat, never moving. The island runtime also checks the
+   *  spot is a real seat (lib/town/stadiumSeatShare.ts) and clears this when it is not. */
+  seated?: boolean };
 export interface Interp {
   push(id: MemberId, body: PoseBody, recvMs: number): void;
   /** renderMs is the current clock (same base as recvMs); the delay is subtracted inside. */
@@ -112,7 +115,9 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
   function put(out: RemotePose, r: Ring, s: number, x: number, y: number, z: number, yaw: number): void {
     out.x = x; out.y = y; out.z = z; out.yaw = yaw; out.speed = r.d[s + 5];
     out.mode = r.d[s + 6] as Mode; out.zone = r.d[s + 7] as Zone; out.flags = r.d[s + 8]; out.activity = activityOf(r.d[s + 6], r.d[s + 5] * 4);
+    out.seated = isSeated(r, s); if (out.seated) out.speed = 0;
   }
+  const isSeated = (r: Ring, s: number): boolean => seatedWire(r.d[s + 6], r.d[s + 5] * 4, r.d[s + 7]);
 
   function sample(id: MemberId, renderMs: number, out: RemotePose): boolean {
     const r = rings.get(id);
@@ -143,6 +148,11 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
       return true;
     }
     const sa = at(r, a);
+    // Seated (stadium stands): exactly on the seat, never extrapolated, and never sliding into or out of it (it pops, as the sitter snaps).
+    if (isSeated(r, sa) || (a + 1 < r.n && isSeated(r, at(r, a + 1)))) {
+      put(out, r, sa, r.d[sa + 1], r.d[sa + 2], r.d[sa + 3], r.d[sa + 4]);
+      return true;
+    }
     if (a === r.n - 1) { // extrapolate, velocity easing to zero across the cap, then glide back onto the real pose
       const dt = rt - r.d[sa];
       let vx = 0, vy = 0, vz = 0;

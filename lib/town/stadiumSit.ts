@@ -14,6 +14,7 @@ import {STADIUM} from './westParkLayout';
 import {createStadiumCrowd,CROWD_RADIUS} from './stadiumCrowd';
 import {createSitMachine,inGate,nearestSeat,seatView,followLook,portraitLook,PORTRAIT_FOV,sitDown,standUp,stepSit,stadiumSponsorLayout,GATE_ARCH_X,FOLLOW_RATE,type Seat} from './stadiumSeats';
 import {createStadiumScreen,screenMinute,stadiumBarText,type ScreenScore} from './stadiumScreen';
+import {remoteSeatsTaken} from './stadiumSeatShare';
 import {BIB_COLOURS} from './beanLooks';
 import {ensureStadiumSponsors,SPONSOR_LOAD_RADIUS} from '../stadium/sponsors/index';
 import {countStadiumVisit} from '../analytics/sponsorEvents';
@@ -56,7 +57,7 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:b
     ensureStadiumSponsors(ports.parent,stadiumSponsorLayout()).then(s=>{s.group.position.set(STADIUM.x,-.045,STADIUM.z);sponsors=s;screenSponsor=!live;s.setScreenSponsor(screenSponsor);ports.wake();}).catch(()=>{sponsorAsked=false;});}
    const gate=inGate(x,z);if(gate&&wasOutside)countStadiumVisit();if(gate)wasOutside=false;else if(x>GATE_ARCH_X||dc>140)wasOutside=true;
    if(held())return {key:SIT_KEY,distance:0};
-   near=canSit&&dc<110&&height>.2?nearestSeat(x,z,height):null;
+   near=canSit&&dc<110&&height>.2?nearestSeat(x,z,height,remoteSeatsTaken()):null;// phase 5: never a seat another player sits in
    return near?{key:SIT_KEY,distance:Math.hypot(near.x-x,near.z-z)}:null;
   },
   /** The prompt pressed: sit on the offered seat (returns it: Town moves the player there) or stand up (returns null). */

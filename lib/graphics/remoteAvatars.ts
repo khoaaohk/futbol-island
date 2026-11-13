@@ -35,6 +35,7 @@ import {CLASSIC_BALL,createClassicBallGeometry,createClassicBallMaterial} from '
 import {kitBall,kitBallKey,kitKey,kitOutfit} from '../multiplayer/kit';
 import {wireToLook} from '../multiplayer/look';
 import type {RemotePose} from '../multiplayer/interp';
+import {npcSeatPose} from './npcSeatPose';
 import {BallState,Emote,Mode,Zone,PARTY_MAX,WORLD_HARD,WORLD_SEE_M,presenceOf,shielded,type Kit,type Look,type MemberId} from '../../multiplayer/protocol';
 import {presenceIconAt,presenceTextAt} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
@@ -302,6 +303,12 @@ export function drawnAs(mode:number,zone:number,shield:boolean,land:boolean,agl:
 export const KIT_SKINS=2;
 const ballAxis=new T.Vector3(),ballSpin=new T.Quaternion(),feelSpot=new T.Vector3();
 const onFoot=(mode:number)=>mode===Mode.Walk||mode===Mode.Run||mode===Mode.Idle;
+/** West Stadium phase 5: a friend seated in the stands (pose.seated, already snapped onto the seat by the island runtime) wears the same
+ *  bench pose the local sitter does (stadiumSit.ts: npcSeatPose('bench')), at full weight; their name tag (and status / emote bubble)
+ *  sits SEATED_LABEL_DROP m lower, over the seated head. Inside a force field (busy / away) they stand as before. */
+const SEAT_POSE=npcSeatPose('bench');SEAT_POSE.w=1;
+export const SEATED_LABEL_DROP=.42;
+export const drawnSeated=(pose:{seated?:boolean},shield:boolean)=>!!pose.seated&&!shield;
 /** Where a friend's ball is drawn (writes out.x/y/z; false = not drawn): Free at its own spot, Feet in front of their feet, Juggle bobbing over them. Exported for tests. */
 export function friendBallSpot(state:number,b:{x:number;y:number;z:number},pose:{x:number;y:number;z:number;yaw:number;mode:number},clock:number,phase:number,out:{x:number;y:number;z:number}):boolean{
  if(state===BallState.Free){out.x=b.x;out.y=b.y;out.z=b.z;return true;}
@@ -366,16 +373,16 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   const label=e.label!,bubble=e.bubble!,d2=e.d2,ld2=e.ld2;
   label.visible=false;bubble.visible=false;
   const underNpc=nearNpcTag(pose);
-  if(ld2<LABEL_RANGE*LABEL_RANGE&&!underNpc){label.position.set(pose.x,pose.y+LABEL_Y*k,pose.z);/* a far camera (the desktop island view sits higher than the phone's) grows the label up to LABEL_FAR_GROW so it never shrinks below the phone size on screen */const cy=pose.y+LABEL_Y-camPos.y,ls=LABEL_WORLD_W*Math.min(LABEL_FAR_GROW,Math.max(1,Math.sqrt(d2+cy*cy)/LABEL_NEAR_M));label.scale.set(ls,ls*LABEL_H/LABEL_W,1);(label.material as T.SpriteMaterial).opacity=k*e.ps;candL.push(e);}
+  if(ld2<LABEL_RANGE*LABEL_RANGE&&!underNpc){const ly=LABEL_Y-(drawnSeated(pose,e.shield)?SEATED_LABEL_DROP:0);label.position.set(pose.x,pose.y+ly*k,pose.z);/* a far camera (the desktop island view sits higher than the phone's) grows the label up to LABEL_FAR_GROW so it never shrinks below the phone size on screen */const cy=pose.y+LABEL_Y-camPos.y,ls=LABEL_WORLD_W*Math.min(LABEL_FAR_GROW,Math.max(1,Math.sqrt(d2+cy*cy)/LABEL_NEAR_M));label.scale.set(ls,ls*LABEL_H/LABEL_W,1);(label.material as T.SpriteMaterial).opacity=k*e.ps;candL.push(e);}
   // The status line ("Taking a lesson", "Away") is THE information about a busy friend: shown to STATUS_RANGE (only busy friends have one),
   // sitting above the name label at a constant screen size (sizeAttenuation off), so it reads from the usual walking camera (~40 m).
   if(e.status){const show=!!e.statusKey&&d2<STATUS_RANGE*STATUS_RANGE&&!underNpc;e.status.visible=show;
-   if(show){e.status.position.set(pose.x,pose.y+LABEL_Y*k+.62,pose.z);(e.status.material as T.SpriteMaterial).opacity=k;}}
+   if(show){e.status.position.set(pose.x,pose.y+(LABEL_Y-(drawnSeated(pose,e.shield)?SEATED_LABEL_DROP:0))*k+.62,pose.z);(e.status.material as T.SpriteMaterial).opacity=k;}}
   if(e.emote>=0){
    if(bubble.userData.icon!==e.emote){bubble.userData.icon=e.emote;const m=bubble.material as T.SpriteMaterial;m.map=iconTexture(e.emote);m.needsUpdate=true;}
    const fs=e.rig?flourishForWire(e.emote,e.emMode):undefined;
    const dur=e.mv>=0?e.mvDur:fs?fs.seconds:e.hf>=0?HIGH_FIVES[e.hf].duration:emoteSeconds(e.emote),f=cycleFrame(e.emoteAge,dur,reduced,BF);// pops in, floats up with a sway, dissipates; repeats through the emote
-   if(f.visible){bubble.position.set(pose.x+f.dx,pose.y+3.3*k+f.dy,pose.z);bubble.scale.setScalar(.72*f.scale);(bubble.material as T.SpriteMaterial).opacity=f.opacity;candB.push(e);}
+   if(f.visible){bubble.position.set(pose.x+f.dx,pose.y+(3.3-(drawnSeated(pose,e.shield)?SEATED_LABEL_DROP:0))*k+f.dy,pose.z);bubble.scale.setScalar(.72*f.scale);(bubble.material as T.SpriteMaterial).opacity=f.opacity;candB.push(e);}
   }
  }
  /** Shows only the nearest `max` candidates (insertion sort by squared distance; no allocation). Label candidates drive `label`, bubble candidates `bubble`. */
@@ -627,7 +634,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     if(e.hidden||!e.sel){hideEntry(e);continue;} // Hide (and a stranger over the room cap): no avatar, ring, label or emote bubble
     const pose=e.leaving?e.lp:poses.get(e.id);
     if(!pose||saverFade<=0){hideEntry(e);continue;}
-    if(e.st&&!e.leaving){const q=e.lp;q.x=pose.x;q.y=pose.y;q.z=pose.z;q.yaw=pose.yaw;q.speed=0;q.mode=pose.mode;q.zone=pose.zone;q.fade=pose.fade;q.flags=pose.flags??0;q.activity=pose.activity??0;}
+    if(e.st&&!e.leaving){const q=e.lp;q.x=pose.x;q.y=pose.y;q.z=pose.z;q.yaw=pose.yaw;q.speed=0;q.mode=pose.mode;q.zone=pose.zone;q.fade=pose.fade;q.flags=pose.flags??0;q.activity=pose.activity??0;q.seated=pose.seated;}
     // Presence: indoors = fade out at the door; busy / away = inside the green force field, still, with a status line.
     const pr=presenceOf(pose.mode,pose.zone,pose.flags??0),shield=shielded(pr);
     if(pose.zone===Zone.Indoors){e.door=reduced?0:Math.max(0,e.door-dt/DOOR_FADE);if(e.door<=0){e.field=0;hideEntry(e);continue;}}else e.door=1;
@@ -660,7 +667,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
     // Live feel: the tier goes by the distance from the LOCAL player (ld2), not the camera: on the island the camera sits ~35 m back, so a
     // friend right next to you was posed at 10 Hz (legs stepping in jerks while the body glided). Near friends now pose every frame.
     const pd=e.ld2,period=e.hf>=0&&!reduced?0:pd>MID_POSE*MID_POSE?1/FARTHER_HZ:pd>FAR_POSE*FAR_POSE?1/FAR_HZ:0;
-    const moving=!shield&&pose.speed>.3; // inside the field they stand still (the speed byte carries the activity)
+    const sat=drawnSeated(pose,shield),moving=!shield&&!sat&&pose.speed>.3; // inside the field they stand still (the speed byte carries the activity)
     e.spd=shield?0:pose.speed;
     if(period===0||e.acc>=period+e.slot*period||e.needResume){
      const step=Math.min(e.acc,.1),idleStep=Math.min(e.acc,.6)/* a far friend updates less often: the idle gestures keep real time */;e.acc=0;
@@ -669,8 +676,8 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
       const land=sw&&!!opts.landAt&&opts.landAt(pose.x,pose.z),g=(jp||land)&&opts.groundAt?opts.groundAt(pose.x,pose.z):NaN,dr=drawnAs(mode,pose.zone,shield,land,pose.y-g);
       e.wet=dr.wet;e.jet=dr.jet;e.lift=land&&g>pose.y?g-pose.y:0;}
      motion.facing=pose.yaw;motion.resumePose=e.needResume;motion.travelMode=shield&&mode!==Mode.Jetpack||mode===Mode.Jetpack&&!e.jet?undefined:travelFor(mode);/* an away friend keeps the jetpack backpack (and the blue downwash while hovering); rides are not drawn inside the field, so they stand */
-     motion.parachute=!shield&&(mode===Mode.Parachute||mode===Mode.Zipline);
-     motion.dribbling=!shield&&onFoot(mode)&&balls?.get(e.id)?.state===BallState.Feet&&pose.zone!==Zone.Indoors;/* only with a ball at their feet */
+     motion.parachute=!shield&&(mode===Mode.Parachute||mode===Mode.Zipline);motion.trick=sat?SEAT_POSE:undefined;if(sat)motion.travelMode=undefined;/* seated in the stands: the bench pose, on the seat */
+     motion.dribbling=!shield&&!sat&&onFoot(mode)&&balls?.get(e.id)?.state===BallState.Feet&&pose.zone!==Zone.Indoors;/* only with a ball at their feet */
      motion.called=0;motion.jump=undefined;motion.skill=e.hf>=0&&!reduced&&highFiveSkill(HF_SKILL,e.hf,0,e.emoteAge)?HF_SKILL as SkillMotion:undefined;
      if(e.wet){
       const s=e.swim;s.kind=moving?'crawl':'tread';s.effort=moving?Math.min(1,pose.speed/3):0;s.phase=reduced?0:s.phase+step*(moving?5:1.5);s.under=mode===Mode.Dive?.7:0;motion.swim=s;
@@ -678,7 +685,7 @@ shield:false,field:0,door:1,shake:0,ripple:1,hx:0,hy:1,hz:0,status:null,statusKe
      // Emotes: JuggleWithMe/Wave/HighFive raise the "called" arm; Cheer/WellPlayed celebrate. Reduced motion keeps only the bubble.
      if(e.emote>=0&&!reduced){
       const em=e.emote,age=e.emoteAge;
-      if(e.hf<0&&!fs0&&e.mv<0){const b=emoteBody(em,age,emoteSeconds(em));motion.jump=b.jump;motion.called=b.called;}
+      if(e.hf<0&&!fs0&&e.mv<0){const b=emoteBody(em,age,emoteSeconds(em));motion.jump=sat?undefined:b.jump;motion.called=b.called;}
       if(e.hf<0&&!fs0&&e.mv<0&&e.ball&&(em===Emote.PassBall||em===Emote.JuggleWithMe))friendBallMotion(e.ball,em===Emote.JuggleWithMe,age,pose.yaw,motion);/* the ball routines' body (lib/town/emoteBallPlay.ts) */
      }
      if(e.ball&&(reduced||e.mv>=0||!(e.emote===Emote.PassBall||e.emote===Emote.JuggleWithMe))&&motion.turnSmoothing!==undefined)clearBallMotion(motion);

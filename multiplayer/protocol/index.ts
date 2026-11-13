@@ -7,3 +7,4 @@ export * from './validate';
 export * from './sha256';
 export * from './presence';
 export * from './rooms';
+export * from './seat';
