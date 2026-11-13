@@ -9,7 +9,7 @@
 // main gate: a ground-level gap from the plaza onto the pitch-level ring round the boards. The corners are open (pitch-side gaps).
 // Rows, treads and the concourse are walk surfaces (a box from the ground up to its height: nothing to fall through); the seats
 // are a grid computed on demand (no per-seat objects): nearestSeat() snaps to one, facing the pitch.
-import {STADIUM,STADIUM_GATE,STADIUM_PLAZA} from './westParkLayout';
+import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PLAZA_FLAG_X} from './westParkLayout';
 import type {SponsorLayout,SponsorQuad} from '../stadium/sponsors/layout';
 
 export const ROWS=10,ROW_DEPTH=1.3,RISE=.5,TREAD_RISE=.25,TREAD=.35,CONCOURSE=4,STAIR_WIDTH=3,AISLE_WIDTH=2.2,SEAT_PITCH=.6;
@@ -196,7 +196,7 @@ export function roofBox(s:StandDef){return {...standRect(s,ROOF.front,ROOF.back,
 /** The sponsor layout matching this geometry (stadium-local: origin on the centre spot, +X east, +Z south). */
 /** The plaza's 14 flag poles (westPark.ts places them with this same rule). */
 export function plazaFlagPoles(){const P=STADIUM_PLAZA,pcz=(P.minZ+P.maxZ)/2,out:{x:number;z:number}[]=[];
- for(const side of [-1,1])for(let i=0;i<7;i++)out.push({x:P.minX+6+i*12,z:pcz+side*(P.maxZ-P.minZ)/2+side*.8});return out;}
+ for(const side of [-1,1])for(const x of PLAZA_FLAG_X)out.push({x,z:pcz+side*(P.maxZ-P.minZ)/2+side*.8});return out;}
 export function stadiumSponsorLayout(plazaFlags:readonly {x:number;z:number}[]=plazaFlagPoles()):SponsorLayout{
  const boards:SponsorQuad[]=[],H=.92,y=H/2,E=Math.PI/2;
  for(let i=0;i<4;i++)boards.push({x:-35.5,y,z:-37.5+i*25,w:22,h:H,yaw:E});

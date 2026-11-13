@@ -109,6 +109,7 @@ const PF=load('lib/town/plazaFlags.ts');
  assert.deepEqual(order,['usa','brazil','france','spain','italy','netherlands','brazil','japan','argentina','germany','england','portugal','mexico','uruguay']);
  assert.equal(new Set(order).size,13,'all thirteen fly');assert.equal(order.filter(n=>n==='argentina').length,1,'Argentina once');
  assert(poles[0].x<poles[1].x&&poles[7].x<poles[8].x,'pole 0 on each side is the west (stadium gate) end');assert.deepEqual([order[0],order[7]],['usa','japan'],'the US and Japan at the front by the stadium');
+ {const WL=load('lib/town/westParkLayout.ts');for(const p of poles)assert(!WL.onWalkPath(p.x,p.z,.5)&&!WL.onParkPaving(p.x,p.z,.3),'flag pole off every path and the paving: '+p.x+','+p.z);}
  for(let i=0;i<7;i++){assert.notEqual(order[i],order[i+7],'across the walk '+i);if(i<6){assert.notEqual(order[i],order[i+1],'north side '+i);assert.notEqual(order[i+7],order[i+8],'south side '+i);}}
  // Each flag draws its own cell; the US gets stripes and a canton, England a cross, Japan a disc.
  const log=[],rec=new Proxy({},{get:(t,k)=>k in t?t[k]:(...a)=>log.push([k,...a]),set:(t,k,v)=>{t[k]=v;return true;}});

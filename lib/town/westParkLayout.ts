@@ -9,6 +9,9 @@ export const STADIUM_GATE={x:STADIUM.x+STADIUM.bowlW/2,z:STADIUM.z,halfWidth:7} 
 /** Map travel ("Stadium", phase 3): you land on the plaza just outside the gate, facing it. */
 export const STADIUM_ARRIVAL={x:STADIUM_GATE.x+8,z:STADIUM_GATE.z,yaw:-Math.PI/2} as const;
 export const STADIUM_PLAZA={minX:-140,maxX:-52,minZ:STADIUM.z-22,maxZ:STADIUM.z+22} as const;
+/** The x of the 7 flag poles on each side of the plaza, west (the stadium apron) to east (owner, Nov 13 2026: no pole on a path):
+ *  on the grass verge 0.8 m outside the plaza's long edges, clear of the apron (x < -132) and the trail mouths at x -106. */
+export const PLAZA_FLAG_X=[-129,-120,-111,-99,-88,-77,-66] as const;
 /** The plaza's player-facing name (Nov 13 2026, owner: "Plaza", not "Stadium Plaza"; analytics ids keep stadium_plaza). */
 export const PLAZA_LABEL='PLAZA';
 /** The park pond (an ellipse, radii in m). Nov 13 2026 (owner): bigger, grown south toward the coast, away from the bowl's ring;

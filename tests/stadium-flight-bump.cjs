@@ -95,7 +95,7 @@ function fly(F,start,dir,y,seconds=1.6){
  const F=FL.createStadiumFlight(),m=Q.MASTS[1];assert(F.solid(m.x,m.z,20));assert(F.knock(false)&&F.react.on);assert(!F.solid(m.x,m.z,40),'over the masts');assert(!F.knock(false),'re-arm');}
 {// Far away: one rectangle test, no solid loop; the broad phase covers the bowl and the plaza.
  const F=FL.createStadiumFlight();for(const [x,z] of [[0,0],[100,-50],[-40,-30]])assert(!F.test(x,z,28));assert.equal(F.stats.tests,0,'nothing tested away from the stadium');
- assert(F.bounds.x0<S.x-S.bowlW/2&&F.bounds.x1>L.STADIUM_PLAZA.maxX-10,'bounds take in the bowl and the plaza');}
+ assert(F.bounds.x0<S.x-S.bowlW/2&&F.bounds.x1>Math.max(...Q.plazaFlagPoles().map(p=>p.x)),'bounds take in the bowl and the plaza (to its last flag pole)');}
 {// Town wiring: only the flight branches resolve (walking unchanged); jet actions block on it; the overlay rides the friend-bump hook.
  const town=src('components/Town.tsx');
  assert.equal((town.match(/stadiumFlight\.resolve\(/g)||[]).length,2,'two flight call sites');
