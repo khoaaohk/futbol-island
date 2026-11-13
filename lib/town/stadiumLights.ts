@@ -27,8 +27,10 @@ export const ROOF_LAMP={d:ROOF.front+.75,w:1.3,h:.28,depth:.55,y:ROOF.y-ROOF.thi
 export function roofLampAlongs(){const L=STADIUM_NIGHT_LIGHTS,out:number[]=[];for(let a=-L.lampSpan;a<=L.lampSpan+1e-6;a+=L.lampEvery)out.push(a);return out;}
 /** The island's street-lamp post (world.ts): base, pole, cap and lamp head; the head is the lens. */
 export const LAMP_POST={baseR:.19,baseH:.22,poleR:.065,poleH:4.2,cap:.62,head:.43,headH:.32,collider:.38,ground:-.115,pool:9} as const;
-/** Where the posts go: 2.4 m out on the plaza's verges, 1.6 m out round the apron, beside the trails; spacing and clearances. */
-export const STADIUM_LAMPS={plazaOut:2.4,plazaX:[-124.5,-115.5,-93.5,-82.5,-71.5],apronOut:1.6,apronEvery:24,trailEvery:26,trailStart:12,trailOut:TRAIL_WIDTH/2+1.4,
+/** Where the posts go: 2.4 m out on the plaza's verges (5 a side, 15 m apart: Nov 13 2026, the old x list put pairs 9 m and 11 m apart,
+ *  so the 12 m spacing rule dropped 4 of the 10; these stand 2+ m from every flag, west of the apron edge x -131, beside not on
+ *  the x -106 trail mouths, far from the PLAZA sign and outside the flower beds), 1.6 m out round the apron, beside the trails; spacing and clearances. */
+export const STADIUM_LAMPS={plazaOut:2.4,plazaX:[-131,-116,-101,-86,-71],apronOut:1.6,apronEvery:24,trailEvery:26,trailStart:12,trailOut:TRAIL_WIDTH/2+1.4,
  spacing:12,pavingClear:.75,signClear:5,obstacleClear:.6,canopyClear:.5} as const;
 /** The PLAZA district sign (westPark.ts) the posts keep clear of, like the park signs. */
 const PLAZA_SIGN:P=[-58,STADIUM_PLAZA.maxZ+3.5];

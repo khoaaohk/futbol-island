@@ -465,6 +465,12 @@ console.log('west stadium phase 2: ok');
  // Posts: round the plaza, the apron and the trails; off every path and the plaza, out of the pond, clear of signs, flags, trees and
  // orchards; 12 m apart; each with a collider and a night pool (one pool batch).
  assert(kinds.plaza>=6&&kinds.apron>=8&&kinds.trail>=12,'posts on every kind of edge');
+ // Nov 13 2026: all 10 plaza posts stand (5 a side, evenly spaced, clear of flags, benches and beds; the old list lost 4 to spacing).
+ {const pl=lights.posts.filter(p=>p.kind==='plaza');assert.equal(pl.length,10,'10 plaza posts');
+  for(const z of [P.minZ-SL.STADIUM_LAMPS.plazaOut,P.maxZ+SL.STADIUM_LAMPS.plazaOut]){const xs=pl.filter(p=>p.z===z).map(p=>p.x).sort((a,b)=>a-b);
+   assert.equal(xs.length,5,'5 posts on each long edge');const gaps=xs.slice(1).map((x,i)=>x-xs[i]);assert(Math.max(...gaps)-Math.min(...gaps)<1e-6,'evenly spaced: '+gaps);}
+  const props=world.obstacles.filter(o=>o.x<-40&&o.w!==SL.LAMP_POST.collider);
+  for(const p of pl)assert(!props.some(o=>Math.abs(p.x-o.x)<o.w/2+.5&&Math.abs(p.z-o.z)<o.d/2+.5),`plaza post (${p.x}, ${p.z}) clear of benches, beds and flags`);}
  const trees=world.assets.filter(a=>a.kind==='tree'||a.kind==='palm'),flags=Q.plazaFlagPoles();
  for(const p of lights.posts){const at=`post (${p.x.toFixed(1)}, ${p.z.toFixed(1)})`;
   assert(!L.onParkPaving(p.x,p.z,SL.LAMP_POST.collider)&&!L.onWalkPath(p.x,p.z,.5),at+' on a path or the plaza');
