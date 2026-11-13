@@ -3,7 +3,7 @@
 // must never leave the avatar parked somewhere the sender never was). A Warp flag or a >25 m jump (x, y or z) fades
 // out/in over 300 ms. The drawn y never sinks more than Y_SINK_M below the poses it comes from (landings, warps).
 // sample() allocates nothing. Positions are metres, yaw radians (wire yaw256 * 2pi/256), speed m/s.
-import { MAX_SPEED_MS, Mode as M, activityOf, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
+import { MAX_SPEED_MS, Mode as M, Zone as Z, activityOf, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
 
 /** flags: the pose flags of the newest snapshot at or before the render time (Hidden = away; design 4.4.1). Optional for old callers. */
 export type RemotePose = { x: number; y: number; z: number; yaw: number; speed: number; mode: Mode; zone: Zone; fade: number; flags?: number;
@@ -59,6 +59,16 @@ const BEACON_DELAY_MAX_MS = 1400, EXTRA_SLEW = 0.5;
 const BEACON_K = 1.15, EX_EASE_MS = 300, EXV_TAU_MS = 250;
 const BRAKE_MPS = 8, BRAKE_E_MS = 120, BRAKE_FLOOR = 0.15, LIN_MS = 300, BRAKE_RELEASE_MS = 1200;
 
+// Coming into sight (local harness, Nov 13 2026: real RoomCore + this interp, a 32 m/s flyer leaving 160 m and coming back on the
+// 1 Hz beacon): the S.Joined / Welcome roster pose has no timestamp, so it was stamped on ARRIVAL (100-250 ms later than the
+// sender-timeline stamps of S.Live): the next real snapshot then looked like a 60+ m/s leap (no extrapolation: a 0.8 s freeze, then
+// a 6 m step), or, alone, it sat still for a whole second and then leapt 20-33 m. Now a MOVING roster pose is never pushed
+// (seedable(); a still friend still shows at once), and a ring holding one snapshot of a fast mover stays invisible until the second
+// one arrives, so the member fades in already on the right (beacon) delay, interpolated between real snapshots.
+/** May a roster pose (S.Welcome / S.Joined, no timestamp) seed the interpolator? Only a member standing still (Busy: the speed byte is
+ *  the activity; a room pose: it is the room code). */
+export const seedable = (body: PoseBody): boolean => body[4] === 0 || body[5] === M.Busy || body[6] === Z.Indoors;
+
 type Ring = { d: Float64Array; cut: Uint8Array; n: number; head: number; iv: number; lastMoved: boolean; ex: number; exv: number; lt: number };
 
 export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }): Interp {
@@ -66,6 +76,8 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
   const capBase = opts?.extrapolateMs ?? 250;
   const rings = new Map<MemberId, Ring>();
 
+  // the slot's real speed (m/s): a Busy pose carries its activity and a room pose (Zone.Indoors) its room code in the speed byte
+  const speedAt = (r: Ring, s: number): number => (r.d[s + 6] === M.Busy || r.d[s + 7] === Z.Indoors ? 0 : r.d[s + 5]);
   const ci = (r: Ring, k: number): number => (r.head - r.n + k + SLOTS * 2) % SLOTS; // k = 0 is the oldest
   const at = (r: Ring, k: number): number => ci(r, k) * F;
 
@@ -85,7 +97,7 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
       if (recvMs === r.d[last]) { // same instant: replace newest, but keep its cut mark (a Warp must survive a same-ms retry)
         r.head = (r.head + SLOTS - 1) % SLOTS; r.n--;
         if (r.cut[r.head]) cut = 1;
-      } else if (moved && r.lastMoved && !cut) { // a moving gap: this member's stream interval (a slower stream is believed at once)
+      } else if (moved && !cut && (r.lastMoved || (r.n === 1 && speedAt(r, last) > 0))) { // a moving gap: this member's stream interval (a slower stream is believed at once; a ring that STARTED on a moving pose counts its first gap, so a 1 Hz member just come into sight is drawn on the beacon delay at once)
         const g = Math.min(IV_MAX, recvMs - r.d[last]);
         r.iv = r.iv === 0 || g > r.iv ? (r.iv === 0 ? g : r.iv + (g - r.iv) * 0.5) : r.iv + (g - r.iv) * 0.2;
       }
@@ -114,10 +126,16 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
   function sample(id: MemberId, renderMs: number, out: RemotePose): boolean {
     const r = rings.get(id);
     if (!r || r.n === 0) return false;
+    const s0 = at(r, 0);
+    if (r.n === 1 && speedAt(r, s0) >= BRAKE_MPS) { // one snapshot of a fast mover: no velocity, no interval yet; wait unseen
+      put(out, r, s0, r.d[s0 + 1], r.d[s0 + 2], r.d[s0 + 3], r.d[s0 + 4]);
+      out.fade = 0; r.lt = -1; // the second snapshot starts the extra delay at its target (no ease from 0)
+      return true;
+    }
     const exMax = Math.max(0, BEACON_DELAY_MAX_MS - delay);
     const want = Math.max(0, Math.min(exMax, r.iv * BEACON_K - delay));
     const sw = at(r, r.n - 1), tn = r.d[sw], base = renderMs - delay;
-    const fast = !r.cut[ci(r, r.n - 1)] && r.d[sw + 6] !== M.Busy && r.d[sw + 5] >= BRAKE_MPS; // the newest pose is a fast mover
+    const fast = !r.cut[ci(r, r.n - 1)] && speedAt(r, sw) >= BRAKE_MPS; // the newest pose is a fast mover
     if (r.lt < 0 || r.n < 2) { r.ex = want; r.exv = 0; }
     else {
       const dt = Math.max(0, Math.min(100, renderMs - r.lt));

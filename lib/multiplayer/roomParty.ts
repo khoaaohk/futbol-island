@@ -14,7 +14,7 @@ import { multiplayerEnabled } from './config';
 import { createPartyConnection, type PartyConnection } from './connection';
 import { bindConnection, onBalls, onPoses } from './index';
 import { liveClock } from './liveClock';
-import { createInterp, type Interp, type RemotePose } from './interp';
+import { createInterp, seedable, type Interp, type RemotePose } from './interp';
 import { lookToWire } from './look';
 import { armEntryWarp, fillRoomBody, roomPoseState, type RoomLocal } from './presence';
 import { displayName, partyStore } from './store';
@@ -160,6 +160,7 @@ export function createFriendCore(ctx: {
     for (const info of list) {
       const pose = info[4];
       if (!pose || info[0] === you || !known.has(info[0])) continue;
+      if (!seedable(pose)) continue; // a moving roster pose has no timestamp: wait for the first stamped snapshot (interp.ts seedable)
       const b = ctx.admit(info[0], pose.slice() as PoseBody, t);
       if (b) interp.push(info[0], b, t);
     }
