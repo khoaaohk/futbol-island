@@ -26,7 +26,7 @@ export type SeaArea={readonly id:SeaAreaId;readonly name:string;readonly x:numbe
 /** The water areas. Membership is by the nearest centre (a loop's centroid), so every loop belongs to exactly one area; the radius
  *  is the area's rough reach (for the map / dive zones), not a hard edge. */
 export const SEA_AREAS:readonly SeaArea[]=[
- {id:'main-west',name:'West Coast',x:-125,z:0,radius:150,big:true},
+ {id:'main-west',name:'West Coast',x:-380,z:-20,radius:150,big:true},
  {id:'main-north',name:'North Shore',x:60,z:-285,radius:130,big:true},
  {id:'main-south',name:'South Bay',x:60,z:262,radius:130,big:true},
  {id:'north-sea',name:'Open Sea north of the causeway',x:300,z:-275,radius:90,big:true},
@@ -63,7 +63,7 @@ export const OPEN_SEA_WHALE_LOOPS:readonly OpenSeaWhaleLoop[]=[
  // its shadow sliding past the wreck: a short loop squeezed between the starfish mantas, the shore band and the shark patrols.
  whale('whale-north-sea','north-sea',zoneEllipse('captains-cup',10,18,14,6),.8,.1),
  whale('whale-main-north','main-north',[120,-280,32,12,0],.75,.6),
- whale('whale-main-west','main-west',[-130,-90,45,12,1.57],.8,.3),
+ whale('whale-main-west','main-west',[-372,-62,45,12,1.57],.8,.3),
  // Oct 20 2026: South Bay's whale is the humpback (a slow surface cruiser with a tail lift), on the whale shark's old loop.
  whale('humpback-main-south','main-south',[135,260,45,16,0],.7,.8,'humpback'),
  whale('whale-jetty-south','jetty-south',[275,165,40,9,1.57],.8,.45),
@@ -99,9 +99,9 @@ const ray=(id:string,area:SeaAreaId,species:RaySpecies,e:[number,number,number,n
  return {id,island:area,area,species,points:ellipseLoop(...e),speed:k.speed,scale:k.scale,tint:species==='manta'?undefined:k.tint,ridable:k.ridable,zone};};
 /** The open-sea rays, added where the sea was thin (see seaLifeInventory): each area gets its own mix. */
 export const OPEN_SEA_RAY_LOOPS:readonly OpenSeaRayLoop[]=[
- ray('ray-west-sting','main-west','sting',[-130,80,22,10,1.57]),
- ray('ray-west-eagle','main-west','eagle',[-115,130,22,10,.4]),
- ray('ray-north-eagle','main-north','eagle',[-70,-260,22,10,2]),
+ ray('ray-west-sting','main-west','sting',[-344,-150,22,10,1.57]),
+ ray('ray-west-eagle','main-west','eagle',[-230,162,22,10,.4]),
+ ray('ray-north-eagle','main-north','eagle',[-110,-260,22,10,3]),
  ray('ray-north-manta','main-north','manta',[-30,-265,22,10,2.4]),
  ray('ray-south-manta','main-south','manta',[15,240,22,10,.8]),
  ray('ray-south-sting','main-south','sting',[-5,190,22,10,1.57]),

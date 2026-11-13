@@ -62,7 +62,7 @@ await ok('zones',()=>{
   [335,-5,'deep_sea_boat'],[385,185,'deep_sea_boat'],[390,188,'deep_sea_boat'],[L.starfishSandbar.x,L.starfishSandbar.z,'sandbars'],[L.turtleSandbar.x,L.turtleSandbar.z,'sandbars'],[L.plaza.x,L.plaza.z,'cay_town'],
   [L.roundabout.x,L.roundabout.z,'cay_town'],[L.cayKonbini.x,L.cayKonbini.z,'cay_konbini'],[L.beachSoccerCourt.x,L.beachSoccerCourt.z,'beach_court'],[L.farm.x,L.farm.z,'farm'],
   [L.hostel.x,L.hostel.z,'hostel'],[L.sharksBeach.x,L.sharksBeach.z,'sharks_beach'],[L.lifeguardTower.x,L.lifeguardTower.z,'coral_cay'],[80,-215,'north_beach'],
-  [-60,60,'west_side'],[-63,94,'west_side'],[80,-105,'library_square'],[108,196,'south_pier'],[217,213,'ferry_dock'],[246,199,'ferry_dock'],[-140,0,'sea'],[400,-40,'sea'],[NaN,0,'sea']];
+  [-60,60,'west_side'],[-63,94,'west_side'],[80,-105,'library_square'],[108,196,'south_pier'],[217,213,'ferry_dock'],[246,199,'ferry_dock'],[-360,0,'sea'],[400,-40,'sea'],[NaN,0,'sea']];
  for(const [x,z,want] of cases)assert.equal(pa(x,z),want,`placeAt(${x}, ${z})`);
  const cw=CC.causewayPoint(.3);assert.equal(pa(cw.x,cw.z),'causeway','a point on the causeway deck');
  // Every id the lookup can return is a fixed id, and every fixed id is reachable somewhere on the map.
@@ -82,7 +82,9 @@ await ok('zones',()=>{
 await ok('grid',()=>{
  const g=IDS.GRID,B=SIM.FLIGHT_BOUNDS;
  assert.equal(g.size,20);assert.equal(IDS.CELL_COUNT,g.cols*g.rows);
- assert(g.x0<=B.minX&&g.x0+g.cols*g.size>=B.maxX&&g.z0<=B.minZ&&g.z0+g.rows*g.size>=B.maxZ,'grid ⊇ FLIGHT_BOUNDS '+JSON.stringify(J(B)));
+ // West Stadium (Nov 12 2026): the grid keeps x0 -160 so stored cell indices stay valid; the new west land and sea (x < -160)
+ // are not yet sampled (docs/stadium/PLAN.md phase 7 adds cells after CELL_COUNT).
+ assert(g.x0<=-160&&B.minX<-160&&g.x0+g.cols*g.size>=B.maxX&&g.z0<=B.minZ&&g.z0+g.rows*g.size>=B.maxZ,'grid ⊇ FLIGHT_BOUNDS '+JSON.stringify(J(B)));
  assert.equal(IDS.cellOf(g.x0,g.z0),0);assert.equal(IDS.cellOf(g.x0+g.cols*g.size-.01,g.z0+g.rows*g.size-.01),IDS.CELL_COUNT-1);
  for(const [x,z] of [[g.x0-.01,0],[0,g.z0-1],[g.x0+g.cols*g.size,0],[0,g.z0+g.rows*g.size],[NaN,0],[0,Infinity]])assert.equal(IDS.cellOf(x,z),-1,'outside: '+x+','+z);
  for(let i=0;i<IDS.CELL_COUNT;i+=7){const c=IDS.cellCenter(i);assert.equal(IDS.cellOf(c.x,c.z),i);}

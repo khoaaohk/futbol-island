@@ -13,7 +13,7 @@ const P=cay.CAUSEWAY_PATH,CORRIDOR_X0=cay.CORRIDOR.x0,CORRIDOR_X1=cay.CORRIDOR.x
 
 // Size and shape: a quarter of the main island's area, irregular (not an ellipse), beach all round.
 const ratio=area(cay.CAY_SHORE)/area(ISLAND_SHORE);
-assert(ratio>.22&&ratio<.28,'cay is about 1/4 of the main island: '+ratio.toFixed(3));
+assert(ratio>.14&&ratio<.19,'cay is about 1/6 of the main island (1/4 before the West Stadium land, Nov 12 2026): '+ratio.toFixed(3));
 {const C=cay.CAY_CENTER,r=cay.CAY_SHORE.map(p=>Math.hypot(p.x-C.x,p.z-C.z));let turns=0;for(let i=0;i<r.length;i++){const a=r[(i+r.length-1)%r.length],b=r[i],c=r[(i+1)%r.length];if(b<a&&b<c)turns++;}
  assert(turns>=8,'the cay outline has coves and headlands, not an oval: '+turns+' coves');}
 for(const s of cay.SANDBARS){const r=s.outline.map(p=>Math.hypot(p.x-s.x,p.z-s.z));assert(Math.max(...r)/Math.min(...r)>1.6,s.id+' is irregular');}
@@ -83,7 +83,7 @@ for(let x=240;x<=520;x+=4){const e=cay.corridorEdges(x),road=P.reduce((b,p)=>Mat
  // Since the south-east sea (Sep 29 2026) the flight carries on past the old band edge to the fill's south edge.
  assert(!flightBlocked(p.x,p.z)&&flightBlocked(p.x,p.z+1.5)&&p.z>FLIGHT_BOUNDS.maxZ-2,`flying south from the Starfish bend stops at the map's south edge (z ${p.z.toFixed(0)})`);}
 // The main island's margin is 50 m everywhere else (east coast at z 0 is x≈246, west coast at z 0 is x≈-99).
-assert(!flightBlocked(292,0)&&!flightBlocked(-145,0)&&flightBlocked(-156,0),'50 m main margin on the other coasts');
+assert(!flightBlocked(292,0)&&!flightBlocked(-405,0)&&flightBlocked(-420,0),'50 m main margin on the east, 80 m off the West Beach (West Stadium, Nov 12 2026)');
 
 // The maps' flight outline is traced from flightBlocked: re-trace and compare, then sample both sides of it.
 {const {trace,render}=require('../scripts/generate-flight-outline.cjs'),t=trace(),stored=fs.readFileSync('lib/town/flightOutline.data.ts','utf8');

@@ -93,7 +93,7 @@ export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
   reef:'harbour-fan-wall',weights:{},story:'The stone harbour wall behind the farmers market. Deep, cold water for cod and haddock.',camera:{lift:1.6,out:0,look:0}},
  {id:'north-rocks',name:'North Beach Rocks',x:60,z:-238,buoy:{x:60,z:-266.9},
   reef:'tidepool-flat',weights:{},story:'Tide-pool rocks at the quiet end of North Beach. Octopuses hide in the cracks.'},
- {id:'west-cove',name:'West Cove',x:-95.5,z:24,buoy:{x:-122.4,z:24},
+ {id:'west-cove',name:'West Cove',x:-324.5,z:24,buoy:{x:-351.4,z:24},
   reef:'stream-channel',weights:{},story:'A windy cove on the west coast where a little stream meets the sea, so river fish swim in beside the rays and sharks.'},
  // Deep Sea Boats (Sep 29 2026; moved and joined by a second boat Oct 14 2026, ./deepSeaBoatData.ts): moored out in the deep
  // open bay, reached by jetpack or parachute. Stand on the aft deck and cast off the starboard (east, seaward) side. Deep water

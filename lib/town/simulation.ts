@@ -6,12 +6,15 @@ import {onSummitLand,onSummitGround,SUMMIT_FLIGHT_BOX} from './summitIsle';
 import {onLandableDeck} from './landableDecks';
 import './eastPier'; // Registers the East Pier's walkway and head as landable decks (static; eastPier.ts).
 import { TRAVEL_MODES, type TravelMode } from './travelModes';
-export const ISLAND_BOUNDS={minX:-102,maxX:250,minZ:-253,maxZ:226} as const;
+export const ISLAND_BOUNDS={minX:-336,maxX:250,minZ:-253,maxZ:226} as const;
 /** Offshore room round the main island (50 m since Sep 29 2026); it sets the world rectangle's west and north edges. Since Oct 12
  *  2026 the whole rectangle is flyable (flightBlocked). */
 export const FLIGHT_WATER_MARGIN=50;
 /** The main island's own flight rectangle (its coast plus the 35 m water margin). */
-export const MAIN_FLIGHT_BOUNDS={minX:ISLAND_BOUNDS.minX-FLIGHT_WATER_MARGIN,maxX:ISLAND_BOUNDS.maxX+FLIGHT_WATER_MARGIN,minZ:ISLAND_BOUNDS.minZ-FLIGHT_WATER_MARGIN,maxZ:ISLAND_BOUNDS.maxZ+FLIGHT_WATER_MARGIN};
+/** West Stadium (Nov 12 2026): a wider sea off the new West Beach, so the west coast's whale, rays and the West Cove float keep
+ *  their open water between the coast (x ≈ -332) and the map edge. */
+export const WEST_WATER_MARGIN=80;
+export const MAIN_FLIGHT_BOUNDS={minX:ISLAND_BOUNDS.minX-WEST_WATER_MARGIN,maxX:ISLAND_BOUNDS.maxX+FLIGHT_WATER_MARGIN,minZ:ISLAND_BOUNDS.minZ-FLIGHT_WATER_MARGIN,maxZ:ISLAND_BOUNDS.maxZ+FLIGHT_WATER_MARGIN};
 /** The playable world: the main island's rectangle joined with Coral Cay's and Summit Isle's seas. The maps use it as their extent. */
 export const FLIGHT_BOUNDS={minX:Math.min(MAIN_FLIGHT_BOUNDS.minX,CAY_FLIGHT_BOUNDS.minX),maxX:Math.ceil(Math.max(MAIN_FLIGHT_BOUNDS.maxX,CAY_FLIGHT_BOUNDS.maxX,SUMMIT_FLIGHT_BOX.maxX)),minZ:Math.min(MAIN_FLIGHT_BOUNDS.minZ,CAY_FLIGHT_BOUNDS.minZ),maxZ:Math.ceil(Math.max(MAIN_FLIGHT_BOUNDS.maxZ,CAY_FLIGHT_BOUNDS.maxZ,SUMMIT_FLIGHT_BOX.maxZ))};
 /** Soft corners of the flyable rectangle (m), so the edge nudge turns smoothly round them. */

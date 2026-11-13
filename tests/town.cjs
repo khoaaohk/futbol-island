@@ -21,7 +21,7 @@ assert.ok(run({x:1,z:0,sprint:true}).pos.x>straight.pos.x,'Sprint increases spee
 const pos={x:0,z:0},velocity={x:0,z:0};for(let i=0;i<240;i++)stepPlayer(pos,velocity,{x:1,z:1,sprint:false},1/60,[{x:2,z:0,w:1,d:40}]);
 assert.ok(pos.x<=1.18,'Player cannot enter a wall');assert.ok(pos.z>5,'Player slides along a wall');
 for(let i=0;i<120;i++)stepPlayer(pos,velocity,{x:0,z:0,sprint:false},1/60,[]);assert.ok(Math.hypot(velocity.x,velocity.z)<.001,'Player decelerates to rest');
-assert.equal(blocked(-103,0,[]),true);assert.equal(blocked(0,-260,[]),true);assert.equal(blocked(0,-206,[]),false,'Expanded north beach stays walkable');
+assert.equal(blocked(-340,0,[]),true);assert.equal(blocked(-150,-130,[]),false,'Stadium Park (new west land) is walkable');assert.equal(blocked(0,-260,[]),true);assert.equal(blocked(0,-206,[]),false,'Expanded north beach stays walkable');
 for(const [key,value] of Object.entries(DISTRICTS))assert.equal(districtAt(value.z),key,'Destinations land in the right district');
 // A1 (Oct 3 2026 play-through): map travel to 7v7 landed at venueEntrance (11, -47.875), inside the Old Town Ground vending
 // machine's box (11, -48, 2.01 x 1.74): hidden and stuck. The arrival must step out to the nearest clear spot, camera side first.

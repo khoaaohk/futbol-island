@@ -62,7 +62,8 @@ export const STRIP_FAR={near:45,far:65} as const;
  */
 // Oct 12 2026: the whole playable rectangle (x −152…864, z −318…300) plus a rim, so Summit Isle, its sandbar and every corner of
 // the map's sea are covered (was x −132…752, z −296…256: +31% texels).
-const MIN_X=-156,MIN_Z=-322,SIZE_X=1036,SIZE_Z=626,STEP=2,TILE=128,BAND_IN=-2.4,BAND_OUT=2.6;
+// Nov 12 2026 (West Stadium): the west coast moved to x ≈ -332, so the rectangle starts at x -422 (FLIGHT_BOUNDS -416 plus the rim).
+const MIN_X=-422,MIN_Z=-322,SIZE_X=1302,SIZE_Z=626,STEP=2,TILE=128,BAND_IN=-2.4,BAND_OUT=2.6;
 const NX=SIZE_X,NZ=SIZE_Z,TX=SIZE_X/STEP,TZ=SIZE_Z/STEP;
 
 /**
