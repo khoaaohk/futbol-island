@@ -1,5 +1,7 @@
 // Remote pose interpolation: 8-slot ring per member (preallocated), Hermite between snapshots, render delayMs in the
-// past, extrapolate at most extrapolateMs then ease to a stop. A Warp flag or a >25 m jump fades out/in over 300 ms.
+// past, extrapolate at most extrapolateMs then ease to a stop and glide back onto the last real pose (a quiet stream
+// must never leave the avatar parked somewhere the sender never was). A Warp flag or a >25 m jump (x, y or z) fades
+// out/in over 300 ms. The drawn y never sinks more than Y_SINK_M below the poses it comes from (landings, warps).
 // sample() allocates nothing. Positions are metres, yaw radians (wire yaw256 * 2pi/256), speed m/s.
 import { activityOf, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
 
@@ -20,6 +22,9 @@ const SLOTS = 8; // live feel: 10 Hz snapshots behind a delay of up to 500 ms ne
 const F = 9; // floats per slot: t, x, y, z, yaw(rad), speed, mode, zone, flags
 const FADE_HALF_MS = 150;
 const JUMP_M = 25;
+const RETURN_MS = 300; // after the extrapolation cap: ease the extrapolated offset back to zero over this long
+const MAX_EXTRAP_MPS = 30; // a velocity above this between two snapshots is a teleport/catch-up, not motion: don't extrapolate it
+const Y_SINK_M = 0.25; // the drawn y may dip at most this far below the lower of the source poses
 const TAU = Math.PI * 2;
 
 type Ring = { d: Float64Array; cut: Uint8Array; n: number; head: number };
@@ -40,9 +45,12 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
     if (r.n > 0) {
       const last = at(r, r.n - 1);
       if (recvMs < r.d[last]) return; // out of order
-      const dx = x - r.d[last + 1], dz = z - r.d[last + 3];
-      if (dx * dx + dz * dz > JUMP_M * JUMP_M) cut = 1;
-      if (recvMs === r.d[last]) { r.n--; r.head = (r.head + SLOTS - 1) % SLOTS; } // same instant: replace newest
+      const dx = x - r.d[last + 1], dy = y - r.d[last + 2], dz = z - r.d[last + 3];
+      if (dx * dx + dy * dy + dz * dz > JUMP_M * JUMP_M) cut = 1;
+      if (recvMs === r.d[last]) { // same instant: replace newest, but keep its cut mark (a Warp must survive a same-ms retry)
+        r.head = (r.head + SLOTS - 1) % SLOTS; r.n--;
+        if (r.cut[r.head]) cut = 1;
+      }
     }
     const s = r.head * F;
     r.d[s] = recvMs; r.d[s + 1] = x; r.d[s + 2] = y; r.d[s + 3] = z;
@@ -86,17 +94,23 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
       return true;
     }
     const sa = at(r, a);
-    if (a === r.n - 1) { // extrapolate, velocity easing to zero across the cap
+    if (a === r.n - 1) { // extrapolate, velocity easing to zero across the cap, then glide back onto the real pose
       const dt = rt - r.d[sa];
       let vx = 0, vy = 0, vz = 0;
-      if (a >= 1 && !r.cut[ci(r, a)]) {
+      if (a >= 1 && !r.cut[ci(r, a)] && dt < cap + RETURN_MS) {
         const sp = at(r, a - 1);
         const span = r.d[sa] - r.d[sp];
-        if (span > 0) { vx = (r.d[sa + 1] - r.d[sp + 1]) / span; vy = (r.d[sa + 2] - r.d[sp + 2]) / span; vz = (r.d[sa + 3] - r.d[sp + 3]) / span; }
+        if (span > 0) {
+          vx = (r.d[sa + 1] - r.d[sp + 1]) / span; vy = (r.d[sa + 2] - r.d[sp + 2]) / span; vz = (r.d[sa + 3] - r.d[sp + 3]) / span;
+          if ((vx * vx + vy * vy + vz * vz) * 1e6 > MAX_EXTRAP_MPS * MAX_EXTRAP_MPS) { vx = 0; vy = 0; vz = 0; } // per ms -> m/s
+        }
       }
       const e = Math.min(dt, cap);
-      const disp = e - (e * e) / (2 * cap);
-      put(out, r, sa, r.d[sa + 1] + vx * disp, r.d[sa + 2] + vy * disp, r.d[sa + 3] + vz * disp, r.d[sa + 4]);
+      let disp = e - (e * e) / (2 * cap);
+      if (dt > cap) { const w = Math.min(1, (dt - cap) / RETURN_MS); disp *= 1 - w * w * (3 - 2 * w); } // stream quiet: ease back
+      const ya = r.d[sa + 2];
+      const y = Math.max(ya - Y_SINK_M, ya + vy * disp);
+      put(out, r, sa, r.d[sa + 1] + vx * disp, y, r.d[sa + 3] + vz * disp, r.d[sa + 4]);
       return true;
     }
     if (r.cut[ci(r, a + 1)]) { // hold until the cut
@@ -120,6 +134,8 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
       const v = h00 * p0 + h10 * h * m0 + h01 * p1 + h11 * h * m1;
       if (c === 1) px = v; else if (c === 2) py = v; else pz = v;
     }
+    const yFloor = Math.min(r.d[sa + 2], r.d[sb + 2]) - Y_SINK_M; // Hermite overshoot on a landing must not sink the avatar
+    if (py < yFloor) py = yFloor;
     put(out, r, sa, px, py, pz, angLerp(r.d[sa + 4], r.d[sb + 4], u));
     out.speed = r.d[sa + 5] + (r.d[sb + 5] - r.d[sa + 5]) * u;
     return true;

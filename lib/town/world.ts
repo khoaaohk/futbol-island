@@ -2,7 +2,7 @@ import {createUmbrellaReaction} from '../graphics/umbrellaReaction';
 import type {PropReactionKind,PropSpec} from '../graphics/propReactions';
 import {ARENA_BLOCKS,ARENA_QUEUES,KNOCKOUT_ROOF} from '../games/rooftopKnockout';
 import {shadeHex,STRIPE_LIGHT,STRIPE_DARK} from '../graphics/pitchStripes';
-import {FERRY_RAMP,FERRY_DECK} from './ferryBoarding';
+import {FERRY_RAMP,FERRY_DECK,FERRY_CABIN,FERRY_RAILS} from './ferryBoarding';
 import {buildEastCoast} from './eastCoast';
 import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
@@ -1050,8 +1050,9 @@ export function* buildTownSteps(scene: T.Scene) {
     for(let i=0;i<=20;i++){const x=rampStart+i/20*FERRY_RAMP.w,y=i/20*1.5;if(i%4===0)cylinder(.055,1.1,'#9d805b',x,y+.55,z);museumRails.push({x,z,w:.16,d:.16,floor:0,top:y+1.1});}
   }
   // Cabin and deck rails remain solid while the hull gently moves beneath them.
-  museumRails.push({x:246,z:199,w:6.6,d:10.5,floor:1.4,top:4.8});
-  for(const [x,z,w,d] of [[246,190.5,8,.12],[246,207.5,8,.12],[250,199,.12,17],[242,197.2,.12,13.4]]){
+  // The cabin's collider matches its drawn 6 m walls (was 6.6: the deck strips beside it were too narrow to walk; ferryBoarding.ts).
+  museumRails.push({...FERRY_CABIN});
+  for(const {x,z,w,d} of FERRY_RAILS){
     box(w,.07,d,'#eddfbb',x,2.55,z,ferry); // World placement is attached below.
     museumRails.push({x,z,w,d,floor:1.35,top:2.6});
   }

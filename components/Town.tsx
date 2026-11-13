@@ -111,6 +111,7 @@ import {createIslandLighting,type TimeOfDay} from '@/lib/graphics/islandLighting
 import {captainSellActions} from '@/lib/town/fishing/boatCaptains';
 import {SET_TIME_EVENT} from '@/lib/town/fishing/timeOfDay';
 import {nearBoat,resolveBoatHull,boatUnstick} from '@/lib/town/fishing/boatHull';
+import {nearFerryDeck,ferryUnstick} from '@/lib/town/ferryBoarding';
 import {onLandableDeck} from '@/lib/town/landableDecks';
 import {createStaticShadowBatches} from '@/lib/graphics/staticShadowBatches';
 import {createNpcShadowBatch} from '@/lib/graphics/npcShadowBatch';
@@ -1547,6 +1548,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       }else if(!rampStep.owns){waterWalk.speed=water.speedScale;rooftop.update(dt,location,velocity,{x:holdStill?0:mx,z:holdStill?0:mz,sprint:(input.current.sprint||keys.has('shift'))&&fuelCanSprint()&&water.state.zone!=='knee'&&water.state.zone!=='waist'},rideRef.current,rideRef.current==='walk'?waterWalk:undefined);}
       // The boats' hulls are solid (Nov 11 2026, owner: "getting stuck here with the boat"; lib/town/fishing/boatHull.ts): from the water beside the open deck you climb aboard, off the deck's side you hop into the sea, the wheelhouse and bow push you back out, and a push that goes nowhere for 1.5 s beside a boat frees you. A box test when away from the boats; also frees a restored save inside a hull on the first frame.
       if(rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.jump.active&&!animalRides.riding&&nearBoat(location.x,location.z)){const hr=resolveBoatHull(location,rampBefore,onLandableDeck,performance.now()/1000);if(hr==='board'||hr==='hop'){velocity.x=velocity.z=0;}if(boatUnstick(dt,location,moveLength>.3&&!holdStill,onLandableDeck(location.x,location.z)))velocity.x=velocity.z=0;}
+      // The ferry deck (live QA Nov 12 2026: stuck beside the cabin after a jetpack landing or a climb from the sea; ferryBoarding.ts): out of a cabin/rail collider at once, and a push that goes nowhere for 1.5 s is freed, like the boats.
+      if(rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.jump.active&&!animalRides.riding&&!water.swimming&&rooftop.state.height>1.2&&nearFerryDeck(location.x,location.z)&&ferryUnstick(dt,location,moveLength>.3&&!holdStill))velocity.x=velocity.z=0;
       // A fall, a rooftop jump or a ride launch that ends over splashable water (decision 4): a water landing, not a knockdown.
       if(rooftop.jump.fall)launchFall=true;
       if(wasFalling&&!rooftop.state.falling&&canSplashDown(location.x,location.z)){const src:SplashSource=launchFall?'launch':'roof';rooftop.state.impact=false;rooftop.state.recovery=0;rooftop.state.landImpact=0;splashInto(src,rooftop.state.dropStart);}
@@ -1999,6 +2002,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
        for(let i=0;i<npcChatter.slots.length;i++){const sl=npcChatter.slots[i],sp=sl.speaker as (typeof islandNpcs.entries)[number]|null;if(sl.on&&sp)chatterBubbles.follow(i,sp.position.x,sp.position.y+2.75*sp.rig.profileScale,sp.position.z);}
        chatterBubbles.update(active?dt:0,reduced);}
       emoteBubbles.update(active?dt:0,reduced);if(knockWords.alive)knockWords.update(active?dt:0);
+      if(party){const tid=islandNpcs.taggedId;let tagged=null;if(tid)for(const e of islandNpcs.entries)if(e.id===tid){tagged=e;break;}party.avoidLabelsNear(tagged?.position.x??0,tagged?.position.y??0,tagged?.position.z??0,!!tagged);}/* friends' tags never cover the shown townsperson's label (remoteAvatars.avoidLabelsNear) */
       party?.update(active?dt:0,performance.now(),camera);{const rk=rideRef.current,me=(rk==='scooter'||rk==='bike'||rk==='moped')&&vehicle.root.visible&&active&&!fieldMenu.current&&rampMotion.state.phase!=='air'&&!rooftop.state.air,fr=party?.riders??null;/* the ride splash: nothing at all unless someone rides or a drop is still in the air */
         if(me||fr||rideSplash.alive){rideSplash.begin(active?dt:0,rideSplashMode(heat.tier,heat.saver,reduced));
           if(me&&rideSplash.soundDue(rideSplash.rider(0,visualLocation.x,groundY,visualLocation.z,player.root.rotation.y,Math.hypot(velocity.x,velocity.z))))document.dispatchEvent(new CustomEvent('fi2-job-cue',{detail:SPLASH_SOUND}));

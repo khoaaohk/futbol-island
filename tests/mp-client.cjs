@@ -307,7 +307,7 @@ t('interp: extrapolation stops after 250 ms and eases',()=>{
   const x0=at(0),xa=at(100),xb=at(250),xc=at(260),xd=at(2000);
   assert.ok(Math.abs(x0-3)<1e-6,'starts at the snapshot');
   assert.ok(xa>x0&&xb>xa,'moves during the cap');
-  assert.equal(xb,xc);assert.equal(xb,xd);
+  assert.ok(xc<=xb&&xc>x0,'then starts gliding back');assert.ok(Math.abs(xd-3)<1e-9,'a quiet stream ends on the last real pose');
   assert.ok(xb-x0<=5*0.25+1e-9,'never beyond plain extrapolation');
   assert.ok(xb-x0>5*0.25*0.4,'but it did extrapolate');
   assert.ok(at(249)-at(240)<at(10)-at(0),'slows down near the cap (ease to stop)');
@@ -326,6 +326,30 @@ t('interp: warp / >25 m jump fades 1->0->1 over 300 ms, arrival fades in',()=>{
   it.sample(1,1400+250,out);assert.equal(out.x,300);
   // explicit Warp flag on a short hop
   it.push(1,[3010,0,0,0,0,0,0,1],1600);assert.equal(f(1600),0);
+});
+
+t('interp: jetpack Blast-up catch-up warp + same-ms retry never draws the player underground',()=>{
+  const it=ip.createInterp(),out=R();
+  // the governed (speed-capped) stream lags 135 m below the real player, then a Warp to y 0 and a retry at the same ms
+  for(let i=0;i<6;i++)it.push(4,[100,-1350+i*20,100,0,40,0,0,0],1000+i*100);
+  it.push(4,[100,0,100,0,0,0,0,1],1600);it.push(4,[100,0,100,0,0,0,0,0],1600); // same instant: the retry replaces the warp
+  let minY=Infinity;for(let ms=1600;ms<=6000;ms+=10){it.sample(4,ms+250,out);if(ms>=1600)minY=Math.min(minY,out.y);}
+  assert.ok(minY>=-0.25-1e-9,`drawn y ${minY} after the warp`);assert.equal(out.y,0,'and it ends on the real pose');
+  it.sample(4,1600+250,out);assert.equal(out.fade,0,'the cut mark survived the replace (fade window)');
+  // a retry 17 ms later (not the same ms) must not extrapolate the warp leap either
+  const j=ip.createInterp();for(let i=0;i<6;i++)j.push(5,[0,-1350+i*20,0,0,40,0,0,0],1000+i*100);
+  j.push(5,[0,0,0,0,0,0,0,1],1600);j.push(5,[0,0,0,0,0,0,0,0],1617);
+  for(let ms=1617;ms<=4000;ms+=7){j.sample(5,ms+250,out);assert.ok(out.y>=-0.25-1e-9,`y ${out.y} at ${ms}`);}
+});
+
+t('interp: a >25 m vertical jump is a cut; landings never sink far below the ground pose',()=>{
+  const it=ip.createInterp(),out=R();
+  it.push(1,[0,0,0,0,0,0,0,0],1000);it.push(1,[0,300,0,0,0,0,0,0],1200); // 30 m straight up in one step
+  it.sample(1,1200+250,out);assert.equal(out.fade,0,'vertical jump fades like a warp');
+  // ordinary landing: falling 10 m/s then ground at y 0, then the sender goes idle
+  const l=ip.createInterp();for(let i=0;i<5;i++)l.push(2,[0,40-i*10,0,0,0,0,0,0],1000+i*100);
+  let minY=Infinity;for(let ms=1000;ms<=4000;ms+=5){l.sample(2,ms+250,out);minY=Math.min(minY,out.y);}
+  assert.ok(minY>=-0.25-1e-9,`landing dipped to ${minY}`);assert.equal(out.y,0);
 });
 
 t('interp: sample() allocates nothing',()=>{

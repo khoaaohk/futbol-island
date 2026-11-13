@@ -31,4 +31,23 @@ const town=read('components/Town.tsx'),world=read('lib/town/world.ts'),ferry=rea
  assert(/if\(sl>\.02\)\{ringNormal\.set\(-hx,1,-hz\)\.normalize\(\);ring\.quaternion\.setFromUnitVectors\(ringFace,ringNormal\)/.test(town),'slope tilt only past 2 %');
  assert(/ringFace=new T\.Vector3\(0,0,1\)/.test(town)&&/ring\.rotation\.x=-Math\.PI\/2/.test(town),'RingGeometry faces +z; flat = rotation.x −π/2');
  assert(/band\(start,last,-P\.kerbHalf,\.02,P\.kerbHalf,\.02,WALK/.test(read('lib/town/eastPierWorld.ts')),'the walkway top is 2 cm: under the ring');}
-console.log('PASS ferry + pier ring: ferry tap box and preview wiring, East Pier ring flat over the deck');
+{// Ferry deck (live QA Nov 12 2026): players stuck at about (249-250, 190-197) after a jetpack landing or a climb from the sea.
+ // From every spot there (and the matching port strip) one unstick call plus a second of walking must get the player >1 m away.
+ const F=load('lib/town/ferryBoarding.ts'),S=load('lib/town/simulation.ts');F.resetFerryUnstick();
+ const solids=[F.FERRY_CABIN,...F.FERRY_RAILS];assert.equal(F.FERRY_CABIN.w,6,'the cabin collider matches its drawn 6 m walls');
+ assert(/museumRails\.push\(\{\.\.\.FERRY_CABIN\}\)/.test(world)&&/for\(const \{x,z,w,d\} of FERRY_RAILS\)/.test(world),'world.ts builds the ferry colliders from the shared constants');
+ assert(/nearFerryDeck\(location\.x,location\.z\)&&ferryUnstick\(dt,location,moveLength>\.3&&!holdStill\)/.test(town),'Town runs the ferry unstick while walking on the deck');
+ const walkAway=(x0,z0)=>{let best=0;for(const [ix,iz] of [[1,0],[-1,0],[0,1],[0,-1]]){const p={x:x0,z:z0},v={x:0,z:0};
+   for(let i=0;i<20;i++){S.stepPlayer(p,v,{x:ix,z:iz,sprint:false},1/20,solids,'walk',.32);if(Math.hypot(p.x-x0,p.z-z0)>1)return 2;}best=Math.max(best,Math.hypot(p.x-x0,p.z-z0));}return best;};
+ let n=0;for(const xs of [[249,250.1],[241.9,243]])for(let x=xs[0];x<=xs[1]+1e-9;x+=.1)for(let z=190.1;z<=197.01;z+=.5){
+  const p={x,z};F.ferryUnstick(1/60,p,true);assert(F.ferryClear(p.x,p.z),`clear after unstick from (${x.toFixed(2)}, ${z.toFixed(2)})`);
+  assert(Math.hypot(p.x-x,p.z-z)<1.6,`freed nearby, not across the deck (${x.toFixed(2)}, ${z.toFixed(2)})`);
+  const d=walkAway(p.x,p.z);assert(d>1,`can walk away from (${x.toFixed(2)}, ${z.toFixed(2)}): best ${d.toFixed(2)} m`);n++;}
+ assert(n>300);
+ // The strip beside the cabin is walkable fore and aft (it used to be 0.64 m: exactly the walker's width).
+ {const p={x:249.47,z:195},v={x:0,z:0};for(let i=0;i<120;i++)S.stepPlayer(p,v,{x:0,z:1,sprint:false},1/60,solids,'walk',.32);assert(p.z>198,`walks along the starboard strip (z ${p.z.toFixed(2)})`);}
+ // A push that goes nowhere for 1.5 s (wedged but clear) is freed too.
+ F.resetFerryUnstick();{const p={x:249.6,z:191},o={x:p.x,z:p.z};let moved=false;for(let i=0;i<100&&!moved;i++)moved=F.ferryUnstick(1/60,p,true);
+  assert(moved&&F.ferryClear(p.x,p.z,.47),'wedged push freed after 1.5 s');assert(Math.hypot(p.x-o.x,p.z-o.z)<1,'nearby');}
+ assert.equal(F.ferryUnstick(1/60,{x:246,z:192},false),false,'an open deck spot is left alone');}
+console.log('PASS ferry deck unstick; ferry + pier ring: ferry tap box and preview wiring, East Pier ring flat over the deck');

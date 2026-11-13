@@ -42,6 +42,8 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   endDuet(id: MemberId): void;
   /** A friend's interpolated pose this frame (reused object; null when not drawn / unknown). */
   friendPose(id: MemberId): RemotePose | null;
+  /** Hide friends' name labels near the townsperson whose tag shows (remoteAvatars.avoidLabelsNear); on=false clears it. */
+  avoidLabelsNear(x: number, y: number, z: number, on: boolean): void;
   /** Tap on a player (remotePick.ts; allocates, on a tap only): who was drawn last frame, and that frame's camera. */
   tapSpots(): ReturnType<import('../graphics/remoteAvatars').RemoteAvatars['tapSpots']>;
   /** The nearest friend I may ask for a ball emote: active (not busy / away / indoors), on foot, not hidden or muted, within `range` m
@@ -236,6 +238,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     duet: (id, partner, role, emote, seed) => avatars.duet(id, partner, role, emote, seed),
     endDuet: (id) => avatars.endDuet(id),
     friendPose: (id) => poses.get(id) ?? null,
+    avoidLabelsNear: (x, y, z, on) => avatars.avoidLabelsNear(x, y, z, on),
     tapSpots: () => avatars.tapSpots(),
     get you() { return core.you; },
     nearestAskable(x, y, z, range) {

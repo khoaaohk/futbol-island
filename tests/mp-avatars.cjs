@@ -236,6 +236,18 @@ assert(/castShadow=false/.test(read('lib/graphics/remoteAvatars.ts')),'batched f
  assert.equal(off0.createPartyRuntime({scene:new T.Scene(),viewGate:{addUnitRoots(){}},local:()=>({}),phone:false,reducedMotion:()=>false}),null);
 }
 
+// 7b. a friend's name label never covers the shown townsperson's tag / bubble (live QA Nov 12 2026: Captain Marina's label)
+{
+ const h=harness(),look=new Array(12).fill(0);
+ const labels=()=>h.avatars.root.children.find(c=>c.name==='remote-avatar-labels').children.filter(c=>c.name==='remote-name');
+ h.avatars.upsert(1,look,'Red',{hex:'#D62828'});h.avatars.upsert(2,look,'Emma',{hex:'#0072B2'});
+ h.all([1,2]);h.avatars.update(.016,h.poses,h.camera,false); // friend 1 at x -1, friend 2 at x 0
+ const [l1,l2]=labels();assert.ok(l1.visible&&l2.visible,'both labels shown with no townsperson tag');
+ h.avatars.avoidLabelsNear(2,0,0,true);h.avatars.update(.016,h.poses,h.camera,false);
+ assert.equal(l2.visible,false,'2 m from the tagged townsperson: hidden');assert.ok(l1.visible,'3 m away: shown');
+ h.avatars.avoidLabelsNear(2,10,0,true);h.avatars.update(.016,h.poses,h.camera,false);assert.ok(l2.visible,'far above or below (another floor): shown');
+ h.avatars.avoidLabelsNear(0,0,0,false);h.avatars.update(.016,h.poses,h.camera,false);assert.ok(l1.visible&&l2.visible,'cleared: both back');
+}
 // 8. first-name labels + Hide / Mute are applied to the drawn avatars
 {
  const h=harness(),look=new Array(12).fill(0);

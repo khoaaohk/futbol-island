@@ -94,6 +94,10 @@ export interface RemoteAvatars{
  readonly rigs:number;
  /** Tests / headless checks only (allocates): each friend's emote state and drawn spot. */
  debugEmotes():{id:MemberId;emote:number;age:number;x:number;z:number;yaw:number}[];
+ /** The townsperson whose name tag / speech bubble shows now (Town, from islandNpcs.taggedId), or on=false for none: a friend's name
+  *  label and status line within NPC_TAG_CLEAR m of it stay hidden so they never cover the NPC's label (live QA Nov 12 2026: a
+  *  remote tag sat over "Captain of the Deep Sea Boat" and her bubble). */
+ avoidLabelsNear(x:number,y:number,z:number,on:boolean):void;
  /** Friend bumps (friendBump.ts): the local player's cosmetic overlay this frame (Town applies it around the render only) and bumps so far. */
  readonly localBump:LocalBump;readonly bumps:number;
  /** Friends drawn on a ride last frame (rideSplash.ts: the splash in the shallows); preallocated, `n` = how many. */
@@ -355,14 +359,17 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  function ringsEnd(){rings.count=ringN;rings.instanceMatrix.needsUpdate=true;if(rings.instanceColor)rings.instanceColor.needsUpdate=true;
   ghostRings.count=ghostRingN;ghostRings.visible=ghostRingN>0;if(ghostRingN>0){ghostRings.instanceMatrix.needsUpdate=true;if(ghostRings.instanceColor)ghostRings.instanceColor.needsUpdate=true;ghostRingMat.opacity=ghostRingA;}}
  const candL:Entry[]=[],candB:Entry[]=[];
+ const npcTag={on:false,x:0,y:0,z:0},NPC_TAG_CLEAR=2.6;
+ const nearNpcTag=(p:RemotePose)=>{if(!npcTag.on)return false;const dx=p.x-npcTag.x,dz=p.z-npcTag.z;return dx*dx+dz*dz<NPC_TAG_CLEAR*NPC_TAG_CLEAR&&Math.abs(p.y-npcTag.y)<2.5;};
  /** Label + emote bubble placement. Both are only CANDIDATES here: the nearest LABEL_MAX labels (within LABEL_RANGE) and BUBBLE_MAX bubbles are made visible by pickVisible after the pass. */
  function placeLabel(e:Entry,pose:RemotePose,k:number,reduced:boolean){
   const label=e.label!,bubble=e.bubble!,d2=e.d2,ld2=e.ld2;
   label.visible=false;bubble.visible=false;
-  if(ld2<LABEL_RANGE*LABEL_RANGE){label.position.set(pose.x,pose.y+LABEL_Y*k,pose.z);/* a far camera (the desktop island view sits higher than the phone's) grows the label up to LABEL_FAR_GROW so it never shrinks below the phone size on screen */const cy=pose.y+LABEL_Y-camPos.y,ls=LABEL_WORLD_W*Math.min(LABEL_FAR_GROW,Math.max(1,Math.sqrt(d2+cy*cy)/LABEL_NEAR_M));label.scale.set(ls,ls*LABEL_H/LABEL_W,1);(label.material as T.SpriteMaterial).opacity=k*e.ps;candL.push(e);}
+  const underNpc=nearNpcTag(pose);
+  if(ld2<LABEL_RANGE*LABEL_RANGE&&!underNpc){label.position.set(pose.x,pose.y+LABEL_Y*k,pose.z);/* a far camera (the desktop island view sits higher than the phone's) grows the label up to LABEL_FAR_GROW so it never shrinks below the phone size on screen */const cy=pose.y+LABEL_Y-camPos.y,ls=LABEL_WORLD_W*Math.min(LABEL_FAR_GROW,Math.max(1,Math.sqrt(d2+cy*cy)/LABEL_NEAR_M));label.scale.set(ls,ls*LABEL_H/LABEL_W,1);(label.material as T.SpriteMaterial).opacity=k*e.ps;candL.push(e);}
   // The status line ("Taking a lesson", "Away") is THE information about a busy friend: shown to STATUS_RANGE (only busy friends have one),
   // sitting above the name label at a constant screen size (sizeAttenuation off), so it reads from the usual walking camera (~40 m).
-  if(e.status){const show=!!e.statusKey&&d2<STATUS_RANGE*STATUS_RANGE;e.status.visible=show;
+  if(e.status){const show=!!e.statusKey&&d2<STATUS_RANGE*STATUS_RANGE&&!underNpc;e.status.visible=show;
    if(show){e.status.position.set(pose.x,pose.y+LABEL_Y*k+.62,pose.z);(e.status.material as T.SpriteMaterial).opacity=k;}}
   if(e.emote>=0){
    if(bubble.userData.icon!==e.emote){bubble.userData.icon=e.emote;const m=bubble.material as T.SpriteMaterial;m.map=iconTexture(e.emote);m.needsUpdate=true;}
@@ -534,6 +541,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
   get jetsShown(){return jetsShown;},
   get localBump(){return bumps.local;},
   get bumps(){return bumps.fired;},
+  avoidLabelsNear(x,y,z,on){npcTag.on=on;npcTag.x=x;npcTag.y=y;npcTag.z=z;},
   debugEmotes(){return list.map(e=>({id:e.id,emote:e.emote,age:+e.emoteAge.toFixed(2),x:+(e.rig?.root.position.x??NaN).toFixed(2),z:+(e.rig?.root.position.z??NaN).toFixed(2),yaw:+(e.rig?.root.rotation.y??NaN).toFixed(2)}));},
   duet(id,partner,role,emote,seed){const e=byId.get(id);if(!e||e.hidden||e.shield||!e.sel||e.st&&inRoom/* no stranger duets indoors */)return false;
    const d=e.du??(e.du={on:false,was:false,partner:-1,role:0,emote:0,seed:0,age:0,dur:0,sx:0,sz:0,px:0,pz:0,started:false,out:createDuetOut(),a:{x:0,y:0,z:0},b:{x:0,y:0,z:0}});
