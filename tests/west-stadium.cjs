@@ -195,6 +195,7 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
  o=view(...at(E,1,10));assert(o[1]<.25,'east row 1 (in front of the roof): the camera line crosses it, it fades '+o);
  o=view(S.x+S.pitchW/2,0,S.z+5);assert(o[1]===1,'on the east touchline: the narrower roof hides nothing, stays solid '+o);
  {const [x,y,z]=at(E,7,10);o=view(x,ROOF_TOP+2,z);assert(o[1]===1,'a jetpack above the roof sees it solid (to land on) '+o);}
+ {const [x,,z]=at(E,7,10),feet=Q.ROOF.y+Q.ROOF.thick/2;for(const [dx,dz] of [[0,0],[3,-20],[-2,25]]){o=view(x+dx,feet,z+dz);assert(o[1]===1,'standing ON the east roof (landed): it stays solid '+o);}}
  {const seat=Q.nearestSeat(...((p)=>[p.x,p.z])(Q.standWorld(E,E.inner+7*Q.ROW_DEPTH+.3,10)),Q.rowHeight(7)),c=Q.seatView(seat);
   o=view(seat.x,seat.y,seat.z,[c.x,c.y,c.z]);assert(o[1]===1,'seated (stand view under the roof): the roof stays '+o);}
  const t=travel();for(const s of [W,E]){const p=Q.standWorld(s,(Q.ROOF.front+Q.ROOF.back)/2,0);

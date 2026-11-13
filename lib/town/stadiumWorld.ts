@@ -250,7 +250,10 @@ export function createRoofFade(roofs:readonly T.Mesh[]){
   /** Each frame after the camera moves: the player's feet (world) and the camera. */
   update(dt:number,px:number,py:number,pz:number,cx:number,cy:number,cz:number,reduced=false){
    const near=Math.abs(px-STADIUM.x)<STADIUM.bowlW/2+20&&Math.abs(pz-STADIUM.z)<STADIUM.bowlL/2+20;
-   for(const r of list){r.hiding=near&&covers(r.box,px,py,pz,cx,cy,cz);
+   // Standing ON a roof (landed on its slab, feet at or above its top): that roof stays solid (owner, Nov 13 2026: the taller fascia
+   // frame put the hips inside the roof's box, so landing on the roof turned it see-through under the player's feet).
+   const onRoof=(b:ReturnType<typeof roofBox>)=>py>=ROOF.y+ROOF.thick/2-.25&&Math.abs(px-b.x)<b.w/2+.5&&Math.abs(pz-b.z)<b.d/2+.5;
+   for(const r of list){r.hiding=near&&!onRoof(r.box)&&covers(r.box,px,py,pz,cx,cy,cz);
     const to=r.hiding?ROOF_FADE.min:1;if(r.opacity===to||!r.mesh)continue;
     r.opacity=reduced?to:to<r.opacity?Math.max(to,r.opacity-ROOF_FADE.out*dt):Math.min(to,r.opacity+ROOF_FADE.in*dt);
     const m=r.mesh.material as T.MeshStandardMaterial;m.opacity=r.opacity;m.depthWrite=r.opacity>.99;}
