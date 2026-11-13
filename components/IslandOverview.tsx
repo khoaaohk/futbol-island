@@ -18,7 +18,7 @@ import {JOBS} from '@/lib/town/jobs/jobCatalog';
 import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
 import {placeJobMarkers,placeGashaponMarkers,capsuleGlyph} from '@/lib/town/mapMarkers';
 import {islandGashaponMachines} from '@/lib/gashapon/machines';
-import {STADIUM,STADIUM_ARRIVAL,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_GROVES,parkPathLines} from '@/lib/town/westParkLayout';
+import {STADIUM,STADIUM_ARRIVAL,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_GROVES,BOWL_APRON,PLAZA_LABEL,TRAIL_WIDTH,parkPathLines} from '@/lib/town/westParkLayout';
 import {STANDS,standBack,standRect,standSpans} from '@/lib/town/stadiumSeats';
 import SummitIsleMap from './SummitIsleMap';
 import ZiplineMapMark from './ZiplineMapMark';
@@ -133,9 +133,12 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   <g aria-label="Stadium Park" data-west-stadium="park">
    {PARK_GROVES.map(([x,z,r],i)=><circle key={'grove'+i} cx={x} cy={z} r={r*.8} fill="#4f7a57" opacity=".35"/>)}
    {PARK_LAWNS.map((l,i)=><ellipse key={'lawn'+i} cx={l.x} cy={l.z} rx={l.rx} ry={l.rz} fill="#86ad79"/>)}
-   {PARK_PATH_POINTS.map((pts,i)=><polyline key={'park-path'+i} points={pts} fill="none" stroke="#eddfbb" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>)}
+   {/* The bowl's apron (paving from the stands to the ring path) and the world's own trail points (westParkLayout parkPathLines):
+       each trail ends on the beach, the plaza, the ring or another trail, so the round caps sit inside the paving they meet. */}
+   <rect aria-label="Stadium apron" data-west-stadium="apron" x={BOWL_APRON.x-BOWL_APRON.w/2} y={BOWL_APRON.z-BOWL_APRON.d/2} width={BOWL_APRON.w} height={BOWL_APRON.d} rx={BOWL_APRON.r} fill="#eddfbb"/>
+   {PARK_PATH_POINTS.map((pts,i)=><polyline key={'park-path'+i} data-park-path={i} points={pts} fill="none" stroke="#eddfbb" strokeWidth={TRAIL_WIDTH} strokeLinecap="round" strokeLinejoin="round"/>)}
    <ellipse aria-label="Lily pond" cx={PARK_POND.x} cy={PARK_POND.z} rx={PARK_POND.rx} ry={PARK_POND.rz} fill="#7fbcd2" stroke="#cdbb93" strokeWidth="2.2"/>
-   <rect aria-label="Stadium Plaza" x={STADIUM_PLAZA.minX} y={STADIUM_PLAZA.minZ} width={STADIUM_PLAZA.maxX-STADIUM_PLAZA.minX} height={STADIUM_PLAZA.maxZ-STADIUM_PLAZA.minZ} rx="4" fill="#eddfbb"/>
+   <rect aria-label="Plaza" x={STADIUM_PLAZA.minX} y={STADIUM_PLAZA.minZ} width={STADIUM_PLAZA.maxX-STADIUM_PLAZA.minX} height={STADIUM_PLAZA.maxZ-STADIUM_PLAZA.minZ} rx="4" fill="#eddfbb"/>
   </g>
   <g aria-label="Stadium" data-west-stadium="bowl">
    {/* Phase 2 (stadiumSeats.ts): four stands with open corners (the gate splits the east one), roofs over the long sides. */}
@@ -150,7 +153,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   {VENUES.map(v=><g key={v.id} {...destination(v.id,v.id+' field')}><rect x={v.x-v.width/2} y={v.z-v.length/2} width={v.width} height={v.length} fill={v.surface} stroke="#fff0cc" strokeWidth="1.5"/><text x={v.x} y={v.z+4} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?10:22} fontWeight="700">{v.id}</text></g>)}
   <g aria-label="Stadium labels" data-west-stadium="labels">
    {/* The stadium's name is its tappable place label below (Nov 13 2026, owner: same size and style as the other places). */}
-   <text x={(STADIUM_PLAZA.minX+STADIUM_PLAZA.maxX)/2} y={STADIUM.z+4} textAnchor="middle" fontSize={localMap?7:10} fill="#76583a" fontWeight="700">STADIUM PLAZA</text>
+   <text x={(STADIUM_PLAZA.minX+STADIUM_PLAZA.maxX)/2} y={STADIUM.z+4} textAnchor="middle" fontSize={localMap?7:10} fill="#76583a" fontWeight="700">{PLAZA_LABEL}</text>
    {!localMap&&<text x={PARK_POND.x} y={PARK_POND.z+PARK_POND.rz+14} textAnchor="middle" fontSize="11" fill="#294f43" fontWeight="700">STADIUM PARK</text>}
    <text x={-312} y={STADIUM.z} textAnchor="middle" fontSize={localMap?9:11} fill="#76583a" fontWeight="700" transform={`rotate(-90 -312 ${STADIUM.z})`}>WEST BEACH</text>
   </g>
