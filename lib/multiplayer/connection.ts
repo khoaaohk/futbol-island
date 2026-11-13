@@ -32,7 +32,7 @@ export interface PartyConnection {
   readonly shard: number | null;
   /** Others in my world (not me): from the lobby reply before connecting, then from S.World. Null when unknown. */
   readonly worldCount: number | null;
-  /** S.Quiet: others in sight within QUIET_RANGE_M (-1 = not told yet). 0 = poses go at 2 Hz. */
+  /** S.Quiet: others in sight within QUIET_RANGE_M (-1 = not told yet). 0 = poses go at 5 Hz. */
   readonly near: number;
   /** A world session this tab can resume (a room page round trip): within WORLD_AWAY_GRACE_MS, or the world socket now. */
   hasWorldSession(): boolean;
@@ -130,8 +130,9 @@ export const SESSION_TTL_MS = PARTY_MAX_MS;
  *  every Welcome and when the page is hidden, which also fires on a page change). */
 export const WORLD_SESSION_KEY = 'fi2-world-session-v1';
 export const WORLD_SESSION_TTL_MS = WORLD_AWAY_GRACE_MS;
-/** Nobody within QUIET_RANGE_M (S.Quiet 0): moving poses at 2 Hz instead of ~10 Hz. */
-export const QUIET_MOVE_GAP_MS = 500;
+/** Nobody within QUIET_RANGE_M (S.Quiet 0): moving poses at 5 Hz instead of ~10 Hz. Was 2 Hz (500 ms); live QA round 7 (Nov 12 2026):
+ *  players 40-160 m away still watch at the relay's 5 Hz tier, and a 2 Hz sender made a far jetpack flyer stall then leap 4-11 m. */
+export const QUIET_MOVE_GAP_MS = 200;
 export type TabState = 'here' | 'elsewhere' | 'moved' | null;
 export const BACKOFF_MS = [1000, 2000, 4000, 8000, 15000] as const;
 export const JITTER = 0.3;
