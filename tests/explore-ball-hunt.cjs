@@ -51,7 +51,7 @@ ok('collecting a reef ball: card choice once (kind ball, id dive:<zone>), off wh
 ok('East Jetty: one new hunt ball on the lighthouse plaza, clear of the lighthouse, hut, islanders, fishing stand and kick spot',()=>{
  const EP=load('lib/town/eastPier.ts'),J=load('lib/town/eastJettyBalls.ts'),Q=load('lib/town/coinQuest.ts');
  assert.equal(J.EAST_JETTY_BALL_SPOTS.length,1);const s=J.EAST_JETTY_BALL_SPOTS[0];
- assert.equal(Q.COIN_QUEST[Q.COIN_QUEST.length-1].id,s.id,'appended last (saved ids keep their order)');
+ assert.equal(Q.COIN_QUEST[115].id,s.id,'appended as ball 116 (saved ids keep their order; the stadium twelve follow it, Nov 13 2026)');
  assert(EP.onEastPier(s.x,s.z),'on the walkable jetty');assert(Math.hypot(s.x-EP.EAST_PIER.cx,s.z-EP.EAST_PIER.cz)<=EP.EAST_PIER.plazaR-1.5,'on the plaza');
  assert(Math.hypot(s.x-EP.JETTY_BEACON.x,s.z-EP.JETTY_BEACON.z)>EP.JETTY_BEACON.r+1.5,'clear of the lighthouse');
  const H=EP.KEEPER_HUT;assert(Math.abs(s.x-H.x)>H.w/2+1.5||Math.abs(s.z-H.z)>H.d/2+1.5,'clear of the keeper’s hut');

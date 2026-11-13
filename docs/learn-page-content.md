@@ -122,7 +122,7 @@ Balls are tucked away on rooftops, beaches and corners of every island. Each one
 
 - **Football tie:** One idea per ball, from rules and skills to history, each drawn on a small pitch diagram.
 - **Where:** Explore the main island, Coral Cay, Summit Isle and the East Jetty; the map tracks what is found.
-- **Proof:** 116 hidden balls, each with its own mini lesson.
+- **Proof:** 128 hidden balls, each with its own mini lesson.
 - **id / image:** `ball-hunt` / `ball_hunt`
 
 ### Reef treasure balls

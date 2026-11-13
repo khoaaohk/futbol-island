@@ -11,10 +11,10 @@ function environment(initial={}){
  return {load,data};
 }
 const e=environment(),q=e.load('lib/town/coinQuest.ts'),ids=q.COIN_QUEST.map(c=>c.id);
-assert.equal(q.emptyCoinProgress().version,8);assert.equal(q.emptyCoinProgress().pendingLesson,null);
+assert.equal(q.emptyCoinProgress().version,9);assert.equal(q.emptyCoinProgress().pendingLesson,null);
 // Migration: a version-7 save has no pending lesson.
 const v7=q.sanitizeCoinProgress({version:7,collected:ids.slice(0,3),revealed:[],hint:null,celebrated:false});
-assert.equal(v7.version,8);assert.equal(v7.pendingLesson,null);assert.equal(v7.collected.length,3);
+assert.equal(v7.version,9);assert.equal(v7.pendingLesson,null);assert.equal(v7.collected.length,3);
 // Kept when it names a collected ball; dropped for unknown / uncollected ids; a bad step falls back to 0.
 assert.equal(JSON.stringify(q.sanitizeCoinProgress({version:8,collected:[ids[0]],pendingLesson:{id:ids[0],step:2}}).pendingLesson),JSON.stringify({id:ids[0],step:2}));
 assert.equal(q.sanitizeCoinProgress({version:8,collected:[ids[0]],pendingLesson:{id:ids[1],step:1}}).pendingLesson,null,'uncollected ball');

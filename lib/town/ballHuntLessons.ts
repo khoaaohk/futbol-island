@@ -15,6 +15,8 @@ const space2=L(2,'Creating space'),time2=L(2,'Timing'),shape2=L(2,'Team shape'),
 const rules1=L(1,'Rules of the game'),health1=L(1,'Player health'),beach1=L(1,'Beach soccer'),keep1=L(1,'Goalkeeping'),rules2=L(2,'Rules of the game'),beach2=L(2,'Beach soccer'),ball3=L(3,'On the ball'),set3=L(3,'Set pieces');
 // Summit Isle (Oct 15 2026): Laws of the Game, goalkeeping, skills and teamwork.
 const team2=L(2,'Teamwork'),rules3=L(3,'Rules of the game');
+// DRIP FC Stadium (Nov 13 2026): matchday, the stadium and its Laws. Stands and the concourse are level 2; the roofs, level 3.
+const world2=L(2,'Football world'),world3=L(3,'Football world');
 const space3=L(3,'Creating space'),shape3=L(3,'Team shape'),lines3=L(3,'Breaking lines'),zones3=L(3,'Zones and thirds'),final3=L(3,'Final third'),trans3=L(3,'Transitions'),def3=L(3,'Defending space'),keep3=L(3,'Goalkeeping');
 
 export const BALL_HUNT_LESSONS:Record<string,BallLesson>={
@@ -144,6 +146,19 @@ export const BALL_HUNT_LESSONS:Record<string,BallLesson>={
  "summit-kick-bonus":ball2('side-foot','You toe-poke the pass. It skids off in the wrong direction.','Plant your standing foot beside the ball, pointing at your mate.','Lock your ankle and push through with the inside of your foot.','Plant and point','Push through'),
  "summit-whale-buoy":ball3('cruyff-turn','A defender chases you toward the touchline and blocks the way ahead.','Fake a pass, then drag the ball behind your standing leg with the inside of your foot.','Spin away the other way. The defender is still going the wrong way.','Fake the pass','Drag and spin'),
  "summit-sky":rules3('indirect-kick','The referee raises an arm high: this free kick is indirect.','A shot straight into the goal would not count, so pass it short first.','Your teammate shoots after that second touch. Now the goal counts!','Spot the raised arm','Touch, then shoot'),
+ // DRIP FC Stadium (Nov 13 2026, stadiumBalls.ts): twelve matchday ideas no other ball teaches (tests/stadium-balls.cjs).
+ "stadium-gate":world2('stewards','Lost in the crowd after the match? Look around for a bright jacket.','Stewards stand at every gate and stairway. Walk over and ask for help.','They keep the exits clear and help you find your family again.','Spot a bright jacket','Ask for help'),
+ "stadium-plaza-flags":world2('walk-out','Both teams wait side by side in the tunnel before kick-off.','They walk out together and line up facing the crowd for the anthems.','Then everyone shakes hands. Respect first, then play to win.','Walk out side by side','Shake hands'),
+ "stadium-plaza-street":rules2('added-time','Play stopped for an injury and two goals. Minutes of the match were lost.','At the end of the half, a board goes up showing the added minutes.','Keep playing hard until the referee blows the final whistle.','Read the board','Play to the whistle'),
+ "stadium-lawn":world2('pitch-stripes','Look at a big pitch from the stands. Why does it have stripes?','The groundstaff mow one strip going up, then the next strip coming back.','The grass leans two ways, so the light makes pale and dark stripes.','Mow one way','Then back the other'),
+ "stadium-pond":rules2('centre-circle','Kick-off! The other team crowds right up to the centre spot.','They must step back outside the circle, 9.15 metres from the ball.','Now you have space. Kick it, it moves, and they can come in.','Back outside the circle','Kick off with space'),
+ "stadium-orchard":rules2('corner-arc','Corner kick! You put the ball down outside the corner arc.','Move it so it sits inside the little quarter-circle by the flag.','Leave the flag where it is, step back and cross it in.','Place it in the arc','Leave the flag'),
+ "stadium-west-roof":rules3('goal-line-tech','A shot hits the bar, drops and bounces out. Was it over the line?','Cameras high up on the roof track the ball from many angles.','The whole ball was over. The referee’s watch buzzes Goal in under a second.','Watch the line','Feel the buzz'),
+ "stadium-east-roof":world3('floodlights','The sun has gone down. The pitch is dark and the ball is hard to see.','Floodlights switch on, high on the masts and along the roof edges.','Light comes from every side, so shadows stay small and the ball is easy to see.','Switch them on','Play under the lights'),
+ "stadium-west-stand":world2('all-seater','Long ago many fans stood squashed together on big standing terraces.','Now many big stadiums give every fan a seat with its own number.','Find your number on your ticket. The crowd is spread out and safer.','Check your ticket','Find your seat'),
+ "stadium-east-stand":rules2('technical-area','Each team bench has a marked box beside the pitch: the technical area.','The coach must not step out of the box onto the pitch.','Inside the box, one coach at a time can stand and call out ideas.','Stay in the box','One voice at a time'),
+ "stadium-north-stand":rules2('kit-colours','Both teams arrive in red shirts. Who is on your side?','The away team usually changes into its second kit, a different colour.','Now every pass finds the right shirt, and the referee looks different too.','Spot the clash','Change the kit'),
+ "stadium-screen":rules2('var-review','A goal is scored, but was there a foul just before it?','The video referee checks the replay. The referee jogs over to the pitchside screen.','VAR only checks goals, penalties, red cards and mistaken identity. The referee decides.','Check the replay','Trust the referee'),
 };
 
 /** Prediction prompts are loaded only with the lesson modal, never by the island. */
@@ -264,4 +279,16 @@ export const BALL_HUNT_PRACTICE:Record<string,string>={
  'summit-kick-bonus':'Which part of your foot gives the most accurate pass, and where does your standing foot go?',
  'summit-whale-buoy':'A defender chases you to the touchline. Which turn could take you the other way?',
  'summit-sky':'The referee raises an arm at a free kick. What must happen before a goal counts?',
+ 'stadium-gate':'You lose your family in a big crowd at a stadium. Who do you look for, and what do they wear?',
+ 'stadium-plaza-flags':'Before a big match, what do both teams do after they walk out and the anthems end?',
+ 'stadium-plaza-street':'The clock says 90 minutes, but there were long stops for injuries. Is the match over yet?',
+ 'stadium-lawn':'Walk to the other end of a striped lawn. What happens to the pale and dark stripes?',
+ 'stadium-pond':'At kick-off, how far from the ball must the other team wait, and until when?',
+ 'stadium-orchard':'Taking a corner, the flag is in your way. Can you pull it out of the ground?',
+ 'stadium-west-roof':'The ball bounces down off the bar. How does the referee know at once if it was a goal?',
+ 'stadium-east-roof':'Why does a night match need lights from every side, not just one big lamp?',
+ 'stadium-west-stand':'Your ticket says row 6, seat 14. How would you find your seat in a big stand?',
+ 'stadium-east-stand':'Where must a coach stand during the match, and how many can shout instructions at once?',
+ 'stadium-north-stand':'Both teams turn up in the same colour shirts. What should happen before kick-off?',
+ 'stadium-screen':'Which four kinds of big moment can the video assistant referee check?',
 };

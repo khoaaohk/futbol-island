@@ -2,6 +2,7 @@ import type {LearningId} from './learningJourneys';
 import {CORAL_CAY_SPOTS} from './coralCayBalls';
 import {SUMMIT_BALL_SPOTS} from './summitBalls';
 import {EAST_JETTY_BALL_SPOTS} from './eastJettyBalls';
+import {STADIUM_BALL_SPOTS} from './stadiumBalls';
 export const COIN_REWARD_ID='matchday-fox',COIN_STORAGE_KEY='fi2-matchday-coins-v1';
 export type CoinSpot={id:string;name:string;x:number;y:number;z:number;kind:'hidden'|'kick'|'landing';parachute?:boolean;/** a parachute ball on something you can stand on (the Summit hut roof): standing beside it collects it too */perch?:boolean;grass?:boolean;truck?:number;ramp?:string;wall?:{x:number;y:number;z:number;high?:boolean;round?:boolean;facing?:'south'|'east'};clue:string;detail:string;teaching:string;lesson:LearningId;manhole?:boolean;
  /** A ball resting on a floating buoy in the sea (Coral Cay): kick it from `kickFrom` on the deck (a shot heading at the buoy
@@ -9,6 +10,8 @@ export type CoinSpot={id:string;name:string;x:number;y:number;z:number;kind:'hid
  buoy?:boolean;kickFrom?:{x:number;z:number};
  /** Summit Isle (Oct 15 2026, summitBalls.ts): on the mountain island (y is the walked ground height there). */
  summit?:boolean;
+ /** DRIP FC Stadium (Nov 13 2026, stadiumBalls.ts): in the stadium, its plaza or its park (y is the walk surface: a stand row, the concourse or a roof). */
+ stadium?:boolean;
  /** A ball lying loose on the ground (no parcel, no collider): picked up by walking to it. */
  loose?:boolean;
  /** Revealed only by one event, never by a kick or a landing: a kicked or shaken fruit tree, or a Summit Kick score. */
@@ -120,16 +123,20 @@ export const COIN_QUEST:CoinSpot[]=[
  ...SUMMIT_BALL_SPOTS,
  // Oct 25 2026: the East Jetty's lighthouse ball takes the hunt to 116 (eastJettyBalls.ts; the Explore audit). Appended last.
  ...EAST_JETTY_BALL_SPOTS,
+ // Nov 13 2026: twelve DRIP FC Stadium balls take the hunt to 128 (stadiumBalls.ts: plaza, park, stands, roofs, big screen). Appended last.
+ ...STADIUM_BALL_SPOTS,
 ];
-const CORAL_CAY_IDS=new Set(CORAL_CAY_SPOTS.map(spot=>spot.id)),SUMMIT_IDS=new Set(SUMMIT_BALL_SPOTS.map(spot=>spot.id)),JETTY_IDS=new Set(EAST_JETTY_BALL_SPOTS.map(spot=>spot.id));
+const CORAL_CAY_IDS=new Set(CORAL_CAY_SPOTS.map(spot=>spot.id)),SUMMIT_IDS=new Set(SUMMIT_BALL_SPOTS.map(spot=>spot.id)),JETTY_IDS=new Set(EAST_JETTY_BALL_SPOTS.map(spot=>spot.id)),STADIUM_IDS=new Set(STADIUM_BALL_SPOTS.map(spot=>spot.id));
 /**
  * `pendingLesson` (version 8, Oct 26 2026, owner): the found-ball lesson card still open (ball id + the step on screen), so a reload
  * mid-lesson reopens it at that step (Town). Older saves migrate to null; an id that is not a collected ball, or a bad step, is dropped.
+ * Version 9 (Nov 13 2026): the stadium's twelve balls; a version 8 save is read unchanged (same fields), and one that had all 116
+ * keeps its fox and costumes (legacy116 below).
  */
 export type PendingBallLesson={id:string;step:number};
-export const COIN_SAVE_VERSION=8;
-export type CoinProgress={version:8;allCostumesUnlocked?:boolean;rewardUnlocked:boolean;revealed:string[];collected:string[];hint:string|null;celebrated:boolean;pendingLesson:PendingBallLesson|null};
-export const emptyCoinProgress=():CoinProgress=>({version:8,rewardUnlocked:false,revealed:[],collected:[],hint:null,celebrated:false,pendingLesson:null});
+export const COIN_SAVE_VERSION=9;
+export type CoinProgress={version:9;allCostumesUnlocked?:boolean;rewardUnlocked:boolean;revealed:string[];collected:string[];hint:string|null;celebrated:boolean;pendingLesson:PendingBallLesson|null};
+export const emptyCoinProgress=():CoinProgress=>({version:9,rewardUnlocked:false,revealed:[],collected:[],hint:null,celebrated:false,pendingLesson:null});
 /** A saved pending lesson, or null when it is missing, malformed, or not a collected ball. Steps are clamped by the card itself. */
 export function sanitizePendingLesson(raw:unknown,collected:readonly string[]):PendingBallLesson|null{
  if(!raw||typeof raw!=='object')return null;const p=raw as Partial<PendingBallLesson>;
@@ -141,23 +148,26 @@ const ids=new Set(COIN_QUEST.map(c=>c.id));
 // The original forty IDs stay in their original order. Old completed saves keep their earned outfit.
 const originalRewardIds=COIN_QUEST.slice(0,40).map(spot=>spot.id);
 // The fifty-five balls from before the manhole covers. A pre-version-4 save with all of them keeps its fox and costumes.
-const preManholeIds=COIN_QUEST.filter(spot=>!spot.manhole&&!CORAL_CAY_IDS.has(spot.id)&&!SUMMIT_IDS.has(spot.id)&&!JETTY_IDS.has(spot.id)).map(spot=>spot.id);
+const preManholeIds=COIN_QUEST.filter(spot=>!spot.manhole&&!CORAL_CAY_IDS.has(spot.id)&&!SUMMIT_IDS.has(spot.id)&&!JETTY_IDS.has(spot.id)&&!STADIUM_IDS.has(spot.id)).map(spot=>spot.id);
 // The eighty balls from before Coral Cay (Sep 29 2026). A pre-version-5 save that found all eighty keeps the Matchday Fox and
 // every costume it had, even though "every ball" now means 100; its 80-ball finale stays unseen until the new 100-ball one.
-export const PRE_CORAL_CAY_IDS=COIN_QUEST.filter(spot=>!CORAL_CAY_IDS.has(spot.id)&&!SUMMIT_IDS.has(spot.id)&&!JETTY_IDS.has(spot.id)).map(spot=>spot.id);
+export const PRE_CORAL_CAY_IDS=COIN_QUEST.filter(spot=>!CORAL_CAY_IDS.has(spot.id)&&!SUMMIT_IDS.has(spot.id)&&!JETTY_IDS.has(spot.id)&&!STADIUM_IDS.has(spot.id)).map(spot=>spot.id);
 // The hundred balls from before Summit Isle's (Oct 15 2026). A pre-version-6 save that found all hundred keeps the Matchday Fox and
 // every costume; its 100-ball finale stays unseen until the new 115-ball one.
-export const PRE_SUMMIT_IDS=COIN_QUEST.filter(spot=>!SUMMIT_IDS.has(spot.id)&&!JETTY_IDS.has(spot.id)).map(spot=>spot.id);
+export const PRE_SUMMIT_IDS=COIN_QUEST.filter(spot=>!SUMMIT_IDS.has(spot.id)&&!JETTY_IDS.has(spot.id)&&!STADIUM_IDS.has(spot.id)).map(spot=>spot.id);
 // The 115 balls from before the East Jetty ball (Oct 25 2026). A pre-version-7 save that found all 115 keeps the Matchday Fox and
 // every costume; its 115-ball finale stays unseen until the new 116-ball one.
-export const PRE_JETTY_IDS=COIN_QUEST.filter(spot=>!JETTY_IDS.has(spot.id)).map(spot=>spot.id);
+export const PRE_JETTY_IDS=COIN_QUEST.filter(spot=>!JETTY_IDS.has(spot.id)&&!STADIUM_IDS.has(spot.id)).map(spot=>spot.id);
+// The 116 balls from before the DRIP FC Stadium's twelve (Nov 13 2026). A pre-version-9 save that found all 116 keeps the Matchday Fox
+// and every costume; its 116-ball finale stays unseen until the new 128-ball one.
+export const PRE_STADIUM_IDS=COIN_QUEST.filter(spot=>!STADIUM_IDS.has(spot.id)).map(spot=>spot.id);
 export function sanitizeCoinProgress(raw:unknown):CoinProgress{
  const r=raw as (Omit<Partial<CoinProgress>,'version'>&{version?:number})|null;if(!r||typeof r!=='object')return emptyCoinProgress();
  const clean=(v:unknown)=>Array.isArray(v)?[...new Set(v.filter((id):id is string=>typeof id==='string'&&ids.has(id)))]:[];
- const version=r.version??1,collected=clean(r.collected),legacyReward=version<2&&originalRewardIds.every(id=>collected.includes(id)),legacyFiftyFive=version<4&&preManholeIds.every(id=>collected.includes(id)),legacyEighty=version<5&&PRE_CORAL_CAY_IDS.every(id=>collected.includes(id)),legacyHundred=version<6&&PRE_SUMMIT_IDS.every(id=>collected.includes(id)),legacy115=version<7&&PRE_JETTY_IDS.every(id=>collected.includes(id));
- const rewardUnlocked=r.rewardUnlocked===true||legacyReward||legacyFiftyFive||legacyEighty||legacyHundred||legacy115||collected.length===COIN_QUEST.length;
- const allCostumesUnlocked=r.allCostumesUnlocked===true||(version<3&&COIN_QUEST.slice(0,50).every(s=>collected.includes(s.id)))||legacyFiftyFive||legacyEighty||legacyHundred||legacy115||collected.length===COIN_QUEST.length;
- return{version:8,allCostumesUnlocked,rewardUnlocked,revealed:[...new Set([...clean(r.revealed),...collected])],collected,hint:typeof r.hint==='string'&&ids.has(r.hint)?r.hint:null,celebrated:r.celebrated===true&&collected.length===COIN_QUEST.length,pendingLesson:sanitizePendingLesson(r.pendingLesson,collected)};
+ const version=r.version??1,collected=clean(r.collected),legacyReward=version<2&&originalRewardIds.every(id=>collected.includes(id)),legacyFiftyFive=version<4&&preManholeIds.every(id=>collected.includes(id)),legacyEighty=version<5&&PRE_CORAL_CAY_IDS.every(id=>collected.includes(id)),legacyHundred=version<6&&PRE_SUMMIT_IDS.every(id=>collected.includes(id)),legacy115=version<7&&PRE_JETTY_IDS.every(id=>collected.includes(id)),legacy116=version<9&&PRE_STADIUM_IDS.every(id=>collected.includes(id));
+ const rewardUnlocked=r.rewardUnlocked===true||legacyReward||legacyFiftyFive||legacyEighty||legacyHundred||legacy115||legacy116||collected.length===COIN_QUEST.length;
+ const allCostumesUnlocked=r.allCostumesUnlocked===true||(version<3&&COIN_QUEST.slice(0,50).every(s=>collected.includes(s.id)))||legacyFiftyFive||legacyEighty||legacyHundred||legacy115||legacy116||collected.length===COIN_QUEST.length;
+ return{version:9,allCostumesUnlocked,rewardUnlocked,revealed:[...new Set([...clean(r.revealed),...collected])],collected,hint:typeof r.hint==='string'&&ids.has(r.hint)?r.hint:null,celebrated:r.celebrated===true&&collected.length===COIN_QUEST.length,pendingLesson:sanitizePendingLesson(r.pendingLesson,collected)};
 }
 export const coinRewardEarned=(s:CoinProgress)=>s.rewardUnlocked===true||s.collected.length===COIN_QUEST.length;
 export function applyCoinEvent(s:CoinProgress,id:string,kind:'reveal'|'collect'):CoinProgress{if(!ids.has(id))return s;const spot=COIN_QUEST.find(c=>c.id===id)!;if(kind==='collect'&&spot.kind!=='hidden'&&!s.revealed.includes(id))return s;if(s[kind==='collect'?'collected':'revealed'].includes(id))return s;return{...s,revealed:[...new Set([...s.revealed,id])],collected:kind==='collect'?[...s.collected,id]:s.collected,hint:kind==='collect'&&s.hint===id?null:s.hint};}
@@ -190,8 +200,8 @@ export function costumeUnlockHint(s:CoinProgress,id:string):{text:string;short:s
  const need=Math.max(1,costumeUnlockBalls(id)-s.collected.length);
  return {text:`Find ${need} more hidden ball${need===1?'':'s'} to unlock`,short:`Find ${need} more ball${need===1?'':'s'}`,need};
 }
-/** Every ball count that unlocks something (Sep 29 2026, 100 balls; Oct 15 2026, 115; Oct 25 2026, 116: three club costumes at
- *  10 … 70, the last two at 80 and the Matchday Fox at every ball, 116). 90–110 unlock nothing, so they are never announced or promised as "next". */
+/** Every ball count that unlocks something (Sep 29 2026, 100 balls; Oct 15 2026, 115; Oct 25 2026, 116; Nov 13 2026, 128: three club
+ *  costumes at 10 … 70, the last two at 80 and the Matchday Fox at every ball, 128). 90–120 unlock nothing, so they are never announced or promised as "next". */
 export const costumeMilestones=()=>[...new Set(COSTUME_UNLOCK_ORDER.map(costumeUnlockBalls))].sort((a,b)=>a-b);
 /** The highest milestone reached (0 before the first), and the next one (null once every costume is unlocked). */
 export const costumeMilestoneReached=(balls:number)=>costumeMilestones().filter(m=>m<=balls).pop()??0;
