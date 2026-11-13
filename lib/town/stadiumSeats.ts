@@ -125,6 +125,28 @@ export function followLook(base:{lx:number;lz:number},ball:{x:number;z:number}|n
  out.x=base.lx+(ball.x-base.lx)*BALL_PULL;out.z=base.lz+(ball.z-base.lz)*BALL_PULL;return out;
 }
 
+/** Portrait phones (phase 3b): the seated view widens to PORTRAIT_FOV (vertical °; the island camera's 40° gives a portrait phone
+ *  only ~19° across) and is framed by portraitLook so the pitch centre and the big screen both stay on screen when the stand faces
+ *  them, while the look still leans toward the ball inside that window. Margins in radians. */
+export const PORTRAIT_FOV=55,PORTRAIT_PULL=.6,PORTRAIT_EDGE=.035;
+const wrap=(a:number)=>Math.atan2(Math.sin(a),Math.cos(a));
+/** Where a portrait stand view looks (world point, 60 m out): yaw toward the ball (PORTRAIT_PULL of the way from the centre spot),
+ *  clamped to the window that keeps the centre spot and the big screen in frame (the centre spot alone when both cannot fit, e.g.
+ *  from the side stands); pitch puts the screen's top near the top edge, never so low that the sitter's own head shows. */
+export function portraitLook(cam:{x:number;y:number;z:number},seat:{x:number;y:number;z:number},ball:{x:number;z:number}|null,aspect:number,out:{x:number;y:number;z:number},fov=PORTRAIT_FOV){
+ const vh=fov*Math.PI/360,hh=Math.atan(Math.tan(vh)*aspect),E=PORTRAIT_EDGE;
+ const sx=STADIUM.x,sz=STADIUM.z+SCREEN.z,ds=Math.hypot(sx-cam.x,sz-cam.z);
+ const yawTo=(x:number,z:number)=>Math.atan2(x-cam.x,z-cam.z),yC=yawTo(STADIUM.x,STADIUM.z),yS=yawTo(sx,sz),sw=Math.atan(SCREEN.w/2/Math.max(1,ds));
+ const ax=ball?STADIUM.x+(ball.x-STADIUM.x)*PORTRAIT_PULL:STADIUM.x,az=ball?STADIUM.z+(ball.z-STADIUM.z)*PORTRAIT_PULL:STADIUM.z;
+ // The window, as offsets from the centre spot's yaw: the centre spot's own (± hh−E) ∩ the screen's (± hh−sw−E) when they meet.
+ let lo=-(hh-E),hi=hh-E;const so=wrap(yS-yC),slo=so-(hh-sw-E),shi=so+(hh-sw-E);
+ if(Math.max(lo,slo)<=Math.min(hi,shi)){lo=Math.max(lo,slo);hi=Math.min(hi,shi);}
+ const yaw=yC+Math.max(lo,Math.min(hi,wrap(yawTo(ax,az)-yC)));
+ const eTop=Math.atan2(SCREEN.y+SCREEN.h/2-cam.y,ds),eHead=Math.atan2(seat.y+1.6-cam.y,Math.max(.5,Math.hypot(seat.x-cam.x,seat.z-cam.z)));
+ const pitch=Math.max(eTop-vh+E*2,eHead+vh+E);
+ out.x=cam.x+Math.sin(yaw)*Math.cos(pitch)*60;out.z=cam.z+Math.cos(yaw)*Math.cos(pitch)*60;out.y=cam.y+Math.sin(pitch)*60;return out;
+}
+
 // ---- Sit / stand state machine (pure; stadiumSit.ts drives it from Town) -------------------------------------------------------
 export type SitPhase='standing'|'sitting'|'seated'|'rising';
 /** SIT_TIME: the ease into the seat and the stand view (s); reduced motion snaps. STAND_PUSH: stick / keys past this get up. */
