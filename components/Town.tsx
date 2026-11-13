@@ -926,7 +926,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const ladderPose=createTrickPose(),ladderPromptV=new T.Vector3();const ladderSeen={rungs:0,slides:0,landed:0,ride:0};let ladderNoteAt=-1e9,ladderPromptDown=false;
     ladderActions.current=()=>{rooftop.ladder.request();tapHaptic();sound.ui('click');};
     // West Stadium (stadiumSit.ts): Sit snaps to the nearest free seat (facing the pitch); Stand up / the stick / a ride gets up.
-    const stadiumSit=createStadiumSit({parent:scene,wake:()=>wakeLoopRef.current()});const stadiumMatch=games.entries.find(e=>e.venue.id==='stadium')??null;
+    const stadiumSit=createStadiumSit({parent:scene,wake:()=>wakeLoopRef.current(),phone:quality.phone,goal:()=>sound.match('crowd',1)});disposers.add(()=>stadiumSit.crowd.dispose());/* phase 3b: the crowd (one instanced draw near the stadium) and the goal cheer */const stadiumMatch=games.entries.find(e=>e.venue.id==='stadium')??null;
     stadiumSitActions.current=()=>{const seat=stadiumSit.press(window.matchMedia('(prefers-reduced-motion: reduce)').matches);if(seat){location.x=seat.x;location.z=seat.z;rooftop.reset(seat.x,seat.z,seat.y);velocity.x=velocity.z=0;player.root.rotation.y=seat.yaw;}tapHaptic();sound.ui('click');};
     const islandNpcs=createIslandNpcs(scene,{isWalkable:(x,z)=>rooftop.canLand(x,z)&&Math.abs(rooftop.surface(x,z)-fieldSurfaceHeight(x,z))<.2&&!world.roads.some(road=>Math.abs(x-road.x)<road.w/2+.4&&Math.abs(z-road.z)<road.d/2+.4),heightAt:fieldSurfaceHeight},ballReactions);
     disposers.add(()=>islandNpcs.dispose());
@@ -2306,7 +2306,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(prompt.hidden!==hidden)setUIHidden(prompt,hidden);ridePromptShown=!hidden;}}
       // The lighthouse ladder (lighthouseLadder.ts): "Climb" at its foot, "Climb down" at the gallery's gate (on foot; pushing works too).
       const ladderKind=canEnter&&rideRef.current==='walk'&&!rooftop.ladder.active&&!rooftop.state.falling?(nearLadderFoot(location.x,location.z,rooftop.state.height,1.5)?1:atLadderGate(location.x,location.z,rooftop.state.height,1.3)?2:0):0;
-      {const se=stadiumMatch;stadiumSit.match(se&&!se.dormant?se:null,now);}// West Stadium (phase 3): the big screen's score, the stand view's ball follow
+      {const se=stadiumMatch;stadiumSit.match(se&&!se.dormant?se:null,now,reduced);sound.stadiumCrowd(stadiumSit.ambience);stadiumSit.bar(uiElement<HTMLElement>('[data-field="stadium"][data-live-bar]'));}// West Stadium (phase 3): the big screen's score, the stand view's ball follow
       const sitWant=stadiumSit.want(location.x,location.z,rooftop.state.height,canEnter&&rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.ladder.active&&streetTraffic.rider.index<0);// West Stadium: Sit / Stand up
       stadiumSit.prompt(uiElement<HTMLButtonElement>('[data-stadium-sit]'),!!sitWant&&hudFocusNow==='enter'&&focusArbiter.current?.key===STADIUM_SIT_KEY,camera,fullWidth,fullHeight,placeEntryPrompt,setUIHidden);
       const ladderWant=ladderKind?{key:'ladder',distance:ladderKind===1?Math.hypot(ladderFootX-location.x,ladderFootZ-location.z):Math.hypot(ladderGateX-location.x,ladderGateZ-location.z)}:null;

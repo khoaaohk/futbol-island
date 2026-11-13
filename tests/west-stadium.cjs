@@ -152,7 +152,7 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
  const back=(o)=>Math.hypot(o.x-st.x,o.z-st.z);assert(b.y>a.y+.8&&back(b)>back(a)+.5,'portrait phone: the stand view is higher and further back');
  const out={x:0,z:0};Q2.followLook(a,null,out);assert(out.x===a.lx&&out.z===a.lz,'no match: the seat\'s pitch point');
  Q2.followLook(a,{x:S.x+20,z:S.z-40},out);assert(Math.hypot(out.x-(S.x+20),out.z-(S.z-40))<Math.hypot(a.lx-(S.x+20),a.lz-(S.z-40)),'a match: toward the ball');}
-{const SS=load('lib/town/stadiumScreen.ts');assert.equal(SS.screenMinute(59),0);assert.equal(SS.screenMinute(61),1);
+{const SS=load('lib/town/stadiumScreen.ts');assert.equal(SS.screenMinute(0),1,"the first minute is 1' (never 0')");assert.equal(SS.screenMinute(59),1);assert.equal(SS.screenMinute(61),2);
  const {createStadiumSit}=load('lib/town/stadiumSit.ts'),parent=new T.Group(),sit=createStadiumSit({parent,wake:()=>{}});
  const p=Q.standWorld(W,W.inner+5*Q.ROW_DEPTH+.3,8),h=Q.rowHeight(5);
  const el={hidden:true,dataset:{},textContent:'',setAttribute(k,val){this[k]=val;}},show=()=>sit.prompt(el,true,cam,800,600,()=>{},(x,hid)=>{x.hidden=hid;});
@@ -175,6 +175,57 @@ assert(/id:'stadium',label:'STADIUM GATE',point:STADIUM_ARRIVAL/.test(map)&&/\|'
 {const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');assert(/travel\.current==='stadium'\?STADIUM_ARRIVAL/.test(town)&&/destination==='stadium'\)go\(destination\)/.test(town),'travel lands at the stadium gate');
  assert(L.STADIUM_ARRIVAL.x>L.STADIUM_GATE.x&&onIsland(L.STADIUM_ARRIVAL.x,L.STADIUM_ARRIVAL.z)&&!blocked(L.STADIUM_ARRIVAL.x,L.STADIUM_ARRIVAL.z),'the arrival is open plaza outside the gate');}
 console.log('west stadium phase 3a: ok');
+// ---- Phase 3b: the crowd, goal frames that stop the ball, portrait framing, exhibitions, the crowd sound -------------------------
+{const C=load('lib/town/stadiumCrowd.ts'),SS=load('lib/town/stadiumScreen.ts'),seats=Q.seatCount(),fans=C.crowdSeats();
+ const share=f=>C.crowdCount(fans,f)/seats,desk=share(C.crowdFill(false,0)),phone=share(C.crowdFill(true,0)),hot=share(C.crowdFill(true,2)),saver=share(C.crowdFill(false,4));
+ console.log(`crowd: ${fans.length} fans max; desktop ${(desk*100).toFixed(0)}%, phone ${(phone*100).toFixed(0)}%, phone tier 2 ${(hot*100).toFixed(0)}%, saver ${(saver*100).toFixed(0)}% of ${seats} seats; desktop ${C.crowdCount(fans,C.crowdFill(false,0))*C.FAN_TRIS} tris`);
+ assert(desk>=.3&&desk<=.4,'desktop fills 30–40 % of the seats');assert(phone<desk*.75&&hot<phone&&saver<hot,'fewer fans on phones and under heat pressure');
+ assert(C.crowdCount(fans,C.crowdFill(false,0))*C.FAN_TRIS<=40000,'crowd triangles bounded (desktop ≤ 40k)');
+ const g=C.fanGeometry();assert.equal(g.index.count/3,C.FAN_TRIS,'20 triangles a fan');g.dispose();
+ // Seats by the aisles stay free (the end seat of every span), and every fan sits on a real seat.
+ for(const s of Q.STANDS)for(const a of s.aisles)assert(!fans.some(f=>{const l=Q.standLocal(s,f.x,f.z);return l.d>s.inner-.1&&l.d<s.inner+Q.ROWS*Q.ROW_DEPTH&&Math.abs(l.a-a)<Q.AISLE_WIDTH/2+Q.SEAT_PITCH*1.4;}),`${s.id} aisle ${a}: free seats beside it`);
+ // One instanced draw, built only near the stadium, hidden far away, culled off screen; a goal bounces it via uniforms only.
+ const parent=new T.Group(),crowd=C.createStadiumCrowd(parent,false);crowd.update(400,0,0,false,1/60,false);assert(!crowd.mesh&&parent.children.length===0,'far away: nothing built');
+ crowd.update(60,S.x+30,S.z,false,1/60,false);const mesh=crowd.mesh;assert(mesh&&mesh.isInstancedMesh&&mesh.visible&&parent.children.length===1&&!mesh.castShadow,'near: one instanced mesh, no shadow pass');
+ assert.equal(mesh.count,C.crowdCount(fans,C.crowdFill(false,0)));const m0=mesh.instanceMatrix.version;
+ const cam=new T.PerspectiveCamera(40,1,1,500);cam.position.set(S.x+150,2,S.z);cam.lookAt(S.x+400,2,S.z);cam.updateMatrixWorld();const fr=new T.Frustum().setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse));
+ assert(mesh.frustumCulled&&!fr.intersectsObject(mesh),'looking away from the stadium: culled (0 draws)');cam.lookAt(S.x,2,S.z);cam.updateMatrixWorld();fr.setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse));assert(fr.intersectsObject(mesh),'looking at it: drawn');
+ const sh={uniforms:{},vertexShader:'#include <color_vertex>\n#include <begin_vertex>'};mesh.material.onBeforeCompile(sh);const U=sh.uniforms;assert(/uCheer/.test(sh.vertexShader)&&/uClear/.test(sh.vertexShader),'bounce and clearing in the shader');
+ for(let i=0;i<30;i++)crowd.update(60,S.x+30,S.z,false,1/60,false);assert.equal(U.uCheer.value,0,'no goal: still');crowd.cheer();crowd.update(60,S.x+30,S.z,false,.3,false);assert(U.uCheer.value>0,'a goal: the stands bounce');
+ for(let i=0;i<200;i++)crowd.update(60,S.x+30,S.z,false,1/60,false);assert(U.uCheer.value===0&&!crowd.cheering,'the cheer ends');assert.equal(mesh.instanceMatrix.version,m0,'no per-instance CPU work');
+ crowd.cheer();crowd.update(60,S.x+30,S.z,false,.3,true);assert.equal(U.uCheer.value,0,'reduced motion: no bounce');
+ crowd.update(60,S.x-45,S.z,true,1/60,false);assert(U.uClear.value.z>0&&U.uClear.value.x===S.x-45,'up in the stands: the fans round me clear');crowd.update(60,S.x,S.z,false,1/60,false);assert(U.uClear.value.z<0,'on the pitch: nobody cleared');
+ crowd.update(400,0,0,false,1/60,false);assert(!mesh.visible,'far away: hidden');crowd.dispose();assert(parent.children.length===0);
+ // The goal frames stop a free ball (sweepGoalFrame's default list now has the stadium); the mouth stays open.
+ const GC=load('lib/town/goalCollisions.ts'),V=load('lib/town/venues.ts'),v=V.liveVenueById('stadium'),hit={},y0=V.STADIUM_PITCH_Y;
+ for(const sz of [-1,1]){const gz=S.z+sz*S.pitchL/2;
+  assert(GC.sweepGoalFrame({x:S.x+v.goalWidth/2,y:y0+1,z:gz-sz*2},{x:S.x+v.goalWidth/2,y:y0+1,z:gz+sz*2},.2,hit),'a shot at the post hits it');assert.equal(hit.part,'post');
+  assert(GC.sweepGoalFrame({x:S.x,y:y0+v.goalHeight,z:gz-sz*2},{x:S.x,y:y0+v.goalHeight,z:gz+sz*2},.2,hit)&&hit.part==='crossbar','the bar');
+  assert(!GC.sweepGoalFrame({x:S.x,y:y0+1,z:gz-sz*2},{x:S.x,y:y0+1,z:gz+sz*.5},.2,hit),'the goal mouth is open');}
+ // Portrait phone framing: from every stand-facing seat in the end stands, the centre spot and the whole big screen stay in frame
+ // wherever the ball is, and the sitter's head stays below the bottom edge.
+ const aspect=390/844,pc=new T.PerspectiveCamera(Q.PORTRAIT_FOV,aspect,1,175),out={x:0,y:0,z:0},ndc=new T.Vector3();
+ const inFrame=(x,y,z)=>{ndc.set(x,y,z).project(pc);return Math.abs(ndc.x)<=1&&Math.abs(ndc.y)<=1&&ndc.z<1;};
+ for(const along of [-30,-8,0,8,30])for(const row of [0,5,9]){const N=Q.STANDS[2],p=Q.standWorld(N,N.inner+row*Q.ROW_DEPTH+.3,along),st=Q.nearestSeat(p.x,p.z,Q.rowHeight(row));assert(st,'a north seat');
+  const view=Q.seatView(st,true);for(const ball of [null,{x:S.x-30,z:S.z+48},{x:S.x+30,z:S.z-48},{x:S.x+30,z:S.z+48}]){
+   Q.portraitLook(view,st,ball,aspect,out);pc.position.set(view.x,view.y,view.z);pc.lookAt(out.x,out.y,out.z);pc.updateMatrixWorld();
+   const sz=S.z+Q.SCREEN.z;assert(inFrame(S.x,0,S.z),`seat ${st.id} ball ${JSON.stringify(ball)}: centre spot in frame`);
+   for(const [dx,dy] of [[-1,-1],[1,-1],[-1,1],[1,1]])assert(inFrame(S.x+dx*Q.SCREEN.w/2,Q.SCREEN.y+dy*Q.SCREEN.h/2,sz),`seat ${st.id}: the big screen in frame`);
+   ndc.set(st.x,st.y+1.5,st.z).project(pc);assert(ndc.y< -1||ndc.z>1,'the sitter\'s head is out of frame');}}
+ {const sit=load('lib/town/stadiumSit.ts').createStadiumSit({parent:new T.Group(),wake:()=>{}}),N=Q.STANDS[2],p=Q.standWorld(N,N.inner+5*Q.ROW_DEPTH+.3,4),h=Q.rowHeight(5);
+  sit.want(p.x,p.z,h,true);sit.press(true);const c=new T.PerspectiveCamera(40,aspect,1,500);sit.applyCamera(c,1/60);assert.equal(c.fov,Q.PORTRAIT_FOV,'seated on a portrait phone: the wider view');
+  sit.holdPlayer(1/60,{x:1,z:0,kick:false,juggle:false},new Set(),{walk:true,x:sit.seat.x,z:sit.seat.z,reduced:true});sit.applyCamera(c,1/60);assert.equal(c.fov,40,'standing: the FOV restored');}
+ // Exhibitions: no human in the match = EXHIBITION on the screen and the pitch bar; the cheer and the crowd sound near the pitch.
+ assert.equal(SS.screenText({home:'Red',away:'Blue',gold:1,blue:0,minute:12,exhibition:true}),"EXHIBITION · RED 1-0 BLUE 12'");
+ let goals=0;const sit=load('lib/town/stadiumSit.ts').createStadiumSit({parent:new T.Group(),wake:()=>{},goal:()=>goals++}),M=load('lib/town/stadiumSit.ts');
+ const tagEl={textContent:''},actEl={textContent:''},bar={querySelector:q=>q==='[data-bar-tag]'?tagEl:actEl,setAttribute(){}};
+ const match={sim:{score:{gold:0,blue:0},clock:5},ball:{position:{x:S.x,z:S.z}},humans:new Map(),puppet:null};
+ sit.want(S.x+30,S.z,0,true);sit.match(match,0);sit.bar(bar);assert(sit.exhibition&&/EXHIBITION/.test(tagEl.textContent)&&/watch/.test(actEl.textContent),'all-AI: an exhibition');
+ assert(sit.ambience>.9,'by the pitch: the crowd loop at full');match.sim.score.gold=1;sit.match(match,100);assert(goals===1&&sit.crowd.cheering,'a goal: the cheer and the bounce');
+ match.humans.set('me',{});sit.match(match,200);sit.bar(bar);assert(!sit.exhibition&&/BIG MATCH/.test(tagEl.textContent),'a player in it: a big match');
+ sit.want(S.x+140,S.z,0,true);sit.match(match,300);assert.equal(sit.ambience,0,'far from the pitch: silent');assert.equal(M.ambienceLevel(S.x+S.pitchW/2+59,S.z)>0,true,'within ~60 m of the pitch: audible');
+ sit.match(null,400);assert.equal(sit.ambience,0,'no match: silent');}
+console.log('west stadium phase 3b: ok');
 // The map draws four stands with open corners.
 assert(/data-stadium-stand=/.test(map),'the map draws the stands');
 console.log('west stadium phase 2: ok');
