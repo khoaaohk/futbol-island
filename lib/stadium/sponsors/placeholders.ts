@@ -16,7 +16,7 @@
  */
 import {INK,PAPER,drawSponsorLabel,type AtlasRect,type CellSource,type Ctx2D} from './atlas';
 import type {SponsorSlot} from './slots';
-import {CREST_ASPECT,WORDMARK_ASPECT,type DripArtKey} from '../dripfc';
+import {CREST_ASPECT,WORDMARK_ASPECT,FOOTY_BANNER_ASPECT,type DripArtKey} from '../dripfc';
 
 /** Drip FC's decoded pictures (any may be missing: lettering instead). */
 export type HouseArt=Partial<Record<DripArtKey,CellSource>>;
@@ -96,7 +96,7 @@ export function drawPlaceholder(c:Ctx2D,slot:SponsorSlot,index:number,r:AtlasRec
   // Left empty since Nov 13 2026: without an uploaded centre sponsor surfaces.ts builds no centre disc, and the circle shows
   // Drip FC's painted drop (stadiumWorld.ts pitchLogo). An uploaded centre sponsor still gets its disc, over the drop.
  }else if(slot==='fascia'){
-  drawAdidas(c,r);
+  drawFootyAccess(c,r,house);// adidas (drawAdidas) waits until their deal is final (owner, Nov 13 2026)
  }else if(slot==='board'){
   // Boards: paper ground, a torn colour strip, the habit in brush letters, the small line beside it.
   c.fillStyle=PAPER;c.fillRect(x-4,y-4,w+8,h+8);
@@ -161,8 +161,16 @@ function adidasPart(c:Ctx2D,part:keyof typeof ADIDAS_PARTS,x:number,y:number,h:n
  c.restore();return w;
 }
 const PAPER_WHITE='#ffffff';
-/** The fascia banner: black panel, mark + wordmark side by side, two lock-ups spaced along the cell, uniform scale (never squashed). */
-function drawAdidas(c:Ctx2D,r:AtlasRect){
+/** The fascia banner today: Footy Access, white shield + name on black, two lock-ups along the cell at a uniform scale (lettered while
+ *  the picture loads). */
+function drawFootyAccess(c:Ctx2D,r:AtlasRect,house?:HouseArt){
+ const {x,y,w,h}=r;c.fillStyle='#000000';c.fillRect(x-4,y-4,w+8,h+8);
+ for(const f of [.25,.75]){if(house?.footyBanner)fit(c,house.footyBanner,FOOTY_BANNER_ASPECT,x+w*f,y+h/2,w*.44,h*.74);
+  else words(c,'FOOTY ACCESS',x+w*f,y+h/2,h*.5,w*.4,PAPER_WHITE,'system-ui,-apple-system,sans-serif','800');}
+ drawSponsorLabel(c,r);
+}
+/** adidas's fascia banner (kept for when the deal is final): black panel, mark + wordmark side by side, two lock-ups spaced along the cell, uniform scale (never squashed). */
+export function drawAdidas(c:Ctx2D,r:AtlasRect){
  const {x,y,w,h}=r;c.fillStyle='#000000';c.fillRect(x-4,y-4,w+8,h+8);
  const mh=h*.66,[mx0,my0,mx1,my1]=ADIDAS_PARTS.mark,[wx0,wy0,wx1,wy1]=ADIDAS_PARTS.word;
  const mw=mh*(mx1-mx0)/(my1-my0),wh=mh*.52,ww=wh*(wx1-wx0)/(wy1-wy0),gap=mh*.22,unit=mw+gap+ww;

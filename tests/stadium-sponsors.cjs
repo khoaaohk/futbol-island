@@ -162,17 +162,25 @@ await ok('built-in art: Drip FC naming sponsor, adidas fascia, Futbol Island pan
  const drip=(slot)=>Array.from({length:P.PLACEHOLDER_COUNT[slot]},(_,i)=>P.isDripPlaceholder(slot,i));
  assert.deepEqual(drip('board'),[false,true,false,false,true,false],'a third of the boards, never two side by side');
  assert.deepEqual(drip('screen'),[false,true,false]);assert.deepEqual(drip('gate'),[false],'the gate panel is a welcome (the sign above names the stadium)');
- assert.deepEqual(drip('flag'),[false],'the flag placeholder is never shown (national flags)');assert.deepEqual(drip('fascia'),[false],'the fascia is adidas');assert.deepEqual(drip('centre'),[false]);
+ assert.deepEqual(drip('flag'),[false],'the flag placeholder is never shown (national flags)');assert.deepEqual(drip('fascia'),[false],'the fascia is a sponsor panel (Footy Access today)');assert.deepEqual(drip('centre'),[false]);
  // Drawn with the pictures: Drip panels draw the art and the Sponsor tag; Futbol Island's own panels draw no tag.
  const rec=()=>{const log=[];const ctx=new Proxy({},{get:(t,k)=>k==='measureText'?(s=>({width:String(s).length*7})):k in t?t[k]:((...a)=>{log.push([k,...a]);}),set:(t,k,v)=>{t[k]=v;return true;}});return {ctx,log};};
- const house={wordmarkLight:{width:800,height:197},wordmarkDark:{width:800,height:197},crest:{width:179,height:226}};
+ const house={wordmarkLight:{width:800,height:197},wordmarkDark:{width:800,height:197},crest:{width:179,height:226},footyBanner:{width:960,height:222}};
  const tagged=(slot,i)=>{const {ctx,log}=rec();const [w,h]=S.SLOT_SPECS[slot].cell;P.drawPlaceholder(ctx,slot,i,{x:0,y:0,w,h},house);return {log,tag:log.some(k=>k[0]==='fillText'&&k[1]==='Sponsor'),imgs:log.filter(k=>k[0]==='drawImage').length};};
  for(const [slot,i] of [['board',1],['board',4],['screen',1]]){const r=tagged(slot,i);assert(r.tag&&r.imgs>=1,`${slot} ${i}: Drip FC art + Sponsor tag`);}
  for(const [slot,i] of [['board',0],['screen',0],['gate',0]]){const r=tagged(slot,i);assert(!r.tag&&r.imgs===0,`${slot} ${i}: Futbol Island's own panel, no tag`);}
  {const {log}=tagged('gate',0),said=log.filter(k=>k[0]==='fillText').map(k=>k[1]);assert.deepEqual(said,[...P.WELCOME_LINES],'the gate welcomes, no Drip FC repeat');}
  // adidas: vector paths filled into the cell, white on black, uniform scale (never squashed), two lock-ups, Sponsor tag.
  globalThis.Path2D=class{constructor(d){this.d=d;}};
- try{const {log,tag}=tagged('fascia',0);
+ try{
+  // Today the fascia flies Footy Access (owner, Nov 13 2026, until the adidas deal is final): two banner pictures at a uniform scale.
+  {const {log,tag}=tagged('fascia',0),imgs=log.filter(k=>k[0]==='drawImage');assert.equal(imgs.length,2,'two Footy Access lock-ups');
+   for(const k of imgs)assert(Math.abs(k[4]/k[5]-960/222)<1e-9,'banner proportions kept');assert(tag,'Footy Access carries the Sponsor tag');
+   const {log:lettered}=(()=>{const {ctx,log}=rec();const [w,h]=S.SLOT_SPECS.fascia.cell;P.drawPlaceholder(ctx,'fascia',0,{x:0,y:0,w,h},{});return {log};})();
+   assert(lettered.some(k=>k[0]==='fillText'&&k[1]==='FOOTY ACCESS'),'lettered while the picture loads');}
+  // adidas (kept for later, drawAdidas):
+  const adi=()=>{const {ctx,log}=rec();const [w,h]=S.SLOT_SPECS.fascia.cell;P.drawAdidas(ctx,{x:0,y:0,w,h});return {log,tag:log.some(k=>k[0]==='fillText'&&k[1]==='Sponsor')};};
+  const {log,tag}=adi();
   const scales=log.filter(k=>k[0]==='scale');assert.equal(scales.length,4,'mark + wordmark, twice');assert(scales.every(k=>Math.abs(k[1]-k[2])<1e-12),'uniform scale: logo proportions kept');
   assert(log.filter(k=>k[0]==='fill'&&k[1]instanceof Path2D).length===4*9,'all 9 logo paths per part');assert(tag,'adidas carries the Sponsor tag');
   const [mx0,my0,mx1,my1]=P.ADIDAS_PARTS.mark,[wx0,wy0,wx1,wy1]=P.ADIDAS_PARTS.word;assert.equal(my1,wy0,'parts split at the bars\' foot');assert(mx1-mx0>0&&wx1-wx0>0);
@@ -181,7 +189,7 @@ await ok('built-in art: Drip FC naming sponsor, adidas fascia, Futbol Island pan
   {const cell=S.SLOT_SPECS.fascia.cell;assert(cell[0]/cell[1]===8&&cell[1]>=80,'fascia cell 8:1, 80 px tall');
    assert(/for\(const f of \[\.25,\.75\]\)/.test(read('lib/stadium/sponsors/placeholders.ts')),'lock-ups at the quarter points');}
  }finally{delete globalThis.Path2D;}
- assert(/drawAdidas\(c,r\)/.test(read('lib/stadium/sponsors/placeholders.ts'))&&!/['"`][^'"`\n]*\.svg['"`]/.test(read('lib/stadium/sponsors/placeholders.ts')+read('lib/stadium/sponsors/surfaces.ts')),'no SVG loaded at runtime');
+ assert(/drawFootyAccess\(c,r,house\)/.test(read('lib/stadium/sponsors/placeholders.ts'))&&!/['"`][^'"`\n]*\.svg['"`]/.test(read('lib/stadium/sponsors/placeholders.ts')+read('lib/stadium/sponsors/surfaces.ts')),'no SVG loaded at runtime');
  // An upload replaces the built-in art exactly as before.
  const picks=S.pickSlots([{id:'f',slot:'fascia',label:'X',image:'/x.png',position:0},{id:'g',slot:'gate',label:'Y',image:'/y.png',position:0}],s=>P.PLACEHOLDER_COUNT[s]);
  assert(picks.fascia.every(p=>p.sponsor)&&picks.gate.every(p=>p.sponsor),'uploads override the fascia and the gate');

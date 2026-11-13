@@ -13,6 +13,8 @@ import {createPondWaterMaterial,createPondPadMaterial,createPondBedMaterial,crea
 
 import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PLAZA_FLAG_X,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_TRAILS,PARK_GROVES,BOWL_RING,BOWL_APRON,POND_RIM,POND_Y,POND_SIGN,POND_BENCHES,PLAZA_LABEL,TRAIL_WIDTH,
  inStadiumFootprint,parkPathLines,pathPoints,ringPoints,segDistance,trailBeachRun,onApron,inPond,onGrass,grassEdgeDistance,type P} from './westParkLayout';
+/** Signs that trees keep clear of: STADIUM PARK, LILY POND. */
+const PARK_SIGNS:readonly (readonly [number,number])[]=[[-114,30],[POND_SIGN.x,POND_SIGN.z]];
 export {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_GROVES,BOWL_RING,inStadiumFootprint,parkPathLines};
 type Tools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -134,7 +136,7 @@ export function buildWestPark(t:Tools):WestParkStats{
    for(const g of parts)if(!g.getAttribute('normal'))g.computeVertexNormals();
    const merged=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());const padMat=createPondPadMaterial();materials.push(padMat);flat(merged,padMat,POND_Y+.012,'park-pond-pads');}
  }
- districtSign('STADIUM PARK',-114,30);
+ districtSign('STADIUM PARK',PARK_SIGNS[0][0],PARK_SIGNS[0][1]);
 
  // --- Trees in groves, palms by the beach (deterministic) ------------------------------------------------------------------
  // Nov 13 2026 (owner): the four straight hedge rows round the bowl's corners are gone (one lay in the pond, two across lawns).
@@ -145,6 +147,9 @@ export function buildWestPark(t:Tools):WestParkStats{
   if(onApron(x,z,r+2)||inStadiumFootprint(x,z,BOWL_RING.width+6))return false;
   if(x>P_.minX-8&&x<P_.maxX+6&&z>P_.minZ-8&&z<P_.maxZ+8)return false;
   if(inPond(x,z,POND_RIM+4+r))return false;
+  // Signs stay readable (owner, Nov 13 2026: a tree stood in front of STADIUM PARK): nothing within 6 m, nor in the camera's view of
+  // them (the follow camera looks from the south-east, so a wider strip on that side).
+  for(const [sx,sz] of PARK_SIGNS)if(Math.hypot(x-sx,z-sz)<6+r||(x>sx-4&&x<sx+14&&z>sz-3&&z<sz+18))return false;
   if(PARK_LAWNS.some(l=>Math.hypot((x-l.x)/(l.rx+2),(z-l.z)/(l.rz+2))<1))return false;
   for(const p of paths)if(segDistance(x,z,p)<TRAIL_WIDTH/2+1.8+r)return false;
   if(local.some(o=>Math.abs(x-o.x)<o.w/2+r+1&&Math.abs(z-o.z)<o.d/2+r+1))return false;
