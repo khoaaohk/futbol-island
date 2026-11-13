@@ -90,7 +90,7 @@ test('Museum: enter from the island, read the free case, blow the whistle, see a
   const row = page.locator('[aria-label="Explore checklist"] li', { hasText: 'Visit the museum' });
   await row.scrollIntoViewIfNeeded();
   await expect(row.locator('[data-complete=true]').first()).toBeVisible();
-  await expect(page.locator('[aria-label="Explore checklist"]')).toContainText(/\d+ \/ 23 completed/);
+  await expect(page.locator('[aria-label="Explore checklist"]')).toContainText(/\d+ \/ 24 completed/);
   await shot('museum-checklist');
   expect(errors.filter(e => !/ChunkLoadError|Loading chunk/.test(e))).toEqual([]);
 });

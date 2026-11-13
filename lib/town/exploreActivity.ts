@@ -7,9 +7,11 @@ export type ExploreActivity={characters:string[];store:boolean;arcade:boolean;ra
  /** G-13 (Sep 30 2026): the island's other places and activities. Fired through lib/town/exploreSignals.ts. */
  fish:boolean;job:boolean;sold:boolean;cay:boolean;jetty:boolean;konbini:boolean;
  /** Oct 3 2026: the walk-in History Museum, ticked on first entry to /museum (components/MuseumRoom.tsx). */
- museum:boolean};
-const FLAGS=['store','arcade','ramp','truck','target','parachute','roofDrop','fish','job','sold','cay','jetty','konbini','museum'] as const;
-const empty:ExploreActivity={characters:[],store:false,arcade:false,ramp:false,truck:false,target:false,parachute:false,roofDrop:false,knockovers:0,knockoutWins:0,fish:false,job:false,sold:false,cay:false,jetty:false,konbini:false,museum:false};
+ museum:boolean;
+ /** Nov 13 2026: Visit the stadium, ticked on first entering the DRIP FC Stadium bowl (lib/town/exploreZones.ts). */
+ stadium:boolean};
+const FLAGS=['store','arcade','ramp','truck','target','parachute','roofDrop','fish','job','sold','cay','jetty','konbini','museum','stadium'] as const;
+const empty:ExploreActivity={characters:[],store:false,arcade:false,ramp:false,truck:false,target:false,parachute:false,roofDrop:false,knockovers:0,knockoutWins:0,fish:false,job:false,sold:false,cay:false,jetty:false,konbini:false,museum:false,stadium:false};
 const count=(v:unknown,max:number)=>typeof v==='number'&&Number.isFinite(v)?Math.min(max,Math.max(0,Math.floor(v))):0;
 export function sanitizeExploreActivity(value:unknown):ExploreActivity{const v=value&&typeof value==='object'?value as Partial<ExploreActivity>:{};const out={...empty,characters:Array.isArray(v.characters)?[...new Set(v.characters.filter((id):id is string=>typeof id==='string'&&id.length>0&&id.length<100))].slice(0,10):[],knockovers:count(v.knockovers,20),knockoutWins:count(v.knockoutWins,5)};for(const k of FLAGS)out[k]=v[k]===true;return out;}
 const listeners=new Set<()=>void>();let state=empty,loaded=false;const server=JSON.stringify(empty);let snapshot=server;

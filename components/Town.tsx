@@ -1735,7 +1735,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
      if(!best)return;const rm=window.matchMedia('(prefers-reduced-motion: reduce)').matches,n=islandNpcs.react(best.id,EMOTE.Cheer,rm);if(n){npcCool.set(best.id,now+emoteSeconds(EMOTE.Cheer)+NPC_COOLDOWN_SECONDS);emoteBubbles.showText('Wow, what a catch!',2.2,n.position.x,n.position.y+2.6,n.position.z);}},{signal:idleInput.signal});
     const dailyPlay=createDailyPlay({now:Date.now,claim:grantDailyPlayCoins,earned:amount=>window.dispatchEvent(new CustomEvent('fi2-daily-play-earned',{detail:{amount}}))});
     let dailyX=location.x,dailyZ=location.z;
-    const exploreZones=createExploreZones(exploreActivityNow(),kind=>recordExploreActivity(kind));// Coral Cay / East Jetty checklist items (G-13)
+    const exploreZones=createExploreZones(exploreActivityNow(),kind=>recordExploreActivity(kind));// Coral Cay / East Jetty (G-13) / stadium (Nov 13 2026) checklist items
     // Frame-loop steps moved to lib/town/frame (Nov 10 2026 split): each takes one long-lived context built here, once.
     const jetTwistFrame:JetTwistFrame={reduced,jetActions,customizationRef,player,vehicle};
     const knockoutLabelsFrame:KnockoutLabelsFrame={uiElement,liveKnockout};

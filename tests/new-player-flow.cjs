@@ -254,11 +254,11 @@ assert.equal(Q.quizFeedbackText('Look again: the defender has moved toward the b
  const W=world(),E=W.load('lib/town/exploreChecklist.ts'),A=W.load('lib/town/exploreActivity.ts'),T=W.load('lib/town/cardRewardTriggers.ts');
  const ids=E.EXPLORE_ITEMS.map(i=>i.id);
  for(const id of ['catch-fish','island-job','sell-rosa','visit-cay','walk-jetty','enter-konbini'])assert(ids.includes(id),id+' is on the checklist');
- assert.equal(ids.length,23);assert(ids.includes('visit-museum'),'visit-museum is on the checklist (Oct 3 2026)');
+ assert.equal(ids.length,24);assert(ids.includes('visit-stadium'),'visit-stadium is on the checklist (Nov 13 2026)');assert(ids.includes('visit-museum'),'visit-museum is on the checklist (Oct 3 2026)');
  for(const item of E.EXPLORE_ITEMS.slice(-6))assert(item.detail.length<=110&&/[.!]$/.test(item.detail),item.id+' copy is short and complete');
  const paid=new Set(T.CARD_EXPLORE_ITEMS.map(i=>i.id));
  for(const id of ['catch-fish','island-job','sell-rosa'])assert(paid.has(id),id+' pays like the other effort items (5 coins + a pick)');
- for(const id of ['visit-cay','walk-jetty','enter-konbini','visit-museum'])assert(!paid.has(id),id+' is a visit: ticks off, pays nothing (same rule as visiting a field)');
+ for(const id of ['visit-cay','walk-jetty','enter-konbini','visit-museum','visit-stadium'])assert(!paid.has(id),id+' is a visit: ticks off, pays nothing (same rule as visiting a field)');
  // Existing saves count, from the stores' own keys.
  const keys={fish:'lib/town/fishing/fishingCore.ts:FISHBOOK_STORAGE_KEY',job:'lib/town/jobs/jobEconomy.ts:JOBS_STORAGE_KEY',sold:'lib/town/market/market.ts:MARKET_STORAGE_KEY',jetty:'lib/town/eastPierChallenge.ts:PIER_CHALLENGE_KEY',konbini:'lib/konbini/foodStore.ts:KONBINI_COLLECTION_KEY'};
  for(const [k,ref] of Object.entries(keys)){const [file,name]=ref.split(':');const m=read(file).match(new RegExp(`export const ${name}='([^']+)'`));assert(m,ref);assert.equal(A.SAVE_EVIDENCE_KEYS[k],m[1],k+' evidence key matches '+ref);}
@@ -273,14 +273,19 @@ assert.equal(Q.quizFeedbackText('Look again: the defender has moved toward the b
  assert(/recordExploreActivity\('konbini'\)/.test(read('components/KonbiniRoom.tsx')));
  // Zone check: at most twice a second, then off for good.
  const Z=W.load('lib/town/exploreZones.ts'),C=W.load('lib/town/coralCay.ts'),P=W.load('lib/town/eastPier.ts');
- const got=[];const z=Z.createExploreZones({cay:false,jetty:false},k=>got.push(k));
+ const got=[];const z=Z.createExploreZones({cay:false,jetty:false,stadium:true},k=>got.push(k));
  z.step(.6,C.CAY_CENTER.x,C.CAY_CENTER.z,true);same(got,['cay'],'flying over Coral Cay counts as a visit');
  const pier=P.JETTY_PATH[Math.floor(P.JETTY_PATH.length/2)];assert(P.onEastPier(pier.x,pier.z));
  z.step(.6,pier.x,pier.z,true);same(got,['cay'],'flying over the jetty is not walking it');
  z.step(.1,pier.x,pier.z,false);same(got,['cay'],'throttled: no check before 0.5 s');
  z.step(.5,pier.x,pier.z,false);same(got,['cay','jetty']);assert.equal(z.finished,true);
  z.step(5,pier.x,pier.z,false);assert.equal(got.length,2,'records once');
- assert.equal(Z.createExploreZones({cay:true,jetty:true},()=>{}).finished,true,'an already-done save never checks');
+ assert.equal(Z.createExploreZones({cay:true,jetty:true,stadium:true},()=>{}).finished,true,'an already-done save never checks');
+ // Nov 13 2026: Visit the stadium ticks inside the bowl (not at the gate, not flying over), once.
+ {const L=W.load('lib/town/westParkLayout.ts'),s=[],zs=Z.createExploreZones({cay:true,jetty:true},k=>s.push(k));assert.equal(zs.finished,false,'an older save without the stadium flag still checks');
+  zs.step(.6,L.STADIUM_GATE.x+1,L.STADIUM_GATE.z,false);same(s,[],'standing at the gate is not inside');
+  zs.step(.6,L.STADIUM.x,L.STADIUM.z,true);same(s,[],'flying over the bowl is not a visit');
+  zs.step(.6,L.STADIUM_GATE.x-8,L.STADIUM_GATE.z,false);same(s,['stadium']);assert.equal(zs.finished,true);zs.step(5,L.STADIUM.x,L.STADIUM.z,false);same(s,['stadium'],'records once');}
 }
 
 // ---- 7. Lesson opener goals (G-18) and the opening-soon label (G-01 part) ----------------------------------------------------
