@@ -1627,7 +1627,7 @@ export function* buildTownSteps(scene: T.Scene) {
   for(const source of windowSources)paintMaterials.set(source,windowPaint);
   const stadiumPaints=new Map<T.Material,T.MeshStandardMaterial>(),STADIUM_CELL=`${Math.floor(STADIUM.x/50)}:${Math.floor(STADIUM.z/50)}`;
   const stadiumPaintFor=(source:T.Material)=>{const shared=paintMaterials.get(source);if(!shared)return undefined;let twin=stadiumPaints.get(shared);
-    if(!twin){twin=patchStadiumNight(shared.clone(),STADIUM_NIGHT_GAIN.paint);stadiumPaints.set(shared,twin);materials.push(twin);}return twin;};
+    if(!twin){twin=patchStadiumNight(shared.clone(),STADIUM_NIGHT_GAIN.paint,STADIUM_NIGHT_GAIN.turf);stadiumPaints.set(shared,twin);materials.push(twin);}return twin;};
   const position=new T.Vector3();
   // Visited in traverse order, in slices (buildTownSteps): the callback only collects, it never changes the tree.
   const batchObject=(object:T.Object3D)=>{
