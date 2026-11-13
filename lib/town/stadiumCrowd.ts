@@ -66,7 +66,7 @@ export function createStadiumCrowd(parent:T.Object3D,phone:boolean){
   fans=crowdSeats();
   const mat=new T.MeshLambertMaterial();
   mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,uniforms);
-   sh.vertexShader='attribute float aHead;\nuniform float uCheer;\nuniform float uTime;\nuniform vec3 uClear;\nuniform vec3 uClearF[${CLEAR_FRIENDS}];\n'+sh.vertexShader
+   sh.vertexShader=`attribute float aHead;\nuniform float uCheer;\nuniform float uTime;\nuniform vec3 uClear;\nuniform vec3 uClearF[${CLEAR_FRIENDS}];\n`+sh.vertexShader
     .replace('#include <color_vertex>',`#include <color_vertex>
  vec3 fanAt=vec3(instanceMatrix[3][0],instanceMatrix[3][1],instanceMatrix[3][2]);
  float fanH=fract(sin(dot(fanAt.xz,vec2(12.9898,78.233)))*43758.5453);

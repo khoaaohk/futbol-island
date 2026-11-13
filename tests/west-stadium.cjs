@@ -229,6 +229,7 @@ assert(/id:'stadium',label:'STADIUM GATE',point:STADIUM_ARRIVAL/.test(map)&&/\|'
  assert(L.STADIUM_ARRIVAL.x>L.STADIUM_GATE.x&&onIsland(L.STADIUM_ARRIVAL.x,L.STADIUM_ARRIVAL.z)&&!blocked(L.STADIUM_ARRIVAL.x,L.STADIUM_ARRIVAL.z),'the arrival is open plaza outside the gate');}
 console.log('west stadium phase 3a: ok');
 // ---- Phase 3b: the crowd, goal frames that stop the ball, portrait framing, exhibitions, the crowd sound -------------------------
+{const src=fs.readFileSync(path.join(base,'lib/town/stadiumCrowd.ts'),'utf8');assert(!/'[^'\n`]*\$\{[A-Z_]+\}[^'\n`]*'/.test(src),'crowd shader strings: no ${} inside a plain quoted string (it reaches GLSL literally and the crowd never draws)');}
 {const C=load('lib/town/stadiumCrowd.ts'),SS=load('lib/town/stadiumScreen.ts'),seats=Q.seatCount(),fans=C.crowdSeats();
  const share=f=>C.crowdCount(fans,f)/seats,desk=share(C.crowdFill(false,0)),phone=share(C.crowdFill(true,0)),hot=share(C.crowdFill(true,2)),saver=share(C.crowdFill(false,4));
  console.log(`crowd: ${fans.length} fans max; desktop ${(desk*100).toFixed(0)}%, phone ${(phone*100).toFixed(0)}%, phone tier 2 ${(hot*100).toFixed(0)}%, saver ${(saver*100).toFixed(0)}% of ${seats} seats; desktop ${C.crowdCount(fans,C.crowdFill(false,0))*C.FAN_TRIS} tris`);
