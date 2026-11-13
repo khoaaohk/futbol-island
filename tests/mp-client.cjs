@@ -288,6 +288,22 @@ t('bindConnection is idempotent per connection (#4): second bind adds no subscri
 
 // ---- interp ----
 const R=()=>({x:0,y:0,z:0,yaw:0,speed:0,mode:0,zone:0,fade:0});
+t('interp: a beacon-tier (1 Hz) 34 m/s jetpack flyer with ±80 ms jitter is interpolated: no >5 m frame jumps, no stalls',()=>{
+  const it=ip.createInterp({delayMs:240}),out=R();let seed=11;const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+  const T0=10000,N=14,jit=[];for(let i=0;i<=N;i++)jit.push(Math.round((rnd()*2-1)*80));
+  let prev=null,run=0,worstRun=0,worst=0,pushed=0;
+  for(let now=T0;now<=T0+N*1000;now+=16){
+    while(pushed<=N&&T0+pushed*1000+jit[pushed]<=now){it.push(8,[pushed*340,300,0,0,136,5,0,0],T0+pushed*1000+jit[pushed]);pushed++;}
+    if(now<T0+3500)continue;
+    it.sample(8,now,out);
+    if(prev!==null){const d=out.x-prev;worst=Math.max(worst,Math.abs(d));if(Math.abs(d)<0.15){run++;worstRun=Math.max(worstRun,run);}else run=0;}
+    prev=out.x;
+  }
+  assert.ok(worst<5,`a ${worst.toFixed(2)} m frame jump`);assert.ok(worstRun<3,`${worstRun} frozen frames in a row`);
+  // it comes close (10 Hz): the extra delay drains, back on the shared 240 ms delay within ~3 s
+  let t=T0+N*1000,x=N*340;for(let i=1;i<=40;i++){t+=100;x+=34;it.push(8,[x,300,0,0,136,5,0,0],t);for(let k=0;k<6;k++)it.sample(8,t-100+k*16,out);}
+  it.sample(8,t,out);assert.ok(Math.abs(out.x-(x-24*3.4/10*10)/10)<1.5,`caught up: x ${out.x} vs ${(x-81.6)/10}`);
+});
 t('interp: a far (quiet 2 Hz) 34 m/s jetpack flyer with ±80 ms jitter: no stall-then-leap (slow-stream cap)',()=>{
   for(const delayMs of [240,380]){
     const it=ip.createInterp({delayMs}),out=R();let seed=7;const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};

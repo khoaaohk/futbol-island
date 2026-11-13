@@ -38,9 +38,15 @@ const TAU = Math.PI * 2;
 // snapshots (moved by position, so idle beacons and room poses standing still never count) and the cap stretches to 1.3 x that
 // interval (at most 800 ms). Nothing else adapts: the render delay and the snapshot times stay exactly as they were, so a 10 Hz
 // stream behaves as before (an adaptive delay + time smoothing tried in 55625b19 stuttered close take-offs and left extra lag).
-const IV_CAP = 1.3, IV_CAP_MAX_MS = 800, IV_MAX = 1000, MOVED_M = 0.05;
+const IV_CAP = 1.3, IV_CAP_MAX_MS = 800, IV_MAX = 1500, MOVED_M = 0.05;
+// The beacon tier (overnight soak Nov 12 2026): on a full island a member outside a watcher's nearest 12 arrives about once a second,
+// and no extrapolation can bridge 1 s of jetpack flight (34 m) without overshooting every stop. A member whose moving interval is
+// above BEACON_IV_MS is drawn further in the past instead (interval + BEACON_SLACK_MS in total), so it is always INTERPOLATED between
+// real snapshots: smooth, about a second behind (it is far away and outside the nearest 12). The extra delay moves at EXTRA_SLEW of
+// real time, so a member that comes close catches up within a couple of seconds (slight fast-forward) and 5-10 Hz streams never get any.
+const BEACON_IV_MS = 600, BEACON_SLACK_MS = 150, BEACON_DELAY_MAX_MS = 1400, EXTRA_SLEW = 0.5;
 
-type Ring = { d: Float64Array; cut: Uint8Array; n: number; head: number; iv: number; lastMoved: boolean };
+type Ring = { d: Float64Array; cut: Uint8Array; n: number; head: number; iv: number; lastMoved: boolean; ex: number; lt: number };
 
 export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }): Interp {
   let delay = opts?.delayMs ?? 250;
@@ -52,14 +58,16 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
 
   function push(id: MemberId, body: PoseBody, recvMs: number): void {
     let r = rings.get(id);
-    if (!r) { r = { d: new Float64Array(SLOTS * F), cut: new Uint8Array(SLOTS), n: 0, head: 0, iv: 0, lastMoved: false }; rings.set(id, r); }
+    if (!r) { r = { d: new Float64Array(SLOTS * F), cut: new Uint8Array(SLOTS), n: 0, head: 0, iv: 0, lastMoved: false, ex: 0, lt: -1 }; rings.set(id, r); }
     const x = body[0] / 10, y = body[1] / 10, z = body[2] / 10;
     let cut = r.n === 0 || (body[7] & 1) !== 0 ? 1 : 0;
     if (r.n > 0) {
       const last = at(r, r.n - 1);
       if (recvMs < r.d[last]) return; // out of order
       const dx = x - r.d[last + 1], dy = y - r.d[last + 2], dz = z - r.d[last + 3];
-      if (dx * dx + dy * dy + dz * dz > JUMP_M * JUMP_M) cut = 1;
+      // a teleport is a move no mode could make in the gap: 25 m, or more for a slow (beacon-tier) stream of a fast mode (1 s of jetpack is 34 m)
+      const jumpM = Math.max(JUMP_M, extrapLimit(body[5]) * (recvMs - r.d[last]) / 1000);
+      if (dx * dx + dy * dy + dz * dz > jumpM * jumpM) cut = 1;
       const moved = dx * dx + dy * dy + dz * dz > MOVED_M * MOVED_M;
       if (recvMs === r.d[last]) { // same instant: replace newest, but keep its cut mark (a Warp must survive a same-ms retry)
         r.head = (r.head + SLOTS - 1) % SLOTS; r.n--;
@@ -93,7 +101,11 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
   function sample(id: MemberId, renderMs: number, out: RemotePose): boolean {
     const r = rings.get(id);
     if (!r || r.n === 0) return false;
-    const rt = renderMs - delay;
+    const want = r.iv > BEACON_IV_MS ? Math.max(0, Math.min(BEACON_DELAY_MAX_MS, r.iv + BEACON_SLACK_MS) - delay) : 0;
+    if (r.lt < 0 || r.n < 2) r.ex = want;
+    else if (r.ex !== want) { const st = EXTRA_SLEW * Math.max(0, Math.min(100, renderMs - r.lt)); r.ex = want > r.ex ? Math.min(want, r.ex + st) : Math.max(want, r.ex - st); }
+    r.lt = renderMs;
+    const rt = renderMs - delay - r.ex;
     const cap = r.iv > 0 ? Math.max(capBase, Math.min(IV_CAP_MAX_MS, r.iv * IV_CAP)) : capBase;
     let a = -1; // newest slot with t <= rt
     for (let k = 0; k < r.n; k++) { if (r.d[at(r, k)] <= rt) a = k; else break; }
