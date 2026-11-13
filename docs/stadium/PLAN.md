@@ -1,0 +1,87 @@
+# West Stadium: build plan
+
+Owner request (Nov 12 2026): push the island west and add a walkable outdoor stadium in a landscaped park. Approved concept:
+scratchpad `west-stadium/index.html`. Branch `stadium` (never pushed from an agent). Heat rules (AGENTS.md) apply to every
+phase: static geometry goes into the 50 m chunk batches, nothing animates off screen, on-demand loading, bounded work.
+
+## Layout (single source: `lib/town/westParkLayout.ts`, no three.js)
+- Coast: `lib/town/shoreline.ts` anchors; west anchors pushed ~230 m (coast at x ≈ -332). East of x -72 unchanged.
+- `STADIUM` centre (-205,-30), long axis N–S, bowl 124 × 164 m, pitch 63 × 100 m. `STADIUM_GATE` east side (x -143).
+- `STADIUM_PLAZA` x -140…-52, z -52…-8 (fan walk from the x -45 street / Old Town). `PARK_POND` (-150,72).
+- `PARK_PATHS` (Béziers), `BOWL_RING`, `PARK_LAWNS`, `PARK_GROVES`, `inStadiumFootprint()`.
+
+## Phase 1: land, park, plaza, map (DONE on this branch)
+- `shoreline.ts`: anchors, `WEST_BEACH_X`, 9 m beach ribbon west of x -110, lawn kept 8 m behind it (`INTERIOR_GRASS` blend).
+- `simulation.ts`: `ISLAND_BOUNDS.minX` -336, `WEST_WATER_MARGIN` 80 (flight/map edge x -416). `flightOutline.data.ts`
+  regenerated (`node scripts/generate-flight-outline.cjs`). `lib/graphics/islandShore.ts` bake rect from x -422 (+26% texels,
+  once at mount).
+- `seaLifeAreas.ts` (west whale/rays, north eagle ray), `fishing/fishSpots.ts` West Cove moved to the new coast (x -324.5).
+- `westPark.ts` (`buildWestPark`, `buildStadiumPlaceholder`), called from `world.ts` after `buildCoralCay`. CORNER DELI and
+  PRAÇA HOMES removed (their scheme/shape draws kept so other houses keep their looks); z -55 bunting removed.
+- `world.ts`: west chunks (cx ≤ -3) behind one frustum-box region gate (`westRegion`, like the cay/isle gates).
+- Map: `components/IslandOverview.tsx` (bowl, pitch, gate, plaza, paths, pond, lawns, groves; STADIUM / PLAZA / PARK / WEST
+  BEACH labels). Travel map widens automatically (FLIGHT_BOUNDS).
+- Tests: `tests/west-stadium.cjs` (new); updated town, coral-cay, admin-analytics-places, island-connectivity grid.
+
+## Phase 2: stadium structure (`lib/town/stadiumWorld.ts`, `lib/town/stadiumSeats.ts`)
+- Replace `buildStadiumPlaceholder`: 4 stands (open corners), walkable concourse behind/under each stand, stairs + aisles as
+  `walkSurfaces` (world.ts already collects `walkSurfaces` / `landableDecks.ts` for raised decks; rooftop stairs in world.ts are
+  the pattern), handrails as obstacles, roof over the long stands (fascia = sponsor slot 4).
+- Seats: a seat grid per stand (pure data, `stadiumSeats.ts`): nearest-seat lookup, "Sit" prompt, seated pose
+  (`lib/graphics/npcSeatPose.ts` / `npcStandUp.ts` patterns), camera faces the pitch centre (`lib/town/emoteCamera*.ts` /
+  `liveJoinCamera.ts` patterns). Seat rows drawn as one InstancedMesh per stand side (not 1 mesh per seat).
+- Gate arch (sponsor slot 3), turnstile props. Collision: `obstacleGrid.ts` handles the extra colliders.
+- Keep the bowl in `inStadiumFootprint`; trees already stay out.
+
+## Phase 3: watching games
+- Today: pitches are `VENUES` / `LIVE_VENUES` (`venues.ts`); live matches run in `fieldRuntime.ts` + `liveJoin*.ts`, sim in
+  `lib/town/match/matchSim.ts` (`elevenAI.ts` for 11v11), sync in `lib/multiplayer/sharedMatch.ts` / `matchLink.ts`, focus and
+  far-match freezing in `matchFocus.ts` (Town passes `fieldSession`; "far matches hold still").
+- Add a `'stadium'` LiveVenue (11v11, `x:-205,z:-30`, width/length from the pitch) to `LIVE_VENUES` only (not `VENUES`, so
+  lessons/quests/coin routes do not move). Check every `LiveFormat` switch (`grep -rn "LiveFormat\|'beach'" lib components`).
+- Big match: join from the gate or watch from a seat (seated players count as spectators, not squad).
+- NPC exhibition matches when no live game is on: reuse the AI-only match path the island pitches use when idle; runs only while
+  the stadium is in view (west region gate + `matchFocus`), paused otherwise. Crowd: a few instanced low-poly fans, no animation
+  off screen.
+- Big screen (sponsor slot 2) shows score/time from a 256 px canvas updated on goals/minute only.
+
+## Phase 4: sponsor slots
+- One 2048 × 1024 atlas (`public/sponsors/atlas.webp`) + `lib/town/sponsorSlots.ts` (UV rect per slot): pitchside board ring
+  (16 panels, one InstancedMesh with per-instance UV offset), big screen, gate arch, roof fascia, plaza flags (14, replace the
+  current flat colours), centre-circle logo (decal). Small "Sponsor" label baked into each panel.
+- Placeholder Futbol Island art now; `/admin` swap later (`app/admin/*`, upload → rebuilt atlas, cached, loaded on demand when
+  the west region first becomes visible).
+
+## Phase 5: multiplayer
+- Public world: the stadium is Zone.Main land (no relay change for position). The relay has no island bounds
+  (`multiplayer/protocol/limits.ts` WORLD_BOUNDS ±4–10 km; interest is nearest-N / LIVE_RANGE_M 40 m by distance), so the new
+  land needs no relay change.
+- Seated pose for others: `Mode` (`multiplayer/protocol/types.ts`) has no Sit; add `Mode.Sit` (protocol minor bump, old
+  clients map unknown modes to Idle) or encode via activity; `lib/graphics/remoteAvatars.ts` draws the seated pose.
+- Big match join/watch through the existing shared-match flow (`sharedMatch.ts`).
+
+## Phase 6: copy
+- "No ads" wording appears in 19 files (`grep -rlE "No ads|no ads" app components lib`: privacy, about, marketing, llms-full,
+  play page, GrownUps, TitleActions…). Sponsor boards are ads: owner decides the new line (e.g. "No ads in your way: just a few
+  sponsor boards round the stadium, never pop-ups or videos"). Update privacy + llms text together.
+
+## Phase 7: heat and QA
+- Measure on a phone: draw calls/triangles at the plaza looking west, from a seat, and from the east island looking west
+  (west gate should hide everything). Real-device heat only from a device.
+- Analytics heat-map: `lib/analytics/islandIds.ts` GRID starts at x -160, so the new land is not sampled. Do NOT move x0
+  (stored cell indices would shift); append west cells after CELL_COUNT (check SQL caps in `supabase/`), add a `stadium`
+  place to `lib/analytics/islandPlaces.ts` and `app/admin/IslandHeatmap.tsx`.
+- Full `npm run test:quiet`, tsc, eslint; play-through: walk Old Town → plaza → gate → pitch → seat; fly the coast.
+
+## Risks and checks (phase 1 status)
+- Save positions: old saves in the former west sea (x -99…-152) now load on land; `islandReturnPosition.ts` accepts
+  FLIGHT_BOUNDS (wider). OK.
+- Arrival spots / travel: map destinations are named points east of x -72; unchanged. A STADIUM travel destination is phase 2/3.
+- Fishing: West Cove float moved; kiosks/backdrops derive from the spot. `fishing*` tests pass.
+- Boats, ferry, lighthouse, East Jetty, Coral Cay, Summit Isle: all east; unchanged.
+- Map bounds / minimap: FLIGHT_BOUNDS minX -416 widens the travel map ~26%; `IslandTravelMap.tsx` derives from it.
+- Camera far plane 500 m, fog: from the west beach the east coast is ~580 m away and fades; acceptable.
+- Ocean plane (2100 × 1700, centre x 350) reaches x -700: covers the new west sea.
+- Shore bake: +26% texels, one-time at mount; foam strip tiles are frustum-culled.
+- Lamps, traffic, ground decals follow `onIsland` / road data automatically; no new roads in phase 1.
+- Pre-existing failures (quarantined, not caused here): night-atmosphere "bounded pool size", field-light-collisions.
