@@ -203,8 +203,9 @@ assert.equal(Q.quizFeedbackText('Look again: the defender has moved toward the b
  assert(/dailyPlay\.step\(dt,dailyPlayCounts\(/.test(town),'Town uses the shared rule');
  assert(!/rideRef\.current==='walk'&&streetTraffic\.rider\.index<0&&Math\.hypot\(driveX,driveZ\)>\.1&&dailyMoved/.test(town),'the walk-only rule is gone');
  assert(/walk, ride or fly/i.test(read('components/IslandBalanceDrawer.tsx')),'the pocket copy says rides count');
- // Fast travel lands on foot (G-13).
- assert.equal((town.match(/if\(rideRef\.current!=='walk'\)\{pendingRide\.current=null;cancelLanding\.current=false;rideRef\.current='walk';setRideMode\('walk'\);\}/g)||[]).length,2,'both fast-travel arrivals land on foot');
+ // Fast travel (G-13) used to land on foot; since Nov 13 2026 (owner) it keeps walking / riding / flying (lib/town/travelArrival.ts,
+ // tests/travel-keeps-mode.cjs), applied after both trips (places and pitches).
+ assert((town.match(/applyArrival\(/g)||[]).length>=2,'both fast-travel arrivals apply the kept mode');
 }
 
 // ---- 5. Welcome back (G-10) -------------------------------------------------------------------------------------------------

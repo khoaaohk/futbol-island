@@ -73,6 +73,7 @@ function walk(dir,out){for(const e of fs.readdirSync(path.join(base,dir),{withFi
 // design specs (museum ball briefs etc.) are not shown to kids.
 const corpusFiles=['lib','components','app','docs'].filter(d=>fs.existsSync(path.join(base,d))).flatMap(d=>walk(d,[]))
  .filter(f=>!f.startsWith('lib/analytics/')&&(!f.startsWith('docs/')||/lesson|fact|ball-hunt|stor(y|ies)|audit/i.test(f)));
+const SHARED_WITH_STADIUM=new Set(['fourth official']);
 const norm=t=>t.toLowerCase().replace(/[’‘]/g,"'").replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ');
 const corpus=norm(corpusFiles.map(f=>fs.readFileSync(path.join(base,f),'utf8')).join(' \n '));
 
@@ -87,6 +88,9 @@ ok('new and unrelated: no topic word is shared between the seven, and none appea
  const seen=new Set();
  for(const b of B.DIVE_BALLS)for(const k of b.topic){const n=norm(k).trim();assert(!seen.has(n),'topic repeated: '+k);seen.add(n);
   assert(norm(b.text+' '+b.title).includes(n),'the topic word is in its own lesson: '+k);
+  // Nov 13 2026 (owner): the DRIP FC Stadium's officials cast (lib/town/stadiumNpcs.ts) now has a fourth official on the bench, so that
+  // one reef topic is shared on purpose with the stadium NPCs; every other reef topic stays unique to its ball.
+  if(SHARED_WITH_STADIUM.has(n)){assert(/fourth official/i.test(read('lib/town/stadiumNpcs.ts')),'shared with the stadium officials');continue;}
   const re=new RegExp('(^|[^a-z])'+n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'($|[^a-z])');assert(!re.test(corpus),'topic “'+k+'” already appears in other game content');}
  for(const b of B.DIVE_BALLS)for(const o of B.DIVE_BALLS)if(o!==b)for(const k of o.topic)assert(!norm(b.text).includes(norm(k).trim()),b.spot+' touches '+o.spot+'’s topic');
 });

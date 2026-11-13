@@ -210,7 +210,7 @@ Walk up to an islander and tap Talk to pick a question from their topics. Every 
 
 - **Football tie:** Coaching ideas, positions, club culture and what different people love about the game, with no typing.
 - **Where:** Walk close to anyone on the island; the nearest one shows a name tag and a Talk button.
-- **Proof:** 158 islanders to meet.
+- **Proof:** 188 islanders to meet.
 - **id / image:** `islanders` / `islanders_talk`
 
 ### Quick challenges
@@ -221,7 +221,7 @@ Some conversations end in a quick challenge with three options and one right ans
 
 - **Football tie:** Fast football decisions and rules, checked in a few seconds and explained right away.
 - **Where:** Talk to islanders; each one has their own set of challenges, and each area adds more.
-- **Proof:** 653 quick challenges across the islanders and areas.
+- **Proof:** 773 quick challenges across the islanders and areas.
 - **id / image:** `quick-challenges` / `quick_challenges`
 
 ### Bubbles and banter
