@@ -10,42 +10,8 @@ import {trunkCollider,type Obstacle} from './simulation';
 import {tintGroundMesh} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 
-/** The stadium bowl: centre, outer size (x × z) and the full-size pitch inside (long axis north–south). */
-export const STADIUM={x:-205,z:-30,bowlW:124,bowlL:164,pitchW:63,pitchL:100} as const;
-/** The gate on the bowl's east side, facing the plaza. */
-export const STADIUM_GATE={x:STADIUM.x+STADIUM.bowlW/2,z:STADIUM.z,halfWidth:7} as const;
-/** Stadium Plaza: the fan walk from Old Town's west street (x -45) to the gate. */
-export const STADIUM_PLAZA={minX:-140,maxX:-52,minZ:STADIUM.z-22,maxZ:STADIUM.z+22} as const;
-/** The park pond (an ellipse, radii in m). */
-export const PARK_POND={x:-150,z:72,rx:24,rz:13} as const;
-/** Mown lawns (ellipses). */
-export const PARK_LAWNS=[{x:-262,z:-150,rx:20,rz:12},{x:-150,z:-120,rx:22,rz:12},{x:-270,z:60,rx:18,rz:12}] as const;
-type P=readonly [number,number];
-/** Winding gravel paths: cubic Béziers [start, control 1, control 2, end] (the concept page's paths). */
-export const PARK_PATHS:readonly (readonly [P,P,P,P])[]=[
- [[-205,-118],[-215,-150],[-165,-170],[-120,-195]],
- [[-205,58],[-185,80],[-245,95],[-262,100]],
- [[-273,-30],[-285,-40],[-295,20],[-300,30]],
- [[-140,-52],[-120,-110],[-100,-140],[-80,-160]],
- [[-140,-8],[-120,50],[-100,70],[-80,90]],
- [[-128,62],[-140,52],[-165,52],[-178,64]],
-];
-/** The ring path round the bowl (a rounded rectangle, 8 m out from the stands). */
-export const BOWL_RING={x:STADIUM.x,z:STADIUM.z,w:STADIUM.bowlW+16,d:STADIUM.bowlL+16,r:40,width:5} as const;
-/** Groves: where the park's trees cluster (centre, radius); a few more trees stand alone between them. */
-const GROVES:readonly [number,number,number][]=[[-255,-185,30],[-160,-175,28],[-110,-120,22],[-290,-110,24],[-295,10,22],[-250,95,26],[-190,100,22],[-110,100,20],[-120,40,18],[-150,-80,16],[-280,-60,16]];
-export const westParkMapData=()=>({stadium:STADIUM,gate:STADIUM_GATE,plaza:STADIUM_PLAZA,pond:PARK_POND,lawns:PARK_LAWNS,paths:PARK_PATHS,ring:BOWL_RING});
-
-const bezier=([a,b,c,d]:readonly [P,P,P,P],t:number):P=>{const u=1-t;return [u*u*u*a[0]+3*u*u*t*b[0]+3*u*t*t*c[0]+t*t*t*d[0],u*u*u*a[1]+3*u*u*t*b[1]+3*u*t*t*c[1]+t*t*t*d[1]];};
-const pathPoints=(curve:readonly [P,P,P,P],n=24)=>Array.from({length:n+1},(_,i)=>bezier(curve,i/n));
-const ringPoints=()=>{const {x,z,w,d,r}=BOWL_RING,a=w/2-r,b=d/2-r,pts:P[]=[];
- for(const [cx,cz,a0] of [[a,b,0],[-a,b,Math.PI/2],[-a,-b,Math.PI],[a,-b,Math.PI*1.5]] as const)for(let i=0;i<=8;i++){const t=a0+i/8*Math.PI/2;pts.push([x+cx+Math.cos(t)*r,z+cz+Math.sin(t)*r]);}
- pts.push(pts[0]);return pts;};
-const segDistance=(x:number,z:number,pts:readonly P[])=>{let best=Infinity;for(let i=0;i<pts.length-1;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((x-ax)*dx+(z-az)*dz)/(dx*dx+dz*dz||1)));best=Math.min(best,Math.hypot(x-ax-t*dx,z-az-t*dz));}return best;};
-const ALL_PATHS=()=>[...PARK_PATHS.map(c=>pathPoints(c)),ringPoints()];
-/** Inside the bowl's footprint (+ margin)? */
-export const inStadiumFootprint=(x:number,z:number,margin=0)=>Math.abs(x-STADIUM.x)<STADIUM.bowlW/2+margin&&Math.abs(z-STADIUM.z)<STADIUM.bowlL/2+margin;
-
+import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_GROVES,BOWL_RING,inStadiumFootprint,parkPathLines,pathPoints,ringPoints,segDistance,type P} from './westParkLayout';
+export {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_GROVES,BOWL_RING,inStadiumFootprint,parkPathLines};
 type Tools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
  put:(g:T.BufferGeometry,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -68,7 +34,10 @@ export function buildWestPark(t:Tools):WestParkStats{
    pos.push(x+ox,0,z+oz,x-ox,0,z-oz);if(i)idx.push((i-1)*2,i*2,(i-1)*2+1,(i-1)*2+1,i*2,i*2+1);// counter-clockwise from above: faces up
    if(i){surfaceAreas.push({kind,x:(x+px)/2,z:(z+pz)/2,w:Math.abs(x-px)+width,d:Math.abs(z-pz)+width});}});
   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setIndex(idx);g.computeVertexNormals();
-  const m=tintGroundMesh(put(g,color,0,y,0),kind);m.castShadow=false;return m;
+  // Placed at its own centre (not the origin): the batching pass files a mesh under the 50 m chunk of its position, so this keeps
+  // each path in its west chunk (frustum-culled and behind the west region gate) instead of the island centre's chunk.
+  g.computeBoundingBox();const c=g.boundingBox!.getCenter(new T.Vector3());g.translate(-c.x,0,-c.z);
+  const m=tintGroundMesh(put(g,color,c.x,y,c.z),kind);m.castShadow=false;return m;
  };
  const disc=(x:number,z:number,rx:number,rz:number,y:number,color:string,kind:'path'|'grass')=>{
   const g=new T.CircleGeometry(1,36);g.rotateX(-Math.PI/2);g.scale(rx,1,rz);surfaceAreas.push({kind,x,z,w:rx*2,d:rz*2});
@@ -126,7 +95,7 @@ export function buildWestPark(t:Tools):WestParkStats{
  // --- Trees in groves (deterministic) -------------------------------------------------------------------------------------
  let seed=7;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
  // Only the park's own colliders can be near (x < -100): a short list, not the island's thousands (build-time budget).
- const paths=ALL_PATHS(),placed:P[]=[],local=obstacles.filter(o=>o.x<-90);
+ const paths=parkPathLines(),placed:P[]=[],local=obstacles.filter(o=>o.x<-90);
  const clear=(x:number,z:number,r:number)=>{
   if(!onIsland(x,z)||distanceToShore(x,z)<20)return false;
   if(inStadiumFootprint(x,z,BOWL_RING.width+6))return false;
@@ -141,7 +110,7 @@ export function buildWestPark(t:Tools):WestParkStats{
  const greens=['#4f7a57','#5e8c62','#6f9d6c','#739568'];
  for(let n=0;n<5000&&stats.trees<340;n++){
   const x=-335+rnd()*240,z=-230+rnd()*360,s=.85+rnd()*.6;
-  const inGrove=GROVES.some(([gx,gz,gr])=>Math.hypot(x-gx,z-gz)<gr);
+  const inGrove=PARK_GROVES.some(([gx,gz,gr])=>Math.hypot(x-gx,z-gz)<gr);
   if(!inGrove&&rnd()>.12)continue;
   if(!clear(x,z,1.8*s))continue;
   placed.push([x,z]);stats.trees++;

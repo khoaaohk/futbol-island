@@ -18,6 +18,7 @@ import {JOBS} from '@/lib/town/jobs/jobCatalog';
 import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
 import {placeJobMarkers,placeGashaponMarkers,capsuleGlyph} from '@/lib/town/mapMarkers';
 import {islandGashaponMachines} from '@/lib/gashapon/machines';
+import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_GROVES,parkPathLines} from '@/lib/town/westParkLayout';
 import SummitIsleMap from './SummitIsleMap';
 import ZiplineMapMark from './ZiplineMapMark';
 import FriendMapDots from './FriendMapDots';
@@ -28,6 +29,8 @@ const PIER=EAST_PIER,JETTY_POINTS=JETTY_PATH.filter((p,i)=>p.x>=EAST_PIER.wallX&
 /** SVG point text with fixed precision: the shoreline comes from trig, which differs in the last digits between Node (SSR)
  *  and WebKit/V8 in the browser, so unrounded values caused a hydration mismatch. 0.01 map units is far below a pixel. */
 const svgPoint=(p:{x:number;z:number})=>`${Math.round(p.x*100)/100},${Math.round(p.z*100)/100}`;
+/** West Stadium (Nov 12 2026): Stadium Park's paths as fixed-precision polylines (static, built once). */
+const PARK_PATH_POINTS=parkPathLines().map(line=>line.map(([x,z])=>svgPoint({x,z})).join(' '));
 // Coral Cay (coralCay.ts): its flight corridor, cay and sandbars share the main island's margin styling. Static strings, built once.
 const SANDBAR_POINTS:Record<string,string>=Object.fromEntries(SANDBARS.map(s=>[s.id,s.outline.map(svgPoint).join(' ')]));
 const CAY_POINTS=CAY_SHORE.map(svgPoint).join(' '),CAUSEWAY_POINTS=CAUSEWAY_PATH.map(svgPoint).join(' '),BEACH_POINTS=CAUSEWAY_BEACHES.map(b=>b.map(svgPoint).join(' '));
@@ -126,8 +129,28 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   {/* The zipline from the summit's lookout to the Coral Cay Hostel roof (Oct 14 2026; ZiplineMapMark.tsx). */}
   <ZiplineMapMark localMap={localMap}/>
   {roads.map((r,i)=><rect key={'road'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} fill="#8c927a"/>)}
+  <g aria-label="Stadium Park" data-west-stadium="park">
+   {PARK_GROVES.map(([x,z,r],i)=><circle key={'grove'+i} cx={x} cy={z} r={r*.8} fill="#4f7a57" opacity=".35"/>)}
+   {PARK_LAWNS.map((l,i)=><ellipse key={'lawn'+i} cx={l.x} cy={l.z} rx={l.rx} ry={l.rz} fill="#86ad79"/>)}
+   {PARK_PATH_POINTS.map((pts,i)=><polyline key={'park-path'+i} points={pts} fill="none" stroke="#eddfbb" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round"/>)}
+   <ellipse aria-label="Lily pond" cx={PARK_POND.x} cy={PARK_POND.z} rx={PARK_POND.rx} ry={PARK_POND.rz} fill="#7fbcd2" stroke="#cdbb93" strokeWidth="2.2"/>
+   <rect aria-label="Stadium Plaza" x={STADIUM_PLAZA.minX} y={STADIUM_PLAZA.minZ} width={STADIUM_PLAZA.maxX-STADIUM_PLAZA.minX} height={STADIUM_PLAZA.maxZ-STADIUM_PLAZA.minZ} rx="4" fill="#eddfbb"/>
+  </g>
+  <g aria-label="Stadium" data-west-stadium="bowl">
+   <rect x={STADIUM.x-STADIUM.bowlW/2} y={STADIUM.z-STADIUM.bowlL/2} width={STADIUM.bowlW} height={STADIUM.bowlL} rx="26" fill="#d8cfbd" stroke="#8d8270" strokeWidth="1.5"/>
+   <rect x={STADIUM.x-STADIUM.pitchW/2-4} y={STADIUM.z-STADIUM.pitchL/2-4} width={STADIUM.pitchW+8} height={STADIUM.pitchL+8} fill="#6e9678" stroke="#fff0cc" strokeWidth="1.5"/>
+   <line x1={STADIUM.x-STADIUM.pitchW/2} y1={STADIUM.z} x2={STADIUM.x+STADIUM.pitchW/2} y2={STADIUM.z} stroke="#fff0cc" strokeWidth="1"/>
+   <circle cx={STADIUM.x} cy={STADIUM.z} r="8.7" fill="none" stroke="#fff0cc" strokeWidth="1"/>
+   <rect aria-label="Stadium gate" x={STADIUM_GATE.x-3} y={STADIUM_GATE.z-STADIUM_GATE.halfWidth} width="6" height={STADIUM_GATE.halfWidth*2} rx="1.5" fill="#e2c766"/>
+  </g>
   {buildings.map((r,i)=><rect key={'building'+i} x={r.x-r.w/2} y={r.z-r.d/2} width={r.w} height={r.d} rx={r.cornerRadius??1} fill="#be8d65"/>)}
   {VENUES.map(v=><g key={v.id} {...destination(v.id,v.id+' field')}><rect x={v.x-v.width/2} y={v.z-v.length/2} width={v.width} height={v.length} fill={v.surface} stroke="#fff0cc" strokeWidth="1.5"/><text x={v.x} y={v.z+4} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?10:22} fontWeight="700">{v.id}</text></g>)}
+  <g aria-label="Stadium labels" data-west-stadium="labels">
+   <text x={STADIUM.x} y={STADIUM.z+(localMap?3:6)} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={localMap?11:26} fontWeight="900">STADIUM</text>
+   <text x={(STADIUM_PLAZA.minX+STADIUM_PLAZA.maxX)/2} y={STADIUM.z+4} textAnchor="middle" fontSize={localMap?7:10} fill="#76583a" fontWeight="700">STADIUM PLAZA</text>
+   {!localMap&&<text x={PARK_POND.x} y={PARK_POND.z+PARK_POND.rz+14} textAnchor="middle" fontSize="11" fill="#294f43" fontWeight="700">STADIUM PARK</text>}
+   <text x={-312} y={STADIUM.z} textAnchor="middle" fontSize={localMap?9:11} fill="#76583a" fontWeight="700" transform={`rotate(-90 -312 ${STADIUM.z})`}>WEST BEACH</text>
+  </g>
   {([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88},{id:'museum',label:'MUSEUM',point:MUSEUM_MAP_POINT,dx:0,dy:localMap?18:28,width:localMap?48:74},{id:'shop',label:'KIT SHOP',point:SHOP_MAP_POINT,dx:0,dy:localMap?-17:-26,width:localMap?52:78}] as const).map(({id,label,point,dx,dy,width})=><g key={id} {...destination(id,id==='coaches'?'Coaches Centre':id==='cay'?'Coral Cay':id==='museum'?'History Museum':id==='shop'?'Kit Shop':'Arcade')}>
    <path d={`M${point.x} ${point.z} L${point.x+dx} ${point.z+dy}`} fill="none" stroke="#294f43" strokeWidth="1.2"/>
    <circle cx={point.x} cy={point.z} r={localMap?4.5:6} fill="#f9ca70" stroke="#294f43" strokeWidth="1.5"/>
