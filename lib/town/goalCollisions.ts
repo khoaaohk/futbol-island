@@ -1,4 +1,4 @@
-import {VENUES,FIELD_SURFACE_Y,type Venue} from './venues';
+import {VENUES,STADIUM_VENUE,FIELD_SURFACE_Y,type Venue} from './venues';
 import type {Obstacle} from './simulation';
 export const GOAL_DEPTH=1.4;
 export const goalPostRadius=(format:string)=>format==='futsal'?.055:.065;
@@ -16,8 +16,11 @@ export function goalBarriersAt(height:number){return GOAL_BARRIERS.filter(b=>hei
 export type FramePoint={x:number;y:number;z:number};
 export type FrameHit=FramePoint&{t:number;nx:number;ny:number;nz:number;part:'post'|'crossbar'};
 const FRAME_ENDS=[-1,1] as const;
+/** The goal frames a free (walking) ball hits: the island pitches' and the West Stadium's (phase 3b: a kicked ball went through the
+ *  stadium's posts and bar). The stadium's nets are walk/ball obstacles from stadiumWorld.ts, like GOAL_BARRIERS for the island. */
+export const FRAME_VENUES:readonly (Omit<Venue,'id'>&{id:string})[]=[...VENUES,STADIUM_VENUE];
 /** Swept sphere against the three round tubes. End caps include the post/bar joins. */
-export function sweepGoalFrame(from:FramePoint,to:FramePoint,radius:number,out:FrameHit,venues:readonly (Omit<Venue,'id'>&{id:string})[]=VENUES){
+export function sweepGoalFrame(from:FramePoint,to:FramePoint,radius:number,out:FrameHit,venues:readonly (Omit<Venue,'id'>&{id:string})[]=FRAME_VENUES){
  out.t=Infinity;
  for(const venue of venues)for(const side of FRAME_ENDS){
   const z=venue.z+side*venue.length/2,r=radius+goalPostRadius(venue.id);
