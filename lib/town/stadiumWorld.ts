@@ -8,7 +8,8 @@
 // the player: +2 draws, two box tests a frame near the stadium); their slabs join the canopy list directly (landable from the sky).
 import * as T from 'three';
 import type {Obstacle} from './simulation';
-import {tintGroundMesh} from '../graphics/groundTint';
+import {tintGroundMesh,applyGroundTint} from '../graphics/groundTint';
+import {patchStadiumNight,STADIUM_NIGHT_GAIN} from './stadiumNight';
 import {goalGeometry} from './fields';
 import {GOAL_DEPTH} from './goalCollisions';
 import {STADIUM_VENUE,STADIUM_PITCH_Y} from './venues';
@@ -34,7 +35,9 @@ const CONCRETE=['#d8cfbd','#cec4af'],TREAD_C='#c2b59c',CONCOURSE_C='#e3d9c3',RAI
 
 export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFade;roofCanopies:{x:number;z:number;w:number;d:number;height:number;overhead:true}[]}{
  const {put,cylinder,sign,obstacles,walkSurfaces,rails,surfaceAreas}=t,S=STADIUM;let boxes=0,strips=0,surfaces=0;const rails0=rails.length;
- const skip=(m:T.Mesh)=>{m.userData.skipRoofObstacle=true;boxes++;return m;};
+ // stadiumPaint: the batching pass (world.ts) gives the piece's paint the stadium night fill (stadiumNight.ts) and keys it to the
+ // stadium's own batch; textured or tinted pieces keep their material.
+ const skip=(m:T.Mesh)=>{m.userData.skipRoofObstacle=true;m.userData.stadiumPaint=true;boxes++;return m;};
  const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>skip(t.box(w,h,d,c,x,y,z));
  const rectBox=(r:{x:number;z:number;w:number;d:number},y0:number,y1:number,c:string)=>box(r.w,y1-y0,r.d,c,r.x,(y0+y1)/2,r.z);
 
@@ -133,7 +136,8 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
  surfaceAreas.push({kind:'pitch',x:S.x,z:S.z,w:W+8,d:L+8});
  tintGroundMesh(box(80,.02,115,'#c9b892',S.x,-.065,S.z),'path').castShadow=false;// the pitch-level ring round the boards
  tintGroundMesh(box(20,.02,STADIUM_GATE.halfWidth*2,'#c9b892',S.x+50,-.065,S.z),'path').castShadow=false;// the gate's walk in
- tintGroundMesh(box(W+8,.05,L+8,'#6e9678',S.x,-.07,S.z),'grass');
+ // The turf keeps the island grass tint (its mottle) on a material of its own with the night fill (stadiumNight.ts): one batch.
+ {const turf=box(W+8,.05,L+8,'#6e9678',S.x,-.07,S.z);turf.material=patchStadiumNight(applyGroundTint(new T.MeshStandardMaterial({color:'#6e9678',roughness:.85}),'grass'),STADIUM_NIGHT_GAIN.turf);t.materials?.push(turf.material);}
  for(let i=0;i<10;i+=2)box(W,.008,L/10,'#78a083',S.x,-.04,S.z-L/2+(i+.5)*L/10).castShadow=false;
  const white='#f4f1e6',ln=.12,ly=-.034,netPts:number[]=[];
  const lineBox=(w:number,d:number,x:number,z:number)=>{box(w,.008,d,white,x,ly,z).castShadow=false;};
@@ -176,7 +180,8 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   skip(sign('STADIUM',G.halfWidth*2-1,1.3,gx+.72,11.35,G.z,'#244d49','#fff0cf',Math.PI/2));
  }
 
- // --- Floodlight masts at the open corners (static: no lights, the heads are paint) -----------------------------------------------
+ // --- Floodlight masts at the open corners: the heads are paint; their lit lenses, glow and the shared real lights at night are ----
+ // fieldLighting.ts's (the stadium joins the island pitches' night blend and spot pool, stadiumNight.ts).
  for(const m of MASTS){skip(cylinder(.45,30,'#d9d6cc',m.x,15,m.z));obstacles.push({x:m.x,z:m.z,w:1,d:1});
   const head=box(6,3.4,.5,'#f7f3e3',m.x,30.5,m.z);head.rotation.y=Math.atan2(-m.sx,-m.sz);head.rotation.x=0;
   const frame=box(6.4,3.8,.3,'#53605f',m.x-m.sx*.2,30.5,m.z-m.sz*.2);frame.rotation.y=head.rotation.y;}

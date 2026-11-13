@@ -287,4 +287,25 @@ console.log('west stadium phase 3b: ok');
 // The map draws four stands with open corners.
 assert(/data-stadium-stand=/.test(map),'the map draws the stands');
 console.log('west stadium phase 2: ok');
+
+// 6. Night (Nov 13 2026, owner: the floodlights were paint and the pitch was dark): the stadium joins the island pitches' night
+// lighting (fieldLighting.ts): lit lenses + one glow draw, the four pooled real spots (no extra light) at the mast heads while the
+// player is in or near the bowl, and the night blend reaching the stadium paint and turf through one uniform (stadiumNight.ts).
+{const N=load('lib/town/stadiumNight.ts'),chunkMats=scene.children.filter(o=>o.isMesh&&o.name.startsWith('island-chunk-')).map(o=>o.material);
+ const nightMats=chunkMats.filter(m=>m.customProgramCacheKey().includes('stadium-night'));
+ assert(nightMats.length>=3,'the stadium paint (shadowed + line markings) and turf batches carry the night fill: '+nightMats.length);
+ assert(nightMats.some(m=>m.vertexColors)&&nightMats.some(m=>!m.vertexColors),'paint twin and tinted turf');
+ for(const m of new Set(nightMats)){const sh={uniforms:{},vertexShader:T.ShaderLib.physical.vertexShader,fragmentShader:T.ShaderLib.physical.fragmentShader};m.onBeforeCompile(sh,null);
+  assert(sh.uniforms.uStadiumNight===N.STADIUM_NIGHT&&/vStadiumY=transformed\.y/.test(sh.vertexShader)&&/uStadiumNight\*/.test(sh.fragmentShader),'night patch lands in the shader');}
+ const fscene=new T.Scene(),fields=load('lib/town/fields.ts').buildFormatFields(fscene),cam=new T.PerspectiveCamera(50,1,.1,800);cam.position.set(S.x+60,40,S.z);cam.lookAt(S.x,0,S.z);cam.updateMatrixWorld();
+ const pool=fscene.getObjectByName('field-floodlight-pool'),lights=pool.children.filter(o=>o.isLight),lens=fscene.getObjectByName('stadium-floodlight-panels'),glow=fscene.getObjectByName('stadium-floodlight-glow');
+ assert.equal(lights.length,4,'still four pooled lights');assert(lens&&glow&&glow.isPoints,'lens mesh + glow points');assert.equal(lens.geometry.index.count/3,4*12*12,'4 heads × 12 lenses');
+ fields.updateLighting('day',cam,null,1/30,true,false,{x:S.x,y:0,z:S.z});assert.equal(N.STADIUM_NIGHT.value,0);assert(!glow.visible);
+ fields.updateLighting('night',cam,null,.2,true,false,{x:S.x-40,y:6,z:S.z+10});// seated in the west stand
+ assert.equal(pool.userData.active,'stadium','the pool covers the stadium from the stands');assert(lights.every(l=>l.intensity>0&&l.position.y>25&&!l.castShadow));
+ const Q=load('lib/town/stadiumSeats.ts');assert.equal(new Set(lights.map(l=>{const m=Q.MASTS.reduce((a,b)=>Math.hypot(b.x-l.position.x,b.z-l.position.z)<Math.hypot(a.x-l.position.x,a.z-l.position.z)?b:a);assert(Math.hypot(m.x-l.position.x,m.z-l.position.z)<2,'a spot at each mast head');return m;})).size,4);
+ assert.equal(N.STADIUM_NIGHT.value,1,'night blend reaches the stadium');assert.equal(lens.material.emissiveIntensity,2.1);assert(glow.visible&&glow.material.opacity>0);
+ fields.updateLighting('night',cam,null,.2,true,false,{x:S.x,y:0,z:S.z-S.bowlL/2-30});assert.notEqual(pool.userData.active,'stadium','leaving the bowl releases the pool');
+ for(let i=0;i<400;i++)fields.updateLighting('day',cam,null,1/30);assert.equal(N.STADIUM_NIGHT.value,0);assert(!glow.visible);assert.equal(pool.visible,false);
+ fields.dispose();console.log('west stadium night lighting: ok');}
 })().catch(e=>{console.error(e);process.exit(1);});

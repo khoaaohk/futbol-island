@@ -8,6 +8,8 @@ import {buildEastPier} from './eastPierWorld';
 import {buildCoralCay} from './coralCayWorld';
 import {buildWestPark} from './westPark';
 import {buildStadium} from './stadiumWorld';
+import {patchStadiumNight,STADIUM_NIGHT_GAIN} from './stadiumNight';
+import {STADIUM} from './westParkLayout';
 import {buildSummitIsle} from './summitIsleWorld';
 import {buildSummitActivityProps} from './summitActivitiesWorld';
 import {buildZiplineProps,type ZiplineRail} from './ziplineWorld';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
@@ -1623,14 +1625,20 @@ export function* buildTownSteps(scene: T.Scene) {
   // Three original glass colors still appear by day, carried in vertex colors;
   // at night they share one warm emissive uniform and one batch per city chunk.
   for(const source of windowSources)paintMaterials.set(source,windowPaint);
+  const stadiumPaints=new Map<T.Material,T.MeshStandardMaterial>(),STADIUM_CELL=`${Math.floor(STADIUM.x/50)}:${Math.floor(STADIUM.z/50)}`;
+  const stadiumPaintFor=(source:T.Material)=>{const shared=paintMaterials.get(source);if(!shared)return undefined;let twin=stadiumPaints.get(shared);
+    if(!twin){twin=patchStadiumNight(shared.clone(),STADIUM_NIGHT_GAIN.paint);stadiumPaints.set(shared,twin);materials.push(twin);}return twin;};
   const position=new T.Vector3();
   // Visited in traverse order, in slices (buildTownSteps): the callback only collects, it never changes the tree.
   const batchObject=(object:T.Object3D)=>{
     if(!(object instanceof T.Mesh)||object.userData.umbrellaAnimated||object.userData.ownDraw||object.parent===ferry||Array.isArray(object.material))return;
     object.getWorldPosition(position);
-    const paint=object.castShadow?paintMaterials.get(object.material):undefined;
+    // West Stadium pieces (userData.stadiumPaint, stadiumWorld.ts) take a night-fill twin of their paint (stadiumNight.ts), shadowed
+    // or not (the line markings), all keyed to the stadium's centre cell: two bowl-wide batches instead of a paint split per chunk.
+    const stadiumPiece=object.userData.stadiumPaint===true;
+    const paint=stadiumPiece?stadiumPaintFor(object.material):object.castShadow?paintMaterials.get(object.material):undefined;
     const material=paint??object.material;
-    const key=`${Math.floor(position.x/50)}:${Math.floor(position.z/50)}:${material.uuid}:${object.castShadow}`;
+    const key=`${stadiumPiece&&paint?STADIUM_CELL:`${Math.floor(position.x/50)}:${Math.floor(position.z/50)}`}:${material.uuid}:${object.castShadow}`;
     const geom=object.geometry.clone().applyMatrix4(object.matrixWorld);
     if(paint){
       const color=(object.material as T.MeshStandardMaterial).color;
