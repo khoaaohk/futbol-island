@@ -264,7 +264,7 @@ import FuelToast from './FuelToast';
 import {fuelTravel,fuelAllowsRide,fuelCanSprint} from '@/lib/town/fuelStore';
 import JobActionButton from './JobActionButton';
 import {earnForBall,earnForDiveBall} from '@/lib/town/cardRewardTriggers';
-import {enterActivity,islandFrame} from '@/lib/analytics/tracker';
+import {enterActivity,islandFrame,setPlayModeSource} from '@/lib/analytics/tracker';
 import {createSummitTravelTracker} from '@/lib/analytics/summitEvents';
 import {placeAt} from '@/lib/analytics/islandPlaces';
 // Play with friends + emote analytics (Oct 22 2026, docs/analytics-multiplayer-plan.md Phase A): the party code never imports
@@ -509,6 +509,9 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   // sheet with no artwork to show, so the 3 s minimum (there for the loader art) is skipped; the island appears once it is ready.
   useEffect(()=>{if(returningFromArcade)return;const timer=window.setTimeout(()=>setMinimumLoadElapsed(true),tanHandoff()?0:3000);return()=>window.clearTimeout(timer);},[returningFromArcade]);
   useEffect(()=>{if(ready&&!failed&&!returningFromArcade&&shouldShowIslandOnboarding())setOnboardingOpen(true);},[ready,failed]);
+  // Admin "On now" (Nov 13 2026): how the island is being played, read once per analytics beat (no render, no timer). A live code party
+  // is 'p' (With friends); the shared public island, connected, is 'w' (With other players); anything else is 's' (Just me).
+  useEffect(()=>setPlayModeSource(()=>partyLive()?'p':multiplayerEnabled()&&publicWorldEnabled()&&publicPresence.get().mode==='public'&&publicPresence.get().connected?'w':'s'),[]);
   // Public island driver: lazy connect after island ready + tour done + a first real input (+3 s idle); counters from presence events.
   const publicWorld=useRef<PublicWorld|null>(null);
   useEffect(()=>{if(!multiplayerEnabled()||!publicWorldEnabled())return;

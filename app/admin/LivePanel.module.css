@@ -73,3 +73,7 @@
 .hero{cursor:pointer}
 .hero:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .more{display:block;margin-top:4px;font-size:12px;font-weight:700;color:var(--a-link,#1d6b52)}
+/* Nov 13 2026: how the island is being played (Public / Just me / Party), live cards only. */
+.badge[data-kind=mode-w]{background:#cfe3f3}
+.badge[data-kind=mode-p]{background:#f6d3dc}
+.badge[data-kind=mode-unknown]{background:transparent;color:var(--a-muted);box-shadow:inset 0 0 0 1px #d8cfae;font-weight:600}

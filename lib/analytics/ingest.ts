@@ -6,7 +6,7 @@
 import {createHash} from 'crypto';
 import type {AnalyticsStore} from './store';
 import {ACTIVITY_IDS,PLACE_IDS} from './islandIds';
-import {checkFlags} from './countIds';
+import {MAX_BEAT_COUNTS,checkFlags,playModeId} from './countIds';
 import {derivePlayerId,type PlayerSecrets} from './playerId';
 import {addVisitGeo} from './marketingVisitGeo';
 import {MAX_BEAT_PAGEVIEWS,MAX_BODY_BYTES,clampCells,clampCounts,clampEngaged,clampSplit,classifySource,deviceClass,isBot,sanitizeCountry,sanitizeHost,sanitizePath,sanitizeRegion,sanitizeUtm,dayIn,validateEvent,type CleanEvent} from './core';
@@ -88,6 +88,9 @@ export async function handleIngest({body,headers,store,limiter,now=new Date(),ve
  if(!start)clean.counts=addVisitGeo(clean.counts,{country:headers.get('x-vercel-ip-country'),region:headers.get('x-vercel-ip-country-region')},now);
  // A beat with no time, no page views and no counters is not written. (A count-only beat is a hide that drained leftovers.)
  if(!start&&!engagedMs&&!clean.pageviews&&!Object.keys(clean.counts).length)return {status:204,reason:'empty-beat'};
+ // Nov 13 2026: how the island is being played (validateEvent kept only an allowlisted letter, on a beat) rides as the counter
+ // pm:<letter> = 1 (countIds.ts PLAY_MODES; no migration). It never makes an empty beat worth writing on its own.
+ if(!start&&ev.m&&Object.keys(clean.counts).length<MAX_BEAT_COUNTS)clean.counts={...clean.counts,[playModeId(ev.m)]:1};
  await store.track(clean,now);
  return {status:204,reason:'ok'};
 }

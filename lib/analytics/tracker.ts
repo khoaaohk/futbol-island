@@ -27,7 +27,7 @@
  * by startFlags.ts (VisitTracker passes it in; this file reads no storage of the game's).
  */
 import type {Area} from './core';
-import {MAX_BEAT_COUNTS,MAX_COUNT_VALUE,isCountId,type StartFlags} from './countIds';
+import {MAX_BEAT_COUNTS,MAX_COUNT_VALUE,isCountId,isPlayMode,type PlayMode,type StartFlags} from './countIds';
 import {engineOf,searchId} from './searchIds';
 import {ACTIVITY_IDS,ACTIVITY_IDLE_MS,MAX_BEAT_CELLS,PASSIVE_ACTIVITIES,SAMPLE_MAX_MS,SAMPLE_MS,cellOf,type ActivityId,type PlaceId} from './islandIds';
 
@@ -59,6 +59,13 @@ export type TrackerEnv={
  player?:()=>{ph:string}|{pi:string}|null;
  allowLocalhost?:boolean;
 };
+
+/** Nov 13 2026: how the island is being played, read once per beat (`m`: 's' Just me, 'w' With other players, 'p' With friends).
+ *  The island (components/Town.tsx) registers the reader; other pages have none and send no `m`. Returns the cleanup. */
+let playModeSource:(()=>PlayMode|null)|null=null;
+export function setPlayModeSource(fn:()=>PlayMode|null):()=>void{playModeSource=fn;return()=>{if(playModeSource===fn)playModeSource=null;};}
+/** The letter for the next beat, or null (no reader, a reader that threw, or a value off the list). */
+export function playModeNow():PlayMode|null{try{const m=playModeSource?.()??null;return isPlayMode(m)?m:null;}catch{return null;}}
 
 let currentOverride:Area|null=null;
 const overrideListeners=new Set<()=>void>();
@@ -228,6 +235,7 @@ export function startTracker(env:TrackerEnv){
   const round=(o:Record<string,number|undefined>)=>{const r:Record<string,number>={};for(const [k,v] of Object.entries(o)){const n=Math.round(v||0);if(n>0)r[k]=n;}return r;};
   const a=round(areaAcc),body:Record<string,unknown>={v:1,t:'beat',s:session,p:path,e:Math.round(acc),a,n:Math.min(pend,100)};
   const pl=round(placeAcc),ac=round(activityAcc);if(Object.keys(pl).length)body.pl=pl;if(Object.keys(ac).length)body.ac=ac;
+  const m=playModeNow();if(m)body.m=m;
   // Heat-map cells: whole seconds, the busiest MAX_BEAT_CELLS only (keeps the beacon small).
   const cells=[...cellAcc].map(([k,ms])=>[k,Math.round(ms/1000)] as const).filter(([,s])=>s>0).sort((x,y)=>y[1]-x[1]||x[0]-y[0]).slice(0,MAX_BEAT_CELLS);
   if(cells.length)body.c=Object.fromEntries(cells);
