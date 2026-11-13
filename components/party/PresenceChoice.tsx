@@ -10,6 +10,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import { usePartyState, type Member, type PresenceState } from '@/lib/multiplayer';
 import { hidden as hiddenSet, hideMember, reported, setMode, unhideMember } from '@/lib/multiplayer/publicWorld';
 import { onHiddenStrangers } from '@/lib/multiplayer/strangers';
+import { mapDots } from '@/lib/multiplayer/mapDots';
 import { PRESENCE_CHOICES, PUBLIC_HIDE, PUBLIC_MATCH_LEAVE, PUBLIC_PANEL_TITLE, PUBLIC_REASON_LINE, PUBLIC_REPORT, PUBLIC_ROSTER, publicChoiceLabel, publicCountLabel, type PresenceChoiceId } from '@/lib/multiplayer/publicCopy';
 import { Icon } from '@/components/Icon';
 import { DoneButton } from '@/components/DoneButton';
@@ -40,6 +41,7 @@ export function reasonLine(ps: Pick<PresenceState, 'mode' | 'choice' | 'reason'>
 export default function PresenceChoice({ ps, onFriends, onClose }: { ps: PresenceState; onFriends: () => void; onClose: () => void }) {
   const party = usePartyState();
   const hid = useSyncExternalStore(onHiddenStrangers, hiddenSet, hiddenSet);
+  const onMap = useSyncExternalStore(mapDots.subscribe, () => mapDots.get().length > 0, () => false); // the relay's map dots (Cap.Map)
   const [ask, setAsk] = useState<PresenceChoiceId | null>(null); // the "You'll leave this match" step
   const [report, setReport] = useState<Member | null>(null);
   const stay = useRef<HTMLButtonElement>(null);
@@ -146,7 +148,7 @@ export default function PresenceChoice({ ps, onFriends, onClose }: { ps: Presenc
               ))}
               {!near.length && <li className={styles.small}>{PUBLIC_ROSTER.empty}</li>}
             </ul>
-            {further && <p className={styles.small} data-public-further>{PUBLIC_ROSTER.further}</p>}
+            {further && <p className={styles.small} data-public-further>{world && !near.length && onMap ? PUBLIC_ROSTER.furtherMap : PUBLIC_ROSTER.further}</p>}
             {hiddenHere.length > 0 && <>
               <h3 className={styles.rosterTitle}>{PUBLIC_ROSTER.hiddenTitle}</h3>
               <ul className={styles.members} data-public-hidden>

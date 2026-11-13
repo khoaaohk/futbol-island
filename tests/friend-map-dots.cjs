@@ -47,14 +47,14 @@ eq(Array.from(M.mapLegend(false),i=>i.label),['Vending','Fishing','Jobs','Gashap
 eq(Array.from(M.mapLegend(true),i=>i.label),['Vending','Fishing','Jobs','Gashapon','Explore','Fly there','You','Friends']);
 assert.equal(M.mapLegend(true)[7].tip,'friend');assert.match(M.legendTipText('friend'),/^Friends: /);
 {const map=read('components/IslandTravelMap.tsx'),css=read('components/IslandTravelMap.module.css'),dots=read('components/FriendMapDots.tsx'),o=read('components/IslandOverview.tsx');
- assert.match(map,/mapLegend\(usePartyHasFriends\(open\)\)/,'the key asks for Friends only while the map is open with a party');
+ assert.match(map,/mapLegend\(usePartyHasFriends\(open\),usePlayersOnMap\(open\)\)/,'the key asks for Friends only while the map is open with a party');
  assert.match(css,/\.legend\[data-legend-count="7"\],\.legend\[data-legend-count="8"\]\{grid-template-columns:repeat\(4,max-content\)/,'phones: 4 + 3 with Friends');
  // 5. Heat: no loop, no interval, no network; listeners only while live; You drawn after the friends (stays on top).
  assert(!/requestAnimationFrame|setInterval|sendPose|send\(/.test(dots),'no loop, no polling, no messages');
  assert.match(dots,/if\(!live\|\|!multiplayerEnabled\(\)\)\{setDots\(NONE\);return;\}/,'nothing subscribes when not live / multiplayer off');
  assert.match(dots,/const kick=\(\)=>\{if\(timer===undefined\)timer=setTimeout\(flush,everyMs\);\}/,'one timer per burst');
  assert.match(dots,/useFriendDots\(live,full\?\.5:1,full\?300:500\)/,'full map ~3 Hz, minimap 2 Hz and 1 m');
- assert.match(o,/\{terrain\}\{friends!==undefined&&<FriendMapDots mode="full" live=\{friends\}[^>]*\/>\}\{you\}/,'friends above the marks, You on top');
+ assert.match(o,/\{terrain\}\{friends!==undefined&&<PlayerMapDots live=\{friends\} me=\{markerPosition\}\/>\}\{friends!==undefined&&<FriendMapDots mode="full" live=\{friends\}[^>]*\/>\}\{you\}/,'other players, then friends above the marks, You on top');
  assert.match(o,/<FriendMapDots mode="mini" live=\{active\}\/>/,'minimap dots sleep while the minimap is collapsed');
  assert.match(map,/friends=\{open\}/,'full map dots only while open');}
 

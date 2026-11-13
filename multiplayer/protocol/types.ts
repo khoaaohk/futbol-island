@@ -51,7 +51,7 @@ export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
  *  it (an old relay) the host's Lock name button is hidden.
  *  Hit (relay v1.6, Oct 23 2026) = a friend's kicked ball can knock a party friend over (C.Hit / S.Hit: a harmless ~1 s cartoon tumble).
  *  Without it (an old relay or an old client) friends are never knocked over; the NPC knock-over by my own ball is unchanged. */
-export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64, Match: 128, World: 256, Quiet: 512, Report: 1024, Goal: 2048 } as const;
+export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64, Match: 128, World: 256, Quiet: 512, Report: 1024, Goal: 2048, Map: 4096 } as const;
 /** What a PARTY socket is offered (S.Caps): exactly 255, as before relay v2.0, so every old client keeps parsing S.Caps. */
 export const CAPS_ALL = 255;
 /** Relay v2.0 (public worlds, Nov 11 2026; docs/multiplayer/WORLD-HANDOFF.md). Only a WORLD socket (/world/:shard/ws) is offered
@@ -60,7 +60,9 @@ export const CAPS_ALL = 255;
  *  a bit above 255 to an old relay (whose parser takes 0..255). New parsers take 0..CAPS_MAX. */
 /** Phase 3 (Nov 12 2026): Cap.Goal (the island-wide daily goal: C.Goal / S.Goal) joins CAPS_WORLD. A client still ANDs with S.Caps, so a
  *  relay without it never gets C.Goal. */
-export const CAPS_WORLD = Cap.Live | Cap.Ball | Cap.EmoteAsk | Cap.Kit | Cap.Match | Cap.World | Cap.Quiet | Cap.Report | Cap.Goal;
+/** Map dots (Nov 13 2026): Cap.Map (S.Map, anonymous coarse cells of the other players for the island map) joins CAPS_WORLD. An old
+ *  relay never offers it (no S.Map: no dots); an old client never answers it (nothing new is sent). */
+export const CAPS_WORLD = Cap.Live | Cap.Ball | Cap.EmoteAsk | Cap.Kit | Cap.Match | Cap.World | Cap.Quiet | Cap.Report | Cap.Goal | Cap.Map;
 export const CAPS_MAX = 0xffff;
 
 // ---- relay v2.0: public worlds (strangers on one island). Shared by the client, the relay, the dev relay and the tests. ----
@@ -97,6 +99,11 @@ export const REPORT = { windowMs: 10 * 60_000, toQuarantine: 2, holdMs: 60 * 60_
  *  no id, name or position is kept. target = the day's goal shown to kids; max = where the count stops; rate = each member's C.Goal
  *  bucket [perSec, burst] (one goal per 10 s sustained: a real live-match goal is rarer than that). */
 export const ISLAND_GOAL = { target: 50, max: 9999, rate: [0.1, 3] } as const;
+/** Map dots (Nov 13 2026, Cap.Map): every `everyMs` the relay sends each Cap.Map member S.Map, the OTHER players on the open island
+ *  as cells of `cellM` metres with a count per cell. Never an id, name, kit or exact spot; never me, anyone in a room or indoors, away
+ *  (Hidden), quarantined, not yet posed, or held back from me (or me from them) by a report or the following guard. Sent only when the
+ *  list changed; at most `maxCells` cells (the fullest kept). Cell (cx, cz) covers x in [cx * cellM, (cx + 1) * cellM) m. */
+export const MAP_DOTS = { cellM: 25, everyMs: 5000, maxCells: 32 } as const;
 /** WebSocket close codes the client must handle on a world socket (the relay's full list is CLOSE in roomCore.ts). */
 export const CloseCode = {
   /** Public play was switched off by the owner (POST /control): go to "Just me" quietly; do not retry until GET /world says open. */
@@ -244,6 +251,8 @@ export const S = {
   Quiet: 41, World: 42,
   /** Phase 3 (Nov 12 2026), world only (Cap.Goal): S.Goal [43, n] = goals this world scored today (0..ISLAND_GOAL.max). */
   Goal: 43,
+  /** Map dots (Nov 13 2026), world only (Cap.Map): S.Map [44, [[cellX, cellZ, count], ...]] (MAP_DOTS). */
+  Map: 44,
 } as const;
 export type S = (typeof S)[keyof typeof S];
 export type SWelcome = [typeof S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
@@ -292,4 +301,7 @@ export type SQuiet = [typeof S.Quiet, near: number];
 export type SWorld = [typeof S.World, n: number];
 /** Phase 3 (Cap.Goal): goals this world scored today (UTC). Sent after C.Caps and when it changes (at most 1 Hz). */
 export type SGoal = [typeof S.Goal, n: number];
-export type ServerMsg = SGoal | SQuiet | SWorld | SMatch | SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;
+/** Map dots (Cap.Map): [cellX, cellZ, count] per cell (MAP_DOTS); [] = nobody else on the open island. Counts only, no ids. */
+export type MapCell = [cx: number, cz: number, n: number];
+export type SMap = [typeof S.Map, cells: MapCell[]];
+export type ServerMsg = SMap | SGoal | SQuiet | SWorld | SMatch | SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;
