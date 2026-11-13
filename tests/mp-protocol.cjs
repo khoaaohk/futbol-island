@@ -170,8 +170,8 @@ t('encode asserts size',()=>{
 t('clampPose',()=>{
   assert.deepEqual(plain(P.clampPose(body)),body);assert.notEqual(P.clampPose(body),body);
   const mut=(i,v)=>{const b=[...body];b[i]=v;return P.clampPose(b);};
-  assert.equal(mut(0,-4001),null);assert.equal(mut(0,10001),null);assert.equal(mut(2,6001),null);assert.equal(mut(1,-401),null);assert.equal(mut(1,2001),null);
-  assert.ok(mut(0,-4000)&&mut(0,10000)&&mut(2,-6000)&&mut(1,2000));
+  assert.equal(mut(0,-5001),null);assert.equal(mut(0,10001),null);assert.equal(mut(2,6001),null);assert.equal(mut(1,-401),null);assert.equal(mut(1,2001),null);
+  assert.ok(mut(0,-5000)&&mut(0,10000)&&mut(2,-6000)&&mut(1,2000));
   assert.equal(mut(3,256),null);assert.equal(mut(3,-1),null);assert.equal(mut(4,256),null);assert.equal(mut(5,14),null);assert.equal(mut(6,5),null);assert.equal(mut(7,4),null);
   assert.equal(mut(0,1.5),null);assert.equal(mut(0,NaN),null);assert.equal(mut(0,Infinity),null);assert.equal(mut(0,'5'),null);
   assert.equal(P.clampPose([1,2,3]),null);assert.ok(mut(7,3));
@@ -238,7 +238,7 @@ t('20 players: ids to 31, a 19-friend Poses frame parses and fits, a 21st roster
   const over=[23,1,...new Array(P.WORLD_HARD+1).fill(0).flatMap((_,i)=>[i,1000,0,500,0,12,8,0,0])];assert.equal(P.parseServer(j(over)),null,'WORLD_HARD+1 (31) entries are refused (relay v2.0: WORLD_HARD 30 since Nov 12 2026, was 24)');
   const w24=[23,1,...new Array(P.WORLD_HARD).fill(0).flatMap((_,i)=>[i,1000,0,500,0,12,8,0,0])];assert.ok(P.parseServer(j(w24)),'WORLD_HARD (30) entries parse (a full world)');
   const hello=j([0,1,[1,2,3,4,5,6,7,8,9,10,11,12],null,null,null,'Abcdefghijkl']);assert.ok(hello.length<=P.MAX_INBOUND_BYTES);
-  const poseMsg=j([1,2147483647,-4000,-400,-6000,255,255,13,4,3]);assert.ok(poseMsg.length<=80,'client frames stay far below 512 B');
+  const poseMsg=j([1,2147483647,-5000,-400,-6000,255,255,13,4,3]);assert.ok(poseMsg.length<=80,'client frames stay far below 512 B');
   assert.equal(P.NAME_COLOURS.length,P.PARTY_MAX,'a unique colour name for every seat');
   for(const n of ['Red','Teal','Brown','Maroon','White','Black'])assert.ok(P.NAME_COLOURS.includes(n),n);
 });
