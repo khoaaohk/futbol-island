@@ -38,15 +38,22 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
  // the ramp: a time constant of ~0.8 s (~2.4 s to 95%), the music the same
  assert(K.tc*3>=2&&K.tc*3<=3,'ramps of 2-3 s');assert.match(fs.readFileSync(path.join(base,'lib/audio/islandMusic.ts'),'utf8'),/STADIUM_MUSIC_TC=\.8/);}
 
-// 2. Songs: six, original structure (lead → join → verses / choruses with builds → up a key → fade), each performance different.
-{const ids=Mo.CHANTS.map(c=>c.id);assert.deepEqual(Object.keys(A.SONGS).sort(),[...ids].sort(),'a song for every mood chant');assert(ids.length>=6);
- const kinds=new Set(ids.map(id=>A.STADIUM_CHANTS[id].kind));for(const k of ['clap','ole','scarf','drum','call','stomp'])assert(kinds.has(k),'a '+k+' song');
- for(const id of ids){const s=A.SONGS[id];for(const k of ['v1','v2','c1','c2','b'])assert(s[k].length>=3||id==='here-we-go'&&s[k].length>=3,id+' '+k);
+// 2. Chants: ten, mostly terrace SHOUTS (owner, Nov 13: "more oohs and chants, less singing"); one short sung tune; structure
+//    (lead → join → verses / choruses with builds → up a key → fade), each performance different.
+{const ids=Mo.CHANTS.map(c=>c.id);assert.deepEqual(Object.keys(A.SONGS).sort(),[...ids].sort(),'a song for every mood chant');assert(ids.length>=10,'ten chants');
+ const kinds=new Set(ids.map(id=>A.STADIUM_CHANTS[id].kind));for(const k of ['clap','ole','scarf','drum','call','stomp','shout'])assert(kinds.has(k),'a '+k+' chant');
+ const sung=ids.filter(id=>A.SONGS[id].sung);assert(sung.length>=1&&sung.length<=2,'sung melodies are a minority: '+sung);
+ for(const id of ['lets-go','hey-hey-hey','clap-clap-shout','stand-to-stand'])assert(ids.includes(id),'new shout chant '+id);
+ for(const id of ids){const s=A.SONGS[id];for(const k of ['v1','v2','c1','c2','b'])assert(s[k].length>=1,id+' '+k);
   for(const k of ['v1','v2','c1','c2','b'])for(const n of s[k])assert(n[0]>=0&&n[0]+n[1]<=8.01,id+' notes inside the 2-bar phrase');
-  const notes=new Set([...s.v1,...s.v2,...s.c1,...s.c2].map(n=>n[2]));assert(notes.size>=4,id+' has a melody (pitch movement)');}
- assert(A.SONGS['here-we-go'].call&&A.SONGS['here-we-go'].e1.length,'call and answer: an east answer');assert.deepEqual([...A.phraseSides('here-we-go','v1')],[0,1]);assert.deepEqual([...A.phraseSides('here-we-go','lead')],[0]);assert.deepEqual([...A.phraseSides('ole-ole','v1')],[2]);
+  const all=[...s.v1,...s.v2,...s.c1,...s.c2,...s.b];
+  if(s.sung){assert(new Set(all.map(n=>n[2])).size>=4,id+' (sung) has a melody');assert(all.every(n=>!n[5]));}
+  else{assert(all.filter(n=>n[5]).length/all.length>=.9,id+': shouted, not sung');assert(all.every(n=>n[1]<=.5),id+': short punchy shouts');
+   const p=s.perc;assert((p.verse.claps?.length||p.verse.drum?.length||p.verse.stomps?.length)&&(p.chorus.claps?.length||p.chorus.stomps?.length),id+': claps / drum / stomps under the shouts');}}
+ assert(A.SONGS['stand-to-stand'].call&&A.SONGS['stand-to-stand'].e1.length&&A.SONGS['here-we-go'].e1.length,'call and response between the stands');assert.deepEqual([...A.phraseSides('here-we-go','v1')],[0,1]);assert.deepEqual([...A.phraseSides('here-we-go','lead')],[0]);assert.deepEqual([...A.phraseSides('ole-ole','v1')],[2]);
  let r=7;const rnd=()=>{r=(r*1664525+1013904223)>>>0;return r/4294967296;};
  for(const id of ids){const len=8*60/Mo.CHANTS.find(c=>c.id===id).bpm;for(const secs of [40,65,90]){const p=A.planSong(id,secs,rnd);
+  if(A.SONGS[id].sung){assert(p.length<=4&&p[0]==='lead'&&p[p.length-1]==='c2f','the sung tune is short: '+p);assert(A.planSong(id,secs,rnd,false,false).every(k=>k==='perc'),'then drums and claps only');continue;}
   assert.equal(p.length,Math.max(3,Math.floor(secs/len)),'fits the phase');assert.equal(p[0],'lead','a lead section starts the line');assert.equal(p[1],'v1j','the stadium joins in');
   assert.equal(p[p.length-1],'c2f','the crowd fades out at the end');assert(p.includes('b'),id+' '+secs+' s: a build ends a chorus');
   for(let i=0;i<p.length;i++)if(p[i]==='b'||p[i]==='bk')assert(['c1','c2','c1h','c2k','c1k'].includes(p[i-1]),'a build follows a chorus line');
@@ -103,6 +110,19 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
  await run(bowl,1);assert.equal(snd.song,mood.chant,'the next chant: '+mood.chant);assert.equal(snd.debug.chantStarts,starts+1);
  // a goal: the roar one-shot; a near miss: the ooh
  const goals=snd.debug.goals;Mo.stepStadiumMood(.1,{...m,goals:1});await run(bowl,1);assert.equal(snd.debug.goals,goals+1,'a goal roars');
+ // reactions: a near miss "ooh" + "aah", the attack swell and its fizzle, the touch ring (save, tackle, long ball), ripples
+ {const R=snd.debug.reactions,before={...R};const sim={touches:Array.from({length:8},()=>({serial:0,kind:'receive',team:'gold',height:0,other:null})),touchSerial:0};
+  const touch=(kind,o={})=>{sim.touchSerial++;Object.assign(sim.touches[(sim.touchSerial-1)%8],{serial:sim.touchSerial,kind,team:'gold',height:0,other:'x',...o});};
+  const fs_={...bowl,sim};await run(fs_,1);
+  for(let i=0;i<5;i++)touch('receive');await run(fs_,1);assert.deepEqual({...R},{...before,ooh:R.ooh,aah:R.aah,applause:R.applause},'old touches are not replayed');
+  const t0={...R};touch('parry');await run(fs_,1);assert(R.ooh>t0.ooh&&R.applause>t0.applause,'a save: ooh + applause');
+  await run(fs_,40);const t1={...R};touch('kick',{height:1,other:'y'});touch('receive');await run(fs_,1);assert(R.applause>t1.applause,'a long ball well received: applause');
+  await run(fs_,70);const t2={...R};touch('tackle');await run(fs_,1);assert(R.applause+R.jeer>t2.applause+t2.jeer,'a tackle: applause (or whistles)');
+  const t3={...R};mood.excitement=.3;await run(fs_,1);mood.excitement=.7;await run(fs_,1);assert.equal(R.swell,t3.swell+1,'an attack near the box: the swell');
+  mood.excitement=.3;await run(fs_,25);assert(R.groan+R.aah>t3.groan+t3.aah,'the attack fizzles: a groan / aah');
+  const t4={...R};Mo.stepStadiumMood(.1,m);const mm=Mo.stadiumMood();mm.sinceGoal=5;mm.sinceNearMiss=0;await run(fs_,1);assert(R.ooh>t4.ooh&&R.aah>t4.aah,'a near miss: ooh, then aah');
+  const t5=Object.values(R).reduce((a,b)=>a+b,0);await run({...bowl,sim:null},400);assert(Object.values(R).reduce((a,b)=>a+b,0)-t5>=3,'ripples from the sections while nothing happens');
+  const pool=[...live].filter(n=>n.context===null&&n.started&&!n.dead&&n.buffer&&!n.loop).length;assert(pool<=15,'still a fixed pool (2 song slots x 6 + 3 one-shots): '+pool);}
  // hidden / muted: the island sound's silence() stops it at once
  linked.stop(true);assert.equal(snd.ready,false,'silenced');ok=false;await run(bowl,3);assert.equal(snd.ready,false,'stays silent while hidden');ok=true;await run(bowl,2);assert.equal(snd.ready,true,'comes back on return');
  // leaving: fades, stops after a few seconds, tears the renders down after TEARDOWN s

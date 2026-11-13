@@ -3,7 +3,7 @@
 // crossfade, chants, rumble), which should only READ it: stadiumMood() returns the live object, never a copy.
 //  - beat / bpm: a continuous beat clock (beats since the match woke). A bpm change at a phase switch keeps the beat count
 //    continuous, so a sway or a drum loop never jumps.
-//  - phase + chant: a chant cycle, every CHANT_PHASE_S (40–90 s, seeded) the next chant from CHANTS; one in three is a slow
+//  - phase + chant: a chant cycle, every CHANT_PHASE_S (40–90 s, seeded) the next chant from CHANTS (Nov 13: mostly terrace shouts); two of the ten are slow
 //    song, when the fans hold their scarves up.
 //  - excitement 0..1: a base (a live match with players above an all-AI exhibition), up while the ball is near a goal (a chance),
 //    a spike on a near miss (the ball out over the goal line close to the posts) and 1 on a goal, easing back down after.
@@ -12,12 +12,14 @@
 // Heat: a few multiplies a frame while the match is awake; nothing at all when it sleeps (stadiumSit stops stepping it).
 import {STADIUM} from './westParkLayout';
 
-export type ChantId='drip-drip-clap'|'ole-ole'|'island-anthem'|'drum-march'|'here-we-go'|'stand-up-song';
+export type ChantId='drip-drip-clap'|'ole-ole'|'island-anthem'|'drum-march'|'here-we-go'|'stand-up-song'|'lets-go'|'hey-hey-hey'|'clap-clap-shout'|'stand-to-stand';
 export type MoodPhase='quiet'|'chant'|'slow-song';
 /** The chants in cycle order: bpm and kind (a slow song raises the scarves). Audio maps the id to its own loop. */
 export const CHANTS:readonly {id:ChantId;bpm:number;slow:boolean}[]=[
- {id:'drip-drip-clap',bpm:112,slow:false},{id:'ole-ole',bpm:100,slow:false},{id:'island-anthem',bpm:72,slow:true},
- {id:'drum-march',bpm:122,slow:false},{id:'here-we-go',bpm:106,slow:false},{id:'stand-up-song',bpm:68,slow:true},
+ {id:'drip-drip-clap',bpm:112,slow:false},{id:'lets-go',bpm:116,slow:false},{id:'island-anthem',bpm:72,slow:true},
+ {id:'hey-hey-hey',bpm:120,slow:false},{id:'here-we-go',bpm:106,slow:false},{id:'ole-ole',bpm:100,slow:false},
+ {id:'clap-clap-shout',bpm:110,slow:false},{id:'stand-up-song',bpm:68,slow:true},{id:'stand-to-stand',bpm:114,slow:false},
+ {id:'drum-march',bpm:122,slow:false},
 ];
 /** Seconds per chant phase (min, max), the quiet spell between chants, the gap between waves and one wave's run. */
 export const CHANT_PHASE_S=[40,90] as const,QUIET_S=[6,14] as const,WAVE_GAP_S=[50,120] as const,WAVE_LAP_S=18,WAVE_LAPS=1.5;
