@@ -32,8 +32,8 @@ export const POND_LIFE={near:90,koi:[7,4] as const,flies:2,scatter:6,flyFlee:3.2
  *    (two stretched ripples angled back either side of the heading) every rideWakeEvery s.
  * Heat: ONE pooled droplet InstancedMesh (DROPS × 20 triangles, 1 draw, hidden when no drop is alive); rings are the shared ripple
  * and splash pools. Runs only while the player is in the water near the pond. Lite mode (heat tier 2+): half the droplets.
- * Reduced motion: half-size effects and fewer drops. Still mode (static ambience): none. Local player only (remote players' poses
- * reach the client at a few Hz, too coarse for footsteps; see the report).
+ * Reduced motion: half-size effects and fewer drops. Still mode (static ambience): none. Other players: pondRemote.ts reads their
+ * interpolated poses (a few Hz on the wire, so no real stride timing) and calls remoteFx() at speed-scaled intervals.
  */
 export const POND_FX={drops:32,landMin:2.5,landMax:14,stepMin:.24,stepMax:.5,stepStride:1.15,wakeEvery:.5,rideWakeEvery:.18,sprayEvery:.07,rideMin:1.2,gravity:9.8} as const;
 export type PondMode=0|1|2;
@@ -87,6 +87,8 @@ export function createPondLife(scene:T.Scene,o:{phone:boolean;sink:PondSink}){
  for(let i=0;i<ND;i++){m4.makeScale(0,0,0);drops.setMatrixAt(i,m4);}
  let t=0,wet=0,stepT=0,wakeT=0,sprayT=0,foot=1,airMaxFall=0,prevY=0,wasGround=true,ballY=9,ballT=0,ballPX=0,ballPZ=0,sx=0,sz=0,splashAge=9;
  const fxOff=(i:PondInput)=>i.mode===2&&!i.reduced;
+ /** remoteFx's reused input (mode and reduced only). */
+ const rin:PondInput={x:0,z:0,speed:0,onGround:true,ballX:0,ballY:9,ballZ:0,ballOn:false,shown:true,mode:0,reduced:false};
  const dropScale=(i:PondInput)=>(i.mode>=1?.5:1)*(i.reduced?.5:1);
  const splashAt=(x:number,z:number,size:number,strength:number,mode:PondMode)=>{if(mode===2)return;o.sink.splash(x,z,size);o.sink.ring(x,z,1.8);pushPondRipple(x,z,strength);sx=x;sz=z;splashAge=0;};
  const wakeAt=(x:number,z:number,r:number,stretch:number,angle:number)=>{if(o.sink.wake)o.sink.wake(x,z,r,stretch,angle);else o.sink.ring(x,z,r);fxStats.wakes++;};
@@ -125,6 +127,21 @@ export function createPondLife(scene:T.Scene,o:{phone:boolean;sink:PondSink}){
   /** A splash ring at (x, z) of strength 0..1 (the skipping ball's touches, pondSkip.ts): crown, a few drops, a pond ring. */
   splash(x:number,z:number,strength:number,mode:PondMode=0,reduced=false){if(mode===2&&!reduced)return;const red=reduced?.5:1;o.sink.splash(x,z,(.5+strength*.4)*red);o.sink.ring(x,z,(1+strength*1.2)*red);pushPondRipple(x,z,strength);sx=x;sz=z;splashAge=0;
    spawnDrops(x,z,Math.round((4+strength*6)*(mode>=1?.5:1)*red),(1.4+strength*2)*red,(.6+strength*.8)*red);},
+  /** Other players in the water (pondRemote.ts drives it from their interpolated poses): one effect from the same pools and the same
+   *  rules as mine. kind 0 = a footstep (foot = ±1) and its trailing wake, 1 = the ride's wheel spray and bow wake, 2 = a landing at
+   *  `speed` m/s of fall. mode / reduced as update()'s; nothing while the pond is asleep (I am not near it) or in still mode. */
+  remoteFx(kind:0|1|2,x:number,z:number,heading:number,speed:number,mode:PondMode,reduced:boolean,foot=1){
+   if(!fish.visible||mode===2&&!reduced)return;
+   rin.mode=mode;rin.reduced=reduced;const fx=Math.sin(heading),fz=Math.cos(heading),red=reduced?.5:1,ds=dropScale(rin);
+   if(kind===2){landSplash(x,z,speed,rin);return;}
+   if(kind===1){const sp=Math.min(1,speed/14),n=Math.max(1,Math.round((1+sp*3)*ds));
+    for(let side=-1;side<=1;side+=2){spawnDrops(x-fx*.5+fz*side*.25,z-fz*.5-fx*side*.25,n,(1.2+sp*2.2)*red,.5*red,(fz*side-fx*.6),(-fx*side-fz*.6),(.8+sp*2)*red);
+     const a=heading+Math.PI+side*.42;wakeAt(x-fx*.8+Math.sin(a)*.4,z-fz*.8+Math.cos(a)*.4,(1.2+sp*2)*red,1.6+sp*1.4,a);}
+    pushPondRipple(x,z,.35+sp*.4);fxStats.sprays++;return;}
+   const px=x+fz*foot*.14+fx*.2,pz=z-fx*foot*.14+fz*.2;
+   o.sink.ring(px,pz,1.1*red);pushPondRipple(px,pz,.5);spawnDrops(px,pz,Math.max(1,Math.round(3*ds)),1.6*red,.6*red);fxStats.steps++;
+   if(foot>0)wakeAt(x-fx*.6,z-fz*.6,1.5*red,1.5,heading);
+  },
   /** Metres a walker at (x, z) sinks into the pond (0 on dry land). */
   wade:pondWade,
   get active(){return fish.visible;},
