@@ -87,7 +87,7 @@ t('no slide, no extrapolation while seated',()=>{
  // between the last walk pose and the seated one: held on the walk pose (no Hermite slide into the seat)
  I.sample(1,tm+100-50,out);assert.equal(out.seated,false);assert.ok(Math.abs(out.x-walk(3)[0]/10)<1e-9,'held, not sliding');
  // once the seated pose is due, and long after it (no new poses): exactly on the seat, no extrapolation
- for(const dt of [100,150,300,900]){I.sample(1,tm+dt,out);assert.equal(out.seated,true,'seated at +'+dt);assert.equal(out.speed,0);
+ for(const dt of [130,150,300,900]){/* +130: past the member delay (iv x 1.15 - delay = 15 ms at this test's 100 ms shared delay) */I.sample(1,tm+dt,out);assert.equal(out.seated,true,'seated at +'+dt);assert.equal(out.speed,0);
   assert.ok(Math.abs(out.x-body[0]/10)<1e-9&&Math.abs(out.z-body[2]/10)<1e-9&&Math.abs(out.y-body[1]/10)<1e-9,'on the seat at +'+dt);}
  // standing up: held seated until the standing pose is due, then off
  const up=[body[0]+6,body[1],body[2],0,0,Mode.Idle,Zone.Main,0];I.push(1,up,tm+1000);
