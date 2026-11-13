@@ -1,7 +1,7 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createBuildingGlow} from '../../graphics/buildingGlow';
-import {FISH_SPOTS,MARKET_STAND,type FishSpot} from './fishSpots';
+import {FISH_SPOTS,MARKET_STAND,POND_SURFACE_Y,type FishSpot} from './fishSpots';
 import type {FishingVisuals} from './fishingVisuals';
 import {markFishingNear} from './fishingSignals';// Nov 10 2026: mounts the lazy FishingHost (components/FishingHostLazy.tsx)
 // Lazy-load pass (Oct 7 2026, docs/performance-guide.md): the angler/shoreline art (fishingVisuals.ts) and the caught-animal models
@@ -206,7 +206,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  const floats=new T.InstancedMesh(floatGeo,floatMaterial,FISH_SPOTS.length);floats.name='fishing-floats';floats.frustumCulled=false;
  const m=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(),v=new T.Vector3(),one=new T.Vector3(1,1,1);
  const hideFloat=(i:number,hidden:boolean)=>{if(i<0)return;if(hidden)floats.setMatrixAt(i,m.makeScale(0,0,0));else setFloat(i,0,0);floats.instanceMatrix.needsUpdate=true;};
- const setFloat=(i:number,bob:number,tilt:number)=>{const b=FISH_SPOTS[i].buoy;q.setFromEuler(e.set(tilt,0,tilt*.6));floats.setMatrixAt(i,m.compose(v.set(b.x,-.36+bob,b.z),q,one));};
+ const setFloat=(i:number,bob:number,tilt:number)=>{const b=FISH_SPOTS[i].buoy;q.setFromEuler(e.set(tilt,0,tilt*.6));floats.setMatrixAt(i,m.compose(v.set(b.x,(FISH_SPOTS[i].pond?POND_SURFACE_Y+.06:-.36)+bob,b.z),q,one));};
  FISH_SPOTS.forEach((_,i)=>setFloat(i,0,0));floats.instanceMatrix.needsUpdate=true;root.add(floats);
  // One ripple ring, shown only around the active spot's float.
  const rippleGeo=new T.RingGeometry(.55,.7,28);rippleGeo.rotateX(-Math.PI/2);geometries.push(rippleGeo);

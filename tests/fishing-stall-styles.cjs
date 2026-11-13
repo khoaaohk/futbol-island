@@ -19,7 +19,7 @@ let failed=0;const ok=async(name,fn)=>{try{await fn();console.log('ok   '+name);
  const sample=type=>K.kioskVariant(posts.find(p=>K.stallType(p.id)===type).id);
 
  await ok('every post has a stall type; all seven types are used, none more than three times',()=>{
-  assert.equal(posts.length,16,'16 shore posts');
+  assert.equal(posts.length,17,'17 shore posts (Nov 13 2026: + the Stadium Park pond)');
   assert.deepEqual([...types].sort(),['booth','cart','lighthouse','market','rowboat','shack','tiki']);
   for(const p of posts)assert(K.STALL_BY_SPOT[p.id],p.id+': has an explicit stall type');
   for(const t of types){const n=posts.filter(p=>K.stallType(p.id)===t).length;assert(n>=1&&n<=3,t+' used '+n+' times');}

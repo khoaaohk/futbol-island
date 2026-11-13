@@ -205,3 +205,16 @@ winner, later Liberia's president).
 - **Sand bubbler crab in Singapore**: Wikipedia only says the tropical Indo-Pacific; a Singapore shore blog (from NUS and Science Centre guides) names Singapore's species, so the fact says "Singapore's shores have their own kind".
 - **Firefly squid "March to June"**: Wikipedia says February to July; fixed. **Mexico "first to host twice"**: not on the page; left out.
 - **Strong links searched, none verifiable**: J.League mascots for deep-sea animals (FC Ryukyu's whale shark is already in the book), "Barracudas" and "Marlins" club nicknames, Tampico Madero "Jaiba Brava" (blue crab already in the book), Maldives "Red Snappers" (red snapper already in the book), Manta F.C.
+
+## The Stadium Park pond (13 Nov 2026): 3 fresh-water species and a legend
+
+Owner request: a fishing spot at the park pond with fresh-water catches. The catalogue's fresh-water animals (arowana, piranha, giant river prawn) are West Cove's uncommon and rare river specials, so the pond (`park-pond`, `lib/town/fishing/pondFish.ts`) gets three pond-only species of its own: two commons and a pike to chase. Fishbook 150 → 153; legends 22 → 23.
+
+| Species (id) | Spot | Rarity | Link kind | Football entity | Verdict | Fact | Sources |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Koi (`koi`) | Stadium Park Pond | common | Fun fish fact | stadium: Big Swan Stadium | Fun fish fact + real football fact | Fun fish fact: koi are colourful carp that rice farmers in Niigata, Japan, began breeding in the 1800s. Football: Niigata's Big Swan Stadium hosted three games at the 2002 World Cup, including England's 3–0 win over Denmark. | https://en.wikipedia.org/wiki/Denka_Big_Swan_Stadium, https://en.wikipedia.org/wiki/Koi |
+| European Perch (`perch`) | Stadium Park Pond | common | Fun fish fact | stadium: Stade de Genève | Fun fish fact + real football fact | Fun fish fact: European perch have dark stripes and orange-red fins, and Lake Geneva is famous for them. Football: Geneva's Stade de Genève, home of Servette FC, hosted three games at Euro 2008. | https://en.wikipedia.org/wiki/Stade_de_Gen%C3%A8ve, https://en.wikipedia.org/wiki/European_perch |
+| Northern Pike (`pike`) | Stadium Park Pond | uncommon | Fun fish fact | national team: Finland | Fun fish fact + real football fact | Fun fish fact: northern pike lie in wait among the reeds of Finland's many lakes, then strike in a flash. Football: Finland played their first ever major tournament at Euro 2020. | https://en.wikipedia.org/wiki/Finland_national_football_team, https://en.wikipedia.org/wiki/Northern_pike |
+| King Koi (`legend-park-pond`, Island Legend) | Stadium Park Pond | legend | Football culture | player: Kazuyoshi Miura | Real football fact | Kazuyoshi Miura, "King Kazu", scored for Yokohama FC in 2017 at the age of 50, the oldest player ever to score in a professional league. | https://en.wikipedia.org/wiki/Kazuyoshi_Miura |
+
+Facts written from well-known records on 13 Nov 2026 in this session (no network fetch); re-check the four pages before a release.

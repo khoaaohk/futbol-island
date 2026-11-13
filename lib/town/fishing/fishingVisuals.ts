@@ -1,6 +1,6 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import {FISH_SPOTS,SHADOW_LENGTH,type FishShape,type ShadowSize} from './fishCatalog';
+import {FISH_SPOTS,POND_SURFACE_Y,SHADOW_LENGTH,type FishShape,type ShadowSize} from './fishCatalog';
 import {createFishingWater} from './shoreWater';
 import {createFishSchools} from './fishSchools';
 import {speciesModel,releaseSpeciesModels,type ShadowKind,type SpeciesModel} from './fishModels';
@@ -82,7 +82,8 @@ export interface FishingVisuals{
  dispose():void;
 }
 
-const SURFACE=-.398,ROD=1.7,LINE_N=20;
+/** The water surface the float rides (the sea's; Nov 13 2026: the pond's while fishing there, set in begin). */
+const SEA_SURFACE=-.398,ROD=1.7,LINE_N=20;let SURFACE=SEA_SURFACE;
 /** B2: the leap lasts LEAP_S; its path parameter pauses near the top for LEAP_HOLD of that time (the freeze-frame). */
 export const LEAP_S=.95,LEAP_HOLD=.16;
 /** Leap time (0..1) to path (0..1): even up to the apex, almost still for LEAP_HOLD, then even down into the hands. */
@@ -157,7 +158,7 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
  const catchSwim={x:0,y:0,z:0,heading:0,len:1,depth:1,mode:'swim' as 'swim'|'nibble'|'bite'|'flee',alpha:0};let biteBlend=0,peck=0,lunge=0,catchYaw=0,catchFresh=true;
  const catchPos=new T.Vector3(),BITE_PITCH=.8;
  const look=(m:T.Mesh,fx:FishFx,f:CatchLook)=>{const model=speciesModel(f.id,f.shape,f.color);if(m.geometry!==model.geometry)m.geometry=model.geometry;fx.setAnim(model.anim);return model;};
- let swimPhase=0;
+ let swimPhase=0,pondOn=false;
 
  // Moving water (Oct 12 2026): the swash, wet sand, caustics and swells round the active spot (shoreWater.ts, one strip draw + the
  // ocean's own draw) and ambient fish schools (fishSchools.ts, one instanced draw). Replaces the static foam / band / ripple decals.
@@ -197,11 +198,14 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    // clownfish's anemone, all from its theme (underwater.ts REEF_THEMES).
    // Oct 19 2026 (one shore): where the clear water window can serve the session it IS the water (underwater.ts CLEAR_SHARE), so
    // the catch and the schools take its water tint, clarity and floor; the deep-sea boats keep their own water column.
-   const spotTheme=reefTheme(spot),byWindow=!!water&&!spotTheme.deep&&CLEAR_SHARE.available,theme=byWindow?windowWater(spotTheme):spotTheme;applyReefWater(theme);applyLiveWaterMood(UW_UNIFORMS);// Oct 15 2026: the night / sunset water mood, uniforms only (waterMood.ts)
-   water?.begin(s,d,spot,halfWidth,viewDepth,!theme.deep);// Served by the window the spot's props do not draw: no clownfish anemones or bubbling reef pieces from them.
-   const homes=byWindow?[]:water?.homes??[],pieces=byWindow?[]:water?.pieces??[];
-   if(waterOn)schools.begin(s,d,water?.field?.distance??null,SURFACE-.003,halfWidth,theme,homes,viewDepth,pieces);
-   if(theme.deep)column?.begin(s,d,theme);else column?.end();overlay.begin();ambient.begin(s,d,readTimeOfDay());biteLen=.7;
+   // Nov 13 2026: the Stadium Park pond is still, shallow fresh water: no sea shore strip, reef window or schools; the float rides
+   // the pond's own surface and the catch shows as its shadow (the sea's clear-water look needs the shore field).
+   pondOn=!!spot.pond;SURFACE=pondOn?POND_SURFACE_Y+.017:SEA_SURFACE;
+   const spotTheme=reefTheme(spot),byWindow=!pondOn&&!!water&&!spotTheme.deep&&CLEAR_SHARE.available,theme=byWindow?windowWater(spotTheme):spotTheme;applyReefWater(theme);applyLiveWaterMood(UW_UNIFORMS);// Oct 15 2026: the night / sunset water mood, uniforms only (waterMood.ts)
+   if(!pondOn)water?.begin(s,d,spot,halfWidth,viewDepth,!theme.deep);// Served by the window the spot's props do not draw: no clownfish anemones or bubbling reef pieces from them.
+   const homes=byWindow||pondOn?[]:water?.homes??[],pieces=byWindow||pondOn?[]:water?.pieces??[];
+   if(waterOn&&!pondOn)schools.begin(s,d,water?.field?.distance??null,SURFACE-.003,halfWidth,theme,homes,viewDepth,pieces);
+   if(theme.deep&&!pondOn)column?.begin(s,d,theme);else column?.end();overlay.begin();ambient.begin(s,d,readTimeOfDay());biteLen=.7;
    // Bubbles rise now and then from the taller reef pieces in view (from the seabed build; none in open deep water).
    {const pcs=pieces.filter(p=>p.top-p.y>.2);const pick:{x:number;y:number;z:number}[]=[];for(let i=0;i<pcs.length&&pick.length<12;i+=Math.max(1,Math.floor(pcs.length/12)))pick.push({x:pcs[i].x,y:pcs[i].y,z:pcs[i].z});overlay.setBubbleSources(pick);}
    lineSag=.1;lineTwitch=0;restRing=1.5;dripT=9;hotList=[];aimTo=null;overlay.setHotspots(hotList);overlay.setAim(null);active=true;reelTravel=0;bend=0;rodTilt=.62;rightArm=-1.05;leftArm=0;reelImpulse=0;reelTurn=0;dip=0;reelingFish=null;fight=null;latX=latZ=0;bangAge=0;stand={...s};cast={...c};dir={...d};root.visible=true;rod.visible=line.visible=bobber.visible=true;pose='hold';bobState={kind:'hanging'};},
@@ -220,7 +224,7 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    const g=.75+biteLen*.36;// small .91 … giant 1.43: a bigger animal throws bigger rings and more spray (cosmetic)
    if(size==='land'){ring(.9,.9);ring(.5,.6);spray(8,.55);restRing=2.2;}else if(size==='bite'){ring(1.5*g,1.1);ring(.8*g,.7);ring(2.1*g,1.4);spray(Math.round(12*g),g);lineTwitch=1;}else if(size==='hook'){ring(1.2*g,.8);ring(2.1*g,1.4);spray(Math.round(12*g),1.1*g);}else{ring(.7*g,.7);spray(4,.4*g);}},
   nibble(){dip=1;lineTwitch=Math.max(lineTwitch,.6);if(catchSwim.mode==='nibble')peck=1;if(bobState.kind==='reeling'){reelImpulse=1;ring(.8,.7);spray(5,.45);}else ring(.55,.6);},
-  showShadow(sh){shadowOn=!!sh&&sh.alpha>.01;shadow.visible=shadowOn;const clear=!!water?.field;catchFish.visible=shadowOn&&clear;if(!sh)return;
+  showShadow(sh){shadowOn=!!sh&&sh.alpha>.01;shadow.visible=shadowOn;const clear=!!water?.field&&!pondOn;catchFish.visible=shadowOn&&clear;if(!sh)return;
    const fx=cast.x+sh.pos.x-dir.x*reelDistance(),fz=cast.z+sh.pos.z-dir.z*reelDistance(),depth=clear?uwDepthAt(water!.field!.distance(fx,fz)):0;
    const kind=shadowKind(sh.shape),model=speciesModel(sh.id,sh.shape,sh.color??'#8aa0a8');shKind=kind;
    if(model!==shModel){shModel=model;const e=silFor(model,silhouetteView(sh.shape,kind));shGeo=e.sil.geometry;shadowRest=e.rest;shadow.geometry=shGeo;shadowMat.map=e.sil.texture;}

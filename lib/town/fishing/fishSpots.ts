@@ -7,6 +7,7 @@
 import {DEEP_SEA_BOATS} from './deepSeaBoatData';
 import {EAST_PIER_FISHING} from '../eastPier';
 import {beachPoint} from '../summitIsle';
+import {POND_Y} from '../westParkLayout';
 export type FishId=string;
 export type FishRarity='common'|'uncommon'|'rare'|'legendary';
 export type ShadowSize='small'|'medium'|'large'|'huge'|'giant';
@@ -23,7 +24,9 @@ export type SpotId='south-pier'|'west-pier'|'harbour-wall'|'north-rocks'|'west-c
  /** Oct 13 2026: the island's other two boulder headlands, see FISH_SPOTS. */
  |'summit-lookout'|'summit-palm'
  /** Oct 14 2026: a ledge on Summit Isle's south-east shore (see FISH_SPOTS). */
- |'summit-ledge';
+ |'summit-ledge'
+ /** Nov 13 2026: the Stadium Park pond (fresh water, see FISH_SPOTS). */
+ |'park-pond';
 /** What kind of sea animal it is (sharks reel like legendary animals: 10-14 taps). */
 export const RARITY_LABEL:Record<FishRarity,string>={common:'Common catch',uncommon:'Good catch',rare:'Rare catch',legendary:'Legendary catch'};
 
@@ -55,7 +58,12 @@ export type FishSpot={
  /** Underwater look (Oct 13 2026, "fix all the fishing spots so they don't all look the same"): the spot's reef theme in
   *  underwater.ts REEF_THEMES (layout, reef palette, sand and water tint, fish, signature prop). Every spot has its own. */
  reef?:string;
+ /** Nov 13 2026: fresh, still pond water (the Stadium Park pond): the float sits on the pond's surface (POND_SURFACE_Y), the cast
+  *  lands inside the pond (fishingCore.ts), and there is no sea shore, reef window or schools round it (fishingVisuals.ts). */
+ pond?:boolean;
 };
+/** The pond's water surface (westParkLayout.ts POND_Y), for the floats and the line (the sea's is fishingVisuals.ts SURFACE). */
+export const POND_SURFACE_Y=POND_Y;
 // Summit Isle's cove (Oct 12 2026, user: "a rocky cove on the far side, for 2-3 new fish species"): placed from that island's
 // own exported helpers (beachPoint, never fixed coordinates), so it follows any reshaping of the coast. Bearing 2.3 rad round
 // SUMMIT_CENTER is one of the three headlands summitIsleWorld.ts already piles boulders on (the same `[a0,count]` list that
@@ -150,6 +158,11 @@ export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
  // a little shark), mean catch ≈ the shore's.
  {id:'summit-ledge',name:'Drop-off Ledge',area:'summit',x:SUMMIT_LEDGE_STAND.x,z:SUMMIT_LEDGE_STAND.z,buoy:{x:SUMMIT_LEDGE_BUOY.x,z:SUMMIT_LEDGE_BUOY.z},
   reef:'ledge-dropoff',weights:{},story:'A rocky ledge on Summit Isle’s south-east shore, where the sand stops and the sea drops away into deep blue. Cod and haddock nose along the edge, and now and then a little shark patrols it.'},
+ // ---- Stadium Park pond (Nov 13 2026, owner: "add a fishing spot at the park pond"): a main-island post on the grass just past
+ // the pond's stone rim on its north-east side (bearing 300° round PARK_POND, 3.4 m out, so the stall clears the rim walk), casting
+ // in toward the middle. Fresh water: its own koi, perch and pike (./pondFish.ts), pond-only. Mean catch ≈ 4.1 coins (shore ≈ 4.0). Kept LAST so the signature waves' SHORE_SPOTS slices hold.
+ {id:'park-pond',name:'Stadium Park Pond',pond:true,x:-134.8,z:63.74,buoy:{x:-143.2,z:74.95},
+  weights:{},story:'The still pond in Stadium Park, a short walk from the DRIP FC Stadium. Koi and perch nose round the middle, and now and then an eel slips past the rim.'},
 ];
 
 /**

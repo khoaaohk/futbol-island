@@ -48,7 +48,7 @@ export const setFloats=(sets:readonly string[])=>FISH_SETS.filter(s=>s.float&&se
 // ---- 2. Today's visitor (Pacific day, the same for everyone) ----
 export type VisitorArea={id:'main'|'cay'|'summit'|'deep';name:string;spots:readonly SpotId[]};
 export const VISITOR_AREAS:readonly VisitorArea[]=[
- {id:'main',name:'Main island',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier']},
+ {id:'main',name:'Main island',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier','park-pond']},
  {id:'cay',name:'Causeway and Coral Cay',spots:['causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach']},
  {id:'summit',name:'Summit Isle',spots:['summit-cove','summit-palm','summit-lookout','summit-ledge']},
  {id:'deep',name:'Deep-sea boats',spots:['deep-sea-boat','deep-sea-boat-west']},

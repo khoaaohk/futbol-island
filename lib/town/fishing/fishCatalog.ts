@@ -14,6 +14,7 @@ import {DEEP_SEA_FISH} from './deepSeaFish';
 import {NIGHT_FISH} from './nightFish';
 import {LEGEND_FISH} from './legendary';
 import {SIGNATURE_FISH_WAVE1,SIGNATURE_FISH_WAVE2,SIGNATURE_FISH_WAVE3} from './shoreSignatures';
+import {POND_FISH} from './pondFish';
 import {FISH_STORIES} from './fishStories';
 import {BOAT_SPOT_IDS} from './deepSeaBoatData';
 import {FISH_SPOTS,RARITY_WEIGHT,type FishId,type FishRarity,type ShadowSize,type SpotId} from './fishSpots';
@@ -122,6 +123,8 @@ FISH.push(...SIGNATURE_FISH_WAVE1);
 FISH.push(...SIGNATURE_FISH_WAVE2);
 // Nov 6 2026: wave 3 of 3, Summit Isle's four shore spots (4 each) and the two deep-sea boats (13 shared deep-sea specials).
 FISH.push(...SIGNATURE_FISH_WAVE3);
+// Nov 13 2026: the Stadium Park pond's fresh-water koi and perch (./pondFish.ts), the only species past the 150 of the three waves.
+FISH.push(...POND_FISH);
 // Every species has its fish tale (the signature species carry theirs inline).
 for(const f of FISH)if(!f.story)f.story=FISH_STORIES[f.id];
 // Island Legends (C1, ./legendary.ts) are NOT in FISH (never sold, never counted): only fishById resolves them, for the live fight.

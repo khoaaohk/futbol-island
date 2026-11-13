@@ -22,6 +22,7 @@ import {BOAT_AFLOATS,onBoatHull} from './deepSeaBoatData';
 import {underEastPier} from '../eastPier';
 import {clearOfCayShores} from '../coralCay';
 import {onSummitLand,distanceToSummitLand} from '../summitIsle';
+import {inPond} from '../westParkLayout';
 
 /** Where the float lands: out past the shoreline in the spot's casting direction (the pier spots cast over the sand; the
  *  Deep Sea Boat casts over its own rail; the causeway and Coral Cay spots cast past their bank's or beach's waterline;
@@ -35,7 +36,8 @@ import {onSummitLand,distanceToSummitLand} from '../summitIsle';
  *  sandbar or another spot's hull; it simply stops at the last open-water step before the target. */
 export function castPoint(spot:FishSpot,from:{x:number;z:number}){
  const dx=spot.buoy.x-spot.x,dz=spot.buoy.z-spot.z,l=Math.hypot(dx,dz)||1,ux=dx/l,uz=dz/l;
- let d=1;while(d<30&&(onIsland(from.x+ux*d,from.z+uz*d)||onSummitLand(from.x+ux*d,from.z+uz*d)||onBoatHull(from.x+ux*d,from.z+uz*d)||underEastPier(from.x+ux*d,from.z+uz*d)||!clearOfCayShores(from.x+ux*d,from.z+uz*d)))d+=.5;
+ // The pond (Nov 13 2026): its water is on the island, so 'land' there is the island outside the pond (inPondWater).
+ let d=1;while(d<30&&(onIsland(from.x+ux*d,from.z+uz*d)&&!inPondWater(from.x+ux*d,from.z+uz*d)||onSummitLand(from.x+ux*d,from.z+uz*d)||onBoatHull(from.x+ux*d,from.z+uz*d)||underEastPier(from.x+ux*d,from.z+uz*d)||!clearOfCayShores(from.x+ux*d,from.z+uz*d)))d+=.5;
  const minReach=d+3.2,target=Math.min(Math.max(minReach,l),30);
  let reach=minReach;
  for(let r=minReach+.5;r<=target+1e-6;r+=.5){if(!inOpenWater(from.x+ux*r,from.z+uz*r))break;reach=r;}
@@ -54,7 +56,9 @@ export const WATER_MARGIN=.8;
  *  waterlines (clearOfCayShores, Oct 5 2026: their fishing spots); Summit Isle and its sandbar keep the same margin past
  *  distanceToSummitLand (Oct 12 2026: the cove). */
 const AFLOAT=[{x0:240.5,x1:251.5,z0:189,z1:209},...BOAT_AFLOATS];
-export const inOpenWater=(x:number,z:number)=>!onIsland(x,z)&&!onSummitLand(x,z)&&!underEastPier(x,z)&&!AFLOAT.some(b=>x>b.x0&&x<b.x1&&z>b.z0&&z<b.z1)&&distanceToShore(x,z)>=WATER_MARGIN&&clearOfCayShores(x,z,WATER_MARGIN)&&distanceToSummitLand(x,z)>=WATER_MARGIN;
+/** The Stadium Park pond's open water (Nov 13 2026): inside its edge by WATER_MARGIN, like the sea's shore margin. */
+export const inPondWater=(x:number,z:number)=>inPond(x,z,-WATER_MARGIN);
+export const inOpenWater=(x:number,z:number)=>inPondWater(x,z)||!onIsland(x,z)&&!onSummitLand(x,z)&&!underEastPier(x,z)&&!AFLOAT.some(b=>x>b.x0&&x<b.x1&&z>b.z0&&z<b.z1)&&distanceToShore(x,z)>=WATER_MARGIN&&clearOfCayShores(x,z,WATER_MARGIN)&&distanceToSummitLand(x,z)>=WATER_MARGIN;
 /** Legacy single start point (kept as the last-resort fallback of planApproach): along the shore, in open water. */
 export function shadowSpawn(cast:{x:number;z:number;dir:{x:number;z:number}},rand:()=>number,inWater:(x:number,z:number)=>boolean=inOpenWater){
  const sx=cast.dir.z,sz=-cast.dir.x;

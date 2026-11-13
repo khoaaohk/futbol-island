@@ -514,6 +514,23 @@ const SPECIES:Record<string,Spec>={
   dorsal:[{t0:.42,t1:.6,h:.09,shape:'round'},{t0:.82,t1:.88,h:.03,shape:'round'}],anal:[{t0:.6,t1:.85,h:.06,shape:'low',c:'#d9573f'}],pect:{t:.32,len:.07,c:'#d9573f'},pelvic:{t:.42,len:.04,c:'#d9573f'},eye:{t:.16,r:.03,ring:'#f2a33a'},mouth:{t:.04,len:.03,a:2.0}});
   // Jutting lower jaw packed with triangular teeth.
   b.blob([-.46,-.07,0],[.06,.04,.05],6,4,()=>hex('#c7503b'));teethRow(b,L,.0,.07,1.85,4,.016,false);},
+ // Nov 13 2026: the Stadium Park pond's fresh-water three (pondFish.ts).
+ koi:b=>{const L=fish(b,{x1:.3,H:.15,W:.08,peak:.42,q:.62,ped:.17,top:'#e8762e',side:'#ef8c3f',belly:'#f6efe4',tail:'round',tailH:.14,finC:'#f2b07a',
+  // Big white and orange patches, a few black (sumi) spots on the back: a kohaku / sanke look.
+  paint:(c,t,up,side)=>cell(t*5,up*2.2,side*1.5)>.62?hex('#f7f2ea'):up>.35&&cell(t*14,up*5,side*3)>.9?hex('#2a2626'):c,
+  dorsal:[{t0:.3,t1:.72,h:.07,shape:'low'}],anal:[{t0:.7,t1:.82,h:.04,shape:'round'}],pect:{t:.24,len:.09},pelvic:{t:.42,len:.06},eye:{t:.1,r:.028},mouth:{t:.03,len:.03,a:1.4}});
+  // Two little whiskers (barbels) at the mouth.
+  b.pair(()=>barbel(b,[-.48,-.01,.012],[-.55,-.04,.03],.006,hex('#e9a070')));void L;},
+ perch:b=>{const L=fish(b,{x1:.28,H:.17,W:.075,peak:.38,q:.62,ped:.16,top:'#4f5a2a',side:'#a9a54a',belly:'#efe6b8',tail:'slight',tailH:.14,finC:'#8a8a3f',
+  // Six dark bars down the sides.
+  paint:(c,t,up)=>t>.18&&t<.82&&up>-.35&&Math.floor(t*14)%2===0?mixC(c,hex('#2c3318'),.6):c,
+  dorsal:[{t0:.26,t1:.48,h:.12,shape:'spiny',spines:9,c:'#5a5f2e'},{t0:.52,t1:.7,h:.08,shape:'round'}],anal:[{t0:.64,t1:.76,h:.06,shape:'round',c:'#e0603a'}],pect:{t:.26,len:.08},pelvic:{t:.33,len:.06,c:'#e0603a'},eye:{t:.11,r:.03,ring:'#e8b43f'},mouth:{t:.04,len:.05,a:1.6}});void L;},
+ pike:b=>{const L=fish(b,{x1:.36,H:.09,W:.055,peak:.5,q:.8,ped:.14,top:'#3f5230',side:'#7a8a4f',belly:'#e6e4c4',tail:'fork',tailH:.12,finC:'#8a7a3f',
+  // Rows of pale bean-shaped spots.
+  paint:(c,t,up,side)=>up>-.4&&up<.6&&cell(t*26,up*5,side*2)>.72?hex('#d8d6a0'):c,
+  dorsal:[{t0:.74,t1:.9,h:.07,shape:'round'}],anal:[{t0:.76,t1:.9,h:.06,shape:'round'}],pect:{t:.18,len:.07},pelvic:{t:.5,len:.05},eye:{t:.09,r:.026},mouth:{t:.03,len:.09,a:1.9}});
+  // The long duck-bill snout.
+  b.blob([-.5,-.005,0],[.07,.022,.035],6,4,()=>hex('#5f6f3f'));void L;},
  'sandbar-shark':b=>{shark(b,{top:'#9b927c',belly:'#efebdd',H:.11,q:.55,dorsal:.24,dorsalT:.3});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},
  'reef-shark':b=>{shark(b,{top:'#717c79',belly:'#eef0ea',H:.11,q:.6,dorsal:.15});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},
  'dusky-shark':b=>{shark(b,{top:'#454e57',belly:'#e6e9e8',H:.1,q:.7,dorsal:.13,pect:.3,pectWide:.8});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},

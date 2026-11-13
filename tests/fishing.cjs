@@ -30,7 +30,7 @@ const straight=(r,f)=>{const pts=[];for(let i=0;i<=8;i++)pts.push({x:3-(3-cat.SH
 const spawn={approach:straight,out:{x:1,z:0}};
 
 // ---- Catalogue + football facts ----
-assert(FISH.length>=10&&FISH.length<=150,'10 shared species + spot specials + the Deep Sea Boat creatures + the night and sunset fish (Oct 15 2026) + the signature species (Nov 6 2026, growing to 150 in three waves)');
+assert(FISH.length>=10&&FISH.length<=153,'10 shared species + spot specials + the Deep Sea Boat creatures + the night and sunset fish (Oct 15 2026) + the signature species (Nov 6 2026, growing to 150 in three waves)');
 assert.equal(new Set(FISH.map(f=>f.id)).size,FISH.length,'unique ids');
 const SPOT_IDS=FISH_SPOTS.map(s=>s.id),PRICE={common:[2,4],uncommon:[4,7],rare:[8,11],legendary:[12,20]};
 for(const f of FISH){
@@ -84,7 +84,7 @@ for(const s of FISH_SPOTS){assert(Object.keys(s.weights).every(id=>fishById(id))
 // beaches), and Summit Isle's own 3 (Oct 12-13 2026: Boulder Cove, then Palm Point and Lookout Rocks). Still ONE merged
 // post mesh and ONE float InstancedMesh for all of them (asserted below).
 // Oct 14 2026: 18 — a second deep-sea boat (west of Summit Isle) and Summit Isle's Drop-off Ledge.
-assert.equal(FISH_SPOTS.length,18,'18 fishing spots: 6 main-island posts, 2 deep-sea boats, 3 causeway posts, 3 Coral Cay posts and Summit Isle\'s 4');
+assert.equal(FISH_SPOTS.length,19,'19 fishing spots: 6 main-island posts, 2 deep-sea boats, 3 causeway posts, 3 Coral Cay posts, Summit Isle\'s 4 and (Nov 13 2026) the Stadium Park pond');
 {const cayCat=e.load('lib/town/coralCay.ts'),{onLand}=e.load('lib/town/landmass.ts'),world=fs.readFileSync(path.join(ROOT,'lib/town/fishing/fishingWorld.ts'),'utf8');
  const causeway=FISH_SPOTS.filter(s=>s.area==='causeway'),cay=FISH_SPOTS.filter(s=>s.area==='cay');
  assert.equal(causeway.length,3,'three causeway spots');assert.equal(cay.length,3,'three Coral Cay spots');
@@ -205,7 +205,7 @@ assert(fishById('tuna').shadow==='huge'&&fishById('shrimp').shadow==='small','sh
 
 // ---- Geometry: every spot casts into the water; shadows start in the water ----
 const shore=e.load('lib/town/shoreline.ts');
-for(const s of FISH_SPOTS){const c=core.castPoint(s,s);assert(!shore.onIsland(c.x,c.z),`${s.id}: float lands in the water`);assert(c.distance>3&&c.distance<=30);
+for(const s of FISH_SPOTS){const c=core.castPoint(s,s);assert(s.pond?core.inPondWater(c.x,c.z):!shore.onIsland(c.x,c.z),`${s.id}: float lands in the water${s.pond?" (the park pond's, Nov 13 2026)":""}`);assert(c.distance>3&&c.distance<=30);
  const r=lcg(3);for(let i=0;i<10;i++){const p=core.shadowSpawn(c,r);assert(!shore.onIsland(c.x+p.x,c.z+p.z)||Math.hypot(p.x,p.z)<4,`${s.id}: shadow starts in the water`);}}
 
 // ---- Farther casts (Oct 13 2026, "cast farther out … to see more of the ocean and a little deeper"): every buoy sits
@@ -449,11 +449,13 @@ assert.equal(MARKET_STAND.z,35,'one stand: the CITRUS & FRUIT stall the jobs sal
 for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:40};s.phase='bite';core.tapSession(s);for(let i=0;i<hz*9;i++)core.stepSession(s,pier,1/hz,()=>.5,spawn);assert.notEqual(s.phase,'caught','idle reeling never awards a fish');assert(['escaped','floating'].includes(s.phase));}
 
 // ---- Per-spot reef themes (Oct 13 2026, "fix all the fishing spots so they don't all look the same … make the coral feel more tropical") ----
-{const uw=e.load('lib/town/fishing/underwater.ts'),sea=e.load('lib/town/fishing/fishSchools.ts'),T=require('three');
- const ids=FISH_SPOTS.map(s=>s.reef);
+{// The park pond (Nov 13 2026) is fresh, still water with no reef or clear-water window (fishingVisuals.ts pondOn): the sea spots only.
+ const REEF_SPOTS=FISH_SPOTS.filter(s=>!s.pond);
+ const uw=e.load('lib/town/fishing/underwater.ts'),sea=e.load('lib/town/fishing/fishSchools.ts'),T=require('three');
+ const ids=REEF_SPOTS.map(s=>s.reef);
  assert(ids.every(id=>id&&uw.REEF_THEMES[id]),'every spot names a reef theme that exists');
- assert.equal(new Set(ids).size,FISH_SPOTS.length,'every spot has its own reef theme');
- const themes=FISH_SPOTS.map(s=>uw.reefTheme(s));
+ assert.equal(new Set(ids).size,REEF_SPOTS.length,'every spot has its own reef theme');
+ const themes=REEF_SPOTS.map(s=>uw.reefTheme(s));
  assert.equal(new Set(themes.map(t=>t.coral.join())).size,themes.length,'reef palettes differ between spots');
  assert.equal(new Set(themes.map(t=>JSON.stringify(t.water))).size,themes.length,'water tints differ between spots');
  assert.equal(new Set(themes.map(t=>JSON.stringify(t.sand))).size,themes.length,'sand tones differ between spots');
@@ -468,7 +470,7 @@ for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:
  // spot ≤ 5.3k / 3.2k; all 16 spots 90.7k / 52.7k) may grow at most 15 % per spot, and the total stays flat.
  const n=160,size=80,lift=new Float32Array(n*n);for(let j=0;j<n;j++)for(let i=0;i<n;i++)lift[j*n+i]=-40+(j+.5)*size/n<-8?.3:-.5;
  const field={box:new T.Vector4(-40,-40,size,size),n,size,lift,distance:(x,z)=>z+8},tot={desktop:0,phone:0};
- for(const s of FISH_SPOTS)for(const phone of [false,true]){const cay=s.area==='cay',build=()=>uw.buildSeabedProps(field,uw.reefTheme(s),{x:0,z:-9},{x:0,z:1},phone,uw.reefSeed(s.id),phone?4.5:9,25);
+ for(const s of REEF_SPOTS)for(const phone of [false,true]){const cay=s.area==='cay',build=()=>uw.buildSeabedProps(field,uw.reefTheme(s),{x:0,z:-9},{x:0,z:1},phone,uw.reefSeed(s.id),phone?4.5:9,25);
   const p=build(),q=build(),cap=(cay?(phone?5932:10182):(phone?3240:5264))*1.15;
   // The deep-sea boats (Oct 14 2026): open deep water shows no seabed at all (the water column draws instead).
   if(s.deep){assert.equal(p.triangles,0,`${s.id}: no seabed pieces under a deep-sea boat`);assert(!p.mesh.visible,`${s.id}: the empty seabed is hidden`);p.dispose();q.dispose();continue;}
@@ -479,7 +481,7 @@ for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:
  // Oct 14 2026: the boats' reef left (deep water: none) and Drop-off Ledge joined; the total may grow by at most one shore spot's cap.
  assert(tot.desktop<=90734+5264*1.15&&tot.phone<=52680+3240*1.15,`seabed triangles flat overall (${tot.desktop} / ${tot.phone})`);
  // The deep look: every deep spot's theme has the water-column config, its fish exist, the water is darker than any reef's.
- for(const s of FISH_SPOTS.filter(x=>x.deep)){const t=uw.reefTheme(s);assert(t.layout==='abyss'&&t.deep,`${s.id}: the open deep-sea look`);
+ for(const s of REEF_SPOTS.filter(x=>x.deep)){const t=uw.reefTheme(s);assert(t.layout==='abyss'&&t.deep,`${s.id}: the open deep-sea look`);
   for(const f of [t.deep.bait,...t.deep.big])assert(sea.LOOKS[f],`${s.id}: deep life look ${f} exists`);
   assert(t.water[1].reduce((a,b)=>a+b,0)<.25&&t.clear>1.5,`${s.id}: dark, deep water (no visible bottom)`);}
  assert(uw.reefTheme(cat.spotById('deep-sea-boat')).deep.bait!==uw.reefTheme(cat.spotById('deep-sea-boat-west')).deep.bait,'the two boats look different (their own bait ball)');
@@ -490,7 +492,7 @@ for(const hz of [30,60,120]){const s=core.createSession();s.fish={id:'cod',size:
  // ---- Depth (Oct 14 2026, "the coral looks like it's on top of the water … make it have more depth") ----
  // 1. The depth look: deeper = less saturated and more tinted by the water; the shallows stay vivid.
  const hsl=c=>{const o={};new T.Color(...c).getHSL(o);return o;},dist=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
- for(const s of FISH_SPOTS.filter(x=>!x.deep)){const t=uw.reefTheme(s);
+ for(const s of REEF_SPOTS.filter(x=>!x.deep)){const t=uw.reefTheme(s);
   for(const hex of t.coral){const c0=new T.Color(hex),rgb=[c0.r,c0.g,c0.b],s0=hsl(rgb).s;if(s0<.5)continue;
    // The piece's own colour loses saturation (no water: clear 0), and what reaches the eye moves toward the water's tint.
    const H=[.25,.8,1.5,2.4,3.2],look=H.map(h=>uw.uwDepthLook(rgb,h,h/.6,t,'reef')),sat=H.map(h=>hsl(uw.uwDepthLook(rgb,h,0,{...t,clear:0},'reef')).s),tint=look.map(c=>dist(c,t.water[1]));

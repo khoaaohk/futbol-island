@@ -121,6 +121,8 @@ export const LEGEND_CHAPTERS:Readonly<Record<string,readonly [string,string]>>={
   'Real Madrid won the first five European Cups in a row, from 1956 to 1960. Five-Crown Crab says five crowns is the perfect number, and it polishes each one.'],
  'legend-summit-lookout':['A barracuda with two tall fins patrolled the stepping-stone boulders again. Back-to-Back was on guard.',
   'Managed by Brian Clough, Nottingham Forest won the European Cup in 1979 and again in 1980. Back-to-Back did two laps of the boulders today, one for each.'],
+ 'legend-park-pond':['A golden koi as long as a bench glided round the pond at dawn. King Koi was still there.',
+  'Kazuyoshi Miura scored in a professional league game at the age of 50. King Koi did one more slow lap of the pond, just to show it could.'],
  'legend-summit-ledge':['A sailfish leapt high at the drop-off, higher than the lookout rocks. The Leaper was back.',
   'Cristiano Ronaldo has scored more goals for his country than any other men\'s player. The Leaper jumped so high today that the seagulls cheered.'],
  'legend-deep-sea-boat-2':['A long silver ribbon with a crimson crest led a deep shoal past the boat. Captain Ribbon was out in front.',

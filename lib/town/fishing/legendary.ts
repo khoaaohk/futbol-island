@@ -1,7 +1,7 @@
 import type {AnimalGroup,FishShape,FishSpecies,SpotId} from './fishCatalog';
 
 /**
- * C1 (docs/fishing-research.md): Island Legends. One named giant per fishing spot (18; four spots got a second one in wave 3, 22 in all, see DEFS2), each with a short island story (GAME
+ * C1 (docs/fishing-research.md): Island Legends. One named giant per fishing spot (19 since the park pond, Nov 13 2026; four spots got a second one in wave 3, 23 in all, see DEFS2), each with a short island story (GAME
  * FICTION) and a real football "legend" fact (REAL, sourced; the same teaching-hook pattern as the deep-sea creatures: the fact
  * never claims the animal). Checked 15 Oct 2026 against the pages in `source` (polite fetches, one at a time).
  *
@@ -81,6 +81,10 @@ const DEFS:Def[]=[
  * find again, nothing expires), and it is caught once and released the same way. Real, sourced football legend facts (checked
  * 6 Nov 2026 against the pages in `source`); the animal never claims the player. Ids: `legend-<spot>-2`.
  */
+// Nov 13 2026: the Stadium Park pond (fishSpots.ts park-pond) gets its own legend, so every spot still has one (19 + 4 = 23).
+DEFS.push({spot:'park-pond',name:'King Koi',title:'The pond\'s ancient golden koi',group:'fish',shape:'round',size:[110,130],color:'#e9b23a',belly:'#fff3d6',
+  story:'A huge golden koi, older than the park itself, that still glides round the pond every morning as if it will never retire.',clue:'Park visitors say a golden koi as long as a bench glides round the pond at dawn.',
+  club:{name:'Kazuyoshi Miura',country:'Japan',link:'Football culture',nickname:'King Kazu',entity:{kind:'player',name:'Kazuyoshi Miura'},fact:'Kazuyoshi Miura, "King Kazu", scored for Yokohama FC in 2017 at the age of 50, the oldest player ever to score in a professional league.',source:W+'Kazuyoshi_Miura'}});
 const DEFS2:Def[]=[
  {spot:'deep-sea-boat',name:'Captain Ribbon',title:'The deep bay\'s captain oarfish',group:'fish',shape:'eel',size:[900,1000],color:'#d8dce4',belly:'#f2f4f8',
   story:'A giant silver oarfish with a crimson crest, longer than any fish in the bay. It leads the deep shoals like a captain leading her team.',clue:'The crew saw a long silver ribbon with a red crest, far below the hull.',

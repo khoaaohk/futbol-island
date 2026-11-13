@@ -71,10 +71,10 @@ const book=ids=>({species:Object.fromEntries(ids.map(id=>[id,{count:1}]))});
  const store=fs.readFileSync(path.join(ROOT,'lib/town/fishing/fishingHooksStore.ts'),'utf8');ok(!/islandMarket|islandJobWallet|credit\(|setCatchRoll|catchWeights|gather\(/.test(store),'the hooks store never pays, fills the basket or rolls a catch');
  const ctx0={time:'day',lure:null,legends:[]};for(const s of FISH_SPOTS){const w=O.catchWeights(s,0,ctx0),ev=O.meanSellValue(w);ok(Number.isFinite(ev)&&ev>0,`${s.id}: catch weights unchanged (EV ${ev.toFixed(2)})`);}}
 
-// ---- 5. Story chapters: 22 legends + 30 favourites, kid-safe, no invented football numbers
+// ---- 5. Story chapters: 23 legends + 30 favourites, kid-safe, no invented football numbers
 {const SCARY=/\b(kill\w*|dead|death|die[sd]?|dying|blood\w*|attack\w*|scar(y|ier|iest)|terrif\w*|deadly|danger\w*|monsters?|jaws|horror|fear\w*|eaten alive|man-eat\w*|vicious|savage|bite[sd]? (you|people|kids))\b/i;
  const bigNums=t=>(t.match(/\d[\d,–-]*\d|\d{2,}/g)??[]).flatMap(x=>x.split(/[–-]/)).filter(x=>x.replace(/,/g,'').length>=2);
- ok(LG.LEGEND_FISH.length===22,'22 legends');
+ ok(LG.LEGEND_FISH.length===23,'23 legends (Nov 13 2026: + King Koi)');
  for(const L of LG.LEGEND_FISH){const ch=CH.LEGEND_CHAPTERS[L.id];ok(Array.isArray(ch)&&ch.length===2,`${L.id}: two more chapters`);
   for(const t of ch){ok(t.length>=40&&t.length<=330&&!SCARY.test(t)&&!/https?:|%|odds|chance/i.test(t),`${L.id}: kid-safe chapter`);
    for(const num of bigNums(t))ok(L.club.fact.includes(num)||LG.LEGEND_INFO[L.id].story.includes(num),`${L.id}: "${num}" comes from its sourced fact`);}}
@@ -108,4 +108,4 @@ const book=ids=>({species:Object.fromEntries(ids.map(id=>[id,{count:1}]))});
  const src=['lib/town/fishing/fishingHooks.ts','lib/town/fishing/fishingHooksStore.ts','components/FishbookExtras.tsx'].map(f=>fs.readFileSync(path.join(ROOT,f),'utf8')).join('\n');
  ok(!/leaderboard|streak|setInterval|requestAnimationFrame/i.test(src.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'')),'no leaderboards, streaks, timers or frame loops');}
 
-console.log(`PASS fishing-hooks: ${n} checks (14 sets, Pacific-day visitors, stamp-only golden, chapters for 22 legends + favourites, synced save)`);
+console.log(`PASS fishing-hooks: ${n} checks (14 sets, Pacific-day visitors, stamp-only golden, chapters for 23 legends + favourites, synced save)`);

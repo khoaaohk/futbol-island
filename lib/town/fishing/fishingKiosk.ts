@@ -44,6 +44,7 @@ export const STALL_BY_SPOT:Readonly<Record<string,StallType>>={
  'causeway-gate':'cart','causeway-channel':'lighthouse','turtle-bank':'rowboat',
  'coral-garden':'tiki','sharks-beach':'booth','farm-beach':'market',
  'summit-cove':'cart','summit-palm':'tiki','summit-lookout':'lighthouse','summit-ledge':'shack',
+ 'park-pond':'rowboat',
 };
 /** Per-spot turn where a type's default yaw would bring its colliders within 0.85 m of the standing spot (radians). */
 const YAW_BY_SPOT:Readonly<Record<string,number>>={'west-pier':1.25,'farm-beach':1.4,'summit-ledge':-.35};
@@ -84,7 +85,7 @@ const PALETTES:Record<StallType,readonly (readonly string[])[]>={
  // band red, band white, roof, roof stripe, accent
  lighthouse:[['#d9483b','#f4efe2','#2f4f6f','#f4efe2','#e8c040'],['#2f6f9a','#f4efe2','#c94f3f','#f4efe2','#e0703f'],['#3f8a5a','#f4efe2','#2f4f6f','#f4efe2','#e0513f']],
  // hull, stripe, boot-top, wood, accent
- rowboat:[['#2f6f9a','#fbf6ee','#d9483b','#a67d55','#e8c040'],['#4f8a6a','#fbf6ee','#c9a23f','#9c7550','#e0513f']],
+ rowboat:[['#2f6f9a','#fbf6ee','#d9483b','#a67d55','#e8c040'],['#4f8a6a','#fbf6ee','#c9a23f','#9c7550','#e0513f'],/* Nov 13 2026: the park pond's boat-hire green */['#3f6f45','#f4efe2','#e8c040','#8c6a48','#d9483b']],
  // lower walls, frame, roof, flag, accent
  booth:[['#2f4f6f','#f4efe2','#c94f3f','#e8c040','#d9483b'],['#3f7a78','#fbf6ee','#2f4f6f','#e0513f','#e8c040']],
  // wood, cloth A, cloth B, parasol, parasol trim
