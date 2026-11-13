@@ -35,6 +35,7 @@ import {earnForExplore} from '@/lib/town/cardRewardTriggers';
 import {exploreActivityNow} from '@/lib/town/exploreActivity';
 import dynamic from 'next/dynamic';
 import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT,BUG_NEW_SPECIES_EVENT} from '@/lib/town/jobs/bugBook';
+import {POND_BUG_CAUGHT,pondCatchToast,type PondBugCaught} from '@/lib/town/pondBugs';
 import {countBugStory} from '@/lib/analytics/summitEvents';
 import {WILD_BUG_HINT} from '@/lib/graphics/wildBugsCore';
 import {claimBugBookReward,claimNewSpecies} from '@/lib/town/jobs/bugBookReward';
@@ -145,8 +146,10 @@ export default function IslandJobs({blocked,holdToasts=false,offerAllowed=true,c
   const wild=()=>getJobRuntime()?.run?undefined:setToast({title:'The bug fluttered away!',detail:'Bugs are only caught gently on a Bug squad shift (fireflies at Night). Find the job signs in the meadow.',merge:'wild-bug'});
   // A species' first catch ever: a small one-time learning bonus (bugBookReward.ts claimNewSpecies).
   const fresh=(e:Event)=>{const id=(e as CustomEvent<string>).detail;if(id)void claimNewSpecies(id).catch(()=>{});};
-  window.addEventListener(OPEN_BUG_BOOK,open);document.addEventListener(BUG_BOOK_COMPLETE_EVENT,done);document.addEventListener(BUG_NEW_SPECIES_EVENT,fresh);window.addEventListener(WILD_BUG_HINT,wild);
-  return()=>{window.removeEventListener(OPEN_BUG_BOOK,open);document.removeEventListener(BUG_BOOK_COMPLETE_EVENT,done);document.removeEventListener(BUG_NEW_SPECIES_EVENT,fresh);window.removeEventListener(WILD_BUG_HINT,wild);};
+  // Nov 13 2026: a dragonfly netted at the Stadium Park pond (lib/town/pondBugs.ts): a short toast, the Bug book has the page.
+  const pond=(e:Event)=>{const c=(e as CustomEvent<PondBugCaught>).detail;if(c)setToast({...pondCatchToast(c),merge:'pond-bug'});};
+  window.addEventListener(OPEN_BUG_BOOK,open);document.addEventListener(BUG_BOOK_COMPLETE_EVENT,done);document.addEventListener(BUG_NEW_SPECIES_EVENT,fresh);window.addEventListener(WILD_BUG_HINT,wild);window.addEventListener(POND_BUG_CAUGHT,pond);
+  return()=>{window.removeEventListener(OPEN_BUG_BOOK,open);document.removeEventListener(BUG_BOOK_COMPLETE_EVENT,done);document.removeEventListener(BUG_NEW_SPECIES_EVENT,fresh);window.removeEventListener(WILD_BUG_HINT,wild);window.removeEventListener(POND_BUG_CAUGHT,pond);};
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
  // Bug squad catching (catching lane): the story card after each catch (like the fish catch card: "Real football fact"), shown once

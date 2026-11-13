@@ -6,14 +6,16 @@ import {bugMaterial} from '../graphics/bugMaterial';
 import {BUG_SPECIES} from './jobs/bugSpecies';
 import {WATER_UNIFORMS} from '../graphics/waterSurface';
 import {pushPondRipple} from '../graphics/pondWater';
+import {POND_NET} from './pondBugs';
 
 /**
  * Stadium Park pond life (Nov 13 2026, owner: "make it lifelike"). Reuses the island's own pieces:
  *  - koi: the dive rooms' 92-triangle reef fish model (diveFish.ts, look 'koi'), ONE InstancedMesh, flattened to swim in the 7 cm
  *    between the pond bed and the surface; they wander, wag, keep inside the water and scatter from a walker or a splash;
  *  - dragonflies: the Bug squad's Midfield Dragonfly model and the bug swarm's flapping material (bugModels.ts, bugMaterial.ts),
- *    ONE InstancedMesh: hover, dart, hover again, and dart off when you come close (decoration: wild bugs, and so the net, are
- *    Summit Isle only; see the report / docs);
+ *    ONE InstancedMesh: hover, dart, hover again, and dart off when you rush close. Nov 13 2026: they are the Bug book's
+ *    Midfield Dragonfly and can be netted (pondBugs.ts): a calm player is not fled from and now and then gets a curious visit;
+ *    nearFly / flyAt / netFly serve the "Net it" prompt, a netted one is let go and comes back after POND_NET.away s;
  *  - splashes and ripples: the swim ripple and splash-down pools (ballEffects.ts) via the sink, plus the pond shader's own rings
  *    (pondWater.ts pushPondRipple), when a walker wades or a ball lands in or rolls through the water.
  * Heat: nothing runs or draws unless the west region is shown and the player is within POND_LIFE.near m of the pond; then a few
@@ -40,7 +42,9 @@ export type PondMode=0|1|2;
 export type PondInput={x:number;z:number;speed:number;onGround:boolean;ballX:number;ballY:number;ballZ:number;ballOn:boolean;shown:boolean;mode:PondMode;
  /** The player's feet height (m) for the landing speed; heading (rad, forward = (sin, cos)); riding a ground ride; reduced motion;
   *  the ball's own splashes come from the skip rules (pondSkip.ts), so the drop splash here is skipped while `ballWet`. */
- y?:number;heading?:number;riding?:boolean;reduced?:boolean;ballWet?:boolean};
+ y?:number;heading?:number;riding?:boolean;reduced?:boolean;ballWet?:boolean;
+ /** Nov 13 2026: on foot and still or slow (pondBugs.ts POND_NET.calmSpeed): the dragonflies stay, and come to look. */
+ calm?:boolean};
 export type PondSink={splash:(x:number,z:number,size:number)=>void;ring:(x:number,z:number,radius:number)=>void;
  /** A stretched ripple (the bow wake's arms): radius, stretch along `angle` (rad). Falls back to ring() when absent. */
  wake?:(x:number,z:number,radius:number,stretch:number,angle:number)=>void};
@@ -62,12 +66,12 @@ export function createPondLife(scene:T.Scene,o:{phone:boolean;sink:PondSink}){
  for(let i=0;i<nf;i++)flap.setXYZW(i,17,.28,.04,i*1.7);flyGeo.setAttribute('iFlap',flap);flyGeo.setAttribute('iPose',pose);
  const flyMat=bugMaterial({uTime:WATER_UNIFORMS.uWaterTime,uFade:{value:1}}),flies=new T.InstancedMesh(flyGeo,flyMat,nf);flies.name='park-pond-dragonflies';
  flies.castShadow=false;flies.boundingSphere=new T.Sphere(new T.Vector3(cx,1,cz),Math.max(rx,rz)+4);flies.visible=false;scene.add(flies);
- const D={x:new Float32Array(nf),y:new Float32Array(nf),z:new Float32Array(nf),tx:new Float32Array(nf),ty:new Float32Array(nf),tz:new Float32Array(nf),hold:new Float32Array(nf),yaw:new Float32Array(nf)};
+ const D={x:new Float32Array(nf),y:new Float32Array(nf),z:new Float32Array(nf),tx:new Float32Array(nf),ty:new Float32Array(nf),tz:new Float32Array(nf),hold:new Float32Array(nf),yaw:new Float32Array(nf),away:new Float32Array(nf)};
  for(let i=0;i<nf;i++){inside(.8);D.x[i]=D.tx[i]=pick.x;D.z[i]=D.tz[i]=pick.z;D.y[i]=D.ty[i]=.7+rnd()*.5;D.hold[i]=rnd()*2;}
  const m4=new T.Matrix4(),q=new T.Quaternion(),p=new T.Vector3(),s=new T.Vector3(),up=new T.Vector3(0,1,0);
  const writeFish=(n:number,t:number)=>{for(let i=0;i<n;i++){const sp2=Math.hypot(F.vx[i],F.vz[i]),yaw=Math.atan2(F.vz[i],-F.vx[i])+Math.sin(t*(4+sp2*5)+F.ph[i])*(.08+Math.min(.18,sp2*.12));
   q.setFromAxisAngle(up,yaw);p.set(F.x[i],POND_Y-.035,F.z[i]);s.set(F.len[i],F.len[i]*.3,F.len[i]);fish.setMatrixAt(i,m4.compose(p,q,s));}fish.count=n;fish.instanceMatrix.needsUpdate=true;};
- const writeFlies=()=>{for(let i=0;i<nf;i++){q.setFromAxisAngle(up,D.yaw[i]);p.set(D.x[i],D.y[i],D.z[i]);s.setScalar(.7);flies.setMatrixAt(i,m4.compose(p,q,s));}flies.instanceMatrix.needsUpdate=true;};
+ const writeFlies=()=>{for(let i=0;i<nf;i++){q.setFromAxisAngle(up,D.yaw[i]);p.set(D.x[i],D.y[i],D.z[i]);s.setScalar(D.away[i]>0?0:.7);flies.setMatrixAt(i,m4.compose(p,q,s));}flies.instanceMatrix.needsUpdate=true;};
  writeFish(cap,0);writeFlies();
  // --- droplets (N5): one pooled instanced mesh, gravity arcs, gone at the water line ------------------------------------------
  const ND=POND_FX.drops,dropGeo=new T.IcosahedronGeometry(.045,0),dropMat=new T.MeshBasicMaterial({color:'#e9fbff',transparent:true,opacity:.85,depthWrite:false});
@@ -125,6 +129,12 @@ export function createPondLife(scene:T.Scene,o:{phone:boolean;sink:PondSink}){
   /** A splash ring at (x, z) of strength 0..1 (the skipping ball's touches, pondSkip.ts): crown, a few drops, a pond ring. */
   splash(x:number,z:number,strength:number,mode:PondMode=0,reduced=false){if(mode===2&&!reduced)return;const red=reduced?.5:1;o.sink.splash(x,z,(.5+strength*.4)*red);o.sink.ring(x,z,(1+strength*1.2)*red);pushPondRipple(x,z,strength);sx=x;sz=z;splashAge=0;
    spawnDrops(x,z,Math.round((4+strength*6)*(mode>=1?.5:1)*red),(1.4+strength*2)*red,(.6+strength*.8)*red);},
+  /** Nov 13 2026 (pondBugs.ts): the nearest drawn dragonfly within `range` m (flat) of (x, z), or -1. */
+  nearFly(x:number,z:number,range:number){if(!flies.visible)return -1;let best=-1,bd=range;for(let k=0;k<nf;k++){if(D.away[k]>0)continue;const d=Math.hypot(D.x[k]-x,D.z[k]-z);if(d<=bd){bd=d;best=k;}}return best;},
+  /** Dragonfly k's position, written into `out`. */
+  flyAt(k:number,out:{x:number;y:number;z:number}){out.x=D.x[k]??0;out.y=D.y[k]??0;out.z=D.z[k]??0;return out;},
+  /** Net dragonfly k: it is let go out of sight and back over the water after POND_NET.away s. False if it is not there. */
+  netFly(k:number){if(!(k>=0&&k<nf)||D.away[k]>0)return false;D.away[k]=POND_NET.away;inside(.9);D.x[k]=D.tx[k]=pick.x;D.z[k]=D.tz[k]=pick.z;D.hold[k]=1;writeFlies();return true;},
   /** Metres a walker at (x, z) sinks into the pond (0 on dry land). */
   wade:pondWade,
   get active(){return fish.visible;},
@@ -160,11 +170,16 @@ export function createPondLife(scene:T.Scene,o:{phone:boolean;sink:PondSink}){
    writeFish(n,t);
    if(!flies.visible)return;
    // Dragonflies: hover (a little bob), dart to a new spot over the water; dart off when the player comes close.
-   for(let k=0;k<nf;k++){const dx=D.tx[k]-D.x[k],dy=D.ty[k]-D.y[k],dz=D.tz[k]-D.z[k],d=Math.hypot(dx,dz,dy);
-    const dp=Math.hypot(D.x[k]-i.x,D.z[k]-i.z);
-    if(d<.15){D.hold[k]-=dt;if(D.hold[k]<=0||dp<POND_LIFE.flyFlee){inside(.9);D.tx[k]=pick.x;D.tz[k]=pick.z;D.ty[k]=.5+rnd()*.8;D.hold[k]=1+rnd()*2.5;}
+   // Nov 13 2026: a calm player (pondBugs.ts) is not fled from, and a dragonfly's next spot is sometimes beside them (over the water).
+   const nearWater=pondQ(i.x,i.z,POND_NET.range)<1;
+   for(let k=0;k<nf;k++){if(D.away[k]>0){D.away[k]=Math.max(0,D.away[k]-dt);continue;}
+    const dx=D.tx[k]-D.x[k],dy=D.ty[k]-D.y[k],dz=D.tz[k]-D.z[k],d=Math.hypot(dx,dz,dy);
+    const dp=Math.hypot(D.x[k]-i.x,D.z[k]-i.z),flee=dp<POND_LIFE.flyFlee&&!i.calm;
+    if(d<.15){D.hold[k]-=dt;if(D.hold[k]<=0||flee){inside(.9);
+      if(!flee&&i.calm&&nearWater&&rnd()<POND_NET.curious){const a=rnd()*Math.PI*2,r=POND_NET.curiousRadius*(.6+rnd()*.4),ex=i.x+Math.cos(a)*r,ez=i.z+Math.sin(a)*r;if(pondQ(ex,ez)<.95){pick.x=ex;pick.z=ez;}}
+      D.tx[k]=pick.x;D.tz[k]=pick.z;D.ty[k]=.5+rnd()*.8;D.hold[k]=1+rnd()*2.5;}
      D.y[k]+=Math.sin(t*2.3+k)*.002;}
-    else{const v=Math.min(d,dt*(dp<POND_LIFE.flyFlee?6:4.5));D.x[k]+=dx/d*v;D.y[k]+=dy/d*v;D.z[k]+=dz/d*v;const want=Math.atan2(dx,dz),dyaw=Math.atan2(Math.sin(want-D.yaw[k]),Math.cos(want-D.yaw[k]));D.yaw[k]+=dyaw*Math.min(1,dt*10);}}
+    else{const v=Math.min(d,dt*(flee?6:4.5));D.x[k]+=dx/d*v;D.y[k]+=dy/d*v;D.z[k]+=dz/d*v;const want=Math.atan2(dx,dz),dyaw=Math.atan2(Math.sin(want-D.yaw[k]),Math.cos(want-D.yaw[k]));D.yaw[k]+=dyaw*Math.min(1,dt*10);}}
    writeFlies();
   },
   dispose(){drops.removeFromParent();drops.dispose();dropGeo.dispose();dropMat.dispose();fish.removeFromParent();flies.removeFromParent();fishGeo.dispose();fishMat.dispose();flyGeo.dispose();flyMat.dispose();fish.dispose();flies.dispose();},

@@ -17,6 +17,7 @@ import {BUG_JOB_LESSON,FIREFLY_JOB_LESSON} from '@/lib/town/jobs/bugScout';
 import {claimBugBookReward} from '@/lib/town/jobs/bugBookReward';
 import {countBugBookOpen} from '@/lib/analytics/summitEvents';
 import {LEARN_COINS} from '@/lib/economy';
+import {POND_DRAGONFLY_ID,POND_DRAGONFLY_WHERE} from '@/lib/town/pondBugs';
 
 /** Pentagon points around (cx, cy). */
 const penta=(cx:number,cy:number,r:number)=>Array.from({length:5},(_,i)=>{const a=-Math.PI/2+i*2*Math.PI/5;return `${(cx+Math.cos(a)*r).toFixed(1)},${(cy+Math.sin(a)*r).toFixed(1)}`;}).join(' ');
@@ -72,7 +73,7 @@ export default function BugBook({open,onClose}:{open:boolean;onClose:()=>void}){
         {p.idea&&<div className={styles.fact} data-bugbook-idea><span className={styles.tag}>Coaching idea</span><p>{p.idea}</p></div>}
         {storiesUnlocked(p.stories,c).map((s,k)=><div key={k} className={styles.fact} data-bugbook-story><span className={styles.tag}>Real football fact{p.stories.length>1?` ${k+1}/${p.stories.length}`:''}</span><p>{s.text}</p></div>)}</>
        :storyFor(p.stories,c)&&<div className={styles.fact} data-bugbook-story><span className={styles.tag}>Real football fact</span><p>{storyFor(p.stories,c)!.text}</p></div>}</>
-      :<><h3>Not caught yet</h3><p className={styles.eyebrow}>{p.kind==='bug'?'A squad player':'A football call'}</p><p className={styles.found}>{sec.where}</p></>}
+      :<><h3>Not caught yet</h3><p className={styles.eyebrow}>{p.kind==='bug'?'A squad player':'A football call'}</p><p className={styles.found}>{sec.where}{p.id===POND_DRAGONFLY_ID?` ${POND_DRAGONFLY_WHERE}`:''}</p></>}
      </li>;})}</ul>
     </section>;})}
     <section className={styles.keeper}><h3>The bug scout&apos;s rule</h3><p><b>Look, learn, let go.</b> Every bug and firefly in this book was caught gently in a jar and set free again at the end of the shift.</p></section>
