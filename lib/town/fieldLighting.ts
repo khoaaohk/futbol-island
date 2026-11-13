@@ -18,6 +18,8 @@ const MAST_HEAD={y:30.5,w:6,h:3.4,front:.25} as const;
  * shared by the relevant pitch. Far pitches retain a modest material fill.
  * The light count is fixed within night (lessons and pitch changes never recompile); outside night the pool is hidden
  * (heat audit pass 2), so only entering and leaving night switch shader variants. */
+/** How far past the stadium bowl's walls (m) the four pooled floodlights move to the stadium, and how far before they let go. */
+export const STADIUM_POOL_RANGE={enter:60,leave:75} as const;
 export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surfaces:Map<string,T.MeshStandardMaterial>,goal:T.MeshStandardMaterial,markings:T.LineBasicMaterial){
  const dayMarkings=markings.color.clone(),nightMarkings=new T.Color().setRGB(2,2,2);
  const steel=new T.MeshStandardMaterial({color:'#596269',roughness:.72});
@@ -78,7 +80,9 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
  const stadiumEntry:FieldEntry={venue:{...STADIUM_VENUE,id:'stadium'},root:stadiumRoot,height:MAST_HEAD.y-.35-(STADIUM_VENUE.elevation??0),side:stadiumMast,reach:{x:stadiumMast-1,z:stadiumEnd-1},dayColor:new T.Color(),nightColor:new T.Color(),nightEmission:new T.Color()};
  entries.push(stadiumEntry);
  /** In the bowl or on its doorstep (the stands, the concourse, the ring), at any seat height. */
- const nearStadium=(p:{x:number;y:number;z:number},margin:number)=>p.y<MAST_HEAD.y&&Math.abs(p.x-STADIUM.x)<=STADIUM.bowlW/2+margin&&Math.abs(p.z-STADIUM.z)<=STADIUM.bowlL/2+margin;
+ // Owner, Nov 13 2026: the floodlights went dark just outside the stadium and when flying over it. The pooled spots now stay on the
+ // stadium out across the plaza and park (60 m past the bowl to switch on, 75 m to let go) and up to 40 m above the mast heads.
+/* see STADIUM_POOL_RANGE */ const nearStadium=(p:{x:number;y:number;z:number},margin:number)=>p.y<MAST_HEAD.y+40&&Math.abs(p.x-STADIUM.x)<=STADIUM.bowlW/2+margin&&Math.abs(p.z-STADIUM.z)<=STADIUM.bowlL/2+margin;
  const lightRoot=new T.Group();lightRoot.name='field-floodlight-pool';scene.add(lightRoot);
  const spots=[0,1,2,3].map(i=>{const light=new T.SpotLight('#fff0d5',0,180,1.18,.72,2);light.name='shared-pitch-floodlight-'+i;light.castShadow=false;lightRoot.add(light,light.target);return light;});
  const visibility=createPitchVisibility();let chosen:FieldEntry|undefined,lastMode='',blend=0,scanAge=1;
@@ -88,7 +92,7 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
   if(roofActive)return entries.find(e=>e.venue.id==='knockout');
   // Projected corners can cross the near plane when walking on a large pitch.
   // Occupancy wins before camera scoring, with a wider exit margin to avoid edge flicker.
-  if(player&&nearStadium(player,chosen===stadiumEntry?14:8))return stadiumEntry;
+  if(player&&nearStadium(player,chosen===stadiumEntry?STADIUM_POOL_RANGE.leave:STADIUM_POOL_RANGE.enter))return stadiumEntry;
   if(player)for(const entry of entries){if(entry===stadiumEntry)continue;const v=entry.venue,margin=entry===chosen?5:2;if(entry.root.visible&&Math.abs(player.y-((v.elevation??0)+FIELD_SURFACE_Y))<4&&Math.abs(player.x-v.x)<=v.width/2+margin&&Math.abs(player.z-v.z)<=v.length/2+margin)return entry;}
   let best:FieldEntry|undefined,bestScore=Infinity,currentScore=Infinity;
   camera.updateMatrixWorld();

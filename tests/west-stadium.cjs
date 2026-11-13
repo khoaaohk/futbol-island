@@ -427,7 +427,8 @@ console.log('west stadium phase 2: ok');
  assert.equal(pool.userData.active,'stadium','the pool covers the stadium from the stands');assert(lights.every(l=>l.intensity>0&&l.position.y>25&&!l.castShadow));
  const Q=load('lib/town/stadiumSeats.ts');assert.equal(new Set(lights.map(l=>{const m=Q.MASTS.reduce((a,b)=>Math.hypot(b.x-l.position.x,b.z-l.position.z)<Math.hypot(a.x-l.position.x,a.z-l.position.z)?b:a);assert(Math.hypot(m.x-l.position.x,m.z-l.position.z)<2,'a spot at each mast head');return m;})).size,4);
  assert.equal(N.STADIUM_NIGHT.value,1,'night blend reaches the stadium');assert.equal(lens.material.emissiveIntensity,2.1);assert(glow.visible&&glow.material.opacity>0);
- fields.updateLighting('night',cam,null,.2,true,false,{x:S.x,y:0,z:S.z-S.bowlL/2-30});assert.notEqual(pool.userData.active,'stadium','leaving the bowl releases the pool');
+ for(const [dz,y] of [[30,0],[55,0],[0,50]]){fields.updateLighting('night',cam,null,.2,true,false,{x:S.x,y,z:S.z-S.bowlL/2-dz});assert.equal(pool.userData.active,'stadium','still lit '+dz+' m outside the bowl / flying at '+y+' m');}
+ fields.updateLighting('night',cam,null,.2,true,false,{x:S.x,y:0,z:S.z-S.bowlL/2-90});assert.notEqual(pool.userData.active,'stadium','far from the stadium releases the pool');
  for(let i=0;i<400;i++)fields.updateLighting('day',cam,null,1/30);assert.equal(N.STADIUM_NIGHT.value,0);assert(!glow.visible);assert.equal(pool.visible,false);
  fields.dispose();console.log('west stadium night lighting: ok');}
 
