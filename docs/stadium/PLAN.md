@@ -73,6 +73,22 @@ Original plan:
   stand with the match on: desktop 96 draws / 228k tris, phone 49–70 / 141–151k; the same session at Eleven Park's touchline: desktop
   232 / 266k, phone 111 / 142k. The rise over phase 2's seated numbers is the 22 match rigs (the same as any island match).
 
+## Phase 3b: crowd, goals, portrait framing, exhibitions, sound (DONE on this branch)
+- Crowd (`stadiumCrowd.ts`): one InstancedMesh (1 draw, no shadow pass, Lambert), fans of 20 tris (body + head, no bottoms) in
+  the stand's team colours with a few neutrals, at seat positions in a fixed shuffled order; fill by device and heat tier: desktop
+  34 % of seats (1,801 fans, 36k tris), phone 21 % (1,097, 22k), tier 2 9–15 %, Battery saver 5 %. Built lazily within 150 m of
+  the centre, hidden beyond, frustum-culled off screen. Goal: a 2.6 s bounce from two shared uniforms (none with reduced motion);
+  a uniform clears the fans within 1.1 m of a player up in the stands; each span's end seats (aisles, stand ends) stay free.
+- Goals: `goalCollisions.ts FRAME_VENUES` (island pitches + the stadium) is the free ball's default frame list: posts and bar stop it.
+- Portrait seated view: FOV eases 40 → 55° while seated (restored on standing); `portraitLook` keeps the centre spot and the whole
+  big screen in frame from the end stands (yaw window, ball pull 0.6 inside it), screen top near the top edge; camera 5.5 m up.
+- Exhibition: no human slot and no friend's puppet = "EXHIBITION MATCH" on the board and "WEST COAST STADIUM · EXHIBITION / Join in
+  or just watch" on the pitch bar. The board's minute is the minute being played (starts at 1').
+- Sound: `islandSound.stadiumCrowd(level)` (one looped 2 s band-passed noise buffer; gain moves only on tenth-steps), full within
+  12 m of the pitch's edge, silent past 60 m or with no match; the goal cheer is the existing `match('crowd')`.
+- Cost (headless Chrome, dev server, seated north stand, exhibition on): desktop 80 draws / 254k tris (3a: 96 / 228k), phone
+  66 / 185k (3a: 49–70 / 141–151k; the crowd + the wider portrait view). No device heat measurement.
+
 ## Phase 3: watching games
 - Today: pitches are `VENUES` / `LIVE_VENUES` (`venues.ts`); live matches run in `fieldRuntime.ts` + `liveJoin*.ts`, sim in
   `lib/town/match/matchSim.ts` (`elevenAI.ts` for 11v11), sync in `lib/multiplayer/sharedMatch.ts` / `matchLink.ts`, focus and

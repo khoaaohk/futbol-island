@@ -108,10 +108,10 @@ export function nearestSeat(x:number,z:number,height:number,occupied?:ReadonlySe
  return best;
 }
 /** The stand view from a seat: the camera behind and above the sitter's head, looking at the pitch (world coordinates). */
-/** The stand view from a seat. `raised` (a portrait phone, phase 3): the camera sits higher and further back (3.6 m behind, 4 m
+/** The stand view from a seat. `raised` (a portrait phone, phase 3): the camera sits higher and further back (3.6 m behind, 5.5 m (phase 3b; 4 in 3a)
  *  up instead of 2.4 / 2.5) and aims a little lower (less sky on a tall screen), so the seated player's head drops below the
  *  bottom of the narrow screen (40° vertical FOV). */
-export const SEAT_VIEW={back:2.4,up:2.5,raisedBack:3.6,raisedUp:4,lookY:.4,raisedLookY:-2} as const;
+export const SEAT_VIEW={back:2.4,up:2.5,raisedBack:3.6,raisedUp:5.5,lookY:.4,raisedLookY:-2} as const;
 export function seatView(seat:Seat,raised=false){
  const s=STANDS.find(q=>q.id===seat.stand)!,{a}=standLocal(s,seat.x,seat.z),dIn=standLocal(s,seat.x,seat.z).d;
  const cam=standWorld(s,dIn+(raised?SEAT_VIEW.raisedBack:SEAT_VIEW.back),a),look=standWorld(s,0,a*.45);
