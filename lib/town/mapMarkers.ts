@@ -2,7 +2,7 @@
  * Travel-map marks (V vending, F fishing, J jobs, E reefs to explore; was D for dive spots before Oct 20 2026): the map key's tap tooltips and where the J marks sit.
  * The marks on the map are plain drawings (not buttons); the key explains them in general, not per place (tests/map-markers.cjs).
  */
-export type MapMarkKind='vending'|'fishing'|'job'|'dive'|'far'|'friend'|'gashapon';
+export type MapMarkKind='vending'|'fishing'|'job'|'dive'|'far'|'friend'|'players'|'gashapon';
 type Point={x:number;z:number};
 
 /** The key's tooltips, one per kind, in words a child can read: shown as "<title>: <text>". */
@@ -17,16 +17,20 @@ export const LEGEND_TIPS:Record<MapMarkKind,{title:string;text:string}>={
  far:{title:'Fly there:',text:'too far to swim, so take your jetpack to these reefs'},
  // Oct 23 2026: party friends' dots (components/FriendMapDots.tsx), keyed only while a party is live.
  friend:{title:'Friends:',text:'your party, each in their own colour. Tap a dot to see who it is'},
+ // Nov 13 2026: other players in my public world (components/PlayerMapDots.tsx): rough, unnamed spots, keyed only while there are some.
+ players:{title:'Players:',text:'other kids on the island right now. A number means a few are together'},
 };
-/** One entry of the map key. `ring` = the You marker, `friend` = the party dots' mark. */
-export type LegendItem={mark:string;fill:string;label:string;ring?:boolean;friend?:boolean;tip?:MapMarkKind};
+/** One entry of the map key. `ring` = the You marker, `friend` = the party dots' mark, `players` = the other players' soft dot. */
+export type LegendItem={mark:string;fill:string;label:string;ring?:boolean;friend?:boolean;players?:boolean;tip?:MapMarkKind};
 const BASE_LEGEND:readonly LegendItem[]=[
  {mark:'V',fill:'#fff8e5',label:'Vending',tip:'vending'},{mark:'F',fill:'#b9e1df',label:'Fishing',tip:'fishing'},{mark:'J',fill:'#f4cc7c',label:'Jobs',tip:'job'},{mark:'gasha',fill:'#ffe1ef',label:'Gashapon',tip:'gashapon'},{mark:'E',fill:'#a9dcf5',label:'Explore',tip:'dive'},{mark:'jet',fill:'#f4cc7c',label:'Fly there',tip:'far'},
  {mark:'',fill:'#7b4fd6',label:'You',ring:true}];
 const FRIEND_LEGEND:readonly LegendItem[]=[...BASE_LEGEND,{mark:'',fill:'#D62828',label:'Friends',friend:true,tip:'friend'}];
+const PLAYERS_LEGEND:readonly LegendItem[]=[...BASE_LEGEND,{mark:'',fill:'#fff7db',label:'Players',players:true,tip:'players'}];
 /** The travel map's key (G-13): "Friends" is listed ONLY while a party is live with someone in it (no party = the key as before).
  *  Phones lay 7 entries out 4 + 3 and 8 entries 4 + 4 (the Gashapon entry joined the key on Nov 9 2026). */
-export const mapLegend=(friends:boolean):readonly LegendItem[]=>friends?FRIEND_LEGEND:BASE_LEGEND;
+/** `players`: "Players" joins only in a public world while the map has other players' dots (a party and a world never overlap). */
+export const mapLegend=(friends:boolean,players=false):readonly LegendItem[]=>friends?FRIEND_LEGEND:players?PLAYERS_LEGEND:BASE_LEGEND;
 export const legendTipText=(kind:MapMarkKind)=>`${LEGEND_TIPS[kind].title} ${LEGEND_TIPS[kind].text}`;
 
 /**

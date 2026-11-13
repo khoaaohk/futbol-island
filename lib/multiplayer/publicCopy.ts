@@ -115,6 +115,8 @@ export const PUBLIC_ROSTER={
  title:'Near you',
  empty:'Nobody near you right now.',
  further:'Others are further away.',
+ /** Nov 13 2026: others are only far away and the map shows their rough, unnamed dots (Cap.Map; an older relay: the line above). */
+ furtherMap:'Others are further away — see them on the map.',
  hiddenTitle:'Hidden this visit',
  chosen:'Chosen',
 } as const;

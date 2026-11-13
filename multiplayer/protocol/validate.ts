@@ -1,5 +1,5 @@
 // parseClient / parseServer / encode. Never throw on bad input; return null.
-import { C, S, Emote, MatchKind, MATCH_FIELDS, MATCH_SLOT_MAX, MATCH_SNAP_MAX, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, WORLD_HARD, CAPS_MAX, ISLAND_GOAL, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
+import { C, S, Emote, MatchKind, MATCH_FIELDS, MATCH_SLOT_MAX, MATCH_SNAP_MAX, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, WORLD_HARD, CAPS_MAX, ISLAND_GOAL, MAP_DOTS, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
 import { NAME_COLOURS, RESERVED_NAME_SLOTS, normalizeNick } from './names';
@@ -101,6 +101,18 @@ function matchServerOk(a: unknown[]): boolean {
 }
 
 const MAX_AGE_MS = 60_000;
+/** Map dots: S.Map's cells, each [cellX, cellZ, count] inside WORLD_BOUNDS, count 1..WORLD_HARD, at most MAP_DOTS.maxCells. */
+const MAP_CELL_DM = MAP_DOTS.cellM * 10;
+export const MAP_CELL_RANGE = {
+  minX: Math.floor(WORLD_BOUNDS.minX / MAP_CELL_DM), maxX: Math.floor(WORLD_BOUNDS.maxX / MAP_CELL_DM),
+  minZ: Math.floor(WORLD_BOUNDS.minZ / MAP_CELL_DM), maxZ: Math.floor(WORLD_BOUNDS.maxZ / MAP_CELL_DM),
+} as const;
+function mapCellsOk(v: unknown): boolean {
+  if (!Array.isArray(v) || v.length > MAP_DOTS.maxCells) return false;
+  const R = MAP_CELL_RANGE;
+  return v.every((c) => Array.isArray(c) && c.length === 3 && inRange(c[0], R.minX, R.maxX) && inRange(c[1], R.minZ, R.maxZ) && inRange(c[2], 1, WORLD_HARD));
+}
+
 /** A ball position (decimetres): inside WORLD_BOUNDS. */
 function isBallXYZ(x: unknown, y: unknown, z: unknown): boolean {
   return inBoundsXZ(x, z) && inRange(y, WORLD_BOUNDS.minY, WORLD_BOUNDS.maxY);
@@ -234,6 +246,8 @@ export function parseServer(raw: string): ServerMsg | null {
       return a.length === 2 && inRange(a[1], 0, WORLD_HARD) ? (a as ServerMsg) : null;
     case S.Goal: // phase 3 world (Cap.Goal)
       return a.length === 2 && inRange(a[1], 0, ISLAND_GOAL.max) ? (a as ServerMsg) : null;
+    case S.Map: // map dots (Cap.Map)
+      return a.length === 2 && mapCellsOk(a[1]) ? (a as ServerMsg) : null;
     case S.NameLock:
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && isBit(a[2]) ? (a as ServerMsg) : null;
     case S.EmoteAsk:

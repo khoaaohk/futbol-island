@@ -87,12 +87,12 @@ ok('flag on: the policy states what is true for public play',()=>{
   /Hide and Report/,/Following, In my way, Too many waves, or Something else/,/only how many reports were made each day for each reason/,
   /same Cloudflare service/,/Cloudflare runs the service for Play with friends and for seeing other players/,/about 15 MB of mobile data an hour \(our estimate/,
   /counts from playing with other players/,/reports by their reason/,/1 in 10 devices start as Just me/,/stop other players being shown/,
-  /Reports about another player/,/in memory for about an hour/i])
+  /Reports about another player/,/in memory for about an hour/i,/other players show only as a rough, unnamed dot on the map/,/never shows a name, an outfit or an exact spot/])
   assert.match(P,re,re.source);
  assert(P.includes('Last updated '+withFlag(true,L=>L('components/privacy/PrivacyPolicy.tsx').POLICY_UPDATED_PUBLIC)+'.'),'the public date');
 });
 ok('flag on: the sentences that would be false are gone',()=>{
- for(const s of ['Friends in a party can only use preset emotes.','we keep privacy-protective settings on by default, and we do not nudge',
+ for(const s of ['Other players are not shown on the map','Friends in a party can only use preset emotes.','we keep privacy-protective settings on by default, and we do not nudge',
   'Cloudflare runs the party service for Play with friends: messages pass through it while a party is in use','7a. Play with friends (optional)'])
   assert(!P.includes(s),'still says: '+s);
  const S=withFlag(true,L=>L('lib/site/safety.ts'));
@@ -112,6 +112,8 @@ ok('no banned claims, and the child-facing copy never says "safe"',()=>{
  for(const t of all)for(const b of S.BANNED_CLAIMS)assert(!b.test(t),`"${b.source}" in: ${t.slice(0,80)}`);
  for(const t of [...C.allPublicCopy(),gOn])assert(!/\bsafe(ly|ty)?\b/i.test(t),'never promise safety: '+t);
  assert.equal(C.PRESENCE_CHOICES.length,3);assert.equal(C.REPORT_REASONS.length,4);assert.equal(C.PLAY_LOCK_SETTINGS.length,3);
+ assert.equal(C.PUBLIC_ROSTER.further,'Others are further away.');assert.equal(C.PUBLIC_ROSTER.furtherMap,'Others are further away — see them on the map.');
+ assert(/a rough, unnamed dot on the map/.test(S.SAFE_FAQ.find(f=>f.q==='Can my child chat with strangers?').a),'the FAQ says what the map shows');
  assert.equal(C.publicCountLabel(0),'Nobody else right now');assert.equal(C.publicCountLabel(8),'8 on now');assert.equal(C.publicCountLabel(30),'30 on now');
  assert.equal(C.publicCountLabel(31),'lots on now');assert.equal(C.publicChoiceLabel(8),'With other players · 8 on now');
  assert.deepEqual(C.REPORT_REASONS.map(r=>r.id),[...withFlag(true,L=>L('lib/analytics/countIds.ts')).PUBLIC_REPORT_REASONS]);

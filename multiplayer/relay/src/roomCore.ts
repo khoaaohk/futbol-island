@@ -6,12 +6,12 @@ import {
   HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, isKit, MatchKind, MATCH_ROSTER, MATCH_RATE, MATCH_JOIN_RATE, FLOOD_BURST, MATCH_OWNER_SILENT_MS,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
   CAPS_WORLD, WORLD_HARD, WORLD_SEE_M, WORLD_SEE_BACK_M, QUIET_RANGE_M, WORLD_AWAY_GRACE_MS, WORLD_IDLE_MS, FOLLOW, REPORT, REPORT_REASON_IDS, CloseCode,
-  pickWorldName, ISLAND_GOAL,
+  pickWorldName, ISLAND_GOAL, MAP_DOTS,
   seatedWire, SEATED_IDLE_MS,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
 import type { RoomSummary, FailReason } from './relayStatsCore';
-import type { ClientMsg, Emote, PingKind, MemberInfo, NameIdx, PoseBody, ServerMsg } from '../../protocol';
+import type { ClientMsg, Emote, PingKind, MapCell, MemberInfo, NameIdx, PoseBody, ServerMsg } from '../../protocol';
 
 /** Party persistence (docs/multiplayer-design.md "Party persistence"): how long a gone member keeps their slot. A member whose last
  *  pose said they stepped away on purpose (a room page: Zone.Indoors; a menu, lesson or the walkthrough: Mode.Busy; a background tab:
@@ -111,6 +111,8 @@ interface Member {
   quietSent: number; worldSent: number; reportBucket: TokenBucket;
   /** Phase 3 (Cap.Goal): the last S.Goal value sent (-1 = none) and this member's C.Goal bucket (ISLAND_GOAL.rate). */
   goalSent: number; goalBucket: TokenBucket;
+  /** Map dots (Cap.Map): the last S.Map cell list sent on this socket, encoded ('[]' = none / nothing yet: the client starts empty). */
+  mapSent: string;
 }
 /** Relay v1.8: one shared live match. owner = the member running the MatchSim (-1 nobody); slots: member -> [team, slot] in join order
  *  (Map insertion order: the owner migrates to the earliest remaining joiner). Memory only: a match never survives an eviction. */
@@ -193,6 +195,8 @@ export class RoomCore {
   private reports = new Map<number, { key: string; at: number }[]>();
   private pendingMeta = new Map<Peer, WorldMeta>();
   private worldStepNo = 0;
+  /** Map dots: when the last S.Map pass ran (MAP_DOTS.everyMs apart). */
+  private mapAt = -1e15;
   /** World: a daily counter to RelayStats ('rl:report_<reason>', 'rl:quarantine'); a quarantine hold on an IP hash (WorldLobby). */
   onStat: ((id: string) => void) | null = null;
   onHold: ((ipKey: string) => void) | null = null;
@@ -441,6 +445,7 @@ export class RoomCore {
       if (second) this.followStep(now);
       this.visibility();
       if (second) this.members.forEach((r) => this.worldHints(r));
+      if (second && now - this.mapAt >= MAP_DOTS.everyMs) { this.mapAt = now; this.mapPass(null); } // map dots: every 5 s, change only
     }
     this.fanOut(false);
   }
@@ -745,6 +750,43 @@ export class RoomCore {
     }
   }
 
+  /** Map dots (Cap.Map, MAP_DOTS): S.Map to each Cap.Map member (or only `only`), when its list changed. One O(members) pass builds
+   *  the cell histogram of everyone who may be on the map; each recipient then takes off themself and every member held apart from them
+   *  (a report either way, a blocked following pair either way), so per recipient it costs its own cells only. Counts only: no id,
+   *  name, kit or exact spot ever leaves this function. A quarantined recipient is sent nothing to look for ([]). */
+  private mapPass(only: Member | null): void {
+    let want = false;
+    this.members.forEach((r) => { if (r.peer && (r.caps & Cap.Map) && (!only || r === only)) want = true; });
+    if (!want) return;
+    const D = MAP_DOTS.cellM * 10; // dm
+    const cellOf = new Map<number, number>(), counts = new Map<number, number>(); // member id -> cell key; cell key -> count
+    this.members.forEach((d) => {
+      const p = d.pose;
+      if (!p || !d.peer || d.quarantined || d.room >= 0 || p[6] === Zone.Indoors || (p[7] & PoseFlag.Hidden) !== 0) return;
+      const k = (Math.floor(p[0] / D) + 512) * 1024 + (Math.floor(p[2] / D) + 512);
+      cellOf.set(d.id, k); counts.set(k, (counts.get(k) || 0) + 1);
+    });
+    const apart = new Map<number, Set<number>>(); // recipient id -> ids never counted for them
+    const hold = (a: number, b: number) => { if (a === b) return; let l = apart.get(a); if (!l) apart.set(a, (l = new Set())); l.add(b); };
+    this.members.forEach((m) => m.hides.forEach((id) => { hold(m.id, id); hold(id, m.id); }));
+    this.follow.forEach((f, k) => { if (f.blocked) { const a = Math.floor(k / 64), b = k % 64; hold(a, b); hold(b, a); } });
+    this.members.forEach((r) => {
+      if (!r.peer || !(r.caps & Cap.Map) || (only && r !== only)) return;
+      let cells: MapCell[] = [];
+      if (!r.quarantined) {
+        const minus = new Map<number, number>();
+        const off = (id: number) => { const k = cellOf.get(id); if (k !== undefined) minus.set(k, (minus.get(k) || 0) + 1); };
+        off(r.id); apart.get(r.id)?.forEach(off);
+        counts.forEach((n, k) => { const c = n - (minus.get(k) || 0); if (c > 0) cells.push([Math.floor(k / 1024) - 512, (k % 1024) - 512, Math.min(WORLD_HARD, c)]); });
+        if (cells.length > MAP_DOTS.maxCells) cells = cells.sort((a, b) => b[2] - a[2]).slice(0, MAP_DOTS.maxCells); // the fullest cells
+        cells.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+      }
+      const text = JSON.stringify(cells);
+      if (text === r.mapSent) return;
+      r.mapSent = text; this.send(r.peer, [S.Map, cells]);
+    });
+  }
+
   /** Phase 3: today's goal count (a new UTC day starts again at 0). */
   private goalToday(now: number): number {
     const day = Math.floor(now / 86_400_000);
@@ -918,6 +960,7 @@ export class RoomCore {
       known: new Set(), met: new Set(), hides: new Set(), quarantined: false, ipKey: null, rkey: 't' + token, activeAt: now, ax: NaN, az: NaN,
       quietSent: -1, worldSent: -1, reportBucket: new TokenBucket(REPORT.rate[0], REPORT.rate[1]),
       goalSent: -1, goalBucket: new TokenBucket(ISLAND_GOAL.rate[0], ISLAND_GOAL.rate[1]),
+      mapSent: '[]',
     };
   }
 
@@ -976,6 +1019,7 @@ export class RoomCore {
     if (m.caps & Cap.NameLock) this.members.forEach((x) => { if (x.nickLocked) this.send(peer, [S.NameLock, x.id, 1]); });
     if (m.caps & Cap.Kit) this.members.forEach((x) => { if (x !== m && x.kit && this.vis(m, x)) this.send(peer, [S.Kit, x.id, x.kit]); });
     if (this.world) { m.quietSent = -1; m.worldSent = -1; m.goalSent = -1; this.worldHints(m); } // relay v2.0: the first S.Quiet / S.World at once
+    if (this.world) { m.mapSent = '[]'; if (m.caps & Cap.Map) this.mapPass(m); } // map dots: a new socket starts empty; its first cells at once
     if (m.caps & Cap.Match) this.fields.forEach((_f, id) => this.send(peer, this.rosterMsg(id)));
     else this.matchDrop(m); // a socket that stopped understanding matches (an old tab resumed the slot) leaves its match
   }
