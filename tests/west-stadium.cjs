@@ -49,7 +49,7 @@ assert.equal(chunks.length,world.westChunkCount,'every west chunk is gated');
 console.log(`west chunks (draw calls when all in view): ${chunks.length}; triangles: ${Math.round(tris)}; trees ${st.trees}, palms ${st.palms}, flags ${st.flags}, hedges ${st.hedges}, beds ${st.beds}`);
 assert(chunks.length<=90,'west draw calls bounded: '+chunks.length);assert(tris<=150000,'west triangles bounded: '+Math.round(tris));
 // Phase 1 (park + placeholder bowl): 66 chunks, 50,950 triangles. The stands add chunks only where the stadium reaches new cells.
-console.log('stadium build:',JSON.stringify(world.stadium));
+console.log('stadium build:',JSON.stringify(world.stadium));assert(chunks.length<=75&&tris<=90000,'phase 2 stadium budget (chunks / triangles)');
 assert(!scene.children.some(o=>o.name==='park-pond'),'the pond is batched into its chunk (no loose mesh)');
 
 // 4. The map draws the stadium, the park and the plaza.
@@ -116,6 +116,19 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
 {const l=Q.stadiumSponsorLayout();assert.equal(load('lib/stadium/sponsors/layout.ts').layoutProblems(l).join(','),'');assert.equal(l.flags.length,14);assert.equal(l.fascia.length,2);
  assert(!blocked(S.x-35.5,S.z-25),'a gap between two side boards is open');assert(blocked(S.x-35.5,S.z-37.5),'a board is solid');
  assert(Q.inGate(G.x-5,G.z)&&!Q.inGate(G.x+5,G.z),'through the gate');}
+// The runtime Town drives (stadiumSit.ts): the prompt, Sit, held by the seat, the stick gets up; never trapped.
+{const {createStadiumSit,SIT_KEY}=load('lib/town/stadiumSit.ts');let wakes=0;const sit=createStadiumSit({parent:new T.Group(),wake:()=>wakes++});
+ assert.equal(sit.want(0,0,0,true),null,'nothing far away');
+ const p=Q.standWorld(W,W.inner+5*Q.ROW_DEPTH+.3,8),h=Q.rowHeight(5),w=sit.want(p.x,p.z,h,true);assert(w&&w.key===SIT_KEY&&w.distance<1.6,'Sit offered on a row');
+ assert.equal(sit.want(p.x,p.z,h,false),null,'not while riding / falling / in a menu');sit.want(p.x,p.z,h,true);
+ const seat=sit.press(true);assert(seat&&sit.seated&&sit.trick()&&sit.trick().w===1,'seated (reduced motion: at once)');assert(wakes>0,'wakes the loop');
+ const input={x:0,z:0,kick:true,juggle:false};assert(sit.holdPlayer(1/60,input,new Set(),{walk:true,x:seat.x,z:seat.z,reduced:true})&&!input.kick,'held: kicks off');
+ assert.deepEqual({...sit.want(seat.x,seat.z,seat.y,true)},{key:SIT_KEY,distance:0},'the prompt stays (Stand up)');
+ assert(!sit.holdPlayer(1/60,{x:0,z:1,kick:false,juggle:false},new Set(),{walk:true,x:seat.x,z:seat.z,reduced:true})&&!sit.seated&&!sit.trick(),'the stick gets up');
+ sit.want(p.x,p.z,h,true);sit.press(false);assert.equal(sit.phase,'sitting');for(let i=0;i<60;i++)sit.holdPlayer(1/60,{x:0,z:0,kick:false,juggle:false},new Set(),{walk:true,x:sit.seat.x,z:sit.seat.z,reduced:false});
+ assert.equal(sit.phase,'seated','eases in');assert(!sit.holdPlayer(1/60,{x:0,z:0,kick:false,juggle:false},new Set(['w']),{walk:true,x:sit.seat.x,z:sit.seat.z,reduced:false}),'a key gets up');
+ for(let i=0;i<60;i++)sit.holdPlayer(1/60,{x:0,z:0,kick:false,juggle:false},new Set(),{walk:true,x:0,z:0,reduced:false});assert(sit.phase==='standing'&&!sit.trick(),'eased out');
+ const cam=new T.PerspectiveCamera();cam.position.set(1,2,3);sit.applyCamera(cam);assert.deepEqual(cam.position.toArray(),[1,2,3],'standing: the camera is untouched');}
 // The map draws four stands with open corners.
 assert(/data-stadium-stand=/.test(map),'the map draws the stands');
 console.log('west stadium phase 2: ok');
