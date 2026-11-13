@@ -11,18 +11,27 @@ import * as T from 'three';
 import {npcSeatPose} from '../graphics/npcSeatPose';
 import type {TrickPose} from '../graphics/trickPose';
 import {STADIUM} from './westParkLayout';
-import {createSitMachine,inGate,nearestSeat,seatView,sitDown,standUp,stepSit,stadiumSponsorLayout,GATE_ARCH_X,type Seat} from './stadiumSeats';
+import {createSitMachine,inGate,nearestSeat,seatView,followLook,sitDown,standUp,stepSit,stadiumSponsorLayout,GATE_ARCH_X,FOLLOW_RATE,type Seat} from './stadiumSeats';
+import {createStadiumScreen,screenMinute,type ScreenScore} from './stadiumScreen';
+import {BIB_COLOURS} from './beanLooks';
 import {ensureStadiumSponsors,SPONSOR_LOAD_RADIUS} from '../stadium/sponsors/index';
 import {countStadiumVisit} from '../analytics/sponsorEvents';
 
 export const SIT_KEY='stadium-seat';
 /** The camera's far plane while seated (m): the whole bowl (the far stand's back is ~115 m away, the end stand from the other end ~150 m). */
 export const SEAT_FAR=175;
+/** The big screen's score shows within this distance of the stadium centre (m); beyond it the plane hides (heat). */
+export const SCREEN_RADIUS=190;
+/** What Town hands over each frame while the stadium's match is awake (fieldRuntime's entry): its sim and its ball. */
+export type StadiumMatch={sim:{score:{gold:number;blue:number};clock:number};ball:{position:{x:number;z:number}}};
 const MOVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'] as const;
 
 export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void}){
  const m=createSitMachine(),pose:TrickPose=npcSeatPose('bench');pose.w=0;
- let farSaved=0,near:Seat|null=null,view:ReturnType<typeof seatView>|null=null,sponsorAsked=false,wasOutside=true,promptSeated=false;
+ let farSaved=0,near:Seat|null=null,view:ReturnType<typeof seatView>|null=null,sponsorAsked=false,wasOutside=true,promptSeated:boolean|null=null,promptLive=false;
+ let dc=Infinity,live=false,sponsors:{setScreenSponsor:(on:boolean)=>void}|null=null,screenSponsor=true,looking=false;
+ const screen=createStadiumScreen(ports.parent,{home:BIB_COLOURS.stadium.home,away:BIB_COLOURS.stadium.away}),score:ScreenScore={home:'Red',away:'Blue',gold:0,blue:0,minute:0};
+ const ball={x:0,z:0},look={x:0,z:0},want={x:0,z:0};
  const cam=new T.PerspectiveCamera(),/* a camera: lookAt aims its -Z (an Object3D's would aim +Z, away from the pitch) */ camQ=new T.Quaternion(),camP=new T.Vector3(),v=new T.Vector3();
  const held=()=>m.phase==='sitting'||m.phase==='seated';
  return {
@@ -33,9 +42,9 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void}){
   /** Each frame (next to the ladder's prompt): what the prompt offers (null = nothing), the sponsor load and the gate count. canSit: on foot, on the ground,
    *  not falling, no menu. */
   want(x:number,z:number,height:number,canSit:boolean):{key:string;distance:number}|null{
-   const dc=Math.hypot(x-STADIUM.x,z-STADIUM.z);
+   dc=Math.hypot(x-STADIUM.x,z-STADIUM.z);
    if(!sponsorAsked&&dc<SPONSOR_LOAD_RADIUS){sponsorAsked=true;
-    ensureStadiumSponsors(ports.parent,stadiumSponsorLayout()).then(s=>{s.group.position.set(STADIUM.x,-.045,STADIUM.z);s.setScreenSponsor(true);ports.wake();}).catch(()=>{sponsorAsked=false;});}
+    ensureStadiumSponsors(ports.parent,stadiumSponsorLayout()).then(s=>{s.group.position.set(STADIUM.x,-.045,STADIUM.z);sponsors=s;screenSponsor=!live;s.setScreenSponsor(screenSponsor);ports.wake();}).catch(()=>{sponsorAsked=false;});}
    const gate=inGate(x,z);if(gate&&wasOutside)countStadiumVisit();if(gate)wasOutside=false;else if(x>GATE_ARCH_X||dc>140)wasOutside=true;
    if(held())return {key:SIT_KEY,distance:0};
    near=canSit&&dc<110&&height>.2?nearestSeat(x,z,height):null;
@@ -44,7 +53,7 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void}){
   /** The prompt pressed: sit on the offered seat (returns it: Town moves the player there) or stand up (returns null). */
   press(reduced:boolean):Seat|null{
    if(held()){standUp(m,reduced);ports.wake();return null;}
-   if(!near||!sitDown(m,near,reduced))return null;view=seatView(near);ports.wake();return near;
+   if(!near||!sitDown(m,near,reduced))return null;view=null;looking=false;ports.wake();return near;
   },
   /** Movement tick: while seated, holds the player (returns true); the stick, the keys, a ride or a move away get up. */
   holdPlayer(dt:number,input:{x:number;z:number;kick:boolean;juggle:boolean;shotPower?:number;charging?:boolean},keys:ReadonlySet<string>,o:{walk:boolean;x:number;z:number;reduced:boolean}){
@@ -56,14 +65,27 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void}){
    if(hold){input.kick=input.juggle=false;input.shotPower=0;input.charging=false;}
    return hold;
   },
+  /** Each frame (Town, next to want()): the stadium's match while it is awake (null = no match on / asleep). The big screen
+   *  shows its score and minute near the stadium, the sponsor card otherwise; the stand view follows its ball. */
+  match(e:StadiumMatch|null,nowMs:number){
+   live=!!e;if(e){ball.x=e.ball.position.x;ball.z=e.ball.position.z;score.gold=e.sim.score.gold;score.blue=e.sim.score.blue;score.minute=screenMinute(e.sim.clock);}
+   if(sponsors&&screenSponsor===live){screenSponsor=!live;sponsors.setScreenSponsor(screenSponsor);}
+   screen.update(live&&dc<SCREEN_RADIUS,live?score:null,nowMs);
+  },
+  /** A match is on at the stadium (the prompt says "Sit and watch"). */
+  get live(){return live;},
   /** After the follow camera is placed: ease to the stand view and back. */
-  applyCamera(camera:T.PerspectiveCamera){
+  applyCamera(camera:T.PerspectiveCamera,dt=1/60){
    // Heat: the stand view looks level across the island (the follow camera looks down on ~100 m of it), so the far plane comes in
    // to SEAT_FAR while seated: the far stands' backs and roofs hide what it cuts; without it ~900 draw calls (desktop) on screen.
    if(m.blend>.5){if(!farSaved){farSaved=camera.far;camera.far=SEAT_FAR;camera.updateProjectionMatrix();}}
    else if(farSaved){camera.far=farSaved;farSaved=0;camera.updateProjectionMatrix();}
-   if(m.blend<=0||!view)return;const k=m.blend*m.blend*(3-2*m.blend);
-   camP.set(view.x,view.y,view.z);cam.position.copy(camP);cam.lookAt(v.set(view.lx,view.ly,view.lz));camQ.copy(cam.quaternion);
+   if(m.blend<=0||!m.seat)return;view??=seatView(m.seat,camera.aspect<1);// portrait phone: the raised view (stadiumSeats SEAT_VIEW)
+   const k=m.blend*m.blend*(3-2*m.blend);
+   // Watching a match: the look point eases toward the ball (smooth, two multiplies a frame); otherwise the seat's pitch point.
+   followLook(view,live?ball:null,want);
+   if(!looking){look.x=want.x;look.z=want.z;looking=true;}else{const f=1-Math.exp(-FOLLOW_RATE*Math.min(dt,.1));look.x+=(want.x-look.x)*f;look.z+=(want.z-look.z)*f;}
+   camP.set(view.x,view.y,view.z);cam.position.copy(camP);cam.lookAt(v.set(look.x,view.ly,look.z));camQ.copy(cam.quaternion);
    camera.position.lerp(camP,k);camera.quaternion.slerp(camQ,k);
   },
   /** Place the Sit / Stand up prompt (Town's placeEntryPrompt) over the seat. */
@@ -72,7 +94,7 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void}){
    if(!hidden&&seat){
     if(held()){place(el,width/2,height-150);}
     else{v.set(seat.x,seat.y+1.7,seat.z).project(camera);hidden=v.z< -1||v.z>1;if(!hidden)place(el,T.MathUtils.clamp((v.x+1)*width/2,90,width-90),T.MathUtils.clamp((1-v.y)*height/2,90,height-160));}
-    const seatedNow=held();if(seatedNow!==promptSeated||!el.dataset.ready){promptSeated=seatedNow;el.dataset.ready='1';el.textContent=seatedNow?'Stand up':'Sit';el.setAttribute('aria-label',seatedNow?'Stand up':'Sit down and watch');}
+    const seatedNow=held();if(seatedNow!==promptSeated||live!==promptLive){promptSeated=seatedNow;promptLive=live;const label=seatedNow?'Stand up':live?'Sit and watch':'Sit';el.textContent=label;el.setAttribute('aria-label',seatedNow?'Stand up':live?'Sit down and watch the match':'Sit down');}
    }
    if(el.hidden!==hidden)hide(el,hidden);
   },

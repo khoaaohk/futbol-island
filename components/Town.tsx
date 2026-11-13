@@ -142,12 +142,14 @@ import {LADDER_FACING,nearLadderFoot,atLadderGate,footX as ladderFootX,footZ as 
 import {fillLadderPose} from '@/lib/graphics/ladderPose';import {createTrickPose} from '@/lib/graphics/trickPose';
 import {roofJumpMotion,applyRoofJumpPose} from '@/lib/town/rooftopJump';
 import {type MapFootprint} from './IslandOverview';
-import {VENUES,ISLAND_SQUARE,ARCADE_DOOR,COACHES_DOOR,venueById,venueEntrance,nearestVenue,fieldSurfaceHeight,liveHalfX,liveHalfZ,liveWorldX,liveWorldZ,liveFieldPoint,BEACH_VENUE,type Format,type LiveFormat,type LiveVenue} from '@/lib/town/venues';
+import {VENUES,ISLAND_SQUARE,ARCADE_DOOR,COACHES_DOOR,venueById,venueEntrance,nearestVenue,fieldSurfaceHeight,liveHalfX,liveHalfZ,liveWorldX,liveWorldZ,liveFieldPoint,BEACH_VENUE,STADIUM_VENUE,type Format,type LiveFormat,type LiveVenue} from '@/lib/town/venues';
 import {joinableFormat} from '@/lib/town/liveJoin';
 /** Pitches with a HUD pitch bar: the island pitches, plus the Sharks Beach court once its live match is joinable (Play only, no lesson).
  *  The bar's stand-in box is in world axes, so the quarter-turned court enters with its x/z extents swapped (liveHalfX/Z). */
 const BEACH_BAR:readonly LiveVenue[]=joinableFormat('beach')?[{...BEACH_VENUE,width:2*liveHalfX(BEACH_VENUE),length:2*liveHalfZ(BEACH_VENUE),yaw:0}]:[];
-const PITCH_BARS:readonly LiveVenue[]=[...VENUES,...BEACH_BAR];
+/** Play-only bars on live venues that are not lesson pitches: the Sharks Beach court and the West Coast Stadium (Nov 12 2026, big matches only). */
+const PLAY_BARS:readonly LiveVenue[]=[...BEACH_BAR,...(joinableFormat('stadium')?[STADIUM_VENUE]:[])];
+const PITCH_BARS:readonly LiveVenue[]=[...VENUES,...PLAY_BARS];
 import {buildFormatFields} from '@/lib/town/fields';
 import {createFieldRuntime,teachingPoseAdvances} from '@/lib/town/fieldRuntime';
 import {createFieldCollision} from '@/lib/town/fieldCollision';
@@ -216,7 +218,7 @@ import {createRideSuspension,nearSummit,summitGradient} from '@/lib/town/rideSlo
 import {createSummitActivities} from '@/lib/graphics/summitActivities';// Summit Kick (Oct 12 2026)
 import SummitKickHud from './SummitKickHud';
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
-import {createStadiumSit,SIT_KEY as STADIUM_SIT_KEY} from '@/lib/town/stadiumSit';// West Stadium: sit in the stands (Nov 12 2026)
+import {createStadiumSit,SIT_KEY as STADIUM_SIT_KEY} from '@/lib/town/stadiumSit';import {STADIUM_ARRIVAL} from '@/lib/town/westParkLayout';// West Stadium: sit in the stands (Nov 12 2026)
 import {createPaintEasel} from '@/lib/graphics/paintEasel';// Summit Isle painting easel (Oct 14 2026)
 // The sea (Oct 15 2026, docs/swimming-research.md P0): wading, swimming, splash-downs, the water HUD, the parked ball.
 import {strokeSurge,fovKick,easeFov} from '@/lib/town/water/swimMotion';// Natural swimming (Oct 27 2026, docs/SWIM_NATURAL_OCT27.md)
@@ -479,7 +481,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     canvasHost.addEventListener('gesturechange',gesture,{passive:false});
     return()=>{canvasHost.removeEventListener('wheel',pinch);canvasHost.removeEventListener('gesturestart',gesture);canvasHost.removeEventListener('gesturechange',gesture);};
   },[]);
-  const travel=useRef<District|'square'|'coaches'|'store'|'cay'|'museum'|'shop'|'summit'|null>(null),mapRef=useRef(false);
+  const travel=useRef<District|'square'|'coaches'|'store'|'cay'|'museum'|'shop'|'summit'|'stadium'|null>(null),mapRef=useRef(false);
   const [district,setDistrict]=useState<District>('coast'),[sceneReady,setSceneReady]=useState(false),[failed,setFailed]=useState(false);
   const [minimumLoadElapsed,setMinimumLoadElapsed]=useState(returningFromArcade);
   const loadingComplete=sceneReady&&minimumLoadElapsed;
@@ -577,7 +579,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   mapRef.current=map||mapMounted;
   // Moving emotes end when a menu, dialog or room opens (lib/town/moveEmotes.ts moveEmoteStop).
   const moveUiOpen=useRef(false);moveUiOpen.current=!!(talkingNpc||arcadeOpen||storeOpen||coachesOpen||ferryOpen||learningOpen||museumOpen||shopOpen||cardOfferOpen||customizerOpen||fishingOpen||balancesOpen||settingsOpen||playsPickerOpen||konbiniDoor||onboardingOpen);
-  const go=(to:District|'square'|'coaches'|'store'|'cay'|'museum'|'shop'|'summit')=>{if(to==='coast'||to==='oldtown'){goField(to==='coast'?'futsal':'7v7');return;}fieldSession.current=null;setFieldCatalog(null);if(lessonRef.current)lessonCommand.current='exit';travel.current=to;setMap(false);};
+  const go=(to:District|'square'|'coaches'|'store'|'cay'|'museum'|'shop'|'summit'|'stadium')=>{if(to==='coast'||to==='oldtown'){goField(to==='coast'?'futsal':'7v7');return;}fieldSession.current=null;setFieldCatalog(null);if(lessonRef.current)lessonCommand.current='exit';travel.current=to;setMap(false);};
   useEffect(()=>{
     const parent=host.current;if(!parent)return;
     bootMark('town:effect');
@@ -924,7 +926,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const ladderPose=createTrickPose(),ladderPromptV=new T.Vector3();const ladderSeen={rungs:0,slides:0,landed:0,ride:0};let ladderNoteAt=-1e9,ladderPromptDown=false;
     ladderActions.current=()=>{rooftop.ladder.request();tapHaptic();sound.ui('click');};
     // West Stadium (stadiumSit.ts): Sit snaps to the nearest free seat (facing the pitch); Stand up / the stick / a ride gets up.
-    const stadiumSit=createStadiumSit({parent:scene,wake:()=>wakeLoopRef.current()});
+    const stadiumSit=createStadiumSit({parent:scene,wake:()=>wakeLoopRef.current()});const stadiumMatch=games.entries.find(e=>e.venue.id==='stadium')??null;
     stadiumSitActions.current=()=>{const seat=stadiumSit.press(window.matchMedia('(prefers-reduced-motion: reduce)').matches);if(seat){location.x=seat.x;location.z=seat.z;rooftop.reset(seat.x,seat.z,seat.y);velocity.x=velocity.z=0;player.root.rotation.y=seat.yaw;}tapHaptic();sound.ui('click');};
     const islandNpcs=createIslandNpcs(scene,{isWalkable:(x,z)=>rooftop.canLand(x,z)&&Math.abs(rooftop.surface(x,z)-fieldSurfaceHeight(x,z))<.2&&!world.roads.some(road=>Math.abs(x-road.x)<road.w/2+.4&&Math.abs(z-road.z)<road.d/2+.4),heightAt:fieldSurfaceHeight},ballReactions);
     disposers.add(()=>islandNpcs.dispose());
@@ -1822,7 +1824,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       }
       if(fieldTravel.current){if(rideRef.current!=='walk'){pendingRide.current=null;cancelLanding.current=false;rideRef.current='walk';setRideMode('walk');}suppressInitialArrival=false;streetTraffic.rider.index=-1;rampMotion.reset();arrivalFacing=Math.atan2(16,33);player.root.rotation.y=arrivalFacing;characterArrival.restart();const v=venueById(fieldTravel.current),entrance=venueEntrance(v),p=clearSpotNear(entrance.x,entrance.z,world.obstacles);/* A1 (Oct 3 2026): the 7v7 entrance is inside a vending machine */location.x=p.x;location.z=p.z;velocity.x=velocity.z=0;orb.x=p.x+.7;orb.z=p.z;orb.vx=orb.vz=0;fieldTravel.current=null;rooftop.reset(p.x,p.z);camera.position.set(p.x+18,23+fieldSurfaceHeight(p.x,p.z),p.z+30);resetInputs();}
       // Fast travel lands ON FOOT at the door (G-13): walking shows the Enter prompt there; the ride-change block below resets flight.
-      if(travel.current){if(rideRef.current!=='walk'){pendingRide.current=null;cancelLanding.current=false;rideRef.current='walk';setRideMode('walk');}suppressInitialArrival=false;streetTraffic.rider.index=-1;rampMotion.reset();arrivalFacing=Math.atan2(16,33);player.root.rotation.y=arrivalFacing;characterArrival.restart();if(travel.current==='store'){arrivalFacing=SQUARE_VENDING_ARRIVAL.yaw;player.root.rotation.y=arrivalFacing;}const named=travel.current==='square'?ARCADE_DOOR:travel.current==='coaches'?COACHES_DOOR:travel.current==='store'?SQUARE_VENDING_ARRIVAL:travel.current==='cay'?CORAL_CAY_ARRIVAL:travel.current==='museum'?museumExitPoint():travel.current==='shop'?shopExitPoint():travel.current==='summit'?SUMMIT_LANDMARKS.gate:DISTRICTS[travel.current],target=clearSpotNear(named.x,named.z,world.obstacles);location.x=target.x;location.z=target.z;velocity.x=velocity.z=0;orb.x=target.x+.7;orb.z=target.z;orb.vx=orb.vz=0;travel.current=null;rooftop.reset(target.x,target.z);camera.position.set(target.x+18,23+fieldSurfaceHeight(target.x,target.z),target.z+30);resetInputs();}
+      if(travel.current){if(rideRef.current!=='walk'){pendingRide.current=null;cancelLanding.current=false;rideRef.current='walk';setRideMode('walk');}suppressInitialArrival=false;streetTraffic.rider.index=-1;rampMotion.reset();arrivalFacing=Math.atan2(16,33);player.root.rotation.y=arrivalFacing;characterArrival.restart();if(travel.current==='store'){arrivalFacing=SQUARE_VENDING_ARRIVAL.yaw;player.root.rotation.y=arrivalFacing;}if(travel.current==='stadium'){arrivalFacing=STADIUM_ARRIVAL.yaw;player.root.rotation.y=arrivalFacing;}const named=travel.current==='square'?ARCADE_DOOR:travel.current==='coaches'?COACHES_DOOR:travel.current==='store'?SQUARE_VENDING_ARRIVAL:travel.current==='cay'?CORAL_CAY_ARRIVAL:travel.current==='museum'?museumExitPoint():travel.current==='shop'?shopExitPoint():travel.current==='summit'?SUMMIT_LANDMARKS.gate:travel.current==='stadium'?STADIUM_ARRIVAL:DISTRICTS[travel.current],target=clearSpotNear(named.x,named.z,world.obstacles);location.x=target.x;location.z=target.z;velocity.x=velocity.z=0;orb.x=target.x+.7;orb.z=target.z;orb.vx=orb.vz=0;travel.current=null;rooftop.reset(target.x,target.z);camera.position.set(target.x+18,23+fieldSurfaceHeight(target.x,target.z),target.z+30);resetInputs();}
       if(previousRide!==rideRef.current){rampMotion.reset();rideChange.trigger(({walk:1,scooter:1.65,bike:2.15,moped:2.3,jetpack:1.4} as const)[rideRef.current]*.54);jetActions.reset();sound.ride(rideRef.current);if(rideRef.current==='jetpack'){flightMotion.reset();summitFlight.reset();flight.cruiseHeight=INITIAL_FLIGHT_HEIGHT;flight.height=rooftop.state.height;flight.startHeight=flight.height;flight.takeoffTime=0;flight.landTime=-1;flight.landing=null;}velocity.x=velocity.z=0;walkBall.reset({...location,y:rooftop.state.height,yaw:player.root.rotation.y});resetInputs(true);previousRide=rideRef.current;}
       if(Math.hypot(location.x-visualLocation.x,location.z-visualLocation.z)>3){previousLocation.x=location.x;previousLocation.z=location.z;previousFlightHeight=flight.height;accumulator=0;}
       if(fieldMenu.current){if(!wasLearning)resetInputs();velocity.x=velocity.z=0;accumulator=0;previousLocation.x=location.x;previousLocation.z=location.z;previousFlightHeight=flight.height;}
@@ -2160,7 +2162,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(!learningFormat.current)liveJoin.cameraApply(camera,active?dt:0,reduced);
       if(!learningFormat.current){if(emoteCam.active){const pv=player.root.position,n=emoteNpc,close=n&&(n.fx.kind>=0||n.ix!==null)&&Math.hypot(n.position.x-pv.x,n.position.z-pv.z)<(rideScript.s?EMOTE_BOUNDS.pairMaxGap:ecsRide()?7:12);emoteCam.track(rideScript.s?location.x:pv.x,pv.y,rideScript.s?location.z:pv.z,ctxOn()&&ctxFx.script!.ctx==='fly'?((ctxFx.friendD=nearestFlyingFriend(pv,friendsNow(),friendFly))>=0&&ctxFx.friendD<=FLY_CAMERA_PAIR_RANGE?friendFly:null):close?n!.position:passAirOn&&emoteFx.kind===EMOTE.PassBall?passAir:null);}emoteCam.apply(camera,dt,emoteCamSync(),reduced);{const pv=player.root.position;moveNudge.apply(camera,dt,moveFx.s?moveNudgeGoal({reduced,zooming:emoteCam.active,speed:Math.hypot(velocity.x,velocity.z),age:moveFx.age,end:moveFx.end}):0,pv.x,pv.y+1.2,pv.z);}/* a moving emote: no zoom, only a gentle eased nudge (emoteCameraMath.ts moveNudgeGoal) */}
       if(!learningFormat.current)jobs.applyCamera(camera,dt,reduced);
-      if(!learningFormat.current){cannon.applyCamera(camera,dt,reduced);easel.applyCamera(camera,dt,reduced);zipline.applyCamera(camera,dt,reduced);stadiumSit.applyCamera(camera);}
+      if(!learningFormat.current){cannon.applyCamera(camera,dt,reduced);easel.applyCamera(camera,dt,reduced);zipline.applyCamera(camera,dt,reduced);stadiumSit.applyCamera(camera,dt);}
       // The eyepiece sits at the player's head: hide the player (and their ride, which hangs off player.root) while looking
       // through it, so the view never shows the character (Oct 14 2026, user). Restored exactly as it was on the way out.
       // A7: hidden behind a building: the foot ring draws through it so the player is never lost (~6 Hz probe, no new draw).
@@ -2226,7 +2228,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
           if(score<bestFieldScore){bestFieldScore=score;visibleVenue=v.id;}
         }
         // The Sharks Beach court's Play-only bar (Nov 4 2026): the same "standing in the court" test (its box in world axes).
-        for(const v of BEACH_BAR){if(Math.abs(player.root.position.x-v.x)>v.width/2+3||Math.abs(player.root.position.z-v.z)>v.length/2+3)continue;
+        for(const v of PLAY_BARS){if(Math.abs(player.root.position.x-v.x)>v.width/2+3||Math.abs(player.root.position.z-v.z)>v.length/2+3)continue;
           const score=Math.min(pitchVisibility(camera,v.x,.2,v.z,v.width,v.length),1e3);if(score<bestFieldScore){bestFieldScore=score;visibleVenue=v.id;}}
       }
       cachedVisibleVenue=visibleVenue;
@@ -2304,6 +2306,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(prompt.hidden!==hidden)setUIHidden(prompt,hidden);ridePromptShown=!hidden;}}
       // The lighthouse ladder (lighthouseLadder.ts): "Climb" at its foot, "Climb down" at the gallery's gate (on foot; pushing works too).
       const ladderKind=canEnter&&rideRef.current==='walk'&&!rooftop.ladder.active&&!rooftop.state.falling?(nearLadderFoot(location.x,location.z,rooftop.state.height,1.5)?1:atLadderGate(location.x,location.z,rooftop.state.height,1.3)?2:0):0;
+      {const se=stadiumMatch;stadiumSit.match(se&&!se.dormant?se:null,now);}// West Stadium (phase 3): the big screen's score, the stand view's ball follow
       const sitWant=stadiumSit.want(location.x,location.z,rooftop.state.height,canEnter&&rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.ladder.active&&streetTraffic.rider.index<0);// West Stadium: Sit / Stand up
       stadiumSit.prompt(uiElement<HTMLButtonElement>('[data-stadium-sit]'),!!sitWant&&hudFocusNow==='enter'&&focusArbiter.current?.key===STADIUM_SIT_KEY,camera,fullWidth,fullHeight,placeEntryPrompt,setUIHidden);
       const ladderWant=ladderKind?{key:'ladder',distance:ladderKind===1?Math.hypot(ladderFootX-location.x,ladderFootZ-location.z):Math.hypot(ladderGateX-location.x,ladderGateZ-location.z)}:null;
@@ -2467,7 +2470,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {/* Clear path (Oct 4 2026): the pitch card starts or continues this pitch's Paths lesson (components/FieldPathCard.tsx). */}
     {VENUES.map(v=><FieldPathCard key={v.id} venue={v} onPlays={()=>setFieldCatalog(v.id)} onLaunch={()=>{liveJoinRef.current?.ground();}} onPlay={()=>liveJoinRef.current?.press('play',true)}/>)}
     {/* The Sharks Beach court (Nov 4 2026): a Play-only bar (no beach lesson), shown when its live match is joinable. */}
-    {BEACH_BAR.map(v=><FieldPathCard key={v.id} venue={v} onPlays={()=>{}} onLaunch={()=>{liveJoinRef.current?.ground();}} onPlay={()=>liveJoinRef.current?.press('play',true)}/>)}
+    {PLAY_BARS.map(v=><FieldPathCard key={v.id} venue={v} onPlays={()=>{}} onLaunch={()=>{liveJoinRef.current?.ground();}} onPlay={()=>liveJoinRef.current?.press('play',true)}/>)}
     </div>
 
     {ready&&!failed&&<><aside className={'town-minimap'+(minimapCollapsed?' is-minimized':'')}>
@@ -2490,7 +2493,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     {failed&&<div className="town-loading"><h2>The island needs WebGL.</h2><p>Enable hardware acceleration in your browser, then reload.</p><button className="pixel-button" onClick={()=>window.location.reload()}>TRY AGAIN</button></div>}
     {guideMounted.current&&<PositionGuide selection={positionSelection} onClose={()=>{setPositionSelection(null);gamesRef.current?.setHoverPaused(null);}}/>}
     <div data-position-tip className="live-position-tip" role="status" hidden/>
-    <MovingIslandTravelMap store={positionStore} open={map} onOpenChange={setMap} {...mapFootprints} onSelect={destination=>{if(destination==='store'||destination==='square'||destination==='coaches'||destination==='cay'||destination==='museum'||destination==='summit'||destination==='shop')go(destination);else goField(destination);}}/>
+    <MovingIslandTravelMap store={positionStore} open={map} onOpenChange={setMap} {...mapFootprints} onSelect={destination=>{if(destination==='store'||destination==='square'||destination==='coaches'||destination==='cay'||destination==='museum'||destination==='summit'||destination==='shop'||destination==='stadium')go(destination);else goField(destination);}}/>
     {/* Inside the provider (QA Oct 22 2026) so the party's notes join the HUD stack under the coins bar like every other toast. */}
     {multiplayerEnabled()&&<PartyHost islandReady={ready&&!failed} introDone={!onboardingOpen} connection={partyConnection()} look={partyLook} onTrack={countParty} onHiddenChange={onHiddenFriends} onMutedChange={onMutedFriends} publicBlocked={toastBlocked} onPublicCard={countPublicHint}/>}
     {publicWorldEnabled()&&<PlayerCard blocked={toastBlocked} onHideFriend={onHiddenFriends}/>}{publicWorldEnabled()&&ready&&!failed&&<IslandLifeToast blocked={toastBlocked}/>}

@@ -18,7 +18,7 @@ import {JOBS} from '@/lib/town/jobs/jobCatalog';
 import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
 import {placeJobMarkers,placeGashaponMarkers,capsuleGlyph} from '@/lib/town/mapMarkers';
 import {islandGashaponMachines} from '@/lib/gashapon/machines';
-import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_GROVES,parkPathLines} from '@/lib/town/westParkLayout';
+import {STADIUM,STADIUM_ARRIVAL,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_GROVES,parkPathLines} from '@/lib/town/westParkLayout';
 import {STANDS,standBack,standRect,standSpans} from '@/lib/town/stadiumSeats';
 import SummitIsleMap from './SummitIsleMap';
 import ZiplineMapMark from './ZiplineMapMark';
@@ -71,7 +71,7 @@ function ExploreMarks({localMap}:{localMap:boolean}){
 }
 const NONE:ReadonlySet<string>=new Set();
 export type MapFootprint={x:number;z:number;w:number;d:number;cornerRadius?:number};
-export type MapDestination=Format|'square'|'store'|'coaches'|'cay'|'museum'|'shop'|'summit';
+export type MapDestination=Format|'square'|'store'|'coaches'|'cay'|'museum'|'shop'|'summit'|'stadium';
 function IslandOverview({roads,buildings,position,markerPosition,onSelect,active=true,frames,friends,onFriendTip}:{roads:MapFootprint[];buildings:MapFootprint[];position?:{x:number;z:number};markerPosition?:{x:number;z:number};onSelect?:(destination:MapDestination)=>void;active?:boolean;frames?:(listener:(x:number,z:number)=>void)=>()=>void;
  /** Full map: draw the party's friend dots (true only while the travel map is open). The minimap draws them while `active`. */
  friends?:boolean;onFriendTip?:(dot:FriendDot,text:string,el:Element|null)=>void}){
@@ -154,7 +154,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    {!localMap&&<text x={PARK_POND.x} y={PARK_POND.z+PARK_POND.rz+14} textAnchor="middle" fontSize="11" fill="#294f43" fontWeight="700">STADIUM PARK</text>}
    <text x={-312} y={STADIUM.z} textAnchor="middle" fontSize={localMap?9:11} fill="#76583a" fontWeight="700" transform={`rotate(-90 -312 ${STADIUM.z})`}>WEST BEACH</text>
   </g>
-  {([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88},{id:'museum',label:'MUSEUM',point:MUSEUM_MAP_POINT,dx:0,dy:localMap?18:28,width:localMap?48:74},{id:'shop',label:'KIT SHOP',point:SHOP_MAP_POINT,dx:0,dy:localMap?-17:-26,width:localMap?52:78}] as const).map(({id,label,point,dx,dy,width})=><g key={id} {...destination(id,id==='coaches'?'Coaches Centre':id==='cay'?'Coral Cay':id==='museum'?'History Museum':id==='shop'?'Kit Shop':'Arcade')}>
+  {([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88},{id:'museum',label:'MUSEUM',point:MUSEUM_MAP_POINT,dx:0,dy:localMap?18:28,width:localMap?48:74},{id:'shop',label:'KIT SHOP',point:SHOP_MAP_POINT,dx:0,dy:localMap?-17:-26,width:localMap?52:78},{id:'stadium',label:'STADIUM GATE',point:STADIUM_ARRIVAL,dx:0,dy:localMap?19:30,width:localMap?66:104}] as const).map(({id,label,point,dx,dy,width})=><g key={id} {...destination(id,id==='coaches'?'Coaches Centre':id==='cay'?'Coral Cay':id==='museum'?'History Museum':id==='shop'?'Kit Shop':id==='stadium'?'West Coast Stadium':'Arcade')}>
    <path d={`M${point.x} ${point.z} L${point.x+dx} ${point.z+dy}`} fill="none" stroke="#294f43" strokeWidth="1.2"/>
    <circle cx={point.x} cy={point.z} r={localMap?4.5:6} fill="#f9ca70" stroke="#294f43" strokeWidth="1.5"/>
    {!localMap&&<circle cx={point.x} cy={point.z} r="11" fill="transparent"/>}

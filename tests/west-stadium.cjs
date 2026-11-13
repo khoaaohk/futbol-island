@@ -49,7 +49,7 @@ assert.equal(chunks.length,world.westChunkCount,'every west chunk is gated');
 console.log(`west chunks (draw calls when all in view): ${chunks.length}; triangles: ${Math.round(tris)}; trees ${st.trees}, palms ${st.palms}, flags ${st.flags}, hedges ${st.hedges}, beds ${st.beds}`);
 assert(chunks.length<=90,'west draw calls bounded: '+chunks.length);assert(tris<=150000,'west triangles bounded: '+Math.round(tris));
 // Phase 1 (park + placeholder bowl): 66 chunks, 50,950 triangles. The stands add chunks only where the stadium reaches new cells.
-console.log('stadium build:',JSON.stringify(world.stadium));assert(chunks.length<=75&&tris<=90000,'phase 2 stadium budget (chunks / triangles)');
+console.log('stadium build:',JSON.stringify(world.stadium));assert(chunks.length<=75&&tris<=95000,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames)');
 assert(!scene.children.some(o=>o.name==='park-pond'),'the pond is batched into its chunk (no loose mesh)');
 
 // 4. The map draws the stadium, the park and the plaza.
@@ -132,6 +132,49 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
   const f=new T.Vector3(0,0,-1).applyQuaternion(c.quaternion),st=sit.seat;assert(f.x*(S.x-st.x)+f.z*(S.z-st.z)>0,'the stand view looks at the pitch');
   sit.holdPlayer(1/60,{x:1,z:0,kick:false,juggle:false},new Set(),{walk:true,x:st.x,z:st.z,reduced:true});sit.applyCamera(c);assert.equal(c.far,500,'standing: the far plane restored');}
  const cam=new T.PerspectiveCamera();cam.position.set(1,2,3);sit.applyCamera(cam);assert.deepEqual(cam.position.toArray(),[1,2,3],'standing: the camera is untouched');}
+// ---- Phase 3a: the stadium as a live venue, real goals, the big screen, watching from the seats, the map destination ----------
+{const V=load('lib/town/venues.ts'),v=V.liveVenueById('stadium');
+ assert(v&&v.x===S.x&&v.z===S.z&&v.width===S.pitchW&&v.length===S.pitchL&&v.players===11&&v.goalWidth===7.32&&v.goalHeight===2.44,'the stadium venue: 63 × 100 m at the pitch, 11 a side, full-size goals');
+ assert(!V.VENUES.some(x=>x.id==='stadium'),'a live venue only: lessons, quests and coin routes do not move');
+ assert.equal(V.simFormat('stadium'),'11v11');assert.equal(V.simFormat('beach'),'beach');
+ assert(Math.abs((v.elevation??0)+V.FIELD_SURFACE_Y-V.STADIUM_PITCH_Y)<1e-9,'rigs and goal frames stand on the stadium grass');
+ assert.equal(load('lib/town/liveJoin.ts').joinableFormat('stadium'),true,'joinable like the other pitches');
+ const P=load('multiplayer/protocol/types.ts'),N=load('lib/town/match/matchNet.ts');
+ assert.deepEqual([...P.MATCH_FIELDS],['7v7','futsal','9v9','11v11','beach','stadium'],'field id 5 appended (old ids keep their meaning)');assert.deepEqual([...N.NET_FIELDS],[...P.MATCH_FIELDS]);
+ const {MatchSim}=load('lib/town/match/matchSim.ts'),m=new MatchSim(7,'stadium'),e=new MatchSim(7,'11v11');
+ assert.equal(m.ids.length,22,'22 players');assert.equal(m.goalVenue.id,'stadium','its own goals');assert.equal(m.useOffside,true,'11v11 laws');
+ assert.deepEqual(m.T,e.T,'the 11v11 tuning');for(let i=0;i<600;i++)m.step(1/30);assert(Number.isFinite(m.ball.x)&&Number.isFinite(m.ball.y),'plays');
+ // The island scene: the real goal frames and nets, their colliders (side and back nets block, the mouth is open).
+ const nets=scene.getObjectByName('stadium-goal-nets');assert(nets&&nets.isLineSegments,'one LineSegments for both nets');
+ for(const sz of [-1,1]){const gz=S.z+sz*S.pitchL/2;assert(blocked(S.x,gz+sz*load('lib/town/goalCollisions.ts').GOAL_DEPTH),'the back net blocks');assert(!blocked(S.x,gz-sz*.8),'the goal mouth is open');}
+ assert.equal(world.stadium.seatsStrips,570,'3 pieces per row and block: cushion, low back, per-seat tops');}
+{const Q2=load('lib/town/stadiumSeats.ts'),st=Q2.nearestSeat(...Object.values(Q2.standWorld(W,W.inner+4*Q2.ROW_DEPTH+.3,6)),Q2.rowHeight(4)),a=Q2.seatView(st),b=Q2.seatView(st,true);
+ const back=(o)=>Math.hypot(o.x-st.x,o.z-st.z);assert(b.y>a.y+.8&&back(b)>back(a)+.5,'portrait phone: the stand view is higher and further back');
+ const out={x:0,z:0};Q2.followLook(a,null,out);assert(out.x===a.lx&&out.z===a.lz,'no match: the seat\'s pitch point');
+ Q2.followLook(a,{x:S.x+20,z:S.z-40},out);assert(Math.hypot(out.x-(S.x+20),out.z-(S.z-40))<Math.hypot(a.lx-(S.x+20),a.lz-(S.z-40)),'a match: toward the ball');}
+{const SS=load('lib/town/stadiumScreen.ts');assert.equal(SS.screenMinute(59),0);assert.equal(SS.screenMinute(61),1);
+ const {createStadiumSit}=load('lib/town/stadiumSit.ts'),parent=new T.Group(),sit=createStadiumSit({parent,wake:()=>{}});
+ const p=Q.standWorld(W,W.inner+5*Q.ROW_DEPTH+.3,8),h=Q.rowHeight(5);
+ const el={hidden:true,dataset:{},textContent:'',setAttribute(k,val){this[k]=val;}},show=()=>sit.prompt(el,true,cam,800,600,()=>{},(x,hid)=>{x.hidden=hid;});
+ const cam=new T.PerspectiveCamera(40,1,1,500);cam.position.set(p.x-20,h+5,p.z);cam.lookAt(p.x,h,p.z);cam.updateMatrixWorld();
+ sit.want(p.x,p.z,h,true);sit.match(null,0);show();assert.equal(el.textContent,'Sit','no match: Sit');
+ const screen=()=>parent.getObjectByName('stadium-score-screen');assert(!screen()||!screen().visible,'no match: no score plane');
+ const match={sim:{score:{gold:1,blue:0},clock:125},ball:{position:{x:S.x+15,z:S.z-30}}};
+ sit.match(match,1000);show();assert.equal(el.textContent,'Sit and watch','a match on: Sit and watch');assert(screen()&&screen().visible,'the score plane shows near the stadium');
+ const tex=screen().material.map,v0=tex.version;sit.match(match,1500);sit.match(match,2600);assert.equal(tex.version,v0,'unchanged score / minute: no redraw');
+ match.sim.score.blue=1;sit.match(match,3000);const v1=tex.version;assert(v1>v0,'a goal redraws');match.sim.clock=185;sit.match(match,3400);assert.equal(tex.version,v1,'at most 1 Hz');sit.match(match,4100);assert(tex.version>v1,'the minute ticks over');
+ sit.want(0,0,0,true);sit.match(match,9000);assert(!screen().visible,'far away: hidden');
+ // Seated with a match on: the stand view turns toward the ball, smoothly.
+ sit.want(p.x,p.z,h,true);sit.match(match,9100);sit.press(true);const c=new T.PerspectiveCamera(40,1,1,500);sit.applyCamera(c,1/60);const f0=new T.Vector3(0,0,-1).applyQuaternion(c.quaternion);
+ match.ball.position.x=S.x+25;match.ball.position.z=S.z+45;sit.match(match,9200);sit.applyCamera(c,1/60);const f1=new T.Vector3(0,0,-1).applyQuaternion(c.quaternion);
+ for(let i=0;i<240;i++){sit.match(match,9200+i*16);sit.applyCamera(c,1/60);}const f2=new T.Vector3(0,0,-1).applyQuaternion(c.quaternion);
+ assert(f0.angleTo(f2)>.2,'it follows the ball');assert(f0.angleTo(f1)<f0.angleTo(f2)*.1,'one frame: a small part of the turn (smooth)');
+ const pc=new T.PerspectiveCamera(40,.5,1,500);sit.applyCamera(pc,1/60);assert(pc.position.y>c.position.y-1e-6,'portrait: from the raised view');}
+// The map and travel: a Stadium destination like the other places.
+assert(/id:'stadium',label:'STADIUM GATE',point:STADIUM_ARRIVAL/.test(map)&&/\|'summit'\|'stadium';/.test(map),'the map has a Stadium destination');
+{const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');assert(/travel\.current==='stadium'\?STADIUM_ARRIVAL/.test(town)&&/destination==='stadium'\)go\(destination\)/.test(town),'travel lands at the stadium gate');
+ assert(L.STADIUM_ARRIVAL.x>L.STADIUM_GATE.x&&onIsland(L.STADIUM_ARRIVAL.x,L.STADIUM_ARRIVAL.z)&&!blocked(L.STADIUM_ARRIVAL.x,L.STADIUM_ARRIVAL.z),'the arrival is open plaza outside the gate');}
+console.log('west stadium phase 3a: ok');
 // The map draws four stands with open corners.
 assert(/data-stadium-stand=/.test(map),'the map draws the stands');
 console.log('west stadium phase 2: ok');

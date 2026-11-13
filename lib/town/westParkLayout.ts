@@ -5,6 +5,8 @@ export const STADIUM={x:-205,z:-30,bowlW:124,bowlL:164,pitchW:63,pitchL:100} as 
 /** The gate on the bowl's east side, facing the plaza. */
 export const STADIUM_GATE={x:STADIUM.x+STADIUM.bowlW/2,z:STADIUM.z,halfWidth:7} as const;
 /** Stadium Plaza: the fan walk from Old Town's west street (x -45) to the gate. */
+/** Map travel ("Stadium", phase 3): you land on the plaza just outside the gate, facing it. */
+export const STADIUM_ARRIVAL={x:STADIUM_GATE.x+8,z:STADIUM_GATE.z,yaw:-Math.PI/2} as const;
 export const STADIUM_PLAZA={minX:-140,maxX:-52,minZ:STADIUM.z-22,maxZ:STADIUM.z+22} as const;
 /** The park pond (an ellipse, radii in m). */
 export const PARK_POND={x:-150,z:72,rx:24,rz:13} as const;

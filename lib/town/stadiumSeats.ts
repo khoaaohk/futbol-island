@@ -108,10 +108,20 @@ export function nearestSeat(x:number,z:number,height:number,occupied?:ReadonlySe
  return best;
 }
 /** The stand view from a seat: the camera behind and above the sitter's head, looking at the pitch (world coordinates). */
-export function seatView(seat:Seat){
+/** The stand view from a seat. `raised` (a portrait phone, phase 3): the camera sits higher and further back (3.2 m behind, 3.6 m
+ *  up instead of 2.4 / 2.5), so the seated player's head drops below the bottom of the narrow screen (40° vertical FOV). */
+export const SEAT_VIEW={back:2.4,up:2.5,raisedBack:3.2,raisedUp:3.6} as const;
+export function seatView(seat:Seat,raised=false){
  const s=STANDS.find(q=>q.id===seat.stand)!,{a}=standLocal(s,seat.x,seat.z),dIn=standLocal(s,seat.x,seat.z).d;
- const cam=standWorld(s,dIn+2.4,a),look=standWorld(s,0,a*.45);
- return {x:cam.x,y:seat.y+2.5,z:cam.z,lx:look.x,ly:.4,lz:look.z};
+ const cam=standWorld(s,dIn+(raised?SEAT_VIEW.raisedBack:SEAT_VIEW.back),a),look=standWorld(s,0,a*.45);
+ return {x:cam.x,y:seat.y+(raised?SEAT_VIEW.raisedUp:SEAT_VIEW.up),z:cam.z,lx:look.x,ly:.4,lz:look.z};
+}
+/** Where the stand view looks while a match is on: mostly at the ball, a little toward the seat's own pitch point, so the framing
+ *  follows play loosely (BALL_PULL of the way) and never swings right round. */
+export const BALL_PULL=.7,FOLLOW_RATE=1.6;
+export function followLook(base:{lx:number;lz:number},ball:{x:number;z:number}|null,out:{x:number;z:number}){
+ if(!ball){out.x=base.lx;out.z=base.lz;return out;}
+ out.x=base.lx+(ball.x-base.lx)*BALL_PULL;out.z=base.lz+(ball.z-base.lz)*BALL_PULL;return out;
 }
 
 // ---- Sit / stand state machine (pure; stadiumSit.ts drives it from Town) -------------------------------------------------------
