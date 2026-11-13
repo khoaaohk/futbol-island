@@ -1,9 +1,9 @@
-// Remote pose interpolation: 8-slot ring per member (preallocated), Hermite between snapshots, render delayMs in the
+// Remote pose interpolation: 24-slot ring per member (preallocated), Hermite between snapshots, render delayMs in the
 // past, extrapolate at most extrapolateMs then ease to a stop and glide back onto the last real pose (a quiet stream
 // must never leave the avatar parked somewhere the sender never was). A Warp flag or a >25 m jump (x, y or z) fades
 // out/in over 300 ms. The drawn y never sinks more than Y_SINK_M below the poses it comes from (landings, warps).
 // sample() allocates nothing. Positions are metres, yaw radians (wire yaw256 * 2pi/256), speed m/s.
-import { MAX_SPEED_MS, activityOf, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
+import { MAX_SPEED_MS, Mode as M, activityOf, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
 
 /** flags: the pose flags of the newest snapshot at or before the render time (Hidden = away; design 4.4.1). Optional for old callers. */
 export type RemotePose = { x: number; y: number; z: number; yaw: number; speed: number; mode: Mode; zone: Zone; fade: number; flags?: number;
@@ -18,7 +18,9 @@ export interface Interp {
   setDelay(ms: number): void;
 }
 
-const SLOTS = 8; // live feel: 10 Hz snapshots behind a delay of up to 500 ms need ~7 (was 4 at 5 Hz)
+// live feel: 10 Hz snapshots behind a delay of up to 500 ms need ~7, but a beacon-tier member that comes near is still drawn up to
+// BEACON_DELAY_MAX_MS behind while its stream is already 10 Hz: 8 slots (0.8 s) fell off the ring there (one 59 m frame, live QA Nov 12)
+const SLOTS = 24;
 const F = 9; // floats per slot: t, x, y, z, yaw(rad), speed, mode, zone, flags
 const FADE_HALF_MS = 150;
 const JUMP_M = 25;
@@ -40,13 +42,24 @@ const TAU = Math.PI * 2;
 // stream behaves as before (an adaptive delay + time smoothing tried in 55625b19 stuttered close take-offs and left extra lag).
 const IV_CAP = 1.3, IV_CAP_MAX_MS = 800, IV_MAX = 1500, MOVED_M = 0.05;
 // The beacon tier (overnight soak Nov 12 2026): on a full island a member outside a watcher's nearest 12 arrives about once a second,
-// and no extrapolation can bridge 1 s of jetpack flight (34 m) without overshooting every stop. A member whose moving interval is
-// above BEACON_IV_MS is drawn further in the past instead (interval + BEACON_SLACK_MS in total), so it is always INTERPOLATED between
-// real snapshots: smooth, about a second behind (it is far away and outside the nearest 12). The extra delay moves at EXTRA_SLEW of
-// real time, so a member that comes close catches up within a couple of seconds (slight fast-forward) and 5-10 Hz streams never get any.
-const BEACON_IV_MS = 600, BEACON_SLACK_MS = 150, BEACON_DELAY_MAX_MS = 1400, EXTRA_SLEW = 0.5;
+// and no extrapolation can bridge 1 s of jetpack flight (34 m) without overshooting every stop. A slow-stream member is drawn further
+// in the past instead (BEACON_K x its moving interval in total), so it is always INTERPOLATED between real snapshots: smooth, about a
+// second behind (it is far away and outside the nearest 12). The extra delay moves at most EXTRA_SLEW of real time, so a member that
+// comes close catches up within a couple of seconds (slight fast-forward) and 5-10 Hz streams never get any.
+const BEACON_DELAY_MAX_MS = 1400, EXTRA_SLEW = 0.5;
+// Tier transitions (live QA Nov 12 2026, full island): a flyer crossing 40 / 70 / 100 m changes stream rate (10 -> 5 -> 1 Hz and back)
+// and popped 6-59 m. Every transition is now continuous in time:
+//  - the extra delay is iv * BEACON_K minus the shared delay (continuous in iv: 0 for 5-10 Hz, ~0.9 s at 1 Hz; the old 600 ms
+//    threshold flipped it by 0.5 s), and it changes at a smoothed rate (EX_EASE_MS / EXV_TAU_MS, at most EXTRA_SLEW) both ways;
+//  - a shrinking extra delay never takes the render time past the newest snapshot (it pauses there instead of extrapolating);
+//  - a starved fast mover (the first 1 s gap on leaving the nearest 12, before iv knows it) brakes the render time smoothly
+//    (rate 1 -> BRAKE_FLOOR as it runs BRAKE_E_MS past the newest snapshot, never more than LIN_MS) instead of extrapolating to the
+//    cap, gliding back and leaping 20 m when the late snapshot lands; the brake lets go when the stream is really quiet (a stop);
+//  - its extrapolation is linear for LIN_MS (the brake keeps it there), so the hand-over to the late snapshot is seamless.
+const BEACON_K = 1.15, EX_EASE_MS = 300, EXV_TAU_MS = 250;
+const BRAKE_MPS = 8, BRAKE_E_MS = 120, BRAKE_FLOOR = 0.15, LIN_MS = 300, BRAKE_RELEASE_MS = 1200;
 
-type Ring = { d: Float64Array; cut: Uint8Array; n: number; head: number; iv: number; lastMoved: boolean; ex: number; lt: number };
+type Ring = { d: Float64Array; cut: Uint8Array; n: number; head: number; iv: number; lastMoved: boolean; ex: number; exv: number; lt: number };
 
 export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }): Interp {
   let delay = opts?.delayMs ?? 250;
@@ -58,7 +71,7 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
 
   function push(id: MemberId, body: PoseBody, recvMs: number): void {
     let r = rings.get(id);
-    if (!r) { r = { d: new Float64Array(SLOTS * F), cut: new Uint8Array(SLOTS), n: 0, head: 0, iv: 0, lastMoved: false, ex: 0, lt: -1 }; rings.set(id, r); }
+    if (!r) { r = { d: new Float64Array(SLOTS * F), cut: new Uint8Array(SLOTS), n: 0, head: 0, iv: 0, lastMoved: false, ex: 0, exv: 0, lt: -1 }; rings.set(id, r); }
     const x = body[0] / 10, y = body[1] / 10, z = body[2] / 10;
     let cut = r.n === 0 || (body[7] & 1) !== 0 ? 1 : 0;
     if (r.n > 0) {
@@ -101,11 +114,29 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
   function sample(id: MemberId, renderMs: number, out: RemotePose): boolean {
     const r = rings.get(id);
     if (!r || r.n === 0) return false;
-    const want = r.iv > BEACON_IV_MS ? Math.max(0, Math.min(BEACON_DELAY_MAX_MS, r.iv + BEACON_SLACK_MS) - delay) : 0;
-    if (r.lt < 0 || r.n < 2) r.ex = want;
-    else if (r.ex !== want) { const st = EXTRA_SLEW * Math.max(0, Math.min(100, renderMs - r.lt)); r.ex = want > r.ex ? Math.min(want, r.ex + st) : Math.max(want, r.ex - st); }
+    const exMax = Math.max(0, BEACON_DELAY_MAX_MS - delay);
+    const want = Math.max(0, Math.min(exMax, r.iv * BEACON_K - delay));
+    const sw = at(r, r.n - 1), tn = r.d[sw], base = renderMs - delay;
+    const fast = !r.cut[ci(r, r.n - 1)] && r.d[sw + 6] !== M.Busy && r.d[sw + 5] >= BRAKE_MPS; // the newest pose is a fast mover
+    if (r.lt < 0 || r.n < 2) { r.ex = want; r.exv = 0; }
+    else {
+      const dt = Math.max(0, Math.min(100, renderMs - r.lt));
+      if (dt > 0) {
+        const g = Math.max(-EXTRA_SLEW, Math.min(EXTRA_SLEW, (want - r.ex) / EX_EASE_MS));
+        r.exv += (g - r.exv) * Math.min(1, dt / EXV_TAU_MS);
+        let ex = r.ex + r.exv * dt;
+        if (ex < r.ex && base - ex > tn) ex = Math.max(ex, Math.min(r.ex, base - tn)); // shrinking: never past the newest snapshot
+        const over = base - ex - tn;
+        if (fast && over > 0 && renderMs - tn < BRAKE_RELEASE_MS + r.iv) { // starved: brake the render time
+          const rate = over >= LIN_MS ? 0 : Math.max(BRAKE_FLOOR, 1 - over / BRAKE_E_MS);
+          ex = Math.max(ex, r.ex + (1 - rate) * dt);
+          if (r.exv < 0) r.exv = 0;
+        }
+        r.ex = Math.min(ex, Math.max(r.ex, exMax));
+      }
+    }
     r.lt = renderMs;
-    const rt = renderMs - delay - r.ex;
+    const rt = base - r.ex;
     const cap = r.iv > 0 ? Math.max(capBase, Math.min(IV_CAP_MAX_MS, r.iv * IV_CAP)) : capBase;
     let a = -1; // newest slot with t <= rt
     for (let k = 0; k < r.n; k++) { if (r.d[at(r, k)] <= rt) a = k; else break; }
@@ -128,7 +159,8 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
     if (a === r.n - 1) { // extrapolate, velocity easing to zero across the cap, then glide back onto the real pose
       const dt = rt - r.d[sa];
       let vx = 0, vy = 0, vz = 0;
-      if (a >= 1 && !r.cut[ci(r, a)] && dt < cap + RETURN_MS) {
+      const lin = fast ? LIN_MS : 0; // a fast mover runs on linearly for LIN_MS (the brake holds it there), then eases as before
+      if (a >= 1 && !r.cut[ci(r, a)] && dt < lin + cap + RETURN_MS) {
         let b = a - 1; // the base slot: back through un-cut slots until the span covers VEL_SPAN_MS (a cut slot is a base, never crossed)
         while (b > 0 && !r.cut[ci(r, b)] && r.d[sa] - r.d[at(r, b)] < VEL_SPAN_MS) b--;
         const sp = at(r, b);
@@ -139,9 +171,9 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
           if ((vx * vx + vy * vy + vz * vz) * 1e6 > lim * lim) { vx = 0; vy = 0; vz = 0; } // per ms -> m/s
         }
       }
-      const e = Math.min(dt, cap);
-      let disp = e - (e * e) / (2 * cap);
-      if (dt > cap) { const w = Math.min(1, (dt - cap) / RETURN_MS); disp *= 1 - w * w * (3 - 2 * w); } // stream quiet: ease back
+      const e = Math.max(0, Math.min(dt, lin + cap) - lin);
+      let disp = Math.min(dt, lin) + e - (e * e) / (2 * cap);
+      if (dt > lin + cap) { const w = Math.min(1, (dt - lin - cap) / RETURN_MS); disp *= 1 - w * w * (3 - 2 * w); } // stream quiet: ease back
       const ya = r.d[sa + 2];
       const y = Math.max(ya - Y_SINK_M, ya + vy * disp);
       put(out, r, sa, r.d[sa + 1] + vx * disp, y, r.d[sa + 3] + vz * disp, r.d[sa + 4]);

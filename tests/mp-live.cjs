@@ -149,12 +149,13 @@ t('live clock: jittered arrivals map back onto the sender timeline; delay = base
  assert.ok(LC.LEGACY_DELAY_MS>=360,'an old 5 Hz relay + 5 Hz sender: snapshots up to 400 ms apart are covered');
  c.reset();assert.equal(c.live,false);
 });
-t('interp: setDelay applies; 8 slots hold 500 ms of 10 Hz snapshots (no extrapolation at the max live delay)',()=>{
+t('interp: setDelay applies; the ring holds 500 ms of 10 Hz snapshots (no extrapolation at the max live delay)',()=>{
  const it=IP.createInterp({delayMs:250}),out={};
  for(let i=0;i<10;i++)it.push(1,[i*10,0,0,0,40,Mode.Run,Zone.Main,0],1000+i*100);
  it.setDelay(500);assert.ok(it.sample(1,1900,out));assert.ok(Math.abs(out.x-4)<.01,'500 ms behind the newest: interpolated, x '+out.x);
  it.setDelay(250);it.sample(1,1900,out);assert.ok(Math.abs(out.x-6.5)<.01,'x '+out.x);
- assert.match(read('lib/multiplayer/interp.ts'),/const SLOTS = 8;/);
+ const slots=+(read('lib/multiplayer/interp.ts').match(/const SLOTS = (\d+);/)||[])[1];
+ assert.ok(slots>=16,'the ring covers the 1.4 s beacon-tier delay at 10 Hz (a member coming near), SLOTS '+slots);
 });
 
 // ---------------------------------------------------------------- avatars: label, posing tier, balls, jets
