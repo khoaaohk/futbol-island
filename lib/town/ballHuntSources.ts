@@ -45,4 +45,17 @@ export const BALL_HUNT_SOURCES:Record<string,BallHuntSource[]>={
  // the teams change ends at half-time).
  'jetty-lighthouse':[IFAB('Law 8 The Start and Restart of Play (the coin toss)','the-start-and-restart-of-play')],
  'summit-whale-buoy':[{title:'Cruyff turn · Johan Cruyff v Sweden, 1974 FIFA World Cup',url:'https://en.wikipedia.org/wiki/Cruyff_turn'}],
+ // DRIP FC Stadium (Nov 13 2026, stadiumBalls.ts). Laws from the IFAB; stadium and matchday facts from the governing bodies.
+ 'stadium-gate':[{title:'Sports Grounds Safety Authority · Guide to Safety at Sports Grounds (stewarding)',url:'https://sgsa.org.uk/'}],
+ 'stadium-plaza-flags':[{title:'Player escort (walking out, line-up and anthems)',url:'https://en.wikipedia.org/wiki/Player_escort'}],
+ 'stadium-plaza-street':[IFAB('Law 7 The Duration of the Match (allowance for time lost)','the-duration-of-the-match')],
+ 'stadium-lawn':[{title:'Grounds Management Association · pitch mowing and striping',url:'https://www.thegma.org.uk/'}],
+ 'stadium-pond':[IFAB('Law 8 The Start and Restart of Play (kick-off: opponents 9.15 m away)','the-start-and-restart-of-play'),IFAB('Law 1 The Field of Play (the centre circle)','the-field-of-play')],
+ 'stadium-orchard':[IFAB('Law 17 The Corner Kick (the corner area; the flagpost is not moved)','the-corner-kick')],
+ 'stadium-west-roof':[IFAB('Law 1 The Field of Play (goal-line technology)','the-field-of-play')],
+ 'stadium-east-roof':[{title:'Floodlight (stadium floodlighting)',url:'https://en.wikipedia.org/wiki/Floodlight'}],
+ 'stadium-west-stand':[{title:'All-seater stadium',url:'https://en.wikipedia.org/wiki/All-seater_stadium'}],
+ 'stadium-east-stand':[IFAB('Law 3 The Players (team officials and the technical area)','the-players')],
+ 'stadium-north-stand':[IFAB('Law 4 The Players’ Equipment (colours)','the-players-equipment')],
+ 'stadium-screen':[IFAB('Law 6 The Other Match Officials (video assistant referee)','the-other-match-officials'),{title:'Video assistant referee',url:'https://en.wikipedia.org/wiki/Video_assistant_referee'}],
 };

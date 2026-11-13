@@ -137,7 +137,7 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
   description:'Balls are tucked away on rooftops, beaches and corners of every island. Each one opens a short animated mini lesson with a practice prompt.',
   footballTie:'One idea per ball, from rules and skills to history, each drawn on a small pitch diagram.',
   where:'Explore the main island, Coral Cay, Summit Isle and the East Jetty; the map tracks what is found.',
-  proof:'116 hidden balls, each with its own mini lesson.',counts:{hiddenBalls:116}},
+  proof:'128 hidden balls, each with its own mini lesson.',counts:{hiddenBalls:128}},
  {id:'reef-balls',title:'Reef treasure balls',group:'explore',imageKey:'reef_balls',
   hook:'Dive to a treasure chest and find a football inside.',
   description:'Each Explore reef zone hides one ball in its open treasure chest. Picking it up plays a mini lesson about a real football fact, then offers a card choice.',
@@ -388,7 +388,7 @@ export const LEARN_HIGHLIGHTS:readonly LearnHighlight[]=[
  {id:'learn',title:'Learn the game',line:'Short lessons and quizzes show real football ideas on a moving pitch.',shot:'lesson_field',
   chips:['Paths, lessons and quizzes','Story films and books','A football museum'],features:['learning-paths','lesson-quiz','path-stories','pop-up-books','history-museum']},
  {id:'explore',title:'Explore the island',line:'Every corner hides a football idea to find.',shot:'explore',
-  chips:['116 hidden balls to find','Each ball, a mini lesson','Swim and dive the reef'],features:['ball-hunt','reef-balls','swim-dive','fishing','islanders','player-cards']},
+  chips:['128 hidden balls to find','Each ball, a mini lesson','Swim and dive the reef'],features:['ball-hunt','reef-balls','swim-dive','fishing','islanders','player-cards']},
  // "Fuel up" (Nov 3 2026): only what docs/learn-konbini-facts.md supports. Konbini food and drinks refill the fuel bar (the energy
  // for rides, flying and sprinting; walking always works), and every item shows one sourced football-nutrition line.
  {id:'fuel',title:'Fuel up like a footballer.',line:'Snacks from the Konbini (convenience store) refill your energy and teach food tips.',shot:'fuel_konbini',

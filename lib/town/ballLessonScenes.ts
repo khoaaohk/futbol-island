@@ -554,6 +554,55 @@ export const SCENES={
   {note:'Arm raised: an indirect free kick',tags:[[[118,104],'Ref: arm up']]},
   {note:'Pass it short first',ball:'b',lanes:[['t','b',1]]},
   {note:'Second touch · shoot · it counts',ball:[212,26],at:{xk:[150,32]},pulse:[[212,28],'Goal!']}]},
+ // DRIP FC Stadium (Nov 13 2026, stadiumBalls.ts): matchday, the stadium and its Laws.
+ 'stewards':{cast:{s:[60,196,'Steward'],a:[214,62,'You'],f:[262,92,'Family']},ball:'a',steps:[
+  {note:'Lost in the crowd after the match?',tags:[['a','Where now?']]},
+  {note:'Find a steward in a bright jacket',at:{a:[96,176]},tags:[['s','Steward']]},
+  {note:'They help · exits and stairs kept clear',at:{f:[112,206]},pulse:['f','Found you!'],zones:[[150,186,150,40,'Exit kept clear','space']]}]},
+ 'walk-out':{cast:{a:[126,214,'You'],b:[146,214],x1:[184,214],x2:[204,214]},ball:'a',steps:[
+  {note:'Both teams wait in the tunnel',zones:[[104,196,122,32,'Tunnel','band']]},
+  {note:'Walk out side by side · line up',at:{a:[118,126],b:[140,126],x1:[190,126],x2:[212,126]},tags:[[[165,98],'Anthems']]},
+  {note:'Shake hands · then play to win',at:{x1:[150,116],x2:[172,116]},pulse:[[160,100],'Respect!']}]},
+ 'added-time':{cast:{f:[30,128,'Official'],a:[150,150,'You'],b:[236,92,'Mate'],x:[200,140]},ball:'a',steps:[
+  {note:'Stops for an injury and two goals',clock:['a',1,'90:00'],tags:[[[150,60],'Time lost']]},
+  {note:'The board shows the added minutes',at:{f:[40,112]},tags:[['f','+4']]},
+  {note:'Keep playing until the final whistle',ball:'b',lanes:[['a','b',1]],pulse:['b','Still on!']}]},
+ 'pitch-stripes':{cast:{g:[44,204,'Groundstaff'],a:[226,118,'You'],x:[268,70]},ball:'a',steps:[
+  {note:'Why does the big pitch have stripes?',zones:[[14,22,60,212,'Pale','space'],[74,22,60,212,'Dark','band']]},
+  {note:'The mower goes up one strip…',at:{g:[44,40]},zones:[[14,22,60,212,'Pale','space'],[74,22,60,212,'Dark','band']]},
+  {note:'…and back down the next one',at:{g:[104,204]},zones:[[14,22,60,212,'Pale','space'],[74,22,60,212,'Dark','band'],[134,22,60,212,'Pale','space']],tags:[[[104,150],'Leans the other way']]}]},
+ 'centre-circle':{cast:{a:[165,128,'You'],b:[146,138,'Mate'],x1:[150,104],x2:[186,108]},ball:'a',steps:[
+  {note:'Kick-off · they crowd the centre spot',tags:[['x1','Too close']]},
+  {note:'Wait outside the circle: 9.15 m',at:{x1:[116,86],x2:[218,90]},zones:[[128,92,74,72,'Centre circle','band']]},
+  {note:'Kick it · it moves · now they can come',ball:'b',at:{x1:[132,112]},zones:[[128,92,74,72,'Centre circle','band']],pulse:['b','Go!']}]},
+ 'corner-arc':{pitch:'attack',cast:{t:[284,52,'You'],f:[306,28,'Flag'],a:[192,92,'Mate'],x1:[214,62],xk:[160,30,'Keeper']},ball:'t',steps:[
+  {note:'Corner · the ball is outside the arc',tags:[['t','Not here']]},
+  {note:'Place it in the arc by the flag',at:{t:[298,36]},tags:[['f','Leave it in']]},
+  {note:'Flag stays put · cross it in',ball:'a',at:{a:[180,66]},pulse:['a','Header!']}]},
+ 'goal-line-tech':{pitch:'attack',cast:{a:[110,110,'You'],xk:[164,40,'Keeper'],x1:[214,84],cam:[30,40,'Camera']},ball:'a',steps:[
+  {note:'Cameras up high watch the goal line',tags:[['cam','Watching']]},
+  {note:'The shot drops behind the keeper…',ball:[172,24],at:{xk:[176,34]}},
+  {note:'Whole ball over · the watch buzzes',at:{a:[132,80]},pulse:[[172,26],'Goal!']}]},
+ 'floodlights':{cast:{m1:[24,30,'Mast'],m2:[306,30,'Mast'],a:[150,150,'You'],b:[226,182,'Mate'],x:[110,96]},ball:'a',steps:[
+  {note:'A night match · the pitch is dark',zones:[[14,22,302,212,'Too dark','danger']]},
+  {note:'Floodlights shine from every side',at:{m1:[30,36],m2:[300,36]},tags:[['m1','On!'],['m2','On!']],zones:[[14,22,302,212,'Bright','space']]},
+  {note:'Small shadows · easy to see the ball',ball:'b',lanes:[['a','b',1]],pulse:['b','I see it!']}]},
+ 'all-seater':{cast:{f1:[60,44,'Fan'],f2:[104,44,'Fan'],a:[184,196,'You'],s:[272,64,'Steward']},ball:'a',steps:[
+  {note:'Fans squashed onto a standing terrace',zones:[[30,26,180,44,'Terrace','danger']],tags:[[[120,90],'Too packed']]},
+  {note:'Now every fan has a numbered seat',at:{f1:[50,38],f2:[92,38]},zones:[[30,26,180,44,'Seats','band']],tags:[['f1','Seat 12'],['f2','Seat 13']]},
+  {note:'Check your ticket · find your seat',at:{a:[150,66]},zones:[[30,26,180,44,'Seats','band']],pulse:['a','Seat 14!']}]},
+ 'technical-area':{cast:{c:[64,200,'Coach'],c2:[104,206,'Sub'],a:[206,116,'You'],x:[240,88]},ball:'a',steps:[
+  {note:'Each bench has a marked box',zones:[[30,184,112,42,'Technical area','band']]},
+  {note:'The coach steps onto the pitch',at:{c:[100,150]},zones:[[30,184,112,42,'Technical area','band']],tags:[['c','Not allowed!']]},
+  {note:'Back in the box · one voice at a time',at:{c:[70,198]},zones:[[30,184,112,42,'Technical area','band']],pulse:['a','Got it!']}]},
+ 'kit-colours':{cast:{a:[120,128,'You'],b:[180,100,'Mate'],x1:[150,80,'Red'],x2:[214,140,'Red']},ball:'a',steps:[
+  {note:'Both teams in red · who is who?',tags:[['b','Red?']]},
+  {note:'The away team changes its kit',at:{x1:[146,74],x2:[220,146]},label:{x1:'Blue',x2:'Blue'},tags:[[[180,40],'Away kit']]},
+  {note:'Now every pass finds a teammate',ball:'b',lanes:[['a','b',1]],pulse:['b','Easy!']}]},
+ 'var-review':{cast:{r:[165,150,'Referee'],a:[120,96,'You'],x:[196,98],v:[290,206,'Screen']},ball:'a',steps:[
+  {note:'A goal! Was there a foul just before?',tags:[[[165,56],'Goal?']]},
+  {note:'VAR checks · the ref watches the screen',at:{r:[266,196]},tags:[['v','Replay']]},
+  {note:'Goals, penalties, reds: the ref decides',at:{r:[165,140]},pulse:['r','Decision!']}]},
  // The seven Explore reef balls (Oct 25 2026): their scenes live with their lessons (lib/town/water/diveBallLessons.ts).
  ...DIVE_BALL_SCENES,
 } satisfies Record<string,Scene>;

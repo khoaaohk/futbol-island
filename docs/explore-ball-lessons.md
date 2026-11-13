@@ -52,3 +52,20 @@ Each Explore reef zone hides ONE football (`lib/town/water/diveBalls.ts`; drawn 
 ## Cost
 
 One small vertex-coloured mesh per room (an icosphere, 500 triangles; 320 in lite), no texture, no per-frame allocation; a slow roll and an occasional soft shimmer (steady in lite / reduced motion); gone once found. It is the room's one extra draw (phone cap 16 → 17 in tests/explore-v2.cjs and tests/explore-delight.cjs). The reef layout is unchanged: the ball joins the layout's finds after the coral and rocks are placed, so only later placements (today's sparkle spot) keep off it.
+
+**Nov 13 2026 (owner: "extend the island ball hunt into the new stadium area").** Twelve DRIP FC Stadium balls (`lib/town/stadiumBalls.ts`, appended to `COIN_QUEST`: 128 balls; coin save version 9, a save that had all 116 keeps the Matchday Fox and every costume). All loose (walk to them, no parcel, no collider); each lesson is a new idea checked by `tests/stadium-balls.cjs` against every island and reef lesson (scene, concept tag, title, tip and topic words):
+
+| Ball | Where | Idea |
+|---|---|---|
+| `stadium-gate` | plaza, beside the gate arch | stewards and stadium safety |
+| `stadium-plaza-flags` | plaza, north flag row | the walk-out, anthems and handshakes |
+| `stadium-plaza-street` | plaza, street end | added time (Law 7) |
+| `stadium-lawn` | park, north lawn | why pitches are striped |
+| `stadium-pond` | park, lily pond's south shore | the centre circle and 9.15 m at kick-off (Laws 1, 8) |
+| `stadium-orchard` | park, south-west orchard | the corner arc and flag (Law 17) |
+| `stadium-west-roof` | west stand roof (fly and land) | goal-line technology (Law 1) |
+| `stadium-east-roof` | east stand roof (fly and land) | floodlights and night matches |
+| `stadium-west-stand` | west stand aisle, row 7 | all-seater stadiums |
+| `stadium-east-stand` | east stand aisle, row 4 | the technical area |
+| `stadium-north-stand` | north stand aisle, row 8 | home and away kits (Law 4) |
+| `stadium-screen` | south concourse, under the big screen | VAR basics (Law 6) |
