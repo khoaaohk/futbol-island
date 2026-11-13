@@ -1347,7 +1347,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // West Stadium (Nov 12 2026, docs/stadium/PLAN.md): Stadium Park, Stadium Plaza.
   const westPark=buildWestPark({box,put,cylinder,sign,palm,bench,planter,path,districtSign,obstacles,assets,surfaceAreas,materials,add:o=>town.add(o),prop});
   // West Stadium phase 2 (stadiumWorld.ts): walkable stands, seats, gate, roofs; its rails join the roof props below.
-  const stadiumRails:(Obstacle&{floor:number;top:number})[]=[];const stadium=buildStadium({box,put,cylinder,sign,obstacles,walkSurfaces,rails:stadiumRails,surfaceAreas});
+  const stadiumRails:(Obstacle&{floor:number;top:number})[]=[];const stadium=buildStadium({box,put,cylinder,sign,obstacles,walkSurfaces,rails:stadiumRails,surfaceAreas,add:o=>town.add(o),materials});
   destinations.push(...coralCay.destinations);
   // Summit Isle (lib/town/summitIsleWorld.ts, Oct 12 2026): its terrain, sandbar and Summit 5s join the same batches.
   // Guarded: a failure here must never stop the island loading (the island's land and flight rules still apply without it).

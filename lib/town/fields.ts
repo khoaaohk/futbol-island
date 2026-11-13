@@ -16,6 +16,30 @@ export function pitchStripePlan(v:Pick<Venue,'id'|'length'|'width'>):StripePlan|
  const boxDepth=v.id==='11v11'?16.5:v.id==='9v9'?13:SEVEN_PENALTY_DEPTH;
  return stripePlan(v.length,{boxDepth,lanesWidth:v.id==='11v11'?v.width:undefined});
 }
+/** One goal's frame (round posts, crossbar and the back frame, merged) and net (line pairs), in venue-local metres: the goal line at
+z = side × length/2, the frame's foot at `base`. Shared by the island pitches (below) and the West Coast Stadium (stadiumWorld.ts). */
+export function goalGeometry(v:Pick<Venue,'goalWidth'|'goalHeight'|'length'>&{id:string},side:number,base:number){
+ const l=v.length/2;
+ const goalPts:number[]=[];const line=(a:number[],b:number[])=>goalPts.push(...a,...b);
+ const gw=v.goalWidth/2,h=base+v.goalHeight,z=side*l,back=z+side*GOAL_DEPTH;
+ // Solid round posts and crossbar read independently from the finer netting.
+ const tubes:T.BufferGeometry[]=[];
+ const tube=(a:number[],b:number[],radius:number)=>{const from=new T.Vector3(...a),to=new T.Vector3(...b),g=new T.CylinderGeometry(radius,radius,from.distanceTo(to),10);g.applyMatrix4(new T.Matrix4().compose(from.clone().add(to).multiplyScalar(.5),new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),to.sub(from).normalize()),new T.Vector3(1,1,1)));tubes.push(g);};
+ const radius=goalPostRadius(v.id);
+ for(const x of [-gw,gw]){
+  tube([x,base,z],[x,h,z],radius);tube([x,base+.035,z],[x,base+.035,back],.035);
+  tube([x,base,back],[x,h-.12,back],.035);tube([x,h,z],[x,h-.12,back],.035);
+ }
+ tube([-gw,h,z],[gw,h,z],radius);tube([-gw,base+.035,back],[gw,base+.035,back],.035);
+ tube([-gw,h-.12,back],[gw,h-.12,back],.035);
+ const cols=Math.ceil(v.goalWidth/.25),rows=Math.ceil(v.goalHeight/.25);
+ for(let i=0;i<=cols;i++){const x=-gw+i*v.goalWidth/cols;line([x,base,back],[x,h-.12,back]);line([x,h,z],[x,h-.12,back]);}
+ for(let i=0;i<=rows;i++){const y=base+i*v.goalHeight/rows;line([-gw,Math.min(y,h-.12),back],[gw,Math.min(y,h-.12),back]);for(const x of [-gw,gw])line([x,y,z],[x,Math.min(y,h-.12),back]);}
+ for(const x of [-gw,gw])for(let i=1;i<6;i++){const t=i/6,zz=z+(back-z)*t;line([x,base,zz],[x,h-.12*t,zz]);}
+ const frame=mergeGeometries(tubes)!;tubes.forEach(g=>g.dispose());
+ const net=new T.BufferGeometry();net.setAttribute('position',new T.Float32BufferAttribute(goalPts,3));
+ return {frame,net};
+}
 export function buildFormatFields(scene:T.Scene){
  const roots=new Map<string,T.Group>(),goalSpecs:PropSpec[]=[];const surfaces=new Map<string,T.MeshStandardMaterial>();const owned:(T.Material|T.BufferGeometry)[]=[];
  const cream=new T.LineBasicMaterial({color:'#f5eed5'});owned.push(cream);
@@ -39,25 +63,9 @@ export function buildFormatFields(scene:T.Scene){
  if(v.id==='futsal'){const end=side*l;for(const hand of [-1,1]){const center=hand*1.5;const start=side<0?(hand<0?Math.PI/2:0):(hand<0?Math.PI:Math.PI*1.5);arc(center,end,6,start,start+Math.PI/2);}seg(-1.5,end-side*6,1.5,end-side*6);}
  else{const depth=v.id==='11v11'?16.5:v.id==='9v9'?13:SEVEN_PENALTY_DEPTH,width=v.id==='11v11'?40.32:v.id==='9v9'?29:23;rect(0,side*(l-depth/2),width,depth);rect(0,side*(l-2.5),v.goalWidth+8,5);}
  const goal=new T.Group();goal.name='goal-'+v.id+'-'+side;root.add(goal);
- const goalPts:number[]=[];const line=(a:number[],b:number[])=>goalPts.push(...a,...b);
- const gw=v.goalWidth/2,base=FIELD_SURFACE_Y,h=base+v.goalHeight,z=side*l,back=z+side*GOAL_DEPTH;
- // Solid round posts and crossbar read independently from the finer netting.
- const tubes:T.BufferGeometry[]=[];
- const tube=(a:number[],b:number[],radius:number)=>{const from=new T.Vector3(...a),to=new T.Vector3(...b),g=new T.CylinderGeometry(radius,radius,from.distanceTo(to),10);g.applyMatrix4(new T.Matrix4().compose(from.clone().add(to).multiplyScalar(.5),new T.Quaternion().setFromUnitVectors(new T.Vector3(0,1,0),to.sub(from).normalize()),new T.Vector3(1,1,1)));tubes.push(g);};
- const radius=goalPostRadius(v.id);
- for(const x of [-gw,gw]){
-  tube([x,base,z],[x,h,z],radius);tube([x,base+.035,z],[x,base+.035,back],.035);
-  tube([x,base,back],[x,h-.12,back],.035);tube([x,h,z],[x,h-.12,back],.035);
- }
- tube([-gw,h,z],[gw,h,z],radius);tube([-gw,base+.035,back],[gw,base+.035,back],.035);
- tube([-gw,h-.12,back],[gw,h-.12,back],.035);
- const frameGeo=mergeGeometries(tubes)!;tubes.forEach(g=>g.dispose());owned.push(frameGeo);
+ const {frame:frameGeo,net:netGeo}=goalGeometry(v,side,FIELD_SURFACE_Y);owned.push(frameGeo,netGeo);
  const frame=new T.Mesh(frameGeo,frameMaterial);frame.name='solid-goal-frame';frame.castShadow=true;frame.receiveShadow=true;goal.add(frame);
- const cols=Math.ceil(v.goalWidth/.25),rows=Math.ceil(v.goalHeight/.25);
- for(let i=0;i<=cols;i++){const x=-gw+i*v.goalWidth/cols;line([x,base,back],[x,h-.12,back]);line([x,h,z],[x,h-.12,back]);}
- for(let i=0;i<=rows;i++){const y=base+i*v.goalHeight/rows;line([-gw,Math.min(y,h-.12),back],[gw,Math.min(y,h-.12),back]);for(const x of [-gw,gw])line([x,y,z],[x,Math.min(y,h-.12),back]);}
- for(const x of [-gw,gw])for(let i=1;i<6;i++){const t=i/6,zz=z+(back-z)*t;line([x,base,zz],[x,h-.12*t,zz]);}
- const netGeo=new T.BufferGeometry();netGeo.setAttribute('position',new T.Float32BufferAttribute(goalPts,3));owned.push(netGeo);const net=new T.LineSegments(netGeo,netMaterial);net.name='goal-net';goal.add(net);
+ const net=new T.LineSegments(netGeo,netMaterial);net.name='goal-net';goal.add(net);
  // Kick reaction (lib/graphics/propReactions.ts): a shot off the frame billows the nearby net; the frame only shivers.
  {frameGeo.computeBoundingBox();netGeo.computeBoundingBox();const b=frameGeo.boundingBox!.clone().union(netGeo.boundingBox!),o=root.position,frameAttr=frameGeo.getAttribute('position') as T.BufferAttribute,netAttr=netGeo.getAttribute('position') as T.BufferAttribute;
   goalSpecs.push({kind:'goal',offset:{x:o.x,y:o.y,z:o.z},min:{x:b.min.x+o.x,y:b.min.y+o.y,z:b.min.z+o.z},max:{x:b.max.x+o.x,y:b.max.y+o.y,z:b.max.z+o.z},parts:[{attribute:frameAttr,start:0,count:frameAttr.count,gain:.12},{attribute:netAttr,start:0,count:netAttr.count}]});}}

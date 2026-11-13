@@ -8,8 +8,11 @@
 import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {tintGroundMesh} from '../graphics/groundTint';
+import {goalGeometry} from './fields';
+import {GOAL_DEPTH} from './goalCollisions';
+import {STADIUM_VENUE,STADIUM_PITCH_Y} from './venues';
 import {STADIUM,STADIUM_GATE} from './westParkLayout';
-import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,GATE_ARCH_X,rowHeight,seatCount,type Rail,type Surface,type StandDef} from './stadiumSeats';
+import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,type Rail,type Surface,type StandDef} from './stadiumSeats';
 
 export type StadiumTools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -17,9 +20,13 @@ export type StadiumTools={
  cylinder:(r:number,h:number,c:string,x:number,y:number,z:number)=>T.Mesh;
  sign:(text:string,w:number,h:number,x:number,y:number,z:number,bg?:string,ink?:string,rotation?:number)=>T.Mesh;
  obstacles:Obstacle[];walkSurfaces:Surface[];rails:Rail[];surfaceAreas:{kind:string;x:number;z:number;w:number;d:number}[];
+ /** Optional (phase 3): adds the goal nets (one LineSegments) to the town; its material joins `materials` for disposal. */
+ add?:(o:T.Object3D)=>void;materials?:T.Material[];
 };
 export type StadiumStats={surfaces:number;rails:number;boxes:number;seatsStrips:number;seats:number};
 
+/** Height above a row of the low seat-back strip's top; the per-seat tops rise from there to 1.13 m. */
+const BACK_SPLIT=.92;
 const CONCRETE=['#d8cfbd','#cec4af'],TREAD_C='#c2b59c',CONCOURSE_C='#e3d9c3',RAIL_C='#315b50',STEEL='#e9e4d6';
 
 export function buildStadium(t:StadiumTools):StadiumStats{
@@ -49,10 +56,30 @@ export function buildStadium(t:StadiumTools):StadiumStats{
     // Blocks: the team's two colours alternate by block, with the back rows of the middle blocks in the second colour (a stripe).
     const c=s.team[(k+(i>=ROWS-3?1:0))%2],dark=new T.Color(c).multiplyScalar(.78).getStyle();
     rectBox(standRect(s,d0+SEAT_DEPTH-.25,d0+SEAT_DEPTH+.25,a0+.05,a1-.05),h,h+SEAT_TOP,c);
-    rectBox(standRect(s,d0+SEAT_DEPTH+.2,d0+SEAT_DEPTH+.3,a0+.05,a1-.05),h+SEAT_TOP,h+1.13,dark);
-    strips+=2;
+    // The seat back: a continuous low strip plus one notched-out top per seat (phase 3: the strips read as long benches).
+    rectBox(standRect(s,d0+SEAT_DEPTH+.2,d0+SEAT_DEPTH+.3,a0+.05,a1-.05),h+SEAT_TOP,h+BACK_SPLIT,dark);
+    skip(seatBackTops(s,d0+SEAT_DEPTH+.2-.004,a0,a1,h+BACK_SPLIT,h+1.13,dark));
+    strips+=3;
    });
   }
+ }
+ /** One quad per seat (pitch-facing, 2 triangles) on top of the low back strip, SEAT_PITCH apart with a 0.12 m gap: the notches
+  *  that make a strip read as single seats. One geometry per row and block, painted and merged into the chunk batch like the
+  *  strips (no draw call); about 10.5k triangles for the 5,250 seats. Seen from behind, only the low strip shows. */
+ function seatBackTops(s:StandDef,d:number,a0:number,a1:number,y0:number,y1:number,c:string){
+  const {n,start}=spanSeats(a0,a1),mid=standWorld(s,d,(a0+a1)/2),ym=(y0+y1)/2,hw=(SEAT_PITCH-.12)/2;
+  const toPitch=standWorld(s,d-1,0),at=standWorld(s,d,0),nx=toPitch.x-at.x,nz=toPitch.z-at.z;
+  const pos=new Float32Array(n*12),nor=new Float32Array(n*12),uv=new Float32Array(n*8),idx:number[]=[];
+  for(let k=0;k<n;k++){const sa=start+k*SEAT_PITCH,l=standWorld(s,d,sa-hw),r=standWorld(s,d,sa+hw),o=k*4;
+   pos.set([l.x-mid.x,y0-ym,l.z-mid.z,r.x-mid.x,y0-ym,r.z-mid.z,r.x-mid.x,y1-ym,r.z-mid.z,l.x-mid.x,y1-ym,l.z-mid.z],k*12);
+   for(let j=0;j<4;j++)nor.set([nx,0,nz],k*12+j*3);uv.set([0,0,1,0,1,1,0,1],k*8);
+   // Wind the quad counter-clockwise as seen from the pitch (its face normal along the pitch-ward normal).
+   const ex=r.x-l.x,ez=r.z-l.z,front=(-ez)*nx+ex*nz>0;// (r-l)×(top-l) ∝ (-ez,0,ex)
+   if(front)idx.push(o,o+1,o+2,o,o+2,o+3);else idx.push(o,o+2,o+1,o,o+3,o+2);
+  }
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));g.setAttribute('normal',new T.BufferAttribute(nor,3));
+  g.setAttribute('uv',new T.BufferAttribute(uv,2));g.setIndex(idx);
+  return put(g,c,mid.x,ym,mid.z);
  }
  function railings(s:StandDef,list:readonly Rail[]){
   const back=standBack(s),rowsEnd=s.inner+ROWS*ROW_DEPTH;
@@ -90,7 +117,7 @@ export function buildStadium(t:StadiumTools):StadiumStats{
  tintGroundMesh(box(20,.02,STADIUM_GATE.halfWidth*2,'#c9b892',S.x+50,-.065,S.z),'path').castShadow=false;// the gate's walk in
  tintGroundMesh(box(W+8,.05,L+8,'#6e9678',S.x,-.07,S.z),'grass');
  for(let i=0;i<10;i+=2)box(W,.008,L/10,'#78a083',S.x,-.04,S.z-L/2+(i+.5)*L/10).castShadow=false;
- const white='#f4f1e6',ln=.12,ly=-.034;
+ const white='#f4f1e6',ln=.12,ly=-.034,netPts:number[]=[];
  const lineBox=(w:number,d:number,x:number,z:number)=>{box(w,.008,d,white,x,ly,z).castShadow=false;};
  for(const sx of [-1,1])lineBox(ln,L,S.x+sx*W/2,S.z);
  for(const sz of [-1,1])lineBox(W,ln,S.x,S.z+sz*L/2);
@@ -100,9 +127,18 @@ export function buildStadium(t:StadiumTools):StadiumStats{
   const goalZ=S.z+sz*L/2,box16=15.4,width16=38;
   lineBox(width16,ln,S.x,goalZ-sz*box16);for(const sx of [-1,1])lineBox(ln,box16,S.x+sx*width16/2,goalZ-sz*box16/2);
   lineBox(17,ln,S.x,goalZ-sz*5.2);for(const sx of [-1,1])lineBox(ln,5.2,S.x+sx*8.5,goalZ-sz*2.6);
-  for(const sx of [-1,1])skip(cylinder(.07,2.3,white,S.x+sx*3.6,1.15,goalZ+sz*.1));
-  box(7.3,.14,.14,white,S.x,2.3,goalZ+sz*.1);
+  // The real goals (phase 3): the island pitches' frame and net (fields.ts goalGeometry), full size (7.32 × 2.44 m). The frame
+  // is painted into the chunk batch (no draw call of its own); both nets share one LineSegments (1 draw, frustum-culled).
+  const {frame,net}=goalGeometry(STADIUM_VENUE,sz,STADIUM_PITCH_Y);frame.translate(0,0,-sz*L/2);skip(put(frame,'#fff6df',S.x,0,goalZ));
+  const np=net.getAttribute('position');for(let i=0;i<np.count;i++)netPts.push(np.getX(i)+S.x,np.getY(i),np.getZ(i)+S.z);net.dispose();
+  // Walk colliders like the island goals' (goalCollisions.ts GOAL_BARRIERS): the two side nets and the back net; the mouth stays open.
+  const gw=STADIUM_VENUE.goalWidth/2,back=goalZ+sz*GOAL_DEPTH;
+  for(const hand of [-1,1])obstacles.push({x:S.x+hand*gw,z:(goalZ+back)/2,w:.13,d:GOAL_DEPTH+.13});
+  obstacles.push({x:S.x,z:back,w:STADIUM_VENUE.goalWidth+.13,d:.07});
  }
+ if(t.add){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(netPts,3));
+  const m=new T.LineBasicMaterial({color:'#c6d4cc',transparent:true,opacity:.68});t.materials?.push(m);
+  const nets=new T.LineSegments(g,m);nets.name='stadium-goal-nets';t.add(nets);}
 
  // --- Pitchside boards: dark backs (the sponsor art lands on their faces later) and their colliders (the gaps stay open) ---------
  const layout=stadiumSponsorLayout();
