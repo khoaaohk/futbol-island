@@ -81,7 +81,7 @@ export const PART_1:Record<string,NpcFresh>={
  ]),
 
  priya:N([
-  T(`eleven-time`,`How long is an 11v11 match?`,`Grown-up matches have two halves of forty-five minutes with a break in between. Youth games are usually shorter, depending on age.`,`What is added time?`,`The referee adds extra minutes at the end of each half for time lost to injuries, substitutions and other stops.`),
+  T(`eleven-time`,`How long is an 11v11 match?`,`Grown-up matches have two halves of forty-five minutes with a break in between. Youth games are usually shorter, depending on age.`,`Where do the extra minutes come from?`,`The referee adds extra minutes at the end of each half for time lost to injuries, substitutions and other stops.`),
   T(`midfield-types`,`Are all midfielders the same?`,`No. Some sit deep to protect the defence, some link play in the middle, and some push forward to create chances. Each needs different habits.`,`Which one should I try?`,`Try all of them in training. Each role teaches you something new about space and timing.`),
   T(`open-body`,`What is an open body shape?`,`Stand side-on when receiving, so you can see the ball and the pitch ahead at the same time. It makes turning forward much quicker.`,`How can I train that shape?`,`Receive passes with your back foot, the one further from the passer. That naturally opens your hips toward the field.`),
   T(`half-turn`,`What is a half-turn?`,`It is receiving the ball while already turning, so your first touch takes you forward. You need to have scanned first to know it is safe.`),
@@ -161,7 +161,7 @@ export const PART_1:Record<string,NpcFresh>={
   T(`team-huddle`,`What do you say in a team huddle?`,`Keep it short: one goal for the team, one reminder for each line, and something encouraging. Then everyone shouts together.`,`Can someone else speak?`,`Yes. A good captain invites others to share, especially if they noticed something important.`),
   T(`warm-up-lead`,`Does a captain lead the warm-up?`,`Often they help. A warm-up with gentle running, stretches and passing gets bodies ready and helps the team feel together.`),
   T(`press-signal`,`How does a team know when to press?`,`Teams agree on a trigger, like a bad touch or a pass to the side. When it happens, the nearest players press together.`,`What if only one person presses?`,`Then the other team just passes around them. Pressing works best when teammates go at the same time.`),
-  T(`wall-organise`,`Who sets up the wall at a free kick?`,`Often the goalkeeper tells players where to stand, and the captain helps organise them quickly.`,`How far away must the wall be?`,`In 11v11, defenders must be at least about nine metres from the ball until it is kicked.`),
+  T(`wall-organise`,`Who sets up the wall at a free kick?`,`Often the goalkeeper tells players where to stand, and the captain helps organise them quickly.`,`How far back does the wall stand?`,`In 11v11, defenders must be at least about nine metres from the ball until it is kicked.`),
   T(`mistake-support`,`What do you do when a teammate makes a mistake?`,`Say something kind right away, like 'next one'. A quick reset helps them play freely again.`,`What if they keep making mistakes?`,`Talk calmly at a break about one small thing to try. Everyone has tough days.`),
   T(`armband-share`,`Can we take turns being captain?`,`Yes, many youth teams rotate the armband. It teaches everyone how to lead and listen.`)
  ],[
@@ -256,7 +256,7 @@ export const PART_1:Record<string,NpcFresh>={
  ]),
 
  imani:N([
-  T(`points-table`,`How do league points work?`,`In most leagues, a win gives three points, a draw gives one and a loss gives none. The team with the most points ranks highest.`,`What if teams have the same points?`,`Leagues often look at goal difference next, then other tie-breakers set by the competition.`),
+  T(`points-table`,`How does a team earn league points?`,`Most leagues reward a win with three points, a draw with one and a loss with none. The team with the most points ranks highest.`,`What if teams have the same points?`,`Leagues often look at goal difference next, then other tie-breakers set by the competition.`),
   T(`goal-difference`,`What is goal difference?`,`Goals scored minus goals conceded. Score twenty and concede twelve, and your goal difference is plus eight.`,`Can it be negative?`,`Yes. If a team concedes more than it scores, the number goes below zero.`),
   T(`own-goal-count`,`Who gets the goal if it is an own goal?`,`The other team. If a defender accidentally puts the ball in their own net, the goal counts for the opponents.`),
   T(`clean-sheet`,`What is a clean sheet?`,`It means a team did not concede any goals in a match. Keepers and defenders are proud of clean sheets.`,`Does a draw count?`,`Yes, if it is nil-nil. Both teams have a clean sheet in that case.`),

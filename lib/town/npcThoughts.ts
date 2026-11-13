@@ -391,6 +391,69 @@ const CAST:Record<string,Record<string,NpcThoughts>>={
  konbini:{
   'konbini-cashier-hana':t(['Irasshaimase! Welcome in!','Magazines by the window!','Snacks at the counter, fresh today.','Football magazines just arrived.','Find something tasty for after practice.','Thank you for visiting!'],
    ['Straightening the magazine rack.','Onigiri shelf, fully stocked.','Quiet moment at the till.','The new issue arrived this morning.'])
+ },
+ // DRIP FC Stadium (lib/town/stadiumNpcs.ts): greeters, guides, fans, coaches, score fans, broadcast crew, photographers.
+ stadium:{
+  'stadium-greeter-anouk':t(['Welcome in, and cheer for good football!','Clap a great save, whoever makes it.','Both teams deserve a warm welcome.','Fair play starts right here at the gate.','Cheer loud, but never boo a mistake.','Respect the referee, even on hard calls.','A handshake before kick-off says a lot.'],
+   ['Counting happy faces at the gate.','Smiling at every fan who walks past.','Visitors are guests, and guests are welcome.','The away fans are lovely people too.']),
+  'stadium-greeter-tomasz':t(['The teams walk out together, side by side.','Captains meet the referee for the coin toss.','Kick-off is taken from the centre mark.','Every player starts in their own half.','The warm-up is nearly finished now.','The walk-out gives me goosebumps every time.','Handshakes first, then the whistle.'],
+   ['Checking the clock: not long to kick-off.','I love the hum before a match starts.','Gates open, and the build-up begins.','The dressing rooms must be buzzing now.']),
+  'stadium-guide-iris':t(['The concourse is the walkway behind the stands.','Players walk out through the tunnel.','Coaches and subs sit in the dugouts.','The technical area is a box by the dugout.','Every stand at this ground has its own name.','Some grounds have safe standing rows.','The next tour starts under the scoreboard.'],
+   ['Polishing my tour guide badge.','Planning the route for the next tour.','Stands, tunnel, dugouts and concourse.','I never get tired of this view.']),
+  'stadium-guide-omari':t(['The centre circle has a 9.15 metre radius.','The penalty area reaches 16.5 metres out.','Penalties are taken from 11 metres.','The goal area is 5.5 metres deep.','Touchlines run down the long sides.','The penalty arc keeps players back.','Goal kicks start inside the goal area.'],
+   ['Drawing a halfway line in the air.','Fresh white lines on the grass today.','Measuring circles in my head again.','Lines, arcs and circles, all with a job.']),
+  'stadium-guide-beatrix':t(['Keep the gangways clear, please.','Exit signs always show the way out.','Lost your grown-up? Ask a steward.','Floodlights stand tall to stop shadows.','The roof keeps the rain off the fans.','Capacity means everyone can leave safely.','Stewards are here to help, so just ask.'],
+   ['One more lap of the ring path.','Checking the exit signs are bright.','The floodlights will come on soon.','Safe stadiums are happy stadiums.']),
+  'stadium-walker-kwesi':t(['Press as a team, never alone.','A bad touch is a signal to press.','Close the ball down and cover the near pass.','Pressing late in games needs stamina.','Win it high and the goal is close.','A back pass can be our trigger to press.','Curve your run to block the easy pass.'],
+   ['Park trail lap done, park trail lap next.','Breathing steady on the trail.','Water break, then another lap.','Legs tired, but pressing needs this.']),
+  'stadium-fan-leon':t(['Say the name first, then the call.','Man on means someone is right behind you.','Time means you are free to turn.','Keeper calls are loud and early.','Short calls are the best calls.','Practising my well done shout for Saturday.','A quiet team is a confused team.'],
+   ['Whispering my calls so nobody hears.','Man on, time, turn, man on, time.','Saving my voice for Saturday.','Counting the stairs between shouts.']),
+  'stadium-coach-gustavo':t(['Stand on the line from ball to goal.','Step out a little to shrink the goal.','Too far out and they can chip you.','Small shuffles keep a keeper in place.','Knees soft, weight on your toes.','Watch how the keeper moves with the ball.','Be still and set as the striker shoots.'],
+   ['Studying the keeper from behind the goal.','Shuffle, set and save, over and over.','That keeper reads angles nicely.','Remembering my own keeping days.']),
+  'stadium-coach-mireille':t(['Watch the second-last defender.','No offside from a throw-in.','No offside from a corner or a goal kick.','Offside only counts if you join in.','Stay level, then sprint on the pass.','You cannot be offside in your own half.','Defenders step up together in a line.'],
+   ['Drawing the back line in my notebook.','That striker timed the run perfectly.','Watching the line, not the ball.','The back four look nicely level.']),
+  'stadium-coach-nkechi':t(['Attack the space, not the ball.','Attackers stay 1 metre from a big wall.','Start your corner run late.','Keep someone back at every corner.','The wall stands 9.15 metres away.','Every set piece is a little plan.','Throw-ins are set pieces too.'],
+   ['Drawing corner runs in my notebook.','That free kick routine was clever.','Arrows and circles all over my pages.','Counting players in the wall.']),
+  'stadium-score-devika':t(['Ask me and we can check the latest result.','A win is worth three points in most leagues.','A draw still earns one point.','Goal difference is scored minus let in.','Want the newest Premier League result?','The table tells a story over a season.','Points first, then goal difference.'],
+   ['Refreshing my results notes.','Reading the league table carefully.','Waiting for the next full-time whistle.','Doing goal difference sums in my head.']),
+  'stadium-score-lucinda':t(['Ask me, dear, and we will check La Liga.','Wingers on the touchline stretch defences.','Width opens gaps in the middle.','Full-backs can give width too, dear.','When one goes wide, another covers.','Hug the line and the pitch gets bigger.'],
+   ['Knitting a scarf in my team colours.','Watching the wingers warm up.','A lovely wide pass, just lovely.','Waiting for the latest La Liga news.']),
+  'stadium-score-ren':t(['Ask me and we can look up the J1 League.','Switch play to find the free side.','Look up before the ball arrives.','One long pass can switch the play.','Short passes across the back switch it too.','Crowd one side, attack the other.'],
+   ['Drawing another passing map.','Arrows from left to right, very neat.','My notebook is almost full.','Waiting for the J1 League news to update.']),
+  'stadium-crew-freya':t(['The wide shot shows the ball and the shape.','My camera sits high on the halfway line.','Smooth pans, no wobbles.','Most of the match comes from my camera.','From up here, both halves fit in the shot.','I keep filming even at a throw-in.'],
+   ['Checking my focus one more time.','Steady hands, steady picture.','Lining up the shot for kick-off.','Panning gently with the warm-up.']),
+  'stadium-crew-mateus':t(['A close-up shows how players feel.','Cameras behind each goal catch the finish.','Find the scorer and stay on them.','Low cameras run along the touchline too.','Every camera gives a different view.','Replays often come from behind the goal.'],
+   ['Zooming in on the coach for practice.','Testing my zoom on the corner flag.','Ready for the next celebration.','Close-up lens cleaned and ready.']),
+  'stadium-crew-callum':t(['Describe the play, then let it breathe.','Names, numbers and notes on my desk.','Commentary helps people picture the game.','Sometimes the best commentary is silence.','My headset keeps my voice clear.','I learn every name before the match.'],
+   ['Reading my team sheets once more.','Warming up my commentary voice.','Testing, testing, one two.','Checking how to say every name.']),
+  'stadium-crew-adaeze':t(['The director picks the shot we see.','Replays show the run before the pass.','I explain the why behind each move.','Watch the players away from the ball.','A slow replay settles big moments.','The director watches every camera at once.'],
+   ['Scribbling tactics notes.','Watching the shape of both teams.','Spotting a pressing pattern already.','Waiting for the director to cue us.']),
+  'stadium-photo-joon':t(['Big moments happen near the goals.','Players run toward me after a goal.','Photographers stay in marked areas.','Shots, saves and celebrations happen here.','Quick bursts, then I pick the best photo.','I never get in the way of the players.'],
+   ['Waiting quietly for a goal.','Lens pointed at the goalmouth.','Shh, the striker is lining up.','Sorting my best photos so far.']),
+  'stadium-photo-esme':t(['A long lens works like a telescope.','Fast shutter speeds freeze the ball.','No flash beside the pitch, ever.','The floodlights light my photos.','My monopod holds this heavy lens.','I can see the far goal from here.'],
+   ['Resting my lens on its monopod.','Checking the shutter speed again.','That glint is just the sun on my lens.','Waiting for the ball to fly.']),
+  'stadium-viewer-sol':t(['Watching together beats watching alone.','The picture comes from the cameras inside.','Everyone gasps together at a near miss.','Public viewing feels like a giant living room.','Clap good play from both teams out here too.','Keep the paths clear so everyone can see.'],
+   ['Saving a spot for my friends.','Waiting for the kick-off picture.','The crowd out here grows every minute.','Humming the club song quietly.']),
+  'stadium-viewer-ingeborg':t(['Ooh, watch the space open up, dear.','That was a near miss, just past the post.','A replay will show it from another angle.','The home team is usually listed first.','The minute shows how long has been played.','See how they squeeze the space to win it?'],
+   ['Explaining the warm-up to a little one.','Finding a good spot for my folding chair.','Tea in my flask, eyes on the match.','Waiting for the first chance of the game.']),
+  'stadium-mascot-drip':t(['High fives for every young fan!','Mascots make match day extra fun.','Kid mascots walk out holding hands with players.','A splash dance for every goal!','I always wave to the away mascot too.','Cheer kindly, cheer loudly!'],
+   ['Sipping water, mascots must stay cool.','Practising my half-time race wiggle.','Costume check: big drop, big smile.','Resting in the shade for a moment.']),
+  'stadium-bench-hollis':t(['One clear instruction at a time.','Stay inside the box when coaching.','Praise the effort, not just the goal.','Calm coaches help players think.','Only one of us may coach from the box.','Stay compact, and keep talking, gold!'],
+   ['Arms folded, watching the shape.','Writing one note for half-time.','Nodding at a good pass.','Calm voice, clear head.']),
+  'stadium-bench-teodor':t(['Subs, jog and stretch, stay ready.','The board shows who comes on and off.','The player going off leaves first.','Fresh legs late on can change things.','Warm muscles sprint faster.','Give the sub one simple job.'],
+   ['Counting the subs left to use.','Writing a number for the fourth official.','Stretching with the substitutes.','Checking the warm-up timer.']),
+  'stadium-bench-sakura':t(['Formations count from the back.','The keeper is never counted in 4-4-2.','Need a goal? Add a striker.','A short half-time talk sticks best.','Changing shape can change the game.','Two things to fix, then belief.'],
+   ['Moving magnets on my tactics board.','Sketching a 4-3-3 shape.','Thinking about half-time already.','Watching how they press us.']),
+  'stadium-bench-yasmin':t(['Specific praise helps players repeat it.','Next one, mistakes are part of football!','Lovely shoulder check, keep it up!','Well tracked back, blue!','Praise the decision as well as the result.','I note what the head coach cannot see.'],
+   ['Ticking good decisions in my notebook.','Clapping quietly from the bench.','Handing out water bottles.','Smiling at a brave tackle.']),
+  'stadium-ref-wanjiru':t(['Number off first, then number on.','Added time on the board is a minimum.','Coaches, please stay in your areas.','I help the referee from the touchline.','Every sub is checked before it happens.','Calm benches make a calmer match.'],
+   ['Charging the substitution board.','Checking my watch with the referee.','Noting every stoppage minute.','Standing between the two benches.']),
+  'stadium-ref-amara':t(['Flag straight up means offside.','For a throw-in, my flag points the way.','I stay level with the second-last defender.','Side-steps keep my eyes on the pitch.','The referee always has the final say.','My flag helps, the whistle decides.'],
+   ['Jogging the line to stay warm.','Checking my flag unfurls cleanly.','Eyes on the back line.','Side-step, side-step, stop.']),
+  'stadium-ref-oskar':t(['Two arms forward means play on.','One arm pointing shows a direct free kick.','Pointing at the spot means a penalty.','Advantage keeps a good attack going.','Accept the call and play on.','Thank the officials after the final whistle.'],
+   ['Rehearsing my advantage signal.','Running the line nice and level.','Saving notes for my referee course.','Smiling at a fair tackle.']),
+  'stadium-photo-rafael':t(['My bib shows I may work pitch-side.','Photos go out while the match is on.','An editor picks the best picture.','Fans at home see photos in minutes.','Shoot, choose, send, then shoot again.','Many photographers start at youth games.'],
+   ['Sending a photo to the newsroom.','Picking the sharpest shot.','Laptop charged, camera ready.','Adjusting my bib straps.'])
  }
 };
 
@@ -421,7 +484,9 @@ const BY_AREA:Record<string,NpcThoughts>={
  shop:t(['The Kit Shop has new shirts today.','Boots, balls and shirts everywhere.','Shopping for kit is so exciting.','Try on boots with your match socks.','The ball wall is my favourite part.'],
   ['Hangers clicking, shoppers chatting.','Shelves full of fresh kit.','A shiny new ball on display.']),
  konbini:t(['The konbini shelves are fully stocked.','Snacks, drinks and football magazines.','Rice balls on the shelf, lovely.','The magazine rack has new issues.','Quick snack before practice?'],
-  ['The fridge is humming softly.','A bell rings as the door opens.','Shelves neat and tidy.'])
+  ['The fridge is humming softly.','A bell rings as the door opens.','Shelves neat and tidy.']),
+ stadium:t(['The stadium is buzzing before kick-off.','Can you hear the crowd warming up?','Floodlights, stands and a perfect pitch.','Match day at DRIP FC Stadium!','Fans streaming in from every gate.'],
+  ['Flags flutter on the stadium roof.','The groundstaff watered the pitch.','A buzz of chatter round the stands.'])
 };
 
 /** Area id for every NPC with a pool (engine helper: an NPC's fallback pool is BY_AREA[NPC_THOUGHT_AREA[id]]). */
@@ -528,7 +593,23 @@ const BANTER:NpcBanter[]=[
  // kit shop
  b('yuna-femi','shop-yuna','shop-clerk-femi',['Femi, our kit cannot match theirs!','Right. Teams wear different colours.','So everyone can tell us apart!']),
  b('tane-yusuf','shop-tane','shop-yusuf',['Do these studs suit soft ground?','Longer studs grip soft mud better.','Thanks! You really know your boots.']),
- b('nadia-oskar','shop-nadia','shop-oskar',['Oskar, shin guards go under your socks.','Can my number be nine?','If you promise to wear these.'])
+ b('nadia-oskar','shop-nadia','shop-oskar',['Oskar, shin guards go under your socks.','Can my number be nine?','If you promise to wear these.']),
+ // stadium
+ b('anouk-tomasz','stadium-greeter-anouk','stadium-greeter-tomasz',['Tomasz, the away fans just arrived!','Then they get our biggest welcome.','Respect for both teams, always.','And a great walk-out for both sides too.']),
+ b('callum-adaeze','stadium-crew-callum','stadium-crew-adaeze',['Adaeze, that was a lovely switch of play.','Yes, and watch the runner who made space.','I describe it, you explain it.','Teamwork, just like on the pitch.']),
+ b('freya-mateus','stadium-crew-freya','stadium-crew-mateus',['Mateus, I will keep the wide shot.','And I will find the scorer close up.','Then the director picks between us.']),
+ b('devika-lucinda','stadium-score-devika','stadium-score-lucinda',['Lucinda, shall we check the newest results?','Yes, dear, if a fan asks us.','Three points for a win, remember.','And width wins plenty of them!']),
+ b('iris-omari','stadium-guide-iris','stadium-guide-omari',['Omari, you take the lines, I take the stands.','Deal, the centre circle is my favourite.','And the tunnel is mine.']),
+ b('beatrix-kwesi','stadium-guide-beatrix','stadium-walker-kwesi',['Kwesi, keep to the path, please.','Of course, I am training my pressing legs.','Then drink some water on the way.']),
+ b('mireille-nkechi','stadium-coach-mireille','stadium-coach-nkechi',['Nkechi, no offside from a corner, right?','Right, so my runners can start anywhere.','Then I will watch your free kicks instead.']),
+ b('gustavo-joon','stadium-coach-gustavo','stadium-photo-joon',['Joon, you see the keeper like I do.','Yes, from behind the goal it is all angles.','Then catch the save when it comes.']),
+ b('esme-rafael','stadium-photo-esme','stadium-photo-rafael',['Rafael, did your photos send yet?','Already, and my editor picked one.','Then I had better freeze the next goal.']),
+ b('sol-ingeborg','stadium-viewer-sol','stadium-viewer-ingeborg',['Ingeborg, why did everyone say ooh?','A near miss, dear, it hit the post.','Will they show it again?','Yes, a replay from another camera, watch.']),
+ b('hollis-teodor','stadium-bench-hollis','stadium-bench-teodor',['Teodor, is our number seven warm?','Warm and ready, coach.','Then one job: stay wide.','I will tell the fourth official.']),
+ b('sakura-yasmin','stadium-bench-sakura','stadium-bench-yasmin',['Yasmin, we switch to a back three.','I will tell them which way to shift.','And praise the first good tackle.','My hands are ready to clap!']),
+ b('amara-oskar','stadium-ref-amara','stadium-ref-oskar',['Oskar, did you see that run?','Level, so I kept my flag down.','Good call, the line was tight.']),
+ b('wanjiru-drip','stadium-ref-wanjiru','stadium-mascot-drip',['Drip, the mascot race is after the whistle.','Splash! I will race fair, I promise.','And drink some water first, please.','Already sipping, thank you!']),
+ b('leon-ren','stadium-fan-leon','stadium-score-ren',['Takumi, did you hear my man on call?','Loud and clear, all the way up here.','Can a call help you switch play?','Yes, a shout of switch tells them to look.'])
 ];
 
 export const THOUGHTS:NpcThoughtBook={

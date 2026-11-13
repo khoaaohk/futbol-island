@@ -3,7 +3,9 @@ function load(file){file=path.resolve(file);if(cache.has(file))return cache.get(
 const {NPC_DIALOGUES:npcs}=load('lib/town/npcDialogues.ts'),{NEWS_LEAGUES}=load('lib/town/newsLeagues.ts');
 for(const key of ['id','name','greeting','pursuit'])assert.equal(new Set(npcs.map(n=>n[key])).size,npcs.length,`unique ${key}`);
 const answers=new Map();for(const n of npcs){assert(n.topics.length>0,n.id);for(const t of n.topics){assert(!answers.has(t.answer),`${n.id} repeats ${answers.get(t.answer)}`);answers.set(t.answer,n.id);assert(t.question&&t.followUp.question&&t.followUp.answer);}}
-const news=npcs.filter(n=>n.matchStory);assert.equal(news.length,20);assert.deepEqual([...new Set(news.map(n=>n.newsLeague))].sort(),Object.keys(NEWS_LEAGUES).sort());for(const league of Object.keys(NEWS_LEAGUES)){const pair=news.filter(n=>n.newsLeague===league);assert.equal(pair.length,2);assert.notEqual(pair[0].newsSlot,pair[1].newsSlot);assert.notEqual(pair[0].newsFocus,pair[1].newsFocus);}
+// DRIP FC Stadium score fans (lib/town/stadiumNpcs.ts) are extra desks (slot 2) on top of the island's twenty.
+const stadiumFans=npcs.filter(n=>n.matchStory&&n.id.startsWith('stadium-'));assert.equal(stadiumFans.length,3);assert(stadiumFans.every(n=>n.newsSlot===2));
+const news=npcs.filter(n=>n.matchStory&&!n.id.startsWith('stadium-'));assert.equal(news.length,20);assert.deepEqual([...new Set(news.map(n=>n.newsLeague))].sort(),Object.keys(NEWS_LEAGUES).sort());for(const league of Object.keys(NEWS_LEAGUES)){const pair=news.filter(n=>n.newsLeague===league);assert.equal(pair.length,2);assert.notEqual(pair[0].newsSlot,pair[1].newsSlot);assert.notEqual(pair[0].newsFocus,pair[1].newsFocus);}
 assert.equal(npcs.filter(n=>n.ranking).length,1);assert.equal(npcs.find(n=>n.ranking).id,'noor');assert(!npcs.find(n=>n.ranking).matchStory);assert.equal(npcs.filter(n=>n.topics.some(t=>t.question==='Pass or dribble?')).length,1);
 console.log(`PASS ${npcs.length} distinct names, greetings, purposes and topic answers; twenty league desks, ten competitions, one ranking host`);
 
