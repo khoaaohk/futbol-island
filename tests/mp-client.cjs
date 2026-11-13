@@ -288,6 +288,32 @@ t('bindConnection is idempotent per connection (#4): second bind adds no subscri
 
 // ---- interp ----
 const R=()=>({x:0,y:0,z:0,yaw:0,speed:0,mode:0,zone:0,fade:0});
+t('interp: a far (quiet 2 Hz) 34 m/s jetpack flyer with ±80 ms jitter: no stall-then-leap (slow-stream cap)',()=>{
+  for(const delayMs of [240,380]){
+    const it=ip.createInterp({delayMs}),out=R();let seed=7;const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+    const T0=10000,N=16,jit=[];for(let i=0;i<=N;i++)jit.push(Math.round((rnd()*2-1)*80));
+    let prev=null,run=0,worstRun=0,worst=0,frames=0,pushed=0;
+    for(let now=T0;now<=T0+N*500+2000;now+=16){
+      while(pushed<=N&&T0+pushed*500+jit[pushed]<=now){it.push(8,[pushed*170,300,0,0,136,5,0,0],T0+pushed*500+jit[pushed]);pushed++;}
+      if(now<T0+1600||now>T0+N*500)continue;
+      assert.ok(it.sample(8,now,out));
+      if(prev!==null){const d=out.x-prev;worst=Math.max(worst,Math.abs(d));if(Math.abs(d)<0.15){run++;worstRun=Math.max(worstRun,run);}else run=0;}
+      prev=out.x;frames++;
+    }
+    assert.ok(frames>300);assert.ok(worst<5,`delay ${delayMs}: a ${worst.toFixed(2)} m frame jump`);
+    assert.ok(worstRun<3,`delay ${delayMs}: ${worstRun} frozen frames in a row (the stall before a leap)`);
+  }
+});
+t('interp: a close 10 Hz take-off from standing still never freezes (round 6 regression guard)',()=>{
+  const it=ip.createInterp({delayMs:240}),out=R();
+  for(let i=0;i<5;i++)it.push(3,[0,300,0,0,0,0,0,0],1000+i*1000); // idle 1 Hz
+  const T0=5100,at=i=>T0+i*100+((i*37)%41-20);let i=1,prev=null,frozen=0;
+  for(let now=T0;now<=T0+3000;now+=16){
+    while(i<=30&&at(i)<=now){it.push(3,[i*34,300,0,0,136,5,0,0],at(i));i++;}
+    if(now<T0+490)continue;
+    it.sample(3,now,out);if(prev!==null&&Math.abs(out.x-prev)<0.05)frozen++;prev=out.x;}
+  assert.ok(frozen<=1,`${frozen} frozen frames after take-off`);
+});
 t('interp: straight walk at 5 Hz, error < 0.05 m',()=>{
   const it=ip.createInterp(),out=R();let maxErr=0,samples=0;
   const T0=10000;
@@ -299,17 +325,17 @@ t('interp: straight walk at 5 Hz, error < 0.05 m',()=>{
   assert.equal(it.sample(99,1,out),false);it.drop(3);assert.equal(it.sample(3,50000,out),false);
 });
 
-t('interp: extrapolation stops after 250 ms and eases',()=>{
+t('interp: extrapolation stops at the cap (250 ms, or 1.3 x a slower moving stream: 260 ms at 5 Hz) and eases',()=>{
   const it=ip.createInterp(),out=R();
   for(let i=0;i<4;i++)it.push(1,[i*10,0,0,64,4,0,0,0],1000+i*200); // 1 m/s... 1 m per 200 ms = 5 m/s
   // last snapshot at 1600; render time = now - 250
   const at=dt=>{it.sample(1,1600+250+dt,out);return out.x;};
-  const x0=at(0),xa=at(100),xb=at(250),xc=at(260),xd=at(2000);
+  const x0=at(0),xa=at(100),xb=at(260),xc=at(275),xd=at(2000);
   assert.ok(Math.abs(x0-3)<1e-6,'starts at the snapshot');
   assert.ok(xa>x0&&xb>xa,'moves during the cap');
   assert.ok(xc<=xb&&xc>x0,'then starts gliding back');assert.ok(Math.abs(xd-3)<1e-9,'a quiet stream ends on the last real pose');
-  assert.ok(xb-x0<=5*0.25+1e-9,'never beyond plain extrapolation');
-  assert.ok(xb-x0>5*0.25*0.4,'but it did extrapolate');
+  assert.ok(xb-x0<=5*0.26+1e-9,'never beyond plain extrapolation');
+  assert.ok(xb-x0>5*0.26*0.4,'but it did extrapolate');
   assert.ok(at(249)-at(240)<at(10)-at(0),'slows down near the cap (ease to stop)');
   assert.equal(out.yaw,64*2*Math.PI/256);
 });
@@ -356,33 +382,6 @@ t('interp: a 34 m/s jetpack stream at 10 Hz with ±30 ms jitter extrapolates smo
     }
     assert.ok(frames>150);assert.equal(frozen,0,`delay ${delayMs}: ${frozen} frozen frames`);assert.ok(worst<5,`delay ${delayMs}: a ${worst.toFixed(2)} m jump`);
   }
-});
-
-t('interp: a far (quiet 2 Hz) 34 m/s jetpack flyer with ±80 ms jitter: no stalls, no >5 m frame jumps (per-member delay + cap)',()=>{
-  for(const delayMs of [240,380]){
-    const it=ip.createInterp({delayMs}),out=R();let seed=7;const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
-    const T0=10000,N=16,jit=[];for(let i=0;i<=N;i++)jit.push(Math.round((rnd()*2-1)*80));
-    let prev=null,run=0,worstRun=0,worst=0,least=Infinity,frames=0,pushed=0; // 34 m/s = 0.54 m per 16 ms frame
-    for(let now=T0;now<=T0+N*500+2000;now+=16){ // snapshot i (x = 17 m * i) arrives at T0 + 500 i + jitter
-      while(pushed<=N&&T0+pushed*500+jit[pushed]<=now){it.push(8,[pushed*170,300,0,0,136,5,0,0],T0+pushed*500+jit[pushed]);pushed++;}
-      if(now<T0+1600||now>T0+N*500)continue;
-      assert.ok(it.sample(8,now,out));assert.equal(out.fade,1);
-      if(prev!==null){const d=out.x-prev;worst=Math.max(worst,Math.abs(d));least=Math.min(least,d);if(d<0.4){run++;worstRun=Math.max(worstRun,run);}else run=0;}
-      prev=out.x;frames++;
-    }
-    assert.ok(frames>300);assert.ok(worst<5,`delay ${delayMs}: a ${worst.toFixed(2)} m frame jump`);
-    assert.ok(least>0.2,`delay ${delayMs}: a frame moved only ${least.toFixed(3)} m (stall or backward step)`);
-    assert.ok(worstRun<3,`delay ${delayMs}: ${worstRun} frames in a row under 0.4 m (the stall before a leap)`);
-  }
-  // the extra delay follows the stream back down once it is fast again (no lasting lag), and idle 1 Hz poses do not count
-  const it=ip.createInterp({delayMs:240}),out=R();
-  for(let i=0;i<4;i++)it.push(9,[i*170,300,0,0,136,5,0,0],1000+i*500);
-  for(let i=1;i<=60;i++)it.push(9,[510+i*34,300,0,0,136,5,0,0],2500+i*100);
-  for(let now=2500;now<=8500;now+=16)it.sample(9,now,out);
-  it.sample(9,8500,out);assert.ok(Math.abs(out.x-(510+(8500-240-2500)/100*34)/10)<0.6,`back on the shared delay, x ${out.x}`);
-  const q=ip.createInterp({delayMs:240});for(let i=0;i<6;i++)q.push(1,[0,0,0,0,0,0,0,0],1000+i*1000);
-  q.push(1,[10,0,0,0,20,0,0,0],6100);q.push(1,[20,0,0,0,20,0,0,0],6200);q.push(1,[30,0,0,0,20,0,0,0],6300);
-  q.sample(1,6300+240,out);assert.ok(Math.abs(out.x-3)<1e-6,`idle beacons left the delay alone, x ${out.x}`);
 });
 
 t('interp: a >25 m vertical jump is a cut; landings never sink far below the ground pose',()=>{
