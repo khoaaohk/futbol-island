@@ -6,10 +6,11 @@ import { Activity, BallState, Cap, Mode, PoseFlag, RoomCode, S, Zone, presenceOf
 import { ballTouches, byteToDir, createKnockGate, dirToByte, fastBall, knockable } from '../town/ballKnock';
 import { arcadeDoorHintText } from '../town/arcadeDoorHint';
 import { bounceOffField, fieldHit, type FieldBall } from '../town/forceFieldBounce';
-import { NOT_BUSY, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, islandJump, localPoseState, roomActivity, roomText } from './presence';
+import { NOT_BUSY, type LocalSeat, armEntryWarp, entryWarp, entryWarpDue, fillLocalBody, islandJump, localPoseState, roomActivity, roomText } from './presence';
 import { multiplayerEnabled } from './config';
 import type { RemotePose } from './interp';
 import type { LocalBump } from '../graphics/friendBump';
+import { beginSeatFrame, clearRemoteSeats, seatFriend } from '../town/stadiumSeatShare';
 import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends, mutedFriends, onFriendFilters } from './roomParty';
 import { displayName, partyStore } from './store';
 import * as T3 from 'three';
@@ -20,7 +21,9 @@ export { partyConnection, setHiddenFriends, setMutedFriends, hiddenFriends, mute
 
 /** activity: NOT_BUSY (-1) while playing, else the Activity code (lib/multiplayer/presence.ts townActivity); optional for old callers. */
 export type LocalPoseSource = () => { x: number; y: number; z: number; facing: number; speed: number; mode: Mode;
-  zone: Zone; warp: boolean; hidden: boolean; activity?: number; pitch?: number };
+  zone: Zone; warp: boolean; hidden: boolean; activity?: number; pitch?: number;
+  /** The stadium seat I sit in (sent as the seated pose, multiplayer/protocol/seat.ts); null / absent = not seated. */
+  seat?: LocalSeat | null };
 export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.Camera): void; dispose(): void;
   /** The friends' latest interpolated poses (read-only, reused objects): the emote button looks for a friend flying nearby.
    *  Friends inside a force field (busy / away) and friends indoors are NOT listed: nothing can emote at them or pick them. */
@@ -71,10 +74,10 @@ export type RoomDoorHint = { room: number; x: number; y: number; z: number };
 
 // Town helper: assembles the local pose from values Town already has, into one reused object (no allocation per call).
 const SUMMIT = { x: 640, z: 130, r: 150 }, CAY = { x: 612, z: -160, r: 120 };
-const localOut = { x: 0, y: 0, z: 0, facing: 0, speed: 0, mode: Mode.Idle as Mode, zone: Zone.Main as Zone, warp: false, hidden: false, activity: NOT_BUSY, pitch: 0 };
+const localOut = { x: 0, y: 0, z: 0, facing: 0, speed: 0, mode: Mode.Idle as Mode, zone: Zone.Main as Zone, warp: false, hidden: false, activity: NOT_BUSY, pitch: 0, seat: null as LocalSeat | null };
 export function partyLocal(
   loc: { x: number; z: number }, root: { position: { y: number }; rotation: { y: number } }, vel: { x: number; z: number },
-  ride: string, swimming: boolean, diving: boolean, hidden: boolean, activity = NOT_BUSY, pitch = 0,
+  ride: string, swimming: boolean, diving: boolean, hidden: boolean, activity = NOT_BUSY, pitch = 0, seat: LocalSeat | null = null,
 ) {
   const o = localOut, speed = Math.hypot(vel.x, vel.z);
   o.x = loc.x; o.y = root.position.y; o.z = loc.z; o.facing = root.rotation.y; o.speed = speed; o.hidden = hidden;
@@ -82,7 +85,8 @@ export function partyLocal(
     : ride === 'moped' ? Mode.Moped : ride === 'jetpack' ? Mode.Jetpack : speed > 2.6 ? Mode.Run : speed > 0.15 ? Mode.Walk : Mode.Idle;
   const sx = loc.x - SUMMIT.x, sz = loc.z - SUMMIT.z, cx = loc.x - CAY.x, cz = loc.z - CAY.z;
   o.zone = swimming || diving ? Zone.Sea : sx * sx + sz * sz < SUMMIT.r * SUMMIT.r ? Zone.Summit : cx * cx + cz * cz < CAY.r * CAY.r ? Zone.Cay : Zone.Main;
-  o.warp = false; o.activity = activity; o.pitch = pitch;
+  o.warp = false; o.activity = activity; o.pitch = pitch; o.seat = seat;
+  if (seat) { o.mode = Mode.Idle; o.speed = 0; }
   return o;
 }
 
@@ -201,11 +205,11 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     const victim = m[2], d = m[3];
     if (victim === core.you) {
       const l = ctx.local();
-      if ((l.activity ?? NOT_BUSY) >= 0 || !knockable(l.mode, l.zone, l.hidden ? PoseFlag.Hidden : 0)) return; // busy / riding / swimming now
+      if ((l.activity ?? NOT_BUSY) >= 0 || l.seat || !knockable(l.mode, l.zone, l.hidden ? PoseFlag.Hidden : 0)) return; // busy / riding / swimming / seated now
       ctx.onKnock?.(-1, d, l.x, l.y, l.z); return;
     }
     const p = poses.get(victim);
-    if (!p || hiddenFriends().has(victim) || shielded(presenceOf(p.mode, p.zone, p.flags ?? 0)) || !knockable(p.mode, p.zone, p.flags ?? 0)) return;
+    if (!p || p.seated || hiddenFriends().has(victim) || shielded(presenceOf(p.mode, p.zone, p.flags ?? 0)) || !knockable(p.mode, p.zone, p.flags ?? 0)) return;
     if (avatars.tumble(victim, byteToDir(d), ctx.reducedMotion())) ctx.onKnock?.(victim, d, p.x, p.y, p.z);
   });
   const offFilters = onFriendFilters(syncHints);
@@ -245,7 +249,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       let best = -1, bd = range * range;
       const hid = hiddenFriends(), mut = mutedFriends();
       active.forEach((p, id) => {
-        if (hid.has(id) || mut.has(id) || !(p.mode === Mode.Walk || p.mode === Mode.Run || p.mode === Mode.Idle) || Math.abs(p.y - y) > 4) return;
+        if (hid.has(id) || mut.has(id) || p.seated || !(p.mode === Mode.Walk || p.mode === Mode.Run || p.mode === Mode.Idle) || Math.abs(p.y - y) > 4) return;
         const d = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
         if (d <= bd) { bd = d; best = id; }
       });
@@ -262,7 +266,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       const hid = hiddenFriends(), t = now();
       for (let i = 0; i < ids.length; i++) {
         const id = ids[i], p = poses.get(id);
-        if (!p || p.fade < .99 || hid.has(id) || !knockable(p.mode, p.zone, p.flags ?? 0) || !ballTouches(x, y, z, p.x, p.y, p.z)) continue;
+        if (!p || p.fade < .99 || p.seated || hid.has(id) || !knockable(p.mode, p.zone, p.flags ?? 0) || !ballTouches(x, y, z, p.x, p.y, p.z)) continue;
         if (!gate.allow(id, t)) return true; // just knocked over: the ball still bounces off them, nothing is sent
         if (!conn.sendHit(id, dirToByte(vx, vz))) return false;
         gate.note(id, t); return true;
@@ -292,10 +296,10 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       // Public island ("Just me"): strangers fade out over ~1 s (remoteAvatars keeps them as leaving entries), so keep drawing until
       // the fade ends, then the flush below hides the layer and the bridge sleeps again. Reduced motion: vanish at once, as before.
       if (!live && drawnLast && avatars.fading && !ctx.reducedMotion()) { avatars.root.visible = true; avatars.update(dt, poses, camera, false, null); return; }
-      if (!live) { if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, true, null); } avatars.root.visible = false; return; }
+      if (!live) { if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, true, null); } avatars.root.visible = false; beginSeatFrame(); return; }
       drawnLast = true;
       // Friends: sample the interpolators into preallocated poses (friends() lists the 'active' ones).
-      core.sample(nowMs);
+      beginSeatFrame(); core.sample(nowMs, seatFriend); // stadium seats: seated friends snap onto (and take) their seat
       if (core.balls.size) { trackDt = dt; core.balls.forEach(track); }
       // Me: my own colour ring only while the party is live (a kid sees which colour they are).
       const l = ctx.local();
@@ -319,7 +323,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     },
     dispose() {
       for (const h of hints) { const m = h.sprite.material as T3.SpriteMaterial; m.map?.dispose(); m.dispose(); }
-      offFilters(); offHit(); core.dispose(); lastIsland.clear(); tracks.clear();
+      offFilters(); offHit(); clearRemoteSeats(); core.dispose(); lastIsland.clear(); tracks.clear();
       conn.onBeforeBeat(null); if (typeof window !== 'undefined') window.removeEventListener('pagehide', onPageHide);
     },
   };

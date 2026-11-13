@@ -1,7 +1,7 @@
 // Presence for the island (docs/multiplayer-design.md 4.4.1): what the local player is doing (Town flags -> Activity) and the
 // kid-facing words / icon friends see over the force field and in the party list. Pure: no three.js, no React.
 import { MARKET_STAND } from '../town/fishing/fishSpots';
-import { Activity, MAX_SPEED_MS, Mode, ROOM_ACTIVITIES, RoomCode, WORLD_BOUNDS, Zone, roomBody, roomOf, type Presence, type PoseBody } from '../../multiplayer/protocol';
+import { Activity, MAX_SPEED_MS, Mode, ROOM_ACTIVITIES, RoomCode, SEAT_SPEED_Q, WORLD_BOUNDS, Zone, roomBody, roomOf, type Presence, type PoseBody } from '../../multiplayer/protocol';
 
 /** The Town state that makes a player "busy". One object, reused: Town writes the fields, townActivity reads them (no allocation). */
 export interface TownFlags {
@@ -97,7 +97,9 @@ export type LocalPoseState = { busy: boolean; ax: number; ay: number; az: number
 export function localPoseState(): LocalPoseState {
   return { busy: false, ax: 0, ay: 0, az: 0, afacing: 0, azone: 0, has: false, px: 0, py: 0, pz: 0, pfacing: 0, pzone: 0, lastX: NaN, lastZ: NaN };
 }
-export type LocalPose = { x: number; y: number; z: number; facing: number; speed: number; mode: number; zone: number; warp: boolean; hidden: boolean; activity?: number };
+/** seat: the stadium seat I sit in (stadiumSit.seat while seated), sent as the seated pose (multiplayer/protocol/seat.ts); null / absent = not seated. */
+export type LocalSeat = { x: number; y: number; z: number; yaw: number };
+export type LocalPose = { x: number; y: number; z: number; facing: number; speed: number; mode: number; zone: number; warp: boolean; hidden: boolean; activity?: number; seat?: LocalSeat | null };
 export function fillLocalBody(st: LocalPoseState, l: LocalPose, body: PoseBody): PoseBody {
   const act = l.activity ?? NOT_BUSY, busy = act >= 0;
   let x = l.x, y = l.y, z = l.z, facing = l.facing, speedQ = Math.min(255, Math.round(l.speed * 4)), mode: number = l.mode, zone: number = l.zone, warp = l.warp;
@@ -111,6 +113,9 @@ export function fillLocalBody(st: LocalPoseState, l: LocalPose, body: PoseBody):
   } else {
     if (st.busy) { st.busy = false; if (Math.hypot(l.x - st.ax, l.z - st.az) > BACK_WARP_M) warp = true; }
     st.px = l.x; st.py = l.y; st.pz = l.z; st.pfacing = l.facing; st.pzone = l.zone; st.has = true;
+    const seat = l.seat;
+    if (seat && l.zone === Zone.Main) { x = seat.x; y = seat.y; z = seat.z; facing = seat.yaw; mode = Mode.Idle; speedQ = SEAT_SPEED_Q; } // seated: the seat, still
+    else if (mode === Mode.Idle && speedQ === SEAT_SPEED_Q) speedQ = 0; // a plain Idle never looks seated
   }
   warp = warp || (st.lastX === st.lastX && Math.hypot(x - st.lastX, z - st.lastZ) > WARP_M);
   st.lastX = x; st.lastZ = z;
