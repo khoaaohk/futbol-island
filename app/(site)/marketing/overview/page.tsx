@@ -3,6 +3,7 @@ import {CONTACT_EMAIL,GROWN_UPS as G,NONPROFITS,WSV_LINKS} from '@/lib/site/abou
 import {LEARN_FAQ,LEARN_FEATURES,LEARN_GROUPS,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,LEARN_TOGETHER_NOT,LEARN_TOGETHER_TRUST,type LearnFeature,type LearnGroupId} from '@/lib/site/learnFeatures';
 import {learnAsset,learnMontage,learnSlideAsset,learnWideAsset,LEARN_THEME,type LearnImage} from '@/lib/site/learnMedia';
 import {hiddenMeta,LOGO_COLOURS,MARKETING_OVERVIEW_PATH} from '@/lib/site/marketing';
+import {DECK_PACKAGES,DECK_SLOTS,slotShare,slotSize,STADIUM_FAMILY_RULES,STADIUM_GREEN,STADIUM_NEXT,STADIUM_PITCH,type DeckSlot} from '@/lib/site/stadiumDeck';
 
 /**
  * /marketing/overview (Nov 4 2026, owner): the print page behind the investor overview PDF (scripts/build-marketing-pdf.cjs renders
@@ -15,7 +16,9 @@ import {hiddenMeta,LOGO_COLOURS,MARKETING_OVERVIEW_PATH} from '@/lib/site/market
  * the 4:5 and phone stills sit beside their words instead of under them. One slide = one idea:
  *  cover · what it is · why we built it · per group: a chapter opener in the group's own island colour (LEARN_THEME) with one
  *  large picture, then a tidy grid of its features (picture left, words right; a feature with no still shows its description
- *  on a tint field instead of drawn art) · Play together's three steps · questions · about · contact.
+ *  on a tint field instead of drawn art) · Play together's three steps · the DRIP FC Stadium sponsor chapter (Nov 13 2026, owner:
+ *  opener, an overhead plan with every sponsor spot numbered, each slot with its in-game screenshot, the packages, the family rules;
+ *  copy and numbers in lib/site/stadiumDeck.ts) · questions · about · contact.
  * Every one of LEARN_FEATURES appears once (data-feature; the build script checks the count).
  */
 export const dynamic='force-static';
@@ -75,6 +78,103 @@ function Tile({f}:{f:LearnFeature}){
    <p className={s.tileTie}>{f.footballTie}</p>
   </div>
  </article>;
+}
+
+/** DRIP FC Stadium screenshots (public/marketing/stadium, 1280 x 720 WebP, shot at 1600 x 900 from a production build: tests/marketing-page.cjs). */
+const shot=(k:string,alt:string,focus?:string):Pic=>({img:{src:`/marketing/stadium/${k}.webp`,width:1280,height:720} as LearnImage,alt,focus});
+const Pin=({n}:{n:number})=><span className={s.pin}>{n}</span>;
+
+/** The overhead plan: stadium-local metres (x east, z south; lib/town/stadiumSeats.ts stadiumSponsorLayout), north up. */
+function StadiumPlan(){
+ const G='#e9c16b',stand='#c8cdbf',roof='#97a596',ink='#14221d';
+ const pins:[number,number,number][]=[[1,-35.5,-25],[2,-15,80],[7,13,80],[3,71,-9],[8,71,10],[4,-63,-30],[4,63,-34],[5,108,-33],[6,9,-9]];
+ const flagX=[76,85,94,106,117,128,139];
+ return <svg className={s.plan} viewBox="-72 -90 232 180" role="img" aria-label="Overhead plan of DRIP FC Stadium with every sponsor spot numbered">
+  <rect x="-72" y="-90" width="232" height="180" rx="8" fill="#dfe6cf"/>
+  <rect x="62" y="-22" width="94" height="44" rx="3" fill="#efe6cf"/>
+  <rect x="-40" y="-55" width="80" height="110" fill="#e6dcc4"/>
+  {/* stands: west, east (split by the gate), north, south; the long stands' roofs darker */}
+  <rect x="-57" y="-52" width="17" height="104" fill={roof}/>
+  <rect x="40" y="-52" width="17" height="45" fill={roof}/><rect x="40" y="7" width="17" height="45" fill={roof}/>
+  <rect x="-36" y="-74.5" width="72" height="17" fill={stand}/><rect x="-36" y="57.5" width="72" height="17" fill={stand}/>
+  <rect x="-31.5" y="-50" width="63" height="100" fill="#7fae86"/>
+  <g fill="none" stroke="#f4f1e6" strokeWidth=".6"><rect x="-31.5" y="-50" width="63" height="100"/><path d="M-31.5 0H31.5"/><circle r="9.15"/><rect x="-20.2" y="-50" width="40.3" height="16.5"/><rect x="-20.2" y="33.5" width="40.3" height="16.5"/></g>
+  {/* the sponsor spots, in gold */}
+  <g fill={G}>
+   {[-37.5,-12.5,12.5,37.5].map(z=><g key={z}><rect x="-36.2" y={z-11} width="1.4" height="22"/><rect x="34.8" y={z-11} width="1.4" height="22"/></g>)}
+   {[-22.5,-7.5,7.5,22.5].map(x=><g key={x}><rect x={x-7} y="53.3" width="14" height="1.4"/><rect x={x-7} y="-55.4" width="14" height="1.4"/></g>)}
+   <rect x="-8" y="75" width="16" height="2.6"/>
+   <rect x="59.6" y="-6" width="2.4" height="12"/>
+   <rect x="-59.2" y="-50" width="2.2" height="100"/><rect x="57" y="-50" width="2.2" height="100"/>
+   {flagX.flatMap(x=>[-22.8,22.8].map(z=><rect key={x+'/'+z} x={x-1} y={z-1.4} width="2" height="2.8"/>))}
+   <circle r="4.6"/>
+  </g>
+  {[[-51,-67],[51,-67],[-51,67],[51,67]].map(([x,z])=><circle key={x+'/'+z} cx={x} cy={z} r="1.6" fill={ink}/>)}
+  <g fill={ink} fontSize="5.2" fontWeight="600"><text x="109" y="2" textAnchor="middle">Stadium Plaza</text><text x="-66" y="-80">Park</text><text x="64" y="-48">East stand</text><text x="0" y="-78" textAnchor="middle">North stand</text><text x="24" y="86">South stand, big screen</text></g>
+  {pins.map(([n,x,z],i)=><g key={i}><circle cx={x} cy={z} r="5.2" fill={ink}/><text x={x} y={z+1.9} textAnchor="middle" fontSize="5.6" fontWeight="700" fill="#fff">{n}</text></g>)}
+ </svg>;
+}
+
+function SlotCard({x}:{x:DeckSlot}){
+ return <article className={s.slotCard} data-stadium-slot={x.id}>
+  <figure><Img p={shot(x.shot,`${x.name} in DRIP FC Stadium`)} className={s.slotImg}/><figcaption>{x.example}</figcaption></figure>
+  <h3><Pin n={x.pin}/>{x.name}</h3>
+  <p className={s.slotLine}>{x.line}</p>
+  <dl className={s.slotSpec}><div><dt>Picture</dt><dd>{slotSize(x.id)}</dd></div><div><dt>Shared by</dt><dd>{slotShare(x.id)}</dd></div><div><dt>Today</dt><dd>{x.today}</dd></div></dl>
+ </article>;
+}
+
+/** The DRIP FC Stadium sponsor chapter (lib/site/stadiumDeck.ts). */
+function StadiumChapter(){
+ const folio=STADIUM_PITCH.title;
+ return <div className={s.group} data-stadium-chapter="">
+  <Slide className={s.stadiumOpener} folio={folio} dark style={{background:STADIUM_GREEN}}>
+   <div className={s.openerText}>
+    <h2 className={s.openerTitle}>{STADIUM_PITCH.title}</h2>
+    <p className={s.openerBlurb}>{STADIUM_PITCH.blurb}</p>
+    <ul className={s.openerList}>{STADIUM_PITCH.points.map(x=><li key={x}>{x}</li>)}</ul>
+   </div>
+   <Img p={shot('hero','DRIP FC Stadium from the air, the plaza and the park around it','46% 50%')} className={s.stadiumHero}/>
+  </Slide>
+
+  <Slide className={s.planPage} folio={folio}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>Every spot your brand can go</h2></div>
+   <div className={s.planBody}>
+    <StadiumPlan/>
+    <ol className={s.planList}>
+     {DECK_SLOTS.map(x=><li key={x.id}><Pin n={x.pin}/><div><b>{x.name}</b><span>{slotSize(x.id).replace(' picture, at least',', from')} · {slotShare(x.id).replace(', taking turns','')}</span></div></li>)}
+     {DECK_PACKAGES.map(x=><li key={x.id} data-stadium-package={x.id}><Pin n={x.pin}/><div><b>{x.name}</b><span>A package, set up with the team · today {x.today}</span></div></li>)}
+    </ol>
+   </div>
+  </Slide>
+
+  {[DECK_SLOTS.slice(0,3),DECK_SLOTS.slice(3)].map((row,i)=><Slide key={i} className={s.slotPage} folio={folio}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>{i?'Above the stands and on the walk in':'Round the pitch and at the gate'}</h2></div>
+   <div className={s.slotRow}>{row.map(x=><SlotCard key={x.id} x={x}/>)}</div>
+  </Slide>)}
+
+  <Slide className={s.slotPage} folio={folio}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>Packages: the name and the broadcast</h2></div>
+   <div className={s.packRow}>{DECK_PACKAGES.map(x=><article key={x.id} className={s.packCard} data-stadium-package={x.id}>
+    <figure><Img p={shot(x.shot,x.id==='feed'?'The live broadcast feed on the back of the big screen, DRIP FC logo top right':'DRIP FC Stadium floodlit at night')} className={s.packImg}/><figcaption>{x.id==='feed'?'The back of the big screen during a match':'The stadium at night'}</figcaption></figure>
+    <h3><Pin n={x.pin}/>{x.name}</h3>
+    <p className={s.slotLine}>{x.line}</p>
+    <p className={s.packToday}>Today: {x.today}</p>
+   </article>)}</div>
+  </Slide>
+
+  <Slide className={s.familyPage} folio={folio}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>How it works for families</h2></div>
+   <div className={s.familyBody}>
+    <div className={s.familyRules}>{STADIUM_FAMILY_RULES.map(r=><div key={r.title}><h3>{r.title}</h3><p>{r.text}</p></div>)}</div>
+    <aside className={s.familyNext}>
+     <Img p={shot('stands','Inside DRIP FC Stadium: the pitch, the boards and the west stand','50% 55%')} className={s.familyImg}/>
+     <h3 className={s.h3}>{STADIUM_NEXT.title}</h3>
+     <p>{STADIUM_NEXT.line} <a href={`mailto:${STADIUM_NEXT.email}`}>{STADIUM_NEXT.email}</a>.</p>
+    </aside>
+   </div>
+  </Slide>
+ </div>;
 }
 
 export default function Overview(){
@@ -162,6 +262,9 @@ export default function Overview(){
     </Slide>)}
    </div>;
   })}
+
+  {/* ---- DRIP FC Stadium: the sponsor chapter ---- */}
+  <StadiumChapter/>
 
   {/* ---- questions grown-ups ask ---- */}
   <Slide className={s.faqPage} folio="Questions">

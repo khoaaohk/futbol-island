@@ -74,6 +74,22 @@ assert.match(doc,/from '@\/lib\/site\/learnFeatures'/,'print page copy comes fro
 assert.match(doc,/from '@\/lib\/site\/aboutCopy'/,'and lib/site/aboutCopy');
 for(const k of ['LEARN_GROUPS.map','LEARN_FEATURES.filter','LEARN_FAQ.map','LEARN_HIGHLIGHTS','CONTACT_EMAIL','G.partnerRest','LEARN_TOGETHER_TRUST'])assert(doc.includes(k),`print page covers ${k}`);
 assert.match(read('components/marketing/marketing.module.css'),/break-inside:avoid/,'cards never split across pages');
+// Nov 13 2026 (owner): the DRIP FC Stadium sponsor chapter: every slot in SLOT_SPECS with its screenshot, plus naming rights and the feed bug
+{const deck=read('lib/site/stadiumDeck.ts'),slots=read('lib/stadium/sponsors/slots.ts');
+ assert.match(doc,/<StadiumChapter\/>/,'the deck prints the stadium chapter');
+ assert.match(doc,/from '@\/lib\/site\/stadiumDeck'/,'stadium copy comes from lib/site/stadiumDeck');
+ assert.match(doc,/data-stadium-slot=\{x\.id\}/,'every slot card is marked data-stadium-slot');
+ assert.match(doc,/<StadiumPlan\/>/,'the overhead plan with numbered pins');
+ const ids=[...slots.match(/SPONSOR_SLOTS=\[([^\]]*)\]/)[1].matchAll(/'(\w+)'/g)].map(m=>m[1]);
+ assert.deepEqual(ids,['board','screen','gate','fascia','flag','centre'],'the six sponsor slots');
+ for(const id of ids){
+  const m=deck.match(new RegExp(`\\{pin:(\\d),id:'${id}'[^\\n]*shot:'(\\w+)'`));
+  assert(m,`the stadium chapter shows the ${id} slot`);
+  assert(has(`public/marketing/stadium/${m[2]}.webp`),`${id}: its screenshot public/marketing/stadium/${m[2]}.webp exists`);}
+ for(const id of ['feed','naming'])assert(new RegExp(`id:'${id}'`).test(deck),`the stadium chapter shows the ${id} package`);
+ assert.match(deck,/SLOT_SPECS\[id\]/,'sizes and sponsor counts are read from SLOT_SPECS (never typed by hand)');
+ assert(!/\$\s?\d|£\s?\d|€\s?\d|per month|per year/i.test(deck),'no prices in the stadium chapter');
+ assert.match(deck,/SPONSOR_BOARDS_LINE/,'the family rules sit beside lib/site/safety SPONSOR_BOARDS_LINE');}
 
 // ---- 4. a built site ----
 const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),app=path.join(dist,'server/app');
