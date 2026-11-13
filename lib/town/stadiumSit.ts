@@ -16,12 +16,14 @@ import {ensureStadiumSponsors,SPONSOR_LOAD_RADIUS} from '../stadium/sponsors/ind
 import {countStadiumVisit} from '../analytics/sponsorEvents';
 
 export const SIT_KEY='stadium-seat';
+/** The camera's far plane while seated (m): the whole bowl (the far stand's back is ~115 m away, the end stand from the other end ~150 m). */
+export const SEAT_FAR=175;
 const MOVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'] as const;
 
 export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void}){
  const m=createSitMachine(),pose:TrickPose=npcSeatPose('bench');pose.w=0;
- let near:Seat|null=null,view:ReturnType<typeof seatView>|null=null,sponsorAsked=false,wasOutside=true,promptSeated=false;
- const cam=new T.Object3D(),camQ=new T.Quaternion(),camP=new T.Vector3(),v=new T.Vector3();
+ let farSaved=0,near:Seat|null=null,view:ReturnType<typeof seatView>|null=null,sponsorAsked=false,wasOutside=true,promptSeated=false;
+ const cam=new T.PerspectiveCamera(),/* a camera: lookAt aims its -Z (an Object3D's would aim +Z, away from the pitch) */ camQ=new T.Quaternion(),camP=new T.Vector3(),v=new T.Vector3();
  const held=()=>m.phase==='sitting'||m.phase==='seated';
  return {
   get seated(){return held();},get phase(){return m.phase;},get seat(){return m.seat;},
@@ -56,6 +58,10 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void}){
   },
   /** After the follow camera is placed: ease to the stand view and back. */
   applyCamera(camera:T.PerspectiveCamera){
+   // Heat: the stand view looks level across the island (the follow camera looks down on ~100 m of it), so the far plane comes in
+   // to SEAT_FAR while seated: the far stands' backs and roofs hide what it cuts; without it ~900 draw calls (desktop) on screen.
+   if(m.blend>.5){if(!farSaved){farSaved=camera.far;camera.far=SEAT_FAR;camera.updateProjectionMatrix();}}
+   else if(farSaved){camera.far=farSaved;farSaved=0;camera.updateProjectionMatrix();}
    if(m.blend<=0||!view)return;const k=m.blend*m.blend*(3-2*m.blend);
    camP.set(view.x,view.y,view.z);cam.position.copy(camP);cam.lookAt(v.set(view.lx,view.ly,view.lz));camQ.copy(cam.quaternion);
    camera.position.lerp(camP,k);camera.quaternion.slerp(camQ,k);

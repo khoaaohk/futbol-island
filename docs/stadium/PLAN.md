@@ -23,7 +23,25 @@ phase: static geometry goes into the 50 m chunk batches, nothing animates off sc
   BEACH labels). Travel map widens automatically (FLIGHT_BOUNDS).
 - Tests: `tests/west-stadium.cjs` (new); updated town, coral-cay, admin-analytics-places, island-connectivity grid.
 
-## Phase 2: stadium structure (`lib/town/stadiumWorld.ts`, `lib/town/stadiumSeats.ts`)
+## Phase 2: stadium structure (DONE on this branch: `stadiumSeats.ts` data, `stadiumWorld.ts` build, `stadiumSit.ts` runtime)
+- Built: 4 stands, open corners. 10 rows (1.3 m deep, 0.5 m rise: too tall to step, so you climb the aisles: 2 treads of 0.25 m per
+  row), a 4 m concourse one tread above the top row (5.25 m), straight back stairs to the park (20 treads), rails as roof props
+  (stand ends, concourse back, stair sides: only a walker at their height). East stand split by the gate (14 m gap, ground level,
+  arch + turnstiles) onto the pitch-level ring; board ring colliders keep their 1–3 m gaps. Long stands roofed (a plain box, so
+  the canopy pass makes it landable from the sky). Screen frame behind the south stand, 4 static floodlight masts.
+- Seats: a computed grid (5,250 seats; `nearestSeat`, occupied set for phase 5), strips per row and block in team colours.
+  "Sit" (HUD arbiter key `stadium-seat`) snaps, bench pose, stand-view camera; stick / keys / Stand up / ride / teleport get up.
+- Sponsors: `ensureStadiumSponsors(scene, stadiumSponsorLayout())` within SPONSOR_LOAD_RADIUS (group at the centre spot,
+  y -0.045); `countStadiumVisit()` walking in through the gate. Plaza flags get a vertical banner under the team flag.
+- Cost: +3 west chunks (66 → 69 draw calls with all the west in view), +19.7k triangles (50.9k → 70.6k), no texture,
+  material or per-frame work (sponsor art: its own 2 draws + 1 atlas, lazily). No LOD needed at this size.
+- Seated view: the camera's far plane comes in to 175 m while seated (the level view across the island was 925 draw calls on
+  desktop without it). Headless Chrome (dev server, not a device): plaza looking west 71 draws / 84k tris desktop, 53 / 60k phone;
+  seated 68 / 92k desktop, 50 / 70k phone. No iPhone heat measurement.
+- Not done: drag-to-look while seated; crowd; tunnel (the gate and corners are the ways in).
+
+Original plan:
+### Phase 2: stadium structure (`lib/town/stadiumWorld.ts`, `lib/town/stadiumSeats.ts`)
 - Replace `buildStadiumPlaceholder`: 4 stands (open corners), walkable concourse behind/under each stand, stairs + aisles as
   `walkSurfaces` (world.ts already collects `walkSurfaces` / `landableDecks.ts` for raised decks; rooftop stairs in world.ts are
   the pattern), handrails as obstacles, roof over the long stands (fascia = sponsor slot 4).

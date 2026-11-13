@@ -128,6 +128,9 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
  sit.want(p.x,p.z,h,true);sit.press(false);assert.equal(sit.phase,'sitting');for(let i=0;i<60;i++)sit.holdPlayer(1/60,{x:0,z:0,kick:false,juggle:false},new Set(),{walk:true,x:sit.seat.x,z:sit.seat.z,reduced:false});
  assert.equal(sit.phase,'seated','eases in');assert(!sit.holdPlayer(1/60,{x:0,z:0,kick:false,juggle:false},new Set(['w']),{walk:true,x:sit.seat.x,z:sit.seat.z,reduced:false}),'a key gets up');
  for(let i=0;i<60;i++)sit.holdPlayer(1/60,{x:0,z:0,kick:false,juggle:false},new Set(),{walk:true,x:0,z:0,reduced:false});assert(sit.phase==='standing'&&!sit.trick(),'eased out');
+ {const c=new T.PerspectiveCamera(40,1,1,500);sit.want(p.x,p.z,h,true);sit.press(true);sit.applyCamera(c);assert(c.far<=200,'seated: the far plane comes in (heat)');
+  const f=new T.Vector3(0,0,-1).applyQuaternion(c.quaternion),st=sit.seat;assert(f.x*(S.x-st.x)+f.z*(S.z-st.z)>0,'the stand view looks at the pitch');
+  sit.holdPlayer(1/60,{x:1,z:0,kick:false,juggle:false},new Set(),{walk:true,x:st.x,z:st.z,reduced:true});sit.applyCamera(c);assert.equal(c.far,500,'standing: the far plane restored');}
  const cam=new T.PerspectiveCamera();cam.position.set(1,2,3);sit.applyCamera(cam);assert.deepEqual(cam.position.toArray(),[1,2,3],'standing: the camera is untouched');}
 // The map draws four stands with open corners.
 assert(/data-stadium-stand=/.test(map),'the map draws the stands');
