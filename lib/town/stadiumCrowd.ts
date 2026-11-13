@@ -1,6 +1,6 @@
 // West Stadium, phase 3b (Nov 12 2026, docs/stadium/PLAN.md): a crowd in the stands, heat-first.
 // One InstancedMesh (1 draw call, no shadow pass) of tiny low-poly fans (a body and a head, 20 triangles) at seat positions:
-// about a third of the 5,250 seats on desktop, fewer on phones and under heat-tier pressure (Battery saver: a handful). Built lazily
+// about a third of the 5,030 seats on desktop, fewer on phones and under heat-tier pressure (Battery saver: a handful). Built lazily
 // the first time the player comes near; hidden beyond CROWD_RADIUS and frustum-culled by three when the bowl is off screen.
 // Animation: on a goal only, a short bounce driven by two shared uniforms (no per-instance CPU work, nothing at all between goals).
 // The fans' seats are a fixed shuffled order (sorted by a per-seat key), so a lower fill is simply a smaller instance count; the

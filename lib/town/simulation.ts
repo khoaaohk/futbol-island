@@ -28,7 +28,7 @@ export function flightBlocked(x:number,z:number){
  return (x-cx)**2+(z-cz)**2>r*r;
 }
 export type District = 'coast' | 'oldtown' | 'lights';
-export type Obstacle = { x: number; z: number; w: number; d: number; cornerRadius?:number; stepAccess?:boolean; dynamic?:boolean };
+export type Obstacle = { x: number; z: number; w: number; d: number; cornerRadius?:number; stepAccess?:boolean; /** a walker may step up onto this surface from this far below (default .35; the stadium's 0.5 m rows) */ stepUp?:number; dynamic?:boolean };
 export const DISTRICTS = {
   coast: { name: 'Palm Coast', subtitle: 'SALT IN THE AIR. BALL AT YOUR FEET.', x: -7, z: 14 },
   oldtown: { name: 'Old Town', subtitle: 'EVERY WALL HAS A STORY.', x: -6, z: -10 },

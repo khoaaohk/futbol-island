@@ -104,7 +104,7 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   const radius=Math.max(8,Math.max(Math.hypot(v.x,v.z),TRAVEL_MODES[mode].maxSpeed)*dt+2);
   const solids=groundGrid.query(p.x,p.z,radius).filter(o=>{
    const building=buildingFor(o);
-   const stepHeight=building?.stepAccess&&mode!=='walk'?1:.35;
+   const stepHeight=building?.stepAccess&&mode!=='walk'?1:mode==='walk'&&building?.stepUp?building.stepUp:.35;// stepUp: the stadium's rows (stadiumSeats.ts)
    return building?building.height>state.height+stepHeight:!elevated;
   }).concat(propGrid.query(p.x,p.z,radius).filter(p=>state.height>=p.floor-.2&&state.height<p.top));
   const barriers=solids.concat(goalBarriersAt(state.height));

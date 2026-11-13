@@ -29,7 +29,7 @@ phase: static geometry goes into the 50 m chunk batches, nothing animates off sc
   (stand ends, concourse back, stair sides: only a walker at their height). East stand split by the gate (14 m gap, ground level,
   arch + turnstiles) onto the pitch-level ring; board ring colliders keep their 1–3 m gaps. Long stands roofed (a plain box, so
   the canopy pass makes it landable from the sky). Screen frame behind the south stand, 4 static floodlight masts.
-- Seats: a computed grid (5,250 seats; `nearestSeat`, occupied set for phase 5), strips per row and block in team colours.
+- Seats: a computed grid (5,030 seats since the 2.2 m aisles, Nov 12; `nearestSeat`, occupied set for phase 5), strips per row and block in team colours.
   "Sit" (HUD arbiter key `stadium-seat`) snaps, bench pose, stand-view camera; stick / keys / Stand up / ride / teleport get up.
 - Sponsors: `ensureStadiumSponsors(scene, stadiumSponsorLayout())` within SPONSOR_LOAD_RADIUS (group at the centre spot,
   y -0.045); `countStadiumVisit()` walking in through the gate. Plaza flags get a vertical banner under the team flag.

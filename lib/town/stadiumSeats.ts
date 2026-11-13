@@ -2,8 +2,8 @@
 // (stadiumWorld.ts), the sit runtime (stadiumSit.ts), the map and the tests.
 //
 // Four stands with open corners. Each stand climbs away from the pitch in ROWS stepped rows (RISE m up, ROW_DEPTH m deep); a row
-// is too tall to step onto from the one below (RISE > the walk's 0.35 m step, rooftopTravel.ts), so you climb by the AISLES:
-// two treads per row (TREAD_RISE each). A CONCOURSE runs behind the top row, one tread up from it (step on anywhere), with a rail
+// is taller than the walk's usual 0.35 m step, but rows carry stepUp (ROW_STEP_UP) so a walker steps up a row from anywhere
+// (rides do not); the AISLES (AISLE_WIDTH 2.2 m, Nov 12 2026: was 1.4) are the easy way: two treads per row (TREAD_RISE each). A CONCOURSE runs behind the top row, one tread up from it (step on anywhere), with a rail
 // along its back except where a back STAIR goes straight down to the ground (each stand's entrances from outside). Rails close
 // the stand ends and the stair sides (roof props: they block only a walker up at their height). The east stand is split by the
 // main gate: a ground-level gap from the plaza onto the pitch-level ring round the boards. The corners are open (pitch-side gaps).
@@ -12,7 +12,7 @@
 import {STADIUM,STADIUM_GATE,STADIUM_PLAZA} from './westParkLayout';
 import type {SponsorLayout,SponsorQuad} from '../stadium/sponsors/layout';
 
-export const ROWS=10,ROW_DEPTH=1.3,RISE=.5,TREAD_RISE=.25,TREAD=.35,CONCOURSE=4,STAIR_WIDTH=3,AISLE_WIDTH=1.4,SEAT_PITCH=.6;
+export const ROWS=10,ROW_DEPTH=1.3,RISE=.5,TREAD_RISE=.25,TREAD=.35,CONCOURSE=4,STAIR_WIDTH=3,AISLE_WIDTH=2.2,SEAT_PITCH=.6;
 /** Seat centre from the row's front edge (m), and the sitter's root (BENCH.rootZ = .05 in front of the seat centre). */
 export const SEAT_DEPTH=.95,SEAT_ROOT=.9;
 /** Seat top above its row (npcSeatPose BENCH.seatTop: the seated pose's bottom rests here). */
@@ -38,7 +38,9 @@ export const standBack=(s:StandDef)=>s.inner+ROWS*ROW_DEPTH+CONCOURSE;
 export const stairEnd=(s:StandDef)=>standBack(s)+STAIR_TREADS*TREAD;
 
 export type Rect={x:number;z:number;w:number;d:number};
-export type Surface=Rect&{height:number;stepAccess?:boolean};
+export type Surface=Rect&{height:number;stepAccess?:boolean;stepUp?:number};
+/** A walker steps up a row (RISE) from anywhere (Nov 12 2026, QA: an off-angle joystick caught the row edge beside an aisle). */
+export const ROW_STEP_UP=RISE+.05;
 export type Rail=Rect&{floor:number;top:number};
 /** A stand-local rectangle (depth d0..d1 out from the centre, along a0..a1) in world coordinates. */
 export function standRect(s:StandDef,d0:number,d1:number,a0:number,a1:number):Rect{
@@ -66,7 +68,7 @@ export type StandGeometry={surfaces:Surface[];rails:Rail[];stand:StandDef};
 export function standGeometry(s:StandDef):StandGeometry{
  const surfaces:Surface[]=[],rails:Rail[]=[],{seats,aisles,pieces}=standSpans(s),back=standBack(s),rowsEnd=s.inner+ROWS*ROW_DEPTH;
  for(let i=0;i<ROWS;i++){const d0=s.inner+i*ROW_DEPTH,h=rowHeight(i);
-  for(const [a0,a1] of seats)surfaces.push({...standRect(s,d0,d0+ROW_DEPTH,a0,a1),height:h});
+  for(const [a0,a1] of seats)surfaces.push({...standRect(s,d0,d0+ROW_DEPTH,a0,a1),height:h,stepUp:ROW_STEP_UP});
   for(const [a0,a1] of aisles){surfaces.push({...standRect(s,d0,d0+ROW_DEPTH/2,a0,a1),height:h-TREAD_RISE,stepAccess:true});surfaces.push({...standRect(s,d0+ROW_DEPTH/2,d0+ROW_DEPTH,a0,a1),height:h,stepAccess:true});}
  }
  for(const [a0,a1] of pieces)surfaces.push({...standRect(s,rowsEnd,back,a0,a1),height:CONCOURSE_HEIGHT});
