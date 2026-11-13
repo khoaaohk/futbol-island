@@ -20,6 +20,7 @@ export type NpcDefinition={freestyle?:number;/** FREESTYLE_CLIPS id shown first 
  floor?:()=>number;
  /** Stadium islanders (lib/town/stadiumNpcs.ts): show order under the heat budget (stadiumNpcBudget); rank >= budget is hidden. */
  heatRank?:number;
+ /** A public-viewing fan (lib/town/stadiumNpcs.ts): looks up at the big screen and keeps facing it (workYaw) while answering a match cue. */ watch?:boolean;
  /** A costume over the rig (the DRIP FC mascot, lib/graphics/dripMascot.ts). */ costume?:'drip';
  /** Gestures on its own now and then while a stadium match is on (coaches, the fourth official; Town picks one at a time). */ emotes?:boolean};
 const ISLAND_REGULARS:NpcDefinition[]=[

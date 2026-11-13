@@ -20,21 +20,26 @@ const {NPC_DIALOGUES}=load('lib/town/npcDialogues.ts'),{STADIUM:S}=L;
 const world=load('lib/town/world.ts').buildTown(new T.Scene());
 const cast=N.STADIUM_NPCS,ids=cast.map(n=>n.id),info=N.STADIUM_NPC_INFO;
 // 1. The cast: in NPC_DIALOGUES (the shared runtime builds them), unique, one entry in STADIUM_NPC_INFO each, ranks 0..n-1.
-assert.equal(cast.length,30,'30 stadium islanders');
+assert.equal(cast.length,36,'36 stadium islanders (30 + the 6-fan watch-party crowd)');
 for(const n of cast)assert(NPC_DIALOGUES.includes(n),n.id+' is an islander');
 assert.deepEqual(Object.keys(info).sort(),[...ids].sort(),'every islander has place + concept, nothing extra');
 assert.deepEqual(cast.map(n=>n.heatRank).sort((a,b)=>a-b),cast.map((_,i)=>i),'heat ranks 0..n-1');
 const groups={};for(const id of ids)groups[info[id].group]=(groups[info[id].group]||0)+1;
-assert(groups.greeter>=2&&groups.guide>=2&&groups.score>=3&&groups.coach>=3&&groups.crew===4&&groups.photographer>=2&&groups.photographer<=4&&groups.viewer>=1&&groups.mascot===1&&groups.bench===4&&groups.official===3,'groups '+JSON.stringify(groups));
+assert(groups.greeter>=2&&groups.guide>=2&&groups.score>=3&&groups.coach>=3&&groups.crew===4&&groups.photographer>=2&&groups.photographer<=4&&groups.viewer===8&&groups.mascot===1&&groups.bench===4&&groups.official===3,'groups '+JSON.stringify(groups));
 // 2. Counts per tier: desktop 22 / phone 13 at tier 0, fewer on every hotter tier, phones never above desktop; first ranks keep a greeter, a guide, a score fan and a coach.
 const tiers=[0,1,2,3,4],cap=(p,t)=>N.stadiumNpcBudget(p,t);
 assert.equal(cap(false,0),30);assert.equal(cap(true,0),16);assert.equal(cap(false,4),4);
-for(const p of [false,true])for(const t of tiers){assert(cap(p,t)<=cast.length&&(t===0||cap(p,t)<=cap(p,t-1)),'budget falls with heat');assert(cap(true,t)<=cap(false,t),'phone <= desktop');
- assert(N.viewingExtras(p,t)<=N.VIEWING_EXTRAS.length&&(t===0||N.viewingExtras(p,t)<=N.viewingExtras(p,t-1))&&N.viewingExtras(true,t)<=N.viewingExtras(false,t),'viewing extras fall with heat');}
-assert.equal(N.viewingExtras(false,4),0,'no viewing extras on Battery saver');
+// The watch-party crowd: real cast entries ranked after the main 30, shown by their own count (desktop 6 / phone 4 at tier 0 ... none on saver).
+const crowd=(p,t)=>N.viewingCrowd(p,t);assert.equal(N.VIEWING_CROWD.length,6);assert.equal(N.VIEWING_CROWD_RANK0,30);
+assert.equal(N.VIEWING_CROWD.map(id=>cast.find(n=>n.id===id).heatRank).join(),'30,31,32,33,34,35','crowd ranks follow the main cast');
+assert.equal(crowd(false,0),6);assert.equal(crowd(true,0),4);assert.equal(crowd(false,4),0);assert.equal(crowd(true,4),0,'no crowd on Battery saver');
+for(const p of [false,true])for(const t of tiers){assert(cap(p,t)<=N.VIEWING_CROWD_RANK0&&(t===0||cap(p,t)<=cap(p,t-1)),'budget falls with heat');assert(cap(true,t)<=cap(false,t),'phone <= desktop');
+ assert(crowd(p,t)<=N.VIEWING_CROWD.length&&(t===0||crowd(p,t)<=crowd(p,t-1))&&crowd(true,t)<=crowd(false,t),'viewing crowd falls with heat');
+ const shown=cast.filter(n=>N.stadiumNpcShown(n.heatRank,cap(p,t),crowd(p,t)));assert.equal(shown.length,cap(p,t)+crowd(p,t),'shown = budget + crowd');
+ assert.equal(shown.filter(n=>N.VIEWING_CROWD.includes(n.id)).length,crowd(p,t),'crowd count by its own budget');}
 const first=k=>cast.filter(n=>n.heatRank<k).map(n=>info[n.id].group);
 for(const g of ['greeter','guide','score','coach','mascot'])assert(first(6).includes(g),'the first six (tier 3) keep a '+g);
-const table=tiers.map(t=>`t${t} ${cap(false,t)}+${N.viewingExtras(false,t)}/${cap(true,t)}+${N.viewingExtras(true,t)}`).join(', ');
+const table=tiers.map(t=>`t${t} ${cap(false,t)}+${crowd(false,t)}/${cap(true,t)}+${crowd(true,t)}`).join(', ');
 // 3. Football concept and lines: a concept, a greeting, 3+ openers, 1+ topics with a follow-up, short phone-friendly text, kid-safe.
 const BANNED=/\b(bet|betting|beer|stupid|dumb|hate|kill|idiot)\b/i;
 for(const n of cast){const c=info[n.id];assert(c.concept.length>=4&&c.place.length>2,n.id+' concept');
@@ -79,12 +84,16 @@ assert.equal(cast.filter(n=>!n.floor&&!N.STADIUM_NPC_ROUTES[n.id]).length,0,'eve
  assert.equal(JSON.stringify([...N.STADIUM_GESTURERS].sort()),JSON.stringify(cast.filter(n=>['bench'].includes(info[n.id].group)||n.id==='stadium-ref-wanjiru').map(n=>n.id).sort()),'bench + fourth official gesture');
  assert.equal(Object.keys(N.AR_TRACKS).length,2);assert(!cast.some(n=>pitch(n.x,n.z,0)),'nobody stands on the field of play');
  for(const d of N.DUGOUTS)assert(Math.abs(d.x-S.x)+d.w/2<=40&&Math.abs(d.x-S.x)-d.w/2>35.7,'dugout between the boards and the stand front');}
-// 6. Public viewing: the extras and the viewing fans stand on the apron behind the south stand facing the screen's back face, clear of
-//    the ring path (the walkway) and the screen posts.
-{const ring=L.ringPoints(),ringD=(x,z)=>L.segDistance(x,z,ring);
- for(const p of [...N.VIEWING_EXTRAS,...cast.filter(n=>info[n.id].group==='viewer')]){assert(L.onApron(p.x,p.z)&&p.z>S.z+Q.standBack(Q.STANDS[3])+3&&p.z>N.SCREEN_BACK_Z+3,'viewer on the apron behind the screen');
+// 6. Public viewing: the viewing fans (real cast rigs, no instanced beans) stand on the apron paving behind the south stand facing
+//    the screen's back face, 1.8 m+ apart, clear of the ring path (the walkway) and the screen posts.
+{const ring=L.ringPoints(),ringD=(x,z)=>L.segDistance(x,z,ring),viewers=cast.filter(n=>info[n.id].group==='viewer');
+ assert.equal([...N.STADIUM_VIEWERS].sort().join(),viewers.map(n=>n.id).sort().join(),'every viewer watches (and answers the match cues)');
+ for(const id of N.VIEWING_CROWD)assert(viewers.some(n=>n.id===id),id+' is a real viewer islander');
+ for(const a of viewers)for(const b of viewers)if(a!==b)assert(Math.hypot(a.x-b.x,a.z-b.z)>=1.8,a.id+' and '+b.id+' 1.8 m+ apart');
+ const m=src('lib/graphics/stadiumMedia.ts');assert(!/InstancedMesh|VIEWING_EXTRAS|viewingExtras|bean/.test(m),'no instanced bean extras in stadiumMedia');assert(!('VIEWING_EXTRAS' in N)&&!('viewingExtras' in N),'extras exports gone');
+ for(const p of viewers){assert(L.onParkPaving(p.x,p.z),p.id+' on paving');assert(L.onApron(p.x,p.z)&&p.z>S.z+Q.standBack(Q.STANDS[3])+3&&p.z>N.SCREEN_BACK_Z+3,'viewer on the apron behind the screen');
   assert(ringD(p.x,p.z)>L.BOWL_RING.width/2+.8,'viewers keep the ring path clear');assert(!sim.blocked(p.x,p.z,world.obstacles,.4),'viewer clear of props');}
- for(const n of cast.filter(n=>info[n.id].group==='viewer'))assert.equal(n.workYaw,Math.PI,n.id+' faces the screen');}
+ for(const n of viewers){assert.equal(n.workYaw,Math.PI,n.id+' faces the screen');assert(n.watch,n.id+' watches');}}
 // 7. Scores: only from verified news data, with a fallback; score fans use the island's match desks; no new fetches.
 {const now=Date.parse('2026-11-13T12:00:00Z'),item=(league,state,h,a,t)=>({league,id:league+h+a,title:'',url:'',source:'x',publishedAt:t,detail:'',match:{home:'Reds',away:'Blues',homeScore:h,awayScore:a,state,completed:state==='post',goals:[],goalsComplete:true}});
  const feed={kind:'scores',fetchedAt:'',items:[item('eng.1','post','2','1','2026-11-12T20:00:00Z'),item('eng.1','in','0','0','2026-11-13T11:00:00Z')],unavailable:false,partial:false};
@@ -100,8 +109,9 @@ assert.equal(cast.filter(n=>!n.floor&&!N.STADIUM_NPC_ROUTES[n.id]).length,0,'eve
  for(const f of ['lib/town/stadiumNpcs.ts','lib/town/stadiumScoreBubbles.ts','lib/graphics/stadiumMedia.ts'])assert(!/\bfetch\s*\(|XMLHttpRequest|loadIslandNews|EventSource|WebSocket/.test(src(f)),f+' makes no request');
  assert.equal((src('lib/town/newsClient.ts').match(/fetch\(/g)||[]).length,1,'newsClient still has its one cached request');}
 // 8. Wiring: the runtime applies routes and the heat budget; Town updates the media near the stadium; the cast joins the dialogue list.
-{const r=src('lib/graphics/islandNpcs.ts'),t=src('components/Town.tsx');assert(/AR_TRACKS\[e\.id\]/.test(r)&&/dressDripMascot\(rig\)/.test(r)&&/islandNpcs\.react\(STADIUM_MASCOT_ID,EMOTE\.Dance/.test(t)&&/STADIUM_NPC_ROUTES\[definition\.id\]/.test(r)&&/stadiumCap=stadiumNpcBudget\(!desktop,effectiveTier\(\)\)/.test(r),'islandNpcs routes + budget');
+{const r=src('lib/graphics/islandNpcs.ts'),t=src('components/Town.tsx');assert(/AR_TRACKS\[e\.id\]/.test(r)&&/dressDripMascot\(rig\)/.test(r)&&/islandNpcs\.react\(STADIUM_MASCOT_ID,EMOTE\.Dance/.test(t)&&/STADIUM_NPC_ROUTES\[definition\.id\]/.test(r)&&/stadiumCap=stadiumNpcBudget\(!desktop,tier\);viewCap=viewingCrowd\(!desktop,tier\)/.test(r)&&/stadiumNpcShown\(entry\.definition\.heatRank,stadiumCap,viewCap\)/.test(r),'islandNpcs routes + budget');
+ assert(/for\(let i=0;i<STADIUM_VIEWERS\.length;i\+\+\)islandNpcs\.react\(STADIUM_VIEWERS\[i\],i%3===1\?EMOTE\.Dance:EMOTE\.Cheer,reduced\)/.test(t)&&/cue\.miss/.test(t)&&/islandNpcs\.react\(id,EMOTE\.WellPlayed,reduced\)/.test(t),'viewers cheer / dance on a goal and clap a near miss');
  assert(/createStadiumMedia\(scene,quality\.phone\)/.test(t)&&/stadiumMedia\.update\(/.test(t)&&/withScoreFanBubbles\(THOUGHTS\)/.test(t),'Town wiring');
  const m=src('lib/graphics/stadiumMedia.ts');assert(/const FAR=150/.test(m)&&/!reduced&&tier<3/.test(m),'media sleeps far away; no glints with reduced motion or at tier 3+');}
-console.log(`PASS stadium-npcs: ${cast.length} islanders (${Object.entries(groups).map(([g,k])=>g+' '+k).join(', ')}), ${legs} route legs on paving or the pitch-side ring, budget desktop+extras/phone+extras ${table}`);
+console.log(`PASS stadium-npcs: ${cast.length} islanders (${Object.entries(groups).map(([g,k])=>g+' '+k).join(', ')}), ${legs} route legs on paving or the pitch-side ring, budget desktop+crowd/phone+crowd ${table}`);
 })().catch(e=>{console.error(e);process.exit(1);});

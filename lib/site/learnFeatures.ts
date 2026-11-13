@@ -185,7 +185,7 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
   description:'Walk up to an islander and tap Talk to pick a question from their topics. Every islander has a role and a personality, and the talk always comes back to football.',
   footballTie:'Coaching ideas, positions, club culture and what different people love about the game, with no typing.',
   where:'Walk close to anyone on the island; the nearest one shows a name tag and a Talk button.',
-  proof:'188 islanders to meet.',counts:{npcs:188}},
+  proof:'194 islanders to meet.',counts:{npcs:194}},
  {id:'quick-challenges',title:'Quick challenges',group:'explore',imageKey:'quick_challenges',
   hook:'Islanders ask a one-tap football question with three answers.',
   description:'Some conversations end in a quick challenge with three options and one right answer. Right or wrong, the islander explains why in one short line.',

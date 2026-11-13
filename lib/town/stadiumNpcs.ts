@@ -106,10 +106,15 @@ export const STADIUM_NPC_ROUTES:Record<string,RoutePoint[]>={
   for(let i=0;i<4;i++){const [ax,az]=c[i],[bx,bz]=c[(i+1)%4],len=Math.hypot(bx-ax,bz-az),k=Math.ceil(len/12);for(let j=0;j<k;j++)out.push({x:S.x+ax+(bx-ax)*j/k,z:S.z+az+(bz-az)*j/k,pause:j===Math.floor(k/2)?4:undefined});}
   return out;})(),
  'stadium-guide-iris':[{x:S.x-10.5,z:S.z+standBack(SOUTH)+4.2,pause:7},{x:S.x-8,z:S.z+standBack(SOUTH)+7,pause:7}],
- // Two public-viewing fans stand with the instanced extras, facing the big screen's back face (one waypoint: they stay put).
+ // Public viewing: Santi, Ingeborg and the watch-party crowd stand facing the big screen's back face (one waypoint: they stay put).
  'stadium-viewer-sol':[{x:S.x-1.6,z:S.z+SCREEN.z+.3+5.4}],
  'stadium-viewer-ingeborg':[{x:S.x+3.2,z:S.z+SCREEN.z+.3+7.6}],
 };
+/** The watch-party crowd's spots (dx, dz from the screen's back face): a loose group between the screen posts and the ring path, 1.8 m+
+ *  apart, so the ring path (the walkway) and the gaps between them stay clear. Listed in heat order: the first ones stay on hot tiers. */
+const CROWD_SPOTS:readonly (readonly [string,number,number])[]=[['stadium-viewer-kwabena',-4.3,5.0],['stadium-viewer-lumi',1.4,5.1],['stadium-viewer-rangi',-.2,6.9],
+ ['stadium-viewer-zawadi',4.6,6.0],['stadium-viewer-arlo',-3.2,7.4],['stadium-viewer-elif',1.7,8.6]];
+for(const [id,dx,dz] of CROWD_SPOTS)STADIUM_NPC_ROUTES[id]=[{x:S.x+dx,z:S.z+SCREEN.z+.3+dz}];
 
 // ---- Fixed spots (stands, concourse, gantry, pitch-side) -------------------------------------------------------------------------
 const CONC_A=concourse(EAST,-14),CONC_B=concourse(EAST,-46),AISLE_A=aisle(EAST,21,5),AISLE_B=aisle(EAST,-21,3),AISLE_K=aisle(SOUTH,0,2);
@@ -159,6 +164,13 @@ export const STADIUM_NPC_INFO:Record<string,StadiumNpcInfo>={
  'stadium-photo-rafael':{group:'photographer',place:'east touchline',concept:'sending photos during the match, and the bib'},
  'stadium-score-ren':{group:'score',place:'north stand stairs',concept:'switching play'},
  'stadium-walker-kwesi':{group:'walker',place:'park trail',concept:'pressing'},
+ // The watch-party crowd (lighter cast: one topic each). Ranks from VIEWING_CROWD_RANK0 follow viewingCrowd(), not the main budget.
+ 'stadium-viewer-kwabena':{group:'viewer',place:'public viewing by the big screen',concept:'cheering together and clapping both teams'},
+ 'stadium-viewer-lumi':{group:'viewer',place:'public viewing by the big screen',concept:'a near miss: shots off target and big saves'},
+ 'stadium-viewer-rangi':{group:'viewer',place:'public viewing by the big screen',concept:'kick-off and half-time'},
+ 'stadium-viewer-zawadi':{group:'viewer',place:'public viewing by the big screen',concept:'replays and slow motion'},
+ 'stadium-viewer-arlo':{group:'viewer',place:'public viewing by the big screen',concept:'the score and the match clock on screen'},
+ 'stadium-viewer-elif':{group:'viewer',place:'public viewing by the big screen',concept:'watching the players without the ball'},
 };
 
 /** How many stadium islanders show for this device and heat tier (lib/graphics/heatTier: 0 default … 4 Battery saver). */
@@ -169,11 +181,13 @@ export function stadiumNpcBudget(phone:boolean,tier:number){
 /** The screen's back face (world z) and the viewing patch: on the apron between the screen posts and the ring path, which stays clear. */
 export const SCREEN_BACK_Z=S.z+SCREEN.z+.3;
 export const VIEWING={x:S.x,z0:SCREEN_BACK_Z+4.6,z1:SCREEN_BACK_Z+9.4,halfW:5.6} as const;
-/** The instanced extras (lib/graphics/stadiumMedia.ts): eight standing mini-bean fans facing the screen (yaw PI: towards -z). */
-export const VIEWING_EXTRAS:readonly {x:number;z:number}[]=Array.from({length:8},(_,i)=>{const row=i%3,col=Math.floor(i/3);
- return {x:VIEWING.x-4.6+col*3.4+(row===1?1.4:0)+((i*37)%7-3)*.12,z:VIEWING.z0+.4+row*1.6+((i*53)%5-2)*.1};});
-/** How many instanced viewing extras show (desktop 8 … none on Battery saver). */
-export function viewingExtras(phone:boolean,tier:number){if(tier>=4)return 0;if(tier>=3)return 2;if(tier>=2)return phone?3:5;return phone?6:8;}
+/** The watch-party crowd: real townsfolk rigs (the shared runtime, lib/graphics/islandNpcs.ts) ranked after the main cast. They show
+ *  by their own count, viewingCrowd(phone, tier), on top of stadiumNpcBudget: desktop 6 / phone 4 at tier 0 ... none on Battery saver. */
+export const VIEWING_CROWD:readonly string[]=CROWD_SPOTS.map(c=>c[0]);
+export const VIEWING_CROWD_RANK0=Object.keys(STADIUM_NPC_INFO).indexOf(VIEWING_CROWD[0]);
+export function viewingCrowd(phone:boolean,tier:number){if(tier>=4)return 0;if(tier>=3)return phone?1:2;if(tier>=2)return phone?2:4;if(tier>=1)return phone?3:6;return phone?4:6;}
+/** Whether a stadium islander of this heatRank shows, given the main budget (stadiumNpcBudget) and the crowd count (viewingCrowd). */
+export const stadiumNpcShown=(rank:number,cap:number,crowd:number)=>rank<VIEWING_CROWD_RANK0?rank<cap:rank-VIEWING_CROWD_RANK0<crowd;
 
 type Look={character:'male'|'female';face:'warm'|'deep'|'light';clothing:'classic'|'coast'|'sunset';body?:'balanced'|'strong'|'slim';age?:'kid'|'teen'|'adult'|'elder'};
 type Talk=[q:string,a:string,fq:string,fa:string];
@@ -298,21 +312,59 @@ export const STADIUM_NPCS:NpcDefinition[]=[
   [['Who chooses which camera you see?','The director. They watch every camera at once on lots of screens and pick the best shot to show, moment by moment.','How does the director pick?','Mostly the wide shot to follow the play. Then a close-up for a big moment, and a replay from a camera behind the goal when the ball stops.'],
    ['What does a co-commentator do?','I explain the tactics, like why a team is pressing or switching play. The main commentator describes what happens; I explain why.','How can I watch like a commentator?','Watch the players without the ball. Ask yourself why they moved there, and what the next pass might be.']],
   {floor:gantry,workYaw:COM_B.yaw}),
- // ---- Public viewing behind the south stand (two talkable fans; the rest are instanced extras)
+ // ---- Public viewing behind the south stand (Santi and Ingeborg, then the lighter watch-party crowd below)
  npc('stadium-viewer-sol','Santi','Public viewing fan','WATCHING THE BIG SCREEN',start('stadium-viewer-sol'),{character:'male',face:'warm',clothing:'coast',age:'teen'},
   'A teenager who loves watching matches on the big screen with a crowd outside the stand.',
   'Hi! Come and watch with us. The big screen shows the match out here too!',
   ['Watching together is the best way to watch!','When the screen shows a goal, we all jump!','Public viewing feels like being in the stand.'],
   [['What is public viewing?','A big screen outside, so lots of fans can watch a match together. Towns put them up in squares and parks for big tournaments.','Where does the picture come from?','From the TV cameras inside the stadium. The director picks the shot, and it shows on this screen a moment later.'],
    ['Why watch with other fans?','Cheering together is fun! You share the nervous moments, the near misses and the goals.','How do I behave at public viewing?','Like in the stand: cheer, clap good play from both teams, keep paths clear and stay with your grown-up.']],
-  {workYaw:Math.PI}),
+  {workYaw:Math.PI,watch:true}),
  npc('stadium-viewer-ingeborg','Ingeborg','Public viewing fan','EXPLAINING THE MATCH',start('stadium-viewer-ingeborg'),{character:'female',face:'light',clothing:'sunset',age:'elder'},
   'A grandmother who explains every move on the big screen to whoever stands next to her.',
   'Ooh, did you see that run? Stand with me, dear, and I will tell you what is happening.',
   ['Ooh, so close! Did you see that chance?','Watch the player without the ball, dear.','Score in the corner of the screen: keep an eye!'],
   [['What should I watch on the screen?','Watch where the space is. The team with the ball tries to spread out, and the other team tries to squeeze the space and win it back.','How do I read the score on the screen?','The two team names, their goals and the minute. The home team is usually shown first.'],
    ['Why did everyone say "ooh"?','That was a near miss: a shot just past the post or a big save. Fans say "ooh" when a goal nearly happens.','Do replays show it again?','Yes! After a big chance, the screen often shows a replay from another camera, sometimes in slow motion.']],
-  {workYaw:Math.PI}),
+  {workYaw:Math.PI,watch:true}),
+ // ---- The watch-party crowd (Nov 13 2026, owner: real islanders, not beans): short chats, one topic each; random looks from the id
+ // (beanLooks npcDress), a few in DRIP FC green and gold shirts. They watch the screen, cheer goals and clap a near miss (Town).
+ npc('stadium-viewer-kwabena','Kwabena','Watch-party fan','CHEERING AT THE SCREEN',start('stadium-viewer-kwabena'),{character:'male',face:'deep',clothing:'coast',age:'adult'},
+  'A dad who never misses a big match on the screen and claps good play from both teams.',
+  'Hello! Grab a spot, the match is on the big screen!',
+  ['Come on, keep it going!','Great pass! Clap for that one.','Both teams are playing well today.'],
+  [['Can I cheer for the other team\'s good play?','Yes! Clapping a great save or pass from either team is good sport. Real fans enjoy good football.','What if my team is losing?','Keep cheering for your team. Encouragement helps, and a match can change in a minute.']],
+  {workYaw:Math.PI,watch:true,look:{top:'#2f9a5a'}}),
+ npc('stadium-viewer-lumi','Lumi','Watch-party fan','HOLDING HER BREATH',start('stadium-viewer-lumi'),{character:'female',face:'light',clothing:'sunset',age:'kid'},
+  'A kid who gasps at every near miss on the big screen.',
+  'Ooh! That shot on the screen nearly went in!',
+  ['Ooh, off the post!','What a save by the keeper!','So close, nearly a goal!'],
+  [['What is a near miss?','A chance that nearly becomes a goal: a shot just wide, off the post or the bar, or a big save by the keeper.','Why does everyone say ooh?','Because a goal nearly happened! The whole crowd feels it at the same moment.']],
+  {workYaw:Math.PI,watch:true,look:{top:'#f2c230'}}),
+ npc('stadium-viewer-rangi','Rangi','Watch-party fan','WAITING FOR KICK-OFF',start('stadium-viewer-rangi'),{character:'male',face:'warm',clothing:'classic',age:'teen'},
+  'A teenager who comes early to watch the teams line up on the big screen.',
+  'Hi! I come early to see the teams walk out on the screen.',
+  ['The second half starts soon!','I love the walk-out before kick-off.','Half-time: time for a stretch!'],
+  [['How long is a match?','A full match is two halves of 45 minutes, with a short break called half-time. Younger players play shorter halves.','What happens at half-time?','Players rest, drink water and the coach gives a few tips. Then the teams swap ends.']],
+  {workYaw:Math.PI,watch:true}),
+ npc('stadium-viewer-zawadi','Zawadi','Watch-party fan','WAITING FOR THE REPLAY',start('stadium-viewer-zawadi'),{character:'female',face:'deep',clothing:'coast',age:'adult'},
+  'A mum who loves the slow-motion replays on the big screen.',
+  'Wait for the replay on the screen, it shows the whole move!',
+  ['Here comes the replay!','Slow motion shows the clever touch.','Watch the run before the goal!'],
+  [['Why do replays help?','A replay shows a moment again, often from another camera, so you can see how the chance was made.','What should I watch in a replay?','Watch the pass and the run before the shot. That is where the goal really starts.']],
+  {workYaw:Math.PI,watch:true,look:{top:'#2f9a5a'}}),
+ npc('stadium-viewer-arlo','Arlo','Watch-party fan','CHECKING THE SCORE',start('stadium-viewer-arlo'),{character:'male',face:'light',clothing:'sunset',age:'kid'},
+  'A kid who always keeps one eye on the score and the clock in the corner of the screen.',
+  'Look at the score in the corner of the screen!',
+  ['How many minutes are left?','The clock is ticking!','Check the score in the corner.'],
+  [['What does the screen corner show?','The two teams, their goals and the match clock. It counts up from 0 to 45 in each half.','What is added time?','Extra minutes at the end of a half for time lost to injuries and changes. The fourth official shows it on a board.']],
+  {workYaw:Math.PI,watch:true}),
+ npc('stadium-viewer-elif','Elif','Watch-party fan','WATCHING OFF THE BALL',start('stadium-viewer-elif'),{character:'female',face:'warm',clothing:'classic',age:'elder'},
+  'A grandmother who watches the players without the ball, not just the ball.',
+  'Watch the players without the ball on the screen, dear!',
+  ['See who is making space?','A good run makes room for others.','Watch the back line move together.'],
+  [['Why watch players without the ball?','Most of the time a player does not have the ball. Their runs and positions decide where the next pass can go.','What can I copy from them?','Keep moving into space where a teammate can see you, and look around before the ball arrives.']],
+  {workYaw:Math.PI,watch:true,look:{top:'#f2c230'}}),
  // ---- The Drip: the club mascot (an original water-drop costume, lib/graphics/dripMascot.ts)
  npc('stadium-mascot-drip','Drip','DRIP FC mascot','LAPPING THE PITCH',start('stadium-mascot-drip'),{character:'male',face:'warm',clothing:'coast',body:'strong'},
   'Drip, the big friendly water-drop mascot of DRIP FC, who laps the pitch and cheers up the crowd.',
@@ -408,5 +460,7 @@ export const SCORE_FAN_LEAGUE:Record<string,NewsLeague>=Object.fromEntries(Objec
  *  point (Well played) or wave now and then, one at a time, through the shared emote answers (islandNpcs.react). */
 export const STADIUM_MASCOT_ID='stadium-mascot-drip';
 export const STADIUM_GESTURERS:readonly string[]=STADIUM_NPCS.filter(n=>n.emotes).map(n=>n.id);
+/** The public-viewing fans (Santi, Ingeborg and the crowd): on a goal they cheer or dance, on a near miss they clap ("ooh, so close!"). */
+export const STADIUM_VIEWERS:readonly string[]=STADIUM_NPCS.filter(n=>n.watch).map(n=>n.id);
 /** EMOTE.Cheer (clap + hop), EMOTE.WellPlayed, EMOTE.Wave (lib/town/emoteReact.ts), as numbers to keep this file pure data. */
 export const STADIUM_GESTURES:readonly number[]=[1,5,0];

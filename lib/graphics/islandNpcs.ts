@@ -4,7 +4,7 @@ import {CAFE_NPC_ROUTES,onCafeRoute} from '../town/cafeRoutes';
 import {applyTruckProtest} from './truckReactions';
 import * as T from 'three';
 import {effectiveTier,heatOptions} from './heatTier';
-import {AR_TRACKS,STADIUM_BALL,STADIUM_NPC_ROUTES,stadiumNpcBudget} from '../town/stadiumNpcs';
+import {AR_TRACKS,STADIUM_BALL,STADIUM_NPC_ROUTES,stadiumNpcBudget,stadiumNpcShown,viewingCrowd} from '../town/stadiumNpcs';
 import {dressDripMascot} from './dripMascot';
 import type {BallReactions} from './ballReactions';
 import {createNpcRide} from './npcRide';
@@ -132,9 +132,9 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  const fastRoutine:typeof entries=[],slowRoutine:typeof entries=[];let slowRoutineDt=0;
  // fewerAmbient (visible heat option, OFF by default; lib/graphics/heatTier HEAT_OPTIONS): 40% of townsfolk are not drawn, routined or talkable on phones.
  const thinAmbient=heatOptions().fewerAmbient&&typeof window!=='undefined'&&window.matchMedia('(pointer: coarse)').matches;let thinnedSet:Set<object>|null=null;const thinnedAmbient=(entry:object)=>thinAmbient&&(thinnedSet??=new Set(entries.filter((e,i)=>(i%5===1||i%5===3)&&!e.definition.floor))).has(entry);
- // DRIP FC Stadium islanders (lib/town/stadiumNpcs.ts): only the first stadiumNpcBudget(phone, tier) by heatRank show; the rest are thinned
- // (not drawn, routined or talkable). The budget is read once per update (one heat-tier lookup).
- let stadiumCap=Infinity;const isThinned=(entry:{definition:NpcDefinition})=>(entry.definition.heatRank!==undefined&&entry.definition.heatRank>=stadiumCap)||thinnedAmbient(entry);
+ // DRIP FC Stadium islanders (lib/town/stadiumNpcs.ts): only the first stadiumNpcBudget(phone, tier) by heatRank show, plus the first
+ // viewingCrowd(phone, tier) of the public-viewing crowd; the rest are thinned (not drawn, routined or talkable). Read once per update.
+ let stadiumCap=Infinity,viewCap=Infinity;const isThinned=(entry:{definition:NpcDefinition})=>(entry.definition.heatRank!==undefined&&!stadiumNpcShown(entry.definition.heatRank,stadiumCap,viewCap))||thinnedAmbient(entry);
  // Townsfolk on a moving floor (the boat captains, Oct 15 2026): their feet follow the deck's live height (two calls a frame).
  const floored=entries.filter(e=>!!e.definition.floor);
  // DRIP FC Stadium assistant referees (stadiumNpcs AR_TRACKS): side-step along their touchline with the stadium ball's z (clamped to
@@ -144,7 +144,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   // Match focus (lib/town/matchFocus.ts): everyone held (r −1) and `still`: after ONE held pass (the name tag hides, every pose stays
   // as drawn) the update returns at once; nothing advances, so nothing jumps when it resumes.
   if(focusAt&&focusAt.still&&focusAt.r<0){if(stillPasses>0){stats.moving=0;return;}stillPasses++;}
-  stadiumCap=stadiumNpcBudget(!desktop,effectiveTier());
+  {const tier=effectiveTier();stadiumCap=stadiumNpcBudget(!desktop,tier);viewCap=viewingCrowd(!desktop,tier);}
   for(const l of linesmen){const e=l.e;if(paused||e.near||e.stunned||isThinned(e)||e.distance>90)continue;const want=STADIUM_BALL.live?Math.min(l.t.max,Math.max(l.t.min,STADIUM_BALL.z)):l.mark,d=want-e.position.z,step=Math.min(Math.abs(d),(STADIUM_BALL.live?3.2:1.2)*Math.min(dt,.1));if(Math.abs(d)>.05)e.position.z+=Math.sign(d)*step;}
   stats.posed=stats.offscreenSkipped=0;for(const e of floored)e.position.y=e.definition.floor!();if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
   for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7||entry.fx.kind>=0;
@@ -169,6 +169,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
    const bucket=Math.floor((poseClock+entry.poseSlot)*POSE_HZ);if(bucket===entry.poseBucket&&!entry.definition.travel&&!entry.stunned&&!truckWitnesses.has(entry.id)&&(entry.freestyle?distance>32&&entry.routine.mode!=='walk'&&entry.routine.mode!=='approach':distance>FAR_POSE)){entry.rig.root.position.set(entry.position.x,entry.position.y,entry.position.z);continue;}entry.poseBucket=bucket;const poseDt=Math.min(entry.rigElapsed,.1);entry.rigElapsed=0;if(entry.seat)entry.seatHeld=entry.near||entry.stunned||truckWitnesses.has(entry.id)?0:entry.seatHeld+1;const r=entry.routine,stunned=reactions?.get('npc:'+entry.id),partner=r.partner===null?undefined:entryById.get(r.partner);
    let facing=entry.near?Math.atan2(player.x-entry.position.x,player.z-entry.position.z):r.mode==='social'&&partner?Math.atan2(partner.position.x-entry.position.x,partner.position.z-entry.position.z):r.mode==='work'?entry.definition.workYaw:undefined;
    if(r.mode==='rest')facing=(entry.definition.workYaw??0)+(reduced?0:Math.sin(r.clock*.35)*.4);
+   if(entry.definition.watch&&entry.fx.kind>=0&&entry.distance>=7)facing=entry.definition.workYaw; // a public-viewing fan cheers at the screen, not at you
    if(entry.freestyle?.facing!==undefined)facing=entry.freestyle.facing; // a pair trick: face the partner until the rally ends
    if(entry.definition.travel&&!entry.near){const dx=entry.position.x-entry.lastPosition.x,dz=entry.position.z-entry.lastPosition.z;facing=Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):entry.rig.root.rotation.y;}
    if(entry.seat){const sf=entry.sm?seatFacing(entry.sm):'seat';if(sf==='seat')facing=entry.definition.workYaw??0;else if(sf==='walk')facing=entry.sm!.walkYaw;} // a still pose keeps its bench / towel heading, even while waving hello
@@ -176,6 +177,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
    const speed=poseDt>0?Math.hypot(entry.position.x-entry.lastPosition.x,entry.position.z-entry.lastPosition.z)/poseDt:0;
    entry.freestyle?.prepare(paused||stunned?0:poseDt,!paused&&!stunned&&distance>2.2&&!entry.duetBall,reduced,freestyleClock);/* a two-ball duet with the player: the routine rests, the duet places its ball (below) */
    stats.posed++;entry.rig.update(entry.position.x,entry.position.z,paused||stunned?0:poseDt,witness?time:r.clock,reduced,{...entry.freestyle?.motion,...(entry.seat?{trick:entry.seat}:null),travelMode:entry.ride?'scooter':'walk',...(entry.pass?npcPassMotion(entry.pass,entry.passBall,entry.rig.profileScale,reduced):npcEmoteMotion(entry.fx,reduced)),stunAge:stunned?.age,rooftopPose:stunned&&stunned.age>1.85?'dizzy':undefined,facing:entry.pass&&!reduced&&facing!==undefined?facing+entry.pass.turn:facing});entry.rig.root.position.y=entry.position.y;
+   if(entry.definition.watch&&entry.head&&!entry.near&&!stunned)entry.head.rotation.x-=.2; // public viewing: eyes up at the big screen
    const working=!witness&&!paused&&!entry.near&&!stunned&&r.mode==='work';if(working)entry.workTime+=poseDt;entry.activity?.update(poseDt,entry.workTime,reduced,working);
    if(!paused&&!stunned&&!reduced&&entry.rightShoulder&&entry.rightElbow){
     if(entry.near&&r.waveTime<2.1&&(!entry.freestyle||distance<=2.2)&&entry.definition.pose!=='lie'){entry.rightShoulder.rotation.set(-.25,0,2.15+Math.sin(r.waveTime*10)*.15);entry.rightElbow.rotation.x=-.8;}
