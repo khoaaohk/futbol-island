@@ -221,7 +221,7 @@ Some conversations end in a quick challenge with three options and one right ans
 
 - **Football tie:** Fast football decisions and rules, checked in a few seconds and explained right away.
 - **Where:** Talk to islanders; each one has their own set of challenges, and each area adds more.
-- **Proof:** 773 quick challenges across the islanders and areas.
+- **Proof:** 797 quick challenges across the islanders and areas.
 - **id / image:** `quick-challenges` / `quick_challenges`
 
 ### Bubbles and banter
