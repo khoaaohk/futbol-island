@@ -7,6 +7,7 @@ import {NEWS_LEAGUES,type NewsLeague} from './newsLeagues';
 import type {NpcLookOverride} from './beanLooks';
 import {TOWNSFOLK_CAST,TOWNSFOLK_MOVES,TOWNSFOLK_VOICES,townsfolkCastEnabled,type NpcAge,type NpcPoseKind,type TownArea} from './townsfolkCast';
 import {SUMMIT_ISLE_NPCS} from './summitIsleNpcs';
+import {STADIUM_NPCS} from './stadiumNpcs';
 import {BOAT_CAPTAINS} from './fishing/boatCaptains';
 /** Familiar island personalities, with short football conversations you can choose. */
 export type NpcTopic={id:string;question:string;answer:string;followUp:{question:string;answer:string}};
@@ -16,7 +17,11 @@ export type NpcDefinition={freestyle?:number;/** FREESTYLE_CLIPS id shown first 
  pose?:NpcPoseKind;age?:NpcAge;look?:NpcLookOverride;persona?:string;lines?:string[];area?:TownArea;
  /** Oct 15 2026 (the deep-sea boats' captains, lib/town/fishing/boatCaptains.ts): stands on a moving floor (a boat deck) at this
   *  live height instead of the ground; no wander route, no snap to walkable ground. */
- floor?:()=>number};
+ floor?:()=>number;
+ /** Stadium islanders (lib/town/stadiumNpcs.ts): show order under the heat budget (stadiumNpcBudget); rank >= budget is hidden. */
+ heatRank?:number;
+ /** A costume over the rig (the DRIP FC mascot, lib/graphics/dripMascot.ts). */ costume?:'drip';
+ /** Gestures on its own now and then while a stadium match is on (coaches, the fourth official; Town picks one at a time). */ emotes?:boolean};
 const ISLAND_REGULARS:NpcDefinition[]=[
  {id:'rosa',name:'Coach Rosa',role:'Futsal coach',x:16,z:43,character:'female',face:'warm',clothing:'sunset',greeting:'Welcome to the rooftop! Futsal gives you lots of touches and very little time. What are you working on?',topics:[
   {id:'touch',question:'How do I improve my first touch?',answer:'Look around before the pass arrives. Cushion the ball into space where you can play your next pass. In futsal, your sole can help you stop and protect it.',followUp:{question:'What can I practise?',answer:'Pass against a wall, check over your shoulder, then receive to either side. Start slowly and keep the ball close enough for your next touch.'}},
@@ -193,6 +198,8 @@ NPC_DIALOGUES.push(...EAST_PIER_NPCS);
 NPC_DIALOGUES.push(...SUMMIT_ISLE_NPCS);
 // The deep-sea boats' captain and skipper (Oct 15 2026, lib/town/fishing/boatCaptains.ts): how the boat works, then fish-and-football facts.
 NPC_DIALOGUES.push(...BOAT_CAPTAINS);
+// DRIP FC Stadium (Nov 13 2026): greeters, guides, fans, coaches, score fans, the broadcast crew and photographers (stadiumNpcs.ts).
+NPC_DIALOGUES.push(...STADIUM_NPCS);
 
 // Townsfolk cast (Oct 12 2026, user-approved; lib/town/townsfolkCast.ts, docs/npc-cast.md): every islander gets a persona and
 // rotating conversation openers (the greeting stays the first one, so gameplay wording is unchanged); 60 new townsfolk join

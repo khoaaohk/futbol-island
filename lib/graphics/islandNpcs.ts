@@ -3,7 +3,9 @@ import {FREESTYLE_PAIRS} from './freestyleRoutine';
 import {CAFE_NPC_ROUTES,onCafeRoute} from '../town/cafeRoutes';
 import {applyTruckProtest} from './truckReactions';
 import * as T from 'three';
-import {heatOptions} from './heatTier';
+import {effectiveTier,heatOptions} from './heatTier';
+import {AR_TRACKS,STADIUM_BALL,STADIUM_NPC_ROUTES,stadiumNpcBudget} from '../town/stadiumNpcs';
+import {dressDripMascot} from './dripMascot';
 import type {BallReactions} from './ballReactions';
 import {createNpcRide} from './npcRide';
 import {createPlayer} from './player';
@@ -67,15 +69,18 @@ function npcEmoteMotion(fx:{kind:number;age:number;v:number},reduced:boolean):{c
 }
 export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:BallReactions){
  const root=new T.Group();root.name='island-townsfolk';scene.add(root);
- const textures:T.Texture[]=[],materials:T.Material[]=[];
+ const textures:T.Texture[]=[],materials:T.Material[]=[],geometriesOwned:T.BufferGeometry[]=[];
  const canTravel=(a:{x:number;y:number;z:number},b:{x:number;y:number;z:number})=>safeNpcPath(a,b,placement.isWalkable,placement.heightAt);
  const entries=NPC_DIALOGUES.map((definition,index)=>{
   const authoredRoute=CAFE_NPC_ROUTES[definition.id];
-  let x=authoredRoute?.[0].x??definition.x,z=authoredRoute?.[0].z??definition.z;
-  search:for(let radius=0;radius<=12&&!authoredRoute&&!definition.pose;radius+=1){for(let angle=0;angle<16;angle++){const px=definition.x+Math.cos(angle*Math.PI/8)*radius,pz=definition.z+Math.sin(angle*Math.PI/8)*radius;if(placement.isWalkable(px,pz)){x=px;z=pz;break search;}}}
+  // DRIP FC Stadium walkers (lib/town/stadiumNpcs.ts): authored waypoints on the paving, height from the ground; no snap, no jitter loop.
+  const stadiumRoute=STADIUM_NPC_ROUTES[definition.id];
+  let x=authoredRoute?.[0].x??stadiumRoute?.[0].x??definition.x,z=authoredRoute?.[0].z??stadiumRoute?.[0].z??definition.z;
+  search:for(let radius=stadiumRoute?13:0;radius<=12&&!authoredRoute&&!definition.pose;radius+=1){for(let angle=0;angle<16;angle++){const px=definition.x+Math.cos(angle*Math.PI/8)*radius,pz=definition.z+Math.sin(angle*Math.PI/8)*radius;if(placement.isWalkable(px,pz)){x=px;z=pz;break search;}}}
   if(definition.floor){x=definition.x;z=definition.z;} // a boat deck (Oct 15 2026): keep the exact spot, never snap ashore
   const rig=createPlayer(`town-npc-${definition.id}`,'home');rig.setAppearance({...DEFAULT_CUSTOMIZATION,character:definition.character,face:definition.face,clothing:definition.clothing,body:definition.body??'balanced'});const dress=npcDress(definition);rig.setBeanLook(dress.look,dress.outfit);releaseHiddenClassic(rig.root);root.add(rig.root);
   if(definition.age&&definition.age!=='adult')rig.setProfile(AGE_PROFILES[definition.age]); // townsfolk cast: children, teens and grandparents (townsfolkCast.ts)
+  if(definition.costume==='drip'){const costume=dressDripMascot(rig);if(costume){geometriesOwned.push(...costume.geometries);materials.push(...costume.materials);}}
   rig.root.traverse(object=>{object.userData.npcId=definition.id;});
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const ctx=canvas.getContext('2d')!;
   ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(definition.name,256,66);ctx.fillStyle='#e6cb8b';ctx.font='700 29px sans-serif';ctx.fillText('LET’S TALK',256,115);
@@ -90,16 +95,18 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   const seat=definition.pose?npcSeatPose(definition.pose,rig.profileScale,beanShapeOf(rig.root)):undefined;
   const routine=createNpcRoutine(index,Boolean(activity||freestyle||seat),position);if(seat)routine.socialCooldown=Infinity;if(definition.travel){routine.speed=definition.travel==='run'?2.8:definition.travel==='skateboard'?3.8:4.5;routine.restDuration=.6;routine.socialCooldown=Infinity;}
   if(freestyle)routine.socialCooldown=Infinity;
+  if(definition.floor)routine.socialCooldown=Infinity; // a fixed spot (a deck, a stand, the stadium touchline): never walks off to chat
   const route=[{...position}];if(!activity&&!freestyle&&!seat&&!definition.floor)for(let step=0;step<4;step++){const angle=index*.7+step*Math.PI/2,point={x:x+Math.sin(angle)*(definition.travel?6:2.5+index%3),z:z+Math.cos(angle)*(definition.travel?6:2.5+index%3),y:position.y};point.y=placement.heightAt(point.x,point.z);if(canTravel(position,point))route.push(point);}
   if(definition.travel){
    let best:{x:number;y:number;z:number}[]=[];let length=0;
    for(let direction=0;direction<8;direction++){const angle=direction*Math.PI/4;const ends=[-1,1].map(sign=>{let end={...position};for(let d=.5;d<=7;d+=.5){const next={x:x+Math.sin(angle)*d*sign,y:position.y,z:z+Math.cos(angle)*d*sign};if(!canTravel(position,next))break;end=next;}return end;});const span=Math.hypot(ends[0].x-ends[1].x,ends[0].z-ends[1].z);if(span>length){best=ends;length=span;}}
    if(length>1){route.splice(0,route.length,{...position},...best);routine.restDuration=1.2;}
   }
+  if(stadiumRoute)route.splice(0,route.length,...stadiumRoute.map(p=>({x:p.x,y:placement.heightAt(p.x,p.z),z:p.z,pause:p.pause})));
   if(authoredRoute){route.splice(0,route.length,...authoredRoute.map(p=>({...p})));routine.speed=.9;routine.socialCooldown=Infinity;
    if(definition.id==='cafe-oren'){routine.waypoint=authoredRoute.findIndex(p=>p.pause===7);Object.assign(position,route[routine.waypoint]);routine.target={...position};rig.root.position.set(position.x,position.y,position.z);}
   }
-  return {routeTravel:authoredRoute?(a:Position,b:Position)=>onCafeRoute(a,b,authoredRoute,routine.waypoint):undefined,id:definition.id,definition,rig,position,home:{x,z},label,activity,freestyle,ride,lastPosition:{x,z},workTime:index*1.7,worker:Boolean(activity||freestyle||seat),seat,seatHeld:0,route,routine,near:false,stunned:false,ix:null as {s:NpcScript;age:number}|null,ixOut:{slow:1,arm:-1,armW:0,spin:0,bow:0,nod:0,hop:0,lean:0,yaw:0} as NpcIx,mx:null as {a:MoveAnswer;age:number}|null,mxOut:{slow:1,arm:-1,armW:0,nod:0,look:0} as MoveAnswerOut,head:rig.root.getObjectByName('player-head')??null,baseSpeed:routine.speed,sm:seat&&(definition.pose==='bench'||definition.pose==='sit')?createSeatSM(x,z,definition.workYaw??0):null,seatTorso:seat?seat.torsoPitch:0,fx:{kind:-1,age:0,v:-1},fxDur:0,pass:null as ActorPose|null,passBall:{x:0,y:0,z:0},duetBall:null as null|{x:number;y:number;z:number},emoteStep:null as null|{x:number;y:number;z:number},labelStatus:'',labelCanvas:canvas,labelTexture:texture,rigElapsed:0,poseSlot:(index*.618034)%1/POSE_HZ,poseBucket:-1,distance:Infinity,leftShoulder:rig.root.getObjectByName('left-shoulder'),rightShoulder:rig.root.getObjectByName('right-shoulder'),rightElbow:rig.root.getObjectByName('right-elbow')};
+  return {routeTravel:authoredRoute?(a:Position,b:Position)=>onCafeRoute(a,b,authoredRoute,routine.waypoint):undefined,id:definition.id,definition,rig,position,home:{x,z},label,activity,freestyle,ride,lastPosition:{x,z},workTime:index*1.7,worker:Boolean(activity||freestyle||seat),seat,seatHeld:0,route,routine,near:false,stunned:false,ix:null as {s:NpcScript;age:number}|null,ixOut:{slow:1,arm:-1,armW:0,spin:0,bow:0,nod:0,hop:0,lean:0,yaw:0} as NpcIx,mx:null as {a:MoveAnswer;age:number}|null,mxOut:{slow:1,arm:-1,armW:0,nod:0,look:0} as MoveAnswerOut,head:rig.root.getObjectByName('player-head')??null,baseSpeed:routine.speed,sm:seat&&!definition.floor&&(definition.pose==='bench'||definition.pose==='sit')?createSeatSM(x,z,definition.workYaw??0):null,seatTorso:seat?seat.torsoPitch:0,fx:{kind:-1,age:0,v:-1},fxDur:0,pass:null as ActorPose|null,passBall:{x:0,y:0,z:0},duetBall:null as null|{x:number;y:number;z:number},emoteStep:null as null|{x:number;y:number;z:number},labelStatus:'',labelCanvas:canvas,labelTexture:texture,rigElapsed:0,poseSlot:(index*.618034)%1/POSE_HZ,poseBucket:-1,distance:Infinity,leftShoulder:rig.root.getObjectByName('left-shoulder'),rightShoulder:rig.root.getObjectByName('right-shoulder'),rightElbow:rig.root.getObjectByName('right-elbow')};
  });
  const neighborhood:typeof entries=[],frozen=new Set<string>(),entryById=new Map(entries.map(entry=>[entry.id,entry]));
  // Freestyle pairs on the court (freestyleRoutine.ts): one shared timeline, so the ball they pass meets both. `freestyleClock` is
@@ -124,13 +131,21 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  let focusAt:{x:number;z:number;r:number;still?:boolean}|null=null,stillPasses=0;const heldByFocus=(e:{position:{x:number;z:number}})=>focusAt!==null&&Math.hypot(e.position.x-focusAt.x,e.position.z-focusAt.z)>focusAt.r;
  const fastRoutine:typeof entries=[],slowRoutine:typeof entries=[];let slowRoutineDt=0;
  // fewerAmbient (visible heat option, OFF by default; lib/graphics/heatTier HEAT_OPTIONS): 40% of townsfolk are not drawn, routined or talkable on phones.
- const thinAmbient=heatOptions().fewerAmbient&&typeof window!=='undefined'&&window.matchMedia('(pointer: coarse)').matches;let thinnedSet:Set<object>|null=null;const isThinned=(entry:object)=>thinAmbient&&(thinnedSet??=new Set(entries.filter((e,i)=>(i%5===1||i%5===3)&&!e.definition.floor))).has(entry);
+ const thinAmbient=heatOptions().fewerAmbient&&typeof window!=='undefined'&&window.matchMedia('(pointer: coarse)').matches;let thinnedSet:Set<object>|null=null;const thinnedAmbient=(entry:object)=>thinAmbient&&(thinnedSet??=new Set(entries.filter((e,i)=>(i%5===1||i%5===3)&&!e.definition.floor))).has(entry);
+ // DRIP FC Stadium islanders (lib/town/stadiumNpcs.ts): only the first stadiumNpcBudget(phone, tier) by heatRank show; the rest are thinned
+ // (not drawn, routined or talkable). The budget is read once per update (one heat-tier lookup).
+ let stadiumCap=Infinity;const isThinned=(entry:{definition:NpcDefinition})=>(entry.definition.heatRank!==undefined&&entry.definition.heatRank>=stadiumCap)||thinnedAmbient(entry);
  // Townsfolk on a moving floor (the boat captains, Oct 15 2026): their feet follow the deck's live height (two calls a frame).
  const floored=entries.filter(e=>!!e.definition.floor);
+ // DRIP FC Stadium assistant referees (stadiumNpcs AR_TRACKS): side-step along their touchline with the stadium ball's z (clamped to
+ // their half), back to their mark with no match; never while talking, stunned or thinned. Two entries, a few multiplies a frame.
+ const linesmen=entries.filter(e=>!!AR_TRACKS[e.id]).map(e=>({e,t:AR_TRACKS[e.id],mark:e.position.z}));
  const update=(dt:number,time:number,reduced:boolean,player:Position,paused:boolean,desktop=false,hoveredId:string|null=null,camera?:T.Camera,hideTags=false)=>{
   // Match focus (lib/town/matchFocus.ts): everyone held (r −1) and `still`: after ONE held pass (the name tag hides, every pose stays
   // as drawn) the update returns at once; nothing advances, so nothing jumps when it resumes.
   if(focusAt&&focusAt.still&&focusAt.r<0){if(stillPasses>0){stats.moving=0;return;}stillPasses++;}
+  stadiumCap=stadiumNpcBudget(!desktop,effectiveTier());
+  for(const l of linesmen){const e=l.e;if(paused||e.near||e.stunned||isThinned(e)||e.distance>90)continue;const want=STADIUM_BALL.live?Math.min(l.t.max,Math.max(l.t.min,STADIUM_BALL.z)):l.mark,d=want-e.position.z,step=Math.min(Math.abs(d),(STADIUM_BALL.live?3.2:1.2)*Math.min(dt,.1));if(Math.abs(d)>.05)e.position.z+=Math.sign(d)*step;}
   stats.posed=stats.offscreenSkipped=0;for(const e of floored)e.position.y=e.definition.floor!();if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
   for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7||entry.fx.kind>=0;
    if(entry.ix){/* a skater / scooter / juggler answers (lib/town/npcEmoteSets.ts): it keeps its route, only its speed dips and then returns */entry.ix.age+=paused?0:dt;if(entry.ix.age>=entry.ix.s.seconds){entry.ix=null;entry.routine.speed=entry.baseSpeed;entry.rig.root.rotation.x=0;}else{npcIxAt(entry.ix.s,entry.ix.age,entry.ixOut);entry.routine.speed=entry.baseSpeed*entry.ixOut.slow;}}
@@ -229,5 +244,5 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  /** A seated townsperson (bench / towel) stands up and steps off along the open front side to a clear spot; false = she stays seated (no clear spot, cooldown, stunned, reduced motion). */
  const standUp=(id:string,reduced:boolean)=>{const e=entryById.get(id);if(!e||!e.sm||reduced||e.stunned||!e.rig.root.visible)return false;const others:{x:number;z:number}[]=[];for(const o of entries)if(o!==e)others.push(o.position);const spot={x:0,z:0};return openFront(e.sm.hx,e.sm.hz,e.sm.yaw,placement.isWalkable,others,spot)&&seatStandUp(e.sm,spot.x,spot.z);};
 
- return {react,interact,duet,passBy,standUp,setSparkHook(fn:((x:number,y:number,z:number)=>void)|null){sparkHook=fn;},reactToTruck,stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},setFocus(f:{x:number;z:number;r:number;still?:boolean}|null){focusAt=f;stillPasses=0;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
+ return {react,interact,duet,passBy,standUp,setSparkHook(fn:((x:number,y:number,z:number)=>void)|null){sparkHook=fn;},reactToTruck,stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},setFocus(f:{x:number;z:number;r:number;still?:boolean}|null){focusAt=f;stillPasses=0;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());geometriesOwned.forEach(g=>g.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
 }

@@ -17,8 +17,9 @@ import {STADIUM,STADIUM_GATE} from './westParkLayout';
 import {STADIUM_NAME,DRIP_FC_ART,PITCH_DROP,drawGateSign} from '../stadium/dripfc';
 import {segmentHitsBox} from './walkControl';
 import {SCREEN_FRAME} from './stadiumFeed';
+import {DUGOUTS,GANTRY,GANTRY_CAMERAS,GANTRY_FLOOR,PHOTO_SPOTS,TECH_AREAS,photoLens} from './stadiumNpcs';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,FRONT_FRAME,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,FRAME_PROUD,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
+import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,standYaw,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,FRONT_FRAME,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,FRAME_PROUD,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
 
 export type StadiumTools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -244,6 +245,29 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   const head=box(6,3.4,.5,'#f7f3e3',m.x,30.5,m.z);head.rotation.y=Math.atan2(-m.sx,-m.sz);head.rotation.x=0;
   const frame=box(6.4,3.8,.3,'#53605f',m.x-m.sx*.2,30.5,m.z-m.sz*.2);frame.rotation.y=head.rotation.y;}
 
+ // --- Broadcast gantry and photographers' gear (Nov 13 2026, lib/town/stadiumNpcs.ts): plain paint pieces (batched like the rest);
+ // only the two camera heads and the shutter glints are live (lib/graphics/stadiumMedia.ts). The desk and the tripods are rails on
+ // the concourse (players walk round them); the deck is a 6 cm plate, the front half of the concourse stays clear.
+ {const W=STANDS.find(q=>q.id===GANTRY.stand)!,top=GANTRY_FLOOR;
+  const deck=standRect(W,GANTRY.d0,GANTRY.d1,GANTRY.a0,GANTRY.a1);rectBox(deck,CONCOURSE_HEIGHT,top,'#3d4648');
+  const desk=standRect(W,GANTRY.deskD-GANTRY.deskDepth/2,GANTRY.deskD+GANTRY.deskDepth/2,-GANTRY.deskW/2,GANTRY.deskW/2);rectBox(desk,top,top+GANTRY.deskH,'#2c3a52');
+  rectBox({...desk,w:desk.w+.06,d:desk.d+.06},top+GANTRY.deskH,top+GANTRY.deskH+.04,'#e8e2d2');
+  rails.push({...desk,floor:CONCOURSE_HEIGHT-.4,top:top+GANTRY.deskH+.1});
+  for(const a of [-.7,.7]){const m=standWorld(W,GANTRY.deskD-.05,a);box(.36,.24,.05,'#1d2226',m.x,top+GANTRY.deskH+.16,m.z).rotation.y=standYaw(W);}// the monitors
+  for(const c of GANTRY_CAMERAS){for(let k=0;k<3;k++){const ang=k*Math.PI*2/3,leg=box(.05,1.3,.05,'#24292c',c.x+Math.sin(ang)*.28,top+.62,c.z+Math.cos(ang)*.28);leg.rotation.set(Math.cos(ang)*.2,0,-Math.sin(ang)*.2);}
+   skip(cylinder(.05,.5,'#24292c',c.x,top+1.12,c.z));rails.push({x:c.x,z:c.z,w:.7,d:.7,floor:CONCOURSE_HEIGHT-.4,top:top+1.3});}}
+ for(const p of PHOTO_SPOTS){const lens=photoLens(p),yaw=p.yaw;
+  const g=new T.CylinderGeometry(.075,.06,.62,10);g.rotateX(Math.PI/2);g.rotateY(yaw);const mid={x:(lens.x*2+p.x)/3,z:(lens.z*2+p.z)/3};
+  skip(put(g,'#ece8dc',mid.x+Math.sin(yaw)*.12,lens.y,mid.z+Math.cos(yaw)*.12));
+  box(.2,.18,.16,'#1f2427',mid.x-Math.sin(yaw)*.22,lens.y+.02,mid.z-Math.cos(yaw)*.22).rotation.y=yaw;
+  skip(cylinder(.02,lens.y-STADIUM_PITCH_Y,'#2a2f33',mid.x,(lens.y+STADIUM_PITCH_Y)/2,mid.z));
+  obstacles.push({x:p.x,z:p.z,w:.9,d:.9});}
+ // Dugouts (two, against the west stand's front, behind the boards) and each team's painted technical area on the touchline side.
+ for(const d of DUGOUTS){const y0=STADIUM_PITCH_Y;box(d.w,.45,d.d-.2,'#2c3a52',d.x+.15,y0+.22,d.z);box(.12,1.6,d.d,'#d9d6cc',d.x-d.w/2+.06,y0+.8,d.z);
+  box(d.w+.3,.08,d.d+.2,'#e8e2d2',d.x+.05,y0+2.1,d.z).rotation.z=-.12;for(const e of [-1,1])box(d.w,1.9,.08,'#d9d6cc',d.x,y0+.95,d.z+e*d.d/2);
+  obstacles.push({x:d.x,z:d.z,w:d.w,d:d.d});}
+ for(const a of TECH_AREAS){const y=STADIUM_PITCH_Y+.012,lw=.08,zc=(a.z0+a.z1)/2,len=Math.abs(a.z1-a.z0);
+  box(lw,.012,len,'#f4f1e6',a.x1,y,zc);box(lw,.012,len,'#f4f1e6',a.x0,y,zc);for(const z of [a.z0,a.z1])box(a.x1-a.x0,.012,lw,'#f4f1e6',(a.x0+a.x1)/2,y,z);}
  return {stats:{surfaces,rails:rails.length-rails0,boxes,seatsStrips:strips,seats:seatCount()},roofFade:createRoofFade(roofs),roofCanopies};
 }
 

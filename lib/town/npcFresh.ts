@@ -12,11 +12,12 @@ import {PART_5} from './npcFresh/part5';
 import {PART_6} from './npcFresh/part6';
 import {PART_7} from './npcFresh/part7';
 import {PART_8} from './npcFresh/part8';
+import {PART_9} from './npcFresh/part9';
 import {FRESH_AREA_POOLS} from './npcFresh/areas';
 
 /** World area ids with a fallback pool: the five town areas (TownArea), Summit Isle, and the deep-sea boats. */
 export const FRESH_AREAS=['square','beach','pier','cay','residential','summit','sea'] as const;
 export type FreshAreaId=typeof FRESH_AREAS[number];
 
-const byNpc:Record<string,NpcFresh>={...PART_1,...PART_2,...PART_3,...PART_4,...PART_5,...PART_6,...PART_7,...PART_8};
+const byNpc:Record<string,NpcFresh>={...PART_1,...PART_2,...PART_3,...PART_4,...PART_5,...PART_6,...PART_7,...PART_8,...PART_9};
 export const FRESH:NpcFreshBook={byNpc,byArea:FRESH_AREA_POOLS};
