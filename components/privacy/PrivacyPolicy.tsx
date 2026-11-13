@@ -204,7 +204,7 @@ export default function PrivacyPolicy(){
    <li>To show sponsors who help fund the game combined, anonymous totals of how it is used (section 13).</li>
    <li>To keep the site secure and prevent abuse (for example, limiting code guessing).</li>
   </ul>
-  <p>We do not show ads, and we do not use information for targeted advertising, for profiling children, or to send marketing.</p></section>
+  <p>We do not show pop-up, video or tracking ads. The stadium&rsquo;s sponsor boards are pictures only, the same for every player. We do not use information for targeted advertising, for profiling children, or to send marketing.</p></section>
 
   <section id="pp-cookies"><h2 tabIndex={-1}>11. Cookies and browser storage</h2>
    <p>The game does not use tracking or advertising cookies. It uses the browser’s local storage to keep the game on the device (section 3), and a per-tab session value for the visit counter that disappears when the tab is closed. Two small yes/no marks on the device help count first-time use without knowing who anyone is: whether this device has been in the sea before, and whether it has played in (or started) a party before; they never leave the device and are not part of a save code. Our administrators’ own sign-in uses a cookie that is never set for players.</p>
