@@ -42,6 +42,7 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-island-jobs-v1','fi2-garden-v1','fi2-market-v1','fi2-fishbook-v1','fi2-konbini-v1','fi2-konbini-collection-v1','fi2-konbini-ball-v1',
  'fi2-gashapon-v1',// Gashapon capsule toys (Nov 8 2026, docs/gashapon-design.md, lib/gashapon/store.ts): owned toys + counts, recent spin receipts, today's spins
  'fi2-summit-forage-v1',// Summit Isle fruit trees (Oct 13 2026): fruit picked per tree (regrow clock), today's count, the tip seen
+ 'fi2-stadium-orchard-v1',// Stadium Park orchards (Nov 13 2026): fruit picked per tree (regrow clock), the same shape as the Summit forage save
  'fi2-fishing-log-v1',// Fishing content (Oct 15 2026, docs/fishing.md "Content systems"): legends, clues, requests, the lure on the line, Fishbook rewards
  'fi2-fishing-hooks-v1',// Fishing return hooks (Nov 7 2026, docs/fishing.md "Return hooks"): sets claimed, Visitor marks, golden catches, legend chapters (a few KB)
  'fi2-fishing-secrets-v1',// Fishing delight pass (Nov 7 2026, docs/fishing.md "Delight pass"): two found-once secret stamps (message in a bottle, golden glint); ~50 bytes
