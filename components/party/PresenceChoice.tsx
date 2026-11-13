@@ -16,8 +16,6 @@ import { DoneButton } from '@/components/DoneButton';
 import FadeScroll from './FadeScroll';
 import ReportSheet from './ReportSheet';
 import { nearestFirst, publicNear } from './publicNear';
-import { islandLife, ISLAND_GOAL_TARGET } from '@/lib/multiplayer/islandLife';
-import { ISLAND_GOAL_COPY } from '@/lib/multiplayer/publicCopy';
 import styles from './party.module.css';
 
 export const ROSTER_MAX = 8;
@@ -53,7 +51,6 @@ export default function PresenceChoice({ ps, onFriends, onClose }: { ps: Presenc
   const marked = markedChoice(ps);
   const locked = ps.lock !== 'all';
   const world = party.kind === 'world' && ps.mode === 'public';
-  const life = useSyncExternalStore(islandLife.subscribe, islandLife.get, islandLife.get);
   const others = world ? party.members.filter((m) => m.id !== party.you) : [];
   const near = nearestFirst(others.filter((m) => !hid.has(m.id)), ROSTER_MAX);
   const hiddenHere = others.filter((m) => hid.has(m.id) && !reported(m.id)); // a report cannot be undone: never under Show again
@@ -121,7 +118,7 @@ export default function PresenceChoice({ ps, onFriends, onClose }: { ps: Presenc
           })}
         </div>
         {why && <p className={styles.small} role="status" data-presence-reason>{why}</p>}
-        {world && life.inWorld && life.goal !== null && <p className={styles.small} data-island-goal>{ISLAND_GOAL_COPY.line(life.goal, ISLAND_GOAL_TARGET)}</p>/* phase 3: the island-wide daily goal (a count only) */}
+        {/* The island-goal count line was removed from this panel (owner, Nov 13 2026); the goal's done toast still shows. */}
         {ask && (
           <div className={styles.confirm} role="group" aria-label={PUBLIC_MATCH_LEAVE.line} data-presence-match-leave>
             <p>{PUBLIC_MATCH_LEAVE.line}</p>

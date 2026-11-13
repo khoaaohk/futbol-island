@@ -151,7 +151,7 @@ await ok('Town wiring behind the flag; no new timers, polling or loops; glows st
  for(const f of ['lib/multiplayer/islandLife.ts','lib/graphics/activityGlow.ts','components/party/IslandLifeToast.tsx'])assert.doesNotMatch(code(read(f)),/setInterval|requestAnimationFrame|fetch\(|localStorage/,f);
  const glow=code(read('lib/graphics/activityGlow.ts'));assert(/if \(k === key\) return;/.test(glow),'set() does nothing unless the list changed');
  assert.doesNotMatch(read('components/FriendMapDots.tsx'),/islandLife|activityGlow/,'never on the map');
- const panel=read('components/party/PresenceChoice.tsx');assert(/\{world && life\.inWorld && life\.goal !== null && <p className=\{styles\.small\} data-island-goal>/.test(panel),'the panel line, in a world only');
+ const panel=read('components/party/PresenceChoice.tsx');assert(!/data-island-goal/.test(panel),'no island-goal count line in the Who\'s here panel (owner, Nov 13 2026)');
 });
 
 console.log(`mp-public-phase3 ok (${n} groups)`);
