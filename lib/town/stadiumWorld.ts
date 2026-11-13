@@ -247,7 +247,10 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
 
  // --- Floodlight masts at the open corners: the heads are paint; their lit lenses, glow and the shared real lights at night are ----
  // fieldLighting.ts's (the stadium joins the island pitches' night blend and spot pool, stadiumNight.ts).
- for(const m of MASTS){skip(cylinder(.45,30,'#d9d6cc',m.x,15,m.z));obstacles.push({x:m.x,z:m.z,w:1,d:1});
+ // The pole (0.9 m wide) stops under the head (owner, Nov 13 2026: it ran up through the 0.5 m panel and showed as a white line on its
+ // face); a short bracket carries the head from behind.
+ for(const m of MASTS){skip(cylinder(.45,28.6,'#d9d6cc',m.x-m.sx*.55,14.3,m.z-m.sz*.55));obstacles.push({x:m.x-m.sx*.55,z:m.z-m.sz*.55,w:1,d:1});
+  {const br=box(.5,1.2,.5,'#53605f',m.x-m.sx*.45,28.9,m.z-m.sz*.45);br.rotation.y=Math.atan2(-m.sx,-m.sz);}
   const head=box(6,3.4,.5,'#f7f3e3',m.x,30.5,m.z);head.rotation.y=Math.atan2(-m.sx,-m.sz);head.rotation.x=0;
   const frame=box(6.4,3.8,.3,'#53605f',m.x-m.sx*.2,30.5,m.z-m.sz*.2);frame.rotation.y=head.rotation.y;}
 

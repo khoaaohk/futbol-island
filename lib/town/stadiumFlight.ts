@@ -32,7 +32,7 @@ export function stadiumFlightSolids():FlightSolid[]{
  const rect=(kind:FlightSolidKind,r:{x:number;z:number;w:number;d:number},y0:number,y1:number)=>box(kind,r.x,r.z,r.w,r.d,y0,y1);
  const pole=(kind:FlightSolidKind,x:number,z:number,r:number,y0:number,y1:number,flag=-1)=>out.push({kind,x,z,hw:r,hd:r,c:1,s:0,y0,y1,round:true,flag,reach:r});
  // Floodlight masts (r .45, 30 m) and their heads (lamp 6 × 3.4 × .5 and frame 6.4 × 3.8 × .3, 0.2 m behind it, at 30.5 m).
- for(const m of MASTS){const yaw=Math.atan2(-m.sx,-m.sz),fx=Math.sin(yaw),fz=Math.cos(yaw);pole('mast',m.x,m.z,.45,0,30);
+ for(const m of MASTS){const yaw=Math.atan2(-m.sx,-m.sz),fx=Math.sin(yaw),fz=Math.cos(yaw);pole('mast',m.x-m.sx*.55,m.z-m.sz*.55,.45,0,28.6);
   box('head',m.x+fx*.09,m.z+fz*.09,6.4,.7,30.5-1.9,30.5+1.9,yaw);}
  // Roofs: the slab, the back fascia frame with its banner, the front frame, the posts behind the concourse.
  for(const s of STANDS.filter(q=>q.roof)){const a0=s.from-ROOF_OVERHANG,a1=s.to+ROOF_OVERHANG,P=FRAME_PROUD;

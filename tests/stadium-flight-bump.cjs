@@ -49,7 +49,7 @@ const S=L.STADIUM,R=Q.ROOF;
  assert.equal(k('mast').length,4);assert.equal(k('head').length,4);assert.equal(k('roof').length,4);assert.equal(k('fascia').length,2);
  assert.equal(k('screen').length,1);assert.equal(k('screenPost').length,2);assert(k('gate').length===3&&k('sign').length===1);
  assert.equal(k('flag').length,28);assert(k('stand').length>=5);assert.equal(k('standEnd').length,Q.STANDS.reduce((n,s)=>n+Q.standSpans(s).pieces.length*2,0)*(Q.ROWS/2+1),'every stand piece has its two stepped end walls (Nov 13 2026)');assert(sol.length<160,'a cheap list ('+sol.length+')');
- const w=src('lib/town/stadiumWorld.ts');assert(/cylinder\(\.45,30,'#d9d6cc',m\.x,15,m\.z\)/.test(w)&&/box\(6\.4,3\.8,\.3,/.test(w),'mast + head sizes as built');
+ const w=src('lib/town/stadiumWorld.ts');assert(/cylinder\(\.45,28\.6,'#d9d6cc',m\.x-m\.sx\*\.55,14\.3,m\.z-m\.sz\*\.55\)/.test(w)&&/pole\('mast',m\.x-m\.sx\*\.55,m\.z-m\.sz\*\.55,\.45,0,28\.6\)/.test(src('lib/town/stadiumFlight.ts'))&&/box\(6\.4,3\.8,\.3,/.test(w),'mast + head sizes as built');
  const scr=k('screen')[0];assert(Math.abs(scr.hw*2-FD.SCREEN_FRAME.w)<1e-9&&Math.abs(scr.y1-scr.y0-FD.SCREEN_FRAME.h)<1e-9,'screen frame');
  for(const [i,p] of W.screenPosts().entries()){const q=k('screenPost')[i];assert(Math.abs(q.x-p.x)<1e-9&&Math.abs(q.y1-p.top)<1e-9&&q.hw===W.SCREEN_POST.r);}
  const fp=k('flag').filter(q=>q.round);assert(fp.every(q=>Math.abs(q.y1-(PF.FLAG.poleH+PF.FLAG.cap))<.01),'flag pole height');
@@ -64,7 +64,7 @@ function fly(F,start,dir,y,seconds=1.6){
  return {...log,p};}
 {const m=Q.MASTS[0];// north-west corner mast (-1,-1)
  // Below the heads (feet 25 m), straight at the mast's centre: the mast bumps and knocks back west.
- let F=FL.createStadiumFlight();let r=fly(F,{x:m.x-30,z:m.z},{x:1,z:0},25,1.4);
+ let F=FL.createStadiumFlight();let r=fly(F,{x:m.x-30,z:m.z-m.sz*.55},{x:1,z:0},25,1.4);// the pole stands .55 m behind the head
  assert(r.bumps>=1&&r.firstOut.kind==='mast','into a mast: a bump '+JSON.stringify(r.firstOut));assert(r.firstOut.vx<-5,'knocked back away from the mast');assert(r.p.x<m.x,'never through the mast');
  // At cruise height (28 m, the owner's flight) the head panel round the mast's top is hit first: knocked off its face.
  {const G=FL.createStadiumFlight(),q=fly(G,{x:m.x-30,z:m.z},{x:1,z:0},28,1.4);assert(q.bumps>=1&&['head','mast'].includes(q.firstOut.kind),'cruise into a mast top: a bump');
