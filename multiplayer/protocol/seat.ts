@@ -10,6 +10,9 @@
 import { Mode, Zone } from './types';
 
 export const SEAT_SPEED_Q = 1;
+/** A seated member (watching a match from the stands) is not idle: the relay frees a seated slot only after this long without other
+ *  activity (relay change, Nov 13 2026; needs a relay redeploy, until then the old 5 min WORLD_IDLE_MS applies). */
+export const SEATED_IDLE_MS = 30 * 60_000;
 
 /** True when a pose's mode, speed byte and zone say "seated in the stands" (the receiver still checks the seat). */
 export function seatedWire(mode: number, speedQ: number, zone: number): boolean {

@@ -7,6 +7,7 @@ import {
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
   CAPS_WORLD, WORLD_HARD, WORLD_SEE_M, WORLD_SEE_BACK_M, QUIET_RANGE_M, WORLD_AWAY_GRACE_MS, WORLD_IDLE_MS, FOLLOW, REPORT, REPORT_REASON_IDS, CloseCode,
   pickWorldName, ISLAND_GOAL,
+  seatedWire, SEATED_IDLE_MS,
 } from '../../protocol';
 import { peakBucket, lenBucket, joinsBucket, msgsBucket, ERR_NAMES } from './relayStatsCore';
 import type { RoomSummary, FailReason } from './relayStatsCore';
@@ -426,7 +427,7 @@ export class RoomCore {
     for (const m of Array.from(this.members.values())) {
       if (m.goneAt !== null && now - m.goneAt >= this.graceOf(m, RESUME_GRACE_MS)) {
         this.remove(m, m.pose && m.pose[6] === Zone.Indoors ? LeaveReason.Indoors : LeaveReason.Timeout, null);
-      } else if (this.world && m.peer && now - m.activeAt >= WORLD_IDLE_MS) {
+      } else if (this.world && m.peer && now - m.activeAt >= (m.pose && (m.pose[7] & PoseFlag.Hidden) === 0 && seatedWire(m.pose[5], m.pose[4], m.pose[6]) ? SEATED_IDLE_MS : WORLD_IDLE_MS)) { // seated in the stands: watching, not idle (30 min)
         this.remove(m, LeaveReason.Timeout, CLOSE.Idle); // relay v2.0: idle or away for 5 min frees the world slot
       }
     }

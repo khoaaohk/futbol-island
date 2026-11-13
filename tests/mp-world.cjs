@@ -42,7 +42,7 @@ function join(W, { nick, ipKey = null, held = false, caps = CAPS_WORLD, resume =
   if (sc && caps) send(W, p, [C.Caps, sc[1] & caps]);
   return p;
 }
-const at = (W, p, x, z, { flags = 0, mode = Mode.Walk } = {}) => send(W, p, [C.Pose, ++p.seq, x, 0, z, 0, 0, mode, Zone.Main, flags]);
+const at = (W, p, x, z, { flags = 0, mode = Mode.Walk, speed = 0 } = {}) => send(W, p, [C.Pose, ++p.seq, x, 0, z, 0, speed, mode, Zone.Main, flags]);
 /** Who p currently knows, replayed from its frames (Welcome resets, Joined adds, Left removes). */
 function known(p) {
   const s = new Set();
@@ -428,6 +428,15 @@ t('slots: away grace 2 min, idle or away 5 min frees the slot (CloseCode.Idle)',
   for (let s = 0; s < 3300; s++) { x += 2; at(W3, w, x % 4000, 0); send(W3, still, [C.Beat, s]); W3.run(100); } // 330 s at 2 dm per pose
   assert.equal(w.closed, null, 'a slow steady walker is never idle-kicked');
   assert.equal(still.closed, CLOSE.Idle, 'standing still is still idle after 5 min');
+  // Nov 13 2026: a kid seated in the stadium stands (Idle + seat speed byte) watching a match is not idle for 30 min
+  const W4 = world();
+  const s1 = join(W4), plain = join(W4);
+  at(W4, s1, -2050, -300, { mode: Mode.Idle, speed: P.SEAT_SPEED_Q }); at(W4, plain, 300, 0, { mode: Mode.Idle }); W4.run(400);
+  for (let s = 0; s < 120; s++) { send(W4, s1, [C.Beat, s]); send(W4, plain, [C.Beat, s]); W4.run(10000); } // 20 min
+  assert.equal(s1.closed, null, 'seated 20 min: still in the world');
+  assert.equal(plain.closed, CLOSE.Idle, 'a plain Idle is still freed after 5 min');
+  for (let s = 0; s < 70; s++) { send(W4, s1, [C.Beat, 200 + s]); W4.run(10000); } // past 30 min
+  assert.equal(s1.closed, CLOSE.Idle, 'seated past 30 min: freed');
 });
 
 t('kill switch: closeWorld closes every socket with WorldOff; the world opens again', () => {
