@@ -15,10 +15,12 @@ export const DRIP_FC_ART={
  wordmarkLight:'/stadium/dripfc/wordmark-light.webp',
  wordmarkDark:'/stadium/dripfc/wordmark-dark.webp',
  crest:'/stadium/dripfc/crest-light.webp',
+ /** Footy Access (owner, Nov 13 2026: on the roof fascia until the adidas deal is final): their white shield + name banner, 960 × 222. */
+ footyBanner:'/stadium/footyaccess/banner.webp',
 } as const;
 /** The white drop + DFC monogram keyed out of the club's blue icon (217 × 273, alpha mask): painted on the pitch centre. */
 export const PITCH_DROP='/stadium/dripfc/pitch-drop.webp';
-export const WORDMARK_ASPECT=800/197,CREST_ASPECT=179/226;
+export const WORDMARK_ASPECT=800/197,CREST_ASPECT=179/226,FOOTY_BANNER_ASPECT=960/222;
 export type DripArtKey=keyof typeof DRIP_FC_ART;
 
 type SignCtx=Pick<CanvasRenderingContext2D,'fillStyle'|'fillRect'|'drawImage'|'font'|'textAlign'|'textBaseline'|'fillText'|'measureText'>;

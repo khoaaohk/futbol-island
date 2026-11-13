@@ -374,7 +374,7 @@ console.log('west stadium phase 2: ok');
  assert(/\['stadium','DRIP FC Stadium \(bowl & pitch\)'\]/.test(src('lib/analytics/islandIds.ts')),'admin place label renamed, id kept');
  for(const f of ['lib/town/venues.ts','lib/town/stadiumSit.ts','lib/town/stadiumScreen.ts','components/IslandOverview.tsx','lib/analytics/islandIds.ts'])assert(!/West Coast Stadium|WEST COAST STADIUM/.test(src(f)),f+': old name gone');
  // Assets: same origin, small, no link to the club anywhere in the game code.
- let bytes=0;for(const u of [...Object.values(D.DRIP_FC_ART),D.PITCH_DROP]){assert(/^\/stadium\/dripfc\/[a-z-]+\.webp$/.test(u));bytes+=fs.statSync(path.join(base,'public',u)).size;}
+ let bytes=0;for(const u of [...Object.values(D.DRIP_FC_ART),D.PITCH_DROP]){assert(/^\/stadium\/(dripfc|footyaccess)\/[a-z-]+\.webp$/.test(u));bytes+=fs.statSync(path.join(base,'public',u)).size;}
  assert(bytes<150e3,'Drip FC art '+bytes+' B');
  for(const f of ['lib/stadium/dripfc.ts','lib/stadium/sponsors/placeholders.ts','lib/town/stadiumWorld.ts'])assert(!/https?:|dripfcofficial|adidas\.com/.test(src(f)),f+': pictures only, no links');
  // Gate sign: ONE line, the wordmark then "Stadium" on the same baseline (lettered "DRIP FC" until the picture loads).
