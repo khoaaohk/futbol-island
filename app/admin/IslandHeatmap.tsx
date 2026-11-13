@@ -7,21 +7,23 @@
  * and the time. Arrow keys walk the busiest cells. Totals only: there is no path or order in the data to draw.
  */
 import {useMemo,useRef,useState,type CSSProperties,type KeyboardEvent,type PointerEvent} from 'react';
-import {CELL_COUNT,GRID,PLACE_LABEL,cellCenter,cellOf} from '@/lib/analytics/islandIds';
+import {CELL_COUNT,GRID,PLACE_LABEL,WEST_GRID,cellCenter,cellOf} from '@/lib/analytics/islandIds';
 import {placeAt} from '@/lib/analytics/islandPlaces';
 import {ISLAND_SHORE} from '@/lib/town/shoreline';
 import {CAY_SHORE,CAUSEWAY_PATH,SANDBARS} from '@/lib/town/coralCay';
 import {SUMMIT_CENTER,SANDBAR_PATH,SUMMIT_PITCH,coastRadius} from '@/lib/town/summitIsle';
 import {ZIP_TOWER,ZIP_LAND} from '@/lib/town/zipline';
+import {STADIUM,STADIUM_PLAZA} from '@/lib/town/westParkLayout';
 import {VENUES} from '@/lib/town/venues';
 import {EAST_PIER,JETTY_PATH} from '@/lib/town/eastPier';
 import {Tip,fmtDuration,fmtPct,useWidth,type TipState} from './charts';
 import styles from './admin.module.css';
 
-type View='all'|'main'|'cay'|'summit';
+type View='all'|'main'|'west'|'cay'|'summit';
 const VIEWS:{id:View;label:string;box:[number,number,number,number]}[]=[
- {id:'all',label:'Whole map',box:[GRID.x0,GRID.z0,GRID.cols*GRID.size,GRID.rows*GRID.size]},
+ {id:'all',label:'Whole map',box:[WEST_GRID.x0,GRID.z0,GRID.x0+GRID.cols*GRID.size-WEST_GRID.x0,GRID.rows*GRID.size]},
  {id:'main',label:'Main island',box:[-130,-270,520,510]},
+ {id:'west',label:'West Stadium',box:[-345,-205,300,330]},
  {id:'cay',label:'Coral Cay',box:[220,-300,540,280]},
  {id:'summit',label:'Summit Isle',box:[470,-20,330,300]},
 ];
@@ -32,7 +34,7 @@ const SANDBAR_PTS=SANDBARS.map(s=>pts(s.outline));
 // Summit Isle, the mountain island (Oct 14 2026): its coast from the island's own polar outline, the walkable sandbar to it, the 5s pitch.
 const SUMMIT=pts(Array.from({length:180},(_,i)=>{const a=i/180*Math.PI*2,r=coastRadius(a);return {x:SUMMIT_CENTER.x+Math.cos(a)*r,z:SUMMIT_CENTER.z+Math.sin(a)*r};}));
 const SUMMIT_BAR=pts(SANDBAR_PATH,3);
-const LABELS=[{x:85,z:-35,text:'Island Square'},{x:600,z:-240,text:'Coral Cay'},{x:343,z:28,text:'East Jetty'},{x:380,z:-145,text:'Causeway'},{x:SUMMIT_CENTER.x,z:SUMMIT_CENTER.z+70,text:'Summit Isle'},{x:182,z:-180,text:'Kit Shop'},{x:(ZIP_TOWER.x+ZIP_LAND.x)/2+14,z:(ZIP_TOWER.z+ZIP_LAND.z)/2,text:'Zipline'}];
+const LABELS=[{x:STADIUM.x,z:STADIUM.z,text:'Stadium'},{x:(STADIUM_PLAZA.minX+STADIUM_PLAZA.maxX)/2,z:STADIUM_PLAZA.minZ-6,text:'Plaza'},{x:-300,z:-165,text:'West Beach'},{x:85,z:-35,text:'Island Square'},{x:600,z:-240,text:'Coral Cay'},{x:343,z:28,text:'East Jetty'},{x:380,z:-145,text:'Causeway'},{x:SUMMIT_CENTER.x,z:SUMMIT_CENTER.z+70,text:'Summit Isle'},{x:182,z:-180,text:'Kit Shop'},{x:(ZIP_TOWER.x+ZIP_LAND.x)/2+14,z:(ZIP_TOWER.z+ZIP_LAND.z)/2,text:'Zipline'}];
 export const HEAT_BINS=5;
 /** Legend edges, rounded so the scale reads at a glance ("16 min", "1.1 h"); the tooltip keeps exact times. */
 export function fmtEdge(seconds:number):string{
@@ -102,7 +104,7 @@ export default function IslandHeatmap({cells}:{cells:[number,number][]}){
      <polyline points={JETTY} fill="none" strokeWidth={6} strokeLinejoin="round"/>
      <circle cx={EAST_PIER.cx} cy={EAST_PIER.cz} r={EAST_PIER.plazaEdge}/>
     </g>
-    <g className={styles.heatPitch}>{VENUES.map(v=><rect key={v.id} x={v.x-v.width/2} y={v.z-v.length/2} width={v.width} height={v.length}/>)}<rect x={SUMMIT_PITCH.x-SUMMIT_PITCH.length/2} y={SUMMIT_PITCH.z-SUMMIT_PITCH.width/2} width={SUMMIT_PITCH.length} height={SUMMIT_PITCH.width}/></g>
+    <g className={styles.heatPitch}><rect x={STADIUM.x-STADIUM.pitchW/2} y={STADIUM.z-STADIUM.pitchL/2} width={STADIUM.pitchW} height={STADIUM.pitchL}/><rect x={STADIUM_PLAZA.minX} y={STADIUM_PLAZA.minZ} width={STADIUM_PLAZA.maxX-STADIUM_PLAZA.minX} height={STADIUM_PLAZA.maxZ-STADIUM_PLAZA.minZ}/>{VENUES.map(v=><rect key={v.id} x={v.x-v.width/2} y={v.z-v.length/2} width={v.width} height={v.length}/>)}<rect x={SUMMIT_PITCH.x-SUMMIT_PITCH.length/2} y={SUMMIT_PITCH.z-SUMMIT_PITCH.width/2} width={SUMMIT_PITCH.length} height={SUMMIT_PITCH.width}/></g>
     <g>{valid.map(([i,s])=>{const c=cellCenter(i),b=heatBin(s,max);return <rect key={i} x={c.x-GRID.size/2+.8} y={c.z-GRID.size/2+.8} width={GRID.size-1.6} height={GRID.size-1.6} rx={2}
      style={{fill:`var(--h${b})`}}/>;})}</g>
     <g className={styles.heatCoast} fill="none"><polygon points={SHORE}/><polygon points={CAY}/><polygon points={SUMMIT}/></g>

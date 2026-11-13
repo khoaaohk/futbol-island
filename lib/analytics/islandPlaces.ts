@@ -14,6 +14,8 @@ import {onFerryBoarding} from '@/lib/town/ferryBoarding';
 import {ISLAND_SQUARE_KONBINI} from '@/lib/town/vendingPlaces';
 import {onSummitSandbar,onSummitIsle,TERRACE,SUMMIT_FENCE} from '@/lib/town/summitIsle';
 import {DEEP_SEA_BOATS} from '@/lib/town/fishing/deepSeaBoatData';
+import {STADIUM_PLAZA,inStadiumFootprint} from '@/lib/town/westParkLayout';
+import {WEST_BEACH_X} from '@/lib/town/shoreline';
 import type {PlaceId} from './islandIds';
 
 type Box={x0:number;x1:number;z0:number;z1:number};
@@ -42,6 +44,7 @@ export const ZONES={
  librarySquare:{x0:55,x1:110,z0:-160,z1:-78} as Box,
  communityPark:{x0:-25,x1:45,z0:-55,z1:-34} as Box,
  oldTown:{x0:-75,x1:50,z0:-145,z1:-55} as Box,
+ stadiumPlaza:{x0:STADIUM_PLAZA.minX,x1:STADIUM_PLAZA.maxX,z0:STADIUM_PLAZA.minZ,z1:STADIUM_PLAZA.maxZ} as Box,
  westSide:{x0:-110,x1:-25,z0:0,z1:125} as Box,
  palmCoast:{x0:-25,x1:75,z0:-34,z1:125} as Box,
  school:{x0:75,x1:210,z0:42,z1:178} as Box,
@@ -91,6 +94,11 @@ export function placeAt(x:number,z:number):PlaceId{
  if(inside(Z.coaches,x,z))return 'coaches';
  if(inside(Z.islandSquare,x,z))return 'island_square';
  if(z< -190)return 'north_beach';
+ // West Stadium (Nov 12 2026): the bowl (with a walkway margin), the fan plaza, then the west park and its beach (a 16 m band along
+ // the coast, found by stepping outward with the same land test). Appended ids: older days never carried them.
+ if(inStadiumFootprint(x,z,6))return 'stadium';
+ if(inside(Z.stadiumPlaza,x,z))return 'stadium_plaza';
+ if(x<WEST_BEACH_X)return !onIsland(x-16,z)||!onIsland(x,z-16)||!onIsland(x,z+16)?'west_beach':'stadium_park';
  if(inside(Z.librarySquare,x,z))return 'library_square';
  if(inside(Z.communityPark,x,z))return 'community_park';
  if(inside(Z.oldTown,x,z))return 'old_town';

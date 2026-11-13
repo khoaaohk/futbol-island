@@ -60,7 +60,7 @@ Original plan:
 - Wire: `MATCH_FIELDS` / `NET_FIELDS` append 'stadium' (id 5). **Relay redeploy needed** for shared stadium matches (its validator
   accepts field < MATCH_FIELDS.length); until then a stadium match stays on the phone, and old clients drop field 5.
 - Analytics: `LIVE_MATCH_FORMATS` + 'stadium' (`lm:stadium_*` counts pass the SQL key regex; no migration). The heat-map place
-  `stadium` is still phase 7 (needs an ingest allow-list migration). Match o'clock rotation unchanged (owner decision: add the
+  `stadium` is in phase 7 (migration 20261119_analytics_stadium.sql). Match o'clock rotation unchanged (owner decision: add the
   stadium? changing the rotation re-maps hours for clients on the old build).
 - Real goals: `fields.ts goalGeometry()` shared; the stadium frames are painted into the chunk batch, both nets one LineSegments
   (+1 draw in view), side/back net colliders. Seat backs: low strip + one quad per seat (2 tris, merged): +10.5k tris, 0 draws.
@@ -134,9 +134,12 @@ Original notes:
 ## Phase 7: heat and QA
 - Measure on a phone: draw calls/triangles at the plaza looking west, from a seat, and from the east island looking west
   (west gate should hide everything). Real-device heat only from a device.
-- Analytics heat-map: `lib/analytics/islandIds.ts` GRID starts at x -160, so the new land is not sampled. Do NOT move x0
-  (stored cell indices would shift); append west cells after CELL_COUNT (check SQL caps in `supabase/`), add a `stadium`
-  place to `lib/analytics/islandPlaces.ts` and `app/admin/IslandHeatmap.tsx`.
+- Analytics heat-map (DONE on branch `stadium-analytics`): GRID never moved. `WEST_GRID` (x -340..-160, 9 columns, same rows) is
+  appended after the original 1612 cells (cells 1612..1890, `CELL_COUNT` 1891; `cellOf` / `cellCenter` handle both blocks). Places
+  `stadium` (bowl + 6 m), `stadium_plaza`, `stadium_park` (west of x -110), `west_beach` (16 m coast band) in `islandPlaces.ts`.
+  Admin heat map: whole map widened to x -340, new "West Stadium" view, labels + bowl/plaza outlines. OWNER: run
+  `supabase/migrations/20261119_analytics_stadium.sql` (place allow-list + cell cap 1891; safe to re-run) for west time to be
+  stored; until then it is dropped, not an error, and is not back-filled.
 - Full `npm run test:quiet`, tsc, eslint; play-through: walk Old Town → plaza → gate → pitch → seat; fly the coast.
 
 ## Risks and checks (phase 1 status)

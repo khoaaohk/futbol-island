@@ -62,7 +62,7 @@ await ok('zones',()=>{
   [335,-5,'deep_sea_boat'],[385,185,'deep_sea_boat'],[390,188,'deep_sea_boat'],[L.starfishSandbar.x,L.starfishSandbar.z,'sandbars'],[L.turtleSandbar.x,L.turtleSandbar.z,'sandbars'],[L.plaza.x,L.plaza.z,'cay_town'],
   [L.roundabout.x,L.roundabout.z,'cay_town'],[L.cayKonbini.x,L.cayKonbini.z,'cay_konbini'],[L.beachSoccerCourt.x,L.beachSoccerCourt.z,'beach_court'],[L.farm.x,L.farm.z,'farm'],
   [L.hostel.x,L.hostel.z,'hostel'],[L.sharksBeach.x,L.sharksBeach.z,'sharks_beach'],[L.lifeguardTower.x,L.lifeguardTower.z,'coral_cay'],[80,-215,'north_beach'],
-  [-60,60,'west_side'],[-63,94,'west_side'],[80,-105,'library_square'],[108,196,'south_pier'],[217,213,'ferry_dock'],[246,199,'ferry_dock'],[-360,0,'sea'],[400,-40,'sea'],[NaN,0,'sea']];
+  [-60,60,'west_side'],[-63,94,'west_side'],[80,-105,'library_square'],[108,196,'south_pier'],[217,213,'ferry_dock'],[246,199,'ferry_dock'],[-360,0,'sea'],[-205,-30,'stadium'],[-205,-100,'stadium'],[-100,-30,'stadium_plaza'],[-250,-140,'stadium_park'],[-326,-30,'west_beach'],[400,-40,'sea'],[NaN,0,'sea']];
  for(const [x,z,want] of cases)assert.equal(pa(x,z),want,`placeAt(${x}, ${z})`);
  const cw=CC.causewayPoint(.3);assert.equal(pa(cw.x,cw.z),'causeway','a point on the causeway deck');
  // Every id the lookup can return is a fixed id, and every fixed id is reachable somewhere on the map.
@@ -80,14 +80,24 @@ await ok('zones',()=>{
 
 // 2. The grid covers the whole flyable world (Coral Cay included) in 20 m cells.
 await ok('grid',()=>{
- const g=IDS.GRID,B=SIM.FLIGHT_BOUNDS;
- assert.equal(g.size,20);assert.equal(IDS.CELL_COUNT,g.cols*g.rows);
+ const g=IDS.GRID,B=SIM.FLIGHT_BOUNDS,W0=IDS.WEST_GRID.x0;
+ assert.equal(g.size,20);
  // West Stadium (Nov 12 2026): the grid keeps x0 -160 so stored cell indices stay valid; the new west land and sea (x < -160)
  // are not yet sampled (docs/stadium/PLAN.md phase 7 adds cells after CELL_COUNT).
- assert(g.x0<=-160&&B.minX<-160&&g.x0+g.cols*g.size>=B.maxX&&g.z0<=B.minZ&&g.z0+g.rows*g.size>=B.maxZ,'grid ⊇ FLIGHT_BOUNDS '+JSON.stringify(J(B)));
- assert.equal(IDS.cellOf(g.x0,g.z0),0);assert.equal(IDS.cellOf(g.x0+g.cols*g.size-.01,g.z0+g.rows*g.size-.01),IDS.CELL_COUNT-1);
- for(const [x,z] of [[g.x0-.01,0],[0,g.z0-1],[g.x0+g.cols*g.size,0],[0,g.z0+g.rows*g.size],[NaN,0],[0,Infinity]])assert.equal(IDS.cellOf(x,z),-1,'outside: '+x+','+z);
- for(let i=0;i<IDS.CELL_COUNT;i+=7){const c=IDS.cellCenter(i);assert.equal(IDS.cellOf(c.x,c.z),i);}
+ assert(W0<=-332&&B.minX<-160&&g.x0+g.cols*g.size>=B.maxX&&g.z0<=B.minZ&&g.z0+g.rows*g.size>=B.maxZ,'grid ⊇ FLIGHT_BOUNDS '+JSON.stringify(J(B)));
+ // The original grid is frozen: cells 0..1611 keep their squares; the west block is appended after them (Nov 12 2026).
+ const W=IDS.WEST_GRID,old=g.cols*g.rows;
+ assert.deepEqual([g.x0,g.z0,g.cols,g.rows,old],[-160,-320,52,31,1612],'the original grid never moves');
+ assert.equal(IDS.GRID_CELLS,old);assert.equal(IDS.CELL_COUNT,old+W.cols*g.rows);assert.equal(W.x0+W.cols*g.size,g.x0,'the west block meets the old grid edge');
+ assert(W.x0<=-332,'the west block takes in the new coast at x ≈ -332');
+ assert.equal(IDS.cellOf(g.x0,g.z0),0);assert.equal(IDS.cellOf(g.x0+g.cols*g.size-.01,g.z0+g.rows*g.size-.01),old-1);
+ assert.equal(IDS.cellOf(85,-35),Math.floor((-35+320)/20)*52+Math.floor((85+160)/20),'old squares keep their index');
+ assert.equal(IDS.cellOf(W.x0,g.z0),old,'first west cell');assert.equal(IDS.cellOf(g.x0-.01,g.z0+g.rows*g.size-.01),IDS.CELL_COUNT-1,'last west cell');
+ assert.equal(IDS.cellOf(g.x0-.01,g.z0),old+W.cols-1);assert.equal(IDS.cellOf(g.x0-.01,g.z0+g.size),old+2*W.cols-1);
+ for(const [x,z] of [[W.x0-.01,0],[0,g.z0-1],[g.x0+g.cols*g.size,0],[0,g.z0+g.rows*g.size],[-250,g.z0-1],[-250,g.z0+g.rows*g.size],[NaN,0],[0,Infinity]])assert.equal(IDS.cellOf(x,z),-1,'outside: '+x+','+z);
+ for(let i=0;i<IDS.CELL_COUNT;i++){const c=IDS.cellCenter(i);assert.equal(IDS.cellOf(c.x,c.z),i,'cell '+i);}
+ assert(IDS.cellCenter(old).x<g.x0&&IDS.cellCenter(old-1).x>g.x0,'west cells are west of the old grid');
+ const st=IDS.cellOf(-205,-30);assert(st>=old&&st<IDS.CELL_COUNT,'the stadium centre falls in a west cell');
  assert.equal(IDS.cellOf(85,-35),IDS.cellOf(99.9,-21),'same 20 m square');assert.notEqual(IDS.cellOf(85,-35),IDS.cellOf(100,-35));
 });
 
@@ -273,7 +283,7 @@ await ok('sql',async()=>{
   assert.deepEqual(psql(`select column_name from information_schema.columns where table_name='analytics_beats' order by ordinal_position`).split('\n'),['id','session_id','ts','engaged_ms','pageviews','area_ms','place_ms','activity_ms','cells','counts'],'three new columns (+ counts, Oct 9), nothing else');
   // The SQL's enums and limits are the TypeScript ones.
   const sql=read('supabase/migrations/20261008_analytics_places.sql');
-  assert(sql.includes(`key::integer < ${IDS.CELL_COUNT}`)&&sql.includes(`limit ${IDS.MAX_BEAT_CELLS}`));
+  assert(sql.includes(`key::integer < ${IDS.GRID_CELLS}`)&&sql.includes(`limit ${IDS.MAX_BEAT_CELLS}`),'the original migration caps cells at the frozen grid (1612); 20261119 raises it to CELL_COUNT');
   assert(!/\bdrop\b|\btruncate\b|\bdelete from\b|rename/i.test(sql.replace(/--.*$/gm,'')),'no destructive statements');
   // The place/area allowlist's latest definition (the newest migration that replaces analytics_ingest; 20261016 since Oct 16
   // 2026): areas and places must match lib/analytics/islandIds.ts / core.ts exactly. tests/admin-analytics-coverage.cjs checks
@@ -286,6 +296,7 @@ await ok('sql',async()=>{
    // file before a reviewer runs it, so this only requires every id lib/analytics/islandIds.ts knows about today to still be
    // accepted — never that the SQL has no more than that (tests/museum-exp-*.cjs and the museum agent's own tests own those ids).
    for(const id of IDS.ACTIVITY_IDS)assert(lists[2].includes(id),`activity allow-list (${ingestFiles[ingestFiles.length-1]}) is missing ${id}`);
+   assert(latest.includes(`key::integer < ${IDS.CELL_COUNT}`)&&latest.includes(`limit ${IDS.MAX_BEAT_CELLS}`),'the newest ingest caps cells at CELL_COUNT (west block appended, Nov 12 2026)');
    assert(!/\bdrop\b|\btruncate\b|\bdelete from\b|rename/i.test(latest.replace(/--.*$/gm,'')),'no destructive statements');}
   // Ingest caps in SQL (the last line, behind the server's own clamp).
   const today=new Date().toISOString().slice(0,10);
