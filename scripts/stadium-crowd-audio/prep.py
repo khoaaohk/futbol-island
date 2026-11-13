@@ -1,5 +1,5 @@
 """Trim, normalise and loop-prepare the stadium recordings, then encode small AAC (.m4a).
-usage: prep.py <download dir> <pa dir> <work dir> <out dir>
+usage: prep.py <download dir> <pa dir> <work dir> <out dir> [only,these,keys]
 Loops: a 1 s equal-power crossfade makes the region seamless, then PAD s of wrap-around audio go on both ends so the
 runtime loops [PAD, PAD+L] (decoder priming / edit-list differences between browsers cannot open a gap)."""
 import sys, subprocess, json, numpy as np, soundfile as sf
@@ -56,6 +56,8 @@ assets['ooh2'] = (fades(seg(S(353418), 3.4, 9.6, 1), .3, 1.6), -18, 'shot', 4000
 assets['groan'] = (fades(seg(S(763880), .7, 5.6, 1), .05, 1.2), -20, 'shot', 40000)
 # 7. applause with whistles (craigsmith), mono
 assets['applause'] = (fades(seg(S(480692), .3, 7.3, 1), .3, 1.8), -20, 'shot', 40000)
+# 7b. ole-shouts: a crowd shouting "Ole!" twice (craigsmith, a bullfight crowd: shouted, no tune), mono, under the synthesised ole song's end
+assets['ole-shouts'] = (fades(seg(S(438434), 4.2, 9.2, 1), .05, .8), -18, 'shot', 40000)
 # 8. the referee's whistle (SpliceSound), one blow, mono
 assets['whistle'] = (fades(seg(S(218318), 0, 1.4, 1), .003, .5), -16, 'shot', 48000)
 # 9-10. PA: the ding-dong (Streety) then the announcer (Kokoro-82M bm_george, rendered offline) through the tannoy
@@ -66,8 +68,10 @@ for k in ['welcome', 'goal']:
     x = fades(x[:int(min(len(x) / R, 9.0) * R)], .005, .6)
     assets['pa-' + k] = (x, -19, 'shot', 40000)
 
+only = set(sys.argv[5].split(',')) if len(sys.argv) > 5 else None
 info = {}
 for k, (x, tgt, kind, br) in assets.items():
+    if only and k not in only: continue
     x = norm(x.astype(np.float32), tgt); w = f'{work}/{k}.wav'; o = f'{out}/{k}.m4a'
     sf.write(w, x, R, subtype='PCM_16')
     ch = x.shape[1]

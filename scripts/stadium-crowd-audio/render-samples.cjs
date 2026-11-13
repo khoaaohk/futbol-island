@@ -14,6 +14,10 @@ const SC={
  // 2. the sung "Come on Drip F-C", then a goal (the eruption, the whistle, the PA), the song back after
  2:{T:40,seed:9,liveAt:-1,chant:[[1,40,'island-anthem']],ex:[[0,.35],[16,.35],[19,.7],[22.4,.8],[22.5,1],[30,.6],[40,.4]],goal:[22.5],touches:[[8,'intercept'],[18,'kick',0]]},
  // 3. kick-off: the pre-match hum, the match wakes (PA welcome, the kick-off whistle), "Come on you Drips!", then the period whistle
+ // ole-1: the slow swaying olé: a section starts, the stands join, louder and louder over the swelling roar, the long "oooo-LÉ" into a cheer
+ 4:{T:41,seed:21,liveAt:-1,chant:[[1,41,'stand-up-song']],ex:[[0,.3],[41,.35]],touches:[[12,'intercept']]},
+ // ole-2: the clap-along olé during an attack, then a goal, and the olé comes round again
+ 5:{T:41,seed:27,liveAt:-1,chant:[[1,41,'ole-ole']],ex:[[0,.32],[9,.35],[12,.62],[15.5,.86],[16.4,1],[24,.6],[41,.45]],goal:[16.4],touches:[[6,'intercept'],[10,'kick',1],[11.3,'receive'],[15.6,'kick',0]]},
  3:{T:40,seed:13,liveAt:2.5,chant:[[12,40,'lets-go']],ex:[[0,0],[2.5,.3],[20,.35],[24,.5],[26,.35],[40,.3]],clock:[[2.5,286],[40,323.5]],touches:[[13,'receive'],[16,'tackle'],[24,'kick',1],[25.3,'receive']]},
 }[which];if(process.env.STEM)SC.stem=process.env.STEM;if(process.env.NORM==='0')SC.nonorm=1;
 (async()=>{
@@ -57,7 +61,7 @@ const SC={
   for(let i=0;i<Lc.length;i++){buf.setInt16(44+i*4,Math.max(-1,Math.min(1,Lc[i]*k))*32767,true);buf.setInt16(46+i*4,Math.max(-1,Math.min(1,Rc[i]*k))*32767,true);}
   const u=new Uint8Array(buf.buffer);let bin='';for(let i=0;i<u.length;i+=32768)bin+=String.fromCharCode.apply(null,u.subarray(i,i+32768));
   const d=snd.debug;snd.dispose();
-  return {wav:btoa(bin),peak:pk,debug:{nan,nans,recordings:d.recordings,errors:d.recordingErrors,real:d.real,phrases:d.phrases,skipped:d.skipped,steps:d.steps.join(','),goals:d.goals,whistles:d.whistles,pa:d.pa,periods:d.periods,reactions:d.reactions,chantStarts:d.chantStarts}};
+  return {wav:btoa(bin),peak:pk,debug:{nan,nans,recordings:d.recordings,errors:d.recordingErrors,real:d.real,phrases:d.phrases,skipped:d.skipped,steps:d.steps.join(','),goals:d.goals,whistles:d.whistles,pa:d.pa,periods:d.periods,reactions:d.reactions,chantStarts:d.chantStarts,oleLines:d.oleLines,oleEnds:d.oleEnds}};
  },SC);
  fs.writeFileSync(outFile,Buffer.from(out.wav,'base64'));console.log(outFile,'peak',out.peak.toFixed(3),JSON.stringify(out.debug));await b.close();
 })().catch(e=>{console.error(e);process.exit(1);});

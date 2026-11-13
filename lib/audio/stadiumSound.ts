@@ -13,6 +13,11 @@
 // noise-burst claps and stomps, a synthesised drum, each rendered by an OfflineAudioContext with the reverb baked in), now in
 // an English terrace style: the long slow sung "Come on Drip F-C", "Come on you Drips!", the spelled "D! R! I! P! DRIP!", clap
 // patterns that break into a shout, and the rising "a-TTAAACK!" urging as an attack builds.
+// The OLÉ family (owner, Nov 13 2026: "the stadium should SING more"): half of the mood's chant cycle is our own swaying olé tune
+// (OLE_A / OLE_B / OLE_END; not the 1985 song's melody): a slow sway (scarves up), clap-along and drum versions, and one rolling
+// round the bowl; each performance starts with one section, the stands join, the whole ground sings it 3-4 times louder and
+// louder while the real roar swells under every line, then a long "oooo-LÉ" into real "Olé!" shouts and applause. The Mexican
+// wave's roll sings the same "o-LÉ" round the stands.
 // Terrace shouts and reactions (owner, Nov 13 2026, after the first samples: "more oohs and chants, less singing"): eight of the ten
 // chants are short shouted chants ("Drip-F-C!", "Hey!", "Let's go!", "Ol-é!", stand-to-stand calls) on claps and the drum; only the
 // scarf song is sung, and briefly. The crowd REACTS to the match (reactions(): stadiumMood and the sim's touch ring): "ooh" + "aah"
@@ -59,16 +64,18 @@ export type StadiumTouches={readonly touches:readonly {readonly serial:number;re
 export const STADIUM_SOUND={fullD:3,plazaD:30,edgeD:110,plazaLevel:.5,roofH:28,deadband:.08,quantum:.05,tc:.8,tick:.1,stopAfter:4,
  teardown:30,chantFade:2,chantIn:1.2,rate:22050,goalHold:3,tail:1.8} as const;
 /** Live mix (before the island effects bus). */
-export const STADIUM_MIX={out:1,murmur:.2,roar:.3,rumble:.35,chant:.75,wave:.2,goal:.75,react:.42,lite:.85,
+export const STADIUM_MIX={out:1,murmur:.2,roar:.3,rumble:.35,chant:.75,wave:.32,goal:.75,react:.42,lite:.85,
  /** the recordings (each file is normalised: bed -20, roar -18, goal -16, reactions -18/-20 dB RMS) */
  bed:.62,bedQuiet:.34,roarRec:.62,goalRec:.8,reactRec:.85,whistle:.32,pa:.55,
+ /** the real roar swelling under each olé line (OLE_LIFT), and the real "Olé!" shouts at its end */
+ oleSwell:.55,oleShout:.8,
  /** the synthesised chants sit over the real bed (owner: "mostly crowd bed and reactions, chants rising and falling over it") */
  chantRec:1} as const;
 /** The real crowd (CC0 field recordings, see the header; files in public/audio/stadium/, ~0.7 MB in all, AAC .m4a, which every
  *  current browser decodes, Safari included). loop: the seamless region [start, end] s (wrap-around padding on both sides, so a
  *  decoder's priming offset cannot open a gap). Decoded on the first approach (one file at a time; ~12 MB of PCM in all at 32 kHz)
  *  and dropped on teardown. */
-export const STADIUM_RECORDINGS={bed:{loop:[.25,18.25]},roar:{loop:[.25,16.25]},goal:{},goal2:{},ooh:{},ooh2:{},groan:{},applause:{},whistle:{},
+export const STADIUM_RECORDINGS={bed:{loop:[.25,18.25]},roar:{loop:[.25,16.25]},goal:{},goal2:{},ooh:{},ooh2:{},groan:{},applause:{},'ole-shouts':{},whistle:{},
  'pa-welcome':{},'pa-goal':{}} as const satisfies Record<string,{loop?:readonly [number,number]}>;
 export type RecId=keyof typeof STADIUM_RECORDINGS;
 export const RECORDING_IDS=Object.keys(STADIUM_RECORDINGS) as RecId[];
@@ -83,13 +90,13 @@ export const STADIUM_CHANTS:Readonly<Record<ChantId,{title:string;kind:ChantKind
  'drip-drip-clap':{title:'Spell It Out',kind:'clap',words:'D! R! I! P! DRIP! (clap clap clap)'},
  'lets-go':{title:'Come On You Drips',kind:'shout',words:'Come on you Drips! (clap clap) Come on you Drips!'},
  'island-anthem':{title:'Come On Drip FC',kind:'scarf',words:'Come on Drip F-C, come on Drip F-C! Ohhh, Drip F-C! (slow and held, the whole ground singing, scarves up)'},
- 'hey-hey-hey':{title:'Hey Hey Hey',kind:'shout',words:'Hey! Hey! Hey! (stomp) Hey-hey-hey, Drip!'},
- 'here-we-go':{title:'Drip-FC Call and Answer',kind:'call',words:'West stand: Drip-F-C! East stand: Drip-F-C!'},
- 'ole-ole':{title:'Shouted Olé',kind:'ole',words:'Ol-é! Ol-é! (clap) Hey!'},
+ 'hey-hey-hey':{title:'Olé Clap-Along',kind:'ole',words:'O-lé! O-lé! O-lé! Oooo-lé! (up-tempo, clap clap-clap; our own olé tune)'},
+ 'here-we-go':{title:'Olé Round the Bowl',kind:'ole',words:'O-lé, o-lé, o-lé, oooo-lé! (rolling round the stands, section after section)'},
+ 'ole-ole':{title:'Clap Olé',kind:'ole',words:'O-lé! O-lé! O-lé! Oooo-lé! (claps between, the whole ground)'},
  'clap-clap-shout':{title:'Clap Clap Shout',kind:'shout',words:'(clap, clap, clap, clap-clap, clap-clap-clap-clap) DRIP! / Come on, Drip! Hey!'},
- 'stand-up-song':{title:'Stomp Round the Bowl',kind:'stomp',words:'(stomps rolling round the stands) Hey! Drip!'},
+ 'stand-up-song':{title:'Swaying Olé',kind:'ole',words:'Ooo-lé, ooo-lé, ooo-lé, oooooo-LÉ! (slow, swaying, scarves up, into a cheer)'},
  'stand-to-stand':{title:'Stand to Stand',kind:'call',words:'West: Hey! East: Ho! West: Drip! East: F-C!'},
- 'drum-march':{title:'Big Drum March',kind:'drum',words:'(the supporters\' drum) Oh! Hey! Oh! Hey!'},
+ 'drum-march':{title:'Drum Olé',kind:'drum',words:'O-lé! O-lé! O-lé! Oooo-lé! (on the supporters\' drum)'},
 };
 
 // ---- distance → presence (pure; tests) ----
@@ -230,7 +237,7 @@ const VOICING=[{oct:-1,fs:.9,level:1,pan:-.55},{oct:0,fs:1.04,level:.95,pan:.35}
 type Perc={claps?:readonly number[];claps2?:readonly number[];drum?:readonly number[];stomps?:readonly number[];roll?:boolean};
 /** One song: tonic (MIDI) and scale, five 2-bar phrases (verse lines v1 / v2, chorus lines c1 / c2, the build b at the end of a
  *  chorus); the call song's verses are the west stand's call (v1 / v2) and the east stand's answer (e1 / e2). */
-type Song={tonic:number;minor?:boolean;slow?:boolean;sweep?:boolean;call?:boolean;/** a sung tune (kept short) */sung?:boolean;v1:readonly Note[];v2:readonly Note[];e1?:readonly Note[];e2?:readonly Note[];
+type Song={tonic:number;minor?:boolean;slow?:boolean;sweep?:boolean;call?:boolean;/** a sung tune (kept short) */sung?:boolean;/** the olé family (OLE_*): its own form (planSong) and the long end phrase */ole?:boolean;end?:readonly Note[];v1:readonly Note[];v2:readonly Note[];e1?:readonly Note[];e2?:readonly Note[];
  c1:readonly Note[];c2:readonly Note[];b:readonly Note[];perc:{verse:Perc;chorus:Perc;build:Perc}};
 // Terrace shouts (owner, Nov 13 2026: "more oohs and chants, less singing"): short, punchy, near-unpitched shouts (the sing()
 // shout flag: each voice off by up to ±1.5 semitones, mostly breath, falling away) locked to claps and the drum.
@@ -240,7 +247,6 @@ const HEY:Shout=(b,p=7)=>[[b,.3,p,'e','h',1]];// "Hey!"
 const HO:Shout=(b,p=4)=>[[b,.3,p,'o','h',1]];// "Ho!"
 const DRIP:Shout=(b,p=7)=>[[b,.3,p,'ih','d',1]];// "Drip!"
 const LG:Shout=(b,p=7)=>[[b,.22,p,'e','l',1],[b+.5,.4,p-5,'o','d',1]];// "Let's go!"
-const OLE:Shout=(b,p=0)=>[[b,.3,p,'o',0,1],[b+.5,.45,p+4,'e','l',1]];// "Ol-é!"
 const OH:Shout=(b,p=0)=>[[b,.45,p,'o',0,1]];// "Oh!"
 const CMON:Shout=(b,p=7)=>[[b,.3,p,'a','k',1],[b+.5,.45,p-2,'o',0,1]];// "Come on!"
 const COYD:Shout=(b,p=7)=>[[b,.3,p,'a','k',1],[b+.5,.25,p,'o',0,1],[b+1,.25,p+2,'u','h',1],[b+1.5,.45,p+5,'ih','d',1]];// "Come on you Drips!"
@@ -248,6 +254,19 @@ const COYD:Shout=(b,p=7)=>[[b,.3,p,'a','k',1],[b+.5,.25,p,'o',0,1],[b+1,.25,p+2,
 const SPELL=(b:number,p=7,step=1):Note[]=>[[b,.4,p,'i','d',1],[b+step,.4,p,'a',0,1],[b+2*step,.4,p+2,'a',0,1],[b+3*step,.4,p+2,'i','p',1]];
 const at=(...parts:Note[][]):readonly Note[]=>parts.flat();
 const EVERY=(from:number,to:number,step:number)=>{const r:number[]=[];for(let b=from;b<to-1e-9;b+=step)r.push(b);return r;};
+// The olé family (owner, Nov 13 2026: "the stadium should SING more: olé, olé, oooo-lé", about half of all singing). OUR OWN
+// tune (not the melody of the well-known 1985 olé song or its covers): three "o-LÉ"s rising then falling, then the long held
+// "oooo-LÉ", in a swaying compound time (a beat is one sway, the "o" a third of a beat before the "LÉ"), sung by the whole ground
+// on wide "o-LEH" vowels. A rises (0-4, 2-7) to the top (9) and falls (7, 5, 4); B answers higher (4-9, 7-12, 11-9) and comes
+// home; the end (12 beats) holds "oooo" high and lands on a long "LÉ" an octave up, into the cheer (live: the real crowd's
+// "Olé!" shouts, applause and the roar).
+const O_LE=(b:number,o:number,le:number,len=1.4):Note[]=>[[b,.3,o,'o'],[b+.33,len,le,'e','l']];
+const OLE_A:readonly Note[]=at(O_LE(0,0,4),O_LE(2,2,7),O_LE(4,9,7,.9),[[5.33,1.6,5,'o'],[7,.95,4,'e','l']]);
+const OLE_B:readonly Note[]=at(O_LE(0,4,9),O_LE(2,7,12),O_LE(4,11,9,.9),[[5.33,1.6,7,'o'],[7,.95,0,'e','l']]);
+const OLE_END:readonly Note[]=at(O_LE(0,0,4),O_LE(2,2,7),O_LE(4,7,9,.9),[[5.33,3.6,9,'o'],[9,2.9,12,'e','l']]);
+const OLE_SONG={sung:true,ole:true,v1:OLE_A,v2:OLE_B,c1:OLE_A,c2:OLE_B,b:OLE_B,end:OLE_END} as const;
+/** The clap-along: a clap on each sway and a triplet "clap-clap" into the next line. */
+const OLE_CLAP:Song['perc']={verse:{claps:[1,3,5,6.67,7],drum:[0,4]},chorus:{claps:[1,1.67,3,3.67,5,5.67,7,7.33,7.67],drum:[0,2,4,6]},build:{claps:[1,1.67,3,3.67,5,5.67,7,7.33,7.67],drum:[0,2,4,6]}};
 /** The ten songs (original, kid-safe). Only the scarf song is sung (and kept short); the rest are terrace shouts. A phrase is 8 beats. */
 export const SONGS:Readonly<Record<ChantId,Song>>={
  // Spell it out: "D! R! I! P! DRIP!" a letter a beat, three claps after; the chorus a tone up with a "Hey!", the build spelled fast.
@@ -266,46 +285,43 @@ export const SONGS:Readonly<Record<ChantId,Song>>={
   c2:[[0,2.6,9,'o'],[2.6,.4,11,'o'],[3,1,11,'o'],[4,1.5,12,'ih','d'],[5.5,.5,11,'e','f'],[6,2,12,'i','s']],
   b:[[0,2,7,'o'],[2,2,9,'a'],[4,2,11,'a'],[6,2,12,'o']],
   perc:{verse:{drum:[0,4]},chorus:{drum:[0,4],claps:[2,6]},build:{drum:[0,2,4,6],claps:[1,3,5,7]}}},
- // "Hey! Hey! Hey!" (stomp), "Hey-hey-hey, Drip!"
- 'hey-hey-hey':{tonic:62,v1:at(HEY(0),HEY(1),HEY(2),HEY(4,9),HEY(5,9),HEY(6,9)),v2:at(HEY(0),HEY(1),HEY(2),DRIP(3),HEY(4,9),HEY(5,9),HEY(6,9),DRIP(7,9)),
-  c1:at(HEY(0,9),HEY(2,9),HEY(4,11),HEY(6,11)),c2:at(HEY(0),HEY(1,9),HEY(2,11),HEY(3,12),HEY(4),HEY(5,9),HEY(6,11),HEY(7,12)),b:at(...EVERY(0,6,.5).map((x,i)=>HEY(x,7+i/2)),HEY(6,14)),
-  perc:{verse:{claps:[3,7],stomps:[0,4],drum:[0,4]},chorus:{claps:[1.5,3.5,5.5,7.5],stomps:[0,2,4,6],drum:[0,2,4,6]},build:{claps:EVERY(0,6,.5),drum:[0,2,4],roll:true}}},
- // Call and answer: the west stand calls "Drip-F-C!", the east stand answers; the chorus is both stands shouting together.
- 'here-we-go':{tonic:62,call:true,v1:DFC(0),e1:DFC(4,4),v2:at(DFC(0,9),HEY(3)),e2:at(DFC(4,7),HEY(7)),
-  c1:at(DFC(0),HEY(2),DFC(4,9),HEY(6,9)),c2:at(DFC(0,9),DFC(2,9),DFC(4,11),HEY(6,12)),b:at(DFC(0),DFC(2,9),DFC(4,11),HEY(6,12)),
-  perc:{verse:{drum:[0,4],claps:[2,2.5,3],claps2:[6,6.5,7]},chorus:{drum:[0,2,4,6],claps:[1.5,3.5,5.5,7.5]},build:{drum:[0,1,2,3,4,5],claps:EVERY(0,6,.5),roll:true}}},
- // "Ol-é! Ol-é!": shouted, rising, claps between; the olé-roll layer follows the Mexican wave itself.
- 'ole-ole':{tonic:62,v1:at(OLE(0),OLE(2),OLE(4),OLE(6,2)),v2:at(OLE(0),OLE(2,2),HEY(4,9),OLE(6,4)),c1:at(OLE(0),OLE(1),OLE(2,2),OLE(4,4),OLE(5,4),OLE(6,5)),
-  c2:at(OLE(0,2),OLE(2,4),OLE(4,5),HEY(6,12)),b:at(OLE(0),OLE(1,2),OLE(2,4),OLE(3,5),OLE(4,7),OLE(6,7)),
-  perc:{verse:{claps:[1.5,3.5,5.5,7.5],drum:[0,4]},chorus:{claps:[3,3.5,7,7.5],drum:[0,2,4,6]},build:{drum:[0,1,2,3,4,5],claps:EVERY(0,6,.5),roll:true}}},
+ 'hey-hey-hey':{...OLE_SONG,tonic:60,perc:OLE_CLAP},
+ 'here-we-go':{...OLE_SONG,tonic:62,sweep:true,perc:{verse:{claps:[3,7],drum:[0,4]},chorus:{claps:[1,3,5,7],drum:[0,2,4,6]},build:{claps:[1,3,5,7],drum:[0,2,4,6]}}},
+ 'ole-ole':{...OLE_SONG,tonic:62,perc:OLE_CLAP},
  // Clap patterns into a shout: "clap, clap, clap, clap-clap, clap-clap-clap-clap... DRIP!"; the chorus: "Come on, Drip! Hey!".
  'clap-clap-shout':{tonic:60,v1:DRIP(6,9),v2:at(DRIP(6,9),HEY(7,11)),c1:at(CMON(4,9),DRIP(5.5,11),HEY(7,11)),
   c2:at(CMON(4,11),DRIP(5.5,12),HEY(7,12)),b:at(...EVERY(4,7,.5).map((x,i)=>DRIP(x,7+i)),HEY(7,14)),
   perc:{verse:{claps:[0,1,2,3,3.5,4,4.5,5,5.5],drum:[0,6]},chorus:{claps:[0,.5,1,1.5,2,2.5,3,3.25,3.5,3.75],drum:[0,4,6]},build:{claps:EVERY(0,4,.25),drum:[0,2,4],roll:true}}},
- // Stomp round the bowl (slow): stamping travels round the stands, "Hey!" and "Drip!" answer it.
- 'stand-up-song':{tonic:60,minor:true,slow:true,sweep:true,v1:at(HEY(3),HEY(7)),v2:at(HEY(1),HEY(3),HEY(5),HEY(7,10)),c1:at(DRIP(0),HEY(2),DRIP(4),HEY(6)),
-  c2:at(DRIP(0,10),HEY(2,10),DRIP(4,12),HEY(6,12)),b:at(HEY(0),HEY(1,8),HEY(2,10),HEY(3,12),OH(4,12),HEY(6,15)),
-  perc:{verse:{stomps:EVERY(0,8,1)},chorus:{stomps:EVERY(0,8,.5),claps:[1,3,5,7]},build:{stomps:EVERY(0,8,.5),claps:EVERY(.5,8,1),drum:[0,2,4,6],roll:true}}},
+ 'stand-up-song':{...OLE_SONG,tonic:60,slow:true,perc:{verse:{drum:[0,4]},chorus:{drum:[0,2,4,6]},build:{drum:[0,2,4,6]}}},
  // Stand to stand: the west shouts "Hey!", the east "Ho!"; then "Drip!" / "F-C!" across the pitch; together for the chorus.
  'stand-to-stand':{tonic:62,call:true,v1:at(HEY(0),HEY(2),DRIP(4,9)),e1:at(HO(1),HO(3),HEY(6,4)),v2:at(HEY(0,9),HEY(1,9),HEY(4)),e2:at(HO(2),HO(3),HO(5,7),DRIP(6)),
   c1:at(HEY(0),HO(1),HEY(2,9),HO(3,7),DFC(4,9),HEY(7,9)),c2:at(HEY(0,9),HO(1,9),HEY(2,11),HO(3,9),DFC(4,11),HEY(7,12)),b:at(...EVERY(0,6,.5).map((x,i)=>i%2?HO(x,4+i/2):HEY(x,7+i/2)),HEY(6,14)),
   perc:{verse:{drum:[0,4],claps:[1.5,3.5],claps2:[5.5,7.5]},chorus:{drum:[0,2,4,6],claps:[1.5,3.5,5.5,7.5]},build:{drum:[0,1,2,3,4,5],claps:EVERY(0,6,.5),roll:true}}},
- // The supporters' drum leads; the crowd answers "Oh!" and "Hey!" (A minor).
- 'drum-march':{tonic:57,minor:true,v1:at(OH(0),HEY(2,7),OH(3,3),OH(4,7),HEY(6,7)),v2:at(OH(0,3),HEY(2,10),OH(3,7),OH(4,3),HEY(6,7)),
-  c1:at(OH(0,7),OH(.5,7),HEY(1,10),OH(2,7),HEY(3,12),OH(4,5),OH(4.5,5),HEY(5,8),OH(6,7),HEY(7,12)),c2:at(OH(0,7),OH(.5,7),HEY(1,10),OH(2,7),HEY(3,12),OH(4,3),OH(4.5,2),HEY(5,3),OH(6,0),HEY(7,7)),
-  b:at(HEY(0,7),HEY(1,7),HEY(2,8),HEY(3,8),HEY(4,10),HEY(5,10),HEY(6,12)),
-  perc:{verse:{drum:[0,1,2,2.5,3,4,5,6,6.5,7]},chorus:{drum:[0,1,2,2.5,3,4,5,6,6.5,7],claps:[1.5,5.5]},build:{drum:EVERY(0,6,.5),roll:true}}},
+ 'drum-march':{...OLE_SONG,tonic:57,perc:{verse:{drum:[0,1,2,3,4,5,6,7]},chorus:{drum:[0,1,2,2.67,3,4,5,6,6.67,7],claps:[1.67,5.67]},build:{drum:EVERY(0,8,.5),roll:true}}},
 };
 /** The phrase kinds a song is built from: the lead line, the crowd joining in, verse lines, a percussion break (the singing drops
  *  out), chorus lines, the chorus with a harmony a third up, the build, the last chorus up a whole tone (k), the fading outro. */
-export type PhraseKey='lead'|'v1j'|'v1'|'v2'|'perc'|'c1'|'c2'|'c1h'|'b'|'c1k'|'c2k'|'bk'|'c2f';
+export type PhraseKey='lead'|'v1j'|'v1'|'v2'|'perc'|'c1'|'c2'|'c1h'|'b'|'c1k'|'c2k'|'bk'|'c2f'|'oend';
 export const PHRASE_BEATS=8;
+/** Beats a phrase takes on the bar grid: the olé's end holds its "oooo-LÉ" for 12. */
+export const phraseBeats=(k:PhraseKey)=>k==='oend'?12:PHRASE_BEATS;
+/** The olé gets louder line by line (the phrase's own level) and the real roar swells under each line (live, OLE_LIFT). */
+const OLE_RISE:Partial<Record<PhraseKey,number>>={c2:1.08,c1h:1.18,oend:1.3};
+export const OLE_LIFT:Partial<Record<PhraseKey,number>>={lead:.15,v1j:.35,c1:.55,c2:.65,c1h:.8,oend:1,perc:.1};
 /** Phrases keep their own dynamics (a lead section is quieter than the whole stadium, the outro fades): one fixed scale, no normalising. */
 const PHRASE_GAIN=.25;
 /** A performance: the lead starts, the stadium joins, then verses and choruses (each chorus ending in a build) alternate, with
  *  random orders, harmonies and drop-outs, and the last chorus goes up a key before the crowd fades out. Fits `seconds`. */
 export function planSong(id:ChantId,seconds:number,rnd:Rnd=Math.random,lite=false,fresh=true):PhraseKey[]{
  const bpm=CHANTS.find(ch=>ch.id===id)?.bpm??100,len=PHRASE_BEATS*60/bpm;let N=Math.max(3,Math.floor(seconds/len));
+ // The olé: a section starts it, the stands join, the whole ground twice, louder with the harmony, then the long "oooo-LÉ" into a
+ // cheer; after a bar of claps it comes round again (without the lone section), as often as the phase allows.
+ if(SONGS[id].ole){const sum=(a:readonly PhraseKey[])=>a.reduce((x,k)=>x+phraseBeats(k)/PHRASE_BEATS,0);
+  const FIRST:readonly (readonly PhraseKey[])[]=[['lead','v1j','c1','c2','c1h','oend'],['lead','v1j','c1','c1h','oend'],['v1j','c1','c1h','oend'],['c1','c1h','oend'],['c1','oend']];
+  const AGAIN:readonly (readonly PhraseKey[])[]=[['c1','c2','c1h','oend'],['c1','c1h','oend'],['c1','oend']];
+  const seq:PhraseKey[]=[];let used=0,forms=fresh?FIRST:AGAIN;if(!fresh){seq.push('perc');used=1;}
+  for(;;){const f=forms.find(x=>used+sum(x)<=N+.01);if(!f)break;seq.push(...f);used+=sum(f);forms=AGAIN;if(used+1+sum(AGAIN[AGAIN.length-1])>N+.01)break;seq.push('perc');used++;}
+  if(!seq.some(k=>k!=='perc'))seq.push('c1','oend');return seq;}
  // The sung tune stays short (owner: singing a minority): four phrases, then drums and claps only.
  if(SONGS[id].sung){if(!fresh)return Array<PhraseKey>(Math.min(N,4)).fill('perc');N=Math.min(N,4);return (['lead','v1j','c1','c2f'] as PhraseKey[]).slice(0,N);}
  // Short performances (slow songs, short phases) follow a fixed form with random lines; long ones alternate blocks.
@@ -327,12 +343,12 @@ export function thirdAbove(semi:number,minor=false){const sc=minor?MINOR:MAJOR,o
 /** One phrase of a song, rendered once (mono, 8 beats + reverb tail; the tail rings over the next phrase). side: 0 west, 1 east,
  *  2 everyone. A fresh seed per render: no two phrases are identical. */
 export function renderPhrase(id:ChantId,key:PhraseKey,side:0|1|2,lite=false,seed=1):Promise<Rendered>|null{
- const O=offlineCtor();if(!O)return null;const s=SONGS[id],bpm=CHANTS.find(ch=>ch.id===id)?.bpm??100,spb=60/bpm,L=PHRASE_BEATS*spb,R=STADIUM_SOUND.rate;
+ const O=offlineCtor();if(!O)return null;const s=SONGS[id],bpm=CHANTS.find(ch=>ch.id===id)?.bpm??100,spb=60/bpm,L=phraseBeats(key)*spb,R=STADIUM_SOUND.rate;
  const c=new O(1,Math.ceil((L+STADIUM_SOUND.tail)*R),R),rnd=lcg(seed*7919+id.length*131+key.length*17+side),noise=noiseBuffer(c,rnd),slow=!!s.slow;
  const verse=key==='lead'||key==='v1j'||key==='v1'||key==='v2',two=key==='v2'||key==='c2'||key==='c2k'||key==='c2f',build=key==='b'||key==='bk',up=key.endsWith('k')?2:0;
- const notes:readonly Note[]=key==='perc'?[]:verse?(side===1?(two?s.e2:s.e1)??[]:two?s.v2:s.v1):build?s.b:two?s.c2:s.c1;
- const harmony=!lite&&(key==='c1h'||up>0||build),lead=key==='lead';
- const out=c.createGain();out.connect(c.destination);if(key==='c2f'){out.gain.setValueAtTime(1,4*spb);out.gain.linearRampToValueAtTime(0,L+.6);}
+ const notes:readonly Note[]=key==='perc'?[]:key==='oend'?s.end??s.c1:verse?(side===1?(two?s.e2:s.e1)??[]:two?s.v2:s.v1):build?s.b:two?s.c2:s.c1;
+ const harmony=!lite&&(key==='c1h'||key==='oend'||up>0||build),lead=key==='lead';
+ const out=c.createGain();out.connect(c.destination);if(s.ole)out.gain.value=OLE_RISE[key]??1;if(key==='c2f'){out.gain.setValueAtTime(1,4*spb);out.gain.linearRampToValueAtTime(0,L+.6);}
  // The sung terrace tune is the whole ground: six sections of five voices (two for the lead) and a bigger, wetter bowl.
  const big=!!s.sung&&!lead,mix=bus(c,x=>x.connect(out),impulse(c,1,rnd),lead?.28:s.sung?.62:slow?.5:.4,slow?4200:5200);
  const G=lead?(s.sung?2:1):lite?2:big?6:4,n=lead?5:lite?3:big?5:4;
@@ -373,7 +389,7 @@ export function renderBed(kind:BedKind,lite=false,seed=1):Promise<Rendered>|null
  const c=new O(ch,Math.ceil((len+extra)*R),R),noise=noiseBuffer(c,rnd),G=lite?3:6,n=lite?3:4;
  const out=bus(c,x=>x.connect(c.destination),impulse(c,ch,rnd),kind==='murmur'?.55:.45,kind==='murmur'?2100:kind==='ole'?4200:4600);
  const end=len+extra;
- for(let gi=0;gi<(kind==='ole'?(lite?2:4):kind==='applause'?2:kind==='jeer'?3:G);gi++){
+ for(let gi=0;gi<(kind==='ole'?(lite?2:6):kind==='applause'?2:kind==='jeer'?3:G);gi++){
   const g=group(c,out,noise,n,{pan:ch===1?0:(gi/(G-1)-.5)*1.5,fs:.92+rnd()*.24,level:1,vib:kind==='murmur'?6:16,rnd});
   for(let i=0;i<n;i++)g.base[i]=kind==='murmur'?(rnd()<.5?95+rnd()*70:185+rnd()*110):150+rnd()*270;
   if(kind==='murmur'){// chatter: syllables of random vowels, voices gated on and off on their own
@@ -383,9 +399,10 @@ export function renderBed(kind:BedKind,lite=false,seed=1):Promise<Rendered>|null
   else if(kind==='roar'){// thousands holding "aah" / "ooh": slow pitch and level drift, a breath hiss under it
    g.cf.frequency.value=1100;g.cf.Q.value=.4;g.cg.gain.value=.35;let tv=0;while(tv<end){vowelAt(g,(['a','o','a','e'] as const)[(rnd()*4)|0],tv,.3);tv+=1+rnd();}
    for(let i=0;i<n;i++){g.osc[i].frequency.value=g.base[i];let t=0;while(t<end){g.osc[i].frequency.setTargetAtTime(g.base[i]*Math.pow(2,(rnd()-.5)*3/12),t,.25);g.vg[i].gain.setTargetAtTime(.45+.55*rnd(),t,.3);t+=.4+rnd()*.5;}}}
-  else if(kind==='ole'){// a rolling "o-LÉÉ": sections staggered so the line never stops (the live layer pans it with the wave)
-   const period=1.5,off=gi*period/(lite?2:4);for(let cyc=-1;cyc*period<end;cyc++){const t0=cyc*period+off;if(t0+1.3<0)continue;
-    sing(g,[[0,.3,0,'o'],[.3,.9,4,'e','l']],{t0,spb:1,tonic:62+(gi%2?0:-12),octs:[0],slow:false,rnd});}}
+  else if(kind==='ole'){// the olé rolling round the bowl with the Mexican wave: each section sings the tune's "o-LÉ" (0-4, then 2-7),
+   // staggered so the line never stops (the live layer pans it with the wave)
+   const period=1.5,off=gi*period/(lite?2:6);for(let cyc=-1;cyc*period<end;cyc++){const t0=cyc*period+off;if(t0+1.3<0)continue;const hi=((cyc%2)+2)%2?2:0;
+    sing(g,[[0,.3,hi,'o'],[.33,.95,hi?7:4,'e','l']],{t0,spb:1,tonic:62+(gi%2?0:-12),octs:[0],slow:false,rnd});}}
   else if(kind==='goal'){// the roar: a burst of "OH" sweeping up into a long "AAH", easing off after three seconds
    for(let i=0;i<n;i++){const t0=.02+rnd()*.18,f0=g.base[i]+40,p=g.osc[i].frequency,gg=g.vg[i].gain;p.setValueAtTime(f0*.85,t0);p.exponentialRampToValueAtTime(f0*1.5,t0+.5);p.setTargetAtTime(f0*1.32,t0+.6,.4);
     gg.setValueAtTime(0,t0);gg.linearRampToValueAtTime(1,t0+.12);gg.setTargetAtTime(.7,t0+.8,.5);gg.setTargetAtTime(0,3+rnd()*.8,.9);}
@@ -437,9 +454,10 @@ type Slot={g:GainNode;sides:[Side,Side,Side];srcs:(AudioBufferSourceNode|null)[]
 type Graph={c:AudioContext;out:GainNode;mur:AudioBufferSourceNode;gMur:GainNode;roar:AudioBufferSourceNode;fRoar:BiquadFilterNode;gRoar:GainNode;rum:AudioBufferSourceNode;fRum:BiquadFilterNode;gRum:GainNode;
  slots:[Slot,Slot];wave:AudioBufferSourceNode|null;gWave:GainNode;pWave:Pan;shots:{src:AudioBufferSourceNode|null;g:GainNode;p:Pan;at:number}[];nodes:AudioNode[];
  /** the real bed / roar are playing (else the synthesised murmur / roar), and the chants' level over them */
- realBed:boolean;realRoar:boolean;chant:number};
+ realBed:boolean;realRoar:boolean;chant:number;
+ /** a second real-roar loop that swells under each olé line (null without the roar recording) */swl:AudioBufferSourceNode|null;gSwl:GainNode};
 // Param indices for the "only when it moved" cache.
-const P_OUT=0,P_MUR=1,P_ROAR=2,P_ROARF=3,P_RUM=4,P_SLOT0=5,P_SLOT1=6,P_WAVE=7,P_WAVEPAN=8,P_GA=9,P_GB=10,P_PA=11,P_PB=12,P_PC=13;
+const P_OUT=0,P_MUR=1,P_ROAR=2,P_ROARF=3,P_RUM=4,P_SLOT0=5,P_SLOT1=6,P_WAVE=7,P_WAVEPAN=8,P_GA=9,P_GB=10,P_PA=11,P_PB=12,P_PC=13,P_SWL=14;
 /** A random section of the bowl, as a pan. */
 const side=()=>(Math.random()-.5)*1.6;
 const isVerse=(k:PhraseKey)=>k==='lead'||k==='v1j'||k==='v1'||k==='v2';
@@ -455,7 +473,7 @@ export function synthKinds(rec:Readonly<Partial<Record<RecId,unknown>>>):BedKind
  if(!rec.ooh)k.push('ooh');if(!rec.groan)k.push('aah','groan');if(!rec.applause)k.push('applause');return k;}
 
 export function createStadiumSound(host:StadiumSoundHost){
- const S=STADIUM_SOUND,M=STADIUM_MIX,last=new Float32Array(14).fill(-9);
+ const S=STADIUM_SOUND,M=STADIUM_MIX,last=new Float32Array(15).fill(-9);
  let acc=0,presence=0,musicFade=0,away=Infinity,quiet=0,g:Graph|null=null,bank:Bank|null=null,building=false,gen=0,rumble:Rendered|null=null;
  let active=0,lastGoal=Infinity,lastMiss=Infinity,holdUntil=0,duckUntil=0,waveOff=0,seed=1,renderSeed=1,goalFlip=0;
  let lastExc=0,swellAt=-99,swellOpen=false,attackAt=-99,touchSeen=-1,kickTeam='',kickLofted=false,kickAt=-99,rippleIn=6;const coolUntil=new Float64Array(REACTIONS.length);
@@ -466,14 +484,15 @@ export function createStadiumSound(host:StadiumSoundHost){
  const debug={ticks:0,builds:0,teardowns:0,graphs:0,renders:0,chant:null as ChantId|null,chantStarts:0,phrases:0,skipped:0,steps:[] as PhraseKey[],goals:0,oohs:0,
   reactions:{ooh:0,aah:0,swell:0,groan:0,applause:0,jeer:0,attack:0} as Record<ReactKind,number>,wave:false,presence:0,stopped:0,lite:false,
   /** recordings fetched + decoded / failed (the synthesised layer stands in), whistles blown, PA announcements, period marks */
-  recordings:0,recordingErrors:0,fetches:0,whistles:0,pa:0,periods:0,real:false};
+  recordings:0,recordingErrors:0,fetches:0,whistles:0,pa:0,periods:0,real:false,
+  /** olé lines scheduled (with the roar swelling under them) and olé endings (into the cheer) */oleLines:0,oleEnds:0};
  const to=(i:number,p:AudioParam,v:number,tc:number=S.tc)=>{if(!g||Math.abs(last[i]-v)<.008)return;last[i]=v;p.setTargetAtTime(v,g.c.currentTime,tc);};
  const playingSong=()=>g?g.slots[active].song:null;
  function stop(now=false){
   if(!g)return;const c=g.c,G=g;g=null;debug.chant=null;debug.wave=false;debug.stopped++;last.fill(-9);queue.length=0;rendering=false;gen++;
   const t=c.currentTime,f=now||c.state!=='running'?0:.3;
   try{G.out.gain.cancelScheduledValues(t);G.out.gain.setValueAtTime(G.out.gain.value,t);G.out.gain.linearRampToValueAtTime(0,t+f);}catch{}
-  const srcs=[G.mur,G.roar,G.rum,G.wave,...G.shots.map(x=>x.src),...G.slots[0].srcs,...G.slots[1].srcs];
+  const srcs=[G.mur,G.roar,G.rum,G.wave,G.swl,...G.shots.map(x=>x.src),...G.slots[0].srcs,...G.slots[1].srcs];
   for(const s of srcs){if(!s)continue;try{s.stop(f?t+f+.02:0);}catch{}}
   for(const sl of G.slots){sl.ready.clear();sl.song=null;}
   const drop=()=>{for(const s of srcs)try{s?.disconnect();}catch{}for(const n of G.nodes)try{n.disconnect();}catch{}host.changed();};
@@ -524,9 +543,9 @@ export function createStadiumSound(host:StadiumSoundHost){
   const slot=():Slot=>{const sg=gain(0);sg.connect(out);return {g:sg,sides:[side(sg,-.6),side(sg,.6),side(sg,0)],srcs:[null,null,null,null,null,null],song:null,steps:[],i:0,nextAt:0,run:0,played:0,ready:new Map()};};
   const gWave=gain(),pWave=pan(c,0);nodes.push(pWave);gWave.connect(pWave);pWave.connect(out);
   const shots=Array.from({length:SHOTS},()=>{const sg=gain(1),p=pan(c,0);nodes.push(p);sg.connect(p);p.connect(out);return {src:null as AudioBufferSourceNode|null,g:sg,p,at:0};});
-  const realBed=!!b.rec.bed,realRoar=!!b.rec.roar;
+  const realBed=!!b.rec.bed,realRoar=!!b.rec.roar,gSwl=gain();gSwl.connect(out);
   g={c,out,mur:loopSrc(c,bed,gMur),gMur,roar:loopSrc(c,roar,fRoar),fRoar,gRoar,rum:loopSrc(c,rumble,fRum),fRum,gRum,slots:[slot(),slot()],wave:null,gWave,pWave,shots,nodes,
-   realBed,realRoar,chant:realBed?M.chantRec:M.chant};
+   realBed,realRoar,chant:realBed?M.chantRec:M.chant,swl:b.rec.roar?loopSrc(c,b.rec.roar,gSwl):null,gSwl};
   last.fill(-9);debug.graphs++;active=0;seenLive=null;
  }
  function startSong(G:Graph,id:ChantId,m:Readonly<StadiumMood>,lite:boolean){
@@ -549,7 +568,7 @@ export function createStadiumSound(host:StadiumSoundHost){
   const c=G.c,id=sl.song!,len=PHRASE_BEATS*60/(CHANTS.find(ch=>ch.id===id)?.bpm??100);
   for(let guard=0;guard<4&&sl.nextAt-c.currentTime<AHEAD;guard++){
    if(sl.i>=sl.steps.length){sl.steps=planSong(id,Math.max(len*2,m.phaseLeft-(sl.nextAt-c.currentTime)),Math.random,lite,false);sl.i=0;sl.run++;sl.ready.clear();debug.steps=sl.steps;request(sl,0,lite);}
-   const k=sl.steps[sl.i],sides=phraseSides(id,k);let ok=true;
+   const k=sl.steps[sl.i],sides=phraseSides(id,k),pl=len*phraseBeats(k)/PHRASE_BEATS;let ok=true;
    for(const sd of sides){const r=sl.ready.get(sl.run+':'+sl.i+':'+sd);if(!r||r==='r')ok=false;}
    if(!ok){if(sl.nextAt-c.currentTime>LATE)break;// not rendered yet: wait, then skip it (the first phrase waits a bar instead)
     if(!sl.played){sl.nextAt+=len/2;continue;}debug.skipped++;}
@@ -557,8 +576,19 @@ export function createStadiumSound(host:StadiumSoundHost){
     let free=sl.srcs.indexOf(null);if(free<0){free=0;try{sl.srcs[0]!.stop();}catch{}sl.srcs[0]!.disconnect();}
     const src=c.createBufferSource();src.buffer=r.buffer;src.connect(sl.sides[sd].g);src.start(Math.max(c.currentTime,sl.nextAt));sl.srcs[free]=src;
     src.onended=()=>{src.disconnect();const j=sl.srcs.indexOf(src);if(j>=0)sl.srcs[j]=null;};sl.played++;debug.phrases++;}
-   sl.i++;sl.nextAt+=len;request(sl,sl.i,lite);request(sl,sl.i+1,lite);
+   if(ok&&SONGS[id].ole)oleLine(G,k,Math.max(c.currentTime,sl.nextAt),pl);
+   sl.i++;sl.nextAt+=pl;request(sl,sl.i,lite);request(sl,sl.i+1,lite);
   }
+ }
+ /** Under an olé line: the real roar swells toward its held "LÉ" (louder line by line); the end's long "LÉ" gets the real
+  *  crowd's "Olé!" shouts and applause, then the swell eases off. */
+ function oleLine(G:Graph,k:PhraseKey,t0:number,pl:number){
+  const lift=OLE_LIFT[k]??0,p=G.gSwl.gain,now=G.c.currentTime;debug.oleLines++;last[P_SWL]=-9;
+  if(G.swl){p.setTargetAtTime(M.oleSwell*lift*.55,t0,.5);p.setTargetAtTime(M.oleSwell*lift,t0+pl*.5,pl*.12);}
+  if(k!=='oend')return;debug.oleEnds++;const le=t0+pl*.75;
+  const sh=bank!.rec['ole-shouts'];if(sh){shot(G,sh,M.oleShout,side()*.3,le-now+.15);shot(G,sh,M.oleShout*.7,side(),le-now+.9,.95);}
+  react(G,'applause',1,side()*.5,le-now+pl*.18,0);
+  if(G.swl){p.setTargetAtTime(M.oleSwell*1.25,le,.3);p.setTargetAtTime(M.oleSwell*.15,t0+pl+1.2,1.4);}
  }
  /** A one-shot on the pool of SHOTS (the oldest gives way), panned to a section, optionally later and at another speed. */
  function shot(G:Graph,r:Rendered,level:number,panTo=0,delay=0,rate=1){const c=G.c,t=c.currentTime+delay;let s=G.shots[0];for(const x of G.shots){if(!x.src){s=x;break;}if(x.at<s.at)s=x;}
@@ -641,6 +671,7 @@ export function createStadiumSound(host:StadiumSoundHost){
   if(c.currentTime>holdUntil){const R=G.realRoar;to(P_ROAR,G.gRoar.gain,live?(R?M.roarRec:M.roar)*(.06+.94*e*e):0,.5);to(P_ROARF,G.fRoar.frequency,R?1500+6000*e:900+2600*e,.5);to(P_RUM,G.gRum.gain,M.rumble*zone*(live?.3+.7*e:.12),.6);}
   // The song: the mood's chant, crossfaded on a change; a new performance each time.
   const want=chantFor(m),sl=G.slots[active];
+  if(!G.slots[active].song||!SONGS[G.slots[active].song!].ole)to(P_SWL,G.gSwl.gain,0,1.2);
   if(want!==sl.song){if(sl.song)stopSlot(sl,c,S.chantFade);debug.chant=null;if(want)startSong(G,want,m!,lite);}
   const cur=G.slots[active];if(!cur.song)return;
   if(c.currentTime>holdUntil&&c.currentTime>duckUntil)to(P_SLOT0+active,cur.g.gain,G.chant*(.8+.4*e),.6);
@@ -650,8 +681,8 @@ export function createStadiumSound(host:StadiumSoundHost){
   if(song.call&&!lite){const ax=STADIUM.x-52-f.x,az=STADIUM.z-f.z,bx=STADIUM.x+52-f.x,bz=az,da=Math.hypot(ax,az),db=Math.hypot(bx,bz),w=db/(da+db);
    to(P_GA,cur.sides[0].g.gain,.4+.9*w,.3);to(P_GB,cur.sides[1].g.gain,.4+.9*(1-w),.3);
    if(cur.sides[0].p.pan)to(P_PA,cur.sides[0].p.pan,Math.max(-.9,Math.min(.9,(ax*f.rx+az*f.rz)/Math.max(12,da))),.3);if(cur.sides[1].p.pan)to(P_PB,cur.sides[1].p.pan,Math.max(-.9,Math.min(.9,(bx*f.rx+bz*f.rz)/Math.max(12,db))),.3);}
-  // Stomp round the bowl: the stamping travels round the stands (one lap every 4 bars of the beat clock).
-  if(song.sweep&&cur.sides[2].p.pan)to(P_PC,cur.sides[2].p.pan,lite?0:.75*Math.sin(Math.PI*2*m!.beat/16),.15);
+  // Olé round the bowl: the singing travels round the stands (one lap every 2 bars of the beat clock).
+  if(song.sweep&&cur.sides[2].p.pan)to(P_PC,cur.sides[2].p.pan,lite?0:.75*Math.sin(Math.PI*2*m!.beat/(song.ole?8:16)),.15);
   // The olé roll rides the Mexican wave round the bowl (not in the lite mix).
   const wv=live&&!lite?m!.wave.on:0;
   if(wv>.01){waveOff=0;if(!G.wave){G.wave=loopSrc(c,bank!.syn.ole!,G.gWave);debug.wave=true;}

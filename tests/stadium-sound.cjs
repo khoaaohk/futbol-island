@@ -46,8 +46,16 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
 // 2. Chants: ten, mostly terrace SHOUTS (owner, Nov 13: "more oohs and chants, less singing"); one short sung tune; structure
 //    (lead → join → verses / choruses with builds → up a key → fade), each performance different.
 {const ids=Mo.CHANTS.map(c=>c.id);assert.deepEqual(Object.keys(A.SONGS).sort(),[...ids].sort(),'a song for every mood chant');assert(ids.length>=10,'ten chants');
- const kinds=new Set(ids.map(id=>A.STADIUM_CHANTS[id].kind));for(const k of ['clap','ole','scarf','drum','call','stomp','shout'])assert(kinds.has(k),'a '+k+' chant');
- const sung=ids.filter(id=>A.SONGS[id].sung);assert(sung.length>=1&&sung.length<=2,'sung melodies are a minority: '+sung);
+ const kinds=new Set(ids.map(id=>A.STADIUM_CHANTS[id].kind));for(const k of ['clap','ole','scarf','drum','call','shout'])assert(kinds.has(k),'a '+k+' chant');
+ // the olé family (owner: "the stadium should SING more"): about half of the cycle, sung; plus one other sung tune
+ const oles=ids.filter(id=>A.SONGS[id].ole);assert(oles.length===5&&oles.every(id=>A.SONGS[id].sung),'olé: half of the ten chants: '+oles);
+ assert(oles.some(id=>Mo.CHANTS.find(c=>c.id===id).slow)&&oles.some(id=>Mo.CHANTS.find(c=>c.id===id).bpm>=110)&&oles.some(id=>A.SONGS[id].sweep),'a slow sway, an up-tempo clap version and one rolling round the bowl');
+ const sung=ids.filter(id=>A.SONGS[id].sung&&!A.SONGS[id].ole);assert(sung.length===1,'one other sung tune: '+sung);
+ // the tune: ours (three "o-LÉ"s rising and falling, then the long held "oooo-LÉ"), on wide "o" / "e" vowels, swaying in thirds of a beat
+ {const t=A.SONGS['ole-ole'],le=t.v1.filter(n=>n[3]==='e');assert.equal(le.length,4,'four "LÉ"s a line');assert(t.v1.every(n=>n[3]==='o'||n[3]==='e'),'wide o-LEH vowels');
+  const top=Math.max(...t.v1.map(n=>n[2]));assert(t.v1.findIndex(n=>n[2]===top)>0&&t.v1[t.v1.length-1][2]<top,'a rise and a fall');
+  const end=t.end;assert(end.some(n=>n[3]==='o'&&n[1]>=3)&&end[end.length-1][1]>=2.5&&end[end.length-1][2]===12,'the end: a long "oooo" and a long high "LÉ"');
+  assert(end.every(n=>n[0]+n[1]<=12.01)&&A.phraseBeats('oend')===12,'the end phrase is 12 beats');assert(t.v1.some(n=>Math.abs(n[0]%1-.33)<.01),'the swing: "LÉ" a third of a beat after the "o"');}
  for(const id of ['lets-go','hey-hey-hey','clap-clap-shout','stand-to-stand'])assert(ids.includes(id),'new shout chant '+id);
  for(const id of ids){const s=A.SONGS[id];for(const k of ['v1','v2','c1','c2','b'])assert(s[k].length>=1,id+' '+k);
   for(const k of ['v1','v2','c1','c2','b'])for(const n of s[k])assert(n[0]>=0&&n[0]+n[1]<=8.01,id+' notes inside the 2-bar phrase');
@@ -55,9 +63,14 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
   if(s.sung){assert(new Set(all.map(n=>n[2])).size>=4,id+' (sung) has a melody');assert(all.every(n=>!n[5]));}
   else{assert(all.filter(n=>n[5]).length/all.length>=.9,id+': shouted, not sung');assert(all.every(n=>n[1]<=.5),id+': short punchy shouts');
    const p=s.perc;assert((p.verse.claps?.length||p.verse.drum?.length||p.verse.stomps?.length)&&(p.chorus.claps?.length||p.chorus.stomps?.length),id+': claps / drum / stomps under the shouts');}}
- assert(A.SONGS['stand-to-stand'].call&&A.SONGS['stand-to-stand'].e1.length&&A.SONGS['here-we-go'].e1.length,'call and response between the stands');assert.deepEqual([...A.phraseSides('here-we-go','v1')],[0,1]);assert.deepEqual([...A.phraseSides('here-we-go','lead')],[0]);assert.deepEqual([...A.phraseSides('ole-ole','v1')],[2]);
+ assert(A.SONGS['stand-to-stand'].call&&A.SONGS['stand-to-stand'].e1.length,'call and response between the stands');assert.deepEqual([...A.phraseSides('stand-to-stand','v1')],[0,1]);assert.deepEqual([...A.phraseSides('stand-to-stand','lead')],[0]);assert.deepEqual([...A.phraseSides('ole-ole','v1')],[2]);
  let r=7;const rnd=()=>{r=(r*1664525+1013904223)>>>0;return r/4294967296;};
  for(const id of ids){const len=8*60/Mo.CHANTS.find(c=>c.id===id).bpm;for(const secs of [40,65,90]){const p=A.planSong(id,secs,rnd);
+  if(A.SONGS[id].ole){assert(p.includes('oend')&&p.indexOf('c1')>=0&&p.indexOf('c1h')>p.indexOf('c1')||p.length<=3,id+' '+secs+': join, louder, the end: '+p);
+   if(p.length>=6)assert.equal(p.slice(0,2).join(),'lead,v1j','a section starts, the stands join');
+   const n=p.reduce((x,k)=>x+A.phraseBeats(k)/8,0);assert(n<=Math.max(3,Math.floor(secs/len))+.01,'fits the phase');
+   if(secs>=90&&len<5)assert(p.filter(k=>k==='oend').length>=2,'it comes round again: '+p);
+   const re=A.planSong(id,secs,rnd,false,false);assert(re[0]==='perc'&&re.includes('oend'),'a re-plan: a bar of claps, then again');continue;}
   if(A.SONGS[id].sung){assert(p.length<=4&&p[0]==='lead'&&p[p.length-1]==='c2f','the sung tune is short: '+p);assert(A.planSong(id,secs,rnd,false,false).every(k=>k==='perc'),'then drums and claps only');continue;}
   assert.equal(p.length,Math.max(3,Math.floor(secs/len)),'fits the phase');assert.equal(p[0],'lead','a lead section starts the line');assert.equal(p[1],'v1j','the stadium joins in');
   assert.equal(p[p.length-1],'c2f','the crowd fades out at the end');assert(p.includes('b'),id+' '+secs+' s: a build ends a chorus');
@@ -125,6 +138,7 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
  assert(snd.debug.pa===1&&snd.debug.whistles>=1,'a match waking: the PA welcome, then the kick-off whistle');
  assert.equal(snd.debug.steps[0],'lead');const bar=A.nextBarIn(mood.beat,mood.bpm,.6),spb=60/mood.bpm;assert(Math.abs(((mood.beat+bar/spb)%4+4)%4)<1e-6||Math.abs(((mood.beat+bar/spb)%4)-4)<1e-6,'starts on a bar line');
  for(let i=0;i<160;i++){Mo.stepStadiumMood(.1,m);await run(bowl,1);}assert(snd.debug.phrases>=3,'phrases go out one after another: '+snd.debug.phrases);
+ assert.equal(snd.debug.oleLines>0,!!A.SONGS[want].ole,'the real roar swells under the olé lines only');
  const nodesBefore=made;for(let i=0;i<10;i++)snd.update(.016,bowl);assert.equal(made,nodesBefore,'no nodes made between ticks');
  const songSrcs=[...live].filter(n=>n.context===null&&n.started&&!n.dead&&n.buffer&&!n.loop).length;assert(songSrcs<=8,'a small fixed pool of phrase sources: '+songSrcs);
  // a chant change crossfades into the next song
