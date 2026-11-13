@@ -71,14 +71,15 @@ const S=L.STADIUM;
 const PF=load('lib/town/plazaFlags.ts');
 {const order=[...PF.plazaFlagOrder(14)],poles=Q.plazaFlagPoles();
  assert.equal(poles.length,14);
- assert.deepEqual([...PF.PLAZA_NATIONS],['brazil','argentina','france','germany','spain','england','italy','portugal','netherlands','mexico','usa','japan']);
- assert.deepEqual(order,['brazil','france','spain','italy','netherlands','usa','brazil','argentina','germany','england','portugal','mexico','japan','argentina']);
- assert.equal(new Set(order).size,12,'all twelve fly');
+ assert.deepEqual([...PF.PLAZA_NATIONS],['brazil','argentina','france','germany','spain','england','italy','portugal','netherlands','mexico','usa','japan','uruguay']);
+ assert.deepEqual(order,['usa','brazil','france','spain','italy','netherlands','brazil','japan','argentina','germany','england','portugal','mexico','uruguay']);
+ assert.equal(new Set(order).size,13,'all thirteen fly');assert.equal(order.filter(n=>n==='argentina').length,1,'Argentina once');
+ assert(poles[0].x<poles[1].x&&poles[7].x<poles[8].x,'pole 0 on each side is the west (stadium gate) end');assert.deepEqual([order[0],order[7]],['usa','japan'],'the US and Japan at the front by the stadium');
  for(let i=0;i<7;i++){assert.notEqual(order[i],order[i+7],'across the walk '+i);if(i<6){assert.notEqual(order[i],order[i+1],'north side '+i);assert.notEqual(order[i+7],order[i+8],'south side '+i);}}
  // Each flag draws its own cell; the US gets stripes and a canton, England a cross, Japan a disc.
  const log=[],rec=new Proxy({},{get:(t,k)=>k in t?t[k]:(...a)=>log.push([k,...a]),set:(t,k,v)=>{t[k]=v;return true;}});
  PF.drawNationFlag(rec,'usa',0,0,128,80);assert(log.filter(k=>k[0]==='fillRect').length>=14&&log.filter(k=>k[0]==='arc').length>=20,'US: 13 stripes + canton, stars');
- const cells=PF.PLAZA_NATIONS.map(PF.flagCell);for(const c of cells)assert(c.x+c.w<=PF.FLAG_CANVAS.w&&c.y+c.h<=240,'cells inside the canvas, clear of the solid strip');}
+ const cells=PF.PLAZA_NATIONS.map(PF.flagCell);for(const c of cells)assert(c.x+c.w<=PF.FLAG_CANVAS.w&&c.y+c.h<=PF.FLAG_CANVAS.h&&!(c.y<292&&c.y+c.h>276&&c.x<320&&c.x+c.w>256),'cells inside the canvas, clear of the solid patches');}
 
 // 5. The flags in the built town: one mesh, waving shader, 'flag' prop specs on its own buffer; the old box flags are gone.
 {const world=load('lib/town/world.ts').buildTown(new T.Scene()),scene=world.dynamicScenery.parent,fl=world.plazaFlags;

@@ -11,15 +11,16 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type {PropSpec} from '../graphics/propReactions';
 
-export const PLAZA_NATIONS=['brazil','argentina','france','germany','spain','england','italy','portugal','netherlands','mexico','usa','japan'] as const;
+export const PLAZA_NATIONS=['brazil','argentina','france','germany','spain','england','italy','portugal','netherlands','mexico','usa','japan','uruguay'] as const;
 export type Nation=typeof PLAZA_NATIONS[number];
-export const NATION_NAMES:Record<Nation,string>={brazil:'Brazil',argentina:'Argentina',france:'France',germany:'Germany',spain:'Spain',england:'England',italy:'Italy',portugal:'Portugal',netherlands:'Netherlands',mexico:'Mexico',usa:'United States',japan:'Japan'};
-/** The run of flags: the twelve, then Brazil and Argentina again for poles 13 and 14 (far from their first ones). */
-const RUN:readonly Nation[]=[...PLAZA_NATIONS,'brazil','argentina'];
-/** Nation on each pole, in plazaFlagPoles() order (the north side west to east, then the south side west to east): the run
- *  alternates across the walk (north pole i = run[2i], south pole i = run[2i + 1]). */
+export const NATION_NAMES:Record<Nation,string>={brazil:'Brazil',argentina:'Argentina',france:'France',germany:'Germany',spain:'Spain',england:'England',italy:'Italy',portugal:'Portugal',netherlands:'Netherlands',mexico:'Mexico',usa:'United States',japan:'Japan',uruguay:'Uruguay'};
+/** Nation on each pole, in plazaFlagPoles() order: the north side west to east, then the south side west to east. The west end is
+ *  the stadium gate, so pole 0 on each side is the front pair (owner, Nov 13: the United States and Japan at the front). Brazil
+ *  flies twice (far apart); Argentina flies once (owner: the second Argentina became Uruguay). */
+const NORTH:readonly Nation[]=['usa','brazil','france','spain','italy','netherlands','brazil'];
+const SOUTH:readonly Nation[]=['japan','argentina','germany','england','portugal','mexico','uruguay'];
 export function plazaFlagOrder(count=14):Nation[]{const half=Math.ceil(count/2),out:Nation[]=[];
- for(let k=0;k<count;k++){const side=k<half?0:1,i=side?k-half:k;out.push(RUN[(2*i+side)%RUN.length]);}return out;}
+ for(let k=0;k<count;k++){const side=k<half?0:1,i=side?k-half:k,run=side?SOUTH:NORTH;out.push(run[i%run.length]);}return out;}
 
 /** Pole and cloth sizes (m): the pole's foot at y 0, the cloth's top at the pole's top less 0.25 m, the hoist on the pole's east side. */
 export const FLAG={poleH:7.2,poleR:.08,cap:.12,capR:.12,w:1.9,h:1.15,y:6.4,segW:12,segH:4} as const;
@@ -28,9 +29,9 @@ export const FLAG_WAVE={amp:.1,kickAmp:.3,k:7,speed:3.4,kickSpeed:4.5,kickSecond
 /** The walker counts as bumping a pole within this distance of its centre (the pole's collider 0.3 m + the walker's 0.32 m). */
 export const BUMP_RADIUS=.62;
 
-// --- The texture: 4 × 3 flag cells (128 × 80) and two solid patches (pole white, finial gold) -------------------------------------
-export const FLAG_CANVAS={w:512,h:256,cellW:128,cellH:80,cols:4} as const;
-const SOLID={pole:{x:8,y:244,c:'#e9e4d6'},cap:{x:40,y:244,c:'#c9a227'}} as const;
+// --- The texture: 4 × 4 flag cells (128 × 80; 13 used) and two solid patches (pole white, finial gold) in the last row -------------------------------------
+export const FLAG_CANVAS={w:512,h:512,cellW:128,cellH:80,cols:4} as const;
+const SOLID={pole:{x:264,y:284,c:'#e9e4d6'},cap:{x:296,y:284,c:'#c9a227'}} as const;
 export function flagCell(n:Nation){const i=PLAZA_NATIONS.indexOf(n),{cellW,cellH,cols}=FLAG_CANVAS;return {x:(i%cols)*cellW,y:Math.floor(i/cols)*cellH,w:cellW,h:cellH};}
 
 type Ctx=Pick<CanvasRenderingContext2D,'fillStyle'|'fillRect'|'beginPath'|'moveTo'|'lineTo'|'closePath'|'fill'|'arc'|'ellipse'|'strokeStyle'|'lineWidth'|'stroke'|'save'|'restore'|'rect'|'clip'>;
@@ -71,6 +72,10 @@ export function drawNationFlag(c:Ctx,n:Nation,x:number,y:number,w:number,h:numbe
    c.fillStyle='#8c5a2b';c.beginPath();c.ellipse(cx,cy-h*.02,h*.1,h*.13,0,0,Math.PI*2);c.fill();// the eagle, simplified
    c.fillStyle='#5a3a1a';c.beginPath();c.ellipse(cx+h*.05,cy-h*.12,h*.04,h*.035,0,0,Math.PI*2);c.fill();
    break;
+  case 'uruguay':{for(let i=0;i<9;i++){c.fillStyle=i%2?'#0038a8':'#ffffff';c.fillRect(x,y+h*i/9,w,h/9+.5);}
+   const sw=w*.36,sh=h*5/9;c.fillStyle='#ffffff';c.fillRect(x,y,sw,sh);const sx=x+sw/2,sy=y+sh/2;disc(c,sx,sy,h*.1,'#fcd116');// the Sun of May
+   c.strokeStyle='#fcd116';c.lineWidth=1.5;for(let i=0;i<16;i++){const a=i*Math.PI/8;c.beginPath();c.moveTo(sx+Math.cos(a)*h*.11,sy+Math.sin(a)*h*.11);c.lineTo(sx+Math.cos(a)*h*.17,sy+Math.sin(a)*h*.17);c.stroke();}
+   break;}
   case 'usa':{for(let i=0;i<13;i++){c.fillStyle=i%2?'#ffffff':'#b22234';c.fillRect(x,y+h*i/13,w,h/13+.5);}
    const cw=w*.4,ch=h*7/13;c.fillStyle='#3c3b6e';c.fillRect(x,y,cw,ch);
    for(let r=0;r<5;r++)for(let k=0;k<(r%2?5:6);k++)disc(c,x+cw*(k+(r%2?1:.5))/6.1,y+ch*(r+.6)/5.2,1.3,'#ffffff');// stars, simplified
