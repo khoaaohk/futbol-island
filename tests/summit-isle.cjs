@@ -108,7 +108,7 @@ assert(GRID.x0+GRID.cols*GRID.size>=FLIGHT_BOUNDS.maxX&&GRID.z0+GRID.rows*GRID.s
  {const sm=fs.readFileSync('components/SummitIsleMap.tsx','utf8'),town=fs.readFileSync('components/Town.tsx','utf8');
   assert(/MapDestination=[^;]*'summit'/.test(map)&&map.includes("pitchProps={destination('summit','Summit 5s')}"),'Summit 5s is a map destination ("Travel to Summit 5s")');
   assert(sm.includes('{...pitchProps}')&&sm.includes('pitch-tap'),'the pitch group carries the button props and a padded tap area');
-  assert(town.includes("destination==='summit'||destination==='shop')go(destination)")&&town.includes("travel.current==='summit'?SUMMIT_LANDMARKS.gate"),'Town travels to the summit gate');
+  assert(town.includes("destination==='summit'||destination==='shop'||destination==='stadium')go(destination)")&&town.includes("travel.current==='summit'?SUMMIT_LANDMARKS.gate"),'Town travels to the summit gate');
   const g=S.SUMMIT_LANDMARKS.gate;assert(S.onSummitIsle(g.x,g.z)&&!blocked(g.x,g.z,S.SUMMIT_OBSTACLES,.5),'the gate is walkable ground outside the fence');}
  assert(!/^import /m.test(fs.readFileSync('lib/town/coralCay.ts','utf8')),'coralCay.ts stays import-free (tests load it on its own)');
  const town=fs.readFileSync('components/Town.tsx','utf8');assert(town.includes('summitGoalCrossed(previousBall,orb,walkBall.state.y)'),'free-play goals counted');}

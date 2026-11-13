@@ -132,7 +132,7 @@ const C=require('../lib/shop/shopCast.ts');
  assert(/\['shop',nearShop,SHOP_DOOR\.x,[\d.]+,SHOP_DOOR\.front,shopBounds\]/.test(town)&&/nearShop=canEnter[^;]*shopDoorNear\(location\.x,location\.z\)/.test(town),'Enter shows at the door');
  assert(/\{name:'shop',bounds:shopBounds/.test(town)&&/kind:'shop',x:KIT_SHOP\.x,z:KIT_SHOP\.z,active:overShop\|\|nearShop\|\|flightNear\(shopBounds\)/.test(town),'the green outline covers the whole shop');
  assert(/\{shopOpen&&<ShopDoorSlide mode="enter"\/>\}/.test(town)&&/museumOpen\|\|shopOpen\|\|ferryOpen/.test(town),'the doors slide and the island stops');
- assert(/travel\.current==='shop'\?shopExitPoint\(\)/.test(town)&&/destination==='shop'\)go\(destination\)/.test(town),'the map travels to the shop door');
+ assert(/travel\.current==='shop'\?shopExitPoint\(\)/.test(town)&&/destination==='shop'(\|\|destination==='stadium')?\)go\(destination\)/.test(town),'the map travels to the shop door');
  assert(/\{id:'shop',label:'KIT SHOP',point:SHOP_MAP_POINT/.test(map),'KIT SHOP on the map');
  // 6. Only the shop, the save sync and lib/shop/islandGear.ts (owner, Oct 26 2026: worn kit shows on the island) read what you bought.
  {const walk=d=>fs.readdirSync(path.join(root,d),{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):/\.tsx?$/.test(e.name)?[path.join(d,e.name)]:[]);
