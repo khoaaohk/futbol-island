@@ -309,7 +309,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       if (!live) { if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, true, null); } avatars.root.visible = false; beginSeatFrame(); return; }
       drawnLast = true;
       // Friends: sample the interpolators into preallocated poses (friends() lists the 'active' ones).
-      beginSeatFrame(); core.sample(nowMs, seatFriend); // stadium seats: seated friends snap onto (and take) their seat
+      beginSeatFrame(nowMs, core.you); core.sample(nowMs, seatFriend); // stadium seats: seated friends snap onto (and take) their seat
       if (core.balls.size) { trackDt = dt; core.balls.forEach(track); }
       // Me: my own colour ring only while the party is live (a kid sees which colour they are).
       const l = ctx.local();
