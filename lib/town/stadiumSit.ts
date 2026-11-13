@@ -16,7 +16,7 @@ import {createSitMachine,inGate,nearestSeat,seatView,followLook,portraitLook,POR
 import {createStadiumFeed} from './stadiumFeed';
 import {stepStadiumMood} from './stadiumMood';
 import {createStadiumScreen,screenMinute,stadiumBarText,type ScreenScore} from './stadiumScreen';
-import {remoteSeatsTaken,remoteSeatSpots} from './stadiumSeatShare';
+import {remoteSeatsTaken,remoteSeatSpots,seatLost,setMySeat} from './stadiumSeatShare';
 import {BIB_COLOURS} from './beanLooks';
 import {ensureStadiumSponsors,SPONSOR_LOAD_RADIUS} from '../stadium/sponsors/index';
 import {countStadiumVisit} from '../analytics/sponsorEvents';
@@ -39,10 +39,15 @@ export type StadiumMatch={sim:{score:{gold:number;blue:number};clock:number};bal
 export const AMBIENCE_RADIUS=60,AMBIENCE_FULL=12;
 export function ambienceLevel(x:number,z:number){const d=Math.hypot(Math.max(0,Math.abs(x-STADIUM.x)-STADIUM.pitchW/2),Math.max(0,Math.abs(z-STADIUM.z)-STADIUM.pitchL/2));
  return d>=AMBIENCE_RADIUS?0:Math.min(1,(AMBIENCE_RADIUS-d)/(AMBIENCE_RADIUS-AMBIENCE_FULL));}
+/** The seat race (stadiumSeatShare.ts): a friend who tapped my seat at the same instant keeps it (lower member id); I hop to the
+ *  nearest free seat within BUMP_REACH m (else I stand up) and a short toast says so. */
+export const BUMP_REACH=4;
+export const SEAT_BUMP_TOAST={moved:'Someone sat there too! You shuffled along one seat.',stood:'Someone sat there too! Find another seat.'} as const;
 const MOVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'] as const;
 
 /** phone: a coarse-pointer device (fewer fans); goal: a goal at the stadium while the match is near (Town plays the cheer). */
-export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:boolean;goal?:()=>void}){
+/** moved: the seat race moved me to `seat` (Town puts the player there, like press()); toast: a short note for the player. */
+export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:boolean;goal?:()=>void;moved?:(seat:Seat)=>void;toast?:(text:string)=>void}){
  const m=createSitMachine(),pose:TrickPose=npcSeatPose('bench');pose.w=0;
  let farSaved=0,near:Seat|null=null,view:ReturnType<typeof seatView>|null=null,sponsorAsked=false,wasOutside=true,promptSeated:boolean|null=null,promptLive=false;
  let dc=Infinity,live=false,sponsors:{setScreenSponsor:(on:boolean)=>void}|null=null,screenSponsor=true,looking=false;
@@ -76,7 +81,13 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:b
   },
   /** Movement tick: while seated, holds the player (returns true); the stick, the keys, a ride or a move away get up. */
   holdPlayer(dt:number,input:{x:number;z:number;kick:boolean;juggle:boolean;shotPower?:number;charging?:boolean},keys:ReadonlySet<string>,o:{walk:boolean;x:number;z:number;reduced:boolean}){
-   if(m.phase==='standing')return false;
+   if(m.phase==='standing'){setMySeat(null);return false;}
+   // The seat race: a friend who sat here at the same instant keeps it (stadiumSeatShare.ts); hop to the nearest free seat.
+   if(held()&&m.seat&&seatLost()>=0){const was=m.seat,next=nearestSeat(was.x,was.z,was.y,remoteSeatsTaken(),BUMP_REACH);
+    if(next&&next.id!==was.id){m.seat=next;view=null;looking=false;ports.moved?.(next);ports.toast?.(SEAT_BUMP_TOAST.moved);o={...o,x:next.x,z:next.z};}
+    else{standUp(m,o.reduced);ports.toast?.(SEAT_BUMP_TOAST.stood);}
+    ports.wake();}
+   setMySeat(held()?m.seat:null);
    let push=Math.hypot(input.x,input.z);for(const k of MOVE_KEYS)if(keys.has(k))push=1;
    const away=!!m.seat&&Math.hypot(o.x-m.seat.x,o.z-m.seat.z)>.6;
    const hold=stepSit(m,dt,{push,walk:o.walk,away,reduced:o.reduced});

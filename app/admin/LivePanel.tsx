@@ -23,6 +23,7 @@ import {LIVE_COUNT_KEYS,LIVE_COUNT_LABEL,LIVE_MIGRATION,LIVE_MODE_LABEL,LIVE_MOD
 import {DAY_MIGRATION,DAY_OK_ROW,RAW_DAYS,addDays,dateClockPT,fmtClock,pacificDay,shortDay,stampPT,
  type AreaTally,type DayReport,type PlayerReport,type PlayerRow,type PlayersReport,type RowTotals} from '@/lib/analytics/day';
 import type {RelayStatsReport} from '@/lib/analytics/relayStatsTypes';
+import {MODES_MIGRATION,MODE_DATA_SINCE,MODE_SINCE_TEXT,modeRows,type PlayModes} from '@/lib/analytics/playModes';
 import styles from './LivePanel.module.css';
 
 export type PanelView={mode:'live'}|{mode:'day';day:string}|{mode:'players';from:string;to:string}|{mode:'player';pid:string};
@@ -107,6 +108,29 @@ function Warn({status,live}:{status:LiveStatus|undefined;live:boolean}){
 /** Day mode: the filter row (country, source, code, device), all client side over the day's rows. */
 type Filters={country:string;source:string;code:string;device:string};
 const NO_FILTER:Filters={country:'',source:'',code:'',device:''};
+/** Nov 13 2026: the day's play modes (/api/admin/play-modes, aggregates only): sessions per mode, the time played in it and its
+ *  players; days before the beat carried a mode say so instead of zeros. */
+export function DayModesStrip({day,data}:{day:string;data:PlayModes|null}){
+ const one=(text:string)=><Strip label="Mode" items={[{key:'x',text}]}/>;
+ if(day<MODE_DATA_SINCE)return one(MODE_SINCE_TEXT);
+ if(!data)return one('…');
+ if(data.status==='needs-migration'||data.status==='not-configured')return one(`Not installed yet: run ${MODES_MIGRATION.split('/').pop()}`);
+ if(data.status!=='ok')return one('Could not be read');
+ const d=data.days.find(x=>x.day===day);
+ if(!d||!d.withMode)return one(d?.sessions?'No mode data for this day':'—');
+ const unknown=d.sessions-d.withMode;
+ return <Strip label="Mode" items={[...modeRows(d).map(m=>({key:m.key,text:`${m.label} ${m.sessions}`,sub:`${fmtSpent(m.seconds)}${m.players?` · ${m.players} player${m.players===1?'':'s'}`:''}`})),
+  ...(unknown>0?[{key:'u',text:`${MODE_UNKNOWN} ${unknown}`}]:[])]}/>;
+}
+function DayModes({day}:{day:string}){
+ const [data,setData]=useState<PlayModes|null>(null);
+ useEffect(()=>{if(day<MODE_DATA_SINCE)return;let live=true;setData(null);
+  fetch(`/api/admin/play-modes?from=${day}&to=${day}`,{cache:'no-store'}).then(r=>r.ok?r.json():null)
+   .then(j=>{if(live)setData(j??{status:'error'} as PlayModes);},()=>{if(live)setData({status:'error'} as PlayModes);});
+  return()=>{live=false;};},[day]);
+ return <DayModesStrip day={day} data={data}/>;
+}
+
 function DayView({data,countryName,onPlayer,step}:{data:DayReport;countryName:(c:string)=>string;onPlayer:(pid:string)=>void;step:(n:number)=>void}){
  const [f,setF]=useState<Filters>(NO_FILTER);
  useEffect(()=>setF(NO_FILTER),[data.day]);
@@ -125,6 +149,7 @@ function DayView({data,countryName,onPlayer,step}:{data:DayReport;countryName:(c
   </div>
   {data.partial&&<p className={styles.warn} role="status">Sessions are kept {RAW_DAYS} days, so this day only has its totals left{data.tz==='UTC'?' (a UTC day)':''}: no list of sessions, no new/returning or code split.</p>}
   <TotalsStrips t={data}/>
+  <DayModes day={data.day}/>
   {data.rows.length>0&&<div className={styles.filters} role="group" aria-label="Filter sessions">
    <select value={f.country} onChange={set('country')} aria-label="Country"><option value="">All countries</option>{opts.country.map(c=><option key={c} value={c}>{c==='(unknown)'?'unknown':`${flagOf(c)} ${countryName(c)}`}</option>)}</select>
    <select value={f.source} onChange={set('source')} aria-label="Source"><option value="">All sources</option>{opts.source.map(s=><option key={s} value={s}>{sourceLabel(s)}</option>)}</select>

@@ -28,6 +28,9 @@ export interface PartyRuntime { update(dt: number, nowMs: number, camera: THREE.
   /** The friends' latest interpolated poses (read-only, reused objects): the emote button looks for a friend flying nearby.
    *  Friends inside a force field (busy / away) and friends indoors are NOT listed: nothing can emote at them or pick them. */
   friends(): Iterable<RemotePose>;
+  /** The friends drawn on the island right now (active, not hidden by me, on the island not indoors, the friend layer shown): each with
+   *  its member id and interpolated pose (reused objects). No allocation; pass a stable callback (the park pond's remote splashes). */
+  eachDrawn(cb: (id: MemberId, p: RemotePose) => void): void;
   /** The island ball against busy friends' force fields: bounces it off (mutates `ball`) and shakes the dome. True on a hit. */
   ballVsFields(ball: FieldBall): boolean;
   /** True while the party draws the local player's colour ring (the island's own cream foot ring then stays hidden: one ring only). */
@@ -230,6 +233,9 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   conn.onBeforeBeat(() => { if (core.live && now() - lastUpdateAt > SLEEP_SAMPLE_MS) sendLocal(now()); });
   const onPageHide = () => { if (core.live) sendLocal(now()); };
   if (typeof window !== 'undefined') window.addEventListener('pagehide', onPageHide);
+  // eachDrawn's one forEach callback (no closure per call).
+  let drawnCb: ((id: MemberId, p: RemotePose) => void) | null = null, drawnHid: ReadonlySet<number> = hiddenFriends();
+  const eachDrawnOne = (p: RemotePose, id: MemberId) => { if (drawnCb && p.zone !== Zone.Indoors && !drawnHid.has(id)) drawnCb(id, p); };
 
   return {
     get meRing() { return meRingOn; },
@@ -257,6 +263,10 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     },
     nameOf(id) { const m = partyStore.get().members.find((q) => q.id === id); return m ? displayName(m) : 'Your friend'; },
     friends: () => active.values(),
+    eachDrawn(cb) {
+      if (!core.live || !avatars.root.visible || !active.size) return;
+      drawnCb = cb; drawnHid = hiddenFriends(); active.forEach(eachDrawnOne); drawnCb = null;
+    },
     ball(state, x, y, z) {
       if (!core.live || conn.status !== 'live') return;
       conn.sendBall(state, x, y, z, now());
@@ -299,7 +309,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       if (!live) { if (drawnLast) { drawnLast = false; avatars.root.visible = true; avatars.update(dt, poses, camera, true, null); } avatars.root.visible = false; beginSeatFrame(); return; }
       drawnLast = true;
       // Friends: sample the interpolators into preallocated poses (friends() lists the 'active' ones).
-      beginSeatFrame(); core.sample(nowMs, seatFriend); // stadium seats: seated friends snap onto (and take) their seat
+      beginSeatFrame(nowMs, core.you); core.sample(nowMs, seatFriend); // stadium seats: seated friends snap onto (and take) their seat
       if (core.balls.size) { trackDt = dt; core.balls.forEach(track); }
       // Me: my own colour ring only while the party is live (a kid sees which colour they are).
       const l = ctx.local();

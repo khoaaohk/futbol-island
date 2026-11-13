@@ -34,6 +34,7 @@ export const METRIC_INDEX:readonly MetricEntry[]=[
  {id:'players.visitors_chart',was:'Players',label:'Visitors, sessions and page views chart',tab:'players',where:'Headline',def:'audience.pageviews'},
  {id:'players.weekly_codes',was:'Players',label:'Weekly save codes',tab:'players',where:'Headline'},
  {id:'players.retention',was:'Players',label:'Save-code retention',tab:'players',where:'Headline'},
+ {id:'players.modes',was:'Players',label:'Players by mode (Public / Just me / Party; since Nov 13 2026)',tab:'players',where:'Headline'},
  {id:'players.new_player_funnel',was:'Players',label:'New-player funnel (title screen → island, codes that came back)',tab:'players',where:'Acquisition'},
  {id:'players.new_codes',was:'Players',label:'New save codes',tab:'players',where:'Acquisition'},
  {id:'players.sources',was:'Players',label:'Where they come from (source)',tab:'players',where:'Acquisition'},

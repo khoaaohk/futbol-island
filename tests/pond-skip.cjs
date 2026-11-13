@@ -95,6 +95,39 @@ const landings=life.fxStats.landings;land(6,{x:P.x+P.rx+8});assert.equal(life.fx
  assert.equal(scn.children.length,geo0,'pooled: no new meshes');assert.equal(life.drops.count,LIFE.POND_FX.drops,'one fixed droplet pool');}
 // The ball's skip touches use the same pool.
 {log.length=0;life.splash(P.x,P.z,.8);assert(log.some(e=>e[0]==='splash')&&log.some(e=>e[0]==='ring'),'a skip touch: splash and ring');}
+// ---- 7. Other players' splashes (pondRemote.ts): their interpolated poses drive the same pooled effects, near the pond only.
+{const RP=load('lib/town/pondRemote.ts'),rp=RP.createRemotePond(life),M={Walk:0,Run:1,Scooter:2,Jetpack:5,Parachute:6,Idle:13};
+ const pose=o=>({x:P.x,y:0,z:P.z,yaw:.4,speed:0,mode:M.Walk,fade:1,...o});
+ /** `n` frames at 60 fps with me on the bank (the pond awake, no splashes of mine) and the remote players `poses(i)` ([id, pose] pairs). */
+ const run=(n,poses,o={})=>{for(let i=0;i<n;i++){life.update(1/60,inp({x:o.me??P.x+40,mode:o.mode??0,reduced:!!o.reduced}));rp.begin(1/60,o.mode??0,!!o.reduced);for(const [id,p] of poses(i))rp.member(id,p);rp.end();}};
+ const st=()=>({...rp.stats}),geoR=scn.children.length;
+ // walking in the water: footsteps at a speed-scaled interval, a wake every other step
+ log.length=0;let a=st();run(120,()=>[[3,pose({speed:1.6})]]);const slowR=rp.stats.steps-a.steps;
+ a=st();run(120,()=>[[3,pose({speed:3.7,mode:M.Run})]]);const fastR=rp.stats.steps-a.steps;
+ assert(slowR>=3&&fastR>slowR,`remote footsteps quicken with speed (${slowR} → ${fastR} in 2 s)`);assert(log.some(e=>e[0]==='ring')&&log.some(e=>e[0]==='wake'),'remote steps ring and leave a wake');
+ const near=log.filter(e=>e[0]==='ring').every(e=>Math.hypot(e[1]-P.x,e[2]-P.z)<1);assert(near,'at the remote player\'s feet');
+ // standing still / seated / on the bank / fading in: nothing
+ a=st();run(120,()=>[[3,pose({speed:0,mode:M.Idle})],[4,pose({speed:3,seated:true})],[5,pose({x:P.x+P.rx+6,speed:3.7})],[6,pose({speed:3.7,fade:.2})]]);
+ assert.equal(rp.stats.steps,a.steps,'still, seated, on the bank or fading in: no steps');
+ // riding through: wheel spray + bow wake at the remote cadence
+ log.length=0;a=st();const d0=life.fxStats.drops;run(60,()=>[[7,pose({speed:9,mode:M.Scooter})]]);
+ assert(rp.stats.sprays-a.sprays>=5&&life.fxStats.drops>d0,'a remote rider sprays');assert(log.filter(e=>e[0]==='wake').length>=10,'and leaves a V wake');
+ // arriving from the air: jetpack frames descending over the pond, then on foot inside it = one landing splash
+ log.length=0;a=st();run(30,i=>[[8,pose({mode:M.Jetpack,y:6-i*.2,speed:4})]]);run(2,()=>[[8,pose({mode:M.Walk,y:0})]]);
+ assert.equal(rp.stats.landings-a.landings,1,'one landing splash');const sp=log.find(e=>e[0]==='splash');assert(sp&&sp[3]>.6,'a landing crown');
+ a=st();run(30,i=>[[9,pose({x:P.x+P.rx+5,mode:M.Parachute,y:6-i*.2})]]);run(2,()=>[[9,pose({x:P.x+P.rx+5,mode:M.Walk})]]);assert.equal(rp.stats.landings,a.landings,'no landing on the bank');
+ // gating: me far from the pond (asleep), still mode, reduced motion (smaller), lite (fewer steps)
+ log.length=0;run(120,()=>[[3,pose({speed:3.7})]],{me:P.x+300});assert(!log.length,'the pond asleep (I am far): nothing');
+ log.length=0;run(120,()=>[[3,pose({speed:3.7})]],{mode:2});assert(!log.length,'still mode: nothing');
+ log.length=0;run(120,()=>[[3,pose({speed:3.7})]],{mode:2,reduced:true});const redR=log.filter(e=>e[0]==='ring');assert(redR.length&&redR.every(e=>e[3]<=.56),'reduced motion: half-size rings');
+ a=st();run(240,()=>[[3,pose({speed:3.7})]],{mode:1});const liteR=rp.stats.steps-a.steps;a=st();run(240,()=>[[3,pose({speed:3.7})]]);assert(liteR<rp.stats.steps-a.steps,'lite mode: sparser steps');
+ // the slot pool: at most REMOTE_POND.slots tracked, freed when they leave; no new meshes
+ run(2,()=>Array.from({length:12},(_,k)=>[20+k,pose({x:P.x+k*.5,speed:2})]));assert.equal(rp.stats.tracked,RP.REMOTE_POND.slots,'a fixed slot pool');
+ run(1,()=>[]);assert.equal(rp.stats.tracked,0,'freed when gone');assert.equal(scn.children.length,geoR,'pooled: no new meshes');
+ const tb=fs.readFileSync(path.join(base,'lib/multiplayer/townBridge.ts'),'utf8');
+ assert(/party\.eachDrawn\(remotePond\.member\)/.test(town)&&/createRemotePond\(pondLife\)/.test(town),'Town feeds the drawn friends to the remote splashes');
+ assert(/eachDrawn\(cb\)[\s\S]{0,200}avatars\.root\.visible/.test(tb)&&/drawnHid\.has\(id\)/.test(tb),'only the drawn set: hidden friends, indoors and a hidden friend layer are skipped');
+ console.log(`  remote: steps ${slowR} → ${fastR}, sprays, landing, lite ${liteR}`);}
 life.dispose();
 assert(/riding:rideRef\.current!=='walk'&&rideRef\.current!=='jetpack'/.test(town)&&/y:groundY,heading:player\.root\.rotation\.y/.test(town),'Town feeds the pond the landing height, heading and ride');
 console.log('pond skip + pond splashes: ok');

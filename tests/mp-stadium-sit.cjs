@@ -118,7 +118,7 @@ t('seat snap and occupied seats',()=>{
 // the bench pose with a lower tag; rooms never do.
 t('wiring',()=>{
  const tb=read('lib/multiplayer/townBridge.ts'),ra=read('lib/graphics/remoteAvatars.ts'),sit=read('lib/town/stadiumSit.ts'),town=read('components/Town.tsx');
- assert.match(tb,/beginSeatFrame\(\); core\.sample\(nowMs, seatFriend\)/);
+ assert.match(tb,/beginSeatFrame\(nowMs, core\.you\); core\.sample\(nowMs, seatFriend\)/);
  assert.match(sit,/nearestSeat\(x,z,height,remoteSeatsTaken\(\)\)/);
  assert.match(town,/partyPitch,stadiumSit\.seated\?stadiumSit\.seat:null\)/);
  assert.match(ra,/motion\.trick=sat\?SEAT_POSE:undefined/);assert.match(ra,/SEAT_POSE=npcSeatPose\('bench'\)/);
@@ -126,5 +126,52 @@ t('wiring',()=>{
  const RA=load('lib/graphics/remoteAvatars.ts',{player:{},playerBatch:{},heatTier:{},celebrations:{},emotePose:{},customization:{},look:{}});
  assert.equal(RA.drawnSeated({seated:true},false),true);assert.equal(RA.drawnSeated({seated:true},true),false,'inside the force field they stand');
  assert.equal(RA.drawnSeated({},false),false);assert.ok(RA.SEATED_LABEL_DROP>.2&&RA.SEATED_LABEL_DROP<.8,'the tag sits a little lower');
+});
+// 7. The seat race (Nov 13 2026): two players tap the same seat at the same instant. Both screens run the same rule (lower member id
+// keeps it) with no relay change; the loser hops to the nearest free seat with a toast; past the claim window the sitter keeps it.
+const seatedAt=s=>({x:Math.round(s.x*10)/10,y:Math.round(s.y*10)/10,z:Math.round(s.z*10)/10,yaw:0,seated:true});
+/** One screen: I am `me` sitting in `mySeat` since tSit; a friend `them` arrives seated on it at tSee. What does each side do? */
+function screen(me,them,tSit,tSee){
+ share.clearRemoteSeats();share.setMySeat(null);share.setMySeat(seat);share.beginSeatFrame(tSit,me);
+ share.beginSeatFrame(tSee,me);const p=seatedAt(seat),got=share.seatFriend(them,p);
+ return {iLose:share.seatLost()===them,theyDrawnSeated:!!got&&p.seated,again:share.seatLost()};
+}
+t('seat race: both screens agree on one winner',()=>{
+ for(const [a,b] of [[2,7],[7,2],[11,3]])for(const lag of [0,180,900]){
+  const A=screen(a,b,1000,1000+lag),B=screen(b,a,1000+lag/2,1000+lag);// a true race: each sees the other within one round trip
+  assert.equal(A.iLose,b<a,`A (${a}) loses only to a lower id`);assert.equal(B.iLose,a<b,`B (${b}) loses only to a lower id`);
+  assert.ok(A.iLose!==B.iLose,'exactly one of them moves');
+  assert.equal(A.theyDrawnSeated,A.iLose,'the winner is drawn in the seat, the loser standing');assert.equal(B.theyDrawnSeated,B.iLose);
+  assert.equal(A.again,-1,'seatLost() reports once');}
+ assert.equal(share.seatWinner(4,9),4);assert.equal(share.seatWinner(9,4),4);
+});
+t('seat race: past the claim window the sitter keeps the seat',()=>{
+ const late=screen(5,2,1000,1000+share.SEAT_CLAIM_MS+1);assert.equal(late.iLose,false,'I was there first: I keep it');assert.equal(late.theyDrawnSeated,false,'the newcomer is drawn standing');
+ const solo=screen(5,5,1000,1100);assert.equal(solo.iLose,false,'my own id never bumps me');
+ share.clearRemoteSeats();share.setMySeat(null);share.beginSeatFrame(1000,5);const p=seatedAt(seat);assert.ok(share.seatFriend(2,p)&&p.seated,'not seated: no race, they just take it');assert.equal(share.seatLost(),-1);
+});
+t('seat race: the loser shuffles to the nearest free seat with a toast',()=>{
+ share.clearRemoteSeats();share.setMySeat(null);
+ const moved=[],toasts=[],parent=new T.Group();
+ const S=load('lib/town/stadiumSit.ts',{stadiumCrowd:{createStadiumCrowd:()=>({update(){},cheer(){},dispose(){},mesh:{},flags:{}}),CROWD_RADIUS:200},
+  stadiumFeed:{createStadiumFeed:()=>({update(){},dispose(){}})},stadiumScreen:{createStadiumScreen:()=>({update(){},dispose(){},mesh:{}}),screenMinute:()=>0,stadiumBarText:()=>({tag:'',action:''})},
+  index:{ensureStadiumSponsors:()=>new Promise(()=>{}),SPONSOR_LOAD_RADIUS:0},sponsorEvents:{countStadiumVisit(){}},stadiumMood:{stepStadiumMood(){}},stadiumSeatShare:share});
+ const sit=S.createStadiumSit({parent,wake(){},moved:s=>moved.push(s),toast:x=>toasts.push(x)});
+ const input={x:0,z:0,kick:false,juggle:false},keys=new Set();
+ assert.ok(sit.want(seat.x,seat.z,seat.y,true),'offered the seat');assert.equal(sit.press(true).id,seat.id,'I sit (reduced: at once)');
+ sit.holdPlayer(1/60,input,keys,{walk:true,x:seat.x,z:seat.z,reduced:true});
+ share.beginSeatFrame(5000,9);share.beginSeatFrame(5100,9);// I am member 9; my seat's claim window starts
+ const p=seatedAt(seat);share.seatFriend(2,p);assert.ok(p.seated,'member 2 (lower) keeps it on my screen too');
+ assert.ok(sit.holdPlayer(1/60,input,keys,{walk:true,x:seat.x,z:seat.z,reduced:true}),'still seated after the hop');
+ assert.equal(moved.length,1);assert.notEqual(moved[0].id,seat.id,'to another seat');assert.ok(Math.hypot(moved[0].x-seat.x,moved[0].z-seat.z)<=S.BUMP_REACH,'a near one');
+ assert.equal(sit.seat.id,moved[0].id,'the sit machine holds the new seat');assert.deepEqual(toasts,[S.SEAT_BUMP_TOAST.moved],'a short toast');
+ assert.ok(sit.holdPlayer(1/60,input,keys,{walk:true,x:moved[0].x,z:moved[0].z,reduced:true}),'and stays put there');assert.equal(moved.length,1,'one hop only');
+ // standing up clears my claim: a friend on my old seat is no race any more
+ sit.press(true);sit.holdPlayer(1/60,input,keys,{walk:true,x:moved[0].x,z:moved[0].z,reduced:true});share.beginSeatFrame(5200,9);
+ const q=seatedAt(moved[0]);share.seatFriend(1,q);assert.ok(q.seated);assert.equal(share.seatLost(),-1,'standing: nothing to lose');
+ const town=read('components/Town.tsx'),tb=read('components/SeatBumpToast.tsx');
+ assert.match(town,/moved:seat=>\{location\.x=seat\.x;location\.z=seat\.z;/);assert.match(town,/toast:text=>showSeatNote\(text\)/);assert.match(town,/<SeatBumpToast\/>/);
+ assert.match(tb,/toastLane\.request\(SEAT_LANE\)/,'the one-message lane');
+ assert.ok(!/seatLost|SEAT_CLAIM/.test(read('multiplayer/relay/src/roomCore.ts')),'no relay change');
 });
 console.log(`mp-stadium-sit: ${n} checks passed`);
