@@ -339,7 +339,7 @@ export const STADIUM_NPCS:NpcDefinition[]=[
   'A kid who gasps at every near miss on the big screen.',
   'Ooh! That shot on the screen nearly went in!',
   ['Ooh, off the post!','What a save by the keeper!','So close, nearly a goal!'],
-  [['What is a near miss?','A chance that nearly becomes a goal: a shot just wide, off the post or the bar, or a big save by the keeper.','Why does everyone say ooh?','Because a goal nearly happened! The whole crowd feels it at the same moment.']],
+  [['What counts as a near miss?','A chance that nearly becomes a goal: a shot just wide, off the post or the bar, or a big save by the keeper.','Why does the whole crowd gasp?','Because a goal nearly happened! The whole crowd feels it at the same moment.']],
   {workYaw:Math.PI,watch:true,look:{top:'#f2c230'}}),
  npc('stadium-viewer-rangi','Rangi','Watch-party fan','WAITING FOR KICK-OFF',start('stadium-viewer-rangi'),{character:'male',face:'warm',clothing:'classic',age:'teen'},
   'A teenager who comes early to watch the teams line up on the big screen.',

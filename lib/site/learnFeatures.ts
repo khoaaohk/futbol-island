@@ -191,7 +191,7 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
   description:'Some conversations end in a quick challenge with three options and one right answer. Right or wrong, the islander explains why in one short line.',
   footballTie:'Fast football decisions and rules, checked in a few seconds and explained right away.',
   where:'Talk to islanders; each one has their own set of challenges, and each area adds more.',
-  proof:'773 quick challenges across the islanders and areas.',counts:{npcChallenges:773}},
+  proof:'797 quick challenges across the islanders and areas.',counts:{npcChallenges:797}},
  {id:'bubbles-banter',title:'Bubbles and banter',group:'explore',imageKey:'bubbles_banter',
   hook:'Walk past and hear islanders think out loud about football.',
   description:'Islanders say short lines as a player passes, and pairs chat with each other. It makes the island feel alive while staying calm on screen.',

@@ -445,6 +445,126 @@ export const PART_9:Record<string,NpcFresh>={
   openers:["Ooh, hello, dear! Stand with me and I will explain everything as it happens.","Hello! Did you see that run? Let me tell you what the striker was thinking.","Hello, dear! I bring my folding chair and my flask to every match out here.","Oh, hello! I love explaining football to new friends. Ready to watch?"],
   returning:["Hello again, dear! Last time we chatted about ‘{topic}’. Shall I explain something new?","You came back! I remember ‘{topic}’. Let us watch the next move together.","Welcome back! After ‘{topic}’, there is plenty more to explain."]
  },
+ 'stadium-viewer-kwabena':{
+  topics:[
+   t('clap-both',"Is it fine to clap the other team?","Yes! Applauding a fine save or a clever pass from either side shows respect. Good fans enjoy good football.","Will my team mind?","Not at all. Players like playing in front of fair fans."),
+   t('chant-kind',"How do I make up a fan chant?","A good chant is about your own team, simple to join in and kind. Nobody needs to be put down.","Can I make one up?","Sure! Pick your team's name and a clap pattern everyone can copy."),
+   t('lose-cheer',"Should I stop cheering when we are behind?","Keep going! Players say the noise helps them, and a match can turn in a few minutes."),
+   t('crowd-noise',"Does crowd noise really help players?","Many players say a loud, warm crowd gives them energy. Some studies suggest home teams win a little more often.","Is it fair on the away team?","It is part of the game. The away fans cheer their side too."),
+   t('injury-clap',"Why clap an injured player off?","When an injured player gets up or is helped off, both sets of fans often clap. It wishes them well."),
+   t('scarf-up',"Why do fans hold scarves above their heads?","It is a way to show team colours together, often during a club song. The whole stand turns into one colour.","Do I need a scarf?","No. Clapping and singing work just as well."),
+   t('watch-manners',"How do I stay a good neighbour here?","Do not block the view of people behind you, keep bags out of the path and cheer without pushing."),
+   t('full-time-clap',"What do players do at the final whistle?","They shake hands with opponents and the referee, then often walk over to clap their fans. Fans clap back.","Even after a loss?","Yes. Thanking your fans matters win or lose.")
+  ],
+  challenges:[
+   c('c-kw-save',"The other team's keeper makes a brilliant save. What can a good fan do?",["Clap the great save","Boo very loudly","Turn the screen off"],0,"Yes. Applause for good play is good sport.","Clapping a great save, even by the other team, is good sport."),
+   c('c-kw-behind',"Your team is one goal behind with ten minutes left. What helps most?",["Going home early","Keep cheering them on","Booing your own players"],1,"Right. Support helps when it is hardest.","Keep cheering: a match can change in minutes."),
+   c('c-kw-view',"A small child cannot see the screen behind you. What do you do?",["Stand on a bench","Pretend not to notice","Let them stand in front"],2,"Kind choice. Everyone gets to watch.","Let them in front so everyone can watch."),
+   c('c-kw-whistle',"What do players usually do at the final whistle?",["Shake hands with opponents","Start a new match","Hide in the goal"],0,"Yes. A handshake ends the game with respect.","They shake hands with opponents and the referee.")
+  ],
+  openers:["Hello, friend! The best seat out here is wherever your friends are standing.","Hi there! I clap for every nice pass, whichever shirt makes it.","Welcome! Bring your loudest cheer, we need it for the second half.","Hey! First time at the watch party? Stand next to me, I will show you the claps."],
+  returning:["Hello again! Last time it was ‘{topic}’. Ready to cheer some more?","You are back! I still think about ‘{topic}’. Let us talk about something new.","Good to see you! After ‘{topic}’, here is another fan tip."]
+ },
+ 'stadium-viewer-lumi':{
+  topics:[
+   t('post-bar',"What is the woodwork?","The two posts and the crossbar of the goal. A shot that hits them and bounces out is not a goal.","Is it a goal if it bounces in?","Yes, if the whole ball crosses the goal line between the posts."),
+   t('whole-ball',"When does a goal count?","Only when the whole ball crosses the whole goal line, between the posts and under the bar. Half over the line is not enough."),
+   t('on-target',"What does a shot on target mean?","A shot that would go in if nobody stopped it. Saves count as shots on target, but misses do not.","And off target?","A shot going wide or over the bar."),
+   t('keeper-save',"How do keepers make big saves?","They get set as the striker shoots, watch the ball and push it wide of the post if they cannot hold it.","Why push it wide?","So no attacker can tap the rebound into the goal."),
+   t('rebound',"What is a rebound?","When the ball bounces back off the keeper, a defender or the post. Quick attackers follow every shot in case it comes loose."),
+   t('goal-line',"Who decides if the ball crossed the line?","The referee, with help from the assistants. Big leagues also use goal-line technology that tells the referee in a second.","How does it tell them?","A signal goes to the referee's watch."),
+   t('try-again',"How do strikers feel after a near miss?","Disappointed for a moment, then they get ready for the next chance. Good strikers keep shooting."),
+   t('aim-corner',"Where is the hardest place for a keeper to reach?","The low corners and the top corners, far from where the keeper stands. Aiming for a corner makes saves harder.","Low or high?","Low and hard is a good habit for young players.")
+  ],
+  challenges:[
+   c('c-lu-bar',"A shot hits the crossbar and bounces out. Is it a goal?",["No, the ball must cross the line","Yes, it touched the goal","Only on a sunny day"],0,"Right. Hitting the bar is a near miss.","No goal: the whole ball must cross the line."),
+   c('c-lu-half',"Half of the ball is over the goal line. Goal or not?",["It counts as a goal","Not a goal yet","A free kick to the keeper"],1,"Correct. The whole ball must be over.","Not a goal yet: the whole ball must cross."),
+   c('c-lu-rebound',"The keeper saves, and the ball bounces loose. What should an attacker do?",["Stroll back to halfway","Ask for a new ball","Follow up for the rebound"],2,"Yes. Always follow your shot in.","Follow up: rebounds turn near misses into goals."),
+   c('c-lu-corner',"Which spot is hardest for a keeper to reach?",["Low in the corner","Straight into their gloves","Straight at their feet"],0,"Yes. Corners are far from the keeper.","The corners are hardest to reach.")
+  ],
+  openers:["Hi! My hands are still over my face from that last shot.","Hello! Did you see it hit the post? I nearly jumped out of my shoes!","Hey! I count the near misses. We are on four already!","Hi there! Stand here, you can see the goalmouth best from this spot."],
+  returning:["You came back! We talked about ‘{topic}’ last time. Want another?","Hi again! I remember ‘{topic}’. Here is another so-close story.","Welcome back! After ‘{topic}’, let me tell you something new."]
+ },
+ 'stadium-viewer-rangi':{
+  topics:[
+   t('kick-off-rule',"How does a kick-off work?","The ball starts on the centre mark and must move when it is kicked. Every player stays in their own half until then.","Can you score from kick-off?","It is allowed by the Laws, but it almost never happens."),
+   t('coin-toss',"Who kicks off first?","The referee tosses a coin. The winning captain picks which goal to attack or chooses to take the kick-off."),
+   t('swap-ends',"Why do teams change goals after the break?","So neither team has the sun or the wind behind it all match. It keeps things fair.","Does the other team start the second half?","Yes. The team that did not kick off first gets the next kick-off."),
+   t('walk-out',"Why do teams walk out together?","It is a sign of respect before kick-off. Then they line up and shake hands.","Why do players shake hands?","To show they will play fairly."),
+   t('warm-up',"Why do players warm up before a match?","Jogging, stretching and short passes get muscles ready and help prevent injuries."),
+   t('half-length',"How long is each half?","In adult matches each half is 45 minutes. Youth matches are often shorter, depending on age.","Is the break long?","Half-time can last up to 15 minutes."),
+   t('restart-goal',"What happens after a goal is scored?","The team that let the goal in restarts play. They kick off from the middle of the pitch."),
+   t('extra-time',"What is extra time?","In some cup matches that end level, teams play two more halves of 15 minutes. If it is still level, there can be penalties.","Is it every match?","No, only when a winner is needed that day.")
+  ],
+  challenges:[
+   c('c-ra-coin',"How is it decided who kicks off first?",["A coin toss","Whoever runs out first","The loudest fans"],0,"Yes. The referee tosses a coin.","A coin toss decides it."),
+   c('c-ra-after',"A team has just conceded a goal. How does play restart?",["A throw from the touchline","A kick-off by the team that conceded","A free kick to the scorers"],1,"Right. The team that conceded kicks off.","The team that let the goal in kicks off."),
+   c('c-ra-swap',"Why do teams change ends at half-time?",["To find their bags","To meet new fans","To keep the sun and wind fair"],2,"Correct. Fairness for both sides.","Swapping ends keeps the sun and wind fair."),
+   c('c-ra-warm',"Why do players warm up before kick-off?",["To get muscles ready","To wear out their legs early","To pick the referee"],0,"Yes. Warm muscles are less likely to get hurt.","A warm-up gets muscles ready and helps avoid injury.")
+  ],
+  openers:["Hey! I always get here early to see the warm-up on the screen.","Hi! The teams are in the tunnel. Kick-off is soon!","Hello! Do you know who won the coin toss today? I do!","Hey there! Half-time is my favourite time to chat."],
+  returning:["Hey, you came back! We chatted about ‘{topic}’. Want another match-day fact?","Good to see you again! After ‘{topic}’, here is something new.","Hello again! I remember ‘{topic}’. Ready for the next one?"]
+ },
+ 'stadium-viewer-zawadi':{
+  topics:[
+   t('why-replay',"Why does the screen show replays?","Live play is quick. A replay shows the key moment again, often from a different camera, so you can see what really happened.","Do players watch replays?","Coaches and players study them after the match to learn."),
+   t('pitch-monitor',"Can the referee watch a replay too?","Yes. When VAR spots a possible clear mistake, the referee can jog to a monitor beside the pitch and watch it before deciding."),
+   t('angle-matters',"Why do replays use different cameras?","One angle can hide a touch or a foot. Another camera behind the goal or along the line can show it clearly.","Which camera is best?","It depends on the moment. That is why there are many."),
+   t('var-what',"What is VAR?","The video assistant referee watches replays to help the referee with four kinds of big moment: goals, penalty decisions, direct red cards and a card shown to the wrong player.","Does VAR decide?","No. VAR only advises, and the match referee has the last word."),
+   t('build-up',"What should I notice in a goal replay?","Look back two or three passes. The goal often starts with a clever pass or a run that pulled a defender away."),
+   t('learn-replay',"Can I learn from watching replays?","Yes! Pause on a moment and ask what you would do. It trains your football brain.","What should I pause on?","The moment just before a pass. Where is the space?"),
+   t('screen-delay',"Why is the screen a bit behind real life?","Pictures travel from the cameras to the screen through equipment that takes a moment. It is only a tiny delay."),
+   t('highlights',"What are highlights?","A short video of the best moments: goals, saves and big chances. They help you catch up quickly.","Is watching the whole match better?","It shows more of the tactics, so try both.")
+  ],
+  challenges:[
+   c('c-za-var',"Who makes the final decision when VAR checks a goal?",["The loudest supporters","The referee out on the grass","The stadium announcer"],1,"Right. The referee decides.","VAR only helps. The match referee has the final say."),
+   c('c-za-angle',"Why might a replay come from a camera behind the goal?",["It can show what the main angle hides","It is the cheapest camera","It films the crowd"],0,"Yes. Another angle shows more.","A different angle can show what the main camera hides."),
+   c('c-za-build',"In a goal replay, where does the goal often really start?",["At the final whistle","At half-time","A few passes before the shot"],2,"Correct. Look at the build-up.","The build-up a few passes earlier usually makes the goal."),
+   c('c-za-highlights',"You missed the match. What gives you the best bits in a few minutes?",["A short highlights video","The team bus timetable","The pitch markings"],0,"Yes. Highlights show goals, saves and big chances.","A highlights video packs in the best moments.")
+  ],
+  openers:["Hello! Keep your eyes on the screen, a replay is coming.","Hi! I love the slow-motion bits. You see every touch.","Hello there! Did you spot the pass before that chance? The replay will show it.","Hi! I always learn something new from a good replay."],
+  returning:["Hello again! Last time it was ‘{topic}’. Shall we watch another replay together?","Welcome back! I remember ‘{topic}’. Here is a new one for you.","Nice to see you! After ‘{topic}’, there is more to spot."]
+ },
+ 'stadium-viewer-arlo':{
+  topics:[
+   t('score-box',"What is in the corner of the screen?","The score box: both team names, their goals and the match clock. Some also show cards and added time."),
+   t('clock-count',"How does the match clock count?","Upwards: the first half runs to 45 minutes, and the second half carries on from 45 to 90.","Does it ever stop?","The clock on screen keeps going. Lost time is added at the end."),
+   t('draw-what',"What is a draw?","When both teams score the same number of goals, like 1-1 or 0-0. In a league, each team gets one point.","And a win?","A win gets three points, a loss gets none."),
+   t('board-numbers',"What does the board at the end of a half show?","The fourth official holds up a board with the minimum minutes of added time."),
+   t('clean-sheet',"Why is the keeper so happy at nil?","When a team lets in no goals in a match. Keepers and defenders are proud of them.","Can you keep one and lose?","No. With zero goals against, you cannot lose."),
+   t('league-table',"What is a league table?","A list of teams ordered by points. If points are level, things like goal difference decide who is higher.","How is goal difference worked out?","Take the goals a team scored and subtract the goals it let in."),
+   t('come-back',"What is a comeback?","When a team that is losing fights back to draw or win. That is why fans watch until the end."),
+   t('half-score',"Why does the screen show HT?","HT means half-time, and FT means full time. The score beside it is the score at that moment.","What does KO mean?","Kick-off: when the match starts.")
+  ],
+  challenges:[
+   c('c-ar-draw',"A match ends 2-2. What is the result?",["A draw","A home win","An away win"],0,"Yes. Same goals each, a draw.","Equal goals is a draw."),
+   c('c-ar-points',"In a league, how many points does a win usually give?",["Just a single point","Three league points","A full ten points"],1,"Correct. Three for a win.","A win gives three points."),
+   c('c-ar-ft',"The screen shows FT next to the score. What does it mean?",["First touch","Free throw","Full time"],2,"Right. The match has finished.","FT means full time."),
+   c('c-ar-sheet',"A keeper lets in no goals all match. What is that called?",["A clean sheet","A golden goal","A long ball"],0,"Yes. A clean sheet!","No goals let in is a clean sheet.")
+  ],
+  openers:["Hi! Quick, look at the little score box up there!","Hello! I keep track of every goal in my notebook.","Hey! How many minutes are left? I always know.","Hi there! Do you want to learn to read the score box like an expert?"],
+  returning:["Hi again! We talked about ‘{topic}’. Ready for more score facts?","You are back! I remember ‘{topic}’. Here is a new one.","Hello again! After ‘{topic}’, let me show you another part of the screen."]
+ },
+ 'stadium-viewer-elif':{
+  topics:[
+   t('off-ball',"What does off the ball mean?","Everything a player does when they do not have the ball: moving, calling, covering and making space."),
+   t('decoy-run',"Why run where the ball will not go?","A run that pulls a defender away so a teammate gets more space. The runner may never touch the ball, but it still helps.","Is that a waste?","Not at all! Good teams make lots of them."),
+   t('back-line',"Why does the back line move together?","Defenders step up and drop back as one line, so there are no big gaps and attackers are easier to catch offside.","Who leads the line?","Often a centre-back calls when to step up."),
+   t('find-space',"How do players find space?","They look around often, then move away from defenders into gaps where a pass can reach them."),
+   t('check-shoulder',"Why do players look over their shoulder?","To see who is behind them before the ball arrives. Then they know whether to turn or pass back.","Is one quick look enough?","Take several looks, and one more just before the ball comes."),
+   t('show-feet',"What does show for the ball mean?","Moving into a spot where the passer can see you and the ball can travel safely. Call or wave so they know."),
+   t('recover-run',"What is a recovery run?","When a team loses the ball, players sprint back towards their goal to help defend. Even strikers do it.","Is that tiring?","Very! That is why fitness matters."),
+   t('watch-tip',"How can I watch a match like a coach?","Pick one player and watch only them for a few minutes. See where they move when they do not have the ball.","Which player should I pick?","Try someone who plays your position.")
+  ],
+  challenges:[
+   c('c-el-decoy',"A player runs away from the ball so a teammate gets space. What is that?",["A run to make space","A sneaky handball","A back-pass to the keeper"],0,"Yes. Unselfish and clever.","That is a decoy run: it makes space for others."),
+   c('c-el-shoulder',"Why do players check over their shoulder before receiving?",["To wave at fans","To see who is behind them","To check the clock"],1,"Right. Then they know what to do next.","They look to see who is behind them."),
+   c('c-el-line',"Why do defenders move up and back as one line?",["To dance together","To rest their legs","To avoid gaps between them"],2,"Correct. No gaps, a stronger defence.","Moving together leaves no gaps."),
+   c('c-el-lost',"Your team loses the ball. What should a striker often do?",["Make a recovery run back","Sit on the grass","Wait up front for the ball"],0,"Yes. Everyone helps defend.","A recovery run helps the team defend.")
+  ],
+  openers:["Hello, dear! Do not just follow the ball. Watch the runners!","Hello! Pick one player and watch them with me for a while.","Oh, hello! See that defender? She has not stopped talking all match.","Hello there! The cleverest moves happen away from the ball, you know."],
+  returning:["Hello again, dear! We talked about ‘{topic}’. Shall we watch the runners again?","Welcome back! I remember ‘{topic}’. Here is something else to notice.","Ah, you came back! After ‘{topic}’, let me point out a new trick."]
+ },
  'stadium-mascot-drip':{
   topics:[
    t('mascot-job',"What does a mascot do all day?","I lap the pitch, wave to every stand and give high fives. My job is to make match day feel friendly, especially for young fans.","Do mascots work every match?","At home matches, yes! It is a busy job with lots of waving."),
