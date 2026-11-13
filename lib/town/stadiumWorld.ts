@@ -9,7 +9,8 @@
 import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {tintGroundMesh,applyGroundTint} from '../graphics/groundTint';
-import {patchStadiumNight,STADIUM_NIGHT_GAIN} from './stadiumNight';
+import {patchStadiumNight,patchLampGlow,STADIUM_NIGHT_GAIN} from './stadiumNight';
+import {roofLampAlongs,roofLampPart,noGlow} from './stadiumLights';
 import {goalGeometry} from './fields';
 import {GOAL_DEPTH} from './goalCollisions';
 import {STADIUM_VENUE,STADIUM_PITCH_Y} from './venues';
@@ -37,13 +38,14 @@ export type StadiumStats={surfaces:number;rails:number;boxes:number;seatsStrips:
 export const GATE_SIGN_H=2.2;
 /** Redraw the sign's own canvas (no new texture or draw) with the wordmark once the small picture has loaded; until then, or if it
  *  fails, the lettered fallback. Browser only: a test tool's sign without a canvas map is left as it is. */
-function dressGateSign(mesh:T.Mesh){
+function dressGateSign(mesh:T.Mesh):T.Material{
  const m=mesh.material as T.MeshStandardMaterial,tex=m?.map,canvas=tex?.image as HTMLCanvasElement|undefined;
- const ctx=canvas&&typeof canvas.getContext==='function'?canvas.getContext('2d'):null;if(!tex||!ctx)return;
+ const ctx=canvas&&typeof canvas.getContext==='function'?canvas.getContext('2d'):null;if(!tex||!ctx)return m;
  const paint=(img:HTMLImageElement|null)=>{drawGateSign(ctx,canvas!.width,canvas!.height,img);tex.needsUpdate=true;};
  paint(null);
- if(typeof Image==='undefined')return;
+ if(typeof Image==='undefined')return m;
  const img=new Image();img.decoding='async';img.onload=()=>paint(img);img.src=DRIP_FC_ART.wordmarkLight;
+ return m;
 }
 /** Drip FC's drop (Nov 13 2026, owner): white paint, semi-transparent, flat in the centre circle (r 8.66 m), ~70% of its diameter,
  *  its top to the north so it reads upright from overhead and its width runs along the halfway line. One quad, one lit
@@ -70,7 +72,7 @@ export function screenPosts(){const z=STADIUM.z+SCREEN.z,top=SCREEN.y-SCREEN_FRA
 const BACK_SPLIT=.92;
 const CONCRETE=['#d8cfbd','#cec4af'],TREAD_C='#c2b59c',CONCOURSE_C='#e3d9c3',RAIL_C='#315b50',STEEL='#e9e4d6';
 
-export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFade;roofCanopies:{x:number;z:number;w:number;d:number;height:number;overhead:true}[]}{
+export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFade;roofCanopies:{x:number;z:number;w:number;d:number;height:number;overhead:true}[];gateSign:T.Material}{
  const {put,cylinder,sign,obstacles,walkSurfaces,rails,surfaceAreas}=t,S=STADIUM;let boxes=0,strips=0,surfaces=0;const rails0=rails.length;
  // stadiumPaint: the batching pass (world.ts) gives the piece's paint the stadium night fill (stadiumNight.ts) and keys it to the
  // stadium's own batch; textured or tinted pieces keep their material.
@@ -147,6 +149,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
  // Nov 12 2026 (QA: under the roof the follow camera saw only the roof and a floating Sit prompt): each roof (slab + its two fascia
  // frames) is ONE mesh of its own, not merged into the chunk batch, so it can fade (createRoofFade): 2 draw calls when in view.
  // Still landable: the slab's top is handed to the canopy list as a plain surface (roofCanopies), as the canopy pass measured it.
+ let gateSign:T.Material|undefined;
  const roofs:T.Mesh[]=[],roofCanopies:{x:number;z:number;w:number;d:number;height:number;overhead:true}[]=[];
  for(const s of STANDS.filter(q=>q.roof)){
   const a0=s.from-ROOF_OVERHANG,a1=s.to+ROOF_OVERHANG,slab=standRect(s,ROOF.front,ROOF.back,a0,a1),c=new T.Vector3(slab.x,ROOF.y,slab.z),parts:T.BufferGeometry[]=[];
@@ -154,7 +157,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
    g.translate(r.x-c.x,(y0+y1)/2-c.y,r.z-c.z);const col=new T.Color(colour),nrm=g.getAttribute('normal'),out=new Float32Array(nrm.count*3);
    // The chunk batch's baked light (world.ts): undersides 0.62, tops 1.03, sides darker toward their foot.
    for(let v=0;v<nrm.count;v++){const ny=nrm.getY(v),f=ny<-.5?.62:ny>.7?1.03:.8;out[v*3]=col.r*f;out[v*3+1]=col.g*f;out[v*3+2]=col.b*f;}
-   g.setAttribute('color',new T.BufferAttribute(out,3));g.deleteAttribute('uv');parts.push(g);};
+   g.setAttribute('color',new T.BufferAttribute(out,3));g.deleteAttribute('uv');parts.push(noGlow(g));};
   piece(slab,ROOF.y-ROOF.thick/2,ROOF.y+ROOF.thick/2,STEEL);
   // The frames stand FRAME_PROUD proud of the slab's faces and ends (Nov 13 2026 owner bug: they shared the slab's back / front and
   // end planes, so dark frame and tan slab z-fought in a flickering strip along the roof edge from afar).
@@ -165,8 +168,11 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   // frames are solid walls for roof walkers (rails: blocked between floor and top) and never landing spots.
   rails.push({...standRect(s,ROOF.back-.12,ROOF.back+P,a0-P,a1+P),floor:ROOF.y-ROOF.frameBelow,top:ROOF.y+ROOF.frameAbove,noLanding:true} as Rail);
   rails.push({...standRect(s,ROOF.front-P,ROOF.front+.12,a0-P,a1+P),floor:ROOF.y-FRONT_FRAME.below,top:ROOF.y+FRONT_FRAME.above,noLanding:true} as Rail);
+  // Night lights (Nov 13 2026, stadiumLights.ts): a row of floodlight lamps hung under the slab just behind the front frame, part of
+  // this mesh (no draw of their own) so they fade with the roof; their lenses glow on the night factor (patchLampGlow, aGlow).
+  for(const a of roofLampAlongs()){const g=roofLampPart(s,a,c).toNonIndexed();g.deleteAttribute('uv');parts.push(g);}
   const merged=mergeGeometries(parts)!;for(const g of parts)g.dispose();
-  const roofMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.85,transparent:true,opacity:1});t.materials?.push(roofMaterial);// one each: they fade apart
+  const roofMaterial=patchLampGlow(new T.MeshStandardMaterial({vertexColors:true,roughness:.85,transparent:true,opacity:1}));t.materials?.push(roofMaterial);// one each: they fade apart
   const roof=new T.Mesh(merged,roofMaterial);roof.name='stadium-roof-'+s.id;roof.position.copy(c);roof.castShadow=roof.receiveShadow=true;
   roof.userData.skipRoofObstacle=true;roof.userData.ownDraw=true;// world.ts: never merged into a chunk batch, never measured as a canopy
   t.add?.(roof);roofs.push(roof);boxes+=3;
@@ -236,7 +242,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   for(const sz of [-1,1]){box(1.6,11,1.6,'#e2c766',gx,5.5,G.z+sz*(G.halfWidth+.4));obstacles.push({x:gx,z:G.z+sz*(G.halfWidth+.4),w:1.6,d:1.6});
    for(const off of [3.4,5.4]){box(.5,1,.5,'#9aa7a6',gx-1.2,.5,G.z+sz*off);obstacles.push({x:gx-1.2,z:G.z+sz*off,w:.5,d:.5});}}
   t.box(1.4,2.4,G.halfWidth*2+3.2,'#e2c766',gx,9.4,G.z);boxes++;// not skipped: its top is a landable canopy (roof-landing audit)
-  dressGateSign(skip(sign(STADIUM_NAME,G.halfWidth*2-1,GATE_SIGN_H,gx+.72,10.7+GATE_SIGN_H/2,G.z,'#244d49','#fff0cf',Math.PI/2)));
+  gateSign=dressGateSign(skip(sign(STADIUM_NAME,G.halfWidth*2-1,GATE_SIGN_H,gx+.72,10.7+GATE_SIGN_H/2,G.z,'#244d49','#fff0cf',Math.PI/2)));
  }
 
  // --- Floodlight masts at the open corners: the heads are paint; their lit lenses, glow and the shared real lights at night are ----
@@ -268,7 +274,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   obstacles.push({x:d.x,z:d.z,w:d.w,d:d.d});}
  for(const a of TECH_AREAS){const y=STADIUM_PITCH_Y+.012,lw=.08,zc=(a.z0+a.z1)/2,len=Math.abs(a.z1-a.z0);
   box(lw,.012,len,'#f4f1e6',a.x1,y,zc);box(lw,.012,len,'#f4f1e6',a.x0,y,zc);for(const z of [a.z0,a.z1])box(a.x1-a.x0,.012,lw,'#f4f1e6',(a.x0+a.x1)/2,y,z);}
- return {stats:{surfaces,rails:rails.length-rails0,boxes,seatsStrips:strips,seats:seatCount()},roofFade:createRoofFade(roofs),roofCanopies};
+ return {stats:{surfaces,rails:rails.length-rails0,boxes,seatsStrips:strips,seats:seatCount()},roofFade:createRoofFade(roofs),roofCanopies,gateSign:gateSign!};
 }
 
 /** How see-through a roof gets while it would hide the player, and how fast it fades (opacity per second, out / back in). */
@@ -279,11 +285,13 @@ export type RoofFade=ReturnType<typeof createRoofFade>;
  *  draws; back to opacity 1 it is an ordinary (sorted) surface again. Reduced motion snaps. */
 export function createRoofFade(roofs:readonly T.Mesh[]){
  const list=STANDS.filter(q=>q.roof).map((s,i)=>({box:roofBox(s),mesh:roofs[i],opacity:1,hiding:false}));
+ /** Each roof's opacity (west, east) as a uniform: the roof beams and haze (stadiumLights.ts) fade with their roof. */
+ const fade={value:new T.Vector2(1,1)};
  const covers=(b:ReturnType<typeof roofBox>,px:number,py:number,pz:number,cx:number,cy:number,cz:number)=>
   cy>b.top&&py<b.floor&&Math.abs(px-b.x)<b.w/2&&Math.abs(pz-b.z)<b.d/2// under it, seen from above
   ||segmentHitsBox(px,py+.7,pz,cx,cy,cz,b)||segmentHitsBox(px,py+1.55,pz,cx,cy,cz,b);
  return {
-  roofs,
+  roofs,fade,
   /** Each roof's opacity now (west, east) and whether it hides the player. */
   get opacity(){return list.map(r=>r.opacity);},get hiding(){return list.map(r=>r.hiding);},
   /** Each frame after the camera moves: the player's feet (world) and the camera. */
@@ -292,10 +300,10 @@ export function createRoofFade(roofs:readonly T.Mesh[]){
    // Standing ON a roof (landed on its slab, feet at or above its top): that roof stays solid (owner, Nov 13 2026: the taller fascia
    // frame put the hips inside the roof's box, so landing on the roof turned it see-through under the player's feet).
    const onRoof=(b:ReturnType<typeof roofBox>)=>py>=ROOF.y+ROOF.thick/2-.25&&Math.abs(px-b.x)<b.w/2+.5&&Math.abs(pz-b.z)<b.d/2+.5;
-   for(const r of list){r.hiding=near&&!onRoof(r.box)&&covers(r.box,px,py,pz,cx,cy,cz);
-    const to=r.hiding?ROOF_FADE.min:1;if(r.opacity===to||!r.mesh)continue;
+   list.forEach((r,i)=>{r.hiding=near&&!onRoof(r.box)&&covers(r.box,px,py,pz,cx,cy,cz);
+    const to=r.hiding?ROOF_FADE.min:1;if(r.opacity===to||!r.mesh)return;
     r.opacity=reduced?to:to<r.opacity?Math.max(to,r.opacity-ROOF_FADE.out*dt):Math.min(to,r.opacity+ROOF_FADE.in*dt);
-    const m=r.mesh.material as T.MeshStandardMaterial;m.opacity=r.opacity;m.depthWrite=r.opacity>.99;}
+    const m=r.mesh.material as T.MeshStandardMaterial;m.opacity=r.opacity;m.depthWrite=r.opacity>.99;fade.value.setComponent(i,r.opacity);});
   },
  };
 }
