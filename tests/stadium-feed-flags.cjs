@@ -29,8 +29,26 @@ const S=L.STADIUM;
  assert.equal(F.feedMode({dc:50,live:false,tier:0}),'card');assert.equal(F.feedMode({dc:F.FEED_RADIUS+5,live:true,tier:0}),'card');
  assert.equal(F.feedMode({dc:50,live:true,tier:H.LOWEST_TIER}),'card','Battery saver / hottest tier: the static card');
  assert.equal(F.feedMode({dc:50,live:true,tier:1}),'feed');
- assert(Math.abs(F.feedInterval(false,0)-1000/7)<1e-9&&F.feedInterval(true,0)===250&&F.feedInterval(false,2)===250,'7 fps desktop, 4 fps phones / hot');
- assert(F.FEED_SIZE.w*F.FEED_SIZE.h<=256*144,'low-res target');}
+ // Nov 13 2026 (owner: choppy, not clear): desktop 640 x 360 at 30 fps with 4x MSAA, phones 384 x 216 at 12 fps, tier 2+: 15 / 6 fps.
+ {const d=F.feedSpec(false,0),p=F.feedSpec(true,0),dh=F.feedSpec(false,2),ph=F.feedSpec(true,2);
+  assert(d.w===640&&d.h===360&&d.fps===30&&d.samples===4,'desktop 640x360 @30, MSAA 4');
+  assert(p.w===384&&p.h===216&&p.fps===12&&p.samples<=2,'phone 384x216 @12');
+  assert(ph.fps===6&&dh.fps<=15&&dh.w===640,'tier 2+: phones 6 fps, desktop 15');
+  assert(Math.abs(F.feedInterval(false,0)-1000/30)<1e-9&&Math.abs(F.feedInterval(true,0)-1000/12)<1e-9&&Math.abs(F.feedInterval(true,3)-1000/6)<1e-9);
+  assert(F.feedDue('feed',true,1033.2,1000,1000/30),'a frame a hair early still counts (60 Hz: every second frame)');assert(!F.feedDue('feed',true,1020,1000,1000/30));}
+ assert(F.FEED_SIZE.w*F.FEED_SIZE.h<=256*144,'the still card stays small');
+ // The damped follow: no snap on a jump, converges, never overshoots a still target.
+ {const st={x:0,v:0};F.smoothDamp(st,10,1.6,1/12);assert(st.x>0&&st.x<1.5,'a ball 10 m away: a small first step, not a snap ('+st.x.toFixed(2)+')');
+  let max=0;for(let i=0;i<240;i++){F.smoothDamp(st,10,1.6,1/12);max=Math.max(max,st.x);}assert(Math.abs(st.x-10)<.01&&max<=10+1e-9,'settles on it, no overshoot');
+  const a=F.broadcastFov(40),b=F.broadcastFov(75);assert(a>b&&a<=F.BROADCAST.maxFov&&b>=F.BROADCAST.minFov&&a<25,'tight TV framing, zooming in on the far touchline');}
+ // The overlay: score box, names, colours, clock m:ss, the wordmark; its key changes with the score and the clock's second only.
+ {const s={home:'Red',away:'Blue',gold:1,blue:0,minute:3,clock:150.4};assert.equal(F.feedClock(150.4),'2:30');
+  const k=F.overlayKey(s);assert.equal(F.overlayKey({...s,clock:150.9}),k,'same second: no redraw');assert.notEqual(F.overlayKey({...s,clock:151}),k,'next second: redraw');assert.notEqual(F.overlayKey({...s,blue:1}),k,'a goal: redraw');
+  const calls=[],c2=new Proxy({measureText:t=>({width:t.length*9}),save(){},restore(){}},{get:(o,p)=>o[p]??((...a)=>calls.push([p,...a])),set:(o,p,v)=>{calls.push(['set',p,v]);return true;}});
+  const img={width:800,height:197};F.drawOverlay(c2,640,360,s,{home:'#d6453d',away:'#2f6fb5'},img);
+  const texts=calls.filter(c=>c[0]==='fillText').map(c=>c[1]);assert(texts.includes('RED')&&texts.includes('BLU')&&texts.includes('1-0')&&texts.includes('2:30'),'names, score and clock: '+texts.join(','));
+  assert(calls.some(c=>c[0]==='set'&&c[1]==='fillStyle'&&c[2]==='#d6453d')&&calls.some(c=>c[0]==='set'&&c[1]==='fillStyle'&&c[2]==='#2f6fb5'),'team colours');
+  const logo=calls.find(c=>c[0]==='drawImage');assert(logo&&logo[1]===img&&logo[2]>320&&logo[3]<60,'the wordmark, top right');}}
 
 // 3. The feed itself, with a counting renderer: renders only near + live + back face in view, at the throttled rate, hides the
 //    crowd, the front screen and itself while it draws, reuses the shadow map, and disposes its target.
@@ -48,22 +66,38 @@ const S=L.STADIUM;
  up(pitch,10);assert.equal(renders.length,0,'seen from the pitch side (front): no feed render');
  up(away,20);assert.equal(renders.length,0,'back face out of the frustum: no feed render');
  assert.equal(up(behind,100),true);assert.equal(renders.length,1,'near + live + in view: one render');
- const r0=renders[0];assert(r0.target&&r0.target.width===256&&r0.target.height===144,'into the 256 x 144 target');
+ const r0=renders[0];assert(r0.target&&r0.target.width===640&&r0.target.height===360&&r0.target.samples===4,'into the 640 x 360 MSAA target');
+ assert(r0.target.texture.minFilter===T.LinearFilter&&r0.target.texture.magFilter===T.LinearFilter&&!r0.target.texture.generateMipmaps,'linear filtering, no mipmaps');
  assert(r0.cam!==behind&&r0.cam.far===F.FEED_FAR,'the broadcast camera, short far plane');
  assert(!r0.crowd&&!r0.front&&!r0.self,'crowd, front screen and the back face hidden while it renders (no recursion)');
  assert(!r0.auto&&!r0.needs,'no shadow pass for the feed');
  assert(crowd.visible&&front.visible&&feed.mesh.visible&&renderer.shadowMap.autoUpdate&&renderer.shadowMap.needsUpdate&&rt===null,'all restored after');
  assert.equal(feed.mesh.material.map,feed.target.texture,'the back face shows the feed');
- for(let t=110;t<1100;t+=10)up(behind,t);
- assert(renders.length>=7&&renders.length<=8,'about 7 renders a second, not every frame: '+renders.length);
+ // The overlay is composited in the back face's shader (no extra draw) and redrawn only on change.
+ {const sh={uniforms:{},fragmentShader:'#include <tonemapping_fragment>\n#include <colorspace_fragment>'};feed.mesh.material.onBeforeCompile(sh);
+  assert(sh.uniforms.uOverlay&&sh.uniforms.uOverlay.value.image===feed.overlay,'the overlay texture is the overlay canvas');
+  assert(/tonemapping_fragment>\s*vec4 feedOv=texture2D\(uOverlay,vMapUv\)/.test(sh.fragmentShader),'mixed in after tone mapping, on the picture uv (not mirrored)');
+  assert(feed.overlay.width===640&&feed.overlay.height===360);}
+ const cam0=feed.camera.position.clone();
+ for(let t=110;t<1100;t+=1000/60)up(behind,t,60,{x:S.x+20,z:S.z+30});
+ assert(renders.length>=29&&renders.length<=32,'about 30 renders a second at 60 Hz, not every frame: '+renders.length);
+ assert(feed.stats.snaps===1&&feed.camera.position.distanceTo(cam0)>0,'the camera follows without snapping again '+feed.stats.snaps+' '+feed.camera.position.distanceTo(cam0));
+ const draws=feed.stats.overlayDraws;for(let t=1100;t<1300;t+=1000/60)feed.update(renderer,scene,behind,t,60,ball,0,[crowd,front],{home:'Red',away:'Blue',gold:0,blue:0,minute:1,clock:12.2});
+ const d1=feed.stats.overlayDraws;for(let t=1300;t<1500;t+=1000/60)feed.update(renderer,scene,behind,t,60,ball,0,[crowd,front],{home:'Red',away:'Blue',gold:0,blue:0,minute:1,clock:12.6});
+ assert(d1===draws+1&&feed.stats.overlayDraws===d1,'overlay redrawn once for a new clock second, not every render');
+ {const BV=load('lib/town/broadcastView.ts').broadcastView;up(behind,1550);assert(BV.frustum&&BV.frustum.intersectsSphere(new T.Sphere(new T.Vector3(S.x,1,S.z),5)),'feed live: its frustum is published for the matches');
+  up(away,1560);assert.equal(BV.frustum,null,'back face out of view: cleared');}
+ feed.debug.forceCard=true;const nf=renders.length;up(behind,1600);assert(renders.length===nf&&feed.showing==='card','debug: forced card');feed.debug.forceCard=false;
  up(behind,2000,60,ball,H.LOWEST_TIER);assert.equal(feed.showing,'card','lowest tier: back to the card');
  const n=renders.length;up(behind,3000,60,null);assert.equal(renders.length,n);assert.equal(feed.showing,'card','match over: the card');
  const phone=F.createStadiumFeed(parent,{phone:true}),pr=renders.length;for(let t=0;t<1000;t+=10)phone.update(renderer,scene,behind,t,60,ball,0,[]);
- assert.equal(renders.length-pr,4,'phones: 4 renders a second');
+ assert.equal(renders.length-pr,12,'phones: 12 renders a second');assert(phone.target.width===384&&phone.target.height===216,'phone target 384 x 216');
+ const ph=renders.length;for(let t=2000;t<3000;t+=10)phone.update(renderer,scene,behind,t,60,ball,2,[]);assert.equal(renders.length-ph,6,'hot phone: 6 renders a second');
  const tgt=feed.target;tgt.addEventListener('dispose',()=>disposed.push('rt'));feed.dispose();phone.dispose();
  assert.deepEqual(disposed,['rt'],'teardown disposes the render target');assert(!parent.children.some(o=>o.name==='stadium-screen-back'),'meshes removed');
  const sit=src('lib/town/stadiumSit.ts'),town=src('components/Town.tsx');
- assert(/feed\.update\(renderer,scene,camera,nowMs,dc,live\?ball:null,tier,\[screen\.mesh,crowd\.mesh\]\)/.test(sit),'stadiumSit feeds dc, the live ball and the hide list');
+ assert(/feed\.update\(renderer,scene,camera,nowMs,dc,live\?ball:null,tier,ports\.phone\?\[screen\.mesh,crowd\.mesh,crowd\.flags\]:\[screen\.mesh\],live\?score:null\)/.test(sit),'stadiumSit feeds dc, the live ball, the hide list (phones: the crowd and flags too) and the score');
+ assert(/frustum\.intersectsSphere\(sphere\)\|\|!!broadcastView\.frustum\?\.intersectsSphere\(sphere\)/.test(src('lib/town/fieldRuntime.ts'))&&/\|\|!!broadcastView\.frustum\?\.intersectsSphere\(playerView\)/.test(src('lib/town/fieldRuntime.ts')),'the matches draw for the feed camera too (no empty pitch)');
  assert(/stadiumSit\.feed\(renderer,scene,camera,now,heat\.tier\);[^\n]*\n\s*if\(meTumble/.test(town),'Town calls it right before the main render');
  assert(/disposers\.add\(\(\)=>stadiumSit\.dispose\(\)\)/.test(town),'and disposes it');}
 

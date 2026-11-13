@@ -4,6 +4,7 @@ import {createMatchUpdateClock} from './matchUpdateClock';
 import {positionLabel,positionInfo,type PositionSelection} from './playerPositions';
 import {recordQuestStep} from './questProgress';
 import * as T from 'three';
+import {broadcastView} from './broadcastView';
 import type {BallReactions} from '../graphics/ballReactions';
 import {createLiveBallPhysics} from './liveBallPhysics';
 import {createLiveBallSound,type LiveBallSoundPlay,type LiveBallSoundKind} from './liveBallSound';
@@ -106,7 +107,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  const rp=!teaching&&e.replay&&e.humans.has(OWN)&&e.replay.step(active?dtIn:0,!!e.puppet||e.humans.size>1,reduced,e.sim.goalHold,e.puppet?e.puppet.restart:e.sim.isRestart)?e.replay:null;
  const dt=rp?dtIn*rp.rate:dtIn;
  sphere.center.set(v.x,1+(v.elevation??0),v.z);sphere.radius=Math.hypot(v.width,v.length)/2+2;
- const visible=(!viewingFormat||v.id===viewingFormat)&&(!session||!!teaching)&&frustum.intersectsSphere(sphere)&&(!!viewingFormat||camera.position.distanceTo(sphere.center)<240);
+ const visible=(!viewingFormat||v.id===viewingFormat)&&(!session||!!teaching)&&(frustum.intersectsSphere(sphere)||!!broadcastView.frustum?.intersectsSphere(sphere))&&(!!viewingFormat||camera.position.distanceTo(sphere.center)<240);// + the stadium's broadcast feed camera (broadcastView.ts)
  // Nearby matches remain responsive to island ball hits, even just outside the view.
  const camDistance=camera.position.distanceTo(sphere.center);
  // Heat pass 5: a field that is off screen and far away is dormant: no clock, sim, bookkeeping or effects at all; it resumes exactly
@@ -276,7 +277,7 @@ export function createFieldRuntime(scene:T.Scene,reactions?:BallReactions){
  if(protesting){if(collisionHit)motion.facing=Math.atan2(collisionHit.x-px,collisionHit.z-pz);motion.backpedal=motion.brake=motion.plant=0;motion.stance=undefined;motion.kick=undefined;motion.receive=undefined;motion.dribbling=false;}
  // Gate posing with the same generous shadow bounds used for drawing.
  playerView.center.set(px+1.5,(v.elevation??0)+1.5,pz-1);playerView.radius=7+Math.max(0,v.elevation??0)*2;
- const inView=!playerCulling||!!teaching||e.slotDress.has(token.id)||frustum.intersectsSphere(playerView);
+ const inView=!playerCulling||!!teaching||e.slotDress.has(token.id)||frustum.intersectsSphere(playerView)||!!broadcastView.frustum?.intersectsSphere(playerView);
  if(!inView&&!stunned&&!protesting&&!reception&&!motion.kick&&!motion.dribbling){
    rig.root.position.set(px,(v.elevation??0)+.105,pz);rig.root.userData.poseSkipped=true;stats.skippedPoses++;stats.culledPlayers++;continue;
  }

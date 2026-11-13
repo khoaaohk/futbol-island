@@ -14,7 +14,7 @@ export const SCREEN_CANVAS={w:256,h:144} as const;
  *  first minute is 1' (football's convention; phase 3b: the board no longer sat at 0' for the first minute after the match woke). */
 export const screenMinute=(seconds:number)=>Math.max(0,Math.floor(Number.isFinite(seconds)?seconds/60:0))+1;
 /** exhibition: nobody (me or a friend) is playing in it: an all-AI match kids can join or just watch (phase 3b). */
-export type ScreenScore={home:string;away:string;gold:number;blue:number;minute:number;exhibition?:boolean};
+export type ScreenScore={home:string;away:string;gold:number;blue:number;minute:number;exhibition?:boolean;/** sim clock seconds (the back face's broadcast clock) */clock?:number};
 /** What the board says (also the change key: a redraw happens only when this string changes). */
 export const screenText=(s:ScreenScore)=>`${s.exhibition?'EXHIBITION · ':''}${s.home.toUpperCase()} ${s.gold}-${s.blue} ${s.away.toUpperCase()} ${s.minute}'`;
 /** The stadium's pitch bar (FieldPathCard) while an exhibition is on vs a match with players in it. */

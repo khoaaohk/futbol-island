@@ -235,22 +235,28 @@ console.log('west stadium phase 3a: ok');
  const share=f=>C.crowdCount(fans,f)/seats,desk=share(C.crowdFill(false,0)),phone=share(C.crowdFill(true,0)),hot=share(C.crowdFill(true,2)),saver=share(C.crowdFill(false,4));
  console.log(`crowd: ${fans.length} fans max; desktop ${(desk*100).toFixed(0)}%, phone ${(phone*100).toFixed(0)}%, phone tier 2 ${(hot*100).toFixed(0)}%, saver ${(saver*100).toFixed(0)}% of ${seats} seats; desktop ${C.crowdCount(fans,C.crowdFill(false,0))*C.FAN_TRIS} tris`);
  assert(desk>=.3&&desk<=.4,'desktop fills 30–40 % of the seats');assert(phone<desk*.75&&hot<phone&&saver<hot,'fewer fans on phones and under heat pressure');
- assert(C.crowdCount(fans,C.crowdFill(false,0))*C.FAN_TRIS<=40000,'crowd triangles bounded (desktop ≤ 40k)');
- const g=C.fanGeometry();assert.equal(g.index.count/3,C.FAN_TRIS,'20 triangles a fan');g.dispose();
+ // Nov 13 2026: mini beans (60–80 triangles each: body, arms, scarf); the whole crowd stays bounded.
+ assert(C.crowdCount(fans,C.crowdFill(false,0))*C.FAN_TRIS<=140000,'crowd triangles bounded (desktop ≤ 140k)');
+ assert(C.crowdCount(fans,C.crowdFill(true,0))*C.FAN_TRIS<=90000,'crowd triangles bounded (phone ≤ 90k)');
+ const g=C.fanGeometry();assert.equal(g.index.count/3,C.FAN_TRIS,'FAN_TRIS triangles a bean');assert(C.FAN_TRIS>=60&&C.FAN_TRIS<=80,'tri budget 60–80');
+ assert(g.getAttribute('position').count<=60,'≤ 60 vertices a bean');assert(g.getAttribute('aFan')&&!g.getAttribute('uv'),'part attribute, no uv');
+ {const a=g.getAttribute('aFan'),parts=new Set();for(let i=0;i<a.count;i++)parts.add(a.getX(i));assert.deepEqual([...parts].sort(),[0,1,2],'body, arms, scarf');}
+ assert(g.boundingBox.max.y>=1.2,'bounds cover a standing bean with its arms up');g.dispose();
  // Seats by the aisles stay free (the end seat of every span), and every fan sits on a real seat.
  for(const s of Q.STANDS)for(const a of s.aisles)assert(!fans.some(f=>{const l=Q.standLocal(s,f.x,f.z);return l.d>s.inner-.1&&l.d<s.inner+Q.ROWS*Q.ROW_DEPTH&&Math.abs(l.a-a)<Q.AISLE_WIDTH/2+Q.SEAT_PITCH*1.4;}),`${s.id} aisle ${a}: free seats beside it`);
  // One instanced draw, built only near the stadium, hidden far away, culled off screen; a goal bounces it via uniforms only.
  const parent=new T.Group(),crowd=C.createStadiumCrowd(parent,false);crowd.update(400,0,0,false,1/60,false);assert(!crowd.mesh&&parent.children.length===0,'far away: nothing built');
- crowd.update(60,S.x+30,S.z,false,1/60,false);const mesh=crowd.mesh;assert(mesh&&mesh.isInstancedMesh&&mesh.visible&&parent.children.length===1&&!mesh.castShadow,'near: one instanced mesh, no shadow pass');
+ crowd.update(60,S.x+30,S.z,false,1/60,false);const mesh=crowd.mesh;assert(mesh&&mesh.isInstancedMesh&&mesh.visible&&parent.children.length===2&&!mesh.castShadow,'near: one instanced mesh (plus the flags), no shadow pass');
+ assert(crowd.flags&&!crowd.flags.isInstancedMesh&&!crowd.flags.castShadow&&crowd.flags.visible,'the stand flags: one merged mesh, no shadows');
  assert.equal(mesh.count,C.crowdCount(fans,C.crowdFill(false,0)));const m0=mesh.instanceMatrix.version;
  const cam=new T.PerspectiveCamera(40,1,1,500);cam.position.set(S.x+150,2,S.z);cam.lookAt(S.x+400,2,S.z);cam.updateMatrixWorld();const fr=new T.Frustum().setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse));
  assert(mesh.frustumCulled&&!fr.intersectsObject(mesh),'looking away from the stadium: culled (0 draws)');cam.lookAt(S.x,2,S.z);cam.updateMatrixWorld();fr.setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse));assert(fr.intersectsObject(mesh),'looking at it: drawn');
- const sh={uniforms:{},vertexShader:'#include <color_vertex>\n#include <begin_vertex>'};mesh.material.onBeforeCompile(sh);const U=sh.uniforms;assert(/uCheer/.test(sh.vertexShader)&&/uClear/.test(sh.vertexShader),'bounce and clearing in the shader');
+ const sh={uniforms:{},vertexShader:'#include <color_vertex>\n#include <beginnormal_vertex>\n#include <begin_vertex>',fragmentShader:'#include <color_fragment>'};mesh.material.onBeforeCompile(sh);const U=sh.uniforms;assert(/uCheer/.test(sh.vertexShader)&&/uClear/.test(sh.vertexShader),'bounce and clearing in the shader');
  for(let i=0;i<30;i++)crowd.update(60,S.x+30,S.z,false,1/60,false);assert.equal(U.uCheer.value,0,'no goal: still');crowd.cheer();crowd.update(60,S.x+30,S.z,false,.3,false);assert(U.uCheer.value>0,'a goal: the stands bounce');
  for(let i=0;i<200;i++)crowd.update(60,S.x+30,S.z,false,1/60,false);assert(U.uCheer.value===0&&!crowd.cheering,'the cheer ends');assert.equal(mesh.instanceMatrix.version,m0,'no per-instance CPU work');
  crowd.cheer();crowd.update(60,S.x+30,S.z,false,.3,true);assert.equal(U.uCheer.value,0,'reduced motion: no bounce');
  {const F=U.uClearF.value;assert(Array.isArray(F)&&F.length>=4&&/uClearF/.test(sh.vertexShader),'friends clear too');crowd.update(60,S.x,S.z,false,1/60,false,[{x:S.x-45,z:S.z}]);assert(F[0].z>0&&F[0].x===S.x-45&&F[1].z<0,'a seated friend: the fan in their seat clears');crowd.update(60,S.x,S.z,false,1/60,false,[]);assert(F[0].z<0,'friend stood up: the fan comes back');}crowd.update(60,S.x-45,S.z,true,1/60,false);assert(U.uClear.value.z>0&&U.uClear.value.x===S.x-45,'up in the stands: the fans round me clear');crowd.update(60,S.x,S.z,false,1/60,false);assert(U.uClear.value.z<0,'on the pitch: nobody cleared');
- crowd.update(400,0,0,false,1/60,false);assert(!mesh.visible,'far away: hidden');crowd.dispose();assert(parent.children.length===0);
+ crowd.update(400,0,0,false,1/60,false);assert(!mesh.visible&&!crowd.flags.visible,'far away: hidden');crowd.dispose();assert(parent.children.length===0);
  // The goal frames stop a free ball (sweepGoalFrame's default list now has the stadium); the mouth stays open.
  const GC=load('lib/town/goalCollisions.ts'),V=load('lib/town/venues.ts'),v=V.liveVenueById('stadium'),hit={},y0=V.STADIUM_PITCH_Y;
  for(const sz of [-1,1]){const gz=S.z+sz*S.pitchL/2;
