@@ -68,7 +68,7 @@ function walk(points,mode='walk',secs=40){const t=travel(),p={x:points[0][0],z:p
   if(f%60===59){if(Math.hypot(p.x-last.x,p.z-last.z)<.15)stuck++;else stuck=0;last={...p};if(stuck>=3)break;}}
  return {x:p.x,z:p.z,h:t.state.height,fell,low,high,reached:i>=points.length,t};}
 const near=(r,x,z,m=.6)=>Math.hypot(r.x-x,r.z-z)<m;
-const W=Q.STANDS[0],E=Q.STANDS[1],N=Q.STANDS[2],SO=Q.STANDS[3],CH=Q.CONCOURSE_HEIGHT;
+const W=Q.STANDS[0],E=Q.STANDS[1],N=Q.STANDS[2],SO=Q.STANDS[3],CH=Q.CONCOURSE_HEIGHT,ROOF_TOP=Q.ROOF.y+Q.ROOF.thick/2;
 // The plaza → the gate → the pitch-level ring → the pitch.
 {const r=walk([[G.x+10,G.z],[G.x-1,G.z],[S.x+38,S.z],[S.x+20,S.z+10]]);assert(r.reached&&!r.fell&&r.high<.1,'gate → ring → pitch on the ground '+JSON.stringify({...r,t:0}));}
 // Up a west aisle from the ring to the concourse, along it, down a back stair to the park: no falls, no sticking.
@@ -79,7 +79,17 @@ for(const s of Q.STANDS){const a=s.aisles[0],p0=Q.standWorld(s,s.inner-2,a),p1=Q
  const r=walk([[p0.x,p0.z],[p1.x,p1.z],[p2.x,p2.z]]);assert(r.reached&&!r.fell&&Math.abs(r.h-CH)<.01,s.id+' aisle to the concourse '+JSON.stringify({...r,t:0}));}
 // Every row is a walk surface: standing on row i reads its height; a row is not climbable from the one below (aisles are).
 {const t=travel();for(let i=0;i<Q.ROWS;i++){const p=Q.standWorld(W,W.inner+i*Q.ROW_DEPTH+.3,5);assert(Math.abs(t.surface(p.x,p.z,9)-Q.rowHeight(i))<1e-6,'west row '+i+' height');}
- const r=walk([[S.x-38,S.z+5],[S.x-50,S.z+5]],'walk',6);assert(r.high<.05,'the front row is a step too high from the ring away from an aisle');}
+ // Nov 12 2026: a walker steps up a row from anywhere (rows carry stepUp 0.55); rides do not (they keep to the aisles).
+ const r=walk([[S.x-38,S.z+5],[S.x-Q.standBack(W)+1,S.z+5]],'walk',12);assert(r.reached&&!r.fell&&Math.abs(r.h-CH)<.01,'walking straight up the rows (no aisle) reaches the concourse '+JSON.stringify({...r,t:0}));
+ const ride=walk([[S.x-38,S.z+5],[S.x-50,S.z+5]],'scooter',6);assert(ride.high<.05,'a ride cannot climb the rows away from an aisle');}
+// Aisles are AISLE_WIDTH (2.2 m) wide, and an off-angle joystick (14° off straight up, kids) still reaches the concourse from the
+// pitch-level ring at every aisle start: no row edge stops a climb.
+assert.equal(Q.AISLE_WIDTH,2.2,'2.2 m aisles');
+for(const s of Q.STANDS)for(const a of [s.aisles[0],s.aisles[s.aisles.length-1]])for(const off of [-.25,.25]){
+ const t=travel(),p=Q.standWorld(s,s.inner-1.5,a),toP=Q.standWorld(s,s.inner+1,a),ux=toP.x-p.x,uz=toP.z-p.z,l=Math.hypot(ux,uz),c=Math.cos(off),sn=Math.sin(off);
+ const dir={x:(ux*c-uz*sn)/l,z:(ux*sn+uz*c)/l,sprint:false},pp={...p},v={x:0,z:0};t.reset(pp.x,pp.z);let fell=false,f=0;
+ for(;f<20*60&&Q.standLocal(s,pp.x,pp.z).d<Q.standBack(s)-2.2;f++){t.update(1/60,pp,v,dir,'walk');if(t.state.falling||t.state.recovery>0)fell=true;}
+ assert(!fell&&Math.abs(t.state.height-CH)<.01&&f<20*60,`${s.id} aisle ${a}, ${off>0?'right':'left'} of straight: off-angle climb reaches the concourse (${Q.standLocal(s,pp.x,pp.z).d.toFixed(1)} m, h ${t.state.height})`);}
 // No falls off the stand ends, the concourse back or the stair sides (the rails hold a walker), from any row.
 for(const [s,i] of [[W,4],[W,9],[N,6],[E,8]]){const p=Q.standWorld(s,s.inner+i*Q.ROW_DEPTH+.3,s.to-6),q=Q.standWorld(s,s.inner+i*Q.ROW_DEPTH+.3,s.to+5);
  const t=travel(),pp={...p},v={x:0,z:0};t.reset(pp.x,pp.z,Q.rowHeight(i));const dx=q.x-p.x,dz=q.z-p.z,l=Math.hypot(dx,dz);let fell=false;
@@ -98,6 +108,26 @@ for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);con
   const h=t.surface(at.x,at.z,Infinity),ok=h<.05||Math.abs(h-CH)<.01||h>12||Array.from({length:Q.ROWS},(_,i)=>Q.rowHeight(i)).some(r=>Math.abs(r-h)<.01);
   assert(ok&&Math.hypot(at.x-x,at.z-z)<14,`landing near ${x},${z} → ${JSON.stringify(at)} at ${h.toFixed(2)} m`);}}
 
+// Roofs (Nov 12 2026, QA: the follow camera saw only the roof over a walker in the long stands): each roof is one mesh of its own
+// (2 draws), not in a chunk batch; it fades while the player is under it or the camera-to-player line crosses it, and back when
+// clear; still a landing surface from the sky.
+{const RF=world.stadiumRoofs,roofs=[];scene.traverse(o=>{if(o.name&&o.name.startsWith('stadium-roof-'))roofs.push(o);});
+ assert.equal(roofs.length,2,'two roof meshes');assert(roofs.every(m=>m.isMesh&&!Array.isArray(m.material)&&m.material.transparent),'one draw each, fadeable');
+ assert(!chunks.some(m=>m.name.includes('roof')),'not merged into a chunk');
+ const off={x:18,y:23,z:30};// walkCameraOffset (desktop)
+ const view=(x,y,z,cam)=>{for(let i=0;i<30;i++)RF.update(1/30,x,y,z,...(cam??[x+off.x,y+off.y,z+off.z]));return RF.opacity;};
+ const at=(s,row,a)=>{const p=Q.standWorld(s,s.inner+row*Q.ROW_DEPTH+.3,a);return [p.x,Q.rowHeight(row),p.z];};
+ let o=view(...at(E,7,10));assert(o[1]<.25&&o[0]===1,'east row 7, under the east roof: it fades (the west one does not) '+o);
+ o=view(S.x,0,S.z);assert(o[0]===1&&o[1]===1,'back on the pitch: both roofs solid again '+o);
+ o=view(...at(W,8,-20));assert(o[0]<.25,'west row 8, under the west roof: it fades '+o);
+ o=view(...at(E,1,10));assert(o[1]<.25,'east row 1 (in front of the roof): the camera line crosses it, it fades '+o);
+ o=view(S.x+S.pitchW/2,0,S.z+5);assert(o[1]===1,'on the east touchline: the narrower roof hides nothing, stays solid '+o);
+ {const [x,y,z]=at(E,7,10);o=view(x,ROOF_TOP+2,z);assert(o[1]===1,'a jetpack above the roof sees it solid (to land on) '+o);}
+ {const seat=Q.nearestSeat(...((p)=>[p.x,p.z])(Q.standWorld(E,E.inner+7*Q.ROW_DEPTH+.3,10)),Q.rowHeight(7)),c=Q.seatView(seat);
+  o=view(seat.x,seat.y,seat.z,[c.x,c.y,c.z]);assert(o[1]===1,'seated (stand view under the roof): the roof stays '+o);}
+ const t=travel();for(const s of [W,E]){const p=Q.standWorld(s,(Q.ROOF.front+Q.ROOF.back)/2,0);
+  assert(t.canLand(p.x,p.z,Infinity),s.id+' roof: a landing from the sky');assert(Math.abs(t.surface(p.x,p.z,Infinity)-ROOF_TOP)<.01,s.id+' roof: lands on the slab top');
+  assert(Math.abs(t.surface(p.x,p.z,Q.rowHeight(8))-Q.rowHeight(8))<.01||t.surface(p.x,p.z,Q.rowHeight(8))<ROOF_TOP-1,s.id+' roof: walkers under it stay on the stand');}}
 // Seats: the nearest free seat, facing the pitch; the sit state machine never traps.
 {const p=Q.standWorld(W,W.inner+3*Q.ROW_DEPTH+.3,5.1),seat=Q.nearestSeat(p.x,p.z,Q.rowHeight(3));assert(seat&&seat.stand==='west'&&seat.row===3,'a seat on the row you stand on');
  const fx=Math.sin(seat.yaw),fz=Math.cos(seat.yaw);assert(fx*(S.x-seat.x)+fz*(S.z-seat.z)>0&&Math.abs(fz)<1e-9,'the seat faces the pitch');

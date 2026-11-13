@@ -171,7 +171,12 @@ export function stepSit(m:SitMachine,dt:number,o:{push:number;walk:boolean;away:
 export const GATE_ARCH_X=STADIUM.x+standBack(STANDS[1])+3.5;
 export const inGate=(x:number,z:number)=>Math.abs(z-STADIUM_GATE.z)<GATE&&x<GATE_ARCH_X-.5&&x>STADIUM.x+STANDS[1].inner;
 export const SCREEN={z:standBack(STANDS[3])+1.2,y:12.6,w:16,h:9} as const;
-export const ROOF={front:37,back:standBack(STANDS[0])+.6,y:12.4,thick:.45} as const;
+/** The long stands' roofs. front 44.5 (Nov 12 2026, was 37, over the boards): the roof covers rows 4–9 and the concourse, so the
+ *  follow camera (above and south-east of the player) sees the whole pitch past the east roof's front edge. */
+export const ROOF={front:44.5,back:standBack(STANDS[0])+.6,y:12.4,thick:.45,frameBelow:.95,frameAbove:.75} as const;
+/** A roof's slab with its fascia frames (world box, the roof fade's occluder); `along` is the slab's overhang past the stand ends. */
+export const ROOF_OVERHANG=2;
+export function roofBox(s:StandDef){return {...standRect(s,ROOF.front,ROOF.back,s.from-ROOF_OVERHANG,s.to+ROOF_OVERHANG),floor:ROOF.y-ROOF.frameBelow,top:ROOF.y+ROOF.frameAbove};}
 /** The sponsor layout matching this geometry (stadium-local: origin on the centre spot, +X east, +Z south). */
 /** The plaza's 14 flag poles (westPark.ts places them with this same rule). */
 export function plazaFlagPoles(){const P=STADIUM_PLAZA,pcz=(P.minZ+P.maxZ)/2,out:{x:number;z:number}[]=[];

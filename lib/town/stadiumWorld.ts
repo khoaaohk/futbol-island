@@ -4,7 +4,8 @@
 // island's 50 m chunks (one draw call per chunk and paint, frustum-culled per chunk, all behind world.ts's west region gate). No
 // texture, light, material or per-frame work of its own; the sponsor art (2 draws, one atlas) loads later, near the stadium.
 // The seats are long strips per row and block (team colours), never a mesh per seat; the stand pieces set skipRoofObstacle so the
-// canopy pass skips them (they are walk surfaces already); only the two roofs are left to it (landable from the sky).
+// canopy pass skips them (they are walk surfaces already). The two roofs are meshes of their own (they fade while they would hide
+// the player: +2 draws, two box tests a frame near the stadium); their slabs join the canopy list directly (landable from the sky).
 import * as T from 'three';
 import type {Obstacle} from './simulation';
 import {tintGroundMesh} from '../graphics/groundTint';
@@ -12,7 +13,9 @@ import {goalGeometry} from './fields';
 import {GOAL_DEPTH} from './goalCollisions';
 import {STADIUM_VENUE,STADIUM_PITCH_Y} from './venues';
 import {STADIUM,STADIUM_GATE} from './westParkLayout';
-import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,type Rail,type Surface,type StandDef} from './stadiumSeats';
+import {segmentHitsBox} from './walkControl';
+import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
 
 export type StadiumTools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -29,7 +32,7 @@ export type StadiumStats={surfaces:number;rails:number;boxes:number;seatsStrips:
 const BACK_SPLIT=.92;
 const CONCRETE=['#d8cfbd','#cec4af'],TREAD_C='#c2b59c',CONCOURSE_C='#e3d9c3',RAIL_C='#315b50',STEEL='#e9e4d6';
 
-export function buildStadium(t:StadiumTools):StadiumStats{
+export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFade;roofCanopies:{x:number;z:number;w:number;d:number;height:number;overhead:true}[]}{
  const {put,cylinder,sign,obstacles,walkSurfaces,rails,surfaceAreas}=t,S=STADIUM;let boxes=0,strips=0,surfaces=0;const rails0=rails.length;
  const skip=(m:T.Mesh)=>{m.userData.skipRoofObstacle=true;boxes++;return m;};
  const box=(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>skip(t.box(w,h,d,c,x,y,z));
@@ -65,7 +68,7 @@ export function buildStadium(t:StadiumTools):StadiumStats{
  }
  /** One quad per seat (pitch-facing, 2 triangles) on top of the low back strip, SEAT_PITCH apart with a 0.12 m gap: the notches
   *  that make a strip read as single seats. One geometry per row and block, painted and merged into the chunk batch like the
-  *  strips (no draw call); about 10.5k triangles for the 5,250 seats. Seen from behind, only the low strip shows. */
+  *  strips (no draw call); about 10k triangles for the 5,030 seats. Seen from behind, only the low strip shows. */
  function seatBackTops(s:StandDef,d:number,a0:number,a1:number,y0:number,y1:number,c:string){
   const {n,start}=spanSeats(a0,a1),mid=standWorld(s,d,(a0+a1)/2),ym=(y0+y1)/2,hw=(SEAT_PITCH-.12)/2;
   const toPitch=standWorld(s,d-1,0),at=standWorld(s,d,0),nx=toPitch.x-at.x,nz=toPitch.z-at.z;
@@ -100,12 +103,27 @@ export function buildStadium(t:StadiumTools):StadiumStats{
   const back=standBack(s);for(const [a0,a1] of standSpans(s).pieces)rectBox(standRect(s,back,back+.06,a0,a1),3.6,4.3,s.team[0]);
  }
 
- // --- Roofs over the long stands (landable from the sky, like any canopy), on posts behind the concourse ---------------------------
+ // --- Roofs over the long stands, on posts behind the concourse ------------------------------------------------------------------
+ // Nov 12 2026 (QA: under the roof the follow camera saw only the roof and a floating Sit prompt): each roof (slab + its two fascia
+ // frames) is ONE mesh of its own, not merged into the chunk batch, so it can fade (createRoofFade): 2 draw calls when in view.
+ // Still landable: the slab's top is handed to the canopy list as a plain surface (roofCanopies), as the canopy pass measured it.
+ const roofs:T.Mesh[]=[],roofCanopies:{x:number;z:number;w:number;d:number;height:number;overhead:true}[]=[];
  for(const s of STANDS.filter(q=>q.roof)){
-  const slab=standRect(s,ROOF.front,ROOF.back,s.from-2,s.to+2);boxes++;
-  t.box(slab.w,ROOF.thick,slab.d,STEEL,slab.x,ROOF.y,slab.z);// not skipped: the canopy pass makes it a landable roof
-  rectBox(standRect(s,ROOF.back-.12,ROOF.back,s.from-2,s.to+2),ROOF.y-.95,ROOF.y+.75,'#244d49');// the fascia frame (sponsor slot)
-  rectBox(standRect(s,ROOF.front,ROOF.front+.12,s.from-2,s.to+2),ROOF.y-.5,ROOF.y+.3,'#244d49');
+  const a0=s.from-ROOF_OVERHANG,a1=s.to+ROOF_OVERHANG,slab=standRect(s,ROOF.front,ROOF.back,a0,a1),c=new T.Vector3(slab.x,ROOF.y,slab.z),parts:T.BufferGeometry[]=[];
+  const piece=(r:{x:number;z:number;w:number;d:number},y0:number,y1:number,colour:string)=>{const g=new T.BoxGeometry(r.w,y1-y0,r.d).toNonIndexed();
+   g.translate(r.x-c.x,(y0+y1)/2-c.y,r.z-c.z);const col=new T.Color(colour),nrm=g.getAttribute('normal'),out=new Float32Array(nrm.count*3);
+   // The chunk batch's baked light (world.ts): undersides 0.62, tops 1.03, sides darker toward their foot.
+   for(let v=0;v<nrm.count;v++){const ny=nrm.getY(v),f=ny<-.5?.62:ny>.7?1.03:.8;out[v*3]=col.r*f;out[v*3+1]=col.g*f;out[v*3+2]=col.b*f;}
+   g.setAttribute('color',new T.BufferAttribute(out,3));g.deleteAttribute('uv');parts.push(g);};
+  piece(slab,ROOF.y-ROOF.thick/2,ROOF.y+ROOF.thick/2,STEEL);
+  piece(standRect(s,ROOF.back-.12,ROOF.back,a0,a1),ROOF.y-ROOF.frameBelow,ROOF.y+ROOF.frameAbove,'#244d49');// the fascia frame (sponsor slot)
+  piece(standRect(s,ROOF.front,ROOF.front+.12,a0,a1),ROOF.y-.5,ROOF.y+.3,'#244d49');
+  const merged=mergeGeometries(parts)!;for(const g of parts)g.dispose();
+  const roofMaterial=new T.MeshStandardMaterial({vertexColors:true,roughness:.85,transparent:true,opacity:1});t.materials?.push(roofMaterial);// one each: they fade apart
+  const roof=new T.Mesh(merged,roofMaterial);roof.name='stadium-roof-'+s.id;roof.position.copy(c);roof.castShadow=roof.receiveShadow=true;
+  roof.userData.skipRoofObstacle=true;roof.userData.ownDraw=true;// world.ts: never merged into a chunk batch, never measured as a canopy
+  t.add?.(roof);roofs.push(roof);boxes+=3;
+  roofCanopies.push({...slab,height:ROOF.y+ROOF.thick/2,overhead:true});
   for(const a of [-50,-38,-12,12,38,50]){const p=standWorld(s,standBack(s)+.35,a);
    skip(cylinder(.28,ROOF.y,STEEL,p.x,ROOF.y/2,p.z));obstacles.push({x:p.x,z:p.z,w:.6,d:.6});}
  }
@@ -163,5 +181,31 @@ export function buildStadium(t:StadiumTools):StadiumStats{
   const head=box(6,3.4,.5,'#f7f3e3',m.x,30.5,m.z);head.rotation.y=Math.atan2(-m.sx,-m.sz);head.rotation.x=0;
   const frame=box(6.4,3.8,.3,'#53605f',m.x-m.sx*.2,30.5,m.z-m.sz*.2);frame.rotation.y=head.rotation.y;}
 
- return {surfaces,rails:rails.length-rails0,boxes,seatsStrips:strips,seats:seatCount()};
+ return {stats:{surfaces,rails:rails.length-rails0,boxes,seatsStrips:strips,seats:seatCount()},roofFade:createRoofFade(roofs),roofCanopies};
+}
+
+/** How see-through a roof gets while it would hide the player, and how fast it fades (opacity per second, out / back in). */
+export const ROOF_FADE={min:.18,out:5,in:2.2} as const;
+export type RoofFade=ReturnType<typeof createRoofFade>;
+/** The roofs fade while the walking player is under one (and the camera above it) or the camera-to-player line crosses one (hips or
+ *  head): two slab tests per frame near the stadium, nothing far away. Faded, the roof stops writing depth so the stand behind it
+ *  draws; back to opacity 1 it is an ordinary (sorted) surface again. Reduced motion snaps. */
+export function createRoofFade(roofs:readonly T.Mesh[]){
+ const list=STANDS.filter(q=>q.roof).map((s,i)=>({box:roofBox(s),mesh:roofs[i],opacity:1,hiding:false}));
+ const covers=(b:ReturnType<typeof roofBox>,px:number,py:number,pz:number,cx:number,cy:number,cz:number)=>
+  cy>b.top&&py<b.floor&&Math.abs(px-b.x)<b.w/2&&Math.abs(pz-b.z)<b.d/2// under it, seen from above
+  ||segmentHitsBox(px,py+.7,pz,cx,cy,cz,b)||segmentHitsBox(px,py+1.55,pz,cx,cy,cz,b);
+ return {
+  roofs,
+  /** Each roof's opacity now (west, east) and whether it hides the player. */
+  get opacity(){return list.map(r=>r.opacity);},get hiding(){return list.map(r=>r.hiding);},
+  /** Each frame after the camera moves: the player's feet (world) and the camera. */
+  update(dt:number,px:number,py:number,pz:number,cx:number,cy:number,cz:number,reduced=false){
+   const near=Math.abs(px-STADIUM.x)<STADIUM.bowlW/2+20&&Math.abs(pz-STADIUM.z)<STADIUM.bowlL/2+20;
+   for(const r of list){r.hiding=near&&covers(r.box,px,py,pz,cx,cy,cz);
+    const to=r.hiding?ROOF_FADE.min:1;if(r.opacity===to||!r.mesh)continue;
+    r.opacity=reduced?to:to<r.opacity?Math.max(to,r.opacity-ROOF_FADE.out*dt):Math.min(to,r.opacity+ROOF_FADE.in*dt);
+    const m=r.mesh.material as T.MeshStandardMaterial;m.opacity=r.opacity;m.depthWrite=r.opacity>.99;}
+  },
+ };
 }
