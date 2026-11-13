@@ -22,6 +22,9 @@ export const PLACES=[
  // Summit Isle (Oct 15 2026): the mountain island reached by its sandbar from Coral Cay (lib/town/summitIsle.ts). Needs
  // supabase/migrations/20261015_analytics_summit_kit.sql (place_ms allowlist) before time here is counted; see that file.
  ['summit_sandbar','Summit Sandbar'],['summit_pitch','Summit 5s (5v5 pitch)'],['summit_isle','Summit Isle (elsewhere)'],
+ // West Stadium (Nov 12 2026): the land pushed 230 m west (lib/town/westParkLayout.ts). Needs
+ // supabase/migrations/20261119_analytics_stadium.sql (place_ms allowlist + cells < CELL_COUNT) before time here is counted.
+ ['stadium','West Coast Stadium (bowl & pitch)'],['stadium_plaza','Stadium Plaza'],['stadium_park','West Park'],['west_beach','West Beach'],
  ['sea','Open sea & sky'],
 ] as const;
 export type PlaceId=typeof PLACES[number][0];
@@ -71,15 +74,29 @@ export const ACTIVITY_IDLE_MS=60_000;
 /**
  * Heat-map grid: 20 m squares over the whole flyable world (FLIGHT_BOUNDS x −152…864, z −318…300, which takes in Coral Cay
  * and its corridor), so x0/z0 are rounded out to the grid. Cell index = row * COLS + col.
+ *
+ * West Stadium (Nov 12 2026): the island grew west to a coast at x ≈ −332. GRID itself NEVER moves (stored cell indices would
+ * shift and old days would map onto the wrong squares). The new land is a second block APPENDED after the original cells:
+ * WEST_GRID, x −340…−160 (9 columns), the same rows. Index = GRID_CELLS + row * WEST_GRID.cols + col, so indices 0…1611 keep
+ * their meaning and the new ones are 1612…1890.
  */
 export const GRID={x0:-160,z0:-320,size:20,cols:52,rows:31} as const;
-export const CELL_COUNT=GRID.cols*GRID.rows;
+export const WEST_GRID={x0:-340,cols:9} as const;
+/** Cells of the original grid: the first west cell is this index. */
+export const GRID_CELLS=GRID.cols*GRID.rows;
+export const CELL_COUNT=GRID_CELLS+WEST_GRID.cols*GRID.rows;
 export function cellOf(x:number,z:number):number{
  if(!Number.isFinite(x)||!Number.isFinite(z))return -1;
- const c=Math.floor((x-GRID.x0)/GRID.size),r=Math.floor((z-GRID.z0)/GRID.size);
- return c<0||r<0||c>=GRID.cols||r>=GRID.rows?-1:r*GRID.cols+c;
+ const r=Math.floor((z-GRID.z0)/GRID.size);if(r<0||r>=GRID.rows)return -1;
+ const c=Math.floor((x-GRID.x0)/GRID.size);
+ if(c>=0)return c>=GRID.cols?-1:r*GRID.cols+c;
+ const w=Math.floor((x-WEST_GRID.x0)/GRID.size);
+ return w<0?-1:GRID_CELLS+r*WEST_GRID.cols+w;// c < 0 and w < cols: x < GRID.x0 is exactly the west block
 }
-export const cellCenter=(i:number)=>({x:GRID.x0+(i%GRID.cols+.5)*GRID.size,z:GRID.z0+(Math.floor(i/GRID.cols)+.5)*GRID.size});
+export function cellCenter(i:number){
+ if(i>=GRID_CELLS){const k=i-GRID_CELLS;return {x:WEST_GRID.x0+(k%WEST_GRID.cols+.5)*GRID.size,z:GRID.z0+(Math.floor(k/WEST_GRID.cols)+.5)*GRID.size};}
+ return {x:GRID.x0+(i%GRID.cols+.5)*GRID.size,z:GRID.z0+(Math.floor(i/GRID.cols)+.5)*GRID.size};
+}
 
 /** Per-beat caps (also enforced in SQL): at most this many cells, and a cell never holds more than a beat can. */
 export const MAX_BEAT_CELLS=64;
