@@ -31,13 +31,13 @@ const world=load('lib/town/world.ts').buildTown(new T.Scene());
 const blocked=(x,z)=>sim.blocked(x,z,world.obstacles,.32);
 for(const [x,z,what] of [[(P.minX+P.maxX)/2,(P.minZ+P.maxZ)/2,'plaza centre'],[-55,S.z,'plaza east end (from the x -45 street)'],[G.x+4,G.z,'in front of the gate'],[G.x-1,G.z,'through the gate'],[S.x,S.z,'centre spot'],[S.x+20,S.z-40,'on the pitch']])assert(!blocked(x,z),what+' is open');
 assert(blocked(S.x-45,S.z),'the west stand is solid from the ground (walked on top, via its aisles)');
-assert(blocked(PARK_POND.x,PARK_POND.z),'the pond is not walkable');
+assert(!blocked(PARK_POND.x,PARK_POND.z)&&L.pondWade(PARK_POND.x,PARK_POND.z)===L.POND_WADE,'the pond is wadeable (no collider; a walker sinks POND_WADE in the middle)');
 // Nothing grows on the pitch or in the stands: no tree/palm asset inside the bowl.
 const trees=world.assets.filter(a=>a.kind==='tree'||a.kind==='palm');
 assert(!trees.some(a=>L.inStadiumFootprint(a.x,a.z,2)),'no trees in the bowl');
 assert(!trees.some(a=>a.x>P.minX-6&&a.x<P.maxX&&a.z>P.minZ-6&&a.z<P.maxZ+6),'no trees on the plaza');
 const st=world.westPark;
-assert(st.trees>=250&&st.trees<=340,'park trees '+st.trees);assert(st.palms>=6&&st.palms<=10,'West Beach palms '+st.palms);assert.equal(st.flags,14,'plaza flags');
+console.log('park trees',st.trees,'palms',st.palms);assert.equal(st.flags,14,'plaza flags');
 // CORNER DELI and PRAÇA HOMES made way for the plaza; their neighbours stay.
 const names=new Set(world.buildings.map(b=>b.name));
 assert(!names.has('CORNER DELI')&&!names.has('PRAÇA HOMES')&&names.has('MAKERS HOUSE')&&names.has('THE GROCER'),'plaza replaced two west houses');
@@ -54,10 +54,81 @@ assert(!scene.children.some(o=>o.name==='park-pond'),'the pond is batched into i
 
 // 4. The map draws the stadium, the park and the plaza.
 const map=fs.readFileSync(path.join(base,'components/IslandOverview.tsx'),'utf8');
-assert(/data-west-stadium="bowl"/.test(map)&&/data-west-stadium="park"/.test(map)&&/STADIUM PLAZA/.test(map),'map shows the stadium');
+assert(/data-west-stadium="bowl"/.test(map)&&/data-west-stadium="park"/.test(map)&&/PLAZA_LABEL/.test(map)&&!/STADIUM PLAZA/.test(map),'map shows the stadium and the Plaza (no "Stadium" in front, Nov 13 2026)');
 assert(!/>STADIUM</.test(map),'no separate big STADIUM word: the name is the tappable place label (Drip FC, Nov 13 2026)');
 assert(!/lib\/town\/westPark'/.test(map),'the map imports the three-free layout module');
 console.log('west stadium phase 1: ok');
+
+// ---- Stadium Park rework (Nov 13 2026, owner A–G): apron, trails, pond, palms, sign, lawns, map -----------------------------------
+{const Q2=load('lib/town/stadiumSeats.ts'),WP=load('lib/town/westPark.ts'),{distanceToShore}=load('lib/town/shoreline.ts');
+ const lines=L.parkPathLines(),trailLines=L.PARK_TRAILS.map(t=>L.pathPoints(t.curve)),ring=L.ringPoints();
+ const trailD=(x,z,except=-1)=>Math.min(...lines.map((l,i)=>i===except?Infinity:L.segDistance(x,z,l)));
+ // A. One continuous walk from the plaza through the gate to the pitch-level ring: paving at every 0.5 m (three lines across
+ // the gate's width), and every back stair's foot and every open corner lands on the apron.
+ for(const dz of [-5,0,5])for(let x=(P.minX+P.maxX)/2;x>Q2.GATE_ARCH_X-6;x-=.5)assert(L.onParkPaving(x,G.z+dz),`paving from the plaza to the gate at x ${x}, z ${G.z+dz}`);
+ for(const s of Q2.STANDS)for(const a of s.stairs){const f=Q2.standWorld(s,Q2.stairEnd(s)+.6,a);assert(L.onApron(f.x,f.z)&&!blocked(f.x,f.z),`${s.id} stair at ${a}: its foot lands on the apron`);}
+ for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]])for(const k of [0,.5,.75])assert(L.onApron(S.x+sx*(46+14*k),S.z+sz*(60+24*k)),'corner '+sx+','+sz+' paved out to the ring');
+ // The plaza's edge meets the apron (no grass strip): the apron reaches past the plaza's west edge along its whole width.
+ for(let z=P.minZ;z<=P.maxZ;z+=2)assert(L.onApron(P.minX+1,z),'apron under the plaza west edge at z '+z);
+ // H. The plaza meets the x -45 street's sidewalk with no grass strip: paving (a path surface) at every point across the gap.
+ {const road=world.roads.find(r=>r.vertical&&Math.abs(r.x+45)<1);const kerb=road.x-road.w/2;assert(WP.PLAZA_PAVING_EAST>kerb&&WP.PLAZA_PAVING_EAST<kerb+1,'plaza paving tucks under the sidewalk');
+  for(let z=P.minZ+.5;z<P.maxZ;z+=3)for(let x=P.maxX;x<kerb+.5;x+=.25)assert(world.surfaceAreas.some(a=>a.kind==='path'&&Math.abs(x-a.x)<=a.w/2&&Math.abs(z-a.z)<=a.d/2),`paving between the plaza and the sidewalk at (${x}, ${z})`);
+  assert(!/'#d9c8a2'/.test(fs.readFileSync(path.join(base,'lib/town/westPark.ts'),'utf8')),'no part-length centre band on the plaza');}
+ // B. Trails: smooth (no kink over 9° between 1.2 m steps), one width, and every end is on the beach or a named destination.
+ const ends=[];
+ L.PARK_TRAILS.forEach((t,i)=>{const pts=trailLines[i];
+  for(let k=1;k<pts.length-1;k++){const a=Math.atan2(pts[k][1]-pts[k-1][1],pts[k][0]-pts[k-1][0]),b=Math.atan2(pts[k+1][1]-pts[k][1],pts[k+1][0]-pts[k][0]);assert(Math.abs(Math.atan2(Math.sin(b-a),Math.cos(b-a)))<9*Math.PI/180,t.id+' smooth at point '+k);}
+  for(const [end,kind] of [[pts[0],t.from],[pts[pts.length-1],t.to]]){const [x,z]=end;ends.push([t.id,kind,x,z]);
+   const ok=kind==='beach'?L.onBeach(x,z)&&L.trailBeachRun(pts).at(-1)>=5:kind==='ring'?L.segDistance(x,z,ring)<.3:kind==='plaza'?x>=P.minX&&x<=P.maxX&&z>=P.minZ&&z<=P.maxZ:
+    kind==='trail'?Math.min(...trailLines.map((l,j)=>j===i?Infinity:L.segDistance(x,z,l)))<.3:kind==='pond'?L.pondQ(x,z,L.POND_RIM)<1&&!L.inPond(x,z):false;
+   assert(ok,`${t.id} ends at ${kind} (${x.toFixed(1)}, ${z.toFixed(1)})`);}
+  assert(!pts.some(([x,z])=>L.inPond(x,z,1)),t.id+' keeps out of the water');});
+ // Every trail heading for the coast (its far end within 35 m of the sea) runs onto the beach; the beach ends blend to sand.
+ for(const t of L.PARK_TRAILS){const e=t.curve[3];if(distanceToShore(e[0],e[1])<35)assert.equal(t.to,'beach',t.id+' heads for the coast and reaches the beach');}
+ assert(L.PARK_TRAILS.filter(t=>t.to==='beach').length>=5&&WP.TRAIL_BEACH.blend>=5,'the coast-bound trails blend into the sand');
+ assert(/strokeWidth=\{TRAIL_WIDTH\}/.test(map)&&/parkPathLines\(\)/.test(map)&&/data-west-stadium="apron"/.test(map),'the map draws the world\'s own trail points, width and the apron');
+ // C. The pond: bigger (grown south, toward the coast), its rim clear of the apron, the plaza and the beach.
+ const PD=L.PARK_POND;assert(PD.rx>=27&&PD.rz>=20&&PD.z+PD.rz>=100,'a bigger pond, grown south toward the coast');
+ for(let a=0;a<360;a+=3){const t=a*Math.PI/180,x=PD.x+Math.cos(t)*(PD.rx+L.POND_RIM),z=PD.z+Math.sin(t)*(PD.rz+L.POND_RIM);
+  assert(!L.onApron(x,z,2)&&L.onGrass(x,z)&&L.onGrass(PD.x+Math.cos(t)*(PD.rx+L.POND_RIM+3),PD.z+Math.sin(t)*(PD.rz+L.POND_RIM+3)),'pond rim on grass, clear of the apron, at '+a+'°');}
+ assert(!sim.blocked(PD.x+PD.rx*.5,PD.z,world.obstacles,.32)&&L.pondWade(PD.x+PD.rx-.5,PD.z)<.1,'wade in from the bank (shallow at the edge)');
+ // No props on paths or in the pond (benches, signs, lamps, planters, trees, palms): every park collider and tree outside the
+ // bowl and off the plaza is clear of the water (and its rim), every trail, the ring and the apron.
+ const park=o=>o.x<-100&&!L.inStadiumFootprint(o.x,o.z,3)&&!(o.x>P.minX-1.5&&o.x<P.maxX+1.5&&o.z>P.minZ-1.5&&o.z<P.maxZ+1.5);
+ const props=[...world.obstacles.filter(o=>park(o)&&!o.dynamic&&(o.w??0)<30),...world.assets.filter(a=>park(a)&&['tree','palm','bench','planter','lamp','sign'].includes(a.kind))];
+ let checked=0;for(const o of props){const half=Math.max(o.w??0,o.d??0)/2;checked++;
+  assert(L.pondQ(o.x,o.z,L.POND_RIM+half)>=1,`prop at (${o.x.toFixed(1)}, ${o.z.toFixed(1)}) in the pond`);
+  assert(!L.onWalkPath(o.x,o.z,half),`prop at (${o.x.toFixed(1)}, ${o.z.toFixed(1)}) on a path (a trail, the ring, the apron or the pond rim)`);}
+ assert(checked>200,'props checked '+checked);
+ {const s=L.POND_SIGN;assert(!L.onParkPaving(s.x,s.z,1.6)&&!L.inPond(s.x,s.z,L.POND_RIM+1)&&trailD(s.x,s.z)<7,'LILY POND sign on the verge beside the pond walk');}
+ // Ground patches (lawns) never meet a path, the apron, the plaza or the pond, and lie on the lawn.
+ for(const l of L.PARK_LAWNS)for(let a=0;a<64;a++)for(const k of [0,.5,1]){const t=a/64*Math.PI*2,x=l.x+Math.cos(t)*l.rx*k,z=l.z+Math.sin(t)*l.rz*k;
+  assert(!L.onParkPaving(x,z,1)&&!L.inPond(x,z,L.POND_RIM+1)&&L.onGrass(x,z),`lawn at ${l.x},${l.z} meets paving or water at (${x.toFixed(0)}, ${z.toFixed(0)})`);}
+ assert.equal(st.hedges,0,'no straight hedge rows (one lay in the pond, two across lawns)');
+ // D. The West Beach: every park tree on the sand or along the grass edge is a palm (the broadleaf trees stay inland).
+ const parkTrees=world.assets.filter(a=>a.kind==='tree'&&a.x<-100);
+ assert(!parkTrees.some(a=>!L.onGrass(a.x,a.z)||L.grassEdgeDistance(a.x,a.z)<WP.PALM_EDGE_M),'no broadleaf / conifer tree on the beach or its edge row');
+ const palms=world.assets.filter(a=>a.kind==='palm'&&a.x<-100);assert(palms.length>=40&&palms.every(a=>distanceToShore(a.x,a.z)>=12),'West Beach palms '+palms.length+' (dry sand / edge row)');
+ assert(st.trees>=150&&st.trees<=340&&st.trees+st.palms<=340,'park trees '+st.trees+', palms '+st.palms);
+ // G. The plaza is just "Plaza" in the world too.
+ assert.equal(L.PLAZA_LABEL,'PLAZA');assert(!/STADIUM PLAZA/.test(fs.readFileSync(path.join(base,'lib/town/westPark.ts'),'utf8')),'in-world sign says PLAZA');
+ // Pond life: wired in Town; near the pond the koi and dragonflies show and move, far away they hide; a ball dropping in the
+ // water splashes (the shared splash and ripple pools) and the koi bolt; still mode holds everything (no splash).
+ const town=fs.readFileSync(path.join(base,'components/Town.tsx'),'utf8');
+ assert(/createPondLife\(scene,/.test(town)&&/pondLife\.update\(/.test(town)&&/pondLife\.wade\(/.test(town)&&/disposers\.add\(\(\)=>pondLife\.dispose\(\)\)/.test(town),'pond life wired into Town');
+ const ps=fs.readFileSync(path.join(base,'lib/town/parkPond.ts'),'utf8');assert(/reefFishModel\('koi'\)/.test(ps)&&/createBugModel\(/.test(ps)&&/InstancedMesh\(fishGeo/.test(ps)&&/InstancedMesh\(flyGeo/.test(ps),'koi and dragonflies reuse the island models, instanced');
+ const LIFE=load('lib/town/parkPond.ts'),scn=new T.Scene(),log=[];const life=LIFE.createPondLife(scn,{phone:false,sink:{splash:(x,z,s)=>log.push(['splash',x,z,s]),ring:(x,z,r)=>log.push(['ring',x,z,r])}});
+ const inp=(o)=>({x:PD.x+40,z:PD.z,speed:0,onGround:true,ballX:0,ballY:0,ballZ:0,ballOn:false,shown:true,mode:0,...o});
+ life.update(1/60,inp({x:500,z:500}));assert(!life.fish.visible&&!life.flies.visible,'far: hidden');
+ const f0=new T.Matrix4();life.fish.getMatrixAt(0,f0);const p0=new T.Vector3().setFromMatrixPosition(f0);
+ for(let i=0;i<60;i++)life.update(1/60,inp());assert(life.fish.visible&&life.flies.visible,'near: koi and dragonflies show');
+ const f1=new T.Matrix4();life.fish.getMatrixAt(0,f1);assert(new T.Vector3().setFromMatrixPosition(f1).distanceTo(p0)>.05,'the koi swim');
+ life.update(1/60,inp({ballOn:true,ballX:PD.x,ballZ:PD.z,ballY:1}));life.update(1/60,inp({ballOn:true,ballX:PD.x,ballZ:PD.z,ballY:.2}));assert(log.some(e=>e[0]==='splash'),'a ball landing in the pond splashes');
+ log.length=0;for(let i=0;i<90;i++)life.update(1/60,inp({x:PD.x,z:PD.z,speed:2.5}));assert(log.some(e=>e[0]==='ring')&&log.some(e=>e[0]==='splash'),'wading in: a splash, then ripples');
+ log.length=0;life.update(1/60,inp({mode:2,ballOn:true,ballX:PD.x,ballZ:PD.z,ballY:1}));life.update(1/60,inp({mode:2,ballOn:true,ballX:PD.x,ballZ:PD.z,ballY:.2}));assert(!log.length,'still mode: no splash');
+ life.update(1/60,inp({mode:1}));assert(!life.flies.visible&&life.fish.count===LIFE.POND_LIFE.koi[1],'lite: fewer koi, no dragonflies');
+ life.dispose();
+ console.log(`stadium park: ok (props checked ${checked}, palms ${palms.length}, park trees ${parkTrees.length}, trail ends ${ends.map(e=>e[0]+':'+e[1]).join(' ')})`);}
 
 // 5. Phase 2: walking the stands (the same rooftop travel Town builds), the gate, seats, the sit state machine, landings.
 const Q=load('lib/town/stadiumSeats.ts'),{createRooftopTravel}=load('lib/town/rooftopTravel.ts');

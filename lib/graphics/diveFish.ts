@@ -16,6 +16,8 @@ export const REEF_FISH:Record<string,ReefFishLook>={
  bigeye:{shape:'oval',top:'#b8392c',side:'#d0503c',belly:'#e8a08a',fin:'#a8302a'},
  snapper:{shape:'oval',top:'#b84a40',side:'#d06a5a',belly:'#f0c4b4',fin:'#c85a4a'},
  trevally:{shape:'oval',top:'#7c7c5c',side:'#c8b878',belly:'#ece4c4',fin:'#d8b048'},
+ /** Stadium Park's pond koi (Nov 13 2026, lib/town/parkPond.ts): orange over white. */
+ koi:{shape:'oval',top:'#e2662c',side:'#f08a48',belly:'#f6efe4',fin:'#f4e2d2',stripe:'#f8f1e8'},
 };
 const SHAPE={slender:{H:.09,W:.07},disc:{H:.25,W:.06},oval:{H:.15,W:.075}} as const;
 const c3=(h:string)=>{const c=new T.Color(h);return [c.r,c.g,c.b] as [number,number,number];};

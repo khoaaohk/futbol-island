@@ -151,17 +151,22 @@ export function* buildTownSteps(scene: T.Scene) {
   const islandShore=createIslandShore(shoreGroup);
   // Trees and palms are solid (Oct 13 2026, user: "don't allow going into trees and bushes"): a round collider of the trunk's
   // radius plus TRUNK_CLEARANCE, so walkers and rides (their own radius on top) stop at the trunk and slide round it.
-  function palm(x:number,z:number,height=6){prop('palm',()=>palmParts(x,z,height));}
-  function palmParts(x:number,z:number,height=6){
+  // yaw / ribs (Nov 13 2026, West Beach): turns the palm so its gentle trunk lean points its own way, and ribs=false drops the
+  // 56 thin frond midrib cylinders (~2.2k of a palm's ~2.4k triangles) for the West Beach's many palms. Defaults: as before.
+  function palm(x:number,z:number,height=6,yaw=0,ribs=true){prop('palm',()=>palmParts(x,z,height,yaw,ribs));}
+  function palmParts(x:number,z:number,height=6,yaw=0,ribs=true){
     assets.push({kind:'palm',x,z,w:.45,d:.45,visualW:6.5,visualD:6.5,canopyHeight:height});
-    const group=new T.Group();group.position.set(x,0,z);town.add(group);
+    const group=new T.Group();group.position.set(x,0,z);group.rotation.y=yaw;town.add(group);
     const trunk=put(new T.CylinderGeometry(.11,.22,height,9),'#9d805b',0,height/2,0,group);trunk.rotation.z=-.07;
     for(let i=0;i<7;i++){
       const angle=i/7*Math.PI*2, points:T.Vector3[]=[];
       const positions:number[]=[],indices:number[]=[];
       for(let j=0;j<=8;j++){const t=j/8,r=t*3.25,w=Math.sin(t*Math.PI)*.44;const y=height+.45*Math.sin(t*Math.PI)-t*t*1.05;points.push(new T.Vector3(Math.cos(angle)*r,y,Math.sin(angle)*r));positions.push(Math.cos(angle)*r-Math.sin(angle)*w,y,Math.sin(angle)*r+Math.cos(angle)*w,Math.cos(angle)*r+Math.sin(angle)*w,y-.05,Math.sin(angle)*r-Math.cos(angle)*w);if(j<8){const n=j*2;indices.push(n,n+1,n+2,n+1,n+3,n+2);}}
-      const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();const m=put(geo,i%2?'#5b895e':'#7a9e67',0,0,0,group);(m.material as T.MeshStandardMaterial).side=T.DoubleSide;
-      for(let j=0;j<points.length-1;j++)line(points[j],points[j+1],.019,'#a1ac6d',group);
+      // Without ribs the frond carries its own back face (a mirrored copy) in a one-step-off palette shade, so it joins the chunk's
+      // ordinary front-sided paint batch instead of adding the double-sided one to every West Beach chunk (a draw call each).
+      if(!ribs){const n=positions.length/3;positions.push(...positions);for(let k=0,m=indices.length;k<m;k+=3)indices.push(indices[k]+n,indices[k+2]+n,indices[k+1]+n);}
+      const geo=new T.BufferGeometry();geo.setAttribute('position',new T.Float32BufferAttribute(positions,3));geo.setIndex(indices);geo.computeVertexNormals();const m=put(geo,ribs?(i%2?'#5b895e':'#7a9e67'):(i%2?'#5b895f':'#7a9e68'),0,0,0,group);if(ribs)(m.material as T.MeshStandardMaterial).side=T.DoubleSide;
+      if(ribs)for(let j=0;j<points.length-1;j++)line(points[j],points[j+1],.019,'#a1ac6d',group);
     }
     obstacles.push(trunkCollider(x,z,.22));
   }

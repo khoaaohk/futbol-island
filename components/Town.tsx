@@ -202,6 +202,7 @@ import {createRideTricks,isHeldRideAction} from '@/lib/town/rideTricks';
 import {createWalkBall,SHOT_WINDUP,SKY_MAX_APEX,KEEPUP_SKY,skyMarkShrink,strayAfterKeepUpPress} from '@/lib/town/walkBall';
 import {createBallEffects} from '@/lib/graphics/ballEffects';
 import {createSwimRipples,type SwimRippleInput} from '@/lib/graphics/swimRipples';
+import {createPondLife} from '@/lib/town/parkPond';import {POND_Y} from '@/lib/town/westParkLayout';// Stadium Park pond life: koi, dragonflies, wading splashes (Nov 13 2026)
 import { createPlayer, profileFor, type PlayerMotion } from '@/lib/graphics/player';
 import { sideGameDress, mainPlayerDress, matchPlayerDress, ownKitLook, DEFAULT_MATCH_KITS } from '@/lib/town/beanLooks';
 import {createLiveJoin} from '@/lib/town/liveJoinRuntime';import {createMatchFocus,MATCH_FOCUS_LIVE} from '@/lib/town/matchFocus';
@@ -1160,6 +1161,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const rollWalkingBall=createGroundBallRoll();
     const airBallFrom=new T.Vector3(),airBallTo=new T.Vector3(),dribblePlayer={x:0,y:0,z:0,yaw:0};
     const walkBall=createWalkBall(),ballEffects=createBallEffects(),rideTricks=createRideTricks(),jetActions=createJetpackActions(),parachute=createParachute(),sonicBurst=createSonicBurst(),parachuteTrail=createParachuteTrail(),craterEffect=createCraterEffect(),landingDust=createLandingDust();scene.add(landingDust.root);scene.add(ballEffects.root,parachute.root,sonicBurst.root,parachuteTrail.root,craterEffect.root);
+    const pondLife=createPondLife(scene,{phone:quality.phone,sink:{splash:(x,z,size)=>ballEffects.splashDown(x,POND_Y,z,size,reduced),ring:(x,z,r)=>ballEffects.swimRipple(x,POND_Y,z,r,1.1,.32,1,0,0)}});disposers.add(()=>pondLife.dispose());
     disposers.add(()=>{craterEffect.dispose();landingDust.dispose();parachuteTrail.dispose();sonicBurst.dispose();parachute.dispose();ballEffects.dispose();});
     const ballFloor=(x:number,z:number)=>Math.max(rooftop.surface(x,z),lighthouseFloor(x,z,walkBall.state.y-.15+Math.max(0,-walkBall.state.vy)/30,.25));
     // Sky keep-up (Oct 24 2026, lib/town/walkBall.ts KEEPUP_SKY): ONE pooled flat red ring (1 draw call, made once, hidden by default)
@@ -1901,6 +1903,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(streetTraffic.rider.index>=0){const truck=streetTraffic.cars[streetTraffic.rider.index],bed=streetTraffic.bedPoint(truck.index);groundY=bed.y;ridePitch=truck.group.rotation.x;player.root.position.x=bed.x;player.root.position.z=bed.z;}
       if(water.inWater&&rideRef.current==='walk'&&streetTraffic.rider.index<0&&!rooftop.state.falling){groundY=water.state.rootY;// wading: the feet on the shelf; swimming: the root under the water line
         rideSeat+=((animalRides.riding?1:0)-rideSeat)*(1-Math.exp(-(active?dt:0)*RIDE_RISE));if(rideSeat<1e-3&&!animalRides.riding)rideSeat=0;groundY+=rideSeat*RIDE_SEAT_LIFT;}/* riding: prone on the risen animal's back */else rideSeat=0;
+      if(rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.state.air&&groundY<.05&&pondLife.active)groundY-=pondLife.wade(visualLocation.x,visualLocation.z);/* wading in the park pond */
       player.root.rotation.order='YXZ';player.root.rotation.x=ridePitch;vehicle.root.rotation.order='YXZ';vehicle.root.rotation.x=ridePitch;player.root.position.y=groundY;vehicle.root.position.y=groundY;
       const crash=rideRef.current==='jetpack'?0:rooftop.state.recovery/ROOF_RECOVERY_TIME;
       const collapse=Number.isFinite(spinCrashAge)?T.MathUtils.smoothstep(spinCrashAge,.15,.65):1;
@@ -2031,6 +2034,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
           if(fr){const n=nearestRiders(fr,visualLocation.x,visualLocation.z,RIDE_SPLASH.friends,splashNear,splashDist);for(let i=0;i<n;i++){const j=splashNear[i];rideSplash.rider(1+i,fr.x[j],fr.y[j],fr.z[j],fr.yaw[j],fr.speed[j]);}}
           rideSplash.end();}}
       {const bs=walkBall.state;if(shoreFoam.update(active?dt:0,shoreFoamMode(heat.tier,heat.saver,reduced),visualLocation.x,groundY,visualLocation.z,Math.hypot(velocity.x,velocity.z),player.root.rotation.y,bs.x,bs.y,bs.z,Math.hypot(bs.vx,bs.vz),ball.visible,Math.hypot(camera.position.x-visualLocation.x,camera.position.z-visualLocation.z)))ballEffects.splash(bs.x,WATER_LEVEL,bs.z);}/* one pooled splash when the ball drops into the swash */
+      {const bs=walkBall.state;pondLife.update(active?dt:0,{x:visualLocation.x,z:visualLocation.z,speed:Math.hypot(velocity.x,velocity.z),onGround:groundY<.05&&rideRef.current!=='jetpack',ballX:bs.x,ballY:bs.y,ballZ:bs.z,ballOn:ball.visible,shown:world.westShown,mode:reduced||heat.staticAmbience?2:waterFxOn()?0:1});}/* Stadium Park pond: koi, dragonflies, wading / ball splashes (only near it) */
       if(meTumble.age>=0)stepTumble(meTumble,active?dt:0,Math.hypot(input.current.x,input.current.z)>.1);/* my knock-over tumble: steering skips to the get-up (no input lock) */
       islandNpcs.update(active?heldDt:0,elapsed,reduced,{x:visualLocation.x,y:groundY,z:visualLocation.z},!active||!islandNpcs.root.visible,!coarse&&viewportW>600,hoveredNpcId,camera,(rideRef.current==='jetpack'&&flight.height>1.2)||vending.focused!==null||emoteCam.active||keepUpBusy.current||liveJoin.joined/* joined a live match (data-live-join): no townsfolk name tag over the pitch (Lua floated above the beach court); back on Leave */);fieldBump.applyNpcNudges();
       const hudTick=now-lastHud>(stadiumSit.hot?HOT_HUD_MS:150);// in the stadium bowl the Sit prompt joins the arbiter within ~50 ms

@@ -146,7 +146,7 @@ export const TOWNSFOLK_CAST:NpcDefinition[]=[
    'Our team eats together after every game, win or lose. That’s where friendships grow.'],
   ['What does a team cook make on match day?','Simple, familiar food: rice or pasta with vegetables and some chicken, fish, beans or eggs. Nothing new on match day, so tummies stay happy.',
    'What about sweets?','A treat with friends after a game is fine. Before playing, fruit or toast is a better choice than a sugary snack.']),
- folk('square','zainab','Zainab','Football scout in training','WALKING TO STADIUM PLAZA',-50,-55,{ch:'female',skin:5,clothing:'classic',age:'teen',look:{hair:'bun'}},{},
+ folk('square','zainab','Zainab','Football scout in training','WALKING TO THE PLAZA',-50,-55,{ch:'female',skin:5,clothing:'classic',age:'teen',look:{hair:'bun'}},{},
   'A teenager learning to scout, who watches what players do when they don’t have the ball.',
   'Scouts watch more than goals. I note how players move when they don’t have the ball.',
   ['My notebook asks three things: does she scan, does she help teammates, and how does she react to mistakes?',
