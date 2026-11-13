@@ -1,6 +1,8 @@
 // DRIP FC Stadium soundscape (lib/audio/stadiumSound.ts, Nov 13 2026): the music crossfade curve with hysteresis, the songs that
 // follow stadiumMood (structure, variation, bar-aligned start, crossfade), gating (no gesture / hidden / muted), the goal shake
 // (reduced motion, flight), lazy build and teardown, no copyrighted titles, and the wiring in islandSound / islandMusic / Town.
+// EPL feel (Nov 13 2026): the CC0 recordings exist, are small, credited, fetched only near the stadium after a gesture; the
+// referee's whistles and the PA follow the match.
 // usage: node tests/stadium-sound.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const base=path.resolve(__dirname,'..');
@@ -15,10 +17,13 @@ const buffer=(ch,n,r)=>{const d=[...Array(ch)].map(()=>new Float32Array(Math.min
 function base_(ctx){return {createGain:()=>nodeFor(ctx),createBiquadFilter:()=>nodeFor(ctx,{type:''}),createOscillator:()=>nodeFor(ctx,{type:''}),createBufferSource:()=>nodeFor(ctx,{loopStart:0,loopEnd:0}),
  createStereoPanner:()=>nodeFor(ctx),createConvolver:()=>nodeFor(ctx),createChannelSplitter:()=>nodeFor(ctx),createChannelMerger:()=>nodeFor(ctx),createBuffer:buffer,destination:{}};}
 class Offline{constructor(ch,n,r){offlines++;Object.assign(this,base_(this));this.sampleRate=r;this.n=n;this.ch=ch;this.currentTime=0;}startRendering(){renders++;return Promise.resolve(buffer(this.ch,this.n,this.sampleRate));}}
-const ctx={...base_(null),state:'running',currentTime:0,sampleRate:44100};
+let decodes=0;const ctx={...base_(null),state:'running',currentTime:0,sampleRate:44100,decodeAudioData(){decodes++;return Promise.resolve(buffer(2,44100*6,44100));}};
+// fetch (the recordings): counted; fails for a name listed in `missing`
+const fetched=[],missing=new Set();const fakeFetch=function(url){if(this!==fakeGlobal)throw new TypeError('Illegal invocation');fetched.push(url);const name=String(url).split('/').pop().replace('.m4a','');
+ return Promise.resolve(missing.has(name)?{ok:false,status:404,arrayBuffer:()=>Promise.reject(new Error('404'))}:{ok:true,status:200,arrayBuffer:()=>Promise.resolve(new ArrayBuffer(8))});};
 const tick=()=>new Promise(r=>setImmediate(r));
 // ---- the loader (relative imports; the fake OfflineAudioContext on the module's globals) ----
-const cache=new Map();const context=vm.createContext({console,Math,Set,Map,Float32Array,Promise,performance,setTimeout:(f)=>{f();return 1;},clearTimeout(){},globalThis:{OfflineAudioContext:Offline}});
+const cache=new Map();const fakeGlobal={OfflineAudioContext:Offline,fetch:fakeFetch};const context=vm.createContext({console,Math,Set,Map,Float32Array,Float64Array,Promise,performance,Array,Object,Number,String,Error,setTimeout:(f)=>{f();return 1;},clearTimeout(){},globalThis:fakeGlobal});
 function load(name){const file=path.resolve(base,name);if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
  vm.runInContext('(function(exports,module,require){'+code+'\n})',context)(mod.exports,mod,id=>load(path.relative(base,path.resolve(path.dirname(file),id+'.ts'))));cache.set(file,mod.exports);return mod.exports;}
@@ -71,7 +76,21 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
  const text=(fs.readFileSync(path.join(base,'lib/audio/stadiumSound.ts'),'utf8')+JSON.stringify(A.STADIUM_CHANTS)).toLowerCase();
  for(const b of banned)assert(!text.includes(b),'no real song: '+b);
  for(const id of Object.keys(A.STADIUM_CHANTS)){const c=A.STADIUM_CHANTS[id];assert(c.title&&c.words);assert(!/\b(kill|hate|die|stupid|idiot|damn|hell)\b/i.test(c.words+c.title),'kid-safe words: '+id);}
- assert(!/\.(mp3|m4a|ogg|wav)['"]/.test(fs.readFileSync(path.join(base,'lib/audio/stadiumSound.ts'),'utf8')),'no recordings: everything is synthesised');}
+ // the chants stay synthesised (no chant recordings): the only audio files are the CC0 crowd beds, reactions, whistle and PA
+ assert(!/\.(mp3|ogg|wav)['"]/.test(fs.readFileSync(path.join(base,'lib/audio/stadiumSound.ts'),'utf8')),'only the listed .m4a recordings');}
+
+// 3b. The real crowd (owner: "must feel like the English Premier League"): CC0 recordings in public/audio/stadium/, small, credited.
+{const dir=path.join(base,'public/audio/stadium');let total=0;
+ for(const id of A.RECORDING_IDS){const f=path.join(dir,id+'.m4a');assert(fs.existsSync(f),'recording '+id);const b=fs.readFileSync(f),n=b.length;total+=n;
+  assert(n>4000&&n<=160*1024,id+': about 150 KB at most ('+(n/1024).toFixed(1)+' KB)');assert.equal(b.toString('latin1',4,8),'ftyp',id+' is an MP4/AAC file (Safari decodes it)');
+  assert.equal(A.recordingUrl(id),'/audio/stadium/'+id+'.m4a');const lp=A.STADIUM_RECORDINGS[id].loop;if(lp)assert(lp[0]>0&&lp[1]-lp[0]>=10,id+': a padded loop region');}
+ assert(total<=1024*1024,'about 1 MB in all: '+(total/1024).toFixed(0)+' KB');
+ assert.deepEqual(fs.readdirSync(dir).filter(f=>!f.startsWith('.')).sort(),A.RECORDING_IDS.map(id=>id+'.m4a').sort(),'nothing else shipped in the folder');
+ const credits=fs.readFileSync(path.join(base,'docs/third-party/stadium-crowd-audio.md'),'utf8'),settings=fs.readFileSync(path.join(base,'components/IslandSettings.tsx'),'utf8');
+ for(const id of A.RECORDING_IDS)assert(credits.includes('`'+id+'.m4a`'),'credited: '+id);
+ const urls=credits.match(/https:\/\/freesound\.org\/people\/[^/\s)]+\/sounds\/\d+\//g)||[];assert(urls.length>=9,'each Freesound source linked: '+urls.length);
+ assert(!/CC[- ]BY[- ]NC/i.test(credits.replace(/no CC-BY-NC/gi,'')),'no non-commercial licences');assert(/CC0/.test(credits)&&/Kokoro-82M/.test(credits),'licences stated (CC0, Kokoro Apache-2.0)');
+ assert(/Stadium crowd/.test(settings)&&/freesound\.org/.test(settings),'credited in Settings → About us');}
 
 // 4. The shake: never under reduced motion, never while flying, only near the bowl; restore puts the camera back exactly.
 {const sh=A.createStadiumShake(),cam={position:{x:1,y:2,z:3}};
@@ -93,8 +112,9 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
  const run=async(f,n=1)=>{for(let i=0;i<n;i++){ctx.currentTime+=.1;snd.update(.1,f);await tick();}};
  const o0=offlines;await run(far,50);assert.equal(offlines,o0,'far away: nothing rendered');assert.equal(snd.debug.ticks,50,'10 Hz work');
  for(let i=0;i<5;i++)snd.update(.016,far);assert.equal(snd.debug.ticks,50,'a frame under the tick does nothing');
- await run(bowl,20);assert.equal(offlines,o0,'no gesture yet: nothing built, nothing rendered');assert.equal(snd.ready,false);
+ await run(bowl,20);assert.equal(offlines,o0,'no gesture yet: nothing built, nothing rendered');assert.equal(snd.ready,false);assert.equal(fetched.length,0,'no gesture yet: nothing fetched');
  gesture=true;ok=false;await run(bowl,10);assert(snd.debug.builds===1&&offlines>o0,'after a gesture, the first approach renders the beds');assert.equal(snd.ready,false,'muted / hidden: no live graph');assert(host.woke>0,'asks the idle-suspended context to wake');
+ assert.equal(fetched.length,A.RECORDING_IDS.length,'the recordings are fetched on the first approach, once each');assert.equal(decodes,A.RECORDING_IDS.length);assert(snd.debug.real,'the real bed');
  ok=true;await run(bowl,2);assert.equal(snd.ready,true,'unmuted in the bowl: the live graph');assert.equal(snd.presence,1);assert.equal(snd.musicFade,1,'the music fades out in the bowl');
  sfx=false;await run(bowl,1);assert.equal(snd.musicFade,1,'effects muted: the island music still stops at the stadium');sfx=true;
 
@@ -102,6 +122,7 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
  // a match wakes: the mood's chant cycle → the song follows; it starts on a bar line
  const m={live:true,exhibition:true,goals:0,ball:{x:S.x,z:S.z}};let guard=0;while(Mo.stadiumMood().phase==='quiet'&&guard++<400)Mo.stepStadiumMood(.1,m);
  const want=mood.chant;assert(want,'the mood is chanting');await run(bowl,1);assert.equal(snd.song,want,'the song follows the mood: '+want);
+ assert(snd.debug.pa===1&&snd.debug.whistles>=1,'a match waking: the PA welcome, then the kick-off whistle');
  assert.equal(snd.debug.steps[0],'lead');const bar=A.nextBarIn(mood.beat,mood.bpm,.6),spb=60/mood.bpm;assert(Math.abs(((mood.beat+bar/spb)%4+4)%4)<1e-6||Math.abs(((mood.beat+bar/spb)%4)-4)<1e-6,'starts on a bar line');
  for(let i=0;i<160;i++){Mo.stepStadiumMood(.1,m);await run(bowl,1);}assert(snd.debug.phrases>=3,'phrases go out one after another: '+snd.debug.phrases);
  const nodesBefore=made;for(let i=0;i<10;i++)snd.update(.016,bowl);assert.equal(made,nodesBefore,'no nodes made between ticks');
@@ -110,27 +131,33 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
  const starts=snd.debug.chantStarts;guard=0;while(mood.chant===want&&guard++<2000)Mo.stepStadiumMood(.1,m);guard=0;while(!mood.chant&&guard++<400)Mo.stepStadiumMood(.1,m);
  await run(bowl,1);assert.equal(snd.song,mood.chant,'the next chant: '+mood.chant);assert.equal(snd.debug.chantStarts,starts+1);
  // a goal: the roar one-shot; a near miss: the ooh
- const goals=snd.debug.goals;Mo.stepStadiumMood(.1,{...m,goals:1});await run(bowl,1);assert.equal(snd.debug.goals,goals+1,'a goal roars');
+ const goals=snd.debug.goals,wh=snd.debug.whistles;Mo.stepStadiumMood(.1,{...m,goals:1});await run(bowl,1);assert.equal(snd.debug.goals,goals+1,'a goal roars');assert.equal(snd.debug.whistles,wh+1,'the referee whistles the goal');
  // reactions: a near miss "ooh" + "aah", the attack swell and its fizzle, the touch ring (save, tackle, long ball), ripples
  {const R=snd.debug.reactions,before={...R};const sim={touches:Array.from({length:8},()=>({serial:0,kind:'receive',team:'gold',height:0,other:null})),touchSerial:0};
   const touch=(kind,o={})=>{sim.touchSerial++;Object.assign(sim.touches[(sim.touchSerial-1)%8],{serial:sim.touchSerial,kind,team:'gold',height:0,other:'x',...o});};
   const fs_={...bowl,sim};await run(fs_,1);
+  // the referee: the kick-off after a goal (the sim's restart ends) and a period mark on the match clock
+  {const w0=snd.debug.whistles,p0=snd.debug.periods;sim.restartKind='kickoff';sim.clock=A.REFEREE.periodS-1;await run(fs_,1);sim.restartKind=null;await run(fs_,1);assert.equal(snd.debug.whistles,w0+1,'the kick-off whistle');
+   sim.clock=A.REFEREE.periodS+1;await run(fs_,1);assert.equal(snd.debug.periods,p0+1,'a period mark');assert.equal(snd.debug.whistles,w0+3,'peep, peeep');sim.clock=A.REFEREE.periodS+2;await run(fs_,3);assert.equal(snd.debug.periods,p0+1,'once');await run(fs_,45);}
   for(let i=0;i<5;i++)touch('receive');await run(fs_,1);assert.deepEqual({...R},{...before,ooh:R.ooh,aah:R.aah,applause:R.applause},'old touches are not replayed');
   const t0={...R};touch('parry');await run(fs_,1);assert(R.ooh>t0.ooh&&R.applause>t0.applause,'a save: ooh + applause');
   await run(fs_,40);const t1={...R};touch('kick',{height:1,other:'y'});touch('receive');await run(fs_,1);assert(R.applause>t1.applause,'a long ball well received: applause');
   await run(fs_,70);const t2={...R};touch('tackle');await run(fs_,1);assert(R.applause+R.jeer>t2.applause+t2.jeer,'a tackle: applause (or whistles)');
-  const t3={...R};mood.excitement=.3;await run(fs_,1);mood.excitement=.7;await run(fs_,1);assert.equal(R.swell,t3.swell+1,'an attack near the box: the swell');
+  const t3={...R};mood.excitement=.3;await run(fs_,1);mood.excitement=.7;await run(fs_,1);assert.equal(R.swell,t3.swell+1,'an attack near the box: the swell');assert.equal(R.attack,t3.attack+1,'and the "a-TTAAACK!" urging');
   mood.excitement=.3;await run(fs_,25);assert(R.groan+R.aah>t3.groan+t3.aah,'the attack fizzles: a groan / aah');
   const t4={...R};Mo.stepStadiumMood(.1,m);const mm=Mo.stadiumMood();mm.sinceGoal=5;mm.sinceNearMiss=0;await run(fs_,1);assert(R.ooh>t4.ooh&&R.aah>t4.aah,'a near miss: ooh, then aah');
   const t5=Object.values(R).reduce((a,b)=>a+b,0);await run({...bowl,sim:null},400);assert(Object.values(R).reduce((a,b)=>a+b,0)-t5>=3,'ripples from the sections while nothing happens');
-  const pool=[...live].filter(n=>n.context===null&&n.started&&!n.dead&&n.buffer&&!n.loop).length;assert(pool<=15,'still a fixed pool (2 song slots x 6 + 3 one-shots): '+pool);}
+  const pool=[...live].filter(n=>n.context===null&&n.started&&!n.dead&&n.buffer&&!n.loop).length;assert(pool<=16,'still a fixed pool (2 song slots x 6 + 4 one-shots): '+pool);}
  // hidden / muted: the island sound's silence() stops it at once
  linked.stop(true);assert.equal(snd.ready,false,'silenced');ok=false;await run(bowl,3);assert.equal(snd.ready,false,'stays silent while hidden');ok=true;await run(bowl,2);assert.equal(snd.ready,true,'comes back on return');
  // leaving: fades, stops after a few seconds, tears the renders down after TEARDOWN s
  await run(far,10);assert.equal(snd.ready,true,'still fading out');await run(far,Math.ceil(K.stopAfter*10)+2);assert.equal(snd.ready,false,'stopped after leaving');
  const t0=snd.debug.teardowns;await run(far,K.teardown*10+5);assert.equal(snd.debug.teardowns,t0+1,'torn down after a while away');
- const o1=offlines;await run(far,20);assert.equal(offlines,o1,'nothing rendered after teardown while away');
+ const o1=offlines,f1=fetched.length;await run(far,20);assert.equal(offlines,o1,'nothing rendered after teardown while away');assert.equal(fetched.length,f1,'nothing fetched while away');
  // lite mix: fewer voices, no olé roll
+ // a recording that fails to load: the synthesised layer stands in (the bed: the synthesised murmur)
+ {missing.add('bed');const fb=A.createStadiumSound(host);for(let i=0;i<14;i++){fb.update(.1,bowl);ctx.currentTime+=.1;await tick();}assert(fb.ready&&!fb.debug.real&&fb.debug.recordingErrors===1,'no bed recording: the synthesised murmur');
+  assert(A.synthKinds({}).includes('murmur')&&!A.synthKinds({bed:1,roar:1,goal:1,ooh:1,groan:1,applause:1}).includes('murmur'),'synth beds only where no recording');fb.dispose();missing.clear();}
  const lite=A.createStadiumSound(host);await run({...bowl,lite:true},1);for(let i=0;i<12;i++){lite.update(.1,{...bowl,lite:true});ctx.currentTime+=.1;await tick();}assert.equal(lite.debug.lite,true);lite.dispose();snd.dispose();}
 
 // 6. Wiring: the island sound hosts it (gates, silence, idle, audible), the music crossfades, Town drives it.

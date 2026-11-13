@@ -1,8 +1,18 @@
 // DRIP FC Stadium soundscape (Nov 13 2026; owner: the stadium should "feel alive and rumbling", like a big European club ground).
 // It follows the crowd's shared mood (lib/town/stadiumMood.ts: bpm, beat, chant, phase, excitement, wave, sinceGoal / sinceNearMiss),
-// so what you hear is what the crowd shader shows. Everything is SYNTHESISED here (no recordings, nothing downloaded): a crowd of
-// detuned sawtooth "voices" through vowel formant filters, noise-burst crowd claps and stomps, and a synthesised bass drum, each
-// rendered by an OfflineAudioContext (native code, off the main thread) with the reverb baked in.
+// so what you hear is what the crowd shader shows.
+// ENGLISH PREMIER LEAGUE feel (owner, Nov 13 2026, after the synth samples: "it must feel like the English Premier League"):
+// the BED is now real: CC0 field recordings of football crowds (public/audio/stadium/*.m4a, ~0.7 MB in all, credited in
+// docs/third-party/stadium-crowd-audio.md and Settings -> About us), fetched and decoded only on the first approach after a
+// gesture and dropped on teardown with everything else. bed (a match-day hum, always on near the bowl) and roar (thousands
+// roaring, rising with excitement) loop seamlessly over a padded region (STADIUM_RECORDINGS.loop); goal / goal2 erupt on a
+// goal; ooh / ooh2 / groan / applause are the crowd's reactions; whistle is the referee (kick-off, a goal, the period marks);
+// pa-welcome / pa-goal are the tannoy (a ding-dong, then an announcer line rendered OFFLINE with Kokoro-82M through a PA horn
+// and the bowl's slap echoes: no speech engine at runtime). Where a file fails to load the old synthesised layer stands in.
+// On top, the crowd's own ORIGINAL chants are still synthesised here (detuned sawtooth "voices" through vowel formant filters,
+// noise-burst claps and stomps, a synthesised drum, each rendered by an OfflineAudioContext with the reverb baked in), now in
+// an English terrace style: the long slow sung "Come on Drip F-C", "Come on you Drips!", the spelled "D! R! I! P! DRIP!", clap
+// patterns that break into a shout, and the rising "a-TTAAACK!" urging as an attack builds.
 // Terrace shouts and reactions (owner, Nov 13 2026, after the first samples: "more oohs and chants, less singing"): eight of the ten
 // chants are short shouted chants ("Drip-F-C!", "Hey!", "Let's go!", "Ol-é!", stand-to-stand calls) on claps and the drum; only the
 // scarf song is sung, and briefly. The crowd REACTS to the match (reactions(): stadiumMood and the sim's touch ring): "ooh" + "aah"
@@ -14,9 +24,10 @@
 // build with a drum roll), with random orders, a harmony a third up, a percussion break where the singing drops out, the last
 // chorus up a whole tone, and a fade-out. Every phrase is rendered fresh just before it is needed (own seed: new pitch spread,
 // ±30 ms per section, new claps), so no phrase is ever heard twice; its reverb tail rings over the next one.
-// The live graph is a small fixed pool: murmur (always near the stadium, low between matches) · roar (excitement) · sub rumble
-// (inside the bowl, under the stands) · two song slots (crossfade on a chant change; up to 6 phrase sources, scheduled ~1 s ahead
-// on the mood's bar lines) · the olé roll (follows the Mexican wave round the bowl, panned) · two one-shots (goal roar, "ooh").
+// The live graph is a small fixed pool: murmur (the recorded bed; always near the stadium, low between matches) · roar (the
+// recorded roar, by excitement) · sub rumble (inside the bowl, under the stands) · two song slots (crossfade on a chant change;
+// up to 6 phrase sources, scheduled ~1 s ahead on the mood's bar lines) · the olé roll (follows the Mexican wave round the
+// bowl, panned) · four one-shots (goal, reactions, the referee's whistle, the PA; the oldest gives way).
 // Distance: presence 1 inside the bowl, ~0.45 in the plaza, 0 past EDGE m; quantised with a dead band (no pumping at an edge) and
 // ramped over ~2.4 s (setTargetAtTime, time constant TC). The island music fades by the same presence (islandMusic.setStadiumFade).
 // Gating: nothing exists before the first gesture (the shared context does not exist yet), nothing plays while muted, at volume 0,
@@ -40,24 +51,42 @@ export type StadiumSoundHost={ctx:()=>AudioContext|null;master:()=>AudioNode|nul
 export type StadiumSoundFrame={x:number;z:number;h:number;rx:number;rz:number;lite:boolean;mood:Readonly<StadiumMood>|null;
  /** The stadium match's sim while awake (matchSim's touch ring: tackles, interceptions, saves, kicks, receptions), for the reactions. */
  sim?:StadiumTouches|null};
-export type StadiumTouches={readonly touches:readonly {readonly serial:number;readonly kind:string;readonly team:string;readonly height:number;readonly other:string|null}[];readonly touchSerial:number};
+export type StadiumTouches={readonly touches:readonly {readonly serial:number;readonly kind:string;readonly team:string;readonly height:number;readonly other:string|null}[];readonly touchSerial:number;
+ /** the match clock (s) and the dead-ball restart being set up (matchSim): the referee's kick-off and period whistles */
+ readonly clock?:number;readonly restartKind?:string|null};
 
 /** Distances are metres outside the bowl's footprint (0 inside it). */
 export const STADIUM_SOUND={fullD:3,plazaD:30,edgeD:110,plazaLevel:.5,roofH:28,deadband:.08,quantum:.05,tc:.8,tick:.1,stopAfter:4,
  teardown:30,chantFade:2,chantIn:1.2,rate:22050,goalHold:3,tail:1.8} as const;
 /** Live mix (before the island effects bus). */
-export const STADIUM_MIX={out:1,murmur:.2,roar:.3,rumble:.35,chant:.75,wave:.2,goal:.75,react:.42,lite:.85} as const;
+export const STADIUM_MIX={out:1,murmur:.2,roar:.3,rumble:.35,chant:.75,wave:.2,goal:.75,react:.42,lite:.85,
+ /** the recordings (each file is normalised: bed -20, roar -18, goal -16, reactions -18/-20 dB RMS) */
+ bed:.62,bedQuiet:.34,roarRec:.62,goalRec:.8,reactRec:.85,whistle:.32,pa:.55,
+ /** the synthesised chants sit over the real bed (owner: "mostly crowd bed and reactions, chants rising and falling over it") */
+ chantRec:1} as const;
+/** The real crowd (CC0 field recordings, see the header; files in public/audio/stadium/, ~0.7 MB in all, AAC .m4a, which every
+ *  current browser decodes, Safari included). loop: the seamless region [start, end] s (wrap-around padding on both sides, so a
+ *  decoder's priming offset cannot open a gap). Decoded on the first approach (one file at a time; ~12 MB of PCM in all at 32 kHz)
+ *  and dropped on teardown. */
+export const STADIUM_RECORDINGS={bed:{loop:[.25,18.25]},roar:{loop:[.25,16.25]},goal:{},goal2:{},ooh:{},ooh2:{},groan:{},applause:{},whistle:{},
+ 'pa-welcome':{},'pa-goal':{}} as const satisfies Record<string,{loop?:readonly [number,number]}>;
+export type RecId=keyof typeof STADIUM_RECORDINGS;
+export const RECORDING_IDS=Object.keys(STADIUM_RECORDINGS) as RecId[];
+export const recordingUrl=(id:RecId)=>'/audio/stadium/'+id+'.m4a';
+/** The referee: a period whistle every PERIOD_S s of the match clock (the stadium's sim has no halves, so the screen clock's
+ *  5-minute marks stand in for half-time); the kick-off whistle after the PA welcome when a match wakes. */
+export const REFEREE={periodS:300,welcomeLead:7.4,goalWhistle:.9,paGoal:5.2,paCool:90} as const;
 
 export type ChantKind='clap'|'ole'|'scarf'|'drum'|'call'|'stomp'|'shout';
 /** The mood's chant ids, as heard. Titles and words are the stadium's own (original, kid-safe). */
 export const STADIUM_CHANTS:Readonly<Record<ChantId,{title:string;kind:ChantKind;words:string}>>={
- 'drip-drip-clap':{title:'Drip-F-C Clap',kind:'clap',words:'Drip-F-C! (clap clap clap) Hey! Hey!'},
- 'lets-go':{title:'Let\'s Go Drip',kind:'shout',words:'Let\'s go! (clap clap) Let\'s go, Drip!'},
- 'island-anthem':{title:'Scarves Up Over the Island',kind:'scarf',words:'Ohh, oh-oh-ah, ohhh (the one sung tune, a slow sway with scarves up)'},
+ 'drip-drip-clap':{title:'Spell It Out',kind:'clap',words:'D! R! I! P! DRIP! (clap clap clap)'},
+ 'lets-go':{title:'Come On You Drips',kind:'shout',words:'Come on you Drips! (clap clap) Come on you Drips!'},
+ 'island-anthem':{title:'Come On Drip FC',kind:'scarf',words:'Come on Drip F-C, come on Drip F-C! Ohhh, Drip F-C! (slow and held, the whole ground singing, scarves up)'},
  'hey-hey-hey':{title:'Hey Hey Hey',kind:'shout',words:'Hey! Hey! Hey! (stomp) Hey-hey-hey, Drip!'},
  'here-we-go':{title:'Drip-FC Call and Answer',kind:'call',words:'West stand: Drip-F-C! East stand: Drip-F-C!'},
  'ole-ole':{title:'Shouted Olé',kind:'ole',words:'Ol-é! Ol-é! (clap) Hey!'},
- 'clap-clap-shout':{title:'Clap Clap Shout',kind:'shout',words:'(clap clap) Drip! (clap clap) Hey!'},
+ 'clap-clap-shout':{title:'Clap Clap Shout',kind:'shout',words:'(clap, clap, clap, clap-clap, clap-clap-clap-clap) DRIP! / Come on, Drip! Hey!'},
  'stand-up-song':{title:'Stomp Round the Bowl',kind:'stomp',words:'(stomps rolling round the stands) Hey! Drip!'},
  'stand-to-stand':{title:'Stand to Stand',kind:'call',words:'West: Hey! East: Ho! West: Drip! East: F-C!'},
  'drum-march':{title:'Big Drum March',kind:'drum',words:'(the supporters\' drum) Oh! Hey! Oh! Hey!'},
@@ -123,12 +152,12 @@ type Vowel='a'|'e'|'i'|'o'|'u'|'ih';
 const FORMANTS:Readonly<Record<Vowel,readonly [number,number,number]>>={a:[730,1090,2440],e:[530,1840,2480],i:[300,2250,3000],o:[500,850,2400],u:[330,800,2240],ih:[400,1950,2550]};
 const VOWELS:readonly Vowel[]=['a','e','i','o','u','ih'];
 const FORM_GAIN=[1,.6,.3],FORM_Q=[5,8,11],BREATH=.09;
-type Cons='d'|'f'|'s'|'h'|'l';
+type Cons='d'|'f'|'s'|'h'|'l'|'k'|'p'|'t';
 /** A consonant: a noise burst (band centre Hz, Q, level, decay s) just before the vowel. */
-const CONS:Readonly<Record<Cons,readonly [number,number,number,number]>>={d:[520,.9,.55,.014],f:[4600,1.1,.35,.05],s:[6200,1.4,.5,.07],h:[1700,.6,.4,.05],l:[900,2,.15,.02]};
+const CONS:Readonly<Record<Cons,readonly [number,number,number,number]>>={d:[520,.9,.55,.014],f:[4600,1.1,.35,.05],s:[6200,1.4,.5,.07],h:[1700,.6,.4,.05],l:[900,2,.15,.02],k:[2300,.9,.6,.02],p:[700,.8,.6,.012],t:[3800,1,.55,.018]};
 /** [beat, beats, semitones over the tonic, vowel, consonant, shout (a falling yell)] */
 type Note=readonly [number,number,number,Vowel,(Cons|0)?,(1|0)?];
-export type Rendered={buffer:AudioBuffer;loopEnd:number};
+export type Rendered={buffer:AudioBuffer;loopEnd:number;/** a recording's seamless loop starts after its padding */loopStart?:number};
 
 /** The white noise and the impulses are made once and shared by every render (an AudioBuffer is not tied to its context). */
 const shared=new Map<string,AudioBuffer>();
@@ -213,24 +242,28 @@ const DRIP:Shout=(b,p=7)=>[[b,.3,p,'ih','d',1]];// "Drip!"
 const LG:Shout=(b,p=7)=>[[b,.22,p,'e','l',1],[b+.5,.4,p-5,'o','d',1]];// "Let's go!"
 const OLE:Shout=(b,p=0)=>[[b,.3,p,'o',0,1],[b+.5,.45,p+4,'e','l',1]];// "Ol-é!"
 const OH:Shout=(b,p=0)=>[[b,.45,p,'o',0,1]];// "Oh!"
+const CMON:Shout=(b,p=7)=>[[b,.3,p,'a','k',1],[b+.5,.45,p-2,'o',0,1]];// "Come on!"
+const COYD:Shout=(b,p=7)=>[[b,.3,p,'a','k',1],[b+.5,.25,p,'o',0,1],[b+1,.25,p+2,'u','h',1],[b+1.5,.45,p+5,'ih','d',1]];// "Come on you Drips!"
+/** "D! R! I! P!" spelled out, a beat (or half a beat, fast) a letter. */
+const SPELL=(b:number,p=7,step=1):Note[]=>[[b,.4,p,'i','d',1],[b+step,.4,p,'a',0,1],[b+2*step,.4,p+2,'a',0,1],[b+3*step,.4,p+2,'i','p',1]];
 const at=(...parts:Note[][]):readonly Note[]=>parts.flat();
 const EVERY=(from:number,to:number,step:number)=>{const r:number[]=[];for(let b=from;b<to-1e-9;b+=step)r.push(b);return r;};
 /** The ten songs (original, kid-safe). Only the scarf song is sung (and kept short); the rest are terrace shouts. A phrase is 8 beats. */
 export const SONGS:Readonly<Record<ChantId,Song>>={
- // "Drip-F-C!" (clap clap clap), "Hey! Hey!"
- 'drip-drip-clap':{tonic:62,v1:at(DFC(0),DFC(4)),v2:at(HEY(0),HEY(1),DFC(4)),c1:at(DFC(0),DFC(2,9),DFC(4),DFC(6,9)),c2:at(DFC(0),HEY(2,9),DFC(4,9),HEY(6,11)),
-  b:at(DFC(0),DFC(2,9),DFC(4,11),HEY(6,12)),
-  perc:{verse:{claps:[2,2.5,3,6,6.5,7],drum:[0,4]},chorus:{claps:[1.5,3.5,5.5,7.5],stomps:[0,2,4,6],drum:[0,2,4,6]},build:{claps:EVERY(0,6,.5),drum:[0,2,4],roll:true}}},
- // "Let's go!" (clap clap), "Let's go, Drip!"
- 'lets-go':{tonic:60,v1:at(LG(0),LG(2),LG(4),DRIP(6)),v2:at(LG(0),DFC(2),LG(4),DFC(6)),c1:at(LG(0),LG(2,9),LG(4,11),LG(6,12)),c2:at(LG(0),DRIP(1),LG(4,9),DRIP(5,9)),
-  b:at(LG(0),LG(1,9),LG(2,11),LG(3,12),HEY(6,14)),
-  perc:{verse:{claps:[1,1.5,3,3.5,5,5.5],drum:[0,2,4,6]},chorus:{claps:[1,1.5,3,3.5,5,5.5,7,7.5],drum:[0,2,4,6]},build:{claps:EVERY(0,6,.5),drum:[0,1,2,3,4,5],roll:true}}},
- // The slow scarf song: the one sung tune, a legato sway in C (kept short: planSong caps it, then drums and claps carry on).
+ // Spell it out: "D! R! I! P! DRIP!" a letter a beat, three claps after; the chorus a tone up with a "Hey!", the build spelled fast.
+ 'drip-drip-clap':{tonic:62,v1:at(SPELL(0),DRIP(4,9)),v2:at(SPELL(0,9),DRIP(4,11)),c1:at(SPELL(0,9),DRIP(4,11),HEY(6,11)),c2:at(SPELL(0,9),DRIP(4,12),DRIP(6,12)),
+  b:at(SPELL(0,9,.5),DRIP(2,11),SPELL(4,11,.5),DRIP(6,14)),
+  perc:{verse:{claps:[5,5.5,6,6.5,7],drum:[0,4]},chorus:{claps:[5,5.5,6,7,7.5],stomps:[0,1,2,3],drum:[0,2,4,6]},build:{claps:[2.5,3,3.5,6.5,7],drum:[0,2,4],roll:true}}},
+ // "Come on you Drips!" (clap clap), English-terrace style; the build: "Come on! Come on!" rising.
+ 'lets-go':{tonic:60,v1:at(COYD(0),COYD(4)),v2:at(COYD(0,9),HEY(3,9),COYD(4,9)),c1:at(COYD(0,9),COYD(4,11)),c2:at(COYD(0,11),HEY(3,12),COYD(4,12)),
+  b:at(CMON(0,7),CMON(1,9),CMON(2,11),CMON(3,12),COYD(4,12)),
+  perc:{verse:{claps:[2.5,3,3.5,6.5,7,7.5],drum:[0,2,4,6]},chorus:{claps:[2.5,3,3.5,6.5,7,7.5],drum:[0,2,4,6]},build:{claps:EVERY(0,4,.5),drum:[0,1,2,3,4,5],roll:true}}},
+ // "Come on Drip F-C": the one long sung terrace tune, slow and held (the whole ground, many voices, a big reverb), scarves up.
  'island-anthem':{tonic:60,slow:true,sung:true,
-  v1:[[0,2,0,'o'],[2,1,4,'o'],[3,1,2,'a'],[4,3,7,'o'],[7,1,5,'a']],
-  v2:[[0,2,4,'o'],[2,1,5,'o'],[3,1,4,'a'],[4,2,2,'o'],[6,2,0,'o']],
-  c1:[[0,1.5,9,'a'],[1.5,.5,7,'o'],[2,2,5,'a'],[4,1.5,7,'o'],[5.5,.5,5,'a'],[6,2,4,'o']],
-  c2:[[0,1.5,9,'a'],[1.5,.5,7,'o'],[2,2,5,'a'],[4,1,4,'o'],[5,1,2,'a'],[6,2,0,'o']],
+  v1:[[0,1,4,'a','k'],[1,1,4,'o'],[2,1.5,7,'ih','d'],[3.5,.5,5,'e','f'],[4,3.6,4,'i','s']],
+  v2:[[0,1,4,'a','k'],[1,1,2,'o'],[2,1.5,5,'ih','d'],[3.5,.5,4,'e','f'],[4,3.6,0,'i','s']],
+  c1:[[0,2.6,9,'o'],[2.6,.4,7,'o'],[3,1,7,'o'],[4,1.5,7,'ih','d'],[5.5,.5,5,'e','f'],[6,2,4,'i','s']],
+  c2:[[0,2.6,9,'o'],[2.6,.4,11,'o'],[3,1,11,'o'],[4,1.5,12,'ih','d'],[5.5,.5,11,'e','f'],[6,2,12,'i','s']],
   b:[[0,2,7,'o'],[2,2,9,'a'],[4,2,11,'a'],[6,2,12,'o']],
   perc:{verse:{drum:[0,4]},chorus:{drum:[0,4],claps:[2,6]},build:{drum:[0,2,4,6],claps:[1,3,5,7]}}},
  // "Hey! Hey! Hey!" (stomp), "Hey-hey-hey, Drip!"
@@ -245,10 +278,10 @@ export const SONGS:Readonly<Record<ChantId,Song>>={
  'ole-ole':{tonic:62,v1:at(OLE(0),OLE(2),OLE(4),OLE(6,2)),v2:at(OLE(0),OLE(2,2),HEY(4,9),OLE(6,4)),c1:at(OLE(0),OLE(1),OLE(2,2),OLE(4,4),OLE(5,4),OLE(6,5)),
   c2:at(OLE(0,2),OLE(2,4),OLE(4,5),HEY(6,12)),b:at(OLE(0),OLE(1,2),OLE(2,4),OLE(3,5),OLE(4,7),OLE(6,7)),
   perc:{verse:{claps:[1.5,3.5,5.5,7.5],drum:[0,4]},chorus:{claps:[3,3.5,7,7.5],drum:[0,2,4,6]},build:{drum:[0,1,2,3,4,5],claps:EVERY(0,6,.5),roll:true}}},
- // Clap-clap-shout: two claps, a shout, round and round.
- 'clap-clap-shout':{tonic:60,v1:at(DRIP(1),HEY(3),DRIP(5),HEY(7)),v2:at(DRIP(1),OLE(2.5,2),DRIP(5),HEY(7,9)),c1:at(HEY(1.5),HEY(3.5,9),HEY(5.5),DRIP(7.5,9)),
-  c2:at(DFC(1),DFC(5,9)),b:at(...EVERY(0,6,1).map((x,i)=>DRIP(x,7+i)),HEY(6,14)),
-  perc:{verse:{claps:[0,.5,2,2.5,4,4.5,6,6.5],drum:[0,4]},chorus:{claps:[0,.5,1,2,2.5,3,4,4.5,5,6,6.5,7],drum:[0,2,4,6]},build:{claps:EVERY(0,6,.5),drum:[0,2,4],roll:true}}},
+ // Clap patterns into a shout: "clap, clap, clap, clap-clap, clap-clap-clap-clap... DRIP!"; the chorus: "Come on, Drip! Hey!".
+ 'clap-clap-shout':{tonic:60,v1:DRIP(6,9),v2:at(DRIP(6,9),HEY(7,11)),c1:at(CMON(4,9),DRIP(5.5,11),HEY(7,11)),
+  c2:at(CMON(4,11),DRIP(5.5,12),HEY(7,12)),b:at(...EVERY(4,7,.5).map((x,i)=>DRIP(x,7+i)),HEY(7,14)),
+  perc:{verse:{claps:[0,1,2,3,3.5,4,4.5,5,5.5],drum:[0,6]},chorus:{claps:[0,.5,1,1.5,2,2.5,3,3.25,3.5,3.75],drum:[0,4,6]},build:{claps:EVERY(0,4,.25),drum:[0,2,4],roll:true}}},
  // Stomp round the bowl (slow): stamping travels round the stands, "Hey!" and "Drip!" answer it.
  'stand-up-song':{tonic:60,minor:true,slow:true,sweep:true,v1:at(HEY(3),HEY(7)),v2:at(HEY(1),HEY(3),HEY(5),HEY(7,10)),c1:at(DRIP(0),HEY(2),DRIP(4),HEY(6)),
   c2:at(DRIP(0,10),HEY(2,10),DRIP(4,12),HEY(6,12)),b:at(HEY(0),HEY(1,8),HEY(2,10),HEY(3,12),OH(4,12),HEY(6,15)),
@@ -300,10 +333,11 @@ export function renderPhrase(id:ChantId,key:PhraseKey,side:0|1|2,lite=false,seed
  const notes:readonly Note[]=key==='perc'?[]:verse?(side===1?(two?s.e2:s.e1)??[]:two?s.v2:s.v1):build?s.b:two?s.c2:s.c1;
  const harmony=!lite&&(key==='c1h'||up>0||build),lead=key==='lead';
  const out=c.createGain();out.connect(c.destination);if(key==='c2f'){out.gain.setValueAtTime(1,4*spb);out.gain.linearRampToValueAtTime(0,L+.6);}
- const mix=bus(c,x=>x.connect(out),impulse(c,1,rnd),lead?.28:slow?.5:.4,slow?4200:5200);
- const G=lead?1:lite?2:4,n=lead?5:lite?3:4;
+ // The sung terrace tune is the whole ground: six sections of five voices (two for the lead) and a bigger, wetter bowl.
+ const big=!!s.sung&&!lead,mix=bus(c,x=>x.connect(out),impulse(c,1,rnd),lead?.28:s.sung?.62:slow?.5:.4,slow?4200:5200);
+ const G=lead?(s.sung?2:1):lite?2:big?6:4,n=lead?5:lite?3:big?5:4;
  for(let gi=0;gi<G+(harmony?1:0);gi++){
-  const h=gi===G,vc=lead?VOICING[1]:VOICING[h?1:lite?gi+1:gi],level=(lead?.55:vc.level)*(h?.55:1),g=group(c,mix,noise,n,{pan:0,fs:vc.fs*(1+(rnd()-.5)*.06),level,vib:slow?22:12,rnd});
+  const h=gi===G,vc=lead?VOICING[1]:VOICING[h?1:lite?gi+1:gi%VOICING.length],level=(lead?.55:vc.level)*(h?.55:1),g=group(c,mix,noise,n,{pan:0,fs:vc.fs*(1+(rnd()-.5)*.06),level,vib:slow?22:12,rnd});
   // The stadium joins in: every section but the first swells in over the phrase, a beat or so apart.
   const off=(rnd()-.5)*.06;// ±30 ms per section
   const line=h?notes.map(nt=>[nt[0],nt[1],thirdAbove(nt[2],s.minor),nt[3],nt[4],nt[5]] as Note):notes;
@@ -321,20 +355,20 @@ export function renderPhrase(id:ChantId,key:PhraseKey,side:0|1|2,lite=false,seed
 /** The crowd's reactions (mono one-shots, panned live to a section): "ooh" (near miss, shot, save), "aah" (disappointment),
  *  the rising "ooo-OOH" swell (an attack near the box), a groan, an applause burst (a tackle, an interception, a good long pass),
  *  and whistles with a low "ooh" murmur (a big challenge; the sim has no fouls or offsides to hear). */
-export type ReactKind='ooh'|'aah'|'swell'|'groan'|'applause'|'jeer';
-export const REACTIONS:readonly ReactKind[]=['ooh','aah','swell','groan','applause','jeer'];
+export type ReactKind='ooh'|'aah'|'swell'|'groan'|'applause'|'jeer'|'attack';
+export const REACTIONS:readonly ReactKind[]=['ooh','aah','swell','groan','applause','jeer','attack'];
 /** Each reaction's voice contour: length s, base pitch scale, pitch points [t, ×], level points [t, level], release [t, tc], vowels [t, vowel]. */
-const CONTOUR:Readonly<Record<Exclude<ReactKind,'applause'|'jeer'>,{len:number;base:number;p:readonly (readonly [number,number])[];g:readonly (readonly [number,number])[];rel:readonly [number,number];v:readonly (readonly [number,Vowel])[]}>>={
+const CONTOUR:Readonly<Record<Exclude<ReactKind,'applause'|'jeer'|'attack'>,{len:number;base:number;p:readonly (readonly [number,number])[];g:readonly (readonly [number,number])[];rel:readonly [number,number];v:readonly (readonly [number,Vowel])[]}>>={
  ooh:{len:2.2,base:1,p:[[0,.95],[.35,1.22],[1.7,.78]],g:[[.3,.9]],rel:[1,.35],v:[[0,'u'],[.5,'o']]},
  aah:{len:2,base:1.05,p:[[0,1.25],[1.5,.7]],g:[[.12,.8]],rel:[.7,.4],v:[[0,'a'],[1,'o']]},
  swell:{len:2.8,base:1,p:[[0,.9],[1.6,1],[2.2,1.45]],g:[[1.4,.25],[2.1,1]],rel:[2.3,.2],v:[[0,'u'],[1.8,'o']]},
  groan:{len:1.6,base:.75,p:[[0,.95],[1.3,.7]],g:[[.15,.6]],rel:[.6,.35],v:[[0,'o'],[.6,'u']]},
 };
-type BedKind='murmur'|'roar'|'ole'|'goal'|ReactKind;
+export type BedKind='murmur'|'roar'|'ole'|'goal'|ReactKind;
 /** The beds and one-shots: murmur (chatter, loop), roar (a sustained "aah/ooh", loop), the olé roll (mono loop), the goal, the reactions. */
 export function renderBed(kind:BedKind,lite=false,seed=1):Promise<Rendered>|null{
  const O=offlineCtor();if(!O)return null;const R=STADIUM_SOUND.rate,rnd=lcg(seed*104729+kind.length*977);
- const react=REACTIONS.includes(kind as ReactKind),len=react?(kind==='applause'?2.2:kind==='jeer'?2.4:CONTOUR[kind as keyof typeof CONTOUR].len):{murmur:6,roar:4,ole:3,goal:6}[kind as 'murmur'],
+ const react=REACTIONS.includes(kind as ReactKind),len=react?(kind==='applause'?2.2:kind==='jeer'?2.4:kind==='attack'?2.3:CONTOUR[kind as keyof typeof CONTOUR].len):{murmur:6,roar:4,ole:3,goal:6}[kind as 'murmur'],
   extra=react?0:{murmur:.8,roar:.8,ole:STADIUM_SOUND.tail,goal:0}[kind as 'murmur'],ch=kind==='ole'||react?1:2;
  const c=new O(ch,Math.ceil((len+extra)*R),R),noise=noiseBuffer(c,rnd),G=lite?3:6,n=lite?3:4;
  const out=bus(c,x=>x.connect(c.destination),impulse(c,ch,rnd),kind==='murmur'?.55:.45,kind==='murmur'?2100:kind==='ole'?4200:4600);
@@ -359,6 +393,12 @@ export function renderBed(kind:BedKind,lite=false,seed=1):Promise<Rendered>|null
   else if(kind==='applause'){// a few "yeah!"s over the claps
    for(let i=0;i<n;i++){const t0=.05+rnd()*.5,f0=g.base[i]*1.1,p=g.osc[i].frequency,gg=g.vg[i].gain;p.setValueAtTime(f0,t0);p.exponentialRampToValueAtTime(f0*1.3,t0+.25);gg.setValueAtTime(0,t0);gg.linearRampToValueAtTime(.5,t0+.06);gg.setTargetAtTime(0,t0+.3,.15);}
    vowelAt(g,'e',0,.02);vowelAt(g,'a',.3,.1);}
+  else if(kind==='attack'){// "a-TTAAAACK!" (the terrace urging an attack on): a short "a", then the long rising "TAAACK", cut off hard
+   const t1=.32,te=1.85;vowelAt(g,'a',0,.02);consonant(g,'t',t1-.012,1.2);consonant(g,'k',te+.01,1);
+   for(let i=0;i<n;i++){const j=rnd()*.05,f0=g.base[i]*1.05,p=g.osc[i].frequency,gg=g.vg[i].gain;
+    p.setValueAtTime(f0*.9,j);gg.setValueAtTime(0,j);gg.linearRampToValueAtTime(.55,j+.03);gg.setTargetAtTime(0,j+.16,.03);
+    p.setValueAtTime(f0,t1+j);p.exponentialRampToValueAtTime(f0*1.4,te+j*.5);gg.setValueAtTime(0,t1+j);gg.linearRampToValueAtTime(.7,t1+j+.05);gg.linearRampToValueAtTime(1,te-.1);gg.setTargetAtTime(0,te+j*.3,.025);}
+   g.bg.gain.setValueAtTime(0,0);g.bg.gain.linearRampToValueAtTime(BREATH*n*1.6,t1+.1);g.bg.gain.linearRampToValueAtTime(BREATH*n*2.4,te-.1);g.bg.gain.setTargetAtTime(0,te,.03);}
   else if(kind==='jeer'){// a low "ooh" murmur under the whistles
    for(let i=0;i<n;i++){const t0=.1+rnd()*.3,f0=g.base[i]*.8,p=g.osc[i].frequency,gg=g.vg[i].gain;p.setValueAtTime(f0,t0);p.exponentialRampToValueAtTime(f0*.75,t0+1.8);gg.setValueAtTime(0,t0);gg.linearRampToValueAtTime(.5,t0+.3);gg.setTargetAtTime(0,1.4,.35);}
    vowelAt(g,'u',0,.02);}
@@ -377,22 +417,27 @@ export function renderBed(kind:BedKind,lite=false,seed=1):Promise<Rendered>|null
   hit(drum(c,out,noise,rnd),.05,.9);}
  return c.startRendering().then(b=>kind==='goal'||react?finish(b,0):finish(b,len,kind==='ole'?0:extra));
 }
-/** The sub rumble: brown noise (JS, 4 s at 11025 Hz, cross-faded loop) on the live context; low-passed live. */
-function rumbleBuffer(c:Ctx){const r=11025,n=r*4,F=r/2,b=c.createBuffer(1,n+F,r),d=b.getChannelData(0);let y=0,top=0;
+/** The sub rumble: brown noise (JS, 4 s at 11025 Hz, cross-faded loop) on the live context; low-passed live. F is a whole number
+ *  of samples (it was r/2 = 5512.5: the cross-fade read one sample past the buffer, a NaN that silenced the whole bus). */
+function rumbleBuffer(c:Ctx){const r=11025,n=r*4,F=Math.floor(r/2),b=c.createBuffer(1,n+F,r),d=b.getChannelData(0);let y=0,top=0;
  for(let i=0;i<n+F;i++){y=(y+(Math.random()*2-1)*.02)*.996;d[i]=y;}
  for(let i=0;i<F;i++){const w=i/F;d[i]=d[i]*Math.sqrt(w)+d[n+i]*Math.sqrt(1-w);}for(let i=0;i<n;i++)top=Math.max(top,Math.abs(d[i]));if(top>0)for(let i=0;i<d.length;i++)d[i]*=.9/top;
  return {buffer:b,loopEnd:n/r};}
 
 
 // ---- the live soundscape ----
-type Bank={murmur:Rendered;roar:Rendered;ole:Rendered;goal:Rendered;lite:boolean}&Record<ReactKind,Rendered>;
+/** The renders and the recordings: syn = synthesised beds and reactions (only those no recording covers, plus the olé roll, the
+ *  swell, the whistled jeer and the "attack" urging), rec = the decoded CC0 recordings that loaded. */
+type Bank={lite:boolean;syn:Partial<Record<BedKind,Rendered>>;rec:Partial<Record<RecId,Rendered>>};
 type Pan=AudioNode&{pan?:AudioParam};
 type Side={g:GainNode;p:Pan};
 /** A song slot (two, for the crossfade): its gain, three sides (west, east, everyone), the phrase sources still sounding (their
  *  tails overlap the next phrase), the planned phrases and where the sequencer is. */
 type Slot={g:GainNode;sides:[Side,Side,Side];srcs:(AudioBufferSourceNode|null)[];song:ChantId|null;steps:PhraseKey[];i:number;nextAt:number;run:number;played:number;ready:Map<string,Rendered|'r'>};
 type Graph={c:AudioContext;out:GainNode;mur:AudioBufferSourceNode;gMur:GainNode;roar:AudioBufferSourceNode;fRoar:BiquadFilterNode;gRoar:GainNode;rum:AudioBufferSourceNode;fRum:BiquadFilterNode;gRum:GainNode;
- slots:[Slot,Slot];wave:AudioBufferSourceNode|null;gWave:GainNode;pWave:Pan;shots:{src:AudioBufferSourceNode|null;g:GainNode;p:Pan;at:number}[];nodes:AudioNode[]};
+ slots:[Slot,Slot];wave:AudioBufferSourceNode|null;gWave:GainNode;pWave:Pan;shots:{src:AudioBufferSourceNode|null;g:GainNode;p:Pan;at:number}[];nodes:AudioNode[];
+ /** the real bed / roar are playing (else the synthesised murmur / roar), and the chants' level over them */
+ realBed:boolean;realRoar:boolean;chant:number};
 // Param indices for the "only when it moved" cache.
 const P_OUT=0,P_MUR=1,P_ROAR=2,P_ROARF=3,P_RUM=4,P_SLOT0=5,P_SLOT1=6,P_WAVE=7,P_WAVEPAN=8,P_GA=9,P_GB=10,P_PA=11,P_PB=12,P_PC=13;
 /** A random section of the bowl, as a pan. */
@@ -401,17 +446,27 @@ const isVerse=(k:PhraseKey)=>k==='lead'||k==='v1j'||k==='v1'||k==='v2';
 /** Which sides a phrase is sung from: the call song's verses are a west call and an east answer (the lead is the west alone). */
 export function phraseSides(id:ChantId,k:PhraseKey):readonly (0|1|2)[]{return SONGS[id].call&&isVerse(k)?(k==='lead'?[0]:[0,1]):[2];}
 /** Schedule this far ahead of a phrase's bar line (s); a phrase not rendered `late` s before its bar is skipped (or, for the first, the song waits a bar). */
-const AHEAD=1,LATE=.15;
+const AHEAD=1,LATE=.15,SHOTS=4;
 const idle=(f:()=>void)=>{const w=globalThis as unknown as {requestIdleCallback?:(f:()=>void,o:{timeout:number})=>number};if(typeof w.requestIdleCallback==='function')w.requestIdleCallback(f,{timeout:400});else if(typeof setTimeout==='function')setTimeout(f,0);else f();};
+type Fetch=(url:string)=>Promise<{ok:boolean;status:number;arrayBuffer():Promise<ArrayBuffer>}>;
+/** Which synthesised beds a bank needs: the olé roll, the swell, the jeer and the urging always; the rest only where no recording loaded. */
+export function synthKinds(rec:Readonly<Partial<Record<RecId,unknown>>>):BedKind[]{
+ const k:BedKind[]=['ole','swell','jeer','attack'];if(!rec.bed)k.push('murmur');if(!rec.roar)k.push('roar');if(!rec.goal)k.push('goal');
+ if(!rec.ooh)k.push('ooh');if(!rec.groan)k.push('aah','groan');if(!rec.applause)k.push('applause');return k;}
 
 export function createStadiumSound(host:StadiumSoundHost){
  const S=STADIUM_SOUND,M=STADIUM_MIX,last=new Float32Array(14).fill(-9);
  let acc=0,presence=0,musicFade=0,away=Infinity,quiet=0,g:Graph|null=null,bank:Bank|null=null,building=false,gen=0,rumble:Rendered|null=null;
- let active=0,lastGoal=Infinity,lastMiss=Infinity,holdUntil=0,waveOff=0,seed=1,renderSeed=1;
- let lastExc=0,swellAt=-99,swellOpen=false,touchSeen=-1,kickTeam='',kickLofted=false,kickAt=-99,rippleIn=6;const coolUntil=new Float64Array(REACTIONS.length);
+ let active=0,lastGoal=Infinity,lastMiss=Infinity,holdUntil=0,duckUntil=0,waveOff=0,seed=1,renderSeed=1,goalFlip=0;
+ let lastExc=0,swellAt=-99,swellOpen=false,attackAt=-99,touchSeen=-1,kickTeam='',kickLofted=false,kickAt=-99,rippleIn=6;const coolUntil=new Float64Array(REACTIONS.length);
+ // The referee and the PA: was a match live last tick (null = not seen yet on this graph), the restart and the clock period seen.
+ let seenLive:boolean|null=null,lastRestart:string|null=null,lastPeriod=-1,welcomeAt=-Infinity,paFree=0;
  type Job={sl:Slot;run:number;key:string;id:ChantId;k:PhraseKey;side:0|1|2};
  const queue:Job[]=[];let rendering=false;
- const debug={ticks:0,builds:0,teardowns:0,graphs:0,renders:0,chant:null as ChantId|null,chantStarts:0,phrases:0,skipped:0,steps:[] as PhraseKey[],goals:0,oohs:0,reactions:{ooh:0,aah:0,swell:0,groan:0,applause:0,jeer:0} as Record<ReactKind,number>,wave:false,presence:0,stopped:0,lite:false};
+ const debug={ticks:0,builds:0,teardowns:0,graphs:0,renders:0,chant:null as ChantId|null,chantStarts:0,phrases:0,skipped:0,steps:[] as PhraseKey[],goals:0,oohs:0,
+  reactions:{ooh:0,aah:0,swell:0,groan:0,applause:0,jeer:0,attack:0} as Record<ReactKind,number>,wave:false,presence:0,stopped:0,lite:false,
+  /** recordings fetched + decoded / failed (the synthesised layer stands in), whistles blown, PA announcements, period marks */
+  recordings:0,recordingErrors:0,fetches:0,whistles:0,pa:0,periods:0,real:false};
  const to=(i:number,p:AudioParam,v:number,tc:number=S.tc)=>{if(!g||Math.abs(last[i]-v)<.008)return;last[i]=v;p.setTargetAtTime(v,g.c.currentTime,tc);};
  const playingSong=()=>g?g.slots[active].song:null;
  function stop(now=false){
@@ -425,14 +480,25 @@ export function createStadiumSound(host:StadiumSoundHost){
   if(f&&typeof setTimeout==='function')setTimeout(drop,(f+.1)*1000);else drop();
  }
  function teardown(){stop(true);bank=null;rumble=null;shared.clear();queue.length=0;gen++;building=false;rendering=false;debug.teardowns++;}
- /** The beds, rendered one after another on the first approach (after a gesture). */
- function build(lite:boolean){
-  if(building||bank||!stadiumSoundSupported())return;building=true;debug.builds++;const my=gen,out:Partial<Bank>={lite};
-  const kinds:BedKind[]=['murmur','roar','ole','goal',...REACTIONS];let i=0;
-  const next=():void=>{if(my!==gen)return;if(i>=kinds.length){bank=out as Bank;building=false;debug.lite=lite;return;}
-   const k=kinds[i++];idle(()=>{if(my!==gen)return;const p=renderBed(k,lite,seed);if(!p){building=false;return;}debug.renders++;
-    p.then(r=>{(out as Record<string,Rendered>)[k]=r;next();},()=>{if(my===gen)building=false;});});};
+ /** The CC0 recordings, fetched and decoded one at a time on the live context (only now: after a gesture, on the first approach).
+  *  A file that fails is skipped (the synthesised layer stands in for it). */
+ function loadRecordings(c:AudioContext,my:number,into:Partial<Record<RecId,Rendered>>,done:()=>void){
+  const f=(globalThis as unknown as {fetch?:Fetch}).fetch;if(typeof f!=='function'||typeof c.decodeAudioData!=='function'){done();return;}
+  let i=0;
+  const next=():void=>{if(my!==gen)return;if(i>=RECORDING_IDS.length){done();return;}const id=RECORDING_IDS[i++],lp=(STADIUM_RECORDINGS[id] as {loop?:readonly [number,number]}).loop;debug.fetches++;
+   f.call(globalThis,recordingUrl(id)).then(r=>r.ok?r.arrayBuffer():Promise.reject(new Error('HTTP '+r.status))).then(b=>c.decodeAudioData(b))
+    .then(buf=>{if(my!==gen)return;into[id]={buffer:buf,loopStart:lp?lp[0]:0,loopEnd:lp?Math.min(lp[1],buf.duration):buf.duration};debug.recordings++;},()=>{debug.recordingErrors++;}).then(next,next);};
   next();
+ }
+ /** The bank, on the first approach (after a gesture): the recordings first, then the synthesised beds they do not cover, one after another. */
+ function build(c:AudioContext,lite:boolean){
+  if(building||bank||!stadiumSoundSupported())return;building=true;debug.builds++;const my=gen,out:Bank={lite,syn:{},rec:{}};
+  loadRecordings(c,my,out.rec,()=>{
+   const kinds=synthKinds(out.rec);let i=0;
+   const next=():void=>{if(my!==gen)return;if(i>=kinds.length){bank=out;building=false;debug.lite=lite;debug.real=!!out.rec.bed;return;}
+    const k=kinds[i++];idle(()=>{if(my!==gen)return;const p=renderBed(k,lite,seed);if(!p){building=false;return;}debug.renders++;
+     p.then(r=>{out.syn[k]=r;next();},()=>{if(my===gen)building=false;});});};
+   next();});
  }
  /** Phrase renders: one at a time (bounded CPU), each with a fresh seed; a result for a superseded run is dropped. */
  function request(sl:Slot,j:number,lite:boolean){
@@ -447,23 +513,26 @@ export function createStadiumSound(host:StadiumSoundHost){
   if(!p){rendering=false;job.sl.ready.delete(job.key);return;}debug.renders++;
   p.then(r=>{if(my!==gen)return;rendering=false;if(job.sl.run===job.run&&job.sl.song===job.id)job.sl.ready.set(job.key,r);pump(lite);},()=>{if(my!==gen)return;rendering=false;job.sl.ready.delete(job.key);pump(lite);});});
  }
- function loopSrc(c:AudioContext,r:Rendered,dest:AudioNode,at=0){const s=c.createBufferSource();s.buffer=r.buffer;s.loop=true;s.loopStart=0;s.loopEnd=r.loopEnd;s.connect(dest);s.start(at,Math.random()*r.loopEnd*.9);return s;}
+ function loopSrc(c:AudioContext,r:Rendered,dest:AudioNode,at=0){const s=c.createBufferSource(),ls=r.loopStart??0;s.buffer=r.buffer;s.loop=true;s.loopStart=ls;s.loopEnd=r.loopEnd;s.connect(dest);s.start(at,ls+Math.random()*(r.loopEnd-ls)*.9);return s;}
  function pan(c:AudioContext,v:number):Pan{if(typeof c.createStereoPanner==='function'){const p=c.createStereoPanner();p.pan.value=v;return p;}return c.createGain();}
  function graph(c:AudioContext,master:AudioNode){
   const nodes:AudioNode[]=[],gain=(v=0)=>{const n=c.createGain();n.gain.value=v;nodes.push(n);return n;},filt=(type:BiquadFilterType,hz:number,q:number)=>{const f=c.createBiquadFilter();f.type=type;f.frequency.value=hz;f.Q.value=q;nodes.push(f);return f;};
   const b=bank!,out=gain(0);out.connect(master);rumble??=rumbleBuffer(c);
+  const bed=b.rec.bed??b.syn.murmur!,roar=b.rec.roar??b.syn.roar!;
   const gMur=gain(),gRoar=gain(),fRoar=filt('lowpass',1200,.5),gRum=gain(),fRum=filt('lowpass',110,.8);gMur.connect(out);fRoar.connect(gRoar);gRoar.connect(out);fRum.connect(gRum);gRum.connect(out);
   const side=(sg:GainNode,v:number):Side=>{const gg=gain(1),p=pan(c,v);nodes.push(p);gg.connect(p);p.connect(sg);return {g:gg,p};};
   const slot=():Slot=>{const sg=gain(0);sg.connect(out);return {g:sg,sides:[side(sg,-.6),side(sg,.6),side(sg,0)],srcs:[null,null,null,null,null,null],song:null,steps:[],i:0,nextAt:0,run:0,played:0,ready:new Map()};};
   const gWave=gain(),pWave=pan(c,0);nodes.push(pWave);gWave.connect(pWave);pWave.connect(out);
-  const shots=[0,1,2].map(()=>{const sg=gain(1),p=pan(c,0);nodes.push(p);sg.connect(p);p.connect(out);return {src:null as AudioBufferSourceNode|null,g:sg,p,at:0};});
-  g={c,out,mur:loopSrc(c,b.murmur,gMur),gMur,roar:loopSrc(c,b.roar,fRoar),fRoar,gRoar,rum:loopSrc(c,rumble,fRum),fRum,gRum,slots:[slot(),slot()],wave:null,gWave,pWave,shots,nodes};
-  last.fill(-9);debug.graphs++;active=0;
+  const shots=Array.from({length:SHOTS},()=>{const sg=gain(1),p=pan(c,0);nodes.push(p);sg.connect(p);p.connect(out);return {src:null as AudioBufferSourceNode|null,g:sg,p,at:0};});
+  const realBed=!!b.rec.bed,realRoar=!!b.rec.roar;
+  g={c,out,mur:loopSrc(c,bed,gMur),gMur,roar:loopSrc(c,roar,fRoar),fRoar,gRoar,rum:loopSrc(c,rumble,fRum),fRum,gRum,slots:[slot(),slot()],wave:null,gWave,pWave,shots,nodes,
+   realBed,realRoar,chant:realBed?M.chantRec:M.chant};
+  last.fill(-9);debug.graphs++;active=0;seenLive=null;
  }
  function startSong(G:Graph,id:ChantId,m:Readonly<StadiumMood>,lite:boolean){
   active^=1;const sl=G.slots[active],c=G.c,now=c.currentTime;stopSlot(sl,c,0);
   sl.song=id;sl.run++;sl.played=0;sl.i=0;sl.steps=planSong(id,Math.max(8,m.phaseLeft),Math.random,lite,true);sl.nextAt=now+nextBarIn(m.beat,m.bpm,.6);
-  const lvl=M.chant*(.8+.4*m.excitement);sl.g.gain.cancelScheduledValues(now);sl.g.gain.setValueAtTime(0,now);sl.g.gain.setTargetAtTime(lvl,sl.nextAt,S.chantIn/3);last[P_SLOT0+active]=lvl;
+  const lvl=G.chant*(.8+.4*m.excitement);sl.g.gain.cancelScheduledValues(now);sl.g.gain.setValueAtTime(0,now);sl.g.gain.setTargetAtTime(lvl,sl.nextAt,S.chantIn/3);last[P_SLOT0+active]=lvl;
   for(const sd of sl.sides){sd.g.gain.setTargetAtTime(1,now,.1);}if(sl.sides[0].p.pan)sl.sides[0].p.pan.setTargetAtTime(-.6,now,.1);if(sl.sides[1].p.pan)sl.sides[1].p.pan.setTargetAtTime(.6,now,.1);if(sl.sides[2].p.pan)sl.sides[2].p.pan.setTargetAtTime(0,now,.1);
   last[P_GA]=last[P_GB]=last[P_PA]=last[P_PB]=last[P_PC]=-9;
   debug.chant=id;debug.chantStarts++;debug.steps=sl.steps;request(sl,0,lite);request(sl,1,lite);
@@ -491,25 +560,61 @@ export function createStadiumSound(host:StadiumSoundHost){
    sl.i++;sl.nextAt+=len;request(sl,sl.i,lite);request(sl,sl.i+1,lite);
   }
  }
- /** A one-shot on the pool of three (the oldest gives way), panned to a section, optionally a little later. */
- function shot(G:Graph,r:Rendered,level:number,panTo=0,delay=0){const c=G.c,t=c.currentTime+delay;let s=G.shots[0];for(const x of G.shots){if(!x.src){s=x;break;}if(x.at<s.at)s=x;}
-  if(s.src){try{s.src.stop();}catch{}s.src.disconnect();}const src=c.createBufferSource();src.buffer=r.buffer;src.connect(s.g);s.g.gain.setValueAtTime(level,t);if(s.p.pan)s.p.pan.setValueAtTime(panTo,t);src.start(t);s.src=src;s.at=t;src.onended=()=>{src.disconnect();if(s.src===src)s.src=null;};}
+ /** A one-shot on the pool of SHOTS (the oldest gives way), panned to a section, optionally later and at another speed. */
+ function shot(G:Graph,r:Rendered,level:number,panTo=0,delay=0,rate=1){const c=G.c,t=c.currentTime+delay;let s=G.shots[0];for(const x of G.shots){if(!x.src){s=x;break;}if(x.at<s.at)s=x;}
+  if(s.src){try{s.src.stop();}catch{}s.src.disconnect();}const src=c.createBufferSource();src.buffer=r.buffer;if(rate!==1)src.playbackRate.value=rate;src.connect(s.g);s.g.gain.setValueAtTime(level,t);if(s.p.pan)s.p.pan.setValueAtTime(panTo,t);src.start(t);s.src=src;s.at=t;src.onended=()=>{src.disconnect();if(s.src===src)s.src=null;};}
+ /** What a reaction sounds like: the recording where one loaded (a little faster or slower each time, never the same twice), else its synthesised voice. */
+ function voice(k:ReactKind):{r:Rendered;rate:number;real:boolean}|null{
+  const R=bank!.rec,v=.94+Math.random()*.12;
+  const rec=k==='ooh'?(Math.random()<.5?R.ooh??R.ooh2:R.ooh2??R.ooh):k==='aah'||k==='groan'?R.groan:k==='applause'?R.applause:undefined;
+  if(rec)return {r:rec,rate:k==='aah'?v*1.08:v,real:true};const syn=bank!.syn[k];return syn?{r:syn,rate:1,real:false}:null;
+ }
  /** A reaction, rate-limited per kind (cool s). */
- function react(G:Graph,k:ReactKind,level:number,panTo=0,delay=0,cool=0){const now=G.c.currentTime,i=REACTIONS.indexOf(k);if(now<coolUntil[i])return false;coolUntil[i]=now+cool;shot(G,bank![k],level*M.react,panTo,delay);debug.reactions[k]++;return true;}
+ function react(G:Graph,k:ReactKind,level:number,panTo=0,delay=0,cool=0){const now=G.c.currentTime,i=REACTIONS.indexOf(k);if(now<coolUntil[i])return false;const v=voice(k);if(!v)return false;
+  coolUntil[i]=now+cool;shot(G,v.r,level*(v.real?M.reactRec:M.react),panTo,delay,v.rate);debug.reactions[k]++;return true;}
+ /** The referee's whistle (a recorded blow; none if the file did not load). */
+ function whistle(G:Graph,delay=0,rate=1,level=1){const r=bank!.rec.whistle;if(!r)return false;shot(G,r,M.whistle*level,0,delay,rate);debug.whistles++;return true;}
+ /** The tannoy: the ding-dong and the announcer, from the middle of the bowl; the chants dip under it. One at a time. */
+ function announce(G:Graph,id:'pa-welcome'|'pa-goal',delay=0){
+  const r=bank!.rec[id],c=G.c,t=c.currentTime+delay;if(!r||t<paFree)return false;const d=r.buffer.duration;paFree=t+d+2;
+  shot(G,r,M.pa,0,delay);debug.pa++;duckUntil=t+d;
+  for(const sl of G.slots){if(!sl.song)continue;const sg=sl.g.gain;sg.setTargetAtTime(G.chant*.35,t,.25);sg.setTargetAtTime(G.chant,t+d,.8);}
+  last[P_SLOT0]=last[P_SLOT1]=-9;return true;
+ }
  function goal(G:Graph,zone:number){
-  const c=G.c,t=c.currentTime;shot(G,bank!.goal,M.goal);debug.goals++;swellOpen=false;holdUntil=t+S.goalHold+.6;
+  const c=G.c,t=c.currentTime,R=bank!.rec,real=goalFlip++%2?R.goal2??R.goal:R.goal??R.goal2;
+  if(real)shot(G,real,M.goalRec);else if(bank!.syn.goal)shot(G,bank!.syn.goal,M.goal);
+  debug.goals++;swellOpen=false;holdUntil=t+S.goalHold+.6;
+  whistle(G,REFEREE.goalWhistle,1.02,.8);announce(G,'pa-goal',REFEREE.paGoal);
   const swell=(p:AudioParam,peak:number,rest:number)=>{p.cancelScheduledValues(t);p.setValueAtTime(p.value,t);p.linearRampToValueAtTime(peak,t+.35);p.setTargetAtTime(rest,t+S.goalHold,1.3);};
-  swell(G.gRoar.gain,M.roar*1.4,M.roar*.5);swell(G.fRoar.frequency,3400,1800);swell(G.gRum.gain,M.rumble*Math.max(.5,zone)*1.7,M.rumble*Math.max(.3,zone)*.6);
-  for(const sl of G.slots){if(!sl.song)continue;const sg=sl.g.gain;sg.cancelScheduledValues(t);sg.setValueAtTime(sg.value,t);sg.setTargetAtTime(M.chant*.3,t,.15);sg.setTargetAtTime(M.chant,t+S.goalHold,1);}
+  const roar=G.realRoar?M.roarRec:M.roar;
+  swell(G.gRoar.gain,roar*(G.realRoar?1.1:1.4),roar*.5);// the real goal eruption carries the peak; the roar holds under itswell(G.fRoar.frequency,G.realRoar?9000:3400,G.realRoar?5200:1800);swell(G.gRum.gain,M.rumble*Math.max(.5,zone)*1.7,M.rumble*Math.max(.3,zone)*.6);
+  for(const sl of G.slots){if(!sl.song)continue;const sg=sl.g.gain;sg.cancelScheduledValues(t);sg.setValueAtTime(sg.value,t);sg.setTargetAtTime(G.chant*.3,t,.15);sg.setTargetAtTime(G.chant,t+S.goalHold,1);}
   last.fill(-9);
  }
- /** The crowd reacting to the match: the swell as an attack nears the box (and a groan or "aah" when it fizzles), the touch ring
-  *  (a save: "ooh" + applause; a shot: "ooh"; a tackle or interception: applause, now and then whistles for a big challenge in a
-  *  dangerous area; a long ball well received: applause; a heavy touch: a groan), and small "ooh / aah" ripples from a section. */
+ /** The referee and the PA: a match waking while you are near gets the welcome then the kick-off whistle (arriving mid-match,
+  *  nothing: the PA does not repeat itself every visit); the kick-off after a goal (the sim's restart) a whistle; each PERIOD_S mark of the clock a double whistle
+  *  and applause. */
+ function referee(G:Graph,f:StadiumSoundFrame,live:boolean){
+  const now=G.c.currentTime;
+  if(live&&seenLive===false){if(now-welcomeAt>REFEREE.paCool&&announce(G,'pa-welcome',.4)){welcomeAt=now;whistle(G,REFEREE.welcomeLead+.4);}else whistle(G,.3);}
+  seenLive=live;
+  const sim=live?f.sim:null;
+  if(sim){const rk=sim.restartKind??null;if(lastRestart==='kickoff'&&rk!=='kickoff')whistle(G);lastRestart=rk;
+   if(typeof sim.clock==='number'&&Number.isFinite(sim.clock)){const p=Math.floor(sim.clock/REFEREE.periodS);
+    if(lastPeriod>=0&&p>lastPeriod){whistle(G);whistle(G,.55,.97,1.1);react(G,'applause',.7,side(),1.4,4);debug.periods++;}lastPeriod=p;}}
+  else{lastRestart=null;lastPeriod=-1;}
+ }
+ /** The crowd reacting to the match: the swell as an attack nears the box, the "a-TTAAACK!" urging as it builds (and a groan or
+  *  "aah" when it fizzles), the touch ring (a save: "ooh" + applause; a shot: "ooh"; a tackle or interception: applause, now and
+  *  then whistles for a big challenge in a dangerous area; a long ball well received: applause; a heavy touch: a groan), and
+  *  small "ooh / aah" ripples from a section. */
  function reactions(G:Graph,f:StadiumSoundFrame,m:Readonly<StadiumMood>,e:number,step:number){
   const now=G.c.currentTime;
   if(e>.55&&lastExc<=.55&&now-swellAt>10){react(G,'swell',.9,side()*.5);swellAt=now;swellOpen=true;}
   else if(swellOpen&&now-swellAt>2.2&&e<.4){swellOpen=false;react(G,Math.random()<.5?'aah':'groan',.75,side()*.5);}
+  if(e>.62&&lastExc<=.62&&now-attackAt>8){react(G,'attack',.85,side()*.4,.7);attackAt=now;}
+  else if(e>.78&&lastExc<=.78&&now-attackAt>1.5&&now-attackAt<8){react(G,'attack',1.05,side()*.4,.2,1.5);attackAt=now-8;}
   lastExc=e;
   const sim=f.sim;
   if(sim){if(touchSeen<0||sim.touchSerial<touchSeen)touchSeen=sim.touchSerial;const ring=sim.touches.length;
@@ -528,14 +633,17 @@ export function createStadiumSound(host:StadiumSoundHost){
   const c=G.c,m=f.mood,live=!!m&&m.live,e=live?m!.excitement:0,zone=rumbleZone(f.x,f.z,f.h,presence),lite=f.lite;
   // Goals and near misses (the mood's counters drop to 0 on the event).
   if(m){if(m.sinceGoal<lastGoal&&live)goal(G,zone);else if(m.sinceNearMiss<lastMiss&&live&&m.sinceGoal>1){react(G,'ooh',1.1);react(G,'aah',.7,0,1.15);debug.oohs++;swellOpen=false;}lastGoal=m.sinceGoal;lastMiss=m.sinceNearMiss;}
+  referee(G,f,live);
   if(live)reactions(G,f,m!,e,step);else{lastExc=0;swellOpen=false;touchSeen=-1;}
-  to(P_OUT,G.out.gain,presence*M.out*(lite?M.lite:1));to(P_MUR,G.gMur.gain,M.murmur*(live?.7+.5*e:.45));
-  if(c.currentTime>holdUntil){to(P_ROAR,G.gRoar.gain,live?M.roar*(.06+.94*e*e):0,.5);to(P_ROARF,G.fRoar.frequency,900+2600*e,.5);to(P_RUM,G.gRum.gain,M.rumble*zone*(live?.3+.7*e:.12),.6);}
+  to(P_OUT,G.out.gain,presence*M.out*(lite?M.lite:1));
+  // The bed: the real crowd's hum (lower and duller between matches), else the synthesised murmur.
+  to(P_MUR,G.gMur.gain,G.realBed?(live?M.bed*(.8+.35*e):M.bedQuiet):M.murmur*(live?.7+.5*e:.45));
+  if(c.currentTime>holdUntil){const R=G.realRoar;to(P_ROAR,G.gRoar.gain,live?(R?M.roarRec:M.roar)*(.06+.94*e*e):0,.5);to(P_ROARF,G.fRoar.frequency,R?1500+6000*e:900+2600*e,.5);to(P_RUM,G.gRum.gain,M.rumble*zone*(live?.3+.7*e:.12),.6);}
   // The song: the mood's chant, crossfaded on a change; a new performance each time.
   const want=chantFor(m),sl=G.slots[active];
   if(want!==sl.song){if(sl.song)stopSlot(sl,c,S.chantFade);debug.chant=null;if(want)startSong(G,want,m!,lite);}
   const cur=G.slots[active];if(!cur.song)return;
-  if(c.currentTime>holdUntil)to(P_SLOT0+active,cur.g.gain,M.chant*(.8+.4*e),.6);
+  if(c.currentTime>holdUntil&&c.currentTime>duckUntil)to(P_SLOT0+active,cur.g.gain,G.chant*(.8+.4*e),.6);
   sequence(G,cur,m!,lite);
   const song=SONGS[cur.song];
   // Call and answer: each stand from where it is (pan by the camera's right, the nearer stand louder).
@@ -546,7 +654,7 @@ export function createStadiumSound(host:StadiumSoundHost){
   if(song.sweep&&cur.sides[2].p.pan)to(P_PC,cur.sides[2].p.pan,lite?0:.75*Math.sin(Math.PI*2*m!.beat/16),.15);
   // The olé roll rides the Mexican wave round the bowl (not in the lite mix).
   const wv=live&&!lite?m!.wave.on:0;
-  if(wv>.01){waveOff=0;if(!G.wave){G.wave=loopSrc(c,bank!.ole,G.gWave);debug.wave=true;}
+  if(wv>.01){waveOff=0;if(!G.wave){G.wave=loopSrc(c,bank!.syn.ole!,G.gWave);debug.wave=true;}
    const wx=STADIUM.x+Math.cos(m!.wave.angle)*55-f.x,wz=STADIUM.z+Math.sin(m!.wave.angle)*70-f.z,dw=Math.hypot(wx,wz),la=Math.atan2(f.z-STADIUM.z,f.x-STADIUM.x),near=.35+.65*(1+Math.cos(m!.wave.angle-la))/2;
    to(P_WAVE,G.gWave.gain,M.wave*wv*near,.25);if(G.pWave.pan)to(P_WAVEPAN,G.pWave.pan,Math.max(-.9,Math.min(.9,(wx*f.rx+wz*f.rz)/Math.max(15,dw))),.25);}
   else if(G.wave){to(P_WAVE,G.gWave.gain,0,.3);waveOff+=step;if(waveOff>1.5){const w=G.wave;G.wave=null;debug.wave=false;try{w.stop();}catch{}w.disconnect();last[P_WAVE]=-9;}}
@@ -558,8 +666,8 @@ export function createStadiumSound(host:StadiumSoundHost){
    presence=presenceStep(presence,presenceAt(bowlDistance(f.x,f.z,f.h)));debug.presence=presence;musicFade=musicFadeFor(presence);
    if(presence>0){away=0;quiet=0;}else{away+=step;quiet+=step;}
    if(presence===0){if(g){to(P_OUT,g.out.gain,0);if(quiet>S.stopAfter)stop(false);}if(bank&&away>S.teardown)teardown();return;}
-   const c=host.ctx();if(!c)return;// no gesture yet: nothing is built
-   if(!bank){build(f.lite);return;}
+   const c=host.ctx();if(!c)return;// no gesture yet: nothing is built, nothing fetched
+   if(!bank){build(c,f.lite);return;}
    if(!host.ok()){if(g)stop(false);host.wake();return;}
    if(!g){const master=host.master();if(!master)return;graph(c,master);}
    mix(g!,f,step);

@@ -74,7 +74,7 @@ export function pondFloatStep(b:PondBall,pond:BallPond,dt:number):boolean{
  b.x=x;b.z=z;return false;
 }
 
-/** A tiny event hook for each splash (skip, settle, roll-out), e.g. for a sound. Unwired today (stadium audio lives elsewhere). */
+/** A tiny event hook for each splash (skip, settle, roll-out). Town plays the island sound's soft splash on each skip. */
 export type PondSkipEvent={kind:'skip'|'float'|'out';x:number;z:number;strength:number;skip:number};
 const listeners=new Set<(e:PondSkipEvent)=>void>();
 const shared:PondSkipEvent={kind:'skip',x:0,z:0,strength:0,skip:0};
