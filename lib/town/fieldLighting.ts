@@ -5,7 +5,7 @@ import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {VENUES,STADIUM_VENUE,FIELD_SURFACE_Y,type Format,type Venue} from './venues';
 import {MASTS} from './stadiumSeats';
 import {STADIUM} from './westParkLayout';
-import {STADIUM_NIGHT} from './stadiumNight';
+import {STADIUM_NIGHT,setStadiumNight} from './stadiumNight';
 import {KNOCKOUT_ROOF} from '../games/rooftopKnockout';
 import {createPitchVisibility} from './pitchVisibility';
 
@@ -102,7 +102,7 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
  return {propSpecs,update(mode:string,camera:T.Camera,isolated:Format|null,dt:number,reduced=false,roofActive=false,player?:{x:number;y:number;z:number}){
   const nextTeaching=isolated!==null;
   if(teaching!==nextTeaching){
-   teaching=nextTeaching;for(const fixture of fixtures)fixture.visible=!teaching;
+   teaching=nextTeaching;for(const fixture of fixtures)fixture.visible=!teaching;setStadiumNight(STADIUM_NIGHT.value,teaching);// the stadium's night dressing hides in lessons too
    scanAge=1;
    if(teaching){chosen=undefined;strength=0;lightGain=0;for(const spot of spots)spot.intensity=0;lightRoot.userData.active=null;lightRoot.userData.format=null;}
   }
@@ -121,10 +121,10 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
   // Within night (including zero-intensity teaching views) the pool stays visible, so lessons never recompile.
   lightRoot.visible=night||blend>0;
   stadiumGlow.visible=blend>0&&!teaching;
-  if(changed||oldBlend!==blend){lenses.emissiveIntensity=blend*2.1;STADIUM_NIGHT.value=blend;glowMaterial.opacity=blend*.85;
+  if(changed||oldBlend!==blend){lenses.emissiveIntensity=blend*2.1;setStadiumNight(blend);glowMaterial.opacity=blend*.85;
   for(const entry of entries){if(!entry.surface)continue;entry.surface.color.copy(entry.dayColor).lerp(entry.nightColor,blend);entry.surface.emissive.copy(entry.nightEmission);entry.surface.emissiveIntensity=blend*(entry.venue.id==='futsal'?.246:.025);}
   goal.emissiveIntensity=blend*.16;markings.color.copy(dayMarkings).lerp(nightMarkings,blend);}
   if(changed||targetChanged||oldBlend!==blend||oldGain!==lightGain)for(const spot of spots)spot.intensity=strength*blend*lightGain;
   settled=blend===target;lightRoot.userData.blend=blend;lightRoot.userData.active=chosen?.venue.id??null;
- },dispose(){for(const geometry of owned)geometry.dispose();steel.dispose();lenses.dispose();glowMaterial.dispose();glowMap.dispose();STADIUM_NIGHT.value=0;lightRoot.removeFromParent();roofRoot.removeFromParent();stadiumRoot.removeFromParent();}};
+ },dispose(){for(const geometry of owned)geometry.dispose();steel.dispose();lenses.dispose();glowMaterial.dispose();glowMap.dispose();setStadiumNight(0,false);lightRoot.removeFromParent();roofRoot.removeFromParent();stadiumRoot.removeFromParent();}};
 }

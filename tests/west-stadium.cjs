@@ -430,4 +430,60 @@ console.log('west stadium phase 2: ok');
  fields.updateLighting('night',cam,null,.2,true,false,{x:S.x,y:0,z:S.z-S.bowlL/2-30});assert.notEqual(pool.userData.active,'stadium','leaving the bowl releases the pool');
  for(let i=0;i<400;i++)fields.updateLighting('day',cam,null,1/30);assert.equal(N.STADIUM_NIGHT.value,0);assert(!glow.visible);assert.equal(pool.visible,false);
  fields.dispose();console.log('west stadium night lighting: ok');}
+
+// 7. Night lights (Nov 13 2026, owner: "make the stadium look alive at night", stadiumLights.ts): roof lamps in the roof meshes,
+// one lamp-hardware mesh (posts, uplights, bollards, gate lamps) and one additive glow mesh (beams, haze, pools, washes), all on the
+// shared night factor; no real light; the posts stand off every path with colliders and their pools join the night pools.
+{const N=load('lib/town/stadiumNight.ts'),SL=load('lib/town/stadiumLights.ts'),Q=load('lib/town/stadiumSeats.ts'),lights=world.stadiumLights,st=lights.stats;
+ const lamps=scene.getObjectByName('stadium-night-lamps'),glow=scene.getObjectByName('stadium-night-glow');
+ const kinds={};for(const p of lights.posts)kinds[p.kind]=(kinds[p.kind]??0)+1;
+ console.log('stadium night lights:',JSON.stringify(st),'posts',JSON.stringify(kinds));
+ assert(lamps&&glow&&lamps.isMesh&&glow.isMesh&&lamps.userData.ownDraw&&glow.userData.ownDraw,'two meshes of their own (2 draws), never batched');
+ assert(!lamps.castShadow&&!glow.castShadow&&!glow.material.depthWrite&&glow.material.blending===T.AdditiveBlending,'no shadows; the glow is additive');
+ // The lenses: aGlow vertices in the lamp mesh and in both roofs, lit by the night factor (the shared uniform) through one patch.
+ const fake=m=>{const sh={uniforms:{},vertexShader:T.ShaderLib.physical.vertexShader,fragmentShader:T.ShaderLib.physical.fragmentShader};m.onBeforeCompile(sh,null);return sh;};
+ const lit=g=>{const a=g.getAttribute('aGlow');let n=0;for(let i=0;i<a.count;i++)n+=a.getX(i)>.5?1:0;return n;};
+ {const sh=fake(lamps.material);assert(sh.uniforms.uStadiumNight===N.STADIUM_NIGHT&&/vGlow\*uStadiumNight/.test(sh.fragmentShader),'lamp lenses glow on the night factor');assert(lit(lamps.geometry)>0);}
+ for(const s of Q.STANDS.filter(q=>q.roof)){const roof=scene.getObjectByName('stadium-roof-'+s.id),sh=fake(roof.material);
+  assert(sh.uniforms.uStadiumNight===N.STADIUM_NIGHT&&/vGlow\*uStadiumNight/.test(sh.fragmentShader),s.id+' roof lamps glow on the night factor');
+  assert.equal(lit(roof.geometry),SL.roofLampAlongs().length*36,s.id+' roof: a row of lamps in the roof mesh itself (they fade with it)');
+  const pos=roof.geometry.getAttribute('position'),a=roof.geometry.getAttribute('aGlow');let ymin=Infinity,ymax=-Infinity;
+  for(let i=0;i<pos.count;i++)if(a.getX(i)>.5){const y=pos.getY(i)+roof.position.y;ymin=Math.min(ymin,y);ymax=Math.max(ymax,y);}
+  assert(ymax<=Q.ROOF.y-Q.ROOF.thick/2+1e-6&&ymin>=Q.ROOF.y-Q.FRONT_FRAME.below-.01,'hung under the slab, no lower than the front frame');}
+ // Day: the factor is 0 (lenses dark) and the glow is hidden; night: shown. Phones on heat tier 2+ keep only the lamps.
+ N.setStadiumNight(0,false);assert(!glow.visible,'no glow by day');N.setStadiumNight(1,false);assert(glow.visible,'glow at night');
+ N.setStadiumNight(1,true);assert(!glow.visible,'hidden in a lesson view');N.setStadiumNight(0,false);
+ assert(glow.material.uniforms.uNight===N.STADIUM_NIGHT&&glow.material.uniforms.uRoofFade===world.stadiumRoofs.fade,'glow reads the night factor and the roof fade');
+ assert(SL.beamsAllowed(false,4)&&SL.beamsAllowed(true,1)&&!SL.beamsAllowed(true,2)&&!SL.beamsAllowed(true,4),'phones at tier 2+: no beams');
+ assert.equal(st.beams,Math.ceil(SL.roofLampAlongs().length/2)*2,'a beam from every other roof lamp, both roofs');
+ // The roof beams fade with their roof: under the west roof, seen from above, the west fade drops; walking away, it is back to 1.
+ {const W0=Q.STANDS[0],p=Q.standWorld(W0,50,0),R=world.stadiumRoofs;R.update(1,p.x,3,p.z,p.x+2,40,p.z+2,true);
+  assert(R.fade.value.x<.5&&R.fade.value.y===1,'west beams fade with the west roof');R.update(1,S.x,0,S.z-200,S.x,20,S.z-190,true);assert.equal(R.fade.value.x,1);}
+ // No new real light: nothing in the lights meshes, no light anywhere near the stadium in the built town.
+ let near=0;scene.traverse(o=>{if(o.isLight){const v=o.getWorldPosition(new T.Vector3());if(Math.abs(v.x-S.x)<200&&Math.abs(v.z-S.z)<200)near++;}});
+ assert.equal(near,0,'no real light in the stadium area');assert(!lamps.children.length&&!glow.children.length);
+ // Posts: round the plaza, the apron and the trails; off every path and the plaza, out of the pond, clear of signs, flags, trees and
+ // orchards; 12 m apart; each with a collider and a night pool (one pool batch).
+ assert(kinds.plaza>=6&&kinds.apron>=8&&kinds.trail>=12,'posts on every kind of edge');
+ const trees=world.assets.filter(a=>a.kind==='tree'||a.kind==='palm'),flags=Q.plazaFlagPoles();
+ for(const p of lights.posts){const at=`post (${p.x.toFixed(1)}, ${p.z.toFixed(1)})`;
+  assert(!L.onParkPaving(p.x,p.z,SL.LAMP_POST.collider)&&!L.onWalkPath(p.x,p.z,.5),at+' on a path or the plaza');
+  assert(!L.inPond(p.x,p.z,L.POND_RIM+1)&&!L.inStadiumFootprint(p.x,p.z,2)&&L.onGrass(p.x,p.z),at+' in the pond, the bowl or on the beach');
+  assert(L.PARK_SIGNS.every(([x,z])=>Math.hypot(p.x-x,p.z-z)>=4)&&flags.every(f=>Math.hypot(p.x-f.x,p.z-f.z)>=2),at+' by a sign or flag');
+  assert(trees.every(t=>Math.hypot(p.x-t.x,p.z-t.z)>=(t.visualW??1)/2+.4),at+' under a tree');
+  assert(world.obstacles.some(o=>o.x===p.x&&o.z===p.z&&o.w===SL.LAMP_POST.collider),at+' has a collider');
+  assert(lights.posts.every(q=>q===p||Math.hypot(p.x-q.x,p.z-q.z)>=12),at+' 12 m from the next');}
+ {const night=scene.getObjectByName('night-atmosphere'),sites=night.userData.lampSites.filter(s=>s.chunk==='stadium'),pool=scene.getObjectByName('night-pool-chunk-stadium');
+  assert.equal(sites.length,lights.posts.length,'every post has a light site');assert(pool&&pool.isInstancedMesh&&pool.count===sites.length,'one pool batch for the stadium posts');}
+ // Bollards at the foot of every back stair, clear of the stair's walk line; the gate sign lights up at night.
+ assert.equal(st.bollards,Q.STANDS.reduce((n,s)=>n+s.stairs.length*2,0));
+ for(const s of Q.STANDS)for(const a of s.stairs){const f=Q.standWorld(s,Q.stairEnd(s)+.6,a);assert(!blocked(f.x,f.z),'stair foot open');}
+ world.updateTrafficSignals('night');assert(world.stadiumGateSign.emissiveIntensity>0&&world.stadiumGateSign.emissiveMap,'the DRIP FC Stadium sign glows at night');
+ world.updateTrafficSignals('day');assert.equal(world.stadiumGateSign.emissiveIntensity,0,'and is plain by day');
+ // The light on the stadium itself is in the paint patch (seat pools, beam hits, wall washes): 0 draws.
+ {const m=scene.children.find(o=>o.isMesh&&o.name.startsWith('island-chunk-')&&o.material.customProgramCacheKey().includes('stadium-night')).material,sh=fake(m);
+  assert(/inLong/.test(sh.fragmentShader)&&/washL/.test(sh.fragmentShader)&&/vStadiumW/.test(sh.vertexShader),'seat pools, beam hits and wall washes in the stadium paint');}
+ // Cost: 2 draws (+ 1 pool batch at night), bounded triangles, nothing per frame (uniform writes only).
+ assert(st.lampTriangles<=14000&&st.glowTriangles<=600,'bounded: '+st.lampTriangles+' / '+st.glowTriangles+' triangles');
+ console.log('west stadium night lights: ok');}
 })().catch(e=>{console.error(e);process.exit(1);});
