@@ -3,7 +3,7 @@
 // must never leave the avatar parked somewhere the sender never was). A Warp flag or a >25 m jump (x, y or z) fades
 // out/in over 300 ms. The drawn y never sinks more than Y_SINK_M below the poses it comes from (landings, warps).
 // sample() allocates nothing. Positions are metres, yaw radians (wire yaw256 * 2pi/256), speed m/s.
-import { activityOf, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
+import { MAX_SPEED_MS, activityOf, type MemberId, type Mode, type PoseBody, type Zone } from '../../multiplayer/protocol';
 
 /** flags: the pose flags of the newest snapshot at or before the render time (Hidden = away; design 4.4.1). Optional for old callers. */
 export type RemotePose = { x: number; y: number; z: number; yaw: number; speed: number; mode: Mode; zone: Zone; fade: number; flags?: number;
@@ -23,7 +23,13 @@ const F = 9; // floats per slot: t, x, y, z, yaw(rad), speed, mode, zone, flags
 const FADE_HALF_MS = 150;
 const JUMP_M = 25;
 const RETURN_MS = 300; // after the extrapolation cap: ease the extrapolated offset back to zero over this long
-const MAX_EXTRAP_MPS = 30; // a velocity above this between two snapshots is a teleport/catch-up, not motion: don't extrapolate it
+// Extrapolation velocity (live QA round 4, Nov 12 2026): a flat 30 m/s cut froze every jetpack flyer (cruise 29-34 m/s plus jitter).
+// The velocity is now measured over at least VEL_SPAN_MS (back through un-cut slots), so a ±30 ms receive jitter on a 10 Hz stream
+// cannot spike it, and only a velocity well above what the relay itself lets that mode move (MAX_SPEED_MS * 1.5, plus the sender's
+// 1 m-per-pose slack) counts as a catch-up leap and is not extrapolated. Warps / >25 m jumps are cut marks and never extrapolate.
+const VEL_SPAN_MS = 180;
+const EXTRAP_SLACK_MPS = 12;
+const extrapLimit = (mode: number): number => (MAX_SPEED_MS[mode as Mode] ?? 6) * 1.5 + EXTRAP_SLACK_MPS;
 const Y_SINK_M = 0.25; // the drawn y may dip at most this far below the lower of the source poses
 const TAU = Math.PI * 2;
 
@@ -98,11 +104,14 @@ export function createInterp(opts?: { delayMs?: number; extrapolateMs?: number }
       const dt = rt - r.d[sa];
       let vx = 0, vy = 0, vz = 0;
       if (a >= 1 && !r.cut[ci(r, a)] && dt < cap + RETURN_MS) {
-        const sp = at(r, a - 1);
+        let b = a - 1; // the base slot: back through un-cut slots until the span covers VEL_SPAN_MS (a cut slot is a base, never crossed)
+        while (b > 0 && !r.cut[ci(r, b)] && r.d[sa] - r.d[at(r, b)] < VEL_SPAN_MS) b--;
+        const sp = at(r, b);
         const span = r.d[sa] - r.d[sp];
         if (span > 0) {
           vx = (r.d[sa + 1] - r.d[sp + 1]) / span; vy = (r.d[sa + 2] - r.d[sp + 2]) / span; vz = (r.d[sa + 3] - r.d[sp + 3]) / span;
-          if ((vx * vx + vy * vy + vz * vz) * 1e6 > MAX_EXTRAP_MPS * MAX_EXTRAP_MPS) { vx = 0; vy = 0; vz = 0; } // per ms -> m/s
+          const lim = extrapLimit(r.d[sa + 6]);
+          if ((vx * vx + vy * vy + vz * vz) * 1e6 > lim * lim) { vx = 0; vy = 0; vz = 0; } // per ms -> m/s
         }
       }
       const e = Math.min(dt, cap);

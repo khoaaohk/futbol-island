@@ -179,6 +179,14 @@ export function islandJump(px: number, pz: number, x: number, z: number, dtSec: 
  */
 export const POSE_SAFE = 0.75, POSE_WARP_LAG_M = 20, POSE_WARP_GAP_MS = 5300;
 const RELAY_WARP = 1;
+/** Live QA round 4 (Nov 12 2026): the sky dive blast spent the one Warp per 5 s on its way UP, so after landing the watcher saw the
+ *  walking player hang up to 114 m in the air until the next Warp was free (~1.85 s). A lag that is mostly vertical while still in the
+ *  air (jetpack / parachute) now keeps the Warp for the landing: the capped catch-up follows the flight, and the first ground pose
+ *  that is still far off warps at once. A horizontal lag (the jetpack boost) or one over POSE_AIR_HOLD_MAX_M still warps right away. */
+export const POSE_AIR_HOLD_MAX_M = 250;
+function airHold(mode: number, dx: number, dy: number, dz: number, d: number): boolean {
+  return (mode === Mode.Jetpack || mode === Mode.Parachute) && d < POSE_AIR_HOLD_MAX_M && Math.abs(dy) >= Math.hypot(dx, dz);
+}
 export type PoseGovernor = { has: boolean; x: number; y: number; z: number; at: number; room: number; warpAt: number };
 export function poseGovernor(): PoseGovernor { return { has: false, x: 0, y: 0, z: 0, at: 0, room: -1, warpAt: -1e12 }; }
 /** Forget the last sent pose (a new socket: the relay treats the next pose as the first one). Keeps warpAt (the relay member may resume). */
@@ -194,7 +202,7 @@ export function governPose(g: PoseGovernor, body: PoseBody, nowMs: number, live 
   const dx = (out[0] - g.x) / 10, dy = (out[1] - g.y) / 10, dz = (out[2] - g.z) / 10, d = Math.sqrt(dx * dx + dy * dy + dz * dz);
   const dt = Math.max(0, nowMs - g.at) / 1000, limit = (live ? Math.max(LIVE_MATCH_POSE_MS, MAX_SPEED_MS[out[5] as Mode] ?? 6) : (MAX_SPEED_MS[out[5] as Mode] ?? 6)) * 1.5 * POSE_SAFE * dt + 1;
   if (d <= limit) return out;
-  if (d > POSE_WARP_LAG_M && nowMs - g.warpAt >= POSE_WARP_GAP_MS) { out[7] |= RELAY_WARP; return out; }
+  if (d > POSE_WARP_LAG_M && nowMs - g.warpAt >= POSE_WARP_GAP_MS && !airHold(out[5], dx, dy, dz, d)) { out[7] |= RELAY_WARP; return out; }
   const k = limit / d; // capped: the furthest point toward the real spot the relay still keeps
   out[0] = Math.round(g.x + dx * k * 10); out[1] = Math.round(g.y + dy * k * 10); out[2] = Math.round(g.z + dz * k * 10);
   return out;

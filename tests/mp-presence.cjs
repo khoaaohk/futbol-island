@@ -231,6 +231,17 @@ t('lazy connect: island ready + tutorial done + first input + 3 s, nothing befor
   void d;void ev;
 });
 
+t('back from a room page (world slot held): the island resumes the world at once, no input or 3 s gate; never in solo',async()=>{
+  const W=world();onSeed(W);const room=page(W);room.setLobby(()=>({status:200,body:{open:true,shard:3,n:2}}));await live(room,W);room.setHidden(true);
+  const isl=page(W,{clock:room.clock,lobby:()=>({status:200,body:{open:true,shard:3,n:2}})});assert.equal(isl.c.hasWorldSession(),true);
+  const r=driver(W,isl);r.d.tutorialDone(true);await flush();assert.equal(isl.calls.length,0,'not before the island is interactive');
+  r.d.islandReady(true);await flush();assert.equal(isl.calls.length,1,'resumed with no input and no wait');assert.equal(isl.calls[0],'http://127.0.0.1:8790/world?in=3');
+  isl.last().open();assert.deepEqual(isl.msgs(isl.last())[0],[0,1,LOOK,'wtok-abcdefghij0123',null],'the same slot');
+  // Just me: the held slot does not reconnect
+  const W2=world();W2.local.setItem('fi2-presence-mode-v1','solo');const room2=page(W2);await live(room2,W2);room2.setHidden(true);
+  const isl2=page(W2,{clock:room2.clock});const r2=driver(W2,isl2);r2.d.tutorialDone(true);r2.d.islandReady(true);await flush();assert.equal(isl2.calls.length,0);
+});
+
 t('silent fallback in the driver: unreachable / closed -> Just me (reason), retried on an input only after 2 min; a tap retries at once',async()=>{
   const W=world();onSeed(W);const p=page(W);const {d,ev}=driver(W,p);p.setLobby(()=>({status:404,body:null}));
   d.islandReady(true);d.tutorialDone(true);d.noteInput();p.clock.advance(3000);await flush();

@@ -131,7 +131,7 @@ t('Phase 2 wiring: Phase 1 names, hook before the scene, chip Leave only, wake r
  // page: the hook resumes the party and is declared before the scene effect (disposed first); the chip sits in the header, right
  const h=mr.indexOf('useRoomParty(room,RoomCode.Museum,ready,covered||!!zoom)');assert.ok(h>0&&h<mr.indexOf("import('@/lib/museum/museumScene')"),'hook before the scene effect, busy = covered or zoomed');
  assert.match(mr,/\{party&&!zoom&&<span className=\{styles\.partySlot\}><RoomPartyChip party=\{party\} hidden=\{covered\} align="right"\/><\/span>\}/,'chip in the header, hidden while covered / zoomed');
- assert.match(mr,/pickMuseumSpawn\(spot,here,s\.you\?\?0\);spreadMuseumSpawn\(spot\);museumRoomHooks\.arrive\(spot\.x,spot\.z\)/,'arrival: first free slot, then arrive()');
+ assert.match(mr,/pickMuseumSpawn\(spot,here,s\.you\?\?0\);spreadMuseumSpawn\(spot,Math\.random,here\);museumRoomHooks\.arrive\(spot\.x,spot\.z\)/,'arrival: first free slot, then arrive()');
  assert.match(hook,/station: host\.stationCode \?/,'useRoomParty takes a room\'s own station codes');
  // scene: the layer through museumRoomHooks (attach / detach), hidden while zoomed, remote wake without the local settle
  assert.match(sc,/setFriendLayer\(layer:MuseumFriendLayer\|null\)\{if\(layer\)\{friends=layer;museumRoomHooks\.attach\(hookLayer\);\}else\{museumRoomHooks\.detach\(hookLayer\);friends=null;remoteOnly=false;\}\}/);

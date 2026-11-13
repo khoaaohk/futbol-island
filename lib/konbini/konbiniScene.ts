@@ -299,6 +299,10 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
 
  // ---- State ---------------------------------------------------------------------------------------------------------------
  const START_Z=4.9;let spread=false;
+ // Live QA round 4 (Nov 12 2026): the walk-in (z 4.9 -> 3.55) ends before the party / world layer attaches, so the old on-the-entry-spot
+ // spread never ran. Now a NEWCOMER (layer attached within ARRIVE_WINDOW_MS of entering, no steering yet) steps away once the remote
+ // players' real spots are known: to floor at least ARRIVE_GAP_M from every one of them. A player already inside never moves.
+ const ARRIVE_WINDOW_MS=8000,ARRIVE_GAP_M=.9,enteredAt=performance.now();let arriveUntil=0,arriveClock=0,steered=false;
  let x=V.doorX,z=START_Z,vx=0,vz=0,yaw=Math.PI,time=0,frame=0,last=0,slot=0,disposed=false,covered=false,leaving=false,settle=1,draws=0,frames=0,greet=reduced?0:1.6;
  let leaveStarted=0,firstFrameSent=false;
  // Party (rooms Phase 1): the friend layer, remote-only frames, the local emote (lazy bubble), friend frames counted for the heat checks.
@@ -346,6 +350,14 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
  /** Grid A* (0.25 m) for tap-to-walk; runs only on a tap. An unreachable goal (behind the counter) walks to the closest
   *  reachable spot instead (lib/konbini/konbiniPath.ts). */
  function findPath(tx:number,tz:number){return findFloorPath({x,z},{x:tx,z:tz},(a,b)=>blocked(a,b));}
+ /** The newcomer's step away (see ARRIVE_*): once the walk-in is done and a remote player stands within ARRIVE_GAP_M, walk to a spot
+  *  0.6-1.5 m off that is walkable, not toward the door and ARRIVE_GAP_M from every known remote. Ends at the window, on steering or once moved. */
+ function arriveStep(){
+  if(leaving||steered||!friends||performance.now()>arriveUntil){arriveUntil=0;return;}
+  if(target||!friends.nearestFriend(x,z,ARRIVE_GAP_M))return;
+  const f=friends,s=roomArrivalSpread({x,z},x,z,(px,pz)=>pz<5.2&&!blocked(px,pz,.35)&&!f.nearestFriend(px,pz,ARRIVE_GAP_M)) /* never toward the door: z>5.95 there is the exit */;
+  arriveUntil=0;if(s.x!==x||s.z!==z){route=findPath(s.x,s.z);target=route.shift()??null;wake();}
+ }
  const segPoint=(p:KonbiniPoi,px:number,pz:number)=>{const dx=p.b.x-p.a.x,dz=p.b.z-p.a.z,l=dx*dx+dz*dz||1,t=T.MathUtils.clamp(((px-p.a.x)*dx+(pz-p.a.z)*dz)/l,0,1);return {x:p.a.x+dx*t,z:p.a.z+dz*t};};
  function nearest(){let best:KonbiniPoi|null=null,dist=1.25;for(const p of pois){const s=segPoint(p,x,z),d=Math.hypot(s.x-x,s.z-z);if(d<dist){dist=d;best=p;}}return best;}
  function walkToPoi(p:KonbiniPoi){const s=segPoint(p,x,z);if(Math.hypot(s.x-x,s.z-z)<.3){target=null;route=[];arrivePoi=null;yaw=Math.atan2(p.face.x-x,p.face.z-z);wake();callbacks.onArrive?.(p);return;}route=findPath(s.x,s.z);target=route.shift()??{x:s.x,z:s.z};arrivePoi=p;wake();}
@@ -356,7 +368,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   const zoomed=zoomIndex!==null;
   let ix=zoomed?0:stick.x+Number(keys.has('KeyD')||keys.has('ArrowRight'))-Number(keys.has('KeyA')||keys.has('ArrowLeft')),iz=zoomed?0:stick.z+Number(keys.has('KeyS')||keys.has('ArrowDown'))-Number(keys.has('KeyW')||keys.has('ArrowUp'));
   if(kb.state.mode==='windup'){ix=iz=0;}// plant for the strike
-  if(ix||iz){target=null;route=[];arrivePoi=null;}
+  if(ix||iz){target=null;route=[];arrivePoi=null;steered=true;}
   else if(target){const dx=target.x-x,dz=target.z-z,d=Math.hypot(dx,dz);
    // No progress for 0.5 s (pushed against a fixture): give the target up so the room can go idle (code review finding 4).
    if(!leaving&&!leaveStarted&&stuck.step(target,d,dt)){target=null;route=[];arrivePoi=null;stuck.reset();}
@@ -408,6 +420,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   // Friends in this room (zero cost without a party): drawn with the room's camera, hidden with you on the shelf zoom. One ring rule:
   // while the party draws your colour ring, the room's own foot disc hides.
   const remoteKeep=friends?friends.update(dt,performance.now(),camera,zoomIndex!==null):false;
+  if(arriveUntil&&friends){arriveClock+=dt;if(arriveClock>=.25){arriveClock=0;arriveStep();}}
   // Emote button rule (lib/konbini/emoteRule.ts): ~4 Hz, no allocation. The layer's nearestFriend skips busy (force-fielded) friends; the clerk is never listed.
   emoteClock+=dt;if(emoteClock>=1/EMOTE_CHECK_HZ){emoteClock=0;const nf=friends?friends.nearestFriend(x,z,8):null;emoteFriend.length=0;if(nf){emoteFriendPt.x=nf.x;emoteFriendPt.z=nf.z;emoteFriend.push(emoteFriendPt);}
    const nx=emoteCandidate(x,z,emoteFriend,null,{live:!!friends,batterySaver:batterySaverOn()});if(nx!==emoteNear){emoteNear=nx;callbacks.onEmoteNear?.(nx);}}if(friends?.meRing)playerShadow.visible=false;
@@ -492,7 +505,7 @@ export function createKonbiniScene(canvas:HTMLCanvasElement,shop:KonbiniShop,cal
   /** Attach / detach the friend layer (null on Leave or unmount). */
   // Live QA Nov 12 2026: everyone entered on the same spot (inside each other). With a party or world layer (others can be here), a
   // player still on the entry spot takes a short 0.6-1.5 m walk to a free bit of floor (lib/town/roomArrival.ts), once per visit.
-  setFriendLayer(layer:KonbiniFriendLayer|null){friends=layer;if(layer&&!spread&&!leaving){spread=true;if(x===V.doorX&&z===START_Z&&!target){const s=roomArrivalSpread({x,z},x,z,(px,pz)=>pz<5.2&&!blocked(px,pz,.35)) /* never toward the door: z>5.95 there is the exit */;if(s.x!==x||s.z!==z){route=findPath(s.x,s.z);target=route.shift()??null;wake();}}}if(!layer){remoteOnly=false;if(emoteNear){emoteNear=false;callbacks.onEmoteNear?.(false);}}},
+  setFriendLayer(layer:KonbiniFriendLayer|null){friends=layer;if(layer&&!spread&&!leaving){spread=true;if(performance.now()-enteredAt<ARRIVE_WINDOW_MS&&!steered){arriveUntil=performance.now()+ARRIVE_WINDOW_MS;wake();}}if(!layer){remoteOnly=false;if(emoteNear){emoteNear=false;callbacks.onEmoteNear?.(false);}}},
   wakeRemote,stationAt,
   /** The local player, room-local (one reused object): what the party sends. */
   localPose(){localOut.x=x;localOut.z=z;localOut.facing=yaw;localOut.speed=Math.hypot(vx,vz);localOut.eating=!!eat;localOut.zoomed=zoomIndex!==null;return localOut;},

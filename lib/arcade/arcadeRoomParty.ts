@@ -96,10 +96,11 @@ export function createArcadeParty(opts: { phone: boolean; reduced: boolean }): A
         if (nowMs > spawnUntil || hp.moving || Math.abs(hp.x - SPAWN.x) > 0.05 || Math.abs(hp.z - SPAWN.z) > 0.05) spawnUntil = 0;
         else {
           let c = 0;
-          for (const p of party.friendsHere()) { if (c >= 8) break; flat[c * 2] = p.x; flat[c * 2 + 1] = p.z; c++; }
+          const near: { x: number; z: number }[] = []; // once per arrival (spawnUntil ends below)
+          for (const p of party.friendsHere()) { if (c >= 8) break; flat[c * 2] = p.x; flat[c * 2 + 1] = p.z; near.push({ x: p.x, z: p.z }); c++; }
           if (c) {
             spawnUntil = 0;
-            const s = spreadArcadeSpawn(pickArcadeSpawn(flat, c, { x: 0, z: 0 })); // + a 0.6-1.5 m spread (live QA Nov 12 2026)
+            const s = spreadArcadeSpawn(pickArcadeSpawn(flat, c, { x: 0, z: 0 }), Math.random, near); // + a 0.6-1.5 m spread (live QA Nov 12 2026), 0.9 m clear of everyone (round 4)
             if (Math.abs(s.x - SPAWN.x) > 0.01 || Math.abs(s.z - SPAWN.z) > 0.01) host.place?.(s.x, s.z);
           }
         }

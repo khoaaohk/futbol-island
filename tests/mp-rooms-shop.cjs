@@ -79,7 +79,14 @@ t('spawn slots: 9, slot 0 = today\'s arrival, inside, walkable, apart, clamp-sta
     const p = { x: s.x, z: s.z }; let q = 0; SH.spreadShopSpawn(p, () => [k, 1 - k][q++ % 2]); const d = Math.hypot(p.x - s.x, p.z - s.z);
     assert.ok(d >= .6 - 1e-9 && d <= 1.5 + 1e-9, 'spread ' + d); assert.ok(SH.shopWalkable(p.x, p.z), 'spread stays walkable'); assert.ok(p.z < D.door.z - 1.2 + 1e-9, 'never toward the doors');
   }
-  assert.match(read('lib/multiplayer/rooms/shopHooks.ts'), /pickShopSpawn\(spot,here,here\.length\);spreadShopSpawn\(spot\);source\?\.arrive/, 'arrival: free slot, then the spread');
+  assert.match(read('lib/multiplayer/rooms/shopHooks.ts'), /pickShopSpawn\(spot,here,here\.length\);spreadShopSpawn\(spot,Math\.random,here\);source\?\.arrive/, 'arrival: free slot, then the spread clear of the others');
+  // QA round 4: the gap was 0.53 m (measured from the slot): now at least 0.9 m from every remote player, still walkable and off the doors
+  for (const s of Sp) for (const k of [0, .13, .37, .61, .89]) {
+    const others = [{ x: s.x + .5, z: s.z }, { x: s.x - .4, z: s.z - .6 }];
+    const p = { x: s.x, z: s.z }; let q = 0; SH.spreadShopSpawn(p, () => [k, 1 - k][q++ % 2], others);
+    for (const o of others) assert.ok(Math.hypot(p.x - o.x, p.z - o.z) >= .9 - 1e-9, `${Math.hypot(p.x - o.x, p.z - o.z).toFixed(2)} m from a remote player`);
+    assert.ok(SH.shopWalkable(p.x, p.z) && p.z < D.door.z - 1.2 + 1e-9, 'walkable, away from the doors');
+  }
   const c = SH.clampToShop({ x: 0, z: 0 }, 30, -30); assert.ok(inR(D.bounds, c.x, c.z), 'clamp brings a far point inside');
 });
 t('wake rule: remote wake, 20 fps remote frames on phones, 300 ms settle, Battery saver never wakes', () => {

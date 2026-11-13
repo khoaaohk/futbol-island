@@ -96,6 +96,11 @@ export function createPublicWorld(deps: {
   const idle = deps.idle ?? defaultIdle;
   const pending = deps.pendingParty ?? hasPendingParty;
   let ready = false, inputSeen = false, gatePassed = false, gateTimer: unknown = null, idleWait = false, slowAt = 0, disposed = false, applying = false;
+  // Live QA round 4 (Nov 12 2026): back on the island from a room page (Museum Done, Konbini / Arcade / Kit Shop exits) the player was
+  // unseen until they moved and the lazy gate ran out (input + 3 s + idle), so friends from the room lost them. A tab that still
+  // holds its world slot (the connection's tab session, within WORLD_AWAY_GRACE_MS) skips the gate and resumes the slot as soon as the island is
+  // interactive (still only in public mode). Once: a later fallback goes back to the normal rules.
+  let back = typeof c.hasWorldSession === 'function' && c.kind === null && c.hasWorldSession();
 
   if (publicWorldEnabled() && !armed) { armed = true; const arm = holdoutArm(); emitPresenceEvent({ type: 'arm', arm, back: holdoutReturning() }); }
 
@@ -115,12 +120,13 @@ export function createPublicWorld(deps: {
         cancelGate();
         return;
       }
-      if (k !== null || idleWait || !ready || !inputSeen) return;
-      if (!gatePassed) {
+      if (k !== null || idleWait || !ready || (!inputSeen && !back)) return;
+      if (!gatePassed && !back) {
         if (gateTimer === null) gateTimer = st(() => { gateTimer = null; idle(() => { if (disposed) return; gatePassed = true; apply(); }); }, LAZY_CONNECT_MS);
         return;
       }
       if (now() < slowAt) return;
+      if (back) { back = false; gatePassed = true; cancelGate(); }
       c.joinWorld({ look: deps.look() });
     } finally { applying = false; }
   }

@@ -342,6 +342,22 @@ t('interp: jetpack Blast-up catch-up warp + same-ms retry never draws the player
   for(let ms=1617;ms<=4000;ms+=7){j.sample(5,ms+250,out);assert.ok(out.y>=-0.25-1e-9,`y ${out.y} at ${ms}`);}
 });
 
+t('interp: a 34 m/s jetpack stream at 10 Hz with ±30 ms jitter extrapolates smoothly (no frozen frames, no >5 m jumps)',()=>{
+  for(const delayMs of [40,100,250]){
+    const it=ip.createInterp({delayMs}),out=R();let seed=11;const rnd=()=>{seed=(seed*1103515245+12345)&0x7fffffff;return seed/0x7fffffff;};
+    const T0=10000,jit=[];for(let i=0;i<=40;i++)jit.push(Math.round((rnd()*2-1)*30));
+    let prev=null,frozen=0,worst=0,frames=0,pushed=0;
+    for(let now=T0;now<=T0+4000;now+=16){ // a 60 fps watcher; snapshot i (x = 3.4 m * i, jetpack mode 5) arrives at T0 + 100 i + jitter
+      while(pushed<=40&&T0+pushed*100+jit[pushed]<=now){it.push(6,[Math.round(pushed*34),300,0,0,136,5,0,0],T0+pushed*100+jit[pushed]);pushed++;}
+      if(now<T0+400||now>T0+3800)continue;
+      assert.ok(it.sample(6,now,out));
+      if(prev!==null){const d=Math.abs(out.x-prev);if(d<1e-6)frozen++;worst=Math.max(worst,d);}
+      prev=out.x;frames++;
+    }
+    assert.ok(frames>150);assert.equal(frozen,0,`delay ${delayMs}: ${frozen} frozen frames`);assert.ok(worst<5,`delay ${delayMs}: a ${worst.toFixed(2)} m jump`);
+  }
+});
+
 t('interp: a >25 m vertical jump is a cut; landings never sink far below the ground pose',()=>{
   const it=ip.createInterp(),out=R();
   it.push(1,[0,0,0,0,0,0,0,0],1000);it.push(1,[0,300,0,0,0,0,0,0],1200); // 30 m straight up in one step

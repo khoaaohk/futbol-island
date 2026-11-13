@@ -349,7 +349,14 @@ t('Konbini wiring: layer in the loop, 20 fps remote frames on phones, one ring, 
   assert.ok(sc.indexOf('friends.update(') > 0 && sc.indexOf('friends.update(') < sc.indexOf('renderer.render(scene,camera);draws++'), 'the layer updates before the render');
   assert.ok(/if\(friends\?\.meRing\)playerShadow\.visible=false/.test(sc), 'one ring rule');
   // Live QA Nov 12 2026: with a layer (others can be here) a player still on the entry spot walks 0.6-1.5 m to free floor, once, never toward the door.
-  assert.ok(/setFriendLayer\(layer:KonbiniFriendLayer\|null\)\{friends=layer;if\(layer&&!spread&&!leaving\)\{spread=true;if\(x===V\.doorX&&z===START_Z&&!target\)\{const s=roomArrivalSpread\(\{x,z\},x,z,\(px,pz\)=>pz<5\.2&&!blocked\(px,pz,\.35\)\)/.test(sc), 'Konbini entry spread');
+  // QA round 4: the walk-in ended before the layer attached, so that never ran: a newcomer (layer within 8 s of entering, no steering)
+  // now steps away once a remote stands within 0.9 m, to floor 0.9 m from every one of them; a player already inside never moves.
+  assert.ok(/setFriendLayer\(layer:KonbiniFriendLayer\|null\)\{friends=layer;if\(layer&&!spread&&!leaving\)\{spread=true;if\(performance\.now\(\)-enteredAt<ARRIVE_WINDOW_MS&&!steered\)\{arriveUntil=/.test(sc), 'Konbini: only a newcomer arms the spread');
+  assert.ok(/if\(target\|\|!friends\.nearestFriend\(x,z,ARRIVE_GAP_M\)\)return;/.test(sc) && /roomArrivalSpread\(\{x,z\},x,z,\(px,pz\)=>pz<5\.2&&!blocked\(px,pz,\.35\)&&!f\.nearestFriend\(px,pz,ARRIVE_GAP_M\)\)/.test(sc), 'Konbini: after the walk-in, measured from the real remote spots');
+  assert.ok(/if\(ix\|\|iz\)\{target=null;route=\[\];arrivePoi=null;steered=true;\}/.test(sc), 'steering ends the newcomer window');
+  { const RA = load('lib/town/roomArrival.ts'), o = { x: 0, z: 0 }, others = [{ x: -2.3, z: 4.9 }, { x: -1.2, z: 4.9 }, { x: -2, z: 4.1 }];
+    RA.roomArrivalClear(o, -2, 4.9, () => true, others, () => .25); for (const p of others) assert.ok(Math.hypot(o.x - p.x, o.z - p.z) >= .9 - 1e-9, 'clear of every remote');
+    RA.roomArrivalClear(o, -2, 4.9, () => true, [], () => .25); assert.ok(Math.abs(Math.hypot(o.x + 2, o.z - 4.9) - (.6 + .25 * .9)) < 1e-9, 'nobody known: the plain spread'); }
   { const RA = load('lib/town/roomArrival.ts'), o = { x: 0, z: 0 };
     RA.roomArrivalSpread(o, -2, 4.9, () => true, () => .25); assert.ok(Math.abs(Math.hypot(o.x + 2, o.z - 4.9) - (.6 + .25 * .9)) < 1e-9, 'on the 0.6-1.5 m ring');
     RA.roomArrivalSpread(o, -2, 4.9, (px, pz) => pz < 4.9, () => .25); assert.ok(o.z < 4.9, 'turns round the ring to free floor');

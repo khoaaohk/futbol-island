@@ -825,7 +825,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       replay:()=>{const last=passAttemptsRef.current.last;if(!last||lessonRef.current==='replay'||lessonRef.current==='passing')return;replayReturn=lessonRef.current==='complete'?'complete':'practice';lessonPass=last;const run=replayLessonPass(last.start,last.inputs,REPLAY_SPEED);lessonSim={state:()=>run.world.state,advance:dt=>{run.advance(dt);}};lessonHold=0;showAim(last.prediction);setPhase('replay');wakeLoop();},
     };
     disposers.add(()=>{lessonAim.current=null;});
-    if(!departure&&!returningFromArcade&&publicWorldEnabled()){const spot=publicArrivalSpot(sceneSpawn.x,sceneSpawn.z,world.obstacles);sceneSpawn.x=spot.x;sceneSpawn.z=spot.z;positionStore.publish(sceneSpawn);}/* public island: kids arrive on a 1.5-4 m ring, not inside each other (QA Nov 12 2026) */
+    if(publicWorldEnabled()){const spot=publicArrivalSpot(sceneSpawn.x,sceneSpawn.z,world.obstacles);sceneSpawn.x=spot.x;sceneSpawn.z=spot.z;positionStore.publish(sceneSpawn);}/* public island: kids arrive on a 1.5-4 m ring, not inside each other (QA Nov 12 2026); since QA round 4 also out of a room door (two kids leaving the Museum together came out on exactly 160.2,188.1) */
     const location={...sceneSpawn},velocity={x:0,z:0},orb={x:sceneSpawn.x+.7,z:sceneSpawn.z,vx:0,vz:0};
     const volleyballGame=createVolleyballGame(scene,ballReactions);
     disposers.add(()=>volleyballGame.dispose());

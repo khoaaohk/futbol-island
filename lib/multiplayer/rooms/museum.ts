@@ -2,7 +2,7 @@ import {EXHIBITS} from '../../endgame/museum';
 import {ROOM,WING,FLOOR,CASE_PLACES,GALLERY_ORDER,museumPois,museumBlocked,museumObstacles,type Obstacle} from '../../museum/museumLayout';
 import {MUSEUM_DOOR_HINT as DOOR_HINT} from '../../museum/museumDoors';
 import {RoomCode,ROOM_BOUNDS} from '../roomPos';
-import {roomArrivalSpread} from '../../town/roomArrival';
+import {roomArrivalClear} from '../../town/roomArrival';
 
 /**
  * The History Museum as a shared room (docs/multiplayer-rooms-design.md Phase 2, "Museum prep status"). Pure data + pure helpers,
@@ -140,9 +140,10 @@ export const museumWalkable=(x:number,z:number,r=.3)=>!museumBlocked(x,z,obstacl
 
 // ---- Arrival ---------------------------------------------------------------------------------------------------------------------
 /** Live QA Nov 12 2026: the picked slot plus a 0.6-1.5 m spread (lib/town/roomArrival.ts) on the walkable L, never into a case and never
- *  toward the doors (the exit is at z D). Writes `out`. */
-export function spreadMuseumSpawn<P extends {x:number;z:number}>(out:P,rand:()=>number=Math.random):P{
- return roomArrivalSpread(out,out.x,out.z,(x,z)=>z<D-1&&museumWalkable(x,z),rand);
+ *  toward the doors (the exit is at z D). Writes `out`.
+ *  QA round 4: also at least ROOM_CLEAR_M (0.9 m) from every one of `others` (the remote players' real spots), not just from the slot. */
+export function spreadMuseumSpawn<P extends {x:number;z:number}>(out:P,rand:()=>number=Math.random,others:ArrayLike<{x:number;z:number}>=[]):P{
+ return roomArrivalClear(out,out.x,out.z,(x,z)=>z<D-1&&museumWalkable(x,z),others,rand);
 }
 /** The first spawn slot with nobody within `clear` m (friends already standing about, or other arrivals); all taken: the slot
  *  `seed` picks (e.g. the member's slot index), so simultaneous arrivals still spread. Writes `out`. */

@@ -114,7 +114,7 @@ function MuseumHall({counts,open,earned}:{counts:Counts;open:Record<string,boole
  // there keep theirs). Once per visit; the scene only re-aims while its arrival walk is still the target.
  useEffect(()=>{if(!party)return;let done=false,timer=0;const spot={x:0,z:0,yaw:0};
   const check=()=>{const s=partyStore.get();if(done||s.status!=='live')return;done=true;
-   timer=window.setTimeout(()=>{const here=party.layer.debugFriends().filter(f=>!f.gone);pickMuseumSpawn(spot,here,s.you??0);spreadMuseumSpawn(spot);museumRoomHooks.arrive(spot.x,spot.z);},150);};
+   timer=window.setTimeout(()=>{const here=party.layer.debugFriends().filter(f=>!f.gone);pickMuseumSpawn(spot,here,s.you??0);spreadMuseumSpawn(spot,Math.random,here);museumRoomHooks.arrive(spot.x,spot.z);},150);};
   check();const off=partyStore.subscribe(check);return()=>{off();clearTimeout(timer);};},[party]);
 
  // Done exits straight away (door slide, then the island), no walk to the door first (user, Oct 10 2026).

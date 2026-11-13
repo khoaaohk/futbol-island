@@ -79,7 +79,7 @@ export const shopRoomHooks={
   if(arrivalPending){
    if(nowMs-registeredAt>ARRIVE_WINDOW_MS)arrivalPending=false;
    else if(layer.friendsHere){here.length=0;for(const f of layer.friendsHere())here.push(f);
-    if(here.length){arrivalPending=false;pickShopSpawn(spot,here,here.length);spreadShopSpawn(spot);source?.arrive(spot.x,spot.z);}}
+    if(here.length){arrivalPending=false;pickShopSpawn(spot,here,here.length);spreadShopSpawn(spot,Math.random,here);source?.arrive(spot.x,spot.z);}}
   }
   return keep;
  },

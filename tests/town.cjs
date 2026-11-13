@@ -37,7 +37,7 @@ for(const [key,value] of Object.entries(DISTRICTS))assert.equal(districtAt(value
  const wall=[{x:103,z:-8,w:5,d:2}];const s3=publicArrivalSpot(103,-8,wall,()=>.5);assert.equal(blocked(s3.x,s3.z,wall,.5),false,'turns round the ring past a collider');
  const sea=publicArrivalSpot(-999,-999,[],()=>.3);assert.equal(sea.x,-999);assert.equal(sea.z,-999,'nothing clear: the base spot');
  const town=require('node:fs').readFileSync(require('node:path').join(__dirname,'../components/Town.tsx'),'utf8');
- assert.ok(/if\(!departure&&!returningFromArcade&&publicWorldEnabled\(\)\)\{const spot=publicArrivalSpot\(sceneSpawn\.x,sceneSpawn\.z,world\.obstacles\);/.test(town),'Town: public worlds only, never a departure return');
+ assert.ok(/if\(publicWorldEnabled\(\)\)\{const spot=publicArrivalSpot\(sceneSpawn\.x,sceneSpawn\.z,world\.obstacles\);/.test(town),'Town: public worlds only, the room-door return spread too (QA round 4)');
  assert.ok(/const sceneSpawn=departure\?\{x:departure\.x,z:departure\.z\}:\{\.\.\.initialSpawn\};/.test(town),'INITIAL_SPAWN itself is never mutated');}
 console.log('Town simulation: diagonal speed, sprint, collision, wall sliding, braking, boundaries, travel and clear arrivals passed.');
 const {crossedGoal}=mod.exports;

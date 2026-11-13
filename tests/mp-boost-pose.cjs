@@ -71,6 +71,16 @@ t('the sky dive blast (+180 m, above WORLD_BOUNDS.maxY) never kicks the flyer an
   const p=w.relayPose();assert.ok(Math.abs(p[1]/10-y)<1,`friend sees the landing height (relay ${p[1]/10}, real ${y.toFixed(1)})`);
 });
 
+t('blast up, fall, land: the friend sees the walker on the ground within .3 s of the landing (the Warp is kept for it)',()=>{
+  const w=world();let y=3;
+  w.run(()=>w.c.sendPose(body(0,y,0),w.now()),1);
+  w.run(s=>{const k=Math.min(1,s/1.05);y=3+180*k*k*k*(k*(6*k-15)+10);w.c.sendPose(body(0,y,0),w.now());},1.05); // the blast
+  w.run(s=>{y=Math.max(3,183-0.5*30*s*s);w.c.sendPose(body(0,y,0,y>3?Mode.Jetpack:Mode.Walk),w.now());},3.6); // a fast fall (lands at ~3.5 s)
+  let hang=0;w.run(s=>{w.c.sendPose(body(s*3,3,0,Mode.Walk),w.now());const p=w.relayPose();if(p&&p[1]/10>5)hang=s;},4); // walk on
+  assert.deepEqual(w.a.errors,[],'no relay errors');
+  assert.ok(hang<.3,`the friend saw the walker hang in the air for ${hang.toFixed(2)} s after the landing`);
+});
+
 t('governPose: clamps to WORLD_BOUNDS, passes slow moves, warps a big lag once per 5.3 s, else caps to the relay speed',()=>{
   const g=pr.poseGovernor(),B=P.WORLD_BOUNDS;
   const first=pr.governPose(g,[0,99999,0,0,0,Mode.Jetpack,Zone.Main,0],0);assert.equal(first[1],B.maxY);pr.commitPose(g,first,0);

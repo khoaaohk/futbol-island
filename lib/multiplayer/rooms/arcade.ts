@@ -3,7 +3,7 @@
 // (lib/multiplayer/roomParty.ts, branch mp-rooms-phase1) owns the real type; the integrator maps names as listed in
 // docs/multiplayer-rooms-design.md "Arcade prep status". Pure data + pure helpers: no three.js, no DOM, no allocation in the
 // per-frame helpers (they write into caller-owned `out` objects).
-import {roomArrivalSpread} from '../../town/roomArrival';
+import {roomArrivalClear} from '../../town/roomArrival';
 import {arcadeCabinets,arcadeHubCabinets,arcadeStand,type ArcadeCabinetId} from '../../arcade/arcadeCatalog';
 
 export type RoomBounds={minX:number;maxX:number;minZ:number;maxZ:number};
@@ -122,7 +122,8 @@ export function arcadeWalkable(x:number,z:number):boolean{
  for(const a of ARCADE_ROOM.areas)if(a.kind!=='door'&&Math.hypot(x-a.x,z-a.z)<a.r)return false;
  return true;
 }
-export function spreadArcadeSpawn<P extends {x:number;z:number}>(out:P,rand:()=>number=Math.random):P{return roomArrivalSpread(out,out.x,out.z,arcadeWalkable,rand);}
+/** QA round 4: also at least ROOM_CLEAR_M (0.9 m) from every one of `others` (the remote players' real spots). */
+export function spreadArcadeSpawn<P extends {x:number;z:number}>(out:P,rand:()=>number=Math.random,others:ArrayLike<{x:number;z:number}>=[]):P{return roomArrivalClear(out,out.x,out.z,arcadeWalkable,others,rand);}
 /** Walk-in for a friend who just arrived (first same-room pose): from the door to their first pose over `seconds`. The layer can use it
  *  instead of the plain Warp fade. t in seconds since arrival; writes into `out`; returns false once finished. */
 export function arcadeWalkIn(toX:number,toZ:number,t:number,out:RoomPoint&{yaw:number},seconds=.9):boolean{

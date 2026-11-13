@@ -117,7 +117,7 @@ const R=A.ARCADE_ROOM,B=R.bounds,inside=(p,m=0)=>p.x>=B.minX-m&&p.x<=B.maxX+m&&p
  for(const s of R.spawnSlots)for(const k of [0,.13,.37,.61,.89]){const p={x:s.x,z:s.z};let q=0;A.spreadArcadeSpawn(p,()=>[k,1-k][q++%2]);const d=Math.hypot(p.x-s.x,p.z-s.z);
   assert(d>=.6-1e-9&&d<=1.5+1e-9,'spread '+d);assert(inside(p)&&A.arcadeWalkable(p.x,p.z)&&!(Math.abs(p.x)<R.exit.halfWidth&&p.z>R.exit.z),'spread stays walkable, off the exit');
   for(const a of R.areas)if(a.kind!=='door')assert(Math.hypot(p.x-a.x,p.z-a.z)>=a.r,'not in '+a.id);}
- assert(/spreadArcadeSpawn\(pickArcadeSpawn\(flat, c,/.test(src('lib/arcade/arcadeRoomParty.ts')),'arcade arrival: free slot, then the spread');
+ assert(/spreadArcadeSpawn\(pickArcadeSpawn\(flat, c, \{ x: 0, z: 0 \}\), Math\.random, near\)/.test(src('lib/arcade/arcadeRoomParty.ts')),'arcade arrival: free slot, then the spread');
  console.log('MP_ROOMS_ARCADE_SPAWN_PASS');
 }
 
