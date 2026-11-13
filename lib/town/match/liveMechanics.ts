@@ -2,7 +2,7 @@
 // far-post crosses and assists. Every behaviour change here is HUMAN-GATED in matchSim.ts (read only while a human is joined;
 // no rng draw on the AI-only path), so the island's AI-only matches stay byte-identical (tests/live-mechanics.cjs).
 // Pure constants + helpers: no allocation, no DOM.
-import type { LiveFormat } from "../venues";
+import type { SimFormat } from "../venues";
 
 /** Tackle wind-up (a readable telegraph before the lunge, so the carrier can react; fair between friends):
  *  - wind: real s a human tackler "sets" once in reach before the tackle resolves (he keeps tracking the carrier: the lunge);
@@ -18,7 +18,7 @@ import type { LiveFormat } from "../venues";
 export const TACKLE_FX = { wind: 0.2, slack: 1.6, escape: 2.6, aiWind: 0.15, deflectSpread: 2.2, stumble: 0.15 } as const;
 /** Per format (measured, 64 seeds x 3 real min, scripted kid): the set tackle's from-behind chance and the deflection share of a
  *  front / side win, so each format's tackle win rate stays where it was before the wind-up (tests/live-mechanics.cjs). */
-export const TACKLE_TUNE: Record<LiveFormat, { behind: number; deflect: number }> = {
+export const TACKLE_TUNE: Record<SimFormat, { behind: number; deflect: number }> = {
   "7v7": { behind: 0.8, deflect: 0.1 }, futsal: { behind: 0.75, deflect: 0.25 }, beach: { behind: 0.75, deflect: 0.25 },
   "9v9": { behind: 0.75, deflect: 0.25 }, "11v11": { behind: 0.85, deflect: 0.1 },
 };

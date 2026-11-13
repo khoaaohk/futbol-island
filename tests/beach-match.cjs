@@ -17,7 +17,7 @@ const DT=1/30,run=(sim,seconds)=>{for(let i=Math.round(seconds/DT);i>0;i--)sim.s
  assert.equal(v.id,'beach');assert.equal(v.x,BEACH_COURT.x);assert.equal(v.z,BEACH_COURT.z);assert.equal(v.length,BEACH_COURT.length);assert.equal(v.width,BEACH_COURT.width);
  assert.equal(v.goalWidth,5.5);assert.equal(v.goalHeight,2.2);assert.equal(v.players,5);
  assert(!V.VENUES.some(x=>x.id==='beach'),'the beach court is a live venue only: no island pitch mesh, goal barriers, lessons or quests');
- assert.equal(V.LIVE_VENUES.length,V.VENUES.length+1);assert.equal(V.liveVenueById('beach'),v);
+ assert.equal(V.LIVE_VENUES.length,V.VENUES.length+2);/* + the West Coast Stadium (Nov 12 2026) */assert.equal(V.liveVenueById('beach'),v);
  // Everything is relative to the court anchors (the court may move): goal line centres (sim y 10 / 390 = ± length/2)
  // land on the cay's goals at x ± length/2; the width axis runs along z.
  const near=(a,b,e=1e-6)=>Math.abs(a-b)<e,hl=BEACH_COURT.length/2,hw=BEACH_COURT.width/2;
@@ -99,7 +99,7 @@ const seen=new Set();
 {const {createFieldRuntime,liveGameSpeed}=load('lib/town/fieldRuntime.ts');assert.equal(liveGameSpeed('beach'),.48);
  const scene=new T.Scene(),rt=createFieldRuntime(scene),e=rt.entries.find(x=>x.venue.id==='beach'),camera=new T.PerspectiveCamera(55,1,.1,1000);
  const look=(x,y,z,tx,tz)=>{camera.position.set(x,y,z);camera.lookAt(tx,0,tz);camera.updateMatrixWorld();};
- assert.equal(rt.entries.length,5);assert.equal(e.rigs.size,0,'no rigs before the court is ever seen');
+ assert.equal(rt.entries.length,6);/* + the stadium */assert.equal(e.rigs.size,0,'no rigs before the court is ever seen');
  look(95,40,5,95,-35);for(let i=0;i<10;i++)rt.update(1/30,i/30,camera,null,true);
  assert.equal(e.dormant,true,'dormant from the main island');assert.equal(e.sim.stats.time,0,'no sim time while dormant');assert.equal(e.root.visible,false);assert.equal(e.rigs.size,0);
  look(BEACH_COURT.x+18,24,BEACH_COURT.z+30,BEACH_COURT.x,BEACH_COURT.z);for(let i=0;i<30;i++)rt.update(1/30,i/30,camera,null,true);

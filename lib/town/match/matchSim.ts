@@ -1,5 +1,5 @@
 import {sevenBuildOutY,behindBuildOut,retreatBuildOutY} from "../buildOut";
-import {liveVenueById,type LiveVenue,type LiveFormat} from '../venues';
+import {liveVenueById,simFormat,type LiveVenue,type LiveFormat} from '../venues';
 import {sweepGoalFrame,type FrameHit} from '../goalCollisions';
 import {shotProgress,shotHeightAt,shotOffsetAt} from '../shotPlacement';
 import {firstTouchDirection} from "./firstTouch";
@@ -730,21 +730,22 @@ export class MatchSim {
   constructor(seed = 1, format: LiveFormat = "9v9", squads?: { gold: [string, number, number, Role][]; blue: [string, number, number, Role][] }) {
     this.goalVenue=liveVenueById(format);this.frameVenues=[this.goalVenue.yaw?{...this.goalVenue,yaw:0}:this.goalVenue];
     // deterministic PRNG so tests are reproducible
+    const rules = simFormat(format); // the stadium plays the 11v11 rules on its own venue (venues.ts)
     let s = seed >>> 0;
     this.rng = () => {
       s = (s * 1664525 + 1013904223) >>> 0;
       return s / 4294967296;
     };
-    const gold = squads?.gold ?? (format === "11v11" ? GOLD_HOME_11 : format === "futsal" ? GOLD_HOME_5 : format === "beach" ? GOLD_HOME_BEACH : format === "7v7" ? GOLD_HOME_7 : GOLD_HOME);
-    const blue = squads?.blue ?? (format === "11v11" ? BLUE_HOME_11 : format === "futsal" ? BLUE_HOME_5 : format === "beach" ? BLUE_HOME_BEACH : format === "7v7" ? BLUE_HOME_7 : BLUE_HOME);
-    if (format === "futsal") { this.passMul = 1.22; this.humanPassCap = 1.6; } // zippier passing for the quick small-sided game; human passes capped at 1.6× (the court is 18.5 m wide)
-    this.windupScale = format === "futsal" || format === "beach" ? 0.48 : 0.32; // = liveGameSpeed(format) in fieldRuntime, which sets it too
-    if (format === "11v11") { this.allowLoft = true; this.humanPace = HUMAN_SIDE["11v11"].pace; this.humanSprintBoost = 1.3 / HUMAN_SIDE["11v11"].pace; this.humanLungeCap = true; this.humanChaseMul = 1; } // Tier 2: run × pace, the sprint top (8.99 m/s) and the lunge held under the pose limit; big field → balls over the top / crosses; adult human pace (see humanSprintBoost)
+    const gold = squads?.gold ?? (rules === "11v11" ? GOLD_HOME_11 : rules === "futsal" ? GOLD_HOME_5 : rules === "beach" ? GOLD_HOME_BEACH : rules === "7v7" ? GOLD_HOME_7 : GOLD_HOME);
+    const blue = squads?.blue ?? (rules === "11v11" ? BLUE_HOME_11 : rules === "futsal" ? BLUE_HOME_5 : rules === "beach" ? BLUE_HOME_BEACH : rules === "7v7" ? BLUE_HOME_7 : BLUE_HOME);
+    if (rules === "futsal") { this.passMul = 1.22; this.humanPassCap = 1.6; } // zippier passing for the quick small-sided game; human passes capped at 1.6× (the court is 18.5 m wide)
+    this.windupScale = rules === "futsal" || rules === "beach" ? 0.48 : 0.32; // = liveGameSpeed(format) in fieldRuntime, which sets it too
+    if (rules === "11v11") { this.allowLoft = true; this.humanPace = HUMAN_SIDE["11v11"].pace; this.humanSprintBoost = 1.3 / HUMAN_SIDE["11v11"].pace; this.humanLungeCap = true; this.humanChaseMul = 1; } // Tier 2: run × pace, the sprint top (8.99 m/s) and the lunge held under the pose limit; big field → balls over the top / crosses; adult human pace (see humanSprintBoost)
     // The pace ladder (humanPace): 9v9 90 %, futsal 80 %, beach 70 % of the 11v11 human's m/s; the 11v11 sprint boost + full-speed chasers.
-    if (format === "9v9") { this.humanPace = 1.29; this.humanBallPace = 1.29; this.humanPassCap = 1.3 * PASS_POWER_MAX; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // the cap: a full charge rolls no further than before (≤ 68 m of 69.5)
-    if (format === "7v7") { this.humanPace = 1.72; this.humanBallPace = 1.5; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // owner Nov 5 2026: "way too slow even for kids, match 9v9": run 3.62 -> 6.2 m/s like the 9v9 (sprint boost 1.3 keeps the sprint under the pose limit)
-    if (format === "futsal") { this.humanPace = 1.4; this.humanBallPace = 1.075; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // passes stay under the 1.6 court cap
-    if (format === "beach") { this.humanPace = 1.39; this.humanBallPace = 1.08; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // measured on sand (BEACH_LEGS)
+    if (rules === "9v9") { this.humanPace = 1.29; this.humanBallPace = 1.29; this.humanPassCap = 1.3 * PASS_POWER_MAX; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // the cap: a full charge rolls no further than before (≤ 68 m of 69.5)
+    if (rules === "7v7") { this.humanPace = 1.72; this.humanBallPace = 1.5; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // owner Nov 5 2026: "way too slow even for kids, match 9v9": run 3.62 -> 6.2 m/s like the 9v9 (sprint boost 1.3 keeps the sprint under the pose limit)
+    if (rules === "futsal") { this.humanPace = 1.4; this.humanBallPace = 1.075; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // passes stay under the 1.6 court cap
+    if (rules === "beach") { this.humanPace = 1.39; this.humanBallPace = 1.08; this.humanSprintBoost = 1.3; this.humanChaseMul = 1; } // measured on sand (BEACH_LEGS)
     // finish (xG multiplier) is tuned so a full 180-sim-second game averages ~1.2–1.5 goals
     // in EVERY format — enough that a typical 2–3 minute viewing window contains a goal (and
     // the post-goal celebration + carry-to-centre restart actually get seen), while staying
@@ -755,28 +756,28 @@ export class MatchSim {
     // (all formats re-tuned up ~15-25% when the carry engine + first-touch trap landed:
     // carries burn clock and get engaged before the box, which trimmed underlying
     // xG/game to ~1.0 — finish restores it to ~1.25, measured via stats.xgSum)
-    if (format === "futsal") this.T = { press: 1.7, lane: 1.9, misplace: 2.0, shoot: 1.8, openReq: 8, laneReq: 6, loftP: 0, switchAt: 3, carryP: 0.52, fwdAdv: 145, shotRange: 155, finish: 1.22, lineUp: 50, lineDn: 88 };
-    else if (format === "7v7") this.T = { press: 1.5, lane: 1.7, misplace: 1.8, shoot: 1.6, openReq: 9, laneReq: 6.5, loftP: 0, switchAt: 3, carryP: 0.45, fwdAdv: 135, shotRange: 135, finish: 1.2, lineUp: 46, lineDn: 82 };
-    else if (format === "11v11") this.T = { press: 1.15, lane: 1.15, misplace: 1.1, shoot: 0.85, openReq: 11, laneReq: 8, loftP: 0.03, switchAt: 4, carryP: 0.28, fwdAdv: 120, shotRange: 110, finish: 0.73, lineUp: 30, lineDn: 62 };
+    if (rules === "futsal") this.T = { press: 1.7, lane: 1.9, misplace: 2.0, shoot: 1.8, openReq: 8, laneReq: 6, loftP: 0, switchAt: 3, carryP: 0.52, fwdAdv: 145, shotRange: 155, finish: 1.22, lineUp: 50, lineDn: 88 };
+    else if (rules === "7v7") this.T = { press: 1.5, lane: 1.7, misplace: 1.8, shoot: 1.6, openReq: 9, laneReq: 6.5, loftP: 0, switchAt: 3, carryP: 0.45, fwdAdv: 135, shotRange: 135, finish: 1.2, lineUp: 46, lineDn: 82 };
+    else if (rules === "11v11") this.T = { press: 1.15, lane: 1.15, misplace: 1.1, shoot: 0.85, openReq: 11, laneReq: 8, loftP: 0.03, switchAt: 4, carryP: 0.28, fwdAdv: 120, shotRange: 110, finish: 0.73, lineUp: 30, lineDn: 62 };
     // Beach: five a side on sand. Small-sided structure like futsal (passMul > 1), but the ball goes up: lifted
     // passes, throws, crosses and balls over the top (allowLoft), volleys and overhead kicks; no offside.
-    else if (format === "beach") this.T = { press: 1.6, lane: 1.8, misplace: 1.9, shoot: 1.8, openReq: 8, laneReq: 6, loftP: 0.14, switchAt: 3, carryP: 0.3, fwdAdv: 145, shotRange: 160, finish: 1.5, lineUp: 50, lineDn: 88 };
-    if (format === "beach") { this.beach = true; this.passMul = 1.15; this.allowLoft = true; this.groundFriction = BEACH_GROUND_FRICTION; this.legs = BEACH_LEGS; }
+    else if (rules === "beach") this.T = { press: 1.6, lane: 1.8, misplace: 1.9, shoot: 1.8, openReq: 8, laneReq: 6, loftP: 0.14, switchAt: 3, carryP: 0.3, fwdAdv: 145, shotRange: 160, finish: 1.5, lineUp: 50, lineDn: 88 };
+    if (rules === "beach") { this.beach = true; this.passMul = 1.15; this.allowLoft = true; this.groundFriction = BEACH_GROUND_FRICTION; this.legs = BEACH_LEGS; }
     // Kick wind-up compensation: the wind-up gives keepers and lane defenders a beat to set
     // (fewer keeper-out-of-position goals, more read passes), so finishing is eased to hold
     // goals/game on the 96-seed balance sample (docs/pass-puzzle/CONTRACT.md, lane B status).
-    this.T.finish *= WINDUP_FINISH[format];
-    this.useBuildOut = format === "7v7";
-    this.useOffside = format === "11v11" || format === "9v9"; // futsal & 7v7 don't play offside
-    this.ai = format === "11v11" ? { ...formatAI(format), ...ELEVEN_FORMAT_AI } : formatAI(format); // 11v11 row: elevenAI.ts
-    this.defend = defendAI(format);
-    this.humanDefence = HUMAN_DEFENCE[format] ?? this.humanDefence; // QA round 2 (balance): read only with a human joined
-    this.humanChase = HUMAN_CHASE[format] ?? this.humanChase; // Tier 2: read only with a human joined
-    this.humanContest = HUMAN_CONTEST[format] ?? this.humanContest;
-    this.humanFeed = HUMAN_FEED[format] ?? this.humanFeed;
-    this.humanSide = HUMAN_SIDE[format] ?? this.humanSide;
-    this.tackleTune = TACKLE_TUNE[format] ?? this.tackleTune; // live mechanics: read only by a human's tackle
-    this.notes = formatNotes(format); // this format's coaching lines (11v11 lane: Eleven Park explains its own laws)
+    this.T.finish *= WINDUP_FINISH[rules];
+    this.useBuildOut = rules === "7v7";
+    this.useOffside = rules === "11v11" || rules === "9v9"; // futsal & 7v7 don't play offside
+    this.ai = rules === "11v11" ? { ...formatAI(rules), ...ELEVEN_FORMAT_AI } : formatAI(rules); // 11v11 row: elevenAI.ts
+    this.defend = defendAI(rules);
+    this.humanDefence = HUMAN_DEFENCE[rules] ?? this.humanDefence; // QA round 2 (balance): read only with a human joined
+    this.humanChase = HUMAN_CHASE[rules] ?? this.humanChase; // Tier 2: read only with a human joined
+    this.humanContest = HUMAN_CONTEST[rules] ?? this.humanContest;
+    this.humanFeed = HUMAN_FEED[rules] ?? this.humanFeed;
+    this.humanSide = HUMAN_SIDE[rules] ?? this.humanSide;
+    this.tackleTune = TACKLE_TUNE[rules] ?? this.tackleTune; // live mechanics: read only by a human's tackle
+    this.notes = formatNotes(rules); // this format's coaching lines (11v11 lane: Eleven Park explains its own laws)
     // deal the philosophy cards for this match (seeded → reproducible): two DISTINCT
     // styles from the deck, then `spice` sets how pronounced the identities are today
     const deck: StyleName[] = ["possession", "press", "counter", "direct"];

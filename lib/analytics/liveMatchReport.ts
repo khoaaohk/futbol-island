@@ -23,7 +23,7 @@ export const LM_SINCE='2026-11-05';
 /** Goals, replays and slots (LM_MATCH_EVENTS) began on this day. */
 export const LM_EXTRAS_SINCE='2026-11-06';
 export const MIN_MATCHES=1;
-export const LM_FORMAT_LABEL:Record<LiveMatchFormat,string>={'7v7':'7v7','futsal':'Futsal','9v9':'9v9','11v11':'11v11','beach':'Beach soccer'};
+export const LM_FORMAT_LABEL:Record<LiveMatchFormat,string>={'7v7':'7v7','futsal':'Futsal','9v9':'9v9','11v11':'11v11','beach':'Beach soccer','stadium':'Stadium'};
 const ROLE_LABEL:Record<string,string>={gk:'Goalkeeper',def:'Defender',mid:'Midfield',fwd:'Forward'};
 
 export type LmRow={id:string;label:string;value:Cell};

@@ -21,9 +21,9 @@ export default function FieldPathCard({venue,onPlays,onLaunch,onPlay}:{venue:{id
  // The last-opened lesson lives in localStorage: read it only after mount so the server and first client render agree.
  const [mounted,setMounted]=useState(false);useEffect(()=>setMounted(true),[]);
  // The Sharks Beach court (Nov 4 2026) has no lesson path (no beach entry in the quest manifest): its bar is Play only.
- const path=venue.id==='beach'?null:venue.id;
+ const path=venue.id==='beach'||venue.id==='stadium'?null:venue.id;// the stadium (Nov 12 2026): big matches only, no lessons
  const target=path?pitchCardTarget(path,steps,answers,mounted?readLastOpened():{}):null,say=target?continueAction(target):null;
- const format=venue.id==='futsal'?'Futsal':venue.id==='beach'?'Beach soccer':venue.id;
+ const format=venue.id==='futsal'?'Futsal':venue.id==='beach'?'Beach soccer':venue.id==='stadium'?'Big':venue.id;
  const launch=()=>{if(target&&path)launchPathLesson(path,target.lesson,steps,answers,'pitch');else onPlays();onLaunch?.();};
  if(onPlay&&joinableFormat(venue.id))return <div data-tour="plays" data-field={venue.id} data-field-lesson={target?.lesson.id} className="meet-coach field-learn-card" data-hud-slot="focus" data-live-bar="" role="group" hidden
   aria-label={say?`${venue.name}, ${format}: ${say.action}, ${say.name}, or play the match`:`${venue.name}: play the match`}>

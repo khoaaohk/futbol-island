@@ -749,14 +749,15 @@ console.log('PASS join-live-game (futsal + 9v9 + 11v11): slots + names, pick, lo
  assert.equal(J.joinableFormat('beach'),true);assert(!V.VENUES.some(v=>v.id==='beach'),'still a live venue only');
  const town=fs.readFileSync('components/Town.tsx','utf8'),card=fs.readFileSync('components/FieldPathCard.tsx','utf8'),rt=fs.readFileSync('lib/town/liveJoinRuntime.ts','utf8'),fr=fs.readFileSync('lib/town/fieldRuntime.ts','utf8');
  assert.match(town,/const BEACH_BAR:readonly LiveVenue\[\]=joinableFormat\('beach'\)\?\[\{\.\.\.BEACH_VENUE,width:2\*liveHalfX\(BEACH_VENUE\),length:2\*liveHalfZ\(BEACH_VENUE\),yaw:0\}\]:\[\];/,'the bar box in world axes');
- assert.match(town,/\{BEACH_BAR\.map\(v=><FieldPathCard key=\{v\.id\} venue=\{v\} onPlays=\{\(\)=>\{\}\}[^\n]*onPlay=\{\(\)=>liveJoinRef\.current\?\.press\('play',true\)\}\/>\)\}/,'a Play-only beach bar');
+ assert.match(town,/const PLAY_BARS:readonly LiveVenue\[\]=\[\.\.\.BEACH_BAR,\.\.\.\(joinableFormat\('stadium'\)\?\[STADIUM_VENUE\]:\[\]\)\];/,'the Play-only bars: the beach court and the stadium (Nov 12 2026)');
+ assert.match(town,/\{PLAY_BARS\.map\(v=><FieldPathCard key=\{v\.id\} venue=\{v\} onPlays=\{\(\)=>\{\}\}[^\n]*onPlay=\{\(\)=>liveJoinRef\.current\?\.press\('play',true\)\}\/>\)\}/,'a Play-only beach bar');
  // a joined match hides the townsfolk name tag over the court (Lua sat above the beach court) and the NPC chatter; Leave restores both
  assert.match(town,/islandNpcs\.update\([^\n]*keepUpBusy\.current\|\|liveJoin\.joined[^\n]*\);fieldBump\.applyNpcNudges\(\);/,'joined: no NPC name tag over the pitch');
  assert.match(town,/chatIn\.blocked=[^\n]*\|\|liveJoin\.joined\|\|/,'joined: no NPC chatter bubbles over the pitch');
  assert.match(rt,/set\(app,'data-live-join',joined\?'':null\)/,'the flag the tags follow is set while joined and cleared on Leave');
- assert.match(town,/for\(const v of BEACH_BAR\)\{if\(Math\.abs\(player\.root\.position\.x-v\.x\)>v\.width\/2\+3/,'shown while standing in the court');
+ assert.match(town,/for\(const v of PLAY_BARS\)\{if\(Math\.abs\(player\.root\.position\.x-v\.x\)>v\.width\/2\+3/,'shown while standing in the court');
  assert.match(town,/for\(const v of PITCH_BARS\)\{const button=uiElement/,'hidden / shown with the island bars');
- assert.match(card,/const path=venue\.id==='beach'\?null:venue\.id;/,'no lesson path on the beach');assert.match(card,/venue\.id==='beach'\?'Beach soccer'/);
+ assert.match(card,/const path=venue\.id==='beach'\|\|venue\.id==='stadium'\?null:venue\.id;/,'no lesson path on the beach (or at the stadium)');assert.match(card,/venue\.id==='beach'\?'Beach soccer'/);
  {const b=[{...bv,width:2*V.liveHalfX(bv),length:2*V.liveHalfZ(bv)}][0];assert.equal(b.width,bv.length);assert.equal(b.length,bv.width,'east–west court: x spans its length');}
  // bibs: the HUD chip / ring / pills take the barefoot kits' shirts; the kits stay BEACH_MATCH_KITS (no bibs on sand)
  assert.equal(B.bibColour('beach',true),B.BEACH_KITS.home.shirt);assert.equal(B.bibColour('beach',false),B.BEACH_KITS.away.shirt);assert.equal(B.bibColour('beach',true),'#f29a1c');

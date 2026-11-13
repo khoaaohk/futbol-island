@@ -128,8 +128,10 @@ export const MatchKind = { Join: 0, Leave: 1, In: 2, Snap: 3, Watch: 4 } as cons
 export type MatchKind = (typeof MatchKind)[keyof typeof MatchKind];
 /** S.Match kind 0 is the roster (the relay's answer to Join / Leave). */
 export const MATCH_ROSTER = MatchKind.Join;
-/** Field ids on the wire (lib/town/venues LiveFormat order). */
-export const MATCH_FIELDS = ['7v7', 'futsal', '9v9', '11v11', 'beach'] as const;
+/** Field ids on the wire (lib/town/venues LiveFormat order). Append only: an index never changes meaning. 'stadium' (5, Nov 12 2026,
+ *  the West Coast Stadium's big match) needs the relay redeployed (its validator accepts field < MATCH_FIELDS.length); an older
+ *  relay rejects field 5, so a stadium match then stays on this phone, and older clients drop a field they do not know. */
+export const MATCH_FIELDS = ['7v7', 'futsal', '9v9', '11v11', 'beach', 'stadium'] as const;
 export const MATCH_SLOT_MAX = 31;
 /** C.Match In button bits. */
 export const MATCH_BTN = { pass: 1, shoot: 2, through: 4, tackle: 8, jockey: 16, sprint: 32, call: 64, save: 128, trick: 256, press: 512 } as const;

@@ -113,12 +113,15 @@ export const BIB_COLOURS={
   '9v9':{home:'#ff8a1f',away:'#5b3fd1'},'11v11':{home:'#22c3e6',away:'#ff7a1a'},
   // The beach court keeps its barefoot BEACH_MATCH_KITS (no bibs on sand): its HUD chip, ring and pills take those shirts.
   beach:{home:BEACH_KITS.home.shirt,away:BEACH_KITS.away.shirt},
+  // West Coast Stadium (Nov 12 2026): a big match in full kits, red (the east stand's colour) against blue (the west stand's).
+  stadium:{home:'#d6453d',away:'#2f6fb5'},
 } as const;
 export const LIVE_BIB_KITS:Readonly<Record<Exclude<keyof typeof BIB_COLOURS,'beach'>,MatchKits>>={
   '7v7':bibKits(bib(BIB_COLOURS['7v7'].home,'#1d2433','#1d2433'),bib(BIB_COLOURS['7v7'].away,'#ffffff','#1d2433')),
   futsal:bibKits(bib(BIB_COLOURS.futsal.home,'#1d2433','#1d2433'),bib(BIB_COLOURS.futsal.away,'#ffffff','#1d2433')),
   '9v9':bibKits(bib(BIB_COLOURS['9v9'].home,'#1d2433','#1d2433'),bib(BIB_COLOURS['9v9'].away,'#ffffff','#1d2433')),
   '11v11':bibKits(bib(BIB_COLOURS['11v11'].home,'#14323a','#14323a'),bib(BIB_COLOURS['11v11'].away,'#1d2433','#1d2433')),
+  stadium:bibKits(bib(BIB_COLOURS.stadium.home,'#ffffff','#ffffff'),bib(BIB_COLOURS.stadium.away,'#ffffff','#14233f')),
 };
 /** Kits a live venue's match wears: the beach court its barefoot kits, a joinable pitch its bibs, else the default. */
 export function liveMatchKits(format:string,sand=false,bibs=false):MatchKits|undefined{

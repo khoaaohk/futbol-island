@@ -20,11 +20,11 @@
 //    (NaN aimX / aimH: the sim's own auto-aim) keeps the plain keeper.
 // The tackle-assist constants (TACKLE_ASSIST), human speeds and pose limits are not touched here.
 // Measured (scripted idle / kid / average / skilled humans, 20 seeds x 3 real min per format): docs/join-live-game-design.md.
-import type { LiveFormat } from "../venues";
+import type { SimFormat } from "../venues";
 
 export type HumanDefence = { intercept: number; lane: number; read: number; tackle: number; attack: number; keeper: number; ramp: number; start: number; margin: number; sag: number; tight: number };
 export const HUMAN_DEFENCE_NEUTRAL: Readonly<HumanDefence> = { intercept: 1, lane: 1, read: 1, tackle: 1, attack: 1, keeper: 1, ramp: 0, start: 1, margin: 0, sag: 1, tight: 1 };
-export const HUMAN_DEFENCE: Record<LiveFormat, HumanDefence> = {
+export const HUMAN_DEFENCE: Record<SimFormat, HumanDefence> = {
   "7v7": { intercept: 1.6, lane: 1.15, read: 1.6, tackle: 1, attack: 1.5, keeper: 1.1, ramp: 240, start: 0.35, margin: 3, sag: 0.4, tight: 1.35 },
   futsal: { intercept: 1.6, lane: 1.2, read: 1.6, tackle: 1, attack: 1.4, keeper: 1.35, ramp: 120, start: 0.6, margin: 3, sag: 0.5, tight: 1.25 },
   "9v9": { intercept: 1.4, lane: 1.15, read: 1.2, tackle: 1, attack: 1.2, keeper: 1.3, ramp: 120, start: 0.5, margin: 3, sag: 0.5, tight: 1.25 },
@@ -57,7 +57,7 @@ export const atStrength = (value: number, k: number) => 1 + (value - 1) * k;
 //  - ease: × the tackle and lane-read chances of the leading human side's AI team-mates against it (a side two up eases off).
 export type HumanChase = { from: number; level: number; full: number; attack: number; range: number; finish: number; counter: number; ease: number };
 export const HUMAN_CHASE_NEUTRAL: Readonly<HumanChase> = { from: 99, level: 0, full: 99, attack: 1, range: 1, finish: 1, counter: 0, ease: 1 };
-export const HUMAN_CHASE: Record<LiveFormat, HumanChase> = {
+export const HUMAN_CHASE: Record<SimFormat, HumanChase> = {
   "7v7": { from: 0, level: 0.5, full: 2, attack: 2.5, range: 1.1, finish: 4, counter: 0.4, ease: 0.4 },
   futsal: { from: 2, level: 0.5, full: 3, attack: 1.4, range: 1.15, finish: 1.3, counter: 0.5, ease: 0.7 },
   "9v9": { from: 0, level: 0.3, full: 2, attack: 1.4, range: 1.15, finish: 1.3, counter: 0.5, ease: 0.7 },
@@ -77,7 +77,7 @@ export function chaseStrength(c: HumanChase, lead: number, bothSides: boolean): 
 // (fading to half at the edge of `r`) on top of the engine's rare loose touch. Measured: AI pass completion near a kid ~98 % -> ~90 %.
 // Rides the engine's existing roll (no new rng draw); 0 in AI-only matches.
 export type HumanContest = { r: number; loose: number };
-export const HUMAN_CONTEST: Record<LiveFormat, HumanContest> = {
+export const HUMAN_CONTEST: Record<SimFormat, HumanContest> = {
   "7v7": { r: 45, loose: 0.14 },
   futsal: { r: 36, loose: 0.14 },
   "9v9": { r: 40, loose: 0.2 },
@@ -91,7 +91,7 @@ export const HUMAN_CONTEST: Record<LiveFormat, HumanContest> = {
 // fewer AI counters there). `square`: an AI team-mate about to shoot squares it to an open human
 // whose chance is at least `square` x his own (0 = off): the extra pass, and the kid gets the finish.
 export type HumanFeed = { giveGo: boolean; giveGoFree: boolean; square: number };
-export const HUMAN_FEED: Record<LiveFormat, HumanFeed> = {
+export const HUMAN_FEED: Record<SimFormat, HumanFeed> = {
   "7v7": { giveGo: true, giveGoFree: true, square: 0.7 }, futsal: { giveGo: true, giveGoFree: true, square: 0.8 },
   "9v9": { giveGo: true, giveGoFree: false, square: 0.7 }, "11v11": { giveGo: true, giveGoFree: false, square: 0.8 },
   beach: { giveGo: true, giveGoFree: true, square: 0.7 },
@@ -102,7 +102,7 @@ export const HUMAN_FEED: Record<LiveFormat, HumanFeed> = {
 //    pose limit by dividing the sprint boost); finish: × his AI team-mates' xG; shoot: × their shooting instinct;
 //  - crossWide: sim units a cross may reach further across / deeper for a HUMAN receiver (the width gate relaxed to the posts).
 export type HumanSide = { pace: number; finish: number; shoot: number; crossWide: number };
-export const HUMAN_SIDE: Record<LiveFormat, HumanSide> = {
+export const HUMAN_SIDE: Record<SimFormat, HumanSide> = {
   "7v7": { pace: 1, finish: 1, shoot: 1, crossWide: 0 },
   futsal: { pace: 1, finish: 1, shoot: 1, crossWide: 0 },
   "9v9": { pace: 1, finish: 1.4, shoot: 1.2, crossWide: 12 },

@@ -1,10 +1,10 @@
 import reference from './positionReference.json';
 import players from './positionPlayers.json';
-import type {LiveFormat} from './venues';
+import {simFormat,type LiveFormat} from './venues';
 export type PositionInfo={name:string;role:keyof typeof players;attack:string;defense:string;keySkills:string[];note?:string};
 export type PositionSelection={format:LiveFormat;id:string;label:string;team:'gold'|'blue'};
 export function positionLabel(format:LiveFormat,id:string){const base=id.replace(/^d/,'').toUpperCase();return format==='futsal'?({GK:'GK',CB:'FIXO',LM:'ALA',RM:'ALA',ST:'PIVOT'}[base]??base):format==='beach'?({GK:'GK',CB:'DEF',LM:'WING',RM:'WING',ST:'PIVOT'}[base]??base):base;}
-export function positionInfo(selection:Pick<PositionSelection,'format'|'label'>):PositionInfo|undefined{return (reference[selection.format] as Record<string,PositionInfo>)[selection.label];}
+export function positionInfo(selection:Pick<PositionSelection,'format'|'label'>):PositionInfo|undefined{return (reference[simFormat(selection.format)] as Record<string,PositionInfo>)[selection.label];}
 export const POSITION_PLAYERS=players;
 export const POSITION_SOURCES=[
  {title:'FIFPRO World 11 (2025)',url:'https://www.fifpro.org/en/articles/2025/11/who-is-in-the-2025-fifpro-men-s-world-11'},

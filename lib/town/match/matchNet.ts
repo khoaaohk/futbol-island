@@ -13,7 +13,7 @@ import {POWER_SHOT,TRICK_KINDS,type HumanFrame} from './humanInputs';
 
 /** C.Match / S.Match codes and kinds (multiplayer/protocol/types.ts; mirrored here so this module stays protocol-free). */
 export const NET={C_MATCH:19,S_MATCH:40,JOIN:0,LEAVE:1,IN:2,SNAP:3,WATCH:4} as const;
-export const NET_FIELDS=['7v7','futsal','9v9','11v11','beach'] as const;
+export const NET_FIELDS=['7v7','futsal','9v9','11v11','beach','stadium'] as const;
 export const NET_BTN={pass:1,shoot:2,through:4,tackle:8,jockey:16,sprint:32,call:64,save:128,trick:256,press:512} as const;
 /** Snapshot send gap (ms; ~12 Hz) and how far behind the newest snapshot friends draw the match (ms). */
 export const SNAP_GAP_MS=83,INTERP_MS=110,IN_GAP_MS=80;

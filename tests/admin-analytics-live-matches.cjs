@@ -27,7 +27,7 @@ function rig(){
 ok('lm: ids are fixed, well-formed, allowlisted and unique',()=>{
  const ids=K.LIVE_MATCH_COUNT_IDS;
  assert.equal(ids.length,K.LIVE_MATCH_FORMATS.length*K.LM_FORMAT_EVENTS.length+K.LM_REACH.length);
- assert.deepEqual([...K.LIVE_MATCH_FORMATS],['7v7','futsal','9v9','11v11','beach']);
+ assert.deepEqual([...K.LIVE_MATCH_FORMATS],['7v7','futsal','9v9','11v11','beach','stadium']);
  for(const id of ids){assert(K.COUNT_KEY_RE.test(id),id);assert(K.isCountId(id),id);assert(K.FIXED_COUNT_IDS.includes(id),id);}
  assert.equal(new Set(K.FIXED_COUNT_IDS).size,K.FIXED_COUNT_IDS.length,'no duplicate fixed ids');
  for(const need of ['lm:7v7_visit','lm:futsal_join','lm:9v9_leave','lm:11v11_min','lm:beach_sec','lm:7v7_role_gk','lm:beach_len_2h','lm:9v9_with_4p','lm:futsal_end_hide','lm:reach_10'])assert(ids.includes(need),need);

@@ -43,7 +43,7 @@ function seedStore(nowMs){
  const dayStart=d=>Date.parse(d+'T00:00:00Z')+(d<'2026-11-01'?7:d==='2026-11-01'?7:8)*3600e3;
  const days=[];for(let t=Date.parse('2026-10-25T00:00:00Z');t<=Date.parse('2026-11-06T00:00:00Z');t+=86400e3)days.push(new Date(t).toISOString().slice(0,10));
  const starts={},beats=[],truth={days:{},counts:{},countSessions:{},sessions:0,engagedMs:0};let sid=0;const id=()=>('audit'+String(++sid).padStart(12,'0')).slice(0,20);
- const LM=['7v7','futsal','9v9','11v11','beach'];
+ const LM=['7v7','futsal','9v9','11v11','beach','stadium'];
  for(const day of days){const lo=dayStart(day),hi=dayStart(days[days.indexOf(day)+1]||'2026-11-07');const nVis=8+Math.floor(rnd()*10),visitors=new Set();let sessions=0,eng=0;
   for(let v=0;v<nVis;v++){const vh='vh_'+day+'_'+v,ns=1+Math.floor(rnd()*3);
    for(let k=0;k<ns;k++){let t=lo+Math.floor(rnd()*(hi-lo-2*3600e3));if(v===0&&k===0)t=lo+5*60e3;if(v===1&&k===0)t=hi-5*60e3;if(t>=nowMs-60e3)continue;

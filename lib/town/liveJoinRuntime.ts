@@ -50,7 +50,7 @@ export type JoinButton='a'|'b'|'s'|'f'|'t'|'skip'|'leave'|'camera'|'play'|'start
 type Mode=JoinMode;
 const TEAM_NAME={gold:'Yellow',blue:'Blue'} as const,TEAMS=['gold','blue'] as const;
 /** The side names follow the format's bibs (beanLooks LIVE_BIB_KITS): the 9v9 plays in orange / purple, not yellow / blue. */
-const TEAM_NAMES:Partial<Record<LiveFormat,{gold:string;blue:string}>>={'9v9':{gold:'Orange',blue:'Purple'},'11v11':{gold:'Cyan',blue:'Orange'},beach:{gold:'Orange',blue:'Blue'}};// beach: BEACH_KITS' orange vs blue shirts
+const TEAM_NAMES:Partial<Record<LiveFormat,{gold:string;blue:string}>>={'9v9':{gold:'Orange',blue:'Purple'},'11v11':{gold:'Cyan',blue:'Orange'},beach:{gold:'Orange',blue:'Blue'},stadium:{gold:'Red',blue:'Blue'}};// beach: BEACH_KITS' orange vs blue shirts
 const teamName=(f:LiveFormat|null,t:'gold'|'blue')=>(f&&TEAM_NAMES[f]||TEAM_NAME)[t];
 const TIP_KEY='fi2-join-tips-v1';
 /** The camera angle (lib/town/liveJoinCamera.ts) is kept for the browser session and across joins: a player who likes
