@@ -51,6 +51,28 @@ Original plan:
 - Gate arch (sponsor slot 3), turnstile props. Collision: `obstacleGrid.ts` handles the extra colliders.
 - Keep the bowl in `inStadiumFootprint`; trees already stay out.
 
+## Phase 3a: the stadium as a live venue (DONE on this branch)
+- `STADIUM_VENUE` ('stadium', West Coast Stadium, 63 × 100 m at (-205,-30), 7.32 × 2.44 m goals) is in `LIVE_VENUES` only (lessons,
+  quests, coin routes, `fieldSurfaceHeight` untouched). `LiveFormat` gains 'stadium'; `simFormat()` maps it to the 11v11 rules in
+  `MatchSim` (squads, tuning, AI, human knobs, shirt numbers, position guide); its own goal venue and `elevation` (-0.15) put rigs
+  and the sim's goal frames on the stadium grass (y -0.045). Joinable (`LIVE_JOIN_FORMATS`), Play-only bar like the beach court
+  (`PLAY_BARS` in Town, no lesson path in `FieldPathCard`), red v blue kits (`BIB_COLOURS.stadium`, team names Red / Blue).
+- Wire: `MATCH_FIELDS` / `NET_FIELDS` append 'stadium' (id 5). **Relay redeploy needed** for shared stadium matches (its validator
+  accepts field < MATCH_FIELDS.length); until then a stadium match stays on the phone, and old clients drop field 5.
+- Analytics: `LIVE_MATCH_FORMATS` + 'stadium' (`lm:stadium_*` counts pass the SQL key regex; no migration). The heat-map place
+  `stadium` is still phase 7 (needs an ingest allow-list migration). Match o'clock rotation unchanged (owner decision: add the
+  stadium? changing the rotation re-maps hours for clients on the old build).
+- Real goals: `fields.ts goalGeometry()` shared; the stadium frames are painted into the chunk batch, both nets one LineSegments
+  (+1 draw in view), side/back net colliders. Seat backs: low strip + one quad per seat (2 tris, merged): +10.5k tris, 0 draws.
+- Big screen (`stadiumScreen.ts`): 256 × 144 canvas plane in front of the sponsor screen while the stadium match is awake and the
+  player is within 190 m; redrawn only on a goal / new minute, at most 1 Hz. `setScreenSponsor(false)` during the match.
+- Seats: the prompt says "Sit and watch" while the match runs; the stand view's look point eases toward the ball (70 %, rate 1.6/s).
+  Portrait phones use a raised view (3.6 m back, 4 m up, aim 2 m lower): the head no longer covers the bottom.
+- Map / travel: "STADIUM GATE" destination (`STADIUM_ARRIVAL`, plaza 8 m east of the gate, facing it).
+- Cost (headless Chrome, dev server, no device heat): west chunks 69 draws (unchanged) / 81.8k tris (+11.2k). Seated in the north
+  stand with the match on: desktop 96 draws / 228k tris, phone 49–70 / 141–151k; the same session at Eleven Park's touchline: desktop
+  232 / 266k, phone 111 / 142k. The rise over phase 2's seated numbers is the 22 match rigs (the same as any island match).
+
 ## Phase 3: watching games
 - Today: pitches are `VENUES` / `LIVE_VENUES` (`venues.ts`); live matches run in `fieldRuntime.ts` + `liveJoin*.ts`, sim in
   `lib/town/match/matchSim.ts` (`elevenAI.ts` for 11v11), sync in `lib/multiplayer/sharedMatch.ts` / `matchLink.ts`, focus and
