@@ -1,7 +1,7 @@
 import {createCoinEffects} from './coinEffects';
 import type {Obstacle} from '../town/simulation';
 import * as T from 'three';
-import {COIN_QUEST,type CoinSpot} from '../town/coinQuest';
+import {COIN_QUEST,wallAxis,type CoinSpot} from '../town/coinQuest';
 import {CORAL_CAY_BALL_IDS} from '../town/coralCayBalls';
 /** Coral Cay parcels (Sep 29 2026) stay out of the shadow pass: 15 more casters for small boxes far from the main island (heat). */
 const CORAL_CAY_IDS=new Set(CORAL_CAY_BALL_IDS);
@@ -45,8 +45,9 @@ export function createCoinHunt(scene:T.Scene,onCollect:(coin:CoinSpot)=>void,onN
   const group=new T.Group();group.name='coin-spot-'+spot.id;group.position.set(spot.x,spot.y,spot.z);root.add(group);
   const parcel=new T.Group();group.add(parcel);
   if(spot.wall){
-   const east=spot.wall.facing==='east',faceDepth=east?spot.wall.x-spot.x:spot.wall.z-spot.z;
-   if(east)parcel.rotation.y=Math.PI/2;
+   // The parcel's local +z is the target's facing (south: none, east: +90°, west: -90°, north: 180°).
+   const f=spot.wall.facing,{alongX,out}=wallAxis(f),faceDepth=out*(alongX?spot.wall.x-spot.x:spot.wall.z-spot.z);
+   parcel.rotation.y=f==='east'?Math.PI/2:f==='west'?-Math.PI/2:f==='north'?Math.PI:0;
    const wallMesh=(g:T.BufferGeometry,m:number,p:T.Object3D,x:number,y:number,z:number,sx=1,sy=1,sz=1)=>mesh(g,spot.wall!.high?(m===1?7:m===5||m===4?8:m===6?9:m):m,p,x,y,z,sx,sy,sz);
    if(spot.wall.round){
     const face=faceDepth;
@@ -131,7 +132,7 @@ export function createCoinHunt(scene:T.Scene,onCollect:(coin:CoinSpot)=>void,onN
  function buoyShot(x:number,y:number,z:number){return entries.find(e=>e.spot.buoy&&!collected.has(e.spot.id)&&y<BUOY_TOP+1.6&&Math.hypot(e.spot.x-x,e.spot.z-z)<=BUOY_HIT);}
  function buoySolid(x:number,y:number,z:number){return y<BUOY_TOP&&entries.some(e=>e.spot.buoy&&Math.hypot(e.spot.x-x,e.spot.z-z)<.85);}
  function collectNow(e:typeof entries[number]){if(!recordCoin(e.spot.id,'collect'))return false;stats.collections++;if(e.spot.summit)countSummitBall();effects.collect(e.spot);pendingLessons.push(e.spot);onCollect(e.spot);return true;}
- function hit(x:number,y:number,z:number,vx:number,vz:number){if(!enabled||Math.hypot(vx,vz)<2)return false;{const b=buoyShot(x,y,z);if(b)return collectNow(b);}const e=entries.find(e=>{const s=e.spot;if(s.kind==='hidden'||s.grass||s.manhole||s.reveal||revealedIds.has(s.id))return false;if(s.wall){const east=s.wall.facing==='east',normal=east?x-s.wall.x:z-s.wall.z,tangent=east?z-s.wall.z:x-s.wall.x,velocity=east?vx:vz;return velocity<-.5&&normal>=-.05&&Math.abs(normal)<(s.wall.high?.5:.32)&&(s.wall.round?Math.hypot(tangent,y-s.wall.y)<1.05:Math.abs(tangent)<1.9&&Math.abs(y-s.wall.y)<.8);}return Math.abs(x-s.x)<.95&&Math.abs(z-s.z)<.95&&y>s.y+.05&&y<s.y+1.25;});return e?reveal(e):false;}
+ function hit(x:number,y:number,z:number,vx:number,vz:number){if(!enabled||Math.hypot(vx,vz)<2)return false;{const b=buoyShot(x,y,z);if(b)return collectNow(b);}const e=entries.find(e=>{const s=e.spot;if(s.kind==='hidden'||s.grass||s.manhole||s.reveal||revealedIds.has(s.id))return false;if(s.wall){const {alongX,out}=wallAxis(s.wall.facing),normal=out*(alongX?x-s.wall.x:z-s.wall.z),tangent=alongX?z-s.wall.z:x-s.wall.x,velocity=out*(alongX?vx:vz),wy=s.y+s.wall.y;return velocity<-.5&&normal>=-.05&&Math.abs(normal)<(s.wall.high?.5:.32)&&(s.wall.round?Math.hypot(tangent,y-wy)<1.05:Math.abs(tangent)<1.9&&Math.abs(y-wy)<.8);}return Math.abs(x-s.x)<.95&&Math.abs(z-s.z)<.95&&y>s.y+.05&&y<s.y+1.25;});return e?reveal(e):false;}
  // fromFlight: a jetpack or parachute touchdown. Manholes open only for a flight that first passed over them.
  function land(p:Point,fromFlight=false){if(!enabled)return;for(const e of entries)if(e.spot.kind==='landing'&&(e.spot.manhole?fromFlight&&e.dropArmed:!e.spot.grass||e.dropArmed)&&!revealedIds.has(e.spot.id)&&Math.abs(p.y-e.spot.y)<.8&&Math.hypot(p.x-e.spot.x,p.z-e.spot.z)<(e.spot.manhole?LAND_RADIUS:1.8))reveal(e);}
  function aim(p:Point,yaw:number,clear:(x:number,z:number)=>boolean){let best:typeof entries[number]|undefined,dist=9;for(const e of entries){const s=e.spot,dx=s.x-p.x,dz=s.z-p.z,d=Math.hypot(dx,dz);const buoy=!!s.buoy&&!collected.has(s.id);if(!buoy&&(s.kind==='hidden'||s.grass||s.manhole||s.reveal||revealedIds.has(s.id))||Math.abs(s.y-p.y)>.7||d>(buoy?BUOY_REACH:dist)||d<.5)continue;const angle=Math.atan2(dx,dz)-yaw;if(Math.cos(angle)<(buoy?.5:.82))continue;if(buoy){/* a wide ±60° assist: at a rail a child rarely faces the buoy squarely */dist=Math.min(dist,d);best=e;continue;}let visible=true;const steps=Math.ceil(d/.3);for(let i=1;i<=steps;i++)if(!clear(p.x+dx*i/steps,p.z+dz*i/steps)){visible=false;break;}if(!visible)continue;dist=d;best=e;}return best?Math.atan2(best.spot.x-p.x,best.spot.z-p.z):null;}

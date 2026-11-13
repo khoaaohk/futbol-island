@@ -156,11 +156,13 @@ export function buildStadiumLights(t:StadiumLightsTools){
   collide(p.x,p.z,.3,.3);pool(p.x,p.z,1.5,-.05,.4);stats.bollards++;}
  // --- The gate: two uplights at the pillars' plaza feet washing them, and three lenses under the arch over the walk in ------------
  {const G=STADIUM_GATE,gx=GATE_ARCH_X;
-  for(const sz of [-1,1]){const z=G.z+sz*(G.halfWidth+.4),x=gx+1.5;
-   lampBox(.5,.22,.5,FIXTURE,x,APRON_Y+.11,z);lampBox(.4,.04,.4,LENS,x,APRON_Y+.24,z,1);collide(x,z,.5,.5);stats.fixtures++;
+  // Nov 13 2026: each lamp sits 0.5 m in from its pillar's middle (toward the walk), so a shot at the ball-hunt target on the
+  // pillar's plaza face (stadiumBalls.ts, 0.2 m out from the middle) is not stopped by the lamp's collider first.
+  for(const sz of [-1,1]){const z=G.z+sz*(G.halfWidth+.4),x=gx+1.5,lz=z-sz*.5;
+   lampBox(.5,.22,.5,FIXTURE,x,APRON_Y+.11,lz);lampBox(.4,.04,.4,LENS,x,APRON_Y+.24,lz,1);collide(x,lz,.5,.5);stats.fixtures++;
    // The pillar's plaza face (x gx+.8, 1.6 m wide): the foot corners take v=1, so it is bright at the foot, fading up.
    quad([V(gx+.82,9.6,z+.85),V(gx+.82,9.6,z-.85),V(gx+.82,0,z-.85),V(gx+.82,0,z+.85)],.22,.25,0,2);
-   pool(x,z,1.4,-.05,.3);}
+   pool(x,lz,1.4,-.05,.3);}
   for(const dz of [-4,0,4])lampBox(.9,.08,.45,LENS,gx,8.16,G.z+dz,1);
   quad([V(gx+.73,10.6,G.z+8.6),V(gx+.73,10.6,G.z-8.6),V(gx+.73,8.2,G.z-8.6),V(gx+.73,8.2,G.z+8.6)],.1,.1,0,2);}
 

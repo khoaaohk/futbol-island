@@ -4,7 +4,13 @@ import {SUMMIT_BALL_SPOTS} from './summitBalls';
 import {EAST_JETTY_BALL_SPOTS} from './eastJettyBalls';
 import {STADIUM_BALL_SPOTS} from './stadiumBalls';
 export const COIN_REWARD_ID='matchday-fox',COIN_STORAGE_KEY='fi2-matchday-coins-v1';
-export type CoinSpot={id:string;name:string;x:number;y:number;z:number;kind:'hidden'|'kick'|'landing';parachute?:boolean;/** a parachute ball on something you can stand on (the Summit hut roof): standing beside it collects it too */perch?:boolean;grass?:boolean;truck?:number;ramp?:string;wall?:{x:number;y:number;z:number;high?:boolean;round?:boolean;facing?:'south'|'east'};clue:string;detail:string;teaching:string;lesson:LearningId;manhole?:boolean;
+/** The way a wall target looks: south +z (the default), east +x, north -z, west -x. */
+export type WallFacing='south'|'east'|'north'|'west';
+/** A wall target's facing as an axis: `alongX` (an east / west face), `out` (+1 east / south, -1 west / north). */
+export const wallAxis=(f:WallFacing|undefined)=>({alongX:f==='east'||f==='west',out:f==='north'||f==='west'?-1:1});
+export type CoinSpot={id:string;name:string;x:number;y:number;z:number;kind:'hidden'|'kick'|'landing';parachute?:boolean;/** a parachute ball on something you can stand on (the Summit hut roof): standing beside it collects it too */perch?:boolean;grass?:boolean;truck?:number;ramp?:string;/** A target on a wall: x/z world, y over the spot's own y (the floor the kicker stands on); `facing` is the way the target looks
+ *  (default south, +z). The pickup spot stands in front of it, on the same line. */
+ wall?:{x:number;y:number;z:number;high?:boolean;round?:boolean;facing?:WallFacing};clue:string;detail:string;teaching:string;lesson:LearningId;manhole?:boolean;
  /** A ball resting on a floating buoy in the sea (Coral Cay): kick it from `kickFrom` on the deck (a shot heading at the buoy
   *  collects it), or glide to it with the parachute. The buoy and the chalk mark are drawn in its packed parcel. */
  buoy?:boolean;kickFrom?:{x:number;z:number};

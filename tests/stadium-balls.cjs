@@ -1,17 +1,20 @@
-// DRIP FC Stadium ball hunt (Nov 13 2026, lib/town/stadiumBalls.ts): twelve loose balls take the hunt from 116 to 128, on the
-// plaza, by the gate, in the park (a lawn, the lily pond's shore, an orchard), on both long stands' roofs, in an aisle of three
-// stands and on the south concourse under the big screen. Checked against the town the game really builds (world.ts, the same
-// rooftop travel Town drives, as tests/west-stadium.cjs does):
+// DRIP FC Stadium ball hunt (Nov 13 2026, lib/town/stadiumBalls.ts): twelve balls take the hunt from 116 to 128. Since the owner's
+// Nov 13 feedback ("too easy to find"; "like the targets on buildings", "some balls in the crowd"): seven round kick targets on the
+// stadium (both gate pillars, the east / north / west stands' back walls, the big screen's east post), three balls on free seats
+// among the fans and two loose balls on the long stands' roofs. Checked against the town the game really builds (world.ts, the same
+// rooftop travel and ball collisions Town drives):
 //  1. count, ids, order (appended after the East Jetty ball), every place the hunt is counted;
 //  2. one new concept each: no scene kind or concept tag any island or reef ball already has, no title / tip overlap, no topic
 //     words taught elsewhere, a lesson + scene + practice prompt each, an IFAB source for every Law, no links in kid UI;
-//  3. placement: ground balls on the island, clear of colliders, trees, the pond and (park balls) the paths; plaza balls on the
-//     plaza clear of its flags, benches and planters; stand balls on an aisle tread, never in a seat or by a stand flag; the
-//     screen ball under the screen; roof balls on the slab top; every ball ≥ 10 m from every other ball;
-//  4. reachable: a walk (flood fill round every collider) from the plaza reaches every ground ball; a real walk with the rooftop
-//     travel climbs each stand ball's aisle to it (and the south aisle to the screen ball); a landing from the sky puts the feet
-//     on each roof ball's slab;
-//  5. the coin-hunt runtime collects each one where it rests (and not from below / afar), with no parcel and no collider (heat);
+//  3. placement: nothing loose on the ground (plaza, apron, park); each target on a real stadium solid's outer face (one on each gate
+//     pillar, clear of the walk and below the sign), round the bowl, its ball dropping on clear ground; crowd balls on the seat
+//     beside an aisle that the crowd never fills, among fans, clear of the aisle, the flags and the roof; roof balls on the slabs;
+//     every ball ≥ 10 m from every other ball;
+//  4. reachable and hittable: a walk (flood fill round every collider) from the plaza reaches every target's ball and its kicker's
+//     spot; a real charged kick (walkBall.ts, Town's collisions) from there hits each target, a tap does not; a real walk climbs each
+//     crowd ball's aisle into its row;
+//  5. the coin-hunt runtime: a target opens only on a shot into it and drops its ball; crowd and roof balls are collected where they
+//     rest, one mesh each, no collider (heat);
 //  6. the card offer: a collected ball goes to earnForBall (kind 'ball', the child picks a card) and the lesson card;
 //  7. saves: same key, version 9; a version 8 save keeps its pending lesson, a 116-ball save keeps the fox and every costume.
 // usage: node tests/stadium-balls.cjs
@@ -35,7 +38,7 @@ const L=load('lib/town/westParkLayout.ts'),S=load('lib/town/stadiumSeats.ts'),si
 // ---- 1. Count, ids, order, counted everywhere.
 assert.equal(spots.length,12,'twelve stadium balls');assert.equal(COIN_QUEST.length,128,'the hunt has 128 balls');assert.equal(new Set(COIN_QUEST.map(s=>s.id)).size,128,'ids are unique');
 assert.deepEqual(COIN_QUEST.slice(116).map(s=>s.id),SB.STADIUM_BALL_IDS,'appended last, so saved ids keep their order');assert.equal(COIN_QUEST[115].id,'jetty-lighthouse','after the East Jetty ball');
-assert.deepEqual(Q.PRE_STADIUM_IDS,COIN_QUEST.slice(0,116).map(s=>s.id));assert(spots.every(s=>s.stadium&&s.loose&&s.kind==='hidden'&&!s.parachute&&!s.summit),'loose stadium balls (walked to)');
+assert.deepEqual(Q.PRE_STADIUM_IDS,COIN_QUEST.slice(0,116).map(s=>s.id));assert(spots.every(s=>s.stadium&&!s.parachute&&!s.summit&&(s.wall?s.kind==='kick'&&!s.loose:s.kind==='hidden'&&s.loose)),'stadium balls: kick targets or loose balls');
 assert(spots.every(s=>s.id.startsWith('stadium-')&&Number.isFinite(s.x+s.y+s.z)));
 {const txt=read('lib/site/learnFeatures.ts');assert(txt.includes('counts:{hiddenBalls:128}')&&txt.includes("'128 hidden balls to find'")&&!/\b116 hidden balls/.test(txt),'the learn page counts 128 (tests/learn-content.cjs checks it against COIN_QUEST)');}
 assert.equal(Q.costumeMilestones().at(-1),128,'the Matchday Fox needs every ball (128)');assert.equal(Q.costumesAtMilestone(116),0,'116 unlocks nothing now');
@@ -78,74 +81,129 @@ console.log('     '+spots.map(s=>`${s.id}=${s.concept}`).join(', '));
 
 // ---- 3. Placement against the built town.
 const world=load('lib/town/world.ts').buildTown(new T.Scene());
-const {createRooftopTravel}=load('lib/town/rooftopTravel.ts');
+const {createRooftopTravel}=load('lib/town/rooftopTravel.ts'),SW=load('lib/town/stadiumWorld.ts'),CR=load('lib/town/stadiumCrowd.ts');
 const G=L.STADIUM_GATE,P=L.STADIUM_PLAZA,ST=L.STADIUM;
-const travel=()=>createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,{x:G.x+8,z:G.z},world.roofObstacles,()=>0,world.landingExclusions,world.canopies);
+const travel=(x=G.x+8,z=G.z)=>createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,{x,z},world.roofObstacles,()=>0,world.landingExclusions,world.canopies);
 const trees=world.assets.filter(a=>a.kind==='tree'||a.kind==='palm'),orchard=load('lib/town/stadiumOrchard.ts').stadiumOrchardTrees();
 const ROOF_TOP=S.ROOF.y+S.ROOF.thick/2;assert.equal(SB.STADIUM_ROOF_TOP,ROOF_TOP);
-const kindOf=s=>s.y>10?'roof':s.id==='stadium-screen'?'screen':s.y>0?'stand':L.inStadiumFootprint(s.x,s.z)?'?':s.x>P.minX-6&&s.x<P.maxX&&s.z>P.minZ&&s.z<P.maxZ?'plaza':'park';
+const kindOf=s=>s.wall?'target':s.y>10?'roof':'crowd';
 const tally={};for(const s of spots)tally[kindOf(s)]=(tally[kindOf(s)]||0)+1;
-assert.deepEqual(tally,{plaza:3,park:3,roof:2,stand:3,screen:1},'the spread '+JSON.stringify(tally));
+assert.deepEqual(tally,{target:7,roof:2,crowd:3},'the spread '+JSON.stringify(tally));
+const targets=spots.filter(s=>s.wall),crowd=spots.filter(s=>kindOf(s)==='crowd'),roofs=spots.filter(s=>kindOf(s)==='roof');
+assert(targets.every(s=>s.kind==='kick'&&!s.loose&&s.wall.high&&s.wall.round),'targets: the island\'s round high kick targets (no parcel box, no collider)');
+assert([...crowd,...roofs].every(s=>s.kind==='hidden'&&s.loose&&!s.parachute),'crowd and roof balls: loose, walked to');
+// No stadium ball lies loose on the ground: not on the plaza, the apron, the ring path, the park or the gate.
+for(const s of spots.filter(s=>s.loose))assert(s.y>=S.rowHeight(0),`${s.id}: never loose on the ground`);
+for(const s of spots.filter(s=>s.loose)){const inPlaza=s.x>P.minX-6&&s.x<P.maxX&&s.z>P.minZ&&s.z<P.maxZ;assert(!inPlaza&&L.inStadiumFootprint(s.x,s.z),`${s.id}: not on the plaza or the apron`);}
 const t0=travel(),solid=(x,z,r)=>sim.blocked(x,z,world.obstacles,r);
-const flags=load('lib/town/stadiumCrowd.ts').standFlagSpots(8);
-for(const s of spots){const k=kindOf(s);
- if(k==='plaza'||k==='park'){
-  assert(onIsland(s.x,s.z)&&s.y===0,`${s.id}: on the island's ground`);assert(!solid(s.x,s.z,.9),`${s.id}: clear of every collider (0.9 m)`);
-  assert(Math.min(...trees.map(t=>Math.hypot(t.x-s.x,t.z-s.z)))>=2.5,`${s.id}: clear of trees and palms`);assert(Math.min(...orchard.map(t=>Math.hypot(t.x-s.x,t.z-s.z)))>=2.5,`${s.id}: clear of the orchard trees`);
-  assert(!L.inPond(s.x,s.z,L.POND_RIM+3),`${s.id}: not in (or on the rim of) the pond`);assert(Math.abs(t0.surface(s.x,s.z,1))<.05,`${s.id}: at ground height`);
-  if(k==='park'){assert(!L.onParkPaving(s.x,s.z,3),`${s.id}: off the paths (≥ 3 m beyond their edges)`);assert(L.onGrass(s.x,s.z),`${s.id}: on the lawn`);}
-  else{assert(L.onParkPaving(s.x,s.z),`${s.id}: on the plaza paving`);for(const f of S.plazaFlagPoles())assert(Math.hypot(f.x-s.x,f.z-s.z)>=3,`${s.id}: clear of the plaza flags`);}}
- if(k==='stand'){const st=S.STANDS.find(q=>{const p=S.standLocal(q,s.x,s.z);return p.d>q.inner&&p.d<q.inner+S.ROWS*S.ROW_DEPTH&&Math.abs(p.a)<=q.to;});assert(st,`${s.id}: in a stand's rows`);
-  const p=S.standLocal(st,s.x,s.z),a=st.aisles.find(c=>Math.abs(c-p.a)<.01);assert(a!==undefined,`${s.id}: on an aisle's centre line, not in a seat span`);
-  const row=Math.floor((p.d-st.inner)/S.ROW_DEPTH);assert.equal(s.y,S.rowHeight(row),`${s.id}: at its row's height`);assert(Math.abs(t0.surface(s.x,s.z,s.y+.1)-s.y)<1e-6,`${s.id}: on the aisle's upper tread`);
-  for(const [a0,a1] of S.standSpans(st).seats){const {n,start}=S.spanSeats(a0,a1);for(let i=0;i<n;i++)assert(Math.abs(start+i*S.SEAT_PITCH-p.a)>=S.AISLE_WIDTH/2,`${s.id}: no seat under it`);}
-  assert(Math.min(...flags.map(f=>Math.hypot(f.x-s.x,f.z-s.z)))>=1.2,`${s.id}: clear of the stand flags`);}
- if(k==='screen'){const so=S.STANDS.find(q=>q.id==='south'),p=S.standLocal(so,s.x,s.z);assert(p.d>so.inner+S.ROWS*S.ROW_DEPTH&&p.d<S.standBack(so)-.5,'the screen ball is on the south concourse');
-  assert.equal(s.y,S.CONCOURSE_HEIGHT);assert(Math.abs(t0.surface(s.x,s.z,s.y+.1)-s.y)<1e-6,'on the concourse floor');
-  assert(Math.abs(s.x-ST.x)<S.SCREEN.w/2&&Math.abs(ST.z+S.SCREEN.z-s.z)<3,'right under the big screen');for(const q of load('lib/town/stadiumWorld.ts').screenPosts())assert(Math.hypot(q.x-s.x,q.z-s.z)>=2,'clear of its posts');}
- if(k==='roof'){assert(t0.canLand(s.x,s.z,Infinity),`${s.id}: a landing from the sky`);assert(Math.abs(t0.surface(s.x,s.z,Infinity)-ROOF_TOP)<.01&&s.y===ROOF_TOP,`${s.id}: on the slab top`);
-  const st=S.STANDS.find(q=>q.roof&&S.standLocal(q,s.x,s.z).d>S.ROOF.front&&S.standLocal(q,s.x,s.z).d<S.ROOF.back);assert(st,`${s.id}: over a roofed stand`);const p=S.standLocal(st,s.x,s.z);
-  assert(p.d-S.ROOF.front>=3&&S.ROOF.back-p.d>=3&&Math.abs(p.a)<=st.to-3,`${s.id}: ≥ 3 m in from every roof edge`);}}
-{const gate=spots.find(s=>s.id==='stadium-gate');assert(Math.hypot(gate.x-G.x,gate.z-G.z)<=14&&!S.inGate(gate.x,gate.z)&&Math.abs(gate.z-G.z)>=G.halfWidth+2,'the gate ball is by the gate, off the walk through it');}
+const AX={east:[1,0],west:[-1,0],south:[0,1],north:[0,-1]},axis=s=>AX[s.wall.facing??'south'];
+// Targets: on real stadium geometry, both sides of the gate, spread round the bowl, pickups on open ground (or the concourse).
+const mounts=new Set();
+for(const s of targets){const [nx,nz]=axis(s),w=s.wall,inside=(x,z)=>world.obstacles.filter(o=>sim.insideObstacle(x,z,o));
+ assert(L.inStadiumFootprint(w.x,w.z,1),`${s.id}: on the stadium (${w.x}, ${w.z})`);
+ const behind=inside(w.x-nx*.25,w.z-nz*.25);assert(behind.length,`${s.id}: mounted on a real solid (a stand's back wall, a gate pillar or a screen post)`);
+ assert(!inside(w.x+nx*.2,w.z+nz*.2).length,`${s.id}: on the solid's outer face`);
+ if(s.id!=='stadium-screen')for(const t of [-.55,.55])assert(inside(w.x-nx*.25+nz*t,w.z-nz*.25+nx*t).length,`${s.id}: the whole target fits on the face`);
+ mounts.add(behind[0]);
+ assert(Math.hypot(s.x-w.x,s.z-w.z)<=SB.TARGET_DROP+.01,`${s.id}: the ball drops just in front`);assert(s.y===0?!solid(s.x,s.z,.6):!world.roofObstacles.some(o=>o.top>s.y&&o.floor<s.y+1.8&&sim.insideObstacle(s.x,s.z,o,.6)),`${s.id}: the pickup is clear of colliders (rails and props on the concourse)`);
+ assert(Math.abs(t0.surface(s.x,s.z,s.y+.1)-s.y)<1e-6,`${s.id}: the pickup is on the floor (${s.y})`);
+ assert(Math.min(...trees.map(t=>Math.hypot(t.x-s.x,t.z-s.z)),...orchard.map(t=>Math.hypot(t.x-s.x,t.z-s.z)))>=2.5,`${s.id}: clear of trees`);
+ if(s.y===0)assert(onIsland(s.x,s.z)&&!L.inPond(s.x,s.z,L.POND_RIM+3),`${s.id}: on the island's ground`);}
+{const posts=SW.screenPosts(),scr=spots.find(s=>s.id==='stadium-screen'),so=S.STANDS.find(q=>q.id==='south'),p=S.standLocal(so,scr.x,scr.z);
+ assert(Math.abs(posts[1].x-scr.wall.x)<.01&&Math.abs(posts[1].z+SB.SCREEN_POST_R-scr.wall.z)<.01&&scr.wall.facing==='south','the screen target is on the east post\'s south face');
+ assert(scr.y+scr.wall.y+.55<posts[1].top,'below the screen frame');assert(scr.y===0&&p.d>S.standBack(so),'its ball drops on the ground behind the south stand');
+ for(const q of posts)assert(Math.hypot(q.x-scr.x,q.z-scr.z)>=2,'clear of the posts');}
+{const gate=['stadium-gate','stadium-plaza-flags'].map(id=>spots.find(s=>s.id===id)),gx=S.GATE_ARCH_X+.8;
+ assert.deepEqual(gate.map(s=>Math.sign(s.wall.z-G.z)),[-1,1],'one target on each pillar: both sides of the entrance');
+ for(const s of gate){assert(s.wall.facing==='east'&&Math.abs(s.wall.x-gx)<.01,`${s.id}: on the pillar's plaza (east) face`);
+  assert(s.wall.y+.55<8.2,`${s.id}: below the arch beam, well clear of the DRIP FC sign over the gate`);assert(s.wall.y-.55>2.2,`${s.id}: above head height`);
+  assert(Math.abs(s.wall.z-G.z)-.55>=G.halfWidth&&Math.abs(s.z-G.z)>=G.halfWidth+.5&&!S.inGate(s.x,s.z),`${s.id}: clear of the walk through the gate`);}}
+const sides=new Set(targets.map(s=>s.wall.facing));assert.deepEqual([...sides].sort(),['east','north','south','west'],'targets round the bowl: the gate and east stand, the north stand, the west stand, the screen at the south end');
+assert(targets.some(s=>s.id==='stadium-screen'&&s.z>ST.z+50)&&targets.some(s=>s.wall.z<ST.z-70),'north and south ends too');
+// Crowd balls: on the free seat beside an aisle, among fans, clear of the stand flags and the roof's shade.
+const fans=CR.crowdSeats(),shown=f=>fans.slice(0,CR.crowdCount(fans,f)),flags=CR.standFlagSpots(8);
+for(const s of crowd){const st=S.STANDS.find(q=>{const p=S.standLocal(q,s.x,s.z);return p.d>q.inner&&p.d<q.inner+S.ROWS*S.ROW_DEPTH&&Math.abs(p.a)<=q.to;});assert(st,`${s.id}: in a stand's rows`);
+ const p=S.standLocal(st,s.x,s.z),row=Math.floor((p.d-st.inner)/S.ROW_DEPTH);
+ assert(Math.abs(p.d-(st.inner+row*S.ROW_DEPTH+S.SEAT_DEPTH-.04))<.01&&Math.abs(s.y-(S.rowHeight(row)+S.SEAT_TOP))<.01,`${s.id}: on a seat pad in row ${row+1}`);
+ const span=S.standSpans(st).seats.find(([a0,a1])=>p.a>a0&&p.a<a1);assert(span,`${s.id}: in a seat span, not on an aisle or a stair`);const {n,start}=S.spanSeats(span[0],span[1]);
+ const k=Math.round((p.a-start)/S.SEAT_PITCH);assert(Math.abs(start+k*S.SEAT_PITCH-p.a)<.01&&(k===0||k===n-1),`${s.id}: on the end seat of its span`);
+ const aisle=st.aisles.find(a=>Math.abs(Math.abs(p.a-a)-(Math.abs(p.a-(k===0?span[0]:span[1]))+S.AISLE_WIDTH/2))<.01);assert(aisle!==undefined,`${s.id}: the seat right beside an aisle`);
+ assert(Math.abs(p.a-aisle)>=S.AISLE_WIDTH/2+.2,`${s.id}: the aisle and its stairs stay clear`);
+ assert(!fans.some(f=>Math.hypot(f.x-s.x,f.z-s.z)<.3),`${s.id}: no fan ever sits in its seat (every fill)`);
+ const by=f=>shown(f).filter(q=>Math.hypot(q.x-s.x,q.z-s.z)<1.5).length;assert(by(CR.crowdFill(true,0))>=2&&by(CR.crowdFill(false,0))>=2,`${s.id}: among fans (${by(.3)} beside it on a phone)`);
+ if(st.roof)assert(p.d<S.ROOF.front-1.5,`${s.id}: in front of the roof (its fade never needs to clear it)`);
+ assert(Math.min(...flags.map(f=>Math.hypot(f.x-s.x,f.z-s.z)))>=1.2,`${s.id}: clear of the stand flags`);}
+assert.equal(new Set(crowd.map(s=>S.STANDS.find(q=>Math.abs(S.standLocal(q,s.x,s.z).a)<=q.to&&S.standLocal(q,s.x,s.z).d>q.inner&&S.standLocal(q,s.x,s.z).d<S.standBack(q)).id)).size,3,'one in each of three stands');
+for(const s of roofs){assert(t0.canLand(s.x,s.z,Infinity),`${s.id}: a landing from the sky`);assert(Math.abs(t0.surface(s.x,s.z,Infinity)-ROOF_TOP)<.01&&s.y===ROOF_TOP,`${s.id}: on the slab top`);
+ const st=S.STANDS.find(q=>q.roof&&S.standLocal(q,s.x,s.z).d>S.ROOF.front&&S.standLocal(q,s.x,s.z).d<S.ROOF.back);assert(st,`${s.id}: over a roofed stand`);const p=S.standLocal(st,s.x,s.z);
+ assert(p.d-S.ROOF.front>=3&&S.ROOF.back-p.d>=3&&Math.abs(p.a)<=st.to-3,`${s.id}: ≥ 3 m in from every roof edge`);}
 let closest=Infinity;for(const a of spots)for(const b of COIN_QUEST){if(a===b||b.truck!==undefined)continue;const d=Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z);closest=Math.min(closest,d);assert(d>=10,`${a.id} and ${b.id} are only ${d.toFixed(1)} m apart`);}
-console.log(`PASS placement ${JSON.stringify(tally)}: ground balls clear of colliders, trees, the pond and (park) the paths; plaza balls clear of the flags; stand balls on aisle treads (no seat, no flag); the screen ball on the concourse; roof balls on the slabs; ≥ 10 m apart (closest ${closest.toFixed(1)} m)`);
+console.log(`PASS placement ${JSON.stringify(tally)}: targets on ${mounts.size} stadium solids (both gate pillars, the east/west/north back walls, the screen post), facing ${[...sides].join('/')}, pickups clear; crowd balls on the free aisle seat among fans (no aisle, flag or roof); roof balls on the slabs; nothing loose on the ground; ≥ 10 m apart (closest ${closest.toFixed(1)} m)`);
 
-// ---- 4. Reachable.
+// ---- 4. Reachable and hittable.
 // Ground: a 0.5 m flood fill over the island from the plaza, round every collider (the walker's radius).
-{const step=.5,x0=-345,z0=-250,nx=Math.ceil(310/step),nz=Math.ceil(400/step),C=4,cells=new Map(),key=(i,j)=>i*100000+j;
+const step=.5,x0=-345,z0=-250,nx=Math.ceil(310/step),nz=Math.ceil(400/step),seen=new Uint8Array(nx*nz);
+{const C=4,cells=new Map(),key=(i,j)=>i*100000+j;
  for(const o of world.obstacles){if(o.floor!==undefined&&o.floor>1)continue;const r=Math.max(o.w,o.d)/2+.5;for(let i=Math.floor((o.x-r)/C);i<=Math.floor((o.x+r)/C);i++)for(let j=Math.floor((o.z-r)/C);j<=Math.floor((o.z+r)/C);j++){let l=cells.get(key(i,j));if(!l)cells.set(key(i,j),l=[]);l.push(o);}}
  const hit=(x,z)=>(cells.get(key(Math.floor(x/C),Math.floor(z/C)))??[]).some(o=>sim.insideObstacle(x,z,o,.32));
- const seen=new Uint8Array(nx*nz),q=[],si=Math.round((-100-x0)/step),sj=Math.round((-30-z0)/step);seen[sj*nx+si]=1;q.push(si,sj);
+ const q=[],si=Math.round((-100-x0)/step),sj=Math.round((-30-z0)/step);seen[sj*nx+si]=1;q.push(si,sj);
  for(let h=0;h<q.length;h+=2){const i=q[h],j=q[h+1];for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){const a=i+di,b=j+dj;if(a<0||b<0||a>=nx||b>=nz||seen[b*nx+a])continue;const x=x0+a*step,z=z0+b*step;
   if(x>-45||!onIsland(x,z)||hit(x,z))continue;seen[b*nx+a]=1;q.push(a,b);}}
- const reached=(x,z,r)=>{for(let i=Math.floor((x-r-x0)/step);i<=Math.ceil((x+r-x0)/step);i++)for(let j=Math.floor((z-r-z0)/step);j<=Math.ceil((z+r-z0)/step);j++)if(i>=0&&j>=0&&i<nx&&j<nz&&seen[j*nx+i]&&Math.hypot(x0+i*step-x,z0+j*step-z)<=r)return true;return false;};
- for(const s of spots.filter(s=>s.y===0))assert(reached(s.x,s.z,1),`${s.id} can be walked to from the plaza`);
- console.log(`PASS walk: a flood fill from the plaza (${q.length/2} cells round every collider) reaches every ground ball`);}
-// Stands and the screen: a real walk with the rooftop travel, from the pitch-level ring up the ball's aisle (no falls).
+ console.log(`     flood fill from the plaza: ${q.length/2} cells`);}
+const reached=(x,z,r)=>{for(let i=Math.floor((x-r-x0)/step);i<=Math.ceil((x+r-x0)/step);i++)for(let j=Math.floor((z-r-z0)/step);j<=Math.ceil((z+r-z0)/step);j++)if(i>=0&&j>=0&&i<nx&&j<nz&&seen[j*nx+i]&&Math.hypot(x0+i*step-x,z0+j*step-z)<=r)return true;return false;};
+for(const s of targets.filter(s=>s.y===0))assert(reached(s.x,s.z,1),`${s.id}: its ball can be walked to from the plaza`);
+// A real walk with the rooftop travel (no falls).
 function walk(points,secs=40){const t=travel(),p={x:points[0][0],z:points[0][1]},v={x:0,z:0};t.reset(p.x,p.z);let fell=false,i=1;
  for(let f=0;f<secs*60&&i<points.length;f++){const [tx,tz]=points[i],dx=tx-p.x,dz=tz-p.z,l=Math.hypot(dx,dz);if(l<.3){i++;continue;}t.update(1/60,p,v,{x:dx/l,z:dz/l,sprint:false},'walk');if(t.state.falling||t.state.recovery>0)fell=true;}
  return {x:p.x,z:p.z,h:t.state.height,fell,reached:i>=points.length};}
-for(const s of spots.filter(s=>s.y>0&&s.y<10)){
- const st=s.id==='stadium-screen'?S.STANDS.find(q=>q.id==='south'):S.STANDS.find(q=>{const p=S.standLocal(q,s.x,s.z);return p.d>q.inner&&p.d<S.standBack(q)&&Math.abs(p.a)<=q.to;});const p=S.standLocal(st,s.x,s.z);
- const a=s.id==='stadium-screen'?st.aisles[1]:p.a,w=(d,al)=>{const q=S.standWorld(st,d,al);return [q.x,q.z];};
- const route=s.id==='stadium-screen'?[w(st.inner-2,a),w(st.inner+.2,a),w(S.standBack(st)-2,a),w(p.d,p.a)]:[w(st.inner-2,a),w(st.inner+.2,a),w(p.d,a)];
- const r=walk(route);assert(r.reached&&!r.fell&&Math.abs(r.h-s.y)<.01&&Math.hypot(r.x-s.x,r.z-s.z)<.5,`${s.id}: walked up the aisle to it ${JSON.stringify(r)}`);}
-// The way into the bowl: the gate from the plaza to the ring (tests/west-stadium.cjs walks it too).
 {const r=walk([[G.x+10,G.z],[G.x-1,G.z],[ST.x+38,ST.z]]);assert(r.reached&&!r.fell,'plaza → gate → ring');}
-for(const s of spots.filter(s=>s.y>10)){const t=travel(),at=t.findLanding(s.x+2,s.z-3)??{x:s.x+2,z:s.z-3};assert(Math.abs(t.surface(at.x,at.z,Infinity)-ROOF_TOP)<.01,`${s.id}: a landing beside it is on the roof too`);}
-console.log('PASS reach: every stand ball and the screen ball by a real walk up an aisle (no falls), the gate into the bowl, both roof balls by a landing on the slab');
-
-// ---- 5. Runtime: the coin hunt collects each where it rests; loose balls are one mesh, no parcel, no collider.
 const H=require('./summit-harness.cjs');
-function hunt(){H.browser();const L2=H.createLoader({three:T}),got=[],near=[];const h=L2('lib/graphics/coinHunt.ts').createCoinHunt(new T.Scene(),s=>got.push(s.id),t=>near.push(t));return {h,got,near};}
+function hunt(){H.browser();const L2=H.createLoader({three:T}),got=[],near=[];const h=L2('lib/graphics/coinHunt.ts').createCoinHunt(new T.Scene(),s=>got.push(s.id),t=>near.push(t));
+ return {h,got,near,progress:()=>L2('lib/town/coinProgress.ts').readCoinProgress(),createWalkBall:L2('lib/town/walkBall.ts').createWalkBall};}
+// Targets: a kick from a reachable spot in front of each one hits it, with the island's own ball (walkBall.ts) and the collisions
+// Town gives it (every obstacle at the ball's 0.19 m radius, rails and roofs by height; the coin hunt's hit() first). A tap
+// (no charge) falls short: it is a high target, like the island's.
+const ballGrid=load('lib/town/obstacleGrid.ts'),obsGrid=ballGrid.createObstacleGrid(world.obstacles),roofGrid=ballGrid.createObstacleGrid(world.roofObstacles);
+const yawOf={east:-Math.PI/2,west:Math.PI/2,south:Math.PI,north:0},shots={};
+for(const s of targets){const [ax,az]=axis(s),w=s.wall,stand=10,px=w.x+ax*stand,pz=w.z+az*stand;
+ assert(s.y===0&&reached(px,pz,.6),`${s.id}: the kicker's spot ${stand} m out is on the ground, walkable from the plaza`);
+ const tr=travel(px,pz);tr.reset(px,pz,s.y);const ok=[];
+ for(let c=0;c<=1.001;c+=.05){const f=hunt(),ball=f.createWalkBall(),player={x:px,y:s.y,z:pz,yaw:yawOf[w.facing]};ball.reset(player);ball.shoot(player,player.yaw,c);
+  const env={floor:(x,z)=>tr.surface(x,z,ball.state.y),blocked:(x,z,y)=>{if(f.h.hit(x,y,z,ball.state.vx,ball.state.vz))return false;
+    return sim.blocked(x,z,obsGrid.query(x,z,.19),.19)||roofGrid.query(x,z,.19).some(o=>y>o.floor&&y<o.top+.2&&Math.abs(x-o.x)<o.w/2+.19&&Math.abs(z-o.z)<o.d/2+.19);},
+   hit:(x,y,z,vx,vz)=>f.h.hit(x,y,z,vx,vz),impact(){},strike(){}};
+  f.h.update(.016,player,true,true);for(let i=0;i<150;i++)ball.update(1/60,player,env);
+  if(f.progress().revealed.includes(s.id))ok.push(+c.toFixed(2));f.h.dispose();}
+ assert(ok.length>=2&&!ok.includes(0),`${s.id}: hit by a charged kick from ${stand} m (charges ${ok.join(', ')}), never by a tap`);shots[s.id]=`${ok[0]}–${ok.at(-1)}`;}
+console.log('PASS hittable: every target hit by a real charged kick (island ball physics, Town\'s collisions) from a reachable spot on the ground 10 m out (the plaza, round the bowl), never by a tap; charges '+JSON.stringify(shots));
+// Crowd balls: a real walk up the aisle to the ball's row, then a step into the row beside it.
+const walkedTo={};
+for(const s of crowd){const st=S.STANDS.find(q=>{const p=S.standLocal(q,s.x,s.z);return p.d>q.inner&&p.d<q.inner+S.ROWS*S.ROW_DEPTH&&Math.abs(p.a)<=q.to;}),p=S.standLocal(st,s.x,s.z);
+ const row=Math.floor((p.d-st.inner)/S.ROW_DEPTH),aisle=st.aisles.reduce((b,a)=>Math.abs(a-p.a)<Math.abs(b-p.a)?a:b),side=Math.sign(p.a-aisle),w=(d,al)=>{const q=S.standWorld(st,d,al);return [q.x,q.z];};
+ const front=st.inner+row*S.ROW_DEPTH,end=walk([w(st.inner-2,aisle),w(st.inner+.2,aisle),w(front+S.ROW_DEPTH*.75,aisle),w(front+.4,aisle+side*(S.AISLE_WIDTH/2+.5))]);
+ assert(Math.hypot(end.x-s.x,end.z-s.z)<1,`${s.id}: the walker ends beside the seat`);
+ assert(end.reached&&!end.fell&&Math.abs(end.h-S.rowHeight(row))<.01,`${s.id}: walked up the aisle to row ${row+1} ${JSON.stringify(end)}`);walkedTo[s.id]={x:end.x,y:end.h,z:end.z};}
+{const so=S.STANDS.find(q=>q.id==='south'),c=S.standWorld(so,S.standBack(so)-2,0);assert(sim.blocked(c.x,c.z,obsGrid.query(c.x,c.z,.19),.19),'a stand is solid to a kicked ball: targets are shot from the ground');}
+console.log('PASS reach: each crowd ball by a real walk up its aisle into its row (no falls), the gate into the bowl; the stands are solid to a kicked ball (so every target is shot from the ground)');
+
+// ---- 5. Runtime: targets reveal on a hit and drop their ball; crowd and roof balls are one mesh, no parcel, no collider.
 {const {h,got,near}=hunt();
- for(const s of spots){const g=h.root.getObjectByName('coin-spot-'+s.id);let meshes=0;g.traverse(o=>{if(o.isMesh)meshes++;});assert.equal(meshes,1,`${s.id}: one mesh (the ball), no parcel`);
+ for(const s of targets){const [ax,az]=axis(s),w=s.wall,g=h.root.getObjectByName('coin-spot-'+s.id);let meshes=0;g.traverse(o=>{if(o.isMesh)meshes++;});assert(meshes>=2,`${s.id}: a target drawn with its ball`);
+  h.update(.7,{x:s.x,y:s.y,z:s.z},true,false);assert(!got.includes(s.id),`${s.id}: not collected before the target is hit`);assert(near.at(-1),`${s.id}: a nearby hint`);
+  h.land({x:s.x,y:s.y,z:s.z},true);const wy=s.y+w.y;
+  assert(!h.hit(w.x+ax*.1,wy,w.z+az*.1,ax*8,az*8),`${s.id}: a ball going away does not open it`);assert(!h.hit(w.x+ax*.1,wy,w.z+az*.1,az*8,ax*8),`${s.id}: a sideways graze does not`);
+  assert(!h.hit(w.x+ax*.1,wy+1.5,w.z+az*.1,-ax*8,-az*8),`${s.id}: a shot 1.5 m over it does not`);assert(h.hit(w.x+ax*.1,wy,w.z+az*.1,-ax*8,-az*8),`${s.id}: a shot into it opens it`);
+  h.update(.7,{x:s.x+3,y:s.y,z:s.z+3},true,false);h.update(.1,{x:s.x+.4,y:s.y,z:s.z},true,false);assert(got.includes(s.id),`${s.id}: its ball collected where it drops`);}
+ for(const s of [...crowd,...roofs]){const g=h.root.getObjectByName('coin-spot-'+s.id);let meshes=0;g.traverse(o=>{if(o.isMesh)meshes++;});assert.equal(meshes,1,`${s.id}: one mesh (the ball), no parcel`);
   h.update(.1,{x:s.x+2.2,y:s.y,z:s.z},true,false);assert(!got.includes(s.id),`${s.id}: not from 2.2 m`);assert(near.at(-1),`${s.id}: a nearby hint`);
-  if(s.y>0){h.update(.1,{x:s.x+.4,y:s.y>10?S.rowHeight(8):0,z:s.z},true,false);assert(!got.includes(s.id),`${s.id}: not from the floor below`);}
-  h.update(.1,{x:s.x+.4,y:s.y,z:s.z},true,false);assert(got.includes(s.id),`${s.id}: collected where it rests`);}
+  h.update(.1,{x:s.x+.4,y:s.y>10?S.rowHeight(8):0,z:s.z},true,false);assert(!got.includes(s.id),`${s.id}: not from the floor below`);
+  const at=walkedTo[s.id]??{x:s.x+.4,y:s.y,z:s.z};h.update(.1,at,true,false);assert(got.includes(s.id),`${s.id}: collected ${walkedTo[s.id]?'from the row beside it':'where it rests'}`);}
  assert.equal(got.length,12);const props=[],obs=[];h.connectCollisions(obs,props);assert(!props.some(p=>spots.some(s=>Math.hypot(p.x-s.x,p.z-s.z)<.5)),'no colliders for the stadium balls');h.dispose();}
 assert(!/stadium/i.test(read('lib/graphics/coinHunt.ts')),'the coin hunt has no stadium code: nothing new per frame (the same loop over COIN_QUEST)');
-console.log('PASS runtime: each ball collected where it rests (stands, concourse, roofs, ground), not from 2.2 m or from the floor below; one mesh each, no parcel, no collider');
+// The crowd balls are coin-hunt meshes, not crowd instances: the crowd shader's clears (round the player and CLEAR_FRIENDS) and the
+// roof fade (roof meshes only) never touch them.
+assert(!/coinHunt|COIN_QUEST/.test(read('lib/town/stadiumCrowd.ts')));
+console.log('PASS runtime: targets reveal only on a shot into them (not away, sideways, over or by a landing) and drop a ball collected below; crowd balls collected from the row beside them, roof balls where they rest; not from 2.2 m or the floor below; no colliders');
 
 // ---- 6. The card offer: every collected hunt ball goes to earnForBall (kind 'ball': the child picks a card) and its lesson card.
 {const calls=[];// The same stubs as tests/explore-ball-hunt.cjs (the trigger module's catalogue imports are not needed here).
