@@ -342,9 +342,9 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
   proof:'4 ride types: scooter, bike, moped and flight.',counts:{rideTypes:4}},
 
  // ---- Safe and simple -------------------------------------------------------------------------------------------------------
- {id:'free-no-ads',title:'Free, no pop-up or tracking ads',group:'safe',imageKey:'free_no_ads',
+ {id:'free-no-ads',title:'No pop-up or tracking ads',group:'safe',imageKey:'free_no_ads',
   hook:'Nothing to buy, and no pop-up or tracking ads.',
-  description:'Futbol Island costs nothing to play and has no pop-up, video or tracking ads. The stadium shows sponsor boards: pictures only, with no links, no tracking and nothing to buy. Coins are earned by playing and learning, never bought with real money.',
+  description:'Futbol Island costs nothing to play, and coins are earned by playing and learning, never bought with real money. There are no pop-up, video or tracking ads: the stadium shows sponsor boards, pictures only, with no links and nothing to buy.',
   footballTie:'Learning the game should not cost money; club soccer already prices too many kids out.',
   where:'Everywhere in the game. Donations to local non-profits sit behind a grown-up check.',
   proof:'No pop-up or tracking ads, and coins cannot be bought.'},
