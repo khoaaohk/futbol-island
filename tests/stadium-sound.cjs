@@ -28,6 +28,9 @@ function load(name){const file=path.resolve(base,name);if(cache.has(file))return
  const code=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
  vm.runInContext('(function(exports,module,require){'+code+'\n})',context)(mod.exports,mod,id=>load(path.relative(base,path.resolve(path.dirname(file),id+'.ts'))));cache.set(file,mod.exports);return mod.exports;}
 const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=load('lib/town/westParkLayout.ts'),S=L.STADIUM,K=A.STADIUM_SOUND;
+// Shipping (owner, Nov 13 2026): generic crowd only, the synthesised singing off. The singing path stays tested by switching it on
+// below (the module reads the flag through its exports), after checking a live match sings nothing while it is off.
+assert.equal(A.STADIUM_SINGING,false,'shipping: the real crowd only, no synthesised singing');A.STADIUM_SINGING=true;
 
 // 1. The crossfade curve: full in the bowl, partial in the plaza, 0 far; monotonic; hysteresis (no pumping at an edge).
 {const at=(x,z,h=0)=>A.presenceAt(A.bowlDistance(x,z,h));
@@ -134,6 +137,7 @@ const A=load('lib/audio/stadiumSound.ts'),Mo=load('lib/town/stadiumMood.ts'),L=l
  const liveSrc=()=>[...live].filter(n=>n.context===null&&n.started&&!n.dead&&n.buffer).length;assert(liveSrc()<=4,'between matches: murmur, roar, rumble only');assert.equal(snd.song,null,'no song without a match');
  // a match wakes: the mood's chant cycle → the song follows; it starts on a bar line
  const m={live:true,exhibition:true,goals:0,ball:{x:S.x,z:S.z}};let guard=0;while(Mo.stadiumMood().phase==='quiet'&&guard++<400)Mo.stepStadiumMood(.1,m);
+ A.STADIUM_SINGING=false;await run(bowl,1);assert.equal(snd.song,null,'singing off: a live match plays the crowd, no song');A.STADIUM_SINGING=true;
  const want=mood.chant;assert(want,'the mood is chanting');await run(bowl,1);assert.equal(snd.song,want,'the song follows the mood: '+want);
  assert(snd.debug.pa===1&&snd.debug.whistles>=1,'a match waking: the PA welcome, then the kick-off whistle');
  assert.equal(snd.debug.steps[0],'lead');const bar=A.nextBarIn(mood.beat,mood.bpm,.6),spb=60/mood.bpm;assert(Math.abs(((mood.beat+bar/spb)%4+4)%4)<1e-6||Math.abs(((mood.beat+bar/spb)%4)-4)<1e-6,'starts on a bar line');

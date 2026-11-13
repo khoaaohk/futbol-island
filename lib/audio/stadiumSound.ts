@@ -61,6 +61,10 @@ export type StadiumTouches={readonly touches:readonly {readonly serial:number;re
  readonly clock?:number;readonly restartKind?:string|null};
 
 /** Distances are metres outside the bowl's footprint (0 inside it). */
+/** The crowd's synthesised singing (the chant songs, the olé roll with the wave and the "a-TTAAACK!" urging). Off for now (owner,
+ *  Nov 13 2026: "keep the generic crowd noise for now"): the stadium plays the real CC0 crowd (bed, roar, goals, ooh / aah / groans,
+ *  applause, "Olé!" shouts), the referee's whistles and the PA. Flip to true to bring the songs back; nothing is rendered while off. */
+export const STADIUM_SINGING=false;
 export const STADIUM_SOUND={fullD:3,plazaD:30,edgeD:110,plazaLevel:.5,roofH:28,deadband:.08,quantum:.05,tc:.8,tick:.1,stopAfter:4,
  teardown:30,chantFade:2,chantIn:1.2,rate:22050,goalHold:3,tail:1.8} as const;
 /** Live mix (before the island effects bus). */
@@ -469,7 +473,7 @@ const idle=(f:()=>void)=>{const w=globalThis as unknown as {requestIdleCallback?
 type Fetch=(url:string)=>Promise<{ok:boolean;status:number;arrayBuffer():Promise<ArrayBuffer>}>;
 /** Which synthesised beds a bank needs: the olé roll, the swell, the jeer and the urging always; the rest only where no recording loaded. */
 export function synthKinds(rec:Readonly<Partial<Record<RecId,unknown>>>):BedKind[]{
- const k:BedKind[]=['ole','swell','jeer','attack'];if(!rec.bed)k.push('murmur');if(!rec.roar)k.push('roar');if(!rec.goal)k.push('goal');
+ const k:BedKind[]=STADIUM_SINGING?['ole','swell','jeer','attack']:['swell','jeer'];if(!rec.bed)k.push('murmur');if(!rec.roar)k.push('roar');if(!rec.goal)k.push('goal');
  if(!rec.ooh)k.push('ooh');if(!rec.groan)k.push('aah','groan');if(!rec.applause)k.push('applause');return k;}
 
 export function createStadiumSound(host:StadiumSoundHost){
@@ -643,7 +647,7 @@ export function createStadiumSound(host:StadiumSoundHost){
   const now=G.c.currentTime;
   if(e>.55&&lastExc<=.55&&now-swellAt>10){react(G,'swell',.9,side()*.5);swellAt=now;swellOpen=true;}
   else if(swellOpen&&now-swellAt>2.2&&e<.4){swellOpen=false;react(G,Math.random()<.5?'aah':'groan',.75,side()*.5);}
-  if(e>.62&&lastExc<=.62&&now-attackAt>8){react(G,'attack',.85,side()*.4,.7);attackAt=now;}
+  if(!STADIUM_SINGING){/* no synthesised urging while the singing is off */}else if(e>.62&&lastExc<=.62&&now-attackAt>8){react(G,'attack',.85,side()*.4,.7);attackAt=now;}
   else if(e>.78&&lastExc<=.78&&now-attackAt>1.5&&now-attackAt<8){react(G,'attack',1.05,side()*.4,.2,1.5);attackAt=now-8;}
   lastExc=e;
   const sim=f.sim;
@@ -670,7 +674,7 @@ export function createStadiumSound(host:StadiumSoundHost){
   to(P_MUR,G.gMur.gain,G.realBed?(live?M.bed*(.8+.35*e):M.bedQuiet):M.murmur*(live?.7+.5*e:.45));
   if(c.currentTime>holdUntil){const R=G.realRoar;to(P_ROAR,G.gRoar.gain,live?(R?M.roarRec:M.roar)*(.06+.94*e*e):0,.5);to(P_ROARF,G.fRoar.frequency,R?1500+6000*e:900+2600*e,.5);to(P_RUM,G.gRum.gain,M.rumble*zone*(live?.3+.7*e:.12),.6);}
   // The song: the mood's chant, crossfaded on a change; a new performance each time.
-  const want=chantFor(m),sl=G.slots[active];
+  const want=STADIUM_SINGING?chantFor(m):null,sl=G.slots[active];
   if(!G.slots[active].song||!SONGS[G.slots[active].song!].ole)to(P_SWL,G.gSwl.gain,0,1.2);
   if(want!==sl.song){if(sl.song)stopSlot(sl,c,S.chantFade);debug.chant=null;if(want)startSong(G,want,m!,lite);}
   const cur=G.slots[active];if(!cur.song)return;
@@ -684,7 +688,7 @@ export function createStadiumSound(host:StadiumSoundHost){
   // Olé round the bowl: the singing travels round the stands (one lap every 2 bars of the beat clock).
   if(song.sweep&&cur.sides[2].p.pan)to(P_PC,cur.sides[2].p.pan,lite?0:.75*Math.sin(Math.PI*2*m!.beat/(song.ole?8:16)),.15);
   // The olé roll rides the Mexican wave round the bowl (not in the lite mix).
-  const wv=live&&!lite?m!.wave.on:0;
+  const wv=STADIUM_SINGING&&live&&!lite?m!.wave.on:0;
   if(wv>.01){waveOff=0;if(!G.wave){G.wave=loopSrc(c,bank!.syn.ole!,G.gWave);debug.wave=true;}
    const wx=STADIUM.x+Math.cos(m!.wave.angle)*55-f.x,wz=STADIUM.z+Math.sin(m!.wave.angle)*70-f.z,dw=Math.hypot(wx,wz),la=Math.atan2(f.z-STADIUM.z,f.x-STADIUM.x),near=.35+.65*(1+Math.cos(m!.wave.angle-la))/2;
    to(P_WAVE,G.gWave.gain,M.wave*wv*near,.25);if(G.pWave.pan)to(P_WAVEPAN,G.pWave.pan,Math.max(-.9,Math.min(.9,(wx*f.rx+wz*f.rz)/Math.max(15,dw))),.25);}
