@@ -201,7 +201,7 @@ export function stadiumSponsorLayout(plazaFlags:readonly {x:number;z:number}[]=p
   screen:{x:0,y:SCREEN.y,z:SCREEN.z-.32,w:SCREEN.w,h:SCREEN.h,yaw:Math.PI},
   gate:{x:GATE_ARCH_X-STADIUM.x+.76,y:9.4,z:0,w:12,h:2,yaw:E},
   fascia:[{x:-fx,y:fy,z:0,w:100,h:1.6,yaw:-E},{x:fx,y:fy,z:0,w:100,h:1.6,yaw:E}],
-  // A vertical banner under each plaza flag (the flag itself keeps its team colour).
+  // A vertical banner under each plaza flag (uploaded flag sponsors only; the poles fly national flags, plazaFlags.ts).
   flags:plazaFlags.map(f=>({x:f.x-STADIUM.x+.62,y:4.6,z:f.z-STADIUM.z,w:1,h:1.8,yaw:0})),
   centre:{x:0,z:0,r:4.6},
  };

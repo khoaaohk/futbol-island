@@ -55,6 +55,8 @@ export function createStadiumScreen(parent:T.Object3D,colours:{home:string;away:
    const key=screenText(s);if(key!==shown&&nowMs-lastDraw>=1000){shown=key;lastDraw=nowMs;draw(s);}
   },
   get visible(){return !!mesh?.visible;},
+  /** The score plane (null until the first match): the back face's feed hides it while it renders. */
+  get mesh(){return mesh;},
   dispose(){if(!mesh)return;mesh.removeFromParent();mesh.geometry.dispose();(mesh.material as T.Material).dispose();texture?.dispose();mesh=null;canvas=null;texture=null;},
  };
 }

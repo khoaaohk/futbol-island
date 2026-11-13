@@ -5,7 +5,7 @@
  * (AGENTS.md): short habits a coach would shout. They are not ads: no "Sponsor" tag, no call to action.
  *
  * DRIP FC (Nov 13 2026, owner): the stadium's built-in naming sponsor (lib/stadium/dripfc.ts). Its wordmark / crest panels are
- * mixed in with the house panels (a third of the boards, one screen card, the gate, one flag; the centre circle's
+ * mixed in with the house panels (a third of the boards, one screen card and the gate; the centre circle's
  * placeholder is left empty for the drop painted on the grass, stadiumWorld.ts)
  *
  * adidas (Nov 13 2026, owner): the built-in roof fascia banner, white on black like adidas boards: the three-bar mark beside the
@@ -28,10 +28,12 @@ const BRUSH='IslandBrush,"Arial Black",system-ui,sans-serif';
 export const BOARD_LINES:readonly [string,string][]=[['HEAD UP','LOOK BEFORE YOU GET THE BALL'],['PASS & MOVE','GIVE IT, THEN FIND SPACE'],['TALK!','CALL "MAN ON" FOR A TEAMMATE'],['RESPECT THE REF','PLAY FAIR, SHAKE HANDS']];
 /** The board panels in turn: Drip FC on every third, so neighbouring boards never show the same thing. */
 export const BOARD_PANELS:readonly (readonly [string,string]|'drip-paper'|'drip-ink')[]=[BOARD_LINES[0],'drip-paper',BOARD_LINES[1],BOARD_LINES[2],'drip-ink',BOARD_LINES[3]];
-export const PLACEHOLDER_COUNT:Record<SponsorSlot,number>={board:BOARD_PANELS.length,screen:3,gate:1,fascia:1,flag:3,centre:1};
+export const PLACEHOLDER_COUNT:Record<SponsorSlot,number>={board:BOARD_PANELS.length,screen:3,gate:1,fascia:1,flag:1,centre:1};
+/** Plaza flags (Nov 13 2026, owner): the poles fly national flags (lib/town/plazaFlags.ts); the banner under each flag is built only
+ *  for an uploaded flag sponsor (surfaces.ts), so the flag placeholder is a plain cell that is never shown. */
 /** Which placeholders are Drip FC's (tests; the rest are Futbol Island's own). */
 export const isDripPlaceholder=(slot:SponsorSlot,index:number)=>slot==='board'?typeof BOARD_PANELS[index%BOARD_PANELS.length]==='string':
- slot==='screen'?index%3===1:slot==='gate'?true:slot==='flag'?index%3===1:false;
+ slot==='screen'?index%3===1:slot==='gate'?true:false;
 
 /** A deterministic wobble, so the torn edges look the same every load (and in the tests). */
 function rand(seed:number){let s=(seed*2654435761)>>>0||1;return ()=>{s=(s*16807)%2147483647;return s/2147483647;};}
@@ -112,12 +114,8 @@ export function drawPlaceholder(c:Ctx2D,slot:SponsorSlot,index:number,r:AtlasRec
   c.fillStyle=SUN;c.fillRect(x-4,y-4,w+8,h+8);dots(c,x,y,w,h,h*.09,ORANGE);
   paper(c,x+w*.06,y+h*.18,w*.88,h*.6,RED,5);
   words(c,'FUTBOL ISLAND',x+w/2,y+h*.48,h*.34,w*.8);// (the gate is Drip FC's today: drawDrip)
- }else{// flag
-  c.fillStyle=[RED,TEAL,SUN][index%3];c.fillRect(x-4,y-4,w+8,h+8);
-  dots(c,x,y,w,h,w*.12,INK);
-  paper(c,x+w*.12,y+h*.62,w*.76,h*.22,PAPER,9+index,w*.03);
-  ball(c,x+w/2,y+h*.36,w*.26);
-  words(c,['GOAL!','TEAM','FAIR'][index%3],x+w/2,y+h*.73,h*.13,w*.66,[SUN,RED,TEAL][index%3]);
+ }else{// flag: never shown (see PLACEHOLDER_COUNT)
+  c.fillStyle=INK;c.fillRect(x-4,y-4,w+8,h+8);
  }
  c.restore();
 }
@@ -140,11 +138,6 @@ function drawDrip(c:Ctx2D,slot:SponsorSlot,index:number,r:AtlasRect,house?:House
   crest(c,house,x+w*.13,y+h*.48,h*.27);
   wordmark(c,house,true,x+w*.45,y+h*.48,w*.42,h*.44);
   words(c,'STADIUM',x+w*.8,y+h*.48,h*.24,w*.2);
- }else{// flag
-  c.fillStyle=INK;c.fillRect(x-4,y-4,w+8,h+8);dots(c,x,y,w,h,w*.12,TEAL);
-  crest(c,house,x+w/2,y+h*.34,w*.3);
-  paper(c,x+w*.1,y+h*.6,w*.8,h*.2,PAPER,9+index,w*.03);
-  wordmark(c,house,false,x+w/2,y+h*.7,w*.7,h*.15);
  }
  drawSponsorLabel(c,r);
  c.restore();

@@ -48,10 +48,10 @@ export function buildWestPark(t:Tools):WestParkStats{
  path(pcx,pcz,P_.maxX-P_.minX,P_.maxZ-P_.minZ);
  // A darker centre band leads the eye to the gate.
  box(P_.maxX-P_.minX-4,.012,6,'#d9c8a2',pcx,-.032,pcz).castShadow=false;
- const flagColours=['#e5533d','#f2b134','#2f7fbf','#3f9b6a'];
  for(const side of [-1,1])for(let i=0;i<7;i++){
   const x=P_.minX+6+i*12,z=pcz+side*(P_.maxZ-P_.minZ)/2+side*.8;
-  prop('pole',()=>{cylinder(.08,7.2,'#e9e4d6',x,3.6,z);box(1.9,1.15,.04,flagColours[(i+(side>0?2:0))%4],x+1.02,6.4,z);cylinder(.12,.12,'#c9a227',x,7.26,z);});
+  // Nov 13 2026 (owner): national flags. The pole, finial and waving cloth are plazaFlags.ts's one mesh (world.ts builds it from
+  // plazaFlagPoles(), the same rule as here); only the collider is here.
   obstacles.push({x,z,w:.3,d:.3});stats.flags++;
  }
  for(const [x,z] of [[-118,-60],[-96,-60],[-74,-60],[-118,0],[-96,0],[-74,0]] as P[]){

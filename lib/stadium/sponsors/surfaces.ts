@@ -4,7 +4,7 @@
  *
  * Cost: ONE texture (the atlas, atlas.ts), ONE material, TWO meshes = two draw calls for every sponsor surface:
  *  - `ring`: the 16 pitchside boards and the big screen (the parts that move);
- *  - `still`: gate arch, roof fascia, plaza flags (both faces) and the centre-circle disc.
+ *  - `still`: gate arch, roof fascia, plaza flag banners (both faces; uploaded sponsors only) and the centre-circle disc (same).
  * No frame loop of its own. The ring's onBeforeRender (three calls it only when the ring is actually drawn: in view, not culled,
  * visible) advances ONE shared uniform for the LED scroll and swaps board pictures every rotateMs, and only while the camera is
  * within `animRadius`. Off screen, hidden or far away: zero work. The still mesh never changes after it is built.
@@ -133,7 +133,8 @@ export function buildSponsorSurfaces(scene:T.Object3D,layout:SponsorLayout,art:S
  const sb=builder();
  quad(sb,layout.gate,cellOf(pick('gate',0)),FX_PLAIN,1);
  layout.fascia.forEach((q,i)=>quad(sb,q,cellOf(pick('fascia',i)),FX_PLAIN,repeatsFor(q,SLOT_SPECS.fascia.aspect)));
- layout.flags.forEach((q,i)=>{const c=cellOf(pick('flag',i));quad(sb,q,c,FX_PLAIN,1);quad(sb,{...q,yaw:q.yaw+Math.PI},c,FX_PLAIN,1);});
+ // The flag banners only for an uploaded flag sponsor: otherwise the poles fly just their national flags (lib/town/plazaFlags.ts).
+ if(art.picks.flag.some(p=>p.sponsor))layout.flags.forEach((q,i)=>{const c=cellOf(pick('flag',i));quad(sb,q,c,FX_PLAIN,1);quad(sb,{...q,yaw:q.yaw+Math.PI},c,FX_PLAIN,1);});
  // The centre disc only for an uploaded sponsor: otherwise the grass shows Drip FC's painted drop (stadiumWorld.ts pitchLogo).
  if(art.picks.centre.some(p=>p.sponsor))disc(sb,layout.centre,cellOf(pick('centre',0)));
  const still=new T.Mesh(geometry(sb),material);still.name='stadium-sponsors-still';
@@ -154,6 +155,7 @@ export function buildSponsorSurfaces(scene:T.Object3D,layout:SponsorLayout,art:S
   const b=rotationStep('board',t);if(b!==boardStep&&art.picks.board.length>1){boardStep=b;layout.boards.forEach((_q,i)=>writeCell(i*4,cellOf(pick('board',i,b))));dirty=true;}
   const s=rotationStep('screen',t);if(s!==screenStep&&art.picks.screen.length>1){screenStep=s;if(screenOn){writeScreen();dirty=true;}}
   if(dirty)cellAttr.needsUpdate=true;
+  if(camera.userData.broadcastFeed)return;// the big screen's back-face feed (lib/town/stadiumFeed.ts) is not a player's view: no counts
   if(boardsPaid)countStadiumSeen('boards_seen');
   if(screenOn&&screenPaid)countStadiumSeen('screen_card');
  };

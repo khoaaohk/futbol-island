@@ -88,14 +88,15 @@ await ok('surfaces: one material, two draw calls, sleeping animation, faces, rea
  assert.equal(scene.children.length,1);assert.equal(s.group.children.length,2);assert.equal(s.ring.material,s.still.material);assert.equal(s.material.map,s.texture);
  assert.equal(s.stats.drawCalls,2);assert(s.stats.atlasSize<=1024);assert.equal(s.texture.generateMipmaps,true);assert.equal(s.texture.minFilter,T.LinearMipmapLinearFilter);
  assert.equal(s.ring.geometry.getAttribute('position').count,(16+1)*4,'16 boards + screen');
- const lay=L.defaultStadiumLayout();assert.equal(s.still.geometry.getAttribute('position').count,4+lay.fascia.length*4+lay.flags.length*8,'gate, fascia, flags both faces; no centre disc without a centre sponsor (Drip FC\'s drop is painted on the grass)');
+ const lay=L.defaultStadiumLayout();assert.equal(s.still.geometry.getAttribute('position').count,4+lay.fascia.length*4,'gate and fascia; no flag banners without a flag sponsor (the poles fly national flags), no centre disc without a centre sponsor (Drip FC\'s drop is painted on the grass)');
  assert.equal(canvas.calls.drawImage,0,'placeholders only: no pictures drawn');
  // Faces point along yaw: the first board (west side) faces east, the screen faces north, the centre disc faces up.
  const pos=s.ring.geometry.getAttribute('position'),n=(g,i0)=>{const p=k=>new T.Vector3().fromBufferAttribute(g.getAttribute('position'),g.index.array[k]);
   const a=p(i0),b=p(i0+1),c=p(i0+2);return b.sub(a).cross(c.sub(a)).normalize();};
  assert(n(s.ring.geometry,0).x>.99,'west board faces east');assert(n(s.ring.geometry,16*6).z<-.99,'screen faces north');
  assert(n(s.still.geometry,0).x>.99,'gate faces east (the plaza)');
- {const cs=build([{id:'c1',slot:'centre',label:'C',image:'/c.png',position:0}],()=>0).s;assert.equal(cs.still.geometry.getAttribute('position').count,4+lay.fascia.length*4+lay.flags.length*8+34,'an uploaded centre sponsor gets its disc back');
+ {const cs=build([{id:'c1',slot:'centre',label:'C',image:'/c.png',position:0}],()=>0).s;assert.equal(cs.still.geometry.getAttribute('position').count,4+lay.fascia.length*4+34,'an uploaded centre sponsor gets its disc back');
+  const fs=build([{id:'f1',slot:'flag',label:'F',image:'/f.png',position:0}],()=>0).s;assert.equal(fs.still.geometry.getAttribute('position').count,4+lay.fascia.length*4+lay.flags.length*8,'an uploaded flag sponsor gets its banners (both faces) under the flags');
   const stillIdx=cs.still.geometry.index.count;assert(n(cs.still.geometry,stillIdx-3).y>.99,'centre disc faces up');}
  assert(pos.count>0);
  // Shader hooks exist and compile-time text has the grads + LED.
@@ -161,13 +162,13 @@ await ok('built-in art: Drip FC naming sponsor, adidas fascia, Futbol Island pan
  const drip=(slot)=>Array.from({length:P.PLACEHOLDER_COUNT[slot]},(_,i)=>P.isDripPlaceholder(slot,i));
  assert.deepEqual(drip('board'),[false,true,false,false,true,false],'a third of the boards, never two side by side');
  assert.deepEqual(drip('screen'),[false,true,false]);assert.deepEqual(drip('gate'),[true],'the gate is the naming partner');
- assert.deepEqual(drip('flag'),[false,true,false]);assert.deepEqual(drip('fascia'),[false],'the fascia is adidas');assert.deepEqual(drip('centre'),[false]);
+ assert.deepEqual(drip('flag'),[false],'the flag placeholder is never shown (national flags)');assert.deepEqual(drip('fascia'),[false],'the fascia is adidas');assert.deepEqual(drip('centre'),[false]);
  // Drawn with the pictures: Drip panels draw the art and the Sponsor tag; Futbol Island's own panels draw no tag.
  const rec=()=>{const log=[];const ctx=new Proxy({},{get:(t,k)=>k==='measureText'?(s=>({width:String(s).length*7})):k in t?t[k]:((...a)=>{log.push([k,...a]);}),set:(t,k,v)=>{t[k]=v;return true;}});return {ctx,log};};
  const house={wordmarkLight:{width:800,height:197},wordmarkDark:{width:800,height:197},crest:{width:179,height:226}};
  const tagged=(slot,i)=>{const {ctx,log}=rec();const [w,h]=S.SLOT_SPECS[slot].cell;P.drawPlaceholder(ctx,slot,i,{x:0,y:0,w,h},house);return {log,tag:log.some(k=>k[0]==='fillText'&&k[1]==='Sponsor'),imgs:log.filter(k=>k[0]==='drawImage').length};};
- for(const [slot,i] of [['board',1],['board',4],['screen',1],['gate',0],['flag',1]]){const r=tagged(slot,i);assert(r.tag&&r.imgs>=1,`${slot} ${i}: Drip FC art + Sponsor tag`);}
- for(const [slot,i] of [['board',0],['screen',0],['flag',0]]){const r=tagged(slot,i);assert(!r.tag&&r.imgs===0,`${slot} ${i}: Futbol Island's own panel, no tag`);}
+ for(const [slot,i] of [['board',1],['board',4],['screen',1],['gate',0]]){const r=tagged(slot,i);assert(r.tag&&r.imgs>=1,`${slot} ${i}: Drip FC art + Sponsor tag`);}
+ for(const [slot,i] of [['board',0],['screen',0]]){const r=tagged(slot,i);assert(!r.tag&&r.imgs===0,`${slot} ${i}: Futbol Island's own panel, no tag`);}
  // adidas: vector paths filled into the cell, white on black, uniform scale (never squashed), two lock-ups, Sponsor tag.
  globalThis.Path2D=class{constructor(d){this.d=d;}};
  try{const {log,tag}=tagged('fascia',0);

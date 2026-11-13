@@ -13,6 +13,7 @@ import type {TrickPose} from '../graphics/trickPose';
 import {STADIUM} from './westParkLayout';
 import {createStadiumCrowd,CROWD_RADIUS} from './stadiumCrowd';
 import {createSitMachine,inGate,nearestSeat,seatView,followLook,portraitLook,PORTRAIT_FOV,sitDown,standUp,stepSit,stadiumSponsorLayout,GATE_ARCH_X,FOLLOW_RATE,type Seat} from './stadiumSeats';
+import {createStadiumFeed} from './stadiumFeed';
 import {createStadiumScreen,screenMinute,stadiumBarText,type ScreenScore} from './stadiumScreen';
 import {remoteSeatsTaken,remoteSeatSpots} from './stadiumSeatShare';
 import {BIB_COLOURS} from './beanLooks';
@@ -46,7 +47,7 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:b
  let dc=Infinity,live=false,sponsors:{setScreenSponsor:(on:boolean)=>void}|null=null,screenSponsor=true,looking=false;
  const screen=createStadiumScreen(ports.parent,{home:BIB_COLOURS.stadium.home,away:BIB_COLOURS.stadium.away}),score:ScreenScore={home:'Red',away:'Blue',gold:0,blue:0,minute:0};
  const ball={x:0,z:0},look={x:0,y:0,z:0},want={x:0,y:0,z:0},me={x:0,z:0,h:0};let fovSaved=0;
- const crowd=createStadiumCrowd(ports.parent,!!ports.phone);let goals=-1,lastMs=-1,exhibition=true,barShown='',ambience=0;
+ const crowd=createStadiumCrowd(ports.parent,!!ports.phone),feed=createStadiumFeed(ports.parent,{phone:!!ports.phone});let goals=-1,lastMs=-1,exhibition=true,barShown='',ambience=0;
  const cam=new T.PerspectiveCamera(),/* a camera: lookAt aims its -Z (an Object3D's would aim +Z, away from the pitch) */ camQ=new T.Quaternion(),camP=new T.Vector3(),v=new T.Vector3();
  const held=()=>m.phase==='sitting'||m.phase==='seated';
  return {
@@ -95,6 +96,12 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:b
    if(sponsors&&screenSponsor===live){screenSponsor=!live;sponsors.setScreenSponsor(screenSponsor);}
    screen.update(live&&dc<SCREEN_RADIUS,live?score:null,nowMs);
   },
+  /** Right before the main render (Town): the big screen's back face, the broadcast feed while a match is live and the back face is
+   *  in view near the stadium, the static card otherwise (stadiumFeed.ts). tier = the heat tier. */
+  feed(renderer:T.WebGLRenderer,scene:T.Scene,camera:T.Camera,nowMs:number,tier:number){return feed.update(renderer,scene,camera,nowMs,dc,live?ball:null,tier,[screen.mesh,crowd.mesh]);},
+  get broadcast(){return feed;},
+  /** Teardown: the crowd, both screen faces and the feed's render target. */
+  dispose(){crowd.dispose();screen.dispose();feed.dispose();},
   /** A match is on at the stadium (the prompt says "Sit and watch"). */
   get live(){return live;},
   /** No human in the stadium match (an all-AI exhibition). */

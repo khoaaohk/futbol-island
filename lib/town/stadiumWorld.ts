@@ -15,6 +15,7 @@ import {STADIUM_VENUE,STADIUM_PITCH_Y} from './venues';
 import {STADIUM,STADIUM_GATE} from './westParkLayout';
 import {STADIUM_NAME,DRIP_FC_ART,PITCH_DROP,drawGateSign} from '../stadium/dripfc';
 import {segmentHitsBox} from './walkControl';
+import {SCREEN_FRAME} from './stadiumFeed';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,FRAME_PROUD,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
 
@@ -59,6 +60,10 @@ function pitchLogo(y:number,materials?:T.Material[]){
  img.src=PITCH_LOGO.url;
  return mesh;
 }
+/** The big screen's two posts (world): radius, and each post's foot (x, z) and top (the frame's underside). */
+export const SCREEN_POST={r:.22,inset:1.5} as const;
+export function screenPosts(){const z=STADIUM.z+SCREEN.z,top=SCREEN.y-SCREEN_FRAME.h/2;
+ return [-1,1].map(sx=>({x:STADIUM.x+sx*(SCREEN.w/2-SCREEN_POST.inset),z,top}));}
 /** Height above a row of the low seat-back strip's top; the per-seat tops rise from there to 1.13 m. */
 const BACK_SPLIT=.92;
 const CONCRETE=['#d8cfbd','#cec4af'],TREAD_C='#c2b59c',CONCOURSE_C='#e3d9c3',RAIL_C='#315b50',STEEL='#e9e4d6';
@@ -200,8 +205,11 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
  obstacles.push(...boardColliders(layout));
 
  // --- The big screen behind the south stand --------------------------------------------------------------------------------------
- {const z=S.z+SCREEN.z;box(SCREEN.w+1,SCREEN.h+1,.5,'#1d2b33',S.x,SCREEN.y,z);box(SCREEN.w,SCREEN.h,.02,'#2b3f48',S.x,SCREEN.y,z-.26);
-  for(const sx of [-1,1]){skip(cylinder(.35,SCREEN.y,STEEL,S.x+sx*(SCREEN.w/2-1.5),SCREEN.y/2,z+.1));obstacles.push({x:S.x+sx*(SCREEN.w/2-1.5),z:z+.1,w:.8,d:.8});}}
+ // Nov 13 2026 (owner: the two posts crossed the back face): the posts stop at the frame's underside and stand inside its 0.5 m
+ // depth (radius SCREEN_POST.r < half the depth), so they meet it from below and never pass in front of either face. The back
+ // face's picture (card / live feed) is stadiumFeed.ts.
+ {const z=S.z+SCREEN.z;box(SCREEN_FRAME.w,SCREEN_FRAME.h,SCREEN_FRAME.depth,'#1d2b33',S.x,SCREEN.y,z);box(SCREEN.w,SCREEN.h,.02,'#2b3f48',S.x,SCREEN.y,z-.26);
+  for(const sx of [-1,1]){const p=screenPosts()[sx<0?0:1];skip(cylinder(SCREEN_POST.r,p.top,STEEL,p.x,p.top/2,p.z));obstacles.push({x:p.x,z:p.z,w:.6,d:.6});}}
 
  // --- Main gate: arch over the east stand's gap, turnstiles either side of an open middle ------------------------------------------
  {const G=STADIUM_GATE,gx=GATE_ARCH_X;
