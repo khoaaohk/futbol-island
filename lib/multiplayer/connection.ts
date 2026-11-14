@@ -859,9 +859,11 @@ export const SITE_NAV_MS = 60_000;
 type NavWindow = { addEventListener(t: string, f: (e: any) => void): void; removeEventListener(t: string, f: (e: any) => void): void;
   location: { origin: string }; navigation?: { addEventListener(t: string, f: (e: any) => void): void; removeEventListener(t: string, f: (e: any) => void): void } };
 /** A real page exit: `pagehide` that is not for the back-forward cache (persisted) and not right after a same-site navigation. Uses
- *  the Navigation API's `navigate` event (Chromium, Safari 26+): every room door, room exit, link and reload goes through it, with
- *  its destination. Without the API a same-site page change cannot be told from a close, so nothing is sent (the relay's grace, as
- *  before). Pure over `w` and `clock` (tests pass fakes). */
+ *  the Navigation API's `navigate` event (Chromium, Safari 26+): every room door, room exit, link and scripted reload goes through
+ *  it, with its destination. A reload from the browser's own button fires no `navigate` (spec: browser-UI cross-document loads), so
+ *  it counts as a close: the reloaded page takes a fresh world slot and name (verified in headless Chromium; pull-to-refresh is off,
+ *  body overscroll-behavior none). Without the API a same-site page change cannot be told from a close, so nothing is sent (the
+ *  relay's grace, as before). Pure over `w` and `clock` (tests pass fakes). */
 export function defaultPageExit(w: NavWindow | undefined = typeof window === 'undefined' ? undefined : (window as unknown as NavWindow),
   clock: () => number = () => Date.now()): PageExitLike {
   return {
