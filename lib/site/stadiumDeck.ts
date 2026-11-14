@@ -60,4 +60,4 @@ export const STADIUM_FAMILY_RULES=[
  {title:'A small “Sponsor” tag',text:'Every sponsor picture carries a small “Sponsor” tag, drawn in by the game, so an uploaded picture can never leave it out.'},
  {title:'Booked by date',text:'The team uploads each picture with a start and end date in the admin. Between bookings the slot goes back to its built-in panels.'},
 ];
-export const STADIUM_NEXT={title:'Put your brand in the stadium',line:'Every slot and package is booked with the team. To talk about one, email',email:CONTACT_EMAIL};
+export const STADIUM_NEXT={title:'Put your brand on the island',line:'Every slot, package and kit item is booked with the team. To talk about one, email',email:CONTACT_EMAIL};

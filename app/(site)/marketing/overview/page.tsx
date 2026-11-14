@@ -3,6 +3,7 @@ import {CONTACT_EMAIL,GROWN_UPS as G,NONPROFITS,WSV_LINKS} from '@/lib/site/abou
 import {LEARN_FAQ,LEARN_FEATURES,LEARN_GROUPS,LEARN_GROWNUP_LINE,LEARN_HERO,LEARN_HIGHLIGHTS,LEARN_TOGETHER_NOT,LEARN_TOGETHER_TRUST,type LearnFeature,type LearnGroupId} from '@/lib/site/learnFeatures';
 import {learnAsset,learnMontage,learnSlideAsset,learnWideAsset,LEARN_THEME,type LearnImage} from '@/lib/site/learnMedia';
 import {hiddenMeta,LOGO_COLOURS,MARKETING_OVERVIEW_PATH} from '@/lib/site/marketing';
+import {CLUB_LABEL,CLUB_NAME,KIT_ART,KIT_ITEMS,KIT_NAVY,KIT_PACKAGE,KIT_PITCH,KIT_RULES,PLACEMENT_GROUPS,SPONSOR_KIT_LINE,SPONSOR_TAG,type KitItem} from '@/lib/site/kitDeck';
 import {DECK_PACKAGES,DECK_SLOTS,slotShare,slotSize,STADIUM_FAMILY_RULES,STADIUM_GREEN,STADIUM_NEXT,STADIUM_PITCH,type DeckSlot} from '@/lib/site/stadiumDeck';
 
 /**
@@ -18,7 +19,8 @@ import {DECK_PACKAGES,DECK_SLOTS,slotShare,slotSize,STADIUM_FAMILY_RULES,STADIUM
  *  large picture, then a tidy grid of its features (picture left, words right; a feature with no still shows its description
  *  on a tint field instead of drawn art) · Play together's three steps · the DRIP FC Stadium sponsor chapter (Nov 13 2026, owner:
  *  opener, an overhead plan with every sponsor spot numbered, each slot with its in-game screenshot, the packages, the family rules;
- *  copy and numbers in lib/site/stadiumDeck.ts) · questions · about · contact.
+ *  copy and numbers in lib/site/stadiumDeck.ts) · the Kit Shop chapter (Nov 14 2026: Drip FC club kit as the example, lib/site/kitDeck.ts)
+ *  · every way a brand can appear, the packages and the family rules · questions · about · contact.
  * Every one of LEARN_FEATURES appears once (data-feature; the build script checks the count).
  */
 export const dynamic='force-static';
@@ -153,11 +155,82 @@ function StadiumChapter(){
    <div className={s.slotRow}>{row.map(x=><SlotCard key={x.id} x={x}/>)}</div>
   </Slide>)}
 
+  </div>;
+}
+
+/** Kit Shop screenshots (public/marketing/kit, 1280 x 720 WebP from a production build). */
+const kitShot=(k:string,alt:string,focus?:string):Pic=>({img:{src:`/marketing/kit/${k}.webp`,width:1280,height:720} as LearnImage,alt,focus});
+
+function KitCard({x}:{x:KitItem}){
+ return <article className={s.slotCard} data-kit-item={x.id}>
+  <figure><Img p={kitShot(x.shot,`${x.name} in the Kit Shop`)} className={s.slotImg}/><figcaption>{x.caption}</figcaption></figure>
+  <h3>{x.name}</h3>
+  <p className={s.slotLine}>{x.line}</p>
+  <dl className={s.slotSpec}><div><dt>Where</dt><dd>{x.where}</dd></div><div><dt>You send</dt><dd>{x.provide}</dd></div></dl>
+ </article>;
+}
+
+/** The Kit Shop sponsor chapter (lib/site/kitDeck.ts): Drip FC club kit as the live example. */
+function KitChapter(){
+ const folio=KIT_PITCH.title;
+ return <div className={s.group} data-kit-chapter="">
+  <Slide className={s.stadiumOpener} folio={folio} dark style={{background:KIT_NAVY}}>
+   <div className={s.openerText}>
+    <h2 className={s.openerTitle}>{KIT_PITCH.title}</h2>
+    <p className={s.openerBlurb}>{KIT_PITCH.blurb}</p>
+    <ul className={s.openerList}>{KIT_PITCH.points.map(x=><li key={x}>{x}</li>)}</ul>
+   </div>
+   <Img p={kitShot('hero','The Boot studio with the Drip FC blue boots, shown as an example','38% 50%')} className={s.stadiumHero}/>
+  </Slide>
+
   <Slide className={s.slotPage} folio={folio}>
-   <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>Packages: the name and the broadcast</h2></div>
-   <div className={s.packRow}>{DECK_PACKAGES.map(x=><article key={x.id} className={s.packCard} data-stadium-package={x.id}>
-    <figure><Img p={shot(x.shot,x.id==='feed'?'The live broadcast feed on the back of the big screen, DRIP FC logo top right':'DRIP FC Stadium floodlit at night')} className={s.packImg}/><figcaption>{x.id==='feed'?'The back of the big screen during a match':'The stadium at night'}</figcaption></figure>
-    <h3><Pin n={x.pin}/>{x.name}</h3>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:KIT_NAVY}}>Stickers and badges kids place themselves</h2></div>
+   <div className={s.slotRow}>{KIT_ITEMS.slice(0,3).map(x=><KitCard key={x.id} x={x}/>)}</div>
+  </Slide>
+
+  <Slide className={s.slotPage} folio={folio}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:KIT_NAVY}}>Ready-made kit, worn round the island</h2></div>
+   <div className={s.packRow}>{KIT_ITEMS.slice(3).map(x=><KitCard key={x.id} x={x}/>)}</div>
+  </Slide>
+
+  <Slide className={s.familyPage} folio={folio}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:KIT_NAVY}}>How club kit works for kids</h2></div>
+   <div className={s.familyBody}>
+    <div className={s.familyRules}>{KIT_RULES.map(r=><div key={r.title}><h3>{r.title}</h3><p>{r.text}</p></div>)}
+     <div className={s.kitArt}><h3>What you send, once</h3>
+      <dl className={s.slotSpec}>{KIT_ART.map(a=><div key={a.name}><dt>{a.name}</dt><dd>{a.spec}. {a.example}</dd></div>)}</dl>
+      <p>Each one a one-colour shape on a transparent background, PNG or WebP. The game tints it and draws the sticker shapes round it.</p>
+     </div>
+    </div>
+    <aside className={s.familyNext}>
+     <Img p={kitShot('label','The Drip FC sticker tray with its Sponsor tag')} className={`${s.familyImg} ${s.kitLabelImg}`}/>
+     <h3 className={s.h3}>The label on every item</h3>
+     <p>“{CLUB_LABEL}” with a small “{SPONSOR_TAG}” tag. {CLUB_NAME} is shown here as an example: it is the club partner in the game today.</p>
+    </aside>
+   </div>
+  </Slide>
+ </div>;
+}
+
+/** After both chapters: every placement in one list, the packages, and how it works for families. */
+function SponsorClose(){
+ const folio='Sponsors';
+ const pack=[...DECK_PACKAGES.map(x=>({id:x.id as string,pin:x.pin as number|null,name:x.name as string,line:x.line as string,today:x.today as string,p:shot(x.shot,x.id==='feed'?'The live broadcast feed on the back of the big screen, DRIP FC logo top right':'DRIP FC Stadium floodlit at night'),cap:x.id==='feed'?'The back of the big screen during a match':'The stadium at night'})),
+  {id:KIT_PACKAGE.id,pin:null,name:KIT_PACKAGE.name,line:KIT_PACKAGE.line,today:KIT_PACKAGE.today,p:kitShot(KIT_PACKAGE.shot,'The ready-made Drip FC shirt and boots in the Kit Shop'),cap:'The ready-made Drip FC kit (example)'}];
+ return <div className={s.group} data-sponsor-close="">
+  <Slide className={s.slotPage} folio={folio}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>Every way your brand can appear</h2></div>
+   <div className={s.allBody}>{PLACEMENT_GROUPS.map(g=><div key={g.id} className={s.allGroup} data-placement-group={g.id}>
+    <h3>{g.title}</h3><p className={s.allLine}>{g.line}</p>
+    <ul>{g.items.map(i=><li key={i.id} data-placement={i.id}><b>{i.name}</b><span>{i.where}</span><em>{i.share}</em></li>)}</ul>
+   </div>)}</div>
+  </Slide>
+
+  <Slide className={s.slotPage} folio={folio}>
+   <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>Packages: the name, the broadcast and the kit</h2></div>
+   <div className={s.slotRow}>{pack.map(x=><article key={x.id} className={s.packCard} data-stadium-package={x.id}>
+    <figure><Img p={x.p} className={s.packImg}/><figcaption>{x.cap}</figcaption></figure>
+    <h3>{x.pin?<Pin n={x.pin}/>:null}{x.name}</h3>
     <p className={s.slotLine}>{x.line}</p>
     <p className={s.packToday}>Today: {x.today}</p>
    </article>)}</div>
@@ -166,7 +239,9 @@ function StadiumChapter(){
   <Slide className={s.familyPage} folio={folio}>
    <div className={s.pageHead}><h2 className={s.h2} style={{color:STADIUM_GREEN}}>How it works for families</h2></div>
    <div className={s.familyBody}>
-    <div className={s.familyRules}>{STADIUM_FAMILY_RULES.map(r=><div key={r.title}><h3>{r.title}</h3><p>{r.text}</p></div>)}</div>
+    <div className={s.familyRules}>{STADIUM_FAMILY_RULES.map(r=><div key={r.title}><h3>{r.title}</h3><p>{r.text}</p></div>)}
+     <div className={s.familyKit} data-kit-line=""><h3>Club kit in the Kit Shop</h3><p>{SPONSOR_KIT_LINE}</p></div>
+    </div>
     <aside className={s.familyNext}>
      <Img p={shot('stands','Inside DRIP FC Stadium: the pitch, the boards and the west stand','50% 55%')} className={s.familyImg}/>
      <h3 className={s.h3}>{STADIUM_NEXT.title}</h3>
@@ -265,6 +340,10 @@ export default function Overview(){
 
   {/* ---- DRIP FC Stadium: the sponsor chapter ---- */}
   <StadiumChapter/>
+  {/* ---- the Kit Shop: club kit kids choose ---- */}
+  <KitChapter/>
+  {/* ---- every placement, the packages, families ---- */}
+  <SponsorClose/>
 
   {/* ---- questions grown-ups ask ---- */}
   <Slide className={s.faqPage} folio="Questions">
