@@ -20,6 +20,10 @@ import {applyLiveWaterMood} from './waterMood';
 import {createFishingAmbient} from './fishingAmbient';
 import {delightRich} from './fishingDelight';
 import {readTimeOfDay} from './timeOfDay';
+// Nov 14 2026 look-and-feel pass (docs/fishing.md "Bite cue, water and trophy moments"): the bite's "now!" flash, foam trails,
+// rare-shadow sparkles, life on the water and the Rare / Legendary close-up (fishingSpectacle.ts; marks in the overlay's one draw).
+import {createFishingSpectacle,spectacleGate,trophyGlow} from './fishingSpectacle';
+import {inOpenWater} from './fishingCore';
 
 /**
  * FISHING VISUALS — original shoreline art behind a small interface (hand-off: docs/fishing-visuals-HANDOFF.md).
@@ -50,7 +54,7 @@ export interface FishingVisuals{
  /* `id` / `color` (optional, Oct 12 2026): in the clear water the catch is drawn as its own species, with the shadow on the seabed. */
  /* `mode` (optional, Oct 12 2026): while it nibbles and bites, the swimming catch comes up under the float, nose up at the bait. */
  /* `rise` (optional, Oct 14 2026, "the fish sometimes teleport in"): 1 = deep down in the haze, 0 = up under the float. */
- showShadow(shadow:{size:ShadowSize;pos:Vec2;heading:number;alpha:number;shape?:FishShape;id?:string;color?:string;mode?:'swim'|'nibble'|'bite'|'flee';rise?:number}|null):void;
+ showShadow(shadow:{size:ShadowSize;pos:Vec2;heading:number;alpha:number;shape?:FishShape;id?:string;color?:string;mode?:'swim'|'nibble'|'bite'|'flee';rise?:number;/** Nov 14 2026: delight RARITY_GLOW (2 rare, 3 legendary): sparkles on the surface over it */glow?:number}|null):void;
  /** Aimed casting (Oct 14 2026, optional): where this cast lands and its direction (the session began with the spot's usual cast). */
  setCast?(cast:Vec2,dir:Vec2):void;
  /** The session's hotspots (fishingAim.ts) drawn as signs in the water; the deep-sea bait ball follows a 'baitball' hotspot. */
@@ -76,6 +80,8 @@ export interface FishingVisuals{
  setCoastVisible(visible:boolean):void;
  /** World point for the in-world catch label (above the angler's head). */
  labelAnchor(out:T.Vector3):T.Vector3;
+ /** Nov 14 2026 (optional): the Rare / Legendary landing's close-up target and weight 0..1 this frame, or null (fishingCamera.closeUp). */
+ readonly closeUp?:{x:number;y:number;z:number;w:number}|null;
  /** Per-frame animation (only called while `busy`). */
  frame(dt:number,elapsed:number,reduced:boolean):void;
  readonly busy:boolean;
@@ -164,12 +170,14 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
  // ocean's own draw) and ambient fish schools (fishSchools.ts, one instanced draw). Replaces the static foam / band / ripple decals.
  // ?fishwater=0 (A/B measurements only) leaves the shore still and the schools out.
  const waterOn=typeof window==='undefined'||new URLSearchParams(window.location.search).get('fishwater')!=='0';
+ // ?fishfx=0 (A/B frame-time measurements only, Nov 14 2026): the look-and-feel pass's spectacle marks are left out.
+ const fxOn=typeof window==='undefined'||new URLSearchParams(window.location.search).get('fishfx')!=='0';
  // Phones (every heat tier): fewer seabed props, a simpler fish body, no sway (underwater.ts / fishSchools.ts).
  const phone=typeof window!=='undefined'&&graphicsQuality().phone;
  const water=renderer&&waterOn?createFishingWater(scene,renderer,phone):null,schools=createFishSchools(scene,phone);
  // Oct 14 2026: the deep-sea boats' water column (light shafts, plankton, jellyfish; one draw, deep spots only) and the water
  // signs + aim arc (one instanced draw, only while fishing).
- const column=waterOn?createDeepSeaScene(scene,phone):null,overlay=createFishingOverlay(scene,UW_UNIFORMS),ambient=createFishingAmbient(overlay);
+ const column=waterOn?createDeepSeaScene(scene,phone):null,overlay=createFishingOverlay(scene,UW_UNIFORMS),ambient=createFishingAmbient(overlay),spectacle=createFishingSpectacle(overlay,inOpenWater);let lastReduced=false,timeOfDay='day';
  // Delight pass: the hook / bite splash grows with the shadow's size class (its length in m, SHADOW_LENGTH; 0.7 = medium).
  let biteLen=.7;
  // Polish pass (Oct 14 2026): the line's sag eases between states (slack while waiting, taut when reeling, a twitch on nibbles);
@@ -180,7 +188,7 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
  let reelTravel=0,landingAge=1,reelingFish:CatchLook|null=null;const landingFrom=new T.Vector3();
  // Oct 15 2026: the fight's look (line colour, bend, the fish pulling sideways, its wake), the bite's "!" and the leap's size.
  let fight:{tension:number;lateral:Vec2;running:boolean;stun:number}|null=null,lineRed=0,latX=0,latZ=0,bangAge=0,leapBig=0;
- const sunOff={x:0,z:0},shWorld={x:0,z:0,heading:0,alpha:0,rise:1,len:1,mode:'swim' as string};
+ const sunOff={x:0,z:0},shWorld={x:0,z:0,heading:0,alpha:0,rise:1,len:1,mode:'swim' as string,glow:0};
  const hv=new T.Vector3(),tip=new T.Vector3(),bob=new T.Vector3(),tmp=new T.Vector3();
  const rightShoulder=player.getObjectByName('right-shoulder'),leftShoulder=player.getObjectByName('left-shoulder'),rightHand=player.getObjectByName('right-hand'),head=player.getObjectByName('player-head');
  const reelDistance=()=>reelTravel;
@@ -205,7 +213,7 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    if(!pondOn)water?.begin(s,d,spot,halfWidth,viewDepth,!theme.deep);// Served by the window the spot's props do not draw: no clownfish anemones or bubbling reef pieces from them.
    const homes=byWindow||pondOn?[]:water?.homes??[],pieces=byWindow||pondOn?[]:water?.pieces??[];
    if(waterOn&&!pondOn)schools.begin(s,d,water?.field?.distance??null,SURFACE-.003,halfWidth,theme,homes,viewDepth,pieces);
-   if(theme.deep&&!pondOn)column?.begin(s,d,theme);else column?.end();overlay.begin();ambient.begin(s,d,readTimeOfDay());biteLen=.7;
+   if(theme.deep&&!pondOn)column?.begin(s,d,theme);else column?.end();overlay.begin();timeOfDay=readTimeOfDay();ambient.begin(s,d,timeOfDay);spectacle.begin(s,d);biteLen=.7;
    // Bubbles rise now and then from the taller reef pieces in view (from the seabed build; none in open deep water).
    {const pcs=pieces.filter(p=>p.top-p.y>.2);const pick:{x:number;y:number;z:number}[]=[];for(let i=0;i<pcs.length&&pick.length<12;i+=Math.max(1,Math.floor(pcs.length/12)))pick.push({x:pcs[i].x,y:pcs[i].y,z:pcs[i].z});overlay.setBubbleSources(pick);}
    lineSag=.1;lineTwitch=0;restRing=1.5;dripT=9;hotList=[];aimTo=null;overlay.setHotspots(hotList);overlay.setAim(null);active=true;reelTravel=0;bend=0;rodTilt=.62;rightArm=-1.05;leftArm=0;reelImpulse=0;reelTurn=0;dip=0;reelingFish=null;fight=null;latX=latZ=0;bangAge=0;stand={...s};cast={...c};dir={...d};root.visible=true;rod.visible=line.visible=bobber.visible=true;pose='hold';bobState={kind:'hanging'};},
@@ -222,7 +230,9 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
   setBobber(s){bobState=s;},
   splash(size){if(size==='bite')lunge=1;schools.scatter(floatX(),floatZ(),size==='bite'||size==='hook'?1.2:size==='land'?1:.7);
    const g=.75+biteLen*.36;// small .91 … giant 1.43: a bigger animal throws bigger rings and more spray (cosmetic)
-   if(size==='land'){ring(.9,.9);ring(.5,.6);spray(8,.55);restRing=2.2;}else if(size==='bite'){ring(1.5*g,1.1);ring(.8*g,.7);ring(2.1*g,1.4);spray(Math.round(12*g),g);lineTwitch=1;}else if(size==='hook'){ring(1.2*g,.8);ring(2.1*g,1.4);spray(Math.round(12*g),1.1*g);}else{ring(.7*g,.7);spray(4,.4*g);}},
+   if(size==='land'){ring(.9,.9);ring(.5,.6);spray(8,.55);restRing=2.2;}else if(size==='bite'){ring(1.5*g,1.1);ring(.8*g,.7);ring(2.1*g,1.4);spray(Math.round(12*g),g);lineTwitch=1;spectacle.bite(floatX(),SURFACE,floatZ(),g);}
+   // Nov 14 2026: a stronger hook: a third wide ring, more spray and a tall spout, and a foam patch (fishingSpectacle).
+   else if(size==='hook'){ring(1.2*g,.8);ring(2.1*g,1.4);ring(3*g,1.8);spray(Math.round(14*g),1.25*g);overlay.burst(floatX(),SURFACE+.02,floatZ(),5,1.7*g);spectacle.hook(floatX(),floatZ(),g);}else{ring(.7*g,.7);spray(4,.4*g);}},
   nibble(){dip=1;lineTwitch=Math.max(lineTwitch,.6);if(catchSwim.mode==='nibble')peck=1;if(bobState.kind==='reeling'){reelImpulse=1;ring(.8,.7);spray(5,.45);}else ring(.55,.6);},
   showShadow(sh){shadowOn=!!sh&&sh.alpha>.01;shadow.visible=shadowOn;const clear=!!water?.field&&!pondOn;catchFish.visible=shadowOn&&clear;if(!sh)return;
    const fx=cast.x+sh.pos.x-dir.x*reelDistance(),fz=cast.z+sh.pos.z-dir.z*reelDistance(),depth=clear?uwDepthAt(water!.field!.distance(fx,fz)):0;
@@ -233,7 +243,7 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
    const rise=Math.max(0,Math.min(1,sh.rise??0)),high=Math.min(.42,Math.max(.2,depth-.25)),low=Math.max(high,Math.min(depth-.15-SHADOW_LENGTH[sh.size]*.2,3)),swimY=UW_SURFACE-(high+(low-high)*rise);
    const off=clear?sunShadowOffset(swimY-(UW_SURFACE-depth),sunOff):null,x=fx+(off?.x??0),z=fz+(off?.z??0),bed=clear?uwDepthAt(water!.field!.distance(x,z)):0;
    shadow.position.set(x,clear?UW_SURFACE-bed+.012:SURFACE-.001,z);shadow.renderOrder=clear?.58:1;// The silhouette head is local -Z; simulation headings point along +Z.
-   Object.assign(shWorld,{x:fx,z:fz,heading:sh.heading,alpha:sh.alpha,rise,len:SHADOW_LENGTH[sh.size],mode:sh.mode??'swim'});biteLen=SHADOW_LENGTH[sh.size];
+   Object.assign(shWorld,{x:fx,z:fz,heading:sh.heading,alpha:sh.alpha,rise,len:SHADOW_LENGTH[sh.size],mode:sh.mode??'swim',glow:sh.glow??0});biteLen=SHADOW_LENGTH[sh.size];
    shadow.rotation.y=sh.heading+Math.PI;shadow.scale.setScalar(SHADOW_LENGTH[sh.size]*.95);shadowMat.opacity=(clear?.42:.5)*sh.alpha;
    if(clear){catchModel=look(catchFish,catchFx,{color:sh.color??'#8aa0a8',lengthCm:40,shape:sh.shape,id:sh.id});
     // The model's nose is local −X (see the reeled fish): face the heading. Near the surface, so it reads clearly over the seabed.
@@ -247,15 +257,19 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
     // The catch leaving the water (B2, Oct 15 2026: a bigger leap for a bigger fish): a splash, rings and a burst of drops where
     // it came out; it drips for a moment after.
     overlay.ring(bob.x,bob.z,1.1+leapBig*.6,1);overlay.ring(bob.x,bob.z,.6,.7);overlay.ring(bob.x,bob.z,1.9+leapBig,1.3);overlay.burst(bob.x,SURFACE+.02,bob.z,14,1.1);if(leapBig>.3)overlay.burst(bob.x,SURFACE+.02,bob.z,4,1.1+leapBig*.5);dripT=0;dripWait=.15;
-    if(f.glow)ambient.celebrate(f.glow>=3?8:5,bob.x,SURFACE+.6,bob.z,.8+leapBig*.5);}
+    if(f.glow)ambient.celebrate(f.glow>=3?8:5,bob.x,SURFACE+.6,bob.z,.8+leapBig*.5);
+    // Rare / Legendary: the slow-motion close-up (none with reduced motion), then the HUD's trophy card.
+    spectacle.spotlight(trophyGlow(f.glow)&&!lastReduced);}
+   if(!f&&heldFish)spectacle.spotlight(false);
    heldFish=f;held.visible=!!f;
    if(f){heldModel=look(held,heldFx,f);heldLift=liftWhenHeld(heldModel);}},
   setCoastVisible(){},
   labelAnchor(out){const hd=head;if(hd)hd.getWorldPosition(out);else out.set(stand.x,1.3,stand.z);out.y+=.55;return out;},
+  get closeUp(){return active?spectacle.closeUp:null;},
   get busy(){return active||ringsBusy()||!!water?.busy||schools.busy||!!column?.busy||overlay.busy;},
   frame(dt,elapsed,reduced){
    // Heat gate (fishingLife): sway, the extra reef life and particles only on the cool tiers; uniform writes only.
-   life=fishingLife(effectiveTier(),reduced,WATER_UNIFORMS.uWaterDetail.value);UW_UNIFORMS.uUwSway.value=life.sway?1:0;overlay.setLife(life.particles);schools.setLife(life.life);
+   lastReduced=reduced;life=fishingLife(effectiveTier(),reduced,WATER_UNIFORMS.uWaterDetail.value);UW_UNIFORMS.uUwSway.value=life.sway?1:0;overlay.setLife(life.particles);schools.setLife(life.life);
    column?.frame(dt,reduced);
    water?.frame(dt,reduced);schools.frame(dt,reduced,active&&(bobState.kind==='floating'||bobState.kind==='under'||bobState.kind==='reeling')?{x:bob.x,z:bob.z}:null);
    if(!active){overlay.setAim(null);overlay.frame(dt,reduced,clockT);UW_UNIFORMS.uUwFloatOn.value=0;if(!ringsBusy())root.visible=false;return;}
@@ -366,17 +380,19 @@ export function createFishingVisuals(scene:T.Scene,player:T.Object3D,renderer?:T
     const fx=bx-mx*.08*L,fz=bz-mz*.08*L,fs=Math.max(.32,.34*L);if(!bodyDrawn)overlay.mark('fin',fx,SURFACE+fs*.42,fz,fs,0,a);
     if(!reduced&&shWorld.mode!=='nibble'&&shWorld.mode!=='bite')overlay.mark('wake',fx-mx*.55*L,SURFACE+.012,fz-mz*.55*L,.75*L,Math.atan2(-mx,-mz),1,.7*a);}
    if(heldFish){const hd=head;if(hd)hd.getWorldPosition(tmp);else tmp.set(stand.x,1.3,stand.z);
-    const len=Math.min(1.3,Math.max(.8,heldFish.lengthCm/70));held.scale.setScalar(len);held.position.set(tmp.x,tmp.y+.55+len*(.2+heldLift)+(reduced?0:Math.sin(elapsed*3)*.02),tmp.z);landingAge=Math.min(1,landingAge+dt/LEAP_S);
+    const len=Math.min(1.3,Math.max(.8,heldFish.lengthCm/70));held.scale.setScalar(len);held.position.set(tmp.x,tmp.y+.55+len*(.2+heldLift)+(reduced?0:Math.sin(elapsed*3)*.02),tmp.z);landingAge=Math.min(1,landingAge+dt*spectacle.leapScale/LEAP_S);
     // B2 (Oct 15 2026): the catch LEAPS out of the water in an arc (higher for a bigger fish), with a ~150 ms freeze at the top
     // (only this fish's own clock slows; the island loop and frame cap are untouched), then lands in the angler's hands.
     if(!reduced&&landingAge<1){const u=leapPath(landingAge),k=u*u*(3-2*u);held.position.lerpVectors(landingFrom,tmp.copy(held.position),k);held.position.y+=Math.sin(u*Math.PI)*(1.1+leapBig*.9);held.scale.setScalar(len*(.6+.4*k));}// Side-on to the fishing camera (it looks back from over the water, a little to the side): the animal's flank (+Z)
     // faces out to sea. Flat animals tip their back toward the camera; the octopus hangs its arms down (model.hold).
     const hm=heldModel;held.rotation.set(hm?.hold.x??0,Math.atan2(dir.x,dir.z)-.3+(reduced?0:Math.sin(elapsed*9)*.12*wriggle),.15+(hm?.hold.z??0)+(reduced?0:Math.sin(leapPath(landingAge)*Math.PI)*.65+Math.sin(elapsed*13)*.1*wriggle),'YZX');
     // Water drips off it for a couple of seconds (a few drops falling to the sand; cool tiers only).
-    ambient.follow(held.position.x,held.position.y,held.position.z);
+    ambient.follow(held.position.x,held.position.y,held.position.z);spectacle.follow(held.position.x,held.position.y,held.position.z);
     if(dripT<2.4&&!reduced){dripWait-=dt;if(dripWait<=0){dripWait=.1+dripT*.12+Math.random()*.12;overlay.drip(held.position.x+(Math.random()-.5)*.3*len,held.position.y-.12*len,held.position.z+(Math.random()-.5)*.3*len,player.position.y+.03);}}}
    // The overlay draws last, so this frame's marks (the "!", fins, wakes) and the aim arc from this frame's rod tip are in it.
    ambient.frame(dt,life.particles&&delightRich(reduced,effectiveTier()),b.kind==='floating',bob.x,bob.z);
+   if(fxOn)spectacle.frame(dt,{reduced,gate:spectacleGate(effectiveTier(),reduced,WATER_UNIFORMS.uWaterDetail.value,phone),surface:SURFACE,timeOfDay,
+    calm:b.kind==='floating'&&(!shadowOn||shWorld.mode==='swim'),float:bob,shadow:shadowOn?shWorld:null,run:reelingFish&&fight?.running?bob:null});
    overlay.setAim(aimTo?{from:{x:tip.x,y:tip.y,z:tip.z},to:aimTo}:null);overlay.frame(dt,reduced,clockT);
   },
   dispose(){water?.dispose();schools.dispose();column?.dispose();overlay.dispose();releaseSpeciesModels();root.removeFromParent();geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());textures.forEach(t=>t.dispose());},

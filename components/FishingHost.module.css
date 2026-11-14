@@ -278,3 +278,6 @@
 .tiredPop{position:absolute;z-index:3;left:50%;bottom:calc(100% + 10px);translate:-50% 0;padding:6px 16px;border:3px solid #fff2cd;border-radius:999px;background:#2f8a5a;color:#fff8e6;font-size:20px;font-weight:900;white-space:nowrap;pointer-events:none;opacity:0;animation:tiredPop 1.3s ease-out}
 @keyframes tiredPop{0%{opacity:0;scale:.7}15%{opacity:1;scale:1.1}30%{scale:1}75%{opacity:1}100%{opacity:0;translate:-50% -16px}}
 @media(prefers-reduced-motion:reduce){.letGo{animation:none}.tiredPop{animation:tiredPopStill 1.3s step-end}@keyframes tiredPopStill{0%{opacity:1}100%{opacity:0}}}
+
+/* Nov 14 2026: a Rare / Legendary catch shows its trophy card first (FishingTrophy); the quick card waits until it is closed, so the close-up is clear. */
+.catch[data-trophy]{opacity:0;visibility:hidden;pointer-events:none}

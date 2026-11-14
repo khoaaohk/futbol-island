@@ -23,10 +23,13 @@ import {hotspotAt,type Hotspot} from './fishingAim';
  * not only a colour), a shark's dorsal FIN breaking the surface, and a V-shaped WAKE behind a shark on its approach or a fish
  * making a run. These are per-frame MARKS the visuals push while fishing (at most MARKS a frame); nothing at rest.
  */
-const KIND={dropoff:0,ripples:1,boil:2,edge:3,shadow:4,upwelling:5,bird:6,dot:7,target:8,ring:9,drop:10,bubble:11,bang:12,fin:13,wake:14,glow:15} as const;
+const KIND={dropoff:0,ripples:1,boil:2,edge:3,shadow:4,upwelling:5,bird:6,dot:7,target:8,ring:9,drop:10,bubble:11,bang:12,fin:13,wake:14,glow:15,flash:16,foam:17,fishy:18,jumper:19} as const;
+/** Nov 14 2026 look-and-feel pass (fishingSpectacle.ts): FX = per-frame marks of the bite "now!" flash, foam trails, rare-shadow
+ *  sparkles and the life on the water (fish under the surface, jumping fish). Their own preallocated pool, same one draw. */
+export type OverlayFx='flash'|'foam'|'fishy'|'jumper'|'glow';
 /** Nov 7 2026 delight pass: EXTRAS = per-frame cosmetic marks (sparkles round a rare catch, fireflies, the idle gull, the far
  *  whale, the golden glint), a fixed pool of preallocated slots (no allocation per frame), still in this one draw. */
-const SURF=-.385,DOTS=16,BIRDS=3,RINGS=7,DROPS=18,BUBBLES=8,MARKS=4,EXTRAS=16,CAP=3*(1+BIRDS)+DOTS+1+RINGS+DROPS+BUBBLES+MARKS+EXTRAS;
+const SURF=-.385,DOTS=16,BIRDS=3,RINGS=7,DROPS=18,BUBBLES=8,MARKS=4,EXTRAS=16,FX=24,CAP=3*(1+BIRDS)+DOTS+1+RINGS+DROPS+BUBBLES+MARKS+EXTRAS+FX;
 export type OverlayMark='bang'|'fin'|'wake';
 export type OverlayExtra='glow'|'gull'|'shadow';
 const VERT=/* glsl */`
@@ -35,7 +38,7 @@ void main(){
  vUv=uv;vKind=iKind;vSeed=iSeed;vAlpha=iAlpha;
  vec3 c=(modelMatrix*instanceMatrix*vec4(0.,0.,0.,1.)).xyz;
  vec3 p;
- if(iKind>5.5&&iKind<7.5||iKind>9.5&&iKind<13.5||iKind>14.5){// Billboards (birds, aim dots, drops, bubbles, the bite's "!", a fin): face the camera, size from the instance scale.
+ if(iKind>5.5&&iKind<7.5||iKind>9.5&&iKind<13.5||iKind>14.5&&iKind<16.5||iKind>18.5){// Billboards (birds, aim dots, drops, bubbles, the bite's "!", a fin, sparkles, the bite flash, a jumping fish): face the camera, size from the instance scale.
   float s=length(instanceMatrix[0].xyz);vec3 right=vec3(viewMatrix[0][0],viewMatrix[1][0],viewMatrix[2][0]),up=vec3(viewMatrix[0][1],viewMatrix[1][1],viewMatrix[2][1]);
   p=c+(right*position.x+up*position.z*-1.)*s;}
  else p=(modelMatrix*instanceMatrix*vec4(position,1.)).xyz;
@@ -71,6 +74,17 @@ void main(){
  else if(vKind<13.5){// A dorsal fin (seen side-on from any angle): a swept triangle, dark slate with a lighter leading edge.
   float y=d.y*.5+.5,x=d.x*.5+.5,lead=.18+y*.42,trail=.92-y*.18*(1.+y);float inside=step(.0,y)*step(y,.96)*step(lead,x)*step(x,trail);
   a=inside*.95;col=mix(vec3(.2,.26,.3),vec3(.55,.62,.66),smoothstep(.06,.0,x-lead));}
+ else if(vKind>18.5){// A jumping fish seen side-on (billboard): silver body, pale belly, forked tail, vSeed = its pitch along the arc.
+  float c=cos(vSeed),s=sin(vSeed);vec2 q=vec2(c*d.x+s*d.y,-s*d.x+c*d.y);float body=length(vec2((q.x-.12)/.62,q.y/.2));
+  float tail=step(q.x,-.48)*step(-.92,q.x)*step(abs(q.y),(-.48-q.x)*.9);a=max(1.-smoothstep(.88,1.,body),tail)*.95;col=mix(vec3(.42,.55,.66),vec3(.93,.96,.97),smoothstep(.0,-.14,q.y));}
+ else if(vKind>17.5){// A fish just under the calm surface (flat, head at -Z): a dark soft body and a wagging tail.
+  float w=sin(t*7.+vSeed*5.)*.12*(-d.y);vec2 q=vec2(d.x-w*step(d.y,.0),d.y);float body=length(vec2(q.x/.24,(q.y-.18)/.58));
+  float tail=step(q.y,-.42)*step(-.95,q.y)*step(abs(q.x),(-.42-q.y)*.7);a=max(1.-smoothstep(.7,1.,body),tail*.8)*.42;col=mix(uUwDeep,vec3(.0,.05,.09),.6);}
+ else if(vKind>16.5){// Foam on the surface (a trail behind a fleeing / running fish): a soft broken white blob, vSeed = its seed.
+  vec2 g=vUv*5.+vSeed;float n=hash(floor(g))*.5+hash(floor(g*2.1))*.5;a=(1.-smoothstep(.25,1.,r))*(.45+.55*n)*.75;col=vec3(.97,1.,.99);}
+ else if(vKind>15.5){// The bite's "now!" flash (billboard round the float): a thick gold-white ring bursting out with eight rays, vSeed = age 0..1.
+  float k=vSeed,rr=.32+.6*sqrt(k),ring=exp(-pow((r-rr)/(.07+.05*(1.-k)),2.)),ang=atan(d.y,d.x),rays=pow(abs(cos(ang*4.)),24.)*smoothstep(rr*.55,rr,r)*(1.-smoothstep(rr,1.,r));
+  a=clamp(ring+rays*.8*(1.-k)+exp(-r*r*14.)*(1.-k)*.6,0.,1.)*(1.-k*k);col=mix(vec3(1.),vec3(1.,.8,.2),smoothstep(.0,.3,abs(r-rr)));}
  else if(vKind>14.5){// Delight sparkle (Nov 7 2026): a soft round glow with a four-point twinkle, vSeed <1 gold (catch / glint), >=1 firefly green-gold.
   float core=exp(-r*r*9.),star=exp(-abs(d.x)*14.)*exp(-abs(d.y)*3.)+exp(-abs(d.y)*14.)*exp(-abs(d.x)*3.);
   a=clamp(core+star*.55,0.,1.)*(1.-smoothstep(.85,1.,r));col=vSeed<1.?vec3(1.,.86,.36):vec3(.86,1.,.5);}
@@ -96,6 +110,9 @@ export function createFishingOverlay(scene:T.Scene,uw?:{uUwShallow:{value:T.Vect
  const dummy=new T.Object3D();
  let hotspots:readonly Hotspot[]=[],aim:AimPreview=null,fade=0,target=0,clock=0;
  const extras=Array.from({length:EXTRAS},()=>({kind:0,x:0,y:0,z:0,sx:0,sz:0,yaw:0,alpha:0,seed:0}));let extraN=0;
+ const fxs=Array.from({length:FX},()=>({kind:0,x:0,y:0,z:0,sx:0,sz:0,yaw:0,alpha:0,seed:0}));let fxN=0;
+ // Birds over a hotspot splash where they hit the water (once per dive; cool tiers only, like the drops).
+ const diveHit=new Float32Array(9);
  const rings:Ring[]=[],drops:Drop[]=[],bubbles:Bubble[]=[],marks:{kind:number;x:number;y:number;z:number;size:number;yaw:number;alpha:number;seed:number}[]=[];let bubbleSources:{x:number;y:number;z:number}[]=[],bubbleWait=2,lifeOn=true;
  /** Fx alive (rings, drops, bubbles): the overlay stays awake for them a moment after a session ends. */
  const fxBusy=()=>rings.length>0||drops.length>0||bubbles.length>0;
@@ -119,6 +136,10 @@ export function createFishingOverlay(scene:T.Scene,uw?:{uUwShallow:{value:T.Vect
    *  dark shadow on the water (sx by sz metres, yaw; the far whale / manta). Pooled: at most EXTRAS a frame, extra ones are dropped. */
   extra(kind:OverlayExtra,x:number,y:number,z:number,sx:number,alpha=1,seed=0,sz=sx,yaw=0){if(extraN>=EXTRAS)return;const e=extras[extraN++];
    e.kind=kind==='glow'?KIND.glow:kind==='gull'?KIND.bird:KIND.shadow;e.x=x;e.y=y;e.z=z;e.sx=sx;e.sz=sz;e.yaw=yaw;e.alpha=alpha;e.seed=seed;mesh.visible=true;},
+  /** A one-frame look-and-feel mark (fishingSpectacle.ts): the bite flash, foam, a fish under the surface, a jumping fish or a
+   *  sparkle. Its own pool of FX slots a frame; extra ones are dropped. */
+  fx(kind:OverlayFx,x:number,y:number,z:number,sx:number,alpha=1,seed=0,sz=sx,yaw=0){if(fxN>=FX)return;const e=fxs[fxN++];
+   e.kind=KIND[kind];e.x=x;e.y=y;e.z=z;e.sx=sx;e.sz=sz;e.yaw=yaw;e.alpha=alpha;e.seed=seed;mesh.visible=true;},
   /** Where bubbles may rise from (reef pieces in view: base x, seabed y, z). */
   setBubbleSources(list:{x:number;y:number;z:number}[]){bubbleSources=list;},
   /** fishingLife: drops and bubbles only on the cool tiers (gameplay rings always). */
@@ -128,12 +149,12 @@ export function createFishingOverlay(scene:T.Scene,uw?:{uUwShallow:{value:T.Vect
   /** The aim preview (null hides it). */
   setAim(a:AimPreview){aim=a;},
   begin(){target=1;mesh.visible=true;},
-  end(){target=0;aim=null;bubbles.length=0;marks.length=0;extraN=0;},
+  end(){target=0;aim=null;bubbles.length=0;marks.length=0;extraN=0;fxN=0;},
   /** `time`: the session clock for the hotspot drift (seconds); dt for the fades and animation. */
   frame(dt:number,reduced:boolean,time:number){
    if(!mesh.visible)return;
    fade=reduced?target:T.MathUtils.clamp(fade+Math.sign(target-fade)*Math.min(Math.abs(target-fade),dt/.7),0,1);
-   if(fade<=0&&target===0&&!fxBusy()&&!marks.length&&!extraN){mesh.visible=false;mesh.count=0;return;}
+   if(fade<=0&&target===0&&!fxBusy()&&!marks.length&&!extraN&&!fxN){mesh.visible=false;mesh.count=0;return;}
    if(!reduced)clock=(clock+Math.min(dt,.1))%3600;uniforms.uTime.value=clock;
    let n=0;
    hotspots.forEach((h,hi)=>{const c=hotspotAt(h,reduced?0:time),seed=hi*7.3+1;
@@ -143,7 +164,9 @@ export function createFishingOverlay(scene:T.Scene,uw?:{uUwShallow:{value:T.Vect
     if(h.kind==='birds'||h.kind==='baitball')for(let b=0;b<(h.kind==='birds'?BIRDS:2);b++){
      // Gulls circle 3.5-5 m up; every few seconds one folds and dives to the surface.
      const ph=clock*(.55+b*.12)+b*2.1+seed,cyc=(clock*.16+b*.33+seed*.1)%1,dive=cyc>.82?Math.sin((cyc-.82)/.18*Math.PI):0;
-     const rr=h.r*(.6+b*.18)*(1-dive*.6);put(n++,KIND.bird,seed+b,fade,c.x+Math.cos(ph)*rr,SURF+3.6+b*.5-dive*(3.4+b*.5),c.z+Math.sin(ph)*rr,.55);}
+     const rr=h.r*(.6+b*.18)*(1-dive*.6),bx=c.x+Math.cos(ph)*rr,bz=c.z+Math.sin(ph)*rr;put(n++,KIND.bird,seed+b,fade,bx,SURF+3.6+b*.5-dive*(3.4+b*.5),bz,.55);
+     // Nov 14 2026: the dive ends in a little splash on the water (the bottom of the dive is cyc ≈ .91).
+     const slot=(hi*3+b)%9,hit=Math.floor(clock*.16+b*.33+seed*.1);if(cyc>.9&&diveHit[slot]!==hit+1&&lifeOn&&!reduced&&fade>.5){diveHit[slot]=hit+1;if(rings.length<RINGS)rings.push({x:bx,z:bz,y:SURF+.004,size:.45,life:.8,age:0});for(let k=0;k<4&&drops.length<DROPS;k++){const a=k*1.57+seed;drops.push({x:bx,y:SURF+.02,z:bz,vx:Math.cos(a)*.35,vy:1.4+k*.2,vz:Math.sin(a)*.35,age:0,life:1,size:.03,floor:SURF});}}}
    });
    if(aim){const {from,to}=aim;for(let i=1;i<=DOTS;i++){const t=i/(DOTS+1),x=from.x+(to.x-from.x)*t,z=from.z+(to.z-from.z)*t,y=from.y+(SURF+.05-from.y)*t+Math.sin(t*Math.PI)*1.6;put(n++,KIND.dot,i,fade*(.35+.65*(1-t*.5)),x,y,z,.085);}
     put(n++,KIND.target,0,fade,to.x,SURF+.01,to.z,1.5);}
@@ -162,6 +185,7 @@ export function createFishingOverlay(scene:T.Scene,uw?:{uUwShallow:{value:T.Vect
     const w=Math.sin(b.age*7+b.seed)*.025;put(n++,KIND.bubble,Math.max(0,SURF-b.y),Math.min(1,b.age*3)*fade,b.x+w,b.y,b.z+w*.6,b.size);}
    for(const m of marks)put(n++,m.kind,m.seed,m.alpha,m.x,m.y,m.z,m.size,m.kind===KIND.wake?m.size*1.8:m.size,m.yaw);marks.length=0;
    for(let i=0;i<extraN;i++){const e=extras[i];put(n++,e.kind,e.seed,e.alpha,e.x,e.y,e.z,e.sx,e.sz,e.yaw);}extraN=0;
+   for(let i=0;i<fxN;i++){const e=fxs[i];put(n++,e.kind,e.seed,e.alpha,e.x,e.y,e.z,e.sx,e.sz,e.yaw);}fxN=0;
    mesh.count=n;mesh.instanceMatrix.needsUpdate=true;kindA.needsUpdate=true;seedA.needsUpdate=true;alphaA.needsUpdate=true;
   },
   dispose(){mesh.removeFromParent();mesh.dispose();quad.dispose();material.dispose();},

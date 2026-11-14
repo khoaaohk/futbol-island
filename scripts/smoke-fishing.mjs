@@ -68,6 +68,8 @@ async function playViewport(browser,name,base){
    await run.step('cast: the float lands',async()=>{await page.waitForTimeout(400);await tapHud(page,'[data-fish-reel]',touch);await waitPhase(page,['casting','floating','approach','nibble','bite'],3000);
     const live=await page.evaluate(()=>window.__fi2.scene.getObjectByName('fishing-live')?.visible===true);if(!live)throw Error('the float / line (fishing-live) is not in the scene');});
    await landAFish(page,run,touch);
+   // Nov 14 2026: a Rare / Legendary catch shows its trophy card after the close-up (the quick card waits): keep fishing like a player.
+   await run.step('close the trophy card if one shows',async()=>{if(await page.locator('[data-fish-trophy]').count()){await tapHud(page,'[data-trophy-close]',touch);await page.waitForFunction(()=>!document.querySelector('[data-fish-trophy]'),null,{timeout:3000});}});
    await run.step('the catch shows and goes in the Fishbook',async()=>{await waitHud(page,'[data-fish-catch]',5000).catch(()=>page.waitForSelector('[data-fish-catch]',{state:'visible',timeout:3000}));
     const book=await page.evaluate(()=>{try{return JSON.parse(localStorage.getItem('fi2-fishbook-v1')||'null');}catch{return null;}});
     if(!book||!JSON.stringify(book).length||JSON.stringify(book)==='{}')throw Error('the Fishbook save is empty after a catch');});
