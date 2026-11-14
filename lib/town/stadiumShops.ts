@@ -8,8 +8,10 @@
  * yaw 0) to the viewing area:
  *  - the middle: the island's vending machine + drink machine pair (vendingCatalog.ts 'stadium', drinkMachines.ts 'drinkstadium'),
  *    side by side with the Konbini pair's 12 cm gap, centred on the screen;
- *  - either side: two gashapon machines each (lib/gashapon/machines.ts zone 'stadium'), 12 cm apart.
- * The whole row spans ±3.8 m: clear of both posts (±6.5 m, 0.6 m colliders), the south stand's stairs and their bollards (±24 m),
+ *  - either side: two gashapon machines each (lib/gashapon/machines.ts zone 'stadium'), centred 3.16 m and 4.99 m from the middle.
+ * Nov 13 2026 (owner: "spread out the machines below the screens more"): the gashapons stand ~1.0–1.05 m apart (cabinet to
+ * cabinet) and from the pair, so each reads on its own; the vending + drink pair keeps its Konbini 12 cm gap.
+ * The whole row spans ±5.42 m: inside both posts (±6.5 m, 0.6 m colliders, ≥ 0.75 m clear) and behind their south faces, the south stand's stairs and their bollards (±24 m),
  * the wall uplights (none within 9 m of the middle, stadiumLights.ts), both screen-post ball targets and their kick lanes (straight
  * south from each post), and the viewers (≥ 6 m out from the wall). The machines are ≤ 2.2 m tall: the screen's underside is 7.6 m up.
  */
@@ -30,5 +32,10 @@ const VEND_W=1.69,VEND_HALF_D=.559;
 export function stadiumVendingSpot(){return {x:r2(STADIUM_SHOP_X-(VEND_W+STADIUM_SHOP_GAP)/2),z:r2(STADIUM_SHOP_WALL_Z+STADIUM_SHOP_BACK_GAP+VEND_HALF_D),yaw:STADIUM_SHOP_YAW};}
 /** Half the middle pair's width: the gashapons start this far either side of the middle (plus the gap). */
 export const STADIUM_VENDING_HALF=VEND_W+STADIUM_SHOP_GAP/2;
+/** The gashapons' centres, metres either side of the middle: the inner (next to the pair) and the outer one. The outer east one
+ *  stays just west of x −200, so the row keeps to one 50 m cell (one globe draw, lib/graphics/gashaponMachines.ts). */
+export const STADIUM_GASHA_OFFSETS=[3.16,4.99] as const;
+/** The night glow pool in front of the row: wide enough for the whole spread row. */
+export const STADIUM_SHOP_POOL={dz:2.4,width:11.6,depth:3.6} as const;
 /** A cabinet `depth` deep, flush against the wall. */
 export const stadiumShopZ=(depth:number)=>r2(STADIUM_SHOP_WALL_Z+STADIUM_SHOP_BACK_GAP+depth/2);

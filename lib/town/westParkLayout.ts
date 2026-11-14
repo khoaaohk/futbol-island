@@ -99,8 +99,14 @@ export type Trail={id:string;curve:Curve;from:TrailEnd;to:TrailEnd};
 // south-east and south-west trails run on further to reach the new sand.
 const T_SOUTH_EAST:Curve=[[-106,-8.5],[-106,40],[-100,78],[-99,128]];
 const SPUR_T=.69,spurStart=bezier(T_SOUTH_EAST,SPUR_T);
-/** Where the pond walk meets the rim: half way across the rim on the pond's east side, at z 86 (as before). */
-let walkBearing=0;const POND_WALK_END=(()=>{let lo=-.7,hi=.7;for(let k=0;k<40;k++){const m=(lo+hi)/2;if(pondEdge(m,POND_RIM*.5).z<86)lo=m;else hi=m;}walkBearing=(lo+hi)/2;return pondEdge(walkBearing,POND_RIM*.5);})();
+/** Where the pond walk meets the rim, on the pond's east side at z 86. Nov 13 2026 (owner: "the pathway is overlapping into the
+ *  pond"): it used to end half way across the rim, so its round end (the map's line cap, the walk mask, the surface boxes) poked
+ *  ~1.2 m past the rim into the shallows. It now ends a trail half-width out from the water's edge, at the rim's outer edge (the bank curves in a little either side, hence +10 cm): the
+ *  cap just reaches the waterline across the rim sand and the walk runs straight on into the rim path. */
+export const POND_WALK_OUT=TRAIL_WIDTH/2+.1;
+let walkBearing=0;const POND_WALK_END=(()=>{let lo=-.7,hi=.7;for(let k=0;k<40;k++){const m=(lo+hi)/2;if(pondEdge(m,POND_WALK_OUT).z<86)lo=m;else hi=m;}walkBearing=(lo+hi)/2;return pondEdge(walkBearing,POND_WALK_OUT);})();
+/** The walk's last stretch comes in square to the bank (along the rim's outward normal there), so the end meets the rim evenly. */
+const POND_WALK_IN=(()=>{const a=pondEdge(walkBearing-.01,POND_WALK_OUT),b=pondEdge(walkBearing+.01,POND_WALK_OUT),tx=b.x-a.x,tz=b.z-a.z,l=Math.hypot(tx,tz);return {x:tz/l,z:-tx/l};})();
 /** The bearing (rad, the pondEdge angle) where the pond walk meets the rim (edge detail keeps clear of it). */
 export const POND_WALK_BEARING=walkBearing;
 export const PARK_TRAILS:readonly Trail[]=[
@@ -110,7 +116,7 @@ export const PARK_TRAILS:readonly Trail[]=[
  {id:'north-east',curve:[[-106,-51.5],[-106,-100],[-100,-150],[-99,-193]],from:'plaza',to:'beach'},
  {id:'south-east',curve:T_SOUTH_EAST,from:'plaza',to:'beach'},
  // The pond walk: off the south-east trail to the pond's east rim (its benches and sign).
- {id:'pond',curve:[spurStart,[spurStart[0]-5,spurStart[1]],[POND_WALK_END.x+5,POND_WALK_END.z],[POND_WALK_END.x,POND_WALK_END.z]],from:'trail',to:'pond'},
+ {id:'pond',curve:[spurStart,[spurStart[0]-5,spurStart[1]],[POND_WALK_END.x+POND_WALK_IN.x*5,POND_WALK_END.z+POND_WALK_IN.z*5],[POND_WALK_END.x,POND_WALK_END.z]],from:'trail',to:'pond'},
 ];
 /** The trails' curves (the older name; the map and tests read either). */
 export const PARK_PATHS:readonly Curve[]=PARK_TRAILS.map(t=>t.curve);

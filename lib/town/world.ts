@@ -47,7 +47,7 @@ import {patchIslandWind,markSway,stepIslandWind,WIND_SWAY_KINDS} from '../graphi
 import {patchMachineGlowPaint,markMachineGlow} from '../graphics/machineNightGlow';
 import {ISLAND_SQUARE_KONBINI} from './vendingPlaces';
 import {CAY_KONBINI} from './coralCay';
-import {STADIUM_SHOP_X,STADIUM_SHOP_WALL_Z} from './stadiumShops';
+import {STADIUM_SHOP_X,STADIUM_SHOP_WALL_Z,STADIUM_SHOP_POOL} from './stadiumShops';
 import { Obstacle, trunkCollider } from './simulation';
 
 /** The island's static world (Town's scene). Synchronous: runs every slice of buildTownSteps at once. */
@@ -1595,7 +1595,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Nov 13 2026: warm pools on the pavement in front of the two lit Konbinis and the stadium's machine row (instances in the existing
   // pool batches: the stadium's joins chunk 'stadium').
   lampSites.push({x:ISLAND_SQUARE_KONBINI.x-.3,z:ISLAND_SQUARE_KONBINI.front+2.6,ground:.05,poolWidth:10,poolDepth:4.5},{x:CAY_KONBINI.x-.3,z:CAY_KONBINI.front+2.6,ground:.05,poolWidth:10,poolDepth:4.5},
-   {x:STADIUM_SHOP_X,z:STADIUM_SHOP_WALL_Z+2.4,ground:.02,poolWidth:9,poolDepth:3.6,chunk:'stadium'});
+   {x:STADIUM_SHOP_X,z:STADIUM_SHOP_WALL_Z+STADIUM_SHOP_POOL.dz,ground:.02,poolWidth:STADIUM_SHOP_POOL.width,poolDepth:STADIUM_SHOP_POOL.depth,chunk:'stadium'});
   const signStates=nightSigns.map(material=>({material,intensity:material.emissiveIntensity}));
 
   // Spatial/material batches preserve culling: a distant city's meshes never share

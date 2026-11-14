@@ -194,8 +194,8 @@ await ok('QA Nov 9: a Konbini pair\'s left-hand neighbour moves the knob label a
  // The label (left of the knob) and the coins / cap tag sat over the neighbouring cabinet: a machine with a neighbour on its
  // left (seen from the front) puts them above the knob / under the coin plate (components/GashaponMachineFace.tsx hasLeftNeighbour).
  const left=island.filter(m=>island.some(o=>o.id!==m.id&&Math.hypot(o.x-m.x,o.z-m.z)<1.6&&((o.x-m.x)*Math.cos(m.yaw)-(o.z-m.z)*Math.sin(m.yaw))<0)).map(m=>m.id).sort();
- same(left,['gs-cay-sweets','gs-square-snacks','gs-stadium-beach','gs-stadium-boots'],'the east machine of each Konbini pair (and of each stadium pair) has its neighbour on the left');
- same(island.filter(m=>m.zone==='stadium').filter(m=>M.stadiumCabinetOnLeft(m.id)).map(m=>m.id),['gs-stadium-boots','gs-stadium-pixel','gs-stadium-beach'],'in the stadium row the drink machine counts as the pixel machine\'s left neighbour too');
+ same(left,['gs-cay-sweets','gs-square-snacks'],'the east machine of each Konbini pair has its neighbour on the left (the spread stadium row has none within 1.6 m)');
+ same(island.filter(m=>m.zone==='stadium').filter(m=>M.stadiumCabinetOnLeft(m.id)).map(m=>m.id),[],'Nov 13 spread: every stadium gap is over a metre, so no stadium machine moves its label for a cabinet on its left');
  const face=read('components/GashaponMachineFace.tsx'),css=read('components/GashaponMachineFace.module.css');
  assert(/export function hasLeftNeighbour/.test(face)&&/data-neighbour=\{hasLeftNeighbour\(machine\)/.test(face),'the face marks a left-hand neighbour');
  assert(/\[data-neighbour=left\] \.knobLabel\{[^}]*bottom:calc\(100% \+/.test(css)&&/\[data-neighbour=left\] \.tag\{[^}]*left:var\(--cx\)/.test(css),'label above the knob, tag under the plate');

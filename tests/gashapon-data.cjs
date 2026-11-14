@@ -109,12 +109,19 @@ await ok('DRIP FC Stadium four: against the south stand under the big screen, tw
  assert(Math.abs(posts[0].x+posts[1].x-2*SS.STADIUM_SHOP_X)<.01,'the screen is centred on the row too');
  const cab=[...row.map(m=>({id:m.id,...M.gashaponFootprint?.(m)??{x:m.x,z:m.z,w:M.GASHA_STYLE_SIZE[M.gashaStyleOf(m)].w+.06,d:M.GASHA_STYLE_SIZE[M.gashaStyleOf(m)].d+.06}})),{id:'stadium',x:vend.x,z:vend.z,w:1.69,d:1.118},{id:'drinkstadium',x:drink.x,z:drink.z,w:1.69,d:1.118}].sort((a,b)=>a.x-b.x);
  for(const c of cab){assert(Math.abs(c.z-c.d/2-(wall+.03))<.011,`${c.id}: back flush to the wall (3 cm gap)`);}
- for(let i=1;i<cab.length;i++){const g=(cab[i].x-cab[i].w/2)-(cab[i-1].x+cab[i-1].w/2);assert(g>=.1&&g<=.13,`${cab[i-1].id} | ${cab[i].id}: a 12 cm gap (${g.toFixed(3)})`);}
+ // Nov 13 2026 (owner: "spread out the machines below the screens more"): the gashapons ~1–1.5 m apart and from the pair; the
+ // vending + drink pair keeps its Konbini 12 cm gap. Symmetric about the middle.
+ for(let i=1;i<cab.length;i++){const g=(cab[i].x-cab[i].w/2)-(cab[i-1].x+cab[i-1].w/2),pair=cab[i-1].id==='stadium'&&cab[i].id==='drinkstadium';
+  assert(pair?g>=.1&&g<=.13:g>=1&&g<=1.5,`${cab[i-1].id} | ${cab[i].id}: ${pair?'a 12 cm gap':'a 1–1.5 m gap'} (${g.toFixed(3)})`);}
+ const gx=row.map(m=>m.x-SS.STADIUM_SHOP_X).sort((a,b)=>a-b);assert(gx.every((x,i)=>Math.abs(x+gx[3-i])<.01),'the gashapons stand symmetric about the middle');
  for(const m of row)assert.equal(m.yaw,0,m.id+' faces out (south)');
  const x0=cab[0].x-cab[0].w/2,x1=cab.at(-1).x+cab.at(-1).w/2;
- for(const q of posts)assert(Math.min(Math.abs(q.x-x0),Math.abs(q.x-x1))>=2&&(q.x<x0||q.x>x1),'the row stands between the posts, ≥ 2 m clear of each');
- // The kick lanes of both screen-post targets run straight south from the posts: the row stays out of them.
- for(const s of SB.STADIUM_BALL_SPOTS.filter(s=>s.id.startsWith('stadium-screen')))assert(s.wall.x<x0-1.5||s.wall.x>x1+1.5,s.id+': its target and kick lane are clear of the row');
+ for(const q of posts)assert(Math.min(Math.abs(q.x-.3-x1),Math.abs(x0-q.x-.3))>=.5&&(q.x<x0||q.x>x1),'the row stands between the posts, ≥ 0.5 m clear of each collider');
+ // The kick lanes of both screen-post targets run straight south from the posts' south faces: any cabinet within 1.5 m of a post's
+ // x stands behind (north of) its face, off the posts' x by ≥ 0.8 m, and ≥ 1.5 m from where each ball drops.
+ for(const s of SB.STADIUM_BALL_SPOTS.filter(s=>s.id.startsWith('stadium-screen'))){assert(cab.every(c=>Math.abs(c.x-s.wall.x)-c.w/2>=1.5||c.z+c.d/2<s.wall.z-.3),s.id+': every cabinet near the post stands behind its target face, out of its kick lane');
+  assert(cab.every(c=>Math.abs(c.x-s.wall.x)-c.w/2>=.8),s.id+': the row is clear of the post\'s x');
+  assert(cab.every(c=>Math.hypot(Math.max(0,Math.abs(s.x-c.x)-c.w/2),Math.max(0,Math.abs(s.z-c.z)-c.d/2))>=1.5),s.id+': its ball drops clear of the row');}
  const so=Seats.STANDS.find(q=>q.id==='south');for(const c of so.stairs)assert(Math.abs(c)-Seats.STAIR_WIDTH/2-1>Math.max(Math.abs(x0-SS.STADIUM_SHOP_X),Math.abs(x1-SS.STADIUM_SHOP_X)),'clear of the back stairs and their bollards');
  const others=solid.filter(o=>!cab.some(c=>Math.abs(c.x-o.x)<.01&&Math.abs(c.z-o.z)<.01)),standBox=o=>o.z+o.d/2<=wall+.01;
  for(const c of cab)for(const o of others){if(standBox(o))continue;assert(gap(c,o)>=.3,`${c.id}: clear of the collider at (${o.x.toFixed(2)}, ${o.z.toFixed(2)})`);

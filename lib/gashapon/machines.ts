@@ -18,7 +18,7 @@
 import {konbiniMachineSpot,summitSnackSpot,ISLAND_SQUARE_KONBINI,KONBINI_FACADE_PROUD,KONBINI_BACK_GAP} from '../town/vendingPlaces';
 import {CAY_KONBINI,CAY_KONBINI_DOOR} from '../town/coralCay';
 import {summitGround} from '../town/summitIsle';
-import {STADIUM_SHOP_X,STADIUM_SHOP_YAW,STADIUM_SHOP_GAP,STADIUM_VENDING_HALF,stadiumShopZ} from '../town/stadiumShops';
+import {STADIUM_SHOP_X,STADIUM_SHOP_YAW,STADIUM_VENDING_HALF,STADIUM_GASHA_OFFSETS,stadiumShopZ} from '../town/stadiumShops';
 
 export type GashaponMachineId=
  |'gs-square-snacks'|'gs-square-lucky'|'gs-cay-sweets'|'gs-cay-bento'
@@ -105,16 +105,19 @@ const SUMMIT_SPOT=(()=>{const v=summitSnackSpot();return {x:v.x,z:r2(v.z+1.97),y
 /**
  * The DRIP FC Stadium four (Nov 13 2026, owner: "on both sides of the vending row, two gashapon machines each"): against the
  * south stand's back wall under the big screen (lib/town/stadiumShops.ts), two west and two east of the vending + drink pair,
- * each flush to the wall, facing out (yaw 0) to the viewing area, 12 cm apart (collider to collider). Listed west to east.
+ * each flush to the wall, facing out (yaw 0) to the viewing area, spread ~1 m apart (stadiumShops.ts STADIUM_GASHA_OFFSETS,
+ * Nov 13 2026 owner: "spread out the machines below the screens more"). Listed west to east.
  */
 const STADIUM_ROW:readonly GashaponMachineId[]=['gs-stadium-trophies','gs-stadium-boots','gs-stadium-pixel','gs-stadium-beach'];
-const stadiumSpot=(id:GashaponMachineId)=>{const i=STADIUM_ROW.indexOf(id),side=i<2?-1:1,near=STADIUM_ROW[i<2?1:2],far=STADIUM_ROW[i<2?0:3];
- const w=(m:GashaponMachineId)=>GASHA_STYLE_SIZE[GASHA_LOOK[m].style].w+.06,inner=STADIUM_VENDING_HALF+STADIUM_SHOP_GAP;
- const off=id===near?inner+w(near)/2:inner+w(near)+STADIUM_SHOP_GAP+w(far)/2;
+const stadiumSpot=(id:GashaponMachineId)=>{const i=STADIUM_ROW.indexOf(id),side=i<2?-1:1,off=STADIUM_GASHA_OFFSETS[i===0||i===3?1:0];
  return {x:r2(STADIUM_SHOP_X+side*off),z:stadiumShopZ(GASHA_STYLE_SIZE[GASHA_LOOK[id].style].d+.06),yaw:STADIUM_SHOP_YAW};};
-/** In the stadium row every machine but the west end one has a cabinet on its left (a gashapon, or the drink machine for the
- *  pixel machine): components/GashaponMachineFace.tsx moves its knob label and tag onto the machine, as for the Konbini pairs. */
-export const stadiumCabinetOnLeft=(id:string)=>STADIUM_ROW.indexOf(id as GashaponMachineId)>0;
+/** A stadium machine with a cabinet close on its left (a gashapon, or the drink machine for the pixel machine) gets its knob label
+ *  and tag moved onto the machine by components/GashaponMachineFace.tsx, as for the Konbini pairs. Since the Nov 13 spread every
+ *  gap is over a metre, so none does: this measures the row rather than assuming it. */
+export const stadiumCabinetOnLeft=(id:string)=>{const i=STADIUM_ROW.indexOf(id as GashaponMachineId);if(i<=0)return false;
+ const w=(m:GashaponMachineId)=>GASHA_STYLE_SIZE[GASHA_LOOK[m].style].w+.06,me=stadiumSpot(STADIUM_ROW[i]).x-w(STADIUM_ROW[i])/2;
+ const left=i===2?STADIUM_SHOP_X+STADIUM_VENDING_HALF:stadiumSpot(STADIUM_ROW[i-1]).x+w(STADIUM_ROW[i-1])/2;
+ return me-left<.5;};
 const STADIUM_PLACE='at the DRIP FC Stadium, against the south stand under the big screen, beside the vending machines';
 
 export const GASHAPON_MACHINES:readonly GashaponMachine[]=[
