@@ -38,6 +38,7 @@ const DECAL_VIEW:Record<DecalZone,BootView>={outside:'side',inside:'inside',toe:
 const VIEW_CHIPS:{id:BootView;label:string}[]=[{id:'hero',label:'Hero'},{id:'side',label:'Outside'},{id:'inside',label:'Inside'},{id:'top',label:'Top'},{id:'heel',label:'Heel'},{id:'sole',label:'Sole'}];
 const QUICK_NUMBERS=[7,9,10,11,23];
 const SPOTS:[number,number][]=[[0,0],[-.6,.35],[.6,-.3],[-.6,-.4],[.6,.4],[0,.6],[0,-.6],[-.3,0]];
+const HEEL_SPOTS:[number,number][]=[[0,0],[0,.6],[0,-.6],[-.6,.5],[.6,.5],[-.6,-.5],[.6,-.5]];
 const lum=(hex:string)=>{const n=parseInt(hex.slice(1),16);return ((n>>16&255)*.2126+(n>>8&255)*.7152+(n&255)*.0722)/255;};
 const newId=()=>'d'+Math.random().toString(36).slice(2,9);
 const HISTORY=40;
@@ -212,8 +213,12 @@ export default function BootStudio({onClose,onBuy,owned}:Props){
  const addDecal=(kind:DecalKind,ref:string)=>{
   if(design.decals.length>=DECAL_LIMIT){say(`${DECAL_LIMIT} is the most. Remove one first.`);return;}
   const used=design.decals.filter(d=>d.zone===zoneD).map(d=>[d.x,d.y]);
-  // the free spot farthest from the stickers already in this zone
-  const spot=SPOTS.map(p=>({p,d:Math.min(9,...used.map(([ux,uy])=>Math.hypot(ux-p[0],uy-p[1])))})).sort((a,b)=>b.d-a.d||0)[0].p;
+  // the heel also carries the stitched name or number and a heel flag (bootScene.ts placedFrom): keep a new sticker clear of them
+  if(zoneD==='heel'){const flagHeel=!!design.flag&&design.flagSpot==='heel';
+   if((design.heelText==='name'&&design.name)||(design.heelText==='number'&&design.number!=null))used.push([0,flagHeel?-.55:-.1]);if(flagHeel)used.push([0,.5]);}
+  const dist=(p:[number,number])=>Math.min(9,...used.map(([ux,uy])=>Math.hypot(ux-p[0],uy-p[1])));
+  // the free spot farthest from the stickers already in this zone; on the heel, the first clear spot (centred above the number)
+  const spot=(zoneD==='heel'?HEEL_SPOTS.find(p=>dist(p)>=.55):null)??SPOTS.map(p=>({p,d:dist(p)})).sort((a,b)=>b.d-a.d||0)[0].p;
   const id=newId(),base=zoneD==='heel'?design.colors.heel:zoneD==='toe'?design.colors.toe:design.colors.mid;
   const decal:BootDecal={id,kind,ref,zone:zoneD,x:spot[0],y:spot[1],size:kind==='quote'?1.1:1,rot:0,...(kind==='quote'?{tint:lum(base)>.55?'#18191d':'#f6f3ea'}:{})};
   commit(d=>({...d,decals:[...d.decals,decal]}));setSelected(id);setView(DECAL_VIEW[zoneD]);

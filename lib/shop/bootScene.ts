@@ -683,11 +683,12 @@ export function createBootScene(canvas:HTMLCanvasElement,opts:BootSceneOptions):
   const zs=pickMesh.geometry.getAttribute('aSurf') as T.BufferAttribute,f=hit.face!.a;
   return {p:hit.point.clone(),n:tmpN.clone(),part:Math.round(part),s:zA.getX(f),yr:zA.getY(f),rimd:zA.getZ(f),across:zs.getY(f)};
  }
- /** The decal (if any) under a point: in its own projected frame. */
- function decalAt(p:T.Vector3){
+ /** The decal (if any) under a point: in its own projected frame. `only`: test just that one (the selected sticker can be dragged
+  * even where a later decal, like the stitched heel number, overlaps it). */
+ function decalAt(p:T.Vector3,only?:string){
   const C=uni.uDC.value as T.Vector3[],A=uni.uDA.value as T.Vector3[],U=uni.uDU.value as T.Vector3[],S=uni.uDS.value as T.Vector4[];
   const ids=placedIds;
-  for(let i=(uni.uDCount.value as number)-1;i>=0;i--){const d=p.clone().sub(C[i]),R=new T.Vector3().crossVectors(A[i],U[i]).normalize();
+  for(let i=(uni.uDCount.value as number)-1;i>=0;i--){if(only&&ids[i]!==only)continue;const d=p.clone().sub(C[i]),R=new T.Vector3().crossVectors(A[i],U[i]).normalize();
    if(Math.abs(d.dot(R))<S[i].x*1.15&&Math.abs(d.dot(U[i]))<S[i].y*1.15+.02&&Math.abs(d.dot(A[i]))<.25)return ids[i]??null;}
   return null;
  }
@@ -698,7 +699,7 @@ export function createBootScene(canvas:HTMLCanvasElement,opts:BootSceneOptions):
   if(pointers.size===2){const [a,b]=[...pointers.values()];const s=sel();pinch0={d:Math.hypot(a.x-b.x,a.y-b.y),a:Math.atan2(b.y-a.y,b.x-a.x),zoom:zoomTarget,size:s?.size??1,rot:s?.rot??0};mode='pinch';drag=null;held=false;return;}
   downAt=performance.now();downX=e.clientX;downY=e.clientY;moved=0;vel={x:0,y:0};stepAcc={x:0,y:0};lastMoveT=downAt;
   mode='turn';
-  if(editing&&selected){const s=sel();const h=pick(e.clientX,e.clientY);if(s&&h&&decalAt(h.p)===s.id){mode='decal';drag={id:s.id,zone:s.zone};}}
+  if(editing&&selected){const s=sel();const h=pick(e.clientX,e.clientY);if(s&&h&&decalAt(h.p,s.id)===s.id){mode='decal';drag={id:s.id,zone:s.zone};}}
   if(mode==='turn'){held=true;omega.set(0,0,0);}
   kick();
  }
