@@ -93,7 +93,7 @@ ok('holdout ids allowlisted (client and the SQL counts regex), apart from the ph
  const K=createLoader()('lib/analytics/countIds.ts');
  assert.deepEqual([...K.HOLDOUT_FIXED_IDS].sort(),[...HX].sort());
  for(const id of HX)assert(!K.PUBLIC_FIXED_IDS.includes(id),id);
- const newest=fs.readdirSync('supabase/migrations').filter(f=>/analytics/.test(f)&&/analytics_ingest/.test(read('supabase/migrations/'+f))).sort().pop();
+ const newest=fs.readdirSync('supabase/migrations').filter(f=>/analytics/.test(f)&&/where key ~ '\^\[a-z\]\{1,2\}:/.test(read('supabase/migrations/'+f))).sort().pop();// the newest file that defines the ingest key regex (later ones may only mention analytics_ingest)
  const re=new RegExp(/where key ~ '(\^\[a-z\]\{1,2\}:[^']+)'/.exec(read('supabase/migrations/'+newest))[1]);
  for(const id of HX){assert(K.isCountId(id),id);assert(K.FIXED_COUNT_IDS.includes(id),id);assert(re.test(id),id);}
 });

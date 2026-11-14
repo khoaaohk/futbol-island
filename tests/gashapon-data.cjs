@@ -84,7 +84,9 @@ await ok('8 outdoor machines: on land, clear of buildings/colliders, roads, walk
   const near=Math.min(...solidFor.map(o=>gap(g,o)));assert(near>=1.4,`${g.id}: ≥ 1.4 m from every building and collider (${near.toFixed(2)})`);
   for(const p of pts)for(const o of solidFor)assert(gap(p,o)>=.5,`${g.id}: footprint/front clear of the collider at (${o.x.toFixed(1)}, ${o.z.toFixed(1)})`);
   for(const r of world.roads)assert(gap(g,r)>=.8,`${g.id}: off the road at (${r.x}, ${r.z})`);
-  for(const a of world.surfaceAreas)if(a.kind!=='sand'&&!(a.kind==='path'&&Math.min(a.w,a.d)>=8))for(const p of pts)assert(!(Math.abs(p.x-a.x)<a.w/2+.6&&Math.abs(p.z-a.z)<a.d/2+.6),`${g.id}: off the ${a.kind} at (${a.x}, ${a.z})`);
+  // Nov 13 2026: the Beach Kitchen square is laid as 6.6 m columns (beachKitchenSquare.ts squareSurfaces): it is a plaza, like a ≥ 8 m path.
+  const bkSquare=new Set(load('lib/town/beachKitchenSquare.ts').squareSurfaces().map(q=>q.x+','+q.z));
+  for(const a of world.surfaceAreas)if(a.kind!=='sand'&&!(a.kind==='path'&&(Math.min(a.w,a.d)>=8||bkSquare.has(a.x+','+a.z))))for(const p of pts)assert(!(Math.abs(p.x-a.x)<a.w/2+.6&&Math.abs(p.z-a.z)<a.d/2+.6),`${g.id}: off the ${a.kind} at (${a.x}, ${a.z})`);
   for(const v of V.LIVE_VENUES)assert(Math.abs(g.x-v.x)>=v.width/2+3||Math.abs(g.z-v.z)>=v.length/2+3,`${g.id}: ≥ 3 m outside the ${v.name} pitch`);
   for(const q of VC.VENDING_MACHINES)if(!(g.id==='gs-summit'&&(q.id==='summit'||q.id==='drinksummit'))/* beside the Summit vending pair on purpose (Nov 9 2026) */)assert(Math.hypot(q.x-g.x,q.z-g.z)>=4.5,`${g.id}: ≥ 4.5 m from the ${q.id} vending machine`);
   if(SI.onSummitIsle(g.x,g.z)){assert(VP.standsOnSummit({x:g.x,z:g.z,yaw:g.yaw})||VP.standsAtSummitFence({x:g.x,z:g.z,yaw:g.yaw}),g.id+': summit flat-ground rules (Nov 10 2026: or the line against the east fence)');assert(Math.abs(g.y-SI.summitGround(g.x,g.z))<.02,g.id+': y is the summit ground');}

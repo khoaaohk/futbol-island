@@ -18,7 +18,8 @@ assert.equal(H.swimLessonDue(false),true,'a real swim start queues the card');
 
 // 2. Wiring.
 const town=read('components/Town.tsx');
-assert(/if\(ev\.swimStarted\)\{countSwimStart\(\);if\(swimLessonDue\(animalRides\.riding\)\)waterStore\.set\(\{lesson:/.test(town),'Town bumps the swim lesson only off a ride');
+// Nov 13 2026: the swim count moved to a 1.5 s debounce (admin-analytics-water.cjs); the lesson bump still fires on the swim start, off a ride only.
+assert(/if\(ev\.swimStarted&&swimLessonDue\(animalRides\.riding\)\)waterStore\.set\(\{lesson:/.test(town),'Town bumps the swim lesson only off a ride');
 const toast=read('components/SwimLessonToast.tsx');
 assert(/waterLessonHeld\(which,\{riding\}\)/.test(toast),'the toast asks waterLessonHeld');
 assert(/blocked=held\|\|busy\|\|rideHeld/.test(toast),'a ride blocks the card from showing');
