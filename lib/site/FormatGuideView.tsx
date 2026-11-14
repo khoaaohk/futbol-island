@@ -23,7 +23,7 @@ export default function FormatGuideView({format}:{format:FormatGuide['format']})
   <JsonLd data={faqLd(g.faq)}/>
   <GuideIntro crumbs={crumbs} h1={g.h1} lead={g.lead} cta/>
   <Section id="compare" title={`${format} formations compared`}>
-   <div className={styles.tableWrap}><table className={styles.table}>
+   <div className={styles.tableWrap} tabIndex={0} role="region" aria-label={`${format} formations compared`}><table className={styles.table}>
     <thead><tr><th scope="col">Formation</th><th scope="col">With the goalkeeper</th><th scope="col">Best for</th><th scope="col">Watch out for</th></tr></thead>
     <tbody>{list.map(f=><tr key={f.slug}><th scope="row"><a href={f.path}>{f.shape}</a></th><td>{withKeeper(f)}</td><td>{f.best}</td><td>{f.watch}</td></tr>)}</tbody>
    </table></div>

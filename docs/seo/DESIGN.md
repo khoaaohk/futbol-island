@@ -23,7 +23,7 @@ green ink, dark green header, IslandBrush title with a gold shadow, beige outlin
   (`/#explore`, `/#together`). The footer is the one home ends on. The header must stay a direct `<header>` child: `/` and
   `/marketing` bring their own bar and hide it.
 - **Colour**: paper `#fbf7ee`, tint `#ecefdf` (cards, tables), well `#efe8d7` (picture panels), ink `#14221d`, soft ink
-  `#5b675f`, gold `#e9c16b`, gold ink `#8a6620`, pitch `#1d6b55`, hairline `rgb(20 34 29 / .12)`, buttons from `--btn-*`.
+  `#5b675f`, gold `#e9c16b`, gold ink `#85621f`, pitch `#1d6b55`, hairline `rgb(20 34 29 / .12)`, buttons from `--btn-*`.
 - **Type**: the system sans (no download). Title `clamp(38px, 3.6vw + 24px, 72px)`, weight 600, tracking -.028em, line-height
   1.04. Section h2 28 / 36, weight 600, -.025em. h3 19 / 22, weight 700. Body 17 / 18, line-height 1.55. Lead 20 / 24, weight
   500, soft ink. Caption 15. Label 13, sentence case. IslandBrush is the wordmark only; never on buttons (AGENTS.md).

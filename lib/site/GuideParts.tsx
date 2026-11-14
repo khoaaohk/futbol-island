@@ -39,7 +39,7 @@ export function SceneDiagram({id,scene,small,image}:{id:string;scene:Scene;small
 }
 /** A data table with real header cells (size charts, rule pages): the first column is the row header. */
 export function DataTable({head,rows,label}:{head:readonly string[];rows:readonly (readonly React.ReactNode[])[];label:string}){
- return <div className={styles.tableWrap}><table className={styles.table} aria-label={label}>
+ return <div className={styles.tableWrap} tabIndex={0} role="region" aria-label={label}><table className={styles.table} aria-label={label}>
   <thead><tr>{head.map(h=><th key={h} scope="col">{h}</th>)}</tr></thead>
   <tbody>{rows.map((r,i)=><tr key={i}>{r.map((c,j)=>j===0?<th key={j} scope="row">{c}</th>:<td key={j}>{c}</td>)}</tr>)}</tbody>
  </table></div>;

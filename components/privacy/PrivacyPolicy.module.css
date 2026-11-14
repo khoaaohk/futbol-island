@@ -22,3 +22,4 @@
 .policy{grid-template-columns:minmax(0,1fr);min-width:0}
 .policy>*{min-width:0}
 .policy h2:focus{outline:none}
+.tableWrap:focus-visible{outline:3px solid #1d6b55;outline-offset:3px}
