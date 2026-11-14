@@ -43,6 +43,11 @@ export function ambienceLevel(x:number,z:number){const d=Math.hypot(Math.max(0,M
  *  nearest free seat within BUMP_REACH m (else I stand up) and a short toast says so. */
 export const BUMP_REACH=4;
 export const SEAT_BUMP_TOAST={moved:'Someone sat there too! You shuffled along one seat.',stood:'Someone sat there too! Find another seat.'} as const;
+/** QA Nov 14 2026: the stadium coaches stand on aisles, where a seat is always nearer than the coach's middle, so the Sit offer
+ *  (with the arbiter's hysteresis) hid "Talk to Coach …" right next to them. Within TALK_FIRST m of a talkable islander the Sit
+ *  offer steps aside (never while seated: Stand up always shows). */
+export const TALK_FIRST=2.2;
+export const sitYieldsToTalk=(seated:boolean,npcDistance:number|null)=>!seated&&npcDistance!==null&&npcDistance<TALK_FIRST;
 const MOVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright'] as const;
 
 /** phone: a coarse-pointer device (fewer fans); goal: a goal at the stadium while the match is near (Town plays the cheer). */
