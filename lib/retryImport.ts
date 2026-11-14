@@ -11,10 +11,19 @@
  * chunk (JS and CSS), so the retry really fetches again. No timers while online and loaded; one `online` listener while waiting.
  */
 export const RETRY_IMPORT_PAUSE_MS=1500;
+/** How many lazy parts are waiting for the connection right now (components/NetSaveNotice.tsx shows "Waiting for internet…"). */
+let waitingOffline=0;
+const waitSubs=new Set<()=>void>();
+const setWaiting=(d:number)=>{waitingOffline=Math.max(0,waitingOffline+d);waitSubs.forEach(f=>f());};
+export const netWaitCount=()=>waitingOffline;
+export function subscribeNetWait(f:()=>void){waitSubs.add(f);return()=>{waitSubs.delete(f);};}
 export function retryImport<T>(load:()=>Promise<T>,pauseMs=RETRY_IMPORT_PAUSE_MS):Promise<T>{
  return load().catch(()=>new Promise<T>((resolve,reject)=>{
   const again=()=>{load().then(resolve,reject);};
-  if(typeof window!=='undefined'&&typeof navigator!=='undefined'&&navigator.onLine===false)window.addEventListener('online',again,{once:true});
+  if(typeof window!=='undefined'&&typeof navigator!=='undefined'&&navigator.onLine===false){
+   setWaiting(1);
+   window.addEventListener('online',()=>{setWaiting(-1);again();},{once:true});
+  }
   else setTimeout(again,pauseMs);
  }));
 }

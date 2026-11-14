@@ -67,5 +67,31 @@ const mem=()=>{const d=new Map();return {getItem:k=>d.has(k)?d.get(k):null,setIt
  const lazy=['components','app'].flatMap(d=>walk(path.join(ROOT,d))).map(f=>[f,fs.readFileSync(f,'utf8')]).filter(([,s])=>s.includes("from 'next/dynamic'"));
  assert(lazy.length>=30,'found the lazy parts');
  for(const [f,s] of lazy){assert(!/(dynamic|dynamicImport)\(\(\)\s*=>\s*import\(/.test(s),'every lazy part retries its download: '+path.relative(ROOT,f));}
+ // 4. Owner defaults (robust pass 2): offline waits are counted for the "Waiting for internet…" note; blocked storage gets one note.
+ {const listeners={};const nav={onLine:false};const win={addEventListener:(n,f)=>{(listeners[n]??=[]).push(f);}};
+  const {load}=loader({window:win,navigator:nav});const R=load('lib/retryImport.ts');
+  let seen=[];const off=R.subscribeNetWait(()=>seen.push(R.netWaitCount()));
+  let a=0,b=0;const pa=R.retryImport(()=>++a===1?Promise.reject(Error('chunk')):Promise.resolve('A'));const pb=R.retryImport(()=>++b===1?Promise.reject(Error('chunk')):Promise.resolve('B'));
+  await new Promise(r=>setImmediate(r));assert.equal(R.netWaitCount(),2,'two panels waiting');assert.deepEqual(seen,[1,2]);
+  nav.onLine=true;listeners.online.forEach(f=>f());assert.equal(R.netWaitCount(),0,'back online: nothing waits');assert.deepEqual([await pa,await pb],['A','B']);
+  off();R.retryImport(()=>Promise.reject(Error('x'))).catch(()=>{});assert.equal(seen.length,4,'unsubscribed');}
+ {const blocked={};for(const n of ['localStorage','sessionStorage'])Object.defineProperty(blocked,n,{configurable:true,enumerable:true,get(){throw Error('denied');}});
+  const ctx=vm.createContext(blocked);ctx.window=ctx;vm.runInContext(STORAGE_FALLBACK_BOOT,ctx);assert.equal(ctx.__fiNoSave,true,'blocked localStorage is flagged');
+  const half=vm.createContext({localStorage:mem()});Object.defineProperty(half,'sessionStorage',{get(){throw Error('denied');}});half.window=half;vm.runInContext(STORAGE_FALLBACK_BOOT,half);
+  assert.equal(half.__fiNoSave,undefined,'only sessionStorage blocked: saving still works, no note');}
+ {const src=read('components/NetSaveNotice.tsx');
+  assert(src.includes(`NO_SAVE_TEXT="This browser can't save your island. Ask a grown-up, or use your save code."`),'owner copy');
+  assert(src.includes("NET_WAIT_TITLE='Waiting for internet…'"));
+  const fn=src.slice(src.indexOf('export const GAME_PATH'),src.indexOf('function markNoSaveSeen'));
+  const js=ts.transpileModule(fn,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+  const m={exports:{}};new Function('exports','module','NO_SAVE_SEEN_KEY',js+';module.exports.reset=()=>{noSaveShown=true};')(m.exports,m,'fi2-no-save-note-v1');
+  const {wantsNoSaveNote}=m.exports;const ss=mem();
+  assert.equal(wantsNoSaveNote({__fiNoSave:true,sessionStorage:ss},'/play'),true,'shows on the game');
+  assert.equal(wantsNoSaveNote({__fiNoSave:true,sessionStorage:ss},'/'),false,'never on the tour site');
+  assert.equal(wantsNoSaveNote({__fiNoSave:true,sessionStorage:ss},'/admin'),false);
+  assert.equal(wantsNoSaveNote({sessionStorage:ss},'/play'),false,'storage works: no note');
+  ss.setItem('fi2-no-save-note-v1','1');assert.equal(wantsNoSaveNote({__fiNoSave:true,sessionStorage:ss},'/arcade'),false,'once per visit');
+  assert.match(read('app/layout.tsx'),/\{children\}<NetSaveNotice\/>/,'mounted on every page');
+  assert.match(read('components/NetSaveNotice.module.css'),/max-width:min\(380px,100%\)/,'phone-safe width');}
  console.log('qa-robust-nov14: ok');
 })().catch(e=>{console.error(e);process.exit(1);});
