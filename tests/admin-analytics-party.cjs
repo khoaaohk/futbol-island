@@ -376,7 +376,7 @@ console.log(`admin-analytics-party: ${passed} groups passed`);
   const pnn=renderToStaticMarkup(React.createElement(PartiesNow,{data:nativeRelay}));assert(/Friend parties now/.test(pnn)&&/>1</.test(pnn),'parties now from adapted native data');}
  const nc=renderToStaticMarkup(React.createElement(Friends,{report:rep,relay:RT.emptyRelayStats('not-configured','2026-10-19','2026-10-25')}));
  assert(/Relay stats not configured/.test(nc),'not configured state');
- const pn=renderToStaticMarkup(React.createElement(PartiesNow,{data:okRelay}));assert(/Parties now/.test(pn)&&/>7</.test(pn)&&/>23</.test(pn),'parties now');
+ const pn=renderToStaticMarkup(React.createElement(PartiesNow,{data:okRelay}));assert(/Friend parties now/.test(pn)&&/>7</.test(pn)&&/>23</.test(pn),'parties now');
  assert(/relay stats not configured/.test(renderToStaticMarkup(React.createElement(PartiesNow,{data:RT.emptyRelayStats('not-configured')}))));
  const e=renderToStaticMarkup(React.createElement(Emote,{report:rep}));assert(/Dance moves/.test(e)&&/Streaks/.test(e)&&/Friends’ emotes seen/.test(e),'variant tables + new tiles');
  for(const html of [f,nc,pn,e])assert(!/sekrit|Bearer/.test(html));
