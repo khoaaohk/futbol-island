@@ -108,6 +108,9 @@ const packInfo=(pack:string)=>PACKS.find(p=>p.id===pack);
 /** Packs where the Scan starts switched on until the child chooses: looking up is the lesson there. */
 const SCAN_FIRST=new Set(['first-passes','see-the-space']);
 
+/** QA Nov 14 2026: a kid mashing Play / Again / Next tapped through the card onto the pitch and played a pass (lost a try)
+ *  before seeing the puzzle; pitch input waits this long after the puzzle view opens. */
+const PLAY_ARM_MS=450;
 export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const canvas=useRef<HTMLCanvasElement>(null),sceneRef=useRef<PassPuzzleScene|null>(null),worldRef=useRef<PuzzleWorld|null>(null),replayRef=useRef<Replay|null>(null);
  const wake=useRef(()=>{}),audio=useRef<AudioContext|null>(null);
@@ -122,7 +125,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  /** Any tap during a beat skips it: back to 1x and the wide camera at once (never blocks a retry). */
  const skipCine=useRef(()=>{});
  const [packId,setPackId]=useState('first-passes');
- const attemptEvents=useRef<PuzzleEvent[]>([]),resultAt=useRef(0),settleUntil=useRef(0),viewRef=useRef<View>('levels');
+ const attemptEvents=useRef<PuzzleEvent[]>([]),resultAt=useRef(0),settleUntil=useRef(0),viewRef=useRef<View>('levels'),armAt=useRef(0);
  const [progress,setProgress]=useState<Progress>({stars:{}}),[format,setFormat]=useState<Format>('9v9'),progressRef=useRef(progress);progressRef.current=progress;
  const [levelId,setLevelId]=useState<string>(SCENARIOS[0]?.id??''),[view,setViewState]=useState<View>('levels');
  const [hud,setHud]=useState({attempt:1,attempts:3,passes:0,phase:'aiming' as string});
@@ -176,7 +179,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const level=useMemo(()=>baseLevel&&!heading?youthScenario(baseLevel):baseLevel,[baseLevel,heading]);
  const numbers=useMemo(()=>level?shirtNumbersFor(level):{attackers:[],defenders:[],keeper:1},[level]);numbersRef.current=numbers;
  const packs=useMemo(()=>{const map=new Map<string,Scenario[]>();for(const s of SCENARIOS){if(!map.has(s.pack))map.set(s.pack,[]);map.get(s.pack)!.push(s);}return [...map.entries()].sort((a,b)=>(packInfo(a[0])?.order??9)-(packInfo(b[0])?.order??9));},[]);
- const setView=(v:View)=>{cancelDrawing.current();warn(null);if(v==='result')resultAt.current=performance.now();viewRef.current=v;setViewState(v);};
+ const setView=(v:View)=>{cancelDrawing.current();warn(null);if(v==='result')resultAt.current=performance.now();if(v==='play'&&viewRef.current!=='play')armAt.current=performance.now()+PLAY_ARM_MS;viewRef.current=v;setViewState(v);};
 
  useEffect(()=>{const p=readProgress();setProgress(p);setFormat(p.format??childFormat()??'9v9');
   // A "Today in the arcade" row opens today's puzzle (dailyStars first, so the same daily the menu would show).
@@ -370,7 +373,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    if(top<8){top=Math.max(8,Math.min(r.height-H-8,py+34));left=px>r.width/2?px-W-46:px+46;}
    el.style.left=`${Math.max(8,Math.min(r.width-W-8,left))}px`;el.style.top=`${top}px`;el.dataset.on='true';};
   // Pointer: a stroke always starts at the ball, so a small thumb never misses it.
-  const down=(e:PointerEvent)=>{if(pausedRef.current)return;/* a tap during a beat only skips it (it never also fires a pass) */if(cine.active||finishAt.current){e.preventDefault();skipCine.current();return;}const world=worldRef.current;if(e.button!==0||!world||replayRef.current||viewRef.current!=='play'||world.state.phase!=='aiming'||stroke.current)return;const bounds=el.getBoundingClientRect(),p=scene.pick(e.clientX,e.clientY,bounds);if(!p)return;e.preventDefault();unlock();el.setPointerCapture(e.pointerId);const b=world.state.ball.p,t=performance.now()/1000;
+  const down=(e:PointerEvent)=>{if(pausedRef.current)return;/* a tap during a beat only skips it (it never also fires a pass) */if(cine.active||finishAt.current){e.preventDefault();skipCine.current();return;}const world=worldRef.current;if(performance.now()<armAt.current)return;/* QA Nov 14 2026: the rest of a mashed Play / Again tap never lands on the pitch as a pass */if(e.button!==0||!world||replayRef.current||viewRef.current!=='play'||world.state.phase!=='aiming'||stroke.current)return;const bounds=el.getBoundingClientRect(),p=scene.pick(e.clientX,e.clientY,bounds);if(!p)return;e.preventDefault();unlock();el.setPointerCapture(e.pointerId);const b=world.state.ball.p,t=performance.now()/1000;
    // Starting on a teammate (away from the ball) drags their run instead of a pass: movement first, then the pass.
    let run:number|undefined,best=RUN_GRAB;if(Math.hypot(p.x-b.x,p.z-b.z)>BALL_GRAB)world.state.attackers.forEach((a,i)=>{const d=Math.hypot(a.p.x-p.x,a.p.z-p.z);if(i!==world.state.carrier&&d<best){best=d;run=i;}});
    const from=run!==undefined?world.state.attackers[run].p:b;
