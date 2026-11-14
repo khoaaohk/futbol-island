@@ -2405,7 +2405,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const sitWant=stadiumSit.want(location.x,location.z,rooftop.state.height,canEnter&&rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.ladder.active&&streetTraffic.rider.index<0);// West Stadium: Sit / Stand up
       stadiumSit.prompt(uiElement<HTMLButtonElement>('[data-stadium-sit]'),!!sitWant&&hudFocusNow==='enter'&&focusArbiter.current?.key===STADIUM_SIT_KEY,camera,fullWidth,fullHeight,placeEntryPrompt,setUIHidden);
       // Stadium Park pond: Net it over a dragonfly within reach (on foot, free to act; pondBugs.ts).
-      const pondNetK=pondLife.active&&pondNetAllowed({ride:rideRef.current,onGround:!rooftop.state.falling&&!rooftop.state.air&&groundY<.05,canEnter,job:!!jobs.run,under:water.diveActive})?pondLife.nearFly(location.x,location.z,POND_NET.range):-1;
+      const pondNetK=pondLife.active&&pondNetAllowed({ride:rideRef.current,onGround:!rooftop.state.falling&&!rooftop.state.air&&groundY<.05,canEnter,job:!!jobs.run,under:water.diveActive,swimming:water.swimming})?pondLife.nearFly(location.x,location.z,POND_NET.range):-1;
       const pondNetWant=pondNetK>=0?{key:POND_NET.key,distance:Math.hypot(pondLife.flyAt(pondNetK,pondNetAt).x-location.x,pondNetAt.z-location.z)}:null;
       {const prompt=uiElement<HTMLButtonElement>('[data-pond-net]');if(prompt){let hidden=!(pondNetWant&&hudFocusNow==='enter'&&focusArbiter.current?.key===POND_NET.key);
         if(!hidden){ladderPromptV.set(pondNetAt.x,pondNetAt.y+.9,pondNetAt.z).project(camera);hidden=ladderPromptV.z< -1||ladderPromptV.z>1;

@@ -28,7 +28,9 @@ const local:Port={get:()=>{try{return localStorage.getItem(BUG_BOOK_KEY);}catch{
  *  itself cannot be seen there). */
 export const pondDiverPinOn=(inPond:boolean,under:number)=>inPond&&under>.35;
 /** `under`: the player is duck-diving (QA Nov 14 2026: Net it floated over the water while the kid was under it). */
-export const pondNetAllowed=(o:{ride:string;onGround:boolean;canEnter:boolean;job:boolean;under?:boolean})=>o.ride==='walk'&&o.onGround&&o.canEnter&&!o.job&&!o.under;
+/** On foot only: not riding, not in a job, not under water and not swimming (QA Nov 14 2026: a kid swimming in the middle of the
+ *  pond was offered "Net the dragonfly"; wading at the edge still counts as on foot). */
+export const pondNetAllowed=(o:{ride:string;onGround:boolean;canEnter:boolean;job:boolean;under?:boolean;swimming?:boolean})=>o.ride==='walk'&&o.onGround&&o.canEnter&&!o.job&&!o.under&&!o.swimming;
 /** The Bug book catch of a pond dragonfly, plus the same events a shift catch fires (the first-ever coin, the completion bonus). */
 export function netPondDragonfly(port:Port=local,fire:(target:'window'|'document',name:string,detail:unknown)=>void=dispatch):BugCatchRecord{
  const rec=recordBugCatch('bug',POND_DRAGONFLY_ID,port);

@@ -61,4 +61,11 @@ ok('Vending cabinet only flattens indexed parts',()=>{
  assert.match(read('lib/graphics/vendingMachines.ts'),/const flat=parts\.map\(g=>g\.index\?g\.toNonIndexed\(\):g\)/);
 });
 
+// 6. Stadium Park pond: no "Net the dragonfly" while swimming in the middle of the pond (on foot only; wading still counts).
+ok('Pond net is on foot only, not swimming',()=>{
+ const PB=load('lib/town/pondBugs.ts'),base={ride:'walk',onGround:true,canEnter:true,job:false};
+ assert(PB.pondNetAllowed(base)&&PB.pondNetAllowed({...base,swimming:false})&&!PB.pondNetAllowed({...base,swimming:true}));
+ assert.match(read('components/Town.tsx'),/under:water\.diveActive,swimming:water\.swimming\}\)\?pondLife\.nearFly/);
+});
+
 console.log(`PASS qa-areas2-nov14: ${n} checks`);

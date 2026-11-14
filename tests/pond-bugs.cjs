@@ -32,7 +32,8 @@ assert(PB.pondNetAllowed({ride:'walk',onGround:true,canEnter:true,job:false}),'o
 assert(!PB.pondNetAllowed({ride:'walk',onGround:true,canEnter:true,job:false,under:true}),'not while duck-diving (QA Nov 14 2026)');
 assert(PB.pondDiverPinOn(true,1)&&!PB.pondDiverPinOn(true,.1)&&!PB.pondDiverPinOn(false,1),'the pond diver pin: in the pond, head under');
 assert(/const on=pondDiverPinOn\(!!waterProbe\.pond,water\.state\.under\);if\(pondPin\.visible!==on\)pondPin\.visible=on;/.test(require('fs').readFileSync('components/Town.tsx','utf8')),'Town shows the pin');
-assert(/job:!!jobs\.run,under:water\.diveActive\}\)/.test(require('fs').readFileSync('components/Town.tsx','utf8')),'Town passes the dive');
+assert(!PB.pondNetAllowed({ride:'walk',onGround:true,canEnter:true,job:false,swimming:true}),'not while swimming (QA Nov 14 2026, areas 2)');
+assert(/job:!!jobs\.run,under:water\.diveActive,swimming:water\.swimming\}\)/.test(require('fs').readFileSync('components/Town.tsx','utf8')),'Town passes the dive');
 for(const o of [{ride:'bike',onGround:true,canEnter:true,job:false},{ride:'walk',onGround:false,canEnter:true,job:false},{ride:'walk',onGround:true,canEnter:false,job:false},{ride:'walk',onGround:true,canEnter:true,job:true}])assert(!PB.pondNetAllowed(o),'not '+JSON.stringify(o));
 // 2. The pond: a calm player is not fled from and gets a visit; a rushing one is fled from; a netted one is away, then back.
 const L=load('lib/town/westParkLayout.ts'),P=load('lib/town/parkPond.ts');
