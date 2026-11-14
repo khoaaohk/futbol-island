@@ -69,3 +69,6 @@ One small vertex-coloured mesh per room (an icosphere, 500 triangles; 320 in lit
 | `stadium-east-stand` | east stand aisle, row 4 | the technical area |
 | `stadium-north-stand` | north stand aisle, row 8 | home and away kits (Law 4) |
 | `stadium-screen` | south concourse, under the big screen | VAR basics (Law 6) |
+| `stadium-screen-west` | target on the big screen's west (left) post, from the ground behind the south stand | the scoreboard and the match clock (Law 7 halves) |
+
+**Nov 13 2026 (owner: a second target on the big screen's left post).** The 129th ball, `stadium-screen-west`, appended last: a round high kick target on the west screen post at the east post's height and facing. Coin save version 10: a save that had all 128 keeps the Matchday Fox and every costume; its finale waits for the 129-ball one.

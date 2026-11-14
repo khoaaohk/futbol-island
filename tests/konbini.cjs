@@ -525,5 +525,22 @@ const {BOOK_PRICE}=require('../lib/books/catalog.ts');
   assert(/data-emote-near=\{near\?'1':'0'\}/.test(rc.replace(/ /g,'').replace(/data-emote-near=\{near\?'1':'0'\}/,"data-emote-near={near?'1':'0'}"))&&/\[data-emote-near="0"\]\{opacity:0;visibility:hidden/.test(kcss)&&/\.18s/.test(kcss),'hidden = faded, cell kept');
   assert(/grid-template-columns:minmax\(0,1fr\) auto minmax\(0,1fr\)/.test(kcss)&&/hudWallet\{grid-column:2/.test(kcss)&&/\[data-konbini-done\]\{grid-column:3/.test(kcss),'header: chip left, coins centred, Done right');
   console.log('konbini emote rule');}
+ // Nov 13 2026 (owner: "at night the Konbini looks dark"): both shopfronts glow with the shared night factor, emissive only
+ // (lib/graphics/machineNightGlow.ts): windows, doors, shelves, stripe band and fascia marked in the paint batches, a brighter sign,
+ // a warm pool on the pavement; nothing in daylight.
+ {const T=require('three'),NG=require('../lib/graphics/machineNightGlow.ts'),SN=require('../lib/town/stadiumNight.ts'),src=f=>fs.readFileSync(require('node:path').join(__dirname,'..',f),'utf8');
+  const world=src('lib/town/world.ts'),cay=src('lib/town/coralCayWorld.ts');
+  const shop=world.slice(world.indexOf("box(10,4.5,10,'#eee9d8'"),world.indexOf("buildings.push({x,z,w:10,d:10,height:4.72,name:'KONBINI'})")),cayShop=cay.slice(cay.indexOf('{const K=CAY_KONBINI'),cay.indexOf("name:'CORAL CAY KONBINI'"));
+  for(const [name,s] of [['Island Square',shop],['Coral Cay',cayShop]]){
+   for(const c of ["'#759f98'","'#284e50'","'#87b1ad'","'#eee9d8'"])assert(new RegExp(`lit\\(box\\([^)]*${c}[^)]*\\),[.\\d]+(,true)?\\)`).test(s),`${name}: ${c} (windows, doors, shelves) glows at night`);
+   assert((s.match(/lit\(box\([^)]*,c,x/g)||[]).length>=2,`${name}: the stripe band (front and sides) glows`);assert(/\.userData\.nightGlow=1\.25/.test(s),`${name}: the KONBINI sign glows brighter`);}
+  assert(/if\(glow&&paint\)markMachineGlow\(geom,glow\[0\],glow\[1\]\)/.test(world)&&/patchMachineGlowPaint\(patchIslandWind\(shared\)\)/.test(world),'world.ts marks lit pieces in the paint batches and patches the shared paint');
+  assert(/lampSites\.push\(\{x:ISLAND_SQUARE_KONBINI\.x[^}]*\},\{x:CAY_KONBINI\.x/.test(world),'a warm night pool in front of each Konbini (existing pool batches)');
+  assert(/state\.material\.userData\.nightGlow/.test(world),'the sign uses its brighter night value');
+  const g=new T.BoxGeometry(1,1,1);NG.markMachineGlow(g,.6,true);const uv=g.getAttribute('uv');assert(Math.abs(uv.getX(3)-.6)<1e-6&&uv.getY(3)===NG.MACHINE_GLOW_WARM_FLAG,'a marked piece carries its weight and the warm flag');
+  const m=NG.patchMachineGlowPaint(new T.MeshStandardMaterial({vertexColors:true})),sh={uniforms:{},vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};m.onBeforeCompile(sh,null);
+  assert.equal(sh.uniforms.uMachineNight,SN.STADIUM_NIGHT,'the paint reads the shared night factor');assert(/vMachineGlow\.x\*uMachineNight/.test(sh.fragmentShader),'emission scales with it');
+  assert.equal(SN.STADIUM_NIGHT.value,0,'off by day');SN.setStadiumNight(1);assert.equal(sh.uniforms.uMachineNight.value,1,'on at night (the same uniform object)');SN.setStadiumNight(0);assert.equal(sh.uniforms.uMachineNight.value,0,'and off again by day');
+  console.log('konbini night glow: shopfronts, stripe band, sign and pools on the shared night factor, off by day');}
  console.log('KONBINI_PASS',JSON.stringify({items:F.FOOD_MENU.length,main:F.shopMenu('main').length,cay:F.shopMenu('cay').length,total,days,maxDay,rewardsTotal,spends}));
 })().catch(e=>{console.error(e);process.exit(1);});

@@ -205,15 +205,18 @@ export function buildCoralCay(t:CayTools){
  {const K=CAY_KONBINI,x=K.x,z=K.front-K.d/2,front=K.front;
   path(x,front+2,K.w+2,4);
   box(K.w,4.3,K.d,'#f1ecdd',x,2.15,z);box(K.w+.5,.22,K.d+.6,'#dde4dc',x,4.41,z);
-  box(K.w+.5,.12,1.7,'#fff4dc',x,3.35,front+.55);box(K.w+.5,.9,1.15,'#fff4dc',x,3.9,front+.35);
-  for(const [y,h,c] of [[4.18,.13,'#f0b49a'],[4.03,.1,'#f4d98f'],[3.85,.2,'#8fcfc0']] as const){box(K.w+.54,h,.06,c,x,y,front+.96);for(const side of [-1,1])box(.06,h,K.d+.6,c,x+side*(K.w/2+.26),y,z+.25);}
-  sign('KONBINI',3.15,.66,x-.3,3.95,front+1.01,'#fff7e5','#3f8f6c');
+  // Nov 13 2026 (owner: the Konbini looks dark at night): like Island Square's, the stripe band, fascia, windows, shelves and doors
+  // glow with the night factor (world.ts `lit` marks, lib/graphics/machineNightGlow.ts), and the sign glows brighter.
+  const lit=(m:T.Mesh,w:number,warm=false)=>{m.userData.machineGlow=[w,warm];return m;};
+  box(K.w+.5,.12,1.7,'#fff4dc',x,3.35,front+.55);lit(box(K.w+.5,.9,1.15,'#fff4dc',x,3.9,front+.35),.18);
+  for(const [y,h,c] of [[4.18,.13,'#f0b49a'],[4.03,.1,'#f4d98f'],[3.85,.2,'#8fcfc0']] as const){lit(box(K.w+.54,h,.06,c,x,y,front+.96),.5);for(const side of [-1,1])lit(box(.06,h,K.d+.6,c,x+side*(K.w/2+.26),y,z+.25),.4);}
+  (sign('KONBINI',3.15,.66,x-.3,3.95,front+1.01,'#fff7e5','#3f8f6c').material as T.Material).userData.nightGlow=1.25;
   // Timber canopy edge with a short thatch fringe, then a scalloped seafoam-and-cream awning over the two windows.
   box(K.w+.6,.16,.18,'#9d805b',x,3.26,front+1.38);const fringe=box(K.w+.7,.2,.42,'#d7ad62',x,3.12,front+1.5);fringe.castShadow=false;
   for(const wx of [x-3.4,x+2.8])for(let i=0;i<6;i++){const flap=box(.42,.34,.05,i%2?'#fff4dc':'#8fcfc0',wx-1.05+i*.42,2.9,front+.55);flap.rotation.x=.35;flap.castShadow=false;}
-  box(K.w-.6,2.6,.08,'#284e50',x,1.85,front+.04);
-  for(const wx of [x-3.4,x+2.8]){box(2.4,2.1,.07,'#759f98',wx,1.75,front+.09);for(const y of [.9,1.5,2.1]){box(2.25,.08,.13,'#eee9d8',wx,y,front+.17);for(let i=0;i<5;i++)box(.24,.3,.08,['#f3d88e','#e2856a','#9fd0b4'][i%3],wx-.96+i*.46,y+.19,front+.14);}}
-  const door=CAY_KONBINI_DOOR.x;for(const side of [-1,1]){box(.86,2.55,.08,'#87b1ad',door+side*.46,1.5,front+.22);box(.035,2.6,.06,'#e8e7d5',door+side*.92,1.5,front+.28);}
+  lit(box(K.w-.6,2.6,.08,'#284e50',x,1.85,front+.04),.45,true);
+  for(const wx of [x-3.4,x+2.8]){lit(box(2.4,2.1,.07,'#759f98',wx,1.75,front+.09),.62,true);for(const y of [.9,1.5,2.1]){lit(box(2.25,.08,.13,'#eee9d8',wx,y,front+.17),.5);for(let i=0;i<5;i++)lit(box(.24,.3,.08,['#f3d88e','#e2856a','#9fd0b4'][i%3],wx-.96+i*.46,y+.19,front+.14),.55);}}
+  const door=CAY_KONBINI_DOOR.x;for(const side of [-1,1]){lit(box(.86,2.55,.08,'#87b1ad',door+side*.46,1.5,front+.22),.5,true);box(.035,2.6,.06,'#e8e7d5',door+side*.92,1.5,front+.28);}
   box(.04,2.6,.06,'#e8e7d5',door,1.5,front+.28);box(2.15,.07,.75,'#879b92',door,.04,front+.35);
   for(const side of [-1,1])box(.18,3.1,.22,'#eee9d8',x+side*(K.w/2-.2),1.6,front+.14);
   sign('CORAL CAY',1.8,.5,x+2.8,2.55,front+.23,'#fff4dc','#3f8f6c');

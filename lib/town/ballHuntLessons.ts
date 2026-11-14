@@ -159,6 +159,7 @@ export const BALL_HUNT_LESSONS:Record<string,BallLesson>={
  "stadium-east-stand":rules2('technical-area','Each team bench has a marked box beside the pitch: the technical area.','The coach must not step out of the box onto the pitch.','Inside the box, one coach at a time can stand and call out ideas.','Stay in the box','One voice at a time'),
  "stadium-north-stand":rules2('kit-colours','Both teams arrive in red shirts. Who is on your side?','The away team usually changes into its second kit, a different colour.','Now every pass finds the right shirt, and the referee looks different too.','Spot the clash','Change the kit'),
  "stadium-screen":rules2('var-review','A goal is scored, but was there a foul just before it?','The video referee checks the replay. The referee jogs over to the pitchside screen.','VAR only checks goals, penalties, red cards and mistaken identity. The referee decides.','Check the replay','Trust the referee'),
+ "stadium-screen-west":world2('match-clock','The ball goes out. How long is left in the match?','Look up at the scoreboard. It shows the score and the match clock, counting up.','At 45 the first half ends. The second half counts on from 45 to 90.','Check the scoreboard','Know the time left'),
 };
 
 /** Prediction prompts are loaded only with the lesson modal, never by the island. */
@@ -291,4 +292,5 @@ export const BALL_HUNT_PRACTICE:Record<string,string>={
  'stadium-east-stand':'Where must a coach stand during the match, and how many can shout instructions at once?',
  'stadium-north-stand':'Both teams turn up in the same colour shirts. What should happen before kick-off?',
  'stadium-screen':'Which four kinds of big moment can the video assistant referee check?',
+ 'stadium-screen-west':'Next time you watch a match, check the clock. How many minutes are left in this half?',
 };

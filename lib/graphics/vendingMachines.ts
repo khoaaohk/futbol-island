@@ -1,11 +1,12 @@
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createBuildingGlow} from './buildingGlow';
+import {patchVendingNight} from './machineNightGlow';
 import {machineStock,VENDING_MACHINES,VENDING_SIZE,type VendingMachine,type VendingMachineId} from '../town/vendingCatalog';
 import {drawVendingProduct,vendingBallPicture} from './vendingProductArt';
 import {FACE_SIZE,VENDING_BAY,VENDING_FACE_LAYOUT} from './vendingFaceLayout';
 import {drawDrink,drawDrinkTile} from './drinkArt';
-import {DRINK_MACHINE_IDS,drinksAt,type Drink,type DrinkMachineId} from '../town/drinkMachines';
+import {DRINK_MACHINE_IDS,drinksAt,drinkStockOf,type Drink,type DrinkMachineId} from '../town/drinkMachines';
 
 /**
  * Twelve Japanese-style vending machines (lib/town/vendingCatalog.ts, docs/vending-machines.md; eight until Sep 29 2026).
@@ -43,6 +44,16 @@ const R={
  drinkGlass:(k:number)=>[k*256,872,256,152],
  white:[2,2,6,6],glass:(i:number)=>i>=12?[512+(i-12)*256,440,256,211.5]:[i%4*256,i<8?8+Math.floor(i/4)*212:660+Math.floor((i-8)/4)*212,256,211.5],led:[0,440,368,101],coin:[376,440,112,101],tray:[0,550,356,100],sticker:[364,550,148,89],
 };
+/** Nov 13 2026: a machine that sells exactly what another one sells shows that machine's glass (same rect, painted once), so the
+ *  DRIP FC Stadium pair (lib/town/stadiumShops.ts) adds no atlas space: its vending machine stocks the Coral Cay Konbini's page and
+ *  its drink machine the Island Square drinks (drinkMachines.ts DRINK_STOCK). */
+export const GLASS_TWIN:Readonly<Partial<Record<VendingMachineId,VendingMachineId>>>={stadium:'caykonbini'};
+function glassRect(m:VendingMachine,index:number){
+ if(m.drinks)return R.drinkGlass(DRINK_MACHINE_IDS.indexOf(drinkStockOf(m.id as DrinkMachineId)));
+ const twin=GLASS_TWIN[m.id];return R.glass(twin?VENDING_MACHINES.findIndex(x=>x.id===twin):index);
+}
+/** Whether this machine paints its own glass (a twin reuses its sibling's). */
+const ownsGlass=(m:VendingMachine)=>m.drinks?drinkStockOf(m.id as DrinkMachineId)===m.id:!GLASS_TWIN[m.id];
 type Ctx=CanvasRenderingContext2D;
 function roundRect(c:Ctx,x:number,y:number,w:number,h:number,r:number){c.beginPath();if(c.roundRect)c.roundRect(x,y,w,h,r);else c.rect(x,y,w,h);}
 /**
@@ -137,7 +148,7 @@ function drawAtlas(machines:VendingMachine[],coins:()=>number|null){
  c.textAlign='center';c.textBaseline='middle';
  const pics=createPictures();let map:T.CanvasTexture|null=null;const changed=()=>{if(map)map.needsUpdate=true;};
  // Glass: dark frame, light shelves, shelf header (prev · row label · next) and six product slots with lit push buttons.
- machines.forEach((machine,index)=>{const t=machine.drinks?R.drinkGlass(DRINK_MACHINE_IDS.indexOf(machine.id as DrinkMachineId)):R.glass(index);c.save();c.translate(t[0],t[1]);c.scale(t[2]/512,t[3]/423);paintGlass(c,machine,pics,changed);c.restore();});
+ machines.forEach((machine,index)=>{if(!ownsGlass(machine))return;const t=glassRect(machine,index);c.save();c.translate(t[0],t[1]);c.scale(t[2]/512,t[3]/423);paintGlass(c,machine,pics,changed);c.restore();});
  // LED display (the greeting the close-up opens with), coin panel (the player's coins) and pickup tray: shared by every machine.
  intoRect(c,R.led,aspect(L.led),(w,h)=>paintLed(c,w,h,...GREETING.shop));
  let shown=coins();intoRect(c,R.coin,aspect(L.coin),(w,h)=>paintCoin(c,w,h,shown));
@@ -295,7 +306,7 @@ function buildMachineGeometry(m:VendingMachine,index:number){
   box(.91*FACE_SIZE.w,.022,FRAME-.012,0,VENDING_FACE.y1-(r.y+r.h*.55)*FACE_SIZE.h,front+.012+(FRAME-.012)/2,'#b8cbcc');
  }
  const glassPart=parts.length;
- facePanel(L.glass,m.drinks?R.drinkGlass(DRINK_MACHINE_IDS.indexOf(m.id as DrinkMachineId)):R.glass(index),front+.01);                         // glass: header + six product slots
+ facePanel(L.glass,glassRect(m,index),front+.01);                         // glass: header + six product slots
  facePanel(L.led,R.led);facePanel(L.coin,R.coin);facePanel(L.tray,R.tray);
  const flat=parts.map(g=>g.toNonIndexed()),start=(i:number)=>flat.slice(0,i).reduce((n,g)=>n+g.getAttribute('position').count,0);
  const merged=mergeGeometries(flat)!;parts.forEach(g=>g.dispose());flat.forEach(g=>g.dispose());merged.computeBoundingSphere();merged.computeBoundingBox();
@@ -308,6 +319,8 @@ export type VendingUpdate={now:number;dt:number;reduced:boolean;hoverRay:T.Rayca
  location:{x:number;z:number};groundY:number;camera:T.Camera;width:number;height:number;hidePrompt:boolean;
  prompt:HTMLButtonElement|null;placeUI:(el:HTMLElement,x:number,y:number)=>void;setUIHidden:(el:HTMLElement,hidden:boolean)=>void;onHoverStart:()=>void};
 /** `coins`: the player's coin balance for the coin displays (read on build and on each zoom in/out, never per frame). */
+/** The printed face's texels (everything but the plain cabinet texel in the atlas corner). */
+const PRINTED_FACE='vMapUv.y < .99 || vMapUv.x > .01';
 export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null;viewport?:()=>{width:number;height:number;dpr:number}}={}){
  const atlas=drawAtlas(VENDING_MACHINES,opts.coins??(()=>null));
  // No emissive map (Sep 30 2026): the printed face texels are shown unlit by the shader patch below and the cabinet texel has no
@@ -319,9 +332,12 @@ export function createVendingMachines(scene:T.Scene,opts:{coins?:()=>number|null
  material.toneMapped=false;
  material.onBeforeCompile=shader=>{shader.fragmentShader=shader.fragmentShader.replace('#include <opaque_fragment>',`#include <opaque_fragment>
  #ifdef USE_MAP
- if(vMapUv.y < .99 || vMapUv.x > .01) gl_FragColor.rgb = diffuseColor.rgb;
+ if(${PRINTED_FACE}) gl_FragColor.rgb = diffuseColor.rgb;
  #endif`);};
  material.customProgramCacheKey=()=>'vending-printed-face-v1';
+ // Night (Nov 13 2026, owner: "the vending machines look dark at night"): the printed front glows brighter and the cabinet gets a
+ // soft self-light, with the shared night factor (machineNightGlow.ts). Same material, same draw, nothing per frame.
+ patchVendingNight(material,PRINTED_FACE);
  const root=new T.Group();root.name='vending-machines';scene.add(root);
  const S=VENDING_SCALE,w=VENDING_SIZE.w*S,d=VENDING_SIZE.d*S,h=VENDING_SIZE.h*S;
  const entries=VENDING_MACHINES.map((m,i)=>{

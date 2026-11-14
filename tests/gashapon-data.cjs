@@ -32,11 +32,11 @@ const {w:GW,d:GD}=M.GASHA_SIZE;
 // Nov 10 2026: each body style its own size (lib/gashapon/machines.ts GASHA_STYLE_SIZE): the corners are that cabinet's.
 const corners=(m,front=false)=>{const S=M.GASHA_STYLE_SIZE[M.gashaStyleOf(m)],W=S.w,D=S.d,fx=Math.sin(m.yaw),fz=Math.cos(m.yaw),rx=fz,rz=-fx,p=[[W/2,D/2],[-W/2,D/2],[W/2,-D/2],[-W/2,-D/2]].map(([a,b])=>({x:m.x+rx*a+fx*b,z:m.z+rz*a+fz*b}));if(front)p.push({x:m.x+fx*1.5,z:m.z+fz*1.5});return p;};
 
-await ok('14 machines: 2 per Konbini, 2 in the Arcade, 8 outdoors; unique ids and colours',()=>{
- assert.equal(all.length,14);assert.equal(new Set(all.map(m=>m.id)).size,14);assert.equal(new Set(all.map(m=>m.name)).size,14,'unique names');
+await ok('18 machines: 2 per Konbini, 2 in the Arcade, 8 outdoors, 4 at the DRIP FC Stadium; unique ids and colours',()=>{
+ assert.equal(all.length,18);assert.equal(new Set(all.map(m=>m.id)).size,18);assert.equal(new Set(all.map(m=>m.name)).size,18,'unique names');assert.equal(new Set(all.map(m=>m.color)).size,18,'unique colours');assert.equal(byZone('stadium').length,4);
  assert.equal(byZone('konbini-square').length,2);assert.equal(byZone('konbini-cay').length,2);assert.equal(byZone('arcade').length,2);assert.equal(byZone('outdoor').length,8);
  for(const m of all){assert(/^#[0-9a-f]{6}$/i.test(m.color)&&/^#[0-9a-f]{6}$/i.test(m.accent),m.id+' colours');assert(Number.isFinite(m.x+m.z+m.y+m.yaw),m.id+' numbers');assert(m.theme&&m.place,m.id+' text');}
- assert.equal(M.islandGashaponMachines().length,12,'the island mesh holds 12 (the arcade pair is in its own scene)');
+ assert.equal(M.islandGashaponMachines().length,16,'the island mesh holds 16 (the arcade pair is in its own scene)');
 });
 
 await ok('Konbini pairs: flush against the shopfront, on the side OPPOSITE the vending + drink machines, clear of the doors',()=>{
@@ -97,6 +97,31 @@ await ok('8 outdoor machines: on land, clear of buildings/colliders, roads, walk
   for(const o of solid){const own=Math.abs(o.x-store.x)<=6&&o.z<store.front+.15;if(own)continue;
    for(const p of corners(g))assert(gap(p,o)>0,`${g.id} does not overlap the collider at (${o.x.toFixed(2)}, ${o.z.toFixed(2)})`);
    assert(gap({x:g.x,z:g.z+1.3},o)>=.3,`${g.id}: its buying spot is clear of the collider at (${o.x.toFixed(2)}, ${o.z.toFixed(2)})`);}}
+});
+
+await ok('DRIP FC Stadium four: against the south stand under the big screen, two either side of the vending + drink pair, flush, facing out, clear of the posts, stairs, lights and viewers; existing football sets',()=>{
+ const SS=load('lib/town/stadiumShops.ts'),SW=load('lib/town/stadiumWorld.ts'),SN=load('lib/town/stadiumNpcs.ts'),SB=load('lib/town/stadiumBalls.ts'),Seats=load('lib/town/stadiumSeats.ts');
+ const row=byZone('stadium'),vend=VC.vendingMachine('stadium'),drink=VC.vendingMachine('drinkstadium'),posts=SW.screenPosts(),wall=SS.STADIUM_SHOP_WALL_Z;
+ same(row.map(m=>m.set),['gs-oldtown','gs-eleven','gs-arcade-pixel','gs-westbeach'],'four existing football sets (no new toys)');
+ for(const m of row){same(Y.toysIn(m.id).map(t=>t.id),Y.toysIn(m.set).map(t=>t.id),m.id+' sells its set');assert(M.GASHAPON_MACHINES.find(x=>x.id===m.set)&&!M.GASHAPON_MACHINES.find(x=>x.id===m.set).set,m.id+': its set is a home machine');}
+ assert.equal(row.filter(m=>m.x<SS.STADIUM_SHOP_X).length,2,'two on the left (west)');assert.equal(row.filter(m=>m.x>SS.STADIUM_SHOP_X).length,2,'two on the right (east)');
+ assert(Math.abs((vend.x+drink.x)/2-SS.STADIUM_SHOP_X)<.01&&vend.yaw===0&&drink.yaw===0,'the vending + drink pair is centred under the screen, facing out');
+ assert(Math.abs(posts[0].x+posts[1].x-2*SS.STADIUM_SHOP_X)<.01,'the screen is centred on the row too');
+ const cab=[...row.map(m=>({id:m.id,...M.gashaponFootprint?.(m)??{x:m.x,z:m.z,w:M.GASHA_STYLE_SIZE[M.gashaStyleOf(m)].w+.06,d:M.GASHA_STYLE_SIZE[M.gashaStyleOf(m)].d+.06}})),{id:'stadium',x:vend.x,z:vend.z,w:1.69,d:1.118},{id:'drinkstadium',x:drink.x,z:drink.z,w:1.69,d:1.118}].sort((a,b)=>a.x-b.x);
+ for(const c of cab){assert(Math.abs(c.z-c.d/2-(wall+.03))<.011,`${c.id}: back flush to the wall (3 cm gap)`);}
+ for(let i=1;i<cab.length;i++){const g=(cab[i].x-cab[i].w/2)-(cab[i-1].x+cab[i-1].w/2);assert(g>=.1&&g<=.13,`${cab[i-1].id} | ${cab[i].id}: a 12 cm gap (${g.toFixed(3)})`);}
+ for(const m of row)assert.equal(m.yaw,0,m.id+' faces out (south)');
+ const x0=cab[0].x-cab[0].w/2,x1=cab.at(-1).x+cab.at(-1).w/2;
+ for(const q of posts)assert(Math.min(Math.abs(q.x-x0),Math.abs(q.x-x1))>=2&&(q.x<x0||q.x>x1),'the row stands between the posts, ≥ 2 m clear of each');
+ // The kick lanes of both screen-post targets run straight south from the posts: the row stays out of them.
+ for(const s of SB.STADIUM_BALL_SPOTS.filter(s=>s.id.startsWith('stadium-screen')))assert(s.wall.x<x0-1.5||s.wall.x>x1+1.5,s.id+': its target and kick lane are clear of the row');
+ const so=Seats.STANDS.find(q=>q.id==='south');for(const c of so.stairs)assert(Math.abs(c)-Seats.STAIR_WIDTH/2-1>Math.max(Math.abs(x0-SS.STADIUM_SHOP_X),Math.abs(x1-SS.STADIUM_SHOP_X)),'clear of the back stairs and their bollards');
+ const others=solid.filter(o=>!cab.some(c=>Math.abs(c.x-o.x)<.01&&Math.abs(c.z-o.z)<.01)),standBox=o=>o.z+o.d/2<=wall+.01;
+ for(const c of cab)for(const o of others){if(standBox(o))continue;assert(gap(c,o)>=.3,`${c.id}: clear of the collider at (${o.x.toFixed(2)}, ${o.z.toFixed(2)})`);
+  assert(gap({x:c.x,z:c.z+c.d/2+.9},o)>=.3,`${c.id}: its buying spot is clear of the collider at (${o.x.toFixed(2)}, ${o.z.toFixed(2)})`);}
+ const viewers=Object.entries(SN.STADIUM_NPC_ROUTES).filter(([id])=>/viewer|guide-iris/.test(id)).flatMap(([,r])=>r);
+ for(const c of cab)for(const v of viewers)assert(Math.hypot(Math.max(0,Math.abs(v.x-c.x)-c.w/2),Math.max(0,Math.abs(v.z-c.z)-c.d/2))>=3,`${c.id}: ≥ 3 m from the viewers' and the guide's spots`);
+ assert(cab.every(c=>c.z+c.d/2<SN.VIEWING.z0-3),'in front of the viewing patch, never in it');
 });
 
 await ok('84 toys: 6 per machine (3 common, 2 uncommon, 1 rare), unique ids and names, a soccer/island/japan link each',()=>{
@@ -176,6 +201,9 @@ await ok('save: round trip, sanitiser drops junk, owned counts + first-found tim
  const clean=St.sanitizeGashapon(junk);same(clean.owned,{'pixel-ball':{n:2,first:5}});same(Object.keys(clean.spins),['ok2'],'receipts must match their machine');assert.equal(clean.day,'');assert.equal(clean.today,0);
  for(const bad of [null,'x',{version:2},[],{version:1,owned:'x'}])same(St.sanitizeGashapon(bad).owned,{});
  const R3=rig(500,{saved:'{not json'});same(R3.store.read(),St.emptyGashapon(),'corrupt save reads as empty, never throws');
+ // Nov 13 2026: a spin at a stadium machine gives a toy of its set, and its receipt survives a reload (receipts match the set).
+ {const RS=rig(100);const r=await RS.store.spin('gs-stadium-boots','st1');assert(r.ok&&r.toy.machine==='gs-eleven','a Boots & Kits toy from the stadium machine');assert.equal(RS.balance(),80,'the same 20-coin price');
+  same(Object.keys(St.sanitizeGashapon(JSON.parse(RS.raw())).spins),['st1'],'the stadium receipt is kept');same(St.sanitizeGashapon({version:1,owned:{},spins:{x1:{m:'gs-stadium-pixel',toy:r.toy.id,at:1}}}).spins,{},'a receipt whose toy is not in that machine\'s set is dropped');}
  // Receipts are bounded.
  const R4=rig(100000);for(let i=0;i<E.GASHAPON.spinsPerDay;i++){R4.tick(2000);await R4.store.spin('gs-westbeach','b'+i);}
  for(let d=1;d<5;d++){R4.tick(24*3600e3);for(let i=0;i<E.GASHAPON.spinsPerDay;i++){R4.tick(2000);await R4.store.spin('gs-westbeach',`d${d}-${i}`);}}
@@ -192,5 +220,5 @@ await ok('save key classified: fi2-gashapon-v1 is SYNC (with the account snapsho
  assert(fs.existsSync(path.join(base,'docs/gashapon-design.md')),'the design doc');
 });
 
-if(failed){console.log(failed+' FAILED');process.exit(1);}console.log('PASS gashapon data: 14 machines placed, 84 toys, odds, spins against the real wallet, save + sync key');
+if(failed){console.log(failed+' FAILED');process.exit(1);}console.log('PASS gashapon data: 18 machines placed (4 at the DRIP FC Stadium sharing island sets), 84 toys, odds, spins against the real wallet, save + sync key');
 })().catch(e=>{console.error(e);process.exit(1);});

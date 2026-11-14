@@ -280,3 +280,14 @@ small edits to `lib/town/vendingCatalog.ts` (id type, the two machines appended,
 
 
 > **Sep 29 2026 (later):** both Konbini pairs shifted 1.1 m west (`KONBINI_MACHINE_EAST` 3.2 → 2.1) so the snack and drinks machines sit inside the 10 m shopfront, flush against the glass, instead of the drinks machine overhanging the east corner.
+
+## Nov 13 2026: the DRIP FC Stadium pair, and night glow
+
+- **Where:** the 15th shop machine (`stadium`) and the 4th drink machine (`drinkstadium`) stand side by side against the south stand's
+  back wall, centred under the big screen (`lib/town/stadiumShops.ts`), facing out to the viewing area, between the gashapon pairs.
+- **Stock:** the regular rows plus the Coral Cay Konbini's four books (no specials of its own), so its glass reuses that machine's atlas
+  rect (`GLASS_TWIN` in `lib/graphics/vendingMachines.ts`); the drink machine sells the Island Square six (`DRINK_STOCK`). Same prices,
+  same 3-a-day drinks bucket, same coin ledger. The atlas does not grow.
+- **Night:** every machine's printed front brightens and the cabinet self-lights on the shared night factor
+  (`lib/graphics/machineNightGlow.ts`); the Konbini shopfronts (windows, doors, shelves, stripe band, fascia) glow in their paint batches,
+  their signs glow brighter and a warm pool lies on the pavement in front (existing night-pool batches). 0 by day.

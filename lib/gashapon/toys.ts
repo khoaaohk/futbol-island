@@ -10,7 +10,7 @@
  * `touch` is what the toy does in the viewer (next round): squeeze, poke and a tap on the head. `sound` is a plain-words recipe for
  * the synthesised voice (Web Audio oscillators + a noise burst, no audio files). `colors` are [body, accent] for its small mesh.
  */
-import type {GashaponMachineId} from './machines';
+import {gashaponSetOf,type GashaponMachineId} from './machines';
 
 export type ToyRarity='common'|'uncommon'|'rare';
 export const RARITY_WEIGHT:Record<ToyRarity,number>={common:22,uncommon:12,rare:10};
@@ -20,7 +20,8 @@ export type GashaponToy={id:string;machine:GashaponMachineId;name:string;rarity:
  link:{kind:ToyLinkKind;note:string};touch:{squeeze:string;poke:string;tap:string};sound:string;colors:[string,string]};
 
 type Row=[id:string,name:string,rarity:ToyRarity,personality:string,kind:ToyLinkKind,note:string,squeeze:string,poke:string,tap:string,sound:string,body:string,accent:string];
-const rows:Record<GashaponMachineId,Row[]>={
+/** Every machine that owns a set (the DRIP FC Stadium four share sets, machines.ts `set`). */
+const rows:Record<Exclude<GashaponMachineId,`gs-stadium-${string}`>,Row[]>={
  'gs-square-snacks':[
   ['onigiri-ollie','Onigiri Ollie','common','A calm rice ball who never drops a pass.','japan','A Konbini rice ball wrapped in seaweed','squishes flat, then puffs back round','wobbles and giggles','bows a tiny bow','a soft "mm-hm" bloop, low then high','#f7f4ea','#1d2b24'],
   ['melon-pan-mimi','Melon Pan Mimi','common','A sweet bun with a crunchy grid on top, always cheerful.','japan','The Konbini melon bread bun','crackles like a crust','spins once','sprinkles sugar sparkles','three crispy clicks and a bright "pip"','#f4d36a','#8bbf4a'],
@@ -139,7 +140,8 @@ export const GASHAPON_TOYS:readonly GashaponToy[]=Object.entries(rows).flatMap((
  id,machine:machine as GashaponMachineId,name,rarity,personality,link:{kind,note},touch:{squeeze,poke,tap},sound,colors:[body,accent] as [string,string]})));
 const BY_ID=new Map(GASHAPON_TOYS.map(t=>[t.id,t]));
 export const gashaponToy=(id:string)=>BY_ID.get(id);
-export const toysIn=(machine:string)=>GASHAPON_TOYS.filter(t=>t.machine===machine);
+/** A machine's six toys: its own, or (the stadium machines, machines.ts `set`) the set it shares. */
+export const toysIn=(machine:string)=>{const set=gashaponSetOf(machine);return GASHAPON_TOYS.filter(t=>t.machine===set);};
 export const toyWeight=(t:Pick<GashaponToy,'rarity'>)=>RARITY_WEIGHT[t.rarity];
 /** Pick a toy from a machine with a 0 ≤ u < 1 roll, by rarity weight. */
 export function pickToy(machine:string,u:number):GashaponToy|null{

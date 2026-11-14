@@ -49,7 +49,9 @@ assert.equal(chunks.length,world.westChunkCount,'every west chunk is gated');
 console.log(`west chunks (draw calls when all in view): ${chunks.length}; triangles: ${Math.round(tris)}; trees ${st.trees}, palms ${st.palms}, flags ${st.flags}, hedges ${st.hedges}, beds ${st.beds}`);
 assert(chunks.length<=90,'west draw calls bounded: '+chunks.length);assert(tris<=150000,'west triangles bounded: '+Math.round(tris));
 // Phase 1 (park + placeholder bowl): 66 chunks, 50,950 triangles. The stands add chunks only where the stadium reaches new cells.
-console.log('stadium build:',JSON.stringify(world.stadium));assert(chunks.length<=75&&tris<=95000,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames)');
+console.log('stadium build:',JSON.stringify(world.stadium));// Nov 13 2026 (owner): the machine row under the big screen adds ~14.4k triangles to the stadium cell's existing batches (the four
+// gashapons' shared island model, lib/graphics/gashaponMesh.ts; no new chunk or draw call): 95k → 98k.
+assert(chunks.length<=75&&tris<=98000,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames; the screen machines ~14k)');
 assert(!scene.children.some(o=>o.name==='park-pond'),'the pond is batched into its chunk (no loose mesh)');
 
 // 4. The map draws the stadium, the park and the plaza.
@@ -481,7 +483,9 @@ console.log('west stadium phase 2: ok');
   assert(world.obstacles.some(o=>o.x===p.x&&o.z===p.z&&o.w===SL.LAMP_POST.collider),at+' has a collider');
   assert(lights.posts.every(q=>q===p||Math.hypot(p.x-q.x,p.z-q.z)>=12),at+' 12 m from the next');}
  {const night=scene.getObjectByName('night-atmosphere'),sites=night.userData.lampSites.filter(s=>s.chunk==='stadium'),pool=scene.getObjectByName('night-pool-chunk-stadium');
-  assert.equal(sites.length,lights.posts.length,'every post has a light site');assert(pool&&pool.isInstancedMesh&&pool.count===sites.length,'one pool batch for the stadium posts');}
+  // Nov 13 2026: plus one warm pool in front of the machine row under the big screen (lib/town/stadiumShops.ts), in the same batch.
+  const SS=load('lib/town/stadiumShops.ts'),row=sites.filter(q=>q.x===SS.STADIUM_SHOP_X&&Math.abs(q.z-SS.STADIUM_SHOP_WALL_Z-2.4)<.01);assert.equal(row.length,1,'one pool for the machine row');
+  assert.equal(sites.length-row.length,lights.posts.length,'every post has a light site');assert(pool&&pool.isInstancedMesh&&pool.count===sites.length,'one pool batch for the stadium posts and the machine row');}
  // Bollards at the foot of every back stair, clear of the stair's walk line; the gate sign lights up at night.
  assert.equal(st.bollards,Q.STANDS.reduce((n,s)=>n+s.stairs.length*2,0));
  for(const s of Q.STANDS)for(const a of s.stairs){const f=Q.standWorld(s,Q.stairEnd(s)+.6,a);assert(!blocked(f.x,f.z),'stair foot open');}

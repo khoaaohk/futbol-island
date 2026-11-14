@@ -20,7 +20,7 @@ const lum=hex=>{const n=parseInt(hex.slice(1),16),c=v=>{v/=255;return v<=0.03928
 const FIRST7=['gs-square-snacks','gs-square-lucky','gs-cay-sweets','gs-cay-bento','gs-arcade-heroes','gs-arcade-pixel','gs-westbeach'];
 
 ok('machines 1-7 in machines.ts order have icon sets',()=>{assert.deepEqual(GASHAPON_MACHINES.slice(0,7).map(m=>m.id),FIRST7);for(const m of FIRST7)assert.ok(TOY_ICON_SETS[m],m);});
-ok('all 14 machines have icon sets, in machines.ts order (84 toys)',()=>{assert.equal(GASHAPON_MACHINES.length,14);assert.deepEqual(Object.keys(TOY_ICON_SETS),GASHAPON_MACHINES.map(m=>m.id));
+ok('all 14 set machines have icon sets, in machines.ts order (84 toys; the 4 stadium machines share sets)',()=>{assert.equal(GASHAPON_MACHINES.length,18);assert.deepEqual(Object.keys(TOY_ICON_SETS),GASHAPON_MACHINES.filter(m=>!m.set).map(m=>m.id));
  assert.equal(Object.keys(TOY_ICONS).length,84);for(const t of GASHAPON_TOYS)assert.ok(toyIconMarkup(t.id),`${t.id} has no icon`);});
 ok('every toy of every listed machine has its own icon, and no stray ids',()=>{
  for(const [m,set] of Object.entries(TOY_ICON_SETS)){const ids=GASHAPON_TOYS.filter(t=>t.machine===m).map(t=>t.id);assert.equal(ids.length,6,m);

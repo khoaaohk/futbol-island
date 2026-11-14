@@ -16,9 +16,13 @@
  */
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {patchGashaGlassNight} from './machineNightGlow';
+/** Night glow of the cream front panel (machineNightGlow.ts, Nov 13 2026: "the gashapon machines look dark at night"). */
+export const GASHA_PANEL_GLOW=.55;
 import {GASHA_SIZE,GASHA_STYLE_SIZE,gashaStyleOf,gashaTrimOf,type GashaponMachine,type GashaponMachineId,type GashaponStyle} from '../gashapon/machines';
 
-export type GashaPiece={geometry:T.BufferGeometry;color:string;glass?:boolean;shadow?:boolean};
+/** glow: the piece's night-glow weight on the island (machineNightGlow.ts; the cream front panel). */
+export type GashaPiece={geometry:T.BufferGeometry;color:string;glass?:boolean;shadow?:boolean;glow?:number};
 /**
  * Visual scale (owner, Nov 8 2026, round 3A): the machines read ~1.2× bigger. Heights, the globe, cap and topper scale 1.2×; the
  * cabinet's width and depth only 1.075× (0.86 × 0.645 m), so it stays inside its unchanged collider (GASHA_SIZE + 3 cm a side,
@@ -39,6 +43,8 @@ const TOPPER:Record<GashaponMachineId,Topper>={
  'gs-square-snacks':'onigiri','gs-square-lucky':'daruma','gs-cay-sweets':'sweet','gs-cay-bento':'bento',
  'gs-arcade-heroes':'star','gs-arcade-pixel':'pixel','gs-westbeach':'ball','gs-northbeach':'shell','gs-eleven':'boot',
  'gs-oldtown':'trophy','gs-jetty':'wheel','gs-cayplaza':'bug','gs-sharks':'fin','gs-summit':'peak',
+ // The DRIP FC Stadium four wear their set's topper (machines.ts `set`).
+ 'gs-stadium-boots':'boot','gs-stadium-trophies':'trophy','gs-stadium-pixel':'pixel','gs-stadium-beach':'ball',
 };
 
 const m4=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(),p=new T.Vector3(),s=new T.Vector3();
@@ -155,7 +161,7 @@ function unitPieces(m:GashaponMachine,index:number,b:Bases,u:Unit):(GashaPiece&{
   add(piece(b.box,DARK,0,.03,0,w-.04,.06,d-.04));
   add(piece(b.box,m.accent,0,H.cabinetH+.02,0,w+.02,.05,d+.02));}
  if(u.front){// A cream front panel; the coin plate under the knob (the price shows on it in HTML); the chute window and the tray.
-  add(piece(b.box,CREAM,0,.42,d/2+.006,w-.16,.5,.012,0,0,0,{shadow:false}));
+  add(piece(b.box,CREAM,0,.42,d/2+.006,w-.16,.5,.012,0,0,0,{shadow:false,glow:GASHA_PANEL_GLOW}));
   add(piece(b.box,METAL,F.coin.x,F.coin.y,d/2+.016,.15,.13,.02,0,0,0,{shadow:false}));
   add(piece(b.box,DARK,F.coin.x,F.coin.y+.02,d/2+.028,.07,.02,.01,0,0,0,{shadow:false}));
   add(piece(b.box,m.color,F.coin.x,F.coin.y-.035,d/2+.028,.1,.025,.01,0,0,0,{shadow:false}));
@@ -260,6 +266,6 @@ export function mergedGashapon(machines:readonly GashaponMachine[]):{solid:T.Buf
  return {solid:merge(solid),glass:merge(glass)};
 }
 /** The glass look shared by every globe: pale, see-through, no depth write (so the capsules behind show), lit by the scene's own lights. */
-export function gashaponGlassMaterial(){return new T.MeshStandardMaterial({color:'#e4f6ff',transparent:true,opacity:.26,roughness:.08,metalness:0,depthWrite:false,name:'gashapon-glass'});}
+export function gashaponGlassMaterial(){return patchGashaGlassNight(new T.MeshStandardMaterial({color:'#e4f6ff',transparent:true,opacity:.26,roughness:.08,metalness:0,depthWrite:false,name:'gashapon-glass'}));}
 /** Axis-aligned collider covering the rotated cabinet of its style (+ a small margin), in the island's {x,z,w,d} shape. */
 export function gashaponFootprint(m:Pick<GashaponMachine,'x'|'z'|'yaw'>&{id?:string}){const c=Math.abs(Math.cos(m.yaw)),sn=Math.abs(Math.sin(m.yaw)),S=m.id?GASHA_STYLE_SIZE[gashaStyleOf({id:m.id})]:GASHA_SIZE,w=S.w+.06,d=S.d+.06;return {x:m.x,z:m.z,w:+(c*w+sn*d).toFixed(2),d:+(sn*w+c*d).toFixed(2)};}

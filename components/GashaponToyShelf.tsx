@@ -7,7 +7,7 @@
  */
 import {useEffect,useRef} from 'react';
 import {NavigationButton} from './DoneButton';
-import {GASHAPON_MACHINES} from '@/lib/gashapon/machines';
+import {setGashaponMachines} from '@/lib/gashapon/machines';
 import {shelfCounts,toysIn} from '@/lib/gashapon/toys';
 import {openToyViewer,toyOverlay,useGashapon,useToyOverlay} from '@/lib/gashapon/gashaponBrowser';
 import {countShelfOpen} from '@/lib/analytics/gashaponEvents';
@@ -23,7 +23,7 @@ import styles from './GashaponToyShelf.module.css';
 export function ToyShelfGrid({heading='h3',idPrefix='shelf'}:{heading?:'h3'|'h5';idPrefix?:string}){
  const save=useGashapon(),{per}=shelfCounts(save.owned),Heading=heading;
  return <>
-   {GASHAPON_MACHINES.map(m=><section key={m.id} className={styles.machine} aria-labelledby={`${idPrefix}-${m.id}`} data-shelf-machine={m.id} style={{'--machine':m.color} as React.CSSProperties}>
+   {setGashaponMachines().map(m=><section key={m.id} className={styles.machine} aria-labelledby={`${idPrefix}-${m.id}`} data-shelf-machine={m.id} style={{'--machine':m.color} as React.CSSProperties}>
     <div className={styles.machineHead}><Heading id={`${idPrefix}-${m.id}`}>{m.name}</Heading><span>{per[m.id]} / 6</span></div>
     <ul className={styles.grid} role="list">{toysIn(m.id).map(t=>{const have=save.owned[t.id];
      return <li key={t.id}>{have

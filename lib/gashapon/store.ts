@@ -16,7 +16,7 @@
  *    refund:(id,coins,reason)=>creditOnce(id,'island',coins,reason),lock:fn=>navigator.locks?navigator.locks.request(GASHAPON_KEY,fn):Promise.resolve().then(fn)})
  */
 import {GASHAPON} from '../economy';
-import {isGashaponMachine,gashaponMachine,type GashaponMachineId} from './machines';
+import {isGashaponMachine,gashaponMachine,gashaponSetOf,type GashaponMachineId} from './machines';
 import {gashaponToy,pickToy,type GashaponToy} from './toys';
 
 export const GASHAPON_KEY='fi2-gashapon-v1';
@@ -49,7 +49,7 @@ export function sanitizeGashapon(v:unknown):GashaponState{
  try{
   if(!v||typeof v!=='object'||(v as {version?:unknown}).version!==1)return out;const s=v as Partial<GashaponState>;
   for(const [id,o] of Object.entries(s.owned??{}))if(gashaponToy(id)&&o&&typeof o==='object'){const n=whole(o.n,9999);if(n>0)out.owned[id]={n,first:whole(o.first,9e15)};}
-  const receipts=Object.entries(s.spins??{}).filter(([id,r])=>isId(id)&&r&&isGashaponMachine(r.m)&&gashaponToy(r.toy)?.machine===r.m)
+  const receipts=Object.entries(s.spins??{}).filter(([id,r])=>isId(id)&&r&&isGashaponMachine(r.m)&&gashaponToy(r.toy)?.machine===gashaponSetOf(r.m))
    .sort((a,b)=>whole(b[1].at,9e15)-whole(a[1].at,9e15)).slice(0,RECEIPTS_KEPT);
   for(const [id,r] of receipts)out.spins[id]={m:r.m,toy:r.toy,at:whole(r.at,9e15),dup:r.dup===true,refund:whole(r.refund,GASHAPON_REFUND)};
   out.day=typeof s.day==='string'&&s.day.length<=16?s.day:'';out.today=whole(s.today,999);out.last=whole(s.last,9e15);

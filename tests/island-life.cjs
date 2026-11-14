@@ -50,7 +50,7 @@ const SP=load('lib/town/jobs/bugSpecies.ts'),SI=load('lib/town/summitIsle.ts'),V
 
 // ---- 2. Wiring: existing materials only ----
 {const w=read('lib/town/world.ts');
- assert.match(w,/shared=m\.clone\(\);shared\.color\.set\(0xffffff\);shared\.vertexColors=true;patchIslandWind\(shared\);/,'chunk paint material patched once, where it is made');
+ assert.match(w,/shared=m\.clone\(\);shared\.color\.set\(0xffffff\);shared\.vertexColors=true;patchMachineGlowPaint\(patchIslandWind\(shared\)\);/,'chunk paint material patched once, where it is made');
  assert.match(w,/updateWater:\(dt:number,still:boolean\)=>\{stepWaterTime\(dt,still\);stepIslandWind\(dt,still\);\}/,'wind clock rides the water step (same still flag, rendered frames only)');
  const block=w.slice(w.indexOf('// Island wind (Nov 8 2026'),w.indexOf('// Island wind (Nov 8 2026')+700);
  assert(!/new T\.(Mesh|InstancedMesh|\w*Material)\b/.test(block),'no mesh or material in the wind marking');

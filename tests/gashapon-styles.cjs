@@ -92,12 +92,12 @@ await ok('the live 3D knob follows the hand, springs back, and the spin carries 
 });
 
 await ok('six body styles: every machine has one, pairs differ, sizes vary, summit is a shallow non-twin',()=>{
- const all=M.GASHAPON_MACHINES;assert.equal(all.length,14);
+ const all=M.GASHAPON_MACHINES;assert.equal(all.length,18);
  for(const m of all)assert(M.GASHA_STYLES.includes(M.GASHA_LOOK[m.id].style)&&/^#[0-9a-f]{6}$/i.test(M.GASHA_LOOK[m.id].trim),m.id+' has a style + trim');
  assert.equal(new Set(all.map(m=>M.gashaStyleOf(m))).size,6,'all six styles used');
  for(const zone of ['konbini-square','konbini-cay','arcade']){const p=all.filter(m=>m.zone===zone);assert.notEqual(M.gashaStyleOf(p[0]),M.gashaStyleOf(p[1]),zone+': the pair differs');}
  for(const a of all)for(const b of all)if(a!==b&&Math.hypot(a.x-b.x,a.z-b.z)<3&&a.zone===b.zone)assert.notEqual(M.gashaStyleOf(a),M.gashaStyleOf(b),`neighbours ${a.id} / ${b.id} differ`);
- const counts={};for(const m of all)counts[M.gashaStyleOf(m)]=(counts[M.gashaStyleOf(m)]??0)+1;assert(Math.max(...Object.values(counts))<=3,'no style more than 3 times');
+ const counts={};for(const m of all)counts[M.gashaStyleOf(m)]=(counts[M.gashaStyleOf(m)]??0)+1;assert(Math.max(...Object.values(counts))<=4,'no style more than 4 times (18 machines since the stadium four, Nov 13 2026)');
  const sum=all.find(m=>m.id==='gs-summit'),st=M.gashaStyleOf(sum);assert.notEqual(st,'twin','summit: never the wide twin');
  const SI=load('lib/town/summitIsle.ts'),fence=SI.SUMMIT_PITCH.x+SI.SUMMIT_FENCE.halfX;
  const b=G.gashaponBases(),p=G.gashaponPieces(sum,0,b),box=new T.Box3();for(const x of p){x.geometry.computeBoundingBox();box.union(x.geometry.boundingBox);x.geometry.dispose();}G.disposeBases(b);

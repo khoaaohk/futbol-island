@@ -470,3 +470,15 @@ Six per machine, 84 ids, all unique. The link column gives each toy's football, 
 | `orange-orbit` | Orange Orbit | uncommon | A round orange who curls shots around the wall. | island: Summit Isle orange trees | squirts a zesty mist / spins / curls through the air | a zesty spray hiss and a "wheee" |
 | `cairn-carl` | Cairn Carl | uncommon | A stack of stones from the lookout who never topples. | island: The summit lookout’s flag and cairn | stones wobble but stay / clacks / his flag waves on top | stone clacks and a breezy whistle |
 | `summit-goal-gigi` | Summit Goal Gigi | rare | The little goal from the Summit 5s, the highest pitch on the island. | soccer: The Summit 5s pitch on top of the mountain | net ripples / posts ping / a ball flies into her net | a net swish and a post "ping" echo |
+
+## Nov 13 2026: the DRIP FC Stadium four, and night glow
+
+- **Where:** against the south stand's back wall under the big screen (`lib/town/stadiumShops.ts`), two either side of the stadium's
+  vending + drink pair, flush to the wall (3 cm), 12 cm apart, facing out (yaw 0) to the public-viewing area. The row spans about
+  ±4.1 m, clear of both screen posts (±6.5 m), the back stairs and bollards (±24 m), the wall uplights, both screen-post ball targets and
+  their kick lanes, and the viewers. Checked in `tests/gashapon-data.cjs`.
+- **Toys:** no new toys. Each stadium machine sells an existing football set (`set` in `lib/gashapon/machines.ts`): Trophies & Legends
+  (`gs-oldtown`), Boots & Kits (`gs-eleven`), Pixel Pitch (`gs-arcade-pixel`) and Beach Day (`gs-westbeach`). Same toys, odds and
+  20-coin price; a receipt is valid when its toy is in the machine's set. The Toy Shelf lists each set once, under its home machine.
+- **Night:** the cream front panels glow in their paint batch and the globes' glass glows softly, both on the shared night factor
+  (`lib/graphics/machineNightGlow.ts`, `STADIUM_NIGHT`); 0 by day. No light, texture, draw call or per-frame work.
