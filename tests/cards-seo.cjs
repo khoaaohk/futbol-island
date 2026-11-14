@@ -115,7 +115,7 @@ for(const [f,list] of Object.entries(fam))for(const [p,rich] of list){
  for(const m of body.matchAll(/<a\b[^>]*href="(https?:\/\/[^"]+)"/g))if(!m[1].startsWith(SITE))problems.push(`${p}: outside link ${m[1]}`);
  texts[p]=[f,rich,textOf(h)];
 }
-const MIN={card:{rich:300,plain:0},fish:{rich:300,plain:150}},stats={};
+const MIN={card:{rich:300,plain:150},fish:{rich:260,plain:250}},stats={};
 for(const f of Object.keys(fam)){const ps=Object.keys(texts).filter(p=>texts[p][0]===f),sents=ps.map(p=>texts[p][2].split(/(?<=[.!?:])\s+/).filter(s=>s.length>12)),df=new Map();
  sents.forEach(ss=>new Set(ss).forEach(s=>df.set(s,(df.get(s)||0)+1)));
  ps.forEach((p,i)=>{const u=sents[i].filter(s=>df.get(s)===1).reduce((a,s)=>a+s.split(' ').length,0),rich=texts[p][1],k=`${f} ${rich?'with notes':'without'}`;
