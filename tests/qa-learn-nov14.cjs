@@ -32,4 +32,8 @@ assert(need(26)>320,'the bug: 26 px does not fit');assert(need(20)<=320,`20 px f
 
 // 4. Explore checklist marks have a role so their label is announced.
 assert.match(read('components/IslandQuests.tsx'),/className=\{styles\.exploreIndicator\} data-complete=\{item\.complete\} role="img" aria-label=/);
+// 5. The expanded pitch radar folds away when a lesson's end buttons (or "Back to the question") appear: on phones it sat
+//    over Quiz yourself / Watch again and swallowed the taps.
+const field=read('components/FieldLearning.tsx');
+assert.match(field,/const endButtons=endActionsAvailable\|\|rewatch!==null;\n useEffect\(\(\)=>\{if\(endButtons\)setRadarOpen\(false\);\},\[endButtons\]\);/,'radar closes for the end buttons');
 console.log('qa-learn-nov14: ok');
