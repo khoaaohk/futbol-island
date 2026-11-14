@@ -5,7 +5,7 @@ import learn from '@/components/learn/learn.module.css';
 import LogoWord from '@/components/learn/LogoWord';
 import title from '@/components/landing/Title.module.css';
 import JsonLd from '@/components/seo/JsonLd';
-import {abs,breadcrumbLd,pageMeta,PUBLISHER,SITE_NAME} from '@/lib/site/seo';
+import {abs,pageMeta,PUBLISHER,SITE_NAME} from '@/lib/site/seo';
 import {GAME_SHEET,LOGO_COLOURS,MARKETING_PATH,MARKETING_PDF,SITE_SHEET,type DesignSheet,type TypeSpec} from '@/lib/site/marketing';
 
 /**
@@ -55,7 +55,7 @@ export default function Marketing(){
  return <div className={`${learn.root} ${s.root}`}>
   {/* Nov 7 2026 SEO: structured data only (no visible content change). */}
   <JsonLd data={{'@context':'https://schema.org','@type':'WebPage',name:`Marketing · ${SITE_NAME}`,url:abs(MARKETING_PATH),inLanguage:'en',isPartOf:{'@type':'WebSite',name:SITE_NAME,url:abs('/')},publisher:PUBLISHER}}/>
-  <JsonLd data={breadcrumbLd([{name:'Home',path:'/'},{name:'Marketing',path:MARKETING_PATH}])}/>
+  {/* Nov 14 2026 (seo-boost): no BreadcrumbList here: the page shows no breadcrumbs, and structured data must match what is visible. */}
   <div className={learn.subnav}><div className={learn.subnavIn}><a className={learn.logo} href="/" aria-label="Futbol Island home"><LogoWord text="Futbol Island"/></a></div></div>
 
   {/* ---- 1. the download ---- */}

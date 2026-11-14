@@ -123,4 +123,6 @@ export const cheatSheetPath=(f:GuideFormat)=>cheats.find(c=>c.format===f)!.path;
 /** Every downloadable file name (no extension); each exists as .svg and .png under FILES_DIR. */
 export const PRINT_FILES:readonly PrintFile[]=PRINTABLES.flatMap(p=>p.files);
 export const printFile=(name:string)=>PRINT_FILES.find(f=>f.name===name);
+/** The sheet page a file belongs to (its canonical: the files send `Link: <page>; rel="canonical"`, seo-boost Nov 14 2026). */
+export const printFilePage=(name:string)=>PRINTABLES.find(p=>p.files.some(f=>f.name===name));
 export const PRINT_FILE_NAMES:readonly string[]=PRINT_FILES.flatMap(f=>[`${f.name}.svg`,`${f.name}.png`]);

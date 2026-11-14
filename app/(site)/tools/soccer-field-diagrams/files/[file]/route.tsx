@@ -1,5 +1,6 @@
 import {ImageResponse} from 'next/og';
-import {PRINT_FILE_NAMES,printFile} from '@/lib/site/tools/printables';
+import {PRINT_FILE_NAMES,printFile,printFilePage} from '@/lib/site/tools/printables';
+import {abs} from '@/lib/site/seo';
 import {toSvgString} from '@/lib/site/tools/sheet';
 import {sheetImage} from '@/lib/site/tools/sheetImage';
 /**
@@ -7,6 +8,9 @@ import {sheetImage} from '@/lib/site/tools/sheetImage';
  * build time like the guide diagrams (app/(site)/learn/diagrams/[file]/route.tsx): force-static + generateStaticParams, unknown
  * names 404, no request-time work. Both files are drawn from the same sheet data as the page preview (lib/site/tools/sheet.ts).
  * The PNG is US Letter at 150 dpi.
+ * Nov 14 2026 (seo-boost): Google indexes SVG files as documents, and the blank field sheets differ only by a line or two, so they
+ * were "Duplicate without user-selected canonical". Each file now names its sheet page as canonical in a Link header (Google
+ * reads rel=canonical from HTTP headers on non-HTML files); the images stay indexable for image search.
  */
 export const dynamic='force-static';
 export const dynamicParams=false;
@@ -15,8 +19,8 @@ const CACHE='public, max-age=86400, stale-while-revalidate=604800';
 export function GET(_req:Request,{params}:{params:{file:string}}){
  const m=/^(.+)\.(svg|png)$/.exec(params.file),f=m&&printFile(m[1]);
  if(!m||!f)return new Response('Not found',{status:404});
- const sheet=f.sheet();
- if(m[2]==='svg')return new Response(toSvgString(sheet),{headers:{'Content-Type':'image/svg+xml; charset=utf-8','Cache-Control':CACHE,'X-Content-Type-Options':'nosniff'}});
+ const sheet=f.sheet(),page=printFilePage(m[1]),link:Record<string,string>=page?{Link:`<${abs(page.path)}>; rel="canonical"`}:{};
+ if(m[2]==='svg')return new Response(toSvgString(sheet),{headers:{'Content-Type':'image/svg+xml; charset=utf-8','Cache-Control':CACHE,'X-Content-Type-Options':'nosniff',...link}});
  const {tree,width,height}=sheetImage(sheet);
- return new ImageResponse(tree,{width,height,headers:{'Cache-Control':CACHE}});
+ return new ImageResponse(tree,{width,height,headers:{'Cache-Control':CACHE,...link}});
 }

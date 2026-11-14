@@ -80,6 +80,15 @@ const cacheStatic = [
   { source: '/api/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
   // Everything UNDER /marketing (the print page and the PDF; Nov 4 2026, lib/site/marketing.ts) is never indexed or followed. The /marketing page itself is open to search since Nov 6 2026 (owner).
   { source: '/marketing/:path+', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }] },
+  // Nov 14 2026 (seo-boost, Search Console "Duplicate without user-selected canonical"): three kinds of non-HTML copies of the
+  // site's words had no canonical of their own.
+  //  - React Server Component payloads (`?_rsc=…` with the RSC request header): the same page as text/x-component. Never indexed.
+  //  - llms.txt and llms-full.txt: plain-text copies of the pages for AI assistants. Still crawled and read (robots.txt allows
+  //    every bot), just never listed as a search result of their own, so the HTML pages are the ones that rank.
+  //  (The printable field SVG/PNG files send a Link rel=canonical to their sheet page instead: files/[file]/route.tsx.)
+  { source: '/:path*', has: [{ type: 'header', key: 'rsc' }], headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+  { source: '/:path*', has: [{ type: 'query', key: '_rsc' }], headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+  { source: '/:file(llms\\.txt|llms-full\\.txt)', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
 ];
 // The game is at /play (Nov 3 2026, owner: the feature tour is the home page `/`, the game moved from `/`). /play is prerendered
 // static (CDN-cached). The only query it used to read on the server, ?from=arcade|konbini|museum|shop (spawn outside that door,
