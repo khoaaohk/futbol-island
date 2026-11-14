@@ -5,7 +5,8 @@
  * balls left, time) with an exit, and the end card (score, best, coins) with the arcade boards' new-high-score initials picker.
  * Reads lib/town/summitStore.ts (written only on changes); no timers or loops of its own.
  */
-import {useState,useSyncExternalStore} from 'react';
+import {useEffect,useState,useSyncExternalStore} from 'react';
+import {registerBackCloser} from '@/lib/town/backCloses';
 import dynamic from 'next/dynamic';
 import {BackButton} from './BackButton';
 import {kickStore,summitActions} from '@/lib/town/summitStore';
@@ -19,6 +20,9 @@ const PARTY=['#f4cc7c','#ef7d3c','#9ff0b8','#fff3df','#7bc4d8'];
 export default function SummitKickHud(){
  const v=useSyncExternalStore(kickStore.subscribe,kickStore.get,kickStore.server);
  const r=v.result,[boardDone,setBoardDone]=useState(0);// the round whose high-score picker has closed
+ // The phone's Back stops the round or closes the end card (QA Nov 14 2026), instead of leaving the island.
+ const open=v.phase!=='idle';
+ useEffect(()=>open?registerBackCloser(()=>summitActions.exitKick()):undefined,[open]);
  return <>
   <button type="button" className="store-enter-prompt" data-summit-kick-start aria-label="Start the Summit Kick" hidden onClick={()=>summitActions.startKick()}>Start the Summit Kick</button>
   {v.phase!=='idle'&&<div className={styles.hud} data-summit-kick-hud data-phase={v.phase}>

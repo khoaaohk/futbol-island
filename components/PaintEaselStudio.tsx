@@ -10,6 +10,7 @@ import {PAINT_W,PAINT_H,PAINT_PAPER,PAINT_PALETTE,PAINT_TOOLS,BRUSH,BRUSH_SIZES,
  readPaintings,writePaintings,addPainting,removePainting,hangPainting,hungPainting,newPaintingId,validPaintingImage,PAINT_BUDGET,
  type PaintTool,type Painting,type PaintSave} from '@/lib/town/paintEasel';
 import {nextPaintStyle,paintStyle,type PaintStyleId} from '@/lib/town/paintStyles';
+import {registerBackCloser} from '@/lib/town/backCloses';
 import {paintSound} from '@/lib/audio/paintSound';
 import {countEaselSave} from '@/lib/analytics/summitEvents';
 import styles from './PaintEasel.module.css';
@@ -130,6 +131,9 @@ export default function Studio({v,sheet}:{v:EaselView;sheet:HTMLCanvasElement}){
    if(k==='escape'){e.preventDefault();e.stopPropagation();done();return;}
    if(k!=='tab'&&k!=='enter'&&k!==' ')e.stopPropagation();};
   window.addEventListener('keydown',key,true);return()=>window.removeEventListener('keydown',key,true);},[done]);
+ // The phone's Back (QA Nov 14 2026): like Done (save, then stand up), instead of leaving the island with the painting unsaved.
+ const doneRef=useRef(done);doneRef.current=done;
+ useEffect(()=>registerBackCloser(()=>doneRef.current()),[]);
 
  if(look)return <button type="button" className={styles.lookCatcher} data-easel-ui data-easel-look-back aria-label="Return to painting" onClick={()=>easelActions.setMode('paint')}>
   <span className={styles.lookHint}>Tap to paint again</span></button>;

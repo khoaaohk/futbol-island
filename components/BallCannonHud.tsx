@@ -7,6 +7,7 @@
  * Reads lib/town/ballCannonStore.ts (written only on changes); pointer events only while dragging; no timers or loops.
  */
 import {useEffect,useRef,useSyncExternalStore,type PointerEvent} from 'react';
+import {registerBackCloser} from '@/lib/town/backCloses';
 import {BackButton} from './BackButton';
 import {cannonStore,cannonActions} from '@/lib/town/ballCannonStore';
 import styles from './BallCannonHud.module.css';
@@ -24,6 +25,8 @@ export default function BallCannonHud(){
    if((k==='r'||k==='p')&&!e.repeat){e.preventDefault();e.stopPropagation();cannonActions.release(k==='p'?2:1);return;}
    if(!AIM_KEYS.has(k)&&k!=='tab'&&k!=='enter')e.stopPropagation();};
   window.addEventListener('keydown',key,true);return()=>window.removeEventListener('keydown',key,true);},[v.seated]);
+ // The phone's Back gets you out of the cannon (QA Nov 14 2026), instead of leaving the island.
+ useEffect(()=>v.seated?registerBackCloser(()=>cannonActions.leave()):undefined,[v.seated]);
  const down=(e:PointerEvent<HTMLDivElement>)=>{if(e.target!==e.currentTarget)return;drag.current={id:e.pointerId,x:e.clientX,y:e.clientY};try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* not capturable */}};
  const move=(e:PointerEvent<HTMLDivElement>)=>{const d=drag.current;if(!d||d.id!==e.pointerId)return;cannonActions.aim(e.clientX-d.x,e.clientY-d.y);d.x=e.clientX;d.y=e.clientY;};
  const up=()=>{drag.current=null;};
