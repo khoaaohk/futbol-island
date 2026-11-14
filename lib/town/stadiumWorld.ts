@@ -252,7 +252,12 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
  for(const m of MASTS){skip(cylinder(.45,28.6,'#d9d6cc',m.x-m.sx*.55,14.3,m.z-m.sz*.55));obstacles.push({x:m.x-m.sx*.55,z:m.z-m.sz*.55,w:1,d:1});
   {const br=box(.5,1.2,.5,'#53605f',m.x-m.sx*.45,28.9,m.z-m.sz*.45);br.rotation.y=Math.atan2(-m.sx,-m.sz);}
   const head=box(6,3.4,.5,'#f7f3e3',m.x,30.5,m.z);head.rotation.y=Math.atan2(-m.sx,-m.sz);head.rotation.x=0;
-  const frame=box(6.4,3.8,.3,'#53605f',m.x-m.sx*.2,30.5,m.z-m.sz*.2);frame.rotation.y=head.rotation.y;}
+  const frame=box(6.4,3.8,.3,'#53605f',m.x-m.sx*.2,30.5,m.z-m.sz*.2);frame.rotation.y=head.rotation.y;
+  // The head is a 0.5 m upright panel turned to the pitch, not a deck: like the roof frames above, never a landing spot. Five small
+  // noLanding rails along its top edge (canLand keeps 1 m off each) cover the diagonal panel without fencing off its whole 4.6 m box
+  // (until Nov 13 2026 the pole's own ground collider, then under the head's centre, happened to cover it: tests/roof-landing.cjs).
+  const ax=Math.cos(head.rotation.y),az=-Math.sin(head.rotation.y);
+  for(const t of [-2.6,-1.3,0,1.3,2.6])rails.push({x:m.x-m.sx*.1+ax*t,z:m.z-m.sz*.1+az*t,w:.6,d:.6,floor:28.6,top:32.4,noLanding:true} as Rail);}
 
  // --- Broadcast gantry and photographers' gear (Nov 13 2026, lib/town/stadiumNpcs.ts): plain paint pieces (batched like the rest);
  // only the two camera heads and the shutter glints are live (lib/graphics/stadiumMedia.ts). The desk and the tripods are rails on

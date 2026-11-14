@@ -51,7 +51,9 @@ assert(chunks.length<=90,'west draw calls bounded: '+chunks.length);assert(tris<
 // Phase 1 (park + placeholder bowl): 66 chunks, 50,950 triangles. The stands add chunks only where the stadium reaches new cells.
 console.log('stadium build:',JSON.stringify(world.stadium));// Nov 13 2026 (owner): the machine row under the big screen adds ~14.4k triangles to the stadium cell's existing batches (the four
 // gashapons' shared island model, lib/graphics/gashaponMesh.ts; no new chunk or draw call): 95k → 98k.
-assert(chunks.length<=75&&tris<=98000,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames; the screen machines ~14k)');
+// Nov 13 2026 (release3, measured): main 57 chunks / 81,902 tris; + the bigger pond, jetty, reeds, rocks and orchard (pond-swim) 63 / 85,352;
+// + the machine row (screen-shops) 59 / 96,338; both together 65 / 99,788. Budget 98k → 102k (~2% margin).
+assert(chunks.length<=75&&tris<=102000,'phase 2 + 3 stadium budget (chunks / triangles; phase 3 adds ~11k: seat-back tops + real goal frames; the screen machines ~14k; the pond and orchard ~3.5k)');
 assert(!scene.children.some(o=>o.name==='park-pond'),'the pond is batched into its chunk (no loose mesh)');
 
 // 4. The map draws the stadium, the park and the plaza.

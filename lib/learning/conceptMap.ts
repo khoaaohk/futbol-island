@@ -71,7 +71,7 @@ export const CONCEPTS:Concept[]=[
  {id:'restart-options',words:w(['Two choices at a restart','Before a restart, get two passes ready.'],['Restart options','Offer two options before the restart, then use the one left open.'],['Set restarts and backups','Prepare a primary and a backup option so the defence cannot cover both.']),
   lessons:{futsal:['set_f_throwin','expf_kickinthird'],'7v7':['next7_dribblein'],'9v9':['learn9_restart'],'11v11':['learn11_restart']},ballKinds:['thrower-free','quick-free-kick','kick-in'],feed:/^Kick-in/,magazines:['throw-in'],jobs:['ball-kid']},
  {id:'keeper-set',words:w(['Keeper: get set','Stand still and ready before the shot. Don’t dive too early.'],['Keeper position','Step to the right spot and wait on your toes.'],['Goalkeeper depth and timing','Set your depth to the threat and hold your feet until the strike.']),
-  lessons:{futsal:['expf_keeperposition']},ballKinds:['keeper-angle','sweeper-keeper','wall-keeper'],fish:['nibble','scared','escaped','lost','caught']},
+  lessons:{futsal:['expf_keeperposition']},ballKinds:['keeper-angle','sweeper-keeper','wall-keeper','keeper-set'],fish:['nibble','scared','escaped','lost','caught']},
  {id:'follow-in',words:w(['Follow your shot','After a shot, run in: the keeper might drop it.'],['Follow in','Arrive for the rebound while others stop to watch.'],['Second-ball reactions','React to the parry or the post before the defence resets.']),
   lessons:{'7v7':['next7_shotreaction']},ballKinds:['follow-shot'],feed:/^(Parried|Rebound goal)/},
 ];

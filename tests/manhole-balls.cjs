@@ -32,7 +32,7 @@ for(const s of manholes){
  for(const o of others.filter(o=>o.truck===undefined))assert(Math.hypot(o.x-s.x,o.z-s.z)>3,`${s.id} stays clear of ${o.id}`);
  const clear=world.roads.some(r=>Math.abs(s.x-r.x)<=r.w/2&&Math.abs(s.z-r.z)<=r.d/2)||causewayCovers.includes(s);assert(clear,`${s.id} sits on the road`);
 }
-assert.equal(others.length,55+19+15+1+12,'the original fifty-five stay in place, plus nineteen Coral Cay balls, fifteen Summit Isle balls, the East Jetty ball and the twelve stadium balls');assert.equal(COIN_QUEST.length,55+world.roadJunctions.length+20+15+1+12);
+assert.equal(others.length,55+19+15+1+13,'the original fifty-five stay in place, plus nineteen Coral Cay balls, fifteen Summit Isle balls, the East Jetty ball and the thirteen stadium balls');assert.equal(COIN_QUEST.length,55+world.roadJunctions.length+20+15+1+13);
 assert(COIN_QUEST.slice(0,55).every(s=>!s.manhole),'new balls are appended after the originals');
 console.log(`PASS ${manholes.length} manhole balls: one at the centre of each of ${townCovers.length} road junctions plus the causeway road cover; total ${COIN_QUEST.length}`);
 
@@ -128,10 +128,10 @@ console.log('PASS collected manholes: plain cover back in its rim, reduced-motio
  const t=hunt(),s=manholes[2];t.h.update(.05,{x:s.x,y:20,z:s.z},true,true,null,false,true);t.h.land({x:s.x,y:0,z:s.z},true);
  const saved=Object.fromEntries(t.storage);t.h.dispose();
  const again=hunt(saved);assert(again.h.covers.isOpen(manholes.indexOf(s)),'opened cover stays open after reload');assert(!again.h.covers.isOpen(manholes.indexOf(manholes[1])));
- assert.equal(JSON.parse(saved[COIN_STORAGE_KEY]).version,9);again.h.dispose();
+ assert.equal(JSON.parse(saved[COIN_STORAGE_KEY]).version,10);again.h.dispose();
  const ids=COIN_QUEST.map(s=>s.id),first55=ids.slice(0,55);
  const oldComplete=sanitizeCoinProgress({version:3,revealed:first55,collected:first55,hint:null,celebrated:true,rewardUnlocked:false});
- assert.equal(oldComplete.version,9);assert.equal(oldComplete.collected.length,55);assert(coinRewardEarned(oldComplete)&&allCostumesEarned(oldComplete),'finished 55-ball saves keep fox and costumes');assert(!oldComplete.celebrated,'the new 100-ball finale is still ahead');
+ assert.equal(oldComplete.version,10);assert.equal(oldComplete.collected.length,55);assert(coinRewardEarned(oldComplete)&&allCostumesEarned(oldComplete),'finished 55-ball saves keep fox and costumes');assert(!oldComplete.celebrated,'the new 100-ball finale is still ahead');
  const oldPartial=sanitizeCoinProgress({version:3,collected:first55.slice(0,54)});assert.equal(oldPartial.collected.length,54);assert(!allCostumesEarned(oldPartial)&&!coinRewardEarned(oldPartial),'unfinished old saves keep their progress only');
  assert(!allCostumesEarned(sanitizeCoinProgress({version:4,collected:first55})),'new saves need every ball, manholes included');
  assert(allCostumesEarned(sanitizeCoinProgress({version:4,collected:ids})));
