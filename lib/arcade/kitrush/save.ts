@@ -65,7 +65,7 @@ export function nearMissLine(o:{score:number;best:number;newBest:boolean;stats:K
  if(close)return `${m.gap} ${m.gap===1?'point':'points'} from ${m.next}`;
  if(!o.newBest&&o.best>o.score&&o.best-o.score<=Math.max(100,o.best*.2))return `${o.best-o.score} from your ${o.daily?'best today':'best'}`;
  const c=o.stats.bestCombo,nextCall=callFor(c+1);
- if(c>=2&&c<6&&nextCall)return `Best swipe ${c}: one more for ${nextCall.replace('!','')}`;
+ if(c>=2&&c<6&&nextCall)return `Best swipe ${c}: one more for ${nextCall.replace('!','').replace(/-/g,'\u2011')}`;// QA Nov 14 2026: a non-breaking hyphen, so a phone never splits "HAT-" / "TRICK" over two lines
  if(m.next)return `${m.gap} points from ${m.next}`;
  return `You hold the ${MEDAL_NAMES[MEDAL_NAMES.length-1]} medal. Beat your best!`;
 }
