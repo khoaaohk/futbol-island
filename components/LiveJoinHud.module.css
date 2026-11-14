@@ -109,7 +109,9 @@
 
 /* "You're the keeper" (Nov 5 2026): ~2 s under the score bar on joining in goal and at each kick-off after a goal. Opaque, no glow;
    the runtime toggles data-show; transform + opacity only. */
-.keeper{position:absolute;z-index:12;left:50%;top:var(--tip-top,76px);display:flex;align-items:center;gap:12px;margin:0;padding:10px 18px 10px 12px;border-radius:20px;background:#193f37;color:#fff3d1;pointer-events:none;opacity:0;transform:translate(-50%,-10px) scale(.92);transition:opacity .2s ease,transform .2s ease;max-width:calc(100vw - 32px)}
+.keeper{position:absolute;z-index:12;left:50%;top:var(--tip-top,76px);display:flex;align-items:center;gap:12px;margin:0;padding:10px 18px 10px 12px;border-radius:20px;background:#193f37;color:#fff3d1;pointer-events:none;opacity:0;visibility:hidden;transform:translate(-50%,-10px) scale(.92);transition:opacity .2s ease,transform .2s ease,visibility 0s linear .2s;max-width:calc(100vw - 32px)}
+/* QA Nov 13 2026: hidden = out of the accessibility tree too (a screen reader read "You're the keeper" on the island). */
+.keeper[data-show]{visibility:visible}
 .keeper[data-show]{opacity:1;transform:translate(-50%,0) scale(1);transition:opacity .14s ease-out,transform .3s cubic-bezier(.3,1.4,.6,1)}
 .keeper svg{flex:none;width:40px;height:40px}
 .keeper b{display:block;font-size:19px;font-weight:800;line-height:1.1;white-space:nowrap}
