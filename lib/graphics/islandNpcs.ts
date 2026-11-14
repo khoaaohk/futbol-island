@@ -8,7 +8,7 @@ import {AR_TRACKS,STADIUM_BALL,STADIUM_NPC_ROUTES,stadiumNpcBudget,stadiumNpcSho
 import {dressDripMascot} from './dripMascot';
 import type {BallReactions} from './ballReactions';
 import {createNpcRide} from './npcRide';
-import {createPlayer} from './player';
+import {createPlayer,forgetRigGeometry} from './player';
 import {createNpcActivity} from './npcActivity';
 import {advanceNpcRoutines,createNpcRoutine,safeNpcPath} from '../town/npcBehavior';
 import {DEFAULT_CUSTOMIZATION} from '../town/customization';
@@ -34,7 +34,7 @@ type Placement={isWalkable:(x:number,z:number)=>boolean;heightAt:(x:number,z:num
  * Heat audit Sep 30 2026: their matrices are frozen too, so the renderer's per-frame matrix refresh no longer recomposes and multiplies
  * ~3,100 of them (it still visits them; they have no children). */
 const RELEASED=new T.BufferGeometry();
-function releaseHiddenClassic(root:T.Object3D){root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();o.geometry=RELEASED;o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;}});detachClassic(root);}
+function releaseHiddenClassic(root:T.Object3D){root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();forgetRigGeometry(root,o.geometry);o.geometry=RELEASED;o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;}});detachClassic(root);}
 /** NPC heat fix 2 (Oct 12 2026, user-approved): the classic parts above are also taken OFF the scene graph, so the renderer's
  * matrix refresh, render-list build and shadow traversal no longer visit them (≈ 37 of a townsperson's ≈ 60 objects: the 35
  * released meshes, the hidden classic jersey with its shirt-number decal, and the classic long-hair group). A part counts as

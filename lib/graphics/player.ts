@@ -383,12 +383,17 @@ function blendPose(o:PoseTarget,a:PoseTarget,b:PoseTarget,k:number){const L=(x:n
 /** The middle of a hand's mitten in the elbow's frame (the zipline grip point; tests and the runtime read it). */
 export const ZIP_GRIP_POINT=[0,-ZIP_FORE,0] as const;
 
+/** Memory (QA Nov 14 2026, heap snapshot): a rig keeps its body geometries in a list only to dispose them with the rig. A caller that
+ *  swaps a hidden classic part's geometry for an empty one for good (islandNpcs / remoteAvatars releaseHiddenClassic) tells the rig
+ *  here, so the old geometry's CPU arrays can go (~0.3 MB per townsperson or friend, ~75 MB on a busy island). */
+const rigGeometryLists=new WeakMap<T.Object3D,T.BufferGeometry[]>();
+export function forgetRigGeometry(root:T.Object3D,geometry:T.BufferGeometry){const list=rigGeometryLists.get(root);if(!list)return;const i=list.indexOf(geometry);if(i>=0)list.splice(i,1);}
 export function createPlayer(id: string, team: string, mergeRigidParts=true, articulatedHands=true): PlayerRig {
   const root = new T.Group(), pelvis = new T.Group(), torso = new T.Group();pelvis.name='player-pelvis';
   torso.name='armor-torso'; root.add(pelvis); pelvis.position.y = .88; pelvis.add(torso);
   const lumbar=new T.Group(),chest=new T.Group();lumbar.name='player-lumbar';chest.name='player-chest';
   lumbar.position.y=LUMBAR_HEIGHT;chest.position.y=CHEST_HEIGHT-LUMBAR_HEIGHT;torso.add(lumbar);lumbar.add(chest);
-  const geometries: T.BufferGeometry[] = [], materials: T.Material[] = [];
+  const geometries: T.BufferGeometry[] = [], materials: T.Material[] = [];rigGeometryLists.set(root,geometries);
   const seed = Array.from(id).reduce((n, c) => n + c.charCodeAt(0), 0);
   const material = (color: string) => { const m = new T.MeshStandardMaterial({ color, roughness: .82 }); materials.push(m); return m; };
   const shirt = material(team === 'home' ? '#edb957' : '#356478');
@@ -455,10 +460,14 @@ export function createPlayer(id: string, team: string, mergeRigidParts=true, art
   const jacketZip=mesh(new T.BoxGeometry(.012,.34,.018),trim,lumbar,0,.23-LUMBAR_HEIGHT,.14);jacketZip.visible=false;
   // Only invariant same-material pieces sharing one animated joint are merged.
   // Clothing switches, hair, joint pivots and costume attachments remain independent.
-  if(mergeRigidParts)for(const joint of [head,...legs.map(leg=>leg.knee),...arms.map(arm=>arm.elbow)]){
-    geometries.push(...batchRigidMeshes(joint));
+  // Memory (QA Nov 14 2026): the merged pieces' own geometries left the tree but stayed in `geometries` (only for dispose), ~12 per
+  // rig x every townsperson / player / visitor: ~90 MB of CPU-side arrays on the island. They were never drawn (merged at build), so
+  // they go now; nothing else holds the removed meshes.
+  if(mergeRigidParts){const sources:T.BufferGeometry[]=[];for(const joint of [head,...legs.map(leg=>leg.knee),...arms.map(arm=>arm.elbow)]){
+    geometries.push(...batchRigidMeshes(joint,sources));
     for(const child of joint.children)if(child instanceof T.Mesh)child.userData.playerId=id;
   }
+  if(sources.length){const gone=new Set(sources);for(const g of sources)g.dispose();for(let i=geometries.length;i-->0;)if(gone.has(geometries[i]))geometries.splice(i,1);}}
   // Body meshes are rigid relative to animated joint groups. Cache only their
   // local matrices; world matrices still follow every joint and parent change.
   const cacheBodyTransforms=()=>root.traverse(object=>{if(object instanceof T.Mesh){object.updateMatrix();object.matrixAutoUpdate=false;}});

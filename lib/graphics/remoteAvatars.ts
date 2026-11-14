@@ -21,7 +21,7 @@
 //    status line over the name ("Taking a lesson", "Away"; one cached texture per line, shared); emotes to / from them are ignored;
 //    a friend who goes indoors fades out at the door (no fade with reduced motion); the field pops when they come back.
 import * as T from 'three';
-import {createPlayer,type PlayerMotion,type PlayerRig} from './player';
+import {createPlayer,forgetRigGeometry,type PlayerMotion,type PlayerRig} from './player';
 import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
 import {DEMOTE_FADE,capGate,planNearest,planRigs,rigPriority,stepCapGate,RIG_HYST_M,ROOM_HYST_M} from './rigCap';
@@ -142,7 +142,7 @@ const EMOTE_ICON:Record<number,string>={[Emote.Wave]:'\u{1F44B}',[Emote.Cheer]:'
 const RELEASED=new T.BufferGeometry();
 const classicOnly=(o:T.Object3D):boolean=>o.userData.beanHidden===true||(o instanceof T.Mesh&&!o.visible&&!o.userData.beanPart&&o.children.every(classicOnly))||(o.name==='female-long-hair'&&o.children.every(classicOnly));
 function releaseHiddenClassic(root:T.Object3D){
- root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();o.geometry=RELEASED;o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;}});
+ root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();forgetRigGeometry(root,o.geometry);o.geometry=RELEASED;o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;}});
  const off:T.Object3D[]=[];
  const visit=(o:T.Object3D)=>{for(const child of o.children){if(classicOnly(child))off.push(child);else visit(child);}};
  visit(root);for(const o of off)o.removeFromParent();

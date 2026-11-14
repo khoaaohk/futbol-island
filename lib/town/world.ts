@@ -1829,6 +1829,10 @@ export function* buildTownSteps(scene: T.Scene) {
     show(id:string){for(const r of gashaponRuns.get(id)??[]){if(!r.saved)continue;(r.attribute.array as Float32Array).set(r.saved,r.start*3);r.attribute.clearUpdateRanges();r.attribute.addUpdateRange(r.start*3,r.saved.length);r.attribute.needsUpdate=true;r.saved=undefined;}},
     has:(id:string)=>(gashaponRuns.get(id)?.length??0)>0,
   };
+  // Memory (QA Nov 14 2026, heap snapshot): every batched piece's world-space clone (batch.geometries, ~22k, ~48 MB) and the original
+  // meshes it replaced (~21 MB) stayed reachable through this scope after the merge. Past this point only the merged meshes, batch.starts
+  // / kinds (mesh.userData.pieces) and the vertex runs above are read, so the source lists go.
+  for(const batch of batches.values())batch.geometries.length=0;batches.clear();original.length=0;propRecords.clear();gashaponPieces.clear();
   nightRoot.userData.lampSites=lampSites;nightRoot.userData.lampCount=lampSites.length;nightRoot.userData.poolChunkCount=poolChunks.size;
   const sceneryRoots=scene.children.filter(root=>!existingRoots.has(root));
   // Coral Cay region gate (heat audit Sep 29 2026): the ~200 static batches east of x 250 (causeway, sandbars, cay) are
