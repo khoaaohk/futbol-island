@@ -256,7 +256,10 @@ export function createJerseyScene(host:HTMLElement,opts:JerseySceneOptions):Jers
   template=null;pickSig='';
  }
  const keyBase=(d:JerseyDesign)=>`${d.pattern}${d.primary}${d.secondary}${d.accent}`;
- const keyPrints=(d:JerseyDesign)=>JSON.stringify([d.name,d.number,d.font,d.outline,d.frontNumber,d.textColor,d.accent,d.primary,d.crest,d.sponsor]);
+ const keyPrints=(d:JerseyDesign)=>JSON.stringify([d.name,d.number,d.font,d.outline,d.frontNumber,d.textColor,d.accent,d.primary,d.crest,d.sponsor,d.club??null,d.club?clubArtState:0,d.club?.crest==='sleeve'?[d.sleeves,d.pattern,d.secondary]:0]);
+ // Drip FC club kit (lib/shop/clubArt.ts): its pictures load on the first club shirt; the prints repaint once when they arrive.
+ let clubArtState=0;
+ function ensureClubArt(d:JerseyDesign){if(!d.club||clubArtState)return;clubArtState=1;void import('@/lib/shop/clubArt').then(m=>m.clubArtReady()).then(()=>{clubArtState=2;shownKey='';if(!disposed&&current){schedulePaint();request();}});}
  function canvas2d(){const c=document.createElement('canvas');c.width=c.height=texSize;return c;}
  function ensureLayers(){
   if(layered)return;layered=true;
@@ -616,7 +619,7 @@ export function createJerseyScene(host:HTMLElement,opts:JerseySceneOptions):Jers
 
  const api:JerseySceneApi={
   setDesign(d,o){
-   const first=!current;current=d;previewD=null;rebuild(d);trimColours(d);ensureFont(d);
+   const first=!current;current=d;previewD=null;rebuild(d);trimColours(d);ensureFont(d);ensureClubArt(d);
    // a stroke the scene just drew comes back as the same op objects: nothing to repaint
    const onlyArt=!first&&layered&&(d.art?.ops??[]).length===applied.length&&applied.every((op,i)=>op===d.art!.ops[i])&&keyBase(d)===baseKey&&keyPrints(d)===printsKey;
    if(!onlyArt)schedulePaint();
@@ -625,7 +628,7 @@ export function createJerseyScene(host:HTMLElement,opts:JerseySceneOptions):Jers
    if(!onlyArt||pulse!=null||auto)request();
   },
   preview(d){
-   if(disposed||(d===previewD))return;previewD=d;const s=shown();if(!s)return;
+   if(disposed||(d===previewD))return;previewD=d;if(d)ensureClubArt(d);const s=shown();if(!s)return;
    rebuild(s);trimColours(s);ensureFont(s);clearTimeout(paintTimer);paintTimer=setTimeout(paint,60);
   },
   setView(f,focus){if(flatOn)return;setView(f,focus);},resetView,

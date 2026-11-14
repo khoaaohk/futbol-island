@@ -2,7 +2,7 @@
 // All timers / clock / randomness / WebSocket / visibility are injectable. Design: docs/multiplayer-design.md 2.5, 4.3, 4.4, 5.1.
 import {
   C, PARTY_MAX_MS, PROTOCOL_VERSION, S, PoseFlag, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
-  Cap, CAPS_ALL, CAPS_WORLD, CloseCode, WORLD_AWAY_GRACE_MS, BallState, WORLD_BOUNDS, KIT_GAP_MS, type ClientMsg, type Kit, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
+  Cap, CAPS_ALL, CAPS_WORLD, CloseCode, WORLD_AWAY_GRACE_MS, BallState, WORLD_BOUNDS, KIT_GAP_MS, KIT_LEN, type ClientMsg, type Kit, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
 import { relayWsUrl, relayLobbyUrl, relayWorldWsUrl, validShard } from './config';
 import { admitStrangerEmote, isHiddenStranger, noteStrangerName } from './strangers';
@@ -236,7 +236,9 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     if (!kitSet || kitSentKey === myKitKey || !(caps & Cap.Kit) || !open() || status !== 'live') return;
     const t = now();
     if (t - kitAt < KIT_GAP_MS) return; // sendPose (every frame) and the beat retry it
-    if (raw([C.Kit, myKit])) { kitSentKey = myKitKey; kitAt = t; }
+    // Cap.KitClub (Drip FC club kit): the long kit only to a relay that offered it; anyone else gets its first KIT_LEN slots.
+    const kit = myKit && myKit.length > KIT_LEN && !(caps & Cap.KitClub) ? myKit.slice(0, KIT_LEN) : myKit;
+    if (raw([C.Kit, kit])) { kitSentKey = myKitKey; kitAt = t; }
   }
   const pingBucket = new TokenBucket(0.33, 2);
   // Health: the last beat sent (its echoed value and local send time), recent round trips, drops recovered.

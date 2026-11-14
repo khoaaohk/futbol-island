@@ -19,6 +19,7 @@
 import * as T from 'three';
 import {BALL_VERT,ballFrag,MAX_FILLS,MAX_SHADER_DECALS} from './ballShader';
 import {decalImage,drawPatternMask,loadDecalFonts} from './ballArt';
+import {clubArtReady} from './clubArt';
 import {QUOTES,type BallDecal,type BallDesign,type BallLayout,type Vec3} from './ball';
 import {frameCapSlot,studioFrameMs} from './studioFrameCap';
 import {pickSphere,turnTowardAxis,RIM_MAX,type V3} from './ballPick';
@@ -197,7 +198,11 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
  const easeBack=(t:number)=>{const c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);};
  const keyOf=(d:BallDecal)=>`${d.kind}|${d.ref}|${d.kind==='name'||d.kind==='number'||d.kind==='quote'?d.color:''}`;
  let fontsReady=false;loadDecalFonts().then(()=>{fontsReady=true;if(!disposed&&decals.length){atlasKeys='~';redrawAtlas();}});
- function redrawAtlas(){const g=atlas.getContext('2d')!;g.clearRect(0,0,AS,AS);const cw=AS/2,ch=AS/4;
+ // Drip FC stickers: their pictures load on the first club sticker, then the atlas is redrawn once (lettered mark until then).
+ let clubAsked=false;
+ function redrawAtlas(){
+  if(!clubAsked&&decals.some(d=>d.kind==='club')){clubAsked=true;clubArtReady().then(()=>{if(!disposed&&decals.length){atlasKeys='~';redrawAtlas();}});}
+const g=atlas.getContext('2d')!;g.clearRect(0,0,AS,AS);const cw=AS/2,ch=AS/4;
   decals.slice(0,MAX_SHADER_DECALS).forEach((d,i)=>{const text=d.kind==='quote'?(QUOTES.find(x=>x.id===d.ref)?.text??''):d.ref;
    const img=decalImage(d.kind,d.ref,d.color,text,ch*.98),a=img.aspect;aspects[i]=a;
    let w=cw-8,h=w/a;if(h>ch-8){h=ch-8;w=h*a;}const x=(i%2)*cw+(cw-w)/2,y=Math.floor(i/2)*ch+(ch-h)/2;g.drawImage(img.canvas,x,y,w,h);

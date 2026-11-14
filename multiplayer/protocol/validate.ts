@@ -1,5 +1,5 @@
 // parseClient / parseServer / encode. Never throw on bad input; return null.
-import { C, S, Emote, MatchKind, MATCH_FIELDS, MATCH_SLOT_MAX, MATCH_SNAP_MAX, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, WORLD_HARD, CAPS_MAX, ISLAND_GOAL, MAP_DOTS, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
+import { C, S, Emote, MatchKind, MATCH_FIELDS, MATCH_SLOT_MAX, MATCH_SNAP_MAX, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, KIT_CLUB_LEN, KIT_CLUB_MAX_BYTES, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, WORLD_HARD, CAPS_MAX, ISLAND_GOAL, MAP_DOTS, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
 import { NAME_COLOURS, RESERVED_NAME_SLOTS, normalizeNick } from './names';
@@ -55,7 +55,7 @@ function isMember(v: unknown): v is MemberInfo {
 /** Relay v1.7: a worn kit (types.ts Kit). Exact length, integers only, every slot in its range, the "worn" groups all-or-nothing,
  *  and at most KIT_MAX_BYTES as JSON. Exported: the relay re-checks a kit restored from a hibernation attachment with it. */
 export function isKit(v: unknown): boolean {
-  if (!Array.isArray(v) || v.length !== KIT_LEN) return false;
+  if (!Array.isArray(v) || (v.length !== KIT_LEN && v.length !== KIT_CLUB_LEN)) return false;
   const col = (n: unknown) => inRange(n, 0, 0xffffff), idx = (n: unknown) => inRange(n, 0, KIT_INDEX_MAX);
   const jersey = v[0] !== -1, ball = v[7] !== -1;
   for (let i = 0; i <= 4; i++) if (jersey ? !col(v[i]) : v[i] !== -1) return false;
@@ -65,6 +65,11 @@ export function isKit(v: unknown): boolean {
     if (!idx(v[7]) || !col(v[8]) || !col(v[9]) || !col(v[10]) || !idx(v[11]) || !col(v[12]) || !col(v[13]) || !inRange(v[14], 0, 3) || !inRange(v[15], 0, 9999) || !idx(v[16])) return false;
   } else for (let i = 8; i <= 16; i++) if (v[i] !== -1) return false;
   if (!jersey && !ball && v[6] === -1) return false; // nothing worn travels as null, never as an all -1 kit
+  if (v.length === KIT_CLUB_LEN) { // Cap.KitClub: the Drip FC slots (types.ts), each 0 / -1 when its item is not worn
+    if (!(jersey ? inRange(v[17], 0, 7) : v[17] === 0) || !(v[6] !== -1 ? inRange(v[18], 0, 3) : v[18] === 0)) return false;
+    for (let i = 19; i <= 21; i++) if (!(v[i] === -1 || (ball && col(v[i]) && ((v[i] as number) & 3) !== 3))) return false;
+    return utf8Len(JSON.stringify(v)) <= KIT_CLUB_MAX_BYTES;
+  }
   return utf8Len(JSON.stringify(v)) <= KIT_MAX_BYTES;
 }
 const isKitOrNull = (v: unknown): boolean => v === null || isKit(v);

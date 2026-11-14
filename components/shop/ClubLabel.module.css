@@ -1,0 +1,6 @@
+/* Drip FC club kit label (Nov 13 2026): plain words + the stadium boards' small "Sponsor" tag (lib/stadium/sponsors/atlas.ts:
+   ink pill, paper letters). No link, no button, no call to action. */
+.label{display:inline-flex;white-space:nowrap;align-items:center;gap:6px;margin:0;font-size:13px;font-weight:800;line-height:1.2;color:inherit}
+.tag{display:inline-block;padding:2px 7px;border-radius:999px;background:#231a2edb;color:#fff3d6;font-size:11px;font-weight:800;line-height:1.3}
+.block{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin:2px 0 8px}
+.block .note{flex:1 1 100%;font-size:12.5px;font-weight:600;opacity:.85}

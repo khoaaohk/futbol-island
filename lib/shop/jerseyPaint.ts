@@ -14,6 +14,8 @@
  */
 import {type JerseyDesign,type JerseyCrest,type PatternId,type FontId,SPONSORS,hexToRgb,luminance} from './jersey';
 import {type ArtSurface,type Art,type Ctx2D,renderArt,makeCanvas} from './paint/artOps';
+import {drawClubMark} from './clubArt';
+import {CLUB_COLORS} from './dripKit';
 
 type Ctx=CanvasRenderingContext2D|OffscreenCanvasRenderingContext2D;
 interface Rect{x:number;y:number;w:number;h:number}
@@ -218,9 +220,10 @@ function paintTorso(ctx:Ctx,d:JerseyDesign,face:Face,r:Rect,kpx:number,opts:{pri
  const outline=d.outline?d.accent===d.textColor?shade(d.textColor,-.5):d.accent:null;
  if(opts.prints){
   if(face==='front'){
-   const [qx,qy]=at(.1,.535);drawCrest(ctx,d.crest,qx,qy,.092*kpx);
+   // Drip FC club kit (Nov 13 2026, lib/shop/dripKit.ts): the club crest takes the crest's place, the wordmark the sponsor's.
+   const [qx,qy]=at(.1,.535);if(d.club?.crest==='chest')drawClubMark(ctx,'crest',qx,qy,.085*kpx,.1*kpx,clubInk(d.primary));else drawCrest(ctx,d.crest,qx,qy,.092*kpx);
    if(d.frontNumber&&d.number!=null){const [nx,ny]=at(-.1,.53);printText(ctx,String(d.number),nx,ny,.07*kpx,d.font,d.textColor,outline,.12*kpx);}
-   const [sx,sy]=at(0,.4);paintSponsor(ctx,d,sx,sy,.3*kpx,outline);
+   const [sx,sy]=at(0,.4);if(d.club?.word)drawClubMark(ctx,'wordmark',sx,sy,.3*kpx,.09*kpx,d.textColor);else paintSponsor(ctx,d,sx,sy,.3*kpx,outline);
   }else{
    if(d.name.trim()){const n=backNamePrint(d);const [x,y]=at(0,n.y);printText(ctx,d.name.trim().toUpperCase(),x,y,n.cap*kpx,d.font,d.textColor,n.outline,n.maxW*kpx,n.tracking);}
    if(d.number!=null){const [x,y]=at(0,.4);printText(ctx,String(d.number),x,y,.22*kpx,d.font,d.textColor,outline,.34*kpx,.02);}
@@ -248,10 +251,17 @@ export function paintAtlasBase(ctx:Ctx,d:JerseyDesign,size:number){
   ctx.save();ctx.beginPath();ctx.rect(r.x-4,r.y-4,r.w+8,r.h+8);ctx.clip();ctx.setTransform(kpx,0,0,kpx,r.x,r.y);sleevePattern(ctx,d,side);ctx.restore();}
  ctx.restore();
 }
+/** The Drip FC crest's ink on a shirt colour: white on darker shirts, club navy on light ones. */
+export const clubInk=(shirt:string)=>luminance(shirt)>.42?CLUB_COLORS.navy:'#ffffff';
 /** Layer 3: crest, sponsor, name, numbers and the woven tags, on a TRANSPARENT canvas (the caller clears it). */
 export function paintAtlasPrints(ctx:Ctx,d:JerseyDesign,size:number){
  const kpx=K*size;
  ctx.save();ctx.setTransform(1,0,0,1,0,0);
+ // The Drip FC sleeve crest: the outside of the wearer's left sleeve, near the shoulder (sleeveUv: a back from the cuff, c round
+ // from the underarm seam), upright toward the shoulder.
+ if(d.club?.crest==='sleeve'){const r=pxRect(ATLAS.sleeveL,size),a=(d.sleeves==='long'?.585:.215)-.075,c=ATLAS.sleeveCirc*.49;
+  const sleeveCol=d.pattern==='stripes'?d.secondary:d.primary;
+  ctx.save();ctx.translate(r.x+a*kpx,r.y+c*kpx);ctx.rotate(Math.PI/2);drawClubMark(ctx,'crest',0,0,.07*kpx,.082*kpx,clubInk(sleeveCol));ctx.restore();}
  paintTorso(ctx,d,'front',pxRect(ATLAS.front,size),kpx,{prints:true,tag:true,pattern:false});
  paintTorso(ctx,d,'back',pxRect(ATLAS.back,size),kpx,{prints:true,tag:true,pattern:false});
  ctx.restore();

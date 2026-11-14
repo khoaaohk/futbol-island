@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {BALL_SKIN_H,BALL_SKIN_W,FINISH_ROUGHNESS,bakeBallPixels,designHash} from '../shop/islandGear';
+import {BALL_SKIN_H,BALL_SKIN_W,FINISH_ROUGHNESS,bakeBallPixels,designHash,stampDecalPixels} from '../shop/islandGear';
 import {drawPatternMask} from '../shop/ballArt';
 import {artUrl,loadBallStore,type BallDesign} from '../shop/ball';
 import {decodeFiDrawSync,isFiDraw} from '../shop/drawCodec';
@@ -14,18 +14,33 @@ function bakeBase(d:BallDesign,key:string){
  return {map,g};
 }
 /**
+ * Drip FC club stickers (Nov 13 2026, lib/shop/dripKit.ts) stamped into the same skin once their pictures have loaded: the only
+ * decals that leave the studio (friends get them too, lib/multiplayer/kit.ts). One putImageData + one upload per bake, never per frame.
+ */
+function layClub(d:BallDesign,g:CanvasRenderingContext2D,map:T.CanvasTexture,alive:()=>boolean){
+ const club=d.decals.filter(x=>x.kind==='club');if(!club.length)return;
+ import('../shop/clubArt').then(({clubArtReady,clubSticker})=>clubArtReady().then(()=>{
+  if(!alive())return;const sk=g.getImageData(0,0,BALL_SKIN_W,BALL_SKIN_H);
+  for(const x of club){const c=clubSticker(x.ref as 'crest',72).canvas,cg=c.getContext('2d')!;
+   stampDecalPixels(sk.data,BALL_SKIN_W,BALL_SKIN_H,x,{data:cg.getImageData(0,0,c.width,c.height).data,w:c.width,h:c.height});c.width=c.height=1;}
+  g.putImageData(sk,0,0);map.needsUpdate=true;
+ })).catch(()=>{/* offline chunk: the ball stays without them */});
+}
+/**
  * A friend's Kit Shop ball (relay v1.7, lib/multiplayer/kit.ts kitBall: panels, colours, pattern, finish; never their drawing). One
  * material + texture per design, baked once; lib/graphics/remoteAvatars.ts keeps at most two and disposes the evicted one (map too).
  */
 export function friendBallMaterial(d:BallDesign,key:string):T.MeshStandardMaterial{
- const {map}=bakeBase(d,'friend-'+key);
- const m=new T.MeshStandardMaterial({map,color:'#ffffff',roughness:FINISH_ROUGHNESS[d.finish]??.7});m.name='friend-shop-ball';return m;
+ const {map,g}=bakeBase(d,'friend-'+key);
+ const m=new T.MeshStandardMaterial({map,color:'#ffffff',roughness:FINISH_ROUGHNESS[d.finish]??.7});m.name='friend-shop-ball';
+ let gone=false;m.addEventListener('dispose',()=>{gone=true;});layClub(d,g,map,()=>!gone);return m;
 }
 /**
  * The Kit Shop ball on the island's walking ball (Oct 26 2026, lib/shop/islandGear.ts). One small equirect CanvasTexture per
  * design, baked once when the worn ball changes (never per frame), kept in a 2-entry cache so switching back is free, and
  * disposed with the renderer. The kid's drawing (Ball Studio Draw step) is layered on top; a WebP/PNG drawing decodes
- * asynchronously and refreshes the texture once. Decals (stickers/flags/text) stay in the studio for now.
+ * asynchronously and refreshes the texture once. Decals (stickers/flags/text) stay in the studio, except Drip FC club stickers
+ * (layClub, Nov 13 2026), which friends see too.
  */
 export function createShopBallSkin(material:T.MeshStandardMaterial){
  const cache=new Map<string,T.CanvasTexture>();let current='',disposed=false;
@@ -37,6 +52,7 @@ export function createShopBallSkin(material:T.MeshStandardMaterial){
    if(isFiDraw(url)){const px=decodeFiDrawSync(url);if(px){const tmp=document.createElement('canvas');tmp.width=px.w;tmp.height=px.h;tmp.getContext('2d')!.putImageData(new ImageData(px.px,px.w,px.h),0,0);cache.set(key,map);lay(tmp);tmp.width=tmp.height=1;}}
    else{const img=new Image();img.onload=()=>lay(img);img.src=url;}
   }
+  layClub(d,g,map,()=>!disposed&&cache.has(key));
   return map;
  }
  return{

@@ -15,7 +15,7 @@
  */
 import {SHOP_GEAR_EVENT,SHOP_OWNED_KEY,designHash,loadOwned,type ShopOwned} from './shopPurchases';
 import {validateJersey,type JerseyDesign} from './jersey';
-import {validateBoots,type BootDesign} from './boots';
+import {validateBoots,bootClubBits,type BootDesign} from './boots';
 import {validateBall,type BallDesign} from './ball';
 import {panelAt} from './ballPanels';
 import type {Outfit} from '../graphics/beanLook';
@@ -48,12 +48,13 @@ export const bootColour=(b:BootDesign)=>b.colors.mid;
 export function gearOutfit(base:Outfit,gear:IslandGear):Outfit{
  if(!gear.jersey&&!gear.boots)return base;
  const j=gear.jersey,out:Outfit={...base};
- if(j){out.kind='kit';out.shirt=j.primary;out.shirt2=j.secondary;out.shorts=j.accent;out.socks=j.primary;out.socks2=j.accent;out.number=j.number;}
- if(gear.boots)out.boots=bootColour(gear.boots);
+ if(j){out.kind='kit';out.shirt=j.primary;out.shirt2=j.secondary;out.shorts=j.accent;out.socks=j.primary;out.socks2=j.accent;out.number=j.number;
+  if(j.club?.crest)out.club=j.club.crest==='chest'?1:2;}// Drip FC club crest (lib/shop/dripKit.ts)
+ if(gear.boots){out.boots=bootColour(gear.boots);const bc=bootClubBits(gear.boots);if(bc)out.bootClub=bc;}
  return out;
 }
 /** Team colours (lessons, rooftop knockout) keep your own boots: footballers wear their own boots with the team kit. */
-export function teamOutfitWithBoots(team:Outfit,gear:IslandGear):Outfit{return gear.boots?{...team,boots:bootColour(gear.boots)}:team;}
+export function teamOutfitWithBoots(team:Outfit,gear:IslandGear):Outfit{if(!gear.boots)return team;const bc=bootClubBits(gear.boots);return bc?{...team,boots:bootColour(gear.boots),bootClub:bc}:{...team,boots:bootColour(gear.boots)};}
 
 // ---- The bought ball as an equirect image ---------------------------------------------------------------------------------
 /** Texture size: 256×128 (128 KB RGBA) is plenty for a 0.19 m ball on a phone, baked once per design. */
@@ -82,3 +83,29 @@ export function bakeBallPixels(d:BallDesign,mask:ArrayLike<number>|null,W=BALL_S
 }
 /** How shiny the island ball is for each studio finish (MeshStandardMaterial roughness). */
 export const FINISH_ROUGHNESS:Record<BallDesign['finish'],number>={gloss:.35,matte:.82,dimple:.6,leather:.75,holo:.3,metal:.32};
+
+// ---- Drip FC club stickers on the island ball (Nov 13 2026, lib/shop/dripKit.ts) -------------------------------------------
+/** Half-size of a decal as the studio draws it (lib/shop/ballStage.ts decalHalf): wide art shrinks so it never wraps too far. */
+const decalHalf=(size:number,aspect:number)=>{const h=Math.min(size,.95/Math.max(aspect,.2));return {w:h*aspect,h};};
+/**
+ * Stamp one decal picture (RGBA, `img.w`×`img.h`, row 0 = its top) into the equirect skin pixels `out`, with the studio shader's
+ * exact chart (ballShader.ts: the atan angles round the decal centre, its "up" turned by `rot` from the local north), alpha-blended.
+ * Pure; runs once per bake (only for club stickers, the art friends see too), never per frame.
+ */
+export function stampDecalPixels(out:Uint8ClampedArray,W:number,H:number,decal:{dir:[number,number,number];rot:number;size:number},img:{data:ArrayLike<number>;w:number;h:number}){
+ const [dx,dy,dz]=decal.dir,l=Math.hypot(dx,dy,dz)||1,d=[dx/l,dy/l,dz/l];
+ const n=Math.abs(d[1])>.97?[0,0,1]:[0,1,0],nd=n[0]*d[0]+n[1]*d[1]+n[2]*d[2];
+ let t=[n[0]-d[0]*nd,n[1]-d[1]*nd,n[2]-d[2]*nd];const tl=Math.hypot(t[0],t[1],t[2])||1;t=t.map(v=>v/tl);
+ const c=Math.cos(decal.rot),s=Math.sin(decal.rot),dxt=[d[1]*t[2]-d[2]*t[1],d[2]*t[0]-d[0]*t[2],d[0]*t[1]-d[1]*t[0]];
+ const up=[t[0]*c+dxt[0]*s,t[1]*c+dxt[1]*s,t[2]*c+dxt[2]*s];
+ let r=[up[1]*d[2]-up[2]*d[1],up[2]*d[0]-up[0]*d[2],up[0]*d[1]-up[1]*d[0]];const rl=Math.hypot(r[0],r[1],r[2])||1;r=r.map(v=>v/rl);
+ const u=[d[1]*r[2]-d[2]*r[1],d[2]*r[0]-d[0]*r[2],d[0]*r[1]-d[1]*r[0]];
+ const hs=decalHalf(decal.size,img.w/Math.max(1,img.h)),p:[number,number,number]=[0,0,0];
+ for(let j=0;j<H;j++)for(let i=0;i<W;i++){
+  dirOf(i,j,W,H,p);const cd=p[0]*d[0]+p[1]*d[1]+p[2]*d[2];if(cd<.15)continue;
+  const qx=Math.atan2(p[0]*r[0]+p[1]*r[1]+p[2]*r[2],cd)/hs.w*.5+.5,qy=Math.atan2(p[0]*u[0]+p[1]*u[1]+p[2]*u[2],cd)/hs.h*.5+.5;
+  if(qx<0||qx>=1||qy<0||qy>=1)continue;
+  const sx=Math.min(img.w-1,Math.floor(qx*img.w)),sy=Math.min(img.h-1,Math.floor((1-qy)*img.h)),si=(sy*img.w+sx)*4,a=img.data[si+3]/255;if(a<=0)continue;
+  const k=(j*W+i)*4;for(let ch=0;ch<3;ch++)out[k+ch]=out[k+ch]+(img.data[si+ch]-out[k+ch])*a;
+ }
+}

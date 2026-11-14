@@ -3,7 +3,7 @@
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, AWAY_GRACE_MS, EMPTY_CLOSE_MS,
   ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState, EMOTE_ASK, AskReply,
-  HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, isKit, MatchKind, MATCH_ROSTER, MATCH_RATE, MATCH_JOIN_RATE, FLOOD_BURST, MATCH_OWNER_SILENT_MS,
+  HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, KIT_LEN, isKit, MatchKind, MATCH_ROSTER, MATCH_RATE, MATCH_JOIN_RATE, FLOOD_BURST, MATCH_OWNER_SILENT_MS,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
   CAPS_WORLD, WORLD_HARD, WORLD_SEE_M, WORLD_SEE_BACK_M, QUIET_RANGE_M, WORLD_AWAY_GRACE_MS, WORLD_IDLE_MS, FOLLOW, REPORT, REPORT_REASON_IDS, CloseCode,
   pickWorldName, ISLAND_GOAL, MAP_DOTS,
@@ -144,6 +144,9 @@ function ctEq(a: string, b: string): boolean {
   for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return d === 0;
 }
+
+/** Cap.KitClub (Nov 13 2026): what recipient `r` may be sent of a kit: the long Drip FC kit only when r understands it. */
+function kitFor(r: { caps: number }, kit: number[]): number[] { return kit.length > KIT_LEN && !(r.caps & Cap.KitClub) ? kit.slice(0, KIT_LEN) : kit; }
 
 export class RoomCore {
   /** The raw host key exists only on the instance that created the party (it is handed out once); a restored room has ''. */
@@ -686,7 +689,7 @@ export class RoomCore {
           this.send(peer, [S.Joined, this.memberInfo(d)]);
           if (d.pose) r.seen.set(d.id, d.poseNo);
           r.seenBall.delete(d.id);
-          if ((r.caps & Cap.Kit) && d.kit) this.send(peer, [S.Kit, d.id, d.kit]);
+          if ((r.caps & Cap.Kit) && d.kit) this.send(peer, [S.Kit, d.id, kitFor(r, d.kit)]);
         } else {
           r.known.delete(d.id); r.seen.delete(d.id); r.seenBall.delete(d.id);
           this.send(peer, [S.Left, d.id, LeaveReason.Far]);
@@ -1017,7 +1020,7 @@ export class RoomCore {
     if (!m.peer) return;
     const peer = m.peer;
     if (m.caps & Cap.NameLock) this.members.forEach((x) => { if (x.nickLocked) this.send(peer, [S.NameLock, x.id, 1]); });
-    if (m.caps & Cap.Kit) this.members.forEach((x) => { if (x !== m && x.kit && this.vis(m, x)) this.send(peer, [S.Kit, x.id, x.kit]); });
+    if (m.caps & Cap.Kit) this.members.forEach((x) => { if (x !== m && x.kit && this.vis(m, x)) this.send(peer, [S.Kit, x.id, kitFor(m, x.kit)]); });
     if (this.world) { m.quietSent = -1; m.worldSent = -1; m.goalSent = -1; this.worldHints(m); } // relay v2.0: the first S.Quiet / S.World at once
     if (this.world) { m.mapSent = '[]'; if (m.caps & Cap.Map) this.mapPass(m); } // map dots: a new socket starts empty; its first cells at once
     if (m.caps & Cap.Match) this.fields.forEach((_f, id) => this.send(peer, this.rosterMsg(id)));
@@ -1121,6 +1124,7 @@ export class RoomCore {
    *  forwarded to every other Cap.Kit member when it changed, at most KIT_RATE (a faster change goes out on a later tick: latest wins). */
   private kitMsg(m: Member, kit: number[] | null, now: number): void {
     if (!(m.caps & Cap.Kit)) return;
+    if (kit && kit.length > KIT_LEN && !(m.caps & Cap.KitClub)) kit = kit.slice(0, KIT_LEN); // never offered the long kit: keep the short one
     const key = kit ? kit.join(',') : '';
     if (key === m.kitKey) return;
     m.kit = kit ? kit.slice() : null; m.kitKey = key;
@@ -1129,8 +1133,9 @@ export class RoomCore {
 
   /** Relay v1.7: tell every other Cap.Kit member what `t` wears now (old clients never see S.Kit). */
   private kitNews(t: Member): void {
-    const text = encode([S.Kit, t.id, t.kit]);
-    this.members.forEach((r) => { if (r !== t && r.peer && (r.caps & Cap.Kit) && this.vis(r, t)) { try { r.peer.send(text); } catch { /* gone */ } } });
+    // Cap.KitClub (Nov 13 2026): the long kit to members that understand it, its first KIT_LEN slots to everyone else.
+    const text = encode([S.Kit, t.id, t.kit]), short = t.kit && t.kit.length > KIT_LEN ? encode([S.Kit, t.id, t.kit.slice(0, KIT_LEN)]) : text;
+    this.members.forEach((r) => { if (r !== t && r.peer && (r.caps & Cap.Kit) && this.vis(r, t)) { try { r.peer.send(r.caps & Cap.KitClub ? text : short); } catch { /* gone */ } } });
   }
 
   /** Relay v1.5: tell every Cap.NameLock member that `t`'s name lock changed (old clients never see S.NameLock). */

@@ -142,8 +142,8 @@
 .studText span{display:block;margin-top:3px;font:600 12.5px/1.35 var(--btn-font);color:var(--ink-soft)}
 
 /* stickers */
-.tabs{display:flex;align-items:center;gap:6px;margin:6px 0 10px}
-.tab{min-height:40px;padding:0 15px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-cream);box-shadow:0 4px 0 var(--btn-cream-edge);font:800 14px var(--btn-font);transition:translate .14s,box-shadow .14s}
+.tabs{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:6px 0 10px}
+.tab{min-height:40px;padding:0 12px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-cream);box-shadow:0 4px 0 var(--btn-cream-edge);font:800 14px var(--btn-font);transition:translate .14s,box-shadow .14s}
 .tab:active{translate:0 var(--btn-press)}
 .tab[aria-selected=true]{background:var(--btn-pink);box-shadow:0 4px 0 var(--btn-pink-edge)}
 .count{margin-left:auto;padding:6px 10px;border-radius:999px;background:var(--btn-green);color:var(--btn-ink-on-dark);font:800 13px var(--btn-font)}

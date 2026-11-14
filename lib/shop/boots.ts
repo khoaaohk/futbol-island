@@ -9,6 +9,7 @@
  * (MIT, public/shop/flags/LICENSE.txt, docs/third-party/flag-icons.md).
  */
 import {BOOT_PRICES} from '../economy';
+import {isClubArt,CLUB_COLORS,BOOT_CLUB_HEEL,BOOT_CLUB_SIDE} from './dripKit';
 
 export const BOOTS_KEY='fi2-shop-boots-v1';
 /** Stickers, flags and quotes a kid can place. The name, number and flag badge are separate (personal) and do not count. */
@@ -37,7 +38,8 @@ export const STUD_FINISH_IDS:readonly StudFinish[]=['matte','glossy','translucen
 export type PatternKind='solid'|'fade'|'speckle'|'stripes'|'camo'|'zigzag';
 export type ColourZone='toe'|'mid'|'heel'|'collar'|'laces'|'soleplate'|'studs'|'tips'|'accent';
 export type DecalZone='toe'|'outside'|'inside'|'heel'|'tongue';
-export type DecalKind='sticker'|'flag'|'quote';
+/** 'club' (Nov 13 2026): a Drip FC sticker the player places (lib/shop/dripKit.ts: crest / wordmark / drop). An older build drops it. */
+export type DecalKind='sticker'|'flag'|'quote'|'club';
 
 export type BootDecal={
  /** Unique within the design (undo and selection use it). */
@@ -204,7 +206,9 @@ export const DEFAULT_BOOTS:BootDesign={
  */
 type PresetDesign=Omit<BootDesign,'decals'|'name'|'number'|'heelText'|'flag'|'flagSpot'>;
 const C=(toe:string,mid:string,heel:string,collar:string,laces:string,soleplate:string,studs:string,tips:string,accent:string)=>({toe,mid,heel,collar,laces,soleplate,studs,tips,accent});
-export const PRESETS:readonly {id:string;label:string;sub:string;design:PresetDesign}[]=[
+/** `decals` (Drip FC boots only): the club stickers a preset puts on, added to the kid's own (never replacing them). `club` marks a
+ *  Drip FC club item (labelled CLUB_LABEL + "Sponsor" in the studio). */
+export const PRESETS:readonly {id:string;label:string;sub:string;design:PresetDesign;decals?:readonly BootDecal[];club?:true}[]=[
  {id:'speed-golden',label:'Modern Speed',sub:'Gold rush',design:{v:1,model:'speed',upper:'synthetic',collar:'low',laces:'visible',finish:'metallic',studs:'blade',studFinish:'chrome',pattern:'solid',
   colors:C('#e8b33a','#e8b33a','#e8b33a','#18191d','#e8b33a','#18191d','#e8b33a','#18191d','#18191d')}},
  {id:'classic-black',label:'Classic Kangaroo',sub:'Black & white',design:{v:1,model:'classic',upper:'leather',collar:'low',laces:'visible',finish:'matte',studs:'sg',studFinish:'glossy',pattern:'solid',
@@ -235,6 +239,10 @@ export const PRESETS:readonly {id:string;label:string;sub:string;design:PresetDe
   colors:C('#14a3a8','#53b8f2','#2253d6','#17295e','#14a3a8','#f6f3ea','#14a3a8','#f6f3ea','#f6f3ea')}},
  {id:'indoor-gum',label:'Indoor Classic',sub:'Navy & gum',design:{v:1,model:'indoor',upper:'leather',collar:'low',laces:'visible',finish:'matte',studs:'indoor',studFinish:'matte',pattern:'solid',
   colors:C('#efe2c2','#17295e','#17295e','#17295e','#f6f3ea','#e8b33a','#efe2c2','#e8b33a','#efe2c2')}},
+ // Drip FC boots (Nov 13 2026, owner): club blue and navy with the white Drip FC drop on both sides; priced like any boot.
+ {id:'dripfc-home',label:'Modern Speed',sub:'Drip FC blue',club:true,design:{v:1,model:'speed',upper:'synthetic',collar:'low',laces:'visible',finish:'matte',studs:'fg',studFinish:'glossy',pattern:'solid',
+  colors:C(CLUB_COLORS.blue,CLUB_COLORS.blue,CLUB_COLORS.navy,CLUB_COLORS.navy,CLUB_COLORS.white,CLUB_COLORS.navy,CLUB_COLORS.white,CLUB_COLORS.blue,CLUB_COLORS.white)},
+  decals:[{id:'dfc-out',kind:'club',ref:'drop',zone:'outside',x:.1,y:0,size:1,rot:0},{id:'dfc-in',kind:'club',ref:'drop',zone:'inside',x:.1,y:0,size:1,rot:0}]},
  {id:'speed-night',label:'Modern Speed',sub:'Night sky',design:{v:1,model:'speed',upper:'synthetic',collar:'sock',laces:'laceless',finish:'iridescent',studs:'carbon',studFinish:'translucent',pattern:'camo',
   colors:C('#17295e','#17295e','#7d4bd8','#18191d','#17295e','#c9ccd2','#c9ccd2','#7d4bd8','#7d4bd8')}},
 ];
@@ -272,7 +280,7 @@ const ZONES:readonly DecalZone[]=['toe','outside','inside','heel','tongue'];
 const COLLARS:readonly Collar[]=['low','mid','sock'],LACES:readonly Laces[]=['visible','covered','laceless'];
 /** The model's metadata. */
 export const modelOf=(m:BootModel)=>MODELS.find(x=>x.id===m)??MODELS[0];
-const isRef=(kind:DecalKind,ref:unknown)=>typeof ref==='string'&&(kind==='sticker'?(STICKER_IDS as readonly string[]).includes(ref):kind==='flag'?FLAGS.some(f=>f.code===ref):QUOTES.some(q=>q.id===ref));
+const isRef=(kind:DecalKind,ref:unknown)=>typeof ref==='string'&&(kind==='club'?isClubArt(ref):kind==='sticker'?(STICKER_IDS as readonly string[]).includes(ref):kind==='flag'?FLAGS.some(f=>f.code===ref):QUOTES.some(q=>q.id===ref));
 
 /** Anything (old saves, a hand-edited localStorage, a bad merge) → a safe design. Unknown values fall back to the defaults. */
 export function validateBoots(input:unknown):BootDesign{
@@ -285,7 +293,7 @@ export function validateBoots(input:unknown):BootDesign{
  if(Array.isArray(d.decals))for(const raw of d.decals){
   if(decals.length>=DECAL_LIMIT)break;
   if(!raw||typeof raw!=='object')continue;const r=raw as Record<string,unknown>;
-  const kind=pick<DecalKind>(r.kind,['sticker','flag','quote'],'sticker');if(!isRef(kind,r.ref))continue;
+  const kind=pick<DecalKind>(r.kind,['sticker','flag','quote','club'],'sticker');if(!isRef(kind,r.ref))continue;
   let id=typeof r.id==='string'&&/^[\w-]{1,24}$/.test(r.id)?r.id:`d${decals.length}`;while(ids.has(id))id+='x';ids.add(id);
   const decal:BootDecal={id,kind,ref:r.ref as string,zone:pick(r.zone,ZONES,'outside'),x:clamp(r.x,-1,1,0),y:clamp(r.y,-1,1,0),size:clamp(r.size,.5,1.6,1),rot:clamp(r.rot,-60,60,0)};
   if(kind==='quote')decal.tint=typeof r.tint==='string'&&HEX.test(r.tint)?r.tint.toLowerCase():'#f6f3ea';
@@ -351,3 +359,7 @@ export function loadBootSaves(store:Store|null=storage()):BootSaves{
  return {v:1,current:r.current?validateBoots(r.current):DEFAULT_BOOTS,slots};
 }
 export function storeBootSaves(saves:BootSaves,store:Store|null=storage()){try{store?.setItem(BOOTS_KEY,JSON.stringify(saves));}catch{/* full or blocked: the studio keeps working */}}
+/** Where the Drip FC stickers sit, for friends' avatars (lib/multiplayer/kit.ts): BOOT_CLUB_SIDE and / or BOOT_CLUB_HEEL bits. */
+export function bootClubBits(d:Pick<BootDesign,'decals'>|null|undefined):number{
+ let bits=0;for(const x of d?.decals??[])if(x.kind==='club')bits|=x.zone==='heel'?BOOT_CLUB_HEEL:BOOT_CLUB_SIDE;return bits;
+}
