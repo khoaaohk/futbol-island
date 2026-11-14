@@ -150,6 +150,18 @@ t('seat race: past the claim window the sitter keeps the seat',()=>{
  const solo=screen(5,5,1000,1100);assert.equal(solo.iLose,false,'my own id never bumps me');
  share.clearRemoteSeats();share.setMySeat(null);share.beginSeatFrame(1000,5);const p=seatedAt(seat);assert.ok(share.seatFriend(2,p)&&p.seated,'not seated: no race, they just take it');assert.equal(share.seatLost(),-1);
 });
+t('seat race: 3+ claimants, the lowest id holds the seat on every screen whatever the member order (QA Nov 14 round 4)',()=>{
+ const perms=a=>a.length<2?[a]:a.flatMap((x,i)=>perms([...a.slice(0,i),...a.slice(i+1)]).map(r=>[x,...r]));
+ for(const ids of [[3,5,9],[2,4,6,8]]){const low=Math.min(...ids);
+  for(const me of [...ids,99])for(const order of perms(ids.filter(i=>i!==me))){// 99 = a bystander not in the race
+   share.clearRemoteSeats();share.setMySeat(null);if(me!==99)share.setMySeat(seat);share.beginSeatFrame(1000,me);share.beginSeatFrame(1100,me);
+   const ps=new Map(order.map(id=>[id,{...seatedAt(seat),yaw:.5}]));for(const id of order)share.seatFriend(id,ps.get(id));
+   const drawn=order.filter(id=>ps.get(id).seated);
+   if(me===low)assert.deepEqual(drawn,[],`me ${me} (lowest) keeps it, order ${order}`);
+   else{assert.deepEqual(drawn,[low],`me ${me}, order ${order}: only ${low} drawn seated`);if(me!==99)assert.equal(share.seatLost(),low,'I move, once');}
+   for(const id of order)if(id!==low||me===low){const q=ps.get(id);assert.equal(q.seated,false);assert.equal(q.yaw,.5,'a deposed / refused claimant keeps its own pose');assert.equal(q.x,seatedAt(seat).x);}
+   assert.equal(share.remoteSeatSpots().length,me===low?0:1,'the seat listed once');}}
+});
 t('seat race: the loser shuffles to the nearest free seat with a toast',()=>{
  share.clearRemoteSeats();share.setMySeat(null);
  const moved=[],toasts=[],parent=new T.Group();
