@@ -1,0 +1,16 @@
+/* Trophy card (Nov 14 2026): the comic kit's card (components/games/comic) over the fishing view after a Rare / Legendary close-up.
+ * Transform / opacity only; it waits for the close-up (fishingSpectacle CLOSEUP_S ≈ 2.85 s) and pops in once. Reduced motion: at once, still. */
+.layer{position:fixed;inset:0;z-index:60;animation:trophyIn .32s cubic-bezier(.2,1.4,.4,1) 2.6s both}
+.wrap{z-index:auto;padding:calc(16px + env(safe-area-inset-top,0px)) calc(16px + env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) calc(16px + env(safe-area-inset-left,0px))}
+.card{width:min(380px,100%);--arcade-card-title:clamp(26px,7.5vw,34px)}
+.art{position:relative;display:grid;place-items:center;margin:24px 0 12px;padding:30px 12px 14px;border:var(--cm-line) solid var(--cm-ink);background:var(--cm-dots),var(--cm-teal)}
+.art[data-tone=sun]{background:var(--cm-dots-orange),var(--cm-sun)}
+.fish{display:block;margin-top:8px}.fish svg{width:min(240px,62vw);height:auto;display:block}
+.art .burst{position:absolute;top:-14px;left:50%;translate:-50% 0}
+.size{margin:0 0 4px;font:700 17px/1.35 var(--cm-ui);color:var(--cm-ink)}
+.where{margin:0 0 14px;font:600 15px/1.35 var(--cm-ui);color:var(--cm-muted)}
+.actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
+.status{min-height:1.3em;margin:10px 0 0;font:600 15px/1.3 var(--cm-ui);color:var(--cm-ink)}
+@keyframes trophyIn{from{opacity:0;visibility:hidden;transform:scale(.86) rotate(-2deg)}to{opacity:1;visibility:visible;transform:none}}
+@media(max-height:560px){.art{margin:8px 0;padding:22px 10px 8px}.fish svg{width:min(170px,30vh)}.where{margin-bottom:8px}}
+@media(prefers-reduced-motion:reduce){.layer{animation:none}}

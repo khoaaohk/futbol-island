@@ -49,8 +49,11 @@ import {islandMarket} from '@/lib/town/jobs/islandWallet';
 import {coinsText,newestUnitValue} from '@/lib/town/market/marketStand';
 const MarketStand=dynamic(()=>retryImport(()=>import('./MarketStand')),{ssr:false});
 type Place=MarketBuyer;// rosa, farm (Mele), marina, kofi: one market state (lib/economy.ts MARKET_BUYERS)
+// Nov 14 2026: the Rare / Legendary trophy card (comic house style, save as a picture), loaded only when one is landed.
+const FishingTrophy=dynamic(()=>retryImport(()=>import('./FishingTrophy')),{ssr:false});
 const Fishbook=dynamic(()=>retryImport(()=>import('./Fishbook')),{ssr:false});
 import {OPEN_MARKET_STAND} from '@/lib/town/fishing/fishingSignals';
+import {trophyRarity} from '@/lib/town/fishing/fishingSpectacle';
 export {OPEN_MARKET_STAND};
 type Tab='fish'|'produce'|'beach'|'cards';
 const useFishing=()=>useSyncExternalStore(fishingSession.subscribe,fishingSession.getView,fishingSession.getView);
@@ -214,7 +217,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  // Catches from the moored boat say where they came from (docs/fishing.md "Deep Sea Boat").
  const fromBoat=!!(view.spotId&&spotById(view.spotId)?.boat);
  // The catch card can be dismissed; a new catch (different fish or size) shows it again.
- const catchKey=view.caught?`${view.caught.id}-${view.caught.size}`:'';const [dismissed,setDismissed]=useState('');
+ const catchKey=view.caught?`${view.caught.id}-${view.caught.size}`:'';const [dismissed,setDismissed]=useState('');const [trophyShut,setTrophyShut]=useState('');
  const waiting=view.phase==='scared'||view.phase==='escaped'||view.phase==='casting'||view.phase==='approach'||view.phase==='nibble'||view.castLock;
  const fighting=view.phase==='reeling'&&view.fight,castable=view.phase==='ready'||view.phase==='caught';
  // A3: the first-time tutorial (this device), finished on the first catch's "Got it" or Skip.
@@ -237,7 +240,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
   <button type="button" className="store-enter-prompt" data-fish-enter aria-label="Fish" hidden onClick={e=>{const id=e.currentTarget.dataset.spot;if(id){countFishStart();pushLook();fishingSession.start(id);}}}>Fish</button>
   <button type="button" className="store-enter-prompt" data-market-enter aria-label="Sell at the market stand" hidden onClick={()=>{setTab(undefined);setPlace('rosa');setLoaded(l=>({...l,stand:true}));setStand(true);}}>Sell</button>
   {/* In-world catch label: positioned above the held-up fish by fishingWorld.ts. */}
-  <div className={styles.catch} data-fish-catch hidden aria-live="polite" data-dismissed={dismissed===catchKey&&catchKey?'':undefined} data-golden={golden||undefined} data-tier={view.caught?tier:undefined}>{fish&&view.caught&&<>
+  <div className={styles.catch} data-fish-catch hidden aria-live="polite" data-dismissed={dismissed===catchKey&&catchKey?'':undefined} data-golden={golden||undefined} data-tier={view.caught?tier:undefined} data-trophy={fish&&trophyRarity(fish.rarity)&&trophyShut!==catchKey?'':undefined}>{fish&&view.caught&&<>
    {/* Delight pass: the glow, a shimmer sweep and a burst of sparkles by tier (transform / opacity only, one-shot; none with reduced motion). */}
    {tier!=='common'&&<span className={styles.celebrate} key={catchKey} aria-hidden="true">{fx.shimmer&&<b className={styles.shine}/>}{Array.from({length:sparkN},(_,i)=><i key={i} style={{'--a':`${Math.round(i*360/sparkN+(i%2)*14)}deg`,'--d':`${44+(i%3)*14}px`,'--w':`${i*35}ms`} as React.CSSProperties}/>)}</span>}
    <button type="button" className={styles.catchClose} aria-label="Dismiss" onClick={()=>setDismissed(catchKey)}><span aria-hidden="true">×</span></button>
@@ -285,6 +288,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
     <FishingLureButton className={styles.action}/>
    </div>
   </div>}
+  {view.phase==='caught'&&fish&&view.caught&&size&&trophyRarity(fish.rarity)&&trophyShut!==catchKey&&<FishingTrophy key={catchKey} fish={fish} sizeCm={view.caught.size} sizeText={size.text} spot={(view.spotId&&spotById(view.spotId)?.name)||'Futbol Island'} onClose={()=>setTrophyShut(catchKey)}/>}
   {loaded.book&&<Fishbook open={book} onClose={()=>setBook(false)}/>}
   {loaded.stand&&<MarketStand open={stand} initialTab={tab} place={place} onOpenChange={setStand}/>}
  </>;

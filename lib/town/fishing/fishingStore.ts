@@ -47,9 +47,14 @@ const HAPTIC:Partial<Record<FishCue,number|number[]>>={tick:6,plunge:14,fanfare:
 export const BITE_HAPTIC_STEP=4;
 /** The haptic pattern for a cue (`strength` = the bite's shadow size step 0..4). */
 export const hapticFor=(kind:FishCue,strength=0):number|number[]|undefined=>kind==='plunge'?14+BITE_HAPTIC_STEP*Math.max(0,Math.min(4,strength)):HAPTIC[kind];
+/** Nov 14 2026 (every missed bite was "too late"): the bite is a "now-now" double buzz, the pulse, a 50 ms gap, a slightly shorter
+ *  second pulse, so it is felt in a pocket-sized hand. */
+export const bitePattern=(ms:number)=>[ms,50,Math.round(ms*.8)];
+/** The island's Vibration switch (Island settings, lib/town/liveControls.ts HKEY): off there means no fishing buzz either. */
+const vibrationOff=()=>{try{return localStorage.getItem('fi2-match-haptics-v1')==='off';}catch{return false;}};
 let lastHaptic=0;
-function fishHaptic(kind:FishCue,strength=0){const p=hapticFor(kind,strength);if(p===undefined||typeof navigator==='undefined'||typeof navigator.vibrate!=='function')return;
- const now=Date.now();if(now-lastHaptic<150&&kind!=='plunge')return;try{if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;lastHaptic=now;navigator.vibrate(p);}catch{/* no haptics */}}
+function fishHaptic(kind:FishCue,strength=0){const raw=hapticFor(kind,strength),p=kind==='plunge'&&typeof raw==='number'?bitePattern(raw):raw;if(p===undefined||typeof navigator==='undefined'||typeof navigator.vibrate!=='function')return;
+ const now=Date.now();if(now-lastHaptic<150&&kind!=='plunge')return;try{if(matchMedia('(prefers-reduced-motion: reduce)').matches||vibrationOff())return;lastHaptic=now;navigator.vibrate(p);}catch{/* no haptics */}}
 /**
  * ONE session per page, kept on globalThis so it survives hot updates (Sep 29 2026 fix, "the fishing for the boat doesn't
  * work"). A hot update of any module under this one (catalogue, boat data …) re-ran this file and made a SECOND session:

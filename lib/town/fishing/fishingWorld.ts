@@ -170,14 +170,15 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
     visuals.setPose(ph==='caught'?'holdUp':ph==='casting'?(s.t<.25?'windup':'cast'):ph==='bite'||ph==='reeling'&&s.dip>.1?'strike':'hold');
     visuals.setBobber(ph==='ready'?{kind:'hanging'}:ph==='casting'?{kind:'flying',progress:s.t/CAST_TIME}:ph==='reeling'?{kind:'reeling',progress:s.reelTaps/Math.max(1,s.reelTarget)}:ph==='bite'?{kind:'under'}:ph==='caught'?{kind:'hidden'}:{kind:'floating'});
     const f=s.fish?fishById(s.fish.id):undefined;
-    visuals.showShadow(s.shadow&&f?{size:f.shadow,pos:{x:s.shadow.x,z:s.shadow.z},heading:s.shadow.heading+(ph==='scared'||ph==='escaped'?Math.PI:0),alpha:s.shadow.alpha,shape:f.shape,id:f.id,color:f.color,mode:ph==='nibble'||ph==='bite'?ph:ph==='scared'||ph==='escaped'?'flee':'swim'}:null);
+    visuals.showShadow(s.shadow&&f?{size:f.shadow,pos:{x:s.shadow.x,z:s.shadow.z},heading:s.shadow.heading+(ph==='scared'||ph==='escaped'?Math.PI:0),alpha:s.shadow.alpha,shape:f.shape,id:f.id,color:f.color,mode:ph==='nibble'||ph==='bite'?ph:ph==='scared'||ph==='escaped'?'flee':'swim',glow:RARITY_GLOW[f.rarity]}:null);
     visuals.setReelingFish(ph==='reeling'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape,id:f.id}:null);
     visuals.setFight?.(meter?fightLook:null);
     visuals.holdUpFish(ph==='caught'&&f&&s.fish?{color:f.color,lengthCm:s.fish.size,shape:f.shape,id:f.id,glow:RARITY_GLOW[f.rarity]}:null);// glow: the delight pass's sparkles round a rare catch (cosmetic)
-    for(const e of events)beat(e);}
+    for(const e of events){beat(e);if(e==='bite'&&!c.reduced)cam.kick(1);}}// Nov 14 2026: the bite's camera nudge (fishingSpectacle.ts)
    if(visuals.busy)visuals.frame(c.dt,c.elapsed,c.reduced);
   }
   if(fishing)cam.ride(liveBoat()?.motion.heave??0);
+  cam.closeUp(fishing?visuals?.closeUp??null:null);// the Rare / Legendary landing's slow-motion close-up
   const label=c.ui<HTMLElement>('[data-fish-catch]');
   if(label){const show=fishing&&!!visuals&&session.session.phase==='caught';
    if(show){visuals!.labelAnchor(labelPoint).project(c.camera);const narrow=c.width<560,px=(labelPoint.x+1)*c.width/2,py=(1-labelPoint.y)*c.height/2;

@@ -265,3 +265,5 @@
 .catchSecret{margin-top:6px!important;padding:6px 8px;border-radius:10px;background:#e3f1f6;font-size:12px;line-height:1.45;color:#21454f}
 .stamp[data-stamp=secret]{font-size:14px;color:#1f6a86;rotate:-4deg;margin-right:4px}
 @media(prefers-reduced-motion:reduce){.shine,.celebrate i{display:none;animation:none}}
+/* Nov 14 2026: a Rare / Legendary catch shows its trophy card first (FishingTrophy); the quick card waits until it is closed, so the close-up is clear. */
+.catch[data-trophy]{opacity:0;visibility:hidden;pointer-events:none}

@@ -307,13 +307,14 @@ Wording kept precise: the ocean sunfish is *not* called the heaviest bony fish (
 - `lib/analytics/fishingEvents.ts`, `fishingAdminMetrics.ts`, `app/admin/FishingSection.tsx`, `supabase/migrations/20261017_analytics_fishing.sql`: fishing analytics.
 - `lib/town/fishing/fishingStore.ts`: the Fishbook in localStorage, landing fish in the market basket, and the session singleton.
 - `lib/town/fishing/fishingWorld.ts`: posts, glows, floats and prompts, and the **driver** that steps the state machine and drives the camera and visuals.
-- `lib/town/fishing/fishingCamera.ts`: the low shoreline camera (ease in and out).
+- `lib/town/fishing/fishingCamera.ts`: the low shoreline camera (ease in and out); since Nov 14 2026 also the bite nudge and the Rare / Legendary close-up).
+- `lib/town/fishing/fishingSpectacle.ts`, `trophyImage.ts`, `components/FishingTrophy.tsx` (+ css): the bite cue, foam, sparkles, life on the water, the close-up and the trophy card (see "Bite cue, water and trophy moments").
 - `lib/town/fishing/fishingVisuals.ts`: **placeholder art behind a small interface** (rod, line, float, rings, shadow, held fish, foam). The graphics agent owns this file; see `docs/fishing-visuals-HANDOFF.md`.
 - `lib/town/market/marketStand.ts`: Sell 1, unit price and the allowance meter.
 - The fish section of `lib/town/market/goods.ts`, generated from the catalogue.
 - Components: `FishingHost.tsx` (+ css) for the HUD, the spin reel and prompts, `FishingLureButton.tsx` (+ css: the lure button, its panel and the catch toast), `FishingTutorial.tsx`, `Fishbook.tsx` (+ css) with `FishbookExtras.tsx` (Trophies and Requests pages), `MarketStand.tsx` (+ css), `FishArt.tsx`.
 - Deep Sea Boat: `lib/town/fishing/deepSeaFish.ts`, `deepSeaBoatData.ts`, `deepSeaBoat.ts` (see above).
-- Tests: `tests/fishing.cjs`, `fishing-fight.cjs`, `fishing-content.cjs`, `fishing-aim.cjs`, `fishing-polish.cjs`, `fishing-backdrop.cjs`, `economy.cjs` §12, `admin-analytics-fishing.cjs` (all in `npm test`).
+- Tests: `tests/fishing.cjs`, `fishing-fight.cjs`, `fishing-content.cjs`, `fishing-aim.cjs`, `fishing-polish.cjs`, `fishing-backdrop.cjs`, `economy.cjs` §12, `admin-analytics-fishing.cjs`, `fishing-spectacle.cjs` (all in `npm test`).
 
 ## Heat
 
@@ -653,3 +654,39 @@ the store and ambient also send nothing when `fi2-sound-muted` is on.
 Gate: reduced motion drops every move and sparkle (stamps and glow stay, still); heat tier 2+ / Battery saver drops the 3D extras and
 halves the card's sparkles. Heat: no new mesh, material, texture or render target: the extras are a preallocated pool of 16 slots in the
 overlay's one instanced draw; no timers; a few float writes a frame while fishing; nothing at rest.
+
+## Bite cue, water and trophy moments (14 Nov 2026, branch fish-visuals)
+
+Why: of 24 missed bites in 14 days, ALL were "too late" (players do not notice the bite); phones are most players (506 of 693
+visitor-days). Look and feel only: no odds, timings, prices or fight values change. The parallel `fish-reach` work (Go fishing
+entry, first-catch guarantee, idle ripples for new players, run-stop hint, basket-full flow, Rosa's prices, tutorial) is separate.
+
+1. **Bite "now!" cue.** When the float goes under for a real bite: a thick gold-white ring with eight rays bursts round the float
+   twice ("now-now", 2.4 m then 1.9 m across, sized to read on a phone at the normal fishing camera), on top of the existing "!",
+   rings and spray. The camera dips ~30 cm toward its look point and settles in ~0.35 s (`fishingCamera.kick`). The phone buzzes
+   twice (`bitePattern`: the size-scaled 14-30 ms pulse, a 50 ms gap, a shorter pulse). The flash is gameplay feedback and always
+   shows (held still with reduced motion); the nudge and the buzz never run with reduced motion, and the island's Vibration switch
+   (`fi2-match-haptics-v1` off) silences every fishing buzz.
+2. **Water.** The hook throws a third wide ring, more spray and a tall spout, and leaves a foam patch. Foam trails behind a fleeing
+   shadow and behind a fish making a run. A Rare / Legendary shadow gets a short twinkle of 3 / 5 gold sparkles on the surface
+   every ~1.5 s while it swims in (`showShadow`'s new optional `glow`, delight `RARITY_GLOW`).
+3. **Landing.** A Rare or Legendary catch gets a slow-motion close-up: the leap's own clock runs at half speed while the camera
+   moves in to ~3.4 m from the fish (`CLOSE_M`) (in its own colours, with the delight sparkles) for `CLOSEUP_S` ≈ 2.85 s, then eases back.
+   The quick catch card waits until the trophy card is closed. Then the **trophy card** (`components/FishingTrophy.tsx`, loaded only when needed) pops in over the view in the arcade's comic
+   house style (`components/games/comic`: ComicCard, ComicBurst "Rare catch!" / "Legend!", ComicButton): the fish drawn large,
+   its name, size in cm and football units, the spot and the day. **Save picture** draws a 1080 × 1350 PNG on the client
+   (`trophyImage.ts`, the same save / share path as the certificates: the share sheet on touch phones, otherwise a download;
+   no personal data on it). **Keep fishing** or Escape closes it; casting is never blocked under it. Common and Good catches keep
+   the quick catch card. Reduced motion: no close-up or slow motion, the card shows at once and does not animate.
+4. **Life on the water.** Now and then (every 6-18 s, up to 3 at once) a fish swims slowly just under the calm surface 4-9 m out
+   to the side of the line (never on land, never within 2.2 m of the float, only while the float waits with nothing biting).
+   At sunset a fish jumps out there every 6-15 s (an arc with a splash out and in). Birds diving over a hotspot (shore birds, the
+   boats' birds and bait balls) now splash where they hit the water.
+
+Gate (`spectacleGate`): reduced motion drops the nudge, slow motion, foam, sparkles and life; heat tier 2+ / Battery saver and the
+still-water path drop foam, sparkles and life; on phones the life on the water needs tier 0 (desktop tiers 0-1).
+Heat: no new mesh, material, texture, render target, timer, listener or audio context (the bite reuses the existing cues).
+Every mark is in the overlay's ONE instanced draw, in a new preallocated FX pool of 24 slots a frame (`OverlayFx`: flash,
+foam, fishy, jumper, glow), driven by the visuals' frame while fishing only. `?fishfx=0` leaves the marks out (A/B frame-time
+measurements only). Tests: `tests/fishing-spectacle.cjs`.
+

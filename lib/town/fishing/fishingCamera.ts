@@ -12,12 +12,17 @@ import {CAMERA_RIDE} from './boatMotion';
  */
 const easeInOut=(t:number)=>t<.5?2*t*t:1-(-2*t+2)**2/2;
 export const CAMERA_IN_S=.9,CAMERA_OUT_S=.8;
+/** The Rare / Legendary close-up's distance from the held catch (m). */
+export const CLOSE_M=3.4;
 type P={x:number;z:number};
 
 export function createFishingCamera(){
  let rideTarget=0,rideY=0,t=0,dir:0|1|-1=0,arrived:(()=>void)|null=null,aspect=0,shot={stand:{x:0,z:0} as P,d:{x:0,z:1} as P,D:6},nudge:{lift?:number;out?:number;look?:number}={};
  const pos=new T.Vector3(),look=new T.Vector3(),follow=new T.Vector3(),mix=new T.Vector3(),viewDir=new T.Vector3(-16,-23,-33).normalize();
  const oFrom=new T.Vector3(),oTo=new T.Vector3(),v=new T.Vector3(),fwd=new T.Vector3(0,0,1),qa=new T.Quaternion(),qb=new T.Quaternion();
+ // Nov 14 2026 look-and-feel pass (fishingSpectacle.ts): the bite's small nudge toward the float, and the Rare / Legendary close-up.
+ let kickAge=9,kickPower=0;const spot=new T.Vector3(),spotLook=new T.Vector3(),camTo=new T.Vector3();let spotW=0;
+ const kickOff=()=>kickAge<.4?kickPower*.32*Math.exp(-kickAge*9)*Math.sin(Math.min(1,kickAge/.05)*Math.PI/2):0;
  function aim(a:number){
   aspect=a;const {stand,d,D}=shot,side={x:-d.z,z:d.x},k=T.MathUtils.clamp(a,.4,1.6),portrait=Math.max(0,1-k);
   const out=D*.75+4.5+portrait*(D*1.1+5)+(nudge.out??0),across=(D*.45+2.6)*T.MathUtils.clamp((k-.5)*2,0,1),lift=3.1+D*.1+portrait*2.2+(nudge.lift??0),f=.45-portrait*.12+portrait*(nudge.lift??0)*.14;
@@ -32,6 +37,13 @@ export function createFishingCamera(){
   /** Oct 15 2026 (the deep-sea boats ride the swell, ./boatMotion.ts): the deck's heave in metres. The shot follows CAMERA_RIDE of
    *  it, smoothed, and none of the tilt, so the view stays steady (never seasick); 0 on shore. */
   ride(heave:number){rideTarget=heave;},
+  /** The bite's "now!" nudge: a quick dip toward the float that settles in ~0.35 s (none with reduced motion: apply skips it). */
+  kick(power=1){kickAge=0;kickPower=power;},
+  /** The close-up on a held Rare / Legendary catch: its world point and a weight 0..1 (null / 0 = the normal shot). */
+  closeUp(c:{x:number;y:number;z:number;w:number}|null){spotW=c?Math.max(0,Math.min(1,c.w)):0;if(c)spot.set(c.x,c.y,c.z);},
+  /** The nudge's current offset (m along the view) and the close-up weight, for tests. */
+  get kickOffset(){return kickOff();},
+  get closeUpWeight(){return spotW;},
   /** The camera's current ride offset (m), for tests. */
   get rideOffset(){return rideY;},
   get easing(){return dir!==0||t>0;},
@@ -47,7 +59,13 @@ export function createFishingCamera(){
    qa.setFromUnitVectors(fwd,oFrom.normalize());qb.setFromUnitVectors(fwd,oTo.normalize());qa.slerp(qb,k);
    // The boat ride: a small, damped share of the heave on the shot (position and look move together: no tilt).
    rideY+=((reduced?0:rideTarget*CAMERA_RIDE)-rideY)*(reduced?1:1-Math.exp(-step*2.5));if(rideY!==0)mix.y+=rideY*k;
-   camera.position.copy(mix).addScaledVector(v.copy(fwd).applyQuaternion(qa),len);camera.lookAt(mix);
+   camera.position.copy(mix).addScaledVector(v.copy(fwd).applyQuaternion(qa),len);
+   // The bite nudge: the camera dips a few cm toward its look point (and a hair down), then settles. Not with reduced motion.
+   if(reduced)kickAge=9;if(kickAge<.4){kickAge+=step;const o=kickOff();if(o>0){v.copy(mix).sub(camera.position).normalize();camera.position.addScaledVector(v,o*k);camera.position.y-=o*.25*k;}}
+   // The close-up: the camera moves in to CLOSE_M from the held catch (a little above it), along its current line of sight, and looks at it.
+   if(spotW>0&&!reduced){const w=spotW*k;camTo.copy(camera.position).sub(spot);const d=camTo.length()||1;camTo.multiplyScalar(CLOSE_M/d).add(spot);camTo.y=Math.max(camTo.y,spot.y+.45);
+    camera.position.lerp(camTo,w);spotLook.copy(mix).lerp(spot,w);camera.lookAt(spotLook);}
+   else camera.lookAt(mix);
    if(t>=1&&arrived){const fn=arrived;arrived=null;fn();}
    if(dir<0&&t<=0)dir=0;
    return true;
