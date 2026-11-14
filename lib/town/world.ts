@@ -590,6 +590,16 @@ export function* buildTownSteps(scene: T.Scene) {
     for(const edge of [{x:landingX,z:-71,w:landingW,d:.1},{x:outer,z:-70,w:.1,d:2}]){
       schoolRoofRail(edge.x,edge.z,Math.max(edge.w,edge.d),edge.d>edge.w,top);
     }
+    // Polish Nov 14 2026 (QA): between the flight's roof-side rail and the receiving roof's end wall there is a slot (0.9 m by
+    // the wing → garden stair, 1 m by the top flight). A kid stepping south off the landing, or west off the wing roof, dropped
+    // 4 m into it. A rail closes the landing's south edge over the slot, and one closes the roof's end from the landing to where
+    // that roof's own end rail starts (wing -66.5 = -61.9-9.2/2; the main roof's starts at -68.75, too short a gap to need one).
+    const inner=x-side*width/2,roofEnd=receivingEdge-side*.15,slot=Math.abs(roofEnd-inner);
+    if(slot>.4){
+      schoolRoofRail((inner+roofEnd)/2,start,slot,false,top);
+      const openTo=base<10?-66.5:-68.75;
+      if(openTo-start>.3)schoolRoofRail(roofEnd,(start+openTo)/2,openTo-start,true,top);
+    }
   }
   for(const side of [-1,1]){
     schoolStair(schoolX+side*37.5,0,9.23,schoolX+side*36.5,4.6);

@@ -188,15 +188,6 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <circle cx={job.x} cy={job.z} r="9.5" fill="#f4cc7c" stroke="#294f43" strokeWidth="1.8"/>
    <text x={job.x} y={job.z+4.6} textAnchor="middle" fill="#294f43" fontSize="13" fontWeight="900" style={{stroke:'none'}}>J</text>
   </g>)}</g>}
-  {/* QA Nov 14 2026: the V / F / J / gashapon marks are drawn after the place and field names, so at phone size they sat on top of
-      them (5v5 under a V, BEACH SOCCER under V / F, HOSTEL under a dot). The names are drawn once more here, above every mark
-      (pointer-transparent and hidden from screen readers: the tappable, named originals stay where they were). Full map only. */}
-  {!localMap&&<g className="map-labels-top" aria-hidden="true" pointerEvents="none">
-   {VENUES.map(v=><text key={'vt'+v.id} x={v.x} y={v.z+4} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={22} fontWeight="700">{v.id}</text>)}
-   {placeLabels.map(({id,label,point,dx,dy,width})=><g key={'pt'+id}><rect x={point.x+dx-width/2} y={point.z+dy-11} width={width} height={22} rx="5" fill="#fff8e5" stroke="#73886b" strokeWidth="1"/><text x={point.x+dx} y={point.z+dy+4} textAnchor="middle" fill="#294f43" fontSize={12} fontWeight="700">{label}</text></g>)}
-   <text x={BEACH_COURT.x} y={BEACH_COURT.z-BEACH_COURT.width/2-6} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={11} fontWeight="700">BEACH SOCCER</text>
-   <text x={HOSTEL.x} y={HOSTEL.z-HOSTEL.d/2-6} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={11} fontWeight="700">HOSTEL</text>
-  </g>}
   <g aria-label="Rosa’s Market · Sell fish, produce and cards" data-market-marker="rosa" pointerEvents="none">
    <title>Rosa’s Market · Sell fish, produce and cards</title>
    <path d={`M${MARKET_STAND.x} ${MARKET_STAND.z}h-${localMap?13:24}`} stroke="#294f43" strokeWidth="1.2"/>
@@ -205,7 +196,19 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <text x={MARKET_STAND.x-(localMap?50:75)} y={MARKET_STAND.z+(localMap?3:4)} textAnchor="middle" fill="#294f43" fontSize={localMap?8:11} fontWeight="800">ROSA’S MARKET</text>
   </g>
  </>,[roads,buildings,onSelect,localMap]);
- // Friends on the map (Oct 23 2026): the party's dots sit above every mark and below "You" (drawn last, so it stays on top).
+ const labelsTop=useMemo(()=> <>
+  {/* QA Nov 14 2026: the V / F / J / gashapon marks are drawn after the place and field names, so at phone size they sat on top of
+      them (5v5 under a V, BEACH SOCCER under V / F, HOSTEL under a dot). The names are drawn once more here, above every mark
+      (pointer-transparent and hidden from screen readers: the tappable, named originals stay where they were). Full map only.
+      Polish Nov 14 2026: this layer is drawn last, above the player dots and "You", so a name under the You dot stays readable. */}
+  {!localMap&&<g className="map-labels-top" aria-hidden="true" pointerEvents="none">
+   {VENUES.map(v=><text key={'vt'+v.id} x={v.x} y={v.z+4} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={22} fontWeight="700">{v.id}</text>)}
+   {placeLabels.map(({id,label,point,dx,dy,width})=><g key={'pt'+id}><rect x={point.x+dx-width/2} y={point.z+dy-11} width={width} height={22} rx="5" fill="#fff8e5" stroke="#73886b" strokeWidth="1"/><text x={point.x+dx} y={point.z+dy+4} textAnchor="middle" fill="#294f43" fontSize={12} fontWeight="700">{label}</text></g>)}
+   <text x={BEACH_COURT.x} y={BEACH_COURT.z-BEACH_COURT.width/2-6} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={11} fontWeight="700">BEACH SOCCER</text>
+   <text x={HOSTEL.x} y={HOSTEL.z-HOSTEL.d/2-6} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={11} fontWeight="700">HOSTEL</text>
+  </g>}
+ </>,[localMap]);
+ // Friends on the map (Oct 23 2026): the party's dots sit above every mark and below "You" (drawn after them; only the name layer above goes over it).
  // Other players (Nov 13 2026, PlayerMapDots): soft unnamed dots from the relay's S.Map, under the friend dots; public world only.
  const you=!localMap&&markerPosition?<g aria-label="Your position" transform={`translate(${markerPosition.x} ${markerPosition.z})`}><circle r="14" fill="#7b4fd6" opacity=".28"/><circle r="9" fill="#7b4fd6" stroke="#fff7db" strokeWidth="2.5"/><circle r="3.2" fill="#fff7db"/></g>:null;
  if(position)return <div className="island-overview local-overview" role="img" aria-label="Nearby streets and fields around your current position" style={{position:'relative',overflow:'hidden',background:'transparent'}}>
@@ -215,7 +218,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
   <svg className="minimap-player" viewBox={view} aria-hidden="true"><g aria-label="Your position"><circle cx={0} cy={0} r="4.5" fill="#314f43"/><circle cx={0} cy={0} r="3" fill="#fff0cf" stroke="#fff0cf" strokeWidth="1"/></g></svg>
  </div>;
  if(!mounted)return null;
- return <svg className="island-overview" viewBox={view} style={{background:'#83b5ac'}} role={onSelect?'group':'img'} aria-label="Island map with vending machines, fishing spots, Rosa’s Market, Arcade, Coaches Centre, football fields and Coral Cay">{terrain}{friends!==undefined&&<PlayerMapDots live={friends} me={markerPosition}/>}{friends!==undefined&&<FriendMapDots mode="full" live={friends} onTip={onFriendTip}/>}{you}</svg>;
+ return <svg className="island-overview" viewBox={view} style={{background:'#83b5ac'}} role={onSelect?'group':'img'} aria-label="Island map with vending machines, fishing spots, Rosa’s Market, Arcade, Coaches Centre, football fields and Coral Cay">{terrain}{friends!==undefined&&<PlayerMapDots live={friends} me={markerPosition}/>}{friends!==undefined&&<FriendMapDots mode="full" live={friends} onTip={onFriendTip}/>}{you}{labelsTop}</svg>;
 }
 
 export default memo(IslandOverview,(a,b)=>a.roads===b.roads&&a.buildings===b.buildings&&a.markerPosition===b.markerPosition&&a.onSelect===b.onSelect&&a.active===b.active&&a.frames===b.frames&&a.friends===b.friends&&a.onFriendTip===b.onFriendTip&&(b.active===false||a.position===b.position));

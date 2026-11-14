@@ -23,8 +23,8 @@
 @media(prefers-reduced-motion:reduce){.entering .panel,.leaving .panel{animation:none}.circle{transition:none}.circle:hover{transform:none}}
 .triggers{left:calc(12px + env(safe-area-inset-left,0px));pointer-events:none;}
 .triggers button{pointer-events:auto;}
-.triggers button:first-child{order:2;margin-left:auto;}
-.triggers button:last-child{order:1;}
+/* DOM order is the visual order (Paths, friends, Settings), so Tab goes left to right (polish Nov 14 2026). */
+.triggers button:last-child{margin-left:auto;}
 /* Align the upper icons with the controls below on each side. */
 .triggers{left:calc(24px + env(safe-area-inset-left,0px));right:calc(24px + env(safe-area-inset-right,0px));}
 @media(max-width:600px),(pointer:coarse){.triggers{left:calc(18px + env(safe-area-inset-left,0px));right:calc(18px + env(safe-area-inset-right,0px));}}
@@ -92,7 +92,7 @@
 
 .walkthrough{margin-top:18px}
 
-.triggers .questsTrigger{order:0}.triggers button:first-child{order:2}
+.triggers .questsTrigger{order:0}
 .questChapters{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:22px 0 18px}.questChapters button{display:flex;flex-direction:column;align-items:center;gap:7px;padding:12px 6px;min-height:86px;border:1px solid #adb897;border-radius:13px;background:#e5debe;color:#294f43;font:700 11px/1.35 Arial;cursor:pointer}.questChapters button span{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#fff0cc}.questChapters button[aria-pressed=true]{background:#294f43;color:#fff0cc;border-color:#294f43}.questChapters button[aria-pressed=true] span{color:#294f43}.pathContinue{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;margin-top:16px;min-height:44px;border:0;border-radius:11px;background:#fff0cc;color:#294f43;font-weight:800;cursor:pointer;box-shadow:0 4px 0 #c3b98d}.learningPath .questPath{margin-top:40px}.learningPath .questStop button:disabled{cursor:default;opacity:.65;box-shadow:0 5px 0 #a6ae92}.learningPath .questStop button:disabled:active{translate:none}.questChapters button:focus-visible,.pathContinue:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .questChapter .pathReward{font-size:12px;margin-top:12px;padding:8px 10px;border-radius:9px;background:#355f454d}
 
