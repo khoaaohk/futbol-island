@@ -122,4 +122,10 @@ assert(!/puzpro|puzlgnd|cupPoints/.test(read('lib/arcade/arcadeWalletCore.ts'))&
  // the cup's look uses existing arcade colours only
  for(const c of (rm.match(/#[0-9a-fA-F]{6}/g)??[]))assert(/^#(ffd45c|c39bff|b994ff|e8bc58|8cff9e|a9bed6|1c2440|2c3a5c|2b2440|3a3120|f1eaff|fff4d8|f3f6ff|c9d7ea|d8f7f3|ffd45c00|ffd45c80)$/i.test(c),'palette colour '+c);}
 /* UI_CHECKS */
+{// QA Nov 14 2026: on a 360–414 px phone the ball-flight keys size to their word (GROUND was clipped to GROUN), never under 44 px.
+ const css=fs.readFileSync(path.join(__dirname,'../components/games/PassPuzzleGame.module.css'),'utf8');
+ assert.match(css,/@media\(max-width:420px\)\{\.game\[data-game=puzzle\] \.aidRow>\.passModes button\{flex:1 1 auto;min-width:44px;padding-inline:4px;font-size:clamp\(10px,3\.15vw,13px\)\}\}/);
+ const at=css.indexOf('flex:1 1 auto;min-width:44px'),prev=css.lastIndexOf('.game[data-game=puzzle] .aidRow>.passModes button,.game[data-game=puzzle] .scanToggle.scanToggle{min-width:0');
+ assert.ok(prev>0&&at>prev,'the fit rule comes after the min-width:0 rule it overrides');
+}
 console.log('puzzle-polish-nov8 ok');
