@@ -13,7 +13,7 @@ import {useEffect,useState,useSyncExternalStore} from 'react';
 import {createPortal} from 'react-dom';
 import {usePathname} from 'next/navigation';
 import styles from './NetSaveNotice.module.css';
-import {netWaitCount,subscribeNetWait} from '@/lib/retryImport';
+import {isOfflineChunkNoise,netWaitCount,subscribeNetWait} from '@/lib/retryImport';
 
 export const NO_SAVE_MS=9000;
 export const NO_SAVE_SEEN_KEY='fi2-no-save-note-v1';
@@ -37,6 +37,10 @@ export default function NetSaveNotice(){
  const waiting=useSyncExternalStore(subscribeNetWait,netWaitCount,()=>0);
  const pathname=usePathname();
  const [noSave,setNoSave]=useState(false);
+ // Offline, webpack's background chunk prefetches reject with nobody listening: mark those handled so the console stays quiet
+ // (lib/retryImport.ts isOfflineChunkNoise). One listener, it only runs when a promise rejects unhandled.
+ useEffect(()=>{const quiet=(ev:PromiseRejectionEvent)=>{if(isOfflineChunkNoise(ev.reason,navigator.onLine!==false))ev.preventDefault();};
+  window.addEventListener('unhandledrejection',quiet);return()=>window.removeEventListener('unhandledrejection',quiet);},[]);
  useEffect(()=>{
   const w=window as unknown as {__fiNoSave?:boolean;sessionStorage?:Storage};
   if(!wantsNoSaveNote(w,pathname))return;

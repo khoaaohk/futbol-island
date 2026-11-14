@@ -20,4 +20,13 @@ ok('school roof: rails close the slot between each flight and the roof it climbs
  const schoolX=365,slot=(off,edge)=>{const x=schoolX-off,inner=x+1.3,end=schoolX-edge+.15;return +Math.abs(end-inner).toFixed(2);};
  assert.equal(slot(26.2,24),1.05);assert.equal(slot(14.2,12),1.05);assert.ok(slot(37.5,36)<=.4);
  assert.equal(-61.9-9.2/2,-66.5,'the wing end rail starts at -66.5');assert.equal(-63.025-11.45/2,-68.75,'the main roof end rail starts at -68.75');});
+ok('offline: a chunk prefetch failure (JS or CSS) is marked handled only while offline',()=>{
+ const ts=require('typescript');require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,f);
+ const {isOfflineChunkNoise:q}=require('../lib/retryImport.ts');
+ const css=Object.assign(new Error('Loading CSS chunk 4521 failed.\n(error: http://x/_next/static/css/a.css)'),{code:'CSS_CHUNK_LOAD_FAILED'});
+ assert.equal(q(css,false),true);assert.equal(q(css,true),false,'online: left alone');
+ assert.equal(q(new Error('Loading CSS chunk 12 failed.'),false),true);
+ assert.equal(q(Object.assign(new Error('Loading chunk 12 failed.\n(error: http://x/a.js)'),{name:'ChunkLoadError'}),false),true,'JS chunks too');assert.equal(q(new Error('Loading chunk 12 failed.'),true),false);assert.equal(q(new Error('Failed to fetch'),false),false,'not every offline error');assert.equal(q('Loading CSS chunk 1 failed',false),false);assert.equal(q(new TypeError('x'),false),false);
+ const n=read('components/NetSaveNotice.tsx');assert.match(n,/if\(isOfflineChunkNoise\(ev\.reason,navigator\.onLine!==false\)\)ev\.preventDefault\(\);/);
+ assert.match(read('components/ErrorBeacon.tsx'),/onRejection=\(ev:PromiseRejectionEvent\)=>\{if\(ev\.defaultPrevented\)return;/);});
 console.log(`qa-polish-nov14: ${n} groups passed`);

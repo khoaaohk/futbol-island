@@ -27,3 +27,13 @@ export function retryImport<T>(load:()=>Promise<T>,pauseMs=RETRY_IMPORT_PAUSE_MS
   else setTimeout(again,pauseMs);
  }));
 }
+/** Offline prefetch noise (polish pass, Nov 14 2026): webpack prefetches the next JS and CSS chunks in the background and drops
+ *  the promise, so offline each one logs an uncaught "Loading CSS chunk N failed" / "Loading chunk N failed". Nothing waits on
+ *  those (a part the player opens goes through retryImport, which catches its own failure, and a render error still reaches
+ *  app/error.tsx), so while offline such an unhandled rejection is quietly marked handled (components/NetSaveNotice.tsx).
+ *  Online, or any other error, is left alone. */
+export function isOfflineChunkNoise(reason:unknown,online:boolean):boolean{
+ if(online||!(reason instanceof Error))return false;
+ const code=(reason as Error&{code?:unknown}).code;
+ return code==='CSS_CHUNK_LOAD_FAILED'||reason.name==='ChunkLoadError'||/^Loading (CSS )?chunk \S+ failed/.test(reason.message);
+}
