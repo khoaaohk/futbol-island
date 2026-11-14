@@ -64,7 +64,7 @@ const pdf=fs.readFileSync(path.join(root,PDF));
 assert.equal(pdf.subarray(0,5).toString(),'%PDF-','it is a PDF');
 assert(pdf.length<15e6,`the PDF is under 15 MB (${(pdf.length/1e6).toFixed(2)} MB)`);
 const pages=(pdf.toString('latin1').match(/\/Type\s*\/Page[^s]/g)||[]).length;
-assert(pages>=12&&pages<=30,`the deck is compact: 12-30 pages (${pages}), not one page per feature`);
+assert(pages>=12&&pages<=36,`the deck is compact: 12-36 pages (${pages}), not one page per feature`);
 // Nov 4 redesign: a 16:9 landscape deck (1280 x 720 CSS px = 960 x 540 pt per page)
 const box=pdf.toString('latin1').match(/\/MediaBox\s*\[\s*0\s+0\s+([\d.]+)\s+([\d.]+)\s*\]/);
 assert(box&&Math.abs(+box[1]/+box[2]-16/9)<.01,`the PDF pages are 16:9 landscape (${box&&box.slice(1).join(' x ')})`);
@@ -90,6 +90,30 @@ assert.match(read('components/marketing/marketing.module.css'),/break-inside:avo
  assert.match(deck,/SLOT_SPECS\[id\]/,'sizes and sponsor counts are read from SLOT_SPECS (never typed by hand)');
  assert(!/\$\s?\d|£\s?\d|€\s?\d|per month|per year/i.test(deck),'no prices in the stadium chapter');
  assert.match(deck,/SPONSOR_BOARDS_LINE/,'the family rules sit beside lib/site/safety SPONSOR_BOARDS_LINE');}
+// Nov 14 2026 (owner): the Kit Shop chapter (Drip FC club kit as the example) and one page with every way a brand can appear
+{const kit=read('lib/site/kitDeck.ts'),slots=read('lib/stadium/sponsors/slots.ts');
+ assert.match(doc,/<KitChapter\/>/,'the deck prints the Kit Shop chapter');
+ assert.match(doc,/<SponsorClose\/>/,'then every placement, the packages and the family rules');
+ assert(doc.indexOf('<StadiumChapter/>')<doc.indexOf('<KitChapter/>')&&doc.indexOf('<KitChapter/>')<doc.indexOf('<SponsorClose/>'),'stadium, then kit, then the close');
+ assert.match(doc,/from '@\/lib\/site\/kitDeck'/,'kit copy comes from lib/site/kitDeck');
+ assert.match(doc,/data-kit-item=\{x\.id\}/,'every kit item card is marked data-kit-item');
+ for(const id of ['ball','boots','shirt','ready','seen']){
+  const m=kit.match(new RegExp(`\\{id:'${id}',name:'[^']+',shot:'(\\w+)'`));
+  assert(m,`the kit chapter shows the ${id} item`);
+  assert(has(`public/marketing/kit/${m[1]}.webp`),`${id}: its screenshot public/marketing/kit/${m[1]}.webp exists`);}
+ for(const k of ['hero','label'])assert(has(`public/marketing/kit/${k}.webp`),`kit ${k} screenshot exists`);
+ for(const k of ['MAX_CLUB_BALL','CLUB_STICKERS','DECAL_ZONES','JERSEY_CLUB_SPOTS','CLUB_LABEL','SPONSOR_TAG'])assert(kit.includes(k),`kit facts read from the game: ${k}`);
+ assert.match(doc,/Every way your brand can appear/,'the all-placements page');
+ assert.match(doc,/data-placement=\{i\.id\}/,'every placement line is marked data-placement');
+ const grp=id=>{const m=kit.match(new RegExp(`\\{id:'${id}',title:[^\\n]*items:\\[([\\s\\S]*?)\\n \\]\\}`));assert(m,`placement group ${id}`);return [...m[1].matchAll(/\{id:'(\w+)',name:/g)].map(x=>x[1]);};
+ const ids=[...slots.match(/SPONSOR_SLOTS=\[([^\]]*)\]/)[1].matchAll(/'(\w+)'/g)].map(m=>m[1]);
+ assert.deepEqual([...grp('stadium')].sort(),[...ids,'feed','naming'].sort(),'the stadium group lists every slot in SLOT_SPECS plus both packages, nothing invented');
+ assert.deepEqual(grp('kit'),['ball','boots','shirt','ready'],'the Kit Shop group: ball and boot stickers, shirt crest and wordmark, ready-made kit');
+ assert.match(kit,/share:share\('(board|screen|gate|fascia|flag|centre)'\)/,'stadium sponsor counts come from SLOT_SPECS');
+ assert(!/gashapon|vending|konbini/i.test(strip(kit)),'the island machines are not sponsor slots and are not listed');
+ assert.match(doc,/KIT_PACKAGE/,'the packages page carries the kit package');
+ assert.match(doc,/SPONSOR_KIT_LINE/,'the family rules carry lib/site/safety SPONSOR_KIT_LINE');
+ assert(!/\$\s?\d|£\s?\d|€\s?\d|per month|per year|USD|price:\s*\d/i.test(kit),'no prices in the kit chapter');}
 
 // ---- 4. a built site ----
 const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),app=path.join(dist,'server/app');
