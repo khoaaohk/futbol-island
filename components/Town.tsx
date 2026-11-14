@@ -1,6 +1,6 @@
 'use client';
 import {createDailyPlay,dailyPlayCounts} from '@/lib/town/dailyPlay';
-import {debugMoveHooksAllowed} from '@/lib/dev/debugHooks';
+import {countProbeAllowed,debugMoveHooksAllowed} from '@/lib/dev/debugHooks';
 import {grantDailyPlayCoins} from '@/lib/arcade/arcadeWallet';
 import { readIslandReturnPosition, saveIslandReturnPosition } from '@/lib/arcade/islandReturnPosition';
 import {ARCADE_DOOR_HINT} from '@/lib/town/arcadeDoorHint';
@@ -266,7 +266,7 @@ import FuelToast from './FuelToast';
 import {fuelTravel,fuelAllowsRide,fuelCanSprint} from '@/lib/town/fuelStore';
 import JobActionButton from './JobActionButton';
 import {earnForBall,earnForDiveBall} from '@/lib/town/cardRewardTriggers';
-import {enterActivity,islandFrame,setPlayModeSource} from '@/lib/analytics/tracker';
+import {enterActivity,islandFrame,setPlayModeSource,startCountProbe} from '@/lib/analytics/tracker';
 import {hasPendingParty} from '@/lib/multiplayer/invite';
 import {createSummitTravelTracker} from '@/lib/analytics/summitEvents';
 import {placeAt} from '@/lib/analytics/islandPlaces';
@@ -1237,6 +1237,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     disposers.add(()=>{delete (window as unknown as {__fi2?:unknown}).__fi2;});
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.meTumble=meTumble;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.liveJoin=liveJoin;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.liveGames=games;/* headless checks: join a live game *//* headless checks: my ball knock-over tumble (lib/town/ballKnock.ts) */
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.motionResolution=motionResolution;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.easel=easel;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.stadiumSit=stadiumSit;/* headless checks: stadium seats */(window as unknown as {__fi2:Record<string,unknown>}).__fi2.gasha=gashaPrompt;/* headless checks: gashapon hover + zoom */(window as unknown as {__fi2:Record<string,unknown>}).__fi2.wildBugs=wildBugs;/* play-tests (scripts/check-bug-squad-browser.cjs): place the player like the summit rides do */if(debugMove)(window as unknown as {__fi2:Record<string,unknown>}).__fi2.teleport=(x:number,z:number,yaw=0)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.y=yaw;arrivalFacing=yaw;walkBall.reset({x,y:rooftop.state.height,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;};
+    /* release smoke check (scripts/smoke-fishing.mjs): analytics count probe, off a production host and only when the page opted in */if(countProbeAllowed(window.location.hostname,(window as unknown as {__fiCountProbe?:unknown}).__fiCountProbe))(window as unknown as {__fi2:Record<string,unknown>}).__fi2.counts=startCountProbe();
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.rides=animalRides;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.rideSplash=rideSplash;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.emoteTest={emoteFx,moveFx,moveWheelState,get nudge(){return moveNudge.amount;},hfBag,emoteCam,ctxFx,fakeFriends,passOut,get passOn(){return passOnBall;},ball,get npc(){return emoteNpc;},get why(){return rideScript.why+'|'+emoteCam.why;},get rideScript(){return rideScript.s?{label:rideScript.s.label,emote:rideScript.s.emote,age:rideScript.age,brake:rideScript.brake,on:rideScript.on}:null;},...(debugMove?{velocity,location}:{})};/* play-tests: force the shuffled bag, read the running variation */// water P1b probes
     (window as unknown as {__fi2:Record<string,unknown>}).__fi2.water=water;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.sharkCircle=sharkCircle;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.waterProbe=waterProbe;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.partyHeat=()=>party?{shown:party.shown,rigs:party.rigs}:null;/* heat checks (scripts/check-mp-heat-recheck.cjs) */(window as unknown as {__fi2:Record<string,unknown>}).__fi2.water=water;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.sharkCircle=sharkCircle;(window as unknown as {__fi2:Record<string,unknown>}).__fi2.waterProbe=waterProbe;
     // Heat pass 4: thermal fallback tiers + Battery saver (lib/graphics/heatTier). Tier 0 (default) changes nothing.

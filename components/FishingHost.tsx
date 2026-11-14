@@ -193,7 +193,9 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  const spinStop=(e:React.PointerEvent<HTMLButtonElement>)=>{const s=spin.current;if(!s||s.id!==e.pointerId)return false;spin.current=null;window.clearTimeout(trailIdle.current);reelEl.current?.style.setProperty('--spin-rate','0');fishingSession.spinEnd();suppressClick.current=true;return true;};
  // Pressing the reel: on the bite it hooks (on the press, not the release) and the same finger can start spinning at once; in the
  // fight it spins; while the line is in it is the Cast button.
- const reelDown=(e:React.PointerEvent<HTMLButtonElement>)=>{
+ // Nov 13 2026 (found by scripts/smoke-fishing.mjs): a new press starts clean. A finger that spun the reel and lifted gets no
+ // click on a phone (it moved), so the suppress set by spinStop used to linger and swallow the next Cast tap.
+ const reelDown=(e:React.PointerEvent<HTMLButtonElement>)=>{suppressClick.current=false;
   const fightNext=view.phase==='bite'||view.phase==='reeling'&&view.fight;
   if(view.phase==='bite'){fishingSession.tap();suppressClick.current=true;}
   if(fightNext){spinStart(e);return;}

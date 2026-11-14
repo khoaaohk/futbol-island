@@ -14,6 +14,12 @@ export function isProductionHost(hostname:string):boolean{
  const h=hostname.toLowerCase().replace(/\.$/,'');
  return PRODUCTION_HOSTS.includes(h)||h.endsWith('.vercel.app');
 }
+/** Nov 13 2026: whether `window.__fi2.counts` (the analytics count probe, lib/analytics/tracker.ts startCountProbe) may run:
+ *  never on a production host, and elsewhere only when the page opted in with `window.__fiCountProbe=true` (set by a headless
+ *  check's init script, e.g. scripts/smoke-fishing.mjs), so a normal local session never allocates it. */
+export function countProbeAllowed(hostname:string,optIn:unknown):boolean{
+ return optIn===true&&!isProductionHost(hostname);
+}
 /** Whether `window.__fi2` may carry the player-moving helpers on this host. */
 export function debugMoveHooksAllowed(hostname:string):boolean{
  return !isProductionHost(hostname);

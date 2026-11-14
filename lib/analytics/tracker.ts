@@ -114,12 +114,21 @@ export const sessionStartRt=():0|1|null=>startRt;
 export function onPageHide(fn:()=>void):()=>void{pageHideHooks.add(fn);return()=>{pageHideHooks.delete(fn);};}
 /** Learning counters waiting for the next beat (id → n). Only filled while a tracker runs. */
 const countAcc=new Map<string,number>();
+/** Nov 13 2026 (scripts/smoke-fishing.mjs, the "can a kid fish" release check): a test-only tally of every count() whose id
+ *  passes the same allowlist the beat uses, kept even while the tracker is off (localhost, automation), so a headless check can
+ *  see that fi:start / fi:cast / fi:land were really counted. Null (and never touched) unless startCountProbe() runs, which
+ *  components/Town.tsx does only off a production host AND when the page opted in (lib/dev/debugHooks.ts countProbeAllowed). */
+let probe:Map<string,number>|null=null;
+/** Start the probe (idempotent); returns a reader of the totals so far. Sends nothing. */
+export function startCountProbe():()=>Record<string,number>{const p=probe??=new Map();return()=>Object.fromEntries(p);}
 /**
  * Count a learning event: a map increment and nothing else (no state, no timer, no request). Unknown ids are ignored, so a
  * lesson that is not in the generated allowlist (a Learning Journey's practice scene) is simply not counted.
  */
 export function count(id:string,n=1){
- if(!live||!Number.isInteger(n)||n<1||!isCountId(id))return;
+ if(!Number.isInteger(n)||n<1||!isCountId(id))return;
+ if(probe)probe.set(id,(probe.get(id)||0)+n);
+ if(!live)return;
  countAcc.set(id,Math.min(10_000,(countAcc.get(id)||0)+n));
 }
 /** Take the busiest counts that fit in `room` bytes (≤ MAX_BEAT_COUNTS ids, ≤ MAX_COUNT_VALUE each); the rest stay for later.
