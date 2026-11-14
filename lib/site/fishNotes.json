@@ -1,0 +1,1339 @@
+{
+ "shrimp": {
+  "lives": "Shallow sandy coasts and estuaries from the White Sea in Russia down to Morocco, including the Baltic, Mediterranean and Black Seas. It copes with slightly salty river mouths too.",
+  "fact": "During the day the brown shrimp digs itself into the sand, leaving only its feelers poking out. Its sandy colour can even change to match the ground around it, so birds and fish swim right past. When night falls, it comes out to feed. Most adults are only about 3 to 5 centimetres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Crangon_crangon"
+  ],
+  "checked": "2026-11-14"
+ },
+ "sardine": {
+  "lives": "Coastal waters of the north-east Atlantic, from Iceland and Norway south to Senegal, plus the Mediterranean and Black Sea. By day it usually swims 25 to 55 metres down.",
+  "fact": "Sardines go up and down every day. At night they rise towards the surface to gulp tiny copepods, which are drifting animals smaller than a grain of rice. A sardine is ready to have young at about one year old, but it keeps growing for around eight years. One female can lay up to 60,000 eggs in a season.",
+  "src": [
+   "https://en.wikipedia.org/wiki/European_pilchard"
+  ],
+  "checked": "2026-11-14"
+ },
+ "mackerel": {
+  "lives": "The open North Atlantic, from Canada and Norway down to North Carolina and Mauritania, and the Mediterranean, Black and Baltic Seas. It prefers water warmer than about 8 °C.",
+  "fact": "Unlike many of its relatives, the Atlantic mackerel has no swim bladder, the air bag that helps fish float. To get enough oxygen, it must keep swimming all the time. When a school feeds on plankton, the fish crowd together with their mouths wide open, so any tiny animal that dodges one mackerel gets caught by the next.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_mackerel"
+  ],
+  "checked": "2026-11-14"
+ },
+ "sea-bass": {
+  "lives": "The eastern Atlantic from southern Norway to Senegal, the Mediterranean and southern Black Sea. In summer it stays near coasts, lagoons, estuaries and river mouths, then moves offshore for winter.",
+  "fact": "The European sea bass is happy hunting in daylight or in the dark, but the biggest ones mostly hunt at night. Young bass swim into estuaries, where river water meets the sea, and stay there for a year or two. They can cope with big changes in saltiness and temperature. It takes this slow-growing fish several years to become an adult.",
+  "src": [
+   "https://en.wikipedia.org/wiki/European_seabass"
+  ],
+  "checked": "2026-11-14"
+ },
+ "herring": {
+  "lives": "Cool waters on both sides of the North Atlantic, from the Gulf of Maine to the Bay of Biscay. Huge schools gather fairly close to the coast.",
+  "fact": "Atlantic herring travel in some of the biggest schools on Earth. One school was measured at up to 4 cubic kilometres, big enough to hold millions of fish. Herring eat by straining sea water through comb-like gill rakers, which catch tiny plankton and krill. Their excellent hearing helps the whole school dodge a hunter in a flash.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_herring"
+  ],
+  "checked": "2026-11-14"
+ },
+ "cod": {
+  "lives": "Cold North Atlantic waters, from North Carolina to Greenland and from the Bay of Biscay to the Arctic, near the seabed down to about 300 metres.",
+  "fact": "A single female cod can lay anywhere from 200,000 to 15 million eggs, and the bigger the mum, the more eggs she lays. Cod are brown or green with spots on their backs and silvery bellies. They can live for up to 25 years, and the biggest ever caught were longer than a grown-up is tall.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_cod"
+  ],
+  "checked": "2026-11-14"
+ },
+ "haddock": {
+  "lives": "The North Atlantic on rock, sand, gravel and shell seabeds, usually 80 to 200 metres deep, in chilly water of about 4 to 10 °C.",
+  "fact": "Look just above a haddock's side fin and you will find a dark oval smudge, sometimes called the \"Devil's thumbprint\". Its scientific name means something like \"black mark\". Haddock feed on the seabed, munching sea urchins, brittlestars, shellfish and worms. They can live for around 14 years, and the record holder was 94 centimetres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Haddock"
+  ],
+  "checked": "2026-11-14"
+ },
+ "tuna": {
+  "lives": "The western and eastern Atlantic Ocean and the Mediterranean Sea. It feeds in chilly northern waters and can dive more than 1,000 metres deep.",
+  "fact": "Most fish are the same temperature as the water, but the Atlantic bluefin tuna can keep its muscles warm. Special blood vessels pass heat back into its body instead of losing it to the sea, and no other fish does this as well. Bluefins have been recorded at up to 680 kilograms, and they can find their way across thousands of miles of ocean.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_bluefin_tuna"
+  ],
+  "checked": "2026-11-14"
+ },
+ "shark": {
+  "lives": "Continental shelves off Norway, the British Isles and Africa down to Senegal, and the Mediterranean, over sandy, gravelly or muddy seabeds from a few metres to 400 metres deep.",
+  "fact": "The small-spotted catshark, one of the most common little sharks in Europe, has skin as rough as sandpaper. Young ones use it as a tool: they press food against the tiny tooth-like scales near their tail and tear off bite-sized pieces. Mums lay eggs in tough cases with curly tendrils that wrap around seaweed.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Small-spotted_catshark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "octopus": {
+  "lives": "Rocky coastal seabeds in tropical, subtropical and temperate seas, including the eastern and western Atlantic, usually shallower than 200 metres.",
+  "fact": "The common octopus has three hearts: two pump blood through its gills and one sends it round the body. Its blood uses copper instead of iron to carry oxygen. This clever animal can solve mazes, open jars and recognise people. Some have even been seen keeping little \"gardens\" of shells, rocks and seaweed.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Common_octopus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "anchovy": {
+  "lives": "Coasts of Europe and Africa, the Mediterranean, Black Sea and Sea of Azov. In summer it usually stays above 50 metres and can live in salty lagoons and estuaries.",
+  "fact": "European anchovy eggs are a funny shape: long like tiny sausages, not round like most fish eggs. When a hunter comes close, a shoal can squeeze into a tight, swirling bait ball that confuses it. These little fish snack on plankton and usually live only about three years, travelling north in summer and south in winter.",
+  "src": [
+   "https://en.wikipedia.org/wiki/European_anchovy"
+  ],
+  "checked": "2026-11-14"
+ },
+ "short-mackerel": {
+  "lives": "Warm, shallow seas of South-East Asia and Melanesia, about 15 to 200 metres deep, in water of 20 to 30 °C. It also feeds in slightly salty estuaries.",
+  "fact": "Open a short mackerel's mouth and you can see its very long gill rakers, a bristly comb that sieves the tiniest drifting animals and plants from the water. These fish gather in schools of the same size. In Thailand it is so common that people call it \"the fish of the nation\", and the catch has dropped sharply in recent years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Rastrelliger_brachysoma",
+   "https://www.fishbase.se/summary/Rastrelliger-brachysoma.html"
+  ],
+  "checked": "2026-11-14"
+ },
+ "hake": {
+  "lives": "The eastern Atlantic from Norway and Iceland down to Gibraltar, and the Mediterranean, mostly 70 to 370 metres deep. Young hake grow up on muddy seabeds.",
+  "fact": "By day the European hake rests near the seabed, but at night it rises up through the water to hunt. Its jaws are lined with big, curved teeth, with two rows on the bottom and only one on top. A hake can live for up to 20 years and usually grows to about a metre long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/European_hake"
+  ],
+  "checked": "2026-11-14"
+ },
+ "red-snapper": {
+  "lives": "The Gulf of Mexico and the Caribbean, mostly 9 to 60 metres deep, around rocky ledges, reefs, shipwrecks and even oil rigs.",
+  "fact": "The northern red snapper can live for more than 57 years, older than many grandparents. Young snappers often have a dark spot on their sides that fades as they grow. Adults gather in big schools around reefs and sunken ships, and they are pale red with the deepest colour on their backs.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Northern_red_snapper"
+  ],
+  "checked": "2026-11-14"
+ },
+ "yellowfin-tuna": {
+  "lives": "Warm open oceans all around the world, mostly in the top 100 metres, though one was tracked diving almost 1,600 metres down.",
+  "fact": "When a yellowfin tuna sprints, it tucks its fins into grooves in its body to make itself extra smooth, like a torpedo. Bursts of up to 75 kilometres per hour have been measured. Its name comes from its bright yellow fins and the little yellow finlets near its tail. Yellowfins often travel near dolphins.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Yellowfin_tuna"
+  ],
+  "checked": "2026-11-14"
+ },
+ "barracuda": {
+  "lives": "Tropical and warm seas in the Atlantic, Indian and Pacific Oceans, from mangroves and seagrass beds to deep reefs, down to about 110 metres.",
+  "fact": "The great barracuda waits very still, then shoots forward in a burst of up to 58 kilometres per hour to catch a fish. It has rows of sharp, fang-like teeth, even on the roof of its mouth. Shiny things catch its eye because they glint like fish scales, which is why it sometimes follows divers around.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Great_barracuda"
+  ],
+  "checked": "2026-11-14"
+ },
+ "blue-shark": {
+  "lives": "Deep tropical and temperate oceans worldwide, from Norway to Chile, from the surface to about 350 metres. It likes water of about 12 to 20 °C.",
+  "fact": "Blue sharks are great travellers that ride ocean currents, sometimes swimming all the way from New England to South America. Their backs are deep blue, their sides lighter and their bellies white, which helps them blend in from above and below. A mum can give birth to a huge litter of more than 100 pups.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Blue_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "hammerhead": {
+  "lives": "Warm coastal waters around the world, over continental shelves, usually above 25 metres. Young ones grow up in shallow bays and mangroves.",
+  "fact": "Scalloped hammerheads are often seen in schools that can number in the hundreds. In the daytime they stay closer to shore, then head further out at night to hunt. Their wide head is packed with special sensing cells for finding fish, and it can pin a stingray flat against the sea floor.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Scalloped_hammerhead"
+  ],
+  "checked": "2026-11-14"
+ },
+ "sawshark": {
+  "lives": "Mostly the warm and temperate seas from the Indian Ocean to the southern Pacific. Most stay 40 to 100 metres deep, going deeper in the tropics.",
+  "fact": "A sawshark has a long, flat snout edged with teeth that swap between big and small. Halfway along hang two whiskers called barbels, which it drags along the sea floor to feel for food. The saw can also sense the tiny electric signals of hidden animals. Before birth, the pups' saw teeth fold backwards so they don't hurt their mum.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Sawshark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "great-white": {
+  "lives": "Tropical and temperate oceans all over the world. It usually swims near the surface but can dive about 1,300 metres. Young ones prefer shallow coasts.",
+  "fact": "A great white can keep parts of its body warmer than the water around it, which helps it stay active in chilly seas. These sharks are amazing long-distance swimmers: one tagged near South Africa swam to Australia and back within a year. Scientists think they can live for more than 70 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Great_white_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "red-mullet": {
+  "lives": "The Mediterranean, the Black Sea and the eastern Atlantic, 10 to 328 metres deep, over muddy, sandy or gravel seabeds.",
+  "fact": "Under its chin, the red mullet has two long whiskers called barbels. It sweeps them over the seabed like fingers to find worms, shellfish and tiny crabs. Despite its name, it is really a goatfish. Long ago, Romans kept red mullets in ponds as pets and trained them to come when called.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Mullus_barbatus",
+   "https://en.wikipedia.org/wiki/Red_mullet"
+  ],
+  "checked": "2026-11-14"
+ },
+ "bonito": {
+  "lives": "The eastern Atlantic from Norway to South Africa, plus the Mediterranean and Black Sea, mostly 80 to 200 metres deep in water of 12 to 27 °C.",
+  "fact": "The Atlantic bonito is a striped, tuna-like fish and a strong swimmer that travels in big schools. Near New York it is nicknamed \"skipjack\" because it likes to jump out of the water. It hunts small fish, squid and shrimps, and it can swallow surprisingly large prey. The biggest grow to about 90 centimetres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_bonito",
+   "https://www.fishbase.se/summary/Sarda-sarda.html"
+  ],
+  "checked": "2026-11-14"
+ },
+ "horse-mackerel": {
+  "lives": "The north and eastern Atlantic from northern Europe to southern Africa, the Mediterranean and Black Sea, mostly over sandy seabeds 100 to 200 metres deep.",
+  "fact": "Along each side of a horse mackerel runs a curved line of 33 to 40 bony plates called scutes, which get spikier towards the tail. Young ones often hide among the tentacles of jellyfish to stay safe. This fish can live a long time too: 40 years has been recorded in the north-east Atlantic.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_horse_mackerel"
+  ],
+  "checked": "2026-11-14"
+ },
+ "dorado": {
+  "lives": "Open, warm seas all around the world, such as the Gulf of Mexico, Hawaii and the Indian Ocean. It swims mostly in the surface water.",
+  "fact": "The dorado, also called mahi-mahi, is one of the fastest-growing fish in the sea, yet it rarely lives longer than four years. Grown-up males develop a tall, square forehead that gets bigger with age. Taken out of the water, a dorado flashes through several colours before fading to a dull yellow-grey.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Mahi-mahi"
+  ],
+  "checked": "2026-11-14"
+ },
+ "mako": {
+  "lives": "Offshore tropical and temperate seas worldwide, from the surface down to about 150 metres. It seldom swims in water colder than 16 °C.",
+  "fact": "The shortfin mako is the fastest shark known, reaching bursts of about 74 kilometres per hour. A clever heat-saving blood system keeps its body several degrees warmer than the sea. Makos are famous for leaping high into the air. One tagged off California was later found about 2,776 kilometres away in the central Pacific.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Shortfin_mako_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "thresher": {
+  "lives": "Tropical and temperate seas worldwide, close to shore or far out, from the surface to 550 metres. It prefers cooler water of about 16 to 21 °C.",
+  "fact": "Common threshers hunt with their tails. Working in pairs or small groups, they swim circles around a school of fish and splash with their tails to squeeze it into a tight ball. Then a quick whip of that long upper tail fin stuns the fish. They keep their muscles a little warmer than the sea, too.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Common_thresher"
+  ],
+  "checked": "2026-11-14"
+ },
+ "whale-shark": {
+  "lives": "Open waters of all the tropical oceans, rarely in water colder than 21 °C. It mostly stays near the surface, but one dived to 1,928 metres.",
+  "fact": "Every whale shark has its own pattern of spots and stripes, so scientists can tell them apart like fingerprints. It has over 300 rows of tiny teeth that it doesn't use for eating. Its eyeballs are covered in tiny tooth-like scales, and it can pull them back into its head for safety. Whale sharks may live 80 to 130 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Whale_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "oceanic-whitetip": {
+  "lives": "Open oceans worldwide, roughly between 45°N and 43°S, mostly in the top 150 metres, in warm water of about 20 to 28 °C.",
+  "fact": "The oceanic whitetip has extra-long, rounded fins that spread out like wings. It usually cruises slowly near the top of the open sea. Pilot fish, remoras and dolphinfish often tag along beside it. It has even been seen following pilot whales, because both of them like to eat squid.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Oceanic_whitetip_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "oyster": {
+  "lives": "Shallow coastal waters and estuaries along western and southern Europe, from Norway to Morocco, on hard bottoms of mud and rock.",
+  "fact": "Most European flat oysters start life as males, and they can switch between male and female, partly depending on how warm the water is. They feed by pumping sea water through their bodies and filtering out tiny bits of food. A flat oyster can live up to 15 years. People in several countries are now working to rebuild old oyster reefs.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Ostrea_edulis"
+  ],
+  "checked": "2026-11-14"
+ },
+ "pearl-oyster": {
+  "lives": "Warm coral reef seas from the Persian Gulf and Red Sea across the Indian Ocean to the Pacific and Japan, from low tide down to about 75 metres.",
+  "fact": "People often say a grain of sand makes a pearl, but that is very rarely true. A pearl usually begins when a tiny parasite or other bit gets inside the black-lip pearl oyster, which coats it in layers of shiny nacre. This oyster is known for grey and black pearls, and it anchors itself with strong threads.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Pinctada_margaritifera"
+  ],
+  "checked": "2026-11-14"
+ },
+ "stingray": {
+  "lives": "Temperate seas of the Southern Hemisphere, around southern Africa, southern Australia and New Zealand, on sandy flats, bays, rocky reefs and estuaries, from the shoreline downward.",
+  "fact": "The smooth stingray is one of the biggest stingrays in the world, measuring over 2 metres across and weighing about 350 kilograms. It finds shellfish buried in the sand by sensing tiny jets of water they squirt, then sucks them out. It can flap its fins so hard that the water makes a loud \"bang\".",
+  "src": [
+   "https://en.wikipedia.org/wiki/Smooth_stingray"
+  ],
+  "checked": "2026-11-14"
+ },
+ "gummy-shark": {
+  "lives": "Sandy seabeds around southern Australia, from Shark Bay in Western Australia to New South Wales, from the surface down to about 350 metres.",
+  "fact": "The gummy shark has white spots scattered over its grey back. At night it swims closer to the shore to look for crabs, worms, small fish and squid. Mum gummy sharks give birth to live pups, usually about 14 at a time but sometimes as many as 57. Females grow bigger than males and live around 16 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Gummy_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "port-jackson": {
+  "lives": "Temperate waters around southern Australia, from southern Queensland to Tasmania and Western Australia, mostly on rocky seabeds shallower than 100 metres.",
+  "fact": "Most sharks must keep swimming to breathe, but the Port Jackson shark can pump water through its first gill slit while lying still. That means it can rest on the seabed, and even eat and breathe at the same time. It is a night owl that crunches shellfish and sea urchins, and it returns to the same places year after year.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Port_Jackson_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "seahorse": {
+  "lives": "Shallow tropical and temperate seas around the world, in sheltered places such as seagrass meadows, estuaries, coral reefs and mangroves.",
+  "fact": "A seahorse can move each eye on its own, just like a chameleon, so it can look two ways at once. It has no stomach, so it has to eat very often. Seahorses are slow swimmers: the dwarf seahorse is the slowest fish known, with a top speed of about 1.5 metres an hour.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Seahorse"
+  ],
+  "checked": "2026-11-14"
+ },
+ "pacific-seahorse": {
+  "lives": "The eastern Pacific from Baja California to Chile and around the Galápagos, in mangroves, seagrass, rocky and coral reefs, down to about 60 metres.",
+  "fact": "The Pacific seahorse is one of the largest seahorses, growing up to 30 centimetres long. It wraps its curly tail around eelgrass to hold on tight, then waits for small shrimp-like animals to drift past. It can be green, brown, maroon, grey or yellow, and pairs usually stay together with one partner.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Pacific_seahorse"
+  ],
+  "checked": "2026-11-14"
+ },
+ "bull-shark": {
+  "lives": "Warm, shallow coasts around the world and up rivers too, usually above 30 metres. It lives in Lake Nicaragua and has swum about 4,000 kilometres up the Amazon.",
+  "fact": "Most sharks need salty sea water, but the bull shark can live in rivers and lakes. Its kidneys and a special salt gland work together to keep the right amount of salt in its blood. Young bull sharks grow up in lagoons and river mouths. Its name comes from its stocky body and wide, flat snout.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Bull_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "blacktip": {
+  "lives": "Warm, shallow coasts of the Indian and Pacific Oceans, from South Africa and the Red Sea to northern Australia and the Pacific islands, often only a few metres deep.",
+  "fact": "Blacktip reef sharks often swim so close to the shore that their fins stick out of the water. Some stay in the same small patch of reef for years. In the Indian Ocean, groups have been seen herding schools of mullet against the beach. Newborn pups gather in water barely deep enough to cover them.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Blacktip_reef_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "edible-crab": {
+  "lives": "The north-east Atlantic and North Sea, from Norway to North Africa, in cracks and holes in rocks from the shallows down to about 100 metres.",
+  "fact": "The front edge of an edible crab's shell has nine rounded bumps, which makes it look like the crust of a pie. When a female sheds her old shell, the male stands over her and makes a protective cage with his legs. Most edible crabs live 25 to 30 years, and a few may reach 100.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Cancer_pagurus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "swimming-crab": {
+  "lives": "Marshes, estuaries and open bays of the western Atlantic, Caribbean and Gulf of Mexico, from the United States to Colombia, in fairly salty water.",
+  "fact": "The lesser blue crab, one of the jaiba swimming crabs of the Gulf of Mexico, eats almost anything: plants, fish, worms, clams and even other crustaceans. It is the most common crab in open bays there. In spring and autumn, females head back to estuaries carrying more than 250,000 eggs each.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Callinectes_similis",
+   "https://en.wikipedia.org/wiki/Portunidae"
+  ],
+  "checked": "2026-11-14"
+ },
+ "blue-crab": {
+  "lives": "The western Atlantic from Cape Cod to Argentina and all around the Gulf of Mexico. It spends most of its life in brackish estuaries where rivers meet the sea.",
+  "fact": "You can tell a blue crab's sex by its claws: males have blue claws with red tips, while females have orange claws with purple tips. A female can carry up to 2 million eggs under her body in a spongy bundle. Blue crabs moult about 25 times as they grow, and their name means \"beautiful savoury swimmer\".",
+  "src": [
+   "https://en.wikipedia.org/wiki/Callinectes_sapidus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "mussel": {
+  "lives": "Cool to cold coasts of the North Atlantic, between the tides, fixed to rocks and other hard surfaces, often packed together in big beds.",
+  "fact": "Blue mussels hold on with byssal threads, made of a natural glue so strong that scientists study it. They can let go and reattach to move a little. As filter feeders, they clean bacteria and other tiny particles out of the water. When starfish are around, a mussel can grow a thicker shell to stay safe.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Blue_mussel"
+  ],
+  "checked": "2026-11-14"
+ },
+ "eel": {
+  "lives": "Rivers, lakes and coasts all around the Atlantic edge of Europe and North Africa. Adults are thought to swim back across the ocean to breed in the Sargasso Sea.",
+  "fact": "Baby European eels drift across the Atlantic for about 300 days. Near Europe they turn into see-through \"glass eels\" and wriggle up rivers, becoming small elvers. Most eels live 15 to 20 years in fresh water before heading back to sea. One famous eel kept in a Swedish well was said to have lived 155 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/European_eel"
+  ],
+  "checked": "2026-11-14"
+ },
+ "spiny-lobster": {
+  "lives": "Warm western Atlantic waters from North Carolina to Brazil, especially around Florida, the Bahamas and the Caribbean, hiding among coral reefs and mangrove roots down to about 100 metres.",
+  "fact": "Every autumn, groups of Caribbean spiny lobsters line up and march together across the sea floor off Florida and the Bahamas. By day they tuck themselves into cracks, coral and tangled mangrove roots for cover. Most grow to about 20 centimetres long, but the biggest can reach around 60 centimetres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Caribbean_spiny_lobster"
+  ],
+  "checked": "2026-11-14"
+ },
+ "coconut-crab": {
+  "lives": "Islands of the Indian Ocean and the central Pacific. It spends almost its whole life on land, going back to the sea only to release its eggs.",
+  "fact": "The coconut crab is the largest land-living arthropod, weighing up to about 4 kilograms with legs spanning nearly a metre. It uses a keen sense of smell to find food, then cuts holes in coconuts with its strong claws. Its babies drift in the sea for weeks before moving ashore, and it may live for over 60 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Coconut_crab"
+  ],
+  "checked": "2026-11-14"
+ },
+ "nurse-shark": {
+  "lives": "Warm, shallow coastal waters, close to the sea floor. Young ones use reefs, seagrass flats and mangroves, while older sharks prefer deeper reefs and rocky areas.",
+  "fact": "A nurse shark feeds by suction, and its slurp is among the strongest ever measured for any animal that breathes water. It sucks prey straight into its mouth. Nurse sharks usually hunt alone at night, but in the daytime they often gather in big, still clusters to rest side by side.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Nurse_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "sand-tiger": {
+  "lives": "Warm and temperate seas of the Atlantic, Pacific and Indian Oceans, from sandy shorelines and shallow reefs down to about 190 metres deep.",
+  "fact": "The sand tiger is the only shark known to gulp air at the surface and keep it in its stomach. That air works like a float, so it can hover in the water with hardly any effort while it quietly hunts fish. Its pointed teeth often show, because it usually swims with its mouth open.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Sand_tiger_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "cownose-ray": {
+  "lives": "Coastal waters and estuaries of the western Atlantic and Caribbean, from New England down to southern Brazil, usually in fairly shallow water near the bottom.",
+  "fact": "Cownose rays often travel in large schools, heading north in late spring and south again in late autumn, and many spend the summer in Chesapeake Bay. They eat clams and crabs, crushing the hard shells with flat plates of teeth. Two soft lobes on the front of the head help steer food towards the mouth.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Cownose_ray"
+  ],
+  "checked": "2026-11-14"
+ },
+ "tope-shark": {
+  "lives": "Temperate coastal seas all around the world, mostly near the sea bed in water of about 10 to 20 °C, sometimes as deep as 800 metres.",
+  "fact": "Tope are serious travellers. Sharks tagged in Australia have swum about 1,200 kilometres along the coast, and some tagged in the UK later turned up near Iceland, the Azores and the Canary Islands. They feed mainly on fish such as sardines, plus squid. Females take more than ten years to grow up.",
+  "src": [
+   "https://en.wikipedia.org/wiki/School_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "wobbegong": {
+  "lives": "Found only around Australia, in warm coastal water no deeper than about 220 metres. Adults rest on rocky reefs and seagrass, and young ones live in estuaries.",
+  "fact": "The spotted wobbegong's blotchy pattern blends in so well with rocky sea floors that it is very hard to see. It rests by day and feeds at night. Small fish sometimes swim close enough to nibble the frilly flaps around its mouth. Most grow to around 1.5 to 1.8 metres, but some reach over 3 metres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Spotted_wobbegong"
+  ],
+  "checked": "2026-11-14"
+ },
+ "arowana": {
+  "lives": "Fresh water in South America, in the Amazon, Essequibo and Oyapock river basins, where it waits close to the surface for food to come by.",
+  "fact": "The silver arowana is nicknamed the 'water monkey' because it can leap out of the water to grab its prey. Most of its meals are insects, small crustaceans and snails, but some have been found with the remains of birds, bats and even snakes in their stomachs. It can grow to about 90 centimetres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Silver_arowana"
+  ],
+  "checked": "2026-11-14"
+ },
+ "piranha": {
+  "lives": "Rivers and lakes of South America, including the Amazon, Paraguay and Paraná basins, mostly in muddy-looking 'whitewater' rivers but sometimes in clear or dark water.",
+  "fact": "Red-bellied piranhas are mostly scavengers and foragers, not the fierce hunters of films. They eat fruit, seeds, leaves, insects and snails as well as fish. They swim in groups to stay safe from caimans and wading birds. During squabbles they make drumming sounds, and scientists have found three different kinds of call.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Red-bellied_piranha"
+  ],
+  "checked": "2026-11-14"
+ },
+ "sandbar-shark": {
+  "lives": "Warm and temperate seas worldwide, usually over muddy or sandy bottoms in shallow coastal water, though it also swims deeper than 200 metres.",
+  "fact": "The sandbar shark has a very tall, triangular fin on its back, which helps tell it apart from similar sharks. Young ones grow up in sheltered nursery waters such as Chesapeake Bay in the USA. Sandbar sharks take around 12 or 13 years to become adults and can live for 35 to 41 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Sandbar_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "reef-shark": {
+  "lives": "Coral reefs of the tropical western Atlantic, from North Carolina to Brazil, including the Caribbean. Mostly shallower than 30 metres, but it can dive below 370 metres.",
+  "fact": "Caribbean reef sharks are sometimes found lying perfectly still on the sea floor or inside caves. People once thought they were asleep, but a 1975 study by Eugenie Clark showed their eyes followed passing divers. They hunt reef fish, squid and octopuses, and low sounds from a struggling fish draw them in.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Caribbean_reef_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "dusky-shark": {
+  "lives": "Tropical and warm-temperate seas around the world, from the surf zone near beaches out to the open ocean, down to about 400 metres.",
+  "fact": "Dusky sharks are long-distance wanderers, with one journey recorded at around 3,800 kilometres. They are among the slowest-growing sharks and only become adults at about 20 years old. A mother carries her pups for up to two years, then rests for a year before having more. Adults are often about 3 metres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Dusky_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "lemon-shark": {
+  "lives": "Shallow, warm waters of the western Atlantic from New Jersey to Brazil, plus West Africa and the eastern Pacific, around reefs, mangroves, bays and river mouths.",
+  "fact": "The lemon shark's yellowish skin is clever camouflage over sandy sea floors. Mothers return to the same nursery waters to give birth, and the lemon sharks around Bimini in the Bahamas are among the best-studied sharks anywhere. Young ones enjoy company, and groups of up to twenty have been seen together.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Lemon_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "coelacanth": {
+  "lives": "Deep, rocky slopes of the western Indian Ocean, from South Africa up the East African coast, usually 70 to 140 metres below the surface.",
+  "fact": "By day, the West Indian Ocean coelacanth hides in underwater lava caves. Some have been seen doing headstands to slurp food out of cracks in the rock. Instead of laying eggs in the water, the mother keeps them inside her until they hatch, after about a year. Females can grow to around 2 metres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/West_Indian_Ocean_coelacanth"
+  ],
+  "checked": "2026-11-14"
+ },
+ "pool-seahorse": {
+  "lives": "Shallow, temperate coastal waters of the eastern Atlantic, from the south coast of the UK to Morocco, often near seagrass meadows, 1 to 20 metres deep.",
+  "fact": "In long-snouted seahorses, it is the dad who carries the eggs, in a pouch on his belly that feeds the growing babies. Its tail can curl round and grip like a hand. Many have long, frilly threads of skin on the head and back. It eats tiny crustaceans, fish eggs and plankton, and grows to about 12 centimetres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Long-snouted_seahorse"
+  ],
+  "checked": "2026-11-14"
+ },
+ "rockpool-shrimp": {
+  "lives": "Rock pools around the middle of the shore all round Britain and Ireland, and from Norway to south-west Africa, plus the Mediterranean and Black Sea.",
+  "fact": "The rockpool prawn is see-through, with thin red-brown lines on its body and yellow and red bands on its front legs. Its first two pairs of walking legs end in tiny claws. When spotted, it darts quickly into a dark corner. In the far north it moves offshore for winter. It grows up to about 6 centimetres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Palaemon_elegans",
+   "https://www.marlin.ac.uk/species/detail/2035"
+  ],
+  "checked": "2026-11-14"
+ },
+ "bloater": {
+  "lives": "Cool waters on both sides of the North Atlantic, from the Gulf of Maine across to the Bay of Biscay, swimming in huge schools.",
+  "fact": "Herring live in enormous schools. One in the North Atlantic was thought to hold about four billion fish, and some schools fill up to 4 cubic kilometres of sea. Herring sieve tiny plankton from the water using comb-like gill rakers. Their sticky eggs sink and glue themselves to gravel or seaweed on the sea bed.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_herring"
+  ],
+  "checked": "2026-11-14"
+ },
+ "squid": {
+  "lives": "Salt water in oceans around the world, mostly in open water, from near the surface right down into the dark deep sea.",
+  "fact": "A squid has three hearts: one pumps blood around its body and two push it through the gills. Its blood looks blue because it carries oxygen using copper. Squid zoom along by squirting water out of a funnel, and special cells in their skin let them change colour in a flash.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Squid"
+  ],
+  "checked": "2026-11-14"
+ },
+ "lanternfish": {
+  "lives": "Oceans worldwide. By day most hide 300 to 1,500 metres deep in the dim twilight zone, then rise to within 100 metres of the surface at night.",
+  "fact": "Lanternfish are among the most numerous animals with backbones on Earth. Each kind has its own pattern of glowing spots, which may help them recognise each other. Their crowds are so thick that wartime sonar operators mistook them for a 'false sea floor'. Most are smaller than 15 centimetres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Lanternfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "grouper": {
+  "lives": "Mostly on or near the sea bed, often around coral reefs and rocky areas, with some kinds sheltering in burrows in the sand.",
+  "fact": "Groupers do not bite their food into pieces. They open their big mouths and gills to make a powerful suck that pulls prey in from a distance, then swallow it whole. Some coral groupers even team up with giant moray eels to hunt. The biggest, the Atlantic goliath grouper, can weigh around 400 kilograms.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Grouper"
+  ],
+  "checked": "2026-11-14"
+ },
+ "sailfish": {
+  "lives": "Warm oceans around the world, out in open water but often coming close to coasts, islands and reefs in the Pacific and Indian Oceans.",
+  "fact": "A sailfish keeps its huge back fin folded down while cruising and raises it only when it attacks. It usually charges sardine shoals from behind, using its long bill to tap or slash at the fish, and injured fish are easier to catch. Sailfish rarely grow longer than 3 metres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Sailfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "anglerfish": {
+  "lives": "Seas all over the world. Some live in shallow water, but deep-sea anglerfish drift in the dark open water far below the surface.",
+  "fact": "The glowing lure of a deep-sea anglerfish gets its light from tiny bacteria living inside it. An anglerfish's jaw and stomach can stretch so far that it can gulp down prey up to twice its own size. In some species the grown-up males are tiny: one kind measures only about 6 or 7 millimetres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Anglerfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "swordfish": {
+  "lives": "Tropical and temperate parts of the Atlantic, Pacific and Indian Oceans, spending days deeper down, often to about 550 metres, and nights near the surface.",
+  "fact": "A swordfish has special heater cells beside its eyes that warm its eyes and brain, giving it sharper eyesight for hunting. Grown-up swordfish have no teeth and no scales at all. It swipes big prey with its sword but swallows small fish whole. Many reach about 3 metres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Swordfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "blue-marlin": {
+  "lives": "Warm, open waters of the Atlantic Ocean, far from land, mostly where the sea is warmer than about 24 °C.",
+  "fact": "Female Atlantic blue marlin are giants next to the males: the biggest females can be over four times heavier than the biggest males. The record is about 818 kilograms and 5 metres. Blue marlin can change colour quickly using shiny skin cells. One tagged fish swam from Delaware in the USA all the way to Mauritius in the Indian Ocean.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_blue_marlin"
+  ],
+  "checked": "2026-11-14"
+ },
+ "ocean-sunfish": {
+  "lives": "Temperate and tropical waters of every ocean. Adults spend lots of time hunting deeper than 200 metres, then bask near the surface.",
+  "fact": "A female ocean sunfish can make up to 300 million eggs at a time, more than any other known animal with a backbone. A newly hatched baby is only about 2.5 millimetres long, yet it can grow up to 60 million times heavier. When a sunfish lies on its side at the surface, seabirds peck pesky parasites off its skin.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Ocean_sunfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "stargazer": {
+  "lives": "Seas all around the world, in both shallow and deep salt water, where it lies buried in the sand on the sea floor.",
+  "fact": "A stargazer waits under the sand, then leaps upwards to snatch passing prey. Some species have a wriggly, worm-shaped lure on the floor of the mouth to tempt fish closer. Stargazers in the group called Astroscopus can even make electricity, using an organ built from changed eye muscles.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Stargazer_(fish)"
+  ],
+  "checked": "2026-11-14"
+ },
+ "bigeye": {
+  "lives": "Warm reefs of the Indian and Pacific Oceans, including tropical northern Australia, on outer reef slopes and lagoon pinnacles from about 3 to 250 metres deep.",
+  "fact": "The lunartail bigeye is usually bright red, but it can switch in moments to silvery pink with reddish bars or spots. By day it lurks near ledges and coral heads. At night bigeyes come out to feed on drifting baby crabs, shrimps, fish and tiny squid. This one reaches about 40 centimetres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Priacanthidae",
+   "https://fishesofaustralia.net.au/home/species/4462"
+  ],
+  "checked": "2026-11-14"
+ },
+ "flashlight-fish": {
+  "lives": "Seaward coral reefs of the eastern Indian Ocean and the Pacific, usually shallower than 15 metres but down to about 50, hiding in caves by day.",
+  "fact": "The eyelight fish's glow is made by bacteria living in pouches under its eyes, fed by the fish's own blood. To switch the light off, it slides a black lid up over each pouch. Scientists think the blinking helps it find food, keep in touch with other eyelight fish and confuse hungry hunters.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Photoblepharon_palpebratum"
+  ],
+  "checked": "2026-11-14"
+ },
+ "golden-trevally": {
+  "lives": "Tropical and subtropical waters of the Indian and Pacific Oceans, mostly close to shore over reefs and sandy sea floors.",
+  "fact": "Young golden trevally swim right beside big animals such as sharks, groupers and even jellyfish, a bit like pilot fish. As they grow, they lose their teeth completely. Instead, an adult pushes out its stretchy mouth like a tube to suck small animals from sand and reef. Its bright gold fades to silver with age.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Golden_trevally"
+  ],
+  "checked": "2026-11-14"
+ },
+ "flying-fish": {
+  "lives": "All of the world's oceans, especially warm tropical and subtropical waters, where they swim close to the surface.",
+  "fact": "Flying fish usually glide about 50 metres, but by riding the air above waves they can travel up to 400 metres. They can zoom along at over 70 kilometres an hour and rise as high as 6 metres. To keep going, a flying fish dips its tail and beats it against the water to launch another glide.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Flying_fish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "skipjack": {
+  "lives": "Warm, open oceans across the world, in large schools that dive to about 260 metres by day and stay near the surface at night.",
+  "fact": "Skipjack tuna grow fast and live only around 8 to 12 years. In warm tropical seas some spawn almost every day, and a female can release up to 2 million eggs at once. The eggs hatch in about a day. Look for four to six dark stripes running along a skipjack's silvery belly.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Skipjack_tuna",
+   "https://www.fisheries.noaa.gov/species/pacific-skipjack-tuna"
+  ],
+  "checked": "2026-11-14"
+ },
+ "white-grouper": {
+  "lives": "The eastern Atlantic from southern Portugal down to Angola, plus the southern and eastern Mediterranean, over rock, mud and sand 20 to 200 metres deep.",
+  "fact": "Young white groupers grow up in calm coastal lagoons and estuaries before heading out to deeper water. They begin life as females and change into males at around 10 to 13 years old. Their meals are mostly fish, plus mantis shrimps, crabs, squid and octopuses. Big ones reach 120 centimetres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/White_grouper"
+  ],
+  "checked": "2026-11-14"
+ },
+ "albacore": {
+  "lives": "Temperate and tropical oceans around the globe, from the surface down to about 600 metres, usually in water between 10 and 25 °C.",
+  "fact": "Young albacore make huge journeys right across the Pacific, between Japan and the west coast of North America. Unlike most tuna, which mostly eat fish, albacore feed mainly on small squid. They swim in schools sorted by age, which sometimes mix with skipjack, yellowfin and bluefin tuna. Adults can reach about 1.4 metres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Albacore"
+  ],
+  "checked": "2026-11-14"
+ },
+ "queen-conch": {
+  "lives": "Warm, shallow seagrass meadows and sandy sea floors of the tropical western Atlantic and Caribbean, usually less than 18 metres deep.",
+  "fact": "A queen conch has two eyes on stalks, each with a proper lens. It moves in hops: it digs the tip of its hard, claw-like door into the sand, then lifts and flings its heavy shell forward. It grazes on seaweed and seagrass. About one conch in ten thousand makes a rare pearl, and pink ones are prized.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Queen_conch"
+  ],
+  "checked": "2026-11-14"
+ },
+ "cockle": {
+  "lives": "Sandy and muddy tidal flats, bays and estuaries along Europe's Atlantic coasts, from the middle of the shore down to just below low tide.",
+  "fact": "Cockles bury themselves no deeper than about 5 centimetres, because their short siphons must reach the surface. One siphon sucks in water, the cockle strains out tiny bits of food, and the other siphon pushes the water out. Up to 10,000 can be packed into a single square metre. Oystercatchers love eating them.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Cerastoderma_edule",
+   "https://www.marlin.ac.uk/species/detail/1384"
+  ],
+  "checked": "2026-11-14"
+ },
+ "dover-sole": {
+  "lives": "Shallow sandy or muddy sea beds of the eastern Atlantic from southern Norway to Senegal, and most of the Mediterranean, usually 10 to 60 metres deep.",
+  "fact": "A baby sole hatches looking like an ordinary fish, with one eye on each side. When it is about a centimetre long, its body changes and both eyes end up together on its right side. The adult half-buries itself in the sand, then snaps up worms, shellfish and crustaceans, mostly at night.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Common_sole"
+  ],
+  "checked": "2026-11-14"
+ },
+ "mud-crab": {
+  "lives": "Estuaries and mangroves of the Indo-Pacific, from South Africa to southern Japan, Australia, Fiji and Samoa, digging deep burrows in soft mud.",
+  "fact": "Mud crabs leave their burrows at night to look for food, and they will eat almost anything, from molluscs and worms to smaller crabs and plants. If a mud crab is grabbed, it can drop a claw to escape, and a new working claw often grows back. A female can have a million babies.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Scylla_serrata",
+   "https://marinewaters.fish.wa.gov.au/resource/fact-sheet-green-mud-crab/"
+  ],
+  "checked": "2026-11-14"
+ },
+ "pollock": {
+  "lives": "Coasts of the north-east Atlantic, including all round Britain and Ireland, near the sea bed around rocks, wrecks and kelp forests, sometimes deeper than 100 metres.",
+  "fact": "You can spot a pollack by its jutting lower jaw and the dark line along its side that arches up over the front fin. Young ones stay among rocks and seaweed in the shallows. Adults lurk near the sea bed, then dart upwards to catch shoals of herring, sand eels and prawns.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Pollachius_pollachius",
+   "https://www.marlin.ac.uk/species/detail/9"
+  ],
+  "checked": "2026-11-14"
+ },
+ "langoustine": {
+  "lives": "Muddy sea beds of the north-east Atlantic and parts of the Mediterranean, where it digs burrows about 20 to 30 centimetres deep.",
+  "fact": "Langoustines spend much of their time tucked inside burrows in soft mud. They come out mainly in dim light or at night to hunt worms and fish, and they eat jellyfish too. Their bodies are a pale, coral-like orange. Most grow to about 18 to 20 centimetres long and live for 5 to 10 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Nephrops_norvegicus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "flying-squid": {
+  "lives": "The northern Pacific around Japan, China and Russia, and east to Alaska and Canada, mostly in the upper ocean in water of about 5 to 27 °C.",
+  "fact": "Japanese flying squid live for only about a year. In that short life they travel in big schools, following surface currents north and then back south again. Babies eat drifting plankton, while adults hunt fish and crustaceans. Females can reach a body length of about 50 centimetres, and males stay smaller.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Japanese_flying_squid"
+  ],
+  "checked": "2026-11-14"
+ },
+ "greenland-shark": {
+  "lives": "The cold, deep waters of the North Atlantic and Arctic Oceans, usually between about 100 and 1,200 metres down, where the water is close to freezing.",
+  "fact": "This giant grows incredibly slowly, adding only about half a centimetre to one centimetre a year. Scientists think a female is not ready to have pups until she is around 150 years old. Many Greenland sharks have tiny creatures called copepods stuck to their eyes, so they find food mostly by smell and hearing.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Greenland_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "galjoen": {
+  "lives": "Shallow rocky reefs close to the shore along southern Africa, from Angola and Namibia down to South Africa, often around 10 metres deep.",
+  "fact": "Galjoen have strong, curved front teeth and thick lips, perfect for scraping food off rocks. They munch on red seaweed, small mussels, barnacles and a sea squirt called red bait. Tagging studies found that most galjoen are real homebodies, staying around one favourite stretch of coast for years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Galjoen"
+  ],
+  "checked": "2026-11-14"
+ },
+ "queen-scallop": {
+  "lives": "Sand and gravel seabeds of the north-east Atlantic, from Norway down to the Canary Islands and into the Mediterranean, mostly less than 40 metres deep.",
+  "fact": "A young queen scallop starts life tied down, using a special foot to spin sticky threads that anchor it to the seabed. As it grows older it lets go and becomes a free swimmer. It eats by filtering tiny floating plankton out of the seawater that flows through its shell.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Aequipecten_opercularis"
+  ],
+  "checked": "2026-11-14"
+ },
+ "red-scorpionfish": {
+  "lives": "Rocky, sandy or muddy seabeds in the Mediterranean, the eastern Atlantic and the western Indian Ocean, from about 20 to 500 metres deep.",
+  "fact": "This is the biggest scorpionfish in the eastern Atlantic, reaching about half a metre long. By day it tucks itself into caves and burrows, then slips out at night to hunt fish, crabs and shellfish. Long feelers above its eyes and blotchy red skin help it blend in, and its spines carry venom.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Scorpaena_scrofa"
+  ],
+  "checked": "2026-11-14"
+ },
+ "moray": {
+  "lives": "Warm and temperate seas worldwide, mostly on tropical reefs, hiding in coral rubble and rocky cracks; a few kinds live much deeper down.",
+  "fact": "A moray has a hidden second set of jaws in its throat. When it bites a fish, these extra jaws shoot forward and pull the meal down. Morays also team up with groupers: a grouper shakes its head to invite the eel, and the eel slips into gaps the grouper cannot reach.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Moray_eel"
+  ],
+  "checked": "2026-11-14"
+ },
+ "river-prawn": {
+  "lives": "Warm rivers and estuaries of the Indo-Pacific, from India through South-east Asia to northern Australia, with young ones in brackish water.",
+  "fact": "Baby giant river prawns can only survive in slightly salty water near the coast. Once they grow into juveniles, they move upstream and live in fresh water for the rest of their lives. Among the adults, the colour of a male's claws shows his rank: clear for small males, then orange, then blue for the bosses.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Macrobrachium_rosenbergii"
+  ],
+  "checked": "2026-11-14"
+ },
+ "hilsa": {
+  "lives": "Coastal waters of the Bay of Bengal and nearby seas, plus the great rivers of Bangladesh, India and Myanmar, such as the Meghna delta.",
+  "fact": "Hilsa gather in big schools along the coast, then swim inland to lay their eggs, travelling roughly 50 to 100 kilometres upriver. Adults are filter feeders, sieving tiny algae and plankton out of the water and the muddy riverbed. The hilsa is the national fish of Bangladesh and the state fish of West Bengal.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Ilish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "corvina": {
+  "lives": "Sandy and muddy seabeds along the Pacific coast of South America, from Chile up to Panama, and around the Galápagos Islands.",
+  "fact": "This corvina's scientific name, Cilus, comes from an ancient Greek word for a long, narrow head, which suits its slim, stretched skull. It belongs to the croaker family and can grow to 40 centimetres or more. Scientists in Chile have found that what it eats changes with the seasons and as it gets bigger.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Cilus_gilberti",
+   "https://en.wikipedia.org/wiki/Cilus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "pink-cusk-eel": {
+  "lives": "Cool seabeds of the Southern Hemisphere around New Zealand, southern Australia and southern South America, from about 22 to 1,000 metres deep.",
+  "fact": "The pink cusk-eel has a pinkish-yellow body marbled with reddish-brown blotches, and no spiny fins at all. It can grow up to two metres long and live for almost 40 years. Northern ones mostly hunt fish, while those further south feast on little crustaceans such as lobster krill.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Genypterus_blacodes"
+  ],
+  "checked": "2026-11-14"
+ },
+ "sprat": {
+  "lives": "The north-east Atlantic, including the North Sea and Baltic Sea, down to the Mediterranean and Black Sea, in open water, bays and estuaries.",
+  "fact": "Sprats are little silver fish, usually only 8 to 12 centimetres long, that travel in schools. Every night they rise towards the surface to feed on tiny copepods, then sink again by day. They can cope with water that is barely salty, which is why they do so well in the Baltic Sea.",
+  "src": [
+   "https://en.wikipedia.org/wiki/European_sprat"
+  ],
+  "checked": "2026-11-14"
+ },
+ "plaice": {
+  "lives": "Sandy and muddy seabeds of the European shelf, from the Barents Sea to Spain and Portugal, plus Iceland, usually 10 to 200 metres deep.",
+  "fact": "Plaice spend the day buried in sand, keeping very still to hide from predators and to ambush passing food. At night they come out to eat worms, small crustaceans and shellfish. They can change their colour a little to match the seabed, but their orange spots always stay. Some live for 20 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/European_plaice"
+  ],
+  "checked": "2026-11-14"
+ },
+ "ghost-crab": {
+  "lives": "Sandy beaches in tropical and subtropical regions all around the world, where they dig deep burrows between the high and low tide lines.",
+  "fact": "Ghost crabs breathe air, but their gills must stay damp, so they dab them on wet sand or step into the waves. They can make a growling sound by grinding teeth inside their stomachs. When sprinting at top speed, they run on just their first two pairs of legs.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Ghost_crab"
+  ],
+  "checked": "2026-11-14"
+ },
+ "reef-squid": {
+  "lives": "Warm, shallow water around coral reefs and seagrass across the Caribbean Sea and off Florida, with adults going down to about 150 metres.",
+  "fact": "Caribbean reef squid talk to each other with colours and patterns on their skin. Amazingly, one squid can show one message to a friend on its right side and a different message to another on its left. They usually hang out in small groups of four to thirty and gobble small fish and crustaceans.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Caribbean_reef_squid"
+  ],
+  "checked": "2026-11-14"
+ },
+ "green-shore-crab": {
+  "lives": "Sheltered shores, mudflats and estuaries of Europe and North Africa, and now also Australia, South Africa, South America and North America.",
+  "fact": "The green shore crab is not always green: it can be brown, grey or even red, and crabs that wait a long time between moults turn reddish. It is so tough that it copes with water from nearly fresh to very salty. One female can produce more than 400,000 eggs.",
+  "src": [
+   "https://en.wikipedia.org/wiki/European_green_crab"
+  ],
+  "checked": "2026-11-14"
+ },
+ "stone-crab": {
+  "lives": "Shallow coastal water of the western North Atlantic, from Connecticut to Colombia, including the Gulf of Mexico, in holes dug near rocks and dock pilings.",
+  "fact": "Stone crabs love oysters, and their claws are strong enough to crack an oyster's shell. The two claws are different sizes, and each time the crab moults, a regrown claw comes back a bit bigger. Shells piled around its burrow entrance double as handy digging tools.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Florida_stone_crab"
+  ],
+  "checked": "2026-11-14"
+ },
+ "cuttlefish": {
+  "lives": "Sand and mud seabeds of the north-east Atlantic, the North Sea and the Mediterranean, coming inshore in spring and moving 100 to 200 metres deep in winter.",
+  "fact": "Inside its body, a cuttlefish has a light, chalky shell called a cuttlebone that keeps it firm. To catch a meal, it shoots out two special feeding tentacles to grab prey by surprise. If it gets a fright, it jets away and squirts ink, and it even has different kinds of ink for different situations.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Common_cuttlefish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "red-lipped-batfish": {
+  "lives": "Sandy seabeds and reef edges around the Galápagos Islands of Ecuador, usually about 3 to 76 metres deep, sometimes deeper.",
+  "fact": "On top of its head, the red-lipped batfish has a little fishing rod made from a fin spine, with a bait at the tip that tempts small animals closer. It snacks on shrimps, crabs, worms and molluscs, mostly at night. Scientists think its bright red lips may help batfish recognise each other.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Red-lipped_batfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "tarpon": {
+  "lives": "Warm coastal waters, estuaries, lagoons and rivers of the tropical and subtropical Atlantic, sometimes reaching as far as Nova Scotia and Argentina.",
+  "fact": "A baby tarpon looks nothing like its parents: it starts out as a long, slender larva, like a baby eel, that soaks up nutrients straight from the water. Grown-up tarpon can reach 2.5 metres and weigh as much as two adults. When hooked, they make spectacular leaps out of the water.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_tarpon"
+  ],
+  "checked": "2026-11-14"
+ },
+ "european-lobster": {
+  "lives": "Rocky or hard-mud seabeds of the north-east Atlantic, from northern Norway to Morocco, plus the Mediterranean, usually less than 50 metres deep.",
+  "fact": "A European lobster has two very different claws. One is a chunky crusher with rounded bumps for smashing shells, and the other is a sharp-edged cutter for gripping and tearing. It hides in holes and cracks during the day, then comes out at night to hunt crabs, sea urchins, starfish and worms.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Homarus_gammarus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "silky-shark": {
+  "lives": "Warm open oceans above 23 degrees Celsius around the world, often near the edges of continental shelves, mostly from the surface to 200 metres deep.",
+  "fact": "Silky sharks have super-sharp hearing and are drawn to low, irregular thumping sounds, like the noise of animals feeding. They often follow schools of tuna and hang around floating logs and buoys. Tagged silky sharks have travelled up to 60 kilometres in a single day.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Silky_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "spider-crab": {
+  "lives": "Deep water off the southern coasts of Honshu in Japan, with a few off Taiwan, from about 50 to 600 metres down among holes and vents.",
+  "fact": "From claw tip to claw tip, a Japanese spider crab can stretch up to 3.7 metres, wider than a car, and weigh up to 19 kilograms. To hide, it decorates its shell with sponges and other small animals. It eats plants and animals alike, and a single female can lay up to 1.5 million eggs in a season.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Japanese_spider_crab"
+  ],
+  "checked": "2026-11-14"
+ },
+ "checkered-puffer": {
+  "lives": "Bays, seagrass beds, tidal creeks and mangrove swamps of the western Atlantic, from Rhode Island and Bermuda through the Gulf of Mexico to Brazil.",
+  "fact": "The checkered puffer has four tooth plates, two on top and two below, that join into a strong, heavy beak. It uses this beak to crack open hard-shelled snacks such as clams, snails and crabs. Its back is covered in a net of lines like a tiled floor, centred on a bullseye mark.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Checkered_puffer"
+  ],
+  "checked": "2026-11-14"
+ },
+ "southern-stingray": {
+  "lives": "Warm, shallow sandy seabeds and seagrass of the western Atlantic, from New Jersey through the Caribbean and Gulf of Mexico to southern Brazil.",
+  "fact": "Southern stingrays hunt for food hidden under the sand. A ray blows jets of water from its mouth or flaps its fins hard to uncover buried worms, clams and crabs. Special pores on its body sense the tiny electric signals that hidden animals give off. Females grow much bigger than males.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Southern_stingray"
+  ],
+  "checked": "2026-11-14"
+ },
+ "moreton-bay-bug": {
+  "lives": "Soft sandy and muddy seabeds of the Indo-West Pacific, from East Africa and the Red Sea to Japan, the Philippines and northern Australia.",
+  "fact": "The Moreton Bay bug is a slipper lobster. Instead of long feelers, it has a pair of antennae flattened into wide plates that stick out in front of its head like a shovel. It cannot flick its tail to dart away like other lobsters, so it stays safe with tough armour and by burying itself in the seabed.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Thenus_orientalis",
+   "https://en.wikipedia.org/wiki/Slipper_lobster"
+  ],
+  "checked": "2026-11-14"
+ },
+ "bonefish": {
+  "lives": "Warm, shallow inshore water of the western Atlantic, including southern Florida, the Gulf of Mexico and the West Indies, over sand and mud flats.",
+  "fact": "Bonefish ride the rising tide onto shallow mud and sand flats to feed. They nose around for worms, little fish, shrimps, crabs and shellfish along drop-offs and seagrass edges. As babies they drift in the open sea as tiny larvae for about 53 days before settling down. Big ones reach nearly 80 centimetres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Bonefish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "clownfish": {
+  "lives": "Sheltered coral reefs and shallow lagoons of the Red Sea and western Indian Ocean, including Socotra and the Chagos Archipelago, living inside sea anemones.",
+  "fact": "Red Sea clownfish all start out as males. In each group, the biggest and bossiest fish turns into the female and leads the family. This clownfish is not fussy about homes and can live in five different kinds of anemone, though it likes the bubble-tip anemone best. Look for its two white bands.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Amphiprion_bicinctus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "disc-abalone": {
+  "lives": "Shallow rocky water off Japan and Korea in the north-west Pacific, usually between 1 and 10 metres deep, sometimes down to 30 metres.",
+  "fact": "Disc abalone graze on big seaweeds such as kelp and wakame. Their tiny babies drift in the sea and then settle on pink, crusty seaweed before moving into the kelp forests as they grow. The shell, usually 10 to 15 centimetres long, has a metallic shine of bronze-green and coppery red inside.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Haliotis_discus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "humphead-wrasse": {
+  "lives": "Steep coral reef slopes, channels and lagoons of the Indian and Pacific Oceans, from East Africa and the Red Sea eastwards, about 2 to 60 metres deep.",
+  "fact": "The humphead wrasse is one of the few animals that happily eats prickly crown-of-thorns starfish, along with boxfish and sea hares that other fish avoid. Some females turn into males at about nine years old. Big males can grow over two metres long, and these gentle giants can live for around 30 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Humphead_wrasse"
+  ],
+  "checked": "2026-11-14"
+ },
+ "reef-octopus": {
+  "lives": "Warm, shallow coral reefs, seagrass beds and rocky seabeds of the Caribbean Sea and nearby western Atlantic, hiding in rocky dens.",
+  "fact": "The Caribbean reef octopus is a night hunter that stays tucked away in hidden rocky lairs by day. It can switch its skin from crimson to green and from bumpy to smooth. After dark it comes out to catch crabs, shrimps, lobsters, worms and fish, and it often moves to a new den.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Caribbean_reef_octopus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "tiger-shark": {
+  "lives": "Tropical and subtropical seas worldwide, often close to coasts and reefs, wandering with warm currents and sometimes diving nearly 900 metres deep.",
+  "fact": "Tiger sharks eat a wider range of food than any other shark, from sea turtles to fish, and they sometimes swallow rubbish too. Their jagged teeth work like saws and can slice through a turtle's hard shell. A mother tiger shark can have anywhere from 10 to 80 pups at once.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Tiger_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "whitetip-reef-shark": {
+  "lives": "Clear coral reefs, ledges, sandy flats and lagoons across the Indo-Pacific, from South Africa to Central America, mostly 8 to 40 metres deep.",
+  "fact": "Unlike most of its relatives, this shark can lie still on the seabed and pump water over its gills to breathe. It naps in caves by day, and one shark may use the same cave for months or even years. At night, groups search the reef and wriggle into narrow cracks to find sleeping fish.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Whitetip_reef_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "parrotfish": {
+  "lives": "Coral reefs of Florida, the Caribbean Sea, the Gulf of Mexico and Bermuda, south to Brazil, usually about 5 to 25 metres deep.",
+  "fact": "A stoplight parrotfish changes its whole look as it grows up. Young fish and females are brown with a red belly, and when a female turns into a male, she becomes bright green with a yellow spot near the tail. It spends the day grazing algae off dead coral and hides under boulders at night.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Stoplight_parrotfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "wahoo": {
+  "lives": "Warm tropical and subtropical open seas all around the world, in the Atlantic, Pacific and Indian Oceans.",
+  "fact": "Wahoo have large mouths full of razor-sharp teeth for catching fish and squid. They usually swim alone or in loose little groups of two or three. Their sides shimmer with wavy blue bars, and they grow quickly, reaching up to 2.7 metres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Wahoo"
+  ],
+  "checked": "2026-11-14"
+ },
+ "lebranche-mullet": {
+  "lives": "Coastal salt and brackish waters of the western Atlantic and Caribbean, from Florida south to Argentina, sometimes swimming into fresh water.",
+  "fact": "The Lebranche mullet is a tidy-up fish: it eats detritus, the tiny bits of dead plants and animals on the bottom, plus stringy algae. Females lay several million floating eggs far out at sea in summer. Most adults are around 40 centimetres long, though some reach double that.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Mugil_liza"
+  ],
+  "checked": "2026-11-14"
+ },
+ "john-dory": {
+  "lives": "Near the seabed in coastal waters of the north-east Atlantic and Mediterranean, and around Australia, New Zealand, Japan and South-east Asia, 5 to 360 metres deep.",
+  "fact": "The John Dory is a slow swimmer, so it sneaks instead of chasing. Its body is so thin that prey can hardly see it coming head-on. When close enough, it shoots its mouth forward like a tube and sucks in small fish, squid or shrimps in an instant.",
+  "src": [
+   "https://en.wikipedia.org/wiki/John_Dory"
+  ],
+  "checked": "2026-11-14"
+ },
+ "snook": {
+  "lives": "Warm western Atlantic coasts from North Carolina to Brazil, including the Gulf of Mexico and Caribbean, in estuaries and lagoons and often in fresh water.",
+  "fact": "Snook are tropical fish that really dislike the cold. If the water drops to about 14 degrees Celsius they stop eating altogether. A snook can grow up to 1.4 metres long and hunts smaller fish, shrimps and the occasional crab. The young often grow up in coastal ponds and creeks.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Common_snook"
+  ],
+  "checked": "2026-11-14"
+ },
+ "mantis-shrimp": {
+  "lives": "Muddy seafloors of the western Pacific Ocean, including the seas around Japan, about 10 to 100 metres deep, and now also near Australia and New Zealand.",
+  "fact": "The Japanese mantis shrimp hides in its burrow all day and rarely comes out until night. When a mother leaves home, she carries her eggs with her, held safely in her front feeding legs, until they hatch about two weeks later. Its hunting arms are halfway between a spear and a hammer.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Oratosquilla_oratoria"
+  ],
+  "checked": "2026-11-14"
+ },
+ "garibaldi": {
+  "lives": "Clear water over rocky reefs, crevices and small caves of the eastern Pacific, from Monterey Bay in California to Baja California, down to about 30 metres.",
+  "fact": "A male garibaldi is a keen gardener. He grows a patch of red seaweed as his nest and keeps it neat for the female to lay eggs in. Females prefer nests that already hold fresh eggs. Babies are covered in shiny blue spots that fade as they grow, and one garibaldi lived to 57.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Garibaldi_(fish)"
+  ],
+  "checked": "2026-11-14"
+ },
+ "goose-barnacle": {
+  "lives": "Rocky Atlantic shores from France, Spain and Portugal south to Morocco and Senegal, plus a few spots in the Mediterranean, growing in clumps on rocks.",
+  "fact": "A goose barnacle eats by sweeping feathery legs, called cirri, through the water to catch tiny food such as diatoms and copepods. Before it settles down, a young barnacle swims freely through seven baby stages for at least a month. People have gathered these barnacles by hand for over 10,000 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Pollicipes_pollicipes"
+  ],
+  "checked": "2026-11-14"
+ },
+ "wolf-eel": {
+  "lives": "Rocky reefs, caves and crevices of the North Pacific, from the Sea of Japan and Bering Sea to northern California, from shallow water to 226 metres.",
+  "fact": "Wolf eels have powerful jaws that crunch through sea urchins, crabs, mussels and clams. When eggs arrive, the mother coils around them to make a ball, and the father coils around her. The pair take turns guarding, with only one leaving the cave at a time to feed. They can grow over two metres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Wolf_eel"
+  ],
+  "checked": "2026-11-14"
+ },
+ "sarcastic-fringehead": {
+  "lives": "Sandy and muddy seabeds of the Pacific coast of North America, from San Francisco to central Baja California, about 3 to 73 metres deep.",
+  "fact": "The inside of a sarcastic fringehead's mouth glows green under special light. Its name comes from the frilly ruff of skin around its neck. A father fringehead guards about 3,000 eggs and fans them with water until they hatch. During squid season, these little fish gobble lots of squid eggs.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Sarcastic_fringehead"
+  ],
+  "checked": "2026-11-14"
+ },
+ "sand-bubbler-crab": {
+  "lives": "Sandy beaches along warm tropical and subtropical coasts of the Indo-Pacific, digging small burrows in the sand between the tides.",
+  "fact": "Sand bubbler crabs are only about one centimetre across. When the tide goes out they pop up and sift sand through their mouthparts, eating tiny bits of food and plankton. As the sea comes back in, each crab hurries home and waits out high tide inside its burrow in a bubble of air.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Sand_bubbler_crab"
+  ],
+  "checked": "2026-11-14"
+ },
+ "milkfish": {
+  "lives": "Warm tropical seas across the Indian and Pacific Oceans, near islands and along coasts, often swimming into estuaries and rivers.",
+  "fact": "The milkfish has a small mouth with no teeth at all. Young ones nibble plankton and soft green algae, while adults add small worms, shellfish and tiny fish. It is the only living member of its fish family, whose fossils go back about 63 million years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Milkfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "ribbontail-ray": {
+  "lives": "Coral reefs and nearby sandy flats of the tropical Indian and western Pacific Oceans, from the shoreline down to about 30 metres deep.",
+  "fact": "When night falls and the tide rises, small groups of these rays glide onto shallow sandy flats to feed. They dig little pits in the sand, hunting for clams, worms, shrimp and crabs. A ray will even visit a bluestreak cleaner wrasse, a tiny fish that tidies its skin. Its tail spines are for defence, and it prefers to swim away.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Bluespotted_ribbontail_ray"
+  ],
+  "checked": "2026-11-14"
+ },
+ "zebra-shark": {
+  "lives": "Warm coral reefs and sandy flats of the Indian and Pacific Oceans, from the Red Sea and South Africa to northern Australia, down to about 62 metres.",
+  "fact": "A zebra shark has a slim, bendy body that can wriggle into narrow cracks in the reef. Its mouth works like a vacuum cleaner, sucking snails, crabs and small fish out of hiding. By day it often rests on the seabed facing into the current, mouth open, so fresh water flows over its gills.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Zebra_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "smelt": {
+  "lives": "Coasts, estuaries and rivers of western and northern Europe, plus some large lakes in Nordic countries where smelt live in fresh water all year.",
+  "fact": "Many European smelt live in the sea but swim up rivers to lay their eggs, choosing sandy, rocky bottoms less than 3 metres deep. They hunt tiny drifting animals called copepods and water fleas. In Scotland they are now found in only three rivers: the Cree, the Forth and the Tay.",
+  "src": [
+   "https://en.wikipedia.org/wiki/European_smelt"
+  ],
+  "checked": "2026-11-14"
+ },
+ "capelin": {
+  "lives": "Cold waters of the Arctic, North Atlantic and North Pacific Oceans, travelling in huge shoals and laying eggs over sand or gravel near coasts.",
+  "fact": "Capelin are tiny, but plenty of big animals depend on them. Whales, seals, cod, mackerel, squid and seabirds all feast on capelin, especially when the shoals move in to lay eggs. The capelin themselves eat krill and other small floating creatures. At spawning time, males have a see-through ridge along each side of the body.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Capelin"
+  ],
+  "checked": "2026-11-14"
+ },
+ "garfish": {
+  "lives": "Close to the surface of the Atlantic Ocean and the Mediterranean, Black and Baltic Seas, moving into shallow seagrass meadows each spring.",
+  "fact": "Garfish spend most of their time just under the waves, hunting shoals of small fish such as herring, sprats and sand eels. In May and June they come into shallow water to spawn among the seagrass. Each egg has tiny threads on its surface, which let it cling to plants and other objects in the water.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Garfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "atlantic-salmon": {
+  "lives": "The northern Atlantic Ocean and the rivers that flow into it, breeding in rivers of Europe and the north-eastern coast of North America.",
+  "fact": "A salmon gets a new name at almost every stage of life. A newly hatched baby is an alevin, then it becomes a fry, a parr and, when it is ready for the sea, a smolt. Unlike Pacific salmon, an Atlantic salmon can survive spawning and return to the sea, though most spawn only once or twice.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_salmon"
+  ],
+  "checked": "2026-11-14"
+ },
+ "bluefish": {
+  "lives": "Coastal waters of temperate and subtropical seas all around the world, except the northern Pacific Ocean, where bluefish are not found.",
+  "fact": "The bluefish is the only living species left in its whole fish family. It is a fast swimmer with a single row of sharp, knife-edged teeth in each jaw. Bluefish chase small fish right into the surf, and they keep on hunting in a feeding frenzy even after they seem to be full.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Bluefish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "lingcod": {
+  "lives": "Rocky seabeds along the Pacific coast of North America, from the Gulf of Alaska to Baja California, mostly 10 to 100 metres deep.",
+  "fact": "Lingcod dads are devoted nest guards. After the eggs are laid, a male defends the nest from egg-eaters for about six weeks, until the babies hatch. Grown-up lingcod will gobble almost anything that fits in their mouths, from rockfish and squid to octopus and crabs. They belong to the greenling family, not the cod family.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Lingcod"
+  ],
+  "checked": "2026-11-14"
+ },
+ "amberjack": {
+  "lives": "The north-west Pacific Ocean, from Japan and the Korean Peninsula out to Hawaii, usually in the top 100 metres of warm water.",
+  "fact": "Young Japanese amberjack shelter under clumps of floating seaweed as they drift through the sea. Each May, fishers collect these wild youngsters, called mojako, to raise on fish farms. Grown-up amberjack swim together in shoals. Most reach about 1 metre long, and a few grow to 1.5 metres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Japanese_amberjack",
+   "https://www.fishbase.se/summary/381"
+  ],
+  "checked": "2026-11-14"
+ },
+ "sixgill-shark": {
+  "lives": "Tropical and temperate oceans worldwide, usually 180 to 1,100 metres deep in dim water near the seabed, and sometimes far deeper.",
+  "fact": "The bluntnose sixgill shark can grow to about 5.5 metres long, yet people rarely see it, because it spends daylight hours in the deep. Only at night does it come up near the surface. It has glowing blue-green eyes and six rows of saw-like teeth on its lower jaw, and it eats a huge range of foods.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Bluntnose_sixgill_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "giant-red-shrimp": {
+  "lives": "Deep water 120 to 1,300 metres down in the Mediterranean, both sides of the Atlantic, the Indian Ocean and the western Pacific.",
+  "fact": "Giant red shrimp seem to switch menus between day and night. By day they pick food from the seabed, but after dark they catch animals swimming higher up in the water. Females grow bigger than males, reaching about 22 centimetres, and they have a longer pointed snout, called a rostrum. Their eyes are black against the red shell.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Aristaeomorpha_foliacea"
+  ],
+  "checked": "2026-11-14"
+ },
+ "firefly-squid": {
+  "lives": "Deep water off the coast of Japan, about 200 to 400 metres down by day, rising closer to the surface at night.",
+  "fact": "A firefly squid has three big lights on the tip of each of two arms, plus many tiny ones elsewhere. It can match the glow on its belly to the light coming from above, so fish below cannot see its shadow. Its eyes have three kinds of light-catching pigment, which might let it see colours.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Firefly_squid"
+  ],
+  "checked": "2026-11-14"
+ },
+ "blue-whiting": {
+  "lives": "The open north-east Atlantic from Morocco to Iceland and Spitsbergen, plus the northern Mediterranean, mostly 300 to 400 metres deep.",
+  "fact": "Blue whiting go up and down every single day. At night they rise towards the surface waters, and in daylight they sink back down near the bottom. They eat mostly small crustaceans such as krill, but the biggest ones also catch small fish and squid. Some grow longer than 40 centimetres.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Blue_whiting",
+   "https://www.fishbase.se/summary/31"
+  ],
+  "checked": "2026-11-14"
+ },
+ "humboldt-squid": {
+  "lives": "The eastern Pacific Ocean, from Tierra del Fuego at the tip of South America up to California, usually 200 to 700 metres deep.",
+  "fact": "Humboldt squid travel in big groups of up to 1,200 animals, and scientists think they may even hunt together as a team. They zoom along by squirting water out of a tube called a siphon, reaching about 24 kilometres an hour. Most live only one or two years, yet some grow 1.5 metres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Humboldt_squid"
+  ],
+  "checked": "2026-11-14"
+ },
+ "orange-roughy": {
+  "lives": "Cold, deep water of 3 to 9 °C, 180 to 1,800 metres down, around undersea canyons and seamounts in the Atlantic, Indian and Pacific Oceans.",
+  "fact": "An orange roughy does not start having young until it is at least 20 years old. While it rests, it can lose almost all of its bright colour and becomes very easy to get close to. It feeds on small fish such as lanternfish, plus squid. It belongs to a family with a funny name: slimeheads.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Orange_roughy"
+  ],
+  "checked": "2026-11-14"
+ },
+ "opah": {
+  "lives": "The open ocean in warm and temperate seas all around the world, between about 50 and 500 metres below the surface.",
+  "fact": "Most fish swim by swishing their tails, but the opah flaps its long side fins up and down, a bit like a bird flapping its wings. It hunts smaller fish and also snaps up squid and krill. An opah can grow to about 2 metres long and weigh as much as a grown man.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Opah"
+  ],
+  "checked": "2026-11-14"
+ },
+ "spotted-ratfish": {
+  "lives": "Near the seabed off the Pacific coast of North America, from Alaska to Baja California, mostly 50 to 400 metres deep over sand, mud or rock.",
+  "fact": "Instead of rows of sharp teeth, the spotted ratfish has hard, flat tooth plates that stay for life. They are perfect for crushing its favourite crunchy foods, such as crabs and clams. Mothers lay leathery egg cases on muddy or sandy bottoms, and females grow much bigger than males, up to about 97 centimetres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Spotted_ratfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "red-king-crab": {
+  "lives": "Cold waters of the North Pacific, from the Bering Sea to the Gulf of Alaska; adults usually live more than 200 metres deep.",
+  "fact": "Once they are about two years old, red king crabs often gather in tight heaps called pods, with hundreds of crabs packed together. Like all crabs, they must shed their hard shell to grow, and growing slows when the water drops below 8 °C. In the 1960s the Soviet Union carried them to the Barents Sea.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Red_king_crab"
+  ],
+  "checked": "2026-11-14"
+ },
+ "footballfish": {
+  "lives": "The Atlantic Ocean from Greenland and Norway south to South Africa, in dark water about 200 to 800 metres deep.",
+  "fact": "Female and male footballfish are wildly different sizes. Females can reach about 60 centimetres, while males stay around 4 centimetres and have no glowing lure. A male finds a female using his strong sense of smell. The female's lure glows thanks to light-making bacteria living inside it, and she eats whatever fits in her mouth.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Himantolophus_groenlandicus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "oarfish": {
+  "lives": "Open oceans worldwide, from the tropics to middle latitudes but not near the poles; one was recorded almost 500 metres deep.",
+  "fact": "Divers have seen the giant oarfish swimming upright, head up, rippling the long fin along its back to move. It has no teeth, and one oarfish was found with thousands of krill in its stomach. Its huge, snake-like body probably explains some old stories of sea serpents spotted by sailors.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Giant_oarfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "black-scabbardfish": {
+  "lives": "The deep Atlantic Ocean, roughly from Iceland down to Madeira and the Canary Islands, between about 180 and 1,700 metres below the surface.",
+  "fact": "By day the black scabbardfish stays deep, but at night it swims upwards to hunt at middle depths. It catches shrimp, squid and other fish, especially grenadiers, with strong fang-like teeth. Adults have no pelvic fins at all. These fish spawn near Madeira and the Canary Islands from October to December.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Black_scabbardfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "patagonian-toothfish": {
+  "lives": "Icy southern waters of the Atlantic, Pacific, Indian and Southern Oceans, on seamounts and shelves from 45 to 3,850 metres deep.",
+  "fact": "A Patagonian toothfish can grow longer than 2 metres and is thought to live for up to 50 years. Young toothfish in shallow water mostly eat other fish. As they grow and move deeper, their menu widens to squid, crustaceans and scraps. Sperm whales, southern elephant seals and colossal squid sometimes eat toothfish.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Patagonian_toothfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "bigeye-tuna": {
+  "lives": "Open waters of warm and temperate oceans worldwide, except the Mediterranean Sea, diving 300 to 500 metres down during the day.",
+  "fact": "Bigeye tuna keep their bodies warmer than the water around them, using special blood vessels that trap heat. That helps them hunt in cold, deep water. They often gather near seamounts, buoys and floating objects. A bigeye can grow to 2.5 metres long, and tagged fish have reached 16 years old.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Bigeye_tuna"
+  ],
+  "checked": "2026-11-14"
+ },
+ "koi": {
+  "lives": "Garden ponds and water gardens around the world; koi come from the wild Amur carp of East Asia and do best in 15–25 °C water.",
+  "fact": "Koi come in many named patterns. A kohaku is white with big red patches, while a showa is black with red and white markings. Koi eat almost anything, from peas and lettuce to watermelon. They learn to recognise the people who feed them, and some will even take food from a hand.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Koi"
+  ],
+  "checked": "2026-11-14"
+ },
+ "perch": {
+  "lives": "Slow-flowing rivers, deep lakes and ponds across Europe and northern Asia, and some brackish parts of the Baltic Sea.",
+  "fact": "A female European perch lays her eggs in a long white ribbon, up to a metre long, draped over water plants or sunken branches. Young perch eat tiny floating animals and small creatures on the bottom. As adults they hunt fish such as sticklebacks, roach and minnows. A perch can live up to 22 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/European_perch"
+  ],
+  "checked": "2026-11-14"
+ },
+ "pike": {
+  "lives": "Weedy lakes, reservoirs and slow streams across the Northern Hemisphere; the Baltic Sea is the only salty water where pike are common.",
+  "fact": "A pike can stay perfectly still for a long time, then shoot forward in a sudden burst of speed. Its lateral line, a row of sensors along each side, feels the swirls made by swimming prey. Pike mostly eat fish and frogs, and their teeth point backwards to keep hold. Some live 25 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Northern_pike"
+  ],
+  "checked": "2026-11-14"
+ },
+ "cabezon": {
+  "lives": "Rocky ledges, kelp beds and sandy or muddy bottoms along the Pacific coast from Alaska to Baja California, down to 200 metres.",
+  "fact": "The cabezon is a big sculpin with smooth skin and no scales at all. It munches crabs, shellfish, small fish and fish eggs, and adults have been seen swallowing crabs whole. It can reach almost 1 metre long. Its own eggs are poisonous to people, so nobody should eat them.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Cabezon_(fish)"
+  ],
+  "checked": "2026-11-14"
+ },
+ "ballan-wrasse": {
+  "lives": "Rocky coasts of the north-east Atlantic from Norway to Morocco, among rocks, seaweed and reefs 1 to 50 metres deep.",
+  "fact": "Every ballan wrasse starts life as a female, and after four to 14 years a few change into males. A male builds a nest from seaweed in a rocky crack, where females lay their eggs. Fish farms in Norway and Scotland use ballan wrasse as cleaners that pick sea lice off salmon. Some live 34 years.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Ballan_wrasse"
+  ],
+  "checked": "2026-11-14"
+ },
+ "golden-redfish": {
+  "lives": "The cold North Atlantic Ocean; adults live offshore between about 100 and 1,000 metres deep, while young ones stay in fjords and inshore waters.",
+  "fact": "Golden redfish do not scatter eggs in the sea. Like other rockfish, the eggs develop inside the mother, and she releases tiny baby fish into the water from spring into summer. In summer redfish feast mostly on krill, and at other times they eat herring and capelin. Some reach 1 metre long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Sebastes_norvegicus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "yelloweye-rockfish": {
+  "lives": "Deep rocky reefs of the eastern Pacific, from Alaska to Baja California, usually about 50 to 400 metres below the surface.",
+  "fact": "A yelloweye rockfish changes colour as it ages. Young fish are reddish with two pale stripes on the belly, adults turn bright orange, and very old fish fade to pale yellow. Many spend their whole lives around a single pile of rocks. They eat small fish, including other rockfish, and bottom-living invertebrates.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Yelloweye_rockfish"
+  ],
+  "checked": "2026-11-14"
+ },
+ "giant-pacific-octopus": {
+  "lives": "The cool North Pacific, from the shoreline down to about 2,000 metres, usually in water of 8 to 12 °C.",
+  "fact": "The giant Pacific octopus has blue blood, because its blood uses copper instead of iron. Its biggest suckers are about 6 centimetres wide, and each one can hold 16 kilograms. It eats crabs, clams, scallops and snails, leaving empty shells piled outside its den. A mother guards her eggs all by herself.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Giant_Pacific_octopus"
+  ],
+  "checked": "2026-11-14"
+ },
+ "kelp-greenling": {
+  "lives": "Kelp beds, rocky reefs and sandy bottoms along the Pacific coast from Alaska's Aleutian Islands to southern California, down to about 46 metres.",
+  "fact": "Kelp greenling dads guard the eggs until they hatch. The eggs are laid in clumps of algae, between rocks, or tucked inside empty shells, often old giant barnacle shells. These fish eat crabs and other crustaceans, worms, brittle stars, shellfish and small fishes. The biggest grow to about 61 centimetres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Kelp_greenling",
+   "https://sanctuarysimon.org/dbtools/species-database/species-info-ajax.php?sID=9",
+   "https://themarinedetective.com/tag/egg-guarding"
+  ],
+  "checked": "2026-11-14"
+ },
+ "kelp-bass": {
+  "lives": "Kelp forests and estuaries from central California to the southern tip of Baja California, usually 3 to 21 metres below the surface.",
+  "fact": "Kelp bass are real homebodies, each staying faithful to its own patch of about 3,000 square metres. At spawning time they gather in groups, usually of about 50 fish but sometimes 200. Males then darken to charcoal, with black bars and white spots. Adults eat small fish, crabs and other crustaceans, and molluscs.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Kelp_bass"
+  ],
+  "checked": "2026-11-14"
+ },
+ "california-sheephead": {
+  "lives": "Coastal waters of the eastern Pacific, especially kelp forests, from Monterey Bay in California south to the Gulf of California in Mexico.",
+  "fact": "Every California sheephead is born female. When she grows to about 45 centimetres, she changes into a male and gets a whole new look: a black head and tail, a reddish-orange middle, red eyes and a fleshy bump on the forehead. Sheephead can live for more than 50 years and grow 91 centimetres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/California_sheephead"
+  ],
+  "checked": "2026-11-14"
+ },
+ "chinook-salmon": {
+  "lives": "The North Pacific Ocean and the rivers that feed it, from California to Alaska and from northern Japan to the far east of Russia.",
+  "fact": "Some Chinook salmon swim more than 3,000 kilometres up the Yukon River from the Bering Sea to lay their eggs. Out in the ocean, older Chinook mostly eat other fish. The biggest one ever caught on a rod weighed 44 kilograms, in Alaska's Kenai River. Extra-large Chinook are given a special name: tyee.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Chinook_salmon"
+  ],
+  "checked": "2026-11-14"
+ },
+ "dungeness-crab": {
+  "lives": "Eelgrass beds and sandy bottoms of the Pacific coast, from Alaska's Aleutian Islands to Point Conception in California, some as deep as 800 metres.",
+  "fact": "A female Dungeness crab can carry up to 2 million eggs. In winter she buries herself in the sand and stays still to keep them safe. Dungeness crabs like eating clams, other crustaceans and small fish, using their claws to tear food apart. Most grow 15 to 18 centimetres across the shell.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Dungeness_crab"
+  ],
+  "checked": "2026-11-14"
+ },
+ "common-dab": {
+  "lives": "Sandy seabeds of the north-east Atlantic from the Bay of Biscay to Iceland and the White Sea, including the North Sea, down to about 100 metres.",
+  "fact": "The easiest way to identify a dab is its lateral line, the sensing line along its body, which bends in a big arch over the side fin. Its upper skin feels rough, while a plaice feels smooth. Dabs eat worms, shellfish, sand eels and small crustaceans. Most stay under 20 centimetres, though some reach 40.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Common_dab",
+   "https://www.marlin.ac.uk/species/detail/2174"
+  ],
+  "checked": "2026-11-14"
+ },
+ "starry-flounder": {
+  "lives": "Shallow coasts and estuaries around the North Pacific down to southern California, sometimes swimming far up rivers into fresh water.",
+  "fact": "A starry flounder is easy to recognise by the black bars and white-to-orange stripes on its top and bottom fins. Although it is a sea fish, it often travels up estuaries well into fresh water. Grown-ups mostly eat clams, and the biggest reach about 91 centimetres. At sea some have been found 375 metres deep.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Starry_flounder"
+  ],
+  "checked": "2026-11-14"
+ },
+ "leopard-shark": {
+  "lives": "Shallow muddy and sandy bays and estuaries of the Pacific coast, from Oregon down to Mexico, mostly less than 4 metres deep.",
+  "fact": "Leopard sharks often ride the rising tide onto mudflats to look for food, then leave before the water drains away. They nibble the siphons of buried clams and can suck worms right out of their burrows. In summer, groups of mother sharks gather in the warmest shallow water, which may help their babies grow.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Leopard_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "atlantic-halibut": {
+  "lives": "The seabed of the North Atlantic on both the European and American sides, usually 50 to 2,000 metres deep in cold water.",
+  "fact": "A baby halibut swims upright like most fish, with one eye on each side of its head. As it grows, its left eye slowly travels over its snout to the right side, and then it lives lying flat. Females can weigh up to 250 kilograms, far more than males, which average about 10 to 15.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Atlantic_halibut"
+  ],
+  "checked": "2026-11-14"
+ }
+}
