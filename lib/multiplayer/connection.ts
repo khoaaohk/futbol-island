@@ -182,7 +182,11 @@ export type ConnectionDeps = {
   lobbyUrl?: (inShard: number | null) => string | null;
   worldUrl?: (shard: number) => string | null;
   tabStorage?: StorageLike | null;
+  /** Public island: fires once when this page really goes away (tab closed, another site; not a room page, a reload or the
+   *  back-forward cache). defaultPageExit() by default; null = never (tests, old behaviour). */
+  pageExit?: PageExitLike | null;
 };
+export type PageExitLike = { on(fn: () => void): () => void };
 export const RTT_SAMPLES = 15;
 export const RTT_PROBE_MS = 30000;
 
@@ -577,6 +581,11 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
     }, Math.max(50, Math.min(BEAT_MS, BEAT_MS - (now() - lastSendAt)))); // due 5 s after the LAST frame sent (never a ~10 s gap)
   }
 
+  // QA Nov 14 2026 (round 4): a CLOSED tab kept its world slot for the relay's 2 min away grace: a zzz statue at the spawn and one
+  // more in "N on now". The world slot lives per tab (sessionStorage), so a closed tab can never resume it: say Leave on the way out
+  // (best effort, like sendBeacon: one small frame on the open socket) so the others fade me out at once. Never for a code party
+  // (its session is kept on the device to rejoin) and never on a same-site page change (a room page or a reload resumes the slot).
+  const offExit = (deps.pageExit === undefined ? defaultPageExit() : deps.pageExit)?.on(() => { if (!disposed && worldOn && open()) leaveWorld(); }) ?? (() => {});
   const offVis = vis.on(() => {
     if (disposed || !hasTarget()) return;
     if (vis.hidden()) {
@@ -837,12 +846,41 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       clearTimers();
       dropSocket();
       releaseLock(); // the stored session stays (the next page resumes it)
-      offVis();
+      offVis(); offExit();
       msgSubs.clear(); statusSubs.clear(); localSubs.clear(); worldSubs.clear();
       disposed = true;
     },
   };
   return self;
+}
+
+/** How long after a same-site `navigate` event an unload still counts as that page change (slow networks included). */
+export const SITE_NAV_MS = 60_000;
+type NavWindow = { addEventListener(t: string, f: (e: any) => void): void; removeEventListener(t: string, f: (e: any) => void): void;
+  location: { origin: string }; navigation?: { addEventListener(t: string, f: (e: any) => void): void; removeEventListener(t: string, f: (e: any) => void): void } };
+/** A real page exit: `pagehide` that is not for the back-forward cache (persisted) and not right after a same-site navigation. Uses
+ *  the Navigation API's `navigate` event (Chromium, Safari 26+): every room door, room exit, link and reload goes through it, with
+ *  its destination. Without the API a same-site page change cannot be told from a close, so nothing is sent (the relay's grace, as
+ *  before). Pure over `w` and `clock` (tests pass fakes). */
+export function defaultPageExit(w: NavWindow | undefined = typeof window === 'undefined' ? undefined : (window as unknown as NavWindow),
+  clock: () => number = () => Date.now()): PageExitLike {
+  return {
+    on(fn) {
+      const nav = w?.navigation;
+      if (!w || !nav) return () => {};
+      let siteNavAt = -Infinity;
+      const onNav = (e: any) => {
+        if (e?.destination?.sameDocument) return; // a client-side route / hash change: the page stays
+        let same = true;
+        try { same = new URL(String(e?.destination?.url), w.location.origin).origin === w.location.origin; } catch { /* unknown: stay safe */ }
+        siteNavAt = same ? clock() : -Infinity;
+      };
+      const onErr = () => { siteNavAt = -Infinity; }; // that page change failed: still here
+      const onHide = (e: any) => { if (e?.persisted || clock() - siteNavAt <= SITE_NAV_MS) return; fn(); };
+      nav.addEventListener('navigate', onNav); nav.addEventListener('navigateerror', onErr); w.addEventListener('pagehide', onHide);
+      return () => { nav.removeEventListener('navigate', onNav); nav.removeEventListener('navigateerror', onErr); w.removeEventListener('pagehide', onHide); };
+    },
+  };
 }
 
 function defaultVisibility() {

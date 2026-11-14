@@ -34,7 +34,7 @@ function page(W,opts={}){
   let hidden=false;const vsubs=[];
   const fetch=url=>{calls.push(url);const r=lobby(url);if(r==='neterr')return Promise.reject(new Error('offline'));return Promise.resolve({ok:r.status===200,status:r.status,json:()=>Promise.resolve(r.body)});};
   const c=W.conn.createPartyConnection({WebSocketImpl:WS,now:clock.now,random:()=>0.5,setTimeout:clock.setTimeout,clearTimeout:clock.clearTimeout,
-    visibility:{hidden:()=>hidden,on:fn=>{vsubs.push(fn);return()=>{};}},storage:opts.storage||memStore(),tabStorage:opts.tab||W.session,locks:null,fetch,online:()=>true});
+    visibility:{hidden:()=>hidden,on:fn=>{vsubs.push(fn);return()=>{};}},storage:opts.storage||memStore(),tabStorage:opts.tab||W.session,locks:null,fetch,online:()=>true,pageExit:opts.pageExit});
   W.idx.bindConnection(c,clock.now);W.pw.attachWorldConnection(c);
   return{c,clock,sockets,calls,last:()=>sockets[sockets.length-1],setLobby(f){lobby=f;},setHidden(h){hidden=h;vsubs.forEach(f=>f());},
     msgs:s=>s.sent.map(x=>JSON.parse(x)),all(){return sockets.flatMap(s=>s.sent.map(x=>JSON.parse(x)));}};}
@@ -289,6 +289,36 @@ t('heat: the driver adds one one-shot timer (the 3 s gate), the world socket onl
   const W=world();onSeed(W);const p=page(W);const {d}=driver(W,p);d.islandReady(true);d.tutorialDone(true);d.noteInput();p.clock.advance(3000);await flush();
   const ws=p.last();ws.open();ws.recv(wWelcome());ws.recv([32,1995]);assert.equal(p.clock.pending(),1,'only the 5 s beat');
   d.dispose();assert.equal(ws.readyState,1,'a page change keeps the socket');
+});
+
+// ---- QA Nov 14 2026 round 4: a closed tab says Leave (no 2 min zzz statue, no ghost in "N on now"); room pages / reloads / parties keep the slot ----
+t('closed tab: the world socket sends Leave and forgets the tab slot; a code party never does',async()=>{
+  const exits=[];const pageExit={on:fn=>{exits.push(fn);return()=>{};}};
+  const W=world(),p=page(W,{pageExit});const ws=await live(p,W);assert.equal(exits.length,1);
+  p.setHidden(true);// a closing tab hides first (Away pose + the tab slot written)
+  const before=p.msgs(ws).length;exits[0]();
+  assert.deepEqual(p.msgs(ws).slice(before),[[8]],'one Leave frame, nothing else');assert.equal(ws.readyState,3,'socket closed');
+  assert.equal(p.c.hasWorldSession(),false,'the tab slot is forgotten');assert.equal(p.clock.pending(),0,'no reconnect / beat timers');
+  exits[0]();assert.equal(p.msgs(ws).length,before+1,'a second exit is a no-op');
+  const W2=world(),ex2=[],q=page(W2,{pageExit:{on:fn=>{ex2.push(fn);return()=>{};}}});
+  q.c.join('K7MQ4R',{look:LOOK,nick:'Emma'});const pw=q.last();pw.open();pw.recv([20,1,1,'ptok-abcdefghij0123',0,0,0,[[1,[2,0],LOOK,1,null,'Emma']]]);
+  const n0=q.msgs(pw).length;ex2[0]();assert.equal(q.msgs(pw).length,n0,'a party keeps its slot (its session rejoins from the device)');assert.equal(pw.readyState,1);
+});
+t('defaultPageExit: only a real close / another site; never a room page, a reload, a client route or the bfcache; nothing without the Navigation API',()=>{
+  const W=world();let now=0;
+  const mk=(withNav=true)=>{const w=new EventTarget();w.location={origin:'http://localhost:8997'};if(withNav)w.navigation=new EventTarget();let hits=0;
+    const off=W.conn.defaultPageExit(w,()=>now).on(()=>hits++);
+    const ev=(target,type,props)=>{const e=new Event(type);Object.assign(e,props);target.dispatchEvent(e);};
+    return{nav:(url,sameDocument=false)=>ev(w.navigation,'navigate',{destination:{url,sameDocument}}),err:()=>ev(w.navigation,'navigateerror',{}),hide:(persisted=false)=>ev(w,'pagehide',{persisted}),hits:()=>hits,off};};
+  let a=mk();a.hide();assert.equal(a.hits(),1,'tab closed: no navigate event before pagehide');
+  a=mk();a.hide(true);assert.equal(a.hits(),0,'back-forward cache: the page may come back');
+  for(const url of ['http://localhost:8997/konbini?door=2','/arcade','http://localhost:8997/play?reload']){a=mk();a.nav(url);a.hide();assert.equal(a.hits(),0,`same site ${url}: the next page resumes`);}
+  a=mk();a.nav('https://example.com/');a.hide();assert.equal(a.hits(),1,'another site: leave');
+  a=mk();a.nav('http://localhost:8997/play#map',true);a.hide();assert.equal(a.hits(),1,'a client route / hash change earlier does not count');
+  a=mk();a.nav('/museum');a.err();a.hide();assert.equal(a.hits(),1,'a failed page change: still here, a later close leaves');
+  a=mk();now=0;a.nav('/shop');now=W.conn.SITE_NAV_MS+1;a.hide();assert.equal(a.hits(),1,'a stale page change (download link, cancelled) does not hold');now=0;
+  a=mk();a.off();a.hide();assert.equal(a.hits(),0,'disposed');
+  a=mk(false);a.hide();assert.equal(a.hits(),0,'no Navigation API: cannot tell a room page from a close, so the relay grace decides (as before)');
 });
 
 (async()=>{for(const [name,fn] of T){try{await fn();n++;}catch(e){console.error('FAIL',name);throw e;}}console.log(`mp-presence: ${n} checks passed`);})().catch(e=>{console.error(e);process.exit(1);});
