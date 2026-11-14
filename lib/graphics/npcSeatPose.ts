@@ -7,7 +7,7 @@
 // geometry below (world.ts benchParts, eastPierWorld bench), not hand-tuned: the bean's lowest shell point rests on the seat top,
 // its back sits a hair in front of the backrest face, the thighs lie along the board and end beyond the front edge, the lower
 // legs hang over it and the hands rest on the thighs. tests/seat-fit.cjs checks every build and scale against the bench boxes.
-import {createTrickPose,type TrickPose} from './trickPose';
+import {copyTrickPose,createTrickPose,type TrickPose} from './trickPose';
 import {createTrickCtx,stancePose} from './freestyleTricks';
 import {BEAN_SHAPES,type BeanShape} from './beanSkin';
 import {beanSurface} from './beanGearFit';
@@ -58,14 +58,17 @@ function restHand(o:TrickPose,side:-1|1,z:number,y:number,arm:{sx:number;sz:numb
   if(d<best){best=d;arm.sx=sx;arm.sz=sz;arm.el=el;}}
  arm.w=1;
 }
-export function npcSeatPose(kind:NpcPoseKind,scale=1,shape?:BeanShape):TrickPose{
+/** The sunbather on a lounger (Nov 13 2026, owner: "lying on bare sand looks dead"; lib/town/beachLoungers.ts): reclined on the
+ *  backrest, on the back, legs out along the pad, hands behind the head, chin a little down toward the sea. `top` is the pad's
+ *  height (the root stands on the sand under it). Rig-root metres before `scale`. */
+export const LOUNGE={pitch:-1.0,lift:.19,ankle:.07,legZ:.84,headPitch:.32,arm:{sx:-2.8,sz:.22,el:-1.6}} as const;
+export function npcSeatPose(kind:NpcPoseKind,scale=1,shape?:BeanShape,top=.21):TrickPose{
  const o=createTrickPose(),ctx=createTrickCtx();
  if(kind==='lie'){
   stancePose('lie',ctx,o);
-  // Flat on the back: legs out along the towel instead of raised for a juggle, arms resting by the sides, head on the ground.
-  o.headPitch=.25;o.torsoPitch=-.12;
-  o.legs[0].x=-.13;o.legs[0].y=.1;o.legs[0].z=.86;o.legs[0].toe=.6;o.legs[1].x=.13;o.legs[1].y=.1;o.legs[1].z=.86;o.legs[1].toe=.6;
-  for(const a of o.arms){a.sx=-.1;a.sz=.32;a.el=-.15;a.w=1;}
+  o.pelvisY=(top+LOUNGE.lift)/scale;o.pelvisZ=0;o.pelvisPitch=LOUNGE.pitch;o.torsoPitch=.06;o.headPitch=LOUNGE.headPitch;
+  for(const [i,l] of o.legs.entries()){l.x=i?.12:-.12;l.y=(top+LOUNGE.ankle)/scale;l.z=LOUNGE.legZ;l.toe=.5;l.w=1;}
+  for(const a of o.arms){a.sx=LOUNGE.arm.sx;a.sz=LOUNGE.arm.sz;a.el=LOUNGE.arm.el;a.w=1;}
   return o;
  }
  stancePose('sit',ctx,o);
@@ -82,4 +85,23 @@ export function npcSeatPose(kind:NpcPoseKind,scale=1,shape?:BeanShape):TrickPose
   for(const l of o.legs){l.z=.62;l.y=.09;}
  }
  return o;
+}
+
+/** The sunbather's idles (Nov 13 2026): every LOUNGE_IDLE.every s (offset per islander) one of: a wave (right hand up and
+ *  swinging), sitting up for a look round, or a stretch of the arms; and a wave hello for the first seconds someone is close
+ *  (`greet` = seconds since they came near, < 0 = nobody). Writes `base` + the idle into `out`; returns false when nothing is on
+ *  (out = base). No allocation. */
+export const LOUNGE_IDLE={every:13,wave:2.4,sit:3.2,stretch:2} as const;
+export function loungeIdle(base:TrickPose,out:TrickPose,t:number,seed:number,greet:number,reduced:boolean):boolean{
+ copyTrickPose(out,base);if(reduced)return false;
+ const hello=greet>=0&&greet<LOUNGE_IDLE.wave,k=Math.floor((t+seed)/LOUNGE_IDLE.every),age=(t+seed)%LOUNGE_IDLE.every;
+ const pick=hello?0:(k*7+Math.floor(seed))%3,len=hello?LOUNGE_IDLE.wave:[LOUNGE_IDLE.wave,LOUNGE_IDLE.sit,LOUNGE_IDLE.stretch][pick],at=hello?greet:age;
+ if(!hello&&(greet>=0||age>len))return false;// while someone stays close (after the hello) they lie still and listen
+ const w=Math.max(0,Math.min(1,at/.35,(len-at)/.35));
+ const R=out.arms[1];
+ if(pick===0){/* toward the sky (the reclined chest's front), the hand swinging */R.sx+=(-2-R.sx)*w;R.sz+=(.45+.22*Math.sin(t*9)-R.sz)*w;R.el+=(-.45-R.el)*w;}
+ else if(pick===1){out.pelvisPitch=base.pelvisPitch+(-.3-base.pelvisPitch)*w;out.headPitch=base.headPitch*(1-w)+.05*w;out.headYaw=.5*Math.sin(at*1.6)*w;
+  for(const a of out.arms){a.sx+=(-.5-a.sx)*w;a.sz+=(.3-a.sz)*w;a.el+=(-.5-a.el)*w;}}
+ else for(const a of out.arms){a.sx+=(-3.05-a.sx)*w;a.sz+=(.15-a.sz)*w;a.el+=(-.1-a.el)*w;}
+ return true;
 }

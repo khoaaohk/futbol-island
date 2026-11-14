@@ -192,7 +192,7 @@ const CAST:Record<string,Record<string,NpcThoughts>>={
    ['Shoulder, ball, shoulder, ball.','Can we play after the bakery?','My coach says I am a good scanner.','I will be a great passer one day.']),
   'folk-losa':t(['I have watched island football for decades.','Every match has a little story.','Sit, have a pastry, watch the game.','In my day, we played barefoot!','Talofa! Lovely to see you.','Young players today are so skilful.'],
    ['Ah, the smell of fresh bread.','That pass reminded me of my brother.','Watching the sea, thinking football.','Another lovely afternoon.']),
-  'folk-tavita':t(['Rest days are serious business.','Bodies get stronger while they rest.','Today: a light walk, no kicking.','Defenders need fresh legs.','Rest is part of training.','Tomorrow I train. Today I relax.'],
+  'folk-tavita':t(['Rest days are serious business.','Bodies get stronger while they rest.','Today: a lazy float, no kicking.','Defenders need fresh legs.','Rest is part of training.','Tomorrow I train. Today I relax.'],
    ['Mmm, nap time.','Resting like a pro.','Next week: a big defending drill.','Feet up, eyes closed.']),
   'folk-ximena':t(['I learned on the sand at Copacabana.','Wherever there is sand, I will play.','Sand makes your touch softer.','Barefoot football feels so free.','Beach games are full of tricks.','Volley it! The sand loves volleys.'],
    ['Toes in the sand, ball on my knee.','Bicycle kick practice later.','The sand remembers my footprints.','Beach football forever.']),

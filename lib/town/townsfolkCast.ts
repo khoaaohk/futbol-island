@@ -3,6 +3,8 @@ import type {NpcLookOverride} from './beanLooks';
 import type {PlayerProfile} from '../graphics/player';
 import type {NpcPoseKind} from '../graphics/npcSeatPose';
 export type {NpcPoseKind} from '../graphics/npcSeatPose';
+import {SUNBATHERS} from './beachLoungers';
+import {NPC_SWIMMERS,type NpcSwim} from './npcSwim';
 /**
  * Townsfolk cast (Oct 12 2026, user-approved: "add about 60 townsfolk … what will they talk about? we need this to be more
  * diverse, but revolve around futbol still", then "mix up the current npcs with the stores too so it's more spread out").
@@ -35,18 +37,18 @@ export const AGE_PROFILES:Record<Exclude<NpcAge,'adult'>,PlayerProfile>={
 export const townsfolkCastEnabled=()=>typeof window==='undefined'||!/[?&]npcmore=0(&|$)/.test(window.location.search);
 
 type Who={ch:'female'|'male';skin:number;clothing:'classic'|'coast'|'sunset';age:NpcAge;body?:'balanced'|'strong'|'slim';look?:NpcLookOverride};
-type How={pose?:NpcPoseKind;yaw?:number;travel?:'run'};
+type How={pose?:NpcPoseKind;yaw?:number;travel?:'run';/** a lounger's pad top (pose 'lie') */lounger?:number;swim?:NpcSwim};
 type Talk=[question:string,answer:string,followQuestion:string,followAnswer:string];
 const face=(skin:number)=>skin<=2?'light' as const:skin<=4?'warm' as const:'deep' as const;
 function folk(area:TownArea,id:string,name:string,role:string,pursuit:string,x:number,z:number,who:Who,how:How,persona:string,greeting:string,lines:string[],talk:Talk):NpcDefinition{
  return {id:`folk-${id}`,name,role,pursuit,x,z,area,character:who.ch,face:face(who.skin),clothing:who.clothing,body:who.body??'balanced',age:who.age,
-  look:{skin:who.skin,...who.look},pose:how.pose,workYaw:how.yaw,travel:how.travel,persona,greeting,lines,
+  look:{skin:who.skin,...who.look},pose:how.pose,workYaw:how.yaw,lounger:how.lounger,swim:how.swim,travel:how.travel,persona,greeting,lines,
   topics:[{id:'chat',question:talk[0],answer:talk[1],followUp:{question:talk[2],answer:talk[3]}}]};
 }
 const GREY='#c9c6c0',WHITE='#ece9e2',SILVER='#a9a7a3';
 // North Beach towels (lib/town/shoreline.ts NORTH_BEACH_UMBRELLAS, world.ts): each towel sits at umbrella + (3, 1), turned 0.15·i.
 const towel=(i:number,[x,z]:[number,number])=>({x:x+3,z:z+1,yaw:.15*i});
-const T1=towel(1,[-15,-224]),T2=towel(2,[22,-229]),T3=towel(3,[62,-229]),T4=towel(4,[105,-227]);
+const T2=towel(2,[22,-229]),T4=towel(4,[105,-227]);// towels 1 and 3: Aroha and Fatou moved onto the loungers (beachLoungers.ts)
 
 export const TOWNSFOLK_CAST:NpcDefinition[]=[
  // ------------------------------------------------------------------ Island Square and the shop streets (15)
@@ -172,7 +174,7 @@ export const TOWNSFOLK_CAST:NpcDefinition[]=[
    'Do I need expensive boots?','No. Boots that fit well and suit the surface are what matter. Skill comes from practice, not from price.']),
 
  // ------------------------------------------------------------------ The beaches (15): North Beach 6, south beach and café terraces 5, Palm Coast beach 4
- folk('beach','aroha','Aroha','Football Ferns fan','SUNBATHING ON NORTH BEACH',T1.x,T1.z,{ch:'female',skin:4,clothing:'sunset',age:'adult',look:{hair:'long'}},{pose:'lie',yaw:T1.yaw},
+ folk('beach','aroha','Aroha','Football Ferns fan','SUNBATHING ON NORTH BEACH',SUNBATHERS.aroha.x,SUNBATHERS.aroha.z,{ch:'female',skin:4,clothing:'sunset',age:'adult',look:{hair:'long'}},{pose:'lie',yaw:SUNBATHERS.aroha.yaw,lounger:SUNBATHERS.aroha.top},
   'A New Zealander who cheers for the Football Ferns and never forgets her sun cream.',
   'In 2023, New Zealand and Australia hosted the Women’s World Cup together, and Spain won it.',
   ['New Zealand’s women’s team is called the Football Ferns. Their first World Cup win came at home in 2023, against Norway.',
@@ -188,7 +190,7 @@ export const TOWNSFOLK_CAST:NpcDefinition[]=[
    'The museum has a sculpture for the laced leather ball and one for the 1970 ball. Both are worth a visit.'],
   ['Why are footballs made of panels?','Panels turn flat material into a round ball. The 1970 ball used 12 pentagons and 20 hexagons, and that pattern is still how people draw a football.',
    'Are balls still made like that?','Many modern balls have fewer panels, glued or heat-bonded instead of stitched, so they stay round and take in less water.']),
- folk('beach','fatou','Fatou','Blind football guide','RESTING IN THE SUN',T3.x,T3.z,{ch:'female',skin:7,clothing:'sunset',age:'adult',body:'strong',look:{hair:'puffs'}},{pose:'lie',yaw:T3.yaw},
+ folk('beach','fatou','Fatou','Blind football guide','RESTING IN THE SUN',SUNBATHERS.fatou.x,SUNBATHERS.fatou.z,{ch:'female',skin:7,clothing:'sunset',age:'adult',body:'strong',look:{hair:'puffs'}},{pose:'lie',yaw:SUNBATHERS.fatou.yaw,lounger:SUNBATHERS.fatou.top},
   'A guide in blind football who stands behind the goal and calls directions to her attackers.',
   'I’m a guide in blind football. I stand behind the goal and call out directions to our attackers.',
   ['In blind football the ball has a rattle inside, so players can hear where it is.',
@@ -253,7 +255,7 @@ export const TOWNSFOLK_CAST:NpcDefinition[]=[
   ['How do you lose well?','Feel sad for a moment: that’s normal. Then shake hands, thank the referee and choose one thing to practise. Every great player has lost many times.',
    'And how do you win well?','Celebrate with your team, then shake hands with the other team too. Never tease them: next week it might be you.']),
  // Tavita lies on the sand (Oct 22 2026 path audit: at (-32, 123) he lay 9 m out at sea, past the Palm Coast shoreline).
- folk('beach','tavita','Tavita','Teen on a rest day','RESTING ON PALM COAST BEACH',-31,111.5,{ch:'male',skin:6,clothing:'sunset',age:'teen',body:'strong',look:{hair:'curls'}},{pose:'lie',yaw:Math.PI/2},
+ folk('beach','tavita','Tavita','Teen on a rest day','FLOATING OFF PALM COAST BEACH',NPC_SWIMMERS.tavita.x,NPC_SWIMMERS.tavita.z,{ch:'male',skin:6,clothing:'sunset',age:'teen',body:'strong',look:{hair:'curls'}},{swim:NPC_SWIMMERS.tavita.swim},
   'A sixteen-year-old defender who takes his rest days as seriously as his training.',
   'Rest day! Muscles get stronger while you rest, not only while you train.',
   ['Teenagers need about 8 to 10 hours of sleep a night. I aim for nine.',
@@ -277,7 +279,7 @@ export const TOWNSFOLK_CAST:NpcDefinition[]=[
    'Running on sand takes more effort than running on grass. Great training, tired legs!'],
   ['How far do footballers run in a match?','Professional outfield players often cover around 10 kilometres in 90 minutes, with lots of short sprints. Young players run less and play shorter games.',
    'How do I get fitter for football?','Play lots of small games! They mix sprints, turns and rests just like a real match, and they’re more fun than running laps.']),
- folk('beach','kiri','Kiri','Marta’s biggest fan','SITTING ON THE SAND',-10,120,{ch:'female',skin:4,clothing:'sunset',age:'kid',look:{hair:'puffs'}},{pose:'sit',yaw:0},
+ folk('beach','kiri','Kiri','Marta’s biggest fan','SWIMMING OFF PALM COAST BEACH',NPC_SWIMMERS.kiri.x,NPC_SWIMMERS.kiri.z,{ch:'female',skin:4,clothing:'sunset',age:'kid',look:{hair:'puffs'}},{swim:NPC_SWIMMERS.kiri.swim},
   'An eight-year-old who has read everything she can find about Marta.',
   'Marta from Brazil has scored 17 goals at Women’s World Cups. That’s the record!',
   ['Marta was named FIFA World Player of the Year six times.',
@@ -285,7 +287,7 @@ export const TOWNSFOLK_CAST:NpcDefinition[]=[
    'I practise tiny touches, like Marta does when she dribbles.'],
   ['Who is your favourite player?','Marta, from Brazil. She played in six Women’s World Cups and scored in five of them. She shows that skill and hard work can take you a long way.',
    'What can I copy from her?','Watch her close dribbling: lots of tiny touches, with her head up to spot space. Practise tiny touches slowly first, then faster.']),
- folk('beach','tama','Tama','Powerchair football coach','SUNBATHING ON PALM COAST BEACH',10,118,{ch:'male',skin:5,clothing:'coast',age:'adult',body:'strong',look:{hair:'bun'}},{pose:'lie',yaw:Math.PI/2},
+ folk('beach','tama','Tama','Powerchair football coach','SUNBATHING ON PALM COAST BEACH',SUNBATHERS.tama.x,SUNBATHERS.tama.z,{ch:'male',skin:5,clothing:'coast',age:'adult',body:'strong',look:{hair:'bun'}},{pose:'lie',yaw:SUNBATHERS.tama.yaw,lounger:SUNBATHERS.tama.top},
   'A coach of a powerchair football team who says there is a version of football for every body.',
   'I coach a powerchair football team. Players drive powered wheelchairs and hit the ball with a guard on the front.',
   ['Powerchair football is four against four, played indoors on a court about the size of a basketball court.',
@@ -393,7 +395,7 @@ export const TOWNSFOLK_CAST:NpcDefinition[]=[
    'Good football is like a good garden: patient care, every day.'],
   ['Why was the 2002 World Cup special?','It was the first World Cup held in Asia, and the first shared by two countries: South Korea and Japan. Brazil won it.',
    'What happens to stadiums after a World Cup?','Good planners make sure they’re used afterwards, by local clubs, schools and events. A stadium should help its town for years.']),
- folk('cay','luana','Luana','Beach soccer player between games','RESTING BETWEEN MATCHES',600,-225,{ch:'female',skin:5,clothing:'sunset',age:'teen',body:'slim',look:{hair:'puffs'}},{pose:'lie',yaw:0},
+ folk('cay','luana','Luana','Beach soccer player between games','RESTING BETWEEN MATCHES',SUNBATHERS.luana.x,SUNBATHERS.luana.z,{ch:'female',skin:5,clothing:'sunset',age:'teen',body:'slim',look:{hair:'puffs'}},{pose:'lie',yaw:SUNBATHERS.luana.yaw,lounger:SUNBATHERS.luana.top},
   'A teenage beach soccer player resting in the sun between tournament games.',
   'Resting between beach soccer matches. Three periods of 12 minutes is hard work on sand!',
   ['Shade, sun cream and water. Then back to the court.',

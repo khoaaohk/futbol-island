@@ -15,7 +15,10 @@ import {DEFAULT_CUSTOMIZATION} from '../town/customization';
 import {npcDress} from '../town/beanLooks';
 import {NPC_DIALOGUES,type NpcDefinition} from '../town/npcDialogues';
 import {pickTagFocus} from './npcTagFocus';
-import {npcSeatPose} from './npcSeatPose';
+import {npcSeatPose,loungeIdle} from './npcSeatPose';
+import {copyTrickPose,createTrickPose} from './trickPose';
+import type {SwimRigPose} from './swimPose';
+import {createNpcSwim,stepNpcSwim,NPC_SWIM_ROOT_Y,type NpcSwimState} from '../town/npcSwim';
 import {beanShapeOf} from './beanGearFit';
 import {AGE_PROFILES} from '../town/townsfolkCast';
 import {applyHighFive} from './highFivePose';
@@ -67,6 +70,8 @@ function npcEmoteMotion(fx:{kind:number;age:number;v:number},reduced:boolean):{c
  const b=emoteBody(fx.kind,fx.age,emoteSeconds(fx.kind));
  return b.jump?{jump:b.jump}:{called:b.called};
 }
+/** A swimmer's rig pose from its loop state (npcSwim.ts); a wave hello while someone is close. No allocation. */
+function npcSwimPose(p:SwimRigPose,s:NpcSwimState,hello:boolean){p.kind=s.kind;p.phase=s.phase;p.effort=s.effort;p.wave=hello?1:s.wave;p.bob=s.bob;return p;}
 export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:BallReactions){
  const root=new T.Group();root.name='island-townsfolk';scene.add(root);
  const textures:T.Texture[]=[],materials:T.Material[]=[],geometriesOwned:T.BufferGeometry[]=[];
@@ -76,7 +81,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   // DRIP FC Stadium walkers (lib/town/stadiumNpcs.ts): authored waypoints on the paving, height from the ground; no snap, no jitter loop.
   const stadiumRoute=STADIUM_NPC_ROUTES[definition.id];
   let x=authoredRoute?.[0].x??stadiumRoute?.[0].x??definition.x,z=authoredRoute?.[0].z??stadiumRoute?.[0].z??definition.z;
-  search:for(let radius=stadiumRoute?13:0;radius<=12&&!authoredRoute&&!definition.pose;radius+=1){for(let angle=0;angle<16;angle++){const px=definition.x+Math.cos(angle*Math.PI/8)*radius,pz=definition.z+Math.sin(angle*Math.PI/8)*radius;if(placement.isWalkable(px,pz)){x=px;z=pz;break search;}}}
+  search:for(let radius=stadiumRoute?13:0;radius<=12&&!authoredRoute&&!definition.pose&&!definition.swim;radius+=1){for(let angle=0;angle<16;angle++){const px=definition.x+Math.cos(angle*Math.PI/8)*radius,pz=definition.z+Math.sin(angle*Math.PI/8)*radius;if(placement.isWalkable(px,pz)){x=px;z=pz;break search;}}}
   if(definition.floor){x=definition.x;z=definition.z;} // a boat deck (Oct 15 2026): keep the exact spot, never snap ashore
   const rig=createPlayer(`town-npc-${definition.id}`,'home');rig.setAppearance({...DEFAULT_CUSTOMIZATION,character:definition.character,face:definition.face,clothing:definition.clothing,body:definition.body??'balanced'});const dress=npcDress(definition);rig.setBeanLook(dress.look,dress.outfit);releaseHiddenClassic(rig.root);root.add(rig.root);
   if(definition.age&&definition.age!=='adult')rig.setProfile(AGE_PROFILES[definition.age]); // townsfolk cast: children, teens and grandparents (townsfolkCast.ts)
@@ -86,17 +91,19 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(definition.name,256,66);ctx.fillStyle='#e6cb8b';ctx.font='700 29px sans-serif';ctx.fillText('LET’S TALK',256,115);
   const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;textures.push(texture);const material=new T.SpriteMaterial({map:texture,depthTest:true,depthWrite:false});materials.push(material);
   const label=new T.Sprite(material);label.visible=false;label.position.y=2.5;label.scale.set(3.5/rig.profileScale,1.094/rig.profileScale,1);label.updateMatrix();label.matrixAutoUpdate=false;label.userData.npcId=definition.id;rig.root.add(label);
-  const position={x,y:authoredRoute?.[0].y??definition.floor?.()??placement.heightAt(x,z),z};rig.update(x,z,0,0,true);rig.root.position.y=position.y;
+  const position={x,y:authoredRoute?.[0].y??definition.floor?.()??(definition.swim?NPC_SWIM_ROOT_Y:placement.heightAt(x,z)),z};rig.update(x,z,0,0,true);rig.root.position.y=position.y;
   const freestyle=definition.freestyle===undefined?null:createCourtFreestyle(rig,definition.freestyle,definition.id);
   const activity=definition.activity?createNpcActivity(definition.activity,rig):null;
   if(freestyle)freestyle.ball.userData.npcId=definition.id;
   activity?.root.traverse(object=>{object.userData.npcId=definition.id;});
   const ride=definition.travel&&definition.travel!=='run'?createNpcRide(definition.travel,definition.id):null;if(ride)root.add(ride.root);
-  const seat=definition.pose?npcSeatPose(definition.pose,rig.profileScale,beanShapeOf(rig.root)):undefined;
-  const routine=createNpcRoutine(index,Boolean(activity||freestyle||seat),position);if(seat)routine.socialCooldown=Infinity;if(definition.travel){routine.speed=definition.travel==='run'?2.8:definition.travel==='skateboard'?3.8:4.5;routine.restDuration=.6;routine.socialCooldown=Infinity;}
+  const seat=definition.pose?npcSeatPose(definition.pose,rig.profileScale,beanShapeOf(rig.root),definition.lounger):undefined;
+  // Swimmers (lib/town/npcSwim.ts): their own loop in the sea, the player's swim poses; never a wander route or a chat walk.
+  const swim=definition.swim?createNpcSwim(x,z,definition.swim,index*2.399):null;
+  const routine=createNpcRoutine(index,Boolean(activity||freestyle||seat||swim),position);if(seat||swim)routine.socialCooldown=Infinity;if(definition.travel){routine.speed=definition.travel==='run'?2.8:definition.travel==='skateboard'?3.8:4.5;routine.restDuration=.6;routine.socialCooldown=Infinity;}
   if(freestyle)routine.socialCooldown=Infinity;
   if(definition.floor)routine.socialCooldown=Infinity; // a fixed spot (a deck, a stand, the stadium touchline): never walks off to chat
-  const route=[{...position}];if(!activity&&!freestyle&&!seat&&!definition.floor)for(let step=0;step<4;step++){const angle=index*.7+step*Math.PI/2,point={x:x+Math.sin(angle)*(definition.travel?6:2.5+index%3),z:z+Math.cos(angle)*(definition.travel?6:2.5+index%3),y:position.y};point.y=placement.heightAt(point.x,point.z);if(canTravel(position,point))route.push(point);}
+  const route=[{...position}];if(!activity&&!freestyle&&!seat&&!swim&&!definition.floor)for(let step=0;step<4;step++){const angle=index*.7+step*Math.PI/2,point={x:x+Math.sin(angle)*(definition.travel?6:2.5+index%3),z:z+Math.cos(angle)*(definition.travel?6:2.5+index%3),y:position.y};point.y=placement.heightAt(point.x,point.z);if(canTravel(position,point))route.push(point);}
   if(definition.travel){
    let best:{x:number;y:number;z:number}[]=[];let length=0;
    for(let direction=0;direction<8;direction++){const angle=direction*Math.PI/4;const ends=[-1,1].map(sign=>{let end={...position};for(let d=.5;d<=7;d+=.5){const next={x:x+Math.sin(angle)*d*sign,y:position.y,z:z+Math.cos(angle)*d*sign};if(!canTravel(position,next))break;end=next;}return end;});const span=Math.hypot(ends[0].x-ends[1].x,ends[0].z-ends[1].z);if(span>length){best=ends;length=span;}}
@@ -106,7 +113,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   if(authoredRoute){route.splice(0,route.length,...authoredRoute.map(p=>({...p})));routine.speed=.9;routine.socialCooldown=Infinity;
    if(definition.id==='cafe-oren'){routine.waypoint=authoredRoute.findIndex(p=>p.pause===7);Object.assign(position,route[routine.waypoint]);routine.target={...position};rig.root.position.set(position.x,position.y,position.z);}
   }
-  return {routeTravel:authoredRoute?(a:Position,b:Position)=>onCafeRoute(a,b,authoredRoute,routine.waypoint):undefined,id:definition.id,definition,rig,position,home:{x,z},label,activity,freestyle,ride,lastPosition:{x,z},workTime:index*1.7,worker:Boolean(activity||freestyle||seat),seat,seatHeld:0,route,routine,near:false,stunned:false,ix:null as {s:NpcScript;age:number}|null,ixOut:{slow:1,arm:-1,armW:0,spin:0,bow:0,nod:0,hop:0,lean:0,yaw:0} as NpcIx,mx:null as {a:MoveAnswer;age:number}|null,mxOut:{slow:1,arm:-1,armW:0,nod:0,look:0} as MoveAnswerOut,head:rig.root.getObjectByName('player-head')??null,baseSpeed:routine.speed,sm:seat&&!definition.floor&&(definition.pose==='bench'||definition.pose==='sit')?createSeatSM(x,z,definition.workYaw??0):null,seatTorso:seat?seat.torsoPitch:0,fx:{kind:-1,age:0,v:-1},fxDur:0,pass:null as ActorPose|null,passBall:{x:0,y:0,z:0},duetBall:null as null|{x:number;y:number;z:number},emoteStep:null as null|{x:number;y:number;z:number},labelStatus:'',labelCanvas:canvas,labelTexture:texture,rigElapsed:0,poseSlot:(index*.618034)%1/POSE_HZ,poseBucket:-1,distance:Infinity,leftShoulder:rig.root.getObjectByName('left-shoulder'),rightShoulder:rig.root.getObjectByName('right-shoulder'),rightElbow:rig.root.getObjectByName('right-elbow')};
+  return {routeTravel:authoredRoute?(a:Position,b:Position)=>onCafeRoute(a,b,authoredRoute,routine.waypoint):undefined,id:definition.id,definition,rig,position,home:{x,z},label,activity,freestyle,ride,lastPosition:{x,z},workTime:index*1.7,worker:Boolean(activity||freestyle||seat||swim),seat,seatHeld:0,swim,swimPose:(swim?{w:1,kind:'tread',phase:0,effort:0,fast:0,entry:'feet',shake:0,wave:0,bob:0}:null) as SwimRigPose|null,loungeBase:seat&&definition.pose==='lie'?copyTrickPose(createTrickPose(),seat):null,loungeOn:false,loungeSeed:index*3.7,route,routine,near:false,stunned:false,ix:null as {s:NpcScript;age:number}|null,ixOut:{slow:1,arm:-1,armW:0,spin:0,bow:0,nod:0,hop:0,lean:0,yaw:0} as NpcIx,mx:null as {a:MoveAnswer;age:number}|null,mxOut:{slow:1,arm:-1,armW:0,nod:0,look:0} as MoveAnswerOut,head:rig.root.getObjectByName('player-head')??null,baseSpeed:routine.speed,sm:seat&&!definition.floor&&(definition.pose==='bench'||definition.pose==='sit')?createSeatSM(x,z,definition.workYaw??0):null,seatTorso:seat?seat.torsoPitch:0,fx:{kind:-1,age:0,v:-1},fxDur:0,pass:null as ActorPose|null,passBall:{x:0,y:0,z:0},duetBall:null as null|{x:number;y:number;z:number},emoteStep:null as null|{x:number;y:number;z:number},labelStatus:'',labelCanvas:canvas,labelTexture:texture,rigElapsed:0,poseSlot:(index*.618034)%1/POSE_HZ,poseBucket:-1,distance:Infinity,leftShoulder:rig.root.getObjectByName('left-shoulder'),rightShoulder:rig.root.getObjectByName('right-shoulder'),rightElbow:rig.root.getObjectByName('right-elbow')};
  });
  const neighborhood:typeof entries=[],frozen=new Set<string>(),entryById=new Map(entries.map(entry=>[entry.id,entry]));
  // Freestyle pairs on the court (freestyleRoutine.ts): one shared timeline, so the ball they pass meets both. `freestyleClock` is
@@ -148,6 +155,8 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   for(const l of linesmen){const e=l.e;if(paused||e.near||e.stunned||isThinned(e)||e.distance>90)continue;const want=STADIUM_BALL.live?Math.min(l.t.max,Math.max(l.t.min,STADIUM_BALL.z)):l.mark,d=want-e.position.z,step=Math.min(Math.abs(d),(STADIUM_BALL.live?3.2:1.2)*Math.min(dt,.1));if(Math.abs(d)>.05)e.position.z+=Math.sign(d)*step;}
   stats.posed=stats.offscreenSkipped=0;for(const e of floored)e.position.y=e.definition.floor!();if(camera){camera.updateMatrixWorld();viewMatrix.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);viewFrustum.setFromProjectionMatrix(viewMatrix);}
   for(const entry of entries){entry.distance=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);entry.near=entry.distance<7||entry.fx.kind>=0;
+   if(entry.swim&&entry.distance<150){/* a swimmer's loop (npcSwim.ts): holds (treads water) while someone is close or it is stunned */const sw=stepNpcSwim(entry.swim,paused?0:dt,reduced,entry.near||entry.stunned);entry.position.x=entry.home.x=sw.x;entry.position.z=entry.home.z=sw.z;entry.position.y=NPC_SWIM_ROOT_Y;}
+   if(entry.loungeBase&&entry.seat&&entry.distance<70){/* a sunbather's idles (npcSeatPose.ts loungeIdle): wave, sit up, stretch */const on=loungeIdle(entry.loungeBase,entry.seat,time,entry.loungeSeed,entry.near?entry.routine.waveTime:-1,reduced);if(on||entry.loungeOn)entry.seatHeld=0;entry.loungeOn=on;}
    if(entry.ix){/* a skater / scooter / juggler answers (lib/town/npcEmoteSets.ts): it keeps its route, only its speed dips and then returns */entry.ix.age+=paused?0:dt;if(entry.ix.age>=entry.ix.s.seconds){entry.ix=null;entry.routine.speed=entry.baseSpeed;entry.rig.root.rotation.x=0;}else{npcIxAt(entry.ix.s,entry.ix.age,entry.ixOut);entry.routine.speed=entry.baseSpeed*entry.ixOut.slow;}}
    if(entry.mx){entry.seatHeld=0;/* keeps a seated one posing while it answers */ /* you walked / ran past with a moving emote (lib/town/moveEmotes.ts): it keeps its route, only the run-by five dips its speed for a moment */entry.mx.age+=paused?0:dt;if(entry.mx.age>=entry.mx.a.seconds){entry.mx=null;if(!entry.ix)entry.routine.speed=entry.baseSpeed;}else{moveAnswerAt(entry.mx.a,entry.mx.age,entry.mxOut);if(!entry.ix)entry.routine.speed=entry.baseSpeed*entry.mxOut.slow;}}
    if(entry.sm&&entry.seat){/* a seated townsperson stands up for an emote and sits back down (lib/town/npcStandUp.ts) */const sm=entry.sm;if(sm.state==='reacting'||sm.state==='waiting'){sm.x=entry.position.x;sm.z=entry.position.z;}
@@ -173,14 +182,15 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
    if(entry.freestyle?.facing!==undefined)facing=entry.freestyle.facing; // a pair trick: face the partner until the rally ends
    if(entry.definition.travel&&!entry.near){const dx=entry.position.x-entry.lastPosition.x,dz=entry.position.z-entry.lastPosition.z;facing=Math.hypot(dx,dz)>.0001?Math.atan2(dx,dz):entry.rig.root.rotation.y;}
    if(entry.seat){const sf=entry.sm?seatFacing(entry.sm):'seat';if(sf==='seat')facing=entry.definition.workYaw??0;else if(sf==='walk')facing=entry.sm!.walkYaw;} // a still pose keeps its bench / towel heading, even while waving hello
+   if(entry.swim)facing=entry.near&&entry.swim.kind==='tread'?Math.atan2(player.x-entry.position.x,player.z-entry.position.z):entry.swim.yaw;
    const witness=truckWitnesses.get(entry.id);if(witness)facing=Math.atan2(witness.x-entry.position.x,witness.z-entry.position.z);
    const speed=poseDt>0?Math.hypot(entry.position.x-entry.lastPosition.x,entry.position.z-entry.lastPosition.z)/poseDt:0;
    entry.freestyle?.prepare(paused||stunned?0:poseDt,!paused&&!stunned&&distance>2.2&&!entry.duetBall,reduced,freestyleClock);/* a two-ball duet with the player: the routine rests, the duet places its ball (below) */
-   stats.posed++;entry.rig.update(entry.position.x,entry.position.z,paused||stunned?0:poseDt,witness?time:r.clock,reduced,{...entry.freestyle?.motion,...(entry.seat?{trick:entry.seat}:null),travelMode:entry.ride?'scooter':'walk',...(entry.pass?npcPassMotion(entry.pass,entry.passBall,entry.rig.profileScale,reduced):npcEmoteMotion(entry.fx,reduced)),stunAge:stunned?.age,rooftopPose:stunned&&stunned.age>1.85?'dizzy':undefined,facing:entry.pass&&!reduced&&facing!==undefined?facing+entry.pass.turn:facing});entry.rig.root.position.y=entry.position.y;
+   stats.posed++;entry.rig.update(entry.position.x,entry.position.z,paused||stunned?0:poseDt,witness?time:r.clock,reduced,{...entry.freestyle?.motion,...(entry.seat?{trick:entry.seat}:null),...(entry.swimPose&&entry.swim?{swim:npcSwimPose(entry.swimPose,entry.swim,entry.near&&entry.routine.waveTime<2.1)}:null),travelMode:entry.ride?'scooter':'walk',...(entry.pass?npcPassMotion(entry.pass,entry.passBall,entry.rig.profileScale,reduced):npcEmoteMotion(entry.fx,reduced)),stunAge:stunned?.age,rooftopPose:stunned&&stunned.age>1.85?'dizzy':undefined,facing:entry.pass&&!reduced&&facing!==undefined?facing+entry.pass.turn:facing});entry.rig.root.position.y=entry.position.y;
    if(entry.definition.watch&&entry.head&&!entry.near&&!stunned)entry.head.rotation.x-=.2; // public viewing: eyes up at the big screen
    const working=!witness&&!paused&&!entry.near&&!stunned&&r.mode==='work';if(working)entry.workTime+=poseDt;entry.activity?.update(poseDt,entry.workTime,reduced,working);
    if(!paused&&!stunned&&!reduced&&entry.rightShoulder&&entry.rightElbow){
-    if(entry.near&&r.waveTime<2.1&&(!entry.freestyle||distance<=2.2)&&entry.definition.pose!=='lie'){entry.rightShoulder.rotation.set(-.25,0,2.15+Math.sin(r.waveTime*10)*.15);entry.rightElbow.rotation.x=-.8;}
+    if(entry.near&&r.waveTime<2.1&&(!entry.freestyle||distance<=2.2)&&entry.definition.pose!=='lie'&&!entry.swim){entry.rightShoulder.rotation.set(-.25,0,2.15+Math.sin(r.waveTime*10)*.15);entry.rightElbow.rotation.x=-.8;}
     else if(r.mode==='social'&&partner&&((Math.floor(r.age/1.5)%2===0)===(entry.id<partner.id))){entry.rightShoulder.rotation.set(-.55-Math.sin(r.age*5)*.12,0,.3);entry.rightElbow.rotation.x=-.85;}
    }
    if(entry.fx.kind>=0&&entry.fx.v>=0&&!reduced&&!stunned)applyHighFive(entry.rig.root,entry.fx.v,1,entry.fx.age,-1,Math.atan2(player.x-entry.position.x,player.z-entry.position.z),entry.rig.profileScale,Math.hypot(player.x-entry.position.x,player.z-entry.position.z));// the townsperson's half of the player's variation, on the same clock
@@ -246,5 +256,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  /** A seated townsperson (bench / towel) stands up and steps off along the open front side to a clear spot; false = she stays seated (no clear spot, cooldown, stunned, reduced motion). */
  const standUp=(id:string,reduced:boolean)=>{const e=entryById.get(id);if(!e||!e.sm||reduced||e.stunned||!e.rig.root.visible)return false;const others:{x:number;z:number}[]=[];for(const o of entries)if(o!==e)others.push(o.position);const spot={x:0,z:0};return openFront(e.sm.hx,e.sm.hz,e.sm.yaw,placement.isWalkable,others,spot)&&seatStandUp(e.sm,spot.x,spot.z);};
 
- return {react,interact,duet,passBy,standUp,setSparkHook(fn:((x:number,y:number,z:number)=>void)|null){sparkHook=fn;},reactToTruck,stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},setFocus(f:{x:number;z:number;r:number;still?:boolean}|null){focusAt=f;stillPasses=0;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());geometriesOwned.forEach(g=>g.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
+ /** The swimmers (npcSwim.ts) for Town's swim ripples: their loop state, distance to the player and visibility. */
+ const swimmers=entries.filter(e=>e.swim);
+ return {swimmers,react,interact,duet,passBy,standUp,setSparkHook(fn:((x:number,y:number,z:number)=>void)|null){sparkHook=fn;},reactToTruck,stats,root,entries,update,nearest,pick,get taggedId(){return shownTag?.id??null;},setDrawDistance(metres:number|null){drawLimit=metres;},setFocus(f:{x:number;z:number;r:number;still?:boolean}|null){focusAt=f;stillPasses=0;},dispose:()=>{entries.forEach(entry=>{entry.activity?.dispose();entry.freestyle?.dispose();entry.ride?.dispose();entry.rig.dispose();});textures.forEach(texture=>texture.dispose());geometriesOwned.forEach(g=>g.dispose());materials.forEach(material=>material.dispose());root.removeFromParent();}};
 }

@@ -42,7 +42,10 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import {COACHES_DOOR,VENUES,FIELD_SURFACE_Y} from './venues';
 import {fieldLightLayout} from './fieldLightLayout';
 import {NORTH_BEACH_UMBRELLAS,NORTH_BEACH_PATHS,onIsland} from './shoreline';
-import {tintGroundMesh} from '../graphics/groundTint';
+import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
+import {createTrailMaterial} from '../graphics/pondWater';
+import {BK_SQUARE,squareEdge,squareSurfaces} from './beachKitchenSquare';
+import {LOUNGER,SET_LOUNGER,PALM_LOUNGER,PALM_COAST_UMBRELLAS,loungerBack} from './beachLoungers';
 import {patchIslandWind,markSway,stepIslandWind,WIND_SWAY_KINDS} from '../graphics/islandWind';
 import {patchMachineGlowPaint,markMachineGlow} from '../graphics/machineNightGlow';
 import {ISLAND_SQUARE_KONBINI} from './vendingPlaces';
@@ -268,6 +271,22 @@ export function* buildTownSteps(scene: T.Scene) {
     roads.push({x,z,w:vertical?footprint:length,d:vertical?length:footprint,carriageway,boulevard,vertical});
   }
   function path(x:number,z:number,w:number,d:number){surfaceAreas.push({kind:'path',x,z,w,d});tintGroundMesh(box(w,.035,d,'#eddfbb',x,-.055,z),'path');}
+  /** The Beach Kitchen square (lib/town/beachKitchenSquare.ts, Nov 13 2026): paving from both facades to the grass line, then a
+   *  vertex-colour fade into the sand (no straight edge across the beach, no grass strip under the shop fronts). */
+  function beachKitchenSquare(){
+    for(const s of squareSurfaces())surfaceAreas.push(s);
+    const trail=createTrailMaterial();materials.push(trail);
+    const pathC=new T.Color('#eddfbb'),sandC=new T.Color(SAND_COLOR),c=new T.Color(),pos:number[]=[],col:number[]=[],idx:number[]=[];
+    const rows=8,cx=(BK_SQUARE.minX+BK_SQUARE.maxX)/2,cz=BK_SQUARE.northZ+10;let n=0;
+    for(let x:number=BK_SQUARE.minX;x<=BK_SQUARE.maxX+1e-6;x+=BK_SQUARE.step,n++){
+      const e=squareEdge(x),zs=[BK_SQUARE.northZ,e.paved];for(let r=1;r<=rows;r++)zs.push(e.paved+BK_SQUARE.blend*r/rows);
+      zs.forEach((z,r)=>{const k=r<2?0:(r-1)/rows,s=k*k*(3-2*k);c.copy(pathC).lerp(sandC,s);
+        pos.push(x-cx,(BK_SQUARE.sandY-BK_SQUARE.y)*s,z-cz);col.push(c.r,c.g,c.b);});
+      if(n){const a=(n-1)*(rows+2),b=n*(rows+2);for(let r=0;r<rows+1;r++)idx.push(a+r,a+r+1,b+r,b+r,a+r+1,b+r+1);}
+    }
+    const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
+    const m=new T.Mesh(g,trail);m.position.set(cx,BK_SQUARE.y,cz);m.receiveShadow=true;m.name='beach-kitchen-square';town.add(m);
+  }
   function bench(x:number,z:number){prop('bench',()=>benchParts(x,z));}
   function benchParts(x:number,z:number){
     assets.push({kind:'bench',x,z,w:2,d:.7});
@@ -996,10 +1015,12 @@ export function* buildTownSteps(scene: T.Scene) {
   // The coast's edge is the sand ribbon's own rounded slope into the sea (fields.ts); the old row of 160 pale cylinders here
   // read as a segmented pipe with gaps at every joint (Oct 12 2026).
   for(const [x,z] of [[-29,80],[-12,94],[35,96],[51,119],[51,138]])palm(x,z,5.5);
-  for(const [x,z] of [[-18,101],[8,108],[32,116]]){
+  for(const {x,z} of PALM_COAST_UMBRELLAS){
     cylinder(.045,2.5,'#9d805b',x,1.25,z);
     const umbrella=put(new T.ConeGeometry(2,.65,8),'#bd7657',x,2.6,z);umbrella.castShadow=true;
-    const mat=box(.85,.22,2.4,'#eddfbb',x+1.4,.16,z+1);umbrella.userData.umbrellaTargets=[mat];obstacles.push({x:x+1.4,z:z+1,w:.85,d:2.4});
+    const L=PALM_LOUNGER,mat=box(.85,L.padH,L.padLen,'#eddfbb',x+L.dx,L.padY,z+L.padDz);obstacles.push({x:x+L.dx,z:z+L.padDz,w:.85,d:L.padLen});
+    // Nov 13 2026: a backrest makes the mat a lounger (Tama sunbathes on the middle one, lib/town/beachLoungers.ts).
+    const bk=loungerBack(z+L.padDz-L.padLen/2,L.top),back=box(.8,.1,LOUNGER.backLen,'#c8734f',x+L.dx,bk.y,bk.z);back.rotation.x=LOUNGER.backTilt;umbrella.userData.umbrellaTargets=[mat,back];
     obstacles.push({x,z,w:.2,d:.2});
   }
   districtSign('PALM COAST BEACH',23,79);
@@ -1009,7 +1030,7 @@ export function* buildTownSteps(scene: T.Scene) {
     assets.push({kind:'beach-umbrella',x,z,w:.25,d:.25,visualW:4.2,visualD:4.2});
     cylinder(.055,2.7,'#9d805b',x,1.35,z);const canopy=put(new T.ConeGeometry(2.1,.7,10),i%2?'#477c6a':'#bd7657',x,2.8,z);canopy.rotation.y=i*.4;const umbrellaTargets:T.Mesh[]=[];canopy.userData.umbrellaTargets=umbrellaTargets;
     obstacles.push({x,z,w:.25,d:.25});
-    for(const dx of [-1.1,1.1]){umbrellaTargets.push(box(.8,.18,2.2,'#eddfbb',x+dx,.12,z+1.2));const back=box(.8,.1,.75,i%2?'#589aa0':'#c8734f',x+dx,.38,z+.4);back.rotation.x=-.55;umbrellaTargets.push(back);obstacles.push({x:x+dx,z:z+1,w:.8,d:2.5});}
+    for(const dx of [-1.1,1.1]){umbrellaTargets.push(box(.8,.18,2.2,'#eddfbb',x+dx,.12,z+1.2));const bk=loungerBack(z+SET_LOUNGER.padDz-SET_LOUNGER.padLen/2,SET_LOUNGER.top),back=box(.8,.1,LOUNGER.backLen,i%2?'#589aa0':'#c8734f',x+dx,bk.y,bk.z);back.rotation.x=LOUNGER.backTilt;/* Nov 13 2026: the backrest rises toward the head end (it leaned over the pad) */umbrellaTargets.push(back);obstacles.push({x:x+dx,z:z+1,w:.8,d:2.5});}
     const towel=box(1.1,.015,1.7,i%2?'#d69b61':'#8b9e6b',x+3,.008,z+1);towel.rotation.y=.15*i;umbrellaTargets.push(towel);
     if(i%2===0)palm(x-4,z+9,5.5);
     for(let j=0;j<3;j++){const rock=put(new T.IcosahedronGeometry(.22+j*.1,0),'#d2bc94',x-2+j*.65,.1,z-3);rock.scale.y=.5;}
@@ -1151,7 +1172,7 @@ export function* buildTownSteps(scene: T.Scene) {
   path(-62,62,24,15);table(-66,61);table(-59,66);bench(-71,65);
   planter(-70,55);planter(-53,56);tree(-76,62);
   house(-70,82,12,10,4.5,'BEACH KITCHEN',2);house(-49,83,12,10,5,'SURF & REPAIR',0);
-  path(-62,97,25,13);table(-68,96);table(-58,96);bench(-71,101);
+  beachKitchenSquare();table(-68,96);table(-58,96);bench(-71,101);
   path(-40.5,76,12,3);path(-36,83,3,14);
   for(const [x,z] of [[-80,87],[-78,101],[-44,100]])palm(x,z,5.5);
   // A small shared learning/workshop square fills the gap between park and club.
