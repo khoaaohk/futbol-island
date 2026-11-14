@@ -34,6 +34,8 @@ export type FlagKickPorts={
  /** The boot meets the pole: flag k, the kick's direction. */
  strike:(k:number,dx:number,dz:number)=>void;
  busy?:()=>boolean;
+ /** The ball is at the player's feet or under their control: the press stays the shot (kick audit, Nov 13 2026). */
+ hasBall?:()=>boolean;
 };
 export type FlagKickInput={dt:number;x:number;z:number;yaw:number;onFoot:boolean;canEnter:boolean;reduced:boolean};
 
@@ -53,7 +55,7 @@ export function createFlagKick(ports:FlagKickPorts){
     if(p>=1)kick.k=-1;}
    if(c.x<box.x0||c.x>box.x1||c.z<box.z0||c.z>box.z1){lastPress=ports.pressed();stats.idle++;return;}// a press held walking in is not a new one
    const h=ports.pressed();if(!h){lastPress=null;return;}if(h===lastPress)return;lastPress=h;stats.presses++;
-   if(!c.onFoot||!c.canEnter||kick.k>=0||ports.busy?.())return;
+   if(!c.onFoot||!c.canEnter||kick.k>=0||ports.busy?.()||ports.hasBall?.())return;
    const k=flagKickTarget(P,c.x,c.z,c.yaw);if(k<0||clock<readyAt[k])return;
    ports.take();readyAt[k]=clock+FLAG_POLE_KICK.cooldown;
    const pole=P[k],st=flagKickStance(pole,Math.atan2(c.z-pole.z,c.x-pole.x));

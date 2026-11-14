@@ -171,6 +171,7 @@ import {createJetExhaust} from '@/lib/graphics/jetExhaust';
 import {createVolleyballGame} from '@/lib/graphics/volleyballGame';
 import {createTreeDebris} from '@/lib/graphics/treeDebris';
 import {createPropReactions} from '@/lib/graphics/propReactions';
+import {createPropKick,propKickTargets} from '@/lib/town/propKick';
 import {stallKickNote,stallLessonStorage} from '@/lib/town/market/stallKick';
 import {MARKET_STAND} from '@/lib/town/fishing/fishSpots';
 import {forageStore} from '@/lib/town/summitForage';
@@ -1171,6 +1172,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const rollWalkingBall=createGroundBallRoll();
     const airBallFrom=new T.Vector3(),airBallTo=new T.Vector3(),dribblePlayer={x:0,y:0,z:0,yaw:0};
     const walkBall=createWalkBall(),ballEffects=createBallEffects(),rideTricks=createRideTricks(),jetActions=createJetpackActions(),parachute=createParachute(),sonicBurst=createSonicBurst(),parachuteTrail=createParachuteTrail(),craterEffect=createCraterEffect(),landingDust=createLandingDust();scene.add(landingDust.root);scene.add(ballEffects.root,parachute.root,sonicBurst.root,parachuteTrail.root,craterEffect.root);
+    // Possession for the Kick-press prop kicks (tree, flag, lamp / gashapon; kick audit Nov 13 2026): the ball is at the feet or under control
+    // unless it is out on a shot, coming back, dropped from a keep-up or launched skyward. With it, a Kick press is always the shot.
+    const ballAtFeet=()=>{const m=walkBall.state.mode;return m!=='shot'&&m!=='return'&&m!=='drop'&&m!=='sky';};
     const pondNetAt={x:0,y:0,z:0};// the dragonfly the Net it prompt floats over (pondBugs.ts)
     pondNetActions.current=()=>{const k=pondLife.nearFly(location.x,location.z,POND_NET.range);if(k<0||!pondLife.netFly(k))return;netPondDragonfly();tapHaptic();sound.ui('click');};
     const pondLife=createPondLife(scene,{phone:quality.phone,sink:{splash:(x,z,size)=>ballEffects.splashDown(x,POND_Y,z,size,reduced),ring:(x,z,r)=>ballEffects.swimRipple(x,POND_Y,z,r,1.1,.32,1,0,0),wake:(x,z,r,stretch,angle)=>ballEffects.swimRipple(x,POND_Y,z,r,1.2,.28,stretch,angle,0)}});disposers.add(()=>pondLife.dispose());const remotePond=createRemotePond(pondLife);/* other players' pond splashes (their interpolated poses) */
@@ -1213,7 +1217,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     disposers.add(()=>summitFun.dispose());
     const cannon=createBallCannon(scene,{teleport:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.y=yaw;arrivalFacing=yaw;},kick:()=>sound.ball('kick'),impact:(x,y,z)=>ballEffects.impact(x,y,z),splash:(x,y,z)=>ballEffects.splash(x,y,z)});// Summit Isle Ball Cannon (idle: flag checks)
     disposers.add(()=>cannon.dispose());
-    const gashaPrompt=createGashaponPrompt(scene,world.gashaponStatic);let gashaHovered=false;const gashaCanHover=(()=>{try{return matchMedia('(hover: hover)').matches;}catch{return true;}})();/* QA Nov 9 2026: a phone's tap leaves the Gashapon button :hover (sticky), which held the LAST machine hovered from anywhere, so the next machine's button opened the previous one */// gashapon machines: 12 distance checks per frame, the prompt only when near; desktop hover glow (12 ray/box tests while the pointer is on the canvas)
+    const gashaStatic=world.gashaponStatic,gashaPrompt=createGashaponPrompt(scene,{...gashaStatic,hide:id=>{propReactions.settle();gashaStatic.hide(id);},show:id=>{propReactions.settle();gashaStatic.show(id);}});/* kick audit: a kick shake ends before the open machine's swap rewrites its runs */let gashaHovered=false;const gashaCanHover=(()=>{try{return matchMedia('(hover: hover)').matches;}catch{return true;}})();/* QA Nov 9 2026: a phone's tap leaves the Gashapon button :hover (sticky), which held the LAST machine hovered from anywhere, so the next machine's button opened the previous one */// gashapon machines: 12 distance checks per frame, the prompt only when near; desktop hover glow (12 ray/box tests while the pointer is on the canvas)
     disposers.add(()=>gashaPrompt.dispose());
     gashaponOpener.set(id=>gashaPrompt.focus(id,()=>gashaponPanel.open(id)));// Nov 9 2026 (owner): opening zooms onto the machine's glass first, like the vending machines
     disposers.add(()=>gashaponOpener.set(null));
@@ -1381,7 +1385,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const forage=createSummitForage(scene,{obstacles:world.obstacles,busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing',gather:id=>islandMarket.gather(id),cue:propCue,haptic:tapHaptic,shook:(x,z)=>coinHunt.treeHit(x,z)/* Summit Isle tree balls (Oct 15 2026) */,
       pose:(trunk,how)=>{jobMoves.start(how.kind??'treeshake',jobPlayer(),trunk,jobFloor,reduced,jobBallNow(),false,how);wakeLoop();},
       // The tree kick (Oct 15 2026, lib/town/summitTreeKick.ts): a Kick press with a trunk in reach ahead becomes a kick at it (the shot hold is cancelled).
-      kick:{pressed:()=>shotHold.current,take:cancelShotHold},yaw:()=>player.root.rotation.y,
+      kick:{pressed:()=>shotHold.current,take:cancelShotHold,hasBall:()=>ballAtFeet()},yaw:()=>player.root.rotation.y,
       // Shaking from a ride or the air (Oct 14 2026): hop off the usual way (the switch to walking), or land beside the trunk with
       // the usual guided jetpack landing (a parachute folds into it); fruitTrees.ts waits until on foot, then walks in and grips.
       dismount:(how,spot)=>{if(how==='ride'){if(rideRef.current==='walk'||rideRef.current==='jetpack')return false;selectRide('walk');wakeLoop();return (rideRef.current as TravelMode)==='walk';}
@@ -1393,9 +1397,14 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const orchard=createStadiumOrchard(scene,{trees:world.westPark.orchard,gather:id=>islandMarket.gather(id),cue:propCue,haptic:tapHaptic});disposers.add(()=>orchard.dispose());
     // Kicking a plaza flag pole (Nov 13 2026, owner; lib/town/flagKick.ts): a Kick press at a pole plays the tree kick's pose and the
     // flag's own kick animation (plazaFlags.ts kickFlag: the pole shakes hard, the cloth whips), with the island's clank.
-    const flagKick=createFlagKick({poles:world.plazaFlags.poles,pressed:()=>shotHold.current,take:cancelShotHold,busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing',
+    const flagKick=createFlagKick({poles:world.plazaFlags.poles,pressed:()=>shotHold.current,take:cancelShotHold,hasBall:()=>ballAtFeet(),busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing',
       pose:(pole,how)=>{jobMoves.start('treekick',jobPlayer(),pole,jobFloor,reduced,jobBallNow(),false,how);wakeLoop();},
       strike:(k,dx,dz)=>{world.plazaFlags.kickFlag(k,dx,dz,reduced);propCue('clank');tapHaptic();wakeLoop();}});
+    // Kicking a lamp, post, bollard, lifebuoy stand or gashapon machine (kick audit, Nov 13 2026, owner; lib/town/propKick.ts): the
+    // same Kick press and pose at the prop, and its propReactions kick reaction (lamps sway, a gashapon shakes and rattles).
+    const propKick=createPropKick({targets:propKickTargets(propReactions.specs()),pressed:()=>shotHold.current,take:cancelShotHold,hasBall:()=>ballAtFeet(),busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing'||flagKick.kicking,
+      pose:(at,how)=>{jobMoves.start('treekick',jobPlayer(),at,jobFloor,reduced,jobBallNow(),false,how);wakeLoop();},
+      strike:(t,vx,vz)=>{propCue(propReactions.hit(t.x,t.y,t.z,vx,vz,reduced));tapHaptic();wakeLoop();}});
     // The zipline (lib/graphics/zipline.ts): the tower's prompt, the ride on the tick (input locked), the rider, camera and effects.
     const zipline=createZipline(scene,{place:(x,z,y)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z,y);},
       land:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.set(0,yaw,0);arrivalFacing=yaw;walkBall.reset({x,y:rooftop.state.height,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;},
@@ -2348,6 +2357,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const forageWant=forage.update({dt,x:location.x,z:location.z,onFoot:active&&rideRef.current==='walk'&&!rooftop.state.falling&&streetTraffic.rider.index<0,
         arrival:!active||streetTraffic.rider.index>=0||rooftop.state.falling?null:rideRef.current==='jetpack'?((jetActions.state.phase==='idle'||jetActions.state.phase==='parachute')&&!pendingRide.current&&!flight.landing&&flight.takeoffTime>=1.05?'fly':null):rideRef.current!=='walk'&&rampMotion.state.phase!=='air'?'ride':null,
         air:()=>flight.height-rooftop.surface(location.x,location.z,Infinity),canEnter:canEnter&&!jobs.run,frozen:backgroundFrozen,reduced,camera,width:fullWidth,height:fullHeight,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden});// Summit Isle fruit trees
+      propKick.update({dt,x:location.x,z:location.z,yaw:player.root.rotation.y,onFoot:active&&rideRef.current==='walk'&&!rooftop.state.falling&&streetTraffic.rider.index<0,canEnter:canEnter&&!jobs.run,reduced});// lamp / post / gashapon kick (after the tree and flag kicks)
       const beachWant=beach.update({dt,x:location.x,z:location.z,onFoot:active&&(rideRef.current==='walk'||rideRef.current==='bike'||rideRef.current==='scooter'||rideRef.current==='moped')&&!rooftop.state.falling&&streetTraffic.rider.index<0,canEnter:canEnter&&!jobs.run,frozen:backgroundFrozen,reduced,camera,width:fullWidth,height:fullHeight,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden});// Beachcombing
       // Water P1b (animalRides.ts): "Hang on!" over the nearest manta / the whale shark (the 10 Hz pick), the island's prompt style.
       const rideNear=canEnter&&!animalRides.riding?animalRides.state.near:null,rideWant=rideNear?{key:'ride',distance:animalRides.state.nearDist}:null;

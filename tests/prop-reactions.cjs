@@ -65,14 +65,21 @@ function merged(){
  console.log('PASS idle sleep, threshold, sway of one run only, base planted, flicker, cooldown, damping ends with an exact restore, pause');
 }
 {
- // Reduced motion: the sound cue still comes back, nothing moves, nothing wakes up.
- const m=merged(),r=R.createPropReactions(m.specs),before=m.snapshot();
- assert.equal(r.hit(10,1,5.2,0,28,true),'clank','sound kept');assert.equal(r.active,false,'no motion');assert.equal(r.stats.reducedHits,1);
- r.update(.1,true);assert.deepEqual(m.snapshot(),before);assert.equal(r.stats.activeUpdates,0);
+ // Reduced motion (kick audit, Nov 13 2026): the sound cue still comes back and the gentle version plays (REDUCED_GAIN of the
+ // sway, no night-pool flicker), then an exact restore.
+ const m=merged(),r=R.createPropReactions(m.specs),before=m.snapshot(),poolBefore=Float32Array.from(m.pool.instanceMatrix.array);
+ const m2=merged(),full2=R.createPropReactions(m2.specs),before2=m2.snapshot();// a full-strength twin for the amplitude comparison
+ assert.equal(r.hit(10,1,5.2,0,28,true),'clank','sound kept');assert.equal(r.active,true,'gentle motion');assert.equal(r.stats.reducedHits,1);
+ full2.hit(10,1,5.2,0,28,false);r.update(.12,true);full2.update(.12,false);
+ const top=(snap,b0)=>{let d=0;for(let v=0;v<m.counts[0];v++)if(b0[v*3+1]>4)d=Math.max(d,Math.hypot(snap[v*3]-b0[v*3],snap[v*3+2]-b0[v*3+2]));return d;};
+ const gentle=top(m.snapshot(),before),strong=top(m2.snapshot(),before2);
+ assert(gentle>0&&gentle<strong*(R.REDUCED_GAIN+.05),'gentle sway: '+gentle.toFixed(3)+' vs '+strong.toFixed(3));
+ assert.deepEqual(Float32Array.from(m.pool.instanceMatrix.array),poolBefore,'no flicker in reduced motion');
+ for(let i=0;i<60;i++){r.update(1/60,true);full2.update(1/60,false);}assert.deepEqual(m.snapshot(),before,'gentle version restores exactly');assert.equal(r.active,false);
  assert.equal(r.hit(10,1,5.2,0,28,true),null,'cooldown applies to the sound too');
  // Switching to reduced motion mid-reaction restores at once.
  r.update(2,false);assert.equal(r.hit(20.8,.3,5,-30,0,false),'thunk');r.update(.05,false);assert.notDeepEqual(m.snapshot(),before);r.update(.016,true);assert.deepEqual(m.snapshot(),before);assert.equal(r.active,false);
- console.log('PASS reduced motion: cue only, no vertex writes, immediate restore');
+ console.log('PASS reduced motion: cue, gentle sway without flicker, exact restore; full reaction restores at once on the switch');
 }
 {
  // Bounded: at most MAX_ACTIVE props animate; further hits keep their sound. Strength scales with the shot.
@@ -103,7 +110,7 @@ function merged(){
  // East Pier kerb props now stop the ball: each one has a footprint, which sits outside the walkable width (walkHalf) so
  // the walkway, the plaza, the kick spot and the lighthouse stay reachable.
  {const pier=load('lib/town/eastPier.ts'),P=pier.EAST_PIER;
-  for(const s of specs.filter(s=>['bollard','lifebuoy'].includes(s.kind)||(s.kind==='lamp'&&pier.underEastPier((s.min.x+s.max.x)/2,(s.min.z+s.max.z)/2)))){
+  for(const s of specs.filter(s=>['bollard','lifebuoy','lamp'].includes(s.kind)&&pier.underEastPier((s.min.x+s.max.x)/2,(s.min.z+s.max.z)/2))/* the pier's own (the stadium has bollards too since the kick audit) */){
    const cx=(s.min.x+s.max.x)/2,cz=(s.min.z+s.max.z)/2,o=world.obstacles.find(o=>Math.abs(o.x-cx)<.1&&Math.abs(o.z-cz)<.1&&o.w<=.6);
    assert(o,s.kind+' at '+cx.toFixed(1)+','+cz.toFixed(1)+' has a ball footprint');
    const inner=pier.jettyOffset(cx,cz)-Math.max(o.w,o.d)/2;assert(inner>P.walkHalf,s.kind+' footprint stays off the walkway ('+inner.toFixed(2)+' m from the centre line)');}

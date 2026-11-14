@@ -187,7 +187,7 @@ await ok('round 5: the open machine is its own interface: static copy folded out
  assert(/<GashaponMachineFace\/>/.test(hud)&&!/import\(['"]\.\/GashaponPanel/.test(hud),'the island mounts the machine face, not the modal panel');
  assert(!/role="dialog"|aria-modal/.test(read('components/GashaponMachineFace.tsx')),'no dialog on the island');
  assert(!/Light\(|CanvasTexture|requestAnimationFrame|setInterval/.test(src),'live copy: no lights, textures or loops of its own');
- assert(/createGashaponPrompt\(scene,world\.gashaponStatic\)/.test(read('components/Town.tsx')),'Town passes the static copies');
+ assert(/gashaStatic=world\.gashaponStatic,gashaPrompt=createGashaponPrompt\(scene,\{\.\.\.gashaStatic,/.test(read('components/Town.tsx')),'Town passes the static copies (wrapped: a kick shake settles before the swap)');
 });
 
 await ok('QA Nov 9: a Konbini pair\'s left-hand neighbour moves the knob label and tag onto the machine; no summit hiker inside a machine',()=>{

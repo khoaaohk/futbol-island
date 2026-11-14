@@ -14,12 +14,13 @@ import type * as T from 'three';
  *
  * Heat: idle = one counter check per frame. No allocation per hit or per frame (slot buffers are made once, on the first
  * hit, sized to the largest registered prop). At most MAX_ACTIVE props animate at once; a further hit still plays its sound.
- * Reduced motion: no vertex motion and no flicker; the sound still plays.
+ * Reduced motion (kick audit, Nov 13 2026): the gentle version, REDUCED_GAIN of the amplitude, no leaf shimmer and no flicker; the
+ * sound plays as usual. Switching to reduced motion mid-reaction still restores a full-strength reaction at once.
  */
 
-export type PropReactionKind='lamp'|'pole'|'signal'|'flag'|'sign'|'bench'|'table'|'tree'|'palm'|'bush'|'planter'|'fence'|'net'|'goal'|'post'|'bike'|'crate'|'bollard'|'lifebuoy'|'stall';
+export type PropReactionKind='lamp'|'pole'|'signal'|'flag'|'sign'|'bench'|'table'|'tree'|'palm'|'bush'|'planter'|'fence'|'net'|'goal'|'post'|'bike'|'crate'|'bollard'|'lifebuoy'|'stall'|'gashapon';
 /** Soft one-shot sounds already in lib/audio/islandSound.ts ('fi2-job-cue'). */
-export type PropReactionCue='clank'|'thunk'|'rustle'|'spring'|'tap'|'thud'|'stall';
+export type PropReactionCue='clank'|'thunk'|'rustle'|'spring'|'tap'|'thud'|'stall'|'rattle';
 
 export type PropReactionStyle={
  /** Rigid tilt about the base, radians at full strength (a pole sways, a sign swings, a bench rocks). */
@@ -54,9 +55,11 @@ export type PropReactionStyle={
 const S=(o:Partial<PropReactionStyle>&Pick<PropReactionStyle,'freq'|'duration'|'cue'>):PropReactionStyle=>({tilt:0,shake:0,rustle:0,jolt:0,bob:0,damping:4,radius:0,cooldown:1.2,minSpeed:4,...o});
 /** One row per prop type. Amplitudes are at full strength (a hard shot); a soft touch scales them down to ~40%. */
 export const PROP_REACTIONS:Record<PropReactionKind,PropReactionStyle>={
- lamp:    S({tilt:.14,freq:2.4,damping:3.4,duration:.85,cue:'clank',flicker:true}),
- pole:    S({tilt:.11,freq:2.8,damping:3.8,duration:.75,cue:'clank'}),
- signal:  S({tilt:.055,freq:1.9,damping:3.4,duration:.85,cue:'clank'}),
+ // Kick audit (Nov 13 2026, owner: "lamps and street lights need to react"): tall poles also get a little height-weighted `shake`
+ // across the ball's path, so the lamp head / signal heads swing a touch on top of the pole's sway.
+ lamp:    S({tilt:.14,shake:.07,freq:2.4,damping:3.4,duration:.85,cue:'clank',flicker:true}),
+ pole:    S({tilt:.11,shake:.05,freq:2.8,damping:3.8,duration:.75,cue:'clank'}),
+ signal:  S({tilt:.055,shake:.08,freq:1.9,damping:3.4,duration:.85,cue:'clank'}),
  flag:    S({tilt:.27,freq:2.2,damping:3,duration:.9,cue:'spring',minSpeed:2}),
  sign:    S({tilt:.14,freq:2.6,damping:3.4,duration:.8,cue:'spring'}),
  bench:   S({tilt:.12,jolt:.18,freq:5.5,damping:6.5,duration:.55,cue:'thunk'}),
@@ -79,7 +82,13 @@ export const PROP_REACTIONS:Record<PropReactionKind,PropReactionStyle>={
  // and produce jiggle (rustle), wooden thunk + wet slap ('stall' cue). The fishing world's "we buy" sign and fish crate join
  // the same reaction through attach() (components/Town.tsx), so the whole stall moves as one.
  stall:   S({shake:.3,rustle:.07,tilt:.02,freq:3.3,damping:3.4,duration:1,cue:'stall',cooldown:.6,minSpeed:2}),
+ // Kick audit (Nov 13 2026, owner: "when kicking the gashapon machine, it should shake"): the whole machine shudders (a small
+ // tilt and slide), the globe on top shakes more (height-weighted), and the capsules inside rattle (the position-keyed jiggle),
+ // with a plastic capsule rattle ('rattle'). The machines are in the merged chunks (world.ts gashaponRuns).
+ gashapon:S({tilt:.035,jolt:.035,shake:.09,rustle:.05,freq:7.5,damping:5,duration:.7,cue:'rattle',cooldown:.6,minSpeed:2}),
 };
+/** Reduced motion: the amplitude of the gentle version. */
+export const REDUCED_GAIN=.3;
 
 /** Builders wrap a prop's meshes in this so world.ts can find them after batching (identity when absent). */
 export type PropTagger=<R>(kind:PropReactionKind,build:()=>R)=>R;
@@ -117,8 +126,8 @@ export function createPropReactions(specs:readonly PropSpec[]){
  const grid=new Map<number,number[]>(),key=(cx:number,cz:number)=>(cx+2048)*4096+(cz+2048);
  props.forEach((p,i)=>{for(let cx=Math.floor((p.min.x-PAD)/CELL);cx<=Math.floor((p.max.x+PAD)/CELL);cx++)for(let cz=Math.floor((p.min.z-PAD)/CELL);cz<=Math.floor((p.max.z+PAD)/CELL);cz++){const k=key(cx,cz);const list=grid.get(k);if(list)list.push(i);else grid.set(k,[i]);}});
  let capacity=props.reduce((n,p)=>p.animatable?Math.max(n,p.verts):n,0);
- type Slot={prop:number;age:number;strength:number;ux:number;uz:number;hx:number;hz:number;orig:Float32Array|null;lo:Int32Array;hi:Int32Array;light0:number;light2:number};
- const slots:Slot[]=Array.from({length:MAX_ACTIVE},()=>({prop:-1,age:0,strength:0,ux:0,uz:1,hx:0,hz:0,orig:null,lo:new Int32Array(MAX_PARTS),hi:new Int32Array(MAX_PARTS),light0:1,light2:1}));
+ type Slot={prop:number;age:number;strength:number;gentle:boolean;ux:number;uz:number;hx:number;hz:number;orig:Float32Array|null;lo:Int32Array;hi:Int32Array;light0:number;light2:number};
+ const slots:Slot[]=Array.from({length:MAX_ACTIVE},()=>({prop:-1,age:0,strength:0,gentle:false,ux:0,uz:1,hx:0,hz:0,orig:null,lo:new Int32Array(MAX_PARTS),hi:new Int32Array(MAX_PARTS),light0:1,light2:1}));
  let clock=0,active=0;
  const stats={hits:0,started:0,reducedHits:0,dropped:0,idleUpdates:0,activeUpdates:0,vertexWrites:0,uploads:0};
 
@@ -147,14 +156,14 @@ export function createPropReactions(specs:readonly PropSpec[]){
 
  /**
   * A ball moving at (vx,vz) hit something at (x,y,z). Returns the sound cue to play, or null (no prop there, too soft, or
-  * cooling down). Starts the reaction unless `reduced`.
+  * cooling down). Starts the reaction (the gentle version when `reduced`).
   */
  function hit(x:number,y:number,z:number,vx:number,vz:number,reduced=false):PropReactionCue|null{
   const i=find(x,y,z);if(i<0)return null;
   const p=props[i],style=p.style,speed=Math.hypot(vx,vz);
   if(!(speed>=style.minSpeed)||clock<p.readyAt)return null;
   p.readyAt=clock+style.cooldown;stats.hits++;
-  if(reduced){stats.reducedHits++;return style.cue;}
+  if(reduced)stats.reducedHits++;
   if(!p.animatable){stats.dropped++;return style.cue;}
   let s=p.slot>=0?slots[p.slot]:undefined;
   if(!s){const free=slots.findIndex(s=>s.prop<0);if(free<0){stats.dropped++;return style.cue;}
@@ -162,7 +171,7 @@ export function createPropReactions(specs:readonly PropSpec[]){
    let o=0;for(const part of p.parts){s.orig.set((part.attribute.array as Float32Array).subarray(part.start*3,(part.start+part.count)*3),o);o+=part.count*3;}
    if(p.light&&style.flicker){const m=p.light.mesh.instanceMatrix.array,b=p.light.index*16;s.light0=m[b];s.light2=m[b+10];}
   }
-  const l=speed||1;s.ux=vx/l;s.uz=vz/l;s.age=0;s.strength=Math.min(1,Math.max(.4,speed/28));
+  const l=speed||1;s.ux=vx/l;s.uz=vz/l;s.age=0;s.gentle=reduced;s.strength=Math.min(1,Math.max(.4,speed/28))*(reduced?REDUCED_GAIN:1);
   s.hx=x-p.off.x;s.hz=z-p.off.z;
   // Only the vertices a ripple can reach are rewritten and uploaded.
   let o=0;for(let k=0;k<p.parts.length;k++){const part=p.parts[k];let lo=0,hi=part.count;
@@ -178,12 +187,12 @@ export function createPropReactions(specs:readonly PropSpec[]){
   stats.activeUpdates++;
   for(const s of slots){if(s.prop<0)continue;const p=props[s.prop],st=p.style;
    s.age+=dt;
-   if(s.age>=st.duration||reduced){restore(s);continue;}
+   if(s.age>=st.duration||reduced&&!s.gentle){restore(s);continue;}
    if(dt<=0)continue;
    const t=s.age,phase=t*st.freq*Math.PI*2,fadeStart=st.duration*.65;
    const fade=t<fadeStart?1:1-(t-fadeStart)/(st.duration-fadeStart);
    const env=s.strength*Math.exp(-st.damping*t)*fade*fade,osc=Math.sin(phase);
-   const theta=st.tilt*env*osc,shakeA=st.shake*env,sA=osc,sB=.45*Math.sin(phase*1.63+1.1),rustleA=st.rustle*env,rs=Math.sin(phase*2.3),rc=Math.cos(phase*2.3);
+   const theta=st.tilt*env*osc,shakeA=st.shake*env,sA=osc,sB=.45*Math.sin(phase*1.63+1.1),rustleA=s.gentle?0:st.rustle*env,rs=Math.sin(phase*2.3),rc=Math.cos(phase*2.3);
    const jolt=st.jolt*env*osc,bob=st.bob*env*Math.sin(phase+.6),ux=s.ux,uz=s.uz,px=p.pivot.x,py=p.pivot.y,pz=p.pivot.z,invH=1/p.height;
    const invR2=st.radius>0?1/(st.radius*st.radius):0,orig=s.orig!,anchor=!!st.anchor,exp=Math.exp;
    let o=0;
@@ -205,7 +214,7 @@ export function createPropReactions(specs:readonly PropSpec[]){
     }
     stats.vertexWrites+=hi-lo;upload(part,lo,hi);o+=part.count*3;
    }
-   if(p.light&&st.flicker){// a short stutter in the first .35 s, never brighter than normal
+   if(p.light&&st.flicker&&!s.gentle){// a short stutter in the first .35 s, never brighter than normal
     const m=p.light.mesh.instanceMatrix.array,b=p.light.index*16,f=t<.35?1-.45*(1-t/.35)*(Math.sin(t*61)>.2?1:.25):1;
     m[b]=s.light0*f;m[b+10]=s.light2*f;p.light.mesh.instanceMatrix.addUpdateRange(b,16);p.light.mesh.instanceMatrix.needsUpdate=true;}
   }
@@ -229,6 +238,10 @@ export function createPropReactions(specs:readonly PropSpec[]){
   },
   /** Prop types registered, for the debug panel and tests. */
   kinds(){const n:Partial<Record<PropReactionKind,number>>={};for(const p of props)n[p.kind]=(n[p.kind]??0)+1;return n;},
+  /** Ends every running reaction now, originals restored (before another system rewrites the same runs: the gashapon swap). */
+  settle(){if(active>0)for(const s of slots)if(s.prop>=0)restore(s);},
+  /** The registered props (read-only use: the Kick-press targets, lib/town/propKick.ts, and tests). */
+  specs():readonly PropSpec[]{return props;},
   dispose(){for(const s of slots)if(s.prop>=0)restore(s);},
  };
 }

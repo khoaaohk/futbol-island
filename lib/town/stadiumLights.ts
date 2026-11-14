@@ -120,8 +120,9 @@ export type StadiumLampSite={x:number;z:number;ground:number;poolWidth:number;po
 
 export function buildStadiumLights(t:StadiumLightsTools){
  const parts:Part[]=[],glow:{pos:number[];uv:number[];tint:number[];shape:number[];idx:number[]}={pos:[],uv:[],tint:[],shape:[],idx:[]};
- const lampBox=(w:number,h:number,d:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=new T.BoxGeometry(w,h,d);g.translate(x,y,z);parts.push(tag(g,colour,lit));};
- const lampCyl=(r:number,h:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=new T.CylinderGeometry(r,r,h,8);g.translate(x,y,z);parts.push(tag(g,colour,lit));};
+ let verts=0;const push=(g:Part)=>{parts.push(g);verts+=g.getAttribute('position').count;};
+ const lampBox=(w:number,h:number,d:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=new T.BoxGeometry(w,h,d);g.translate(x,y,z);push(tag(g,colour,lit));};
+ const lampCyl=(r:number,h:number,colour:string,x:number,y:number,z:number,lit=0)=>{const g=new T.CylinderGeometry(r,r,h,8);g.translate(x,y,z);push(tag(g,colour,lit));};
  const W=STADIUM_NIGHT_LIGHTS.warm;
  /** A glow quad: corners (bl, br, tr, tl) with v=1 along the top edge (tl-tr) — the bright end of a gradient. */
  const quad=(c:readonly T.Vector3[],strength:number,soft:number,mode:0|1,roof:0|1|2)=>{const o=glow.pos.length/3;
@@ -131,14 +132,18 @@ export function buildStadiumLights(t:StadiumLightsTools){
  const V=(x:number,y:number,z:number)=>new T.Vector3(x,y,z);
  const pool=(x:number,z:number,r:number,y:number,strength:number)=>quad([V(x-r,y,z+r),V(x+r,y,z+r),V(x+r,y,z-r),V(x-r,y,z-r)],strength,0,1,2);
  const stats={posts:0,fixtures:0,bollards:0,beams:0,colliders:0};
+ // Kick reactions (kick audit, Nov 13 2026; lib/graphics/propReactions.ts): each post / bollard / fixture's vertex run in the one
+ // merged lamp mesh (mergeGeometries keeps the parts' order), so world.ts can make a PropSpec of it. Build-time only.
+ const runs:{kind:'lamp'|'bollard';start:number;count:number}[]=[];
+ const run=(kind:'lamp'|'bollard',build:()=>void)=>{const start=verts;build();runs.push({kind,start,count:verts-start});};
  const collide=(x:number,z:number,w:number,d:number)=>{t.obstacles.push({x,z,w,d});stats.colliders++;};
 
  // --- Lamp posts round the plaza, the apron and the trails (the island's post, its pool in world.ts's night pools) -------------
  const posts=stadiumLampPosts({obstacles:t.obstacles,trees:t.assets.filter(a=>a.kind==='tree'||a.kind==='palm')});
  const L=LAMP_POST,b0=L.ground,sites:StadiumLampSite[]=[];
  for(const {x,z} of posts){
-  lampCyl(L.baseR,L.baseH,DARK,x,b0+L.baseH/2,z);lampCyl(L.poleR,L.poleH,DARK,x,b0+L.poleH/2,z);
-  lampBox(L.cap,.12,L.cap,DARK,x,b0+4.22,z);lampBox(L.head,L.headH,L.head,LENS,x,b0+3.99,z,1);
+  run('lamp',()=>{lampCyl(L.baseR,L.baseH,DARK,x,b0+L.baseH/2,z);lampCyl(L.poleR,L.poleH,DARK,x,b0+L.poleH/2,z);
+  lampBox(L.cap,.12,L.cap,DARK,x,b0+4.22,z);lampBox(L.head,L.headH,L.head,LENS,x,b0+3.99,z,1);});
   collide(x,z,L.collider,L.collider);t.assets.push({kind:'stadium-lamp',x,z,w:L.collider,d:L.collider,visualW:.65,visualD:.65});
   sites.push({x,z,ground:-.02,poolWidth:L.pool,poolDepth:L.pool,chunk:'stadium'});stats.posts++;}
 
@@ -149,19 +154,19 @@ export function buildStadiumLights(t:StadiumLightsTools){
   for(let a=-span;a<=span;a+=every){
    if(s.stairs.some(c=>Math.abs(a-c)<STAIR_WIDTH/2+1)||(s.roof&&roofPosts.some(p=>Math.abs(a-p)<1.2))||(s.gap&&Math.abs(a)<STADIUM_GATE.halfWidth+1.5)||(s.id==='south'&&Math.abs(a)<9))continue;
    const f=local(s,back+.45,a,.4,.55),lens=local(s,back+.45,a,.3,.45);
-   lampBox(f.w,.22,f.d,FIXTURE,f.x,APRON_Y+.11,f.z);lampBox(lens.w,.04,lens.d,LENS,lens.x,APRON_Y+.24,lens.z,1);collide(f.x,f.z,f.w,f.d);
+   run('bollard',()=>{lampBox(f.w,.22,f.d,FIXTURE,f.x,APRON_Y+.11,f.z);lampBox(lens.w,.04,lens.d,LENS,lens.x,APRON_Y+.24,lens.z,1);});collide(f.x,f.z,f.w,f.d);
    const p=standWorld(s,back+1.1,a);pool(p.x,p.z,1.3,-.05,.28);stats.fixtures++;}
  }
  // --- Bollards either side of every back stair's foot -------------------------------------------------------------------------
  for(const s of STANDS)for(const c of s.stairs)for(const side of [-1,1]){const p=standWorld(s,stairEnd(s)+.35,c+side*(STAIR_WIDTH/2+.35));
-  lampCyl(.11,.8,FIXTURE,p.x,APRON_Y+.4,p.z);lampCyl(.13,.14,LENS,p.x,APRON_Y+.87,p.z,1);lampCyl(.15,.05,FIXTURE,p.x,APRON_Y+.965,p.z);
+  run('bollard',()=>{lampCyl(.11,.8,FIXTURE,p.x,APRON_Y+.4,p.z);lampCyl(.13,.14,LENS,p.x,APRON_Y+.87,p.z,1);lampCyl(.15,.05,FIXTURE,p.x,APRON_Y+.965,p.z);});
   collide(p.x,p.z,.3,.3);pool(p.x,p.z,1.5,-.05,.4);stats.bollards++;}
  // --- The gate: two uplights at the pillars' plaza feet washing them, and three lenses under the arch over the walk in ------------
  {const G=STADIUM_GATE,gx=GATE_ARCH_X;
   // Nov 13 2026: each lamp sits 0.5 m in from its pillar's middle (toward the walk), so a shot at the ball-hunt target on the
   // pillar's plaza face (stadiumBalls.ts, 0.2 m out from the middle) is not stopped by the lamp's collider first.
   for(const sz of [-1,1]){const z=G.z+sz*(G.halfWidth+.4),x=gx+1.5,lz=z-sz*.5;
-   lampBox(.5,.22,.5,FIXTURE,x,APRON_Y+.11,lz);lampBox(.4,.04,.4,LENS,x,APRON_Y+.24,lz,1);collide(x,lz,.5,.5);stats.fixtures++;
+   run('bollard',()=>{lampBox(.5,.22,.5,FIXTURE,x,APRON_Y+.11,lz);lampBox(.4,.04,.4,LENS,x,APRON_Y+.24,lz,1);});collide(x,lz,.5,.5);stats.fixtures++;
    // The pillar's plaza face (x gx+.8, 1.6 m wide): the foot corners take v=1, so it is bright at the foot, fading up.
    quad([V(gx+.82,9.6,z+.85),V(gx+.82,9.6,z-.85),V(gx+.82,0,z-.85),V(gx+.82,0,z+.85)],.22,.25,0,2);
    pool(x,lz,1.4,-.05,.3);}
@@ -192,6 +197,6 @@ export function buildStadiumLights(t:StadiumLightsTools){
  const unregister=registerStadiumNightObject(beams,()=>beamsAllowed());
  if(!tierHooked){tierHooked=true;subscribeHeatTier(()=>refreshStadiumNightObjects());}// one module-wide hook: a tier change re-checks the beams
  const tris=(geo:T.BufferGeometry)=>(geo.index?geo.index.count:geo.getAttribute('position').count)/3;
- return {lamps,beams,lampSites:sites,posts,stats:{...stats,lampTriangles:tris(lampGeometry),glowTriangles:tris(g)},dispose:()=>{unregister();lampGeometry.dispose();g.dispose();}};
+ return {lamps,beams,lampSites:sites,posts,propRuns:runs,stats:{...stats,lampTriangles:tris(lampGeometry),glowTriangles:tris(g)},dispose:()=>{unregister();lampGeometry.dispose();g.dispose();}};
 }
 export type StadiumLights=ReturnType<typeof buildStadiumLights>;

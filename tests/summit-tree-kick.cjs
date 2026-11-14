@@ -65,14 +65,14 @@ for(const s of sites){const L=K.kickLeaves(s);assert(L.count>=3&&L.count<=5,'3â€
 // ---- 2â€“4. The runtime.
 const sway={tree:{value:0},pivot:{value:new T.Vector3()},axis:{value:new T.Vector3()},angle:{value:0},height:{value:5},bend:{value:1}};
 function rig(opts={}){
- const store=new Map(),calls={pose:[],cue:[],take:0,shook:[]};let clock=opts.now??new Date(2026,9,15,10,0,0).getTime(),seed=7,press=null,seen=!!opts.seen,yaw=0;
+ const store=new Map(),calls={pose:[],cue:[],take:0,shook:[]};let clock=opts.now??new Date(2026,9,15,10,0,0).getTime(),seed=7,press=null,seen=!!opts.seen,yaw=0,ball=false;
  const scene=new T.Scene();
  const f=RT.createSummitForage(scene,{obstacles,sites:()=>sites,sway,budgetMs:Infinity,pose:(p,how)=>calls.pose.push({p,how}),gather:()=>1,cue:k=>calls.cue.push(k),shook:(x,z)=>calls.shook.push({x,z}),
-  kick:{pressed:()=>press,take:()=>{calls.take++;press=null;}},yaw:()=>yaw,lessonSeen:()=>seen,lessonMark:()=>{seen=true;},busy:()=>!!opts.busy,
+  kick:{pressed:()=>press,take:()=>{calls.take++;press=null;},hasBall:()=>ball},yaw:()=>yaw,lessonSeen:()=>seen,lessonMark:()=>{seen=true;},busy:()=>!!opts.busy,
   now:()=>clock,random:()=>{seed=(seed*16807)%2147483647;return seed/2147483647;},read:()=>store.get(F.FORAGE_SAVE_KEY)??null,write:v=>store.set(F.FORAGE_SAVE_KEY,v)});
  const el={hidden:true},camera=new T.PerspectiveCamera(50,390/844,.1,500);
  const ctx=(x,z,extra={})=>({dt:1/60,x,z,onFoot:true,canEnter:true,frozen:false,reduced:!!opts.reduced,camera,width:390,height:844,focusKey:'forage',ui:()=>el,place:()=>{},hide:(e,h)=>{e.hidden=h;},...extra});
- const r={f,scene,calls,ctx,tick:ms=>{clock+=ms;},press:()=>{press={at:clock};},face:a=>{yaw=a;},get seen(){return seen;},
+ const r={f,scene,calls,ctx,tick:ms=>{clock+=ms;},press:()=>{press={at:clock};},face:a=>{yaw=a;},hold:b=>{ball=b;},get seen(){return seen;},
   run:(x,z,frames,extra)=>{for(let i=0;i<frames;i++){clock+=1000/60;f.update(ctx(x,z,extra));}},
   /** Run until the sway rests, counting its swings (sign changes of the angle) and its peak. */
   settle:(x,z)=>{let swings=0,last=0,peak=0,n=0;for(;n<60*6;n++){clock+=1000/60;f.update(ctx(x,z));const a=sway.angle.value;peak=Math.max(peak,Math.abs(a));if(last!==0&&a!==0&&Math.sign(a)!==Math.sign(last))swings++;if(a!==0)last=a;if(n>5&&a===0&&!f.busy)break;}return {swings,peak,frames:n};}};
@@ -88,7 +88,9 @@ const bareSite=(f,kind)=>{const v=f.view(),fruiting=new Set(v.trees.map(t=>t.tid
  const site=bareSite(f,'tree'),st=K.kickStance(site,0);r.face(st.face);
  // A press with no trunk ahead is left alone (a normal shot); turned to the trunk it is taken.
  r.face(st.face+Math.PI);r.press();r.run(st.root.x,st.root.z,2);assert.equal(r.calls.take,0,'facing away: the press stays a shot');assert.equal(r.calls.pose.length,0);
- r.face(st.face);r.press();r.run(st.root.x+.4,st.root.z,1);
+ // Kick audit (Nov 13 2026): with the ball at the feet the press is always the shot; without it, the trunk takes the kick.
+ r.face(st.face);r.hold(true);r.press();r.run(st.root.x+.4,st.root.z,1);assert.equal(r.calls.take,0,'with the ball: the press stays a shot');assert.equal(r.calls.pose.length,0);
+ r.hold(false);r.press();r.run(st.root.x+.4,st.root.z,1);
  assert.equal(r.calls.take,1,'a trunk ahead: the press is taken (no shot)');const p=r.calls.pose[0];assert(p&&p.how.kind==='treekick','the kick pose');
  assert(Math.abs(p.p.x-site.x)<1e-9&&Math.abs(p.p.z-site.z)<1e-9,'at the trunk');assert(p.how.lead>0&&p.how.lead<=K.TREE_KICK.maxLead,'steps to the stance first');
  assert(Math.hypot(p.how.stand.x-st.root.x,p.how.stand.z-st.root.z)<1e-9,'the stance from kickStance');assert.equal(f.view().kicking,true);assert.equal(f.update(r.ctx(st.root.x,st.root.z)),null,'no forage prompt while kicking');
@@ -152,7 +154,7 @@ const bareSite=(f,kind)=>{const v=f.view(),fruiting=new Set(v.trees.map(t=>t.tid
 
 // ---- 5. Wiring.
 {const town=read('components/Town.tsx'),jm=read('lib/town/jobs/jobMoves.ts');
- assert(town.includes("kick:{pressed:()=>shotHold.current,take:cancelShotHold},yaw:()=>player.root.rotation.y"),'Town hands the shot hold and the heading to the forage runtime');
+ assert(town.includes("kick:{pressed:()=>shotHold.current,take:cancelShotHold,hasBall:()=>ballAtFeet()},yaw:()=>player.root.rotation.y"),'Town hands the shot hold and the heading to the forage runtime');
  assert(town.includes("jobMoves.start(how.kind??'treeshake'"),'the pose kind comes from the runtime (push or kick)');
  assert(/'treekick'/.test(jm)&&jm.includes('treekick:.8'),'jobMoves knows the kick pose');
  assert(read('lib/graphics/jobPoses.ts').includes('treekick:[')&&/export const TREE_KICK_CONTACT=/.test(read('lib/graphics/jobPoses.ts')),'the keyframes and the contact');
