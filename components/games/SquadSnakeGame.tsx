@@ -131,7 +131,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   change('playing');wake();
  },[change,entry,wake]);
  const pause=useCallback(()=>{if(phaseRef.current!=='playing')return;sleep();change('paused');},[change,sleep]);
- const resume=useCallback(()=>{if(phaseRef.current!=='paused')return;audio.current?.unlock();change('playing');wake();},[change,wake]);
+ const resume=useCallback(()=>{if(phaseRef.current!=='paused')return;audio.current?.unlock();game.current?.resumeGrace();change('playing');wake();},[change,wake]);
  const leave=useCallback(()=>{sleep();onExit();},[onExit,sleep]);
  /** A turn from any input. During the crash beat a press skips to the results. */
  const steer=useCallback((d:number)=>{const g=game.current;if(phaseRef.current!=='playing'||!g)return;audio.current?.unlock();if(g.state.over){endAt.current=1;return;}g.turn(d);},[]);

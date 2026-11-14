@@ -67,7 +67,7 @@ function Panel({machine}:{machine:GashaponMachine}){
    </button>
    <footer className={styles.foot}>
     <p className={styles.progress} data-gashapon-progress={found}><span className={styles.dots} aria-hidden="true">{toys.map(t=><i key={t.id} data-on={!!save.owned[t.id]} style={{'--dot':t.colors[0]} as React.CSSProperties}/>)}</span>{found} of {toys.length} toys found</p>
-    <button type="button" className={styles.shelf} onClick={()=>openToyShelf()} disabled={busy} data-gashapon-shelf>Toy Shelf</button>
+    <button type="button" className={styles.shelf} onClick={()=>openToyShelf(machine.id)} disabled={busy} data-gashapon-shelf>Toy Shelf</button>
     <p className={styles.left} data-gashapon-left={left}>{left>0?`${left} of ${GASHAPON_SPINS_PER_DAY} capsules left today`:'No capsules left today. Back tomorrow!'}</p>
    </footer>
   </div>

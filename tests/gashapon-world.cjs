@@ -237,7 +237,7 @@ await ok('browser store: fi2-gashapon-v1 saved, 20 coins once per spin id from t
  assert.equal(W.readArcadeWallet().balance,charged+(fix.duplicate?fix.refund:0),'the retry charged nothing new');context.Date.now=now;
  const panel=read('components/useGashaponSpin.ts')+read('components/GashaponMachineFace.tsx');
  assert(/pending\.current\?\?=newSpinId\(\)/.test(panel)&&/if\(r\.reason==='save'\)unsavedSpin\.set\(machine\.id,spinId\);else\{pending\.current=null;/.test(panel),'the panel keeps the spin id for a save retry');
- assert(/openToyViewer\(shown\.toy\.id,'result'\)/.test(panel)&&/openToyShelf\(\)/.test(panel)&&/export function openToyViewer\(toyId:string,source:ToyViewSource='result'\)/.test(read('lib/gashapon/gashaponBrowser.ts')),'round-3A viewer + Toy Shelf hooks');
+ assert(/openToyViewer\(shown\.toy\.id,'result'\)/.test(panel)&&/openToyShelf\(machine\.id\)/.test(panel)&&/export function openToyViewer\(toyId:string,source:ToyViewSource='result'\)/.test(read('lib/gashapon/gashaponBrowser.ts')),'round-3A viewer + Toy Shelf hooks');
  // Owner, Nov 10 2026 ("simplify this to fit between Toy Shelf and Done btn on mobile"): ONE status pill from lib/gashapon/statusLine.ts
  // (its texts: tests/gashapon-status.cjs), between Toy Shelf and Done in one row.
  assert(/gashaponStatus\(\{found,total:toys\.length,left,blocked\}\)/.test(panel)&&/aria-label=\{status\.label\}/.test(panel)&&/data-gashapon-shelf>Toy Shelf<\/button>\s*<p className=\{styles\.status\}[\s\S]*?<\/p>\s*<div className=\{styles\.done\}>/.test(panel),'one status pill between Toy Shelf and Done');
@@ -276,3 +276,7 @@ await ok('Audit Nov 10: Spin cannot start without enough coins or after the dail
 console.log(failed?`${failed} FAILED`:'PASS gashapon world: 18 machines in 3D (16 on the island incl. the DRIP FC Stadium four), colliders, draw budget, Coral Cay room, browser store, prompt + panel wiring');
 process.exit(failed?1:0);
 })().catch(e=>{console.error(e);process.exit(1);});
+// QA Nov 14 2026: the Toy Shelf opened from a machine starts at that machine's row.
+{const fs=require('fs'),shelf=fs.readFileSync('components/GashaponToyShelf.tsx','utf8'),face=fs.readFileSync('components/GashaponMachineFace.tsx','utf8'),br=fs.readFileSync('lib/gashapon/gashaponBrowser.ts','utf8');
+ if(!/openToyShelf\(machine\.id\)/.test(face)||!/export function openToyShelf\(machineId\?:string\)\{setOverlay\(\{\.\.\.overlay,shelf:true,at:machineId\}\)/.test(br)||!/toyOverlay\.get\(\)\.at[\s\S]{0,200}data-shelf-machine/.test(shelf)||!/box\.scrollTop=/.test(shelf))throw new Error('Toy Shelf opens at the machine row');
+ console.log('Toy Shelf opens at the machine row: ok');}

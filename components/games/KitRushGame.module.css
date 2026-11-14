@@ -41,7 +41,8 @@
 .score{--cm-numeral-size:72px;display:block}
 .score[data-new-best]{animation:krPop .6s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes krPop{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
-.stamp{position:absolute;right:-16px;top:-20px}
+/* QA Nov 14 2026: was top:-20px, which sat the burst over the card's "Best 240" chip ("Rest 240"). Now it sticks on the score's top-right. */
+.stamp{position:absolute;right:-16px;top:18px}
 .medalRow{display:inline-flex;align-items:center;justify-content:center;gap:5px;margin:2px 0 8px}
 .chips .medal{width:16px;height:16px;border-width:2.5px}.chips .medal i{width:4px;height:4px}.chips .medalRow{gap:3px;margin:3px 0 4px}
 .medalRow em{margin-left:6px;font:800 14px/1 var(--cm-ui);font-style:normal;color:var(--cm-ink)}

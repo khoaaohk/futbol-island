@@ -47,7 +47,7 @@ const earnCopy=(name:string)=>cardRewardsActive()?TIER_HINT[cardTier(name)]??EAR
 const PLURAL:Record<string,string>={coach:'Coaches',goalkeeper:'Goalkeepers',fullback:'Full-backs',centerback:'Centre-backs',midfielder:'Midfielders',winger:'Wingers',striker:'Strikers',goleiro:'Goleiros',fixo:'Fixos',ala:'Alas',pivot:'Pivôs'};
 const SHORT:Record<string,string>={coach:'Coach',goalkeeper:'Goalkeeper',fullback:'Full-back',centerback:'Centre-back',midfielder:'Midfielder',winger:'Winger',striker:'Striker',goleiro:'Goleiro',fixo:'Fixo',ala:'Ala',pivot:'Pivô'};
 /** Divider tab labels that fit a phone's narrow tabs. */
-const TAB_SHORT:Record<string,string>={coach:'Coaches',goalkeeper:'Keepers',fullback:'Full-backs',centerback:'Centre',midfielder:'Midfield',winger:'Wingers',striker:'Strikers',goleiro:'Goleiros',fixo:'Fixos',ala:'Alas',pivot:'Pivôs'};
+const TAB_SHORT:Record<string,string>={coach:'Coaches',goalkeeper:'Keepers',fullback:'Backs'/* was 'Full-backs': clipped to "Full-ba…" on the side tab (QA Nov 14 2026) */,centerback:'Centre',midfielder:'Midfield',winger:'Wingers',striker:'Strikers',goleiro:'Goleiros',fixo:'Fixos',ala:'Alas',pivot:'Pivôs'};
 /** Divider tab colours (island riso palette), one per position. */
 const TAB:Record<string,string>={coach:'#e9798b',goalkeeper:'#ffd451',fullback:'#6ccdb0',centerback:'#8fb8f0',midfielder:'#f0a0d0',winger:'#f59f5b',striker:'#b9a0f0',goleiro:'#ffd451',fixo:'#6ccdb0',ala:'#f0a0d0',pivot:'#f59f5b'};
 /** One line per position on what to learn from its cards (the page head's and the tab's tooltip). */
