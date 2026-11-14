@@ -36,7 +36,7 @@ assert.match(sheet,/data-heading-choice[\s\S]*chooseHeading\(on\)/,'heading in t
 assert.match(sheet,/US youth rule: no heading at 10 and under\./,'age-safety rule kept, short');
 assert.match(sheet,/progress\.format===undefined&&[^\n]*data-ask-once/,'asks once, only when never set');
 assert.match(tsx,/const saveSettings=\(\)=>\{setProgress\(p=>\{const next=\{\.\.\.p,format,heading:headingAllowed\(p,format\)\};writeProgress\(next\)/,'Done saves the defaults');
-assert.match(tsx,/const headingAllowed=\(p:Progress,f:Format\)=>p\.heading\?\?f!=='7v7';/,'heading default unchanged (off in 7v7)');
+assert.match(tsx,/const headingAllowed=\(p:Progress,_f:Format\)=>p\.heading\?\?false;/,'heading default off in every format (Nov 14 2026)');
 assert.match(tsx,/setFormat\(p\.format\?\?childFormat\(\)\?\?'9v9'\)/,'format default unchanged');
 assert.match(home,/data-unset=\{progress\.format===undefined\|\|undefined\}/,'a dot invites a first look, never blocks');
 

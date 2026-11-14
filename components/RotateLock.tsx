@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { usePathname } from 'next/navigation';
 import { PORTRAIT_ONLY_QUERY, getOrientationMode, lockScreenOrientation, subscribeOrientationMode, wrongOrientationQuery } from '@/lib/orientationMode';
 import styles from './RotateLock.module.css';
 
@@ -15,6 +16,9 @@ const serverMode = () => 'portrait' as const;
 export default function RotateLock() {
   const mode = useSyncExternalStore(subscribeOrientationMode, getOrientationMode, serverMode);
   const switched = useRef(false);
+  // Leftovers QA (Nov 14 2026): the upright-only card in the arcade (room and portrait games) gets a way out too. Back closes an open
+  // game (ArcadeRoom listens for ARCADE_EXIT_EVENT); in the room itself it leaves to the island. The island has no Back here.
+  const inArcade = (usePathname() ?? '').startsWith('/arcade');
   useEffect(() => { lockScreenOrientation(getOrientationMode()); }, []);
   // QA round 2 (Oct 25 2026): the card covered the screen but arcade games kept running behind it (Strikers conceded, Breakaway Run
   // lost hearts). Turning the phone the wrong way now sends the same window `blur` the games and the island already treat as "the
@@ -26,5 +30,5 @@ export default function RotateLock() {
     if (switched.current) change(); switched.current = true;
     mq.addEventListener?.('change', change); return () => mq.removeEventListener?.('change', change);
   }, [mode]);
-  return <div className={styles.lock} data-mode={mode} role="alert" aria-live="polite"><div className={styles.phone} aria-hidden="true" /><p>{mode === 'landscape' ? 'Turn your phone sideways to play' : 'Turn your phone upright to play'}</p>{mode === 'landscape' && <button type="button" className={styles.leave} onClick={() => window.dispatchEvent(new Event(ARCADE_EXIT_EVENT))}>Back to arcade</button>}</div>;
+  return <div className={styles.lock} data-mode={mode} role="alert" aria-live="polite"><div className={styles.phone} aria-hidden="true" /><p>{mode === 'landscape' ? 'Turn your phone sideways to play' : 'Turn your phone upright to play'}</p>{mode === 'landscape' && <button type="button" className={styles.leave} onClick={() => window.dispatchEvent(new Event(ARCADE_EXIT_EVENT))}>Back to arcade</button>}{mode === 'portrait' && inArcade && <button type="button" className={styles.leave} data-portrait-back onClick={() => window.dispatchEvent(new Event(ARCADE_EXIT_EVENT))}>Back</button>}</div>;
 }

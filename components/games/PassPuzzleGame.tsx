@@ -101,7 +101,9 @@ function writeProgress(p:Progress){try{localStorage.setItem(PROGRESS_KEY,JSON.st
 /** The child's own format from their development plan when they have one; 9v9 otherwise. */
 function childFormat():Format|undefined{try{const goal=loadIdp().plan?.goalId;const f=goal?goalById(goal)?.format:undefined;return f&&(FORMATS as string[]).includes(f)?f as Format:undefined;}catch{return undefined;}}
 const reasonCopy:Record<string,string>={offside:'Offside! Your teammate was past the second-last defender when the ball was played. Wait for them, or pass sooner.',intercept:'A defender got to it first.',save:'The keeper read it.',out:'That one ran out of play.',rest:'The ball stopped before anyone reached it.','too-few-passes':'Right idea, but this one needs more passes first.',timeout:'Too slow! The defence got back before the finish.'};
-const headingAllowed=(p:Progress,f:Format)=>p.heading??f!=='7v7';
+/* Leftovers QA (Nov 14 2026): no heading by default in every format (the audience is 7–12 and the game knows no age; US youth rule:
+   no heading at 10 and under). A kid or parent can still turn it on; a saved choice wins. Was: on except in 7v7. */
+const headingAllowed=(p:Progress,_f:Format)=>p.heading??false;
 /** The puzzle as played: direct shots allowed, and the no-heading youth version when heading is off. */
 const playable=(s:Scenario,heading=true):Scenario=>{const base=heading?s:youthScenario(s);return{...base,require:{...base.require,allowDirectShot:base.require.finish==='goal'}};};
 const packInfo=(pack:string)=>PACKS.find(p=>p.id===pack);
