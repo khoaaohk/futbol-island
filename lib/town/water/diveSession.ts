@@ -165,7 +165,7 @@ export function createDiveSession(spots:readonly DiveSpot[]=DIVE_SPOTS,found:(sp
    *  refills the breath while at the surface. */
   scan(dt:number,x:number,z:number,swimming:boolean){
    clear();
-   if(state.phase==='surface'&&state.breath<1&&!state.ducking){state.breath=Math.min(1,state.breath+dt/BREATH_REFILL_S);markUi(dt);}
+   if(state.phase==='surface'&&state.breath<1&&!state.ducking){state.breath=Math.min(1,state.breath+dt/BREATH_REFILL_S);markUi(dt);/* QA Nov 13 2026: the frame the refill lands on full always tells the HUD (markUi's 10 Hz gate could skip it, and with breath at 1 it is never called again, so the Breath pill stayed up while swimming) */if(state.breath>=1&&state.uiBreath<1){state.uiAcc=0;state.uiBreath=1;events.breathUi=true;}}
    if(state.hold>0)state.hold=Math.max(0,state.hold-dt);// just surfaced: the Dive prompt waits (R stays the jetpack, no instant re-dive)
    if(!swimming||state.phase!=='surface'||state.hold>0){state.near=null;state.acc=Infinity;return state.near;}
    state.acc+=dt;if(state.acc<DIVE_TICK-1e-6)return state.near;state.acc=0;
