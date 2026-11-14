@@ -20,7 +20,9 @@ export type BeanLook = {
   headwearColor?: string; headwearColor2?: string;
   gloves?: string;         // keepers
 };
-export type Outfit = { kind: 'kit'|'casual'; shirt: string; shirt2: string; shorts: string; socks: string; socks2?: string; boots: string; number?: number|null };
+/** `club` / `bootClub` (Nov 13 2026, Drip FC club kit, lib/shop/dripKit.ts): the club crest on the shirt (1 chest, 2 sleeve) and
+ *  the club drop on the boots (bits: 1 side, 2 heel), drawn by the bean shader from one shared mark texture (beanSkin.ts). */
+export type Outfit = { kind: 'kit'|'casual'; shirt: string; shirt2: string; shorts: string; socks: string; socks2?: string; boots: string; number?: number|null; club?: number; bootClub?: number };
 
 export type BeanExpression = 'neutral'|'calling'|'determined'|'beaten'|'happy'|'surprised'|'focused';
 

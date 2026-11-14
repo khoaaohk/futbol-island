@@ -5,6 +5,8 @@ import {ZONE_SIZE,decalPart,paintAt,zoneAt,zoneParams,zoneRay,type ZoneCtx} from
 import {createBaker,MAX_DECALS,MAX_EYELETS} from './bootBake';
 import {FLAGS,QUOTES,flagUrl,type BootDecal,type BootDesign,type BootModel,type ColourZone,type DecalZone,type StickerId,type StudFinish,type StudType} from './boots';
 import {STICKERS,stickerDataUrl} from './bootStickers';
+import {clubArtReady,clubSticker} from './clubArt';
+import {isClubArt} from './dripKit';
 import {frameCapSlot,studioFrameMs} from './studioFrameCap';
 import {applyInsetOffset,fitDistance,sameInsets,type StageInsets} from './studioSheet';
 
@@ -471,6 +473,10 @@ export function createBootScene(canvas:HTMLCanvasElement,opts:BootSceneOptions):
  function itemFor(p:Placed):AtlasItem{
   const [kind,ref]=p.key.split(':');
   if(kind==='sticker')return {key:p.key,w:256,h:256,draw:async(g,x,y)=>{const i=await img(stickerDataUrl(ref as StickerId));g.drawImage(i,x+12,y+12,232,232);}};
+  // Drip FC stickers (lib/shop/clubArt.ts): the wordmark takes a 512×128 strip, the crest and the drop a square.
+  if(kind==='club'){const id=isClubArt(ref)?ref:'crest',wide=id==='wordmark';
+   return {key:p.key,w:wide?512:256,h:wide?128:256,draw:async(g,x,y)=>{await clubArtReady();const c=clubSticker(id,wide?240:232).canvas,W=wide?496:232,H=wide?120:232,k=Math.min(W/c.width,H/c.height),w=c.width*k,h=c.height*k;
+    g.drawImage(c,x+(wide?256:128)-w/2,y+(wide?64:128)-h/2,w,h);c.width=c.height=1;}};}
   if(kind==='flag'||kind==='badge')return {key:p.key,w:256,h:192,draw:async(g,x,y)=>{const i=await img(flagUrl(ref));
    const r=18,b=kind==='badge'?9:11,m=12,W=256-2*m,H=192-2*m;g.save();g.beginPath();g.roundRect(x+m,y+m,W,H,r);g.fillStyle=kind==='badge'?'#f4f1e8':'#fffaf0';g.fill();g.beginPath();g.roundRect(x+m+b,y+m+b,W-2*b,H-2*b,r-6);g.clip();g.drawImage(i,x+m+b,y+m+b,W-2*b,H-2*b);g.restore();}};
   if(kind==='num')return {key:p.key,w:256,h:256,draw:(g,x,y)=>{g.save();g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';const px=fitText(g,ref,n=>`900 ${n}px "Arial Black",Arial,Helvetica,sans-serif`,220,200);g.font=`900 ${px}px "Arial Black",Arial,Helvetica,sans-serif`;g.fillText(ref,x+128,y+138);g.restore();}};
@@ -571,7 +577,7 @@ export function createBootScene(canvas:HTMLCanvasElement,opts:BootSceneOptions):
  }
  function placedFrom(d:BootDesign){
   const list:Placed[]=d.decals.map(x=>({id:x.id,zone:x.zone,x:x.x,y:x.y,size:x.size,rot:x.rot,kind:0,tint:x.kind==='quote'?(x.tint??'#f6f3ea'):null,
-   key:`${x.kind}:${x.ref}`,aspect:x.kind==='quote'?4:x.kind==='flag'?4/3:1}));
+   key:`${x.kind}:${x.ref}`,aspect:x.kind==='quote'||(x.kind==='club'&&x.ref==='wordmark')?4:x.kind==='flag'?4/3:1}));
   const heelHex=d.colors.heel,thread=lumOf(heelHex)>.55?'#18191d':'#f6f3ea';
   const flagHeel=d.flag&&d.flagSpot==='heel';
   if(d.heelText==='name'&&d.name)list.push({id:'__name',zone:'heel',x:0,y:flagHeel?-.6:-.1,size:1.35,rot:0,kind:1,tint:thread,key:`name:${d.name}`,aspect:4});

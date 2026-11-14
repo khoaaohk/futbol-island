@@ -30,11 +30,13 @@ import {StudioIconButton,StudioIconRow,StudioSheetHandle,StudioSteps,studioSecti
 import type {StageInsets} from '@/lib/shop/studioSheet';
 import {countDesignSave} from '@/lib/analytics/shopEvents';
 import {EDGE_IN,edgeTurnRate} from '@/lib/shop/ballPick';
+import {CLUB_STICKERS,MAX_CLUB_BALL} from '@/lib/shop/dripKit';
+import {ClubNote} from './ClubLabel';
 
 type Props={onClose():void;onBuy?(design:BallDesign):void};
 const STEPS=[{id:'panels',label:'Start'},{id:'colours',label:'Colours'},{id:'pattern',label:'Pattern'},{id:'finish',label:'Finish'},{id:'draw',label:'Draw'},{id:'stickers',label:'Stickers'},{id:'done',label:'Done'}] as const;
 type StepId=typeof STEPS[number]['id'];
-const DEFAULT_SIZE:Record<DecalKind,number>={sticker:.2,flag:.17,quote:.15,name:.16,number:.26};
+const DEFAULT_SIZE:Record<DecalKind,number>={sticker:.2,flag:.17,quote:.15,name:.16,number:.26,club:.2};
 type Mods={paint:typeof import('@/lib/shop/ballPaint');panels:typeof import('@/lib/shop/ballPanels')};
 /** One Draw-step undo step: a stroke (pixels), a fill change, or both (Clear). */
 type DrawStep={px:boolean;fills?:{before:string[];after:string[]}};
@@ -150,7 +152,7 @@ export default function BallStudio({onClose,onBuy}:Props){
  const [visited,setVisited]=useState<Set<StepId>>(()=>new Set(['panels']));
  const [group,setGroup]=useState<'a'|'b'|'c'>('a');
  const [patSlot,setPatSlot]=useState<'c1'|'c2'>('c1');
- const [tray,setTray]=useState<'sticker'|'flag'|'quote'|'name'>('sticker');
+ const [tray,setTray]=useState<'sticker'|'flag'|'quote'|'name'|'club'>('sticker');
  const [sel,setSel]=useState(-1);
  const [ready,setReady]=useState(false);
  const [failed,setFailed]=useState(false);
@@ -301,6 +303,7 @@ export default function BallStudio({onClose,onBuy}:Props){
   const st=stageRef.current,rot=st?st.uprightRot(dir):0;d.decals.push({id:uid(),kind,ref,color,dir,rot,size:DEFAULT_SIZE[kind]});commit(d);const i=d.decals.length-1;setSel(i);soundRef.current?.pop();buzz();return i;},[commit,say]);
  /** One tap puts it on the ball, on a free spot facing you, selected: then drag it where you like. */
  const place=(kind:DecalKind,ref:string)=>{if(designRef.current.decals.length>=MAX_DECALS){say(`That's ${MAX_DECALS}, the most a ball can hold!`);return;}
+  if(kind==='club'&&designRef.current.decals.filter(x=>x.kind==='club').length>=MAX_CLUB_BALL){say(`${MAX_CLUB_BALL} Drip FC stickers is the most for one ball.`);return;}
   const i=addDecal(kind,ref,freeDir(kind,SPOTS),kind==='quote'?textColor:'#ffffff');if(i>=0)setHint('Drag it to move it · pinch or ± to resize');};
  const changeSel=(fn:(x:BallDecal)=>void)=>{if(sel<0)return;edit(d=>{const x=d.decals[sel];if(x)fn(x);});};
  const removeSel=()=>{if(sel<0)return;edit(d=>{d.decals.splice(sel,1);});setSel(-1);};
@@ -391,6 +394,10 @@ export default function BallStudio({onClose,onBuy}:Props){
  useEffect(()=>{if(step!=='stickers'||thumbs['sticker:star'])return;let dead=false;import('@/lib/shop/ballArt').then(({decalImage})=>{if(dead)return;const out:Record<string,string>={};
   for(const id of STICKER_IDS)out[`sticker:${id}`]=decalImage('sticker',id,'#fff','',120).canvas.toDataURL();
   for(const f of FLAGS)out[`flag:${f.code}`]=decalImage('flag',f.code,'#fff','',96).canvas.toDataURL();setThumbs(out);});return ()=>{dead=true;};},[step,thumbs]);
+ // Drip FC sticker thumbnails: only when that tray opens (the club's pictures load then, once).
+ useEffect(()=>{if(step!=='stickers'||tray!=='club'||thumbs['club:crest'])return;let dead=false;
+  Promise.all([import('@/lib/shop/ballArt'),import('@/lib/shop/clubArt')]).then(([{decalImage},{clubArtReady}])=>clubArtReady().then(()=>{if(dead)return;const out:Record<string,string>={};
+   for(const c of CLUB_STICKERS)out[`club:${c.id}`]=decalImage('club',c.id,'#fff','',120).canvas.toDataURL();setThumbs(t=>({...t,...out}));}));return ()=>{dead=true;};},[step,tray,thumbs]);
  const [patThumbs,setPatThumbs]=useState<Record<string,string>>({});
  useEffect(()=>{if(step!=='pattern')return;let dead=false;import('@/lib/shop/ballArt').then(({drawPatternMask})=>{if(dead)return;const c=document.createElement('canvas');c.width=128;c.height=64;const g2=c.getContext('2d')!;const out:Record<string,string>={};
   const hx=(v:string)=>[parseInt(v.slice(1,3),16),parseInt(v.slice(3,5),16),parseInt(v.slice(5,7),16)];const base=hx(design.colors.b==='#1d1f24'?design.colors.a:design.colors.b),c1=hx(design.pattern.c1),c2=hx(design.pattern.c2);
@@ -484,9 +491,13 @@ export default function BallStudio({onClose,onBuy}:Props){
    <p className={s.fact}>{I.hand}<span><b>{tool==='fill'?'Fill a panel':tool==='stamp'?'Stamps':sym==='radial5'?'×5 magic':'How to draw'}</b>{tool==='fill'?'Tap any panel to paint it. Tap it again to take the colour off.':tool==='stamp'?'Tap the ball to stamp. Try ×5 for a ring of stars!':sym==='radial5'?'Everything you draw is copied five times round the ball, like the five sides of a pentagon.':'Paint with one finger. Spin the ball with two fingers, or switch to Spin.'}</span></p>{nextCta}</div>;
   case 'stickers':return <div className={s.pane} key="stickers">
    <h2 className={`${s.h2} ${studioSectionTitle}`}>Stickers &amp; words <small className={s.count} aria-label={`${design.decals.length} of ${MAX_DECALS} used`}>{Array.from({length:MAX_DECALS},(_,i)=><i key={i} data-on={i<design.decals.length?'':undefined}/>)}</small></h2>
-   <div className={s.tabs} role="group" aria-label="Sticker kind">{(['sticker','flag','quote','name'] as const).map(k=><button key={k} aria-pressed={tray===k} onClick={()=>setTray(k)}>{k==='sticker'?'Stickers':k==='flag'?'Flags':k==='quote'?'Words':'Name'}</button>)}</div>
+   <div className={s.tabs} role="group" aria-label="Sticker kind">{(['sticker','flag','quote','name','club'] as const).map(k=><button key={k} aria-pressed={tray===k} onClick={()=>setTray(k)}>{k==='sticker'?'Stickers':k==='flag'?'Flags':k==='quote'?'Words':k==='name'?'Name':'Drip FC'}</button>)}</div>
    {tray==='sticker'&&<div className={s.trays}>{STICKER_IDS.map(id=><button key={id} className={s.item} aria-label={`${id} sticker`} disabled={design.decals.length>=MAX_DECALS} onClick={()=>place('sticker',id)} data-shop-own-cue>{thumbs[`sticker:${id}`]?<img src={thumbs[`sticker:${id}`]} alt=""/>:null}</button>)}</div>}
    {tray==='flag'&&<div className={`${s.trays} ${s.flags}`}>{FLAGS.map(f=><button key={f.code} className={s.item} aria-label={`${f.name} flag`} title={f.name} disabled={design.decals.length>=MAX_DECALS} onClick={()=>place('flag',f.code)} data-shop-own-cue>{thumbs[`flag:${f.code}`]?<img src={thumbs[`flag:${f.code}`]} alt="" style={{height:'78%'}}/>:null}<span className={s.flagName}>{f.name}</span></button>)}</div>}
+   {tray==='club'&&<><ClubNote>Up to {MAX_CLUB_BALL}, the same price as any sticker.</ClubNote>
+    <div className={s.trays}>{CLUB_STICKERS.map(c=><button key={c.id} className={s.item} aria-label={`${c.label} sticker`} title={c.label} disabled={design.decals.length>=MAX_DECALS||design.decals.filter(x=>x.kind==='club').length>=MAX_CLUB_BALL} onClick={()=>place('club',c.id)} data-shop-own-cue>{thumbs[`club:${c.id}`]?
+     // eslint-disable-next-line @next/next/no-img-element
+     <img src={thumbs[`club:${c.id}`]} alt="" style={{maxWidth:'86%',maxHeight:'78%',objectFit:'contain'}}/>:null}</button>)}</div></>}
    {tray==='quote'&&<div className={s.quotes}>{QUOTES.map(q=><button key={q.id} className={s.quote} disabled={design.decals.length>=MAX_DECALS} onClick={()=>place('quote',q.id)} data-shop-own-cue>{q.text}</button>)}</div>}
    {tray==='name'&&<>
     <div className={s.field}><input value={nameDraft} onChange={e=>onName(e.target.value)} placeholder="Type your name" maxLength={NAME_MAX+1} aria-label="Name for your ball" autoComplete="off" autoCapitalize="words" spellCheck={false} enterKeyHint="done" onKeyDown={e=>{if(e.key==='Enter')putName();}}/>

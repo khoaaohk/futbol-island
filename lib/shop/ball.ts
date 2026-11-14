@@ -16,6 +16,7 @@
  * no tournament names.
  */
 import {BALL_PRICES} from '../economy';
+import {MAX_CLUB_BALL,isClubArt} from './dripKit';
 export const BALL_KEY='fi2-shop-ball-v1';
 export const MAX_DECALS=8;
 export const SLOT_COUNT=3;
@@ -36,7 +37,8 @@ export type BallLayout='classic32'|'panel26'|'panel14'|'propeller6'|'panel8'|'le
 export type BallFinish='gloss'|'matte'|'dimple'|'leather'|'holo'|'metal';
 export type PatternKind='none'|'stripes'|'swoosh'|'stars'|'splatter'|'gradient'|'confetti'|'waves'|'flames';
 export type PatternTarget='all'|'a'|'b'|'c';
-export type DecalKind='sticker'|'flag'|'quote'|'name'|'number';
+/** 'club' (Nov 13 2026): a Drip FC sticker (lib/shop/dripKit.ts: ref = crest / wordmark / drop). An older build drops it. */
+export type DecalKind='sticker'|'flag'|'quote'|'name'|'number'|'club';
 export type BallSize=3|4|5;
 export type Vec3=[number,number,number];
 /** A decal on the ball: `dir` is the unit direction of its centre in ball space, `rot` its turn (radians) about that
@@ -120,7 +122,7 @@ export const DEFAULT_BALL:BallDesign=Object.freeze({
 }) as BallDesign;
 
 const LAYOUT_IDS=LAYOUTS.map(l=>l.id),FINISH_IDS=FINISHES.map(f=>f.id),PATTERN_IDS=PATTERNS.map(p=>p.id);
-const DECAL_KINDS:readonly DecalKind[]=['sticker','flag','quote','name','number'];
+const DECAL_KINDS:readonly DecalKind[]=['sticker','flag','quote','name','number','club'];
 export const layoutInfo=(id:BallLayout)=>LAYOUTS.find(l=>l.id===id)??LAYOUTS[0];
 
 // ---- Text safety --------------------------------------------------------------------------------------------------------
@@ -172,6 +174,7 @@ export function validateDecal(input:unknown,i=0):BallDecal|null{
  let ref=typeof d.ref==='string'?d.ref:'';
  if(kind==='sticker'&&!(STICKER_IDS as readonly string[]).includes(ref))return null;
  if(kind==='flag'&&!FLAGS.some(f=>f.code===ref))return null;
+ if(kind==='club'&&!isClubArt(ref))return null;
  if(kind==='quote'&&!QUOTES.some(q=>q.id===ref))return null;
  if(kind==='name'){ref=filterNameInput(ref).trim();if(!isNameAllowed(ref))return null;}
  if(kind==='number'){const n=cleanNumber(ref);if(n===null)return null;ref=String(n);}
@@ -183,7 +186,8 @@ export function validateBall(input:unknown):BallDesign{
  const D=DEFAULT_BALL;if(!input||typeof input!=='object')return cloneBall(D);
  const o=input as Record<string,unknown>,c=(o.colors&&typeof o.colors==='object'?o.colors:{}) as Record<string,unknown>,p=(o.pattern&&typeof o.pattern==='object'?o.pattern:{}) as Record<string,unknown>;
  const decals:BallDecal[]=[];const seen=new Set<string>();
- if(Array.isArray(o.decals))for(const [i,x] of o.decals.entries()){if(decals.length>=MAX_DECALS)break;const d=validateDecal(x,i);if(!d)continue;if(seen.has(d.id))d.id=`d${i}x`;seen.add(d.id);decals.push(d);}
+ let club=0;
+ if(Array.isArray(o.decals))for(const [i,x] of o.decals.entries()){if(decals.length>=MAX_DECALS)break;const d=validateDecal(x,i);if(!d)continue;if(d.kind==='club'&&++club>MAX_CLUB_BALL)continue;if(seen.has(d.id))d.id=`d${i}x`;seen.add(d.id);decals.push(d);}
  const size=([3,4,5] as const).includes(o.size as BallSize)?o.size as BallSize:D.size;
  const layout=pick(o.layout,LAYOUT_IDS,D.layout);
  return {v:1,layout,colors:{a:hex(c.a,D.colors.a),b:hex(c.b,D.colors.b),c:hex(c.c,D.colors.c)},

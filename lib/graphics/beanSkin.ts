@@ -3,6 +3,7 @@ import {LUMBAR_HEIGHT,CHEST_HEIGHT} from './spineSurface';
 import {shirtDigitAtlas,shirtInk,SHIRT_NUMBER_COVER_GLSL,BEAN_NUMBER_U,BEAN_DIGIT_HEIGHT,BEAN_NAME_U,BEAN_NAME_W,BEAN_NAME_H,BEAN_NAME_CAP} from './shirtNumbers';
 import {styleIndexRange} from './playerBatch';
 import {WATER_UNIFORMS} from './waterSurface';
+import {clubMarkTexture,wantClubMarks} from './clubMark';
 import {BEAN_EYES,BEAN_MOUTHS,BEAN_EXPRESSIONS,defaultBeanLookFor,defaultOutfitForTeam,
  type BeanLook,type Outfit,type BeanExpression,type BeanBuild,type BeanEyes,type BeanMouth} from './beanLook';
 
@@ -449,7 +450,7 @@ void beanShape(){
   beanP=vec3(dot(r0,vec4(lp,1.)),dot(r1,vec4(lp,1.)),dot(r2,vec4(lp,1.)));
   beanN=normalize(vec3(dot(r0.xyz,beanLocalN),dot(r1.xyz,beanLocalN),dot(r2.xyz,beanLocalN)));
   vBeanPaint=beanPaint;
-  vBeanS=vec3(0.,0.,beanLocal.y);
+  vBeanS=vec3(beanLocal.x,beanLocal.z,beanLocal.y);// x / z: the Drip FC boot mark (LIMB_FRAG); z = local height (the sole)
  }
 }`;
 const HEAD_VERTEX=/* glsl */`
@@ -497,6 +498,7 @@ int beanRowI;
 float beanFaceMask;
 ${ROW_ACCESS}`;
 const BODY_FRAG_PARS=/* glsl */`
+uniform sampler2D beanClub;
 uniform sampler2D beanFace;
 uniform sampler2D beanDigits;
 #ifdef BEAN_NAME
@@ -545,6 +547,15 @@ const BODY_FRAG=/* glsl */`
    }
   }}
  #endif
+ // Drip FC club crest (misc.z: 1 = wearer's left chest, 2 = left sleeve side; clubMark.ts left cell), inked like the number.
+ if(mc.z>.5){
+  float ca=atan(vBeanSC.x,vBeanSC.y),a0=mc.z<1.5?.36:1.45;
+  vec2 cq=vec2((ca-a0)*vBeanSC.z,vBeanSC.w-(${g(Y0)}+.5*span))/.045,cdx=dFdx(cq)*vec2(.25,.5),cdy=dFdy(cq)*vec2(.25,.5);
+  if(abs(cq.x)<1.&&abs(cq.y)<1.){
+   float cov=textureGrad(beanClub,vec2(.25+cq.x*.25,.5+cq.y*.5),cdx,cdy).r*smoothstep(3.,5.,.09*vBeanPx);
+   col=mix(col,bt(${BD.shirt}).w>.5?vec3(1.):vec3(.0065,.0168,.0814),cov);
+  }
+ }
  if(fr<1.08){
   vec4 sk=bt(${BD.skin});vec3 panel=sk.rgb;
   vec3 pc=mix(panel*1.12+.02,panel,smoothstep(0.,.85,length(fp-vec2(-.17,.24))));
@@ -573,6 +584,7 @@ const BODY_FRAG=/* glsl */`
  diffuseColor.rgb=col;
 }`;
 const LIMB_FRAG_PARS=/* glsl */`
+uniform sampler2D beanClub;
 flat varying float vBeanRow;
 flat varying float vBeanPaint;
 varying vec3 vBeanS;`;
@@ -583,7 +595,16 @@ const LIMB_FRAG=/* glsl */`
  // Legs: shorts on the thigh top, kit socks up most of the shin (stripe at the top); arms: kit sleeves + cuff.
  if(vBeanPaint<-1.5){float ft=vBeanS.x,fb=vBeanS.y;col=ft<.42?bt(${BD.shorts}).rgb:fb<.64?bt(${BD.socks}).rgb:fb<.71?bt(${BD.socks2}).rgb:bt(${BD.body}).rgb;}
  else if(vBeanPaint<-.5){float ft=vBeanS.x;col=ft<.86?bt(${BD.shirt}).rgb:ft<.93?bt(${BD.shirt2}).rgb:bt(${BD.body}).rgb;}
- else if(abs(vBeanPaint-${BD.boots}.)<.5)col=vBeanS.z<-.062?vec3(.93,.88,.8):bt(${BD.boots}).rgb;
+ else if(abs(vBeanPaint-${BD.boots}.)<.5){
+  col=vBeanS.z<-.062?vec3(.93,.88,.8):bt(${BD.boots}).rgb;
+  // Drip FC drop on the boot (misc.w bits: 1 sides, 2 heel; clubMark.ts right cell). Boot-local x across, y = forward, z up.
+  float bw=bt(${BD.misc}).w;
+  vec2 sq=vec2((vBeanS.x>0.?-1.:1.)*(vBeanS.y-.03),vBeanS.z+.024)/.028,hq=vec2(-vBeanS.x,vBeanS.z+.022)/.026;
+  vec2 sdx=dFdx(sq)*vec2(.25,.5),sdy=dFdy(sq)*vec2(.25,.5),hdx=dFdx(hq)*vec2(.25,.5),hdy=dFdy(hq)*vec2(.25,.5);
+  vec3 mk=dot(col,vec3(.2126,.7152,.0722))>.3?vec3(.0123,.117,.644):vec3(1.);
+  if(mod(bw,2.)>.5&&abs(vBeanS.x)>.035&&abs(sq.x)<1.&&abs(sq.y)<1.)col=mix(col,mk,textureGrad(beanClub,vec2(.75+sq.x*.25,.5+sq.y*.5),sdx,sdy).r);
+  if(bw>1.5&&vBeanS.y<-.05&&abs(hq.x)<1.&&abs(hq.y)<1.)col=mix(col,mk,textureGrad(beanClub,vec2(.75+hq.x*.25,.5+hq.y*.5),hdx,hdy).r);
+ }
  else col=bt(int(vBeanPaint+.5)).rgb;
  diffuseColor.rgb=col;
 }`;
@@ -647,7 +668,7 @@ function patchVertex(src:string,kind:BeanKind,depth:boolean){
  if(!depth)src=src.replace('#include <common>','#include <common>\nvarying vec3 vBeanW;').replace('#include <project_vertex>','#include <project_vertex>\n'+BEAN_WORLD_VERTEX);
  return src.replace('#include <project_vertex>','#include <project_vertex>\n'+lod);
 }
-type BeanUniforms={beanData:{value:T.Texture|null};beanDyn:{value:T.Texture|null};beanRowU:{value:Float32Array};uBeanViewport:{value:number};beanFace:{value:T.Texture|null};beanDigits:{value:T.Texture|null};beanName:{value:T.Texture|null};
+type BeanUniforms={beanData:{value:T.Texture|null};beanDyn:{value:T.Texture|null};beanRowU:{value:Float32Array};uBeanViewport:{value:number};beanFace:{value:T.Texture|null};beanDigits:{value:T.Texture|null};beanName:{value:T.Texture|null};beanClub:{value:T.Texture|null};
  /** 0..1 underwater look below the water line (swimClear.ts; the swimming player only, 0 = no-op for every other bean). */beanUnder:{value:number};uWaterTime:{value:number}};
 const EMPTY_ROW=new Float32Array(BD.size*4);
 /** A rig's row wrapped as a texture handle: identifies the row for code that clones bean materials; never uploaded. */
@@ -662,7 +683,7 @@ const isBatchTexture=(source:RowSource)=>!!source&&!(source instanceof Float32Ar
  * frame re-uploads only the small dynamic texture.
  */
 function uniformsFor(kind:BeanKind,row:Float32Array|null,texture:T.Texture|null):BeanUniforms{
- return {beanData:{value:texture},beanDyn:{value:null},beanRowU:{value:row??EMPTY_ROW},uBeanViewport:viewport,beanFace:{value:kind==='body'?beanFaceAtlas():null},beanDigits:{value:kind==='body'?shirtDigitAtlas():null},beanName:{value:null},beanUnder:{value:0},uWaterTime:WATER_UNIFORMS.uWaterTime};
+ return {beanData:{value:texture},beanDyn:{value:null},beanRowU:{value:row??EMPTY_ROW},uBeanViewport:viewport,beanFace:{value:kind==='body'?beanFaceAtlas():null},beanDigits:{value:kind==='body'?shirtDigitAtlas():null},beanName:{value:null},beanClub:{value:kind==='body'||kind==='limbs'?clubMarkTexture():null},beanUnder:{value:0},uWaterTime:WATER_UNIFORMS.uWaterTime};
 }
 /** Clay MeshStandardMaterial for one bean part; clones (playerBatch) keep the shader with their own data texture. */
 export class BeanMaterial extends T.MeshStandardMaterial{
@@ -1005,7 +1026,9 @@ export function createBeanSkin(j:BeanJoints,id:string,team:string,articulatedHan
   colour(BD.hair,look.hair?.color??'#2a1c16',hairId);colour(BD.hat1,look.headwearColor??(hw==='none'?'#ff5d8f':outfit.shirt),HAT_IDS[hw]??0);
   colour(BD.hat2,look.headwearColor2??(hw==='none'?'#fff4cd':outfit.shirt2),number??0);
   const s=BEAN_SHAPES[look.build]??BEAN_SHAPES.regular;put(BD.shape0,s.H,s.W,s.D,s.taper);put(BD.shape1,s.belly,s.leanX,s.leanZ,look.build==='wide'?1.08:look.build==='tall'?.95:1);
-  put(BD.misc,FACE_U,BEAN_NUMBER_U,0,0);
+  // misc.z / misc.w: the Drip FC club crest spot and boot marks (beanLook.ts Outfit.club / bootClub; 0 = none)
+  const club=outfit.club??0,bootClub=outfit.bootClub??0;if(club||bootClub)wantClubMarks();
+  put(BD.misc,FACE_U,BEAN_NUMBER_U,club,bootClub);
   hair.geometry=beanStyleView(geos.hair,hairId);hat.geometry=beanStyleView(geos.hat,HAT_IDS[hw]??0);
   hair.visible=hairId>0;hat.visible=(HAT_IDS[hw]??0)>0;
   for(const m of meshes)if(m!==hair&&m!==hat)m.visible=active;

@@ -15,8 +15,13 @@
  * so the jersey key stays under ~50 KB, far inside the sync caps (lib/saves/snapshot.ts: 256 KB per key, 512 KB / 192 KB gzip
  * per snapshot). Drawings are user-generated images stored only in the child's own save (no public sharing); typed text still
  * goes only through the name filter below.
+ *
+ * Nov 13 2026 (owner): the one real club is Drip FC, the stadium's naming sponsor, who agreed to it: an optional `club` block puts
+ * their crest on the chest or sleeve and their wordmark across the front (lib/shop/dripKit.ts). Absent = no change (same JSON, same
+ * purchase id); an older build drops it.
  */
 import {type Art,validateArt,artStats} from './paint/artOps';
+import {CLUB_COLORS,cleanJerseyClub,type JerseyClub} from './dripKit';
 
 export const JERSEY_KEY='fi2-shop-jersey-v1';
 export const JERSEY_SLOTS=3;
@@ -39,6 +44,9 @@ export interface JerseyDesign{
  crest:JerseyCrest;sponsor:SponsorId;
  /** The child's own drawing (optional; absent = none). Layered above the pattern and below the crest, name and numbers. */
  art?:Art;
+ /** Drip FC club kit (optional, Nov 13 2026): the club crest on the chest (in place of the island crest) or the sleeve, and / or
+  *  the wordmark across the front (in place of the made-up sponsor). Absent = none. */
+ club?:JerseyClub;
 }
 export interface JerseySlot{name:string;design:JerseyDesign;savedAt:number}
 export interface JerseySave{v:1;current:JerseyDesign;slots:(JerseySlot|null)[];updatedAt:number}
@@ -116,6 +124,8 @@ export const PRESETS:{id:string;label:string;design:JerseyDesign}[]=[
  {id:'flamingo',label:'Flamingo pins',design:{...DEFAULT_JERSEY,pattern:'pinstripes',primary:'#ff8fb8',secondary:'#f7f3ea',accent:'#7b4bb7',collar:'polo',number:7,textColor:'#7b4bb7',font:'brush',crest:{shape:'diamond',initials:'FP',icon:'palm',fill:'#7b4bb7',ring:'#f7f3ea',ink:'#ff8fb8'},sponsor:'panenka'}},
  {id:'keeper',label:'Keeper lime',design:{...DEFAULT_JERSEY,pattern:'solid',primary:'#a3d93a',secondary:'#15171a',accent:'#15171a',collar:'crew',sleeves:'long',number:1,textColor:'#15171a',font:'classic',crest:{shape:'shield',initials:'GK',icon:'ball',fill:'#15171a',ring:'#a3d93a',ink:'#a3d93a'},sponsor:'none'}},
  {id:'navy',label:'Classic navy',design:{...DEFAULT_JERSEY,pattern:'hoops',primary:'#1b2a4a',secondary:'#f7f3ea',accent:'#d7263d',collar:'polo',number:2,textColor:'#f7f3ea',font:'college',crest:{shape:'shield',initials:'CN',icon:'star',fill:'#f7f3ea',ring:'#d7263d',ink:'#1b2a4a'},sponsor:'nutmeg'}},
+ // Drip FC home shirt (Nov 13 2026, owner): club blue with navy and white, the crest on the chest and the wordmark across the front.
+ {id:'dripfc-home',label:'Drip FC home',design:{...DEFAULT_JERSEY,pattern:'solid',primary:CLUB_COLORS.blue,secondary:CLUB_COLORS.white,accent:CLUB_COLORS.navy,collar:'vneck',number:9,textColor:'#f7f3ea',font:'classic',crest:{shape:'roundel',initials:'DFC',icon:'none',fill:CLUB_COLORS.navy,ring:'#f7f3ea',ink:'#f7f3ea'},sponsor:'none',club:{crest:'chest',word:true}}},
  {id:'mint',label:'Mint waves',design:{...DEFAULT_JERSEY,pattern:'waves',primary:'#9fe3c8',secondary:'#2554c7',accent:'#f7f3ea',collar:'vneck',number:3,textColor:'#2554c7',font:'rounded',crest:{shape:'roundel',initials:'MW',icon:'wave',fill:'#2554c7',ring:'#f7f3ea',ink:'#9fe3c8'},sponsor:'topbins'}},
 ];
 
@@ -228,6 +238,7 @@ export function validateJersey(input:unknown):JerseyValidation{
   sponsor:pick('sponsor',SPONSORS.some(x=>x.id===d.sponsor),oneOf(d.sponsor,SPONSORS,D.sponsor),D.sponsor),
  };
  // the drawing: optional; a bad or oversized one is dropped whole (never half-drawn) and reported as 'art'
+ const club=cleanJerseyClub(d.club);if(club)design.club=club;
  const art=validateArt(d.art);
  if(!art.ok)errors.push('art');
  if(art.art)design.art=art.art;

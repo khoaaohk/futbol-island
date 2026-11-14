@@ -144,8 +144,8 @@
 .finish{width:66px;height:66px;border-radius:50%;box-shadow:0 6px 8px -5px #0007}
 
 /* Stickers / flags / quotes */
-.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding:5px;border-radius:999px;background:#efe1bf;margin-bottom:12px}
-.tabs button{height:44px;border:0;border-radius:999px;background:transparent;font-size:13px;font-weight:900;color:var(--ink-soft);transition:background .2s,color .2s}
+.tabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:5px;border-radius:999px;background:#efe1bf;margin-bottom:12px}
+.tabs button{height:44px;padding:0 2px;border:0;border-radius:999px;background:transparent;font-size:12.5px;white-space:nowrap;font-weight:900;color:var(--ink-soft);transition:background .2s,color .2s}
 .tabs button[aria-pressed='true']{background:var(--ink);color:#fff3d2}
 .count{display:inline-flex;align-items:center;gap:6px}
 .count i{display:inline-block;width:9px;height:9px;border-radius:50%;background:#e3d4b0}

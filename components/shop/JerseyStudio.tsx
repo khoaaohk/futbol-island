@@ -25,6 +25,8 @@ import {
  loadJerseySave,writeJerseySave,emptySave,validateJersey,sameJersey,bestInk,hasArt,jerseyHistory,
 } from '@/lib/shop/jersey';
 import {drawFlatShirt,drawCrest,FONT_FACES} from '@/lib/shop/jerseyPaint';
+import type {JerseyClubSpot} from '@/lib/shop/dripKit';
+import {ClubNote,ClubTag} from './ClubLabel';
 import {type ArtOp,type ArtShape,type ArtSize,artFullness} from '@/lib/shop/paint/artOps';
 import type {JerseySceneApi,JerseyFocus,JerseyAngle,DrawConfig,DrawTool,PaintLock} from './jerseyScene';
 import {StudioIconButton,StudioIconRow,StudioModeToggle,StudioSheetHandle,StudioSteps,StudioViewChips,studioSectionTitle,useStudioSheet} from './StudioControls';
@@ -49,10 +51,17 @@ function useCanvas(draw:(ctx:CanvasRenderingContext2D,w:number,h:number)=>void,d
  },[deps,w,h]);
  return ref;
 }
+/** Drip FC pictures for printed thumbnails: loaded on the first club shirt shown (lib/shop/clubArt.ts); true once they are in. */
+function useClubArt(want:boolean){
+ const [ok,setOk]=useState(false);
+ useEffect(()=>{if(!want||ok)return;let dead=false;import('@/lib/shop/clubArt').then(m=>m.clubArtReady()).then(()=>{if(!dead)setOk(true);});return ()=>{dead=true;};},[want,ok]);
+ return ok;
+}
 function ShirtThumb({design,size,pattern,back,prints,art,className}:{design:JerseyDesign;size:number;pattern?:PatternId;back?:boolean;prints?:boolean;art?:boolean;className?:string}){
  // redraw only when something it shows changes (pattern tiles ignore the name, number, crest, sponsor and drawing)
  const showArt=art??prints;
- const key=prints||showArt?JSON.stringify([design,back,prints,showArt]):JSON.stringify([design.sleeves,design.collar,design.cuffs,design.primary,design.secondary,design.accent,pattern??design.pattern,back]);
+ const club=useClubArt(!!prints&&!!design.club);
+ const key=prints||showArt?JSON.stringify([design,back,prints,showArt,club]):JSON.stringify([design.sleeves,design.collar,design.cuffs,design.primary,design.secondary,design.accent,pattern??design.pattern,back]);
  const ref=useCanvas((ctx,w,h)=>drawFlatShirt(ctx,design,w,h,{pattern,back,prints,art:showArt}),key,size,size*.86);
  return <canvas ref={ref} className={className??styles.thumb} style={{width:size,height:size*.86}} aria-hidden="true"/>;
 }
@@ -257,7 +266,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    <h3 className={studioSectionTitle}>Start from a design</h3>
    <div className={styles.presets}>
     {PRESETS.map(p=>{const make=()=>({...p.design,name:d.name,art:d.art});return <button key={p.id} type="button" className={styles.preset} aria-pressed={sameJersey(make(),d)} {...pv(make)} onClick={()=>{pulseNext.current=true;dispatch({type:'set',design:make()});}}>
-     <ShirtThumb design={p.design} size={84}/><span>{p.label}</span></button>;})}
+     <ShirtThumb design={p.design} size={84}/><span>{p.label}</span>{p.design.club?<ClubTag/>:null}</button>;})}
    </div>
   </section>
   {savedSlots.length>0&&<section className={styles.group}>
@@ -389,6 +398,14 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
     <button type="button" className={styles.chip} onClick={()=>setCrest({fill:d.secondary,ring:d.accent,ink:d.primary})}>Match kit</button>
    </div>
    <Swatches label={`Crest ${crestRole} colour`} value={d.crest[crestRole]} preview={hex=>pv(()=>({...designRef.current,crest:{...designRef.current.crest,[crestRole]:hex}}))} onPick={(hex,key)=>setCrest({[crestRole]:hex},key?`cc-${crestRole}`:undefined)}/>
+  </section>
+  <section className={styles.group}>
+   <h3 className={studioSectionTitle}>Drip FC club badge</h3>
+   <ClubNote>Optional, and free on any shirt.</ClubNote>
+   <div className={styles.tiles3}>{([['none','None'],['chest','Chest'],['sleeve','Sleeve']] as const).map(([id,label])=>{const cur=d.club?.crest??'none';
+    const next=(c:JerseyClubSpot|null,w:boolean):Partial<JerseyDesign>=>({club:c||w?{crest:c,word:w}:undefined});
+    return <button key={id} type="button" className={styles.tile} aria-pressed={cur===id} onClick={()=>{set(next(id==='none'?null:id,!!d.club?.word));sceneRef.current?.setView(id==='sleeve'?'left':'front',id==='sleeve'?'side':'crest');}}><span>{label}</span></button>;})}</div>
+   <button type="button" className={styles.chip} aria-pressed={!!d.club?.word} onClick={()=>set({club:d.club?.crest||!d.club?.word?{crest:d.club?.crest??null,word:!d.club?.word}:undefined})}>Drip FC across the front</button>
   </section>
   <section className={styles.group}>
    <h3 className={studioSectionTitle}>Shirt sponsor</h3>

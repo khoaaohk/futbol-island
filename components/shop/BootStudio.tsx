@@ -9,6 +9,8 @@ import {BackButton} from '@/components/BackButton';
 import CoinPill,{CoinIcon} from './CoinPill';
 import {useArcadeWallet} from '@/lib/arcade/arcadeWallet';
 import {STICKERS,stickerDataUrl} from '@/lib/shop/bootStickers';
+import {CLUB_STICKERS} from '@/lib/shop/dripKit';
+import {ClubNote,ClubTag} from './ClubLabel';
 import {BOOT_GLYPHS} from '@/lib/shop/bootGlyphs';
 import type {BootScene,BootView,DecalPatch} from '@/lib/shop/bootScene';
 import {StudioIconButton,StudioIconRow,StudioSheetHandle,StudioSteps,StudioViewChips,studioSectionTitle,useStudioSheet} from './StudioControls';
@@ -113,6 +115,8 @@ export default function BootStudio({onClose,onBuy,owned}:Props){
  const [step,setStep]=useState(0);
  const [zoneC,setZoneC]=useState<ColourZone>('mid');
  const [tab,setTab]=useState<DecalKind>('sticker');
+ // Drip FC sticker pictures (lib/shop/clubArt.ts): drawn once, when the Drip FC tab opens or a club sticker is selected.
+ const [clubThumbs,setClubThumbs]=useState<Record<string,string>>({});
  const [zoneD,setZoneD]=useState<DecalZone>('outside');
  const [selected,setSelected]=useState<string|null>(null);
  const [pair,setPair]=useState(false);
@@ -198,6 +202,10 @@ export default function BootStudio({onClose,onBuy,owned}:Props){
 
  const price=bootPrice(design),lines=bootPriceLines(design);
  const sel=design.decals.find(d=>d.id===selected)??null;
+ const wantClub=tab==='club'||sel?.kind==='club';
+ useEffect(()=>{if(!wantClub||clubThumbs.crest)return;let dead=false;
+  import('@/lib/shop/clubArt').then(({clubArtReady,clubSticker})=>clubArtReady().then(()=>{if(dead)return;const out:Record<string,string>={};
+   for(const c of CLUB_STICKERS)out[c.id]=clubSticker(c.id,120).canvas.toDataURL();setClubThumbs(out);}));return ()=>{dead=true;};},[wantClub,clubThumbs]);
  const setColour=(z:ColourZone,hex:string)=>commit(d=>({...d,colors:{...d.colors,[z]:hex}}));
  const pickZoneC=(z:ColourZone)=>{setZoneC(z);setView(ZONE_VIEW[z]);};
  const pickZoneD=(z:DecalZone)=>{setZoneD(z);setView(DECAL_VIEW[z]);if(sel)commit(d=>({...d,decals:d.decals.map(x=>x.id===sel.id?{...x,zone:z,x:0,y:0}:x)}));};
@@ -214,7 +222,9 @@ export default function BootStudio({onClose,onBuy,owned}:Props){
  const removeSel=()=>{if(!sel)return;commit(d=>({...d,decals:d.decals.filter(x=>x.id!==sel.id)}));setSelected(null);};
  // a random look keeps the shape you picked (the dice is for colours and parts; the Shape step is for the model)
  const randomise=()=>{commit(d=>({...randomBoots(Math.random,{decals:d.decals,name:d.name,number:d.number,heelText:d.heelText,flag:d.flag,flagSpot:d.flagSpot}),model:d.model}));say('Fresh look!');};
- const applyPreset=(id:string)=>{const p=PRESETS.find(x=>x.id===id);if(p){commit(d=>({...d,...p.design}));setView('side');}};
+ // A Drip FC preset also puts its club stickers on (added to the kid's own while there is room; never twice).
+ const applyPreset=(id:string)=>{const p=PRESETS.find(x=>x.id===id);if(p){commit(d=>{const extra=(p.decals??[]).filter(x=>!d.decals.some(y=>y.kind===x.kind&&y.ref===x.ref&&y.zone===x.zone)).map(x=>({...x,id:newId()}));
+  return {...d,...p.design,decals:[...d.decals,...extra].slice(0,DECAL_LIMIT)};});setView('side');}};
  const pickModel=(m:BootModel)=>{commit(d=>({...d,model:m}));setView('side');};
  const model=modelOf(design.model),free=!model.collar;
  const typeName=(raw:string)=>{const n=cleanName(raw);setNameDraft(n);if(!nameAllowed(n)){setNameError('Let’s pick a different name.');return;}setNameError('');commit(d=>({...d,name:n.trim(),heelText:n.trim()?'name':d.heelText}));};
@@ -230,7 +240,7 @@ export default function BootStudio({onClose,onBuy,owned}:Props){
   case ST.shape:return <>
    <div className={styles.modelCard} aria-live="polite"><BootGlyph d={design} size={112}/><div><h3>{model.label} <small>{model.era}</small></h3><p>{model.blurb}</p></div></div>
    <Section title="Start from a look" hint="A famous boot shape in a fresh colourway">
-    <div className={styles.presets}>{PRESETS.map(p=><button key={p.id} type="button" className={styles.preset} aria-label={`${p.label}, ${p.sub}`} onClick={()=>applyPreset(p.id)}><BootGlyph d={p.design} size={96}/><span>{p.label}</span><small>{p.sub}</small></button>)}</div>
+    <div className={styles.presets}>{PRESETS.map(p=><button key={p.id} type="button" className={styles.preset} aria-label={`${p.label}, ${p.sub}`} onClick={()=>applyPreset(p.id)}><BootGlyph d={p.design} size={96}/><span>{p.label}</span><small>{p.sub}</small>{p.club?<ClubTag/>:null}</button>)}</div>
    </Section>
    <Section title="Just the shape" hint="Keeps your colours">
     <div className={styles.modelRow}>{MODELS.map(m=><button key={m.id} type="button" className={styles.modelTile} aria-pressed={design.model===m.id} onClick={()=>pickModel(m.id)}>
@@ -315,12 +325,17 @@ export default function BootStudio({onClose,onBuy,owned}:Props){
     {sel.kind==='quote'&&<div className={styles.tintRow}>{['#f6f3ea','#18191d','#e8b33a','#d7262e','#2253d6','#2fa65a','#ff7cc8'].map(h=><button key={h} type="button" aria-label={'Text colour '+h} aria-pressed={sel.tint===h} className={styles.tint} style={{'--c':h} as CSSProperties} onClick={()=>patchSel({tint:h})}/>)}</div>}
     <p className={styles.selHint}>Drag it on the boot · pinch to size and twist</p>
    </div>}
-   <div className={styles.tabs} role="tablist">{(['sticker','flag','quote'] as const).map(t=><button key={t} type="button" role="tab" aria-selected={tab===t} className={styles.tab} onClick={()=>setTab(t)}>{t==='sticker'?'Stickers':t==='flag'?'Flags':'Words'}</button>)}
+   <div className={styles.tabs} role="tablist">{(['sticker','flag','quote','club'] as const).map(t=><button key={t} type="button" role="tab" aria-selected={tab===t} className={styles.tab} onClick={()=>setTab(t)}>{t==='sticker'?'Stickers':t==='flag'?'Flags':t==='quote'?'Words':'Drip FC'}</button>)}
     <span className={styles.count} aria-label={`${design.decals.length} of ${DECAL_LIMIT} placed`}>{design.decals.length}/{DECAL_LIMIT}</span></div>
    {tab==='sticker'&&<div className={styles.stickerGrid}>{STICKER_IDS.map(id=><button key={id} type="button" className={styles.sticker} aria-label={'Add '+STICKERS[id].label} onClick={()=>addDecal('sticker',id)}>
     {/* eslint-disable-next-line @next/next/no-img-element */}<img src={stickerDataUrl(id)} alt="" width={56} height={56}/></button>)}</div>}
    {tab==='flag'&&<div className={styles.flagGrid}>{FLAGS.map(f=><button key={f.code} type="button" className={styles.flagBtn} aria-label={'Add the flag of '+f.name} onClick={()=>addDecal('flag',f.code)}>
     {/* eslint-disable-next-line @next/next/no-img-element */}<img src={flagUrl(f.code)} alt="" width={48} height={36} loading="lazy"/><span>{f.name}</span></button>)}</div>}
+   {tab==='club'&&<><ClubNote>Same price as any sticker. Try the side or the heel.</ClubNote>
+    <div className={styles.stickerGrid}>{CLUB_STICKERS.map(c=><button key={c.id} type="button" className={styles.sticker} aria-label={'Add the '+c.label} onClick={()=>addDecal('club',c.id)}>
+    {clubThumbs[c.id]?
+     // eslint-disable-next-line @next/next/no-img-element
+     <img src={clubThumbs[c.id]} alt="" style={{width:56,height:56,objectFit:'contain'}}/>:null}</button>)}</div></>}
    {tab==='quote'&&<div className={styles.quoteGrid}>{QUOTES.map(q=><button key={q.id} type="button" className={styles.quote} onClick={()=>addDecal('quote',q.id)}>{q.text}</button>)}</div>}
   </>;
   case ST.name:return <>
@@ -367,6 +382,8 @@ export default function BootStudio({onClose,onBuy,owned}:Props){
   if(kind==='sticker')return <img src={stickerDataUrl(ref as typeof STICKER_IDS[number])} alt="" width={44} height={44}/>;
   // eslint-disable-next-line @next/next/no-img-element
   if(kind==='flag')return <img src={flagUrl(ref)} alt="" width={44} height={33}/>;
+  // eslint-disable-next-line @next/next/no-img-element
+  if(kind==='club')return clubThumbs[ref]?<img src={clubThumbs[ref]} alt="" style={{width:44,height:44,objectFit:'contain'}}/>:null;
   return <span className={styles.quoteThumb}>{QUOTES.find(q=>q.id===ref)?.text}</span>;
  }
 
