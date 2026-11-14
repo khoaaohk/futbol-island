@@ -39,6 +39,7 @@ import dd from './dash.module.css';
 import {isoWeekOf} from '@/lib/analytics/sponsorReport';
 import so from './SponsorOverview.module.css';
 import StadiumSponsorsSection from './StadiumSponsorsSection';
+import StaffDevice from './StaffDevice';
 
 type Preset='today'|'yesterday'|'7d'|'14d'|'30d'|'90d'|'all'|'custom';
 const PRESETS:{id:Preset;label:string}[]=[{id:'today',label:'Today'},{id:'yesterday',label:'Yesterday'},{id:'7d',label:'7 days'},{id:'14d',label:'14 days'},{id:'30d',label:'30 days'},{id:'90d',label:'90 days'},{id:'all',label:'All'},{id:'custom',label:'Custom'}];
@@ -94,11 +95,12 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
  const openPanel=useCallback((v:PanelView)=>{opener.current=document.activeElement instanceof HTMLElement?document.activeElement:liveTile.current;setPanel(v);},[]);
  const closeLive=useCallback(()=>{setPanel(null);requestAnimationFrame(()=>(opener.current??liveTile.current)?.focus({preventScroll:true}));},[]);
  // Distinct players in the range (the "N players" tile): /api/admin/players, cached 30 s on the server.
- const [playerCount,setPlayerCount]=useState<number|null>(null);
+ // Nov 13 2026: DISTINCT player ids in the raw rows (kept 14 days), not a sum of days: a longer range counts only from playerSince.
+ const [playerCount,setPlayerCount]=useState<number|null>(null),[playerSince,setPlayerSince]=useState<string|null>(null);
  useEffect(()=>{
-  let gone=false;setPlayerCount(null);
+  let gone=false;setPlayerCount(null);setPlayerSince(null);
   fetch(`/api/admin/players?from=${report.from}&to=${report.to}`,{cache:'no-store'}).then(r=>r.ok?r.json():null)
-   .then(j=>{if(!gone&&j&&j.status==='ok'&&typeof j.players==='number')setPlayerCount(j.players);}).catch(()=>{});
+   .then(j=>{if(!gone&&j&&j.status==='ok'&&typeof j.players==='number'){setPlayerCount(j.players);setPlayerSince(j.partial&&typeof j.oldestDay==='string'&&j.oldestDay?j.oldestDay:null);}}).catch(()=>{});
   return()=>{gone=true;};
  },[report.from,report.to,report.generatedAt]);
  const [tab,setTabState]=useState<Tab>('overview');
@@ -189,6 +191,7 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
     <span aria-hidden="true"/>
     <h1><small>Admin</small>Analytics</h1>
    </header>
+   <StaffDevice/>
 
    <div className={so.tabs} role="tablist" aria-label="Admin sections" ref={tabsEl}>
     {pill&&<span className={so.tabPill} data-ready={pill.ready?'true':'false'} aria-hidden="true" style={{width:pill.w,transform:`translateX(${pill.x}px)`}}/>}
@@ -207,7 +210,7 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
    <div className={dd.bar}>
     <label className={dd.compare} data-off={cmp&&!cmp.ok?'':undefined} title={cmp&&!cmp.ok?cmp.reason:'Each trend against the same number of complete days just before'}>
      <input type="checkbox" checked={useCmp} disabled={!cmp?.ok} onChange={e=>setCompare(e.target.checked)} data-compare-toggle/>
-     {cmp&&!cmp.ok?`Compare: ${cmp.reason[0].toLowerCase()+cmp.reason.slice(1)}`:cmp?.ok?`Compare with ${fmtDay(cmp.from)} – ${fmtDay(cmp.to)}`:'Compare to the previous period'}
+     {cmp&&!cmp.ok?`Compare: ${cmp.reason[0].toLowerCase()+cmp.reason.slice(1)}`:cmp?.ok?`Compare with ${cmp.label}`:'Compare to the previous period'}
     </label>
     <button type="button" className={styles.secondary} onClick={refresh} disabled={loading} data-refresh>{loading?'Loading…':'Refresh'}</button>
     <span className={styles.spacer}/>
@@ -215,10 +218,10 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
     <button type="button" ref={liveTile} className={`${styles.live} ${liveStyles.tile}`} data-live-tile aria-haspopup="dialog" aria-expanded={panel?.mode==='live'} onClick={()=>openPanel({mode:'live'})}
      data-tip="Tabs that sent anything in the last 5 minutes. Tap for who is on now." title="Tabs that sent anything in the last 5 minutes. Tap for who is on now."><i aria-hidden="true"/>{fmtInt(report.live)} on now</button>
     <button type="button" className={`${styles.live} ${liveStyles.tile}`} data-players-tile aria-haspopup="dialog" aria-expanded={panel?.mode==='players'}
-     onClick={()=>openPanel({mode:'players',from:report.from,to:report.to})} title="Anonymous players in this range (a save code, or one device without one). Tap for each player.">
-     {playerCount===null?'Players':`${fmtInt(playerCount)} player${playerCount===1?'':'s'}`} ›</button>
+     onClick={()=>openPanel({mode:'players',from:report.from,to:report.to})} title={`Distinct anonymous players (a save code, or one device without one), counted once each, not added up per day.${playerSince?` Raw rows are kept 14 days, so this range counts players since ${fmtDay(playerSince)} only.`:''} Tap for each player.`} data-players-since={playerSince??undefined}>
+     {playerCount===null?'Players':`${fmtInt(playerCount)} player${playerCount===1?'':'s'}${playerSince?` since ${fmtDay(playerSince)}`:''}`} ›</button>
    </div>
-   <div className={styles.utcRow}><p className={styles.utc}>{rangeText}{tm?.partialToday?' (today so far: a partial day, left out of averages and comparisons)':''} · days and hours in {pacific?'Pacific time (midnight to midnight, Los Angeles; PDT or PST)':'UTC'}{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>
+   <div className={styles.utcRow}><p className={styles.utc}>{rangeText}{tm?.partialToday?(report.from===report.to?' (today so far: compared with yesterday up to the same time of day)':' (today so far: a partial day, left out of averages and of both sides of comparisons)'):''} · days and hours in {pacific?'Pacific time (midnight to midnight, Los Angeles; PDT or PST)':'UTC'}{loading?' · loading…':''}</p>{report.notes.map(n=><p key={n} className={styles.utc}>{n}</p>)}</div>
    <details className={dd.exportBox} data-header-export><summary>Export (CSV and ZIP, exact numbers)</summary>
     <ExportControl from={report.from} to={report.to} today={tm?.today??report.to}/></details>
 
@@ -285,7 +288,7 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
     </section>}
     {tab==='live'&&<SiteHealthSection/>}
 
-    {tab==='players'&&strip('Players trends',[{key:K.players,label:'Players per day'},...(dash?.people.status==='ok'?[{key:K.distinct,label:'Distinct players a day'},{key:K.returningShare,label:'Returning sessions'},{key:K.fresh,label:'New sessions'}]:[]),{key:K.sessions,label:'Sessions'},{key:K.mpp,label:'Minutes per player'},{key:K.avgSession,label:'Average session'},{key:K.bounce,label:'Bounce rate'}],
+    {tab==='players'&&strip('Players trends',[{key:K.players,label:'Visitors (devices) per day'},...(dash?.people.status==='ok'?[{key:K.distinct,label:'Players (save code or device)'},{key:K.returningShare,label:'Returning sessions'},{key:K.fresh,label:'New sessions'}]:[]),{key:K.sessions,label:'Sessions'},{key:K.mpp,label:'Minutes per player'},{key:K.avgSession,label:'Average session'},{key:K.bounce,label:'Bounce rate'}],
      dash&&dash.people.status!=='ok'?'Distinct players, returning and new sessions per day need the people function (docs/analytics-proposed/analytics_daily_people.sql, not run yet); they appear here by themselves once it exists.':'Distinct players, returning and new: raw rows, the last 14 days only.')}
     {tab==='players'&&<PlayersExplorer from={report.from} to={report.to} stamp={report.generatedAt} onSessions={pid=>openPanel({mode:'player',pid})} countryName={countryName}/>}
     {tab==='players'&&    <section className={styles.island} aria-labelledby="sec-headline">

@@ -10,7 +10,9 @@
  * the anomaly flags, the funnels and the cohort table. Pure and client-safe (no server imports; types only from the layer).
  *
  * Honesty rules (docs/analytics-audit-2026-11-06.md): not tracked = null, never 0; today is partial (left out of averages,
- * of sparkline ends and of comparisons); a comparison exists only when the previous period is fully tracked; exact numbers.
+ * of sparkline ends and of multi-day comparisons); a comparison exists only when the previous period is fully tracked; exact numbers.
+ * Nov 13 2026 (owner: "today so far vs all of yesterday"): a range of today alone compares with yesterday up to the same time of
+ * day (DashboardData.sameTime, compareOf); a series with no such window says "comparison waits for a full day".
  */
 import {aggregate,byWeekday,isTracked,previousPeriod,weekly,type Agg,type DailyPoint,type PrevPeriod,type SeriesCore,type WeekRow} from './dailyMath';
 
@@ -28,7 +30,13 @@ export type DashboardData={version:1;generatedAt:string;from:string;to:string;to
  gaps:{metric:string;why:string;fix:string}[];
  /** Feature start days inside the loaded days (first day a counter family was sent: countSince.generated.ts). */
  releases:{day:string;label:string}[];
- medianSessionMs:number|null};
+ medianSessionMs:number|null;
+ /** A single-day range that is today: yesterday up to the same Pacific time of day (store.computeWindow), so today so far is
+  *  compared like for like (owner, Nov 13 2026). Absent when yesterday's raw rows are gone or the window is unavailable. */
+ sameTime?:SameTime|null};
+/** Yesterday's values from Pacific midnight to `cutIso` (the same time of day as now), per series key; `label` e.g. "5:36 pm".
+ *  Series missing here (people.*: another SQL function) cannot be compared like for like: "waits for a full day". */
+export type SameTime={day:string;cutIso:string;label:string;v:Record<string,number|null>;nd?:Record<string,[number,number]|null>};
 
 /** Keys the dashboard reads (the server sends these and every key under DASH_PREFIXES). */
 export const K={
@@ -70,26 +78,54 @@ export const rangeDays=(d:DashboardData)=>d.days.length-d.start;
 export const completeDays=(d:DashboardData)=>d.days.slice(d.start).filter(x=>x!==d.today);
 
 // ---- tiles -----------------------------------------------------------------------------------------------------------------
-export type Kpi={key:string;label:string;unit:string;value:number|null;prev:PrevPeriod|null;spark:(number|null)[];sparkDays:string[];trackedSince:string|null;how:string;
+/** A tile's comparison: the previous period (dailyMath.ts), or, for today alone, yesterday by the same time (`sameTime` = its label);
+ *  'waits' = today alone with no like-for-like yesterday for this series. */
+export type Compare=(PrevPeriod&{sameTime?:string})|{status:'waits';from:string;to:string;trackedSince:string|null};
+const addDay=(day:string,n:number)=>new Date(Date.parse(day+'T00:00:00Z')+n*86_400_000).toISOString().slice(0,10);
+/** The range is today alone (partly over): compared with yesterday up to the same time of day, never with all of yesterday. */
+export const todayAlone=(d:DashboardData)=>d.from===d.to&&d.to===d.today&&d.partialDay===d.today;
+export function compareOf(d:DashboardData,s:Series):Compare{
+ if(!todayAlone(d))return previousPeriod(s,d.from,d.to,d.today);
+ const y=addDay(d.today,-1),st=d.sameTime;
+ if(s.trackedSince&&y<s.trackedSince)return {status:'not-tracked',from:y,to:y,trackedSince:s.trackedSince};
+ const v=st?.v[s.key],nd=st?.nd?.[s.key];
+ if(!st||v===undefined||(s.agg==='ratio'?!nd:v===null))return {status:'waits',from:y,to:y,trackedSince:s.trackedSince};
+ const prev=s.agg==='ratio'?(nd![1]?nd![0]/nd![1]*(s.scale??1):null):v,cur=aggregate(s,s.points).value;
+ return {status:'ok',from:st.day,to:st.day,value:prev,current:cur,curFrom:d.today,curTo:d.today,change:prev===null||cur===null||prev===0?null:(cur-prev)/prev,sameTime:st.label};
+}
+/** What a delta is against, in words: "yesterday by 5:36 pm", "the 6 days before (today left out of both)", "the 7 days before". */
+export function vsLabel(d:DashboardData,p:Compare|null):string{
+ if(!p)return 'the period before';
+ if(p.status==='ok'&&p.sameTime)return `yesterday by ${p.sameTime}`;
+ if(p.status==='waits')return 'yesterday by this time';
+ const n=dayCount(p.from,p.to);
+ return `the ${n} day${n===1?'':'s'} before${p.status==='ok'&&d.partialDay&&p.curTo<d.to?' (today left out of both)':''}`;
+}
+/** How an average-of-days tile reads its days (the "mean of complete days" rule does not fit a single day). */
+export const daysRule=(d:DashboardData)=>todayAlone(d)?'today so far':d.from===d.to?`${fmtDay(d.from)} only`:d.partialDay?'mean of complete days (today left out)':'mean of the days';
+export const WAITS_TEXT='comparison waits for a full day';
+export type Kpi={key:string;label:string;unit:string;value:number|null;prev:Compare|null;vs:string;spark:(number|null)[];sparkDays:string[];trackedSince:string|null;how:string;
  /** Tracked from after the range began: the total covers only part of it. */partFrom:string|null};
 /** A tile: the range's value (the layer's rule for the series), its previous period and its complete-day sparkline. */
 export function kpi(d:DashboardData,key:string):Kpi|null{
  const s=seriesOf(d,key);if(!s)return null;
  const days=s.points.filter(p=>!p.partial||s.points.length===1);
- return {key,label:s.label,unit:s.unit,value:aggregate(s,s.points).value,prev:previousPeriod(s,d.from,d.to,d.today),
+ const prev=compareOf(d,s);
+ return {key,label:s.label,unit:s.unit,value:aggregate(s,s.points).value,prev,vs:vsLabel(d,prev),
   spark:days.map(p=>isTracked(p)?(p.value as number):null),sparkDays:days.map(p=>p.day),trackedSince:s.trackedSince,how:s.how,
   partFrom:s.trackedSince&&s.trackedSince>d.from?s.trackedSince:null};
 }
 /** Whether "compare to the previous period" can be offered: the sessions series' previous period is fully tracked. */
-export function compareState(d:DashboardData):{ok:true;from:string;to:string;days:number}|{ok:false;reason:string}{
+export function compareState(d:DashboardData):{ok:true;from:string;to:string;days:number;label:string}|{ok:false;reason:string}{
  const s=seriesOf(d,K.sessions);if(!s)return {ok:false,reason:'No sessions loaded.'};
- const p=previousPeriod(s,d.from,d.to,d.today);
- if(p.status==='ok')return {ok:true,from:p.from,to:p.to,days:dayCount(p.from,p.to)};
+ const p=compareOf(d,s);
+ if(p.status==='ok')return {ok:true,from:p.from,to:p.to,days:dayCount(p.from,p.to),label:p.sameTime?`yesterday by ${p.sameTime}`:`${fmtDay(p.from)} – ${fmtDay(p.to)}${d.partialDay&&p.curTo<d.to?' (today left out)':''}`};
+ if(p.status==='waits')return {ok:false,reason:'Comparison waits for a full day (yesterday by this time is not available)'};
  return {ok:false,reason:p.status==='not-tracked'||p.status==='not-loaded'?`Not tracked before ${fmtDay(s.trackedSince??d.loadedFrom)}`:'Nothing to compare with'};
 }
 export const dayCount=(from:string,to:string)=>Math.round((Date.parse(to+'T00:00:00Z')-Date.parse(from+'T00:00:00Z'))/86_400_000)+1;
 /** A change worth printing: ok and both sides known. */
-export const changeOf=(p:PrevPeriod|null)=>p&&p.status==='ok'&&p.value!==null&&p.current!==null?{cur:p.current,prev:p.value,change:p.change}:null;
+export const changeOf=(p:Compare|null)=>p&&p.status==='ok'&&p.value!==null&&p.current!==null?{cur:p.current,prev:p.value,change:p.change}:null;
 
 // ---- the story -------------------------------------------------------------------------------------------------------------
 /** Series compared for "what changed most" (the owner's core measures and the main activities). */
@@ -100,7 +136,7 @@ export const MOVER_MIN_BASE=5;
 export type Mover={key:string;label:string;unit:string;cur:number;prev:number;change:number};
 export function movers(d:DashboardData,keys:readonly string[]=MOVER_KEYS):Mover[]{
  const out:Mover[]=[];
- for(const key of keys){const s=seriesOf(d,key);if(!s)continue;const c=changeOf(previousPeriod(s,d.from,d.to,d.today));
+ for(const key of keys){const s=seriesOf(d,key);if(!s)continue;const c=changeOf(compareOf(d,s));
   if(!c||c.change===null)continue;if(s.agg==='sum'&&c.prev<MOVER_MIN_BASE)continue;out.push({key,label:s.label,unit:s.unit,cur:c.cur,prev:c.prev,change:c.change});}
  return out.sort((a,b)=>Math.abs(b.change)-Math.abs(a.change)||a.key.localeCompare(b.key));
 }
@@ -135,12 +171,13 @@ export function takeaway(d:DashboardData,compare:boolean):string{
  if(!ses||!pl)return 'No data for this range yet.';
  const tot=aggregate(ses,ses.points).value??0;if(!tot)return `No sessions in ${rangePhrase(d)} yet.`;
  const ppd=aggregate(pl,pl.points).value,mp=mpp?aggregate(mpp,mpp.points).value:null,n=completeDays(d).length;
- const base=`${fmtNum(ppd,1)} players a day${n?` over ${n} complete day${n===1?'':'s'}`:' (today so far)'}, ${fmtNum(tot)} sessions${mp!==null?`, ${fmtNum(mp,1)} minutes per player`:''}`;
- if(compare){const pp=previousPeriod(pl,d.from,d.to,d.today),pc=changeOf(pp),sc=changeOf(previousPeriod(ses,d.from,d.to,d.today));
+ const base=`${fmtNum(ppd,1)} visitors (devices) a day${n?` over ${n} complete day${n===1?'':'s'}`:' (today so far)'}, ${fmtNum(tot)} sessions${mp!==null?`, ${fmtNum(mp,1)} minutes per player`:''}`;
+ if(compare){const pp=compareOf(d,pl),pc=changeOf(pp),sc=changeOf(compareOf(d,ses));
   if(pc&&pc.change!==null&&pp.status==='ok'){const top=movers(d).find(m=>m.key!==K.players&&m.key!==K.sessions);
-   return `Players per day ${pc.change>=0?'up':'down'} ${fmtPctAbs(pc.change)} to ${fmtNum(pc.cur,1)} vs the ${dayCount(pp.from,pp.to)} days before`+
+   return `Visitors (devices) per day ${pc.change>=0?'up':'down'} ${fmtPctAbs(pc.change)} to ${fmtNum(pc.cur,1)} vs ${vsLabel(d,pp)}`+
     `${sc&&sc.change!==null?`; sessions ${sc.change>=0?'up':'down'} ${fmtPctAbs(sc.change)}`:''}`+
     `${top?`; the biggest change: ${lowerFirst(top.label)} ${top.change>=0?'+':'−'}${fmtPctAbs(top.change)}`:''}.`;}}
+ if(compare&&todayAlone(d)&&compareOf(d,pl).status==='waits')return `${base}; the ${WAITS_TEXT}.`;
  const busiest=ses.points.filter(p=>!p.partial&&p.value!==null).sort((a,b)=>(b.value as number)-(a.value as number)||a.day.localeCompare(b.day))[0];
  return `${base}${busiest?`; the busiest day was ${fmtDay(busiest.day)} (${fmtNum(busiest.value)} sessions)`:''}.`;
 }

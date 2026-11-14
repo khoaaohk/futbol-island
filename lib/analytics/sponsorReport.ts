@@ -50,7 +50,15 @@ export type SponsorWeekly={
  week:string;from:string;to:string;prevWeek:string;nextWeek:string;generatedAt:string;banner:string;exportLine:string;
  kpis:SponsorKpi[];partySize:{source:'relay'|'client'|'none';bands:SponsorBand[]};topEmotes:SponsorBand[];
  notes:string[];
+ /** Nov 13 2026 (owner confused by "298 players" over All vs "Reach 149"): the report is its own week, whatever the range buttons say. */
+ scope:string;
 };
+const SHORT=(d:string,o:Intl.DateTimeFormatOptions)=>new Date(d+'T12:00:00Z').toLocaleDateString('en-US',{timeZone:'UTC',...o});
+/** "This report covers Week 46 (Nov 9–15); the range buttons above don't apply." (month repeated across a month end). */
+export function weekScope(week:string,from:string,to:string):string{
+ const same=from.slice(0,7)===to.slice(0,7),span=same?`${SHORT(from,{month:'short',day:'numeric'})}–${SHORT(to,{day:'numeric'})}`:`${SHORT(from,{month:'short',day:'numeric'})} – ${SHORT(to,{month:'short',day:'numeric'})}`;
+ return `This report covers Week ${Number(week.slice(6))} (${span}); the range buttons above don’t apply.`;
+}
 type In={counts:Record<string,number>;countSessions:Record<string,number>;sessions:number;engagedMs:number;islandMs:number};
 export type SponsorWeekInput={
  week:string;now?:Date;
@@ -124,11 +132,11 @@ export function buildSponsorWeekly({week,now=new Date(),merged,prev,players,prev
   how:'Share of sessions from a device that had played before (from the raw rows of the last 14 days).',
   note:!returning||returning.share===null?'Not available for this week (needs the raw rows of the last 14 days).':undefined,sub:[]});
  // Learning: lessons watched to the end, quizzes taken and finished, learning in a party.
- const lessons=total(c,pre('le:')),quizzes=total(c,pre('ls:')),done=total(c,pre('lf:')),pLessons=p?total(p,pre('le:')):null;
+ const lessons=total(c,pre('le:')),opened=total(c,pre('lo:')),quizzes=total(c,pre('ls:')),done=total(c,pre('lf:')),pLessons=p?total(p,pre('le:')):null;
  const together=partyLive?total(c,k=>k==='mp:lesson'||k==='mp:quiz'):null;
  kpis.push({id:'learning',label:'Learning engagement',value:lessons,prev:pLessons,change:change(lessons,pLessons),format:'int',status:'ok',
-  how:'Lesson videos watched to the end; lesson quizzes started and finished; lessons and quizzes started while playing with friends.',
-  sub:[{label:'Quizzes taken',value:quizzes,format:'int',status:'ok'},{label:'Quizzes finished',value:done,format:'int',status:'ok'},
+  how:'Lesson videos watched to the END (le:); lessons opened (lo:, the count on the player cards: an opened lesson may not be finished); lesson quizzes started and finished; lessons and quizzes started while playing with friends.',
+  sub:[{label:'Lessons opened',value:opened,format:'int',status:'ok'},{label:'Quizzes taken',value:quizzes,format:'int',status:'ok'},{label:'Quizzes finished',value:done,format:'int',status:'ok'},
    {label:'Learning with friends',value:together,format:'int',status:st(partyLive)}]});
  // Party size bands (relay when it reports parties, else the hosts' devices), exact.
  const relayParties=relay?Object.values(relay.sizeBuckets).reduce((a,b)=>a+b,0):0;
@@ -142,7 +150,7 @@ export function buildSponsorWeekly({week,now=new Date(),merged,prev,players,prev
  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Los_Angeles'}).format(now),inProgress=today>=r.from&&today<=r.to;
  if(inProgress)for(const k of kpis)k.change=null;
  return {week,from:r.from,to:r.to,prevWeek:shiftWeek(week,-1),nextWeek:shiftWeek(week,1),generatedAt:now.toISOString(),banner:DRAFT_BANNER,exportLine:EXPORT_LINE,
-  kpis,partySize:{source:src,bands},topEmotes,
+  kpis,partySize:{source:src,bands},topEmotes,scope:weekScope(week,r.from,r.to),
   notes:[...(inProgress?[`This week is still in progress (to ${today}, Pacific): the change vs last week is shown once the week has ended.`]:[]),'Visitors with Do Not Track or Global Privacy Control are not counted, so every figure is a floor. No sampling, nothing estimated.',
    'Party sizes from the hosts’ devices miss parties whose host tab was closed abruptly; the party service’s own totals are used when available.',
    `Play with friends and emote numbers start ${PARTY_SINCE}; earlier weeks say “not tracked yet”.`,

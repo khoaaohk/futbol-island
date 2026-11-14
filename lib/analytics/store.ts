@@ -9,6 +9,7 @@
  * all three migrations in order and checks the SQL rollup against the TypeScript one again.
  */
 import {randomBytes} from 'crypto';
+import {adminPid} from './playerId';
 import * as fs from 'fs';
 import type {BeatRow,CleanEvent,DailyRollup,Point,StartRow,TimeZoneMode} from './core';
 import {BEAT_CAP_PER_SESSION,BEAT_WINDOW_MS,RETENTION_DAYS,SCHEMA_VERSION,SESSION_CAP_PER_VISITOR_DAY,addDays,dayBounds,dayIn,dayList,dayStartMs,deriveSessions,hourlySeries,rollupDay,rollupPacificDay} from './core';
@@ -57,16 +58,21 @@ export const oldestComputable=(today:string,mode:TimeZoneMode)=>addDays(today,mo
 export const isFinal=(day:string,now:Date,mode:TimeZoneMode='pacific')=>now.getTime()>=dayStartMs(addDays(day,1),mode)+BEAT_WINDOW_MS+2*3_600_000;
 
 /** `rollups`: UTC days frozen before Pacific time (or all frozen days in 'utc' mode); `ptRollups`: frozen Pacific days. */
-type MemoryData={salts:Record<string,string>;starts:Record<string,StartRow>;beats:BeatRow[];rollups:Record<string,DailyRollup>;ptRollups:Record<string,DailyRollup>};
+type MemoryData={salts:Record<string,string>;starts:Record<string,StartRow>;beats:BeatRow[];rollups:Record<string,DailyRollup>;ptRollups:Record<string,DailyRollup>;
+ /** Nov 13 2026: excluded (staff) player hashes, 6–12 hex prefixes of the admin pid (the SQL's analytics_excluded). */
+ excluded?:string[]};
 
-export function createMemoryStore(file?:string,{tz='pacific'}:{tz?:TimeZoneMode}={}):AnalyticsStore&{data:MemoryData}{
+export function createMemoryStore(file?:string,{tz='pacific'}:{tz?:TimeZoneMode}={}):AnalyticsStore&{data:MemoryData;setExcluded(pids:string[]):void}{
  let data:MemoryData={salts:{},starts:{},beats:[],rollups:{},ptRollups:{}};
  if(file&&fs.existsSync(file)){try{data={...data,...JSON.parse(fs.readFileSync(file,'utf8'))};}catch{}}
  const save=()=>{if(file)fs.writeFileSync(file,JSON.stringify(data));};
+ /** Staff players are left out of every read, as the SQL's *_counted views do (supabase/migrations/20261121_analytics_staff_exclusion.sql). */
+ const isStaff=(s:StartRow)=>!!s.playerId&&!!data.excluded?.length&&data.excluded.some(p=>adminPid(s.playerId!).startsWith(p));
+ const counted=()=>Object.values(data.starts).filter(s=>!isStaff(s));
  const sessionsOf=(starts:StartRow[])=>{const ids=new Set(starts.map(s=>s.id));return deriveSessions(starts,data.beats.filter(b=>ids.has(b.sessionId)));};
  /** UTC mode: sessions by their day label. Pacific mode: by start time, between the first day's and the day after the last day's midnights. */
  const rawDays=(from:string,to:string)=>{
-  const all=Object.values(data.starts);
+  const all=counted();
   if(tz==='utc')return all.filter(s=>s.day>=from&&s.day<=to);
   const lo=dayStartMs(from,'pacific'),hi=dayStartMs(addDays(to,1),'pacific');
   return all.filter(s=>{const t=Date.parse(s.startedAt);return t>=lo&&t<hi;});
@@ -74,13 +80,14 @@ export function createMemoryStore(file?:string,{tz='pacific'}:{tz?:TimeZoneMode}
  const compute=(from:string,to:string,now:Date)=>{
   const today=dayIn(tz,now),oldest=oldestComputable(today,tz),f=from<oldest?oldest:from,t=to>today?today:to;if(f>t)return [];
   const sessions=sessionsOf(rawDays(f,t));
-  return dayList(f,t).map(d=>tz==='utc'?rollupDay(d,sessions):rollupPacificDay(d,sessions));
+  return dayList(f,t).map(d=>{const r=tz==='utc'?rollupDay(d,sessions):rollupPacificDay(d,sessions);return data.excluded?.length?{...r,staffExcluded:true}:r;});
  };
  const frozen=()=>tz==='utc'?data.rollups:data.ptRollups;
  const between=(rec:Record<string,DailyRollup>,from:string,to:string)=>Object.values(rec||{}).filter(r=>r.day>=from&&r.day<=to).sort((a,b)=>a.day<b.day?-1:1);
  return {
   kind:'memory',
   get data(){return data;},
+  setExcluded(pids){data.excluded=[...pids];save();},
   async timeMode(){return tz;},
   async salt(day){if(!data.salts[day]){data.salts[day]=randomBytes(32).toString('hex');save();}return data.salts[day];},
   async track(ev,now){
@@ -108,8 +115,8 @@ export function createMemoryStore(file?:string,{tz='pacific'}:{tz?:TimeZoneMode}
   },
   async hourly(day){const starts=rawDays(day,day),ids=new Set(starts.map(s=>s.id));return hourlySeries(day,starts,data.beats.filter(b=>ids.has(b.sessionId)),tz);},
   async live(sinceIso){
-   const ids=new Set(Object.values(data.starts).filter(s=>s.startedAt>=sinceIso).map(s=>s.id));
-   for(const b of data.beats)if(b.ts>=sinceIso)ids.add(b.sessionId);
+   const ok=new Set(counted().map(s=>s.id)),ids=new Set(counted().filter(s=>s.startedAt>=sinceIso).map(s=>s.id));
+   for(const b of data.beats)if(b.ts>=sinceIso&&ok.has(b.sessionId))ids.add(b.sessionId);
    return ids.size;
   },
   async finalize(now){

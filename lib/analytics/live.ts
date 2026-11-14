@@ -8,6 +8,7 @@
  * country and a region code; a source is a site's host or a link's tag; returning / save code are yes/no marks. No IP, no city,
  * no name, no code.
  */
+import {entryPageKey,pageLabel} from './pageKeys';
 export const LIVE_WINDOWS=[2,5,15] as const;
 export type LiveWindow=typeof LIVE_WINDOWS[number];
 export const LIVE_MIGRATION='supabase/migrations/20261018_analytics_live.sql',LIVE_OK_ROW='OK, live sessions installed';
@@ -32,7 +33,10 @@ export type LiveRow={sid:string;startedAt:string;lastSeen:string;
  /** Nov 13 2026: how the island is being played at the newest beat that said ('s' Just me, 'w' With other players, 'p' With
   *  friends; liveAdmin.ts reads it from the beat's `pm:` counter). null = Mode unknown (an older tab, a beat-less session, the
   *  day and player views). */
- mode:LiveMode|null};
+ mode:LiveMode|null;
+ /** Nov 13 2026: the page at the newest beat (pageKeys.ts key, from the beat's `pg:` counter), else the start's entry page; null
+  *  when neither is known (the day and player views). */
+ page:string|null};
 /** The same letters as countIds.ts PLAY_MODES (kept here so the admin bundle does not pull the counter allowlist). */
 export const LIVE_MODES=['w','s','p'] as const;
 export type LiveMode=typeof LIVE_MODES[number];
@@ -42,11 +46,45 @@ export const LIVE_MODE_LABEL:Record<LiveMode,string>={w:'Public',s:'Just me',p:'
 export const LIVE_MODE_TITLE:Record<LiveMode,string>={w:'With other players, on the shared public island',s:'Just me: playing solo',p:'With friends, in a code party'};
 export const MODE_UNKNOWN='Mode unknown';
 /** The MODE strip: "Public 2 · Just me 1 · Party 1", modes with nobody left out, then unknown when any. */
-export function modeTally(rows:Pick<LiveRow,'mode'>[]):Tally[]{
- const n:Record<string,number>={};for(const r of rows){const k=r.mode??'unknown';n[k]=(n[k]||0)+1;}
+export const OFF_ISLAND='Off island',OFF_ISLAND_YET='Not on island yet';
+/** Nov 13 2026: where a session is for the MODE badge. On the island (the newest beat's area, else the entry page /play) → its
+ *  mode letter, or 'unknown' only for an island session whose tab sends no letter (an older client); off the island → 'off'; a
+ *  just-arrived session (no beat yet) that did not land on the island → 'yet'. */
+export function modeKey(r:Pick<LiveRow,'mode'|'area'|'page'>):LiveMode|'unknown'|'off'|'yet'{
+ if(r.area&&r.area!=='island'&&r.area!=='paths')return 'off';// the paths story is a menu over the island
+ if(r.mode)return r.mode;
+ if(!r.area)return r.page==null||r.page==='play'?'unknown':'yet';
+ return 'unknown';
+}
+/** The MODE strip: "Public 2 · Just me 1 · Party 1", modes with nobody left out, then unknown (island sessions only) when any;
+ *  off-island and not-yet sessions are not counted here (the WHERE strip has them). */
+export function modeTally(rows:Pick<LiveRow,'mode'|'area'|'page'>[]):Tally[]{
+ const n:Record<string,number>={};for(const r of rows){const k=modeKey(r);if(k!=='off'&&k!=='yet')n[k]=(n[k]||0)+1;}
  return [...LIVE_MODES,'unknown'].filter(k=>n[k]).map(k=>({key:k,n:n[k]}));
 }
-export const modeLabel=(k:string|null|undefined)=>isLiveMode(k)?LIVE_MODE_LABEL[k]:MODE_UNKNOWN;
+export const modeLabel=(k:string|null|undefined)=>isLiveMode(k)?LIVE_MODE_LABEL[k]:k==='off'?OFF_ISLAND:k==='yet'?OFF_ISLAND_YET:MODE_UNKNOWN;
+/** The place line for an off-island session: the page it is on ("Learn: 9v9 formations", "Marketing page", "Other page"); the
+ *  arcade adds its game ("Arcade: Kit Rush") when the newest activity names one. */
+export function pageLine(r:Pick<LiveRow,'page'|'area'|'activity'>):string{
+ if(r.area==='arcade'&&r.activity&&r.activity.startsWith('arcade_')&&r.activity!=='arcade_lobby')return 'Arcade: '+spotLabel(r.activity);
+ return pageLabel(r.page??(r.area&&r.area!=='other'?r.area:null));
+}
+const offIsland=(r:Pick<LiveRow,'mode'|'area'|'page'>)=>{const k=modeKey(r);return k==='off'||k==='yet';};
+/** A live card's place line: the page for an off-island (or not-yet-on-island) session, else the island spot as before. */
+export const placeLine=(r:Pick<LiveRow,'mode'|'area'|'page'|'activity'|'spot'>)=>offIsland(r)?pageLine(r):spotLabel(r.spot);
+/** The live WHERE strip: the SQL's spots, with its catch-all "other page" (and a just-arrived session off the island) split into
+ *  the pages the rows say ('pg:<key>' tallies); any part the rows do not cover (a capped row list) stays as it was. */
+export function whereTally(rep:Pick<LiveReport,'byArea'|'rows'>):Tally[]{
+ const pages=new Map<string,{n:number;from:string}>();
+ for(const r of rep.rows){const from=r.spot??'starting';if((from==='other'||from==='starting')&&offIsland(r)&&r.page){const k='pg:'+r.page,e=pages.get(k);if(e)e.n++;else pages.set(k,{n:1,from});}}
+ const taken:Record<string,number>={};for(const e of pages.values())taken[e.from]=(taken[e.from]||0)+e.n;
+ const out=rep.byArea.map(t=>({key:t.key,n:t.n-Math.min(t.n,taken[t.key]||0)})).filter(t=>t.n>0);
+ for(const [key,e] of pages)out.push({key,n:e.n});
+ return out.sort((a,b)=>b.n-a.n||a.key.localeCompare(b.key));
+}
+/** A WHERE key's label: a spot (spotLabel) or a page ('pg:learn_soccer_drills' → "Learn: Drills"). */
+export const whereLabel=(k:string)=>k.startsWith('pg:')?pageLabel(k.slice(3)):spotLabel(k);
+export const whereIcon=(k:string)=>k.startsWith('pg:')?(k==='pg:play'?'🏝️':k.startsWith('pg:learn')?'📖':'📄'):spotIcon(k);
 export type Tally={key:string;n:number};
 export type CountryTally={country:string;n:number;regions:{region:string;name:string;n:number|null}[]};
 export type LiveReport={status:LiveStatus;minutes:number;generatedAt:string;sessions:number;byArea:Tally[];byCountry:CountryTally[];bySource:Tally[];rows:LiveRow[]};
@@ -82,7 +120,7 @@ export function shapeLiveRow(x:unknown,names?:Names):LiveRow{const o=obj(x),c=ob
    returning:bool(o.returning),hasCode:bool(o.has_code),area:str(o.area),activity:str(o.activity),previousArea:str(o.previous_area),spot:str(o.spot),
    areas:secs(o.areas),activities:secs(o.activities),counts:Object.fromEntries(LIVE_COUNT_KEYS.map(k=>[k,num(c[k])])) as Record<LiveCountKey,number>,
    deviceTodaySessions:num(o.device_today_sessions),deviceTodaySeconds:num(o.device_today_seconds),
-   pid:typeof o.pid==='string'&&/^[0-9a-f]{12}$/.test(o.pid)?o.pid:null,mode:isLiveMode(o.mode)?o.mode:null};
+   pid:typeof o.pid==='string'&&/^[0-9a-f]{12}$/.test(o.pid)?o.pid:null,mode:isLiveMode(o.mode)?o.mode:null,page:entryPageKey(str(o.entry_path))};
 }
 export const emptySources=(status:LiveStatus,from='',to=''):SourcesSummary=>({status,from,to,windowDays:14,minSessions:3,sessions:0,countries:[],countriesSuppressed:0,
  sources:[],sourcesSuppressed:0,returning:{new:null,returning:null,unknown:null},code:{with:null,without:null,unknown:null}});

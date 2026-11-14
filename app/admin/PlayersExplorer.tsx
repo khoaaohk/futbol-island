@@ -24,10 +24,14 @@ const mins=(s:number)=>Math.round(s/6)/10;
 const STATUS_TEXT:Record<string,string>={'not-configured':'Not available here: the players list reads the analytics database (Supabase).','needs-migration':'Needs supabase/migrations/20261019_analytics_day_sessions.sql.',error:'Could not load the players just now. Try Refresh.'};
 
 /** Pure (tests): the list after the filters and the sort. */
-export function filterPlayers(rows:PlayerRow[],{q,ret,cohort,sort,from}:{q:string;ret:'all'|'returning'|'new';cohort:'all'|'new'|'before';sort:Sort;from:string}):PlayerRow[]{
+/** Nov 13 2026 (owner: returning players with 0–11 s): a player whose sessions add up to under this much foreground time never
+ *  really played (a tab restored in the background, a save-code page left at once): hidden from the list unless asked for. */
+export const MIN_PLAYER_SECONDS=5;
+export const isShortVisit=(p:Pick<PlayerRow,'seconds'>)=>p.seconds<MIN_PLAYER_SECONDS;
+export function filterPlayers(rows:PlayerRow[],{q,ret,cohort,sort,from,short=true}:{q:string;ret:'all'|'returning'|'new';cohort:'all'|'new'|'before';sort:Sort;from:string;short?:boolean}):PlayerRow[]{
  const term=q.trim().toLowerCase().replace(/^#/,'').replace(/^player\s*#?/,'');
  const firstDay=(p:PlayerRow)=>p.firstSeen?pacificDay(Date.parse(p.firstSeen)):'';
- return rows.filter(p=>(!term||p.pid.startsWith(term))&&(ret==='all'||(ret==='returning'?p.returning===true:p.returning===false))
+ return rows.filter(p=>(short||!isShortVisit(p))&&(!term||p.pid.startsWith(term))&&(ret==='all'||(ret==='returning'?p.returning===true:p.returning===false))
   &&(cohort==='all'||(cohort==='new'?firstDay(p)>=from:firstDay(p)<from)))
   .sort((a,b)=>sort==='minutes'?b.seconds-a.seconds:sort==='sessions'?b.sessions-a.sessions:sort==='days'?b.daysPlayed-a.daysPlayed:sort==='first'?a.firstSeen.localeCompare(b.firstSeen):b.lastSeen.localeCompare(a.lastSeen)||a.pid.localeCompare(b.pid));
 }
@@ -35,11 +39,12 @@ export function filterPlayers(rows:PlayerRow[],{q,ret,cohort,sort,from}:{q:strin
 export default function PlayersExplorer({from,to,stamp,onSessions,countryName}:{from:string;to:string;stamp:string;onSessions:(pid:string)=>void;countryName:(c:string)=>string}){
  const [list,setList]=useState<PlayersReport|null>(null),[err,setErr]=useState(false);
  const [q,setQ]=useState(''),[ret,setRet]=useState<'all'|'returning'|'new'>('all'),[cohort,setCohort]=useState<'all'|'new'|'before'>('all'),[sort,setSort]=useState<Sort>('last');
- const [pid,setPid]=useState<string|null>(null),[limit,setLimit]=useState(25);
+ const [pid,setPid]=useState<string|null>(null),[limit,setLimit]=useState(25),[short,setShort]=useState(false);
  useEffect(()=>{let gone=false;setList(null);setErr(false);
   fetch(`/api/admin/players?from=${from}&to=${to}`,{cache:'no-store'}).then(r=>r.ok?r.json():Promise.reject()).then(j=>{if(!gone)setList(j as PlayersReport);}).catch(()=>{if(!gone)setErr(true);});
   return()=>{gone=true;};},[from,to,stamp]);
- const rows=useMemo(()=>list?.status==='ok'?filterPlayers(list.rows,{q,ret,cohort,sort,from}):[],[list,q,ret,cohort,sort,from]);
+ const rows=useMemo(()=>list?.status==='ok'?filterPlayers(list.rows,{q,ret,cohort,sort,from,short}):[],[list,q,ret,cohort,sort,from,short]);
+ const shortN=list?.status==='ok'?list.rows.filter(isShortVisit).length:0;
  useEffect(()=>{setLimit(25);},[q,ret,cohort,sort]);
  return <section className={styles.island} aria-labelledby="sec-players-list" data-metric="players.list">
   <div className={styles.sectionHead}><h2 id="sec-players-list">Players</h2>
@@ -56,7 +61,8 @@ export default function PlayersExplorer({from,to,stamp,onSessions,countryName}:{
      <select className={d.select} value={cohort} onChange={e=>setCohort(e.target.value as typeof cohort)} aria-label="First seen"><option value="all">Any first day</option><option value="new">New in range</option><option value="before">Seen before</option></select>
     </div>
     {list.partial&&<p className={styles.note}>Players from before {shortDay(list.oldestDay)} are not listed (raw rows are kept {RAW_DAYS} days).</p>}
-    <p className={styles.note} data-players-count>{rows.length===list.rows.length?`${list.players} players`:`${rows.length} of ${list.players} players`} over {list.sessions} sessions{list.unattributed?` (${list.unattributed} sessions from older tabs have no player id)`:''}.</p>
+    <p className={styles.note} data-players-count>{rows.length===list.rows.length?`${list.players} players`:`${rows.length} of ${list.players} players`} over {list.sessions} sessions{list.unattributed?` (${list.unattributed} sessions from older tabs have no player id)`:''}.
+     {shortN>0&&<> {short?'Including':'Not listing'} {shortN} short visit{shortN===1?'':'s'} (under {MIN_PLAYER_SECONDS} s of play in all). <button type="button" className={d.linkBtn} onClick={()=>setShort(!short)}>{short?'Hide them':'Show them'}</button></>}</p>
     {rows.length?<ul className={d.pList}>
      <li aria-hidden="true"><div className={`${d.pRow} ${d.pHead}`}><span>Player</span><span>Last seen</span><span>Minutes</span><span>Sessions</span><span>Days</span><span>First seen</span></div></li>
      {rows.slice(0,limit).map(p=><li key={p.pid}><button type="button" className={d.pRow} aria-current={pid===p.pid} onClick={()=>setPid(p.pid)} data-pid={p.pid}
@@ -80,6 +86,7 @@ export function PlayerDetail({pid,onSessions,onClose,countryName}:{pid:string;on
  return <section className={styles.card} id="player-detail" aria-labelledby="player-title" data-metric="players.detail">
   <div className={styles.cardHead}><div><h2 id="player-title">Player #{pid.slice(0,6)}</h2><p>Anonymous id (a further hash of the save code or device): no name, IP, user agent or code is kept. The last {RAW_DAYS} days only.</p></div>
    <button type="button" className={styles.tableToggle} onClick={onClose}>Close</button></div>
+  <ExcludePlayer pid={pid}/>
   {!p&&!err&&<p className={styles.note} aria-busy="true">Loading…</p>}
   {err&&<p className={d.state} role="alert">Could not load this player. Try again.</p>}
   {p&&p.status!=='ok'&&<p className={d.state}>{STATUS_TEXT[p.status]??'Not available.'}</p>}
@@ -125,4 +132,19 @@ export function playerView(p:PlayerReport,days:string[],countryName:(c:string)=>
  const places=[...new Set(p.rows.map(r=>[r.country?countryName(r.country):null,r.regionName||r.region].filter(Boolean).join(' · ')).filter(Boolean))].slice(0,3).join('; ');
  return {perDay:days.map(x=>perDayMap.get(x)??0),areas,devices,places,avg:p.sessions?Math.round(p.seconds/p.sessions/6)/10:0,
   pattern:played.length<=1?'One day':`${played.length} days`,gapText:played.length<=1?'not back yet in the kept days':`longest gap ${Math.max(...gaps)} day${Math.max(...gaps)===1?'':'s'}, came back ${played.length-1} time${played.length===2?'':'s'}`};
+}
+
+/** Nov 13 2026 (staff exclusion, app/api/admin/staff): leave this player out of every number (an owner or tester device). Undo in
+ *  the "Excluded players" list under the admin header. Their past rows leave at once (last 14 days); frozen days need the recompute. */
+function ExcludePlayer({pid}:{pid:string}){
+ const [state,setState]=useState<'idle'|'busy'|'done'|'migration'|'error'>('idle');
+ const go=async()=>{if(!window.confirm(`Exclude player #${pid.slice(0,6)} from all analytics? Use this for your own or a tester's device.`))return;setState('busy');
+  const r=await fetch('/api/admin/staff',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({pid,label:'Excluded from a player card'})}).catch(()=>null);
+  setState(r?.ok?'done':r?.status===409?'migration':'error');};
+ return <p className={styles.note} data-exclude-player>
+  {state==='done'?<>Excluded: #{pid.slice(0,6)} leaves every count on the next refresh.</>
+   :state==='migration'?<>Needs the staff-exclusion SQL (<code>20261121_analytics_staff_exclusion.sql</code>) first.</>
+   :<button type="button" className={d.linkBtn} disabled={state==='busy'} onClick={()=>void go()}>Exclude this player</button>}
+  {state==='error'&&' Could not save just now; try again.'}
+ </p>;
 }

@@ -5,6 +5,7 @@ import {count,onPageHide,startTracker} from '@/lib/analytics/tracker';
 import {readStartFlags} from '@/lib/analytics/startFlags';
 import {readDeviceMarks,readPlayerKey} from '@/lib/analytics/deviceMarks';
 import {watchStart} from '@/lib/analytics/startEvents';
+import {isStaffDevice} from '@/lib/analytics/staff';
 import {countPlayArrival,countPlayStart} from '@/lib/analytics/marketingIds';
 import {MM_PATH,watchMarketingVisit} from '@/lib/analytics/marketingVisit';
 import {useRootView} from '@/components/root/useRootView';
@@ -24,7 +25,9 @@ export default function VisitTracker({allowLocalhost=false}:{allowLocalhost?:boo
    // Two yes/no marks for /admin's live sessions: played here before, a save code active (never the code).
    marks:()=>{try{return readDeviceMarks(window.localStorage);}catch{return null;}},
    // One player key for /admin's players (Oct 16 2026): the save code, else a random install id; the server keeps only a keyed one-way hash.
-   player:()=>{try{return readPlayerKey(window.localStorage,n=>crypto.getRandomValues(new Uint8Array(n)));}catch{return null;}}});
+   player:()=>{try{return readPlayerKey(window.localStorage,n=>crypto.getRandomValues(new Uint8Array(n)));}catch{return null;}},
+   // Nov 13 2026: a device that opened /admin (or was marked "mine" there) is staff and sends nothing (lib/analytics/staff.ts).
+   staff:()=>isStaffDevice((()=>{try{return window.localStorage;}catch{return null;}})())});
   return()=>{tracker.current?.stop();tracker.current=null;};
  },[allowLocalhost]);
  useEffect(()=>{if(!pathname)return;tracker.current?.pageview(pathname);

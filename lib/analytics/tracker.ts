@@ -33,6 +33,9 @@ import {ACTIVITY_IDS,ACTIVITY_IDLE_MS,MAX_BEAT_CELLS,PASSIVE_ACTIVITIES,SAMPLE_M
 
 export const ENDPOINT='/api/visit';
 export const PING_MS=180_000;
+/** Nov 13 2026: a new session off the island, and the island once it can say its play mode, send one early beat this soon (not 3 min later), so the
+ *  admin "On now" card knows the page and the mode from the first ping. At most one pending at a time; it is an ordinary beat. */
+export const EARLY_BEAT_MS=3000;
 export const PING_JITTER=0.2;
 export const IDLE_MS=10*60_000;
 export const SESSION_IDLE_MS=30*60_000;
@@ -58,12 +61,14 @@ export type TrackerEnv={
  /** Oct 16 2026 (players): the start's one player key, a save code or the install id (lib/analytics/deviceMarks.ts readPlayerKey). */
  player?:()=>{ph:string}|{pi:string}|null;
  allowLocalhost?:boolean;
+ /** Nov 13 2026: this device is staff (lib/analytics/staff.ts, set by /admin): the tracker sends nothing at all. */
+ staff?:()=>boolean;
 };
 
 /** Nov 13 2026: how the island is being played, read once per beat (`m`: 's' Just me, 'w' With other players, 'p' With friends).
  *  The island (components/Town.tsx) registers the reader; other pages have none and send no `m`. Returns the cleanup. */
 let playModeSource:(()=>PlayMode|null)|null=null;
-export function setPlayModeSource(fn:()=>PlayMode|null):()=>void{playModeSource=fn;return()=>{if(playModeSource===fn)playModeSource=null;};}
+export function setPlayModeSource(fn:()=>PlayMode|null):()=>void{playModeSource=fn;live?.soon();return()=>{if(playModeSource===fn)playModeSource=null;};}
 /** The letter for the next beat, or null (no reader, a reader that threw, or a value off the list). */
 export function playModeNow():PlayMode|null{try{const m=playModeSource?.()??null;return isPlayMode(m)?m:null;}catch{return null;}}
 
@@ -78,7 +83,7 @@ export function enterArea(area:Area):()=>void{
 /** Activities pushed by open components (top wins); `frameMode` is what the island's frame says the player is doing. */
 const activityStack:{id:ActivityId}[]=[];
 let frameMode:ActivityId|null=null;
-let live:{flush():void;sample(x:number,z:number,lookup:(x:number,z:number)=>PlaceId):void;now():number}|null=null;
+let live:{flush():void;sample(x:number,z:number,lookup:(x:number,z:number)=>PlaceId):void;now():number;soon():void}|null=null;
 let nextSample=-Infinity;
 const VALID_ACTIVITY=new Set<string>(ACTIVITY_IDS);
 /** A component that is open (pop-up book, arcade game, exhibit, menu…) attributes its time to `id`. Returns a cleanup. */
@@ -137,6 +142,7 @@ export function skipReason(env:TrackerEnv):string|null{
  const n=env.navigator;
  if(n.doNotTrack==='1'||n.doNotTrack==='yes'||env.window.doNotTrack==='1'||n.globalPrivacyControl===true)return 'dnt';
  if(n.webdriver)return 'automation';
+ try{if(env.staff?.())return 'staff';}catch{}
  const {hostname,pathname,search}=env.window.location;
  if(!env.allowLocalhost&&/^(localhost|127\.|0\.0\.0\.0|\[::1\]|192\.168\.|10\.)/.test(hostname))return 'local';
  if(/-lab(\/|$)/.test(pathname))return 'lab';
@@ -244,17 +250,27 @@ export function startTracker(env:TrackerEnv){
   acc=0;pend=0;for(const o of [areaAcc,placeAcc,activityAcc] as Record<string,number>[])for(const k of Object.keys(o))delete o[k];cellAcc.clear();
  }
  const stopTimer=()=>{if(timer!==null){w.clearTimeout(timer);timer=null;}};
+ let early:number|null=null;
+ const soon=()=>{if(early!==null||d.visibilityState!=='visible')return;early=w.setTimeout(()=>{early=null;beat();},EARLY_BEAT_MS);};
+ const stopEarly=()=>{if(early!==null){w.clearTimeout(early);early=null;}};
  function schedule(){
   if(timer!==null||d.visibilityState!=='visible'||pings>=MAX_PINGS||env.now()-lastInput>IDLE_MS)return;
   const jitter=1-PING_JITTER+2*PING_JITTER*(env.random(1)[0]/255);
   timer=w.setTimeout(()=>{timer=null;pings++;beat();schedule();},Math.round(PING_MS*jitter));
  }
+ /** The tab is on screen and not a prerender (Chrome speculation rules, Safari's preload). */
+ let waiting=false;
+ const shown=()=>d.visibilityState==='visible'&&!(d as {prerendering?:boolean}).prerendering;
  function pageview(p:string){
   const t=env.now();
   if(p===lastPv.path&&t-lastPv.at<1000)return;// React strict-mode double effects
   if(/^\/admin(\/|$)|-lab(\/|$)/.test(p))return;
   flush();path=p;lastPv={path:p,at:t};
   if(!isNew){pend++;schedule();return;}// rides along in the next beat
+  // Nov 13 2026 (owner: returning players with 0–11 s): a tab opened or restored in the BACKGROUND, or a page the browser
+  // prerenders, is not a visit until someone sees it. Its start waits for the tab to be shown (onVisibility starts it then).
+  if(!shown()){waiting=true;return;}
+  waiting=false;
   const body:Record<string,unknown>={v:1,t:'start',s:session,p};
   {
    isNew=false;
@@ -272,7 +288,7 @@ export function startTracker(env:TrackerEnv){
    if((n.maxTouchPoints||0)>1)body.tp=1;
    try{const f=env.flags?.();if(f&&Object.keys(f).length)body.f=f;}catch{}
   }
-  send(body);schedule();
+  send(body);schedule();if(areaOf(p)!=='island')soon();// the island asks once it can say its mode (setPlayModeSource)
  }
  const onInput=()=>{const t=env.now();if(visibleSince!==null&&t-lastInput>IDLE_MS){flush();visibleSince=t;}lastInput=t;markActive(t);schedule();};
  /** Counts that did not fit the hide beat go out in up to MAX_DRAIN_BEATS small count-only beats (no time, no page views). */
@@ -280,22 +296,23 @@ export function startTracker(env:TrackerEnv){
  const onHide=(e?:Event)=>{if(e?.type==='pagehide')for(const f of pageHideHooks)try{f();}catch{}beat();drain();visibleSince=null;stopTimer();};
  function onVisibility(){
   if(d.visibilityState==='visible'){
-   if(visibleSince!==null)return;
+   if(visibleSince!==null){if(waiting&&shown()){lastPv={path:'',at:-1e9};pageview(path);}return;}
    const old=session;loadSession();
    lastInput=lastActive=env.now();visibleSince=env.now();
-   if(session!==old){lastPv={path:'',at:-1e9};pageview(path);}else schedule();
+   if(session!==old||waiting){lastPv={path:'',at:-1e9};pageview(path);}else schedule();
   }else onHide();
  }
  overrideListeners.add(flush);
- live={flush,sample,now:env.now};nextSample=-Infinity;
+ live={flush,sample,now:env.now,soon};nextSample=-Infinity;
  loadSession();
  d.addEventListener('visibilitychange',onVisibility);
+ d.addEventListener('prerenderingchange',onVisibility);
  w.addEventListener('pagehide',onHide);
  w.addEventListener('pointerdown',onInput,{capture:true,passive:true});
  w.addEventListener('keydown',onInput,{capture:true,passive:true});
  return {
   pageview,
-  stop(){overrideListeners.delete(flush);live=null;countAcc.clear();stopTimer();d.removeEventListener('visibilitychange',onVisibility);w.removeEventListener('pagehide',onHide);w.removeEventListener('pointerdown',onInput,{capture:true});w.removeEventListener('keydown',onInput,{capture:true});},
+  stop(){overrideListeners.delete(flush);live=null;countAcc.clear();stopTimer();stopEarly();d.removeEventListener('visibilitychange',onVisibility);d.removeEventListener('prerenderingchange',onVisibility);w.removeEventListener('pagehide',onHide);w.removeEventListener('pointerdown',onInput,{capture:true});w.removeEventListener('keydown',onInput,{capture:true});},
   /** Test hooks. */
   state:()=>({session,timer:timer!==null,acc,pend,pings,path,place,activity:activityNow(currentOverride??areaOf(path)),cells:cellAcc.size,counts:Object.fromEntries(countAcc)}),
  };

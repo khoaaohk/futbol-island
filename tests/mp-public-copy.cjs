@@ -125,7 +125,7 @@ const IDS=['mp:pub_arm_on','mp:pub_arm_hold','mp:pub_connect','mp:pub_seen','mp:
 ok('every mp:pub_* id is allowlisted (client and the SQL counts regex)',()=>{
  const K=createLoader()('lib/analytics/countIds.ts');
  assert.deepEqual([...K.PUBLIC_FIXED_IDS].sort(),[...IDS].sort());
- const newest=fs.readdirSync('supabase/migrations').filter(f=>/analytics/.test(f)&&/analytics_ingest/.test(read('supabase/migrations/'+f))).sort().pop();
+ const newest=fs.readdirSync('supabase/migrations').filter(f=>/analytics/.test(f)&&/function public\.analytics_ingest\(/.test(read('supabase/migrations/'+f))).sort().pop();
  const re=new RegExp(/where key ~ '(\^\[a-z\]\{1,2\}:[^']+)'/.exec(read('supabase/migrations/'+newest))[1]);
  for(const id of IDS){assert(K.isCountId(id),id);assert(K.FIXED_COUNT_IDS.includes(id),id);assert(K.COUNT_KEY_RE.test(id),id);assert(re.test(id),id+' passes '+newest);}
  assert.equal(new Set(K.FIXED_COUNT_IDS).size,K.FIXED_COUNT_IDS.length,'no duplicate fixed ids');

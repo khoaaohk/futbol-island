@@ -122,8 +122,8 @@ function catalog(rollups:DailyRollup[]):Def[]{
 
  // Audience (Players tab, Overview tiles).
  defs.push(
-  {section:'audience',metric:'players_per_day',label:'Players (unique visitors that day)',unit:'players',agg:'avg',firstSession:true,since:T,source:'rollup.visitors',
-   how:'Distinct anonymous visitors in the Pacific day (one-way daily hash; the salt is deleted every night, so days cannot be linked). Over a span: the average of complete days (today left out), from the first day with a session.',value:x=>x.r.visitors},
+  {section:'audience',metric:'players_per_day',label:'Visitors (devices) per day',unit:'players',agg:'avg',firstSession:true,since:T,source:'rollup.visitors',
+   how:'Distinct anonymous DEVICES (browsers) in the Pacific day (one-way daily hash; the salt is deleted every night, so days cannot be linked). Not the same as “Players (save code or device)”: one save code on two devices is two visitors here, one player there. Over a span: the average of complete days (today left out), from the first day with a session.',value:x=>x.r.visitors},
   {section:'audience',metric:'sessions',label:'Sessions',unit:'sessions',agg:'sum',firstSession:true,since:T,source:'rollup.sessions',how:'Tab sessions that started in the Pacific day.',value:x=>x.r.sessions},
   {section:'audience',metric:'pageviews',label:'Page views',unit:'views',agg:'sum',firstSession:true,since:T,source:'rollup.pageviews',how:'Page views of the day’s sessions.',value:x=>x.r.pageviews},
   {section:'audience',metric:'bounce_rate',label:'Bounce rate',unit:'share',agg:'ratio',firstSession:true,since:T,source:'rollup.bounces / rollup.sessions',how:'Sessions with at most one page and under 10 s of foreground time, as a share of sessions.',num:x=>x.r.bounces,den:x=>x.r.sessions},
@@ -282,7 +282,7 @@ export function buildDailyLayer({rollups,from,to,today,mode='pacific',hourly=[],
    const first=people.map(p=>p.day).sort()[0];
    return {key:'people.'+metric,section:'people',metric,part:'',label,unit,agg,how:how+' Raw rows: the last 14 days only.',source:'analytics_daily_people (proposed SQL)',trackedSince:first,fullSince:null,sinceFrom:'first-data',
     points:days.map(pt),prior:allDays.filter(d=>d<from).map(pt)};};
-  series.push(ps('players_distinct','Players (distinct player ids)','players','avg','Distinct anonymous player ids (save code, else device) with a session that day; sessions without an id left out.',p=>({value:p.players})),
+  series.push(ps('players_distinct','Players (save code or device)','players','avg','Distinct anonymous player ids (the save code, else the device) with a session that day; sessions without an id left out. Not the same as “Visitors (devices) per day”: a save code played on two devices is one player. Today alone is not compared like for like (this count has whole days only).',p=>({value:p.players})),
    ps('returning_share','Returning sessions','share','ratio','Sessions from a device that had played before ÷ sessions that sent the mark (unknown left out).',p=>({num:p.returning,den:p.returning+p.fresh})),
    ps('returning_sessions','Returning sessions (count)','sessions','sum','Sessions marked returning.',p=>({value:p.returning})),
    ps('new_sessions','New sessions (count)','sessions','sum','Sessions marked new (first visit on the device).',p=>({value:p.fresh})));

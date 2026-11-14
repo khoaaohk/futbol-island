@@ -6,7 +6,7 @@
  * the same as the export for the same range. Not tracked = a dash and a sentence, never a fake 0. No goals or targets.
  */
 import {useMemo,useState} from 'react';
-import {K,aggregate,anomalies,byWeekday,cohortTable,compareState,dailyValues,fmtDay,fmtNum,fmtPctAbs,fmtShare,fmtUnit,funnels,movers,seriesOf,takeaway,weekly,
+import {K,WAITS_TEXT,aggregate,anomalies,byWeekday,cohortTable,compareState,dailyValues,daysRule,fmtDay,kpi,fmtNum,fmtPctAbs,fmtShare,fmtUnit,funnels,movers,seriesOf,takeaway,weekly,
  ANOMALY_Z,ANOMALY_MIN_REL,MOVER_MIN_BASE,type DashboardData} from '@/lib/analytics/dashboard';
 import {ChartCard} from './charts';
 import {FunnelBars,HeatStrip,Legend,StackedColumns,TrendChart,dayX,type XLabel} from './DashCharts';
@@ -37,10 +37,11 @@ export default function OverviewStory({data,compare,onDef,onPlayers,fallback}:P)
   </div>
 
   <div className={d.tiles} aria-label="Headline numbers">
-   <TrendTile data={data} seriesKey={K.players} label="Players per day" metric="overview.players_per_day" compare={useCmp} onDef={onDef}
-    foot={<span>unique visitors, mean of complete days</span>}/>
+   <TrendTile data={data} seriesKey={K.players} label="Visitors (devices) per day" metric="overview.players_per_day" compare={useCmp} onDef={onDef}
+    foot={<span data-tile-foot="visitors">unique devices (daily hash), {daysRule(data)}{baseline(data,K.players,useCmp)}</span>}/>
    {noPeople?<PeopleTile label="Players (distinct, range)" metric="overview.players" note={peopleNote} onDef={()=>onDef(K.players)} value={fallback?.players==null?null:fmtNum(fallback.players)}/>
-    :<TrendTile data={data} seriesKey={K.distinct} label="Distinct players a day" metric="overview.players" compare={useCmp} onDef={onDef} foot={<span>per day, last 14 days of raw rows</span>}/>}
+    :<TrendTile data={data} seriesKey={K.distinct} label="Players (save code or device)" metric="overview.players" compare={useCmp} onDef={onDef}
+     foot={<span data-tile-foot="players">distinct player ids a day (raw rows, last 14 days), {daysRule(data)}{baseline(data,K.distinct,useCmp)}. Not the same count as devices: one save code on two devices is one player</span>}/>}
    {noPeople?<PeopleTile label="Returning sessions" metric="overview.returning_sessions" note={peopleNote} onDef={()=>onDef(K.sessions)} value={fallback?.returning==null?null:fmtShare(fallback.returning)}/>
     :<TrendTile data={data} seriesKey={K.returningShare} label="Returning sessions" metric="overview.returning_sessions" compare={useCmp} onDef={onDef} foot={<span>share of sessions, last 14 days</span>}/>}
    <TrendTile data={data} seriesKey={K.sessions} label="Sessions" metric="overview.sessions" compare={useCmp} onDef={onDef}/>
@@ -63,6 +64,11 @@ export default function OverviewStory({data,compare,onDef,onPlayers,fallback}:P)
  </section>;
 }
 
+/** The tile foot's baseline: what its delta is against, or why there is none (the same words as the delta line). */
+function baseline(data:DashboardData,key:string,compare:boolean){
+ if(!compare)return '';const k=kpi(data,key);if(!k?.prev)return '';
+ return k.prev.status==='waits'?`; ${WAITS_TEXT} (no yesterday-by-this-time count for it)`:k.prev.status==='ok'?`; delta vs ${k.vs}`:'';
+}
 function rangeLine(data:DashboardData){
  const n=data.days.length-data.start;
  return `${fmtDay(data.from)} – ${fmtDay(data.to)} (${n} day${n===1?'':'s'}${data.partialDay?', today so far':''}), Pacific days.`;
@@ -178,8 +184,8 @@ function Retention({data,onPlayers}:{data:DashboardData;onPlayers:()=>void}){
 }
 
 function WhatChanged({data,compare,reason}:{data:DashboardData;compare:boolean;reason:string|null}){
- const mv=compare?movers(data).slice(0,6):[],an=anomalies(data).slice(0,6);
- return <ChartCard wide title="What changed" subtitle={`Biggest moves vs the period before (sums with under ${MOVER_MIN_BASE} before are left out), and unusual days: more than ${ANOMALY_Z} scaled MADs and ${Math.round(ANOMALY_MIN_REL*100)}% from the range’s median day (robust: one big day cannot hide another). No goals or targets.`}
+ const mv=compare?movers(data).slice(0,6):[],an=anomalies(data).slice(0,6),vs=kpi(data,K.sessions)?.vs??'the period before';
+ return <ChartCard wide title="What changed" subtitle={`Biggest moves vs ${vs} (sums with under ${MOVER_MIN_BASE} before are left out), and unusual days: more than ${ANOMALY_Z} scaled MADs and ${Math.round(ANOMALY_MIN_REL*100)}% from the range’s median day (robust: one big day cannot hide another). No goals or targets.`}
   table={{columns:['Kind','Measure','Day or period','Value','Compared with'],rows:[...mv.map(m=>['Change',m.label,'range',fmtUnit(m.cur,m.unit),`${fmtUnit(m.prev,m.unit)} (${m.change>=0?'+':'−'}${fmtPctAbs(m.change)})`]),
    ...an.map(a=>[a.dir==='spike'?'Spike':'Drop',a.label,fmtDay(a.day),fmtUnit(a.value,a.unit),`median ${fmtUnit(a.median,a.unit)}`])]}}>
   <div className={d.changes} data-metric="overview.what_changed">

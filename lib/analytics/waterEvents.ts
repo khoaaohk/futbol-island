@@ -19,8 +19,24 @@ const markFirst=(flag:'w'|'s')=>{const f=readFirsts();if(f.includes(flag))return
 
 /** The feet went into the sea: the first time on this device counts once. */
 export function countWade(){if(markFirst('w'))count('wa:first_wade');}
-/** A swim started (wading in past the waist, or surfacing after a splash-down). */
+/** A swim started (wading in past the waist, or surfacing after a splash-down). Since Nov 13 2026 only through the swim counter
+ *  below, never straight from waterState's swimStarted edge. */
 export function countSwimStart(){count('wa:swim_start');if(markFirst('s'))count('wa:first_swim');}
+/** Nov 13 2026 (owner: "25 and 12 swims for one player"): swimStarted fires on every step from wading depth into swimming depth,
+ *  and a shelf edge (the Stadium Park pond, the beaches) flips it back and forth. A swim now counts once the player has been in
+ *  swim mode (swim, under or surface) for SWIM_COUNT_MIN_S without a break; leaving and coming back within SWIM_COUNT_GAP_S is
+ *  the same swim (no second count). Three numbers of state, stepped each island frame: no allocation. */
+export const SWIM_COUNT_MIN_S=1.5,SWIM_COUNT_GAP_S=3;
+export function createSwimCounter(onCount:()=>void=countSwimStart){
+ let inFor=0,outFor=Infinity,counted=false;
+ return {step(dt:number,swimming:boolean){
+  if(swimming){if(outFor>=SWIM_COUNT_GAP_S)counted=false;outFor=0;inFor+=dt;if(!counted&&inFor>=SWIM_COUNT_MIN_S){counted=true;onCount();}}
+  else{inFor=0;outFor+=dt;}
+ },reset(){inFor=0;outFor=Infinity;counted=false;}};
+}
+const swimCounter=createSwimCounter();
+/** The island's frame: is the player swimming (WaterPhase swim / under / surface) this frame. */
+export const swimCountFrame=(dt:number,swimming:boolean)=>swimCounter.step(dt,swimming);
 export const countSplashDown=(source:SplashSource)=>count(`wa:splash_${source}`);
 export const countBackToShore=()=>count('wa:shore');
 export const countSwimFast=()=>count('wa:fast');

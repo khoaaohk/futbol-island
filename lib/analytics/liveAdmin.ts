@@ -8,6 +8,7 @@
 import {createHash} from 'crypto';
 import {regionName} from './regions';
 import {playModeOf} from './countIds';
+import {pageKeyIn} from './pageKeys';
 import {LIVE_WINDOWS,emptyLive,emptySources,shapeLive,shapeSources,type LiveReport,type SourcesSummary} from './live';
 
 /** One answer per window for this long, so the panel's 10 s polls from several open tabs cost at most one RPC per 5 s. */
@@ -43,8 +44,8 @@ export const MODE_BEATS_LIMIT=2000;
 /**
  * Nov 13 2026: each live row's play mode, with NO migration. The ingest stores the beat's mode as the counter pm:<s|w|p> in
  * analytics_beats.counts; this reads the window's beats (service role, newest first), keeps each session's newest beat that
- * carries one, and matches it to the RPC's rows by the same 6-hex sid. Only the letter leaves this function: no session id,
- * no other counter. Never throws: on any failure the rows keep mode null ("Mode unknown").
+ * carries one, and matches it to the RPC's rows by the same 6-hex sid. Only the letter (and the page key, pageKeys.ts) leaves
+ * this function: no session id, no other counter. Never throws: on any failure the rows keep mode null ("Mode unknown").
  */
 export async function withModes(report:LiveReport,minutes:number,{fetchImpl=fetch,now=Date.now()}:{fetchImpl?:typeof fetch;now?:number}={}):Promise<LiveReport>{
  try{
@@ -55,14 +56,16 @@ export async function withModes(report:LiveReport,minutes:number,{fetchImpl=fetc
    {method:'GET',cache:'no-store',headers:{apikey:key,Authorization:`Bearer ${key}`}});
   if(!res.ok)return report;
   const beats=JSON.parse(await res.text()||'null');if(!Array.isArray(beats))return report;
-  const bySid=new Map<string,ReturnType<typeof playModeOf>>();
+  // Nov 13 2026: the same read also gives each session's page (the newest beat's pg:<key>, pageKeys.ts; a fixed route family).
+  const bySid=new Map<string,NonNullable<ReturnType<typeof playModeOf>>>(),pageBySid=new Map<string,string>();
   for(const b of beats){
    if(!b||typeof b!=='object'||typeof b.session_id!=='string')continue;
-   const sid=liveSid(b.session_id);if(bySid.has(sid))continue;
-   const mode=playModeOf(b.counts);if(mode)bySid.set(sid,mode);
+   const sid=liveSid(b.session_id);
+   if(!bySid.has(sid)){const mode=playModeOf(b.counts);if(mode)bySid.set(sid,mode);}
+   if(!pageBySid.has(sid)){const page=pageKeyIn(b.counts);if(page)pageBySid.set(sid,page);}
   }
-  if(!bySid.size)return report;
-  return {...report,rows:report.rows.map(r=>r.mode===null&&bySid.has(r.sid)?{...r,mode:bySid.get(r.sid)!}:r)};
+  if(!bySid.size&&!pageBySid.size)return report;
+  return {...report,rows:report.rows.map(r=>{const mode=r.mode??bySid.get(r.sid)??null,page=pageBySid.get(r.sid)??r.page;return mode===r.mode&&page===r.page?r:{...r,mode,page};})};
  }catch{return report;}
 }
 
