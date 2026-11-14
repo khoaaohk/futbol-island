@@ -190,6 +190,10 @@ const FILES=['lib/shop/boots.ts','lib/shop/bootStickers.ts','lib/shop/bootGeomet
    const r=Z.zoneRay(zone,x,y,{collar,laces});ray.set(r.o,r.d);ray.far=6;
    const hit=ray.intersectObject(mesh,false).find(h=>Z.decalPart(Math.round(zA.getW(h.face.a)),zA.getY(h.face.a),zA.getZ(h.face.a)));
    assert.ok(hit,`${m.id}: ${zone} (${x},${y}) lands on the boot`);
+   // Nov 14 2026 regression: a heel ray along the centre-back seam slipped through the upper and its first decal-part hit was the
+   // vamp near the toe, facing away, so the bake (bootBake.ts decals(): n·−A ≥ .12, |depth| ≤ .3) drew nothing: counted, never shown.
+   if(zone==='heel'){const n=new T.Vector3().fromBufferAttribute(g.getAttribute('normal'),hit.face.a);
+    assert.ok(G.sAt(hit.point.x)<.1&&-n.dot(r.d)>=.12,`${m.id}: heel (${x},${y}) lands on the back of the heel facing out (s ${G.sAt(hit.point.x).toFixed(2)}, n·−d ${(-n.dot(r.d)).toFixed(2)})`);}
    if(zone==='heel'||zone==='outside'||zone==='inside'){const back=Z.zoneParams(zone,hit.point,{collar,laces});assert.ok(Math.abs(back.x-x)<.25&&Math.abs(back.y-y)<.3,`${m.id}: ${zone} (${x},${y}) round-trips to (${back.x.toFixed(2)},${back.y.toFixed(2)})`);}}
   const hb=Z.heelBand();assert.ok(hb.y1-hb.y0>=.15,m.id+' heel band is tall enough for a name');
   assert.ok(GL.BOOT_GLYPHS[m.id]&&/^M[\d.]+ /.test(GL.BOOT_GLYPHS[m.id].body),m.id+' has a thumbnail silhouette');
