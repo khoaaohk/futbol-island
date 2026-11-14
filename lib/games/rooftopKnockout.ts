@@ -1,6 +1,8 @@
 import {HIT_RECOVERY,SHIELD_DURATION} from './knockoutAnimation';
 export const KNOCKOUT_ROOF={x:66,z:151.75,w:28,d:50.5,height:10.23};
 export const ARENA={w:26,d:48.5};
+/** Where the round's Leave button sets you down (QA Nov 14 2026): the street at the foot of the south stair, facing east. */
+export const KNOCKOUT_EXIT={x:75,z:179,yaw:Math.PI/2};
 export const ARENA_QUEUES=[{x:-10,z:-19,w:3,d:4},{x:10,z:19,w:3,d:4}];
 export const ARENA_BLOCKS=[{x:-5,z:-8,w:3,d:4},{x:5,z:8,w:3,d:4},{x:5,z:-7,w:4,d:2},{x:-5,z:7,w:4,d:2},{x:0,z:0,w:3,d:3}];
 /** Oct 4 2026 polish (A6): readable, beatable bots. Each shot is telegraphed by a planted wind-up whose aim locks

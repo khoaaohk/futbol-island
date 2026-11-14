@@ -75,6 +75,7 @@
 @media(max-width:600px) and (orientation:landscape),(pointer:coarse) and (orientation:landscape){.island-district-label{top:calc(14px + env(safe-area-inset-top,0px));left:18px}}
 
 .travel-mode{right:24px;bottom:24px}
+.travel-actions[data-on-ladder] .travel-mode{visibility:hidden;pointer-events:none}/* no Change ride mid-climb on the lighthouse ladder (QA Nov 14 2026) */
 @media(max-width:600px),(pointer:coarse){
  .travel-mode{right:24px;bottom:var(--control-bottom)}
  .touch-controls,.touch-actions{height:160px}
@@ -1001,7 +1002,8 @@ html[data-game-guard] canvas{touch-action:none}
 .field-learn-card[data-live-bar]>.field-go{cursor:pointer}
 @media(prefers-reduced-motion:reduce){.field-learn-card[data-live-bar]>.field-play{transition:none}.field-learn-card[data-live-bar]>.field-play:hover,.field-learn-card[data-live-bar]>.field-play:focus-visible,.field-learn-card[data-live-bar]>.field-play:active{scale:1}}
 @media(max-width:600px),(pointer:coarse){.town-app .hud-stack.hud-stack.hud-stack>.field-learn-card[data-live-bar]{width:100%}}
-.town-app[data-live-join] .town-minimap,.town-app[data-live-join] nav[data-hud-triggers]{display:none!important}/* the match bar takes the top row: no paths / friends / settings buttons mid-match */
+.town-app[data-live-join] .town-minimap,.town-app[data-live-join] nav[data-hud-triggers]{display:none!important}
+.town-app:has([data-knockout-leave]:not([hidden])) nav[data-hud-triggers]{display:none!important}/* Rooftop Knockout's Leave takes the settings button's top-right spot mid-round (QA Nov 14 2026) *//* the match bar takes the top row: no paths / friends / settings buttons mid-match */
 .town-app[data-live-join] [data-job-wallet]{visibility:hidden;pointer-events:none}/* the match bar takes the coins bar's place */
 
 /* Pitch bar title (owner, Nov 4): smaller so the Learn + Play buttons fit beside it. */

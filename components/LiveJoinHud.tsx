@@ -43,6 +43,11 @@ export function LiveJoinStack({onPress}:{onPress:Press}){
     <p data-join-tip data-hud-slot="task" className={styles.tip} role="status" hidden/>
   </>;
 }
+/** Rooftop Knockout's Leave (QA Nov 14 2026): the live match's Leave pill in the same top-right spot (a ✕ circle on phones);
+ *  the frame loop shows it while you are in a round and sets you down at the foot of the stair. */
+export function KnockoutLeave({onLeave}:{onLeave:()=>void}){
+  return <button type="button" data-knockout-leave className={styles.leave} onClick={onLeave} title="Leave the knockout" aria-label="Leave the knockout" hidden>Leave</button>;
+}
 /** The side + position modal, the contextual action buttons and the off-screen goal badge (outside the stack). */
 export function LiveJoinActions({onPress,onSlot}:{onPress:Press;onSlot:(slot:string)=>void}){
   return <>

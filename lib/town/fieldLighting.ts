@@ -58,7 +58,7 @@ export function createFieldLighting(scene:T.Scene,roots:Map<string,T.Group>,surf
    parts:[{attribute:bodyMesh.geometry.getAttribute('position') as T.BufferAttribute,start:bodyStarts[b0],count:bodyStarts[b1]-bodyStarts[b0]},{attribute:glassMesh.geometry.getAttribute('position') as T.BufferAttribute,start:glassStarts[g0],count:glassStarts[g1]-glassStarts[g0]}]});});
   const surface=surfaces.get(v.id);if(surface){surface.emissive.copy(surface.color);surface.emissiveIntensity=0;}
   const dayColor=surface?.color.clone()??new T.Color(v.surface),nightColor=dayColor.clone(),nightEmission=v.id==='futsal'?dayColor.clone():new T.Color('#d0ccb7');
-  entries.push({venue:v,root,surface,height,side,reach:{x:side-.7,z:v.length/2+(v.id==='knockout'?1.5:2.3)},dayColor,nightColor,nightEmission});
+  entries.push({venue:v,root,surface,height,side,reach:{x:v.id==='knockout'?v.width/2:side-.7,z:v.length/2+(v.id==='knockout'?1.5:2.3)},dayColor,nightColor,nightEmission});
  }
  // West Stadium (Nov 13 2026): its masts are stadiumWorld.ts paint; here they get 4 × 12 lit lenses (the shared lens material, one
  // merged mesh: 1 draw) and one soft glow per head (4 points, one additive draw, night only) that reads from across the island.

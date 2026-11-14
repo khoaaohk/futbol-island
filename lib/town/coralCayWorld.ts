@@ -47,6 +47,13 @@ export function coralOrchardFruit(){return CORAL_ORCHARD.flatMap(([x,z,kind],i)=
 function mergeRows(parts:T.BufferGeometry[]){const pos:number[]=[],nor:number[]=[],idx:number[]=[];let o=0;for(const g of parts){const p=g.getAttribute('position'),n=g.getAttribute('normal');for(let i=0;i<p.count;i++){pos.push(p.getX(i),p.getY(i),p.getZ(i));nor.push(n.getX(i),n.getY(i),n.getZ(i));}const index=g.index!;for(let i=0;i<index.count;i++)idx.push(index.getX(i)+o);o+=p.count;}
  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('normal',new T.Float32BufferAttribute(nor,3));g.setIndex(idx);return g;}
 
+/** The Cay's outdoor gashapon (lib/gashapon/machines.ts gs-cayplaza, gs-sharks; tests/qa-areas2-nov14.cjs keeps them in step) and
+ *  the island camera's direction from them (GASHA_OUTDOOR_YAW). A palm in that corridor hides the kid and the machine. */
+export const CAY_GASHAPON_VIEWS=[{x:594,z:-159},{x:670.62,z:-211.77}] as const;
+const GASHA_VIEW_DIR={x:16/Math.hypot(16,33),z:33/Math.hypot(16,33)};
+/** True when (x, z) stands between an outdoor Cay gashapon and the camera: up to 20 m towards it, within 6 m of the line. */
+export function inGashaponView(x:number,z:number){return CAY_GASHAPON_VIEWS.some(m=>{const dx=x-m.x,dz=z-m.z,along=dx*GASHA_VIEW_DIR.x+dz*GASHA_VIEW_DIR.z,perp=dx*GASHA_VIEW_DIR.z-dz*GASHA_VIEW_DIR.x;return along>-2&&along<20&&Math.abs(perp)<6;});}
+
 export function buildCoralCay(t:CayTools){
  const {box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas}=t,prop=t.prop??untaggedProp;
  const lampSites:CayLampSite[]=[];
@@ -338,7 +345,8 @@ export function buildCoralCay(t:CayTools){
  // A ring of palms around a planted centre; tables and planters at the edges keep the crossing open.
  cylinder(3,.5,'#d2bc94',CAY_PLAZA.x+4,.2,CAY_PLAZA.z-6);put(new T.IcosahedronGeometry(1.6,0),'#739568',CAY_PLAZA.x+4,1,CAY_PLAZA.z-6);obstacles.push({x:CAY_PLAZA.x+4,z:CAY_PLAZA.z-6,w:6,d:6,cornerRadius:3});
  palm(CAY_PLAZA.x+4,CAY_PLAZA.z-6,6.4);
- for(const [x,z] of [[CAY_PLAZA.x-9,CAY_PLAZA.z+10],[CAY_PLAZA.x+9,CAY_PLAZA.z+10]])palm(x,z,6);
+ // The east palm stands at the plaza's east edge (Nov 14 2026: at +9,+10 its canopy hid the player at the Bug Squad gashapon).
+ for(const [x,z] of [[CAY_PLAZA.x-9,CAY_PLAZA.z+10],[CAY_PLAZA.x+13,CAY_PLAZA.z+5]])palm(x,z,6);
  table(CAY_PLAZA.x-8,CAY_PLAZA.z-9);table(CAY_PLAZA.x+10,CAY_PLAZA.z+3);planter(CAY_PLAZA.x-11,CAY_PLAZA.z-13);planter(CAY_PLAZA.x+11,CAY_PLAZA.z-13);
  for(let i=0;i<3;i++)lamp(CAY_PLAZA.x-12+i*12,CAY_PLAZA.z+13.5,-.03);
  // Café terrace tables and surfboards leaning outside the surf shop.
@@ -390,7 +398,7 @@ export function buildCoralCay(t:CayTools){
   box(S.w-1.2,1.9,.08,'#294f43',S.x,2.35,S.front+.02);sign('SHARKS BEACH COURT',S.w-1.6,.55,S.x,5.1,S.front+.05,'#477c6a','#f4cc7c');
   sign('HOME  0 – 0  AWAY',S.w-2,.7,S.x,2.7,S.front+.08,'#294f43','#f4cc7c');sign('PERIOD 1 · 12:00',S.w-3.4,.45,S.x,1.85,S.front+.08,'#294f43','#eddfbb');
   obstacles.push({x:S.x,z:S.z,w:S.w,d:S.d});assets.push({kind:'scoreboard',x:S.x,z:S.z,w:S.w,d:S.d,visualW:S.w+.3,visualD:S.d+.3});}
- umbrella(BEACH_COURT.x+7,COURT_SCOREBOARD.z-8,3);palm(BEACH_COURT.x-6,COURT_SCOREBOARD.z-9,5.8);
+ umbrella(BEACH_COURT.x+7,COURT_SCOREBOARD.z-8,3);palm(BEACH_COURT.x-13,COURT_SCOREBOARD.z-9,5.8);// x-13, not x-6: clear of the Reef Friends gashapon's camera line (Nov 14 2026)
  // The three rules boards on the court's north side were removed (user, Sep 29 2026): the court islanders and the live
  // match commentary teach the format. The lane to the scoreboard's east half stays clear (a ball-hunt target is mounted there).
  for(const dx of [-17,17])palm(K.x+dx,K.z-halfW-11,6.2);
@@ -562,7 +570,7 @@ export function buildCoralCay(t:CayTools){
  const onBuilding=(p:{x:number;z:number})=>CAY_HOUSES.some(([x,z,w,d])=>Math.abs(p.x-x)<w/2+3&&Math.abs(p.z-z)<d/2+3);
  const onCourt=(p:{x:number;z:number})=>onBuilding(p)||Math.abs(p.x-BEACH_COURT.x)<BEACH_COURT.length/2+5&&p.z>BEACH_COURT.z-BEACH_COURT.width/2-12&&p.z<BEACH_COURT.z+BEACH_COURT.width/2+12;
  const nearCauseway=(p:{x:number;z:number})=>onCourt(p)||p.x<CAY_BOULEVARD.x0+30&&Math.abs(p.z-z0)<18||Math.abs(p.x-CAY_KONBINI.x)<CAY_KONBINI.w/2+4&&p.z>CAY_KONBINI.z-CAY_KONBINI.d/2-4&&p.z<ROUNDABOUT.z;
- for(let i=0;i<n;i+=5){const p=inward(i,.6+jitter(i)*.2);if(nearCauseway(p))continue;palm(p.x,p.z,5.3+jitter(i,2)*1.3);}
+ for(let i=0;i<n;i+=5){const p=inward(i,.6+jitter(i)*.2);if(nearCauseway(p)||inGashaponView(p.x,p.z))continue;palm(p.x,p.z,5.3+jitter(i,2)*1.3);}
  let u=0;for(let i=2;i<n;i+=17){const p=inward(i,.4);if(nearCauseway(p))continue;umbrella(p.x,p.z,u++);}
  // Tide-line rocks never sit on the roundabout or the causeway's paving (Oct 15 2026: the cay's west shore runs under the
  // ring's west half, and pebbles poked up through the asphalt and the zebra).
@@ -574,7 +582,7 @@ export function buildCoralCay(t:CayTools){
  const inFarm=(x:number,z:number)=>x>FARM.fence[0].x-1.5&&x<FARM.fence[1].x+1.5&&z>FARM.fence[0].z-1.5&&z<FARM.fence[5].z+1.5;
  const inland=(x:number,z:number,margin:number)=>onCay(x,z)&&distanceToCayShore(x,z)>margin&&!inFarm(x,z)&&!inHostelArea(x,z)&&!onCourtBeach(x,z);
  for(const [x,z] of [[523,-170],[541,-168.6],[560,-168.6],[578,-172.5],[617,-186],[659,-186],[604,-140]])if(inland(x,z,14)){prop('bush',()=>{for(const [dx,r,c] of [[-.6,.7,'#5b895e'],[.5,.6,'#7a9e67']] as [number,number,string][]){const shrub=put(new T.IcosahedronGeometry(r,1),c,x+dx,.45,z);shrub.scale.y=.75;}});obstacles.push({x,z,w:1.8,d:1.2});}
- [[525,-205],[543,-216],[559,-199],[585,-222],[604,-209],[619,-233],[667,-222],[686,-181],[696,-150],[673,-101],[648,-112],[620,-101],[568,-110],[548,-112],[610,-127],[531,-118],[640,-240],[700,-130],[626,-173],[646,-146],[621,-146],[636,-193],[560,-80],[620,-78]].forEach(([x,z],i)=>{if(inland(x,z,12))palm(x,z,5.4+jitter(i,9)*1.4);});
+ [[525,-205],[543,-216],[559,-199],[585,-222],[604,-209],[619,-233],[667,-222],[686,-181],[696,-150],[673,-101],[648,-112],[620,-101],[568,-110],[548,-112],[610,-127],[531,-118],[640,-240],[700,-130],[626,-173],[646,-146],[621,-146],[636,-193],[560,-80],[620,-78]].forEach(([x,z],i)=>{if(inland(x,z,12)&&!inGashaponView(x,z))palm(x,z,5.4+jitter(i,9)*1.4);});
  for(const [x,z] of [[537,-200],[577,-205],[612,-218],[681,-160],[660,-104],[577,-120],[540,-124]])if(inland(x,z,12)){prop('bush',()=>{for(let k=0;k<3;k++){const shrub=put(new T.IcosahedronGeometry(.55+k*.12,1),k%2?'#7a9e67':'#5b895e',x+(k-1)*.9,.4,z+(k%2)*.5);shrub.scale.y=.75;}});obstacles.push({x,z:z+.25,w:3,d:1.4});}
  return {lampSites,farmDecor,destinations:[{name:'Coral Cay Plaza',x:CAY_PLAZA.x,z:CAY_PLAZA.z+8},{name:'Beach Soccer Court',x:BEACH_COURT.x,z:BEACH_COURT.z+BEACH_COURT.width/2+2},{name:'Sharks Beach',x:SHARKS_BEACH.x,z:SHARKS_BEACH.z+8},{name:'Coral Cay Farm',x:FARM.crops.x0-1.5,z:FARM.track.z},{name:'Coral Cay Hostel',x:HOSTEL.x,z:HOSTEL_PATHS[0][1]},{name:'Hostel homes',x:HOSTEL_PATHS[2][0],z:-104},{name:'Farm beach gate',x:FARM.beachTrack.x,z:FARM.beachTrack.z1+1},...SANDBARS.map(s=>({name:s.name,x:s.x,z:s.z}))]};
 }

@@ -308,7 +308,7 @@ function buildMachineGeometry(m:VendingMachine,index:number){
  const glassPart=parts.length;
  facePanel(L.glass,glassRect(m,index),front+.01);                         // glass: header + six product slots
  facePanel(L.led,R.led);facePanel(L.coin,R.coin);facePanel(L.tray,R.tray);
- const flat=parts.map(g=>g.toNonIndexed()),start=(i:number)=>flat.slice(0,i).reduce((n,g)=>n+g.getAttribute('position').count,0);
+ const flat=parts.map(g=>g.index?g.toNonIndexed():g),start=(i:number)=>flat.slice(0,i).reduce((n,g)=>n+g.getAttribute('position').count,0);
  const merged=mergeGeometries(flat)!;parts.forEach(g=>g.dispose());flat.forEach(g=>g.dispose());merged.computeBoundingSphere();merged.computeBoundingBox();
  // The close-up cuts these away (collapses them) to open the real bay: the cabinet box's front face (+z, vertices 24–29 of the
  // first part) and the printed glass panel.
