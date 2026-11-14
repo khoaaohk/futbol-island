@@ -164,6 +164,8 @@ import {createCoachPractice} from '@/lib/town/coachPractice';
 import {createFlightMotion} from '@/lib/graphics/flightMotion';import {createIdleWave,stepIdleWave,IDLE_SPEED} from '@/lib/town/jetpackIdleWave';import {applyIdleGesture} from '@/lib/graphics/jetpackIdlePose';
 import {createBoundaryFeedback} from '@/lib/graphics/boundaryFeedback';
 import {createStadiumFlight,roofCeiling} from '@/lib/town/stadiumFlight';
+import {SCREEN_FRAME,screenFrameWeight} from '@/lib/town/stadiumScreenFrame';
+import {pondDiverPinOn} from '@/lib/town/pondBugs';
 import {createLandingMarker} from '@/lib/graphics/landingMarker';
 import {createQuizViewControls} from '@/lib/town/quizViewControls';
 import {createLearningView,type LearningAngle} from '@/lib/town/learningView';
@@ -871,6 +873,12 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const clearWin=createClearWindow(scene,()=>world.islandShore.field);// the clear water window over the shallows (lib/town/water/clearWindow.ts)
     const swimClear=createSwimClear(scene);// the swimmer's clear disc + seabed shadow + underwater body tint (lib/graphics/swimClear.ts)
     disposers.add(()=>{swimClear.dispose();clearWin.dispose();});
+    /* QA Nov 14 2026: the park pond is painted on the island's ground (its bed is a flat disc just under the surface), so a diver
+       under it is hidden by the ground itself and no see-through water can show them. While duck-diving in the pond a small teal
+       pin (and a ring on the surface) marks where the kid is. One cone + one ring, hidden everywhere else. */
+    const pondPinMat=new T.MeshBasicMaterial({color:'#81fbed',transparent:true,opacity:.95,depthWrite:false,toneMapped:false}),pondPinCone=new T.ConeGeometry(.28,.55,14),pondPinRingGeo=new T.RingGeometry(.55,.72,28);pondPinRingGeo.rotateX(-Math.PI/2);
+    const pondPin=new T.Group();pondPin.name='pond-diver-pin';pondPin.visible=false;{const cone=new T.Mesh(pondPinCone,pondPinMat);cone.rotation.x=Math.PI;cone.position.y=1.6;const ring=new T.Mesh(pondPinRingGeo,pondPinMat);ring.position.y=.03;pondPin.add(cone,ring);}scene.add(pondPin);
+    disposers.add(()=>{pondPin.removeFromParent();pondPinMat.dispose();pondPinCone.dispose();pondPinRingGeo.dispose();});
     const waterProbe=createWaterProbe(),water=createWaterState(waterProbe,()=>reduced,(x,z)=>{const f=world.islandShore.field;return f?clearBedDepthAt(f,x,z)+WATER_LEVEL-UW_SURFACE:Infinity;},(x,z)=>waterProbe.pond?pondDiveRoom(x,z):NaN/* the park pond (Nov 13 2026): its own dive bound, the deep middle only */),/* the dive keeps the body above the drawn seabed (Oct 19 2026, diving to a shore lost the diver in the bed) */waterWalk={allow:(x:number,z:number)=>waterProbe.allowed(x,z),speed:1};let swimEdgeHold=0,swimEdgeQuiet=0;
     /** The water surface the swimmer is in (Nov 13 2026): the sea's WATER_LEVEL, or the park pond's POND_Y (the probe's level): the
      *  splashes, ripples, drips, the swim clear disc and the camera's floor follow it. Set after each water step. */
@@ -1195,7 +1203,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     // catch radius (KEEPUP_SKY.catchRadius, 1.5 m) as the ball lands, bigger while it is still high (shrinks as it nears).
     const SKY_MARK_OUTER=1.05,SKY_MARK_SCALE=KEEPUP_SKY.catchRadius/SKY_MARK_OUTER,skyMarkGeometry=new T.RingGeometry(SKY_MARK_OUTER-.045,SKY_MARK_OUTER,64),skyMarkMaterial=new T.MeshBasicMaterial({color:0xff2d2d,transparent:true,opacity:.9,depthWrite:false,side:T.DoubleSide,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
     disposers.add(()=>{skyMarkGeometry.dispose();skyMarkMaterial.dispose();});
-    const skyMark=new T.Mesh(skyMarkGeometry,skyMarkMaterial);skyMark.rotation.x=-Math.PI/2;skyMark.visible=false;skyMark.renderOrder=3;skyMark.frustumCulled=false;skyMark.name='keepup-sky-mark';scene.add(skyMark);let skyCamLift=0;
+    const skyMark=new T.Mesh(skyMarkGeometry,skyMarkMaterial);skyMark.rotation.x=-Math.PI/2;skyMark.visible=false;skyMark.renderOrder=3;skyMark.frustumCulled=false;skyMark.name='keepup-sky-mark';scene.add(skyMark);let skyCamLift=0,screenFrameW=0;
     // Keep-up cues (owner, Oct 24: "very intuitive"): the button's charge ring / state (a CSS var + data attribute written only on
     // change), an edge arrow toward the mark, and first-time hints (max 3 runs, localStorage). No per-frame allocation.
     const skyArrowPoint=new T.Vector3();let keepUpCharge=-1,keepUpState='',skyArrowX=NaN,skyArrowY=NaN,skyArrowA=NaN,skyArrowOn=false,hintRuns=3,ringHints=3,trapHints=3,nudgeHints=3,skyMade=true,nudgeStreak=0,hintStep=0,hintUntil=0,hintCounted=false,hintTrapped=false,hintLaunches=0;
@@ -2208,6 +2216,9 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // Coach lesson on a portrait phone: frame passer, marker and receiver above the coach card (same view angle).
       if(lessonRef.current&&camera.aspect<.85){const fx=(PASSER.x+lessonDefender.x+location.x)/3,fz=(PASSER.z+lessonDefender.z+location.z)/3,shift=5.5/Math.hypot(16,33),scale=1.2;
         camTarget.set(fx+16*shift+16*scale,groundY+23*scale,fz+33*shift+33*scale);}
+      // Public viewing on a portrait phone (lib/town/stadiumScreenFrame.ts, QA Nov 14 2026): frame the big screen above the walker.
+      {const want=camera.aspect<.85&&rideRef.current==='walk'&&!flying&&!lessonRef.current&&!water.inWater?screenFrameWeight(visualLocation.x,visualLocation.z):0;screenFrameW+=(want-screenFrameW)*(reduced?1:1-Math.exp(-dt*3));if(screenFrameW<1e-3&&want===0)screenFrameW=0;
+       if(screenFrameW>0){const k=SCREEN_FRAME.back*screenFrameW;camTarget.z-=SCREEN_FRAME.north*screenFrameW;camTarget.x+=(camTarget.x-visualLocation.x)*k;camTarget.y+=(camTarget.y-groundY)*k;camTarget.z+=(camTarget.z-visualLocation.z+SCREEN_FRAME.north*screenFrameW)*k;}}
       // Summit Isle's tower (lib/town/summitIsle.ts summitCameraFrame): when the hill would come between, the follow camera rises a
       // little, then dollies in along its view line (never closer than 35%), then rises further. Eased.
       // In the sea (Oct 20 2026, user: "when diving near the shore, the player is not in view"): the sight line starts at the water
@@ -2311,6 +2322,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
        clearWin.update(dt,player.root.position.x,player.root.position.z,heat.tier+(quality.phone&&heat.tier>=2?1:0),WATER_UNIFORMS.uShore.value,camera);swimClear.hideBed=clearWin.strength>0;
        divePreview.update(dt,player.root.position.x,player.root.position.z,heat.tier+(quality.phone&&heat.tier>=2?1:0),!dive.diving);
        swimClear.update(dt,player.root.position.x,player.root.position.z,player.root.rotation.y,water.inWater?water.pose.w:0,waterProbe.depth,waterY,SWIM_ROOT_DEPTH+water.state.dive,beanSkinOf(player)?.meshes??null,water.state.under);
+       {const on=pondDiverPinOn(!!waterProbe.pond,water.state.under);if(pondPin.visible!==on)pondPin.visible=on;if(on){pondPin.position.set(player.root.position.x,waterY,player.root.position.z);pondPin.children[0].position.y=1.6+(reduced?0:Math.sin(elapsed*4)*.08);}}/* the pond diver's pin (above) */
        // Diving: open the disc where the view ray to the body crosses the surface (toward the camera), so the deeper body stays in it.
        if(water.state.dive>.05&&swimClear.strength>0){const px=player.root.position.x,pz=player.root.position.z,dx=camera.position.x-px,dz=camera.position.z-pz,hd=Math.hypot(dx,dz),h=Math.max(1,camera.position.y-waterY),D=water.state.dive+.2,k=hd>1e-3?D/(h+D):0;SWIM_CLEAR_UNIFORMS.uSwimXZ.value.set(px+dx*k,pz+dz*k);
          // A visibility floor: the deeper body keeps some of its own colour (beanUnder ≤ 1 − 0.5 × under; the depth absorption still tints it).

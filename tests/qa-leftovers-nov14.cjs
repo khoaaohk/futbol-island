@@ -28,7 +28,8 @@ ok('stadium: the row in front of a seated player clears; nothing to clear on the
  const load=require('./summit-harness.cjs').createLoader(),C=load('lib/town/stadiumCrowd.ts'),S=load('lib/town/stadiumSeats.ts'),T=require('three');
  const west=S.STANDS.find(s=>s.id==='west'),v=new T.Vector3();
  const at=row=>S.standWorld(west,west.inner+row*S.ROW_DEPTH+S.SEAT_DEPTH-.04,5);
- const p=at(4);assert.ok(C.aheadClear(p.x,p.z,v));const f=at(3);assert.ok(Math.hypot(v.x-f.x,v.y-f.z)<1e-6&&v.z===C.AHEAD_RADIUS,'the spot one row down');
+ const p=at(4);assert.ok(C.aheadClear(p.x,p.z,v));for(const [row,da] of [[3,0],[2,0],[3,1.2],[2,1.2]]){const f=S.standWorld(west,west.inner+row*S.ROW_DEPTH+S.SEAT_DEPTH-.04,5+da);assert.ok(Math.hypot(v.x-f.x,v.y-f.z)<v.z,`row ${row} fan ${da} m along is cleared`);}
+ const keep=S.standWorld(west,west.inner+4*S.ROW_DEPTH+S.SEAT_DEPTH-.04,5+2.4);assert.ok(Math.hypot(v.x-keep.x,v.y-keep.z)>v.z,'own row 2.4 m along keeps its fan');
  const p0=at(0);assert.equal(C.aheadClear(p0.x,p0.z,v),false);assert.equal(v.z,-1,'front row: nothing ahead');
  assert.equal(C.aheadClear(0,0,v),false,'on the pitch: nothing');
  assert.match(read('lib/town/stadiumCrowd.ts'),/transformed\*=1\.-step\(distance\(fanAt\.xz,uClearA\.xy\),uClearA\.z\);/);});
@@ -45,4 +46,16 @@ ok('island: a chat bubble starts above a shown name tag; viewers clear of the sc
  assert.match(read('lib/graphics/islandNpcs.ts'),/label\.position\.y=2\.5;label\.scale\.set\(3\.5\/rig\.profileScale,1\.094\/rig\.profileScale/,'tag size the bubble lift assumes');
  const spots=[...read('lib/town/stadiumNpcs.ts').matchAll(/\['stadium-viewer-[a-z]+',(-?[\d.]+),(-?[\d.]+)\]/g)].map(m=>+m[1]);assert.equal(spots.length,6);
  for(const dx of spots)assert.ok(Math.abs(dx)<=3.6,'viewer within 3.6 m of the middle (posts at ±6.5): '+dx);});
+ok('island: the shown NPC name tag fades while it covers the player',()=>{const s=read('lib/graphics/islandNpcs.ts');
+ assert.match(s,/const TAG_FADE=\.22/);assert.match(s,/want=camera&&tagOverPlayer\(shownTag,player,camera\)\?TAG_FADE:1/);assert.match(s,/shownTag\.label\.visible=false;shownTag\.label\.material\.opacity=1;/,'a hidden tag comes back opaque');});
+ok('public viewing on a phone: the camera frames the big screen in and near the viewing area only',()=>{
+ const load=require('./summit-harness.cjs').createLoader(),F=load('lib/town/stadiumScreenFrame.ts'),N=load('lib/town/stadiumNpcs.ts');
+ assert.deepEqual({...F.SCREEN_VIEWING},{...N.VIEWING},'same viewing box as the cast');const V=N.VIEWING;
+ assert.equal(F.screenFrameWeight(V.x,(V.z0+V.z1)/2),1);assert.equal(F.screenFrameWeight(V.x+V.halfW+F.SCREEN_FRAME.margin+F.SCREEN_FRAME.fade+.1,V.z0),0);
+ const mid=F.screenFrameWeight(V.x,V.z1+F.SCREEN_FRAME.margin+F.SCREEN_FRAME.fade/2);assert.ok(mid>0&&mid<1,'eases at the edge');
+ assert.match(read('components/Town.tsx'),/const want=camera\.aspect<\.85&&rideRef\.current==='walk'&&!flying&&!lessonRef\.current&&!water\.inWater\?screenFrameWeight\(/);});
+ok('map: place and field names are drawn again above the V / F / J / gashapon marks (full map); the pond diver gets a pin',()=>{const m=read('components/IslandOverview.tsx');
+ const top=m.indexOf('className="map-labels-top"'),jobs=m.indexOf('className="map-job-markers"'),gasha=m.indexOf('className="map-gashapon-markers"');assert.ok(top>jobs&&top>gasha,'after the marks');
+ assert.match(m,/\{!localMap&&<g className="map-labels-top" aria-hidden="true" pointerEvents="none">/);assert.match(m,/>BEACH SOCCER<\/text>\n   <text x=\{HOSTEL\.x\}/);
+ assert.match(read('components/Town.tsx'),/pondPin\.name='pond-diver-pin'/);});
 console.log(`qa-leftovers-nov14: ${n} groups passed`);

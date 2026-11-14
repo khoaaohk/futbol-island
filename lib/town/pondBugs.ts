@@ -24,6 +24,9 @@ export const POND_DRAGONFLY_WHERE='Or stand still by the Stadium Park pond: a dr
 type Port={get:()=>string|null;set:(v:string)=>void};
 const local:Port={get:()=>{try{return localStorage.getItem(BUG_BOOK_KEY);}catch{return null;}},set:v=>{try{localStorage.setItem(BUG_BOOK_KEY,v);}catch{/* private mode */}}};
 /** May the player net right now? On foot (walking), on the ground, free to act (no lesson, panel or job). */
+/** QA Nov 14 2026: the pond diver's pin (Town.tsx) shows once the head is under (the pond is painted on the ground, so the body
+ *  itself cannot be seen there). */
+export const pondDiverPinOn=(inPond:boolean,under:number)=>inPond&&under>.35;
 /** `under`: the player is duck-diving (QA Nov 14 2026: Net it floated over the water while the kid was under it). */
 export const pondNetAllowed=(o:{ride:string;onGround:boolean;canEnter:boolean;job:boolean;under?:boolean})=>o.ride==='walk'&&o.onGround&&o.canEnter&&!o.job&&!o.under;
 /** The Bug book catch of a pond dragonfly, plus the same events a shift catch fires (the first-ever coin, the completion bonus). */
