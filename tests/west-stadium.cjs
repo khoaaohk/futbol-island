@@ -184,6 +184,11 @@ for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const r=walk([[S.x+sx*37.5,S
 // Rides go up an aisle and down a back stair too (no wedging, no falls).
 for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);const r=walk([[S.x-37,z],[S.x-40.5,z],[back+1.5,z],[back+1.5,S.z-26],[back-.5,S.z-26],[S.x-Q.stairEnd(W)-2,S.z-26]],mode);
  assert(r.reached&&!r.fell&&r.h<.05,mode+' up an aisle and down a back stair '+JSON.stringify({...r,t:0}));}
+// Owner, Nov 13 2026 (a rider stuck on a back stair): walking AND riding UP every back stair of every stand reach the concourse.
+{const bad=[];for(const s of Q.STANDS)for(const c of s.stairs)for(const mode of ['walk','scooter','bike']){
+  const a=Q.standWorld(s,Q.stairEnd(s)+2.5,c),b=Q.standWorld(s,Q.standBack(s)+.3,c),d=Q.standWorld(s,Q.standBack(s)-1.2,c);
+  const r=walk([[a.x,a.z],[b.x,b.z],[d.x,d.z]],mode,25);if(!(r.reached&&!r.fell&&Math.abs(r.h-CH)<.05))bad.push(`${s.id} stair ${c} ${mode}: h ${r.h.toFixed(2)} at ${Q.standLocal(s,r.x,r.z).d.toFixed(1)} m`);}
+ assert.deepEqual(bad,[],'every back stair climbs to the concourse, on foot and on a ride');}
 // Landings: a parachute / jetpack over the open north stand comes down on the stand (its concourse) or the ground beside it, never
 // in a gap between rows; over a roofed stand, on the roof or beside it.
 {const t=travel();for(const [x,z] of [[S.x+5,S.z-63],[S.x-20,S.z-68],[S.x-47,S.z+10],[S.x+20,S.z+64]]){const at=t.canLand(x,z,Infinity)?{x,z}:t.findLanding(x,z);assert(at,'a landing near '+x+','+z);

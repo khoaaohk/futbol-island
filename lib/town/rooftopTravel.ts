@@ -102,9 +102,13 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   // A hop's rider is not up on a roof: the trees and props it flies at still stop it.
   const elevated=!state.air&&state.height>fieldSurfaceHeight(p.x,p.z)+1;
   const radius=Math.max(8,Math.max(Math.hypot(v.x,v.z),TRAVEL_MODES[mode].maxSpeed)*dt+2);
+  // A rider standing on a wide stair (wider than NARROW_STAIR, so it keeps its 0.8 m radius) reaches the landing slab at the top
+  // with its front before its wheels leave the treads below: on a stair it may step up to 0.8 m onto whatever it touches (owner,
+  // Nov 13 2026: a scooter stopped three treads from the top of the stadium's 3 m back stairs, the concourse slab's edge in reach).
+  const onStair=mode!=='walk'&&!state.air&&!!roofAt(p.x,p.z,state.height)?.stepAccess;
   const solids=groundGrid.query(p.x,p.z,radius).filter(o=>{
    const building=buildingFor(o);
-   const stepHeight=building?.stepAccess&&mode!=='walk'?1:mode==='walk'&&building?.stepUp?building.stepUp:.35;// stepUp: the stadium's rows (stadiumSeats.ts)
+   const stepHeight=building?.stepAccess&&mode!=='walk'?1:onStair?.8:mode==='walk'&&building?.stepUp?building.stepUp:.35;// stepUp: the stadium's rows (stadiumSeats.ts)
    return building?building.height>state.height+stepHeight:!elevated;
   }).concat(propGrid.query(p.x,p.z,radius).filter(p=>state.height>=p.floor-.2&&state.height<p.top));
   const barriers=solids.concat(goalBarriersAt(state.height));
