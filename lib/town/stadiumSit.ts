@@ -19,6 +19,7 @@ import {createStadiumScreen,screenMinute,stadiumBarText,type ScreenScore} from '
 import {remoteSeatsTaken,remoteSeatSpots,seatLost,setMySeat} from './stadiumSeatShare';
 import {BIB_COLOURS} from './beanLooks';
 import {ensureStadiumSponsors,SPONSOR_LOAD_RADIUS} from '../stadium/sponsors/index';
+import {retryGate} from '../retryGate';
 import {countStadiumVisit} from '../analytics/sponsorEvents';
 import {STADIUM_NAME} from '../stadium/dripfc';
 
@@ -54,7 +55,7 @@ const MOVE_KEYS=['w','a','s','d','arrowup','arrowdown','arrowleft','arrowright']
 /** moved: the seat race moved me to `seat` (Town puts the player there, like press()); toast: a short note for the player. */
 export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:boolean;goal?:()=>void;moved?:(seat:Seat)=>void;toast?:(text:string)=>void}){
  const m=createSitMachine(),pose:TrickPose=npcSeatPose('bench');pose.w=0;
- let farSaved=0,near:Seat|null=null,view:ReturnType<typeof seatView>|null=null,sponsorAsked=false,wasOutside=true,promptSeated:boolean|null=null,promptLive=false;
+ let farSaved=0,near:Seat|null=null,view:ReturnType<typeof seatView>|null=null,sponsorAsked=false,wasOutside=true,sponsorRetry=retryGate(),promptSeated:boolean|null=null,promptLive=false;
  let dc=Infinity,live=false,sponsors:{setScreenSponsor:(on:boolean)=>void}|null=null,screenSponsor=true,looking=false;
  const screen=createStadiumScreen(ports.parent,{home:BIB_COLOURS.stadium.home,away:BIB_COLOURS.stadium.away}),score:ScreenScore={home:'Red',away:'Blue',gold:0,blue:0,minute:0};
  const ball={x:0,z:0},look={x:0,y:0,z:0},want={x:0,y:0,z:0},me={x:0,z:0,h:0};let fovSaved=0;
@@ -72,8 +73,8 @@ export function createStadiumSit(ports:{parent:T.Object3D;wake:()=>void;phone?:b
    *  not falling, no menu. */
   want(x:number,z:number,height:number,canSit:boolean):{key:string;distance:number}|null{
    dc=Math.hypot(x-STADIUM.x,z-STADIUM.z);me.x=x;me.z=z;me.h=height;
-   if(!sponsorAsked&&dc<SPONSOR_LOAD_RADIUS){sponsorAsked=true;
-    ensureStadiumSponsors(ports.parent,stadiumSponsorLayout()).then(s=>{s.group.position.set(STADIUM.x,-.045,STADIUM.z);sponsors=s;screenSponsor=!live;s.setScreenSponsor(screenSponsor);ports.wake();}).catch(()=>{sponsorAsked=false;});}
+   if(!sponsorAsked&&dc<SPONSOR_LOAD_RADIUS&&sponsorRetry.ready()){sponsorAsked=true;
+    ensureStadiumSponsors(ports.parent,stadiumSponsorLayout()).then(s=>{s.group.position.set(STADIUM.x,-.045,STADIUM.z);sponsors=s;screenSponsor=!live;s.setScreenSponsor(screenSponsor);ports.wake();}).catch(()=>{sponsorAsked=false;sponsorRetry.fail();});}
    const gate=inGate(x,z);if(gate&&wasOutside)countStadiumVisit();if(gate)wasOutside=false;else if(x>GATE_ARCH_X||dc>140)wasOutside=true;
    if(held())return {key:SIT_KEY,distance:0};
    near=canSit&&dc<110&&height>.2?nearestSeat(x,z,height,remoteSeatsTaken()):null;// phase 5: never a seat another player sits in

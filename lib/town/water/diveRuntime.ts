@@ -9,13 +9,16 @@
  */
 import * as T from 'three';
 import type {DiveRoom} from '../../graphics/diveRoom';
+import {retryGate} from '../../retryGate';
 // Load-time pass (Nov 10 2026, docs/performance-guide.md): the sealed room (diveRoom.ts, ~90 KB of source plus the caught-animal
 // models it shares with fishing) is not in the island boot chunk. Its chunk is fetched once the player is within
 // DIVE_ROOM_PREFETCH m of a dive zone (slots(), the HUD tick); until it lands the Dive prompt stays hidden and the edge entry is
 // refused, so a dive never starts without its room. A failed load is forgotten, so the next tick near the water retries.
 const DIVE_ROOM_PREFETCH=120;
 let roomModule:typeof import('../../graphics/diveRoom')|null=null,roomLoading:Promise<void>|null=null;
-export const loadDiveRoom=()=>{if(roomModule)return Promise.resolve();roomLoading??=import('../../graphics/diveRoom').then(m=>{roomModule=m;},()=>{roomLoading=null;});return roomLoading;};
+// QA Nov 14 2026: a failed load is retried at most every 5 s, not on every slots() tick (lib/retryGate.ts).
+const roomRetry=retryGate();
+export const loadDiveRoom=()=>{if(roomModule||(!roomLoading&&!roomRetry.ready()))return Promise.resolve();roomLoading??=import('../../graphics/diveRoom').then(m=>{roomModule=m;},()=>{roomLoading=null;roomRetry.fail();});return roomLoading;};
 export const diveRoomReady=()=>roomModule!==null;
 /** Tests and headless checks: hand the room module over synchronously (the island always goes through loadDiveRoom). */
 export function provideDiveRoom(m:typeof import('../../graphics/diveRoom')){roomModule=m;}
