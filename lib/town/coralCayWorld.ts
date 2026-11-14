@@ -7,6 +7,7 @@ import {trunkCollider,type Obstacle} from './simulation';
 import {canopyHang} from './canopyHang';
 import {CAUSEWAY,CAUSEWAY_PATH,SANDBARS,CAY_SHORE,CAY_SAND,CAY_LAWN,CAY_CENTER,CAY_BOULEVARD,CAY_PLAZA,BEACH_COURT,CAY_HOUSES,CAY_HUTS,CAY_HUT_RADIUS,MAIN_SHORE_X,SHARKS_BEACH,COURT_BEACH,COURT_SCOREBOARD,onCourtBeach,ROUNDABOUT,WELCOME_ARCH,CAY_KONBINI,CAY_KONBINI_DOOR,FARM,FARM_FENCE_OBSTACLES,HOSTEL,CAY_HOMES,HOSTEL_PATHS,MINI_GOAL,inHostelArea,shoulderWidth,causewayRuns,offsetPoint,onCay,onSandbarStop,distanceToCayShore,cayJitter as jitter,type Sandbar,type PathSample,type RoadSide} from './coralCay';
 import {INTERIOR_GRASS_COLOR} from './shoreline';
+import {LOUNGER,SET_LOUNGER,loungerBack} from './beachLoungers';
 import {tintGroundMesh} from '../graphics/groundTint';
 import type {DecorPart,DecorPlant} from '../graphics/farmDecor';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
@@ -238,7 +239,7 @@ export function buildCoralCay(t:CayTools){
   assets.push({kind:'beach-umbrella',x,z,w:.25,d:.25,visualW:4.2,visualD:4.2});
   cylinder(.055,2.7,'#9d805b',x,1.35,z);const canopy=put(new T.ConeGeometry(2.1,.7,10),i%2?'#477c6a':'#bd7657',x,2.8,z);canopy.rotation.y=i*.4;
   const targets:Mesh[]=[];canopy.userData.umbrellaTargets=targets;obstacles.push({x,z,w:.25,d:.25});
-  for(const dx of [-1.1,1.1]){targets.push(box(.8,.18,2.2,'#eddfbb',x+dx,.12,z+1.2));const back=box(.8,.1,.75,i%2?'#589aa0':'#c8734f',x+dx,.38,z+.4);back.rotation.x=-.55;targets.push(back);obstacles.push({x:x+dx,z:z+1,w:.8,d:2.5});}
+  for(const dx of [-1.1,1.1]){targets.push(box(.8,.18,2.2,'#eddfbb',x+dx,.12,z+1.2));const bk=loungerBack(z+SET_LOUNGER.padDz-SET_LOUNGER.padLen/2,SET_LOUNGER.top),back=box(.8,.1,LOUNGER.backLen,i%2?'#589aa0':'#c8734f',x+dx,bk.y,bk.z);back.rotation.x=LOUNGER.backTilt;/* Nov 13 2026: the backrest rises toward the head end (it leaned over the pad) */targets.push(back);obstacles.push({x:x+dx,z:z+1,w:.8,d:2.5});}
   const towel=box(1.1,.015,1.7,i%2?'#d69b61':'#8b9e6b',x+3,.008,z+1);towel.rotation.y=.15*i;targets.push(towel);
  }
  function lifeguardChair(x:number,z:number){prop('post',()=>lifeguardChairParts(x,z));}

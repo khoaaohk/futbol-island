@@ -246,7 +246,7 @@ t('wiring: Town stands a seated townsperson up first, fires the emote when she i
  assert(/islandNpcs\.standUp\(sid,reduced\)/.test(town)&&/se\.sm\.state==='reacting'/.test(town)&&/standArm\.fire=true;emoteBus\.fire\(standArm\.pick\)/.test(town));
  assert(/seatPickable\(e\.sm\)/.test(town)&&/e\.sm\.cool>0\?now\+e\.sm\.cool:0/.test(town),'busy while up and 20 s cooldown after');
  assert(/stepSeat\(sm,paused\?0:dt,entry\.fx\.kind>=0/.test(npcs)&&/entry\.seat\.w=sm\.w;entry\.seat\.torsoPitch=entry\.seatTorso\+sm\.lean/.test(npcs),'only the pose blend and a lean are driven');
- assert(/npcSeatPose\(definition\.pose,rig\.profileScale,beanShapeOf\(rig\.root\)\)/.test(npcs),'the seat-fit solve is unchanged');
+ assert(/npcSeatPose\(definition\.pose,rig\.profileScale,beanShapeOf\(rig\.root\)(,definition\.lounger)?\)/.test(npcs),'the seat-fit solve is unchanged');
  assert(!/seatTorso:seat\?[^,]*\.pelvis/.test(npcs));
 });
 

@@ -18,7 +18,7 @@ assert.equal(new Set(NPC_DIALOGUES.map(n=>n.id)).size,NPC_DIALOGUES.length,'uniq
 assert.equal(new Set(NPC_DIALOGUES.map(n=>n.name)).size,NPC_DIALOGUES.length,'unique names');
 
 // ---- Placement bounds per area, and nobody new (or moved) on a pitch or the beach soccer court.
-const BOX={square:[[-60,235,-62,-5]],beach:[[-60,200,-235,-200],[60,185,195,218],[-40,45,95,135]],pier:[[240,380,50,105],[200,245,190,215]],cay:[[380,710,-240,-60]],residential:[[-60,240,-200,-80],[-60,-40,-20,45],[90,100,40,160]]};
+const BOX={square:[[-60,235,-62,-5]],beach:[[-60,200,-235,-200],[60,185,195,218],[-40,45,95,135]],pier:[[240,380,50,105],[200,245,190,215]],cay:[[380,710,-260,-60]]/* Nov 13 2026: to the south beach (Luana's lounger) */,residential:[[-60,240,-200,-80],[-60,-40,-20,45],[90,100,40,160]]};
 const inBox=(n,b)=>n.x>=b[0]&&n.x<=b[1]&&n.z>=b[2]&&n.z<=b[3];
 for(const n of NEW)assert(BOX[n.area].some(b=>inBox(n,b)),`${n.id} (${n.x}, ${n.z}) inside its area "${n.area}"`);
 const onPitch=(x,z)=>VENUES.some(v=>Math.abs(x-v.x)<v.width/2+1&&Math.abs(z-v.z)<v.length/2+1)||(Math.abs(x-BEACH_COURT.x)<BEACH_COURT.length/2+3&&Math.abs(z-BEACH_COURT.z)<BEACH_COURT.width/2+3);
@@ -76,11 +76,11 @@ assert.match(npcs,/const entries=NPC_DIALOGUES\.map\(/,'every islander is an ent
 assert.match(npcs,/for\(const entry of entries\)\{if\(isThinned\(entry\)\|\|heldByFocus\(entry\)\)continue;/,'focus mode holds routines');
 assert.match(npcs,/for\(const entry of entries\)\{if\(frozen\.has\(entry\.id\)\|\|heldByFocus\(entry\)\)continue;/,'focus mode holds posing');
 assert.match(npcs,/bucket===entry\.poseBucket&&!entry\.definition\.travel&&[^;]*distance>FAR_POSE/,'still and walking townsfolk pose at 10 Hz beyond FAR_POSE');
-assert.match(npcs,/const seat=definition\.pose\?npcSeatPose\(definition\.pose,rig\.profileScale,beanShapeOf\(rig\.root\)\):undefined;/,'still poses built once');
+assert.match(npcs,/const seat=definition\.pose\?npcSeatPose\(definition\.pose,rig\.profileScale,beanShapeOf\(rig\.root\),definition\.lounger\):undefined;/,'still poses built once');
 assert.match(npcs,/\.\.\.\(entry\.seat\?\{trick:entry\.seat\}:null\)/,'still pose handed to the rig as its trick pose');
 assert.match(npcs,/if\(entry\.seat&&!entry\.near&&!entry\.stunned&&entry\.seatHeld>=2&&\(!entry\.sm\|\|entry\.sm\.state==='seated'\)&&!truckWitnesses\.has\(entry\.id\)\)/,'a still townsperson holds its solved pose (re-solved after a wave, bump or truck)');
 assert.match(npcs,/rig\.setProfile\(AGE_PROFILES\[definition\.age\]\)/,'age height profile');
-assert.match(npcs,/radius<=12&&!authoredRoute&&!definition\.pose;/,'still poses keep their exact bench / towel spot');
+assert.match(npcs,/radius<=12&&!authoredRoute&&!definition\.pose(&&!definition\.swim)?;/,'still poses keep their exact bench / towel spot');
 assert.match(src('lib/graphics/npcSeatPose.ts'),/stancePose\('lie',ctx,o\)[\s\S]*stancePose\('sit',ctx,o\)/,'existing freestyle stances');
 assert.match(src('components/Town.tsx')+src('lib/town/frame/focusFrame.ts'),/islandNpcs\.setFocus\(\{x:s\.x,z:s\.z,r:focusNearLive\?FOCUS_LIVE_M:-1\}\)/,'fishing focus freezes all townsfolk');
 assert.match(src('lib/town/npcDialogues.ts'),/if\(townsfolkCastEnabled\(\)\)\{/,'?npcmore=0 A/B switch');
