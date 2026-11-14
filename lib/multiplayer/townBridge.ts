@@ -13,6 +13,7 @@ import type { LocalBump } from '../graphics/friendBump';
 import { beginSeatFrame, clearRemoteSeats, seatFriend } from '../town/stadiumSeatShare';
 import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends, mutedFriends, onFriendFilters } from './roomParty';
 import { displayName, partyStore } from './store';
+import { isHiddenStranger } from './strangers';
 import * as T3 from 'three';
 
 // The shared parts (one connection per page, Hide / Mute, the look, the friend core) live in roomParty.ts, used by rooms too.
@@ -192,6 +193,10 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
 
   // Ball knock-overs (relay v1.6, Cap.Hit; lib/town/ballKnock.ts). The shooter's gate mirrors the relay's cooldowns; friends' balls are
   // tracked (last sample -> velocity) so every screen can knock its own townspeople with them.
+  // QA Nov 14 2026: a stranger I hid (or reported) on the public island is out of everything here, not only the drawing: no ask card
+  // offered to them, no splashes / ripples, no invisible ball or force field. hiddenFriends() is the party's own list; strangers.ts
+  // keeps the public one (ids are reused, so it counts only while this connection is a world).
+  const hiddenNow = (id: MemberId) => hiddenFriends().has(id) || (conn.kind === 'world' && isHiddenStranger(id));
   const gate = createKnockGate();
   type BallTrack = { x: number; y: number; z: number; vx: number; vz: number; ok: boolean; fast: boolean };
   const tracks = new Map<MemberId, BallTrack>();
@@ -199,7 +204,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   const track = (b: { state: number; x: number; y: number; z: number }, id: MemberId) => {
     let q = tracks.get(id);
     if (!q) { q = { x: 0, y: 0, z: 0, vx: 0, vz: 0, ok: false, fast: false }; tracks.set(id, q); }
-    if (b.state !== BallState.Free || hiddenFriends().has(id)) { q.ok = false; q.fast = false; return; }
+    if (b.state !== BallState.Free || hiddenNow(id)) { q.ok = false; q.fast = false; return; }
     if (q.ok && trackDt > 0) { q.vx = (b.x - q.x) / trackDt; q.vz = (b.z - q.z) / trackDt; q.fast = fastBall(q.vx, q.vz); } else q.fast = false;
     q.x = b.x; q.y = b.y; q.z = b.z; q.ok = true;
   };
@@ -235,7 +240,8 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   if (typeof window !== 'undefined') window.addEventListener('pagehide', onPageHide);
   // eachDrawn's one forEach callback (no closure per call).
   let drawnCb: ((id: MemberId, p: RemotePose) => void) | null = null, drawnHid: ReadonlySet<number> = hiddenFriends();
-  const eachDrawnOne = (p: RemotePose, id: MemberId) => { if (drawnCb && p.zone !== Zone.Indoors && !drawnHid.has(id)) drawnCb(id, p); };
+  let drawnWorld = false;
+  const eachDrawnOne = (p: RemotePose, id: MemberId) => { if (drawnCb && p.zone !== Zone.Indoors && !drawnHid.has(id) && !(drawnWorld && isHiddenStranger(id))) drawnCb(id, p); };
 
   return {
     get meRing() { return meRingOn; },
@@ -253,9 +259,9 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     get you() { return core.you; },
     nearestAskable(x, y, z, range) {
       let best = -1, bd = range * range;
-      const hid = hiddenFriends(), mut = mutedFriends();
+      const mut = mutedFriends();
       active.forEach((p, id) => {
-        if (hid.has(id) || mut.has(id) || p.seated || !(p.mode === Mode.Walk || p.mode === Mode.Run || p.mode === Mode.Idle) || Math.abs(p.y - y) > 4) return;
+        if (hiddenNow(id) || mut.has(id) || p.seated || !(p.mode === Mode.Walk || p.mode === Mode.Run || p.mode === Mode.Idle) || Math.abs(p.y - y) > 4) return;
         const d = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
         if (d <= bd) { bd = d; best = id; }
       });
@@ -265,7 +271,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     friends: () => active.values(),
     eachDrawn(cb) {
       if (!core.live || !avatars.root.visible || !active.size) return;
-      drawnCb = cb; drawnHid = hiddenFriends(); active.forEach(eachDrawnOne); drawnCb = null;
+      drawnCb = cb; drawnHid = hiddenFriends(); drawnWorld = conn.kind === 'world'; active.forEach(eachDrawnOne); drawnCb = null;
     },
     ball(state, x, y, z) {
       if (!core.live || conn.status !== 'live') return;
@@ -292,7 +298,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       let hit = false;
       for (let i = 0; i < ids.length; i++) {
         const id = ids[i], p = poses.get(id);
-        if (!p || p.zone === Zone.Indoors || hiddenFriends().has(id) || !shielded(presenceOf(p.mode, p.zone, p.flags ?? 0))) continue;
+        if (!p || p.zone === Zone.Indoors || hiddenNow(id) || !shielded(presenceOf(p.mode, p.zone, p.flags ?? 0))) continue;
         if (bounceOffField(ball, p.x, p.y + 1.0, p.z)) { avatars.bumpField(id, fieldHit.nx, fieldHit.ny, fieldHit.nz); hit = true; }
       }
       return hit;
