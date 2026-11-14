@@ -33,9 +33,9 @@ export const FAN_TRIS=72;
 export const CHEER_TIME=2.6,CLEAR_RADIUS=1.1;
 /** QA Nov 14 2026: seated (or standing) in a stand, the camera looks over the row in front, and its fans' heads filled the view's
  *  foreground (a bobble hat over a corner). The fans in the two rows just ahead (within AHEAD_RADIUS of a spot a row and a half in
- *  front: about three seats either side) shrink away like the player's own neighbours. Out = (x, z, radius), radius -1 = nothing to
+ *  front: about four seats either side) shrink away like the player's own neighbours. Out = (x, z, radius), radius -1 = nothing to
  *  clear (the front row, or not in a stand). */
-export const AHEAD_RADIUS=2,AHEAD_ROWS=1.5;
+export const AHEAD_RADIUS=2.6,AHEAD_ROWS=1.5;
 export function aheadClear(x:number,z:number,out:{set(x:number,y:number,z:number):unknown}){
  for(const s of STANDS){const {d,a}=standLocal(s,x,z);if(d<s.inner-.3||d>s.inner+ROWS*ROW_DEPTH||a<s.from||a>s.to)continue;
   if(d-ROW_DEPTH<s.inner)break;const p=standWorld(s,d-AHEAD_ROWS*ROW_DEPTH,a);out.set(p.x,p.z,AHEAD_RADIUS);return true;}
