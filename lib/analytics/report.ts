@@ -44,7 +44,13 @@ async function loadRollups(store:AnalyticsStore,days:string[],now:Date,mode:Time
  // Storage check (Oct 9 2026): the installed SQL version, and whether a live-computed day with visits came back without the
  // learning keys (the SQL functions predate 20261009_analytics_counts.sql) or the start-page subset (20261009_analytics_start.sql). Either one shows the "storage needs update" banner.
  let stale=false;
- if(missing.length)for(const r of await store.computeDays(missing[0],missing[missing.length-1],now)){if(r.sessions>0&&(!('counts' in r)||!('start' in r)))stale=true;if(!byDay.has(r.day))byDay.set(r.day,r);}
+ // Nov 13 2026 (owner: "fishing all zero"): one big multi-day call that fails (a statement timeout under load) used to throw the
+ // whole report away, leaving every report tab at zero while the trend tiles had the numbers. Retry day by day; a day that still
+ // fails is left out (empty) rather than losing the report.
+ const compute=async(from:string,to:string):Promise<DailyRollup[]>=>{
+  try{return await store.computeDays(from,to,now);}
+  catch(e){if(from===to)throw e;const out:DailyRollup[]=[];for(const d of dayList(from,to))try{out.push(...await store.computeDays(d,d,now));}catch{}return out;}};
+ if(missing.length)for(const r of await compute(missing[0],missing[missing.length-1])){if(r.sessions>0&&(!('counts' in r)||!('start' in r)))stale=true;if(!byDay.has(r.day))byDay.set(r.day,r);}
  if(mode==='pacific'){
   const old=days.filter(d=>!byDay.has(d)&&d<oldestRaw);
   if(old.length)for(const r of await store.legacyRollups(old[0],old[old.length-1]))if(old.includes(r.day)&&!byDay.has(r.day))byDay.set(r.day,{...r,tz:'UTC'});

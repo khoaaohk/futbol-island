@@ -272,7 +272,7 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
     {tab==='matches'&&<div className={dd.mx} data-metric="matches.section"><LiveMatchesSection report={report} rangeText={rangeText} dayLabel={k=>dayLabel(k,false)}/></div>}
     {tab==='fishing'&&strip('Fishing trends',[{key:'fishing.funnel_sessions.start',label:'Sessions that tapped Fish'},{key:'fishing.funnel_sessions.land',label:'Sessions that landed a fish'},{key:K.fishLanded,label:'Fish landed'},{key:'time.where_time_goes.fishing',label:'Fishing minutes'}],
      'The funnel counters started Nov 6 2026; fish landed and fishing minutes go back further.')}
-    {tab==='fishing'&&<div className={dd.mx} data-metric="engagement.fishing"><FishingSection report={report}/></div>}
+    {tab==='fishing'&&<div className={dd.mx} data-metric="engagement.fishing"><FishingSection report={report} dash={dash}/></div>}
     {tab==='marketing'&&strip('Marketing trends',[{key:K.tourViews,label:'Tour page views (/)'},{key:K.tourPlay,label:'Tour: sessions that tapped Play'},{key:'marketing.tour_avg_seconds',label:'Tour: time per view'},{key:K.investorVisits,label:'Investor page visits'},{key:K.investorAvg,label:'Investor page: average stay'}])}
     {tab==='marketing'&&<div className={dd.mx} data-metric="marketing.section"><span className={dd.mx} data-metric="marketing.visits"/><MarketingSection report={report} rangeText={rangeText} dayLabel={k=>dayLabel(k,false)}/></div>}
     {tab==='report'&&<div className={dd.mx} data-metric="report.weekly">
