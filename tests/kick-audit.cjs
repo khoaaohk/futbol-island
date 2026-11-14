@@ -98,11 +98,16 @@ console.log('PASS gashapon: globe shakes over a planted foot, capsules jiggle, r
  assert((tk.lamp??0)>=150&&(tk.gashapon??0)>=12&&(tk.bollard??0)>=40,'Kick targets '+JSON.stringify(tk));
  assert(!targets.some(t=>['sign','bench','fence','table','tree','palm','flag','goal','net','stall'].includes(t.kind)),'wide/low props and the tree/flag kicks keep their own paths');
  const g=targets.find(t=>t.kind==='gashapon');const yawTo=(x,z,t)=>Math.atan2(t.x-x,t.z-z);
- const log=[];let press=null;const kick=K.createPropKick({targets,pressed:()=>press,take:()=>{log.push('take');press=null;},pose:(_p,how)=>log.push(['pose',how.lead]),strike:(t,vx,vz)=>log.push(['strike',t,vx,vz,r.hit(t.x,t.y,t.z,vx,vz,false)])});
+ const log=[];let press=null,ball=false;const kick=K.createPropKick({targets,pressed:()=>press,hasBall:()=>ball,take:()=>{log.push('take');press=null;},pose:(_p,how)=>log.push(['pose',how.lead]),strike:(t,vx,vz)=>log.push(['strike',t,vx,vz,r.hit(t.x,t.y,t.z,vx,vz,false)])});
  const at={x:g.x+g.r+1,z:g.z},inp=o=>({dt:1/60,x:at.x,z:at.z,yaw:yawTo(at.x,at.z,g),onFoot:true,canEnter:true,reduced:false,...o});
  for(let i=0;i<30;i++)kick.update(inp());assert.equal(kick.stats.searches,0,'no press: no search');
  press={};kick.update(inp({yaw:yawTo(at.x,at.z,g)+Math.PI}));assert.equal(log.length,0,'facing away: the press stays a shot');press=null;kick.update(inp());
- r.update(5,false);press={};kick.update(inp());assert.equal(log[0],'take','the press is taken');assert.equal(log[1][0],'pose');
+ // With the ball at the feet (or under control) the press is always the shot: kids never lose shots on lamp-lined streets.
+ ball=true;press={};kick.update(inp());assert.equal(log.length,0,'with the ball: shot, no prop kick');ball=false;press=null;kick.update(inp());
+ // Facing must be within 35° of the prop.
+ press={};kick.update(inp({yaw:yawTo(at.x,at.z,g)+50*Math.PI/180}));assert.equal(log.length,0,'50° off: the press stays a shot');press=null;kick.update(inp());
+ press={};kick.update(inp({yaw:yawTo(at.x,at.z,g)+25*Math.PI/180}));assert.equal(log[0],'take','25° off, no ball: the prop takes the kick');for(let i=0;i<120;i++){kick.update(inp());r.update(1/60,false);}log.length=0;
+ r.update(5,false);press={};kick.update(inp());assert.equal(log[0],'take','without the ball: the press is taken');assert.equal(log[1][0],'pose');
  press={};kick.update(inp());assert.equal(log.filter(e=>e==='take').length,1,'a press mid-kick is not taken');press=null;
  for(let i=0;i<120;i++){kick.update(inp());r.update(1/60,false);}
  const strikes=log.filter(e=>e[0]==='strike');assert.equal(strikes.length,1,'one strike');assert.equal(strikes[0][1],g);assert.equal(strikes[0][4],'rattle','the gashapon shakes with its rattle');

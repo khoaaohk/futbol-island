@@ -6,6 +6,8 @@
  * the tree kick's `treekick` pose, and at its contact the prop gets its own kick reaction (lib/graphics/propReactions.ts hit: the
  * lamp sways and its head swings, the gashapon machine shakes and its capsules rattle) with its sound.
  * A ball shot into any of them (and into every other registered prop) reacts through the walking ball's `blocked` hook as before.
+ * With the ball at the player's feet or under their control (`hasBall`), the press is always the shot (coordinator, Nov 13 2026:
+ * kids must not lose shots on lamp-lined streets); the prop kick is for a player whose ball is away. The facing cone is 35°.
  * Heat: idle and between presses, one property read per frame; the target search (one 8 m grid cell block) only on a new press.
  * No allocation per frame. Reduced motion: the pose is quicker and the reaction is the gentle one (propReactions REDUCED_GAIN).
  */
@@ -18,7 +20,7 @@ import type {PropReactionKind,PropSpec} from '../graphics/propReactions';
 /** The kinds a Kick press goes to, with each one's solid radius (its collider's half size, m). 0 = from its bounds (a gashapon
  *  cabinet). Wide or low props (signs, benches, fences, tables, planters, nets) are not Kick targets: a shot into them reacts. */
 export const PROP_KICK={kinds:{lamp:.19,pole:.1,bollard:.2,lifebuoy:.1,gashapon:0} as Partial<Record<PropReactionKind,number>>,
- reach:TREE_KICK.reach,cone:TREE_KICK.cone,cooldown:TREE_KICK.cooldown,
+ reach:TREE_KICK.reach,cone:35*Math.PI/180,cooldown:TREE_KICK.cooldown,
  /** The kick's speed as the reaction sees it (m/s): a firm, not full-power, hit (propReactions strength ≈ .6). */
  push:17,
  cell:8,maxRadius:.7} as const;
@@ -53,6 +55,8 @@ export type PropKickPorts={
  /** The boot meets the prop: target t, the kick's direction (unit) and speed. */
  strike:(t:PropKickTarget,vx:number,vz:number)=>void;
  busy?:()=>boolean;
+ /** The ball is at the player's feet or under their control: the press stays the shot. */
+ hasBall?:()=>boolean;
 };
 export type PropKickInput={dt:number;x:number;z:number;yaw:number;onFoot:boolean;canEnter:boolean;reduced:boolean};
 
@@ -73,7 +77,7 @@ export function createPropKick(ports:PropKickPorts){
     if(!kick.struck&&p>=TREE_KICK_CONTACT){kick.struck=true;stats.strikes++;ports.strike(P[kick.k],kick.dx*PROP_KICK.push,kick.dz*PROP_KICK.push);}
     if(p>=1)kick.k=-1;}
    const h=ports.pressed();if(!h){lastPress=null;return;}if(h===lastPress)return;lastPress=h;stats.presses++;
-   if(!c.onFoot||!c.canEnter||kick.k>=0||ports.busy?.())return;
+   if(!c.onFoot||!c.canEnter||kick.k>=0||ports.busy?.()||ports.hasBall?.())return;
    near.length=0;stats.searches++;const cx=Math.floor(c.x/C),cz=Math.floor(c.z/C);
    for(let i=-1;i<=1;i++)for(let j=-1;j<=1;j++){const list=grid.get(key(cx+i,cz+j));if(list)for(const k of list)near.push(k);}
    const k=propKickTarget(P,near,c.x,c.z,c.yaw);if(k<0||clock<readyAt[k])return;

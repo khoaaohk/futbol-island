@@ -6,7 +6,9 @@ ball is kicked against them. Find other objects that need this interaction." And
 How it works: `lib/graphics/propReactions.ts` (one table of styles, one updater). A shot (or wall-juggle) that the walking ball's
 `blocked` / goal-frame hook stops calls `propReactions.hit`; the prop's vertex runs in the merged chunk buffers move for under a
 second and are restored bit for bit. New here: a Kick press next to a compact prop (`lib/town/propKick.ts`, the flag kick's
-pattern) plays the tree-kick pose and the same reaction. Reduced motion now plays the gentle version (`REDUCED_GAIN` 0.3, no leaf
+pattern) plays the tree-kick pose and the same reaction, but only when the ball is NOT at the player's feet or under their
+control (walkBall mode shot / return / drop / sky) and the prop is within 35° of the facing: with the ball, Kick is always the
+shot. The tree and flag kicks follow the same ball rule. Reduced motion now plays the gentle version (`REDUCED_GAIN` 0.3, no leaf
 shimmer, no lamp flicker) with the usual sound.
 
 Counts are from the headless town build (`tests/kick-audit.cjs`, `tests/prop-reactions.cjs`). "Kick" = the Kick press also works.

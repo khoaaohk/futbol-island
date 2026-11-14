@@ -23,10 +23,12 @@ assert.equal(K.flagKickTarget(poles,p0.x-3,p0.z,yawTo(p0.x-3,p0.z,p0)),-1,'not o
 {const st=K.flagKickStance(p0,Math.PI);assert(Math.hypot(st.root.x-p0.x,st.root.z-p0.z)>.15+.3+.32,'the stance is clear of the pole collider');}
 
 // ---- 2. The runtime: take the press, pose, one strike at contact, cooldown.
-{const log=[];let press=null;const kick=K.createFlagKick({poles,pressed:()=>press,take:()=>{log.push('take');press=null;},pose:(p,how)=>log.push(['pose',how.lead]),strike:(k,dx,dz)=>log.push(['strike',k,dx,dz])});
+{const log=[];let press=null,ball=false;const kick=K.createFlagKick({poles,pressed:()=>press,hasBall:()=>ball,take:()=>{log.push('take');press=null;},pose:(p,how)=>log.push(['pose',how.lead]),strike:(k,dx,dz)=>log.push(['strike',k,dx,dz])});
  const at={x:p0.x-1.2,z:p0.z},inp=o=>({dt:1/60,x:at.x,z:at.z,yaw:yawTo(at.x,at.z,p0),onFoot:true,canEnter:true,reduced:false,...o});
  kick.update(inp({x:500,z:500}));assert(kick.stats.idle===1,'off the plaza: one box test');
- press={};kick.update(inp());assert.equal(log[0],'take','the press is taken (no shot)');assert.equal(log[1][0],'pose','the kick pose plays');
+ // Kick audit (Nov 13 2026): with the ball at the feet the press is always the shot; without it, the pole takes the kick.
+ ball=true;press={};kick.update(inp());assert.equal(log.length,0,'with the ball: the press stays a shot');ball=false;press=null;kick.update(inp());
+ press={};kick.update(inp());assert.equal(log[0],'take','without the ball: the press is taken (no shot)');assert.equal(log[1][0],'pose','the kick pose plays');
  for(let i=0;i<120;i++)kick.update(inp());const strikes=log.filter(e=>e[0]==='strike');assert.equal(strikes.length,1,'one strike');assert.equal(strikes[0][1],3);assert(strikes[0][2]>.9,'along the kick');
  assert(!kick.kicking,'done');press={};kick.update(inp({onFoot:false}));assert.equal(log.filter(e=>e==='take').length,1,'riding: the press stays a shot');
  const k2=K.createFlagKick({poles,pressed:()=>press,take:()=>{press=null;},pose(){},strike(){}});press={};k2.update(inp());press={};k2.update(inp({dt:.1}));assert.equal(k2.stats.kicks,1,'cooldown: no second kick at once');}

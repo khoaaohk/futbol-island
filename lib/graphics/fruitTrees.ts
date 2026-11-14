@@ -60,7 +60,10 @@ type Ports={
   kind?:'treeshake'|'treekick'})=>void;
  /** The island's Kick action (Town's shot hold): `pressed()` is the live press (a fresh object per press, null between presses);
   *  `take()` cancels it so no shot follows when the kick goes to a trunk. */
- kick?:{pressed:()=>unknown;take:()=>void};
+ kick?:{pressed:()=>unknown;take:()=>void;
+  /** The ball is at the player's feet or under their control (Town: walkBall mode not shot / return / drop / sky): the press stays
+   *  the shot (kick audit, Nov 13 2026: kids must never lose a shot to a nearby trunk). */
+  hasBall?:()=>boolean};
  /** The character's heading (Town: player.root.rotation.y; forward = (sin, cos)), to pick the trunk in front of the player. */
  yaw?:()=>number;
  /** The kick's one-time coaching note (default: localStorage TREE_KICK_LESSON_KEY). */
@@ -443,7 +446,7 @@ export function createSummitForage(scene:T.Scene,ports:Ports){
    // frame but the read); the boot meets the bark at TREE_KICK_CONTACT of the pose
    if(ports.kick){const h=ports.kick.pressed();// edge-triggered: a press held through a kick, a shake or a job never fires later
     if(!h)lastPress=null;else if(h!==lastPress){lastPress=h;
-     if(c.onFoot&&c.canEnter&&!kick&&!shake&&!arriving&&!ports.busy?.()){const site=kickTarget(allSites,c.x,c.z,ports.yaw?.()??0);if(site){ports.kick.take();beginKick(site);}}}}
+     if(c.onFoot&&c.canEnter&&!kick&&!shake&&!arriving&&!ports.busy?.()&&!ports.kick.hasBall?.()){const site=kickTarget(allSites,c.x,c.z,ports.yaw?.()??0);if(site){ports.kick.take();beginKick(site);}}}}
    if(kick){work=true;kick.t+=c.dt;const k=kick.t/kick.dur;
     if(!kick.struck&&k>=TREE_KICK_CONTACT){kick.struck=true;strike(kick.site,kick.dir);}
     if(k>=1)kick=null;}
