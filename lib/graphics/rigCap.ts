@@ -67,3 +67,12 @@ export function planNearest<S extends NearSlot>(slots:readonly S[],order:S[],on:
  }
  return changes;
 }
+
+// QA Nov 14 2026 (overnight multiplayer round 3): on the public island an AWAY stranger (the Hidden pose flag: a backgrounded phone, a
+// closed tab within the relay's 2 min away grace) is a zzz statue, yet it competed for the 5 rigs on distance alone. Five kids who put
+// their phones down at the spawn took every rig and the kids actually playing beside me were drawn as a ring and a name with no body.
+// Away strangers now rank as if AWAY_RIG_M farther: anyone playing within ~60 m takes a rig first; an away kid still gets a free one.
+/** Extra metres (squared into the priority) for an away stranger. */
+export const AWAY_RIG_M=60;
+/** The rig priority (`pd2`) of a stranger `d2` m² away: an away one ranks behind everyone active nearby. A party keeps plain distance. */
+export function rigPriority(d2:number,away:boolean,pub:boolean):number{return pub&&away?d2+AWAY_RIG_M*AWAY_RIG_M:d2;}

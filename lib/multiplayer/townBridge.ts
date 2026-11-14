@@ -13,6 +13,7 @@ import type { LocalBump } from '../graphics/friendBump';
 import { beginSeatFrame, clearRemoteSeats, seatFriend } from '../town/stadiumSeatShare';
 import { createFriendCore, SLEEP_SAMPLE_MS, hiddenFriends, mutedFriends, onFriendFilters } from './roomParty';
 import { displayName, partyStore } from './store';
+import { isHiddenStranger, onHiddenStrangers } from './strangers';
 import * as T3 from 'three';
 
 // The shared parts (one connection per page, Hide / Mute, the look, the friend core) live in roomParty.ts, used by rooms too.
@@ -161,6 +162,11 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       syncHints();
     } });
   const { conn, avatars, poses, active, ids } = core;
+  // QA Nov 14 2026: a stranger I hid (or reported) on the public island is out of everything here, not only the drawing: no ask card
+  // offered to them, no splashes / ripples, no invisible ball or force field, and
+  // (QA round 4) no count in the door hints ("2 players in the Arcade"). hiddenFriends() is the party's own list; strangers.ts
+  // keeps the public one (ids are reused, so it counts only while this connection is a world).
+  const hiddenNow = (id: MemberId) => hiddenFriends().has(id) || (conn.kind === 'world' && isHiddenStranger(id));
   // The labels are the only units the view gate can measure: register the LABEL group (each sprite sits at its friend). Registering the
   // whole root made the batch, the rings and the force fields units at the world origin, so the gate hid every friend whenever the
   // origin was off screen (found Oct 22 2026 with the presence check); the remote layer already culls itself per friend.
@@ -173,13 +179,13 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   // Door hints: one screen-sized sprite per door, its texture redrawn only when that room's count changes (store emits on room flips).
   function syncHints() {
     if (!ready || !ctx.doors?.length) return;
-    const s = partyStore.get(), live = s.status === 'live' || s.status === 'reconnecting', hid = hiddenFriends();
+    const s = partyStore.get(), live = s.status === 'live' || s.status === 'reconnecting';
     for (let i = 0; i < ctx.doors.length; i++) {
       const d = ctx.doors[i];
       let h = hints[i];
       if (!h) { const sp = new T3.Sprite(new T3.SpriteMaterial({ transparent: true, depthWrite: false, depthTest: false, sizeAttenuation: false })); sp.renderOrder = 4; sp.scale.set(HINT_SCREEN, HINT_SCREEN * HINT_H / HINT_W, 1); sp.position.set(d.x, d.y, d.z); sp.visible = false; sp.raycast = () => {}; sp.name = 'party-door-hint'; avatars.root.add(sp); h = hints[i] = { d, sprite: sp, n: 0 }; }
       let n = 0;
-      if (live) for (const m of s.members) if (m.id !== s.you && atRoomDoor(m, d.room) && !hid.has(m.id)) n++;
+      if (live) for (const m of s.members) if (m.id !== s.you && atRoomDoor(m, d.room) && !hiddenNow(m.id)) n++;
       if (n !== h.n) {
         h.n = n; const mat = h.sprite.material as T3.SpriteMaterial; mat.map?.dispose(); mat.map = n > 0 ? hintTexture(doorHintText(n, d.room)) : null; mat.needsUpdate = true;
         h.sprite.userData.text = doorHintText(n, d.room);
@@ -199,7 +205,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   const track = (b: { state: number; x: number; y: number; z: number }, id: MemberId) => {
     let q = tracks.get(id);
     if (!q) { q = { x: 0, y: 0, z: 0, vx: 0, vz: 0, ok: false, fast: false }; tracks.set(id, q); }
-    if (b.state !== BallState.Free || hiddenFriends().has(id)) { q.ok = false; q.fast = false; return; }
+    if (b.state !== BallState.Free || hiddenNow(id)) { q.ok = false; q.fast = false; return; }
     if (q.ok && trackDt > 0) { q.vx = (b.x - q.x) / trackDt; q.vz = (b.z - q.z) / trackDt; q.fast = fastBall(q.vx, q.vz); } else q.fast = false;
     q.x = b.x; q.y = b.y; q.z = b.z; q.ok = true;
   };
@@ -215,7 +221,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     if (!p || p.seated || hiddenFriends().has(victim) || shielded(presenceOf(p.mode, p.zone, p.flags ?? 0)) || !knockable(p.mode, p.zone, p.flags ?? 0)) return;
     if (avatars.tumble(victim, byteToDir(d), ctx.reducedMotion())) ctx.onKnock?.(victim, d, p.x, p.y, p.z);
   });
-  const offFilters = onFriendFilters(syncHints);
+  const offFilters = onFriendFilters(syncHints), offStrangers = onHiddenStrangers(syncHints); // a Hide / Report recounts the door hints
 
   // Me while the island loop sleeps (Settings, map, a waiting quiz) or the page is leaving for a room: the frame loop is not running,
   // so the connection's own 5 s beat tick (no new timer) and pagehide send the Busy / Indoors pose. The connection's delta check sends
@@ -235,7 +241,8 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
   if (typeof window !== 'undefined') window.addEventListener('pagehide', onPageHide);
   // eachDrawn's one forEach callback (no closure per call).
   let drawnCb: ((id: MemberId, p: RemotePose) => void) | null = null, drawnHid: ReadonlySet<number> = hiddenFriends();
-  const eachDrawnOne = (p: RemotePose, id: MemberId) => { if (drawnCb && p.zone !== Zone.Indoors && !drawnHid.has(id)) drawnCb(id, p); };
+  let drawnWorld = false;
+  const eachDrawnOne = (p: RemotePose, id: MemberId) => { if (drawnCb && p.zone !== Zone.Indoors && !drawnHid.has(id) && !(drawnWorld && isHiddenStranger(id))) drawnCb(id, p); };
 
   return {
     get meRing() { return meRingOn; },
@@ -253,9 +260,9 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     get you() { return core.you; },
     nearestAskable(x, y, z, range) {
       let best = -1, bd = range * range;
-      const hid = hiddenFriends(), mut = mutedFriends();
+      const mut = mutedFriends();
       active.forEach((p, id) => {
-        if (hid.has(id) || mut.has(id) || p.seated || !(p.mode === Mode.Walk || p.mode === Mode.Run || p.mode === Mode.Idle) || Math.abs(p.y - y) > 4) return;
+        if (hiddenNow(id) || mut.has(id) || p.seated || !(p.mode === Mode.Walk || p.mode === Mode.Run || p.mode === Mode.Idle) || Math.abs(p.y - y) > 4) return;
         const d = (p.x - x) * (p.x - x) + (p.z - z) * (p.z - z);
         if (d <= bd) { bd = d; best = id; }
       });
@@ -265,7 +272,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     friends: () => active.values(),
     eachDrawn(cb) {
       if (!core.live || !avatars.root.visible || !active.size) return;
-      drawnCb = cb; drawnHid = hiddenFriends(); active.forEach(eachDrawnOne); drawnCb = null;
+      drawnCb = cb; drawnHid = hiddenFriends(); drawnWorld = conn.kind === 'world'; active.forEach(eachDrawnOne); drawnCb = null;
     },
     ball(state, x, y, z) {
       if (!core.live || conn.status !== 'live') return;
@@ -292,7 +299,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
       let hit = false;
       for (let i = 0; i < ids.length; i++) {
         const id = ids[i], p = poses.get(id);
-        if (!p || p.zone === Zone.Indoors || hiddenFriends().has(id) || !shielded(presenceOf(p.mode, p.zone, p.flags ?? 0))) continue;
+        if (!p || p.zone === Zone.Indoors || hiddenNow(id) || !shielded(presenceOf(p.mode, p.zone, p.flags ?? 0))) continue;
         if (bounceOffField(ball, p.x, p.y + 1.0, p.z)) { avatars.bumpField(id, fieldHit.nx, fieldHit.ny, fieldHit.nz); hit = true; }
       }
       return hit;
@@ -333,7 +340,7 @@ export function createPartyRuntime(ctx: { scene: THREE.Scene; viewGate: { addUni
     },
     dispose() {
       for (const h of hints) { const m = h.sprite.material as T3.SpriteMaterial; m.map?.dispose(); m.dispose(); }
-      offFilters(); offHit(); clearRemoteSeats(); core.dispose(); lastIsland.clear(); tracks.clear();
+      offFilters(); offStrangers(); offHit(); clearRemoteSeats(); core.dispose(); lastIsland.clear(); tracks.clear();
       conn.onBeforeBeat(null); if (typeof window !== 'undefined') window.removeEventListener('pagehide', onPageHide);
     },
   };

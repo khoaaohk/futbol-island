@@ -8,7 +8,7 @@ import {AR_TRACKS,STADIUM_BALL,STADIUM_NPC_ROUTES,stadiumNpcBudget,stadiumNpcSho
 import {dressDripMascot} from './dripMascot';
 import type {BallReactions} from './ballReactions';
 import {createNpcRide} from './npcRide';
-import {createPlayer} from './player';
+import {createPlayer,forgetRigGeometry} from './player';
 import {createNpcActivity} from './npcActivity';
 import {advanceNpcRoutines,createNpcRoutine,safeNpcPath} from '../town/npcBehavior';
 import {DEFAULT_CUSTOMIZATION} from '../town/customization';
@@ -34,7 +34,7 @@ type Placement={isWalkable:(x:number,z:number)=>boolean;heightAt:(x:number,z:num
  * Heat audit Sep 30 2026: their matrices are frozen too, so the renderer's per-frame matrix refresh no longer recomposes and multiplies
  * ~3,100 of them (it still visits them; they have no children). */
 const RELEASED=new T.BufferGeometry();
-function releaseHiddenClassic(root:T.Object3D){root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();o.geometry=RELEASED;o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;}});detachClassic(root);}
+function releaseHiddenClassic(root:T.Object3D){root.traverse(o=>{if(o instanceof T.Mesh&&o.userData.beanHidden&&o.geometry!==RELEASED){o.geometry.dispose();forgetRigGeometry(root,o.geometry);o.geometry=RELEASED;o.matrixAutoUpdate=false;o.matrixWorldAutoUpdate=false;}});detachClassic(root);}
 /** NPC heat fix 2 (Oct 12 2026, user-approved): the classic parts above are also taken OFF the scene graph, so the renderer's
  * matrix refresh, render-list build and shadow traversal no longer visit them (≈ 37 of a townsperson's ≈ 60 objects: the 35
  * released meshes, the hidden classic jersey with its shirt-number decal, and the classic long-hair group). A part counts as
@@ -75,6 +75,14 @@ function npcSwimPose(p:SwimRigPose,s:NpcSwimState,hello:boolean){p.kind=s.kind;p
 export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:BallReactions){
  const root=new T.Group();root.name='island-townsfolk';scene.add(root);
  const textures:T.Texture[]=[],materials:T.Material[]=[],geometriesOwned:T.BufferGeometry[]=[];
+ // Name tags (QA Nov 14 2026, overnight multiplayer round 3 memory pass): only ONE tag is ever visible (shownTag below), yet every
+ // townsperson (~200) made its own 512 x 160 canvas, CanvasTexture and SpriteMaterial up front: ~63 MB of canvas pixels per tab, plus a
+ // GPU texture left behind for each one ever shown (the tally was 194 canvases = ~80 MB of the island's ~142 MB of textures). Every
+ // townsperson keeps its own Sprite (position, scale, raycast id), all sharing this one canvas; the tag is redrawn when it moves to
+ // another townsperson (labelOwner).
+ const tagCanvas=document.createElement('canvas');tagCanvas.width=512;tagCanvas.height=160;
+ const tagTexture=new T.CanvasTexture(tagCanvas);tagTexture.colorSpace=T.SRGBColorSpace;textures.push(tagTexture);
+ const tagMaterial=new T.SpriteMaterial({map:tagTexture,depthTest:true,depthWrite:false});materials.push(tagMaterial);
  const canTravel=(a:{x:number;y:number;z:number},b:{x:number;y:number;z:number})=>safeNpcPath(a,b,placement.isWalkable,placement.heightAt);
  const entries=NPC_DIALOGUES.map((definition,index)=>{
   const authoredRoute=CAFE_NPC_ROUTES[definition.id];
@@ -87,9 +95,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   if(definition.age&&definition.age!=='adult')rig.setProfile(AGE_PROFILES[definition.age]); // townsfolk cast: children, teens and grandparents (townsfolkCast.ts)
   if(definition.costume==='drip'){const costume=dressDripMascot(rig);if(costume){geometriesOwned.push(...costume.geometries);materials.push(...costume.materials);}}
   rig.root.traverse(object=>{object.userData.npcId=definition.id;});
-  const canvas=document.createElement('canvas');canvas.width=512;canvas.height=160;const ctx=canvas.getContext('2d')!;
-  ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(definition.name,256,66);ctx.fillStyle='#e6cb8b';ctx.font='700 29px sans-serif';ctx.fillText('LET’S TALK',256,115);
-  const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;textures.push(texture);const material=new T.SpriteMaterial({map:texture,depthTest:true,depthWrite:false});materials.push(material);
+  const canvas=tagCanvas,texture=tagTexture,material=tagMaterial;// the one shared tag (drawn when shown: labelStatus '' never matches a status)
   const label=new T.Sprite(material);label.visible=false;label.position.y=2.5;label.scale.set(3.5/rig.profileScale,1.094/rig.profileScale,1);label.updateMatrix();label.matrixAutoUpdate=false;label.userData.npcId=definition.id;rig.root.add(label);
   const position={x,y:authoredRoute?.[0].y??definition.floor?.()??(definition.swim?NPC_SWIM_ROOT_Y:placement.heightAt(x,z)),z};rig.update(x,z,0,0,true);rig.root.position.y=position.y;
   const freestyle=definition.freestyle===undefined?null:createCourtFreestyle(rig,definition.freestyle,definition.id);
@@ -128,7 +134,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  // 1.5 m hysteresis. `tagFocus` is that choice; `shownTag` is the one label currently visible (null while hidden by the flight /
  // vending close-up rule, a truck protest, or the tagged townsperson being off screen). Labels change visibility only on change.
  type Entry=typeof entries[number];
- let tagFocus:Entry|null=null,shownTag:Entry|null=null;
+ let tagFocus:Entry|null=null,shownTag:Entry|null=null,labelOwner:Entry|null=null;
  const tagEligible=(entry:Entry)=>!entry.stunned&&!isThinned(entry)&&entry.distance<(drawLimit??Infinity);
  // Talk targets the tagged townsperson while it is in Talk range, so the tag always names the one "Talk to …" opens.
  const nearest=(player:Position,maxDistance=6)=>{if(tagFocus&&!reactions?.get('npc:'+tagFocus.id)&&!isThinned(tagFocus)&&Math.hypot(tagFocus.position.x-player.x,tagFocus.position.z-player.z,tagFocus.position.y-player.y)<maxDistance)return tagFocus.definition;let best:NpcDefinition|null=null,distance=maxDistance;for(const entry of entries){if(reactions?.get('npc:'+entry.id)||isThinned(entry))continue;const d=Math.hypot(entry.position.x-player.x,entry.position.z-player.z,entry.position.y-player.y);if(d<distance){distance=d;best=entry.definition;}}return best;};
@@ -219,6 +225,7 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   if(show&&(hideTags||truckWitnesses.has(show.id)||!show.rig.root.visible))show=null;
   if(show&&camera){viewSphere.center.set(show.position.x,show.position.y+2.5,show.position.z);viewSphere.radius=2;if(!viewFrustum.intersectsSphere(viewSphere))show=null;}
   if(show!==shownTag){if(shownTag)shownTag.label.visible=false;shownTag=show;if(show)show.label.visible=true;}
+  if(shownTag&&shownTag!==labelOwner){labelOwner=shownTag;shownTag.labelStatus='';}// the shared tag canvas now names this townsperson
   if(shownTag){const entry=shownTag,r=entry.routine;
    const status=entry.near?'LET’S TALK':r.mode==='social'?'CATCHING UP':r.mode==='approach'?'SAYING HELLO':entry.freestyle?.tag??entry.definition.pursuit??'TAKING A BREAK';
    if(status!==entry.labelStatus){entry.labelStatus=status;const ctx=entry.labelCanvas.getContext('2d')!;ctx.clearRect(0,0,512,160);ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(entry.definition.name,256,66);ctx.fillStyle='#e6cb8b';ctx.font='700 25px sans-serif';ctx.fillText(status,256,115,470);entry.labelTexture.needsUpdate=true;}}
