@@ -223,7 +223,7 @@ import {createSummitActivities} from '@/lib/graphics/summitActivities';// Summit
 import SummitKickHud from './SummitKickHud';
 import {createZipline} from '@/lib/graphics/zipline';import {zipStore,zipActions,ZIP_BUTTONS,type ZipActionId} from '@/lib/town/zipline';import ZiplineHud from './ZiplineHud';// Summit Isle → Coral Cay Hostel zipline (Oct 14 2026)
 import {createStadiumMedia} from '@/lib/graphics/stadiumMedia';import {STADIUM_GESTURERS,STADIUM_GESTURES,STADIUM_MASCOT_ID,STADIUM_VIEWERS} from '@/lib/town/stadiumNpcs';// DRIP FC Stadium media + public viewing (Nov 13 2026)
-import {createStadiumSit,HOT_HUD_MS,SIT_KEY as STADIUM_SIT_KEY} from '@/lib/town/stadiumSit';import {createStadiumSound,createStadiumShake,goalBuzz,type StadiumSoundFrame} from '@/lib/audio/stadiumSound';import {stadiumMood} from '@/lib/town/stadiumMood';import {STADIUM_ARRIVAL} from '@/lib/town/westParkLayout';// West Stadium: sit in the stands (Nov 12 2026)
+import {createStadiumSit,HOT_HUD_MS,SIT_KEY as STADIUM_SIT_KEY,sitYieldsToTalk} from '@/lib/town/stadiumSit';import {createStadiumSound,createStadiumShake,goalBuzz,type StadiumSoundFrame} from '@/lib/audio/stadiumSound';import {stadiumMood} from '@/lib/town/stadiumMood';import {STADIUM_ARRIVAL} from '@/lib/town/westParkLayout';// West Stadium: sit in the stands (Nov 12 2026)
 import {createPaintEasel} from '@/lib/graphics/paintEasel';// Summit Isle painting easel (Oct 14 2026)
 // The sea (Oct 15 2026, docs/swimming-research.md P0): wading, swimming, splash-downs, the water HUD, the parked ball.
 import {strokeSurge,fovKick,easeFov} from '@/lib/town/water/swimMotion';// Natural swimming (Oct 27 2026, docs/SWIM_NATURAL_OCT27.md)
@@ -2414,7 +2414,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(forageWant)cands.push({kind:'enter',key:forageWant.key,distance:forageWant.distance});// Summit Isle fruit tree
         if(beachWant)cands.push({kind:'enter',key:beachWant.key,distance:beachWant.distance});// Beachcombing find
         if(ladderWant)cands.push({kind:'enter',key:ladderWant.key,distance:ladderWant.distance});// the lighthouse ladder
-        if(sitWant)cands.push({kind:'enter',key:sitWant.key,distance:sitWant.distance});// a stadium seat
+        if(sitWant&&!sitYieldsToTalk(stadiumSit.seated,npc?Math.hypot(npc.x-location.x,npc.z-location.z):null))cands.push({kind:'enter',key:sitWant.key,distance:sitWant.distance});// a stadium seat (steps aside right next to a coach on an aisle)
         if(pondNetWant)cands.push({kind:'enter',key:pondNetWant.key,distance:pondNetWant.distance});// a pond dragonfly
         if(rideWant)cands.push({kind:'enter',key:rideWant.key,distance:rideWant.distance});{const dw=canEnter?dive.want():null;if(dw)cands.push({kind:'enter',key:dw.key,distance:dw.distance});}/* water P2: Dive */diveBuoys.near(location.x,location.z);diveWreckTops.update(location.x,location.z,heat.tier);dive.slots(location.x,location.z);// water P1b: Hang on! (a manta / the whale shark)
         if(spotWaiting.current)cands.push({kind:'spot',distance:0});
