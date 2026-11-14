@@ -5,9 +5,12 @@
  *   waiters); it goes away by itself when the part loads (the panel then opens on its own, as before).
  * - Blocked browser storage (lib/storageFallback.ts set window.__fiNoSave): once per visit, "This browser can't save your island.
  *   Ask a grown-up, or use your save code." Game pages only (not the tour site). Tap closes it; it leaves after NO_SAVE_MS.
+ * Most panels are modal <dialog>s, which sit in the browser's top layer above any z-index: while one is open the note is drawn
+ * inside the topmost open dialog (a portal), so a panel waiting inside Settings still shows it.
  * Event-driven: one subscription, one hide timeout while the storage note shows. Nothing runs when storage and the network are fine.
  */
 import {useEffect,useState,useSyncExternalStore} from 'react';
+import {createPortal} from 'react-dom';
 import {usePathname} from 'next/navigation';
 import styles from './NetSaveNotice.module.css';
 import {netWaitCount,subscribeNetWait} from '@/lib/retryImport';
@@ -26,6 +29,8 @@ export function wantsNoSaveNote(win:{__fiNoSave?:boolean;sessionStorage?:Storage
  try{if(win.sessionStorage?.getItem(NO_SAVE_SEEN_KEY))return false;}catch{/* memory store */}
  return true;
 }
+/** The topmost open modal dialog (top layer), if any. */
+function topDialog():HTMLElement|null{const open=document.querySelectorAll<HTMLDialogElement>('dialog[open]');for(let i=open.length-1;i>=0;i--){try{if(open[i].matches(':modal'))return open[i];}catch{return open[i];}}return null;}
 function markNoSaveSeen(win:{sessionStorage?:Storage}){noSaveShown=true;try{win.sessionStorage?.setItem(NO_SAVE_SEEN_KEY,'1');}catch{/* fine */}}
 
 export default function NetSaveNotice(){
@@ -38,9 +43,13 @@ export default function NetSaveNotice(){
   markNoSaveSeen(w);setNoSave(true);
  },[pathname]);
  useEffect(()=>{if(!noSave)return;const t=setTimeout(()=>setNoSave(false),NO_SAVE_MS);return()=>clearTimeout(t);},[noSave]);
- if(waiting>0)return <div className={styles.wrap}><p className={styles.toast} role="status" data-net-wait="">
-  <b>{NET_WAIT_TITLE}</b><span>{NET_WAIT_TEXT}</span></p></div>;
- if(noSave)return <div className={styles.wrap}><button type="button" className={styles.toast} role="status" data-no-save-note="" onClick={()=>setNoSave(false)}>
+ const showing=waiting>0||noSave;
+ const [host,setHost]=useState<HTMLElement|null>(null);
+ useEffect(()=>{setHost(showing?topDialog():null);},[showing,waiting]);
+ if(!showing)return null;
+ const note=waiting>0?<div className={styles.wrap}><p className={styles.toast} role="status" data-net-wait="">
+  <b>{NET_WAIT_TITLE}</b><span>{NET_WAIT_TEXT}</span></p></div>
+  :<div className={styles.wrap}><button type="button" className={styles.toast} role="status" data-no-save-note="" onClick={()=>setNoSave(false)}>
   <span>{NO_SAVE_TEXT}</span></button></div>;
- return null;
+ return host&&host.isConnected?createPortal(note,host):note;
 }

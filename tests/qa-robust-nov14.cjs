@@ -92,6 +92,7 @@ const mem=()=>{const d=new Map();return {getItem:k=>d.has(k)?d.get(k):null,setIt
   assert.equal(wantsNoSaveNote({sessionStorage:ss},'/play'),false,'storage works: no note');
   ss.setItem('fi2-no-save-note-v1','1');assert.equal(wantsNoSaveNote({__fiNoSave:true,sessionStorage:ss},'/arcade'),false,'once per visit');
   assert.match(read('app/layout.tsx'),/\{children\}<NetSaveNotice\/>/,'mounted on every page');
-  assert.match(read('components/NetSaveNotice.module.css'),/max-width:min\(380px,100%\)/,'phone-safe width');}
+  assert.match(read('components/NetSaveNotice.module.css'),/max-width:min\(380px,100%\)/,'phone-safe width');
+  assert(src.includes('createPortal(note,host)')&&src.includes("matches(':modal')"),'drawn inside an open modal dialog (top layer), not hidden behind it');}
  console.log('qa-robust-nov14: ok');
 })().catch(e=>{console.error(e);process.exit(1);});
