@@ -112,10 +112,62 @@ await ok('play mode (Nov 13 2026): the beat carries one letter, the server keeps
  assert.equal((await go({...base,m:'bogus'})).reason,'ok');
  assert.equal((await go({v:1,t:'beat',s:'liveModeA00000000001',p:'/play',m:'p'})).reason,'empty-beat','the mode alone is not worth a write');
  const bs=mem.data.beats.filter(x=>x.sessionId==='liveModeA00000000001');
- assert.deepEqual(bs[0].counts,{'pm:w':1});assert.deepEqual(bs[1].counts,{},'an off-list letter stores nothing');
+ assert.deepEqual(bs[0].counts,{'pm:w':1});assert.deepEqual(bs[1].counts,{},'an off-list letter stores nothing (and an island beat carries no page key)');
  // Town registers the reader: a party is 'p', the shared island connected is 'w', anything else 's'. Nothing about who.
  const town=read('components/Town.tsx');
- assert(town.includes(`setPlayModeSource(()=>partyLive()?'p':multiplayerEnabled()&&publicWorldEnabled()&&publicPresence.get().mode==='public'&&publicPresence.get().connected?'w':'s')`),'Town.tsx reads the mode');
+ // Nov 13 2026: the CHOSEN mode from the first beat (public chosen but not yet connected, or held by the tutorial, is 'w'; a party
+ // code waiting in the URL is 'p'); not only once the socket is connected.
+ assert(town.includes(`if(partyLive())return 'p';if(!multiplayerEnabled())return 's';const pr=publicPresence.get();`)&&town.includes(`return pr.party||hasPendingParty()?'p':publicWorldEnabled()&&(pr.mode==='public'||pr.reason==='tutorial')?'w':'s';}),[]);`),'Town.tsx reads the chosen mode');
+ assert(!/setPlayModeSource\([^\n]*\.connected/.test(town),'not only once connected');
+});
+
+await ok('first ping (Nov 13 2026): a new session and the island registering its mode send one early beat with the page and the mode',async()=>{
+ const sent=[],timers=[],w={location:{hostname:'futbolisland.app',pathname:'/play',search:''},addEventListener(){},removeEventListener(){},setTimeout:(f,ms)=>{timers.push({f,ms});return timers.length;},clearTimeout(id){if(timers[id-1])timers[id-1].f=null;}};
+ const d={visibilityState:'visible',referrer:'',addEventListener(){},removeEventListener(){}};
+ let clock=0;const t=T.startTracker({window:w,document:d,navigator:{sendBeacon:(u,b)=>{sent.push(JSON.parse(b));return true;},maxTouchPoints:0},storage:null,now:()=>clock,random:k=>new Uint8Array(k).map((_,i)=>i*7)});
+ const fire=ms=>{for(const x of timers)if(x.f&&x.ms===ms){const f=x.f;x.f=null;f();}};
+ t.pageview('/play');assert.equal(sent.length,1,'the start');assert.equal(T.EARLY_BEAT_MS,3000);assert(!timers.some(x=>x.f&&x.ms===T.EARLY_BEAT_MS),'an island start waits for the island to say its mode');
+ const off=T.setPlayModeSource(()=>'w');assert.equal(timers.filter(x=>x.f&&x.ms===T.EARLY_BEAT_MS).length,1,'the island registering asks for one');const off1=T.setPlayModeSource(()=>'w');assert.equal(timers.filter(x=>x.f&&x.ms===T.EARLY_BEAT_MS).length,1,'at most one pending');
+ clock=3000;fire(T.EARLY_BEAT_MS);const b=sent.filter(x=>x.t==='beat');assert.equal(b.length,1,'one early beat');assert.equal(b[0].m,'w','the mode from the first ping');assert.equal(b[0].p,'/play');
+ assert(C.validateEvent(JSON.stringify(b[0])).ok,'the server accepts it');assert(!('m' in sent[0]),'still never on the start');
+ // The island mounting later in a running session (home, then the island) asks for one too.
+ off();off1();clock=60_000;const off2=T.setPlayModeSource(()=>'s');clock=63_000;fire(T.EARLY_BEAT_MS);assert.equal(sent.filter(x=>x.t==='beat').pop().m,'s');off2();
+ t.stop();
+ // A new session off the island (a Learn guide) sends its early beat too, so the card says where from the first ping.
+ {const sent2=[],tm=[],w2={...w,location:{hostname:'futbolisland.app',pathname:'/learn/soccer-drills',search:''},setTimeout:(f,ms)=>{tm.push({f,ms});return tm.length;},clearTimeout(){}};
+  let c2=0;const t2=T.startTracker({window:w2,document:d,navigator:{sendBeacon:(u,b)=>{sent2.push(JSON.parse(b));return true;},maxTouchPoints:0},storage:null,now:()=>c2,random:k=>new Uint8Array(k).map((_,i)=>i*7)});
+  t2.pageview('/learn/soccer-drills');c2=3000;for(const x of tm)if(x.ms===T.EARLY_BEAT_MS)x.f();const b2=sent2.filter(x=>x.t==='beat');assert.equal(b2.length,1);assert.equal(b2[0].p,'/learn/soccer-drills');assert(!('m' in b2[0]),'no mode off the island');t2.stop();}
+});
+
+await ok('page keys (Nov 13 2026): a fixed allowlist of route families, unknown is Other page, never a URL or query; ingest-made pg:<key>',async()=>{
+ const PK=load('lib/analytics/pageKeys.ts'),K=load('lib/analytics/countIds.ts');
+ const cases={'/':'home','/play':'play','/play?from=arcade&party=ABCD':'play','/island-return':'play','/arcade':'arcade','/marketing':'marketing','/marketing/overview':'marketing',
+  '/learn/9v9-soccer-formations':'learn_9v9_soccer_formations','/learn/soccer-drills/rondo-4v1':'learn_soccer_drills','/learn/made-up':'learn','/LEARN/Soccer-Rules#x':'learn_soccer_rules',
+  '/privacy':'privacy','/safe-football-game-for-kids':'parents','/cards/12':'cards','/museum':'museum','/admin':'other','/secret/x?code=ABC':'other','':'other','x':'other'};
+ for(const [p,k] of Object.entries(cases))assert.equal(PK.pageKeyOf(p),k,p);assert.equal(PK.pageKeyOf(null),'other');
+ assert.equal(PK.pageLabel('learn_9v9_soccer_formations'),'Learn: 9v9 formations');assert.equal(PK.pageLabel('marketing'),'Marketing page');assert.equal(PK.pageLabel('home'),'Home');
+ assert.equal(PK.pageLabel('nope'),'Other page');assert.equal(PK.pageLabel(null),'Other page');assert.equal(PK.pageLabel('parents'),'Parents\u2019 guide');
+ for(const k of PK.PAGE_KEYS){assert(K.COUNT_KEY_RE.test(PK.pageCountId(k)),k);assert.equal(K.isCountId(PK.pageCountId(k)),false,'ingest-only: a tab cannot send pg: in k');assert(PK.PAGE_LABEL[k],k);}
+ assert.deepEqual(C.clampCounts({'pg:home':1,'fi:land':1}),{'fi:land':1},'a forged pg: in k is dropped');
+ assert.equal(PK.pageKeyIn({'fi:land':1,'pg:arcade':1}),'arcade');assert.equal(PK.pageKeyIn({'pg:zzz':1}),'other');assert.equal(PK.pageKeyIn({}),null);assert.equal(PK.pageKeyIn(null),null);
+ assert.equal(PK.entryPageKey('/other'),'other');assert.equal(PK.entryPageKey('/play'),'play');assert.equal(PK.entryPageKey(null),null);
+ // Every public route of the app has its own key (a new route shows as Other page until it is added here).
+ const routes=[];const walk=(dir,url)=>{for(const e of fs.readdirSync(dir,{withFileTypes:true})){if(!e.isDirectory())continue;const seg=e.name;if(/^(api|admin)$|-lab$|^\[/.test(seg))continue;
+  const u=/^\(.*\)$/.test(seg)?url:url+'/'+seg;if(fs.existsSync(path.join(dir,seg,'page.tsx')))routes.push(u||'/');walk(path.join(dir,seg),u);}};walk('app','');
+ assert(routes.length>20);for(const r of routes)assert.notEqual(PK.pageKeyOf(r),'other','route has a key: '+r);
+ // The ingest stores it on every beat (no migration: the SQL accepts any id of COUNT_KEY_RE's shape); never on a start.
+ const mem=S.createMemoryStore(),lim=I.createLimiter({capacity:1e6}),now=new Date();
+ const h={get:k=>({'user-agent':'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) Mobile/15E148','host':'futbolisland.app'})[k]??null};
+ const go=body=>I.handleIngest({body:JSON.stringify(body),headers:h,store:mem,limiter:lim,now,vercelEnv:'production'});
+ assert.equal((await go({v:1,t:'start',s:'livePageA00000000001',p:'/learn/9v9-soccer-formations'})).reason,'ok');
+ assert.equal((await go({v:1,t:'beat',s:'livePageA00000000001',p:'/learn/9v9-soccer-formations',e:4000})).reason,'ok');
+ assert.equal((await go({v:1,t:'beat',s:'livePageA00000000001',p:'/somewhere/new',e:4000})).reason,'ok');
+ assert.equal((await go({v:1,t:'beat',s:'livePageA00000000001',p:'/play'})).reason,'empty-beat','the page alone is not worth a write');
+ const bs=mem.data.beats.filter(x=>x.sessionId==='livePageA00000000001');
+ assert.deepEqual(bs.map(b=>b.counts),[{'pg:learn_9v9_soccer_formations':1},{'pg:other':1}]);
+ const sql=read('supabase/migrations/20261119_analytics_stadium.sql'),re=new RegExp(/where key ~ '(\^\[a-z\]\{1,2\}:[^']+)'/.exec(sql)[1]);
+ for(const k of PK.PAGE_KEYS)assert(re.test(PK.pageCountId(k)),k+' passes the SQL counts regex');
+ const pol=read('components/privacy/PrivacyPolicy.tsx');assert(pol.includes('which page the visitor is on, both from a fixed list of pages and page groups')&&pol.includes('never a full web address'),'the privacy page says so');
 });
 
 await ok('rootView: ?from=flyer shows the title screen; the return trips still open the game',()=>{
@@ -139,6 +191,19 @@ await ok('live.ts: shapes, labels, time',()=>{
  assert.equal(r.rows[0].mode,null,'no mode: unknown');assert.equal(L.shapeLive({rows:[{sid:'ab',mode:'p'}]}).rows[0].mode,'p');assert.equal(L.shapeLive({rows:[{sid:'ab',mode:'party'}]}).rows[0].mode,null);
  assert.deepEqual(L.modeTally([{mode:'s'},{mode:'w'},{mode:'p'},{mode:'w'},{mode:null}]),[{key:'w',n:2},{key:'s',n:1},{key:'p',n:1},{key:'unknown',n:1}]);
  assert.deepEqual(L.modeTally([{mode:'s'}]),[{key:'s',n:1}],'modes with nobody left out');
+ // Nov 13 2026: off the island is not "unknown"; a just-arrived session off the island is "Not on island yet".
+ assert.equal(L.modeKey({mode:null,area:'other',page:'home'}),'off');assert.equal(L.modeKey({mode:'w',area:'arcade',page:'arcade'}),'off','an old island letter on a later arcade beat');
+ assert.equal(L.modeKey({mode:null,area:null,page:'learn'}),'yet');assert.equal(L.modeKey({mode:null,area:null,page:'play'}),'unknown');assert.equal(L.modeKey({mode:null,area:null,page:null}),'unknown');
+ assert.equal(L.modeKey({mode:null,area:'island',page:'play'}),'unknown','an island session with no letter (an old client)');assert.equal(L.modeKey({mode:'p',area:'paths',page:'play'}),'p','the paths story is on the island');
+ assert.deepEqual(L.modeTally([{mode:'w',area:'island'},{mode:null,area:'other',page:'home'},{mode:null,area:null,page:'marketing'},{mode:null,area:'island'}]),[{key:'w',n:1},{key:'unknown',n:1}],'off-island not counted as unknown');
+ assert.equal(L.modeLabel('off'),'Off island');assert.equal(L.modeLabel('yet'),'Not on island yet');
+ assert.equal(L.placeLine({mode:null,area:'other',page:'marketing',activity:null,spot:'other'}),'Marketing page');assert.equal(L.placeLine({mode:'w',area:'island',page:'play',activity:'fishing',spot:'fishing'}),'fishing');
+ assert.equal(L.placeLine({mode:null,area:'other',page:null,activity:null,spot:'other'}),'Other page','no page known: Other page');
+ assert.equal(L.shapeLive({rows:[{sid:'ab',entry_path:'/arcade'}]}).rows[0].page,'arcade','the start entry page until a beat says');assert.equal(L.shapeLive({rows:[{sid:'ab'}]}).rows[0].page,null);
+ {const rows=[{mode:null,area:'other',page:'home',spot:'other'},{mode:null,area:'other',page:'marketing',spot:'other'},{mode:null,area:'other',page:'home',spot:'other'},{mode:null,area:null,page:'learn_soccer_drills',spot:null},{mode:'w',area:'island',page:'play',spot:'island'}];
+  const wt=L.whereTally({byArea:[{key:'other',n:4},{key:'island',n:1},{key:'starting',n:1}],rows});
+  assert.deepEqual(wt,[{key:'pg:home',n:2},{key:'island',n:1},{key:'other',n:1},{key:'pg:learn_soccer_drills',n:1},{key:'pg:marketing',n:1}],'other page split by page; the uncovered rest stays');
+  assert.equal(L.whereLabel('pg:home'),'Home');assert.equal(L.whereLabel('pg:learn_soccer_drills'),'Learn: Drills');assert.equal(L.whereLabel('island'),'island');}
  assert.equal(L.modeLabel('w'),'Public');assert.equal(L.modeLabel('s'),'Just me');assert.equal(L.modeLabel('p'),'Party');assert.equal(L.modeLabel('unknown'),'Mode unknown');assert.equal(L.modeLabel(null),'Mode unknown');
  const s=L.shapeSources({sessions:6,countries:[{country:'US',n:3,regions:[{region:'CA',n:null}]}],returning:{new:null,returning:4,unknown:0},code:{with:3}});
  assert.equal(s.countries[0].regions[0].n,null);assert.equal(s.returning.returning,4);assert.equal(s.code.without,null);
@@ -153,13 +218,14 @@ await ok('liveAdmin: not configured, needs migration, 5 s cache, windows',async(
  assert.equal((await LA.loadLive(2,{fetchImpl:f404,now:0})).status,'needs-migration');
  let beatReads=0;const fok=async(url,init)=>{
   if(url.includes('/rest/v1/analytics_beats?')){beatReads++;assert.equal(init.method,'GET');assert.match(url,/select=session_id,counts&ts=gte\.[^&]+&order=ts\.desc,id\.desc&limit=2000$/);
-   return {ok:true,status:200,text:async()=>JSON.stringify([{session_id:'liveRowX000000000001',counts:{'fi:land':1}},{session_id:'liveRowX000000000001',counts:{'pm:p':1}},{session_id:'liveRowX000000000001',counts:{'pm:s':1}}])};}
+   return {ok:true,status:200,text:async()=>JSON.stringify([{session_id:'liveRowX000000000001',counts:{'fi:land':1}},{session_id:'liveRowX000000000001',counts:{'pm:p':1,'pg:learn_soccer_drills':1}},{session_id:'liveRowX000000000001',counts:{'pm:s':1,'pg:play':1}}])};}
   calls++;assert.match(url,/\/rest\/v1\/rpc\/analytics_live_sessions$/);assert.equal(JSON.parse(init.body).p_minutes,15);
   return {ok:true,status:200,text:async()=>JSON.stringify({minutes:15,sessions:2,rows:[{sid:'abcdef',country:'US',region:'TX'},{sid:LA.liveSid('liveRowX000000000001')}]})};};
  calls=0;const a=await LA.loadLive(15,{fetchImpl:fok,now:1000}),b=await LA.loadLive(15,{fetchImpl:fok,now:5999});
  assert.equal(calls,1,'cached for 5 s');assert.equal(a,b);assert.equal(a.rows[0].regionName,'Texas');
  assert.equal(beatReads,1,'one beat read per cache miss');assert.equal(a.rows[0].mode,null,'no beat with a mode: Mode unknown');
  assert.equal(a.rows[1].mode,'p','the newest beat that carries a mode (an older one said s)');
+ assert.equal(a.rows[1].page,'learn_soccer_drills','the newest beat with a page key');assert.equal(a.rows[0].page,null);
  assert.equal(LA.liveSid('liveSessionA00000001'),crypto.createHash('sha256').update('liveSessionA00000001:futbol-island-live-v1').digest('hex').slice(0,6),'the SQL sid');
  assert(!JSON.stringify(a).includes('liveRowX'),'never the raw session id');
  const fbad=async url=>url.includes('analytics_beats')?{ok:false,status:500,text:async()=>''}:{ok:true,status:200,text:async()=>JSON.stringify({rows:[{sid:'abcdef'}]})};
@@ -179,7 +245,8 @@ await ok('the panel and the day section are wired',()=>{
  assert.match(panel,/document\.visibilityState!=='visible'/,'polls only while visible');assert.match(panel,/POLL_MS=10_000/);
  assert.match(panel,/e\.key==='Escape'/);assert.match(panel,/<DoneButton ref=\{done\} onDone=\{onClose\}/);assert(panel.includes('Nobody right now.'));
  assert(panel.includes('<LiveModeStrip rows={data!.rows}/>'),'the MODE strip with the Where / Country / Source strips');
- assert(panel.indexOf('<LiveModeStrip')<panel.indexOf('<Strip label="Source" items={tallyItems(data!.bySource')&&panel.indexOf('<LiveModeStrip')>panel.indexOf('<Strip label="Where" items={(data!.byArea)'),'at the top, before the cards');
+ assert(panel.indexOf('<LiveModeStrip')<panel.indexOf('<Strip label="Source" items={tallyItems(data!.bySource')&&panel.indexOf('<LiveModeStrip')>panel.indexOf('<Strip label="Where" items={whereTally(data!).map('),'at the top, before the cards');
+ assert(panel.indexOf('<Strip label="Where" items={whereTally(data!).map(')>0,'the WHERE strip splits "other page" into pages');
  // Render: the badge next to New / Returning on live cards, the unknown fallback, none on day cards, and the strip's counts.
  const React=require('react'),{renderToStaticMarkup}=require('react-dom/server'),css=new Proxy({},{get:(_,k)=>typeof k==='string'?k:undefined});
  const P=createLoader({'LivePanel.module.css':css,'DoneButton.module.css':css,'Icon.module.css':css,'IslandTravelMap.module.css':css})('app/admin/LivePanel.tsx');
@@ -188,11 +255,18 @@ await ok('the panel and the day section are wired',()=>{
  for(const [m,word] of [['w','Public'],['s','Just me'],['p','Party']]){const h=card({mode:m});
   assert(h.includes(`data-mode="${m}"`)&&h.includes(`>${word}</span>`),'badge '+word);assert(h.indexOf('>New</span>')<h.indexOf(`>${word}</span>`)&&h.indexOf('>Save code</span>')<h.indexOf(`>${word}</span>`),'next to New / Save code');}
  {const h=card({});assert(h.includes('data-mode="unknown"')&&h.includes('>Mode unknown</span>'),'older sessions: Mode unknown');}
+ {const h=card({area:'island',entry_path:'/play'});assert(h.includes('>Mode unknown</span>'),'an island session from an old client (no letter): Mode unknown');}
+ // Nov 13 2026: off the island says where instead (owner: "other page" + "Mode unknown" on a phone that just arrived).
+ {const h=card({area:'other',entry_path:'/'});assert(h.includes('data-mode="off"')&&h.includes('>Off island</span>')&&!h.includes('Mode unknown'),'off island');assert(h.includes('<b>Home</b>'),'the page as the place line');}
+ {const h=card({area:'arcade',activity:'arcade_live',entry_path:'/arcade'});assert(h.includes('>Off island</span>')&&h.includes('<b>Arcade: Kit Rush</b>'),'the arcade game');}
+ {const h=card({entry_path:'/other'});assert(h.includes('data-mode="yet"')&&h.includes('>Not on island yet</span>'),'just arrived off the island');assert(h.includes('<b>Other page</b>'));}
+ {const h=card({entry_path:'/play'});assert(h.includes('>Mode unknown</span>'),'just arrived on the island and no beat yet (the early beat comes 3 s later)');}
+ {const r=row({area:'other'});r.page='learn_9v9_soccer_formations';const h=renderToStaticMarkup(React.createElement(P.SessionCard,{r,now:Date.parse('2026-11-13T10:06:00Z'),countryName:c=>c,clock:'ago'}));assert(h.includes('<b>Learn: 9v9 formations</b>'),'a Learn guide');}
  {const h=card({mode:'w'},'time');assert(!h.includes('data-mode='),'day / player cards: no mode badge');}
- const strip=renderToStaticMarkup(React.createElement(P.LiveModeStrip,{rows:[{mode:'w'},{mode:'w'},{mode:'s'},{mode:'p'},{mode:null}]}));
- assert(/aria-label="Mode"/.test(strip)&&strip.includes('<b>Public 2</b>')&&strip.includes('<b>Just me 1</b>')&&strip.includes('<b>Party 1</b>')&&strip.includes('<b>Mode unknown 1</b>'),'strip counts');
+ const strip=renderToStaticMarkup(React.createElement(P.LiveModeStrip,{rows:[{mode:'w'},{mode:'w'},{mode:'s'},{mode:'p'},{mode:null},{mode:null,area:'other',page:'home'},{mode:null,area:null,page:'marketing'}]}));
+ assert(/aria-label="Mode"/.test(strip)&&strip.includes('<b>Public 2</b>')&&strip.includes('<b>Just me 1</b>')&&strip.includes('<b>Party 1</b>')&&strip.includes('<b>Mode unknown 1</b>')&&!strip.includes('Off island'),'strip counts (off-island sessions are not unknown)');
  assert(strip.indexOf('Public 2')<strip.indexOf('Just me 1')&&strip.indexOf('Just me 1')<strip.indexOf('Party 1'),'Public · Just me · Party order');
- assert.match(panel,/\{clock==='ago'&&\(r\.mode\?<span className=\{styles\.badge\} data-kind=\{'mode-'\+r\.mode\}[^>]*>\{LIVE_MODE_LABEL\[r\.mode\]\}<\/span>/,'the badge next to New / Returning, live cards only');
+ assert.match(panel,/\{clock==='ago'&&\(mk==='w'\|\|mk==='s'\|\|mk==='p'\?<span className=\{styles\.badge\} data-kind=\{'mode-'\+mk\}[^>]*>\{LIVE_MODE_LABEL\[mk\]\}<\/span>/,'the badge next to New / Returning, live cards only');
  assert.match(panel,/data-kind="mode-unknown"[^>]*>\{MODE_UNKNOWN\}<\/span>/,'the unknown fallback');
  {const pol=read('components/privacy/PrivacyPolicy.tsx');assert(pol.includes('how the island is being played at the moment')&&pol.includes('Never who with'),'the privacy page lists the mode');}
  for(const p of ['app/admin/page.tsx','app/api/admin/analytics/route.ts'])assert.match(read(p),/report\.sources=await loadSources\(report\.from,report\.to\);/,p);

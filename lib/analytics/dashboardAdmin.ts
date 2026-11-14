@@ -4,11 +4,12 @@
  * D1/D7 cohorts and the feature start days for chart annotations. Reads only; after the admin session check.
  */
 import type {AnalyticsStore} from './store';
-import {addDays,dayList} from './core';
+import {oldestComputable} from './store';
+import {addDays,dayBounds,dayList,type DailyRollup} from './core';
 import {loadDailyLayer} from './dailyAdmin';
-import type {DailyLayer} from './daily';
+import {buildDailyLayer,type DailyLayer} from './daily';
 import {COUNT_SINCE} from './countSince.generated';
-import {wantSeries,type DashSeries,type DashboardData,type PeopleStatus,type CohortRow} from './dashboard';
+import {wantSeries,type DashSeries,type DashboardData,type PeopleStatus,type CohortRow,type SameTime} from './dashboard';
 
 /** Feature launches the charts annotate: the first day a counter family was sent (countSince.generated.ts, from git). */
 const RELEASES:[RegExp,string][]=[[/^en:/,'Engagement cards'],[/^su:/,'Summit Isle'],[/^wa:/,'Water and swimming'],[/^sh:/,'Kit Shop'],[/^mp:/,'Play with friends'],
@@ -38,7 +39,29 @@ export function compactLayer(layer:DailyLayer,{peopleStatus,cohorts,medianSessio
   people:{status:peopleStatus,cohorts,windowDays:14},gaps:layer.gaps,releases:releasesFrom(COUNT_SINCE,days[0]??layer.from,layer.to),medianSessionMs};
 }
 
+/** "5:36 pm" (Pacific). */
+export const clockLabel=(ms:number)=>new Intl.DateTimeFormat('en-US',{timeZone:'America/Los_Angeles',hour:'numeric',minute:'2-digit',hour12:true}).format(new Date(ms)).replace(/[\s\u202f]+/g,' ').toLowerCase();
+/**
+ * Today alone, like for like (Nov 13 2026; owner: the story compared today so far with ALL of yesterday): yesterday's rollup
+ * from Pacific midnight to the same time of day (store.computeWindow, the old report's rule: report.ts), run through the layer's
+ * own catalog so every series reads its yesterday-by-now value. null when yesterday's raw rows are gone or the store cannot
+ * cut a window (UTC mode). people.* series are not here (another SQL function, whole days only): they "wait for a full day".
+ */
+export async function sameTimeOf(store:AnalyticsStore,layer:DailyLayer,rollups:DailyRollup[],keys:ReadonlySet<string>,now:Date):Promise<SameTime|null>{
+ const today=layer.today,y=addDays(today,-1);
+ if(layer.timeZone!=='America/Los_Angeles'||y<oldestComputable(today,'pacific'))return null;
+ const [a]=dayBounds(today,'pacific'),[ya,yb]=dayBounds(y,'pacific'),cut=Math.min(yb,ya+Math.max(0,now.getTime()-a));
+ const part=await store.computeWindow(y,new Date(ya).toISOString(),new Date(cut).toISOString());if(!part)return null;
+ const L=buildDailyLayer({rollups:[...rollups.filter(r=>r.day!==y),{...part,day:y}],from:y,to:today,today,mode:'pacific'});
+ const v:Record<string,number|null>={},nd:Record<string,[number,number]|null>={};
+ for(const s of L.series){if(!keys.has(s.key))continue;const p=s.points[0];if(!p||p.day!==y)continue;
+  v[s.key]=p.value===null?null:Math.round(p.value*1e6)/1e6;if(s.agg==='ratio')nd[s.key]=p.num!==undefined&&p.den!==undefined?[p.num,p.den]:null;}
+ return {day:y,cutIso:new Date(cut).toISOString(),label:clockLabel(cut),v,nd};
+}
+
 export async function loadDashboard(store:AnalyticsStore,range:{from:string;to:string},now=new Date()):Promise<DashboardData>{
- const {layer,medianSessionMs,peopleStatus,cohorts}=await loadDailyLayer(store,range,now);
- return compactLayer(layer,{peopleStatus,cohorts,medianSessionMs,now});
+ const {layer,medianSessionMs,peopleStatus,cohorts,rollups}=await loadDailyLayer(store,range,now);
+ const data=compactLayer(layer,{peopleStatus,cohorts,medianSessionMs,now});
+ if(layer.partialDay&&layer.from===layer.to)try{data.sameTime=await sameTimeOf(store,layer,rollups,new Set(Object.keys(data.series)),now);}catch{data.sameTime=null;}
+ return data;
 }

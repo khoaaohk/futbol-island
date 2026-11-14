@@ -247,6 +247,14 @@ await ok('weekly report: ISO weeks, exact numbers (Nov 8 2026 owner ruling), not
  assert.equal(sub(K2.social,'Average party size').value,3.5,'20 parties of 3–4');assert.equal(sub(K2.social,'Sessions with friends').value,20/41);
  assert.equal(K2.emotes.value,(20*4+21)/20,'all picks ÷ emoting sessions');assert.equal(sub(K2.emotes,'Sessions that emoted').value,20/41);
  assert.equal(K2.return.value,0.42);assert.equal(K2.learning.value,20);assert.equal(sub(K2.learning,'Learning with friends').value,20);
+ // Nov 13 2026: the report is its own week (not the range buttons), and lessons opened (lo:, the player cards' count) sit beside watched-to-the-end (le:).
+ assert.equal(rep.scope,'This report covers Week 43 (Oct 19–25); the range buttons above don’t apply.');
+ assert.equal(W.weekScope('2026-W46','2026-11-09','2026-11-15'),'This report covers Week 46 (Nov 9–15); the range buttons above don’t apply.');
+ assert.equal(W.weekScope('2026-W44','2026-10-26','2026-11-01'),'This report covers Week 44 (Oct 26 – Nov 1); the range buttons above don’t apply.');
+ assert.equal(sub(K2.learning,'Lessons opened').value,0,'no lo: in this week');assert.equal(K2.learning.sub[0].label,'Lessons opened');
+ const lo=W.buildSponsorWeekly({week:'2026-W43',merged:C.mergeRollups([C.rollupDay('2026-10-20',many(5,'2026-10-20',{'lo:learn7_roles':2,'lo:learn1_ball':1,'le:learn7_roles':1}))]),prev:null,players:5,prevPlayers:null,returning:null,relay:null});
+ const LK=lo.kpis.find(k=>k.id==='learning');assert.equal(LK.value,5,'watched to the end: le:');assert.equal(sub(LK,'Lessons opened').value,15,'opened: every lo: id added up');
+ assert.match(W.sponsorWeeklyCsv(lo),/^ {2}Lessons opened,15,,,/m);
  assert.deepEqual(rep.partySize.bands.map(b=>[b.key,b.value]),[['peak_1',0],['peak_2',0],['peak_3_4',20],['peak_5_8',0],['peak_9_12',0],['peak_13_20',0]]);assert.equal(rep.partySize.source,'client');
  assert.deepEqual(rep.topEmotes.map(b=>[b.label,b.value]),[['Wave',40],['Juggle',21],['Dance',20],['Kickflip',20]],'every emote played, exact');
  // Relay totals win for party size when the relay reports parties.
@@ -299,6 +307,8 @@ await ok('weekly report: fixture render (desktop + phone screenshot input)',()=>
  const html=renderToStaticMarkup(React.createElement(Tab,{week:'2026-W43',onWeek:()=>{},initial:rep}));
  assert(/Sponsor report/.test(html)&&/Internal draft: do not share outside the company/.test(html)&&/data-kpi="reach"/.test(html)&&/1,234/.test(html),'reach exact');
  for(const id of ['reach','minutes','social','emotes','return','learning'])assert(html.includes(`data-kpi="${id}"`),id);
+ assert(/data-sponsor-scope[^>]*>This report covers Week 43 \(Oct 19–25\); the range buttons above don’t apply\./.test(html),'the week note');
+ assert(/ lessons watched to the end</.test(html)&&/<dt>Lessons opened<\/dt>/.test(html),'learning: watched to the end + lessons opened');
  assert(/Party size \(party service\)/.test(html)&&/Top emotes/.test(html)&&/Aggregate, anonymous counts; exact totals; no personal information\./.test(html)&&!/groups under 10|rounded|&lt;10/.test(html));
  assert(!/[23456789BCDFGHJKMNPQRSTVWXYZ]{6}/.test(html.replace(/<[^>]+>/g,' ')),'no code-shaped text');
  if(process.env.SPONSOR_REPORT_OUT){

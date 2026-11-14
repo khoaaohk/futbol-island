@@ -45,4 +45,19 @@ ok("the 'swim' activity: client list, Town's frame, the newest analytics_ingest"
  assert.match(sql.trim().split('\n').pop(),/as status;$/);assert(sql.includes("'OK, water analytics installed'"));
  assert(!/\bdrop\b|\btruncate\b|\bdelete from\b/i.test(sql.replace(/--.*$/gm,'')),'no destructive statements');
 });
+ok('wa:swim_start counts once per real swim (Nov 13 2026: >= 1.5 s in swim mode; gaps under 3 s are the same swim)',()=>{
+ const W=load('lib/analytics/waterEvents.ts');assert.equal(W.SWIM_COUNT_MIN_S,1.5);assert.equal(W.SWIM_COUNT_GAP_S,3);
+ const run=(plan,dt=1/60)=>{let n=0;const c=W.createSwimCounter(()=>n++);for(const [secs,sw] of plan)for(let t=0;t<secs-1e-9;t+=dt)c.step(dt,sw);return n;};
+ assert.equal(run([[1,false],[1,true],[5,false]]),0,'a 1 s dip does not count');
+ assert.equal(run([[2,true],[5,false]]),1,'a 2 s swim counts once');
+ assert.equal(run([[10,true]]),1,'a long swim counts once');
+ const jitter=[];for(let i=0;i<20;i++)jitter.push([.3,true],[.2,false]);// a shelf edge flipping wade/swim 2x a second
+ assert.equal(run(jitter),0,'jitter alone (no 1.5 s stretch) is not a swim');
+ assert.equal(run([[2,true],...jitter,[2,true],...jitter,[2,true]]),1,'a swim with in/out jitter counts once');
+ assert.equal(run([[2,true],[2.5,false],[2,true]]),1,'back in within 3 s: the same swim');
+ assert.equal(run([[2,true],[4,false],[2,true]]),2,'back in after 3+ s on land: a new swim');
+ const town=read('components/Town.tsx');assert.match(town,/swimCountFrame\(dt,ph==='swim'\|\|ph==='under'\|\|ph==='surface'\)/,'Town steps the counter');
+ assert(!/countSwimStart\(\)/.test(town),'Town no longer counts the raw swimStarted edge');
+ assert(!/new |\[|=>|=\{|\(\{/.test(read('lib/analytics/waterEvents.ts').match(/step\(dt:number,swimming:boolean\)\{([\s\S]*?)\n \},reset/)[1]),'the frame step allocates nothing');
+});
 console.log(`admin-analytics-water: ${passed} groups passed`);

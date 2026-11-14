@@ -42,7 +42,8 @@ export default function SponsorReport({week,onWeek,initial}:{week:string;onWeek:
   <p className={s.draft} role="note" data-sponsor-draft><b>Internal draft: do not share outside the company until the privacy policy wording is approved.</b></p>
   <div className={s.head}>
    <div className={styles.sectionHead}><h2 id="sec-sponsor-report">Sponsor report</h2>
-    <p>{data?`Week ${data.week.slice(6)} (${fmtDay(data.from)} – ${fmtDay(data.to)})`:week}. All numbers are exact combined totals. No personal data.</p></div>
+    <p>{data?`Week ${data.week.slice(6)} (${fmtDay(data.from)} – ${fmtDay(data.to)})`:week}. All numbers are exact combined totals. No personal data.</p>
+    {data&&<p className={styles.note} role="note" data-sponsor-scope data-no-print>{data.scope??`This report covers Week ${Number(data.week.slice(6))}; the range buttons above don’t apply.`} Reach counts each player once in the week, so it will not match the players count next to the range.</p>}</div>
    <div className={s.actions} data-no-print>
     <button type="button" className={styles.secondary} onClick={()=>onWeek(shiftWeek(week,-1))} aria-label="Previous week">‹ Prev</button>
     <button type="button" className={styles.secondary} onClick={()=>onWeek(shiftWeek(week,1))} aria-label="Next week">Next ›</button>
@@ -56,7 +57,7 @@ export default function SponsorReport({week,onWeek,initial}:{week:string;onWeek:
    <ul className={s.cards} aria-label="Sponsor KPIs" data-sponsor-cards>
     {data.kpis.map(k=><li key={k.id} className={s.card} data-kpi={k.id} data-status={k.status}>
      <span className={s.label}>{k.label}</span>
-     <b className={k.status==='ok'?s.value:s.none}>{fmtKpi(k.value,k.format,k.status)}{k.value===null?null:k.status==='ok'&&k.format==='min'?<small> min</small>:k.status==='ok'&&k.id==='reach'?<small> players</small>:k.status==='ok'&&k.id==='emotes'?<small> per emoter</small>:k.status==='ok'&&k.id==='learning'?<small> lessons</small>:null}</b>
+     <b className={k.status==='ok'?s.value:s.none}>{fmtKpi(k.value,k.format,k.status)}{k.value===null?null:k.status==='ok'&&k.format==='min'?<small> min</small>:k.status==='ok'&&k.id==='reach'?<small> players</small>:k.status==='ok'&&k.id==='emotes'?<small> per emoter</small>:k.status==='ok'&&k.id==='learning'?<small> lessons watched to the end</small>:null}</b>
      {changeText(k)&&<small className={s.change}>{changeText(k)}</small>}
      {k.sub.length>0&&<dl className={s.sub}>{k.sub.map(x=><div key={x.label}><dt>{x.label}</dt><dd>{fmtKpi(x.value,x.format,x.status)}</dd></div>)}</dl>}
      {k.note&&<small className={s.note}>{k.note}</small>}

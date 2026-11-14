@@ -21,7 +21,7 @@ export function DefinitionsPanel({data,open,onToggle,target}:{data:DashboardData
  return <details className={so.how} id="definitions" open={open} onToggle={e=>onToggle((e.currentTarget as HTMLDetailsElement).open)} data-metric="overview.definitions">
   <summary>Definitions: how each trend is counted ({list.length})</summary>
   {data&&<>
-   <p className={d.leadNote}>Days are Pacific days. Not tracked = empty (never 0). Today is partial: left out of averages and comparisons. Exact numbers (admin only). The Export’s Definitions CSV lists every series of the layer.</p>
+   <p className={d.leadNote}>Days are Pacific days. Not tracked = empty (never 0). Today is partial: left out of averages and of multi-day comparisons; today alone is compared with yesterday up to the same time of day. Exact numbers (admin only). The Export’s Definitions CSV lists every series of the layer.</p>
    <dl className={d.defs}>{list.map(s=><div key={s.key} id={'def-'+s.key} tabIndex={-1} data-target={target===s.key||undefined}>
     <dt>{s.label}<small style={{display:'block',fontWeight:400,color:'var(--a-muted)'}}>{SECTION[s.key.split('.')[0]]??s.key.split('.')[0]} · {s.unit}</small></dt>
     <dd>{s.how}<small>Source: {s.source}. Over several days: {AGG[s.agg]}. Tracked since {s.trackedSince?fmtDay(s.trackedSince):'—'}{s.fullSince?`, every part from ${fmtDay(s.fullSince)}`:''}.</small></dd>

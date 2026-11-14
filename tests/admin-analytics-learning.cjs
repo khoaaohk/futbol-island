@@ -88,7 +88,7 @@ await ok('validation',async()=>{
  assert.equal(store.data.beats.length,0,'nothing stored from bad payloads');
  const r=await ingest(store,beat({k:{['lo:'+L0.id]:2,'lo:removed_lesson':3,[`q:${L0.id}:9`]:1,'ob:seen:welcome':1}}),{now:at(60_000)});
  assert.equal(r.reason,'ok','the beat (and its time) is kept');
- assert.deepEqual(J(store.data.beats[0].counts),{['lo:'+L0.id]:2,'ob:seen:welcome':1},'unknown or out-of-range ids are dropped, not the beat');
+ assert.deepEqual(J(store.data.beats[0].counts),{['lo:'+L0.id]:2,'ob:seen:welcome':1,'pg:home':1},'unknown or out-of-range ids are dropped, not the beat (pg:home: the ingest-made page key, Nov 13 2026)');
  // A count-only beat (a hide draining leftovers) is stored; an empty one is not.
  assert.equal((await ingest(store,{v:1,t:'beat',s:SID,p:'/',k:{'rv:q':1}},{now:at(70_000)})).reason,'ok');
  assert.equal((await ingest(store,{v:1,t:'beat',s:SID,p:'/',k:{'lo:removed_lesson':1}},{now:at(71_000)})).reason,'empty-beat');
@@ -105,8 +105,7 @@ await ok('tracker overflow carry',()=>{
  const ids=ALL.slice(0,90).map(l=>'lo:'+l.id);
  ids.forEach((id,i)=>T.count(id,i<10?3:1));T.count('ls:'+L0.id,70);T.count('nonsense:id');T.count('lo:'+L0.id,0);T.count('lo:'+L0.id,1.5);
  assert.equal(x.timers.size,timersBefore,'counting adds no timer');
- x.fire('pointerdown');x.advance(30_000);
- {const due=Math.min(...[...x.timers.values()].map(v=>v.at));x.advance(due-x.e.now());}// exactly one safety ping beat
+ x.fire('pointerdown');x.advance(T.EARLY_BEAT_MS);// exactly one beat: a new session off the island sends one early (Nov 13 2026)
  const first=x.sent.filter(b=>b.t==='beat')[0];
  assert.equal(Object.keys(first.k).length,K.MAX_BEAT_COUNTS,'64 ids per beat');
  assert.equal(first.k['ls:'+L0.id],K.MAX_COUNT_VALUE,'busiest first, capped at 50 (the other 20 carry)');

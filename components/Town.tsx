@@ -238,7 +238,7 @@ import {onLand} from '@/lib/town/landmass';
 import {createWaterState,pondDiveRoom,UNDER_TINT_MS,BELLY_SHAKE,BELLY_SHAKE_TIME,SPLASH_SCALE,type SplashSource} from '@/lib/town/water/waterState';
 import {fuelStore} from '@/lib/town/fuelStore';
 import {waterStore,waterActions,swimLessonDue,waterButtonsFor,waterKeyAction,DROP_IN_LABEL,DROP_IN_TITLE,SPLASH_CUES,SURFACE_CUES,SWIM_RIDE_NOTE,RIDING_NOTE,DIVE_SHALLOW_NOTE,REEF_NOTE,SWIM_EDGE_TITLE,SWIM_EDGE_NOTE,type WaterActionId} from '@/lib/town/water/waterHud';
-import {countWade,countSwimStart,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveEnterEdge,countDiveExitEdge,countDivePick,countDiveRestore,countDiveGoal,countDiveWhale,countDiveEmote,countDiveSparkle,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind,countDiveBallFind} from '@/lib/analytics/waterEvents';
+import {countWade,swimCountFrame,countSplashDown,countSwimFast,countDive,countSwimTime,countWaterIdleCap,countSharksCircle,countSharksEscape,countRideStart,countRideLap,countRideOff,countOpenSeaWhaleRide,countRaySpot,countDiveStart,countDiveEnterEdge,countDiveExitEdge,countDivePick,countDiveRestore,countDiveGoal,countDiveWhale,countDiveEmote,countDiveSparkle,countDiveSurface,countDiveFind,countDiveBreathOut,countDiveCrest,countDiveFly,countDiveWreckVisit,countDiveWreckFind,countDiveBallFind} from '@/lib/analytics/waterEvents';
 import {createOpenSeaLife} from '@/lib/graphics/openSeaLife';
 import {createSharkCircle,SHARK_LINE,SHARK_BUBBLE_S,type SharkEvents} from '@/lib/town/water/sharks';
 import {createAnimalRides,RIDE_PROMPT,RIDE_PROMPT_LABEL,RIDE_DISMOUNT_SPLASH,RIDE_DISMOUNT_CARRY,RIDE_WAKE,RIDE_CAM_LIFT,RIDE_SEAT_LIFT,RIDE_RISE,RIDE_WAKE_AT,DART_WAKE,type RideEvents} from '@/lib/town/water/animalRides';
@@ -267,6 +267,7 @@ import {fuelTravel,fuelAllowsRide,fuelCanSprint} from '@/lib/town/fuelStore';
 import JobActionButton from './JobActionButton';
 import {earnForBall,earnForDiveBall} from '@/lib/town/cardRewardTriggers';
 import {enterActivity,islandFrame,setPlayModeSource} from '@/lib/analytics/tracker';
+import {hasPendingParty} from '@/lib/multiplayer/invite';
 import {createSummitTravelTracker} from '@/lib/analytics/summitEvents';
 import {placeAt} from '@/lib/analytics/islandPlaces';
 // Play with friends + emote analytics (Oct 22 2026, docs/analytics-multiplayer-plan.md Phase A): the party code never imports
@@ -513,9 +514,12 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   // sheet with no artwork to show, so the 3 s minimum (there for the loader art) is skipped; the island appears once it is ready.
   useEffect(()=>{if(returningFromArcade)return;const timer=window.setTimeout(()=>setMinimumLoadElapsed(true),tanHandoff()?0:3000);return()=>window.clearTimeout(timer);},[returningFromArcade]);
   useEffect(()=>{if(ready&&!failed&&!returningFromArcade&&shouldShowIslandOnboarding())setOnboardingOpen(true);},[ready,failed]);
-  // Admin "On now" (Nov 13 2026): how the island is being played, read once per analytics beat (no render, no timer). A live code party
-  // is 'p' (With friends); the shared public island, connected, is 'w' (With other players); anything else is 's' (Just me).
-  useEffect(()=>setPlayModeSource(()=>partyLive()?'p':multiplayerEnabled()&&publicWorldEnabled()&&publicPresence.get().mode==='public'&&publicPresence.get().connected?'w':'s'),[]);
+  // Admin "On now" (Nov 13 2026): how the island is being played, read once per analytics beat (no render, no timer). A live code party,
+  // or a party code waiting in the URL, is 'p' (With friends); the CHOSEN shared public island is 'w' (With other players) from the
+  // first beat, before its socket connects or while the tutorial holds it back (owner: "Mode unknown" on a phone that just arrived);
+  // a lock, Just me, or a closed / unreachable world is 's' (Just me). Registering sends one early beat (tracker.ts EARLY_BEAT_MS).
+  useEffect(()=>setPlayModeSource(()=>{if(partyLive())return 'p';if(!multiplayerEnabled())return 's';const pr=publicPresence.get();
+   return pr.party||hasPendingParty()?'p':publicWorldEnabled()&&(pr.mode==='public'||pr.reason==='tutorial')?'w':'s';}),[]);
   // Public island driver: lazy connect after island ready + tour done + a first real input (+3 s idle); counters from presence events.
   const publicWorld=useRef<PublicWorld|null>(null);
   useEffect(()=>{if(!multiplayerEnabled()||!publicWorldEnabled())return;
@@ -1651,7 +1655,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       // The water step (lib/town/water/waterState.ts): zones with hysteresis, the ball parked on the sand, ripples, the splash events.
       {const speed=Math.hypot(velocity.x,velocity.z),ev=water.step(dt,location.x,location.z,{stick:Math.min(1,moveLength),moving:speed>.15,speed,landY:rooftop.state.height,yaw:player.root.rotation.y,airborne:rooftop.state.falling||rooftop.jump.active||rooftop.state.air||rampStep.owns||streetTraffic.rider.index>=0||rideRef.current!=='walk'&&nearPond(location.x,location.z)/* a ground ride on the park pond's shelf: the pond's own spray (parkPond.ts), not the water model */});waterY=waterProbe.level??WATER_LEVEL;
         if(ev.entered){countWade();rooftop.state.recovery=0;rooftop.state.impact=false;/* the sea takes over from any knockdown (a fall outside the splash test still lands in water) */if(!water.state.park){const p=rooftop.findLanding(location.x,location.z);if(p)water.state.park={x:p.x,z:p.z,y:rooftop.surface(p.x,p.z),yaw:player.root.rotation.y};}}
-        if(ev.swimStarted){countSwimStart();if(swimLessonDue(animalRides.riding))waterStore.set({lesson:waterStore.get().lesson+1});}
+        if(ev.swimStarted&&swimLessonDue(animalRides.riding))waterStore.set({lesson:waterStore.get().lesson+1});
+        {const ph=water.state.phase;swimCountFrame(dt,ph==='swim'||ph==='under'||ph==='surface');}// wa:swim_start: once per real swim (≥ 1.5 s, gaps < 3 s bridged; waterEvents.ts)
         if(ev.swimSeconds>0)countSwimTime(ev.swimSeconds);
         if(ev.sped)countSwimFast();
         // Dive (waterState.ts DIVE): a soft splash going under, drips + the plip + the head-shake coming up, a small bubble ring over

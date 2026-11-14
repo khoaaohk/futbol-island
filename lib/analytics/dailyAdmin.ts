@@ -6,7 +6,7 @@
  */
 import type {AnalyticsStore} from './store';
 import {oldestComputable} from './store';
-import {TRACKING_START,addDays,dayIn,dayList,histMedianMs,mergeRollups} from './core';
+import {TRACKING_START,addDays,dayIn,dayList,histMedianMs,mergeRollups,type DailyRollup} from './core';
 import {loadRangeMerged} from './report';
 import {buildDailyLayer,type DailyLayer,type PeopleDay} from './daily';
 import {rpc} from './liveAdmin';
@@ -34,7 +34,7 @@ export async function loadDailyPeople(from:string,to:string,fetchImpl:typeof fet
  }catch{return {status:'error',days:[],cohorts:[]};}
 }
 
-export async function loadDailyLayer(store:AnalyticsStore,range:{from:string;to:string},now=new Date(),{people=true}:{people?:boolean}={}):Promise<{layer:DailyLayer;medianSessionMs:number|null;peopleStatus:DailyPeopleStatus;cohorts:CohortRow[]}>{
+export async function loadDailyLayer(store:AnalyticsStore,range:{from:string;to:string},now=new Date(),{people=true}:{people?:boolean}={}):Promise<{layer:DailyLayer;medianSessionMs:number|null;peopleStatus:DailyPeopleStatus;cohorts:CohortRow[];rollups:DailyRollup[]}>{
  const mode=await store.timeMode(),today=dayIn(mode,now),start=range.from<TRACKING_START?range.from:TRACKING_START;
  const {rollups}=await loadRangeMerged(store,start,range.to,now);
  const oldestRaw=oldestComputable(today,mode);
@@ -48,5 +48,5 @@ export async function loadDailyLayer(store:AnalyticsStore,range:{from:string;to:
   p={status:'ok',...shapeDailyPeople(memoryDailyPeople((store as unknown as {data:Parameters<typeof memoryDailyPeople>[0]}).data,peopleFrom,range.to,now))};
  const layer=buildDailyLayer({rollups,from:range.from,to:range.to,today,mode,hourly,people:p.days});
  const inRange=rollups.filter(r=>r.day>=range.from&&r.day<=range.to),m=mergeRollups(inRange);
- return {layer,medianSessionMs:m.totals.sessions?histMedianMs(m.hist):null,peopleStatus:p.status,cohorts:p.cohorts};
+ return {layer,medianSessionMs:m.totals.sessions?histMedianMs(m.hist):null,peopleStatus:p.status,cohorts:p.cohorts,rollups};
 }

@@ -13,7 +13,7 @@
  * own label (so the two keys are never the same); with neither, no player id is made at all.
  * /admin shows only 6 hex of a further hash (supabase/migrations/20261019_analytics_day_sessions.sql).
  */
-import {createHmac} from 'crypto';
+import {createHash,createHmac} from 'crypto';
 import {INSTALL_ID_RE} from './core';
 import {PLAYER_HASH_RE} from './playerHash';
 
@@ -42,3 +42,6 @@ export function derivePlayerId(key:{ph?:string;pi?:string},secrets:PlayerSecrets
  return null;
 }
 export const envSecrets=():PlayerSecrets=>({salt:process.env.ANALYTICS_PLAYER_SALT||null,pepper:process.env.SAVE_CODE_PEPPER||null});
+
+/** The 12-hex pid /admin shows for a stored player id (the SQL's analytics_pid(): sha256(id + ':futbol-island-player-v1')). */
+export const adminPid=(playerId:string)=>createHash('sha256').update(playerId+':futbol-island-player-v1').digest('hex').slice(0,12);

@@ -198,7 +198,7 @@ await ok('no free text',async()=>{
  const store=S.createMemoryStore(),now=new Date();
  await ingest(store,{v:1,t:'start',s:'NoTextStartSession01',p:'/start'},now);
  assert.equal((await ingest(store,{v:1,t:'beat',s:'NoTextStartSession01',p:'/start',e:3000,k:{'st:view':1,'st:junk':1}},now)).reason,'ok');
- assert.deepEqual(J(store.data.beats[0].counts),{'st:view':1});
+ assert.deepEqual(J(store.data.beats[0].counts),{'st:view':1,'pg:start':1},'pg:start: the ingest-made page key (Nov 13 2026)');
  for(const f of ['components/landing/GrownUps.tsx','components/about/AboutGrownUps.tsx','components/landing/Donate.tsx','components/landing/TitleActions.tsx','components/landing/TitleScene.tsx'])
   for(const m of read(f).matchAll(/data-track=\{([^}]+)\}/g))assert(/^'s[gtp]:(amt_)?'\+(nonprofitSlug\(n\.name\)|a)$/.test(m[1]),f+': '+m[1]);
 });

@@ -168,7 +168,9 @@ export function deviceClass(ua:string|null|undefined,touch=false):Device{
 
 export function isBot(ua:string|null|undefined):boolean{
  const u=ua||'';
- return !u||/bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|monitor|uptime|curl|wget|python|httpclient|go-http|java\/|axios|node-fetch|playwright|puppeteer|phantom/i.test(u);
+ return !u||/bot|crawl|spider|slurp|headless|lighthouse|pagespeed|preview|monitor|uptime|curl|wget|python|httpclient|go-http|java\/|axios|node-fetch|playwright|puppeteer|phantom/i.test(u)
+  // Nov 13 2026: link previews and fetchers that run pages (chat apps, social cards, AI assistants, read-aloud, ad checks).
+  ||/facebookexternalhit|facebookcatalog|meta-externalagent|whatsapp\/|slack-imgproxy|embedly|iframely|vkshare|quora link preview|outbrain|mediapartners|google-read-aloud|googleother|google-inspectiontool|feedfetcher|chatgpt-user|oai-searchbot|perplexity-user|claude-user|claude-web|anthropic-ai|bytespider|petalbot|duckduckgo-favicons|qwantify|ahrefs|semrush|mj12|dotbot|screaming frog|siteimprove/i.test(u);
 }
 
 export function sanitizeCountry(raw:string|null|undefined):string|null{const v=(raw||'').toUpperCase();return /^[A-Z]{2}$/.test(v)&&v!=='XX'?v:null;}
@@ -380,6 +382,9 @@ export type DailyRollup={
   *  days before the migration, when the salt still rotated at UTC midnight (5 or 4 pm Pacific): someone who played before and
   *  after that hour counts as two visitors that day. */
  exactVisitors?:boolean;
+ /** Nov 13 2026: computed with staff players left out (20261121_analytics_staff_exclusion.sql). A frozen day without it was
+  *  frozen before the exclusion and may include staff visits. */
+ staffExcluded?:boolean;
 };
 /** The dims the start-page subset keeps (no region or entry: the start page is the entry). */
 export const START_DIMS=['country','source','referrer','campaign','device'] as const;

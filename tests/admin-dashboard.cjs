@@ -117,19 +117,57 @@ await ok('the rendered Overview shows the layer’s numbers (tiles, takeaway, mi
 // 2. range / compare logic ----------------------------------------------------------------------------------------------------
 await ok('compare: offered only when the previous period is fully tracked; "not tracked before" otherwise; today left out',()=>{
  const c=DB.compareState(dash);assert.equal(c.ok,false,'13 days from the first day with data: nothing before');assert.match(c.reason,/^Not tracked before Oct 25/);
- const w=DB.compareState(week);assert.equal(w.ok,true,'Oct 31 – Nov 6: the previous 6 complete days are tracked');deq(w,{ok:true,from:'2026-10-25',to:'2026-10-30',days:6});
+ const w=DB.compareState(week);assert.equal(w.ok,true,'Oct 31 – Nov 6: the previous 6 complete days are tracked');deq(w,{ok:true,from:'2026-10-25',to:'2026-10-30',days:6,label:'Oct 25 – Oct 30 (today left out)'});
  const p=DB.kpi(week,DB.K.sessions).prev;assert.equal(p.status,'ok');assert.equal(p.curTo,'2026-11-05','today (partial) is left out of the comparison');
  // a series that started counting inside the range: its own previous period is not tracked, even when sessions are
  assert.equal(DB.kpi(week,DB.K.lmJoins).prev.status,'not-tracked');assert.equal(DB.kpi(week,DB.K.lmJoins).prev.trackedSince,'2026-11-05');
  const html=render(React.createElement(TT.TrendTile,{data:week,seriesKey:DB.K.lmJoins,compare:true,onDef(){}}));assert.match(html,/not tracked before Nov 5/);
  assert(!/data-tone="good"[^>]*>[^<]*new/.test(html));
  // takeaway with and without a comparison
- assert.match(DB.takeaway(week,true),/^Players per day (up|down) [\d.]+% to [\d.]+ vs the 6 days before; sessions (up|down)/);
- assert.match(DB.takeaway(dash,true),/players a day over 12 complete days, [\d,]+ sessions/,'no fake comparison when the previous period is untracked');
+ assert.match(DB.takeaway(week,true),/^Visitors \(devices\) per day (up|down) [\d.]+% to [\d.]+ vs the 6 days before \(today left out of both\); sessions (up|down)/);
+ assert.equal(DB.kpi(week,DB.K.sessions).vs,'the 6 days before (today left out of both)','a multi-day range ending today says today is left out');
+ assert.match(DB.takeaway(dash,true),/visitors \(devices\) a day over 12 complete days, [\d,]+ sessions/,'no fake comparison when the previous period is untracked');
  // the pure arithmetic: a null day inside the previous period refuses it
  const s={agg:'sum',trackedSince:'2026-10-01',points:[{day:'2026-10-05',value:3},{day:'2026-10-06',value:4}],prior:[{day:'2026-10-03',value:1},{day:'2026-10-04',value:null}]};
  assert.equal(M.previousPeriod(s,'2026-10-05','2026-10-06','2026-10-20').status,'not-tracked');
  s.prior[1].value=2;const pp=M.previousPeriod(s,'2026-10-05','2026-10-06','2026-10-20');assert.equal(pp.status,'ok');assert.equal(pp.value,3);assert.equal(pp.change,(7-3)/3);
+});
+await ok('today alone: compared with yesterday up to the same time of day (like for like), else "comparison waits for a full day"',async()=>{
+ const t=await DBA.loadDashboard(store,{from:'2026-11-06',to:'2026-11-06'},NOW);
+ assert(t.sameTime,'yesterday by now is loaded');assert.equal(t.sameTime.day,'2026-11-05');assert.equal(t.sameTime.cutIso,'2026-11-05T20:00:00.000Z','12:00 PST on Nov 5');assert.equal(t.sameTime.label,'12:00 pm');
+ const ySes=Object.values(syn.starts).filter(x=>x.day==='2026-11-05'&&x.startedAt<'2026-11-05T20:00:00.000Z'),yAll=Object.values(syn.starts).filter(x=>x.day==='2026-11-05');
+ assert(ySes.length>0&&ySes.length<yAll.length,'the window is part of yesterday');
+ assert.equal(t.sameTime.v[DB.K.sessions],ySes.length,'sessions: yesterday by 12:00 pm, not all of yesterday');
+ assert.equal(t.sameTime.v[DB.K.players],new Set(ySes.map(x=>x.visitorHash)).size,'visitors: yesterday by 12:00 pm');
+ const p=DB.kpi(t,DB.K.sessions).prev;assert.equal(p.status,'ok');assert.equal(p.value,ySes.length);assert.equal(p.sameTime,'12:00 pm');
+ const tSes=Object.values(syn.starts).filter(x=>x.day==='2026-11-06').length;assert.equal(p.current,tSes);close(p.change,(tSes-ySes.length)/ySes.length,'change');
+ const mppNd=t.sameTime.nd[DB.K.mpp];assert(mppNd&&mppNd[1]===t.sameTime.v[DB.K.players],'ratios carry yesterday-by-now num/den');
+ assert.equal(DB.kpi(t,DB.K.sessions).vs,'yesterday by 12:00 pm');
+ assert.deepEqual(J(DB.compareState(t)),{ok:true,from:'2026-11-05',to:'2026-11-05',days:1,label:'yesterday by 12:00 pm'});
+ assert.match(DB.takeaway(t,true),/^Visitors \(devices\) per day (up|down) [\d.]+% to [\d.]+ vs yesterday by 12:00 pm; sessions (up|down)/,'the headline is like for like');
+ assert(DB.movers(t).length>0,'some movers today');for(const m of DB.movers(t)){const c=DB.compareOf(t,DB.seriesOf(t,m.key));assert.equal(c.sameTime,'12:00 pm','movers use the same baseline: '+m.key);}
+ // people.* (whole days only): no like-for-like count → waits, on the tile and in its foot
+ assert(t.series[DB.K.distinct],'people loaded (memory stand-in)');assert.equal(DB.kpi(t,DB.K.distinct).prev.status,'waits');
+ const html=render(React.createElement(OverviewStory,{data:t,compare:true,onDef(){},onPlayers(){}}));
+ assert(html.includes('Visitors (devices) per day')&&html.includes('Players (save code or device)'),'the two player tiles are named apart');
+ assert(/data-series="audience\.players_per_day"[\s\S]*?data-vs="yesterday by 12:00 pm"/.test(html),'visitors tile: vs yesterday by 12:00 pm');
+ assert(/data-series="people\.players_distinct"[\s\S]*?data-compare-waits[^>]*>— comparison waits for a full day/.test(html),'players tile: waits, says why');
+ const foot=k=>(html.match(new RegExp(`data-tile-foot="${k}">([^<]*)<`))||[])[1]||'';
+ assert.match(foot('visitors'),/^unique devices \(daily hash\), today so far; delta vs yesterday by 12:00 pm$/);
+ assert.match(foot('players'),/^distinct player ids a day \(raw rows, last 14 days\), today so far; comparison waits for a full day/);
+ assert(!/mean of complete days/.test(foot('visitors')+foot('players')),'a single day is not a "mean of complete days"');
+ // no window (the store cannot cut one, or yesterday's raw rows are gone): every tile waits, no fake whole-day delta
+ const none={...t,sameTime:null};assert.equal(DB.kpi(none,DB.K.sessions).prev.status,'waits');assert.equal(DB.compareState(none).ok,false);
+ assert.match(DB.compareState(none).reason,/^Comparison waits for a full day/);assert.equal(DB.movers(none).length,0,'no mover against all of yesterday');
+ const h2=render(React.createElement(TT.TrendTile,{data:none,seriesKey:DB.K.players,compare:true,onDef(){}}));assert.match(h2,/— comparison waits for a full day/);
+ // the "N players" pill next to the range: distinct ids in the raw rows (not summed per day); a longer range says "since <oldest raw day>"
+ const page=read('app/admin/AnalyticsDashboard.tsx');assert(/setPlayerSince\(j\.partial&&/.test(page)&&page.includes('player${playerCount===1?\'\':\'s\'}${playerSince?` since ${fmtDay(playerSince)}`:\'\'}'),'pill: "298 players since Oct 30"');
+ assert(DAY.shapePlayers({players:298,partial:true,oldest_day:'2026-10-30'}).oldestDay==='2026-10-30','the players payload carries its oldest raw day');
+ // a multi-day range keeps the old rule; a single past day says so in the foot
+ const y=await DBA.loadDashboard(store,{from:'2026-11-05',to:'2026-11-05'},NOW);assert.equal(y.sameTime,undefined,'a past day needs no window');
+ assert.equal(DB.kpi(y,DB.K.sessions).prev.from,'2026-11-04');assert.equal(DB.daysRule(y),'Nov 5 only');assert.equal(DB.daysRule(week),'mean of complete days (today left out)');
+ // the two player tiles: in a multi-day range both deltas use the same days
+ const a=DB.kpi(week,DB.K.players).prev,b=DB.kpi(week,DB.K.distinct)?.prev;if(b&&b.status==='ok')deq([a.from,a.to,a.curTo],[b.from,b.to,b.curTo],'same baseline days');
 });
 await ok('funnels use the same days for every step; movers need a base; unusual days are robust (MAD) and skip the first tracked day',()=>{
  const f=DB.funnels(dash);

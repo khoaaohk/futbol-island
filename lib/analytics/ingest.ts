@@ -7,6 +7,7 @@ import {createHash} from 'crypto';
 import type {AnalyticsStore} from './store';
 import {ACTIVITY_IDS,PLACE_IDS} from './islandIds';
 import {MAX_BEAT_COUNTS,checkFlags,playModeId} from './countIds';
+import {pageCountId,pageKeyOf} from './pageKeys';
 import {derivePlayerId,type PlayerSecrets} from './playerId';
 import {addVisitGeo} from './marketingVisitGeo';
 import {MAX_BEAT_PAGEVIEWS,MAX_BODY_BYTES,clampCells,clampCounts,clampEngaged,clampSplit,classifySource,deviceClass,isBot,sanitizeCountry,sanitizeHost,sanitizePath,sanitizeRegion,sanitizeUtm,dayIn,validateEvent,type CleanEvent} from './core';
@@ -91,6 +92,11 @@ export async function handleIngest({body,headers,store,limiter,now=new Date(),ve
  // Nov 13 2026: how the island is being played (validateEvent kept only an allowlisted letter, on a beat) rides as the counter
  // pm:<letter> = 1 (countIds.ts PLAY_MODES; no migration). It never makes an empty beat worth writing on its own.
  if(!start&&ev.m&&Object.keys(clean.counts).length<MAX_BEAT_COUNTS)clean.counts={...clean.counts,[playModeId(ev.m)]:1};
+ // Nov 13 2026: which page OFF the island (a fixed route family, pageKeys.ts; never the URL or a query) rides the same way as
+ // pg:<key> = 1, so the live panel can say where an off-island visitor is ("Learn: 9v9 formations"). Island beats carry none (their
+ // area already says island). Also never makes an empty beat worth writing.
+ const pg=start?null:pageKeyOf(ev.p);
+ if(pg&&pg!=='play'&&Object.keys(clean.counts).length<MAX_BEAT_COUNTS)clean.counts={...clean.counts,[pageCountId(pg)]:1};
  await store.track(clean,now);
  return {status:204,reason:'ok'};
 }
