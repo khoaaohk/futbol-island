@@ -2352,7 +2352,10 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         const prompt=uiElement<HTMLButtonElement>(`[data-${kind}-enter]`);
         const hoverEntry=canEnter&&!mobileEntry&&((kind===buildingHoverKind&&now<buildingHoverUntil)||!!prompt?.matches(':hover'));
         if(mobileEntry?!near&&!flightNear(bounds):!near&&!hoverEntry)continue;
-        const distance=hoverEntry?-1:(location.x-x)**2+(location.z-z)**2;
+        // Distance to the DOOR (QA Nov 14 2026): the Arcade and Coaches tuples carry the building's middle (5 and 4 m inside the
+        // door) for the prompt, so Haruto at the Arcade door always out-ranked Enter and a phone player could not get in.
+        const doorZ=kind==='arcade'?ARCADE_DOOR.z:kind==='coaches'?COACHES_DOOR.z:z;
+        const distance=hoverEntry?-1:(location.x-x)**2+(location.z-doorZ)**2;
         if(distance<closestEntryDistance){closestEntry=kind;closestEntryDistance=distance;}
       }
       let shownEntry=false;

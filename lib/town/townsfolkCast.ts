@@ -76,7 +76,7 @@ export const TOWNSFOLK_CAST:NpcDefinition[]=[
    'Keepers can use their hands, but only inside their own penalty area.'],
   ['Why do you like being in goal?','You can see the whole pitch, so you can shout helpful things to your team. And a good save feels just like scoring a goal!',
    'Is it scary when people shoot?','Sometimes! Keep your eyes on the ball and your hands ready. My coach says being brave means trying, not never feeling scared.']),
- folk('square','haruto','Haruto','Pass Puzzles fan','HEADING TO THE ARCADE',104,-48,{ch:'male',skin:2,clothing:'classic',age:'teen',body:'slim',look:{hair:'tuft'}},{},
+ folk('square','haruto','Haruto','Pass Puzzles fan','HEADING TO THE ARCADE',106.5,-46.8,{ch:'male',skin:2,clothing:'classic',age:'teen',body:'slim',look:{hair:'tuft'}},{},
   'A teenager who loves puzzles, passing and the story of Japan’s 2011 Women’s World Cup win.',
   'Pass Puzzles in the arcade are my favourite. Finding the free teammate feels just like a real match.',
   ['In 2011 Japan’s women’s team won the World Cup in Germany. They beat the USA on penalties in the final.',
