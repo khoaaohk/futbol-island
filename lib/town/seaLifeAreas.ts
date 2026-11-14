@@ -99,7 +99,7 @@ const ray=(id:string,area:SeaAreaId,species:RaySpecies,e:[number,number,number,n
  return {id,island:area,area,species,points:ellipseLoop(...e),speed:k.speed,scale:k.scale,tint:species==='manta'?undefined:k.tint,ridable:k.ridable,zone};};
 /** The open-sea rays, added where the sea was thin (see seaLifeInventory): each area gets its own mix. */
 export const OPEN_SEA_RAY_LOOPS:readonly OpenSeaRayLoop[]=[
- ray('ray-west-sting','main-west','sting',[-344,-150,22,10,1.57]),
+ ray('ray-west-sting','main-west','sting',[-354,-136,18,10,0]),// Nov 13 2026: moved (was -344,-150 along the coast), clear of North Point's float and cast
  ray('ray-west-eagle','main-west','eagle',[-230,162,22,10,.4]),
  ray('ray-north-eagle','main-north','eagle',[-110,-260,22,10,3]),
  ray('ray-north-manta','main-north','manta',[-30,-265,22,10,2.4]),

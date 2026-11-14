@@ -531,6 +531,53 @@ const SPECIES:Record<string,Spec>={
   dorsal:[{t0:.74,t1:.9,h:.07,shape:'round'}],anal:[{t0:.76,t1:.9,h:.06,shape:'round'}],pect:{t:.18,len:.07},pelvic:{t:.5,len:.05},eye:{t:.09,r:.026},mouth:{t:.03,len:.09,a:1.9}});
   // The long duck-bill snout.
   b.blob([-.5,-.005,0],[.07,.022,.035],6,4,()=>hex('#5f6f3f'));void L;},
+ // Nov 13 2026: the north-west coast's own catches (northWestFish.ts), from the existing builders.
+ cabezon:b=>{fish(b,{x1:.3,H:.15,W:.12,peak:.26,q:.55,ped:.15,top:'#7a4a32',side:'#8a5a3e',belly:'#cfe0c8',line:-.1,tail:'round',tailH:.11,finC:'#7a4a32',
+  // Mottled reds and browns, a big wide head.
+  paint:(c,t,up,side)=>cell(t*18,up*5,side*3)>.62?mixC(c,hex('#3f2a1e'),.55):cell(t*9,up*3,side*2)>.8?mixC(c,hex('#5f7a4a'),.5):c,
+  dorsal:[{t0:.22,t1:.48,h:.07,shape:'spiny',spines:10},{t0:.5,t1:.82,h:.06,shape:'round'}],anal:[{t0:.56,t1:.82,h:.04,shape:'low'}],pect:{t:.22,len:.13,wide:1.7,round:true},pelvic:{t:.28,len:.04},eye:{t:.11,a:.75,r:.028},mouth:{t:.0,len:.09,a:1.35}});},
+ 'ballan-wrasse':b=>{const L=fish(b,{x1:.3,H:.15,W:.08,peak:.4,q:.62,ped:.15,top:'#4f6a3a',side:'#6f8a4a',belly:'#e8d8a8',tail:'round',tailH:.13,finC:'#5a7a42',
+  paint:(c,t,up,side)=>cell(t*26,up*7,side*3)>.7?hex('#e8e0b0'):c,
+  dorsal:[{t0:.22,t1:.82,h:.06,shape:'spiny',spines:14}],anal:[{t0:.6,t1:.82,h:.05,shape:'round'}],pect:{t:.26,len:.07,round:true},pelvic:{t:.32,len:.04},eye:{t:.1,r:.026},mouth:{t:.02,len:.035,a:1.5}});
+  // The thick lips.
+  b.blob([-.49,-.02,0],[.03,.02,.03],5,4,()=>hex('#c8a070'));void L;},
+ 'golden-redfish':b=>{fish(b,{x1:.3,H:.16,W:.08,peak:.36,q:.6,ped:.14,top:'#c0302a',side:'#d8483a',belly:'#f4b8a0',line:.05,tail:'slight',tailH:.14,finC:'#c03a2e',
+  paint:(c,t,up)=>t>.18&&t<.26&&up>.1?mixC(c,hex('#5a1a18'),.5):c,
+  dorsal:[{t0:.22,t1:.52,h:.09,shape:'spiny',spines:12},{t0:.54,t1:.8,h:.06,shape:'round'}],anal:[{t0:.62,t1:.78,h:.05,shape:'tri'}],pect:{t:.24,len:.09},pelvic:{t:.3,len:.05},eye:{t:.1,a:.85,r:.04,ring:'#f0c040'},mouth:{t:.01,len:.05,a:1.5}});},
+ 'yelloweye-rockfish':b=>{fish(b,{x1:.3,H:.17,W:.085,peak:.36,q:.6,ped:.15,top:'#d8562a',side:'#ee8a3a',belly:'#f6d08a',line:.0,tail:'slight',tailH:.14,finC:'#2a2422',
+  dorsal:[{t0:.22,t1:.52,h:.1,shape:'spiny',spines:13,c:'#e06a2e'},{t0:.54,t1:.8,h:.06,shape:'round'}],anal:[{t0:.62,t1:.78,h:.05,shape:'tri'}],pect:{t:.24,len:.09,c:'#e88a3a'},pelvic:{t:.3,len:.05},eye:{t:.1,a:.85,r:.04,iris:'#f2d020',ring:'#f2d020'},mouth:{t:.01,len:.05,a:1.5}});},
+ 'giant-pacific-octopus':b=>{octopus(b,{body:'#b0503a',belly:'#f0c0a6'});return {anim:{axis:[1,0,0],start:-.05,span:.5,dir:[0,.75,.65],k:[5,0,9],amp:.06},hold:{x:0,z:-PI/2},shadow:'octopus'};},
+ 'kelp-greenling':b=>{const L=fish(b,{x1:.33,H:.12,W:.065,peak:.36,q:.68,ped:.13,top:'#6a5a3a',side:'#8a7a52',belly:'#e8d8b0',line:.0,tail:'slight',tailH:.12,finC:'#7a6a42',
+  dorsal:[{t0:.18,t1:.5,h:.06,shape:'spiny',spines:9},{t0:.52,t1:.86,h:.05,shape:'round'}],anal:[{t0:.52,t1:.84,h:.04,shape:'low'}],pect:{t:.22,len:.08,round:true},eye:{t:.08,r:.024},mouth:{t:.0,len:.04,a:1.4}});
+  // Blue spots on the front half (the males').
+  spots(b,L,Array.from({length:8},(_,i):[number,number,number]=>[.12+.4*hash(i*2.9),.5+.7*hash(i*1.7),.014]),hex('#4a86c0'),0,6);},
+ 'kelp-bass':b=>{const L=fish(b,{x1:.32,H:.14,W:.075,peak:.38,q:.66,ped:.12,top:'#4a4a2a',side:'#7a7a4a',belly:'#e8e0b8',line:.05,tail:'slight',tailH:.14,finC:'#6a6a3a',
+  dorsal:[{t0:.22,t1:.5,h:.08,shape:'spiny',spines:10},{t0:.52,t1:.78,h:.06,shape:'round'}],anal:[{t0:.62,t1:.78,h:.05,shape:'round'}],pect:{t:.24,len:.08},pelvic:{t:.3,len:.05},eye:{t:.09,r:.028},mouth:{t:.0,len:.06,a:1.4}});
+  // The calico patches.
+  spots(b,L,Array.from({length:12},(_,i):[number,number,number]=>[.16+.62*hash(i*3.3),.2+1.2*hash(i*2.1),.018]),hex('#d8d0a0'),0,6);},
+ 'california-sheephead':b=>{const L=fish(b,{x1:.31,H:.17,W:.08,peak:.4,q:.6,ped:.15,top:'#d0503a',side:'#e06a4a',belly:'#f4e4dc',tail:'slight',tailH:.14,finC:'#2a2224',
+  // Black head and tail, red middle (a male's colours).
+  paint:(c,t)=>t<.24||t>.78?hex('#262022'):c,
+  dorsal:[{t0:.22,t1:.82,h:.06,shape:'spiny',spines:12}],anal:[{t0:.6,t1:.82,h:.05,shape:'round'}],pect:{t:.26,len:.07,round:true},pelvic:{t:.32,len:.04},eye:{t:.1,r:.026,iris:'#c0302a'},mouth:{t:.02,len:.04,a:1.5}});
+  // The forehead bump and white chin.
+  b.blob([-.4,.07,0],[.06,.04,.05],6,4,()=>hex('#2a2224'));b.blob([-.47,-.04,0],[.03,.02,.035],5,4,()=>hex('#f2ece4'));void L;},
+ 'chinook-salmon':b=>{const L=fish(b,{x1:.34,H:.13,W:.075,peak:.38,q:.72,ped:.1,top:'#3f5a6a',side:'#c8d2d8',belly:'#eef0ee',line:.18,tail:'slight',tailH:.16,finC:'#5f7480',
+  dorsal:[{t0:.38,t1:.5,h:.06,shape:'tri'},{t0:.8,t1:.84,h:.025,shape:'round'}],anal:[{t0:.72,t1:.82,h:.035,shape:'tri'}],pect:{t:.22,len:.07},pelvic:{t:.46,len:.035},eye:{t:.08,r:.025},mouth:{t:.0,len:.06,a:1.4}});
+  spots(b,L,Array.from({length:16},(_,i):[number,number,number]=>[.2+.75*hash(i*3.1),.55+.6*hash(i*1.3),.01]),hex('#1f2a30'),0,5);return {anim:{...FISH_ANIM,start:.3,amp:.05}};},
+ 'dungeness-crab':b=>{crab(b,{body:'#a8603a',belly:'#f0d8b0',claw:'#b06a42',tip:'#f2e8d8',kind:'edible'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
+ 'common-dab':b=>{fish(b,{x1:.34,H:.16,W:.025,peak:.42,q:.9,ped:.08,top:'#8a7258',side:'#a08868',belly:'#f0e8d8',line:-.6,tail:'round',tailH:.09,finC:'#7a6448',
+  paint:(c,t,up,side)=>cell(t*24,up*6,side*2)>.82?mixC(c,hex('#e8d8b8'),.4):c,
+  dorsal:[{t0:.05,t1:.93,h:.03,shape:'low'}],anal:[{t0:.14,t1:.93,h:.03,shape:'low'}],pect:{t:.18,len:.04},eye:{t:.07,a:.6,r:.019},mouth:{t:.01,len:.025,a:1.3}});return {shadow:'ray'};},
+ 'starry-flounder':b=>{fish(b,{x1:.34,H:.18,W:.026,peak:.42,q:.9,ped:.09,top:'#4f4f32',side:'#62603e',belly:'#f2ecdc',line:-.6,tail:'round',tailH:.1,finC:'#3a3a28',
+  // Bold dark and orange bars on the fins (the "stars" are the rough plates; the bars give the look).
+  paint:(c,t,up,side)=>cell(t*20,up*5,side*2)>.85?mixC(c,hex('#d8c890'),.45):c,
+  dorsal:[{t0:.05,t1:.93,h:.04,shape:'low',c:'#e0a040'}],anal:[{t0:.14,t1:.93,h:.04,shape:'low',c:'#e0a040'}],pect:{t:.18,len:.045},eye:{t:.08,a:.6,r:.02},mouth:{t:.01,len:.03,a:1.3}});return {shadow:'ray'};},
+ 'leopard-shark':b=>{shark(b,{top:'#8a8478',belly:'#eeeae0',H:.09,q:.85,dorsal:.1,dorsalT:.4,d2:.08,d2T:.66,
+  // Black saddles across the back and spots on the flanks.
+  paint:(c,t,up,side)=>up>.25&&t>.18&&t<.9&&Math.sin(t*40)>.5?hex('#2a2622'):up>-.2&&cell(t*30,up*5,side*3)>.82?hex('#3a3430'):c});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},
+ 'atlantic-halibut':b=>{fish(b,{x1:.34,H:.15,W:.03,peak:.42,q:.85,ped:.09,top:'#3f3f30',side:'#55553f',belly:'#f4f2ea',line:-.6,tail:'slight',tailH:.12,finC:'#35352a',
+  paint:(c,t,up,side)=>cell(t*14,up*4,side*2)>.8?mixC(c,hex('#26261c'),.5):c,
+  dorsal:[{t0:.08,t1:.86,h:.035,shape:'low'}],anal:[{t0:.2,t1:.86,h:.035,shape:'low'}],pect:{t:.2,len:.05},eye:{t:.07,a:.6,r:.02},mouth:{t:.0,len:.06,a:1.3}});return {shadow:'ray'};},
  'sandbar-shark':b=>{shark(b,{top:'#9b927c',belly:'#efebdd',H:.11,q:.55,dorsal:.24,dorsalT:.3});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},
  'reef-shark':b=>{shark(b,{top:'#717c79',belly:'#eef0ea',H:.11,q:.6,dorsal:.15});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},
  'dusky-shark':b=>{shark(b,{top:'#454e57',belly:'#e6e9e8',H:.1,q:.7,dorsal:.13,pect:.3,pectWide:.8});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},

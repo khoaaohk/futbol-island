@@ -30,7 +30,7 @@ const straight=(r,f)=>{const pts=[];for(let i=0;i<=8;i++)pts.push({x:3-(3-cat.SH
 const spawn={approach:straight,out:{x:1,z:0}};
 
 // ---- Catalogue + football facts ----
-assert(FISH.length>=10&&FISH.length<=153,'10 shared species + spot specials + the Deep Sea Boat creatures + the night and sunset fish (Oct 15 2026) + the signature species (Nov 6 2026, growing to 150 in three waves)');
+assert(FISH.length>=10&&FISH.length<=167,'10 shared species + spot specials + the Deep Sea Boat creatures + the night and sunset fish (Oct 15 2026) + the signature species (Nov 6 2026, growing to 150 in three waves) + the pond three and the north-west coast fourteen (Nov 13 2026)');
 assert.equal(new Set(FISH.map(f=>f.id)).size,FISH.length,'unique ids');
 const SPOT_IDS=FISH_SPOTS.map(s=>s.id),PRICE={common:[2,4],uncommon:[4,7],rare:[8,11],legendary:[12,20]};
 for(const f of FISH){
@@ -84,7 +84,7 @@ for(const s of FISH_SPOTS){assert(Object.keys(s.weights).every(id=>fishById(id))
 // beaches), and Summit Isle's own 3 (Oct 12-13 2026: Boulder Cove, then Palm Point and Lookout Rocks). Still ONE merged
 // post mesh and ONE float InstancedMesh for all of them (asserted below).
 // Oct 14 2026: 18 — a second deep-sea boat (west of Summit Isle) and Summit Isle's Drop-off Ledge.
-assert.equal(FISH_SPOTS.length,19,'19 fishing spots: 6 main-island posts, 2 deep-sea boats, 3 causeway posts, 3 Coral Cay posts, Summit Isle\'s 4 and (Nov 13 2026) the Stadium Park pond');
+assert.equal(FISH_SPOTS.length,22,'22 fishing spots: 6 main-island posts, 2 deep-sea boats, 3 causeway posts, 3 Coral Cay posts, Summit Isle\'s 4, (Nov 13 2026) the Stadium Park pond and the north-west coast\'s 3');
 {const cayCat=e.load('lib/town/coralCay.ts'),{onLand}=e.load('lib/town/landmass.ts'),world=fs.readFileSync(path.join(ROOT,'lib/town/fishing/fishingWorld.ts'),'utf8');
  const causeway=FISH_SPOTS.filter(s=>s.area==='causeway'),cay=FISH_SPOTS.filter(s=>s.area==='cay');
  assert.equal(causeway.length,3,'three causeway spots');assert.equal(cay.length,3,'three Coral Cay spots');

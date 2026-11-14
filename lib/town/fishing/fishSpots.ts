@@ -29,7 +29,9 @@ export type SpotId='south-pier'|'west-pier'|'harbour-wall'|'north-rocks'|'west-c
  /** Oct 14 2026: a ledge on Summit Isle's south-east shore (see FISH_SPOTS). */
  |'summit-ledge'
  /** Nov 13 2026: the Stadium Park pond (fresh water, see FISH_SPOTS). */
- |'park-pond';
+ |'park-pond'
+ /** Nov 13 2026: the north-west coast round the DRIP FC Stadium (see FISH_SPOTS): two north of the stadium, one south. */
+ |'north-point'|'stadium-rocks'|'sunset-shoals';
 /** What kind of sea animal it is (sharks reel like legendary animals: 10-14 taps). */
 export const RARITY_LABEL:Record<FishRarity,string>={common:'Common catch',uncommon:'Good catch',rare:'Rare catch',legendary:'Legendary catch'};
 
@@ -166,6 +168,18 @@ export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
  // in toward the middle. Fresh water: its own koi, perch and pike (./pondFish.ts), pond-only. Mean catch ≈ 4.1 coins (shore ≈ 4.0). Kept LAST so the signature waves' SHORE_SPOTS slices hold.
  {id:'park-pond',name:'Stadium Park Pond',pond:true,x:+POND_STALL.x.toFixed(2),z:+POND_STALL.z.toFixed(2),buoy:{x:+POND_BUOY.x.toFixed(2),z:+POND_BUOY.z.toFixed(2)},
   weights:{},story:'The still pond in Stadium Park, a short walk from the DRIP FC Stadium. Koi and perch nose round the middle, and now and then an eel slips past the rim.'},
+ // ---- The north-west coast round the DRIP FC Stadium (Nov 13 2026, owner: "three new fishing spots … two north of the stadium,
+ // one south"). Each stands 5 m up the sand from the waterline (a shore point of shoreline.ts ISLAND_SHORE, half way along a
+ // segment: 166, 174 and 147) and casts square out to sea, ~25 m. Placed clear of the trails' beach ends (north -152,-200, west
+ // -320,22, south-west -261,119), the West Beach palms (10+ m), the orchards, the pond and the plaza flags; tests/fishing-northwest.cjs
+ // checks the shore, the casts and the clearances. Each has its own spot-only species (./northWestFish.ts) and legend; mean catch
+ // ≈ the shore's 4.0. Appended after the pond, so every older index (and the signature waves' SHORE_SPOTS slices) holds.
+ {id:'north-point',name:'North Point',x:-306.5,z:-171.9,buoy:{x:-328.6,z:-183.6},
+  reef:'point-boulders',weights:{},story:'A rocky point on the island’s north-west corner, past the DRIP FC Stadium’s north stand. Cold, clear water swirls round the rocks, where big-headed cabezon and long-lived rockfish hide.'},
+ {id:'stadium-rocks',name:'Stadium Rocks',x:-211.6,z:-213.8,buoy:{x:-215.1,z:-238.5},
+  reef:'kelp-edge',weights:{},story:'Rocks on the north shore, straight out from the DRIP FC Stadium, where a kelp forest sways at the edge of deeper water. Kelp bass and sheephead patrol the fronds, and a king salmon sometimes cruises past.'},
+ {id:'sunset-shoals',name:'Sunset Shoals',x:-290.5,z:95.9,buoy:{x:-309.2,z:112.4},
+  reef:'sunset-sand',weights:{},story:'Shallow sandy shoals on the south-west shore, south of the stadium, where the sun sets over the sea. Flatfish lie hidden in the sand, crabs scuttle about, and leopard sharks glide over the shallows.'},
 ];
 
 /**
