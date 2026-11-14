@@ -240,7 +240,7 @@ export default function BootStudio({onClose,onBuy,owned}:Props){
   case ST.shape:return <>
    <div className={styles.modelCard} aria-live="polite"><BootGlyph d={design} size={112}/><div><h3>{model.label} <small>{model.era}</small></h3><p>{model.blurb}</p></div></div>
    <Section title="Start from a look" hint="A famous boot shape in a fresh colourway">
-    <div className={styles.presets}>{PRESETS.map(p=><button key={p.id} type="button" className={styles.preset} aria-label={`${p.label}, ${p.sub}`} onClick={()=>applyPreset(p.id)}><BootGlyph d={p.design} size={96}/><span>{p.label}</span><small>{p.sub}</small>{p.club?<ClubTag/>:null}</button>)}</div>
+    <div className={styles.presets}>{PRESETS.map(p=><button key={p.id} type="button" className={styles.preset} aria-label={`${p.label}, ${p.sub}`} onClick={()=>applyPreset(p.id)}><BootGlyph d={p.design} size={96}/><span>{p.label}</span><small>{p.sub}</small>{p.club?<ClubTag compact/>:null}</button>)}</div>
    </Section>
    <Section title="Just the shape" hint="Keeps your colours">
     <div className={styles.modelRow}>{MODELS.map(m=><button key={m.id} type="button" className={styles.modelTile} aria-pressed={design.model===m.id} onClick={()=>pickModel(m.id)}>

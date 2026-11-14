@@ -266,7 +266,7 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    <h3 className={studioSectionTitle}>Start from a design</h3>
    <div className={styles.presets}>
     {PRESETS.map(p=>{const make=()=>({...p.design,name:d.name,art:d.art});return <button key={p.id} type="button" className={styles.preset} aria-pressed={sameJersey(make(),d)} {...pv(make)} onClick={()=>{pulseNext.current=true;dispatch({type:'set',design:make()});}}>
-     <ShirtThumb design={p.design} size={84}/><span>{p.label}</span>{p.design.club?<ClubTag/>:null}</button>;})}
+     <ShirtThumb design={p.design} size={84}/><span>{p.label}</span>{p.design.club?<ClubTag compact/>:null}</button>;})}
    </div>
   </section>
   {savedSlots.length>0&&<section className={styles.group}>

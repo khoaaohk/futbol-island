@@ -187,4 +187,12 @@ t('heat: nothing per frame; the bean marks are one shared texture; the club pict
   assert.match(read('lib/graphics/shopBallSkin.ts'), /layClub\(d,g,map/);
 });
 
+t('QA Nov 14: the preset tiles use the compact label (words over the tag), so it never breaks one word per line', () => {
+  for (const f of ['components/shop/BootStudio.tsx', 'components/shop/JerseyStudio.tsx']) assert.match(read(f), /<ClubTag compact\/>/, f);
+  const label = read('components/shop/ClubLabel.tsx'), css = read('components/shop/ClubLabel.module.css');
+  assert.match(label, /<span className=\{styles\.text\}>\{CLUB_LABEL\}<\/span>/);
+  assert.match(css, /\.compact\.compact\{display:flex;flex-direction:column[^}]*max-width:100%/);
+  assert.match(css, /\.compact\.compact \.text\{white-space:normal;text-wrap:balance\}/);
+});
+
 Promise.resolve().then(() => console.log(`dripfc-kit: ${n} checks passed`));
