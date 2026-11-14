@@ -143,3 +143,6 @@
 .bottom .endActions>button:nth-child(2),.bottom .endActions>button:nth-child(2):hover{background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge)}
 .bottom .endActions>button:nth-child(2):active{box-shadow:0 1px 0 var(--btn-mint-edge)}
 .bottom .quizTools button.camera{flex:0 0 var(--btn-icon);width:var(--btn-icon);height:var(--btn-icon);min-width:var(--btn-icon);padding:0;border-radius:50%}
+/* QA Nov 14 2026: at 320 px the centred "Choose plays" pill touched Done (≈1 px). A touch narrower and nudged left on the
+   smallest phones; the camera button keeps 20 px of air on the left. */
+@media(max-width:350px){.corners .choose,.corners button.choose[data-navigation]{--navigation-width:132px;left:calc(50% - 12px)}}

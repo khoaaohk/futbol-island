@@ -5,6 +5,7 @@ import {cleanLineup,DEFAULT_FORMATION,emptyLineup,encodeLineup,lineupSheet,MAX_B
 import {fieldItems,GRASS,INK,toSvgString} from '@/lib/site/tools/sheet';
 import SheetSvg,{SheetItem} from '@/lib/site/tools/SheetSvg';
 import t from './tools.module.css';
+import {LINEUP_FORMAT_EVENT} from '@/lib/site/tools/lineupHeading';
 /**
  * The lineup builder (Nov 10 2026; /tools/soccer-lineup-builder and its format landings). A client component, the allowed
  * exception to "no client JavaScript on reading pages" because it is a tool the coach drives. It stays cool (AGENTS.md, phone
@@ -92,6 +93,7 @@ export default function LineupBuilder({shapes,initial,lockFormat}:{shapes:readon
  const VW=shape.format==='futsal'?280:340,spec=PITCH[shape.format],VH=Math.round((VW-24)*spec.l/spec.w)+24;
  const field=useMemo(()=>fieldItems(shape.format,{x:0,y:0,w:VW,h:VH},{theme:GRASS,pad:12}),[shape.format,VW,VH]);
  const R=15,format=shape.format;
+ useEffect(()=>{window.dispatchEvent(new CustomEvent(LINEUP_FORMAT_EVENT,{detail:format}));},[format]);// the landing's h1 follows (QA Nov 14 2026)
  return <div className={t.tool} data-tool="lineup">
   <div className={`${t.panel} ${t.noPrint}`}>
    <div className={t.grid}>

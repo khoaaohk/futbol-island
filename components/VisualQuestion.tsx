@@ -36,7 +36,7 @@ function MiniPitch({lesson,frame,extra=[],include=[],label,thumb,targets,after,s
  const arrow=useId().replace(/:/g,'');
  const pose=useMemo(()=>framePose(lesson,frame),[lesson,frame]);
  const view=useMemo(()=>frameView(lesson,frame,pose,extra,include),[lesson,frame,pose,extra,include]);
- const g=PITCH[lesson.fmt]??PITCH['11v11'],unit=Math.max(view.w,view.h*1.1)*(thumb?.055:.036),focus=new Set(frame.focus??[]);
+ const g=PITCH[lesson.fmt]??PITCH['11v11'],unit=Math.max(view.w,view.h*1.1)*(thumb?.055:.036),focus=new Set(frame.focus??[]),labelled=new Set((frame.marks??[]).filter(m=>m.kind==='label'&&m.text&&typeof m.from==='string').map(m=>m.from as string))/* QA Nov 14 2026: a player with its own label mark gets no second name chip */;
  const box=(top:boolean)=>{const y=top?4:396,s=top?1:-1,x0=135-g.boxW/2,x1=135+g.boxW/2,d=g.boxD;
   return g.round?`M${x0} ${y}Q${x0} ${y+s*d} ${135-g.goalW/2} ${y+s*d}H${135+g.goalW/2}Q${x1} ${y+s*d} ${x1} ${y}`:`M${x0} ${y}V${y+s*d}H${x1}V${y}`+(g.smallD?`M${135-g.smallW!/2} ${y}V${y+s*g.smallD}H${135+g.smallW!/2}V${y}`:'');};
  const desc=label??describeFrame(lesson,frame,pose);
@@ -50,7 +50,7 @@ function MiniPitch({lesson,frame,extra=[],include=[],label,thumb,targets,after,s
   <Marks marks={frame.marks??[]} pose={pose} unit={unit} arrow={arrow}/>
   {targets?.(pose,unit)}
   <g pointerEvents="none">{[...pose.positions].map(([id,p])=>{const a=[...lesson.offense,...lesson.defense].find(x=>x.id===id);if(!a)return null;const gold=lesson.offense.some(x=>x.id===id),code=short(a.label);
-   return <g key={id} transform={`translate(${p.x} ${p.y})`}>{focus.has(id)&&<circle r={unit*1.45} fill="none" stroke="#fff2b9" strokeWidth={unit*.22}/>}<circle r={unit} fill={gold?'#f7cb69':'#4f7f98'} stroke="#fff9e5" strokeWidth={unit*.13}/><text textAnchor="middle" y={unit*.3} fontSize={unit*(code.length>2?.72:.9)} fontWeight="800" fill={gold?'#243f36':'#fff'}>{code}</text>{focus.has(id)&&!thumb&&<Chip x={0} y={-unit*2.35} text={a.label} unit={unit}/>}</g>;})}
+   return <g key={id} transform={`translate(${p.x} ${p.y})`}>{focus.has(id)&&<circle r={unit*1.45} fill="none" stroke="#fff2b9" strokeWidth={unit*.22}/>}<circle r={unit} fill={gold?'#f7cb69':'#4f7f98'} stroke="#fff9e5" strokeWidth={unit*.13}/><text textAnchor="middle" y={unit*.3} fontSize={unit*(code.length>2?.72:.9)} fontWeight="800" fill={gold?'#243f36':'#fff'}>{code}</text>{focus.has(id)&&!thumb&&!labelled.has(id)&&<Chip x={0} y={-unit*2.35} text={a.label} unit={unit}/>}</g>;})}
    {(()=>{const near=[...pose.positions.values()].some(p=>Math.hypot(p.x-pose.ball.x,p.y-pose.ball.y)<unit*1.2),b=near?{x:pose.ball.x+unit*.95,y:pose.ball.y+unit*.75}:pose.ball;return <circle cx={b.x} cy={b.y} r={unit*.48} fill="#fff" stroke="#243f36" strokeWidth={unit*.14}/>;})()}</g>
   {after?.(pose,unit)}
  </svg>;
