@@ -177,11 +177,11 @@ ok('Town wiring: the cluster swap, the parked ball, no kicks in the sea, the spl
  assert.match(town,/groundY=water\.state\.rootY;/,'the root lowers onto the shelf / the swim line');
  assert.match(town,/swim:water\.pose\.w>0\?water\.pose:undefined/,'the rig gets the swim pose');
  assert.match(town,/camTarget\.y\+=water\.state\.camDip;/,'the camera dips with the splash');
- assert.match(town,/camera\.position\.y<WATER_LEVEL\+\.25\)camera\.position\.y=WATER_LEVEL\+\.25;/,'the eye never goes under the sea');
+ assert.match(town,/camera\.position\.y<waterY\+\.25\)camera\.position\.y=waterY\+\.25;/,'the eye never goes under the sea');
  assert.match(town,/<SwimLessonToast blocked=\{toastBlocked\}\/>/);assert.match(town,/data-water-under hidden/);
  assert.match(town,/\$\{waterView\.dropIn\?DROP_IN_LABEL\+'\. ':''\}Change ride/,'the travel button says Drop in in its accessible name (icon only on screen, user Oct 15 2026)');assert.doesNotMatch(town,/<small>\{DROP_IN_LABEL\}<\/small>/,'no Drop in caption');
  // The sim: the walker's step takes the water test only after the ground says blocked (no extra cost on land).
- const sim=fs.readFileSync('lib/town/simulation.ts','utf8');assert.match(sim,/groundBlocked\(x,z,obstacles,collisionRadius\)&&!\(water&&water\(x,z\)\)/);
+ const sim=fs.readFileSync('lib/town/simulation.ts','utf8');assert.match(sim,/\(groundBlocked\(x,z,obstacles,collisionRadius\)\|\|mode!=='walk'&&nearPond\(x,z\)&&pondDepthAt\(x,z\)>POND_DEPTH\.ride\)&&!\(water&&water\(x,z\)\)/);/* Nov 13 2026: a ride also stops at the park pond's deep water */
  const jump=fs.readFileSync('lib/town/rooftopJump.ts','utf8');assert.match(jump,/q\.blockedAt\?\.\(x,z\) && !q\.canSplash\?\.\(x,z\)/);
  const jet=fs.readFileSync('lib/town/jetpackActions.ts','utf8');assert.match(jet,/if\(env\.splash\?\.\(p\.x,p\.z\)\)\{const drop=state\.startHeight,canopy=canopyCut;reset\(\);return\{height:floor,landed:true,splash:true,drop,canopy\};\}/);
 });
@@ -222,9 +222,9 @@ ok('the splash: its size by drop and entry, the burst from the ring pool, a cue 
  for(const [event,detail] of H.SURFACE_CUES)assert(event==='fi2-path-cue'&&pathCues.has(detail));
  // The Town wiring: the crown + burst sized by the entry, the thud, the cues, a DOM event a page probe can count; drips on surfacing.
  const town=fs.readFileSync('components/Town.tsx','utf8');
- assert.match(town,/const size=\(\.6\+ev\.splash\*\.9\)\*SPLASH_SCALE\[water\.state\.entry\];ballEffects\.splashDown\(location\.x,WATER_LEVEL,location\.z,size,reduced\);/);
+ assert.match(town,/const size=\(\.6\+ev\.splash\*\.9\)\*SPLASH_SCALE\[water\.state\.entry\];ballEffects\.splashDown\(location\.x,waterY,location\.z,size,reduced\);/);
  assert.match(town,/playCues\(SPLASH_CUES\[water\.state\.entry\]\);\/\*[^*]*\*\/document\.dispatchEvent\(new CustomEvent\('fi2-water-splash',/);
- assert.match(town,/if\(ev\.surfaced\)\{ballEffects\.drips\(location\.x,WATER_LEVEL,location\.z,reduced\);playCues\(SURFACE_CUES\);\}/);
+ assert.match(town,/if\(ev\.surfaced\)\{ballEffects\.drips\(location\.x,waterY,location\.z,reduced\);playCues\(SURFACE_CUES\);\}/);
  assert.match(town,/for\(const t of cueTimers\)clearTimeout\(t\);cueTimers\.clear\(\);/,'cue timers cleared on unmount');
  // The pool: the splash borrows the five rings, the 14 ghost spheres and the 8 charge spheres; reduced motion = one ring.
  const fx=fs.readFileSync('lib/graphics/ballEffects.ts','utf8');assert.match(fx,/splashDown\(x:number,y:number,z:number,size:number,reduced:boolean\)\{/);assert.match(fx,/crown\(true,\.9\*s,1\.3\*s,\.03,0\);\n   if\(reduced\)return;/,'reduced motion: one foam ring, then out');

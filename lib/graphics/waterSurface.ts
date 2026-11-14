@@ -69,6 +69,18 @@ export function swashClock(t:number){return t/SWASH_PERIOD+SWASH_WARP.amp*Math.s
 /** The clock wraps here: a whole number of swash cycles (625) and of every scroll (all rates are multiples of 1/500 per second), so the wrap never jumps. */
 export const WATER_WRAP=3500;
 const empty=new T.DataTexture(new Uint8Array([0,0,0,0]),1,1);empty.needsUpdate=true;
+/**
+ * The sea's look, shared with Stadium Park's pond (Nov 13 2026, owner: "tie it to the ocean so the water is the same colour"):
+ * the ocean material's base (world.ts oceanMat) and the shader's water colours (the lagoon turquoise at the waterline, the clear
+ * aqua over the first metres, the open sea's deep blue, the ripple tile's tint). The pond's water (pondWater.ts) is built from the
+ * same numbers and the same ripple texture on the same clock, so a change here changes both.
+ */
+export const SEA_WATER_LOOK={color:'#368eb3',emissive:'#185a94',emissiveIntensity:.3,roughness:.52,metalness:.02} as const;
+export const SEA_TINT={lagoon:[.04,.62,.7],aqua:[.02,.44,.64],deep:[.015,.2,.47],rippleTint:[.855,.913,1]} as const;
+const v3=(c:readonly number[])=>`vec3(${c.map(v=>v.toFixed(3)).join(',')})`;
+export const SEA_GLSL={lagoon:v3(SEA_TINT.lagoon),aqua:v3(SEA_TINT.aqua),deep:v3(SEA_TINT.deep),rippleTint:v3(SEA_TINT.rippleTint)} as const;
+/** The ripple tile's scale on the ocean (texture repeat 44 per 1400 m of UV: waterRipples.ts, world.ts) per world metre, and its drift. */
+export const SEA_RIPPLE_PER_M=44/1400;
 export const WATER_UNIFORMS={
  uWaterTime:{value:0},
  /** Waves elapsed (swashClock(uWaterTime)), set with the clock. */uSwashClock:{value:0},
@@ -348,7 +360,7 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     // chop's heading changes across the sea from the same single fetch.
     float chopF=clamp(seaN+s.b-.5,0.,1.);vec4 rippleA=texture2D(map,rUv+uWaterTime*vec2(.014,.006));float rp=mix(rippleA.r,rippleA.g,chopF);
     if(uWaterDetail>1.5){vec4 rippleB=texture2D(map,vec2(rUv.y,-rUv.x)*1.37+uWaterTime*vec2(-.008,.012));rp=max(rp,mix(rippleB.g,rippleB.r,chopF));}
-    ripple=vec4(mix(vec3(.855,.913,1.),vec3(1.),rp),1.);// the old #eef5ff-to-white tile tint
+    ripple=vec4(mix(${SEA_GLSL.rippleTint},vec3(1.),rp),1.);// the old #eef5ff-to-white tile tint
     // The tile repeats every 32 m: patches of it fade out on the 14 m noise, so its strokes never line up into long streaks; glassy
     // lanes keep only a quarter of the chop.
     diffuseColor.rgb*=mix(vec3(.95),ripple.rgb,(.3+.7*smoothstep(.3,.7,s.g*.45+s.b*.4+seaN*.5-.15))*rough);
@@ -356,14 +368,14 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     {
      // Depth: pale sandy shallows at the waterline, turquoise over the first metres, back to the open-sea teal by ~24 m.
      // Tropical water (Oct 26 2026): a clearer lagoon turquoise (#3fd8d0-ish) at the edge into a clear aqua, then cerulean (same ops).
-     vec3 shallowC=mix(vec3(.04,.62,.7),vec3(.02,.44,.64),smoothstep(.3,5.,dd));
+     vec3 shallowC=mix(${SEA_GLSL.lagoon},${SEA_GLSL.aqua},smoothstep(.3,5.,dd));
      float nearK=1.-smoothstep(3.,24.,dd);
      diffuseColor.rgb=mix(diffuseColor.rgb,shallowC*(.92+.08*ripple.r),nearK*.85);
      // Open sea (Oct 19 2026 audit, Tide Bound "deeper blue past the drop-off"): past ~40 m the teal sinks toward a deeper blue. 2 ALU.
      // Nov 10 2026: broad wind patches (slow, warped lighter/darker lanes ~130 m apart, out past ~15 m; 2 sin + ~9 ALU, every tier),
      // folded into the open-sea factor so they cost no extra smoothstep.
      {float sea=smoothstep(25.,110.,dd);
-      diffuseColor.rgb=mix(diffuseColor.rgb,vec3(.015,.2,.47),sea*.55)*(1.+.075*wp*min(1.,dd*.04-.6));}
+      diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.deep},sea*.55)*(1.+.075*wp*min(1.,dd*.04-.6));}
      // Nov 10 2026: night water, a moonlit blue instead of the day teal lit dimly (uniform set per time-of-day change; 1 ALU).
      diffuseColor.rgb*=uWaterNight;
      float crest=0.;

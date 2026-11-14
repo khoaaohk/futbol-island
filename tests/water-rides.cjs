@@ -247,7 +247,7 @@ ok('heat + wiring: the scan on the probe tick only, the ride step only while rid
  const src=read('lib/town/water/animalRides.ts');
  assert(!/setTimeout|setInterval|requestAnimationFrame|new T\.|from 'three'/.test(src),'pure: no timers, loops or three.js');
  const town=read('components/Town.tsx');
- assert(/animalRides\.scan\(dt,location\.x,location\.z,water\.inWater&&water\.state\.phase==='swim'\)/.test(town),'the scan runs only while swimming (10 Hz inside)');
+ assert(/animalRides\.scan\(dt,location\.x,location\.z,water\.inWater&&water\.state\.phase==='swim'&&!waterProbe\.pond\)/.test(town),'the scan runs only while swimming in the sea (10 Hz inside; Nov 13 2026: not in the park pond)');
  assert(/if\(animalRides\.riding&&water\.swimming&&rideRef\.current==='walk'\)\{rideEnded\(animalRides\.step\(dt,location,velocity,rideSteer,waterWalk\.allow,waterProbe\.d,waterProbe\.isLand\)\)/.test(town),'the ride drives the movement (with the dry-land test for the hull probe)');
  assert(/pose\.kind='hold'/.test(town)&&/s\.kind==='hold'/.test(read('lib/graphics/swimPose.ts')),'the hold-on pose');
  assert(/pose\.kind='hold';pose\.effort=rs\.roll;pose\.fast=0;ev\.wake=false;ev\.stroke=0;/.test(town),'the swim strokes\' wake is off while riding (the ride has its own)');

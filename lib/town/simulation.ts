@@ -1,5 +1,6 @@
 import {onFerryBoarding} from './ferryBoarding';
 import {onIsland} from './shoreline';
+import {nearPond,pondDepthAt,POND_DEPTH} from './westParkLayout';
 import {onCayLand,CAY_FLIGHT_BOUNDS} from './coralCay';
 // Summit Isle (Oct 12 2026): walkable like the cay; its sea sets the world's south-east corner.
 import {onSummitLand,onSummitGround,SUMMIT_FLIGHT_BOX} from './summitIsle';
@@ -177,7 +178,8 @@ export function stepPlayer(position: {x: number; z: number}, velocity: {x: numbe
   // Even a thin fence cannot be skipped at moped speed after a long frame.
   const steps = Math.max(1, Math.ceil(Math.hypot(velocity.x,velocity.z)*dt/.15));
   let normal:{x:number;z:number}|null|undefined;
-  const hit=(x:number,z:number)=>mode==='jetpack'?flightBlocked(x,z):groundBlocked(x,z,obstacles,collisionRadius)&&!(water&&water(x,z));
+  // A ground ride stops at the park pond's deep water (Nov 13 2026: past its wadeable shelf), as at the sea's edge; on foot you wade in.
+  const hit=(x:number,z:number)=>mode==='jetpack'?flightBlocked(x,z):(groundBlocked(x,z,obstacles,collisionRadius)||mode!=='walk'&&nearPond(x,z)&&pondDepthAt(x,z)>POND_DEPTH.ride)&&!(water&&water(x,z));
   for (let i=0; i<steps; i++) {
     const nx = position.x+velocity.x*dt/steps, nz = position.z+velocity.z*dt/steps;
     if (mode==='jetpack') {

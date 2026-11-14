@@ -19,8 +19,17 @@ const L=load('lib/town/westParkLayout.ts'),O=load('lib/town/stadiumOrchard.ts'),
 
 // ---- 1. Placement, in the real built town.
 const scene=new T.Scene(),world=load('lib/town/world.ts').buildTown(scene),trees=world.westPark.orchard;
-assert(trees.length>=10&&trees.length<=20,`a few small orchards (${trees.length} trees)`);
-const clusters=new Set(trees.map(t=>O.ORCHARD_CENTRES.findIndex(c=>Math.hypot(c.x-t.x,c.z-t.z)<10)));assert(clusters.size>=3&&!clusters.has(-1),'in several clusters by the trails and the plaza');
+assert(trees.length>=28&&trees.length<=32,`about double the first 14: small orchards round the bowl and the park (${trees.length} trees)`);
+// Save compatibility (Nov 13 2026): the first 14 trees keep their ids, forms, fruit and order (a save's picks are keyed by id); the
+// newer orchards' trees are appended after them, with ids of their own.
+{const first=['tree--122--71','tree--127--71','tree--117--71','tree--124--75','tree--124-13','tree--129-13','tree--119-13','tree--126-9','tree--112-99','tree--117-99','tree--187-82','tree--192-82','tree--189-78','tree--189-86'];
+ assert.equal(trees.slice(0,14).map(t=>t.id).join(),first.join(),'the first 14 trees keep their ids and order');
+ assert.equal(trees.slice(0,14).map(t=>t.fruit+'/'+t.form).join(),O.ORCHARD_LEGACY.map(t=>t.fruit+'/'+t.form).join(),'and their fruit and forms');
+ assert.equal(new Set(trees.map(t=>t.id)).size,trees.length,'every id is unique');
+ for(const t of trees.slice(0,14)){const l=O.ORCHARD_LEGACY.find(u=>u.id===t.id);assert(Math.hypot(l.x-t.x,l.z-t.z)<8,t.id+': replanted (if at all) near its old spot');}
+ const sides=new Set(trees.map(t=>Math.abs(t.x-L.STADIUM.x)>Math.abs(t.z-L.STADIUM.z)*.8?(t.x<L.STADIUM.x?'west':'east'):(t.z<L.STADIUM.z?'north':'south')));
+ assert(sides.size>=4,'orchards on every side of the stadium: '+[...sides]);}
+const clusters=new Set(trees.map(t=>O.ORCHARD_CENTRES.findIndex(c=>Math.hypot(c.x-t.x,c.z-t.z)<10)));assert(clusters.size>=8&&!clusters.has(-1),'in several clusters by the trails and the plaza');
 for(const t of trees){const w=`${t.id}`;
  assert(!L.onParkPaving(t.x,t.z,2),w+': off the paths and paving');assert(L.onGrass(t.x,t.z),w+': on the lawn');
  for(const [sx,sz] of L.PARK_SIGNS)assert(Math.hypot(t.x-sx,t.z-sz)>=8,w+': clear of the signs');

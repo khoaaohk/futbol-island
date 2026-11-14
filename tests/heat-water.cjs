@@ -22,7 +22,7 @@ ok('no loops, timers, targets, audio contexts, pools or materials in the water c
  const toast=read('components/SwimLessonToast.tsx');assert(!/setInterval|requestAnimationFrame/.test(toast));assert.equal((toast.match(/setTimeout\(/g)||[]).length,2,'one wait + one hide timeout');
  // The ripples reuse the ball effects' ring pool: no new pool anywhere.
  const fx=read('lib/graphics/ballEffects.ts');assert.match(fx,/ripple\(x:number,y:number,z:number,power:number,size=1\)\{const ring=rings\[cursor\+\+%rings\.length\];/);assert.match(fx,/rings=Array\.from\(\{length:5\}/,'the ring pool is still five rings (no new materials)');
- const town=read('components/Town.tsx');assert.match(town,/ballEffects\.ripple\(location\.x,WATER_LEVEL,location\.z,ev\.ripple\)/);assert.match(town,/ballEffects\.splashDown\(location\.x,WATER_LEVEL,location\.z,size,reduced\)/);
+ const town=read('components/Town.tsx');assert.match(town,/ballEffects\.ripple\(location\.x,waterY,location\.z,ev\.ripple\)/);assert.match(town,/ballEffects\.splashDown\(location\.x,waterY,location\.z,size,reduced\)/);/* waterY: the sea's level or the park pond's (Nov 13 2026) */
  // The splash-down's instance budget: the pool's own 5 rings, 14 ghost spheres and 8 charge spheres, the same 6 materials as
  // before, a burst that ends itself after SPLASH_BURST_S (< 1 s) and leaves nothing visible; reduced motion: one ring.
  assert.match(fx,/ghosts=Array\.from\(\{length:14\}/);assert.match(fx,/energy=Array\.from\(\{length:8\}/);assert.equal((fx.match(/new T\.MeshBasicMaterial/g)||[]).length,7,'no new materials for the splash (the same five MeshBasicMaterial literals as before, plus the one swim-ripple pool literal, Oct 19 2026, and the live-match kick ribbon\'s one shared material, Nov 5 2026)');
@@ -39,7 +39,7 @@ ok('no loops, timers, targets, audio contexts, pools or materials in the water c
  assert.match(town,/if\(waterTintUntil&&now>=waterTintUntil\)\{waterTintUntil=0;const tint=uiElement<HTMLElement>\('\[data-water-under\]'\);if\(tint\)\{tint\.hidden=true;/);
  // Decorative ripples obey the fishingLife-style gate (reduced / static ambience / governor slow / tier ≥ 2); splash rings never do.
  assert.match(town,/const waterFxOn=\(\)=>!\(reduced\|\|heat\.staticAmbience\|\|heat\.governor\.last\.state==='slow'\)&&heat\.tier<2;/);
- assert.match(town,/else if\(ev\.ripple>0&&!animalRides\.riding\/\* riding: the ride's own wake on the animal \*\/&&\(ev\.surfaced\|\|waterFxOn\(\)&&water\.state\.phase!=='swim'\)\)\{ballEffects\.ripple/);
+ assert.match(town,/else if\(ev\.ripple>0&&!animalRides\.riding\/\* riding: the ride's own wake on the animal \*\/&&!\(waterProbe\.pond&&water\.state\.phase==='wade'\)\/\* the pond's own footstep splashes \(parkPond\.ts\) \*\/&&\(ev\.surfaced\|\|waterFxOn\(\)&&water\.state\.phase!=='swim'\)\)\{ballEffects\.ripple/);
 });
 
 ok('treading water for 4 s with no input engages the 20 fps idle cap; input restores it; wading never caps',()=>{

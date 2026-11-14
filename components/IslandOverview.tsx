@@ -18,7 +18,7 @@ import {JOBS} from '@/lib/town/jobs/jobCatalog';
 import {EAST_PIER,JETTY_PATH,PIER_TARGET_SPOTS} from '@/lib/town/eastPier';
 import {placeJobMarkers,placeGashaponMarkers,capsuleGlyph} from '@/lib/town/mapMarkers';
 import {islandGashaponMachines} from '@/lib/gashapon/machines';
-import {STADIUM,STADIUM_ARRIVAL,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_GROVES,BOWL_APRON,PLAZA_LABEL,TRAIL_WIDTH,parkPathLines} from '@/lib/town/westParkLayout';
+import {STADIUM,STADIUM_ARRIVAL,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_GROVES,BOWL_APRON,PLAZA_LABEL,TRAIL_WIDTH,parkPathLines,pondEdge} from '@/lib/town/westParkLayout';
 import {STANDS,standBack,standRect,standSpans} from '@/lib/town/stadiumSeats';
 import SummitIsleMap from './SummitIsleMap';
 import ZiplineMapMark from './ZiplineMapMark';
@@ -33,6 +33,8 @@ const PIER=EAST_PIER,JETTY_POINTS=JETTY_PATH.filter((p,i)=>p.x>=EAST_PIER.wallX&
 const svgPoint=(p:{x:number;z:number})=>`${Math.round(p.x*100)/100},${Math.round(p.z*100)/100}`;
 /** West Stadium (Nov 12 2026): Stadium Park's paths as fixed-precision polylines (static, built once). */
 const PARK_PATH_POINTS=parkPathLines().map(line=>line.map(([x,z])=>svgPoint({x,z})).join(' '));
+/** The park pond's own outline (westParkLayout.ts pondEdge, Nov 13 2026: lobes and a cove, no longer an ellipse), 72 points. */
+const POND_OUTLINE=Array.from({length:72},(_,k)=>{const p=pondEdge(k/72*Math.PI*2);return svgPoint({x:p.x,z:p.z});}).join(' ');
 // Coral Cay (coralCay.ts): its flight corridor, cay and sandbars share the main island's margin styling. Static strings, built once.
 const SANDBAR_POINTS:Record<string,string>=Object.fromEntries(SANDBARS.map(s=>[s.id,s.outline.map(svgPoint).join(' ')]));
 const CAY_POINTS=CAY_SHORE.map(svgPoint).join(' '),CAUSEWAY_POINTS=CAUSEWAY_PATH.map(svgPoint).join(' '),BEACH_POINTS=CAUSEWAY_BEACHES.map(b=>b.map(svgPoint).join(' '));
@@ -138,7 +140,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
        each trail ends on the beach, the plaza, the ring or another trail, so the round caps sit inside the paving they meet. */}
    <rect aria-label="Stadium apron" data-west-stadium="apron" x={BOWL_APRON.x-BOWL_APRON.w/2} y={BOWL_APRON.z-BOWL_APRON.d/2} width={BOWL_APRON.w} height={BOWL_APRON.d} rx={BOWL_APRON.r} fill="#eddfbb"/>
    {PARK_PATH_POINTS.map((pts,i)=><polyline key={'park-path'+i} data-park-path={i} points={pts} fill="none" stroke="#eddfbb" strokeWidth={TRAIL_WIDTH} strokeLinecap="round" strokeLinejoin="round"/>)}
-   <ellipse aria-label="Lily pond" cx={PARK_POND.x} cy={PARK_POND.z} rx={PARK_POND.rx} ry={PARK_POND.rz} fill="#7fbcd2" stroke="#cdbb93" strokeWidth="2.2"/>
+   <polygon aria-label="Lily pond" data-park-pond="" points={POND_OUTLINE} fill="#7fbcd2" stroke="#cdbb93" strokeWidth="2.2" strokeLinejoin="round"/>
    <rect aria-label="Plaza" x={STADIUM_PLAZA.minX} y={STADIUM_PLAZA.minZ} width={STADIUM_PLAZA.maxX-STADIUM_PLAZA.minX} height={STADIUM_PLAZA.maxZ-STADIUM_PLAZA.minZ} rx="4" fill="#eddfbb"/>
   </g>
   <g aria-label="Stadium" data-west-stadium="bowl">

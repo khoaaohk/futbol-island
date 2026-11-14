@@ -28,7 +28,7 @@ assert(core.inPondWater(s.buoy.x,s.buoy.z),'the idle float is on the pond');
  const A=aim.aimArea(s,s);let r=1;const rand=()=>(r=(r*16807)%2147483647)/2147483647;for(let i=0;i<200;i++){const q=aim.quickCast(A,rand);assert(core.inPondWater(q.x,q.z),'every quick cast lands in the pond');}}
 // The pond's water is the only island water: the plaza, the park lawn and the rim stay land; the sea is unchanged.
 assert(core.inOpenWater(L.PARK_POND.x,L.PARK_POND.z)&&core.inOpenWater(-400,0),'the pond and the sea are open water');
-for(const [x,z] of [[-96,-30],[-150,40],[s.x,s.z],[L.PARK_POND.x+L.PARK_POND.rx+.5,L.PARK_POND.z]])assert(!core.inOpenWater(x,z),`(${x}, ${z}) is not open water`);
+for(const [x,z] of [[-96,-30],[-150,40],[s.x,s.z],[L.pondEdge(0,.5).x,L.pondEdge(0,.5).z]])assert(!core.inOpenWater(x,z),`(${x}, ${z}) is not open water`);
 // 2. The catch: koi, perch (commons) and pike (uncommon), pond-only; shore-level mean catch; at least the legend-clue kinds; its legend.
 {const ids=Object.keys(s.weights).sort();assert.deepEqual(ids,['koi','perch','pike'],'the pond table: '+ids);
  for(const id of ids){const f=cat.fishById(id);assert(f.spots.length===1&&f.spots[0]==='park-pond'&&f.group==='fish'&&f.story&&/^Fun fish fact: .+ Football: /.test(f.club.fact)&&f.club.fact.includes(f.club.entity.name),`${id}: pond-only, a split fun-fish + football fact naming its entity`);}

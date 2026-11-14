@@ -8,8 +8,9 @@
  * (components/Town.tsx) owns movement and the rig; this only decides what the water is doing to the player.
  * Tests: tests/water-swim.cjs, tests/heat-water.cjs.
  */
-import {DEPTH_MAX,SWIM_ROOT_DEPTH,SWIM_ROOT_Y,SWIM_SPEED,WATER_ROOT_BLEND,wadeRootY,wadeSpeedScale,wadeZone,waterDepthAt,type WadeZone,type WaterProbe} from './waterDepth';
+import {DEPTH_MAX,SWIM_ROOT_DEPTH,SWIM_ROOT_Y,SWIM_SPEED,WATER_ROOT_BLEND,WADE_FOOT_Y,wadeSpeedScale,wadeZone,waterDepthAt,type WadeZone,type WaterProbe} from './waterDepth';
 import type {SwimRigPose,EntryStyle} from '../../graphics/swimPose';
+import {pondDepthAt,POND_DEPTH,POND_Y} from '../westParkLayout';
 import {bankFor,buoyancyRate,climbPitch,diveArcPitch,pitchToward,strokeRate,surfaceBob,wrapAngle} from './swimMotion';
 
 export type WaterPhase='land'|'wade'|'swim'|'under'|'surface';
@@ -53,6 +54,11 @@ export const diveRoom=(d:number)=>{const far=Math.max(0,Math.min(1,(d-8)/12)),de
  *  opaque shore band of the water hid a diver still deep under it. Under DIVE.minRoom the dive surfaces (and Dive is greyed). */
 export const diveBedRoom=(bed:number)=>{const t=Math.max(0,Math.min(1,(bed-DIVE.bedNear)/(DIVE.bedFar-DIVE.bedNear)));
  return Math.max(0,Math.min(bed-SWIM_ROOT_DEPTH-DIVE.body,DIVE.depth*t*t*(3-2*t)));};
+/** The park pond's dive (Nov 13 2026): only over its deep middle (POND_DEPTH.dive m of water and more; 0 over the shelf and the
+ *  drop-off, so Dive greys there and a dive surfaces as the bed comes up), the root keeping DIVE.body m above the pond bed (drawn at
+ *  -depth under the bank's level) and at most DIVE.depth. Host: createWaterState's roomAt while the probe is in the pond. */
+export const pondDiveRoomFor=(depth:number)=>depth<POND_DEPTH.dive?0:Math.max(0,Math.min(DIVE.depth,depth+POND_Y-SWIM_ROOT_DEPTH-DIVE.body));
+export const pondDiveRoom=(x:number,z:number)=>pondDiveRoomFor(pondDepthAt(x,z));
 /** The shelf's share of the dive (0 at DIVE.minWater − 0.1 m of water, 1 at the shelf's DEPTH_MAX): the diver rises toward a shore. */
 export const diveShore=(depth:number)=>{const t=Math.max(0,Math.min(1,(depth-(DIVE.minWater-.1))/(DEPTH_MAX-(DIVE.minWater-.1))));return t*t*(3-2*t);};
 /** The surface glide's ease in / out (per s) and how much it slows the stroke clock (the arms hold ahead, the kick eases). */
@@ -98,8 +104,13 @@ export type WaterStepInput={
  airborne:boolean;
 };
 
-/** `seabed` (optional): the drawn seabed's depth under the water line at (x, z), m (Infinity / omitted = no bound but the shelf). */
-export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x:number,z:number)=>number){
+/** `seabed` (optional): the drawn seabed's depth under the water line at (x, z), m (Infinity / omitted = no bound but the shelf).
+ *  `roomAt` (optional, Nov 13 2026: the park pond): the dive's room at (x, z) where the water is not the sea's (m; NaN = use the
+ *  seabed rule), e.g. 0 over the pond's shelf, so Dive greys and a dive surfaces there. The surface height and the wading feet follow
+ *  the probe (`level`, `foot`: the sea's or the pond's). */
+export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x:number,z:number)=>number,roomAt?:(x:number,z:number)=>number){
+ /** The swimming root height here (the sea's SWIM_ROOT_Y, or under the pond's surface) and the wading root at a depth. */
+ const swimY=()=>probe.level===undefined?SWIM_ROOT_Y:probe.level-SWIM_ROOT_DEPTH,wadeY=(depth:number)=>(probe.foot??WADE_FOOT_Y)-depth;
  const state={phase:'land' as WaterPhase,zone:'none' as WadeZone,depth:0,rootY:0,fast:false,
   entry:'feet' as EntryStyle,source:'fall' as SplashSource,
   /** Dive: `diving` = wants to be under; `under` the eased 0..1 progress; `dive` the body's depth under its surface place (m);
@@ -121,7 +132,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
  const lastLand={x:NaN,z:NaN,y:0,yaw:0};
  let gaspLeft=0,rippleClock=0,wakeClock=0,bubbleClock=0,strokeIndex=0,splashPower=0,pendDive=false,pendSped=false,pendSplash=0,pendTint=false,pendFly=false,diveRate=1/DIVE.ease,riseShake=0,lastX=NaN,lastZ=NaN;
  /** diveBedRoom at (x, z) and DIVE.ahead m along the travel (the slope ahead), the lower; 9 without a seabed. */
- let bedHere=9;const bedRoomAt=(x:number,z:number)=>{if(!seabed)return bedHere=9;let b=seabed(x,z);bedHere=Math.min(9,diveBedRoom(b));const mx=x-lastX,mz=z-lastZ,m=Math.hypot(mx,mz);
+ let bedHere=9;const bedRoomAt=(x:number,z:number)=>{if(roomAt){const r=roomAt(x,z);if(r===r)return bedHere=Math.min(9,r);}if(!seabed)return bedHere=9;let b=seabed(x,z);bedHere=Math.min(9,diveBedRoom(b));const mx=x-lastX,mz=z-lastZ,m=Math.hypot(mx,mz);
   if(m>1e-4&&m<2){const k=DIVE.ahead/m;b=Math.min(b,seabed(x+mx*k,z+mz*k));}return Math.min(9,diveBedRoom(b));};
  const clear=()=>{events.entered=events.left=events.swimStarted=events.surfaced=events.tint=events.dived=events.sped=events.rose=events.bubble=events.wake=events.flew=false;events.ripple=events.splash=events.swimSeconds=events.stroke=0;};
  /** Drop the dive at once (leaving the swim: the wade blend, a splash-down, the jetpack); `rose` when the body was under. */
@@ -154,16 +165,16 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
    // The dip: down, then up; the tint flashes at the hit; reduced motion is a short cross-fade with no dip at all.
    const total=r?UNDER_REDUCED:UNDER_DOWN+UNDER_UP;
    state.dip=r?0:state.age<UNDER_DOWN?UNDER_DEPTH*Math.sin(state.age/UNDER_DOWN*Math.PI/2):UNDER_DEPTH*Math.max(0,Math.cos((state.age-UNDER_DOWN)/UNDER_UP*Math.PI/2));
-   state.rootY=SWIM_ROOT_Y-state.dip;state.camDip=r?0:-CAM_DIP*state.dip/UNDER_DEPTH;
+   state.rootY=swimY()-state.dip;state.camDip=r?0:-CAM_DIP*state.dip/UNDER_DEPTH;
    if(state.shake>0)state.shake=Math.max(0,state.shake-dt);if(state.dazed>0)state.dazed=Math.max(0,state.dazed-dt);
    pose.w=1;pose.kind='entry';pose.entry=state.entry;pose.phase=state.age;pose.effort=0;pose.fast=0;pose.shake=0;
-   if(state.age>=total){state.phase='surface';state.age=0;state.dip=0;state.rootY=SWIM_ROOT_Y;events.surfaced=true;events.ripple=.35;}
+   if(state.age>=total){state.phase='surface';state.age=0;state.dip=0;state.rootY=swimY();events.surfaced=true;events.ripple=.35;}
    return events;
   }
   if(state.phase==='surface'){
    state.camDip*=Math.exp(-dt*8);if(Math.abs(state.camDip)<1e-3)state.camDip=0;
    if(state.dazed>0)state.dazed=Math.max(0,state.dazed-dt);
-   state.rootY=SWIM_ROOT_Y;pose.w=1;pose.kind='entry';pose.entry=state.entry;pose.phase=UNDER_DOWN+UNDER_UP+state.age;pose.shake=r?0:1-state.age/SURFACE_TIME;
+   state.rootY=swimY();pose.w=1;pose.kind='entry';pose.entry=state.entry;pose.phase=UNDER_DOWN+UNDER_UP+state.age;pose.shake=r?0:1-state.age/SURFACE_TIME;
    if(state.age>=(r?.1:SURFACE_TIME)){startSwim();}
    return events;
   }
@@ -176,7 +187,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   if(state.camDip)state.camDip*=Math.exp(-dt*8);
   const k=1-Math.exp(-dt/WATER_ROOT_BLEND);
   if(state.phase==='wade'){
-   state.rootY+=(wadeRootY(state.depth)-state.rootY)*k;
+   state.rootY+=(wadeY(state.depth)-state.rootY)*k;
    const cadence=zone==='ankle'?RIPPLE.ankle:zone==='knee'?RIPPLE.knee:RIPPLE.waist;
    if(input.moving){rippleClock+=dt;if(rippleClock>=cadence){rippleClock=0;events.ripple=zone==='ankle'?.12:zone==='knee'?.2:.28;}}
    pose.w=0;return events;
@@ -196,12 +207,12 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   const u=state.under,ue=u*u*(3-2*u);state.dive=state.room*ue;
   // The pitch (Oct 27 2026): the dive's arc (head down in, head up on the way back) plus the body following a climb or a dip of the
   // drawn seabed while under, rate-limited (swimMotion pitchToward) so it never snaps; flat when settled. Reduced motion: none.
-  {const vy=Number.isFinite(lastRootY)&&dt>0?(SWIM_ROOT_Y-state.dive-lastRootY)/dt:0;lastRootY=SWIM_ROOT_Y-state.dive;
+  {const vy=Number.isFinite(lastRootY)&&dt>0?(swimY()-state.dive-lastRootY)/dt:0;lastRootY=swimY()-state.dive;
    const want=(u===goal?0:diveArcPitch(u,goal>u,DIVE.tilt))+(u>0&&u===goal&&Math.abs(vy)>.08?climbPitch(vy)*ue*.6:0);
    state.tilt=r?0:Math.abs(want)<1e-4&&Math.abs(state.tilt)<.01?0:pitchToward(state.tilt,want,dt);}
   if(riseShake>0)riseShake=Math.max(0,riseShake-dt);if(gaspLeft>0)gaspLeft=Math.max(0,gaspLeft-dt);pose.gasp=r?0:gaspLeft/GASP.time;
   if(state.bob>0)state.bob=Math.max(0,state.bob-dt);
-  state.rootY+=(SWIM_ROOT_Y-state.dive-state.rootY)*k;if(state.rootY<SWIM_ROOT_Y-bedHere)state.rootY=SWIM_ROOT_Y-bedHere;
+  state.rootY+=(swimY()-state.dive-state.rootY)*k;if(state.rootY<swimY()-bedHere)state.rootY=swimY()-bedHere;
   const moving=input.moving||input.stick>.05;
   pose.w=1;pose.kind=u>0||moving?'crawl':'tread';pose.entry=state.entry;pose.shake=r?0:riseShake/SURFACE_TIME;
   pose.under=ue;pose.tilt=state.tilt;
@@ -241,7 +252,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   state.entry=canopy||source==='launch'?'belly':source==='dropin'?(height>=CLEAN_ENTRY_HEIGHT?'clean':'feet'):height>=BELLY_FALL_HEIGHT?'belly':'feet';
   splashPower=Math.min(1,.35+height/20);
   state.phase='under';state.age=0;state.zone='swim';state.fast=false;endDive();events.rose=false;state.swimFor=0;
-  state.dip=0;state.rootY=SWIM_ROOT_Y;state.camDip=0;state.tintLeft=r?0:UNDER_TINT_MS/1000;
+  state.dip=0;state.rootY=swimY();state.camDip=0;state.tintLeft=r?0:UNDER_TINT_MS/1000;
   state.shake=state.entry==='belly'&&!r?BELLY_SHAKE_TIME:0;state.dazed=state.entry==='belly'?BELLY_DAZED:0;
   // Raised on the next step (the host calls splashDown mid-tick, before its water step): the ring, the sound, the tint.
   pendSplash=splashPower;pendTint=!r;
@@ -265,7 +276,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   *  ease down, no plunge): settled under at the dive the water here allows. False when not swimming or the water is too shallow
   *  (the host then lets the swimmer come up at the surface). */
  function underNow(){if(!canDive())return false;state.diving=true;state.under=1;state.diveFor=0;diveRate=1/DIVE.ease;state.fast=false;state.tilt=0;
-  state.room=Math.min(diveRoom(probe.d)*diveShore(state.depth),state.bedRoom);state.dive=state.room;state.rootY=SWIM_ROOT_Y-state.dive;pose.under=1;pose.tilt=0;return true;}
+  state.room=Math.min(diveRoom(probe.d)*diveShore(state.depth),state.bedRoom);state.dive=state.room;state.rootY=swimY()-state.dive;pose.under=1;pose.tilt=0;return true;}
  /** Seamless Explore: what the water at (x, z) allows for the way out of a reef room (once per crossing, never per frame): 'dive'
   *  (the duck-dive's shelf and drawn-seabed bounds), 'swim' (too shallow to stay under) or 'no' (land, a pier, past the swim range). */
  function edgeWaterAt(x:number,z:number):'dive'|'swim'|'no'{if(probe.isLand(x,z)||!probe.allowed(x,z))return 'no';

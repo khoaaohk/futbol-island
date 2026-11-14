@@ -19,7 +19,7 @@ const L=load('lib/town/westParkLayout.ts'),{onIsland,ISLAND_SHORE,INTERIOR_GRASS
 const {STADIUM:S,STADIUM_GATE:G,STADIUM_PLAZA:P,PARK_POND}=L;
 // 1. Land: the stadium, park and plaza are on the island; the old west coast (x -99) is inland; the sea starts past x -332.
 for(const [x,z] of [[S.x,S.z],[S.x-S.bowlW/2,S.z],[S.x,S.z-S.bowlL/2],[S.x,S.z+S.bowlL/2],[PARK_POND.x,PARK_POND.z],[P.minX,P.minZ],[-300,-150],[-250,100]])assert(onIsland(x,z),`(${x}, ${z}) is land`);
-assert(!onIsland(-340,-30)&&!onIsland(-200,140)&&!onIsland(-150,-235),'sea beyond the new west, south-west and north-west coasts');
+assert(!onIsland(-340,-30)&&!onIsland(-200,165)/* Nov 13 2026: the coast below the pond moved out ~20 m */&&!onIsland(-150,-235),'sea beyond the new west, south-west and north-west coasts');
 assert(Math.min(...ISLAND_SHORE.map(p=>p.x))>=sim.ISLAND_BOUNDS.minX,'ISLAND_BOUNDS takes in the new coast');
 assert(sim.FLIGHT_BOUNDS.minX<=sim.ISLAND_BOUNDS.minX-50,'open sea west of the West Beach is flyable');
 // The lawn keeps a West Beach of sand (not 40 m of bare sand): at the stadium's latitude the grass starts 12–25 m in from the coast.
@@ -31,7 +31,7 @@ const world=load('lib/town/world.ts').buildTown(new T.Scene());
 const blocked=(x,z)=>sim.blocked(x,z,world.obstacles,.32);
 for(const [x,z,what] of [[(P.minX+P.maxX)/2,(P.minZ+P.maxZ)/2,'plaza centre'],[-55,S.z,'plaza east end (from the x -45 street)'],[G.x+4,G.z,'in front of the gate'],[G.x-1,G.z,'through the gate'],[S.x,S.z,'centre spot'],[S.x+20,S.z-40,'on the pitch']])assert(!blocked(x,z),what+' is open');
 assert(blocked(S.x-45,S.z),'the west stand is solid from the ground (walked on top, via its aisles)');
-assert(!blocked(PARK_POND.x,PARK_POND.z)&&L.pondWade(PARK_POND.x,PARK_POND.z)===L.POND_WADE,'the pond is wadeable (no collider; a walker sinks POND_WADE in the middle)');
+assert(!blocked(PARK_POND.x,PARK_POND.z)&&L.pondDepthAt(PARK_POND.x,PARK_POND.z)===L.POND_DEPTH.deep,'the pond is open water (no collider; Nov 13 2026: POND_DEPTH.deep in the middle, swimmable: tests/pond-swim.cjs)');
 // Nothing grows on the pitch or in the stands: no tree/palm asset inside the bowl.
 const trees=world.assets.filter(a=>a.kind==='tree'||a.kind==='palm');
 assert(!trees.some(a=>L.inStadiumFootprint(a.x,a.z,2)),'no trees in the bowl');
@@ -88,10 +88,10 @@ console.log('west stadium phase 1: ok');
  assert(L.PARK_TRAILS.filter(t=>t.to==='beach').length>=5&&WP.TRAIL_BEACH.blend>=5,'the coast-bound trails blend into the sand');
  assert(/strokeWidth=\{TRAIL_WIDTH\}/.test(map)&&/parkPathLines\(\)/.test(map)&&/data-west-stadium="apron"/.test(map),'the map draws the world\'s own trail points, width and the apron');
  // C. The pond: bigger (grown south, toward the coast), its rim clear of the apron, the plaza and the beach.
- const PD=L.PARK_POND;assert(PD.rx>=27&&PD.rz>=20&&PD.z+PD.rz>=100,'a bigger pond, grown south toward the coast');
- for(let a=0;a<360;a+=3){const t=a*Math.PI/180,x=PD.x+Math.cos(t)*(PD.rx+L.POND_RIM),z=PD.z+Math.sin(t)*(PD.rz+L.POND_RIM);
-  assert(!L.onApron(x,z,2)&&L.onGrass(x,z)&&L.onGrass(PD.x+Math.cos(t)*(PD.rx+L.POND_RIM+3),PD.z+Math.sin(t)*(PD.rz+L.POND_RIM+3)),'pond rim on grass, clear of the apron, at '+a+'°');}
- assert(!sim.blocked(PD.x+PD.rx*.5,PD.z,world.obstacles,.32)&&L.pondWade(PD.x+PD.rx-.5,PD.z)<.1,'wade in from the bank (shallow at the edge)');
+ const PD=L.PARK_POND;assert(PD.rx>=33&&PD.rz>=25&&PD.z+PD.rz>=110,'a bigger pond (Nov 13 2026: ~25% more again), grown south toward the coast');
+ for(let a=0;a<360;a+=3){const t=a*Math.PI/180,{x,z}=L.pondEdge(t,L.POND_RIM),o=L.pondEdge(t,L.POND_RIM+3);// the pond's own outline
+  assert(!L.onApron(x,z,2)&&L.onGrass(x,z)&&L.onGrass(o.x,o.z),'pond rim on grass, clear of the apron, at '+a+'°');}
+ assert(!sim.blocked(PD.x+PD.rx*.5,PD.z,world.obstacles,.32)&&L.pondWade(L.pondEdge(0,-.5).x,PD.z)<.1,'wade in from the bank (shallow at the edge)');
  // No props on paths or in the pond (benches, signs, lamps, planters, trees, palms): every park collider and tree outside the
  // bowl and off the plaza is clear of the water (and its rim), every trail, the ring and the apron.
  const park=o=>o.x<-100&&!L.inStadiumFootprint(o.x,o.z,3)&&!(o.x>P.minX-1.5&&o.x<P.maxX+1.5&&o.z>P.minZ-1.5&&o.z<P.maxZ+1.5);

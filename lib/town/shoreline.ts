@@ -1,7 +1,8 @@
 // Shared by the rendered foundation and walking boundary.
 // West Stadium (Nov 12 2026, docs/stadium/PLAN.md): the west coast is pushed about 230 m out for Stadium Park and the stadium
-// (centre -205,-30); every anchor east of x -72 is unchanged. Old west anchors: [-85,-160] … [-45,112],[-85,112],[-96,70],[-99,-40].
-const anchors=[[-190,-222],[-72,-228],[80,-243],[209,-218],[239,-150],[246,-30],[240,110],[242,190],[227,219],[145,224],[65,220],[40,211],[33,177],[25,155],[12,133],[-5,120],[-45,112],[-150,130],[-262,120],[-322,50],[-330,-80],[-300,-190]];
+// (centre -205,-30); every anchor east of x -72 is unchanged. Nov 13 2026 (owner, the bigger pond): the south coast below Stadium
+// Park's pond moved out ~20 m ([-150,130] → [-155,150], [-262,120] → [-262,126]) for a wider beach between the pond and the sea. Old west anchors: [-85,-160] … [-45,112],[-85,112],[-96,70],[-99,-40].
+const anchors=[[-190,-222],[-72,-228],[80,-243],[209,-218],[239,-150],[246,-30],[240,110],[242,190],[227,219],[145,224],[65,220],[40,211],[33,177],[25,155],[12,133],[-5,120],[-45,112],[-155,150],[-262,126],[-322,50],[-330,-80],[-300,-190]];
 export const ISLAND_SHORE: {x:number;z:number}[]=[];
 for(let i=0;i<anchors.length;i++)for(let j=0;j<8;j++){
  const t=j/8,p0=anchors[(i+anchors.length-1)%anchors.length],p1=anchors[i],p2=anchors[(i+1)%anchors.length],p3=anchors[(i+2)%anchors.length];
@@ -19,7 +20,12 @@ export function onIsland(x:number,z:number){
 /** Shared coastline widths keep the 3D sand and both maps in agreement. */
 /** WEST_BEACH_X: west of this the coast is the new West Beach (wider sand, palms; westPark.ts). */
 export const WEST_BEACH_X=-110;
-export const shoreSandWidth=(p:{x:number;z:number})=>p.z< -195?Math.min(36,5+(-p.z-195)*.75):p.x<WEST_BEACH_X?9:p.z>110&&p.x<55?8:5;
+/** The pond beach (Nov 13 2026, owner: "extend the beach south of [the pond] to make room for it"): the West Beach's 9 m of sand
+ *  widens by up to POND_BEACH_EXTRA m on the south coast below Stadium Park's pond (x -225 … -112), eased in and out so the grass
+ *  line stays one smooth curve. */
+export const POND_BEACH_EXTRA=5;
+const easeBand=(a:number,b:number,v:number)=>{const k=Math.min(1,Math.max(0,(v-a)/(b-a)));return k*k*(3-2*k);};
+export const shoreSandWidth=(p:{x:number;z:number})=>p.z< -195?Math.min(36,5+(-p.z-195)*.75):p.x<WEST_BEACH_X?9+(p.z>100?POND_BEACH_EXTRA*easeBand(-112,-140,p.x)*easeBand(-225,-195,p.x):0):p.z>110&&p.x<55?8:5;
 export const SHORE_SAND=ISLAND_SHORE.map((p,i)=>{const previous=ISLAND_SHORE[(i+ISLAND_SHORE.length-1)%ISLAND_SHORE.length],next=ISLAND_SHORE[(i+1)%ISLAND_SHORE.length],dx=next.x-previous.x,dz=next.z-previous.z,length=Math.hypot(dx,dz),width=shoreSandWidth(p);return {outer:p,inner:{x:p.x-dz/length*width,z:p.z+dx/length*width}};});
 export const NORTH_BEACH_UMBRELLAS=[{x:-48,z:-218},{x:-15,z:-224},{x:22,z:-229},{x:62,z:-229},{x:105,z:-227},{x:145,z:-220},{x:178,z:-211}];
 export const NORTH_BEACH_PATHS=[{x:-45,z:-185,w:3,d:52},{x:80,z:-189,w:3,d:60}];

@@ -50,7 +50,7 @@ ok('swim depth: root raised to 1.0, pinned to the pose water line; Town wiring',
  const W=load('lib/town/water/waterDepth.ts'),P=load('lib/graphics/swimPose.ts');
  assert.equal(W.SWIM_ROOT_DEPTH,1);assert.equal(P.WATER_LINE,W.SWIM_ROOT_DEPTH);
  const pose=fs.readFileSync('lib/graphics/swimPose.ts','utf8');assert.doesNotMatch(pose,/target\[P_Y\]=(1\.0|\.9)\b/,'pelvis heights are relative to WATER_LINE');
- const town=fs.readFileSync('components/Town.tsx','utf8');assert.match(town,/swimClear\.update\(dt,player\.root\.position\.x,player\.root\.position\.z,player\.root\.rotation\.y,water\.inWater\?water\.pose\.w:0,waterProbe\.depth,WATER_LEVEL,SWIM_ROOT_DEPTH(?:\+water\.state\.dive)?,beanSkinOf\(player\)\?\.meshes\?\?null(?:,water\.state\.under)?\);/);
+ const town=fs.readFileSync('components/Town.tsx','utf8');assert.match(town,/swimClear\.update\(dt,player\.root\.position\.x,player\.root\.position\.z,player\.root\.rotation\.y,water\.inWater\?water\.pose\.w:0,waterProbe\.depth,waterY,SWIM_ROOT_DEPTH(?:\+water\.state\.dive)?,beanSkinOf\(player\)\?\.meshes\?\?null(?:,water\.state\.under)?\);/);
  assert.match(town,/disposers\.add\(\(\)=>\{swimClear\.dispose\(\);clearWin\.dispose\(\);\}\);/);assert.match(town,/return\(\)=>\{disposers\.runAll\(\);/,'the unmount runs every registered disposer (lib/town/townCleanup.ts)');
  const src=fs.readFileSync('lib/graphics/swimClear.ts','utf8'),upd=src.slice(src.indexOf('update(dt'),src.indexOf('get strength'));assert(!/new |=\s*\[|\{\.\.\.|=>\s*\(\{/.test(upd),'update() allocates');
 });

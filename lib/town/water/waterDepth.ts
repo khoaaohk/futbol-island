@@ -16,6 +16,17 @@ import {onLand,distanceToLand,distanceToShelfLand} from '../landmass';
 import {distanceToLandableDeck} from '../landableDecks';
 import {flightBlocked} from '../simulation';
 import {SWIM_MOTION,swimVelocity} from './swimMotion';
+import {inPondWater,pondDepthAt,pondInset,nearPond,POND_Y} from '../westParkLayout';
+
+/**
+ * Stadium Park's pond (Nov 13 2026, owner: "allow swimming in it"): fresh water INSIDE the island, with its own surface height and
+ * its own depth profile (westParkLayout.ts pondDepthAt: a wadeable shelf round the rim, ~3.2 m in the middle). The probe below
+ * treats it as water like the sea: the same zones, wading, swimming, the duck-dive and splash-downs. `level` is the surface the
+ * swimmer floats at, `foot` the wading feet's height at depth 0 (the bank is the lawn: 0), `inset` the distance in from its edge
+ * (the probe's `d`: the swim range never bites in a pond). `near` is the cheap box reject that keeps it free off the pond.
+ */
+export type PondWater={near(x:number,z:number):boolean;at(x:number,z:number):boolean;depth(x:number,z:number):number;inset(x:number,z:number):number;level:number;foot:number};
+export const PARK_POND_WATER:PondWater={near:(x,z)=>nearPond(x,z,1),at:inPondWater,depth:pondDepthAt,inset:(x,z)=>Math.max(0,pondInset(x,z)),level:POND_Y,foot:0};
 
 /** The ocean plane (lib/town/world.ts, ballSea.ts SEA_LEVEL; tests/water-depth.cjs pins them equal). */
 export const WATER_LEVEL=-.43;
@@ -96,6 +107,8 @@ export const SWIM_ROOT_Y=WATER_LEVEL-SWIM_ROOT_DEPTH;
  * touchdown, never per frame.
  */
 export function canSplashDown(x:number,z:number){
+ // The park pond: only its swim-deep middle (a drop onto the shelf is an ordinary landing, with the pond's own splash).
+ if(PARK_POND_WATER.near(x,z)&&PARK_POND_WATER.at(x,z))return PARK_POND_WATER.depth(x,z)>=ZONE_SWIM;
  if(flightBlocked(x,z)||onLand(x,z))return false;
  return depthForDistance(distanceToShelfLand(x,z))>=SPLASH_MIN_DEPTH;
 }
@@ -113,6 +126,9 @@ export type WaterProbe={
  isLand(x:number,z:number):boolean;
  /** How many distanceToLand calls so far (tests, the ?heat readout). */
  readonly calls:number;
+ /** The water's surface height where the last sample was taken (the sea's WATER_LEVEL, or the park pond's POND_Y), the wading feet's
+  *  height at depth 0 there, and whether that sample was in the pond. Optional so a test's hand-made probe stays valid. */
+ readonly level?:number;readonly foot?:number;readonly pond?:boolean;
  reset():void;
 };
 /** The cached 10 Hz depth probe. `distance` and `land` default to the island's real tests (injectable for tests). */
@@ -120,19 +136,28 @@ export type WaterProbe={
  *  land, but the DEPTH does not (`shelf`): next to a boat the sea is deep, so a swimmer swims up to it and climbs aboard
  *  (lib/town/fishing/boatHull.ts) instead of wading on the open sea inside its hull. `floating` is the boats' deck distance (a box
  *  test per boat); the extra shelf call only runs when a boat is the nearest land. */
-export function createWaterProbe(distance:(x:number,z:number)=>number=distanceToLand,land:(x:number,z:number)=>boolean=onLand,blockedAt:(x:number,z:number)=>boolean=flightBlocked,shelf:(x:number,z:number)=>number=distanceToShelfLand,floating:(x:number,z:number)=>number=(x,z)=>distanceToLandableDeck(x,z,true)):WaterProbe{
- let d=0,s=0,px=NaN,pz=NaN,acc=Infinity,calls=0,isLand=true;
+/** `pond` (Nov 13 2026): the park pond (PARK_POND_WATER, null = none): inside it the island is not land, the depth is the pond's
+ *  profile and the level its surface. One box test per call off the pond. */
+export function createWaterProbe(distance:(x:number,z:number)=>number=distanceToLand,landTest:(x:number,z:number)=>boolean=onLand,blockedAt:(x:number,z:number)=>boolean=flightBlocked,shelf:(x:number,z:number)=>number=distanceToShelfLand,floating:(x:number,z:number)=>number=(x,z)=>distanceToLandableDeck(x,z,true),pond:PondWater|null=PARK_POND_WATER):WaterProbe{
+ let d=0,s=0,px=NaN,pz=NaN,acc=Infinity,calls=0,isLand=true,inPond=false,pondDepth=0;
+ const wet=(x:number,z:number)=>!!pond&&pond.near(x,z)&&pond.at(x,z);
+ const land=(x:number,z:number)=>landTest(x,z)&&!wet(x,z);
  const probe:WaterProbe={
-  get d(){return d;},get x(){return px;},get z(){return pz;},get depth(){return depthForDistance(s);},get land(){return isLand;},get calls(){return calls;},isLand:land,
+  get d(){return d;},get x(){return px;},get z(){return pz;},get depth(){return inPond?pondDepth:depthForDistance(s);},get land(){return isLand;},get calls(){return calls;},isLand:land,
+  get level(){return inPond&&pond?pond.level:WATER_LEVEL;},get foot(){return inPond&&pond?pond.foot:WADE_FOOT_Y;},get pond(){return inPond;},
   sample(x,z,dt,force=false){
    const nowLand=land(x,z);
-   if(nowLand){if(!isLand||d!==0){isLand=true;d=0;s=0;px=x;pz=z;acc=0;}else{px=x;pz=z;}return 0;}
+   if(nowLand){if(!isLand||d!==0){isLand=true;d=0;s=0;px=x;pz=z;acc=0;}else{px=x;pz=z;}inPond=false;pondDepth=0;return 0;}
    acc+=dt;
-   if(force||isLand||acc>=1/WATER_PROBE_HZ-1e-6||!Number.isFinite(px)){acc=0;isLand=false;d=distance(x,z);s=floating(x,z)<=d+1e-6?shelf(x,z):d;px=x;pz=z;calls++;}
-   return depthForDistance(s);
+   if(force||isLand||acc>=1/WATER_PROBE_HZ-1e-6||!Number.isFinite(px)){acc=0;isLand=false;px=x;pz=z;
+    // The pond: its own depth and edge distance (no distanceToLand: the pond is inside the island).
+    if(wet(x,z)){inPond=true;pondDepth=pond!.depth(x,z);d=s=pond!.inset(x,z);}
+    else{inPond=false;pondDepth=0;d=distance(x,z);s=floating(x,z)<=d+1e-6?shelf(x,z):d;calls++;}}
+   return inPond?pondDepth:depthForDistance(s);
   },
   allowed(x,z){
    if(blockedAt(x,z)||land(x,z))return false;
+   if(inPond)return wet(x,z);/* in the pond: its water only (the bank is land, climbed out onto) */
    const reach=Number.isFinite(px)?d+Math.hypot(x-px,z-pz):Infinity;
    if(reach<=SWIM_RANGE)return true;
    // Dive zones out at sea (Oct 20 2026, the user's map circles; lib/town/water/diveSpots.ts): open water inside a zone's blob is
@@ -143,7 +168,7 @@ export function createWaterProbe(distance:(x:number,z:number)=>number=distanceTo
    if(d-Math.hypot(x-px,z-pz)>limit)return false;
    calls++;return distance(x,z)<=limit;
   },
-  reset(){d=0;s=0;px=pz=NaN;acc=Infinity;isLand=true;},
+  reset(){d=0;s=0;px=pz=NaN;acc=Infinity;isLand=true;inPond=false;pondDepth=0;},
  };
  return probe;
 }

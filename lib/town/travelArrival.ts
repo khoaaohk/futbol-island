@@ -5,6 +5,8 @@
  *  - flying (the jetpack, hovering or under the parachute) arrives flying, ARRIVAL_FLIGHT.min..max m over the destination's ground
  *    (the height over the ground it had, kept in that band); a crashing jetpack ('fall') arrives walking;
  *  - swimming (or diving) arrives walking on land, swimming on water; the ride left on the sand is not brought back.
+ *  `dest.water` is the sea or (Nov 13 2026) the park pond's swim-deep middle (Town: ballGround 'sea' || pondDepthAt > 1 m); arriving
+ *  there the water model's probe (waterDepth.ts PARK_POND_WATER) takes over at the pond's own surface, like the sea.
  * Multiplayer needs nothing extra: the next pose carries the mode from the ride (townBridge.ts partyLocal), and the jump itself sends
  * Warp (presence.ts islandJump / governPose), so remote players see the rider or flyer appear at the destination.
  */

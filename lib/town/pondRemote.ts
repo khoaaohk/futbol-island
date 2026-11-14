@@ -6,6 +6,8 @@
 //    REMOTE_POND.rideEvery s (coarser than mine: one call does both);
 //  - arriving from the air (Jetpack / Parachute -> on foot or a ride) inside the pond: a landing splash scaled by the fall speed
 //    measured from the interpolated height while they flew (at least REMOTE_POND.landFloor m/s: a jetpack hover still splashes).
+//  - swimming (Swim / Dive on the wire, Nov 13 2026: the pond is swimmable): like a sea swimmer, none of the walker's footstep
+//    splashes or the ride's spray (onFoot / riding leave those modes out); arriving from the air into the water still splashes.
 // Gating: parkPond.remoteFx does nothing unless the pond is awake (I am within POND_LIFE.near of it) and not in still mode; members
 // further than REMOTE_POND.track from the pond are skipped with one test; at most REMOTE_POND.slots players are tracked.
 // Reduced motion and the heat tier pass straight through (the same mode / reduced as the local splashes).

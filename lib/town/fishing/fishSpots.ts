@@ -7,7 +7,10 @@
 import {DEEP_SEA_BOATS} from './deepSeaBoatData';
 import {EAST_PIER_FISHING} from '../eastPier';
 import {beachPoint} from '../summitIsle';
-import {POND_Y} from '../westParkLayout';
+import {POND_Y,PARK_POND,POND_STALL_BEARING,POND_STALL_OUT,pondEdge} from '../westParkLayout';
+/** The park pond's post (Nov 13 2026, the bigger pond with its own outline): at POND_STALL_BEARING, POND_STALL_OUT m out from the
+ *  water's edge; the buoy (where a cast settles) half way in toward the middle on the same bearing. */
+const POND_STALL=pondEdge(POND_STALL_BEARING,POND_STALL_OUT),POND_BUOY=(()=>{const e=pondEdge(POND_STALL_BEARING);return {x:PARK_POND.x+(e.x-PARK_POND.x)*.52,z:PARK_POND.z+(e.z-PARK_POND.z)*.52};})();
 export type FishId=string;
 export type FishRarity='common'|'uncommon'|'rare'|'legendary';
 export type ShadowSize='small'|'medium'|'large'|'huge'|'giant';
@@ -159,9 +162,9 @@ export const FISH_SPOTS:(FishSpot&{id:SpotId})[]=[
  {id:'summit-ledge',name:'Drop-off Ledge',area:'summit',x:SUMMIT_LEDGE_STAND.x,z:SUMMIT_LEDGE_STAND.z,buoy:{x:SUMMIT_LEDGE_BUOY.x,z:SUMMIT_LEDGE_BUOY.z},
   reef:'ledge-dropoff',weights:{},story:'A rocky ledge on Summit Isle’s south-east shore, where the sand stops and the sea drops away into deep blue. Cod and haddock nose along the edge, and now and then a little shark patrols it.'},
  // ---- Stadium Park pond (Nov 13 2026, owner: "add a fishing spot at the park pond"): a main-island post on the grass just past
- // the pond's stone rim on its north-east side (bearing 300° round PARK_POND, 3.4 m out, so the stall clears the rim walk), casting
+ // the pond's stone rim on its north-east side (bearing 300° round PARK_POND, 3.4 m out from the water, so the stall clears the rim walk; computed from the pond's outline), casting
  // in toward the middle. Fresh water: its own koi, perch and pike (./pondFish.ts), pond-only. Mean catch ≈ 4.1 coins (shore ≈ 4.0). Kept LAST so the signature waves' SHORE_SPOTS slices hold.
- {id:'park-pond',name:'Stadium Park Pond',pond:true,x:-134.8,z:63.74,buoy:{x:-143.2,z:74.95},
+ {id:'park-pond',name:'Stadium Park Pond',pond:true,x:+POND_STALL.x.toFixed(2),z:+POND_STALL.z.toFixed(2),buoy:{x:+POND_BUOY.x.toFixed(2),z:+POND_BUOY.z.toFixed(2)},
   weights:{},story:'The still pond in Stadium Park, a short walk from the DRIP FC Stadium. Koi and perch nose round the middle, and now and then an eel slips past the rim.'},
 ];
 

@@ -56,12 +56,13 @@ export function pondTouch(b:PondBall,pond:BallPond,radius:number):'skip'|'float'
 }
 
 /**
- * One float step: the speed bleeds away, the pond pushes the ball toward the nearest bank (the ellipse's outward normal at the
+ * One float step: the speed bleeds away, the pond pushes the ball toward the nearest bank (the outline's outward normal at the
  * ball), it bobs. Returns true when the ball has reached the bank this step (the caller rolls it out); b.x / b.z stay in the water.
  */
 export function pondFloatStep(b:PondBall,pond:BallPond,dt:number):boolean{
  b.pondFloat+=dt;const damp=Math.exp(-POND_SKIP.damp*dt);b.vx*=damp;b.vz*=damp;
- let nx=(b.x-pond.x)/(pond.rx*pond.rx),nz=(b.z-pond.z)/(pond.rz*pond.rz);const l=Math.hypot(nx,nz);
+ // The outward normal: q's gradient (Nov 13 2026: the pond's outline is no longer an ellipse, westParkLayout.ts pondShape), 4 q reads.
+ let nx=pond.q(b.x+.25,b.z)-pond.q(b.x-.25,b.z),nz=pond.q(b.x,b.z+.25)-pond.q(b.x,b.z-.25);const l=Math.hypot(nx,nz);
  if(l>1e-9){nx/=l;nz/=l;}else{nx=1;nz=0;}
  b.vx+=nx*POND_SKIP.push*dt;b.vz+=nz*POND_SKIP.push*dt;
  const sp=Math.hypot(b.vx,b.vz),out=b.vx*nx+b.vz*nz;

@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {PARK_POND,POND_Y,pondQ,pondWade} from './westParkLayout';
+import {PARK_POND,POND_Y,pondQ,pondWade,pondShape} from './westParkLayout';
 import {reefFishModel} from '../graphics/diveFish';
 import {createBugModel} from '../graphics/bugModels';
 import {bugMaterial} from '../graphics/bugMaterial';
@@ -44,7 +44,10 @@ export type PondInput={x:number;z:number;speed:number;onGround:boolean;ballX:num
   *  the ball's own splashes come from the skip rules (pondSkip.ts), so the drop splash here is skipped while `ballWet`. */
  y?:number;heading?:number;riding?:boolean;reduced?:boolean;ballWet?:boolean;
  /** Nov 13 2026: on foot and still or slow (pondBugs.ts POND_NET.calmSpeed): the dragonflies stay, and come to look. */
- calm?:boolean};
+ calm?:boolean;
+ /** Nov 13 2026 (swimming in the pond): the water model owns a swimmer's splashes, ripples and wake (like the sea's), so none of
+  *  the walker's footsteps, wake or landing splash here; the koi still scatter from them. */
+ swimming?:boolean};
 export type PondSink={splash:(x:number,z:number,size:number)=>void;ring:(x:number,z:number,radius:number)=>void;
  /** A stretched ripple (the bow wake's arms): radius, stretch along `angle` (rad). Falls back to ring() when absent. */
  wake?:(x:number,z:number,radius:number,stretch:number,angle:number)=>void};
@@ -53,7 +56,7 @@ export function createPondLife(scene:T.Scene,o:{phone:boolean;sink:PondSink}){
  const {x:cx,z:cz,rx,rz}=PARK_POND,cap=POND_LIFE.koi[0];
  let seed=97;const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647;};
  /** A random point in the water within q of the edge, written into `pick` (no allocation). */
- const pick={x:0,z:0},inside=(q:number)=>{const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*q;pick.x=cx+Math.cos(a)*rx*r;pick.z=cz+Math.sin(a)*rz*r;return pick;};
+ const pick={x:0,z:0},inside=(q:number)=>{const a=rnd()*Math.PI*2,r=Math.sqrt(rnd())*q*pondShape(a);pick.x=cx+Math.cos(a)*rx*r;pick.z=cz+Math.sin(a)*rz*r;return pick;};// the pond's own outline (pondShape)
  // --- koi -------------------------------------------------------------------------------------------------------------------
  const {geometry:fishGeo}=reefFishModel('koi'),fishMat=new T.MeshStandardMaterial({vertexColors:true,roughness:.5});
  const fish=new T.InstancedMesh(fishGeo,fishMat,cap);fish.name='park-pond-koi';fish.castShadow=false;fish.receiveShadow=false;
@@ -104,7 +107,7 @@ export function createPondLife(scene:T.Scene,o:{phone:boolean;sink:PondSink}){
  }
  /** The player's own splashes (N5): landing, footsteps and wake, the ride's spray and V wake. Only while in the water. */
  function playerFx(dt:number,i:PondInput,inWater:boolean){
-  const y=i.y??0;
+  const y=i.y??0;if(i.swimming){wasGround=true;airMaxFall=0;prevY=y;stepT=wakeT=sprayT=0;return;}
   if(!i.onGround){const fall=(prevY-y)/Math.max(dt,1e-3);if(fall>airMaxFall)airMaxFall=fall;}
   if(i.onGround&&!wasGround){if(inWater&&!fxOff(i)&&airMaxFall>=POND_FX.landMin)landSplash(i.x,i.z,airMaxFall,i);airMaxFall=0;wet=1;}
   wasGround=i.onGround;prevY=y;
@@ -166,7 +169,7 @@ export function createPondLife(scene:T.Scene,o:{phone:boolean;sink:PondSink}){
    t+=dt;splashAge+=dt;
    // Wading in: a small splash stepping in at a walk or more (the footsteps above take it from there).
    const w=i.onGround?pondWade(i.x,i.z):0;
-   if(w>0&&wet===0&&i.speed>1&&fxStats.landings===landed0)splashAt(i.x,i.z,.28,.8,i.mode);
+   if(w>0&&wet===0&&i.speed>1&&!i.swimming&&fxStats.landings===landed0)splashAt(i.x,i.z,.28,.8,i.mode);
    wet=w>0||inWater&&i.onGround?Math.max(w,1e-3):0;
    // The ball: a splash when it drops onto the water (unless it is skipping: pondSkip.ts reports those), rings while it rolls through.
    if(i.ballOn&&pondQ(i.ballX,i.ballZ)<1){

@@ -10,11 +10,11 @@ import {trunkCollider,type Obstacle} from './simulation';
 import {tintGroundMesh,SAND_COLOR} from '../graphics/groundTint';
 import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {orchardParts,orchardRig} from './summitOrchard';
-import {stadiumOrchardTrees,orchardPlanOf,type StadiumOrchardTree} from './stadiumOrchard';
-import {createPondWaterMaterial,createPondPadMaterial,createPondBedMaterial,createTrailMaterial} from '../graphics/pondWater';
+import {stadiumOrchardTrees,orchardPlanOf,ORCHARD_LEGACY,type StadiumOrchardTree} from './stadiumOrchard';
+import {createPondWaterMaterial,createPondPadMaterial,createPondBedMaterial,createTrailMaterial,pondSeaDistance} from '../graphics/pondWater';
 
-import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PLAZA_FLAG_X,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_TRAILS,PARK_GROVES,BOWL_RING,BOWL_APRON,POND_RIM,POND_Y,POND_SIGN,POND_BENCHES,PLAZA_LABEL,PARK_SIGNS,TRAIL_WIDTH,
- inStadiumFootprint,parkPathLines,pathPoints,ringPoints,segDistance,trailBeachRun,onApron,inPond,onGrass,grassEdgeDistance,type P} from './westParkLayout';
+import {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PLAZA_FLAG_X,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_TRAILS,PARK_GROVES,BOWL_RING,BOWL_APRON,POND_RIM,POND_Y,POND_SIGN,POND_BENCHES,POND_BENCH_BEARINGS,POND_DEPTH,POND_JETTY,POND_JETTY_AT,POND_STALL_BEARING,POND_SAND,POND_LOBE_MAX,POND_REED_BEARINGS,POND_WALK_BEARING,PLAZA_LABEL,PARK_SIGNS,TRAIL_WIDTH,
+ inStadiumFootprint,parkPathLines,pathPoints,ringPoints,segDistance,trailBeachRun,onApron,inPond,onGrass,grassEdgeDistance,pondEdge,pondShape,pondInset,pondDepthForInset,onPondJetty,type P} from './westParkLayout';
 export {STADIUM,STADIUM_GATE,STADIUM_PLAZA,PARK_POND,PARK_LAWNS,PARK_PATHS,PARK_GROVES,BOWL_RING,inStadiumFootprint,parkPathLines};
 type Tools={
  box:(w:number,h:number,d:number,c:string,x:number,y:number,z:number)=>T.Mesh;
@@ -25,8 +25,10 @@ type Tools={
  path:(x:number,z:number,w:number,d:number)=>void;districtSign:(text:string,x:number,z:number)=>void;
  obstacles:Obstacle[];assets:{kind:string;x:number;z:number;w:number;d:number;visualW?:number;visualD?:number;canopyHeight?:number}[];
  surfaceAreas:{kind:string;x:number;z:number;w:number;d:number}[];materials:T.Material[];add:(o:T.Object3D)=>void;prop?:PropTagger;
+ /** The sea's ripple tile (world.ts waterRipples): the pond's water samples the same texture as the ocean (no new texture). */
+ seaRipples?:T.Texture;
 };
-export type WestParkStats={trees:number;palms:number;flags:number;hedges:number;beds:number;lilyPads:number;
+export type WestParkStats={trees:number;palms:number;flags:number;hedges:number;beds:number;lilyPads:number;pondFlowers:number;pondRocks:number;pondReeds:number;
  /** The fruit orchards' trees (stadiumOrchard.ts), baked here; the fruit runtime (stadiumOrchardFruit.ts) reads this list. */
  orchard:StadiumOrchardTree[];orchardTriangles:number};
 /** A park tree on the sand, or within this distance inland of the grass / sand line, is a palm (Nov 13 2026, owner: the sand and
@@ -35,6 +37,8 @@ export const PALM_EDGE_M=9;
 /** The plaza paving's east end: tucked 0.3 m under the street's west sidewalk (road x -45, 12 m wide). */
 export const PLAZA_PAVING_EAST=-50.7;
 const PATH_C='#eddfbb',RIM_C='#cdbb93';
+/** Lily pads on the pond (Nov 13 2026: 18 → 26 with the bigger pond, a flower on every 4th). */
+const POND_PADS=26;
 /** Trail paving that runs onto the beach: from the lawn's edge it eases to the sand's colour over BLEND m, narrows a little and
  *  settles toward the sand's height, so it fades into the beach (no squared-off end, no pale rectangle on the sand). */
 export const TRAIL_BEACH={blend:7,narrow:.3,y:-.09} as const;
@@ -42,7 +46,7 @@ const smooth=(a:number,b:number,v:number)=>{const k=Math.min(1,Math.max(0,(v-a)/
 
 export function buildWestPark(t:Tools):WestParkStats{
  const {box,put,cylinder,sign,palm,bench,planter,path,districtSign,obstacles,assets,surfaceAreas,materials}=t,prop=t.prop??untaggedProp;
- const stats:WestParkStats={trees:0,palms:0,flags:0,hedges:0,beds:0,lilyPads:0,orchard:[],orchardTriangles:0};
+ const stats:WestParkStats={trees:0,palms:0,flags:0,hedges:0,beds:0,lilyPads:0,pondFlowers:0,pondRocks:0,pondReeds:0,orchard:[],orchardTriangles:0};
  const trailMat=createTrailMaterial();materials.push(trailMat);
  const pathC=new T.Color(PATH_C),sandC=new T.Color(SAND_COLOR),tmpC=new T.Color();
  /** A flat mesh in the trail paving (vertex colours), placed at its own centre so the batching pass files it under its own
@@ -113,27 +117,66 @@ export function buildWestPark(t:Tools):WestParkStats{
  for(const tr of PARK_TRAILS)ribbon(pathPoints(tr.curve),TRAIL_WIDTH,-.045,{beach:tr.to==='beach'});
  ribbon(ringPoints(),BOWL_RING.width,-.045);
  for(const l of PARK_LAWNS)disc(l.x,l.z,l.rx,l.rz,-.075,'#86ad79','grass');
- {const {x,z,rx,rz}=PARK_POND,c=(h:string)=>new T.Color(h);
-  // The stone rim (an annulus, so the bed shows through the water), the bed (sandy shallows to a deep middle), the water.
-  {const g=ellipse(rx,rz,[{s:.97,c:c(RIM_C)},{s:1,c:c(RIM_C)}]);// the outer ring is moved out to rx + rim, rz + rim
-   const p=g.getAttribute('position');for(let i=56;i<112;i++){const a=(i-56)/56*Math.PI*2;p.setXYZ(i,Math.cos(a)*(rx+POND_RIM),0,Math.sin(a)*(rz+POND_RIM));}
-   g.translate(x,0,z);flat(g,trailMat,-.06);surfaceAreas.push({kind:'path',x,z,w:(rx+POND_RIM)*2,d:(rz+POND_RIM)*2});}
+ {const {x,z,rx,rz}=PARK_POND,c=(h:string)=>new T.Color(h),SEG=96,tmpE={x:0,z:0},sandK=(a:number)=>{const d=Math.atan2(Math.sin(a-POND_SAND.bearing),Math.cos(a-POND_SAND.bearing));return 1-smooth(POND_SAND.half*.55,POND_SAND.half,Math.abs(d));};
+  /** A ring mesh round the pond's own outline (westParkLayout.ts pondEdge, Nov 13 2026: no longer an ellipse): each ring is the edge
+   *  scaled by `f` (0 = the centre) and pushed `out` m along the radius; per-vertex colour (and an optional attribute) from `paint`. */
+  const rings=(def:readonly {f?:number;out?:number}[],paintAt:(px:number,pz:number,a:number,ring:number)=>{c:T.Color;v?:number},attr?:string)=>{
+   const pos:number[]=[],col:number[]=[],extra:number[]=[],idx:number[]=[];
+   def.forEach((r,ri)=>{for(let k=0;k<SEG;k++){const a=k/SEG*Math.PI*2,e=pondEdge(a,0,tmpE),f=r.f??1,ex=e.x-x,ez=e.z-z,l=Math.hypot(ex,ez)||1,o=r.out??0,px=x+ex*f+ex/l*o,pz=z+ez*f+ez/l*o,q=paintAt(px,pz,a,ri);
+    pos.push(px-x,0,pz-z);col.push(q.c.r,q.c.g,q.c.b);extra.push(q.v??0);}});
+   for(let j=0;j<def.length-1;j++)for(let k=0;k<SEG;k++){const a=j*SEG+k,b=j*SEG+(k+1)%SEG,cc=a+SEG,d=b+SEG;idx.push(a,cc,b,b,cc,d);}
+   // Faces up whichever way the rings run (in → out or out → in): flip the winding if the first triangle faces down.
+   {const [i0,i1,i2]=idx,ux=pos[i1*3]-pos[i0*3],uz=pos[i1*3+2]-pos[i0*3+2],vx=pos[i2*3]-pos[i0*3],vz=pos[i2*3+2]-pos[i0*3+2];if(uz*vx-ux*vz<0)for(let k=0;k<idx.length;k+=3){const t0=idx[k+1];idx[k+1]=idx[k+2];idx[k+2]=t0;}}
+   const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));if(attr)g.setAttribute(attr,new T.Float32BufferAttribute(extra,1));
+   g.setIndex(idx);g.computeVertexNormals();g.translate(x,0,z);return g;};
+  const rimC=c(RIM_C),sandRimC=c(SAND_COLOR),tc=new T.Color();
+  // The stone rim (an annulus round the outline, so the bed shows through the water); on the coast side (POND_SAND) a sandy shore.
+  {const g=rings([{out:-.6},{out:POND_RIM}],(_px,_pz,a)=>({c:tc.copy(rimC).lerp(sandRimC,sandK(a)).clone()}));flat(g,trailMat,-.06,'park-pond-rim');
+   surfaceAreas.push({kind:'path',x,z,w:(rx+POND_RIM)*2*(1+POND_LOBE_MAX),d:(rz+POND_RIM)*2*(1+POND_LOBE_MAX)});}
+  // The bed: sandy at the edge, the shelf's olive, then the drop-off down to a dark deep middle (its colour follows the depth profile).
   {const bedMat=createPondBedMaterial();materials.push(bedMat);
-   const g=ellipse(rx,rz,[{s:0,c:c('#2c4638')},{s:.45,c:c('#34503d')},{s:.75,c:c('#55684a')},{s:.92,c:c('#8e8a63')},{s:1.01,c:c('#b3a57a')}]);g.translate(x,0,z);flat(g,bedMat,-.085,'park-pond-bed');}
-  {const water=createPondWaterMaterial();materials.push(water);
-   const g=ellipse(rx,rz,[{s:0,c:c('#ffffff'),a:1},{s:.7,c:c('#ffffff'),a:1},{s:.88,c:c('#ffffff'),a:.75},{s:.96,c:c('#ffffff'),a:.35},{s:1,c:c('#ffffff'),a:0}],64,'aEdge');
-   g.deleteAttribute('color');g.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(g.getAttribute('position').count*2),2));g.translate(x,0,z);
+   const ramp=[[0,c('#b3a57a')],[.35,c('#8e8a63')],[POND_DEPTH.shelf,c('#5f6f4c')],[1.4,c('#3a5440')],[2.4,c('#29412f')],[POND_DEPTH.deep,c('#1d3127')]] as const;
+   const bedAt=(d:number,a:number)=>{let k=0;while(k<ramp.length-2&&d>ramp[k+1][0])k++;const [d0,c0]=ramp[k],[d1,c1]=ramp[k+1];tc.copy(c0).lerp(c1,Math.min(1,Math.max(0,(d-d0)/(d1-d0))));
+    return tc.lerp(sandRimC,sandK(a)*.7*(1-smooth(.2,1.2,d))).clone();};
+   const g=rings([{out:.05},{out:-.8},{out:-2},{out:-3.2},{out:-5},{out:-7},{out:-9},{out:-12},{f:.35},{f:0}],(px,pz,a)=>({c:bedAt(pondDepthForInset(Math.max(0,pondInset(px,pz))),a)}));flat(g,bedMat,-.085,'park-pond-bed');}
+  // The water: the sea's own look (pondWater.ts, Nov 13 2026 owner: "tie it to the ocean so the water is the same colour"): aEdge fades
+  // it into the bank, aSea is the depth as the sea's shore distance (the shelf reads as the sea's pale shallows, the middle its teal).
+  {const water=createPondWaterMaterial(t.seaRipples);materials.push(water);
+   const g=rings([{out:0},{out:-.5},{out:-1.5},{out:-3},{out:-5},{out:-8},{out:-12},{f:.35},{f:0}],(px,pz,_a,ri)=>({c:tc.set('#ffffff'),v:[0,.35,.75,1,1,1,1,1,1][ri]}),'aEdge');
+   const pos=g.getAttribute('position'),sea=new Float32Array(pos.count);for(let k=0;k<pos.count;k++)sea[k]=pondSeaDistance(pondDepthForInset(Math.max(0,pondInset(pos.getX(k),pos.getZ(k)))));
+   g.setAttribute('aSea',new T.BufferAttribute(sea,1));g.deleteAttribute('color');g.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(pos.count*2),2));
    const pond=flat(g,water,POND_Y,'park-pond');pond.receiveShadow=true;}
-  // Wadeable (Nov 13 2026, owner: walking in the water splashes): no collider; parkPond.ts sinks a walker and splashes.
+  // Swimmable (Nov 13 2026): no collider; the water model (waterDepth.ts PARK_POND_WATER) wades and swims a walker in.
   for(const [bx,bz] of POND_BENCHES)bench(bx,bz);
   {const {x:sx,z:sz,rotation}=POND_SIGN;sign('LILY POND',3.2,.6,sx,1.5,sz,'#477c6a',undefined,rotation);for(const d of [-1.3,1.3])cylinder(.05,1.5,'#9d805b',sx,.75,sz+d);
    obstacles.push({x:sx,z:sz,w:.2,d:3});}
-  // Lily pads: notched discs (a few in flower), drifting on their own slow loops (pondWater.ts), one merged mesh.
+  // Where the edge detail keeps clear: the pond walk's end, the jetty, the fishing stall's cast line, the benches, the sandy shore.
+  const busy=(a:number,pad=0)=>{const near=(b:number,w:number)=>Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b)))<w+pad;
+   return near(POND_WALK_BEARING,.2)||near(POND_JETTY.bearing,.16)||near(POND_STALL_BEARING,.22)||POND_BENCH_BEARINGS.some(b=>near(b*Math.PI/180,.12));};
+  // Rocks and pebbles on the rim (two greys, merged: 2 paints in the chunk batches), fewer on the sandy shore.
+  {let sd=29;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};const greys:T.BufferGeometry[][]=[[],[]];
+   for(let k=0;k<64;k++){const a=k/64*Math.PI*2+(r()-.5)*.08;if(busy(a)||sandK(a)>.5&&r()<.75)continue;const big=r()<.35,rad=big?.32+r()*.22:.12+r()*.12,inner=r()<.3;
+    const e=pondEdge(a,inner?-.25:POND_RIM+.15+r()*.35),g=new T.IcosahedronGeometry(rad,0);g.scale(1,.55+r()*.25,.8+r()*.4);g.rotateY(r()*6.283);g.translate(e.x,rad*.25-.04,e.z);greys[k%2].push(g);stats.pondRocks++;}
+   greys.forEach((list,i)=>{if(!list.length)return;const m=mergeGeometries(list)!;list.forEach(g=>g.dispose());m.computeBoundingBox();const cc=m.boundingBox!.getCenter(new T.Vector3());m.translate(-cc.x,0,-cc.z);put(m,i?'#9a968c':'#7f7b72',cc.x,0,cc.z);});}
+  // Reeds and cattails in clumps in the shallows (stems: one merged mesh per clump colour; the brown heads on a few).
+  {let sd=53;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};const stems:T.BufferGeometry[]=[],heads:T.BufferGeometry[]=[];
+   for(const deg of POND_REED_BEARINGS){const a=deg*Math.PI/180;if(busy(a,.05))continue;const e=pondEdge(a,-(.9+r()*1.1));stats.pondReeds++;
+    for(let n=0;n<8;n++){const h=.8+r()*.7,ox=(r()-.5)*1.6,oz=(r()-.5)*1.6,g=new T.CylinderGeometry(.018,.03,h,4,1,true);g.rotateZ((r()-.5)*.18);g.rotateX((r()-.5)*.18);g.translate(e.x+ox,h/2-.08,e.z+oz);stems.push(g);
+     if(n%3===0){const hd=new T.CylinderGeometry(.05,.05,.22,5);hd.translate(e.x+ox,h-.02,e.z+oz);heads.push(hd);}}}
+   for(const [list,col] of [[stems,'#6f8f4a'],[heads,'#6b4a2b']] as const){if(!list.length)continue;const m=mergeGeometries(list.map(g=>g.toNonIndexed()))!;list.forEach(g=>g.dispose());m.computeVertexNormals();m.computeBoundingBox();const cc=m.boundingBox!.getCenter(new T.Vector3());m.translate(-cc.x,0,-cc.z);put(m,col,cc.x,0,cc.z);}}
+  // The jetty (POND_JETTY): a low plank dock from the rim out over the water beside the fishing stall, flush with the bank (walkable:
+  // its planks are dry land to the water model, westParkLayout.ts onPondJetty). A deck, cross planks, and posts into the water.
+  {const J=POND_JETTY_AT,yaw=Math.atan2(J.ux,J.uz),wood='#9d805b',dark='#7a6142',cx=J.x+J.ux*POND_JETTY.len/2,cz=J.z+J.uz*POND_JETTY.len/2;
+   put(new T.BoxGeometry(POND_JETTY.w,.08,POND_JETTY.len).rotateY(yaw),wood,cx,POND_JETTY.y-.05,cz);
+   for(let k=0;k<6;k++){const d=.6+k*(POND_JETTY.len-1.2)/5;put(new T.BoxGeometry(POND_JETTY.w+.12,.03,.14).rotateY(yaw),dark,J.x+J.ux*d,POND_JETTY.y,J.z+J.uz*d);}
+   for(const d of [2.5,POND_JETTY.len-.3])for(const side of [-1,1])cylinder(.08,1.1,dark,J.x+J.ux*d-J.uz*side*(POND_JETTY.w/2-.05),-.48,J.z+J.uz*d+J.ux*side*(POND_JETTY.w/2-.05));
+   surfaceAreas.push({kind:'path',x:cx,z:cz,w:Math.abs(J.ux)*POND_JETTY.len+POND_JETTY.w,d:Math.abs(J.uz)*POND_JETTY.len+POND_JETTY.w});}
+  // Lily pads: notched discs (a few in flower), drifting on their own slow loops (pondWater.ts), one merged mesh; clear of the jetty.
   {let sd=11;const r=()=>{sd=(sd*16807)%2147483647;return sd/2147483647;};const parts:T.BufferGeometry[]=[],greens=['#5e9a5c','#6aa564','#4f8a52'];
-   for(let k=0;k<18;k++){const a=r()*Math.PI*2,q=.25+r()*.5,px=x+Math.cos(a)*rx*q,pz=z+Math.sin(a)*rz*q,size=.55+r()*.5,ph=r()*6.283;
+   for(let k=0;k<POND_PADS;k++){const a=r()*Math.PI*2,q=(.25+r()*.5)*pondShape(a),px=x+Math.cos(a)*rx*q,pz=z+Math.sin(a)*rz*q,size=.55+r()*.5,ph=r()*6.283;if(onPondJetty(px,pz,1.6))continue;
     const pad=new T.CircleGeometry(size,10,r()*6.283,Math.PI*1.82).rotateX(-Math.PI/2).translate(px,0,pz).toNonIndexed();paint(pad,c(greens[k%3]));
     const add=(g:T.BufferGeometry)=>{g.deleteAttribute('uv');g.setAttribute('aPad',new T.Float32BufferAttribute(new Float32Array(g.getAttribute('position').count).fill(ph),1));parts.push(g);};add(pad);
-    if(k%5===0){const f=new T.ConeGeometry(.2,.22,6).translate(px+.1,.1,pz-.05).toNonIndexed();paint(f,c(k%2?'#f2a7c3':'#f6f1e7'));f.deleteAttribute('normal');f.computeVertexNormals();add(f);}
+    if(k%4===0){const f=new T.ConeGeometry(.2,.22,6).translate(px+.1,.1,pz-.05).toNonIndexed();paint(f,c(k%8?'#f2a7c3':'#f6f1e7'));f.deleteAttribute('normal');f.computeVertexNormals();add(f);stats.pondFlowers++;}
     stats.lilyPads++;}
    for(const g of parts)if(!g.getAttribute('normal'))g.computeVertexNormals();
    const merged=mergeGeometries(parts)!;parts.forEach(g=>g.dispose());const padMat=createPondPadMaterial();materials.push(padMat);flat(merged,padMat,POND_Y+.012,'park-pond-pads');}
@@ -167,6 +210,9 @@ export function buildWestPark(t:Tools):WestParkStats{
   prop('tree',()=>{assets.push({kind:'tree',x:o.x,z:o.z,w:.4,d:.4,visualW:3.4*o.s,visualD:3.4*o.s,canopyHeight:4.2*o.s});
    for(const part of orchardParts(plan)){const g=part.geo();g.applyMatrix4(part.matrix);g.translate(-o.x,0,-o.z);stats.orchardTriangles+=(g.index?g.index.count:g.getAttribute('position').count)/3;put(g,part.color,o.x,0,o.z);}});
   obstacles.push(trunkCollider(o.x,o.z,orchardRig(plan).baseR));}
+ // Nov 13 2026 (owner: more fruit trees): every orchard tree past the first 14 takes the place of a plain park tree (every 8th
+ // broadleaf spot is left to the orchards until they are paid for), so the park's tree triangles stay about flat.
+ let convert=Math.max(0,stats.orchard.length-ORCHARD_LEGACY.length),plainSeen=0;
  for(let n=0;n<5000&&stats.trees+stats.palms<340;n++){
   const x=-335+rnd()*240,z=-230+rnd()*360,s=.85+rnd()*.6;
   const inGrove=PARK_GROVES.some(([gx,gz,gr])=>Math.hypot(x-gx,z-gz)<gr);
@@ -174,6 +220,7 @@ export function buildWestPark(t:Tools):WestParkStats{
   if(!clear(x,z,1.8*s))continue;
   // The sand and the row along the grass edge are palms, leaning their own way, 5–7.4 m tall.
   if(!onGrass(x,z)||grassEdgeDistance(x,z)<PALM_EDGE_M){beachPalm(x,z,5+s*1.6);continue;}
+  if(convert>0&&++plainSeen%8===0){convert--;placed.push([x,z]);continue;}// its spot stays open lawn
   placed.push([x,z]);stats.trees++;
   const conifer=rnd()<.22,colour=greens[Math.floor(rnd()*greens.length)];
   prop('tree',()=>{

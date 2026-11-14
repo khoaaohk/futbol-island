@@ -26,12 +26,39 @@ export const ORCHARD_RULES={
  spacing:4.6,radius:7,perCluster:4,canopy:2,
 } as const;
 /** Orchard clusters: by the north-east trail and the plaza's north edge, by the plaza's south edge and the south-east trail, south of
- *  the pond walk, and west of the pond by the south-west trail. */
-export const ORCHARD_CENTRES:readonly {x:number;z:number;forms:readonly OrchardForm[];fruit:readonly FruitKind[]}[]=[
+ *  the pond walk, and west of the pond by the south-west trail (the first 4, Nov 13 2026). Nov 13 2026, later (owner: "more fruit
+ *  trees around the stadium", roughly double): five more small orchards round the bowl and along the trails, north of the bowl by
+ *  the north trail, west of it by the west trail, south-west by the south-west trail, out along the north-east trail, and south of
+ *  the pond by the beach. `n`: trees in that cluster (the first four: ORCHARD_RULES.perCluster). */
+export const ORCHARD_CENTRES:readonly {x:number;z:number;forms:readonly OrchardForm[];fruit:readonly FruitKind[];n?:number}[]=[
  {x:-122,z:-71,forms:['round','lobed'],fruit:['mango','orange']},
  {x:-124,z:13,forms:['round','oval'],fruit:['orange','avocado']},
  {x:-112,z:99,forms:['lobed','round'],fruit:['guava','lime']},
  {x:-187,z:82,forms:['round','lobed'],fruit:['mango','guava']},
+ {x:-180,z:-140,forms:['oval','round'],fruit:['avocado','orange'],n:3},
+ {x:-292,z:-40,forms:['round','lobed'],fruit:['lime','mango'],n:3},
+ {x:-235,z:70,forms:['lobed','oval'],fruit:['guava','avocado'],n:4},
+ {x:-95,z:-120,forms:['round','oval'],fruit:['orange','lime'],n:3},
+ {x:-200,z:105,forms:['lobed','round'],fruit:['mango','guava'],n:3},
+];
+/** The first 14 trees exactly as they were planted (Nov 13 2026), so a save's picks (keyed by id) still find them: same ids, order,
+ *  forms and fruit. Where the bigger pond (or anything since) now covers a tree's old spot, it is replanted at the nearest clear spot
+ *  of its own orchard (stadiumOrchardTrees), keeping its id. `c`: its cluster in ORCHARD_CENTRES. */
+export const ORCHARD_LEGACY:readonly (Omit<StadiumOrchardTree,'form'|'fruit'>&{form:OrchardForm;fruit:FruitKind;c:number})[]=[
+ {id:'tree--122--71',x:-122,z:-71,form:'round',fruit:'mango',s:0.82,th:0.95,yaw:0,seed:0,c:0},
+ {id:'tree--127--71',x:-126.6,z:-71,form:'lobed',fruit:'orange',s:0.96,th:1.025,yaw:2.399,seed:1,c:0},
+ {id:'tree--117--71',x:-117.4,z:-71,form:'round',fruit:'mango',s:0.9,th:0.975,yaw:4.798,seed:2,c:0},
+ {id:'tree--124--75',x:-124.3,z:-75,form:'lobed',fruit:'orange',s:0.84,th:1.05,yaw:0.9138,seed:3,c:0},
+ {id:'tree--124-13',x:-124,z:13,form:'round',fruit:'orange',s:1,th:0.975,yaw:3.3128,seed:7,c:1},
+ {id:'tree--129-13',x:-128.6,z:13,form:'oval',fruit:'avocado',s:0.94,th:1.05,yaw:5.7118,seed:8,c:1},
+ {id:'tree--119-13',x:-119.4,z:13,form:'round',fruit:'orange',s:0.88,th:1,yaw:1.8276,seed:9,c:1},
+ {id:'tree--126-9',x:-126.3,z:9,form:'oval',fruit:'avocado',s:0.82,th:0.95,yaw:4.2266,seed:10,c:1},
+ {id:'tree--112-99',x:-112,z:99,form:'lobed',fruit:'guava',s:0.98,th:1,yaw:0.3424,seed:14,c:2},
+ {id:'tree--117-99',x:-116.6,z:99,form:'round',fruit:'lime',s:0.92,th:0.95,yaw:2.7414,seed:15,c:2},
+ {id:'tree--187-82',x:-187,z:82,form:'round',fruit:'mango',s:0.96,th:1.025,yaw:5.1404,seed:21,c:3},
+ {id:'tree--192-82',x:-191.6,z:82,form:'lobed',fruit:'guava',s:0.9,th:0.975,yaw:1.2563,seed:22,c:3},
+ {id:'tree--189-78',x:-189.3,z:78,form:'round',fruit:'mango',s:0.84,th:1.05,yaw:3.6553,seed:23,c:3},
+ {id:'tree--189-86',x:-189.3,z:86,form:'lobed',fruit:'guava',s:0.98,th:1,yaw:6.0543,seed:24,c:3},
 ];
 /** Can an orchard tree (canopy radius r) stand at (x, z)? */
 export function orchardSpotClear(x:number,z:number,r:number=ORCHARD_RULES.canopy){
@@ -44,14 +71,22 @@ export function orchardSpotClear(x:number,z:number,r:number=ORCHARD_RULES.canopy
  return true;
 }
 export type StadiumOrchardTree={id:string;x:number;z:number;form:OrchardForm;fruit:FruitKind;s:number;th:number;yaw:number;seed:number};
-/** The orchard trees: up to perCluster per cluster on a staggered grid round its centre, nearest first, every spot clear. */
+/** The orchard trees: the first 14 (ORCHARD_LEGACY, each replanted nearby if its spot is no longer clear), then the newer
+ *  clusters' trees appended (up to `n` per cluster on a staggered grid round its centre, nearest first, every spot clear). */
 export function stadiumOrchardTrees():StadiumOrchardTree[]{
- const out:StadiumOrchardTree[]=[],R=ORCHARD_RULES;
- ORCHARD_CENTRES.forEach((c,ci)=>{const cand:{x:number;z:number;d:number}[]=[];
+ const out:StadiumOrchardTree[]=[],R=ORCHARD_RULES,spaced=(x:number,z:number)=>!out.some(o=>Math.hypot(o.x-x,o.z-z)<R.spacing*.95);
+ for(const t of ORCHARD_LEGACY){const c=ORCHARD_CENTRES[t.c];let x=t.x,z=t.z;
+  if(!orchardSpotClear(x,z)||!spaced(x,z)){let best:{x:number;z:number;d:number}|null=null;
+   for(let i=-16;i<=16;i++)for(let j=-16;j<=16;j++){const px=t.x+i*.5,pz=t.z+j*.5,d=Math.hypot(i*.5,j*.5);
+    if(Math.hypot(px-c.x,pz-c.z)>9||(best&&d>=best.d)||!orchardSpotClear(px,pz)||!spaced(px,pz))continue;best={x:px,z:pz,d};}
+   if(!best)continue;x=best.x;z=best.z;}
+  out.push({id:t.id,x:+x.toFixed(2),z:+z.toFixed(2),form:t.form,fruit:t.fruit,s:t.s,th:t.th,yaw:t.yaw,seed:t.seed});}
+ ORCHARD_CENTRES.forEach((c,ci)=>{if(ci<4)return;const cand:{x:number;z:number;d:number}[]=[];
   for(let i=-3;i<=3;i++)for(let j=-3;j<=3;j++){const x=c.x+(i+(j%2?.5:0))*R.spacing,z=c.z+j*R.spacing*.87,d=Math.hypot(x-c.x,z-c.z);if(d<=R.radius)cand.push({x,z,d});}
   cand.sort((a,b)=>a.d-b.d||a.x-b.x||a.z-b.z);let n=0;
-  for(const p of cand){if(n>=R.perCluster)break;if(!orchardSpotClear(p.x,p.z))continue;if(out.some(o=>Math.hypot(o.x-p.x,o.z-p.z)<R.spacing*.95))continue;
-   const k=out.length,seed=ci*7+n;out.push({id:`tree-${Math.round(p.x)}-${Math.round(p.z)}`,x:+p.x.toFixed(2),z:+p.z.toFixed(2),form:c.forms[n%c.forms.length],fruit:c.fruit[n%c.fruit.length],
+  for(const p of cand){if(n>=(c.n??R.perCluster))break;if(!orchardSpotClear(p.x,p.z)||!spaced(p.x,p.z))continue;
+   const k=out.length,seed=ci*7+n;let id=`tree-${Math.round(p.x)}-${Math.round(p.z)}`;if(out.some(o=>o.id===id))id+='-b';
+   out.push({id,x:+p.x.toFixed(2),z:+p.z.toFixed(2),form:c.forms[n%c.forms.length],fruit:c.fruit[n%c.fruit.length],
     s:.82+((seed*37)%10)/50,th:.95+((seed*13)%5)/40,yaw:(k*2.399)%(Math.PI*2),seed});n++;}});
  return out;
 }

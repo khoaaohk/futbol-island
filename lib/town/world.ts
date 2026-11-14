@@ -32,7 +32,7 @@ import {MUSEUM_WING} from '../museum/museumDoors';
 import {buildMuseumExterior,MUSEUM_CANOPY,MUSEUM_ACCENT} from './museumExterior';
 import {buildKitShopExterior} from './kitShopExterior';
 import {createWaterRipples} from '../graphics/waterRipples';
-import {patchOceanMaterial,stepWaterTime,setWaterNight} from '../graphics/waterSurface';
+import {patchOceanMaterial,stepWaterTime,setWaterNight,SEA_WATER_LOOK} from '../graphics/waterSurface';
 import {createIslandShore} from '../graphics/islandShore';
 import {createSchemePicker,awningColour,type BuildingScheme} from './buildingStyles';
 import {createShapePicker} from './buildingShapes';
@@ -136,7 +136,7 @@ export function* buildTownSteps(scene: T.Scene) {
 
   // A single ocean surrounds the curved foundation on every side.
   const waterRipples=createWaterRipples();textures.push(waterRipples.texture);
-  const oceanMat=new T.MeshStandardMaterial({color:'#368eb3',map:waterRipples.texture,emissive:'#185a94',emissiveIntensity:.3,roughness:.52,metalness:.02});materials.push(oceanMat);
+  const oceanMat=new T.MeshStandardMaterial({...SEA_WATER_LOOK,map:waterRipples.texture});materials.push(oceanMat);// SEA_WATER_LOOK: shared with the park pond's water (pondWater.ts)
   // Moving water (lib/graphics/waterSurface.ts): two drifting ripple layers off one shared clock; the fishing shore box adds swells.
   patchOceanMaterial(oceanMat);
   // 2100 × 1700 m (Oct 12 2026: the whole map rectangle x −152…864, z −318…300 is playable): from any edge or corner the plane
@@ -1355,7 +1355,7 @@ export function* buildTownSteps(scene: T.Scene) {
   yield;
   const coralCay=buildCoralCay({box,cylinder,put,line,sign,palm,house,table,planter,path,districtSign,obstacles,buildings,assets,surfaceAreas,prop});
   // West Stadium (Nov 12 2026, docs/stadium/PLAN.md): Stadium Park, Stadium Plaza.
-  const westPark=buildWestPark({box,put,cylinder,sign,palm,bench,planter,path,districtSign,obstacles,assets,surfaceAreas,materials,add:o=>town.add(o),prop});
+  const westPark=buildWestPark({box,put,cylinder,sign,palm,bench,planter,path,districtSign,obstacles,assets,surfaceAreas,materials,add:o=>town.add(o),prop,seaRipples:waterRipples.texture/* the pond's water: the sea's own ripple tile */});
   // Stadium Plaza's national flags (plazaFlags.ts): poles + waving cloth, one mesh of its own (never batched), 'flag' prop reactions.
   const plazaFlags=createPlazaFlags(plazaFlagPoles());town.add(plazaFlags.mesh);textures.push(plazaFlags.texture);materials.push(plazaFlags.material);
   // West Stadium phase 2 (stadiumWorld.ts): walkable stands, seats, gate, roofs; its rails join the roof props below.
