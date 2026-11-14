@@ -318,6 +318,9 @@ export async function restoreSave(typed:string,{grownup=false}:{grownup?:boolean
  const r=await post('restore',{code,grownup});
  if(!r)return {ok:false,reason:'offline'};
  if(r.status===503)return {ok:false,reason:'unavailable'};
+ // QA Nov 14 2026: the server answers a wrong code with 200 {ok:false}. Any other failure (a 500 / 502 / 504 from the host, a
+ // 429 from its edge, a non-JSON error page) says nothing about the code: "can't reach the island, try again", never a wrong try.
+ if(r.status!==200)return {ok:false,reason:'offline'};
  if(r.json.ok!==true)return fail();
  const s=readSnapshot(r.json.snapshot);
  if(!s.ok)return s.newer?{ok:false,reason:'newer'}:fail();
