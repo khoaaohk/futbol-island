@@ -181,6 +181,10 @@ for(const [s,i] of [[W,4],[W,9],[N,6],[E,8]]){const p=Q.standWorld(s,s.inner+i*Q
  assert(Math.hypot(pp.x-p.x,pp.z-p.z)<Math.hypot(backX.x-p.x,backX.z-p.z),'stopped before the banner frame');}
 // Corners are open: from the ring out through each corner gap to the park.
 for(const [sx,sz] of [[-1,-1],[1,-1],[-1,1],[1,1]]){const r=walk([[S.x+sx*37.5,S.z+sz*50],[S.x+sx*38,S.z+sz*55],[S.x+sx*46,S.z+sz*60],[S.x+sx*60,S.z+sz*84]]);assert(r.reached&&!r.fell&&r.high<.1,'corner '+sx+','+sz+' open '+JSON.stringify({...r,t:0}));}
+// QA Nov 14 2026: a ride up an aisle cannot turn off along a seat row (it rode through the seated fans); on foot that still works.
+for(const mode of ['scooter','bike']){const z=S.z-39,d=W.inner+4*Q.ROW_DEPTH+.65;const r=walk([[S.x-37,z],[S.x-40.5,z],[S.x-d,z],[S.x-d,S.z-30]],mode,10);
+ assert(!r.fell&&!r.reached&&r.z<S.z-39+1.3,mode+' stays in the aisle '+JSON.stringify({...r,t:0}));}
+{const z=S.z-39,d=W.inner+4*Q.ROW_DEPTH+.65;const r=walk([[S.x-37,z],[S.x-40.5,z],[S.x-d,z],[S.x-d,S.z-30]],'walk',14);assert(r.reached,'a walker can go along the row');}
 // Rides go up an aisle and down a back stair too (no wedging, no falls).
 for(const mode of ['scooter','bike']){const z=S.z-39,back=S.x-Q.standBack(W);const r=walk([[S.x-37,z],[S.x-40.5,z],[back+1.5,z],[back+1.5,S.z-26],[back-.5,S.z-26],[S.x-Q.stairEnd(W)-2,S.z-26]],mode);
  assert(r.reached&&!r.fell&&r.h<.05,mode+' up an aisle and down a back stair '+JSON.stringify({...r,t:0}));}
@@ -478,7 +482,8 @@ console.log('west stadium phase 2: ok');
  // Nov 13 2026: all 10 plaza posts stand (5 a side, evenly spaced, clear of flags, benches and beds; the old list lost 4 to spacing).
  {const pl=lights.posts.filter(p=>p.kind==='plaza');assert.equal(pl.length,10,'10 plaza posts');
   for(const z of [P.minZ-SL.STADIUM_LAMPS.plazaOut,P.maxZ+SL.STADIUM_LAMPS.plazaOut]){const xs=pl.filter(p=>p.z===z).map(p=>p.x).sort((a,b)=>a-b);
-   assert.equal(xs.length,5,'5 posts on each long edge');const gaps=xs.slice(1).map((x,i)=>x-xs[i]);assert(Math.max(...gaps)-Math.min(...gaps)<1e-6,'evenly spaced: '+gaps);}
+   assert.equal(xs.length,5,'5 posts on each long edge');const gaps=xs.slice(1).map((x,i)=>x-xs[i]);assert(Math.min(...gaps)>=12&&Math.max(...gaps)<=18,'spread along the edge (QA Nov 14 2026: no longer exactly even, so no post stands by a flag): '+gaps);
+   for(const x of xs.slice(1))assert(Q.plazaFlagPoles().every(f=>Math.hypot(f.x-x,f.z-z)>=2.9),`plaza post x ${x} stands clear of the flag poles`);}
   const props=world.obstacles.filter(o=>o.x<-40&&o.w!==SL.LAMP_POST.collider);
   for(const p of pl)assert(!props.some(o=>Math.abs(p.x-o.x)<o.w/2+.5&&Math.abs(p.z-o.z)<o.d/2+.5),`plaza post (${p.x}, ${p.z}) clear of benches, beds and flags`);}
  const trees=world.assets.filter(a=>a.kind==='tree'||a.kind==='palm'),flags=Q.plazaFlagPoles();

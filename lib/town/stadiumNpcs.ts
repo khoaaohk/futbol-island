@@ -112,8 +112,10 @@ export const STADIUM_NPC_ROUTES:Record<string,RoutePoint[]>={
 };
 /** The watch-party crowd's spots (dx, dz from the screen's back face): a loose group between the screen posts and the ring path, 1.8 m+
  *  apart, so the ring path (the walkway) and the gaps between them stay clear. Listed in heat order: the first ones stay on hot tiers. */
-const CROWD_SPOTS:readonly (readonly [string,number,number])[]=[['stadium-viewer-kwabena',-4.3,5.0],['stadium-viewer-lumi',1.4,5.1],['stadium-viewer-rangi',-.2,6.9],
- ['stadium-viewer-zawadi',4.6,6.0],['stadium-viewer-arlo',-3.2,7.4],['stadium-viewer-elif',1.7,8.6]];
+/*  QA Nov 14 2026: Kwabena (was -4.3) and Zawadi (was 4.6) stood in the kick lanes to the screen-post targets (posts at ±6.5): a
+    shot bounced off them. Everyone now stands within 3.5 m of the middle, so the strips in front of both posts stay clear. */
+const CROWD_SPOTS:readonly (readonly [string,number,number])[]=[['stadium-viewer-kwabena',-3.4,5.0],['stadium-viewer-lumi',1.4,5.1],['stadium-viewer-rangi',-.2,6.9],
+ ['stadium-viewer-zawadi',3.5,5.6],['stadium-viewer-arlo',-3.2,7.4],['stadium-viewer-elif',1.7,8.6]];
 for(const [id,dx,dz] of CROWD_SPOTS)STADIUM_NPC_ROUTES[id]=[{x:S.x+dx,z:S.z+SCREEN.z+.3+dz}];
 
 // ---- Fixed spots (stands, concourse, gantry, pitch-side) -------------------------------------------------------------------------

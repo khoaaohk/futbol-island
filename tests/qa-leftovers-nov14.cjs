@@ -40,4 +40,9 @@ ok('stadium: a take-off under a stand roof is held under it; roof ends have wall
  assert.equal(F.roofCeiling(pitch.x,pitch.z,3),Infinity,'over the pitch: free');assert.equal(F.roofCeiling(seat.x,seat.z,S.ROOF.y+.3),Infinity,'already above the roof');
  const town=read('components/Town.tsx');assert.equal((town.match(/flight\.height=Math\.min\(flight\.height,Math\.max\(was,roofCeiling\(location\.x,location\.z,was\)\)\);/g)||[]).length,2,'take-off/cruise and the landing glide');
  assert.match(read('lib/town/stadiumWorld.ts'),/for\(const \[e0,e1\] of \[\[a0-P,a0\+\.12\],\[a1-\.12,a1\+P\]\] as const\)\{const r=standRect\(s,ROOF\.front\+\.12,ROOF\.back-\.12,e0,e1\);[\s\S]{0,120}rails\.push/);});
+ok('island: a chat bubble starts above a shown name tag; viewers clear of the screen-post lanes',()=>{
+ assert.match(read('components/Town.tsx'),/chatterBubbles\.follow\(i,sp\.position\.x,sp\.position\.y\+\(sp\.label\.visible\?2\.5\*sp\.rig\.profileScale\+\.62:2\.75\*sp\.rig\.profileScale\)/);
+ assert.match(read('lib/graphics/islandNpcs.ts'),/label\.position\.y=2\.5;label\.scale\.set\(3\.5\/rig\.profileScale,1\.094\/rig\.profileScale/,'tag size the bubble lift assumes');
+ const spots=[...read('lib/town/stadiumNpcs.ts').matchAll(/\['stadium-viewer-[a-z]+',(-?[\d.]+),(-?[\d.]+)\]/g)].map(m=>+m[1]);assert.equal(spots.length,6);
+ for(const dx of spots)assert.ok(Math.abs(dx)<=3.6,'viewer within 3.6 m of the middle (posts at ±6.5): '+dx);});
 console.log(`qa-leftovers-nov14: ${n} groups passed`);
