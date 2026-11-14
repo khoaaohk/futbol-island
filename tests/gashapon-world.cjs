@@ -1,4 +1,4 @@
-// Gashapon round 2 (Nov 8 2026, docs/gashapon-design.md): the 14 machines in the 3D world (12 on the island inside buildTown's
+// Gashapon round 2 (Nov 8 2026, docs/gashapon-design.md): the 18 machines in the 3D world (16 on the island since Nov 13 2026 inside buildTown's
 // static batches, 2 in the Arcade room), their colliders and walk-up clearance, the draw-call budget (the island's solid pieces
 // add no batch; the globes add at most one draw per 50 m cell), the Coral Cay Konbini making room, the browser store wiring
 // (fi2-gashapon-v1, the arcade wallet, no double charge) and the prompt/panel wiring in Town and the Arcade.
@@ -47,8 +47,8 @@ await ok('the shared machine: one glass globe, capsules, crank, coin slot, tray 
  const src=read('lib/graphics/gashaponMesh.ts')+read('lib/town/gashaponWorld.ts');assert(!/Light\(|CanvasTexture|requestAnimationFrame|setInterval/.test(src),'no lights, textures or loops');
 });
 
-await ok('island: 12 machines built, each a collider; solid pieces join the paint batches, globes 1 draw per 50 m cell, ≤ 2 draws per site',()=>{
- const foot=withG.world.obstacles.filter(o=>island.some(m=>Math.abs(m.x-o.x)<.01&&Math.abs(m.z-o.z)<.01));assert.equal(foot.length,12,'12 footprints');
+await ok('island: 16 machines built, each a collider; solid pieces join the paint batches, globes 1 draw per 50 m cell, ≤ 2 draws per site',()=>{
+ const foot=withG.world.obstacles.filter(o=>island.some(m=>Math.abs(m.x-o.x)<.01&&Math.abs(m.z-o.z)<.01));assert.equal(foot.length,16,'16 footprints');
  for(const o of foot){const m=island.find(m=>Math.abs(m.x-o.x)<.01&&Math.abs(m.z-o.z)<.01);{const q=Math.abs(Math.sin(m.yaw))>.7,/* Nov 10 2026: the summit machine faces east (quarter turn), so its footprint's w and d swap */S=M.GASHA_STYLE_SIZE[M.gashaStyleOf(m)]/* Nov 10 2026: each body style its own size */,cw=q?S.d:S.w,cd=q?S.w:S.d;assert(o.w>=cw&&o.d>=cd&&o.w<1.6&&o.d<1.6,m.id+' footprint covers the cabinet');}}
  const a=meshes(withG.scene),b=meshes(without.scene);
  const glass=a.filter(x=>x.material&&x.material.name==='gashapon-glass');
@@ -65,6 +65,23 @@ await ok('island: 12 machines built, each a collider; solid pieces join the pain
  assert(extra/island.length<=3,'≤ 3 draws per machine');
 });
 
+// Nov 13 2026 (owner: "the gashapon machines look dark at night"): the cream front panels glow in their own paint batch (uv-slot
+// marks, lib/graphics/machineNightGlow.ts) and the globes' glass glows softly, both on the shared night factor: off by day.
+await ok('night glow: every island machine\'s front panel is marked in its paint batch, the paint and the glass read the shared night factor (0 by day)',()=>{
+ const NG=load('lib/graphics/machineNightGlow.ts'),SN=load('lib/town/stadiumNight.ts');assert.equal(NG.MACHINE_NIGHT,SN.STADIUM_NIGHT,'one shared night factor');
+ const chunks=meshes(withG.scene).filter(x=>/^island-chunk-/.test(x.name)),glowing=[];
+ for(const c of chunks){const uv=c.geometry.getAttribute('uv'),pos=c.geometry.getAttribute('position');if(!uv)continue;for(let i=0;i<uv.count;i++)if(uv.getY(i)===NG.MACHINE_GLOW_FLAG&&Math.abs(uv.getX(i)-G.GASHA_PANEL_GLOW)<1e-6)glowing.push({c,x:pos.getX(i),z:pos.getZ(i)});}
+ for(const m of island)assert(glowing.some(g=>Math.hypot(g.x-m.x,g.z-m.z)<1),m.id+': its front panel glows at night');
+ const mats=new Set(glowing.map(g=>g.c.material));for(const mat of mats)assert(/machine-glow-paint/.test(mat.customProgramCacheKey()),'the panel\'s batch paint carries the night-glow patch');
+ const compile=mat=>{const sh={uniforms:{},vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};mat.onBeforeCompile(sh,null);return sh;};
+ for(const mat of mats){const sh=compile(mat);assert.equal(sh.uniforms.uMachineNight,SN.STADIUM_NIGHT,'the paint binds the shared night uniform');assert(/vMachineGlow\.x\*uMachineNight/.test(sh.fragmentShader)&&/uv\.y>500/.test(sh.vertexShader),'emission = mark × night');assert(sh.uniforms.uWindT,'the island wind patch still runs');}
+ const glass=meshes(withG.scene).filter(x=>x.material&&x.material.name==='gashapon-glass'),gm=new Set(glass.map(x=>x.material));assert.equal(gm.size,1,'one shared glass material');
+ {const sh=compile([...gm][0]);assert.equal(sh.uniforms.uMachineNight,SN.STADIUM_NIGHT);assert(/totalEmissiveRadiance\+=vec3\([^)]*\)\*0\.500\*uMachineNight/.test(sh.fragmentShader),'the globes glow with the night factor');}
+ assert.equal(SN.STADIUM_NIGHT.value,0,'off by day: the night factor starts at 0 (fieldLighting.ts raises it only in night mode)');
+ assert(/const target=night\?1:0/.test(read('lib/town/fieldLighting.ts'))&&/setStadiumNight\(blend\)/.test(read('lib/town/fieldLighting.ts')),'fieldLighting eases it to 1 at night and back to 0 by day');
+ const unmarked=chunks.filter(c=>c.material===[...mats][0]).flatMap(c=>{const uv=c.geometry.getAttribute('uv');let n=0;for(let i=0;i<uv.count;i++)if(uv.getY(i)===0&&uv.getX(i)===0)n++;return [n];}).reduce((a,b)=>a+b,0);
+ assert(unmarked>1000,'unmarked paint (uv 0, 0) adds nothing');
+});
 await ok('walk-up spots are clear: 0.9 m in front of each glass, no collider; the Konbini doors stay open',()=>{
  const own=o=>all.some(m=>Math.abs(m.x-o.x)<.01&&Math.abs(m.z-o.z)<.01);
  const solid=[...withG.world.obstacles.filter(o=>!own(o)),...withG.world.buildings];
@@ -177,7 +194,8 @@ await ok('QA Nov 9: a Konbini pair\'s left-hand neighbour moves the knob label a
  // The label (left of the knob) and the coins / cap tag sat over the neighbouring cabinet: a machine with a neighbour on its
  // left (seen from the front) puts them above the knob / under the coin plate (components/GashaponMachineFace.tsx hasLeftNeighbour).
  const left=island.filter(m=>island.some(o=>o.id!==m.id&&Math.hypot(o.x-m.x,o.z-m.z)<1.6&&((o.x-m.x)*Math.cos(m.yaw)-(o.z-m.z)*Math.sin(m.yaw))<0)).map(m=>m.id).sort();
- same(left,['gs-cay-sweets','gs-square-snacks'],'the east machine of each Konbini pair has its neighbour on the left');
+ same(left,['gs-cay-sweets','gs-square-snacks','gs-stadium-beach','gs-stadium-boots'],'the east machine of each Konbini pair (and of each stadium pair) has its neighbour on the left');
+ same(island.filter(m=>m.zone==='stadium').filter(m=>M.stadiumCabinetOnLeft(m.id)).map(m=>m.id),['gs-stadium-boots','gs-stadium-pixel','gs-stadium-beach'],'in the stadium row the drink machine counts as the pixel machine\'s left neighbour too');
  const face=read('components/GashaponMachineFace.tsx'),css=read('components/GashaponMachineFace.module.css');
  assert(/export function hasLeftNeighbour/.test(face)&&/data-neighbour=\{hasLeftNeighbour\(machine\)/.test(face),'the face marks a left-hand neighbour');
  assert(/\[data-neighbour=left\] \.knobLabel\{[^}]*bottom:calc\(100% \+/.test(css)&&/\[data-neighbour=left\] \.tag\{[^}]*left:var\(--cx\)/.test(css),'label above the knob, tag under the plate');
@@ -192,8 +210,8 @@ await ok('Nov 9: the island map shows the gashapon (one capsule mark per spot, K
  const MM=load('lib/town/mapMarkers.ts'),V=load('lib/town/vendingCatalog.ts').VENDING_MACHINES,F=load('lib/town/fishing/fishCatalog.ts').FISH_SPOTS;
  const vm_=V.reduce((l,m)=>{const n=l.find(o=>Math.hypot(o.x-m.x,o.z-m.z)<6);if(!n)l.push({x:m.x,z:m.z});return l;},[]);
  const marks=MM.placeGashaponMarkers(island,[...vm_,...F]);
- assert.equal(marks.length,10,'12 machines, the two Konbini pairs share a mark');
- assert.equal(marks.reduce((n,g)=>n+g.ids.length,0),12,'every island machine exactly once');assert(!marks.some(g=>g.ids.some(id=>id.startsWith('gs-arcade'))),'the Arcade pair is indoors');
+ assert.equal(marks.length,11,'16 machines, the two Konbini pairs share a mark, the stadium four share one');
+ assert.equal(marks.reduce((n,g)=>n+g.ids.length,0),16,'every island machine exactly once');assert(!marks.some(g=>g.ids.some(id=>id.startsWith('gs-arcade'))),'the Arcade pair is indoors');
  for(const g of marks){for(const id of g.ids){const m=island.find(x=>x.id===id);assert(Math.hypot(g.x-m.x,g.z-m.z)<25,id+': near its machine');}
   for(const o of [...vm_,...F])assert(Math.hypot(g.x-o.x,g.z-o.z)>=19.9,g.id+': clear of a V/F mark');}
  const o=read('components/IslandOverview.tsx'),i=o.indexOf('className="map-gashapon-markers"');
@@ -255,6 +273,6 @@ await ok('Audit Nov 10: Spin cannot start without enough coins or after the dail
  assert(/const tagKind=error\?\.kind\?\?blocked;/.test(face),'island face: the coins / cap tag shows before the knob is pressed');
 });
 
-console.log(failed?`${failed} FAILED`:'PASS gashapon world: 14 machines in 3D, colliders, draw budget, Coral Cay room, browser store, prompt + panel wiring');
+console.log(failed?`${failed} FAILED`:'PASS gashapon world: 18 machines in 3D (16 on the island incl. the DRIP FC Stadium four), colliders, draw budget, Coral Cay room, browser store, prompt + panel wiring');
 process.exit(failed?1:0);
 })().catch(e=>{console.error(e);process.exit(1);});

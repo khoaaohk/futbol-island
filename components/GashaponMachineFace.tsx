@@ -25,7 +25,7 @@ import {DoneButton} from './DoneButton';
 import {CapsuleIcon} from './CapsuleIcon';
 import ToyIcon from './ToyIcon';
 import {useEffect,useRef,useState,type CSSProperties,type PointerEvent as ReactPointerEvent} from 'react';
-import {gashaponMachine,islandGashaponMachines,type GashaponMachine} from '@/lib/gashapon/machines';
+import {gashaponMachine,islandGashaponMachines,stadiumCabinetOnLeft,type GashaponMachine} from '@/lib/gashapon/machines';
 import {GASHAPON_PRICE,GASHAPON_REFUND,GASHAPON_SPINS_PER_DAY} from '@/lib/gashapon/store';
 import {openToyShelf,openToyViewer,useGashaponPanel} from '@/lib/gashapon/gashaponBrowser';
 import {gashaponFace,gashaponFx,type FacePoint} from '@/lib/gashapon/gashaponFace';
@@ -51,7 +51,7 @@ const markHint=()=>{try{const s=new Set<string>(JSON.parse(localStorage.getItem(
 const reducedMotion=()=>{try{return matchMedia('(prefers-reduced-motion: reduce)').matches;}catch{return false;}};
 
 export function hasLeftNeighbour(m:{id:string;x:number;z:number;yaw:number}){const c=Math.cos(m.yaw),s=Math.sin(m.yaw);
- return islandGashaponMachines().some(o=>{if(o.id===m.id)return false;const dx=o.x-m.x,dz=o.z-m.z,lx=dx*c-dz*s;return Math.hypot(dx,dz)<1.6&&lx<0;});}
+ return stadiumCabinetOnLeft(m.id)||islandGashaponMachines().some(o=>{if(o.id===m.id)return false;const dx=o.x-m.x,dz=o.z-m.z,lx=dx*c-dz*s;return Math.hypot(dx,dz)<1.6&&lx<0;});}
 
 function Face({machine}:{machine:GashaponMachine}){
  const root=useRef<HTMLDivElement>(null),knob=useRef<HTMLButtonElement>(null),tray=useRef<HTMLButtonElement>(null);

@@ -1,13 +1,13 @@
 /**
  * DRIP FC Stadium ball hunt (Nov 13 2026; owner: "extend the island ball hunt into the new stadium area"). Twelve balls take the
- * hunt from 116 to 128.
+ * hunt from 116 to 128; a thirteenth (Nov 13 2026, owner: a second target on the big screen's west post) takes it to 129.
  *
  * Nov 13 2026 (owner: the loose balls on the plaza and the apron were "too easy to find"; "make them like the targets on
  * buildings", "place them as targets on the stadium" and "place some balls in the crowd"): the ids, concepts and lessons stay,
  * only the places and kinds change, so an old save's found balls stay found.
- *  - Seven WALL TARGETS on the stadium (the island's kick targets: coinQuest.ts `wall`, round high targets like the Coral Cay
+ *  - Eight WALL TARGETS on the stadium (the island's kick targets: coinQuest.ts `wall`, round high targets like the Coral Cay
  *    arch's): one on each gold gate pillar's plaza face (both sides of the entrance), on the east, west (two) and north stands' back
- *    walls, and on the big screen's east post (from the ground behind the south stand). Kick the target, the ball drops in front of it.
+ *    walls, and on both of the big screen's posts (from the ground behind the south stand; the west one added later, the 129th ball). Kick the target, the ball drops in front of it.
  *  - Three CROWD balls resting on an empty seat among the fans: the seat right beside an aisle, which the crowd always leaves free
  *    (stadiumCrowd.ts crowdSeats, k 0), in a front row of the west and east stands (in front of the roof, so the roof fade never
  *    hides them) and mid-way up the open north stand. Walk up the aisle and step into the row.
@@ -18,7 +18,7 @@
  * the game really builds: each target on real stadium geometry and hit by a real kick from a reachable spot; each crowd ball on a
  * free seat among fans, reached by a walk up the aisle; the roof balls on the slabs.
  *
- * Lessons: twelve stadium ideas no other ball (island or reef) teaches (tests/stadium-balls.cjs); sources in ballHuntSources.ts,
+ * Lessons: thirteen stadium ideas no other ball (island or reef) teaches (tests/stadium-balls.cjs); sources in ballHuntSources.ts,
  * never in kid UI. Pure data (no three.js): the island imports it through coinQuest.ts, like every other ball.
  */
 import type {CoinSpot,WallFacing} from './coinQuest';
@@ -52,8 +52,11 @@ function pillar(side:-1|1):Target{const x=GATE_ARCH_X+PILLAR_HALF,z=STADIUM_GATE
 /** The big screen's east post, on its south face (the side the park sees, with the screen's back picture above): shot at from the
  *  ground behind the south stand, the ball drops there. (Not from the concourse: the stands are solid to a kicked ball, so a
  *  kick on a stand never leaves the foot.) */
-const SCREEN_TARGET:Target=(()=>{const x=STADIUM.x+SCREEN_POST_X,z=STADIUM.z+SCREEN.z+SCREEN_POST_R;
- return {x:r2(x),y:0,z:r2(z+TARGET_DROP),wall:{x:r2(x),y:SCREEN_TARGET_Y,z:r2(z),high:true,round:true,facing:'south'}};})();
+function screenTarget(side:-1|1):Target{const x=STADIUM.x+side*SCREEN_POST_X,z=STADIUM.z+SCREEN.z+SCREEN_POST_R;
+ return {x:r2(x),y:0,z:r2(z+TARGET_DROP),wall:{x:r2(x),y:SCREEN_TARGET_Y,z:r2(z),high:true,round:true,facing:'south'}};}
+/** Nov 13 2026 (owner: "a second hidden ball target on the left screen post"): the west post's twin of the east one, at the same
+ *  height and facing. Seen from the viewing area (looking north at the screen's back face) the west post is on the left. */
+const SCREEN_TARGET=screenTarget(1),SCREEN_WEST_TARGET=screenTarget(-1);
 /** On the seat right beside aisle `aisle` (its centre, stand-local metres) on its `side` (-1 / +1 along), in row `row`: the seat
  *  the crowd always leaves free (stadiumCrowd.ts), with fans beside and behind it. The ball rests on the seat pad. */
 export function crowdSeat(id:StandDef['id'],aisle:number,side:-1|1,row:number){const s=stand(id);
@@ -114,5 +117,10 @@ export const STADIUM_BALL_SPOTS:CoinSpot[]=[
   clue:'The big screen at the south end shows replays. A target hides on one of the posts that hold it up.',
   detail:'Walk round the outside of the stadium to the south end, behind the south stand. Find the round target on the big screen’s east post, back away to the south and hold Kick for a high shot.',
   teaching:'VAR checks the big moments. A video assistant referee watches replays of goals, penalties, straight red cards and mistaken identity. The referee can look at a screen, then decides.',lesson:'support'},
+ // Nov 13 2026 (owner): the 129th ball, on the screen's west (left) post. Appended last, so saved ids keep their order.
+ {id:'stadium-screen-west',name:'DRIP FC Stadium · big screen west post',...SCREEN_WEST_TARGET,...T,concept:'world-match-clock',near:kick,
+  clue:'The big screen has two posts. The other one hides a target too, under the score and the clock that every fan checks.',
+  detail:'Walk round the outside of the stadium to the south end, behind the south stand. Find the round target on the big screen’s west post, on the left as you face the screen, back away to the south and hold Kick for a high shot.',
+  teaching:'The scoreboard tells everyone the story. It shows both teams, the score and the match clock, which counts up from 0 to 45 minutes in the first half and from 45 to 90 in the second.',lesson:'support'},
 ];
 export const STADIUM_BALL_IDS=STADIUM_BALL_SPOTS.map(s=>s.id);

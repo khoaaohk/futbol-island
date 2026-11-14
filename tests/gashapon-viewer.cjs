@@ -298,7 +298,7 @@ await ok('toy kinds: 10 kinds, every one of the 84 has a kind + bonus; each mach
  for(const t of all){const p=KD.kindPlan(t.id);assert(p,t.id+' has a plan');assert(KD.TOY_KINDS[p.kind]&&KD.TOY_KINDS[p.bonus],t.id);assert.notEqual(p.kind,p.bonus,t.id+': the bonus is a second interaction');
   assert.equal(t.rarity==='rare',p.kind==='capsule',t.id+': the rare (only) is a secret capsule');if(t.rarity==='rare')assert(['gold','clear','glitter','pearl'].includes(p.rare),t.id+' rare finish');}
  assert.equal(Object.keys(KD.TOY_KIND_PLAN).length,84,'no stray ids');
- const M=load('lib/gashapon/machines.ts');for(const m of M.GASHAPON_MACHINES){const ps=all.filter(t=>t.machine===m.id).map(t=>KD.kindPlan(t.id));
+ const M=load('lib/gashapon/machines.ts');for(const m of M.setGashaponMachines()/* the stadium four share these sets */){const ps=all.filter(t=>t.machine===m.id).map(t=>KD.kindPlan(t.id));
   assert(ps.some(p=>p.kind==='puzzle'),m.id+': a take-apart puzzle');const sq=ps.filter(p=>KD.SQUISHY.includes(p.kind)).length;assert(sq>=1&&sq<=2,m.id+': 1–2 squishy ('+sq+')');
   assert(ps.some(p=>KD.MECHANICAL.includes(p.kind)),m.id+': a mechanical toy');}
  for(const id of KD.KIND_LIVE)assert(REG.HD_MACHINES.has(id),id+': live kinds need the HD build');

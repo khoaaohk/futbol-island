@@ -58,4 +58,5 @@ export const BALL_HUNT_SOURCES:Record<string,BallHuntSource[]>={
  'stadium-east-stand':[IFAB('Law 3 The Players (team officials and the technical area)','the-players')],
  'stadium-north-stand':[IFAB('Law 4 The Players’ Equipment (colours)','the-players-equipment')],
  'stadium-screen':[IFAB('Law 6 The Other Match Officials (video assistant referee)','the-other-match-officials'),{title:'Video assistant referee',url:'https://en.wikipedia.org/wiki/Video_assistant_referee'}],
+ 'stadium-screen-west':[IFAB('Law 7 The Duration of the Match','the-duration-of-the-match'),{title:'Scoreboard',url:'https://en.wikipedia.org/wiki/Scoreboard'}],
 };

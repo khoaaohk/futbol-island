@@ -11,12 +11,12 @@ function environment(initial={},browser=true){
 const e=environment(),q=e.load('lib/town/coinQuest.ts'),{COIN_QUEST,COIN_STORAGE_KEY,COIN_REWARD_ID,emptyCoinProgress,sanitizeCoinProgress,applyCoinEvent,coinRewardEarned}=q;
 assert.equal(new Set(COIN_QUEST.map(c=>c.teaching)).size,COIN_QUEST.length,'Every found ball teaches a different idea');
 const ids=COIN_QUEST.map(c=>c.id),hidden=COIN_QUEST.find(c=>c.kind==='hidden').id,parcel=COIN_QUEST.find(c=>c.kind==='kick').id;
-assert.equal(ids.length,128);assert.equal(new Set(ids).size,128);assert(COIN_QUEST.every(c=>Number.isFinite(c.x+c.y+c.z)&&c.clue&&c.detail&&c.teaching));
+assert.equal(ids.length,129);assert.equal(new Set(ids).size,129);assert(COIN_QUEST.every(c=>Number.isFinite(c.x+c.y+c.z)&&c.clue&&c.detail&&c.teaching));
 for(const raw of [null,undefined,false,1,'oops'])assert.equal(sanitizeCoinProgress(raw).collected.length,0);
 const dirty=sanitizeCoinProgress({revealed:[parcel,parcel,'fake',4],collected:[hidden,hidden,'fake',null],hint:'fake',celebrated:true});
 assert.equal(dirty.collected.length,1);assert(dirty.revealed.includes(hidden));assert.equal(dirty.revealed.length,2);assert.equal(dirty.hint,null);assert.equal(dirty.celebrated,false);
 const oldTen=sanitizeCoinProgress({revealed:ids.slice(0,10),collected:ids.slice(0,10),hint:null,celebrated:true});assert.equal(oldTen.collected.length,10,'previous ten collectibles persist');assert(!coinRewardEarned(oldTen),'new goal requires fifty');assert(!oldTen.celebrated);
-const nineteen=sanitizeCoinProgress({version:9,collected:ids.slice(0,-1)});assert.equal(nineteen.collected.length,127);assert(!coinRewardEarned(nineteen));
+const nineteen=sanitizeCoinProgress({version:10,collected:ids.slice(0,-1)});assert.equal(nineteen.collected.length,128);assert(!coinRewardEarned(nineteen));
 let s=emptyCoinProgress();assert.equal(applyCoinEvent(s,'fake','collect'),s);assert.equal(applyCoinEvent(s,parcel,'collect'),s,'cannot collect closed parcel');
 s=applyCoinEvent({...s,hint:hidden},hidden,'collect');assert(s.collected.includes(hidden));assert.equal(s.hint,null);assert.equal(applyCoinEvent(s,hidden,'collect'),s,'duplicate pickup no-op');
 s=applyCoinEvent(s,parcel,'reveal');assert.equal(applyCoinEvent(s,parcel,'reveal'),s);assert(!s.collected.includes(parcel));s=applyCoinEvent(s,parcel,'collect');assert(s.collected.includes(parcel));
@@ -32,14 +32,14 @@ for(const id of ids){p.recordCoin(id,'reveal');p.recordCoin(id,'collect');}p.dis
 // SSR reads must not mark storage loaded before browser hydration.
 const ssr=environment({[COIN_STORAGE_KEY]:JSON.stringify(s)},false),sp=ssr.load('lib/town/coinProgress.ts'),custom=ssr.load('lib/town/customization.ts');assert.equal(sp.readCoinProgress().collected.length,0);assert.equal(custom.sanitizeCustomization({costume:COIN_REWARD_ID}).costume,'none');ssr.hydrate();assert.equal(sp.readCoinProgress().collected.length,COIN_QUEST.length);assert.equal(custom.sanitizeCustomization({costume:COIN_REWARD_ID}).costume,COIN_REWARD_ID);
 const broken=environment({[COIN_STORAGE_KEY]:'not JSON'}),bp=broken.load('lib/town/coinProgress.ts');assert.equal(bp.readCoinProgress().collected.length,0);broken.block();assert(bp.recordCoin(hidden,'collect'));assert(bp.readCoinProgress().collected.includes(hidden),'private browsing retains session progress');
-console.log('PASS coin quest: 128 locations, sanitization, reveal/collect gating, duplicates, hints, persistence, cross-tab merge, completion, SSR hydration, blocked storage');
+console.log('PASS coin quest: 129 locations, sanitization, reveal/collect gating, duplicates, hints, persistence, cross-tab merge, completion, SSR hydration, blocked storage');
 
 // Expanding the hunt never takes an already-earned costume away.
 const legacy40={revealed:ids.slice(0,40),collected:ids.slice(0,40),hint:null,celebrated:true};
-const migrated=sanitizeCoinProgress(legacy40);assert.equal(migrated.version,9);assert(migrated.rewardUnlocked);assert(coinRewardEarned(migrated));assert.equal(migrated.collected.length,40);assert(!migrated.celebrated,'new fifty-ball finale remains available');
+const migrated=sanitizeCoinProgress(legacy40);assert.equal(migrated.version,10);assert(migrated.rewardUnlocked);assert(coinRewardEarned(migrated));assert.equal(migrated.collected.length,40);assert(!migrated.celebrated,'new fifty-ball finale remains available');
 assert(!coinRewardEarned(sanitizeCoinProgress({...legacy40,collected:ids.slice(0,39)})),'incomplete old save does not unlock');
 assert(!coinRewardEarned(sanitizeCoinProgress({...legacy40,version:2,rewardUnlocked:false})),'new players need all fifty');
-const legacyEnv=environment({[COIN_STORAGE_KEY]:JSON.stringify(legacy40)}),legacyProgress=legacyEnv.load('lib/town/coinProgress.ts');assert(coinRewardEarned(legacyProgress.readCoinProgress()));legacyProgress.setCoinHint(ids[40]);const persisted=JSON.parse(legacyEnv.data.get(COIN_STORAGE_KEY));assert.equal(persisted.version,9);assert(persisted.rewardUnlocked);assert(coinRewardEarned(sanitizeCoinProgress(persisted)));
+const legacyEnv=environment({[COIN_STORAGE_KEY]:JSON.stringify(legacy40)}),legacyProgress=legacyEnv.load('lib/town/coinProgress.ts');assert(coinRewardEarned(legacyProgress.readCoinProgress()));legacyProgress.setCoinHint(ids[40]);const persisted=JSON.parse(legacyEnv.data.get(COIN_STORAGE_KEY));assert.equal(persisted.version,10);assert(persisted.rewardUnlocked);assert(coinRewardEarned(sanitizeCoinProgress(persisted)));
 console.log('PASS fifty-ball migration: completed original40 keeps reward, partial40 does not, new saves require50');
 
 assert(!q.allCostumesEarned({...emptyCoinProgress(),collected:ids.slice(0,49)}));assert(q.allCostumesEarned({...emptyCoinProgress(),collected:ids}));assert(!q.allCostumesEarned({...emptyCoinProgress(),collected:ids.slice(0,40),rewardUnlocked:true}),'Legacy fox reward does not skip the new all-costume goal');console.log('PASS all costumes unlock at 50; legacy fox remains separate');
@@ -51,22 +51,25 @@ const oldFull=sanitizeCoinProgress({version:2,collected:ids.slice(0,50)});assert
  assert.equal(COSTUME_UNLOCK_ORDER.length,clubIds.length+1,'every club costume plus the fox');assert.equal(new Set(COSTUME_UNLOCK_ORDER).size,COSTUME_UNLOCK_ORDER.length,'no duplicates');
  assert.deepEqual([...COSTUME_UNLOCK_ORDER].filter(id=>id!==COIN_REWARD_ID).sort(),[...clubIds].sort(),'the order lists exactly the club costumes');
  assert.equal(COSTUME_UNLOCK_ORDER[COSTUME_UNLOCK_ORDER.length-1],COIN_REWARD_ID,'the fox is last');
- assert.equal(BALLS_PER_COSTUME_MILESTONE,10);assert.equal(COSTUMES_PER_MILESTONE,3);assert.equal(COIN_QUEST.length,128);
- // Sep 29 2026, 100 balls; Oct 15 2026, 115; Oct 25 2026, 116 (the East Jetty ball); Nov 13 2026, 128 (the stadium's twelve): club costumes keep their 10…80 milestones (nothing re-locks); the fox moves to every ball, 115; 90–110 unlock nothing.
+ assert.equal(BALLS_PER_COSTUME_MILESTONE,10);assert.equal(COSTUMES_PER_MILESTONE,3);assert.equal(COIN_QUEST.length,129);
+ // Sep 29 2026, 100 balls; Oct 15 2026, 115; Oct 25 2026, 116 (the East Jetty ball); Nov 13 2026, 128 (the stadium's twelve), then 129 (the big screen's west post): club costumes keep their 10…80 milestones (nothing re-locks); the fox moves to every ball, 115; 90–110 unlock nothing.
  for(let m=10;m<=70;m+=10)assert.equal(costumesAtMilestone(m),3,`${m} balls unlock exactly three`);
- assert.equal(costumesAtMilestone(80),2);assert.equal(costumesAtMilestone(90),0);assert.equal(costumesAtMilestone(100),0);assert.equal(costumesAtMilestone(115),0);assert.equal(costumesAtMilestone(116),0);assert.equal(costumesAtMilestone(128),1);
- assert.equal(q.costumeMilestones().join(),'10,20,30,40,50,60,70,80,128');assert.equal(q.costumeMilestoneReached(95),80);assert.equal(q.costumeMilestoneReached(128),128);assert.equal(q.costumeMilestoneReached(9),0);
- assert.equal(COSTUME_UNLOCK_ORDER.map(costumeUnlockBalls).join(),[10,10,10,20,20,20,30,30,30,40,40,40,50,50,50,60,60,60,70,70,70,80,80,128].join(),'stable order');
+ assert.equal(costumesAtMilestone(80),2);assert.equal(costumesAtMilestone(90),0);assert.equal(costumesAtMilestone(100),0);assert.equal(costumesAtMilestone(115),0);assert.equal(costumesAtMilestone(116),0);assert.equal(costumesAtMilestone(128),0);assert.equal(costumesAtMilestone(129),1);
+ assert.equal(q.costumeMilestones().join(),'10,20,30,40,50,60,70,80,129');assert.equal(q.costumeMilestoneReached(95),80);assert.equal(q.costumeMilestoneReached(129),129);assert.equal(q.costumeMilestoneReached(9),0);
+ assert.equal(COSTUME_UNLOCK_ORDER.map(costumeUnlockBalls).join(),[10,10,10,20,20,20,30,30,30,40,40,40,50,50,50,60,60,60,70,70,70,80,80,129].join(),'stable order');
  const at=n=>({...emptyCoinProgress(),collected:ids.slice(0,n)}),count=n=>COSTUME_UNLOCK_ORDER.filter(id=>costumeEarned(at(n),id)).length;
- assert.equal(count(0),0);assert.equal(count(9),0);assert.equal(count(10),3);assert.equal(count(29),6);assert.equal(count(30),9);assert.equal(count(79),21);assert.equal(count(80),23);assert.equal(count(127),23);assert.equal(count(128),24);
- assert.equal(nextCostumeMilestone(17),20);assert.equal(nextCostumeMilestone(79),80);assert.equal(nextCostumeMilestone(80),128);assert.equal(nextCostumeMilestone(90),128);assert.equal(nextCostumeMilestone(128),null);
- assert(!costumeEarned(at(127),COIN_REWARD_ID)&&costumeEarned(at(128),COIN_REWARD_ID),'the fox needs every ball');
+ assert.equal(count(0),0);assert.equal(count(9),0);assert.equal(count(10),3);assert.equal(count(29),6);assert.equal(count(30),9);assert.equal(count(79),21);assert.equal(count(80),23);assert.equal(count(128),23);assert.equal(count(129),24);
+ assert.equal(nextCostumeMilestone(17),20);assert.equal(nextCostumeMilestone(79),80);assert.equal(nextCostumeMilestone(80),129);assert.equal(nextCostumeMilestone(90),129);assert.equal(nextCostumeMilestone(129),null);
+ assert(!costumeEarned(at(128),COIN_REWARD_ID)&&costumeEarned(at(129),COIN_REWARD_ID),'the fox needs every ball');
  // Oct 25 2026: a pre-version-7 save that found all 115 keeps the fox and every costume; its finale waits for the 116-ball one.
  {const old115=sanitizeCoinProgress({version:6,collected:q.PRE_JETTY_IDS,celebrated:true});assert.equal(q.PRE_JETTY_IDS.length,115);assert(coinRewardEarned(old115)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(old115,id)),'115-ball saves keep every costume');assert(!old115.celebrated,'the new 116-ball finale stays unseen');
   assert(!coinRewardEarned(sanitizeCoinProgress({version:7,collected:q.PRE_JETTY_IDS})),'version 7 saves need all 116');
   // Nov 13 2026: a pre-version-9 save that found all 116 keeps the fox and every costume; its finale waits for the 128-ball one.
   const old116=sanitizeCoinProgress({version:8,collected:q.PRE_STADIUM_IDS,celebrated:true,pendingLesson:null});assert.equal(q.PRE_STADIUM_IDS.length,116);assert(coinRewardEarned(old116)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(old116,id)),'116-ball saves keep every costume');assert(!old116.celebrated,'the new 128-ball finale stays unseen');
-  assert(!coinRewardEarned(sanitizeCoinProgress({version:9,collected:q.PRE_STADIUM_IDS})),'new saves need all 128');}
+  assert(!coinRewardEarned(sanitizeCoinProgress({version:9,collected:q.PRE_STADIUM_IDS})),'version 9 saves need all 128');
+  // Nov 13 2026: a pre-version-10 save that found all 128 keeps the fox and every costume; its finale waits for the 129-ball one.
+  const old128=sanitizeCoinProgress({version:9,collected:q.PRE_SCREEN_WEST_IDS,celebrated:true,pendingLesson:null});assert.equal(q.PRE_SCREEN_WEST_IDS.length,128);assert(coinRewardEarned(old128)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(old128,id)),'128-ball saves keep every costume');assert(!old128.celebrated,'the new 129-ball finale is still ahead');assert.equal(old128.version,10);
+  assert(!coinRewardEarned(sanitizeCoinProgress({version:10,collected:q.PRE_SCREEN_WEST_IDS})),'new saves need all 129');}
  // Players who found all 80 before Coral Cay keep the fox and every costume (tests/coral-cay-balls.cjs has the full migration).
  {const old80=sanitizeCoinProgress({version:4,collected:q.PRE_CORAL_CAY_IDS});assert(COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(old80,id)),'80-ball saves keep every costume');}
  // Migration: old saves keep what the all-balls rule gave them, and a save with N balls gets every group up to N at once.

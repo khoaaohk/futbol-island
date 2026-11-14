@@ -603,6 +603,11 @@ export const SCENES={
   {note:'A goal! Was there a foul just before?',tags:[[[165,56],'Goal?']]},
   {note:'VAR checks · the ref watches the screen',at:{r:[266,196]},tags:[['v','Replay']]},
   {note:'Goals, penalties, reds: the ref decides',at:{r:[165,140]},pulse:['r','Decision!']}]},
+ // Nov 13 2026: the 129th ball (stadium-screen-west): the scoreboard's score and match clock.
+ 'match-clock':{cast:{a:[150,150,'You'],b:[236,100,'Mate'],x:[196,130],s:[165,30,'Scoreboard']},ball:'a',steps:[
+  {note:'The ball goes out · how long is left?',tags:[['s','2–1']]},
+  {note:'Look up · the match clock counts up',at:{a:[160,120]},tags:[['s','38:00']],pulse:['s','Look!']},
+  {note:'45 ends the first half · then 45 to 90',at:{a:[150,170],b:[220,150]},tags:[['s','45:00']],pulse:['s','Half-time']}]},
  // The seven Explore reef balls (Oct 25 2026): their scenes live with their lessons (lib/town/water/diveBallLessons.ts).
  ...DIVE_BALL_SCENES,
 } satisfies Record<string,Scene>;

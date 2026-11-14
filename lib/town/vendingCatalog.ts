@@ -8,6 +8,7 @@ import {SPECIAL_BALL_IDS,type VendingSpecialBall} from './specialBalls';
 import {cayVendingSpots,konbiniMachineSpot,ISLAND_SQUARE_KONBINI,summitSnackSpot} from './vendingPlaces';
 import {DRINK_MACHINE_IDS,DRINK_MACHINE_INFO,drinkSpotBeside,type DrinkMachineId} from './drinkMachines';
 import {summitGround} from './summitIsle';
+import {stadiumVendingSpot} from './stadiumShops';
 
 /**
  * Island vending machines (user, Sep 27 2026): the Store is gone; Japanese-style vending machines around the island sell
@@ -15,7 +16,7 @@ import {summitGround} from './summitIsle';
  * Coral Cay, each selling one new hardship pop-up book (placed from Coral Cay's anchors in lib/town/vendingPlaces.ts). Every machine stocks the full regular catalogue in rows (card packs, balls, rides, island
  * animals) plus a Specials row that only that machine sells. docs/vending-machines.md documents prices and decisions.
  */
-export type VendingMachineId='plaza'|'rooftop'|'oldtown'|'clubgrounds'|'eleven'|'beach'|'pier'|'market'|'northbeach'|'causeway'|'cayplaza'|'sharks'|'caykonbini'|'summit'|DrinkMachineId;
+export type VendingMachineId='plaza'|'rooftop'|'oldtown'|'clubgrounds'|'eleven'|'beach'|'pier'|'market'|'northbeach'|'causeway'|'cayplaza'|'sharks'|'caykonbini'|'summit'|'stadium'|DrinkMachineId;
 export type VendingMachine={id:VendingMachineId;name:string;place:string;x:number;z:number;y:number;yaw:number;
  /** Cabinet colour, lighter sign colour and a readable ink for the UI. */
  color:string;light:string;ink:string;specials:string[];lesson:string;
@@ -58,6 +59,10 @@ export const VENDING_MACHINES:VendingMachine[]=[
  // vending machines on top of the mountain") from the sandbar landing up to the summit terrace, on the walkway just
  // outside the Summit 5s' fence, by the gate where the climbing trail arrives (lib/town/vendingPlaces.ts summitSnackSpot).
  {id:'summit',name:'Summit Isle Konbini',place:'on the summit terrace, just outside the Summit 5s pitch gate',...SUMMIT_SNACK,y:summitGround(SUMMIT_SNACK.x,SUMMIT_SNACK.z),color:'#6a5acd',light:'#e8e4fb',ink:'#2a1f52',specials:[],lesson:'Hikers pack light and fuel often: a snack and water keep legs going on a long climb.'},
+ // Nov 13 2026 (owner): the DRIP FC Stadium's machine, against the south stand under the big screen with its drink machine
+ // (lib/town/stadiumShops.ts). Regular rows plus the Coral Cay Konbini's four island-favourite books (no specials of its own), so
+ // its glass is that machine's glass (lib/graphics/vendingMachines.ts GLASS_TWIN) and the atlas does not grow.
+ {id:'stadium',name:'DRIP FC Stadium',place:'against the south stand, under the big screen where the fans watch',...stadiumVendingSpot(),y:0,color:'#c2185b',light:'#ffd9e8',ink:'#4a0722',specials:[],lesson:'Matchday fuel: a banana or a rice ball an hour or two before you play gives your legs energy.'},
 ];
 // Sep 29 2026: exactly two drink machines, each side by side with its Konbini's machine (placed from that machine's spot).
 for(const id of DRINK_MACHINE_IDS){const info=DRINK_MACHINE_INFO[id],next=VENDING_MACHINES.find(m=>m.id===info.beside)!;
@@ -68,6 +73,7 @@ const displayThemes:Record<VendingMachineId,[string,string,string]>={
  pier:['Pelé','Finishing','#b7a477'],market:['Cruyff','Move into space','#9a77bf'],
  northbeach:['Cafu','Overlap','#e0b33f'],causeway:['Nadim','Penalties','#7c93b3'],cayplaza:['Kanté','Win it back','#8dba55'],sharks:['Oshoala','Time your run','#4f98d8'],caykonbini:['Konbini','Fuel up','#5fa98a'],drinksplaza:['Drinks','Hydrate','#5d93d6'],drinkscay:['Drinks','Hydrate','#4fb0dc'],
  summit:['Nadim','Keep climbing','#8a7fd0'],drinksummit:['Drinks','Hydrate','#6aab74'],
+ stadium:['Konbini','Matchday','#d0558a'],drinkstadium:['Drinks','Hydrate','#3fa79c'],
 };
 /** Four pop-up books join each machine's exclusive ball and pack: six specials total. A book that isn't written yet
  * shows as a "coming soon" preview (no storyId, so it can't be bought or opened). */
@@ -95,6 +101,7 @@ export const MACHINE_BOOKS:Partial<Record<VendingMachineId,readonly PlayerBookId
  sharks:['oshoala','hegerberg','kerr','drogba'],           // strikers who time their runs and keep believing
  caykonbini:['messi','marta','ronaldinho','putellas'],     // a Konbini mix of island favourites
  summit:['davies','kante','vardy','weah'],                 // long, hard roads: a mix for the trail's own Konbini
+ stadium:['messi','marta','ronaldinho','putellas'],        // the Coral Cay Konbini's island favourites (same glass, GLASS_TWIN)
 };
 export const vendingMachine=(id:string)=>VENDING_MACHINES.find(m=>m.id===id);
 export function nearestVendingMachine(x:number,z:number):VendingMachine{

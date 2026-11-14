@@ -15,10 +15,14 @@ function load(file){
 }
 const D=load(path.join(root,'lib/town/drinkMachines.ts')),F=load(path.join(root,'lib/konbini/food.ts'));
 
-// 1. Exactly three machines (Oct 12 2026: Summit Isle joined Island Square and Coral Cay), six drinks each, unique ids that
+// 1. Four machines (Oct 12 2026: Summit Isle joined Island Square and Coral Cay; Nov 13 2026: the DRIP FC Stadium), six drinks each, unique ids that
 // never clash with the Konbini menu.
 {
- same([...D.DRINK_MACHINE_IDS],['drinksplaza','drinkscay','drinksummit']);
+ same([...D.DRINK_MACHINE_IDS],['drinksplaza','drinkscay','drinksummit','drinkstadium']);
+ // Nov 13 2026: the DRIP FC Stadium's drink machine (lib/town/stadiumShops.ts) sells the Island Square six: the same items, prices
+ // and daily bucket, so no new drink, art or collection entry.
+ same(D.drinksAt('drinkstadium').map(d=>d.id),D.drinksAt('drinksplaza').map(d=>d.id),'the stadium machine stocks the Island Square drinks');
+ assert.equal(D.drinkStockOf('drinkstadium'),'drinksplaza');assert(D.DRINKS.every(d=>d.machine!=='drinkstadium'),'no drink belongs to the stadium machine itself');assert.equal(D.DRINK_MACHINE_INFO.drinkstadium.beside,'stadium');
  for(const m of D.DRINK_MACHINE_IDS){assert.equal(D.drinksAt(m).length,6,m+' sells six drinks');assert(D.DRINK_MACHINE_INFO[m].lesson.length>20);}
  const ids=D.DRINKS.map(d=>d.id);assert.equal(new Set(ids).size,ids.length,'unique item ids');assert.equal(ids.length,18);
  for(const id of ids){assert(/^[a-z0-9-]{2,60}$/.test(id),id);assert(!F.foodItem(id),id+' does not clash with the Konbini menu');}
@@ -104,5 +108,5 @@ const D=load(path.join(root,'lib/town/drinkMachines.ts')),F=load(path.join(root,
  assert(!/konbini\/foodStore/.test(ctl),'the controller goes through the adapter');
  assert.match(town,/isDrinkMachine\(vendingId\)&&<DrinkMachine /,'Town opens drink machines with the drink controller');
  assert.match(town,/<VendingMachine [^\n]*open=\{storeOpen&&!isDrinkMachine\(vendingId\)\}/,'and never the shop face');
- console.log('PASS drink machines: 3 machines × 6 drinks (unique ids, Japanese names, generic art), verified hydration lines with sources, prices 3–6, 3 drinks/day (separate from food), repeat-safe purchases, pouch + collection group, no loops');
+ console.log('PASS drink machines: 4 machines × 6 drinks (the stadium machine shares the Island Square six) (unique ids, Japanese names, generic art), verified hydration lines with sources, prices 3–6, 3 drinks/day (separate from food), repeat-safe purchases, pouch + collection group, no loops');
 })().catch(e=>{console.error(e);process.exit(1);});

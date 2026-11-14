@@ -1,4 +1,4 @@
-// DRIP FC Stadium ball hunt (Nov 13 2026, lib/town/stadiumBalls.ts): twelve balls take the hunt from 116 to 128. Since the owner's
+// DRIP FC Stadium ball hunt (Nov 13 2026, lib/town/stadiumBalls.ts): twelve balls take the hunt from 116 to 128, and (Nov 13 2026, owner) a target on the big screen's west post takes it to 129. Since the owner's
 // Nov 13 feedback ("too easy to find"; "like the targets on buildings", "some balls in the crowd"): seven round kick targets on the
 // stadium (both gate pillars, the east / north / west stands' back walls, the big screen's east post), three balls on free seats
 // among the fans and two loose balls on the long stands' roofs. Checked against the town the game really builds (world.ts, the same
@@ -16,7 +16,7 @@
 //  5. the coin-hunt runtime: a target opens only on a shot into it and drops its ball; crowd and roof balls are collected where they
 //     rest, one mesh each, no collider (heat);
 //  6. the card offer: a collected ball goes to earnForBall (kind 'ball', the child picks a card) and the lesson card;
-//  7. saves: same key, version 9; a version 8 save keeps its pending lesson, a 116-ball save keeps the fox and every costume.
+//  7. saves: same key, version 10; a version 8/9 save keeps its pending lesson, a 116- or 128-ball save keeps the fox and every costume.
 // usage: node tests/stadium-balls.cjs
 const assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),ts=require('typescript');
 const base=path.resolve(__dirname,'..'),req=require('node:module').createRequire(base+'/package.json'),T=req('three');
@@ -36,13 +36,13 @@ const {BALL_HUNT_LESSONS,BALL_HUNT_PRACTICE,DIVE_BALL_LESSONS,DIVE_BALL_PRACTICE
 const L=load('lib/town/westParkLayout.ts'),S=load('lib/town/stadiumSeats.ts'),sim=load('lib/town/simulation.ts'),{onIsland}=load('lib/town/shoreline.ts');
 
 // ---- 1. Count, ids, order, counted everywhere.
-assert.equal(spots.length,12,'twelve stadium balls');assert.equal(COIN_QUEST.length,128,'the hunt has 128 balls');assert.equal(new Set(COIN_QUEST.map(s=>s.id)).size,128,'ids are unique');
+assert.equal(spots.length,13,'thirteen stadium balls');assert.equal(COIN_QUEST.length,129,'the hunt has 129 balls');assert.equal(new Set(COIN_QUEST.map(s=>s.id)).size,129,'ids are unique');
 assert.deepEqual(COIN_QUEST.slice(116).map(s=>s.id),SB.STADIUM_BALL_IDS,'appended last, so saved ids keep their order');assert.equal(COIN_QUEST[115].id,'jetty-lighthouse','after the East Jetty ball');
-assert.deepEqual(Q.PRE_STADIUM_IDS,COIN_QUEST.slice(0,116).map(s=>s.id));assert(spots.every(s=>s.stadium&&!s.parachute&&!s.summit&&(s.wall?s.kind==='kick'&&!s.loose:s.kind==='hidden'&&s.loose)),'stadium balls: kick targets or loose balls');
+assert.deepEqual(Q.PRE_STADIUM_IDS,COIN_QUEST.slice(0,116).map(s=>s.id));assert.equal(COIN_QUEST.at(-1).id,'stadium-screen-west','the west post ball is appended last');assert.deepEqual(Q.PRE_SCREEN_WEST_IDS,COIN_QUEST.slice(0,128).map(s=>s.id));assert(spots.every(s=>s.stadium&&!s.parachute&&!s.summit&&(s.wall?s.kind==='kick'&&!s.loose:s.kind==='hidden'&&s.loose)),'stadium balls: kick targets or loose balls');
 assert(spots.every(s=>s.id.startsWith('stadium-')&&Number.isFinite(s.x+s.y+s.z)));
-{const txt=read('lib/site/learnFeatures.ts');assert(txt.includes('counts:{hiddenBalls:128}')&&txt.includes("'128 hidden balls to find'")&&!/\b116 hidden balls/.test(txt),'the learn page counts 128 (tests/learn-content.cjs checks it against COIN_QUEST)');}
-assert.equal(Q.costumeMilestones().at(-1),128,'the Matchday Fox needs every ball (128)');assert.equal(Q.costumesAtMilestone(116),0,'116 unlocks nothing now');
-console.log('PASS 12 stadium balls appended (128 in all, after the East Jetty ball), unique ids; the learn page and the fox milestone count 128');
+{const txt=read('lib/site/learnFeatures.ts');assert(txt.includes('counts:{hiddenBalls:129}')&&txt.includes("'129 hidden balls to find'")&&!/\b12[68] hidden balls/.test(txt),'the learn page counts 129 (tests/learn-content.cjs checks it against COIN_QUEST)');}
+assert.equal(Q.costumeMilestones().at(-1),129,'the Matchday Fox needs every ball (129)');assert.equal(Q.costumesAtMilestone(116),0,'116 unlocks nothing now');assert.equal(Q.costumesAtMilestone(128),0,'nor 128');
+console.log('PASS 13 stadium balls appended (129 in all, after the East Jetty ball; the west screen post last), unique ids; the learn page and the fox milestone count 129');
 
 // ---- 2. Concepts: new, one each, accurate format.
 const words=t=>new Set(t.toLowerCase().replace(/[^a-z0-9’' -]/g,' ').split(/\s+/).filter(w=>w.length>2&&!STOP.has(w)));
@@ -57,9 +57,9 @@ const otherText=[...others.map(s=>s.teaching),...others.flatMap(s=>BALL_HUNT_LES
 const TOPIC={'stadium-gate':['steward'],'stadium-plaza-flags':['anthem','shake hands','shakes hands'],'stadium-plaza-street':['added time','added minutes','time lost'],
  'stadium-lawn':['stripe','mow'],'stadium-pond':['centre circle','9.15'],'stadium-orchard':['corner arc','quarter-circle','corner flag'],
  'stadium-west-roof':['goal-line technology','watch buzzes'],'stadium-east-roof':['floodlight'],'stadium-west-stand':['all-seater','terrace','numbered seat'],
- 'stadium-east-stand':['technical area'],'stadium-north-stand':['away kit','second kit','colour clash','changes kit'],'stadium-screen':['var','video assistant','replay']};
+ 'stadium-east-stand':['technical area'],'stadium-north-stand':['away kit','second kit','colour clash','changes kit'],'stadium-screen':['var','video assistant','replay'],'stadium-screen-west':['scoreboard','match clock']};
 assert.deepEqual(Object.keys(TOPIC).sort(),[...ids].sort());
-const concepts=spots.map(s=>s.concept);assert(concepts.every(c=>typeof c==='string'&&/^[a-z0-9-]+$/.test(c)),'a concept tag each');assert.equal(new Set(concepts).size,12,'no two share a tag');
+const concepts=spots.map(s=>s.concept);assert(concepts.every(c=>typeof c==='string'&&/^[a-z0-9-]+$/.test(c)),'a concept tag each');assert.equal(new Set(concepts).size,13,'no two share a tag');
 for(const s of spots){const l=BALL_HUNT_LESSONS[s.id];
  assert(l&&SCENES[l.kind]&&BALL_HUNT_PRACTICE[s.id]&&ballLessonFrames(l.kind).length===3,`${s.id}: lesson, three-step scene and practice prompt`);
  assert(!oldKinds.has(l.kind),`${s.id}: its scene (${l.kind}) is not one any other ball teaches`);
@@ -74,9 +74,9 @@ for(const s of spots){const l=BALL_HUNT_LESSONS[s.id];
  const src=BALL_HUNT_SOURCES[s.id];assert(src&&src.length&&src.every(r=>r.title&&/^https:\/\//.test(r.url)),`${s.id}: a source`);
  if(s.concept.startsWith('law')){const n=s.concept.match(/^law(\d+)/)[1];assert(src.some(r=>r.url.startsWith('https://www.theifab.com/laws/')&&r.title.includes(`Law ${n} `)),`${s.id}: cites IFAB Law ${n}`);}
  assert.equal(l.level,s.y>10?3:2,`${s.id}: level 2 (3 on a roof)`);}
-assert.equal(new Set([...COIN_QUEST.map(s=>BALL_HUNT_LESSONS[s.id].kind),...Object.values(DIVE_BALL_LESSONS).map(l=>l.kind)]).size,128+7,'135 different scenes across the island and the reef');
-const laws=concepts.filter(c=>c.startsWith('law')).length;assert(laws>=4&&laws<=8,`a mix of Laws (${laws}) and stadium/matchday ideas (${12-laws})`);
-console.log(`PASS concepts: 12 new ideas (${laws} Laws of the Game, ${12-laws} stadium and matchday), no scene, tag, title, tip or topic shared with the other 116 balls or the 7 reef balls; IFAB sources; no links`);
+assert.equal(new Set([...COIN_QUEST.map(s=>BALL_HUNT_LESSONS[s.id].kind),...Object.values(DIVE_BALL_LESSONS).map(l=>l.kind)]).size,129+7,'136 different scenes across the island and the reef');
+const laws=concepts.filter(c=>c.startsWith('law')).length;assert(laws>=4&&laws<=8,`a mix of Laws (${laws}) and stadium/matchday ideas (${13-laws})`);
+console.log(`PASS concepts: 13 new ideas (${laws} Laws of the Game, ${13-laws} stadium and matchday), no scene, tag, title, tip or topic shared with the other 116 balls or the 7 reef balls; IFAB sources; no links`);
 console.log('     '+spots.map(s=>`${s.id}=${s.concept}`).join(', '));
 
 // ---- 3. Placement against the built town.
@@ -88,7 +88,7 @@ const trees=world.assets.filter(a=>a.kind==='tree'||a.kind==='palm'),orchard=loa
 const ROOF_TOP=S.ROOF.y+S.ROOF.thick/2;assert.equal(SB.STADIUM_ROOF_TOP,ROOF_TOP);
 const kindOf=s=>s.wall?'target':s.y>10?'roof':'crowd';
 const tally={};for(const s of spots)tally[kindOf(s)]=(tally[kindOf(s)]||0)+1;
-assert.deepEqual(tally,{target:7,roof:2,crowd:3},'the spread '+JSON.stringify(tally));
+assert.deepEqual(tally,{target:8,roof:2,crowd:3},'the spread '+JSON.stringify(tally));
 const targets=spots.filter(s=>s.wall),crowd=spots.filter(s=>kindOf(s)==='crowd'),roofs=spots.filter(s=>kindOf(s)==='roof');
 assert(targets.every(s=>s.kind==='kick'&&!s.loose&&s.wall.high&&s.wall.round),'targets: the island\'s round high kick targets (no parcel box, no collider)');
 assert([...crowd,...roofs].every(s=>s.kind==='hidden'&&s.loose&&!s.parachute),'crowd and roof balls: loose, walked to');
@@ -103,16 +103,18 @@ for(const s of targets){const [nx,nz]=axis(s),w=s.wall,inside=(x,z)=>world.obsta
  assert(L.inStadiumFootprint(w.x,w.z,1),`${s.id}: on the stadium (${w.x}, ${w.z})`);
  const behind=inside(w.x-nx*.25,w.z-nz*.25);assert(behind.length,`${s.id}: mounted on a real solid (a stand's back wall, a gate pillar or a screen post)`);
  assert(!inside(w.x+nx*.2,w.z+nz*.2).length,`${s.id}: on the solid's outer face`);
- if(s.id!=='stadium-screen')for(const t of [-.55,.55])assert(inside(w.x-nx*.25+nz*t,w.z-nz*.25+nx*t).length,`${s.id}: the whole target fits on the face`);
+ if(!s.id.startsWith('stadium-screen'))for(const t of [-.55,.55])assert(inside(w.x-nx*.25+nz*t,w.z-nz*.25+nx*t).length,`${s.id}: the whole target fits on the face`);
  mounts.add(behind[0]);
  assert(Math.hypot(s.x-w.x,s.z-w.z)<=SB.TARGET_DROP+.01,`${s.id}: the ball drops just in front`);assert(s.y===0?!solid(s.x,s.z,.6):!world.roofObstacles.some(o=>o.top>s.y&&o.floor<s.y+1.8&&sim.insideObstacle(s.x,s.z,o,.6)),`${s.id}: the pickup is clear of colliders (rails and props on the concourse)`);
  assert(Math.abs(t0.surface(s.x,s.z,s.y+.1)-s.y)<1e-6,`${s.id}: the pickup is on the floor (${s.y})`);
  assert(Math.min(...trees.map(t=>Math.hypot(t.x-s.x,t.z-s.z)),...orchard.map(t=>Math.hypot(t.x-s.x,t.z-s.z)))>=2.5,`${s.id}: clear of trees`);
  if(s.y===0)assert(onIsland(s.x,s.z)&&!L.inPond(s.x,s.z,L.POND_RIM+3),`${s.id}: on the island's ground`);}
-{const posts=SW.screenPosts(),scr=spots.find(s=>s.id==='stadium-screen'),so=S.STANDS.find(q=>q.id==='south'),p=S.standLocal(so,scr.x,scr.z);
- assert(Math.abs(posts[1].x-scr.wall.x)<.01&&Math.abs(posts[1].z+SB.SCREEN_POST_R-scr.wall.z)<.01&&scr.wall.facing==='south','the screen target is on the east post\'s south face');
- assert(scr.y+scr.wall.y+.55<posts[1].top,'below the screen frame');assert(scr.y===0&&p.d>S.standBack(so),'its ball drops on the ground behind the south stand');
- for(const q of posts)assert(Math.hypot(q.x-scr.x,q.z-scr.z)>=2,'clear of the posts');}
+{const posts=SW.screenPosts(),so=S.STANDS.find(q=>q.id==='south');
+ for(const [id,i,side] of [['stadium-screen',1,'east'],['stadium-screen-west',0,'west']]){const scr=spots.find(s=>s.id===id),p=S.standLocal(so,scr.x,scr.z);
+  assert(Math.abs(posts[i].x-scr.wall.x)<.01&&Math.abs(posts[i].z+SB.SCREEN_POST_R-scr.wall.z)<.01&&scr.wall.facing==='south',`${id}: on the ${side} post's south face`);
+  assert(scr.y+scr.wall.y+.55<posts[i].top,`${id}: below the screen frame`);assert(scr.y===0&&p.d>S.standBack(so),`${id}: its ball drops on the ground behind the south stand`);
+  for(const q of posts)assert(Math.hypot(q.x-scr.x,q.z-scr.z)>=2,`${id}: clear of the posts`);}
+ const [e,w]=['stadium-screen','stadium-screen-west'].map(id=>spots.find(s=>s.id===id));assert(e.wall.y===w.wall.y&&e.wall.z===w.wall.z&&Math.abs(e.wall.x+w.wall.x-2*ST.x)<.01,'the west post target mirrors the east one (same height and facing)');}
 {const gate=['stadium-gate','stadium-plaza-flags'].map(id=>spots.find(s=>s.id===id)),gx=S.GATE_ARCH_X+.8;
  assert.deepEqual(gate.map(s=>Math.sign(s.wall.z-G.z)),[-1,1],'one target on each pillar: both sides of the entrance');
  for(const s of gate){assert(s.wall.facing==='east'&&Math.abs(s.wall.x-gx)<.01,`${s.id}: on the pillar's plaza (east) face`);
@@ -198,7 +200,7 @@ console.log('PASS reach: each crowd ball by a real walk up its aisle into its ro
   h.update(.1,{x:s.x+2.2,y:s.y,z:s.z},true,false);assert(!got.includes(s.id),`${s.id}: not from 2.2 m`);assert(near.at(-1),`${s.id}: a nearby hint`);
   h.update(.1,{x:s.x+.4,y:s.y>10?S.rowHeight(8):0,z:s.z},true,false);assert(!got.includes(s.id),`${s.id}: not from the floor below`);
   const at=walkedTo[s.id]??{x:s.x+.4,y:s.y,z:s.z};h.update(.1,at,true,false);assert(got.includes(s.id),`${s.id}: collected ${walkedTo[s.id]?'from the row beside it':'where it rests'}`);}
- assert.equal(got.length,12);const props=[],obs=[];h.connectCollisions(obs,props);assert(!props.some(p=>spots.some(s=>Math.hypot(p.x-s.x,p.z-s.z)<.5)),'no colliders for the stadium balls');h.dispose();}
+ assert.equal(got.length,13);const props=[],obs=[];h.connectCollisions(obs,props);assert(!props.some(p=>spots.some(s=>Math.hypot(p.x-s.x,p.z-s.z)<.5)),'no colliders for the stadium balls');h.dispose();}
 assert(!/stadium/i.test(read('lib/graphics/coinHunt.ts')),'the coin hunt has no stadium code: nothing new per frame (the same loop over COIN_QUEST)');
 // The crowd balls are coin-hunt meshes, not crowd instances: the crowd shader's clears (round the player and CLEAR_FRIENDS) and the
 // roof fade (roof meshes only) never touch them.
@@ -217,17 +219,20 @@ console.log('PASS runtime: targets reveal only on a shot into them (not away, si
  assert(/if\(!ballResumed\.current\)/.test(town),'a reload mid-lesson resumes it (pendingLesson)');}
 console.log('PASS card offer: earnForBall offers a card choice (kind ball) for each stadium ball; Town wires it with the lesson card');
 
-// ---- 7. Saves: same key, version 9, older saves keep everything.
+// ---- 7. Saves: same key, version 10, older saves keep everything.
 {const {sanitizeCoinProgress,coinRewardEarned,allCostumesEarned,costumeEarned,COSTUME_UNLOCK_ORDER,COIN_STORAGE_KEY,COIN_SAVE_VERSION,PRE_STADIUM_IDS}=Q;
- assert.equal(COIN_STORAGE_KEY,'fi2-matchday-coins-v1','the same save key (nothing new to classify or sync)');assert.equal(COIN_SAVE_VERSION,9);
+ assert.equal(COIN_STORAGE_KEY,'fi2-matchday-coins-v1','the same save key (nothing new to classify or sync)');assert.equal(COIN_SAVE_VERSION,10);
  const v8={version:8,revealed:PRE_STADIUM_IDS,collected:PRE_STADIUM_IDS,hint:'jetty-lighthouse',celebrated:true,rewardUnlocked:false,pendingLesson:{id:'jetty-lighthouse',step:2}};
- const m=sanitizeCoinProgress(v8);assert.equal(m.version,9);assert.equal(m.collected.length,116);assert(m.rewardUnlocked&&coinRewardEarned(m)&&allCostumesEarned(m)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m,id)),'a 116-ball save keeps the fox and every costume');
- assert(!m.celebrated,'the 128-ball finale is still ahead');assert.deepEqual({...m.pendingLesson},{id:'jetty-lighthouse',step:2},'a version 8 pending lesson survives');assert.equal(m.hint,'jetty-lighthouse');
- assert(sanitizeCoinProgress(JSON.parse(JSON.stringify(m))).rewardUnlocked,'and keeps it after a re-save as version 9');
+ const m=sanitizeCoinProgress(v8);assert.equal(m.version,10);assert.equal(m.collected.length,116);assert(m.rewardUnlocked&&coinRewardEarned(m)&&allCostumesEarned(m)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m,id)),'a 116-ball save keeps the fox and every costume');
+ assert(!m.celebrated,'the 129-ball finale is still ahead');assert.deepEqual({...m.pendingLesson},{id:'jetty-lighthouse',step:2},'a version 8 pending lesson survives');assert.equal(m.hint,'jetty-lighthouse');
+ assert(sanitizeCoinProgress(JSON.parse(JSON.stringify(m))).rewardUnlocked,'and keeps it after a re-save as version 10');
  assert(!coinRewardEarned(sanitizeCoinProgress({...v8,collected:PRE_STADIUM_IDS.slice(0,115)})),'115 of the old 116 does not unlock the fox');
  assert(!coinRewardEarned(sanitizeCoinProgress({...v8,version:9,rewardUnlocked:false})),'a version 9 save needs all 128');
- const all=sanitizeCoinProgress({version:9,collected:COIN_QUEST.map(s=>s.id)});assert(coinRewardEarned(all));
- const mid=sanitizeCoinProgress({version:9,collected:['stadium-gate','stadium-west-roof','fake'],pendingLesson:{id:'stadium-west-roof',step:1}});assert.deepEqual([...mid.collected],['stadium-gate','stadium-west-roof']);assert.deepEqual({...mid.pendingLesson},{id:'stadium-west-roof',step:1},'a stadium lesson resumes after a reload');
+ const v9={version:9,revealed:Q.PRE_SCREEN_WEST_IDS,collected:Q.PRE_SCREEN_WEST_IDS,hint:null,celebrated:true,rewardUnlocked:false,pendingLesson:{id:'stadium-screen',step:1}},m9=sanitizeCoinProgress(v9);
+ assert(m9.version===10&&m9.collected.length===128&&coinRewardEarned(m9)&&COSTUME_UNLOCK_ORDER.every(id=>costumeEarned(m9,id))&&!m9.celebrated,'a 128-ball version 9 save keeps the fox and every costume; the 129-ball finale is ahead');assert.deepEqual({...m9.pendingLesson},{id:'stadium-screen',step:1},'a version 9 pending lesson survives');
+ assert(!coinRewardEarned(sanitizeCoinProgress({...v9,version:10})),'a version 10 save needs all 129');
+ const all=sanitizeCoinProgress({version:10,collected:COIN_QUEST.map(s=>s.id)});assert(coinRewardEarned(all));
+ const mid=sanitizeCoinProgress({version:10,collected:['stadium-gate','stadium-west-roof','fake'],pendingLesson:{id:'stadium-west-roof',step:1}});assert.deepEqual([...mid.collected],['stadium-gate','stadium-west-roof']);assert.deepEqual({...mid.pendingLesson},{id:'stadium-west-roof',step:1},'a stadium lesson resumes after a reload');
  const snap=read('lib/saves/snapshot.ts');assert(snap.includes("'fi2-matchday-coins-v1'"),'the hunt key is still a synced save key');}
-console.log('PASS saves: same key (synced), version 9; a version 8 save keeps its pending lesson and hint, a 116-ball save keeps the fox and every costume, a stadium lesson resumes after a reload');
+console.log('PASS saves: same key (synced), version 10; a version 9 save with 128 keeps the fox, a version 8 save keeps its pending lesson and hint, a 116-ball save keeps the fox and every costume, a stadium lesson resumes after a reload');
 })().catch(e=>{console.error(e);process.exit(1);});

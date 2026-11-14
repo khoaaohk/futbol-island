@@ -1,7 +1,8 @@
 /**
  * Gashapon capsule-toy machines (owner request, Nov 8 2026; docs/gashapon-design.md). Pure data, no React and no three.js.
  *
- * Fourteen machines, each with its own six toys (lib/gashapon/toys.ts):
+ * Eighteen machines: fourteen with their own six toys (lib/gashapon/toys.ts), and (Nov 13 2026) four at the DRIP FC Stadium that
+ * sell four of those sets (`set`):
  *  - 4 at the two Konbinis: a pair outside each, flush against the shopfront on the side OPPOSITE the vending + drink pair,
  *    i.e. the vending machine's spot mirrored across the sliding doors' centre line (`gashaponPairOpposite`), never fixed
  *    coordinates, so they follow the store the same way lib/town/drinkMachines.ts `drinkSpotBeside` does;
@@ -17,17 +18,22 @@
 import {konbiniMachineSpot,summitSnackSpot,ISLAND_SQUARE_KONBINI,KONBINI_FACADE_PROUD,KONBINI_BACK_GAP} from '../town/vendingPlaces';
 import {CAY_KONBINI,CAY_KONBINI_DOOR} from '../town/coralCay';
 import {summitGround} from '../town/summitIsle';
+import {STADIUM_SHOP_X,STADIUM_SHOP_YAW,STADIUM_SHOP_GAP,STADIUM_VENDING_HALF,stadiumShopZ} from '../town/stadiumShops';
 
 export type GashaponMachineId=
  |'gs-square-snacks'|'gs-square-lucky'|'gs-cay-sweets'|'gs-cay-bento'
  |'gs-arcade-heroes'|'gs-arcade-pixel'
- |'gs-westbeach'|'gs-northbeach'|'gs-eleven'|'gs-oldtown'|'gs-jetty'|'gs-cayplaza'|'gs-sharks'|'gs-summit';
-export type GashaponZone='konbini-square'|'konbini-cay'|'arcade'|'outdoor';
+ |'gs-westbeach'|'gs-northbeach'|'gs-eleven'|'gs-oldtown'|'gs-jetty'|'gs-cayplaza'|'gs-sharks'|'gs-summit'
+ |'gs-stadium-boots'|'gs-stadium-trophies'|'gs-stadium-pixel'|'gs-stadium-beach';
+export type GashaponZone='konbini-square'|'konbini-cay'|'arcade'|'outdoor'|'stadium';
 export type GashaponMachine={id:GashaponMachineId;name:string;theme:string;zone:GashaponZone;place:string;
  /** World metres (arcade: room metres). y is the ground the cabinet stands on. */
  x:number;z:number;y:number;yaw:number;
  /** Cabinet colours for the shared instanced mesh (instance colour only, no new materials). */
- color:string;accent:string};
+ color:string;accent:string;
+ /** Nov 13 2026: a machine that sells another machine's six toys (the DRIP FC Stadium's four, lib/town/stadiumShops.ts): the
+  *  same toys, odds and price, so a toy found here is the same toy as there. Absent: the machine sells its own six. */
+ set?:GashaponMachineId};
 
 /** One capsule tower on the ground (metres): narrower and shallower than a vending cabinet (1.69 × 1.12). */
 export const GASHA_SIZE={w:.8,d:.6,h:1.55} as const;
@@ -58,6 +64,10 @@ export const GASHA_LOOK:Readonly<Record<GashaponMachineId,{style:GashaponStyle;t
  'gs-eleven':{style:'double',trim:'#ffffff'},'gs-oldtown':{style:'retro',trim:'#3d8f4f'},// stadium stand; old-ground green canopy
  'gs-jetty':{style:'tower',trim:'#ffffff'},'gs-cayplaza':{style:'classic',trim:'#ffd84a'},// lighthouse stripes
  'gs-sharks':{style:'twin',trim:'#9ff0e8'},'gs-summit':{style:'tower',trim:'#8d9399'},// reef base; summit stone
+ // The DRIP FC Stadium four (Nov 13 2026): four different single-globe styles (no twin: the stadium cell's triangle budget,
+ // tests/west-stadium.cjs), neighbours always different.
+ 'gs-stadium-boots':{style:'double',trim:'#ffffff'},'gs-stadium-trophies':{style:'retro',trim:'#c9a227'},
+ 'gs-stadium-pixel':{style:'tower',trim:'#60e9f2'},'gs-stadium-beach':{style:'classic',trim:'#f3dfb0'},
 };
 export const gashaStyleOf=(m:{id:string}):GashaponStyle=>GASHA_LOOK[m.id as GashaponMachineId]?.style??'classic';
 export const gashaTrimOf=(m:{id:string})=>GASHA_LOOK[m.id as GashaponMachineId]?.trim??'#fff6e4';
@@ -92,6 +102,20 @@ const ARCADE_X=[-3.6,-3.6-(GASHA_SIZE.w+GASHA_GAP)];
 /** Outdoor spots (searched on the built town, re-checked by tests/gashapon-data.cjs). */
 /** Nov 9 2026 (owner: "move the gashapon on the mountain next to the vending machines"): side by side with the Summit Isle Konbini vending + drink pair (now behind the east goal, lib/town/vendingPlaces.ts summitSnackSpot), on the vending's left (west) with the same 12 cm gap and the same facing. */
 const SUMMIT_SPOT=(()=>{const v=summitSnackSpot();return {x:v.x,z:r2(v.z+1.97),yaw:v.yaw};})();
+/**
+ * The DRIP FC Stadium four (Nov 13 2026, owner: "on both sides of the vending row, two gashapon machines each"): against the
+ * south stand's back wall under the big screen (lib/town/stadiumShops.ts), two west and two east of the vending + drink pair,
+ * each flush to the wall, facing out (yaw 0) to the viewing area, 12 cm apart (collider to collider). Listed west to east.
+ */
+const STADIUM_ROW:readonly GashaponMachineId[]=['gs-stadium-trophies','gs-stadium-boots','gs-stadium-pixel','gs-stadium-beach'];
+const stadiumSpot=(id:GashaponMachineId)=>{const i=STADIUM_ROW.indexOf(id),side=i<2?-1:1,near=STADIUM_ROW[i<2?1:2],far=STADIUM_ROW[i<2?0:3];
+ const w=(m:GashaponMachineId)=>GASHA_STYLE_SIZE[GASHA_LOOK[m].style].w+.06,inner=STADIUM_VENDING_HALF+STADIUM_SHOP_GAP;
+ const off=id===near?inner+w(near)/2:inner+w(near)+STADIUM_SHOP_GAP+w(far)/2;
+ return {x:r2(STADIUM_SHOP_X+side*off),z:stadiumShopZ(GASHA_STYLE_SIZE[GASHA_LOOK[id].style].d+.06),yaw:STADIUM_SHOP_YAW};};
+/** In the stadium row every machine but the west end one has a cabinet on its left (a gashapon, or the drink machine for the
+ *  pixel machine): components/GashaponMachineFace.tsx moves its knob label and tag onto the machine, as for the Konbini pairs. */
+export const stadiumCabinetOnLeft=(id:string)=>STADIUM_ROW.indexOf(id as GashaponMachineId)>0;
+const STADIUM_PLACE='at the DRIP FC Stadium, against the south stand under the big screen, beside the vending machines';
 
 export const GASHAPON_MACHINES:readonly GashaponMachine[]=[
  {id:'gs-square-snacks',name:'Onigiri Pals',theme:'Konbini snacks with faces',zone:'konbini-square',place:'outside the Island Square Konbini, west of the sliding doors',...SQUARE_PAIR[0],y:0,color:'#e94b3c',accent:'#fff3d6'},
@@ -108,9 +132,19 @@ export const GASHAPON_MACHINES:readonly GashaponMachine[]=[
  {id:'gs-cayplaza',name:'Bug Squad',theme:'Island bugs that play football',zone:'outdoor',place:'on the Coral Cay plaza',x:594,z:-159,y:0,yaw:GASHA_OUTDOOR_YAW,color:'#7fb13c',accent:'#ffd84a'},
  {id:'gs-sharks',name:'Reef Friends',theme:'Sea life from the island waters',zone:'outdoor',place:'on the Sharks Beach sand, along from its machine',x:670.62,z:-211.77,y:0,yaw:GASHA_OUTDOOR_YAW,color:'#1f6fb8',accent:'#9ff0e8'},
  {id:'gs-summit',name:'Summit Orchard',theme:'Mountain fruit and summit landmarks',zone:'outdoor',place:'on the summit terrace, right beside the Summit Isle Konbini vending machines',...SUMMIT_SPOT,y:r2(summitGround(SUMMIT_SPOT.x,SUMMIT_SPOT.z)),color:'#6a5acd',accent:'#ffb03b'},
+ // Nov 13 2026: the DRIP FC Stadium four sell the island's football sets (no new toys): Boots & Kits, Trophies & Legends, Pixel Pitch
+ // and Beach Day. Own names and colours (the shelf lists each set once, under its home machine).
+ {id:'gs-stadium-trophies',name:'Trophies & Legends · Stadium',theme:'Cups, medals and matchday',zone:'stadium',place:STADIUM_PLACE,...stadiumSpot('gs-stadium-trophies'),y:0,color:'#b8860b',accent:'#2e7d4f',set:'gs-oldtown'},
+ {id:'gs-stadium-boots',name:'Boots & Kits · Stadium',theme:'Football gear with faces',zone:'stadium',place:STADIUM_PLACE,...stadiumSpot('gs-stadium-boots'),y:0,color:'#1d3a8a',accent:'#f4f1e6',set:'gs-eleven'},
+ {id:'gs-stadium-pixel',name:'Pixel Pitch · Stadium',theme:'Retro 8-bit football',zone:'stadium',place:STADIUM_PLACE,...stadiumSpot('gs-stadium-pixel'),y:0,color:'#6a4cff',accent:'#ffd447',set:'gs-arcade-pixel'},
+ {id:'gs-stadium-beach',name:'Beach Day · Stadium',theme:'Beach soccer and sunny sand',zone:'stadium',place:STADIUM_PLACE,...stadiumSpot('gs-stadium-beach'),y:0,color:'#ff8c42',accent:'#2bb3d1',set:'gs-westbeach'},
 ];
 export const GASHAPON_MACHINE_IDS=GASHAPON_MACHINES.map(m=>m.id);
 export const gashaponMachine=(id:string)=>GASHAPON_MACHINES.find(m=>m.id===id);
 export const isGashaponMachine=(id:unknown):id is GashaponMachineId=>typeof id==='string'&&GASHAPON_MACHINES.some(m=>m.id===id);
 /** World machines (everything but the arcade room's pair), for the island's one instanced mesh. */
 export const islandGashaponMachines=()=>GASHAPON_MACHINES.filter(m=>m.zone!=='arcade');
+/** The machine whose six toys this machine sells (itself, unless it shares a set). */
+export const gashaponSetOf=(id:string):string=>gashaponMachine(id)?.set??id;
+/** Machines that own a set of toys (one Toy Shelf section each). */
+export const setGashaponMachines=()=>GASHAPON_MACHINES.filter(m=>!m.set);

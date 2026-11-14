@@ -40,19 +40,19 @@ const BOOK_MACHINES=['northbeach','causeway','cayplaza','sharks'],CAY_MACHINES=[
 const SUMMIT_MACHINES=['summit'];
 /** Sep 29 2026: the Coral Cay Konbini's machine sells the regular rows only (Island Square's Konbini keeps its specials).
  *  Oct 12 2026: Summit Isle's kiosk does too (a small trailside stand, not a sixth "home" shop). */
-const REGULAR_ONLY=['caykonbini','summit'];
+const REGULAR_ONLY=['caykonbini','summit','stadium'];
 /** Sep 29 2026: exactly two drink machines (lib/town/drinkMachines.ts), each side by side with its Konbini's machine.
  *  Oct 12 2026: a third, beside Summit Isle's kiosk. */
-const DRINK_MACHINES={drinksplaza:'plaza',drinkscay:'caykonbini',drinksummit:'summit'};
+const DRINK_MACHINES={drinksplaza:'plaza',drinkscay:'caykonbini',drinksummit:'summit',drinkstadium:'stadium'};
 const {MYSTERY_PACK_OPTIONS}=load(path.join(root,'lib/arcade/legendPacks.ts'));
 const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customization.ts'));
 
-// 1. Catalogue: seventeen machines (eight original + four book machines + the Coral Cay Konbini + two drink machines + Summit
-// Isle's kiosk and its drink machine), the same regular rows
+// 1. Catalogue: nineteen machines (eight original + four book machines + the Coral Cay Konbini + two drink machines + Summit
+// Isle's kiosk and its drink machine + the DRIP FC Stadium's pair, Nov 13 2026), the same regular rows
 // in every shop machine, exclusive specials.
 {
- const ALL=C.VENDING_MACHINES;assert.equal(ALL.length,17);assert.equal(new Set(ALL.map(m=>m.id)).size,17);assert.equal(new Set(ALL.map(m=>m.color)).size,17,'each machine has its own colour');
- same(ALL.filter(m=>m.drinks).map(m=>m.id),Object.keys(DRINK_MACHINES),'exactly three drink machines');
+ const ALL=C.VENDING_MACHINES;assert.equal(ALL.length,19);assert.equal(new Set(ALL.map(m=>m.id)).size,19);assert.equal(new Set(ALL.map(m=>m.color)).size,19,'each machine has its own colour');
+ same(ALL.filter(m=>m.drinks).map(m=>m.id),Object.keys(DRINK_MACHINES),'exactly four drink machines');
  const M=ALL.filter(m=>!m.drinks);
  const rows=['special','books','packs','ball','scooter','bike','moped','jetpack','costume'];
  const regular=new Set(C.VENDING_ITEMS.map(i=>i.id)),seen=new Map();
@@ -89,6 +89,11 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  const M=C.VENDING_MACHINES;
  for(const m of M){
   if(DRINK_MACHINES[m.id])continue;// checked in 2b
+  // Nov 13 2026: the DRIP FC Stadium's machine, against the south stand's back wall under the big screen (tests/gashapon-data.cjs
+  // checks the whole row: flush, 12 cm gaps, clear of the posts, stairs, lights and viewers).
+  if(m.id==='stadium'){const SS=load(path.join(root,'lib/town/stadiumShops.ts'));same([m.x,m.z,m.yaw],(({x,z,yaw})=>[x,z,yaw])(SS.stadiumVendingSpot()),'stadium placed from its wall anchor');
+   assert.equal(m.y,0);assert(Math.abs(m.z-.559-(SS.STADIUM_SHOP_WALL_Z+.03))<.011,'flush to the wall');assert(onIsland(m.x,m.z),'on the island');
+   same(C.machineStock('stadium')[1].items.map(i=>i.id),C.machineStock('caykonbini')[1].items.map(i=>i.id),'the Coral Cay Konbini\'s four books (its glass twin)');continue;}
   if(CAY_MACHINES.includes(m.id)){assert(isOnCayLand(m.x,m.z)&&standsOnCay(m),m.id+' stands on walkable Coral Cay ground (cabinet and walk-up point)');assert.equal(m.y,0);
    const s=cayVendingSpots[m.id==='cayplaza'?'cafe':m.id==='caykonbini'?'konbini':m.id]();same([m.x,m.z,m.yaw],[s.x,s.z,s.yaw],m.id+' placed from the Coral Cay anchors');
    assert((Math.sin(m.yaw)*16+Math.cos(m.yaw)*33)/Math.hypot(16,33)>.3,m.id+' glass front reads from the island camera');continue;}
@@ -127,6 +132,7 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
   const fx=m.x+Math.sin(m.yaw)*1.5,fz=m.z+Math.cos(m.yaw)*1.5;
   // Summit Isle's kiosk is a small stand, not a full Konbini building, so it has no KONBINI_DOORS entry to check against.
   if(beside==='summit'){assert(onSummitIsle(m.x,m.z)&&onSummitIsle(fx,fz),id+' on Summit Isle');continue;}
+  if(beside==='stadium'){assert(onIsland(m.x,m.z)&&onIsland(fx,fz),id+' on the island');continue;}
   const door=KONBINI_DOORS[beside==='plaza'?'main':'cay'];
   assert(Math.abs(m.x-door.x)-D.CABINET_WIDTH/2>2.2,id+' keeps the sliding doors clear');assert(!konbiniDoorNear(beside==='plaza'?'main':'cay',fx,fz),id+"'s walk-up spot is outside the door's Enter zone");
   if(beside==='caykonbini')assert(standsOnCay(m),id+' stands on walkable Coral Cay ground (cabinet and walk-up point)');else assert(onIsland(m.x,m.z)&&onIsland(fx,fz),id+' on the island');
@@ -138,10 +144,17 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  const {createVendingMachines,VENDING_SCALE}=load(path.join(root,'lib/graphics/vendingMachines.ts'));
  const scene=new T.Scene(),v=createVendingMachines(scene);
  const meshes=[];v.root.traverse(o=>{if(o.isMesh)meshes.push(o);});
- assert.equal(meshes.length,17,'one merged mesh (one draw call) per machine');assert.equal(new Set(meshes.map(m=>m.material)).size,1,'all seventeen share one material');
+ assert.equal(meshes.length,19,'one merged mesh (one draw call) per machine');assert.equal(new Set(meshes.map(m=>m.material)).size,1,'all nineteen share one material');
  const atlasMaps=new Set(meshes.map(m=>m.material.map));assert.equal(atlasMaps.size,1,'one shared atlas texture, no new textures for the book machines');
  assert(meshes.every(m=>m.frustumCulled&&m.geometry.boundingSphere),'frustum-culled with bounds');assert(meshes.every(m=>m.geometry.getAttribute('position').count<800),'low-poly');
- assert.equal(v.obstacles.length,17);assert.equal(meshes[0].material.map.image.height,1024,'the atlas did not grow for the drink machines or Summit Isle');for(const o of v.obstacles)assert(Math.min(o.w,o.d)>1.1&&Math.max(o.w,o.d)>1.68&&o.w<2.4&&o.d<2.4,'collision footprint covers the cabinet');// any yaw (wall machines are square-on)
+ assert.equal(v.obstacles.length,19);assert.equal(meshes[0].material.map.image.height,1024,'the atlas did not grow for the drink machines, Summit Isle or the stadium pair');for(const o of v.obstacles)assert(Math.min(o.w,o.d)>1.1&&Math.max(o.w,o.d)>1.68&&o.w<2.4&&o.d<2.4,'collision footprint covers the cabinet');// any yaw (wall machines are square-on)
+ // Nov 13 2026 (owner: "the vending machines look dark at night"): the shared material's printed face brightens and the cabinet
+ // self-lights with the shared night factor (lib/graphics/machineNightGlow.ts); 0 by day, so the day look is unchanged.
+ {const SN=load(path.join(root,'lib/town/stadiumNight.ts')),mat=meshes[0].material,sh={uniforms:{},vertexShader:T.ShaderLib.standard.vertexShader,fragmentShader:T.ShaderLib.standard.fragmentShader};mat.onBeforeCompile(sh,null);
+  assert.equal(sh.uniforms.uMachineNight,SN.STADIUM_NIGHT,'night glow: the vending material binds the shared night uniform');
+  assert(/if\(uMachineNight>0\.\)\{/.test(sh.fragmentShader)&&/gl_FragColor\.rgb\*=1\.\+0\.300\*uMachineNight/.test(sh.fragmentShader)&&/diffuseColor\.rgb\*0\.320\*uMachineNight/.test(sh.fragmentShader),'the printed face brightens and the cabinet glows, scaled by the night factor');
+  assert(sh.fragmentShader.indexOf('gl_FragColor.rgb = diffuseColor.rgb')<sh.fragmentShader.indexOf('uMachineNight>0.'),'after the printed-face patch');assert(/vending-printed-face-v1\|vending-night-v1/.test(mat.customProgramCacheKey()),'one program for all machines');
+  assert.equal(SN.STADIUM_NIGHT.value,0,'off by day (the night factor is 0 until fieldLighting.ts sees night)');}
  const glow=scene.getObjectByName('vending-selection');assert(glow,'one shared hover glow');
  let glowMeshes=0;glow.traverse(o=>{if(o.isMesh)glowMeshes++;});assert.equal(glowMeshes,3,'single buildingGlow (outline, halo, wash) for all machines');
  const camera=new T.PerspectiveCamera(40,390/844,1,500);const plaza=v.entries.find(e=>e.machine.id==='plaza');
@@ -290,7 +303,7 @@ const {CUSTOMIZATION_OPTIONS,BALL_COLORS}=load(path.join(root,'lib/town/customiz
  // i.e. under the HTML tap areas), and goes back to the flat printed front at distance.
  {const {VENDING_BAY,VENDING_FACE_LAYOUT:FL}=load(path.join(root,'lib/graphics/vendingFaceLayout.ts'));
   const w=load(path.join(root,'lib/graphics/vendingMachines.ts')).createVendingMachines(new T.Scene(),{viewport:()=>({width:1280,height:800,dpr:2}),coins:()=>123});
-  same(w.entries.map(e=>e.machine.id),C.VENDING_MACHINES.map(m=>m.id),'every machine is covered');assert.equal(w.entries.length,17);
+  same(w.entries.map(e=>e.machine.id),C.VENDING_MACHINES.map(m=>m.id),'every machine is covered');assert.equal(w.entries.length,19);
   const yaws=new Set();
   for(const e of w.entries){const id=e.machine.id,pos=e.geometry.getAttribute('position'),before=Array.from(pos.array);yaws.add(+e.machine.yaw.toFixed(3));
    assert(!w.hasCloseUp(id),id+' shows its flat front at distance');
@@ -408,7 +421,7 @@ function sourceChecks(){
  assert(!/data-machines-found=|>No real money</.test(ui),'requested footer labels removed');assert(!/className=\{styles.only\}/.test(face),'no badges over the product artwork');
  for(const f of ['components/RideUnlockToast.tsx','components/BallHuntLesson.tsx','components/CoinQuest.tsx','lib/town/npcDialogues.ts','lib/town/questModel.ts','lib/town/exploreChecklist.ts','components/IslandTravelMap.tsx'])assert(!/\bthe (Island )?Store\b|Visit the Store|in the Store/.test(read(f)),f+' no longer sends players to the Store');
  lockHintChecks(controller);
- console.log('PASS vending machines: 17 placed machines (8 with exclusive specials, 4 book machines incl. 3 on Coral Cay anchors, the Coral Cay Konbini, Summit Isle\'s kiosk, 3 drink machines beside the Konbini/kiosk machines), one draw call each, shared glow + Go, ~1 s angled zoom fitting the face (taps ≥44px portrait + landscape), in-world face (no modal, one shared layout, visuals-only module), idle frames free, coin ledger (locked, no re-locking, no duplicates), Store entry points redirected');
+ console.log('PASS vending machines: 19 placed machines (8 with exclusive specials, 4 book machines incl. 3 on Coral Cay anchors, the Coral Cay Konbini, Summit Isle\'s kiosk, the DRIP FC Stadium\'s, 4 drink machines beside the Konbini/kiosk/stadium machines), one draw call each, shared glow + Go, ~1 s angled zoom fitting the face (taps ≥44px portrait + landscape), in-world face (no modal, one shared layout, visuals-only module), idle frames free, coin ledger (locked, no re-locking, no duplicates), Store entry points redirected');
 }
 
 // 6. Locked hints on the LED (Sep 30 2026, E2E audit: a page where every item said LOCKED gave no hint). The copy comes from the

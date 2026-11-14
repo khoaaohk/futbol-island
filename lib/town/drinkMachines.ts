@@ -21,8 +21,12 @@ import {registerConsumables,registerCollectionGroup,type Consumable,type Source}
 // itself when it loads (lazy-load pass, Oct 7 2026): this data module stays free of the canvas painters, so the island's boot bundle
 // (which needs isDrinkMachine and the machine info) does not carry the Konbini food art.
 
-export type DrinkMachineId='drinksplaza'|'drinkscay'|'drinksummit';
-export const DRINK_MACHINE_IDS:readonly DrinkMachineId[]=['drinksplaza','drinkscay','drinksummit'];
+export type DrinkMachineId='drinksplaza'|'drinkscay'|'drinksummit'|'drinkstadium';
+export const DRINK_MACHINE_IDS:readonly DrinkMachineId[]=['drinksplaza','drinkscay','drinksummit','drinkstadium'];
+/** Nov 13 2026 (owner: the machines under the DRIP FC Stadium's big screen, lib/town/stadiumShops.ts): the stadium's drink machine
+ *  sells the Island Square machine's six drinks (the same items, prices and daily limit), so no new drink and no new art. */
+export const DRINK_STOCK:Readonly<Partial<Record<DrinkMachineId,DrinkMachineId>>>={drinkstadium:'drinksplaza'};
+export const drinkStockOf=(machine:DrinkMachineId):DrinkMachineId=>DRINK_STOCK[machine]??machine;
 export const isDrinkMachine=(id:string):id is DrinkMachineId=>(DRINK_MACHINE_IDS as readonly string[]).includes(id);
 
 // ---- Sources (checked 29 Sep 2026) -----------------------------------------------------------------------------------------
@@ -123,12 +127,12 @@ export const DRINKS:Drink[]=[
  ]),
 ];
 export const drink=(id:string)=>DRINKS.find(x=>x.id===id);
-export const drinksAt=(machine:DrinkMachineId)=>DRINKS.filter(x=>x.machine===machine);
+export const drinksAt=(machine:DrinkMachineId)=>{const stock=drinkStockOf(machine);return DRINKS.filter(x=>x.machine===stock);};
 export const drinkSources=(x:Drink)=>x.sources.map(s=>DRINK_SOURCES[s]);
 
 // ---- Machines ---------------------------------------------------------------------------------------------------------------
 /** The machine sheet, merged into VENDING_MACHINES by lib/town/vendingCatalog.ts. `beside` is the id of the store's machine. */
-export const DRINK_MACHINE_INFO:Record<DrinkMachineId,{beside:'plaza'|'caykonbini'|'summit';name:string;shop:string;place:string;color:string;light:string;ink:string;lesson:string}>={
+export const DRINK_MACHINE_INFO:Record<DrinkMachineId,{beside:'plaza'|'caykonbini'|'summit'|'stadium';name:string;shop:string;place:string;color:string;light:string;ink:string;lesson:string}>={
  drinksplaza:{beside:'plaza',name:'Drinks · Island Square',shop:'Island Square Konbini',place:'beside the Konbini’s vending machine, under the east end of the canopy',
   color:'#2d6fc7',light:'#eef6ff',ink:'#0b2a52',lesson:'Hydration helps you play: drink before, during and after the game.'},
  drinkscay:{beside:'caykonbini',name:'Drinks · Coral Cay',shop:'Coral Cay Konbini',place:'beside the Coral Cay Konbini’s vending machine, by the roundabout',
@@ -137,6 +141,9 @@ export const DRINK_MACHINE_INFO:Record<DrinkMachineId,{beside:'plaza'|'caykonbin
  // sandbar's landing up to the summit terrace, outside the Summit 5s pitch gate.
  drinksummit:{beside:'summit',name:'Drinks · Summit Isle',shop:'Summit Isle Konbini',place:'beside the Summit Isle Konbini’s vending machine, on the summit terrace by the pitch gate',
   color:'#4f8f5a',light:'#eaf6e4',ink:'#17331c',lesson:'Climbing is thirsty work: drink before you start up the trail, and keep sipping on the way.'},
+ // Nov 13 2026: beside the stadium's vending machine, under the big screen (lib/town/stadiumShops.ts); Island Square's drinks.
+ drinkstadium:{beside:'stadium',name:'Drinks · DRIP FC Stadium',shop:'DRIP FC Stadium',place:'beside the stadium’s vending machine, against the south stand under the big screen',
+  color:'#2a8f86',light:'#e3f7f4',ink:'#08332f',lesson:'Matchday tip: sip water before kick-off and again at half-time, even if you are only cheering.'},
 };
 /** Cabinet width on the ground (VENDING_SIZE.w × VENDING_SCALE = 1.3 × 1.3) and the gap between the two cabinets. */
 export const CABINET_WIDTH=1.69,DRINK_GAP=.12;
