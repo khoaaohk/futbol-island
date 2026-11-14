@@ -1,7 +1,7 @@
 import {SITE_CARDS,cardPath,eraWord,type SiteCard} from './cards';
 import {SITE_EXHIBITS,exhibitPath,type SiteExhibit} from './exhibits';
 import {SITE_FISH,fishPath,fishPlaces,rarityWord} from './fish';
-import {lessonById,lessonPath,LESSONS_INDEX,type SiteLesson} from './lessons';
+import {lessonById,lessonPath,LESSONS,LESSONS_INDEX,type SiteLesson} from './lessons';
 import {hubBySlug} from './hubs';
 import type {FishSpecies} from '@/lib/town/fishing/fishCatalog';
 /**
@@ -101,4 +101,16 @@ export function fishRelated(f:FishSpecies):Related{
  else{const land=after(SITE_FISH.filter(x=>x.club.country===f.club.country),f,2,skip);
   if(land.length)groups.push({title:`More club animals from ${f.club.country}`,links:land.map(fishLink)});}
  return {prev:fishLink(p),next:fishLink(n),groups,read:[cards.length?CARDS_LINK:LESSONS_LINK]};
+}
+
+// ---- lessons (Nov 14 2026, seo-boost) ------------------------------------------------------------------------------------------
+/** A lesson page's own siblings: previous and next in the same format's catalog order, then the next three in the same
+ *  category (else chapter) of that format, cyclic, so links spread over the group. Lesson pages had only hub and guide links. */
+export function lessonSiblings(l:SiteLesson):{prev:SiteLesson;next:SiteLesson;same:SiteLesson[];groupName:string}{
+ const fmt=LESSONS.filter(x=>x.format===l.format),[prev,next]=around(fmt,l),skip=new Set<SiteLesson>([l,prev,next]);
+ const key=l.category?'category':'chapter',val=l[key];
+ const group=val?fmt.filter(x=>x[key]===val):fmt;
+ let same=after(group,l,3,skip);
+ if(same.length<3)same=[...same,...after(fmt,l,3-same.length,skip)];
+ return {prev,next,same,groupName:val?`${l.formatLabel} ${val.toLowerCase()} lessons`:`${l.formatLabel} lessons`};
 }

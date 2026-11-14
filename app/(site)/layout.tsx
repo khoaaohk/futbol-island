@@ -8,6 +8,9 @@ import styles from './site.module.css';
  * from components/learn for motion, clips and filters; its words are still all prerendered. The game itself is at /play (Nov 3 2026; it was `/`): each page has one gold "Play" button (near the
  * top of index pages, at the end of detail pages). Shared type and spacing scale: site.module.css and docs/seo/DESIGN.md.
  */
+const FOOTER_HUBS:readonly (readonly [string,string])[]=[['/learn/lessons','Lessons'],['/learn/soccer-drills','Drills'],['/learn/soccer-practice-plans','Practice plans'],
+ ['/learn/soccer-formations','Formations'],['/learn/soccer-positions','Positions'],['/learn/soccer-rules','Rules'],['/learn/soccer-terms','Soccer terms'],
+ ['/learn/soccer-age-groups','Age groups'],['/tools','Coach tools'],['/games','Games']];
 export default function SiteLayout({children}:{children:React.ReactNode}){
  preloadIslandBrush();
  return <div className={styles.page} data-reading-page="">
@@ -21,6 +24,10 @@ export default function SiteLayout({children}:{children:React.ReactNode}){
    <span>Futbol Island · a free football learning game for kids.</span>
    <a href="/">What’s inside</a>
    <a href="/privacy">Privacy</a>
-  </div></footer>
+  </div>
+  {/* Nov 14 2026 (seo-boost, owner-approved: "the home page links to the main hubs"): the guide hubs, one quiet row on every
+      reading page and the home page, so each hub is one click from anywhere. Plain links, same footer style. */}
+  <nav className={styles.footerInner} aria-label="Guides">{FOOTER_HUBS.map(([href,label])=><a key={href} href={href}>{label}</a>)}</nav>
+  </footer>
  </div>;
 }

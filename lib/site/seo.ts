@@ -62,20 +62,26 @@ export type Crumb={name:string;path:string};
 export const breadcrumbLd=(crumbs:readonly Crumb[])=>({'@context':'https://schema.org','@type':'BreadcrumbList',
  itemListElement:crumbs.map((c,i)=>({'@type':'ListItem',position:i+1,name:c.name,item:abs(c.path)}))});
 export const KIDS_AUDIENCE={'@type':'PeopleAudience',suggestedMinAge:7,suggestedMaxAge:12};
-export const PUBLISHER={'@type':'Organization',name:SITE_NAME,url:SITE_URL+'/'};
+/** Nov 14 2026 (seo-boost): one Organization and one WebSite entity, named by @id everywhere, with the logo Google's Article
+ *  guidelines ask of a publisher. */
+export const ORG_ID=SITE_URL+'/#organization',WEBSITE_ID=SITE_URL+'/#website';
+export const PUBLISHER={'@type':'Organization','@id':ORG_ID,name:SITE_NAME,url:SITE_URL+'/',logo:{'@type':'ImageObject',url:SITE_URL+'/icon.png'}};
 /** The game itself (it runs at /play since Nov 3 2026), as a web app and a video game: on `/`, /play and /about. */
 export const PLAY_PATH='/play';
-export const siteLd=()=>({'@context':'https://schema.org','@type':['WebApplication','VideoGame'],
+export const GAME_ID=abs(PLAY_PATH)+'#game';
+/** Nov 14 2026 (seo-boost): operatingSystem "Web browser", applicationCategory GameApplication (Google's value for games),
+ *  isFamilyFriendly, and the same @id on `/` and /play so both describe one game. */
+export const siteLd=()=>({'@context':'https://schema.org','@type':['WebApplication','VideoGame'],'@id':GAME_ID,
  name:SITE_NAME,url:abs(PLAY_PATH),
  description:'Futbol Island is a free football (soccer) learning game for kids aged 7 to 12. Explore an island, learn positions, tactics and the rules of 7v7, 9v9, 11v11 and futsal through short lessons and quizzes, and discover football history and culture.',
- applicationCategory:'GameApplication',operatingSystem:'Any (web browser, phone first)',genre:['Educational','Sports'],
+ applicationCategory:'GameApplication',operatingSystem:'Web browser',genre:['Educational','Sports'],isFamilyFriendly:true,
  gamePlatform:'Web browser',playMode:'SinglePlayer',
  inLanguage:'en',isAccessibleForFree:true,offers:{'@type':'Offer',price:0,priceCurrency:'USD'},
  audience:KIDS_AUDIENCE,educationalUse:['Self-directed learning','Practice','Quiz'],
  learningResourceType:'Educational game',teaches:['Football positions','Team shape','Tactics','Laws of the Game','Football history','Futsal'],
  publisher:PUBLISHER,image:SITE_URL+'/opengraph-image.png'});
 /** The home page `/` (the feature tour, Nov 3 2026): the site and its publisher. */
-export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/',inLanguage:'en',
+export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite','@id':WEBSITE_ID,name:SITE_NAME,url:SITE_URL+'/',inLanguage:'en',
  description:'Futbol Island is a free football (soccer) learning game for kids aged 7 to 12, played in the web browser.',publisher:PUBLISHER});
 /** No sameAs: Futbol Island has no social profile of its own yet (the Instagram on `/` is the partner founder's personal
  *  account, not the game's), and sameAs must name the same entity. Add its own profiles here when they exist. */
@@ -96,5 +102,5 @@ export const creativeWorkLd=(o:{name:string;path:string;description:string;about
 /** /play (Nov 10 2026): the same game entity with its own @id, the page it is the main thing of, and real screenshots (the
  *  home page's captures, public/learn). No ratings and no reviews: none exist, so none are stated. */
 export const PLAY_SCREENSHOTS=['/learn/town_overview.webp','/learn/lesson_field.webp','/learn/quiz_question.webp'] as const;
-export const playLd=()=>({...siteLd(),'@id':abs(PLAY_PATH)+'#game',mainEntityOfPage:abs(PLAY_PATH),
+export const playLd=()=>({...siteLd(),mainEntityOfPage:abs(PLAY_PATH),
  screenshot:PLAY_SCREENSHOTS.map(s=>({'@type':'ImageObject',contentUrl:SITE_URL+s,encodingFormat:'image/webp'}))});

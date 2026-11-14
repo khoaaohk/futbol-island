@@ -38,6 +38,9 @@ export default function Landing(){
    <TitleActions/>
    <nav className={styles.grownRow} aria-label="For grown-ups">
     <LegalLinks/>
+    {/* Nov 14 2026 (seo-boost, owner-approved: /play links to the guide hubs): one plain link for grown-ups, styled like Privacy.
+        /learn/lessons lists every hub (lessons, drills, formations, rules, tools, games). */}
+    <a className={styles.grownLink} href="/learn/lessons">Guides</a>
    </nav>
   </TitleScene>
  </div>;

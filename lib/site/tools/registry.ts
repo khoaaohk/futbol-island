@@ -149,7 +149,7 @@ export const onFieldFor=(f:GuideFormat)=>PLAYERS_PER_TEAM[f];
 /* ---- JSON-LD ---- */
 /** A free browser tool. No ratings or reviews: none exist, and none are invented. */
 export const webAppLd=(o:{name:string;path:string;description:string;image?:string;features:string[]})=>({'@context':'https://schema.org','@type':'WebApplication',name:o.name,url:abs(o.path),description:o.description,
- applicationCategory:'SportsApplication',operatingSystem:'Any (web browser)',browserRequirements:'Requires JavaScript',inLanguage:'en',isAccessibleForFree:true,
+ applicationCategory:'SportsApplication',operatingSystem:'Web browser',browserRequirements:'Requires JavaScript',inLanguage:'en',isAccessibleForFree:true,
  offers:{'@type':'Offer',price:0,priceCurrency:'USD'},featureList:o.features,...(o.image?{image:abs(o.image),screenshot:abs(o.image)}:{}),
  audience:{'@type':'Audience',audienceType:'Youth soccer coaches, teachers and parents'},publisher:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
 const LICENCE_URL=`${PRINTABLES_HUB_PATH}#licence`;

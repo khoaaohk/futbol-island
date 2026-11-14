@@ -275,7 +275,7 @@ export const GAME_LISTINGS:readonly GameListing[]=[
 /** One arcade game as a free browser VideoGame. No ratings or reviews: none exist, and none are invented. */
 export const videoGameLd=(g:GamePage)=>({'@context':'https://schema.org','@type':'VideoGame','@id':abs(g.path)+'#game',name:g.name,alternateName:g.h1,url:abs(g.path),mainEntityOfPage:abs(g.path),description:g.description,
  image:abs(g.og),screenshot:g.shots.map(s=>({'@type':'ImageObject',contentUrl:abs(s.src),encodingFormat:'image/webp',width:s.w,height:s.h,caption:s.alt})),
- genre:g.genre,gamePlatform:'Web browser',operatingSystem:'Any (web browser, phone first)',applicationCategory:'Game',playMode:'SinglePlayer',inLanguage:'en',isAccessibleForFree:true,
+ genre:g.genre,gamePlatform:'Web browser',operatingSystem:'Web browser',applicationCategory:'Game',playMode:'SinglePlayer',inLanguage:'en',isAccessibleForFree:true,
  offers:{'@type':'Offer',price:0,priceCurrency:'USD',availability:'https://schema.org/InStock',url:abs(g.path)},audience:KIDS_AUDIENCE,isFamilyFriendly:true,teaches:g.skill,
  datePublished:GAMES_UPDATED,dateModified:GAMES_UPDATED,publisher:PUBLISHER,author:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
 /** The hub's list of games. */
