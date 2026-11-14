@@ -301,7 +301,8 @@ const CharacterCustomizer=stableMemo(dynamic(()=>import('./CharacterCustomizer')
 const VendingMachine=dynamic(()=>import('./VendingMachine'),{ssr:false}),FieldLearning=dynamic(()=>import('./FieldLearning'),{ssr:false}),CoachLesson=dynamic(()=>import('./CoachLesson'),{ssr:false});
 // The two outdoor drink machines (lib/town/drinkMachines.ts): same in-world machine, drink stock and the Konbini consumable flow.
 const DrinkMachine=dynamic(()=>import('./DrinkMachine'),{ssr:false});
-const INITIAL_SPAWN={x:103,z:-8};
+/* QA Nov 13 2026: was z:-8, where the 20 m roof terrace to the south hides the player from the camera (only the pin showed on the first landing). */
+const INITIAL_SPAWN={x:103,z:-20};
 const INITIAL_FLIGHT_HEIGHT=28;
 type Input = {charging?:boolean;shotPower?:number;x:number;z:number;sprint:boolean;kick:boolean;juggle:boolean};
 export default function Island({returningFromArcade=false,openArcadePacks=false}:{returningFromArcade?:boolean;openArcadePacks?:boolean}={}) {
