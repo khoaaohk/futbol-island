@@ -24,7 +24,8 @@ export const POND_DRAGONFLY_WHERE='Or stand still by the Stadium Park pond: a dr
 type Port={get:()=>string|null;set:(v:string)=>void};
 const local:Port={get:()=>{try{return localStorage.getItem(BUG_BOOK_KEY);}catch{return null;}},set:v=>{try{localStorage.setItem(BUG_BOOK_KEY,v);}catch{/* private mode */}}};
 /** May the player net right now? On foot (walking), on the ground, free to act (no lesson, panel or job). */
-export const pondNetAllowed=(o:{ride:string;onGround:boolean;canEnter:boolean;job:boolean})=>o.ride==='walk'&&o.onGround&&o.canEnter&&!o.job;
+/** `under`: the player is duck-diving (QA Nov 14 2026: Net it floated over the water while the kid was under it). */
+export const pondNetAllowed=(o:{ride:string;onGround:boolean;canEnter:boolean;job:boolean;under?:boolean})=>o.ride==='walk'&&o.onGround&&o.canEnter&&!o.job&&!o.under;
 /** The Bug book catch of a pond dragonfly, plus the same events a shift catch fires (the first-ever coin, the completion bonus). */
 export function netPondDragonfly(port:Port=local,fire:(target:'window'|'document',name:string,detail:unknown)=>void=dispatch):BugCatchRecord{
  const rec=recordBugCatch('bug',POND_DRAGONFLY_ID,port);

@@ -163,7 +163,7 @@ import {createBackpack} from '@/lib/graphics/backpack';
 import {createCoachPractice} from '@/lib/town/coachPractice';
 import {createFlightMotion} from '@/lib/graphics/flightMotion';import {createIdleWave,stepIdleWave,IDLE_SPEED} from '@/lib/town/jetpackIdleWave';import {applyIdleGesture} from '@/lib/graphics/jetpackIdlePose';
 import {createBoundaryFeedback} from '@/lib/graphics/boundaryFeedback';
-import {createStadiumFlight} from '@/lib/town/stadiumFlight';
+import {createStadiumFlight,roofCeiling} from '@/lib/town/stadiumFlight';
 import {createLandingMarker} from '@/lib/graphics/landingMarker';
 import {createQuizViewControls} from '@/lib/town/quizViewControls';
 import {createLearningView,type LearningAngle} from '@/lib/town/learningView';
@@ -1521,7 +1521,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         if(target){
           if(!rooftop.canLand(target.x,target.z,Infinity)){flight.landing=null;flight.landTime=-1;return;}
           const dx=target.x-location.x,dz=target.z-location.z,d=Math.hypot(dx,dz);
-          if(d>.1){liftJetpack(dt);flight.height+=summitFlight.update(location.x,location.z,dx/d*20,dz/d*20,flight.height,dt,flight.cruiseHeight);if(flight.takeoffTime>=1.05){const step=Math.min(d,dt*20),g=stadiumFlight.glide(location,target,flight.height,step,reduced);if(g.fresh)stadiumBump(flight.height);if(g.lift)flight.height+=g.lift*dt;}}/* the landing glide bumps off the stadium (walls: hop over; masts: round) */
+          if(d>.1){const was=flight.height;liftJetpack(dt);flight.height+=summitFlight.update(location.x,location.z,dx/d*20,dz/d*20,flight.height,dt,flight.cruiseHeight);flight.height=Math.min(flight.height,Math.max(was,roofCeiling(location.x,location.z,was)));if(flight.takeoffTime>=1.05){const step=Math.min(d,dt*20),g=stadiumFlight.glide(location,target,flight.height,step,reduced);if(g.fresh)stadiumBump(flight.height);if(g.lift)flight.height+=g.lift*dt;}}/* the landing glide bumps off the stadium (walls: hop over; masts: round) */
           else{location.x=target.x;location.z=target.z;const floor=rooftop.surface(target.x,target.z,Infinity);
             if(flight.landTime<0){flight.landTime=0;flight.landHeight=flight.height;}
             flight.landTime=Math.min(.95,flight.landTime+dt);const t=flight.landTime/.95;
@@ -1537,7 +1537,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
         // Clear Summit Isle's tower. During the take-off (no velocity yet) the lift looks where the stick points, at cruise speed, so
         // a take-off straight at the steep north face starts climbing at once (it used to skim ~2 m over the top).
         const lookTakeoff=flight.takeoffTime<1.05&&len>.01?TRAVEL_MODES.jetpack.maxSpeed/Math.max(1,len):0;
-        liftJetpack(dt);flight.height+=summitFlight.update(location.x,location.z,lookTakeoff?ix*lookTakeoff:velocity.x,lookTakeoff?iz*lookTakeoff:velocity.z,flight.height,dt,flight.cruiseHeight);
+        {const was=flight.height;liftJetpack(dt);flight.height+=summitFlight.update(location.x,location.z,lookTakeoff?ix*lookTakeoff:velocity.x,lookTakeoff?iz*lookTakeoff:velocity.z,flight.height,dt,flight.cruiseHeight);flight.height=Math.min(flight.height,Math.max(was,roofCeiling(location.x,location.z,was)));}/* QA Nov 14 2026: held under a stand roof (stadiumFlight.ts roofCeiling) */
         if(flight.takeoffTime<1.05){velocity.x=velocity.z=0;return;}
         if(len>.01){const nx=ix/len,nz=iz/len;if(flightBlocked(location.x+nx*1.2,location.z+nz*1.2)){sound.boundary();boundaryFeedback.hit(location.x+nx*.8,flight.height,location.z+nz*.8,-nx,-nz,Math.max(.7,Math.hypot(velocity.x,velocity.z)/25));}}
         {const ox=location.x,oz=location.z;stepPlayer(location,velocity,{x:ix,z:iz,sprint:false},dt,[],'jetpack');
@@ -2383,7 +2383,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const sitWant=stadiumSit.want(location.x,location.z,rooftop.state.height,canEnter&&rideRef.current==='walk'&&!rooftop.state.falling&&!rooftop.ladder.active&&streetTraffic.rider.index<0);// West Stadium: Sit / Stand up
       stadiumSit.prompt(uiElement<HTMLButtonElement>('[data-stadium-sit]'),!!sitWant&&hudFocusNow==='enter'&&focusArbiter.current?.key===STADIUM_SIT_KEY,camera,fullWidth,fullHeight,placeEntryPrompt,setUIHidden);
       // Stadium Park pond: Net it over a dragonfly within reach (on foot, free to act; pondBugs.ts).
-      const pondNetK=pondLife.active&&pondNetAllowed({ride:rideRef.current,onGround:!rooftop.state.falling&&!rooftop.state.air&&groundY<.05,canEnter,job:!!jobs.run})?pondLife.nearFly(location.x,location.z,POND_NET.range):-1;
+      const pondNetK=pondLife.active&&pondNetAllowed({ride:rideRef.current,onGround:!rooftop.state.falling&&!rooftop.state.air&&groundY<.05,canEnter,job:!!jobs.run,under:water.diveActive})?pondLife.nearFly(location.x,location.z,POND_NET.range):-1;
       const pondNetWant=pondNetK>=0?{key:POND_NET.key,distance:Math.hypot(pondLife.flyAt(pondNetK,pondNetAt).x-location.x,pondNetAt.z-location.z)}:null;
       {const prompt=uiElement<HTMLButtonElement>('[data-pond-net]');if(prompt){let hidden=!(pondNetWant&&hudFocusNow==='enter'&&focusArbiter.current?.key===POND_NET.key);
         if(!hidden){ladderPromptV.set(pondNetAt.x,pondNetAt.y+.9,pondNetAt.z).project(camera);hidden=ladderPromptV.z< -1||ladderPromptV.z>1;

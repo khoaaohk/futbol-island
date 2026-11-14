@@ -20,7 +20,7 @@ import {effectiveTier} from '../graphics/heatTier';
 import {STADIUM} from './westParkLayout';
 import {BODY_COLOURS,SKIN_TONES} from './beanLooks';
 import {stadiumMood,type StadiumMood} from './stadiumMood';
-import {STANDS,ROWS,ROW_DEPTH,SEAT_DEPTH,SEAT_TOP,rowHeight,spanSeats,standSpans,standWorld,standYaw,SEAT_PITCH} from './stadiumSeats';
+import {STANDS,ROWS,ROW_DEPTH,SEAT_DEPTH,SEAT_TOP,rowHeight,spanSeats,standSpans,standWorld,standYaw,standLocal,SEAT_PITCH} from './stadiumSeats';
 
 /** The highest fill key ever shown (desktop, tier 0: about 36 % of the seats); the instance buffer holds exactly these fans. */
 export const CROWD_MAX_FILL=.5;
@@ -31,6 +31,14 @@ export const CROWD_RADIUS=150;
 export const FAN_TRIS=72;
 /** The goal bounce (s) and the fans cleared round the player (m). */
 export const CHEER_TIME=2.6,CLEAR_RADIUS=1.1;
+/** QA Nov 14 2026: seated (or standing) in a stand, the camera looks over the row in front, and its fans' heads filled the view's
+ *  foreground (a bobble hat over a corner). The fans in the row just ahead, within AHEAD_RADIUS of the spot in front of the player,
+ *  shrink away like the player's own neighbours. Out = (x, z, radius), radius -1 = nothing to clear (the front row, or not in a stand). */
+export const AHEAD_RADIUS=1.5;
+export function aheadClear(x:number,z:number,out:{set(x:number,y:number,z:number):unknown}){
+ for(const s of STANDS){const {d,a}=standLocal(s,x,z);if(d<s.inner-.3||d>s.inner+ROWS*ROW_DEPTH||a<s.from||a>s.to)continue;
+  if(d-ROW_DEPTH<s.inner)break;const p=standWorld(s,d-ROW_DEPTH,a);out.set(p.x,p.z,AHEAD_RADIUS);return true;}
+ out.set(0,0,-1);return false;}
 /** Seated friends whose seats the crowd keeps clear (more than this many seated friends in view: the rest may share a fan). */
 export const CLEAR_FRIENDS=8;
 /** The mini bean (m, fan space: y up from the seat, +z towards the pitch): body rings [y, radius], the top, depth squash, the
@@ -156,7 +164,7 @@ export function standFlagGeometry(spots:ReturnType<typeof standFlagSpots>){
 const linear=(hex:string)=>new T.Color(hex);
 export function createStadiumCrowd(parent:T.Object3D,phone:boolean){
  let mesh:T.InstancedMesh|null=null,flags:T.Mesh|null=null,fans:Fan[]=[],cheer=0,shownFill=-1;
- const uniforms={uCheer:{value:0},uTime:{value:0},uClear:{value:new T.Vector3(0,0,-1)},uClearF:{value:Array.from({length:CLEAR_FRIENDS},()=>new T.Vector3(0,0,-1))},
+ const uniforms={uCheer:{value:0},uTime:{value:0},uClear:{value:new T.Vector3(0,0,-1)},uClearA:{value:new T.Vector3(0,0,-1)},uClearF:{value:Array.from({length:CLEAR_FRIENDS},()=>new T.Vector3(0,0,-1))},
   uBeat:{value:0},uSway:{value:0},uPump:{value:0},uExcite:{value:0},uWave:{value:new T.Vector2(0,0)},uScarf:{value:0},uCentre:{value:new T.Vector2(STADIUM.x,STADIUM.z)},
   uBodyPal:{value:BODY_COLOURS.slice(0,8).map(linear)},uSkinPal:{value:SKIN_TONES.slice(1,7).map(linear)}};
  const flagUniforms={uClock:{value:0},uFlagSwing:{value:0},uClear:uniforms.uClear};
@@ -167,7 +175,7 @@ export function createStadiumCrowd(parent:T.Object3D,phone:boolean){
   const B=BEAN,g=(x:number)=>x.toFixed(4);
   mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,uniforms);
    sh.vertexShader=`attribute vec3 aFan;
-uniform float uCheer;uniform float uTime;uniform vec3 uClear;uniform vec3 uClearF[${CLEAR_FRIENDS}];
+uniform float uCheer;uniform float uTime;uniform vec3 uClear,uClearA;uniform vec3 uClearF[${CLEAR_FRIENDS}];
 uniform float uBeat;uniform float uSway;uniform float uPump;uniform float uExcite;uniform vec2 uWave;uniform float uScarf;uniform vec2 uCentre;
 uniform vec3 uBodyPal[8];uniform vec3 uSkinPal[6];
 varying vec3 vFanP;varying float vFanPart;varying vec3 vFanBody;varying vec3 vFanSkin;varying float vFanU;
@@ -199,6 +207,7 @@ vec2 fanRot(vec2 p,float a){float c=cos(a),s=sin(a);return vec2(p.x*c-p.y*s,p.x*
  transformed.y*=1.+.12*fanUp;transformed.y+=fanUp*.3+uCheer*max(0.,sin(uTime*13.+fanH*6.2832))*.3;
  transformed.x+=uSway*.05*sin(fanBeat+sectH*.8)*fanY;
  transformed*=1.-step(distance(fanAt.xz,uClear.xy),uClear.z);
+ transformed*=1.-step(distance(fanAt.xz,uClearA.xy),uClearA.z);
  for(int i=0;i<${CLEAR_FRIENDS};i++)transformed*=1.-step(distance(fanAt.xz,uClearF[i].xy),uClearF[i].z);`);
    sh.fragmentShader=`varying vec3 vFanP;varying float vFanPart;varying vec3 vFanBody;varying vec3 vFanSkin;varying float vFanU;
 `+sh.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
@@ -254,7 +263,7 @@ varying vec3 vFlagC2;varying float vFlagV;
    if(!mesh)build();const me=mesh!,tier=effectiveTier();if(!me.visible)me.visible=true;
    const showFlags=!(tier>=3||(phone&&tier>=2));if(flags&&flags.visible!==showFlags)flags.visible=showFlags;
    const fill=crowdFill(phone,tier);if(fill!==shownFill){shownFill=fill;me.count=crowdCount(fans,fill);}
-   const cl=uniforms.uClear.value;if(onStand){cl.set(x,z,CLEAR_RADIUS);}else if(cl.z>0)cl.z=-1;
+   const cl=uniforms.uClear.value,ca=uniforms.uClearA.value;if(onStand){cl.set(x,z,CLEAR_RADIUS);aheadClear(x,z,ca);}else{if(cl.z>0)cl.z=-1;if(ca.z>0)ca.z=-1;}
    const cf=uniforms.uClearF.value;for(let i=0;i<CLEAR_FRIENDS;i++){const f=friends[i],v=cf[i];if(f)v.set(f.x,f.z,SEAT_PITCH*.75);else if(v.z>0)v.z=-1;}
    if(cheer>0){cheer=Math.max(0,cheer-dt);uniforms.uTime.value+=dt;uniforms.uCheer.value=reduced?0:Math.min(1,cheer/.6)*Math.min(1,(CHEER_TIME-cheer)/.15);}
    else if(uniforms.uCheer.value)uniforms.uCheer.value=0;

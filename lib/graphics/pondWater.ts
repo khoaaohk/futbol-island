@@ -1,5 +1,5 @@
 import * as T from 'three';
-import {WATER_UNIFORMS,SEA_WATER_LOOK,SEA_GLSL,SEA_RIPPLE_PER_M} from './waterSurface';
+import {WATER_UNIFORMS,SEA_WATER_LOOK,SEA_GLSL,SEA_RIPPLE_PER_M,SWIM_CLEAR_GLSL,SWIM_CLEAR_UNIFORMS} from './waterSurface';
 import {POND_DEPTH} from '../town/westParkLayout';
 import {applyGroundTint} from './groundTint';
 
@@ -39,11 +39,12 @@ export function pondSeaDistance(depth:number){const sh=POND_DEPTH.shelf;return d
 export function createPondWaterMaterial(map?:T.Texture){
  const m=new T.MeshStandardMaterial({...SEA_WATER_LOOK,transparent:true,opacity:.92});if(map)m.map=map;
  m.onBeforeCompile=s=>{
-  Object.assign(s.uniforms,{uWaterTime:WATER_UNIFORMS.uWaterTime,uWaterNight:WATER_UNIFORMS.uWaterNight,uWaterDetail:WATER_UNIFORMS.uWaterDetail,uPondRip:POND_UNIFORMS.uPondRip});
+  Object.assign(s.uniforms,{uWaterTime:WATER_UNIFORMS.uWaterTime,uWaterNight:WATER_UNIFORMS.uWaterNight,uWaterDetail:WATER_UNIFORMS.uWaterDetail,uPondRip:POND_UNIFORMS.uPondRip},SWIM_CLEAR_UNIFORMS);
   s.vertexShader=s.vertexShader.replace('#include <common>','#include <common>\nattribute float aEdge,aSea;varying float vEdge,vSea;varying vec2 vPondXZ;')
    .replace('#include <project_vertex>','#include <project_vertex>\nvEdge=aEdge;vSea=aSea;vPondXZ=(modelMatrix*vec4(transformed,1.)).xz;');
   s.fragmentShader=s.fragmentShader.replace('#include <common>',`#include <common>
-uniform float uWaterTime,uWaterDetail;uniform vec3 uWaterNight;uniform vec4 uPondRip[${POND_RIPPLES}];varying float vEdge,vSea;varying vec2 vPondXZ;`)
+uniform float uWaterTime,uWaterDetail;uniform vec3 uWaterNight;uniform vec4 uPondRip[${POND_RIPPLES}];varying float vEdge,vSea;varying vec2 vPondXZ;
+${SWIM_CLEAR_GLSL}`)
    .replace('#include <map_fragment>',`
 #ifdef USE_MAP
  {vec2 rUv=vPondXZ*${SEA_RIPPLE_PER_M.toFixed(6)};float rp=texture2D(map,rUv+uWaterTime*vec2(.014,.006)).r;
@@ -54,7 +55,8 @@ uniform float uWaterTime,uWaterDetail;uniform vec3 uWaterNight;uniform vec4 uPon
 {float dd=vSea,e=smoothstep(0.,1.,vEdge);
  vec3 shallowC=mix(${SEA_GLSL.lagoon},${SEA_GLSL.aqua},smoothstep(.3,5.,dd));diffuseColor.rgb=mix(diffuseColor.rgb,shallowC,(1.-smoothstep(3.,24.,dd))*.85);
  diffuseColor.rgb=mix(diffuseColor.rgb,${SEA_GLSL.deep},smoothstep(25.,110.,dd)*.55);
- diffuseColor.rgb=mix(vec3(.5,.62,.52),diffuseColor.rgb,e)*uWaterNight;diffuseColor.a*=mix(.18,1.,e)*mix(.6,1.,smoothstep(2.,18.,dd));}`)
+ diffuseColor.rgb=mix(vec3(.5,.62,.52),diffuseColor.rgb,e)*uWaterNight;diffuseColor.a*=mix(.18,1.,e)*mix(.6,1.,smoothstep(2.,18.,dd));
+ diffuseColor.a*=swimClearAlpha(vPondXZ,dd);/* QA Nov 14 2026: the sea's swimmer disc, so a duck-dive in the pond shows the diver (was opaque: invisible) */}`)
    .replace('#include <normal_fragment_maps>',`#include <normal_fragment_maps>
 {vec2 p=vPondXZ;float t=uWaterTime;
  vec2 g=vec2(cos(p.x*1.7+p.y*.6+t*1.9),cos(p.y*1.9-p.x*.5+t*1.6))*.06+vec2(cos(p.x*3.9-p.y*2.3-t*2.7),cos(p.y*3.4+p.x*2.1-t*2.4))*.03;
@@ -64,7 +66,7 @@ uniform float uWaterTime,uWaterDetail;uniform vec3 uWaterNight;uniform vec4 uPon
    .replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
 {float fr=pow(1.-abs(dot(normal,normalize(vViewPosition))),3.);totalEmissiveRadiance+=vec3(.42,.6,.72)*fr*.3*uWaterNight*smoothstep(0.,.6,vEdge);}`);
  };
- m.customProgramCacheKey=()=>'park-pond-water-v2-sea';
+ m.customProgramCacheKey=()=>'park-pond-water-v3-sea-clear';
  return m;
 }
 

@@ -127,6 +127,7 @@ ok('pond life, remote swimmers, the map and the sea look',()=>{
  const ws=read('lib/graphics/waterSurface.ts'),pw=read('lib/graphics/pondWater.ts'),world=read('lib/town/world.ts');
  assert(/new T\.MeshStandardMaterial\(\{\.\.\.SEA_WATER_LOOK,map:waterRipples\.texture\}\)/.test(world)&&/seaRipples:waterRipples\.texture/.test(world),'the ocean and the pond share SEA_WATER_LOOK and the ripple tile');
  assert(/\{\.\.\.SEA_WATER_LOOK,transparent:true/.test(pw)&&/SEA_GLSL\.lagoon/.test(pw)&&/SEA_GLSL\.deep/.test(pw)&&/SEA_GLSL\.lagoon/.test(ws)&&/SEA_GLSL\.deep/.test(ws),'one colour ramp for both');
+ assert(/SWIM_CLEAR_UNIFORMS\);/.test(pw)&&/\$\{SWIM_CLEAR_GLSL\}/.test(pw)&&/diffuseColor\.a\*=swimClearAlpha\(vPondXZ,dd\);/.test(pw)&&/export const SWIM_CLEAR_GLSL/.test(ws),'a duck-dive in the pond clears the sea\'s swimmer disc (QA Nov 14 2026: the diver vanished)');
  const PW=load('lib/graphics/pondWater.ts');assert(PW.pondSeaDistance(L.POND_DEPTH.shelf)<=3&&PW.pondSeaDistance(L.POND_DEPTH.deep)>=24,'the shelf is the sea\'s pale shallows, the middle its teal');
  // Edge detail and the sandy shore (westPark.ts stats; one build in tests/west-stadium.cjs checks the draw budget).
  const wp=read('lib/town/westPark.ts');assert(/stats\.pondRocks\+\+/.test(wp)&&/stats\.pondReeds\+\+/.test(wp)&&/POND_JETTY_AT/.test(wp)&&/sandK\(a\)/.test(wp),'rocks, reeds, the jetty and the sandy shore are built');

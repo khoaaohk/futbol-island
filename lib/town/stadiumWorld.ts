@@ -171,6 +171,10 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   // frames are solid walls for roof walkers (rails: blocked between floor and top) and never landing spots.
   rails.push({...standRect(s,ROOF.back-.12,ROOF.back+P,a0-P,a1+P),floor:ROOF.y-ROOF.frameBelow,top:ROOF.y+ROOF.frameAbove,noLanding:true} as Rail);
   rails.push({...standRect(s,ROOF.front-P,ROOF.front+.12,a0-P,a1+P),floor:ROOF.y-FRONT_FRAME.below,top:ROOF.y+FRONT_FRAME.above,noLanding:true} as Rail);
+  // QA Nov 14 2026: the roof's two short ends had no edge, so a roof walker stepped off and dropped 12 m. A low end frame (the front
+  // frame's size and colour) closes each end, between the long frames (no shared faces), and is a wall for roof walkers like them.
+  for(const [e0,e1] of [[a0-P,a0+.12],[a1-.12,a1+P]] as const){const r=standRect(s,ROOF.front+.12,ROOF.back-.12,e0,e1);
+   piece(r,ROOF.y-FRONT_FRAME.below,ROOF.y+FRONT_FRAME.above,'#244d49');rails.push({...r,floor:ROOF.y-FRONT_FRAME.below,top:ROOF.y+FRONT_FRAME.above,noLanding:true} as Rail);}
   // Night lights (Nov 13 2026, stadiumLights.ts): a row of floodlight lamps hung under the slab just behind the front frame, part of
   // this mesh (no draw of their own) so they fade with the roof; their lenses glow on the night factor (patchLampGlow, aGlow).
   for(const a of roofLampAlongs()){const g=roofLampPart(s,a,c).toNonIndexed();g.deleteAttribute('uv');parts.push(g);}

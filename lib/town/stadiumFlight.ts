@@ -70,6 +70,14 @@ function boundsOf(solids:readonly FlightSolid[]){
 
 export type FlightContact={solid:FlightSolid|null;nx:number;nz:number;depth:number};
 export type StadiumFlight=ReturnType<typeof createStadiumFlight>;
+/** QA Nov 14 2026: a jetpack take-off from a seat under a stand roof flew straight up through the slab (the bumps only push sideways)
+ *  and grabbed the roof ball on the way. Under a roof, a flyer that starts below it is held under it: its feet at most ROOF_CEILING
+ *  (the front frame's bottom less the body and a hand's breadth), so it can fly out from under the roof, pitch side, then climb. */
+export const ROOF_CEILING=ROOF.y-FRONT_FRAME.below-FLIGHT_BODY.h-.15;
+const ROOF_RECTS=STANDS.filter(s=>s.roof).map(s=>standRect(s,ROOF.front-FRAME_PROUD-.12,ROOF.back+FRAME_PROUD,s.from-ROOF_OVERHANG-FRAME_PROUD,s.to+ROOF_OVERHANG+FRAME_PROUD));
+/** The highest the feet may go at (x, z) for a flyer whose feet were at `was` (Infinity when no roof is overhead or it was above). */
+export function roofCeiling(x:number,z:number,was:number){if(was>ROOF_CEILING+.05)return Infinity;const R=FLIGHT_BODY.r;
+ for(const r of ROOF_RECTS)if(Math.abs(x-r.x)<r.w/2+R&&Math.abs(z-r.z)<r.d/2+R)return ROOF_CEILING;return Infinity;}
 export function createStadiumFlight(solids:readonly FlightSolid[]=stadiumFlightSolids()){
  const b=boundsOf(solids),R=FLIGHT_BODY.r,contact:FlightContact={solid:null,nx:0,nz:0,depth:0};
  const react:BumpReact=createBumpReact(),pose:BumpPose&{on:boolean;nx:number;nz:number}={...createBumpPose(),on:false,nx:0,nz:1};

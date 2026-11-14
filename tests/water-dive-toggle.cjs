@@ -49,6 +49,11 @@ ok('shallow: Dive is greyed under DIVE.minWater of shelf water (the press is ref
  const row=H.waterButtonsFor({inWater:true,swimming:true,flyOk:false,diving:false,diveOk:false});assert.equal(row[1].id,'dive');assert.equal(row[1].enabled,false);assert.ok(H.DIVE_SHALLOW_NOTE.length<80);
 });
 
+ok('auto-surface by the clock (QA Nov 14 2026): an idle dive whose frames stopped (resting island, sleeping tab) comes up on the next frame after DIVE.maxTime real seconds',()=>{
+ const real=performance.now;let shift=0;performance.now=()=>real.call(performance)+shift;
+ try{const water=swimmer();water.press('dive','tap');for(let i=0;i<Math.round((S.DIVE.ease+.3)*60);i++)water.step(F,30,0,input());assert.equal(water.state.under,1);
+  shift=(S.DIVE.maxTime+1)*1000;water.step(F,30,0,input());assert.equal(water.state.diving,false,'the next frame ends the dive');}
+ finally{performance.now=real;}});
 ok('auto-surface: after DIVE.maxTime s, and swimming in to a shore; a splash-down or leaving the water drops it',()=>{
  const water=swimmer();water.press('dive','tap');let rose=0;for(let i=0;i<Math.round((S.DIVE.maxTime+S.DIVE.ease+.5)*60);i++)if(water.step(F,30,0,input()).rose)rose++;
  assert.equal(rose,1,'back up by itself');assert.equal(water.state.diving,false);assert.equal(water.state.dive,0);assert(S.DIVE.maxTime>=30&&S.DIVE.maxTime<=60);

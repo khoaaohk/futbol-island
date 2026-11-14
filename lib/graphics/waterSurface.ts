@@ -200,7 +200,8 @@ export const SWIM_CLEAR={radius:9.5,edge:5.5,minAlpha:.32,deepAlpha:.86,diveAlph
 // Diving (uSwimDive 0..1, swimClear.ts eases it with the dive): out in deep water the disc clears down to SWIM_CLEAR.diveAlpha so the
 // submerged body reads (not a faint shape under a bubble ring); same radius and soft edge.
 export const SWIM_CLEAR_UNIFORMS={uSwimClear:{value:0},uSwimXZ:{value:new T.Vector2()},uSwimDive:{value:0}};
-const SWIM_CLEAR_GLSL=/* glsl */`
+/** Exported for the park pond (lib/graphics/pondWater.ts, QA Nov 14 2026): a duck-dive there clears the same disc. */
+export const SWIM_CLEAR_GLSL=/* glsl */`
 uniform float uSwimClear,uSwimDive;uniform vec2 uSwimXZ;
 float swimClearAlpha(vec2 xz,float d){float r=distance(xz,uSwimXZ),a=mix(${SWIM_CLEAR.minAlpha.toFixed(2)},mix(${SWIM_CLEAR.deepAlpha.toFixed(2)},${SWIM_CLEAR.diveAlpha.toFixed(2)},uSwimDive),smoothstep(7.,20.,d));
  return 1.-uSwimClear*(1.-smoothstep(${(SWIM_CLEAR.radius-SWIM_CLEAR.edge).toFixed(2)},${SWIM_CLEAR.radius.toFixed(2)},r))*(1.-a);}
