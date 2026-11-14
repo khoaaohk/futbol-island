@@ -5,16 +5,19 @@ import {FUTSAL_LAWS_URL,RULES,RULES_HUB,RULE_LEAGUE_LINE,RULE_SOURCE_LINE,ruleBy
 import {TERMS_HUB} from '@/lib/site/terms';
 import {drillLinksFor} from '@/lib/site/drills';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
-import {Bullets,DataTable,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,DataTable,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import {lessonPath} from '@/lib/site/lessons';
 import {PLAY_PATH,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
+import {RULE_NOTES} from '@/lib/site/notesGuides';
+import {checkNotes} from '@/lib/site/coachNotes';
 import styles from '../../../site.module.css';
 
 /** One rule (lib/site/rules.ts): the two-sentence answer, the diagram, what the referee looks for, mix-ups, formats, FAQ, lessons. */
 export const dynamic='force-static';
 export const dynamicParams=false;
 export const generateStaticParams=()=>RULES.map(r=>({slug:r.slug}));
+checkNotes('rule',RULES.map(x=>x.slug),RULE_NOTES);/* every page has its own coach's notes (seo-boost, Nov 14 2026) */
 export function generateMetadata({params}:{params:{slug:string}}){
  const r=ruleBySlug(params.slug);if(!r)return {};
  return pageMeta(r.title,r.desc,r.path,{whole:true,image:{url:diagramUrl(r.picture),alt:`Diagram: ${r.name.toLowerCase()} in soccer`}});
@@ -48,6 +51,7 @@ export default function RulePage({params}:{params:{slug:string}}){
    <p className={styles.caption}>{RULE_LEAGUE_LINE} {RULE_SOURCE_LINE}</p>
   </Section>
   <QA id="faq" title={`Questions about ${r.name.toLowerCase().replace('futsal rules','futsal rules')}`} faq={r.faq}/>
+  <CoachNotesSection name={r.name} notes={RULE_NOTES[r.slug]}/>
   <Section id="lessons" title="Lessons that go with this rule"><LessonList lessons={r.lessons}/></Section>
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
   {drillLinksFor(r.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(r.path)}/></Section>}

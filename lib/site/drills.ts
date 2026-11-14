@@ -6,6 +6,7 @@ import {DRILLS_B} from './drillsB';
 import {DRILLS_C} from './drillsC';
 import {DRILLS_D} from './drillsD';
 import {GUIDE_DRILLS} from './drillLinks';
+import {DRILL_AGE_NOTES} from './notesDrills';
 /**
  * The DRILLS cluster (SEO cluster 3, Nov 10 2026): /learn/soccer-drills and one page per drill under it, for the volunteer
  * coaches and parents who search "u8 soccer drills", "sharks and minnows" or "first touch drills". All page words live in typed
@@ -111,3 +112,8 @@ export const DRILLS_HUB={path:DRILLS_HUB_PATH,crumb:'Soccer drills',blurb:`${DRI
 /** Drill links for an existing guide page (position, rule, glossary term): lib/site/drillLinks.ts GUIDE_DRILLS. */
 export const drillLinksFor=(guidePath:string):DrillLink[]=>(GUIDE_DRILLS[guidePath]??[]).map(s=>{const d=drill(s);return {path:d.path,name:`${d.name} (soccer drill)`,line:drillLine(d)};});
 for(const list of Object.values(GUIDE_DRILLS))for(const s of list)drill(s);
+/** Coach's notes by age (lib/site/notesDrills.ts, seo-boost Nov 14 2026): one note per age the drill lists, in order. */
+export const drillAgeNotes=(d:Pick<Drill,'slug'>)=>DRILL_AGE_NOTES[d.slug]!;
+for(const d of DRILLS){const n=DRILL_AGE_NOTES[d.slug];
+ if(!n||n.map(a=>a[0]).join()!==d.ages.join()||n.some(a=>a[1].length<25))throw new Error(`drill ${d.slug}: age notes must match its ages (lib/site/notesDrills.ts)`);}
+for(const s of Object.keys(DRILL_AGE_NOTES))if(!drillBySlug(s))throw new Error(`notesDrills: ${s} has no drill page`);

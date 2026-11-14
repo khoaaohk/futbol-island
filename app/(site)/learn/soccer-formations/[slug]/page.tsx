@@ -4,18 +4,21 @@ import {QA} from '@/components/site/LessonHub';
 import {FORMATIONS,FORMATIONS_HUB,formationBySlug,formationsIn,formatGuide,withKeeper} from '@/lib/site/formations';
 import {POSITIONS_HUB,positionPath} from '@/lib/site/positions';
 import {formationImage,guideCrumbs} from '@/lib/site/guides';
-import {Bullets,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
 import {lessonById,lessonPath} from '@/lib/site/lessons';
 import {PLAYERS_PER_TEAM} from '@/lib/site/pitch';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {lineupLinkFor} from '@/lib/site/tools/registry';
+import {FORMATION_NOTES} from '@/lib/site/notesGuides';
+import {checkNotes} from '@/lib/site/coachNotes';
 import styles from '../../../site.module.css';
 
 /** One formation (lib/site/formations.ts): the answer first, a pitch diagram, every role, strengths, weak spots, how it moves, FAQ, lessons. */
 export const dynamic='force-static';
 export const dynamicParams=false;
 export const generateStaticParams=()=>FORMATIONS.map(f=>({slug:f.slug}));
+checkNotes('formation',FORMATIONS.map(x=>x.slug),FORMATION_NOTES,{mistakes:true});/* every page has its own coach's notes (seo-boost, Nov 14 2026) */
 export function generateMetadata({params}:{params:{slug:string}}){
  const f=formationBySlug(params.slug);if(!f)return {};
  return pageMeta(f.title,f.desc,f.path,{whole:true,image:{url:formationImage(f.slug),alt:`Diagram of the ${f.name} formation`}});
@@ -55,6 +58,7 @@ export default function FormationPage({params}:{params:{slug:string}}){
   </Section>
   <Section id="suits" title="Who it suits"><p>{f.suits}</p></Section>
   <QA id="faq" title={`Questions about the ${f.shape}`} faq={f.faq}/>
+  <CoachNotesSection name={f.name} notes={FORMATION_NOTES[f.slug]}/>
   <Section id="lessons" title="Lessons that teach this shape"><LessonList lessons={f.lessons}/></Section>
   <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
   <GuideEnd/>

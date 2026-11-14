@@ -57,3 +57,14 @@ export function LinkList({links}:{links:readonly {path:string;name:string;line?:
 export function GuideEnd({cta=true}:{cta?:boolean}){
  return <><p className={styles.caption}>{GUIDE_FOOT}</p>{cta&&<p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Play it on the island</a></p>}</>;
 }
+/** "Coach's notes" (lib/site/coachNotes.ts): the item's own coaching point, how it shows up in a match, age-group notes and,
+ *  where the page had none, common mistakes. `ages` alone is used on drill pages (they already have points and a game line). */
+export function CoachNotesSection({name,notes}:{name:string;notes:{coach?:string;match?:string;ages:readonly (readonly [string,string])[];mistakes?:readonly string[]}}){
+ return <Section id="coach-notes" title={`Coach’s notes: ${name}`}>
+  {notes.coach&&<p><b>Coaching point:</b> {notes.coach}</p>}
+  {notes.match&&<p><b>In a match:</b> {notes.match}</p>}
+  {notes.mistakes&&notes.mistakes.length>0&&<><h3 className={styles.h3}>Common mistakes</h3><Bullets items={notes.mistakes}/></>}
+  <h3 className={styles.h3}>By age group</h3>
+  <ul>{notes.ages.map(([l,t])=><li key={l}><b>{l}:</b> {t}</li>)}</ul>
+ </Section>;
+}

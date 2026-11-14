@@ -1,11 +1,11 @@
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
-import {DRILLS,DRILLS_HUB,DRILL_SAFETY_LINE,SKILLS,drillBySlug,drillLine,type Drill} from '@/lib/site/drills';
+import {DRILLS,DRILLS_HUB,DRILL_SAFETY_LINE,SKILLS,drillAgeNotes,drillBySlug,drillLine,type Drill} from '@/lib/site/drills';
 import {DRILL_GUIDES,SKILL_GUIDES,drillGuideBySlug,guidesForDrill,type DrillGuide} from '@/lib/site/drillGuides';
 import {PLANS_HUB,plansForAge,plansForDrill} from '@/lib/site/plans';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
-import {Bullets,DataTable,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,DataTable,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
 import {DrillList,GridFigure,Steps} from '@/lib/site/DrillParts';
 import {lessonPath} from '@/lib/site/lessons';
 import {PLAY_PATH,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -53,6 +53,7 @@ function DrillPage({d}:{d:Drill}){
    <p>{d.game}</p>
    <p>The lesson that teaches it: <a href={lessonPath(d.cta.id)}>{d.cta.title}</a>.</p>
   </Section>
+  <CoachNotesSection name={d.name} notes={{ages:drillAgeNotes(d)}}/>
   {d.home&&<Section id="home" title="Do it at home"><p>{d.home}</p></Section>}
   <QA id="faq" title={`Questions about ${d.name}`} faq={d.faq}/>
   <Section id="lessons" title="Lessons that teach this idea"><LessonList lessons={d.lessons}/></Section>

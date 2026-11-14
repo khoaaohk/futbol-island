@@ -5,16 +5,19 @@ import {TERMS_HUB,TERM_PAGES,termBySlug} from '@/lib/site/terms';
 import {RULES_HUB} from '@/lib/site/rules';
 import {drillLinksFor} from '@/lib/site/drills';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
-import {Bullets,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import {lessonPath} from '@/lib/site/lessons';
 import {PLAY_PATH,abs,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
+import {TERM_NOTES} from '@/lib/site/notesGuides';
+import {checkNotes} from '@/lib/site/coachNotes';
 import styles from '../../../site.module.css';
 
 /** One glossary term with a page of its own (lib/site/terms.ts): the answer, a diagram, the steps, mistakes, FAQ, lessons. */
 export const dynamic='force-static';
 export const dynamicParams=false;
 export const generateStaticParams=()=>TERM_PAGES.map(t=>({slug:t.slug}));
+checkNotes('term',TERM_PAGES.map(x=>x.slug),TERM_NOTES);/* every page has its own coach's notes (seo-boost, Nov 14 2026) */
 export function generateMetadata({params}:{params:{slug:string}}){
  const t=termBySlug(params.slug);if(!t)return {};
  return pageMeta(t.title,t.desc,t.path,{whole:true,image:{url:diagramUrl(t.picture),alt:`Diagram: ${t.scene.title.toLowerCase()} in soccer`}});
@@ -35,6 +38,7 @@ export default function TermPage({params}:{params:{slug:string}}){
   <Section id="mistakes" title="Common mistakes"><Bullets items={t.mistakes}/></Section>
   <Section id="formats" title="In 7v7, 9v9, 11v11 and futsal"><p>{t.formats}</p></Section>
   <QA id="faq" title={`Questions about the ${t.name.toLowerCase()}`} faq={t.faq}/>
+  <CoachNotesSection name={t.name} notes={TERM_NOTES[t.slug]}/>
   <Section id="lessons" title="Lessons that teach it"><LessonList lessons={t.lessons}/></Section>
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
   {drillLinksFor(t.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(t.path)}/></Section>}

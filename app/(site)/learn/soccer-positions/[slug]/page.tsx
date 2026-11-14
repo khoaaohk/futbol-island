@@ -4,17 +4,20 @@ import {QA} from '@/components/site/LessonHub';
 import {FORMATIONS_HUB,formationBySlug,formationsUsing} from '@/lib/site/formations';
 import {POSITIONS,POSITIONS_HUB,positionBySlug} from '@/lib/site/positions';
 import {guideCrumbs,positionImage} from '@/lib/site/guides';
-import {Bullets,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
 import {drillLinksFor} from '@/lib/site/drills';
 import {SITE_CARDS,cardPath} from '@/lib/site/cards';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
+import {POSITION_NOTES} from '@/lib/site/notesGuides';
+import {checkNotes} from '@/lib/site/coachNotes';
 import styles from '../../../site.module.css';
 
 /** One position (lib/site/positions.ts): the job in one sentence, where they stand, with and without the ball, habits, numbers, formations, FAQ, lessons, cards. */
 export const dynamic='force-static';
 export const dynamicParams=false;
 export const generateStaticParams=()=>POSITIONS.map(p=>({slug:p.slug}));
+checkNotes('position',POSITIONS.map(x=>x.slug),POSITION_NOTES,{mistakes:true});/* every page has its own coach's notes (seo-boost, Nov 14 2026) */
 export function generateMetadata({params}:{params:{slug:string}}){
  const p=positionBySlug(params.slug);if(!p)return {};
  return pageMeta(p.title,p.desc,p.path,{whole:true,image:{url:positionImage(p.slug),alt:`Diagram showing where the ${p.name.toLowerCase()} plays`}});
@@ -46,6 +49,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
    <LinkList links={[...used.map(x=>({path:x.path,name:`${x.name} formation`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:FORMATIONS_HUB.path,name:'All soccer formations',line:FORMATIONS_HUB.blurb}]}/>
   </Section>}
   <QA id="faq" title={`Questions about the ${lower}`} faq={p.faq}/>
+  <CoachNotesSection name={p.name} notes={POSITION_NOTES[p.slug]}/>
   <Section id="lessons" title="Lessons for this position"><LessonList lessons={p.lessons}/></Section>
   {cards.length>0&&<Section id="cards" title="Player cards">
    <p className={styles.caption}>{p.cardNote}</p>
