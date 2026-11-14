@@ -103,6 +103,10 @@ t('every lying islander is on a lounger pad under an umbrella, head at the backr
   const head=pad.z-pad.d/2;assert(d.z-head>.4&&d.z-head<1.1,`${d.id} hips just below the backrest`);}
  assert.equal(JSON.stringify(lying.map(d=>d.id).sort()),JSON.stringify(['folk-aroha','folk-fatou','folk-luana','folk-tama']));
 });
+t('every Palm Coast umbrella set stands on dry sand, not the lawn (QA Nov 14 2026)',()=>{
+ for(const u of Lg.PALM_COAST_UMBRELLAS)for(const [dx,dz] of [[0,0],[-1,-1],[Lg.PALM_LOUNGER.dx+.5,-.2],[Lg.PALM_LOUNGER.dx+.5,2.3],[-1,2.3]]){
+  const x=u.x+dx,z=u.z+dz;assert(!onGrass(x,z)&&onIsland(x,z)&&distanceToShore(x,z)>3,`the set at (${u.x}, ${u.z}) is on sand at (${x}, ${z})`);}
+});
 t('the lounger pose: on the pad (not the ground), reclined on the back, hands behind the head',()=>{
  for(const top of [.21,.27])for(const scale of [.74,.88,1]){const o=P.npcSeatPose('lie',scale,undefined,top);
   assert(Math.abs(o.pelvisY*scale-(top+P.LOUNGE.lift))<1e-9,'pelvis on the pad');
