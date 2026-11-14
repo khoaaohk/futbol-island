@@ -95,6 +95,9 @@ ok('props, paths and the beach clear of the bigger pond',()=>{
  for(let d=0;d<360;d+=2){const a=d*Math.PI/180,r=L.pondEdge(a,L.POND_RIM);
   assert(lines.every((l,i)=>i===pondWalk||L.segDistance(r.x,r.z,l)>L.TRAIL_WIDTH/2+1),'trails clear of the rim at '+d);
   assert(L.onGrass(r.x,r.z)&&!L.PARK_LAWNS.some(l=>Math.hypot((r.x-l.x)/l.rx,(r.z-l.z)/l.rz)<1.1),'the rim on grass, off the lawns');}
+ // Nov 13 2026 (owner: "the pathway is overlapping into the pond"): no trail, round ends and half-width included, reaches the water.
+ for(let d=0;d<360;d+=.5){const e=L.pondEdge(d*Math.PI/180,0);lines.forEach((l,i)=>assert(L.segDistance(e.x,e.z,l)>=L.TRAIL_WIDTH/2-.005,`path ${i} (${L.PARK_TRAILS[i]?.id??"ring"}) reaches into the water at ${d}° (${L.segDistance(e.x,e.z,l).toFixed(3)} m from its centreline)`));}
+ assert(lines.every(l=>l.every(([x,z])=>!L.inPond(x,z,L.TRAIL_WIDTH/2-.01))),'no trail point within a half-width of the water');
  for(const [x,z] of L.POND_BENCHES)assert(!L.onWalkPath(x,z,.8)&&!L.inPond(x,z,L.POND_RIM+.5),'bench clear of the rim and paths');
  {const s=L.POND_SIGN;assert(!L.onParkPaving(s.x,s.z,1.6)&&!L.inPond(s.x,s.z,L.POND_RIM+1),'the LILY POND sign clear');}
  const F=load('lib/town/fishing/fishSpots.ts').spotById('park-pond'),core=load('lib/town/fishing/fishingCore.ts');

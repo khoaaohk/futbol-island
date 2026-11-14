@@ -114,7 +114,10 @@ export function buildWestPark(t:Tools):WestParkStats{
   surfaceAreas.push({kind:'path',x:BOWL_APRON.x,z:BOWL_APRON.z,w,d});}
 
  // --- Park trails, lawns and the pond --------------------------------------------------------------------------------------
- for(const tr of PARK_TRAILS)ribbon(pathPoints(tr.curve),TRAIL_WIDTH,-.045,{beach:tr.to==='beach'});
+ // A pond walk's square end runs 0.3 m on over the rim sand (its line ends just off the rim so the round caps of the walk mask and
+ // the map stop at the waterline): no grass seam between the walk and the rim, and still ~2 m short of the water.
+ const onToRim=(pts:P[])=>{const [ax,az]=pts[pts.length-2],[bx,bz]=pts[pts.length-1],l=Math.hypot(bx-ax,bz-az)||1;pts.push([bx+(bx-ax)/l*.3,bz+(bz-az)/l*.3]);return pts;};
+ for(const tr of PARK_TRAILS)ribbon(tr.to==='pond'?onToRim(pathPoints(tr.curve)):pathPoints(tr.curve),TRAIL_WIDTH,-.045,{beach:tr.to==='beach'});
  ribbon(ringPoints(),BOWL_RING.width,-.045);
  for(const l of PARK_LAWNS)disc(l.x,l.z,l.rx,l.rz,-.075,'#86ad79','grass');
  {const {x,z,rx,rz}=PARK_POND,c=(h:string)=>new T.Color(h),SEG=96,tmpE={x:0,z:0},sandK=(a:number)=>{const d=Math.atan2(Math.sin(a-POND_SAND.bearing),Math.cos(a-POND_SAND.bearing));return 1-smooth(POND_SAND.half*.55,POND_SAND.half,Math.abs(d));};

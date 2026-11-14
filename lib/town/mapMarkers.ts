@@ -65,16 +65,18 @@ export function placeJobMarkers(
  * metres east of its pair). Static: computed once at module load.
  */
 export function placeGashaponMarkers(
- machines:readonly {id:string;name:string;x:number;z:number}[],
+ machines:readonly {id:string;name:string;x:number;z:number;place?:string}[],
  marks:readonly Point[],
 ):{id:string;ids:string[];names:string[];x:number;z:number}[]{
- const groups:{id:string;ids:string[];names:string[];x:number;z:number}[]=[];
- for(const m of machines){const g=groups.find(o=>Math.hypot(o.x-m.x,o.z-m.z)<6);
+ // Machines within 6 m share a mark, and so does a spread row at one spot (the same `place`, within 15 m: the DRIP FC Stadium
+ // four, spread out on Nov 13 2026).
+ const groups:{id:string;ids:string[];names:string[];x:number;z:number;place?:string}[]=[];
+ for(const m of machines){const g=groups.find(o=>Math.hypot(o.x-m.x,o.z-m.z)<6||(!!m.place&&o.place===m.place&&Math.hypot(o.x-m.x,o.z-m.z)<15));
   if(g){g.x=(g.x*g.ids.length+m.x)/(g.ids.length+1);g.z=(g.z*g.ids.length+m.z)/(g.ids.length+1);g.ids.push(m.id);g.names.push(m.name);}
-  else groups.push({id:m.id,ids:[m.id],names:[m.name],x:m.x,z:m.z});}
+  else groups.push({id:m.id,ids:[m.id],names:[m.name],x:m.x,z:m.z,place:m.place});}
  for(const g of groups)for(let pass=0;pass<4;pass++)for(const o of marks){const dx=g.x-o.x,dz=g.z-o.z,d=Math.hypot(dx,dz);
   if(d<20){const k=d<.01?-1:dx/d,l=d<.01?0:dz/d;g.x=o.x+k*20;g.z=o.z+l*20;}}
- return groups.map(g=>({...g,x:Math.round(g.x*100)/100,z:Math.round(g.z*100)/100}));
+ return groups.map(({place:_place,...g})=>({...g,x:Math.round(g.x*100)/100,z:Math.round(g.z*100)/100}));
 }
 /** The Gashapon mark's capsule (map + key): a red top half and a white bottom half split by a seam, centre (cx, cy), radius r. */
 export function capsuleGlyph(cx:number,cy:number,r:number){const f=(v:number)=>Math.round(v*100)/100,a=f(cx-r),b=f(cx+r),y=f(cy);

@@ -84,7 +84,7 @@ console.log('west stadium phase 1: ok');
   for(let k=1;k<pts.length-1;k++){const a=Math.atan2(pts[k][1]-pts[k-1][1],pts[k][0]-pts[k-1][0]),b=Math.atan2(pts[k+1][1]-pts[k][1],pts[k+1][0]-pts[k][0]);assert(Math.abs(Math.atan2(Math.sin(b-a),Math.cos(b-a)))<9*Math.PI/180,t.id+' smooth at point '+k);}
   for(const [end,kind] of [[pts[0],t.from],[pts[pts.length-1],t.to]]){const [x,z]=end;ends.push([t.id,kind,x,z]);
    const ok=kind==='beach'?L.onBeach(x,z)&&L.trailBeachRun(pts).at(-1)>=5:kind==='ring'?L.segDistance(x,z,ring)<.3:kind==='plaza'?x>=P.minX&&x<=P.maxX&&z>=P.minZ&&z<=P.maxZ:
-    kind==='trail'?Math.min(...trailLines.map((l,j)=>j===i?Infinity:L.segDistance(x,z,l)))<.3:kind==='pond'?L.pondQ(x,z,L.POND_RIM)<1&&!L.inPond(x,z):false;
+    kind==='trail'?Math.min(...trailLines.map((l,j)=>j===i?Infinity:L.segDistance(x,z,l)))<.3:kind==='pond'?L.pondQ(x,z,L.POND_RIM+.2)<1&&!L.inPond(x,z,L.TRAIL_WIDTH/2-.01):false;// on the rim's outer edge, its cap clear of the water
    assert(ok,`${t.id} ends at ${kind} (${x.toFixed(1)}, ${z.toFixed(1)})`);}
   assert(!pts.some(([x,z])=>L.inPond(x,z,1)),t.id+' keeps out of the water');});
  // Every trail heading for the coast (its far end within 35 m of the sea) runs onto the beach; the beach ends blend to sand.
