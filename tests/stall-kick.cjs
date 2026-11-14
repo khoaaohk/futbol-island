@@ -58,12 +58,13 @@ const read=f=>fs.readFileSync(path.join(base,f),'utf8');
  for(let i=0;i<90;i++)r.update(1/60,false);
  assert.deepEqual(Float32Array.from(attr.array),before,'stall restored exactly');assert.deepEqual(Float32Array.from(ea.array),extraBefore,'sign restored exactly');assert.equal(r.active,false);
  assert(R.PROP_REACTIONS.stall.duration<=1.05&&R.PROP_REACTIONS.stall.duration>=.9,'about one second');
- // Reduced motion: the cue only, nothing moves.
+ // Reduced motion (kick audit, Nov 13 2026): the cue and the gentle wobble (REDUCED_GAIN), then an exact restore.
  for(let i=0;i<60;i++)r.update(1/60,false);
- const started=r.stats.started;assert.equal(r.hit(hx,.3,hz,22,0,true),'stall','reduced motion still plays the cue');r.update(.1,true);
- assert.equal(r.stats.started,started,'reduced motion starts no wobble');assert.deepEqual(Float32Array.from(attr.array),before,'reduced motion: no vertex moved');
+ assert.equal(r.hit(hx,.3,hz,22,0,true),'stall','reduced motion still plays the cue');r.update(.1,true);
+ {const a=attr.array;let d=0;for(let i=0;i<a.length;i++)d=Math.max(d,Math.abs(a[i]-before[i]));assert(d>0&&d<.12,'reduced motion: a gentle wobble ('+d.toFixed(3)+' m)');}
+ for(let i=0;i<90;i++)r.update(1/60,true);assert.deepEqual(Float32Array.from(attr.array),before,'reduced motion: restored exactly');assert.equal(r.active,false);
  world.dispose();
- console.log('PASS Rosa\'s stall: one baked prop in shared chunks, wobble top-weighted, attach, 0.6 s cooldown, exact restore, reduced = cue only');
+ console.log('PASS Rosa\'s stall: one baked prop in shared chunks, wobble top-weighted, attach, 0.6 s cooldown, exact restore, reduced = cue + gentle wobble');
 }
 
 // ---- Wiring: the cue is synthesized, Town calls the splash and note only for the stall, and the splash skips reduced motion.

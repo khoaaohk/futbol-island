@@ -210,6 +210,9 @@ export function createIslandSound(initialMuted=false,initialVolume=.5){
       // Oct 15 2026 (user: "add animation when kicking the ball against the fish stall"; propReactions 'stall'): a wooden thunk off
       // the counter, then a wet slap (a short noise burst) and two little drip blips off the ice. Synthesized, no samples.
       case 'stall':tone(170,72,.14,.14,'sine',0,.004);hiss(380,.05,.06);hiss(1700,.09,.11,.05);tone(900,1300,.05,.03,'sine',.16);tone(1100,1600,.045,.025,'sine',.27);return;
+      // Kick audit (Nov 13 2026, owner: "when kicking the gashapon machine, it should shake"; propReactions 'gashapon'): a dull knock
+      // on the cabinet, then the capsules rattling in the globe (a few quick plastic ticks, falling off). Synthesized, no samples.
+      case 'rattle':tone(210,120,.07,.08,'sine',0,.004);for(const [d,f,v] of [[.03,2300,.04],[.07,1900,.035],[.1,2600,.03],[.15,2100,.025],[.21,2400,.018],[.28,2000,.012]] as const)tone(f,f*.82,.022,v,'triangle',d,.002);hiss(3800,.18,.025,.03);return;
       case 'ding':tone(880,880,.09,.06);tone(1320,1320,.14,.05,'sine',.08);return;
       // Jobs upgrade (Oct 25 2026, lib/town/jobs/jobCoach.ts): a rhythm-streak milestone, a quick bright three-note lift.
       case 'streak':tone(784,784,.07,.045,'triangle');tone(988,988,.07,.045,'triangle',.07);tone(1319,1319,.16,.04,'triangle',.14);hiss(6000,.12,.02,.14);return;

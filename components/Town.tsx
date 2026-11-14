@@ -171,6 +171,7 @@ import {createJetExhaust} from '@/lib/graphics/jetExhaust';
 import {createVolleyballGame} from '@/lib/graphics/volleyballGame';
 import {createTreeDebris} from '@/lib/graphics/treeDebris';
 import {createPropReactions} from '@/lib/graphics/propReactions';
+import {createPropKick,propKickTargets} from '@/lib/town/propKick';
 import {stallKickNote,stallLessonStorage} from '@/lib/town/market/stallKick';
 import {MARKET_STAND} from '@/lib/town/fishing/fishSpots';
 import {forageStore} from '@/lib/town/summitForage';
@@ -1213,7 +1214,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     disposers.add(()=>summitFun.dispose());
     const cannon=createBallCannon(scene,{teleport:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.y=yaw;arrivalFacing=yaw;},kick:()=>sound.ball('kick'),impact:(x,y,z)=>ballEffects.impact(x,y,z),splash:(x,y,z)=>ballEffects.splash(x,y,z)});// Summit Isle Ball Cannon (idle: flag checks)
     disposers.add(()=>cannon.dispose());
-    const gashaPrompt=createGashaponPrompt(scene,world.gashaponStatic);let gashaHovered=false;const gashaCanHover=(()=>{try{return matchMedia('(hover: hover)').matches;}catch{return true;}})();/* QA Nov 9 2026: a phone's tap leaves the Gashapon button :hover (sticky), which held the LAST machine hovered from anywhere, so the next machine's button opened the previous one */// gashapon machines: 12 distance checks per frame, the prompt only when near; desktop hover glow (12 ray/box tests while the pointer is on the canvas)
+    const gashaStatic=world.gashaponStatic,gashaPrompt=createGashaponPrompt(scene,{...gashaStatic,hide:id=>{propReactions.settle();gashaStatic.hide(id);},show:id=>{propReactions.settle();gashaStatic.show(id);}});/* kick audit: a kick shake ends before the open machine's swap rewrites its runs */let gashaHovered=false;const gashaCanHover=(()=>{try{return matchMedia('(hover: hover)').matches;}catch{return true;}})();/* QA Nov 9 2026: a phone's tap leaves the Gashapon button :hover (sticky), which held the LAST machine hovered from anywhere, so the next machine's button opened the previous one */// gashapon machines: 12 distance checks per frame, the prompt only when near; desktop hover glow (12 ray/box tests while the pointer is on the canvas)
     disposers.add(()=>gashaPrompt.dispose());
     gashaponOpener.set(id=>gashaPrompt.focus(id,()=>gashaponPanel.open(id)));// Nov 9 2026 (owner): opening zooms onto the machine's glass first, like the vending machines
     disposers.add(()=>gashaponOpener.set(null));
@@ -1396,6 +1397,11 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     const flagKick=createFlagKick({poles:world.plazaFlags.poles,pressed:()=>shotHold.current,take:cancelShotHold,busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing',
       pose:(pole,how)=>{jobMoves.start('treekick',jobPlayer(),pole,jobFloor,reduced,jobBallNow(),false,how);wakeLoop();},
       strike:(k,dx,dz)=>{world.plazaFlags.kickFlag(k,dx,dz,reduced);propCue('clank');tapHaptic();wakeLoop();}});
+    // Kicking a lamp, post, bollard, lifebuoy stand or gashapon machine (kick audit, Nov 13 2026, owner; lib/town/propKick.ts): the
+    // same Kick press and pose at the prop, and its propReactions kick reaction (lamps sway, a gashapon shakes and rattles).
+    const propKick=createPropKick({targets:propKickTargets(propReactions.specs()),pressed:()=>shotHold.current,take:cancelShotHold,busy:()=>jobMoves.busy||jobMoves.kicking||!!jobs.run||summitFun.kickPhase==='playing'||flagKick.kicking,
+      pose:(at,how)=>{jobMoves.start('treekick',jobPlayer(),at,jobFloor,reduced,jobBallNow(),false,how);wakeLoop();},
+      strike:(t,vx,vz)=>{propCue(propReactions.hit(t.x,t.y,t.z,vx,vz,reduced));tapHaptic();wakeLoop();}});
     // The zipline (lib/graphics/zipline.ts): the tower's prompt, the ride on the tick (input locked), the rider, camera and effects.
     const zipline=createZipline(scene,{place:(x,z,y)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z,y);},
       land:(x,z,yaw)=>{location.x=x;location.z=z;velocity.x=velocity.z=0;rooftop.reset(x,z);player.root.rotation.set(0,yaw,0);arrivalFacing=yaw;walkBall.reset({x,y:rooftop.state.height,z,yaw});orb.x=x;orb.z=z;orb.vx=orb.vz=0;},
@@ -2348,6 +2354,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       const forageWant=forage.update({dt,x:location.x,z:location.z,onFoot:active&&rideRef.current==='walk'&&!rooftop.state.falling&&streetTraffic.rider.index<0,
         arrival:!active||streetTraffic.rider.index>=0||rooftop.state.falling?null:rideRef.current==='jetpack'?((jetActions.state.phase==='idle'||jetActions.state.phase==='parachute')&&!pendingRide.current&&!flight.landing&&flight.takeoffTime>=1.05?'fly':null):rideRef.current!=='walk'&&rampMotion.state.phase!=='air'?'ride':null,
         air:()=>flight.height-rooftop.surface(location.x,location.z,Infinity),canEnter:canEnter&&!jobs.run,frozen:backgroundFrozen,reduced,camera,width:fullWidth,height:fullHeight,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden});// Summit Isle fruit trees
+      propKick.update({dt,x:location.x,z:location.z,yaw:player.root.rotation.y,onFoot:active&&rideRef.current==='walk'&&!rooftop.state.falling&&streetTraffic.rider.index<0,canEnter:canEnter&&!jobs.run,reduced});// lamp / post / gashapon kick (after the tree and flag kicks)
       const beachWant=beach.update({dt,x:location.x,z:location.z,onFoot:active&&(rideRef.current==='walk'||rideRef.current==='bike'||rideRef.current==='scooter'||rideRef.current==='moped')&&!rooftop.state.falling&&streetTraffic.rider.index<0,canEnter:canEnter&&!jobs.run,frozen:backgroundFrozen,reduced,camera,width:fullWidth,height:fullHeight,focusKey:hudFocusNow==='enter'?focusArbiter.current?.key??null:null,ui:uiElement,place:placeEntryPrompt,hide:setUIHidden});// Beachcombing
       // Water P1b (animalRides.ts): "Hang on!" over the nearest manta / the whale shark (the 10 Hz pick), the island's prompt style.
       const rideNear=canEnter&&!animalRides.riding?animalRides.state.near:null,rideWant=rideNear?{key:'ride',distance:animalRides.state.nearDist}:null;

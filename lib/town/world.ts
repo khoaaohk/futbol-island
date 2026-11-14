@@ -730,7 +730,7 @@ export function* buildTownSteps(scene: T.Scene) {
     for(let dx=-5;dx<=5;dx+=1)box(.06,1.1,.06,'#477c6a',x+dx,.55,78);});
     obstacles.push({x,z:78,w:10,d:.15});
   }
-  for(let z=48;z<55;z+=1.5){line(new T.Vector3(324.5,0,z),new T.Vector3(324.5,.75,z),.035,'#477c6a');line(new T.Vector3(324.5,.75,z),new T.Vector3(326,.75,z),.035,'#477c6a');line(new T.Vector3(326,.75,z),new T.Vector3(326,0,z),.035,'#477c6a');}
+  prop('fence',()=>{for(let z=48;z<55;z+=1.5){line(new T.Vector3(324.5,0,z),new T.Vector3(324.5,.75,z),.035,'#477c6a');line(new T.Vector3(324.5,.75,z),new T.Vector3(326,.75,z),.035,'#477c6a');line(new T.Vector3(326,.75,z),new T.Vector3(326,0,z),.035,'#477c6a');}});// kick audit: the bike rack ripples
   obstacles.push({x:325.25,z:51,w:1.5,d:7});
   shift(schoolStart,-230,80);
   // North-roof hangout: the stairs meet a clear east–west lane at z10 and the
@@ -984,9 +984,11 @@ export function* buildTownSteps(scene: T.Scene) {
   table(68,23);bench(68,33);planter(75,34);
   // A small shuttle shelter and cycle stop sit on the pedestrian side of the avenue.
   path(72,-24,11,7);bench(62,-28);planter(78,-29);
-  box(7,.18,3,'#d2bc94',72,3,-27);
-  for(const x of [69,75]){box(.15,3,.15,'#9d805b',x,1.5,-27);obstacles.push({x,z:-27,w:.2,d:.2});}
-  sign('ISLAND SHUTTLE',5,.65,72,2.45,-26.82,'#477c6a');
+  // Kick audit (Nov 13 2026): the shelter and its sign shiver as one ('post') when a ball hits a post.
+  prop('post',()=>{box(7,.18,3,'#d2bc94',72,3,-27);
+  for(const x of [69,75])box(.15,3,.15,'#9d805b',x,1.5,-27);
+  sign('ISLAND SHUTTLE',5,.65,72,2.45,-26.82,'#477c6a');});
+  for(const x of [69,75])obstacles.push({x,z:-27,w:.2,d:.2});
   for(const [x,z] of [[64,-70],[114,-87],[138,-47],[211,-45]]){
     box(4,.018,5,'#7a9e67',x,-.065,z);tree(x,z);
   }
@@ -1179,7 +1181,7 @@ export function* buildTownSteps(scene: T.Scene) {
   table(163,195);bench(172,200);
   // Fixed shade structures, showers and a fishing station give the shoreline use.
   for(const [x,z] of [[100,196],[200,196]]){
-    cylinder(.055,2.8,'#9d805b',x,1.4,z);put(new T.ConeGeometry(2.2,.7,8),'#bd7657',x,2.9,z);
+    prop('pole',()=>{cylinder(.055,2.8,'#9d805b',x,1.4,z);put(new T.ConeGeometry(2.2,.7,8),'#bd7657',x,2.9,z);});// kick audit: the shade sways
     obstacles.push({x,z,w:.15,d:.15});
   }
   for(const x of [-36,-33]){
@@ -1188,7 +1190,7 @@ export function* buildTownSteps(scene: T.Scene) {
   }
   prop('table',()=>{box(3,.12,1,'#a67d55',219,.9,202);for(const x of [218,220])box(.12,.85,.7,'#477c6a',x,.43,202);});
   obstacles.push({x:219,z:202,w:3,d:1});
-  for(const x of [58,216]){const ring=put(new T.TorusGeometry(.36,.085,6,16),'#bd7657',x,.8,214.48);ring.castShadow=true;}
+  for(const x of [58,216])prop('lifebuoy',()=>{const ring=put(new T.TorusGeometry(.36,.085,6,16),'#bd7657',x,.8,214.48);ring.castShadow=true;});// kick audit: the ring swings
   const destinations=[{name:'Courtside Courtyard',x:69,z:29},{name:'West Market',x:-60,z:60},{name:'Beach Kitchen Courtyard',x:-63,z:94},{name:'Library Square',x:80,z:-105},{name:'Pier Cafés',x:108,z:196},{name:'Fishing Station',x:216,z:200}];
 
 
@@ -1367,7 +1369,7 @@ export function* buildTownSteps(scene: T.Scene) {
   // Stadium Plaza's national flags (plazaFlags.ts): poles + waving cloth, one mesh of its own (never batched), 'flag' prop reactions.
   const plazaFlags=createPlazaFlags(plazaFlagPoles());town.add(plazaFlags.mesh);textures.push(plazaFlags.texture);materials.push(plazaFlags.material);
   // West Stadium phase 2 (stadiumWorld.ts): walkable stands, seats, gate, roofs; its rails join the roof props below.
-  const stadiumRails:(Obstacle&{floor:number;top:number})[]=[];const {stats:stadium,roofFade:stadiumRoofs,roofCanopies:stadiumRoofCanopies,gateSign:stadiumGateSign}=buildStadium({box,put,cylinder,sign,obstacles,walkSurfaces,rails:stadiumRails,surfaceAreas,add:o=>town.add(o),materials});
+  const stadiumRails:(Obstacle&{floor:number;top:number})[]=[];const {stats:stadium,roofFade:stadiumRoofs,roofCanopies:stadiumRoofCanopies,gateSign:stadiumGateSign,goalNets:stadiumGoalNets}=buildStadium({box,put,cylinder,sign,obstacles,walkSurfaces,rails:stadiumRails,surfaceAreas,add:o=>town.add(o),materials,prop});
   // Stadium night lights (stadiumLights.ts): lamp posts round the plaza, apron and trails, uplights, bollards, gate lamps (1 draw)
   // and the roof beams / glows (1 additive draw, night only); the posts' pools join the night pools below as one batch.
   const stadiumLights=buildStadiumLights({obstacles,assets,add:o=>town.add(o),materials,roofFade:stadiumRoofs.fade});
@@ -1775,13 +1777,31 @@ export function* buildTownSteps(scene: T.Scene) {
     propSpecs.push({kind:tag.kind,parts,min:{x:bounds.min.x,y:bounds.min.y,z:bounds.min.z},max:{x:bounds.max.x,y:bounds.max.y,z:bounds.max.z},...(pool?{light:{mesh:pool.mesh,index:pool.index}}:{})});
   }
   propSpecs.push(...plazaFlags.propSpecs);// the plaza flags sway on their own mesh's buffer (pole + cloth together)
+  // Kick audit (Nov 13 2026; docs/kick-reactions-audit.md). A run's world bounds, read from its own vertices (world-space buffers).
+  const runBounds=(runs:readonly {attribute:T.BufferAttribute;start:number;count:number}[])=>{const min={x:Infinity,y:Infinity,z:Infinity},max={x:-Infinity,y:-Infinity,z:-Infinity};
+    for(const r of runs)for(let v=r.start;v<r.start+r.count;v++){const x=r.attribute.getX(v),y=r.attribute.getY(v),z=r.attribute.getZ(v);
+      if(x<min.x)min.x=x;if(y<min.y)min.y=y;if(z<min.z)min.z=z;if(x>max.x)max.x=x;if(y>max.y)max.y=y;if(z>max.z)max.z=z;}
+    return {min,max};};
+  // The stadium's lamp posts, stair bollards and uplight fixtures: runs of their one merged lamp mesh (stadiumLights.ts propRuns).
+  {const attribute=stadiumLights.lamps.geometry.getAttribute('position') as T.BufferAttribute;
+    for(const r of stadiumLights.propRuns){const parts=[{attribute,start:r.start,count:r.count}],b=runBounds(parts),cx=(b.min.x+b.max.x)/2,cz=(b.min.z+b.max.z)/2;
+      const pool=r.kind==='lamp'?poolInstances.find(p=>Math.abs(p.site.x-cx)<.6&&Math.abs(p.site.z-cz)<.6):undefined;
+      propSpecs.push({kind:r.kind,parts,...b,...(pool?{light:{mesh:pool.mesh,index:pool.index}}:{})});}}
+  // The stadium goals: each net's run of the nets' LineSegments joins its frame's 'goal' prop (the net billows, the frame shivers).
+  if(stadiumGoalNets.nets){const attribute=stadiumGoalNets.nets.geometry.getAttribute('position') as T.BufferAttribute;
+    for(const r of stadiumGoalNets.runs){const goal=propSpecs.find(s=>s.kind==='goal'&&!s.offset&&r.x>=s.min.x&&r.x<=s.max.x&&Math.abs(r.z-(s.min.z+s.max.z)/2)<3);if(!goal)continue;
+      for(const p of goal.parts)p.gain=.12;const net={attribute,start:r.start,count:r.count},b=runBounds([net]);goal.parts.push(net);
+      goal.min={x:Math.min(goal.min.x,b.min.x),y:Math.min(goal.min.y,b.min.y),z:Math.min(goal.min.z,b.min.z)};goal.max={x:Math.max(goal.max.x,b.max.x),y:Math.max(goal.max.y,b.max.y),z:Math.max(goal.max.z,b.max.z)};}}
   // Gashapon (Nov 9 2026): each island machine's vertex runs in the merged chunks. hide(id) folds them to one point (the open
   // machine is drawn by its animated live copy, lib/graphics/gashaponLive.ts), show(id) puts them back. Nothing per frame.
   const gashaponRuns=new Map<string,{attribute:T.BufferAttribute;start:number;count:number;saved?:Float32Array}[]>();
   for(const [id,pieces] of gashaponPieces){const runs:{attribute:T.BufferAttribute;start:number;count:number}[]=[];
     for(const {batch,index} of pieces){const attribute=batch.mesh?.geometry.getAttribute('position') as T.BufferAttribute|undefined;if(!attribute||!batch.starts)continue;
       const start=batch.starts[index],count=(batch.starts[index+1]??attribute.count)-start,run=runs.find(r=>r.attribute===attribute&&r.start+r.count===start);if(run)run.count+=count;else runs.push({attribute,start,count});}
-    gashaponRuns.set(id,runs);}
+    gashaponRuns.set(id,runs);
+    // Kick audit (Nov 13 2026, owner: "when kicking the gashapon machine, it should shake"): the same runs (cabinet, capsules and
+    // globe) are one 'gashapon' prop. Town settles any reaction before hide/show rewrites them (components/Town.tsx).
+    if(runs.length)propSpecs.push({kind:'gashapon',parts:runs.map(r=>({attribute:r.attribute,start:r.start,count:r.count})),...runBounds(runs)});}
   const gashaponStatic={
     hide(id:string){for(const r of gashaponRuns.get(id)??[]){if(r.saved)continue;const a=r.attribute.array as Float32Array,from=r.start*3,n=r.count*3;r.saved=a.slice(from,from+n);
       for(let i=from+3;i<from+n;i+=3){a[i]=a[from];a[i+1]=a[from+1];a[i+2]=a[from+2];}r.attribute.clearUpdateRanges();r.attribute.addUpdateRange(from,n);r.attribute.needsUpdate=true;}},

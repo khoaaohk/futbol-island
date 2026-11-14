@@ -20,6 +20,7 @@ import {segmentHitsBox} from './walkControl';
 import {SCREEN_FRAME} from './stadiumFeed';
 import {DUGOUTS,GANTRY,GANTRY_CAMERAS,GANTRY_FLOOR,PHOTO_SPOTS,TECH_AREAS,photoLens} from './stadiumNpcs';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {untaggedProp,type PropTagger} from '../graphics/propReactions';
 import {STANDS,ROWS,ROW_DEPTH,CONCOURSE_HEIGHT,SEAT_DEPTH,SEAT_TOP,TREAD,TREAD_RISE,RAIL_TOP,standGeometry,standBack,standLocal,standRect,standSpans,standWorld,standYaw,boardColliders,stadiumSponsorLayout,MASTS,SCREEN,ROOF,FRONT_FRAME,GATE_ARCH_X,rowHeight,seatCount,spanSeats,SEAT_PITCH,ROOF_OVERHANG,FRAME_PROUD,roofBox,type Rail,type Surface,type StandDef} from './stadiumSeats';
 
 export type StadiumTools={
@@ -30,6 +31,8 @@ export type StadiumTools={
  obstacles:Obstacle[];walkSurfaces:Surface[];rails:Rail[];surfaceAreas:{kind:string;x:number;z:number;w:number;d:number}[];
  /** Optional (phase 3): adds the goal nets (one LineSegments) to the town; its material joins `materials` for disposal. */
  add?:(o:T.Object3D)=>void;materials?:T.Material[];
+ /** Kick-reaction tagging (lib/graphics/propReactions.ts; kick audit Nov 13 2026): corner flags and goal frames. */
+ prop?:PropTagger;
 };
 export type StadiumStats={surfaces:number;rails:number;boxes:number;seatsStrips:number;seats:number};
 
@@ -72,8 +75,8 @@ export function screenPosts(){const z=STADIUM.z+SCREEN.z,top=SCREEN.y-SCREEN_FRA
 const BACK_SPLIT=.92;
 const CONCRETE=['#d8cfbd','#cec4af'],TREAD_C='#c2b59c',CONCOURSE_C='#e3d9c3',RAIL_C='#315b50',STEEL='#e9e4d6';
 
-export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFade;roofCanopies:{x:number;z:number;w:number;d:number;height:number;overhead:true}[];gateSign:T.Material}{
- const {put,cylinder,sign,obstacles,walkSurfaces,rails,surfaceAreas}=t,S=STADIUM;let boxes=0,strips=0,surfaces=0;const rails0=rails.length;
+export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFade;roofCanopies:{x:number;z:number;w:number;d:number;height:number;overhead:true}[];gateSign:T.Material;goalNets:{nets:T.LineSegments|null;runs:{start:number;count:number;x:number;z:number}[]}}{
+ const {put,cylinder,sign,obstacles,walkSurfaces,rails,surfaceAreas}=t,S=STADIUM,prop=t.prop??untaggedProp;let boxes=0,strips=0,surfaces=0;const rails0=rails.length;
  // stadiumPaint: the batching pass (world.ts) gives the piece's paint the stadium night fill (stadiumNight.ts) and keys it to the
  // stadium's own batch; textured or tinted pieces keep their material.
  const skip=(m:T.Mesh)=>{m.userData.skipRoofObstacle=true;m.userData.stadiumPaint=true;boxes++;return m;};
@@ -189,7 +192,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
  // The turf keeps the island grass tint (its mottle) on a material of its own with the night fill (stadiumNight.ts): one batch.
  {const turf=box(W+8,.05,L+8,'#6e9678',S.x,-.07,S.z);turf.material=patchStadiumNight(applyGroundTint(new T.MeshStandardMaterial({color:'#6e9678',roughness:.85}),'grass'),STADIUM_NIGHT_GAIN.turf);t.materials?.push(turf.material);}
  for(let i=0;i<10;i+=2)box(W,.008,L/10,'#78a083',S.x,-.04,S.z-L/2+(i+.5)*L/10).castShadow=false;
- const white='#f4f1e6',ln=.12,ly=-.034,netPts:number[]=[];
+ const white='#f4f1e6',ln=.12,ly=-.034,netPts:number[]=[],netRuns:{start:number;count:number;x:number;z:number}[]=[];
  const lineBox=(w:number,d:number,x:number,z:number)=>{box(w,.008,d,white,x,ly,z).castShadow=false;};
  for(const sx of [-1,1])lineBox(ln,L,S.x+sx*W/2,S.z);
  for(const sz of [-1,1])lineBox(W,ln,S.x,S.z+sz*L/2);
@@ -205,29 +208,33 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   for(const sx of [-1,1]){const cx=S.x+sx*W/2,cz=goalZ;
    const arc=new T.RingGeometry(.94,1.06,12,1,0,Math.PI/2);arc.rotateX(-Math.PI/2);// quarter ring in +x/+z, turned to face the pitch
    arc.rotateY(sx<0?(sz<0?-Math.PI/2:0):(sz<0?Math.PI:Math.PI/2));skip(put(arc,white,cx,ly+.004,cz)).castShadow=false;
-   const post=new T.CylinderGeometry(.025,.025,1.5,6);skip(put(post,'#f4f1e6',cx,.75,cz));
-   const flag=new T.BoxGeometry(.012,.32,.42);flag.translate(0,0,-sz*.21);skip(put(flag,'#f2b134',cx,1.33,cz)).castShadow=false;}
+   // Kick audit (Nov 13 2026): the post sways like a plaza flag when the ball hits it, and has a thin collider (it let the ball through).
+   prop('flag',()=>{const post=new T.CylinderGeometry(.025,.025,1.5,6);skip(put(post,'#f4f1e6',cx,.75,cz));
+   const flag=new T.BoxGeometry(.012,.32,.42);flag.translate(0,0,-sz*.21);skip(put(flag,'#f2b134',cx,1.33,cz)).castShadow=false;});
+   obstacles.push({x:cx,z:cz,w:.12,d:.12});}
   {const spotZ=goalZ-sz*11;const spot=new T.CircleGeometry(.12,10);spot.rotateX(-Math.PI/2);skip(put(spot,white,S.x,ly+.004,spotZ)).castShadow=false;
    // The arc's part outside the 16.5 m box: the circle meets the box line 5.5 m in front of the spot, a half-angle of acos(5.5/9.15).
    const h=Math.acos((box16-11)/9.15),d=new T.RingGeometry(9.09,9.21,24,1,-h,2*h);d.rotateX(-Math.PI/2);d.rotateY(sz<0?-Math.PI/2:Math.PI/2);// open toward the halfway line
    skip(put(d,white,S.x,ly+.004,spotZ)).castShadow=false;}
   // The real goals (phase 3): the island pitches' frame and net (fields.ts goalGeometry), full size (7.32 × 2.44 m). The frame
   // is painted into the chunk batch (no draw call of its own); both nets share one LineSegments (1 draw, frustum-culled).
-  const {frame,net}=goalGeometry(STADIUM_VENUE,sz,STADIUM_PITCH_Y);frame.translate(0,0,-sz*L/2);skip(put(frame,'#fff6df',S.x,0,goalZ));
-  const np=net.getAttribute('position');for(let i=0;i<np.count;i++)netPts.push(np.getX(i)+S.x,np.getY(i),np.getZ(i)+S.z);net.dispose();
+  const {frame,net}=goalGeometry(STADIUM_VENUE,sz,STADIUM_PITCH_Y);frame.translate(0,0,-sz*L/2);prop('goal',()=>skip(put(frame,'#fff6df',S.x,0,goalZ)));
+  // Kick reaction (kick audit): world.ts joins this goal's run of the nets' buffer to the frame's 'goal' prop, so a shot billows it.
+  const np=net.getAttribute('position');netRuns.push({start:netPts.length/3,count:np.count,x:S.x,z:goalZ});for(let i=0;i<np.count;i++)netPts.push(np.getX(i)+S.x,np.getY(i),np.getZ(i)+S.z);net.dispose();
   // Walk colliders like the island goals' (goalCollisions.ts GOAL_BARRIERS): the two side nets and the back net; the mouth stays open.
   const gw=STADIUM_VENUE.goalWidth/2,back=goalZ+sz*GOAL_DEPTH;
   for(const hand of [-1,1])obstacles.push({x:S.x+hand*gw,z:(goalZ+back)/2,w:.13,d:GOAL_DEPTH+.13});
   obstacles.push({x:S.x,z:back,w:STADIUM_VENUE.goalWidth+.13,d:.07});
  }
+ let nets:T.LineSegments|null=null;
  if(t.add){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(netPts,3));
   const m=new T.LineBasicMaterial({color:'#c6d4cc',transparent:true,opacity:.68});t.materials?.push(m);
-  const nets=new T.LineSegments(g,m);nets.name='stadium-goal-nets';t.add(nets);}
+  nets=new T.LineSegments(g,m);nets.name='stadium-goal-nets';t.add(nets);}
 
  // --- Pitchside boards: dark backs (the sponsor art lands on their faces later) and their colliders (the gaps stay open) ---------
  const layout=stadiumSponsorLayout();
  for(const b of layout.boards){const side=Math.abs(Math.sin(b.yaw))>.5,fx=Math.sin(b.yaw),fz=Math.cos(b.yaw);
-  box(side?.12:b.w,b.h,side?b.w:.12,'#20343a',S.x+b.x-fx*.07,b.h/2,S.z+b.z-fz*.07);}
+  box(side?.12:b.w,b.h,side?b.w:.12,'#20343a',S.x+b.x-fx*.07,b.h/2,S.z+b.z-fz*.07);}// no kick reaction: the sponsor art is its own mesh and would part from a moving back
  obstacles.push(...boardColliders(layout));
 
  // --- The big screen behind the south stand --------------------------------------------------------------------------------------
@@ -282,7 +289,7 @@ export function buildStadium(t:StadiumTools):{stats:StadiumStats;roofFade:RoofFa
   obstacles.push({x:d.x,z:d.z,w:d.w,d:d.d});}
  for(const a of TECH_AREAS){const y=STADIUM_PITCH_Y+.012,lw=.08,zc=(a.z0+a.z1)/2,len=Math.abs(a.z1-a.z0);
   box(lw,.012,len,'#f4f1e6',a.x1,y,zc);box(lw,.012,len,'#f4f1e6',a.x0,y,zc);for(const z of [a.z0,a.z1])box(a.x1-a.x0,.012,lw,'#f4f1e6',(a.x0+a.x1)/2,y,z);}
- return {stats:{surfaces,rails:rails.length-rails0,boxes,seatsStrips:strips,seats:seatCount()},roofFade:createRoofFade(roofs),roofCanopies,gateSign:gateSign!};
+ return {stats:{surfaces,rails:rails.length-rails0,boxes,seatsStrips:strips,seats:seatCount()},roofFade:createRoofFade(roofs),roofCanopies,gateSign:gateSign!,goalNets:{nets,runs:netRuns}};
 }
 
 /** How see-through a roof gets while it would hide the player, and how fast it fades (opacity per second, out / back in). */
