@@ -373,7 +373,7 @@ console.log(`admin-analytics-party: ${passed} groups passed`);
  const f=renderToStaticMarkup(React.createElement(Friends,{report:rep,relay:okRelay}));
  assert(/data-relay-health="true" data-status="ok"/.test(f)&&/Connect success/.test(f)&&/Refusals by error code/.test(f)&&/Messages per party/.test(f)&&/Learning together/.test(f)&&/First parties/.test(f),'health block');
  {const fn=renderToStaticMarkup(React.createElement(Friends,{report:rep,relay:nativeRelay}));assert(/data-relay-health="true" data-status="ok"/.test(fn)&&/Connect success/.test(fn),'health block from adapted native data');
-  const pnn=renderToStaticMarkup(React.createElement(PartiesNow,{data:nativeRelay}));assert(/Parties now/.test(pnn)&&/>1</.test(pnn),'parties now from adapted native data');}
+  const pnn=renderToStaticMarkup(React.createElement(PartiesNow,{data:nativeRelay}));assert(/Friend parties now/.test(pnn)&&/>1</.test(pnn),'parties now from adapted native data');}
  const nc=renderToStaticMarkup(React.createElement(Friends,{report:rep,relay:RT.emptyRelayStats('not-configured','2026-10-19','2026-10-25')}));
  assert(/Relay stats not configured/.test(nc),'not configured state');
  const pn=renderToStaticMarkup(React.createElement(PartiesNow,{data:okRelay}));assert(/Parties now/.test(pn)&&/>7</.test(pn)&&/>23</.test(pn),'parties now');

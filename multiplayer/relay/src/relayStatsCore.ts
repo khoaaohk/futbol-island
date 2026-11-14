@@ -124,6 +124,9 @@ export class RelayStatsCore {
     const live = await this.live();
     mut(row, live);
     live.parties = Math.max(0, live.parties); live.players = Math.max(0, live.players);
+    // Self-heal (Nov 13 2026): with no party open nobody can be in one, so a gauge that drifted (a room that ended without its report)
+    // snaps back to 0 instead of showing "0 parties, 4 players" until the next restart.
+    if (live.parties === 0) live.players = 0;
     bump(row, 'rl:live_parties_max', live.parties);
     bump(row, 'rl:live_players_max', live.players);
     await this.kv.put(DAY_PREFIX + day, row);

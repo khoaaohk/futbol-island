@@ -343,8 +343,9 @@ export function PartiesNow({data}:{data:RelayStatsReport|null}){
  if(!data)return null;
  if(data.status!=='ok'||!data.live)return <p className={styles.foot} data-parties-now={data.status}>Parties now: {data.status==='not-configured'?'relay stats not configured':'not available'}.</p>;
  return <dl className={`${styles.facts} ${styles.summary}`} data-parties-now="ok">
-  <div><dt>Parties now</dt><dd>{data.live.parties}</dd></div>
-  <div><dt>Players in parties</dt><dd>{data.live.players}</dd></div>
-  {data.totals&&<div><dt>Peak today (relay)</dt><dd>{data.totals.peakParties} parties · {data.totals.peakPlayers} players</dd></div>}
+  <div><dt>Friend parties now</dt><dd>{data.live.parties}</dd></div>
+  {/* No party open means nobody is in one: a drifted relay gauge (fixed relay-side Nov 13 2026) never shows "0 parties, 4 players". */}
+  <div><dt>Players in friend parties</dt><dd>{data.live.parties>0?data.live.players:0}</dd></div>
+  {data.totals&&<div><dt>Peak today (friend parties)</dt><dd>{data.totals.peakParties} parties · {data.totals.peakPlayers} players</dd></div>}
  </dl>;
 }
