@@ -1,6 +1,7 @@
 'use client';
 import {DoneButton} from './DoneButton';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import shell from './ModalShell.module.css';
 import {Icon} from './Icon';
 import {useEffect,useRef,useState} from 'react';
@@ -15,9 +16,9 @@ import {npcCardsToday} from '@/lib/town/cardRewardStore';
 import cardStyles from './CardOffer.module.css';
 import NpcMatchStory from './NpcMatchStory';
 import {answerChallenge,claimChallengeReward,markFreshSeen,planNpcVisit,type VisitPlan} from '@/lib/town/npcFreshPicker';
-const NpcRanking=dynamic(()=>import('./NpcRanking'),{ssr:false});
-const CourtFreestyleClips=dynamic(()=>import('./CourtFreestyleClips'),{ssr:false});
-const NpcClips=dynamic(()=>import('./NpcClips'),{ssr:false});
+const NpcRanking=dynamic(()=>retryImport(()=>import('./NpcRanking')),{ssr:false});
+const CourtFreestyleClips=dynamic(()=>retryImport(()=>import('./CourtFreestyleClips')),{ssr:false});
+const NpcClips=dynamic(()=>retryImport(()=>import('./NpcClips')),{ssr:false});
 type Exchange={id:string;question:string;answer?:string;news?:'scores'|'transfers';seen?:string};
 type Props={npc:NpcDefinition|null;open:boolean;onOpenChange:(open:boolean)=>void;
  /** Extra reply buttons (e.g. the Konbini cashier's "Browse the counter"); `practice:false` hides the island-only Practise reply. */

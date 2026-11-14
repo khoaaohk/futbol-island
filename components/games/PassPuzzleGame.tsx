@@ -45,10 +45,11 @@ import styles from './PassPuzzleGame.module.css';
 import {arcadeSkin} from './skins';
 import {comicRoot} from './comic';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {beginBoardSession} from '@/lib/arcade/boardClient';
 // Leaderboards (docs/arcade-leaderboards.md): the puzzle board ranks total stars. Lazy, loaded only when it is needed.
-const HighScoreEntry=dynamic(()=>import('../arcade/HighScoreEntry'),{ssr:false});
-const ArcadeBoards=dynamic(()=>import('../arcade/ArcadeBoards'),{ssr:false});
+const HighScoreEntry=dynamic(()=>retryImport(()=>import('../arcade/HighScoreEntry')),{ssr:false});
+const ArcadeBoards=dynamic(()=>retryImport(()=>import('../arcade/ArcadeBoards')),{ssr:false});
 /** Total stars across the puzzles (the daily remix is a bonus and doesn't count toward the board). */
 const boardStars=(stars:Record<string,number>)=>Object.entries(stars).reduce((n,[k,v])=>k.startsWith('daily')||isTierPuzzle(k)?n:n+v,0);// Nov 8 2026: cup puzzles score on their own cup boards
 

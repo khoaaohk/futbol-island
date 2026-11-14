@@ -1,6 +1,7 @@
 'use client';
 import {ARCADE_EXIT_EVENT} from './RotateLock';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import ArcadeGameLoading from './ArcadeGameLoading';
 import {NavigationButton} from './DoneButton';
 import ArcadeLoading from './ArcadeLoading';
@@ -15,26 +16,26 @@ import type {ActivityId} from '@/lib/analytics/islandIds';
 import {arcadeCabinets,arcadeAnalyticsId,type ArcadeCabinetId} from '@/lib/arcade/arcadeCatalog';
 import {gashaponPanel,useGashaponPanel,useToyOverlay} from '@/lib/gashapon/gashaponBrowser';import GashaponToyLayer from './GashaponToyLayer';
 import {gashaponMachine} from '@/lib/gashapon/machines';
-const GashaponPanel=dynamic(()=>import('./GashaponPanel'),{ssr:false});// gashapon capsule machines (Nov 8 2026)
+const GashaponPanel=dynamic(()=>retryImport(()=>import('./GashaponPanel')),{ssr:false});// gashapon capsule machines (Nov 8 2026)
 import type {createArcadeRoomScene,ArcadeRoomAction} from '@/lib/arcade/arcadeRoomScene';
 import styles from './ArcadeRoom.module.css';
 import {setArcadeBusy} from '@/lib/arcade/arcadeRoomHooks';
 // Party in rooms (docs/multiplayer-rooms-design.md Phase 3): friends in the Arcade walk about the hub; a friend in a game shows at its
 // cabinet in a force field. The layer lives for the PAGE (a game replaces the hub); Leave-only chip under the header.
 import {useArcadeRoomParty} from './party/useArcadeRoomParty';import type {RoomPartyHandle} from './party/useRoomParty';import {RoomPlayerCard,roomTapPlayer} from './party/RoomPlayerTap';
-const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});// only rendered with a live party (flag on)
+const RoomPartyChip=dynamic(()=>retryImport(()=>import('./party/RoomPartyChip')),{ssr:false});// only rendered with a live party (flag on)
 import {paintJoystick} from '@/lib/town/joystickFeedback';
 import {stickInput,stickTravel} from '@/lib/town/floatingStick';
 import {useJoystickBounds} from '@/lib/town/useJoystickBounds';
-const Tennis=dynamic(()=>import('./games/TennisGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="tennis"/>});
-const Pinball=dynamic(()=>import('./games/PinballGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="pinball"/>});
-const Runner=dynamic(()=>import('./games/RunnerGame3D'),{ssr:false,loading:()=> <ArcadeGameLoading game="runner"/>});
-const PassPuzzle=dynamic(()=>import('./games/PassPuzzleGame'),{ssr:false,loading:()=> <ArcadeGameLoading game="puzzle"/>});
+const Tennis=dynamic(()=>retryImport(()=>import('./games/TennisGame3D')),{ssr:false,loading:()=> <ArcadeGameLoading game="tennis"/>});
+const Pinball=dynamic(()=>retryImport(()=>import('./games/PinballGame3D')),{ssr:false,loading:()=> <ArcadeGameLoading game="pinball"/>});
+const Runner=dynamic(()=>retryImport(()=>import('./games/RunnerGame3D')),{ssr:false,loading:()=> <ArcadeGameLoading game="runner"/>});
+const PassPuzzle=dynamic(()=>retryImport(()=>import('./games/PassPuzzleGame')),{ssr:false,loading:()=> <ArcadeGameLoading game="puzzle"/>});
 // Nov 10 2026: Kit Rush took Island Strikers' cabinet. Strikers (./LiveArcadeMatch, lib/arcade/striker*) stays in the repo but is no longer
 // reachable from the arcade; an old /arcade?game=live link opens Kit Rush.
-const SquadSnake=dynamic(()=>import('./games/SquadSnakeGame'),{ssr:false,loading:()=> <ArcadeGameLoading game="snake"/>});
-const AirFutbol=dynamic(()=>import('./games/AirFutbolGame'),{ssr:false,loading:()=> <ArcadeGameLoading game="airhockey"/>});
-const KitRush=dynamic(()=>import('./games/KitRushGame'),{ssr:false,loading:()=> <ArcadeGameLoading game="kitrush"/>});
+const SquadSnake=dynamic(()=>retryImport(()=>import('./games/SquadSnakeGame')),{ssr:false,loading:()=> <ArcadeGameLoading game="snake"/>});
+const AirFutbol=dynamic(()=>retryImport(()=>import('./games/AirFutbolGame')),{ssr:false,loading:()=> <ArcadeGameLoading game="airhockey"/>});
+const KitRush=dynamic(()=>retryImport(()=>import('./games/KitRushGame')),{ssr:false,loading:()=> <ArcadeGameLoading game="kitrush"/>});
 const gameComponents={tennis:Tennis,pinball:Pinball,runner:Runner};
 /* Nov 11 2026 (slow-connection loading, docs/qa/arcade-load-after.md): the same chunks as the dynamic() games above (webpack shares them).
  * A deep link /arcade?game=<id> starts its game's download while this module evaluates, before hydration, instead of after it. */
@@ -46,9 +47,9 @@ const gameChunk=(id:ArcadeCabinetId)=>earlyGame?.id===id?earlyGame.chunk:gameChu
  * with a deep-linked 2D game or the room for a slow connection. Late attach is supported (arcadeRoomHooks attachArcadeLayer/busy). */
 function ArcadePartyLayer({onParty}:{onParty:(p:RoomPartyHandle|null)=>void}){const party=useArcadeRoomParty();useEffect(()=>{onParty(party);},[party,onParty]);useEffect(()=>()=>onParty(null),[onParty]);return null;}
 // The Hall of High Scores (docs/arcade-leaderboards.md): lazy, loaded when Scores is tapped; the room sleeps under it.
-const ArcadeBoards=dynamic(()=>import('./arcade/ArcadeBoards'),{ssr:false});
+const ArcadeBoards=dynamic(()=>retryImport(()=>import('./arcade/ArcadeBoards')),{ssr:false});
 // Today in the arcade (Nov 10 2026): one daily challenge per cabinet; lazy, loaded when Today is tapped.
-const ArcadeTodayPanel=dynamic(()=>import('./arcade/ArcadeTodayPanel'),{ssr:false});
+const ArcadeTodayPanel=dynamic(()=>retryImport(()=>import('./arcade/ArcadeTodayPanel')),{ssr:false});
 /** One play per launch + time per game for admin analytics. `game` is the cabinet's analytics id (arcadeCatalog.ts arcadeAnalyticsId: Kit Rush reports on the slot it took over). */
 function trackArcadeGame(game:string|null){if(!game)return;countArcadeGame(game);return enterActivity(`arcade_${game}` as ActivityId);}
 export default function ArcadeRoom(){

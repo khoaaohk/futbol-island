@@ -1,10 +1,11 @@
 'use client';
 import {useEffect,useState} from 'react';
 import dynamicImport from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {GROWNUPS_OPEN,type GrownUpsOpen} from '@/lib/grownups/prefs';
 import type {GrownUpSettings} from './GrownUps';
 /** Loaded only when a grown-up opens it (heat: nothing runs until the first open; static DOM, no loops). */
-const GrownUps=dynamicImport(()=>import('./GrownUps'),{ssr:false});
+const GrownUps=dynamicImport(()=>retryImport(()=>import('./GrownUps')),{ssr:false});
 
 /** Listens for `openGrownUps()` (Settings, Coaches Centre) and shows the gated "For grown-ups" dialog. */
 export default function GrownUpsHost({settings,onLaunch,onOpenChange}:{settings?:GrownUpSettings;onLaunch?:()=>void;onOpenChange?:(open:boolean)=>void}){

@@ -1,6 +1,7 @@
 'use client';
 import {PHONE_LAYOUT_QUERY} from '@/lib/ui/phoneLayout';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {UPCOMING_STORIES,type UpcomingStory as UpcomingStoryData} from '@/lib/paths/upcomingStories';
 import UpcomingStory from './UpcomingStory';
 import {useEffect,useLayoutEffect,useState,useRef,type CSSProperties} from 'react';
@@ -21,7 +22,7 @@ import {playDock,playUndock,playSwipe,playPathPop} from '@/lib/games/sound';
 import styles from './IslandSettings.module.css';
 import ui from './FormatPaths.module.css';
 import journey from './IslandJourney.module.css';
-const StoryModal=dynamic(()=>import('./PathStoryModal'),{ssr:false});
+const StoryModal=dynamic(()=>retryImport(()=>import('./PathStoryModal')),{ssr:false});
 import pathArt from '@/lib/paths/pathArt.json';
 import {mediaUrl} from '@/lib/media/mediaUrl';
 import PathWarmUpRow from './PathWarmUpRow';

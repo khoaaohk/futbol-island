@@ -13,13 +13,14 @@
  */
 import {useEffect,useState} from 'react';
 import dynamicImport from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {endPlan2} from '@/lib/coaches/idp/store';
 import PlayerPlan,{type PlayerScreen} from './idp/PlayerPlan';
 import {useIdpState,useIslandSaves} from './idp/useIdp';
 import ParentGate from './ParentGate';
 import styles from './IdpPlan.module.css';
 
-const GrownUpHub=dynamicImport(()=>import('./idp/GrownUpHub'),{ssr:false});
+const GrownUpHub=dynamicImport(()=>retryImport(()=>import('./idp/GrownUpHub')),{ssr:false});
 export type IdpAudience='player'|'grownup'|'coach';
 
 export default function IdpPlan({onLaunch,audience='player'}:{onLaunch:()=>void;audience?:IdpAudience}){

@@ -11,7 +11,7 @@ const staticImports=src=>[...src.matchAll(/^import\s+(?!type\b)[^;]*?from\s*'([^
   assert(!imports.includes('./'+part),`Town does not import ${part} statically`);
  }
  for(const part of ['CharacterCustomizer','VendingMachine','CoachesCentre','NpcConversation','IslandOnboarding','FieldLearning','CoachLesson'])
-  assert.match(town,new RegExp(`\\b${part}=(?:stableMemo\\()?dynamic\\(\\(\\)=>import\\('\\./${part}'\\),\\{ssr:false\\}\\)`),`${part} loads with next/dynamic`);
+  assert.match(town,new RegExp(`\\b${part}=(?:stableMemo\\()?dynamic\\(\\(\\)=>(?:retryImport\\(\\(\\)=>)?import\\('\\./${part}'\\)(?:\\))?,\\{ssr:false\\}\\)`),`${part} loads with next/dynamic`);
  // Dialogs that stay mounted once opened (close animation, focus restore) mount the first time they are wanted.
  for(const [part,flag] of [['conversation','conversationOpen'],['onboarding','onboardingOpen'],['coaches','coachesOpen'],['customizer','customizerOpen']])
   assert(town.includes(`mountWhen('${part}',${flag})&&`),`${part} mounts on first open`);
@@ -33,13 +33,13 @@ const staticImports=src=>[...src.matchAll(/^import\s+(?!type\b)[^;]*?from\s*'([^
 
 // 2b. The customizer's Backpack tab (cards, Konbini collection, food art) loads when the customizer opens.
 {const c=read('components/CharacterCustomizer.tsx');assert(!staticImports(c).includes('./Backpack'));
- assert.match(c,/const Backpack=dynamic\(\(\)=>import\('\.\/Backpack'\),\{ssr:false\}\);/);assert.match(c,/if\(open\)\{setMoveIndex\(0\);setView\('look'\);void import\('\.\/Backpack'\);\}/);}
+ assert.match(c,/const Backpack=dynamic\(\(\)=>(?:retryImport\(\(\)=>)?import\('\.\/Backpack'\)\)?,\{ssr:false\}\);/);assert.match(c,/if\(open\)\{setMoveIndex\(0\);setView\('look'\);void import\('\.\/Backpack'\);\}/);}
 
 // 3. Settings keeps its HUD buttons (and their animations) in the boot bundle; the panels behind them load on first touch.
 {const s=read('components/IslandSettings.tsx'),imports=staticImports(s);
  for(const part of ['./IslandQuests','./CoinQuest','./IslandBottle'])assert(!imports.includes(part),`Settings does not import ${part} statically`);
- assert.match(s,/const IslandQuests=dynamicImport\(\(\)=>import\('\.\/IslandQuests'\),\{ssr:false\}\);/);
- assert.match(s,/const IslandBottleLogo=dynamicImport\(\(\)=>import\('\.\/IslandBottle'\)\.then\(m=>m\.IslandBottleLogo\),\{ssr:false\}\);/);
+ assert.match(s,/const IslandQuests=dynamicImport\(\(\)=>(?:retryImport\(\(\)=>)?import\('\.\/IslandQuests'\)(?:\))?,\{ssr:false\}\);/);
+ assert.match(s,/const IslandBottleLogo=dynamicImport\(\(\)=>(?:retryImport\(\(\)=>)?import\('\.\/IslandBottle'\)(?:\))?\.then\(m=>m\.IslandBottleLogo\),\{ssr:false\}\);/);
  assert.match(s,/data-hud-triggers aria-label="Island information" onPointerEnter=\{warmPanels\} onPointerDown=\{warmPanels\} onFocus=\{warmPanels\}>/,'touching the HUD buttons warms the panels');
  assert.match(s,/if\(open\)\{\n\s*warmPanels\(\);/,'opening Settings/Paths any other way warms them too');
  assert(!/immediate/.test(s),'no immediate press (the buttons keep their shrink-to-icon animation)');}

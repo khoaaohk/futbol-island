@@ -6,6 +6,7 @@
  *    hides it with one timeout. No loops, no polling. The drawer's code loads on first open.
  */
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useEffect,useState} from 'react';
 import {LEARNING_REVIEW_OPEN,learnedLessonFor,openPathLesson,creditConceptTick} from '@/lib/learning/reviewStore';
 import {connectSpotIt,SPOT_IT_SHOW_MS,type SpotItOffer} from '@/lib/learning/spotIt';
@@ -13,7 +14,7 @@ import {FORMAT_PATH_LAUNCH} from '@/lib/paths/formatPaths';
 import {LEARNING_LAUNCH} from '@/lib/town/learningProgress';
 import styles from './LearningReview.module.css';
 import HudSlot from './HudStack';
-const LearningReview=dynamic(()=>import('./LearningReview'),{ssr:false});
+const LearningReview=dynamic(()=>retryImport(()=>import('./LearningReview')),{ssr:false});
 
 /** Spot it sits in the HUD stack's focus slot (docs/ui/HUD_STACK.md): `onSpotChange` tells Town's arbiter an offer is waiting and
  *  `spotAllowed` says it holds the focus (a nearer Talk / Enter wins; Spot it outranks the hint and the ambient Learn card). */

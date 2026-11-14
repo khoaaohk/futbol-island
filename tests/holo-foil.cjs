@@ -35,7 +35,7 @@ function load(file,{env={},stubs={},globals={}}={},cache=new Map()){
 {const card=read('components/PlayerCard.tsx'),mini=read('components/MiniCard.tsx');
  assert.match(card,/glint=0,holo=null,onHoloStats,tiltRef\}:PlayerCardProps/,'PlayerCard holo defaults to null');
  assert.match(card,/\{holo\?<HoloFoil [^\n]*fallback=\{<span className=\{styles\.foil\} aria-hidden="true"\/>\}\/>\n\s*:<span className=\{styles\.foil\} aria-hidden="true"\/>\}/,'without holo the CSS .foil renders as before');
- assert.match(card,/const HoloFoil=dynamic\(\(\)=>import\('\.\/HoloFoil'\),\{ssr:false\}\);/,'the WebGL code is code-split');
+ assert.match(card,/const HoloFoil=dynamic\(\(\)=>(?:retryImport\(\(\)=>)?import\('\.\/HoloFoil'\)\)?,\{ssr:false\}\);/,'the WebGL code is code-split');
  assert(!/^import (?!type)[^\n]*'\.\/HoloFoil'/m.test(card),'no static import of HoloFoil');
  assert.match(card,/\{holo&&<p className=\{styles\.foilNote\}><b>\{foilNote\(holo\.pattern,coach\?'coach':undefined\)\.chip\}\.<\/b>/,'the back names the foil (coaches as coaches)');
  assert.match(mini,/className='',style,foil=null\}:MiniCardProps/,'MiniCard foil defaults to null');

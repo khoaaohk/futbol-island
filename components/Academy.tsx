@@ -2,11 +2,12 @@
 import {BackButton} from './BackButton';
 import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import { retryImport } from '@/lib/retryImport';
 import { LESSONS, Lesson } from '@/lib/curriculum';
 import { completeLesson, Progress, readProgress, saveProgress } from '@/lib/progress';
 import shell from './ModalShell.module.css';
 import { Icon } from './Icon';
-const Pitch = dynamic(() => import('./Pitch'), { ssr: false, loading: () => <div className="pitch-loading">Preparing your island…</div> });
+const Pitch = dynamic(() => retryImport(() => import('./Pitch')), { ssr: false, loading: () => <div className="pitch-loading">Preparing your island…</div> });
 type Page = 'island' | 'learn' | 'lab' | 'progress';
 export default function Academy() {
   const [page,setPage]=useState<Page>('island');

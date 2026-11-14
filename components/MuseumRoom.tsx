@@ -1,6 +1,7 @@
 'use client';
 import {useCallback,useEffect,useLayoutEffect,useMemo,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {NavigationButton} from './DoneButton';
 import MuseumDoorSlide from './MuseumDoorSlide';
 import MuseumExhibit,{type ExhibitHooks} from './MuseumExhibit';
@@ -22,16 +23,16 @@ import {konbiniAudioContext} from '@/lib/konbini/konbiniSound';
 import type {MuseumScene,MuseumZoomView} from '@/lib/museum/museumScene';
 import {accentOf} from '@/lib/museum/museumAtlas';
 import {CASE_PLACES,type MuseumPoi} from '@/lib/museum/museumLayout';
-const WorldCupBalls=dynamic(()=>import('./WorldCupBalls'),{ssr:false});
+const WorldCupBalls=dynamic(()=>retryImport(()=>import('./WorldCupBalls')),{ssr:false});
 import {EXPERIENCES} from './museum/experiences';
 import ExperienceStage,{ExperienceAfterglow,type StageInfo} from './museum/experiences/ExperienceStage';
 import {passport,recordMuseumVisit,useMuseumVisits,museumVisitsNow} from '@/lib/museum/museumVisits';
 import {enterActivity} from '@/lib/analytics/tracker';
 import {museumRoomHooks} from '@/lib/multiplayer/rooms/museumHooks';
-import {useRoomParty} from './party/useRoomParty';import {RoomPlayerCard,roomTapPlayer} from './party/RoomPlayerTap';const RoomPartyChip=dynamic(()=>import('./party/RoomPartyChip'),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
+import {useRoomParty} from './party/useRoomParty';import {RoomPlayerCard,roomTapPlayer} from './party/RoomPlayerTap';const RoomPartyChip=dynamic(()=>retryImport(()=>import('./party/RoomPartyChip')),{ssr:false});/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
 import {partyStore} from '@/lib/multiplayer/store';import {pickMuseumSpawn,spreadMuseumSpawn} from '@/lib/multiplayer/rooms/museum';
 import type {ActivityId} from '@/lib/analytics/islandIds';
-const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
+const GraduationCeremony=dynamic(()=>retryImport(()=>import('./GraduationCeremony')),{ssr:false,loading:()=><p role="status">Getting your certificate ready…</p>});
 
 /**
  * The walk-in History Museum (Oct 3 2026, user: "build that out just like the Konbini and arcade. Enter that building and make

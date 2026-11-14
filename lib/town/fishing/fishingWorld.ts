@@ -3,13 +3,16 @@ import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createBuildingGlow} from '../../graphics/buildingGlow';
 import {FISH_SPOTS,MARKET_STAND,POND_SURFACE_Y,type FishSpot} from './fishSpots';
 import type {FishingVisuals} from './fishingVisuals';
-import {markFishingNear} from './fishingSignals';// Nov 10 2026: mounts the lazy FishingHost (components/FishingHostLazy.tsx)
+import {markFishingNear} from './fishingSignals';
+import {retryGate} from '../../retryGate';// Nov 10 2026: mounts the lazy FishingHost (components/FishingHostLazy.tsx)
 // Lazy-load pass (Oct 7 2026, docs/performance-guide.md): the angler/shoreline art (fishingVisuals.ts) and the caught-animal models
 // (fishModels.ts) are not in the boot bundle. Their chunk is fetched once the player is within VISUALS_PREFETCH m of a spot, well
 // before the 45 m at which the visuals are built; if a session starts first, the visuals join it as soon as the chunk lands.
 const VISUALS_PREFETCH=100;
 let visualsModule:typeof import('./fishingVisuals')|null=null,visualsLoading:Promise<void>|null=null;
-const loadFishingVisuals=()=>{markFishingNear();visualsLoading??=import('./fishingVisuals').then(m=>{visualsModule=m;},()=>{visualsLoading=null;});return visualsLoading;};
+// QA Nov 14 2026: a failed load (offline at the pier) is retried at most every 5 s, not every frame (lib/retryGate.ts).
+const visualsRetry=retryGate();
+const loadFishingVisuals=()=>{markFishingNear();if(!visualsLoading&&!visualsRetry.ready())return Promise.resolve();visualsLoading??=import('./fishingVisuals').then(m=>{visualsModule=m;},()=>{visualsLoading=null;visualsRetry.fail();});return visualsLoading;};
 import {createFishingCamera} from './fishingCamera';
 import {buildKioskGeometry,kioskAt,kioskVariant,stallColliders,stallType,stallYaw,STALL_TYPES} from './fishingKiosk';
 import {CAST_TIME,castPoint,planApproach,stepSession,type SessionEvent} from './fishingCore';

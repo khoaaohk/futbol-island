@@ -33,7 +33,7 @@ ok('fishSpots.ts (spots, market stand) carries no species data; fishCatalog re-e
 ok('the dive room loads by distance and a dive never starts without it',()=>{
  const rt=read('lib/town/water/diveRuntime.ts');
  assert(rt.includes("import type {DiveRoom} from '../../graphics/diveRoom';"));
- assert(rt.includes("import('../../graphics/diveRoom').then(m=>{roomModule=m;},()=>{roomLoading=null;})"),'a failed load is forgotten (retry next tick)');
+ assert(rt.includes("import('../../graphics/diveRoom').then(m=>{roomModule=m;},()=>{roomLoading=null;roomRetry.fail();})"),'a failed load is forgotten (retried after a pause, lib/retryGate.ts)');
  assert(/slots\(x:number,z:number\)\{nearestDiveSpots\(x,z,near\);if\(!roomModule&&near\[0\]/.test(rt),'prefetch from the HUD tick near a zone');
  assert(rt.includes('start(){if(!roomModule){void loadDiveRoom();return false;}'),'tap Dive: refused until the room is here');
  assert.equal(rt.split('if(!roomModule){void loadDiveRoom();return false;}').length,3,'tap and edge entry both refused until loaded');

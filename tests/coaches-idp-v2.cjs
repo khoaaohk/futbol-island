@@ -239,8 +239,8 @@ ok('heat',()=>{
   assert.ok(!/\binfinite\b/.test(src),f+': no infinite animation');
   assert.ok(!/fetch\(|sendBeacon|XMLHttpRequest|navigator\.share/.test(src),f+': sends nothing');}
  const css=read('components/idp/Idp.module.css');assert.match(css,/prefers-reduced-motion:reduce/);assert.ok(!/::view-transition/.test(css),'no global view-transition rules');
- assert.match(read('components/IdpPlan.tsx'),/dynamicImport\(\(\)=>import\('\.\/idp\/GrownUpHub'\)/,'grown-up tools are lazy');
- assert.match(read('components/CoachesCentre.tsx'),/const IdpPlan=dynamicImport\(\(\)=>import\('\.\/IdpPlan'\)/,'the plan loads with the Coaches Centre, on demand');
+ assert.match(read('components/IdpPlan.tsx'),/dynamicImport\(\(\)=>(?:retryImport\(\(\)=>)?import\('\.\/idp\/GrownUpHub'\)(?:\))?/,'grown-up tools are lazy');
+ assert.match(read('components/CoachesCentre.tsx'),/const IdpPlan=dynamicImport\(\(\)=>(?:retryImport\(\(\)=>)?import\('\.\/IdpPlan'\)(?:\))?/,'the plan loads with the Coaches Centre, on demand');
  const F=load('lib/coaches/idp/fridge.ts');
  let s=ST.startPlan(ST.emptyIdp2(),['7-look'],'together',NOW);s=ST.addProud(s,'brave',Date.now());
  const html=F.fridgeCardHtml(s,{printedAt:NOW,qrDataUrl:'data:image/png;base64,AAAA'});

@@ -1,5 +1,6 @@
 'use client';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {readableBook,type PlayerBookId} from '@/lib/books/catalog';
 import {isVendingPreview} from '@/lib/town/vendingPreview';
 import {HOME_DECOR_ENABLED} from '@/lib/town/homeFeature';
@@ -48,7 +49,7 @@ export type VendingMachineProps={open:boolean;machineId:VendingMachineId;onOpenC
  onChange:(value:CharacterCustomization)=>void;onEquipRide:(mode:TravelMode)=>void;itemRequest?:{id:string;nonce:number}|null;
  /** The 3D machines: the face follows their zoom camera. */
  machines?:()=>VendingMachines|null};
-const PlayerPopUpBook=dynamic(()=>import('./PlayerPopUpBook'),{ssr:false});
+const PlayerPopUpBook=dynamic(()=>retryImport(()=>import('./PlayerPopUpBook')),{ssr:false});
 type Status={kind:VendingSlotState;note:string;short?:string;need?:number};
 type Point={x:number;y:number};
 /** Gear miniatures are the island's own vehicle and ball meshes, rendered once per visit by StorePreviews and kept for the session. */

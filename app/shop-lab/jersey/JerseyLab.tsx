@@ -1,11 +1,12 @@
 'use client';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useState} from 'react';
 import type {JerseyDesign} from '@/lib/shop/jersey';
 import {jerseyPrice} from '@/lib/shop/jersey';
 
 // Loaded the same way the shop loads it: a separate chunk, three.js only once the studio mounts.
-const JerseyStudio=dynamic(()=>import('@/components/shop/JerseyStudio'),{ssr:false});
+const JerseyStudio=dynamic(()=>retryImport(()=>import('@/components/shop/JerseyStudio')),{ssr:false});
 
 export default function JerseyLab(){
  const [open,setOpen]=useState(()=>{if(typeof window!=='undefined'&&/[?&]debug\b/.test(location.search))(window as unknown as {__fiJerseyDebug:boolean}).__fiJerseyDebug=true;return true;});

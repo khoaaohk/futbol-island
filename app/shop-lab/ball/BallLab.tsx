@@ -1,10 +1,11 @@
 'use client';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useState} from 'react';
 import type {BallDesign} from '@/lib/shop/ball';
 import {ballPrice} from '@/lib/shop/ball';
 /** Loaded exactly as the shop loads it: next/dynamic, client only. */
-const BallStudio=dynamic(()=>import('@/components/shop/BallStudio'),{ssr:false});
+const BallStudio=dynamic(()=>retryImport(()=>import('@/components/shop/BallStudio')),{ssr:false});
 export default function BallLab(){
  const [open,setOpen]=useState(true),[bought,setBought]=useState<BallDesign|null>(null);
  return <main style={{minHeight:'100dvh',background:'#244d40',color:'#fff3d1',fontFamily:'system-ui',display:'grid',placeItems:'center',gap:12,padding:24}}>

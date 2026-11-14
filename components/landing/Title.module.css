@@ -391,3 +391,5 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
 
 /* Visually hidden, read by screen readers and crawlers (Landing.tsx: what /play is, in words). */
 .srOnly{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap;border:0}
+/* Under the 320 px floor (200% zoom ≈ 195 px wide; QA robust pass 2): "For grown-ups" overlapped Back. Two short lines beside it. */
+@media(max-width:299px){.grownLink.grownTop.grownTop.grownTop{max-width:84px;padding:0 2px;white-space:normal;text-align:right;line-height:1.15;font-size:12px}}

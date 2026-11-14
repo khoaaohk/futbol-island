@@ -26,12 +26,13 @@ import {neutralLiveInput} from '@/lib/arcade/liveMatchInput';
 import styles from './LiveArcadeMatch.module.css';
 import {arcadeSkin} from './games/skins';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {beginBoardSession} from '@/lib/arcade/boardClient';
 import {strikerBoardPoints,STRIKER_POINTS,type BoardGame} from '@/lib/arcade/leaderboard';
 import {STRIKER_TIERS,STRIKER_TIER_IDS,strikerCombo,strikerGoalPoints,strikerTierScore,strikerTiersOpen,readStrikerTiers,saveStrikerTier,type StrikerTierId} from '@/lib/arcade/strikerTiers';
 // Leaderboards (docs/arcade-leaderboards.md): lazy, loaded only after a match with points ends or when Leaderboard is tapped.
-const HighScoreEntry=dynamic(()=>import('./arcade/HighScoreEntry'),{ssr:false});
-const ArcadeBoards=dynamic(()=>import('./arcade/ArcadeBoards'),{ssr:false});
+const HighScoreEntry=dynamic(()=>retryImport(()=>import('./arcade/HighScoreEntry')),{ssr:false});
+const ArcadeBoards=dynamic(()=>retryImport(()=>import('./arcade/ArcadeBoards')),{ssr:false});
 
 /** One line per round, kept on screen while playing: the habit this round teaches. */
 const ROUND_TIPS=['','Tap Pass before receiving for a one-two.','Switch play: pass across to the far side.','Pass early. Blue presses and covers.','Rain! Short, firm passes. Pass early.','Small goals. Switch play, then pick a corner.'];

@@ -34,6 +34,7 @@ import {requestAnyOrientation} from '@/lib/orientationMode';
 import {arcadeSkin} from './skins'
 import styles from './ArcadeGame3D.module.css';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {beginBoardSession} from '@/lib/arcade/boardClient';
 import {runnerBoardFor,selectedRunnerMode} from '@/lib/arcade/runnerModes';
 import {noteArcadeToday} from '@/lib/arcade/arcadeToday';
@@ -42,8 +43,8 @@ import {settleArcadeResult,arcadeResultFor,runnerCoins,pinballCoins,tennisCoins,
 const ARCADE_COINS:Record<ArcadeKind,(s:ArcadeStates)=>number>={runner:s=>runnerCoins(s.runner),pinball:s=>pinballCoins(s.pinball),tennis:s=>tennisCoins(s.tennis)};
 const ARCADE_COIN_REASONS:Record<ArcadeKind,string>={runner:RUNNER_COIN_REASON,pinball:PINBALL_COIN_REASON,tennis:TENNIS_COIN_REASON};
 // Leaderboards (docs/arcade-leaderboards.md): lazy, loaded only after a scored game ends or when Leaderboard is tapped.
-const HighScoreEntry=dynamic(()=>import('../arcade/HighScoreEntry'),{ssr:false});
-const ArcadeBoards=dynamic(()=>import('../arcade/ArcadeBoards'),{ssr:false});
+const HighScoreEntry=dynamic(()=>retryImport(()=>import('../arcade/HighScoreEntry')),{ssr:false});
+const ArcadeBoards=dynamic(()=>retryImport(()=>import('../arcade/ArcadeBoards')),{ssr:false});
 const descriptions={tennis:{name:'Futbol Tennis',tag:'FIND YOUR ANGLE',copy:'Nine courts, three of them HARD. One bounce, a clean first touch, then send the ball into open space.',help:'Move: WASD / arrows or drag. Space: kick · J: lob (serve: rainbow flick) · K: drop. Tap for a normal shot, or HOLD to wind up and let go while the ring is gold for a SWEET strike (hold too long and it is overhit). Held Kick = a harder, flatter drive · Lob = higher and deeper · Drop = shorter, dies by the net. Hold a direction as you let go to place it: left/right, up = deeper, down = shorter. H: header · L: scissor (golden: bicycle) · T: trap on two-touch courts. Plant and hit just after the bounce for a Perfect Return.',learn:'Get beside the ball before you kick. A balanced touch gives you more control.'},pinball:{name:'Futbol Pinball',tag:'PLAY THE ANGLES',copy:'Kick with one foot, then the other, to light up the goal. Then shoot past the keeper into a corner!',help:'A / ←: left flipper. D / →: right flipper. Hold Space to launch; tap Space during play to nudge. Strike as the ball reaches the ring. Switch flippers to recharge the nudge.',learn:'Use both feet to build the move. Watch where the ball will land, and strike just as it arrives.'},runner:{name:'Breakaway Run',tag:'READ THE OPEN LANE',copy:'Collect footballs, dribble into space, then shoot to knock obstacles aside or finish for bonus points.',help:'A / D or swipe: change lanes. Hold Space or Shoot: charge, release: blast. ↑ / W / J / swipe up: jump; shoot in the air for a volley. ↓ / S / K / swipe down: slide. E or Skill: the skill move named on the button (step-over, nutmeg, drag-back…). Shoot beside a teammate for a one-two.',learn:'Look beyond the nearest defender. Plan your next move before the challenge.'}};
 /** Pause card keycaps (desktop only): the main keys per game, the same ones the start cards teach. */
 const PAUSE_KEYS:Record<ArcadeKind,readonly ArcadeKey[]>={tennis:[['W A S D','move'],['Space','kick (hold: power)'],['J','lob'],['K','drop'],['H','header'],['Esc','pause']],pinball:[['A','left flipper'],['D','right flipper'],['Space','launch / nudge'],['Esc','pause']],runner:[['A D','lane'],['W','jump'],['S','slide'],['Space','hold, let go: shoot'],['E','skill'],['Esc','pause']]};

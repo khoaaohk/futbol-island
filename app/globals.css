@@ -1016,3 +1016,13 @@ html[data-game-guard] canvas{touch-action:none}
 /* Gashapon machine open (components/GashaponMachineFace.tsx, Nov 9 2026; html[data-gashapon-open]): the machine is the interface, so the island's own controls
    step aside, the coins bar and the settings / HUD buttons too (the price pill under the knob shows the balance). */
 html[data-gashapon-open] .town-minimap,html[data-gashapon-open] .minimap-toggle,html[data-gashapon-open] .touch-controls,html[data-gashapon-open] .touch-actions,html[data-gashapon-open] .travel-actions,html[data-gashapon-open] .joystick,html[data-gashapon-open] .hud-stack,html[data-gashapon-open] .store-enter-prompt,html[data-gashapon-open] [data-job-wallet],html[data-gashapon-open] nav[data-hud-triggers]{visibility:hidden!important}
+
+/* Under the 320 px floor (200% browser zoom on a 390 px phone ≈ 195 px; QA robust pass 2, Nov 14 2026): the 3 x 2 action grid
+ * is wider than the space beside the stick, so the stick sat under Fly / Parachute. Stacked fallback: a smaller stick lifted
+ * above the action grid (same side), and the title screen's "For grown-ups" wraps to two short lines beside Back. */
+@media(max-width:299px){
+ .town-app .touch-controls,.town-app .touch-controls .joystick{width:84px;height:84px}
+ .town-app .touch-controls{left:calc(12px + env(safe-area-inset-left,0px));right:auto;bottom:calc(var(--control-bottom) + 2 * var(--action-size,52px) + 24px)}
+ .town-app.controls-flipped .touch-controls{left:auto;right:calc(12px + env(safe-area-inset-right,0px))}
+ .town-app .touch-controls .joystick span{width:42px;height:42px}
+}

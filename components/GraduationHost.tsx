@@ -1,5 +1,6 @@
 'use client';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useEffect,useState} from 'react';
 import {pathProgressFrom} from '@/lib/town/cardTiers';
 import {useQuestEvidence} from '@/lib/town/questProgress';
@@ -11,7 +12,7 @@ import {isCertificateId,type CertificateId} from '@/lib/endgame/certificate';
 import EndgameDialog from './EndgameDialog';
 import styles from './Endgame.module.css';
 // QA11 C-4: a placeholder in the Ferry's style while the ceremony/certificate code loads, so the dialog is never blank.
-const GraduationCeremony=dynamic(()=>import('./GraduationCeremony'),{ssr:false,loading:()=><div className={styles.card}><p role="status">Getting your certificate ready…</p></div>});
+const GraduationCeremony=dynamic(()=>retryImport(()=>import('./GraduationCeremony')),{ssr:false,loading:()=><div className={styles.card}><p role="status">Getting your certificate ready…</p></div>});
 
 /**
  * Mounted once in Town (Lane 2, Sep 30 2026). Watches the same path stores the Paths screen reads and saves a graduation the

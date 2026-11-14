@@ -34,6 +34,7 @@ import {paydayWaits} from '@/lib/town/cardOfferHold';
 import {earnForExplore} from '@/lib/town/cardRewardTriggers';
 import {exploreActivityNow} from '@/lib/town/exploreActivity';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {OPEN_BUG_BOOK,BUG_BOOK_COMPLETE_EVENT,BUG_NEW_SPECIES_EVENT} from '@/lib/town/jobs/bugBook';
 import {POND_BUG_CAUGHT,pondCatchToast,type PondBugCaught} from '@/lib/town/pondBugs';
 import {countBugStory} from '@/lib/analytics/summitEvents';
@@ -41,7 +42,7 @@ import {WILD_BUG_HINT} from '@/lib/graphics/wildBugsCore';
 import {claimBugBookReward,claimNewSpecies} from '@/lib/town/jobs/bugBookReward';
 import {pickSurface,BUG_NOTE_MS,BUG_PILL,BUG_TIP,BUG_TIP_NIGHT,initialPill,bugBookCoinNote,pillCount,pillShown,bugBar} from '@/lib/town/jobs/bugUi';
 // The Bug book (Oct 20 2026): loaded the first time it opens.
-const BugBook=dynamic(()=>import('./BugBook'),{ssr:false});
+const BugBook=dynamic(()=>retryImport(()=>import('./BugBook')),{ssr:false});
 const isBugJob=(id:string)=>canonicalJobId(id)==='bug-scout';
 const openBugBook=()=>window.dispatchEvent(new Event(OPEN_BUG_BOOK));
 /** A fact's source as a short site name for the card ("en.wikipedia.org" → "wikipedia.org"). */

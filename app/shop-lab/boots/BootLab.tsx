@@ -1,9 +1,10 @@
 'use client';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useState} from 'react';
 import type {BootDesign} from '@/lib/shop/boots';
 /** Lazy like the shop: three.js and the studio load only when it opens. */
-const BootStudio=dynamic(()=>import('@/components/shop/BootStudio'),{ssr:false});
+const BootStudio=dynamic(()=>retryImport(()=>import('@/components/shop/BootStudio')),{ssr:false});
 export default function BootLab(){
  const [open,setOpen]=useState(true);
  const buy=(d:BootDesign)=>{const w=window as unknown as {__bootBuys?:BootDesign[]};(w.__bootBuys??=[]).push(d);console.info('buy boots',d);};

@@ -1,5 +1,6 @@
 'use client';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useEffect,useState} from 'react';
 import {CARD_COMPLETE,CARD_OFFER_OPEN,cardRewardsActive,readCardOffers,useCardOffers} from '@/lib/town/cardRewardStore';
 import {CARD_EXPLORE_ITEMS,earnForExplore,earnForJourney,earnForPath} from '@/lib/town/cardRewardTriggers';
@@ -9,7 +10,7 @@ import {useQuizCompletions} from '@/lib/town/quizProgress';
 import {LEARNING_STAGE_COMPLETE} from '@/lib/town/learningProgress';
 import {useCardOffersHeld} from '@/lib/town/cardOfferHold';
 import {useExploreChecklist} from '@/lib/town/exploreChecklist';
-const CardOffer=dynamic(()=>import('./CardOffer'),{ssr:false});
+const CardOffer=dynamic(()=>retryImport(()=>import('./CardOffer')),{ssr:false});
 
 /** Shown once per page session: the "every card collected" message. */
 let completeShown=false;
