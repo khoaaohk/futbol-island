@@ -91,7 +91,8 @@ ok('save: best, medal, daily first run, day streak, rotating facts, near-miss li
  assert.equal(S.nearMissLine({score:488,best:0,newBest:true,stats,daily:false}),'12 points from Bronze');
  assert.equal(S.nearMissLine({score:1000,best:1040,newBest:false,stats,daily:false}),'200 points from Silver');
  assert.equal(S.nearMissLine({score:600,best:650,newBest:false,stats,daily:false}),'50 from your best');
- assert.match(S.nearMissLine({score:600,best:5000,newBest:false,stats,daily:false}),/one more for TIKI-TAKA/);
+ assert.match(S.nearMissLine({score:600,best:5000,newBest:false,stats,daily:false}),/one more for TIKI\u2011TAKA/);// QA Nov 14 2026: non-breaking hyphen (no "HAT-" / "TRICK" split on a phone)
+ assert.doesNotMatch(S.nearMissLine({score:600,best:5000,newBest:false,stats,daily:false}),/-/);
  assert(S.KIT_FACTS.length>=10&&S.KIT_FACTS.every(f=>f.line.length<=130&&f.title.length<=32),'facts stay short');
  assert.match(S.coachLine({...stats,whistle:2,rival:1}),/whistle/i);assert.match(S.coachLine(stats),/pattern/);
  assert(isSyncKey(S.KITRUSH_KEY),'the save travels with a save code');

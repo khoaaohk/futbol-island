@@ -31,3 +31,10 @@ for(let i=1;i<=80;i++){
 }
 const valid={...duplicate};filterPointer(duplicate,NaN,0,1000);assert.deepEqual(duplicate,valid,'invalid coordinate cannot poison later samples');
 console.log('PASS coalesced event invariance and stale/invalid sample rejection');
+{// QA Nov 14 2026: mashing Play / Again tapped through the card onto the pitch and played a pass before the kid saw the puzzle.
+ const src=fs.readFileSync(require('node:path').join(__dirname,'../components/games/PassPuzzleGame.tsx'),'utf8');
+ const arm=Number(/const PLAY_ARM_MS=(\d+);/.exec(src)?.[1]);assert.ok(arm>=300&&arm<=700,'pitch input arms 0.3–0.7 s after the puzzle opens');
+ assert.match(src,/if\(v==='play'&&viewRef\.current!=='play'\)armAt\.current=performance\.now\(\)\+PLAY_ARM_MS;/,'armed when the play view opens');
+ assert.match(src,/const down=\(e:PointerEvent\)=>\{[^\n]*if\(performance\.now\(\)<armAt\.current\)return;[^\n]*if\(e\.button!==0\|\|!world/,'pitch pointerdown waits for the arm time');
+ console.log('PASS mashed Play cannot fire a pass');
+}

@@ -543,6 +543,9 @@
 }
 /* Narrow phones: the five comic keys fit inside the tray (Shoot overflowed its right edge by ~7 px at 390 wide). */
 @media(max-width:420px){.game[data-game=puzzle] .aidRow{gap:6px}.game[data-game=puzzle] .aidRow>.passModes{gap:6px}.game[data-game=puzzle] .aidRow>.passModes button,.game[data-game=puzzle] .scanToggle.scanToggle{min-width:0;padding-inline:4px;letter-spacing:0}}
+/* QA Nov 14 2026: equal-width keys still clipped GROUND to "GROUN" (62 px of text in a 45–59 px key from 360 to 414 wide). Keys
+   now size to their word, never under a 44 px tap target, in type that scales with the phone; all five fit from 360 px. */
+@media(max-width:420px){.game[data-game=puzzle] .aidRow>.passModes button{flex:1 1 auto;min-width:44px;padding-inline:4px;font-size:clamp(10px,3.15vw,13px)}}
 /* Tablets and laptop heights (Nov 11 2026): a long result card (stars, why, lesson, high-score strip) ran past the bottom of a 1024x768
  * screen with Next puzzle below the fold. The main action sticks to the bottom of the scrolling overlay at every size, as on short phones. */
 @media(min-height:521px){.game .lowOverlay>section>.go{position:sticky;bottom:6px;z-index:1}}
