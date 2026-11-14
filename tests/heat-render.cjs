@@ -61,6 +61,9 @@ assert.match(fs.readFileSync(path.join(__dirname,'..','components/Town.tsx'),'ut
  const town=fs.readFileSync(path.join(__dirname,'..','components/Town.tsx'),'utf8');
  assert.match(town,/new MotionResolution\(quality\.pixelRatio,dynamicResolutionEnabled\(/,'Town builds the helper from the existing quality cap');
  assert.match(town,/motionResolution\.update\(now,viewMoved\|\|Math\.hypot\(velocity\.x,velocity\.z\)>\.1\|\|Boolean\(learning&&!quiz\?\.quiz\),paused\|\|Boolean\(quiz\?\.quiz\)\|\|aimWaiting,idleFrame>0\)/,'moving = camera/player/live view; menus, quizzes and aim are sharp');
- assert.match(town,/if\(resolution\)\{renderer\.setPixelRatio\(resolution\);renderer\.setViewport\([^)]*\);\}\n\s*(heat\.beforeRender\(location[^;]*\);)?renderer\.render\(scene,camera\)/,'switch happens at the frame boundary right before drawing');}
+ assert.match(town,/if\(resolution\)\{renderer\.setPixelRatio\(resolution\);renderer\.setViewport\([^)]*\);\}\n(?:[^\n]*\n){0,2}[^\n]*?heat\.beforeRender\(location[^\n]*?\);renderer\.render\(scene,camera\)/,'switch happens at the frame boundary right before drawing');
+ // Only cosmetic per-frame touches sit between the switch and the draw (stadium feed into its own target, tumble / bump poses): no second main-scene render.
+ const tail=town.slice(town.indexOf('if(resolution){renderer.setPixelRatio(resolution)')),gap=tail.slice(0,tail.indexOf('renderer.render(scene,camera)'));
+ assert(!/requestAnimationFrame|setPixelRatio\((?!resolution)/.test(gap),'nothing re-sizes or yields between the switch and the draw');}
 console.log('PASS heat pass 2: dynamic resolution (move 1.5 / still 2 / desktop off / no thrash); spot pool out of day shaders, night lessons keep it; dynamic shadow culling + restore; rooftop static index parity (20000 points) with live dynamic boxes');
 })().catch(e=>{console.error(e);process.exit(1);});
