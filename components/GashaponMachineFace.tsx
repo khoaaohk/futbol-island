@@ -104,7 +104,7 @@ function Face({machine}:{machine:GashaponMachine}){
   </button>
   {/* One top row (owner, Nov 10 2026): Toy Shelf, ONE status pill between, Done. The six dots only show with room (CSS). */}
   <div className={styles.bar}>
-   <button type="button" className={styles.shelf} onClick={()=>openToyShelf()} disabled={busy} data-gashapon-shelf>Toy Shelf</button>
+   <button type="button" className={styles.shelf} onClick={()=>openToyShelf(machine.id)} disabled={busy} data-gashapon-shelf>Toy Shelf</button>
    <p className={styles.status} data-gashapon-progress={found} data-gashapon-left={left} data-gashapon-status={status.kind??'ok'} role="img" aria-label={status.label}>
     <CapsuleIcon className={styles.statusIcon} top={machine.color} bottom="#fff6e4"/>
     <span className={styles.dots} aria-hidden="true">{toys.map(t=><i key={t.id} data-on={!!save.owned[t.id]} style={{'--dot':t.colors[0]} as CSSProperties}/>)}</span>

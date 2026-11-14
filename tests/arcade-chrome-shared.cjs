@@ -79,3 +79,7 @@ assert.doesNotMatch(read('components/games/comic/comic.module.css'),/data-naviga
  const rot=read('components/RotateLock.module.css');
  assert.match(rot,/:global\(body:has\(\[data-arcade-kind\]\)\) \.lock\{background:#19b5a5 /);assert.match(rot,/^\.lock\{display:none;position:fixed;inset:0;z-index:2147483000;background:#244d40/m,'island card unchanged');
  assert.match(rot,/:global\(body:has\(\[data-arcade-kind\]\)\) \.lock \.leave\{[^}]*border:3px solid #81fbed;border-radius:999px;background:#24223e;color:#e9f5ff/,'standard back button face');}
+// Leftovers QA (Nov 14 2026): tapping the pause backdrop (where the top bar's ▷ sits) resumes; a press must start on the backdrop.
+{const pc=require('fs').readFileSync('components/arcade/ArcadePauseCard.tsx','utf8');
+assert.match(pc,/onPointerDown=\{e=>\{downOnBackdrop\.current=e\.target===e\.currentTarget;\}\}/,'backdrop press tracked');
+assert.match(pc,/onClick=\{e=>\{if\(e\.target===e\.currentTarget&&downOnBackdrop\.current\)onResume\(\)/,'backdrop tap resumes');}

@@ -127,6 +127,15 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
  for(const [a,b] of FREESTYLE_PAIRS){const A=entryById.get(a),B=entryById.get(b);if(A?.freestyle&&B?.freestyle)linkFreestylePair(A.freestyle,B.freestyle,A.position,B.position);}
  let freestyleClock=0,poseClock=0;
  const viewFrustum=new T.Frustum(),viewMatrix=new T.Matrix4(),viewSphere=new T.Sphere();
+ /* QA Nov 14 2026: standing next to a townsperson, their name tag could sit right over the player. The shown tag fades (TAG_FADE)
+    while its screen box overlaps the player's (feet to head); a few projections a frame for the one shown tag, no allocation. */
+ const TAG_FADE=.22,tagC=new T.Vector3(),tagE=new T.Vector3(),meA=new T.Vector3(),meB=new T.Vector3(),camRight=new T.Vector3(),camUp=new T.Vector3();
+ const tagOverPlayer=(entry:{position:Position;rig:{profileScale:number}},player:Position,camera:T.Camera)=>{
+  camRight.setFromMatrixColumn(camera.matrixWorld,0);camUp.setFromMatrixColumn(camera.matrixWorld,1);const ps=entry.rig.profileScale;
+  tagC.set(entry.position.x,entry.position.y+2.5*ps,entry.position.z);tagE.copy(tagC).addScaledVector(camRight,1.75).addScaledVector(camUp,.55);
+  tagC.project(camera);tagE.project(camera);if(tagC.z>1||tagC.z<-1)return false;const hw=Math.abs(tagE.x-tagC.x),hh=Math.abs(tagE.y-tagC.y);
+  meA.set(player.x,player.y+.05,player.z).addScaledVector(camRight,-.35);meB.set(player.x,player.y+1.75,player.z).addScaledVector(camRight,.35);meA.project(camera);meB.project(camera);
+  return Math.min(meA.x,meB.x)<tagC.x+hw&&Math.max(meA.x,meB.x)>tagC.x-hw&&Math.min(meA.y,meB.y)<tagC.y+hh&&Math.max(meA.y,meB.y)>tagC.y-hh;};
  const stats={posed:0,offscreenSkipped:0,slowRoutine:0,moving:0};/* Heat audit Oct 17 2026: townsfolk near, drawn and on screen that are visibly animating (see MOVING_RANGE) */const seenXZ=new Float32Array(entries.length*2).fill(1e9);
  const truckWitnesses=new Map<string,{remaining:number;x:number;z:number}>();
  const reactToTruck=(id:string,x:number,z:number)=>{truckWitnesses.set(id,{remaining:4.8,x,z});};
@@ -224,8 +233,9 @@ export function createIslandNpcs(scene:T.Scene,placement:Placement,reactions?:Ba
   let show=tagFocus;
   if(show&&(hideTags||truckWitnesses.has(show.id)||!show.rig.root.visible))show=null;
   if(show&&camera){viewSphere.center.set(show.position.x,show.position.y+2.5,show.position.z);viewSphere.radius=2;if(!viewFrustum.intersectsSphere(viewSphere))show=null;}
-  if(show!==shownTag){if(shownTag)shownTag.label.visible=false;shownTag=show;if(show)show.label.visible=true;}
+  if(show!==shownTag){if(shownTag){shownTag.label.visible=false;shownTag.label.material.opacity=1;}shownTag=show;if(show)show.label.visible=true;}
   if(shownTag&&shownTag!==labelOwner){labelOwner=shownTag;shownTag.labelStatus='';}// the shared tag canvas now names this townsperson
+  if(shownTag){const m=shownTag.label.material,want=camera&&tagOverPlayer(shownTag,player,camera)?TAG_FADE:1;if(m.opacity!==want)m.opacity=reduced?want:Math.abs(want-m.opacity)<.02?want:m.opacity+(want-m.opacity)*Math.min(1,dt*10);}
   if(shownTag){const entry=shownTag,r=entry.routine;
    const status=entry.near?'LET’S TALK':r.mode==='social'?'CATCHING UP':r.mode==='approach'?'SAYING HELLO':entry.freestyle?.tag??entry.definition.pursuit??'TAKING A BREAK';
    if(status!==entry.labelStatus){entry.labelStatus=status;const ctx=entry.labelCanvas.getContext('2d')!;ctx.clearRect(0,0,512,160);ctx.fillStyle='#294f43';ctx.beginPath();ctx.roundRect(3,3,506,154,44);ctx.fill();ctx.textAlign='center';ctx.fillStyle='#fff0cc';ctx.font='700 43px sans-serif';ctx.fillText(entry.definition.name,256,66);ctx.fillStyle='#e6cb8b';ctx.font='700 25px sans-serif';ctx.fillText(status,256,115,470);entry.labelTexture.needsUpdate=true;}}

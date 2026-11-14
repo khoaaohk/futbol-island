@@ -4,16 +4,19 @@ import {fileUrl,type PrintFile} from '@/lib/site/tools/printables';
 import {TOOL_NAMES} from '@/lib/site/tools/registry';
 import {LICENCE} from '@/lib/site/tools/sheet';
 import type {Crumb} from '@/lib/site/seo';
+import type {GuideFormat} from '@/lib/site/pitch';
+import LineupHeading from './LineupHeading';
 import site from '@/app/(site)/site.module.css';
 import t from './tools.module.css';
 /**
  * Server-rendered parts shared by the tool pages (app/(site)/tools): the page head, the print rule that drops the site footer
  * on these pages only (the header is already hidden in print by site.module.css), a sheet preview and its download links.
  */
-export function ToolIntro({crumbs,h1,lead}:{crumbs:readonly Crumb[];h1:string;lead:string}){
+/** headingFormat: a lineup format landing; its h1 follows the builder's format select (components/site/tools/LineupHeading.tsx). */
+export function ToolIntro({crumbs,h1,lead,headingFormat}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat}){
  return <header className={site.intro}>
   <Breadcrumbs crumbs={crumbs}/>
-  <h1 className={site.title}>{h1}</h1>
+  {headingFormat?<LineupHeading format={headingFormat} className={site.title}/>:<h1 className={site.title}>{h1}</h1>}
   <p className={site.lead}>{lead}</p>
   <p className={site.caption}>{TOOL_NAMES}</p>
  </header>;

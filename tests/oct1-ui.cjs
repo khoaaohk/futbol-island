@@ -82,7 +82,7 @@ require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f
  const src=read('lib/graphics/islandNpcs.ts');
  assert.match(src,/const label=new T\.Sprite\(material\);label\.visible=false;/,'labels start hidden');
  assert.equal((src.match(/label\.visible=/g)||[]).length,3,'label visibility is written only at creation and on change');
- assert.match(src,/if\(show!==shownTag\)\{if\(shownTag\)shownTag\.label\.visible=false;shownTag=show;if\(show\)show\.label\.visible=true;\}/);
+ assert.match(src,/if\(show!==shownTag\)\{if\(shownTag\)\{shownTag\.label\.visible=false;shownTag\.label\.material\.opacity=1;\}shownTag=show;if\(show\)show\.label\.visible=true;\}/);
  assert.match(src,/tagFocus=pickTagFocus\(tagFocus,entries,tagEligible,desktop\?14:12\);/,'the existing show range');
  assert.match(src,/if\(show&&\(hideTags\|\|truckWitnesses\.has\(show\.id\)\|\|!show\.rig\.root\.visible\)\)show=null;/,'vending close-up / flight rule kept');
  assert.match(src,/if\(show&&camera\)\{viewSphere\.center\.set\([^)]*\);viewSphere\.radius=2;if\(!viewFrustum\.intersectsSphere\(viewSphere\)\)show=null;\}/,'never for an off-screen townsperson');

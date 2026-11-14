@@ -38,7 +38,7 @@ export const standBack=(s:StandDef)=>s.inner+ROWS*ROW_DEPTH+CONCOURSE;
 export const stairEnd=(s:StandDef)=>standBack(s)+STAIR_TREADS*TREAD;
 
 export type Rect={x:number;z:number;w:number;d:number};
-export type Surface=Rect&{height:number;stepAccess?:boolean;stepUp?:number};
+export type Surface=Rect&{height:number;stepAccess?:boolean;stepUp?:number;noRide?:boolean};
 /** A walker steps up a row (RISE) from anywhere (Nov 12 2026, QA: an off-angle joystick caught the row edge beside an aisle). */
 export const ROW_STEP_UP=RISE+.05;
 export type Rail=Rect&{floor:number;top:number};
@@ -68,7 +68,7 @@ export type StandGeometry={surfaces:Surface[];rails:Rail[];stand:StandDef};
 export function standGeometry(s:StandDef):StandGeometry{
  const surfaces:Surface[]=[],rails:Rail[]=[],{seats,aisles,pieces}=standSpans(s),back=standBack(s),rowsEnd=s.inner+ROWS*ROW_DEPTH;
  for(let i=0;i<ROWS;i++){const d0=s.inner+i*ROW_DEPTH,h=rowHeight(i);
-  for(const [a0,a1] of seats)surfaces.push({...standRect(s,d0,d0+ROW_DEPTH,a0,a1),height:h,stepUp:ROW_STEP_UP});
+  for(const [a0,a1] of seats)surfaces.push({...standRect(s,d0,d0+ROW_DEPTH,a0,a1),height:h,stepUp:ROW_STEP_UP,noRide:true});// noRide: rides keep to the aisles and the concourse (QA Nov 14 2026)
   for(const [a0,a1] of aisles){surfaces.push({...standRect(s,d0,d0+ROW_DEPTH/2,a0,a1),height:h-TREAD_RISE,stepAccess:true});surfaces.push({...standRect(s,d0+ROW_DEPTH/2,d0+ROW_DEPTH,a0,a1),height:h,stepAccess:true});}
  }
  for(const [a0,a1] of pieces)surfaces.push({...standRect(s,rowsEnd,back,a0,a1),height:CONCOURSE_HEIGHT});

@@ -95,6 +95,11 @@ export function frameView(lesson:FieldLesson,frame:QuizFrame,pose:FramePose,extr
  // Widen (never shrink) to the minimum aspect; a tall crop stays tall if the pitch is too narrow.
  if((x1-x0)/(y1-y0)<minAspect){const c=(x0+x1)/2,w=Math.min(W+20,(y1-y0)*minAspect);x0=c-w/2;x1=c+w/2;}
  if((x1-x0)/(y1-y0)>1.7){const c=(y0+y1)/2,h=(x1-x0)/1.7;y0=c-h/2;y1=c+h/2;}
+ // QA Nov 14 2026: a token cut in half by the crop edge (keepers at the top of a warm-up picture) reads as a glitch. A player whose
+ // disc straddles an edge pulls that edge out just past it (a few units at most); players well outside stay out of the picture.
+ {const r=12;for(const p of pose.positions.values()){const inX=p.x>x0-r&&p.x<x1+r,inY=p.y>y0-r&&p.y<y1+r;
+  if(inX){if(p.y<y0+r&&p.y>y0-r)y0=p.y-r-4;if(p.y>y1-r&&p.y<y1+r)y1=p.y+r+4;}
+  if(inY){if(p.x<x0+r&&p.x>x0-r)x0=p.x-r-4;if(p.x>x1-r&&p.x<x1+r)x1=p.x+r+4;}}}
  const fit=(a:number,b:number,lo:number,hi:number):[number,number]=>{const len=Math.min(b-a,hi-lo);let s=a;if(s<lo)s=lo;if(s+len>hi)s=hi-len;return [s,s+len];};
  [x0,x1]=fit(x0,x1,-10,W+10);[y0,y1]=fit(y0,y1,-10,H+10);
  return {x:Math.round(x0),y:Math.round(y0),w:Math.round(x1-x0),h:Math.round(y1-y0)};

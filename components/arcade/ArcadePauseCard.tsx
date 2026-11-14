@@ -1,4 +1,5 @@
 'use client';
+import { useRef } from 'react';
 import styles from './ArcadePauseCard.module.css';
 
 /** One keycap row entry: the key(s) and what they do, e.g. ['W A S D','move']. */
@@ -13,7 +14,13 @@ export type ArcadeKey=readonly [string,string];
 export function ArcadePauseCard({game,score,onResume,onExit,onRestart,restartDisabled,extra,keys,status}:{
  game:string;score?:string;onResume:()=>void;onExit:()=>void;onRestart?:()=>void;restartDisabled?:boolean;extra?:{label:string;onClick:()=>void};
  keys?:readonly ArcadeKey[];status?:string}){
- return <div className={styles.overlay} data-arcade-paused={game}>
+ /* Leftovers QA (Nov 14 2026): the top bar's ▷ sits under this backdrop, so a tap there did nothing. A tap on the backdrop itself
+    (anywhere outside the card, the ▷ included) now resumes. Only when the press also started on the backdrop, so a drag that ends
+    off the card, or the tap that opened the pause, never resumes by accident. */
+ const downOnBackdrop=useRef(false);
+ return <div className={styles.overlay} data-arcade-paused={game} data-arcade-backdrop-resume
+  onPointerDown={e=>{downOnBackdrop.current=e.target===e.currentTarget;}}
+  onClick={e=>{if(e.target===e.currentTarget&&downOnBackdrop.current)onResume();downOnBackdrop.current=false;}}>
   <section className={styles.card} role="dialog" aria-modal="false" aria-label="Paused" data-arcade-pause-card>
    <h2 className={styles.title} data-arcade-pause-title>Paused</h2>
    {score&&<p className={styles.score} data-arcade-pause-score>{score}</p>}

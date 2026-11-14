@@ -95,6 +95,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
  const shorePoints=ISLAND_SHORE.map(p=>svgPoint(p)).join(' ');
  const view=position?`${-radius} ${-radius} ${radius*2} ${radius*2}`:`${b.minX-8} ${b.minZ-8} ${w+16} ${h+16}`;
  const localMap=!!position;
+ const placeLabels=([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88},{id:'museum',label:'MUSEUM',point:MUSEUM_MAP_POINT,dx:0,dy:localMap?18:28,width:localMap?48:74},{id:'shop',label:'KIT SHOP',point:SHOP_MAP_POINT,dx:0,dy:localMap?-17:-26,width:localMap?52:78},{id:'stadium',label:'DRIP FC STADIUM',point:STADIUM_ARRIVAL,dx:0,dy:localMap?19:30,width:localMap?78:122}] as const);
  const terrain=useMemo(()=> <>
   {/* The whole map is playable sea (Oct 12 2026, user: "the border is the edge of the map"): no inner border line; the frame is
       the edge (flightBlocked is the map's rectangle with soft corners). */}
@@ -160,7 +161,7 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    {!localMap&&<text x={PARK_POND.x} y={PARK_POND.z+PARK_POND.rz+14} textAnchor="middle" fontSize="11" fill="#294f43" fontWeight="700">STADIUM PARK</text>}
    <text x={-312} y={STADIUM.z} textAnchor="middle" fontSize={localMap?9:11} fill="#76583a" fontWeight="700" transform={`rotate(-90 -312 ${STADIUM.z})`}>WEST BEACH</text>
   </g>
-  {([{id:'square',label:'ARCADE',point:ARCADE_DOOR,dx:0,dy:localMap?19:30,width:localMap?42:64},{id:'coaches',label:'COACHES',point:COACHES_DOOR,dx:localMap?27:29,dy:localMap?1:3,width:localMap?46:74},{id:'cay',label:'CORAL CAY',point:CORAL_CAY_ARRIVAL,dx:0,dy:localMap?-19:-32,width:localMap?56:88},{id:'museum',label:'MUSEUM',point:MUSEUM_MAP_POINT,dx:0,dy:localMap?18:28,width:localMap?48:74},{id:'shop',label:'KIT SHOP',point:SHOP_MAP_POINT,dx:0,dy:localMap?-17:-26,width:localMap?52:78},{id:'stadium',label:'DRIP FC STADIUM',point:STADIUM_ARRIVAL,dx:0,dy:localMap?19:30,width:localMap?78:122}] as const).map(({id,label,point,dx,dy,width})=><g key={id} {...destination(id,id==='coaches'?'Coaches Centre':id==='cay'?'Coral Cay':id==='museum'?'History Museum':id==='shop'?'Kit Shop':id==='stadium'?'DRIP FC Stadium':'Arcade')}>
+  {placeLabels.map(({id,label,point,dx,dy,width})=><g key={id} {...destination(id,id==='coaches'?'Coaches Centre':id==='cay'?'Coral Cay':id==='museum'?'History Museum':id==='shop'?'Kit Shop':id==='stadium'?'DRIP FC Stadium':'Arcade')}>
    <path d={`M${point.x} ${point.z} L${point.x+dx} ${point.z+dy}`} fill="none" stroke="#294f43" strokeWidth="1.2"/>
    <circle cx={point.x} cy={point.z} r={localMap?4.5:6} fill="#f9ca70" stroke="#294f43" strokeWidth="1.5"/>
    {!localMap&&<circle cx={point.x} cy={point.z} r="11" fill="transparent"/>}
@@ -187,6 +188,15 @@ function IslandOverview({roads,buildings,position,markerPosition,onSelect,active
    <circle cx={job.x} cy={job.z} r="9.5" fill="#f4cc7c" stroke="#294f43" strokeWidth="1.8"/>
    <text x={job.x} y={job.z+4.6} textAnchor="middle" fill="#294f43" fontSize="13" fontWeight="900" style={{stroke:'none'}}>J</text>
   </g>)}</g>}
+  {/* QA Nov 14 2026: the V / F / J / gashapon marks are drawn after the place and field names, so at phone size they sat on top of
+      them (5v5 under a V, BEACH SOCCER under V / F, HOSTEL under a dot). The names are drawn once more here, above every mark
+      (pointer-transparent and hidden from screen readers: the tappable, named originals stay where they were). Full map only. */}
+  {!localMap&&<g className="map-labels-top" aria-hidden="true" pointerEvents="none">
+   {VENUES.map(v=><text key={'vt'+v.id} x={v.x} y={v.z+4} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={22} fontWeight="700">{v.id}</text>)}
+   {placeLabels.map(({id,label,point,dx,dy,width})=><g key={'pt'+id}><rect x={point.x+dx-width/2} y={point.z+dy-11} width={width} height={22} rx="5" fill="#fff8e5" stroke="#73886b" strokeWidth="1"/><text x={point.x+dx} y={point.z+dy+4} textAnchor="middle" fill="#294f43" fontSize={12} fontWeight="700">{label}</text></g>)}
+   <text x={BEACH_COURT.x} y={BEACH_COURT.z-BEACH_COURT.width/2-6} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={11} fontWeight="700">BEACH SOCCER</text>
+   <text x={HOSTEL.x} y={HOSTEL.z-HOSTEL.d/2-6} textAnchor="middle" fill="#fff5d5" stroke="#294f43" strokeWidth="3" paintOrder="stroke" fontSize={11} fontWeight="700">HOSTEL</text>
+  </g>}
   <g aria-label="Rosa’s Market · Sell fish, produce and cards" data-market-marker="rosa" pointerEvents="none">
    <title>Rosa’s Market · Sell fish, produce and cards</title>
    <path d={`M${MARKET_STAND.x} ${MARKET_STAND.z}h-${localMap?13:24}`} stroke="#294f43" strokeWidth="1.2"/>

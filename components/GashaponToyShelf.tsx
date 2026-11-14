@@ -38,11 +38,13 @@ export function ToyShelfGrid({heading='h3',idPrefix='shelf'}:{heading?:'h3'|'h5'
 
 export default function GashaponToyShelf({onClose}:{onClose:()=>void}){
  const save=useGashapon(),overlay=useToyOverlay(),{found,total}=shelfCounts(save.owned);
- const root=useRef<HTMLElement>(null),closeRef=useRef<HTMLButtonElement>(null),closeNow=useRef(onClose);closeNow.current=onClose;
+ const root=useRef<HTMLElement>(null),scroller=useRef<HTMLDivElement>(null),closeRef=useRef<HTMLButtonElement>(null),closeNow=useRef(onClose);closeNow.current=onClose;
  // The shelf covers the whole screen, so the island sleeps under it too (lib/videoPlayback.ts holdIslandCover).
  useEffect(()=>{const release=holdIslandCover(),before=document.activeElement as HTMLElement|null;closeRef.current?.focus({preventScroll:true});countShelfOpen(shelfCounts(save.owned).found);return()=>{release();before?.focus?.({preventScroll:true});};
  // eslint-disable-next-line react-hooks/exhaustive-deps
  },[]);
+ // Opened from a machine: start at that machine's row, not at the top (QA Nov 14 2026). Instant, no smooth scroll.
+ useEffect(()=>{const at=toyOverlay.get().at,box=scroller.current;if(!at||!box)return;const row=box.querySelector<HTMLElement>(`[data-shelf-machine="${CSS.escape(at)}"]`);if(row)box.scrollTop=Math.max(0,row.offsetTop-box.offsetTop-8);},[]);
  // Keys while the shelf is on top (the viewer, when open over it, takes them first and stops them).
  useEffect(()=>{const key=(e:KeyboardEvent)=>{if(toyOverlay.get().toy)return;
    if(e.key==='Escape'){e.preventDefault();closeNow.current();}
@@ -55,7 +57,7 @@ export default function GashaponToyShelf({onClose}:{onClose:()=>void}){
    <h2 id="toy-shelf-title" className={styles.title}>Toy Shelf</h2>
    <p className={styles.count} data-toy-shelf-count>{found} / {total}</p>
   </header>
-  <div className={styles.scroll}>
+  <div className={styles.scroll} ref={scroller}>
    {found===0&&<p className={styles.empty}>Spin a gashapon machine to find your first toy. Each machine has six.</p>}
    <ToyShelfGrid/>
   </div>

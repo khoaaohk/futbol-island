@@ -7,7 +7,7 @@
  */
 export const SN={
  cols:11,rows:15,squad:11,maxLine:12,startX:5,startY:10,
- ready:.7,beat:1.5,levelReady:.4,
+ ready:.7,beat:1.5,levelReady:.4,/** after a pause (QA Nov 14 2026): the line stands still this long so a kid facing the touchline can steer first */resumeGrace:1,
  pick:10,squadBonus:200,callMult:2,boot:50,dashStep:5,dashSteps:8,dashSpeed:1/1.5,knock:25,card:50,levelCap:12,
  defMin:3,defMax:5,midMin:3,midMax:5,
  ballEvery:[8,14] as const,bootEvery:[9,15] as const,firstBall:6,firstBoot:12,
@@ -235,6 +235,9 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean;hold?:boolean}
    while(!s.over&&s.beat<=0&&s.ready<=0&&s.acc>=stepNow()&&guard++<6){s.acc-=stepNow();tick();}
    if(guard>=6)s.acc=0;
   },
+  /** Back from a pause: a short stand-still (SN.resumeGrace) before the next tick, so resuming next to the touchline never ends the run
+   *  before the kid can turn (QA Nov 14 2026). Turns are taken during it. */
+  resumeGrace(){if(s.over)return;s.ready=Math.max(s.ready,SN.resumeGrace);s.acc=0;},
   /** Hands every event since the last drain to `fn`, then empties the ring. */
   drain(fn:(e:SnakeEvent)=>void){for(let i=0;i<en;i++)fn(events[i]);en=0;},
  };

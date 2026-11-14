@@ -129,6 +129,10 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
  /** Natural swimming (Oct 27 2026, swimMotion.ts): the bob's clock (s), the last facing and the smoothed turn rate (rad/s) for the bank,
   *  the last root height for the climb pitch. */
  let bobT=0,lastYaw=NaN,yawRate=0,lastRootY=NaN;
+ /* QA Nov 14 2026: an idle duck-dive never ended: the island rests (capped / clamped frames, or no frames at all while the tab
+    sleeps), so diveFor, counted from frame dt, barely moved and DIVE.maxTime never came. The dive also keeps a wall-clock start;
+    diveFor is never less than the real time under, so the first frame after a long rest brings the kid up. */
+ const wallNow=()=>typeof performance!=='undefined'?performance.now()/1000:Date.now()/1000;let diveWallAt=0;
  const lastLand={x:NaN,z:NaN,y:0,yaw:0};
  let gaspLeft=0,rippleClock=0,wakeClock=0,bubbleClock=0,strokeIndex=0,splashPower=0,pendDive=false,pendSped=false,pendSplash=0,pendTint=false,pendFly=false,diveRate=1/DIVE.ease,riseShake=0,lastX=NaN,lastZ=NaN;
  /** diveBedRoom at (x, z) and DIVE.ahead m along the travel (the slope ahead), the lower; 9 without a seabed. */
@@ -196,7 +200,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
   state.swimFor+=dt;
   // Dive: the clock and the auto-surface (time, a shore), the eased progress, the seabed / shelf bound, the pitch.
   state.bedRoom=bedRoomAt(x,z);lastX=x;lastZ=z;
-  if(state.diving){state.diveFor+=dt;if(state.diveFor>=DIVE.maxTime||state.depth<DIVE.minWater-.05||state.bedRoom<DIVE.minRoom){state.diving=false;diveRate=1/DIVE.ease;}}
+  if(state.diving){state.diveFor=Math.max(state.diveFor+dt,diveWallAt?wallNow()-diveWallAt:0);if(state.diveFor>=DIVE.maxTime||state.depth<DIVE.minWater-.05||state.bedRoom<DIVE.minRoom){state.diving=false;diveRate=1/DIVE.ease;}}
   const goal=state.diving?1:0,was=state.under;
   // Natural swimming (Oct 27 2026): buoyancy brings the body up briskly from the bottom of the dive and eases as the head nears the top.
   if(was!==goal){state.under=goal>was?Math.min(1,was+dt*diveRate):Math.max(0,was-dt*diveRate*buoyancyRate(was));
@@ -265,7 +269,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
    if(phase==='up')return false;
    if(state.diving)return surfaceDive();
    if(!canDive())return false;
-   state.diving=true;state.diveFor=0;diveRate=1/DIVE.ease;state.fast=false;if(state.under===0)state.room=Math.min(diveRoom(probe.d)*diveShore(state.depth),state.bedRoom);pendDive=true;return true;}
+   state.diving=true;state.diveFor=0;diveWallAt=wallNow();diveRate=1/DIVE.ease;state.fast=false;if(state.under===0)state.room=Math.min(diveRoom(probe.d)*diveShore(state.depth),state.bedRoom);pendDive=true;return true;}
   return false;
  }
  /** Dive is live: swimming in at least DIVE.minWater of shelf water, over a drawn seabed with DIVE.minRoom of room. */
@@ -275,7 +279,7 @@ export function createWaterState(probe:WaterProbe,reduced:()=>boolean,seabed?:(x
  /** Seamless Explore (diveEdge.ts): back from a reef room across the zone's edge, already under. The duck-dive goes on at once (no
   *  ease down, no plunge): settled under at the dive the water here allows. False when not swimming or the water is too shallow
   *  (the host then lets the swimmer come up at the surface). */
- function underNow(){if(!canDive())return false;state.diving=true;state.under=1;state.diveFor=0;diveRate=1/DIVE.ease;state.fast=false;state.tilt=0;
+ function underNow(){if(!canDive())return false;state.diving=true;state.under=1;state.diveFor=0;diveWallAt=wallNow();diveRate=1/DIVE.ease;state.fast=false;state.tilt=0;
   state.room=Math.min(diveRoom(probe.d)*diveShore(state.depth),state.bedRoom);state.dive=state.room;state.rootY=swimY()-state.dive;pose.under=1;pose.tilt=0;return true;}
  /** Seamless Explore: what the water at (x, z) allows for the way out of a reef room (once per crossing, never per frame): 'dive'
   *  (the duck-dive's shelf and drawn-seabed bounds), 'swim' (too shallow to stay under) or 'no' (land, a pier, past the swim range). */

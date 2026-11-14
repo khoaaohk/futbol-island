@@ -109,6 +109,8 @@ export function createRooftopTravel(roofs:Roof[],obstacles:Obstacle[],start:{x:n
   const solids=groundGrid.query(p.x,p.z,radius).filter(o=>{
    const building=buildingFor(o);
    const stepHeight=building?.stepAccess&&mode!=='walk'?1:onStair?.8:mode==='walk'&&building?.stepUp?building.stepUp:.35;// stepUp: the stadium's rows (stadiumSeats.ts)
+   // A ride never rolls onto a seat row (noRide, the stadium's stands: QA Nov 14 2026); one already on it (mounted there) can roll off.
+   if(building?.noRide&&mode!=='walk'&&mode!=='jetpack'&&!insideObstacle(p.x,p.z,building,0))return true;
    return building?building.height>state.height+stepHeight:!elevated;
   }).concat(propGrid.query(p.x,p.z,radius).filter(p=>state.height>=p.floor-.2&&state.height<p.top));
   const barriers=solids.concat(goalBarriersAt(state.height));

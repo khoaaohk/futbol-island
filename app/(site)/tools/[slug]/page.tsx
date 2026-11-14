@@ -1,3 +1,4 @@
+import {lineupHeading} from '@/lib/site/tools/lineupHeading';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -41,7 +42,7 @@ function Lineup({p}:{p:LineupPage}){
    features:['Lineups for 7v7, 9v9, 11v11 and futsal','Drag or tap to swap players and substitutes','One-page print','Picture download','Share by link','No account; names stay on the device']})}/>
   <JsonLd data={faqLd(p.faq)}/>
   <PrintStyle/>
-  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead}/></Screen>
+  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} headingFormat={p.format&&lineupHeading(p.format)===p.h1?p.format:undefined}/></Screen>
   <LineupBuilder shapes={SHAPES} initial={f.slug} lockFormat={p.format}/>
   <Screen>
    <Section id="how" title="How to build your lineup">

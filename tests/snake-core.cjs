@@ -209,4 +209,9 @@ ok('phones (Nov 11 2026): the d-pad is on by default on touch screens, docked in
  // cells (CSS px) with the measured pad room (~140 px) under the 122 px bar + team sheet
  for(const [w,h,min] of [[390,844,34],[390,664,26],[375,553,18],[360,560,19]]){const l=snakeLayout(w,h,122,140);assert(l.cell>=min,`${w}x${h}: cell ${l.cell}`);assert(l.y0+l.ph<=h-140,`${w}x${h}: the pitch ends above the d-pad`);}
 });
+ok('resume grace (QA Nov 14 2026): after a pause the line stands still SN.resumeGrace s and turns are taken meanwhile',()=>{
+ const g=kickOff(game(7));g.turn(1);g.step(.05);const x0=g.state.xs[0],y0=g.state.ys[0],t0=g.state.ticks;
+ g.resumeGrace();assert.equal(g.state.ready,SN.resumeGrace);g.step(SN.resumeGrace*.9);assert.equal(g.state.ticks,t0,'no tick inside the grace');assert.equal(g.state.xs[0],x0);assert.equal(g.state.ys[0],y0);
+ assert.ok(g.turn(2)||g.turn(0),'a turn is taken during the grace');g.step(SN.resumeGrace*.2+g.stepSeconds);assert.ok(g.state.ticks>t0,'play goes on after it');
+ assert.match(read('components/games/SquadSnakeGame.tsx'),/const resume=useCallback\(\(\)=>\{[^}]*game\.current\?\.resumeGrace\(\)/,'resume calls the grace');});
 console.log(`snake-core: ${n} groups passed`);

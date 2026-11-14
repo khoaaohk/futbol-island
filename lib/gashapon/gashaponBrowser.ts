@@ -68,7 +68,8 @@ export const gashaponOpener={
 
 // ---- The toy viewer + Toy Shelf overlay (round 3A, Nov 8 2026; components/GashaponToyLayer.tsx) ------------------------------
 export type ToyViewSource='result'|'shelf';
-export type ToyOverlay={toy:string|null;source:ToyViewSource;shelf:boolean};
+/** `at`: the machine the shelf was opened from; the shelf scrolls to that machine's row (QA Nov 14 2026). */
+export type ToyOverlay={toy:string|null;source:ToyViewSource;shelf:boolean;at?:string};
 let overlay:ToyOverlay={toy:null,source:'result',shelf:false};const overlayListeners=new Set<()=>void>();
 const SERVER_OVERLAY:ToyOverlay={toy:null,source:'result',shelf:false};
 function setOverlay(next:ToyOverlay){overlay=next;overlayListeners.forEach(f=>f());}
@@ -101,4 +102,4 @@ export function openToyViewer(toyId:string,source:ToyViewSource='result'){
  if(typeof window!=='undefined')window.dispatchEvent(new CustomEvent('fi2-gashapon-viewer',{detail:{toyId,source}}));
 }
 /** Open the Toy Shelf (every machine's toys, found ones tappable). */
-export function openToyShelf(){setOverlay({...overlay,shelf:true});if(typeof window!=='undefined')window.dispatchEvent(new CustomEvent('fi2-gashapon-shelf'));}
+export function openToyShelf(machineId?:string){setOverlay({...overlay,shelf:true,at:machineId});if(typeof window!=='undefined')window.dispatchEvent(new CustomEvent('fi2-gashapon-shelf'));}
