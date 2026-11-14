@@ -21,7 +21,7 @@ function load(file){file=path.resolve(ROOT,file);if(loaded.has(file))return load
  if(file.endsWith('.json')){const v={default:JSON.parse(fs.readFileSync(file,'utf8'))};loaded.set(file,v);return v;}
  const m={exports:{}};loaded.set(file,m.exports);
  vm.runInNewContext(ts.transpileModule(fs.readFileSync(file,'utf8'),{fileName:file,compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,jsx:ts.JsxEmit.ReactJSX}}).outputText,
-  {module:m,exports:m.exports,Buffer,URL,URLSearchParams,TextEncoder,TextDecoder,DataView,ArrayBuffer,Uint8Array,Uint32Array,Date,Math,JSON,Promise,Intl,process:{env:{}},console,setTimeout,clearTimeout,
+  {module:m,exports:m.exports,Buffer,URL,URLSearchParams,TextEncoder,TextDecoder,DataView,ArrayBuffer,Uint8Array,Uint32Array,Date,Math,JSON,Promise,Intl,process:{env:{}},console,setTimeout,clearTimeout,fetch:()=>Promise.reject(Error("no network in tests")),
    require:id=>id.startsWith('.')||id.startsWith('@/')?load(resolve(file,id)):require(id)});
  loaded.set(file,m.exports);return m.exports;}
 let passed=0;const ok=(name,fn)=>Promise.resolve().then(fn).then(r=>{if(r!=='skip')passed++;},e=>{console.error('FAIL',name);throw e;});
@@ -180,6 +180,25 @@ await ok('a background or prerendered load is not a visit until shown; previews 
   {pid:'c'.repeat(12),seconds:5,sessions:1,daysPlayed:1,firstSeen:'2026-11-13T10:00:00Z',lastSeen:'2026-11-13T10:00:00Z',returning:true}];
  const f=o=>PE.filterPlayers(rows,{q:'',ret:'all',cohort:'all',sort:'last',from:'2026-11-13',...o}).map(p=>p.pid[0]).join('');
  assert.equal(f({short:false}),'c','under 5 s of play: not listed');assert.equal(f({short:true}).length,3,'"Show them" lists them');
+});
+
+// ---- 6. the Fishing tab never shows zeros for a range with fishing (Nov 13 2026) ------------------------------------------
+await ok('fishing tab: today\'s raw landings reach the report; a failing multi-day read no longer empties it; dash fallback',async()=>{
+ const S=load('lib/analytics/store.ts'),R=load('lib/analytics/report.ts'),DA=load('lib/analytics/dashboardAdmin.ts'),FS=load('app/admin/FishingSection.tsx');
+ const store=S.createMemoryStore();const now=new Date('2026-11-13T20:00:00Z');
+ const base={day:'2026-11-13',visitorHash:'v'.repeat(32),path:'/play',country:'US',region:'CA',device:'phone',source:'direct',referrerHost:null,utmSource:null,utmMedium:null,utmCampaign:null};
+ await store.track({type:'start',session:'FishTabSession0001',...base,playerId:'d'.repeat(32)},now);
+ await store.track({type:'beat',session:'FishTabSession0001',...base,engagedMs:60000,pageviews:1,areaMs:{island:60000},placeMs:{},activityMs:{fishing:30000},cells:{},counts:{'fi:start':1,'fi:cast':2,'fi:bite':2,'fi:hook_spin':2,'fi:land':2}},new Date(now.getTime()+1000));
+ const later=new Date(now.getTime()+60000),today={from:'2026-11-13',to:'2026-11-13'},week={from:'2026-11-07',to:'2026-11-13'};
+ const land=r=>r.fishingFunnel.steps.find(s=>s.id==='fi:land').total;
+ assert.equal(land(await R.buildReport(store,today,later)),2,'Today: the raw rows of today');assert.equal(land(await R.buildReport(store,week,later)),2,'a week ending today');
+ // The SQL answering one big multi-day call with an error (a statement timeout) used to throw the whole report away.
+ const flaky={...store,computeDays:async(f,t,n)=>{if(f!==t)throw Error('analytics store 500');return store.computeDays(f,t,n);}};
+ assert.equal(land(await R.buildReport(flaky,week,later)),2,'retried day by day');
+ // The tab's fallback when the report did not load at all: the funnel from the trend data (same rollups).
+ const dash=await DA.loadDashboard(store,today,later);const steps=FS.funnelFromDash(dash);
+ assert.equal(steps.find(s=>s.id==='fi:land').total,2);assert.equal(steps.find(s=>s.id==='fi:start').sessions,1);assert.equal(FS.funnelFromDash(null),null);
+ assert(/<FishingSection report=\{report\} dash=\{dash\}\/>/.test(read('app/admin/AnalyticsDashboard.tsx')),'the tab gets the trend data');
 });
 
 console.log(`admin-analytics-staff: ${passed} groups passed`);

@@ -9,6 +9,7 @@
  * never which fish, which spot or a size.
  */
 import type {Report} from '@/lib/analytics/core';
+import {aggregate,seriesOf,type DashboardData} from '@/lib/analytics/dashboard';
 import type {FunnelStep} from '@/lib/analytics/fishingFunnel';
 import {FIGHT_BUCKETS,FISHING_MIGRATION,FISHING_OK_ROW,FISHING_SESSIONS_MIGRATION,FISHING_SESSIONS_OK_ROW} from '@/lib/analytics/fishingAdminMetrics';
 import {BarList,ChartCard,fmtInt,fmtPct,type BarRow} from './charts';
@@ -31,9 +32,22 @@ function CountCard({title,subtitle,rows,unit='times'}:{title:string;subtitle:str
  </ChartCard>;
 }
 
-export default function FishingSection({report}:{report:Report}){
+/** Nov 13 2026 (owner: "fishing all zero" while the tiles said 25 landed): when the report did not load (the server's empty
+ *  report has no funnel), the funnel comes from the trend data instead (the same rollups, today's raw rows included), so the tab
+ *  never shows zeros for a range that has fishing. Pure (tests). */
+export function funnelFromDash(dash:DashboardData|null|undefined):FunnelStep[]|null{
+ if(!dash)return null;let prev:number|null=null;const out:FunnelStep[]=[];
+ for(const [st,label] of [['start','Fish tapped'],['cast','Cast'],['bite','Bite'],['hook_spin','Hooked'],['land','Landed']] as const){
+  const s=seriesOf(dash,'fishing.funnel_sessions.'+st),e=seriesOf(dash,'fishing.funnel_events.'+st);if(!s||!e)return null;
+  const sessions=aggregate(s,s.points).value??0,total=aggregate(e,e.points).value??0;
+  out.push({id:'fi:'+st,label,sessions,total,kept:prev===null||!prev?null:sessions/prev});prev=sessions;}
+ return out;
+}
+
+export default function FishingSection({report,dash}:{report:Report;dash?:DashboardData|null}){
+ const fromDash=report.fishingFunnel?null:funnelFromDash(dash);
  const fn=report.fishingFunnel,f=report.fishing;
- const rows:Row[]=fn?.rows??report.overview?.fishing??[];
+ const rows:Row[]=fn?.rows??report.overview?.fishing??(fromDash?fromDash.map(s=>({id:s.id,label:s.label,value:s.total})):[]);
  const v=(id:string)=>rows.find(r=>r.id==='fi:'+id)?.value;
  const spin=v('hook_spin'),land=v('land'),escape=v('escape'),stopped=v('run_stopped'),spun=v('run_spun');
  const missEarly=v('miss_early'),missLate=v('miss_late'),missOld=v('miss');
@@ -43,7 +57,7 @@ export default function FishingSection({report}:{report:Report}){
  const misses=rows.filter(r=>['fi:miss_early','fi:miss_late','fi:miss'].includes(r.id));
  const tutorial=rows.filter(r=>['fi:tutorial_done','fi:tutorial_skip'].includes(r.id));
  const bucketRows:BarRow[]=f?.buckets?FIGHT_BUCKETS.filter(k=>k in f.buckets!).map(k=>({key:k,label:k==='0'?'Fished, never hooked':`${k} fight${k==='1'?'':'s'}`,value:f.buckets![k]??0})):[];// exact counts (fishingAdminMetrics num()): never null
- const steps=fn?.steps??[];
+ const steps=fn?.steps??fromDash??[];
  return <section className={styles.island} aria-labelledby="fishing-heading">
   <div className={styles.sectionHead}>
    <h2 id="fishing-heading">Fishing</h2>
@@ -62,6 +76,8 @@ export default function FishingSection({report}:{report:Report}){
    run it. Its last result must be one row reading <code>{FISHING_SESSIONS_OK_ROW}</code>; it only adds a function and is safe to run again.
   </section>}
 
+  {fromDash&&<p className={`${styles.banner} ${styles.bannerWarn}`} role="status" data-fishing-fallback>The full fishing report did not load just now, so the funnel below comes from the trend data (the same daily totals, today included). Pull to refresh for the rest.</p>}
+  {fromDash&&<div className={styles.fiFunnel} aria-label="Fishing funnel" data-fishing-funnel>{fromDash.map((s,i)=><FunnelBox key={s.id} step={s} prev={fromDash[i-1]}/>)}</div>}
   {fn&&fn.status!=='not_yet'&&<>
    {fn.partial&&<p className={styles.note}>The funnel counters started on {fn.since}: earlier days in this range have no “Fish tapped”, “Cast” or “Bite”.</p>}
    <div className={styles.fiFunnel} aria-label="Fishing funnel" data-fishing-funnel>
