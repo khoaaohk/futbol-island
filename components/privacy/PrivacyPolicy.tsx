@@ -235,7 +235,7 @@ export default function PrivacyPolicy(){
   </section>
 
   <section id="pp-retention"><h2 tabIndex={-1}>14. How long we keep things (our retention policy)</h2>
-   <div className={styles.tableWrap}><table>
+   <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="How long we keep each kind of information"><table>
     <thead><tr><th>Information</th><th>Why</th><th>How long</th></tr></thead>
     <tbody>
      <tr><td>Saved game progress (with a save code)</td><td>So the player can continue on any device</td><td>Until deleted, or automatically 12 months after it was last used. Backups roll off within 7 days of deletion.</td></tr>

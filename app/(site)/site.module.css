@@ -7,11 +7,11 @@
 
 /* Nov 10 2026 (owner: "fix all these pages to match more with the main site"): ONE site. The tokens below are the home page's
    (components/learn/learn.module.css .root): paper #fbf7ee, tint #ecefdf, ink #14221d, soft ink #5b675f, gold #e9c16b, gold ink
-   #8a6620, pitch #1d6b55, the system sans, tight 600 headlines. Every class name is unchanged; only its look moved. The old
+   #85621f, pitch #1d6b55, the system sans, tight 600 headlines. Every class name is unchanged; only its look moved. The old
    values in the header comment above (cream #fff8e7, green ink, brush title) are history. New rules: docs/seo/DESIGN.md.
    --s3 / --s5 and .main's top / bottom padding must keep their values: the home page's full-bleed root undoes them. */
 .page{
- --ink:#14221d;--ink-soft:#5b675f;--paper:#fbf7ee;--surface:#ecefdf;--well:#efe8d7;--rule:rgb(20 34 29 / .12);--accent:#8a6620;--link:#1d6b55;--gold:#e9c16b;
+ --ink:#14221d;--ink-soft:#5b675f;--paper:#fbf7ee;--surface:#ecefdf;--well:#efe8d7;--rule:rgb(20 34 29 / .12);--accent:#85621f;--link:#1d6b55;--gold:#e9c16b;
  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI Variable Display','Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;
  --s1:8px;--s2:16px;--s3:24px;--s4:40px;--s5:64px;--gutter:16px;--measure:68ch;--col:736px;--gap:40px;
  --t-title:clamp(38px,3.6vw + 24px,72px);--t-h2:28px;--t-h3:19px;--t-body:17px;--t-lead:20px;--t-cap:15px;--t-label:13px;
@@ -48,6 +48,9 @@
 .menuList li+li{border-top:1px solid var(--rule)}
 .page .menuList a{display:flex;align-items:center;min-height:64px;padding:0 4px;color:var(--ink);font-size:28px;font-weight:600;line-height:1.1;letter-spacing:-.02em;text-decoration:none}
 @media(max-width:640px){.navLinks{display:none}.menu{display:block;grid-column:1;grid-row:1;justify-self:start}.page .brand{grid-column:2;grid-row:1;justify-self:center}.page .nav a.play{grid-column:3;grid-row:1}}
+/* QA Nov 14 2026: on a 320 px phone the menu, the 26 px wordmark and the Play pill needed 357 px, so Play ran off the edge. Below
+   360 px the wordmark steps down to 20 px and the gaps to 4 px (313 px with the 16 px gutters). */
+@media(max-width:359px){.nav{gap:4px}.page .brand{font-size:20px}}
 @media(min-width:641px) and (max-width:759px){.navLinks{gap:4px}.page .navLinks a{width:82px}}
 @media print{.header{display:none}}
 
@@ -150,6 +153,7 @@
 @media(min-width:720px){.pair{grid-template-columns:1fr 1fr}}
 .pair .list{grid-template-columns:minmax(0,1fr)}
 .tableWrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--surface);border:0;border-radius:24px}
+.tableWrap:focus-visible{outline:3px solid var(--link);outline-offset:3px}
 .table{width:100%;border-collapse:collapse;font-size:16px;line-height:1.4}
 .table th,.table td{padding:14px var(--s2);text-align:left;vertical-align:top;border-top:1px solid var(--rule)}
 .table thead th{border-top:0;font-size:var(--t-cap);font-weight:600;color:var(--ink-soft)}

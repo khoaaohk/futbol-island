@@ -26,7 +26,7 @@ export default function PositionsHub(){
   <Section id="each" title="Each position explained"><LinkList links={POSITIONS.map(p=>({path:p.path,name:`${p.name} (${p.short})`,line:p.job}))}/></Section>
   <Section id="numbers" title="Soccer position numbers 1 to 11">
    <Bullets items={HUB.numbers}/>
-   <div className={styles.tableWrap}><table className={styles.table}>
+   <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Soccer position numbers"><table className={styles.table}>
     <thead><tr><th scope="col">Number</th><th scope="col">Position</th><th scope="col">Job</th></tr></thead>
     <tbody>{NUMBERS.map(n=><tr key={n.n} data-number={n.n}><th scope="row">{n.n}</th><td><a href={positionPath(n.slug)}>{n.name}</a></td><td>{n.line}</td></tr>)}</tbody>
    </table></div>

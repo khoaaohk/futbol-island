@@ -65,7 +65,7 @@ export default function RotationPlanner({presets,initial,lockKey}:{presets:reado
    <h2 className={site.h2} id="plan">{s.team?`${s.team}: the plan`:'Your substitution plan'}</h2>
    <p data-summary="">{bench<=0?`With ${i.players} players and ${i.onField} on the field there are no substitutes: everyone plays the whole game of ${plan.gameMin} minutes.`
     :`${i.players} players share ${i.onField} places over ${plan.gameMin} minutes. ${i.keeperRotates?'Every player':'Every outfield player'} is on for ${rLo===rHi?`${rLo} minutes`:`${rLo} to ${rHi} minutes`}${i.keeperRotates?'':`, and the goalkeeper plays all ${plan.gameMin}`}. ${bench} sit out in each block of about ${plan.blocks[0].minutes} minutes.`}</p>
-   <div className={`${site.tableWrap} ${t.printTable}`}><table className={site.table} aria-label="Who is on the field in each block">
+   <div className={`${site.tableWrap} ${t.printTable}`} tabIndex={0} role="region" aria-label="Rotation table"><table className={site.table} aria-label="Who is on the field in each block">
     <thead><tr><th scope="col">Time</th><th scope="col">Goalkeeper</th><th scope="col">On the field</th><th scope="col">Sitting out</th></tr></thead>
     <tbody>{plan.blocks.map((b,n)=><tr key={n}><th scope="row">{i.periods>1?`${periodName(b.period,i.periods)}, `:''}{b.start}–{b.end} min</th>
      <td><b>{plan.names[b.keeper]}</b></td>

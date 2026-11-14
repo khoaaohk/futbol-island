@@ -10,7 +10,7 @@
 
 .root{
  --paper:#fbf7ee;--tint:#ecefdf;--night:#0c1714;--well-l:#efe8d7;--well-d:#15241f;
- --ink:#14221d;--ink2:#5b675f;--inkD:#f6f1e4;--ink2D:#a3aea6;--gold:#e9c16b;--goldInk:#8a6620;--pitch:#1d6b55;
+ --ink:#14221d;--ink2:#5b675f;--inkD:#f6f1e4;--ink2D:#a3aea6;--gold:#e9c16b;--goldInk:#85621f;--pitch:#1d6b55;
  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI Variable Display','Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;
  --ease:cubic-bezier(.2,.7,.2,1);--gut:max(16px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px));--fade:min(16vh,150px);
  --tallMax:min(80svh,820px);
@@ -76,6 +76,8 @@
  .root ul.subLinks::before{transform:translateX(calc(var(--i,0) * 86px)) scale(.86)}.root .subLinks[data-has-current]::before{transform:translateX(calc(var(--i,0) * 86px))}}
 /* phones (owner, Nov 3): menu button far left, logo centred, Play right */
 @media(max-width:640px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr}.root .logo{grid-column:2;grid-row:1;margin:0;justify-self:center}.menu{grid-column:1;grid-row:1;justify-self:start}.pill{grid-column:3;grid-row:1;justify-self:end}}
+/* QA Nov 14 2026: same 320 px fix as app/(site)/site.module.css .nav: the wordmark steps down so the Play pill stays on screen. */
+@media(max-width:359px){.subnavIn{gap:4px}.root .logo{font-size:20px}}
 @media(min-width:760px){.subnavIn{display:grid;grid-template-columns:1fr auto 1fr;max-width:none;padding:0 var(--gut) 3px}.root .logo{margin-right:0;justify-self:start}.root .subLinks{flex:none;margin-right:0;justify-self:center}.pill{justify-self:end}.root .subLinks a{font-size:13px}}
 .pill{flex:none}
 /* tap target (audit Nov 3): the 26px wordmark link gets a 44px tall hit area inside the 68px bar; the look is unchanged */

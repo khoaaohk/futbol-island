@@ -103,6 +103,10 @@ export default function FieldLearning({pathRequest,learningId,onResetQuizView,on
  // Manual Next navigation pauses at the start of the final step. Offer the
  // same exit choices without requiring playback or awarding lesson progress.
  const endActionsAvailable=Boolean(chosen&&!quiz&&!playing&&step===chosen.steps.length-1);
+ // QA Nov 14 2026: the expanded radar sits over the end buttons on phones (Quiz yourself / Watch again, and "Back to the
+ // question" after Watch that part), so it folds away when they appear; the child can open it again.
+ const endButtons=endActionsAvailable||rewatch!==null;
+ useEffect(()=>{if(endButtons)setRadarOpen(false);},[endButtons]);
  const holdId=useRef('');if(!holdId.current)holdId.current=cardHoldId('lesson');
  const holdsCards=lessonHoldsCards({launching:!!(pathRequest||learningId),chosen:!!chosen,quiz,quizEnded,playing,rewatch:rewatch!==null});
  useEffect(()=>{holdCardOffers(holdId.current,holdsCards);},[holdsCards]);
