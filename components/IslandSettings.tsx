@@ -27,21 +27,22 @@ import {setEasyBite,useFishingPrefs} from '@/lib/town/fishing/fishingStore';
 import {COACH_VOICES} from '@/lib/town/useLessonVoice';
 import styles from './IslandSettings.module.css';
 import dynamicImport from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {CardOfferDot,pendingPicksLabel,usePendingPicks} from './CardOfferBadges';
 import {OPEN_CARDS_EVENT} from '@/lib/town/cardRewardStore';
 import {prefetchPart} from '@/lib/ui/idlePrefetch';
 import {loadBottleLogo,loadCoinQuest,loadPathsPanel} from './islandParts';
-const IslandHome=dynamicImport(()=>import('./IslandHome'),{ssr:false});
+const IslandHome=dynamicImport(()=>retryImport(()=>import('./IslandHome')),{ssr:false});
 // Lazy-load pass (Oct 7 2026, docs/performance-guide.md): the Paths panel (IslandQuests: the learning path, stories, warm-ups),
 // the daily bottle and the ball hunt are not in the boot bundle. The HUD buttons below stay; touching or hovering them (and the
 // island's idle warm-up) fetches the panels before the dialog opens (components/islandParts.ts).
-const IslandQuests=dynamicImport(()=>import('./IslandQuests'),{ssr:false});
-const CoinQuest=dynamicImport(()=>import('./CoinQuest'),{ssr:false});
-const IslandBottleLogo=dynamicImport(()=>import('./IslandBottle').then(m=>m.IslandBottleLogo),{ssr:false});
+const IslandQuests=dynamicImport(()=>retryImport(()=>import('./IslandQuests')),{ssr:false});
+const CoinQuest=dynamicImport(()=>retryImport(()=>import('./CoinQuest')),{ssr:false});
+const IslandBottleLogo=dynamicImport(()=>retryImport(()=>import('./IslandBottle')).then(m=>m.IslandBottleLogo),{ssr:false});
 const warmPanels=()=>{prefetchPart(loadPathsPanel);prefetchPart(loadBottleLogo);prefetchPart(loadCoinQuest);};
-const CardCollection=dynamicImport(()=>import('./CardCollection'),{ssr:false});
+const CardCollection=dynamicImport(()=>retryImport(()=>import('./CardCollection')),{ssr:false});
 // Save codes (Oct 10 2026, docs/accounts-design.md §3.2): the "My save code" card loads when Settings opens, never at boot.
-const SaveCodeCard=dynamicImport(()=>import('./saves/SaveCodeCard'),{ssr:false});
+const SaveCodeCard=dynamicImport(()=>retryImport(()=>import('./saves/SaveCodeCard')),{ssr:false});
 /** Ms until the Paths button's 3 s cycle is between swaps and shakes (250–2350 ms: one icon fully shown, button still), so a rest never
  * freezes a half-blurred icon or a tilted button. The icons' 3 s / 6 s delays keep them on the button's cycle.
  * A cycle that is not running (paused under a card film or a dialog) never reaches a clean frame: rest now. Waiting on it

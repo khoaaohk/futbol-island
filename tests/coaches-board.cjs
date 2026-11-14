@@ -264,7 +264,7 @@ group('heat: frames only while something moves',()=>{
  assert.equal(most,1,'one frame request per frame while playing');stage.setHooks({});
  stage.playFrom(0,2,true);run(3000);assert.equal(pending.length,1,'looping keeps going…');stage.stopPlay();run(100);assert.equal(pending.length,0,'…until stopped');
  // Static guards: lazy-loaded with the centre, no backdrop blur, stage is the only rAF user on the board.
- const centre=fs.readFileSync(path.join(ROOT,'components/CoachesCentre.tsx'),'utf8');assert.match(centre,/dynamicImport\(\(\)=>import\('\.\/CoachesBoard'\),\{ssr:false\}\)/);
+ const centre=fs.readFileSync(path.join(ROOT,'components/CoachesCentre.tsx'),'utf8');assert.match(centre,/dynamicImport\(\(\)=>(?:retryImport\(\(\)=>)?import\('\.\/CoachesBoard'\)(?:\))?,\{ssr:false\}\)/);
  for(const f of fs.readdirSync(path.join(ROOT,'components/coaches-board'))){const src=fs.readFileSync(path.join(ROOT,'components/coaches-board',f),'utf8');
   assert.ok(!/backdrop-filter\s*:\s*(?!none)/.test(src),f+': no backdrop blur');
   const raf=(src.match(/requestAnimationFrame\(/g)||[]).length;

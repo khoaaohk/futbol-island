@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
 import dynamicImport from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {BallHuntSummary} from './CoinQuest';
 import {CardsSummary} from './CardsSummary';
 import QuestLearningPath from './QuestLearningPath';
@@ -14,7 +15,7 @@ import {primeTutorialNarration} from '@/lib/tutorial/tutorialAudio';
 // The tutorial (scenes, art, player) is its own chunk: the Paths panel only pays for it when the button is used.
 const loadTutorial=()=>import('./IslandTutorial');
 const preloadTutorial=()=>{void loadTutorial();};
-const IslandTutorial=dynamicImport(loadTutorial,{ssr:false});
+const IslandTutorial=dynamicImport(()=>retryImport(loadTutorial),{ssr:false});
 export default function IslandQuests({onDiscover,onExplore,onCards,exploration=false}:{onLearn:()=>void;onMap:()=>void;onStore?:()=>void;onDiscover:()=>void;onExplore?:()=>void;onCards?:()=>void;exploration?:boolean}){
  useEffect(()=>enterArea('paths'),[]);
  useEffect(()=>enterActivity('paths'),[]);// …and as an activity (it opens over the Settings menu)// admin analytics: foreground time while Paths is open (a module variable, no render)

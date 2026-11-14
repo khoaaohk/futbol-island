@@ -18,7 +18,7 @@ const script=JSON.parse(read('lib/tutorial/islandTutorial.json')),timing=JSON.pa
  assert.match(quests,/if\(!tutorial&&returnFocus\.current\)\{returnFocus\.current=false;tutorialButton\.current\?\.focus\(/,'focus goes back to the Island Tutorial button');
  // Lazy: the tutorial is its own chunk, never a static import of the Paths panel.
  assert(!/^import .*['"]\.\/IslandTutorial['"]/m.test(quests),'IslandQuests does not import the tutorial statically');
- assert.match(quests,/const loadTutorial=\(\)=>import\('\.\/IslandTutorial'\);/);assert.match(quests,/dynamicImport\(loadTutorial,\{ssr:false\}\)/);
+ assert.match(quests,/const loadTutorial=\(\)=>import\('\.\/IslandTutorial'\);/);assert.match(quests,/dynamicImport\(\(\)=>retryImport\(loadTutorial\),\{ssr:false\}\)/);
  // The old journey text lives on in the last chapter.
  assert(!script.scenes.some(s=>s.id==='ferry'||/Matchday/.test(s.narration)),'no Matchday section (user, Oct 13 2026)');
 }

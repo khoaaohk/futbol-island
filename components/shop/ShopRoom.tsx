@@ -1,6 +1,7 @@
 'use client';
 import {useCallback,useEffect,useRef,useState,type PointerEvent as ReactPointerEvent} from 'react';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {NavigationButton} from '../DoneButton';
 import CoinPill from './CoinPill';
 import {Icon} from '../Icon';
@@ -26,9 +27,9 @@ import {countStudioOpen,countMyKitOpen,countPurchase} from '@/lib/analytics/shop
 import {enterActivity} from '@/lib/analytics/tracker';
 // Party in rooms (docs/multiplayer-rooms-design.md Phase 4): friends in the Kit Shop walk the floor with you; studios, My kit and
 // chats are Busy (a force field at your spot, "Designing a kit" at a studio stand); Leave-only chip.
-import {useRoomParty} from '../party/useRoomParty';const RoomPartyChip=dynamic(()=>import('../party/RoomPartyChip'),{ssr:false});import {RoomPlayerCard,roomTapPlayer} from '../party/RoomPlayerTap';/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
+import {useRoomParty} from '../party/useRoomParty';const RoomPartyChip=dynamic(()=>retryImport(()=>import('../party/RoomPartyChip')),{ssr:false});import {RoomPlayerCard,roomTapPlayer} from '../party/RoomPlayerTap';/* flag off: never loaded (only rendered with a live party) */import {RoomCode} from '@/lib/multiplayer/roomPos';
 import {shopRoomHooks} from '@/lib/multiplayer/rooms/shopHooks';
-const NpcConversation=dynamic(()=>import('../NpcConversation'),{ssr:false});
+const NpcConversation=dynamic(()=>retryImport(()=>import('../NpcConversation')),{ssr:false});
 
 /**
  * The walk-in Kit Shop (Oct 12 2026, users: "turn the community hall building into a futbol shop … you have two options in this

@@ -25,13 +25,14 @@ import {cardNumber} from '@/lib/town/cardCollection';
 import jobs from './IslandJobs.module.css';
 import styles from './IslandOnboarding.module.css';
 import dynamicImport from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {clearPendingRestoreCode,codeRequired,getLocalCode,pendingRestoreCode,savingStatus} from '@/lib/saves/client';
 import {CREATE_TITLES,type CreatePhase} from './saves/SaveCodeCreate';
 import {RESTORE_TITLES,type RestorePhase} from './saves/SaveCodeRestore';
 import saveStyles from './saves/SaveCode.module.css';
 // Save codes (Oct 10 2026, docs/accounts-design.md §3.1): loaded only when the save step or "I have a save code" opens.
-const SaveCodeCreate=dynamicImport(()=>import('./saves/SaveCodeCreate'),{ssr:false});
-const SaveCodeRestore=dynamicImport(()=>import('./saves/SaveCodeRestore'),{ssr:false});
+const SaveCodeCreate=dynamicImport(()=>retryImport(()=>import('./saves/SaveCodeCreate')),{ssr:false});
+const SaveCodeRestore=dynamicImport(()=>retryImport(()=>import('./saves/SaveCodeRestore')),{ssr:false});
 /**
  * First-run welcome (Sep 28 2026; reordered Sep 30 2026, G-32): pick a character, then Paths (the main thing to do: watch plays
  * and take quizzes), then the Ball hunt (every hidden ball teaches a tip), and only then coins: gather to earn, and spend on things

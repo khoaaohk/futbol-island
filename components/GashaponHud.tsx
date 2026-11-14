@@ -6,10 +6,11 @@
  * (components/GashaponToyLayer.tsx, round 3A).
  */
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {gashaponOpener,useGashaponPanel} from '@/lib/gashapon/gashaponBrowser';
 import GashaponToyLayer from './GashaponToyLayer';
 
-const GashaponMachineFace=dynamic(()=>import('./GashaponMachineFace'),{ssr:false});
+const GashaponMachineFace=dynamic(()=>retryImport(()=>import('./GashaponMachineFace')),{ssr:false});
 export default function GashaponHud(){
  const open=useGashaponPanel();
  return <>

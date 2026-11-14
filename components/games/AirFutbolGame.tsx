@@ -12,6 +12,7 @@
  */
 import {useCallback,useEffect,useRef,useState} from 'react';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {ArcadeTopBar} from '../arcade/ArcadeTopBar';
 import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {arcadeSkin} from './skins';
@@ -30,8 +31,8 @@ import {beginBoardSession} from '@/lib/arcade/boardClient';
 import {noteArcadeToday} from '@/lib/arcade/arcadeToday';
 import {frameCapSlot} from '@/lib/town/frameCap';
 import {requestAnyOrientation} from '@/lib/orientationMode';
-const HighScoreEntry=dynamic(()=>import('../arcade/HighScoreEntry'),{ssr:false});
-const AirFutbolScores=dynamic(()=>import('./AirFutbolScores'),{ssr:false});
+const HighScoreEntry=dynamic(()=>retryImport(()=>import('../arcade/HighScoreEntry')),{ssr:false});
+const AirFutbolScores=dynamic(()=>retryImport(()=>import('./AirFutbolScores')),{ssr:false});
 
 type Phase='menu'|'playing'|'paused'|'over';
 /** wait: the puck is waiting for a serve touch. between: the next opponent is walking on. first: nobody has served yet. */

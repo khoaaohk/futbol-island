@@ -15,6 +15,7 @@
  * Other features can open the stand with `window.dispatchEvent(new CustomEvent(OPEN_MARKET_STAND))` (detail: {tab, place}; place 'farm' = the Coral Cay farm stand, produce only).
  */
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {registerBackCloser} from '@/lib/town/backCloses';
 import {fishSellValue,isMarketBuyer,type MarketBuyer} from '@/lib/economy';
@@ -46,9 +47,9 @@ import {FishingCatchToast,FishingLureButton} from './FishingLureButton';
 import {countFishStart,countFishTutorial,countFishbookOpen} from '@/lib/analytics/fishingEvents';
 import {islandMarket} from '@/lib/town/jobs/islandWallet';
 import {coinsText,newestUnitValue} from '@/lib/town/market/marketStand';
-const MarketStand=dynamic(()=>import('./MarketStand'),{ssr:false});
+const MarketStand=dynamic(()=>retryImport(()=>import('./MarketStand')),{ssr:false});
 type Place=MarketBuyer;// rosa, farm (Mele), marina, kofi: one market state (lib/economy.ts MARKET_BUYERS)
-const Fishbook=dynamic(()=>import('./Fishbook'),{ssr:false});
+const Fishbook=dynamic(()=>retryImport(()=>import('./Fishbook')),{ssr:false});
 import {OPEN_MARKET_STAND} from '@/lib/town/fishing/fishingSignals';
 export {OPEN_MARKET_STAND};
 type Tab='fish'|'produce'|'beach'|'cards';

@@ -7,13 +7,14 @@
  */
 import {useState,useSyncExternalStore} from 'react';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {BackButton} from './BackButton';
 import {kickStore,summitActions} from '@/lib/town/summitStore';
 import {HOOP_COUNT,KICK_RULES,kickEndLine} from '@/lib/town/summitKick';
 import styles from './SummitActivities.module.css';
 
 // The initials picker and the boards load only when a round with a score ends.
-const HighScoreEntry=dynamic(()=>import('./arcade/HighScoreEntry'),{ssr:false});
+const HighScoreEntry=dynamic(()=>retryImport(()=>import('./arcade/HighScoreEntry')),{ssr:false});
 const PARTY=['#f4cc7c','#ef7d3c','#9ff0b8','#fff3df','#7bc4d8'];
 
 export default function SummitKickHud(){

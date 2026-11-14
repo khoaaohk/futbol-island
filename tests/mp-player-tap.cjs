@@ -64,7 +64,7 @@ t('flag OFF: nothing is hooked up (Town, rooms, the tap itself); party friends g
  assert(/\{publicWorldEnabled\(\)&&<PlayerCard /.test(town),'Town card behind the flag');
  assert(/export function tapPlayer[^]*?\{\s*if \(!publicWorldEnabled\(\) \|\| !source\) return false;/.test(tap),'tapPlayer is inert with the flag off');
  assert(/export function roomTapPlayer[^]*?\{\s*if \(!publicWorldEnabled\(\) \|\| !party\) return;/.test(room)&&/export function RoomPlayerCard[^]*?const on = publicWorldEnabled\(\) && !!party;\s*useEffect\(\(\) => \{ if \(on && !tapMod\)[^]*?if \(!on\) return null;/.test(room),'rooms inert with the flag off');
- assert(/dynamic\(\(\) => import\('\.\/PlayerCard'\)/.test(room)&&/import\('\.\/usePlayerTap'\)/.test(room)&&!/^import [^\n]*(PlayerCard'|usePlayerTap')/m.test(room),'rooms load the card code only on demand');
+ assert(/dynamic\(\(\) => (?:retryImport\(\(\) => )?import\('\.\/PlayerCard'\)/.test(room)&&/import\('\.\/usePlayerTap'\)/.test(room)&&!/^import [^\n]*(PlayerCard'|usePlayerTap')/m.test(room),'rooms load the card code only on demand');
  for(const f of ['components/KonbiniRoom.tsx','components/MuseumRoom.tsx','components/shop/ShopRoom.tsx','components/ArcadeRoom.tsx'])assert(!/import [^;]*from '[^']*(PlayerCard|usePlayerTap)'/.test(read(f)),f+': no static import of the card');
 });
 t('the card: Wave through the existing emote path, Hide / Report through the client API; no Report for party friends',()=>{

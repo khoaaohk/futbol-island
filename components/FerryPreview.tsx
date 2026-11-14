@@ -1,5 +1,6 @@
 'use client';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useState} from 'react';
 import {pathProgressFrom} from '@/lib/town/cardTiers';
 import {useQuestEvidence} from '@/lib/town/questProgress';
@@ -11,7 +12,7 @@ import {PATH_ORDER} from '@/lib/paths/pathContinue';
 import EndgameDialog from './EndgameDialog';
 import {OPENING_SOON_LABEL} from '@/lib/town/openingSoon';
 import styles from './Endgame.module.css';
-const MatchdayFinale=dynamic(()=>import('./MatchdayFinale'),{ssr:false,loading:()=><div className={styles.card}><p role="status">The ferry is getting ready…</p></div>});
+const MatchdayFinale=dynamic(()=>retryImport(()=>import('./MatchdayFinale')),{ssr:false,loading:()=><div className={styles.card}><p role="status">The ferry is getting ready…</p></div>});
 
 /**
  * The Matchday Ferry (Lane 2, Sep 30 2026). Locked: "Opening soon — finish your paths!" with each path's progress and how to

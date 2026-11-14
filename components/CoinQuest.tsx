@@ -2,11 +2,12 @@
 import {pathText} from '@/lib/paths/pathText';
 import {useState} from 'react';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {Icon} from './Icon';
 import {COIN_QUEST,allCostumesEarned,costumesAtMilestone,nextCostumeMilestone} from '@/lib/town/coinQuest';
 import {useCoinProgress,setCoinHint} from '@/lib/town/coinProgress';
 import styles from './CoinQuest.module.css';
-const BallHuntLesson=dynamic(()=>import('./BallHuntLesson'),{ssr:false});
+const BallHuntLesson=dynamic(()=>retryImport(()=>import('./BallHuntLesson')),{ssr:false});
 export function BallHuntSummary({onDiscover}:{onDiscover:()=>void}){
  const progress=useCoinProgress(),total=COIN_QUEST.length,collected=progress.collected.length;
  return <button type="button" className={styles.summaryCard} onClick={onDiscover} aria-haspopup="dialog">

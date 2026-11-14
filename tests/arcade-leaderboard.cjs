@@ -248,7 +248,7 @@ await ok('wiring: lazy UI, no timers or polling, device key, route, npm test',()
  const S=require(path.join(ROOT,'lib/saves/snapshot.ts'));assert(S.DEVICE_KEYS.includes(L.LOCAL_BOARDS_KEY),'the device board never syncs');assert.equal(S.isSyncKey(L.LOCAL_BOARDS_KEY),false);
  for(const f of ['components/games/ArcadeGame3D.tsx','components/LiveArcadeMatch.tsx','components/games/PassPuzzleGame.tsx','components/ArcadeRoom.tsx']){const src=read(f);
   assert(!/^import [^;]*(HighScoreEntry|ArcadeBoards|BoardsPanel)/m.test(src),'board UI is never a static import: '+f);
-  assert(/dynamic\(\(\)=>import\('\.{1,2}\/arcade\/ArcadeBoards'\)/.test(src),'lazy hall: '+f);}
+  assert(/dynamic\(\(\)=>(?:retryImport\(\(\)=>)?import\('\.{1,2}\/arcade\/ArcadeBoards'\)/.test(src),'lazy hall: '+f);}
  for(const f of ['components/games/ArcadeGame3D.tsx','components/LiveArcadeMatch.tsx','components/games/PassPuzzleGame.tsx'])assert(/beginBoardSession\('?\w*'?\)|beginBoardSession\(kind\)|beginBoardSession\(boardRef\.current\)/.test(read(f))&&/HighScoreEntry/.test(read(f)),'session + high score: '+f);
  // Nov 8 2026: hall tab display order puts each tier board right after its parent; data order/ids unchanged; selected tab scrolled into view.
  assert.deepEqual([...L.BOARD_TAB_ORDER],['runner','runwarm','runnight','runstorm','cupfinal','legend','rundaily','pinball','pinderby','pinfinal','tennis','tenpro','tenlgnd','live','livepro','livelgnd','puzzle','puzpro','puzlgnd','kick','kitrush','kitdaily','snake','snakedaily','airhockey']);/* Nov 11 2026: Air Futbol (one board) *//* Nov 10 2026: Kit Rush and its Daily Rush tab; Squad Snake and its Daily Squad tab */

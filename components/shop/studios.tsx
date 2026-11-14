@@ -1,5 +1,6 @@
 'use client';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import type {ComponentType} from 'react';
 import styles from './ShopRoom.module.css';
 
@@ -12,6 +13,6 @@ import styles from './ShopRoom.module.css';
  */
 export type StudioProps={onClose():void;onBuy?(design:unknown):void;owned?(design:unknown):boolean};
 function Opening(){return <p role="status" className={styles.studioLoading}>Opening the studio…</p>;}
-export const JerseyStudio=dynamic(()=>import('./JerseyStudio'),{ssr:false,loading:Opening}) as ComponentType<StudioProps>;
-export const BootStudio=dynamic(()=>import('./BootStudio'),{ssr:false,loading:Opening}) as ComponentType<StudioProps>;
-export const BallStudio=dynamic(()=>import('./BallStudio'),{ssr:false,loading:Opening}) as ComponentType<StudioProps>;
+export const JerseyStudio=dynamic(()=>retryImport(()=>import('./JerseyStudio')),{ssr:false,loading:Opening}) as ComponentType<StudioProps>;
+export const BootStudio=dynamic(()=>retryImport(()=>import('./BootStudio')),{ssr:false,loading:Opening}) as ComponentType<StudioProps>;
+export const BallStudio=dynamic(()=>retryImport(()=>import('./BallStudio')),{ssr:false,loading:Opening}) as ComponentType<StudioProps>;

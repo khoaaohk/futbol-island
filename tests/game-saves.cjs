@@ -774,7 +774,7 @@ await ok('wiring',()=>{
  for(const f of ['components/root/Game.tsx','app/island-return/page.tsx'])assert(/<SaveSync\/>/.test(read(f))&&/from '@\/components\/saves\/LazySaveSync'/.test(read(f)),'boot check on '+f+', loaded after hydration');
  for(const f of ['app/arcade/page.tsx','app/konbini/page.tsx','app/museum/page.tsx'])assert(/<SaveSync boot=\{false\}\/>/.test(read(f)),'hide-save on '+f);
  assert(/else void resumeCheck\(\);/.test(read('components/saves/SaveSync.tsx')),'rooms settle a waiting save as they open');
- assert(/SaveCodeCard/.test(read('components/IslandSettings.tsx'))&&/dynamicImport\(\(\)=>import\('\.\/saves\/SaveCodeCard'\)/.test(read('components/IslandSettings.tsx')),'Settings card, lazy');
+ assert(/SaveCodeCard/.test(read('components/IslandSettings.tsx'))&&/dynamicImport\(\(\)=>(?:retryImport\(\(\)=>)?import\('\.\/saves\/SaveCodeCard'\)(?:\))?/.test(read('components/IslandSettings.tsx')),'Settings card, lazy');
  const g=read('components/GrownUps.tsx');assert(/Saving progress/.test(g)&&!/Vercel Web Analytics/.test(g),'grown-ups card; stale analytics wording gone');
  assert(/its own counter: no cookies and no personal identifiers/.test(g));
  assert(fs.existsSync('app/privacy/page.tsx')&&/PrivacyPolicy/.test(read('app/privacy/page.tsx'))&&/12 months/.test(read('components/privacy/PrivacyPolicy.tsx')),'/privacy (text in components/privacy/PrivacyPolicy.tsx)');

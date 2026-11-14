@@ -11,14 +11,15 @@
  * island's start while it has no code (a code is required before playing: the "Save your island" prompt).
  */
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useCallback,useEffect,useRef,useState} from 'react';
 import {SAVE_MILESTONES,bootCheck,codeRequired,deviceHasProgress,getLocalCode,resumeCheck,savingStatus,syncNow,takeSaveFragment} from '@/lib/saves/client';
 import {SAVE_APPLIED_KEY,SAVE_NUDGE_KEY} from '@/lib/saves/snapshot';
 import {shouldShowIslandOnboarding} from '@/lib/town/onboarding';
 import styles from './SaveCode.module.css';
 
-const SaveCodeRestore=dynamic(()=>import('./SaveCodeRestore'),{ssr:false});
-const RequiredSave=dynamic(()=>import('./RequiredSave'),{ssr:false});
+const SaveCodeRestore=dynamic(()=>retryImport(()=>import('./SaveCodeRestore')),{ssr:false});
+const RequiredSave=dynamic(()=>retryImport(()=>import('./RequiredSave')),{ssr:false});
 /** Milestones that may earn the one-time nudge for a player without a code (doc §3.1 "A later nudge"). */
 const NUDGE_EVENTS=['fi2-card-added','fi2-graduations-changed'];
 /** A joined live match (or its side picker) owns the screen (Nov 4 2026: the required prompt covered a live match). The

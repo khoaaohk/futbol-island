@@ -2,6 +2,7 @@
 import {useState,type CSSProperties} from 'react';
 import {createPortal} from 'react-dom';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {NavigationButton} from '../DoneButton';
 import {warmGame} from './playLaunch';
 import {enterGame} from '@/lib/rootView';
@@ -10,9 +11,9 @@ import styles from './Title.module.css';
 
 /** The hand-off into the game's own loading screen (Handoff.tsx + handoff.ts): the title screen morphs into IslandLoading, then `/`
  *  switches to the game in place (enterGame), whose loader starts in the same state. */
-const Handoff=dynamic(()=>import('./Handoff'),{ssr:false});
+const Handoff=dynamic(()=>retryImport(()=>import('./Handoff')),{ssr:false});
 /** With the hand-off off: the game's normal loading screen, shown the moment Play is pressed (as before the hand-off work). */
-const IslandLoading=dynamic(()=>import('../IslandLoading'),{ssr:false});
+const IslandLoading=dynamic(()=>retryImport(()=>import('../IslandLoading')),{ssr:false});
 /** OFF (user, Oct 9 2026: "ignore the second loader for now"): Play switches `/` to the game (enterGame) with the game's normal loader.
  *  The morph-into-IslandLoading hand-off stays in Handoff.tsx / handoffMotion.ts for reuse. */
 export const HANDOFF_ENABLED=false;

@@ -9,13 +9,14 @@ import {hasPlayFilm,loadPlayFilm} from '@/lib/plays/riso/registry';
 import type {RisoStory} from '@/lib/paths/riso/story';
 import {ALL_PLAYERS,CARD_STORAGE_KEY,cardDisplayName,isCoachCard} from '@/lib/town/cardCollection';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import styles from './PlayerCard.module.css';
 import artStyles from './PlayerArt.module.css';
 import type {HoloFoilConfig,HoloFoilHandle,HoloStats} from './HoloFoil';
 import {foilNote} from '@/lib/graphics/holoFoil/patterns';
-const CardHighlights=dynamic(()=>import('./CardHighlights'),{ssr:false});
+const CardHighlights=dynamic(()=>retryImport(()=>import('./CardHighlights')),{ssr:false});
 /** WebGL holo foil (card lab, Oct 8 2026): loaded only when a host sets `holo` (none in the live game). */
-const HoloFoil=dynamic(()=>import('./HoloFoil'),{ssr:false});
+const HoloFoil=dynamic(()=>retryImport(()=>import('./HoloFoil')),{ssr:false});
 
 const STORAGE_KEY=CARD_STORAGE_KEY;
 /** The narration sentence with the current cue words marked. */

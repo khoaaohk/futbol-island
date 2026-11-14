@@ -9,6 +9,7 @@
  */
 import {useCallback,useEffect,useRef,useState} from 'react';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {ArcadeTopBar} from '../arcade/ArcadeTopBar';
 import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {arcadeSkin} from './skins';
@@ -27,8 +28,8 @@ import {noteArcadeToday,takeTodayLaunch} from '@/lib/arcade/arcadeToday';
 import {localPlayDay} from '@/lib/town/dailyPlay';
 import {frameCapSlot} from '@/lib/town/frameCap';
 import type {BoardGame} from '@/lib/arcade/leaderboard';
-const HighScoreEntry=dynamic(()=>import('../arcade/HighScoreEntry'),{ssr:false});
-const SquadSnakeScores=dynamic(()=>import('./SquadSnakeScores'),{ssr:false});
+const HighScoreEntry=dynamic(()=>retryImport(()=>import('../arcade/HighScoreEntry')),{ssr:false});
+const SquadSnakeScores=dynamic(()=>retryImport(()=>import('./SquadSnakeScores')),{ssr:false});
 
 type Phase='menu'|'playing'|'paused'|'over';
 /** line: the positions joined so far, one digit each ("12223"). */

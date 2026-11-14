@@ -4,13 +4,14 @@
  * before the viewer mounts). ?toy=<id> opens one; the list below opens any. scripts/check-gashapon-toys-browser.cjs drives it.
  */
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useEffect,useState} from 'react';
 import {GASHAPON_TOYS} from '@/lib/gashapon/toys';
 import {GASHAPON_KEY} from '@/lib/gashapon/store';
 import type {GashaponToy} from '@/lib/gashapon/toys';
 import type {ToyViewerOpts} from '@/lib/gashapon/toyViewer';
 type Lab={ids:string[];toy:(id:string)=>GashaponToy|null;hooks:NonNullable<ToyViewerOpts['lab']>};
-const Viewer=dynamic(()=>import('@/components/GashaponToyViewer'),{ssr:false});
+const Viewer=dynamic(()=>retryImport(()=>import('@/components/GashaponToyViewer')),{ssr:false});
 export default function ToyLab(){
  const [ready,setReady]=useState(false),[toy,setToy]=useState<string|null>(null),[lab,setLab]=useState<Lab|null>(null);
  // Round 3C sample models (dev only, never registered for players): loaded here only.

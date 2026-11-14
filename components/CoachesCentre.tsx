@@ -2,11 +2,12 @@
 import {DoneButton} from './DoneButton';
 import {BackButton} from './BackButton';
 import dynamicImport from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {openGrownUps} from '@/lib/grownups/prefs';
 import {FORMAT_PATH_LAUNCH} from '@/lib/paths/formatPaths';
 import {registerBoardLink} from '@/lib/coaches/board/link';
 /** The coach plan loads only when opened (heat: static UI, lazy). */
-const IdpPlan=dynamicImport(()=>import('./IdpPlan'),{ssr:false});
+const IdpPlan=dynamicImport(()=>retryImport(()=>import('./IdpPlan')),{ssr:false});
 /** Lane 4 (Sep 30 2026, G-09): the IDP is on. Set false to hide it again. The kid's own plan opens straight away (user decision,
  *  Oct 10 2026); only its grown-up tools ("For grown-ups and coaches") sit behind the ParentGate, inside IdpPlan. */
 /* Nov 11 2026 (owner): the plan is being rebuilt as the Individual Development Plan; until it is ready the card says "Coming soon" and does not open. Saved plans are kept. */
@@ -16,7 +17,7 @@ import {useEffect,useRef,useState} from 'react';
 import {Icon} from './Icon';
 import styles from './CoachesCentre.module.css';
 /** The Coaches Board (components/CoachesBoard.tsx): the Tactics board (Oct 9 2026) and the Progress tab (Lane 2, Sep 30 2026). */
-const CoachesBoard=dynamicImport(()=>import('./CoachesBoard'),{ssr:false});
+const CoachesBoard=dynamicImport(()=>retryImport(()=>import('./CoachesBoard')),{ssr:false});
 export default function CoachesCentre({open,onOpenChange}:{open:boolean;onOpenChange:(open:boolean)=>void}){
  // A shared play link (#play=…) opens straight onto the board (components/coaches-board/TacticsBoard.tsx reads it).
  const [view,setView]=useState<'home'|'idp'|'board'>(()=>typeof location!=='undefined'&&location.hash.startsWith('#play=')?'board':'home');

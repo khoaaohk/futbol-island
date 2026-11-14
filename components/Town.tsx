@@ -84,6 +84,7 @@ import {grantTestingCoins} from '@/lib/arcade/arcadeWallet';
 import {enforceVendingOwnership} from '@/lib/town/vendingWallet';
 import {positionInfo,type PositionSelection} from '@/lib/town/playerPositions';
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {stableMemo} from '@/lib/ui/stableMemo';
 import {prefetchOnIdle,prefetchPart,prefetchWhenIdle} from '@/lib/ui/idlePrefetch';
 import {loadBottleLogo,loadCoaches,loadCoachLesson,loadConversation,loadCustomizer,loadFieldLearning,loadOnboarding,loadPathsPanel,loadVending} from './islandParts';
@@ -120,7 +121,7 @@ import {createCharacterArrival} from '@/lib/graphics/characterArrival';
 import {createCoinHunt} from '@/lib/graphics/coinHunt';
 import CoinHuntHud from './CoinHuntHud';
 import IslandJobs from './IslandJobs';
-const IslandBalanceDrawer=dynamic(()=>import('./IslandBalanceDrawer'),{ssr:false});
+const IslandBalanceDrawer=dynamic(()=>retryImport(()=>import('./IslandBalanceDrawer')),{ssr:false});
 import FishingHost from './FishingHostLazy';// Nov 10 2026 load-time pass: the host loads near the water (components/FishingHostLazy.tsx)
 import {createFishingWorld,fishingKioskObstacles} from '@/lib/town/fishing/fishingWorld';
 import {inGarden} from '@/lib/town/jobs/garden';
@@ -253,7 +254,7 @@ import {createBallCannon} from '@/lib/graphics/ballCannon';import BallCannonHud 
 import {createBeachFinds} from '@/lib/graphics/beachFinds';import BeachcombHud from './BeachcombHud';import {islandJobWallet as beachWallet,islandMarket as beachMarket} from '@/lib/town/jobs/islandWallet';// Beachcombing (Oct 14 2026, docs/beachcombing.md)
 import {createSummitForage} from '@/lib/graphics/fruitTrees';import ForagePrompt from './ForagePrompt';import {islandMarket} from '@/lib/town/jobs/islandWallet';// Summit Isle fruit trees (Oct 13 2026)
 
-const BallHuntLesson=dynamic(()=>import('./BallHuntLesson'),{ssr:false});
+const BallHuntLesson=dynamic(()=>retryImport(()=>import('./BallHuntLesson')),{ssr:false});
 import CardOfferHost from './CardOfferHost';
 // Lane 2 endgame (Sep 30 2026): graduations, certificates, the live Ferry/Museum/Coaches Board (docs/endgame-2026-09-30.md).
 import GraduationHost from './GraduationHost';
@@ -292,17 +293,17 @@ import {typingTarget} from '@/lib/town/typingTarget';import KeepUpCounter from '
 /** Party door hints on the island: each Konbini, the Museum and the Kit Shop ("2 in the Kit Shop"; docs/multiplayer-rooms-design.md Phases 1, 2 and 4). */
 const ROOM_DOOR_HINTS=[...KONBINI_DOOR_HINTS,MUSEUM_DOOR_HINT,SHOP_DOOR_HINT,ARCADE_DOOR_HINT] as const;
 /** The position guide (PlayerCard, PlayerArt, photo manifests, film registry and player) loads on the first live-player tap, not with the island. */
-const PositionGuide=stableMemo(dynamic(()=>import('./PositionGuide'),{ssr:false}));
+const PositionGuide=stableMemo(dynamic(()=>retryImport(()=>import('./PositionGuide')),{ssr:false}));
 // Heat (overnight audit F4): Town re-renders on its HUD tick; these dialog hosts (closed almost all the time) re-render only when a
 // data prop changes. Their inline callbacks reach them through stable wrappers (lib/ui/stableMemo.ts).
 const IslandSettings=stableMemo(IslandSettingsHost),Museum=stableMemo(MuseumHost),FerryPreview=stableMemo(FerryPreviewHost);
 // Lazy-load pass (Oct 7 2026, docs/performance-guide.md): these dialogs are not in the boot bundle. Each mounts the first time it
 // is wanted and then stays mounted (its own close animation and focus restore still run); its chunk is warmed beforehand by the
 // idle warm-up or by the HUD focus that offers it (components/islandParts.ts), so a first open does not wait on the network.
-const CharacterCustomizer=stableMemo(dynamic(()=>import('./CharacterCustomizer'),{ssr:false})),CoachesCentre=stableMemo(dynamic(()=>import('./CoachesCentre'),{ssr:false})),IslandOnboarding=stableMemo(dynamic(()=>import('./IslandOnboarding'),{ssr:false})),NpcConversation=stableMemo(dynamic(()=>import('./NpcConversation'),{ssr:false}));
-const VendingMachine=dynamic(()=>import('./VendingMachine'),{ssr:false}),FieldLearning=dynamic(()=>import('./FieldLearning'),{ssr:false}),CoachLesson=dynamic(()=>import('./CoachLesson'),{ssr:false});
+const CharacterCustomizer=stableMemo(dynamic(()=>retryImport(()=>import('./CharacterCustomizer')),{ssr:false})),CoachesCentre=stableMemo(dynamic(()=>retryImport(()=>import('./CoachesCentre')),{ssr:false})),IslandOnboarding=stableMemo(dynamic(()=>retryImport(()=>import('./IslandOnboarding')),{ssr:false})),NpcConversation=stableMemo(dynamic(()=>retryImport(()=>import('./NpcConversation')),{ssr:false}));
+const VendingMachine=dynamic(()=>retryImport(()=>import('./VendingMachine')),{ssr:false}),FieldLearning=dynamic(()=>retryImport(()=>import('./FieldLearning')),{ssr:false}),CoachLesson=dynamic(()=>retryImport(()=>import('./CoachLesson')),{ssr:false});
 // The two outdoor drink machines (lib/town/drinkMachines.ts): same in-world machine, drink stock and the Konbini consumable flow.
-const DrinkMachine=dynamic(()=>import('./DrinkMachine'),{ssr:false});
+const DrinkMachine=dynamic(()=>retryImport(()=>import('./DrinkMachine')),{ssr:false});
 /* QA Nov 13 2026: was z:-8, where the 20 m roof terrace to the south hides the player from the camera (only the pin showed on the first landing). */
 const INITIAL_SPAWN={x:103,z:-20};
 const INITIAL_FLIGHT_HEIGHT=28;

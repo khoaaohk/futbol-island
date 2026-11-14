@@ -30,9 +30,10 @@ import {useGraduations} from '@/lib/endgame/graduationStore';
 import {useReviewState} from '@/lib/learning/reviewStore';
 import {GRADUATION_FORMATS,GRAD_TITLES} from '@/lib/endgame/graduationModel';
 import dynamicImport from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 // Save codes (Oct 10 2026, docs/accounts-design.md §3.4): this sheet is already behind the ParentGate, so the card's grown-up
 // actions (print, email, delete) open without a second gate.
-const SaveCodeCard=dynamicImport(()=>import('./saves/SaveCodeCard'),{ssr:false});
+const SaveCodeCard=dynamicImport(()=>retryImport(()=>import('./saves/SaveCodeCard')),{ssr:false});
 
 export type GrownUpSettings={musicEnabled:boolean;onMusicChange:(v:boolean)=>void;soundMuted:boolean;onSoundMutedChange:(v:boolean)=>void;voiceEnabled:boolean;onVoiceChange:(v:boolean)=>void};
 const FORMAT_NAMES:Record<Format,string>={'7v7':'7v7','9v9':'9v9','11v11':'11v11',futsal:'Futsal'};

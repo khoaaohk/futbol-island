@@ -4,12 +4,13 @@
 // <RoomPlayerCard/>. Flag off: both are inert and nothing else is loaded (the card and the picking are dynamic imports), so the room
 // pages keep loading no party code (useRoomParty.ts).
 import dynamic from 'next/dynamic';
+import { retryImport } from '@/lib/retryImport';
 import { useEffect } from 'react';
 import { publicWorldEnabled } from '@/lib/multiplayer/publicFlag';
 import type { RoomPartyHandle } from './useRoomParty';
 import { Emote } from '../../multiplayer/protocol';
 
-const PlayerCard = dynamic(() => import('./PlayerCard'), { ssr: false });
+const PlayerCard = dynamic(() => retryImport(() => import('./PlayerCard')), { ssr: false });
 type TapMod = typeof import('./usePlayerTap');
 let tapMod: TapMod | null = null;
 const loadTap = () => import('./usePlayerTap').then((m) => (tapMod = m));
