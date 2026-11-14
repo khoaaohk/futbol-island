@@ -18,7 +18,7 @@ const read=f=>fs.readFileSync(path.join(base,f),'utf8');
 const cat=load('lib/town/fishing/fishCatalog.ts'),core=load('lib/town/fishing/fishingCore.ts'),aim=load('lib/town/fishing/fishingAim.ts'),L=load('lib/town/westParkLayout.ts');
 const O=load('lib/town/fishing/fishingOdds.ts'),LG=load('lib/town/fishing/legendary.ts'),K=load('lib/town/fishing/fishingKiosk.ts'),H=load('lib/town/fishing/fishingHooks.ts'),{onIsland}=load('lib/town/shoreline.ts');
 const s=cat.spotById('park-pond');assert(s&&s.pond&&!s.area&&!s.deep&&!s.boat,'the park pond is a main-island shore post');
-assert.equal(cat.FISH_SPOTS.at(-1).id,'park-pond','kept last (the signature waves slice SHORE_SPOTS)');
+assert.equal(cat.FISH_SPOTS.findIndex(x=>x.id==='park-pond'),18,'kept after the signature waves\' spots (they slice SHORE_SPOTS); the north-west coast follows it (Nov 13 2026)');
 // 1. Placement: on the grass past the rim walk (the stall too), casting in toward the middle; the float lands in the pond's water.
 assert(!L.inPond(s.x,s.z,L.POND_RIM)&&L.onGrass(s.x,s.z)&&!L.onWalkPath(s.x,s.z,.3),'stands on the grass, off the rim walk');
 assert(L.pondQ(s.x,s.z,L.POND_RIM)<1.25,'right by the rim');
@@ -35,7 +35,7 @@ for(const [x,z] of [[-96,-30],[-150,40],[s.x,s.z],[L.pondEdge(0,.5).x,L.pondEdge
  const p=O.meanPrice(s.weights);assert(p>=3.75&&p<=4.26,`mean catch ${p.toFixed(2)} ≈ the shore's 4.0`);
  assert(ids.length>=LG.LEGEND_CLUE_KINDS,'enough kinds for the legend clue');
  const leg=LG.legendsAt('park-pond');assert(leg.length===1&&leg[0].name==='King Koi'&&leg[0].price===0&&!cat.FISH.includes(leg[0]),'King Koi: the pond legend, released, never sold');
- assert.equal(cat.FISH.length,153,'Fishbook 150 + the pond three');
+ assert.equal(cat.FISH.length,167,'Fishbook 150 + the pond three + the north-west coast fourteen');
  assert(load('lib/town/fishing/fishModels.ts').MODELLED_SPECIES.filter(id=>ids.includes(id)).length===3,'each has its own 3D model');}
 // 3. Visuals: the float and the line ride the pond's own surface, no sea strip / reef window / schools there; the stall type.
 {const v=read('lib/town/fishing/fishingVisuals.ts'),w=read('lib/town/fishing/fishingWorld.ts');

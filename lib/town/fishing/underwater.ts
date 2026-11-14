@@ -336,6 +336,21 @@ export const REEF_THEMES:Record<string,ReefTheme>={
   kinds:{brain:2,branch:2,table:1,tube:1,anemone:1,fan:1,barrel:1,plate:1},clusters:12,items:[5,7],spread:.65,scale:1,grass:3,kelp:0,rocks:6,rockSize:[.14,.28],pebbles:4,stars:7,shells:7,urchins:3,piles:0,anemones:1,
   grassCol:['#3a8a3a','#a0e07a'],rock:'#9a9080',algae:'#8a9a5a',urchin:['#2a1a3a','#6a4f90'],sand:[[.7,.64,.52],[.8,.74,.6]],weed:[.26,.32,.18,.25],
   water:[[0,.44,.66],[0,.16,.38]],clear:.9,fish:{schools:['blueTang','sardine','sergeant'],cruisers:['queenAngel','garibaldi','barracuda','parrot'],glider:'ray'},signature:['clam']},
+ // The north-west coast (Nov 13 2026): cold, clear water round the DRIP FC Stadium. North Point is a field of big dark boulders
+ // with urchins in the cracks; Stadium Rocks a tall kelp forest at the edge of deeper water; Sunset Shoals open, pale sand with
+ // shells and a few low reefs (the only 'open' layout).
+ 'point-boulders':{id:'point-boulders',name:'Cold boulder point',layout:'boulders',coral:['#ff6a3d','#d9b8ff','#ffd000','#8a3cff'],
+  kinds:{anemone:3,soft:2,tube:2,brain:1},clusters:13,items:[2,4],spread:.65,scale:.9,grass:2,kelp:4,rocks:12,rockSize:[.5,.95],pebbles:6,stars:8,shells:4,urchins:8,piles:0,anemones:1,
+  grassCol:['#2f5a3a','#7fa86a'],rock:'#5a5e66',algae:'#4f6a4a',urchin:['#3a0a2a','#8a2a5a'],sand:[[.4,.4,.42],[.5,.5,.52]],weed:[.18,.24,.18,.4],
+  water:[[0,.34,.48],[0,.11,.24]],clear:1.05,fish:{schools:['sardine','bream','mackerel'],cruisers:['grouper','bass','snapper','wrasse'],glider:null},signature:['anchor'],floor:3.6},
+ 'kelp-edge':{id:'kelp-edge',name:'Kelp forest edge',layout:'kelp',coral:['#ff8a3a','#ffd23a','#c4122e','#ff5aa0'],
+  kinds:{soft:3,anemone:2,fan:1,tube:1},clusters:11,items:[2,3],spread:.6,scale:.85,grass:4,kelp:18,rocks:9,rockSize:[.2,.4],pebbles:4,stars:7,shells:4,urchins:6,piles:0,anemones:0,
+  grassCol:['#3a5a2a','#8aa04a'],rock:'#6a6a62',algae:'#7a6a2a',urchin:['#2a0a1a','#7a1a3a'],sand:[[.46,.44,.38],[.56,.54,.47]],weed:[.22,.26,.12,.5],
+  water:[[.02,.38,.42],[0,.13,.2]],clear:1.1,fish:{schools:['sardine','mackerel','bream'],cruisers:['garibaldi','bass','barracuda','grouper'],glider:null},signature:['football'],floor:3.6},
+ 'sunset-sand':{id:'sunset-sand',name:'Sunset sand shoals',layout:'open',coral:['#ffb02e','#ff7a6b','#f2d04a','#ff9a6a'],
+  kinds:{brain:2,soft:2,plate:1,anemone:1},clusters:8,items:[2,3],spread:.6,scale:.8,grass:8,kelp:0,rocks:4,rockSize:[.12,.24],pebbles:5,stars:12,shells:16,urchins:1,piles:0,anemones:0,
+  grassCol:['#4a7a3a','#a8c86a'],rock:'#a8988a',algae:'#a89a6a',urchin:['#2a1a3a','#6a4f90'],sand:[[.8,.72,.58],[.9,.82,.68]],weed:[.24,.3,.16,.15],
+  water:[[.04,.5,.56],[0,.22,.32]],clear:.85,fish:{schools:['sardine','damsel','sergeant'],cruisers:['bass','bream','mackerel','snapper'],glider:'ray'},signature:['stars']},
 };
 /**
  * One water (Oct 19 2026, user: "these fishing spots don't match with the coral and items; also the colour doesn't match either"):
@@ -375,7 +390,8 @@ export type CoralFamily=keyof typeof CORAL_FAMILIES;
 /** Reef theme id → hue family (shore themes; deep-sea themes have no reef). */
 export const REEF_HUE:Record<string,CoralFamily>={'barnacle-pilings':'blue','lifebuoy-lagoon':'warm','harbour-fan-wall':'violet','tidepool-flat':'pink',
  'stream-channel':'lime','jetty-kelp':'blue','seawall-rubble':'warm','channel-tables':'blue','turtle-meadow':'lime','pink-ring':'pink',
- 'sunlit-patches':'warm','fruit-garden':'lime','boulder-cove':'violet','palm-staghorn':'warm','lookout-bommies':'blue','ledge-dropoff':'violet'};
+ 'sunlit-patches':'warm','fruit-garden':'lime','boulder-cove':'violet','palm-staghorn':'warm','lookout-bommies':'blue','ledge-dropoff':'violet',
+ 'point-boulders':'violet','kelp-edge':'lime','sunset-sand':'warm'};
 export const coralFamily=(themeId:string|undefined)=>CORAL_FAMILIES[REEF_HUE[themeId??'']??'pink'];
 /** The fishing reefs' palette: accents and teals interleaved 1:1 (= the window's 50 % accent share), rotated per spot, plus the
  *  spot's hue family three times over (about a third of the pieces lead with it). */

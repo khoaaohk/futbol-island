@@ -1,7 +1,7 @@
 import type {AnimalGroup,FishShape,FishSpecies,SpotId} from './fishCatalog';
 
 /**
- * C1 (docs/fishing-research.md): Island Legends. One named giant per fishing spot (19 since the park pond, Nov 13 2026; four spots got a second one in wave 3, 23 in all, see DEFS2), each with a short island story (GAME
+ * C1 (docs/fishing-research.md): Island Legends. One named giant per fishing spot (22 since the north-west coast, Nov 13 2026; four spots got a second one in wave 3, 26 in all, see DEFS2), each with a short island story (GAME
  * FICTION) and a real football "legend" fact (REAL, sourced; the same teaching-hook pattern as the deep-sea creatures: the fact
  * never claims the animal). Checked 15 Oct 2026 against the pages in `source` (polite fetches, one at a time).
  *
@@ -85,6 +85,17 @@ const DEFS:Def[]=[
 DEFS.push({spot:'park-pond',name:'King Koi',title:'The pond\'s ancient golden koi',group:'fish',shape:'round',size:[110,130],color:'#e9b23a',belly:'#fff3d6',
   story:'A huge golden koi, older than the park itself, that still glides round the pond every morning as if it will never retire.',clue:'Park visitors say a golden koi as long as a bench glides round the pond at dawn.',
   club:{name:'Kazuyoshi Miura',country:'Japan',link:'Football culture',nickname:'King Kazu',entity:{kind:'player',name:'Kazuyoshi Miura'},fact:'Kazuyoshi Miura, "King Kazu", scored for Yokohama FC in 2017 at the age of 50, the oldest player ever to score in a professional league.',source:W+'Kazuyoshi_Miura'}});
+// Nov 13 2026: the north-west coast's three spots (fishSpots.ts north-point, stadium-rocks, sunset-shoals) get a legend each, so every
+// spot still has one (22 + 4 = 26). Real football facts checked 13 Nov 2026 against the pages in `source` (docs/fishing-content-sources.md).
+DEFS.push({spot:'north-point',name:'Ironhead',title:'North Point\'s giant cabezon',group:'fish',shape:'round',size:[140,160],color:'#8a3a2a',belly:'#e0d6b8',
+  story:'A cabezon as big as a beach chair that has guarded the same rock on North Point for years, snapping up every crab that drifts past.',clue:'Anglers at North Point say a huge red head peeps out from the biggest rock at low tide.',
+  club:{name:'Christine Sinclair',country:'Canada',link:'Football culture',entity:{kind:'player',name:'Christine Sinclair'},fact:'Christine Sinclair scored 190 goals for Canada, the most international goals by any player, man or woman.',source:W+'Christine_Sinclair'}},
+ {spot:'stadium-rocks',name:'The Gentle Giant',title:'Stadium Rocks\' giant sea bass',group:'fish',shape:'round',size:[190,210],color:'#3f3a3a',belly:'#bdb6ac',
+  story:'A giant sea bass, older than the stadium, that cruises slowly along the edge of the kelp. Giant sea bass are protected, so it is always set free again.',clue:'Divers at Stadium Rocks talk about a dark shape as big as a rowing boat at the edge of the kelp.',
+  club:{name:'Marta',country:'Brazil',link:'Football culture',entity:{kind:'player',name:'Marta'},fact:'In 2019 Brazil\'s Marta became the top scorer in World Cup history, men or women, with her 17th goal, at her fifth World Cup.',source:W+'Marta_(footballer)',sources:[W+'Giant_sea_bass']}},
+ {spot:'sunset-shoals',name:'The Panther',title:'Sunset Shoals\' great dark ray',group:'ray',shape:'ray',size:[180,210],color:'#2f2c30',belly:'#e8e2d8',
+  story:'A huge dark ray that glides over the shoals at sunset, as fast as a striker on the break.',clue:'At sunset, something wide and dark glides over the Sunset Shoals sand.',
+  club:{name:'Eusébio',country:'Portugal',link:'Football culture',nickname:'The Black Panther',entity:{kind:'player',name:'Eusébio'},fact:'Portugal\'s Eusébio, the "Black Panther", scored nine goals at the 1966 World Cup and won the Golden Boot.',source:W+'Eus%C3%A9bio'}});
 const DEFS2:Def[]=[
  {spot:'deep-sea-boat',name:'Captain Ribbon',title:'The deep bay\'s captain oarfish',group:'fish',shape:'eel',size:[900,1000],color:'#d8dce4',belly:'#f2f4f8',
   story:'A giant silver oarfish with a crimson crest, longer than any fish in the bay. It leads the deep shoals like a captain leading her team.',clue:'The crew saw a long silver ribbon with a red crest, far below the hull.',

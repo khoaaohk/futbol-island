@@ -18,7 +18,7 @@ const {FISH,FISH_SPOTS,fishById}=cat;
 const book=ids=>({species:Object.fromEntries(ids.map(id=>[id,{count:1}]))});
 
 // ---- 1. Sets: 10-14, real species, never empty, stamp for each, floats are real skins
-{const S=H.FISH_SETS;ok(S.length>=10&&S.length<=14,`10-14 sets (${S.length})`);
+{const S=H.FISH_SETS;ok(S.length>=10&&S.length<=15,`10-15 sets (${S.length}; Nov 13 2026: + the stadium coast)`);
  ok(new Set(S.map(s=>s.id)).size===S.length,'set ids are unique');
  for(const s of S){ok(s.species.length>=4,`${s.id}: at least 4 species (${s.species.length})`);ok(s.species.every(id=>FISH.some(f=>f.id===id)),`${s.id}: Fishbook species only (no legends)`);
   ok(new Set(s.species).size===s.species.length,`${s.id}: no duplicates`);ok(typeof s.stamp==='string'&&s.stamp.length>3,`${s.id}: a stamp`);
@@ -74,7 +74,7 @@ const book=ids=>({species:Object.fromEntries(ids.map(id=>[id,{count:1}]))});
 // ---- 5. Story chapters: 23 legends + 30 favourites, kid-safe, no invented football numbers
 {const SCARY=/\b(kill\w*|dead|death|die[sd]?|dying|blood\w*|attack\w*|scar(y|ier|iest)|terrif\w*|deadly|danger\w*|monsters?|jaws|horror|fear\w*|eaten alive|man-eat\w*|vicious|savage|bite[sd]? (you|people|kids))\b/i;
  const bigNums=t=>(t.match(/\d[\d,–-]*\d|\d{2,}/g)??[]).flatMap(x=>x.split(/[–-]/)).filter(x=>x.replace(/,/g,'').length>=2);
- ok(LG.LEGEND_FISH.length===23,'23 legends (Nov 13 2026: + King Koi)');
+ ok(LG.LEGEND_FISH.length===26,'26 legends (Nov 13 2026: + King Koi and the north-west coast\'s three)');
  for(const L of LG.LEGEND_FISH){const ch=CH.LEGEND_CHAPTERS[L.id];ok(Array.isArray(ch)&&ch.length===2,`${L.id}: two more chapters`);
   for(const t of ch){ok(t.length>=40&&t.length<=330&&!SCARY.test(t)&&!/https?:|%|odds|chance/i.test(t),`${L.id}: kid-safe chapter`);
    for(const num of bigNums(t))ok(L.club.fact.includes(num)||LG.LEGEND_INFO[L.id].story.includes(num),`${L.id}: "${num}" comes from its sourced fact`);}}
@@ -108,4 +108,4 @@ const book=ids=>({species:Object.fromEntries(ids.map(id=>[id,{count:1}]))});
  const src=['lib/town/fishing/fishingHooks.ts','lib/town/fishing/fishingHooksStore.ts','components/FishbookExtras.tsx'].map(f=>fs.readFileSync(path.join(ROOT,f),'utf8')).join('\n');
  ok(!/leaderboard|streak|setInterval|requestAnimationFrame/i.test(src.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'')),'no leaderboards, streaks, timers or frame loops');}
 
-console.log(`PASS fishing-hooks: ${n} checks (14 sets, Pacific-day visitors, stamp-only golden, chapters for 23 legends + favourites, synced save)`);
+console.log(`PASS fishing-hooks: ${n} checks (15 sets, Pacific-day visitors, stamp-only golden, chapters for 26 legends + favourites, synced save)`);

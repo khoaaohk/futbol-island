@@ -20,7 +20,7 @@ const {FISH,FISH_SPOTS,SHORE_SPOTS,fishById,isExclusive}=cat;
 ok(new Set(FISH.map(f=>f.id)).size===FISH.length,'no duplicate ids');
 ok(new Set(FISH.map(f=>f.name.toLowerCase())).size===FISH.length,'no duplicate names');
 ok(new Set(FISH.map(f=>f.plural.toLowerCase())).size===FISH.length,'no duplicate plurals');
-ok(FISH.length<=150+3,'the Fishbook grows to at most 150 species in the three waves, + the park pond\'s koi, perch and pike (Nov 13 2026)');
+ok(FISH.length<=150+3+14,'the Fishbook grows to at most 150 species in the three waves, + the park pond\'s koi, perch and pike (Nov 13 2026)');
 const ALL_SIG=[...SIG.SIGNATURE_FISH_WAVE1,...SIG.SIGNATURE_FISH_WAVE2,...SIG.SIGNATURE_FISH_WAVE3];
 ok(ALL_SIG.every(f=>FISH.includes(f)),'waves 1, 2 and 3 are in FISH (market goods, Fishbook, SEO pages all read FISH)');
 ok(!ALL_SIG.some(f=>load('lib/town/fishing/legendary.ts').LEGEND_FISH.some(l=>l.id===f.id)),'no clash with an Island Legend id');
@@ -33,7 +33,7 @@ const BOAT_IDS=cat.BOAT_SPOTS.map(s=>s.id),W3_BOAT=SIG.SIGNATURE_FISH_WAVE3.filt
 const WAVES=[{name:'wave 1',spots:SHORE_SPOTS.slice(0,6).map(s=>s.id),species:SIG.SIGNATURE_FISH_WAVE1},{name:'wave 2',spots:SHORE_SPOTS.slice(6,12).map(s=>s.id),species:SIG.SIGNATURE_FISH_WAVE2},{name:'wave 3',spots:SHORE_SPOTS.slice(12,16).map(s=>s.id),species:W3_SHORE}];
 ok(JSON.stringify(WAVES[0].spots)===JSON.stringify(['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier']),'wave 1 = South Pier, Lifebuoy Point, Harbour Wall, North Beach Rocks, West Cove, East Jetty');
 ok(JSON.stringify(WAVES[1].spots)===JSON.stringify(['causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach']),'wave 2 = the three causeway posts and the three Coral Cay beaches');
-ok(JSON.stringify(WAVES[2].spots)===JSON.stringify(['summit-cove','summit-palm','summit-lookout','summit-ledge'])&&SHORE_SPOTS.filter(s=>!s.pond).length===16&&SHORE_SPOTS.at(-1).id==='park-pond','wave 3 = Summit Isle\'s four shore spots (every sea shore spot has a wave; the park pond, Nov 13 2026, has its own fresh-water three, pondFish.ts)');
+ok(JSON.stringify(WAVES[2].spots)===JSON.stringify(['summit-cove','summit-palm','summit-lookout','summit-ledge'])&&SHORE_SPOTS.filter(s=>!s.pond).length===19&&SHORE_SPOTS[16].id==='park-pond','wave 3 = Summit Isle\'s four shore spots (the park pond, Nov 13 2026, has its own fresh-water three, pondFish.ts; the north-west coast after it, its own fourteen, northWestFish.ts)');
 // Wave 3's deep-sea specials: shared by BOTH boats (one deep table, tests/fishing.cjs), deep-sea creatures, explicit weights, common to rare.
 ok(W3_BOAT.length>=8&&W3_BOAT.every(f=>JSON.stringify([...f.spots].sort())===JSON.stringify([...BOAT_IDS].sort())&&f.deepSea&&!f.when&&typeof f.weight==='number'&&f.weight>0&&cat.isDeepSeaSpecial(f)),`wave 3: ${W3_BOAT.length} deep-sea specials shared by both boats`);
 ok(['common','uncommon','rare'].every(r=>W3_BOAT.some(f=>f.rarity===r))&&!W3_BOAT.some(f=>f.group==='shark'||f.rarity==='legendary'),'wave 3 boats: commons to rares, no new sharks or legendaries');

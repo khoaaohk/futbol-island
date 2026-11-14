@@ -15,6 +15,7 @@ import {NIGHT_FISH} from './nightFish';
 import {LEGEND_FISH} from './legendary';
 import {SIGNATURE_FISH_WAVE1,SIGNATURE_FISH_WAVE2,SIGNATURE_FISH_WAVE3} from './shoreSignatures';
 import {POND_FISH} from './pondFish';
+import {NORTH_WEST_FISH} from './northWestFish';
 import {FISH_STORIES} from './fishStories';
 import {BOAT_SPOT_IDS} from './deepSeaBoatData';
 import {FISH_SPOTS,RARITY_WEIGHT,type FishId,type FishRarity,type ShadowSize,type SpotId} from './fishSpots';
@@ -74,15 +75,15 @@ export const FISH:FishSpecies[]=[
   club:{name:'Southend United',country:'England',link:'Nickname',entity:{kind:'club',name:'Southend United'},nickname:'The Shrimpers',
    fact:'Southend United are "The Shrimpers" because nearby Leigh-on-Sea had lots of shrimp-fishing boats, and a shrimp is on the club badge.',
    source:'https://en.wikipedia.org/wiki/Southend_United_F.C.'}},
- {id:'sardine',name:'Sardine',plural:'Sardines',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','deep-sea-boat-west','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach','summit-ledge','summit-lookout'],price:3,size:[12,22],color:'#6f8fa6',belly:'#dfe7ea',shape:'slim',shadow:'small',
+ {id:'sardine',name:'Sardine',plural:'Sardines',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','deep-sea-boat-west','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach','summit-ledge','summit-lookout','north-point','stadium-rocks','sunset-shoals'],price:3,size:[12,22],color:'#6f8fa6',belly:'#dfe7ea',shape:'slim',shadow:'small',
   club:{name:'Santos FC',country:'Brazil',link:'Nickname',entity:{kind:'club',name:'Santos'},nickname:'Peixe (Fish)',
    fact:'In 1933 rival fans teased port-city Santos as "fishmongers", so Santos fans proudly took the nickname "Peixe" (Fish). Pelé played there from 1956 to 1974.',
    source:'https://en.wikipedia.org/wiki/Santos_FC'}},
- {id:'mackerel',name:'Mackerel',plural:'Mackerel',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','deep-sea-boat-west','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach','summit-ledge','summit-palm'],price:4,size:[25,40],color:'#3f7a78',belly:'#e4ecd9',shape:'slim',shadow:'medium',
+ {id:'mackerel',name:'Mackerel',plural:'Mackerel',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','deep-sea-boat','deep-sea-boat-west','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach','summit-ledge','summit-palm','north-point','stadium-rocks','sunset-shoals'],price:4,size:[25,40],color:'#3f7a78',belly:'#e4ecd9',shape:'slim',shadow:'medium',
   club:{name:'Celta Vigo',country:'Spain',link:'Port city',entity:{kind:'club',name:'Celta Vigo'},
    fact:'Celta Vigo\'s home city, Vigo, has Europe\'s biggest fishing port: almost a million tonnes of fish arrive there every year.',
    source:'https://www.fao.org/newsroom/story/Not-business-as-usual-in-Europe-s-largest-fishing-port/en'}},
- {id:'sea-bass',name:'Sea Bass',plural:'Sea Bass',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach','summit-ledge','summit-palm'],price:4,size:[30,60],color:'#8a9aa0',belly:'#eef0e6',shape:'round',shadow:'medium',
+ {id:'sea-bass',name:'Sea Bass',plural:'Sea Bass',rarity:'common',group:'fish',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier','causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach','summit-ledge','summit-palm','north-point','stadium-rocks','sunset-shoals'],price:4,size:[30,60],color:'#8a9aa0',belly:'#eef0e6',shape:'round',shadow:'medium',
   club:{name:'Olympique de Marseille',country:'France',link:'Nickname',entity:{kind:'club',name:'Les Phocéens'},nickname:'Les Phocéens',
    fact:'Marseille are "Les Phocéens", after the Greek sailors from Phocaea who founded the port about 600 BC. In 1993 OM became the first French club to win the Champions League.',
    source:'https://en.wikipedia.org/wiki/Olympique_de_Marseille'}},
@@ -125,6 +126,8 @@ FISH.push(...SIGNATURE_FISH_WAVE2);
 FISH.push(...SIGNATURE_FISH_WAVE3);
 // Nov 13 2026: the Stadium Park pond's fresh-water koi and perch (./pondFish.ts), the only species past the 150 of the three waves.
 FISH.push(...POND_FISH);
+// Nov 13 2026: the north-west coast's three spots (North Point, Stadium Rocks, Sunset Shoals), spot-only (./northWestFish.ts).
+FISH.push(...NORTH_WEST_FISH);
 // Every species has its fish tale (the signature species carry theirs inline).
 for(const f of FISH)if(!f.story)f.story=FISH_STORIES[f.id];
 // Island Legends (C1, ./legendary.ts) are NOT in FISH (never sold, never counted): only fishById resolves them, for the live fight.

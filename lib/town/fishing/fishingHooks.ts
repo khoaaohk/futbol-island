@@ -30,6 +30,8 @@ export const FISH_SETS:readonly FishSet[]=[
  {id:'area-causeway',kind:'area',title:'Causeway posts',blurb:'The specials of Seawall Gate Sands, Channel Bend and Turtle Bank.',stamp:'Causeway stamp',species:own(['causeway-gate','causeway-channel','turtle-bank'])},
  {id:'area-cay',kind:'area',title:'Coral Cay beaches',blurb:'The specials of Coral Garden Beach, Sharks Beach Point and Farm Beach.',stamp:'Coral Cay stamp',float:'coral',species:own(['coral-garden','sharks-beach','farm-beach'])},
  {id:'area-summit',kind:'area',title:'Summit Isle shore',blurb:'The specials of Boulder Cove, Palm Point, Lookout Rocks and Drop-off Ledge.',stamp:'Summit Isle stamp',species:own(['summit-cove','summit-palm','summit-lookout','summit-ledge'])},
+ // Nov 13 2026: the north-west coast round the DRIP FC Stadium.
+ {id:'area-northwest',kind:'area',title:'Stadium coast',blurb:'The specials of North Point, Stadium Rocks and Sunset Shoals, round the DRIP FC Stadium.',stamp:'Stadium coast stamp',species:own(['north-point','stadium-rocks','sunset-shoals'])},
  {id:'theme-shared',kind:'theme',title:'The shared ten',blurb:'The ten animals you can meet at lots of spots. A good first team.',stamp:'First team stamp',species:FISH.filter(f=>!f.when&&!isExclusive(f)&&!isDeepSeaSpecial(f)).map(f=>f.id)},
  {id:'theme-deep',kind:'theme',title:'Deep sea specials',blurb:'Everything that only bites out on the deep-sea boats.',stamp:'Deep sea stamp',float:'abyss',species:FISH.filter(isDeepSeaSpecial).map(f=>f.id)},
  {id:'theme-night',kind:'theme',title:'Night and sunset fish',blurb:'Animals that only come out at sunset or at night. Switch the island time to meet them.',stamp:'Night owl stamp',float:'moon',species:FISH.filter(f=>!!f.when).map(f=>f.id)},
@@ -48,7 +50,7 @@ export const setFloats=(sets:readonly string[])=>FISH_SETS.filter(s=>s.float&&se
 // ---- 2. Today's visitor (Pacific day, the same for everyone) ----
 export type VisitorArea={id:'main'|'cay'|'summit'|'deep';name:string;spots:readonly SpotId[]};
 export const VISITOR_AREAS:readonly VisitorArea[]=[
- {id:'main',name:'Main island',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier','park-pond']},
+ {id:'main',name:'Main island',spots:['south-pier','west-pier','harbour-wall','north-rocks','west-cove','east-pier','park-pond','north-point','stadium-rocks','sunset-shoals']},
  {id:'cay',name:'Causeway and Coral Cay',spots:['causeway-gate','causeway-channel','turtle-bank','coral-garden','sharks-beach','farm-beach']},
  {id:'summit',name:'Summit Isle',spots:['summit-cove','summit-palm','summit-lookout','summit-ledge']},
  {id:'deep',name:'Deep-sea boats',spots:['deep-sea-boat','deep-sea-boat-west']},

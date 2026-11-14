@@ -45,6 +45,8 @@ export const STALL_BY_SPOT:Readonly<Record<string,StallType>>={
  'coral-garden':'tiki','sharks-beach':'booth','farm-beach':'market',
  'summit-cove':'cart','summit-palm':'tiki','summit-lookout':'lighthouse','summit-ledge':'shack',
  'park-pond':'rowboat',
+ // Nov 13 2026: the north-west coast (a harbour-master's booth on the rocky point, a weathered shack on the rocks, a tiki hut on the sunset sand).
+ 'north-point':'booth','stadium-rocks':'shack','sunset-shoals':'tiki',
 };
 /** Per-spot turn where a type's default yaw would bring its colliders within 0.85 m of the standing spot (radians). */
 const YAW_BY_SPOT:Readonly<Record<string,number>>={'west-pier':1.25,'farm-beach':1.4,'summit-ledge':-.35};
@@ -77,17 +79,17 @@ const BOARD=['#fff0cf','#f3e3c3','#e8efe6','#fbe6d6'];
 /** Two or three palettes per type; the n-th post of a type (STALL_BY_SPOT order) takes the n-th, so two posts of one type differ. */
 const PALETTES:Record<StallType,readonly (readonly string[])[]>={
  // wall, trim/dark, roof, roof stripe, accent
- shack:[['#a08c74','#5f5246','#6b5646','#836b56','#c45d5d'],['#7f908a','#4f5a55','#6b4f3a','#80634b','#e0b04f']],
+ shack:[['#a08c74','#5f5246','#6b5646','#836b56','#c45d5d'],['#7f908a','#4f5a55','#6b4f3a','#80634b','#e0b04f'],/* Nov 13 2026: Stadium Rocks' kelp green */['#6f7f6a','#3f4a40','#4f5f4a','#6a7a5e','#e8c040']],
  // body, trim, canopy, canopy stripe, accent
  cart:[['#3f8fb0','#fbf6ee','#e0513f','#fff3df','#e8c040'],['#f0b43f','#fbf6ee','#2f8f8a','#f4efe2','#e0513f'],['#e0513f','#fbf6ee','#3f8fb0','#fbf6ee','#e8c040']],
  // bamboo, dark bamboo, straw, dark straw, accent
- tiki:[['#c9a66b','#8c6c4f','#d9b56a','#b08a4a','#e0703f'],['#b8955c','#7a5a3e','#cfae6e','#a3823f','#d9483b']],
+ tiki:[['#c9a66b','#8c6c4f','#d9b56a','#b08a4a','#e0703f'],['#b8955c','#7a5a3e','#cfae6e','#a3823f','#d9483b'],/* Nov 13 2026: Sunset Shoals' sunset orange */['#c99a5c','#8a5f3e','#e0b26a','#c0803f','#f08a3c']],
  // band red, band white, roof, roof stripe, accent
  lighthouse:[['#d9483b','#f4efe2','#2f4f6f','#f4efe2','#e8c040'],['#2f6f9a','#f4efe2','#c94f3f','#f4efe2','#e0703f'],['#3f8a5a','#f4efe2','#2f4f6f','#f4efe2','#e0513f']],
  // hull, stripe, boot-top, wood, accent
  rowboat:[['#2f6f9a','#fbf6ee','#d9483b','#a67d55','#e8c040'],['#4f8a6a','#fbf6ee','#c9a23f','#9c7550','#e0513f'],/* Nov 13 2026: the park pond's boat-hire green */['#3f6f45','#f4efe2','#e8c040','#8c6a48','#d9483b']],
  // lower walls, frame, roof, flag, accent
- booth:[['#2f4f6f','#f4efe2','#c94f3f','#e8c040','#d9483b'],['#3f7a78','#fbf6ee','#2f4f6f','#e0513f','#e8c040']],
+ booth:[['#2f4f6f','#f4efe2','#c94f3f','#e8c040','#d9483b'],['#3f7a78','#fbf6ee','#2f4f6f','#e0513f','#e8c040'],/* Nov 13 2026: North Point's slate and red */['#5a6470','#f4efe2','#d9483b','#e8c040','#2f4f6f']],
  // wood, cloth A, cloth B, parasol, parasol trim
  market:[['#a67d55','#e0513f','#fff3df','#3f8fb0','#fbf6ee'],['#8f6a48','#4f8a6a','#f1ecd8','#e08a4f','#fde9d0']],
 };

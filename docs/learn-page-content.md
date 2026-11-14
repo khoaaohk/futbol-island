@@ -155,7 +155,7 @@ Fishing on the island is calm and quick, and every catch goes into the Fishbook.
 
 - **Football tie:** Club history and culture, plus a goalkeeper lesson: stay set, do not bite on a feint, then react fast.
 - **Where:** Head to a fishing spot on the shore, a boat or the Stadium Park pond; the Fishbook opens from fishing.
-- **Proof:** 153 sea and pond animals to catch, 11 of them legendary (Nov 13 2026: the three waves of signature species plus the park pond's koi, perch and pike).
+- **Proof:** 167 sea and pond animals to catch, 13 of them legendary (Nov 13 2026: the three waves of signature species, the park pond's koi, perch and pike, and the 14 north-west coast specials of North Point, Stadium Rocks and Sunset Shoals).
 - **id / image:** `fishing` / `fishing_fishbook`
 
 ### Bug Squad
