@@ -24,7 +24,7 @@ import * as T from 'three';
 import {createPlayer,type PlayerMotion,type PlayerRig} from './player';
 import {playerBatch} from './playerBatch';
 import {effectiveTier,batterySaverOn,type HeatTier} from './heatTier';
-import {DEMOTE_FADE,capGate,planNearest,planRigs,stepCapGate,RIG_HYST_M,ROOM_HYST_M} from './rigCap';
+import {DEMOTE_FADE,capGate,planNearest,planRigs,rigPriority,stepCapGate,RIG_HYST_M,ROOM_HYST_M} from './rigCap';
 import {devRegisterLayer,publicDraw,strangerLabel} from './remotePublic';
 import {emoteSeconds} from '../town/emoteReact';import {applyEmoteArms,emoteBody} from './emotePose';
 import {applyHighFive} from './highFivePose';import {actorMotion,clearBallMotion,createPassBallOut,friendBallMotion,pickBallRoutine,type PassBallOut} from '../town/emotePass';import {createDuetOut,duetAt,duetSeconds,type DuetOut} from '../town/emoteDuet';import {applyRideEmote} from './celebrations';import {createIdleWave,stepIdleWave,IDLE_SPEED,type IdleWave} from '../town/jetpackIdleWave';import {applyIdleGesture} from './jetpackIdlePose';import {emoteCtxOfMode,flourishAt,flourishForWire,friendFlourishLapsed,type Flourish} from '../town/emoteContexts';import {cycleFrame,type BubbleFrame} from '../town/emoteBubbleMotion';import {MOVE_ROLE,friendMoveEnd,moveForWire,moveWeight,pickMoveVariant} from '../town/moveEmotes';import {applyMoveEmote} from './moveEmotePose';
@@ -36,7 +36,7 @@ import {kitBall,kitBallKey,kitKey,kitOutfit} from '../multiplayer/kit';
 import {wireToLook} from '../multiplayer/look';
 import type {RemotePose} from '../multiplayer/interp';
 import {npcSeatPose} from './npcSeatPose';
-import {BallState,Emote,Mode,Zone,PARTY_MAX,WORLD_HARD,WORLD_SEE_M,presenceOf,shielded,type Kit,type Look,type MemberId} from '../../multiplayer/protocol';
+import {BallState,Emote,Mode,PoseFlag,Zone,PARTY_MAX,WORLD_HARD,WORLD_SEE_M,presenceOf,shielded,type Kit,type Look,type MemberId} from '../../multiplayer/protocol';
 import {presenceIconAt,presenceTextAt} from '../multiplayer/presence';
 import {createForceFields} from './forceField';
 import {createRemoteJets} from './remoteJets';
@@ -464,7 +464,7 @@ export function createRemoteAvatars(scene:T.Scene,opts:{phone:boolean;maxFor:(ti
  function recheckCaps(dt:number,reduced:boolean,poses:Map<MemberId,RemotePose>,local:LocalRing|null|undefined){
   const cap=stepCapGate(gate,tierCap(),dt),ox=local?local.x:camPos.x,oz=local?local.z:camPos.z;
   syncPublic(true);
-  for(let i=0;i<list.length;i++){const e=list[i],p=poses.get(e.id);e.pd2=e.leaving||!p||e.hidden||p.zone===Zone.Indoors?Infinity:(p.x-ox)*(p.x-ox)+(p.z-oz)*(p.z-oz);}
+  for(let i=0;i<list.length;i++){const e=list[i],p=poses.get(e.id);e.pd2=e.leaving||!p||e.hidden||p.zone===Zone.Indoors?Infinity:rigPriority((p.x-ox)*(p.x-ox)+(p.z-oz)*(p.z-oz),((p.flags??0)&PoseFlag.Hidden)!==0,pub);}
   // Public island, a room: only the nearest ROOM_CAP strangers are drawn at all (hysteresis ROOM_HYST_M), and only they may hold a rig.
   if(pub&&inRoom){if(planNearest(list,order,isSel,ROOM_CAP,Infinity,ROOM_HYST_M)>0)for(let i=0;i<list.length;i++){const e=list[i];if(e.plan<0)e.sel=false;else if(e.plan>0)e.sel=true;}
    for(let i=0;i<list.length;i++)if(!list[i].sel)list[i].pd2=Infinity;}
