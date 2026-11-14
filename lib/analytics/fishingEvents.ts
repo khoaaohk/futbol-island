@@ -34,6 +34,16 @@ export const countFishTutorial=(how:'done'|'skip')=>count(how==='done'?'fi:tutor
 /** Fish sold at a stand: `n` fish in one sale (only the number, never which fish or the coins). Every place that buys fish calls this. */
 export function fishSold(n:number){const k=Math.floor(Number(n)||0);if(k>0)count('fi:sold',k);}
 
+/** Nov 14 2026 (reach, lib/town/fishing/fishingReach.ts): a Go fishing tap (the Welcome back note's suggestion or the island map). */
+export const countGoFishing=(from:'welcome'|'map')=>count(from==='welcome'?'fi:go_welcome':'fi:go_map');
+/** The device's first catch (the guaranteed common). */
+export const countFirstCatch=()=>count('fi:first_catch');
+/** Fish tapped at a spot that was showing the discovery ripples (a player who never fished, within 8 m). */
+export const countRippleStart=()=>count('fi:ripple_start');
+/** The first-time run hint shown (once per device). */
+export const countRunHint=()=>count('fi:run_hint');
+/** Sell tapped on a catch that found the basket full. */
+export const countFullSell=()=>count('fi:full_sell');
 /** Slip buckets: 0 / 1 / 2 / 3+ per spin fight. */
 export const slipBucket=(slips:number)=>slips<=0?'fi:slips_0':slips===1?'fi:slips_1':slips===2?'fi:slips_2':'fi:slips_3plus';
 /** Average spin rate buckets (0..1 of a full spin, fishingFight.ts FULL_SPIN_S): slow < 0.45, mid < 0.8, full otherwise. */

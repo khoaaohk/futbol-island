@@ -84,3 +84,10 @@
  .legendTip{min-height:44px}.legendTip::before{inset:0 -5px}
 }
 @media(prefers-reduced-motion:reduce){.entering,.leaving,.tip{animation:none}.stage[data-eased],.arrow{transition:none}}
+
+/* Nov 14 2026 (fishing reach): Go fishing, the shared mint secondary button (the title card's "Use a different code" look). */
+.goFish{flex:none;align-self:center;display:flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:8px 18px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 4px 0 var(--btn-mint-edge);font:inherit;font-size:15px;font-weight:800;cursor:pointer;transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+@media(hover:hover){.goFish:hover{scale:1.03}}
+.goFish:active{translate:0 var(--btn-press);scale:.98;box-shadow:0 1px 0 var(--btn-mint-edge)}
+.goFish:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+@media(prefers-reduced-motion:reduce){.goFish{transition:none}}

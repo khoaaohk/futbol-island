@@ -51,3 +51,10 @@
 @keyframes dialogRise{from{opacity:0;transform:translateY(14px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes dialogFade{from{opacity:0}to{opacity:1}}
 @media(prefers-reduced-motion:reduce){.dialog[open],.dialog[open]::backdrop{animation:none}}
+/* Nov 14 2026 (fishing reach): full price left today as a number, and each item's price as its own chip. */
+.allowance .capLeft{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:8px 0 0;font-size:15px;color:#244d40}
+.capLeft b{font-size:17px;font-weight:900}
+.capLeft>span:last-child{font-size:13px;font-weight:700;color:#52634e}
+.price{flex:none;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
+.price b{padding:3px 10px;border-radius:999px;background:#ffe9a3;color:#5a4300;font-size:14px;font-weight:900;white-space:nowrap}
+.price small{margin-top:2px;font-size:11px;color:#687365;white-space:nowrap}

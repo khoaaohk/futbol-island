@@ -153,6 +153,10 @@ export const FISHING_COUNT_EVENTS=[
  ['spin_slow','Spin fights at a slow average rate'],['spin_mid','Spin fights at a medium average rate'],['spin_full','Spin fights at a full average rate'],
  ['book','Fishbook opened while fishing'],
  ['request','Islander fishing request finished'],['clue','Legend clue found'],['legend','Island Legend caught and released'],
+ // Nov 14 2026 (reach, lib/town/fishing/fishingReach.ts): the Go fishing entries, the guaranteed first catch, a start at a spot
+ // showing the discovery ripples, the first-time run hint, a run let go in time (feedback shown), and Sell from a full basket.
+ ['go_welcome','Go fishing tapped (Welcome back note)'],['go_map','Go fishing tapped (island map)'],['first_catch','First catch on a device (guaranteed common)'],
+ ['ripple_start','Fish tapped at a spot showing the discovery ripples'],['run_hint','First-time run hint shown'],['full_sell','Sell tapped on a full-basket catch'],
 ] as const;
 
 

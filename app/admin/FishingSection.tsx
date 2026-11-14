@@ -56,6 +56,8 @@ export default function FishingSection({report,dash}:{report:Report;dash?:Dashbo
  const island=rows.filter(r=>['fi:request','fi:clue','fi:legend','fi:book','fi:new_species','fi:basket_full','fi:sold'].includes(r.id));
  const misses=rows.filter(r=>['fi:miss_early','fi:miss_late','fi:miss'].includes(r.id));
  const tutorial=rows.filter(r=>['fi:tutorial_done','fi:tutorial_skip'].includes(r.id));
+ // Nov 14 2026 (reach, lib/town/fishing/fishingReach.ts): the Go fishing entries, the first catch, ripple starts, the run hint, Sell from a full basket.
+ const reach=rows.filter(r=>['fi:go_welcome','fi:go_map','fi:first_catch','fi:ripple_start','fi:run_hint','fi:run_stopped','fi:full_sell'].includes(r.id));
  const bucketRows:BarRow[]=f?.buckets?FIGHT_BUCKETS.filter(k=>k in f.buckets!).map(k=>({key:k,label:k==='0'?'Fished, never hooked':`${k} fight${k==='1'?'':'s'}`,value:f.buckets![k]??0})):[];// exact counts (fishingAdminMetrics num()): never null
  const steps=fn?.steps??fromDash??[];
  return <section className={styles.island} aria-labelledby="fishing-heading">
@@ -90,6 +92,7 @@ export default function FishingSection({report,dash}:{report:Report;dash?:Dashbo
    <div><span>Landed vs got away</span><b>{show(land)} · {show(escape)}</b><small>{share(land,escape)} landed after a hook · {show(spin)} fights started</small></div>
    <div><span>Runs: stopped vs spun through</span><b>{show(stopped)} · {show(spun)}</b><small>{share(stopped,spun)} stopped spinning in time (the teaching moment)</small></div>
    <div><span>Tutorial finished</span><b>{fn?.tutorial.rate==null?'—':fmtPct(fn.tutorial.rate)}</b><small>{show(v('tutorial_done'))} finished on the first catch · {show(v('tutorial_skip'))} skipped</small></div>
+   <div data-fishing-reach><span>Go fishing taps</span><b>{show(v('go_welcome'))} · {show(v('go_map'))}</b><small>Welcome back note · map · {show(v('first_catch'))} first catches · {show(v('ripple_start'))} ripple-spot starts</small></div>
    <div><span>Basket full</span><b>{show(v('basket_full'))}</b><small>catches that found the basket full · {show(v('sold'))} fish sold</small></div>
    <div><span>Fishing sessions</span><b>{f?.status==='ok'?show(f.fished??f.sessions):'—'}</b><small>{f?.status==='ok'?`${f.neverHooked!=null?`${show(f.neverHooked)} never hooked a fish · `:''}${show(f.fights)} fights, ${show(f.landed)} landed · raw beats, last ${f.windowDays} days`:f?.status==='needs-migration'?'needs the fishing migration':f?.status==='not-configured'?'needs the analytics database':'could not be read'}</small></div>
   </div>
@@ -105,6 +108,7 @@ export default function FishingSection({report,dash}:{report:Report;dash?:Dashbo
     table={{columns:['Fights in the session','Sessions'],rows:bucketRows.map(r=>[r.label,r.text??r.value])}}>
     <BarList rows={bucketRows} unit="sessions" share={false} limit={bucketRows.length}/>
    </ChartCard>
+   <CountCard title="Reach: getting to a first catch" subtitle="Go fishing taps (Welcome back note, map), first catches on a device, Fish taps at a spot showing the discovery ripples, the first-time run hint, runs let go in time, Sell from a full basket" rows={reach}/>
    <CountCard title="First-time tutorial" subtitle="Finished on the first catch’s “Got it”, or skipped" rows={tutorial}/>
    <CountCard title="Requests, legends, the Fishbook and selling" subtitle="Islander requests finished, legend clues, legends released, Fishbook opens, new species, basket full, fish sold" rows={island}/>
   </div>

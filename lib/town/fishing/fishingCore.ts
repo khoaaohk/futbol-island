@@ -123,7 +123,9 @@ export type SessionEvent='splash'|'notice'|'nibble'|'bite'|'escaped'|'scared'|'h
  /** Nov 6 2026: the catch's read time is over, Cast works again. */
  |'castable'
  /** Oct 15 2026 (docs/fishing-research.md A5, B1): the line twangs before the idle escape; the fight's runs, slips and the red zone. */
- |'warn'|'run'|'slip'|'leap'|'strain'|'ease';
+ |'warn'|'run'|'slip'|'leap'|'strain'|'ease'
+ /** Nov 14 2026: a run let go in time (fishingFight.ts). */
+ |'tired';
 /** Reaction window after the real bite: about 0.6-1 s (shorter for rarer animals), a little longer in easy mode / reduced motion. */
 export const BITE_WINDOW:Record<FishRarity,number>={common:1,uncommon:.9,rare:.8,legendary:.7};
 /** Easy bite (Island settings) or reduced motion: this much longer to react, for every bite (the two never stack). */
@@ -220,7 +222,7 @@ export function stepSession(s:Session,spot:FishSpot,dt:number,rand:()=>number,o:
   case 'reeling':{
    if(s.fight){
     // The fight: spinning resets the idle clock; landing is the hook-out.
-    const fe=stepFight(s.fight,step,rand);s.reelIdle=s.fight.holding?0:s.reelIdle+step;if(s.fight.holding)s.warned=false;
+    const fe=stepFight(s.fight,step,rand);s.reelIdle=s.fight.holding||s.fight.run?0:s.reelIdle+step;/* Nov 14 2026: letting go during a run is right, never "idle" */if(s.fight.holding)s.warned=false;
     s.reelTarget=1;s.reelTaps=s.fight.progress;
     for(const x of fe){if(x==='landed'){go(s,'caught');s.shadow=null;ev.push('hooked');s.fight=null;return ev;}ev.push(x);}
     if(!s.warned&&s.reelIdle>=REEL_WARN){s.warned=true;ev.push('warn');}

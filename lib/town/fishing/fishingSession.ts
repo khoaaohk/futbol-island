@@ -85,7 +85,9 @@ const floatHint=(w:FishingView['water'])=>w==='spooked'?SPOOKED_HINT:w==='hot'?H
 /** The fight's one-line hints (the spin reel, 15 Oct 2026), with the football link: the weight of a pass. */
 export const FIGHT_HINT='Spin the reel to wind it in. Ease off in the red!';
 export const STRAIN_HINT='Too tight! Ease off, like the weight of a pass.';
-export const RUN_HINT='It runs! Stop spinning and let it tire.';
+export const RUN_HINT='It pulls away! Stop spinning: let go of the reel.';
+/** Nov 14 2026: a run let go in time (fishingFight.ts 'tired'): the feedback line. */
+export const TIRED_HINT='Nice! You let it tire. Spin again!';
 export const SLIP_HINT='It slipped back a bit. Ease off, then spin again.';
 /** An Island Legend (Agent B, legendary.ts) rests after a slip instead. */
 export const LEGEND_REST_HINT='The legend is resting. Ease off, then spin again.';
@@ -93,7 +95,9 @@ export const LEGEND_REST_HINT='The legend is resting. Ease off, then spin again.
 export const WARN_HINT='It\'s getting away, keep reeling!';
 
 export type FishCue='tick'|'splash'|'plunge'|'cast'|'fanfare'|'reel'|'twang'|'slip'|'run';
-export type FishingEventType='cast'|'nibble'|'bite'|'hook'|'run'|'slip'|'warn'|'catch'|'escape';
+export type FishingEventType='cast'|'nibble'|'bite'|'hook'|'run'|'slip'|'warn'|'catch'|'escape'
+ /** Nov 14 2026: a run let go in time (feedback; the fight stats still count it as run_stopped). */
+ |'tired';
 export type FishingEvent={type:FishingEventType;fish:FishId|null;size:number|null;spot:string|null;at:number;
  rarity:FishRarity|null;shadow:ShadowSize|null;lure:string|null;hot:FishingView['water'];
  dir?:-1|1;isNew?:boolean;isBiggest?:boolean;inBasket?:boolean;how?:'scared'|'escaped';hooked?:boolean;fight?:FightStats;
@@ -154,6 +158,7 @@ export function createFishingSession(land:Lander,cue:(kind:FishCue,strength?:num
    if(e==='escaped'){lostHooked=hooked;lessonNext=lesson(hooked?'lost':'escaped',true);emit('escape',{how:'escaped',hooked,...(hooked&&session.lastFight?{fight:fightStats(session.lastFight)}:{})});hooked=false;}
    if(e==='warn'){cue('twang');emit('warn');}
    if(e==='run'){cue('run');fightHint=null;const r=session.fight?.run;emit('run',r?{dir:r.dir}:{});}
+   if(e==='tired'){cue('reel');fightHint=TIRED_HINT;emit('tired');}
    if(e==='slip'){cue('slip');fightHint=session.fight?.style==='legend'?LEGEND_REST_HINT:SLIP_HINT;emit('slip');}
    if(e==='hooked'&&session.fish){const f=session.fish;caught={id:f.id,size:f.size,...land(f.id,f.size)};catches++;cue('fanfare');countSummitFishCatch(view.spotId);
     emit('catch',{isNew:caught.isNew,isBiggest:caught.isBiggest,inBasket:caught.inBasket,legend:!isFishbookSpecies(f.id),...(session.lastFight?{fight:fightStats(session.lastFight)}:{})});hooked=false;}

@@ -12,6 +12,9 @@ import styles from './WelcomeBack.module.css';
 import HudSlot from './HudStack';
 import {SAVE_CODE_KEY,SAVE_NUDGE_KEY} from '@/lib/saves/snapshot';
 import {toastLane,useToastLaneOwned} from '@/lib/ui/toastLane';
+import {pickWelcomeSuggestion,readWelcomeSave} from '@/lib/welcomeSuggestion';
+import {requestGoFishing} from '@/lib/town/fishing/fishingReach';
+import {countGoFishing} from '@/lib/analytics/fishingEvents';
 /** One message at a time (Nov 11 2026, owner: "don't show something shimmers and welcome back at the same time. welcome back first. the
  *  shimmer shows later"): the first moments after arriving are quiet for every lane note (ARRIVE_QUIET_MS); Welcome back opens
  *  only when no note owns the lane, HOLDS the lane while it is open (lib/ui/toastLane.ts: no note starts), then leaves a short gap
@@ -53,10 +56,14 @@ export default function WelcomeBack({blocked,held=false}:{blocked:boolean;held?:
  let storage:Storage|null=null;try{storage=localStorage;}catch{}
  const target=suggestedNextStep(storage,new Set(evidence.steps),answers);
  const title=target.kind==='lesson'?target.lesson.name:null;
- return <HudSlot><button type="button" className={`${toast.toast} ${styles.card}`} role="status" data-hud-slot="guide" data-welcome-back hidden={blocked} onClick={()=>setOpen(false)}>
+ // Nov 14 2026 (fishing reach): one "for you" line from this device's save (lib/welcomeSuggestion.ts). Still a note, not a menu:
+ // the whole note is the tap target, and with a suggestion that tap also does it (travel to the nearest fishing spot).
+ const suggest=pickWelcomeSuggestion(readWelcomeSave());
+ return <HudSlot><button type="button" className={`${toast.toast} ${styles.card}`} role="status" data-hud-slot="guide" data-welcome-back hidden={blocked} data-welcome-suggest={suggest?.kind} onClick={()=>{if(suggest?.action==='go-fishing'){countGoFishing('welcome');requestGoFishing();}setOpen(false);}}>
   <b>Welcome back!</b>
   <span>{welcomeBackLine(title,ferryUnlocked(graduations),finaleComplete(graduations))}</span>
   <span className={styles.note}>Move for {DAILY_PLAY_SECONDS} seconds today: +{DAILY_PLAY_COINS} coins.</span>
+  {suggest&&<span className={styles.note} data-welcome-suggest-line>{suggest.line}</span>}
   {nudge&&<span className={styles.note} data-save-nudge>Want to keep this? Get a save code in Settings.</span>}
  </button></HudSlot>;
 }

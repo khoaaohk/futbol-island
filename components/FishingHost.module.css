@@ -265,3 +265,16 @@
 .catchSecret{margin-top:6px!important;padding:6px 8px;border-radius:10px;background:#e3f1f6;font-size:12px;line-height:1.45;color:#21454f}
 .stamp[data-stamp=secret]{font-size:14px;color:#1f6a86;rotate:-4deg;margin-right:4px}
 @media(prefers-reduced-motion:reduce){.shine,.celebrate i{display:none;animation:none}}
+
+/* Nov 14 2026 (fishing reach, docs/fishing.md "Reach and fixes"). A full basket: a plain line and one tap to the nearest buyer. */
+.catchFull{margin-top:6px!important;padding:6px 8px;border-radius:10px;background:#fde3d6;font-size:12px;line-height:1.45;color:#5c2a17}
+.catchFull b{display:block;font-size:13px;color:#7a2e12}
+.catchSell{display:flex;align-items:center;justify-content:center;min-height:44px;width:100%;margin-top:6px;padding:6px 14px;border:var(--btn-rim-width) solid var(--btn-rim);border-radius:var(--btn-radius);background:var(--btn-mint);color:var(--btn-ink);box-shadow:0 3px 0 var(--btn-mint-edge);font:inherit;font-size:14px;font-weight:800;cursor:pointer}
+.catchSell:active{translate:0 var(--btn-press);box-shadow:0 1px 0 var(--btn-mint-edge)}
+.catchSell:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
+/* A run: a big "Let go!" badge over the reel (the reel label says Stop!); letting go in time pops "Nice!" (one-shot). */
+.letGo{position:absolute;z-index:2;left:50%;bottom:calc(100% + 10px);translate:-50% 0;padding:6px 16px;border:3px solid #fff2cd;border-radius:999px;background:#c8432f;color:#fff8e6;font-size:20px;font-weight:900;white-space:nowrap;pointer-events:none;animation:letGo .5s ease-in-out infinite alternate}
+@keyframes letGo{to{scale:1.08}}
+.tiredPop{position:absolute;z-index:3;left:50%;bottom:calc(100% + 10px);translate:-50% 0;padding:6px 16px;border:3px solid #fff2cd;border-radius:999px;background:#2f8a5a;color:#fff8e6;font-size:20px;font-weight:900;white-space:nowrap;pointer-events:none;opacity:0;animation:tiredPop 1.3s ease-out}
+@keyframes tiredPop{0%{opacity:0;scale:.7}15%{opacity:1;scale:1.1}30%{scale:1}75%{opacity:1}100%{opacity:0;translate:-50% -16px}}
+@media(prefers-reduced-motion:reduce){.letGo{animation:none}.tiredPop{animation:tiredPopStill 1.3s step-end}@keyframes tiredPopStill{0%{opacity:1}100%{opacity:0}}}

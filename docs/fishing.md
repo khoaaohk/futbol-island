@@ -653,3 +653,52 @@ the store and ambient also send nothing when `fi2-sound-muted` is on.
 Gate: reduced motion drops every move and sparkle (stamps and glow stay, still); heat tier 2+ / Battery saver drops the 3D extras and
 halves the card's sparkles. Heat: no new mesh, material, texture or render target: the extras are a preallocated pool of 16 slots in the
 overlay's one instanced draw; no timers; a few float writes a frame while fishing; nothing at rest.
+
+## Reach and fixes (14 Nov 2026)
+
+Why: admin data for Nov 1–14 showed only 6 of 100 new players (1+ min of play) fished on day 1, while returners spend the 3rd-most
+time fishing. Funnel: all 24 misses were "too late"; 0 of 30 runs were stopped in time; the tutorial finished 4 times and was skipped
+4 times; 32 catches found the basket full while only 20 fish were sold. Files: `lib/town/fishing/fishingReach.ts` (pure helpers plus a
+tiny browser binding), `lib/welcomeSuggestion.ts`, and small edits in the files named below. Tests: `tests/fishing-reach.cjs` (in `npm test`).
+
+**A. Reach**
+1. **Go fishing.** Two entries travel to the nearest shore spot (`nearestFishingSpot`, never a boat), landing at its post facing
+   the float, so the Fish prompt is already up:
+   - **Welcome back note** (`components/WelcomeBack.tsx`): one extra "for you" line, "Fish are biting today. Tap here to go
+     fishing!", picked on the device from the local save (`pickWelcomeSuggestion`: fewer than 5 Fishbook species). It is still a
+     note, not a menu (owner, Oct 1 2026): the whole note is the one tap target, and with the suggestion that tap goes fishing. Same
+     classes as before (`CostumeMilestoneToast.module.css` `.toast`, `WelcomeBack.module.css` `.card` / `.note`), same toast lane and
+     dwell. Later suggestion kinds (next Paths lesson, the daily puzzle, the Kit Shop) add a case there. The title screen is unchanged.
+   - **Island map** (`components/IslandTravelMap.tsx`): a **Go fishing** button between the key and the map, in the shared mint
+     secondary button look (the title card's "Use a different code").
+   Both fire `fi2-go-fishing` (`GO_FISHING_EVENT`); `Town.tsx` resolves the nearest spot in its next frame, like map travel.
+2. **First catch guaranteed.** Until this device has landed a fish (`fi2-fish-first-catch-v1`, a DEVICE key) and while the Fishbook
+   is empty, the live roll (`fishingLogStore.ts liveCatchRoll`) returns the spot's most common common (`firstCatchFish`), and the
+   bite window gets the Easy bite extra (+0.35 s). Commons never run, so the fight is short. Economy: one common, once per device;
+   sims and `tests/economy.cjs` §12 run without a window and keep the neutral roll.
+3. **Spot discovery.** A player who has never fished, on foot within 8 m (`DISCOVER_RANGE`) of a post, sees its float bob 2.6× like a
+   nibble and the spot's ripple ring (the existing one ring mesh). No new mesh, material or timer; one cached boolean a frame.
+
+**B. Fixes**
+4. **Runs.** The reel says **Stop!** and a red **Let go!** badge pulses over it during a run; the hint reads "It pulls away! Stop
+   spinning: let go of the reel." The first run on a device also shows a short card ("When the fish pulls away, take your finger off
+   the reel…", `fi2-fish-run-hint-v1`, DEVICE). Letting go in time pops a green **Nice!** on the reel and the hint "Nice! You let it
+   tire. Spin again!" (fight event `tired`, Event API `tired`) and winds the fish in a little (`RUN_TIRED_BONUS` 0.04). It is easier
+   to count as "in time": the reel still for 35 % of the run (was 50 %), a resting finger's jitter (spin rate under 0.15) counts as
+   still, and letting go during a run never runs the idle-escape clock. Fights only get easier.
+5. **Basket full.** The catch card says "Your basket is full! This one swam free, but it is in your Fishbook." with one button,
+   **Sell to Rosa** (or Mele / the boat's captain: `nearestFishBuyer`), which opens that stand right there. Chosen over auto-release
+   with a message because auto-release already happens silently and is why fish piled up unsold: a kid keeps control, nothing is
+   lost (the Fishbook still records it), and selling is one tap instead of a walk across the island. The 5 s toast stays as well.
+   The line lives in the catch card (`view.caught`), so when the fish-visuals trophy card holds the catch card back for a rare or
+   legendary catch, it shows as soon as the catch card comes back.
+6. **Rosa's stand.** Each line has its price as its own chip ("3 coins each", plus "full price 4" when the ladder or the cap lowers
+   it), and the meter reads "**N coins** left at full price today" (or "Half price until tomorrow") with "Basket n/20" beside it.
+7. **Tutorial.** Why half never finished: "finished" needed a "Got it" tap on the first catch, which players skipped by casting
+   again or walking off, and Skip was the only other button. Now the first catch finishes it by doing (counted `done` at once; its
+   "You did it!" card stays while that catch shows). A device whose Fishbook already has fish never sees it. Lines are shorter, and the
+   miss line says "Too slow! Tap Hook! the moment the float goes under." (all misses were late).
+
+**Counters** (`lib/analytics/countIds.ts`, `fishingEvents.ts`, shown in the admin Fishing tab's "Go fishing taps" tile and the
+"Reach: getting to a first catch" card): `fi:go_welcome`, `fi:go_map`, `fi:first_catch`, `fi:ripple_start` (Fish tapped at a spot
+showing the discovery ripples), `fi:run_hint`, `fi:full_sell`; `fi:run_stopped` is unchanged and now easier to earn.

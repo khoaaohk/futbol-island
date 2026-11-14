@@ -17,6 +17,8 @@ import {createFishingCamera} from './fishingCamera';
 import {buildKioskGeometry,kioskAt,kioskVariant,stallColliders,stallType,stallYaw,STALL_TYPES} from './fishingKiosk';
 import {CAST_TIME,castPoint,planApproach,stepSession,type SessionEvent} from './fishingCore';
 import {fishById} from './fishCatalog';
+import {DISCOVER_RANGE,isNewAngler} from './fishingReach';// Nov 14 2026: discovery ripples for a player who never fished
+import {countRippleStart} from '../../analytics/fishingEvents';
 import {createDeepSeaBoat} from './deepSeaBoat';
 import {DEEP_SEA_BOATS,boatBySpot} from './deepSeaBoatData';
 import {aimCharge,type FishingSessionApi} from './fishingSession';
@@ -130,7 +132,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   if(session.paused){if(fishing&&visuals)visuals.frame(0,c.elapsed,c.reduced);return near;}
   const pending=session.takePending();
   if(pending&&!fishing){const i=FISH_SPOTS.findIndex(s=>s.id===pending),s=FISH_SPOTS[i];
-   if(s&&near===i){liveSpot=i;fishing=true;stand={x:c.x,z:c.z};area=aimArea(s,stand,c.height>c.width);cast=area.base;session.begin(s.id);hideFloat(i,true);
+   if(s&&near===i){liveSpot=i;fishing=true;stand={x:c.x,z:c.z};area=aimArea(s,stand,c.height>c.width);cast=area.base;session.begin(s.id);if(i===discoverSpot)countRippleStart();hideFloat(i,true);
     sessionNo++;clock=0;aimLanding=null;liveBoat()?.ride(true);
     visuals??=makeVisuals();visuals?.begin(stand,cast,cast.dir);visuals?.setLook?.(session.look);lookSeen=session.lookRev;replanHotspots(s,c.now/1000);
     // The camera eases in and the player aims the first cast (Oct 14 2026: no automatic first throw any more).
@@ -139,7 +141,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   if(fishing){
    if(session.takeStop())stopFishing(session);
    else{const o=session.options;if(session.session.phase==='reeling')session.tickSpin(c.now);/* the finger's spin rate fades once it stops */
-    events.push(...stepSession(session.session,FISH_SPOTS[liveSpot],c.dt,Math.random,{easy:c.reduced||session.easyBite,out:cast.dir,approach:(r,f)=>planApproach(cast,r,f),lure:o.lure,roll:session.catchRoll??undefined}));if(events.length||session.session.phase==='reeling')session.handle(events);}
+    events.push(...stepSession(session.session,FISH_SPOTS[liveSpot],c.dt,Math.random,{easy:c.reduced||session.easyBite||isNewAngler(),out:cast.dir,approach:(r,f)=>planApproach(cast,r,f),lure:o.lure,roll:session.catchRoll??undefined}));if(events.length||session.session.phase==='reeling')session.handle(events);}
   }else session.takeStop();
   const taps=session.drainTapEvents();events.push(...taps);
   if(fishing){const s=FISH_SPOTS[liveSpot],nowS=c.now/1000,ph=session.session.phase;clock+=c.dt;
@@ -236,7 +238,7 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  const kioskBoxes=FISH_SPOTS.map(s=>{const a=s.boat?boatBySpot(s.id)?.afloat:null;if(a)return new T.Box3(new T.Vector3(a.x0,-.4,a.z0),new T.Vector3(a.x1,3,a.z1));const k=kioskAt(s),g=STALL_TYPES[stallType(s.id)].glow,e=Math.max(1.2,Math.hypot(g.w,g.d)/2);return new T.Box3(new T.Vector3(k.x-e,0,k.z-e),new T.Vector3(k.x+e,Math.max(3.3,g.h+.3),k.z+e));});
  const standBox=new T.Box3(new T.Vector3(MARKET_STAND.x-3.8,0,MARKET_STAND.z-4.6),new T.Vector3(MARKET_STAND.x+3.8,5.1,MARKET_STAND.z+4.6));
  const hit=new T.Vector3(),anchor=new T.Vector3();
- let glowSpot=-1,hoverKind='',hoverSpot=-1,hoverUntil=0,bobbing=false,lastHover=-1;
+ let discoverSpot=-1,glowSpot=-1,hoverKind='',hoverSpot=-1,hoverUntil=0,bobbing=false,lastHover=-1;
  const rippleAge={t:0};
  // The moored Deep Sea Boats: each built only near it (one shared merged mesh), registering its aft deck as a landable floor.
  const boats=DEEP_SEA_BOATS.map(b=>createDeepSeaBoat(scene,b)),boatOf=new Map(boats.map(b=>[b.boat.spotId as string,b]));
@@ -244,8 +246,8 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
  function update(c:FishingUpdate){
   for(const b of boats)b.update(c);
   // Nearest spot within reach (on foot) — the only work when the player is away from the water.
-  let near=-1,nearD=SPOT_REACH,closestFloat=Infinity;
-  for(let i=0;i<FISH_SPOTS.length;i++){const s=FISH_SPOTS[i],d=Math.hypot(c.x-s.x,c.z-s.z);if(d<nearD&&(!s.boat||boatOf.get(s.id)?.deck)){near=i;nearD=d;}closestFloat=Math.min(closestFloat,Math.hypot(c.x-s.buoy.x,c.z-s.buoy.z));}
+  let near=-1,nearD=SPOT_REACH,closestFloat=Infinity,closestSpot=-1,closestPost=Infinity;
+  for(let i=0;i<FISH_SPOTS.length;i++){const s=FISH_SPOTS[i],d=Math.hypot(c.x-s.x,c.z-s.z);if(d<nearD&&(!s.boat||boatOf.get(s.id)?.deck)){near=i;nearD=d;}if(d<closestPost&&!s.boat){closestPost=d;closestSpot=i;}closestFloat=Math.min(closestFloat,Math.hypot(c.x-s.buoy.x,c.z-s.buoy.z));}
   if(!c.onFoot||!c.canEnter)near=-1;
   // ---- Live fishing session ----
   // ---- Live fishing: the state machine drives the camera and the (swappable) visuals ----
@@ -283,12 +285,15 @@ export function createFishingWorld(scene:T.Scene,player?:T.Object3D,session?:Fis
   if(activeSpot>=0&&activeSpot!==glowSpot){const s=FISH_SPOTS[activeSpot],k=kioskAt(s),g=STALL_TYPES[stallType(s.id)].glow;spotGlowRoot.position.set(k.x,0,k.z);spotGlowRoot.rotation.y=stallYaw(s.id);spotGlowRoot.scale.set(g.w/1.2,g.h/2.9,g.d/.7);spotGlowRoot.updateMatrixWorld();glowSpot=activeSpot;}
   spotGlow.update(activeSpot>=0&&!FISH_SPOTS[activeSpot].boat,c.dt,c.reduced);standGlow.update(activeStand,c.dt,c.reduced);
   // Floats bob only while the player is close enough to see them; reset once on leaving.
+  // Nov 14 2026 (reach): a player who has never fished, within DISCOVER_RANGE of a post on foot, sees its float bob like a nibble
+  // and the ripple ring (the same one mesh): no new draws, one cached boolean.
+  discoverSpot=!fishing&&c.onFoot&&closestPost<DISCOVER_RANGE&&isNewAngler()?closestSpot:-1;
   const bob=!c.reduced&&closestFloat<BOB_RANGE;
-  if(bob){for(let i=0;i<FISH_SPOTS.length;i++){const b=FISH_SPOTS[i].buoy;if(i!==liveSpot&&Math.hypot(c.x-b.x,c.z-b.z)<BOB_RANGE)setFloat(i,Math.sin(c.elapsed*1.8+i*1.7)*.05,Math.sin(c.elapsed*1.3+i)*.08);}floats.instanceMatrix.needsUpdate=true;}
+  if(bob){for(let i=0;i<FISH_SPOTS.length;i++){const b=FISH_SPOTS[i].buoy;if(i!==liveSpot&&Math.hypot(c.x-b.x,c.z-b.z)<BOB_RANGE){const k=i===discoverSpot?2.6:1;setFloat(i,Math.sin(c.elapsed*1.8*k+i*1.7)*.05*k,Math.sin(c.elapsed*1.3+i)*.08*k);}}floats.instanceMatrix.needsUpdate=true;}
   else if(bobbing){FISH_SPOTS.forEach((_,i)=>{if(i!==liveSpot)setFloat(i,0,0);});floats.instanceMatrix.needsUpdate=true;}
   bobbing=bob;
-  const rip=near>=0&&!c.reduced;
-  if(rip){const b=FISH_SPOTS[near].buoy;rippleAge.t=(rippleAge.t+Math.min(c.dt,.05)*.55)%1;ripple.position.set(b.x,-.4,b.z);ripple.scale.setScalar(.7+rippleAge.t*1.6);rippleMaterial.opacity=.5*(1-rippleAge.t);ripple.updateMatrix();}
+  const ripAt=near>=0?near:discoverSpot,rip=ripAt>=0&&!c.reduced;
+  if(rip){const b=FISH_SPOTS[ripAt].buoy;rippleAge.t=(rippleAge.t+Math.min(c.dt,.05)*.55)%1;ripple.position.set(b.x,-.4,b.z);ripple.scale.setScalar(.7+rippleAge.t*1.6);rippleMaterial.opacity=.5*(1-rippleAge.t);ripple.updateMatrix();}
   if(ripple.visible!==rip)ripple.visible=rip;
   const hoverKey=overSpot>=0?overSpot:overStand?99:-1,hoverStarted=hoverKey>=0&&hoverKey!==lastHover;lastHover=hoverKey;
   return {hovered:hoverKey>=0,hoverStarted,wants:(wantsFish?'fish':wantsSell?'sell':null) as 'fish'|'sell'|null,wantsDistance};

@@ -47,6 +47,10 @@ export const FIGHT_WORD:Record<FightStyle,string>={steady:'Steady puller',classi
 export const FULL_SPIN_S=.7;
 /** A run burns out this much faster while the reel is still (stop spinning and let it tire). */
 export const RUN_TIRE=1.6;
+/** Nov 14 2026 (the runs teaching moment): a run counts as "let go in time" when the reel was still for this share of it (was
+ *  half: a child's reaction time ate most of a short run), a spin rate under RUN_STILL_RATE during a run is a resting finger, and
+ *  a run let go in time winds the fish in a little (RUN_TIRED_BONUS of the progress): easier, never harder. */
+export const RUN_STOP_SHARE=.35,RUN_STILL_RATE=.15,RUN_TIRED_BONUS=.04;
 /** Seconds of spinning at full rate (no runs) to land, by rarity; sharks fight like legendary animals. Size adds up to +30 %. */
 export const FIGHT_NEED:Record<FishRarity,number>={common:2.2,uncommon:2.8,rare:3.6,legendary:4.6};
 /** Runs per fight by rarity (commons never run). */
@@ -100,7 +104,8 @@ export type Fight={
  /** Seconds left of a slip's head-shake (no winding). */stun:number;
  /** Seconds spent so far (for tests and the economy check). */time:number;
 };
-export type FightEvent='run'|'slip'|'landed'|'strain'|'ease'|'leap';
+/** `tired` (Nov 14 2026): a run ended with the reel let go in time (feedback + a small wind-in bonus). */
+export type FightEvent='run'|'slip'|'landed'|'strain'|'ease'|'leap'|'tired';
 
 const lerp=(a:number,b:number,t:number)=>a+(b-a)*t;
 export function createFight(f:Pick<FishSpecies,'group'|'shape'|'rarity'|'size'>&{id?:string},sizeCm:number,rand:()=>number):Fight{
@@ -123,11 +128,12 @@ export function stepFight(f:Fight,dt:number,rand:()=>number):FightEvent[]{
  const ev:FightEvent[]=[],step=Math.max(0,Math.min(dt,.1));f.time+=step;
  // A run starts when the progress passes its mark (the fish feels the hook coming in).
  if(!f.run&&f.runAt.length&&f.progress>=f.runAt[0]){f.runAt.shift();const [a,b]=STYLE_TUNE[f.style].runLen;f.run={dir:rand()<.5?-1:1,t:0,len:lerp(a,b,rand()),still:0};f.runs++;ev.push('run');if(f.style==='leaper'||f.style==='legend')ev.push('leap');}
- const rate=f.holding?f.rate:0;
+ // Nov 14 2026 (0 of 30 runs were stopped in time): during a run a resting finger's jitter (under RUN_STILL_RATE) counts as still.
+ const rate=f.holding&&!(f.run&&f.rate<RUN_STILL_RATE)?f.rate:0;
  if(f.run){
   // A run ends by time: sooner while the reel is still (let it tire), at its own pace while you keep spinning.
   if(rate>0)f.run.t+=step;else{f.run.t+=step*RUN_TIRE;f.run.still+=step*RUN_TIRE;}
-  if(f.run.t>=f.run.len){if(f.run.still>=f.run.t*.5)f.runsStopped++;else f.runsSpun++;f.run=null;}
+  if(f.run.t>=f.run.len){if(f.run.still>=f.run.t*RUN_STOP_SHARE){f.runsStopped++;f.progress=Math.min(.99,f.progress+RUN_TIRED_BONUS);ev.push('tired');}else f.runsSpun++;f.run=null;}
  }
  if(rate>0){f.rateSum+=rate*step;f.spinTime+=step;}
  const live=f.run,pull=live?f.runPull*f.tire:0;

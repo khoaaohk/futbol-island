@@ -158,7 +158,7 @@ for(const f of ['lib/town/fishing/fishingOverlay.ts','lib/town/fishing/deepSeaBo
  store.resetFishingTutorial();ok(!store.fishingPrefs().tutorialDone,'the tutorial can be replayed');
  ok(/'fi2-fish-tutorial-v1'/.test(snap)&&/`fi2-fish-tutorial-v1`/.test(doc)&&!/easy-reel/.test(snap+doc),'the tutorial flag is a DEVICE key (snapshot + accounts design); the Easy reel key is gone');
  const host=src('components/FishingHost.tsx'),tut=src('components/FishingTutorial.tsx');
- ok(/!prefs\.tutorialDone/.test(host)&&/onDone=\{how=>\{countFishTutorial\(how\);finishFishingTutorial\(\);\}\}/.test(host),'the HUD shows the tutorial until it is done');
+ ok(/!prefs\.tutorialDone/.test(host)&&/onDone=\{how=>\{if\(how==='done'\)\{setTutorialCatch\(''\);return;\}countFishTutorial\(how\);finishFishingTutorial\(\);\}\}/.test(host)&&/countFishTutorial\('done'\);finishFishingTutorial\(\)/.test(host),'the HUD shows the tutorial until it is done (Nov 14 2026: the first catch finishes it by doing)');
  ok(['aim','watch','wait','now','reel'].every(k=>new RegExp(`${k}:'`).test(tut))&&/GhostHand/.test(host)&&/Spin the reel/.test(tut)&&!/swipe/i.test(tut),'the steps: aim, watch, wait, NOW, spin, with the ghost hand (no swipe)');
  ok(/ghostButton\[data-ghost=reel\]\{[^}]*ghostSpin/.test(src('components/FishingHost.module.css')),'the reel step\'s ghost hand circles the reel');
  ok(!/setTimeout|setInterval|requestAnimationFrame/.test(tut),'the tutorial has no timers');}

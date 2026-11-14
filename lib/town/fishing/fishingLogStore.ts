@@ -5,6 +5,7 @@
  * Event-driven only: no timers here, nothing per frame. (The derby clock, photo mode, the record boards and the weather were removed
  * on 15 Oct 2026: user decision, "too complicated".)
  */
+import {firstCatchFish,isNewAngler,markFirstCatch} from './fishingReach';
 import {useSyncExternalStore} from 'react';
 import {FISHING_LOG_KEY,bumpPity,pityFor,claimMilestones,emptyLog,ensureDay,legendsDue,logCatch,mergeLogs,sanitizeLog,type CatchEffects,type FishingLog,type FloatSkin} from './fishingLog';
 import {catchWeights,pitySpecies,type CatchContext} from './fishingOdds';
@@ -14,7 +15,7 @@ import {FISHBOOK_STORAGE_KEY,sanitizeFishbook,speciesCaught} from './fishingCore
 import {FISH_REQUEST_COINS} from '../../economy';
 import {islandJobWallet} from '../jobs/islandWallet';
 import {count} from '../../analytics/tracker';
-import {countLureChosen,wireFishingAnalytics} from '../../analytics/fishingEvents';
+import {countFirstCatch,countLureChosen,wireFishingAnalytics} from '../../analytics/fishingEvents';
 import type {TimeOfDayKey} from './nightFish';
 
 const server=emptyLog();
@@ -42,6 +43,8 @@ function uncaughtLegendaries(spot:Parameters<typeof catchWeights>[0]):string[]{c
 /** The live catch roll (fishingSession.setCatchRoll): the same weighted pick as fishingCore.rollCatch, through the live context
  *  (night fish, the lure, legends). Read once per bite. */
 export function liveCatchRoll(spot:Parameters<typeof catchWeights>[0],rand:number,hot:number):string{
+ // Nov 14 2026 (reach): a device's first ever catch is guaranteed: the spot's most common common (fishingReach.ts).
+ if(isNewAngler()){const first=firstCatchFish(spot);if(first)return first;}
  const weighted=Object.entries(catchWeights(spot,hot,liveContext(spot))),total=weighted.reduce((a,[,w])=>a+w,0);let pick=Math.max(0,Math.min(.999999,rand))*total;
  let out=weighted[weighted.length-1][0];
  for(const [id,w] of weighted){if(pick<w){out=id;break;}pick-=w;}
@@ -86,7 +89,7 @@ type HotLog={off?:()=>void};
 const hotLog:HotLog=typeof globalThis==='undefined'?{}:((globalThis as {__fi2FishingLog?:HotLog}).__fi2FishingLog??={});
 if(typeof window!=='undefined'){
  hotLog.off?.();
- hotLog.off=fishingSession.onFishingEvent(e=>{if(e.type==='catch'&&e.fish&&typeof e.size==='number')handleCatch({id:e.fish,size:e.size,spot:e.spot},e.at);});
+ hotLog.off=fishingSession.onFishingEvent(e=>{if(e.type==='catch'&&e.fish&&typeof e.size==='number'){if(!e.legend&&isNewAngler()){markFirstCatch();countFirstCatch();}handleCatch({id:e.fish,size:e.size,spot:e.spot},e.at);}});
  // The lure on the line rides along in the session options (the event payload carries it too).
  fishingSession.setOptions({lure:readFishingLog().lure});
  fishingSession.setCatchRoll(liveCatchRoll);

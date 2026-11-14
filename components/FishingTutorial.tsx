@@ -3,7 +3,7 @@
  * The first-time fishing tutorial (Oct 15 2026, docs/fishing-research.md A3): on this device's first fishing session a small
  * card walks through the beats one at a time (aim, watch the shadow, wait through the nibbles, NOW on the bite, then spin the
  * reel), with a dotted "ghost hand" showing the gesture (Nov 6 2026: no hand while the button reads Wait…; it appears on Hook!) (a hand circling on the reel for the spin). It ends on the first catch
- * (or Skip) and is remembered per device
+ * (or Skip; Nov 14 2026: the first catch finishes it by itself) and is remembered per device
  * (fi2-fish-tutorial-v1, a DEVICE key in lib/saves/snapshot.ts). DOM + one-shot / short CSS animations only; no timers.
  */
 import type {SessionPhase} from '@/lib/town/fishing/fishingCore';
@@ -21,14 +21,16 @@ export function tutorialStep(phase:SessionPhase):TutorialStep{
   default:return 'done';
  }
 }
+// Nov 14 2026: shorter lines (kids 7-12 read them mid-action), and finished BY DOING: the first catch ends it (FishingHost counts
+// it 'done' at once, no "Got it" needed). All 24 misses in the Nov 1-14 data were "too late", so the miss line says tap sooner.
 const NUM:Record<TutorialStep,string>={aim:'1/4',watch:'2/4',wait:'3/4',now:'3/4',reel:'4/4',miss:'',done:''};
 export const TUTORIAL_TEXT:Record<TutorialStep,string>={
- aim:'Drag on the water to aim, then let go to cast.',
- watch:'Watch the water for a fish shadow. When one comes, wait for it.',
- wait:'The button says Wait… while it nibbles: a nibble is just a feint!',
+ aim:'Drag on the water to aim. Let go to cast.',
+ watch:'Watch the water for a fish shadow.',
+ wait:'The button says Wait… while it nibbles. Wait for the big splash!',
  now:'NOW! Tap Hook!',
- reel:'Spin the reel round and round to wind in. When it runs, stop and let it tire!',
- miss:'Oops! Another fish will come. Wait for the big splash.',
+ reel:'Spin the reel. When it pulls away, let go!',
+ miss:'Too slow! Tap Hook! the moment the float goes under.',
  done:'You did it! You landed your first catch.',
 };
 

@@ -18,7 +18,7 @@ import dynamic from 'next/dynamic';
 import {retryImport} from '@/lib/retryImport';
 import {useEffect,useRef,useState,useSyncExternalStore} from 'react';
 import {registerBackCloser} from '@/lib/town/backCloses';
-import {fishSellValue,isMarketBuyer,type MarketBuyer} from '@/lib/economy';
+import {MARKET_BUYERS,fishSellValue,isMarketBuyer,type MarketBuyer} from '@/lib/economy';
 import {fishingSession,finishFishingTutorial,useFishbook,useFishingPrefs} from '@/lib/town/fishing/fishingStore';
 import {speciesCaught} from '@/lib/town/fishing/fishingCore';
 import {sizeCompare} from '@/lib/town/fishing/fishingCard';
@@ -44,9 +44,10 @@ import styles from './FishingHost.module.css';
 import {BackButton} from './BackButton';
 import {Icon} from './Icon';
 import {FishingCatchToast,FishingLureButton} from './FishingLureButton';
-import {countFishStart,countFishTutorial,countFishbookOpen} from '@/lib/analytics/fishingEvents';
+import {countFishStart,countFishTutorial,countFishbookOpen,countFullSell,countRunHint} from '@/lib/analytics/fishingEvents';
+import {markRunHint,runHintSeen} from '@/lib/town/fishing/fishingReach';
 import {islandMarket} from '@/lib/town/jobs/islandWallet';
-import {coinsText,newestUnitValue} from '@/lib/town/market/marketStand';
+import {coinsText,nearestFishBuyer,newestUnitValue} from '@/lib/town/market/marketStand';
 const MarketStand=dynamic(()=>retryImport(()=>import('./MarketStand')),{ssr:false});
 type Place=MarketBuyer;// rosa, farm (Mele), marina, kofi: one market state (lib/economy.ts MARKET_BUYERS)
 const Fishbook=dynamic(()=>retryImport(()=>import('./Fishbook')),{ssr:false});
@@ -213,12 +214,26 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  const caught=speciesCaught(useFishbook());
  // Catches from the moored boat say where they came from (docs/fishing.md "Deep Sea Boat").
  const fromBoat=!!(view.spotId&&spotById(view.spotId)?.boat);
+ // Nov 14 2026 (reach): the runs teaching moment. The first run on this device shows a short card (once); every run shows the
+ // "Let go!" badge on the reel; a run let go in time ('tired' on the Event API) pops "Nice!" on the reel (one-shot CSS).
+ const [runCard,setRunCard]=useState(false),[tired,setTired]=useState(0);
+ useEffect(()=>{if(view.run&&view.fight&&!runCard&&!runHintSeen()){markRunHint();countRunHint();setRunCard(true);}},[view.run,view.fight]);// eslint-disable-line react-hooks/exhaustive-deps
+ useEffect(()=>{if(view.phase!=='reeling'){setRunCard(false);setTired(0);}},[view.phase]);
+ useEffect(()=>fishingSession.onFishingEvent(e=>{if(e.type==='tired')setTired(n=>n+1);}),[]);
  // The catch card can be dismissed; a new catch (different fish or size) shows it again.
  const catchKey=view.caught?`${view.caught.id}-${view.caught.size}`:'';const [dismissed,setDismissed]=useState('');
  const waiting=view.phase==='scared'||view.phase==='escaped'||view.phase==='casting'||view.phase==='approach'||view.phase==='nibble'||view.castLock;
  const fighting=view.phase==='reeling'&&view.fight,castable=view.phase==='ready'||view.phase==='caught';
  // A3: the first-time tutorial (this device), finished on the first catch's "Got it" or Skip.
- const tutorial=view.active&&!prefs.tutorialDone&&!book&&!stand,tStep=tutorial?tutorialStep(view.phase):null;
+ // Nov 14 2026: the tutorial is finished BY DOING: the first catch finishes it (counted 'done' at once, no "Got it" needed; half
+ // the players used to leave without tapping it), and its "You did it!" card stays up while that catch is shown. A device whose
+ // Fishbook already has fish (a restored save) never sees it.
+ const [tutorialCatch,setTutorialCatch]=useState('');
+ useEffect(()=>{if(!view.active||prefs.tutorialDone)return;
+  if(view.phase==='caught'&&catchKey){countFishTutorial('done');finishFishingTutorial();setTutorialCatch(catchKey);return;}
+  if(caught>0&&view.phase==='ready')finishFishingTutorial();},[view.active,view.phase,catchKey,caught,prefs.tutorialDone]);
+ const tutorialDoneCard=view.active&&view.phase==='caught'&&!!catchKey&&tutorialCatch===catchKey&&!book&&!stand;
+ const tutorial=view.active&&(!prefs.tutorialDone||tutorialDoneCard)&&!book&&!stand,tStep=tutorial?tutorialStep(view.phase):null;
  const size=view.caught?sizeCompare(view.caught.size):null;
  // A legend is caught once and released (legendary.ts): its own card, no coins, no basket.
  const legend=view.caught&&isLegendId(view.caught.id)?LEGEND_INFO[view.caught.id]:null;
@@ -229,7 +244,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  useDelightRev();const dl=lastDelight(),delight=dl&&view.caught&&dl.id===view.caught.id&&dl.size===view.caught.size?dl:null;
  // The celebration tier (common … legend, golden): glow, shimmer and sparkles; Battery saver / hot phones keep half the sparkles.
  const tier=fish?celebrationTier(fish.rarity,{golden,legend:!!legend}):'common',fx=CELEBRATION[tier],sparkN=effectiveTier()>=2?Math.floor(fx.sparkles/2):fx.sparkles,secret=delight?.secret?SECRET_TEXT[delight.secret]:null;
- const reelLabel=fighting?(view.strain?'Ease!':view.run?'Stop!':'Spin!'):view.phase==='reeling'?'Reel':view.castLock?'Wait…':REEL_LABEL[view.phase];
+ const reelLabel=fighting?(view.run?'Stop!':view.strain?'Ease!':'Spin!'):view.phase==='reeling'?'Reel':view.castLock?'Wait…':REEL_LABEL[view.phase];
  // What this catch fetches now (Nov 6 2026: the card used to show full price, but the same-kind ladder and the daily allowance can
  // lower it): the newest one in the basket's value; "up to" full price when it is not in the basket.
  const worth=fish&&view.caught&&!legend?(()=>{const v=view.caught.inBasket?newestUnitValue(market,fish.id):null;return v===null?`up to ${coinsText(fishSellValue(fish))}`:coinsText(v);})():'';
@@ -245,7 +260,9 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    {legend?<p className={styles.stamps}><span className={styles.stamp} data-stamp="legend">Island legend!</span></p>:(view.caught.isNew||record||golden||visitor)&&<p className={styles.stamps}>{golden&&<span className={styles.stamp} data-stamp="golden">Golden!</span>}{view.caught.isNew&&<span className={styles.stamp} data-stamp="new">New!</span>}{record&&<span className={styles.stamp} data-stamp="record">Record!</span>}{visitor&&<span className={styles.stamp} data-stamp="visitor">Today&apos;s visitor!</span>}</p>}
    <p className={styles.catchTop}><b>{fish.name}</b>{fromBoat&&<em className={styles.catchWhere} data-fish-where>Deep sea boat</em>}</p>
    {legend?<p className={styles.catchMeta} data-rarity="legendary" data-fish-legend><RarityStars rarity="legendary" className={styles.stars}/> {legend.title} · caught once and released</p>
-   :<p className={styles.catchMeta} data-rarity={fish.rarity}><RarityStars rarity={fish.rarity} className={styles.stars}/> {RARITY_LABEL[fish.rarity]} · <span data-fish-worth>{worth}</span>{view.caught.inBasket?'':' · basket full'}</p>}
+   :<p className={styles.catchMeta} data-rarity={fish.rarity}><RarityStars rarity={fish.rarity} className={styles.stars}/> {RARITY_LABEL[fish.rarity]} · <span data-fish-worth>{worth}</span></p>}
+   {/* Nov 14 2026: a full basket says so plainly, with one tap to the nearest fish buyer (the fish is still in the Fishbook). */}
+   {!legend&&!view.caught.inBasket&&(()=>{const b=view.spotId?nearestFishBuyer(view.spotId):'rosa';return <p className={styles.catchFull} data-fish-basket-full><b>Your basket is full!</b> This one swam free, but it is in your Fishbook. <button type="button" className={styles.catchSell} data-fish-sell={b} onClick={()=>{countFullSell();setTab('fish');setPlace(b);setLoaded(l=>({...l,stand:true}));setStand(true);}}>Sell to {MARKET_BUYERS[b].who}</button></p>;})()}
    {/* A golden one: a short celebration, and the plain truth that it is the same fish at the same price (stamp-only). */}
    {golden&&!legend&&<p className={styles.catchGolden} data-fish-golden><b>A golden {fish.name}!</b> Very rare. It gets a gold mark in your Fishbook, and Rosa pays the same as for any {fish.name}.</p>}
    {secret&&<p className={styles.catchSecret} data-fish-secret={delight?.secret}><span className={styles.stamp} data-stamp="secret">{secret.stamp}</span> {secret.note}</p>}
@@ -263,7 +280,8 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    </div>
    {/* B2: the white flash at the top of the leap (one-shot CSS, after the leap's rise; none with reduced motion). */}
    {view.phase==='caught'&&catchKey&&<div className={styles.leapFlash} key={catchKey} aria-hidden="true"/>}
-   {tutorial&&<FishingTutorial phase={view.phase} onDone={how=>{countFishTutorial(how);finishFishingTutorial();}}/>}
+   {tutorial&&<FishingTutorial phase={view.phase} onDone={how=>{if(how==='done'){setTutorialCatch('');return;}countFishTutorial(how);finishFishingTutorial();}}/>}
+   {runCard&&fighting&&!tutorial&&<div className={styles.tutorial} data-fish-run-hint role="status"><p>When the fish pulls away, take your finger off the reel. It gets tired. Then spin again!</p></div>}
    {/* Content toast (a request finished, a reward, a legend's clue or release): after the catch card (or once it is dismissed), above the reel. */}
    <FishingCatchToast cardUp={view.phase==='caught'&&dismissed!==catchKey}/>
    <div className={styles.controls}>
@@ -280,6 +298,8 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
      <span className={styles.trail} aria-hidden="true"><b/><i/><i/><i/><i/></span>
      <ReelArt crank={crank}/>
      <span className={styles.reelLabel}>{reelLabel}</span>
+     {fighting&&view.run&&<span className={styles.letGo} data-fish-let-go aria-hidden="true">Let go!</span>}
+     {fighting&&tired>0&&<b key={`tired-${tired}`} className={styles.tiredPop} data-fish-tired aria-hidden="true">Nice!</b>}
      {tStep==='now'||tStep==='reel'?<span className={styles.ghostButton} data-ghost={tStep} aria-hidden="true"><GhostHand/></span>:null}
     </button>
     <FishingLureButton className={styles.action}/>

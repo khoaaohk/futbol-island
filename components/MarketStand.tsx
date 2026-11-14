@@ -54,7 +54,7 @@ export default function MarketStand({open,onOpenChange,initialTab,place='rosa'}:
   setNote({id:Date.now(),coins:r.credited||r.coins,text:`${r.lines.map(l=>`${l.count} ${l.name}`).join(', ')} sold. ${r.message}`,lesson:first?.lesson});};
  const sellAll=(kind:GoodKind)=>{if(busy)return;setBusy(true);void islandMarket.sell(kind).then(done,()=>setBusy(false));};
  const sellOne=(id:string)=>{if(busy)return;setBusy(true);void sellOneGood(id,sellPorts).then(done,()=>setBusy(false));};
- const used=allowanceUsed(market),count=basketCount(market);
+ const used=allowanceUsed(market),count=basketCount(market),capLeft=Math.max(0,MARKET_FULL_PRICE_COINS-market.soldToday);
  return <dialog ref={dialog} className={styles.dialog} aria-labelledby="market-stand-title" data-market-stand data-market-place={place} onCancel={e=>{e.preventDefault();onOpenChange(false);}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}} onKeyDown={e=>e.stopPropagation()} onKeyUp={e=>e.stopPropagation()}>
   <section className={`${styles.panel} ${shell.shell}`}>
    <header className={shell.header}><div><h2 id="market-stand-title">{STAND_TITLE[place]}</h2></div><DoneButton ref={close} onDone={()=>onOpenChange(false)}/></header>
@@ -66,7 +66,9 @@ export default function MarketStand({open,onOpenChange,initialTab,place='rosa'}:
     </div>
     <div className={styles.allowance} aria-label={`Full-price sales today: ${Math.min(market.soldToday,MARKET_FULL_PRICE_COINS)} of ${MARKET_FULL_PRICE_COINS} coins`}>
      <div className={styles.meter}><div style={{transform:`scaleX(${used})`}}/></div>
-     <p>{used<1?`Full prices today until you have sold ${MARKET_FULL_PRICE_COINS} coins of goods (${market.soldToday} so far). After that, half price until tomorrow.`:'Great trading today! Everything sells for half price until tomorrow.'} After {MARKET_LADDER_FULL_EACH} of one kind today, more of the same fetch a bit less (rare catches and finds skip that rule). Basket {count}/{BASKET_LIMIT}.</p>
+     {/* Nov 14 2026 (fishing reach): what is left at full price today, plainly, as a number (was one long sentence). */}
+     <p className={styles.capLeft} data-market-cap-left={capLeft}><span>{capLeft>0?<><b>{capLeft} coins</b> left at full price today</>:<b>Half price until tomorrow</b>}</span><span>Basket {count}/{BASKET_LIMIT}</span></p>
+     <p>{capLeft>0?`Rosa pays full price for the first ${MARKET_FULL_PRICE_COINS} coins each day, then half price.`:'Great trading today! Full prices come back tomorrow.'} After {MARKET_LADDER_FULL_EACH} of one kind today, more of the same fetch a bit less (rare catches and finds skip that rule).</p>
     </div>
     <div className={styles.tabs} role="tablist" aria-label="What to sell">{tabs.map(t=>{const n=t.id==='cards'?null:basketLines(market,t.id).reduce((a,l)=>a+l.count,0);return <button key={t.id} type="button" role="tab" id={`market-tab-${t.id}`} aria-selected={tab===t.id} aria-controls={`market-panel-${t.id}`} onClick={()=>{setTab(t.id);setNote(null);}}>{t.label}{n?<span>{n}</span>:null}</button>;})}</div>
     {note&&<p key={note.id} className={styles.note} role="status" data-market-note>
@@ -87,9 +89,10 @@ function Goods({kind,lines,busy,onOne,onAll,seller}:{kind:'fish'|'produce'|'beac
  if(!lines.length)return <div className={styles.empty}>{kind==='fish'?<><b>No fish in your basket yet.</b><p>Look for the little fishing posts with a red float (F on the map): {FISH_SPOTS.filter(s=>!s.area).map(s=>s.name).join(', ')}, plus {FISH_SPOTS.filter(s=>s.area).length} more along the Coral Cay causeway and round Coral Cay.</p></>:<><b>No produce in your basket yet.</b><p>Pick ripe fruit and vegetables at the Community Garden, just north of the market, or work a Harvest day on Coral Cay Farm.</p></>}</div>;
  const total=islandMarket.quote(kind).coins;
  return <section className={styles.goods} aria-label={kind==='fish'?'Sell fish':kind==='beach'?'Sell beach finds':'Sell produce'}>
-  <ul>{lines.map(({good,count,eachText,plenty})=>{const fish=kind==='fish'?fishById(good.id):undefined;return <li key={good.id} data-good={good.id} data-plenty={plenty||undefined}>
+  <ul>{lines.map(({good,count,each,eachText,full,plenty})=>{const fish=kind==='fish'?fishById(good.id):undefined;return <li key={good.id} data-good={good.id} data-plenty={plenty||undefined}>
    <span className={styles.art}>{fish?<FishArt fish={fish} size={64}/>:kind==='beach'&&beachFindById(good.id)?<BeachFindArt find={beachFindById(good.id)!} size={44}/>:<ProduceArt good={good} size={40}/>}</span>
-   <span className={styles.name}><b>{count>1?good.plural:good.name} × {count}</b><small>{eachText}{fish?` · ${fish.club.name}`:''}</small>{plenty&&<small className={styles.plenty} data-plenty-note>{`${seller} already has plenty of ${good.plural.toLowerCase()} today: ${eachText}. Fresh tomorrow!`}</small>}</span>
+   <span className={styles.name}><b>{count>1?good.plural:good.name} × {count}</b>{fish&&<small>{fish.club.name}</small>}{plenty&&<small className={styles.plenty} data-plenty-note>{`${seller} already has plenty of ${good.plural.toLowerCase()} today: ${eachText}. Fresh tomorrow!`}</small>}</span>
+   <span className={styles.price} data-market-price={good.id}><b>{eachText}</b>{each<full&&<small>full price {full}</small>}</span>
    <button type="button" className={styles.one} disabled={busy} onClick={()=>onOne(good.id)} aria-label={`Sell one ${good.name} (${eachText})`}>Sell 1</button>
   </li>;})}</ul>
   <button type="button" className={styles.all} disabled={busy} onClick={onAll} data-market-sell-all={kind}>Sell all {kind==='beach'?'beach finds':kind} · {total} coin{total===1?'':'s'}</button>

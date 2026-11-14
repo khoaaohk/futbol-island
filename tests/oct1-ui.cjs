@@ -12,7 +12,7 @@ require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f
  assert(W.WELCOME_BACK_SHOW_MS>=5000&&W.WELCOME_BACK_SHOW_MS<=7000,'about 6 s on screen');
  // No buttons inside the card: the whole card is the one tap target that hides it.
  assert.equal((card.match(/<button\b/g)||[]).length,1,'one button: the card itself');
- assert.match(card,/<button type="button" className=\{`\$\{toast\.toast\} \$\{styles\.card\}`\} role="status" data-hud-slot="guide" data-welcome-back hidden=\{blocked\} onClick=\{\(\)=>setOpen\(false\)\}>/,'a tap on the card hides it');
+ assert.match(card,/<button type="button" className=\{`\$\{toast\.toast\} \$\{styles\.card\}`\} role="status" data-hud-slot="guide" data-welcome-back hidden=\{blocked\} data-welcome-suggest=\{suggest\?\.kind\} onClick=\{\(\)=>\{if\(suggest\?\.action==='go-fishing'\)\{countGoFishing\('welcome'\);requestGoFishing\(\);\}setOpen\(false\);\}\}>/,'a tap on the card hides it (Nov 14 2026: with a fishing suggestion the same tap goes fishing)');
  for(const gone of [/data-welcome-go/,/data-welcome-warmup/,/data-welcome-myfootball/,/>Go</,/>Later</,/Warm-up</,/openLearningReview/,/FORMAT_PATH_LAUNCH/,/styles\.actions/])assert.doesNotMatch(card,gone,`no ${gone} on the card`);
  assert.doesNotMatch(css,/\.actions|\.go\b|\.later\b/,'no button styles left');
  // Auto-dismiss: one timeout that runs only while the card is on screen (not blocked, stack not covered); fresh dwell on return.
