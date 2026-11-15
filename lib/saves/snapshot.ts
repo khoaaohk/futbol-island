@@ -11,6 +11,8 @@
  *  - NEVER: session-only, developer-only and the save system's own keys (the code itself, the sync state, the backup).
  *  - Coach-plan (IDP) free text is never synced: the plan's choices travel, its typed notes and strength stay on this device.
  */
+import {WELCOME_TALLY_KEY,cleanTallyRaw} from '../welcome/tally';
+import {WELCOME_LEARN_KEY,WELCOME_ARM_KEY} from '../welcome/learn';
 export const SNAPSHOT_FORMAT=1;
 /** Doc §4.1 table A. Order follows the doc. */
 export const SYNC_KEYS:readonly string[]=[
@@ -58,10 +60,13 @@ export const SYNC_KEYS:readonly string[]=[
  // Grown-ups & IDP (the IDP with its free text removed: stripIdpText). fi2-idp-v2 (Oct 9 2026) holds ids, dates and picture
  // choices only; its typed words live in the device key fi2-idp-text-v1 (DEVICE_KEYS), which never syncs.
  'fi2-grownups-format-v1','fi2-idp-plan-v1','fi2-idp-v2',
+ // Smart welcome (Nov 14 2026, docs/welcome-suggestions.md, lib/welcome/tally.ts): decayed minutes/actions per interest, ~120 bytes,
+ // sanitised by cleanTallyRaw below. Follows a save code; never sent to analytics.
+ WELCOME_TALLY_KEY,
 ];
 export const ARCADE_RECORD_KEY=/^fi2-arcade-record-[a-z0-9]{1,24}(?:-[a-z0-9]{1,24}){0,2}-v1$/;
 /** Doc §4.1 table B: each device keeps its own. */
-export const DEVICE_KEYS:readonly string[]=['fi2-toy-hints-v1','fi2-toy-opened-v1'/* gashapon 3D toy viewer: gesture hints seen, capsules whose opening played (components/GashaponToyViewer.tsx; QA Nov 9 2026) */,'fi2-npc-fresh-v1','fi2-goal-replays-v1'/* live matches: Goal replays on / off (lib/town/goalReplay.ts) */,'fi2-stick-sprint-v1'/* live matches: Push stick to sprint on / off (lib/town/liveControls.ts) */,'fi2-match-fx-v1'/* live matches: Match effects Full / Light (lib/town/matchFxSetting.ts) */,'fi2-match-11-mode-v1'/* live matches: 11v11 kid / adult balance (lib/town/match/matchModeSetting.ts) */,'fi2-match-haptics-v1'/* live matches: Vibration on / off (lib/town/liveControls.ts) */,'fi2-match-phrases-v1'/* live matches: Quick phrases on / off (lib/town/quickPhrases.ts) */,'fi2-pinball-prefs-v1','fi2-pinball-tutorial-v1','fi2-music-enabled','fi2-runner-hint-v1','fi2-bug-pill-v1','fi2-multiplayer-allowed-v1','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
+export const DEVICE_KEYS:readonly string[]=[WELCOME_LEARN_KEY,WELCOME_ARM_KEY/* smart welcome (Nov 14 2026, lib/welcome/learn.ts): taps/ignores per suggestion kind and the 10% holdout arm, this device only */,'fi2-toy-hints-v1','fi2-toy-opened-v1'/* gashapon 3D toy viewer: gesture hints seen, capsules whose opening played (components/GashaponToyViewer.tsx; QA Nov 9 2026) */,'fi2-npc-fresh-v1','fi2-goal-replays-v1'/* live matches: Goal replays on / off (lib/town/goalReplay.ts) */,'fi2-stick-sprint-v1'/* live matches: Push stick to sprint on / off (lib/town/liveControls.ts) */,'fi2-match-fx-v1'/* live matches: Match effects Full / Light (lib/town/matchFxSetting.ts) */,'fi2-match-11-mode-v1'/* live matches: 11v11 kid / adult balance (lib/town/match/matchModeSetting.ts) */,'fi2-match-haptics-v1'/* live matches: Vibration on / off (lib/town/liveControls.ts) */,'fi2-match-phrases-v1'/* live matches: Quick phrases on / off (lib/town/quickPhrases.ts) */,'fi2-pinball-prefs-v1','fi2-pinball-tutorial-v1','fi2-music-enabled','fi2-runner-hint-v1','fi2-bug-pill-v1','fi2-multiplayer-allowed-v1','fi2-music-volume','fi2-sound-muted','fi2-sound-volume','fi2-audio-mix',
  'fi2-voice-enabled','fi2-coach-voice','fi2-controls-flipped','fi2-battery-saver','fi2-time-of-day','fi2-cards-field-v1','fi-card-dots',
  'fi2-last-visit-day-v1','fi2-bottle-open-date','fi2-idp-text-v1',
  // The energy bar (Oct 12 2026): refilled on each device's first visit of the day and redrawn as the player walks (a float),
@@ -179,6 +184,7 @@ export function cleanKeys(keys:unknown):Record<string,string>|null{
  for(const [k,v] of Object.entries(keys as Record<string,unknown>)){
   if(!isSyncKey(k)||typeof v!=='string'||v.length>MAX_KEY_BYTES)continue;
   if(k===IDP_KEY_NAME||k===IDP2_KEY_NAME){const s=stripIdpText(v);if(s!==null)out[k]=s;continue;}
+  if(k===WELCOME_TALLY_KEY){const s=cleanTallyRaw(v);if(s!==null)out[k]=s;continue;}
   out[k]=v;
  }
  return out;
@@ -214,6 +220,8 @@ export const PLAYED_IGNORE_KEYS:readonly string[]=[
  'fi2-ride-unlocks-v1','fi2-ride-unlock-announced-v1','fi2-costume-milestone-v1','fi2-graduations-v1','futbol-island-quiz-growth-v1',
  // Migrations and preferences written on mount: the IDP v1 mirror, the inferred path/lesson format, onboarding done
  'fi2-idp-plan-v1','fi2-path-format-v1','fi2-lesson-format-v1','fi2-grownups-format-v1','fi2-welcome-v1',
+ // The smart-welcome tally (Nov 14 2026): written by just being somewhere, so it never makes a save "played more recently"
+ WELCOME_TALLY_KEY,
 ];
 /** snapshotHash without PLAYED_IGNORE_KEYS: the "did the player change anything" fingerprint behind the played time. */
 export function progressHash(s:Pick<Snapshot,'keys'>):string{

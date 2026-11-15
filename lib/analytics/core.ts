@@ -37,6 +37,7 @@ import type {HoldoutReport} from './holdoutReport';
 import type {MarketingReport} from './marketingReport';
 import type {LiveMatchReport} from './liveMatchReport';
 import type {MarketingVisitReport} from './marketingVisitReport';
+import type {WelcomeReport} from './welcomeReport';
 import {PLAYER_HASH_RE} from './playerHash';
 import {COUNT_KEY_RE,MAX_BEAT_COUNTS,MAX_COUNT_VALUE,checkFlags,flagTallyKeys,isCountId,isPlayMode,type PlayMode,type StartFlags} from './countIds';
 
@@ -582,6 +583,8 @@ export type Report={
  fishing?:FishingAdminMetrics|null;
  /** Nov 6 2026: the fishing funnel (lib/analytics/fishingFunnel.ts): Fish tapped → cast → bite → hooked → landed, exact counts. */
  fishingFunnel?:FishingFunnel|null;
+ /** Nov 14 2026: the smart Welcome back suggestion (lib/analytics/welcomeReport.ts), totals only. */
+ welcome?:WelcomeReport|null;
  /** Oct 15 2026: "Where players come from" (lib/analytics/liveAdmin.ts loadSources, supabase/migrations/20261018_analytics_live.sql). */
  sources?:SourcesSummary|null;
  /** Oct 20 2026: the sponsor Overview (lib/analytics/sponsor.ts): games, designs, cards, videos and stories, books, reading, quizzes. */

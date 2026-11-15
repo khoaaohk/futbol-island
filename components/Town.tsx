@@ -90,6 +90,7 @@ import {prefetchOnIdle,prefetchPart,prefetchWhenIdle} from '@/lib/ui/idlePrefetc
 import {loadBottleLogo,loadCoaches,loadCoachLesson,loadConversation,loadCustomizer,loadFieldLearning,loadOnboarding,loadPathsPanel,loadVending} from './islandParts';
 import {ensureStarterKit} from '@/lib/town/backpackStore';
 import WelcomeBack from './WelcomeBack';
+import {WELCOME_GO,type WelcomeGo} from '@/lib/welcome/act';
 import {shouldShowIslandOnboarding} from '@/lib/town/onboarding';
 import {countPathLaunch} from '@/lib/analytics/learnEvents';// Paths format share (Oct 9 2026): a map increment per launch
 import {LEARNING_LAUNCH} from '@/lib/town/learningProgress';
@@ -320,6 +321,12 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   const onboardingNpcStep=useRef(false),onboardingNpcTarget=useRef<OnboardingNpcTarget|null>(null);
   const [onboardingOpen,setOnboardingOpen]=useState(false),onboardingRef=useRef(false);onboardingRef.current=onboardingOpen;
   const [arcadeOpen,setArcadeOpen]=useState(false);
+  // Nov 14 2026 (smart welcome, lib/welcome/act.ts): a Welcome back suggestion tap goes through the same Enter doors (the departure
+  // save and the fade); the arcade may open one cabinet (and today's challenge) by query.
+  const arcadeQueryRef=useRef('');
+  useEffect(()=>{const go=(event:Event)=>{const d=(event as CustomEvent<WelcomeGo>).detail;if(!d)return;
+   if(d.to==='arcade'){arcadeQueryRef.current=typeof d.query==='string'&&/^\?game=[a-z]{1,12}(&today=1)?$/.test(d.query)?d.query:'';setArcadeOpen(true);}else if(d.to==='shop')setShopOpen(true);};
+   window.addEventListener(WELCOME_GO,go);return()=>window.removeEventListener(WELCOME_GO,go);},[]);
   // Konbini (Sep 29 2026): like the Arcade, a document boundary that unloads the island; the departure is that store's door.
   const [konbiniDoor,setKonbiniDoor]=useState<KonbiniDoor|null>(null);
   // The Enter tap's click (onClickCapture → ui('click')) is still sounding when this runs: disposing the island sound here closed
@@ -328,7 +335,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   useEffect(()=>{if(!konbiniDoor)return;saveKonbiniDeparture(konbiniDoor,rideRef.current);musicRef.current?.setSceneActive(false);stopIslandNarration();const disposeSound=leaveIslandSound();const timer=setTimeout(()=>{disposeSound();window.location.assign(konbiniUrl(konbiniDoor));},matchMedia('(prefers-reduced-motion:reduce)').matches?120:380);return()=>clearTimeout(timer);},[konbiniDoor]);
   const saveArcadeDeparture=useRef<()=>void>(()=>{});
   // A document boundary aborts island loading and releases its complete runtime.
-  useEffect(()=>{if(!arcadeOpen)return;saveArcadeDeparture.current();musicRef.current?.setSceneActive(false);stopIslandNarration();const disposeSound=leaveIslandSound();const timer=setTimeout(()=>{disposeSound();window.location.assign('/arcade');},matchMedia('(prefers-reduced-motion:reduce)').matches?120:380);return()=>clearTimeout(timer);},[arcadeOpen]);
+  useEffect(()=>{if(!arcadeOpen)return;saveArcadeDeparture.current();musicRef.current?.setSceneActive(false);stopIslandNarration();const disposeSound=leaveIslandSound();const timer=setTimeout(()=>{disposeSound();window.location.assign('/arcade'+arcadeQueryRef.current);},matchMedia('(prefers-reduced-motion:reduce)').matches?120:380);return()=>clearTimeout(timer);},[arcadeOpen]);
   // The Store became eight vending machines (docs/vending-machines.md); storeOpen = a vending machine's dialog is open.
   const [storeOpen,setStoreOpen]=useState(false),[vendingId,setVendingId]=useState<VendingMachineId>('plaza'),vendingRef=useRef<VendingMachines|null>(null);
   const [formatPathRequest,setFormatPathRequest]=useState<FormatPathLaunch|null>(null);

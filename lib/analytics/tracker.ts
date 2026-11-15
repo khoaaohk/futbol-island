@@ -89,17 +89,27 @@ const VALID_ACTIVITY=new Set<string>(ACTIVITY_IDS);
 /** A component that is open (pop-up book, arcade game, exhibit, menu…) attributes its time to `id`. Returns a cleanup. */
 export function enterActivity(id:ActivityId):()=>void{
  if(!VALID_ACTIVITY.has(id))id='other';
- const token={id};live?.flush();activityStack.push(token);
- return()=>{const i=activityStack.indexOf(token);if(i<0)return;live?.flush();activityStack.splice(i,1);};
+ const token={id};live?.flush();activityStack.push(token);localChanged();
+ return()=>{const i=activityStack.indexOf(token);if(i<0)return;live?.flush();activityStack.splice(i,1);localChanged();};
 }
+/**
+ * Nov 14 2026 (smart welcome, lib/welcome/tallyLive.ts): the SAME activity classification, read on the device. A watcher is told
+ * when the open activity changes (a component opened or closed, the island frame's base mode changed); it reads localActivity().
+ * Works with the tracker off (dev, DNT, localhost) and never sends anything: the tally stays in this browser (and in a save code).
+ */
+const localWatchers=new Set<()=>void>();
+function localChanged(){for(const w of localWatchers)try{w();}catch{}}
+export function watchLocalActivity(fn:()=>void):()=>void{localWatchers.add(fn);return()=>{localWatchers.delete(fn);};}
+/** The top open component's activity, else the island frame's base mode, else null (the caller falls back to the page). */
+export const localActivity=():ActivityId|null=>activityStack.length?activityStack[activityStack.length-1].id:frameMode;
 /**
  * Called from the island's existing frame (components/Town.tsx), never from a loop of its own. `mode` is the frame's base
  * activity (walk/ride/fly/lesson/quiz/watch); `lookup` maps x/z to a place (lib/analytics/islandPlaces.ts, island bundle
  * only). Does nothing when the tracker is off (dev, DNT, preview…). Per frame: a comparison; every SAMPLE_MS: one sample.
  */
 export function islandFrame(x:number,z:number,mode:ActivityId,lookup:(x:number,z:number)=>PlaceId){
+ if(mode!==frameMode){live?.flush();frameMode=mode;localChanged();}
  if(!live)return;
- if(mode!==frameMode){live.flush();frameMode=mode;}
  const t=live.now();if(t<nextSample)return;nextSample=t+SAMPLE_MS;
  live.sample(x,z,lookup);
 }

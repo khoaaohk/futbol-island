@@ -30,6 +30,7 @@ import SponsorReport from './SponsorReport';
 import OverviewStory from './OverviewStory';
 import PlayersExplorer from './PlayersExplorer';
 import PlayModesCard from './PlayModesCard';
+import WelcomeSuggestCard from './WelcomeSuggestCard';
 import ExportControl from './ExportControl';
 import {TrendStrip} from './TrendTiles';
 import {DefinitionsPanel,MetricIndexPanel} from './DefinitionsPanel';
@@ -310,6 +311,7 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
       <div className={dd.mx} data-metric="players.weekly_codes"><WeeklyCodesCard d={sd} saves={report.saves}/></div>
       <div className={dd.mx} data-metric="players.retention"><RetentionCard d={sd} saves={report.saves}/></div>
       <div className={dd.mx} data-metric="players.modes"><PlayModesCard from={report.from} to={report.to}/></div>
+      <div className={dd.mx} data-metric="players.welcome"><WelcomeSuggestCard data={report.welcome}/></div>
      </div>
     </section>}
 

@@ -29,6 +29,7 @@ import {emoteVariantLabels} from './emoteVariantLabels';
 import {buildMarketing} from './marketingReport';
 import {buildLiveMatches} from './liveMatchReport';
 import {buildFishingFunnel} from './fishingFunnel';
+import {buildWelcome} from './welcomeReport';
 import {buildMarketingVisits} from './marketingVisitReport';
 import {buildSearch} from './searchReport';
 import {SEARCH_SINCE} from './searchIds';
@@ -134,6 +135,8 @@ export async function buildReport(store:AnalyticsStore|null,range:{from:string;t
  report.party=buildParty(merged,range,rollups);report.emotes=buildEmotes(merged,range,emoteLabels(),emoteVariantLabels());
  // Nov 12 2026: the public island's holdout reading (lib/analytics/holdoutReport.ts): status 'off' until legal sign-off.
  report.holdout=buildHoldout(merged);
+ // Nov 14 2026: the smart Welcome back suggestion (welcomeReport.ts): shown / tapped / acted per kind, the holdout arms' returns.
+ report.welcome=buildWelcome(merged);
  // Nov 3 2026: the marketing page at `/` (lib/analytics/marketingReport.ts), same rollups.
  report.marketing=buildMarketing(merged,rollups);// named by the admin route / page (marketingLabels.ts)
  // Nov 5 2026: live matches (lib/analytics/liveMatchReport.ts): visits, joins and time per format, same rollups.
