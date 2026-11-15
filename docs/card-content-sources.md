@@ -10,7 +10,7 @@ that goes stale (no "current club", no "best in the world"), no controversies, p
 advice for kids. Kids see a plain-text "Checked against: Wikipedia, UEFA" credit and no links. "Why they matter" and "Learn from
 them" describe a well-documented playing or coaching style in our own words.
 
-Done: 393 of 450 cards. Remaining: 57 (listed at the end).
+Done: 413 of 450 cards. Remaining: 37 (listed at the end).
 
 | # | Card | Checked | Fact | Sources |
 | --- | --- | --- | --- | --- |
@@ -621,6 +621,46 @@ Done: 393 of 450 cards. Remaining: 57 (listed at the end).
 |  |  |  | He won the Premier League title with Liverpool in the 2024-25 season. | https://en.wikipedia.org/wiki/Cody_Gakpo |
 | 330 | João Pedro | 2026-11-14 | João Pedro joined Chelsea during the 2025 FIFA Club World Cup and won the tournament with them. | https://en.wikipedia.org/wiki/Jo%C3%A3o_Pedro_(footballer,_born_2001) |
 |  |  |  | He was named Chelsea's Player of the Season for 2025-26. | https://en.wikipedia.org/wiki/Jo%C3%A3o_Pedro_(footballer,_born_2001) |
+| 331 | Ismaïla Sarr | 2026-11-14 | Sarr won the 2021 Africa Cup of Nations with Senegal and the Coupe de France with Rennes in 2019. | https://en.wikipedia.org/wiki/Isma%C3%AFla_Sarr |
+|  |  |  | With Crystal Palace he won the FA Cup in 2025 and the Conference League in 2025-26. | https://en.wikipedia.org/wiki/Isma%C3%AFla_Sarr |
+| 332 | Rafael Leão | 2026-11-14 | Leão helped AC Milan win Serie A in 2021-22 and was named Serie A Footballer of the Year for 2022. | https://en.wikipedia.org/wiki/Rafael_Le%C3%A3o |
+|  |  |  | Away from football he makes music as a rapper, under the name WAY 45. | https://en.wikipedia.org/wiki/Rafael_Le%C3%A3o |
+| 333 | Alexis Mac Allister | 2026-11-14 | His father Carlos and uncle Patricio were footballers, and his older brothers Francis and Kevin are footballers too. | https://en.wikipedia.org/wiki/Alexis_Mac_Allister |
+|  |  |  | Mac Allister won the 2022 World Cup and the 2024 Copa América with Argentina, and the Premier League with Liverpool in 2024-25. | https://en.wikipedia.org/wiki/Alexis_Mac_Allister |
+| 334 | Weston McKennie | 2026-11-14 | McKennie lived in Kaiserslautern, Germany, between the ages of six and nine, where he started playing football. | https://en.wikipedia.org/wiki/Weston_McKennie |
+|  |  |  | He won the Coppa Italia with Juventus in 2021 and 2024, and the CONCACAF Nations League three times with the United States. | https://en.wikipedia.org/wiki/Weston_McKennie |
+| 335 | Gabriel Martinelli | 2026-11-14 | Martinelli started playing in Corinthians' futsal team in 2010, before moving on to the full-sized game. | https://en.wikipedia.org/wiki/Gabriel_Martinelli |
+|  |  |  | He won Olympic gold with Brazil at the 2020 Games, the FA Cup with Arsenal in 2020 and the Premier League in 2025-26. | https://en.wikipedia.org/wiki/Gabriel_Martinelli |
+| 336 | João Cancelo | 2026-11-14 | Cancelo won the Portuguese league with Benfica in 2013-14 and Serie A with Juventus in 2018-19. | https://en.wikipedia.org/wiki/Jo%C3%A3o_Cancelo |
+|  |  |  | With Manchester City he won three Premier League titles and the 2023 Champions League. | https://en.wikipedia.org/wiki/Jo%C3%A3o_Cancelo |
+| 337 | Dani Olmo | 2026-11-14 | Olmo joined Barcelona's youth academy aged nine and moved to Dinamo Zagreb aged sixteen, where he won five Croatian league titles. | https://en.wikipedia.org/wiki/Dani_Olmo |
+|  |  |  | He won Euro 2024 and the 2026 World Cup with Spain, and was a joint top scorer at Euro 2024. | https://en.wikipedia.org/wiki/Dani_Olmo |
+| 338 | Arda Güler | 2026-11-14 | Güler won the Turkish Cup with Fenerbahçe in 2023 before moving to Real Madrid. | https://en.wikipedia.org/wiki/Arda_G%C3%BCler |
+|  |  |  | He was named UEFA Champions League Young Player of the Season for 2025-26. | https://en.wikipedia.org/wiki/Arda_G%C3%BCler |
+| 339 | Marc Guéhi | 2026-11-14 | Guéhi won the 2017 FIFA Under-17 World Cup with England. | https://en.wikipedia.org/wiki/Marc_Gu%C3%A9hi |
+|  |  |  | He captained Crystal Palace to the 2025 FA Cup and Community Shield, and later won the FA Cup again with Manchester City in 2026. | https://en.wikipedia.org/wiki/Marc_Gu%C3%A9hi |
+| 340 | Fabián Ruiz | 2026-11-14 | Fabián won the Coppa Italia with Napoli in 2020, and the Champions League with Paris Saint-Germain in 2025 and 2026. | https://en.wikipedia.org/wiki/Fabi%C3%A1n_Ruiz |
+|  |  |  | Fabián was part of the Spain teams that won Euro 2024 and then the 2026 World Cup. | https://en.wikipedia.org/wiki/Fabi%C3%A1n_Ruiz |
+| 341 | Casemiro | 2026-11-14 | Casemiro won the Copa São Paulo de Futebol Júnior with São Paulo in 2010 and the Copa Sudamericana in 2012. | https://en.wikipedia.org/wiki/Casemiro |
+|  |  |  | He won the Champions League five times with Real Madrid, including three in a row from 2016 to 2018. | https://en.wikipedia.org/wiki/Casemiro |
+| 342 | Mikel Merino | 2026-11-14 | At Euro 2024 Merino scored a quarter-final winner and celebrated by running around the corner flag, copying his father's celebration in the same stadium in 1991. | https://en.wikipedia.org/wiki/Mikel_Merino |
+|  |  |  | He won the European Under-19 Championship with Spain in 2015, and Euro 2024 and the 2026 World Cup at senior level. | https://en.wikipedia.org/wiki/Mikel_Merino |
+| 343 | Eberechi Eze | 2026-11-14 | Eze was released by Arsenal at the age of thirteen, then played youth football for Fulham, Reading and Millwall. | https://en.wikipedia.org/wiki/Eberechi_Eze |
+|  |  |  | He won the FA Cup with Crystal Palace in 2025 and the Premier League with Arsenal in 2025-26. | https://en.wikipedia.org/wiki/Eberechi_Eze |
+| 344 | Kenan Yıldız | 2026-11-14 | Yıldız was born in Germany and came through Bayern Munich's youth teams before joining Juventus in 2022. | https://en.wikipedia.org/wiki/Kenan_Y%C4%B1ld%C4%B1z |
+|  |  |  | He won the Coppa Italia, Italy's main cup competition, with Juventus in 2024. | https://en.wikipedia.org/wiki/Kenan_Y%C4%B1ld%C4%B1z |
+| 345 | Raúl Jiménez | 2026-11-14 | Jiménez won Olympic gold with Mexico at the 2012 Summer Olympics. | https://en.wikipedia.org/wiki/Ra%C3%BAl_Jim%C3%A9nez |
+|  |  |  | With Benfica he won the Portuguese league in 2015-16 and 2016-17. | https://en.wikipedia.org/wiki/Ra%C3%BAl_Jim%C3%A9nez |
+| 346 | Gonçalo Ramos | 2026-11-14 | Ramos won the Portuguese league with Benfica in 2022-23, the season he scored his first career hat-trick. | https://en.wikipedia.org/wiki/Gon%C3%A7alo_Ramos |
+|  |  |  | Ramos was in the Paris Saint-Germain squad that won the Champions League in both 2025 and 2026. | https://en.wikipedia.org/wiki/Gon%C3%A7alo_Ramos |
+| 347 | Mikel Oyarzabal | 2026-11-14 | Oyarzabal scored the winning goal in the Euro 2024 final as Spain won the title. | https://en.wikipedia.org/wiki/Mikel_Oyarzabal |
+|  |  |  | He also won the 2026 World Cup with Spain, and the Copa del Rey with Real Sociedad in 2020 and 2026. | https://en.wikipedia.org/wiki/Mikel_Oyarzabal |
+| 348 | Marcus Thuram | 2026-11-14 | Thuram won the European Under-19 Championship with France in 2016. | https://en.wikipedia.org/wiki/Marcus_Thuram |
+|  |  |  | With Inter Milan he won Serie A in 2023-24 and 2025-26. | https://en.wikipedia.org/wiki/Marcus_Thuram |
+| 349 | Kaoru Mitoma | 2026-11-14 | Mitoma turned down a place in Kawasaki Frontale's senior team to study at the University of Tsukuba. | https://en.wikipedia.org/wiki/Kaoru_Mitoma |
+|  |  |  | Back at Kawasaki Frontale, he won the J1 League and the Emperor's Cup in 2020. | https://en.wikipedia.org/wiki/Kaoru_Mitoma |
+| 350 | Phil Foden | 2026-11-14 | Foden won the 2017 FIFA Under-17 World Cup with England and was given the Golden Ball as the tournament's best player. | https://en.wikipedia.org/wiki/Phil_Foden |
+|  |  |  | With his boyhood club Manchester City he won six Premier League titles. | https://en.wikipedia.org/wiki/Phil_Foden |
 | 354 | Ivan Rakitić | 2026-11-14 | Rakitić captained Sevilla to the 2013-14 Europa League and was man of the match in the final. He won the competition again with Sevilla in 2023. | https://en.wikipedia.org/wiki/Ivan_Rakiti%C4%87 |
 |  |  |  | At the 2018 World Cup in Russia, Rakitić scored the deciding kick in Croatia's penalty shoot-outs against both Denmark and the hosts, Russia. | https://en.wikipedia.org/wiki/Ivan_Rakiti%C4%87 |
 | 355 | Raphaël Varane | 2026-11-14 | Varane joined Real Madrid from Lens in 2011 and won La Liga with them three times, in 2011-12, 2016-17 and 2019-20. | https://en.wikipedia.org/wiki/Rapha%C3%ABl_Varane |
@@ -790,4 +830,4 @@ Done: 393 of 450 cards. Remaining: 57 (listed at the end).
 
 ## Remaining cards (no notes yet)
 
-#2 Adolfo · #20 Artem Fareniuk · #32 Chemi · #41 Danyil Abakshyn · #50 Edu · #77 Gustavo Lobo · #89 João Victor · #106 Luan Muller · #111 Mamadou Touré · #116 Mario Rivillos · #118 Matheus Rodrigues · #119 Mathi Fernández · #120 Mellado · #125 Miquel Feixas · #128 Mykola Mykytiuk · #136 Pablo Ramírez · #138 Pany Varela · #142 Pauleta · #168 Sergei Sergeev · #170 Sergio González · #331 Ismaïla Sarr · #332 Rafael Leão · #333 Alexis Mac Allister · #334 Weston McKennie · #335 Gabriel Martinelli · #336 João Cancelo · #337 Dani Olmo · #338 Arda Güler · #339 Marc Guéhi · #340 Fabián Ruiz · #341 Casemiro · #342 Mikel Merino · #343 Eberechi Eze · #344 Kenan Yıldız · #345 Raúl Jiménez · #346 Gonçalo Ramos · #347 Mikel Oyarzabal · #348 Marcus Thuram · #349 Kaoru Mitoma · #350 Phil Foden · #351 Lisandro Martínez · #352 Bradley Barcola · #353 Pervis Estupiñán · #356 Anthony Gordon · #359 Endrick · #360 Karim Adeyemi · #362 Elliot Anderson · #364 Sandro Tonali · #373 Rodrigo De Paul · #375 Vozinha · #376 Jonathan David · #377 Brahim Díaz · #383 Olivier Giroud · #386 Kyle Walker · #387 İlkay Gündoğan · #388 Nico O'Reilly · #399 James Rodríguez
+#2 Adolfo · #20 Artem Fareniuk · #32 Chemi · #41 Danyil Abakshyn · #50 Edu · #77 Gustavo Lobo · #89 João Victor · #106 Luan Muller · #111 Mamadou Touré · #116 Mario Rivillos · #118 Matheus Rodrigues · #119 Mathi Fernández · #120 Mellado · #125 Miquel Feixas · #128 Mykola Mykytiuk · #136 Pablo Ramírez · #138 Pany Varela · #142 Pauleta · #168 Sergei Sergeev · #170 Sergio González · #351 Lisandro Martínez · #352 Bradley Barcola · #353 Pervis Estupiñán · #356 Anthony Gordon · #359 Endrick · #360 Karim Adeyemi · #362 Elliot Anderson · #364 Sandro Tonali · #373 Rodrigo De Paul · #375 Vozinha · #376 Jonathan David · #377 Brahim Díaz · #383 Olivier Giroud · #386 Kyle Walker · #387 İlkay Gündoğan · #388 Nico O'Reilly · #399 James Rodríguez
