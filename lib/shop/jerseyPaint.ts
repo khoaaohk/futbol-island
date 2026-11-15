@@ -255,8 +255,10 @@ export function paintAtlasBase(ctx:Ctx,d:JerseyDesign,size:number){
 export const clubInk=(shirt:string)=>luminance(shirt)>.42?CLUB_COLORS.navy:'#ffffff';
 /** A shirt print's colours (Nov 15 2026, lib/shop/dripKit.ts JerseyClub cc / wc): the player's pair, or the club print (`ink`, no backing). */
 export function clubPrintColors(code:number|undefined,ink:string):{art:string;bg:string|null}{return code===undefined?{art:ink,bg:null}:clubColorsOf(code);}
-/** The shirt colour under each club print, for the studio's contrast hint: the chest (main colour), the left sleeve. */
-export const clubUnder=(d:JerseyDesign,spot:'chest'|'sleeve'|'word'):string[]=>spot==='sleeve'?[d.pattern==='stripes'?d.secondary:d.primary]:[d.primary];
+/** The shirt colours under each club print, for the studio's contrast hint: the left sleeve's colour, or the front's main colour
+ *  plus the second colour when a pattern puts it on the front too (stripes, hoops ...; pinstripes are too thin to count). */
+export const clubUnder=(d:JerseyDesign,spot:'chest'|'sleeve'|'word'):string[]=>spot==='sleeve'?[d.pattern==='stripes'?d.secondary:d.primary]:
+ d.pattern==='solid'||d.pattern==='pinstripes'?[d.primary]:[d.primary,d.secondary];
 /** Layer 3: crest, sponsor, name, numbers and the woven tags, on a TRANSPARENT canvas (the caller clears it). */
 export function paintAtlasPrints(ctx:Ctx,d:JerseyDesign,size:number){
  const kpx=K*size;

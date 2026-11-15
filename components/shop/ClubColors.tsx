@@ -35,12 +35,12 @@ export function ClubColors({title='Drip FC colours',code,under,itemWord,printed,
  return <div className={styles.box} role="group" aria-label={title}>
   <div className={styles.head}><span className={styles.title}>{title}</span>
    <button type="button" className={chipClass} aria-pressed={isClub} disabled={isClub} onClick={()=>set(undefined)}>Club colours</button></div>
+  {read.ok?null:<p className={styles.hint} role="status"><span>{clubHint(read,itemWord)}</span>
+   <button type="button" className={chipClass} onClick={()=>set(bestClubCode(under,printed&&bgI===CLUB_NO_BACKING))}>Best contrast</button></p>}
   <div className={styles.row}><span className={styles.lab}>Art</span><div className={styles.sws}>
    {CLUB_PALETTE.map((_,i)=>sw(i,artI===i,'Art colour',()=>set(clubCode(i,bgI))))}</div></div>
   <div className={styles.row}><span className={styles.lab}>Background</span><div className={styles.sws}>
    {printed?<button type="button" className={`${chipClass} ${styles.none}`} aria-pressed={bgI===CLUB_NO_BACKING} onClick={()=>set(clubCode(artNow,CLUB_NO_BACKING))}>None</button>:null}
    {CLUB_PALETTE.map((_,i)=>sw(i,bgI===i,'Background colour',()=>set(clubCode(artNow===i?(i===2?0:2):artNow,i))))}</div></div>
-  {read.ok?null:<p className={styles.hint} role="status"><span>{clubHint(read,itemWord)}</span>
-   <button type="button" className={chipClass} onClick={()=>set(bestClubCode(under,printed&&bgI===CLUB_NO_BACKING))}>Best contrast</button></p>}
  </div>;
 }
