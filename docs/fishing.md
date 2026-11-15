@@ -452,7 +452,7 @@ User ask: build every fishing improvement in [fishing-research.md](fishing-resea
 - **Wait… is honest** (`components/FishingHost.tsx` REEL_LABEL, `fishingSession.ts` tap): the big reel reads **Reel in** while the float floats (a tap brings the line back), **Wait…** while a shadow swims in and nibbles (aria-disabled, quieter label, no press effect; every tap, Space and water tap is ignored with no scare), **Hook!** at the plunge. The tutorial's wait step names the Wait… button; the ghost hand appears only on Hook! and the spin. The core still scares a fish tapped on a nibble for other callers (`tapSession`), so `fi:miss_early` should now stay near zero.
 - **Lost fish** (`KEEPER_LESSONS.lost`, `LOST_HINT`): a hooked fish lost because the reel stopped says "It got away! Keep spinning once it's hooked." with the keeper-holds-the-ball lesson; a late reaction to the plunge keeps "A touch too late". The bite hint is "Now! Tap Hook!" (it said "Reel it in" while the button said Hook!).
 - **Cast after a catch** (`castLocked`, `CATCH_READ_TIME` 3 s): taps in the read time are ignored and no longer restart a 0.7 s quiet timer (a child tapping steadily could never cast); the reel reads Wait… (disabled) and the core steps a `castable` event when the time is up, so the HUD unlocks on that frame.
-- **Summit headlands**: Palm Point now has mackerel, sea bass and its Mealy Crab (the stargazer at night); Lookout Rocks has brown shrimp, sardines and its Bloater (the bigeye at night). Same-price commons, so the mean catch is exactly what it was (4.00 and 3.00 coins; `tests/economy.cjs` §12 still passes, `tests/fishing-nov6.cjs` snapshots the two tables), and the "3 kinds at a spot" legend clue can now fire there (every spot has at least 3 kinds, tested).
+- **Summit headlands**: Palm Point now has mackerel, sea bass and its Mealy Crab (renamed Rice Field Crab on 14 Nov 2026, see the end of this file; the stargazer at night); Lookout Rocks has brown shrimp, sardines and its Bloater (the bigeye at night). Same-price commons, so the mean catch is exactly what it was (4.00 and 3.00 coins; `tests/economy.cjs` §12 still passes, `tests/fishing-nov6.cjs` snapshots the two tables), and the "3 kinds at a spot" legend clue can now fire there (every spot has at least 3 kinds, tested).
 - **Legends and the Fishbook total**: `recordCatch` ignores an Island Legend (it is released, never a species), so the "N caught in total" line no longer gains a +1 that the next merge or reload dropped. (A total already saved with that +1 keeps it: the sanitizer keeps the larger total.)
 - **Catch card coins** (`newestUnitValue` / `coinsText` in `lib/town/market/marketStand.ts`): the card shows what the newest one in the basket fetches now under the market's own rules (same-kind ladder, half price past the allowance), e.g. "1 coin" for a 6th sardine; "up to N coins" when it is not in the basket.
 - **Kid bite window** (`missHelp`, `biteWindow` in `fishingCore.ts`): after 2 late misses in a row the next bite window is +0.3 s, +0.45 s after 3 or more, until the next hook. **Island settings → Fishing → Easy bite** (default off, device key `fi2-fish-easy-bite-v1`) adds +0.35 s to every bite, like reduced motion (they do not stack). The rarity window stays the base and odds never read either, so every shark (Great White included) still has a shorter window than any common under the same help (tested).
@@ -786,3 +786,21 @@ Fishing tab card "Come back tomorrow"): `fi:fotd_catch` (once a player a day), `
 `fishingHooksStore.refreshSets`), `fi:new_record`, `fi:visitor_week` (once a player a week). Totals only.
 Also fixed: the trophy card's empty status line no longer reserves a band under its buttons on phones (`.status:empty`).
 Heat: no new mesh, material, timer, listener per frame or render target; the fish-of-the-day check is memoised per minute.
+
+## Three fish fact fixes (14 Nov 2026)
+
+Found while writing the Fishbook page notes (docs/fishing-content-sources.md, "Fishbook page notes"). The ids stay the same so
+saved Fishbooks, catch logs, analytics and the spot tables keep working; only the names, looks and words changed. Counts unchanged
+(167 species).
+- **`red-reef-shark`: "Red Reef Shark" was not a real species.** It is now the **Grey Reef Shark** (Carcharhinus amblyrhynchos,
+  Indian and Pacific reefs; Wikipedia "Grey reef shark"), still the Summit Cove legendary at the same price, size and spot. Its
+  model is grey with the species' black tail band. The club link holds: C.D. Veracruz's "Tiburones Rojos" (Red Sharks) nickname,
+  founding in 1943 and two league titles in 1945-46 and 1949-50 are on Wikipedia "C.D. Veracruz". A general "Sharks" nickname
+  lets us choose the species (the teaching-choice rule above); Veracruz is also the Bull Shark's club.
+- **`mealy-crab`: no source for a "mealy crab" animal.** It is now the **Rice Field Crab** (Thai rice-field crabs, genus
+  Esanthelphusa: microbiologyjournal.org study of E. dugasti, Suranaree University species study on tci-thaijo.org), smaller
+  (3-6 cm) and mud-brown. The club link is kept: Mahasarakham CC F.C.'s nickname "The Mealy Crabs" (ปูม่วงมหากาฬ) is in the
+  Wikipedia infobox and in Thai press; the unsourced "named after the purple field crabs" part of the fact was removed.
+- **`flying-squid`: the story said they "glide".** Wikipedia hedges this (the Japanese flying squid page says gliding by this
+  species is questionable; Ommastrephidae describes jet-propelled flight). The story now says some "can even leap out of the water
+  and travel through the air".

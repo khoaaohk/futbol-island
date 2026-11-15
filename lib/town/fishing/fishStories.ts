@@ -73,8 +73,8 @@ export const FISH_STORIES:Record<string,string>={
  // ---- Summit Isle
  'pool-seahorse':'This seahorse hides in the seaweed of Boulder Cove. Whitley Bay F.C. took the seahorse as their emblem after a fan competition in 1964-65. It thinks a fan vote is the best way to pick anything.',
  'rockpool-shrimp':'This shrimp is so small it fits in a rock pool. Morecambe F.C. are "The Shrimps", after the shrimping boats of Morecambe Bay. It hops from pool to pool like a player doing ladder drills.',
- 'red-reef-shark':'This red shark is very rare, so seeing one is like a cup upset. C.D. Veracruz from Mexico\'s Gulf coast were the "Red Sharks" and won the league twice in the 1940s. It swims past the boulders in its red away kit.',
- 'mealy-crab':'This purple crab usually lives in rice fields, far from the sea, so it is on an away trip. Mahasarakham CC F.C. in north-east Thailand are "The Mealy Crabs". It scuttles between the boulders looking for its fans.',
+ 'red-reef-shark':'This grey reef shark is very rare, so seeing one is like a cup upset, and its tail has a black edge like a smart kit trim. C.D. Veracruz from Mexico\'s Gulf coast were the "Red Sharks" and won the league twice in the 1940s. It swims past the boulders as if it is on a lap of honour.',
+ 'mealy-crab':'This rice field crab usually lives in muddy paddy fields, far from the sea, so it is on an away trip. Mahasarakham CC F.C. in north-east Thailand, where these crabs are common, are nicknamed "The Mealy Crabs". It scuttles between the boulders looking for its fans.',
  bloater:'A bloater is not a different fish: it is a whole herring smoked for a treat. Great Yarmouth Town F.C. are "The Bloaters", after their town\'s big catch. This one is very glad it is still swimming.',
  // ---- Deep Sea Boats
  squid:'When a squid is surprised it squirts a cloud of ink. Referees squirt vanishing spray to mark where the wall must stand. The squid says it was spraying lines first!',

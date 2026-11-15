@@ -637,9 +637,9 @@ const SPECIES:Record<string,Spec>={
  // ---- Boulder Cove, Summit Isle
  'pool-seahorse':b=>{seahorse(b,{body:'#9a6a52',belly:'#f0cdab'});return {anim:{axis:[0,-1,0],start:.15,span:.2,dir:[1,0,0],k:[0,6,0],amp:.03},shadow:'fish'};},
  'rockpool-shrimp':b=>{shrimp(b,{body:'#b89a78',belly:'#f0e3c6',speckle:'#6e5a3e'});return {anim:{axis:[1,0,0],start:.05,span:.3,dir:[0,1,0],k:[6,0,0],amp:.025},shadow:'fish'};},
- 'red-reef-shark':b=>{shark(b,{top:'#9a4a3f',belly:'#eecfc4',H:.1,q:.6,dorsal:.14,tip:'#6e2e26'});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},
+ 'red-reef-shark':b=>{shark(b,{top:'#6c767b',belly:'#eceeea',H:.1,q:.6,dorsal:.14,tip:'#25292c'});return {shadow:'shark',anim:{...FISH_ANIM,start:-.1,amp:.08}};},
  // ---- Palm Point and Lookout Rocks, Summit Isle
- 'mealy-crab':b=>{crab(b,{body:'#6a4a78',belly:'#e9cdae',claw:'#5a3d68',kind:'edible'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
+ 'mealy-crab':b=>{crab(b,{body:'#6b5238',belly:'#d9c3a0',claw:'#57412b',kind:'edible'});return {anim:{...FISH_ANIM,amp:0},hold:{x:1.15,z:-PI/2},shadow:'crab'};},
  bloater:b=>{fish(b,{x1:.32,H:.1,W:.045,peak:.4,q:.74,ped:.11,sag:.012,top:'#3a6f8f',side:'#cdd9df',belly:'#eef2f0',line:.22,tail:'fork',tailH:.12,finC:'#82a0ac',dorsal:[{t0:.4,t1:.52,h:.055,shape:'tri'}],anal:[{t0:.76,t1:.87,h:.022,shape:'square'}],pect:{t:.22,len:.065},pelvic:{t:.5,len:.032},eye:{t:.1,r:.03},mouth:{t:.03,len:.022,a:1.5}});},
 
  // ---- Signature species, wave 1 (Nov 6 2026, ./shoreSignatures.ts): existing builders, each with its own shape, colour and pattern.

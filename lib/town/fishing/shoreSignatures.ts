@@ -82,7 +82,7 @@ export const SIGNATURE_FISH_WAVE1:FishSpecies[]=[
   club:{name:'Vanraure Hachinohe',country:'Japan',link:'Mascot',entity:{kind:'mascot',name:'Vanta'},
    fact:'Vanraure Hachinohe, from the port city of Hachinohe in northern Japan, have a squid mascot called Vanta. His J.League profile says he was signed after being landed at Hachinohe port.',
    source:W+'List_of_J.League_mascots',sources:['https://www.jleague.jp/mascot/2023/profile/hachinohe.html',W+'Vanraure_Hachinohe']},
-  story:'At night flying squid rise to the top of the sea, and some can even shoot out of the water and glide. Vanraure Hachinohe\'s mascot, Vanta, is a squid too. This one waves all ten arms at the floodlights.'},
+  story:'At night flying squid rise to the top of the sea, and some can even leap out of the water and travel through the air. Vanraure Hachinohe\'s mascot, Vanta, is a squid too. This one waves all ten arms at the floodlights.'},
  {id:'greenland-shark',name:'Greenland Shark',plural:'Greenland Sharks',rarity:'legendary',group:'shark',spots:['harbour-wall'],weight:.8,price:15,size:[200,500],color:'#5a6066',belly:'#c9cdd0',shape:'shark',shadow:'giant',
   club:{name:'Iceland national team',country:'Iceland',link:'Fun fish fact',nickname:'Strákarnir okkar',entity:{kind:'tournament',name:'Euro 2016'},
    fact:'Fun fish fact: hákarl, fermented Greenland shark, is a national dish of Iceland. Football: at Euro 2016 Iceland, "Our Boys", beat England 2-1, and in 2018 they played their first World Cup.',

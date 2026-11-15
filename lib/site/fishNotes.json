@@ -1335,5 +1335,22 @@
    "https://en.wikipedia.org/wiki/Atlantic_halibut"
   ],
   "checked": "2026-11-14"
+ },
+ "red-reef-shark": {
+  "lives": "Coral reefs of the Indian and Pacific Oceans, from South Africa to Easter Island, usually near the reef edge and mostly shallower than 60 metres.",
+  "fact": "When a grey reef shark feels threatened, it puts on a famous warning show. It hunches its back, drops its side fins and swims in a swaying, side-to-side way, telling divers to back off. Its tail has a broad black band along the back edge, and the biggest one ever reported was 2.6 metres long.",
+  "src": [
+   "https://en.wikipedia.org/wiki/Grey_reef_shark"
+  ],
+  "checked": "2026-11-14"
+ },
+ "mealy-crab": {
+  "lives": "Paddy rice fields in Thailand and neighbouring South-East Asian countries, found in every region of Thailand but especially the rice fields of the north-east.",
+  "fact": "Thai rice-field crabs are freshwater crabs from a group called Esanthelphusa, and scientists have identified at least six species in the lower north-east of Thailand alone. They are an important food for many people in the region. Their numbers have been falling, partly because of the weedkillers and insect sprays used on rice fields.",
+  "src": [
+   "https://microbiologyjournal.org/effects-of-chitosan-levels-on-growth-performance-feed-utilization-and-survival-rate-of-rice-field-crab-esanthelphusa-dugasti/",
+   "https://ph04.tci-thaijo.org/index.php/SUJST/article/view/13336"
+  ],
+  "checked": "2026-11-14"
  }
 }
