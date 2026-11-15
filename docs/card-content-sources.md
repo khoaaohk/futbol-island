@@ -10,7 +10,7 @@ that goes stale (no "current club", no "best in the world"), no controversies, p
 advice for kids. Kids see a plain-text "Checked against: Wikipedia, UEFA" credit and no links. "Why they matter" and "Learn from
 them" describe a well-documented playing or coaching style in our own words.
 
-Done: 373 of 450 cards. Remaining: 77 (listed at the end).
+Done: 393 of 450 cards. Remaining: 57 (listed at the end).
 
 | # | Card | Checked | Fact | Sources |
 | --- | --- | --- | --- | --- |
@@ -581,6 +581,46 @@ Done: 373 of 450 cards. Remaining: 77 (listed at the end).
 |  |  |  | With Chelsea he won the Conference League and the FIFA Club World Cup in 2025. | https://en.wikipedia.org/wiki/Mois%C3%A9s_Caicedo |
 | 310 | Antoine Semenyo | 2026-11-14 | Semenyo scored the only goal of the 2026 FA Cup final for Manchester City. | https://en.wikipedia.org/wiki/Antoine_Semenyo |
 |  |  |  | He made his debut for Ghana in 2022 and played at the 2022 and 2026 World Cups. | https://en.wikipedia.org/wiki/Antoine_Semenyo |
+| 311 | Aurélien Tchouaméni | 2026-11-14 | Tchouaméni was Ligue 1 Young Player of the Year for 2020-21 with Monaco. | https://en.wikipedia.org/wiki/Aur%C3%A9lien_Tchouam%C3%A9ni |
+|  |  |  | He won La Liga and the Champions League with Real Madrid in 2023-24. | https://en.wikipedia.org/wiki/Aur%C3%A9lien_Tchouam%C3%A9ni |
+| 312 | Joshua Kimmich | 2026-11-14 | Kimmich won the European Under-19 Championship with Germany in 2014. | https://en.wikipedia.org/wiki/Joshua_Kimmich |
+|  |  |  | With Bayern Munich he won the Champions League in 2020 and many Bundesliga titles in a row from 2015-16. | https://en.wikipedia.org/wiki/Joshua_Kimmich |
+| 313 | Bernardo Silva | 2026-11-14 | Bernardo won Ligue 1 with Monaco in 2016-17, then six Premier League titles with Manchester City. | https://en.wikipedia.org/wiki/Bernardo_Silva |
+|  |  |  | He won the Champions League with Manchester City in 2023. | https://en.wikipedia.org/wiki/Bernardo_Silva |
+| 314 | Denzel Dumfries | 2026-11-14 | Dumfries first played international football for Aruba in 2014, before switching to the Netherlands. | https://en.wikipedia.org/wiki/Denzel_Dumfries |
+|  |  |  | He won Serie A with Inter Milan in 2023-24 and 2025-26. | https://en.wikipedia.org/wiki/Denzel_Dumfries |
+| 315 | Jérémy Doku | 2026-11-14 | Doku is of Ghanaian descent and was born in Antwerp, Belgium. | https://en.wikipedia.org/wiki/J%C3%A9r%C3%A9my_Doku |
+|  |  |  | He won the Premier League and the FIFA Club World Cup with Manchester City in 2023-24. | https://en.wikipedia.org/wiki/J%C3%A9r%C3%A9my_Doku |
+| 316 | Rayan Cherki | 2026-11-14 | Cherki became the youngest player ever to score a senior goal for Lyon, and the youngest to play in a Champions League semi-final. | https://en.wikipedia.org/wiki/Rayan_Cherki |
+|  |  |  | He won an Olympic silver medal with France in 2024 and was the Europa League Young Player of the Season for 2024-25. | https://en.wikipedia.org/wiki/Rayan_Cherki |
+| 317 | N'Golo Kanté | 2026-11-14 | Kanté won the Premier League two seasons in a row with different clubs, Leicester City in 2015-16 and Chelsea in 2016-17. | https://en.wikipedia.org/wiki/N'Golo_Kant%C3%A9 |
+|  |  |  | He won the 2018 World Cup with France and the Champions League with Chelsea in 2021. | https://en.wikipedia.org/wiki/N'Golo_Kant%C3%A9 |
+| 318 | Tijjani Reijnders | 2026-11-14 | Reijnders could have played for Indonesia through his mother's family, but chose the Netherlands, his birth country. | https://en.wikipedia.org/wiki/Tijjani_Reijnders |
+|  |  |  | He won the Supercoppa Italiana with AC Milan, and the FA Cup and EFL Cup with Manchester City in 2025-26. | https://en.wikipedia.org/wiki/Tijjani_Reijnders |
+| 319 | Bruno Guimarães | 2026-11-14 | Guimarães won the Copa Sudamericana with Athletico Paranaense in 2018. | https://en.wikipedia.org/wiki/Bruno_Guimar%C3%A3es |
+|  |  |  | He won Olympic gold with Brazil at the 2020 Summer Olympics. | https://en.wikipedia.org/wiki/Bruno_Guimar%C3%A3es |
+| 320 | Frenkie de Jong | 2026-11-14 | Ajax signed De Jong from Willem II for a symbolic fee of one euro. | https://en.wikipedia.org/wiki/Frenkie_de_Jong |
+|  |  |  | He won the Dutch league and cup with Ajax in 2018-19, then La Liga with Barcelona in 2022-23, 2024-25 and 2025-26. | https://en.wikipedia.org/wiki/Frenkie_de_Jong |
+| 321 | Marc Cucurella | 2026-11-14 | Cucurella won Euro 2024 and the 2026 FIFA World Cup with Spain, and an Olympic silver medal in 2021. | https://en.wikipedia.org/wiki/Marc_Cucurella |
+|  |  |  | Cucurella was part of the Chelsea team that won both the Conference League and the Club World Cup in 2025. | https://en.wikipedia.org/wiki/Marc_Cucurella |
+| 322 | Sadio Mané | 2026-11-14 | Mané scored a Premier League record fastest hat-trick, in 176 seconds, for Southampton in 2015. | https://en.wikipedia.org/wiki/Sadio_Man%C3%A9 |
+|  |  |  | He scored the winning penalty in the 2021 Africa Cup of Nations final shootout, giving Senegal their first title. | https://en.wikipedia.org/wiki/Sadio_Man%C3%A9 |
+| 323 | Martín Zubimendi | 2026-11-14 | Zubimendi won the Copa del Rey with Real Sociedad in 2020. | https://en.wikipedia.org/wiki/Mart%C3%ADn_Zubimendi |
+|  |  |  | Zubimendi was in the Spain squads that won Euro 2024 and the 2026 FIFA World Cup. | https://en.wikipedia.org/wiki/Mart%C3%ADn_Zubimendi |
+| 324 | Enzo Fernández | 2026-11-14 | Fernández won the 2022 World Cup with Argentina and the tournament's Young Player Award. | https://en.wikipedia.org/wiki/Enzo_Fern%C3%A1ndez |
+|  |  |  | He also won the 2024 Copa América, and with Chelsea the 2025 Conference League and FIFA Club World Cup. | https://en.wikipedia.org/wiki/Enzo_Fern%C3%A1ndez |
+| 325 | Willian Pacho | 2026-11-14 | Pacho won the Belgian league and cup with Royal Antwerp in 2022-23. | https://en.wikipedia.org/wiki/Willian_Pacho |
+|  |  |  | He won the Champions League with Paris Saint-Germain in 2025 and 2026. | https://en.wikipedia.org/wiki/Willian_Pacho |
+| 326 | Scott McTominay | 2026-11-14 | In his first season at Napoli, 2024-25, McTominay won Serie A and the league's MVP award. | https://en.wikipedia.org/wiki/Scott_McTominay |
+|  |  |  | He scored an acrobatic kick against Cagliari on the day Napoli won that Serie A title. | https://en.wikipedia.org/wiki/Scott_McTominay |
+| 327 | Ryan Gravenberch | 2026-11-14 | Gravenberch became Ajax's youngest ever Eredivisie player, beating Clarence Seedorf's record. | https://en.wikipedia.org/wiki/Ryan_Gravenberch |
+|  |  |  | He won the Premier League with Liverpool in 2024-25 and was named Premier League Young Player of the Season. | https://en.wikipedia.org/wiki/Ryan_Gravenberch |
+| 328 | Fermín López | 2026-11-14 | Fermín won the Olympic gold medal with Spain at the 2024 Paris Games. | https://en.wikipedia.org/wiki/Ferm%C3%ADn_L%C3%B3pez |
+|  |  |  | He won Euro 2024 with Spain and La Liga with Barcelona in 2024-25 and 2025-26. | https://en.wikipedia.org/wiki/Ferm%C3%ADn_L%C3%B3pez |
+| 329 | Cody Gakpo | 2026-11-14 | Gakpo was named Dutch Footballer of the Year for the 2021-22 season, while playing for PSV. | https://en.wikipedia.org/wiki/Cody_Gakpo |
+|  |  |  | He won the Premier League title with Liverpool in the 2024-25 season. | https://en.wikipedia.org/wiki/Cody_Gakpo |
+| 330 | João Pedro | 2026-11-14 | João Pedro joined Chelsea during the 2025 FIFA Club World Cup and won the tournament with them. | https://en.wikipedia.org/wiki/Jo%C3%A3o_Pedro_(footballer,_born_2001) |
+|  |  |  | He was named Chelsea's Player of the Season for 2025-26. | https://en.wikipedia.org/wiki/Jo%C3%A3o_Pedro_(footballer,_born_2001) |
 | 354 | Ivan Rakitić | 2026-11-14 | Rakitić captained Sevilla to the 2013-14 Europa League and was man of the match in the final. He won the competition again with Sevilla in 2023. | https://en.wikipedia.org/wiki/Ivan_Rakiti%C4%87 |
 |  |  |  | At the 2018 World Cup in Russia, Rakitić scored the deciding kick in Croatia's penalty shoot-outs against both Denmark and the hosts, Russia. | https://en.wikipedia.org/wiki/Ivan_Rakiti%C4%87 |
 | 355 | Raphaël Varane | 2026-11-14 | Varane joined Real Madrid from Lens in 2011 and won La Liga with them three times, in 2011-12, 2016-17 and 2019-20. | https://en.wikipedia.org/wiki/Rapha%C3%ABl_Varane |
@@ -750,4 +790,4 @@ Done: 373 of 450 cards. Remaining: 77 (listed at the end).
 
 ## Remaining cards (no notes yet)
 
-#2 Adolfo · #20 Artem Fareniuk · #32 Chemi · #41 Danyil Abakshyn · #50 Edu · #77 Gustavo Lobo · #89 João Victor · #106 Luan Muller · #111 Mamadou Touré · #116 Mario Rivillos · #118 Matheus Rodrigues · #119 Mathi Fernández · #120 Mellado · #125 Miquel Feixas · #128 Mykola Mykytiuk · #136 Pablo Ramírez · #138 Pany Varela · #142 Pauleta · #168 Sergei Sergeev · #170 Sergio González · #311 Aurélien Tchouaméni · #312 Joshua Kimmich · #313 Bernardo Silva · #314 Denzel Dumfries · #315 Jérémy Doku · #316 Rayan Cherki · #317 N'Golo Kanté · #318 Tijjani Reijnders · #319 Bruno Guimarães · #320 Frenkie de Jong · #321 Marc Cucurella · #322 Sadio Mané · #323 Martín Zubimendi · #324 Enzo Fernández · #325 Willian Pacho · #326 Scott McTominay · #327 Ryan Gravenberch · #328 Fermín López · #329 Cody Gakpo · #330 João Pedro · #331 Ismaïla Sarr · #332 Rafael Leão · #333 Alexis Mac Allister · #334 Weston McKennie · #335 Gabriel Martinelli · #336 João Cancelo · #337 Dani Olmo · #338 Arda Güler · #339 Marc Guéhi · #340 Fabián Ruiz · #341 Casemiro · #342 Mikel Merino · #343 Eberechi Eze · #344 Kenan Yıldız · #345 Raúl Jiménez · #346 Gonçalo Ramos · #347 Mikel Oyarzabal · #348 Marcus Thuram · #349 Kaoru Mitoma · #350 Phil Foden · #351 Lisandro Martínez · #352 Bradley Barcola · #353 Pervis Estupiñán · #356 Anthony Gordon · #359 Endrick · #360 Karim Adeyemi · #362 Elliot Anderson · #364 Sandro Tonali · #373 Rodrigo De Paul · #375 Vozinha · #376 Jonathan David · #377 Brahim Díaz · #383 Olivier Giroud · #386 Kyle Walker · #387 İlkay Gündoğan · #388 Nico O'Reilly · #399 James Rodríguez
+#2 Adolfo · #20 Artem Fareniuk · #32 Chemi · #41 Danyil Abakshyn · #50 Edu · #77 Gustavo Lobo · #89 João Victor · #106 Luan Muller · #111 Mamadou Touré · #116 Mario Rivillos · #118 Matheus Rodrigues · #119 Mathi Fernández · #120 Mellado · #125 Miquel Feixas · #128 Mykola Mykytiuk · #136 Pablo Ramírez · #138 Pany Varela · #142 Pauleta · #168 Sergei Sergeev · #170 Sergio González · #331 Ismaïla Sarr · #332 Rafael Leão · #333 Alexis Mac Allister · #334 Weston McKennie · #335 Gabriel Martinelli · #336 João Cancelo · #337 Dani Olmo · #338 Arda Güler · #339 Marc Guéhi · #340 Fabián Ruiz · #341 Casemiro · #342 Mikel Merino · #343 Eberechi Eze · #344 Kenan Yıldız · #345 Raúl Jiménez · #346 Gonçalo Ramos · #347 Mikel Oyarzabal · #348 Marcus Thuram · #349 Kaoru Mitoma · #350 Phil Foden · #351 Lisandro Martínez · #352 Bradley Barcola · #353 Pervis Estupiñán · #356 Anthony Gordon · #359 Endrick · #360 Karim Adeyemi · #362 Elliot Anderson · #364 Sandro Tonali · #373 Rodrigo De Paul · #375 Vozinha · #376 Jonathan David · #377 Brahim Díaz · #383 Olivier Giroud · #386 Kyle Walker · #387 İlkay Gündoğan · #388 Nico O'Reilly · #399 James Rodríguez
