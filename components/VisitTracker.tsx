@@ -9,6 +9,7 @@ import {isStaffDevice} from '@/lib/analytics/staff';
 import {countPlayArrival,countPlayStart} from '@/lib/analytics/marketingIds';
 import {MM_PATH,watchMarketingVisit} from '@/lib/analytics/marketingVisit';
 import {useRootView} from '@/components/root/useRootView';
+import {isStandalone} from '@/lib/pwa/homeScreen';
 
 /**
  * Cookie-free first-party visit counter for the admin dashboard (lib/analytics/tracker.ts has the privacy and heat notes).
@@ -32,6 +33,8 @@ export default function VisitTracker({allowLocalhost=false}:{allowLocalhost?:boo
  },[allowLocalhost]);
  useEffect(()=>{if(!pathname)return;tracker.current?.pageview(pathname);
   // Marketing page (Nov 3 2026): a Play tap on `/` that really reached the game counts mk:reached (lib/analytics/marketingIds.ts).
+  // Nov 14 2026 (retention): this visit was opened from the Home Screen icon (start_url /play, app/manifest.ts).
+  if(pathname==='/play'&&tracker.current&&isStandalone())count('st:home_open');
   if(pathname==='/play'&&tracker.current)countPlayArrival((()=>{try{return window.sessionStorage;}catch{return null;}})(),Date.now(),count);},[pathname]);
  // The title screen (`/` before Play; lib/rootView.ts): its view and one passive click listener for its buttons and links
  // (lib/analytics/startEvents.ts). Play switches `/` to the game in place, which stops it.

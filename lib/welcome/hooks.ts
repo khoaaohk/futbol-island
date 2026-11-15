@@ -35,7 +35,9 @@ export type WelcomeFacts={
  lessons?:{next:LessonFact|null;pathTitle:string;leftInPath:number;streak:number;lessonToday:boolean;
   /** The passing lesson behind Pass Puzzles, in the player's path (cross nudge for arcade fans). */
   passing:LessonFact|null};
- arcade?:{fav:{game:string;name:string}|null;challenge:{game:string;name:string;line:string;done:boolean}|null;weekDays:number;pennantLit:boolean};
+ arcade?:{fav:{game:string;name:string}|null;challenge:{game:string;name:string;line:string;done:boolean}|null;weekDays:number;pennantLit:boolean;
+  /** Nov 14 2026: the most recent cabinet whose last run fell just short of its best (lib/arcade/lastScore.ts nearBest). */
+  near?:{game:string;name:string;score:number;best:number}|null};
  kit?:{news:{line:string}|null;visited:boolean};
 };
 
@@ -86,6 +88,9 @@ registerHooks('arcade',f=>{
  const x=f.arcade;if(!x)return [];const out:WelcomeHook[]=[],c=x.challenge;
  if(c&&!c.done&&!x.pennantLit&&x.weekDays===2)out.push({kind:'arcade_pennant',interest:'arcade',tier:TIER.almost,action:{to:'arcade',game:c.game,today:true},
   line:'1 more day for this week’s arcade pennant! Tap for today’s challenge'});
+ // Nov 14 2026 (retention): "almost your best". The last run fell just short (within 30%, lastScore.ts): a concrete number to beat.
+ const n=x.near;if(n&&n.best>n.score&&n.score>0)out.push({kind:'arcade_near',interest:'arcade',tier:TIER.almost,action:{to:'arcade',game:n.game,today:false},
+  line:`Your last ${n.name} score was ${n.score.toLocaleString('en-US')}, ${(n.best-n.score).toLocaleString('en-US')} off your best! Tap to beat it`});
  if(c&&!c.done)out.push({kind:'arcade_daily',interest:'arcade',tier:TIER.fresh,action:{to:'arcade',game:c.game,today:true},line:`New today in ${c.name}: ${c.line.replace(/\.$/,'')}. Tap to play`});
  if(x.fav)out.push({kind:'arcade_go',interest:'arcade',tier:TIER.evergreen,action:{to:'arcade',game:x.fav.game,today:false},line:`${x.fav.name} is waiting in the arcade. Tap to play`});
  return out;

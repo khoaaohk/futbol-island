@@ -52,7 +52,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
 
 // 2. A save code is required to play.
 {assert(!/PlayButton/.test(strip(landing)),'no Play on the title screen itself');
- const block=name=>{const i=actions.indexOf(`{state==='${name}'&&`);assert(i>0,`state ${name} renders`);const j=actions.indexOf('</div>}',i);return actions.slice(i,j);};
+ const block=name=>{let i=actions.indexOf(`{state==='${name}'&&`);if(i<0)i=actions.indexOf(`{(state==='${name}'||state==='boot')&&`);/* Nov 14 2026: new / returning also render in 'boot' */assert(i>0,`state ${name} renders`);const j=actions.indexOf('</div>}',i);return actions.slice(i,j);};
  assert(!/PlayButton|data-landing-play/.test(block('new')),'new players see Start and "I have a save code", no Play');
  assert.match(block('new'),/data-title-start/);assert.match(block('new'),/data-title-restore/);
  // Every Play is the gold water pill (WaterPill): returning (tap), ready / restored (straight from the save flow), break (tap).
@@ -75,7 +75,7 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
  assert.match(actions,/const created=\(c:string\|null\)=>\{\s*if\(!c\)\{void leave\('break'\);return;\}/,'no code → break, never ready');
  assert.match(actions,/void leave\('ready'\)/);
  // The outage state: unavailable / server down / create error / restore "play today" → the distinct break card with Play.
- assert.match(actions,/const ok=await saves\.isSavingAvailable\(\)\.catch\(\(\)=>false\);/,'checks availability (a failed check counts as unavailable)');
+ assert.match(actions,/const ok=!!m&&await m\.isSavingAvailable\(\)\.catch\(\(\)=>false\);/,'checks availability (a failed check counts as unavailable)');
  assert.match(actions,/if\(!ok\)\{pendingMorph\.current=el\.getBoundingClientRect\(\);setState\('break'\);return;\}/);
  assert.match(actions,/const onCreatePhase=\(p:string\)=>\{(?:setCreatePhase\(p\);)?if\(p==='unavailable'\|\|p==='error'\)void leave\('break'\);\};/);
  assert.match(actions,/onDone=\{restored=>\{if\(!restored\)void leave\('break'\);\}\}/);

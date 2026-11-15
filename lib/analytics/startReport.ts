@@ -11,7 +11,7 @@ import {MIN_SESSIONS,type Cell} from './learning';
 import {PRIVACY_SECTION_IDS,START_AMOUNTS} from './startIds';
 
 export type StartStep={id:string;label:string;sessions:Cell};
-export type StartFunnel={id:'new'|'restore'|'returning'|'break';title:string;steps:StartStep[];side:StartStep[]};
+export type StartFunnel={id:'new'|'restore'|'returning'|'break'|'home';title:string;steps:StartStep[];side:StartStep[]};
 export type StartReport={
  hasData:boolean;min:number;hidden:number;
  /** visitors / sessions of the start-page subset (null when the storage update is missing, `partial` when some days lack it). */
@@ -50,12 +50,18 @@ export function buildStart(m:Pick<Merged,'counts'|'countSessions'|'start'|'dims'
  const available=schema>=storageNeeded&&m.start.days>0;
  const funnels:StartFunnel[]=[
   {id:'new',title:'New player: Start',steps:[step('st:view','Saw the title screen'),step('st:start','Pressed Start'),step('st:created','Save code made'),
-   step('st:saved','Passed the code check (“I saved it”)'),step('st:play_ready','Pressed Play')],side:[]},
+   step('st:saved','Passed the code check (“I saved it”)'),step('st:play_ready','Pressed Play')],
+   // Nov 14 2026 (retention): "Saw the title screen" counts returning visits too (their card has no Start), so the drop to Start
+   // looked like 65–71%. st:new is the real base: sessions shown Start (no code in this browser yet). Counted from Nov 14 2026.
+   side:[step('st:new','Start shown (no save code in this browser yet; the real base for Pressed Start, from Nov 14 2026)')]},
   {id:'restore',title:'I have a save code',steps:[step('st:have','Pressed “I have a save code”'),step('st:restored','Code restored'),step('st:play_restored','Pressed Play')],
    side:[step('st:restore_fail','A try that failed (wrong code, offline or too many tries)')]},
   {id:'returning',title:'Returning (code already in this browser)',steps:[step('st:returning','Welcome back card shown'),step('st:play_returning','Pressed Play')],
    side:[step('st:other_code','Pressed “Use a different code”')]},
   {id:'break',title:'Saving break',steps:[step('st:break','“Saving is taking a break” card shown'),step('st:play_break','Pressed Play')],side:[]},
+  // Nov 14 2026 (retention): the in-game "Add to your Home Screen" note (components/HomeScreenTip.tsx, phones with a save code).
+  {id:'home',title:'Home Screen (phones)',steps:[step('st:home_tip','“Add to your Home Screen” note shown'),step('st:home_add','Added with the browser’s install button (Android; iPhone adds via Share, seen as Opened from the Home Screen)')],
+   side:[step('st:home_open','Opened from the Home Screen icon')]},
  ];
  const report:StartReport={
   hasData:false,min:MIN_SESSIONS,hidden:0,

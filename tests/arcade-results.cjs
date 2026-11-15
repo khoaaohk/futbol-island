@@ -38,6 +38,10 @@ for(const c of CASES){
  const out=R.settleArcadeResult(res,{beforeRecord:()=>{if(c.kind==='tennis')tennisOver(c.state.tennis);}});
  const got={coins:res.coins,reason:res.coinReason,board:res.board,...log};
  if(c.kind==='pinball')got.pinballFresh=out.pinballFresh;if(out.record)got.record=out.record;if(out.boardScore!==null)got.boardScore=out.boardScore;
+ // Nov 14 2026 (lib/arcade/lastScore.ts): a classic record write is also the cabinet's last score (one more key, never for tennis or tiers).
+ const last=store.get('fi2-arcade-last-v1');store.delete('fi2-arcade-last-v1');
+ if(last){const j=JSON.parse(last),[g]=Object.keys(j);assert(out.record&&['runner','pinball'].includes(g)&&j[g].b===out.record.best,c.name+': last score');}
+ else assert(!out.record||c.kind==='tennis',c.name+': a classic run notes its last score');
  got.storage=Object.fromEntries([...store.entries()].sort());
  const want={...c.expect,...CHANGED[c.name]};
  // CHANGED (Nov 10 2026): the routes save also keeps Daily Run stars (one more key, 0 for every old save).

@@ -52,5 +52,5 @@ export function startRestorePhase(p:string){
 }
 /** "Which word comes first?": the first pick only, and whether it was right (a boolean, never the word). */
 export function startWordPick(right:boolean){trackStart('st:word');if(right)trackStart('st:word_ok');}
-/** The title card that is showing: the returning fast path and the saving-break card are counted when they appear. */
-export function startTitleState(s:string){if(s==='returning')trackStart('st:returning');else if(s==='break')trackStart('st:break');}
+/** The title card that is showing: the new-player Start (Nov 14 2026), the returning fast path and the saving-break card are counted when they appear. */
+export function startTitleState(s:string){if(s==='returning')trackStart('st:returning');else if(s==='break')trackStart('st:break');else if(s==='new')trackStart('st:new');}

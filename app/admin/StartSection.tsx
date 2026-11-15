@@ -72,6 +72,9 @@ export default function StartSection({report,countryName}:{report:Report;country
       <p className={styles.miniHead}>{f.title}</p>
       <Steps steps={f.steps}/>
       {f.side.map(s=><p key={s.id} className={styles.note}>{s.label}: <b>{show(s.sessions)}</b> sessions</p>)}
+      {/* Nov 14 2026 (retention): Pressed Start as a share of the sessions that were shown Start (st:new), not of every title view. */}
+      {f.id==='new'&&(()=>{const shown=f.side.find(x=>x.id==='st:new')?.sessions,start=f.steps.find(x=>x.id==='st:start')?.sessions;
+       return shown?<p className={styles.note} data-start-rate>Pressed Start of the sessions shown Start: <b>{start===null||start===undefined?'<5':fmtPct(Math.min(1,start/shown))}</b></p>:null;})()}
       {f.id==='new'&&<p className={styles.note}>“Which word comes first?” right on the first pick: <b>{S.word.right===null||S.word.answered===null||!S.word.answered?show(S.word.right):fmtPct(S.word.right/S.word.answered)}</b> of {show(S.word.answered)} sessions.{S.tilt?<> Tilt button used in {show(S.tilt)} sessions.</>:null}</p>}
      </div>)}
     </div>

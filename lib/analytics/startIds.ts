@@ -11,7 +11,11 @@
  */
 export const START_TITLE_IDS=['view','start','created','word','word_ok','saved','play_ready','have','restored','restore_fail','play_restored',
  'returning','play_returning','other_code','break','play_break','tilt',
- 'friends'] as const;// friends: "Join friends" tapped (Oct 22 2026, the Play with friends funnel)
+ 'friends',// friends: "Join friends" tapped (Oct 22 2026, the Play with friends funnel)
+ // Nov 14 2026 (retention): new = the new-player buttons (Start) were shown, the true base of the Start step (st:view also counts
+ // every returning visit); home_tip / home_add = the in-game "Add to your Home Screen" note shown / its Add tapped (or the browser's
+ // own install accepted); home_open = this visit opened from the Home Screen icon (display-mode standalone).
+ 'new','home_tip','home_add','home_open'] as const;
 /** The non-profits (components/DonationLinks.tsx NONPROFITS, slugged: lower case, non-letters → _) and the Stripe tiers. */
 export const START_NONPROFITS=['fc_yap','street_soccer_san_diego','ronin_futsal'] as const;
 export const START_AMOUNTS=[5,10,15,25] as const;

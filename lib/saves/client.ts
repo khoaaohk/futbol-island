@@ -33,6 +33,7 @@
 import {INSTALL_ID_KEY,SAVE_APPLIED_KEY,SAVE_BACKUP_KEY,SAVE_CODE_KEY,SAVE_OPTOUT_KEY,SAVE_PLAYED_KEY,SAVE_SYNC_KEY,SAVE_TRIES_KEY,WALLET_KEY_NAME,KEEPALIVE_BYTES,applySnapshot,
  buildSnapshot,diffKeys,hasProgress,localKeys,playedTime,progressHash,readBackup,readSnapshot,snapshotHash,writeBackup,type Backup,type Snapshot,type StoragePort} from './snapshot';
 import {compactWallet} from './walletCompact';
+import {LOCAL_CODE_RE} from '../boot/titleCode';
 import {progressRank,summarise,type IslandSummary} from './summary';
 
 export const SAVE_CHANGED='fi2-save-changed';
@@ -64,7 +65,7 @@ const emit=()=>{if(typeof window!=='undefined')window.dispatchEvent(new Event(SA
  * deleted its save (that choice is respected). Hosts also check isSavingAvailable(): when saving is down, kids still play.
  */
 export function codeRequired():boolean{return !getLocalCode()&&read(SAVE_OPTOUT_KEY)===null;}
-export function getLocalCode():string|null{const c=read(SAVE_CODE_KEY);return c&&/^[a-z]{3,9}-[a-z]{3,9}-[a-z]{3,9}-[1-9]\d{2,3}$/.test(c)?c:null;}
+export function getLocalCode():string|null{const c=read(SAVE_CODE_KEY);return c&&LOCAL_CODE_RE.test(c)?c:null;}
 export function getSyncState():SyncState|null{try{const s=JSON.parse(read(SAVE_SYNC_KEY)??'null');if(!(s&&Number.isInteger(s.rev)&&s.rev>=0&&typeof s.hash==='string'))return null;
  if(s.sent!==undefined&&!(Array.isArray(s.sent)&&s.sent.every((h:unknown)=>typeof h==='string')))delete s.sent;return s;}catch{return null;}}
 /** At most this many unanswered hashes are remembered per base rev (island hide, room hide, a milestone…). */

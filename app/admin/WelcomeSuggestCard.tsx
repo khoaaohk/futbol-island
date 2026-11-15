@@ -11,7 +11,7 @@ import styles from './admin.module.css';
 
 export const WELCOME_KIND_LABEL:Record<string,string>={fish_set:'Fish: finish a set',fish_day:'Fish: fish of the day',fish_visitor:'Fish: visitor leaving',
  fish_sunset:'Fish: sunset spot',fish_go:'Fish: go fishing',lesson_grad:'Lesson: 1 to graduate',lesson_streak:'Lesson: keep the streak',lesson_next:'Lesson: next up',
- lesson_weekend:'Lesson: weekend',arcade_pennant:'Arcade: pennant day',arcade_daily:'Arcade: today’s challenge',arcade_go:'Arcade: favourite game',
+ lesson_weekend:'Lesson: weekend',arcade_pennant:'Arcade: pennant day',arcade_near:'Arcade: almost your best',arcade_daily:'Arcade: today’s challenge',arcade_go:'Arcade: favourite game',
  kit_news:'Kit Shop: new',kit_design:'Kit Shop: design',cross_fish_lesson:'Cross: fisher → lesson',cross_arcade_lesson:'Cross: arcade → passing lesson',
  cross_lesson_arcade:'Cross: learner → Pass Puzzle',cross_roam_fish:'Cross: explorer → fishing',cross_kit_arcade:'Cross: Kit Shop → Kit Rush'};
 const pct=(x:number|null)=>x===null?'—':fmtPct(x);

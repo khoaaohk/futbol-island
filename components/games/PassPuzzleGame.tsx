@@ -19,6 +19,7 @@ import {scanLanes,shutLanes} from '@/lib/passPuzzle/scan';
 import {coachRun} from '@/lib/passPuzzle/coach';
 import {dailyPuzzle} from '@/lib/passPuzzle/daily';
 // Nov 10 2026: Endless Run (the main arcade entry): puzzle after puzzle, three lives, rising difficulty (lib/passPuzzle/endless.ts).
+import {noteLastScore} from '@/lib/arcade/lastScore';
 import {endlessPuzzle,endlessSeed,startEndlessRun,stepEndless,ENDLESS_LIVES,ENDLESS_BEST_KEY,type EndlessPuzzle,type EndlessRun,type EndlessEvent} from '@/lib/passPuzzle/endless';
 import {arcadeFeedback} from '@/lib/arcade/arcadeFeedback';
 import {puzzleStrike,puzzleTouch,puzzlePassChime,puzzleWhistle,puzzleStar,puzzleShotWhoosh,puzzleGoalRoar,puzzleCrowdOoh,puzzleCombo,puzzleStreak,puzzleSnapTick,puzzleIntercept,puzzleUiTap,puzzleSkillChime,puzzleNewBest} from '@/lib/arcade/passPuzzleAudio';
@@ -521,6 +522,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   setWipe(w=>w+1);e.timer=window.setTimeout(()=>{e.timer=0;if(endless.current===e)endlessServe(p);},130);};
  /** Full time: the lives are gone. The fail beat plays, then the run card and the one Pass Puzzles board. */
  const endlessOver=()=>{const e=endless.current;if(!e)return;endlessTimers();const run=e.run,last=e.puzzle?.scenario;let best=0;try{best=Number(JSON.parse(localStorage.getItem(ENDLESS_BEST_KEY)??'{}').score)||0;}catch{/* no best yet */}
+ noteLastScore('puzzle',run.score,Math.max(best,run.score));/* Nov 14 2026: the Welcome back "almost your best" (lib/arcade/lastScore.ts) */
   const newBest=run.score>best;if(newBest){try{localStorage.setItem(ENDLESS_BEST_KEY,JSON.stringify({score:run.score,solved:run.solved,level:run.level}));}catch{/* this visit only */}setEndBest(run.score);}
   let lesson=last?.lesson??'';try{const w=last?puzzleConceptWords(last.concept,formatRef.current):null;if(w)lesson=`The move to practise: ${w.name}.${w.line?' '+w.line:''}`;}catch{/* the puzzle's own lesson stays */}
   setEndOver({score:run.score,solved:run.solved,level:run.level,best:Math.max(best,run.score),newBest,streak:run.bestStreak,lesson});

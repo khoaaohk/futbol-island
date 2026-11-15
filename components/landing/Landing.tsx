@@ -4,6 +4,7 @@ import TitleActions from './TitleActions';
 import {LegalLinks} from './GrownUps';
 import LandingBack from './LandingBack';
 import styles from './Title.module.css';
+import {TITLE_CODE_BOOT} from '@/lib/boot/titleCode';
 
 /**
  * The Futbol Island title screen (at /play since Nov 3 2026, `/` from Oct 9; /start was removed): one screen, like a game's title. The title, one line, the layered island and
@@ -35,6 +36,8 @@ export default function Landing(){
     {/* The island loader's track (IslandLoading): hidden until Play starts the hand-off into the game (handoffMotion.ts). */}
     <span className={`island-loading-track ${styles.track}`} data-landing-track aria-hidden="true"><span/></span>
    </header>
+   {/* Nov 14 2026 (retention): pre-paint, Start or the returning Play shows from the first frame (TitleActions 'boot'). */}
+   <script dangerouslySetInnerHTML={{__html:TITLE_CODE_BOOT}}/>
    <TitleActions/>
    <nav className={styles.grownRow} aria-label="For grown-ups">
     <LegalLinks/>

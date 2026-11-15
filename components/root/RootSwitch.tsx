@@ -4,6 +4,7 @@ import {flushSync} from 'react-dom';
 import {continueLoaderFrom,ISLAND_COVER_DONE,islandCovered} from '@/components/islandLoadingBoot';
 import {loadGame,loadedGame} from './gameLoader';
 import {useRootView} from './useRootView';
+import {listenForInstallPrompt} from '@/lib/pwa/homeScreen';
 
 /**
  * `/` = the title screen, then the game in place, at the same URL (Oct 9 2026; lib/rootView.ts has the rule).
@@ -25,6 +26,8 @@ export default function RootSwitch({landing,loader}:{landing:ReactNode;loader:Re
  const Loaded=Game??(view==='game'?loadedGame():null);
  const [,setCoverEnded]=useState(0);
  const cover=view==='game'&&islandCovered();
+ // Nov 14 2026 (retention): keep the browser's install offer for the in-game Home Screen note (components/HomeScreenTip.tsx).
+ useEffect(()=>listenForInstallPrompt(),[]);
  useEffect(()=>{
   if(!cover)return;const el=document.querySelector<HTMLElement>('[data-root-cover]');let fading=false;
   const end=()=>{delete document.documentElement.dataset.islandCover;setCoverEnded(n=>n+1);};

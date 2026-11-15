@@ -56,9 +56,12 @@ export default function TitleActions(){
  useEffect(()=>{startTitleState(state);},[state]);
  const pendingMorph=useRef<DOMRect|null>(null),opener=useRef<HTMLElement|null>(null);
  // Boot: the save module loads at once (the only things on this screen are save actions); a stored code is the fast path.
- useEffect(()=>{let live=true;import('./saveCodeAdapter').then(m=>{if(!live)return;setSaves(m);const have=m.getLocalCode();setCode(have);setState(have?'returning':'new');
+ // Nov 14 2026 (retention): one import shared by the boot below and a tap that beats it (open() awaits the same promise).
+ const savesP=useRef<Promise<Saves>|null>(null);
+ const loadSaves=useCallback(()=>savesP.current??=import('./saveCodeAdapter'),[]);
+ useEffect(()=>{let live=true;loadSaves().then(m=>{if(!live)return;setSaves(m);const have=m.getLocalCode();setCode(have);setState(have?'returning':'new');
   // Warm the one status check so Start answers at once (cached by lib/saves/client).
-  void m.isSavingAvailable().catch(()=>false);},()=>{if(live)setState('break');});return()=>{live=false;};},[]);
+  void m.isSavingAvailable().catch(()=>false);},()=>{if(live)setState('break');});return()=>{live=false;};},[loadSaves]);
  // Preload pass (Oct 9 2026, components/root/islandPreload.ts): once the title has settled, the game's code and the island's first
  // picture go into the HTTP cache on idle; Start / Play then build the island off screen (warmIsland).
  useEffect(()=>prefetchIslandWhenSettled(),[]);
@@ -86,9 +89,12 @@ export default function TitleActions(){
    await morph(s,target.getBoundingClientRect(),{reverse:true,duration:300});}
   setSheet(null);target?.focus({preventScroll:true});
  },[]);
+ // Nov 14 2026 (retention): Start works from the first frame (the buttons are in the static HTML, 'boot' below); a tap before the
+ // save module is here waits for it, under the button's busy state, instead of the button being disabled until then.
  const open=async(mode:'create'|'restore',el:HTMLElement)=>{
-  if(!saves||busy)return;opener.current=el;setBusy(true);
-  const ok=await saves.isSavingAvailable().catch(()=>false);setBusy(false);
+  if(busy)return;opener.current=el;setBusy(true);
+  const m=saves??await loadSaves().catch(()=>null);
+  const ok=!!m&&await m.isSavingAvailable().catch(()=>false);setBusy(false);
   if(!ok){pendingMorph.current=el.getBoundingClientRect();setState('break');return;}
   setIntro(mode==='create');setMaking(false);setCreatePhase('');setSheet({mode,from:el});
  };
@@ -118,13 +124,16 @@ export default function TitleActions(){
  // flashed in the corner before the code's footer Back took over (user, Oct 9 2026).
  const footerBack=sheet?.mode==='create'||sheet?.mode==='join'||restoreFooter;
  return <div className={styles.actions} data-title-state={state} aria-live="polite">
-  {state==='new'&&<div className={styles.choices} data-enter="actions">
-   <button type="button" className={styles.start} data-title-start data-track="st:start" disabled={!saves||busy} onClick={e=>{warmIsland('create');void open('create',e.currentTarget);}}>
+  {/* Nov 14 2026 (retention, admin: Start appeared only after the save module had loaded, then waited 1 s for its entrance): 'boot'
+      renders BOTH the new-player and the returning buttons into the static HTML, and the pre-paint flag <html data-title-code>
+      (TITLE_CODE_BOOT, Landing.tsx) shows the right one at first paint (Title.module.css). The same nodes stay when the state settles. */}
+  {(state==='new'||state==='boot')&&<div className={styles.choices} data-enter="actions" data-boot-card="new">
+   <button type="button" className={styles.start} data-title-start data-track="st:start" disabled={busy} aria-busy={busy||undefined} onClick={e=>{warmIsland('create');void open('create',e.currentTarget);}}>
     <span>Start</span><small>Get my save code</small>
    </button>
-   <button type="button" className={styles.haveCode} data-title-restore data-track="st:have" disabled={!saves||busy} onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}>I have a save code</button>
+   <button type="button" className={styles.haveCode} data-title-restore data-track="st:have" disabled={busy} onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}>I have a save code</button>
   </div>}
-  {state==='returning'&&<div ref={landing} className={styles.choices} data-title-card="returning" data-enter="actions">
+  {(state==='returning'||state==='boot')&&<div ref={landing} className={styles.choices} data-title-card="returning" data-enter="actions" data-boot-card="returning">
    {/* Never part of the code on screen: its first word is a third of the key (QA, Oct 10 2026). */}
    <WaterPill card="returning" label="Play"/>
    <button type="button" className={styles.haveCode} data-track="st:other_code" onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="8" cy="12" r="3.4"/><path d="M11.4 12H21M17.5 12v3M20 12v2"/></svg>Use a different code</button>

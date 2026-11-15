@@ -16,6 +16,7 @@ export {fishingFacts,visitorDaysLeft,VISITOR_LEAVING_DAYS,type FishingFactsInput
 import {readArcadeToday,dailyRunOpen} from '../arcade/arcadeToday';
 import {TODAY_CABINETS,todayChallenge,weekDays,pennantLit,type TodayCabinet} from '../arcade/arcadeTodayCore';
 import {arcadeCabinets} from '../arcade/arcadeCatalog';
+import {nearBest,readLastScores} from '../arcade/lastScore';
 import {localPlayDay} from '../town/dailyPlay';
 
 /** About 15 seconds a lesson step (narrated plays): a 9-step lesson reads "2 min". */
@@ -24,6 +25,8 @@ export const lessonMinutes=(l:Pick<PathLesson,'steps'>)=>Math.max(1,Math.round(l
 export const PASSING_LESSON:Record<string,string>={'7v7':'prn_7_support','9v9':'prn_9_support',futsal:'prn_f_support','11v11':'e_thirdman'};
 const fact=(format:string,l:PathLesson):LessonFact=>({format,lessonId:l.id,name:l.name,minutes:lessonMinutes(l)});
 const nameOf=(id:string)=>arcadeCabinets.find(c=>c.id===id)?.name??null;
+/** Nov 14 2026: the arcade's "almost your best" (lib/arcade/lastScore.ts), from the storage passed in. */
+function nearFact(storage:Pick<Storage,'getItem'>|null,now:number){const n=nearBest(readLastScores(storage),now),name=n&&nameOf(n.game);return n&&name?{game:n.game,name,score:n.score,best:n.best}:null;}
 
 export function readWelcomeFacts(storage:Pick<Storage,'getItem'>|null,steps:ReadonlySet<string>,answers:ReadonlySet<string>,tally:Tally,today:number,now=Date.now()):WelcomeFacts{
  const f:WelcomeFacts={weekend:[0,6].includes(new Date(now).getDay())};
@@ -42,7 +45,7 @@ export function readWelcomeFacts(storage:Pick<Storage,'getItem'>|null,steps:Read
   const day=localPlayDay(now),save=readArcadeToday(),fav=tally.fav&&(TODAY_CABINETS as readonly string[]).includes(tally.fav)?tally.fav as TodayCabinet:null;
   const cab:TodayCabinet=fav&&(fav!=='runner'||dailyRunOpen())?fav:'puzzle',ch=todayChallenge(day,cab);
   f.arcade={fav:fav&&nameOf(fav)?{game:fav,name:nameOf(fav)!}:null,challenge:{game:cab,name:nameOf(cab)??'the arcade',line:ch.line,done:(save.done[day]??[]).includes(cab)},
-   weekDays:weekDays(save,day),pennantLit:pennantLit(save,day)};
+   weekDays:weekDays(save,day),pennantLit:pennantLit(save,day),near:nearFact(storage,now)};
  }catch{}
  f.kit={news:kitNewsFor(tally.l[4],today),visited:tally.l[4]>0};
  return f;
