@@ -10,7 +10,7 @@ that goes stale (no "current club", no "best in the world"), no controversies, p
 advice for kids. Kids see a plain-text "Checked against: Wikipedia, UEFA" credit and no links. "Why they matter" and "Learn from
 them" describe a well-documented playing or coaching style in our own words.
 
-Done: 413 of 450 cards. Remaining: 37 (listed at the end).
+Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 
 | # | Card | Checked | Fact | Sources |
 | --- | --- | --- | --- | --- |
@@ -661,18 +661,34 @@ Done: 413 of 450 cards. Remaining: 37 (listed at the end).
 |  |  |  | Back at Kawasaki Frontale, he won the J1 League and the Emperor's Cup in 2020. | https://en.wikipedia.org/wiki/Kaoru_Mitoma |
 | 350 | Phil Foden | 2026-11-14 | Foden won the 2017 FIFA Under-17 World Cup with England and was given the Golden Ball as the tournament's best player. | https://en.wikipedia.org/wiki/Phil_Foden |
 |  |  |  | With his boyhood club Manchester City he won six Premier League titles. | https://en.wikipedia.org/wiki/Phil_Foden |
+| 351 | Lisandro Martínez | 2026-11-14 | Martínez won two Dutch league titles with Ajax and was named the club's Player of the Year for 2021-22. | https://en.wikipedia.org/wiki/Lisandro_Mart%C3%ADnez |
+|  |  |  | With Argentina he won the 2022 World Cup and the Copa América in 2021 and 2024. | https://en.wikipedia.org/wiki/Lisandro_Mart%C3%ADnez |
+| 352 | Bradley Barcola | 2026-11-14 | Barcola's brother, Malcolm, is also a footballer and plays for the Togo national team. | https://en.wikipedia.org/wiki/Bradley_Barcola |
+|  |  |  | He won the Champions League with Paris Saint-Germain in 2025 and 2026, and Ligue 1 three times. | https://en.wikipedia.org/wiki/Bradley_Barcola |
+| 353 | Pervis Estupiñán | 2026-11-14 | Estupiñán joined LDU Quito's youth teams in 2011 and made his professional debut there. | https://en.wikipedia.org/wiki/Pervis_Estupi%C3%B1%C3%A1n |
+|  |  |  | He won the UEFA Europa League with Villarreal in 2021. | https://en.wikipedia.org/wiki/Pervis_Estupi%C3%B1%C3%A1n |
 | 354 | Ivan Rakitić | 2026-11-14 | Rakitić captained Sevilla to the 2013-14 Europa League and was man of the match in the final. He won the competition again with Sevilla in 2023. | https://en.wikipedia.org/wiki/Ivan_Rakiti%C4%87 |
 |  |  |  | At the 2018 World Cup in Russia, Rakitić scored the deciding kick in Croatia's penalty shoot-outs against both Denmark and the hosts, Russia. | https://en.wikipedia.org/wiki/Ivan_Rakiti%C4%87 |
 | 355 | Raphaël Varane | 2026-11-14 | Varane joined Real Madrid from Lens in 2011 and won La Liga with them three times, in 2011-12, 2016-17 and 2019-20. | https://en.wikipedia.org/wiki/Rapha%C3%ABl_Varane |
 |  |  |  | Varane was part of the France squad that won the UEFA Nations League in 2021, and in 2024 he lifted the FA Cup with Manchester United. | https://en.wikipedia.org/wiki/Rapha%C3%ABl_Varane |
+| 356 | Anthony Gordon | 2026-11-14 | Gordon won the 2023 European Under-21 Championship with England and was named Player of the Tournament. | https://en.wikipedia.org/wiki/Anthony_Gordon_(footballer) |
+|  |  |  | He won the EFL Cup with Newcastle United in 2025. | https://en.wikipedia.org/wiki/Anthony_Gordon_(footballer) |
 | 357 | Juan Román Riquelme | 2026-11-14 | Riquelme helped Boca Juniors win the 2000 Intercontinental Cup, beating Real Madrid in Tokyo, and he was named South American Footballer of the Year in 2001. | https://en.wikipedia.org/wiki/Juan_Rom%C3%A1n_Riquelme |
 |  |  |  | Riquelme captained Argentina to victory at the 1997 FIFA World Youth Championship in Malaysia, scoring four goals during the tournament. | https://en.wikipedia.org/wiki/Juan_Rom%C3%A1n_Riquelme |
 | 358 | Jay-Jay Okocha | 2026-11-14 | At the 2004 Africa Cup of Nations, Okocha was named the best player of the tournament. The BBC also voted him African Footballer of the Year in both 2003 and 2004. | https://en.wikipedia.org/wiki/Jay-Jay_Okocha |
 |  |  |  | Okocha was part of the Nigeria side that won Olympic gold at the 1996 Atlanta Games, and two years earlier he was in the squad that won the 1994 Africa Cup of Nations. | https://en.wikipedia.org/wiki/Jay-Jay_Okocha |
+| 359 | Endrick | 2026-11-14 | Endrick became the youngest player to appear for Palmeiras's first team. | https://en.wikipedia.org/wiki/Endrick |
+|  |  |  | He helped Palmeiras win the Brazilian Série A in 2022 and 2023. | https://en.wikipedia.org/wiki/Endrick |
+| 360 | Karim Adeyemi | 2026-11-14 | With Red Bull Salzburg he won six domestic titles and was the Austrian Bundesliga's top scorer in 2021-22. | https://en.wikipedia.org/wiki/Karim_Adeyemi |
+|  |  |  | Adeyemi was part of the Germany team that won the 2021 European Under-21 Championship. | https://en.wikipedia.org/wiki/Karim_Adeyemi |
 | 361 | Pepe | 2026-11-14 | At the 2022 World Cup, Pepe scored in Portugal's 6-1 win over Switzerland. Aged 39, he became the oldest player ever to score in a World Cup knockout match. | https://en.wikipedia.org/wiki/Pepe_(footballer,_born_1983) |
 |  |  |  | When he started Portugal's first game at Euro 2024, Pepe was 41 years old. That made him the oldest player ever to appear at a European Championship. | https://en.wikipedia.org/wiki/Pepe_(footballer,_born_1983), https://www.guinnessworldrecords.com/world-records/88665-oldest-player-in-a-football-soccer-uefa-european-championships |
+| 362 | Elliot Anderson | 2026-11-14 | On loan at Bristol Rovers, he helped them win promotion from League Two in 2021-22 and was EFL Young Player of the Month in April 2022. | https://en.wikipedia.org/wiki/Elliot_Anderson |
+|  |  |  | Anderson was part of the England team that won the 2025 European Under-21 Championship. | https://en.wikipedia.org/wiki/Elliot_Anderson |
 | 363 | Park Ji-sung | 2026-11-14 | Park scored at the 2002, 2006 and 2010 World Cups, becoming the first Asian player to score at three World Cups in a row. His 2002 goal beat Portugal 1-0. | https://en.wikipedia.org/wiki/Park_Ji-sung |
 |  |  |  | In 2009 Park started for Manchester United against Barcelona in Rome. He became the first Asian player ever to appear in a Champions League final. | https://en.wikipedia.org/wiki/Park_Ji-sung, https://www.koreatimes.co.kr/sports/20090528/park-1st-asian-to-play-in-cl-final |
+| 364 | Sandro Tonali | 2026-11-14 | Tonali helped Brescia win Serie B in 2018-19 and was named Serie B's Best Young Player. | https://en.wikipedia.org/wiki/Sandro_Tonali |
+|  |  |  | He won Serie A with AC Milan in 2021-22 and the EFL Cup with Newcastle United in 2025. | https://en.wikipedia.org/wiki/Sandro_Tonali |
 | 365 | Gareth Bale | 2026-11-14 | Bale made his Southampton debut aged just 16, playing as a left-back. He later won the PFA Players' Player of the Year award twice, in 2011 and 2013, with Tottenham. | https://en.wikipedia.org/wiki/Gareth_Bale |
 |  |  |  | Bale scored the late winner for Real Madrid in the 2014 Copa del Rey final against Barcelona, after sprinting past defender Marc Bartra from the halfway line. | https://en.wikipedia.org/wiki/Gareth_Bale |
 | 366 | Ángel Di María | 2026-11-14 | Di María scored the only goal of the 2008 Olympic final against Nigeria, chipping the goalkeeper from the edge of the box to win gold for Argentina. | https://en.wikipedia.org/wiki/%C3%81ngel_Di_Mar%C3%ADa |
@@ -689,8 +705,16 @@ Done: 413 of 450 cards. Remaining: 37 (listed at the end).
 |  |  |  | Agüero scored 12 Premier League hat-tricks for Manchester City, the most by any player. He broke Alan Shearer's record against Aston Villa in January 2020. | https://en.wikipedia.org/wiki/Sergio_Ag%C3%BCero, https://www.premierleague.com/news/1570064 |
 | 372 | Mario Balotelli | 2026-11-14 | In December 2010 Balotelli won the Golden Boy award, given to the best young player in Europe. Earlier that year he had won the treble with Inter Milan. | https://en.wikipedia.org/wiki/Mario_Balotelli |
 |  |  |  | Balotelli was named man of the match in the 2011 FA Cup final, when Manchester City beat Stoke City 1-0. He was later picked in the Euro 2012 Team of the Tournament. | https://en.wikipedia.org/wiki/Mario_Balotelli |
+| 373 | Rodrigo De Paul | 2026-11-14 | De Paul won the 2022 World Cup with Argentina, plus the Copa América in 2021 and 2024. | https://en.wikipedia.org/wiki/Rodrigo_De_Paul |
+|  |  |  | He was named in the team of the tournament at both the 2021 and 2024 Copa Américas. | https://en.wikipedia.org/wiki/Rodrigo_De_Paul |
 | 374 | Vincent Kompany | 2026-11-14 | Kompany was named Premier League Player of the Season for 2011-12, the year Manchester City won their first Premier League title. | https://en.wikipedia.org/wiki/Vincent_Kompany, https://www.premierleague.com/en/events/hall-of-fame/inductees/vincent-kompany |
 |  |  |  | Kompany began his career at Anderlecht at 17 and won the Belgian Golden Shoe in 2004. As a manager, he led Burnley to the 2022-23 Championship title in his first season. | https://en.wikipedia.org/wiki/Vincent_Kompany |
+| 375 | Vozinha | 2026-11-14 | As captain, Vozinha started the 3-0 win over Eswatini in October 2025 that sent Cape Verde to their first World Cup. | https://en.wikipedia.org/wiki/Vozinha |
+|  |  |  | At the 2026 World Cup he became the oldest player to feature in a nation's first World Cup match, and was player of the match against Spain. | https://en.wikipedia.org/wiki/Vozinha |
+| 376 | Jonathan David | 2026-11-14 | David won the Golden Boot at the 2019 CONCACAF Gold Cup. | https://en.wikipedia.org/wiki/Jonathan_David |
+|  |  |  | He won Ligue 1 with Lille in 2020-21 and was CONCACAF Men's Player of the Year for 2024-25. | https://en.wikipedia.org/wiki/Jonathan_David |
+| 377 | Brahim Díaz | 2026-11-14 | Brahim won the Champions League with Real Madrid in 2024 and Serie A with AC Milan in 2021-22. | https://en.wikipedia.org/wiki/Brahim_D%C3%ADaz |
+|  |  |  | He won the 2025 Africa Cup of Nations with Morocco. | https://en.wikipedia.org/wiki/Brahim_D%C3%ADaz |
 | 378 | Leonardo Bonucci | 2026-11-14 | With Andrea Barzagli and Giorgio Chiellini, Bonucci formed a famous Juventus back three. Fans called it the "BBC" defence, after the players' initials. | https://en.wikipedia.org/wiki/Leonardo_Bonucci |
 |  |  |  | Bonucci started for Juventus in two Champions League finals, in 2015 and 2017. He also won the Coppa Italia four times with the club. | https://en.wikipedia.org/wiki/Leonardo_Bonucci |
 | 379 | Cesc Fàbregas | 2026-11-14 | Fàbregas became Arsenal's youngest ever first-team player in October 2003, aged 16 years and 177 days, in a League Cup game against Rotherham. | https://en.wikipedia.org/wiki/Cesc_F%C3%A0bregas, https://arsenal.com/node/23851 |
@@ -701,10 +725,18 @@ Done: 413 of 450 cards. Remaining: 37 (listed at the end).
 |  |  |  | Cantona captained Manchester United in the 1996 FA Cup final and scored the only goal against Liverpool. In 2021 he was inducted into the Premier League Hall of Fame. | https://en.wikipedia.org/wiki/Eric_Cantona, https://www.skysports.com/football/news/11661/12309749/eric-cantona-and-roy-keane-former-manchester-united-captains-inducted-into-premier-league-hall-of-fame |
 | 382 | Thomas Müller | 2026-11-14 | At the 2010 World Cup, aged 20, Müller won the Golden Boot as top scorer and was also named the tournament's Best Young Player. | https://en.wikipedia.org/wiki/Thomas_M%C3%BCller |
 |  |  |  | In the 2019-20 season Müller set up 21 Bundesliga goals, breaking the league record for assists in a season. He also won two Champions Leagues with Bayern, in 2013 and 2020. | https://en.wikipedia.org/wiki/Thomas_M%C3%BCller, https://amp.bundesliga.com/en/bundesliga/news/thomas-muller-all-goals-and-assists-2019-20-bayern-munich-12112 |
+| 383 | Olivier Giroud | 2026-11-14 | Giroud won the FIFA Puskás Award for a scorpion kick goal he scored for Arsenal against Crystal Palace in 2017. | https://en.wikipedia.org/wiki/Olivier_Giroud |
+|  |  |  | He won the Champions League with Chelsea in 2021 and Serie A with AC Milan in 2021-22. | https://en.wikipedia.org/wiki/Olivier_Giroud |
 | 384 | Keylor Navas | 2026-11-14 | At the 2014 World Cup, Navas saved Theofanis Gekas' kick in the penalty shootout against Greece, sending Costa Rica into the quarter-finals. | https://en.wikipedia.org/wiki/Keylor_Navas |
 |  |  |  | Navas was named CONCACAF Men's Player of the Year in 2014 and again in 2017. In 2013-14, with Levante, he won La Liga's award for best goalkeeper. | https://en.wikipedia.org/wiki/Keylor_Navas, https://www.concacaf.com/news/navas-wambach-named-2014-concacaf-players-of-the-year/ |
 | 385 | Lúcio | 2026-11-14 | As Brazil captain, Lúcio scored the 84th-minute winner as Brazil came back from 2-0 down to beat the USA 3-2 in the 2009 Confederations Cup final. | https://en.wikipedia.org/wiki/L%C3%BAcio, https://tr.fifa.com/news/the-decisive-goal-lucio-seals-golden-comeback-2891515 |
 |  |  |  | Lúcio scored for Bayer Leverkusen in the 2002 Champions League final against Real Madrid. He later won three Bundesliga titles with Bayern Munich. | https://en.wikipedia.org/wiki/L%C3%BAcio |
+| 386 | Kyle Walker | 2026-11-14 | On loan at Queens Park Rangers, Walker helped them win the Championship in 2010-11. | https://en.wikipedia.org/wiki/Kyle_Walker |
+|  |  |  | He won six Premier League titles with Manchester City, the last in 2023-24. | https://en.wikipedia.org/wiki/Kyle_Walker |
+| 387 | İlkay Gündoğan | 2026-11-14 | Gündoğan won the German league title, the Bundesliga, with Borussia Dortmund in 2011-12. | https://en.wikipedia.org/wiki/%C4%B0lkay_G%C3%BCndo%C4%9Fan |
+|  |  |  | As Manchester City captain, he led the team to a continental treble in 2022-23. | https://en.wikipedia.org/wiki/%C4%B0lkay_G%C3%BCndo%C4%9Fan |
+| 388 | Nico O'Reilly | 2026-11-14 | O'Reilly scored two goals in the 2026 EFL Cup final, his first major trophy with Manchester City. | https://en.wikipedia.org/wiki/Nico_O'Reilly |
+|  |  |  | He was named Premier League Young Player of the Season and PFA Young Player of the Year for 2025-26. | https://en.wikipedia.org/wiki/Nico_O'Reilly |
 | 389 | Ronald Koeman | 2026-11-14 | Koeman won the 1988 European Cup with PSV Eindhoven, part of a treble season. That summer he also won Euro 1988 with the Netherlands. | https://en.wikipedia.org/wiki/Ronald_Koeman |
 |  |  |  | As Barcelona manager, Koeman led the club to the 2021 Copa del Rey, beating Athletic Bilbao 4-0 in the final. | https://en.wikipedia.org/wiki/Ronald_Koeman |
 | 390 | Ricardo Quaresma | 2026-11-14 | At the 2018 World Cup, Quaresma scored against Iran with a trademark trivela, curled with the outside of his foot. It was his first World Cup goal. | https://en.wikipedia.org/wiki/Ricardo_Quaresma, https://www.fifa.com/en/news/en/news/quaresma-s-trivela-treat |
@@ -725,6 +757,8 @@ Done: 413 of 450 cards. Remaining: 37 (listed at the end).
 |  |  |  | In 2012 Van Persie won both the PFA Players' Player of the Year and the FWA Footballer of the Year awards. He then helped Manchester United win the 2012-13 Premier League. | https://en.wikipedia.org/wiki/Robin_van_Persie |
 | 398 | Laurent Blanc | 2026-11-14 | Blanc started at Montpellier as an attacking midfielder before moving into defence. He was named French Player of the Year in 1990 and later won the 2002-03 Premier League with Manchester United. | https://en.wikipedia.org/wiki/Laurent_Blanc |
 |  |  |  | As a coach, Blanc led Bordeaux to the 2008-09 Ligue 1 title. He then won three Ligue 1 titles in a row with Paris Saint-Germain. | https://en.wikipedia.org/wiki/Laurent_Blanc |
+| 399 | James Rodríguez | 2026-11-14 | James won the Golden Boot at the 2014 World Cup, helping Colombia reach the quarter-finals for the first time. | https://en.wikipedia.org/wiki/James_Rodr%C3%ADguez |
+|  |  |  | His volley against Uruguay at that World Cup won the FIFA Puskás Award for the best goal of 2014. | https://en.wikipedia.org/wiki/James_Rodr%C3%ADguez |
 | 400 | Filippo Inzaghi | 2026-11-14 | Inzaghi was Serie A's top scorer in 1996-97, with 24 goals for Atalanta. He then won the league with Juventus in 1997-98. | https://en.wikipedia.org/wiki/Filippo_Inzaghi |
 |  |  |  | Nicknamed "Superpippo", Inzaghi won the Champions League with AC Milan in 2003 and 2007. He also scored twice in the 2007 Club World Cup final against Boca Juniors. | https://en.wikipedia.org/wiki/Filippo_Inzaghi |
 | 401 | Luis Enrique | 2026-11-14 | As a player, Luis Enrique won Olympic gold with Spain in 1992 and played for his country at three World Cups. | https://en.wikipedia.org/wiki/Luis_Enrique |
@@ -830,4 +864,4 @@ Done: 413 of 450 cards. Remaining: 37 (listed at the end).
 
 ## Remaining cards (no notes yet)
 
-#2 Adolfo · #20 Artem Fareniuk · #32 Chemi · #41 Danyil Abakshyn · #50 Edu · #77 Gustavo Lobo · #89 João Victor · #106 Luan Muller · #111 Mamadou Touré · #116 Mario Rivillos · #118 Matheus Rodrigues · #119 Mathi Fernández · #120 Mellado · #125 Miquel Feixas · #128 Mykola Mykytiuk · #136 Pablo Ramírez · #138 Pany Varela · #142 Pauleta · #168 Sergei Sergeev · #170 Sergio González · #351 Lisandro Martínez · #352 Bradley Barcola · #353 Pervis Estupiñán · #356 Anthony Gordon · #359 Endrick · #360 Karim Adeyemi · #362 Elliot Anderson · #364 Sandro Tonali · #373 Rodrigo De Paul · #375 Vozinha · #376 Jonathan David · #377 Brahim Díaz · #383 Olivier Giroud · #386 Kyle Walker · #387 İlkay Gündoğan · #388 Nico O'Reilly · #399 James Rodríguez
+#2 Adolfo · #20 Artem Fareniuk · #32 Chemi · #41 Danyil Abakshyn · #50 Edu · #77 Gustavo Lobo · #89 João Victor · #106 Luan Muller · #111 Mamadou Touré · #116 Mario Rivillos · #118 Matheus Rodrigues · #119 Mathi Fernández · #120 Mellado · #125 Miquel Feixas · #128 Mykola Mykytiuk · #136 Pablo Ramírez · #138 Pany Varela · #142 Pauleta · #168 Sergei Sergeev · #170 Sergio González
