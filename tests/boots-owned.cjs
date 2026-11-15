@@ -13,7 +13,10 @@ const btn=boots.match(/\{isOwned\?<button[^\n]*data-boot-owned[^\n]*\n\s*:<butto
 assert.ok(/data-boot-owned[^\n]*<span>Owned<\/span>[^\n]*Equip/.test(boots)&&!/data-boot-owned[^\n]*Buy for/.test(boots),'no price on owned boots');
 // The ownership check itself: the purchase id is a hash of the design, so the same design reads owned and a changed one does not.
 const src=ts.transpileModule(read('lib/shop/shopPurchases.ts'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
-const m={exports:{}};vm.runInNewContext(src,{module:m,exports:m.exports,require:()=>({}),localStorage:undefined,console});
+const m={exports:{}};// Nov 15 2026: purchase ids ignore Drip FC colour choices (lib/shop/dripKit.ts stripClubColors), so load the real helper.
+const dripSrc=ts.transpileModule(read('lib/shop/dripKit.ts'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText;
+const dm={exports:{}};vm.runInNewContext(dripSrc,{module:dm,exports:dm.exports,require:()=>({DRIP_FC_ART:{},PITCH_DROP:''}),console});
+vm.runInNewContext(src,{module:m,exports:m.exports,require:(id)=>/dripKit$/.test(id)?dm.exports:({}),localStorage:undefined,console});
 const P=m.exports,design={model:'speed',colors:{toe:'#ffffff'}},owned={v:1,items:[{id:P.purchaseId('boots',design),kind:'boots',name:'x',price:265,design,at:1}],wearing:{}};
 assert.equal(P.ownsDesign(owned,'boots',{...design}),true);assert.equal(P.ownsDesign(owned,'boots',{...design,colors:{toe:'#000000'}}),false);
 console.log('boots-owned ok');
