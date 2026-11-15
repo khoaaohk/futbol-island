@@ -11,7 +11,8 @@ import {multiplayerEnabled} from '@/lib/multiplayer/config';
 import {SPRING_EASE,flipTransform,invert} from './motion';
 import styles from './Title.module.css';
 import {startTitleState,trackStart} from '@/lib/analytics/startEvents';
-import {prefetchIslandWhenSettled,warmIsland} from '../root/islandPreload';
+import {prefetchIslandWhenSettled,warmIsland,whenIdle} from '../root/islandPreload';
+import {watchReturningCard} from '@/lib/analytics/returningCard';
 
 type Saves=typeof import('./saveCodeAdapter');
 /** What the title screen offers. A save code is REQUIRED to play (user decision, Oct 9 2026):
@@ -65,6 +66,13 @@ export default function TitleActions(){
  // Preload pass (Oct 9 2026, components/root/islandPreload.ts): once the title has settled, the game's code and the island's first
  // picture go into the HTTP cache on idle; Start / Play then build the island off screen (warmIsland).
  useEffect(()=>prefetchIslandWhenSettled(),[]);
+ // Nov 15 2026 (owner): the returning card is a clear intent to play (own island or friends, both go through the water Play), so
+ // the island starts building off screen in idle slices once the card is up (islandPreload.ts 'returning'; skipped on Save-Data /
+ // 2G, never while hidden). The card itself is unchanged.
+ useEffect(()=>{if(state!=='returning')return;return whenIdle(()=>warmIsland('returning'),1500);},[state]);
+ // Nov 15 2026: the card's outcomes (lib/analytics/returningCard.ts): left the page while it was up, and for how long (bands).
+ const cardUp=state==='returning'&&!sheet,cardWatch=useRef<{end:()=>void}|null>(null),endCard=()=>cardWatch.current?.end();
+ useEffect(()=>{if(!cardUp)return;const c=watchReturningCard(window,document);cardWatch.current=c;return()=>{c.end();cardWatch.current=null;};},[cardUp]);
  // Open: the sheet's surface grows out of the button that opened it.
  useLayoutEffect(()=>{if(!sheet||!surface.current)return;
   const from=sheet.from?.getBoundingClientRect();if(from)void morph(surface.current,from);
@@ -100,7 +108,7 @@ export default function TitleActions(){
  };
  // "Join friends" (Oct 22 2026): the same sheet and morph as "Use a different code"; it stores the typed code as the pending party and
  // then continues into the game exactly as Play / Start would (PartyHost does the grown-up check and the join).
- const openJoin=(el:HTMLElement)=>{if(!saves||busy)return;trackStart('st:friends');/* the Play with friends funnel's title-screen step: a tap total, never the code */opener.current=el;setIntro(false);setMaking(false);setCreatePhase('');setSheet({mode:'join',from:el});};
+ const openJoin=(el:HTMLElement)=>{if(!saves||busy)return;trackStart('st:friends');if(state==='returning'){trackStart('st:ret_friends');cardWatch.current?.end();}/* the Play with friends funnel's title-screen step: a tap total, never the code */opener.current=el;setIntro(false);setMaking(false);setCreatePhase('');setSheet({mode:'join',from:el});};
  const joinParty=(c:string)=>{
   const stored=setPendingParty(c);if(!stored)return;
   window.dispatchEvent(new Event(TITLE_PENDING_EVENT));
@@ -133,7 +141,7 @@ export default function TitleActions(){
    </button>
    <button type="button" className={styles.haveCode} data-title-restore data-track="st:have" disabled={busy} onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}>I have a save code</button>
   </div>}
-  {(state==='returning'||state==='boot')&&<div ref={landing} className={styles.choices} data-title-card="returning" data-enter="actions" data-boot-card="returning">
+  {(state==='returning'||state==='boot')&&<div ref={landing} className={styles.choices} data-title-card="returning" onClickCapture={endCard} data-enter="actions" data-boot-card="returning">
    {/* Never part of the code on screen: its first word is a third of the key (QA, Oct 10 2026). */}
    <WaterPill card="returning" label="Play"/>
    <button type="button" className={styles.haveCode} data-track="st:other_code" onClick={e=>{warmIsland('restore');void open('restore',e.currentTarget);}}><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="8" cy="12" r="3.4"/><path d="M11.4 12H21M17.5 12v3M20 12v2"/></svg>Use a different code</button>

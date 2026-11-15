@@ -116,4 +116,21 @@ const mem=(init={})=>{const d={...init};return {getItem:k=>k in d?d[k]:null,setI
  assert.match(read('components/games/KitRushGame.tsx'),/else noteLastScore\('kitrush_daily',score,settled\.dailyBest\)/);assert.match(read('components/games/SquadSnakeGame.tsx'),/else noteLastScore\('snake_daily',score,settled\.dailyBest\)/);
  assert.match(read('docs/accounts-design.md'),/`runner_daily`, `runner_cup`/);assert.match(read('docs/welcome-suggestions.md'),/Your last Daily Run was 300/);
 }
+// 8. Nov 15 2026: the returning card warms the island and counts how it ends (totals only).
+{
+ const R=load('lib/analytics/returningCard.ts',()=>({trackStart:()=>{}}));
+ assert.equal(R.retBand(4999),'st:ret_t5');assert.equal(R.retBand(5000),'st:ret_t15');assert.equal(R.retBand(59999),'st:ret_t60');assert.equal(R.retBand(3e5),'st:ret_tmore');
+ const mk=()=>{const l={};return {l,w:{addEventListener:(t,f)=>{l[t]=f;},removeEventListener:t=>{delete l[t];}}};};
+ let t=0,got=[];const a=mk(),d={visibilityState:'visible'};R.watchReturningCard(a.w,d,()=>t,id=>got.push(id));
+ t=8000;a.l.visibilitychange();assert.deepEqual(got,[],'a visible change is not a leave');
+ d.visibilityState='hidden';a.l.visibilitychange();assert.deepEqual(got,['st:ret_left','st:ret_t15'],'left after 8 s');assert(!a.l.pagehide,'once per card');
+ got=[];const b=mk(),c=R.watchReturningCard(b.w,d,()=>0,id=>got.push(id));c.end();assert(!b.l.visibilitychange,'a tap ends it without a count');
+ const I=read('lib/analytics/startIds.ts');for(const id of ['ret_friends','ret_left','ret_t5','ret_t15','ret_t60','ret_tmore'])assert(I.includes(`'${id}'`),id);
+ const rep=read('lib/analytics/startReport.ts');for(const id of ['st:ret_friends','st:ret_left','st:ret_tmore'])assert(rep.includes(`step('${id}'`),'admin returning funnel: '+id);
+ const since=read('lib/analytics/countSince.generated.ts');assert(since.includes('"st:ret_left"'),'countSince regenerated');
+ const ta=read('components/landing/TitleActions.tsx');
+ assert.match(ta,/if\(state!=='returning'\)return;return whenIdle\(\(\)=>warmIsland\('returning'\),1500\);/,'the card warms the island on idle');
+ assert.match(ta,/if\(state==='returning'\)\{trackStart\('st:ret_friends'\)/);assert.match(ta,/onClickCapture=\{endCard\}/);
+ const pre=read('components/root/islandPreload.ts');assert.match(pre,/if\(\(intent==='create'\|\|intent==='returning'\)&&!prefetchAllowed\(\)\)return;/,'Save-Data / 2G respected');
+}
 console.log('retention-front ok');

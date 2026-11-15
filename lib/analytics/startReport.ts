@@ -57,7 +57,10 @@ export function buildStart(m:Pick<Merged,'counts'|'countSessions'|'start'|'dims'
   {id:'restore',title:'I have a save code',steps:[step('st:have','Pressed “I have a save code”'),step('st:restored','Code restored'),step('st:play_restored','Pressed Play')],
    side:[step('st:restore_fail','A try that failed (wrong code, offline or too many tries)')]},
   {id:'returning',title:'Returning (code already in this browser)',steps:[step('st:returning','Welcome back card shown'),step('st:play_returning','Pressed Play')],
-   side:[step('st:other_code','Pressed “Use a different code”')]},
+   // Nov 15 2026 (owner): every way the card ends, and how long a card that was left had been up (from Nov 15 2026).
+   side:[step('st:other_code','Pressed “Use a different code”'),step('st:ret_friends','Pressed “Join friends” (from this card, from Nov 15 2026)'),
+    step('st:ret_left','Left the page from the card (hidden or closed, no tap)'),step('st:ret_t5','… after under 5 s on screen'),
+    step('st:ret_t15','… after 5–15 s'),step('st:ret_t60','… after 15–60 s'),step('st:ret_tmore','… after over 1 min')]},
   {id:'break',title:'Saving break',steps:[step('st:break','“Saving is taking a break” card shown'),step('st:play_break','Pressed Play')],side:[]},
   // Nov 14 2026 (retention): the in-game "Add to your Home Screen" note (components/HomeScreenTip.tsx, phones with a save code).
   {id:'home',title:'Home Screen (phones)',steps:[step('st:home_tip','“Add to your Home Screen” note shown'),step('st:home_add','Added with the browser’s install button (Android; iPhone adds via Share, seen as Opened from the Home Screen)')],

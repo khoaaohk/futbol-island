@@ -16,6 +16,9 @@ import {bootMark} from '@/lib/boot/perfMarks';
  *       (they warm at Play instead).
  *     - 'play' (any water-pill Play): the same, now eager (a task per slice, so the water keeps rising between them); the water fill
  *       waits for it (waterLaunch.ts), so Town takes a built island the moment the tan sheet covers the screen.
+ *     - 'returning' (Nov 15 2026: the Welcome back card is up, TitleActions, after an idle callback): the prefetch at once, then the
+ *       same idle build as 'create' (both of the card's choices, own island and Join friends, end in the water-pill Play). Skipped
+ *       on Save-Data / 2G.
  *     - 'restore' (I have a save code / Use a different code): its Play applies the save and RELOADS the page, so only stage a helps.
  *     No work while the tab is hidden; no requestAnimationFrame anywhere (0 rAF at rest holds). A warm island nobody takes is
  *     disposed (WebGL context released) after UNUSED_MS or when the page is hidden for good (pagehide).
@@ -78,7 +81,7 @@ export function prefetchIslandNow(){
 }
 
 // ── b. Warm on intent ───────────────────────────────────────────────────────────────────────────────────────────────────────────
-export type WarmIntent='create'|'restore'|'play';
+export type WarmIntent='create'|'restore'|'play'|'returning';
 /** A warm island not taken by Town within this long is disposed (the player wandered off without pressing Play). */
 export const UNUSED_MS=180_000;
 type Warm={mode:'idle'|'eager';done:Promise<void>;cancelled:boolean;wake:(()=>void)|null};
@@ -86,7 +89,9 @@ let warm:Warm|null=null,game:GameModule|null=null,unusedTimer:ReturnType<typeof 
 
 export function warmIsland(intent:WarmIntent){
  if(intent==='restore'){prefetchIslandNow();return;}
- if(intent==='create'&&!prefetchAllowed())return;
+ // Nov 15 2026: 'returning' (the Welcome back card is up): the prefetch now, then the same idle build as 'create'.
+ if(intent==='returning')prefetchIslandNow();
+ if((intent==='create'||intent==='returning')&&!prefetchAllowed())return;
  bootMark(`warm:intent-${intent}`);
  const mode=intent==='play'?'eager':'idle';
  armUnused();
