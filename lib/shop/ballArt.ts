@@ -130,9 +130,9 @@ function dieCut(w:number,h:number,b:number,art:(g:G)=>void,border='#ffffff'):HTM
  const out=document.createElement('canvas');out.width=W;out.height=H;const g=out.getContext('2d')!;g.drawImage(o,0,0);g.drawImage(a,0,0);return out;}
 
 /** A decal's image and its aspect (width/height). Text decals measure their width. */
-export function decalImage(kind:string,ref:string,color:string,text:string,px:number):{canvas:HTMLCanvasElement;aspect:number}{
+export function decalImage(kind:string,ref:string,color:string,text:string,px:number,cc?:number):{canvas:HTMLCanvasElement;aspect:number}{
  // Drip FC club stickers (Nov 13 2026, lib/shop/dripKit.ts): the club's own art, drawn by clubArt.ts (a lettered mark until it loads).
- if(kind==='club')return clubSticker(isClubArt(ref)?ref:'crest',px);
+ if(kind==='club')return clubSticker(isClubArt(ref)?ref:'crest',px,cc);
  if(kind==='sticker'){const draw=STICKERS[ref]??STICKERS.star;const s=px/100*.86;const c=dieCut(px*.86,px*.86,px*.05,g=>{g.scale(s,s);draw(g);});return {canvas:c,aspect:c.width/c.height};}
  if(kind==='flag'){const draw=FLAGS[ref]??FLAGS.jp,h=Math.round(px*.62),w=Math.round(h*1.5);
   const c=dieCut(w,h,px*.045,g=>{g.save();const r=h*.12;g.beginPath();g.roundRect(0,0,w,h,r);g.clip();draw(g,w,h);

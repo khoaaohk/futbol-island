@@ -23,3 +23,5 @@ export function countPurchase(kind:ShopKind,price:number){
  if(Number.isFinite(price)&&price>0)count('sh:spend',Math.max(1,Math.round(price)));
 }
 export const countMyKitOpen=()=>count('sh:mykit');
+/** A Drip FC piece recoloured in a studio (Nov 15 2026): a total, never which colour, piece or item. */
+export const countClubColor=()=>count('sh:club_color');

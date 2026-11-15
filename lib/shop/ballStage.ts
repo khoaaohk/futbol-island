@@ -196,7 +196,7 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
    uniforms.uDDir.value[i].set(...d.dir).normalize();uniforms.uDUp.value[i].copy(up);uniforms.uDSize.value[i].set(Math.max(.001,hs.w*pk),Math.max(.001,hs.h*pk),0,0);}
   uniforms.uDecalN.value=atlasKeys?n:0;}
  const easeBack=(t:number)=>{const c=1.9;return 1+(c+1)*Math.pow(t-1,3)+c*Math.pow(t-1,2);};
- const keyOf=(d:BallDecal)=>`${d.kind}|${d.ref}|${d.kind==='name'||d.kind==='number'||d.kind==='quote'?d.color:''}`;
+ const keyOf=(d:BallDecal)=>`${d.kind}|${d.ref}|${d.kind==='name'||d.kind==='number'||d.kind==='quote'?d.color:d.kind==='club'?d.cc??'':''}`;
  let fontsReady=false;loadDecalFonts().then(()=>{fontsReady=true;if(!disposed&&decals.length){atlasKeys='~';redrawAtlas();}});
  // Drip FC stickers: their pictures load on the first club sticker, then the atlas is redrawn once (lettered mark until then).
  let clubAsked=false;
@@ -204,7 +204,7 @@ export function createBallStage(canvas:HTMLCanvasElement,opts:StageOpts):BallSta
   if(!clubAsked&&decals.some(d=>d.kind==='club')){clubAsked=true;clubArtReady().then(()=>{if(!disposed&&decals.length){atlasKeys='~';redrawAtlas();}});}
 const g=atlas.getContext('2d')!;g.clearRect(0,0,AS,AS);const cw=AS/2,ch=AS/4;
   decals.slice(0,MAX_SHADER_DECALS).forEach((d,i)=>{const text=d.kind==='quote'?(QUOTES.find(x=>x.id===d.ref)?.text??''):d.ref;
-   const img=decalImage(d.kind,d.ref,d.color,text,ch*.98),a=img.aspect;aspects[i]=a;
+   const img=decalImage(d.kind,d.ref,d.color,text,ch*.98,d.cc),a=img.aspect;aspects[i]=a;
    let w=cw-8,h=w/a;if(h>ch-8){h=ch-8;w=h*a;}const x=(i%2)*cw+(cw-w)/2,y=Math.floor(i/2)*ch+(ch-h)/2;g.drawImage(img.canvas,x,y,w,h);
    uniforms.uDRect.value[i].set(x/AS,y/AS,w/AS,h/AS);});
   atlasTex.needsUpdate=true;stats.uploads++;uniforms.uDecalTex.value=atlasTex;atlasKeys=decals.map(keyOf).join('§')||'';if(!decals.length)atlasKeys='';

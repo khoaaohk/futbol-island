@@ -4,7 +4,7 @@
  * cached for the page's life. Until they arrive (or if one fails) every drawer falls back to a lettered "DFC" mark, so a sticker
  * never vanishes; callers redraw once when clubArtReady() resolves. Canvas 2D only, no three.js; DOM is touched only when called.
  */
-import {CLUB_COLORS,CLUB_STICKERS,type ClubArt} from './dripKit';
+import {CLUB_COLORS,CLUB_STICKERS,clubColorsOf,clubRing,type ClubArt} from './dripKit';
 
 type Img=HTMLImageElement;
 const imgs=new Map<ClubArt,Img>();let ready:Promise<void>|null=null;
@@ -36,21 +36,32 @@ export function drawClubMark(g:ClubCtx,id:ClubArt,x:number,y:number,w:number,h:n
 const dropPath=(g:G,x:number,y:number,w:number,h:number)=>{g.beginPath();g.moveTo(x+w/2,y);g.bezierCurveTo(x+w*.62,y+h*.2,x+w,y+h*.42,x+w,y+h*.66);
  g.arc(x+w/2,y+h*.66,w/2,0,Math.PI,false);g.bezierCurveTo(x,y+h*.42,x+w*.38,y+h*.2,x+w/2,y);g.closePath();};
 /**
- * A die-cut club sticker about `px` tall: crest = white crest on a blue roundel with a white rim; wordmark = white wordmark on a
- * blue tab; drop = a blue drop (the white monogram inside) with a white edge. Returns the canvas and its aspect (w/h).
+ * A die-cut club sticker about `px` tall: crest = the crest on a roundel with a white rim; wordmark = the wordmark on a tab;
+ * drop = a drop body (the monogram inside) with a white edge. `cc` (lib/shop/dripKit.ts clubCode, Nov 15 2026) picks the art and
+ * backing colours; absent = club colours (white art on club blue, navy ring), exactly as before. Returns the canvas and its aspect.
  */
-export function clubSticker(id:ClubArt,px:number):{canvas:HTMLCanvasElement;aspect:number}{
- const b=Math.max(2,px*.05);
+export function clubSticker(id:ClubArt,px:number,cc?:number):{canvas:HTMLCanvasElement;aspect:number}{
+ const b=Math.max(2,px*.05),col=clubColorsOf(cc),ink=col.art,back=col.bg??CLUB_COLORS.blue;
  if(id==='wordmark'){const h=px*.5,w=h*3.4,c=canvas(w+b*2,h+b*2),g=c.getContext('2d')!;
   g.fillStyle='#ffffff';g.beginPath();g.roundRect(0,0,c.width,c.height,(h+b*2)*.3);g.fill();
-  g.fillStyle=CLUB_COLORS.blue;g.beginPath();g.roundRect(b,b,w,h,h*.26);g.fill();
-  drawClubMark(g,'wordmark',c.width/2,c.height/2+h*.04,w*.84,h*.78,'#ffffff');return {canvas:c,aspect:c.width/c.height};}
+  g.fillStyle=back;g.beginPath();g.roundRect(b,b,w,h,h*.26);g.fill();
+  drawClubMark(g,'wordmark',c.width/2,c.height/2+h*.04,w*.84,h*.78,ink);return {canvas:c,aspect:c.width/c.height};}
  if(id==='drop'){const h=px*.9,w=h*.78,c=canvas(w+b*2,h+b*2),g=c.getContext('2d')!;
-  dropPath(g,0,0,c.width,c.height);g.fillStyle='#ffffff';g.fill();dropPath(g,b,b*1.6,w,h-b*.6);g.fillStyle=CLUB_COLORS.blue;g.fill();
-  drawClubMark(g,'drop',c.width/2,b*1.6+h*.56,w*.7,h*.62,'#ffffff');return {canvas:c,aspect:c.width/c.height};}
+  dropPath(g,0,0,c.width,c.height);g.fillStyle='#ffffff';g.fill();dropPath(g,b,b*1.6,w,h-b*.6);g.fillStyle=back;g.fill();
+  drawClubMark(g,'drop',c.width/2,b*1.6+h*.56,w*.7,h*.62,ink);return {canvas:c,aspect:c.width/c.height};}
  const r=px*.45,c=canvas(r*2+b*2,r*2+b*2),g=c.getContext('2d')!,m=c.width/2;
  g.fillStyle='#ffffff';g.beginPath();g.arc(m,m,r+b,0,Math.PI*2);g.fill();
- g.fillStyle=CLUB_COLORS.blue;g.beginPath();g.arc(m,m,r,0,Math.PI*2);g.fill();
- g.strokeStyle=CLUB_COLORS.navy;g.lineWidth=r*.07;g.beginPath();g.arc(m,m,r*.9,0,Math.PI*2);g.stroke();
- drawClubMark(g,'crest',m,m+r*.02,r*1.25,r*1.4,'#ffffff');return {canvas:c,aspect:1};
+ g.fillStyle=back;g.beginPath();g.arc(m,m,r,0,Math.PI*2);g.fill();
+ g.strokeStyle=clubRing(back);g.lineWidth=r*.07;g.beginPath();g.arc(m,m,r*.9,0,Math.PI*2);g.stroke();
+ drawClubMark(g,'crest',m,m+r*.02,r*1.25,r*1.4,ink);return {canvas:c,aspect:1};
+}
+/**
+ * A shirt print (Nov 15 2026): the mark `id` in `ink`, on an optional backing patch (a roundel for the crest, a rounded tab for
+ * the wordmark) when `bg` is set. Used by lib/shop/jerseyPaint.ts.
+ */
+export function drawClubPrint(g:ClubCtx,id:ClubArt,x:number,y:number,w:number,h:number,ink:string,bg:string|null){
+ if(bg){g.save();g.fillStyle=bg;g.beginPath();
+  if(id==='wordmark'){const pw=w*1.08,ph=h*1.25;g.roundRect(x-pw/2,y-ph/2,pw,ph,ph*.3);}else{g.arc(x,y,Math.max(w,h)*.62,0,Math.PI*2);}
+  g.fill();g.restore();}
+ const k=bg&&id!=='wordmark'?.8:1;drawClubMark(g,id,x,y,w*k,h*k,ink);
 }

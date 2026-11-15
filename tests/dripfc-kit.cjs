@@ -195,4 +195,66 @@ t('QA Nov 14: the preset tiles use the compact label (words over the tag), so it
   assert.match(css, /\.compact\.compact \.text\{white-space:normal;text-wrap:balance\}/);
 });
 
+// ---- Nov 15 2026: Drip FC art colours (lib/shop/dripKit.ts CLUB_PALETTE / clubCode) ----------------------------------------
+t('colours: a curated palette, compact codes, defaults never written, junk dropped', () => {
+  assert.ok(D.CLUB_PALETTE.length >= 10 && D.CLUB_PALETTE.length <= 15, 'about a dozen colours, indexes fit 4 bits');
+  deq(D.CLUB_PALETTE.slice(0, 3).map((c) => c.hex), [D.CLUB_COLORS.blue, D.CLUB_COLORS.navy, D.CLUB_COLORS.white], 'the club three first');
+  const bootHex = new Set(BO.PALETTE.map((p) => p.hex)); for (const c of D.CLUB_PALETTE.slice(3)) assert.ok(bootHex.has(c.hex), c.name + ' comes from the Boot Studio palette');
+  deq(D.clubColorsOf(undefined), { art: D.CLUB_COLORS.white, bg: D.CLUB_COLORS.blue }, 'no code = white art on club blue');
+  assert.equal(D.cleanClubCode(D.CLUB_DEFAULT_CODE), undefined, 'a sticker never stores the club pair');
+  assert.equal(D.cleanClubCode(D.clubCode(3, 6)), D.clubCode(3, 6));
+  for (const bad of [-1, 256, 1.5, '34', null, D.clubCode(13, 0), D.clubCode(0, D.CLUB_NO_BACKING)]) assert.equal(D.cleanClubCode(bad), undefined, String(bad));
+  assert.equal(D.cleanClubCode(D.clubCode(1, D.CLUB_NO_BACKING), true), D.clubCode(1, D.CLUB_NO_BACKING), 'shirts may print without a backing');
+  assert.equal(D.clubColorsOf(D.clubCode(1, D.CLUB_NO_BACKING)).bg, null);
+});
+t('colours: the ball, boot and shirt codecs keep a chosen pair and drop it on anything else', () => {
+  const code = D.clubCode(3, 6);
+  const b = ball([{ ...clubDecal('crest', [0, 0, 1], 0), cc: code }, { ...clubDecal('drop', [1, 0, 0], 1), cc: D.CLUB_DEFAULT_CODE }, { id: 's', kind: 'sticker', ref: 'star', color: '#fff', dir: [0, 1, 0], rot: 0, size: .2, cc: code }]);
+  assert.equal(b.decals[0].cc, code); assert.equal('cc' in b.decals[1], false, 'the default is not stored'); assert.equal('cc' in b.decals[2], false, 'only club stickers carry colours');
+  const bo = BO.validateBoots({ ...boots, decals: [{ ...boots.decals[0], cc: code }, { ...boots.decals[1], cc: 999 }] });
+  assert.equal(bo.decals[0].cc, code); assert.equal('cc' in bo.decals[1], false);
+  const jj = J.validateJersey({ ...jersey, club: { crest: 'chest', word: true, cc: D.clubCode(2, 4), wc: D.clubCode(1, D.CLUB_NO_BACKING) } }).design;
+  deq(jj.club, { crest: 'chest', word: true, cc: D.clubCode(2, 4), wc: D.clubCode(1, D.CLUB_NO_BACKING) });
+  deq(J.validateJersey({ ...jersey, club: { crest: null, word: true, cc: 5, wc: 'x' } }).design.club, { crest: null, word: true }, 'no crest, no crest colours');
+  deq(jersey.club, { crest: 'chest', word: true }, 'the preset keeps its old JSON');
+});
+t('colours: recolouring an owned design is free (same purchase id) and the new colours are worn', async () => {
+  const code = D.clubCode(4, 2), recol = ball(clubBall.decals.map((d, i) => (d.kind === 'club' && i === 0 ? { ...d, cc: code } : d)));
+  assert.equal(SP.purchaseId('ball', recol), SP.purchaseId('ball', clubBall), 'colours are not part of the purchase id');
+  assert.equal(SP.purchaseId('jersey', { ...jersey, club: { ...jersey.club, cc: 7 } }), SP.purchaseId('jersey', jersey));
+  assert.equal(SP.purchaseId('ball', clubBall), 'shop:ball:' + SP.designHash(clubBall), 'designs without colours keep their old id');
+  const mem = new Map(), store = { getItem: (k) => mem.get(k) ?? null, setItem: (k, v) => mem.set(k, v) };
+  let spent = 0; const spend = async () => { spent++; return { ok: true }; };
+  await SP.buyDesign('ball', clubBall, 120, spend, { store });
+  const r = await SP.buyDesign('ball', recol, 120, spend, { store });
+  assert.equal(spent, 1, 'no second charge'); assert.ok(r.ok && r.already);
+  assert.equal(SP.loadOwned(store).items[0].design.decals[0].cc, code, 'the stored (worn) design has the new colours');
+});
+t('colours: contrast help (WCAG ratio), Best contrast is readable and keeps the club pair when it already reads', () => {
+  assert.ok(Math.abs(D.clubContrast('#ffffff', '#000000') - 21) < .01);
+  assert.ok(D.clubReadability(undefined, ['#f6f3ea']).ok, 'club pair on white boots reads');
+  const royal = D.clubReadability(undefined, ['#2253d6']); assert.equal(royal.ok, false); assert.equal(royal.problem, 'item', 'blue sticker on royal boots: hard to see');
+  assert.equal(D.clubReadability(D.clubCode(6, 2), ['#18191d']).problem, 'pair', 'lemon on white: the pair itself is weak');
+  assert.equal(D.bestClubCode(['#f6f3ea']), D.CLUB_DEFAULT_CODE, 'keeps the club colours when they read');
+  for (const under of [['#2253d6'], ['#1d5fd1'], ['#17295e'], ['#18191d', '#f7f4ec'], ['#ffe14a']]) {
+    const best = D.bestClubCode(under); assert.ok(D.clubReadability(best, under).ok, 'best contrast reads on ' + under);
+  }
+  const pr = D.bestClubCode(['#1d5fd1'], true); assert.equal(pr >> 4, D.CLUB_NO_BACKING); assert.ok(D.clubReadability(pr, ['#1d5fd1']).ok, 'a printed crest picks a readable ink');
+  assert.match(D.clubHint(royal, 'boot'), /boot/); assert.doesNotMatch(D.clubHint(royal, 'boot') + D.clubHint({ problem: 'pair' }, 'x'), /\d/, 'no numbers in the hint');
+});
+t('colours: the studios offer it (Club colours + Best contrast), new pieces start in club colours, a counter only', () => {
+  const ui = read('components/shop/ClubColors.tsx');
+  assert.match(ui, />Club colours</); assert.match(ui, />Best contrast</); assert.match(ui, /role="status"/); assert.match(ui, /countClubColor\(\)/);
+  assert.doesNotMatch(ui, /type="color"|<a |href=/, 'curated palette only, no links');
+  for (const f of ['components/shop/BootStudio.tsx', 'components/shop/BallStudio.tsx', 'components/shop/JerseyStudio.tsx']) assert.match(read(f), /<ClubColors /, f);
+  assert.doesNotMatch(read('components/shop/BootStudio.tsx') + read('components/shop/BallStudio.tsx'), /bestClubCode/, 'nothing auto-switches a new placement (owner)');
+  assert.match(read('lib/analytics/countIds.ts'), /\['club_color','Drip FC colours changed'\]/);
+  assert.match(read('lib/analytics/shopEvents.ts'), /countClubColor=\(\)=>count\('sh:club_color'\)/);
+});
+t('colours: friends see the club colours (the relay validates every Cap.KitClub slot; colours need a relay change first)', () => {
+  const code = D.clubCode(3, 6), g2 = { ...gear, ball: ball(clubBall.decals.map((d) => (d.kind === 'club' ? { ...d, cc: code } : d))) };
+  const k = K.kitFromGear(g2); assert.equal(k.length, KIT_CLUB_LEN, 'same long kit, no new slot'); deq(k, K.kitFromGear(gear), 'colours do not travel yet');
+  assert.ok(K.kitBall(k).decals.every((d) => d.cc === undefined), 'a friend draws the club colours');
+});
+
 Promise.resolve().then(() => console.log(`dripfc-kit: ${n} checks passed`));

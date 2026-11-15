@@ -16,7 +16,7 @@
  * no tournament names.
  */
 import {BALL_PRICES} from '../economy';
-import {MAX_CLUB_BALL,isClubArt} from './dripKit';
+import {MAX_CLUB_BALL,isClubArt,cleanClubCode} from './dripKit';
 export const BALL_KEY='fi2-shop-ball-v1';
 export const MAX_DECALS=8;
 export const SLOT_COUNT=3;
@@ -44,7 +44,9 @@ export type Vec3=[number,number,number];
 /** A decal on the ball: `dir` is the unit direction of its centre in ball space, `rot` its turn (radians) about that
  *  direction from the local north, `size` its half-height in radians (≈ sphere radii). `ref` is the sticker id, the flag
  *  code, the quote id, the filtered name, or the number as text. `color` tints text decals. */
-export type BallDecal={id:string;kind:DecalKind;ref:string;color:string;dir:Vec3;rot:number;size:number};
+export type BallDecal={id:string;kind:DecalKind;ref:string;color:string;dir:Vec3;rot:number;size:number;
+ /** Drip FC stickers only (Nov 15 2026, lib/shop/dripKit.ts clubCode): art + backing colours; absent = club colours. */
+ cc?:number};
 /** What the kid drew (Draw step): `id` names a drawing in the store's art pool ('' = none); `fills` are per-panel colours
  *  ('' = not filled), indexed by the shader's panel id for this layout (lib/shop/ballPanels.ts), [] when nothing is filled. */
 export type BallArt={id:string;fills:string[]};
@@ -179,7 +181,9 @@ export function validateDecal(input:unknown,i=0):BallDecal|null{
  if(kind==='name'){ref=filterNameInput(ref).trim();if(!isNameAllowed(ref))return null;}
  if(kind==='number'){const n=cleanNumber(ref);if(n===null)return null;ref=String(n);}
  const id=typeof d.id==='string'&&/^[\w-]{1,24}$/.test(d.id)?d.id:`d${i}`;
- return {id,kind,ref,color:hex(d.color,'#ffffff'),dir,rot:num(d.rot,0,-Math.PI*4,Math.PI*4),size:num(d.size,.24,DECAL_SIZE.min,DECAL_SIZE.max)};
+ const out:BallDecal={id,kind,ref,color:hex(d.color,'#ffffff'),dir,rot:num(d.rot,0,-Math.PI*4,Math.PI*4),size:num(d.size,.24,DECAL_SIZE.min,DECAL_SIZE.max)};
+ if(kind==='club'){const cc=cleanClubCode(d.cc);if(cc!==undefined)out.cc=cc;}
+ return out;
 }
 /** Clean any stored or incoming value into a valid design (unknown fields dropped, bad values defaulted, ≤ MAX_DECALS). */
 export function validateBall(input:unknown):BallDesign{
