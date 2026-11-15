@@ -28,7 +28,7 @@ const nameOf=(id:string)=>arcadeCabinets.find(c=>c.id===id)?.name??null;
 export function readWelcomeFacts(storage:Pick<Storage,'getItem'>|null,steps:ReadonlySet<string>,answers:ReadonlySet<string>,tally:Tally,today:number,now=Date.now()):WelcomeFacts{
  const f:WelcomeFacts={weekend:[0,6].includes(new Date(now).getDay())};
  try{const j=(k:string)=>{try{return JSON.parse(storage?.getItem(k)??'null');}catch{return null;}};
-  f.fishing=fishingFacts(j('fi2-fishbook-v1'),{now,comeback:j(COMEBACK_KEY),hooks:j(FISHING_HOOKS_KEY),time:storage?.getItem(TIME_KEY)??'sunset'});}catch{}
+  f.fishing=fishingFacts(j('fi2-fishbook-v1'),{now,comeback:j(COMEBACK_KEY),hooks:j(FISHING_HOOKS_KEY),time:storage?.getItem(TIME_KEY)??''/* only a sunset the player chose: the island's default time is sunset, so the default must not fire the hook for everyone */});}catch{}
  try{
   const t=suggestedNextStep(storage,steps,answers),s=lessonStreak(tally,today);
   if(t.kind==='lesson'){
