@@ -10,7 +10,11 @@
 .size{margin:0 0 4px;font:700 17px/1.35 var(--cm-ui);color:var(--cm-ink)}
 .where{margin:0 0 14px;font:600 15px/1.35 var(--cm-ui);color:var(--cm-muted)}
 .actions{display:flex;flex-wrap:wrap;gap:12px;justify-content:center}
-.status{min-height:1.3em;margin:10px 0 0;font:600 15px/1.3 var(--cm-ui);color:var(--cm-ink)}
+.status{margin:10px 0 0;font:600 15px/1.3 var(--cm-ui);color:var(--cm-ink)}
+/* Nov 14 2026: an empty status line takes no room (it left a band under the buttons on phones); it still announces when filled. */
+.status:empty{margin:0}
+.record{display:inline-block;margin:0 0 8px;padding:4px 10px;border:var(--cm-line-thin) solid var(--cm-ink);background:var(--cm-sun);font:700 15px/1.3 var(--cm-ui);color:var(--cm-ink);rotate:-2deg}
+.record b{font-weight:900}
 @keyframes trophyIn{from{opacity:0;visibility:hidden;transform:scale(.86) rotate(-2deg)}to{opacity:1;visibility:visible;transform:none}}
 @media(max-height:560px){.art{margin:8px 0;padding:22px 10px 8px}.fish svg{width:min(170px,30vh)}.where{margin-bottom:8px}}
 @media(prefers-reduced-motion:reduce){.layer{animation:none}}

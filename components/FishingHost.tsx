@@ -30,6 +30,9 @@ import {fishingCosmetics,useFishingLog} from '@/lib/town/fishing/fishingLogStore
 // Nov 7 2026 return hooks (docs/fishing.md "Return hooks"): golden and visitor stamps on the catch card (cosmetic only).
 import {lastHookEffects,useFishingHooks} from '@/lib/town/fishing/fishingHooksStore';
 import {lureById} from '@/lib/town/fishing/lures';
+// Nov 14 2026 come back tomorrow (docs/fishing.md): fish of the day, weekly visitor and new-record lines; the sea's condition in the HUD.
+import {lastComeback,useComeback} from '@/lib/town/fishing/comebackStore';
+import {conditionAt} from '@/lib/town/fishing/fishConditions';
 // Nov 7 2026 delight pass (docs/fishing.md "Delight pass"): the rarity-tiered celebration and the secrets on the catch card (cosmetic).
 import {CELEBRATION,SECRET_TEXT,celebrationTier} from '@/lib/town/fishing/fishingDelight';
 import {lastDelight,useDelightRev} from '@/lib/town/fishing/fishingDelightStore';
@@ -244,6 +247,10 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
  const record=!!view.caught&&!legend&&view.caught.isBiggest;
  useFishingHooks();const hook=lastHookEffects(),hooked=hook&&view.caught&&hook.id===view.caught.id&&hook.size===view.caught.size?hook.effects:null;
  const golden=!!hooked?.golden,visitor=!!hooked?.visitor;
+ useComeback();const cb=lastComeback(),come=cb&&view.caught&&cb.id===view.caught.id&&cb.size===view.caught.size?cb.effects:null;
+ const fotd=!!come?.fotd&&!legend,weekVisitor=!!come?.visitor&&!legend,prevBest=record?view.caught?.prevBest??0:0;
+ // The sea's condition for this 3-hour block (read on each HUD render: no timer; it changes at most every 3 hours).
+ const condition=view.active?conditionAt():null;
  useDelightRev();const dl=lastDelight(),delight=dl&&view.caught&&dl.id===view.caught.id&&dl.size===view.caught.size?dl:null;
  // The celebration tier (common … legend, golden): glow, shimmer and sparkles; Battery saver / hot phones keep half the sparkles.
  const tier=fish?celebrationTier(fish.rarity,{golden,legend:!!legend}):'common',fx=CELEBRATION[tier],sparkN=effectiveTier()>=2?Math.floor(fx.sparkles/2):fx.sparkles,secret=delight?.secret?SECRET_TEXT[delight.secret]:null;
@@ -260,7 +267,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    {tier!=='common'&&<span className={styles.celebrate} key={catchKey} aria-hidden="true">{fx.shimmer&&<b className={styles.shine}/>}{Array.from({length:sparkN},(_,i)=><i key={i} style={{'--a':`${Math.round(i*360/sparkN+(i%2)*14)}deg`,'--d':`${44+(i%3)*14}px`,'--w':`${i*35}ms`} as React.CSSProperties}/>)}</span>}
    <button type="button" className={styles.catchClose} aria-label="Dismiss" onClick={()=>setDismissed(catchKey)}><span aria-hidden="true">×</span></button>
    {/* A4: NEW (first of its kind) and RECORD (this player's biggest yet) stamps; A6: rarity stars as well as the word and colour. */}
-   {legend?<p className={styles.stamps}><span className={styles.stamp} data-stamp="legend">Island legend!</span></p>:(view.caught.isNew||record||golden||visitor)&&<p className={styles.stamps}>{golden&&<span className={styles.stamp} data-stamp="golden">Golden!</span>}{view.caught.isNew&&<span className={styles.stamp} data-stamp="new">New!</span>}{record&&<span className={styles.stamp} data-stamp="record">Record!</span>}{visitor&&<span className={styles.stamp} data-stamp="visitor">Today&apos;s visitor!</span>}</p>}
+   {legend?<p className={styles.stamps}><span className={styles.stamp} data-stamp="legend">Island legend!</span></p>:(view.caught.isNew||record||golden||visitor||fotd||weekVisitor)&&<p className={styles.stamps}>{golden&&<span className={styles.stamp} data-stamp="golden">Golden!</span>}{view.caught.isNew&&<span className={styles.stamp} data-stamp="new">New!</span>}{record&&<span className={styles.stamp} data-stamp="record">Record!</span>}{visitor&&<span className={styles.stamp} data-stamp="visitor">Today&apos;s visitor!</span>}{fotd&&<span className={styles.stamp} data-stamp="fotd">Fish of the day!</span>}{weekVisitor&&<span className={styles.stamp} data-stamp="week">Visitor of the week!</span>}</p>}
    <p className={styles.catchTop}><b>{fish.name}</b>{fromBoat&&<em className={styles.catchWhere} data-fish-where>Deep sea boat</em>}</p>
    {legend?<p className={styles.catchMeta} data-rarity="legendary" data-fish-legend><RarityStars rarity="legendary" className={styles.stars}/> {legend.title} · caught once and released</p>
    :<p className={styles.catchMeta} data-rarity={fish.rarity}><RarityStars rarity={fish.rarity} className={styles.stars}/> {RARITY_LABEL[fish.rarity]} · <span data-fish-worth>{worth}</span></p>}
@@ -269,6 +276,9 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    {/* A golden one: a short celebration, and the plain truth that it is the same fish at the same price (stamp-only). */}
    {golden&&!legend&&<p className={styles.catchGolden} data-fish-golden><b>A golden {fish.name}!</b> Very rare. It gets a gold mark in your Fishbook, and Rosa pays the same as for any {fish.name}.</p>}
    {secret&&<p className={styles.catchSecret} data-fish-secret={delight?.secret}><span className={styles.stamp} data-stamp="secret">{secret.stamp}</span> {secret.note}</p>}
+   {/* Nov 14 2026: a new personal best says by how much; the fish of the day says it fetches double. */}
+   {prevBest>0&&<p className={styles.catchRecord} data-fish-record><b>New record!</b> Your best was {prevBest} cm. This one is {Math.round((view.caught.size-prevBest)*10)/10} cm bigger.</p>}
+   {fotd&&<p className={styles.catchFotd} data-fish-fotd><b>Fish of the day!</b> Rosa pays double for it today.</p>}
    {size&&<p className={styles.catchSize} data-fish-size data-unit={size.unit}><b>{view.caught.size} cm</b>: {size.text}</p>}
    <p className={styles.catchClub}><span>{fish.club.link==='Fun fish fact'?'Fun fish fact + real football fact':'Real football fact'}</span>{fish.club.name}{fish.club.nickname?` · “${fish.club.nickname}”`:''}</p>
    <p className={styles.catchFact}>{fish.club.fact}</p>
@@ -279,6 +289,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
    <div className={styles.back}><BackButton ref={back} data-fish-stop onBack={()=>fishingSession.stop()}/></div>
    <div className={styles.message} role="status" data-fishing-message data-run={view.run||undefined} data-warn={view.warn||undefined}>
     <p className={styles.messageTitle}>{view.phase==='caught'&&fish&&<RarityStars rarity={fish.rarity} className={styles.stars} size={13}/>}{view.phase==='caught'&&fish?' ':''}{view.hint}</p>
+    {condition&&(view.phase==='ready'||view.phase==='casting'||view.phase==='approach'||view.phase==='nibble')&&<p className={styles.condition} data-fishing-condition={condition.id}>{condition.line}</p>}
     {toast&&view.phase!=='caught'&&view.phase!=='bite'&&view.phase!=='reeling'&&<button type="button" key={toast.key} className={styles.messageLesson} data-fishing-lesson data-expanded={expanded} aria-expanded={expanded} onClick={()=>setExpanded(v=>!v)}><span>{toast.text}</span></button>}
    </div>
    {/* B2: the white flash at the top of the leap (one-shot CSS, after the leap's rise; none with reduced motion). */}
@@ -308,7 +319,7 @@ export default function FishingHost({onOpenChange,onDialogChange,paused=false}:{
     <FishingLureButton className={styles.action}/>
    </div>
   </div>}
-  {view.phase==='caught'&&fish&&view.caught&&size&&trophyRarity(fish.rarity)&&trophyShut!==catchKey&&<FishingTrophy key={catchKey} fish={fish} sizeCm={view.caught.size} sizeText={size.text} spot={(view.spotId&&spotById(view.spotId)?.name)||'Futbol Island'} onClose={()=>setTrophyShut(catchKey)}/>}
+  {view.phase==='caught'&&fish&&view.caught&&size&&trophyRarity(fish.rarity)&&trophyShut!==catchKey&&<FishingTrophy key={catchKey} fish={fish} record={prevBest>0?prevBest:undefined} sizeCm={view.caught.size} sizeText={size.text} spot={(view.spotId&&spotById(view.spotId)?.name)||'Futbol Island'} onClose={()=>setTrophyShut(catchKey)}/>}
   {loaded.book&&<Fishbook open={book} onClose={()=>setBook(false)}/>}
   {loaded.stand&&<MarketStand open={stand} initialTab={tab} place={place} onOpenChange={setStand}/>}
  </>;

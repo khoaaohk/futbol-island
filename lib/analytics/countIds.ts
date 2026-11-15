@@ -157,6 +157,10 @@ export const FISHING_COUNT_EVENTS=[
  // showing the discovery ripples, the first-time run hint, a run let go in time (feedback shown), and Sell from a full basket.
  ['go_welcome','Go fishing tapped (Welcome back note)'],['go_map','Go fishing tapped (island map)'],['first_catch','First catch on a device (guaranteed common)'],
  ['ripple_start','Fish tapped at a spot showing the discovery ripples'],['run_hint','First-time run hint shown'],['full_sell','Sell tapped on a full-basket catch'],
+
+ // Nov 14 2026 (come back tomorrow, lib/town/fishing/comeback.ts): the fish of the day caught (once per player and day), a Fishbook
+ // set completed, a new personal best size, and the weekly visitor caught at its spot (once per player and week).
+ ['fotd_catch','Fish of the day caught (first one that day)'],['set_done','Fishbook set completed'],['new_record','New personal best size'],['visitor_week','Weekly visitor caught at its spot'],
 ] as const;
 
 

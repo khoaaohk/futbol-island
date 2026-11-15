@@ -58,6 +58,8 @@ export default function FishingSection({report,dash}:{report:Report;dash?:Dashbo
  const tutorial=rows.filter(r=>['fi:tutorial_done','fi:tutorial_skip'].includes(r.id));
  // Nov 14 2026 (reach, lib/town/fishing/fishingReach.ts): the Go fishing entries, the first catch, ripple starts, the run hint, Sell from a full basket.
  const reach=rows.filter(r=>['fi:go_welcome','fi:go_map','fi:first_catch','fi:ripple_start','fi:run_hint','fi:run_stopped','fi:full_sell'].includes(r.id));
+ // Nov 14 2026 (come back tomorrow, lib/town/fishing/comeback.ts): fish of the day, sets completed, new records, the weekly visitor.
+ const comeback=rows.filter(r=>['fi:fotd_catch','fi:set_done','fi:new_record','fi:visitor_week'].includes(r.id));
  const bucketRows:BarRow[]=f?.buckets?FIGHT_BUCKETS.filter(k=>k in f.buckets!).map(k=>({key:k,label:k==='0'?'Fished, never hooked':`${k} fight${k==='1'?'':'s'}`,value:f.buckets![k]??0})):[];// exact counts (fishingAdminMetrics num()): never null
  const steps=fn?.steps??fromDash??[];
  return <section className={styles.island} aria-labelledby="fishing-heading">
@@ -109,6 +111,7 @@ export default function FishingSection({report,dash}:{report:Report;dash?:Dashbo
     <BarList rows={bucketRows} unit="sessions" share={false} limit={bucketRows.length}/>
    </ChartCard>
    <CountCard title="Reach: getting to a first catch" subtitle="Go fishing taps (Welcome back note, map), first catches on a device, Fish taps at a spot showing the discovery ripples, the first-time run hint, runs let go in time, Sell from a full basket" rows={reach}/>
+   <CountCard title="Come back tomorrow" subtitle="Fish of the day caught (once a player a day), Fishbook sets completed, new personal best sizes, the weekly visitor caught at its spot (once a player a week)" rows={comeback}/>
    <CountCard title="First-time tutorial" subtitle="Finished on the first catch’s “Got it”, or skipped" rows={tutorial}/>
    <CountCard title="Requests, legends, the Fishbook and selling" subtitle="Islander requests finished, legend clues, legends released, Fishbook opens, new species, basket full, fish sold" rows={island}/>
   </div>

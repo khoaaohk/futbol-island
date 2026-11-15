@@ -13,6 +13,8 @@
  */
 import {GOODS,goodById,isGood,ladderExempt,type Good,type GoodKind} from './goods';
 import {MARKET,marketUnitValue,payFromTally,ladderFactor} from '../../economy';
+// Nov 14 2026 (come back tomorrow, docs/fishing.md): the fish of the day fetches double, still inside the daily full-price allowance.
+import {FOTD_MULT,isFishOfTheDay} from '../fishing/fishDaily';
 export const MARKET_STORAGE_KEY='fi2-market-v1';
 export const BASKET_LIMIT=MARKET.basket;
 export const MARKET_FULL_PRICE_COINS=MARKET.allowance;
@@ -63,9 +65,12 @@ export function grantGoods(s:MarketState,key:string,items:GrantLine[]):{state:Ma
 /** How many of this good were sold today. */
 export const soldOfGood=(s:MarketState,id:string)=>s.byGood?.[id]??0;
 /** What the NEXT item of good `g` is worth now (may be part of a coin): the same-kind ladder, then half past the allowance. */
-export function nextUnitValue(s:Pick<MarketState,'soldToday'|'byGood'>,g:Good,extraSold=0,soldCoins=s.soldToday){
- return marketUnitValue(g.price,(s.byGood?.[g.id]??0)+extraSold,soldCoins,ladderExempt(g));
+export function nextUnitValue(s:Pick<MarketState,'soldToday'|'byGood'>&{day?:string},g:Good,extraSold=0,soldCoins=s.soldToday){
+ return marketUnitValue(g.price*fotdFactor(s.day,g),(s.byGood?.[g.id]??0)+extraSold,soldCoins,ladderExempt(g));
 }
+/** Double for the fish of the state's local day (a state without a day, as in the sims, never doubles). The doubled coins count
+ *  towards today's allowance like any other sale, so the soft cap still halves everything after MARKET_FULL_PRICE_COINS. */
+export const fotdFactor=(day:string|undefined,g:Pick<Good,'id'|'kind'>)=>g.kind==='fish'&&isFishOfTheDay(g.id,day)?FOTD_MULT:1;
 /** Whether Rosa already has plenty of this good today (its next one sells below full price because of the ladder). */
 export const plentyToday=(s:Pick<MarketState,'byGood'>,g:Good)=>ladderFactor(s.byGood?.[g.id]??0,ladderExempt(g))<1;
 export type SaleQuote={lines:SaleLine[];coins:number;halfPrice:boolean;

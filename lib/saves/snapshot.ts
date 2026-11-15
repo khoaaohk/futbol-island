@@ -45,6 +45,7 @@ export const SYNC_KEYS:readonly string[]=[
  'fi2-stadium-orchard-v1',// Stadium Park orchards (Nov 13 2026): fruit picked per tree (regrow clock), the same shape as the Summit forage save
  'fi2-fishing-log-v1',// Fishing content (Oct 15 2026, docs/fishing.md "Content systems"): legends, clues, requests, the lure on the line, Fishbook rewards
  'fi2-fishing-hooks-v1',// Fishing return hooks (Nov 7 2026, docs/fishing.md "Return hooks"): sets claimed, Visitor marks, golden catches, legend chapters (a few KB)
+ 'fi2-fishing-comeback-v1',// Fishing "come back tomorrow" (Nov 14 2026, docs/fishing.md): the last day / week the fish of the day / weekly visitor was caught, and how many; ~120 bytes
  'fi2-fishing-secrets-v1',// Fishing delight pass (Nov 7 2026, docs/fishing.md "Delight pass"): two found-once secret stamps (message in a bottle, golden glint); ~50 bytes
  'fi2-beachcomb-v1',// Beachcombing (Oct 14 2026, docs/beachcombing.md): the Shellbook, today's taken spots, the tips seen
  'fi2-bug-book-v1',// The Bug book (Oct 20 2026, lib/town/jobs/bugBook.ts): catch counts for the 8 Summit bugs + 8 fireflies and the reward flag (≤ ~130 bytes)

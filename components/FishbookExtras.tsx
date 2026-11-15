@@ -20,6 +20,8 @@ import {FISH_REQUEST_COINS} from '@/lib/economy';
 import {FISH_SETS,legendChapters,pacificDay,setProgress,speciesChapters,visitorHint,visitorsFor,type HooksSave} from '@/lib/town/fishing/fishingHooks';
 import type {Fishbook} from '@/lib/town/fishing/fishingCore';
 import type {FishSpecies} from '@/lib/town/fishing/fishCatalog';
+// Nov 14 2026 come back tomorrow (docs/fishing.md): fish of the day, the weekly visitor and the sea's condition, by the local date.
+import {conditionAt,fishOfTheDay,fotdWhere,isoWeek,localDay,weeklyVisitor,type ComebackSave} from '@/lib/town/fishing/comeback';
 
 export type FishbookPage='fish'|'sets'|'trophies'|'requests';
 export const FISHBOOK_PAGES:readonly [FishbookPage,string][]=[['fish','Fish'],['sets','Sets'],['trophies','Trophies'],['requests','Requests']];
@@ -32,6 +34,19 @@ export function VisitorBanner({hooks,now=Date.now()}:{hooks:HooksSave;now?:numbe
   <p className={styles.note}>One special animal drops by each part of the island today. Catch it today for a Visitor mark in your Fishbook. A new one comes tomorrow.</p>
   <ul>{list.map(({area,fish})=>{const got=hooks.visits[fish.id]?.day===day;return <li key={area.id} data-visitor-area={area.id} data-got={got||undefined}>
    <FishArt fish={fish} size={56}/><div><b>{fish.name}</b><span>{area.name} · {visitorHint(fish)}</span>{got&&<em>Caught today ✓</em>}</div></li>;})}</ul>
+ </section>;
+}
+
+/** Today on the water: the fish of the day (double coins today), this week's visitor at its spot, and the sea right now. */
+export function ComebackBanner({save,now=Date.now()}:{save:ComebackSave;now?:number}){
+ const f=fishOfTheDay(now),v=weeklyVisitor(now),c=conditionAt(now),gotF=save.fotdDay===localDay(now),gotV=save.visitorWeek===isoWeek(now);
+ return <section className={`${styles.visitors} ${styles.comeback}`} aria-labelledby="fishbook-today" data-fishbook-comeback>
+  <h3 id="fishbook-today">Today on the water</h3>
+  <p className={styles.note} data-fishbook-condition={c.id}>{c.line} The sea changes every few hours.</p>
+  <ul>
+   <li data-fishbook-fotd={f.id} data-got={gotF||undefined}><FishArt fish={f} size={56}/><div><b>Fish of the day: {f.name}</b><span>Rosa pays double for it today. Look at {fotdWhere(f)}.</span>{gotF&&<em>Caught today ✓</em>}</div></li>
+   <li data-fishbook-week={v.fish.id} data-got={gotV||undefined}><FishArt fish={v.fish} size={56}/><div><b>Visitor of the week: {v.fish.name}</b><span>Swimming at {v.spotName} all week, until Sunday. A new visitor comes on Monday.</span>{gotV&&<em>Caught this week ✓</em>}</div></li>
+  </ul>
  </section>;
 }
 

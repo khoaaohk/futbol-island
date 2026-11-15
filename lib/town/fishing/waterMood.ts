@@ -10,6 +10,7 @@
  */
 import type {TimeOfDayKey} from './nightFish';
 import {readTimeOfDay} from './timeOfDay';
+import {conditionAt} from './fishConditions';
 
 export type WaterMood={shallow:[number,number,number];deep:[number,number,number];clear:number;floatGlow:number;sparkle:number};
 const TIME:Record<TimeOfDayKey,WaterMood>={
@@ -27,4 +28,10 @@ export function applyWaterMood(u:{uUwShallow:{value:V3};uUwDeep:{value:V3};uUwCl
  return m;
 }
 /** The visuals' hook (fishingVisuals.ts, right after applyReefWater): the live time of day. */
-export const applyLiveWaterMood=(u:Parameters<typeof applyWaterMood>[0])=>applyWaterMood(u,readTimeOfDay());
+/** Nov 14 2026 (come back tomorrow): plus a light hint of the sea's condition (./fishConditions.ts mood: a little less clear in
+ *  mist or soft rain, a touch clearer on calm water). The same uniforms, once a session: no new draw, pass or per-frame work. */
+export function applyLiveWaterMood(u:Parameters<typeof applyWaterMood>[0],now=Date.now()){
+ const m=applyWaterMood(u,readTimeOfDay()),c=conditionAt(now).mood,v=u.uUwShallow.value,d=u.uUwDeep.value;
+ v.set(v.x*c.tint[0],v.y*c.tint[1],v.z*c.tint[2]);d.set(d.x*c.tint[0],d.y*c.tint[1],d.z*c.tint[2]);u.uUwClear.value*=c.clear;
+ return m;
+}

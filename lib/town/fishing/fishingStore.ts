@@ -18,13 +18,13 @@ const storage=(e:StorageEvent)=>{if(e.key===FISHBOOK_STORAGE_KEY||e.key===null){
 export function subscribeFishbook(fn:()=>void){listeners.add(fn);if(listeners.size===1)window.addEventListener('storage',storage);return()=>{listeners.delete(fn);if(!listeners.size)window.removeEventListener('storage',storage);};}
 export const useFishbook=()=>useSyncExternalStore(subscribeFishbook,readFishbook,()=>server);
 
-export type LandResult={isNew:boolean;isBiggest:boolean;inBasket:boolean};
+export type LandResult={isNew:boolean;isBiggest:boolean;inBasket:boolean;prevBest:number};
 /** Log the catch (merging with another tab's save) and put the fish in the market basket if there is room. */
 export function landFish(id:FishId,size:number,now=Date.now()):LandResult{
- const r=recordCatch(mergeFishbooks(readFishbook(),readSaved()),id,size,now);
+ const merged=mergeFishbooks(readFishbook(),readSaved()),prevBest=merged.species[id]?.biggest??0,r=recordCatch(merged,id,size,now);
  state=r.book;try{localStorage.setItem(FISHBOOK_STORAGE_KEY,JSON.stringify(r.book));}catch{}emit();signalExplore('fish');
  let added=0;try{added=islandMarket.gather(id,1);}catch{}
- return {isNew:r.isNew,isBiggest:r.isBiggest,inBasket:added>0};
+ return {isNew:r.isNew,isBiggest:r.isBiggest,inBasket:added>0,prevBest};
 }
 
 // ---- The live session singleton (HUD <-> island loop). Sounds reuse the island sound system's document cues. ----
@@ -67,7 +67,7 @@ const hot:HotFishing=typeof globalThis==='undefined'?{}:((globalThis as {__fi2Fi
 hot.land=landFish;
 hot.cue=(kind,strength)=>{try{for(const [name,detail] of CUES[kind])document.dispatchEvent(new CustomEvent(name,{detail:kind==='reel'&&strength!==undefined?{cue:detail,gain:.5+Math.max(0,Math.min(1,strength))}:detail}));}catch{}fishHaptic(kind,strength);};// the reel's ratchet carries its spin rate as a gain (islandSound.ts jobCue)
 export const fishingSession=hot.session??=createFishingSession(
- (id,size)=>{const r=hot.land!(id,size);return {isNew:r.isNew,isBiggest:r.isBiggest,inBasket:r.inBasket};},
+ (id,size)=>{const r=hot.land!(id,size);return {isNew:r.isNew,isBiggest:r.isBiggest,inBasket:r.inBasket,prevBest:r.prevBest};},
  (kind,strength)=>hot.cue!(kind,strength),
 );
 /** The event API (docs/fishing.md "Event API", ./fishingSession.ts): subscribe to cast / bite / hook / catch / escape … */

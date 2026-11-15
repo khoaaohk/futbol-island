@@ -161,7 +161,7 @@ Bite window extras (Nov 6 2026), added to the base and never changing the odds: 
   - A pause alone never loses the fish; only 8 s with no spinning at all lets a hooked fish swim off (it says "Keep spinning!", 6 Nov 2026).
   - Nothing is ever lost.
   - Space, Enter, the reel and a tap on the water do the same thing. While a shadow comes in or nibbles, the reel reads **Wait…** and every tap is ignored (no scare, 6 Nov 2026).
-- **Economy.** The mean catch is worth about 4.0 coins (`scripts/economy-sim.cjs`), the same as before, so the shared 40-coin daily soft cap still limits market income.
+- **Economy.** The mean catch is worth about 4.0 coins (`scripts/economy-sim.cjs`), the same as before, so the shared 30-coin daily soft cap (40 until Oct 14 2026) still limits market income.
 
 ## Approaches: a new direction every cast
 
@@ -208,11 +208,12 @@ This section fits the jobs economy in `lib/town/jobs/jobEconomy.ts` and `docs/is
   - Common: 2–4 coins. The new commons are 2–3; the original mackerel and sea bass stay at 4.
   - Good: 4–7 coins.
   - Rare: 8–11 coins.
-  - Legendary: 12–18 coins. The priciest are the whale shark and the coelacanth at 18, still under half the 40-coin daily soft cap and well below a 100-coin book.
+  - Legendary: 12–18 coins. The priciest are the whale shark and the coelacanth at 18, still well under the 30-coin daily soft cap and well below a 100-coin book.
 - **Where prices live.** Every species is a market good automatically: `FISH_GOODS` in `lib/town/market/goods.ts` is generated from `FISH`. Every species also counts towards the shared soft cap and the Fishbook total.
 - **Why these prices.** A realistic catch takes about 30 s and earns about 4 coins on average, which is roughly the 7–10 coins a 1-minute island job pays.
-- **Shared daily soft cap.** Fish, produce and (if ever switched on) cards all sell at full price until the day's sales reach `MARKET_FULL_PRICE_COINS`, which is 40 coins. After that everything sells at half price (at least 1 coin), and the cap resets at local midnight.
+- **Shared daily soft cap.** Fish, produce and (if ever switched on) cards all sell at full price until the day's sales reach `MARKET_FULL_PRICE_COINS` (`MARKET.allowance` in `lib/economy.ts`), which is 30 coins (40 before the Oct 14 2026 rebalance). After that everything sells at half price (at least 1 coin), and the cap resets at local midnight.
 - **Other limits:**
+  - The fish of the day (Nov 14 2026, "Come back tomorrow") fetches double, and those coins count towards the same 30.
   - The basket holds 20 items, shared with garden produce.
   - Catching is unlimited, because it's the fun part and it fills the Fishbook. Only selling is capped.
   - With a full basket a fish swims free but is still logged.
@@ -324,7 +325,7 @@ See `docs/performance-guide.md` ("Fishing spots and market stand").
 
 1. **The fish-to-club pairings.** The clubs are verified, but which fish represents Santos, Celta, Marseille, St. Pauli and Yokohama is a teaching choice, because those links are about the port and not a fish nickname. Shrimp–Southend, Cod–Fleetwood, Haddock–Grimsby, Shark–Junior and Octopus–Paul are direct links.
 2. ~~Source links in the Fishbook~~ Decided Sep 27 2026: no clickable links for kids. The Fishbook shows plain-text credits; the URLs stay here and in the data.
-3. **The soft cap is 40 coins a day** for all market goods (jobs agent's number). Fishing adds no cap of its own. Raise it if fishing and the garden feel too limited together.
+3. **The soft cap is 30 coins a day** (40 until the Oct 14 2026 economy rebalance) for all market goods (jobs agent's number). Fishing adds no cap of its own. Raise it if fishing and the garden feel too limited together.
 4. **Bite window.** The window is 0.7–1.0 s, plus 0.35 s with reduced motion. Say if young players need it wider.
 5. **The species pairings for general nicknames** (for example Chonburi "The Sharks" shown as a blacktip reef shark) are teaching choices. The club facts do not claim the species.
 6. **Reeling difficulty.** Every shark, of any rarity, takes 10–14 taps (user decision, 28 Sep 2026: sharks must be hard). Other animals use their rarity's range. Mackerel and sea bass stay at 4 coins.
@@ -739,3 +740,49 @@ Every mark is in the overlay's ONE instanced draw, in a new preallocated FX pool
 foam, fishy, jumper, glow), driven by the visuals' frame while fishing only. `?fishfx=0` leaves the marks out (A/B frame-time
 measurements only). Tests: `tests/fishing-spectacle.cjs`.
 
+
+## Come back tomorrow (14 Nov 2026, branch fish-comeback)
+
+Why: returning players spend their 3rd-most time fishing (10 returners caught 118 fish in 2 weeks); this gives them a reason to
+look in every day. Everything is deterministic from the player's **local** date (and hour), so it needs no server and no timer.
+Files: `lib/town/fishing/fishDaily.ts` (fish of the day, weekly visitor, `localDay`, `isoWeek`), `fishConditions.ts` (the
+conditions), `comeback.ts` (re-exports both, plus the set helpers, personal bests and the save), `comebackStore.ts` (browser binding:
+one Event API listener, no timers). The market and the odds import only `fishDaily.ts` / `fishConditions.ts`, never the hooks.
+Tests: `tests/fishing-comeback.cjs` (in `npm test`).
+
+**Hooks for other features** (the per-player welcome-back note can call these, all pure): `fishOfTheDay(date)`,
+`conditionAt(date)`, `weeklyVisitor(date)`, `setsProgress({book,claimed})` (alias `setProgress`), `nearlyDoneSets({book,claimed},2)`,
+`personalBest(book,id)`, `newRecord(prev,size)`.
+
+1. **Fish of the day.** One species a local day (`hash01('fotd|<day>')`) from the 120 non-legendary, any-time species with a shore
+   spot (Island Legends are never in the pool). It fetches **double** (`FOTD_MULT`) at every fish buyer through the market's own price
+   rule (`market.ts fotdFactor`, on the state's local day), and those coins count towards the shared **30-coin** daily allowance like
+   any sale, so the soft cap still halves everything after it. Its shadow glows faintly (glow level 1: a twinkle of two small
+   sparkles in the existing FX pool; Rare / Legendary keep their own 3 / 5). Shown in the Fishbook ("Today on the water"), at Rosa's
+   stand (a line under the meter and "Fish of the day: double" by its price) and on the catch card (stamp and line).
+2. **Conditions.** One of six (Calm water, Fresh breeze, Sea mist, High tide, Low tide, Soft rain) for each 3-hour block of the local
+   day (never the same as the block before's raw pick). Each favours some families (seahorses / rays / shellfish, slim swimmers,
+   eels / squid / octopuses, round fish, crabs / lobsters, small fish) as a **family mix inside each rarity** with the lure and the
+   weekly visitor, all guarded together (`FAMILY_EV_GUARD` 2.5 %): rarity shares never move, so the economy guard holds (the test
+   checks every spot × condition × lure within ±3 %). The HUD shows its plain line under the hint while waiting; the water gets a
+   light tint and clarity change once a session (`waterMood.ts`). The island weather was removed on 15 Oct 2026 (user: "too
+   complicated"), so there is still no sky, rain or audio system: words, odds and a water tint only.
+3. **Fishbook sets.** Ten more, 5-8 animals each, each with its own float (`FLOAT_SKINS`, the log's float cap raised to 32): Reef
+   sharks, Rays and eels, Ink squad, Deep oddballs, World stage (tournament stories), On the badge (crests), and four club-country
+   sets (Brazil, Spain, Australia, France; kind `club`). 25 sets in all; the Sets page already shows progress bars. A Kit Shop
+   sticker was considered: the Kit Shop's stickers (`lib/shop/boots.ts STICKER_IDS`) have no owned / locked state (all are free), so
+   there is nothing to unlock through; floats are the reward.
+4. **Personal bests.** Already saved per species (the Fishbook's `biggest`, synced). New: the catch gets `prevBest` (fishingStore
+   `landFish` → `CatchView.prevBest` → the `catch` event), so the card says "New record! Your best was N cm. This one is M cm bigger."
+   and the trophy card shows a "New record!" tag; the Fishbook reads "your best N cm".
+5. **Weekly visitor.** One Rare / Legendary-rarity, any-time species a local ISO week (`hash01('week|<YYYY-Www>')`) at one of its own
+   shore spots, named in the Fishbook ("Swimming at … all week, until Sunday"). At that spot it is pulled 2.5× inside its rarity
+   (value-guarded with the rest); nowhere else changes. The catch card stamps "Visitor of the week!". (The per-area "Today's
+   visitors" from the return hooks stay as they are: Pacific day, no odds.)
+
+Save: `fi2-fishing-comeback-v1` (synced, lib/saves/snapshot.ts, docs/accounts-design.md): `{version:1,fotdDay,fotdDays,visitorWeek,
+visitorWeeks}`, ~120 bytes; merge keeps the later day / week and the larger totals. Counters (`lib/analytics/countIds.ts`, admin
+Fishing tab card "Come back tomorrow"): `fi:fotd_catch` (once a player a day), `fi:set_done` (any set, counted in
+`fishingHooksStore.refreshSets`), `fi:new_record`, `fi:visitor_week` (once a player a week). Totals only.
+Also fixed: the trophy card's empty status line no longer reserves a band under its buttons on phones (`.status:empty`).
+Heat: no new mesh, material, timer, listener per frame or render target; the fish-of-the-day check is memoised per minute.

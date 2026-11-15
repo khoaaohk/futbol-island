@@ -86,10 +86,11 @@ export function createFishingSpectacle(overlay:Overlay,inWater:(x:number,z:numbe
    if(hookFoam.age<1.6){hookFoam.age+=step;const k=hookFoam.age/1.6;if(g.foam)overlay.fx('foam',hookFoam.x,Y+.009,hookFoam.z,(1+k*1.4)*hookFoam.size,(1-k)*.9,3.3);}
    // Sparkles over a Rare / Legendary shadow: a short twinkle every ~1.5 s while it swims in.
    const sh=f.shadow;
-   if(g.sparkle&&sh&&sh.glow>=2&&sh.alpha>.2&&sh.mode!=='flee'){spark.wait-=step;if(spark.wait<=0){spark.wait=1.3+rand()*.6;spark.age=0;}
-    if(spark.age<.75){spark.age+=step;const n=sh.glow>=3?5:3,k=spark.age/.75;
+   // Nov 14 2026: glow 1 = the fish of the day (comeback): a fainter twinkle of two small sparkles.
+   if(g.sparkle&&sh&&sh.glow>=1&&sh.alpha>.2&&sh.mode!=='flee'){spark.wait-=step;if(spark.wait<=0){spark.wait=1.3+rand()*.6;spark.age=0;}
+    if(spark.age<.75){spark.age+=step;const n=sh.glow>=3?5:sh.glow>=2?3:2,k=spark.age/.75;
      for(let i=0;i<n;i++){const a=i*2.4+clock*.6,rr=sh.len*(.25+.18*(i%2)),tw=Math.sin(Math.min(1,k*1.4+i*.08)*Math.PI);if(tw<=0)continue;
-      overlay.fx('glow',sh.x+Math.cos(a)*rr,Y+.07+i*.03,sh.z+Math.sin(a)*rr,(.2+.08*(sh.glow-2))*tw,tw,.5);}}}
+      overlay.fx('glow',sh.x+Math.cos(a)*rr,Y+.07+i*.03,sh.z+Math.sin(a)*rr,(sh.glow>=2?.2+.08*(sh.glow-2):.15)*tw,sh.glow>=2?tw:tw*.7,.5);}}}
    else spark.age=9;
    // Life on the water: a few fish just under the calm surface near the spot (not while something bites or fights).
    const showLife=g.life&&f.calm;
