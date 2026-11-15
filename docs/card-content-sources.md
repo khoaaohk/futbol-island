@@ -10,12 +10,14 @@ that goes stale (no "current club", no "best in the world"), no controversies, p
 advice for kids. Kids see a plain-text "Checked against: Wikipedia, UEFA" credit and no links. "Why they matter" and "Learn from
 them" describe a well-documented playing or coaching style in our own words.
 
-Done: 430 of 450 cards. Remaining: 20 (listed at the end).
+Done: 444 of 450 cards. Remaining: 6 (listed at the end).
 
 | # | Card | Checked | Fact | Sources |
 | --- | --- | --- | --- | --- |
 | 1 | Achraf Hakimi | 2026-11-14 | Hakimi came through Real Madrid's youth teams and won the Champions League with them in 2018. He later won it again with Paris Saint-Germain in 2025 and 2026. | https://en.wikipedia.org/wiki/Achraf_Hakimi |
 |  |  |  | He helped Morocco win the 2025 Africa Cup of Nations and was named African Footballer of the Year for 2025. | https://en.wikipedia.org/wiki/Achraf_Hakimi |
+| 2 | Adolfo | 2026-11-14 | Adolfo won the UEFA Futsal Champions League twice with Barcelona, in 2020 and 2022. | https://es.wikipedia.org/wiki/Adolfo_Fern%C3%A1ndez_D%C3%ADaz |
+|  |  |  | He also won the 2026 UEFA Futsal Euro with Spain. | https://es.wikipedia.org/wiki/Adolfo_Fern%C3%A1ndez_D%C3%ADaz |
 | 3 | Adrián Rivera | 2026-11-14 | Adrián Rivera won the UEFA Under-19 Futsal Championship with Spain in 2022 and the senior UEFA Futsal Euro in 2026. | https://it.wikipedia.org/wiki/Adri%C3%A1n_Rivera |
 |  |  |  | He won Spain's second division twice, with Noia in 2021 and with S10 Zaragoza in 2024. | https://it.wikipedia.org/wiki/Adri%C3%A1n_Rivera |
 | 4 | Afonso Jesus | 2026-11-14 | Afonso Jesus won the 2021 FIFA Futsal World Cup, the 2022 European Championship and the 2022 Futsal Finalissima with Portugal. | https://en.wikipedia.org/wiki/Afonso_Jesus |
@@ -50,6 +52,8 @@ Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 |  |  |  | After joining Real Madrid in 2022, he won La Liga and a second Champions League title in 2024. With Germany he won the 2017 Confederations Cup. | https://en.wikipedia.org/wiki/Antonio_R%C3%BCdiger |
 | 19 | Arjen Robben | 2026-11-14 | Robben won the Premier League twice with Chelsea, in 2005 and 2006, and then won La Liga in his first season with Real Madrid. | https://en.wikipedia.org/wiki/Arjen_Robben |
 |  |  |  | In 2010, after his first season at Bayern Munich, he was named Footballer of the Year in Germany. He went on to win eight Bundesliga titles there. | https://en.wikipedia.org/wiki/Arjen_Robben, https://fcbayern.com/en/news/2010/08/prestigious-awards-for-van-gaal-and-robben |
+| 20 | Artem Fareniuk | 2026-11-14 | Fareniuk won a bronze medal with Ukraine at the 2024 FIFA Futsal World Cup. | https://uk.wikipedia.org/wiki/%D0%A4%D0%B0%D1%80%D0%B5%D0%BD%D1%8E%D0%BA_%D0%90%D1%80%D1%82%D0%B5%D0%BC_%D0%9C%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D0%B9%D0%BE%D0%B2%D0%B8%D1%87 |
+|  |  |  | He was top scorer of the Ukrainian futsal league twice, in 2018-19 and 2023-24, and won the league in 2020-21. | https://uk.wikipedia.org/wiki/%D0%A4%D0%B0%D1%80%D0%B5%D0%BD%D1%8E%D0%BA_%D0%90%D1%80%D1%82%D0%B5%D0%BC_%D0%9C%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D0%B9%D0%BE%D0%B2%D0%B8%D1%87 |
 | 21 | Ashley Cole | 2026-11-14 | Cole came through Arsenal's youth teams and won seven FA Cups, three with Arsenal and four with Chelsea. That is more than any other player in history. | https://en.wikipedia.org/wiki/Ashley_Cole, https://www.chelseafc.com/en/ashley-cole |
 |  |  |  | He won the Champions League with Chelsea in 2012, scoring in the penalty shootout of the final against Bayern Munich. He also played 107 times for England. | https://en.wikipedia.org/wiki/Ashley_Cole |
 | 22 | Bernardo Paçó | 2026-11-14 | Bernardo Paçó has a twin brother, Tomás, who plays futsal as a defender for Sporting CP and Portugal. | https://en.wikipedia.org/wiki/Tom%C3%A1s_Pa%C3%A7%C3%B3 |
@@ -70,6 +74,8 @@ Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 | 30 | Carlos Ortiz | 2026-11-14 | Ortiz won the UEFA Futsal Championship with Spain in 2007 and played in the 2008 FIFA Futsal World Cup final. | https://en.wikipedia.org/wiki/Carlos_Ortiz_(futsal_player) |
 |  |  |  | He won the UEFA Futsal Champions League in 2009 and was picked as a defender in FutsalFeed's Best Team of the Year in 2020. | https://en.wikipedia.org/wiki/Carlos_Ortiz_(futsal_player) |
 | 31 | Catela | 2026-11-14 | With Barcelona, Catela won the Spanish futsal league in 2022-23 and 2025-26 and the Copa del Rey in 2022-23. | https://it.wikipedia.org/wiki/Catela |
+| 32 | Chemi | 2026-11-14 | Chemi won the Spanish futsal league with Jimbee Cartagena in 2023-24 and 2024-25. | https://es.wikipedia.org/wiki/Jos%C3%A9_Miguel_Oliver_Solano |
+|  |  |  | Chemi was Spain's goalkeeper when they won the 2026 UEFA Futsal Euro. | https://es.wikipedia.org/wiki/Jos%C3%A9_Miguel_Oliver_Solano |
 | 33 | Cirilo | 2026-11-14 | Cirilo won the Russian Futsal Super League seven times and the UEFA Futsal Cup in 2007. | https://en.wikipedia.org/wiki/Cirilo_(futsal_player) |
 |  |  |  | Born in Brazil, he played for the Russian national futsal team, finishing third at the 2007 UEFA Futsal Championship. | https://en.wikipedia.org/wiki/Cirilo_(futsal_player) |
 | 34 | Cole Palmer | 2026-11-14 | With Manchester City he won the Champions League, the Premier League and the FA Cup in 2022-23, and he won the 2023 European Under-21 Championship with England. | https://en.wikipedia.org/wiki/Cole_Palmer |
@@ -86,6 +92,8 @@ Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 |  |  |  | With Inter Movistar he won five Spanish league titles and three UEFA Futsal Cups. | https://en.wikipedia.org/wiki/Daniel_Iba%C3%B1es |
 | 40 | Daniel Passarella | 2026-11-14 | Eight years after lifting the trophy in 1978, Passarella was again in Argentina's squad when they won the 1986 World Cup, giving him two winner's medals. | https://en.wikipedia.org/wiki/Daniel_Passarella, https://inside.fifa.com/tournaments/mens/worldcup/1978argentina/news/passarella-at-the-pinnacle-2767245 |
 |  |  |  | As a coach, he later led Argentina at the 1998 World Cup and then became the first foreigner to manage Uruguay's national team. | https://en.wikipedia.org/wiki/Daniel_Passarella |
+| 41 | Danyil Abakshyn | 2026-11-14 | Abakshyn won bronze with Ukraine at the 2024 FIFA Futsal World Cup and the tournament's Silver Boot with seven goals. | https://uk.wikipedia.org/wiki/%D0%90%D0%B1%D0%B0%D0%BA%D1%88%D0%B8%D0%BD_%D0%94%D0%B0%D0%BD%D0%B8%D1%96%D0%BB_%D0%90%D0%BD%D0%B4%D1%80%D1%96%D0%B9%D0%BE%D0%B2%D0%B8%D1%87 |
+|  |  |  | He scored twice on his Ukraine debut, against Denmark in April 2021. | https://uk.wikipedia.org/wiki/%D0%90%D0%B1%D0%B0%D0%BA%D1%88%D0%B8%D0%BD_%D0%94%D0%B0%D0%BD%D0%B8%D1%96%D0%BB_%D0%90%D0%BD%D0%B4%D1%80%D1%96%D0%B9%D0%BE%D0%B2%D0%B8%D1%87 |
 | 42 | David Raya | 2026-11-14 | Raya won the Premier League Golden Glove three times, for 2023-24, 2024-25 (shared) and 2025-26. | https://en.wikipedia.org/wiki/David_Raya |
 |  |  |  | He was part of the Spain squads that won Euro 2024 and the 2026 FIFA World Cup. | https://en.wikipedia.org/wiki/David_Raya |
 | 43 | Declan Rice | 2026-11-14 | Rice captained West Ham to the UEFA Europa Conference League title in 2023 and was named the competition's Player of the Season. | https://en.wikipedia.org/wiki/Declan_Rice |
@@ -153,6 +161,8 @@ Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 |  |  |  | He was named in the Champions League Team of the Season for 2023-24. | https://en.wikipedia.org/wiki/Gregor_Kobel |
 | 76 | Guitta | 2026-11-14 | Guitta has won the FIFA Futsal World Cup twice with Brazil, in 2012 and 2024. | https://en.wikipedia.org/wiki/Guitta |
 |  |  |  | His real name is Thiago Mendes Rocha. In 2021 Futsal Planet named him the best futsal goalkeeper in the world. | https://en.wikipedia.org/wiki/Guitta |
+| 77 | Gustavo Lobo | 2026-11-14 | Gustavo won the Kazakhstan futsal league five seasons in a row, from 2004-05 to 2008-09. | https://ru.wikipedia.org/wiki/%D0%93%D1%83%D1%81%D1%82%D0%B0%D0%B2%D0%BE_(%D1%84%D1%83%D1%82%D0%B7%D0%B0%D0%BB%D0%B8%D1%81%D1%82) |
+|  |  |  | Playing for Russia, he won a silver medal at the 2016 FIFA Futsal World Cup. | https://ru.wikipedia.org/wiki/%D0%93%D1%83%D1%81%D1%82%D0%B0%D0%B2%D0%BE_(%D1%84%D1%83%D1%82%D0%B7%D0%B0%D0%BB%D0%B8%D1%81%D1%82) |
 | 78 | Harry Kane | 2026-11-14 | As of November 2026, Kane is England's all-time top goalscorer and Tottenham Hotspur's all-time top goalscorer. | https://en.wikipedia.org/wiki/Harry_Kane |
 |  |  |  | He won the Golden Boot at the 2018 World Cup, the Bundesliga with Bayern Munich in 2025 and 2026, and the 2026 Ballon d'Or. | https://en.wikipedia.org/wiki/Harry_Kane |
 | 79 | Higor | 2026-11-14 | Higor Ribeiro de Souza started his career at Corinthians in Brazil, winning the Copa do Brasil de Futsal in 2019. He has played for the Brazil national futsal team. | https://en.wikipedia.org/wiki/Higor_de_Souza |
@@ -212,6 +222,8 @@ Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 |  |  |  | He won the Premier League with Liverpool in 2024-25 and shared the Copa América Golden Boot in 2021. | https://en.wikipedia.org/wiki/Luis_D%C3%ADaz_(footballer,_born_1997) |
 | 110 | Luís Figo | 2026-11-14 | As a teenager, Figo won the 1991 FIFA World Youth Championship with Portugal, playing alongside Rui Costa and João Pinto in a famous 'golden generation'. | https://en.wikipedia.org/wiki/Lu%C3%ADs_Figo, https://www.uefa.com/uefachampionsleague/news/newsid=1987395.html |
 |  |  |  | Figo was named FIFA World Player of the Year in 2001. He also won the Champions League with Real Madrid in 2002 and four Serie A titles with Inter. | https://en.wikipedia.org/wiki/Lu%C3%ADs_Figo |
+| 111 | Mamadou Touré | 2026-11-14 | In 2022 Touré became the first French futsal player to join FC Barcelona. | https://fr.wikipedia.org/wiki/Mamadou_Tour%C3%A9_(futsal,_2001) |
+|  |  |  | He won the French title with ACCS in 2021-22 and was named the best young player in Spain's top division for 2023-24. | https://fr.wikipedia.org/wiki/Mamadou_Tour%C3%A9_(futsal,_2001) |
 | 112 | Manoel Tobias | 2026-11-14 | Manoel Tobias won the FIFA Futsal World Cup with Brazil twice, in 1992 and 1996. | https://en.wikipedia.org/wiki/Manoel_Tobias |
 |  |  |  | He also won the South American Club Futsal Championship in 1993 and the Intercontinental Futsal Cup in 1996 and 1998. | https://en.wikipedia.org/wiki/Manoel_Tobias |
 | 113 | Manuel Neuer | 2026-11-14 | Neuer won the Golden Glove for the best goalkeeper at the 2014 World Cup in Brazil. Later that year he finished third in the Ballon d'Or voting. | https://en.wikipedia.org/wiki/Manuel_Neuer, https://www.plus.fifa.com/en/content/manuel-neuer-golden-glove-award-2014-fifa-world-cup-brazil/07903c57-4233-479d-93ca-493e2d00ad0f |
@@ -219,8 +231,12 @@ Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 | 114 | Marcio Forte | 2026-11-14 | Márcio Forte was born in Londrina in Brazil and moved to Italy, where he went on to play for the Italian national futsal team and the club Lazio. | https://en.wikipedia.org/wiki/Marcio_Forte |
 | 115 | Marco van Basten | 2026-11-14 | On his Ajax debut in April 1982, the teenage Van Basten came on as a substitute for Johan Cruyff and scored in a 5-0 win. | https://en.wikipedia.org/wiki/Marco_van_Basten |
 |  |  |  | In November 1992 he became the first player to score four goals in a single Champions League match, for Milan against IFK Göteborg. | https://en.wikipedia.org/wiki/Marco_van_Basten, https://www.uefa.com/uefachampionsleague/news/025a-0ea6af4fadcb-8229ae10f743-1000--milan-s-four-goal-champions-league-masterclasses |
+| 116 | Mario Rivillos | 2026-11-14 | Rivillos won the UEFA Futsal Euro with the Spain national team in 2016. | https://es.wikipedia.org/wiki/Mario_Rivillos |
+|  |  |  | He won the UEFA Futsal Champions League with Inter in 2017 and with Barcelona in 2020. | https://es.wikipedia.org/wiki/Mario_Rivillos |
 | 117 | Marquinhos | 2026-11-14 | He captained Paris Saint-Germain to their first Champions League titles, in 2025 and 2026. | https://en.wikipedia.org/wiki/Marquinhos |
 |  |  |  | Marquinhos won the 2012 Copa Libertadores with Corinthians, an Olympic gold medal with Brazil in 2016 and the 2019 Copa América. | https://en.wikipedia.org/wiki/Marquinhos |
+| 120 | Mellado | 2026-11-14 | Mellado was named the breakthrough player of Spain's futsal league for 2020-21. | https://es.wikipedia.org/wiki/Miguel_%C3%81ngel_Cano_Mellado |
+|  |  |  | He won the 2026 UEFA Futsal Euro with Spain and the Spanish league with Jimbee Cartagena in 2024 and 2025. | https://es.wikipedia.org/wiki/Miguel_%C3%81ngel_Cano_Mellado |
 | 121 | Michael Olise | 2026-11-14 | As a young boy at Chelsea's academy, Olise met Jamal Musiala, who was also there. | https://en.wikipedia.org/wiki/Michael_Olise |
 |  |  |  | He won an Olympic silver medal with France in 2024 and the Bundesliga with Bayern Munich in 2024-25 and 2025-26. | https://en.wikipedia.org/wiki/Michael_Olise |
 | 122 | Michel Platini | 2026-11-14 | Platini scored nine goals at Euro 1984, including two hat-tricks, against Belgium and Yugoslavia, as captain of the winning France side. | https://en.wikipedia.org/wiki/Michel_Platini, https://www.uefa.com/uefaeuro/history/news/0253-0d7b2f74a487-b50e45cf2f25-1000--platini-the-scourge-of-yugoslavia-in-euro-1984-group-1 |
@@ -228,10 +244,14 @@ Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 | 123 | Miguelín | 2026-11-14 | Miguelín's full name is Miguel Sayago Martí. He is a Spanish futsal player who has played as an ala for ElPozo Murcia. | https://en.wikipedia.org/wiki/Miguel%C3%ADn |
 | 124 | Mike Maignan | 2026-11-14 | Maignan won Ligue 1 with Lille in 2020-21, beating his former club Paris Saint-Germain to the title by one point on the final day. | https://en.wikipedia.org/wiki/Mike_Maignan |
 |  |  |  | He then won Serie A with AC Milan in 2021-22. | https://en.wikipedia.org/wiki/Mike_Maignan |
+| 125 | Miquel Feixas | 2026-11-14 | Feixas made his debut for Barcelona's first team in 2015, while he was still a youth player. | https://es.wikipedia.org/wiki/Miquel_Feixas_de_Jes%C3%BAs |
+|  |  |  | As a youth player at Barcelona he won three Spanish junior championships. | https://es.wikipedia.org/wiki/Miquel_Feixas_de_Jes%C3%BAs |
 | 126 | Mohamed Salah | 2026-11-14 | As of November 2026, Salah is the Premier League's all-time top foreign goalscorer and the Egypt national team's all-time top scorer. | https://en.wikipedia.org/wiki/Mohamed_Salah |
 |  |  |  | With Liverpool he won the Premier League in 2019-20 and 2024-25, and he was African Footballer of the Year in 2017 and 2018. | https://en.wikipedia.org/wiki/Mohamed_Salah |
 | 127 | Mostafa Nazari | 2026-11-14 | Nazari was chosen as the best futsal goalkeeper in the world in 2010. | https://en.wikipedia.org/wiki/Mostafa_Nazari |
 |  |  |  | He won the AFC Futsal Championship three times with Iran, and the Asian club championship with three different clubs. | https://en.wikipedia.org/wiki/Mostafa_Nazari |
+| 128 | Mykola Mykytiuk | 2026-11-14 | Mykytiuk won a bronze medal with Ukraine at the 2024 FIFA Futsal World Cup. | https://uk.wikipedia.org/wiki/%D0%9C%D0%B8%D0%BA%D0%B8%D1%82%D1%8E%D0%BA_%D0%9C%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0_%D0%9C%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D0%B9%D0%BE%D0%B2%D0%B8%D1%87 |
+|  |  |  | He made his debut for Uragan in 2016, starting in a 5-1 win over the reigning Ukrainian champions. | https://uk.wikipedia.org/wiki/%D0%9C%D0%B8%D0%BA%D0%B8%D1%82%D1%8E%D0%BA_%D0%9C%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0_%D0%9C%D0%B8%D0%BA%D0%BE%D0%BB%D0%B0%D0%B9%D0%BE%D0%B2%D0%B8%D1%87 |
 | 129 | Neto | 2026-11-14 | Neto won the 2012 FIFA Futsal World Cup with Brazil and was given the Golden Ball as the best player of the tournament. | https://en.wikipedia.org/wiki/Neto_(futsal_player) |
 |  |  |  | He won the 2011 futsal Copa América with Brazil and was named the best player of that tournament. | https://en.wikipedia.org/wiki/Neto_(futsal_player) |
 | 130 | Nico Williams | 2026-11-14 | He and his older brother Iñaki Williams won the Copa del Rey together with Athletic Bilbao in 2024. | https://en.wikipedia.org/wiki/Nico_Williams |
@@ -246,14 +266,19 @@ Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 |  |  |  | He won the French futsal championship with Laval in 2024 and 2025. | https://fr.wikipedia.org/wiki/Ouassini_Guirio |
 | 135 | Ousmane Dembélé | 2026-11-14 | Dembélé won the Ballon d'Or and The Best FIFA Men's Player award for 2025. | https://en.wikipedia.org/wiki/Ousmane_Demb%C3%A9l%C3%A9 |
 |  |  |  | He won the UEFA Champions League with Paris Saint-Germain in 2025 and 2026, after earlier league titles in Germany and Spain. | https://en.wikipedia.org/wiki/Ousmane_Demb%C3%A9l%C3%A9 |
+| 136 | Pablo Ramírez | 2026-11-14 | Ramírez was named the breakthrough player of Spain's top futsal league for 2022-23, and was joint top scorer in 2024-25. | https://es.wikipedia.org/wiki/Pablo_Ram%C3%ADrez_Gonz%C3%A1lez |
+|  |  |  | Ramírez was part of the Spain team that won the 2026 UEFA Futsal Euro. | https://es.wikipedia.org/wiki/Pablo_Ram%C3%ADrez_Gonz%C3%A1lez |
 | 137 | Paco Sedano | 2026-11-14 | Sedano won the 2004 FIFA Futsal World Cup with Spain and two European Championships, in 2005 and 2016. | https://en.wikipedia.org/wiki/Paco_Sedano |
 |  |  |  | With Barcelona he won the UEFA Futsal Cup in 2011 and three Spanish league titles in a row. | https://en.wikipedia.org/wiki/Paco_Sedano |
+| 138 | Pany Varela | 2026-11-14 | Pany Varela won the 2021 FIFA Futsal World Cup with Portugal and the Silver Ball as the tournament's second-best player. | https://pt.wikipedia.org/wiki/Pany_Varela |
+|  |  |  | He won the UEFA Futsal Champions League three times, once with Benfica and twice with Sporting CP. | https://pt.wikipedia.org/wiki/Pany_Varela |
 | 139 | Paolo Maldini | 2026-11-14 | Maldini made his Serie A debut for Milan in January 1985, aged just 16, coming on as a substitute in a match against Udinese. | https://en.wikipedia.org/wiki/Paolo_Maldini |
 |  |  |  | He won the European Cup or Champions League five times. When he retired in 2009, Milan retired his famous number 3 shirt. | https://en.wikipedia.org/wiki/Paolo_Maldini |
 | 140 | Pau Cubarsí | 2026-11-14 | Cubarsí won Olympic gold with Spain in 2024 and was part of the Spain team that won the 2026 World Cup, where he got the Young Player award. | https://en.wikipedia.org/wiki/Pau_Cubars%C3%AD |
 |  |  |  | With Barcelona he won La Liga in 2024-25 and 2025-26. | https://en.wikipedia.org/wiki/Pau_Cubars%C3%AD |
 | 141 | Paul Scholes | 2026-11-14 | Scholes scored both goals on his Manchester United debut, a 2-1 League Cup win at Port Vale in September 1994. | https://en.wikipedia.org/wiki/Paul_Scholes, https://www.manutd.com/en/players-and-staff/detail/paul-scholes |
 |  |  |  | In the 2008 Champions League semi-final he hit a shot from about 25 yards to beat Barcelona 1-0 and send United to the final, which they won. | https://en.wikipedia.org/wiki/Paul_Scholes |
+| 142 | Pauleta | 2026-11-14 | In October 2021 Pauleta was made a Commander of the Order of Prince Henry, a Portuguese honour. | https://pt.wikipedia.org/wiki/Pauleta_(futsal) |
 | 143 | Pedri | 2026-11-14 | Pedri was named Young Player of the Tournament at Euro 2020 and won the Kopa Trophy in 2021. | https://en.wikipedia.org/wiki/Pedri |
 |  |  |  | He won Euro 2024 and the 2026 World Cup with Spain. | https://en.wikipedia.org/wiki/Pedri |
 | 144 | Pedro Porro | 2026-11-14 | Porro won the Portuguese league with Sporting CP in 2020-21 and the UEFA Europa League with Tottenham Hotspur in 2025. | https://en.wikipedia.org/wiki/Pedro_Porro |
@@ -301,6 +326,8 @@ Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 |  |  |  | His nickname comes from the German football goalkeeper Harald Schumacher, not the racing driver. | https://en.wikipedia.org/wiki/Schumacher_(futsal_player) |
 | 167 | Sepp Maier | 2026-11-14 | Maier played 442 Bundesliga matches in a row for Bayern Munich between 1966 and 1979, a German record that no other player has matched. | https://en.wikipedia.org/wiki/Sepp_Maier, https://fcbayern.com/en/news/2024/02/sepp-maier-a-unique-career-at-the-service-of-fc-bayern |
 |  |  |  | He won three European Cups in a row with Bayern, from 1974 to 1976, and later coached goalkeepers for Germany and Bayern, mentoring Oliver Kahn. | https://en.wikipedia.org/wiki/Sepp_Maier |
+| 168 | Sergei Sergeev | 2026-11-14 | Sergeev won silver medals with Russia at the 2012 and 2014 UEFA Futsal Euros. | https://ru.wikipedia.org/wiki/%D0%A1%D0%B5%D1%80%D0%B3%D0%B5%D0%B5%D0%B2,_%D0%A1%D0%B5%D1%80%D0%B3%D0%B5%D0%B9_%D0%90%D0%BB%D0%B5%D0%BA%D1%81%D0%B0%D0%BD%D0%B4%D1%80%D0%BE%D0%B2%D0%B8%D1%87_(%D1%84%D1%83%D1%82%D0%B7%D0%B0%D0%BB%D0%B8%D1%81%D1%82) |
+|  |  |  | He won the Russian futsal league and the Intercontinental Cup in 2013. | https://ru.wikipedia.org/wiki/%D0%A1%D0%B5%D1%80%D0%B3%D0%B5%D0%B5%D0%B2,_%D0%A1%D0%B5%D1%80%D0%B3%D0%B5%D0%B9_%D0%90%D0%BB%D0%B5%D0%BA%D1%81%D0%B0%D0%BD%D0%B4%D1%80%D0%BE%D0%B2%D0%B8%D1%87_(%D1%84%D1%83%D1%82%D0%B7%D0%B0%D0%BB%D0%B8%D1%81%D1%82) |
 | 169 | Sergey Zuev | 2026-11-14 | Zuev was voted the best goalkeeper of the Russian futsal championship in eight different seasons, and he was named the world's best goalkeeper for 2008. | https://en.wikipedia.org/wiki/Sergey_Zuev |
 |  |  |  | As a young player he won the Student World Cup with a Russian student team before making his debut for Russia's senior national team. | https://en.wikipedia.org/wiki/Sergey_Zuev |
 | 171 | Sergio Lozano | 2026-11-14 | Lozano has won the UEFA Futsal Cup four times and won the 2012 UEFA Futsal Euro with Spain. | https://en.wikipedia.org/wiki/Sergio_Lozano_(futsal_player) |
@@ -864,4 +891,4 @@ Done: 430 of 450 cards. Remaining: 20 (listed at the end).
 
 ## Remaining cards (no notes yet)
 
-#2 Adolfo · #20 Artem Fareniuk · #32 Chemi · #41 Danyil Abakshyn · #50 Edu · #77 Gustavo Lobo · #89 João Victor · #106 Luan Muller · #111 Mamadou Touré · #116 Mario Rivillos · #118 Matheus Rodrigues · #119 Mathi Fernández · #120 Mellado · #125 Miquel Feixas · #128 Mykola Mykytiuk · #136 Pablo Ramírez · #138 Pany Varela · #142 Pauleta · #168 Sergei Sergeev · #170 Sergio González
+#50 Edu · #89 João Victor · #106 Luan Muller · #118 Matheus Rodrigues · #119 Mathi Fernández · #170 Sergio González
