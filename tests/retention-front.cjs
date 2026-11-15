@@ -112,7 +112,7 @@ const mem=(init={})=>{const d={...init};return {getItem:k=>k in d?d[k]:null,setI
  T.requestModeLaunch('runner','night');assert.equal(T.takeModeLaunch('runner'),null,'only the elite tiers');
  assert.match(read('components/ArcadeRoom.tsx'),/requestModeLaunch\(id!,mode\)/);assert.match(read('components/games/RunnerMenu.tsx'),/takeModeLaunch\('runner'\)/);assert.match(read('components/games/PinballCard.tsx'),/takeModeLaunch\('pinball'\)/);
  const set=read('lib/arcade/results/settle.ts');
- assert.match(set,/noteLastScore\('pinball_'\+t\.id,t\.score,saved\.progress\[t\.id\]\.best\)/);assert.match(set,/noteLastScore\('runner_'\+m,/);assert.match(set,/noteLastScore\('runner_daily',/);
+ assert.match(set,/noteLastScore\('pinball_'\+r\.pinballTier\.id,r\.pinballTier\.score,saved\.progress\[r\.pinballTier\.id\]\.best\)/);assert.match(set,/noteLastScore\('runner_'\+r\.runnerTierBest\.mode,/);assert.match(set,/noteLastScore\('runner_daily',/);
  assert.match(read('components/games/KitRushGame.tsx'),/else noteLastScore\('kitrush_daily',score,settled\.dailyBest\)/);assert.match(read('components/games/SquadSnakeGame.tsx'),/else noteLastScore\('snake_daily',score,settled\.dailyBest\)/);
  assert.match(read('docs/accounts-design.md'),/`runner_daily`, `runner_cup`/);assert.match(read('docs/welcome-suggestions.md'),/Your last Daily Run was 300/);
 }
