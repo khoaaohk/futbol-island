@@ -281,3 +281,12 @@
 
 /* Nov 14 2026: a Rare / Legendary catch shows its trophy card first (FishingTrophy); the quick card waits until it is closed, so the close-up is clear. */
 .catch[data-trophy]{opacity:0;visibility:hidden;pointer-events:none}
+/* Nov 14 2026 (come back tomorrow): the fish of the day / weekly visitor stamps, the new-record and fish-of-the-day lines on the
+ * catch card, and the sea's condition under the HUD hint (one quiet line, same card). */
+.stamp[data-stamp=fotd]{color:#1f6b4c;background:#e3f4ec;rotate:-4deg}
+.stamp[data-stamp=week]{color:#5b3fa0;rotate:3deg}
+.catchRecord,.catchFotd{margin-top:4px!important;padding:6px 8px;border-radius:10px;font-size:12px;line-height:1.4}
+.catchRecord{background:#fff1d3;color:#5a4300}.catchRecord b{color:#a86b00;font-weight:900}
+.catchFotd{background:#e3f4ec;color:#244d40}.catchFotd b{color:#1f6b4c;font-weight:900}
+.condition{margin:5px 0 0;font-size:12.5px;font-weight:700;line-height:1.35;color:#3a5b50}
+@media(max-width:600px),(pointer:coarse){.condition{font-size:12px}}

@@ -4,6 +4,7 @@ import {fishSellValue} from '../../economy';
 import {applyTimeSwaps,timeSwaps,type TimeOfDayKey} from './nightFish';
 import {lureById,type LureId} from './lures';
 import {LEGEND_WEIGHT,legendForSpot} from './legendary';
+import {CONDITION_BOOST,conditionById,type ConditionId} from './fishConditions';
 
 /**
  * Hotspot odds (Oct 14 2026, user: "update the fishing to be able to cast in certain spots to try and catch bigger fish").
@@ -35,17 +36,22 @@ export type CatchContext={time:TimeOfDayKey;lure:LureId|null;legends:readonly st
   *  passes only species this player has never caught (fishingLogStore.ts liveContext); absent or empty = no pity. */
  pity?:Readonly<Record<string,number>>;
  /** Nov 6 2026 (wave 3): the legends this player already caught and released, so a spot with two legends sends the next one. */
- legendsCaught?:Readonly<Record<string,number>>};
+ legendsCaught?:Readonly<Record<string,number>>;
+ /** Nov 14 2026 (come back tomorrow, ./comeback.ts): the sea's condition right now (./fishConditions.ts), and this week's visitor
+  *  (a species at one named spot). Each is a family mix inside its rarity, guarded TOGETHER with the lure (FAMILY_EV_GUARD).
+  *  Absent = neutral (the sims and tests/economy.cjs keep the plain tables). */
+ condition?:ConditionId;visitor?:{id:string;spot:string}};
 export const NEUTRAL_CONTEXT:CatchContext=Object.freeze({time:'day',lure:null,legends:Object.freeze([])}) as CatchContext;
 let source:(()=>CatchContext)|null=null;
 /** The browser store registers where the live context comes from (read once per bite, never per frame). */
 export function setCatchContextSource(fn:(()=>CatchContext)|null){source=fn;}
 export function catchContext():CatchContext{try{return source?.()??NEUTRAL_CONTEXT;}catch{return NEUTRAL_CONTEXT;}}
 const hasPity=(c:CatchContext)=>!!c.pity&&Object.values(c.pity).some(n=>n>0);
-const isNeutral=(c:CatchContext)=>c.time==='day'&&!c.lure&&!c.legends.length&&!hasPity(c);
+const isNeutral=(c:CatchContext)=>c.time==='day'&&!c.lure&&!c.legends.length&&!hasPity(c)&&!c.condition&&!c.visitor;
 
-/** How strongly a lure pulls its favoured kinds (inside each rarity), before the value guard. */
-export const FAMILY_BOOST={lure:2.2} as const;
+/** How strongly a lure pulls its favoured kinds (inside each rarity), before the value guard. Nov 14 2026: the sea's condition and
+ *  the weekly visitor pull the same way (./fishConditions.ts CONDITION_BOOST, ./comeback.ts VISITOR_BOOST mirrors `visitor`). */
+export const FAMILY_BOOST={lure:2.2,condition:CONDITION_BOOST,visitor:2.5} as const;
 /** The most a family mix may move a spot's mean catch value (catalogue price and Rosa's sell value), either way. */
 export const FAMILY_EV_GUARD=.025;
 const evOf=(w:Record<string,number>,value:(f:FishSpecies)=>number)=>{let t=0,v=0;for(const [id,x] of Object.entries(w)){const f=fishById(id);if(!f||!(x>0))continue;t+=x;v+=x*value(f);}return t?v/t:0;};
@@ -120,8 +126,13 @@ export function catchWeights(spot:FishSpot,hot:number,ctx:CatchContext=catchCont
  // B3: night / sunset fish take the place of a resting day fish of their rarity (never on the deep-sea boats).
  if(ctx.time!=='day'&&!spot.deep)out=applyTimeSwaps(out,timeSwaps(spot.id,ctx.time,spot.weights,FISH,fishById));
  // C3: the lure's family mix (never rarity, value-guarded against the table before the time swaps).
- const lure=ctx.lure?lureById(ctx.lure):undefined;
- if(lure)out=familyMixes(out,[{favors:lure.favors,k:FAMILY_BOOST.lure}],before);
+ const lure=ctx.lure?lureById(ctx.lure):undefined,cond=conditionById(ctx.condition),vis=ctx.visitor&&ctx.visitor.spot===spot.id&&ctx.visitor.id in out?ctx.visitor.id:null;
+ // Nov 14 2026: the condition's families and this week's visitor join the lure's mix, all guarded together against `before`.
+ const mixes:{favors:(f:FishSpecies)=>boolean;k:number}[]=[];
+ if(lure)mixes.push({favors:lure.favors,k:FAMILY_BOOST.lure});
+ if(cond)mixes.push({favors:cond.favors,k:FAMILY_BOOST.condition});
+ if(vis)mixes.push({favors:f=>f.id===vis,k:FAMILY_BOOST.visitor});
+ if(mixes.length)out=familyMixes(out,mixes,before);
  // Nov 6 2026: bad-luck protection for still-uncaught legendaries (value-guarded against the same reference).
  if(ctx.pity)out=applyPity(out,ctx.pity,before);
  // C1: a found legend joins at a small fixed weight (worth 0 coins: never sold, so it can only lower the mean value).

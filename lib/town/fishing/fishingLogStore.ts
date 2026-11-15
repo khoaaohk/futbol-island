@@ -6,6 +6,8 @@
  * on 15 Oct 2026: user decision, "too complicated".)
  */
 import {firstCatchFish,isNewAngler,markFirstCatch} from './fishingReach';
+import {conditionAt} from './fishConditions';
+import {weeklyVisitor} from './fishDaily';
 import {useSyncExternalStore} from 'react';
 import {FISHING_LOG_KEY,bumpPity,pityFor,claimMilestones,emptyLog,ensureDay,legendsDue,logCatch,mergeLogs,sanitizeLog,type CatchEffects,type FishingLog,type FloatSkin} from './fishingLog';
 import {catchWeights,pitySpecies,type CatchContext} from './fishingOdds';
@@ -34,7 +36,9 @@ export const useFishingLog=()=>useSyncExternalStore(subscribeFishingLog,readFish
 
 // ---- The live catch context (read once per bite by fishingOdds.catchWeights) ----
 export const timeOfDay=():TimeOfDayKey=>readTimeOfDay();
-export function liveContext(spot?:Parameters<typeof catchWeights>[0]):CatchContext{const log=readFishingLog(),ctx:CatchContext={time:timeOfDay(),lure:log.lure,legends:legendsDue(log),legendsCaught:log.legends};
+export function liveContext(spot?:Parameters<typeof catchWeights>[0],now=Date.now()):CatchContext{const log=readFishingLog(),ctx:CatchContext={time:timeOfDay(),lure:log.lure,legends:legendsDue(log),legendsCaught:log.legends};
+ // Nov 14 2026 (come back tomorrow): the sea's condition for this 3-hour block and this week's visitor (value-guarded family mixes).
+ ctx.condition=conditionAt(now).id;{const v=weeklyVisitor(now);ctx.visitor={id:v.fish.id,spot:v.spot};}
  if(spot){const p=pityFor(log,spot.id,uncaughtLegendaries(spot));if(Object.keys(p).length)ctx.pity=p;}
  return ctx;}
 /** This spot's legendary species the player has never caught (bad-luck protection, fishingOdds.ts PITY). Read once per bite. */

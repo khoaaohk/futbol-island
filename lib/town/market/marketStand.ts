@@ -5,7 +5,7 @@
  * Pure planners are exported for tests; `sellOneGood` is the browser executor.
  */
 import {GOODS,goodById,type GoodKind} from './goods';
-import {MARKET_FULL_PRICE_COINS,MARKET_STORAGE_KEY,localMarketDay,quoteSale,sanitizeMarket,nextUnitValue,plentyToday,plentyLine,withTallies,type MarketState,type SaleResult} from './market';
+import {MARKET_FULL_PRICE_COINS,MARKET_STORAGE_KEY,localMarketDay,quoteSale,sanitizeMarket,nextUnitValue,fotdFactor,plentyToday,plentyLine,withTallies,type MarketState,type SaleResult} from './market';
 import {MARKET_BUYERS,perItemText,type MarketBuyer} from '../../economy';
 import {FISH_SPOTS,MARKET_STAND} from '../fishing/fishSpots';
 import {DEEP_SEA_BOATS} from '../fishing/deepSeaBoatData';
@@ -22,7 +22,8 @@ export function coinsText(value:number):string{return Number.isInteger(value)?`$
 /** Basket lines of one kind, in registry order. `each` is the next item's value (maybe a part-coin), `eachText` how the stand
  *  says it ("2 coins each", "2 for 1 coin"), `full` its full price, `plenty`: Rosa already has plenty of this good today. */
 export function basketLines(s:MarketState,kind:GoodKind){return GOODS.filter(g=>g.kind===kind&&(s.basket[g.id]??0)>0).map(g=>{const each=unitPrice(s,g.id);
- return {good:g,count:s.basket[g.id],each,eachText:perItemText(each),full:g.price,plenty:plentyToday(s,g)};});}
+ const k=fotdFactor(s.day,g);
+ return {good:g,count:s.basket[g.id],each,eachText:perItemText(each),full:g.price*k,plenty:plentyToday(s,g),fotd:k>1};});}
 /** The stand's kind note for a good Rosa has plenty of: "Rosa already has plenty of mangoes today: 1 coin each." */
 export function plentyNote(s:MarketState,id:string,seller='Rosa'):string{const g=goodById(id);if(!g||!plentyToday(s,g))return '';
  return `${seller} already has plenty of ${g.plural.toLowerCase()} today: ${perItemText(unitPrice(s,id))}. Fresh tomorrow!`;}

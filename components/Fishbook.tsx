@@ -17,7 +17,8 @@ import {FISHBOOK_PAGES,MilestoneBar,RequestsPage,TrophyPage,type FishbookPage} f
 import extra from './FishbookExtras.module.css';
 import {refreshMilestones,useFishingLog} from '@/lib/town/fishing/fishingLogStore';
 // Nov 7 2026 return hooks: the Sets page, today's visitors, golden / visitor marks and story chapters (cosmetic, docs/fishing.md).
-import {SetsPage,SpeciesHooks,VisitorBanner} from './FishbookExtras';
+import {ComebackBanner,SetsPage,SpeciesHooks,VisitorBanner} from './FishbookExtras';
+import {useComeback} from '@/lib/town/fishing/comebackStore';
 import {refreshSets,useFishingHooks} from '@/lib/town/fishing/fishingHooksStore';
 import {shadowShapeWord} from '@/lib/town/fishing/fishingFight';
 import {RarityStars} from './RarityStars';
@@ -64,7 +65,7 @@ function TimeSwitch({time,onChange}:{time:TimeOfDay;onChange:(t:TimeOfDay)=>void
 
 export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void}){
  const dialog=useRef<HTMLDialogElement>(null),close=useRef<HTMLButtonElement>(null),restore=useRef<HTMLElement|null>(null);
- const book=useFishbook(),caught=speciesCaught(book),log=useFishingLog(),hooks=useFishingHooks();
+ const book=useFishbook(),caught=speciesCaught(book),log=useFishingLog(),hooks=useFishingHooks(),comeback=useComeback();
  const [page,setPage]=useState<FishbookPage>('fish'),[time,setTime]=useState<TimeOfDay>('sunset');
  useEffect(()=>{if(open){refreshMilestones();refreshSets();setTime(readTimeOfDay());}},[open]);
  // What is new since the book was last open: captured once per opening (the marks clear on close, so each stamps in only once).
@@ -91,6 +92,7 @@ export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void})
     <div className={extra.page} key={page} data-fishbook-page={page}>
     {page==='sets'&&<SetsPage book={book} hooks={hooks} fresh={fresh.sets}/>}{page==='trophies'&&<TrophyPage log={log} hooks={hooks}/>}{page==='requests'&&<RequestsPage log={log}/>}
     {page==='fish'&&<>
+    <ComebackBanner save={comeback}/>
     <VisitorBanner hooks={hooks}/>
     {SECTIONS.map(sec=>{const got=sec.fish.filter(f=>book.species[f.id]).length;return <section key={sec.id} className={styles.spot} data-fishbook-spot={sec.id}>
      <h3 className={styles.spotTitle}>{sec.title} <small data-spot-count>{sec.spot?`${got} of ${sec.fish.length} caught here`:`${got} / ${sec.fish.length}`}</small></h3>
@@ -98,7 +100,7 @@ export default function Fishbook({open,onClose}:{open:boolean;onClose:()=>void})
      <ul className={styles.grid}>{sec.fish.map(f=>{const e=book.species[f.id],isFresh=!!e&&fresh.species.has(f.id);return <li key={f.id} data-caught={!!e} data-golden={e&&hooks.golden[f.id]?'':undefined} data-fresh={isFresh||undefined}>
       {isFresh&&<span className={extra.freshStamp} aria-hidden="true">New!<i/><i/><i/><i/><i/><i/></span>}
       <FishArt fish={f} hidden={!e} size={92}/>
-      {e?<><h3>{f.name}</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined}><RarityStars rarity={f.rarity} size={12}/> {deepTag(f)}{RARITY_LABEL[f.rarity]} · {shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f,time)}<p>Caught {e.count} · biggest {e.biggest} cm · {fishSellValue(f)} coins at Rosa&apos;s stand</p>
+      {e?<><h3>{f.name}</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined}><RarityStars rarity={f.rarity} size={12}/> {deepTag(f)}{RARITY_LABEL[f.rarity]} · {shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f,time)}<p>Caught {e.count} · <span data-fish-best>your best {e.biggest} cm</span> · {fishSellValue(f)} coins at Rosa&apos;s stand</p>
        <div className={styles.fact}><span className={styles.tag}>{f.club.link==='Fun fish fact'?'Fun fish fact + real football fact':`Real football fact · ${f.club.link}`}</span><p className={styles.club}><b>{f.club.name}</b>{f.club.nickname?` · “${f.club.nickname}”`:''}</p><p>{f.club.fact}</p><small className={styles.credit}>Source: {credit(f)}</small></div>{f.story&&<div className={styles.story} data-fish-story><span className={styles.tag}>Fish tale</span><p>{f.story}</p><SpeciesHooks fish={f} count={e.count} hooks={hooks}/></div>}</>
        :<><h3 aria-label="Not caught yet">???</h3><p className={styles.eyebrow} data-deep-sea={f.deepSea||undefined} data-shape-word>{deepTag(f)}{shadowWords(f)}</p><p className={styles.found}>Found at: {foundAt(f)}</p>{whenLine(f,time)}</>}
      </li>;})}</ul>

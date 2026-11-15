@@ -50,7 +50,9 @@ for(const good of G.GOODS){
  assert.equal(market.gather(good.id,2),2,`${good.id} fits in the basket`);
  const v=view(),cat_=P.pocketCategory(good),row=v[cat_].rows.find(r=>r.id===good.id);
  assert(row,`${good.id} shows in the pocket under ${cat_}`);
- assert.equal(row.count,2);assert.equal(row.name,good.plural);assert.equal(row.each,good.price);assert.equal(row.value,good.price*2,`${good.id} value`);
+ // Nov 14 2026: today's fish of the day is worth double (market.ts fotdFactor, docs/fishing.md "Come back tomorrow").
+ const full=good.price*M.fotdFactor(market.read().day,good);
+ assert.equal(row.count,2);assert.equal(row.name,good.plural);assert.equal(row.each,full);assert.equal(row.value,full*2,`${good.id} value`);
  assert.equal(v.hud.fish,good.kind==='fish'?2:0);assert.equal(v.hud.produce,good.kind==='produce'?2:0);
  assert.equal(v.hud.fish,hudLikeIslandJobs(market.read(),'fish'));assert.equal(v.hud.produce,hudLikeIslandJobs(market.read(),'produce'));
  assert.equal(v.fish.count+v.fruit.count+v.veg.count+v.beach.count,v.total,'groups add up to the basket');// beach: beachcombing finds

@@ -94,3 +94,5 @@
 .marks span+span{animation-delay:.27s}
 @keyframes markIn{from{opacity:0;transform:scale(.6)}}
 @media(prefers-reduced-motion:reduce){.page,.freshStamp,.sets li[data-celebrate],.marks span{animation:none}.freshStamp i,.setBurst{display:none}}
+/* Nov 14 2026 (come back tomorrow): the Today on the water banner reuses the visitors card; a little space before the next one. */
+.comeback{margin-bottom:10px}

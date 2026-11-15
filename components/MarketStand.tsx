@@ -21,6 +21,8 @@ import {BASKET_LIMIT,MARKET_FULL_PRICE_COINS,basketCount,type SaleResult} from '
 import {MARKET_STORAGE_KEY,allowanceUsed,basketLines,sellOneGood} from '@/lib/town/market/marketStand';
 import {MARKET,MARKET_BUYERS,buyerTakes,type MarketBuyer} from '@/lib/economy';
 import {fishSold} from '@/lib/analytics/fishingEvents';
+// Nov 14 2026 (come back tomorrow, docs/fishing.md): today's fish of the day fetches double at every fish buyer.
+import {fishOfTheDay} from '@/lib/town/fishing/fishDaily';
 const MARKET_LADDER_FULL_EACH=MARKET.ladder.fullEach;
 import {FISH_SPOTS,MARKET_STAND,fishById} from '@/lib/town/fishing/fishCatalog';
 import {beachFindById,OPEN_SHELLBOOK} from '@/lib/town/beachcombing';
@@ -69,6 +71,7 @@ export default function MarketStand({open,onOpenChange,initialTab,place='rosa'}:
      {/* Nov 14 2026 (fishing reach): what is left at full price today, plainly, as a number (was one long sentence). */}
      <p className={styles.capLeft} data-market-cap-left={capLeft}><span>{capLeft>0?<><b>{capLeft} coins</b> left at full price today</>:<b>Half price until tomorrow</b>}</span><span>Basket {count}/{BASKET_LIMIT}</span></p>
      <p>{capLeft>0?`Rosa pays full price for the first ${MARKET_FULL_PRICE_COINS} coins each day, then half price.`:'Great trading today! Full prices come back tomorrow.'} After {MARKET_LADDER_FULL_EACH} of one kind today, more of the same fetch a bit less (rare catches and finds skip that rule).</p>
+     {buyerTakes(place,'fish')&&(()=>{const f=fishOfTheDay(market.day||Date.now());return <p className={styles.fotd} data-market-fotd={f.id}><FishArt fish={f} size={40}/><span><b>Fish of the day: {f.name}</b>It fetches double today, while the full-price coins last.</span></p>;})()}
     </div>
     <div className={styles.tabs} role="tablist" aria-label="What to sell">{tabs.map(t=>{const n=t.id==='cards'?null:basketLines(market,t.id).reduce((a,l)=>a+l.count,0);return <button key={t.id} type="button" role="tab" id={`market-tab-${t.id}`} aria-selected={tab===t.id} aria-controls={`market-panel-${t.id}`} onClick={()=>{setTab(t.id);setNote(null);}}>{t.label}{n?<span>{n}</span>:null}</button>;})}</div>
     {note&&<p key={note.id} className={styles.note} role="status" data-market-note>
@@ -89,10 +92,10 @@ function Goods({kind,lines,busy,onOne,onAll,seller}:{kind:'fish'|'produce'|'beac
  if(!lines.length)return <div className={styles.empty}>{kind==='fish'?<><b>No fish in your basket yet.</b><p>Look for the little fishing posts with a red float (F on the map): {FISH_SPOTS.filter(s=>!s.area).map(s=>s.name).join(', ')}, plus {FISH_SPOTS.filter(s=>s.area).length} more along the Coral Cay causeway and round Coral Cay.</p></>:<><b>No produce in your basket yet.</b><p>Pick ripe fruit and vegetables at the Community Garden, just north of the market, or work a Harvest day on Coral Cay Farm.</p></>}</div>;
  const total=islandMarket.quote(kind).coins;
  return <section className={styles.goods} aria-label={kind==='fish'?'Sell fish':kind==='beach'?'Sell beach finds':'Sell produce'}>
-  <ul>{lines.map(({good,count,each,eachText,full,plenty})=>{const fish=kind==='fish'?fishById(good.id):undefined;return <li key={good.id} data-good={good.id} data-plenty={plenty||undefined}>
+  <ul>{lines.map(({good,count,each,eachText,full,plenty,fotd})=>{const fish=kind==='fish'?fishById(good.id):undefined;return <li key={good.id} data-good={good.id} data-plenty={plenty||undefined}>
    <span className={styles.art}>{fish?<FishArt fish={fish} size={64}/>:kind==='beach'&&beachFindById(good.id)?<BeachFindArt find={beachFindById(good.id)!} size={44}/>:<ProduceArt good={good} size={40}/>}</span>
    <span className={styles.name}><b>{count>1?good.plural:good.name} × {count}</b>{fish&&<small>{fish.club.name}</small>}{plenty&&<small className={styles.plenty} data-plenty-note>{`${seller} already has plenty of ${good.plural.toLowerCase()} today: ${eachText}. Fresh tomorrow!`}</small>}</span>
-   <span className={styles.price} data-market-price={good.id}><b>{eachText}</b>{each<full&&<small>full price {full}</small>}</span>
+   <span className={styles.price} data-market-price={good.id}><b>{eachText}</b>{fotd&&<small className={styles.fotdTag} data-fotd-price>Fish of the day: double</small>}{each<full&&<small>full price {full}</small>}</span>
    <button type="button" className={styles.one} disabled={busy} onClick={()=>onOne(good.id)} aria-label={`Sell one ${good.name} (${eachText})`}>Sell 1</button>
   </li>;})}</ul>
   <button type="button" className={styles.all} disabled={busy} onClick={onAll} data-market-sell-all={kind}>Sell all {kind==='beach'?'beach finds':kind} · {total} coin{total===1?'':'s'}</button>

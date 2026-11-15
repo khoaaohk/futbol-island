@@ -2,7 +2,7 @@
  * Fishing return hooks (Nov 7 2026, docs/fishing.md "Return hooks"): reasons to come back and "catch them all", all cosmetic or
  * stamp-only. Owner rules: no leaderboards, nothing expires, no penalties or streaks, prices never move, the odds never move
  * (tests/economy.cjs §12 and tests/fishing-hooks.cjs: no hook touches catchWeights, the basket or a sell value).
- *  1. Sets: 14 Fishbook sets (6 spot sets, 3 area sets, 5 themed sets). Completing one gives a Fishbook stamp, and five of them
+ *  1. Sets: 25 Fishbook sets (6 spot sets, 4 area sets, 11 themed sets, 4 club-country sets; Nov 14 2026: +10 smaller ones). Completing one gives a Fishbook stamp, and five of them
  *     also give a float skin (fishingLog.ts FLOAT_SKINS). Progress reads "N of M" from the Fishbook itself.
  *  2. Today's visitor: one featured species per area, the same for everyone on a Pacific day (date-seeded, hash01). Catching it
  *     stamps a "Visitor" mark on its Fishbook entry, once per species and day. It changes no odds: the banner only says where (and,
@@ -22,7 +22,7 @@ import type {FloatSkin} from './fishingLog';
 export const FISHING_HOOKS_KEY='fi2-fishing-hooks-v1';
 
 // ---- 1. Sets ----
-export type FishSet={id:string;kind:'spot'|'area'|'theme';title:string;blurb:string;stamp:string;float?:FloatSkin;species:readonly string[]};
+export type FishSet={id:string;kind:'spot'|'area'|'theme'|'club';title:string;blurb:string;stamp:string;float?:FloatSkin;species:readonly string[]};
 const own=(spots:readonly string[])=>FISH.filter(f=>isExclusive(f)&&spots.includes(f.spots[0])).map(f=>f.id);
 const spotSet=(id:SpotId):FishSet=>{const name=spotById(id)?.name??id;return {id:`spot-${id}`,kind:'spot',title:`${name} specials`,blurb:`Every animal that lives only at ${name}. A full squad for one ground.`,stamp:`${name} stamp`,species:own([id])};};
 export const FISH_SETS:readonly FishSet[]=[
@@ -37,6 +37,18 @@ export const FISH_SETS:readonly FishSet[]=[
  {id:'theme-night',kind:'theme',title:'Night and sunset fish',blurb:'Animals that only come out at sunset or at night. Switch the island time to meet them.',stamp:'Night owl stamp',float:'moon',species:FISH.filter(f=>!!f.when).map(f=>f.id)},
  {id:'theme-sharks',kind:'theme',title:'Every shark',blurb:'Every shark in the Fishbook. Sharks pull hard: a long hunt.',stamp:'Shark spotter stamp',float:'fin',species:FISH.filter(f=>f.group==='shark').map(f=>f.id)},
  {id:'theme-claws',kind:'theme',title:'Crabs and lobsters',blurb:'Every crab and lobster: walk sideways, defend the box.',stamp:'Claws stamp',float:'shell',species:FISH.filter(f=>f.group==='crab'||f.group==='lobster').map(f=>f.id)},
+ // Nov 14 2026 (come back tomorrow, docs/fishing.md): ten smaller sets of 5-8 animals, each with its own float. Club sets group the
+ // animals by the country of their football story; every species list is fixed here (the test checks 5-8 real Fishbook species).
+ {id:'theme-reef-sharks',kind:'theme',title:'Reef sharks',blurb:'Six sharks that patrol the coral. Quick on the turn, like a winger.',stamp:'Reef patrol stamp',float:'reef',species:['blacktip','whitetip-reef-shark','reef-shark','nurse-shark','zebra-shark','lemon-shark']},
+ {id:'theme-rays-eels',kind:'theme',title:'Rays and eels',blurb:'Flat gliders and wiggly hiders. Look for them on calm days.',stamp:'Glider stamp',float:'ray',species:FISH.filter(f=>f.group==='ray'||f.group==='eel').map(f=>f.id)},
+ {id:'theme-squid',kind:'theme',title:'Ink squad',blurb:'Every squid and cuttlefish. They love a misty sea.',stamp:'Ink squad stamp',float:'ink',species:FISH.filter(f=>f.group==='squid').map(f=>f.id)},
+ {id:'theme-oddballs',kind:'theme',title:'Deep oddballs',blurb:'Swordfish, marlins, anglerfish and the giant sunfish: the strangest shapes in the sea.',stamp:'Oddball stamp',float:'oddball',species:FISH.filter(f=>f.shape==='billfish'||f.shape==='angler'||f.shape==='mola').map(f=>f.id)},
+ {id:'theme-cups',kind:'theme',title:'World stage',blurb:'Animals whose football story happened at a big tournament.',stamp:'World stage stamp',float:'cup',species:FISH.filter(f=>f.club.entity?.kind==='tournament').map(f=>f.id)},
+ {id:'theme-crests',kind:'theme',title:'On the badge',blurb:'Animals that sit on a real club crest.',stamp:'Badge stamp',float:'crest',species:FISH.filter(f=>f.club.link==='Crest').map(f=>f.id)},
+ {id:'club-brazil',kind:'club',title:'Brazil',blurb:'Every animal with a Brazilian football story. Samba on the shore!',stamp:'Brazil stamp',float:'samba',species:FISH.filter(f=>f.club.country==='Brazil').map(f=>f.id)},
+ {id:'club-spain',kind:'club',title:'Spain',blurb:'Every animal with a Spanish football story, from Vigo to Cádiz.',stamp:'Spain stamp',float:'roja',species:FISH.filter(f=>f.club.country==='Spain').map(f=>f.id)},
+ {id:'club-australia',kind:'club',title:'Australia',blurb:'Every animal with an Australian football story.',stamp:'Australia stamp',float:'wattle',species:FISH.filter(f=>f.club.country==='Australia').map(f=>f.id)},
+ {id:'club-france',kind:'club',title:'France',blurb:'Every animal with a French football story.',stamp:'France stamp',float:'bleu',species:FISH.filter(f=>f.club.country==='France').map(f=>f.id)},
 ];
 const SET_IDS=new Set(FISH_SETS.map(s=>s.id));
 export const setById=(id:string)=>FISH_SETS.find(s=>s.id===id);

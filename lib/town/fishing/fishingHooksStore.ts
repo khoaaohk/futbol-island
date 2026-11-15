@@ -9,6 +9,7 @@ import {useSyncExternalStore} from 'react';
 import {FISHING_HOOKS_KEY,claimSets,emptyHooks,hookCatch,mergeHooks,sanitizeHooks,setFloats,type FishSet,type HookEffects,type HooksSave} from './fishingHooks';
 import {fishingSession,readFishbook} from './fishingStore';
 import {grantFloats,readFishingLog} from './fishingLogStore';
+import {countSetDone} from '../../analytics/fishingEvents';// Nov 14 2026: a set completed (a total only)
 
 const server=emptyHooks();
 let state:HooksSave=server,loaded=false;
@@ -30,7 +31,7 @@ export const lastHookEffects=()=>last;
 /** Claim completed sets and make sure their floats are in the fishing log (also mends a save merged from another device). */
 export function refreshSets():FishSet[]{
  let done:FishSet[]=[];const r=claimSets(mergeHooks(readFishingHooks(),readSaved()),readFishbook());
- if(r.done.length){done=r.done;write(r.save);}
+ if(r.done.length){done=r.done;write(r.save);countSetDone(done.length);}
  const floats=setFloats(readFishingHooks().sets);if(floats.length)grantFloats(floats);
  return done;
 }

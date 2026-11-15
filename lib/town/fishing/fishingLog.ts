@@ -16,9 +16,14 @@ import {requestHint,requestProgress,requestsForDay,type FishRequest} from './req
 
 export const FISHING_LOG_KEY='fi2-fishing-log-v1';
 /** Nov 7 2026 (return hooks, fishingHooks.ts FISH_SETS): five more floats, each earned by completing a Fishbook set. Cosmetic only. */
-export type FloatSkin='classic'|'football'|'seagull'|'golden'|'coral'|'abyss'|'moon'|'fin'|'shell';
+/** Nov 14 2026 (come back tomorrow): ten more, one for each new Fishbook set. */
+export type FloatSkin='classic'|'football'|'seagull'|'golden'|'coral'|'abyss'|'moon'|'fin'|'shell'
+ |'reef'|'ray'|'ink'|'samba'|'roja'|'wattle'|'bleu'|'cup'|'oddball'|'crest';
 export const FLOAT_SKINS:Record<FloatSkin,{name:string;color:string}>={classic:{name:'Classic red float',color:'#d6453a'},football:{name:'Football float',color:'#f4f4f0'},seagull:{name:'Seagull float',color:'#9fb7c9'},golden:{name:'Golden float',color:'#e3b53c'},
- coral:{name:'Coral float',color:'#f08a6c'},abyss:{name:'Deep blue float',color:'#2b4f9a'},moon:{name:'Moon float',color:'#d9def5'},fin:{name:'Shark fin float',color:'#66737e'},shell:{name:'Shell float',color:'#e8c9a2'}};
+ coral:{name:'Coral float',color:'#f08a6c'},abyss:{name:'Deep blue float',color:'#2b4f9a'},moon:{name:'Moon float',color:'#d9def5'},fin:{name:'Shark fin float',color:'#66737e'},shell:{name:'Shell float',color:'#e8c9a2'},
+ reef:{name:'Reef float',color:'#2fa39a'},ray:{name:'Ray float',color:'#7d6bb0'},ink:{name:'Ink float',color:'#2e2a3a'},samba:{name:'Samba float',color:'#f2c230'},
+ roja:{name:'Roja float',color:'#c8202f'},wattle:{name:'Wattle float',color:'#1f7a4a'},bleu:{name:'Bleu float',color:'#2350a8'},cup:{name:'Cup float',color:'#c9a24a'},
+ oddball:{name:'Lantern float',color:'#9cd6e8'},crest:{name:'Crest float',color:'#8a5a2b'}};
 export type FishingLog={version:1;
  /** Distinct kinds caught per spot (capped). */
  kinds:Record<string,string[]>;
@@ -70,7 +75,7 @@ export function sanitizeLog(value:unknown):FishingLog{
  out.reqTotal=whole(v.reqTotal,1e6);
  out.lure=isLureId(v.lure)?v.lure:null;
  out.milestones=(Array.isArray(v.milestones)?v.milestones:[]).filter((m):m is number=>MILESTONES.includes(m as never)).filter((m,i,a)=>a.indexOf(m)===i);
- out.floats=[...new Set<FloatSkin>(['classic',...strList(v.floats,s=>SKINS.includes(s as FloatSkin),16) as FloatSkin[]])];
+ out.floats=[...new Set<FloatSkin>(['classic',...strList(v.floats,s=>SKINS.includes(s as FloatSkin),32) as FloatSkin[]])];
  out.float=SKINS.includes(v.float as FloatSkin)&&out.floats.includes(v.float as FloatSkin)?v.float as FloatSkin:'classic';
  out.goldenRod=v.goldenRod===true;out.rod=out.goldenRod&&v.rod==='golden'?'golden':'standard';
  if(v.pity&&typeof v.pity==='object')for(const [k,n] of Object.entries(v.pity).slice(0,PITY_KEYS_MAX)){if(isPityKey(k)){const c=whole(n,PITY_COUNT_MAX);if(c>0)out.pity[k]=c;}}

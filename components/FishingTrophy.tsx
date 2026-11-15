@@ -14,7 +14,8 @@ import {saveTrophy,trophyWord,type TrophySpec} from '@/lib/town/fishing/trophyIm
 import comic from './games/comic/comic.module.css';
 import styles from './FishingTrophy.module.css';
 
-export default function FishingTrophy({fish,sizeCm,sizeText,spot,onClose}:{fish:FishSpecies;sizeCm:number;sizeText:string;spot:string;onClose:()=>void}){
+/** `record`: the player's previous best of this species when this catch beats it (Nov 14 2026, come back tomorrow). */
+export default function FishingTrophy({fish,sizeCm,sizeText,spot,record,onClose}:{fish:FishSpecies;sizeCm:number;sizeText:string;spot:string;record?:number;onClose:()=>void}){
  const art=useRef<HTMLDivElement>(null);
  const [busy,setBusy]=useState(false),[status,setStatus]=useState('');
  const legendary=fish.rarity==='legendary';
@@ -30,6 +31,7 @@ export default function FishingTrophy({fish,sizeCm,sizeText,spot,onClose}:{fish:
     <ComicBurst word={trophyWord(legendary)} className={styles.burst} size={24} tilt={-4} color="#f0452e"/>
     <span className={styles.fish} data-trophy-art><FishArt fish={fish} size={240}/></span>
    </div>
+   {record?<p className={styles.record} data-trophy-record><b>New record!</b> Your best was {record} cm.</p>:null}
    <p className={styles.size}>{sizeText}</p>
    <p className={styles.where}>Caught at {spot} · {date}</p>
    <div className={styles.actions}>

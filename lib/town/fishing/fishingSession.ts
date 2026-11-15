@@ -48,7 +48,9 @@ import {countSummitFishCatch} from '../../analytics/summitEvents';
 import {HOTSPOT_HINT,READ_WATER_HINT,SPOOKED_HINT} from './fishingAim';
 import {fightStats,running,setHold,type FightStats,FULL_SPIN_S} from './fishingFight';
 
-export type CatchView={id:FishId;size:number;isNew:boolean;isBiggest:boolean;inBasket:boolean};
+export type CatchView={id:FishId;size:number;isNew:boolean;isBiggest:boolean;inBasket:boolean;
+ /** Nov 14 2026: this species' best size before this catch (0 = the first one), for the "New record!" line. */
+ prevBest?:number};
 export type FishingView={active:boolean;spotId:string|null;phase:SessionPhase;hint:string;lesson:{title:string;text:string;key:number}|null;caught:CatchView|null;catches:number;
  /** Where the last cast landed (Oct 14 2026, aimed casting): on a hotspot / in spooked water (hint text only, never odds). */
  water:'calm'|'hot'|'spooked';
@@ -100,7 +102,7 @@ export type FishingEventType='cast'|'nibble'|'bite'|'hook'|'run'|'slip'|'warn'|'
  |'tired';
 export type FishingEvent={type:FishingEventType;fish:FishId|null;size:number|null;spot:string|null;at:number;
  rarity:FishRarity|null;shadow:ShadowSize|null;lure:string|null;hot:FishingView['water'];
- dir?:-1|1;isNew?:boolean;isBiggest?:boolean;inBasket?:boolean;how?:'scared'|'escaped';hooked?:boolean;fight?:FightStats;
+ dir?:-1|1;isNew?:boolean;isBiggest?:boolean;/** catch: the species' best size before it (Nov 14 2026) */prevBest?:number;inBasket?:boolean;how?:'scared'|'escaped';hooked?:boolean;fight?:FightStats;
  /** On 'catch' (Nov 6 2026): an Island Legend (released: never a Fishbook species, never in the basket). */
  legend?:boolean};
 export type FishingOptions={lure:string|null};
@@ -161,7 +163,7 @@ export function createFishingSession(land:Lander,cue:(kind:FishCue,strength?:num
    if(e==='tired'){cue('reel');fightHint=TIRED_HINT;emit('tired');}
    if(e==='slip'){cue('slip');fightHint=session.fight?.style==='legend'?LEGEND_REST_HINT:SLIP_HINT;emit('slip');}
    if(e==='hooked'&&session.fish){const f=session.fish;caught={id:f.id,size:f.size,...land(f.id,f.size)};catches++;cue('fanfare');countSummitFishCatch(view.spotId);
-    emit('catch',{isNew:caught.isNew,isBiggest:caught.isBiggest,inBasket:caught.inBasket,legend:!isFishbookSpecies(f.id),...(session.lastFight?{fight:fightStats(session.lastFight)}:{})});hooked=false;}
+    emit('catch',{isNew:caught.isNew,isBiggest:caught.isBiggest,prevBest:caught.prevBest,inBasket:caught.inBasket,legend:!isFishbookSpecies(f.id),...(session.lastFight?{fight:fightStats(session.lastFight)}:{})});hooked=false;}
    if(e==='cast')caught=null;
   }
   // The fight's arc is CSS written by the

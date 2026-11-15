@@ -18,7 +18,7 @@ const {FISH,FISH_SPOTS,fishById}=cat;
 const book=ids=>({species:Object.fromEntries(ids.map(id=>[id,{count:1}]))});
 
 // ---- 1. Sets: 10-14, real species, never empty, stamp for each, floats are real skins
-{const S=H.FISH_SETS;ok(S.length>=10&&S.length<=15,`10-15 sets (${S.length}; Nov 13 2026: + the stadium coast)`);
+{const S=H.FISH_SETS;ok(S.length>=10&&S.length<=30,`10-30 sets (${S.length}; Nov 13 2026: + the stadium coast; Nov 14 2026: + ten smaller come-back sets)`);
  ok(new Set(S.map(s=>s.id)).size===S.length,'set ids are unique');
  for(const s of S){ok(s.species.length>=4,`${s.id}: at least 4 species (${s.species.length})`);ok(s.species.every(id=>FISH.some(f=>f.id===id)),`${s.id}: Fishbook species only (no legends)`);
   ok(new Set(s.species).size===s.species.length,`${s.id}: no duplicates`);ok(typeof s.stamp==='string'&&s.stamp.length>3,`${s.id}: a stamp`);
@@ -108,4 +108,4 @@ const book=ids=>({species:Object.fromEntries(ids.map(id=>[id,{count:1}]))});
  const src=['lib/town/fishing/fishingHooks.ts','lib/town/fishing/fishingHooksStore.ts','components/FishbookExtras.tsx'].map(f=>fs.readFileSync(path.join(ROOT,f),'utf8')).join('\n');
  ok(!/leaderboard|streak|setInterval|requestAnimationFrame/i.test(src.replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm,'')),'no leaderboards, streaks, timers or frame loops');}
 
-console.log(`PASS fishing-hooks: ${n} checks (15 sets, Pacific-day visitors, stamp-only golden, chapters for 26 legends + favourites, synced save)`);
+console.log(`PASS fishing-hooks: ${n} checks (${H.FISH_SETS.length} sets, Pacific-day visitors, stamp-only golden, chapters for 26 legends + favourites, synced save)`);

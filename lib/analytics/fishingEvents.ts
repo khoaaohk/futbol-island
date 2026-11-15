@@ -44,6 +44,12 @@ export const countRippleStart=()=>count('fi:ripple_start');
 export const countRunHint=()=>count('fi:run_hint');
 /** Sell tapped on a catch that found the basket full. */
 export const countFullSell=()=>count('fi:full_sell');
+/** Nov 14 2026 (come back tomorrow, lib/town/fishing/comebackStore.ts): the first fish of the day caught today, a set completed,
+ *  a new personal best size, the weekly visitor caught at its spot. Totals only, never which fish, set or size. */
+export const countFotdCatch=()=>count('fi:fotd_catch');
+export function countSetDone(n=1){const k=Math.floor(Number(n)||0);if(k>0)count('fi:set_done',k);}
+export const countNewRecord=()=>count('fi:new_record');
+export const countVisitorWeek=()=>count('fi:visitor_week');
 /** Slip buckets: 0 / 1 / 2 / 3+ per spin fight. */
 export const slipBucket=(slips:number)=>slips<=0?'fi:slips_0':slips===1?'fi:slips_1':slips===2?'fi:slips_2':'fi:slips_3plus';
 /** Average spin rate buckets (0..1 of a full spin, fishingFight.ts FULL_SPIN_S): slow < 0.45, mid < 0.8, full otherwise. */

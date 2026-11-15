@@ -58,3 +58,8 @@
 .price{flex:none;display:flex;flex-direction:column;align-items:flex-end;text-align:right}
 .price b{padding:3px 10px;border-radius:999px;background:#ffe9a3;color:#5a4300;font-size:14px;font-weight:900;white-space:nowrap}
 .price small{margin-top:2px;font-size:11px;color:#687365;white-space:nowrap}
+/* Nov 14 2026 (come back tomorrow): the fish of the day line and its price note. */
+.allowance p.fotd{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding:8px 12px;border-radius:18px 26px 16px 20px;background:#e3f4ec;color:#244d40;font-size:13px}
+.fotd b{display:block;font-size:15px;font-weight:900}
+.fotd svg{flex:none}
+.price small.fotdTag{color:#1f6b4c;font-weight:800}
