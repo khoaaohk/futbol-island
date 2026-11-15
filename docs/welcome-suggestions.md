@@ -50,7 +50,7 @@ dwell (WELCOME_BACK_SHOW_MS) and the same toast lane. The title-screen welcome c
 | | lesson_weekend (1) | "Weekend! Try two lessons today. Next up: …" | Paths |
 | | lesson_next (0) | "Next up: Carry or Pass? (2 min). Tap to start" | Paths |
 | Arcade | arcade_pennant (4) | "1 more day for this week's arcade pennant! …" (2 of 3 days done) | /arcade?game=<cab>&today=1 |
-| | arcade_near (4) | "Your last Pass Puzzles score was 300, 38 off your best! Tap to beat it" (the most recently played scored cabinet, last run within 30% of the best, played in the last 14 days; lib/arcade/lastScore.ts, Nov 14 2026) | that cabinet |
+| | arcade_near (4) | "Your last Pass Puzzles score was 300, 38 off your best! Tap to beat it" (the most recently played scored cabinet, last run within 30% of the best, played in the last 14 days; lib/arcade/lastScore.ts, Nov 14 2026). Nov 15 2026: daily runs and elite tiers count too, each against its own best: "Your last Daily Run was 300, 38 off your best! Tap to beat it" (Daily Run, Cup Final run, Legend run, Derby Night game, World Final game, Daily Rush, Daily Squad; a daily one only on the same play day, its course is new tomorrow) | that cabinet, in that mode (`?today=1` for a daily run, `?mode=cup` etc. for an elite tier) |
 | | arcade_daily (2) | "New today in Pass Puzzles: Solve today's puzzle. Tap to play" | today's challenge |
 | | arcade_go (0) | "Pass Puzzles is waiting in the arcade. Tap to play" | that cabinet |
 | Kit Shop | kit_news (2) / kit_design (0) | "New boot stickers in the Kit Shop! …" | the Kit Shop door |

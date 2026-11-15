@@ -13,8 +13,8 @@ import {PATHS_IN_ORDER,pathLaunchDetail} from '../paths/pathContinue';
 
 export const WELCOME_GO='fi2-welcome-go';
 export type WelcomeGo={to:'arcade'|'shop';query?:string};
-/** The arcade page's query for a cabinet (and today's challenge). Pure. */
-export const arcadeQuery=(game:string,today:boolean)=>`?game=${encodeURIComponent(game)}${today?'&today=1':''}`;
+/** The arcade page's query for a cabinet (and today's challenge, or an elite tier: `mode`, Nov 15 2026). Pure. */
+export const arcadeQuery=(game:string,today:boolean,mode?:string)=>`?game=${encodeURIComponent(game)}${today?'&today=1':''}${mode?`&mode=${encodeURIComponent(mode)}`:''}`;
 const send=(name:string,detail:unknown)=>{try{window.dispatchEvent(new CustomEvent(name,{detail}));}catch{/* no window */}};
 
 export function actWelcome(a:WelcomeAction,steps:ReadonlySet<string>,answers:ReadonlySet<string>){
@@ -23,7 +23,7 @@ export function actWelcome(a:WelcomeAction,steps:ReadonlySet<string>,answers:Rea
   case 'paths':send(ENDGAME_OPEN,{target:'paths',format:a.format});return;
   case 'lesson':{const p=PATHS_IN_ORDER.find(x=>x.format===a.format),l=p&&[...p.chapters.flatMap(c=>c.lessons),...p.depth].find(x=>x.id===a.lessonId);
    if(p&&l)send(FORMAT_PATH_LAUNCH,pathLaunchDetail(p.format,l,steps,answers));else send(ENDGAME_OPEN,{target:'paths',format:a.format});return;}
-  case 'arcade':send(WELCOME_GO,{to:'arcade',query:arcadeQuery(a.game,a.today)} satisfies WelcomeGo);return;
+  case 'arcade':send(WELCOME_GO,{to:'arcade',query:arcadeQuery(a.game,a.today,a.mode)} satisfies WelcomeGo);return;
   case 'shop':send(WELCOME_GO,{to:'shop'} satisfies WelcomeGo);return;
  }
 }

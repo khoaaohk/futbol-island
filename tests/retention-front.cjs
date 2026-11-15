@@ -85,4 +85,35 @@ const mem=(init={})=>{const d={...init};return {getItem:k=>k in d?d[k]:null,setI
  assert.match(read('lib/welcome/facts.ts'),/near:nearFact\(storage,now\)/);
  assert.match(read('app/admin/WelcomeSuggestCard.tsx'),/arcade_near:'Arcade: almost your best'/);
 }
+// 7. Nov 15 2026: daily runs and elite tiers, each against its own best, named by the hook and opening that mode.
+{
+ const L=load('lib/arcade/lastScore.ts'),st=mem(),now=new Date(2026,10,15,15).getTime();
+ for(const k of ['runner_daily','runner_cup','runner_legend','pinball_derby','pinball_final','kitrush_daily','snake_daily'])assert(L.LAST_SCORE_GAMES.includes(k)&&L.LAST_SCORE_MODES[k],k);
+ L.noteLastScore('runner',900,5000,now-5e6,st);L.noteLastScore('runner_daily',300,338,now-1e5,st);
+ assert.deepEqual(L.readLastScores(st).runner_daily,{s:300,b:338,at:now-1e5},'its own best, not the classic record');
+ assert.deepEqual(L.nearBest(L.readLastScores(st),now),{game:'runner_daily',score:300,best:338,gap:38});
+ const tomorrow=new Date(2026,10,16,9).getTime();assert.equal(L.nearBest(L.readLastScores(st),tomorrow),null,'a daily run counts only on its own play day (a new course tomorrow)');
+ L.noteLastScore('pinball_final',4000,4200,now,st);assert.equal(L.nearBest(L.readLastScores(st),now+1).game,'pinball_final','the most recent');
+ assert.equal(L.nearBest(L.readLastScores(st),now+8*864e5).game,'pinball_final','an elite tier keeps the 14 days');
+ L.noteLastScore('pinball_derby',100,1000,now+2,st);assert.equal(L.nearBest(L.readLastScores(st),now+3),null,'more than 30% off: nothing');
+ const S=load('lib/saves/snapshot.ts',n=>n.endsWith('welcome/tally')?{WELCOME_TALLY_KEY:'fi2-welcome-tally-v1',cleanTallyRaw:v=>v}:n.endsWith('welcome/learn')?{WELCOME_LEARN_KEY:'fi2-welcome-learn-v1',WELCOME_ARM_KEY:'fi2-welcome-arm-v1'}:n.endsWith('arcade/lastScore')?L:{});
+ assert.deepEqual(JSON.parse(S.cleanKeys({'fi2-arcade-last-v1':JSON.stringify({runner_cup:{s:5,b:9,at:1},runner_night:{s:1,b:2,at:3}})})['fi2-arcade-last-v1']),{runner_cup:{s:5,b:9,at:1}},'the snapshot keeps the mode entries, drops unknown ones');
+ const kinds=load('lib/welcome/kinds.ts'),H=load('lib/welcome/hooks.ts',n=>n.endsWith('/kinds')?kinds:{});
+ const base={fav:null,challenge:null,weekDays:0,pennantLit:false};
+ const d=H.hooksFor('arcade',{arcade:{...base,near:{game:'runner',name:'Breakaway Run',score:300,best:338,label:'Daily Run',today:true}}})[0];
+ assert.equal(d.line,'Your last Daily Run was 300, 38 off your best! Tap to beat it');assert.deepEqual(d.action,{to:'arcade',game:'runner',today:true});
+ const e=H.hooksFor('arcade',{arcade:{...base,near:{game:'pinball',name:'Futbol Pinball',score:4000,best:4200,label:'World Final game',mode:'final'}}})[0];
+ assert.equal(e.line,'Your last World Final game was 4,000, 200 off your best! Tap to beat it');assert.deepEqual(e.action,{to:'arcade',game:'pinball',today:false,mode:'final'});
+ const A=read('lib/welcome/act.ts');assert.match(A,/arcadeQuery\(a\.game,a\.today,a\.mode\)/);
+ const q=load('lib/welcome/act.ts',()=>new Proxy({},{get:()=>()=>{}})).arcadeQuery;assert.equal(q('pinball',false,'final'),'?game=pinball&mode=final');assert.equal(q('runner',true),'?game=runner&today=1');
+ assert.match(read('lib/welcome/facts.ts'),/LAST_SCORE_MODES\[n\.game\]/,'facts map a mode entry to its cabinet');
+ const T=load('lib/arcade/arcadeToday.ts',()=>new Proxy({},{get:()=>()=>({})}));
+ T.requestModeLaunch('runner','cup');assert.equal(T.takeModeLaunch('pinball'),null);assert.equal(T.takeModeLaunch('runner'),'cup');assert.equal(T.takeModeLaunch('runner'),null,'one shot');
+ T.requestModeLaunch('runner','night');assert.equal(T.takeModeLaunch('runner'),null,'only the elite tiers');
+ assert.match(read('components/ArcadeRoom.tsx'),/requestModeLaunch\(id!,mode\)/);assert.match(read('components/games/RunnerMenu.tsx'),/takeModeLaunch\('runner'\)/);assert.match(read('components/games/PinballCard.tsx'),/takeModeLaunch\('pinball'\)/);
+ const set=read('lib/arcade/results/settle.ts');
+ assert.match(set,/noteLastScore\('pinball_'\+t\.id,t\.score,saved\.progress\[t\.id\]\.best\)/);assert.match(set,/noteLastScore\('runner_'\+m,/);assert.match(set,/noteLastScore\('runner_daily',/);
+ assert.match(read('components/games/KitRushGame.tsx'),/else noteLastScore\('kitrush_daily',score,settled\.dailyBest\)/);assert.match(read('components/games/SquadSnakeGame.tsx'),/else noteLastScore\('snake_daily',score,settled\.dailyBest\)/);
+ assert.match(read('docs/accounts-design.md'),/`runner_daily`, `runner_cup`/);assert.match(read('docs/welcome-suggestions.md'),/Your last Daily Run was 300/);
+}
 console.log('retention-front ok');

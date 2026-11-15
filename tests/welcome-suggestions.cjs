@@ -146,7 +146,7 @@ ok(!/count\(/.test(read('lib/welcome/tally.ts')+read('lib/welcome/hooks.ts')+rea
  ok(/window\.location\.assign\('\/arcade'\+arcadeQueryRef\.current\)/.test(town)&&/addEventListener\(WELCOME_GO/.test(town),'Town: the same Enter doors');
  ok(/q\.get\('today'\)==='1'[^\n]*requestTodayLaunch/.test(room),'the arcade opens today’s challenge from ?today=1');
  // (act.ts is not required here: './formatPaths' would resolve to the .json beside it under this simple loader)
- ok(/arcadeQuery=\(game:string,today:boolean\)=>`\?game=\$\{encodeURIComponent\(game\)\}\$\{today\?'&today=1':''\}`/.test(act),'arcade query');
+ ok(/arcadeQuery=\(game:string,today:boolean,mode\?:string\)=>`\?game=\$\{encodeURIComponent\(game\)\}\$\{today\?'&today=1':''\}\$\{mode\?`&mode=\$\{encodeURIComponent\(mode\)\}`:''\}`/.test(act),'arcade query (Nov 15 2026: + an elite tier)');
  ok(!/welcome\/|welcomeSuggestion/.test(read('components/landing/TitleActions.tsx')),'the title screen card is untouched');}
 
 console.log(`WELCOME_SUGGESTIONS_PASS ${n} checks (tally, decay, tiers, back-off, holdout, cross nudge, rotation, saves, counters, admin)`);

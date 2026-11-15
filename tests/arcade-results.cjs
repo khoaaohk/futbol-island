@@ -40,7 +40,10 @@ for(const c of CASES){
  if(c.kind==='pinball')got.pinballFresh=out.pinballFresh;if(out.record)got.record=out.record;if(out.boardScore!==null)got.boardScore=out.boardScore;
  // Nov 14 2026 (lib/arcade/lastScore.ts): a classic record write is also the cabinet's last score (one more key, never for tennis or tiers).
  const last=store.get('fi2-arcade-last-v1');store.delete('fi2-arcade-last-v1');
- if(last){const j=JSON.parse(last),[g]=Object.keys(j);assert(out.record&&['runner','pinball'].includes(g)&&j[g].b===out.record.best,c.name+': last score');}
+ // Nov 15 2026: an elite tier / Daily Run notes its own entry against its own best (runner_cup, pinball_final …).
+ if(last){const j=JSON.parse(last),[g]=Object.keys(j);
+  if(g.includes('_')){assert(!out.record&&/^(runner_(cup|legend|daily)|pinball_(derby|final))$/.test(g)&&j[g].b>=j[g].s,c.name+': a tier notes its own last score');}
+  else assert(out.record&&['runner','pinball'].includes(g)&&j[g].b===out.record.best,c.name+': last score');}
  else assert(!out.record||c.kind==='tennis',c.name+': a classic run notes its last score');
  got.storage=Object.fromEntries([...store.entries()].sort());
  const want={...c.expect,...CHANGED[c.name]};

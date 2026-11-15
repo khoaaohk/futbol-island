@@ -25,6 +25,7 @@ import {creditRun,arcadeCoinTarget} from '@/lib/arcade/arcadeWallet';
 import {saveArcadeRecord} from '@/lib/arcade/arcadeRecords';
 import {beginBoardSession} from '@/lib/arcade/boardClient';
 import {noteArcadeToday,takeTodayLaunch} from '@/lib/arcade/arcadeToday';
+import {noteLastScore} from '@/lib/arcade/lastScore';
 import {localPlayDay} from '@/lib/town/dailyPlay';
 import {frameCapSlot} from '@/lib/town/frameCap';
 import type {BoardGame} from '@/lib/arcade/leaderboard';
@@ -72,7 +73,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
  const finish=useCallback(()=>{
   const g=game.current,r=run.current;if(!g||r.done)return;r.done=true;const s=g.state,score=Math.floor(s.score),stats={...s.stats},line=[s.gk,s.d,s.m,s.f] as const;
   const settled=settleSnake(readSnakeSave(),{score,daily:r.daily,day:r.day,stats,joined:s.joined,line,level:s.level,cause:s.cause,call:s.call});writeSnakeSave(settled.save);setSave(settled.save);
-  if(!r.daily)saveArcadeRecord('snake',score);
+  if(!r.daily)saveArcadeRecord('snake',score);else noteLastScore('snake_daily',score,settled.dailyBest);/* Nov 15 2026: Welcome back "almost your best" (lib/arcade/lastScore.ts) */
   const coins=arcadeCoinTarget('snake',{points:score});if(coins>0)void creditRun(r.id,'snake',coins,SNAKE_COIN_REASON);
   void noteArcadeToday({kind:'snake',daily:r.daily,day:r.day,score,squads:stats.squads,calls:stats.calls,level:s.level});
   setResult({score,daily:r.daily,level:s.level,squads:stats.squads,longest:stats.longest-1,built:builtLine(stats,line),hasShape:stats.bestCode>0,called:stats.bestCall,settled,coins,

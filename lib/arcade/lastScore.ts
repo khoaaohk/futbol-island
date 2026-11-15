@@ -6,11 +6,25 @@
  * Shape: {"<game>":{"s":last,"b":best,"at":ms}} for the fixed games below only, about 40 bytes a game. Pure apart from the
  * storage passed in (defaults to localStorage); no React, no catalogues.
  *  - Written by saveArcadeRecord (Breakaway Run, Pinball, Kit Rush, Squad Snake, Air Futbol: every call is one finished run) and by
- *    Pass Puzzles' Endless Run (components/games/PassPuzzleGame.tsx endlessOver). Daily runs and elite tiers keep their own bests
- *    and do not write here. Futbol Tennis (a rally length) and live matches (a scoreline) are not scores to beat, so they are left out.
+ *    Pass Puzzles' Endless Run (components/games/PassPuzzleGame.tsx endlessOver). Futbol Tennis (a rally length) and live matches
+ *    (a scoreline) are not scores to beat, so they are left out.
+ *  - Nov 15 2026: daily runs and elite tiers write their own entry against their OWN best (LAST_SCORE_MODES: the Daily Run, Cup Final
+ *    and Legend from lib/arcade/results/settle.ts, Derby Night and World Final from savePinballTier there, Daily Rush and Daily
+ *    Squad from KitRushGame / SquadSnakeGame). A daily entry's best is that day's best (a new course every day), so it only counts
+ *    on the same local play day.
  */
 export const ARCADE_LAST_KEY='fi2-arcade-last-v1';
-export const LAST_SCORE_GAMES=['runner','pinball','puzzle','kitrush','snake','airhockey'] as const;
+export const LAST_SCORE_GAMES=['runner','pinball','puzzle','kitrush','snake','airhockey',
+ 'runner_daily','runner_cup','runner_legend','pinball_derby','pinball_final','kitrush_daily','snake_daily'] as const;
+/** The daily-run and elite-tier entries: the cabinet, the mode the Welcome back tap opens (`mode` = a tier, `today` = the daily
+ *  run) and the words for "Your last <label> was …". */
+export const LAST_SCORE_MODES:Partial<Record<string,{game:string;label:string;mode?:string;today?:true}>>={
+ runner_daily:{game:'runner',label:'Daily Run',today:true},runner_cup:{game:'runner',label:'Cup Final run',mode:'cup'},
+ runner_legend:{game:'runner',label:'Legend run',mode:'legend'},pinball_derby:{game:'pinball',label:'Derby Night game',mode:'derby'},
+ pinball_final:{game:'pinball',label:'World Final game',mode:'final'},kitrush_daily:{game:'kitrush',label:'Daily Rush',today:true},
+ snake_daily:{game:'snake',label:'Daily Squad',today:true},
+};
+const playDay=(ms:number)=>{const d=new Date(ms);return d.getFullYear()*1e4+d.getMonth()*100+d.getDate();};
 export type LastScoreGame=typeof LAST_SCORE_GAMES[number];
 export type LastScore={s:number;b:number;at:number};
 export type LastScores=Partial<Record<LastScoreGame,LastScore>>;
@@ -46,11 +60,12 @@ export function noteLastScore(game:string,score:number,best:number,now=Date.now(
 
 /** How close counts as "almost": within 30% of the best (and at least 1 point off), last played within 14 days. */
 export const NEAR_SHARE=.3,NEAR_DAYS=14;
-/** The most recently played cabinet whose last run fell just short of its best, or null. */
+/** The most recently played cabinet (or daily run / elite tier) whose last run fell just short of its best, or null. */
 export function nearBest(last:LastScores,now=Date.now()):{game:LastScoreGame;score:number;best:number;gap:number}|null{
  let pick:{game:LastScoreGame;r:LastScore}|null=null;
  for(const g of LAST_SCORE_GAMES){const r=last[g];if(r&&(!pick||r.at>pick.r.at))pick={game:g,r};}
  if(!pick)return null;const {s,b,at}=pick.r,gap=b-s;
  if(s<=0||gap<=0||gap>b*NEAR_SHARE||now-at>NEAR_DAYS*864e5||at>now+6e4)return null;
+ if(LAST_SCORE_MODES[pick.game]?.today&&playDay(at)!==playDay(now))return null;// yesterday's course is gone
  return {game:pick.game,score:s,best:b,gap};
 }

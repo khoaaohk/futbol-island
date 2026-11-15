@@ -49,6 +49,11 @@ export function useArcadeToday():ArcadeTodaySave{const raw=useSyncExternalStore(
 let launch:TodayCabinet|null=null;
 export function requestTodayLaunch(c:TodayCabinet){launch=c;}
 export function takeTodayLaunch(c:TodayCabinet){if(launch!==c)return false;launch=null;return true;}
+/** Nov 15 2026: an elite tier to open on (?mode=, the Welcome back "almost your best" note): runner cup / legend, pinball derby / final. */
+const LAUNCH_MODES:Record<string,readonly string[]>={runner:['cup','legend'],pinball:['derby','final']};
+let modeLaunch:{game:string;mode:string}|null=null;
+export function requestModeLaunch(game:string,mode:string){modeLaunch=LAUNCH_MODES[game]?.includes(mode)?{game,mode}:null;}
+export function takeModeLaunch(game:string):string|null{if(modeLaunch?.game!==game)return null;const m=modeLaunch.mode;modeLaunch=null;return m;}
 
 /* ---- arcade trophies: facts from the cabinets' own saves (plain reads: no game code is loaded) ---- */
 const json=(k:string)=>{try{return JSON.parse(localStorage.getItem(k)??'null');}catch{return null;}};

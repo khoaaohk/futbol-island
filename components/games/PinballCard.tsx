@@ -5,6 +5,7 @@ import {PINBALL_DIVISIONS} from '@/lib/games/soccerPinball';
 import {loadPinballStars,starCount} from '@/lib/games/soccerPinballTable';
 import {PINBALL_TIERS,PINBALL_TIER_IDS,pinballTiersOpen,pinballTipOnly,readPinballTiers,type PinballTierProgress} from '@/lib/games/soccerPinballTiers';
 import {ComicButton,comicLettering,comicNumeral} from './comic';
+import {takeModeLaunch} from '@/lib/arcade/arcadeToday';
 import styles from './PinballCard.module.css';
 
 /* Futbol Pinball start / pause / full-time card (round 3, Oct 26 2026, docs/ARCADE_PINBALL_R3_OCT26.md). Nov 10 2026: drawn as a
@@ -35,7 +36,8 @@ type Props={phase:'ready'|'paused'|'over';score:string;detail:string;takeaway?:s
 export function PinballCard({phase,score,detail,takeaway,ended,fresh,best,unlocked,pending,status,help,onPlay,onBoards,onExit}:Props){
  const [stars,setStars]=useState<number[]>([0,0,0,0,0,0]),[prefs,setPrefs]=useState<PinballPrefs>({level:1,nudge:true,tier:0}),[options,setOptions]=useState(false),[tiers,setTiers]=useState<PinballTierProgress>({derby:{best:0,goals:0},final:{best:0,goals:0}});
  // localStorage after mount (server and first client render match); re-read at full time for the new stars.
- useEffect(()=>{setStars(loadPinballStars());setPrefs(readPinballPrefs());setTiers(readPinballTiers());},[phase]);
+ useEffect(()=>{const t=takeModeLaunch('pinball');/* Nov 15 2026: ?mode=derby|final (Welcome back "almost your best"); a locked tier falls back below */
+  if(t==='derby'||t==='final')savePinballPrefs({...readPinballPrefs(),tier:t==='final'?2:1});setStars(loadPinballStars());setPrefs(readPinballPrefs());setTiers(readPinballTiers());},[phase]);
  const top=pinballLadderTop(unlocked,stars),level=Math.min(prefs.level,top),division=PINBALL_DIVISIONS[level-1];
  const open=pinballTiersOpen(top,tiers),tierId=prefs.tier===2&&open.final?'final':prefs.tier===1&&open.derby?'derby':null,tier=tierId?PINBALL_TIERS[tierId]:null;
  const pick=(n:number)=>{if(n>top)return;const next={...prefs,level:n,tier:0};setPrefs(next);savePinballPrefs(next);};

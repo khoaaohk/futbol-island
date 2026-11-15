@@ -5,9 +5,11 @@ import {RUNNER_MODES,RUNNER_MODE_ORDER,defaultRunnerMode,isRunnerModeOpen,readRu
 import {runnerFinishLine,runnerLessonTakeaway,runnerLossLine} from '@/lib/arcade/runnerHud';
 import {RunnerMissionCard} from './RunnerMissionCard';
 import styles from './RunnerMenu.module.css';
-import {takeTodayLaunch} from '@/lib/arcade/arcadeToday';
+import {takeModeLaunch,takeTodayLaunch} from '@/lib/arcade/arcadeToday';
 /** Nov 10 2026: a "Today in the arcade" row opens the menu on the Daily Run (when it is open), once per tap. */
-const todayRun=(recordStage:number)=>{const ok=takeTodayLaunch('runner')&&isRunnerModeOpen('daily',recordStage);if(ok)rememberRunnerMode('daily');return ok;};
+const todayRun=(recordStage:number)=>{const ok=takeTodayLaunch('runner')&&isRunnerModeOpen('daily',recordStage);if(ok)rememberRunnerMode('daily');
+ // Nov 15 2026: ?mode=cup|legend (Welcome back "almost your best") opens the menu on that elite tier when it is open.
+ const tier=takeModeLaunch('runner') as RunnerModeId|null;if(!ok&&tier&&isRunnerModeOpen(tier,recordStage))rememberRunnerMode(tier);return ok;};
 
 type Phase='ready'|'playing'|'paused'|'over';
 const HINT_KEY='fi2-runner-hint-v1';

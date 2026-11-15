@@ -25,6 +25,7 @@ import {creditRun,arcadeCoinTarget} from '@/lib/arcade/arcadeWallet';
 import {saveArcadeRecord} from '@/lib/arcade/arcadeRecords';
 import {beginBoardSession} from '@/lib/arcade/boardClient';
 import {noteArcadeToday,takeTodayLaunch} from '@/lib/arcade/arcadeToday';
+import {noteLastScore} from '@/lib/arcade/lastScore';
 import {localPlayDay} from '@/lib/town/dailyPlay';
 import {frameCapSlot} from '@/lib/town/frameCap';
 import type {BoardGame} from '@/lib/arcade/leaderboard';
@@ -76,7 +77,7 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
  const finish=useCallback(()=>{
   const g=game.current,r=run.current;if(!g||r.done)return;r.done=true;const s=g.state,score=Math.floor(s.score),stats={...s.stats};
   const settled=settleKitRush(readKitRushSave(),{score,daily:r.daily,day:r.day,stats});writeKitRushSave(settled.save);setSave(settled.save);
-  if(!r.daily)saveArcadeRecord('kitrush',score);
+  if(!r.daily)saveArcadeRecord('kitrush',score);else noteLastScore('kitrush_daily',score,settled.dailyBest);/* Nov 15 2026: Welcome back "almost your best" (lib/arcade/lastScore.ts) */
   const coins=arcadeCoinTarget('kitrush',{points:score});if(coins>0)void creditRun(r.id,'kitrush',coins,KITRUSH_COIN_REASON);
   void noteArcadeToday({kind:'kitrush',daily:r.daily,day:r.day,score,bestCombo:stats.bestCombo,clean:stats.bestClean});
   setResult({score,daily:r.daily,stats,settled,coins,near:nearMissLine({score,best:settled.previousBest,newBest:settled.newBest,stats,daily:r.daily}),coach:coachLine(stats)});
