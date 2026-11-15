@@ -50,11 +50,14 @@
  *                                  (≤ 3 of each per open, per toy), Toy Shelf opens with a found-count band. Totals only
  *   se:<landing>:<engine>          search arrivals (searchIds.ts; Nov 10 2026): a session whose first page came from a search engine
  *                                  or AI assistant, per landing page and engine NAME. Never search words, a URL or an id.
+ *   ws:<event>                     the smart Welcome back suggestion (WELCOME_COUNT_IDS below, Nov 14 2026): shown / tapped /
+ *                                  acted per kind, notes per holdout arm and returns within 7 days per arm
  *   mm:<event>                     the investor page /marketing (MARKETING_VISIT_COUNT_IDS, lib/analytics/marketingVisit.ts;
  *                                  Nov 5 2026): views, stay seconds and stay band from the browser; where (mm:g_<geo>) and
  *                                  when (mm:h_<weekday>_<hour>) are added by the ingest only (marketingVisitGeo.ts)
  */
 import {LESSON_TABLE} from './learningIds.generated';
+import {WELCOME_KINDS} from '../welcome/kinds';
 import {START_COUNT_IDS} from './startIds';
 import {MARKETING_COUNT_IDS} from './marketingIds';
 import {MARKETING_VISIT_COUNT_IDS} from './marketingVisit';
@@ -324,6 +327,16 @@ export const PUBLIC_FIXED_IDS:readonly string[]=PUBLIC_COUNT_EVENTS.map(([e])=>'
 export const HOLDOUT_ARMS=['on','hold'] as const;
 export const HOLDOUT_COUNT_EVENTS=HOLDOUT_ARMS.flatMap(a=>[[`pub_hx_${a}_min`,`Island minutes (holdout arm "${a}")`],[`pub_hx_${a}_back`,`Returning visits (holdout arm "${a}")`]] as const);
 export const HOLDOUT_FIXED_IDS:readonly string[]=HOLDOUT_COUNT_EVENTS.map(([e])=>'mp:'+e);
+/**
+ * Smart welcome (Nov 14 2026, docs/welcome-suggestions.md; lib/welcome/): the Welcome back note's suggestion, totals only. Per kind
+ * (lib/welcome/kinds.ts): ws:s_<kind> shown, ws:t_<kind> tapped, ws:a_<kind> acted (the player really got there within 15 min).
+ * Per holdout arm (10% of devices get the plain line only): ws:arm_<arm> notes shown, ws:back_<arm> notes shown within 7 days
+ * of the previous one on that device (the return rate to compare). ws:none: an 'on' note with nothing to suggest. Never which
+ * player, which fish, lesson or score; the interest tally itself never leaves the device.
+ */
+export const WELCOME_ARMS=['on','hold'] as const;
+export const WELCOME_COUNT_IDS:readonly string[]=[...WELCOME_ARMS.flatMap(a=>['ws:arm_'+a,'ws:back_'+a]),'ws:none',
+ ...WELCOME_KINDS.flatMap(k=>['ws:s_'+k,'ws:t_'+k,'ws:a_'+k])];
 export const EMOTE_FIXED_IDS:readonly string[]=[...EMOTE_COUNT_EVENTS.map(([e])=>'em:'+e),...EMOTE_WIRE_IDS.map(n=>'em:e'+n),...EMOTE_VARIANT_IDS];
 
 /**
@@ -383,6 +396,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...MARKETING_COUNT_IDS,// mk: the marketing page at `/` (marketingIds.ts, Nov 3 2026)
  ...LIVE_MATCH_COUNT_IDS,// lm: live matches (liveMatchEvents.ts, Nov 5 2026)
  ...MARKETING_VISIT_COUNT_IDS,// mm: the investor page /marketing (marketingVisit.ts, Nov 5 2026)
+ ...WELCOME_COUNT_IDS,// ws: the smart Welcome back suggestion (lib/welcome/, Nov 14 2026)
  ...GASHAPON_COUNT_IDS,// gs: gashapon machines, the toy viewer and the Toy Shelf (gashaponEvents.ts, Nov 8 2026)
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);

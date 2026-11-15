@@ -38,10 +38,12 @@ const core=read('lib/town/fishing/fishingCore.ts'),sess=read('lib/town/fishing/f
 ok(/s\.fight\.holding\|\|s\.fight\.run\?0:/.test(core),'letting go during a run never counts as an idle reel');
 ok(/e==='tired'\)\{cue\('reel'\);fightHint=TIRED_HINT;emit\('tired'\);\}/.test(sess)&&/Stop spinning/.test(sess),'the session says Nice and emits tired; the run hint says stop spinning');
 // 4. Welcome suggestion: on-device, pure.
-const W=load('lib/welcomeSuggestion.ts');
-ok(W.pickWelcomeSuggestion({fishbookSpecies:0}).kind==='fishing'&&W.pickWelcomeSuggestion({fishbookSpecies:9})===null&&W.pickWelcomeSuggestion(null)===null,'fishing suggested to players with few species');
-ok(!/fetch\(|count\(/.test(read('lib/welcomeSuggestion.ts')),'decided on the device, never sent');
-const wb=read('components/WelcomeBack.tsx');ok((wb.match(/<button\b/g)||[]).length===1&&/requestGoFishing\(\)/.test(wb)&&/countGoFishing\('welcome'\)/.test(wb)&&/data-welcome-suggest-line/.test(wb),'the Welcome back note stays one tap target; with a suggestion it goes fishing');
+// Nov 14 2026 (smart welcome, tests/welcome-suggestions.cjs has the picker): a never-fished new player is offered fishing first.
+const W=load('lib/welcomeSuggestion.ts'),WH=load('lib/welcome/hooks.ts'),WT=load('lib/welcome/tally.ts'),WL=load('lib/welcome/learn.ts');
+const wctx=f=>({arm:'on',tally:WT.emptyTally(),learn:WL.emptyLearn(),today:20000,facts:{fishing:f}});
+ok(W.pickWelcomeSuggestion(wctx({species:0,nearSet:null})).action.to==='fish'&&W.pickWelcomeSuggestion({...wctx({species:0,nearSet:null}),arm:'hold'})===null,'fishing suggested to new players (not the holdout)');
+ok(!/fetch\(|count\(/.test(read('lib/welcomeSuggestion.ts')+read('lib/welcome/hooks.ts')+read('lib/welcome/tally.ts')),'decided on the device, never sent');
+const wb=read('components/WelcomeBack.tsx'),wa=read('lib/welcome/act.ts');ok((wb.match(/<button\b/g)||[]).length===1&&/requestGoFishing\(\)/.test(wa)&&/countGoFishing\('welcome'\)/.test(wa)&&/data-welcome-suggest-line/.test(wb),'the Welcome back note stays one tap target; with a suggestion it goes fishing');
 ok(!/welcomeSuggestion|GoFishing/.test(read('components/landing/TitleActions.tsx')),'the title screen card is unchanged');
 // 5. Wiring.
 const town=read('components/Town.tsx');ok(/window\.addEventListener\(GO_FISHING_EVENT,on\)/.test(town)&&/nearestFishingSpot\(location\.x,location\.z\)/.test(town),'Town travels on Go fishing');

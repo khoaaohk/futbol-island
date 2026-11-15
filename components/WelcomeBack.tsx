@@ -12,9 +12,13 @@ import styles from './WelcomeBack.module.css';
 import HudSlot from './HudStack';
 import {SAVE_CODE_KEY,SAVE_NUDGE_KEY} from '@/lib/saves/snapshot';
 import {toastLane,useToastLaneOwned} from '@/lib/ui/toastLane';
-import {pickWelcomeSuggestion,readWelcomeSave} from '@/lib/welcomeSuggestion';
-import {requestGoFishing} from '@/lib/town/fishing/fishingReach';
-import {countGoFishing} from '@/lib/analytics/fishingEvents';
+import {pickWelcomeSuggestion,type WelcomeSuggestion} from '@/lib/welcomeSuggestion';
+import {readWelcomeFacts} from '@/lib/welcome/facts';
+import {actWelcome} from '@/lib/welcome/act';
+import {noteIgnored,noteShown,noteTapped} from '@/lib/welcome/learn';
+import {readArm,readLearn,readTally,writeLearn} from '@/lib/welcome/tallyLive';
+import {dayNumber} from '@/lib/welcome/tally';
+import {count} from '@/lib/analytics/tracker';
 /** One message at a time (Nov 11 2026, owner: "don't show something shimmers and welcome back at the same time. welcome back first. the
  *  shimmer shows later"): the first moments after arriving are quiet for every lane note (ARRIVE_QUIET_MS); Welcome back opens
  *  only when no note owns the lane, HOLDS the lane while it is open (lib/ui/toastLane.ts: no note starts), then leaves a short gap
@@ -34,8 +38,22 @@ let decided:boolean|null=null,shown=false;
  *  from the DOM" on desktop-chromium: part of the dwell is spent inside the boot helper). A player's browser never sets webdriver:
  *  players always get WELCOME_BACK_SHOW_MS. */
 const welcomeDwellMs=()=>{if(typeof window!=='undefined'&&(process.env.NODE_ENV!=='production'||navigator.webdriver===true)){const v=(window as unknown as {__fi2WelcomeMs?:number}).__fi2WelcomeMs;if(typeof v==='number'&&v>0)return v;}return WELCOME_BACK_SHOW_MS;};
+/** Nov 14 2026: the one suggestion for this note (lib/welcomeSuggestion.ts), from the on-device tally and what this device learned.
+ *  Counts the note per holdout arm (ws:arm_<arm>; ws:back_<arm> within 7 days of the last note) and the kind shown. Never throws. */
+function decideSuggestion(storage:Storage|null,steps:ReadonlySet<string>,answers:ReadonlySet<string>):WelcomeSuggestion|null{
+ try{const now=Date.now(),today=dayNumber(now),arm=readArm(storage),learn=readLearn(storage),tally=readTally(storage);
+  const hook=pickWelcomeSuggestion({arm,tally,learn,today,facts:readWelcomeFacts(storage,steps,answers,tally,today,now)});
+  count('ws:arm_'+arm);if(learn.last&&today-learn.last<=7)count('ws:back_'+arm);
+  if(arm==='on')count(hook?'ws:s_'+hook.kind:'ws:none');
+  writeLearn(noteShown(learn,hook?.kind??null,today),storage);return hook;}catch{return null;}
+}
+/** The tap: reinforce the kind, wait for "acted" (lib/welcome/tallyLive.ts), and do it through the existing events. */
+function tapSuggestion(s:WelcomeSuggestion,steps:ReadonlySet<string>,answers:ReadonlySet<string>){
+ count('ws:t_'+s.kind);writeLearn(noteTapped(readLearn(),s.kind,Date.now()));actWelcome(s.action,steps,answers);
+}
+let ignoredOnce=false;
 export default function WelcomeBack({blocked,held=false}:{blocked:boolean;held?:boolean}){
- const [due,setDue]=useState(false),[open,setOpen]=useState(false),[nudge,setNudge]=useState(false);
+ const [due,setDue]=useState(false),[open,setOpen]=useState(false),[nudge,setNudge]=useState(false),[suggest,setSuggest]=useState<WelcomeSuggestion|null>(null);
  const laneOwned=useToastLaneOwned();
  useEffect(()=>{toastLane.quiet('arrive',ARRIVE_QUIET_MS);},[]);
  const waiting=due||open;// due (not yet shown) or open: every lane note waits for it
@@ -47,19 +65,21 @@ export default function WelcomeBack({blocked,held=false}:{blocked:boolean;held?:
  useEffect(()=>{if(due&&!blocked&&!laneOwned){shown=true;let storage:Storage|null=null;try{storage=localStorage;}catch{}
   // Save codes (Oct 10 2026, doc §3.1 "A later nudge"): once, after a first card or graduation earned without a code. Never again.
   try{if(storage?.getItem(SAVE_NUDGE_KEY)==='due'&&!storage.getItem(SAVE_CODE_KEY)){storage.setItem(SAVE_NUDGE_KEY,'shown');setNudge(true);}}catch{}
+  setSuggest(decideSuggestion(storage,new Set(evidence.steps),answers));
   markWelcomeBackSeen(storage);setOpen(true);setDue(false);}},[due,blocked,laneOwned]);
  const onScreen=open&&!blocked&&!held;
  useEffect(()=>{if(!onScreen)return;const t=setTimeout(()=>setOpen(false),welcomeDwellMs());return()=>clearTimeout(t);},[onScreen]);
+ // A suggestion the note left with, untapped, is one ignore (lib/welcome/learn.ts); a tap clears it first (tapSuggestion).
+ useEffect(()=>{if(!open&&shown&&suggest){if(!ignoredOnce)writeLearn(noteIgnored(readLearn(),dayNumber(Date.now())));ignoredOnce=true;}},[open,suggest]);
  // Mounted once (Oct 15 2026): while blocked (a job, a lesson, a modal) the card stays in the DOM, `hidden` (display:none in the
  // stack), and the same node comes back after, instead of unmounting and remounting a new button each time `blocked` flips.
  if(!open)return null;
  let storage:Storage|null=null;try{storage=localStorage;}catch{}
  const target=suggestedNextStep(storage,new Set(evidence.steps),answers);
  const title=target.kind==='lesson'?target.lesson.name:null;
- // Nov 14 2026 (fishing reach): one "for you" line from this device's save (lib/welcomeSuggestion.ts). Still a note, not a menu:
- // the whole note is the tap target, and with a suggestion that tap also does it (travel to the nearest fishing spot).
- const suggest=pickWelcomeSuggestion(readWelcomeSave());
- return <HudSlot><button type="button" className={`${toast.toast} ${styles.card}`} role="status" data-hud-slot="guide" data-welcome-back hidden={blocked} data-welcome-suggest={suggest?.kind} onClick={()=>{if(suggest?.action==='go-fishing'){countGoFishing('welcome');requestGoFishing();}setOpen(false);}}>
+ // Nov 14 2026 (smart welcome, docs/welcome-suggestions.md): one "for you" line, picked once on this device when the note opens
+ // (decideSuggestion). Still a note, not a menu: the whole note is the tap target, and with a suggestion that tap also does it.
+ return <HudSlot><button type="button" className={`${toast.toast} ${styles.card}`} role="status" data-hud-slot="guide" data-welcome-back hidden={blocked} data-welcome-suggest={suggest?.kind} onClick={()=>{if(suggest){ignoredOnce=true;tapSuggestion(suggest,new Set(evidence.steps),answers);}setOpen(false);}}>
   <b>Welcome back!</b>
   <span>{welcomeBackLine(title,ferryUnlocked(graduations),finaleComplete(graduations))}</span>
   <span className={styles.note}>Move for {DAILY_PLAY_SECONDS} seconds today: +{DAILY_PLAY_COINS} coins.</span>
