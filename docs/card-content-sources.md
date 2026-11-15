@@ -10,7 +10,7 @@ that goes stale (no "current club", no "best in the world"), no controversies, p
 advice for kids. Kids see a plain-text "Checked against: Wikipedia, UEFA" credit and no links. "Why they matter" and "Learn from
 them" describe a well-documented playing or coaching style in our own words.
 
-Done: 353 of 450 cards. Remaining: 97 (listed at the end).
+Done: 373 of 450 cards. Remaining: 77 (listed at the end).
 
 | # | Card | Checked | Fact | Sources |
 | --- | --- | --- | --- | --- |
@@ -479,6 +479,42 @@ Done: 353 of 450 cards. Remaining: 97 (listed at the end).
 |  |  |  | She won the Women's Champions League with Arsenal in 2025. | https://en.wikipedia.org/wiki/Leah_Williamson |
 | 259 | Mapi León | 2026-11-14 | In 2017 León became the first paid transfer in Spanish women's football history, when she moved from Atlético Madrid to Barcelona. | https://en.wikipedia.org/wiki/Mapi_Le%C3%B3n |
 |  |  |  | With Barcelona she won the Women's Champions League in 2021, 2023, 2024 and 2026. | https://en.wikipedia.org/wiki/Mapi_Le%C3%B3n |
+| 260 | Caroline Graham Hansen | 2026-11-14 | With Wolfsburg she won three German league titles and five German cups. | https://en.wikipedia.org/wiki/Caroline_Graham_Hansen |
+|  |  |  | She scored in the 2021 Women's Champions League final as Barcelona won the competition for the first time. | https://en.wikipedia.org/wiki/Caroline_Graham_Hansen |
+| 261 | Salma Paralluelo | 2026-11-14 | Salma was the first player ever to win all three women's World Cups: Under-17 in 2018, Under-20 in 2022 and the senior World Cup in 2023. | https://en.wikipedia.org/wiki/Salma_Paralluelo |
+|  |  |  | She won the Women's Champions League with Barcelona in 2023, 2024 and 2026. | https://en.wikipedia.org/wiki/Salma_Paralluelo |
+| 262 | Trinity Rodman | 2026-11-14 | Rodman was the NWSL's youngest draftee at the time and won the NWSL Championship and Rookie of the Year in her first season. | https://en.wikipedia.org/wiki/Trinity_Rodman |
+|  |  |  | She won Olympic gold with the United States in 2024. | https://en.wikipedia.org/wiki/Trinity_Rodman |
+| 263 | Lauren James | 2026-11-14 | Lauren James's brother, Reece James, is also a professional footballer. | https://en.wikipedia.org/wiki/Lauren_James |
+|  |  |  | She won the Women's Super League with Chelsea four seasons in a row, and Euro 2025 with England. | https://en.wikipedia.org/wiki/Lauren_James |
+| 264 | Chloe Kelly | 2026-11-14 | Kelly came on as a substitute and scored the winning goal in the Euro 2022 final for England. | https://en.wikipedia.org/wiki/Chloe_Kelly |
+|  |  |  | She won the Women's Champions League with Arsenal in 2025 and the 2025 European Championship with England. | https://en.wikipedia.org/wiki/Chloe_Kelly |
+| 265 | Clàudia Pina | 2026-11-14 | Pina won the 2018 FIFA Under-17 Women's World Cup with Spain. | https://en.wikipedia.org/wiki/Cl%C3%A0udia_Pina |
+|  |  |  | She was the top scorer in the 2024-25 Women's Champions League. | https://en.wikipedia.org/wiki/Cl%C3%A0udia_Pina |
+| 266 | Sam Kerr | 2026-11-14 | As of November 2026, Kerr is the all-time top scorer for Australia's women's team, the Matildas. | https://en.wikipedia.org/wiki/Sam_Kerr |
+|  |  |  | Kerr won five Women's Super League titles with Chelsea, from 2019-20 to 2023-24. | https://en.wikipedia.org/wiki/Sam_Kerr |
+| 267 | Alessia Russo | 2026-11-14 | At Euro 2022 she scored a famous back-heel goal through the goalkeeper's legs against Sweden in the semi-final, and England won the tournament. | https://en.wikipedia.org/wiki/Alessia_Russo |
+|  |  |  | Russo was part of the Arsenal team that won the 2025 Women's Champions League. | https://en.wikipedia.org/wiki/Alessia_Russo |
+| 268 | Ewa Pajor | 2026-11-14 | Pajor won five German league titles with Wolfsburg and was the Bundesliga top scorer in 2018-19. | https://en.wikipedia.org/wiki/Ewa_Pajor |
+|  |  |  | In her first season with Barcelona, 2024-25, she was the club's top scorer as they won a domestic triple. | https://en.wikipedia.org/wiki/Ewa_Pajor |
+| 269 | Khadija Shaw | 2026-11-14 | Shaw won the Women's Super League Golden Boot three seasons in a row, from 2023-24 to 2025-26. | https://en.wikipedia.org/wiki/Khadija_Shaw |
+|  |  |  | She won the Women's Super League with Manchester City in 2025-26. | https://en.wikipedia.org/wiki/Khadija_Shaw |
+| 270 | Sophia Wilson | 2026-11-14 | In 2022 she was named the NWSL's Most Valuable Player and led the Thorns to the NWSL Championship. | https://en.wikipedia.org/wiki/Sophia_Wilson |
+|  |  |  | She scored three goals at the 2024 Paris Olympics, where the United States won gold. | https://en.wikipedia.org/wiki/Sophia_Wilson |
+| 271 | Temwa Chawinga | 2026-11-14 | In 2024, her first season with the Kansas City Current, she set an NWSL single-season record with 20 league goals. | https://en.wikipedia.org/wiki/Temwa_Cha%C5%B5inga |
+|  |  |  | She won the NWSL Golden Boot and Most Valuable Player awards in each of her first two seasons with the Current. | https://en.wikipedia.org/wiki/Temwa_Cha%C5%B5inga |
+| 272 | Ada Hegerberg | 2026-11-14 | In 2018 Hegerberg became the first player ever to win the Ballon d'Or Féminin. | https://en.wikipedia.org/wiki/Ada_Hegerberg |
+|  |  |  | She holds the record for most goals in one Women's Champions League season, 15, and won the competition many times with Lyon. | https://en.wikipedia.org/wiki/Ada_Hegerberg |
+| 273 | Vivianne Miedema | 2026-11-14 | Miedema won the 2017 European Championship with the Netherlands, and the 2014 European Under-19 Championship. | https://en.wikipedia.org/wiki/Vivianne_Miedema |
+|  |  |  | She was named PFA Women's Players' Player of the Year for 2018-19, when Arsenal won the Women's Super League. | https://en.wikipedia.org/wiki/Vivianne_Miedema |
+| 274 | Pernille Harder | 2026-11-14 | Harder finished second at the first-ever Ballon d'Or Féminin in 2018. | https://en.wikipedia.org/wiki/Pernille_Harder |
+|  |  |  | She won four German league titles with Wolfsburg and three Women's Super League titles with Chelsea. | https://en.wikipedia.org/wiki/Pernille_Harder |
+| 275 | Marta | 2026-11-14 | Marta was named FIFA World Player of the Year six times. | https://en.wikipedia.org/wiki/Marta_(footballer) |
+|  |  |  | As of November 2026, she holds the record for most career goals at the Women's World Cup, with 17. | https://en.wikipedia.org/wiki/Marta_(footballer) |
+| 276 | Barbra Banda | 2026-11-14 | As of November 2026, Banda is Africa's all-time top scorer in Olympic football, with three hat-tricks at two Olympic Games. | https://en.wikipedia.org/wiki/Barbra_Banda |
+|  |  |  | She was named BBC Women's Footballer of the Year and African Women's Footballer of the Year for 2024. | https://en.wikipedia.org/wiki/Barbra_Banda |
+| 277 | Asisat Oshoala | 2026-11-14 | As of November 2026, Oshoala has won the African Women's Footballer of the Year award a record six times. | https://en.wikipedia.org/wiki/Asisat_Oshoala |
+|  |  |  | She won the Women's Champions League with Barcelona in 2021 and 2023. | https://en.wikipedia.org/wiki/Asisat_Oshoala |
 | 278 | Mia Hamm | 2026-11-14 | Hamm made her debut for the United States at 15, and she helped the University of North Carolina win four NCAA Division I championships. | https://en.wikipedia.org/wiki/Mia_Hamm |
 |  |  |  | In 2001 she won the first-ever FIFA World Player of the Year award for women, and she won it again in 2002. | https://en.wikipedia.org/wiki/2001_FIFA_World_Player_of_the_Year, https://en.wikipedia.org/wiki/Mia_Hamm |
 | 279 | Megan Rapinoe | 2026-11-14 | Rapinoe won Olympic gold in 2012 and was the first player, male or female, to score directly from a corner at the Olympic Games, which she did twice. | https://en.wikipedia.org/wiki/Megan_Rapinoe |
@@ -541,6 +577,10 @@ Done: 353 of 450 cards. Remaining: 97 (listed at the end).
 |  |  |  | In 1998 Owen was named PFA Young Player of the Year. That same season he shared the Premier League Golden Boot after scoring 18 league goals for Liverpool. | https://en.wikipedia.org/wiki/Michael_Owen |
 | 308 | Gary Lineker | 2026-11-14 | Lineker is the only player to have been the top goalscorer in England's top division with three different clubs: Leicester City, Everton and Tottenham. | https://en.wikipedia.org/wiki/Gary_Lineker |
 |  |  |  | In his first season at Barcelona, Lineker scored a hat-trick in a 3-2 win over Real Madrid, and in 1989 he won the European Cup Winners' Cup with the club. | https://en.wikipedia.org/wiki/Gary_Lineker |
+| 309 | Moisés Caicedo | 2026-11-14 | Caicedo won the Under-20 Copa Libertadores with Independiente del Valle in 2020. | https://en.wikipedia.org/wiki/Mois%C3%A9s_Caicedo |
+|  |  |  | With Chelsea he won the Conference League and the FIFA Club World Cup in 2025. | https://en.wikipedia.org/wiki/Mois%C3%A9s_Caicedo |
+| 310 | Antoine Semenyo | 2026-11-14 | Semenyo scored the only goal of the 2026 FA Cup final for Manchester City. | https://en.wikipedia.org/wiki/Antoine_Semenyo |
+|  |  |  | He made his debut for Ghana in 2022 and played at the 2022 and 2026 World Cups. | https://en.wikipedia.org/wiki/Antoine_Semenyo |
 | 354 | Ivan Rakitić | 2026-11-14 | Rakitić captained Sevilla to the 2013-14 Europa League and was man of the match in the final. He won the competition again with Sevilla in 2023. | https://en.wikipedia.org/wiki/Ivan_Rakiti%C4%87 |
 |  |  |  | At the 2018 World Cup in Russia, Rakitić scored the deciding kick in Croatia's penalty shoot-outs against both Denmark and the hosts, Russia. | https://en.wikipedia.org/wiki/Ivan_Rakiti%C4%87 |
 | 355 | Raphaël Varane | 2026-11-14 | Varane joined Real Madrid from Lens in 2011 and won La Liga with them three times, in 2011-12, 2016-17 and 2019-20. | https://en.wikipedia.org/wiki/Rapha%C3%ABl_Varane |
@@ -710,4 +750,4 @@ Done: 353 of 450 cards. Remaining: 97 (listed at the end).
 
 ## Remaining cards (no notes yet)
 
-#2 Adolfo · #20 Artem Fareniuk · #32 Chemi · #41 Danyil Abakshyn · #50 Edu · #77 Gustavo Lobo · #89 João Victor · #106 Luan Muller · #111 Mamadou Touré · #116 Mario Rivillos · #118 Matheus Rodrigues · #119 Mathi Fernández · #120 Mellado · #125 Miquel Feixas · #128 Mykola Mykytiuk · #136 Pablo Ramírez · #138 Pany Varela · #142 Pauleta · #168 Sergei Sergeev · #170 Sergio González · #260 Caroline Graham Hansen · #261 Salma Paralluelo · #262 Trinity Rodman · #263 Lauren James · #264 Chloe Kelly · #265 Clàudia Pina · #266 Sam Kerr · #267 Alessia Russo · #268 Ewa Pajor · #269 Khadija Shaw · #270 Sophia Wilson · #271 Temwa Chawinga · #272 Ada Hegerberg · #273 Vivianne Miedema · #274 Pernille Harder · #275 Marta · #276 Barbra Banda · #277 Asisat Oshoala · #309 Moisés Caicedo · #310 Antoine Semenyo · #311 Aurélien Tchouaméni · #312 Joshua Kimmich · #313 Bernardo Silva · #314 Denzel Dumfries · #315 Jérémy Doku · #316 Rayan Cherki · #317 N'Golo Kanté · #318 Tijjani Reijnders · #319 Bruno Guimarães · #320 Frenkie de Jong · #321 Marc Cucurella · #322 Sadio Mané · #323 Martín Zubimendi · #324 Enzo Fernández · #325 Willian Pacho · #326 Scott McTominay · #327 Ryan Gravenberch · #328 Fermín López · #329 Cody Gakpo · #330 João Pedro · #331 Ismaïla Sarr · #332 Rafael Leão · #333 Alexis Mac Allister · #334 Weston McKennie · #335 Gabriel Martinelli · #336 João Cancelo · #337 Dani Olmo · #338 Arda Güler · #339 Marc Guéhi · #340 Fabián Ruiz · #341 Casemiro · #342 Mikel Merino · #343 Eberechi Eze · #344 Kenan Yıldız · #345 Raúl Jiménez · #346 Gonçalo Ramos · #347 Mikel Oyarzabal · #348 Marcus Thuram · #349 Kaoru Mitoma · #350 Phil Foden · #351 Lisandro Martínez · #352 Bradley Barcola · #353 Pervis Estupiñán · #356 Anthony Gordon · #359 Endrick · #360 Karim Adeyemi · #362 Elliot Anderson · #364 Sandro Tonali · #373 Rodrigo De Paul · #375 Vozinha · #376 Jonathan David · #377 Brahim Díaz · #383 Olivier Giroud · #386 Kyle Walker · #387 İlkay Gündoğan · #388 Nico O'Reilly · #399 James Rodríguez
+#2 Adolfo · #20 Artem Fareniuk · #32 Chemi · #41 Danyil Abakshyn · #50 Edu · #77 Gustavo Lobo · #89 João Victor · #106 Luan Muller · #111 Mamadou Touré · #116 Mario Rivillos · #118 Matheus Rodrigues · #119 Mathi Fernández · #120 Mellado · #125 Miquel Feixas · #128 Mykola Mykytiuk · #136 Pablo Ramírez · #138 Pany Varela · #142 Pauleta · #168 Sergei Sergeev · #170 Sergio González · #311 Aurélien Tchouaméni · #312 Joshua Kimmich · #313 Bernardo Silva · #314 Denzel Dumfries · #315 Jérémy Doku · #316 Rayan Cherki · #317 N'Golo Kanté · #318 Tijjani Reijnders · #319 Bruno Guimarães · #320 Frenkie de Jong · #321 Marc Cucurella · #322 Sadio Mané · #323 Martín Zubimendi · #324 Enzo Fernández · #325 Willian Pacho · #326 Scott McTominay · #327 Ryan Gravenberch · #328 Fermín López · #329 Cody Gakpo · #330 João Pedro · #331 Ismaïla Sarr · #332 Rafael Leão · #333 Alexis Mac Allister · #334 Weston McKennie · #335 Gabriel Martinelli · #336 João Cancelo · #337 Dani Olmo · #338 Arda Güler · #339 Marc Guéhi · #340 Fabián Ruiz · #341 Casemiro · #342 Mikel Merino · #343 Eberechi Eze · #344 Kenan Yıldız · #345 Raúl Jiménez · #346 Gonçalo Ramos · #347 Mikel Oyarzabal · #348 Marcus Thuram · #349 Kaoru Mitoma · #350 Phil Foden · #351 Lisandro Martínez · #352 Bradley Barcola · #353 Pervis Estupiñán · #356 Anthony Gordon · #359 Endrick · #360 Karim Adeyemi · #362 Elliot Anderson · #364 Sandro Tonali · #373 Rodrigo De Paul · #375 Vozinha · #376 Jonathan David · #377 Brahim Díaz · #383 Olivier Giroud · #386 Kyle Walker · #387 İlkay Gündoğan · #388 Nico O'Reilly · #399 James Rodríguez
