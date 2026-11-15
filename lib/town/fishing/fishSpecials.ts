@@ -127,16 +127,19 @@ export const SPECIAL_FISH:FishSpecies[]=[
   club:{name:'Morecambe F.C.',country:'England',link:'Nickname',entity:{kind:'club',name:'Morecambe F.C.'},nickname:'The Shrimps',
    fact:'Morecambe F.C., from the seaside town of Morecambe on the Lancashire coast, are nicknamed "The Shrimps" after the shrimping boats that once worked Morecambe Bay.',
    source:W+'Morecambe_F.C.'}},
- {id:'red-reef-shark',name:'Red Reef Shark',plural:'Red Reef Sharks',rarity:'legendary',group:'shark',spots:['summit-cove'],price:16,size:[120,260],color:'#9a4a3f',belly:'#eecfc4',shape:'shark',shadow:'giant',
+ // Nov 14 2026: was the made-up "Red Reef Shark"; now the real Grey Reef Shark (the id stays so saved Fishbooks keep the catch).
+ {id:'red-reef-shark',name:'Grey Reef Shark',plural:'Grey Reef Sharks',rarity:'legendary',group:'shark',spots:['summit-cove'],price:16,size:[120,260],color:'#6c767b',belly:'#eceeea',shape:'shark',shadow:'giant',
   club:{name:'C.D. Veracruz',country:'Mexico',link:'Nickname',entity:{kind:'club',name:'C.D. Veracruz'},nickname:'Tiburones Rojos',
    fact:'C.D. Veracruz, from the port of Veracruz on Mexico’s Gulf coast, were nicknamed "Tiburones Rojos": the Red Sharks. Founded in 1943, they won the Mexican league twice in the 1940s.',
    source:W+'C.D._Veracruz'}},
 
  // ---- Palm Point, Summit Isle (Oct 13 2026, "add two more fishing spots on the mountain island"): one exclusive, a shore
  // crab that works the sand between the headland's boulders. Fact checked 13 Oct 2026 against the source below.
- {id:'mealy-crab',name:'Mealy Crab',plural:'Mealy Crabs',rarity:'common',group:'crab',spots:['summit-palm'],price:4,size:[8,20],color:'#6a4a78',belly:'#e9cdae',shape:'crab',shadow:'small',
+ // Nov 14 2026: was "Mealy Crab" (no source for that animal); now the real Thai rice-field crab, Mahasarakham's nickname kept
+ // (the id stays so saved Fishbooks keep the catch).
+ {id:'mealy-crab',name:'Rice Field Crab',plural:'Rice Field Crabs',rarity:'common',group:'crab',spots:['summit-palm'],price:4,size:[3,6],color:'#6b5238',belly:'#d9c3a0',shape:'crab',shadow:'small',
   club:{name:'Mahasarakham CC F.C.',country:'Thailand',link:'Nickname',entity:{kind:'club',name:'Mahasarakham CC F.C.'},nickname:'The Mealy Crabs',
-   fact:'Mahasarakham CC F.C., from an inland rice-farming province of north-east Thailand, are nicknamed "The Mealy Crabs" (ปูม่วงมหากาฬ) after the purple field crabs found across the region.',
+   fact:'Mahasarakham CC F.C., founded in 2009 and based in Maha Sarakham in north-east Thailand, are nicknamed "The Mealy Crabs" (ปูม่วงมหากาฬ).',
    source:W+'Mahasarakham_CC_F.C.'}},
 
  // ---- Lookout Rocks, Summit Isle (Oct 13 2026): one exclusive, a shoaling fish that passes the straight stretch of beach
