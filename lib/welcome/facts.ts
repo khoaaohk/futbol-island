@@ -8,8 +8,11 @@ import {lessonStreak,type Tally} from './tally';
 import {kitNewsFor} from './kitNews';
 import {suggestedNextStep,PATHS_IN_ORDER} from '../paths/pathContinue';
 import {lessonEvidence,type PathLesson} from '../paths/formatPaths';
-import {sanitizeFishbook} from '../town/fishing/fishingCore';
-import {FISH_SETS,setProgress} from '../town/fishing/fishingHooks';
+import {TIME_KEY} from '../town/fishing/timeOfDay';
+import {FISHING_HOOKS_KEY} from '../town/fishing/fishingHooks';
+import {COMEBACK_KEY} from '../town/fishing/comeback';
+import {fishingFacts} from './fishingFacts';
+export {fishingFacts,visitorDaysLeft,VISITOR_LEAVING_DAYS,type FishingFactsInput} from './fishingFacts';
 import {readArcadeToday,dailyRunOpen} from '../arcade/arcadeToday';
 import {TODAY_CABINETS,todayChallenge,weekDays,pennantLit,type TodayCabinet} from '../arcade/arcadeTodayCore';
 import {arcadeCabinets} from '../arcade/arcadeCatalog';
@@ -22,18 +25,10 @@ export const PASSING_LESSON:Record<string,string>={'7v7':'prn_7_support','9v9':'
 const fact=(format:string,l:PathLesson):LessonFact=>({format,lessonId:l.id,name:l.name,minutes:lessonMinutes(l)});
 const nameOf=(id:string)=>arcadeCabinets.find(c=>c.id===id)?.name??null;
 
-/** Fishbook progress: species caught and the set closest to done (1–3 left, at least one caught). Pure. */
-export function fishingFacts(book:unknown):NonNullable<WelcomeFacts['fishing']>{
- const b=sanitizeFishbook(book),species=Object.values(b.species).filter(e=>(e?.count??0)>0).length;
- let near:{title:string;left:number}|null=null;
- for(const s of FISH_SETS){const p=setProgress(s,b),left=p.total-p.got;if(p.got>0&&left>0&&left<=3&&(!near||left<near.left))near={title:s.title,left};}
- // TODO(fish-comeback merge): fishOfDay / visitorLeaving / sunsetSpot from lib/town/fishing/comeback.ts.
- return {species,nearSet:near};
-}
-
 export function readWelcomeFacts(storage:Pick<Storage,'getItem'>|null,steps:ReadonlySet<string>,answers:ReadonlySet<string>,tally:Tally,today:number,now=Date.now()):WelcomeFacts{
  const f:WelcomeFacts={weekend:[0,6].includes(new Date(now).getDay())};
- try{f.fishing=fishingFacts(JSON.parse(storage?.getItem('fi2-fishbook-v1')??'null'));}catch{}
+ try{const j=(k:string)=>{try{return JSON.parse(storage?.getItem(k)??'null');}catch{return null;}};
+  f.fishing=fishingFacts(j('fi2-fishbook-v1'),{now,comeback:j(COMEBACK_KEY),hooks:j(FISHING_HOOKS_KEY),time:storage?.getItem(TIME_KEY)??'sunset'});}catch{}
  try{
   const t=suggestedNextStep(storage,steps,answers),s=lessonStreak(tally,today);
   if(t.kind==='lesson'){

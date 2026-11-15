@@ -8,6 +8,10 @@
 .card span{text-wrap:balance}
 /* Owner (Nov 12 2026): the coins note stays on ONE line (card = "Next up" line + note line), no 30ch cap. */
 .card .note{font-weight:600;font-size:13px;line-height:1.35;margin-inline:auto}
+/* Nov 14 2026: the "for you" suggestion line (it replaces "Next up"): a touch bolder than the coins note, with a trailing "›" so
+   it reads as tappable. Not a button: the whole note stays the one tap target. */
+.card [data-welcome-suggest-line]{font-weight:800;font-size:14px}
+.card [data-welcome-suggest-more]{font-weight:900;white-space:nowrap}
 
 /* Landscape phones (Sep 30 2026, leftover from the Deploy 11 audit): the centred card covered the screen centre (the player) and,
    with a job running, the docked job panel and its Stop job. A running job now owns the stack (Town blocks this card until the
@@ -20,5 +24,6 @@
   justify-items:start;text-align:left;gap:2px;padding:8px 10px}
  .card b{font-size:18px}
  .card span{font-size:12px;line-height:1.25}
+ .card [data-welcome-suggest-line]{font-size:12px}
  .card .note{margin-inline:0;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
 }

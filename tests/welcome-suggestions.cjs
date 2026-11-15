@@ -49,7 +49,7 @@ const islandIds=read('lib/analytics/islandIds.ts');for(const a of ['fishing','le
 // ---- 3. Picker: interests, tiers ----
 {const fisher=tallyWith([30,2,0,0,0],[3,0,0,0,0]);
  ok(pick({tally:fisher}).kind==='fish_go','a fisher gets fishing (evergreen when nothing more)');
- ok(pick({tally:fisher,facts:facts({fishing:{species:9,nearSet:{title:'Every shark',left:2}}})}).line==='2 more fish to finish Every shark! Tap to go fishing','almost done wins');
+ ok(pick({tally:fisher,facts:facts({fishing:{species:9,nearSet:{title:'Every shark',left:2}}})}).line==='2 more fish to finish your Every Shark set!','almost done wins (set names read naturally)');
  ok(pick({tally:fisher,facts:facts({lessons:{...facts().lessons,leftInPath:1}})}).kind==='lesson_grad','the 2nd interest wins only with a strictly better tier (almost done vs evergreen)');
  ok(pick({tally:fisher,facts:facts({fishing:{species:9,nearSet:{title:'Every shark',left:1}},lessons:{...facts().lessons,streak:4}})}).kind==='fish_set','the top interest keeps a tie-ish tier');
  const learner=tallyWith([0,20,0,0,0],[0,3,0,0,0]);
@@ -111,10 +111,12 @@ ok(pick({learn:learnN(7),tally:T.emptyTally()}).interest,'no tally yet after the
  ok(all.length>=15,'every provider yields');}
 // A provider that throws is skipped, never breaks the note
 H.registerHooks('roam',()=>{throw new Error('x');});ok(H.hooksFor('roam',facts()).length===0,'a throwing provider is ignored');
-// The comeback slots are wired already
+// The comeback slots (wired to lib/town/fishing/comeback.ts in lib/welcome/fishingFacts.ts; tests/fishing-reach.cjs checks the facts)
 {const f=facts({fishing:{species:9,nearSet:null,fishOfDay:{name:'Moon Ray'},visitorLeaving:{name:'Sunfish',days:1},sunsetSpot:{name:'Sunset Shoals'}}});
  ok(H.hooksFor('fishing',f).map(h=>h.kind).join()==='fish_visitor,fish_day,fish_sunset,fish_go','comeback hooks ordered by tier');
- ok(/TODO\(fish-comeback merge\)/.test(read('lib/welcome/facts.ts'))&&/TODO\(fish-comeback merge\)/.test(read('lib/welcome/hooks.ts')),'TODO slot marked for comeback.ts');}
+ ok(!/TODO\(fish-comeback merge\)/.test(read('lib/welcome/facts.ts')+read('lib/welcome/hooks.ts'))&&/from '\.\.\/town\/fishing\/comeback'/.test(read('lib/welcome/fishingFacts.ts')),'comeback.ts is wired (no TODO left)');
+ const g=H.hooksFor('fishing',facts({fishing:{species:9,nearSet:null,fishOfDay:{name:'Moon Ray',spots:['summit-palm']},visitorLeaving:{name:'Sunfish',days:1,spot:'west-pier'},sunsetSpot:null}}));
+ ok(g.find(h=>h.kind==='fish_day').action.spots.join()==='summit-palm'&&g.find(h=>h.kind==='fish_visitor').action.spots.join()==='west-pier'&&!('spots' in g.find(h=>h.kind==='fish_go').action),'a named fish travels to its spot; plain Go fishing to the nearest');}
 
 // ---- 9. Saves, privacy, counters, admin ----
 {const S=require('../lib/saves/snapshot.ts');
@@ -138,6 +140,8 @@ ok(!/count\(/.test(read('lib/welcome/tally.ts')+read('lib/welcome/hooks.ts')+rea
 // ---- 10. The note: same style, one tap target, existing events ----
 {const wb=read('components/WelcomeBack.tsx'),act=read('lib/welcome/act.ts'),town=read('components/Town.tsx'),room=read('components/ArcadeRoom.tsx');
  ok((wb.match(/<button\b/g)||[]).length===1&&/className=\{styles\.note\} data-welcome-suggest-line/.test(wb)&&/toast\.toast/.test(wb),'one line in the existing note, same classes');
+ ok(/\{!\(suggest&&title\)&&<span data-welcome-status>\{welcomeBackLine\(/.test(wb)&&/data-welcome-suggest-line>\{suggest\.line\}<span aria-hidden="true" data-welcome-suggest-more> ›<\/span>/.test(wb),'a suggestion replaces the "Next up" line (never twice) and ends in a tappable "›"');
+ {const css=read('components/WelcomeBack.module.css');ok(/\.card \[data-welcome-suggest-line\]\{font-weight:800/.test(css),'the suggestion line is a touch bolder');}
  ok(/ENDGAME_OPEN/.test(act)&&/FORMAT_PATH_LAUNCH/.test(act)&&/requestGoFishing/.test(act)&&/WELCOME_GO/.test(act),'tap acts through existing events');
  ok(/window\.location\.assign\('\/arcade'\+arcadeQueryRef\.current\)/.test(town)&&/addEventListener\(WELCOME_GO/.test(town),'Town: the same Enter doors');
  ok(/q\.get\('today'\)==='1'[^\n]*requestTodayLaunch/.test(room),'the arcade opens today’s challenge from ?today=1');

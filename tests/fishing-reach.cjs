@@ -43,10 +43,10 @@ const W=load('lib/welcomeSuggestion.ts'),WH=load('lib/welcome/hooks.ts'),WT=load
 const wctx=f=>({arm:'on',tally:WT.emptyTally(),learn:WL.emptyLearn(),today:20000,facts:{fishing:f}});
 ok(W.pickWelcomeSuggestion(wctx({species:0,nearSet:null})).action.to==='fish'&&W.pickWelcomeSuggestion({...wctx({species:0,nearSet:null}),arm:'hold'})===null,'fishing suggested to new players (not the holdout)');
 ok(!/fetch\(|count\(/.test(read('lib/welcomeSuggestion.ts')+read('lib/welcome/hooks.ts')+read('lib/welcome/tally.ts')),'decided on the device, never sent');
-const wb=read('components/WelcomeBack.tsx'),wa=read('lib/welcome/act.ts');ok((wb.match(/<button\b/g)||[]).length===1&&/requestGoFishing\(\)/.test(wa)&&/countGoFishing\('welcome'\)/.test(wa)&&/data-welcome-suggest-line/.test(wb),'the Welcome back note stays one tap target; with a suggestion it goes fishing');
+const wb=read('components/WelcomeBack.tsx'),wa=read('lib/welcome/act.ts');ok((wb.match(/<button\b/g)||[]).length===1&&/requestGoFishing\(a\.spots\)/.test(wa)&&/countGoFishing\('welcome'\)/.test(wa)&&/data-welcome-suggest-line/.test(wb),'the Welcome back note stays one tap target; with a suggestion it goes fishing');
 ok(!/welcomeSuggestion|GoFishing/.test(read('components/landing/TitleActions.tsx')),'the title screen card is unchanged');
 // 5. Wiring.
-const town=read('components/Town.tsx');ok(/window\.addEventListener\(GO_FISHING_EVENT,on\)/.test(town)&&/nearestFishingSpot\(location\.x,location\.z\)/.test(town),'Town travels on Go fishing');
+const town=read('components/Town.tsx');ok(/window\.addEventListener\(GO_FISHING_EVENT,on\)/.test(town)&&/goFishingTarget\(location\.x,location\.z,goFishSpots\.current\)/.test(town)&&/goFishSpots\.current=\(e as CustomEvent/.test(town),'Town travels on Go fishing (to the named fish\'s spot when the event carries spots)');
 const map=read('components/IslandTravelMap.tsx');ok(/data-map-go-fishing/.test(map)&&/countGoFishing\('map'\);requestGoFishing\(\)/.test(map),'the map has Go fishing');
 const log=read('lib/town/fishing/fishingLogStore.ts');ok(/if\(isNewAngler\(\)\)\{const first=firstCatchFish\(spot\);if\(first\)return first;\}/.test(log)&&/markFirstCatch\(\);countFirstCatch\(\)/.test(log),'the live roll guarantees the first catch and counts it');
 const world=read('lib/town/fishing/fishingWorld.ts');ok(/closestPost<DISCOVER_RANGE&&isNewAngler\(\)/.test(world)&&/if\(i===discoverSpot\)countRippleStart\(\)/.test(world)&&/easy:c\.reduced\|\|session\.easyBite\|\|isNewAngler\(\)/.test(world),'discovery ripples, ripple starts and an easy first bite');
@@ -63,4 +63,27 @@ for(const id of ['go_welcome','go_map','first_catch','ripple_start','run_hint','
 counted.length=0;FE.countGoFishing('welcome');FE.countGoFishing('map');FE.countFirstCatch();FE.countRippleStart();FE.countRunHint();FE.countFullSell();
 assert.deepEqual(counted.map(c=>c[0]),['fi:go_welcome','fi:go_map','fi:first_catch','fi:ripple_start','fi:run_hint','fi:full_sell']);n++;
 const adm=read('app/admin/FishingSection.tsx');ok(/'fi:go_welcome','fi:go_map','fi:first_catch','fi:ripple_start','fi:run_hint','fi:run_stopped','fi:full_sell'/.test(adm)&&/data-fishing-reach/.test(adm),'the admin Fishing tab shows the reach counters');
+// 6. A named fish's spot (Nov 14 2026, fish-comeback x smart-welcome): Go fishing with spot ids travels to the nearest of THOSE.
+{const far=R.GO_FISHING_SPOTS.find(s=>s.id==='summit-palm'),near=R.GO_FISHING_SPOTS.find(s=>s.id!=='summit-palm');
+ ok(far&&R.goFishingTarget(near.x,near.z,['summit-palm']).id==='summit-palm','a named spot wins over the nearest (Palm Point on Summit Isle)');
+ ok(R.goFishingTarget(near.x,near.z,null).id===near.id&&R.goFishingTarget(near.x,near.z,[]).id===near.id&&R.goFishingTarget(near.x,near.z,['deep-sea-boat']).id===near.id,'no / boat-only ids: the nearest shore spot');}
+{const F=load('lib/welcome/fishingFacts.ts'),H=load('lib/welcome/hooks.ts'),CB=load('lib/town/fishing/comeback.ts');
+ const sun=new Date(2026,10,15,10).getTime(),mon=new Date(2026,10,9,10).getTime();// Sunday / Monday of ISO week 46
+ ok(F.visitorDaysLeft(mon)===7&&F.visitorDaysLeft(sun)===1,'visitor days left in the ISO week');
+ const fd=CB.fishOfTheDay(CB.localDay(sun)),v=CB.weeklyVisitor(sun);
+ const a=F.fishingFacts({version:1,species:{}},{now:sun,time:'sunset'});
+ ok(a.fishOfDay&&a.fishOfDay.name===fd.name&&a.fishOfDay.spots.length>0&&a.fishOfDay.spots.every(id=>R.GO_FISHING_SPOTS.some(s=>s.id===id&&fd.id in s.weights)),'fish of the day with its shore spots');
+ ok(a.visitorLeaving&&a.visitorLeaving.name===v.fish.name&&a.visitorLeaving.spot===v.spot&&a.visitorLeaving.days===1,'the weekly visitor on its last day, at its spot');
+ ok(a.sunsetSpot&&R.GO_FISHING_SPOTS.some(s=>s.id===a.sunsetSpot.spot&&s.name===a.sunsetSpot.name),'a sunset fish spot while the island is at sunset');
+ const b=F.fishingFacts({version:1,species:{}},{now:mon,time:'day',comeback:{version:1,fotdDay:CB.localDay(mon),fotdDays:1,visitorWeek:'',visitorWeeks:0}});
+ ok(b.fishOfDay===null&&b.visitorLeaving===null&&b.sunsetSpot===null,'caught today / not leaving soon / daytime: no line');
+ const set=CB.setsProgress({book:{species:{}}}).map(x=>x.set).find(x=>x.species.length>=3);
+ if(set){const book={version:1,species:Object.fromEntries(set.species.slice(0,set.species.length-2).map(id=>[id,{count:1}]))};
+  const c=F.fishingFacts(book,{now:mon,time:'day'}),d=F.fishingFacts(book,{now:mon,time:'day',hooks:{version:1,sets:[set.id],visits:{},golden:{},legendSeen:{}}});
+  ok(c.nearSet&&c.nearSet.left<=2,'nearly-done set via nearlyDoneSets');ok(!d.nearSet||d.nearSet.title!==set.title,'a claimed set is not nearly done');}
+ ok(H.setName('Every shark')==='Every Shark'&&H.setName('The shared ten')==='Shared Ten'&&H.setName('Night and sunset fish')==='Night and Sunset Fish','set names read naturally');
+ const hs=H.hooksFor('fishing',{fishing:{species:4,nearSet:{title:'Every shark',left:2},fishOfDay:{name:'Moon Ray',spots:['summit-palm']},visitorLeaving:null,sunsetSpot:null}});
+ ok(hs[0].line==='2 more fish to finish your Every Shark set!','set line copy');
+ const day=hs.find(h=>h.kind==='fish_day');ok(day.action.to==='fish'&&day.action.spots.join()==='summit-palm','the fish of the day travels to its spot');
+ ok(!('spots' in hs.find(h=>h.kind==='fish_go').action),'plain Go fishing: the nearest spot');}
 console.log(`FISHING_REACH_PASS ${n} checks (Go fishing, first catch, discovery ripples, runs, full basket, stand prices, tutorial, counters)`);

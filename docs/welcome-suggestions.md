@@ -40,7 +40,10 @@ dwell (WELCOME_BACK_SHOW_MS) and the same toast lane. The title-screen welcome c
 
 | Interest | Kind (tier) | Line, e.g. | Tap |
 | --- | --- | --- | --- |
-| Fishing | fish_set (4) | "2 more fish to finish Every shark! Tap to go fishing" (1–3 left in a Fishbook set) | Go fishing (fishingReach) |
+| Fishing | fish_set (4) | "2 more fish to finish your Every Shark set!" (1–3 left in a Fishbook set, `nearlyDoneSets`) | Go fishing (fishingReach) |
+| | fish_visitor (3) | "The Octopus leaves in 1 day. Tap to go fishing" (last 3 days of the ISO week, not caught yet) | Go fishing to the visitor's spot |
+| | fish_day (2) | "Fish of the day: Sea Bass! Tap to go fishing" (until caught today) | Go fishing to the nearest of its shore spots |
+| | fish_sunset (1) | "Sunset fish bite at Harbour Wall. Tap to go fishing" (island at sunset, a sunset fish not yet caught) | Go fishing to that spot |
 | | fish_go (0) | "Fish are biting today. Tap here to go fishing!" | Go fishing |
 | Lessons | lesson_grad (4) | "1 lesson to graduate 7v7! Next up: Carry or Pass?" | Paths on that format (its Continue card) |
 | | lesson_streak (3) | "Next up: Carry or Pass? (2 min). Keep your 4-day streak!" | Paths |
@@ -55,12 +58,18 @@ The lesson streak comes from the tally: days in a row with any lesson, quiz or P
 about 15 s per step. There is no "close to an arcade best" hook yet, because the saves keep only the best score and not the
 last one; the pennant hook is the arcade's "almost done" hook for now.
 
-### Fishing: wiring the fish-comeback helpers (merge TODO)
+### Fishing: the fish-comeback helpers (wired Nov 14 2026)
 
-Branch `fish-comeback` adds `lib/town/fishing/comeback.ts` (fish of the day, weekly visitor leaving, sunset spots). The
-providers are already written (`fish_visitor` tier 3, `fish_day` tier 2, `fish_sunset` tier 1) and read
-`facts.fishing.visitorLeaving / fishOfDay / sunsetSpot`. At merge time, fill those three fields in `fishingFacts()`
-(lib/welcome/facts.ts, marked `TODO(fish-comeback merge)`). No other file needs to change.
+`fishingFacts()` (lib/welcome/fishingFacts.ts, pure; facts.ts passes it the Fishbook, `fi2-fishing-comeback-v1`,
+`fi2-fishing-hooks-v1` and the island time) reads lib/town/fishing/comeback.ts: `fishOfTheDay`, `weeklyVisitor` (shown in the
+week's last 3 days, `VISITOR_LEAVING_DAYS`), sunset fish at a shore spot while the island is at sunset, and `nearlyDoneSets`
+(claimed sets excluded). A line that names a fish carries its shore spot ids (`action.spots`); the tap's Go fishing then lands at
+the nearest of THOSE (`goFishingTarget` in fishingReach.ts, e.g. Palm Point on Summit Isle), otherwise the nearest spot. Set
+titles read as "your Every Shark set" (`setName` in hooks.ts).
+
+**In the note** (components/WelcomeBack.tsx): a suggestion replaces the "Next up: <lesson>" line (it was shown twice when the
+suggestion was the next lesson); the Ferry / all-done lines stay. The suggestion line is a touch bolder and ends in "›" so kids
+see it can be tapped; the whole note is still the one tap target.
 
 ## Taps
 

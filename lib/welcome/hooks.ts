@@ -16,7 +16,9 @@ export {WELCOME_KINDS,type WelcomeKind};
 
 /** What a tap does, through the game's existing events and navigation (components/WelcomeBack.tsx actWelcome). */
 export type WelcomeAction=
- |{to:'fish'}
+ |{to:'fish';
+  /** Shore spot ids of the fish the line names (fish of the day, the visitor, a sunset fish): travel there, not the nearest. */
+  spots?:readonly string[]}
  |{to:'paths';format:string}
  |{to:'lesson';format:string;lessonId:string}
  |{to:'arcade';game:string;today:boolean}
@@ -28,9 +30,8 @@ export type LessonFact={format:string;lessonId:string;name:string;minutes:number
 export type WelcomeFacts={
  weekend?:boolean;
  fishing?:{species:number;nearSet:{title:string;left:number}|null;
-  // TODO(fish-comeback merge): fill these from lib/town/fishing/comeback.ts helpers (branch fish-comeback); the providers below
-  // already turn them into hooks, so wiring them is facts.ts only.
-  fishOfDay?:{name:string}|null;visitorLeaving?:{name:string;days:number}|null;sunsetSpot?:{name:string}|null};
+  // From lib/town/fishing/comeback.ts (facts.ts fishingFacts): `spots` / `spot` are shore spot ids a tap travels to.
+  fishOfDay?:{name:string;spots?:readonly string[]}|null;visitorLeaving?:{name:string;days:number;spot?:string}|null;sunsetSpot?:{name:string;spot?:string}|null};
  lessons?:{next:LessonFact|null;pathTitle:string;leftInPath:number;streak:number;lessonToday:boolean;
   /** The passing lesson behind Pass Puzzles, in the player's path (cross nudge for arcade fans). */
   passing:LessonFact|null};
@@ -49,17 +50,23 @@ export function hooksFor(interest:Interest,f:WelcomeFacts):WelcomeHook[]{
 
 const mins=(n:number)=>`${Math.max(1,Math.round(n))} min`;
 const plural=(n:number,w:string)=>`${n} ${w}${n===1?'':'s'}`;
+const SMALL=new Set(['and','or','of','on','the','a','in']);
+/** A Fishbook set title as it reads in a sentence: "Every shark" → "Every Shark", "The shared ten" → "Shared Ten". */
+export function setName(title:string):string{
+ const w=title.trim().replace(/^the\s+/i,'').split(/\s+/).filter(Boolean);
+ return w.map((x,i)=>i>0&&SMALL.has(x.toLowerCase())?x.toLowerCase():x.charAt(0).toUpperCase()+x.slice(1)).join(' ').replace(/\s+set$/i,'');
+}
+const spotAct=(ids:readonly (string|undefined)[]|undefined):WelcomeAction=>{const spots=(ids??[]).filter((x):x is string=>!!x);return spots.length?{to:'fish',spots}:{to:'fish'};};
 
-// ---- Fishing (today: Fishbook progress only; the comeback.ts slots are wired at merge time) ----
+// ---- Fishing (Fishbook sets + the comeback.ts picks, gathered by facts.ts) ----
 registerHooks('fishing',f=>{
  const x=f.fishing;if(!x)return [];const out:WelcomeHook[]=[];
  if(x.nearSet&&x.nearSet.left>0&&x.nearSet.left<=3)out.push({kind:'fish_set',interest:'fishing',tier:TIER.almost,action:{to:'fish'},
-  line:`${x.nearSet.left} more fish to finish ${x.nearSet.title}! Tap to go fishing`});
- // TODO(fish-comeback merge): these three read lib/town/fishing/comeback.ts through facts.ts (fishOfDay, visitorLeaving, sunsetSpot).
- if(x.visitorLeaving)out.push({kind:'fish_visitor',interest:'fishing',tier:TIER.losing,action:{to:'fish'},
+  line:`${x.nearSet.left} more fish to finish your ${setName(x.nearSet.title)} set!`});
+ if(x.visitorLeaving)out.push({kind:'fish_visitor',interest:'fishing',tier:TIER.losing,action:spotAct([x.visitorLeaving.spot]),
   line:`The ${x.visitorLeaving.name} leaves in ${plural(x.visitorLeaving.days,'day')}. Tap to go fishing`});
- if(x.fishOfDay)out.push({kind:'fish_day',interest:'fishing',tier:TIER.fresh,action:{to:'fish'},line:`Fish of the day: ${x.fishOfDay.name}! Tap to go fishing`});
- if(x.sunsetSpot)out.push({kind:'fish_sunset',interest:'fishing',tier:TIER.time,action:{to:'fish'},line:`Sunset fish bite at ${x.sunsetSpot.name}. Tap to go fishing`});
+ if(x.fishOfDay)out.push({kind:'fish_day',interest:'fishing',tier:TIER.fresh,action:spotAct(x.fishOfDay.spots),line:`Fish of the day: ${x.fishOfDay.name}! Tap to go fishing`});
+ if(x.sunsetSpot)out.push({kind:'fish_sunset',interest:'fishing',tier:TIER.time,action:spotAct([x.sunsetSpot.spot]),line:`Sunset fish bite at ${x.sunsetSpot.name}. Tap to go fishing`});
  out.push({kind:'fish_go',interest:'fishing',tier:TIER.evergreen,action:{to:'fish'},line:'Fish are biting today. Tap here to go fishing!'});
  return out;
 });

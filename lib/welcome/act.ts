@@ -1,6 +1,6 @@
 /**
  * What a tap on the Welcome back suggestion does (Nov 14 2026, docs/welcome-suggestions.md), through the game's EXISTING events:
- * fishing → fishingReach's Go fishing (travel to the nearest spot); Paths → the endgame "open Paths on a format" event (Paths opens
+ * fishing → fishingReach's Go fishing (travel to the named fish's spot, else the nearest); Paths → the endgame "open Paths on a format" event (Paths opens
  * on its Continue card, the next lesson); one lesson → the Paths launch event; the arcade / the Kit Shop → WELCOME_GO, which Town
  * turns into its own Enter door (the same departure save and fade), with `?game=<cabinet>&today=1` for today's challenge.
  */
@@ -19,7 +19,7 @@ const send=(name:string,detail:unknown)=>{try{window.dispatchEvent(new CustomEve
 
 export function actWelcome(a:WelcomeAction,steps:ReadonlySet<string>,answers:ReadonlySet<string>){
  switch(a.to){
-  case 'fish':countGoFishing('welcome');requestGoFishing();return;
+  case 'fish':countGoFishing('welcome');requestGoFishing(a.spots);return;
   case 'paths':send(ENDGAME_OPEN,{target:'paths',format:a.format});return;
   case 'lesson':{const p=PATHS_IN_ORDER.find(x=>x.format===a.format),l=p&&[...p.chapters.flatMap(c=>c.lessons),...p.depth].find(x=>x.id===a.lessonId);
    if(p&&l)send(FORMAT_PATH_LAUNCH,pathLaunchDetail(p.format,l,steps,answers));else send(ENDGAME_OPEN,{target:'paths',format:a.format});return;}

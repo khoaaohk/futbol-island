@@ -79,11 +79,14 @@ export default function WelcomeBack({blocked,held=false}:{blocked:boolean;held?:
  const title=target.kind==='lesson'?target.lesson.name:null;
  // Nov 14 2026 (smart welcome, docs/welcome-suggestions.md): one "for you" line, picked once on this device when the note opens
  // (decideSuggestion). Still a note, not a menu: the whole note is the tap target, and with a suggestion that tap also does it.
+ // Nov 14 2026 (learner screenshot: "Next up: Meet Your Team" twice): a suggestion REPLACES the "Next up: <lesson>" line (the
+ // lesson stays one tap away in Paths); the Ferry / all-done lines stay. The suggestion line is a little bolder with a trailing
+ // "›" (aria-hidden) so kids see the note can be tapped; it is still a line, not a button.
  return <HudSlot><button type="button" className={`${toast.toast} ${styles.card}`} role="status" data-hud-slot="guide" data-welcome-back hidden={blocked} data-welcome-suggest={suggest?.kind} onClick={()=>{if(suggest){ignoredOnce=true;tapSuggestion(suggest,new Set(evidence.steps),answers);}setOpen(false);}}>
   <b>Welcome back!</b>
-  <span>{welcomeBackLine(title,ferryUnlocked(graduations),finaleComplete(graduations))}</span>
+  {suggest&&<span className={styles.note} data-welcome-suggest-line>{suggest.line}<span aria-hidden="true" data-welcome-suggest-more> ›</span></span>}
+  {!(suggest&&title)&&<span data-welcome-status>{welcomeBackLine(title,ferryUnlocked(graduations),finaleComplete(graduations))}</span>}
   <span className={styles.note}>Move for {DAILY_PLAY_SECONDS} seconds today: +{DAILY_PLAY_COINS} coins.</span>
-  {suggest&&<span className={styles.note} data-welcome-suggest-line>{suggest.line}</span>}
   {nudge&&<span className={styles.note} data-save-nudge>Want to keep this? Get a save code in Settings.</span>}
  </button></HudSlot>;
 }

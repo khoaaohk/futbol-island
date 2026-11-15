@@ -3,7 +3,7 @@
  * Admin data Nov 1–14: 6 of 100 new players fished on day 1, yet returners spend the 3rd-most time fishing.
  *
  * - "Go fishing" (the in-island Welcome back note's suggestion, the island map): `requestGoFishing` asks Town to travel to the
- *   nearest shore spot (`nearestFishingSpot`; Town.tsx listens for GO_FISHING_EVENT).
+ *   nearest shore spot (`goFishingTarget`; Town.tsx listens for GO_FISHING_EVENT), or to a named fish's spot when given ids.
  * - First catch guaranteed: until this device has landed a fish (FIRST_CATCH_KEY, a DEVICE key) and while the Fishbook is empty,
  *   the live roll returns the spot's most common common (`firstCatchFish`). Commons never run, so the fight is short.
  * - Spot discovery: a player who has never fished sees a bigger bob and ripples on a float within DISCOVER_RANGE (fishingWorld.ts).
@@ -27,6 +27,15 @@ export const GO_FISHING_SPOTS=FISH_SPOTS.filter(s=>!s.boat);
 export function nearestFishingSpot(x:number,z:number,spots:readonly FishSpot[]=GO_FISHING_SPOTS):FishSpot{
  let best=spots[0],d=Infinity;for(const s of spots){const e=Math.hypot(s.x-x,s.z-z);if(e<d){d=e;best=s;}}return best;
 }
+/**
+ * Where a Go fishing lands: the nearest of `spotIds` when it names shore spots (the Welcome back note's "Fish of the day" /
+ * "weekly visitor" travel to THAT fish's spot, even across the island, e.g. Palm Point on Summit Isle), else the nearest spot.
+ */
+export function goFishingTarget(x:number,z:number,spotIds?:readonly string[]|null):FishSpot{
+ const named=spotIds?.length?GO_FISHING_SPOTS.filter(s=>spotIds.includes(s.id)):[];
+ return nearestFishingSpot(x,z,named.length?named:GO_FISHING_SPOTS);
+}
+export type GoFishingDetail={spots?:readonly string[]};
 /** The guaranteed first catch at a spot: its highest-weighted common species (ties: catalogue order). Deterministic. */
 export function firstCatchFish(spot:Pick<FishSpot,'weights'>):string|null{
  let best:string|null=null,w=-1;for(const [id,v] of Object.entries(spot.weights)){if(fishById(id)?.rarity!=='common'||!(v>0))continue;if(v>w){w=v;best=id;}}return best;
@@ -46,5 +55,5 @@ export function markFirstCatch():boolean{const first=ls(FIRST_CATCH_KEY)!=='1';t
 export const runHintSeen=()=>ls(RUN_HINT_KEY)==='1';
 export function markRunHint(){try{localStorage.setItem(RUN_HINT_KEY,'1');}catch{/* private mode */}}
 
-/** Ask the island to take the player to the nearest fishing spot (Town.tsx listens). */
-export function requestGoFishing(){try{window.dispatchEvent(new Event(GO_FISHING_EVENT));}catch{/* no window */}}
+/** Ask the island to take the player fishing (Town.tsx listens): the nearest spot, or the nearest of `spots` (goFishingTarget). */
+export function requestGoFishing(spots?:readonly string[]){try{window.dispatchEvent(new CustomEvent<GoFishingDetail>(GO_FISHING_EVENT,{detail:spots?.length?{spots}:{}}));}catch{/* no window */}}
