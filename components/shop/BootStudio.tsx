@@ -11,6 +11,7 @@ import {useArcadeWallet} from '@/lib/arcade/arcadeWallet';
 import {STICKERS,stickerDataUrl} from '@/lib/shop/bootStickers';
 import {CLUB_STICKERS} from '@/lib/shop/dripKit';
 import {ClubNote,ClubTag} from './ClubLabel';
+import {ClubColors} from './ClubColors';
 import {BOOT_GLYPHS} from '@/lib/shop/bootGlyphs';
 import type {BootScene,BootView,DecalPatch} from '@/lib/shop/bootScene';
 import {StudioIconButton,StudioIconRow,StudioSheetHandle,StudioSteps,StudioViewChips,studioSectionTitle,useStudioSheet} from './StudioControls';
@@ -328,6 +329,9 @@ export default function BootStudio({onClose,onBuy,owned}:Props){
      <button type="button" className={styles.doneSel} onClick={()=>setSelected(null)}>Done</button>
     </div>
     {sel.kind==='quote'&&<div className={styles.tintRow}>{['#f6f3ea','#18191d','#e8b33a','#d7262e','#2253d6','#2fa65a','#ff7cc8'].map(h=><button key={h} type="button" aria-label={'Text colour '+h} aria-pressed={sel.tint===h} className={styles.tint} style={{'--c':h} as CSSProperties} onClick={()=>patchSel({tint:h})}/>)}</div>}
+    {sel.kind==='club'&&<ClubColors code={sel.cc} under={[design.colors[sel.zone==='toe'?'toe':sel.zone==='heel'?'heel':'mid']]} itemWord="boot"
+     onChange={cc=>commit(d=>({...d,decals:d.decals.map(x=>{if(x.id!==sel.id)return x;const {cc:_old,...rest}=x;void _old;return cc===undefined?rest:{...rest,cc};})}))}
+     swatchClass={styles.tint} chipClass={styles.zoneChip} paint="--c"/>}
     <p className={styles.selHint}>Drag it on the boot · pinch to size and twist</p>
    </div>}
    <div className={styles.tabs} role="tablist">{(['sticker','flag','quote','club'] as const).map(t=><button key={t} type="button" role="tab" aria-selected={tab===t} className={styles.tab} onClick={()=>setTab(t)}>{t==='sticker'?'Stickers':t==='flag'?'Flags':t==='quote'?'Words':'Drip FC'}</button>)}

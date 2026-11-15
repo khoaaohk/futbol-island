@@ -9,6 +9,12 @@
  *
  * Pure (no DOM, no three.js): data, validation helpers and the Kit wire packing (lib/multiplayer/kit.ts), so tests/dripfc-kit.cjs
  * runs it in Node. The pictures are drawn by lib/shop/clubArt.ts.
+ *
+ * Colours (Nov 15 2026, owner; docs/dripfc-colors.md): each placed piece may be recoloured (art + backing) from CLUB_PALETTE so it
+ * stands out on the player's kit. New pieces ALWAYS start in club colours; the studios (components/shop/ClubColors.tsx) show a
+ * gentle hint when a pair is hard to read on the item under it and a "Best contrast" button, but change nothing on their own.
+ * Stored as one integer per piece (`cc`; the shirt's `cc` / `wc`), never as the default; free once owned (purchase ids ignore
+ * it). Friends still see club colours: the relay checks every Cap.KitClub slot, so colours need a relay change first (the doc).
  */
 import {DRIP_FC_ART,PITCH_DROP} from '../stadium/dripfc';
 
@@ -32,17 +38,113 @@ export const isClubArt=(v:unknown):v is ClubArt=>(CLUB_ART_IDS as readonly unkno
 /** At most this many Drip FC stickers on one ball (all of them travel to friends: lib/multiplayer/kit.ts). */
 export const MAX_CLUB_BALL=3;
 
+// ---- Club art colours (Nov 15 2026, owner) ------------------------------------------------------------------------------
+/**
+ * Players may recolour the Drip FC art they place so it stands out on their kit: two colours per piece, the ART (the drop /
+ * crest / wordmark, club white by default) and its BACKING (the roundel / tab / drop body, club blue by default), from this
+ * curated palette only (no free picker). Indexes are STORED (one small integer per piece, below), so never reorder or remove
+ * an entry; add new ones at the end (≤ 15). The hexes are the club's own three plus kid colours from the Boot Studio palette
+ * (lib/shop/boots.ts PALETTE).
+ */
+export const CLUB_PALETTE:readonly {hex:string;name:string}[]=[
+ {hex:CLUB_COLORS.blue,name:'Club blue'},{hex:CLUB_COLORS.navy,name:'Club navy'},{hex:CLUB_COLORS.white,name:'Club white'},
+ {hex:'#18191d',name:'Black'},{hex:'#d7262e',name:'Red'},{hex:'#ff8a1f',name:'Orange'},{hex:'#ffe14a',name:'Lemon'},
+ {hex:'#b8f03c',name:'Volt'},{hex:'#2fa65a',name:'Green'},{hex:'#53b8f2',name:'Sky'},{hex:'#7d4bd8',name:'Purple'},{hex:'#ff7cc8',name:'Pink'},
+];
+/** Backing index meaning "no backing" (shirt prints only: the art printed straight on the shirt). */
+export const CLUB_NO_BACKING=15;
+/**
+ * One piece's colours as ONE integer: art index | backing index << 4 (0..255). A sticker without a code (`cc` absent) is in
+ * club colours, so every older save, preset and purchase id stays byte for byte the same; recolouring is free (purchase ids
+ * ignore it: stripClubColors, lib/shop/shopPurchases.ts).
+ */
+export const clubCode=(art:number,bg:number)=>(art&15)|(bg&15)<<4;
+/** White art on club blue: the club colours (a sticker stores no code for it). */
+export const CLUB_DEFAULT_CODE=clubCode(2,0);
+/** A stored code, cleaned: undefined for anything unusable or for the club colours themselves (stickers), so the default is never
+ *  written. `backingOptional` (shirt prints) also allows CLUB_NO_BACKING and keeps an explicit club pair. */
+export function cleanClubCode(v:unknown,backingOptional=false):number|undefined{
+ if(typeof v!=='number'||!Number.isInteger(v)||v<0||v>255)return undefined;
+ const art=v&15,bg=v>>4;if(art>=CLUB_PALETTE.length)return undefined;
+ if(!(bg<CLUB_PALETTE.length||(backingOptional&&bg===CLUB_NO_BACKING)))return undefined;
+ if(!backingOptional&&v===CLUB_DEFAULT_CODE)return undefined;
+ return v;
+}
+/** The art and backing hex of a code (undefined = club colours). backing null = printed straight on (shirts). */
+export function clubColorsOf(code:number|undefined):{art:string;bg:string|null}{
+ const c=cleanClubCode(code,true)??CLUB_DEFAULT_CODE,bg=c>>4;
+ return {art:CLUB_PALETTE[c&15].hex,bg:bg===CLUB_NO_BACKING?null:CLUB_PALETTE[bg].hex};
+}
+const lin=(h:string)=>{const n=parseInt(h.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255].map(v=>{const s=v/255;return s<=.03928?s/12.92:((s+.055)/1.055)**2.4;});};
+/** WCAG relative luminance of a #rrggbb colour. */
+export const clubLuminance=(h:string)=>{const c=lin(/^#[0-9a-f]{6}$/i.test(h)?h:'#000000');return .2126*c[0]+.7152*c[1]+.0722*c[2];};
+/** WCAG contrast ratio (1..21). */
+export function clubContrast(a:string,b:string):number{const x=clubLuminance(a),y=clubLuminance(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05);}
+/** Readable when the art is ≥ 3:1 on its backing (WCAG non-text contrast) and the backing ≥ 2:1 on the item under it (the white
+ *  die-cut rim helps a little); printed straight on, the art needs ≥ 3:1 on the item. */
+export const CLUB_READ_PAIR=3,CLUB_READ_ITEM=2;
+export type ClubReadability={ok:boolean;pair:number;item:number;problem:'pair'|'item'|null};
+/** How readable a piece is: `under` = the item colours the art sits on (boot zone, ball panels, shirt). */
+export function clubReadability(code:number|undefined,under:readonly string[]):ClubReadability{const {art,bg}=clubColorsOf(code);return clubReadabilityHex(art,bg,under);}
+/** The same for explicit colours (a shirt's club print: its automatic ink, no backing). */
+export function clubReadabilityHex(art:string,bg:string|null,under:readonly string[]):ClubReadability{
+ const u=under.length?under:['#808080'];
+ if(!bg){const item=Math.min(...u.map(h=>clubContrast(art,h)));return {ok:item>=CLUB_READ_PAIR,pair:item,item,problem:item>=CLUB_READ_PAIR?null:'item'};}
+ const pair=clubContrast(art,bg),item=Math.min(...u.map(h=>clubContrast(bg,h)));
+ const problem=pair<CLUB_READ_PAIR?'pair':item<CLUB_READ_ITEM?'item':null;
+ return {ok:!problem,pair,item,problem};
+}
+/**
+ * "Best contrast": the most readable code on `under`. Keeps the club pair when it already reads; else scores every art × backing
+ * pair by its weakest ratio (art on backing / 3, backing on item / 2), preferring the club's own colours on a tie. With
+ * `printed` (a shirt print without backing) only the art colour is chosen. Pure and deterministic.
+ */
+export function bestClubCode(under:readonly string[],printed=false):number{
+ const club=(i:number)=>i<3?0:1;
+ if(printed){let best=2,score=-1;for(let a=0;a<CLUB_PALETTE.length;a++){const s=clubReadability(clubCode(a,CLUB_NO_BACKING),under).item-club(a)*.01;if(s>score){score=s;best=a;}}return clubCode(best,CLUB_NO_BACKING);}
+ if(clubReadability(CLUB_DEFAULT_CODE,under).ok)return CLUB_DEFAULT_CODE;
+ let best=CLUB_DEFAULT_CODE,score=-1;
+ for(let b=0;b<CLUB_PALETTE.length;b++)for(let a=0;a<CLUB_PALETTE.length;a++){if(a===b)continue;
+  const r=clubReadability(clubCode(a,b),under),s=Math.min(r.pair/CLUB_READ_PAIR,r.item/CLUB_READ_ITEM,1.6)-(club(a)+club(b))*.004;
+  if(s>score){score=s;best=clubCode(a,b);}}
+ return best;
+}
+/** A shaded backing for the crest's inner ring (club navy on club blue, as before). */
+export function clubRing(bg:string):string{
+ if(bg.toLowerCase()===CLUB_COLORS.blue)return CLUB_COLORS.navy;
+ const n=parseInt(bg.slice(1),16),k=clubLuminance(bg)>.5?.72:.6,ch=(s:number)=>Math.round(((n>>s)&255)*k);
+ return '#'+((ch(16)<<16)|(ch(8)<<8)|ch(0)).toString(16).padStart(6,'0');
+}
+/** The design without any club colour codes (ball / boot decals' `cc`, the shirt club block's `cc` / `wc`): what a purchase id
+ *  hashes, so a recolour never asks for coins again. Pure; returns the input itself when it carries no codes. */
+export function stripClubColors<T>(design:T):T{
+ if(!design||typeof design!=='object')return design;
+ const o=design as Record<string,unknown>;let out:Record<string,unknown>|null=null;
+ if(Array.isArray(o.decals)&&o.decals.some(d=>d&&typeof d==='object'&&'cc' in d)){out={...o,decals:o.decals.map(d=>{if(!d||typeof d!=='object'||!('cc' in d))return d;const {cc:_c,...rest}=d as Record<string,unknown>;void _c;return rest;})};}
+ const cl=o.club as Record<string,unknown>|undefined;
+ if(cl&&typeof cl==='object'&&('cc' in cl||'wc' in cl)){const {cc:_a,wc:_b,...rest}=cl;void _a;void _b;out={...(out??o),club:rest};}
+ return (out??design) as T;
+}
+/** What the colour hint says (kid-friendly, no numbers). */
+export function clubHint(r:ClubReadability,itemWord:string):string{
+ return r.problem==='pair'?'These two colours are close, so the badge is hard to read.':`This may be hard to see on your ${itemWord}.`;
+}
+
 // ---- Shirt ---------------------------------------------------------------------------------------------------------------
 /** Where the club crest sits on a shirt: on the chest (in the crest's place) or on the left sleeve; `word` prints the wordmark
  *  across the front (in the sponsor's place). */
 export type JerseyClubSpot='chest'|'sleeve';
-export type JerseyClub={crest:JerseyClubSpot|null;word:boolean};
+export type JerseyClub={crest:JerseyClubSpot|null;word:boolean;
+ /** Nov 15 2026: the crest's / wordmark's colours (clubCode; backing CLUB_NO_BACKING = printed straight on). Absent = the club's
+  *  print (white or navy ink picked by the shirt colour, no backing), as before. */
+ cc?:number;wc?:number};
 export const JERSEY_CLUB_SPOTS:readonly {id:JerseyClubSpot;label:string}[]=[{id:'chest',label:'Chest'},{id:'sleeve',label:'Sleeve'}];
 /** A clean club block, or null when it carries nothing (so a shirt without it keeps its old JSON and purchase id). */
 export function cleanJerseyClub(v:unknown):JerseyClub|null{
  if(!v||typeof v!=='object')return null;const o=v as Record<string,unknown>;
- const crest=o.crest==='chest'||o.crest==='sleeve'?o.crest:null,word=o.word===true;
- return crest||word?{crest,word}:null;
+ const crest=o.crest==='chest'||o.crest==='sleeve'?o.crest:null,word=o.word===true;if(!crest&&!word)return null;
+ const out:JerseyClub={crest,word},cc=crest?cleanClubCode(o.cc,true):undefined,wc=word?cleanClubCode(o.wc,true):undefined;
+ if(cc!==undefined)out.cc=cc;if(wc!==undefined)out.wc=wc;return out;
 }
 
 // ---- Wire (relay Cap.KitClub, lib/multiplayer/kit.ts) ----------------------------------------------------------------------

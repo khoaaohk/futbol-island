@@ -88,6 +88,8 @@ export const SHOP_COUNT_EVENTS=[
  ['save_jersey','Jersey design saved'],['save_boots','Boot design saved'],['save_ball','Ball design saved'],
  ['buy_jersey','Jersey bought'],['buy_boots','Boots bought'],['buy_ball','Ball bought'],
  ['spend','Coins spent (Kit Shop)'],['mykit','“My kit” opened'],
+ // Nov 15 2026: a Drip FC piece recoloured (a swatch, Best contrast or Club colours tapped; lib/shop/dripKit.ts). Totals only.
+ ['club_color','Drip FC colours changed'],
 ] as const;
 /** The sandbar between Coral Cay and Summit Isle (lib/town/summitIsle.ts SANDBAR_NAME). */
 export const SANDBAR_COUNT_EVENTS=[['cross','Sandbar crossed']] as const;

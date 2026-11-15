@@ -32,6 +32,7 @@ import {countDesignSave} from '@/lib/analytics/shopEvents';
 import {EDGE_IN,edgeTurnRate} from '@/lib/shop/ballPick';
 import {CLUB_STICKERS,MAX_CLUB_BALL} from '@/lib/shop/dripKit';
 import {ClubNote} from './ClubLabel';
+import {ClubColors} from './ClubColors';
 
 type Props={onClose():void;onBuy?(design:BallDesign):void};
 const STEPS=[{id:'panels',label:'Start'},{id:'colours',label:'Colours'},{id:'pattern',label:'Pattern'},{id:'finish',label:'Finish'},{id:'draw',label:'Draw'},{id:'stickers',label:'Stickers'},{id:'done',label:'Done'}] as const;
@@ -498,6 +499,8 @@ export default function BallStudio({onClose,onBuy}:Props){
     <div className={s.trays}>{CLUB_STICKERS.map(c=><button key={c.id} className={s.item} aria-label={`${c.label} sticker`} title={c.label} disabled={design.decals.length>=MAX_DECALS||design.decals.filter(x=>x.kind==='club').length>=MAX_CLUB_BALL} onClick={()=>place('club',c.id)} data-shop-own-cue>{thumbs[`club:${c.id}`]?
      // eslint-disable-next-line @next/next/no-img-element
      <img src={thumbs[`club:${c.id}`]} alt="" style={{maxWidth:'86%',maxHeight:'78%',objectFit:'contain'}}/>:null}</button>)}</div></>}
+   {sel>=0&&design.decals[sel]?.kind==='club'&&<ClubColors code={design.decals[sel].cc} under={[design.colors.a,design.colors.b]} itemWord="ball"
+    onChange={cc=>changeSel(x=>{if(cc===undefined)delete x.cc;else x.cc=cc;})} swatchClass={s.sw} lightClass={s.light} chipClass={s.chip} paint="bg"/>}
    {tray==='quote'&&<div className={s.quotes}>{QUOTES.map(q=><button key={q.id} className={s.quote} disabled={design.decals.length>=MAX_DECALS} onClick={()=>place('quote',q.id)} data-shop-own-cue>{q.text}</button>)}</div>}
    {tray==='name'&&<>
     <div className={s.field}><input value={nameDraft} onChange={e=>onName(e.target.value)} placeholder="Type your name" maxLength={NAME_MAX+1} aria-label="Name for your ball" autoComplete="off" autoCapitalize="words" spellCheck={false} enterKeyHint="done" onKeyDown={e=>{if(e.key==='Enter')putName();}}/>

@@ -9,7 +9,7 @@
  * (MIT, public/shop/flags/LICENSE.txt, docs/third-party/flag-icons.md).
  */
 import {BOOT_PRICES} from '../economy';
-import {isClubArt,CLUB_COLORS,BOOT_CLUB_HEEL,BOOT_CLUB_SIDE} from './dripKit';
+import {isClubArt,cleanClubCode,CLUB_COLORS,BOOT_CLUB_HEEL,BOOT_CLUB_SIDE} from './dripKit';
 
 export const BOOTS_KEY='fi2-shop-boots-v1';
 /** Stickers, flags and quotes a kid can place. The name, number and flag badge are separate (personal) and do not count. */
@@ -56,6 +56,8 @@ export type BootDecal={
  rot:number;
  /** Text colour for quotes (hex); stickers and flags ignore it. */
  tint?:string;
+ /** Drip FC stickers only (Nov 15 2026, lib/shop/dripKit.ts clubCode): art + backing colours; absent = club colours. */
+ cc?:number;
 };
 
 export type BootDesign={
@@ -297,6 +299,7 @@ export function validateBoots(input:unknown):BootDesign{
   let id=typeof r.id==='string'&&/^[\w-]{1,24}$/.test(r.id)?r.id:`d${decals.length}`;while(ids.has(id))id+='x';ids.add(id);
   const decal:BootDecal={id,kind,ref:r.ref as string,zone:pick(r.zone,ZONES,'outside'),x:clamp(r.x,-1,1,0),y:clamp(r.y,-1,1,0),size:clamp(r.size,.5,1.6,1),rot:clamp(r.rot,-60,60,0)};
   if(kind==='quote')decal.tint=typeof r.tint==='string'&&HEX.test(r.tint)?r.tint.toLowerCase():'#f6f3ea';
+  if(kind==='club'){const cc=cleanClubCode(r.cc);if(cc!==undefined)decal.cc=cc;}
   decals.push(decal);
  }
  const name=cleanName(typeof d.name==='string'?d.name:'').trim();

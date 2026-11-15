@@ -8,6 +8,7 @@
  * island player and ball, read only through lib/shop/islandGear.ts. "Take off" clears a kind (wearing[kind] absent).
  * Pure apart from the injected storage and spend, so tests/shop-room.cjs runs it in Node.
  */
+import {stripClubColors} from './dripKit';
 export const SHOP_OWNED_KEY='fi2-shop-owned-v1';
 export const OWNED_LIMIT=36;
 export type ShopKind='jersey'|'boots'|'ball';
@@ -23,7 +24,8 @@ export const emptyOwned=():ShopOwned=>({v:1,items:[],wearing:{}});
 const isKind=(k:unknown):k is ShopKind=>k==='jersey'||k==='boots'||k==='ball';
 /** FNV-1a over the design's JSON: a short, stable id for the same design on every device. */
 export function designHash(design:unknown):string{const s=JSON.stringify(design)??'';let h=0x811c9dc5;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193);}return (h>>>0).toString(36);}
-export const purchaseId=(kind:ShopKind,design:unknown)=>`shop:${kind}:${designHash(design)}`;
+/** Drip FC art colours (lib/shop/dripKit.ts) are left out, so recolouring a design the player owns is free (Nov 15 2026). */
+export const purchaseId=(kind:ShopKind,design:unknown)=>`shop:${kind}:${designHash(stripClubColors(design))}`;
 
 export function parseOwned(raw:string|null):ShopOwned{
  try{const v=JSON.parse(raw??'null') as Partial<ShopOwned>|null;if(!v||v.v!==1||!Array.isArray(v.items))return emptyOwned();
@@ -61,7 +63,9 @@ export async function buyDesign(kind:ShopKind,design:unknown,price:number,spend:
  if(!isKind(kind))return {ok:false,reason:'That is not something the Kit Shop sells.'};
  if(!Number.isInteger(price)||price<1||price>10000)return {ok:false,reason:'That price does not look right.'};
  const id=purchaseId(kind,design),owned=loadOwned(store),had=owned.items.find(i=>i.id===id);
- if(had){writeOwned({...owned,wearing:{...owned.wearing,[kind]:id}},store);return {ok:true,item:had,already:true};}
+ // Already owned: no charge. A recoloured Drip FC piece has the same id (purchaseId), so its new colours replace the stored design.
+ if(had){const item=JSON.stringify(had.design)===JSON.stringify(design)?had:{...had,design};
+  writeOwned({...owned,items:owned.items.map(i=>i.id===id?item:i),wearing:{...owned.wearing,[kind]:id}},store);return {ok:true,item,already:true};}
  const paid=await spend(id,price,`Kit Shop · ${KIND_LABEL[kind]}`);
  if(!paid.ok)return paid;
  const item:OwnedItem={id,kind,name:(name??'').trim().slice(0,24)||`My ${KIND_LABEL[kind].toLowerCase()}`,price,design,at:now};

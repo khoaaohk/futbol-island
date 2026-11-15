@@ -24,9 +24,10 @@ import {
  cleanName,nameProblem,cleanInitials,initialsOk,cleanNumber,numberTip,jerseyPrice,jerseyPriceParts,randomJersey,applyPalette,
  loadJerseySave,writeJerseySave,emptySave,validateJersey,sameJersey,bestInk,hasArt,jerseyHistory,
 } from '@/lib/shop/jersey';
-import {drawFlatShirt,drawCrest,FONT_FACES} from '@/lib/shop/jerseyPaint';
-import type {JerseyClubSpot} from '@/lib/shop/dripKit';
+import {drawFlatShirt,drawCrest,FONT_FACES,clubInk,clubUnder} from '@/lib/shop/jerseyPaint';
+import type {JerseyClub,JerseyClubSpot} from '@/lib/shop/dripKit';
 import {ClubNote,ClubTag} from './ClubLabel';
+import {ClubColors} from './ClubColors';
 import {type ArtOp,type ArtShape,type ArtSize,artFullness} from '@/lib/shop/paint/artOps';
 import type {JerseySceneApi,JerseyFocus,JerseyAngle,DrawConfig,DrawTool,PaintLock} from './jerseyScene';
 import {StudioIconButton,StudioIconRow,StudioModeToggle,StudioSheetHandle,StudioSteps,StudioViewChips,studioSectionTitle,useStudioSheet} from './StudioControls';
@@ -121,6 +122,11 @@ function StyleIcon({kind}:{kind:string}){
 
 const tip=(text:string)=><p className={styles.tip}><Ico name="bulb" size={18}/><span>{text}</span></p>;
 type PreviewFn=(make:()=>JerseyDesign)=>{onPointerEnter:(e:ReactPointerEvent)=>void;onPointerLeave:()=>void;onPointerDown:(e:ReactPointerEvent)=>void;onPointerCancel:()=>void};
+/** The shirt's Drip FC block with a new crest spot / wordmark, keeping each piece's colours while it stays on (Nov 15 2026). */
+function clubWith(old:JerseyClub|undefined,crest:JerseyClubSpot|null,word:boolean):JerseyClub|undefined{
+ if(!crest&&!word)return undefined;const out:JerseyClub={crest,word};
+ if(crest&&old?.cc!==undefined)out.cc=old.cc;if(word&&old?.wc!==undefined)out.wc=old.wc;return out;
+}
 function Swatches({value,onPick,colors=PALETTE.map(p=>p.hex),custom=true,label,preview}:{value:string;onPick:(hex:string,key?:string)=>void;colors?:string[];custom?:boolean;label:string;preview?:(hex:string)=>ReturnType<PreviewFn>}){
  return <div className={styles.swatches} role="group" aria-label={label}>
   {colors.map(hex=>{const p=PALETTE.find(x=>x.hex===hex);return <button key={hex} type="button" className={styles.swatch} style={{'--sw':hex} as CSSProperties} aria-pressed={value===hex} aria-label={p?.label??hex} title={p?.label} {...preview?.(hex)} onClick={()=>onPick(hex)}><span className={styles.swatchCheck}><Ico name="check" size={16}/></span></button>;})}
@@ -403,9 +409,13 @@ export default function JerseyStudio({onClose,onBuy}:{onClose():void;onBuy?(desi
    <h3 className={studioSectionTitle}>Drip FC club badge</h3>
    <ClubNote>Optional, and free on any shirt.</ClubNote>
    <div className={styles.tiles3}>{([['none','None'],['chest','Chest'],['sleeve','Sleeve']] as const).map(([id,label])=>{const cur=d.club?.crest??'none';
-    const next=(c:JerseyClubSpot|null,w:boolean):Partial<JerseyDesign>=>({club:c||w?{crest:c,word:w}:undefined});
+    const next=(c:JerseyClubSpot|null,w:boolean):Partial<JerseyDesign>=>({club:clubWith(d.club,c,w)});
     return <button key={id} type="button" className={styles.tile} aria-pressed={cur===id} onClick={()=>{set(next(id==='none'?null:id,!!d.club?.word));sceneRef.current?.setView(id==='sleeve'?'left':'front',id==='sleeve'?'side':'crest');}}><span>{label}</span></button>;})}</div>
-   <button type="button" className={styles.chip} aria-pressed={!!d.club?.word} onClick={()=>set({club:d.club?.crest||!d.club?.word?{crest:d.club?.crest??null,word:!d.club?.word}:undefined})}>Drip FC across the front</button>
+   <button type="button" className={styles.chip} aria-pressed={!!d.club?.word} onClick={()=>set({club:clubWith(d.club,d.club?.crest??null,!d.club?.word)})}>Drip FC across the front</button>
+   {d.club?.crest?<ClubColors title="Badge colours" code={d.club.cc} printed printInk={clubInk(clubUnder(d,d.club.crest)[0])} under={clubUnder(d,d.club.crest)} itemWord="shirt"
+    onChange={cc=>set({club:{...clubWith(d.club,d.club?.crest??null,!!d.club?.word)!,cc}})} swatchClass={styles.swatch} chipClass={styles.chip} paint="--sw"/>:null}
+   {d.club?.word?<ClubColors title="Wordmark colours" code={d.club.wc} printed printInk={d.textColor} under={clubUnder(d,'word')} itemWord="shirt"
+    onChange={wc=>set({club:{...clubWith(d.club,d.club?.crest??null,true)!,wc}})} swatchClass={styles.swatch} chipClass={styles.chip} paint="--sw"/>:null}
   </section>
   <section className={styles.group}>
    <h3 className={studioSectionTitle}>Shirt sponsor</h3>

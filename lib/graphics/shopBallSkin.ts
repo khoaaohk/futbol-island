@@ -21,7 +21,7 @@ function layClub(d:BallDesign,g:CanvasRenderingContext2D,map:T.CanvasTexture,ali
  const club=d.decals.filter(x=>x.kind==='club');if(!club.length)return;
  import('../shop/clubArt').then(({clubArtReady,clubSticker})=>clubArtReady().then(()=>{
   if(!alive())return;const sk=g.getImageData(0,0,BALL_SKIN_W,BALL_SKIN_H);
-  for(const x of club){const c=clubSticker(x.ref as 'crest',72).canvas,cg=c.getContext('2d')!;
+  for(const x of club){const c=clubSticker(x.ref as 'crest',72,x.cc).canvas,cg=c.getContext('2d')!;
    stampDecalPixels(sk.data,BALL_SKIN_W,BALL_SKIN_H,x,{data:cg.getImageData(0,0,c.width,c.height).data,w:c.width,h:c.height});c.width=c.height=1;}
   g.putImageData(sk,0,0);map.needsUpdate=true;
  })).catch(()=>{/* offline chunk: the ball stays without them */});
