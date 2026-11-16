@@ -175,8 +175,8 @@
 .table thead th{border-top:0;font-size:var(--t-cap);font-weight:600;color:var(--ink-soft)}
 .table tbody th{font-weight:700;white-space:nowrap}
 .table td{min-width:9em}
-/* Nov 15 2026: on a phone the row header stays put while a wide table scrolls under it (comparison and chart tables). */
-@media(max-width:719px){.table tbody th{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--rule)}}/* phones: a wide table scrolls inside .tableWrap instead of crushing its columns */
+/* Nov 15 2026: on a phone the row header stays put (Nov 16: and its column title, e.g. "Time", with it) while a wide table scrolls under it (comparison and chart tables). */
+@media(max-width:719px){.table tbody th,.table thead th:first-child{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--rule)}.table thead th:first-child{z-index:2}}/* phones: a wide table scrolls inside .tableWrap instead of crushing its columns */
 
 /* Practice plans (Nov 10 2026, lib/site/plans.ts): a plan prints on ONE page. On screen the two wrappers change nothing
    (display:contents). In print, everything a coach does not need at the field is dropped (.noPrint: FAQ, links, the button)
