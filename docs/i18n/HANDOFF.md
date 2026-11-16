@@ -1,4 +1,4 @@
-# Spanish version: handoff (round 1, Nov 15 2026)
+# Spanish version: handoff (round 1 Nov 15, round 2 Nov 16 2026)
 
 Branch `spanish-r1` (not pushed). Owner brief: US Latino neutral Spanish, "tú", glossary-driven, English is the source of truth.
 
@@ -40,15 +40,37 @@ Home `/es`, `/es/about`, `/es/about/how-we-check-facts`, rules hub + 16 rules, t
 positions hub + 9 positions. Each: title/desc/H1/answer-first lead/body/FAQ + FAQPage JSON-LD/coach's notes/quiz/diagram
 captions and aria/breadcrumbs/related/Last checked/buttons/print sheet/read next.
 Sections deliberately left off Spanish guide pages until their families exist: lesson lists (English lesson titles), drills,
-player cards, museum/arcade links, formation links, comparisons. Add them back as each family lands (GuidesEs.tsx `esLink`).
+player cards, museum/arcade links. Add them back as each family lands (GuidesEs.tsx `esLink`).
+
+## Done (round 2, Nov 16 2026)
+
+Formations hub + 16 formation pages + the 7v7/9v9/11v11 format guides (`lib/i18n/es/formations.ts`, coach's notes included) and
+the 3 comparison pages (`lib/i18n/es/comparisons.ts`); pages in `components/es/pages/FormationsEs.tsx` (table cells built from the
+Spanish position/formation records, as in English). Position pages and hub got their "formaciones con esta posición" and
+comparison links back. Weak-spot lesson links and "Lessons that teach this shape" stay off (English lesson titles). The
+lineup builder link says "(en inglés)". `/learn/7v7-9v9-11v11` is a lesson hub, so it moved to the lessons family.
+Futsal dot labels: BACK/FRONT -> ATRÁS/ARRIBA (dot letters B/F, F/A/P stay as the English data has them).
+
+## Test-suite regressions (fixed Nov 16 2026)
+
+- 12 failures: `lib/site/seo.ts`, `LangSwitch.tsx`, `GuideQuiz.tsx` imported `@/lib/i18n/...`; the vm/require loaders in the
+  multiplayer/game tests do not resolve `@/`. Rule: shared modules (lib/site, components/site, anything the game imports) import
+  lib/i18n with RELATIVE paths.
+- The ~3 h run and the 21 "timeouts": the Mac was in clamshell (lid closed) and kept dropping into Maintenance Sleep; a test
+  frozen by sleep keeps its wall clock running (example: 42 s CPU in 935 s wall; gashapon-viewer even failed its 600 ms squeeze
+  check that way, on main too). Run the suite under `caffeinate -s -i` (on AC power): after the fix,
+  `caffeinate -s -i npm run test:quiet -- --timeout 300` = 1078/1078 passed in 639 s (Nov 16 2026).
+- Mobile (Playwright, Chrome, 390x844 @3x isMobile+hasTouch, plus 360, 700, 1440 wide), production build: /, /es, a rule, a term,
+  a position (EN + ES), the formation pages: scrollWidth == clientWidth everywhere, no element past the edge. The earlier cut-off
+  phone shots were a capture artifact. Fixed: Spanish h1 broke “4-3-” / “3” on phones (EsIntro keeps shapes on one line);
+  EN | ES spacing (flex trimmed the spaces around “|”; now a gap).
 
 ## Pending (by family; tests/es-pages.cjs prints the counts; patterns in lib/i18n/esScope.ts)
 
-1. comparisons (3): fullback-vs-wingback, striker-vs-winger, 4-3-3-vs-4-4-2 (lib/site/comparisons.ts).
-2. formations (hub + 17 + 7v7/9v9/11v11 guides + 7v7-9v9-11v11) (lib/site/formations.ts, FORMATION_NOTES).
+1-2. comparisons and formations: DONE (round 2).
 3. drills (hub + 56) (lib/site/drills*.ts, drillGuides.ts, notesDrills.ts).
 4. practice plans (hub + 12) (lib/site/plans.ts).
-5. lessons (index + 96 reading pages) (lib/site/lessons.ts + public/lessons JSON).
+5. lessons (index + 96 reading pages + the /learn/7v7-9v9-11v11 lesson hub, which also shows the TEAM_SIZES table) (lib/site/lessons.ts + public/lessons JSON).
 6. guide hubs and charts: football-rules-for-kids, soccer-quiz-for-kids, passing-and-support, futsal-for-kids, ball/field size,
    age groups, safe-football-game-for-kids.
 7. tools (hub + 7 tools + field diagrams 10): copy and page-level tool UI labels.
@@ -66,6 +88,7 @@ esPaths.ts (ES_PAGES) -> remove the family from ES_PENDING -> `node tests/es-pag
 | origin/main b631f5de | 129.0 s | 4.49 GB |
 | spanish-r1 | 129.0 s / 129.9 s | 5.04 GB / 5.19 GB |
 | spanish-r1 without app/es | 129.3 s | 4.85 GB |
+| spanish-r1 round 2 (formations + comparisons), `/usr/bin/time -l` max RSS | 138.8 s | 3.68 GB (different method: compare with a `/usr/bin/time -l` run of main before drawing conclusions) |
 
 Time is unchanged, peak memory is +12-15% (over the +10% budget; run-to-run noise about 3%). About half comes from the
 per-section layouts, half from compiling the /es route; /es prerenders nothing. NEXT STEP: check the real Vercel build peak;
@@ -82,3 +105,7 @@ one-line lab layouts into fewer route groups.
 - Punt / drop-kick "despejar de volea / de bote pronto"; high school "preparatoria"; sin bins "exclusiones temporales".
 - Game UI names stay English with a gloss ("Play with friends" (jugar con amigos)): the game itself is English for now.
 - Age label "U13 and up" is kept as the data key and shown as "U13 y mayores" (EsCoachNotes).
+- Round 2: "mediocampistas abiertos" for wide midfielders, "defensas de los lados" for the outside backs of a back three,
+  "mediocampista de contención" / "los dos de contención" for holders, "doble pivote" (11v11) vs "pívot" (futsal), "línea de
+  cuatro / de tres" for back four / three, "árbol de Navidad" (2-3-2-1), "el cuadrado" (futsal box), "rombo" (diamond),
+  "creador de alineaciones" (lineup builder), "Cuidado con" for "Watch out for".
