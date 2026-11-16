@@ -205,7 +205,6 @@
 .endNote{display:grid;gap:var(--s1);max-width:var(--measure)}
 /* A tinted panel for one section that is a different voice (Coach's notes): the well tone, same radius and padding as a card. */
 .panel{max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--well);border-radius:var(--r-lg);padding:var(--pad-box)}
-.panel .h2{font-size:var(--t-h3);line-height:1.2}
 
 /* Animated scene diagrams (lib/site/sceneMotion.ts): the art frame holds the moving SVG and a small Pause button. The motion is
    CSS keyframes from the page; it stops when paused, off screen, printed, or when the reader asks for reduced motion (then the

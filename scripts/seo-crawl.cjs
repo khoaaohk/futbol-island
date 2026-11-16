@@ -17,7 +17,7 @@ const base = (process.argv.find(a => /^https?:\/\//.test(a)) || 'http://localhos
 const SITE = 'https://futbolisland.app';
 const families = process.argv.includes('--families');
 const thinAt = process.argv.indexOf('--thin'), thin = thinAt > 0 ? (Number(process.argv[thinAt + 1]) || 30) : 0;
-const jsonOut = process.argv[process.argv.indexOf('--json') + 1];
+const jsonOut = process.argv.includes('--json') ? process.argv[process.argv.indexOf('--json') + 1] : null;
 const strip = s => s.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<svg[\s\S]*?<\/svg>/gi, ' ');
 const text = html => { const m = html.match(/<main[\s\S]*<\/main>/i); return strip(m ? m[0] : html).replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim(); };
 async function get(path, redirect = 'manual') { const r = await fetch(base + path, { redirect }); return { status: r.status, loc: r.headers.get('location'), body: r.status === 200 ? await r.text() : '' }; }

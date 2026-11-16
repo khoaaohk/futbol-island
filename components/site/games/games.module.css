@@ -17,7 +17,7 @@
 .game img{display:block;width:100%;height:auto;border-radius:var(--r-sm);background:var(--well)}
 .gameWords{display:grid;gap:6px;min-width:0}
 .gameWords p{max-width:none!important}
-.page .gameName{font-size:clamp(20px,.6vw + 17px,26px);font-weight:700;letter-spacing:-.02em;line-height:1.2;color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:3px;text-underline-offset:.22em}
+.page .gameName{display:inline-flex;align-items:center;min-height:var(--tap);font-size:var(--t-h3);font-weight:700;letter-spacing:-.02em;line-height:1.2;color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:3px;text-underline-offset:.22em}
 .gameKind{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
 .gameLinks{display:flex;flex-wrap:wrap;gap:0 var(--s3);font-size:var(--t-cap)}
 .gameLinks a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:.2em}
