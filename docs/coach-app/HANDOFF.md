@@ -23,6 +23,17 @@ Branch `coach-app` (from `spanish-r1`), not pushed.
   coach's lineup starts, spots follow players, re-plan (water-filling to level totals + greedy most-owed; the running block keeps
   players still owed time; rotating keepers' periods are reserved first), clock from timestamps, live-game reducers
   (kickOff, applyChange, delay, skip, setStatus hurt/left/late/ok, endCurrentPeriod), undo stack (30).
+  Nov 16 pm: players who must play now are ranked by slack (field time owed beyond the field time left outside their own blocks
+  in goal; "must" = short by more than half a block for a keeper-to-be, else by any); a rotating keeper for a later period is
+  picked with a look-ahead (not kept yet, owed at least the period, leftover field time fits whole changes, most owed).
+  `confirmChange` (the Done button) re-levels when a change is made 30 s or more off its time. `planWithLate` = the plan with late
+  players brought in at their expected minute, exactly as the live re-plan on "Arrived" (test checks they match); arrivals are
+  kept in `game.joined` and left out of the summary spread. Fairness meter limit: one change interval (the +90 s is gone).
+- **Team "Late"**: the Coming pill cycles Coming → Late → Not coming; Late shows "Arrives around" (Not sure / every change
+  interval). Store `late: {id: minute|null}` (only players coming; cleaned). Late players are not in the lineup; the live game
+  starts from the players here (`startPlan`) with late ones "Not here yet"; the Plan tab shows `planWithLate`.
+- **Sticky Start game**: sits in the flow on a paper band (gradient) 65 px + safe area above the tab bar; at the end of every
+  tab the last item ends above the tab bar and the last change above the button (checked in the build).
 - **Counters**: `ca:open`, `ca:game`, `ca:sub` (totals only) in `lib/analytics/countIds.ts` + labels in `daily.ts`;
   `countSince.generated.ts` regenerated.
 - **Words** `lib/coach/words.ts` (en/es, glossary terms, "tú"; "banca" for bench). Language: `?lang=`, saved choice, then phone
@@ -32,17 +43,22 @@ Branch `coach-app` (from `spanish-r1`), not pushed.
 - `tests/coach-app.cjs` (in the npm test chain after tools-rotation): storage sanitize/versioning, plan property sweep over all
   presets × squad sizes × keeper modes (full field, totals = game × field, spread ≤ one block), 300-case re-plan sweep, injury
   re-plan, clock pause/resume/reload, scripted 2-period 7v7 game with an injury and a late arrival (everyone else 35–38 min),
+  simulated 7v7 2×25, 11 players, keeper each half, injury 8:00 + late arrival 12:00: everyone there all game 31.5–36.5 min
+  (was 31–36.5); 396-game sweep (formats × squad +1..+6 × keeper modes × injury/arrival timings): none over 1.5 intervals, none
+  over one with nothing happening (before: 105 over one interval, worst 35 min); lagged Done (40 s) ≤ 1.25 intervals; late plan,
   share round trip + garbage, CSV, presets vs chart, noindex/manifest/SW scope (runs the SW's `inScope`), Spanish keys + banned
   words, front-door links. `COACH_SIM=1 node tests/coach-app.cjs` prints the simulated game log.
 - `tests/seo-tools.cjs` allows `/coach` as a link target. tsc, `eslint . --quiet`, seo-tools, es-pages, tools-rotation,
   admin-analytics(-coverage, -daily), security-headers pass. Production build OK; `seo-crawl` 1200 URLs, 0 issues.
+- Nov 16 pm re-verify (production build, port 9043): `scratchpad/coach-shots2/` (script `scratchpad/coach-shots2.cjs`): one
+  manifest link `/coach/manifest.webmanifest`, Start game contrast 9.6, front-door pill 15.4, bottoms clear on every tab.
 - Screenshots: `scratchpad/coach-shots/` (script `scratchpad/coach-shots.cjs <base> <worktree>`, Playwright + system Chrome
   with a fake clock: team → drag on pitch → plan → live → injury → reload → full game → summary → Spanish → front doors).
 
 ## Open / next
-- Rotating-keeper games with an injury land around 32–38 min (one keeper's whole period is a big block); the meter calls a
-  spread over one change interval + 90 s "uneven". A smarter keeper choice (look ahead at owed time) would tighten it.
-- Late arrivals are marked from the live bench sheet ("Not here yet" → "Arrived"); there is no pre-game "late" toggle on Team.
+- Limits left: an injury or arrival mid-block can still cost up to ~1.4 intervals in 9v9/11v11 (10-min blocks) or small squads
+  (blocks are whole); the meter then says "check", which is honest. Runs over time (stoppage) go to whoever is on at the end.
+- A late player whose expected minute is a change time joins at the next change after it (as the live game does).
 - Formations for 4v4/5v5 are one built-in shape each (no formation pages exist for them).
 - One team per device (no team switcher). Undo history is in memory (lost on reload; the game itself is not).
 - iOS ignores the manifest swap for name/icon in some versions; `apple-mobile-web-app-title` "Coach" + `/coach/icon-180.png`

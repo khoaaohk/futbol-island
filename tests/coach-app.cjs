@@ -177,6 +177,16 @@ function simGame(fmt,N,keeper,hurtAt,lateAt){
   }}
  ok(n>=390,'sim sweep ran');if(process.env.COACH_SIM)console.log(`sim sweep ${n} games, worst ${worst.toFixed(2)} intervals`);
 }
+/* changes confirmed late (waiting for a stoppage): confirmChange re-levels, so a 40 s wait at every change stays within about one
+   change interval for the owner's 7v7 with a late arrival at any time */
+for(const arr of [300,605,720,900,1205]){
+ const s={...E.settingsFor(E.presetOf('7v7')),keeper:'rotate'},team=ids(11),order=team.slice(0,10),L='p10',ps=1500,K=['p0'];
+ const plan=E.buildPlan(order,s);let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),{...Object.fromEntries(order.map(p=>[p,'ok'])),[L]:'late'},0),now=0;
+ const due=()=>{const nc=E.nextChange(g);if(!nc||(nc.due!=null&&nc.due+40>E.nowSec(g,now)))return;g=E.confirmChange(g,now,nc.change,nc.index,K);};
+ for(let per=0;per<2;per++){due();g=E.kickOff(g,now);for(let t=0;t<ps;t+=5){now+=5000;if(per*ps+E.nowSec(g,now)===arr)g=E.setStatus(g,now,L,'ok',K);due();}g=E.endCurrentPeriod(g,now);}
+ const {played}=E.playedSeconds(g,0),fr=E.fairness(played,order),tot=Object.values(played).reduce((a,b)=>a+b,0);
+ ok(tot===3000*7,'lagged changes: every place filled');ok(fr.spread<=1.25*300,`lagged changes, arrival at ${arr}s: spread ${fr.spread/60} min`);
+}
 /* ---- 5c. late players before the game: the plan brings them in at the expected minute, as the live game will ---- */
 {
  const s={...E.settingsFor(E.presetOf('7v7')),keeper:'rotate'},team=ids(11),order=team.filter(p=>p!=='p10'&&p!=='p9');

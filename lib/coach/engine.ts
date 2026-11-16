@@ -272,6 +272,13 @@ export function applyChange(g:Game,now:number,c:Change,index:number):Game{
  const spots=nextSpots(g.spots,{...c,gkTo:gk},on,nSpotsOf(g),g.settings.keeper!=='none');
  return {...g,on,gk,spots,stints,next:index+1,delay:0,subs:g.subs+1};
 }
+/** The coach pressed Done. A change made half a minute or more away from its planned time (waiting for a stoppage) re-levels
+ *  the rest of the game, so the minutes lost or gained do not pile up on the same players. */
+export function confirmChange(g:Game,now:number,c:Change,index:number,keepers:readonly string[]=[]):Game{
+ const x=applyChange(g,now,c,index),b=g.blocks[index],inPlay=g.clock.status==='live'||g.clock.status==='paused';
+ if(!inPlay||!b||b.period!==g.clock.period||Math.abs(nowSec(g,now)-b.start)<30)return x;
+ return withReplan(x,now,keepers);
+}
 export const delayChange=(g:Game,sec=60):Game=>({...g,delay:g.delay+sec});
 /** Mark a player and re-plan the rest of the game. A player on the field who is hurt or leaves comes off now and the most-owed
  *  bench player takes the spot at once (shown with an Undo). */
