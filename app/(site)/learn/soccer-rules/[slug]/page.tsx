@@ -46,7 +46,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   <JsonLd data={{...articleLd({headline:r.title,path:r.path,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (soccer rule)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.path,name:`${r.name} quiz`,questions:quiz})}}/>
   <JsonLd data={faqLd(r.faq)}/>
   <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer}/>
-  <PrintSheet path={r.path} what={cards?'card rules sheet':'rule sheet'}/>
+  <PrintSheet path={r.path} what={cards?'card rules sheet':'rule sheet'} has={cards?'all 14 card offenses and the yellow vs red table':undefined}/>
   {cards&&<CardRulesTop c={CARD_RULES}/>}
   <Section id="diagram" title={`${r.name}: diagram`}>
    {pair

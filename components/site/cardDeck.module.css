@@ -69,7 +69,7 @@
 @keyframes deckFade{from{opacity:.2}to{opacity:1}}
 
 /* ---- print: the "Card rules" sheet. The list, two columns, name + explanation; the deck parts and this page's diagram,
-   referee points and mix-ups drop out so the 14 offences and the yellow vs red table fit one page. ---- */
+   referee points and mix-ups drop out (printSheet.module.css) so the 14 offences and the yellow vs red table fit one page. ---- */
 @media print{
  .how,.status,.controls,.flip{display:none!important}
  .track{display:grid!important;grid-template-columns:1fr 1fr;gap:4pt 10pt!important;transform:none!important}
@@ -81,7 +81,6 @@
  .back p:not(:first-of-type){display:none}
  .back p:nth-of-type(2){display:block}
  .kind{font-size:7.5pt}
- :global(main:has([data-card-deck])>section[aria-labelledby=diagram]),
- :global(main:has([data-card-deck])>section[aria-labelledby=referee]),
- :global(main:has([data-card-deck])>section[aria-labelledby=mixups]){display:none!important}
+ .back p{font-size:8.5pt!important;line-height:1.25!important}
+ .name{font-size:9.5pt!important}
 }

@@ -74,7 +74,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   <JsonLd data={esLd({...articleLd({headline:r.title,path:r.esPath,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (regla de fútbol)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.esPath,name:`Prueba: ${r.name}`,questions:quiz})})}/>
   <JsonLd data={faqLd(r.faq)}/>
   <EsIntro crumbs={crumbs} h1={r.h1} lead={r.answer}/>
-  <EsPrintSheet path={r.esPath} what={cards?'hoja de las tarjetas':'hoja de la regla'}/>
+  <EsPrintSheet path={r.esPath} what={cards?'hoja de las tarjetas':'hoja de la regla'} has={cards?'las 14 faltas de tarjeta y la tabla de amarilla o roja':undefined}/>
   {cards&&<CardRulesTop c={CARD_RULES_ES}/>}
   <Section id="diagram" title={`${r.name}: diagrama`}>
    {pair
