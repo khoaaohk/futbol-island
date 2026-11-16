@@ -1,4 +1,6 @@
 import JsonLd from '@/components/seo/JsonLd';
+import {CollectionLinks} from '@/components/site/CollectionHub';
+import {FISH_COLLECTIONS} from '@/lib/site/collections';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {fishPath,rarityWord,SITE_FISH} from '@/lib/site/fish';
 import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
@@ -22,6 +24,7 @@ export default function FishIndex(){
    <p className={styles.caption}>Where each animal lives on the island is a made-up island story. The club facts are real.</p>
    <a className={styles.cta} href="/play">Go fishing on the island</a>
   </header>
+  <CollectionLinks list={FISH_COLLECTIONS} title="Browse the Fishbook by group and spot"/>
   {ORDER.map(r=>{const list=SITE_FISH.filter(f=>f.rarity===r);if(!list.length)return null;return <section key={r} className={styles.section} aria-labelledby={`r-${r}`}>
    <h2 className={styles.h2} id={`r-${r}`}>{rarityWord(list[0])} <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(f=><li key={f.id}><a href={fishPath(f.id)}><span className={styles.itemTitle}>{f.name}</span><span className={styles.itemMeta}>{f.club.name}{f.club.nickname?` · “${f.club.nickname}”`:''}</span></a></li>)}</ul>

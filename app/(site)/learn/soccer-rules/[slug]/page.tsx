@@ -1,3 +1,4 @@
+import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -12,6 +13,7 @@ import {PLAY_PATH,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {RULE_NOTES} from '@/lib/site/notesGuides';
 import {checkNotes} from '@/lib/site/coachNotes';
+import {FUTSAL_VS_SOCCER} from '@/lib/site/comparisons';
 import styles from '../../../site.module.css';
 
 /** One rule (lib/site/rules.ts): the two-sentence answer, the diagram, what the referee looks for, mix-ups, formats, FAQ, lessons. */
@@ -51,6 +53,11 @@ export default function RulePage({params}:{params:{slug:string}}){
    <DataTable label={`${r.name} by game format`} head={[futsal?'Topic':'Game',futsal?'Futsal rule':'How the rule works']} rows={r.formats}/>
    <p className={styles.caption}>{RULE_LEAGUE_LINE} {RULE_SOURCE_LINE}</p>
   </Section>
+  {/* Nov 15 2026 (seo-links): "futsal rules vs soccer rules" lands here, so the comparison is a section, not a second page. */}
+  {futsal&&<Section id={FUTSAL_VS_SOCCER.id} title={FUTSAL_VS_SOCCER.title}>
+   <DataTable label={FUTSAL_VS_SOCCER.title} head={FUTSAL_VS_SOCCER.head} rows={FUTSAL_VS_SOCCER.rows}/>
+   <p className={styles.caption}>{FUTSAL_VS_SOCCER.note}</p>
+  </Section>}
   <QA id="faq" title={`Questions about ${r.name.toLowerCase().replace('futsal rules','futsal rules')}`} faq={r.faq}/>
   <CoachNotesSection name={r.name} notes={RULE_NOTES[r.slug]}/>
   <Section id="lessons" title="Lessons that go with this rule"><LessonList lessons={r.lessons}/></Section>
@@ -60,5 +67,6 @@ export default function RulePage({params}:{params:{slug:string}}){
   <p className={styles.caption}>{GUIDE_FOOT}</p>
   <CheckedLine date={FAMILY_CHECKED.rules}/>
   <p className={styles.end}>{r.cta?<a className={styles.cta} href={lessonPath(r.cta.id)}>Play the lesson: {r.cta.title}</a>:<a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>}</p>
+  <ReadNext path={r.path}/>
  </>;
 }

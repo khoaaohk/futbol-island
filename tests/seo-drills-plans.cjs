@@ -79,7 +79,7 @@ for(const g of PAGES){
  assert(guides.COACH_FILES.includes(og.replace(guides.DIAGRAM_DIR+'/','')),`${g.path}: ${og} is a prerendered picture`);
  html.set(g.path,renderToStaticMarkup(React.createElement(mod.default,{params})));
 }
-const sp=paths.sitePaths();for(const g of PAGES)assert.equal(sp.find(x=>x.path===g.path).lastmod,L('lib/site/updated.ts').SITE_UPDATED.guides,`${g.path}: lastmod`);
+const sp=paths.sitePaths(),LM=JSON.parse(require('node:fs').readFileSync(require('node:path').join(__dirname,'../lib/site/lastmod.generated.json'),'utf8'));for(const g of PAGES)assert.equal(sp.find(x=>x.path===g.path).lastmod,LM[g.path],`${g.path}: lastmod is the page's own last change (scripts/gen-lastmod.cjs, Nov 15 2026)`);
 
 // ---- 2. rendered HTML ---------------------------------------------------------------------------------------------------------
 const text=h=>h.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<(title|desc)[\s\S]*?<\/\1>/g,' ').replace(/<[^>]+>/g,' ').replace(/&#x27;|&#39;/g,'’').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();

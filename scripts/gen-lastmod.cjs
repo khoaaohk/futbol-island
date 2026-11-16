@@ -1,0 +1,82 @@
+#!/usr/bin/env node
+/**
+ * Per-URL sitemap <lastmod> (SEO, Nov 15 2026): for every path in lib/site/paths.ts sitePaths(), the date of the last git commit
+ * that touched the page's route file(s) or the data the page is built from (DEPS below). Files with uncommitted changes count
+ * as today, so running this before a commit gives the date that commit will have. Writes lib/site/lastmod.generated.json,
+ * which sitePaths() reads (no git at build time: Vercel's clone may be shallow, and a build must never fake freshness).
+ * Usage: node scripts/gen-lastmod.cjs [--check]   (--check: exit 1 when the file is out of date; prints one line)
+ */
+const fs=require('node:fs'),path=require('node:path'),ts=require('typescript'),vm=require('node:vm'),{execFileSync}=require('node:child_process');
+const root=path.join(__dirname,'..'),OUT=path.join(root,'lib/site/lastmod.generated.json');
+const cache=new Map();
+function load(file){
+ if(cache.has(file))return cache.get(file).exports;
+ if(file.endsWith('.json'))return JSON.parse(fs.readFileSync(file,'utf8'));
+ const mod={exports:{}};cache.set(file,mod);
+ const out=ts.transpileModule(fs.readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,esModuleInterop:true,resolveJsonModule:true,jsx:ts.JsxEmit.React}}).outputText;
+ vm.runInNewContext(out,{Math,JSON,Set,Map,Object,Array,Number,String,Symbol,Promise,Error,RegExp,Date,Boolean,Infinity,NaN,isFinite,console,URL,URLSearchParams,Intl,
+  process:{env:{NODE_ENV:'production'},cwd:()=>root},exports:mod.exports,module:mod,require:id=>{
+  if(!id.startsWith('.')&&!id.startsWith('@/'))return require(id);
+  const base=id.startsWith('@/')?path.join(root,id.slice(2)):path.resolve(path.dirname(file),id);
+  for(const f of [base,base+'.ts',base+'.tsx',base+'.json'])if(fs.existsSync(f)&&fs.statSync(f).isFile())return load(f);
+  throw new Error('Cannot resolve '+id+' from '+file);}});
+ return mod.exports;
+}
+/** The data each family of pages is built from, by path prefix (first match wins). Route files are found from the path. */
+const L='lib/site/',T='lib/town/',SHARED=[L+'GuideParts.tsx',L+'readNext.ts','components/site/ReadNext.tsx'];
+const DEPS=[
+ [/^\/cards\/\d+$/,[L+'cards.ts',L+'cardNotes.ts',L+'cardNotes.json',L+'cardPlays.generated.json',L+'related.ts',L+'collections.ts',T+'playerProfiles.json',T+'playerCareers.json','components/site/RelatedLinks.tsx']],
+ [/^\/cards\/./,[L+'collections.ts',L+'cardGroups.ts','components/site/CollectionHub.tsx',L+'cards.ts']],
+ [/^\/fish\/spots$|^\/fish\/[a-z-]+-and-|^\/fish\/sharks$/,[L+'collections.ts','components/site/CollectionHub.tsx','lib/town/fishing/fishCatalog.ts']],
+ [/^\/fish\/./,[L+'fish.ts',L+'fishNotes.ts',L+'fishNotes.json',L+'related.ts',L+'collections.ts','lib/town/fishing/fishCatalog.ts','components/site/RelatedLinks.tsx']],
+ [/^\/exhibits\/./,[L+'exhibits.ts',L+'related.ts','components/site/RelatedLinks.tsx']],
+ [/^\/(cards|fish|exhibits)$/,[L+'collections.ts']],
+ [/^\/learn\/lessons\/./,[L+'lessons.ts','public/lessons',L+'related.ts',...SHARED]],
+ [/^\/learn\/soccer-rules\/./,[L+'rules.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'drillLinks.ts',...SHARED]],
+ [/^\/learn\/soccer-terms\/./,[L+'terms.ts',L+'notesGuides.ts',L+'drillLinks.ts',...SHARED]],
+ [/^\/learn\/soccer-positions\/.*-vs-|^\/learn\/soccer-formations\/.*-vs-/,[L+'comparisons.ts',L+'positions.ts',L+'formations.ts','components/site/ComparePage.tsx']],
+ [/^\/learn\/soccer-positions\/./,[L+'positions.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'collections.ts',L+'drillLinks.ts',...SHARED]],
+ [/^\/learn\/soccer-formations\/./,[L+'formations.ts',L+'notesGuides.ts',L+'comparisons.ts',...SHARED]],
+ [/^\/learn\/soccer-drills\/./,[L+'drills.ts',L+'drillsA.ts',L+'drillsB.ts',L+'drillsC.ts',L+'drillsD.ts',L+'drillGuides.ts',L+'notesDrills.ts',L+'drillLinks.ts','lib/site/DrillParts.tsx',...SHARED]],
+ [/^\/learn\/soccer-practice-plans\/./,[L+'plans.ts',...SHARED]],
+ [/^\/learn\//,[L+'hubs.ts',L+'guides.ts','components/site/LessonHub.tsx']],
+ [/^\/tools/,[L+'tools']],[/^\/games/,[L+'games.ts']],
+];
+/** The route file(s) of a path: app/(site)<path>/page.tsx, else the nearest dynamic [param] folder; /play and /privacy are outside (site). */
+function routeFiles(p){
+ const tries=[`app/(site)${p==='/'?'':p}/page.tsx`,`app${p}/page.tsx`];
+ for(const t of tries)if(fs.existsSync(path.join(root,t)))return [t];
+ const parts=p.split('/').filter(Boolean);
+ for(let i=parts.length-1;i>=0;i--){
+  const dir=`app/(site)/${parts.slice(0,i).join('/')}`.replace(/\/$/,''),abs=path.join(root,dir);
+  if(!fs.existsSync(abs))continue;
+  const dyn=fs.readdirSync(abs).find(d=>/^\[.+\]$/.test(d));
+  if(dyn)return [`${dir}/${dyn}/page.tsx`];
+ }
+ throw new Error('no route file for '+p);
+}
+const git=(args)=>execFileSync('git',args,{cwd:root,encoding:'utf8'}).trim();
+const now=new Date(),today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;/* local, like git's %cs */
+const memo=new Map();
+function dateOf(files){
+ const k=files.join('|');if(memo.has(k))return memo.get(k);
+ const existing=files.filter(f=>fs.existsSync(path.join(root,f)));
+ const dirty=git(['status','--porcelain','--',...existing]);
+ const d=dirty?today:git(['log','-1','--format=%cs','--',...existing])||today;
+ memo.set(k,d);return d;
+}
+function build(){
+ const {sitePaths}=load(path.join(root,'lib/site/paths.ts'));
+ const out={};
+ for(const {path:p} of sitePaths()){const deps=(DEPS.find(([re])=>re.test(p))||[,[]])[1];out[p]=dateOf([...routeFiles(p),...deps].sort());}
+ return out;
+}
+module.exports={build,routeFiles};
+if(require.main===module){
+ const next=build(),json=JSON.stringify(next,null,0).replace(/,"/g,',\n"')+'\n';
+ if(process.argv.includes('--check')){
+  const cur=fs.existsSync(OUT)?fs.readFileSync(OUT,'utf8'):'';
+  if(cur!==json){console.log('lastmod: lib/site/lastmod.generated.json is out of date (run node scripts/gen-lastmod.cjs)');process.exit(1);}
+  console.log(`lastmod: ${Object.keys(next).length} paths up to date`);
+ }else{fs.writeFileSync(OUT,json);const days=new Set(Object.values(next));console.log(`lastmod: wrote ${Object.keys(next).length} paths, ${days.size} distinct dates`);}
+}

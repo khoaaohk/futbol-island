@@ -70,10 +70,10 @@ const J=x=>JSON.parse(JSON.stringify(x));// values built inside the vm have anot
  const PATHS=new Set(paths.sitePaths().map(p=>p.path));
  const check=(name,self,r,extra)=>{
   const all=[r.prev,r.next,...r.groups.flatMap(g=>g.links),...r.read];
-  for(const l of all){assert(PATHS.has(l.path),`${name}: ${l.path} is a sitemap page`);assert(l.name&&l.path!==self,`${name}: no empty or self link`);}
+  for(const l of all){assert(PATHS.has(l.path.split('#')[0]),`${name}: ${l.path} is a sitemap page`);assert(l.name&&l.path!==self,`${name}: no empty or self link`);}
   const inGroups=[...r.groups.flatMap(g=>g.links),...r.read].map(l=>l.path);assert.equal(new Set(inGroups).size,inGroups.length,`${name}: no page listed twice`);
   for(const g of r.groups)assert(g.title&&g.links.length>0,`${name}: no empty group`);
-  const n=all.length+extra;assert(n>=8&&n<=15,`${name}: ${n} body links (8-15)`);return n;
+  const n=all.length+extra;assert(n>=8&&n<=18,`${name}: ${n} body links (8-18; Nov 15 2026: + position guide, collection hubs, spot)`);return n;
  };
  // + the breadcrumb's two links and the one gold button
  let sum=0;for(const c of cards.SITE_CARDS){sum+=check('card '+c.number,cards.cardPath(c.number),rel.cardRelated(c),3);assert(PATHS.has(lessons.lessonPath(rel.roleLesson(c).id)));}

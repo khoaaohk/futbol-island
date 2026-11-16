@@ -8,6 +8,9 @@ import {ALL_GUIDE_PAGES} from './guides';
 import {TOOL_PAGES,TOOLS_UPDATED} from './tools/registry';
 import {GAME_LISTINGS,GAMES_UPDATED} from './games';
 import {FACTS_PATH,FAMILY_CHECKED} from './checked';
+import {COLLECTIONS,COLLECTIONS_UPDATED} from './collections';
+import {COMPARISONS,COMPARISONS_UPDATED} from './comparisons';
+import generated from './lastmod.generated.json';
 /**
  * Every public, indexable path (app/sitemap.ts, tests/seo-pages.cjs). Nov 3 2026 (owner): `/` is the home page (the feature tour,
  * formerly /learn, which now redirects to `/`) and the main entry; the game is /play, indexable at a low priority.
@@ -19,8 +22,14 @@ export const INDEX_PATHS=['/learn/lessons','/fish','/cards','/exhibits'] as cons
 export const HOME_UPDATED=SITE_UPDATED.home;
 /** The topic hubs (lib/site/hubs.ts) and the parents' guide (SEO, Nov 8 2026). */
 export const GUIDE_PATHS=[...HUB_PATHS,SAFE_GUIDE.path] as const;
-/** Every path with its sitemap priority and its section's real content date (lib/site/updated.ts; no build-time "now"). */
+/** Nov 15 2026 (seo-links): each URL's own last change (scripts/gen-lastmod.cjs: the last commit touching its route and data
+ *  files), read from lib/site/lastmod.generated.json; the hand-kept section date below is the fallback for a path not in it. */
+const LASTMOD=generated as Record<string,string>;
+/** Every path with its sitemap priority and its real content date (no build-time "now"). */
 export function sitePaths():{path:string;priority:number;lastmod:string}[]{
+ return sectionPaths().map(x=>({...x,lastmod:LASTMOD[x.path]??x.lastmod}));
+}
+function sectionPaths():{path:string;priority:number;lastmod:string}[]{
  const U=SITE_UPDATED;
  return [{path:'/',priority:1,lastmod:U.home},{path:'/about',priority:.9,lastmod:U.about},{path:'/play',priority:.3,lastmod:U.play},{path:'/privacy',priority:.5,lastmod:U.privacy},{path:'/marketing',priority:.4,lastmod:U.marketing},
   {path:FACTS_PATH,priority:.5,lastmod:FAMILY_CHECKED.rules},/* the trust page (lib/site/checked.ts, Nov 15 2026) */
@@ -30,5 +39,7 @@ export function sitePaths():{path:string;priority:number;lastmod:string}[]{
   ...TOOL_PAGES.map(t=>({path:t.path,priority:t.hub?.8:.7,lastmod:TOOLS_UPDATED})),/* the free coach tools and printables (lib/site/tools/registry.ts) */
   ...GAME_LISTINGS.map(g=>({path:g.path,priority:g.hub?.8:.7,lastmod:GAMES_UPDATED})),/* the arcade games' search pages (lib/site/games.ts) */
   ...LESSONS.map(l=>({path:lessonPath(l.id),priority:.6,lastmod:U.lessons})),...SITE_FISH.map(f=>({path:fishPath(f.id),priority:.4,lastmod:U.fish})),
-  ...SITE_CARDS.map(c=>({path:cardPath(c.number),priority:.4,lastmod:U.cards})),...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),priority:.5,lastmod:U.exhibits}))];
+  ...SITE_CARDS.map(c=>({path:cardPath(c.number),priority:.4,lastmod:U.cards})),...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),priority:.5,lastmod:U.exhibits})),
+  ...COLLECTIONS.map(c=>({path:c.path,priority:.7,lastmod:COLLECTIONS_UPDATED})),/* card and Fishbook hubs (lib/site/collections.ts) */
+  ...COMPARISONS.map(c=>({path:c.path,priority:.7,lastmod:COMPARISONS_UPDATED}))];/* "A vs B" guides (lib/site/comparisons.ts) */
 }

@@ -1,3 +1,4 @@
+import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
@@ -65,5 +66,6 @@ export default function LessonPage({params}:{params:{slug:string}}){
   </section>}
   <QA id="faq" title="Questions grown-ups ask" faq={faq}/>
   <p className={styles.end}><a className={styles.cta} href="/play">Play this lesson on the island</a></p>
+  <ReadNext path={lessonPath(l.id)}/>
  </>;
 }

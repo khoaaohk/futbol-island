@@ -1,3 +1,4 @@
+import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -62,6 +63,7 @@ function DrillPage({d}:{d:Drill}){
   <p className={styles.caption}>{GUIDE_FOOT}</p>
   <CheckedLine date={FAMILY_CHECKED.drills}/>
   <p className={styles.end}><a className={styles.cta} href={lessonPath(d.cta.id)}>Play the lesson: {d.cta.title}</a></p>
+  <ReadNext path={d.path}/>
  </>;
 }
 function GuidePage({g}:{g:DrillGuide}){
@@ -92,6 +94,7 @@ function GuidePage({g}:{g:DrillGuide}){
   <p className={styles.caption}>{GUIDE_FOOT}</p>
   <CheckedLine date={FAMILY_CHECKED.drills}/>
   <p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Play it on the island</a></p>
+  <ReadNext path={g.path}/>
  </>;
 }
 export default function DrillOrGuide({params}:{params:{slug:string}}){

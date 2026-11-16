@@ -1,4 +1,6 @@
 import JsonLd from '@/components/seo/JsonLd';
+import {CollectionLinks} from '@/components/site/CollectionHub';
+import {CARD_COLLECTIONS} from '@/lib/site/collections';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {cardPath,SITE_CARDS} from '@/lib/site/cards';
 import {ROLE_LABELS,ROLE_ORDER} from '@/lib/town/cardCollection';
@@ -22,6 +24,7 @@ export default function CardsIndex(){
    <p className={styles.lead}>{DESC} Every card tells you the player’s position, what they are good at and where they played.</p>
    <a className={styles.cta} href="/play">Collect cards on the island</a>
   </header>
+  <CollectionLinks list={CARD_COLLECTIONS} title="Browse the cards by collection"/>
   {ROLE_ORDER.map(role=>{const list=SITE_CARDS.filter(c=>c.role===role);if(!list.length)return null;return <section key={role} className={styles.section} aria-labelledby={`role-${role}`}>
    <h2 className={styles.h2} id={`role-${role}`}>{ROLE_LABELS[role]??role} <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(c=><li key={c.number}><a href={cardPath(c.number)}><span className={styles.itemTitle}>#{c.number} {c.displayName}</span><span className={styles.itemMeta}>{[c.country,c.era==='allTime'?'All-time great':'Current'].filter(Boolean).join(' · ')}</span></a></li>)}</ul>

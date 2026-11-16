@@ -6,6 +6,7 @@ import {SITE_EXHIBITS,exhibitPath} from '../exhibits';
 import {fileUrl,PRINTABLES,PRINTABLES_HUB_PATH} from './printables';
 import {TOOL_PAGES} from './registry';
 import {GAME_LISTINGS} from '../games';
+import {COMPARISONS} from '../comparisons';
 /**
  * /sitemap-images.xml (Nov 10 2026): the pictures of each page for image search, as Google's image sitemap extension. Next
  * 14.2.15's MetadataRoute.Sitemap has no `images` field (it arrived in a later release), so this is its own static file,
@@ -23,6 +24,7 @@ export function imageEntries():ImageEntry[]{
   ...SITE_FISH.map(f=>({path:fishPath(f.id),images:[fishArtPath(f.id),ogPath(fishPath(f.id))]})),
   ...SITE_CARDS.map(c=>({path:cardPath(c.number),images:[ogPath(cardPath(c.number))]})),
   ...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),images:[ogPath(exhibitPath(e.id))]})),
+  ...COMPARISONS.map(c=>({path:c.path,images:c.images})),/* Nov 15 2026: the two diagrams an "A vs B" page compares */
  ];
 }
 const x=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
