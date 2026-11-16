@@ -9,7 +9,7 @@ import styles from '@/app/(site)/site.module.css';
  * lines. "Hide" keeps it away for this visit (sessionStorage, try/catch). Renders nothing on the server.
  */
 const OFF_KEY='fi-playbar-off';
-export default function PlayBar({href,text}:{href:string;text:string}){
+export default function PlayBar({href,text,lang}:{href:string;text:string;lang?:'es'}){/* lang (Nov 15 2026): the Spanish pages' words */
  const [show,setShow]=useState(false),[off,setOff]=useState(true),bar=useRef<HTMLDivElement>(null);
  useEffect(()=>{let gone=false;try{gone=sessionStorage.getItem(OFF_KEY)==='1';}catch{/* private mode */}setOff(gone);},[]);
  useEffect(()=>{
@@ -25,8 +25,8 @@ export default function PlayBar({href,text}:{href:string;text:string}){
  const hide=()=>{setOff(true);try{sessionStorage.setItem(OFF_KEY,'1');}catch{/* private mode */}};
  return <div ref={bar} className={styles.playBar} hidden={!show||off} data-play-bar="">
   <span className={styles.playBarText}>{text}</span>
-  <a className={styles.playBarBtn} href={href}>Play free</a>
-  <button type="button" className={styles.playBarHide} onClick={hide} aria-label="Hide the Play bar">
+  <a className={styles.playBarBtn} href={href}>{lang==='es'?'Juega gratis':'Play free'}</a>
+  <button type="button" className={styles.playBarHide} onClick={hide} aria-label={lang==='es'?'Ocultar la barra de Jugar':'Hide the Play bar'}>
    <span aria-hidden="true" className={styles.playBarX}/>
   </button>
  </div>;

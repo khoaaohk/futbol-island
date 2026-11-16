@@ -23,9 +23,11 @@ export default function GameError({error,reset}:{error:Error&{digest?:string};re
   window.addEventListener('online',sync);window.addEventListener('offline',sync);
   return()=>{window.removeEventListener('online',sync);window.removeEventListener('offline',sync);};
  },[]);
- return <div className={styles.screen}><div className={styles.card} role="alert" data-game-error="">
+ /* Nov 15 2026: its own <html>/<body>. The root layout is a pass-through now, so this boundary replaces the whole section layout
+    (components/site/HtmlShell.tsx), document shell included. */
+ return <html lang="en" suppressHydrationWarning><body><div className={styles.screen}><div className={styles.card} role="alert" data-game-error="">
   <h2 className={styles.title}>{offline?'No internet right now':'Oops! The island tripped over the ball.'}</h2>
   <p className={styles.text}>{offline?'Connect to Wi-Fi or data, then tap Try again. Your island is saved.':'Tap Try again to jump back in. Your island is saved.'}</p>
   <button type="button" className={styles.button} disabled={offline} onClick={()=>{if(isChunkError(error))window.location.reload();else reset();}}>Try again</button>
- </div></div>;
+ </div></div></body></html>;
 }

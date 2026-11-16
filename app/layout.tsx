@@ -1,19 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import '@/components/arcade/arcadeChrome.css';
-import ExternalLinkGate from '@/components/ExternalLinkGate';
-import RotateLock from "@/components/RotateLock";
-import VisitTracker from '@/components/VisitTracker';
-import ErrorBeacon from '@/components/ErrorBeacon';
-import NetSaveNotice from '@/components/NetSaveNotice';
-import WelcomeTally from '@/components/WelcomeTally';
-import { STORAGE_FALLBACK_BOOT } from '@/lib/storageFallback';
-/** Vercel Web Analytics was removed on Oct 7 2026 (a paid duplicate, $3 per 100k events): the first-party counter below and
- *  the /admin dashboard now cover visitors, sources, countries and time on site. */
-/** First-party visit counter for /admin (Oct 7 2026; lib/analytics/tracker.ts): no cookies, no stored IP/UA, a per-tab session id
- *  only. Production deployments only: preview deployments, `next dev` and local builds skip it (FI_VISITS_LOCAL=1 opts a local
- *  build in for testing). */
-const VISITS = process.env.VERCEL_ENV === 'production' || process.env.FI_VISITS_LOCAL === '1';
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover' };
 const description = 'Explore Futbol Island to learn futsal, 7v7, 9v9, and 11v11 through lessons, quizzes, and stories.';
 export const metadata: Metadata = {
@@ -28,7 +15,6 @@ export const metadata: Metadata = {
   twitter: { card: 'summary_large_image', title: 'Futbol Island', description },
 };
 // The IslandBrush font preload lives on the routes that use it at once (lib/islandBrushPreload.ts), not here: the museum warned.
-// suppressHydrationWarning on <html> only: two pre-paint boot scripts set <html data-island-handoff> (the title
-// screen → game hand-off) and <html data-root-view> (`/`: title screen or game, lib/rootView.ts) before React hydrates, which is intended and would otherwise log "Extra attributes from the server".
-export default function Layout({ children }: { children: React.ReactNode }) { return <html lang="en" suppressHydrationWarning><head/><body><script dangerouslySetInnerHTML={{ __html: STORAGE_FALLBACK_BOOT }}/>{children}<NetSaveNotice/><WelcomeTally/><RotateLock/><ExternalLinkGate/>{VISITS && <VisitTracker allowLocalhost={process.env.FI_VISITS_LOCAL === '1'}/>}{VISITS && <ErrorBeacon/>}
-  </body></html>; }
+// Nov 15 2026 (Spanish round 1): a pass-through. <html lang> and <body> live in components/site/HtmlShell.tsx, rendered by each
+// top-level section's layout (lang "en") and app/es/layout.tsx (lang "es"), so Spanish pages get <html lang="es"> statically.
+export default function Layout({ children }: { children: React.ReactNode }) { return <>{children}</>; }

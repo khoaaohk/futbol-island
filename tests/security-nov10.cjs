@@ -74,7 +74,7 @@ await ok('error beacon: scrubbed, keyed, capped; store and limiter caps',async()
  assert.equal(await mem.hit('err','k1',''),true,'existing keys still count');const top=await mem.top('err',7,20);assert.equal(top.rows.length,20);assert.equal(top.rows[0].n,2);
  const lim=R.createReportLimiter();let a=0;for(let i=0;i<30;i++)if(lim.allow('1.2.3.4',0))a++;assert.equal(a,20);assert(lim.allow('5.6.7.8',0));
  const beacon=read('components/ErrorBeacon.tsx');{const body=beacon.match(/JSON\.stringify\(\{(m:[^;]*?)\}\);/)[1];assert(/MAX=3/.test(beacon)&&/sendBeacon/.test(beacon)&&/doNotTrack/.test(beacon)&&!/stack|userAgent|href|search/.test(body),'body: m, f, l, r only');}
- assert(/<ErrorBeacon\/>/.test(read('app/layout.tsx')));
+ assert(/<ErrorBeacon\/>/.test(read('components/site/HtmlShell.tsx')));
 });
 await ok('leaderboard rate ceilings from the games\' real scoring',()=>{
  const p=L.BOARD_RULES.pinball;assert.equal(p.perSecond,1200);assert.equal(p.base,3000);

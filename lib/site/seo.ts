@@ -1,4 +1,5 @@
 import type {Metadata} from 'next';
+import {hasEs,languageAlternates} from '@/lib/i18n/esPaths';
 /**
  * The static reading pages (Oct 16 2026, "make the site easier to find through ChatGPT, Claude and search"): shared metadata
  * and JSON-LD helpers for app/(site)/*, app/sitemap.ts, app/robots.ts and the llms files. Pure data: no env reads, no client
@@ -36,10 +37,12 @@ export function fitDescription(d:string):string{
 /** Page metadata: "X · Futbol Island" (or the title as given with `whole`, for the home page), description, canonical, Open Graph. */
 export function pageMeta(title:string,description:string,path:string,o:{whole?:boolean;type?:'article'|'website';image?:{url:string;alt:string}}={}):Metadata{
  const full=fitTitle(title,o.whole);description=fitDescription(description);
- if(o.image)return {title:full,description,alternates:{canonical:path},/* a page with its own picture (guide diagrams, lib/site/guides.ts) */
+ // Nov 15 2026 (Spanish round 1): a page with a Spanish version names both (hreflang en / es / x-default; lib/i18n/esPaths.ts).
+ const alternates=hasEs(path)?{canonical:path,languages:languageAlternates(path)}:{canonical:path};
+ if(o.image)return {title:full,description,alternates,/* a page with its own picture (guide diagrams, lib/site/guides.ts) */
   openGraph:{title:full,description,url:path,siteName:SITE_NAME,type:o.type??'article',images:[{url:o.image.url,width:1200,height:630,alt:o.image.alt}]},
   twitter:{card:'summary_large_image',title:full,description,images:[o.image.url]}};
- return {title:full,description,alternates:{canonical:path},
+ return {title:full,description,alternates,
   openGraph:{title:full,description,url:path,siteName:SITE_NAME,type:o.type??'article',images:[{url:'/opengraph-image.png',width:1200,height:630,alt:SITE_NAME}]},
   twitter:{card:'summary_large_image',title:full,description,images:['/opengraph-image.png']}};
 }

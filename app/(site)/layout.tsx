@@ -1,5 +1,7 @@
+import HtmlShell from '@/components/site/HtmlShell';
 import {preloadIslandBrush} from '@/lib/islandBrushPreload';
 import SiteNav from '@/components/site/SiteNav';
+import LangSwitch from '@/components/site/LangSwitch';
 import styles from './site.module.css';
 /**
  * The static reading pages (Oct 16 2026: "make the site easier to find through ChatGPT, Claude and search"): `/` (home), /about,
@@ -13,7 +15,7 @@ const FOOTER_HUBS:readonly (readonly [string,string])[]=[['/learn/lessons','Less
  ['/learn/soccer-age-groups','Age groups'],['/tools','Coach tools'],['/games','Games'],['/cards','Player cards'],['/fish','Fishbook'],['/exhibits','Museum']];
 export default function SiteLayout({children}:{children:React.ReactNode}){
  preloadIslandBrush();
- return <div className={styles.page} data-reading-page="">
+ return <HtmlShell lang="en"><div className={styles.page} data-reading-page="">
   <style>{'html,body{background:#fbf7ee;color-scheme:light}'}</style>
   {/* Nov 10 2026 (owner: "fix all these pages to match more with the main site"): the home page's bar, static (SiteNav). This
       replaces the Oct 16 "brand only, no section navigation" header. It stays a direct <header> child: the home page and
@@ -24,10 +26,11 @@ export default function SiteLayout({children}:{children:React.ReactNode}){
    <span>Futbol Island · a free football learning game for kids.</span>
    <a href="/">What’s inside</a>
    <a href="/privacy">Privacy</a>
+   <LangSwitch/>{/* EN | ES where the page has a Spanish version (Nov 15 2026) */}
   </div>
   {/* Nov 14 2026 (seo-boost, owner-approved: "the home page links to the main hubs"): the guide hubs, one quiet row on every
       reading page and the home page, so each hub is one click from anywhere. Plain links, same footer style. */}
   <nav className={styles.footerInner} aria-label="Guides">{FOOTER_HUBS.map(([href,label])=><a key={href} href={href}>{label}</a>)}</nav>
   </footer>
- </div>;
+ </div></HtmlShell>;
 }

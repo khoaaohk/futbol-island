@@ -427,7 +427,7 @@ await ok('sql',async()=>{
 
 // 11. Wiring: production-only mount, Vercel Analytics kept, migration locks the tables down.
 await ok('wiring',async()=>{
- const layout=read('app/layout.tsx');
+ const layout=read('components/site/HtmlShell.tsx');/* the document shell left app/layout.tsx on Nov 15 2026 */
  assert(!/@vercel\/analytics|<Analytics\/>/.test(layout),'Vercel Web Analytics removed Oct 7 2026; the first-party counter replaces it');
  assert(/const VISITS = process\.env\.VERCEL_ENV === 'production'/.test(layout)&&/\{VISITS && <VisitTracker/.test(layout),'the tracker mounts on production deployments only');
  const sql=read('supabase/migrations/20261007_analytics.sql');

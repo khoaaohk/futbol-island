@@ -28,7 +28,7 @@ const mem=()=>{const d=new Map();return {getItem:k=>d.has(k)?d.get(k):null,setIt
  // Working storage (and one that only refuses writes, a full disk) is left alone.
  {const real=mem(),ctx=vm.createContext({localStorage:real,sessionStorage:{getItem(){return null;},setItem(){throw Error('QuotaExceededError');}}});ctx.window=ctx;
   vm.runInContext(STORAGE_FALLBACK_BOOT,ctx);assert.equal(vm.runInContext('localStorage',ctx),real,'working storage untouched');assert.equal(ctx.__fiMemoryStorage,undefined);}
- const layout=read('app/layout.tsx');
+ const layout=read('components/site/HtmlShell.tsx');/* the document shell, Nov 15 2026 */
  assert.match(layout,/<body><script dangerouslySetInnerHTML=\{\{ __html: STORAGE_FALLBACK_BOOT \}\}\/>\{children\}/,'the fallback runs first in <body>, before any game chunk');
 
  // 2. Restore: a host error (502/504/500, a 429 from the edge, a non-JSON page) is "can't reach", never a wrong try.
@@ -91,7 +91,7 @@ const mem=()=>{const d=new Map();return {getItem:k=>d.has(k)?d.get(k):null,setIt
   assert.equal(wantsNoSaveNote({__fiNoSave:true,sessionStorage:ss},'/admin'),false);
   assert.equal(wantsNoSaveNote({sessionStorage:ss},'/play'),false,'storage works: no note');
   ss.setItem('fi2-no-save-note-v1','1');assert.equal(wantsNoSaveNote({__fiNoSave:true,sessionStorage:ss},'/arcade'),false,'once per visit');
-  assert.match(read('app/layout.tsx'),/\{children\}<NetSaveNotice\/>/,'mounted on every page');
+  assert.match(read('components/site/HtmlShell.tsx'),/\{children\}<NetSaveNotice\/>/,'mounted on every page');
   assert.match(read('components/NetSaveNotice.module.css'),/max-width:min\(380px,100%\)/,'phone-safe width');
   assert(src.includes('createPortal(note,host)')&&src.includes("matches(':modal')"),'drawn inside an open modal dialog (top layer), not hidden behind it');}
  console.log('qa-robust-nov14: ok');
