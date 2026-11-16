@@ -12,9 +12,10 @@ PROJECT.md
 vendor
 docs/story-production
 
-# Local test output and screenshots are never deployed.
-test-results
-playwright-report
-shots
-audit
-var-shots
+# Local test output and screenshots are never deployed. Root-anchored (Nov 16 2026): a bare `shots` also dropped
+# public/games/shots, so the /games screenshots 404'd live.
+/test-results
+/playwright-report
+/shots
+/audit
+/var-shots

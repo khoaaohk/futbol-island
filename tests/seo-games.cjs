@@ -171,5 +171,9 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
  const cfg=(await import(require('node:url').pathToFileURL(path.join(root,'next.config.mjs')).href)).default('phase-production-build');
  for(const r of await cfg.redirects()){const hostOnly=(r.has||[]).some(h=>h.type==='host');assert(hostOnly||r.source==='/'||r.source==='/learn'||r.source==='/es/learn'/* Spanish search: /es/learn without ?q= -> /es */||r.source.startsWith('/learn/'),`redirect ${r.source} cannot swallow /games`);}
  for(const r of [].concat((await cfg.rewrites()).beforeFiles||[]))assert(!r.source.startsWith('/games'),'no rewrite on /games');
+ // Nov 16 2026: a bare `shots` line in .vercelignore dropped public/games/shots from the deploy (screenshots 404'd live). Every
+ // ignore pattern must be root-anchored or must not match a folder the pages serve from public/.
+ const ign=read('.vercelignore').split('\n').map(l=>l.trim()).filter(l=>l&&!l.startsWith('#'));
+ for(const d of ['games','games/shots','games/clips'])for(const seg of d.split('/'))assert(!ign.includes(seg),`.vercelignore "${seg}" would drop public/${d} from the deploy (anchor it with a leading /)`);
  console.log(`seo-games: ${ALL.length} pages, ${PAGES.reduce((n,g)=>n+g.faq.length,0)+HUB.faq.length} questions, ${fs.readdirSync(pub('games')).length} pictures ok`);
 })().catch(e=>{console.error(e);process.exit(1);});
