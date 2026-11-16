@@ -433,7 +433,9 @@ await ok('retention',async()=>{
  const cron=read('app/api/cron/analytics/route.ts');assert(cron.indexOf('cronAuthorized(')<cron.indexOf('await purgeSaves()')&&/saves\.purge\(/.test(cron),'the nightly cron purges, after the secret check');
  const vercel=JSON.parse(read('vercel.json'));
  assert.deepEqual(vercel.crons,[{path:'/api/cron/analytics',schedule:'30 10 * * *'},{path:'/api/cron/scores',schedule:'*/5 * * * *'}],'crons unchanged');
- assert.equal(vercel.ignoreCommand,"git diff --quiet HEAD^ HEAD -- . ':(exclude)docs' ':(exclude)*.md'",'ignoreCommand unchanged');
+ // Nov 16 2026: compare with the last deployed commit (VERCEL_GIT_PREVIOUS_SHA), not just the newest commit: a push ending in a
+ // docs-only commit was skipped whole (the rules pages release). Falls back to HEAD^; a missing SHA makes git fail = build.
+ assert.equal(vercel.ignoreCommand,"git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)docs' ':(exclude)*.md'",'ignoreCommand unchanged');
 });
 
 // 10. A full two-device flow through the real client module, the real handler and the memory store.
