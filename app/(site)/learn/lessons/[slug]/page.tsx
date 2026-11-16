@@ -9,7 +9,8 @@ import {lessonSiblings} from '@/lib/site/related';
 import {HUB_COMMON_FAQ,SAFE_TRUST_LINE} from '@/lib/site/safety';
 import {LESSON_DATA_UPDATED,SITE_PUBLISHED,SITE_UPDATED} from '@/lib/site/updated';
 import {formatPhrase,LESSONS,lessonById,lessonDescription,lessonPath,lessonTitle} from '@/lib/site/lessons';
-import {abs,breadcrumbLd,faqLd,KIDS_AUDIENCE,pageMeta,PUBLISHER,SITE_NAME,SITE_URL} from '@/lib/site/seo';
+import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
+import {lessonLd} from '@/lib/site/learningLd';
 import styles from '../../../site.module.css';
 
 /** One lesson as plain text. The quiz shows its questions, options and explanations, never which option is correct. */
@@ -26,11 +27,7 @@ export default function LessonPage({params}:{params:{slug:string}}){
  const guides=guidesForLesson(l.id);/* formations and positions pages that teach from this lesson (lib/site/guides.ts) */
  const sib=lessonSiblings(l),hubs=hubsFor(l.id),faq=[{q:'How do I play this lesson?',a:'Open Futbol Island at futbolisland.app/play and start an island or continue with a save code. In the game, a coach voice shows each idea on a pitch with moving players, step by step, and a quick quiz checks it.'},...HUB_COMMON_FAQ];
  return <>
-  <JsonLd data={{'@context':'https://schema.org','@type':'LearningResource',name:l.title,url:abs(lessonPath(l.id)),description:l.concept,
-   inLanguage:'en',isAccessibleForFree:true,educationalLevel:l.difficulty??'Beginner',learningResourceType:['Lesson','Quiz'],
-   teaches:l.concept,about:{'@type':'Thing',name:`${l.formatLabel} football`},keywords:[l.formatLabel,l.category,l.chapter].filter(Boolean).join(', '),
-   audience:KIDS_AUDIENCE,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,
-   datePublished:SITE_PUBLISHED,dateModified:LESSON_DATA_UPDATED>SITE_UPDATED.lessons?LESSON_DATA_UPDATED:SITE_UPDATED.lessons}}/>
+  <JsonLd data={lessonLd({name:l.title,path:lessonPath(l.id),description:l.concept,teaches:l.concept,level:l.difficulty,about:`${l.formatLabel} football`,keywords:[l.formatLabel,l.category,l.chapter].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:LESSON_DATA_UPDATED>SITE_UPDATED.lessons?LESSON_DATA_UPDATED:SITE_UPDATED.lessons,questions:l.questions})}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={faqLd(faq)}/>
   <header className={styles.intro}>
