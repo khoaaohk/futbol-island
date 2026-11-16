@@ -10,7 +10,8 @@
  body:has(.sheet) [data-reading-page]{min-height:0!important;background:#fff!important}
  main:has(.sheet){padding:0!important;gap:8pt!important;max-width:none!important}
  main:has(.sheet)>:not(header):not(.sheet):not(section[aria-labelledby=diagram]):not(section[aria-labelledby=facts]):not(section[aria-labelledby=steps]):not(section[aria-labelledby=cues]):not(section[aria-labelledby=referee]):not(section[aria-labelledby=mixups]){display:none!important}
- main:has(.sheet)>header{padding:0!important;gap:4pt!important;justify-items:start!important;text-align:left!important}
+ main:has(.sheet)>header{padding:0!important;margin:0!important;gap:4pt!important;justify-items:start!important;text-align:left!important}
+ main:has(.sheet) section *{box-shadow:none!important}
  main:has(.sheet)>header>:not(h1):not([data-answer]){display:none!important}
  main:has(.sheet) h1{font-size:20pt!important}
  main:has(.sheet) h2{font-size:12.5pt!important;line-height:1.2!important}
