@@ -5,8 +5,8 @@
  * the screenshot script checks it in a real browser), so nothing the owner had is lost.
  * `def`: the daily-layer series that defines it (its row in Definitions), when there is one.
  */
-export type DashTab='overview'|'players'|'learning'|'island'|'matches'|'fishing'|'marketing'|'live'|'report';
-export const DASH_TABS:[DashTab,string][]=[['overview','Overview'],['players','Players and retention'],['learning','Learning'],['island','Island and games'],['matches','Live matches'],['fishing','Fishing'],['marketing','Marketing'],['live','Live now'],['report','Sponsor report']];
+export type DashTab='overview'|'players'|'learning'|'island'|'matches'|'fishing'|'marketing'|'seo'|'live'|'report';
+export const DASH_TABS:[DashTab,string][]=[['overview','Overview'],['players','Players and retention'],['learning','Learning'],['island','Island and games'],['matches','Live matches'],['fishing','Fishing'],['marketing','Marketing'],['seo','SEO'],['live','Live now'],['report','Sponsor report']];
 /** Old tab hashes (#engagement …) open the tab that holds their sections now. */
 export const OLD_TAB:Record<string,DashTab>={engagement:'island',players:'players',matches:'matches',marketing:'marketing',live:'live',report:'report',overview:'overview'};
 export type MetricEntry={id:string;was:string;label:string;tab:DashTab;where:string;def?:string};

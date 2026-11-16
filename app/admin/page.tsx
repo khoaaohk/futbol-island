@@ -12,6 +12,7 @@ import {loadSources} from '@/lib/analytics/liveAdmin';
 import {labelMarketing} from '@/lib/analytics/marketingLabels';
 import {loadDashboard} from '@/lib/analytics/dashboardAdmin';
 import type {DashboardData} from '@/lib/analytics/dashboard';
+import {loadSeoSnapshot} from '@/lib/seo/loadSnapshot';
 import AdminLogin from './AdminLogin';
 import AnalyticsDashboard from './AnalyticsDashboard';
 
@@ -36,5 +37,6 @@ export default async function AdminPage(){
  report.fishing=await loadFishingMetrics(report.from,report.to);
  report.sources=await loadSources(report.from,report.to);
  labelMarketing(report.marketing);// Nov 3 2026: the Marketing page tab's card, slide, FAQ and step names
- return <AnalyticsDashboard initial={report} initialDash={await dashP} initialRange="today" saves={await saveAdminLine()}/>;
+ const seo=await loadSeoSnapshot();// Nov 15 2026: the SEO tab's Search Console snapshot, read only for a signed-in admin
+ return <AnalyticsDashboard initial={report} initialDash={await dashP} initialRange="today" saves={await saveAdminLine()} seo={seo}/>;
 }
