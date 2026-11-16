@@ -5,15 +5,16 @@ import {QA} from '@/components/site/LessonHub';
 import {TERMS_HUB,TERM_PAGES,termBySlug} from '@/lib/site/terms';
 import {RULES_HUB} from '@/lib/site/rules';
 import {drillLinksFor} from '@/lib/site/drills';
-import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
+import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {CheckedLine,Bullets,CoachNotesSection,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
-import {lessonPath} from '@/lib/site/lessons';
-import {PLAY_PATH,abs,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
+import {Bullets,CoachNotesSection,GuideEnd,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import GuideQuiz from '@/components/site/GuideQuiz';
+import {termQuiz} from '@/lib/site/guideQuiz';
+import {ANIMATED_TERMS} from '@/lib/site/sceneMotion';
+import {abs,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {TERM_NOTES} from '@/lib/site/notesGuides';
 import {checkNotes} from '@/lib/site/coachNotes';
-import styles from '../../../site.module.css';
 
 /** One glossary term with a page of its own (lib/site/terms.ts): the answer, a diagram, the steps, mistakes, FAQ, lessons. */
 export const dynamic='force-static';
@@ -35,7 +36,7 @@ export default function TermPage({params}:{params:{slug:string}}){
   <JsonLd data={{'@context':'https://schema.org','@type':'DefinedTerm',name:t.name,description:t.short,url:abs(t.path),inDefinedTermSet:abs(TERMS_HUB.path)+'#terms',...(t.also?{alternateName:t.also.split(', ')}:{})}}/>
   <JsonLd data={faqLd(t.faq)}/>
   <GuideIntro crumbs={crumbs} h1={t.h1} lead={t.answer} more={t.also?`Other names: ${t.also}.`:undefined}/>
-  <Section id="diagram" title={`${t.name}: diagram`}><SceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)}/></Section>
+  <Section id="diagram" title={`${t.name}: diagram`}><SceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
   <Section id="mistakes" title="Common mistakes"><Bullets items={t.mistakes}/></Section>
   <Section id="formats" title="In 7v7, 9v9, 11v11 and futsal"><p>{t.formats}</p></Section>
@@ -45,9 +46,8 @@ export default function TermPage({params}:{params:{slug:string}}){
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
   {drillLinksFor(t.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(t.path)}/></Section>}
   <Section id="related" title="Related soccer terms"><LinkList links={related}/></Section>
-  <p className={styles.caption}>{GUIDE_FOOT}</p>
-  <CheckedLine date={FAMILY_CHECKED.terms}/>
-  <p className={styles.end}>{t.cta?<a className={styles.cta} href={lessonPath(t.cta.id)}>Play the lesson: {t.cta.title}</a>:<a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>}</p>
+  <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={termQuiz(t,TERM_PAGES)}/>
+  <GuideEnd checked={FAMILY_CHECKED.terms} lesson={t.cta}/>
   <ReadNext path={t.path}/>
  </>;
 }

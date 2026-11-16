@@ -9,7 +9,8 @@ import {cardRelated,roleLesson,rolePlural} from '@/lib/site/related';
 import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {checkedOn} from '@/lib/site/checked';
-import {CheckedLine} from '@/lib/site/GuideParts';
+import {CheckedLine,PlayEnd} from '@/lib/site/GuideParts';
+import {PLAY_PACKS_HREF} from '@/lib/site/playLinks';
 import styles from '../../site.module.css';
 
 /** One player (or coach) card as plain text: position, country, blurb, strengths and career. No photo (see lib/site/cards.ts).
@@ -84,6 +85,6 @@ export default function CardPage({params}:{params:{number:string}}){
    <p><a href={lessonPath(lesson.id)}>Read the {lesson.formatLabel} lesson: {lesson.title}</a></p>
   </section>
   <RelatedLinks related={{...related,read:related.read.slice(1)}} heading="More cards like this" readHeading="Keep reading"/>
-  <p className={styles.end}><a className={styles.cta} href="/play">Collect cards on the island</a></p>
+  <PlayEnd href={PLAY_PACKS_HREF} label="Collect cards on the island" bar="Open card packs on the island"/>
  </>;
 }

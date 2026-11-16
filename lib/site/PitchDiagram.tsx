@@ -1,7 +1,9 @@
 import {PITCH,type Arrow,type GuideFormat,type Placed} from './pitch';
 /**
  * One pitch diagram as server-rendered inline SVG (Nov 10 2026): the field of that format in proportion, numbered player dots
- * with a short position label, optional movement arrows (a picture with arrows drops the labels under the dots, so they never collide). No client code, no canvas, no animation (AGENTS.md, phone heat).
+ * with a short position label, optional movement arrows (a picture with arrows drops the labels under the dots, so they never collide). No client code, no canvas. The
+ * drawing itself never animates; since Nov 15 2026 a few scene pages move its dots with CSS keyframes from outside (`data-i` on each
+ * player, `data-ball` on the ball; lib/site/sceneMotion.ts, components/site/AnimatedScene.tsx).
  * It carries <title> and <desc>; the page prints the same description under it (the text alternative). Colours are the home
  * page's: its pitch green, white lines, dark ink and the gold of the Play button. `mark` paints one position gold and dims the rest.
  */
@@ -43,7 +45,7 @@ export default function PitchDiagram({id,format,spots,title,desc,arrows=[],mark,
    return <line key={i} x1={x1} y1={y1} x2={x1+(x2-x1)*u} y2={y1+(y2-y1)*u} stroke={PAPER} strokeWidth={2} strokeOpacity={.7} strokeDasharray="5 4" markerEnd={`url(#${id}-a)`}/>;})}
   {spots.map((s,i)=>{const on=!mark||s.pos===mark,keeper=i===0;
    const opp=s.team==='opp',fill=scene?(opp?INK:GOLD):mark?(on?GOLD:PAPER):keeper?PAPER:GOLD;
-   return <g key={i} data-player={s.label} opacity={on?1:.5}>
+   return <g key={i} data-player={s.label} data-i={i} opacity={on?1:.5}>
     <circle cx={X(s.x)} cy={Y(s.y)} r={r} fill={fill} stroke={scene&&opp?PAPER:INK} strokeWidth={2}/>
     <text x={X(s.x)} y={Y(s.y)+4.5} textAnchor="middle" fontSize={s.n.length>2?9:13} fontWeight={700} fill={scene&&opp?PAPER:INK}>{s.n}</text>
     {s.n!==s.label&&arrows.length===0&&!scene&&(s.label==='GK'

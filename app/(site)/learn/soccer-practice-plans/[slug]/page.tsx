@@ -7,9 +7,9 @@ import {ageGuide} from '@/lib/site/drillGuides';
 import {PLANS,PLANS_HUB,PLAN_SAFETY_LINE,PPP_LINE,PRACTICE_RANGE,clock,planBySlug,plansForAge} from '@/lib/site/plans';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {CheckedLine,Bullets,DataTable,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {CheckedLine,Bullets,DataTable,GuideIntro,LessonList,LinkList,PlayEnd,Section} from '@/lib/site/GuideParts';
 import {DrillList,GridFigure} from '@/lib/site/DrillParts';
-import {PLAY_PATH,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
+import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import styles from '../../../site.module.css';
 
@@ -64,7 +64,7 @@ export default function PlanPage({params}:{params:{slug:string}}){
    <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
    <p className={styles.caption}>{GUIDE_FOOT}</p>
    <CheckedLine date={FAMILY_CHECKED.plans}/>
-   <p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Play it on the island</a></p>
+   <PlayEnd/>
   </div>
   <ReadNext path={p.path}/>
  </>;

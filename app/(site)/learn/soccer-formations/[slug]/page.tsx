@@ -65,7 +65,7 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <Section id="lessons" title="Lessons that teach this shape"><LessonList lessons={f.lessons}/></Section>
   {comparisonsFor(f.path).length>0&&<Section id="compare" title="Compare it"><LinkList links={comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
   <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
-  <GuideEnd checked={FAMILY_CHECKED.formations}/>
+  <GuideEnd checked={FAMILY_CHECKED.formations} lesson={f.lessons[0]}/>
   <ReadNext path={f.path}/>
  </>;
 }

@@ -51,7 +51,7 @@ export default function PrintablePage({params}:{params:{sheet:string}}){
    </Section>}
    <Section id="use" title="How coaches use it">{p.use.map(x=><p key={x}>{x}</p>)}</Section>
    <Section id="related" title="Go further"><LinkList links={[...p.links,{path:PRINTABLES_HUB.path,name:'All printable field diagrams',line:PRINTABLES_HUB.blurb}]}/></Section>
-   <GuideEnd/>
+   <GuideEnd sticky={false}/>
   </Screen>
  </>;
 }

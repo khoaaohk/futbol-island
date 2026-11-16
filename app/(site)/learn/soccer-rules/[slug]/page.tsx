@@ -5,11 +5,13 @@ import {QA} from '@/components/site/LessonHub';
 import {FUTSAL_LAWS_URL,RULES,RULES_HUB,RULE_LEAGUE_LINE,RULE_SOURCE_LINE,ruleBySlug} from '@/lib/site/rules';
 import {TERMS_HUB} from '@/lib/site/terms';
 import {drillLinksFor} from '@/lib/site/drills';
-import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
+import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {CheckedLine,Bullets,CoachNotesSection,DataTable,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
-import {lessonPath} from '@/lib/site/lessons';
-import {PLAY_PATH,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
+import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import GuideQuiz from '@/components/site/GuideQuiz';
+import {ruleQuiz} from '@/lib/site/guideQuiz';
+import {ANIMATED_RULES} from '@/lib/site/sceneMotion';
+import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {RULE_NOTES} from '@/lib/site/notesGuides';
 import {checkNotes} from '@/lib/site/coachNotes';
@@ -31,7 +33,7 @@ export default function RulePage({params}:{params:{slug:string}}){
  const i=RULES.indexOf(r),next=[RULES[(i+1)%RULES.length],RULES[(i+2)%RULES.length]];
  const related=[...(r.slug==='substitutions-and-game-length'?[{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'A fair substitution plan with equal minutes for every player'}]:[]),...r.exhibits,...r.links,...next.map(x=>({path:x.path,name:x.h1,line:`${x.law}, with a diagram`})),
   {path:RULES_HUB.path,name:'All soccer rules for kids',line:RULES_HUB.blurb},{path:TERMS_HUB.path,name:TERMS_HUB.h1,line:TERMS_HUB.blurb}];
- const futsal=r.slug==='futsal-rules',pair=r.scenes.length>1,last=r.scenes.length-1;
+ const moving=(ANIMATED_RULES as readonly string[]).includes(r.slug),futsal=r.slug==='futsal-rules',pair=r.scenes.length>1,last=r.scenes.length-1;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={articleLd({headline:r.title,path:r.path,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (soccer rule)`,teaches:r.answer,image:diagramUrl(r.picture)})}/>
@@ -39,8 +41,8 @@ export default function RulePage({params}:{params:{slug:string}}){
   <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer}/>
   <Section id="diagram" title={`${r.name}: diagram`}>
    {pair
-    ?<div className={styles.pair}>{r.scenes.map((s,j)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><SceneDiagram id={`s${j}`} scene={s} small image={j===last?diagramUrl(r.picture):undefined}/></div>)}</div>
-    :<SceneDiagram id="s0" scene={r.scenes[0]} image={diagramUrl(r.picture)}/>}
+    ?<div className={styles.pair}>{r.scenes.map((s,j)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><SceneDiagram id={`s${j}`} scene={s} small image={j===last?diagramUrl(r.picture):undefined} animate={moving?`${s.title.toLowerCase()} pass`:undefined}/></div>)}</div>
+    :<SceneDiagram id="s0" scene={r.scenes[0]} image={diagramUrl(r.picture)} animate={moving?r.name.toLowerCase():undefined}/>}
   </Section>
   <Section id="referee" title="What the referee looks for">
    <Bullets items={r.refs}/>
@@ -64,9 +66,8 @@ export default function RulePage({params}:{params:{slug:string}}){
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
   {drillLinksFor(r.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(r.path)}/></Section>}
   <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
-  <p className={styles.caption}>{GUIDE_FOOT}</p>
-  <CheckedLine date={FAMILY_CHECKED.rules}/>
-  <p className={styles.end}>{r.cta?<a className={styles.cta} href={lessonPath(r.cta.id)}>Play the lesson: {r.cta.title}</a>:<a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>}</p>
+  <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={ruleQuiz(r)}/>
+  <GuideEnd checked={FAMILY_CHECKED.rules} lesson={r.cta}/>
   <ReadNext path={r.path}/>
  </>;
 }

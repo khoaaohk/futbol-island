@@ -77,6 +77,8 @@ const sp=paths.sitePaths(),LM=JSON.parse(require('node:fs').readFileSync(require
 // ---- 2. rendered HTML ---------------------------------------------------------------------------------------------------------
 const text=h=>h.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<(title|desc)[\s\S]*?<\/\1>/g,' ').replace(/<[^>]+>/g,' ').replace(/&#x27;|&#39;/g,'’').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();
 const SERVED=new Set(['/play','/privacy',...[...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`${guides.DIAGRAM_DIR}/${f}`)]);
+/* Nov 15 2026 (seo-design): the game's "Play this in the game" deep links; tests/seo-design.cjs checks each id is real. */
+const PLAY_GO=/^\/play\?go=(lesson|fish)(:[A-Za-z0-9_-]+)?$/;
 const SOURCES=/^https:\/\/(www\.theifab\.com\/laws\/latest\/[a-z-]+\/|the-aiff\.com\/media\/uploads\/2025\/09\/Futsal-Laws-of-the-Game-2025-2026_EN\.pdf)$/;
 const paraPages=new Map();let words=0,tables=0;
 const kind=p=>p.startsWith('/learn/soccer-rules/')?'rule':p.startsWith('/learn/soccer-terms/')?'term':/soccer-(rules|terms)$/.test(p)?'hub':'chart';
@@ -114,7 +116,7 @@ for(const g of PAGES){
  for(const l of links){
   if(l.startsWith('#')){assert(ids.has(l.slice(1)),`${where}: anchor ${l} exists`);continue;}
   if(l.startsWith('http')){assert(SOURCES.test(l),`${where}: external link ${l} is a cited source`);continue;}
-  assert(l.startsWith('/'),`${where}: link ${l}`);assert(PATHS.has(l)||SERVED.has(l),`${where}: link target ${l} exists`);}
+  assert(l.startsWith('/'),`${where}: link ${l}`);assert(PATHS.has(l)||(SERVED.has(l)||PLAY_GO.test(l)),`${where}: link target ${l} exists`);}
  assert(links.some(l=>l.startsWith('/learn/lessons/')),`${where}: links to lessons`);
  assert(links.some(l=>l!==g.path&&PAGES.some(x=>x.path===l)),`${where}: links to another page of the cluster`);
  for(const m of h.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)){const t=text(m[1]);if(t.length>=90){if(!paraPages.has(t))paraPages.set(t,new Set());paraPages.get(t).add(g.path);}}
@@ -132,7 +134,7 @@ for(const r of rules.RULES){const where=r.path,h=html.get(r.path);
  assert(r.refs.length>=4&&r.mixups.length>=3&&r.formats.length>=1&&r.lessons.length>=3&&r.scenes.length>=1,`${where}: referee list, mix-ups, formats, lessons, diagram`);
  assert(text(h).includes(r.answer.replace(/'/g,'’')),`${where}: the answer is on the page`);
  assert(/^https:\/\/www\.theifab\.com\/laws\/latest\//.test(r.lawUrl),`${where}: law link`);
- if(r.cta)assert(new RegExp(`class="cta" href="/learn/lessons/${r.cta.id}"`).test(h),`${where}: the button opens its lesson`);}
+ if(r.cta)assert(new RegExp(`class="cta" href="/play\\?go=lesson:${r.cta.id}"`).test(h)&&h.includes(`href="/learn/lessons/${r.cta.id}"`),`${where}: the button opens its lesson in the game (Nov 15 2026) and the lesson page is still linked`);}
 assert.equal(rules.ruleBySlug('offside').scenes.length,2,'offside shows onside and offside');
 assert(/data-line=/.test(html.get('/learn/soccer-rules/offside'))&&/data-zone=/.test(html.get('/learn/soccer-rules/goal-kick')),'offside line and shaded zone are drawn');
 for(const c of sizes.CHARTS){const h=html.get(c.path);assert(c.tables.length>=1,`${c.path}: a table`);

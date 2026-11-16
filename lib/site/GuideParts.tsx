@@ -2,10 +2,14 @@ import PitchDiagram from './PitchDiagram';
 import {arrows,describe,place,type GuideFormat,type Line,type Mode} from './pitch';
 import {lessonPath,type SiteLesson} from './lessons';
 import {sceneDesc,type Scene} from './scenes';
+import {sceneMotion} from './sceneMotion';
+import MotionToggle from '@/components/site/MotionToggle';
 import {GUIDE_FOOT,GUIDE_NAMES} from './guides';
 import {PLAY_PATH,type Crumb} from './seo';
 import {FACTS_PATH,longDate} from './checked';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
+import PlayBar from '@/components/site/PlayBar';
+import {playLessonHref} from './playLinks';
 import styles from '@/app/(site)/site.module.css';
 /**
  * The shared sections of the guide pages (formations, positions and later clusters; lib/site/guides.ts): intro, diagram with
@@ -31,10 +35,15 @@ export function Diagram({id,format,lines,what,mode='base',mark,markName,small,im
  </figure>;
 }
 /** A rule or glossary scene (lib/site/scenes.ts): the same pitch, with two teams, a ball, a line or a shaded zone. */
-export function SceneDiagram({id,scene,small,image}:{id:string;scene:Scene;small?:boolean;image?:string}){
- const desc=sceneDesc(scene);
+/** `animate` (Nov 15 2026, lib/site/sceneMotion.ts): the dots and the ball move along the scene's own arrows in a CSS loop, with a
+ *  Pause button; reduced motion, print and no-CSS readers get the still picture, which is the same drawing. */
+export function SceneDiagram({id,scene,small,image,animate}:{id:string;scene:Scene;small?:boolean;image?:string;animate?:string}){
+ const desc=sceneDesc(scene),root=`${id}-anim`,motion=animate?sceneMotion(scene,root):null;
+ const art=<PitchDiagram id={id} format={scene.format} spots={scene.spots} arrows={scene.runs} title={scene.title} desc={desc} small={small} scene={{ball:scene.ball,lineY:scene.lineY,lineWord:scene.lineWord,zone:scene.zone,passes:scene.passes}}/>;
  return <figure className={styles.figure}>
-  <div className={styles.art}><PitchDiagram id={id} format={scene.format} spots={scene.spots} arrows={scene.runs} title={scene.title} desc={desc} small={small} scene={{ball:scene.ball,lineY:scene.lineY,lineWord:scene.lineWord,zone:scene.zone,passes:scene.passes}}/></div>
+  {motion
+   ?<div className={`${styles.art} ${styles.anim}`} id={root} data-anim=""><style>{motion.css}</style>{art}<MotionToggle name={animate!}/></div>
+   :<div className={styles.art}>{art}</div>}
   <figcaption className={styles.caption}>{scene.caption}{image&&<> <a href={image}>Open this diagram as a picture</a>.</>}</figcaption>
  </figure>;
 }
@@ -45,8 +54,8 @@ export function DataTable({head,rows,label}:{head:readonly string[];rows:readonl
   <tbody>{rows.map((r,i)=><tr key={i}>{r.map((c,j)=>j===0?<th key={j} scope="row">{c}</th>:<td key={j}>{c}</td>)}</tr>)}</tbody>
  </table></div>;
 }
-export function Section({id,title,children}:{id:string;title:string;children:React.ReactNode}){
- return <section className={styles.section} aria-labelledby={id}><h2 className={styles.h2} id={id}>{title}</h2>{children}</section>;
+export function Section({id,title,children,panel}:{id:string;title:string;children:React.ReactNode;panel?:boolean}){
+ return <section className={panel?`${styles.section} ${styles.panel}`:styles.section} aria-labelledby={id}><h2 className={styles.h2} id={id}>{title}</h2>{children}</section>;
 }
 export const Bullets=({items}:{items:readonly string[]})=><ul>{items.map(t=><li key={t}>{t}</li>)}</ul>;
 export function LessonList({lessons}:{lessons:readonly SiteLesson[]}){
@@ -59,13 +68,21 @@ export function LinkList({links}:{links:readonly {path:string;name:string;line?:
 export function CheckedLine({date}:{date:string}){
  return <p className={styles.caption} data-checked={date}>Last checked: <time dateTime={date}>{longDate(date)}</time>. <a href={FACTS_PATH}>How we check facts</a>.</p>;
 }
-export function GuideEnd({cta=true,checked}:{cta?:boolean;checked?:string}){
- return <><p className={styles.caption}>{GUIDE_FOOT}</p>{checked&&<CheckedLine date={checked}/>}{cta&&<p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Play it on the island</a></p>}</>;
+/** The end of a guide (one style everywhere): the "about this guide" line and "Last checked" as one quiet block, then the gold
+ *  button. `lesson` (Nov 15 2026) makes the button open that lesson in the game (lib/site/playLinks.ts). */
+export function GuideEnd({cta=true,checked,lesson,sticky=true}:{cta?:boolean;checked?:string;lesson?:{id:string;title:string};sticky?:boolean}){
+ return <><div className={styles.endNote}><p className={styles.caption}>{GUIDE_FOOT}</p>{checked&&<CheckedLine date={checked}/>}</div>
+  {cta&&(lesson?<PlayEnd href={playLessonHref(lesson.id)} label={`Play the lesson: ${lesson.title}`} bar={`Play “${lesson.title}”`} sticky={sticky}/>:<PlayEnd sticky={sticky}/>)}</>;
+}
+/** The one gold Play button at the end of a detail page (`data-play-cta`), plus the phones' sticky "Play free" bar
+ *  (components/site/PlayBar.tsx), which hides itself while this button is on screen. */
+export function PlayEnd({href=PLAY_PATH,label='Play it on the island',bar='Learn it on the island',sticky=true}:{href?:string;label?:string;bar?:string;sticky?:boolean}){
+ return <><p className={styles.end}><a className={styles.cta} href={href} data-play-cta="">{label}</a></p>{sticky&&<PlayBar href={href} text={bar}/>}</>;
 }
 /** "Coach's notes" (lib/site/coachNotes.ts): the item's own coaching point, how it shows up in a match, age-group notes and,
  *  where the page had none, common mistakes. `ages` alone is used on drill pages (they already have points and a game line). */
 export function CoachNotesSection({name,notes}:{name:string;notes:{coach?:string;match?:string;ages:readonly (readonly [string,string])[];mistakes?:readonly string[]}}){
- return <Section id="coach-notes" title={`Coach’s notes: ${name}`}>
+ return <Section id="coach-notes" title={`Coach’s notes: ${name}`} panel>
   {notes.coach&&<p><b>Coaching point:</b> {notes.coach}</p>}
   {notes.match&&<p><b>In a match:</b> {notes.match}</p>}
   {notes.mistakes&&notes.mistakes.length>0&&<><h3 className={styles.h3}>Common mistakes</h3><Bullets items={notes.mistakes}/></>}

@@ -65,7 +65,7 @@ function Lineup({p}:{p:LineupPage}){
    </Section>}
    <QA id="faq" title={`Questions about the ${p.h1}`} faq={p.faq}/>
    <Section id="related" title="Formations and more tools"><LinkList links={related}/></Section>
-   <GuideEnd/>
+   <GuideEnd sticky={false}/>
   </Screen>
  </>;
 }
@@ -108,7 +108,7 @@ function Planner({p}:{p:PlannerPage}){
    </Section>
    <QA id="faq" title={`Questions about ${p.format?`${p.format} substitutions`:'playing time'}`} faq={p.faq}/>
    <Section id="related" title="Rules, charts and more tools"><LinkList links={related}/></Section>
-   <GuideEnd/>
+   <GuideEnd sticky={false}/>
   </Screen>
  </>;
 }

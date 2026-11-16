@@ -1,4 +1,6 @@
 import ReadNext from '@/components/site/ReadNext';
+import GuideQuiz from '@/components/site/GuideQuiz';
+import {positionQuiz} from '@/lib/site/guideQuiz';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -64,7 +66,8 @@ export default function PositionPage({params}:{params:{slug:string}}){
   {drillLinksFor(p.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(p.path)}/></Section>}
   {compare.length>0&&<Section id="compare" title="Compare it"><LinkList links={compare.map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
   <Section id="related" title="Other positions"><LinkList links={[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}/></Section>
-  <GuideEnd checked={FAMILY_CHECKED.positions}/>
+  <GuideQuiz id="quiz" name={`the ${lower}`} questions={positionQuiz(p,POSITIONS)}/>
+  <GuideEnd checked={FAMILY_CHECKED.positions} lesson={p.lessons[0]}/>
   <ReadNext path={p.path}/>
  </>;
 }

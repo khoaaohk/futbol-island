@@ -9,7 +9,8 @@ import {fishRelated} from '@/lib/site/related';
 import {abs,PUBLISHER,breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta} from '@/lib/site/seo';
 import {SITE_PUBLISHED,SITE_UPDATED} from '@/lib/site/updated';
 import {checkedOn} from '@/lib/site/checked';
-import {CheckedLine} from '@/lib/site/GuideParts';
+import {CheckedLine,PlayEnd} from '@/lib/site/GuideParts';
+import {playFishHref,shoreSpot} from '@/lib/site/playLinks';
 import styles from '../../site.module.css';
 
 /** One Fishbook species. Art: the game's own drawing (components/FishArt.tsx), since Nov 10 2026 as a real picture built at build
@@ -28,7 +29,7 @@ export function generateMetadata({params}:{params:{id:string}}){
 export default function FishPage({params}:{params:{id:string}}){
  const f=fishById(params.id);if(!f)notFound();
  const crumbs=[{name:'Home',path:'/'},{name:'Fish',path:'/fish'},{name:f.name,path:fishPath(f.id)}];
- const places=fishPlaces(f),when=fishWhen(f),note=fishNote(f),tips=fishCatchTips(f);
+ const spot=shoreSpot(f.spots),places=fishPlaces(f),when=fishWhen(f),note=fishNote(f),tips=fishCatchTips(f);
  const wiki=note?.src.find(u=>/^https:\/\/en\.wikipedia\.org\/wiki\//.test(u));
  return <>
   <JsonLd data={{...creativeWorkLd({name:`${f.name} and ${f.club.name}`,path:fishPath(f.id),description:f.club.fact,image:ogPath(fishPath(f.id)),
@@ -72,6 +73,6 @@ export default function FishPage({params}:{params:{id:string}}){
    <ul>{tips.map(t=><li key={t}>{t}</li>)}</ul>
   </section>
   <RelatedLinks related={withRelatedFish(f,fishRelated(f))} heading="More from the Fishbook" readHeading="Keep reading"/>
-  <p className={styles.end}><a className={styles.cta} href="/play">Go fishing on the island</a></p>
+  {spot?<PlayEnd href={playFishHref(spot.id)} label={`Catch it at ${spot.name}`} bar={`Catch the ${f.name.toLowerCase()} at ${spot.name}`}/>:<PlayEnd href={playFishHref()} label="Go fishing on the island" bar="Go fishing on the island"/>}
  </>;
 }

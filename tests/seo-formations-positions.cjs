@@ -80,6 +80,8 @@ const sp=paths.sitePaths(),LM=JSON.parse(require('node:fs').readFileSync(require
 // ---- 2. rendered HTML ---------------------------------------------------------------------------------------------------------
 const text=h=>h.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<(title|desc)[\s\S]*?<\/\1>/g,' ').replace(/<[^>]+>/g,' ').replace(/&#x27;|&#39;/g,'’').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();
 const SERVED=new Set(['/play','/privacy',...guides.DIAGRAM_FILES.map(f=>`${guides.DIAGRAM_DIR}/${f}`)]);
+/* Nov 15 2026 (seo-design): the game's "Play this in the game" deep links; tests/seo-design.cjs checks each id is real. */
+const PLAY_GO=/^\/play\?go=(lesson|fish)(:[A-Za-z0-9_-]+)?$/;
 const paraPages=new Map();let words=0;
 for(const g of guides.GUIDE_PAGES){
  const h=html.get(g.path),where=g.path;
@@ -122,7 +124,7 @@ for(const g of guides.GUIDE_PAGES){
  // one way into the game, internal links resolve
  assert.equal((h.match(/class="cta"/g)||[]).length,1,`${where}: one Play button`);
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);assert(links.length>=8,`${where}: internal links`);
- for(const l of links){assert(l.startsWith('/'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||SERVED.has(l),`${where}: link target ${l} exists`);}/* a #fragment is allowed: the lineup builder deep link */
+ for(const l of links){assert(l.startsWith('/'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||(SERVED.has(l)||PLAY_GO.test(l)),`${where}: link target ${l} exists`);}/* a #fragment is allowed: the lineup builder deep link */
  assert(links.some(l=>l.startsWith('/learn/lessons/')),`${where}: links to lessons`);
  for(const m of h.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)){const t=text(m[1]);if(t.length>=90){if(!paraPages.has(t))paraPages.set(t,new Set());paraPages.get(t).add(g.path);}}
 }

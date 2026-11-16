@@ -84,6 +84,8 @@ const sp=paths.sitePaths(),LM=JSON.parse(require('node:fs').readFileSync(require
 // ---- 2. rendered HTML ---------------------------------------------------------------------------------------------------------
 const text=h=>h.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<(title|desc)[\s\S]*?<\/\1>/g,' ').replace(/<[^>]+>/g,' ').replace(/&#x27;|&#39;/g,'’').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/\s+/g,' ').trim();
 const SERVED=new Set(['/play','/privacy',...[...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES,...guides.COACH_FILES].map(f=>`${guides.DIAGRAM_DIR}/${f}`)]);
+/* Nov 15 2026 (seo-design): the game's "Play this in the game" deep links; tests/seo-design.cjs checks each id is real. */
+const PLAY_GO=/^\/play\?go=(lesson|fish)(:[A-Za-z0-9_-]+)?$/;
 const paraPages=new Map();let words=0,tables=0,diagrams=0;
 const kind=p=>SINGLE.includes(p)?'hub':p.startsWith(PH+'/')?'plan':drills.drillBySlug(p.slice(DH.length+1))?'drill':'guide';
 const MIN={hub:500,guide:450,drill:420,plan:400};
@@ -118,7 +120,7 @@ for(const g of PAGES){
  for(const l of links){
   if(l.startsWith('#')){assert(ids.has(l.slice(1)),`${where}: anchor ${l} exists`);continue;}
   assert(l.startsWith('/'),`${where}: no external link (${l})`);
-  const [p,hash]=l.split('#');assert(PATHS.has(p)||SERVED.has(p),`${where}: link target ${l} exists`);
+  const [p,hash]=l.split('#');assert(PATHS.has(p)||(SERVED.has(p)||PLAY_GO.test(l)),`${where}: link target ${l} exists`);
   if(hash)assert(html.get(p)&&html.get(p).includes(` id="${hash}"`),`${where}: anchor ${l} exists on the target page`);}
  assert(links.some(l=>l.startsWith('/learn/lessons/')),`${where}: links to lessons`);
  assert(links.some(l=>l!==g.path&&PAGES.some(x=>x.path===l)),`${where}: links to another page of the cluster`);
@@ -147,7 +149,7 @@ for(const d of drills.DRILLS){const where=d.path,h=html.get(d.path),b=text(h);
  assert(/<ol>(<li>[\s\S]*?<\/li>){4,}<\/ol>/.test(h),`${where}: numbered steps`);
  for(const c of d.cues)assert(c.length<=60,`${where}: a cue is short enough to say out loud: ${c}`);
  assert(d.lessons.length>=2&&d.lessons.every(l=>lessons.lessonById(l.id)),`${where}: lessons from the catalog`);
- assert(new RegExp(`class="cta" href="/learn/lessons/${d.cta.id}"`).test(h),`${where}: the button opens its lesson`);
+ assert(new RegExp(`class="cta" href="/play\\?go=lesson:${d.cta.id}"`).test(h)&&h.includes(`href="/learn/lessons/${d.cta.id}"`),`${where}: the button opens its lesson in the game (Nov 15 2026) and the lesson page is still linked`);
  assert(/Why it matters in a game/.test(h)&&h.includes(`The lesson that teaches it: <a href="/learn/lessons/${d.cta.id}"`),`${where}: the game moment links the lesson that teaches it`);
  assert(d.related.length>=3&&d.related.every(r=>h.includes(`href="${DH}/${r}"`)),`${where}: related drills are linked`);
  if(d.home)assert(/Do it at home/.test(h),`${where}: at-home section`);

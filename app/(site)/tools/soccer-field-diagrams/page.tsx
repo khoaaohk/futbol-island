@@ -30,6 +30,6 @@ export default function PrintablesHub(){
   <QA id="faq" title="Questions about the field diagrams" faq={H.faq}/>
   <Section id="related" title="Tools that use the same fields"><LinkList links={[{path:LINEUP_PATH,name:'Soccer lineup builder',line:'Put your players’ names on a field and print it'},{path:PLANNER_PATH,name:'Soccer playing time calculator',line:'A fair substitution plan with equal minutes'},
    {path:'/learn/soccer-formations',name:'Soccer formations',line:'Every formation explained, with a diagram'},{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'}]}/></Section>
-  <GuideEnd/>
+  <GuideEnd sticky={false}/>
  </>;
 }

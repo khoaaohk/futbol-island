@@ -2,6 +2,8 @@ import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
+import {PlayEnd} from '@/lib/site/GuideParts';
+import {playLessonHref} from '@/lib/site/playLinks';
 import {QA} from '@/components/site/LessonHub';
 import {hubsFor,SAFE_GUIDE} from '@/lib/site/hubs';
 import {guidesForLesson} from '@/lib/site/guides';
@@ -40,7 +42,7 @@ export default function LessonPage({params}:{params:{slug:string}}){
    <p className={styles.lead}>{l.concept}</p>
    <p>{l.title} is a free {formatPhrase(l.formatLabel)} lesson and quiz for kids aged 7 to 12 in Futbol Island, a learning game played in the web browser.</p>
    <p className={styles.caption}>{SAFE_TRUST_LINE} <a href={SAFE_GUIDE.path}>Read the parents’ guide</a>.</p>
-   <a className={styles.cta} href="/play">Play this lesson</a>
+   <a className={styles.cta} href={playLessonHref(l.id)} data-play-cta="">Play this lesson</a>
   </header>
   <section className={styles.section} aria-labelledby="coach"><h2 className={styles.h2} id="coach">What the coach says</h2>
    <div className={styles.card}><ol>{l.steps.map((s,i)=><li key={i}>{s}</li>)}</ol></div>
@@ -65,7 +67,7 @@ export default function LessonPage({params}:{params:{slug:string}}){
    <ul className={styles.list}>{guides.map(g=><li key={g.path}><a href={g.path}><span className={styles.itemTitle}>{g.name[0].toUpperCase()+g.name.slice(1)}</span></a></li>)}</ul>
   </section>}
   <QA id="faq" title="Questions grown-ups ask" faq={faq}/>
-  <p className={styles.end}><a className={styles.cta} href="/play">Play this lesson on the island</a></p>
+  <PlayEnd href={playLessonHref(l.id)} label="Play this lesson on the island" bar={`Play “${l.title}”`}/>
   <ReadNext path={lessonPath(l.id)}/>
  </>;
 }
