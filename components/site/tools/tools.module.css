@@ -34,7 +34,7 @@ textarea.input{min-height:88px;resize:vertical}
 .status{min-height:1.45em;font-size:var(--t-cap);font-weight:700;color:var(--link);margin:0}
 
 .actions{display:flex;flex-wrap:wrap;gap:10px}
-.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border:0;border-radius:var(--r-pill);background:var(--ink);color:var(--paper);font:800 16px/1.2 var(--sans);cursor:pointer;text-decoration:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:0 20px;border:0;border-radius:var(--r-pill,999px);background:var(--ink);color:var(--paper);font:800 16px/1.2 var(--sans);cursor:pointer;text-decoration:none}
 .btnQuiet{background:var(--paper);color:var(--ink)}
 .btn:active{translate:0 1px}
 .icon{flex:none;width:44px;min-height:44px;padding:0;font-size:20px}
@@ -74,5 +74,5 @@ textarea.input{min-height:88px;resize:vertical}
 /* "Open the app" under a tool page title (components/site/tools/ToolParts.tsx AppLink) */
 .appLink{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;margin:16px 0 0}
 .appLink span{margin:0}
-.appLink .appBtn,.appLink .appBtn:visited{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 24px;border-radius:999px;background:var(--ink,#14221d);color:#fbf7ee;font-weight:800;font-size:17px;text-decoration:none;background-image:none}
+.appLink .appBtn,.appLink .appBtn:visited{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 24px;border-radius:var(--r-pill,999px);background:var(--ink,#14221d);color:#fbf7ee;font-weight:800;font-size:17px;text-decoration:none;background-image:none}
 .appLink .appBtn:hover{background:#1d6b55;color:#fff}
