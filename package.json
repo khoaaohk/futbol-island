@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 8092",
-    "prebuild": "node scripts/content-dates.cjs",
+    "prebuild": "test ! -f scripts/content-dates.cjs || node scripts/content-dates.cjs",
     "build": "next build",
     "start": "next start -p 8092",
     "typecheck": "tsc --noEmit",
