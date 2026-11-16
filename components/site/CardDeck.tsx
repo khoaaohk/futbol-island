@@ -43,7 +43,7 @@ export default function CardDeck({id,cards,words}:{id:string;cards:readonly Card
  const onKey=(e:React.KeyboardEvent)=>{if(e.key==='ArrowRight'){e.preventDefault();go(index+1,true);}else if(e.key==='ArrowLeft'){e.preventDefault();go(index-1,true);}};
  const pos=(n:number)=>fill(words.position,{n,total});
  const kind=(c:CardOffence)=>c.color==='red'?words.red:words.yellow;
- return <div className={s.deck} data-card-deck="" data-ready={ready?'':undefined} role="region" aria-roledescription="carousel" aria-label={words.label} onKeyDown={ready?onKey:undefined}>
+ return <div className={s.deck} data-card-deck="" data-playbar-hide="" data-ready={ready?'':undefined} role="region" aria-roledescription="carousel" aria-label={words.label} onKeyDown={ready?onKey:undefined}>
   {ready&&<p className={s.how} id={`${id}-how`}>{words.how}</p>}
   <div ref={viewport} className={s.viewport} onPointerDown={ready?onDown:undefined} onPointerMove={ready?onMove:undefined} onPointerUp={ready?onUp:undefined} onPointerCancel={ready?onUp:undefined}
    onClickCapture={e=>{if(moved.current){e.preventDefault();e.stopPropagation();moved.current=false;}}}>
@@ -54,8 +54,7 @@ export default function CardDeck({id,cards,words}:{id:string;cards:readonly Card
       <div className={s.card} data-color={c.color} data-flipped={on?'':undefined} onClick={ready?()=>flip(i):undefined}>
        <div className={s.front} aria-hidden={ready&&on?true:undefined}>
         <span className={s.kind}>{kind(c)}</span>
-        <CardIconSvg icon={c.icon} className={s.icon}/>
-        <h3 className={s.name}>{c.name}</h3>
+        <div className={s.face}><CardIconSvg icon={c.icon} className={s.icon}/><h3 className={s.name}>{c.name}</h3></div>
        </div>
        <div className={s.back} id={back} aria-hidden={ready&&!on?true:undefined}>
         <p className={s.backName}>{c.name}</p>

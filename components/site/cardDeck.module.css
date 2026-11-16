@@ -9,7 +9,8 @@
 .card[data-color=red]{background:var(--card-red);color:var(--card-red-ink)}
 .front{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 12px}
 .kind{grid-column:1/-1;font-size:var(--t-label,13px);font-weight:700;letter-spacing:0}
-.icon{width:40px;height:40px}
+.face{grid-column:1/-1;display:flex;align-items:center;gap:12px}
+.icon{width:40px;height:40px;flex:none}
 .name{margin:0;font-size:var(--t-h3,19px);line-height:1.2;font-weight:700;letter-spacing:-.01em;color:inherit}
 .back{display:grid;gap:var(--s1,8px)}
 .back p{margin:0;font-size:var(--t-body,17px);line-height:1.5;max-width:var(--measure,68ch)}
@@ -24,22 +25,27 @@
  .deck[data-ready] .track{display:flex;gap:0;transition:transform .34s cubic-bezier(.2,.8,.2,1);will-change:transform}
  .deck[data-ready] .track[data-dragging]{transition:none}
  .deck[data-ready] .slide{flex:0 0 100%;display:grid;justify-items:center;padding:0 var(--s2,16px);box-sizing:border-box}
- .deck[data-ready] .card{width:min(100%,320px);min-height:440px;padding:0;perspective:1200px;background:none;display:grid;cursor:pointer}
- .deck[data-ready] .front,.deck[data-ready] .back{grid-area:1/1;box-sizing:border-box;border-radius:14px;padding:22px 22px 76px;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+ /* A referee card is portrait: 3:4, never taller than 60% of the screen, so on a phone the card, its arrows and dots fit in
+    one view. Both faces fill the card; a long back scrolls inside the card above the Flip button. */
+ .deck[data-ready] .card{width:min(100%,330px);aspect-ratio:3/4;max-height:60vh;max-height:60svh;padding:0;perspective:1200px;background:none;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);cursor:pointer}
+ .deck[data-ready] .front,.deck[data-ready] .back{grid-area:1/1;min-height:0;box-sizing:border-box;border-radius:14px;padding:18px 20px 72px;backface-visibility:hidden;-webkit-backface-visibility:hidden;
   transition:transform .5s cubic-bezier(.2,.8,.2,1)}
  .deck[data-ready] .card[data-color=yellow] .front,.deck[data-ready] .card[data-color=yellow] .back{background:var(--card-yellow)}
  .deck[data-ready] .card[data-color=red] .front,.deck[data-ready] .card[data-color=red] .back{background:var(--card-red)}
- .deck[data-ready] .front{grid-template-columns:1fr;grid-template-rows:auto 1fr auto;justify-items:start;align-content:stretch;gap:var(--s2,16px)}
+ .deck[data-ready] .front{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:0;overflow:hidden}
  .deck[data-ready] .kind{font-size:15px}
- .deck[data-ready] .icon{width:96px;height:96px;align-self:center;justify-self:center}
- .deck[data-ready] .name{font-size:30px;line-height:1.05;letter-spacing:-.025em;font-weight:700;text-wrap:balance}
- .deck[data-ready] .back{transform:rotateY(180deg);align-content:start;gap:12px}
- .deck[data-ready] .back p{font-size:16px;line-height:1.45}
- .deck[data-ready] .backName{display:block;font-size:21px!important;line-height:1.15!important;font-weight:700;letter-spacing:-.015em}
+ .deck[data-ready] .face{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;min-height:0}
+ .deck[data-ready] .icon{width:88px;height:88px;flex:none}
+ .deck[data-ready] .name{font-size:26px;line-height:1.08;letter-spacing:-.02em;font-weight:700;text-wrap:balance}
+ .deck[data-ready] .back{transform:rotateY(180deg);align-content:start;gap:10px;overflow-y:auto;overscroll-behavior:contain}
+ .deck[data-ready] .back{padding-bottom:0}
+ .deck[data-ready] .back::after{content:'';display:block;height:72px}/* room under the last line for the Flip button (a scroll container's bottom padding is not reliable) */
+ .deck[data-ready] .back p{font-size:15px;line-height:1.4}
+ .deck[data-ready] .backName{display:block;font-size:19px!important;line-height:1.15!important;font-weight:700;letter-spacing:-.015em}
  .deck[data-ready] .card[data-flipped] .front{transform:rotateY(-180deg)}
  .deck[data-ready] .card[data-flipped] .back{transform:rotateY(0)}
  /* The Flip button sits at the foot of the card (keyboard and screen readers); a tap anywhere on the card flips it too. */
- .flip{position:absolute;left:22px;bottom:20px;min-height:var(--tap,44px);padding:0 20px;border:0;border-radius:var(--r-pill,999px);font:inherit;font-size:16px;font-weight:700;
+ .flip{position:absolute;left:20px;bottom:16px;min-height:var(--tap,44px);padding:0 20px;border:0;border-radius:var(--r-pill,999px);font:inherit;font-size:16px;font-weight:700;
   background:var(--ink,#14221d);color:#fff;cursor:pointer;z-index:2;transition:transform .15s ease}
  .card[data-color=red] .flip{background:#fff;color:var(--card-red)}
  .flip:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}

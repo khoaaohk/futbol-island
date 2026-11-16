@@ -36,7 +36,7 @@ import type {CallGame} from './refCall';
  * do not), whether young recreational leagues show cards, yellow-card accumulation bans.
  */
 export type CardColor='yellow'|'red';
-export type CardIcon='mask'|'talk'|'repeat'|'clock'|'distance'|'enter'|'leave'|'studs'|'fist'|'spit'|'hand'|'goal'|'mouth'|'twoCards';
+export type CardIcon='dive'|'talk'|'repeat'|'clock'|'distance'|'enter'|'leave'|'studs'|'fist'|'spit'|'hand'|'goal'|'mouth'|'twoCards';
 export type CardOffence={id:string;color:CardColor;icon:CardIcon;name:string;explain:string;example:string;next:string};
 export type CardDeckWords={label:string;yellow:string;red:string;flip:string;flipBack:string;prev:string;next:string;
  /** "Card {n} of {total}" */position:string;example:string;then:string;how:string};
@@ -59,7 +59,7 @@ export const CARD_RULES:CardRulesContent={
    example:'Example',then:'What happens next',how:'Swipe, or use the arrows. Tap a card to flip it.'},
   extra:'The Laws also list a few offenses that only come up in top games with video referees (going into the referee review area, too many “TV screen” signals, going into the video room), plus some that a competition may choose to add.'},
  offences:[
-  {id:'unsporting',color:'yellow',icon:'mask',name:'Unsporting behavior',
+  {id:'unsporting',color:'yellow',icon:'dive',name:'Unsporting behavior',
    explain:'Playing unfairly or trying to cheat. This includes a reckless foul (done without caring if the other player gets hurt), a foul or handball that stops a promising attack, diving and handling the ball to try to score.',
    example:'A player falls over in the penalty area, hoping for a penalty, but no one touched them.',next:Y_NEXT},
   {id:'dissent',color:'yellow',icon:'talk',name:'Dissent',
@@ -153,7 +153,7 @@ export const CARD_RULES:CardRulesContent={
    {min:.8,name:'Cup final referee',line:'Sharp eyes. You know your cards.'},
    {min:1,name:'World Cup final referee',line:'Every call right. The players would trust you with the whistle.'}],
   words:{title:'Yellow, red or nothing?',intro:'You are the referee. Read what happened and make the call: yellow card, red card or no card.',start:'Start the game',again:'Play again',next:'Next',finish:'See my score',
-   progress:'Scenario {n} of {total}',how:'Swipe up for yellow, right for red, left for no card. Or tap a button.',right:'Right call!',wrong:'Not quite.',
+   progress:'Scenario {n} of {total}',how:'Swipe up for yellow, right for red, left for no card. Or tap a button.',right:'Correct!',wrong:'Not quite.',
    answerIs:'The right call: {call}.',score:'You got {score} of {total} right.',levelIs:'Your referee level:',privacy:'Nothing you pick is saved or sent.',
    noScript:'This game needs JavaScript. The 14 card offenses above have every answer.'}},
 };

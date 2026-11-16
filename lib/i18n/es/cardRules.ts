@@ -111,7 +111,7 @@ export const CARD_RULES_ES:CardRulesContent={
    {min:.8,name:'Árbitro de final de copa',line:'Buen ojo. Conoces tus tarjetas.'},
    {min:1,name:'Árbitro de la final del Mundial',line:'Todas bien. Los jugadores te confiarían el silbato.'}],
   words:{title:'¿Amarilla, roja o nada?',intro:'Tú eres el árbitro. Lee lo que pasó y decide: tarjeta amarilla, tarjeta roja o nada.',start:'Empezar el juego',again:'Jugar otra vez',next:'Siguiente',finish:'Ver mi puntaje',
-   progress:'Jugada {n} de {total}',how:'Desliza hacia arriba para amarilla, a la derecha para roja y a la izquierda para sin tarjeta. O toca un botón.',right:'¡Bien marcado!',wrong:'Casi.',
+   progress:'Jugada {n} de {total}',how:'Desliza hacia arriba para amarilla, a la derecha para roja y a la izquierda para sin tarjeta. O toca un botón.',right:'¡Correcto!',wrong:'Casi.',
    answerIs:'La decisión correcta: {call}.',score:'Acertaste {score} de {total}.',levelIs:'Tu nivel de árbitro:',privacy:'Nada de lo que eliges se guarda ni se envía.',
    noScript:'Este juego necesita JavaScript. Las 14 faltas de tarjeta de arriba tienen todas las respuestas.'}},
 };

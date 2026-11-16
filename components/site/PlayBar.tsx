@@ -4,7 +4,7 @@ import styles from '@/app/(site)/site.module.css';
 /**
  * The small "Play free" bar on phones (Nov 15 2026, owner item 10) for guide, card and fish pages. Under 768 px only (CSS hides it
  * wider). It shows once the page's answer (the intro) has scrolled away, and hides again whenever an in-page Play button
- * (`data-play-cta`) is on screen, so there are never two Play buttons in view. One IntersectionObserver, no scroll listener, no
+ * (`data-play-cta`) or a swipe island (`data-playbar-hide`: the cards deck and game) is on screen, so there are never two Play buttons in view. One IntersectionObserver, no scroll listener, no
  * timer. While it shows, the page gets bottom padding (`data-playbar` on the reading-page root), so it never covers the last
  * lines. "Hide" keeps it away for this visit (sessionStorage, try/catch). Renders nothing on the server.
  */
@@ -14,7 +14,7 @@ export default function PlayBar({href,text,lang}:{href:string;text:string;lang?:
  useEffect(()=>{let gone=false;try{gone=sessionStorage.getItem(OFF_KEY)==='1';}catch{/* private mode */}setOff(gone);},[]);
  useEffect(()=>{
   if(off||typeof IntersectionObserver==='undefined')return;
-  const watch=[...document.querySelectorAll('[data-answer],[data-play-cta]')];if(!watch.length)return;
+  const watch=[...document.querySelectorAll('[data-answer],[data-play-cta],[data-playbar-hide]')];/* data-playbar-hide (Nov 16 2026): the cards deck and game, whose controls sit at the screen foot */if(!watch.length)return;
   const seen=new Set<Element>();
   const io=new IntersectionObserver(es=>{for(const e of es){if(e.isIntersecting)seen.add(e.target);else seen.delete(e.target);}
    const introBelow=watch.some(el=>el.hasAttribute('data-answer')&&el.getBoundingClientRect().top>0);

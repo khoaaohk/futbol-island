@@ -46,7 +46,7 @@ export default function RefCallGame({game,lang}:{game:CallGame;lang?:'es'}){
  const onKey=(e:React.KeyboardEvent)=>{const dir=ARROW[e.key];if(!dir||answered)return;const c=game.choices.find(k=>k.swipe===dir);if(c){e.preventDefault();pick(c.id);}};
  const level=levelFor(game.levels,score,total);
  const right=answered&&picked===cur.answer;
- return <section className={styles.section} aria-labelledby={id} data-ref-call={id}>
+ return <section className={styles.section} aria-labelledby={id} data-ref-call={id} data-playbar-hide="">
   <h2 className={styles.h2} id={id}>{W.title}</h2>
   {phase==='intro'&&<div className={g.intro}>
    <p>{W.intro}</p>
@@ -66,9 +66,9 @@ export default function RefCallGame({game,lang}:{game:CallGame;lang?:'es'}){
       {leanChoice&&<p className={g.lean} data-call={leanChoice.id} aria-hidden="true">{leanChoice.label}</p>}
      </div>
      <div className={g.back} aria-hidden={!answered||undefined}>
-      {answered&&<><p className={g.verdict}>{right?W.right:W.wrong} {fill(W.answerIs,{call:callWord(cur.answer)})}</p>
-       <p>{cur.why}</p>
-       <p className={g.scenario}>{cur.text}</p></>}
+      {answered&&<><p className={g.scenario}>{cur.text}</p>
+       <p className={g.verdict}>{right?W.right:W.wrong} {fill(W.answerIs,{call:callWord(cur.answer)})}</p>
+       <p>{cur.why}</p></>}
      </div>
     </div>
    </div>

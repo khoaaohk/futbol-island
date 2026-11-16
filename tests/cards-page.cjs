@@ -77,4 +77,7 @@ const game=read('components/site/RefCallGame.tsx');
 ok(!/fetch\(|sendBeacon|localStorage|sessionStorage|track\(/.test(game+deck),'deck and game send and store nothing');
 ok(/aria-live="polite"/.test(game)&&/ArrowUp/.test(game)&&/onPointerUp/.test(game),'game: live region, keyboard and swipe');
 ok(/game\.choices\.map\(c=><button/.test(game),'game: the three buttons are real buttons');
+ok(/data-playbar-hide=""/.test(deck)&&/data-playbar-hide=""/.test(game)&&/\[data-playbar-hide\]/.test(read('components/site/PlayBar.tsx')),'the phone Play bar hides while the deck or game is on screen');
+ok(game.indexOf('className={g.scenario}')<game.indexOf('className={g.verdict}'),'game feedback shows the scenario first, then the verdict');
+ok(/aspect-ratio:3\/4/.test(dcss)&&/max-height:60vh/.test(dcss),'deck card is 3:4 and at most 60vh');
 console.log(`cards-page: ${n} checks OK`);
