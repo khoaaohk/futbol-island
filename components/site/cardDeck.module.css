@@ -1,0 +1,92 @@
+/* The card offences deck (components/site/CardDeck.tsx). Without JavaScript, before hydration and in print it is a plain list:
+   every card a tint block with its name and all its words. With [data-ready] it is a deck of referee cards: flat yellow or red,
+   portrait, square-ish corners like a real card, no gradient, no shadow at rest (docs/seo/DESIGN.md). */
+.deck{--card-yellow:#f5c518;--card-yellow-ink:#14221d;--card-red:#c8202f;--card-red-ink:#fff;display:grid;gap:var(--s2,16px);max-width:100%}
+.track{list-style:none;margin:0;padding:0!important;display:grid;gap:var(--s2,16px)}
+.slide{min-width:0}
+.card{position:relative;box-sizing:border-box;border-radius:var(--r-md,16px);padding:var(--pad-box,20px);display:grid;gap:var(--s1,8px)}
+.card[data-color=yellow]{background:var(--card-yellow);color:var(--card-yellow-ink)}
+.card[data-color=red]{background:var(--card-red);color:var(--card-red-ink)}
+.front{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 12px}
+.kind{grid-column:1/-1;font-size:var(--t-label,13px);font-weight:700;letter-spacing:0}
+.face{grid-column:1/-1;display:flex;align-items:center;gap:12px}
+.icon{width:40px;height:40px;flex:none}
+.name{margin:0;font-size:var(--t-h3,19px);line-height:1.2;font-weight:700;letter-spacing:-.01em;color:inherit}
+.back{display:grid;gap:var(--s1,8px)}
+.back p{margin:0;font-size:var(--t-body,17px);line-height:1.5;max-width:var(--measure,68ch)}
+.backName{display:none}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.how,.status{margin:0;font-size:var(--t-cap,15px);color:var(--ink-soft,#5b675f)}
+.status{color:var(--ink,#14221d);font-weight:600;text-align:center}
+
+/* ---- the deck (screen only, after hydration) ---- */
+@media screen{
+ .deck[data-ready] .viewport{overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none;border-radius:var(--r-lg,24px);background:var(--surface,#ecefdf);padding:var(--s3,24px) 0}
+ .deck[data-ready] .track{display:flex;gap:0;transition:transform .34s cubic-bezier(.2,.8,.2,1);will-change:transform}
+ .deck[data-ready] .track[data-dragging]{transition:none}
+ .deck[data-ready] .slide{flex:0 0 100%;display:grid;justify-items:center;padding:0 var(--s2,16px);box-sizing:border-box}
+ /* A referee card is portrait: 3:4, never taller than 60% of the screen, so on a phone the card, its arrows and dots fit in
+    one view. Both faces fill the card; a long back scrolls inside the card above the Flip button. */
+ .deck[data-ready] .card{width:min(100%,330px);aspect-ratio:3/4;max-height:60vh;max-height:60svh;padding:0;perspective:1200px;background:none;display:grid;grid-template:minmax(0,1fr)/minmax(0,1fr);cursor:pointer}
+ .deck[data-ready] .front,.deck[data-ready] .back{grid-area:1/1;min-height:0;box-sizing:border-box;border-radius:14px;padding:18px 20px 72px;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  transition:transform .5s cubic-bezier(.2,.8,.2,1)}
+ .deck[data-ready] .card[data-color=yellow] .front,.deck[data-ready] .card[data-color=yellow] .back{background:var(--card-yellow)}
+ .deck[data-ready] .card[data-color=red] .front,.deck[data-ready] .card[data-color=red] .back{background:var(--card-red)}
+ .deck[data-ready] .front{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:0;overflow:hidden}
+ .deck[data-ready] .kind{font-size:15px}
+ .deck[data-ready] .face{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;min-height:0}
+ .deck[data-ready] .icon{width:88px;height:88px;flex:none}
+ .deck[data-ready] .name{font-size:26px;line-height:1.08;letter-spacing:-.02em;font-weight:700;text-wrap:balance}
+ .deck[data-ready] .back{transform:rotateY(180deg);align-content:start;gap:10px;overflow-y:auto;overscroll-behavior:contain}
+ .deck[data-ready] .back{padding-bottom:0}
+ .deck[data-ready] .back::after{content:'';display:block;height:72px}/* room under the last line for the Flip button (a scroll container's bottom padding is not reliable) */
+ .deck[data-ready] .back p{font-size:15px;line-height:1.4}
+ .deck[data-ready] .backName{display:block;font-size:19px!important;line-height:1.15!important;font-weight:700;letter-spacing:-.015em}
+ .deck[data-ready] .card[data-flipped] .front{transform:rotateY(-180deg)}
+ .deck[data-ready] .card[data-flipped] .back{transform:rotateY(0)}
+ /* The Flip button sits at the foot of the card (keyboard and screen readers); a tap anywhere on the card flips it too. */
+ .flip{position:absolute;left:20px;bottom:16px;min-height:var(--tap,44px);padding:0 20px;border:0;border-radius:var(--r-pill,999px);font:inherit;font-size:16px;font-weight:700;
+  background:var(--ink,#14221d);color:#fff;cursor:pointer;z-index:2;transition:transform .15s ease}
+ .card[data-color=red] .flip{background:#fff;color:var(--card-red)}
+ .flip:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+ .flip:active{transform:scale(.96)}
+ .controls{display:flex;align-items:center;justify-content:space-between;gap:var(--s2,16px)}
+ .arrow{flex:none;width:52px;height:52px;border:0;border-radius:var(--r-pill,999px);background:var(--ink,#14221d);color:#fff;font:inherit;font-size:22px;font-weight:700;cursor:pointer;transition:transform .15s ease,opacity .15s ease}
+ .arrow:disabled{opacity:.3;cursor:default}
+ .arrow:not(:disabled):active{transform:scale(.94)}
+ .arrow:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+ .dots{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;min-width:0}
+ .dot{width:8px;height:8px;border-radius:50%;opacity:.35;transition:transform .2s ease,opacity .2s ease}
+ .dot[data-color=yellow]{background:#c99a00}
+ .dot[data-color=red]{background:var(--card-red)}
+ .dot[data-on]{opacity:1;transform:scale(1.5)}
+ @media(hover:hover){.arrow:not(:disabled):hover,.flip:hover{transform:translateY(-1px)}}
+}
+@media screen and (max-width:420px){.dots{gap:4px}.dot{width:6px;height:6px}}
+@media screen and (prefers-reduced-motion:reduce){
+ .deck[data-ready] .track{transition:none}
+ .deck[data-ready] .front,.deck[data-ready] .back{transform:none!important;transition:opacity .2s linear}
+ .deck[data-ready] .back{opacity:0}
+ .deck[data-ready] .card[data-flipped] .front{opacity:0}
+ .deck[data-ready] .card[data-flipped] .back{opacity:1}
+ .deck[data-ready] .slide[data-current] .card{animation:deckFade .2s linear}
+ .flip,.arrow,.dot{transition:none}
+}
+@keyframes deckFade{from{opacity:.2}to{opacity:1}}
+
+/* ---- print: the "Card rules" sheet. The list, two columns, name + explanation; the deck parts and this page's diagram,
+   referee points and mix-ups drop out (printSheet.module.css) so the 14 offences and the yellow vs red table fit one page. ---- */
+@media print{
+ .how,.status,.controls,.flip{display:none!important}
+ .track{display:grid!important;grid-template-columns:1fr 1fr;gap:4pt 10pt!important;transform:none!important}
+ .slide{break-inside:avoid}
+ .card{padding:4pt 6pt!important;border-radius:4pt;background:#fff!important;color:#000!important;border-left:4pt solid #000}
+ .card[data-color=yellow]{border-left-color:#e0b000}
+ .card[data-color=red]{border-left-color:#c8202f}
+ .icon{display:none}
+ .back p:not(:first-of-type){display:none}
+ .back p:nth-of-type(2){display:block}
+ .kind{font-size:7.5pt}
+ .back p{font-size:8.5pt!important;line-height:1.25!important}
+ .name{font-size:9.5pt!important}
+}

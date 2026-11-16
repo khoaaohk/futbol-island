@@ -1,0 +1,50 @@
+/* "Make the call" game (components/site/RefCallGame.tsx). One scenario card on the tint panel, three big call buttons under it
+   (always there), the card turns to the referee's call. Flat colours from the page tokens; no gradient, no shadow at rest. */
+.intro,.play,.done{display:grid;gap:var(--s2,16px);--yellow:#f5c518;--red:#c8202f}
+.intro p,.done p{margin:0}
+.start{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 26px;border:0;border-radius:var(--r-pill,999px);background:var(--ink,#14221d);color:#fff;
+ font:inherit;font-size:17px;font-weight:700;cursor:pointer;transition:transform .15s ease}
+.start:active{transform:scale(.97)}
+.start:focus-visible,.choice:focus-visible,.card:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+@media(hover:hover){.start:hover{transform:translateY(-1px)}}
+.progress{margin:0;font-size:var(--t-cap,15px);font-weight:600}
+.stage{background:var(--surface,#ecefdf);border-radius:var(--r-lg,24px);padding:var(--s3,24px) var(--s2,16px);display:grid;justify-items:center;overflow:hidden}
+.card{position:relative;width:min(100%,340px);min-height:300px;display:grid;perspective:1200px;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;
+ transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.card[data-dragging]{transition:none;cursor:grabbing}
+.card[data-answered]{cursor:default;touch-action:auto;user-select:text;-webkit-user-select:text}
+.front,.back{grid-area:1/1;box-sizing:border-box;border-radius:14px;padding:24px;display:grid;align-content:center;gap:12px;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+ transition:transform .5s cubic-bezier(.2,.8,.2,1),background-color .15s linear}
+.front{background:var(--paper,#fbf7ee)}
+.back{transform:rotateY(180deg);background:var(--paper,#fbf7ee);align-content:start}
+.card[data-answered] .front{transform:rotateY(-180deg)}
+.card[data-answered] .back{transform:rotateY(0)}
+.card[data-call=yellow] .back{background:var(--yellow);color:var(--ink,#14221d)}
+.card[data-call=red] .back{background:var(--red);color:#fff}
+.card[data-lean=yellow] .front{background:#fbe59a}
+.card[data-lean=red] .front{background:#f3c2c6}
+.card[data-lean=none] .front{background:#dfe6d2}
+.text{margin:0;font-size:24px;line-height:1.25;font-weight:600;letter-spacing:-.015em}
+.lean{position:absolute;top:14px;right:14px;margin:0;padding:6px 12px;border-radius:var(--r-pill,999px);font-size:15px;font-weight:700;background:var(--ink,#14221d);color:#fff}
+.back p{margin:0;font-size:17px;line-height:1.45}
+.verdict{font-size:22px!important;line-height:1.2!important;font-weight:700}
+.scenario{font-size:18px!important;line-height:1.35!important;font-weight:600}
+.choices{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--s1,8px)}
+.choice{min-height:64px;padding:8px;border:0;border-radius:var(--r-md,16px);font:inherit;font-size:18px;font-weight:700;cursor:pointer;transition:transform .15s ease}
+.choice[data-call=none]{background:var(--ink,#14221d);color:#fff}
+.choice[data-call=yellow]{background:var(--yellow);color:var(--ink,#14221d)}
+.choice[data-call=red]{background:var(--red);color:#fff}
+.choice:active{transform:scale(.96)}
+@media(hover:hover){.choice:hover{transform:translateY(-2px)}}
+.nextRow{margin:0;min-height:64px;display:flex;align-items:center}
+.level{font-size:var(--t-h3,19px)}
+.level b{font-size:28px;letter-spacing:-.02em}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;margin:0}
+@media(prefers-reduced-motion:reduce){
+ .card,.start,.choice{transition:none}
+ .front,.back{transform:none!important;transition:opacity .2s linear}
+ .back{opacity:0}
+ .card[data-answered] .front{opacity:0}
+ .card[data-answered] .back{opacity:1}
+}
+@media print{.play,.intro button{display:none}}

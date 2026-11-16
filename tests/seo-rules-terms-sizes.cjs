@@ -79,7 +79,7 @@ const text=h=>h.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<(title|desc)
 const SERVED=new Set(['/play','/privacy',...[...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`${guides.DIAGRAM_DIR}/${f}`)]);
 /* Nov 15 2026 (seo-design): the game's "Play this in the game" deep links; tests/seo-design.cjs checks each id is real. */
 const PLAY_GO=/^\/play\?go=(lesson|fish)(:[A-Za-z0-9_-]+)?$/;
-const SOURCES=/^https:\/\/(www\.theifab\.com\/laws\/latest\/[a-z-]+\/|the-aiff\.com\/media\/uploads\/2025\/09\/Futsal-Laws-of-the-Game-2025-2026_EN\.pdf)$/;
+const SOURCES=/^https:\/\/(www\.theifab\.com\/laws\/latest\/[a-z-]+\/|the-aiff\.com\/media\/uploads\/2025\/09\/Futsal-Laws-of-the-Game-2025-2026_EN\.pdf|www\.euronews\.com\/2023\/01\/25\/referee-shows-a-white-card-for-the-first-time-in-football-history-but-why)$/;/* euronews: Portugal's white card on the cards page (lib/site/cardRules.ts SOURCES) */
 const paraPages=new Map();let words=0,tables=0;
 const kind=p=>p.startsWith('/learn/soccer-rules/')?'rule':p.startsWith('/learn/soccer-terms/')?'term':/soccer-(rules|terms)$/.test(p)?'hub':'chart';
 for(const g of PAGES){
@@ -105,8 +105,8 @@ for(const g of PAGES){
  for(const t of h.match(/<table[\s\S]*?<\/table>/g)||[]){tables++;assert(/<thead><tr>(<th scope="col">[^<]+<\/th>)+<\/tr><\/thead>/.test(t),`${where}: table column headers`);
   const rows=t.match(/<tr>[\s\S]*?<\/tr>/g).slice(1);assert(rows.length>=1&&rows.every(r=>/^<tr><th scope="row">/.test(r)),`${where}: each row starts with a header cell`);}
  // diagrams
- const svgs=h.match(/<svg[\s\S]*?<\/svg>/g)||[];
- if(k==='rule'||k==='term'){assert(svgs.length>=1,`${where}: a diagram`);assert(/data-player=/.test(svgs[0])&&/data-ball=/.test(h),`${where}: players and a ball`);}
+ const svgs=(h.match(/<svg[\s\S]*?<\/svg>/g)||[]).filter(x=>!/^<svg[^>]*aria-hidden="true"/.test(x));/* decorative icons (aria-hidden) are not diagrams */
+ if(k==='rule'||k==='term'){assert(svgs.length>=1,`${where}: a diagram`);assert(svgs.some(x=>/data-player=/.test(x))&&/data-ball=/.test(h),`${where}: players and a ball`);/* svgs.some: the cards page has card icons before its diagram (Nov 16 2026) */}
  for(const s of svgs){assert(/<title[^>]*>[^<]+<\/title><desc[^>]*>[^<]{40,}<\/desc>/.test(s),`${where}: diagram title and description`);assert(/role="img"/.test(s));}
  assert.equal(new Set((h.match(/ id="[^"]+"/g)||[])).size,(h.match(/ id="[^"]+"/g)||[]).length,`${where}: unique ids`);
  // one way into the game or a lesson, links resolve

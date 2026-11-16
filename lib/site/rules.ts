@@ -37,6 +37,8 @@ import {scene,type RawScene,type Scene} from './scenes';
  *    build-out examples), bld_7_usekeeper (the keeper plays a pass back with the feet), gap11_runoncue (Law 11), exp11_shortfreekick
  *    (Law 13, ten yards), set_f_throwin / expf_kickinthird / expf_cornercutback (kick-in and the four-second count),
  *    next7_dribblein (the FA's pass-in or dribble-in).
+ * Re-checked Nov 16 2026 for /learn/soccer-rules/yellow-and-red-cards against theifab.com Law 12 (section 4), Law 3 and the
+ * temporary dismissals guidelines; that page's extra parts and their sources are in lib/site/cardRules.ts.
  * NOT VERIFIED and therefore not stated: the referee's arm signals (the Laws show them as pictures), the exact distances for
  * restarts on small-sided fields (leagues set them), futsal's rule for replacing a sent-off player.
  * Local leagues change details, so every page tells readers to check their own league's rules. No statistics, no named players.
@@ -246,9 +248,9 @@ export const RULES:readonly Rule[]=([
   lessonIds:['next7_shotreaction','expf_keeperposition','def_7_goalside'],cta:'next7_shotreaction',exhibitIds:['penalty-1891'],links:[L.gk,L.st,L.cb]},
  // ---- yellow and red cards -----------------------------------------------------------------------------------------------
  {slug:'yellow-and-red-cards',name:'Yellow and red cards',law:'Law 12',lawPage:'fouls-and-misconduct/',
-  title:'Yellow and Red Cards in Soccer: What They Mean (for Kids)',h1:'Yellow and red cards in soccer, explained for kids',
-  desc:'What does a yellow card mean in soccer, and how do you get a red card? Plain answers for kids and parents: what earns each card and what happens next.',
-  answer:'In soccer, a yellow card is a warning from the referee, and a red card sends a player off for the rest of the game. A yellow is for things like a reckless foul or arguing, and a red is for serious foul play, violent conduct, stopping an obvious chance to score or a second yellow card.',
+  title:'Yellow and Red Cards in Soccer: What a Yellow Card Means',h1:'Yellow and red cards in soccer: what they mean',
+  desc:'What does a yellow card mean in soccer? A warning. The 7 yellow and 7 red card offenses, what happens after a red card, and a referee game.',
+  answer:'In soccer, a yellow card is a warning from the referee: the player keeps playing, but a second yellow in the same game becomes a red card. A red card sends the player off for the rest of the game, and the team plays one player short, with no one to replace them.',
   scenes:[{title:'Stopping a clear chance to score',who:'9@52,74 7@80,66 8@40,58 !4@50,71 !5@28,72 !G@50,96',ball:[53,76],zone:[30,76,70,100],runs:['52,74>52,90'],
    caption:'Number 9 is through with only the goalkeeper ahead, and defender number 4 pulls number 9 back from behind. Stopping an obvious chance to score with a foul like this is a red card. The shaded space shows the open route to goal.'}],
   refs:['Yellow: a reckless foul, stopping a promising attack with a foul, arguing with the referee, delaying a restart, not giving the distance at a free kick, pretending to be fouled.',
@@ -261,12 +263,15 @@ export const RULES:readonly Rule[]=([
    {said:'“Cards are only for fouls.”',truth:'Cards are also for behavior: arguing, wasting time and unsporting acts.'}],
   formats:[['7v7 and 9v9','The same cards exist, but referees of young players usually talk first. Ask your league what happens after a card, such as missing the next game.'],
    ['11v11','Law 12 in full.'],['Futsal','Yellow and red cards are used in futsal too, and direct free kick fouls also count toward the team’s foul total.']],
-  faq:[{q:'What does a yellow card mean in soccer?',a:'It is a caution: the referee is warning the player. The player stays on the field, but a second yellow card in the same game means a red card. Yellow cards are for things like a reckless foul, arguing with the referee, wasting time or not standing back at a free kick.'},
-   {q:'How do you get a red card in soccer?',a:'By a foul with far too much force (serious foul play), violent conduct, biting or spitting, insulting or abusive words or gestures, stopping a goal or an obvious chance to score with a handball or a foul, or a second yellow card in the same game.'},
-   {q:'How many yellow cards make a red card?',a:'Two in the same game. The referee shows the second yellow card and then the red card.'},
-   {q:'Can a goalkeeper get a red card?',a:'Yes. A goalkeeper can be sent off like any other player. Every team must have a goalkeeper, so another player goes in goal and the team plays one short.'},
-   {q:'Can VAR change a card?',a:'Where video assistant referees are used, they can check straight red cards and a card shown to the wrong player. An ordinary yellow card is not one of the things they review.'}],
-  lessonIds:['trn_11_recover','def_7_goalside','def_11_pressurecover'],cta:'trn_11_recover',exhibitIds:['var-2018','laws-1863'],links:[L.cb,L.dm,L.gk]},
+  faq:[{q:'What does a yellow card mean in soccer?',a:'A yellow card is a caution: the referee is warning the player. The player stays on the field and keeps playing, but a second yellow card in the same game means a red card. Yellow cards are for things like a reckless foul, arguing with the referee, wasting time or not backing up at a free kick.'},
+   {q:'How do you get a red card in soccer?',a:'By serious foul play, violent conduct, biting or spitting at someone, offensive or abusive words or gestures, stopping a goal or an obvious chance to score with a handball or a foul, or a second yellow card in the same game.'},
+   {q:'What happens after a red card in soccer?',a:'The player leaves the field and the bench area and cannot come back in that game. No one can replace them, so the team plays one player short. The player usually misses at least the next game too, but the league or tournament decides how many.'},
+   {q:'How many yellow cards make a red card?',a:'Two in the same game. The referee shows the second yellow card and then the red card, and the player is sent off.'},
+   {q:'What are the FIFA rules for yellow cards in soccer?',a:'FIFA competitions use the IFAB Laws of the Game. Law 12 lists the yellow card offenses: unsporting behavior, dissent, persistent offenses, delaying the restart, not respecting the distance at a restart, and entering or leaving the field without permission, plus two that only apply in games with video referees.'}],
+  lessonIds:['trn_11_recover','def_7_goalside','def_11_pressurecover'],cta:'trn_11_recover',exhibitIds:['var-2018','laws-1863'],links:[
+   {path:rulePath('fouls-and-free-kicks'),name:'Fouls and free kicks in soccer',line:'Which fouls give a direct or an indirect free kick'},
+   {path:rulePath('penalty-kick'),name:'The penalty kick in soccer',line:'What happens after a foul in the penalty area'},
+   {path:rulePath('handball'),name:'The handball rule in soccer',line:'When a handball is a foul, and when it is a card'},L.cb,L.gk]},
  // ---- back-pass rule -----------------------------------------------------------------------------------------------------
  {slug:'back-pass-rule',name:'Back-pass rule',law:'Law 12',lawPage:'fouls-and-misconduct/',
   title:'Back-Pass Rule in Soccer: Can the Goalkeeper Pick It Up?',h1:'The back-pass rule in soccer, explained for kids',

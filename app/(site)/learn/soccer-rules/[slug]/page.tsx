@@ -18,6 +18,9 @@ import {SITE_UPDATED} from '@/lib/site/updated';
 import {RULE_NOTES} from '@/lib/site/notesGuides';
 import {checkNotes} from '@/lib/site/coachNotes';
 import {FUTSAL_VS_SOCCER} from '@/lib/site/comparisons';
+import {CardRulesGame,CardRulesSide,CardRulesTop} from '@/components/site/CardRulesSections';
+import {CARD_RULES} from '@/lib/site/cardRules';
+import {longDate} from '@/lib/site/checked';
 import styles from '../../../site.module.css';
 
 /** One rule (lib/site/rules.ts): the two-sentence answer, the diagram, what the referee looks for, mix-ups, formats, FAQ, lessons. */
@@ -36,18 +39,22 @@ export default function RulePage({params}:{params:{slug:string}}){
  const i=RULES.indexOf(r),next=[RULES[(i+1)%RULES.length],RULES[(i+2)%RULES.length]];
  const related=[...(r.slug==='substitutions-and-game-length'?[{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'A fair substitution plan with equal minutes for every player'}]:[]),...r.exhibits,...r.links,...next.map(x=>({path:x.path,name:x.h1,line:`${x.law}, with a diagram`})),
   {path:RULES_HUB.path,name:'All soccer rules for kids',line:RULES_HUB.blurb},{path:TERMS_HUB.path,name:TERMS_HUB.h1,line:TERMS_HUB.blurb}];
+ const cards=r.slug==='yellow-and-red-cards';/* Nov 16 2026: the cards page's deck, table, side questions and game (lib/site/cardRules.ts) */
  const moving=(ANIMATED_RULES as readonly string[]).includes(r.slug),futsal=r.slug==='futsal-rules',pair=r.scenes.length>1,last=r.scenes.length-1;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{...articleLd({headline:r.title,path:r.path,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (soccer rule)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.path,name:`${r.name} quiz`,questions:quiz})}}/>
   <JsonLd data={faqLd(r.faq)}/>
   <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer}/>
-  <PrintSheet path={r.path} what="rule sheet"/>
+  <PrintSheet path={r.path} what={cards?'card rules sheet':'rule sheet'} has={cards?'all 14 card offenses and the yellow vs red table':undefined}/>
+  {cards&&<CardRulesTop c={CARD_RULES}/>}
   <Section id="diagram" title={`${r.name}: diagram`}>
    {pair
     ?<div className={styles.pair}>{r.scenes.map((s,j)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><SceneDiagram id={`s${j}`} scene={s} small image={j===last?diagramUrl(r.picture):undefined} animate={moving?`${s.title.toLowerCase()} pass`:undefined}/></div>)}</div>
     :<SceneDiagram id="s0" scene={r.scenes[0]} image={diagramUrl(r.picture)} animate={moving?r.name.toLowerCase():undefined}/>}
   </Section>
+  {cards&&<CardRulesGame c={CARD_RULES}/>}
+  {cards&&<CardRulesSide c={CARD_RULES} checked={`Checked on ${longDate(FAMILY_CHECKED.rules)}.`}/>}
   <Section id="referee" title="What the referee looks for">
    <Bullets items={r.refs}/>
    <p className={styles.caption}>Rule: {r.law}. {futsal?<a href={FUTSAL_LAWS_URL} rel="noopener">FIFA Futsal Laws of the Game 2025-26</a>:<a href={r.lawUrl} rel="noopener">Read it in the Laws of the Game (The IFAB)</a>}.</p>

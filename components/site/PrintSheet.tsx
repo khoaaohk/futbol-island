@@ -7,10 +7,10 @@ import p from './printSheet.module.css';
  * answer, diagram, the steps / referee points and the coaching points / mix-ups, drops the site bar, footer, breadcrumbs,
  * buttons, FAQ and link lists, and ends with a small line naming the page's URL.
  */
-export default function PrintSheet({path,what='sheet'}:{path:string;what?:string}){
+export default function PrintSheet({path,what='sheet',has='diagram, steps, key points'}:{path:string;what?:string;has?:string}){
  const url=abs(path);
  return <div className={p.sheet} data-print-sheet="">
-  <div className={p.screen}><PrintButton/> <span className={p.hint}>A one-page {what} for the field: diagram, steps, key points.</span></div>
+  <div className={p.screen}><PrintButton/> <span className={p.hint}>A one-page {what} for the field: {has}.</span></div>
   <p className={p.url}>Futbol Island · free football lessons for kids · {url.replace(/^https:\/\//,'')}</p>
  </div>;
 }

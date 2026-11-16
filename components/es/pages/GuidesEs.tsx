@@ -18,6 +18,8 @@ import {esDrillLinksFor} from '@/lib/i18n/es/drillsRegistry';
 import {ES_COMPARISONS,ES_FORMATIONS,esFormatGuide,ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
 import {positionQuizEs,ruleQuizEs,termQuizEs} from '@/lib/i18n/es/quiz';
 import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,EsLessonList} from '@/components/es/EsParts';
+import {CardRulesGame,CardRulesSide,CardRulesTop} from '@/components/site/CardRulesSections';
+import {CARD_RULES_ES} from '@/lib/i18n/es/cardRules';
 import styles from '@/app/(site)/site.module.css';
 /**
  * The Spanish rules, terms and positions pages (Spanish round 1, Nov 15 2026): the English pages' sections in the same order,
@@ -65,18 +67,22 @@ export function RuleEsPage({r}:{r:EsRule}){
  const H=ES_HUBS.rules,crumbs=esCrumbs({name:H.crumb,path:H.path},{name:r.name,path:r.esPath}),all=ES_RULES(),quiz=ruleQuizEs(r);
  const i=all.findIndex(x=>x.slug===r.slug),next=[all[(i+1)%all.length],all[(i+2)%all.length]];
  const related=[...links(r.links),...next.map(x=>({path:x.esPath,name:x.h1,line:`${x.law}, con diagrama`})),{path:H.path,name:'Todas las reglas del fútbol para niños',line:H.blurb},{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb}];
+ const cards=r.slug==='yellow-and-red-cards';/* Nov 16 2026: lib/i18n/es/cardRules.ts */
  const moving=(ANIMATED_RULES as readonly string[]).includes(r.slug),futsal=r.slug==='futsal-rules',pair=r.scenes.length>1,last=r.scenes.length-1,F=H.futsalVsSoccer;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd({...articleLd({headline:r.title,path:r.esPath,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (regla de fútbol)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.esPath,name:`Prueba: ${r.name}`,questions:quiz})})}/>
   <JsonLd data={faqLd(r.faq)}/>
   <EsIntro crumbs={crumbs} h1={r.h1} lead={r.answer}/>
-  <EsPrintSheet path={r.esPath} what="hoja de la regla"/>
+  <EsPrintSheet path={r.esPath} what={cards?'hoja de las tarjetas':'hoja de la regla'} has={cards?'las 14 faltas de tarjeta y la tabla de amarilla o roja':undefined}/>
+  {cards&&<CardRulesTop c={CARD_RULES_ES}/>}
   <Section id="diagram" title={`${r.name}: diagrama`}>
    {pair
     ?<div className={styles.pair}>{r.scenes.map((s,j)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><EsSceneDiagram id={`s${j}`} scene={s} small image={j===last?diagramUrl(r.picture):undefined} animate={moving?`pase: ${s.title.toLowerCase()}`:undefined}/></div>)}</div>
     :<EsSceneDiagram id="s0" scene={r.scenes[0]} image={diagramUrl(r.picture)} animate={moving?r.name.toLowerCase():undefined}/>}
   </Section>
+  {cards&&<CardRulesGame c={CARD_RULES_ES} lang="es"/>}
+  {cards&&<CardRulesSide c={CARD_RULES_ES} checked={`Revisado el ${longDateEs(FAMILY_CHECKED.rules)}.`}/>}
   <Section id="referee" title="Lo que mira el árbitro">
    <Bullets items={r.refs}/>
    <p className={styles.caption}>Regla: {r.law}. {futsal?<a href={FUTSAL_LAWS_URL} rel="noopener">Reglas de Juego de Futsal de la FIFA 2025-26 (en inglés)</a>:<a href={r.lawUrl} rel="noopener">Léela en las Reglas de Juego (IFAB, en inglés)</a>}.</p>
