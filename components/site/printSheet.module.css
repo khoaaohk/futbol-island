@@ -12,10 +12,11 @@
  main:has(.sheet)>:not(header):not(.sheet):not(section[aria-labelledby=diagram]):not(section[aria-labelledby=facts]):not(section[aria-labelledby=steps]):not(section[aria-labelledby=cues]):not(section[aria-labelledby=referee]):not(section[aria-labelledby=mixups]):not(section[aria-labelledby=card-rules]):not(section[aria-labelledby=yellow-vs-red]){display:none!important}
  main:has(.sheet)>header{padding:0!important;margin:0!important;gap:4pt!important;justify-items:start!important;text-align:left!important}
  main:has(.sheet) section *{box-shadow:none!important}
- /* the cards page's "Card rules" sheet (components/site/CardDeck.tsx): the 14 offences and the yellow vs red table only */
+ /* the cards page's "Card rules" sheet (components/site/CardDeck.tsx): the 14 offences and the yellow vs red table only (keyed on
+    the card-rules section, not on the deck: the rule pages' decks, lib/site/rulePlay.ts, keep the normal rule sheet) */
  main:has(.sheet) section[aria-labelledby=card-rules]{break-inside:auto!important}
  main:has(.sheet) section[aria-labelledby=card-rules]>p{display:none!important}
- main:has(.sheet):has([data-card-deck])>section[aria-labelledby=diagram],main:has(.sheet):has([data-card-deck])>section[aria-labelledby=referee],main:has(.sheet):has([data-card-deck])>section[aria-labelledby=mixups]{display:none!important}
+ main:has(.sheet):has(section[aria-labelledby=card-rules])>section[aria-labelledby=diagram],main:has(.sheet):has(section[aria-labelledby=card-rules])>section[aria-labelledby=referee],main:has(.sheet):has(section[aria-labelledby=card-rules])>section[aria-labelledby=mixups]{display:none!important}
  main:has(.sheet)>header>:not(h1):not([data-answer]){display:none!important}
  main:has(.sheet) h1{font-size:20pt!important}
  main:has(.sheet) h2{font-size:12.5pt!important;line-height:1.2!important}

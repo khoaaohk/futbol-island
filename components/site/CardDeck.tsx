@@ -1,11 +1,12 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
-import type {CardDeckWords,CardOffence} from '@/lib/site/cardRules';
+import type {DeckSlide,DeckWords} from '@/lib/site/ruleDeck';
 import {fill} from '@/lib/site/refCall';
 import CardIconSvg from './CardIcons';
 import s from './cardDeck.module.css';
 /**
- * The swipeable info deck (cards page, Nov 16 2026; reusable for any list of cards with a front and a back). The server renders
+ * The swipeable info deck (cards page, Nov 16 2026; data shape lib/site/ruleDeck.ts; also the back-pass, throw-in, handball
+ * and fouls pages' decks, lib/site/rulePlay.ts). The server renders
  * every card as a plain list item with ALL its words (name, explanation, example, what happens next), so search engines,
  * screen readers without the deck, no-JavaScript visitors and print all get the full list. After hydration the same list
  * becomes a deck: one card at a time, flip with a tap / Enter / Space (the Flip button), swipe left or right (pointer events,
@@ -14,7 +15,7 @@ import s from './cardDeck.module.css';
  * No timers, no scroll listeners, nothing stored or sent.
  */
 const FLICK=.35;/* px per ms: a quick flick turns the card even when the drag is short */
-export default function CardDeck({id,cards,words}:{id:string;cards:readonly CardOffence[];words:CardDeckWords}){
+export default function CardDeck({id,cards,words}:{id:string;cards:readonly DeckSlide[];words:DeckWords}){
  const [ready,setReady]=useState(false);
  const [index,setIndex]=useState(0);
  const [flipped,setFlipped]=useState<ReadonlySet<number>>(()=>new Set());
@@ -42,7 +43,7 @@ export default function CardDeck({id,cards,words}:{id:string;cards:readonly Card
   setDx(0);};
  const onKey=(e:React.KeyboardEvent)=>{if(e.key==='ArrowRight'){e.preventDefault();go(index+1,true);}else if(e.key==='ArrowLeft'){e.preventDefault();go(index-1,true);}};
  const pos=(n:number)=>fill(words.position,{n,total});
- const kind=(c:CardOffence)=>c.color==='red'?words.red:words.yellow;
+ const kind=(c:DeckSlide)=>words.kinds[c.tone]??'';
  return <div className={s.deck} data-card-deck="" data-playbar-hide="" data-ready={ready?'':undefined} role="region" aria-roledescription="carousel" aria-label={words.label} onKeyDown={ready?onKey:undefined}>
   {ready&&<p className={s.how} id={`${id}-how`}>{words.how}</p>}
   <div ref={viewport} className={s.viewport} onPointerDown={ready?onDown:undefined} onPointerMove={ready?onMove:undefined} onPointerUp={ready?onUp:undefined} onPointerCancel={ready?onUp:undefined}
@@ -51,7 +52,7 @@ export default function CardDeck({id,cards,words}:{id:string;cards:readonly Card
     {cards.map((c,i)=>{const hide=ready&&i!==index,on=flipped.has(i),back=`${id}-back-${i}`;
      return <li key={c.id} className={s.slide} data-slide={i} data-current={ready&&i===index?'':undefined} role="group" aria-roledescription="card" aria-label={`${pos(i+1)}: ${kind(c)}, ${c.name}`}
       aria-hidden={hide||undefined} {...(hide?{inert:''} as Record<string,string>:{})}>
-      <div className={s.card} data-color={c.color} data-flipped={on?'':undefined} onClick={ready?()=>flip(i):undefined}>
+      <div className={s.card} data-color={c.tone} data-flipped={on?'':undefined} onClick={ready?()=>flip(i):undefined}>
        <div className={s.front} aria-hidden={ready&&on?true:undefined}>
         <span className={s.kind}>{kind(c)}</span>
         <div className={s.face}><CardIconSvg icon={c.icon} className={s.icon}/><h3 className={s.name}>{c.name}</h3></div>
@@ -69,7 +70,7 @@ export default function CardDeck({id,cards,words}:{id:string;cards:readonly Card
   </div>
   {ready&&<div className={s.controls}>
    <button type="button" className={s.arrow} onClick={()=>go(index-1)} disabled={index===0} aria-label={words.prev}><span aria-hidden="true">←</span></button>
-   <div className={s.dots} aria-hidden="true">{cards.map((c,i)=><span key={c.id} className={s.dot} data-color={c.color} data-on={i===index?'':undefined}/>)}</div>
+   <div className={s.dots} aria-hidden="true">{cards.map((c,i)=><span key={c.id} className={s.dot} data-color={c.tone} data-on={i===index?'':undefined}/>)}</div>
    <button type="button" className={s.arrow} onClick={()=>go(index+1)} disabled={index===total-1} aria-label={words.next}><span aria-hidden="true">→</span></button>
   </div>}
   {ready&&<p className={s.status} aria-live="polite" aria-atomic="true">{pos(index+1)}: {cards[index].name}</p>}

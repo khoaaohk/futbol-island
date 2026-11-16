@@ -1,4 +1,5 @@
 import type {CallGame} from './refCall';
+import type {DeckIcon,DeckSlide,DeckWords} from './ruleDeck';
 /**
  * The extra parts of /learn/soccer-rules/yellow-and-red-cards (cards page, Nov 16 2026): the 7 yellow and 7 red card
  * offences (the swipeable deck, components/site/CardDeck.tsx, which enhances a server-rendered list), what happens next, the
@@ -36,10 +37,13 @@ import type {CallGame} from './refCall';
  * do not), whether young recreational leagues show cards, yellow-card accumulation bans.
  */
 export type CardColor='yellow'|'red';
-export type CardIcon='dive'|'talk'|'repeat'|'clock'|'distance'|'enter'|'leave'|'studs'|'fist'|'spit'|'hand'|'goal'|'mouth'|'twoCards';
+export type CardIcon=DeckIcon;/* the deck's shared icon set (lib/site/ruleDeck.ts) */
 export type CardOffence={id:string;color:CardColor;icon:CardIcon;name:string;explain:string;example:string;next:string};
 export type CardDeckWords={label:string;yellow:string;red:string;flip:string;flipBack:string;prev:string;next:string;
  /** "Card {n} of {total}" */position:string;example:string;then:string;how:string};
+/** The offences and the deck words as the shared deck (components/site/CardDeck.tsx) takes them: colour = tone. */
+export const cardDeckOf=(c:CardRulesContent):{slides:DeckSlide[];words:DeckWords}=>{const {yellow,red,...w}=c.deck.words;
+ return {slides:c.offences.map(({color,...o})=>({...o,tone:color})),words:{...w,kinds:{yellow,red}}};};
 export type CardRulesContent={
  deck:{id:string;title:string;intro:string;words:CardDeckWords;extra:string};
  offences:readonly CardOffence[];

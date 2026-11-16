@@ -1,7 +1,7 @@
 import CardDeck from '@/components/site/CardDeck';
 import RefCallGame from '@/components/site/RefCallGame';
 import {DataTable,Section} from '@/lib/site/GuideParts';
-import type {CardRulesContent} from '@/lib/site/cardRules';
+import {cardDeckOf,type CardRulesContent} from '@/lib/site/cardRules';
 import {checkCallGame} from '@/lib/site/refCall';
 import styles from '@/app/(site)/site.module.css';
 /**
@@ -10,11 +10,11 @@ import styles from '@/app/(site)/site.module.css';
  * are the two client islands, and the deck's whole list is in the server HTML.
  */
 export function CardRulesTop({c}:{c:CardRulesContent}){
- const N=c.next;
+ const N=c.next,d=cardDeckOf(c);
  return <>
   <Section id={c.deck.id} title={c.deck.title}>
    <p>{c.deck.intro}</p>
-   <CardDeck id="deck" cards={c.offences} words={c.deck.words}/>
+   <CardDeck id="deck" cards={d.slides} words={d.words}/>
    <p className={styles.caption}>{c.deck.extra}</p>
   </Section>
   <Section id={N.id} title={N.title}>

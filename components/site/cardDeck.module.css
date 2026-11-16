@@ -1,12 +1,14 @@
 /* The card offences deck (components/site/CardDeck.tsx). Without JavaScript, before hydration and in print it is a plain list:
    every card a tint block with its name and all its words. With [data-ready] it is a deck of referee cards: flat yellow or red,
    portrait, square-ish corners like a real card, no gradient, no shadow at rest (docs/seo/DESIGN.md). */
-.deck{--card-yellow:#f5c518;--card-yellow-ink:#14221d;--card-red:#c8202f;--card-red-ink:#fff;display:grid;gap:var(--s2,16px);max-width:100%}
+.deck{--card-yellow:#f5c518;--card-yellow-ink:#14221d;--card-red:#c8202f;--card-red-ink:#fff;--card-pitch:#1d6b55;--card-gold:#e9c16b;display:grid;gap:var(--s2,16px);max-width:100%}
 .track{list-style:none;margin:0;padding:0!important;display:grid;gap:var(--s2,16px)}
 .slide{min-width:0}
 .card{position:relative;box-sizing:border-box;border-radius:var(--r-md,16px);padding:var(--pad-box,20px);display:grid;gap:var(--s1,8px)}
 .card[data-color=yellow]{background:var(--card-yellow);color:var(--card-yellow-ink)}
 .card[data-color=red]{background:var(--card-red);color:var(--card-red-ink)}
+.card[data-color=pitch]{background:var(--card-pitch);color:#fff}
+.card[data-color=gold]{background:var(--card-gold);color:var(--ink,#14221d)}
 .front{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:4px 12px}
 .kind{grid-column:1/-1;font-size:var(--t-label,13px);font-weight:700;letter-spacing:0}
 .face{grid-column:1/-1;display:flex;align-items:center;gap:12px}
@@ -32,6 +34,8 @@
   transition:transform .5s cubic-bezier(.2,.8,.2,1)}
  .deck[data-ready] .card[data-color=yellow] .front,.deck[data-ready] .card[data-color=yellow] .back{background:var(--card-yellow)}
  .deck[data-ready] .card[data-color=red] .front,.deck[data-ready] .card[data-color=red] .back{background:var(--card-red)}
+ .deck[data-ready] .card[data-color=pitch] .front,.deck[data-ready] .card[data-color=pitch] .back{background:var(--card-pitch)}
+ .deck[data-ready] .card[data-color=gold] .front,.deck[data-ready] .card[data-color=gold] .back{background:var(--card-gold)}
  .deck[data-ready] .front{grid-template-columns:1fr;grid-template-rows:auto 1fr;gap:0;overflow:hidden}
  .deck[data-ready] .kind{font-size:15px}
  .deck[data-ready] .face{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;min-height:0}
@@ -48,6 +52,7 @@
  .flip{position:absolute;left:20px;bottom:16px;min-height:var(--tap,44px);padding:0 20px;border:0;border-radius:var(--r-pill,999px);font:inherit;font-size:16px;font-weight:700;
   background:var(--ink,#14221d);color:#fff;cursor:pointer;z-index:2;transition:transform .15s ease}
  .card[data-color=red] .flip{background:#fff;color:var(--card-red)}
+ .card[data-color=pitch] .flip{background:#fff;color:var(--card-pitch)}
  .flip:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
  .flip:active{transform:scale(.96)}
  .controls{display:flex;align-items:center;justify-content:space-between;gap:var(--s2,16px)}
@@ -59,6 +64,8 @@
  .dot{width:8px;height:8px;border-radius:50%;opacity:.35;transition:transform .2s ease,opacity .2s ease}
  .dot[data-color=yellow]{background:#c99a00}
  .dot[data-color=red]{background:var(--card-red)}
+ .dot[data-color=pitch]{background:var(--card-pitch)}
+ .dot[data-color=gold]{background:#b98b2c}
  .dot[data-on]{opacity:1;transform:scale(1.5)}
  @media(hover:hover){.arrow:not(:disabled):hover,.flip:hover{transform:translateY(-1px)}}
 }
@@ -83,6 +90,8 @@
  .card{padding:4pt 6pt!important;border-radius:4pt;background:#fff!important;color:#000!important;border-left:4pt solid #000}
  .card[data-color=yellow]{border-left-color:#e0b000}
  .card[data-color=red]{border-left-color:#c8202f}
+ .card[data-color=pitch]{border-left-color:#1d6b55}
+ .card[data-color=gold]{border-left-color:#e9c16b}
  .icon{display:none}
  .back p:not(:first-of-type){display:none}
  .back p:nth-of-type(2){display:block}

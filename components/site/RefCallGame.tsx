@@ -1,12 +1,13 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
-import {fill,levelFor,shuffled,type CallGame,type CallId} from '@/lib/site/refCall';
+import {fill,levelFor,shuffled,toneOf,type CallGame,type CallId} from '@/lib/site/refCall';
 import styles from '@/app/(site)/site.module.css';
 import g from './refCallGame.module.css';
 /**
- * "Make the call" swipe game (cards page, Nov 16 2026; data: lib/site/refCall.ts, so handball or offside can reuse it). The
+ * "Make the call" swipe game (cards page, Nov 16 2026; data: lib/site/refCall.ts; also the back-pass, throw-in, handball and
+ * fouls pages' games, lib/site/rulePlay.ts, with two or three choices whose colour is their `tone`). The
  * scenarios are shuffled on Start; each is a card you swipe (up / right / left, as the game's choices say) or answer with the
- * three big buttons, which are always there. The card then turns to show the right call and why, read out by a polite live
+ * big buttons (one per choice), which are always there. The card then turns to show the right call and why, read out by a polite live
  * region, and Next moves on. At the end: the score, a referee level and Play again. Keyboard: the buttons, or the arrow keys
  * that match the swipes while the card has focus. State lives here only: nothing is stored or sent.
  */
@@ -57,13 +58,13 @@ export default function RefCallGame({game,lang}:{game:CallGame;lang?:'es'}){
   {phase==='play'&&cur&&<div className={g.play} lang={lang}>
    <p className={g.progress}>{fill(W.progress,{n:i+1,total})}</p>
    <div className={g.stage}>
-    <div ref={cardRef} className={g.card} tabIndex={-1} data-answered={answered?'':undefined} data-call={answered?cur.answer:undefined} data-lean={leanChoice?.id}
+    <div ref={cardRef} className={g.card} tabIndex={-1} data-answered={answered?'':undefined} data-call={answered?toneOf(choice(cur.answer)):undefined} data-lean={leanChoice?toneOf(leanChoice):undefined}
      role="group" aria-roledescription="scenario card" aria-label={fill(W.progress,{n:i+1,total})}
      style={off&&!answered?{transform:`translate3d(${off.x}px,${off.y}px,0) rotate(${off.x*.04}deg)`}:undefined} data-dragging={off?'':undefined}
      onPointerDown={onDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={()=>{drag.current=null;setOff(null);}} onKeyDown={onKey}>
      <div className={g.front} aria-hidden={answered||undefined}>
       <p className={g.text}>{cur.text}</p>
-      {leanChoice&&<p className={g.lean} data-call={leanChoice.id} aria-hidden="true">{leanChoice.label}</p>}
+      {leanChoice&&<p className={g.lean} data-call={toneOf(leanChoice)} aria-hidden="true">{leanChoice.label}</p>}
      </div>
      <div className={g.back} aria-hidden={!answered||undefined}>
       {answered&&<><p className={g.scenario}>{cur.text}</p>
@@ -74,8 +75,8 @@ export default function RefCallGame({game,lang}:{game:CallGame;lang?:'es'}){
    </div>
    <p className={g.sr} aria-live="polite" aria-atomic="true">{answered?`${right?W.right:W.wrong} ${fill(W.answerIs,{call:callWord(cur.answer)})} ${cur.why}`:''}</p>
    {!answered
-    ?<div className={g.choices} role="group" aria-label={W.title}>
-      {game.choices.map(c=><button key={c.id} type="button" className={g.choice} data-call={c.id} onClick={()=>pick(c.id)}>
+    ?<div className={g.choices} data-n={game.choices.length} role="group" aria-label={W.title}>
+      {game.choices.map(c=><button key={c.id} type="button" className={g.choice} data-call={toneOf(c)} onClick={()=>pick(c.id)}>
        {c.swipe==='left'&&<span aria-hidden="true">{GLYPH.left} </span>}{c.label}{c.swipe==='up'&&<span aria-hidden="true"> {GLYPH.up}</span>}{c.swipe==='right'&&<span aria-hidden="true"> {GLYPH.right}</span>}</button>)}
      </div>
     :<p className={g.nextRow}><button ref={nextBtn} type="button" className={g.start} onClick={next}>{i+1>=total?W.finish:W.next}</button></p>}
