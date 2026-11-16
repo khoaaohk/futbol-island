@@ -112,7 +112,7 @@ const L=rel=>load(path.join(root,rel));
   /* "A vs B" pages (lib/site/comparisons.ts) are their own family: their table is copied from the two compared pages on purpose,
      so they are compared with each other, not with the formation and position pages they summarise. */
   compare:/^\/learn\/soccer-(formations|positions)\/[^/]+-vs-[^/]+$/};
- const COMPARE_MIN=+(process.env.COMPARE_MIN||300);
+ const COMPARE_MIN=400;/* Nov 15 2026: 464-515 unique words among the three, with the "switching between them" notes */
  const MIN={drill:500,plan:550,formation:600,rule:600,position:700,term:400,lesson:290,game:600,compare:COMPARE_MIN};
  for(const [f,re] of Object.entries(FAM)){const ps=Object.keys(texts).filter(p=>re.test(p)),sents=ps.map(p=>texts[p].split(/(?<=[.!?:])\s+/).filter(s=>s.length>12)),df=new Map();
   sents.forEach(ss=>new Set(ss).forEach(s=>df.set(s,(df.get(s)||0)+1)));

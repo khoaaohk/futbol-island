@@ -191,12 +191,14 @@
 .still,.clip{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
 .clip{opacity:0;transition:opacity .6s var(--ease)}
 .media[data-playing] .clip{opacity:1}
-.clipBtn{position:absolute;right:14px;bottom:14px;z-index:2;display:grid;place-items:center;width:44px;height:44px;border-radius:50%;border:0;background:rgb(20 30 26 / .55);color:#fff;cursor:pointer}
+/* release QA Nov 15: the reveal scales a chapter (.9-.94), which shrank the 44px disc to a 40-41px target. The button is 50px with a
+   3px clear ring (background-clip:content-box), so the disc still looks 44px where it was and the target stays >= 44px when scaled. */
+.clipBtn{position:absolute;right:11px;bottom:11px;z-index:2;display:grid;place-items:center;box-sizing:border-box;width:50px;height:50px;padding:3px;border-radius:50%;border:0;background:rgb(20 30 26 / .55);background-clip:content-box;color:#fff;cursor:pointer}
 .clipBtn svg{width:18px;height:18px;fill:currentColor}
 .icoPause{display:none}
 .clipBtn[data-playing] .icoPause{display:block}
 .clipBtn[data-playing] .icoPlay{display:none}
-.root[data-calm] .clipBtn:not([data-playing]){right:50%;bottom:50%;transform:translate(50%,50%);width:64px;height:64px}
+.root[data-calm] .clipBtn:not([data-playing]){right:50%;bottom:50%;transform:translate(50%,50%);width:70px;height:70px}
 .root[data-calm] .clipBtn:not([data-playing]) svg{width:26px;height:26px}
 
 /* chips as a quiet caption under the media */

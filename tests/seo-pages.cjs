@@ -57,6 +57,8 @@ assert.equal(cards.SITE_CARDS.length,L('lib/town/cardCollection.ts').CARD_ENTRIE
 for(const c of cards.SITE_CARDS)assert(c.blurb&&c.roleLabel,`card ${c.number} has a blurb and position`);
 assert.equal(exhibits.SITE_EXHIBITS.length,L('lib/endgame/museum.ts').EXHIBITS.length,'every exhibit');
 const PATHS=paths.sitePaths().map(p=>p.path);
+/* the card and fish collection hubs (seo-links) are search-titled whole too */
+const WHOLE_HUBS=new Set(L('lib/site/collections.ts').COLLECTIONS.map(c=>c.path));
 // Nov 6 2026 (signature species, waves 1-2, parametric: no hard-coded count): every Fishbook species, the new waves included, has a
 // sitemap page and a fish tale, and a fun fish fact is labelled as such on its public page.
 {const SIG=L('lib/town/fishing/shoreSignatures.ts'),page=fs.readFileSync(path.join(__dirname,'../app/(site)/fish/[id]/page.tsx'),'utf8');
@@ -150,9 +152,9 @@ for(const p of PATHS){
  assert.match(h,/<html lang="en"/,`${p}: lang="en"`);
  assert.match(h,/<title>[^<]+<\/title>/,`${p}: title`);
  const tt=(/<title>([^<]+)<\/title>/.exec(h)||[])[1]||'';assert(tt.replace(/&amp;/g,'&').replace(/&#x27;|&#39;/g,"'").length<=60,`${p}: title <= 60 (${tt})`);
- /* Search-worded pages (guides, comparisons, charts, tools, games, lessons) are titled whole (pageMeta {whole:true}, seo-content):
+ /* Search-worded pages (guides, comparisons, charts, tools, games, lessons, collection hubs) are titled whole (pageMeta {whole:true}, seo-content):
     their keyword title is the whole title, with no room for the suffix. Every other page is "X · Futbol Island". */
- if(!['/','/play','/privacy','/marketing'].includes(p)&&!/^\/(learn|tools|games)(\/|$)/.test(p))assert.match(h,/<title>[^<]+ · Futbol Island<\/title>/,`${p}: "X · Futbol Island"`);/* long lesson titles drop the suffix to stay <= 60 (lib/site/seo.ts fitTitle) */
+ if(!['/','/play','/privacy','/marketing'].includes(p)&&!/^\/(learn|tools|games)(\/|$)/.test(p)&&!WHOLE_HUBS.has(p))assert.match(h,/<title>[^<]+ · Futbol Island<\/title>/,`${p}: "X · Futbol Island"`);/* long lesson titles drop the suffix to stay <= 60 (lib/site/seo.ts fitTitle) */
  assert.match(h,/<meta name="description" content="[^"]{20,}"/,`${p}: description`);
  assert(h.includes(`<link rel="canonical" href="${p==='/'?SITE:SITE+p}"/>`),`${p}: canonical`);
  if(GENERATED.includes(p)){const ld=[...h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m=>JSON.parse(m[1]));
@@ -161,7 +163,8 @@ for(const p of PATHS){
   if(p==='/'||p==='/about'||p==='/play')for(const t of ['WebApplication','VideoGame'])assert(types.includes(t),`${p}: ${t}`);
   if(p==='/'||p==='/about'){const g=ld.find(x=>[].concat(x['@type']).includes('VideoGame'));assert.equal(g.audience.suggestedMinAge,7);assert.equal(g.audience.suggestedMaxAge,12);assert.equal(g.isAccessibleForFree,true);assert.equal(g.applicationCategory,'GameApplication');assert(g.educationalUse&&g.publisher);}
   if(/^\/learn\/lessons\/./.test(p)){const r=ld.find(x=>x['@type']==='LearningResource');assert(r&&r.educationalLevel&&r.learningResourceType&&r.teaches&&r.audience,`${p}: LearningResource`);}
-  if(/^\/(fish|cards|exhibits)\/./.test(p)){const r=ld.find(x=>x['@type']==='CreativeWork');assert(r&&r.about,`${p}: CreativeWork with about`);}
+  /* detail pages: CreativeWork, or Article once they carry checked notes (cards-seo, lib/site/cardNotes.ts); the card and fish collection hubs (seo-links) are a CollectionPage */
+  if(/^\/(fish|cards|exhibits)\/./.test(p)){const r=ld.find(x=>['CreativeWork','Article'].includes(x['@type']))??ld.find(x=>x['@type']==='CollectionPage'&&WHOLE_HUBS.has(p));assert(r&&(r.about||r['@type']==='CollectionPage'),`${p}: CreativeWork/Article with about, or a collection hub CollectionPage`);}
   if(['/learn/lessons','/fish','/cards','/exhibits','/about'].includes(p))assert(types.includes('BreadcrumbList'),`${p}: BreadcrumbList`);
   if(p!=='/'&&p!=='/play'&&p!=='/marketing')assert.match(h,/aria-label="Breadcrumb"/,`${p}: breadcrumbs`);}
  const t=text(h).split('jeremiah@whitesportventures.com').join('');/* the partnership's published business contact, shown on the main page About chapter (owner, Nov 4) */for(const re of PERSONAL)assert(!re.test(t),`${p}: no personal-data string (${re}): ${(t.match(re)||[])[0]}`);
@@ -186,7 +189,9 @@ assert(fs.existsSync(path.join(app,'llms-full.txt.body'))&&/## Lessons/.test(fs.
 // ---- 3. home `/` and the game /play ----
 assert(html('/play').includes('data-root-landing')&&html('/play').includes('data-root-game'),'/play is the title screen and the game');
 assert(!html('/').includes('data-root-game')&&html('/').includes('id="learn-root"'),'/ is the feature tour, not the game');
-assert(!fs.existsSync(path.join(app,'learn.html')),'no /learn page (it redirects to /)');
+/* seo-extras: a built /learn is only the noindex guide search (/learn?q=); plain /learn redirects to / */
+assert(!fs.existsSync(path.join(app,'learn.html'))||/<meta name="robots" content="noindex/.test(fs.readFileSync(path.join(app,'learn.html'),'utf8')),'no indexable /learn page (it redirects to /; ?q= is the noindex search)');
+assert(!PATHS.includes('/learn'),'/learn is not in the sitemap');
 const attr=(h,re)=>{const m=h.match(re);return m?m[1].replace(/&#x27;/g,"'").replace(/&amp;/g,'&').replace(/&quot;/g,'"'):'';};
 for(const p of ['/','/play']){const h=html(p),title=attr(h,/<title>([^<]*)<\/title>/),desc=attr(h,/<meta name="description" content="([^"]*)"/);
  assert(title.length>0&&title.length<=60,`${p}: title <= 60 characters (${title.length}): ${title}`);
@@ -211,8 +216,8 @@ assert.notEqual(attr(html('/'),/<title>([^<]*)<\/title>/),attr(html('/play'),/<t
  for(let i=1;i<heads.length;i++)assert(heads[i]<=heads[i-1]+1,`/: headings never skip a level (h${heads[i-1]} then h${heads[i]})`);
  for(const m of h.matchAll(/<img [^>]*>/g))assert(/\balt="[^"]+"/.test(m[0])||/aria-hidden="true"|alt=""/.test(m[0]),`/: every image has alt text: ${m[0].slice(0,80)}`);}
 {const t=text(html('/play'));assert(/free football learning game/i.test(t)&&/save code/i.test(t),'/play has crawlable text');}
-// The reading pages' gold Play buttons (class "cta") go to the game at /play (the museum pages straight into the /museum room).
-{let ctas=0;for(const p of PATHS.filter(p=>p!=='/play'&&p!=='/marketing'))for(const m of html(p).matchAll(/<a class="[^"]*_cta__[^"]*" href="([^"]*)"/g)){ctas++;assert(m[1]==='/play'||(m[1]==='/museum'&&p.startsWith('/exhibits')),`${p}: Play goes to /play (exhibits: straight into /museum), not ${m[1]}`);}
+// The reading pages' gold Play buttons (class "cta") go to the game at /play, or a /play?go= deep link (seo-design; the museum pages straight into the /museum room, the game pages into /arcade?game=).
+{let ctas=0;for(const p of PATHS.filter(p=>p!=='/play'&&p!=='/marketing'))for(const m of html(p).matchAll(/<a class="[^"]*_cta__[^"]*" href="([^"]*)"/g)){ctas++;assert(/^\/play(\?(go|store)=[a-z]+(:[A-Za-z0-9_-]+)?)?$/.test(m[1])||(m[1]==='/museum'&&p.startsWith('/exhibits'))||(/^\/arcade\?game=[a-z]+$/.test(m[1])&&p.startsWith('/games/')),`${p}: Play goes to /play (exhibits: straight into /museum), not ${m[1]}`);}
  assert(ctas>PATHS.length/2,`the gold Play buttons were found (${ctas})`);}
 // Nov 7 2026 audit: every sitemap page (incl. the 150 fish) has a title <= 60 and a 70-160 character description; fish are distinct.
 {const dec=x=>x.replace(/&#x27;/g,"'").replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>'),seen=new Map();

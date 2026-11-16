@@ -403,7 +403,9 @@ const faq=ld.find(x=>x['@type']==='FAQPage');assert(faq,'FAQPage JSON-LD');
 assert.deepEqual(faq.mainEntity.map(e=>[e.name,e.acceptedAnswer.text]),JSON.parse(JSON.stringify(Q.map(q=>[q.q,q.a]))),'FAQPage JSON-LD matches the 5 shown FAQs');
 for(const t of ['WebSite','Organization'])assert(ld.some(x=>x['@type']===t),t+' JSON-LD');
 assert.match(html,/<link rel="canonical" href="https:\/\/futbolisland\.app"\/>/,'canonical /');
-assert(!fs.existsSync(path.join(dist,'server/app/learn.html')),'no /learn page is built (it redirects)');
+/* seo-extras: /learn?q= is the guide search (noindex); plain /learn still redirects to / (next.config.mjs: missing q) */
+{const lf=path.join(dist,'server/app/learn.html');assert(!fs.existsSync(lf)||/<meta name="robots" content="noindex/.test(fs.readFileSync(lf,'utf8')),'a built /learn is only the noindex search page');
+ assert(/source: '\/learn', missing: \[\{ type: 'query', key: 'q' \}\], destination: '\/'/.test(fs.readFileSync(path.join(root,'next.config.mjs'),'utf8')),'plain /learn redirects to /');}
 {const plays=[...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>((?:(?!<\/a>)[\s\S])*?)<\/a>/g)].filter(m=>/\bPlay\b/.test(m[2].replace(/<[^>]+>/g,''))).map(m=>m[1]);/* the word Play, not "Player cards" (footer, seo-links) */assert(plays.length>=2&&plays.every(h=>h==='/play'),'built: every Play link goes to /play: '+plays.join(' '));}
 assert.match(html,/<meta property="og:image" content="[^"]*opengraph-image\.png"/,'OG image');
 assert.equal((html.match(/<h1[ >]/g)||[]).length,1,'one h1');
