@@ -2,7 +2,7 @@
 // All timers / clock / randomness / WebSocket / visibility are injectable. Design: docs/multiplayer-design.md 2.5, 4.3, 4.4, 5.1.
 import {
   C, PARTY_MAX_MS, PROTOCOL_VERSION, S, PoseFlag, TokenBucket, ErrorCode, encode, normalizeCode, normalizeNick, parseServer,
-  Cap, CAPS_ALL, CAPS_WORLD, CloseCode, WORLD_AWAY_GRACE_MS, BallState, WORLD_BOUNDS, KIT_GAP_MS, kitForCaps, type ClientMsg, type Kit, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
+  Cap, CAPS_ALL, CAPS_PARTY_HI, CAPS_WORLD, CloseCode, WORLD_AWAY_GRACE_MS, BallState, WORLD_BOUNDS, KIT_GAP_MS, kitForCaps, type ClientMsg, type Kit, type Emote, type Look, type MemberId, type PingKind, type PoseBody, type ServerMsg,
 } from '../../multiplayer/protocol';
 import { relayWsUrl, relayLobbyUrl, relayWorldWsUrl, validShard } from './config';
 import { admitStrangerEmote, isHiddenStranger, noteStrangerName } from './strangers';
@@ -233,6 +233,7 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
   let beforeBeat: (() => void) | null = null;
   let lastEmoteAt = -1e12;
   let caps = 0; // agreed with the relay after each Welcome (S.Caps -> C.Caps)
+  let capsHi = 0; // party Drip FC kits (Nov 16 2026): S.CapsHi, the party bits above 255 a new relay offers right before S.Caps
   let ballSt = -1, ballX = 0, ballY = 0, ballZ = 0, ballAt = -1e12;
   // Relay v1.7 (Cap.Kit): my kit, whether this page set one at all, what this socket last sent (null = nothing since S.Caps), when.
   let myKit: Kit | null = null, myKitKey = '', kitSet = false, kitSentKey: string | null = null, kitAt = -1e12;
@@ -472,13 +473,16 @@ export function createPartyConnection(deps: ConnectionDeps = {}): PartyConnectio
       if (!worldOn) setLocal('here', false);
       if (dropped) { dropped = false; reconnects++; }
       last = null; // first pose after (re)connect is always sent
-      caps = 0; ballSt = -1; // the relay sends S.Caps after every Welcome (an old relay never does)
+      caps = 0; capsHi = 0; ballSt = -1; // the relay sends S.Caps after every Welcome (an old relay never does)
       writeSession();
       if (worldOn) { fullRetried = false; writeWorldSession(); }
       setStatus('live');
       if (worldOn) emitWorld({ type: 'live' });
+    } else if (m[0] === S.CapsHi) {
+      if (!worldOn) capsHi = m[1] & CAPS_PARTY_HI; // only a new party relay sends it (an old one never sees C.Caps above 255)
     } else if (m[0] === S.Caps) {
-      caps = m[1] & (worldOn ? CAPS_WORLD : CAPS_ALL); // never answer a bit the relay did not offer
+      // never answer a bit the relay did not offer; a party: S.Caps is 255 at most, plus what S.CapsHi offered
+      caps = worldOn ? m[1] & CAPS_WORLD : (m[1] & CAPS_ALL) | (capsHi & CAPS_PARTY_HI);
       if (caps & Cap.NameLock) nameLocked = false; // a v1.5 relay re-sends every current lock right after our C.Caps
       if (caps) raw([C.Caps, caps]);
       if (renamePending && nick !== null && (caps & Cap.Rename) && !nameLocked && raw([C.Rename, nick])) renamePending = false;

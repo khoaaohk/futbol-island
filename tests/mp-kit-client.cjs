@@ -121,9 +121,29 @@ t('client: v1.7 relay: my kit goes out right after S.Caps, valid for the relay; 
 t('client: Drip FC colours (Cap.KitClubColor): 29 slots only when the relay offered the bit; else 22 / 17, never a refused kit', () => {
   const KC = K.kitFromGear({ ...gear, jersey: { ...jersey, club: { crest: 'chest', word: false, cc: 1 | 15 << 4 } } });
   assert.equal(KC.length, P.KIT_CLUB_COLOR_LEN); assert.ok(P.isKit(KC)); assert.equal(KC[22], 241);
-  // party: CAPS_ALL (255) never carries the club bits -> 17 slots
-  { const e = makeEnv(); e.c.setKit(KC); e.c.join('K7MQ4R', { look: LOOK, nick: 'Leo' }); const s = e.last(); s.open(); s.recv(welcome()); s.recv([S.Caps, CAPS_ALL]);
-    same(e.kitsSent(s), [[C.Kit, KC.slice(0, P.KIT_LEN)]]); }
+  // party (Nov 16 2026): S.Caps stays 255; the club bits come only in S.CapsHi right before it. An old relay (no S.CapsHi) -> 17 slots.
+  const partyRun = (hi, capsOffer = CAPS_ALL) => {
+    const e = makeEnv(); e.c.setKit(KC); e.c.join('K7MQ4R', { look: LOOK, nick: 'Leo' }); const s = e.last(); s.open(); s.recv(welcome());
+    if (hi !== null) s.recv([S.CapsHi, hi]); s.recv([S.Caps, capsOffer]);
+    const sent = s.sent.map((x) => JSON.parse(x)), answer = sent.filter((x) => x[0] === C.Caps);
+    return { e, s, kits: e.kitsSent(s), answer };
+  };
+  assert.equal(S.CapsHi, 45); assert.equal(P.CAPS_PARTY_HI, Cap.KitClub | Cap.KitClubColor); assert.equal(P.CAPS_PARTY, 255 | P.CAPS_PARTY_HI);
+  for (const [hi, len] of [[null, 17], [P.CAPS_PARTY_HI, 29], [Cap.KitClub, 22], [0, 17]]) {
+    const r = partyRun(hi);
+    assert.equal(r.kits.length, 1, 'hi ' + hi); assert.equal(r.kits[0][1].length, len, 'hi ' + hi); assert.ok(P.parseClient(j(r.kits[0])));
+    assert.equal(r.answer.length, 1, 'one C.Caps answer per S.Caps (no extra inbound)');
+    assert.equal(r.answer[0][1], 255 | (hi || 0), 'hi ' + hi); assert.ok(P.parseClient(j(r.answer[0])));
+    if (hi === null || hi === 0) assert.ok(r.answer[0][1] <= 255, 'an old relay (0..255 C.Caps parser) never sees a bigger answer');
+  }
+  { const r = partyRun(P.CAPS_PARTY_HI, 0xffff); assert.equal(r.answer[0][1], P.CAPS_PARTY, 'a party never answers world bits'); }
+  { // a stray S.CapsHi carrying other bits fails parsing (dropped); S.CapsHi is forgotten on the next Welcome (a rolled-back relay)
+    assert.equal(P.parseServer(j([S.CapsHi, Cap.World])), null); assert.equal(P.parseServer(j([S.CapsHi, P.CAPS_PARTY_HI | 1])), null);
+    assert.equal(P.parseServer(j([S.CapsHi])), null); assert.deepEqual(P.parseServer(j([S.CapsHi, P.CAPS_PARTY_HI])), [S.CapsHi, P.CAPS_PARTY_HI]);
+    const r = partyRun(P.CAPS_PARTY_HI); r.s.recv(welcome()); r.s.recv([S.Caps, CAPS_ALL]);
+    const ans = r.s.sent.map((x) => JSON.parse(x)).filter((x) => x[0] === C.Caps); assert.equal(ans[1][1], CAPS_ALL, 'reset by Welcome');
+    assert.equal(r.e.kitsSent(r.s)[1][1].length, 17, 'then the short kit');
+  }
 });
 const KC = K.kitFromGear({ ...gear, jersey: { ...jersey, club: { crest: 'chest', word: false, cc: 1 | 15 << 4 } } });
 
@@ -173,6 +193,11 @@ const tick = () => new Promise((r) => setImmediate(r));
       const caps = s.sent.map((x) => JSON.parse(x)).find((x) => x[0] === C.Caps); assert.equal(caps[1] & ~offer, 0, 'never answers a bit the relay did not offer');
       assert.ok(P.parseClient(j(sent[0])), 'valid for the relay');
       e.c.leave?.();
+    }
+    { // a world socket ignores S.CapsHi (party only)
+      const e = makeEnv(fetch); e.c.setKit(KC); assert.ok(e.c.joinWorld({ look: LOOK })); for (let i = 0; i < 6; i++) await tick();
+      const s = e.last(); s.open(); s.recv(wWelcome); s.recv([S.CapsHi, P.CAPS_PARTY_HI]); const offer = P.CAPS_WORLD & ~Cap.KitClubColor & ~Cap.KitClub; s.recv([S.Caps, offer]);
+      assert.equal(e.kitsSent(s)[0][1].length, 17); e.c.leave?.();
     }
     n++;
   }

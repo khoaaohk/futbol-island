@@ -64,13 +64,21 @@ export const CAPS_ALL = 255;
  *  relay never offers it (no S.Map: no dots); an old client never answers it (nothing new is sent). */
 /** Drip FC club kit (Nov 13 2026): Cap.KitClub (a Kit may carry KIT_CLUB_LEN slots: the club crest, boot and ball stickers) joins
  *  CAPS_WORLD. A client sends the long kit only when S.Caps offered it (else the first KIT_LEN slots); the relay forwards the long kit
- *  only to Cap.KitClub members and its first KIT_LEN slots to everyone else, so an old relay and an old client never see one. A party
- *  (CAPS_ALL stays exactly 255) keeps the short kit. */
+ *  only to Cap.KitClub members and its first KIT_LEN slots to everyone else, so an old relay and an old client never see one. Parties
+ *  get it too since Nov 16 2026 (S.CapsHi, CAPS_PARTY_HI below); S.Caps to a party stays exactly 255. */
 /** Drip FC colours (Nov 16 2026, docs/dripfc-colors.md): Cap.KitClubColor (a Kit may carry KIT_CLUB_COLOR_LEN slots: the club pieces'
  *  palette colour codes) joins CAPS_WORLD the same way: sent only when S.Caps offered it, forwarded whole only to Cap.KitClubColor
  *  members, its first KIT_CLUB_LEN slots to Cap.KitClub members and its first KIT_LEN slots to everyone else (kitForCaps). */
 export const CAPS_WORLD = Cap.Live | Cap.Ball | Cap.EmoteAsk | Cap.Kit | Cap.Match | Cap.World | Cap.Quiet | Cap.Report | Cap.Goal | Cap.Map | Cap.KitClub | Cap.KitClubColor;
 export const CAPS_MAX = 0xffff;
+/** Party Drip FC kits (Nov 16 2026, docs/dripfc-colors.md): Cap.KitClub + Cap.KitClubColor for PARTY sockets too. S.Caps to a party stays
+ *  exactly CAPS_ALL (255): a client built before relay v2.0 (Nov 11 2026) parses S.Caps 0..255 only and would drop a larger S.Caps,
+ *  losing every party cap (Live, Ball, Kit...). So a party relay first sends S.CapsHi [45, CAPS_PARTY_HI] (every older client drops the
+ *  unknown type), then S.Caps 255; a new client answers C.Caps (255-bits & S.Caps) | (S.CapsHi & CAPS_PARTY_HI). An old relay never
+ *  sends S.CapsHi, so it never sees a C.Caps above 255. No extra inbound message (the cost watch counts inbound). */
+export const CAPS_PARTY_HI = Cap.KitClub | Cap.KitClubColor;
+/** What a party member may hold after C.Caps (the relay masks C.Caps with it). */
+export const CAPS_PARTY = CAPS_ALL | CAPS_PARTY_HI;
 
 // ---- relay v2.0: public worlds (strangers on one island). Shared by the client, the relay, the dev relay and the tests. ----
 /** A world fills to WORLD_SOFT before the lobby opens another; WORLD_HARD is the room's real cap (room for reconnects of members
@@ -280,6 +288,8 @@ export const S = {
   Goal: 43,
   /** Map dots (Nov 13 2026), world only (Cap.Map): S.Map [44, [[cellX, cellZ, count], ...]] (MAP_DOTS). */
   Map: 44,
+  /** Party Drip FC kits (Nov 16 2026), party only: S.CapsHi [45, bits] = the party caps above 255 (CAPS_PARTY_HI), sent right before S.Caps. */
+  CapsHi: 45,
 } as const;
 export type S = (typeof S)[keyof typeof S];
 export type SWelcome = [typeof S.Welcome, v: number, you: MemberId, resumeToken: string, codeExpiresAt: number,
@@ -300,6 +310,7 @@ export type SBeat = [typeof S.Beat, t: number];
 export type SRenamed = [typeof S.Renamed, id: MemberId, nick: null];
 /** Relay v1.2: sent right after every Welcome. Old clients cannot parse it and ignore it (parseServer -> null). */
 export type SCaps = [typeof S.Caps, bits: number];
+export type SCapsHi = [typeof S.CapsHi, bits: number];
 /** Relay v1.2, only to a client that answered C.Caps with Cap.Live: replaces S.Poses for it. t = relay clock (ms);
  *  poses = flat [id, ...PoseBody, ageMs] (stride LIVE_POSE_STRIDE), balls = flat [id, state, x_dm, y_dm, z_dm, ageMs] (stride LIVE_BALL_STRIDE).
  *  ageMs = how long before t the relay received that frame, so the receiver can place every snapshot on the sender's timeline. */
@@ -331,4 +342,4 @@ export type SGoal = [typeof S.Goal, n: number];
 /** Map dots (Cap.Map): [cellX, cellZ, count] per cell (MAP_DOTS); [] = nobody else on the open island. Counts only, no ids. */
 export type MapCell = [cx: number, cz: number, n: number];
 export type SMap = [typeof S.Map, cells: MapCell[]];
-export type ServerMsg = SMap | SGoal | SQuiet | SWorld | SMatch | SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;
+export type ServerMsg = SCapsHi | SMap | SGoal | SQuiet | SWorld | SMatch | SWelcome | SJoined | SLeft | SPoses | SEmote | SPing | SHost | SCode | SEnded | SError | SBeat | SRenamed | SCaps | SLive | SEmoteAsk | SEmoteAnswer | SDuet | SNameLock | SHit | SKit;

@@ -147,4 +147,60 @@ t('protocol: kitForCaps (Cap.KitClub / Cap.KitClubColor) cuts a kit to what a me
   for (let len = 0; len <= 40; len++) if (len !== 17 && len !== 22 && len !== 29) assert.equal(P.isKit([...k29, ...new Array(11).fill(-1)].slice(0, len)), false, 'length ' + len);
 });
 
+// ---- party Drip FC kits (Nov 16 2026): S.CapsHi + S.Caps 255, per-member fan-out 29 / 22 / 17 / none ----
+const { CAPS_PARTY, CAPS_PARTY_HI, CAPS_WORLD, KIT_CLUB_COLOR_MAX_BYTES } = P;
+const K22 = [...FULL, 1, 1, -1, -1, -1], K29 = [...K22, -1, -1, D_CODE, -1, -1, -1, -1]; // boot side mark in palette colours
+const KITCLUB_ONLY = CAPS_ALL | Cap.KitClub; // a client that knows the club kit but not its colours
+
+t('relay party: a fresh socket hears S.CapsHi (CAPS_PARTY_HI) right before S.Caps exactly 255; a world socket never hears S.CapsHi', () => {
+  const { ps: [a] } = party([null]);
+  const ops = a.msgs.map((m) => m[0]), iHi = ops.indexOf(S.CapsHi), iCaps = ops.indexOf(S.Caps);
+  assert.ok(iHi >= 0 && iHi === iCaps - 1, 'S.CapsHi then S.Caps'); assert.deepEqual(a.msgs[iHi], [S.CapsHi, CAPS_PARTY_HI]);
+  assert.deepEqual(a.msgs[iCaps], [S.Caps, CAPS_ALL], 'a pre-v2.0 client (0..255 parser) still reads S.Caps');
+  assert.ok(P.parseServer(j(a.msgs[iHi])), 'a new client parses S.CapsHi');
+  assert.equal(CAPS_PARTY & ~CAPS_ALL & ~CAPS_PARTY_HI, 0); assert.equal(CAPS_PARTY & (Cap.World | Cap.Quiet | Cap.Report | Cap.Goal | Cap.Map), 0, 'no world bits in a party');
+  const clock = { t: 7_000_000, now() { return this.t; } };
+  const w = new RoomCore({ code: 'pub-1', createdAt: clock.t, clock, random, kind: 'world' });
+  const wp = peer(); w.connect(wp, false, { ipKey: null, held: false }); w.message(wp, j([C.Hello, PROTOCOL_VERSION, LOOK, null, null]));
+  assert.equal(wp.of(S.Welcome).length, 1); assert.equal(wp.of(S.CapsHi).length, 0); assert.deepEqual(wp.of(S.Caps)[0], [S.Caps, CAPS_WORLD]);
+});
+
+t('relay party: mixed versions (new host, KitClub-only, current 255, old v1.6): a 29 kit fans out 29 / 22 / 17 / none, one encode per length', () => {
+  const { ps: [h, b, c, old], clear, msg } = party([CAPS_PARTY, KITCLUB_ONLY, CAPS_ALL, OLD_CAPS]); clear();
+  msg(h, [C.Kit, K29]);
+  assert.deepEqual(kits(b), [[S.Kit, h.id, K22]]); assert.deepEqual(kits(c), [[S.Kit, h.id, FULL]]); assert.equal(kits(old).length, 0);
+  assert.ok(P.parseServer(j(kits(b)[0])) && P.parseServer(j(kits(c)[0])), 'every form parses for its receiver');
+  // a 255 sender (an older client or a relay that never offered the bits) that still sends a long kit is cut to 17 for everyone
+  clear(); msg(c, [C.Kit, K29]); assert.deepEqual(kits(h), [[S.Kit, c.id, FULL]]); assert.deepEqual(kits(b), [[S.Kit, c.id, FULL]]);
+  clear(); msg(b, [C.Kit, K29]); assert.deepEqual(kits(h), [[S.Kit, b.id, K22]], 'a KitClub-only sender keeps 22');
+  for (const p of [h, b, c, old]) { assert.equal(p.of(S.Error).length, 0); assert.equal(p.closed, null); }
+});
+
+t('relay party: C.Caps is masked to CAPS_PARTY (a 0xffff answer never gets world bits); strict validation of 29 kits holds in a party', () => {
+  const { room, ps: [a, b], clear, msg } = party([0xffff, CAPS_PARTY]); clear();
+  msg(a, [C.Kit, K29]); assert.deepEqual(kits(b), [[S.Kit, a.id, K29]]);
+  const bad = [[...K22, -1, -1, -1, D_CODE, -1, -1, -1] /* heel code, no heel mark */, [...K22, -1, -1, 12, -1, -1, -1, -1] /* art 12 */,
+    [...K22, -1, -1, 0 | 15 << 4, -1, -1, -1, -1] /* boot backing none */, [...K22, ...new Array(7).fill(-1)] /* no code set */];
+  clear(); for (const k of bad) { assert.equal(P.isKit(k), false, j(k)); assert.equal(P.parseClient(j([C.Kit, k])), null); msg(b, [C.Kit, k]); }
+  assert.equal(kits(a).length, 0, 'nothing forwarded'); assert.equal(b.closed, null, 'four bad frames: still connected');
+  assert.ok(j([S.Kit, 31, K29]).length <= KIT_CLUB_COLOR_MAX_BYTES + 12 && j([C.Kit, K29]).length < MAX_INBOUND_BYTES);
+  void room;
+});
+
+t('relay party: late joiners hear every current kit in their own length; a full party (20) fans out a 29 kit to 19 members', () => {
+  const p = party([CAPS_PARTY, CAPS_ALL]); const [a, b] = p.ps;
+  p.msg(a, [C.Kit, K29]); p.msg(b, [C.Kit, BOOTS]);
+  const c = p.join(2, CAPS_PARTY), d = p.join(3, KITCLUB_ONLY);
+  assert.deepEqual(kits(c).sort((x, y) => x[1] - y[1]), [[S.Kit, a.id, K29], [S.Kit, b.id, BOOTS]]);
+  assert.deepEqual(kits(d).sort((x, y) => x[1] - y[1]), [[S.Kit, a.id, K22], [S.Kit, b.id, BOOTS]]);
+  const e = p.join(0, OLD_CAPS); assert.equal(kits(e).length, 0, 'an old joiner hears none');
+  // a resume of the new host from an older tab (255): later fan-out to it is 17
+  p.room.message(a, j([C.Caps, CAPS_ALL])); assert.ok(kits(a).some((x) => x[1] === b.id), 'replayed on C.Caps'); p.clear(); p.msg(c, [C.Kit, K29]); assert.deepEqual(kits(a), [[S.Kit, c.id, FULL]]);
+  // full party
+  const q = party([CAPS_PARTY]); for (let i = 1; i < 20; i++) q.join(i % 4, i % 3 === 0 ? CAPS_ALL : CAPS_PARTY);
+  assert.equal(q.ps.length, 20); q.clear(); q.msg(q.ps[0], [C.Kit, K29]);
+  const got = q.ps.slice(1).map((x) => kits(x)); assert.ok(got.every((g) => g.length === 1), 'every other member hears it once');
+  assert.ok(got.every((g, i) => g[0][2].length === ((i + 1) % 3 === 0 ? 17 : 29)));
+});
+
 console.log(`mp-kit-relay: ${n} checks passed`);

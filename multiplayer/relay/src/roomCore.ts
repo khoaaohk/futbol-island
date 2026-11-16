@@ -2,7 +2,7 @@
 // Design: docs/multiplayer-design.md 4.4 / 4.5. Time and randomness are injected so tests are deterministic.
 import {
   C, S, PROTOCOL_VERSION, PARTY_MAX, MAX_MEMBER_ID, INTEREST_NEAR, BEACON_EVERY, CODE_TTL_MS, PARTY_MAX_MS, RESUME_GRACE_MS, HOST_GRACE_MS, AWAY_GRACE_MS, EMPTY_CLOSE_MS,
-  ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState, EMOTE_ASK, AskReply,
+  ErrorCode, Mode, EndReason, LeaveReason, Zone, PoseFlag, RATE, TokenBucket, Cap, CAPS_ALL, CAPS_PARTY, CAPS_PARTY_HI, LIVE_NEAR, LIVE_RANGE_M, BALL_RANGE_M, BallState, EMOTE_ASK, AskReply,
   HIT_RANGE_M, HIT_RATE_MAX, HIT_RATE_WINDOW_MS, HIT_PAIR_COOLDOWN_MS, KIT_RATE, isKit, kitForCaps, MatchKind, MATCH_ROSTER, MATCH_RATE, MATCH_JOIN_RATE, FLOOD_BURST, MATCH_OWNER_SILENT_MS,
   parseClient, encode, clampPose, roomBoundsOk, roomOf, speedOk, generateCode, pickNameWith, sha256Hex, normalizeNick, AWAY_SILENCE_MS, presenceOf, shielded,
   CAPS_WORLD, WORLD_HARD, WORLD_SEE_M, WORLD_SEE_BACK_M, QUIET_RANGE_M, WORLD_AWAY_GRACE_MS, WORLD_IDLE_MS, FOLLOW, REPORT, REPORT_REASON_IDS, CloseCode,
@@ -1017,7 +1017,7 @@ export class RoomCore {
   /** C.Caps: what this client understands. A Cap.NameLock client then hears every current name lock, a Cap.Kit client every friend's
    *  worn kit (a join or a resume). */
   private caps(m: Member, bits: number): void {
-    m.caps = bits & (this.world ? CAPS_WORLD : CAPS_ALL); this.matchUnwatch(m); // a (re)connect: the client sends its Watch again
+    m.caps = bits & (this.world ? CAPS_WORLD : CAPS_PARTY); this.matchUnwatch(m); // a party: 255 + CAPS_PARTY_HI (S.CapsHi); a (re)connect: the client sends its Watch again
     if (!m.peer) return;
     const peer = m.peer;
     if (m.caps & Cap.NameLock) this.members.forEach((x) => { if (x.nickLocked) this.send(peer, [S.NameLock, x.id, 1]); });
@@ -1165,6 +1165,8 @@ export class RoomCore {
     // answers S.Caps (old clients cannot parse S.Caps and ignore it).
     m.seen.clear(); m.seenBall.clear(); m.caps = 0;
     this.members.forEach((x) => { if (x !== m && x.pose && this.vis(m, x)) m.seen.set(x.id, x.poseNo); });
+    // Party Drip FC kits (Nov 16 2026): S.CapsHi first (older clients drop the unknown type), then S.Caps exactly 255 as before.
+    if (!this.world) this.send(m.peer as Peer, [S.CapsHi, CAPS_PARTY_HI]);
     this.send(m.peer as Peer, [S.Caps, this.world ? CAPS_WORLD : CAPS_ALL]);
   }
 

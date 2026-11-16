@@ -32,7 +32,7 @@ uses the shirt colour only.
 Status: **implemented** on branch `dripfc-relay` (relay + client). Until the relay is deployed, friends keep seeing the club colours
 (nothing breaks: the client only sends the colour slots to a relay that offers them).
 
-Wire (multiplayer/protocol/types.ts): `Cap.KitClubColor = 16384` joins CAPS_WORLD (a party, CAPS_ALL = 255, never gets it).
+Wire (multiplayer/protocol/types.ts): `Cap.KitClubColor = 16384` joins CAPS_WORLD, and parties get it too (see Parties below).
 `KIT_CLUB_COLOR_LEN = 29`, `KIT_CLUB_COLOR_MAX_BYTES = 330`. Slots 22..28, one palette code (`clubCode`) per club piece, **-1 = the piece
 is absent or wears the club's own colours** (one value for both, so 0 stays a real code: art 0 on backing 0):
 22 shirt crest, 23 shirt wordmark (backing may be 15 = none), 24 boot side mark, 25 boot heel mark, 26..28 the colours of ball
@@ -53,7 +53,27 @@ draw the art colour plus a backing disc from a fixed GLSL copy of CLUB_PALETTE. 
 same. The wordmark is not drawn on avatars (it never was); its code travels for future use.
 
 Compatibility: new relay + old client: the old client never answers Cap.KitClubColor, so it sends ≤ 22 and receives 22 / 17.
-Old relay + new client: S.Caps lacks the bit, the client sends ≤ 22, which the deployed `isKit` accepts. Party rooms: 17 as before.
+Old relay + new client: S.Caps lacks the bit, the client sends ≤ 22, which the deployed `isKit` accepts.
+
+### Parties (implemented Nov 16 2026, same relay deploy)
+Friends in a private party now see Drip FC kits and their colours too (29 / 22 / 17 slots per member caps, the same strict
+`isKit`, the same `kitForCaps` fan-out, late joiners replayed after C.Caps).
+Why parties were left out: a party's S.Caps must stay exactly **255** (CAPS_ALL). A client built before relay v2.0 (Nov 11 2026)
+parses S.Caps as 0..255 only and would drop a larger S.Caps, so it would lose every party cap (Live, Ball, Kit, Match...). So the
+new bits do not go in S.Caps: right before it the party relay sends **`S.CapsHi [45, CAPS_PARTY_HI]`** (CAPS_PARTY_HI = KitClub |
+KitClubColor). Every older client drops the unknown message type; a new client answers `C.Caps (S.Caps & 255) | (S.CapsHi & CAPS_PARTY_HI)`
+(forgotten on each Welcome). The relay masks C.Caps with `CAPS_PARTY` (255 | CAPS_PARTY_HI): no world bits in a party.
+Cost: no extra inbound message (the admin "Messages per party" cost watch counts inbound), one extra ~10-byte outbound message per
+(re)connect; a kit change is still one C.Kit and at most three encodes (29 / 22 / 17) for up to 19 friends (PARTY_MAX 20), each ≤ 330 B,
+under the existing KIT_RATE. Join flows, invite links, the Welcome / roster shape and the party UI are unchanged.
+
+| Party mix | Result |
+|---|---|
+| new relay + new client | S.CapsHi + S.Caps 255 -> answers 24831; sends 29; receives 29 / 22 / 17 per sender |
+| new relay + current client (Nov 11-16) | ignores S.CapsHi, answers ≤ 255, sends / receives 17 (a long kit it sends is cut to 17) |
+| new relay + pre-v2.0 client | drops S.CapsHi, reads S.Caps 255 as before |
+| old relay + new client | no S.CapsHi -> answers ≤ 255, sends 17 (an old relay never sees C.Caps above 255) |
+| relay rolled back mid-party | the next Welcome resets S.CapsHi -> 17 |
 
 ### Deploy (owner)
 Order: **deploy the relay first, then push the client** (the client is safe either way, but colours only show once both are out).
