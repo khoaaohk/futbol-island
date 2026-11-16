@@ -17,6 +17,10 @@ import {DEFAULT_FORMATION} from '@/lib/site/tools/lineup';
 import {cheatSheetPath,fileUrl,PRINTABLES,PRINTABLES_HUB_PATH,PRINT_FILES,templateSheet,type Printable,type PrintFile,type Variant} from '@/lib/site/tools/printables';
 import {gameLengths,LINEUP_PAGES,LINEUP_PATH,PLANNER_PAGES,PLANNER_PATH,plannerImage,printableImage,printableLd,PRINTABLES_HUB,TOOL_PAGES,TOOLS_HUB,TOOLS_UPDATED,webAppLd,type LineupPage,type PlannerPage} from '@/lib/site/tools/registry';
 import {SHAPES} from '@/lib/site/tools/shapes';
+import ScanTrainerPage from '@/components/site/tools/ScanTrainerPage';
+import {EsGridFigure} from './DrillsEs';
+import {SCAN_IMAGE,SCAN_PATH,SCAN_RELATED_EN} from '@/lib/site/tools/scanTrainer';
+import {SCAN_ES} from '@/lib/i18n/es/scanTrainer';
 import {CREDIT,dotItems,fieldItems,INK,LETTER,LICENCE,wrapText,type Item,type Sheet} from '@/lib/site/tools/sheet';
 import {hasEs,toEs} from '@/lib/i18n/esPaths';
 import {esMeta} from '@/lib/i18n/es/seo';
@@ -148,7 +152,7 @@ function SheetThumbEs({file,alt}:{file:PrintFile;alt:string}){
 // ---- /es/tools ----
 function ToolsHubEs(){
  const crumbs=esCrumbs({name:HUB.crumb,path:toEs(TOOLS_HUB.path)});
- const items=[...LINEUP_PAGES.map(p=>toolLink(p.path)!),...PLANNER_PAGES.map(p=>toolLink(p.path)!),toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!)];
+ const items=[...LINEUP_PAGES.map(p=>toolLink(p.path)!),...PLANNER_PAGES.map(p=>toolLink(p.path)!),toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!),{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd(collectionLd({name:HUB.h1,path:toEs(TOOLS_HUB.path),description:HUB.description,published:TOOLS_UPDATED,modified:TOOLS_UPDATED,items:items.map(x=>({name:x.name,path:x.path}))}))}/>
@@ -161,6 +165,10 @@ function ToolsHubEs(){
   <Section id="playing-time" title="Minutos de juego y cambios">
    <p>Escribe cuántos jugadores vinieron y cuánto dura el partido. La calculadora reparte los minutos por igual y te dice quién entra en cada cambio.</p>
    <LinkList links={PLANNER_PAGES.map(p=>toolLink(p.path)!)}/>
+  </Section>
+  <Section id="practice" title="Herramientas para el entrenamiento">
+   <p>Para la cancha de entrenamiento: un teléfono en un cono que muestra colores, números, flechas y pases, para que los jugadores aprendan a mirar por encima del hombro antes de que llegue el balón.</p>
+   <LinkList links={[{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb}]}/>
   </Section>
   <Section id="printables" title="Diagramas de cancha y hojas de referencia para imprimir">
    <p>Canchas en blanco para dibujar, todas las formaciones de una modalidad en una página, y las posiciones con sus números. Gratis para imprimir y compartir con equipos, clubes y escuelas.</p>
@@ -322,12 +330,30 @@ function PrintableEsPage({p}:{p:Printable}){
  </>;
 }
 
+// ---- Scan Trainer (Nov 16 2026; lib/i18n/es/scanTrainer.ts) ----
+/** Spanish names for the English related links (every target has a Spanish page; tests/scan-trainer.cjs checks the paths match). */
+const SCAN_RELATED_ES:readonly [string,string][]=[['Mira, y luego gira o devuelve (lección de 7v7)','Busca la presión antes de recibir y luego gira hacia el espacio o devuelve el balón'],
+ ['Recibe: gira o conecta (lección de 9v9)','Revisa el espacio antes de recibir; girar y devolver resuelven presiones distintas'],['Sal de la sombra del pase (lección de 9v9)','El movimiento de apoyo que practica el ejercicio Pásala'],
+ ['Mira el balón y al que corre (lección de 7v7)','Mirar alrededor cuando tu equipo no tiene el balón'],['Lecciones de pase y apoyo','Cada lección para encontrar y dar un pase libre'],
+ ['Colores por encima del hombro (ejercicio de fútbol)','La misma idea con un compañero que levanta conos, sin teléfono'],['Cuadrado lleno: conducción con la cabeza arriba (ejercicio)','Conducción mirando arriba para los más pequeños'],
+ ['Ejercicios de primer toque','Ejercicios para recibir en los que mirar antes de que llegue el balón sí cuenta'],['¿Qué es el primer toque en el fútbol?','Por qué la mirada va antes del toque'],
+ ['Calculadora de minutos de juego de fútbol','Minutos justos para cada jugador el día del partido'],['Creador de alineaciones de fútbol','Pon a los titulares en un diagrama de cancha']];
+function ScanEs(){
+ const crumbs=toolCrumbsEs({name:SCAN_ES.crumb,path:toEs(SCAN_PATH)});
+ const related=SCAN_RELATED_EN.map((l,i)=>({path:toEs(l.path),name:SCAN_RELATED_ES[i][0],line:SCAN_RELATED_ES[i][1]}));
+ return <ScanTrainerPage p={SCAN_ES} path={toEs(SCAN_PATH)} crumbs={crumbs} lang="es" related={related}
+  intro={<header className={site.intro}><EsBreadcrumbs crumbs={crumbs}/><h1 className={site.title}>{SCAN_ES.h1}</h1><p className={site.lead} data-answer="">{SCAN_ES.lead}</p>
+   <AppLink href="/scan?lang=es" label={SCAN_ES.openLabel} line={SCAN_ES.openLine}/><p className={site.caption}>{TOOL_NAMES_ES}</p></header>}
+  end={<EsToolEnd/>} figure={(id,sc)=><EsGridFigure id={id} scene={sc} small/>}/>;
+}
+
 // ---- the route table ----
 const H1_IMAGE_ALT='Un diagrama de formación de fútbol 9v9';
 export function toolsEsRoute(enPath:string):EsRoute|null{
  if(enPath===TOOLS_HUB.path)return {meta:()=>esMeta(HUB.title,HUB.description,enPath,{url:image(enPath),alt:H1_IMAGE_ALT}),render:()=><ToolsHubEs/>};
  const l=LINEUP_PAGES.find(x=>x.path===enPath);if(l){const e=lineupEs(l);return {meta:()=>esMeta(e.title,e.description,enPath,{url:image(enPath),alt:`Un diagrama de formación del ${e.h1.toLowerCase()}`}),render:()=><LineupEs p={l}/>};}
  const r=PLANNER_PAGES.find(x=>x.path===enPath);if(r){const e=plannerEs(r);return {meta:()=>esMeta(e.title,e.description,enPath,{url:image(enPath),alt:'Un diagrama de formación de fútbol'}),render:()=><PlannerEs p={r}/>};}
+ if(enPath===SCAN_PATH)return {meta:()=>esMeta(SCAN_ES.title,SCAN_ES.description,enPath,{url:SCAN_IMAGE,alt:'El entrenador de escaneo en dos teléfonos: una señal de color azul y un pase al compañero 3 a la derecha'}),render:()=><ScanEs/>};
  if(enPath===PRINTABLES_HUB.path)return {meta:()=>esMeta(PRINT_HUB.title,PRINT_HUB.description,enPath,{url:image(enPath),alt:'Un diagrama de cancha de fútbol 11v11 en blanco'}),render:()=><PrintablesHubEs/>};
  const s=PRINTABLES.find(x=>x.path===enPath);if(s){const e=printEs(s);
   return {meta:()=>{const sh=fileEs(s,s.files[0]).sheet,url=printableImage(s),m=esMeta(e.title,e.description,enPath,{url,alt:sh.title});return {...m,openGraph:{...m.openGraph,images:[{url,width:sh.w*1.5,height:sh.h*1.5,alt:sh.title}]}};},render:()=><PrintableEsPage p={s}/>};}

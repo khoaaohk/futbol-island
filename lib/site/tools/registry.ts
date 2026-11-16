@@ -5,6 +5,7 @@ import {abs,PUBLISHER,SITE_NAME,SITE_URL} from '../seo';
 import {PLAYERS_PER_TEAM,type GuideFormat} from '../pitch';
 import {DEFAULT_FORMATION} from './lineup';
 import {fileUrl,PRINTABLES,PRINTABLES_HUB_PATH,PRINT_FILES,type Printable} from './printables';
+import {SCAN_EN,SCAN_IMAGE,SCAN_PATH} from './scanTrainer';
 /**
  * The free coach tools (Nov 10 2026): /tools, the lineup builder and its format landings, the playing-time planner and its
  * landings, and the printables (lib/site/tools/printables.ts). TOOL_PAGES is the registry, parallel to lib/site/guides.ts: it
@@ -131,7 +132,7 @@ export const PRINTABLES_HUB={path:PRINTABLES_HUB_PATH,crumb:'Field diagrams',tit
   {q:'Should I download the PNG or the SVG?',a:'Take the PNG to print at home or to drop into a document or a slide. Take the SVG if you want to edit the diagram in a drawing program or print it very large: it stays sharp at any size.'},
   {q:'Will the sheets print on A4 paper?',a:'Yes. They are drawn for US Letter; choose “fit to page” in the print window and they fill an A4 page with a slightly wider margin.'},
   {q:'Why is a 7v7 field drawn differently from a full-size field?',a:'Because it is a different field, not a smaller copy. In the US a 7v7 field has build-out lines and its own penalty area size. Each template here keeps the markings of its own game.'}] as Faq[]};
-export type ToolPage={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;image?:string;kind:'hub'|'lineup'|'planner'|'printables'|'printable'};
+export type ToolPage={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;image?:string;kind:'hub'|'lineup'|'planner'|'printables'|'printable'|'scan'};
 const lineupImage=(p:LineupPage)=>formationImg(DEFAULT_FORMATION[p.format??'7v7']);
 const PLANNER_IMAGE:Record<string,string>={'7v7':formationImg('7v7-3-2-1'),'9v9':formationImg('9v9-3-3-2')};
 export const plannerImage=(p:PlannerPage)=>PLANNER_IMAGE[p.format??'']??formationImg('7v7-2-2-2');
@@ -142,6 +143,8 @@ export const TOOL_PAGES:readonly ToolPage[]=[
  ...PLANNER_PAGES.map((p,i)=>({path:p.path,name:p.h1,title:p.title,description:p.description,blurb:p.blurb,hub:i===0,kind:'planner' as const,image:plannerImage(p)})),
  {path:PRINTABLES_HUB.path,name:PRINTABLES_HUB.h1,title:PRINTABLES_HUB.title,description:PRINTABLES_HUB.description,blurb:PRINTABLES_HUB.blurb,hub:true,kind:'printables',image:fileUrl('11v11-soccer-field-blank-landscape','png')},
  ...PRINTABLES.map(p=>({path:p.path,name:p.h1,title:p.title,description:p.description,blurb:p.blurb,kind:'printable' as const,image:printableImage(p)})),
+ /* Scan Trainer's front door (Nov 16 2026; lib/site/tools/scanTrainer.ts): hub-level, so llms.txt, search and "More to learn" list it */
+ {path:SCAN_PATH,name:SCAN_EN.h1,title:SCAN_EN.title,description:SCAN_EN.description,blurb:SCAN_EN.blurb,hub:true,kind:'scan',image:SCAN_IMAGE},
 ];
 /** The pages the lesson hubs' "More to learn" list and llms.txt name (the tools hub and the three main tools). */
 export const TOOL_HUBS=TOOL_PAGES.filter(t=>t.hub);

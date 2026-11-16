@@ -1,0 +1,16 @@
+/* Scan Trainer front door (Nov 16 2026): the four sample cues, drawn as the app's cue screen shows them (components/scan),
+   and the drill blocks. Tokens from app/(site)/site.module.css .page (--s*, --r-*, --t-*). */
+.preview{margin:var(--s2) 0 0;display:grid;gap:var(--s1)}
+.cues{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:var(--s1);max-width:calc(var(--measure) + 2 * var(--s3))}
+@media (max-width:560px){.cues{grid-template-columns:repeat(2,1fr)}}
+.cue{aspect-ratio:3/4;border-radius:var(--r-md);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;overflow:hidden;font-weight:800;line-height:.9;text-align:center}
+.word{font-size:clamp(24px,4vw,34px);letter-spacing:-.02em}
+.num{font-size:clamp(64px,10vw,96px);letter-spacing:-.05em;font-variant-numeric:tabular-nums}
+.arrow{width:70%;height:auto;display:block}
+.arrowSmall{width:clamp(44px,7vw,64px);height:auto;display:block}
+.pass{font-size:clamp(15px,2.2vw,19px)}
+.passRow{display:flex;align-items:center;gap:6px}
+.passRow .num{font-size:clamp(48px,7vw,72px)}
+.drill{display:grid;gap:var(--s1);margin:var(--s4) 0 0}
+.drill h3{margin:0}
+.facts{display:flex;flex-wrap:wrap;gap:var(--s1) var(--s3);margin:0;font-size:var(--t-cap)}

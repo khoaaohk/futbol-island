@@ -13,7 +13,7 @@ export const DIR_ANGLE:Record<Dir,number>={up:0,upRight:45,right:90,downRight:13
 /** Cone and bib colours a coach is likely to own. `ink` is the text colour that reads on the colour (contrast checked in the test). */
 export type ColourId='red'|'orange'|'yellow'|'green'|'blue'|'purple'|'pink'|'white'|'black';
 export const COLOURS:Readonly<Record<ColourId,{hex:string;ink:string}>>={
- red:{hex:'#d7262e',ink:'#ffffff'},orange:{hex:'#f07a12',ink:'#14221d'},yellow:{hex:'#ffd21f',ink:'#14221d'},green:{hex:'#1f9a4a',ink:'#ffffff'},
+ red:{hex:'#d7262e',ink:'#ffffff'},orange:{hex:'#f07a12',ink:'#14221d'},yellow:{hex:'#ffd21f',ink:'#14221d'},green:{hex:'#16793b',ink:'#ffffff'},
  blue:{hex:'#1f5fd1',ink:'#ffffff'},purple:{hex:'#7a3db8',ink:'#ffffff'},pink:{hex:'#f27cb4',ink:'#14221d'},white:{hex:'#ffffff',ink:'#14221d'},black:{hex:'#111111',ink:'#ffffff'}};
 export const COLOUR_IDS=Object.keys(COLOURS) as ColourId[];
 export type Range='1-9'|'1-20'|'0-99';
@@ -26,13 +26,13 @@ export type AgeId='u8'|'u10'|'u12'|'u14'|'adult';
 export const AGES:readonly AgeId[]=['u8','u10','u12','u14','adult'];
 export type Settings={mode:Mode;interval:number;colours:ColourId[];range:Range;dirs:Dir[];teammates:number;bg:boolean;names:boolean;session:SessionLen;sound:Sound;score:boolean;age:AgeId|null};
 export const MIN_INTERVAL=1,MAX_INTERVAL=6,MIN_TEAMMATES=2,MAX_TEAMMATES=8;
-export const DEFAULTS:Settings={mode:'colours',interval:3,colours:['red','blue','yellow','green'],range:'1-9',dirs:['up','right','down','left'],teammates:4,bg:true,names:true,session:90,sound:'tick',score:false,age:'u10'};
+export const DEFAULTS:Settings={mode:'colours',interval:3,colours:['red','yellow','green','blue'],range:'1-9',dirs:['up','right','down','left'],teammates:4,bg:true,names:true,session:90,sound:'tick',score:false,age:'u10'};
 /**
  * Age presets: speed and cue type. Younger players get slower changes and the simplest cue (a colour), older ones get faster
  * changes and cues that need a decision (a number to add, an arrow to turn to, a pass). The coach's colours are never changed.
  */
 export const PRESETS:Readonly<Record<AgeId,Pick<Settings,'mode'|'interval'|'range'|'dirs'|'session'>>>={
- u8:{mode:'colours',interval:3.5,range:'1-9',dirs:['left','right'],session:60},
+ u8:{mode:'colours',interval:3.5,range:'1-9',dirs:['right','left'],session:60},
  u10:{mode:'colours',interval:3,range:'1-9',dirs:['up','right','down','left'],session:90},
  u12:{mode:'mix',interval:2.5,range:'1-9',dirs:['up','right','down','left'],session:90},
  u14:{mode:'pass',interval:2,range:'1-20',dirs:['up','right','down','left'],session:180},
