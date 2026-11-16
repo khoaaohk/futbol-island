@@ -10,7 +10,7 @@ import p from './printSheet.module.css';
 export default function PrintSheet({path,what='sheet'}:{path:string;what?:string}){
  const url=abs(path);
  return <div className={p.sheet} data-print-sheet="">
-  <div className={p.screen}><PrintButton/> <span className={p.hint}>A one-page {what} for the field: title, diagram, steps and coaching points.</span></div>
+  <div className={p.screen}><PrintButton/> <span className={p.hint}>A one-page {what} for the field: diagram, steps, key points.</span></div>
   <p className={p.url}>Futbol Island · free football lessons for kids · {url.replace(/^https:\/\//,'')}</p>
  </div>;
 }

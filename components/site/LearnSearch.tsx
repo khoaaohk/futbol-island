@@ -2,6 +2,7 @@
 import {useEffect,useMemo,useRef,useState} from 'react';
 import {SEARCH_INDEX_PATH,SEARCH_LABEL,searchEntries,type SearchEntry} from '@/lib/site/searchCore';
 import site from '@/app/(site)/site.module.css';
+import fx from './siteForms.module.css';
 /**
  * The /learn search box (seo-extras, Nov 15 2026). Reads ?q= on load (the WebSite SearchAction in lib/site/seo.ts points here),
  * loads the small prebuilt index once (lib/site/searchIndex.ts, ~20 KB gzipped) and matches as you type, on the device: nothing
@@ -30,11 +31,11 @@ export default function LearnSearch(){
  };
  const status=failed?'The search could not load. Try the guides below.':!index?(q?'Loading the search…':''):!q.trim()?'':total?`${total} result${total===1?'':'s'} for “${q.trim()}”.`:`Nothing found for “${q.trim()}”. Try a shorter word, such as offside, rondo or 4-3-3.`;
  return <div className={site.section} data-learn-search="">
-  <form role="search" action="/learn" method="get" onSubmit={e=>{e.preventDefault();links()[0]?.focus();}} style={{display:'flex',flexWrap:'wrap',gap:8,alignItems:'center'}}>
-   <label htmlFor="learn-q" className={site.caption} style={{width:'100%'}}>Search rules, terms, positions, formations, drills, plans and lessons</label>
+  <form role="search" action="/learn" method="get" onSubmit={e=>{e.preventDefault();links()[0]?.focus();}} className={fx.searchForm}>
+   <label htmlFor="learn-q" className={`${site.caption} ${fx.fullWidth}`}>Search rules, terms, positions, formations, drills, plans and lessons</label>
    <input ref={box} id="learn-q" name="q" type="search" value={q} onChange={e=>change(e.target.value)} onKeyDown={onBoxKey} autoComplete="off" spellCheck={false} enterKeyHint="search"
     placeholder="Try offside, rondo or 4-3-3" aria-describedby="learn-q-status" aria-controls="learn-results"
-    style={{flex:'1 1 220px',minWidth:0,minHeight:48,padding:'0 16px',borderRadius:24,border:'1px solid var(--rule)',background:'var(--surface)',color:'var(--ink)',font:'17px var(--sans)',boxSizing:'border-box'}}/>
+    className={fx.searchInput}/>
   </form>
   <p id="learn-q-status" role="status" aria-live="polite" className={site.caption}>{status}</p>
   <div id="learn-results" ref={list} onKeyDown={onListKey}>

@@ -1,6 +1,7 @@
 'use client';
 import {useState} from 'react';
 import site from '@/app/(site)/site.module.css';
+import fx from '../siteForms.module.css';
 /**
  * "Use this on your club's website" (seo-extras, Nov 15 2026): the iframe snippet for this tool's /embed twin, selectable and
  * copyable. Server-rendered text first, so it works without JavaScript; the Copy button only adds the clipboard.
@@ -13,7 +14,7 @@ export default function EmbedSnippet({snippet,name}:{snippet:string;name:string}
   <p>Paste this code into your club or league web page to show the {name} there, for your coaches and parents.</p>
   <p className={site.caption}>No ads, no tracking, no sign-up; names typed into it stay on each visitor’s device.</p>
   <label className={site.caption} htmlFor="embed-code">Embed code</label>
-  <textarea id="embed-code" readOnly rows={4} value={snippet} onFocus={e=>e.currentTarget.select()} style={{width:'100%',maxWidth:'var(--measure)',boxSizing:'border-box',font:'14px/1.4 ui-monospace,Menlo,monospace',padding:12,borderRadius:12,border:'1px solid var(--rule)',background:'var(--surface)',color:'var(--ink)'}}/>
-  <p><button type="button" onClick={copy} style={{minHeight:44,padding:'0 18px',borderRadius:22,border:'1px solid var(--rule)',background:'var(--paper)',color:'var(--ink)',font:'600 15px var(--sans)',cursor:'pointer'}}>Copy embed code</button> <span role="status" className={site.caption}>{done}</span></p>
+  <textarea id="embed-code" readOnly rows={4} value={snippet} onFocus={e=>e.currentTarget.select()} className={fx.embedCode}/>
+  <p><button type="button" onClick={copy} className={fx.copyBtn}>Copy embed code</button> <span role="status" className={site.caption}>{done}</span></p>
  </section>;
 }
