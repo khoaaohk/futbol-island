@@ -51,7 +51,7 @@ export type PoseFlag = (typeof PoseFlag)[keyof typeof PoseFlag];
  *  it (an old relay) the host's Lock name button is hidden.
  *  Hit (relay v1.6, Oct 23 2026) = a friend's kicked ball can knock a party friend over (C.Hit / S.Hit: a harmless ~1 s cartoon tumble).
  *  Without it (an old relay or an old client) friends are never knocked over; the NPC knock-over by my own ball is unchanged. */
-export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64, Match: 128, World: 256, Quiet: 512, Report: 1024, Goal: 2048, Map: 4096, KitClub: 8192 } as const;
+export const Cap = { Live: 1, Ball: 2, Rename: 4, EmoteAsk: 8, NameLock: 16, Hit: 32, Kit: 64, Match: 128, World: 256, Quiet: 512, Report: 1024, Goal: 2048, Map: 4096, KitClub: 8192, KitClubColor: 16384 } as const;
 /** What a PARTY socket is offered (S.Caps): exactly 255, as before relay v2.0, so every old client keeps parsing S.Caps. */
 export const CAPS_ALL = 255;
 /** Relay v2.0 (public worlds, Nov 11 2026; docs/multiplayer/WORLD-HANDOFF.md). Only a WORLD socket (/world/:shard/ws) is offered
@@ -66,7 +66,10 @@ export const CAPS_ALL = 255;
  *  CAPS_WORLD. A client sends the long kit only when S.Caps offered it (else the first KIT_LEN slots); the relay forwards the long kit
  *  only to Cap.KitClub members and its first KIT_LEN slots to everyone else, so an old relay and an old client never see one. A party
  *  (CAPS_ALL stays exactly 255) keeps the short kit. */
-export const CAPS_WORLD = Cap.Live | Cap.Ball | Cap.EmoteAsk | Cap.Kit | Cap.Match | Cap.World | Cap.Quiet | Cap.Report | Cap.Goal | Cap.Map | Cap.KitClub;
+/** Drip FC colours (Nov 16 2026, docs/dripfc-colors.md): Cap.KitClubColor (a Kit may carry KIT_CLUB_COLOR_LEN slots: the club pieces'
+ *  palette colour codes) joins CAPS_WORLD the same way: sent only when S.Caps offered it, forwarded whole only to Cap.KitClubColor
+ *  members, its first KIT_CLUB_LEN slots to Cap.KitClub members and its first KIT_LEN slots to everyone else (kitForCaps). */
+export const CAPS_WORLD = Cap.Live | Cap.Ball | Cap.EmoteAsk | Cap.Kit | Cap.Match | Cap.World | Cap.Quiet | Cap.Report | Cap.Goal | Cap.Map | Cap.KitClub | Cap.KitClubColor;
 export const CAPS_MAX = 0xffff;
 
 // ---- relay v2.0: public worlds (strangers on one island). Shared by the client, the relay, the dev relay and the tests. ----
@@ -167,6 +170,19 @@ export const KIT_MAX_BYTES = 200;
  *  A long kit is sent only when it carries something (else the short one), and is at most KIT_CLUB_MAX_BYTES as JSON. */
 export const KIT_CLUB_LEN = 22;
 export const KIT_CLUB_MAX_BYTES = 280;
+/** Cap.KitClubColor (Nov 16 2026): seven more slots after KIT_CLUB_LEN, each one club piece's colours as a palette code
+ *  (lib/shop/dripKit.ts clubCode: art index | backing index << 4, both < CLUB_PALETTE_LEN; backing CLUB_NO_BACKING_IDX = none, shirt
+ *  prints only), or -1 = that piece is absent or wears the club's own colours:
+ *   22 shirt crest, 23 shirt wordmark (shirt prints: backing may be none)
+ *   24 boot side mark, 25 boot heel mark
+ *   26..28 the colours of ball club stickers 19..21 (-1 whenever that sticker slot is -1)
+ *  A piece's code is sent only when the piece is worn (the relay refuses a code for an absent piece). The colour kit is sent only when
+ *  one code is set (else the KIT_CLUB_LEN one), and is at most KIT_CLUB_COLOR_MAX_BYTES as JSON. Only palette codes travel (no free
+ *  colour); a new palette entry needs this table, CLUB_PALETTE_LEN and a relay deploy. */
+export const KIT_CLUB_COLOR_LEN = 29;
+export const KIT_CLUB_COLOR_MAX_BYTES = 330;
+export const CLUB_PALETTE_LEN = 12;
+export const CLUB_NO_BACKING_IDX = 15;
 export type Kit = number[];
 /** Relay v1.6 ball knock-over rules (C.Hit): shooter and victim within HIT_RANGE_M, each shooter at most HIT_RATE_MAX hits per
  *  HIT_RATE_WINDOW_MS, and the same shooter -> victim pair at most once per HIT_PAIR_COOLDOWN_MS. */

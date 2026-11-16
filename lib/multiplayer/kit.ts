@@ -5,9 +5,11 @@
 // Cap.KitClub (Nov 13 2026): a kit that carries Drip FC club kit (lib/shop/dripKit.ts: the shirt's club crest / wordmark, where the
 // boots' club stickers sit, up to three ball club stickers, all chosen from the club's fixed art) is KIT_CLUB_LEN long; anything
 // else stays KIT_LEN long, byte for byte as before. Still never the kid's own drawing, decals, crest or name.
-import { KIT_CLUB_LEN, KIT_LEN, isKit, type Kit } from '../../multiplayer/protocol';
+// Cap.KitClubColor (Nov 16 2026, docs/dripfc-colors.md): when a club piece wears its own palette colours the kit is KIT_CLUB_COLOR_LEN
+// long (seven palette codes after the club slots); the connection cuts it to what the relay offered (kitForCaps).
+import { KIT_CLUB_COLOR_LEN, KIT_CLUB_LEN, KIT_LEN, isClubCode, isKit, kitForCaps, type Kit } from '../../multiplayer/protocol';
 import { FINISHES, LAYOUTS, PATTERNS, validateBall, type BallDecal, type BallDesign } from '../shop/ball';
-import { bootClubBits } from '../shop/boots';
+import { bootClubBits, bootClubCodes } from '../shop/boots';
 import { jerseyClubCode, jerseyClubFrom, packBallClub, unpackBallClub, MAX_CLUB_BALL, isClubArt } from '../shop/dripKit';
 import type { IslandGear } from '../shop/islandGear';
 import type { Outfit } from '../graphics/beanLook';
@@ -35,17 +37,31 @@ export function kitFromGear(g: IslandGear | null | undefined): Kit | null {
   }
   // Drip FC club kit: five more slots, only when something club is worn (an ordinary kit keeps its old length and key).
   const club = [j ? jerseyClubCode(j.club) : 0, g.boots ? bootClubBits(g.boots) : 0, -1, -1, -1];
-  if (b) { let n = 0; for (const d of b.decals) if (d.kind === 'club' && isClubArt(d.ref) && n < MAX_CLUB_BALL) club[2 + n++] = packBallClub(d.ref, d.dir, d.rot, d.size); }
-  if (club[0] || club[1] || club[2] >= 0) { const long = [...k, ...club]; if (long.length === KIT_CLUB_LEN && isKit(long)) return long; }
+  // Drip FC colours: one palette code per worn club piece (-1 = club colours), in the same order as types.ts KIT_CLUB_COLOR_LEN.
+  const cc = [-1, -1, -1, -1, -1, -1, -1], code = (c: number | undefined, printed: boolean) => (c !== undefined && isClubCode(c, printed) ? c : -1);
+  if (j?.club) { if (j.club.crest) cc[0] = code(j.club.cc, true); if (j.club.word) cc[1] = code(j.club.wc, true); }
+  if (g.boots && club[1]) { const bc = bootClubCodes(g.boots); if (club[1] & 1) cc[2] = code(bc.side, false); if (club[1] & 2) cc[3] = code(bc.heel, false); }
+  if (b) { let n = 0; for (const d of b.decals) if (d.kind === 'club' && isClubArt(d.ref) && n < MAX_CLUB_BALL) { club[2 + n] = packBallClub(d.ref, d.dir, d.rot, d.size); if (club[2 + n] >= 0) cc[4 + n] = code(d.cc, false); n++; } }
+  if (club[0] || club[1] || club[2] >= 0) {
+    const long = [...k, ...club];
+    if (cc.some((c) => c >= 0)) { const full = [...long, ...cc]; if (full.length === KIT_CLUB_COLOR_LEN && isKit(full)) return full; }
+    if (long.length === KIT_CLUB_LEN && isKit(long)) return long;
+  }
   return isKit(k) ? k : null;
 }
 /** The short (KIT_LEN) form, for a relay that never offered Cap.KitClub. */
 export const kitShort = (k: Kit | null): Kit | null => (k && k.length > KIT_LEN ? k.slice(0, KIT_LEN) : k);
+/** The form a relay that agreed `caps` understands (29 / 22 / 17 slots; protocol kitForCaps). */
+export const kitFor = (k: Kit | null, caps: number): Kit | null => kitForCaps(k, caps);
+/** A colour slot of a kit (-1 = club colours or not a colour kit): `i` is 0..6 in the types.ts KIT_CLUB_COLOR_LEN order. */
+const kitCc = (k: Kit, i: number, printed: boolean): number | undefined => {
+  const c = k.length === KIT_CLUB_COLOR_LEN ? k[KIT_CLUB_LEN + i] : -1; return c >= 0 && isClubCode(c, printed) ? c : undefined;
+};
 
 /** One string per kit (change checks); '' for none. */
 export const kitKey = (k: Kit | null | undefined): string => (k ? k.join(',') : '');
 /** The ball part's key ('' = no shop ball): friends wearing the same ball share one baked skin. */
-export const kitBallKey = (k: Kit | null | undefined): string => (k && k[7] >= 0 ? k.slice(7, KIT_LEN).join(',') + (k.length > KIT_LEN ? '|' + k.slice(19, 22).join(',') : '') : '');
+export const kitBallKey = (k: Kit | null | undefined): string => (k && k[7] >= 0 ? k.slice(7, KIT_LEN).join(',') + (k.length > KIT_LEN ? '|' + k.slice(19, 22).join(',') : '') + (k.length === KIT_CLUB_COLOR_LEN ? '|' + k.slice(26, 29).join(',') : '') : '');
 
 /** A friend's outfit with their kit on top (the base itself when they wear nothing from the shop: no allocation). */
 export function kitOutfit(base: Outfit, k: Kit | null | undefined): Outfit {
@@ -54,8 +70,13 @@ export function kitOutfit(base: Outfit, k: Kit | null | undefined): Outfit {
   if (k[0] >= 0) { out.kind = 'kit'; out.shirt = kitHex(k[0]); out.shirt2 = kitHex(k[1]); out.shorts = kitHex(k[2]); out.socks = kitHex(k[3]); out.socks2 = kitHex(k[4]); out.number = k[5] >= 0 ? k[5] : null; }
   if (k[6] >= 0) out.boots = kitHex(k[6]);
   if (k.length > KIT_LEN) { // Drip FC: the shirt's club crest spot and the boots' club marks (lib/graphics/beanSkin.ts draws them)
-    const c = k[0] >= 0 ? jerseyClubFrom(k[17])?.crest : null; if (c) out.club = c === 'chest' ? 1 : 2;
-    if (k[6] >= 0 && k[18] > 0) out.bootClub = k[18] & 3;
+    const c = k[0] >= 0 ? jerseyClubFrom(k[17])?.crest : null;
+    if (c) { out.club = c === 'chest' ? 1 : 2; const cc = kitCc(k, 0, true); if (cc !== undefined) out.clubCc = cc; }
+    if (k[6] >= 0 && k[18] > 0) {
+      out.bootClub = k[18] & 3;
+      const side = out.bootClub & 1 ? kitCc(k, 2, false) : undefined, heel = out.bootClub & 2 ? kitCc(k, 3, false) : undefined;
+      if (side !== undefined) out.bootCc = side; if (heel !== undefined) out.heelCc = heel;
+    }
   }
   return out;
 }
@@ -72,6 +93,11 @@ export function kitBall(k: Kit | null | undefined): BallDesign | null {
 /** The Drip FC ball stickers of a long kit (only the club's fixed art ever travels). */
 function clubDecals(k: Kit): BallDecal[] {
   const out: BallDecal[] = [];
-  for (let i = 19; i <= 21; i++) { const c = unpackBallClub(k[i]); if (c) out.push({ id: 'c' + i, kind: 'club', ref: c.ref, color: '#ffffff', dir: c.dir, rot: c.rot, size: c.size }); }
+  for (let i = 19; i <= 21; i++) {
+    const c = unpackBallClub(k[i]); if (!c) continue;
+    const d: BallDecal = { id: 'c' + i, kind: 'club', ref: c.ref, color: '#ffffff', dir: c.dir, rot: c.rot, size: c.size };
+    const cc = kitCc(k, 4 + i - 19, false); if (cc !== undefined) d.cc = cc; // Cap.KitClubColor: the sticker's own palette colours
+    out.push(d);
+  }
   return out;
 }

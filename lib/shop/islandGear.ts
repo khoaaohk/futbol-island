@@ -15,7 +15,7 @@
  */
 import {SHOP_GEAR_EVENT,SHOP_OWNED_KEY,designHash,loadOwned,type ShopOwned} from './shopPurchases';
 import {validateJersey,type JerseyDesign} from './jersey';
-import {validateBoots,bootClubBits,type BootDesign} from './boots';
+import {validateBoots,bootClubBits,bootClubCodes,type BootDesign} from './boots';
 import {validateBall,type BallDesign} from './ball';
 import {panelAt} from './ballPanels';
 import type {Outfit} from '../graphics/beanLook';
@@ -49,12 +49,14 @@ export function gearOutfit(base:Outfit,gear:IslandGear):Outfit{
  if(!gear.jersey&&!gear.boots)return base;
  const j=gear.jersey,out:Outfit={...base};
  if(j){out.kind='kit';out.shirt=j.primary;out.shirt2=j.secondary;out.shorts=j.accent;out.socks=j.primary;out.socks2=j.accent;out.number=j.number;
-  if(j.club?.crest)out.club=j.club.crest==='chest'?1:2;}// Drip FC club crest (lib/shop/dripKit.ts)
- if(gear.boots){out.boots=bootColour(gear.boots);const bc=bootClubBits(gear.boots);if(bc)out.bootClub=bc;}
+  if(j.club?.crest){out.club=j.club.crest==='chest'?1:2;if(j.club.cc!==undefined)out.clubCc=j.club.cc;}}// Drip FC club crest (lib/shop/dripKit.ts)
+ if(gear.boots){out.boots=bootColour(gear.boots);const bc=bootClubBits(gear.boots);if(bc){out.bootClub=bc;bootCodes(out,gear.boots);}}
  return out;
 }
 /** Team colours (lessons, rooftop knockout) keep your own boots: footballers wear their own boots with the team kit. */
-export function teamOutfitWithBoots(team:Outfit,gear:IslandGear):Outfit{if(!gear.boots)return team;const bc=bootClubBits(gear.boots);return bc?{...team,boots:bootColour(gear.boots),bootClub:bc}:{...team,boots:bootColour(gear.boots)};}
+export function teamOutfitWithBoots(team:Outfit,gear:IslandGear):Outfit{if(!gear.boots)return team;const bc=bootClubBits(gear.boots);if(!bc)return {...team,boots:bootColour(gear.boots)};const out:Outfit={...team,boots:bootColour(gear.boots),bootClub:bc};bootCodes(out,gear.boots);return out;}
+/** Nov 16 2026: the boot marks' Drip FC colours (Outfit.bootCc / heelCc; absent = club ink). */
+function bootCodes(out:Outfit,boots:BootDesign){const c=bootClubCodes(boots);if(c.side!==undefined)out.bootCc=c.side;if(c.heel!==undefined)out.heelCc=c.heel;}
 
 // ---- The bought ball as an equirect image ---------------------------------------------------------------------------------
 /** Texture size: 256×128 (128 KB RGBA) is plenty for a 0.19 m ball on a phone, baked once per design. */
