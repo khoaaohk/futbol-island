@@ -7,6 +7,7 @@ import {SITE_UPDATED} from './updated';
 import {ALL_GUIDE_PAGES} from './guides';
 import {TOOL_PAGES,TOOLS_UPDATED} from './tools/registry';
 import {GAME_LISTINGS,GAMES_UPDATED} from './games';
+import {FACTS_PATH,FAMILY_CHECKED} from './checked';
 /**
  * Every public, indexable path (app/sitemap.ts, tests/seo-pages.cjs). Nov 3 2026 (owner): `/` is the home page (the feature tour,
  * formerly /learn, which now redirects to `/`) and the main entry; the game is /play, indexable at a low priority.
@@ -22,6 +23,7 @@ export const GUIDE_PATHS=[...HUB_PATHS,SAFE_GUIDE.path] as const;
 export function sitePaths():{path:string;priority:number;lastmod:string}[]{
  const U=SITE_UPDATED;
  return [{path:'/',priority:1,lastmod:U.home},{path:'/about',priority:.9,lastmod:U.about},{path:'/play',priority:.3,lastmod:U.play},{path:'/privacy',priority:.5,lastmod:U.privacy},{path:'/marketing',priority:.4,lastmod:U.marketing},
+  {path:FACTS_PATH,priority:.5,lastmod:FAMILY_CHECKED.rules},/* the trust page (lib/site/checked.ts, Nov 15 2026) */
   {path:'/learn/lessons',priority:.8,lastmod:U.lessons},{path:'/fish',priority:.8,lastmod:U.fish},{path:'/cards',priority:.8,lastmod:U.cards},{path:'/exhibits',priority:.8,lastmod:U.exhibits},
   ...GUIDE_PATHS.map(path=>({path,priority:.8,lastmod:U.hubs})),
   ...ALL_GUIDE_PAGES.map(g=>({path:g.path,priority:g.hub?.8:.7,lastmod:U.guides})),/* guide clusters: formations, positions, rules, size charts, glossary (lib/site/guides.ts) */

@@ -1,0 +1,45 @@
+{
+ "note": "Written by scripts/content-dates.cjs. Do not edit by hand.",
+ "families": {
+  "rules": {
+   "date": "2026-11-15",
+   "from": "stated"
+  },
+  "terms": {
+   "date": "2026-11-15",
+   "from": "stated"
+  },
+  "positions": {
+   "date": "2026-11-15",
+   "from": "stated"
+  },
+  "formations": {
+   "date": "2026-11-10",
+   "from": "stated"
+  },
+  "drills": {
+   "date": "2026-11-10",
+   "from": "stated"
+  },
+  "plans": {
+   "date": "2026-11-10",
+   "from": "stated"
+  },
+  "sizes": {
+   "date": "2026-11-10",
+   "from": "stated"
+  },
+  "cards": {
+   "date": "2026-11-14",
+   "from": "stated"
+  },
+  "fish": {
+   "date": "2026-11-14",
+   "from": "git"
+  },
+  "exhibits": {
+   "date": "2026-10-16",
+   "from": "git"
+  }
+ }
+}

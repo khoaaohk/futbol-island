@@ -83,8 +83,8 @@ export function gameLengths(format:GuideFormat):GameLength[]{
 }
 export type PlannerPage={kind:'planner';slug:string;path:string;format?:Exclude<GuideFormat,'futsal'>;crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:string[];faq:Faq[]};
 export const PLANNER_PAGES:readonly PlannerPage[]=[
- {kind:'planner',slug:'soccer-playing-time-calculator',path:PLANNER_PATH,crumb:'Playing time calculator',title:'Soccer Playing Time Calculator: Fair Sub Rotation',h1:'Soccer playing time calculator',
-  description:'Free soccer playing time calculator. Enter your players and game length and get a fair substitution rotation with equal minutes to print or paste in chat.',
+ {kind:'planner',slug:'soccer-playing-time-calculator',path:PLANNER_PATH,crumb:'Playing time calculator',title:'Soccer Playing Time Calculator (Sub Rotation)',h1:'Soccer playing time calculator',
+  description:'Free soccer playing time calculator and sub calculator: enter your players and game length for a fair substitution rotation with equal minutes, to print.',
   lead:'Tell it how many players came, how many play at once and how long the game is. It gives you a substitution plan in which every player gets the same share of the game, to within one change.',
   blurb:'A fair substitution plan with equal minutes for every player',
   intro:['Sharing minutes fairly in your head, with a game going on in front of you, is hard. Nine children, seven places, two halves: who has sat out twice? This planner does the arithmetic before the match, so on the side line you only read the next line of the table.',

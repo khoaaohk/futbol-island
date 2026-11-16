@@ -5,7 +5,8 @@ import {DRILLS,DRILLS_HUB,DRILL_SAFETY_LINE,SKILLS,drillAgeNotes,drillBySlug,dri
 import {DRILL_GUIDES,SKILL_GUIDES,drillGuideBySlug,guidesForDrill,type DrillGuide} from '@/lib/site/drillGuides';
 import {PLANS_HUB,plansForAge,plansForDrill} from '@/lib/site/plans';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
-import {Bullets,CoachNotesSection,DataTable,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {FAMILY_CHECKED} from '@/lib/site/checked';
+import {CheckedLine,Bullets,CoachNotesSection,DataTable,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
 import {DrillList,GridFigure,Steps} from '@/lib/site/DrillParts';
 import {lessonPath} from '@/lib/site/lessons';
 import {PLAY_PATH,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -59,6 +60,7 @@ function DrillPage({d}:{d:Drill}){
   <Section id="lessons" title="Lessons that teach this idea"><LessonList lessons={d.lessons}/></Section>
   <Section id="related" title="Related drills and guides"><LinkList links={related}/></Section>
   <p className={styles.caption}>{GUIDE_FOOT}</p>
+  <CheckedLine date={FAMILY_CHECKED.drills}/>
   <p className={styles.end}><a className={styles.cta} href={lessonPath(d.cta.id)}>Play the lesson: {d.cta.title}</a></p>
  </>;
 }
@@ -88,6 +90,7 @@ function GuidePage({g}:{g:DrillGuide}){
   <Section id="lessons" title="Lessons to go with these drills"><LessonList lessons={g.lessons}/></Section>
   <Section id="related" title="Keep reading"><LinkList links={[...others,...g.links,{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb},{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}/></Section>
   <p className={styles.caption}>{GUIDE_FOOT}</p>
+  <CheckedLine date={FAMILY_CHECKED.drills}/>
   <p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Play it on the island</a></p>
  </>;
 }

@@ -8,6 +8,8 @@ import {lessonPath} from '@/lib/site/lessons';
 import {cardRelated,roleLesson,rolePlural} from '@/lib/site/related';
 import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
+import {checkedOn} from '@/lib/site/checked';
+import {CheckedLine} from '@/lib/site/GuideParts';
 import styles from '../../site.module.css';
 
 /** One player (or coach) card as plain text: position, country, blurb, strengths and career. No photo (see lib/site/cards.ts).
@@ -74,6 +76,7 @@ export default function CardPage({params}:{params:{number:string}}){
    <h2 className={styles.h2} id="know">Did you know?</h2>
    {note.facts.length>1?<ul>{note.facts.map(f=><li key={f.text}>{f.text}</li>)}</ul>:<p>{note.facts[0].text}</p>}
    <p className={styles.caption}>Checked against: {noteCredit(note)}.</p>
+   <CheckedLine date={checkedOn('cards',note.checked)}/>
   </section>}
   <section className={styles.section} aria-labelledby="lesson">
    <h2 className={styles.h2} id="lesson">{c.coach?'A lesson every coach starts with':`A lesson for ${rolePlural(c.role)}`}</h2>

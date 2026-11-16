@@ -1,6 +1,7 @@
 import {lessonById,type SiteLesson} from './lessons';
 import {exhibitById,exhibitPath} from './exhibits';
 import type {Faq} from './safety';
+import {FAMILY_CHECKED,longDate} from './checked';
 import {gameLink} from './games';
 import {scene,type RawScene,type Scene} from './scenes';
 /**
@@ -9,7 +10,9 @@ import {scene,type RawScene,type Scene} from './scenes';
  * with "soccer" and say "football" once near the top (lib/site/guides.ts GUIDE_NAMES). The older lesson hub
  * /learn/football-rules-for-kids stays as it is and is linked from here.
  *
- * SOURCES (all checked Nov 10 2026; nothing here is written from memory):
+ * SOURCES (all checked Nov 10 2026; nothing here is written from memory). Re-checked Nov 15 2026 against theifab.com Laws 12 and
+ * 15 for the new answers and FAQs (cautions, sending-off offences, back-pass, direct free kick fouls, foul throw retaken by the
+ * other team); futsal substitutions from the FIFA Futsal Laws 2025-26 (Law 3: unlimited, on the fly).
  *  - IFAB Laws of the Game, the edition served at /laws/latest/ on that day (the site's menu offered 2026/27 and 2025/26):
  *    Law 3 https://www.theifab.com/laws/latest/the-players/ · Law 5 (advantage, VAR) https://www.theifab.com/laws/latest/the-referee/
  *    Law 7 https://www.theifab.com/laws/latest/the-duration-of-the-match/ · Law 8 (kick-off, dropped ball) https://www.theifab.com/laws/latest/the-start-and-restart-of-play/
@@ -107,8 +110,8 @@ export const RULES:readonly Rule[]=([
   lessonIds:['gap11_runoncue','next7_offsideboundary','bld_11_throughlines','nx9_twostrikers'],cta:'gap11_runoncue',exhibitIds:['offside-rules'],links:[L.st,L.cb,L.f433,gameLink('puzzle')]},
  // ---- throw-in -----------------------------------------------------------------------------------------------------------
  {slug:'throw-in',name:'Throw-in',law:'Law 15',lawPage:'the-throw-in/',
-  title:'Soccer Throw-In Rules for Kids: How to Take One',h1:'Soccer throw-in rules for kids',
-  desc:'Soccer throw-in rules in plain words: both hands, from behind and over the head, feet on or behind the line. With a diagram, common mistakes and an FAQ.',
+  title:'Soccer Throw-In Rules for Kids: How to Take a Legal Throw',h1:'Soccer throw-in rules for kids',
+  desc:'The rules for a soccer throw-in in plain words: both hands, from behind and over the head, feet on or behind the line. Diagram, mistakes and an FAQ.',
   answer:'In soccer, a throw-in restarts the game when the whole ball crosses the touchline, and it goes to the team that did not touch the ball last. The thrower faces the field, keeps part of each foot on or behind the line, and throws with both hands from behind and over the head.',
   scenes:[{title:'A throw-in',who:'2@0,62 7@16,74 8@22,58 4@14,48 !11@9,66 !6@26,66',ball:[1,63],zone:[0,58,6,66],passes:['2,62>20,58'],
    caption:'Number 2 takes the throw-in from the touchline, at the place where the ball went out. Three teammates offer a throw up the line, inside and back. The nearest opponent, number 11, stands at least 2 yards from the thrower.'}],
@@ -125,6 +128,7 @@ export const RULES:readonly Rule[]=([
   faq:[{q:'Can you be offside from a throw-in?',a:'No. A player who receives the ball directly from a throw-in cannot be offside.'},
    {q:'Can the goalkeeper pick up a throw-in?',a:'Not from a teammate. If a teammate throws the ball straight to their own goalkeeper, the keeper must play it with the feet. Picking it up gives the other team an indirect free kick.'},
    {q:'Can you jump or do a flip throw?',a:'Yes, if part of each foot is on or behind the line when the ball leaves the hands, and the ball is thrown with both hands from behind and over the head.'},
+   {q:'What happens if a throw-in is taken wrong?',a:'It is a foul throw, and the other team takes the throw-in from the same place. Some leagues for the youngest players let a child try again, so ask your league.'},
    {q:'How far away must defenders stand at a throw-in?',a:'At least 2 metres, which is about 2 yards, from the place where the throw is taken.'}],
   lessonIds:['next9_restartreturn','next7_dribblein','set_f_throwin','expf_kickinthird'],cta:'next9_restartreturn',exhibitIds:['throw-in'],links:[L.fb,L.wg,L.f9]},
  // ---- goal kick ----------------------------------------------------------------------------------------------------------
@@ -171,8 +175,8 @@ export const RULES:readonly Rule[]=([
   lessonIds:['next9_shortcornerbudget','expf_cornercutback','expf_defendcorner','learn11_cutback'],cta:'next9_shortcornerbudget',links:[L.wg,L.cb,L.gk]},
  // ---- handball -----------------------------------------------------------------------------------------------------------
  {slug:'handball',name:'Handball',law:'Law 12',lawPage:'fouls-and-misconduct/',
-  title:'Handball Rule in Soccer, Explained for Kids',h1:'Handball in soccer, explained for kids',
-  desc:'The handball rule in soccer in plain words for kids and parents: what counts as a handball, what does not, where the arm starts and what the referee gives.',
+  title:'Handball Rules in Soccer: What Counts, Explained for Kids',h1:'Handball in soccer, explained for kids',
+  desc:'Handball rules in soccer for kids and parents: what counts as a handball, what does not, where the arm starts, and when it is a free kick or a penalty.',
   answer:'In soccer, handball is an offence when a player touches the ball with a hand or arm on purpose, or with an arm that makes the body unnaturally bigger. Not every touch of the ball on an arm is a handball, and a goalkeeper may use the hands inside their own penalty area.',
   scenes:[{title:'Where the goalkeeper may use hands',who:'G@50,8 4@34,20 5@66,20 !9@50,30 !7@80,34',ball:[50,24],zone:[20.4,0,79.6,15.7],
    caption:'The shaded penalty area is the only place where the gold goalkeeper may handle the ball. Outside it, the goalkeeper is like any other player. Everyone else may never use a hand or arm on purpose, anywhere on the field.'}],
@@ -186,14 +190,15 @@ export const RULES:readonly Rule[]=([
    {said:'“A handball in the box is always a penalty.”',truth:'Only when a defender commits it. A handball by an attacker gives the defending team a direct free kick.'}],
   formats:[['7v7 and 9v9','The same rule. With young players, referees and coaches usually explain rather than punish an accident.'],['11v11','Law 12 in full.'],
    ['Futsal','The same handball rule. The goalkeeper may use the hands only inside the penalty area, and not after a teammate deliberately kicks the ball to them, even from a kick-in.']],
-  faq:[{q:'Is it a handball if it is an accident?',a:'Usually not. The two big exceptions: if the arm made the body unnaturally bigger, and if an attacker scores with the hand or arm, or straight after the ball touched it.'},
+  faq:[{q:'What is a handball in soccer?',a:'Touching the ball with a hand or arm on purpose, or with an arm held away from the body so that it makes the body bigger. The arm starts at the bottom of the armpit, so the shoulder is not part of it.'},
+   {q:'Is it a handball if it is an accident?',a:'Usually not. The two big exceptions: if the arm made the body unnaturally bigger, and if an attacker scores with the hand or arm, or straight after the ball touched it.'},
    {q:'Is the shoulder a handball in soccer?',a:'No. The Laws put the top of the arm in line with the bottom of the armpit, so a ball played with the shoulder is fine.'},
    {q:'What does the referee give for a handball?',a:'A direct free kick, or a penalty kick if a defender handles the ball inside their own penalty area.'},
    {q:'Can a goalkeeper get a handball?',a:'Yes, outside their own penalty area. Inside it, a keeper who handles the ball when not allowed, such as a pass back from a teammate’s foot, gives away an indirect free kick.'}],
   lessonIds:['bld_7_usekeeper','bld_9_usekeeper','expf_keeperposition'],cta:'bld_7_usekeeper',exhibitIds:['keeper-hands-1912'],links:[L.gk,L.cb,L.dm]},
  // ---- fouls and free kicks -----------------------------------------------------------------------------------------------
  {slug:'fouls-and-free-kicks',name:'Fouls and free kicks',law:'Laws 12 and 13',lawPage:'free-kicks/',
-  title:'Soccer Fouls and Free Kicks: Direct vs Indirect',h1:'Soccer fouls and free kicks: direct vs indirect',
+  title:'Soccer Fouls and Free Kicks for Kids: Direct vs Indirect',h1:'Soccer fouls and free kicks: direct vs indirect',
   desc:'Soccer fouls and free kicks in plain words for kids: which fouls give a direct or an indirect free kick, the 10-yard rule, the wall, and a clear diagram.',
   answer:'In soccer, a foul gives the other team a free kick from the place where it happened. A direct free kick can be shot straight into the goal, and an indirect free kick has to touch another player before a goal can count.',
   scenes:[{title:'A direct free kick and the wall',who:'10@50,72 8@38,70 9@64,88 !2@44,82 !4@48,82.5 !5@52,82.5 !6@56,82 !G@56,97 !3@70,90',ball:[50,73],zone:[38,73,62,82],passes:['50,73>40,99'],
@@ -213,6 +218,7 @@ export const RULES:readonly Rule[]=([
   faq:[{q:'What is the difference between a direct and an indirect free kick?',a:'A direct free kick can score without anyone else touching the ball. An indirect free kick must touch a second player first. If it goes straight in, the other team gets a goal kick.'},
    {q:'How do I know a free kick is indirect?',a:'The referee raises one arm straight up and keeps it there until the kick has been taken and the ball touches another player or goes out of play.'},
    {q:'How far back does the wall have to be?',a:'At least 9.15 metres, which is 10 yards, from the ball. In futsal the distance is 5 metres.'},
+   {q:'What are the most common fouls in soccer?',a:'Tripping, pushing, kicking or charging into an opponent, holding a shirt or an arm, a careless tackle and handball. Each gives a direct free kick, or a penalty kick if a defender does it inside their own penalty area.'},
    {q:'Is a slide tackle a foul?',a:'Not by itself in the Laws of the Game. It is a foul if it is careless, reckless or uses too much force. Youth leagues can add their own rule about slide tackles, so check yours.'}],
   lessonIds:['exp11_shortfreekick','expf_freekickbalance','trn_11_recover','def_7_goalside'],cta:'exp11_shortfreekick',exhibitIds:['free-kick-wall'],links:[L.cb,L.dm,L.gk]},
  // ---- penalty kick -------------------------------------------------------------------------------------------------------
@@ -240,9 +246,9 @@ export const RULES:readonly Rule[]=([
   lessonIds:['next7_shotreaction','expf_keeperposition','def_7_goalside'],cta:'next7_shotreaction',exhibitIds:['penalty-1891'],links:[L.gk,L.st,L.cb]},
  // ---- yellow and red cards -----------------------------------------------------------------------------------------------
  {slug:'yellow-and-red-cards',name:'Yellow and red cards',law:'Law 12',lawPage:'fouls-and-misconduct/',
-  title:'Yellow and Red Cards in Soccer, Explained for Kids',h1:'Yellow and red cards in soccer, explained for kids',
-  desc:'What yellow and red cards mean in soccer, in plain words for kids and parents: what earns each card, what happens next and how youth leagues handle them.',
-  answer:'In soccer, a yellow card is a warning and a red card sends a player off for the rest of the game. Two yellow cards for the same player in one game make a red card, and the team plays on with one player fewer.',
+  title:'Yellow and Red Cards in Soccer: What They Mean (for Kids)',h1:'Yellow and red cards in soccer, explained for kids',
+  desc:'What does a yellow card mean in soccer, and how do you get a red card? Plain answers for kids and parents: what earns each card and what happens next.',
+  answer:'In soccer, a yellow card is a warning from the referee, and a red card sends a player off for the rest of the game. A yellow is for things like a reckless foul or arguing, and a red is for serious foul play, violent conduct, stopping an obvious chance to score or a second yellow card.',
   scenes:[{title:'Stopping a clear chance to score',who:'9@52,74 7@80,66 8@40,58 !4@50,71 !5@28,72 !G@50,96',ball:[53,76],zone:[30,76,70,100],runs:['52,74>52,90'],
    caption:'Number 9 is through with only the goalkeeper ahead, and defender number 4 pulls number 9 back from behind. Stopping an obvious chance to score with a foul like this is a red card. The shaded space shows the open route to goal.'}],
   refs:['Yellow: a reckless foul, stopping a promising attack with a foul, arguing with the referee, delaying a restart, not giving the distance at a free kick, pretending to be fouled.',
@@ -255,15 +261,16 @@ export const RULES:readonly Rule[]=([
    {said:'“Cards are only for fouls.”',truth:'Cards are also for behavior: arguing, wasting time and unsporting acts.'}],
   formats:[['7v7 and 9v9','The same cards exist, but referees of young players usually talk first. Ask your league what happens after a card, such as missing the next game.'],
    ['11v11','Law 12 in full.'],['Futsal','Yellow and red cards are used in futsal too, and direct free kick fouls also count toward the team’s foul total.']],
-  faq:[{q:'How many yellow cards make a red card?',a:'Two in the same game. The referee shows the second yellow card and then the red card.'},
+  faq:[{q:'What does a yellow card mean in soccer?',a:'It is a caution: the referee is warning the player. The player stays on the field, but a second yellow card in the same game means a red card. Yellow cards are for things like a reckless foul, arguing with the referee, wasting time or not standing back at a free kick.'},
+   {q:'How do you get a red card in soccer?',a:'By a foul with far too much force (serious foul play), violent conduct, biting or spitting, insulting or abusive words or gestures, stopping a goal or an obvious chance to score with a handball or a foul, or a second yellow card in the same game.'},
+   {q:'How many yellow cards make a red card?',a:'Two in the same game. The referee shows the second yellow card and then the red card.'},
    {q:'Can a goalkeeper get a red card?',a:'Yes. A goalkeeper can be sent off like any other player. Every team must have a goalkeeper, so another player goes in goal and the team plays one short.'},
-   {q:'Does the referee stop the game to show a card?',a:'Not always. If the fouled team has a good attack, the referee can play advantage and show the card at the next stop.'},
    {q:'Can VAR change a card?',a:'Where video assistant referees are used, they can check straight red cards and a card shown to the wrong player. An ordinary yellow card is not one of the things they review.'}],
   lessonIds:['trn_11_recover','def_7_goalside','def_11_pressurecover'],cta:'trn_11_recover',exhibitIds:['var-2018','laws-1863'],links:[L.cb,L.dm,L.gk]},
  // ---- back-pass rule -----------------------------------------------------------------------------------------------------
  {slug:'back-pass-rule',name:'Back-pass rule',law:'Law 12',lawPage:'fouls-and-misconduct/',
-  title:'The Back-Pass Rule in Soccer, Explained for Kids',h1:'The back-pass rule in soccer, explained for kids',
-  desc:'The back-pass rule in soccer in plain words for kids and parents: when the goalkeeper may not pick the ball up and what is still allowed.',
+  title:'Back-Pass Rule in Soccer: Can the Goalkeeper Pick It Up?',h1:'The back-pass rule in soccer, explained for kids',
+  desc:'The back-pass rule in soccer (football) for kids and parents: when the goalkeeper may not pick up a pass back, what is still allowed, and the free kick.',
   answer:'In soccer, the goalkeeper may not touch the ball with the hands when a teammate deliberately kicks it to them or throws it to them from a throw-in. The goalkeeper has to play that ball with the feet, and picking it up gives the other team an indirect free kick.',
   scenes:[{title:'A pass back to the goalkeeper',who:'G@50,7 4@32,26 5@66,24 6@46,40 !9@40,32 !7@72,34',ball:[33,24],zone:[20.4,0,79.6,15.7],passes:['33,24>48,9','52,8>66,22'],
    caption:'Defender number 4 is under pressure and passes back with the foot. The goalkeeper may not pick this ball up, even inside the shaded penalty area, so the goalkeeper plays it with the feet to the free defender, number 5.'}],
@@ -277,7 +284,8 @@ export const RULES:readonly Rule[]=([
    {said:'“The keeper can hold the ball as long as they like.”',truth:'The current Laws give eight seconds. After that the other team gets a corner kick.'}],
   formats:[['7v7','The same rule. In the U.S. Soccer standards the 7v7 goalkeeper also may not punt or drop-kick, so passing with the feet starts early.'],['9v9 and 11v11','Law 12 in full.'],
    ['Futsal','Stricter. After playing the ball, the goalkeeper may not touch it again in their own half from a teammate’s deliberate pass until an opponent has touched it. The keeper also has only four seconds on the ball in their own half.']],
-  faq:[{q:'Can a goalkeeper pick up a back-pass?',a:'Not when a teammate deliberately kicks it to them. The keeper may pick up a ball that a teammate heads or chests back, or one that comes off a teammate by accident.'},
+  faq:[{q:'What is the back-pass rule in soccer?',a:'It is the part of Law 12 that stops a goalkeeper from handling the ball when a teammate deliberately kicks it to them, or throws it to them from a throw-in. The keeper has to play that ball with the feet, like any other player.'},
+   {q:'Can a goalkeeper pick up a back-pass?',a:'Not when a teammate deliberately kicks it to them. The keeper may pick up a ball that a teammate heads or chests back, or one that comes off a teammate by accident.'},
    {q:'Can the goalkeeper pick up a throw-in?',a:'Not a throw-in taken by a teammate and thrown straight to them. The keeper has to use the feet.'},
    {q:'What does the referee give for a back-pass?',a:'An indirect free kick to the other team, from the place where the goalkeeper touched the ball with the hands.'},
    {q:'Why does the back-pass rule exist?',a:'It keeps the game moving: a goalkeeper cannot simply pick the ball up every time a teammate passes back. It also means goalkeepers learn to pass, which our lessons practise.'}],
@@ -368,7 +376,7 @@ export const RULES:readonly Rule[]=([
   lessonIds:['trn_9_firstpass','trn_f_firstpass','trn_11_recover'],cta:'trn_9_firstpass',exhibitIds:['laws-1863'],links:[L.st,L.cm,L.old]},
  // ---- substitutions and game length --------------------------------------------------------------------------------------
  {slug:'substitutions-and-game-length',name:'Substitutions and game length',law:'Laws 3 and 7',lawPage:'the-players/',
-  title:'Soccer Substitutions and Game Length by Age',h1:'Soccer substitutions and game length by age',
+  title:'Soccer Substitution Rules and Game Length by Age',h1:'Soccer substitutions and game length by age',
   desc:'How long a soccer game lasts at each age and how substitutions work, in plain words for kids and parents: game times from U6 to U19 and the pro rules.',
   answer:'A full soccer game is two halves of 45 minutes, and in top competitions a team may use up to five substitutes who cannot come back on. Youth soccer plays shorter games and usually lets players go off and come back as often as the coach likes.',
   scenes:[{title:'A substitution',who:'7@98,62 14@103,50 9@50,70 8@44,52 4@40,24 !3@86,66 !6@52,58',ball:[101,36],zone:[94,47,106,53],runs:['103,50>94,50','98,62>103,62'],
@@ -419,9 +427,9 @@ export const RULES:readonly Rule[]=([
   lessonIds:['learn7_receive','learn9_receive','next7_shotreaction'],cta:'learn7_receive',links:[L.ages,L.f7,L.ball]},
  // ---- futsal rules -------------------------------------------------------------------------------------------------------
  {slug:'futsal-rules',name:'Futsal rules',law:'FIFA Futsal Laws of the Game',lawPage:'general-modifications/',
-  title:'Futsal Rules vs Soccer: Kick-In, 4 Seconds, Fouls',h1:'Futsal rules that are different from soccer',
-  desc:'How futsal rules differ from soccer, in plain words for kids and parents: the kick-in, the four-second rule, accumulated fouls, no offside and subs.',
-  answer:'Futsal is five-a-side soccer on a hard court, and it has its own Laws from FIFA. The biggest differences are a kick-in instead of a throw-in, four seconds to take every restart, no offside, and a count of each team’s fouls.',
+  title:'Futsal Rules vs Soccer Rules: The Key Differences',h1:'Futsal rules that are different from soccer',
+  desc:'Futsal rules and regulations vs soccer, in plain words for kids and parents: the kick-in, the four-second rule, accumulated fouls, no offside and subs.',
+  answer:'Futsal is five-a-side soccer on a hard court, and it has its own Laws from FIFA. The biggest differences are a kick-in instead of a throw-in, four seconds to take every restart, no offside, a count of each team’s fouls, and as many substitutions as a team likes, made on the fly.',
   scenes:[{format:'futsal',title:'A futsal kick-in',who:'A@0,58 P@30,78 F@40,30 A@82,60 G@50,5 !A@14,66 !F@42,70 !A@70,52 !G@50,95',ball:[1,59],zone:[0,49,24,69],passes:['2,58>38,32'],
    caption:'A gold ala takes a kick-in from the touchline, with the ball still and on the line. Opponents stay out of the shaded space, 5 m from the ball. The kick has to be taken within four seconds, and here it goes back to the fixo, marked F.'}],
   refs:['Kick-in: the ball is still, on the touchline where it went out, and opponents are 5 m away.','Four seconds: kick-ins, corner kicks, free kicks and goal clearances are taken within four seconds of the team being ready.',
@@ -435,15 +443,15 @@ export const RULES:readonly Rule[]=([
   formats:[['Players','Five a side, one of them the goalkeeper. Unlimited substitutions at any time, through the substitution zone.'],['Time','Two periods of 20 minutes of playing time. Youth leagues often shorten this.'],
    ['Ball','62 to 64 cm around and 400 to 440 g. Dropped from 2 m, it must not bounce higher than 65 cm.'],['Offside','None.'],
    ['Penalty marks','6 m for a penalty kick, 10 m for the free kick after a sixth foul.'],['Youth leagues','The Futsal Laws let a competition shorten the periods, and youth leagues often do. Check your league’s rules.']],
-  faq:[{q:'What is the four-second rule in futsal?',a:'A team has four seconds to take a kick-in, corner kick, free kick or goal clearance once it is ready. The goalkeeper also has only four seconds on the ball in their own half.'},
+  faq:[{q:'How are futsal rules different from soccer rules?',a:'Futsal is five a side on a hard court, with a smaller ball that bounces less. The ball is kicked in instead of thrown in, every restart must be taken within four seconds, there is no offside, and substitutions are unlimited and made on the fly.'},
+   {q:'What is the four-second rule in futsal?',a:'A team has four seconds to take a kick-in, corner kick, free kick or goal clearance once it is ready. The goalkeeper also has only four seconds on the ball in their own half.'},
    {q:'What are accumulated fouls in futsal?',a:'Each direct free kick foul is added to the team’s count for that period. From the sixth, the other team gets a direct free kick with no wall, usually from the 10 m mark.'},
    {q:'Is there offside in futsal?',a:'No. The Futsal Laws say there is no offside.'},
-   {q:'Is a futsal ball smaller than a soccer ball?',a:'Yes. A futsal ball is 62 to 64 cm around. A full-size soccer ball is 68 to 70 cm. The futsal ball is also made to bounce less.'},
-   {q:'Can a futsal goalkeeper score by throwing the ball?',a:'Not by throwing. If the goalkeeper throws the ball straight into the other goal, the other team gets a goal clearance.'}],
+   {q:'Is a futsal ball smaller than a soccer ball?',a:'Yes. A futsal ball is 62 to 64 cm around. A full-size soccer ball is 68 to 70 cm. The futsal ball is also made to bounce less.'}],
   lessonIds:['set_f_throwin','expf_kickinthird','expf_cornercutback','expf_freekickbalance','expf_keeperrelease'],cta:'set_f_throwin',exhibitIds:['futsal-1989'],links:[L.fs,L.fs22,L.gk]},
 ] as Raw[]).map(make);
 export const ruleBySlug=(slug:string)=>RULES.find(r=>r.slug===slug);
-export const RULE_SOURCE_LINE='Sources: IFAB Laws of the Game (current edition), U.S. Soccer small-sided standards, US Youth Soccer playing rules (December 2025) and the FIFA Futsal Laws of the Game 2025-26. Checked on November 10, 2026.';
+export const RULE_SOURCE_LINE=`Sources: IFAB Laws of the Game (current edition), U.S. Soccer small-sided standards, US Youth Soccer playing rules (December 2025) and the FIFA Futsal Laws of the Game 2025-26. Checked on ${longDate(FAMILY_CHECKED.rules)}.`;
 export const RULE_LEAGUE_LINE=LEAGUE;
 /** The futsal law source for the futsal page (the other pages cite their IFAB Law). */
 export const FUTSAL_LAWS_URL='https://the-aiff.com/media/uploads/2025/09/Futsal-Laws-of-the-Game-2025-2026_EN.pdf';

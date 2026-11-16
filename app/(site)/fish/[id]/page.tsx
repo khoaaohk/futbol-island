@@ -8,6 +8,8 @@ import {sourceLabel} from '@/lib/site/cardNotes';
 import {fishRelated} from '@/lib/site/related';
 import {abs,PUBLISHER,breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta} from '@/lib/site/seo';
 import {SITE_PUBLISHED,SITE_UPDATED} from '@/lib/site/updated';
+import {checkedOn} from '@/lib/site/checked';
+import {CheckedLine} from '@/lib/site/GuideParts';
 import styles from '../../site.module.css';
 
 /** One Fishbook species. Art: the game's own drawing (components/FishArt.tsx), since Nov 10 2026 as a real picture built at build
@@ -57,6 +59,7 @@ export default function FishPage({params}:{params:{id:string}}){
    <p><b>Where it lives:</b> {note.lives}</p>
    <p>{note.fact}</p>
    <p className={styles.caption}>Checked against: {[...new Set(note.src.map(sourceLabel))].join(', ')}.</p>
+   <CheckedLine date={checkedOn('fish',note.checked)}/>
   </section>}
   <section className={styles.card} aria-labelledby="story">
    <span className={styles.label} id="story">Island story</span>

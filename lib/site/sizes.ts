@@ -1,5 +1,6 @@
 import {lessonById,type SiteLesson} from './lessons';
 import type {Faq} from './safety';
+import {FAMILY_CHECKED,longDate} from './checked';
 /**
  * The SIZE CHARTS (SEO cluster 2, Nov 10 2026): /learn/soccer-ball-size-by-age, /learn/soccer-field-size-by-age and
  * /learn/soccer-age-groups. Parents search these before buying a ball or signing a child up, so the tables must be right and
@@ -33,7 +34,7 @@ import type {Faq} from './safety';
  * them in a diagram that the text copy does not carry), field sizes for U13 to U19 other than the Laws' full-size range.
  */
 export const SIZES_SEASON='2026-27';
-export const SIZES_CHECKED='November 10, 2026';
+export const SIZES_CHECKED=longDate(FAMILY_CHECKED.sizes);
 export type Table={id:string;title:string;intro?:string;head:string[];rows:string[][];note:string};
 export type ChartSection={id:string;title:string;items:string[]};
 export type ChartPage={slug:string;path:string;crumb:string;blurb:string;title:string;h1:string;description:string;lead:string;more:string;tables:Table[];sections:ChartSection[];fields?:boolean;

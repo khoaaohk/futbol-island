@@ -5,7 +5,8 @@ import {TERMS_HUB,TERM_PAGES,termBySlug} from '@/lib/site/terms';
 import {RULES_HUB} from '@/lib/site/rules';
 import {drillLinksFor} from '@/lib/site/drills';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
-import {Bullets,CoachNotesSection,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {FAMILY_CHECKED} from '@/lib/site/checked';
+import {CheckedLine,Bullets,CoachNotesSection,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import {lessonPath} from '@/lib/site/lessons';
 import {PLAY_PATH,abs,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -44,6 +45,7 @@ export default function TermPage({params}:{params:{slug:string}}){
   {drillLinksFor(t.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(t.path)}/></Section>}
   <Section id="related" title="Related soccer terms"><LinkList links={related}/></Section>
   <p className={styles.caption}>{GUIDE_FOOT}</p>
+  <CheckedLine date={FAMILY_CHECKED.terms}/>
   <p className={styles.end}>{t.cta?<a className={styles.cta} href={lessonPath(t.cta.id)}>Play the lesson: {t.cta.title}</a>:<a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>}</p>
  </>;
 }

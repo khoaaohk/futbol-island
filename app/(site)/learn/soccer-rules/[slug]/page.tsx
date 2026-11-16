@@ -5,7 +5,8 @@ import {FUTSAL_LAWS_URL,RULES,RULES_HUB,RULE_LEAGUE_LINE,RULE_SOURCE_LINE,ruleBy
 import {TERMS_HUB} from '@/lib/site/terms';
 import {drillLinksFor} from '@/lib/site/drills';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
-import {Bullets,CoachNotesSection,DataTable,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {FAMILY_CHECKED} from '@/lib/site/checked';
+import {CheckedLine,Bullets,CoachNotesSection,DataTable,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import {lessonPath} from '@/lib/site/lessons';
 import {PLAY_PATH,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -57,6 +58,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   {drillLinksFor(r.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(r.path)}/></Section>}
   <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
   <p className={styles.caption}>{GUIDE_FOOT}</p>
+  <CheckedLine date={FAMILY_CHECKED.rules}/>
   <p className={styles.end}>{r.cta?<a className={styles.cta} href={lessonPath(r.cta.id)}>Play the lesson: {r.cta.title}</a>:<a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>}</p>
  </>;
 }

@@ -6,7 +6,7 @@ import {scene,type RawScene,type Scene} from './scenes';
  * its own under /learn/soccer-terms/<slug> only for the terms people search for and that can carry a diagram and 250+ useful
  * words. All words live here; the two routes only render.
  *
- * SOURCES (checked Nov 10 2026):
+ * SOURCES (checked Nov 10 2026; answers and FAQs re-checked Nov 15 2026, the rule words against theifab.com Law 12):
  *  - Wording first from the repo: lib/learning/conceptMap.ts (one-two / wall pass, third-man, overlap and underlap, switch of
  *    play, support angle, width, 2v1, press and cover, goal side, win it / lose it, through ball, cut-back, far post, pivot) and
  *    the lessons those concepts point to in public/lessons/*.json (s_onetwo, learn9_wall, f_pared, e_thirdman, next7_outsideback,
@@ -73,7 +73,7 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'Is an overlap risky?',a:'It leaves a space behind the runner. Good teams have a midfielder or the other fullback ready to cover it.'}],
   lessonIds:['next7_outsideback','nx9_fourthrunner','exp11_insidefullback'],related:['two-v-one','cross','give-and-go','cutback']},
 
- {slug:'through-ball',name:'Through Ball',also:'through pass',short:'A pass played between or behind the defenders into space, for a teammate to run on to.',
+ {slug:'through-ball',title:'What Is a Through Ball in Soccer? Meaning for Kids',name:'Through Ball',also:'through pass',short:'A pass played between or behind the defenders into space, for a teammate to run on to.',
   desc:'The through ball in soccer explained for kids: a pass into the space behind the defenders for a runner, with a diagram, timing tips, mistakes and lessons.',
   answer:'A through ball in soccer is a pass played between or behind the defenders into open space, for a teammate to run on to. The pass goes where the runner will be, not to their feet, and the runner must be onside when the ball is played.',
   scene:{title:'A through ball',who:'10@46,56 9@58,70 7@84,64 !4@42,72 !5@62,72 !G@50,96',ball:[47,57],lineY:72,lineWord:'offside line',passes:['47,57>52,86'],runs:['58,70>53,86'],
@@ -82,7 +82,8 @@ export const TERM_PAGES:readonly TermPage[]=([
    'The pass is firm enough to get through and soft enough that the goalkeeper cannot reach it first.','The runner stays level with the second-last defender until the ball leaves the passer’s foot.'],
   mistakes:['Running too early and being offside when the pass is played.','Passing to feet when the runner is already moving, which stops the attack.','Hitting it too hard, so it runs through to the goalkeeper.'],
   formats:'Offside matters for this pass in 7v7 (past the build-out line), 9v9 and 11v11. Futsal has no offside, so the same idea is a pass into the corner for a running teammate.',
-  faq:[{q:'What is the difference between a through ball and a long ball?',a:'A through ball goes through or behind the defense for a runner, and can be short. A long ball is any long pass, often in the air.'},
+  faq:[{q:'What makes a good through ball?',a:'The right speed and the right moment: firm enough to get past the defenders, soft enough that the goalkeeper cannot reach it first, and played just as the runner starts to move.'},
+   {q:'What is the difference between a through ball and a long ball?',a:'A through ball goes through or behind the defense for a runner, and can be short. A long ball is any long pass, often in the air.'},
    {q:'How do you stay onside for a through ball?',a:'Stay level with or behind the second-last opponent until your teammate plays the ball. Then run.'},
    {q:'Who plays through balls?',a:'Any player can, but attacking midfielders play many of them because they face the goal with runners ahead.'}],
   lessonIds:['gap11_runoncue','f_paralela','bld_11_throughlines'],related:['give-and-go','third-man-run','counterattack','first-touch']},
@@ -103,7 +104,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   lessonIds:['learn9_switch','e_switch','expf_switchblock'],related:['overlap','third-man-run','first-touch','cross']},
 
  {slug:'two-v-one',name:'2v1',also:'two against one',short:'Two attackers against one defender. The player with the ball dribbles at the defender, then passes if the defender comes or keeps going if they do not.',
-  title:'2v1 in Soccer: How Two Attackers Beat One Defender',h1:'What is a 2v1 in soccer?',
+  title:'2v1 in Soccer: Meaning and How to Play It',h1:'What is a 2v1 in soccer?',
   desc:'The 2v1 in soccer explained for kids: how two attackers beat one defender by carrying the ball and choosing pass or dribble, with a diagram and lessons.',
   answer:'A 2v1 in soccer is a moment when two attackers face one defender. The player with the ball dribbles at the defender: if the defender comes to the ball, pass to the teammate, and if the defender stays with the teammate, keep going.',
   scene:{title:'A 2v1',who:'7@44,58 9@62,60 !4@50,70 !G@50,96',ball:[45,59],runs:['44,58>46,68','62,60>62,80'],passes:['46,68>62,79'],
@@ -112,12 +113,13 @@ export const TERM_PAGES:readonly TermPage[]=([
    'Watch the defender’s feet. If they step to you, pass. If they back away, carry on.','Pass before you are close enough to be tackled, and in front of your teammate.'],
   mistakes:['Passing too early, so the defender simply moves across to the receiver.','The two attackers running close together, where one defender can stop both.','The teammate running ahead of the ball into an offside position.'],
   formats:'A 2v1 is the smallest team move, so it appears in every game. In futsal a counterattack is very often a 2v1, and the lone defender tries to slow it down until a teammate gets back.',
-  faq:[{q:'What does 2v1 mean in soccer?',a:'Two attackers against one defender. You may also see 3v2 or 1v1: the first number is the team with the ball.'},
+  faq:[{q:'How do you practice a 2v1?',a:'Mark out a small channel with one defender in it and a line or a small goal at the end. Two attackers start together and try to get past with a pass or a dribble. Swap roles after every turn, so everyone defends too.'},
+   {q:'What does 2v1 mean in soccer?',a:'Two attackers against one defender. You may also see 3v2 or 1v1: the first number is the team with the ball.'},
    {q:'How does one defender stop a 2v1?',a:'By slowing it down: staying between the two attackers and the goal without diving in, until a teammate comes back to help.'},
    {q:'How do you make a 2v1?',a:'With an overlap, a give-and-go, or by running forward quickly after winning the ball.'}],
   lessonIds:['learn9_two_one','learn7_carry','expf_2v1','expf_delay2v1'],related:['overlap','give-and-go','counterattack','goal-side']},
 
- {slug:'cutback',name:'Cutback',also:'cut-back, pull-back',short:'A pass from near the goal line back toward a teammate arriving in front of goal.',
+ {slug:'cutback',title:'What Is a Cutback in Soccer? Cut Back Meaning for Kids',name:'Cutback',also:'cut-back, pull-back',short:'A pass from near the goal line back toward a teammate arriving in front of goal.',
   desc:'The cutback in soccer explained for kids: a pass from near the goal line back to a teammate arriving in front of goal, with a diagram, steps and lessons.',
   answer:'A cutback in soccer is a pass from near the goal line back toward a teammate who is arriving in front of the goal. Defenders are running toward their own goal, so the space just behind them is open for a shot.',
   scene:{title:'A cutback',who:'7@82,95 8@52,80 9@46,95 !3@76,93 !4@48,93 !5@58,95 !G@54,98',ball:[81,94],passes:['81,94>54,82'],runs:['52,74>52,81'],zone:[40,78,64,88],
@@ -126,7 +128,8 @@ export const TERM_PAGES:readonly TermPage[]=([
    'The pass goes back along the ground, away from the goalkeeper.','The shot is taken first time if possible, before the defenders can turn around.'],
   mistakes:['Every attacker running to the goal line, so nobody is in the space for the cutback.','Crossing into a crowd when the pass back is free.','Playing the cutback when a defender is already standing in that route. It is useful only when the pass is there.'],
   formats:'It works the same way in 7v7, 9v9 and 11v11. In futsal it is a favorite play from a corner kick: a near-post run pulls a defender and the ball is cut back to a deeper player.',
-  faq:[{q:'What is the difference between a cutback and a cross?',a:'A cross goes into the area in front of the goal, often in the air. A cutback goes backward along the ground to a player arriving behind the defenders.'},
+  faq:[{q:'Who plays a cutback in soccer?',a:'Usually a winger or a fullback who has run to the goal line beside the penalty area. A striker or a midfielder scores from it by arriving late, around the penalty mark.'},
+   {q:'What is the difference between a cutback and a cross?',a:'A cross goes into the area in front of the goal, often in the air. A cutback goes backward along the ground to a player arriving behind the defenders.'},
    {q:'Why do cutbacks lead to goals?',a:'The defenders are facing their own goal and moving backward, and the shooter is facing the goal and moving forward.'},
    {q:'Can you be offside from a cutback?',a:'Not if you are behind the ball when it is passed. A player level with or behind the ball is not in an offside position.'}],
   lessonIds:['learn11_cutback','expf_cornercutback','learnf_farpost'],related:['cross','overlap','two-v-one','set-piece']},
@@ -148,7 +151,7 @@ export const TERM_PAGES:readonly TermPage[]=([
  {slug:'first-touch',name:'First Touch',also:'receiving, control',short:'The touch you take as the ball arrives. A good one puts the ball where you want to play next.',
   title:'First Touch in Soccer: What It Is, for Kids',h1:'What is a first touch in soccer?',
   desc:'First touch in soccer explained for kids: how to receive the ball so the next move is easy, look before it arrives, with a diagram, steps and free lessons.',
-  answer:'A first touch in soccer is the touch a player takes when the ball arrives. A good first touch moves the ball into space, away from the nearest defender, so the next pass, dribble or shot is easy.',
+  answer:'A first touch in soccer is the touch a player takes when the ball arrives. A good first touch moves the ball into space, away from the nearest defender, so the next pass, dribble or shot is easy. Players with a good first touch look around before the ball arrives, so they already know where to put it.',
   scene:{title:'A first touch into space',who:'6@40,40 8@52,56 7@80,60 !8@50,62 !6@66,52',ball:[41,41],passes:['41,41>51,55'],runs:['52,56>42,60'],zone:[30,54,46,68],
    caption:'Number 8 looks over the shoulder before the pass arrives and sees an opponent close behind on the right. The first touch takes the ball to the left, into the shaded space, away from that opponent.'},
   howTitle:'How to take a good first touch',how:['Look around before the ball comes: over one shoulder, then the other.','Decide early. If there is room, turn. If a defender is close, play back or to the side.',
@@ -193,7 +196,7 @@ export const TERM_PAGES:readonly TermPage[]=([
  {slug:'goal-side',name:'Goal-Side',also:'goal side, goalside',short:'Standing between an attacker and your own goal.',
   title:'Goal-Side in Soccer: What It Means, for Kids',h1:'What does goal-side mean in soccer?',
   desc:'Goal-side in soccer explained for kids: why defenders stand between the attacker and their own goal, with a diagram, how to do it, mistakes and lessons.',
-  answer:'Goal-side in soccer means standing between an attacker and your own goal. A defender who is goal-side is in the way of the shot and of the run, and can step forward to win the ball.',
+  answer:'Goal-side in soccer means standing between an attacker and your own goal. A defender who is goal-side is in the way of the shot and of the run, and can step forward to win the ball. Coaches shout it when an attacker gets free, so the defender runs back onto the line between that attacker and the goal.',
   scene:{title:'Goal-side and not goal-side',who:'!9@40,42 !7@70,44 4@42,34 3@74,50 G@50,5',ball:[52,60],zone:[30,0,70,30],
    caption:'The other team attacks down the picture toward the gold goal. Gold number 4 is goal-side of the striker: between that player and the goal. Gold number 3 is on the wrong side of the winger, who has a free run into the shaded space.'},
   howTitle:'How to get goal-side',how:['When your team loses the ball, run toward your own goal first, not toward the ball.','Get between your opponent and the goal, then turn to face the play.',
@@ -275,7 +278,7 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'What is the difference between a clean sheet and a shutout?',a:'None. Shutout is the word used in American sports, and clean sheet is the word used in most soccer countries.'}],
   lessonIds:['def_7_goalside','def_11_pressurecover','expf_keeperposition','gap7_lostball'],related:['goal-side','marking','pressing','hat-trick']},
 
- {slug:'hat-trick',name:'Hat-Trick',also:'hat trick',short:'Three goals scored by one player in one game.',
+ {slug:'hat-trick',title:'What Is a Hat-Trick in Soccer? Meaning and Rules',name:'Hat-Trick',also:'hat trick',short:'Three goals scored by one player in one game.',
   desc:'A hat-trick in soccer explained for kids: three goals by one player in one game, what counts, what a brace is and the runs that lead to goals.',
   answer:'A hat-trick in soccer is three goals scored by the same player in one game. The goals can come at any time and in any way, with either foot or from a penalty kick, and two goals in a game is called a brace.',
   scene:{title:'Three places goals come from',who:'9@44,90 9@58,88 9@52,82 7@88,86 !4@48,93 !5@60,93 !G@52,98',ball:[87,87],passes:['87,87>45,91','87,87>58,89','87,87>52,83'],
@@ -284,7 +287,8 @@ export const TERM_PAGES:readonly TermPage[]=([
    'Follow every shot in. The goalkeeper may drop the ball or push it back out.','Stay onside by timing your run with the pass.'],
   mistakes:['Shooting from anywhere to reach three goals when a teammate has an open goal.','Counting goals instead of helping the team defend.','Standing next to the goalkeeper, where the ball rarely arrives.'],
   formats:'A hat-trick means three goals in every form of the game, futsal included. In 4v4 games for the youngest players the U.S. Soccer standards say results should not be recorded, so the count matters less than the fun of scoring.',
-  faq:[{q:'How many goals is a hat-trick?',a:'Three, by one player, in one game.'},
+  faq:[{q:'What is a perfect hat-trick?',a:'A hat-trick with one goal from the left foot, one from the right foot and one header. It is a nickname, not a rule, and an ordinary hat-trick is just as good.'},
+   {q:'How many goals is a hat-trick?',a:'Three, by one player, in one game.'},
    {q:'Do penalty kicks count for a hat-trick?',a:'Yes. A goal from a penalty kick during the game is a goal like any other.'},
    {q:'What is a brace in soccer?',a:'Two goals by one player in one game.'}],
   lessonIds:['next7_shotreaction','learnf_farpost','gap11_runoncue'],related:['cross','cutback','through-ball','clean-sheet']},
@@ -380,10 +384,10 @@ if(new Set(GLOSSARY.map(g=>g.id)).size!==GLOSSARY.length)throw new Error('glossa
 const letterOf=(g:GlossaryEntry)=>/^\d/.test(g.term)?'T':g.term[0].toUpperCase();
 export const GLOSSARY_LETTERS=[...new Set(GLOSSARY.map(letterOf))].sort().map(letter=>({letter,terms:GLOSSARY.filter(g=>letterOf(g)===letter)}));
 export const TERMS_HUB={path:TERMS_HUB_PATH,crumb:'Soccer terms',blurb:`${GLOSSARY.length} soccer words in plain English, from advantage to yellow card, ${TERM_PAGES.length} with a diagram`,
- title:'Soccer Terms for Kids: A-Z Glossary of Soccer Words',
- description:`${GLOSSARY.length} soccer terms explained for kids and parents in plain English, A to Z: positions, rules, moves and slang, with diagrams for the key ideas.`,
+ title:'Soccer Terms A to Z: Glossary of Soccer Words for Kids',
+ description:`Soccer terms A to Z for kids and parents: ${GLOSSARY.length} soccer words in plain English, from positions and rules to moves and slang, with diagrams.`,
  h1:'Soccer terms for kids: an A-Z glossary',
- lead:`Soccer has its own words, and a new player or parent hears most of them in the first season. This glossary explains ${GLOSSARY.length} of them in plain English, from advantage to yellow card.`,
+ lead:`Soccer terms are the words players, coaches and referees use for the game’s rules, positions and moves. This A to Z glossary explains ${GLOSSARY.length} of them in plain English, from advantage to yellow card, so a new player or parent can follow any practice or game from the first season.`,
  more:`${TERM_PAGES.length} of the terms have a page of their own, with a diagram and the steps to do it on the field. Words that are rules link to the rule, and positions link to the position.`,
  faq:[{q:'What are the basic soccer terms a beginner should know?',a:'Start with the restarts (kick-off, throw-in, goal kick, corner kick), the areas (penalty area, goal area, touchline) and four ideas: pass, dribble, mark and support.'},
   {q:'Why do some people say pitch and others say field?',a:'They mean the same place. Pitch, kit, boots and nil are British words. Field, uniform, cleats and zero are the American ones.'},

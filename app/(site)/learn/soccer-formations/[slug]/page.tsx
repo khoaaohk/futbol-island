@@ -4,6 +4,7 @@ import {QA} from '@/components/site/LessonHub';
 import {FORMATIONS,FORMATIONS_HUB,formationBySlug,formationsIn,formatGuide,withKeeper} from '@/lib/site/formations';
 import {POSITIONS_HUB,positionPath} from '@/lib/site/positions';
 import {formationImage,guideCrumbs} from '@/lib/site/guides';
+import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
 import {lessonById,lessonPath} from '@/lib/site/lessons';
 import {PLAYERS_PER_TEAM} from '@/lib/site/pitch';
@@ -61,6 +62,6 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <CoachNotesSection name={f.name} notes={FORMATION_NOTES[f.slug]}/>
   <Section id="lessons" title="Lessons that teach this shape"><LessonList lessons={f.lessons}/></Section>
   <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
-  <GuideEnd/>
+  <GuideEnd checked={FAMILY_CHECKED.formations}/>
  </>;
 }

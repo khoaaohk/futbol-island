@@ -13,6 +13,7 @@ import type {Faq} from './safety';
  *  - IFAB Laws of the Game: Law 3 (each team has a goalkeeper), Law 4 (the goalkeeper wears colours that are different from
  *    the other players and the match officials), Law 12 (the goalkeeper may handle the ball inside their own penalty area,
  *    but not from a deliberate kick or a throw-in by a teammate): https://www.theifab.com/laws/latest/
+ *    Answers re-checked Nov 15 2026 (the same sources; no new facts beyond the page's own sections).
  *    Re-checked against theifab.com on Nov 10 2026 (Laws 3, 4 and 12; sources in lib/site/rules.ts). One wording fix: the
  *    back-pass rule is about a ball DELIBERATELY KICKED to the keeper by a teammate (or thrown from a throw-in), not any pass back.
  *  - U.S. Soccer small-sided standards (7v7 keepers do not punt; build-out line): see lib/site/formations.ts.
@@ -25,7 +26,7 @@ import type {Faq} from './safety';
  * No statistics, no named players in the text, no claims about what professionals "always" do.
  */
 export type Habit={name:string;how:string};
-export type Position={slug:string;path:string;name:string;short:string;numbers:string;numberLine:string;title:string;h1:string;desc:string;job:string;suits:string;
+export type Position={slug:string;path:string;name:string;short:string;numbers:string;numberLine:string;title:string;h1:string;desc:string;answer:string;job:string;suits:string;
  where:string;diagram:string;withBall:string[];withoutBall:string[];habits:Habit[];small:string;faq:Faq[];lessons:SiteLesson[];cardRole:string;cardSkip:number;cardNote:string};
 export const POSITIONS_HUB_PATH='/learn/soccer-positions';
 export const positionPath=(slug:string)=>`${POSITIONS_HUB_PATH}/${slug}`;
@@ -34,7 +35,7 @@ type Raw=Omit<Position,'path'|'lessons'>&{lessonIds:string[]};
 const make=({lessonIds,...p}:Raw):Position=>({...p,path:positionPath(p.slug),lessons:pick(lessonIds)});
 
 export const POSITIONS:readonly Position[]=[
- {slug:'goalkeeper',name:'Goalkeeper',short:'GK',numbers:'1',numberLine:'The goalkeeper is number 1 in the old 1 to 11 system.',
+ {slug:'goalkeeper',answer:'A goalkeeper in soccer guards the goal and is the only player allowed to use their hands, but only inside their own penalty area. The keeper stops shots, catches crosses, tells the defenders where to stand and starts attacks with a roll, a throw or a pass. The goalkeeper usually wears number 1.',name:'Goalkeeper',short:'GK',numbers:'1',numberLine:'The goalkeeper is number 1 in the old 1 to 11 system.',
   title:'Soccer Goalkeeper: What the Position Does, for Kids',h1:'Goalkeeper in soccer',
   desc:'What a soccer goalkeeper does, explained for kids: where the keeper stands, the job with and without the ball, three habits to practise and the number 1.',
   job:'The goalkeeper is the one soccer player who may use their hands, and the job is to keep the ball out of the goal and to start the team’s attacks.',
@@ -53,8 +54,8 @@ export const POSITIONS:readonly Position[]=[
    {q:'Why does the goalkeeper wear a different color?',a:'So the referee and the players can tell who is allowed to handle the ball. The Laws of the Game say the keeper’s colors must be different from the other players and the officials.'},
    {q:'Should young children play goalkeeper all the time?',a:'Most coaches rotate the job at young ages. Every keeper needs good feet, and every outfield player learns from a turn in goal.'}],
   lessonIds:['bld_7_usekeeper','bld_9_usekeeper','learn11_restart','learn7_buildout'],cardRole:'goalkeeper',cardSkip:0,cardNote:'Goalkeepers in the Futbol Island card binder.'},
- {slug:'center-back',name:'Center back',short:'CB',numbers:'4 and 5',numberLine:'Center backs usually wear 4 and 5. In some countries they are 5 and 6.',
-  title:'Center Back in Soccer: What the Position Does',h1:'Center back in soccer',
+ {slug:'center-back',answer:'A center back in soccer is a defender who plays in the middle, right in front of their own goal. Center backs mark the other team’s striker, block shots, win tackles, clear danger and start attacks with calm passes. Most teams play two center backs side by side, often wearing numbers 4 and 5.',name:'Center back',short:'CB',numbers:'4 and 5',numberLine:'Center backs usually wear 4 and 5. In some countries they are 5 and 6.',
+  title:'Center Back (Centerback) in Soccer: What the Position Does',h1:'Center back in soccer',
   desc:'What a center back does in soccer, explained for kids: where they stand, the job with and without the ball, three habits to practise and shirt numbers.',
   job:'A center back is a soccer defender who plays in the middle of the back line, and the job is to protect the space in front of the goal.',
   suits:'It suits calm players who read the game early, enjoy winning the ball and are happy to talk to teammates.',
@@ -71,7 +72,7 @@ export const POSITIONS:readonly Position[]=[
    {q:'Do center backs need to be tall?',a:'Height helps with high balls, but reading the game matters more. A center back who stands in the right place early wins the ball without needing to jump or race.'},
    {q:'Is sweeper the same as center back?',a:'A sweeper is an older kind of center back who plays behind the other defenders to clear up loose balls. Most teams today ask the center backs to cover for each other instead.'}],
   lessonIds:['learn9_shape','learn9_cover','def_11_pressurecover','next9_spareback','def_7_goalside'],cardRole:'centerback',cardSkip:0,cardNote:'Center backs in the Futbol Island card binder.'},
- {slug:'fullback',name:'Fullback',short:'LB / RB',numbers:'2 and 3',numberLine:'The right back is usually 2 and the left back is 3.',
+ {slug:'fullback',answer:'A fullback in soccer is a defender who plays on one side of the field, as the left back or the right back. Fullbacks stop the other team’s wingers, cover behind the center backs and run forward on the outside to join attacks. In the classic numbers the right back is 2 and the left back is 3.',name:'Fullback',short:'LB / RB',numbers:'2 and 3',numberLine:'The right back is usually 2 and the left back is 3.',
   title:'Fullback in Soccer: Left Back and Right Back Explained',h1:'Fullback in soccer',
   desc:'What a fullback does in soccer, for kids: the left back and right back defend the sides and join attacks. Where they stand, habits to practise, numbers.',
   job:'A fullback is a soccer defender who plays on the left or right side of the back line: the left back and the right back.',
@@ -89,7 +90,7 @@ export const POSITIONS:readonly Position[]=[
    {q:'What is an inverted fullback?',a:'A fullback who moves inside, into midfield, when the team has the ball. It works when the winger stays wide, so the two are not in the same lane.'},
    {q:'Is fullback a defending or an attacking position?',a:'Both. The first job is to defend the side. But a fullback also gives the team width and supports attacks, so it is one of the busiest positions.'}],
   lessonIds:['exp11_insidefullback','next7_outsideback','learn11_shape','nx9_fourthrunner'],cardRole:'fullback',cardSkip:0,cardNote:'Full-backs in the Futbol Island card binder.'},
- {slug:'wingback',name:'Wingback',short:'LWB / RWB',numbers:'2 and 3',numberLine:'Wingbacks often keep the fullback numbers, 2 and 3.',
+ {slug:'wingback',answer:'A wingback in soccer is a wide player who does two jobs on one side of the field: defending like a fullback and attacking like a winger. Wingbacks play in formations with three center backs, such as the 3-5-2, and they run up and down the touchline more than almost anyone else on the team.',name:'Wingback',short:'LWB / RWB',numbers:'2 and 3',numberLine:'Wingbacks often keep the fullback numbers, 2 and 3.',
   title:'Wingback in Soccer: What It Is and What It Does',h1:'Wingback in soccer',
   desc:'What a wingback is in soccer, for kids: a wide player outside three center backs who attacks like a winger and defends like a fullback. Diagram and tips.',
   job:'A wingback is a soccer player who covers one whole side of the field, attacking like a winger and defending like a fullback.',
@@ -107,8 +108,8 @@ export const POSITIONS:readonly Position[]=[
    {q:'Which formations use wingbacks?',a:'Formations with three center backs, such as the 3-5-2. When the wingbacks drop back to defend, the same team looks like a 5-3-2.'},
    {q:'Is wingback a hard position?',a:'It is the hardest running job on the team. A wingback has to get forward to attack and back to defend, again and again.'}],
   lessonIds:['exp11_wingbackcue','exp11_checking8','def_11_shift'],cardRole:'fullback',cardSkip:6,cardNote:'The card binder files wing-backs with the full-backs. Here are more full-backs.'},
- {slug:'defensive-midfielder',name:'Defensive midfielder',short:'DM',numbers:'6',numberLine:'The defensive midfielder is often called the 6. In some countries the same job wears 4.',
-  title:'Defensive Midfielder in Soccer: What Does a 6 Do?',h1:'Defensive midfielder in soccer',
+ {slug:'defensive-midfielder',answer:'A defensive midfielder in soccer, often called the number 6 or the holding midfielder, plays just in front of the defenders. The 6 blocks passes through the middle, wins the ball back and covers for teammates who go forward. With the ball, the 6 is the safe pass that moves the attack from one side to the other.',name:'Defensive midfielder',short:'DM',numbers:'6',numberLine:'The defensive midfielder is often called the 6. In some countries the same job wears 4.',
+  title:'Defensive Midfielder (Defensive Mid) in Soccer: the 6',h1:'Defensive midfielder in soccer',
   desc:'What a defensive midfielder (the number 6) does in soccer, for kids: where the holder stands, jobs with and without the ball, and three habits to practise.',
   job:'A defensive midfielder is a soccer player who stays in front of the defenders, to protect them and to link them with the rest of the team.',
   suits:'It suits patient players who like to pass, look around a lot and are happy to stay behind the ball while others attack.',
@@ -125,7 +126,7 @@ export const POSITIONS:readonly Position[]=[
    {q:'What is a holding midfielder?',a:'Another name for the defensive midfielder. The player holds a place in front of the defenders instead of running forward with the attack.'},
    {q:'What is a double pivot?',a:'Two holding midfielders playing side by side, as in a 4-2-3-1. One can step forward while the other stays.'}],
   lessonIds:['next9_singleholder','exp11_droppingnine','trn_11_restdefense','gap7_lostball'],cardRole:'midfielder',cardSkip:0,cardNote:'The card binder keeps all midfielders in one group. These are midfielders of every kind.'},
- {slug:'central-midfielder',name:'Central midfielder',short:'CM',numbers:'8',numberLine:'The central midfielder is often called the 8.',
+ {slug:'central-midfielder',answer:'A central midfielder in soccer, often called a center mid or the number 8, plays in the middle of the field between the defenders and the forwards. The 8 helps at both ends: defending, linking the team with short passes and running forward to support attacks. Center mids need fitness, a good first touch and quick eyes.',name:'Central midfielder',short:'CM',numbers:'8',numberLine:'The central midfielder is often called the 8.',
   title:'What Does a Center Mid Do? Soccer Position for Kids',h1:'Central midfielder in soccer',
   desc:'What a center mid does in soccer, explained for kids: the central midfielder links defense and attack. Where they stand, habits to practise, the number 8.',
   job:'A central midfielder, or center mid, is the soccer player in the middle of the field who links the defense to the attack.',
@@ -143,7 +144,7 @@ export const POSITIONS:readonly Position[]=[
    {q:'What is a box-to-box midfielder?',a:'A central midfielder who works from one penalty box to the other: defending near their own goal, then running to join the attack.'},
    {q:'What is the difference between a 6, an 8 and a 10?',a:'They are three midfield jobs. The 6 stays deeper to protect the defense. The 10 plays higher, close to the striker. The 8 works between them and helps both.'}],
   lessonIds:['learn7_roles','nx9_twoblocks','exp11_checking8','learn7_receive','e_thirdman'],cardRole:'midfielder',cardSkip:6,cardNote:'The card binder keeps all midfielders in one group. Here are more of them.'},
- {slug:'attacking-midfielder',name:'Attacking midfielder',short:'AM',numbers:'10',numberLine:'The attacking midfielder is often called the 10.',
+ {slug:'attacking-midfielder',answer:'An attacking midfielder in soccer, often called the number 10, plays just behind the striker, in the space between the other team’s midfielders and defenders. The 10 creates chances by receiving the ball, turning and playing the final pass, or by shooting from the edge of the box. A 10 also helps the team press when the ball is lost.',name:'Attacking midfielder',short:'AM',numbers:'10',numberLine:'The attacking midfielder is often called the 10.',
   title:'Attacking Midfielder (the 10): Soccer Position Guide',h1:'Attacking midfielder in soccer',
   desc:'What an attacking midfielder (the number 10) does in soccer, for kids: where the playmaker stands, jobs with and without the ball, and habits to practise.',
   job:'An attacking midfielder is a soccer player who plays between the midfield and the striker, and the job is to create chances to score.',
@@ -161,7 +162,7 @@ export const POSITIONS:readonly Position[]=[
    {q:'What is a playmaker?',a:'A player the team looks for when it wants to create a chance. The word is used most for the attacking midfielder, but a deeper midfielder can be a playmaker too.'},
    {q:'Does an attacking midfielder have to defend?',a:'Yes. When the ball is lost, the attacking midfielder is often the nearest player to help the holding midfielder. In our 9v9 lesson, that recovery run is the key idea.'}],
   lessonIds:['bld_11_throughlines','learn9_receive','next9_singleholder','e_thirdman'],cardRole:'midfielder',cardSkip:12,cardNote:'The card binder keeps all midfielders in one group. Here are more of them.'},
- {slug:'winger',name:'Winger',short:'LW / RW',numbers:'7 and 11',numberLine:'The right winger is usually 7 and the left winger is 11.',
+ {slug:'winger',answer:'A winger in soccer is an attacker who plays wide, close to the touchline, on the left or the right. Wingers stretch the other team’s defense, dribble past fullbacks, cross or cut the ball back, and run behind the defenders for through balls. In the classic numbers the right winger is 7 and the left winger is 11.',name:'Winger',short:'LW / RW',numbers:'7 and 11',numberLine:'The right winger is usually 7 and the left winger is 11.',
   title:'Winger in Soccer: What the Position Does, for Kids',h1:'Winger in soccer',
   desc:'What a winger does in soccer, explained for kids: wide attackers who stretch the field, dribble and cross. Where they stand, habits, numbers 7 and 11.',
   job:'A winger is a soccer attacker who plays wide on the left or right, to stretch the other team and to create chances from the side.',
@@ -179,7 +180,7 @@ export const POSITIONS:readonly Position[]=[
    {q:'What is an inverted winger?',a:'A winger who plays on the side opposite to their stronger foot, such as a right-footed player on the left. That makes it natural to cut inside and shoot.'},
    {q:'Do wingers have to defend?',a:'Yes. A winger follows the other team’s fullback and drops back beside the midfielders, so the team defends with more players.'}],
   lessonIds:['prn_7_spread','nx9_midfieldhelper','learn11_cutback','learn9_two_one','e_switch'],cardRole:'winger',cardSkip:0,cardNote:'Wingers in the Futbol Island card binder.'},
- {slug:'striker',name:'Striker',short:'ST',numbers:'9',numberLine:'The striker is usually number 9.',
+ {slug:'striker',answer:'A striker in soccer, also called a center forward or the number 9, is the attacker who plays closest to the other team’s goal. The main job is scoring goals, but a striker also holds the ball up for teammates, runs behind the defense, and starts the team’s press when the other team has the ball.',name:'Striker',short:'ST',numbers:'9',numberLine:'The striker is usually number 9.',
   title:'Striker in Soccer: What the Position Does, for Kids',h1:'Striker in soccer',
   desc:'What a striker does in soccer, explained for kids: the forward closest to goal. Where the striker stands, jobs with and without the ball, three habits.',
   job:'A striker is the soccer forward who plays closest to the other team’s goal, and the main job is to score and to help teammates score.',

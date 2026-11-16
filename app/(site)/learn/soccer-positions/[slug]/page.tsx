@@ -4,6 +4,7 @@ import {QA} from '@/components/site/LessonHub';
 import {FORMATIONS_HUB,formationBySlug,formationsUsing} from '@/lib/site/formations';
 import {POSITIONS,POSITIONS_HUB,positionBySlug} from '@/lib/site/positions';
 import {guideCrumbs,positionImage} from '@/lib/site/guides';
+import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
 import {drillLinksFor} from '@/lib/site/drills';
 import {SITE_CARDS,cardPath} from '@/lib/site/cards';
@@ -31,7 +32,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={articleLd({headline:p.title,path:p.path,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.name} (soccer position)`,teaches:p.job,image:positionImage(p.slug)})}/>
   <JsonLd data={faqLd(p.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={p.h1} lead={p.job} more={p.suits}/>
+  <GuideIntro crumbs={crumbs} h1={p.h1} lead={p.answer} more={p.suits}/>
   <Section id="where" title={`Where the ${lower} stands`}>
    <Diagram id="where-d" format={f.format} lines={f.lines} what={`the ${lower} position in a ${f.shape} formation`} mark={p.slug} markName={lower} image={positionImage(p.slug)}/>
    <p>{p.where}</p>
@@ -58,6 +59,6 @@ export default function PositionPage({params}:{params:{slug:string}}){
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
   {drillLinksFor(p.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(p.path)}/></Section>}
   <Section id="related" title="Other positions"><LinkList links={[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}/></Section>
-  <GuideEnd/>
+  <GuideEnd checked={FAMILY_CHECKED.positions}/>
  </>;
 }

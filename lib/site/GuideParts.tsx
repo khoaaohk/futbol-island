@@ -4,6 +4,7 @@ import {lessonPath,type SiteLesson} from './lessons';
 import {sceneDesc,type Scene} from './scenes';
 import {GUIDE_FOOT,GUIDE_NAMES} from './guides';
 import {PLAY_PATH,type Crumb} from './seo';
+import {FACTS_PATH,longDate} from './checked';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import styles from '@/app/(site)/site.module.css';
 /**
@@ -15,7 +16,7 @@ export function GuideIntro({crumbs,h1,lead,more,cta}:{crumbs:readonly Crumb[];h1
  return <header className={styles.intro}>
   <Breadcrumbs crumbs={crumbs}/>
   <h1 className={styles.title}>{h1}</h1>
-  <p className={styles.lead}>{lead}</p>
+  <p className={styles.lead} data-answer="">{lead}</p>
   {more&&<p>{more}</p>}
   <p className={styles.caption}>{GUIDE_NAMES}</p>
   {cta&&<a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>}
@@ -54,8 +55,12 @@ export function LessonList({lessons}:{lessons:readonly SiteLesson[]}){
 export function LinkList({links}:{links:readonly {path:string;name:string;line?:string}[]}){
  return <ul className={styles.list}>{links.map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span>{l.line&&<span className={styles.itemMeta}>{l.line}</span>}</a></li>)}</ul>;
 }
-export function GuideEnd({cta=true}:{cta?:boolean}){
- return <><p className={styles.caption}>{GUIDE_FOOT}</p>{cta&&<p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Play it on the island</a></p>}</>;
+/** "Last checked" (lib/site/checked.ts): the content's real check date, and the trust page. */
+export function CheckedLine({date}:{date:string}){
+ return <p className={styles.caption} data-checked={date}>Last checked: <time dateTime={date}>{longDate(date)}</time>. <a href={FACTS_PATH}>How we check facts</a>.</p>;
+}
+export function GuideEnd({cta=true,checked}:{cta?:boolean;checked?:string}){
+ return <><p className={styles.caption}>{GUIDE_FOOT}</p>{checked&&<CheckedLine date={checked}/>}{cta&&<p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Play it on the island</a></p>}</>;
 }
 /** "Coach's notes" (lib/site/coachNotes.ts): the item's own coaching point, how it shows up in a match, age-group notes and,
  *  where the page had none, common mistakes. `ages` alone is used on drill pages (they already have points and a game line). */

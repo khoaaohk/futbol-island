@@ -2,6 +2,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {chartBySlug,type ChartPage} from '@/lib/site/sizes';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
+import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {Bullets,DataTable,GuideEnd,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import {scene} from '@/lib/site/scenes';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -35,6 +36,6 @@ export default function ChartView({slug}:{slug:string}){
   <QA id="faq" title={`Questions about ${c.crumb.toLowerCase()}`} faq={c.faq}/>
   <Section id="lessons" title="Free lessons to start with"><LessonList lessons={c.lessons}/></Section>
   <Section id="related" title="Keep reading"><LinkList links={[...c.links,{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Share the game fairly: a substitution plan for any squad'}]}/></Section>
-  <GuideEnd/>
+  <GuideEnd checked={FAMILY_CHECKED.sizes}/>
  </>;
 }
