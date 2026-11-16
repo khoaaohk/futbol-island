@@ -27,7 +27,7 @@ version of that common training idea: own words, own layout, own drills. Branch 
   `public/scan-sw.js` (copy of coach-sw; scope `/scan`; `inScope` = `/scan` or `/scan/…`; cache `fi-scan-sw-v1`).
   `next.config.mjs`: X-Robots-Tag noindex on `/scan`, `/scan/*`, `/scan-sw.js` (no-cache).
 - **Counters** `sn:start`, `sn:finish` (`SCAN_COUNT_EVENTS` in countIds.ts, labels in daily.ts, countSince regenerated).
-  Page key `scan` in `lib/analytics/pageKeys.ts`.
+  Page keys `scan` and `embed` in `lib/analytics/pageKeys.ts`.
 - **Words** `lib/scan/words.ts` (en/es; US spelling "color"; Spanish per the glossary).
 
 ## SEO front door

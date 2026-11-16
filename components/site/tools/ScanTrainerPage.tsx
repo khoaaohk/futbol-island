@@ -21,10 +21,10 @@ export const scanEmbedSnippet=(title:string)=>`<iframe src="${abs(SCAN_EMBED_PAT
 function Preview({p,es}:{p:ScanPage;es:boolean}){
  return <figure className={s.preview}>
   <ul className={s.cues} aria-label={p.previewCaption}>
-   <li className={s.cue} style={{background:'#1f5fd1',color:'#fff'}}><span className={s.word}>{es?'Azul':'Blue'}</span></li>
-   <li className={s.cue} style={{background:'#1d6b55',color:'#fff'}}><span className={s.num}>7</span></li>
-   <li className={s.cue} style={{background:'#1d6b55',color:'#fff'}}><svg viewBox="-50 -50 100 100" className={s.arrow} aria-hidden="true" style={{transform:'rotate(270deg)'}}><path d="M0 -44 L34 -6 L13 -6 L13 42 L-13 42 L-13 -6 L-34 -6 Z" fill="currentColor"/></svg></li>
-   <li className={s.cue} style={{background:'#1d6b55',color:'#fff'}}><span className={s.pass}>{es?'Pásale al 3':'Pass to 3'}</span><span className={s.passRow}><span className={s.num}>3</span><svg viewBox="-50 -50 100 100" className={s.arrowSmall} aria-hidden="true" style={{transform:'rotate(90deg)'}}><path d="M0 -44 L34 -6 L13 -6 L13 42 L-13 42 L-13 -6 L-34 -6 Z" fill="currentColor"/></svg></span></li>
+   <li className={`${s.cue} ${s.blue}`}><span className={s.word}>{es?'Azul':'Blue'}</span></li>
+   <li className={s.cue}><span className={s.num}>7</span></li>
+   <li className={s.cue}><svg viewBox="-50 -50 100 100" className={`${s.arrow} ${s.left}`} aria-hidden="true"><path d="M0 -44 L34 -6 L13 -6 L13 42 L-13 42 L-13 -6 L-34 -6 Z" fill="currentColor"/></svg></li>
+   <li className={s.cue}><span className={s.pass}>{es?'Pásale al 3':'Pass to 3'}</span><span className={s.passRow}><span className={s.num}>3</span><svg viewBox="-50 -50 100 100" className={`${s.arrowSmall} ${s.right}`} aria-hidden="true"><path d="M0 -44 L34 -6 L13 -6 L13 42 L-13 42 L-13 -6 L-34 -6 Z" fill="currentColor"/></svg></span></li>
   </ul>
   <figcaption className={site.caption}>{p.previewCaption}</figcaption>
  </figure>;
