@@ -68,10 +68,11 @@ export function EsCoachNotes({name,notes}:{name:string;notes:CoachNotesEs}){
   <ul>{notes.ages.map(([l,t])=><li key={l}><b>{l==='U13 and up'?'U13 y mayores':l}:</b> {t}</li>)}</ul>
  </section>;
 }
-export function EsPrintSheet({path,what='hoja'}:{path:string;what?:string}){
+/** `has`: what the printed sheet holds (lesson sheets have no diagram: "pasos y preguntas"). */
+export function EsPrintSheet({path,what='hoja',has}:{path:string;what?:string;has?:string}){
  const url=abs(path);
  return <div className={p.sheet} data-print-sheet="">
-  <div className={p.screen}><PrintButton label={ES_UI.print}/> <span className={p.hint}>{ES_UI.printHint(what)}</span></div>
+  <div className={p.screen}><PrintButton label={ES_UI.print}/> <span className={p.hint}>{ES_UI.printHint(what,has)}</span></div>
   <p className={p.url}>{ES_UI.printUrl} · {url.replace(/^https:\/\//,'')}</p>
  </div>;
 }

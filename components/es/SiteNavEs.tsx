@@ -5,10 +5,11 @@ import LangSwitch from '@/components/site/LangSwitch';
 import done from '@/components/DoneButton.module.css';
 import styles from '@/app/(site)/site.module.css';
 /** The Spanish pages' top bar: components/site/SiteNav.tsx with Spanish labels, Spanish destinations where they exist, and EN | ES. */
-const NAV:readonly (readonly [string,string])[]=[[toEs('/learn/soccer-rules'),'Reglas'],[toEs('/learn/soccer-terms'),'Términos'],[toEs('/learn/soccer-positions'),'Posiciones'],[toEs('/about'),'Acerca de']];
+/** Nov 16 2026: 8 links (+ EN | ES) do not fit the 641-1099 px bar, so the Spanish bar keeps the phone menu up to 1099 px (.navEs). */
+const NAV:readonly (readonly [string,string])[]=[[toEs('/learn/lessons'),'Lecciones'],[toEs('/learn/soccer-rules'),'Reglas'],[toEs('/learn/soccer-terms'),'Términos'],[toEs('/learn/soccer-positions'),'Posiciones'],[toEs('/learn/soccer-drills'),'Ejercicios'],[toEs('/learn/soccer-practice-plans'),'Planes'],[toEs('/tools'),'Herramientas'],[toEs('/about'),'Acerca de']];
 const NAME='Futbol Island';
 export default function SiteNavEs(){
- return <nav className={styles.nav} aria-label="Sitio">
+ return <nav className={`${styles.nav} ${styles.navEs}`} aria-label="Sitio">
   <a className={styles.brand} href={toEs('/')} aria-label={`${NAME}: inicio`}><span aria-hidden="true">{[...NAME].map((ch,i)=>ch===' '?' ':<span key={i} style={{color:LOGO_COLOURS[i%LOGO_COLOURS.length]}}>{ch}</span>)}</span></a>
   <ul className={styles.navLinks}>{NAV.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}<li><LangSwitch compact/></li></ul>
   <details className={styles.menu}>

@@ -18,8 +18,8 @@ export const LESSONS_ES:Readonly<Record<string,LessonEs>>={...LESSONS_ES_7V7,...
 /** lib/paths/formatPaths.json chapter titles, lesson categories and difficulty levels. */
 export const CHAPTER_ES:Readonly<Record<string,string>>={
  'Meet the team and restart':'Conoce al equipo y reanuda el juego','Look and help':'Mira y ayuda','Connect around pressure':'Conéctate para salir de la presión',
- 'Protect the goal together':'Protejan el arco juntos','Find your unit and receive':'Encuentra tu línea y recibe','Read the spare option':'Lee la opción libre',
- 'Share the next job':'Repartan la siguiente tarea','Restart and track':'Reanuda y sigue a tu rival','Receive inside the team shape':'Recibe dentro de la forma del equipo',
+ 'Protect the goal together':'Protege el arco con tu equipo','Find your unit and receive':'Encuentra tu línea y recibe','Read the spare option':'Lee la opción libre',
+ 'Share the next job':'Reparte la siguiente tarea','Restart and track':'Reanuda y sigue a tu rival','Receive inside the team shape':'Recibe dentro de la forma del equipo',
  'Create the next opening':'Crea el siguiente espacio','Keep the team connected':'Mantén al equipo conectado','Restart and time the run':'Reanuda y elige el momento de correr',
  'Find your connection':'Encuentra tu conexión','Attack and protect across goal':'Ataca y protege frente al arco','When the ball changes teams':'Cuando el balón cambia de equipo',
  'Start with another option':'Empieza con otra opción'};

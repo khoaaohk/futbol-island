@@ -86,7 +86,7 @@ export const POSITIONS_ES:Readonly<Record<string,PositionEs>>={
   job:'Un carrilero es un jugador que cubre todo un lado de la cancha, atacando como un extremo y defendiendo como un lateral.',
   suits:'Es ideal para los jugadores con mejor condición física del equipo, que aman correr y se sienten cómodos tanto centrando como haciendo entradas.',
   where:'Abierto por la izquierda o la derecha, por fuera de tres defensas centrales. Con el balón, el carrilero juega arriba, a la altura del mediocampo o de los delanteros. Sin el balón, baja junto a los defensas centrales para formar una línea de cinco.',
-  withBall:['Le da amplitud al equipo, porque no hay un extremo adelante.','Sube por la línea de banda para centrar o para dar un pase atrás para un tiro.','Ofrece un pase por fuera cuando el medio está lleno.'],
+  withBall:['Le da amplitud al equipo, porque no hay un extremo adelante.','Sube por la línea de banda para centrar o para dar un centro atrás para un tiro.','Ofrece un pase por fuera cuando el medio está lleno.'],
   withoutBall:['Regresa para formar una línea de cinco con los defensas centrales.','Presiona al lateral rival, pero solo cuando un defensa central cubre atrás al extremo.','Marca el segundo palo cuando el centro viene del otro lado.'],
   habits:[{name:'Lee la señal para presionar',how:'Ve al balón cuando el toque del rival es lento y tienes cobertura atrás. Cuando esa señal ya no está, regresa.'},
    {name:'Corre, descansa, corre',how:'Aprovecha los momentos en que el balón está en el otro lado para recuperar el aire en una buena posición.'},

@@ -84,6 +84,21 @@ Not done: the Spanish header nav (SiteNavEs) has no drills/plans link yet (share
 - Left: Spanish header nav has no "Lecciones"/"Herramientas" item yet; ClipPlay aria-label "Play video" is English; the lesson
   print hint mentions a diagram (lesson sheets have none); dropped English-only links (futsal star cards, /games).
 
+## Merge + leftovers (Nov 16 2026, branch `spanish-r1` = round 1 + 2 + C + D, 267 Spanish pages, ES_PENDING empty)
+
+- Header nav (SiteNavEs): Lecciones, Reglas, Términos, Posiciones, Ejercicios, Planes, Herramientas, Acerca de + EN | ES. The 8
+  links do not fit 641-1099 px, so the Spanish bar keeps the phone menu up to 1099 px (`.navEs` in app/(site)/site.module.css);
+  from 1100 px the links size to their words.
+- Spanish search (lib/i18n/es/search.ts) now also indexes the 46 drills, 12 plans, 10 drill guides and the two hubs.
+- Holder = "mediocampista de contención" everywhere (9v9 lessons used "mediocampista defensivo"); glossary got holder + cutback.
+- tú sweep: ustedes imperatives in lessons (titles, steps, chapter names), drills, plans, terms, formations changed to tú, or to a
+  plain description of what the players do ("Cambian de papel…"), or "que jueguen…" in coach tips. KEPT on purpose (quoted coach
+  call-outs to a group): “Ábranse cuando lo tenemos.”, “Defensas: muévanse juntos hacia el lado.”, “Los de afuera, quédense
+  abiertos.”, “Hagan grande el área.”, “No vayan los dos.”, the “abran” / “cierren” call words (formations).
+- Lesson print hint no longer promises a diagram (EsPrintSheet `has`); ClipPlay `lang="es"` says "Reproducir video".
+- Glossary sweep: no "penalti", "portería", "gambeta", "arquero", "pelota", "fuera de lugar"; "campo" only as "campo contrario",
+  "jugador de campo" and the cancha/campo FAQ. Wingback "pase atrás para un tiro" -> "centro atrás".
+
 ## Test-suite regressions (fixed Nov 16 2026)
 
 - 12 failures: `lib/site/seo.ts`, `LangSwitch.tsx`, `GuideQuiz.tsx` imported `@/lib/i18n/...`; the vm/require loaders in the
@@ -148,9 +163,9 @@ one-line lab layouts into fewer route groups.
   Limpia tu cuarto...); a native coach should check they sound like games kids already know.
 - Round D: "prueba" for quiz; "reanudación" for restart; "Dorado"/"Azul" as team names; passing shadow "sombra del pase"; channel
   "carril"/"pasillo"; outlet "opción de salida"; screen "tapar"/"hacer de pantalla"; second ball "segunda jugada"/"rebote"; lay-off
-  "descarga"; near/far post "primer/segundo palo"; holder "mediocampista defensivo/de contención" (both used: unify); outside back
+  "descarga"; near/far post "primer/segundo palo"; holder "mediocampista de contención" (unified at the merge; "mediocampista defensivo" only for the defensive-midfielder position name); outside back
   "lateral"; dribble-in "saque conduciendo"; punts "despeje de volea del portero"; bench "banca"; substitute "suplente"; squad
   "plantel"; template "plantilla"; positions chart "cuadro de posiciones y números"; Game select "Modalidad"; clipboard "tablilla";
   rolling subs "cambios libres"; playing-time calculator "calculadora de minutos de juego"; preset emotes "gestos predefinidos";
   playing up "jugar en una categoría superior"; source "It's true./It's false." kept as "Es verdadero./Es falso." (as English).
-  Futsal lesson uses one plural command ("Acérquense juntos"), ustedes form.
+  Futsal lesson plural command fixed to tú at the merge.

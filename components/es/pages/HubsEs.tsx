@@ -41,7 +41,7 @@ function GuideVideoEs({enPath,words}:{enPath:string;words?:{name:string;descript
  return <section className={styles.section} aria-labelledby={id} data-guide-video={v.key}>
   <JsonLd data={esLd({...videoLd(v),name:words.name,description:words.description,mainEntityOfPage:abs(toEs(enPath))})}/>
   <h2 className={styles.h2} id={id}>Míralo en el juego</h2>
-  <ClipPlay name={words.name} poster={learnUrl(v.poster)} webm={v.webm&&learnUrl(v.webm)} mp4={learnUrl(v.mp4!)} width={v.width} height={v.height} describedBy={`${id}-d`}/>
+  <ClipPlay name={words.name} poster={learnUrl(v.poster)} webm={v.webm&&learnUrl(v.webm)} mp4={learnUrl(v.mp4!)} width={v.width} height={v.height} describedBy={`${id}-d`} lang="es"/>
   <p className={styles.caption} id={`${id}-d`}>{words.description} {v.seconds} segundos, sin sonido.</p>
  </section>;
 }

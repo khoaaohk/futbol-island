@@ -38,12 +38,12 @@ export const ES_GLOSSARY={
  'heading':'cabecear (cabezazo)','offence':'infracción',
  // positions
  'goalkeeper / keeper':'portero','defender':'defensa','center back':'defensa central','fullback':'lateral','wingback':'carrilero',
- 'sweeper':'líbero','midfielder':'mediocampista','defensive midfielder':'mediocampista defensivo','central midfielder':'mediocampista central',
+ 'sweeper':'líbero','midfielder':'mediocampista','defensive midfielder':'mediocampista defensivo','holding midfielder / holder':'mediocampista de contención','central midfielder':'mediocampista central',
  'attacking midfielder':'mediocampista ofensivo','winger':'extremo','striker / forward':'delantero','center forward':'delantero centro',
  'false nine':'falso nueve','pivot (futsal)':'pívot','fixo (futsal)':'cierre','ala (futsal)':'ala',
  // play
  'pass':'pase','through ball':'pase al hueco','give-and-go / one-two':'pared','dribble':'regate (regatear)','first touch':'primer toque',
- 'shot':'tiro','cross':'centro','tackle':'entrada','marking':'marca','pressing':'presión','support':'apoyo','space':'espacio',
+ 'shot':'tiro','cross':'centro','cutback':'centro atrás','tackle':'entrada','marking':'marca','pressing':'presión','support':'apoyo','space':'espacio',
  'formation':'formación (sistema)','team shape':'forma del equipo','counterattack':'contraataque','possession':'posesión',
  'scan / check the shoulder':'mirar por encima del hombro','overlap':'desdoble','switch of play':'cambio de juego',
  'teammate':'compañero (compañera)','opponent':'rival','coach':'entrenador','practice':'entrenamiento (práctica)','drill':'ejercicio',

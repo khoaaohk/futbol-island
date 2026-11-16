@@ -12,7 +12,7 @@ export const ES_UI={
  openPicture:'Abre este diagrama como imagen',lastChecked:'Última revisión',howWeCheck:'Cómo revisamos los datos',
  coachNotes:'Notas del entrenador',coachPoint:'Punto clave',inMatch:'En un partido',mistakes:'Errores comunes',byAge:'Por edad',
  readNext:'Lee después',previous:'Anterior',backTo:'Volver a',keepReading:'Sigue leyendo',drills:'Ejercicios para practicarlo',
- print:'Imprimir / Guardar como PDF',printHint:(what:string)=>`Una ${what} de una página para la cancha: diagrama, pasos y puntos clave.`,
+ print:'Imprimir / Guardar como PDF',printHint:(what:string,has='diagrama, pasos y puntos clave')=>`Una ${what} de una página para la cancha: ${has}.`,
  printUrl:'Futbol Island · lecciones gratis de fútbol para niños',crumbNav:'Ruta de navegación',
  sceneDesc:(format:string,caption:string)=>`Diagrama de una ${format==='futsal'?'cancha de futsal':`cancha de fútbol ${format}`}, visto desde arriba. El equipo dorado ataca hacia arriba y el otro equipo va de verde oscuro. ${caption}`,
  playLesson:'Juega la lección en la isla',

@@ -333,7 +333,7 @@ export const FORMATIONS_ES:Readonly<Record<string,FormationEs>>={
   strengths:['Dos parejas dan ancho y profundidad con una imagen muy sencilla.','Siempre hay un compañero cerca para un pase.','Enseña el hábito más útil del futsal: uno va y el otro apoya atrás.'],
   weak:[{spot:'Se abre un hueco entre la pareja de atrás y la de adelante.',cover:'Un jugador de adelante regresa hacia el balón para que sea posible un pase corto.'},
    {spot:'Si los dos de atrás suben, nadie protege el arco.',cover:'Cuando uno de atrás avanza, el otro se queda detrás del balón.'},
-   {spot:'Cuatro jugadores en un cuadrado son fáciles de marcar.',cover:'Muévanse. Los jugadores cambian de lugar con un pase y una carrera, así que el cuadrado nunca se queda quieto.'}],
+   {spot:'Cuatro jugadores en un cuadrado son fáciles de marcar.',cover:'Que se muevan. Los jugadores cambian de lugar con un pase y una carrera, así que el cuadrado nunca se queda quieto.'}],
   attack:'Con el balón, la pareja de adelante se abre y sube. Un jugador de atrás conduce hacia adelante y el otro se mete hacia dentro como el apoyo más atrasado.',
   defend:'Sin el balón, la pareja de adelante baja hasta la línea media y los cuatro jugadores forman un cuadrado pequeño delante de su arco.',
   suits:'Niños nuevos en el futsal, y equipos de cancha abierta que juegan futsal en invierno. El dos-dos es una relación inicial, y los jugadores se mueven con el juego.',

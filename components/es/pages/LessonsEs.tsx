@@ -68,7 +68,7 @@ export function LessonEsPage({l}:{l:EsLesson}){
    <ParentsLine/>
    <a className={styles.cta} href={playLessonHref(l.id)} data-play-cta="">Juega esta lección</a>
   </header>
-  <EsPrintSheet path={l.esPath} what="hoja de la lección"/>
+  <EsPrintSheet path={l.esPath} what="hoja de la lección" has="la idea, los pasos y las preguntas"/>
   <section className={styles.section} aria-labelledby="coach"><h2 className={styles.h2} id="coach">Lo que dice el entrenador</h2>
    <div className={styles.card}><ol>{l.steps.map((s,i)=><li key={i}>{s}</li>)}</ol></div>
   </section>
