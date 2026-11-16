@@ -40,4 +40,20 @@ for(const [file,items,type] of guidePages){const P=L(file);for(const it of items
  assert.equal(a[0].learningResourceType,type,`${it.path}: learningResourceType`);shape(a[0],it.path);n++;}}
 const g=ll.guideQuizPart({path:'/learn/soccer-rules/offside',name:'Offside quiz',questions:[{q:'Is it offside?',options:['Yes','No']}]});
 assert.equal(g['@type'],'Quiz');assert.equal(g.url,'https://futbolisland.app/learn/soccer-rules/offside#quiz');assert.equal(g.hasPart[0].suggestedAnswer.length,2);
-console.log(`seo-learning-ld: ok (${n} pages, ${q} quiz questions)`);
+// 5. Every rules, terms and positions page carries its visible end-of-guide quiz as hasPart on its ONE Article+LearningResource node.
+const gq=L('lib/site/guideQuiz.ts'),terms=L('lib/site/terms.ts'),positions=L('lib/site/positions.ts');let gn=0;
+const quizPages=[
+ ['app/(site)/learn/soccer-rules/[slug]/page.tsx',rules.RULES,r=>gq.ruleQuiz(r)],
+ ['app/(site)/learn/soccer-terms/[slug]/page.tsx',terms.TERM_PAGES,t=>gq.termQuiz(t,terms.TERM_PAGES)],
+ ['app/(site)/learn/soccer-positions/[slug]/page.tsx',positions.POSITIONS,p=>gq.positionQuiz(p,positions.POSITIONS)],
+];
+for(const [file,items,quizOf] of quizPages){const P=L(file);for(const it of items){
+ const html=render(React.createElement(P.default,{params:{slug:it.path.split('/').pop()}})),ld=ldOf(html);noDupes(ld,it.path);
+ assert(!ld.some(x=>[].concat(x['@type']).includes('Quiz')),`${it.path}: Quiz is nested, not top-level`);
+ const a=ld.filter(x=>[].concat(x['@type']).includes('LearningResource'));assert.equal(a.length,1,`${it.path}: one learning node`);
+ const z=a[0].hasPart,vis=quizOf(it);assert(z&&z['@type']==='Quiz'&&!z['@context'],`${it.path}: nested end-of-guide Quiz`);
+ assert(/id="quiz"/.test(html)&&z.url.endsWith(it.path+'#quiz'),`${it.path}: Quiz url points at the visible #quiz`);
+ assert.deepEqual(z.hasPart.map(x=>x.text),vis.map(x=>x.q),`${it.path}: one Question per visible question`);
+ for(const [i,x] of z.hasPart.entries())assert.deepEqual(x.suggestedAnswer.map(s=>s.text),vis[i].options,`${it.path}: options match`);
+ gn++;}}
+console.log(`seo-learning-ld: ok (${n} pages, ${q} quiz questions, ${gn} guide quizzes)`);

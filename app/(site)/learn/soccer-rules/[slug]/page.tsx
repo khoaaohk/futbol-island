@@ -11,6 +11,7 @@ import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {ruleQuiz} from '@/lib/site/guideQuiz';
+import {guideQuizPart} from '@/lib/site/learningLd';
 import {ANIMATED_RULES} from '@/lib/site/sceneMotion';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -31,13 +32,14 @@ export function generateMetadata({params}:{params:{slug:string}}){
 export default function RulePage({params}:{params:{slug:string}}){
  const r=ruleBySlug(params.slug);if(!r)notFound();
  const crumbs=guideCrumbs({name:RULES_HUB.crumb,path:RULES_HUB.path},{name:r.name,path:r.path});
+ const quiz=ruleQuiz(r);
  const i=RULES.indexOf(r),next=[RULES[(i+1)%RULES.length],RULES[(i+2)%RULES.length]];
  const related=[...(r.slug==='substitutions-and-game-length'?[{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'A fair substitution plan with equal minutes for every player'}]:[]),...r.exhibits,...r.links,...next.map(x=>({path:x.path,name:x.h1,line:`${x.law}, with a diagram`})),
   {path:RULES_HUB.path,name:'All soccer rules for kids',line:RULES_HUB.blurb},{path:TERMS_HUB.path,name:TERMS_HUB.h1,line:TERMS_HUB.blurb}];
  const moving=(ANIMATED_RULES as readonly string[]).includes(r.slug),futsal=r.slug==='futsal-rules',pair=r.scenes.length>1,last=r.scenes.length-1;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
-  <JsonLd data={articleLd({headline:r.title,path:r.path,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (soccer rule)`,teaches:r.answer,image:diagramUrl(r.picture)})}/>
+  <JsonLd data={{...articleLd({headline:r.title,path:r.path,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (soccer rule)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.path,name:`${r.name} quiz`,questions:quiz})}}/>
   <JsonLd data={faqLd(r.faq)}/>
   <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer}/>
   <PrintSheet path={r.path} what="rule sheet"/>
@@ -68,7 +70,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
   {drillLinksFor(r.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(r.path)}/></Section>}
   <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
-  <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={ruleQuiz(r)}/>
+  <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz}/>
   <GuideEnd checked={FAMILY_CHECKED.rules} lesson={r.cta}/>
   <ReadNext path={r.path}/>
  </>;

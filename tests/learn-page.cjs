@@ -404,7 +404,7 @@ assert.deepEqual(faq.mainEntity.map(e=>[e.name,e.acceptedAnswer.text]),JSON.pars
 for(const t of ['WebSite','Organization'])assert(ld.some(x=>x['@type']===t),t+' JSON-LD');
 assert.match(html,/<link rel="canonical" href="https:\/\/futbolisland\.app"\/>/,'canonical /');
 assert(!fs.existsSync(path.join(dist,'server/app/learn.html')),'no /learn page is built (it redirects)');
-{const plays=[...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>((?:(?!<\/a>)[\s\S])*?)<\/a>/g)].filter(m=>/Play/.test(m[2].replace(/<[^>]+>/g,''))).map(m=>m[1]);assert(plays.length>=2&&plays.every(h=>h==='/play'),'built: every Play link goes to /play: '+plays.join(' '));}
+{const plays=[...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>((?:(?!<\/a>)[\s\S])*?)<\/a>/g)].filter(m=>/\bPlay\b/.test(m[2].replace(/<[^>]+>/g,''))).map(m=>m[1]);/* the word Play, not "Player cards" (footer, seo-links) */assert(plays.length>=2&&plays.every(h=>h==='/play'),'built: every Play link goes to /play: '+plays.join(' '));}
 assert.match(html,/<meta property="og:image" content="[^"]*opengraph-image\.png"/,'OG image');
 assert.equal((html.match(/<h1[ >]/g)||[]).length,1,'one h1');
 {const vs=[...html.matchAll(/<video [^>]*>/g)].map(m=>m[0]);

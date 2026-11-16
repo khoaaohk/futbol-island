@@ -1,6 +1,7 @@
 import ReadNext from '@/components/site/ReadNext';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {positionQuiz} from '@/lib/site/guideQuiz';
+import {guideQuizPart} from '@/lib/site/learningLd';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -32,11 +33,12 @@ export default function PositionPage({params}:{params:{slug:string}}){
  const p=positionBySlug(params.slug);if(!p)notFound();
  const f=formationBySlug(p.diagram)!,lower=p.name.toLowerCase(),used=formationsUsing(p.slug);
  const crumbs=guideCrumbs({name:POSITIONS_HUB.crumb,path:POSITIONS_HUB.path},{name:p.name,path:p.path});
+ const quiz=positionQuiz(p,POSITIONS);
  const hub=roleCollection(p.cardRole),compare=comparisonsFor(p.path);
  const cards=SITE_CARDS.filter(c=>c.role===p.cardRole&&!c.coach).slice(p.cardSkip,p.cardSkip+6);
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
-  <JsonLd data={articleLd({headline:p.title,path:p.path,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.name} (soccer position)`,teaches:p.job,image:positionImage(p.slug)})}/>
+  <JsonLd data={{...articleLd({headline:p.title,path:p.path,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.name} (soccer position)`,teaches:p.job,image:positionImage(p.slug)}),hasPart:guideQuizPart({path:p.path,name:`${p.name} quiz`,questions:quiz})}}/>
   <JsonLd data={faqLd(p.faq)}/>
   <GuideIntro crumbs={crumbs} h1={p.h1} lead={p.answer} more={p.suits}/>
   <Section id="where" title={`Where the ${lower} stands`}>
@@ -66,7 +68,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
   {drillLinksFor(p.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(p.path)}/></Section>}
   {compare.length>0&&<Section id="compare" title="Compare it"><LinkList links={compare.map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
   <Section id="related" title="Other positions"><LinkList links={[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}/></Section>
-  <GuideQuiz id="quiz" name={`the ${lower}`} questions={positionQuiz(p,POSITIONS)}/>
+  <GuideQuiz id="quiz" name={`the ${lower}`} questions={quiz}/>
   <GuideEnd checked={FAMILY_CHECKED.positions} lesson={p.lessons[0]}/>
   <ReadNext path={p.path}/>
  </>;

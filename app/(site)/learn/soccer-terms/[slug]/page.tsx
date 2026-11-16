@@ -10,6 +10,7 @@ import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {Bullets,CoachNotesSection,GuideEnd,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {termQuiz} from '@/lib/site/guideQuiz';
+import {guideQuizPart} from '@/lib/site/learningLd';
 import {ANIMATED_TERMS} from '@/lib/site/sceneMotion';
 import {abs,articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -28,11 +29,12 @@ export function generateMetadata({params}:{params:{slug:string}}){
 export default function TermPage({params}:{params:{slug:string}}){
  const t=termBySlug(params.slug);if(!t)notFound();
  const crumbs=guideCrumbs({name:TERMS_HUB.crumb,path:TERMS_HUB.path},{name:t.name,path:t.path});
+ const quiz=termQuiz(t,TERM_PAGES);
  const related=[...t.related.map(s=>termBySlug(s)!).map(x=>({path:x.path,name:x.name,line:x.short})),
   {path:TERMS_HUB.path,name:'All soccer terms, A to Z',line:TERMS_HUB.blurb},{path:RULES_HUB.path,name:RULES_HUB.h1,line:RULES_HUB.blurb}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
-  <JsonLd data={articleLd({headline:t.title,path:t.path,description:t.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${t.name} (soccer term)`,teaches:t.answer,image:diagramUrl(t.picture)})}/>
+  <JsonLd data={{...articleLd({headline:t.title,path:t.path,description:t.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${t.name} (soccer term)`,teaches:t.answer,image:diagramUrl(t.picture)}),hasPart:guideQuizPart({path:t.path,name:`${t.name} quiz`,questions:quiz})}}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'DefinedTerm',name:t.name,description:t.short,url:abs(t.path),inDefinedTermSet:abs(TERMS_HUB.path)+'#terms',...(t.also?{alternateName:t.also.split(', ')}:{})}}/>
   <JsonLd data={faqLd(t.faq)}/>
   <GuideIntro crumbs={crumbs} h1={t.h1} lead={t.answer} more={t.also?`Other names: ${t.also}.`:undefined}/>
@@ -46,7 +48,7 @@ export default function TermPage({params}:{params:{slug:string}}){
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
   {drillLinksFor(t.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(t.path)}/></Section>}
   <Section id="related" title="Related soccer terms"><LinkList links={related}/></Section>
-  <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={termQuiz(t,TERM_PAGES)}/>
+  <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz}/>
   <GuideEnd checked={FAMILY_CHECKED.terms} lesson={t.cta}/>
   <ReadNext path={t.path}/>
  </>;

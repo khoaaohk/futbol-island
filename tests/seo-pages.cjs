@@ -149,7 +149,10 @@ for(const p of PATHS){
  const h=html(p);
  assert.match(h,/<html lang="en"/,`${p}: lang="en"`);
  assert.match(h,/<title>[^<]+<\/title>/,`${p}: title`);
- if(!['/','/play','/privacy','/marketing'].includes(p)&&!/^\/learn\/lessons\/./.test(p))assert.match(h,/<title>[^<]+ · Futbol Island<\/title>/,`${p}: "X · Futbol Island"`);/* long lesson titles drop the suffix to stay <= 60 (lib/site/seo.ts fitTitle) */
+ const tt=(/<title>([^<]+)<\/title>/.exec(h)||[])[1]||'';assert(tt.replace(/&amp;/g,'&').replace(/&#x27;|&#39;/g,"'").length<=60,`${p}: title <= 60 (${tt})`);
+ /* Search-worded pages (guides, comparisons, charts, tools, games, lessons) are titled whole (pageMeta {whole:true}, seo-content):
+    their keyword title is the whole title, with no room for the suffix. Every other page is "X · Futbol Island". */
+ if(!['/','/play','/privacy','/marketing'].includes(p)&&!/^\/(learn|tools|games)(\/|$)/.test(p))assert.match(h,/<title>[^<]+ · Futbol Island<\/title>/,`${p}: "X · Futbol Island"`);/* long lesson titles drop the suffix to stay <= 60 (lib/site/seo.ts fitTitle) */
  assert.match(h,/<meta name="description" content="[^"]{20,}"/,`${p}: description`);
  assert(h.includes(`<link rel="canonical" href="${p==='/'?SITE:SITE+p}"/>`),`${p}: canonical`);
  if(GENERATED.includes(p)){const ld=[...h.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)].map(m=>JSON.parse(m[1]));

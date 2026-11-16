@@ -107,9 +107,13 @@ const L=rel=>load(path.join(root,rel));
  }
  for(const [u,n] of inbound)if(u!=='/'&&n===0)problems.push(`${u}: orphan (no other page links to it)`);
  // unique words per family: words in sentences found on no other page of the family
- const FAM={drill:/^\/learn\/soccer-drills\/[^/]+$/,plan:/^\/learn\/soccer-practice-plans\/[^/]+$/,formation:/^\/learn\/soccer-formations\/[^/]+$/,rule:/^\/learn\/soccer-rules\/[^/]+$/,
-  position:/^\/learn\/soccer-positions\/[^/]+$/,term:/^\/learn\/soccer-terms\/[^/]+$/,lesson:/^\/learn\/lessons\/[^/]+$/,game:/^\/games\/[^/]+$/};
- const MIN={drill:500,plan:550,formation:600,rule:600,position:700,term:400,lesson:290,game:600};
+ const FAM={drill:/^\/learn\/soccer-drills\/[^/]+$/,plan:/^\/learn\/soccer-practice-plans\/[^/]+$/,formation:/^\/learn\/soccer-formations\/(?![^/]*-vs-)[^/]+$/,rule:/^\/learn\/soccer-rules\/[^/]+$/,
+  position:/^\/learn\/soccer-positions\/(?![^/]*-vs-)[^/]+$/,term:/^\/learn\/soccer-terms\/[^/]+$/,lesson:/^\/learn\/lessons\/[^/]+$/,game:/^\/games\/[^/]+$/,
+  /* "A vs B" pages (lib/site/comparisons.ts) are their own family: their table is copied from the two compared pages on purpose,
+     so they are compared with each other, not with the formation and position pages they summarise. */
+  compare:/^\/learn\/soccer-(formations|positions)\/[^/]+-vs-[^/]+$/};
+ const COMPARE_MIN=+(process.env.COMPARE_MIN||300);
+ const MIN={drill:500,plan:550,formation:600,rule:600,position:700,term:400,lesson:290,game:600,compare:COMPARE_MIN};
  for(const [f,re] of Object.entries(FAM)){const ps=Object.keys(texts).filter(p=>re.test(p)),sents=ps.map(p=>texts[p].split(/(?<=[.!?:])\s+/).filter(s=>s.length>12)),df=new Map();
   sents.forEach(ss=>new Set(ss).forEach(s=>df.set(s,(df.get(s)||0)+1)));
   ps.forEach((p,i)=>{const u=sents[i].filter(s=>df.get(s)===1).reduce((a,s)=>a+s.split(' ').length,0);if(u<MIN[f])problems.push(`${p}: ${u} unique words (${f} minimum ${MIN[f]})`);});}
