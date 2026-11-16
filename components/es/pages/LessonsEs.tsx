@@ -143,7 +143,7 @@ export function SearchEsPage(){
   <header className={styles.intro}>
    <EsBreadcrumbs crumbs={esCrumbs({name:'Buscar',path:toEs('/learn')+'?q='})}/>
    <h1 className={styles.title}>Busca en las guías de fútbol</h1>
-   <p className={styles.lead} data-answer="">Encuentra una regla, una palabra del fútbol, una posición, una formación o una lección, con la respuesta corta.</p>
+   <p className={styles.lead} data-answer="">Encuentra una regla, una palabra del fútbol, una posición, una formación, un ejercicio, un plan o una lección, con la respuesta corta.</p>
   </header>
   <LearnSearch lang="es"/>
   <section className={styles.section} aria-labelledby="browse"><h2 className={styles.h2} id="browse">Explora las guías</h2>
@@ -155,7 +155,7 @@ export function SearchEsPage(){
 // ---- routes -------------------------------------------------------------------------------------------------------------------
 const L=INDEX+'/';
 export function lessonsEsRoute(enPath:string):EsRoute|null{
- if(enPath==='/learn')return {meta:()=>({...esMeta('Busca en las guías de fútbol | Futbol Island','Busca en las guías gratis de fútbol de Futbol Island para niños y entrenadores: reglas, términos, posiciones, formaciones y lecciones.','/learn'),
+ if(enPath==='/learn')return {meta:()=>({...esMeta('Busca en las guías de fútbol | Futbol Island','Busca en las guías gratis de fútbol de Futbol Island para niños y entrenadores: reglas, términos, posiciones, formaciones, ejercicios, planes y lecciones.','/learn'),
   alternates:{canonical:toEs('/learn')},robots:{index:false,follow:true}}),render:()=><SearchEsPage/>};
  if(!hasEs(enPath))return null;
  if(enPath===INDEX)return {meta:()=>esMeta(LESSONS_INDEX_ES.title,LESSONS_INDEX_ES.desc,enPath),render:()=><LessonsIndexEsPage/>};

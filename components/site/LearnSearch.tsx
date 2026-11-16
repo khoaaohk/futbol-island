@@ -13,7 +13,7 @@ import fx from './siteForms.module.css';
 /** Spanish words (lang="es", /es/learn); English output is unchanged without the prop. */
 const ES={failed:'No se pudo cargar la búsqueda. Prueba con las guías de abajo.',loading:'Cargando la búsqueda…',
  count:(n:number,q:string)=>`${n} resultado${n===1?'':'s'} para “${q}”.`,none:(q:string)=>`No encontramos nada para “${q}”. Prueba una palabra más corta, como fuera de juego, pared o 4-3-3.`,
- label:'Busca reglas, términos, posiciones, formaciones y lecciones',placeholder:'Prueba fuera de juego, pared o 4-3-3'};
+ label:'Busca reglas, términos, posiciones, formaciones, ejercicios, planes y lecciones',placeholder:'Prueba fuera de juego, pared o 4-3-3'};
 export default function LearnSearch({lang}:{lang?:'es'}={}){
  const es=lang==='es';
  const [q,setQ]=useState(''),[index,setIndex]=useState<SearchEntry[]|null>(null),[failed,setFailed]=useState(false);

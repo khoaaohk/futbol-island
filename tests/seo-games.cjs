@@ -161,7 +161,7 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
  const arcade=read('app/arcade/page.tsx');assert(/noindexMeta\([^;]*'\/arcade'\)/.test(arcade),'/arcade: noindex, canonical /arcade (so ?game= deep links are never indexable copies)');assert(!/Strikers/.test(arcade),'/arcade metadata names no retired game');}
 (async()=>{
  const cfg=(await import(require('node:url').pathToFileURL(path.join(root,'next.config.mjs')).href)).default('phase-production-build');
- for(const r of await cfg.redirects()){const hostOnly=(r.has||[]).some(h=>h.type==='host');assert(hostOnly||r.source==='/'||r.source==='/learn'||r.source.startsWith('/learn/'),`redirect ${r.source} cannot swallow /games`);}
+ for(const r of await cfg.redirects()){const hostOnly=(r.has||[]).some(h=>h.type==='host');assert(hostOnly||r.source==='/'||r.source==='/learn'||r.source==='/es/learn'/* Spanish search: /es/learn without ?q= -> /es */||r.source.startsWith('/learn/'),`redirect ${r.source} cannot swallow /games`);}
  for(const r of [].concat((await cfg.rewrites()).beforeFiles||[]))assert(!r.source.startsWith('/games'),'no rewrite on /games');
  console.log(`seo-games: ${ALL.length} pages, ${PAGES.reduce((n,g)=>n+g.faq.length,0)+HUB.faq.length} questions, ${fs.readdirSync(pub('games')).length} pictures ok`);
 })().catch(e=>{console.error(e);process.exit(1);});
