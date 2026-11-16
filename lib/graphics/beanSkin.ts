@@ -3,7 +3,7 @@ import {LUMBAR_HEIGHT,CHEST_HEIGHT} from './spineSurface';
 import {shirtDigitAtlas,shirtInk,SHIRT_NUMBER_COVER_GLSL,BEAN_NUMBER_U,BEAN_DIGIT_HEIGHT,BEAN_NAME_U,BEAN_NAME_W,BEAN_NAME_H,BEAN_NAME_CAP} from './shirtNumbers';
 import {styleIndexRange} from './playerBatch';
 import {WATER_UNIFORMS} from './waterSurface';
-import {clubMarkTexture,wantClubMarks} from './clubMark';
+import {clubMarkTexture,wantClubMarks,clubCodeTexel,CLUB_PALETTE_GLSL} from './clubMark';
 import {BEAN_EYES,BEAN_MOUTHS,BEAN_EXPRESSIONS,defaultBeanLookFor,defaultOutfitForTeam,
  type BeanLook,type Outfit,type BeanExpression,type BeanBuild,type BeanEyes,type BeanMouth} from './beanLook';
 
@@ -499,6 +499,7 @@ float beanFaceMask;
 ${ROW_ACCESS}`;
 const BODY_FRAG_PARS=/* glsl */`
 uniform sampler2D beanClub;
+${CLUB_PALETTE_GLSL}
 uniform sampler2D beanFace;
 uniform sampler2D beanDigits;
 #ifdef BEAN_NAME
@@ -553,7 +554,8 @@ const BODY_FRAG=/* glsl */`
   vec2 cq=vec2((ca-a0)*vBeanSC.z,vBeanSC.w-(${g(Y0)}+.5*span))/.045,cdx=dFdx(cq)*vec2(.25,.5),cdy=dFdy(cq)*vec2(.25,.5);
   if(abs(cq.x)<1.&&abs(cq.y)<1.){
    float cov=textureGrad(beanClub,vec2(.25+cq.x*.25,.5+cq.y*.5),cdx,cdy).r*smoothstep(3.,5.,.09*vBeanPx);
-   col=mix(col,bt(${BD.shirt}).w>.5?vec3(1.):vec3(.0065,.0168,.0814),cov);
+   // shirt2.w: the crest's palette code+1 (Nov 16 2026; 0 = the club print, white or navy ink as before)
+   col=beanClubInk(col,bt(${BD.shirt}).w>.5?vec3(1.):vec3(.0065,.0168,.0814),bt(${BD.shirt2}).w,cov,(1.-smoothstep(.86,.96,length(cq)))*smoothstep(3.,5.,.09*vBeanPx));
   }
  }
  if(fr<1.08){
@@ -585,6 +587,7 @@ const BODY_FRAG=/* glsl */`
 }`;
 const LIMB_FRAG_PARS=/* glsl */`
 uniform sampler2D beanClub;
+${CLUB_PALETTE_GLSL}
 flat varying float vBeanRow;
 flat varying float vBeanPaint;
 varying vec3 vBeanS;`;
@@ -602,8 +605,9 @@ const LIMB_FRAG=/* glsl */`
   vec2 sq=vec2((vBeanS.x>0.?-1.:1.)*(vBeanS.y-.03),vBeanS.z+.024)/.028,hq=vec2(-vBeanS.x,vBeanS.z+.022)/.026;
   vec2 sdx=dFdx(sq)*vec2(.25,.5),sdy=dFdy(sq)*vec2(.25,.5),hdx=dFdx(hq)*vec2(.25,.5),hdy=dFdy(hq)*vec2(.25,.5);
   vec3 mk=dot(col,vec3(.2126,.7152,.0722))>.3?vec3(.0123,.117,.644):vec3(1.);
-  if(mod(bw,2.)>.5&&abs(vBeanS.x)>.035&&abs(sq.x)<1.&&abs(sq.y)<1.)col=mix(col,mk,textureGrad(beanClub,vec2(.75+sq.x*.25,.5+sq.y*.5),sdx,sdy).r);
-  if(bw>1.5&&vBeanS.y<-.05&&abs(hq.x)<1.&&abs(hq.y)<1.)col=mix(col,mk,textureGrad(beanClub,vec2(.75+hq.x*.25,.5+hq.y*.5),hdx,hdy).r);
+  // boots.w / shorts.w: the side / heel marks' palette code+1 (Nov 16 2026; 0 = the club ink above)
+  if(mod(bw,2.)>.5&&abs(vBeanS.x)>.035&&abs(sq.x)<1.&&abs(sq.y)<1.)col=beanClubInk(col,mk,bt(${BD.boots}).w,textureGrad(beanClub,vec2(.75+sq.x*.25,.5+sq.y*.5),sdx,sdy).r,1.-smoothstep(.86,.96,length(sq)));
+  if(bw>1.5&&vBeanS.y<-.05&&abs(hq.x)<1.&&abs(hq.y)<1.)col=beanClubInk(col,mk,bt(${BD.shorts}).w,textureGrad(beanClub,vec2(.75+hq.x*.25,.5+hq.y*.5),hdx,hdy).r,1.-smoothstep(.86,.96,length(hq)));
  }
  else col=bt(int(vBeanPaint+.5)).rgb;
  diffuseColor.rgb=col;
@@ -1019,7 +1023,7 @@ export function createBeanSkin(j:BeanJoints,id:string,team:string,articulatedHan
  const colour=(k:number,hex:string,w=0)=>{_col.set(hex);put(k,_col.r,_col.g,_col.b,w);};
  const writeStatic=()=>{
   const shirtW=shirtInk(outfit.shirt)==='#ffffff'?1:0;
-  colour(BD.shirt,outfit.shirt,shirtW);colour(BD.shirt2,outfit.shirt2);colour(BD.shorts,outfit.shorts);colour(BD.socks,outfit.socks);colour(BD.socks2,outfit.socks2??outfit.shirt2);colour(BD.boots,outfit.boots);
+  colour(BD.shirt,outfit.shirt,shirtW);colour(BD.shirt2,outfit.shirt2,outfit.club?clubCodeTexel(outfit.clubCc):0);colour(BD.shorts,outfit.shorts,(outfit.bootClub??0)&2?clubCodeTexel(outfit.heelCc):0);colour(BD.socks,outfit.socks);colour(BD.socks2,outfit.socks2??outfit.shirt2);colour(BD.boots,outfit.boots,(outfit.bootClub??0)&1?clubCodeTexel(outfit.bootCc):0);
   colour(BD.body,look.body);cell=faceCell(look.eyes,look.mouth,expression);colour(BD.skin,look.skin,cell);colour(BD.blush,look.blush??look.skin,look.blush?1:0);
   colour(BD.hands,look.gloves??look.body,look.gloves?1.45:1);
   const hw=look.headwear??'none',hs=look.hair?.style??'none',hairId=COVERING.has(hw)&&SHORT_HAIR.has(hs)?0:HAIR_IDS[hs]??0;

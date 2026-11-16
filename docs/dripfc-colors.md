@@ -1,5 +1,7 @@
 # Drip FC art colours (Nov 15 2026)
 
+Status: implemented (Kit Shop Nov 15; friends' view Nov 16, needs the relay deploy below).
+
 Owner request: in the Kit Shop, players can recolour the Drip FC club art they place so it shows up against their boots,
 shirt and ball. Drip FC stays the only club kit; every Drip FC item keeps "Drip FC club kit" + the "Sponsor" tag; coins only.
 
@@ -26,18 +28,41 @@ There is no shorts garment or Drip FC placement on shorts: the avatar's shorts a
 (lib/shop/islandGear.ts). The chest crest and the wordmark sit on the chest, away from the shorts, so the contrast check
 uses the shirt colour only.
 
-## Friends (not yet: needs a relay deploy)
-The relay's `isKit` (multiplayer/protocol/validate.ts) checks the exact length (17 or 22) and every Cap.KitClub slot's
-range, and the 24-bit ball sticker slots are fully used, so colours cannot ride in the current kit. Friends therefore see
-the club colours (graceful: the kit is unchanged). The relay change, for the owner to deploy:
-1. `types.ts`: `Cap.KitClubColor = 16384` (add to CAPS_WORLD); `KIT_CLUB_COLOR_LEN = 29` with slots 22 crest code, 23 wordmark
-   code (0 when no shop jersey), 24 boot side code, 25 boot heel code (0 when no shop boots), 26..28 the codes of ball club
-   stickers 19..21 (-1 when that sticker is absent); `KIT_CLUB_COLOR_MAX_BYTES = 330`.
-2. `validate.ts isKit`: also accept length 29: the 22-slot checks, then each of 22..28 in 0..255 (or -1 / 0 as above).
-3. `roomCore.ts kitFor` and the S.Kit fan-out: send 29 slots to members with Cap.KitClubColor, the first 22 to
-   Cap.KitClub members, the first 17 to everyone else (as today).
-4. Then the client: `kitFromGear` adds the slots when the relay offers the cap, `kitBall` / `kitOutfit` read them, and
-   lib/graphics/beanSkin.ts tints the avatar's crest and boot marks.
+## Friends (implemented Nov 16 2026; live once the relay is deployed)
+Status: **implemented** on branch `dripfc-relay` (relay + client). Until the relay is deployed, friends keep seeing the club colours
+(nothing breaks: the client only sends the colour slots to a relay that offers them).
+
+Wire (multiplayer/protocol/types.ts): `Cap.KitClubColor = 16384` joins CAPS_WORLD (a party, CAPS_ALL = 255, never gets it).
+`KIT_CLUB_COLOR_LEN = 29`, `KIT_CLUB_COLOR_MAX_BYTES = 330`. Slots 22..28, one palette code (`clubCode`) per club piece, **-1 = the piece
+is absent or wears the club's own colours** (one value for both, so 0 stays a real code: art 0 on backing 0):
+22 shirt crest, 23 shirt wordmark (backing may be 15 = none), 24 boot side mark, 25 boot heel mark, 26..28 the colours of ball
+club stickers 19..21. A 29 kit is sent only when one code is set; otherwise the 22 (or 17) kit, byte for byte as before.
+
+Relay (validate.ts `isKit` + `isClubCode`, strict): the 22-slot checks, then each colour slot is -1 or a palette code (art < 12,
+backing < 12, or 15 on the two shirt slots only), a code only for a piece that is worn (crest bit, wordmark bit, side / heel bit,
+sticker slot not -1), at least one code set, ≤ 330 bytes. `CLUB_PALETTE_LEN = 12` in the protocol must equal
+`CLUB_PALETTE.length` (tests/dripfc-kit.cjs checks it); a new palette colour needs both plus a relay deploy. Fan-out
+(roomCore.ts `kitFor` = protocol `kitForCaps`): 29 slots to Cap.KitClubColor members, the first 22 to Cap.KitClub members, the
+first 17 to everyone else; a sender that was not offered the bit is cut the same way.
+
+Client: `kitFromGear` packs the codes; connection.ts `flushKit` sends `kitForCaps(myKit, caps)` (caps = S.Caps AND this build's bits),
+so an old relay gets ≤ 22 slots. `kitOutfit` reads the crest / boot codes into `Outfit.clubCc / bootCc / heelCc`; `kitBall` puts
+each sticker's `cc` back on its decal (shopBallSkin.ts already tints club stickers). The bean shaders (beanSkin.ts, clubMark.ts
+`beanClubInk`) take code+1 from spare `.w` channels (shirt2 = crest, boots = side, shorts = heel; 0 = club ink as before) and
+draw the art colour plus a backing disc from a fixed GLSL copy of CLUB_PALETTE. My own player (islandGear.ts gearOutfit) shows the
+same. The wordmark is not drawn on avatars (it never was); its code travels for future use.
+
+Compatibility: new relay + old client: the old client never answers Cap.KitClubColor, so it sends ≤ 22 and receives 22 / 17.
+Old relay + new client: S.Caps lacks the bit, the client sends ≤ 22, which the deployed `isKit` accepts. Party rooms: 17 as before.
+
+### Deploy (owner)
+Order: **deploy the relay first, then push the client** (the client is safe either way, but colours only show once both are out).
+1. Relay, from this worktree (needs `npx wrangler login` once; no migration, no new secret):
+   `cd /private/tmp/claude-501/-Users-khoado/e23a5642-6645-4069-b550-daeae4d02ae6/scratchpad/dripfc-relay-wt/multiplayer/relay && npx wrangler deploy`
+   (or from any checkout of this branch: `cd multiplayer/relay && npx wrangler deploy`).
+2. Push the client (`dripfc-relay` → main) as usual.
+Rollback: `npx wrangler deployments list` (from multiplayer/relay) to find the previous version id, then
+`npx wrangler rollback <version-id>`. Rolling back is safe: new clients then fall back to 22 slots on the next S.Caps.
 
 ## Admin
 `sh:club_color` (Kit Shop counter, lib/analytics/countIds.ts SHOP_COUNT_EVENTS): a Drip FC colour changed (a swatch, Best

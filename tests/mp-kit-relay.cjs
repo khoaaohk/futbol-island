@@ -11,6 +11,7 @@ const { C, S, Cap, CAPS_ALL, KIT_LEN, KIT_MAX_BYTES, KIT_RATE, KIT_GAP_MS, MAX_I
 let n = 0; const t = (name, fn) => { try { fn(); n++; } catch (e) { console.error('FAIL', name); throw e; } };
 const j = (a) => JSON.stringify(a);
 const OLD_CAPS = 63; // a v1.6 client / relay
+const D_CODE = 4 | 6 << 4; // a Drip FC palette code (red on lemon; lib/shop/dripKit.ts clubCode)
 
 // shirt, trim, shorts, socks, sock tops, number, boots, ball layout, a, b, c, pattern, c1, c2, on, seed, finish
 const FULL = [0xd62828, 0xffffff, 0x003049, 0xd62828, 0x003049, 7, 0xff00aa, 0, 0x112233, 0xffee00, 0x00ff00, 3, 0xffffff, 0x000000, 0, 42, 1];
@@ -135,6 +136,15 @@ t('relay: a frame that fails validation counts as bad (a modded client), like ev
   const { ps: [a, b], clear, msg } = party([CAPS_ALL, CAPS_ALL]); clear();
   for (let i = 0; i < 4; i++) msg(a, [C.Kit, [1, 2, 3]]);
   assert.equal(kits(b).length, 0); assert.equal(a.closed, null, 'four bad frames: still connected (limit 5)');
+});
+
+t('protocol: kitForCaps (Cap.KitClub / Cap.KitClubColor) cuts a kit to what a member understands; isKit takes 17 / 22 / 29 only', () => {
+  const long = [...FULL, 0, 0, -1, -1, -1], k29 = [...FULL.slice(0, 7), ...FULL.slice(7), 1, 1, -1, -1, -1, -1, -1, D_CODE, -1, -1, -1, -1];
+  assert.equal(P.isKit(long), true); assert.equal(P.isKit(k29), true, 'a boot side mark in palette colours');
+  assert.deepEqual(P.kitForCaps(k29, Cap.Kit), FULL); assert.deepEqual(P.kitForCaps(k29, Cap.Kit | Cap.KitClub), k29.slice(0, 22));
+  assert.equal(P.kitForCaps(k29, Cap.Kit | Cap.KitClub | Cap.KitClubColor), k29, 'nothing cut: the same array');
+  assert.equal(P.kitForCaps(FULL, 0xffff), FULL);
+  for (let len = 0; len <= 40; len++) if (len !== 17 && len !== 22 && len !== 29) assert.equal(P.isKit([...k29, ...new Array(11).fill(-1)].slice(0, len)), false, 'length ' + len);
 });
 
 console.log(`mp-kit-relay: ${n} checks passed`);

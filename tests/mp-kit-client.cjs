@@ -81,7 +81,7 @@ t('kit.ts: the ball travels as its design only (layout, colours, pattern, finish
 
 // ---- connection ----
 const conn = load(path.join(ROOT, 'lib/multiplayer/connection.ts'));
-function makeEnv() {
+function makeEnv(fetch) {
   const clk = { now: 1e6 }; let seq = 0; const timers = [], sockets = [];
   class WS { constructor(url) { this.url = url; this.readyState = 0; this.sent = []; sockets.push(this); } send(x) { this.sent.push(x); } close() { this.readyState = 3; }
     open() { this.readyState = 1; this.onopen && this.onopen(); } recv(m) { this.onmessage && this.onmessage({ data: j(m) }); } }
@@ -89,7 +89,8 @@ function makeEnv() {
   const c = conn.createPartyConnection({ WebSocketImpl: WS, now: () => clk.now, random: () => 0.5,
     setTimeout: (fn, ms) => { const h = { id: ++seq, at: clk.now + ms, fn }; timers.push(h); return h.id; },
     clearTimeout: (id) => { const i = timers.findIndex((x) => x.id === id); if (i >= 0) timers.splice(i, 1); },
-    visibility: { hidden: () => false, on: () => () => {} }, storage: { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, v), removeItem: (k) => m.delete(k) } });
+    visibility: { hidden: () => false, on: () => () => {} }, storage: { getItem: (k) => m.get(k) ?? null, setItem: (k, v) => m.set(k, v), removeItem: (k) => m.delete(k) },
+    ...(fetch ? { fetch, online: () => true, locks: null } : {}) });
   const last = () => sockets[sockets.length - 1];
   const kitsSent = (s) => s.sent.map((x) => JSON.parse(x)).filter((x) => x[0] === C.Kit);
   return { c, clk, last, kitsSent };
@@ -116,6 +117,15 @@ t('client: v1.7 relay: my kit goes out right after S.Caps, valid for the relay; 
   const caps = s.sent.map((x) => JSON.parse(x)).find((x) => x[0] === C.Caps); assert.ok(caps[1] & Cap.Kit, 'C.Caps answers with Cap.Kit');
   s.recv(welcome()); s.recv([S.Caps, CAPS_ALL]); assert.equal(e.kitsSent(s).length, 2, 'a new Welcome + S.Caps: sent again (the relay dedupes)');
 });
+
+t('client: Drip FC colours (Cap.KitClubColor): 29 slots only when the relay offered the bit; else 22 / 17, never a refused kit', () => {
+  const KC = K.kitFromGear({ ...gear, jersey: { ...jersey, club: { crest: 'chest', word: false, cc: 1 | 15 << 4 } } });
+  assert.equal(KC.length, P.KIT_CLUB_COLOR_LEN); assert.ok(P.isKit(KC)); assert.equal(KC[22], 241);
+  // party: CAPS_ALL (255) never carries the club bits -> 17 slots
+  { const e = makeEnv(); e.c.setKit(KC); e.c.join('K7MQ4R', { look: LOOK, nick: 'Leo' }); const s = e.last(); s.open(); s.recv(welcome()); s.recv([S.Caps, CAPS_ALL]);
+    same(e.kitsSent(s), [[C.Kit, KC.slice(0, P.KIT_LEN)]]); }
+});
+const KC = K.kitFromGear({ ...gear, jersey: { ...jersey, club: { crest: 'chest', word: false, cc: 1 | 15 << 4 } } });
 
 t('client: a change is sent at once, a quicker second change waits KIT_GAP_MS and the LATEST goes (via sendPose or the beat)', () => {
   const e = makeEnv(); e.c.setKit(null); e.c.join('K7MQ4R', { look: LOOK, nick: 'Leo' }); const s = e.last(); s.open(); s.recv(welcome()); s.recv([S.Caps, CAPS_ALL]);
@@ -153,6 +163,19 @@ function avatarHarness() {
 const tick = () => new Promise((r) => setImmediate(r));
 
 (async () => {
+  { // world: new relay (CAPS_WORLD) -> 29; Nov 13 relay (no KitClubColor) -> 22; a relay without either -> 17
+    const fetch = () => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve({ open: true, shard: 1, n: 3 }) });
+    const wWelcome = [20, 1, 21, 'wtok-abcdefghij0123', 0, 0, 0, [[21, [2, 4], LOOK, 0, [0, 0, 0, 0, 0, 1, 0, 0]]]];
+    for (const [offer, len] of [[P.CAPS_WORLD, 29], [P.CAPS_WORLD & ~Cap.KitClubColor, 22], [P.CAPS_WORLD & ~Cap.KitClubColor & ~Cap.KitClub, 17]]) {
+      const e = makeEnv(fetch); e.c.setKit(KC); assert.ok(e.c.joinWorld({ look: LOOK })); for (let i = 0; i < 6; i++) await tick();
+      const s = e.last(); assert.ok(s, 'a world socket'); s.open(); s.recv(wWelcome); s.recv([S.Caps, offer]);
+      const sent = e.kitsSent(s); assert.equal(sent.length, 1, 'offer ' + offer); assert.equal(sent[0][1].length, len, 'offer ' + offer);
+      const caps = s.sent.map((x) => JSON.parse(x)).find((x) => x[0] === C.Caps); assert.equal(caps[1] & ~offer, 0, 'never answers a bit the relay did not offer');
+      assert.ok(P.parseClient(j(sent[0])), 'valid for the relay');
+      e.c.leave?.();
+    }
+    n++;
+  }
   {
     const h = avatarHarness(), { avatars, st, camera } = h;
     const kit = (c) => { const k = KIT.slice(); k[8] = c; return k; };

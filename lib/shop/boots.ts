@@ -366,3 +366,11 @@ export function storeBootSaves(saves:BootSaves,store:Store|null=storage()){try{s
 export function bootClubBits(d:Pick<BootDesign,'decals'>|null|undefined):number{
  let bits=0;for(const x of d?.decals??[])if(x.kind==='club')bits|=x.zone==='heel'?BOOT_CLUB_HEEL:BOOT_CLUB_SIDE;return bits;
 }
+/** Nov 16 2026 (docs/dripfc-colors.md): the colour code of the first club sticker on the boot's sides and on its heel (the avatar draws
+ *  one mark per spot); undefined = no sticker there, or it wears the club's own colours. */
+export function bootClubCodes(d:Pick<BootDesign,'decals'>|null|undefined):{side?:number;heel?:number}{
+ const out:{side?:number;heel?:number}={};let side=false,heel=false;
+ for(const x of d?.decals??[]){if(x.kind!=='club')continue;
+  if(x.zone==='heel'){if(!heel){heel=true;if(x.cc!==undefined)out.heel=x.cc;}}else if(!side){side=true;if(x.cc!==undefined)out.side=x.cc;}}
+ return out;
+}
