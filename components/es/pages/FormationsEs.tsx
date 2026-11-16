@@ -17,7 +17,7 @@ import styles from '@/app/(site)/site.module.css';
  * The Spanish formations hub, the 21 formation pages, the three format guides and the three comparison pages (Spanish round 2,
  * Nov 16 2026): the English pages' sections in the same order (app/(site)/learn/soccer-formations, lib/site/FormatGuideView.tsx,
  * components/site/ComparePage.tsx) with the Spanish words. Lesson lists stay off until the lessons family is translated; the
- * lineup builder and cheat sheets are English tools, linked with “(en inglés)”.
+ * lineup builder links its Spanish page (round D).
  */
 type Fmt=GuideFormat;
 const posEs=(slug?:string)=>slug?ES_POSITIONS().find(p=>p.slug===slug):undefined;
@@ -73,7 +73,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   <EsIntro crumbs={crumbs} h1={f.h1} lead={f.answer}/>
   <Section id="diagram" title={`Diagrama del ${f.shapeEs}`}>
    <FormationDiagram id="base" format={f.format} lines={f.lines} what={what} image={formationImage(f.slug)}/>
-   <p><a href={lineupLinkFor(f.slug)}>Arma esta alineación</a> (en inglés): pon los nombres de tus jugadores en el {f.shapeEs} con el creador de alineaciones gratis, y luego imprímelo o comparte un enlace.</p>
+   <p><a href={toEs(lineupLinkFor(f.slug).replace(/[?#].*$/,''))+(lineupLinkFor(f.slug).match(/[?#].*$/)?.[0]??'')}>Arma esta alineación</a>: pon los nombres de tus jugadores en el {f.shapeEs} con el creador de alineaciones gratis, y luego imprímelo o comparte un enlace.</p>
    {futsal
     ?<p>El {f.shape} cuenta a los cuatro jugadores de campo de atrás hacia adelante. Al portero se le cuenta aparte, así que un equipo de futsal tiene {PLAYERS_PER_TEAM.futsal} jugadores en la cancha.</p>
     :<p>Los entrenadores escriben esta forma de dos maneras. <b>{f.shape}</b> cuenta a los {PLAYERS_PER_TEAM[f.format]-1} jugadores de campo, desde la defensa hacia adelante. U.S. Soccer cuenta primero al portero y escribe <b>{withKeeper(f)}</b>. Las dos quieren decir la misma formación. Los números de los puntos son una costumbre común de los entrenadores, no una regla: los jugadores pueden usar cualquier número de camiseta.</p>}

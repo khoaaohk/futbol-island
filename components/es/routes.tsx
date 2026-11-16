@@ -8,6 +8,9 @@ import {hasEs} from '@/lib/i18n/esPaths';
 import HomeEs,{meta as HOME} from './pages/HomeEs';
 import AboutEs,{meta as ABOUT} from './pages/AboutEs';
 import FactsEs,{meta as FACTS} from './pages/FactsEs';
+import {lessonsEsRoute} from './pages/LessonsEs';
+import {hubsEsRoute} from './pages/HubsEs';
+import {toolsEsRoute} from './pages/ToolsEs';
 import {PositionEsPage,PositionsHubEsPage,RuleEsPage,RulesHubEsPage,TermEsPage,TermsHubEsPage} from './pages/GuidesEs';
 /**
  * The Spanish route table: English path -> metadata + page. Only paths in lib/i18n/esPaths.ts ES_PAGES resolve, so the language
@@ -18,6 +21,7 @@ const R='/learn/soccer-rules/',T='/learn/soccer-terms/',P='/learn/soccer-positio
 const COMPARE:Readonly<Record<string,string>>={'/learn/soccer-positions/fullback-vs-wingback':'fullback-vs-wingback','/learn/soccer-positions/striker-vs-winger':'striker-vs-winger','/learn/soccer-formations/4-3-3-vs-4-4-2':'4-3-3-vs-4-4-2'};
 const GUIDES:Readonly<Record<string,'7v7'|'9v9'|'11v11'>>={'/learn/7v7-soccer-formations':'7v7','/learn/9v9-soccer-formations':'9v9','/learn/11v11-soccer-formations':'11v11'};
 export function esRoute(enPath:string):EsRoute|null{
+ if(enPath==='/learn')return lessonsEsRoute(enPath);/* /es/learn?q= search: noindex, not a sitemap page */
  if(!hasEs(enPath))return null;
  if(enPath==='/')return {meta:()=>esMeta(HOME.title,HOME.desc,'/'),render:()=><HomeEs/>};
  if(enPath==='/about')return {meta:()=>esMeta(ABOUT.title,ABOUT.desc,enPath),render:()=><AboutEs/>};
@@ -37,5 +41,5 @@ export function esRoute(enPath:string):EsRoute|null{
   return {meta:()=>esMeta(t.title,t.desc,enPath,{url:diagramUrl(t.picture),alt:`Diagrama: ${t.name.toLowerCase()} en el fútbol`}),render:()=><TermEsPage t={t}/>};}
  if(enPath.startsWith(P)){const p=esPosition(enPath.slice(P.length));if(!p)return null;
   return {meta:()=>esMeta(p.title,p.desc,enPath,{url:positionImage(p.slug),alt:`Diagrama de dónde juega: ${p.name.toLowerCase()}`}),render:()=><PositionEsPage p={p}/>};}
- return null;
+ return lessonsEsRoute(enPath)??hubsEsRoute(enPath)??toolsEsRoute(enPath);/* round D families (each file owns its paths) */
 }

@@ -34,3 +34,21 @@ export type FormationsHubEs={crumb:string;blurb:string;title:string;description:
  groups:Readonly<Record<'7v7'|'9v9'|'11v11'|'futsal',string>>;faq:readonly Faq[]};
 /** Comparison pages: the table cells come from the Spanish position / formation records. */
 export type ComparisonEs={title:string;h1:string;desc:string;answer:string;fit:readonly string[];switching:readonly string[]};
+/** Lessons (Spanish round D, Nov 16 2026): the words of one lib/site/lessons.ts SiteLesson. steps / questions / options are 1:1 with
+ *  the English site lesson (options in the English A-Z order; the Spanish page re-sorts them A-Z in Spanish). No answer key. */
+export type LessonQuestionEs={q:string;options:readonly string[];explain:string};
+export type LessonEs={title:string;concept:string;steps:readonly string[];questions:readonly LessonQuestionEs[]};
+/** Tools (Spanish round D, Nov 16 2026): the words of one lib/site/tools/registry.ts LineupPage / PlannerPage (intro and faq 1:1),
+ *  of the two hubs, and of one lib/site/tools/printables.ts Printable (use 1:1). Keyed by the English slug. */
+export type ToolPageEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:readonly string[];faq:readonly Faq[]};
+export type ToolsHubEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;faq:readonly Faq[]};
+export type PrintableEs={crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;use:readonly string[]};
+/** Lesson hubs, size charts and the parents' guide (Spanish round D, Nov 16 2026; lib/i18n/es/hubs.ts, charts.ts, safety.ts).
+ *  Hub groups, chart tables/rows/sections/FAQ are 1:1 with the English lib/site/hubs.ts and lib/site/sizes.ts. */
+export type HubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;groups:readonly {title:string;line?:string}[];faq:readonly Faq[];
+ video?:{name:string;description:string}};
+export type ChartTableEs={title:string;intro?:string;head:readonly string[];rows:readonly (readonly string[])[];note:string};
+export type ChartEs={crumb:string;blurb:string;title:string;h1:string;description:string;lead:string;more:string;tables:readonly ChartTableEs[];
+ sections:readonly {title:string;items:readonly string[]}[];faq:readonly Faq[];pictureTitle:string};
+export type SafeFactEs={title:string;text:string};
+export type LinkEs={name:string;line:string};
