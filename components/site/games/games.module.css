@@ -17,7 +17,72 @@
 .game img{display:block;width:100%;height:auto;border-radius:var(--r-sm);background:var(--well)}
 .gameWords{display:grid;gap:6px;min-width:0}
 .gameWords p{max-width:none!important}
-.page .gameName{display:inline-flex;align-items:center;min-height:var(--tap);font-size:var(--t-h3);font-weight:700;letter-spacing:-.02em;line-height:1.2;color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:3px;text-underline-offset:.22em}
 .gameKind{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
 .gameLinks{display:flex;flex-wrap:wrap;gap:0 var(--s3);font-size:var(--t-cap)}
 .gameLinks a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink);font-weight:700;text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:.2em}
+/* Nov 16 2026 (owner: "more screenshots ... and videos of the game, more visual and engaging"): gameplay loops and stills.
+   Every media box has its poster's aspect ratio (no shift); the only client code is LoopClip. Wide bands break out of the
+   736 px reading column to at most 1180 px with the page's own gutters. Tone steps, no lines, no shadows on things at rest. */
+.bleed{--bw:min(1180px,100vw - 2 * var(--gutter));width:var(--bw);margin-inline:calc((100% - var(--bw)) / 2)!important;max-width:none!important;box-sizing:border-box}
+.clip{position:relative;width:100%;overflow:hidden;border-radius:var(--r-md);background:var(--well);isolation:isolate}
+.clip img{display:block;width:100%;height:auto}
+.clip video{display:block;width:100%;height:100%;object-fit:cover}
+.clip video{position:absolute;inset:0;z-index:1}
+.clipBtn{position:absolute;z-index:2;right:10px;bottom:10px;display:grid;place-items:center;width:48px;height:48px;padding:0;border:0;border-radius:var(--r-pill);
+ background:var(--paper);color:var(--ink);cursor:pointer;transition:scale .18s cubic-bezier(.2,1.28,.32,1),opacity .2s}
+.clip[data-playing] .clipBtn{opacity:.55}
+.clip[data-playing]:hover .clipBtn,.clipBtn:focus-visible{opacity:1}
+@media(hover:hover){.clipBtn:hover{scale:1.08}}
+.clipBtn:active{scale:.94}
+.clipBtn:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+.iconPlay{width:0;height:0;margin-left:4px;border-style:solid;border-width:9px 0 9px 15px;border-color:transparent transparent transparent currentColor}
+.iconPause{width:14px;height:18px;border-inline:5px solid currentColor;box-sizing:border-box}
+@media(prefers-reduced-motion:reduce){.clipBtn{transition:none}}
+.clipFig{margin:0;display:grid;gap:var(--s1);min-width:0}
+.clipFig figcaption{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
+.secs{white-space:nowrap}
+/* Hub hero: the three-phone loop on a pitch-green field. */
+.hero{display:grid;justify-items:center;gap:var(--s3);padding:var(--s3) var(--s2) var(--s4);background:var(--link);border-radius:clamp(24px,2.4vw,32px)}
+@media(min-width:720px){.hero{padding:var(--s4) var(--s4) var(--s5)}}
+.hero .clipFig{width:min(100%,760px)}
+.hero .clip{border-radius:var(--r-lg)}
+.hero figcaption{color:#f3efe2;text-align:center}
+/* Hub: one block per game. Phone: clip and name side by side, then the words. From 860 px: media | words, flipped every other. */
+.features{list-style:none;padding:0!important;display:grid;gap:var(--s3)!important}
+.feature{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);grid-template-areas:'m w';gap:var(--s2);align-items:start;max-width:none!important;padding:var(--s2);background:var(--surface);border-radius:var(--r-lg)}
+.featureWide{grid-template-columns:minmax(0,1fr);grid-template-areas:'m' 'w'}
+.featureMedia{grid-area:m;min-width:0}
+.featureWords{grid-area:w;display:grid;gap:10px;min-width:0;align-content:start}
+.featureWords p{max-width:none!important}
+.featureName{margin:0;font-size:var(--t-h2);line-height:1.05;font-weight:700;letter-spacing:-.03em}
+.featureWords .featureName a{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:4px;text-underline-offset:.16em}
+@media(min-width:860px){
+ .feature{grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:var(--s4);padding:var(--s3);align-items:center}
+ .flip{grid-template-columns:minmax(0,1fr) minmax(0,260px);grid-template-areas:'w m'}
+ .featureWide{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-template-areas:'m w'}
+ .featureWords{gap:var(--s2)}
+}
+.thumbs{list-style:none;padding:0!important;margin:0;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s1)!important;max-width:360px}
+.thumbs li{max-width:none!important}
+.thumbs img{display:block;width:100%;height:auto;border-radius:var(--r-sm);background:var(--well)}
+.featureWide .thumbs{max-width:none}
+.featureWords .gameLinks .playNow,.playRow7 .playNow{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 18px;border-radius:var(--r-pill);background:var(--gold);color:var(--btn-ink,#244d40);font-weight:800;text-decoration:none;transition:scale .18s cubic-bezier(.2,1.28,.32,1)}
+@media(hover:hover){.featureWords .gameLinks .playNow:hover,.playRow7 .playNow:hover{scale:1.04}}
+.featureWords .gameLinks .playNow:active,.playRow7 .playNow:active{scale:.96}
+@media(prefers-reduced-motion:reduce){.featureWords .gameLinks .playNow,.playRow7 .playNow{transition:none}}
+/* Inside the island: one row that swipes sideways, snapping to each picture; the next one peeks in. */
+.gallery{list-style:none;margin:0;padding:0 0 var(--s2)!important;display:flex!important;gap:var(--s2)!important;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.gallery>li{flex:0 0 min(84%,520px);max-width:none!important;scroll-snap-align:start}
+.gallery .shot img{aspect-ratio:16/9;object-fit:cover;border-radius:var(--r-md)}
+/* The "play one now" row on the hub: seven gold links that wrap. */
+.playRow7{list-style:none;padding:0!important;display:flex!important;flex-wrap:wrap;gap:var(--s1) var(--s2)!important}
+.playRow7 li{max-width:none!important}
+/* Game page: the clip beside the stills (phone games), or above them (the wide runner). */
+.media{display:grid;gap:var(--s2);box-sizing:border-box;padding:var(--s2);background:var(--surface);border-radius:clamp(24px,2.4vw,32px)}
+@media(min-width:720px){.media{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:var(--s3);padding:var(--s3);align-items:start}}
+.mediaWide{grid-template-columns:minmax(0,1fr)!important}
+.mediaClip{max-width:280px;justify-self:center;width:100%}
+@media(min-width:720px){.mediaClip{max-width:420px}}
+.mediaWide .mediaClip{max-width:none}
+.strip{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s2)}
+.stripWide{grid-template-columns:repeat(2,minmax(0,1fr))}

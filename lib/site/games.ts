@@ -1,4 +1,5 @@
 import type {Faq} from './safety';
+import {gameStills,HERO_CLIP,islandStills} from './gameMedia';
 import {abs,KIDS_AUDIENCE,PUBLISHER,SITE_NAME,SITE_URL} from './seo';
 /**
  * The arcade games' search pages (Nov 10 2026, owner: "we also need separate SEO pages for these games"): /games and one page
@@ -14,7 +15,8 @@ import {abs,KIDS_AUDIENCE,PUBLISHER,SITE_NAME,SITE_URL} from './seo';
  * Tennis is described without match-length rules (its endless mode was being built on the same day).
  * Island Strikers is not a cabinet any more and is never named here as an arcade game.
  * The kit pattern is written str\\u0069pes in the strings: tests/seo-pages.cjs forbids the name of the payment service in lib/site.
- * Pictures: public/games/*.webp and *-og.jpg, made from docs/arcade-aaa/shots by docs/seo/build-game-images.py.
+ * Pictures: public/games/*.webp and *-og.jpg, made from docs/arcade-aaa/shots by docs/seo/build-game-images.py; gameplay clips
+ * and extra stills (Nov 16 2026) come from lib/site/gameMedia.ts (allShots adds them, up to four per game).
  */
 export const GAMES_PATH='/games';
 export const GAMES_UPDATED='2026-11-10';
@@ -246,6 +248,8 @@ export const GAME_PAGES:readonly GamePage[]=[
    {q:'How do you play Air Futbol?',a:'Drag your round striker with a finger (or the mouse) to hit the puck into the goal at the far end, and keep it out of your own. Shots can rebound off the side boards.'},
    {q:'What age is Air Futbol for?',a:'Futbol Island is made for children aged 7 to 12. One finger is all it takes, and the first opponent is gentle, so it is one of the easiest arcade games to start.'}]},
 ];
+/** A game page's pictures: the hand-made screenshots, then new gameplay stills up to four (lib/site/gameMedia.ts). */
+export const allShots=(g:GamePage):GameShot[]=>[...g.shots,...gameStills(g.id,Math.max(0,4-g.shots.length))];
 export const gameBySlug=(slug:string)=>GAME_PAGES.find(g=>g.slug===slug);
 export const gameById=(id:GameId)=>GAME_PAGES.find(g=>g.id===id)!;
 /** A ready link to a game page for a guide's own "related" list (lib/site/rules.ts, lib/site/drillLinks.ts, the two hubs). */
@@ -268,13 +272,13 @@ export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',pat
 /** For the sitemap, llms.txt and the image sitemap: the hub first, then the seven pages. */
 export type GameListing={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;images:string[]};
 export const GAME_LISTINGS:readonly GameListing[]=[
- {path:GAMES_HUB.path,name:GAMES_HUB.h1,title:GAMES_HUB.title,description:GAMES_HUB.description,blurb:GAMES_HUB.blurb,hub:true,images:[GAMES_HUB.og,...GAME_PAGES.map(g=>g.shots[0].src)]},
- ...GAME_PAGES.map(g=>({path:g.path,name:g.h1,title:g.title,description:g.description,blurb:g.blurb,images:[...g.shots.map(s=>s.src),g.og]})),
+ {path:GAMES_HUB.path,name:GAMES_HUB.h1,title:GAMES_HUB.title,description:GAMES_HUB.description,blurb:GAMES_HUB.blurb,hub:true,images:[GAMES_HUB.og,...GAME_PAGES.map(g=>g.shots[0].src),...GAME_PAGES.flatMap(g=>gameStills(g.id,3).map(s=>s.src)),...islandStills().map(s=>s.src),...(HERO_CLIP?[HERO_CLIP.poster]:[])]},
+ ...GAME_PAGES.map(g=>({path:g.path,name:g.h1,title:g.title,description:g.description,blurb:g.blurb,images:[...allShots(g).map(s=>s.src),g.og]})),
 ];
 /* ---- JSON-LD ---- */
 /** One arcade game as a free browser VideoGame. No ratings or reviews: none exist, and none are invented. */
 export const videoGameLd=(g:GamePage)=>({'@context':'https://schema.org','@type':'VideoGame','@id':abs(g.path)+'#game',name:g.name,alternateName:g.h1,url:abs(g.path),mainEntityOfPage:abs(g.path),description:g.description,
- image:abs(g.og),screenshot:g.shots.map(s=>({'@type':'ImageObject',contentUrl:abs(s.src),encodingFormat:'image/webp',width:s.w,height:s.h,caption:s.alt})),
+ image:abs(g.og),screenshot:allShots(g).map(s=>({'@type':'ImageObject',contentUrl:abs(s.src),encodingFormat:'image/webp',width:s.w,height:s.h,caption:s.alt})),
  genre:g.genre,gamePlatform:'Web browser',operatingSystem:'Web browser',applicationCategory:'Game',playMode:'SinglePlayer',inLanguage:'en',isAccessibleForFree:true,
  offers:{'@type':'Offer',price:0,priceCurrency:'USD',availability:'https://schema.org/InStock',url:abs(g.path)},audience:KIDS_AUDIENCE,isFamilyFriendly:true,teaches:g.skill,
  datePublished:GAMES_UPDATED,dateModified:GAMES_UPDATED,publisher:PUBLISHER,author:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});

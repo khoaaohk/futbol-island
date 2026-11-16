@@ -38,9 +38,19 @@ for(const v of vids){
 // sitemap
 const xml=gv.videoSitemapXml();
 assert(xml.startsWith('<?xml version="1.0" encoding="UTF-8"?>')&&xml.includes('xmlns:video="http://www.google.com/schemas/sitemap-video/1.1"'),'video sitemap header');
-assert.equal((xml.match(/<url>/g)||[]).length,vids.length,'one <url> per clip');
+// Nov 16 2026: the games pages add their own entries (lib/site/gameMedia.ts): /games (hero + island clips) and one per game page.
+const gm=L('lib/site/gameMedia.ts'),gamePages=gm.GAME_VIDEO_PAGES.filter(p=>gm.gameVideosFor(p).length),gameClips=gamePages.flatMap(p=>gm.gameVideosFor(p));
+assert.equal((xml.match(/<url>/g)||[]).length,vids.length+gamePages.length,'one <url> per guide clip and per games page with clips');
+const entries=vids.length+gameClips.length;assert.equal((xml.match(/<video:video>/g)||[]).length,entries,'one <video:video> per clip');
+for(const c of gameClips){for(const f of [c.mp4,c.webm,c.poster]){const st=fs.statSync(path.join(root,'public',f));assert(st.size<1_600_000,`${f} is small (${st.size})`);}
+ assert(c.seconds>=4&&c.seconds<=12,`${c.key}: a 4-12 s loop`);assert(Math.max(c.w,c.h)<=720,`${c.key}: 720 px on the long side at most`);
+ const ld=gm.gameClipLd(c);for(const k of ['name','description','thumbnailUrl','uploadDate','contentUrl','duration'])assert(ld[k],`${c.key}: VideoObject.${k}`);}
+// LoopClip: muted, inline, no sound, the <video> only exists on the client once it may play, one clip at a time
+const lc=read('components/site/games/LoopClip.tsx');
+assert(/<video[^>]*\bmuted\b[^>]*\bplaysInline\b/.test(lc)&&/preload="none"/.test(lc)&&/\{on&&<video/.test(lc),'LoopClip: muted inline video, created only when it may play');
+assert(/prefers-reduced-motion: reduce/.test(lc)&&/IntersectionObserver/.test(lc)&&/visibilitychange/.test(lc)&&/PLAYING/.test(lc),'LoopClip: reduced motion keeps the poster, pauses off screen and when hidden, one at a time');
 for(const t of ['loc','video:thumbnail_loc','video:title','video:description','video:content_loc','video:duration','video:publication_date','video:family_friendly'])
- assert.equal((xml.match(new RegExp(`<${t}>[^<]+</${t}>`,'g'))||[]).length,vids.length,`every entry has <${t}>`);
+ assert.equal((xml.match(new RegExp(`<${t}>[^<]+</${t}>`,'g'))||[]).length,t==='loc'?vids.length+gamePages.length:entries,`every entry has <${t}>`);
 assert(!/&(?!amp;|lt;|gt;|quot;|apos;)/.test(xml),'XML entities escaped');
 assert(/export const dynamic='force-static'/.test(read('app/sitemap-video.xml/route.ts')),'the video sitemap is static');
 assert(read('app/robots.ts').includes('/sitemap-video.xml'),'robots.txt names the video sitemap');

@@ -129,3 +129,23 @@ consistent". The look above is unchanged; the pass made it one system and added 
   island location). The island validates `go=` against its own lessons and spots (`lib/play/deepLink.ts`) after boot,
   runs it through the Welcome back card's actions, ignores anything else, and removes the param. The lesson's reading page
   stays linked in "Lessons that teach it".
+
+## Games pages with gameplay footage (Nov 16 2026)
+
+Owner: "fix /games to include more screenshots of the game and videos of the game. Make this page more visual and engaging."
+The one exception to "no video" on reading pages, and only on `/games` and `/games/<slug>` (`lib/site/gameMedia.ts`).
+
+- **Media**: real captures of the production build (CDP screencast in headless Chrome): one silent loop per arcade game, a
+  three-phone hero loop, and island loops (walk, jetpack, stadium, fishing bite + trophy card, arcade room; museum, beach match,
+  Kit Shop studio and plaza re-cut from the Nov 3 /learn captures). 720 px long side, H.264 MP4 + VP9 WebM, poster WebP from a
+  sharper still. Sizes and durations live in `lib/site/gameMedia.json`. Files: `public/games/clips`, `public/games/shots`.
+- **LoopClip** (`components/site/games/LoopClip.tsx`): server HTML is the poster `<img>` (real size, so no shift) and a 48 px
+  Play/Pause button. The `<video>` is created on the client only when it may play: the hub hero once on screen; every other
+  clip on hover (mouse) or tap. Never with prefers-reduced-motion or Save-Data on the hero; paused off screen and when the tab
+  is hidden; one clip plays at a time. Muted, playsInline, loop, preload="none". No third-party player.
+- **Hub layout**: intro, the hero loop on a pitch-green field with the gold "Play Kit Rush now", one block per game (clip,
+  name, kind, what it teaches, three stills, gold "Play <game>" pill) alternating sides from 860 px, "Inside the island" as a
+  sideways scroll-snap row, "Pick a game and play" (seven gold pills), then the original parents / FAQ / guides. Wide bands
+  break out of the 736 px column to 1180 px (`.bleed`). The hero poster is the LCP: preloaded, eager, fetchpriority high.
+- **SEO**: VideoObject per clip (the hub's as `CollectionPage.video`; each game's as `VideoGame.trailer`), all clips in
+  `/sitemap-video.xml`, stills in `/sitemap-images.xml` and `VideoGame.screenshot` (up to four per game).
