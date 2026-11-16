@@ -1,5 +1,7 @@
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
+import GuideVideo from '@/components/site/GuideVideo';
+import LearnSearchForm from '@/components/site/LearnSearchForm';
 import {FORMAT_LABEL,FORMAT_ORDER,LESSONS,lessonPath} from '@/lib/site/lessons';
 import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
 import {DEFINITION,HUBS,SAFE_GUIDE} from '@/lib/site/hubs';
@@ -24,7 +26,9 @@ export default function LearnIndex(){
    <p className={styles.lead}>{DEFINITION} {DESC} On the island each lesson plays out on a real pitch with moving players; here you can read the coach’s words and the quiz questions.</p>
    <p className={styles.caption}>{SAFE_TRUST_LINE} <a href={SAFE_GUIDE.path}>Read the parents’ guide</a>.</p>
    <a className={styles.cta} href="/play">Play the lessons on the island</a>
+   <LearnSearchForm/>
   </header>
+  <GuideVideo path="/learn/lessons"/>
   <section className={styles.section} aria-labelledby="topics"><h2 className={styles.h2} id="topics">Lessons by topic</h2>
    <ul className={styles.list}>{HUBS.map(h=><li key={h.path}><a href={h.path}><span className={styles.itemTitle}>{h.h1}</span><span className={styles.itemMeta}>{h.blurb}</span></a></li>)}</ul>
   </section>

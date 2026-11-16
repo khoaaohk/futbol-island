@@ -1,5 +1,6 @@
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
+import GuideVideo from '@/components/site/GuideVideo';
 import {HUBS,SAFE_GUIDE,type Hub} from '@/lib/site/hubs';
 import {GUIDE_HUBS} from '@/lib/site/guides';
 import {TOOL_HUBS} from '@/lib/site/tools/registry';
@@ -41,6 +42,7 @@ export default function LessonHub({hub,children}:{hub:Hub;children?:React.ReactN
    <p className={styles.caption}>{SAFE_TRUST_LINE} <a href={SAFE_GUIDE.path}>Read the parents’ guide</a>.</p>
    <a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>
   </header>
+  <GuideVideo path={hub.path}/>
   {children}{/* page-specific sections before the lesson groups (Nov 15 2026: the 7v7 vs 9v9 vs 11v11 table) */}
   {hub.groups.map((g,i)=><section key={g.title} className={styles.section} aria-labelledby={`g-${i}`}>
    <h2 className={styles.h2} id={`g-${i}`}>{g.title} <span className={styles.count}>({g.lessons.length})</span></h2>

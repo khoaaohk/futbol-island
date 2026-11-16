@@ -167,7 +167,7 @@ for(const f of ['components/site/tools/LineupBuilder.tsx','components/site/tools
  const xml=im.imageSitemapXml();assert(xml.startsWith('<?xml')&&xml.includes('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"')&&xml.trim().endsWith('</urlset>'));
  assert.equal((xml.match(/<url>/g)||[]).length,entries.length);assert.equal((xml.match(/<image:loc>https:\/\/futbolisland\.app\/[^<]+<\/image:loc>/g)||[]).length,entries.reduce((a,e)=>a+e.images.length,0));
  assert((await L('app/sitemap-images.xml/route.ts').GET().text())===xml&&/force-static/.test(read('app/sitemap-images.xml/route.ts')));
- const robots=L('app/robots.ts').default();assert.deepEqual(robots.sitemap,['https://futbolisland.app/sitemap.xml','https://futbolisland.app/sitemap-images.xml'],'robots.txt names both sitemaps');
+ const robots=L('app/robots.ts').default();assert.deepEqual(robots.sitemap,['https://futbolisland.app/sitemap.xml','https://futbolisland.app/sitemap-images.xml','https://futbolisland.app/sitemap-video.xml'],'robots.txt names the three sitemaps (video: tests/seo-video.cjs)');
  const play=seo.playLd();for(const t of ['WebApplication','VideoGame'])assert(play['@type'].includes(t),`/play: ${t}`);
  assert.equal(play.url,'https://futbolisland.app/play');assert.deepEqual(play.genre,['Educational','Sports']);assert.equal(play.gamePlatform,'Web browser');assert.equal(play.isAccessibleForFree,true);assert.equal(play.inLanguage,'en');
  assert.equal(play.audience.suggestedMinAge,7);assert.equal(play.audience.suggestedMaxAge,12);assert.equal(play.publisher.name,'Futbol Island');assert(play.image&&play.name&&play.description);

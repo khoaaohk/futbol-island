@@ -99,7 +99,7 @@ for(const g of PAGES){
  const n=body.split(' ').length;words+=n;assert(n>=MIN[k],`${where}: real substance (${n} words, at least ${MIN[k]})`);
  const scripts=h.match(/<script[^>]*>[\s\S]*?<\/script>/g)||[];
  const ld=scripts.map(s=>{assert(/type="application\/ld\+json"/.test(s),`${where}: no script except JSON-LD`);return JSON.parse(s.replace(/^<script[^>]*>|<\/script>$/g,''));});
- const types=ld.map(x=>x['@type']);
+ const types=ld.flatMap(x=>[].concat(x['@type']));/* Article+LearningResource is one node (seo-extras) */
  assert(types.includes('BreadcrumbList')&&types.includes('FAQPage'),`${where}: BreadcrumbList and FAQPage`);
  assert(types.includes(k==='hub'?'CollectionPage':'Article'),`${where}: its own JSON-LD type (${types})`);
  const crumbs=ld.find(x=>x['@type']==='BreadcrumbList').itemListElement;

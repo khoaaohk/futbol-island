@@ -1,0 +1,35 @@
+# IndexNow ping (seo-extras, Nov 15 2026; docs/indexnow.md). DISABLED for automatic runs: workflow_dispatch only, no push trigger.
+# Run it by hand from the Actions tab after a deploy is live. "send: false" is a dry run that only prints the URLs.
+name: IndexNow ping
+on:
+  workflow_dispatch:
+    inputs:
+      since:
+        description: 'Previous deploy commit (sha). Empty = HEAD~1'
+        required: false
+        default: ''
+      send:
+        description: 'Actually send the ping (false = dry run)'
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 50
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: IndexNow
+        env:
+          SINCE: ${{ inputs.since }}
+          SEND: ${{ inputs.send }}
+        run: |
+          ARGS=""
+          if [ -n "$SINCE" ]; then ARGS="--since $SINCE"; fi
+          if [ "$SEND" = "true" ]; then ARGS="$ARGS --send"; fi
+          node scripts/indexnow-ping.mjs $ARGS

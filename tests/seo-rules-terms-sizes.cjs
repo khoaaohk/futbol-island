@@ -92,7 +92,7 @@ for(const g of PAGES){
  const n=body.split(' ').length;words+=n;assert(n>=(k==='term'?330:400),`${where}: real substance (${n} words)`);
  const scripts=h.match(/<script[^>]*>[\s\S]*?<\/script>/g)||[];
  const ld=scripts.map(s=>{assert(/type="application\/ld\+json"/.test(s),`${where}: no script except JSON-LD`);return JSON.parse(s.replace(/^<script[^>]*>|<\/script>$/g,''));});
- const types=ld.map(x=>x['@type']);
+ const types=ld.flatMap(x=>[].concat(x['@type']));/* Article+LearningResource is one node (seo-extras) */
  assert(types.includes('BreadcrumbList')&&types.includes('FAQPage'),`${where}: BreadcrumbList and FAQPage`);
  assert(types.includes(g.path==='/learn/soccer-terms'?'DefinedTermSet':g.path==='/learn/soccer-rules'?'CollectionPage':'Article'),`${where}: its own JSON-LD type (${types})`);
  if(k==='term')assert(types.includes('DefinedTerm'),`${where}: DefinedTerm`);

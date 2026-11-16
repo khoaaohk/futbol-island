@@ -1,6 +1,7 @@
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
+import PrintSheet from '@/components/site/PrintSheet';
 import {QA} from '@/components/site/LessonHub';
 import {DRILLS,DRILLS_HUB,DRILL_SAFETY_LINE,SKILLS,drillAgeNotes,drillBySlug,drillLine,type Drill} from '@/lib/site/drills';
 import {DRILL_GUIDES,SKILL_GUIDES,drillGuideBySlug,guidesForDrill,type DrillGuide} from '@/lib/site/drillGuides';
@@ -40,6 +41,7 @@ function DrillPage({d}:{d:Drill}){
   <JsonLd data={articleLd({headline:d.title,path:d.path,description:d.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${d.name} (soccer drill)`,teaches:d.answer,image:diagramUrl(d.picture)})}/>
   <JsonLd data={faqLd(d.faq)}/>
   <GuideIntro crumbs={crumbs} h1={d.h1} lead={d.answer}/>
+  <PrintSheet path={d.path} what="drill sheet"/>
   <Section id="diagram" title={`${d.name}: setup diagram`}><GridFigure id="s0" scene={d.scene} image={diagramUrl(d.picture)}/></Section>
   <Section id="facts" title="At a glance">
    <DataTable label={`${d.name}: ages, players, space, equipment and time`} head={['Detail','For this drill']} rows={[['Ages',d.agesText],['Players',d.players],['Space',d.space],['Equipment',d.equipment],['Time',d.time],['Skill',skill.name]]}/>

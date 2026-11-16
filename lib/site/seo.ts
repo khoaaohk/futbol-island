@@ -82,15 +82,24 @@ export const siteLd=()=>({'@context':'https://schema.org','@type':['WebApplicati
  publisher:PUBLISHER,image:SITE_URL+'/opengraph-image.png'});
 /** The home page `/` (the feature tour, Nov 3 2026): the site and its publisher. */
 export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite','@id':WEBSITE_ID,name:SITE_NAME,url:SITE_URL+'/',inLanguage:'en',
- description:'Futbol Island is a free football (soccer) learning game for kids aged 7 to 12, played in the web browser.',publisher:PUBLISHER});
+ description:'Futbol Island is a free football (soccer) learning game for kids aged 7 to 12, played in the web browser.',publisher:PUBLISHER,
+ // seo-extras (Nov 15 2026): the guide search at /learn?q= (app/(site)/learn/page.tsx reads q on load).
+ potentialAction:{'@type':'SearchAction',target:{'@type':'EntryPoint',urlTemplate:SITE_URL+'/learn?q={search_term_string}'},'query-input':'required name=search_term_string'}});
 /** No sameAs: Futbol Island has no social profile of its own yet (the Instagram on `/` is the partner founder's personal
  *  account, not the game's), and sameAs must name the same entity. Add its own profiles here when they exist. */
 export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png',
  description:'Futbol Island makes a free football (soccer) learning game for kids aged 7 to 12, built in San Diego with White Sports Ventures.'});
-/** A guide page (formations, positions and later clusters, lib/site/guides.ts): an Article for kids with real content dates. */
-export const articleLd=(o:{headline:string;path:string;description:string;published:string;modified:string;about:string;teaches?:string;image?:string})=>({'@context':'https://schema.org','@type':'Article',
+/** Who the learning pages are for (seo-extras, Nov 15 2026): kids 7 to 12 and the grown-ups who coach them. */
+export const COACH_AUDIENCE={'@type':'EducationalAudience',educationalRole:'coach',audienceType:'Youth soccer coaches and parents'};
+export const LEARN_AUDIENCE=[KIDS_AUDIENCE,COACH_AUDIENCE];
+/** schema.org learningResourceType for a guide, from its path (drills, practice plans, rules and terms, or a plain guide). */
+export const resourceTypeFor=(path:string)=>/^\/learn\/soccer-drills\/./.test(path)?'Drill':/^\/learn\/soccer-practice-plans\/./.test(path)?'Lesson plan'
+ :/^\/learn\/soccer-(rules|terms)\/./.test(path)?'Reference':'Guide';
+/** A guide page (formations, positions, drills, rules, plans, charts): an Article that is also a LearningResource (seo-extras,
+ *  Nov 15 2026: one entity with both types, never a second node), for kids and coaches, with real content dates. */
+export const articleLd=(o:{headline:string;path:string;description:string;published:string;modified:string;about:string;teaches?:string;image?:string})=>({'@context':'https://schema.org','@type':['Article','LearningResource'],
  headline:o.headline,name:o.headline,url:abs(o.path),mainEntityOfPage:abs(o.path),description:o.description,inLanguage:'en',isAccessibleForFree:true,
- datePublished:o.published,dateModified:o.modified,learningResourceType:'Guide',educationalLevel:'Beginner',audience:KIDS_AUDIENCE,
+ datePublished:o.published,dateModified:o.modified,learningResourceType:resourceTypeFor(o.path),educationalLevel:'Beginner',audience:LEARN_AUDIENCE,
  about:{'@type':'Thing',name:o.about},...(o.teaches?{teaches:o.teaches}:{}),...(o.image?{image:abs(o.image)}:{}),
  author:PUBLISHER,publisher:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
 /** A plain-text page about one thing (a fish, a card, an exhibit). */

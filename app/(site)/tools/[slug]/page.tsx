@@ -15,6 +15,8 @@ import {DEFAULT_FORMATION} from '@/lib/site/tools/lineup';
 import {cheatSheetPath,PRINTABLES_HUB_PATH} from '@/lib/site/tools/printables';
 import {gameLengths,LINEUP_PAGES,LINEUP_PATH,lineupPage,PLANNER_PAGES,PLANNER_PATH,plannerImage,plannerPage,PRINTABLES_HUB,TOOL_PAGES,toolCrumbs,webAppLd,type LineupPage,type PlannerPage} from '@/lib/site/tools/registry';
 import {SHAPES} from '@/lib/site/tools/shapes';
+import EmbedSnippet from '@/components/site/tools/EmbedSnippet';
+import {embedSnippet} from '@/lib/site/tools/embed';
 import site from '../../site.module.css';
 
 /**
@@ -63,6 +65,7 @@ function Lineup({p}:{p:LineupPage}){
     <p>The builder opens with the {f.name} formation. These are its jobs; <a href={f.path}>the {f.shape} guide</a> has the strengths, the weak spots and how the shape moves.</p>
     <ul>{f.roles.map(r=><li key={r.title}><b>{r.pos?<a href={positionPath(r.pos)}>{r.title}</a>:r.title}.</b> {r.job}</li>)}</ul>
    </Section>}
+   <EmbedSnippet snippet={embedSnippet(p)} name={p.h1}/>
    <QA id="faq" title={`Questions about the ${p.h1}`} faq={p.faq}/>
    <Section id="related" title="Formations and more tools"><LinkList links={related}/></Section>
    <GuideEnd sticky={false}/>
@@ -106,6 +109,7 @@ function Planner({p}:{p:PlannerPage}){
      <li>The same numbers always give the same plan. Reorder the names to change who starts.</li>
     </ul>
    </Section>
+   <EmbedSnippet snippet={embedSnippet(p)} name={p.h1}/>
    <QA id="faq" title={`Questions about ${p.format?`${p.format} substitutions`:'playing time'}`} faq={p.faq}/>
    <Section id="related" title="Rules, charts and more tools"><LinkList links={related}/></Section>
    <GuideEnd sticky={false}/>

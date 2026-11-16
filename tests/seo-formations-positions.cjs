@@ -103,7 +103,7 @@ for(const g of guides.GUIDE_PAGES){
  for(const q of faq){assert(body.includes(q.name.replace(/'/g,'’')),`${where}: FAQ question is on the page: ${q.name}`);assert(q.acceptedAnswer.text.length>=60,`${where}: a real answer to ${q.name}`);}
  if(g.hub){const c=ld.find(x=>x['@type']==='CollectionPage');assert(c&&c.mainEntity['@type']==='ItemList'&&c.mainEntity.numberOfItems>=4,`${where}: ItemList on the hub`);
   for(const it of c.mainEntity.itemListElement)assert(PATHS.has(it.url.replace('https://futbolisland.app','')),`${where}: list item ${it.url} exists`);assert(c.audience,`${where}: audience`);}
- else{const a=ld.find(x=>x['@type']==='Article');assert(a&&a.audience&&a.datePublished&&a.dateModified&&a.headline===g.title,`${where}: Article with audience and dates`);
+ else{const a=ld.find(x=>[].concat(x['@type']).includes('Article'));assert(a&&a.audience&&a.datePublished&&a.dateModified&&a.headline===g.title,`${where}: Article with audience and dates`);
   assert.equal(a.image,'https://futbolisland.app'+g.image,`${where}: Article image is the diagram`);}
  // diagrams
  const svgs=h.match(/<svg[\s\S]*?<\/svg>/g)||[];assert(svgs.length>=1,`${where}: has a diagram`);
