@@ -1,25 +1,42 @@
+import * as ReactDOM from 'react-dom';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
-import {GameIntro,GameRow,gamesCss} from '@/components/site/games/GameParts';
+import {ClipFigure,GameFeature,GameIntro,IslandGallery,gamesCss} from '@/components/site/games/GameParts';
 import {LinkList,Section} from '@/lib/site/GuideParts';
 import {GAME_FOOT,GAME_PAGES,GAMES_HUB,gameCrumbs,gameListLd} from '@/lib/site/games';
-import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
+import {gameClipLd,HERO_CLIP,islandClips} from '@/lib/site/gameMedia';
+import {abs,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import site from '../site.module.css';
 
-/** /games (lib/site/games.ts): the seven arcade games as a reading page for search. Static, no client code, no game canvas. */
+/** /games (lib/site/games.ts): the seven arcade games as a reading page for search, with real gameplay loops and stills
+ * (lib/site/gameMedia.ts, Nov 16 2026). Static; the only client code is the clips' LoopClip. No game canvas. */
 export const dynamic='force-static';
 const H=GAMES_HUB;
 export const metadata=pageMeta(H.title,H.description,H.path,{whole:true,type:'website',image:{url:H.og,alt:H.ogAlt}});
 export default function GamesHub(){
- const crumbs=gameCrumbs();
+ // The hero poster is the page's LCP: preload it at high priority (react-dom's preload, in the App Router's React).
+ if(HERO_CLIP&&typeof ReactDOM.preload==='function')ReactDOM.preload(HERO_CLIP.poster,{as:'image',fetchPriority:'high'});
+ const crumbs=gameCrumbs(),clips=[HERO_CLIP,...islandClips()].filter(c=>c!==null);
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={gameListLd()}/>
   <JsonLd data={faqLd(H.faq)}/>
+  {clips.length>0&&<JsonLd data={{'@context':'https://schema.org','@type':'CollectionPage','@id':abs(H.path)+'#page',url:abs(H.path),name:H.title,video:clips.map(c=>gameClipLd(c,false))}}/>}
   <GameIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
+  {HERO_CLIP&&<div className={`${gamesCss.bleed} ${gamesCss.hero}`}>
+   <ClipFigure c={HERO_CLIP} auto priority/>
+   <a className={site.cta} href={GAME_PAGES[0].play} data-play={GAME_PAGES[0].id}>Play {GAME_PAGES[0].name} now</a>
+  </div>}
   <Section id="games" title="The seven games">
    {H.intro.map(x=><p key={x}>{x}</p>)}
-   <ul className={gamesCss.games}>{GAME_PAGES.map(g=><GameRow key={g.id} game={g}/>)}</ul>
+   <ul className={`${gamesCss.features} ${gamesCss.bleed}`}>{GAME_PAGES.map((g,i)=><GameFeature key={g.id} game={g} flip={i%2===1}/>)}</ul>
+  </Section>
+  <Section id="island" title="Inside the island">
+   <p>The arcade is one room of Futbol Island, a whole 3D island to explore. Walk or fly around it, fish from the pier, play a match on the beach, design a kit and visit the football museum.</p>
+   <div className={gamesCss.bleed}><IslandGallery/></div>
+  </Section>
+  <Section id="play" title="Pick a game and play">
+   <ul className={gamesCss.playRow7}>{GAME_PAGES.map(g=><li key={g.id}><a className={gamesCss.playNow} href={g.play}>Play {g.name}</a></li>)}</ul>
   </Section>
   <Section id="pick" title="Which game to start with">
    <ul>{H.pick.map(([k,v])=><li key={k}><b>{k}:</b> {v}</li>)}</ul>

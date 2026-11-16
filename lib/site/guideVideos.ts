@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import {GAME_CLIPS_UPLOADED,GAME_VIDEO_PAGES,gameVideosFor} from './gameMedia';
 import {learnUrl} from './learnMedia';
 import {abs,SITE_URL} from './seo';
 /**
@@ -39,8 +40,11 @@ export const videoLd=(v:GuideVideo)=>({'@context':'https://schema.org','@type':'
  thumbnailUrl:[abs(v.poster)],uploadDate:v.uploadDate,duration:`PT${v.seconds}S`,contentUrl:full(learnUrl(v.mp4!)),
  width:v.width,height:v.height,isFamilyFriendly:true,inLanguage:'en',isAccessibleForFree:true,mainEntityOfPage:abs(v.path)});
 const esc=(s:string)=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
-/** /sitemap-video.xml (Google video sitemap): one <url> per guide page with a clip. */
+/** /sitemap-video.xml (Google video sitemap): one <url> per guide page with a clip, then the games pages (Nov 16 2026: /games
+ *  carries its hero loop and the island clips, each /games/<slug> its gameplay loop; lib/site/gameMedia.ts). */
+const entry=(v:{poster:string;name:string;description:string;content:string;seconds:number;date:string})=>`<video:video><video:thumbnail_loc>${esc(abs(v.poster))}</video:thumbnail_loc><video:title>${esc(v.name)}</video:title><video:description>${esc(v.description)}</video:description><video:content_loc>${esc(v.content)}</video:content_loc><video:duration>${v.seconds}</video:duration><video:publication_date>${esc(v.date)}</video:publication_date><video:family_friendly>yes</video:family_friendly><video:requires_subscription>no</video:requires_subscription></video:video>`;
 export function videoSitemapXml():string{
- const urls=allGuideVideos().map(v=>`<url><loc>${esc(abs(v.path))}</loc><video:video><video:thumbnail_loc>${esc(abs(v.poster))}</video:thumbnail_loc><video:title>${esc(v.name)}</video:title><video:description>${esc(v.description)}</video:description><video:content_loc>${esc(full(learnUrl(v.mp4!)))}</video:content_loc><video:duration>${v.seconds}</video:duration><video:publication_date>${esc(v.uploadDate)}</video:publication_date><video:family_friendly>yes</video:family_friendly><video:requires_subscription>no</video:requires_subscription></video:video></url>`);
+ const urls=allGuideVideos().map(v=>`<url><loc>${esc(abs(v.path))}</loc>${entry({poster:v.poster,name:v.name,description:v.description,content:full(learnUrl(v.mp4!)),seconds:v.seconds,date:v.uploadDate})}</url>`);
+ for(const p of GAME_VIDEO_PAGES){const vs=gameVideosFor(p);if(vs.length)urls.push(`<url><loc>${esc(abs(p))}</loc>${vs.map(c=>entry({poster:c.poster,name:c.name,description:`${c.caption} ${c.alt}.`,content:abs(c.mp4),seconds:c.seconds,date:GAME_CLIPS_UPLOADED})).join('')}</url>`);}
  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">\n${urls.join('\n')}\n</urlset>\n`;
 }

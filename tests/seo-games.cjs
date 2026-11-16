@@ -70,8 +70,14 @@ for(const g of PAGES){assert(g.h1.startsWith('Soccer ')&&g.h1.endsWith(g.name),`
  assert(g.guides.length>=3&&g.tips.length>=3&&g.tips.length<=5&&g.faq.length>=4&&g.faq.length<=6&&g.shots.length>=2,`${g.path}: guides, 3-5 tips, 4-6 questions, screenshots`);
  assert(/free/i.test(g.faq[0].q)&&g.faq.some(f=>/phone/i.test(f.q)&&/Chromebook/i.test(f.q))&&g.faq.some(f=>/^How do you play/.test(f.q))&&g.faq.some(f=>/What age/.test(f.q)),`${g.path}: the four questions people search`);}
 // total weight of the pictures (brief: about 1.2 MB for all), and no stray file
-{const dir=pub('games'),bytes=fs.readdirSync(dir).reduce((n,f)=>n+fs.statSync(path.join(dir,f)).size,0);assert(bytes<1.25*1024*1024,`public/games weighs ${Math.round(bytes/1024)} KB`);
- const used=new Set(ALL.flatMap(p=>p.images).map(i=>path.basename(i)));for(const f of fs.readdirSync(dir))assert(used.has(f),`public/games/${f} is used by a page`);}
+{const dir=pub('games'),files=fs.readdirSync(dir).filter(f=>fs.statSync(path.join(dir,f)).isFile()),bytes=files.reduce((n,f)=>n+fs.statSync(path.join(dir,f)).size,0);assert(bytes<1.25*1024*1024,`public/games weighs ${Math.round(bytes/1024)} KB`);
+ const used=new Set(ALL.flatMap(p=>p.images).map(i=>path.basename(i)));for(const f of files)assert(used.has(f),`public/games/${f} is used by a page`);}
+// Nov 16 2026: gameplay footage (lib/site/gameMedia.ts). Every clip and still is used, and the whole set stays under 20 MB.
+{const gm=L('lib/site/gameMedia.ts'),clips=[gm.HERO_CLIP,...gm.islandClips(),...PAGES.map(g=>gm.gameClip(g.id))].filter(Boolean);
+ const usedC=new Set(clips.flatMap(c=>[c.mp4,c.webm,c.poster]).map(f=>path.basename(f))),usedS=new Set([...PAGES.flatMap(g=>games.allShots(g)),...PAGES.flatMap(g=>gm.gameStills(g.id,3)),...gm.islandStills()].map(s=>path.basename(s.src)));
+ let total=0;for(const [d,used] of [['games/clips',usedC],['games/shots',usedS]])for(const f of fs.readdirSync(pub(d))){total+=fs.statSync(pub(d+'/'+f)).size;assert(used.has(f),`public/${d}/${f} is used by a page`);}
+ assert(clips.length===PAGES.length+1+gm.islandClips().length&&clips.length>=14,`a clip for every game, the hero and the island (${clips.length})`);
+ assert(total<20*1024*1024,`gameplay media weighs ${Math.round(total/1024)} KB`);}
 
 // ---- 2 + 3. metadata and rendered HTML -------------------------------------------------------------------------------------
 const hubMod=L(`${G}/page.tsx`),pageMod=L(`${G}/[slug]/page.tsx`);
@@ -86,10 +92,12 @@ function check(p,meta,el,game){
  const h=renderToStaticMarkup(el);html.set(p.path,h);
  assert.equal((h.match(/<h1[ >]/g)||[]).length,1,`${where}: one h1`);assert(h.includes(`>${p.name}</h1>`),`${where}: the h1 is the registry's`);
  const t=text(h);assert(/football/i.test(t.slice(0,700)),`${where}: "football" near the top`);
- const n=t.split(" ").length;if(process.env.WORDS)console.log(where,n);assert(n>=450&&n<=1270/* Nov 11 2026: was 1250; the seventh game adds one entry (about 15 words) to every page's list of the other games */,`${where}: ${n} words`);
+ const n=t.split(" ").length;if(process.env.WORDS)console.log(where,n);assert(n>=450&&n<=1300/* Nov 16 2026: was 1270 (gameplay clip and still captions add about 30 words); Nov 11 2026: was 1250; the seventh game adds one entry (about 15 words) to every page's list of the other games */,`${where}: ${n} words`);
  assert(!/Strikers/.test(h),`${where}: Island Strikers is not an arcade game any more`);
  assert(!/aggregateRating|ratingValue|reviewCount|millions? of players/i.test(h),`${where}: no ratings, no invented numbers`);
- assert(!/<(canvas|video|iframe|audio)\b/.test(h),`${where}: no game canvas, video or frame (phone heat)`);
+ // Nov 16 2026 (owner: videos of the game on these pages): the clips are LoopClip islands that create their <video> on the client
+ // only when they may play, so the server HTML still has no <video>, and never a canvas, frame or audio (phone heat).
+ assert(!/<(canvas|video|iframe|audio)\b/.test(h),`${where}: no game canvas, video or frame in the HTML (phone heat)`);
  const scripts=[...h.matchAll(/<script([^>]*)>([\s\S]*?)<\/script>/g)];assert(scripts.every(s=>/application\/ld\+json/.test(s[1])),`${where}: no script but JSON-LD`);
  const ld=scripts.map(s=>JSON.parse(s[2]));const by=k=>ld.find(x=>x['@type']===k);
  const crumbs=by('BreadcrumbList');assert(crumbs&&crumbs.itemListElement.length===(game?3:2),`${where}: BreadcrumbList`);
@@ -101,7 +109,7 @@ function check(p,meta,el,game){
  const imgs=[...h.matchAll(/<img\b([^>]*)>/g)].map(m=>Object.fromEntries([...m[1].matchAll(/([a-z-]+)="([^"]*)"/g)].map(a=>[a[1],a[2].replace(/&#x27;/g,"'").replace(/&amp;/g,'&')])));
  assert(imgs.length>=(game?2:6),`${where}: pictures`);
  for(const i of imgs){assert(i.src.startsWith('/games/')&&fs.existsSync(pub(i.src)),`${where}: ${i.src} exists`);const s=size(pub(i.src));
-  assert(Number(i.width)===s.w&&Number(i.height)===s.h,`${where}: ${i.src} states its real size ${s.w}x${s.h}`);assert(i.alt&&i.alt.length>=30,`${where}: ${i.src} has alt text`);assert.equal(i.loading,'lazy',`${where}: ${i.src} is lazy`);}
+  assert(Number(i.width)===s.w&&Number(i.height)===s.h,`${where}: ${i.src} states its real size ${s.w}x${s.h}`);assert(i.alt&&i.alt.length>=30,`${where}: ${i.src} has alt text`);assert(i.loading==='lazy'||(i.loading==='eager'&&i.src===(game?`/games/clips/${game.id}.webp`:'/games/clips/hero.webp')),`${where}: ${i.src} is lazy (only the first clip's poster, the LCP, loads at once)`);}
  assert.equal(new Set(imgs.map(i=>i.alt)).size,imgs.length,`${where}: every alt text is its own`);
  // links
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1].replace(/&amp;/g,'&'));
@@ -122,7 +130,7 @@ for(const g of PAGES){
  assert(Array.isArray(v.genre)&&v.genre.length>=2&&v.gamePlatform==='Web browser'&&/web browser/i.test(v.operatingSystem)&&v.applicationCategory==='Game',`${g.path}: genre, platform, category`);
  assert(v.offers['@type']==='Offer'&&v.offers.price===0&&v.offers.priceCurrency==='USD'&&v.isAccessibleForFree===true,`${g.path}: free`);
  assert.deepEqual(v.audience,seo.KIDS_AUDIENCE,`${g.path}: audience`);assert.deepEqual(v.publisher,seo.PUBLISHER,`${g.path}: publisher`);assert.equal(v.isFamilyFriendly,true);
- assert(v.screenshot.length===g.shots.length&&v.screenshot.every((s,i)=>s.contentUrl===seo.abs(g.shots[i].src)),`${g.path}: screenshots`);
+ {const all=games.allShots(g);assert(all.length>=g.shots.length&&all.length<=4&&v.screenshot.length===all.length&&v.screenshot.every((s,i)=>s.contentUrl===seo.abs(all[i].src)),`${g.path}: screenshots`);}
  assert(!('aggregateRating' in v)&&!('review' in v),`${g.path}: no ratings`);
  // the button, the hub and the other five
  const play=[...r.h.matchAll(/<a class="cta" href="([^"]+)"[^>]*>([^<]+)<\/a>/g)];assert(play.length===2&&play.every(m=>m[1].replace(/&amp;/g,'&')===g.play&&m[2]===`Play ${g.name}`),`${g.path}: the Play button (top and end) opens ${g.play}`);

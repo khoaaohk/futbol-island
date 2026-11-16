@@ -1,0 +1,418 @@
+{
+ "clips": {
+  "museum": {
+   "w": 720,
+   "h": 406,
+   "seconds": 7.8,
+   "mp4": 171535,
+   "webm": 149786,
+   "src": "learn/video/wide_museum.mp4",
+   "poster": {
+    "w": 960,
+    "h": 540,
+    "bytes": 16832
+   }
+  },
+  "match": {
+   "w": 720,
+   "h": 406,
+   "seconds": 8,
+   "mp4": 291528,
+   "webm": 357344,
+   "src": "learn/video/slide_beachmatch.mp4",
+   "poster": {
+    "w": 960,
+    "h": 540,
+    "bytes": 12892
+   }
+  },
+  "kitstudio": {
+   "w": 720,
+   "h": 406,
+   "seconds": 8,
+   "mp4": 268611,
+   "webm": 314303,
+   "src": "learn/video/slide_kit.mp4",
+   "poster": {
+    "w": 960,
+    "h": 540,
+    "bytes": 58460
+   }
+  },
+  "plaza": {
+   "w": 720,
+   "h": 406,
+   "seconds": 8,
+   "mp4": 238156,
+   "webm": 350105,
+   "src": "learn/video/wide_multiplayer.mp4",
+   "poster": {
+    "w": 960,
+    "h": 540,
+    "bytes": 45396
+   }
+  },
+  "kitrush": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10,
+   "mp4": 208006,
+   "webm": 301788,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 29028
+   }
+  },
+  "snake": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10,
+   "mp4": 140495,
+   "webm": 225313,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 31962
+   }
+  },
+  "airhockey": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10,
+   "mp4": 162538,
+   "webm": 219751,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 38810
+   }
+  },
+  "pinball": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10,
+   "mp4": 769988,
+   "webm": 735901,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 58704
+   }
+  },
+  "runner": {
+   "w": 720,
+   "h": 332,
+   "seconds": 10,
+   "mp4": 922897,
+   "webm": 931242,
+   "poster": {
+    "w": 960,
+    "h": 444,
+    "bytes": 55060
+   }
+  },
+  "tennis": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10,
+   "mp4": 715188,
+   "webm": 780783,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 62232
+   }
+  },
+  "puzzle": {
+   "w": 332,
+   "h": 720,
+   "seconds": 9.6,
+   "mp4": 189699,
+   "webm": 263954,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 42580
+   }
+  },
+  "walk": {
+   "w": 720,
+   "h": 406,
+   "seconds": 9.3,
+   "mp4": 535970,
+   "webm": 725322,
+   "poster": {
+    "w": 960,
+    "h": 540,
+    "bytes": 47316
+   }
+  },
+  "fly": {
+   "w": 720,
+   "h": 406,
+   "seconds": 8.5,
+   "mp4": 461015,
+   "webm": 591733,
+   "poster": {
+    "w": 960,
+    "h": 540,
+    "bytes": 48498
+   }
+  },
+  "stadium": {
+   "w": 720,
+   "h": 406,
+   "seconds": 7.7,
+   "mp4": 352866,
+   "webm": 511587,
+   "poster": {
+    "w": 960,
+    "h": 540,
+    "bytes": 40544
+   }
+  },
+  "fishing": {
+   "w": 720,
+   "h": 406,
+   "seconds": 10,
+   "mp4": 516137,
+   "webm": 663480,
+   "poster": {
+    "w": 960,
+    "h": 540,
+    "bytes": 39578
+   }
+  },
+  "room": {
+   "w": 720,
+   "h": 406,
+   "seconds": 8.9,
+   "mp4": 193485,
+   "webm": 231027,
+   "poster": {
+    "w": 960,
+    "h": 540,
+    "bytes": 18896
+   }
+  },
+  "hero": {
+   "w": 720,
+   "h": 520,
+   "seconds": 10,
+   "mp4": 386730,
+   "webm": 540128,
+   "poster": {
+    "w": 1440,
+    "h": 1040,
+    "bytes": 104372
+   }
+  }
+ },
+ "shots": {
+  "kitrush": [
+   {
+    "file": "kitrush-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 29028
+   },
+   {
+    "file": "kitrush-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 30126
+   },
+   {
+    "file": "kitrush-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 33670
+   }
+  ],
+  "snake": [
+   {
+    "file": "snake-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 31962
+   },
+   {
+    "file": "snake-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 38708
+   },
+   {
+    "file": "snake-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 31064
+   }
+  ],
+  "airhockey": [
+   {
+    "file": "airhockey-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 38810
+   },
+   {
+    "file": "airhockey-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 41516
+   }
+  ],
+  "pinball": [
+   {
+    "file": "pinball-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 58704
+   },
+   {
+    "file": "pinball-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 61096
+   },
+   {
+    "file": "pinball-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 57850
+   }
+  ],
+  "runner": [
+   {
+    "file": "runner-1.webp",
+    "w": 960,
+    "h": 444,
+    "bytes": 55060
+   },
+   {
+    "file": "runner-2.webp",
+    "w": 960,
+    "h": 444,
+    "bytes": 55328
+   },
+   {
+    "file": "runner-3.webp",
+    "w": 960,
+    "h": 444,
+    "bytes": 60760
+   }
+  ],
+  "tennis": [
+   {
+    "file": "tennis-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 62232
+   },
+   {
+    "file": "tennis-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 60978
+   },
+   {
+    "file": "tennis-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 62678
+   }
+  ],
+  "puzzle": [
+   {
+    "file": "puzzle-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 42580
+   },
+   {
+    "file": "puzzle-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 40286
+   },
+   {
+    "file": "puzzle-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 40286
+   }
+  ],
+  "walk": [
+   {
+    "file": "walk-1.webp",
+    "w": 960,
+    "h": 540,
+    "bytes": 47316
+   },
+   {
+    "file": "walk-2.webp",
+    "w": 960,
+    "h": 540,
+    "bytes": 49438
+   }
+  ],
+  "fly": [
+   {
+    "file": "fly-1.webp",
+    "w": 960,
+    "h": 540,
+    "bytes": 48498
+   },
+   {
+    "file": "fly-2.webp",
+    "w": 960,
+    "h": 540,
+    "bytes": 15260
+   }
+  ],
+  "stadium": [
+   {
+    "file": "stadium-1.webp",
+    "w": 960,
+    "h": 540,
+    "bytes": 40544
+   },
+   {
+    "file": "stadium-2.webp",
+    "w": 960,
+    "h": 540,
+    "bytes": 46772
+   }
+  ],
+  "fishing": [
+   {
+    "file": "fishing-1.webp",
+    "w": 960,
+    "h": 540,
+    "bytes": 39578
+   },
+   {
+    "file": "fishing-2.webp",
+    "w": 960,
+    "h": 540,
+    "bytes": 38804
+   },
+   {
+    "file": "fishing-3.webp",
+    "w": 960,
+    "h": 540,
+    "bytes": 83410
+   }
+  ],
+  "room": [
+   {
+    "file": "room-2.webp",
+    "w": 960,
+    "h": 540,
+    "bytes": 23224
+   }
+  ]
+ }
+}
