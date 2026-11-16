@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "site": "https://futbolisland.app/",
+  "asOf": "2026-11-15",
+  "gscDataThrough": "2026-11-13",
+  "windows": {
+    "d7": null,
+    "d28": { "clicks": 25, "impressions": 535, "ctr": 0.047, "position": 28.3, "queries": 170, "pages": 112, "prev": null }
+  },
+  "daily": [],
+  "topQueries": [
+    { "query": "futbal island", "clicks": 1, "impressions": 3, "position": 2.0 },
+    { "query": "futbol island", "clicks": 1, "impressions": 3, "position": 3.7 },
+    { "query": "2v1", "clicks": null, "impressions": 12, "position": 8.2 },
+    { "query": "through ball", "clicks": null, "impressions": 4, "position": 10.0 },
+    { "query": "yellow and red card soccer", "clicks": null, "impressions": 4, "position": 40.0 },
+    { "query": "yellow card in soccer", "clicks": null, "impressions": 4, "position": 62.5 },
+    { "query": "futsal rules vs soccer rules", "clicks": null, "impressions": 3, "position": 5.7 },
+    { "query": "football island", "clicks": null, "impressions": 3, "position": 7.3 },
+    { "query": "red and yellow cards in soccer", "clicks": null, "impressions": 3, "position": 50.0 },
+    { "query": "11 v 11 soccer formations", "clicks": null, "impressions": 3, "position": 63.3 },
+    { "query": "yellow card soccer", "clicks": null, "impressions": 3, "position": 63.7 },
+    { "query": "3-2-3 soccer formation", "clicks": null, "impressions": 3, "position": 66.0 },
+    { "query": "what does a yellow card mean in soccer", "clicks": null, "impressions": 3, "position": 73.0 },
+    { "query": "futsal scorekeeping", "clicks": null, "impressions": 3, "position": 77.0 },
+    { "query": "football formation creator 7 a side", "clicks": null, "impressions": 2, "position": 4.5 },
+    { "query": "penalty kick diagram", "clicks": null, "impressions": 2, "position": 6.5 },
+    { "query": "soccer tennis game", "clicks": null, "impressions": 2, "position": 6.5 },
+    { "query": "2v1 meaning", "clicks": null, "impressions": 2, "position": 8.5 },
+    { "query": "give and go soccer drills", "clicks": null, "impressions": 2, "position": 20.0 },
+    { "query": "sub calculator", "clicks": null, "impressions": 2, "position": 27.5 },
+    { "query": "ruud gullit football cards", "clicks": null, "impressions": 2, "position": 28.5 },
+    { "query": "red card and yellow card", "clicks": null, "impressions": 2, "position": 43.0 },
+    { "query": "soccer yellow card", "clicks": null, "impressions": 2, "position": 49.5 },
+    { "query": "soccer positions by number", "clicks": null, "impressions": 2, "position": 52.0 },
+    { "query": "first football match under floodlights", "clicks": null, "impressions": 2, "position": 52.5 }
+  ],
+  "topPages": [
+    { "path": "/learn/soccer-rules/yellow-and-red-cards", "clicks": null, "impressions": 67, "position": 51.4 },
+    { "path": "/tools/soccer-playing-time-calculator", "clicks": null, "impressions": 45, "position": 12.6 },
+    { "path": "/", "clicks": null, "impressions": 37, "position": 2.1 },
+    { "path": "/learn/soccer-positions", "clicks": null, "impressions": 32, "position": 23.0 },
+    { "path": "/learn/soccer-terms/two-v-one", "clicks": null, "impressions": 23, "position": 7.9 },
+    { "path": "/learn/soccer-rules/futsal-rules", "clicks": null, "impressions": 22, "position": 31.5 },
+    { "path": "/learn/soccer-rules/back-pass-rule", "clicks": null, "impressions": 21, "position": 48.8 },
+    { "path": "/learn/soccer-rules/heading-rules-for-kids", "clicks": null, "impressions": 20, "position": 8.4 },
+    { "path": "/learn/soccer-terms/cutback", "clicks": null, "impressions": 17, "position": 7.0 },
+    { "path": "/learn/soccer-rules/fouls-and-free-kicks", "clicks": null, "impressions": 17, "position": 29.5 },
+    { "path": "/games/soccer-tennis-game", "clicks": null, "impressions": 15, "position": 5.7 },
+    { "path": "/learn/soccer-terms/through-ball", "clicks": null, "impressions": 15, "position": 17.7 },
+    { "path": "/play", "clicks": null, "impressions": 13, "position": 3.2 },
+    { "path": "/learn/soccer-rules/throw-in", "clicks": null, "impressions": 13, "position": 75.6 },
+    { "path": "/learn/lessons", "clicks": null, "impressions": 11, "position": 4.5 },
+    { "path": "/learn/soccer-terms", "clicks": null, "impressions": 9, "position": 34.8 },
+    { "path": "/learn/soccer-rules/handball", "clicks": null, "impressions": 9, "position": 46.1 },
+    { "path": "/games", "clicks": null, "impressions": 8, "position": 2.8 },
+    { "path": "/tools/11v11-lineup-builder", "clicks": null, "impressions": 8, "position": 50.4 },
+    { "path": "/learn/soccer-terms/give-and-go", "clicks": null, "impressions": 7, "position": 11.0 },
+    { "path": "/exhibits/copa-america-1916", "clicks": null, "impressions": 7, "position": 17.4 },
+    { "path": "/learn/soccer-positions/center-back", "clicks": null, "impressions": 6, "position": 32.5 },
+    { "path": "/learn/soccer-positions/defensive-midfielder", "clicks": null, "impressions": 6, "position": 42.3 },
+    { "path": "/learn/soccer-rules/substitutions-and-game-length", "clicks": null, "impressions": 6, "position": 59.5 },
+    { "path": "/learn/soccer-terms/hat-trick", "clicks": null, "impressions": 6, "position": 64.2 },
+    { "path": "/learn/soccer-rules/penalty-kick", "clicks": null, "impressions": 5, "position": 5.4 },
+    { "path": "/learn/soccer-formations", "clicks": null, "impressions": 5, "position": 38.8 },
+    { "path": "/tools", "clicks": null, "impressions": 5, "position": 51.4 },
+    { "path": "/learn/soccer-terms/nutmeg", "clicks": null, "impressions": 4, "position": 2.5 },
+    { "path": "/about", "clicks": null, "impressions": 4, "position": 5.0 }
+  ],
+  "index": {
+    "asOf": "2026-11-12",
+    "indexed": 314,
+    "notIndexed": 617,
+    "previous": { "asOf": "2026-11-08", "indexed": 2, "notIndexed": 225 },
+    "reasons": [
+      { "reason": "Discovered - currently not indexed", "pages": 575, "validation": null },
+      { "reason": "Crawled - currently not indexed", "pages": 37, "validation": null,
+        "examples": ["/learn/soccer-positions/goalkeeper", "/fish/perch", "/fish/queen-scallop", "/cards/264", "/fish/california-sheephead"] },
+      { "reason": "Duplicate without user-selected canonical", "pages": 5, "validation": "Started 2026-11-15",
+        "examples": ["/learn/soccer-drills/clean-your-room", "/exhibits/wwc-1991", "/cards/238", "/learn/lessons/def_11_pressurecover", "/learn/soccer-formations/7v7-2-2-2"] }
+    ]
+  },
+  "sitemaps": [
+    { "path": "/sitemap.xml", "lastRead": "2026-11-13", "status": "Success", "discovered": 916 },
+    { "path": "/sitemap-images.xml", "lastRead": "2026-11-12", "status": "Success", "discovered": 788 }
+  ],
+  "workLog": [
+    { "day": "2026-11-10", "requested": ["/learn/lessons", "/learn/football-rules-for-kids", "/learn/soccer-formations", "/learn/7v7-soccer-formations", "/learn/soccer-rules", "/learn/soccer-positions", "/learn/soccer-ball-size-by-age"], "alreadyIndexed": 1, "note": "Property verified, sitemap submitted. Probably also /play and /learn/7v7-9v9-11v11 (run timed out before confirmation)." },
+    { "day": "2026-11-11", "requested": ["/games", "/games/soccer-swipe-game", "/games/soccer-snake-game", "/games/soccer-runner-game", "/games/soccer-tennis-game", "/games/soccer-passing-puzzle-game", "/tools/soccer-lineup-builder", "/learn/soccer-drills"], "alreadyIndexed": 1, "note": "/games/soccer-pinball already on Google under two hours after release." },
+    { "day": "2026-11-12", "requested": ["/safe-football-game-for-kids", "/learn/soccer-practice-plans", "/privacy", "/learn/soccer-drills/u8", "/learn/soccer-drills/u10", "/learn/soccer-drills/sharks-and-minnows", "/learn/soccer-drills/u6", "/tools/9v9-lineup-builder"], "alreadyIndexed": 6, "note": "Daily cap of 8 reached." },
+    { "day": "2026-11-13", "requested": ["/play", "/privacy", "/", "/safe-football-game-for-kids", "/learn/soccer-age-groups"], "alreadyIndexed": 7, "note": "After the stadium release; /privacy re-requested at night after the policy lines." },
+    { "day": "2026-11-14", "requested": ["/learn/soccer-rules/build-out-line", "/learn/soccer-formations/7v7-2-3-1", "/learn/soccer-rules/offside", "/learn/soccer-positions/goalkeeper"], "alreadyIndexed": 10, "note": "After the seo-boost push: all 6 hubs, /tools and 11v11-4-3-3 already on Google; re-crawl for 7v7-2-3-1 and offside." },
+    { "day": "2026-11-15", "requested": ["/learn/soccer-positions/striker", "/learn/soccer-positions/central-midfielder", "/learn/soccer-formations/7v7-3-2-1", "/learn/soccer-formations/9v9-3-3-2", "/fish/red-reef-shark", "/fish/mealy-crab"], "alreadyIndexed": 12, "note": "Queue finished. Clicked Validate fix for the 5 duplicate-canonical pages." }
+  ],
+  "history": [
+    { "day": "2026-11-14", "clicks": 15, "impressions": 108, "ctr": 0.139, "position": 11.1, "indexed": null },
+    { "day": "2026-11-15", "clicks": 25, "impressions": 535, "ctr": 0.047, "position": 28.3, "indexed": 314 }
+  ]
+}

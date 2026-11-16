@@ -20,7 +20,8 @@ function load(file){file=path.resolve(file);if(loaded.has(file))return loaded.ge
    return id.startsWith('.')||id.startsWith('@/')?load(resolve(file,id)):require(id);}});
  loaded.set(file,m.exports);return m.exports;}
 const React=require('react'),{renderToStaticMarkup}=require('react-dom/server');
-const SNAP='data/seo/snapshot.json',seed=JSON.parse(read(SNAP));
+// The live file changes every day (the daily Search Console run); the rendering checks use a frozen copy of the Nov 15 seed.
+const SNAP='data/seo/snapshot.json',SEED='tests/fixtures/seo-snapshot-seed.json',seed=JSON.parse(read(SEED)),live=JSON.parse(read(SNAP));
 const L=load('lib/seo/snapshot.ts'),SeoSection=load('app/admin/SeoSection.tsx').default;
 const cli=(...a)=>spawnSync(process.execPath,['scripts/seo-snapshot.mjs',...a],{encoding:'utf8'});
 const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'seo-snap-'));
@@ -35,6 +36,7 @@ let n=0;const ok=(name,fn)=>{try{fn();n++;}catch(e){console.error('FAIL',name);t
 ok('the committed seed passes the CLI and the app validator',()=>{
  const r=cli();assert.equal(r.status,0,r.stderr);assert.match(r.stdout,/seo-snapshot: OK/);
  assert.equal(L.validateSnapshot(seed).errors.length,0);
+ assert.equal(L.validateSnapshot(live).errors.length,0,'the live snapshot is valid');
  assert.equal(cli('--quiet').stdout,'');
 });
 ok('the seed carries the Nov 15 Search Console numbers',()=>{
@@ -60,7 +62,7 @@ ok('broken snapshots fail with readable errors',()=>{
 
 // 2. the tab -------------------------------------------------------------------------------------------------------------------
 ok('the tab renders the seed headline numbers, the as-of line and the summary',()=>{
- const seo=L.parseSnapshot(read(SNAP));assert.equal(seo.status,'ok');
+ const seo=L.parseSnapshot(read(SEED));assert.equal(seo.status,'ok');
  const html=render(seo),t=text(html);
  assert.match(t,/As of Nov 15 · Google data through Nov 13/);
  const tile=k=>(html.match(new RegExp(`data-k="${k}">([^<]+)<`))||[])[1];
