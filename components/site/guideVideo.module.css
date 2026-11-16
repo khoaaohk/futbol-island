@@ -1,0 +1,7 @@
+/* The guide clips (components/site/ClipPlay.tsx). Upright phone captures, so the frame is capped in height and centred. */
+.poster{position:relative;display:block;padding:0;margin:0 auto;border:0;background:none;cursor:pointer;border-radius:24px;line-height:0}
+.poster:focus-visible{outline:3px solid var(--link,#1d6b55);outline-offset:4px}
+.frame{display:block;width:auto;height:auto;max-width:100%;max-height:min(70vh,560px);aspect-ratio:auto;border-radius:24px;margin:0 auto;background:#14221d}
+.play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:64px;height:64px;border-radius:50%;display:grid;place-items:center;
+ background:rgb(20 34 29 / .78);color:#fff8e7;font-size:24px;line-height:1;padding-left:4px;box-sizing:border-box}
+@media print{.poster,.frame{display:none}}
