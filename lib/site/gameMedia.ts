@@ -32,7 +32,7 @@ const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
  tennis:{name:'Futbol Tennis gameplay: a rally over the net',alt:'Futbol Tennis gameplay on a phone: two players kick the ball back and forth over a net on a clay court',caption:'Futbol Tennis: kick, lob and drop the ball over the net.'},
  pinball:{name:'Futbol Pinball gameplay: flippers and bumpers on a pitch table',alt:'Futbol Pinball gameplay on a phone: the ball bounces off bumpers and the flippers kick it back up the table',caption:'Futbol Pinball: two flippers, a goalkeeper and a wall.'},
  puzzle:{name:'Pass Puzzles gameplay: passing around the defenders',alt:'Pass Puzzles gameplay on a phone: passes travel from player to player around the defenders toward the goal',caption:'Pass Puzzles: find the open team-mate, then the goal.'},
- airhockey:{name:'Air Futbol gameplay: air hockey on a football pitch',alt:'Air Futbol gameplay on a phone: the teal striker hits the puck up the small pitch toward the red goal',caption:'Air Futbol: guard your goal and bank it off the wall.'},
+ airhockey:{name:'Air Futbol gameplay: air hockey on a football pitch',alt:'Air Futbol gameplay on a phone: the teal striker hits the puck up the small pitch and scores in the red goal',caption:'Air Futbol: guard your goal and bank it off the wall.'},
 };
 const gamePaths:Record<GameId,string>={kitrush:'/games/soccer-swipe-game',snake:'/games/soccer-snake-game',runner:'/games/soccer-runner-game',tennis:'/games/soccer-tennis-game',
  pinball:'/games/soccer-pinball',puzzle:'/games/soccer-passing-puzzle-game',airhockey:'/games/air-hockey-soccer-game'};
@@ -40,21 +40,21 @@ export const gameClip=(id:GameId)=>clip({key:id,page:gamePaths[id],...GAME_CLIP_
 /** New stills of each game (beyond the two hand-made ones in lib/site/games.ts), with their own alt text. */
 const STILL_WORDS:Record<GameId,string[]>={
  kitrush:['Kit Rush mid-wave: kit in two team colours spins in the air above the goal','Kit Rush later in a run: more kit in the air and the score climbing','Kit Rush near the end of a run, with the lives at the top of the screen'],
- snake:['Squad Snake: the captain turns with team-mates following in a line','Squad Snake: the line of players grows longer across the pitch','Squad Snake: the captain heads toward the next player to collect'],
+ snake:['Squad Snake: the captain turns with team-mates following in a line','Squad Snake: the line of players grows longer and the call THROUGH PASS! appears','Squad Snake at level 2: a new formation and new players to collect'],
  runner:['Breakaway Run: the player dribbles toward a defender on the coast road','Breakaway Run: jumping over a sliding tackle in the middle lane','Breakaway Run: collecting footballs further down the road'],
  tennis:['Futbol Tennis: the ball flies over the net toward the other player','Futbol Tennis: a player runs to reach the ball before it lands','Futbol Tennis: a rally on the clay court with the score at the top'],
  pinball:['Futbol Pinball: the ball races up the table past the bumpers','Futbol Pinball: a flipper kicks the ball back toward the goal','Futbol Pinball: the ball bounces between the bumpers near the goalkeeper'],
  puzzle:['Pass Puzzles: a pass goes from one team-mate to another around a defender','Pass Puzzles: the ball travels toward the striker near the goal','Pass Puzzles: a new puzzle with the players set out on the pitch'],
- airhockey:['Air Futbol: the striker blocks the puck in front of the goal','Air Futbol: the puck slides across the pitch toward the other goal','Air Futbol: a fast rebound off the side wall'],
+ airhockey:['Air Futbol: GOAL! The puck flies past the red striker into the top goal','Air Futbol: a bank shot goal off the side wall, worth 75 extra points','Air Futbol: a fast rebound off the side wall'],
 };
 const STILL_CAPS:Record<GameId,string[]>={
  kitrush:['Read the whole wave before you swipe.','Waves get faster as the run goes on.','Three lives: the whistle costs one.'],
- snake:['Players join in position order.','The line grows as the squad fills up.','Eleven players make a formation.'],
+ snake:['Players join in position order.','The line grows as the squad fills up.','Each level brings a new formation.'],
  runner:['A defender ahead: change lane.','Jump the sliding tackle.','Collect footballs on the way.'],
  tennis:['Over the net and into the court.','Get to the ball before it bounces twice.','The score sits at the top.'],
  pinball:['Bumpers send the ball flying.','Flip it back up the table.','Score past the goalkeeper.'],
  puzzle:['Pass around the defender.','Then find the striker.','Each puzzle is a new picture.'],
- airhockey:['Guard your goal.','Aim at the other goal.','Use the side walls.'],
+ airhockey:['Score in the top goal.','Bank shots score extra.','Use the side walls.'],
 };
 export function gameStills(id:GameId,max=3):GameShot[]{
  return (MEDIA.shots[id]??[]).slice(0,max).map((s,i)=>({src:`${SHOTS_DIR}/${s.file}`,w:s.w,h:s.h,alt:STILL_WORDS[id][i]??`${GAME_CLIP_DEFS[id].name}, picture ${i+1}`,caption:STILL_CAPS[id][i]??''}));

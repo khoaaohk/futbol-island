@@ -49,23 +49,30 @@
 .hero figcaption{color:#f3efe2;text-align:center}
 /* Hub: one block per game. Phone: clip and name side by side, then the words. From 860 px: media | words, flipped every other. */
 .features{list-style:none;padding:0!important;display:grid;gap:var(--s3)!important}
-.feature{display:grid;grid-template-columns:minmax(0,42%) minmax(0,1fr);grid-template-areas:'m w';gap:var(--s2);align-items:start;max-width:none!important;padding:var(--s2);background:var(--surface);border-radius:var(--r-lg)}
-.featureWide{grid-template-columns:minmax(0,1fr);grid-template-areas:'m' 'w'}
-.featureMedia{grid-area:m;min-width:0}
+.feature{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:'m' 'w';gap:var(--s2);align-items:start;max-width:none!important;padding:var(--s2);background:var(--surface);border-radius:var(--r-lg)}
+.featureMedia{grid-area:m;min-width:0;display:grid}
+/* Phones and small tablets: the clip runs full width, but an upright phone clip is capped so it fits on screen (about 70% of the
+   viewport height at the clip's 332:720 aspect), centred. */
+.featureMedia .clipFig{justify-self:center;width:min(100%,calc(70svh * 332 / 720),420px)}
+.featureWide .featureMedia .clipFig{width:100%}
 .featureWords{grid-area:w;display:grid;gap:10px;min-width:0;align-content:start}
 .featureWords p{max-width:none!important}
 .featureName{margin:0;font-size:var(--t-h2);line-height:1.05;font-weight:700;letter-spacing:-.03em}
 .featureWords .featureName a{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:4px;text-underline-offset:.16em}
-@media(min-width:860px){
+@media(min-width:900px){
+ .featureMedia .clipFig{width:100%}
  .feature{grid-template-columns:minmax(0,260px) minmax(0,1fr);gap:var(--s4);padding:var(--s3);align-items:center}
  .flip{grid-template-columns:minmax(0,1fr) minmax(0,260px);grid-template-areas:'w m'}
  .featureWide{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);grid-template-areas:'m w'}
  .featureWords{gap:var(--s2)}
 }
-.thumbs{list-style:none;padding:0!important;margin:0;display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s1)!important;max-width:360px}
-.thumbs li{max-width:none!important}
+/* The three stills: a sideways strip that snaps on phones, three in a row from 900 px. */
+.thumbs{list-style:none;padding:0 0 4px!important;margin:0;display:flex!important;gap:var(--s1)!important;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:none}
+.thumbs::-webkit-scrollbar{display:none}
+.thumbs li{flex:0 0 38%;max-width:none!important;scroll-snap-align:start}
+.featureWide .thumbs li{flex-basis:72%}
+@media(min-width:900px){.thumbs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;max-width:360px}.featureWide .thumbs{max-width:none}}
 .thumbs img{display:block;width:100%;height:auto;border-radius:var(--r-sm);background:var(--well)}
-.featureWide .thumbs{max-width:none}
 .featureWords .gameLinks .playNow,.playRow7 .playNow{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 18px;border-radius:var(--r-pill);background:var(--gold);color:var(--btn-ink,#244d40);font-weight:800;text-decoration:none;transition:scale .18s cubic-bezier(.2,1.28,.32,1)}
 @media(hover:hover){.featureWords .gameLinks .playNow:hover,.playRow7 .playNow:hover{scale:1.04}}
 .featureWords .gameLinks .playNow:active,.playRow7 .playNow:active{scale:.96}

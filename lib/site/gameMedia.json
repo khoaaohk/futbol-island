@@ -68,24 +68,24 @@
    "w": 332,
    "h": 720,
    "seconds": 10,
-   "mp4": 88622,
-   "webm": 129634,
+   "mp4": 140495,
+   "webm": 225313,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 34196
+    "bytes": 31962
    }
   },
   "airhockey": {
    "w": 332,
    "h": 720,
    "seconds": 10,
-   "mp4": 158871,
-   "webm": 217614,
+   "mp4": 162538,
+   "webm": 219751,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 34834
+    "bytes": 38810
    }
   },
   "pinball": {
@@ -200,12 +200,12 @@
    "w": 720,
    "h": 520,
    "seconds": 10,
-   "mp4": 340835,
-   "webm": 459795,
+   "mp4": 386730,
+   "webm": 540128,
    "poster": {
     "w": 1440,
     "h": 1040,
-    "bytes": 101958
+    "bytes": 104372
    }
   }
  },
@@ -235,19 +235,19 @@
     "file": "snake-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 34196
+    "bytes": 31962
    },
    {
     "file": "snake-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 30434
+    "bytes": 38708
    },
    {
     "file": "snake-3.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 31380
+    "bytes": 31064
    }
   ],
   "airhockey": [
@@ -255,13 +255,13 @@
     "file": "airhockey-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 34834
+    "bytes": 38810
    },
    {
     "file": "airhockey-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 31216
+    "bytes": 41516
    }
   ],
   "pinball": [
