@@ -9,7 +9,8 @@ import {articleLd,breadcrumbLd,collectionLd,faqLd} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {toEs} from '@/lib/i18n/esPaths';
 import {ES_COMPARISONS,ES_FORMATIONS,ES_HUBS,ES_POSITIONS,describeEs,esFormatGuide,esFormationsIn,esLines,type EsComparison,type EsFormation} from '@/lib/i18n/es/registry';
-import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsReadNext,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
+import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsReadNext,EsLessonList,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
+import {esLesson} from '@/lib/i18n/es/lessons';
 import {esLd} from './GuidesEs';
 import styles from '@/app/(site)/site.module.css';
 /**
@@ -82,7 +83,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   </Section>
   <Section id="strengths" title={`Fortalezas del ${f.shapeEs}`}><Bullets items={f.strengths}/></Section>
   <Section id="weak" title="Puntos débiles y cómo cubrirlos">
-   <ul className={styles.stack}>{f.weak.map(w=><li key={w.spot} className={styles.card}><h3 className={styles.h3}>{w.spot}</h3><p><b>Cómo cubrirlo:</b> {w.cover}</p></li>)}</ul>
+   <ul className={styles.stack}>{f.weak.map(w=><li key={w.spot} className={styles.card}><h3 className={styles.h3}>{w.spot}</h3><p><b>Cómo cubrirlo:</b> {w.cover}{w.lesson&&esLesson(w.lesson)&&<> Lección: <a href={esLesson(w.lesson)!.esPath}>{esLesson(w.lesson)!.title}</a>.</>}</p></li>)}</ul>
   </Section>
   <Section id="moves" title={`Cómo se mueve el ${f.shapeEs}`}>
    <div className={styles.pair}>
@@ -94,6 +95,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   <QA id="faq" title={`Preguntas sobre el ${f.shapeEs}`} faq={f.faq}/>
   <EsCoachNotes name={f.name} notes={f.notes}/>
   {compare.length>0&&<Section id="compare" title="Compárala"><LinkList links={compare.map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))}/></Section>}
+  {f.lessons.length>0&&<Section id="lessons" title="Lecciones que enseñan esta formación"><EsLessonList lessons={f.lessons}/></Section>}
   <Section id="related" title="Sigue leyendo"><LinkList links={related}/></Section>
   <EsGuideEnd checked={FAMILY_CHECKED.formations} lessonId={f.lessons[0]?.id}/>
   <EsReadNext order={[{path:H.path,name:H.h1},...ES_FORMATIONS().map(x=>({path:x.esPath,name:x.h1}))]} path={f.esPath}/>

@@ -16,7 +16,7 @@ import {hasEs,toEs} from '@/lib/i18n/esPaths';
 import {longDateEs} from '@/lib/i18n/es/ui';
 import {ES_COMPARISONS,ES_FORMATIONS,esFormatGuide,ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
 import {positionQuizEs,ruleQuizEs,termQuizEs} from '@/lib/i18n/es/quiz';
-import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
+import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,EsLessonList} from '@/components/es/EsParts';
 import styles from '@/app/(site)/site.module.css';
 /**
  * The Spanish rules, terms and positions pages (Spanish round 1, Nov 15 2026): the English pages' sections in the same order,
@@ -93,6 +93,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   </Section>}
   <QA id="faq" title={`Preguntas sobre: ${r.name.toLowerCase()}`} faq={r.faq}/>
   <EsCoachNotes name={r.name} notes={r.notes}/>
+  {r.lessons.length>0&&<Section id="lessons" title="Lecciones que van con esta regla"><EsLessonList lessons={r.lessons}/></Section>}
   <Section id="related" title="Sigue leyendo"><LinkList links={related}/></Section>
   <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz} lang="es"/>
   <EsGuideEnd checked={FAMILY_CHECKED.rules} lessonId={r.cta?.id}/>
@@ -143,6 +144,7 @@ export function TermEsPage({t}:{t:EsTerm}){
   <Section id="formats" title="En 7v7, 9v9, 11v11 y futsal"><p>{t.formats}</p></Section>
   <QA id="faq" title={`Preguntas sobre: ${t.name.toLowerCase()}`} faq={t.faq}/>
   <EsCoachNotes name={t.name} notes={t.notes}/>
+  {t.lessons.length>0&&<Section id="lessons" title="Lecciones que lo enseñan"><EsLessonList lessons={t.lessons}/></Section>}
   <Section id="related" title="Términos relacionados"><LinkList links={related}/></Section>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz} lang="es"/>
   <EsGuideEnd checked={FAMILY_CHECKED.terms} lessonId={t.cta?.id}/>
@@ -216,6 +218,7 @@ export function PositionEsPage({p}:{p:EsPosition}){
   <QA id="faq" title={`Preguntas sobre: ${lower}`} faq={p.faq}/>
   <EsCoachNotes name={p.name} notes={p.notes}/>
   {compare.length>0&&<Section id="compare" title="Compárala"><LinkList links={compare.map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
+  {p.lessons.length>0&&<Section id="lessons" title="Lecciones para esta posición"><EsLessonList lessons={p.lessons}/></Section>}
   <Section id="related" title="Otras posiciones"><LinkList links={[...all.filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.name,line:`Número ${x.numbers}`})),{path:H.path,name:'Todas las posiciones del fútbol',line:H.blurb}]}/></Section>
   <GuideQuiz id="quiz" name={lower} questions={quiz} lang="es"/>
   <EsGuideEnd checked={FAMILY_CHECKED.positions} lessonId={p.lessons[0]?.id}/>
