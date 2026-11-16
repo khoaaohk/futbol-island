@@ -135,7 +135,7 @@ export const GAME_PAGES:readonly GamePage[]=[
  {id:'tennis',slug:'soccer-tennis-game',path:page('soccer-tennis-game'),name:'Futbol Tennis',play:play('tennis'),
   title:'Futbol Tennis: Free Soccer Tennis Game (Football Tennis)',h1:'Soccer tennis game: Futbol Tennis',
   description:'Futbol Tennis is a free online soccer tennis game for kids. Rally over the net with kicks, lobs, drops and headers on nine beach-club courts. No ads.',
-  lead:'Football tennis in your browser: keep the ball up, control it with your first touch and play it over the net with your feet and head, against tougher opponents on nine beach-club courts.',
+  lead:'Futbol Tennis is a free soccer tennis game, also called football tennis, in your browser: keep the ball up, control it with your first touch and play it over the net with your feet and head, against tougher opponents on nine beach-club courts.',
   blurb:'Football tennis: first touch and shot choice over a net',genre:['Sports','Arcade','Educational'],skill:'First touch and choosing the right shot',
   og:img('futbol-tennis-soccer-tennis-game-og.jpg'),ogAlt:'Futbol Tennis, a soccer tennis game: two players rally over a net on a clay court by the sea',
   shots:[phone('futbol-tennis-soccer-tennis-game.webp','Futbol Tennis on a phone: two players face each other across a net on a clay court, with a move stick and Kick, Lob and Drop buttons','A rally on the clay practice court, with rings that show where the ball will land.'),

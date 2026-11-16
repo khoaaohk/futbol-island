@@ -7,6 +7,24 @@ import {SAFE_FACTS} from './safety';
 import {GUIDE_HUBS} from './guides';
 import {TOOL_HUBS} from './tools/registry';
 import {GAME_LISTINGS} from './games';
+import {TERM_PAGES} from './terms';
+import {RULES} from './rules';
+import {NUMBERS_PAGE} from './positionNumbers';
+import {drillGuideBySlug} from './drillGuides';
+import {firstSentence} from './seo';
+/** Nov 16 2026 (SEO CTR, owner: "written for LLM searches as well"): the pages people search most, each with its stand-alone
+ *  one-sentence answer, so an assistant can quote the answer and cite the page (docs/seo-ctr/LLM-CHECKLIST.md). */
+const ANSWER_TERMS=['two-v-one','through-ball','cutback','give-and-go','pressing','first-touch','nutmeg','hat-trick','free-kick-wall'];
+const ANSWER_RULES=['heading-rules-for-kids','substitutions-and-game-length','futsal-rules','penalty-kick','goal-kick'];
+function answers():string[]{
+ const cap=(s:string)=>s[0].toUpperCase()+s.slice(1);
+ const d=drillGuideBySlug('defending')!;
+ return [{path:NUMBERS_PAGE.path,q:NUMBERS_PAGE.h1,a:NUMBERS_PAGE.answer},
+  ...ANSWER_TERMS.map(s=>TERM_PAGES.find(t=>t.slug===s)!).map(t=>({path:t.path,q:t.h1,a:t.answer})),
+  ...ANSWER_RULES.map(s=>RULES.find(r=>r.slug===s)!).map(r=>({path:r.path,q:r.h1,a:r.answer})),
+  {path:d.path,q:d.h1,a:d.lead}]
+  .map(x=>`- [${cap(x.q)}](https://futbolisland.app${x.path}): ${firstSentence(x.a,320)}`);
+}
 /**
  * /llms.txt (llmstxt.org format; served by app/llms.txt/route.ts, moved from a hand-kept public/llms.txt on Nov 8 2026 so the
  * counts come from the data). A factual summary for AI assistants: what Futbol Island is, who it is for, what it teaches, the
@@ -31,7 +49,11 @@ export function llmsText():string{
   ...['football-rules-for-kids','soccer-quiz-for-kids','passing-and-support','futsal-for-kids','7v7-9v9-11v11'].map(slug=>{const h=hub(slug);return `- [${h.h1}](https://futbolisland.app${h.path}): ${h.blurb}.`;}),
   ...GUIDE_HUBS.map(g=>`- [${g.name[0].toUpperCase()+g.name.slice(1)}](https://futbolisland.app${g.path}): ${g.blurb}.`),'',
   '## Free tools for coaches','',/* lib/site/tools/registry.ts */
-  ...TOOL_HUBS.map(t=>`- [${t.name[0].toUpperCase()+t.name.slice(1)}](https://futbolisland.app${t.path}): ${t.blurb}.`),'',
+  ...TOOL_HUBS.map(t=>`- [${t.name[0].toUpperCase()+t.name.slice(1)}](https://futbolisland.app${t.path}): ${t.blurb}.`),
+  /* the two app shells are noindex (their front doors are the tool pages above), so they are named here, not linked */
+  '- Two of the tools also run as full-screen phone apps: the scanning trainer at https://futbolisland.app/scan and the coach app (team, lineup, fair game minutes and a live game mode) at https://futbolisland.app/coach. They are app screens, not reading pages.','',
+  '## Short answers','',
+  ...answers(),'',
   '## Free soccer games','',/* lib/site/games.ts */
   ...GAME_LISTINGS.map(g=>`- [${g.name[0].toUpperCase()+g.name.slice(1)}](https://futbolisland.app${g.path}): ${g.blurb}.`),'',
   '## Fish','',

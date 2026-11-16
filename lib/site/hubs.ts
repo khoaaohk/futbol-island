@@ -60,7 +60,7 @@ export const HUBS:readonly Hub[]=[
    {q:'Which restarts do the lessons cover?',a:`${RULES_GROUPS.map(g=>`${g.title} (${g.lessons.length})`).join('; ')}. Each lesson ends with a short quiz.`},
    ...HUB_COMMON_FAQ]},
  {slug:'soccer-quiz-for-kids',path:'/learn/soccer-quiz-for-kids',crumb:'Soccer quizzes',blurb:`${QUIZ_LESSONS.length} quizzes with ${QUIZ_QS} questions`,showQuestion:true,
-  title:'Soccer Quiz for Kids: Questions and Answers, Free',
+  title:'Soccer Quiz for Kids: Questions With Answers',
   description:`${QUIZ_LESSONS.length} free football (soccer) quizzes for kids with ${QUIZ_QS} questions on positions, passing, defending and rules in 7v7, 9v9, 11v11 and futsal.`,
   h1:'Soccer quizzes for kids',
   lead:`${DEFINITION} Every lesson ends with a quiz: ${QUIZ_LESSONS.length} quizzes and ${QUIZ_QS} questions in all, grouped here by format. Each one shows a first question; open a lesson to read them all.`,

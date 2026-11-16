@@ -7,5 +7,7 @@
 export const ES_OUT_OF_SCOPE:readonly RegExp[]=[/^\/(play|privacy|marketing|games|cards|fish|exhibits)(\/|$)/];
 /** In scope, not translated yet: [family, pattern]. */
 export const ES_PENDING:readonly (readonly [string,RegExp])[]=[
+ /* Nov 16 2026 (SEO CTR): the new English-only "positions by number" page (lib/site/positionNumbers.ts); no Spanish data yet. */
+ ['positions-by-number',/^\/learn\/soccer-positions\/numbers$/],
 ];
 export const esPendingFamily=(path:string)=>ES_PENDING.find(([,re])=>re.test(path))?.[0]??null;

@@ -58,7 +58,7 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
    {q:'Can I print the 9v9 lineup?',a:'Yes. “Print” makes a one-page sheet in black on white with the field, the names, the bench and your match note, ready for a clipboard.'}]},
  {kind:'lineup',slug:'11v11-lineup-builder',path:'/tools/11v11-lineup-builder',format:'11v11',crumb:'11v11 lineup builder',title:'Starting 11 Lineup Maker: Free 11v11 Soccer Lineup',h1:'11v11 soccer lineup builder',
   description:'Starting 11 maker for soccer: build an 11v11 lineup in a 4-3-3, 4-4-2, 4-2-3-1 or 3-5-2, type names, drag players, print or share. Free, no sign-up.',
-  lead:'Draw your starting eleven on a full-size field in a 4-3-3, 4-4-2, 4-2-3-1 or 3-5-2, with the customary numbers on the dots and your substitutes listed beside it.',
+  lead:'This starting 11 maker draws your soccer lineup on a full-size field in a 4-3-3, 4-4-2, 4-2-3-1 or 3-5-2, with the customary numbers on the dots and your substitutes listed beside it.',
   blurb:'A starting eleven on a full-size field',
   intro:['11v11 is the full game, played from U13 in the US and by adults everywhere. Eleven names are a lot to read out before kick-off; a sheet on the bench or a picture in the group chat the night before saves the talk for what matters.',
    'The dots carry the numbers coaches use as position names (6 for the holding midfielder, 9 for the striker). They are a custom, not a rule, so the sheet shows the player’s name under each one and you can ignore the numbers if your team does not use them.'],
@@ -88,7 +88,7 @@ export type PlannerPage={kind:'planner';slug:string;path:string;format?:Exclude<
 export const PLANNER_PAGES:readonly PlannerPage[]=[
  {kind:'planner',slug:'soccer-playing-time-calculator',path:PLANNER_PATH,crumb:'Playing time calculator',title:'Soccer Sub Calculator: Free Playing Time Calculator',h1:'Soccer playing time calculator',
   description:'Free soccer playing time calculator and sub calculator: enter your players and game length for a fair substitution rotation with equal minutes, to print.',
-  lead:'Tell it how many players came, how many play at once and how long the game is. It gives you a substitution plan in which every player gets the same share of the game, to within one change.',
+  lead:'A soccer playing time calculator, or sub calculator, works out a substitution plan in which every player gets the same share of the game, to within one change. Tell it how many players came, how many play at once and how long the game is.',
   blurb:'A fair substitution plan with equal minutes for every player',
   intro:['Sharing minutes fairly in your head, with a game going on in front of you, is hard. Nine children, seven places, two halves: who has sat out twice? This planner does the arithmetic before the match, so on the side line you only read the next line of the table.',
    'It works for any game: choose 7v7, 9v9, 11v11 or futsal, or type your own numbers for a tournament with short games.'],

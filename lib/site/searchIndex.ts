@@ -6,6 +6,7 @@ import {HUBS} from './hubs';
 import {LESSONS,lessonPath} from './lessons';
 import {PLANS} from './plans';
 import {POSITIONS} from './positions';
+import {NUMBERS_PAGE} from './positionNumbers';
 import {RULES} from './rules';
 import {GLOSSARY,TERMS_HUB_PATH} from './terms';
 import {TOOL_HUBS} from './tools/registry';
@@ -32,6 +33,7 @@ export function buildSearchIndex():SearchEntry[]{
  for(const h of HUBS)add({t:'Guide',n:h.h1,p:h.path,s:h.lead,k:h.blurb});
  for(const g of GUIDE_HUBS)add({t:'Guide',n:cap(g.name),p:g.path,s:g.description,k:g.blurb});
  for(const c of COMPARISONS)add({t:'Guide',n:c.h1,p:c.path,s:c.answer});
+ add({t:'Guide',n:NUMBERS_PAGE.h1,p:NUMBERS_PAGE.path,s:NUMBERS_PAGE.answer,k:'position numbers CB CDM LCM DF ST GK'});/* Nov 16 2026 (SEO CTR) */
  for(const t of TOOL_HUBS)add({t:'Guide',n:cap(t.name),p:t.path,s:t.description,k:t.blurb});
  return out;
 }
