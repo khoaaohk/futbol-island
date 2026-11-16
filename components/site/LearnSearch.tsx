@@ -39,7 +39,7 @@ export default function LearnSearch(){
   </form>
   <p id="learn-q-status" role="status" aria-live="polite" className={site.caption}>{status}</p>
   <div id="learn-results" ref={list} onKeyDown={onListKey}>
-   {groups.map(g=><section key={g.type} className={site.section} aria-labelledby={`r-${g.type}`}>
+   {groups.map(g=><section key={g.type} className={`${site.section} ${fx.resultGroup}`} aria-labelledby={`r-${g.type}`}>
     <h2 className={site.h2} id={`r-${g.type}`}>{SEARCH_LABEL[g.type]} <span className={site.count}>({g.total})</span></h2>
     <ul className={site.list}>{g.items.map(e=><li key={e.t+e.p}><a href={e.p} data-hit=""><span className={site.itemTitle}>{e.n}</span><span className={site.itemMeta}>{e.s}</span></a></li>)}</ul>
    </section>)}

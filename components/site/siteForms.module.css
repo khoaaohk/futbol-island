@@ -6,3 +6,8 @@
 .searchInput{flex:1 1 220px;min-width:0;min-height:48px;padding:0 16px;border-radius:24px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);font:17px var(--sans);box-sizing:border-box}
 .embedCode{width:100%;max-width:var(--measure);box-sizing:border-box;font:14px/1.4 ui-monospace,Menlo,monospace;padding:12px;border-radius:12px;border:1px solid var(--rule);background:var(--surface);color:var(--ink)}
 .copyBtn{min-height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--rule);background:var(--paper);color:var(--ink);font:600 15px var(--sans);cursor:pointer}
+
+/* Nov 15 2026: each result group (Rules, Soccer terms, …) gets clear space above its heading so it does not sit on the previous snippet. */
+.resultGroup{margin-top:28px}
+.resultGroup:first-child{margin-top:12px}
+.resultGroup ul li+li{margin-top:14px}
