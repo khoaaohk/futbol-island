@@ -386,6 +386,8 @@ export const GASHAPON_ACT_KINDS=[['puzzle','Puzzle pieces pulled or put back'],[
 export const GASHAPON_COUNT_IDS:readonly string[]=[...GASHAPON_COUNT_EVENTS.map(([e])=>'gs:'+e),...GASHAPON_ACT_KINDS.map(([k])=>'gs:act_'+k),...GASHAPON_RARITY_WORDS.map(r=>'gs:r_'+r),...GASHAPON_FOUND_BANDS.map(([b])=>'gs:'+b),
  ...[...new Set(GASHAPON_TOYS.map(t=>t.machine))].map(m=>'gs:spin_'+gsKey(m)),...GASHAPON_TOYS.flatMap(t=>['t','v','i'].map(f=>`gs:${f}_${gsKey(t.id)}`))];
 
+/** The coach app (/coach, Nov 16 2026; components/coach/CoachApp.tsx): totals only, never a team, a name, a number or a time. */
+export const COACH_COUNT_EVENTS=[['open','Coach app opened'],['game','Coach app games started'],['sub','Coach app changes confirmed']] as const;
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
  ...LEARN_FORMATS.map(f=>'pf:'+f),...LEARN_FORMATS.map(f=>'gr:'+f),'gr:finale','rv:q','rv:ok','rv:done',
@@ -404,6 +406,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...MARKETING_VISIT_COUNT_IDS,// mm: the investor page /marketing (marketingVisit.ts, Nov 5 2026)
  ...WELCOME_COUNT_IDS,// ws: the smart Welcome back suggestion (lib/welcome/, Nov 14 2026)
  ...GASHAPON_COUNT_IDS,// gs: gashapon machines, the toy viewer and the Toy Shelf (gashaponEvents.ts, Nov 8 2026)
+ ...COACH_COUNT_EVENTS.map(([e])=>'ca:'+e),// ca: the coach app (components/coach/CoachApp.tsx, Nov 16 2026)
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 

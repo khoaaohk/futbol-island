@@ -83,6 +83,10 @@ const cacheStatic = [
   // Admin analytics (Oct 7 2026): never indexed, never cached.
   { source: '/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Cache-Control', value: 'no-store' }] },
   { source: '/admin', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }, { key: 'Cache-Control', value: 'no-store' }] },
+  // The coach app (Nov 16 2026, docs/coach-app/HANDOFF.md): a tool, not a page to rank (the /tools pages are its front doors).
+  { source: '/coach', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+  { source: '/coach/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+  { source: '/coach-sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }, { key: 'X-Robots-Tag', value: 'noindex' }] },
   { source: '/api/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
   // Everything UNDER /marketing (the print page and the PDF; Nov 4 2026, lib/site/marketing.ts) is never indexed or followed. The /marketing page itself is open to search since Nov 6 2026 (owner).
   { source: '/marketing/:path+', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }] },

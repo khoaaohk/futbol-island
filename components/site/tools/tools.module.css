@@ -71,3 +71,8 @@ textarea.input{min-height:88px;resize:vertical}
  .printTable{font-size:11pt;color:#000}
 }
 .screen>*{min-width:0}
+/* "Open the app" under a tool page title (components/site/tools/ToolParts.tsx AppLink) */
+.appLink{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:8px 16px;margin:16px 0 0}
+.appLink span{margin:0}
+.appLink .appBtn,.appLink .appBtn:visited{display:inline-flex;align-items:center;justify-content:center;min-height:52px;padding:0 24px;border-radius:999px;background:var(--ink,#14221d);color:#fbf7ee;font-weight:800;font-size:17px;text-decoration:none;background-image:none}
+.appLink .appBtn:hover{background:#1d6b55;color:#fff}

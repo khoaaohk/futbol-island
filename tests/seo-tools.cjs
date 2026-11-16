@@ -43,7 +43,7 @@ const WANT=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder',
  ...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`)];
 assert.deepEqual(PAGES.map(p=>p.path),WANT,'the tool pages');
 assert.deepEqual(reg.TOOL_HUBS.map(p=>p.path),['/tools','/tools/soccer-lineup-builder','/tools/soccer-playing-time-calculator','/tools/soccer-field-diagrams'],'hub-level pages');
-const SERVED=new Set([...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`/learn/diagrams/${f}`).concat(pr.PRINT_FILE_NAMES.map(f=>`${pr.FILES_DIR}/${f}`)));
+const SERVED=new Set([...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`/learn/diagrams/${f}`).concat(pr.PRINT_FILE_NAMES.map(f=>`${pr.FILES_DIR}/${f}`),[`/coach`]/* the coach app (app/coach, noindex; tests/coach-app.cjs) */));
 {const all=[...guides.ALL_GUIDE_PAGES,...PAGES];
  assert.equal(new Set(all.map(p=>p.title)).size,all.length,'titles are unique across guides and tools');assert.equal(new Set(all.map(p=>p.description)).size,all.length,'descriptions are unique');}
 for(const p of PAGES){
