@@ -90,7 +90,8 @@ import {prefetchOnIdle,prefetchPart,prefetchWhenIdle} from '@/lib/ui/idlePrefetc
 import {loadBottleLogo,loadCoaches,loadCoachLesson,loadConversation,loadCustomizer,loadFieldLearning,loadOnboarding,loadPathsPanel,loadVending} from './islandParts';
 import {ensureStarterKit} from '@/lib/town/backpackStore';
 import WelcomeBack from './WelcomeBack';
-import {WELCOME_GO,type WelcomeGo} from '@/lib/welcome/act';
+import {WELCOME_GO,actWelcome,type WelcomeGo} from '@/lib/welcome/act';
+import {GO_PARAM,parseGo} from '@/lib/play/deepLink';
 import {shouldShowIslandOnboarding} from '@/lib/town/onboarding';
 import {countPathLaunch} from '@/lib/analytics/learnEvents';// Paths format share (Oct 9 2026): a map increment per launch
 import {LEARNING_LAUNCH} from '@/lib/town/learningProgress';
@@ -548,6 +549,9 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
   // Coaches Board share links (#play=…, Oct 9 2026): open the Coaches Centre on the board once the island is ready.
   useEffect(()=>{if(ready&&!failed&&/^#play=/.test(window.location.hash))setCoachesOpen(true);},[ready,failed]);
   useEffect(()=>{if(!ready||failed)return;const url=new URL(window.location.href);const store=url.searchParams.get('store');if(store===null)return;if(store==='books'&&isVendingPreview())openVending('plaza','display:plaza:book');else openStore(store==='packs'||openArcadePacks?'packs:legend':undefined);url.searchParams.delete('store');window.history.replaceState(null,'',url.pathname+url.search);},[ready,failed]);
+  // Reading-page deep links (Nov 15 2026, lib/play/deepLink.ts): `?go=lesson:<id>` / `?go=fish:<spot>` once the island is ready, through
+  // the Welcome back card's own actions. Unknown or malformed values are ignored; the param leaves the address bar either way.
+  useEffect(()=>{if(!ready||failed)return;const url=new URL(window.location.href);if(!url.searchParams.has(GO_PARAM))return;const go=parseGo(url.searchParams.get(GO_PARAM));url.searchParams.delete(GO_PARAM);window.history.replaceState(null,'',url.pathname+url.search+url.hash);if(go)actWelcome(go,new Set(),new Set());},[ready,failed]);
   useEffect(()=>{if(testCoinsRequested())void grantTestingCoins();},[]);// dev builds on localhost only (lib/town/vendingPreview.ts, G-16)
   const [minimapCollapsed,setMinimapCollapsed]=useState(false);
   const [map,setMap]=useState(false),[goals,setGoals]=useState(0),[scored,setScored]=useState(false);
