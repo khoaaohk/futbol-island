@@ -27,7 +27,7 @@ const P:Record<DeckIcon,React.ReactNode>={
  /* a ball whose path bends off a foot */
  deflect:<><path d="M6 40 22 24l16 4"/><path d="M33 23l5 5-6 3"/><path d="M14 18h8v6" opacity=".55"/><circle cx="40" cy="12" r="4"/></>,
  /* a foot flicking the ball up in an arc */
- trick:<><path d="M6 42h13l5-5"/><path d="M22 34c2-12 8-20 16-22"/><path d="M33 8l5 4-4 5"/><circle cx="12" cy="14" r="5"/><path d="M12 22v6" opacity=".55"/></>,
+ trick:<><path d="M5 42h13l5-4"/><path d="M24 35c0-12 4-20 11-23" strokeDasharray="1 6"/><circle cx="38" cy="10" r="5"/><circle cx="12" cy="20" r="4"/><path d="M12 25v8" opacity=".55"/></>,
  /* the referee's whistle */
  whistle:<><circle cx="20" cy="30" r="10"/><path d="M20 20h22v8H29"/><circle cx="20" cy="30" r="3"/><path d="M28 12l3-5M36 14l4-3M20 13V7" opacity=".7"/></>,
  /* two footprints on the touchline */
@@ -48,7 +48,7 @@ const P:Record<DeckIcon,React.ReactNode>={
  /* a goalkeeper's glove */
  gloves:<><path d="M14 30V13a3 3 0 0 1 6 0v9V10a3 3 0 0 1 6 0v12V12a3 3 0 0 1 6 0v12l2-3a3 3 0 0 1 5 3l-5 10c-2 3-5 4-9 4h-3c-5 0-8-3-8-8Z"/><path d="M14 38h20v6H14Z"/></>,
  /* a sliding leg catching the other player's foot */
- trip:<><circle cx="32" cy="9" r="4"/><path d="M31 14l-5 12 10 4M26 26l-6 9"/><path d="M4 42l10-4 10 2"/><path d="M40 38l4 4" opacity=".55"/></>,
+ trip:<><circle cx="35" cy="11" r="4"/><path d="M32 15l-10 11M28 19l10 4M22 26l-9-4M22 26l4 9"/><path d="M4 41h22l4-5"/></>,
  /* a shirt being pulled */
  hold:<><path d="M17 8 7 14l4 8 4-2v20h18V20l4 2 4-8-10-6c-1 3-4 5-7 5s-6-2-7-5Z"/><path d="M33 28h10M33 33h8" opacity=".7"/></>,
  /* a high foot near a head */
