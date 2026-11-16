@@ -21,6 +21,8 @@ The checks live in `lib/seo/snapshotSchema.mjs` and run three ways: in the app, 
 | `gscDataThrough` | the last day the Performance report has data for (usually 2 days ago) | Performance, last day on the chart |
 | `windows.d28` | `{clicks, impressions, ctr, position, queries, pages, prev}` for "Last 28 days". `ctr` is a fraction: 4.7% is `0.047`. `prev` is the previous 28 days from the Compare view, or `null` | Performance, date filter "Last 28 days" (Compare for `prev`) |
 | `windows.d7` | the same for "Last 7 days", or `null` when not read | Performance, "Last 7 days" |
+| `windows.h24` | optional, the same fields for Search Console's **"24 hours"** view (fresh, partial data; shown as "Today"), or `null`/absent when not read | Performance, date filter "24 hours" (Compare for `prev`) |
+| `windows.d1` | optional, one whole day: the same fields plus `day` (YYYY-MM-DD, normally yesterday; shown as "Yesterday"), or `null`/absent | Performance, More → Custom (that one day), or the DAYS tab row |
 | `daily` | `[{day, clicks, impressions}]` per day when the chart is read; may stay `[]` | Performance chart, hover or Export |
 | `topQueries` | up to ~25 rows `{query, clicks, impressions, position}`, by impressions. `clicks: null` when Google does not show them | Performance, Queries table |
 | `topPages` | up to ~30 rows `{path, clicks, impressions, position}`; `path` starts with `/` | Performance, Pages table |
@@ -35,7 +37,9 @@ the quick wins; nothing needs writing by hand.
 ## The daily run, step by step
 
 1. `git pull` on `main` (only this file changes, so there is nothing to merge).
-2. Read Performance (28 days, then 7 days if time allows), Pages, Sitemaps, and do the day's indexing requests.
+2. Read Performance for **24 hours** (`windows.h24`, "Today"), **yesterday** (`windows.d1`, More → Custom), **7 days** and
+   **28 days** (the owner asked for Today / Yesterday / 7 days on Nov 16 2026; turn on Compare for `prev`), then Pages,
+   Sitemaps, and do the day's indexing requests. The table rows can be read with one script in the page (all `tr` cells).
 3. Edit `data/seo/snapshot.json`:
    - set `asOf` to today and `gscDataThrough` to the report's last day;
    - replace `windows`, `topQueries`, `topPages`, `index` and `sitemaps` with today's readings (move the old `index`

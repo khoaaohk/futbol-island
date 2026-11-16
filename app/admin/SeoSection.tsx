@@ -17,9 +17,17 @@ const pct1=(x:number)=>`${(Math.round(x*1000)/10).toFixed(1)}%`;
 const pos=(x:number|null)=>x===null?'—':x.toFixed(1);
 const dash=(x:number|null)=>x===null?'—':fmtInt(x);
 
-function Tiles({w,days}:{w:SeoWindow;days:number}){
- const p=w.prev??null,lbl=`previous ${days} days`;
- return <div className={styles.startTiles} aria-label={`Google Search, last ${days} days`}>
+type Win='h24'|'d1'|'d7'|'d28';
+/** Nov 16 2026 (owner: "today, yesterday and 7 days"): the four windows, their chip names and what a change is compared with. */
+const WIN:{k:Win;chip:string;span:string;prev:string}[]=[
+ {k:'h24',chip:'Today',span:'last 24 hours',prev:'previous 24 hours'},
+ {k:'d1',chip:'Yesterday',span:'yesterday',prev:'the day before'},
+ {k:'d7',chip:'Last 7 days',span:'last 7 days',prev:'previous 7 days'},
+ {k:'d28',chip:'Last 28 days',span:'last 28 days',prev:'previous 28 days'}];
+
+function Tiles({w,span,lbl}:{w:SeoWindow;span:string;lbl:string}){
+ const p=w.prev??null;
+ return <div className={styles.startTiles} aria-label={`Google Search, ${span}`}>
   <div><span>Clicks</span><b data-k="seo-clicks">{fmtInt(w.clicks)}</b><Delta cur={w.clicks} prev={p?.clicks} label={lbl}/></div>
   <div><span>Impressions</span><b data-k="seo-impressions">{fmtInt(w.impressions)}</b><Delta cur={w.impressions} prev={p?.impressions} label={lbl}/></div>
   <div><span>Click-through rate</span><b data-k="seo-ctr">{pct1(w.ctr)}</b><Delta cur={w.ctr} prev={p?.ctr} label={lbl} points/></div>
@@ -37,8 +45,9 @@ function RankTable({rows,first}:{rows:{name:string;clicks:number|null;impression
 }
 
 function Snapshot({s,summary,warnings}:{s:SeoSnapshot;summary:string[];warnings:string[]}){
- const [win,setWin]=useState<'d7'|'d28'>(s.windows.d28?'d28':'d7');
- const w=s.windows[win],h=s.history,ix=s.index;
+ const [win,setWin]=useState<Win>(()=>(WIN.find(o=>o.k!=='d28'&&s.windows[o.k])??WIN[3]).k);
+ const cur=WIN.find(o=>o.k===win)!,span=cur.span;
+ const w=s.windows[win]??null,h=s.history,ix=s.index;
  const q=s.topQueries.map(r=>({name:r.query,clicks:r.clicks,impressions:r.impressions,position:r.position}));
  const pg=s.topPages.map(r=>({name:r.path,clicks:r.clicks,impressions:r.impressions,position:r.position}));
  const histTable={columns:['Snapshot day','Clicks','Impressions','CTR','Position','Indexed'],rows:h.map(r=>[day(r.day),r.clicks,r.impressions,r.ctr==null?'—':pct1(r.ctr),pos(r.position),r.indexed==null?'—':r.indexed])};
@@ -51,12 +60,12 @@ function Snapshot({s,summary,warnings}:{s:SeoSnapshot;summary:string[];warnings:
    {warnings.length>0&&<p className={styles.note}>Snapshot notes: {warnings.join('; ')}.</p>}
   </div>
   <div className={styles.seoWindows} role="group" aria-label="Search Console window">
-   <button type="button" className={styles.chip} aria-pressed={win==='d7'} disabled={!s.windows.d7} onClick={()=>setWin('d7')}>Last 7 days</button>
-   <button type="button" className={styles.chip} aria-pressed={win==='d28'} disabled={!s.windows.d28} onClick={()=>setWin('d28')}>Last 28 days</button>
-   {!s.windows.d7&&<span className={styles.note}>7-day numbers were not recorded in this snapshot.</span>}
+   {WIN.map(o=><button key={o.k} type="button" className={styles.chip} aria-pressed={win===o.k} disabled={!s.windows[o.k]} data-win={o.k} onClick={()=>setWin(o.k)}>{o.chip}</button>)}
   </div>
-  {w&&<Tiles w={w} days={win==='d7'?7:28}/>}
-  {w&&(w.queries!==undefined||w.pages!==undefined)&&<p className={styles.note}>{w.queries!==undefined&&`${fmtInt(w.queries)} different searches`}{w.queries!==undefined&&w.pages!==undefined&&' · '}{w.pages!==undefined&&`${fmtInt(w.pages)} pages shown in Google`} in the last {win==='d7'?7:28} days.</p>}
+  {w&&<Tiles w={w} span={span} lbl={cur.prev}/>}
+  <p className={styles.note} data-win-note>{win==='h24'?'Google’s fresh numbers for the last 24 hours, read on '+day(s.asOf)+'; they fill in over the next two days.'
+   :win==='d1'&&s.windows.d1?`${day(s.windows.d1.day)}, as Google showed it on ${day(s.asOf)}; the newest days can still grow a little.`
+   :`To ${day(s.gscDataThrough)}, Google’s finished data.`}{w&&(w.queries!==undefined||w.pages!==undefined)&&<> {w.queries!==undefined&&`${fmtInt(w.queries)} different searches`}{w.queries!==undefined&&w.pages!==undefined&&' · '}{w.pages!==undefined&&`${fmtInt(w.pages)} pages shown in Google`}.</>}</p>
   <div className={styles.grid}>
    <ChartCard title="Impressions by snapshot day" subtitle="Google's headline number on each day the snapshot was taken" table={histTable} empty={!h.length} emptyText="No snapshot day recorded yet.">
     <DayColumns unit="impressions" ariaLabel="Google impressions by snapshot day" rows={h.map(r=>({key:r.day,label:day(r.day),value:r.impressions,detail:`${fmtInt(r.clicks)} clicks · position ${pos(r.position)}`}))}/>

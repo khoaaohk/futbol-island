@@ -10,7 +10,7 @@ export type SeoWindow=SeoWindowCore&{queries?:number;pages?:number;prev?:SeoWind
 export type SeoRow={clicks:number|null;impressions:number;position:number};
 export type SeoSnapshot={
  schemaVersion:1;site?:string;asOf:string;gscDataThrough:string;
- windows:{d7:SeoWindow|null;d28:SeoWindow|null};
+ windows:{d7:SeoWindow|null;d28:SeoWindow|null;h24?:SeoWindow|null;d1?:(SeoWindow&{day:string})|null};
  daily:{day:string;clicks:number;impressions:number}[];
  topQueries:(SeoRow&{query:string})[];
  topPages:(SeoRow&{path:string})[];

@@ -4,7 +4,13 @@
  "asOf": "2026-11-16",
  "gscDataThrough": "2026-11-14",
  "windows": {
-  "d7": null,
+  "d7": {
+   "clicks": 29,
+   "impressions": 826,
+   "ctr": 0.035,
+   "position": 30.4,
+   "prev": null
+  },
   "d28": {
    "clicks": 29,
    "impressions": 826,
@@ -13,9 +19,60 @@
    "queries": 170,
    "pages": 112,
    "prev": null
+  },
+  "h24": {
+   "clicks": 4,
+   "impressions": 322,
+   "ctr": 0.012,
+   "position": 36.6,
+   "prev": null
+  },
+  "d1": {
+   "day": "2026-11-14",
+   "clicks": 4,
+   "impressions": 291,
+   "ctr": 0.014,
+   "position": 34.3,
+   "prev": {
+    "clicks": 5,
+    "impressions": 278,
+    "ctr": 0.018,
+    "position": 39.1
+   }
   }
  },
- "daily": [],
+ "daily": [
+  {
+   "day": "2026-11-09",
+   "clicks": 1,
+   "impressions": 5
+  },
+  {
+   "day": "2026-11-10",
+   "clicks": 9,
+   "impressions": 17
+  },
+  {
+   "day": "2026-11-11",
+   "clicks": 5,
+   "impressions": 86
+  },
+  {
+   "day": "2026-11-12",
+   "clicks": 5,
+   "impressions": 149
+  },
+  {
+   "day": "2026-11-13",
+   "clicks": 5,
+   "impressions": 278
+  },
+  {
+   "day": "2026-11-14",
+   "clicks": 4,
+   "impressions": 291
+  }
+ ],
  "topQueries": [
   {
    "query": "futbal island",
@@ -425,6 +482,20 @@
    ],
    "alreadyIndexed": 12,
    "note": "Queue finished. Clicked Validate fix for the 5 duplicate-canonical pages."
+  },
+  {
+   "day": "2026-11-16",
+   "requested": [
+    "/learn/soccer-rules/yellow-and-red-cards",
+    "/es/learn/soccer-rules/yellow-and-red-cards",
+    "/es",
+    "/games",
+    "/tools/soccer-playing-time-calculator",
+    "/tools/soccer-scanning-trainer",
+    "/es/tools/soccer-scanning-trainer"
+   ],
+   "alreadyIndexed": 0,
+   "note": "Video sitemap submitted. Re-crawl for the rebuilt cards page and the coach-app playing-time page; Scan Trainer EN+ES after its release."
   }
  ],
  "history": [

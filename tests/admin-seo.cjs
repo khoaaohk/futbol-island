@@ -78,15 +78,30 @@ ok('the tab renders the seed headline numbers, the as-of line and the summary',(
  assert(!winRows.includes('/')&&!winRows.includes('/learn/soccer-rules/yellow-and-red-cards')&&!winRows.includes('futbal island'));
  for(const s of ['Discovered - currently not indexed','Duplicate without user-selected canonical','fix validation started Nov 15','/sitemap-images.xml','788','Indexing requests','/learn/soccer-positions/striker','Google says','We counted','Search arrivals'])assert(t.includes(s),s);
  assert(t.indexOf('Nov 15',t.indexOf('Indexing requests'))<t.indexOf('2026-11-10'.replace('2026-11-10','Nov 10'),t.indexOf('Indexing requests')),'work log newest first');
- assert.match(t,/7-day numbers were not recorded/);
+ // Nov 16 2026: four window chips; ones the snapshot did not record are disabled (the seed has only 28 days).
+ for(const k of ['h24','d1','d7'])assert.match(html,new RegExp(`<button type="button" class="chip" aria-pressed="false" disabled="" data-win="${k}"`),k+' disabled');
+ assert.match(html,/aria-pressed="true" data-win="d28"/);assert.match(t,/Today Yesterday Last 7 days Last 28 days/);
 });
 ok('a 7-day window and a previous window show changes',()=>{
- const s=clone();s.windows.d28.prev={clicks:10,impressions:100,ctr:0.1,position:30};s.windows.d7={clicks:5,impressions:50,ctr:0.1,position:20,prev:null};
+ const s=clone();s.windows.d28.prev={clicks:10,impressions:100,ctr:0.1,position:30};
  const html=render(L.parseSnapshot(JSON.stringify(s))),t=text(html);
  assert.match(t,/\+150% vs previous 28 days/);assert.match(t,/\+435% vs previous 28 days/);
  assert.match(html,/data-tone="bad"><span aria-hidden="true">▼<\/span> −5 pts vs previous 28 days/,'CTR in points');
  assert.match(html,/data-k="seo-position">28.3<\/b><small class="delta" data-tone="good">/,'a lower position is good');
- assert(!/7-day numbers were not recorded/.test(t));
+ const s7=clone();s7.windows.d7={clicks:5,impressions:50,ctr:0.1,position:20,prev:{clicks:4,impressions:40,ctr:0.1,position:25}};
+ const h7=render(L.parseSnapshot(JSON.stringify(s7)));assert.match(h7,/aria-pressed="true" data-win="d7"/,'7 days opens first when there is no Today');
+ assert.match(text(h7),/vs previous 7 days/);
+});
+ok('Today (24 hours) and Yesterday windows',()=>{
+ const s=clone();s.windows.h24={clicks:2,impressions:90,ctr:0.022,position:24.5,prev:{clicks:1,impressions:60,ctr:0.017,position:26}};
+ s.windows.d1={day:'2026-11-14',clicks:3,impressions:120,ctr:0.025,position:27.1,prev:null};
+ assert.equal(L.validateSnapshot(s).errors.length,0);
+ const html=render(L.parseSnapshot(JSON.stringify(s))),t=text(html);
+ assert.match(html,/aria-pressed="true" data-win="h24"/,'Today opens first');assert.match(html,/data-k="seo-impressions">90</);
+ assert.match(t,/vs previous 24 hours/);assert.match(t,/last 24 hours, read on Nov 15/);
+ const bad=clone();bad.windows.d1={clicks:3,impressions:120,ctr:0.025,position:27.1};
+ assert(L.validateSnapshot(bad).errors.some(e=>/windows\.d1\.day/.test(e)),'d1 needs its day');
+ const bad2=clone();bad2.windows.h24={clicks:9,impressions:3,ctr:1,position:2};assert(L.validateSnapshot(bad2).errors.some(e=>/more clicks/.test(e)));
 });
 
 // 3. empty state ---------------------------------------------------------------------------------------------------------------
