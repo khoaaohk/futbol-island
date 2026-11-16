@@ -32,7 +32,7 @@ const relayOrigin = (() => { try { const u = new URL(process.env.NEXT_PUBLIC_MUL
 const RELAY = ['https://party.futbolisland.app', 'wss://party.futbolisland.app', ...(relayOrigin ? [relayOrigin, relayOrigin.replace(/^http/, 'ws')] : [])].join(' ');
 const MEDIA_HOST = 'https://futbol-media.khoa0aohk.workers.dev';// lib/site/learnMedia.ts MEDIA_BASE
 const YT = 'https://www.youtube.com https://www.youtube-nocookie.com';
-const csp = dev => [
+const csp = (dev, frameAncestors = "'self'") => [
   "default-src 'self'",
   `script-src 'self' 'unsafe-inline'${dev ? " 'unsafe-eval'" : ''} https://www.youtube.com https://s.ytimg.com https://vercel.live`,
   "style-src 'self' 'unsafe-inline'",
@@ -46,19 +46,25 @@ const csp = dev => [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
-  "frame-ancestors 'self'",
+  `frame-ancestors ${frameAncestors}`,
   // Nov 10 2026: still report-only; violations go to our own counter (app/api/csp-report: daily counts, no URLs or user agents).
   'report-uri /api/csp-report',
   'report-to csp',
 ].join('; ');
 const securityHeaders = dev => ({ source: '/:path*', headers: [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
-  { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: `accelerometer=(self), gyroscope=(self), fullscreen=(self "https://www.youtube.com" "https://www.youtube-nocookie.com"), camera=(), microphone=(), geolocation=(), payment=(), usb=(), midi=(), display-capture=()` },
   { key: 'Content-Security-Policy-Report-Only', value: csp(dev) },
   { key: 'Reporting-Endpoints', value: 'csp="/api/csp-report"' },
 ] });
+// Framing (seo-extras, Nov 15 2026): SAMEORIGIN everywhere EXCEPT the kid-safe club embeds at /embed/* (app/embed), which any
+// site may frame (frame-ancestors *). The embeds are noindex (header + meta) with a canonical to the tool page.
+export const EMBED_SOURCE = '/embed/:path*';
+const frameHeaders = dev => [
+  { source: '/:path((?!embed(?:/|$)).*)', headers: [{ key: 'X-Frame-Options', value: 'SAMEORIGIN' }] },
+  { source: EMBED_SOURCE, headers: [{ key: 'Content-Security-Policy-Report-Only', value: csp(dev, '*') }, { key: 'X-Robots-Tag', value: 'noindex' }] },
+];
 const cacheStatic = [
   ...cacheAssets,
   { source: '/players/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=86400, stale-while-revalidate=604800' }] },
@@ -115,4 +121,4 @@ const GAME_QUERY_TO_PLAY = [
 // the destination (apex) can never match it again: no loop.
 export const WWW_TO_APEX = { source: '/:path*', has: [{ type: 'host', value: 'www\\.futbolisland\\.app' }], destination: 'https://futbolisland.app/:path*', permanent: true };
 const redirects = [WWW_TO_APEX, { source: '/learn', destination: '/', permanent: true }, { source: '/learn/:slug((?!lessons$)(?!(?:football-rules-for-kids|soccer-quiz-for-kids|passing-and-support|futsal-for-kids|7v7-9v9-11v11|soccer-formations|soccer-positions|7v7-soccer-formations|9v9-soccer-formations|11v11-soccer-formations|soccer-rules|soccer-ball-size-by-age|soccer-field-size-by-age|soccer-age-groups|soccer-terms|soccer-drills|soccer-practice-plans)$)[A-Za-z0-9_-]+)', destination: '/learn/lessons/:slug', permanent: true }, ...GAME_QUERY_TO_PLAY];
-export default phase => ({ reactStrictMode: true, distDir: process.env.NEXT_DIST_DIR || (phase === 'phase-development-server' ? '.next-dev' : '.next'), async headers() { return [securityHeaders(phase === 'phase-development-server'), ...cacheStatic]; }, async rewrites() { return rewrites; }, async redirects() { return redirects; } });
+export default phase => ({ reactStrictMode: true, distDir: process.env.NEXT_DIST_DIR || (phase === 'phase-development-server' ? '.next-dev' : '.next'), async headers() { return [securityHeaders(phase === 'phase-development-server'), ...frameHeaders(phase === 'phase-development-server'), ...cacheStatic]; }, async rewrites() { return rewrites; }, async redirects() { return redirects; } });

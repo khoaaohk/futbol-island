@@ -12,7 +12,7 @@ export default function ErrorBeacon(){
  useEffect(()=>{
   const n=navigator as Navigator&{globalPrivacyControl?:boolean};
   if(n.doNotTrack==='1'||n.globalPrivacyControl===true||typeof n.sendBeacon!=='function')return;
-  if(/^\/admin(\/|$)/.test(location.pathname))return;
+  if(/^\/admin(\/|$)/.test(location.pathname)||/^\/embed(\/|$)/.test(location.pathname))return;/* + club embeds (lib/embed/isEmbed.ts) */
   let sent=0;try{sent=Number(sessionStorage.getItem(KEY))||0;}catch{}
   const send=(m:unknown,f:unknown,l:unknown)=>{
    if(sent>=MAX)return;sent++;try{sessionStorage.setItem(KEY,String(sent));}catch{}
