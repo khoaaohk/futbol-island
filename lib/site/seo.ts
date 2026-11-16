@@ -1,5 +1,5 @@
 import type {Metadata} from 'next';
-import {hasEs,languageAlternates} from '@/lib/i18n/esPaths';
+import {hasEs,languageAlternates} from '../i18n/esPaths';
 /**
  * The static reading pages (Oct 16 2026, "make the site easier to find through ChatGPT, Claude and search"): shared metadata
  * and JSON-LD helpers for app/(site)/*, app/sitemap.ts, app/robots.ts and the llms files. Pure data: no env reads, no client

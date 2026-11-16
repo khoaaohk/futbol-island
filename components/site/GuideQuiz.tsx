@@ -2,7 +2,7 @@
 import {useState} from 'react';
 import type {QuizQuestion} from '@/lib/site/guideQuiz';
 import styles from '@/app/(site)/site.module.css';
-import {ES_QUIZ} from '@/lib/i18n/es/ui';
+import {ES_QUIZ} from '../../lib/i18n/es/ui';
 /**
  * The end-of-guide quiz (Nov 15 2026; questions from lib/site/guideQuiz.ts). Real buttons, one tap per question, instant
  * feedback read out by an aria-live region, the score when all three are done ("3/3!"), and "Try again". State lives in this
