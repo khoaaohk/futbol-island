@@ -388,6 +388,8 @@ export const GASHAPON_COUNT_IDS:readonly string[]=[...GASHAPON_COUNT_EVENTS.map(
 
 /** The coach app (/coach, Nov 16 2026; components/coach/CoachApp.tsx): totals only, never a team, a name, a number or a time. */
 export const COACH_COUNT_EVENTS=[['open','Coach app opened'],['game','Coach app games started'],['sub','Coach app changes confirmed']] as const;
+/** Scan Trainer (/scan, Nov 16 2026; components/scan/ScanApp.tsx): totals only, never a setting, a score or a time. */
+export const SCAN_COUNT_EVENTS=[['start','Scan Trainer sessions started'],['finish','Scan Trainer sessions finished']] as const;
 export const FIXED_COUNT_IDS:readonly string[]=[
  ...ONBOARDING_STEPS.map(([s])=>'ob:seen:'+s),...ONBOARDING_STEPS.map(([s])=>'ob:skip:'+s),'ob:explore','ob:lesson',
  ...LEARN_FORMATS.map(f=>'pf:'+f),...LEARN_FORMATS.map(f=>'gr:'+f),'gr:finale','rv:q','rv:ok','rv:done',
@@ -407,6 +409,7 @@ export const FIXED_COUNT_IDS:readonly string[]=[
  ...WELCOME_COUNT_IDS,// ws: the smart Welcome back suggestion (lib/welcome/, Nov 14 2026)
  ...GASHAPON_COUNT_IDS,// gs: gashapon machines, the toy viewer and the Toy Shelf (gashaponEvents.ts, Nov 8 2026)
  ...COACH_COUNT_EVENTS.map(([e])=>'ca:'+e),// ca: the coach app (components/coach/CoachApp.tsx, Nov 16 2026)
+ ...SCAN_COUNT_EVENTS.map(([e])=>'sn:'+e),// sn: Scan Trainer (components/scan/ScanApp.tsx, Nov 16 2026)
 ];
 const FIXED=new Set(FIXED_COUNT_IDS);
 

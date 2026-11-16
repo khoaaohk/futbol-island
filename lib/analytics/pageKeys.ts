@@ -16,7 +16,7 @@ const LEARN:Record<string,string>={'11v11-soccer-formations':'11v11 formations',
 const TOP:Record<string,[key:string,label:string]>={'':['home','Home'],play:['play','Island'],'island-return':['play','Island'],arcade:['arcade','Arcade'],
  museum:['museum','Museum'],konbini:['konbini','Konbini'],shop:['shop','Kit shop'],controller:['controller','Phone controller'],coffee:['coffee','Support page'],
  start:['start','Start page'],plan:['plan','Football plan'],privacy:['privacy','Privacy'],about:['about','About'],cards:['cards','Cards'],exhibits:['exhibits','Exhibits'],
- fish:['fish','Fish guide'],games:['games','Games'],tools:['tools','Coach tools'],coach:['coach','Coach app'],marketing:['marketing','Marketing page'],
+ fish:['fish','Fish guide'],games:['games','Games'],tools:['tools','Coach tools'],coach:['coach','Coach app'],scan:['scan','Scan Trainer'],marketing:['marketing','Marketing page'],
  'safe-football-game-for-kids':['parents','Parents’ guide'],learn:['learn','Learn']};
 const learnKey=(slug:string)=>'learn_'+slug.replace(/-/g,'_');
 /** Every key, with its admin label ("Other page" for anything not listed). */

@@ -87,6 +87,10 @@ const cacheStatic = [
   { source: '/coach', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
   { source: '/coach/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
   { source: '/coach-sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }, { key: 'X-Robots-Tag', value: 'noindex' }] },
+  // Scan Trainer (Nov 16 2026, docs/scan-trainer/HANDOFF.md): the same; its front door is /tools/soccer-scanning-trainer.
+  { source: '/scan', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+  { source: '/scan/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex' }] },
+  { source: '/scan-sw.js', headers: [{ key: 'Cache-Control', value: 'no-cache' }, { key: 'X-Robots-Tag', value: 'noindex' }] },
   { source: '/api/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
   // Everything UNDER /marketing (the print page and the PDF; Nov 4 2026, lib/site/marketing.ts) is never indexed or followed. The /marketing page itself is open to search since Nov 6 2026 (owner).
   { source: '/marketing/:path+', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow, noarchive' }] },
