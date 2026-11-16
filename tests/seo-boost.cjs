@@ -70,7 +70,7 @@ const L=rel=>load(path.join(root,rel));
  for(const g of games.GAME_PAGES){const v=games.videoGameLd(g);assert.equal(v.operatingSystem,'Web browser');assert.equal(v.isFamilyFriendly,true);assert.equal(v.applicationCategory,'Game');assert(!('aggregateRating' in v),'no ratings');}
  assert.equal(L('lib/site/tools/registry.ts').webAppLd({name:'x',path:'/tools/x',description:'d',features:[]}).operatingSystem,'Web browser');
  assert.equal(seo.PUBLISHER.logo.url,SITE+'/icon.png','publisher has a logo');
- assert(!JSON.stringify(seo.websiteLd()).includes('SearchAction'),'no SearchAction (no site search)');
+ {const a=seo.websiteLd().potentialAction;assert(a&&a['@type']==='SearchAction'&&a.target.urlTemplate==='https://futbolisland.app/learn?q={search_term_string}','SearchAction to the /learn search (seo-extras)');}
 
  // ---- 2. built site ---------------------------------------------------------------------------------------------------------------
  const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),app=path.join(dist,'server/app');

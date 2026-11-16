@@ -82,7 +82,9 @@ export const siteLd=()=>({'@context':'https://schema.org','@type':['WebApplicati
  publisher:PUBLISHER,image:SITE_URL+'/opengraph-image.png'});
 /** The home page `/` (the feature tour, Nov 3 2026): the site and its publisher. */
 export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite','@id':WEBSITE_ID,name:SITE_NAME,url:SITE_URL+'/',inLanguage:'en',
- description:'Futbol Island is a free football (soccer) learning game for kids aged 7 to 12, played in the web browser.',publisher:PUBLISHER});
+ description:'Futbol Island is a free football (soccer) learning game for kids aged 7 to 12, played in the web browser.',publisher:PUBLISHER,
+ // seo-extras (Nov 15 2026): the guide search at /learn?q= (app/(site)/learn/page.tsx reads q on load).
+ potentialAction:{'@type':'SearchAction',target:{'@type':'EntryPoint',urlTemplate:SITE_URL+'/learn?q={search_term_string}'},'query-input':'required name=search_term_string'}});
 /** No sameAs: Futbol Island has no social profile of its own yet (the Instagram on `/` is the partner founder's personal
  *  account, not the game's), and sameAs must name the same entity. Add its own profiles here when they exist. */
 export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png',

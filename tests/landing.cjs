@@ -32,13 +32,14 @@ const actions=read(`${DIR}/TitleActions.tsx`),scene=read(`${DIR}/TitleScene.tsx`
 //     links (door returns, Stripe returns, party invites, store, dev switches) → /play with the same query; the title screen's
 //     Back goes to `/`; nothing in the game sends a player to a bare `/` or `/?…` any more.
 {const cfg=read('next.config.mjs');
- assert.match(cfg,/\{ source: '\/learn', destination: '\/', permanent: true \}/,'/learn is a permanent redirect to /');
+ assert.match(cfg,/\{ source: '\/learn', missing: \[\{ type: 'query', key: 'q' \}\], destination: '\/', permanent: true \}/,'/learn is a permanent redirect to / (except /learn?q=, the search)');
  assert.match(cfg,/source: '\/learn\/:slug\(\(\?!lessons\$\)/,'old lesson URLs still redirect to /learn/lessons/<id>');
  assert.match(cfg,/const GAME_FROM = 'arcade\|konbini\|museum\|shop\|e2e';/);
  for(const k of ['panel','party','store','coffee'])assert(cfg.includes(`'${k}'`),`/?${k}= redirects to /play`);
  assert.match(cfg,/\.map\(has => \(\{ source: '\/', has: \[has\], destination: '\/play', permanent: true \}\)\)/,'each old game query on / redirects to /play (query kept)');
  assert(!fs.existsSync(path.join(ROOT,'app/page.tsx')),'no app/page.tsx: `/` is app/(site)/page.tsx');
- assert(fs.existsSync(path.join(ROOT,'app/(site)/page.tsx'))&&!fs.existsSync(path.join(ROOT,'app/(site)/learn/page.tsx')),'the tour is the home page');
+ {const lp=path.join(ROOT,'app/(site)/learn/page.tsx');/* seo-extras: /learn?q= is the noindex search, never the tour */
+ assert(fs.existsSync(path.join(ROOT,'app/(site)/page.tsx'))&&(!fs.existsSync(lp)||/LearnSearch/.test(fs.readFileSync(lp,'utf8'))&&!/LearnTour|learn\.module\.css/.test(fs.readFileSync(lp,'utf8'))),'the tour is the home page');}
  assert.match(read('components/landing/LandingBack.tsx'),/window\.location\.assign\('\/'\)/,'the title screen Back goes to the home page /');
  assert.match(adapter,/window\.history\.replaceState\(window\.history\.state,'','\/play'\)/,'a restored save reloads /play');
  for(const [f,v] of [['lib/shop/shopDoors.ts',"SHOP_RETURN_URL='/play?from=shop'"],['lib/konbini/konbiniDoors.ts',"KONBINI_RETURN_URL='/play?from=konbini'"],['lib/museum/museumDoors.ts',"MUSEUM_RETURN_URL='/play?from=museum'"],

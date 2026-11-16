@@ -50,7 +50,8 @@ const {LEARN_FEATURES:F,LEARN_GROUPS:G,LEARN_FAQ:ALLQ,LEARN_FAQ_TOP:TOP,LEARN_HI
 const Q=TOP.map(q=>ALLQ.find(x=>x.q===q));
 
 // ---- 1. routes ----------------------------------------------------------------------------------------------------------------
-assert(!has('app/(site)/learn/page.tsx')&&!has('app/page.tsx'),'the tour is the home page: no /learn page, no root app/page.tsx');
+// Nov 15 2026 (seo-extras): app/(site)/learn/page.tsx is now ONLY the noindex guide search (/learn?q=), never the tour.
+assert(!has('app/page.tsx')&&(!has('app/(site)/learn/page.tsx')||/LearnSearch/.test(fs.readFileSync(path.join(root,'app/(site)/learn/page.tsx'),'utf8'))&&/index:false/.test(fs.readFileSync(path.join(root,'app/(site)/learn/page.tsx'),'utf8'))),'the tour is the home page: /learn is only the noindex search, no root app/page.tsx');
 for(const f of ['app/(site)/page.tsx','app/play/page.tsx','app/(site)/learn/lessons/page.tsx','app/(site)/learn/lessons/[slug]/page.tsx'])assert(has(f),`${f} exists`);
 assert(!has('app/(site)/learn/[slug]'),'the old /learn/[slug] route is gone (moved to lessons/[slug])');
 const page=read('app/(site)/page.tsx');
@@ -65,7 +66,7 @@ const red=nc.match(/const redirects = \[(.*)\];/);assert(red,'next.config.mjs ha
 assert.match(red[1],/source: '\/learn\/:slug\(\(\?!lessons\$\)[^']+'/,'old lesson URLs redirect, /learn/lessons excluded');
 assert.match(red[1],/destination: '\/learn\/lessons\/:slug', permanent: true/,'permanent redirect to /learn/lessons/<id>');
 assert.match(nc,/async redirects\(\) \{ return redirects; \}/,'redirects are wired into the config');
-assert.match(red[1],/\{ source: '\/learn', destination: '\/', permanent: true \}/,'/learn is a permanent redirect to the home page /');
+assert.match(red[1],/\{ source: '\/learn', missing: \[\{ type: 'query', key: 'q' \}\], destination: '\/', permanent: true \}/,'/learn is a permanent redirect to the home page / (except /learn?q=, the search)');
 {const re=new RegExp('^/learn/(?:'+red[1].match(/:slug\((.*)\)', destination/)[1]+')$');
  for(const l of lessons.LESSONS)assert(re.test('/learn/'+l.id),`old URL /learn/${l.id} is caught by the redirect`);
  assert(!re.test('/learn/lessons'),'/learn/lessons is not redirected');}
