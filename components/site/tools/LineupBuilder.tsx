@@ -6,6 +6,7 @@ import {fieldItems,GRASS,INK,toSvgString} from '@/lib/site/tools/sheet';
 import SheetSvg,{SheetItem} from '@/lib/site/tools/SheetSvg';
 import t from './tools.module.css';
 import {LINEUP_FORMAT_EVENT} from '@/lib/site/tools/lineupHeading';
+import {LINEUP_ES as W,lineupSheetEs,shapeLabelEs} from './toolWordsEs';
 /**
  * The lineup builder (Nov 10 2026; /tools/soccer-lineup-builder and its format landings). A client component, the allowed
  * exception to "no client JavaScript on reading pages" because it is a tool the coach drives. It stays cool (AGENTS.md, phone
@@ -21,7 +22,9 @@ const KEY='fi-lineup-v1';
 const FORMAT_LABEL:Record<GuideFormat,string>={'7v7':'7v7','9v9':'9v9','11v11':'11v11',futsal:'Futsal'};
 const refId=(r:Ref)=>`${r.k}:${r.i}`;
 const parseRef=(s:string|null|undefined):Ref|null=>{const m=/^(on|bench):(\d+)$/.exec(s??'');return m?{k:m[1] as Ref['k'],i:Number(m[2])}:null;};
-export default function LineupBuilder({shapes,initial,lockFormat}:{shapes:readonly Shape[];initial:string;lockFormat?:GuideFormat}){
+/** `lang="es"` (Spanish round D, Nov 16 2026): Spanish words (./toolWordsEs.ts); the page passes shapes with Spanish spot labels. English output is unchanged without it. */
+export default function LineupBuilder({shapes,initial,lockFormat,lang}:{shapes:readonly Shape[];initial:string;lockFormat?:GuideFormat;lang?:'es'}){
+ const es=lang==='es',sLabel=es?shapeLabelEs:shapeLabel,sheetOf=es?lineupSheetEs:lineupSheet;
  const first=shapes.find(s=>s.slug===initial)??shapes[0];
  const [l,setL]=useState<Lineup>(()=>emptyLineup(first));
  const [sel,setSel]=useState<Ref|null>(null);
@@ -39,13 +42,13 @@ export default function LineupBuilder({shapes,initial,lockFormat}:{shapes:readon
   window.addEventListener('hashchange',fromHash);return ()=>window.removeEventListener('hashchange',fromHash);
  },[shapes,lockFormat]);
  useEffect(()=>{if(!loaded.current)return;try{window.localStorage.setItem(KEY,JSON.stringify(l));}catch{/* storage is optional */}},[l]);
- const nameOf=useCallback((r:Ref)=>r.k==='on'?(l.on[r.i]||spots[r.i]?.label||'Empty spot'):(l.bench[r.i]||'New substitute'),[l,spots]);
+ const nameOf=useCallback((r:Ref)=>r.k==='on'?(l.on[r.i]||spots[r.i]?.label||(es?W.empty:'Empty spot')):(l.bench[r.i]||(es?W.newSub:'New substitute')),[l,spots,es]);
  const act=useCallback((r:Ref)=>{
-  if(!sel){setSel(r);setStatus(`${nameOf(r)} picked. Now choose who to swap with.`);return;}
+  if(!sel){setSel(r);setStatus(es?W.picked(nameOf(r)):`${nameOf(r)} picked. Now choose who to swap with.`);return;}
   if(sameRef(sel,r)){setSel(null);setStatus('');return;}
-  setStatus(`${nameOf(sel)} and ${nameOf(r)} swapped.`);setL(x=>swap(x,sel,r));setSel(null);
- },[sel,nameOf]);
- const drop=useCallback((from:Ref,to:Ref)=>{if(sameRef(from,to))return;setStatus(`${nameOf(from)} and ${nameOf(to)} swapped.`);setL(x=>swap(x,from,to));setSel(null);},[nameOf]);
+  setStatus(es?W.swapped(nameOf(sel),nameOf(r)):`${nameOf(sel)} and ${nameOf(r)} swapped.`);setL(x=>swap(x,sel,r));setSel(null);
+ },[sel,nameOf,es]);
+ const drop=useCallback((from:Ref,to:Ref)=>{if(sameRef(from,to))return;setStatus(es?W.swapped(nameOf(from),nameOf(to)):`${nameOf(from)} and ${nameOf(to)} swapped.`);setL(x=>swap(x,from,to));setSel(null);},[nameOf,es]);
  /* pointer: a press that moves more than a few pixels is a drag; otherwise it is a tap */
  const down=(r:Ref)=>(e:React.PointerEvent)=>{if(e.button)return;press.current={ref:r,x:e.clientX,y:e.clientY,moved:false};(e.currentTarget as Element).setPointerCapture?.(e.pointerId);};
  const move=(e:React.PointerEvent)=>{const p=press.current;if(!p)return;const dx=e.clientX-p.x,dy=e.clientY-p.y;
@@ -76,18 +79,18 @@ export default function LineupBuilder({shapes,initial,lockFormat}:{shapes:readon
  const setBench=(i:number,v:string)=>setL(x=>({...x,bench:x.bench.map((n,j)=>j===i?v.slice(0,24):n)}));
  const print=()=>{setLink('');window.print();};
  const download=()=>{
-  try{const sheet=lineupSheet(l,shape,GRASS),url=URL.createObjectURL(new Blob([toSvgString(sheet,2)],{type:'image/svg+xml'})),img=new Image();
+  try{const sheet=sheetOf(l,shape,GRASS),url=URL.createObjectURL(new Blob([toSvgString(sheet,2)],{type:'image/svg+xml'})),img=new Image();
    img.onload=()=>{const c=document.createElement('canvas');c.width=sheet.w*2;c.height=sheet.h*2;c.getContext('2d')?.drawImage(img,0,0,c.width,c.height);URL.revokeObjectURL(url);
     c.toBlob(b=>{if(!b){setStatus('This browser could not make the picture. Try Print instead.');return;}
-     const a=document.createElement('a'),href=URL.createObjectURL(b);a.href=href;a.download=`${(l.team||'soccer-lineup').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||'soccer-lineup'}.png`;
-     document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(href);setStatus('Picture saved to your downloads.');},'image/png');};
+     const a=document.createElement('a'),href=URL.createObjectURL(b),dflt=es?W.file:'soccer-lineup';a.href=href;a.download=`${(l.team||dflt).toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')||dflt}.png`;
+     document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(href);setStatus(es?W.saved:'Picture saved to your downloads.');},'image/png');};
    img.onerror=()=>{URL.revokeObjectURL(url);setStatus('This browser could not make the picture. Try Print instead.');};
    img.src=url;}catch{setStatus('This browser could not make the picture. Try Print instead.');}
  };
  const copy=()=>{const url=`${window.location.origin}${window.location.pathname}#l=${encodeLineup(l)}`;
   try{window.history.replaceState(null,'',url);}catch{/* the link is still shown below */}
   setLink(url);
-  const done=()=>setStatus('Link copied. Anyone who opens it sees this lineup.'),manual=()=>setStatus('Copy the link below.');
+  const done=()=>setStatus(es?W.linkCopied:'Link copied. Anyone who opens it sees this lineup.'),manual=()=>setStatus(es?W.copyBelow:'Copy the link below.');
   if(navigator.clipboard?.writeText)navigator.clipboard.writeText(url).then(done,manual);else manual();};
  /* the on-screen pitch */
  const VW=shape.format==='futsal'?280:340,spec=PITCH[shape.format],VH=Math.round((VW-24)*spec.l/spec.w)+24;
@@ -97,19 +100,19 @@ export default function LineupBuilder({shapes,initial,lockFormat}:{shapes:readon
  return <div className={t.tool} data-tool="lineup">
   <div className={`${t.panel} ${t.noPrint}`}>
    <div className={t.grid}>
-    <label className={t.fieldLabel}>Game
+    <label className={t.fieldLabel}>{es?W.game:'Game'}
      <select className={t.input} value={format} onChange={e=>setFormat(e.target.value as GuideFormat)}>{GUIDE_FORMATS.map(f=><option key={f} value={f}>{FORMAT_LABEL[f]}</option>)}</select></label>
-    <label className={t.fieldLabel}>Formation
-     <select className={t.input} value={shape.slug} onChange={e=>setShape(e.target.value)}>{shapes.filter(s=>s.format===format).map(s=><option key={s.slug} value={s.slug}>{shapeLabel(s)}</option>)}</select></label>
-    <label className={`${t.fieldLabel} ${t.wide}`}>Team name
-     <input className={t.input} value={l.team} maxLength={24} autoComplete="off" placeholder="Blue Sharks U10" onChange={e=>setL(x=>({...x,team:e.target.value}))}/></label>
+    <label className={t.fieldLabel}>{es?W.formation:'Formation'}
+     <select className={t.input} value={shape.slug} onChange={e=>setShape(e.target.value)}>{shapes.filter(s=>s.format===format).map(s=><option key={s.slug} value={s.slug}>{sLabel(s)}</option>)}</select></label>
+    <label className={`${t.fieldLabel} ${t.wide}`}>{es?W.team:'Team name'}
+     <input className={t.input} value={l.team} maxLength={24} autoComplete="off" placeholder={es?W.teamHint:'Blue Sharks U10'} onChange={e=>setL(x=>({...x,team:e.target.value}))}/></label>
    </div>
   </div>
   <div className={`${t.pitch} ${t.noPrint}`}>
-   <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${VW} ${VH}`} width={VW} height={VH} role="group" aria-label={`${FORMAT_LABEL[format]} field, ${shapeLabel(shape)} formation. ${spots.length} players.`} data-diagram={format} fontFamily="Arial,Helvetica,sans-serif">
+   <svg ref={svgRef} xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${VW} ${VH}`} width={VW} height={VH} role="group" aria-label={es?W.svg(format,sLabel(shape),spots.length):`${FORMAT_LABEL[format]} field, ${shapeLabel(shape)} formation. ${spots.length} players.`} data-diagram={format} fontFamily="Arial,Helvetica,sans-serif">
     {field.items.map((i,n)=><SheetItem key={n} i={i}/>)}
     {spots.map((s,i)=>{const r:Ref={k:'on',i},[x,y]=field.at(s.x,s.y),on=sameRef(sel,r),d=drag&&sameRef(drag.ref,r)?drag:null,name=l.on[i];
-     return <g key={i} role="button" tabIndex={0} data-ref={refId(r)} data-player={s.label} aria-pressed={on} aria-label={`${s.label}: ${name||'no name yet'}${i===0?', goalkeeper':''}`}
+     return <g key={i} role="button" tabIndex={0} data-ref={refId(r)} data-player={s.label} aria-pressed={on} aria-label={`${s.label}: ${name||(es?W.noName:'no name yet')}${i===0?(es?W.keeper:', goalkeeper'):''}`}
       className={`${t.slot}${d?` ${t.dragging}`:''}`} transform={d?`translate(${d.dx} ${d.dy})`:undefined}
       onPointerDown={down(r)} onPointerMove={move} onPointerUp={up} onPointerCancel={cancel} onKeyDown={key(r)}>
       <circle cx={x} cy={y} r={24} fill="transparent"/>
@@ -122,38 +125,38 @@ export default function LineupBuilder({shapes,initial,lockFormat}:{shapes:readon
   </div>
   <div className={`${t.panel} ${t.noPrint}`}>
    <p className={t.status} role="status" aria-live="polite">{status}</p>
-   <div className={t.benchRow} role="group" aria-label="Bench">
-    <span className={t.pos}>Bench</span>
+   <div className={t.benchRow} role="group" aria-label={es?W.bench:'Bench'}>
+    <span className={t.pos}>{es?W.bench:'Bench'}</span>
     {l.bench.map((b,i)=>{const r:Ref={k:'bench',i},d=drag&&sameRef(drag.ref,r)?drag:null;
      return <button key={i} type="button" className={`${t.chip}${d?` ${t.dragging}`:''}`} style={d?{transform:`translate(${d.dx}px,${d.dy}px)`}:undefined} data-ref={refId(r)} aria-pressed={sameRef(sel,r)}
-      onPointerDown={down(r)} onPointerMove={move} onPointerUp={up} onPointerCancel={cancel} onKeyDown={key(r)} onClick={e=>{if(e.detail===0)act(r);}}>{b||'Sub'}</button>;})}
-    {l.bench.length<MAX_BENCH&&<button type="button" className={`${t.chip} ${t.chipAdd}`} data-ref={refId({k:'bench',i:l.bench.length})} aria-label={sel?.k==='on'?'Move the picked player to the bench':'Add a substitute'}
-      onClick={()=>{if(sel?.k==='on')act({k:'bench',i:l.bench.length});else{setL(x=>({...x,bench:[...x.bench,'']}));setSel(null);}}}>{sel?.k==='on'?'To bench':'+ Sub'}</button>}
+      onPointerDown={down(r)} onPointerMove={move} onPointerUp={up} onPointerCancel={cancel} onKeyDown={key(r)} onClick={e=>{if(e.detail===0)act(r);}}>{b||(es?W.sub:'Sub')}</button>;})}
+    {l.bench.length<MAX_BENCH&&<button type="button" className={`${t.chip} ${t.chipAdd}`} data-ref={refId({k:'bench',i:l.bench.length})} aria-label={sel?.k==='on'?(es?W.toBenchAria:'Move the picked player to the bench'):(es?W.addSubAria:'Add a substitute')}
+      onClick={()=>{if(sel?.k==='on')act({k:'bench',i:l.bench.length});else{setL(x=>({...x,bench:[...x.bench,'']}));setSel(null);}}}>{sel?.k==='on'?(es?W.toBench:'To bench'):(es?W.plusSub:'+ Sub')}</button>}
    </div>
-   <p className={t.hint}>Tap a player, then tap another player or a substitute to swap them. You can also drag. The white dot is the goalkeeper: swap any player onto it to change keeper.</p>
+   <p className={t.hint}>{es?W.hint:'Tap a player, then tap another player or a substitute to swap them. You can also drag. The white dot is the goalkeeper: swap any player onto it to change keeper.'}</p>
    <div className={t.actions}>
-    <button type="button" className={t.btn} onClick={print}>Print</button>
-    <button type="button" className={t.btn} onClick={download}>Download picture</button>
-    <button type="button" className={t.btn} onClick={copy}>Copy link</button>
-    {sel&&!(sel.k==='on'&&sel.i===0)&&<button type="button" className={`${t.btn} ${t.btnQuiet}`} onClick={()=>act({k:'on',i:0})}>Make keeper</button>}
-    <button type="button" className={`${t.btn} ${t.btnQuiet}`} onClick={()=>{setL(emptyLineup(shape));setSel(null);setLink('');setStatus('Lineup cleared.');}}>Clear</button>
+    <button type="button" className={t.btn} onClick={print}>{es?W.print:'Print'}</button>
+    <button type="button" className={t.btn} onClick={download}>{es?W.download:'Download picture'}</button>
+    <button type="button" className={t.btn} onClick={copy}>{es?W.copy:'Copy link'}</button>
+    {sel&&!(sel.k==='on'&&sel.i===0)&&<button type="button" className={`${t.btn} ${t.btnQuiet}`} onClick={()=>act({k:'on',i:0})}>{es?W.makeKeeper:'Make keeper'}</button>}
+    <button type="button" className={`${t.btn} ${t.btnQuiet}`} onClick={()=>{setL(emptyLineup(shape));setSel(null);setLink('');setStatus(es?W.cleared:'Lineup cleared.');}}>{es?W.clear:'Clear'}</button>
    </div>
-   {link&&<label className={t.fieldLabel}>Link to this lineup<input className={`${t.input} ${t.link}`} readOnly value={link} onFocus={e=>e.currentTarget.select()}/></label>}
-   <p className={t.hint}>Names stay on your device. Nothing you type is sent to Futbol Island or stored on a server. A copied link holds the lineup inside the link itself, so use first names or nicknames.</p>
+   {link&&<label className={t.fieldLabel}>{es?W.linkLabel:'Link to this lineup'}<input className={`${t.input} ${t.link}`} readOnly value={link} onFocus={e=>e.currentTarget.select()}/></label>}
+   <p className={t.hint}>{es?W.privacy:'Names stay on your device. Nothing you type is sent to Futbol Island or stored on a server. A copied link holds the lineup inside the link itself, so use first names or nicknames.'}</p>
   </div>
   <details className={`${t.panel} ${t.noPrint}`} open>
-   <summary className={t.summary}>Player names and match note</summary>
+   <summary className={t.summary}>{es?W.names:'Player names and match note'}</summary>
    <div className={t.names}>
     {spots.map((s,i)=><label key={i} className={t.row}><span className={t.pos}>{s.label}</span>
-     <input className={t.input} value={l.on[i]??''} maxLength={24} autoComplete="off" enterKeyHint="next" aria-label={`Name of the ${s.label}`} placeholder="First name" onChange={e=>setOn(i,e.target.value)}/></label>)}
-    {l.bench.map((b,i)=><div key={`b${i}`} className={`${t.row} ${t.rowBench}`}><span className={t.pos}>Sub {i+1}</span>
-     <input className={t.input} value={b} maxLength={24} autoComplete="off" enterKeyHint="next" aria-label={`Name of substitute ${i+1}`} placeholder="First name" onChange={e=>setBench(i,e.target.value)}/>
-     <button type="button" className={`${t.btn} ${t.btnQuiet} ${t.icon}`} aria-label={`Remove substitute ${i+1}`} onClick={()=>setL(x=>({...x,bench:x.bench.filter((_,j)=>j!==i)}))}>×</button></div>)}
-    {l.bench.length<MAX_BENCH&&<button type="button" className={`${t.btn} ${t.btnQuiet}`} onClick={()=>setL(x=>({...x,bench:[...x.bench,'']}))}>Add a substitute</button>}
-    <label className={t.fieldLabel}>Match note
-     <textarea className={t.input} value={l.note} maxLength={MAX_NOTE} placeholder="Kick-off 9:30, field 4. White shirts." onChange={e=>setL(x=>({...x,note:e.target.value}))}/></label>
+     <input className={t.input} value={l.on[i]??''} maxLength={24} autoComplete="off" enterKeyHint="next" aria-label={es?W.nameOf(s.label):`Name of the ${s.label}`} placeholder={es?W.firstName:'First name'} onChange={e=>setOn(i,e.target.value)}/></label>)}
+    {l.bench.map((b,i)=><div key={`b${i}`} className={`${t.row} ${t.rowBench}`}><span className={t.pos}>{es?W.subN(i+1):<>Sub {i+1}</>}</span>
+     <input className={t.input} value={b} maxLength={24} autoComplete="off" enterKeyHint="next" aria-label={es?W.subNameOf(i+1):`Name of substitute ${i+1}`} placeholder={es?W.firstName:'First name'} onChange={e=>setBench(i,e.target.value)}/>
+     <button type="button" className={`${t.btn} ${t.btnQuiet} ${t.icon}`} aria-label={es?W.removeSub(i+1):`Remove substitute ${i+1}`} onClick={()=>setL(x=>({...x,bench:x.bench.filter((_,j)=>j!==i)}))}>×</button></div>)}
+    {l.bench.length<MAX_BENCH&&<button type="button" className={`${t.btn} ${t.btnQuiet}`} onClick={()=>setL(x=>({...x,bench:[...x.bench,'']}))}>{es?W.addSub:'Add a substitute'}</button>}
+    <label className={t.fieldLabel}>{es?W.note:'Match note'}
+     <textarea className={t.input} value={l.note} maxLength={MAX_NOTE} placeholder={es?W.noteHint:'Kick-off 9:30, field 4. White shirts.'} onChange={e=>setL(x=>({...x,note:e.target.value}))}/></label>
    </div>
   </details>
-  <div className={t.printOnly} aria-hidden="true"><SheetSvg id="lineup-print" sheet={lineupSheet(l,shape,INK)}/></div>
+  <div className={t.printOnly} aria-hidden="true"><SheetSvg id="lineup-print" sheet={sheetOf(l,shape,INK)}/></div>
  </div>;
 }
