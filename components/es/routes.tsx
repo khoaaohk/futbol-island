@@ -8,6 +8,8 @@ import {hasEs} from '@/lib/i18n/esPaths';
 import HomeEs,{meta as HOME} from './pages/HomeEs';
 import AboutEs,{meta as ABOUT} from './pages/AboutEs';
 import FactsEs,{meta as FACTS} from './pages/FactsEs';
+import {DrillEsPage,DrillGuideEsPage,DrillsHubEsPage,PlanEsPage,PlansHubEsPage} from './pages/DrillsEs';
+import {ES_DRILL_HUBS,esDrill,esDrillGuide,esPlan} from '@/lib/i18n/es/drillsRegistry';
 import {PositionEsPage,PositionsHubEsPage,RuleEsPage,RulesHubEsPage,TermEsPage,TermsHubEsPage} from './pages/GuidesEs';
 /**
  * The Spanish route table: English path -> metadata + page. Only paths in lib/i18n/esPaths.ts ES_PAGES resolve, so the language
@@ -23,6 +25,15 @@ export function esRoute(enPath:string):EsRoute|null{
  if(enPath==='/about')return {meta:()=>esMeta(ABOUT.title,ABOUT.desc,enPath),render:()=><AboutEs/>};
  if(enPath==='/about/how-we-check-facts')return {meta:()=>esMeta(FACTS.title,FACTS.desc,enPath),render:()=><FactsEs/>};
  const H=ES_HUBS;
+ /* round C: drills, drill guides and practice plans */
+ const DH=ES_DRILL_HUBS,DP='/learn/soccer-drills/',PP='/learn/soccer-practice-plans/';
+ if(enPath===DH.drills.enPath)return {meta:()=>esMeta(DH.drills.title,DH.drills.description,enPath,{url:diagramUrl('sharks-and-minnows-drill.png'),alt:'Diagrama del ejercicio Tiburones y pececitos'}),render:()=><DrillsHubEsPage/>};
+ if(enPath===DH.plans.enPath)return {meta:()=>esMeta(DH.plans.title,DH.plans.description,enPath,{url:diagramUrl('three-v-three-game-drill.png'),alt:'Diagrama de un partido reducido 3v3'}),render:()=><PlansHubEsPage/>};
+ if(enPath.startsWith(DP)){const s=enPath.slice(DP.length),d=esDrill(s);
+  if(d)return {meta:()=>esMeta(d.title,d.desc,enPath,{url:diagramUrl(d.picture),alt:`Diagrama del montaje: ${d.name}`}),render:()=><DrillEsPage d={d}/>};
+  const g=esDrillGuide(s);if(!g)return null;return {meta:()=>esMeta(g.title,g.desc,enPath,{url:diagramUrl(g.picture),alt:`Diagrama de un ejercicio de la guía: ${g.h1}`}),render:()=><DrillGuideEsPage g={g}/>};}
+ if(enPath.startsWith(PP)){const p=esPlan(enPath.slice(PP.length));if(!p)return null;
+  return {meta:()=>esMeta(p.title,p.desc,enPath,{url:diagramUrl(p.picture),alt:`Diagrama de un ejercicio del ${p.h1.toLowerCase()}`}),render:()=><PlanEsPage p={p}/>};}
  const cmp=COMPARE[enPath];if(cmp){const c=esComparison(cmp)!;return {meta:()=>esMeta(c.title,c.desc,enPath,{url:c.images[0],alt:c.h1.replace(/:.*$/,'')}),render:()=><CompareEsPage c={c}/>};}
  if(enPath===H.formations.enPath)return {meta:()=>esMeta(H.formations.title,H.formations.description,enPath,{url:formationImage('11v11-4-3-3'),alt:'Diagrama de la formación 4-3-3'}),render:()=><FormationsHubEsPage/>};
  const fg=GUIDES[enPath];if(fg){const g=esFormatGuide(fg);return {meta:()=>esMeta(g.title,g.description,enPath,{url:guideByPath(enPath)!.image!,alt:`Diagrama de una formación de fútbol ${fg}`}),render:()=><FormatGuideEsPage format={fg}/>};}

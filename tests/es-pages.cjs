@@ -39,12 +39,20 @@ for(const [enF,enK,esF,esK,slugK] of fam){
  const h=es.FORMATIONS_HUB_ES(en.FORMATIONS.length);assert.equal(h.what.length,en.FORMATIONS_HUB.what.length);assert.equal(h.faq.length,en.FORMATIONS_HUB.faq.length);
  const c=L('lib/site/comparisons.ts').COMPARISONS,ce=L('lib/i18n/es/comparisons.ts').COMPARISONS_ES;assert.deepEqual(Object.keys(ce),c.map(x=>x.slug));
  for(const x of c){assert.equal(ce[x.slug].fit.length,x.fit.length);assert.equal(ce[x.slug].switching.length,x.switching.length);}}
+{/* round C: drills (hub + 10 guides + 46 drills) and practice plans (hub + 12), 1:1 with English */
+ const d=L('lib/site/drills.ts').DRILLS,de=L('lib/i18n/es/drills.ts').DRILLS_ES,n=L('lib/site/notesDrills.ts').DRILL_AGE_NOTES,g=L('lib/site/drillGuides.ts').DRILL_GUIDES,ge=L('lib/i18n/es/drillGuides.ts').DRILL_GUIDES_ES,p=L('lib/site/plans.ts').PLANS,pe=L('lib/i18n/es/plans.ts').PLANS_ES;
+ assert.deepEqual(Object.keys(de),d.map(x=>x.slug),'DRILLS_ES: the English slugs, in order');assert.deepEqual([...ep.ES_DRILL_SLUGS],[...g.map(x=>x.slug),...d.map(x=>x.slug)],'esPaths ES_DRILL_SLUGS');
+ for(const x of d){const e=de[x.slug];for(const k of ['steps','cues','mistakes','faq'])assert.equal(e[k].length,x[k].length,`DRILLS_ES.${x.slug}.${k}: 1:1`);assert.equal(e.ages.length,n[x.slug].length,`${x.slug}: age notes 1:1`);
+  assert.equal((e.answer.match(/[^.!?]+[.!?]+(?=\s|$)/g)||[]).length,2,`${x.slug}: two-sentence answer`);}
+ assert.deepEqual(Object.keys(ge),g.map(x=>x.slug));for(const x of g){const e=ge[x.slug];for(const k of ['before','after','picks','faq'])assert.equal(e[k].length,x[k].length,`DRILL_GUIDES_ES.${x.slug}.${k}: 1:1`);}
+ assert.deepEqual(Object.keys(pe),p.map(x=>x.slug));assert.deepEqual([...ep.ES_PLAN_SLUGS],p.map(x=>x.slug),'esPaths ES_PLAN_SLUGS');
+ for(const x of p){const e=pe[x.slug];for(const k of ['rows','equipment','notes','faq'])assert.equal(e[k].length,x[k].length,`PLANS_ES.${x.slug}.${k}: 1:1`);}}
 {const t=L('lib/site/terms.ts'),hub=L('lib/i18n/es/terms.ts').TERMS_HUB_ES;assert.deepEqual(Object.keys(hub.glossary).sort(),t.GLOSSARY.map(g=>g.id).sort(),'every glossary entry translated');}
 // ---- 2 + 3. every Spanish page ----
 const STOP=/\b(the|and|with|your|you|when|which|this|that|player|players|ball|kick|team|from|have)\b/i;
 const strings=(x,out=[])=>{if(typeof x==='string')out.push(x);else if(Array.isArray(x))x.forEach(y=>strings(y,out));else if(x&&typeof x==='object')Object.values(x).forEach(y=>strings(y,out));return out;};
 const ALLOWED=/U\.S\. Soccer|US Youth Soccer|build-out line|Laws of the Game|The FA|Futbol Island|nutmeg|hat-trick|clean sheet|give-and-go|one-two|soccer|White Sports Ventures|Ocean Discovery Institute|Kitchens for Good|Big Brothers Big Sisters|“[A-Z][^”]*” \([^)]*\)|\(en inglés\)/g;
-for(const f of ['lib/i18n/es/rules.ts','lib/i18n/es/terms.ts','lib/i18n/es/positions.ts','lib/i18n/es/formations.ts','lib/i18n/es/comparisons.ts']){
+for(const f of ['lib/i18n/es/rules.ts','lib/i18n/es/terms.ts','lib/i18n/es/positions.ts','lib/i18n/es/formations.ts','lib/i18n/es/comparisons.ts','lib/i18n/es/drills.ts','lib/i18n/es/drillGuides.ts','lib/i18n/es/plans.ts']){
  for(const s of strings(L(f))){
   if(s==='U13 and up')continue;/* the English age label key, shown as “U13 y mayores” (EsCoachNotes) */
   for(const re of gl.ES_BANNED)assert(!re.test(s),`${f}: banned word ${re} in “${s.slice(0,80)}”`);

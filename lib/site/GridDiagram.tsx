@@ -9,7 +9,8 @@ import type {Arrow} from './pitch';
  * arrow is a pass, a dashed white arrow is a run without the ball, a wavy gold arrow is a dribble.
  */
 const INK='#14221d',PAPER='#ffffff',GOLD='#e9c16b',GRASS='#1d6b55';
-export default function GridDiagram({id,scene:g,small}:{id:string;scene:GridScene;small?:boolean}){
+/** `desc` replaces the English text alternative (the Spanish pages pass their own, lib/i18n/es/drillsRegistry.ts gridDescEs). */
+export default function GridDiagram({id,scene:g,small,desc:descIn}:{id:string;scene:GridScene;small?:boolean;desc?:string}){
  const k=Math.min(300/g.w,360/g.l),W=Math.round(g.w*k),H=Math.round(g.l*k),M=30,FOOT=22,VW=Math.max(W+2*M,small?220:280),VH=H+2*M+FOOT,ox=(VW-W)/2,r=small?10:12;
  const X=(x:number)=>ox+x/100*W,Y=(y:number)=>M+H-y/100*H;
  const cone=(x:number,y:number,key:string)=><path key={key} data-cone="" d={`M${X(x)} ${Y(y)-6}L${X(x)+5.5} ${Y(y)+4.5}H${X(x)-5.5}z`} fill={GOLD} stroke={INK} strokeWidth={1.5} strokeLinejoin="round"/>;
@@ -18,7 +19,7 @@ export default function GridDiagram({id,scene:g,small}:{id:string;scene:GridScen
  const wave=(a:Arrow)=>{const {x1,y1,x2,y2}=ends(a,7),d=Math.hypot(x2-x1,y2-y1)||1,ux=(x2-x1)/d,uy=(y2-y1)/d,pts:string[]=[];
   for(let t=0;t<=d;t+=2){const amp=t>d-9||t<3?0:3.2,s=Math.sin(t/11*Math.PI*2)*amp;pts.push(`${(x1+ux*t-uy*s).toFixed(1)} ${(y1+uy*t+ux*s).toFixed(1)}`);}
   pts.push(`${x2.toFixed(1)} ${y2.toFixed(1)}`);return `M${pts.join('L')}`;};
- const desc=gridDesc(g);
+ const desc=descIn??gridDesc(g);
  return <svg xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby={`${id}-t ${id}-d`} viewBox={`0 0 ${VW} ${VH}`} width={VW} height={VH} data-diagram="grid" fontFamily="Arial,Helvetica,sans-serif">
   <title id={`${id}-t`}>{g.title}</title>
   <desc id={`${id}-d`}>{desc}</desc>
