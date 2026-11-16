@@ -13,7 +13,9 @@ assert.equal(vids.length,gv.GUIDE_VIDEOS.length,'every listed clip resolves to r
 assert(vids.length>=3,'at least three guide pages have a clip');
 for(const v of vids){
  for(const f of [v.poster,v.mp4,v.webm].filter(Boolean)){const st=fs.statSync(path.join(root,'public',f));assert(st.size<400_000,`${f} is small (${st.size})`);}
- let first='';try{first=execFileSync('git',['log','--diff-filter=A','--format=%aI','--',`public${v.mp4}`],{cwd:root,encoding:'utf8'}).trim().split('\n').pop();}catch{}
+ // CI checks out a shallow clone (no full history): the add-commit is not there, so only compare on a full clone.
+ let shallow=false;try{shallow=execFileSync('git',['rev-parse','--is-shallow-repository'],{cwd:root,encoding:'utf8'}).trim()==='true';}catch{}
+ let first='';if(!shallow)try{first=execFileSync('git',['log','--diff-filter=A','--format=%aI','--',`public${v.mp4}`],{cwd:root,encoding:'utf8'}).trim().split('\n').pop();}catch{}
  if(first)assert.equal(v.uploadDate,first,`${v.key}: uploadDate is the first commit of the clip`);
  assert(v.seconds>0&&v.seconds<=60,`${v.key}: a short clip`);
 }
