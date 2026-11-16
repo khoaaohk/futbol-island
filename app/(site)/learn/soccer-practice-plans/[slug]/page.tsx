@@ -1,3 +1,4 @@
+import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -63,5 +64,6 @@ export default function PlanPage({params}:{params:{slug:string}}){
    <p className={styles.caption}>{GUIDE_FOOT}</p>
    <p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Play it on the island</a></p>
   </div>
+  <ReadNext path={p.path}/>
  </>;
 }

@@ -27,7 +27,7 @@ export function MoreToLearn({except}:{except?:string}){
  </section>;
 }
 
-export default function LessonHub({hub}:{hub:Hub}){
+export default function LessonHub({hub,children}:{hub:Hub;children?:React.ReactNode}){
  const crumbs=hubCrumbs(hub),items=hub.groups.flatMap(g=>g.lessons);
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -41,6 +41,7 @@ export default function LessonHub({hub}:{hub:Hub}){
    <p className={styles.caption}>{SAFE_TRUST_LINE} <a href={SAFE_GUIDE.path}>Read the parents’ guide</a>.</p>
    <a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>
   </header>
+  {children}{/* page-specific sections before the lesson groups (Nov 15 2026: the 7v7 vs 9v9 vs 11v11 table) */}
   {hub.groups.map((g,i)=><section key={g.title} className={styles.section} aria-labelledby={`g-${i}`}>
    <h2 className={styles.h2} id={`g-${i}`}>{g.title} <span className={styles.count}>({g.lessons.length})</span></h2>
    {g.line&&<p>{g.line}</p>}

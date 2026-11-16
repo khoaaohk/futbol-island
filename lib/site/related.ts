@@ -3,6 +3,9 @@ import {SITE_EXHIBITS,exhibitPath,type SiteExhibit} from './exhibits';
 import {SITE_FISH,fishPath,fishPlaces,rarityWord} from './fish';
 import {lessonById,lessonPath,LESSONS,LESSONS_INDEX,type SiteLesson} from './lessons';
 import {hubBySlug} from './hubs';
+import {cardCollections,fishCollections,spotAnchor,type Collection} from './collections';
+import {cardNote,cardNoteDrill} from './cardNotes';
+import {drillLinksFor} from './drills';
 import type {FishSpecies} from '@/lib/town/fishing/fishCatalog';
 /**
  * Internal links for the long-tail reading pages (SEO, Nov 10 2026, docs/seo/DISCOVERY.md): /cards/<n>, /exhibits/<id> and
@@ -17,7 +20,7 @@ import type {FishSpecies} from '@/lib/town/fishing/fishCatalog';
  * Budget: 8-15 links in the page body, never a list of everything (the index pages do that).
  */
 export type SiteLink={path:string;name:string;meta?:string};
-export type LinkGroup={title:string;links:SiteLink[]};
+export type LinkGroup={title:string;line?:string;id?:string;links:SiteLink[]};
 export type Related={prev:SiteLink;next:SiteLink;groups:LinkGroup[];read:SiteLink[]};
 
 /** The next `k` items after `self` in `list` (cyclic), skipping anything in `skip`. */
@@ -51,6 +54,14 @@ export function cardFish(c:SiteCard):{fish:FishSpecies;club:string}|undefined{
  for(const club of [...c.clubs].reverse()){const fish=FISH_BY_CLUB.get(clubKey(club));if(fish)return {fish,club};}
  return undefined;
 }
+const POS='/learn/soccer-positions/';
+/** The guide page that explains each card role (futsal roles: the futsal hub; coaches: the formations guide). */
+const ROLE_GUIDE:Record<string,SiteLink>={goalkeeper:{path:POS+'goalkeeper',name:'What a goalkeeper does',meta:'Soccer positions'},
+ fullback:{path:POS+'fullback',name:'What a fullback does',meta:'Soccer positions'},centerback:{path:POS+'center-back',name:'What a center back does',meta:'Soccer positions'},
+ midfielder:{path:POS+'central-midfielder',name:'What a central midfielder does',meta:'Soccer positions'},winger:{path:POS+'winger',name:'What a winger does',meta:'Soccer positions'},
+ striker:{path:POS+'striker',name:'What a striker does',meta:'Soccer positions'},coach:{path:'/learn/soccer-formations',name:'Soccer formations coaches use',meta:'Formations with diagrams'}};
+export const roleGuide=(role:string):SiteLink|undefined=>ROLE_GUIDE[role];
+const collectionLink=(h:Collection):SiteLink=>({path:h.path,name:h.h1.replace(/: player cards$|: cards$/,''),meta:h.blurb});
 export function cardRelated(c:SiteCard):Related{
  const [p,n]=around(SITE_CARDS,c),skip=new Set<SiteCard>([c]),groups:LinkGroup[]=[];
  const same=after(SITE_CARDS.filter(x=>x.role===c.role&&x.era===c.era),c,3,skip);
@@ -61,9 +72,15 @@ export function cardRelated(c:SiteCard):Related{
   if(l.length){groups.push({title:`Also on a ${club} card`,links:l.map(cardLink)});break;}
  }
  const read:SiteLink[]=[lessonLink(roleLesson(c).id)],cf=cardFish(c);
+ /* Nov 15 2026 (seo-links): the guide page for the card's position, its collection hubs (lib/site/collections.ts) and, for the
+    few cards without a coach's-notes drill, a drill for the position (lib/site/drillLinks.ts GUIDE_DRILLS, picked by number). */
+ const guide=ROLE_GUIDE[c.role];if(guide)read.push(guide);
+ read.push(...cardCollections(c).slice(0,2).map(collectionLink));
+ const note=cardNote(c);
+ if(!(note&&cardNoteDrill(note))&&guide){const d=drillLinksFor(guide.path);if(d.length){const x=d[c.number%d.length];read.push({path:x.path,name:x.name,meta:x.line});}}
  if(cf)read.push({path:fishPath(cf.fish.id),name:`${cf.fish.name}: the Fishbook animal for ${cf.fish.club.name}`,meta:'Fishbook'});
  else read.push(c.futsal?hubLink('futsal-for-kids'):hubLink('7v7-9v9-11v11'));
- return {prev:cardLink(p),next:cardLink(n),groups,read};
+ return {prev:cardLink(p),next:cardLink(n),groups,read:read.filter((x,i,a)=>a.findIndex(y=>y.path===x.path)===i)};
 }
 
 // ---- exhibits ------------------------------------------------------------------------------------------------------------------
@@ -100,7 +117,10 @@ export function fishRelated(f:FishSpecies):Related{
  if(cards.length)groups.push({title:`Player cards from ${f.club.name}`,links:cards.map(cardLink)});
  else{const land=after(SITE_FISH.filter(x=>x.club.country===f.club.country),f,2,skip);
   if(land.length)groups.push({title:`More club animals from ${f.club.country}`,links:land.map(fishLink)});}
- return {prev:fishLink(p),next:fishLink(n),groups,read:[cards.length?CARDS_LINK:LESSONS_LINK]};
+ /* Nov 15 2026 (seo-links): the animal's group hub and its first fishing spot on the spots page (lib/site/collections.ts). */
+ const hubs=fishCollections(f),kind=hubs.find(h=>h.slug!=='spots'),spots=hubs.find(h=>h.slug==='spots');
+ const read:SiteLink[]=[...(kind?[collectionLink(kind)]:[]),...(spots&&spot&&place?[{path:`${spots.path}#${spotAnchor(spot)}`,name:`More animals at ${place.name}`,meta:'Fishing spots'}]:[]),cards.length?CARDS_LINK:LESSONS_LINK];
+ return {prev:fishLink(p),next:fishLink(n),groups,read};
 }
 
 // ---- lessons (Nov 14 2026, seo-boost) ------------------------------------------------------------------------------------------

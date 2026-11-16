@@ -1,3 +1,4 @@
+import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -11,6 +12,8 @@ import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {POSITION_NOTES} from '@/lib/site/notesGuides';
 import {checkNotes} from '@/lib/site/coachNotes';
+import {roleCollection} from '@/lib/site/collections';
+import {comparisonsFor} from '@/lib/site/comparisons';
 import styles from '../../../site.module.css';
 
 /** One position (lib/site/positions.ts): the job in one sentence, where they stand, with and without the ball, habits, numbers, formations, FAQ, lessons, cards. */
@@ -26,6 +29,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
  const p=positionBySlug(params.slug);if(!p)notFound();
  const f=formationBySlug(p.diagram)!,lower=p.name.toLowerCase(),used=formationsUsing(p.slug);
  const crumbs=guideCrumbs({name:POSITIONS_HUB.crumb,path:POSITIONS_HUB.path},{name:p.name,path:p.path});
+ const hub=roleCollection(p.cardRole),compare=comparisonsFor(p.path);
  const cards=SITE_CARDS.filter(c=>c.role===p.cardRole&&!c.coach).slice(p.cardSkip,p.cardSkip+6);
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -53,11 +57,13 @@ export default function PositionPage({params}:{params:{slug:string}}){
   <Section id="lessons" title="Lessons for this position"><LessonList lessons={p.lessons}/></Section>
   {cards.length>0&&<Section id="cards" title="Player cards">
    <p className={styles.caption}>{p.cardNote}</p>
-   <LinkList links={cards.map(c=>({path:cardPath(c.number),name:c.displayName,line:[c.roleLabel,c.country].filter(Boolean).join(' · ')}))}/>
+   <LinkList links={[...cards.map(c=>({path:cardPath(c.number),name:c.displayName,line:[c.roleLabel,c.country].filter(Boolean).join(' · ')})),...(hub?[{path:hub.path,name:`See all ${hub.blurb.replace(/,.*$/,'')}`,line:hub.h1}]:[])]}/>
   </Section>}
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
   {drillLinksFor(p.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(p.path)}/></Section>}
+  {compare.length>0&&<Section id="compare" title="Compare it"><LinkList links={compare.map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
   <Section id="related" title="Other positions"><LinkList links={[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}/></Section>
   <GuideEnd/>
+  <ReadNext path={p.path}/>
  </>;
 }

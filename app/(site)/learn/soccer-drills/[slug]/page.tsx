@@ -1,3 +1,4 @@
+import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -60,6 +61,7 @@ function DrillPage({d}:{d:Drill}){
   <Section id="related" title="Related drills and guides"><LinkList links={related}/></Section>
   <p className={styles.caption}>{GUIDE_FOOT}</p>
   <p className={styles.end}><a className={styles.cta} href={lessonPath(d.cta.id)}>Play the lesson: {d.cta.title}</a></p>
+  <ReadNext path={d.path}/>
  </>;
 }
 function GuidePage({g}:{g:DrillGuide}){
@@ -89,6 +91,7 @@ function GuidePage({g}:{g:DrillGuide}){
   <Section id="related" title="Keep reading"><LinkList links={[...others,...g.links,{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb},{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}/></Section>
   <p className={styles.caption}>{GUIDE_FOOT}</p>
   <p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Play it on the island</a></p>
+  <ReadNext path={g.path}/>
  </>;
 }
 export default function DrillOrGuide({params}:{params:{slug:string}}){

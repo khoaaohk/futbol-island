@@ -6,6 +6,7 @@
  *  - every <script type="application/ld+json"> parses, and no @type appears twice on a page;
  *  - every internal link on every page resolves (200 or a redirect to a page that does);
  *  - no orphans: every sitemap URL is linked from at least one OTHER page;
+ *  - click depth (Nov 15 2026): every sitemap URL is at most 3 clicks from / (breadth-first over the pages' own links);
  *  - (with --families) the unique text per page family vs the text shared by the family's template.
  * Usage: node scripts/seo-crawl.cjs [base=http://localhost:9010] [--families] [--json out.json]
  * Quiet: prints one summary line per check plus at most 20 problems each. Exit 1 on any failure.
@@ -28,7 +29,7 @@ const familyOf = p => (FAMILY.find(([, re]) => re.test(p)) || ['other'])[0];
   const sm = await get('/sitemap.xml');
   const urls = [...sm.body.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m => m[1]);
   const paths = urls.map(u => u.replace(SITE, '') || '/');
-  const problems = { status: [], canonical: [], jsonld: [], broken: [], orphan: [] };
+  const problems = { status: [], canonical: [], jsonld: [], broken: [], orphan: [], depth: [] };
   const inbound = new Map(paths.map(p => [p, new Set()]));
   const linkStatus = new Map(), pages = {};
   await pool(paths, 8, async p => {
@@ -62,6 +63,10 @@ const familyOf = p => (FAMILY.find(([, re]) => re.test(p)) || ['other'])[0];
     if (r.status !== 200) problems.broken.push(`${h} → ${r.status} (from ${Object.keys(pages).find(p => pages[p].links.includes(h))})`);
   });
   for (const [p, s] of inbound) if (p !== '/' && pages[p] && s.size === 0) problems.orphan.push(p);
+  const depth = new Map([['/', 0]]); let frontier = ['/'];
+  while (frontier.length) { const nxt = []; for (const p of frontier) for (const h of (pages[p]?.links || [])) { const k = h.split('?')[0].replace(/(.)\/$/, '$1'); if (inbound.has(k) && !depth.has(k)) { depth.set(k, depth.get(p) + 1); nxt.push(k); } } frontier = nxt; }
+  const hist = {}; for (const p of paths) { const d = depth.has(p) ? depth.get(p) : 'unreached'; hist[d] = (hist[d] || 0) + 1; if (d === 'unreached' || d > 3) problems.depth.push(`${p}: ${d}`); }
+  console.log(`click depth from /: ${JSON.stringify(hist)}`);
   const summary = { urls: paths.length, ...Object.fromEntries(Object.entries(problems).map(([k, v]) => [k, v.length])) };
   console.log(`seo-crawl: ${JSON.stringify(summary)}`);
   for (const [k, v] of Object.entries(problems)) if (v.length) console.log(`  ${k}:\n    ` + v.slice(0, 20).join('\n    ') + (v.length > 20 ? `\n    … +${v.length - 20}` : ''));
@@ -80,6 +85,6 @@ const familyOf = p => (FAMILY.find(([, re]) => re.test(p)) || ['other'])[0];
     console.log('families (words: all / unique-to-page, min):');
     for (const [f, x] of Object.entries(fam)) console.log(`  ${f.padEnd(10)} n=${String(x.n).padEnd(4)} ${x.avgWords} / ${x.avgUnique}  min ${x.minUnique} ${x.minPage}`);
   }
-  if (jsonOut && !jsonOut.startsWith('--')) require('fs').writeFileSync(jsonOut, JSON.stringify({ summary, problems, fam, inbound: Object.fromEntries([...inbound].map(([k, v]) => [k, v.size])) }, null, 1));
+  if (jsonOut && !jsonOut.startsWith('--')) require('fs').writeFileSync(jsonOut, JSON.stringify({ summary, problems, fam, inbound: Object.fromEntries([...inbound].map(([k, v]) => [k, v.size])), depth: Object.fromEntries(depth), linksOut: Object.fromEntries(Object.entries(pages).map(([k, v]) => [k, v.links.length])) }, null, 1));
   process.exit(Object.values(problems).some(v => v.length) ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });

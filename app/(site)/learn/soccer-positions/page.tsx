@@ -7,6 +7,8 @@ import {gameLink} from '@/lib/site/games';
 import {Bullets,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
+import {COMPARISONS} from '@/lib/site/comparisons';
+import {CARD_COLLECTIONS} from '@/lib/site/collections';
 import styles from '../../site.module.css';
 
 /** /learn/soccer-positions: the positions hub (lib/site/positions.ts): all positions on one pitch, the numbers 1 to 11, positions by format. */
@@ -38,6 +40,7 @@ export default function PositionsHub(){
   </Section>
   <Section id="lessons" title="Lessons that introduce the positions"><LessonList lessons={HUB.lessons}/></Section>
   <QA id="faq" title="Questions about positions" faq={HUB.faq}/>
+  <Section id="compare" title="Compare positions and meet the players"><LinkList links={[...COMPARISONS.filter(c=>c.kind==='position').map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'})),...CARD_COLLECTIONS.filter(h=>h.slug!=='coaches'&&h.slug!=='futsal'&&h.slug!=='women'&&h.slug!=='world-cup-winners').map(h=>({path:h.path,name:h.h1.replace(/: player cards$/,''),line:h.blurb}))]}/></Section>
   <Section id="related" title="Keep reading"><LinkList links={[gameLink('snake'),gameLink('airhockey'),/* Air Futbol: the goalkeeper's rule (Nov 11 2026) *//* the arcade game that builds formations (lib/site/games.ts) */{path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.h1,line:FORMATIONS_HUB.blurb},{path:'/learn/lessons',name:'All football lessons',line:'Every lesson in 7v7, 9v9, 11v11 and futsal'}]}/></Section>
   <GuideEnd cta={false}/>
  </>;

@@ -1,3 +1,4 @@
+import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -45,5 +46,6 @@ export default function TermPage({params}:{params:{slug:string}}){
   <Section id="related" title="Related soccer terms"><LinkList links={related}/></Section>
   <p className={styles.caption}>{GUIDE_FOOT}</p>
   <p className={styles.end}>{t.cta?<a className={styles.cta} href={lessonPath(t.cta.id)}>Play the lesson: {t.cta.title}</a>:<a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>}</p>
+  <ReadNext path={t.path}/>
  </>;
 }

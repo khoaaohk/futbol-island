@@ -1,0 +1,43 @@
+import JsonLd from '@/components/seo/JsonLd';
+import Breadcrumbs from '@/components/site/Breadcrumbs';
+import {COLLECTIONS_UPDATED,collectionBySlug,type Collection} from '@/lib/site/collections';
+import {breadcrumbLd,collectionLd,pageMeta,PLAY_PATH} from '@/lib/site/seo';
+import {SITE_PUBLISHED} from '@/lib/site/updated';
+import styles from '@/app/(site)/site.module.css';
+/**
+ * A collection hub (lib/site/collections.ts, Nov 15 2026): breadcrumb, h1, short intro, one list per group, the guide pages that
+ * explain the topic, and the sibling hubs. Server-rendered plain links, the same list classes as /cards and /fish.
+ */
+const PARENT={cards:{name:'Cards',path:'/cards',cta:'Collect cards on the island'},fish:{name:'Fish',path:'/fish',cta:'Go fishing on the island'}} as const;
+export const collectionCrumbs=(c:Collection)=>[{name:'Home',path:'/'},{name:PARENT[c.parent].name,path:PARENT[c.parent].path},{name:c.crumb,path:c.path}];
+export function hubMeta(parent:'cards'|'fish',slug:string){const c=collectionBySlug(parent,slug)!;return pageMeta(c.title,c.description,c.path,{whole:true,type:'website'});}
+/** The list of hubs on /cards and /fish ("Browse by …"). */
+export function CollectionLinks({list,title}:{list:readonly Collection[];title:string}){
+ return <section className={styles.section} aria-labelledby="collections"><h2 className={styles.h2} id="collections">{title}</h2>
+  <ul className={styles.list}>{list.map(c=><li key={c.path}><a href={c.path}><span className={styles.itemTitle}>{c.h1}</span><span className={styles.itemMeta}>{c.blurb}</span></a></li>)}</ul>
+ </section>;
+}
+export default function CollectionHub({parent,slug,siblings}:{parent:'cards'|'fish';slug:string;siblings:readonly Collection[]}){
+ const c=collectionBySlug(parent,slug)!,crumbs=collectionCrumbs(c),items=c.groups.flatMap(g=>g.links);
+ return <>
+  <JsonLd data={breadcrumbLd(crumbs)}/>
+  <JsonLd data={collectionLd({name:c.h1,path:c.path,description:c.description,published:SITE_PUBLISHED,modified:COLLECTIONS_UPDATED,items:items.map(l=>({name:l.name,path:l.path}))})}/>
+  <header className={styles.intro}>
+   <Breadcrumbs crumbs={crumbs}/>
+   <h1 className={styles.title}>{c.h1}</h1>
+   <p className={styles.lead}>{c.intro}</p>
+   {c.more&&<p>{c.more}</p>}
+   <a className={styles.cta} href={PLAY_PATH}>{PARENT[parent].cta}</a>
+  </header>
+  {c.groups.map((g,i)=>{const id=g.id??`g-${i}`;return <section key={id} className={styles.section} aria-labelledby={id}>
+   <h2 className={styles.h2} id={id}>{g.title} <span className={styles.count}>({g.links.length})</span></h2>
+   {g.line&&<p>{g.line}</p>}
+   <ul className={styles.list}>{g.links.map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span>{l.meta&&<span className={styles.itemMeta}>{l.meta}</span>}</a></li>)}</ul>
+  </section>;})}
+  <section className={styles.section} aria-labelledby="learn-more"><h2 className={styles.h2} id="learn-more">Keep reading</h2>
+   <ul className={styles.list}>{[...c.learn,...siblings.filter(s=>s.path!==c.path&&!c.learn.some(l=>l.path===s.path)).map(s=>({path:s.path,name:s.h1,line:s.blurb})),
+    {path:PARENT[parent].path,name:parent==='cards'?'Every player card':'The whole Fishbook',line:parent==='cards'?'All the cards, by position':'Every sea animal, by rarity'}]
+    .map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span><span className={styles.itemMeta}>{l.line}</span></a></li>)}</ul>
+  </section>
+ </>;
+}

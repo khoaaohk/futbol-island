@@ -1,3 +1,4 @@
+import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -12,6 +13,7 @@ import {SITE_UPDATED} from '@/lib/site/updated';
 import {lineupLinkFor} from '@/lib/site/tools/registry';
 import {FORMATION_NOTES} from '@/lib/site/notesGuides';
 import {checkNotes} from '@/lib/site/coachNotes';
+import {comparisonsFor} from '@/lib/site/comparisons';
 import styles from '../../../site.module.css';
 
 /** One formation (lib/site/formations.ts): the answer first, a pitch diagram, every role, strengths, weak spots, how it moves, FAQ, lessons. */
@@ -60,7 +62,9 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <QA id="faq" title={`Questions about the ${f.shape}`} faq={f.faq}/>
   <CoachNotesSection name={f.name} notes={FORMATION_NOTES[f.slug]}/>
   <Section id="lessons" title="Lessons that teach this shape"><LessonList lessons={f.lessons}/></Section>
+  {comparisonsFor(f.path).length>0&&<Section id="compare" title="Compare it"><LinkList links={comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
   <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
   <GuideEnd/>
+  <ReadNext path={f.path}/>
  </>;
 }
