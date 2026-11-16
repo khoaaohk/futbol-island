@@ -214,7 +214,7 @@ export const DRILLS_C_ES:Readonly<Record<string,DrillEs>>={
    'Di 3v2 o una pregunta rápida de matemáticas. El equipo que pierde el balón debe volver a su propia línea antes del siguiente número.']},
  'one-v-one-defending':{name:'Defensa 1v1',h1:'Defensa 1v1: ejercicio de fútbol',title:'Defensa 1v1 en fútbol: acércate rápido y frena',
   desc:'Ejercicio de defensa 1v1 de fútbol para niños: acércate rápido, frena, ponte de perfil y lleva al atacante hacia un lado. Montaje, consignas y errores.',
-  answer:'En este ejercicio de defensa 1v1, un defensa pasa a un atacante a lo largo de un pasillo angosto, se acerca rápido y trata de impedir que cruce conduciendo la línea de atrás. Entrena la forma de acercarse al balón: rápido al principio, luego lento, bajo y de perfil, llevando al atacante hacia un lado.',
+  answer:'En este ejercicio de defensa 1v1, un defensa le pasa el balón a un atacante por un pasillo angosto, se acerca rápido y trata de impedir que cruce conduciendo la línea de atrás. Entrena la forma de acercarse al balón: rápido al principio, luego lento, bajo y de perfil, llevando al atacante hacia un lado.',
   players:'Grupos de 4 por pasillo',equipment:'Un balón y 6 conos por pasillo',time:'10 a 12 minutos',
   scene:{title:'Montaje de Defensa 1v1',caption:'El defensa pasa desde arriba del pasillo al atacante de abajo, luego corre a cerrarle el espacio y frena de perfil a unas yardas, llevando al atacante hacia la línea de banda izquierda.'},
   steps:['Marca un pasillo de 10 yardas (9 m) de ancho y 20 (18 m) de largo. El defensa empieza en una línea de fondo con el balón, el atacante en la otra.',

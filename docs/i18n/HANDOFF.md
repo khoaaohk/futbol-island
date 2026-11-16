@@ -51,7 +51,18 @@ comparison links back. Weak-spot lesson links and "Lessons that teach this shape
 lineup builder link says "(en inglés)". `/learn/7v7-9v9-11v11` is a lesson hub, so it moved to the lessons family.
 Futsal dot labels: BACK/FRONT -> ATRÁS/ARRIBA (dot letters B/F, F/A/P stay as the English data has them).
 
-## Test-suite regressions (fixed Nov 16 2026)
+## Done (round C, Nov 16 2026: drills and practice plans, branch `spanish-drills`)
+
+Drills hub + 4 age guides + 6 skill guides + 46 drills, plans hub + 12 plans (70 pages). Data: `lib/i18n/es/drills.ts` (hubs,
+skills, stage words, safety lines, Spanish names/lines of the guide links), `drillsA-D.ts`, `drillGuides.ts`, `plans.ts`, types in
+`drillTypes.ts` (kept out of types.ts), merged by `drillsRegistry.ts` (not registry.ts). Pages: `components/es/pages/DrillsEs.tsx`.
+Grid diagrams: `GridDiagram` takes an optional `desc` (English output unchanged); Spanish key/desc in `gridDescEs`/`gridKeyEs`; dot
+GK -> POR, other dot letters stay. Guide links (rules/positions/terms/formats, and field/ball size + age groups) resolve through
+`esDrillLink` and appear only when `hasEs(path)`: the size and age-group links show up by themselves when that family lands.
+Rule, term and position pages got "Ejercicios para practicarlo" back (`esDrillLinksFor`). Lesson lists stay off (English titles);
+the gold button opens the page's lesson. Drill names table: scratchpad brief (also the `name` fields).
+
+
 
 - 12 failures: `lib/site/seo.ts`, `LangSwitch.tsx`, `GuideQuiz.tsx` imported `@/lib/i18n/...`; the vm/require loaders in the
   multiplayer/game tests do not resolve `@/`. Rule: shared modules (lib/site, components/site, anything the game imports) import
@@ -68,8 +79,7 @@ Futsal dot labels: BACK/FRONT -> ATRÁS/ARRIBA (dot letters B/F, F/A/P stay as t
 ## Pending (by family; tests/es-pages.cjs prints the counts; patterns in lib/i18n/esScope.ts)
 
 1-2. comparisons and formations: DONE (round 2).
-3. drills (hub + 56) (lib/site/drills*.ts, drillGuides.ts, notesDrills.ts).
-4. practice plans (hub + 12) (lib/site/plans.ts).
+3-4. drills and practice plans: DONE (round C).
 5. lessons (index + 96 reading pages + the /learn/7v7-9v9-11v11 lesson hub, which also shows the TEAM_SIZES table) (lib/site/lessons.ts + public/lessons JSON).
 6. guide hubs and charts: football-rules-for-kids, soccer-quiz-for-kids, passing-and-support, futsal-for-kids, ball/field size,
    age groups, safe-football-game-for-kids.
@@ -109,3 +119,12 @@ one-line lab layouts into fewer route groups.
   "mediocampista de contención" / "los dos de contención" for holders, "doble pivote" (11v11) vs "pívot" (futsal), "línea de
   cuatro / de tres" for back four / three, "árbol de Navidad" (2-3-2-1), "el cuadrado" (futsal box), "rombo" (diamond),
   "creador de alineaciones" (lineup builder), "Cuidado con" for "Watch out for".
+- Round C (drills, plans): drill = "ejercicio", practice = "entrenamiento", bibs = "chalecos" (Spain says "petos"), small goals =
+  "arcos pequeños", end zone = "zona final", tag = "las atrapadas" / "el que atrapa" (Mexico; "la mancha"/"pilla-pilla" elsewhere),
+  toe taps / foundations = "toques con la suela / de interior", drag-back = "pisada atrás", inside/outside hook = "corte con el
+  interior / exterior", receive across the body / on the back foot = "recibir con el pie lejano", set position = "posición de
+  espera", lay-off = "descarga", cutback = "centro atrás" (as round 1), near/far post = "primer/segundo palo", jockeying =
+  "temporizar", step-over = "bicicleta", target player = "jugador de referencia", server = "el que sirve", punt = "despejar de
+  volea", scoop = "la pala", "man on" = “te marcan”, Play-Practice-Play = "Jugar-Practicar-Jugar", bottom (Simon says) = "pompas"
+  (Mexico), parent = "un papá o una mamá". Drill names are our own Spanish (Tiburones y pececitos, Saca el balón for Knockout,
+  Limpia tu cuarto...); a native coach should check they sound like games kids already know.
