@@ -28,7 +28,7 @@ const PLANS='/learn/soccer-practice-plans';
 const plan=(slug:string,name:string,line:string):DrillLink=>({path:`${PLANS}/${slug}`,name,line});
 const NOTE='Game format, field, ball and game length are U.S. Soccer’s small-sided standards; practice length is US Youth Soccer’s coaching guidance. Your league may differ.';
 const RAW:RawGuide[]=[
- {slug:'u6',kind:'age',age:'U6',name:'U6 drills',title:'U6 Soccer Drills: Fun Games for 5 and 6 Year Olds',h1:'U6 soccer drills: fun games for 5 and 6 year olds',
+ {slug:'u6',kind:'age',age:'U6',name:'U6 drills',title:'Fun Soccer Games for 6 Year Olds: U6 Soccer Drills',h1:'U6 soccer drills: fun games for 5 and 6 year olds',
   desc:'The best U6 soccer drills are games: a ball for every child, a story and no lines. Nine fun drills for 5 and 6 year olds, plus what to avoid at this age.',
   blurb:'Nine games for 5 and 6 year olds, a ball each, with what to avoid',
   lead:'The best soccer drills for 5 and 6 year olds do not look like drills at all. They are games with a story, where every child has a ball and nobody waits for a turn.',
@@ -212,6 +212,24 @@ const RAW:RawGuide[]=[
    {q:'Should one child always play in goal?',a:'No. Rotating gives every player a feel for the position, and keeps the regular goalkeeper’s outfield skills growing.'},
    {q:'Can a goalkeeper pick up a back pass?',a:'Not if a teammate kicked it to them on purpose. They must use their feet. Our back-pass rule page explains the details.'}],
   lessons:['bld_7_usekeeper','expf_keeperposition','learn7_buildout','expf_keeperrelease'],links:[G.gk,G.backPass,G.buildOut,G.goalKick],featured:'goalkeeper-catching-w-and-basket'},
+ {slug:'defending',kind:'skill',name:'1v1 defending drills',title:'1v1 Defending Soccer Drills for Kids: Stop the Attacker',h1:'1v1 defending soccer drills for kids',
+  desc:'1v1 defending soccer drills for kids: close down, slow down, stay goal-side and win the ball without diving in. Ten drills from U8 to U12, with cues.',
+  blurb:'Close down, get side on, stay goal-side and win it back, from U8 to U12',
+  lead:'1v1 defending soccer drills teach a player to stop one attacker on their own: close the space fast, slow down near the ball, stay between the attacker and the goal, and win the ball when the touch gets too big. These ten drills build that habit from U8 to U12.',
+  more:'Most young defenders are beaten because they dive in, not because the attacker is better. So these drills reward patience: a defender who stays on their feet and keeps the attacker in front of them is doing the job, even before they win the ball.',
+  before:[{id:'technique',title:'What good 1v1 defending looks like',items:['Close down quickly while the ball is traveling to the attacker.','Slow down about two or three steps away, with small steps and bent knees.','Stand side on, not square, so you can turn and run either way.','Stay goal-side: between the attacker and the goal you defend.','Show the attacker one way, usually toward the side line or a teammate.','Tackle when the attacker’s touch is too big, not before.']},
+   {id:'order',title:'What to teach at each age',items:['U8: stay on your feet and steal the ball in tag and dribbling games.','U10: the approach, fast then slow, and getting goal-side again after being beaten.','U12: showing the attacker one way, and pressure and cover with a teammate.']}],
+  picksTitle:'1v1 defending drills',
+  picks:[['one-v-one-defending','Close down, slow down, show them to the line.'],['recover-goal-side','Beaten? Sprint back between the ball and the goal.'],['pressure-and-cover-2v2','One presses the ball, one covers behind.'],['one-v-one-to-end-zones','Live 1v1: the defender stops the dribble over the line.'],
+   ['one-v-one-two-goals','Protect two small goals and force the attacker to choose.'],['numbers-game','React fast when your number is called and defend at once.'],['knockout','Win other players’ balls while you protect your own.'],['sharks-and-minnows','The sharks practice stealing the ball, everyone gets a turn.'],
+   ['rondo-3v1','The defender in the middle learns to cut passing lanes.'],['three-v-two-to-goal','Two defenders against three: delay and wait for help.']],
+  after:[{id:'mistakes',title:'Common 1v1 defending mistakes',items:['Diving in at full speed. One touch from the attacker and the defender is out of the game.','Standing square with flat feet, which makes it impossible to turn.','Watching the attacker’s hips or feet tricks instead of the ball.','Giving up after being beaten instead of sprinting back goal-side.']},
+   {id:'rules',title:'Fair tackling: what young players should know',items:['Play the ball, not the player. Tripping, pushing or holding is a foul.','Tackle from the front or the side, never from behind.','A careless or reckless tackle gives a free kick, and can bring a yellow card.','Inside your own penalty area, a foul gives the other team a penalty kick.']}],
+  faq:[{q:'How do you teach 1v1 defending to kids?',a:'Start with one rule: stay on your feet. Then teach the approach, fast while the ball travels and slow near the attacker, and finish with a live 1v1 game where the defender scores by winning the ball.'},
+   {q:'What is the best 1v1 defending drill?',a:'A 1v1 in a narrow channel: the defender passes to the attacker, closes them down and tries to stop the dribble over the line. It repeats the real moment many times in a few minutes.'},
+   {q:'At what age should kids learn to defend 1v1?',a:'They start at U6 and U8 by stealing the ball in tag games. The approach and the body shape are taught from about U10, when players can think about the goal behind them.'},
+   {q:'Should young defenders slide tackle?',a:'Most youth coaches teach young players to stay on their feet. A defender on the ground is out of the play, and a slide tackle that misses the ball is a foul.'}],
+  lessons:['def_7_goalside','def_f_goalside','learn9_cover','def_11_pressurecover'],links:[G.goalSide,G.tackle,G.pressing,plan('u10-1v1-practice-plan','U10 1v1 practice plan','A whole session on 1v1 attacking and defending')],featured:'one-v-one-defending'},
 ];
 export const DRILL_GUIDES:readonly DrillGuide[]=RAW.map(r=>{
  if(DRILLS.some(d=>d.slug===r.slug))throw new Error(`guide ${r.slug} has the slug of a drill`);

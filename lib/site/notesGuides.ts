@@ -367,6 +367,12 @@ export const TERM_NOTES:Readonly<Record<string,CoachNotes>>={
   ages:[['U8','In 4v4 restarts are simple. Teach children to restart quickly and pass to a free teammate.'],
    ['U10','No heading at 10 and under, so 7v7 set pieces work best with low passes and shots.'],
    ['U12','At U12 teams can learn a few simple set-piece plans for corners and free kicks.']]},
+ 'free-kick-wall':{
+  coach:'Practise the wall as a quick team habit: the goalkeeper calls a number, players jog into line, then everyone turns to win the second ball.',
+  match:'At a free kick near the goal, parents see players join hands or link arms in a line, the referee pace out the distance, and the goalkeeper shout and point.',
+  ages:[['U8','In 4v4 there are no goalkeepers and few walls. Teach children to stand back from the ball and wait for the kick.'],
+   ['U10','In 7v7 a wall of one or two players is enough, so the rest of the team can mark the other attackers.'],
+   ['U12','At U12 the goalkeeper can learn to set the wall and decide how many players go in it.']]},
  'nutmeg':{
   coach:'Teach players that a nutmeg is a tool, not the goal: use it when the defender’s legs open and there is space behind them.',
   match:'A dribbler slips the ball through a defender’s legs and runs around to collect it on the other side, and the sideline cheers.',

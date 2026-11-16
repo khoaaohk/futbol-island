@@ -8,6 +8,7 @@ import {Bullets,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {COMPARISONS} from '@/lib/site/comparisons';
+import {NUMBERS_PAGE} from '@/lib/site/positionNumbers';
 import {CARD_COLLECTIONS} from '@/lib/site/collections';
 import styles from '../../site.module.css';
 
@@ -32,6 +33,7 @@ export default function PositionsHub(){
     <thead><tr><th scope="col">Number</th><th scope="col">Position</th><th scope="col">Job</th></tr></thead>
     <tbody>{NUMBERS.map(n=><tr key={n.n} data-number={n.n}><th scope="row">{n.n}</th><td><a href={positionPath(n.slug)}>{n.name}</a></td><td>{n.line}</td></tr>)}</tbody>
    </table></div>
+   <p><a href={NUMBERS_PAGE.path}>Soccer positions by number</a>: what CB, CDM, LCM and DF stand for, and the numbers center backs wear.</p>
   </Section>
   <Section id="formats" title="How positions change in 7v7, 9v9 and 11v11">
    <ul className={styles.stack}>{HUB.formats.map(x=>{const f=formationBySlug(x.slug)!,g=formatGuide(f.format);return <li key={x.format} className={styles.card}><h3 className={styles.h3}>{x.format}</h3><p>{x.text}</p>

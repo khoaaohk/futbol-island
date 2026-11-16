@@ -35,6 +35,7 @@ const DEPS=[
  [/^\/learn\/soccer-rules\/./,[L+'rules.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'drillLinks.ts',...SHARED]],
  [/^\/learn\/soccer-terms\/./,[L+'terms.ts',L+'notesGuides.ts',L+'drillLinks.ts',...SHARED]],
  [/^\/learn\/soccer-positions\/.*-vs-|^\/learn\/soccer-formations\/.*-vs-/,[L+'comparisons.ts',L+'positions.ts',L+'formations.ts','components/site/ComparePage.tsx']],
+ [/^\/learn\/soccer-positions\/numbers$/,[L+'positionNumbers.ts',L+'positions.ts',L+'formations.ts',...SHARED]],
  [/^\/learn\/soccer-positions\/./,[L+'positions.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'collections.ts',L+'drillLinks.ts',...SHARED]],
  [/^\/learn\/soccer-formations\/./,[L+'formations.ts',L+'notesGuides.ts',L+'comparisons.ts',...SHARED]],
  [/^\/learn\/soccer-drills\/./,[L+'drills.ts',L+'drillsA.ts',L+'drillsB.ts',L+'drillsC.ts',L+'drillsD.ts',L+'drillGuides.ts',L+'notesDrills.ts',L+'drillLinks.ts','lib/site/DrillParts.tsx',...SHARED]],

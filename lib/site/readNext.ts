@@ -1,6 +1,7 @@
 import {RULES,RULES_HUB} from './rules';
 import {TERM_PAGES,TERMS_HUB} from './terms';
 import {POSITIONS,POSITIONS_HUB} from './positions';
+import {NUMBERS_PAGE} from './positionNumbers';
 import {FORMATIONS,FORMATIONS_HUB} from './formations';
 import {DRILLS,DRILLS_HUB} from './drills';
 import {DRILL_GUIDES} from './drillGuides';
@@ -21,7 +22,7 @@ const RULE_ORDER=['kick-off','throw-in','goal-kick','corner-kick','drop-ball','y
  'offside','back-pass-rule','build-out-line','heading-rules-for-kids','substitutions-and-game-length','futsal-rules'];
 /** Terms: combinations from the simplest (2v1) up, then wide play, the ball, defending, and the words for results. */
 const TERM_ORDER=['two-v-one','give-and-go','through-ball','third-man-run','overlap','switching-play','cross','cutback','first-touch','nutmeg','counterattack',
- 'pressing','marking','goal-side','tackle','set-piece','clean-sheet','hat-trick'];
+ 'pressing','marking','goal-side','tackle','set-piece','free-kick-wall','clean-sheet','hat-trick'];
 function ordered<T extends {slug:string}>(list:readonly T[],order:readonly string[],what:string):T[]{
  const out=order.map(s=>{const x=list.find(y=>y.slug===s);if(!x)throw new Error(`readNext: ${what} ${s} does not exist`);return x;});
  if(out.length!==list.length||new Set(order).size!==order.length)throw new Error(`readNext: the ${what} order must list every page once`);
@@ -30,7 +31,7 @@ function ordered<T extends {slug:string}>(list:readonly T[],order:readonly strin
 export const CHAINS:readonly Chain[]=[
  {id:'rules',hub:{path:RULES_HUB.path,name:'All soccer rules for kids'},pages:ordered(RULES,RULE_ORDER,'rule').map(r=>({path:r.path,name:r.h1}))},
  {id:'terms',hub:{path:TERMS_HUB.path,name:'All soccer terms'},pages:ordered(TERM_PAGES,TERM_ORDER,'term').map(t=>({path:t.path,name:t.h1}))},
- {id:'positions',hub:{path:POSITIONS_HUB.path,name:'All soccer positions'},pages:POSITIONS.map(p=>({path:p.path,name:p.h1}))},
+ {id:'positions',hub:{path:POSITIONS_HUB.path,name:'All soccer positions'},pages:[{path:NUMBERS_PAGE.path,name:NUMBERS_PAGE.h1},...POSITIONS.map(p=>({path:p.path,name:p.h1}))]},
  {id:'formations',hub:{path:FORMATIONS_HUB.path,name:'All soccer formations'},pages:FORMATIONS.map(f=>({path:f.path,name:f.h1}))},
  {id:'drills',hub:{path:DRILLS_HUB.path,name:'All soccer drills for kids'},pages:DRILLS.map(d=>({path:d.path,name:d.h1}))},
  {id:'drill-guides',hub:{path:DRILLS_HUB.path,name:'All soccer drills for kids'},pages:DRILL_GUIDES.map(g=>({path:g.path,name:g.h1}))},

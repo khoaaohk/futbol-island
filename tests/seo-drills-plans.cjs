@@ -40,7 +40,7 @@ const DH='/learn/soccer-drills',PH='/learn/soccer-practice-plans',SINGLE=[DH,PH]
 
 // ---- 1. registry, sitemap, metadata -------------------------------------------------------------------------------------------
 assert(drills.DRILLS.length>=40&&drills.DRILLS.length<=50,`40-50 drills (${drills.DRILLS.length})`);
-assert.deepEqual(dg.DRILL_GUIDES.map(g=>g.slug),['u6','u8','u10','u12','at-home','passing','dribbling','shooting','first-touch','goalkeeper'],'four age guides and six skill guides');
+assert.deepEqual(dg.DRILL_GUIDES.map(g=>g.slug),['u6','u8','u10','u12','at-home','passing','dribbling','shooting','first-touch','goalkeeper','defending'],'four age guides and seven skill guides');
 assert.equal(plans.PLANS.length,12,'twelve plans');
 for(const a of drills.AGES){const ps=plans.plansForAge(a);assert.equal(ps.length,3,`${a}: three plans`);assert(ps.some(p=>/first-practice$/.test(p.slug)),`${a}: a first practice of the season`);assert(drills.drillsForAge(a).length>=12,`${a}: enough drills`);}
 for(const s of drills.SKILLS)assert(drills.drillsBySkill(s.id).length>=2,`skill ${s.id} has drills`);

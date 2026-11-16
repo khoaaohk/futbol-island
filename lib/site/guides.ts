@@ -1,5 +1,6 @@
 import {FORMATIONS,FORMATIONS_HUB,FORMAT_GUIDES} from './formations';
 import {POSITIONS,POSITIONS_HUB} from './positions';
+import {NUMBERS_PAGE} from './positionNumbers';
 import {LESSONS_INDEX} from './lessons';
 import {RULES,RULES_HUB} from './rules';
 import {CHARTS} from './sizes';
@@ -41,6 +42,8 @@ export const GUIDE_PAGES:readonly GuidePage[]=[
  {path:POSITIONS_HUB.path,name:POSITIONS_HUB.h1,title:POSITIONS_HUB.title,description:POSITIONS_HUB.description,blurb:POSITIONS_HUB.blurb,hub:true,lessonIds:POSITIONS_HUB.lessons.map(l=>l.id),image:formationImage('11v11-4-3-3')},
  ...FORMATIONS.map(f=>({path:f.path,name:f.h1,title:f.title,description:f.desc,lessonIds:f.lessons.map(l=>l.id),image:formationImage(f.slug)})),
  ...POSITIONS.map(p=>({path:p.path,name:p.h1,title:p.title,description:p.desc,lessonIds:p.lessons.map(l=>l.id),image:positionImage(p.slug)})),
+ /* Nov 16 2026 (SEO CTR): positions by number and the team-sheet letters (lib/site/positionNumbers.ts) */
+ {path:NUMBERS_PAGE.path,name:NUMBERS_PAGE.h1,title:NUMBERS_PAGE.title,description:NUMBERS_PAGE.desc,lessonIds:[] as string[],image:formationImage('11v11-4-3-3')},
 ];
 /**
  * Cluster 2 (Nov 10 2026): rules (lib/site/rules.ts), size charts (lib/site/sizes.ts) and the glossary (lib/site/terms.ts).

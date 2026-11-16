@@ -7,6 +7,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {FORMATIONS_HUB,formationBySlug,formationsUsing} from '@/lib/site/formations';
 import {POSITIONS,POSITIONS_HUB,positionBySlug} from '@/lib/site/positions';
+import {NUMBERS_PATH} from '@/lib/site/positionNumbers';
 import {guideCrumbs,positionImage} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
@@ -51,7 +52,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
    <ol className={styles.stack}>{p.habits.map(h=><li key={h.name} className={styles.card}><h3 className={styles.h3}>{h.name}</h3><p>{h.how}</p></li>)}</ol>
   </Section>
   <Section id="number" title={`Shirt number: ${p.numbers}`}>
-   <p>{p.numberLine} The numbers are a coaching custom from the days when starters wore 1 to 11. Players today can wear any number.</p>
+   <p>{p.numberLine} The numbers are a coaching custom from the days when starters wore 1 to 11. Players today can wear any number. <a href={NUMBERS_PATH}>All soccer positions by number</a>.</p>
   </Section>
   <Section id="small" title="In 7v7, 9v9 and futsal"><p>{p.small}</p></Section>
   {used.length>0&&<Section id="formations" title={`Formations with a ${lower}`}>
@@ -67,7 +68,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
   {drillLinksFor(p.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(p.path)}/></Section>}
   {compare.length>0&&<Section id="compare" title="Compare it"><LinkList links={compare.map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
-  <Section id="related" title="Other positions"><LinkList links={[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}/></Section>
+  <Section id="related" title="Other positions"><LinkList links={[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:NUMBERS_PATH,name:'Soccer positions by number',line:'1 to 11 and the letters: CB, CDM, LCM, DF'},{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}/></Section>
   <GuideQuiz id="quiz" name={`the ${lower}`} questions={quiz}/>
   <GuideEnd checked={FAMILY_CHECKED.positions} lesson={p.lessons[0]}/>
   <ReadNext path={p.path}/>

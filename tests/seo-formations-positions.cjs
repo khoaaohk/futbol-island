@@ -44,7 +44,7 @@ const WANT_F={'7v7':['2-3-1','3-2-1','2-2-2','3-1-2'],'9v9':['3-2-3','3-3-2','2-
 for(const [fmt,shapes] of Object.entries(WANT_F))assert.deepEqual(formations.formationsIn(fmt).map(f=>f.shape),shapes,`${fmt} formations`);
 assert.deepEqual(positions.POSITIONS.map(p=>p.slug),['goalkeeper','center-back','fullback','wingback','defensive-midfielder','central-midfielder','attacking-midfielder','winger','striker'],'the nine positions');
 for(const p of ['/learn/soccer-formations','/learn/soccer-positions','/learn/7v7-soccer-formations','/learn/9v9-soccer-formations','/learn/11v11-soccer-formations'])assert(guides.GUIDE_HUBS.some(g=>g.path===p),`${p} is a guide hub`);
-assert.equal(guides.GUIDE_PAGES.length,5+16+9,'5 hub-level pages, 16 formations, 9 positions');
+assert.equal(guides.GUIDE_PAGES.length,5+16+9+1,'5 hub-level pages, 16 formations, 9 positions, positions by number');
 assert.equal(new Set(guides.GUIDE_PAGES.map(g=>g.path)).size,guides.GUIDE_PAGES.length,'unique paths');
 const PAGE_FILES=[`${A}/soccer-formations/page.tsx`,`${A}/soccer-formations/[slug]/page.tsx`,`${A}/soccer-positions/page.tsx`,`${A}/soccer-positions/[slug]/page.tsx`,
  `${A}/7v7-soccer-formations/page.tsx`,`${A}/9v9-soccer-formations/page.tsx`,`${A}/11v11-soccer-formations/page.tsx`,`${A}/diagrams/[file]/route.tsx`];
@@ -57,7 +57,7 @@ for(const f of [...PAGE_FILES,'lib/site/guides.ts','lib/site/formations.ts','lib
 /** path -> [page module, params] */
 const route=p=>{
  let m=/^\/learn\/soccer-formations\/(.+)$/.exec(p);if(m)return [`${A}/soccer-formations/[slug]/page.tsx`,{slug:m[1]}];
- m=/^\/learn\/soccer-positions\/(.+)$/.exec(p);if(m)return [`${A}/soccer-positions/[slug]/page.tsx`,{slug:m[1]}];
+ m=/^\/learn\/soccer-positions\/(?!numbers$)(.+)$/.exec(p);if(m)return [`${A}/soccer-positions/[slug]/page.tsx`,{slug:m[1]}];
  return [`${A}${p.replace(/^\/learn/,'')}/page.tsx`,undefined];};
 const titles=new Map(),descs=new Map(),html=new Map();
 for(const g of guides.GUIDE_PAGES){
