@@ -4,7 +4,7 @@ import {abs} from './seo';
 /**
  * Gameplay footage for /games and /games/<slug> (Nov 16 2026, owner: "include more screenshots of the game and videos of the
  * game. Make this page more visual and engaging"). Every clip and still is a REAL capture: the production build driven in a
- * headless Chrome (arcade games on a 390x844 phone, Breakaway Run on a landscape phone, the island at 1280x720), cut to a silent
+ * headless Chrome (arcade games on a 390x844 phone, the island at 1280x720), cut to a silent
  * 6-10 s loop, 720 px on the long side, H.264 MP4 + VP9 WebM, with a sharper still as the poster. Four island clips (museum,
  * beach match, Kit Shop studio, plaza) are re-cuts of the Nov 3 /learn captures in public/learn/video. Sizes, durations and
  * picture sizes come from lib/site/gameMedia.json, written by the capture's encode step, so nothing here is typed by hand.
@@ -41,7 +41,7 @@ export const gameClip=(id:GameId)=>clip({key:id,page:gamePaths[id],...GAME_CLIP_
 const STILL_WORDS:Record<GameId,string[]>={
  kitrush:['Kit Rush mid-wave: kit in two team colours spins in the air above the goal','Kit Rush later in a run: more kit in the air and the score climbing','Kit Rush near the end of a run, with the lives at the top of the screen'],
  snake:['Squad Snake: the captain turns with team-mates following in a line','Squad Snake: the line of players grows longer and the call THROUGH PASS! appears','Squad Snake at level 2: a new formation and new players to collect'],
- runner:['Breakaway Run: the player dribbles toward a defender on the coast road','Breakaway Run: jumping over a sliding tackle in the middle lane','Breakaway Run: collecting footballs further down the road'],
+ runner:['Breakaway Run: the player dribbles toward a defender and a cone, with the Step-over skill button lit','Breakaway Run: a red defender lunges across the road ahead of the player','Breakaway Run: footballs in a line down the road with a defender far ahead'],
  tennis:['Futbol Tennis: the ball flies over the net toward the other player','Futbol Tennis: a player runs to reach the ball before it lands','Futbol Tennis: a rally on the clay court with the score at the top'],
  pinball:['Futbol Pinball: the ball races up the table past the bumpers','Futbol Pinball: a flipper kicks the ball back toward the goal','Futbol Pinball: the ball bounces between the bumpers near the goalkeeper'],
  puzzle:['Pass Puzzles: a pass goes from one team-mate to another around a defender','Pass Puzzles: the ball travels toward the striker near the goal','Pass Puzzles: a new puzzle with the players set out on the pitch'],
@@ -50,7 +50,7 @@ const STILL_WORDS:Record<GameId,string[]>={
 const STILL_CAPS:Record<GameId,string[]>={
  kitrush:['Read the whole wave before you swipe.','Waves get faster as the run goes on.','Three lives: the whistle costs one.'],
  snake:['Players join in position order.','The line grows as the squad fills up.','Each level brings a new formation.'],
- runner:['A defender ahead: change lane.','Jump the sliding tackle.','Collect footballs on the way.'],
+ runner:['A defender ahead: change lane or play the skill.','Time the jump or slide past the tackle.','Collect footballs on the way.'],
  tennis:['Over the net and into the court.','Get to the ball before it bounces twice.','The score sits at the top.'],
  pinball:['Bumpers send the ball flying.','Flip it back up the table.','Score past the goalkeeper.'],
  puzzle:['Pass around the defender.','Then find the striker.','Each puzzle is a new picture.'],
