@@ -12,7 +12,7 @@ const css=read('components/site/printSheet.module.css'),print=(css.match(/@media
 assert(print.length>200,'a print block');
 for(const r of ['body:has(.sheet) [data-reading-page]>:not(main){display:none!important}','main:has(.sheet)>header>:not(h1):not([data-answer]){display:none!important}','main:has(.sheet) button{display:none!important}','.screen{display:none!important}','@page{margin:12mm}'])
  assert(print.includes(r),`print CSS: ${r}`);
-assert(/main:has\(\.sheet\)>:not\(header\):not\(\.sheet\)(:not\(section\[aria-labelledby=[a-z]+\]\))+\{display:none!important\}/.test(print),'print CSS drops every section it does not keep');
+assert(/main:has\(\.sheet\)>:not\(header\):not\(\.sheet\)(:not\(section\[aria-labelledby=[a-z-]+\]\))+\{display:none!important\}/.test(print),'print CSS drops every section it does not keep');
 assert(/^\.url\{display:none\}/m.test(css),'the URL line is print-only');
 assert(/@media print\{\.header\{display:none\}\}/.test(read('app/(site)/site.module.css')),'the site bar is hidden in print');
 assert(/onClick=\{\(\)=>window\.print\(\)\}/.test(read('components/site/PrintButton.tsx')),'the button opens the print dialog');
