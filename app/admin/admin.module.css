@@ -123,6 +123,9 @@
 
 /* Sign-in: the ParentGate card on the island green. */
 .signin{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:24px var(--phone-gutter);background:#244d40;box-sizing:border-box}
+.remember{display:flex;align-items:center;gap:10px;min-height:44px;font-size:15px;font-weight:700;color:#244d40;cursor:pointer;user-select:none}
+.remember input{width:22px;height:22px;margin:0;flex:none;accent-color:#2f7a4f;cursor:pointer}
+.remember input:focus-visible{outline:var(--btn-focus);outline-offset:var(--btn-focus-offset)}
 .password{width:100%;min-height:48px;padding:0 14px;box-sizing:border-box;border:2px solid #a8b78d;border-radius:14px;background:#fffaf0;color:#244d40;font:700 18px var(--btn-font)}
 
 @media (max-width:900px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:minmax(0,1fr)}}

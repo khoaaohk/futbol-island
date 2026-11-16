@@ -4,14 +4,15 @@ import {useRouter} from 'next/navigation';
 import gate from '@/components/ParentGate.module.css';
 import styles from './admin.module.css';
 
-/** Sign-in card: the grown-up gate's card and green primary, with a password field. */
+/** Sign-in card: the grown-up gate's card and green primary, with a password field. Nov 16 2026: "Remember this device for
+ *  30 days" (unchecked by default; lib/analytics/adminAuth.ts signs the 30-day flag into the session token). */
 export default function AdminLogin({configured}:{configured:boolean}){
  const router=useRouter();
- const [password,setPassword]=useState(''),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
+ const [password,setPassword]=useState(''),[remember,setRemember]=useState(false),[status,setStatus]=useState(''),[busy,setBusy]=useState(false);
  async function submit(e:React.FormEvent){
   e.preventDefault();if(busy||!password)return;setBusy(true);setStatus('');
   try{
-   const res=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password})});
+   const res=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({password,remember})});
    if(res.ok){setPassword('');router.refresh();return;}
    setStatus(res.status===429?'Too many tries. Wait 15 minutes and try again.':res.status===503?'Sign-in is not set up yet.':'That password did not work.');
   }catch{setStatus('Could not reach the server.');}
@@ -26,6 +27,10 @@ export default function AdminLogin({configured}:{configured:boolean}){
     <form className={gate.form} onSubmit={submit}>
      <label className={gate.question} htmlFor="admin-password">Password</label>
      <input id="admin-password" className={styles.password} type="password" autoComplete="current-password" value={password} onChange={e=>setPassword(e.target.value)} required maxLength={200} autoFocus/>
+     <label className={styles.remember} htmlFor="admin-remember">
+      <input id="admin-remember" type="checkbox" checked={remember} onChange={e=>setRemember(e.target.checked)}/>
+      <span>Remember this device for 30 days</span>
+     </label>
      <p className={gate.status} role="status" aria-live="polite">{status}</p>
      <button type="submit" className={gate.primary} disabled={busy||!password}>{busy?'Checking…':'Sign in'}</button>
     </form>

@@ -24,3 +24,7 @@ Notes
 - WAF rate limiting is billed per allowed request (cents at our volume).
 - After switching a rule to Rate limit, watch /admin → Players and retention → save health for a jump in "busy" answers from
   schools; raise the restore/check limit before lowering anything else.
+- Admin sessions (Nov 16 2026, lib/analytics/adminAuth.ts header): a sign-in lasts 12 h, or 30 days with "Remember this device"
+  (the flag and expiry are inside the signed `fi_admin` token; HttpOnly, Secure, SameSite=Strict, Path=/). `POST /api/admin/session`
+  renews only a remembered session with under 7 days left; it needs a valid session, so it needs no rate rule of its own.
+  Log out, "Sign out everywhere" (session epoch) and a new ADMIN_PASSWORD / ADMIN_SESSION_SECRET end remembered sessions too.

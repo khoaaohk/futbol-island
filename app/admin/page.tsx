@@ -1,5 +1,5 @@
 import {cookies} from 'next/headers';
-import {ADMIN_COOKIE,adminPassword,verifySession} from '@/lib/analytics/adminAuth';
+import {ADMIN_COOKIE,adminPassword,readSession,verifySession} from '@/lib/analytics/adminAuth';
 import {loadSessionEpoch} from '@/lib/analytics/adminSession';
 import {resolveRange} from '@/lib/analytics/core';
 import {buildReportFor} from '@/lib/analytics/report';
@@ -25,6 +25,7 @@ export const runtime='nodejs';
 export default async function AdminPage(){
  await loadSessionEpoch();// Nov 10 2026: "Sign out everywhere" (lib/analytics/adminSession.ts)
  if(!adminPassword()||!verifySession(cookies().get(ADMIN_COOKIE)?.value,Date.now()))return <AdminLogin configured={!!adminPassword()}/>;
+ const sess=readSession(cookies().get(ADMIN_COOKIE)?.value,Date.now());// Nov 16 2026: "Remembered on this device until …"
  const now=new Date(),store=getStore();
  const dashP:Promise<DashboardData|null>=store?(async()=>{let mode:'pacific'|'utc'='pacific';try{mode=await store.timeMode();}catch{mode='utc';}
   return loadDashboard(store,resolveRange({range:'today'},now,mode),now);})().catch(()=>null):Promise.resolve(null);
@@ -38,5 +39,5 @@ export default async function AdminPage(){
  report.sources=await loadSources(report.from,report.to);
  labelMarketing(report.marketing);// Nov 3 2026: the Marketing page tab's card, slide, FAQ and step names
  const seo=await loadSeoSnapshot();// Nov 15 2026: the SEO tab's Search Console snapshot, read only for a signed-in admin
- return <AnalyticsDashboard initial={report} initialDash={await dashP} initialRange="today" saves={await saveAdminLine()} seo={seo}/>;
+ return <AnalyticsDashboard initial={report} initialDash={await dashP} initialRange="today" saves={await saveAdminLine()} seo={seo} rememberedUntil={sess?.remember?sess.exp:null}/>;
 }

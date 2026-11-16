@@ -84,7 +84,7 @@ const dayRun=(days:string[])=>days.length===1?shortDay(days[0]):`${days.length} 
 
 
 /** `saves`: the save-code status line from the server (app/admin/page.tsx; counts only, never a code or a save's contents). */
-export default function AnalyticsDashboard({initial,initialDash,initialRange,saves,seo=null}:{initial:Report;initialDash?:DashboardData|null;initialRange:Preset;saves?:string;seo?:SeoLoad|null}){
+export default function AnalyticsDashboard({initial,initialDash,initialRange,saves,seo=null,rememberedUntil=null}:{initial:Report;initialDash?:DashboardData|null;initialRange:Preset;saves?:string;seo?:SeoLoad|null;rememberedUntil?:number|null}){
  const router=useRouter();
  // The trend data (the daily layer, lib/analytics/dashboard.ts): loaded with the report, for the same range, in parallel.
  const [dash,setDash]=useState<DashboardData|null>(initialDash??null),[dashError,setDashError]=useState(false);
@@ -166,6 +166,11 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
  const choose=(p:Preset)=>{setPreset(p);if(p!=='custom')void load(`range=${p}`);};
  const applyCustom=()=>void load(`range=custom&from=${from}&to=${to}`);
  const logout=async()=>{await fetch('/api/admin/logout',{method:'POST'}).catch(()=>{});router.refresh();};
+ // Nov 16 2026: sliding renewal of a remembered session, only once it has under 7 days left (POST /api/admin/session).
+ const [remembered,setRemembered]=useState<number|null>(rememberedUntil);
+ useEffect(()=>{if(!rememberedUntil||rememberedUntil-Date.now()>=7*86_400_000)return;
+  fetch('/api/admin/session',{method:'POST'}).then(r=>r.ok?r.json():null).then(b=>{if(b?.renewed&&typeof b.until==='number')setRemembered(b.until);}).catch(()=>{});
+ },[rememberedUntil]);
 
  const hourly=report.granularity==='hour',tm=report.time,pacific=tm?.mode!=='utc',clock=pacific?'Pacific time':'UTC';
  const t=report.totals,d=report.dims,empty=t.sessions===0;
@@ -291,7 +296,7 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
       <button type="button" className={so.liveCard} aria-haspopup="dialog" onClick={()=>openPanel({mode:'players',from:report.from,to:report.to})}><span>Players in this range</span><b>{playerCount===null?'Players':fmtInt(playerCount)} ›</b><small>One row per anonymous player; tap one for their sessions.</small></button>
      </div>
     </section>}
-    {tab==='live'&&<SiteHealthSection/>}
+    {tab==='live'&&<SiteHealthSection rememberedUntil={remembered} onForget={logout}/>}
 
     {tab==='players'&&strip('Players trends',[{key:K.players,label:'Visitors (devices) per day'},...(dash?.people.status==='ok'?[{key:K.distinct,label:'Players (save code or device)'},{key:K.returningShare,label:'Returning sessions'},{key:K.fresh,label:'New sessions'}]:[]),{key:K.sessions,label:'Sessions'},{key:K.mpp,label:'Minutes per player'},{key:K.avgSession,label:'Average session'},{key:K.bounce,label:'Bounce rate'}],
      dash&&dash.people.status!=='ok'?'Distinct players, returning and new sessions per day need the people function (docs/analytics-proposed/analytics_daily_people.sql, not run yet); they appear here by themselves once it exists.':'Distinct players, returning and new: raw rows, the last 14 days only.')}

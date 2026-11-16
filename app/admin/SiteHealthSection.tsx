@@ -30,7 +30,7 @@ function TopTable({title,sub,top,cols}:{title:string;sub:string;top:Top|null;col
  </div>;
 }
 
-export default function SiteHealthSection(){
+export default function SiteHealthSection({rememberedUntil=null,onForget}:{rememberedUntil?:number|null;onForget?:()=>void}){
  const [health,setHealth]=useState<Health|null>(null),[game,setGame]=useState<BoardGame>('runner'),[board,setBoard]=useState<Board|null>(null),[msg,setMsg]=useState('');
  const loadHealth=useCallback(()=>{fetch('/api/admin/site-health?days=7',{cache:'no-store'}).then(r=>r.ok?r.json():null).then(setHealth).catch(()=>setHealth(null));},[]);
  const loadBoard=useCallback((g:BoardGame)=>{setBoard(null);fetch('/api/admin/board?game='+g,{cache:'no-store'}).then(r=>r.ok?r.json():null).then(setBoard).catch(()=>setBoard(null));},[]);
@@ -72,6 +72,9 @@ export default function SiteHealthSection(){
   <div className={styles.card}>
    <div className={styles.cardHead}><div><h2>Admin sessions</h2><p>Signs out every /admin session on every device, this one included (within 15 seconds on every server).</p></div>
     <button type="button" className={styles.secondary} onClick={logoutAll}>Sign out everywhere</button></div>
+   {rememberedUntil&&<div className={styles.cardHead}><div><h2>This device</h2>
+    <p suppressHydrationWarning>Remembered on this device until {new Date(rememberedUntil).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'})}.</p></div>
+    <button type="button" className={styles.secondary} onClick={onForget}>Forget this device</button></div>}
   </div>
  </section>;
 }

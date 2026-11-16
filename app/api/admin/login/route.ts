@@ -14,8 +14,8 @@ export async function POST(req:Request){
  if(!actual)return json(503,{error:'not-configured'});
  const ip=clientIp(req.headers),now=Date.now();
  if(lockout.locked(ip,now))return json(429,{error:'locked'});
- let password='';
- try{const text=await req.text();if(text.length>512)return json(413,{error:'too-large'});const b=JSON.parse(text);if(typeof b?.password==='string')password=b.password;}catch{return json(400,{error:'bad-request'});}
+ let password='',remember=false;
+ try{const text=await req.text();if(text.length>512)return json(413,{error:'too-large'});const b=JSON.parse(text);if(typeof b?.password==='string')password=b.password;remember=b?.remember===true;}catch{return json(400,{error:'bad-request'});}
  if(!passwordMatches(password,actual)){
   lockout.fail(ip,now);
   // Nov 10 2026: 20 failures per IP per hour across every instance; past it this IP is locked here for the hour.
@@ -25,6 +25,7 @@ export async function POST(req:Request){
  }
  lockout.succeed(ip);
  await loadSessionEpoch();// sign with the current epoch
- cookies().set(ADMIN_COOKIE,signSession(now)!,cookieOptions());
+ // Nov 16 2026: "Remember this device for 30 days" (only a literal true): the 30-day flag is inside the signed token.
+ cookies().set(ADMIN_COOKIE,signSession(now,undefined,undefined,remember)!,cookieOptions(remember));
  return json(200,{ok:true});
 }

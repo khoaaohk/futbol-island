@@ -8,11 +8,18 @@
  * 15 s, the epoch cache). Epoch 0 gives the same key as before, so existing sessions survive the deploy. The lockout is per
  * IP (5 tries / 15 min here, plus 20 / hour across instances in lib/analytics/adminSession.ts) with a site-wide ceiling raised
  * from 50 to 1000 failures / 15 min, so one guesser can no longer lock the owner out.
+ * Nov 16 2026: "Remember this device for 30 days" (unchecked by default). A remembered token carries an `r` flag INSIDE the
+ * signed payload (`<exp>.<nonce>.r.<sig>`) and may expire up to 30 days out; a plain token (`<exp>.<nonce>.<sig>`, unchanged)
+ * is still capped at 12 h, so the flag cannot be added or the expiry stretched without the key. Both are revoked the same way:
+ * Log out clears the cookie, "Sign out everywhere" bumps the epoch, a new password or ADMIN_SESSION_SECRET changes the key.
+ * Sliding renewal: POST /api/admin/session re-issues a REMEMBERED token for 30 more days once it has under 7 days left.
  */
 import {createHash,createHmac,randomBytes,timingSafeEqual} from 'crypto';
 
 export const ADMIN_COOKIE='fi_admin';
 export const SESSION_TTL_MS=12*3_600_000;
+export const REMEMBER_TTL_MS=30*86_400_000;
+export const RENEW_BELOW_MS=7*86_400_000;
 export const MIN_PASSWORD_LENGTH=12;
 const MAX_FAILS=5,LOCK_MS=15*60_000;
 export const GLOBAL_MAX_FAILS=1000;
@@ -38,24 +45,39 @@ function key(env:Record<string,string|undefined>=process.env,epoch=0):Buffer|nul
 }
 const b64=(b:Buffer)=>b.toString('base64url');
 
-export function signSession(nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch()):string|null{
+export function signSession(nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch(),remember=false):string|null{
  const k=key(env,epoch);if(!k)return null;
- const payload=`${nowMs+SESSION_TTL_MS}.${b64(randomBytes(12))}`;
+ const payload=`${nowMs+(remember?REMEMBER_TTL_MS:SESSION_TTL_MS)}.${b64(randomBytes(12))}${remember?'.r':''}`;
  return `${payload}.${b64(createHmac('sha256',k).update(payload).digest())}`;
 }
 
-export function verifySession(token:string|undefined|null,nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch()):boolean{
- const k=key(env,epoch);if(!k||!token||token.length>200)return false;
- const i=token.lastIndexOf('.');if(i<0)return false;
+export type AdminSession={exp:number;remember:boolean};
+/** The verified session (signature first, then the shape, then the expiry against the cap for its kind), or null. */
+export function readSession(token:string|undefined|null,nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch()):AdminSession|null{
+ const k=key(env,epoch);if(!k||!token||token.length>200)return null;
+ const i=token.lastIndexOf('.');if(i<0)return null;
  const payload=token.slice(0,i),sig=Buffer.from(token.slice(i+1),'base64url');
  const want=createHmac('sha256',k).update(payload).digest();
- if(sig.length!==want.length||!timingSafeEqual(sig,want))return false;
- const exp=Number(payload.split('.')[0]);
- return Number.isFinite(exp)&&exp>nowMs&&exp<=nowMs+SESSION_TTL_MS;
+ if(sig.length!==want.length||!timingSafeEqual(sig,want))return null;
+ const parts=payload.split('.');
+ const remember=parts.length===3&&parts[2]==='r';
+ if(parts.length!==2&&!remember)return null;
+ const exp=Number(parts[0]);
+ return Number.isFinite(exp)&&exp>nowMs&&exp<=nowMs+(remember?REMEMBER_TTL_MS:SESSION_TTL_MS)?{exp,remember}:null;
 }
 
-export function cookieOptions(){
- return {httpOnly:true,secure:true,sameSite:'strict' as const,path:'/',maxAge:SESSION_TTL_MS/1000};
+export function verifySession(token:string|undefined|null,nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch()):boolean{
+ return readSession(token,nowMs,env,epoch)!==null;
+}
+
+/** Sliding renewal, remembered sessions only: a fresh 30-day token once fewer than 7 days are left; otherwise null. */
+export function renewSession(token:string|undefined|null,nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch()):string|null{
+ const s=readSession(token,nowMs,env,epoch);
+ return s&&s.remember&&s.exp-nowMs<RENEW_BELOW_MS?signSession(nowMs,env,epoch,true):null;
+}
+
+export function cookieOptions(remember=false){
+ return {httpOnly:true,secure:true,sameSite:'strict' as const,path:'/',maxAge:(remember?REMEMBER_TTL_MS:SESSION_TTL_MS)/1000};
 }
 
 /** Failed sign-ins per client (an IP hash, kept in memory only) plus a global ceiling against spread-out guessing. */
