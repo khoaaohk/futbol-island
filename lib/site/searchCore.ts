@@ -5,6 +5,10 @@
 export type SearchType='Rule'|'Term'|'Position'|'Formation'|'Drill'|'Plan'|'Lesson'|'Guide';
 export const SEARCH_TYPES:readonly SearchType[]=['Rule','Term','Position','Formation','Drill','Plan','Lesson','Guide'];
 export const SEARCH_LABEL:Record<SearchType,string>={Rule:'Rules',Term:'Soccer terms',Position:'Positions',Formation:'Formations',Drill:'Drills',Plan:'Practice plans',Lesson:'Lessons',Guide:'Guides and hubs'};
+/** Spanish search (round D, Nov 16 2026): /es/learn?q= reads /es/search-index.json (lib/i18n/es/search.ts) with these words. */
+export const SEARCH_LABEL_ES:Record<SearchType,string>={Rule:'Reglas',Term:'Términos del fútbol',Position:'Posiciones',Formation:'Formaciones',Drill:'Ejercicios',Plan:'Planes de entrenamiento',Lesson:'Lecciones',Guide:'Guías y temas'};
+export const SEARCH_INDEX_PATH_ES='/es/search-index.json';
+export const SEARCH_PATH_ES='/es/learn';
 export type SearchEntry={t:SearchType;n:string;p:string;s:string;k?:string};
 export const SEARCH_INDEX_PATH='/learn/search-index.json';
 export const SEARCH_PATH='/learn';

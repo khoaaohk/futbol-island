@@ -47,14 +47,19 @@ for(const [enF,enK,esF,esK,slugK] of fam){
  assert.deepEqual(Object.keys(ge),g.map(x=>x.slug));for(const x of g){const e=ge[x.slug];for(const k of ['before','after','picks','faq'])assert.equal(e[k].length,x[k].length,`DRILL_GUIDES_ES.${x.slug}.${k}: 1:1`);}
  assert.deepEqual(Object.keys(pe),p.map(x=>x.slug));assert.deepEqual([...ep.ES_PLAN_SLUGS],p.map(x=>x.slug),'esPaths ES_PLAN_SLUGS');
  for(const x of p){const e=pe[x.slug];for(const k of ['rows','equipment','notes','faq'])assert.equal(e[k].length,x[k].length,`PLANS_ES.${x.slug}.${k}: 1:1`);}}
+{/* round D: lessons (96), 1:1 with the English site lessons; no verdict opener in an explanation (a page never gives the answer) */
+ const en=L('lib/site/lessons.ts').LESSONS,es=L('lib/i18n/es/lessons.ts').LESSONS_ES;assert.deepEqual(Object.keys(es),en.map(l=>l.id),'LESSONS_ES: the English lesson ids, in order');
+ for(const l of en){const e=es[l.id];assert.equal(e.steps.length,l.steps.length,`${l.id}.steps 1:1`);assert.equal(e.questions.length,l.questions.length,`${l.id}.questions 1:1`);
+  e.questions.forEach((q,i)=>{assert.equal(q.options.length,l.questions[i].options.length,`${l.id}.q${i}.options 1:1`);assert(!/^(?:sí|correcto|exacto|exactamente|muy bien|así es|eso es)[.!,:]/i.test(q.explain),`${l.id}.q${i}: verdict opener`);});}}
 {const t=L('lib/site/terms.ts'),hub=L('lib/i18n/es/terms.ts').TERMS_HUB_ES;assert.deepEqual(Object.keys(hub.glossary).sort(),t.GLOSSARY.map(g=>g.id).sort(),'every glossary entry translated');}
 // ---- 2 + 3. every Spanish page ----
 const STOP=/\b(the|and|with|your|you|when|which|this|that|player|players|ball|kick|team|from|have)\b/i;
 const strings=(x,out=[])=>{if(typeof x==='string')out.push(x);else if(Array.isArray(x))x.forEach(y=>strings(y,out));else if(x&&typeof x==='object')Object.values(x).forEach(y=>strings(y,out));return out;};
 const ALLOWED=/U\.S\. Soccer|US Youth Soccer|build-out line|Laws of the Game|The FA|Futbol Island|nutmeg|hat-trick|clean sheet|give-and-go|one-two|soccer|White Sports Ventures|Ocean Discovery Institute|Kitchens for Good|Big Brothers Big Sisters|“[A-Z][^”]*” \([^)]*\)|\(en inglés\)/g;
-for(const f of ['lib/i18n/es/rules.ts','lib/i18n/es/terms.ts','lib/i18n/es/positions.ts','lib/i18n/es/formations.ts','lib/i18n/es/comparisons.ts','lib/i18n/es/drills.ts','lib/i18n/es/drillGuides.ts','lib/i18n/es/plans.ts']){
+for(const f of ['lib/i18n/es/rules.ts','lib/i18n/es/terms.ts','lib/i18n/es/positions.ts','lib/i18n/es/formations.ts','lib/i18n/es/comparisons.ts','lib/i18n/es/drills.ts','lib/i18n/es/drillGuides.ts','lib/i18n/es/plans.ts','lib/i18n/es/lessons.ts','lib/i18n/es/safety.ts','lib/i18n/es/hubs.ts','lib/i18n/es/charts.ts','lib/i18n/es/tools.ts']){
  for(const s of strings(L(f))){
-  if(s==='U13 and up')continue;/* the English age label key, shown as “U13 y mayores” (EsCoachNotes) */
+  if(s==='U13 and up')continue;
+  if(/^\/[\w\/#-]*$/.test(s))continue;/* a path *//* the English age label key, shown as “U13 y mayores” (EsCoachNotes) */
   for(const re of gl.ES_BANNED)assert(!re.test(s),`${f}: banned word ${re} in “${s.slice(0,80)}”`);
   const bare=s.replace(ALLOWED,'');assert(!STOP.test(bare),`${f}: English left? “${s.slice(0,120)}”`);
  }
@@ -88,6 +93,13 @@ for(const enPath of ep.ES_PAGES){
 {const sm=L('app/sitemap.ts').default();const byUrl=new Map(sm.map(x=>[x.url,x]));
  for(const p of ep.ES_PAGES){const e=byUrl.get(seo.abs(ep.toEs(p))),n=byUrl.get(seo.abs(p));assert(e&&n,`${p}: both languages in the sitemap`);
   assert.deepEqual(e.alternates,n.alternates,`${p}: same hreflang set on both sitemap entries`);assert.equal(e.alternates.languages.es,seo.abs(ep.toEs(p)));}}
+// Spanish search (round D): /es/learn?q= (noindex, follow), its index has only /es pages with Spanish names, "fuera" finds offside
+{const idx=L('lib/i18n/es/search.ts').buildSearchIndexEs(),core=L('lib/site/searchCore.ts');assert(idx.length>150,`Spanish search index: ${idx.length} entries`);
+ for(const e of idx){assert(/^\/es(\/|$)/.test(e.p),`search ${e.p}: Spanish path`);assert(ep.hasEs(ep.toEn(e.p.replace(/#.*$/,''))),`search ${e.p}: a Spanish page`);}
+ const hit=core.searchEntries(idx,'fuera');assert(hit.length&&hit[0].items.some(e=>e.p==='/es/learn/soccer-rules/offside'),'“fuera” finds the offside rule');
+ const r=routes.esRoute('/learn'),m=r.meta();assert.deepEqual(m.robots,{index:false,follow:true});assert.equal(m.alternates.canonical,'/es/learn');
+ const html=render(r.render());assert(/data-learn-search=""/.test(html)&&/action="\/es\/learn"/.test(html),'/es/learn renders the Spanish search');
+ assert.match(read('components/es/pages/HomeEs.tsx'),/urlTemplate:URL_ES\+'\/learn\?q=\{search_term_string\}'/,'Spanish WebSite SearchAction');}
 // ---- 4. document shell and build cost ----
 assert.match(read('app/es/layout.tsx'),/<HtmlShell lang="es">/,'Spanish pages: <html lang="es">');
 assert.match(read('components/site/HtmlShell.tsx'),/<html lang=\{lang\} suppressHydrationWarning>/);

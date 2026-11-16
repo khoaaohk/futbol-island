@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useMemo,useRef,useState} from 'react';
-import {SEARCH_INDEX_PATH,SEARCH_LABEL,searchEntries,type SearchEntry} from '@/lib/site/searchCore';
+import {SEARCH_INDEX_PATH,SEARCH_INDEX_PATH_ES,SEARCH_LABEL,SEARCH_LABEL_ES,SEARCH_PATH_ES,searchEntries,type SearchEntry} from '@/lib/site/searchCore';
 import site from '@/app/(site)/site.module.css';
 import fx from './siteForms.module.css';
 /**
@@ -10,14 +10,19 @@ import fx from './siteForms.module.css';
  * answer snippet. Keyboard: arrow down from the box into the results, arrows to move, Escape back to the box. The count is
  * announced politely to screen readers.
  */
-export default function LearnSearch(){
+/** Spanish words (lang="es", /es/learn); English output is unchanged without the prop. */
+const ES={failed:'No se pudo cargar la búsqueda. Prueba con las guías de abajo.',loading:'Cargando la búsqueda…',
+ count:(n:number,q:string)=>`${n} resultado${n===1?'':'s'} para “${q}”.`,none:(q:string)=>`No encontramos nada para “${q}”. Prueba una palabra más corta, como fuera de juego, pared o 4-3-3.`,
+ label:'Busca reglas, términos, posiciones, formaciones y lecciones',placeholder:'Prueba fuera de juego, pared o 4-3-3'};
+export default function LearnSearch({lang}:{lang?:'es'}={}){
+ const es=lang==='es';
  const [q,setQ]=useState(''),[index,setIndex]=useState<SearchEntry[]|null>(null),[failed,setFailed]=useState(false);
  const box=useRef<HTMLInputElement>(null),list=useRef<HTMLDivElement>(null);
  useEffect(()=>{
   try{const v=new URLSearchParams(window.location.search).get('q');if(v)setQ(v.slice(0,100));}catch{/* no query */}
-  let live=true;fetch(SEARCH_INDEX_PATH).then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{if(live)setIndex(j);},()=>{if(live)setFailed(true);});
+  let live=true;fetch(es?SEARCH_INDEX_PATH_ES:SEARCH_INDEX_PATH).then(r=>r.ok?r.json():Promise.reject(r.status)).then(j=>{if(live)setIndex(j);},()=>{if(live)setFailed(true);});
   return()=>{live=false;};
- },[]);
+ },[es]);
  const groups=useMemo(()=>index?searchEntries(index,q):[],[index,q]);
  const total=groups.reduce((a,g)=>a+g.total,0);
  const change=(v:string)=>{setQ(v);try{const u=new URL(window.location.href);if(v.trim())u.searchParams.set('q',v);else u.searchParams.delete('q');window.history.replaceState(null,'',u.pathname+u.search);}catch{/* fine */}};
@@ -29,18 +34,18 @@ export default function LearnSearch(){
   else if(e.key==='ArrowUp'){e.preventDefault();(i>0?l[i-1]:box.current)?.focus();}
   else if(e.key==='Escape'){e.preventDefault();box.current?.focus();}
  };
- const status=failed?'The search could not load. Try the guides below.':!index?(q?'Loading the search…':''):!q.trim()?'':total?`${total} result${total===1?'':'s'} for “${q.trim()}”.`:`Nothing found for “${q.trim()}”. Try a shorter word, such as offside, rondo or 4-3-3.`;
+ const status=es?(failed?ES.failed:!index?(q?ES.loading:''):!q.trim()?'':total?ES.count(total,q.trim()):ES.none(q.trim())):failed?'The search could not load. Try the guides below.':!index?(q?'Loading the search…':''):!q.trim()?'':total?`${total} result${total===1?'':'s'} for “${q.trim()}”.`:`Nothing found for “${q.trim()}”. Try a shorter word, such as offside, rondo or 4-3-3.`;
  return <div className={site.section} data-learn-search="">
-  <form role="search" action="/learn" method="get" onSubmit={e=>{e.preventDefault();links()[0]?.focus();}} className={fx.searchForm}>
-   <label htmlFor="learn-q" className={`${site.caption} ${fx.fullWidth}`}>Search rules, terms, positions, formations, drills, plans and lessons</label>
+  <form role="search" action={es?SEARCH_PATH_ES:"/learn"} method="get" onSubmit={e=>{e.preventDefault();links()[0]?.focus();}} className={fx.searchForm}>
+   <label htmlFor="learn-q" className={`${site.caption} ${fx.fullWidth}`}>{es?ES.label:'Search rules, terms, positions, formations, drills, plans and lessons'}</label>
    <input ref={box} id="learn-q" name="q" type="search" value={q} onChange={e=>change(e.target.value)} onKeyDown={onBoxKey} autoComplete="off" spellCheck={false} enterKeyHint="search"
-    placeholder="Try offside, rondo or 4-3-3" aria-describedby="learn-q-status" aria-controls="learn-results"
+    placeholder={es?ES.placeholder:"Try offside, rondo or 4-3-3"} aria-describedby="learn-q-status" aria-controls="learn-results"
     className={fx.searchInput}/>
   </form>
   <p id="learn-q-status" role="status" aria-live="polite" className={site.caption}>{status}</p>
   <div id="learn-results" ref={list} onKeyDown={onListKey}>
    {groups.map(g=><section key={g.type} className={`${site.section} ${fx.resultGroup}`} aria-labelledby={`r-${g.type}`}>
-    <h2 className={site.h2} id={`r-${g.type}`}>{SEARCH_LABEL[g.type]} <span className={site.count}>({g.total})</span></h2>
+    <h2 className={site.h2} id={`r-${g.type}`}>{(es?SEARCH_LABEL_ES:SEARCH_LABEL)[g.type]} <span className={site.count}>({g.total})</span></h2>
     <ul className={site.list}>{g.items.map(e=><li key={e.t+e.p}><a href={e.p} data-hit=""><span className={site.itemTitle}>{e.n}</span><span className={site.itemMeta}>{e.s}</span></a></li>)}</ul>
    </section>)}
   </div>

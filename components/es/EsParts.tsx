@@ -9,6 +9,7 @@ import {playLessonHref} from '@/lib/site/playLinks';
 import {ES_UI,longDateEs} from '@/lib/i18n/es/ui';
 import {toEs} from '@/lib/i18n/esPaths';
 import type {CoachNotesEs} from '@/lib/i18n/es/types';
+import {esLesson} from '@/lib/i18n/es/lessons';
 import p from '@/components/site/printSheet.module.css';
 import styles from '@/app/(site)/site.module.css';
 export {Bullets,DataTable,LinkList,Section} from '@/lib/site/GuideParts';
@@ -82,4 +83,8 @@ export function EsReadNext({order,path}:{order:readonly {path:string;name:string
   <a rel="prev" href={prev.path}><span className={styles.pagerWord}>{prev===order[0]?ES_UI.backTo:ES_UI.previous}</span><span className={styles.pagerName}>{prev.name}</span></a>
   <a rel="next" href={next.path}><span className={styles.pagerWord}>{next===order[0]?ES_UI.backTo:ES_UI.readNext}</span><span className={styles.pagerName}>{next.name}</span></a>
  </nav>;
+}
+/** Spanish lib/site/GuideParts.tsx LessonList (round D): the Spanish lesson pages, title + concept. */
+export function EsLessonList({lessons}:{lessons:readonly {id:string}[]}){
+ return <ul className={styles.list}>{lessons.map(x=>esLesson(x.id)!).map(l=><li key={l.id}><a href={l.esPath}><span className={styles.itemTitle}>{l.title} (lección de {l.formatLabel==='Futsal'?'futsal':l.formatLabel})</span><span className={styles.itemMeta}>{l.concept}</span></a></li>)}</ul>;
 }

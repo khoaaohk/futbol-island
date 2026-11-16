@@ -9,14 +9,15 @@ import {articleLd,breadcrumbLd,collectionLd,faqLd} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {toEs} from '@/lib/i18n/esPaths';
 import {ES_COMPARISONS,ES_FORMATIONS,ES_HUBS,ES_POSITIONS,describeEs,esFormatGuide,esFormationsIn,esLines,type EsComparison,type EsFormation} from '@/lib/i18n/es/registry';
-import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsReadNext,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
+import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsReadNext,EsLessonList,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
+import {esLesson} from '@/lib/i18n/es/lessons';
 import {esLd} from './GuidesEs';
 import styles from '@/app/(site)/site.module.css';
 /**
  * The Spanish formations hub, the 21 formation pages, the three format guides and the three comparison pages (Spanish round 2,
  * Nov 16 2026): the English pages' sections in the same order (app/(site)/learn/soccer-formations, lib/site/FormatGuideView.tsx,
  * components/site/ComparePage.tsx) with the Spanish words. Lesson lists stay off until the lessons family is translated; the
- * lineup builder and cheat sheets are English tools, linked with “(en inglés)”.
+ * lineup builder links its Spanish page (round D).
  */
 type Fmt=GuideFormat;
 const posEs=(slug?:string)=>slug?ES_POSITIONS().find(p=>p.slug===slug):undefined;
@@ -72,7 +73,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   <EsIntro crumbs={crumbs} h1={f.h1} lead={f.answer}/>
   <Section id="diagram" title={`Diagrama del ${f.shapeEs}`}>
    <FormationDiagram id="base" format={f.format} lines={f.lines} what={what} image={formationImage(f.slug)}/>
-   <p><a href={lineupLinkFor(f.slug)}>Arma esta alineación</a> (en inglés): pon los nombres de tus jugadores en el {f.shapeEs} con el creador de alineaciones gratis, y luego imprímelo o comparte un enlace.</p>
+   <p><a href={toEs(lineupLinkFor(f.slug).replace(/[?#].*$/,''))+(lineupLinkFor(f.slug).match(/[?#].*$/)?.[0]??'')}>Arma esta alineación</a>: pon los nombres de tus jugadores en el {f.shapeEs} con el creador de alineaciones gratis, y luego imprímelo o comparte un enlace.</p>
    {futsal
     ?<p>El {f.shape} cuenta a los cuatro jugadores de campo de atrás hacia adelante. Al portero se le cuenta aparte, así que un equipo de futsal tiene {PLAYERS_PER_TEAM.futsal} jugadores en la cancha.</p>
     :<p>Los entrenadores escriben esta forma de dos maneras. <b>{f.shape}</b> cuenta a los {PLAYERS_PER_TEAM[f.format]-1} jugadores de campo, desde la defensa hacia adelante. U.S. Soccer cuenta primero al portero y escribe <b>{withKeeper(f)}</b>. Las dos quieren decir la misma formación. Los números de los puntos son una costumbre común de los entrenadores, no una regla: los jugadores pueden usar cualquier número de camiseta.</p>}
@@ -82,7 +83,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   </Section>
   <Section id="strengths" title={`Fortalezas del ${f.shapeEs}`}><Bullets items={f.strengths}/></Section>
   <Section id="weak" title="Puntos débiles y cómo cubrirlos">
-   <ul className={styles.stack}>{f.weak.map(w=><li key={w.spot} className={styles.card}><h3 className={styles.h3}>{w.spot}</h3><p><b>Cómo cubrirlo:</b> {w.cover}</p></li>)}</ul>
+   <ul className={styles.stack}>{f.weak.map(w=><li key={w.spot} className={styles.card}><h3 className={styles.h3}>{w.spot}</h3><p><b>Cómo cubrirlo:</b> {w.cover}{w.lesson&&esLesson(w.lesson)&&<> Lección: <a href={esLesson(w.lesson)!.esPath}>{esLesson(w.lesson)!.title}</a>.</>}</p></li>)}</ul>
   </Section>
   <Section id="moves" title={`Cómo se mueve el ${f.shapeEs}`}>
    <div className={styles.pair}>
@@ -94,6 +95,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   <QA id="faq" title={`Preguntas sobre el ${f.shapeEs}`} faq={f.faq}/>
   <EsCoachNotes name={f.name} notes={f.notes}/>
   {compare.length>0&&<Section id="compare" title="Compárala"><LinkList links={compare.map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))}/></Section>}
+  {f.lessons.length>0&&<Section id="lessons" title="Lecciones que enseñan esta formación"><EsLessonList lessons={f.lessons}/></Section>}
   <Section id="related" title="Sigue leyendo"><LinkList links={related}/></Section>
   <EsGuideEnd checked={FAMILY_CHECKED.formations} lessonId={f.lessons[0]?.id}/>
   <EsReadNext order={[{path:H.path,name:H.h1},...ES_FORMATIONS().map(x=>({path:x.esPath,name:x.h1}))]} path={f.esPath}/>

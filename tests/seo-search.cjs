@@ -38,7 +38,7 @@ const {root,L,read,render,React,ldOf}=require('./lib/tsLoad.cjs');process.chdir(
  const c=read('components/site/LearnSearch.tsx');
  assert(/new URLSearchParams\(window\.location\.search\)\.get\('q'\)/.test(c),'reads ?q= on load');
  for(const k of ["'ArrowDown'","'ArrowUp'","'Escape'"])assert(c.includes(k),`keyboard: ${k}`);
- assert.equal((c.match(/fetch\(/g)||[]).length,1,'one fetch: the index');assert(c.includes('fetch(SEARCH_INDEX_PATH)'));
+ assert.equal((c.match(/fetch\(/g)||[]).length,1,'one fetch: the index');assert(/fetch\((?:es\?SEARCH_INDEX_PATH_ES:)?SEARCH_INDEX_PATH\)/.test(c));
  assert(!/sendBeacon|analytics|track\(/.test(c),'no analytics');
  assert(c.includes("from '@/lib/site/searchCore'")&&!/^import/m.test(read('lib/site/searchCore.ts')),'the client imports only the import-free core (no registries in the bundle)');
  const cfg=await import(require('node:path').join(root,'next.config.mjs'));const red=(await cfg.default('phase-production-build').redirects()).find(r=>r.source==='/learn');

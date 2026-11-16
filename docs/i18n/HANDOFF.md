@@ -64,7 +64,27 @@ the gold button opens the page's lesson. tests/seo-pages.cjs built-site check no
 ES_PAGES; they render on demand, so they are not in the build output). Build + `seo-crawl` on :9036: 1075 URLs, 0 problems.
 Not done: the Spanish header nav (SiteNavEs) has no drills/plans link yet (shared file, left to the coordinator).
 
+## Done (round D, Nov 16 2026, branch `spanish-lessons`)
 
+- Lessons: `/es/learn/lessons` + 96 lesson pages (`lib/i18n/es/lessons/*.ts`, merged by `lib/i18n/es/lessons.ts` esLesson; chapters,
+  categories, difficulty translated there). Same rule as English: options A-Z (Spanish sort), no verdict opener in explanations
+  (tests/es-pages.cjs checks it). Pages: `components/es/pages/LessonsEs.tsx` (also the search page). Lesson lists are back on
+  rules/terms/positions/formations (EsLessonList), weak-spot lesson links on formations, lineup builder links its Spanish page.
+- Hubs/charts: 5 lesson hubs (incl. /learn/7v7-9v9-11v11 + team-size table), 3 size charts, parents' guide
+  (`lib/i18n/es/hubs.ts`, `charts.ts`, `safety.ts` with the [PUBLIC-WORLD] TODAY/PUBLIC switch; `components/es/pages/HubsEs.tsx`).
+- Tools: 19 pages (`lib/i18n/es/tools.ts`, `components/es/pages/ToolsEs.tsx`); `lang="es"` on LineupBuilder, RotationPlanner,
+  LineupHeading, EmbedSnippet (words in `components/site/tools/toolWordsEs.ts`). Still English: downloadable PNG/SVG sheets and
+  their thumbnails, the /embed iframe (pages say so).
+- Search: `/es/learn?q=` (dispatcher special case, noindex/follow, not in ES_PAGES), index `/es/search-index.json`
+  (`lib/i18n/es/search.ts`, only paths with hasEs), `LearnSearch lang="es"`, WebSite SearchAction on /es, `/es/learn` without q
+  308 -> `/es` (next.config.mjs). Drills/plans join the index when that family lands (add them in search.ts).
+- Round D hooks: esPaths.ts `ES_LESSON_PAGES` / `ES_HUB_PAGES` / `ES_TOOL_PAGES`; routes.tsx ends with
+  `lessonsEsRoute ?? hubsEsRoute ?? toolsEsRoute`. Checks: tsc, eslint, es-pages (197 pages), seo-search/tools/pages/learn tests,
+  production build + seo-crawl 0 problems (1130 URLs), phone + desktop shots (lesson, tool, /es/learn?q=fuera).
+- Left: Spanish header nav has no "Lecciones"/"Herramientas" item yet; ClipPlay aria-label "Play video" is English; the lesson
+  print hint mentions a diagram (lesson sheets have none); dropped English-only links (futsal star cards, /games).
+
+## Test-suite regressions (fixed Nov 16 2026)
 
 - 12 failures: `lib/site/seo.ts`, `LangSwitch.tsx`, `GuideQuiz.tsx` imported `@/lib/i18n/...`; the vm/require loaders in the
   multiplayer/game tests do not resolve `@/`. Rule: shared modules (lib/site, components/site, anything the game imports) import
@@ -82,11 +102,7 @@ Not done: the Spanish header nav (SiteNavEs) has no drills/plans link yet (share
 
 1-2. comparisons and formations: DONE (round 2).
 3-4. drills and practice plans: DONE (round C).
-5. lessons (index + 96 reading pages + the /learn/7v7-9v9-11v11 lesson hub, which also shows the TEAM_SIZES table) (lib/site/lessons.ts + public/lessons JSON).
-6. guide hubs and charts: football-rules-for-kids, soccer-quiz-for-kids, passing-and-support, futsal-for-kids, ball/field size,
-   age groups, safe-football-game-for-kids.
-7. tools (hub + 7 tools + field diagrams 10): copy and page-level tool UI labels.
-8. Spanish search on /es/learn (a Spanish index from the registry, same LearnSearch UI with Spanish labels).
+5-8. lessons, guide hubs and charts, tools, Spanish search: DONE (round D). ES_PENDING is now empty (merged Nov 16 2026).
 Out of scope (later rounds): cards, fish, exhibits, games pages, /play, admin, privacy.
 
 Recipe per family: add `XxxEs` type -> `lib/i18n/es/xxx.ts` (translator brief: glossary, 1:1 arrays, title <= 60, desc 70-155,
@@ -130,3 +146,11 @@ one-line lab layouts into fewer route groups.
   volea", scoop = "la pala", "man on" = “te marcan”, Play-Practice-Play = "Jugar-Practicar-Jugar", bottom (Simon says) = "pompas"
   (Mexico), parent = "un papá o una mamá". Drill names are our own Spanish (Tiburones y pececitos, Saca el balón for Knockout,
   Limpia tu cuarto...); a native coach should check they sound like games kids already know.
+- Round D: "prueba" for quiz; "reanudación" for restart; "Dorado"/"Azul" as team names; passing shadow "sombra del pase"; channel
+  "carril"/"pasillo"; outlet "opción de salida"; screen "tapar"/"hacer de pantalla"; second ball "segunda jugada"/"rebote"; lay-off
+  "descarga"; near/far post "primer/segundo palo"; holder "mediocampista defensivo/de contención" (both used: unify); outside back
+  "lateral"; dribble-in "saque conduciendo"; punts "despeje de volea del portero"; bench "banca"; substitute "suplente"; squad
+  "plantel"; template "plantilla"; positions chart "cuadro de posiciones y números"; Game select "Modalidad"; clipboard "tablilla";
+  rolling subs "cambios libres"; playing-time calculator "calculadora de minutos de juego"; preset emotes "gestos predefinidos";
+  playing up "jugar en una categoría superior"; source "It's true./It's false." kept as "Es verdadero./Es falso." (as English).
+  Futsal lesson uses one plural command ("Acérquense juntos"), ustedes form.
