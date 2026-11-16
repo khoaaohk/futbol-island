@@ -164,7 +164,7 @@ t('relay: the long kit reaches Cap.KitClub members; an old client gets the short
 t('client: the connection sends the short kit unless the relay offered Cap.KitClub', () => {
   const src = read('lib/multiplayer/connection.ts');
   assert.match(src, /const kit = kitForCaps\(myKit, caps\);/, 'flushKit cuts the kit to the agreed caps');
-  assert.match(src, /caps = m\[1\] & \(worldOn \? CAPS_WORLD : CAPS_ALL\)/, 'caps = what the relay offered AND what this build knows');
+  assert.match(src, /caps = worldOn \? m\[1\] & CAPS_WORLD : \(m\[1\] & CAPS_ALL\) \| \(capsHi & CAPS_PARTY_HI\)/, 'caps = what the relay offered AND what this build knows (a party: S.Caps 255 + S.CapsHi)');
 });
 
 t('honesty: "Drip FC club kit" + "Sponsor" tag in every studio; no links, no buy pressure; the parents\' line', () => {

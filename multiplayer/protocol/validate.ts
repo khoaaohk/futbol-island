@@ -1,5 +1,5 @@
 // parseClient / parseServer / encode. Never throw on bad input; return null.
-import { C, S, Emote, MatchKind, MATCH_FIELDS, MATCH_SLOT_MAX, MATCH_SNAP_MAX, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, KIT_CLUB_LEN, KIT_CLUB_MAX_BYTES, KIT_CLUB_COLOR_LEN, KIT_CLUB_COLOR_MAX_BYTES, CLUB_PALETTE_LEN, CLUB_NO_BACKING_IDX, Cap, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, WORLD_HARD, CAPS_MAX, ISLAND_GOAL, MAP_DOTS, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
+import { C, S, Emote, MatchKind, MATCH_FIELDS, MATCH_SLOT_MAX, MATCH_SNAP_MAX, KIT_INDEX_MAX, KIT_LEN, KIT_MAX_BYTES, KIT_CLUB_LEN, KIT_CLUB_MAX_BYTES, KIT_CLUB_COLOR_LEN, KIT_CLUB_COLOR_MAX_BYTES, CLUB_PALETTE_LEN, CLUB_NO_BACKING_IDX, Cap, LIVE_POSE_STRIDE, LIVE_BALL_STRIDE, LOOK_LEN, MAX_INBOUND_BYTES, MAX_MEMBER_ID, WORLD_HARD, CAPS_MAX, CAPS_PARTY_HI, ISLAND_GOAL, MAP_DOTS, type ClientMsg, type ServerMsg, type MemberInfo, type NameIdx, type PoseBody } from './types';
 import { normalizeCode } from './codes';
 import { clampPose, WORLD_BOUNDS } from './limits';
 import { NAME_COLOURS, RESERVED_NAME_SLOTS, normalizeNick } from './names';
@@ -272,6 +272,8 @@ export function parseServer(raw: string): ServerMsg | null {
       return a.length === 3 && inRange(a[1], 0, MAX_MEMBER_ID) && a[2] === null ? (a as ServerMsg) : null;
     case S.Caps:
       return a.length === 2 && inRange(a[1], 0, CAPS_MAX) ? (a as ServerMsg) : null;
+    case S.CapsHi: // party Drip FC kits (Nov 16 2026): only the bits above 255 a party may agree
+      return a.length === 2 && inRange(a[1], 0, CAPS_MAX) && (a[1] & ~CAPS_PARTY_HI) === 0 ? (a as ServerMsg) : null;
     case S.Quiet: // relay v2.0 world
       return a.length === 2 && inRange(a[1], 0, 255) ? (a as ServerMsg) : null;
     case S.World: // relay v2.0 world
