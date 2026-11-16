@@ -153,7 +153,7 @@ for(const pre of E.PRESETS)for(const extra of [0,1,2,3,5])for(const keeper of pr
  const layout=read('app/coach/layout.tsx'),sw=read('public/coach-sw.js'),reg=read('components/coach/CoachApp.tsx'),man=read('app/coach/manifest.webmanifest/route.ts'),cfg=read('next.config.mjs');
  ok(/robots:\s*\{\s*index:\s*false/.test(layout),'app route is noindex (meta)');
  ok(/source: '\/coach'[^\n]*X-Robots-Tag/.test(cfg)&&/source: '\/coach\/:path\*'[^\n]*X-Robots-Tag/.test(cfg),'app route is noindex (header)');
- ok(/manifest:\s*'\/coach\/manifest\.webmanifest'/.test(layout),'its own manifest');
+ ok(/manifest:\s*'\/coach\/manifest\.webmanifest'/.test(layout)&&/link\[rel=manifest\][\s\S]*l\.href='\/coach\/manifest\.webmanifest'/.test(layout),'its own manifest (metadata + the swap over the site file manifest)');
  ok(/start_url:\s*'\/coach'/.test(man)&&/scope:\s*'\/coach'/.test(man)&&/id:\s*'\/coach'/.test(man),'manifest start_url, scope and id are /coach');
  ok(/register\('\/coach-sw\.js',\s*\{\s*scope:\s*'\/coach'\s*\}\)/.test(reg),'the SW is registered with scope /coach');
  ok(!/register\(/.test(read('components/site/HtmlShell.tsx'))&&!fs.readdirSync(path.join(root,'app/play')).some(f=>/sw|service/i.test(f)),'nothing else registers a service worker');

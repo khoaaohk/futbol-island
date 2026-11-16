@@ -83,7 +83,7 @@ function Legend({w,keeper}:{w:Words;keeper:boolean}){
  return <div className={c.legend} aria-hidden="true">{keeper&&<span><i className={c.gk}/>{w.gk}</span>}<span><i className={c.def}/>{w.def}</span><span><i className={c.midC}/>{w.mid}</span><span><i className={c.fwd}/>{w.fwd}</span></div>;
 }
 function Fair({w,seconds,ids,skip,fixedName,step}:{w:Words;seconds:Readonly<Record<string,number>>;ids:readonly string[];skip:ReadonlySet<string>;fixedName?:string;step:number}){
- const f=fairness(seconds,ids,skip),bad=f.spread>step*60+59;
+ const f=fairness(seconds,ids,skip),bad=f.spread>step*60+90;/* one block, plus the odd minute a change waits for a stoppage */
  return <div className={c.fair} aria-live="polite"><div><div className={c.fairBig}>{w.fairEveryone(mins(f.min),mins(f.max))}</div>{fixedName&&<div className={c.note}>{w.keeperAll(fixedName)}</div>}</div>
   <span className={c.fairTag} data-bad={bad}>{bad?w.fairCheck:w.fairGood}</span></div>;
 }
@@ -116,6 +116,8 @@ export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
   const m=/[#&]s=([A-Za-z0-9_-]+)/.exec(window.location.hash);if(m){const d=decodeShare(m[1]);if(d)setShared(d);}
   if(s.game&&s.game.clock.status!=='done'&&s.game.clock.status!=='pre'){setLive(true);setTab('game');}
   else setTab(s.team.players.length?'game':'team');
+  /* one manifest only, the coach app's (app/coach/layout.tsx swaps the site's before paint; React may add the site's back) */
+  document.querySelectorAll('link[rel=manifest]').forEach((l,i)=>{if(i===0)(l as HTMLLinkElement).href='/coach/manifest.webmanifest';else l.remove();});
   setReady(true);count('ca:open');
   if('serviceWorker' in navigator&&(location.protocol==='https:'||location.hostname==='localhost'))navigator.serviceWorker.register('/coach-sw.js',{scope:'/coach'}).catch(()=>{});
  },[]);
@@ -409,7 +411,9 @@ function SharedView({w,x,onClose}:{w:Words;x:Shared;onClose:()=>void}){
  const shown=x.seconds.some(v=>v>0)?sec:planSeconds(x.blocks),fixed=x.settings.keeper==='fixed'?x.blocks[0]?.gk??null:null;
  const ids=rows.map(p=>p.id).filter(id=>(shown[id]??0)>0);
  return <div className={c.app} data-reading-page="" data-coach-app="">
-  <header className={c.top}>{/* eslint-disable-next-line @next/next/no-img-element */}<img className={c.mark} src="/coach/icon.svg" alt="" width={32} height={32}/>
+  <header className={c.top}>
+   {/* eslint-disable-next-line @next/next/no-img-element */}
+   <img className={c.mark} src="/coach/icon.svg" alt="" width={32} height={32}/>
    <div className={c.topTitle}><b>{x.team||w.shared}</b><span>{x.settings.format} · {x.settings.periods} × {x.settings.periodMin} {w.min}</span></div></header>
   <main className={c.main}>
    <h1 className={c.h1}>{x.done?w.summary:w.shared}</h1><p className={c.note}>{w.sharedNote}</p>
