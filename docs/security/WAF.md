@@ -27,4 +27,5 @@ Notes
 - Admin sessions (Nov 16 2026, lib/analytics/adminAuth.ts header): a sign-in lasts 12 h, or 30 days with "Remember this device"
   (the flag and expiry are inside the signed `fi_admin` token; HttpOnly, Secure, SameSite=Strict, Path=/). `POST /api/admin/session`
   renews only a remembered session with under 7 days left; it needs a valid session, so it needs no rate rule of its own.
+  Hard cap: the original sign-in time is signed in too, so renewals never go past sign-in + 90 days; then the password again.
   Log out, "Sign out everywhere" (session epoch) and a new ADMIN_PASSWORD / ADMIN_SESSION_SECRET end remembered sessions too.

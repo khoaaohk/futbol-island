@@ -13,6 +13,8 @@
  * is still capped at 12 h, so the flag cannot be added or the expiry stretched without the key. Both are revoked the same way:
  * Log out clears the cookie, "Sign out everywhere" bumps the epoch, a new password or ADMIN_SESSION_SECRET changes the key.
  * Sliding renewal: POST /api/admin/session re-issues a REMEMBERED token for 30 more days once it has under 7 days left.
+ * Nov 16 2026 (owner: "yes add the 90 day cap"): a remembered token also signs the ORIGINAL sign-in time
+ * (`<exp>.<nonce>.r.<since>.<sig>`); renewal keeps it, so no remembered session outlives sign-in + 90 days. Then: password again.
  */
 import {createHash,createHmac,randomBytes,timingSafeEqual} from 'crypto';
 
@@ -20,6 +22,7 @@ export const ADMIN_COOKIE='fi_admin';
 export const SESSION_TTL_MS=12*3_600_000;
 export const REMEMBER_TTL_MS=30*86_400_000;
 export const RENEW_BELOW_MS=7*86_400_000;
+export const REMEMBER_MAX_MS=90*86_400_000;
 export const MIN_PASSWORD_LENGTH=12;
 const MAX_FAILS=5,LOCK_MS=15*60_000;
 export const GLOBAL_MAX_FAILS=1000;
@@ -45,13 +48,15 @@ function key(env:Record<string,string|undefined>=process.env,epoch=0):Buffer|nul
 }
 const b64=(b:Buffer)=>b.toString('base64url');
 
-export function signSession(nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch(),remember=false):string|null{
+export function signSession(nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch(),remember=false,since=nowMs):string|null{
  const k=key(env,epoch);if(!k)return null;
- const payload=`${nowMs+(remember?REMEMBER_TTL_MS:SESSION_TTL_MS)}.${b64(randomBytes(12))}${remember?'.r':''}`;
+ const exp=remember?Math.min(nowMs+REMEMBER_TTL_MS,since+REMEMBER_MAX_MS):nowMs+SESSION_TTL_MS;
+ if(exp<=nowMs)return null;
+ const payload=`${exp}.${b64(randomBytes(12))}${remember?'.r.'+since:''}`;
  return `${payload}.${b64(createHmac('sha256',k).update(payload).digest())}`;
 }
 
-export type AdminSession={exp:number;remember:boolean};
+export type AdminSession={exp:number;remember:boolean;since?:number};
 /** The verified session (signature first, then the shape, then the expiry against the cap for its kind), or null. */
 export function readSession(token:string|undefined|null,nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch()):AdminSession|null{
  const k=key(env,epoch);if(!k||!token||token.length>200)return null;
@@ -60,20 +65,26 @@ export function readSession(token:string|undefined|null,nowMs:number,env:Record<
  const want=createHmac('sha256',k).update(payload).digest();
  if(sig.length!==want.length||!timingSafeEqual(sig,want))return null;
  const parts=payload.split('.');
- const remember=parts.length===3&&parts[2]==='r';
+ const remember=parts.length===4&&parts[2]==='r';
  if(parts.length!==2&&!remember)return null;
  const exp=Number(parts[0]);
- return Number.isFinite(exp)&&exp>nowMs&&exp<=nowMs+(remember?REMEMBER_TTL_MS:SESSION_TTL_MS)?{exp,remember}:null;
+ if(!Number.isFinite(exp)||exp<=nowMs)return null;
+ if(!remember)return exp<=nowMs+SESSION_TTL_MS?{exp,remember:false}:null;
+ const since=Number(parts[3]);
+ return /^\d+$/.test(parts[3])&&since<=nowMs&&exp<=nowMs+REMEMBER_TTL_MS&&exp<=since+REMEMBER_MAX_MS?{exp,remember:true,since}:null;
 }
 
 export function verifySession(token:string|undefined|null,nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch()):boolean{
  return readSession(token,nowMs,env,epoch)!==null;
 }
 
-/** Sliding renewal, remembered sessions only: a fresh 30-day token once fewer than 7 days are left; otherwise null. */
+/** Sliding renewal, remembered sessions only: a fresh token (30 days, never past sign-in + 90 days) once fewer than 7 days are
+ *  left; otherwise null (also null at the 90-day cap, when there is nothing left to extend). */
 export function renewSession(token:string|undefined|null,nowMs:number,env:Record<string,string|undefined>=process.env,epoch=sessionEpoch()):string|null{
  const s=readSession(token,nowMs,env,epoch);
- return s&&s.remember&&s.exp-nowMs<RENEW_BELOW_MS?signSession(nowMs,env,epoch,true):null;
+ if(!s||!s.remember||s.since===undefined||s.exp-nowMs>=RENEW_BELOW_MS)return null;
+ const fresh=signSession(nowMs,env,epoch,true,s.since);
+ return fresh&&(readSession(fresh,nowMs,env,epoch)?.exp??0)>s.exp?fresh:null;
 }
 
 export function cookieOptions(remember=false){
