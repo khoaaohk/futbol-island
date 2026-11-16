@@ -16,6 +16,8 @@ import HoldoutCard from './HoldoutCard';
 import LearningSection from './LearningSection';
 import StartSection from './StartSection';
 import MarketingSection from './MarketingSection';
+import SeoSection from './SeoSection';
+import type {SeoLoad} from '@/lib/seo/snapshot';
 import {EngagementTiles,HeadlineTiles,InvestorFunnel,PlanCard} from './OverviewSection';
 import {ComingBackCard,NewCodesCard,RestoresCard,RetentionCard,SaveHealthCard,SaveMetricsBanner,SaveStorageCard,WeeklyCodesCard,saveData} from './SavesSection';
 import RegionCard from './RegionCard';
@@ -82,7 +84,7 @@ const dayRun=(days:string[])=>days.length===1?shortDay(days[0]):`${days.length} 
 
 
 /** `saves`: the save-code status line from the server (app/admin/page.tsx; counts only, never a code or a save's contents). */
-export default function AnalyticsDashboard({initial,initialDash,initialRange,saves}:{initial:Report;initialDash?:DashboardData|null;initialRange:Preset;saves?:string}){
+export default function AnalyticsDashboard({initial,initialDash,initialRange,saves,seo=null}:{initial:Report;initialDash?:DashboardData|null;initialRange:Preset;saves?:string;seo?:SeoLoad|null}){
  const router=useRouter();
  // The trend data (the daily layer, lib/analytics/dashboard.ts): loaded with the report, for the same range, in parallel.
  const [dash,setDash]=useState<DashboardData|null>(initialDash??null),[dashError,setDashError]=useState(false);
@@ -276,6 +278,8 @@ export default function AnalyticsDashboard({initial,initialDash,initialRange,sav
     {tab==='fishing'&&<div className={dd.mx} data-metric="engagement.fishing"><FishingSection report={report} dash={dash}/></div>}
     {tab==='marketing'&&strip('Marketing trends',[{key:K.tourViews,label:'Tour page views (/)'},{key:K.tourPlay,label:'Tour: sessions that tapped Play'},{key:'marketing.tour_avg_seconds',label:'Tour: time per view'},{key:K.investorVisits,label:'Investor page visits'},{key:K.investorAvg,label:'Investor page: average stay'}])}
     {tab==='marketing'&&<div className={dd.mx} data-metric="marketing.section"><span className={dd.mx} data-metric="marketing.visits"/><MarketingSection report={report} rangeText={rangeText} dayLabel={k=>dayLabel(k,false)}/></div>}
+    {/* Nov 15 2026: the SEO tab: the Search Console snapshot (data/seo/snapshot.json, loaded on the server after the session check) + our Search arrivals. */}
+    {tab==='seo'&&<div className={dd.mx} data-metric="seo.section"><SeoSection seo={seo} report={report} rangeText={rangeText} dayLabel={k=>dayLabel(k,false)}/></div>}
     {tab==='report'&&<div className={dd.mx} data-metric="report.weekly">
     {tab==='report'&&<SponsorReport week={week??isoWeekOf(tm?.today??report.to)} onWeek={setWeek}/>}
     </div>}

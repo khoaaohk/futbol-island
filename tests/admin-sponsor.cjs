@@ -148,7 +148,7 @@ await ok('split: TypeScript reference, suppression into withheld',()=>{
 await ok('dashboard: tabs, overview, route behind the session, client bundle stays small',()=>{
  const dash=read('app/admin/AnalyticsDashboard.tsx'),ov=read('app/admin/SponsorOverview.tsx'),route=read('app/api/admin/sponsor-split/route.ts');
  // Nov 6 2026 (deliberate, the trend rebuild): nine tabs, defined in lib/analytics/metricIndex.ts (the old ones' sections all kept, mapped by the metric index).
- assert(/\['overview','Overview'\],\['players','Players and retention'\],\['learning','Learning'\],\['island','Island and games'\],\['matches','Live matches'\],\['fishing','Fishing'\],\['marketing','Marketing'\],\['live','Live now'\],\['report','Sponsor report'\]/.test(read('lib/analytics/metricIndex.ts'))&&/const TABS:\[Tab,string\]\[\]=DASH_TABS;/.test(dash),'nine tabs (Phase B: Sponsor report; Nov 3: Marketing; Nov 5: Live matches; Nov 6: the trend rebuild)');
+ assert(/\['overview','Overview'\],\['players','Players and retention'\],\['learning','Learning'\],\['island','Island and games'\],\['matches','Live matches'\],\['fishing','Fishing'\],\['marketing','Marketing'\],\['seo','SEO'\],\['live','Live now'\],\['report','Sponsor report'\]/.test(read('lib/analytics/metricIndex.ts'))&&/const TABS:\[Tab,string\]\[\]=DASH_TABS;/.test(dash),'ten tabs (Phase B: Sponsor report; Nov 3: Marketing; Nov 5: Live matches; Nov 6: the trend rebuild; Nov 15: SEO)');
  assert(dash.includes("{tab==='report'&&<SponsorReport week={week??isoWeekOf(tm?.today??report.to)} onWeek={setWeek}/>}"),'the report tab');
  assert(dash.includes("{tab==='overview'&&<SponsorOverview report={report}"),'the overview is the first tab');
  assert(/\{id:'all',label:'All'\}/.test(dash),'All preset');
