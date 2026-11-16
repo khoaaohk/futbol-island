@@ -13,8 +13,8 @@ export default function RelatedLinks({related,heading,readHeading}:{related:Rela
    <div className={styles.section}><h3 className={styles.h3}>{readHeading}</h3><ul className={styles.list}>{related.read.map(l=><Item key={l.path} l={l}/>)}</ul></div>
   </section>
   <nav className={styles.pager} aria-label="Previous and next">
-   <a rel="prev" href={related.prev.path}>‹ Previous: {related.prev.name}</a>
-   <a rel="next" href={related.next.path}>Next: {related.next.name} ›</a>
+   <a rel="prev" href={related.prev.path}><span className={styles.pagerWord}>Previous</span><span className={styles.pagerName}>{related.prev.name}</span></a>
+   <a rel="next" href={related.next.path}><span className={styles.pagerWord}>Next</span><span className={styles.pagerName}>{related.next.name}</span></a>
   </nav>
  </>;
 }

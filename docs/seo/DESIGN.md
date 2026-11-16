@@ -99,3 +99,33 @@ Like the guide clusters they are not linked from the home page.
   prints the sheet alone (`tools.module.css`: `.screen` / `.printOnly`).
 - Look: `components/site/tools/tools.module.css` adds controls only (inputs, chips, dark pill buttons at weight 800 in the UI
   sans) from the same variables; everything else uses `site.module.css`.
+
+## Design + engagement pass (Nov 15 2026, owner items 6, 7, 8, 10, 11)
+
+Owner: "use the design taste skills to fix the pages", "make sure this all works on mobile; spacing, colors and fonts are
+consistent". The look above is unchanged; the pass made it one system and added four small client islands. Test:
+`tests/seo-design.cjs`.
+
+- **Tokens** (`site.module.css` `.page`): spacing `--s1..--s5`, type `--t-title/h2/h3/body/lead/cap/label`, radii `--r-lg` 24 /
+  `--r-md` 16 / `--r-sm` 12 / `--r-pill`, box padding `--pad-box` (20 / 28), tap size `--tap` 44. `tools.module.css` and
+  `games.module.css` use the same radii. No inline style one-offs on reading templates.
+- **One style each**: the answer lead (`.lead[data-answer]`: full ink, left-aligned on phones), FAQ and mix-ups (`card`),
+  Coach's notes (`Section panel`: the well tone), the end block (`endNote`: the guide line + "Last checked"), Read next and
+  card / fish neighbours (`pager`: two tap blocks, a small word over the title, next first on phones), tables (`tableWrap`,
+  the row header sticks while a wide table scrolls on phones), link grids (`list`), breadcrumbs (`crumbs`).
+- **Client islands, the only exceptions besides the coach tools.** Each is small, has no timers or scroll listeners, sends
+  nothing, and the page reads fully without it:
+  - Animated scene diagrams (`SceneDiagram animate`, `lib/site/sceneMotion.ts`, `components/site/MotionToggle.tsx`): the
+    scene's own arrows become CSS keyframes on the existing SVG dots (2v1, give-and-go, through ball, cutback, overlap,
+    pressing, offside). A Pause button; paused off screen (IntersectionObserver); prefers-reduced-motion and print show the
+    still picture, which is the same drawing as the PNG in `/sitemap-images.xml`. Caption, `<title>` and `<desc>` unchanged.
+  - The end-of-guide quiz (`components/site/GuideQuiz.tsx`, `lib/site/guideQuiz.ts`) on rules, terms and positions pages:
+    three questions built only from the page's own words (mix-ups, meanings, how-to vs mistakes, where / who / letters).
+    The game's lesson quizzes are not reused, so lesson pages still never give their answers away.
+  - The phones' "Play free" bar (`components/site/PlayBar.tsx`, via `PlayEnd` / `GuideEnd`): under 768 px only, after the
+    intro, hidden while an in-page Play button shows, pads the page, "Hide" for the visit (sessionStorage). Not on tools.
+- **"Play this in the game"**: a detail page's gold button opens `/play?go=lesson:<id>` (guides, drills, lessons) or
+  `/play?go=fish:<shore spot>` ("Catch it at <spot>"); card pages open the pack shop (`/play?store=packs`; cards have no
+  island location). The island validates `go=` against its own lessons and spots (`lib/play/deepLink.ts`) after boot,
+  runs it through the Welcome back card's actions, ignores anything else, and removes the param. The lesson's reading page
+  stays linked in "Lessons that teach it".

@@ -14,10 +14,11 @@
  --ink:#14221d;--ink-soft:#5b675f;--paper:#fbf7ee;--surface:#ecefdf;--well:#efe8d7;--rule:rgb(20 34 29 / .12);--accent:#85621f;--link:#1d6b55;--gold:#e9c16b;
  --sans:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Segoe UI Variable Display','Segoe UI',ui-sans-serif,Roboto,'Helvetica Neue',Arial,sans-serif;
  --s1:8px;--s2:16px;--s3:24px;--s4:40px;--s5:64px;--gutter:16px;--measure:68ch;--col:736px;--gap:40px;
+ --r-lg:24px;--r-md:16px;--r-sm:12px;--r-pill:999px;--pad-box:20px;--tap:44px;
  --t-title:clamp(38px,3.6vw + 24px,72px);--t-h2:28px;--t-h3:19px;--t-body:17px;--t-lead:20px;--t-cap:15px;--t-label:13px;
  color-scheme:light;min-height:100dvh;margin:0;background:var(--paper);color:var(--ink);
  font:var(--t-body)/1.55 var(--sans);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;display:flex;flex-direction:column;overflow-x:clip;-webkit-text-size-adjust:100%}
-@media(min-width:720px){.page{--gutter:24px;--gap:56px;--t-h2:36px;--t-h3:22px;--t-body:18px;--t-lead:24px}}
+@media(min-width:720px){.page{--gutter:24px;--gap:56px;--t-h2:36px;--t-h3:22px;--t-body:18px;--t-lead:24px;--pad-box:28px}}
 .page a{color:var(--link);text-underline-offset:.18em}
 .page a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px;border-radius:4px}
 
@@ -33,7 +34,7 @@
 @media(hover:hover){.page .navLinks a:hover{opacity:1;color:var(--link)}}
 .page .nav a.play{justify-self:end;align-self:center}/* weight and size come from DoneButton.module.css, exactly as the home bar's Play */
 .menu{display:none}
-.menuBtn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:76px;height:44px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);list-style:none;cursor:pointer}
+.menuBtn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:76px;height:44px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);box-shadow:0 4px 0 var(--btn-mint-edge,#8bac9d);list-style:none;cursor:pointer}
 .menuBtn::-webkit-details-marker{display:none}
 .menuBtn:active{translate:0 var(--btn-press,3px);box-shadow:0 1px 0 var(--btn-mint-edge,#8bac9d)}
 .menuBtn:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
@@ -81,6 +82,11 @@
 .eyebrow{font-size:var(--t-cap);line-height:1.4;font-weight:600;color:var(--accent)}
 .title{font-family:var(--sans);font-weight:600;font-size:var(--t-title);line-height:1.04;letter-spacing:-.028em;color:var(--ink);overflow-wrap:anywhere;text-wrap:balance}
 .lead{max-width:var(--measure);font-size:var(--t-lead);font-weight:500;line-height:1.3;letter-spacing:-.01em;color:var(--ink-soft);text-wrap:balance}
+/* Nov 15 2026 design pass: the answer lead (data-answer, the sentence search engines and assistants quote) is the page's most
+   important text, so it is set in the full ink and, when long, reads left-aligned under the centred title (centred 5-line
+   paragraphs are hard to read on phones). */
+.lead[data-answer]{color:var(--ink);line-height:1.4}
+@media(max-width:719px){.intro .lead[data-answer]{text-align:left;justify-self:stretch;text-wrap:pretty}}
 
 /* Sections: a heading, then its blocks 16 apart. Headings follow the home scale (600, tight tracking). */
 .section{display:grid;gap:var(--s2);align-content:start}
@@ -95,13 +101,12 @@
 @media(hover:hover){.main :where(.lead,.caption,.card,.figure,.table,.pair,.h2,.h3,.section>p,.section>ul,.section>ol,.section>dl,.intro>p) a:hover{text-decoration-color:var(--ink)}}
 
 /* Card (facts, quizzes, FAQ): a step in tone (the home page's tint), 24 radius like its boxes, no outline and no shadow at rest. */
-.card{max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--surface);border:0;border-radius:24px;
- padding:20px;display:grid;gap:var(--s2);align-content:start}
-@media(min-width:720px){.card{padding:28px}}
+.card{max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--surface);border:0;border-radius:var(--r-lg);
+ padding:var(--pad-box);display:grid;gap:var(--s2);align-content:start}
 .stack{list-style:none;padding:0!important;display:grid;gap:var(--s2)!important}
 .options{list-style:upper-alpha}
 /* The one label for what kind of text a card holds: "Real football fact" (true) or "Island story" (game fiction). */
-.label{justify-self:start;display:inline-block;padding:5px 12px;border-radius:999px;background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);
+.label{justify-self:start;display:inline-block;padding:5px 12px;border-radius:var(--r-pill);background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);
  font-size:var(--t-label);line-height:1.3;font-weight:700}
 .card .label{background:var(--paper)}
 
@@ -109,7 +114,7 @@
 .art{display:flex;justify-content:center;max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--well);border-radius:clamp(24px,2.4vw,32px);padding:var(--s2);box-shadow:0 30px 60px -28px rgb(12 23 20 / .35)}
 @media(min-width:720px){.art{padding:var(--s3)}}
 .art svg{max-width:100%;height:auto}
-.art img{display:block;width:100%;max-width:368px;height:auto;border-radius:16px}
+.art img{display:block;width:100%;max-width:368px;height:auto;border-radius:var(--r-md)}
 
 /* Index lists: the home page's "Read the lessons first" links (learn.module.css .linkGrid). Plain rows, the title underlined in
    gold, one soft line under it; one column on phones, two from 720 px. No boxes. */
@@ -117,7 +122,7 @@
 .page .list a{display:grid;gap:4px;min-height:44px;padding:12px 0;box-sizing:border-box;color:var(--ink);text-decoration:none}
 .list a .itemTitle{text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:3px;text-underline-offset:.22em}
 @media(hover:hover){.page .list a:hover .itemTitle{text-decoration-color:var(--ink)}}
-.itemTitle{font-size:clamp(18px,.4vw + 15px,21px);font-weight:700;letter-spacing:-.015em;line-height:1.3}
+.itemTitle{font-size:var(--t-h3);font-weight:700;letter-spacing:-.015em;line-height:1.3}
 .itemMeta{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
 @media(min-width:720px){
  .list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px var(--s4)!important}
@@ -125,20 +130,27 @@
 
 /* The one way into the game: the home page's gold button (learn.module.css .cta), same box, face and type. */
 .page .cta{display:inline-flex;align-items:center;justify-content:center;min-height:56px;max-width:100%;box-sizing:border-box;padding:0 30px;
- border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
+ border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-gold,#e9c16b) var(--btn-grain) center/128px 128px;background-blend-mode:soft-light;
  color:var(--btn-ink,#244d40);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d);font-family:var(--btn-font,Arial,Helvetica,sans-serif);font-weight:800;font-size:19px;line-height:1.15;letter-spacing:0;text-align:center;text-decoration:none;
  transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
 @media(hover:hover){.page .cta:hover{scale:1.03}}
 .page .cta:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
 @media(prefers-reduced-motion:reduce){.page .cta{transition:none}}
 .end{padding-top:var(--s3)}
-/* Previous / next in a collection (Nov 10 2026): a quiet line in the breadcrumb's voice, 44 px tap targets. */
-.pager{display:flex;flex-wrap:wrap;justify-content:space-between;gap:0 var(--s3);max-width:calc(var(--measure) + 2 * var(--s3));font-size:var(--t-cap);line-height:1.4}
-.page .pager a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink-soft);font-weight:600;text-decoration:none}
-.page .pager a:hover{color:var(--ink)}
+/* Previous / next (Read next, and card / fish neighbours). Nov 15 2026 design pass: two tap blocks in the tint, a small word over
+   the title, next on the right; one column on phones (next first, the thing to read). */
+.pager{display:grid;gap:var(--s1);max-width:calc(var(--measure) + 2 * var(--s3))}
+@media(min-width:560px){.pager{grid-template-columns:1fr 1fr}.pager a[rel=next]{grid-column:2;text-align:right}.pager a[rel=prev]{grid-column:1;grid-row:1}}
+@media(max-width:559px){.pager a[rel=next]{order:-1}}
+.page .pager a{display:grid;gap:2px;align-content:center;min-height:var(--tap);padding:14px 18px;box-sizing:border-box;border-radius:var(--r-md);background:var(--surface);color:var(--ink);text-decoration:none;transition:background-color .16s}
+@media(hover:hover){.page .pager a:hover{background:var(--well)}}
+.pagerWord{font-size:var(--t-label);line-height:1.3;font-weight:600;color:var(--ink-soft)}
+.pagerName{font-size:var(--t-cap);line-height:1.35;font-weight:700;text-wrap:balance}
+.pager a[rel=prev] .pagerWord::before{content:'‹ '}
+.pager a[rel=next] .pagerWord::after{content:' ›'}
 
 /* Quiet footer (the same one the home page ends on): one line and plain links, as the home page's end links. */
-.footer{border-top:1px solid var(--rule);padding:var(--s2) var(--gutter) calc(var(--s2) + env(safe-area-inset-bottom,0px));font-size:15px;line-height:1.4;color:var(--ink-soft)}
+.footer{border-top:1px solid var(--rule);padding:var(--s2) var(--gutter) calc(var(--s2) + env(safe-area-inset-bottom,0px));font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
 .footerInner{max-width:calc(1040px - 2 * var(--gutter));margin:0 auto;display:flex;flex-wrap:wrap;gap:0 var(--s3);align-items:center;justify-content:center;text-align:center}
 .page .footer a{display:inline-flex;align-items:center;min-height:44px;color:var(--ink-soft);font-weight:600;text-decoration:none}
 .page .footer a:hover{color:var(--ink)}
@@ -152,13 +164,15 @@
 .pair svg{width:100%;max-width:240px}
 @media(min-width:720px){.pair{grid-template-columns:1fr 1fr}}
 .pair .list{grid-template-columns:minmax(0,1fr)}
-.tableWrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;background:var(--surface);border:0;border-radius:24px}
+.tableWrap{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;background:var(--surface);border:0;border-radius:var(--r-lg)}
 .tableWrap:focus-visible{outline:3px solid var(--link);outline-offset:3px}
-.table{width:100%;border-collapse:collapse;font-size:16px;line-height:1.4}
+.table{width:100%;border-collapse:separate;border-spacing:0;font-size:16px;line-height:1.4}
 .table th,.table td{padding:14px var(--s2);text-align:left;vertical-align:top;border-top:1px solid var(--rule)}
 .table thead th{border-top:0;font-size:var(--t-cap);font-weight:600;color:var(--ink-soft)}
 .table tbody th{font-weight:700;white-space:nowrap}
-.table td{min-width:9em}/* phones: a wide table scrolls inside .tableWrap instead of crushing its columns */
+.table td{min-width:9em}
+/* Nov 15 2026: on a phone the row header stays put while a wide table scrolls under it (comparison and chart tables). */
+@media(max-width:719px){.table tbody th{position:sticky;left:0;z-index:1;background:var(--surface);box-shadow:1px 0 0 var(--rule)}}/* phones: a wide table scrolls inside .tableWrap instead of crushing its columns */
 
 /* Practice plans (Nov 10 2026, lib/site/plans.ts): a plan prints on ONE page. On screen the two wrappers change nothing
    (display:contents). In print, everything a coach does not need at the field is dropped (.noPrint: FAQ, links, the button)
@@ -185,3 +199,66 @@
  .printPage .printCols{display:grid;grid-template-columns:1fr 1fr;gap:12pt;align-items:start}
 }
 .printCols{display:contents}
+
+/* ---- Nov 15 2026 design + engagement pass (owner items 6, 7, 10): shared parts, tokens only. ---- */
+/* The end of a guide: "about this guide" and "Last checked" as one quiet block. */
+.endNote{display:grid;gap:var(--s1);max-width:var(--measure)}
+/* A tinted panel for one section that is a different voice (Coach's notes): the well tone, same radius and padding as a card. */
+.panel{max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--well);border-radius:var(--r-lg);padding:var(--pad-box)}
+.panel .h2{font-size:var(--t-h3);line-height:1.2}
+
+/* Animated scene diagrams (lib/site/sceneMotion.ts): the art frame holds the moving SVG and a small Pause button. The motion is
+   CSS keyframes from the page; it stops when paused, off screen, printed, or when the reader asks for reduced motion (then the
+   still picture shows and the button goes). */
+.anim{position:relative}
+.anim[data-paused] svg *,.anim[data-away] svg *{animation-play-state:paused!important}
+.animBtn{position:absolute;right:calc(var(--s2) + 8px);bottom:calc(var(--s2) + 8px);display:inline-flex;align-items:center;gap:6px;min-height:var(--tap);padding:0 16px;border:0;border-radius:var(--r-pill);
+ background:var(--paper);color:var(--ink);font:600 var(--t-cap)/1 var(--sans);cursor:pointer;box-shadow:0 2px 8px rgb(12 23 20 / .25)}
+.animIco{display:block;width:12px;height:12px;box-sizing:border-box}
+.animIco[data-ico=pause]{border-left:4px solid currentColor;border-right:4px solid currentColor}
+.animIco[data-ico=play]{width:0;height:0;border-style:solid;border-width:6px 0 6px 11px;border-color:transparent transparent transparent currentColor}
+.animBtn:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+@media(hover:hover){.animBtn:hover{background:var(--surface)}}
+@media(prefers-reduced-motion:reduce){.anim svg *{animation:none!important}.animBtn{display:none}}
+@media print{.anim svg *{animation:none!important}.animBtn{display:none}}
+
+/* End-of-guide quiz (components/site/GuideQuiz.tsx): each question a card; options are full-width buttons (48 px), the chosen
+   one turns pitch green when right and gold-ink outlined when wrong, the right one is always shown once answered. */
+.quiz{list-style:none;padding:0!important;display:grid;gap:var(--s2)!important}
+.quizItem{max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--surface);border-radius:var(--r-lg);padding:var(--pad-box);display:grid;gap:var(--s2)}
+.quizOptions{display:grid;gap:var(--s1)}
+.quizOption{display:block;width:100%;min-height:48px;padding:12px 16px;box-sizing:border-box;border:2px solid transparent;border-radius:var(--r-md);background:var(--paper);color:var(--ink);
+ font:500 var(--t-body)/1.4 var(--sans);text-align:left;cursor:pointer;transition:background-color .16s,border-color .16s}
+@media(hover:hover){.quizOption:not(:disabled):not([aria-pressed=true]):hover{border-color:var(--gold)}}
+.quizOption:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:2px}
+.quizOption:disabled{cursor:default;opacity:.62}
+.quizOption[data-state=right]{opacity:1;background:var(--link);color:#fff;font-weight:700}
+.quizOption[data-state=wrong]{border-color:var(--accent);background:var(--paper)}
+.quizOption[data-state=right]::before{content:'✓ '}
+.quizOption[data-state=wrong]::before{content:'✗ ';color:var(--accent)}
+.quizFeedback{font-size:var(--t-body);line-height:1.5}
+.quizFeedback:empty{display:none}
+.quizScore{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s2)}
+.quizScore:empty{display:none}
+.quizScore p{font-size:var(--t-h3);line-height:1.3}
+.quizAgain{min-height:var(--tap);padding:0 20px;border:0;border-radius:var(--r-pill);background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40);font:700 var(--t-cap)/1 var(--sans);cursor:pointer}
+.quizAgain:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+
+/* The phones' "Play free" bar (components/site/PlayBar.tsx): fixed to the bottom under 768 px, safe-area aware; it floats, so it
+   is the one surface here with a shadow. The page gets matching bottom padding while it shows, so nothing hides under it. */
+.playBar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;align-items:center;gap:var(--s1);box-sizing:border-box;
+ padding:10px max(var(--gutter),env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(var(--gutter),env(safe-area-inset-left,0px));
+ background:var(--paper);box-shadow:0 -1px 0 var(--rule),0 -12px 30px -18px rgb(12 23 20 / .45)}
+.playBar[hidden]{display:none}
+.playBarText{flex:1;min-width:0;font-size:var(--t-cap);line-height:1.3;font-weight:600;color:var(--ink);overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.page .playBarBtn{flex:none;display:inline-flex;align-items:center;justify-content:center;min-height:var(--tap);padding:0 18px;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);
+ background:var(--btn-gold,#e9c16b);color:var(--btn-ink,#244d40);box-shadow:0 3px 0 #a8863d;font:800 16px/1 var(--btn-font,Arial,Helvetica,sans-serif);text-decoration:none}
+.page .playBarBtn:active{translate:0 2px;box-shadow:0 1px 0 #a8863d}
+.playBarHide{flex:none;display:inline-flex;align-items:center;justify-content:center;width:var(--tap);height:var(--tap);border:0;border-radius:var(--r-pill);background:transparent;color:var(--ink-soft);cursor:pointer}
+.playBarX{position:relative;display:block;width:16px;height:16px}
+.playBarX::before,.playBarX::after{content:"";position:absolute;left:7px;top:0;width:2px;height:16px;border-radius:1px;background:currentColor;rotate:45deg}
+.playBarX::after{rotate:-45deg}
+.playBarHide:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:2px}
+@media(min-width:768px){.playBar{display:none!important}}
+@media(max-width:767px){.page[data-playbar]{padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}}
+@media print{.playBar{display:none!important}}
