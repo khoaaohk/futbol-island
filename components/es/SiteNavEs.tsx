@@ -10,10 +10,10 @@ const NAME='Futbol Island';
 export default function SiteNavEs(){
  return <nav className={styles.nav} aria-label="Sitio">
   <a className={styles.brand} href={toEs('/')} aria-label={`${NAME}: inicio`}><span aria-hidden="true">{[...NAME].map((ch,i)=>ch===' '?' ':<span key={i} style={{color:LOGO_COLOURS[i%LOGO_COLOURS.length]}}>{ch}</span>)}</span></a>
-  <ul className={styles.navLinks}>{NAV.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}<li><LangSwitch/></li></ul>
+  <ul className={styles.navLinks}>{NAV.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}<li><LangSwitch compact/></li></ul>
   <details className={styles.menu}>
    <summary className={styles.menuBtn} aria-label="Menú"><span className={styles.menuIco} aria-hidden="true"><i/><i/></span></summary>
-   <div className={styles.menuPanel}><ul className={styles.menuList}>{NAV.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}<li><LangSwitch/></li></ul></div>
+   <div className={styles.menuPanel}><ul className={styles.menuList}>{NAV.map(([href,label])=><li key={href}><a href={href}>{label}</a></li>)}<li><LangSwitch compact/></li></ul></div>
   </details>
   <a className={`${styles.play} ${done.button}`} href={PLAY_PATH} aria-label="Jugar"><span className={done.label} aria-hidden="true">Jugar</span></a>
  </nav>;

@@ -73,7 +73,7 @@ ok(/\.anim\[data-paused\] svg \*,\.anim\[data-away\] svg \*\{animation-play-stat
 const parts=read('lib/site/GuideParts.tsx'),toggle=read('components/site/MotionToggle.tsx');
 ok(/<figcaption className=\{styles\.caption\}>\{scene\.caption\}/.test(parts),'animated scenes keep their figure caption');
 ok(/<title id=\{`\$\{id\}-t`\}>/.test(read('lib/site/PitchDiagram.tsx'))&&/<desc id=/.test(read('lib/site/PitchDiagram.tsx')),'the SVG keeps its title and description (alt text)');
-ok(/aria-label=\{`\$\{paused\?'Play':'Pause'\} the \$\{name\} animation`\}/.test(toggle)&&/IntersectionObserver/.test(toggle),'toggle: accessible name, pauses off screen');
+ok(/aria-label=\{(es\?`[^`]*`:)?`\$\{paused\?'Play':'Pause'\} the \$\{name\} animation`\}/.test(toggle)&&/IntersectionObserver/.test(toggle),'toggle: accessible name, pauses off screen');
 ok(/animate=\{\(ANIMATED_TERMS/.test(read('app/(site)/learn/soccer-terms/[slug]/page.tsx'))&&/ANIMATED_RULES/.test(read('app/(site)/learn/soccer-rules/[slug]/page.tsx')),'terms and rules pages animate the named scenes');
 ok(/rules, terms/.test(read('lib/site/tools/imageSitemap.ts')),'the diagrams\' still PNGs are in the image sitemap');
 
@@ -101,6 +101,6 @@ const bar=read('components/site/PlayBar.tsx');
 ok(/@media\(min-width:768px\)\{\.playBar\{display:none!important\}\}/.test(css),'bar hidden from 768 px');
 ok(/env\(safe-area-inset-bottom/.test(css.slice(css.indexOf('.playBar{')))&&/\.page\[data-playbar\]\{padding-bottom:/.test(css),'bar is safe-area aware and pads the page');
 ok(/data-play-cta/.test(bar)&&/IntersectionObserver/.test(bar)&&!/addEventListener\('scroll'/.test(bar),'bar hides while an in-page Play button shows, no scroll listener');
-ok(/sessionStorage\.setItem/.test(bar)&&/try\{/.test(bar)&&/aria-label="Hide the Play bar"/.test(bar),'bar is dismissible for the visit, with a named button');
+ok(/sessionStorage\.setItem/.test(bar)&&/try\{/.test(bar)&&/aria-label=("|\{lang==='es'\?'[^']*':')Hide the Play bar/.test(bar),'bar is dismissible for the visit, with a named button');
 ok(/data-play-cta=""/.test(parts)&&/<PlayBar /.test(parts),'PlayEnd pairs the in-page button with the bar');
 console.log(`seo-design: ${n} checks passed`);

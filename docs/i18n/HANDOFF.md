@@ -59,6 +59,26 @@ Recipe per family: add `XxxEs` type -> `lib/i18n/es/xxx.ts` (translator brief: g
 answer 40-60 words) -> merge in registry.ts -> page component in components/es/pages -> route in routes.tsx -> slugs in
 esPaths.ts (ES_PAGES) -> remove the family from ES_PENDING -> `node tests/es-pages.cjs`.
 
+## Build cost (measured locally, `next build`, NEXT_DIST_DIR=.next-es, 16 GB Mac)
+
+| build | wall time | peak RSS (largest process) |
+|---|---|---|
+| origin/main b631f5de | 129.0 s | 4.49 GB |
+| spanish-r1 | 129.0 s / 129.9 s | 5.04 GB / 5.19 GB |
+| spanish-r1 without app/es | 129.3 s | 4.85 GB |
+
+Time is unchanged, peak memory is +12-15% (over the +10% budget; run-to-run noise about 3%). About half comes from the
+per-section layouts, half from compiling the /es route; /es prerenders nothing. NEXT STEP: check the real Vercel build peak;
+if it is tight, ideas: let `app/es` import the page data lazily per family (`import()` inside routes.tsx), or merge the 14
+one-line lab layouts into fewer route groups.
+
 ## Unsure terms (for a native reviewer)
 
-See the report of round 1 (commit messages) and the "CHOICES" block in lib/i18n/es-glossary.ts.
+- goal-side "lado del arco"; cutback "centro atrás"; third-man run "tercer hombre"; jockeying "temporizar"; rest defense
+  "equilibrio defensivo"; clean sheet "arco en cero" (also "valla invicta"); nutmeg "caño" (also "túnel"); hat-trick "triplete".
+- Futsal goal clearance "saque de portero" (FIFA Spanish says "saque de meta", which would erase the English distinction).
+- Positions: striker "delantero centro" (DC), holding midfielder "mediocampista de contención", box-to-box "de área a área",
+  inverted winger "extremo a pierna cambiada"; quiz `suits` opening is "Es ideal para ".
+- Punt / drop-kick "despejar de volea / de bote pronto"; high school "preparatoria"; sin bins "exclusiones temporales".
+- Game UI names stay English with a gloss ("Play with friends" (jugar con amigos)): the game itself is English for now.
+- Age label "U13 and up" is kept as the data key and shown as "U13 y mayores" (EsCoachNotes).
