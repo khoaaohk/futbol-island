@@ -47,6 +47,28 @@ export function buildPlan(order:readonly string[],s:Settings):Plan{
  const blocks=r.blocks.map(b=>({period:b.period,start:b.start*60,end:b.end*60,on:b.on.map(i=>order[i]),gk:s.keeper==='none'?null:order[b.keeper]}));
  return {blocks:relabelStarters(blocks,order.slice(0,F)),periods:s.periods,periodSec,onField:F};
 }
+/** The plan with players coming late: the players here at kick-off play the opening plan, and each late player with an expected
+ *  minute joins then, exactly as the live game re-plans when the coach taps "Arrived" (so the plan shown before the game is the
+ *  one the live game will follow). `late`: player id -> expected minute of the game, counted from kick-off across periods (null
+ *  = not known: that player is left out until they come). `order` as in buildPlan, late players anywhere in it. */
+export function planWithLate(order:readonly string[],s:Settings,late:Readonly<Record<string,number|null>>,keepers:readonly string[]=[]):Plan{
+ const periodSec=s.periodMin*60,game=s.periods*periodSec,isLate=(p:string)=>p in late&&!(late[p]===0);
+ const start=order.filter(p=>!isLate(p));let plan=buildPlan(start,s);
+ const arr=order.filter(p=>isLate(p)&&late[p]!=null&&late[p]!*60<game).map(p=>({p,t:Math.round(late[p]!*60)})).sort((a,b)=>a.t-b.t);
+ const avail=[...start];
+ for(const {p,t} of arr){
+  avail.push(p);
+  if(!plan.blocks.length){plan=buildPlan(avail,s);continue;}
+  const period=Math.min(s.periods-1,Math.floor(t/periodSec)),sec=t-period*periodSec;
+  const past=plan.blocks.filter(b=>b.period<period||(b.period===period&&b.start<sec)).map(b=>b.period===period&&b.end>sec?{...b,end:sec}:b);
+  /* who is on at that moment: a change due then is made first (as on the live screen, where it is confirmed at its time) */
+  const cur=plan.blocks.find(b=>b.period===period&&b.start<=sec&&sec<b.end)??past[past.length-1]??plan.blocks[0],played:Record<string,number>={},kept:Record<string,number>={};
+  for(const b of past)for(const q of b.on){played[q]=(played[q]??0)+b.end-b.start;if(q===b.gk)kept[q]=(kept[q]??0)+b.end-b.start;}
+  const rest=replan({settings:s,period,sec,periodSec,available:avail,on:cur.on,gk:cur.gk,played,kept,keepers});
+  plan={...plan,blocks:[...past,...rest],onField:Math.min(s.onField,avail.length)};
+ }
+ return plan;
+}
 /** The scheduler picks its own starters; the coach's chosen starters (the lineup) swap identities with them for the whole game,
  *  which keeps every fairness promise (it is a renaming of players with the same role). */
 function relabelStarters(blocks:PBlock[],starters:readonly string[]):PBlock[]{
@@ -129,11 +151,19 @@ export function replan(i:ReplanInput):PBlock[]{
   const rank=(p:string)=>prefSet.size&&!prefSet.has(p)?1:0;
   const cur=i.gk&&availSet.has(i.gk)?i.gk:[...avail].sort((a,b)=>rank(a)-rank(b)||(kept[a]??0)-(kept[b]??0)||avail.indexOf(a)-avail.indexOf(b))[0]??null;
   if(s.keeper==='fixed')segs.forEach((_,k)=>{gkOf[k]=cur;});
-  else{/* later periods: someone who has not kept yet, the least played first (a whole period in goal is a big share) */
-   const rota=prefs.length>=2?prefs:avail;let p=-1,who=cur;
-   segs.forEach((g,k)=>{if(g.period!==p){if(p!==-1){const c=rota.filter(x=>x!==who);
-     who=[...c].sort((a,b)=>((kept[a]??0)>0?1:0)-((kept[b]??0)>0?1:0)||(i.played[a]??0)-(i.played[b]??0)||rota.indexOf(a)-rota.indexOf(b))[0]??who;}p=g.period;}
-    gkOf[k]=who;if(who)kept[who]=(kept[who]??0)+(g.end-g.start);});}
+  else{/* later periods, one keeper each, chosen with a look ahead at the time each player is still owed: someone who has not
+     kept yet; then whoever is owed at least the period in goal and whose field time left over fits whole changes best (a
+     whole period in goal is a big block, and the rest of their time comes in blocks of about the change interval); then the
+     most owed */
+   const rota=prefs.length>=2?prefs:avail,F0=Math.min(s.onField,avail.length),blk=Math.max(60,s.subEvery*60);
+   const all=segs.reduce((a,g)=>a+(g.end-g.start),0),L0=waterLevel(avail.map(p=>i.played[p]??0),all,all*F0);
+   const owed:Record<string,number>={};for(const p of avail)owed[p]=L0-(i.played[p]??0);
+   const fit=(p:string,len:number)=>{const r=owed[p]-len;if(r<-blk/2)return 1e6-r;const m=((r%blk)+blk)%blk;return Math.min(m,blk-m);};
+   let p=-1,who=cur;
+   segs.forEach((g,k)=>{if(g.period!==p){if(p!==-1){const c=rota.filter(x=>x!==who),plen=segs.filter(x=>x.period===g.period).reduce((a,x)=>a+x.end-x.start,0);
+     const sc=new Map(c.map(x=>[x,((kept[x]??0)>0?1e9:0)+fit(x,plen)-owed[x]*0.3]));
+     who=[...c].sort((a,b)=>sc.get(a)!-sc.get(b)!||rota.indexOf(a)-rota.indexOf(b))[0]??who;}p=g.period;}
+    gkOf[k]=who;if(who){kept[who]=(kept[who]??0)+(g.end-g.start);owed[who]-=g.end-g.start;}});}
  }
  const total=segs.reduce((a,g)=>a+(g.end-g.start),0);
  /* a fixed keeper plays every block and is left out of the levelling, like the calculator */
@@ -157,7 +187,9 @@ export function replan(i:ReplanInput):PBlock[]{
   /* mid-period, the block running now keeps whoever is still on and only fills the empty places (one change for the coach,
      not a reshuffle); later blocks are free */
   const keepNow=k===0&&g.start===i.sec&&i.sec>0;
-  const key=(p:string)=>{const n=need[p]??-1e9,must=n>after-(ahead[p]??0)+0.5;return (must?1e7:keepNow&&prev.has(p)&&n>=len/2?5e6:0)+n+(prev.has(p)?len*0.4:0);};
+  /* among the players who must play now, the least slack first (field time owed beyond the field time this player has left after
+     this block: a keeper-to-be has less, their blocks in goal are taken), so a keeper-to-be is not benched until it is too late */
+  const key=(p:string)=>{const n=need[p]??-1e9,a=ahead[p]??0,over=n-(after-a);const stay=prev.has(p)?len*0.4:0;return over>(a>0?len/2:0.5)?1e7+over*10+stay:(keepNow&&prev.has(p)&&n>=len/2?5e6:0)+n+stay;};
   const score=new Map(cands.map(p=>[p,key(p)]));
   cands.sort((a,b)=>score.get(b)!-score.get(a)!||avail.indexOf(a)-avail.indexOf(b));
   for(const p of cands){if(chosen.length>=F)break;chosen.push(p);}
@@ -192,6 +224,7 @@ export type Game={
  on:string[];gk:string|null;spots:Record<string,number>;
  stints:Stint[];status:Record<string,Status>;
  subs:number;/* changes confirmed */
+ joined?:string[];/* players who came late (marked late, then arrived): left out of the fairness spread, like the calculator */
 };
 export function newGame(plan:Plan,s:Settings,spots:Record<string,number>,status:Record<string,Status>,now:number):Game{
  const b=plan.blocks[0];
@@ -243,7 +276,9 @@ export const delayChange=(g:Game,sec=60):Game=>({...g,delay:g.delay+sec});
 /** Mark a player and re-plan the rest of the game. A player on the field who is hurt or leaves comes off now and the most-owed
  *  bench player takes the spot at once (shown with an Undo). */
 export function setStatus(g:Game,now:number,p:string,st:Status,keepers:readonly string[]=[]):Game{
- const status={...g.status,[p]:st};let x:Game={...g,status};
+ const status={...g.status,[p]:st};
+ const joined=g.status[p]==='late'&&st==='ok'&&!(g.joined??[]).includes(p)?[...(g.joined??[]),p]:g.joined;
+ let x:Game={...g,status,...(joined?{joined}:{})};
  if(st!=='ok'&&g.on.includes(p)){
   const sec=g.clock.status==='live'||g.clock.status==='paused'?nowSec(g,now):0;
   const rest=replanFrom({...x,on:g.on},now,keepers,sec);

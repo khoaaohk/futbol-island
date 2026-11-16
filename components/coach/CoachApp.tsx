@@ -3,7 +3,7 @@ import {useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import {count} from '@/lib/analytics/tracker';
 import {place} from '@/lib/site/pitch';
 import {shapeLabel,type Shape} from '@/lib/site/tools/lineup';
-import {addStoppage,applyChange,buildPlan,changeBetween,clockSec,delayChange,endCurrentPeriod,fairness,fmtClock,kickOff,newGame,nextChange,nextSpots,pauseClock,
+import {addStoppage,applyChange,buildPlan,planWithLate,changeBetween,clockSec,delayChange,endCurrentPeriod,fairness,fmtClock,kickOff,newGame,nextChange,nextSpots,pauseClock,
  planSeconds,playedSeconds,PRESETS,presetOf,pushUndo,resumeClock,setStatus,settingsFor,skipChange,summarySeconds,type Game,type PBlock,type Settings,type Status} from '@/lib/coach/engine';
 import {cleanPlayers,decodeShare,emptyStore,encodeShare,label,loadStore,minutesCsv,newId,saveStore,toShared,type Lang,type Player,type Shared,type Store} from '@/lib/coach/store';
 import {WORDS,type Words} from '@/lib/coach/words';
@@ -32,13 +32,16 @@ function formationsFor(format:string,shapes:readonly Shape[]):Formation[]{
 const mins=(s:number)=>Math.round(s/60);
 /* ------------------------------------------------------------------ derived plan ----------------------------------------- */
 function derive(store:Store,shapes:readonly Shape[]){
- const s=store.settings,keeper=s.keeper!=='none',hereSet=new Set(store.here);
- const here=store.team.players.filter(p=>hereSet.has(p.id));
+ const s=store.settings,keeper=s.keeper!=='none',lateOf=store.late;
+ /* here: everyone coming; ready: those here at kick-off (the lineup); late players join the plan at their expected minute */
+ const isLate=(id:string)=>id in lateOf&&lateOf[id]!==0;
+ const here=store.team.players.filter(p=>store.here.includes(p.id)),late=here.filter(p=>isLate(p.id)),hereSet=new Set(here.filter(p=>!isLate(p.id)).map(p=>p.id));
+ const ready=here.filter(p=>hereSet.has(p.id));
  const forms=formationsFor(s.format,shapes),form=forms.find(f=>f.slug===s.formation)??forms[0];
- const nSpots=form?.spots.length??s.onField,F=Math.min(s.onField,here.length);
+ const nSpots=form?.spots.length??s.onField,F=Math.min(s.onField,ready.length);
  const lastSec=store.last?playedSeconds(store.last,0).played:{};
  /* fair auto order: who played least last game first, then by number */
- const auto=[...here].sort((a,b)=>(lastSec[a.id]??0)-(lastSec[b.id]??0)||a.num-b.num);
+ const auto=[...ready].sort((a,b)=>(lastSec[a.id]??0)-(lastSec[b.id]??0)||a.num-b.num);
  const spots=Array.from({length:nSpots},(_,i)=>{const id=store.spots[i];return id&&hereSet.has(id)?id:'';});
  spots.forEach((id,i)=>{if(id&&spots.indexOf(id)!==i)spots[i]='';});
  const used=new Set(spots.filter(Boolean));
@@ -47,9 +50,12 @@ function derive(store:Store,shapes:readonly Shape[]){
  for(let i=0;i<nSpots&&used.size<F;i++)if(!spots[i])fill(i,auto.find(p=>!used.has(p.id)));
  const starters=spots.filter(Boolean),bench=auto.filter(p=>!used.has(p.id));
  const order=[...starters,...bench.map(p=>p.id)];
- const plan=buildPlan(order,s);
+ const keepers=here.filter(p=>p.gk).map(p=>p.id);
+ /* startPlan: what the live game starts from (players here at kick-off); plan: the same with each late player brought in at the
+    expected minute, as the live game will re-plan when they arrive (shown before the game) */
+ const startPlan=buildPlan(order,s),plan=late.length?planWithLate([...order,...late.map(p=>p.id)],s,lateOf,keepers):startPlan;
  const spotOf:Record<string,number>={};spots.forEach((id,i)=>{if(id)spotOf[id]=i;});
- return {here,form,forms,spots,bench,plan,spotOf,keepers:here.filter(p=>p.gk).map(p=>p.id),F};
+ return {here,ready,late,form,forms,spots,bench,plan,startPlan,spotOf,keepers,F};
 }
 /** The role of every player in every block (spots follow the players through the changes). */
 function blockRoles(blocks:readonly PBlock[],start:Record<string,number>,form:Formation|undefined,keeper:boolean):Record<string,Role>[]{
@@ -83,7 +89,8 @@ function Legend({w,keeper}:{w:Words;keeper:boolean}){
  return <div className={c.legend} aria-hidden="true">{keeper&&<span><i className={c.gk}/>{w.gk}</span>}<span><i className={c.def}/>{w.def}</span><span><i className={c.midC}/>{w.mid}</span><span><i className={c.fwd}/>{w.fwd}</span></div>;
 }
 function Fair({w,seconds,ids,skip,fixedName,step}:{w:Words;seconds:Readonly<Record<string,number>>;ids:readonly string[];skip:ReadonlySet<string>;fixedName?:string;step:number}){
- const f=fairness(seconds,ids,skip),bad=f.spread>step*60+90;/* one block, plus the odd minute a change waits for a stoppage */
+ /* uneven = a spread of more than one change interval (the planner keeps everyone there all game within one; tests/coach-app.cjs) */
+ const f=fairness(seconds,ids,skip),bad=f.spread>step*60+1;
  return <div className={c.fair} aria-live="polite"><div><div className={c.fairBig}>{w.fairEveryone(mins(f.min),mins(f.max))}</div>{fixedName&&<div className={c.note}>{w.keeperAll(fixedName)}</div>}</div>
   <span className={c.fairTag} data-bad={bad}>{bad?w.fairCheck:w.fairGood}</span></div>;
 }
@@ -138,9 +145,9 @@ export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
  const doUndo=()=>{setUndo(u=>{const prev=u[u.length-1];if(prev)setStore(s=>({...s,game:prev}));return u.slice(0,-1);});setToast(null);};
  const beep=()=>{if(!store.sound)return;try{const a=audio.current;if(!a)return;for(const t of [0,0.35]){const o=a.createOscillator(),g=a.createGain();o.frequency.value=880;g.gain.setValueAtTime(0.0001,a.currentTime+t);g.gain.exponentialRampToValueAtTime(0.5,a.currentTime+t+0.02);g.gain.exponentialRampToValueAtTime(0.0001,a.currentTime+t+0.25);o.connect(g).connect(a.destination);o.start(a.currentTime+t);o.stop(a.currentTime+t+0.3);}}catch{/* no audio */}};
  const startGame=()=>{
-  const status:Record<string,Status>={};for(const p of d.here)status[p.id]='ok';
+  const status:Record<string,Status>={};for(const p of d.ready)status[p.id]='ok';for(const p of d.late)status[p.id]='late';
   try{audio.current??=new (window.AudioContext||(window as unknown as {webkitAudioContext:typeof AudioContext}).webkitAudioContext)();void audio.current.resume();}catch{/* no audio */}
-  setUndo([]);update(s=>({...s,last:s.game?.clock.status==='done'?s.game:s.last,game:newGame(d.plan,s.settings,d.spotOf,status,Date.now())}));setLive(true);count('ca:game');
+  setUndo([]);update(s=>({...s,last:s.game?.clock.status==='done'?s.game:s.last,game:newGame(d.startPlan,s.settings,d.spotOf,status,Date.now())}));setLive(true);count('ca:game');
  };
  const shareLink=async(x:Shared)=>{
   const url=`${location.origin}/coach${lang==='es'?'?lang=es':''}#s=${encodeShare(x)}`;
@@ -175,6 +182,8 @@ export default function CoachApp({shapes}:{shapes:readonly Shape[]}){
  </div>;
 }
 type D=ReturnType<typeof derive>;
+/** Minutes a late player can be expected at: every change interval from the first one to the last minute of the game. */
+const lateMinutes=(s:Settings)=>{const out:number[]=[],end=s.periods*s.periodMin;for(let m=s.subEvery;m<end;m+=s.subEvery)out.push(m);return out;};
 type Up=(f:(s:Store)=>Store)=>void;
 /* ------------------------------------------------------------------ Team ------------------------------------------------- */
 function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
@@ -203,6 +212,7 @@ function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
   <div className={c.seg} role="group" aria-label={w.subStyle}>{([false,true] as const).map(r=><button key={String(r)} type="button" className={c.chip} aria-pressed={s.rolling===r} onClick={()=>update(x=>({...x,settings:{...x.settings,rolling:r}}))}>{r?w.rolling:w.stoppages}</button>)}</div>
   <h2 className={c.h2}>{w.squad}</h2>
   <p className={c.note}>{w.ready(d.here.length,d.F)}</p>
+  {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
   {d.here.length>0&&d.here.length<s.onField&&<p className={c.err}>{w.notEnough(s.onField)}</p>}
   {!players.length&&<div className={c.empty}><p style={{margin:'0 0 12px',fontWeight:600}}>{w.emptyTeam}</p>
    <div className={c.btnRow} style={{marginTop:0}}><label className={c.field} style={{flexDirection:'row',alignItems:'center',gap:10}}>{w.quickAdd}<select className={c.input} style={{width:84}} value={quick} onChange={e=>setQuick(Number(e.target.value))}>{Array.from({length:23},(_,i)=>i+4).map(n=><option key={n}>{n}</option>)}</select></label>
@@ -212,9 +222,17 @@ function TeamTab({w,store,update,d}:{w:Words;store:Store;update:Up;d:D}){
    <input className={c.input} aria-label={`${w.nameOpt}, #${p.num}`} placeholder={w.nameOpt} value={p.name} maxLength={24} onChange={e=>{const v=e.target.value;update(x=>({...x,team:{...x.team,players:x.team.players.map(q=>q.id===p.id?{...q,name:v.slice(0,24)}:q)}}));}}/>
    <div className={c.rowTools}>
     {presetOf(s.format).keeper&&<button type="button" className={c.iconBtn} aria-pressed={p.gk} aria-label={`${w.gkMark}: #${p.num}`} title={w.gkMark} onClick={()=>setPlayers(ps=>ps.map(x=>x.id===p.id?{...x,gk:!x.gk}:x))}>{w.gk}</button>}
-    <button type="button" className={c.here} aria-pressed={hereSet.has(p.id)} aria-label={`#${p.num}: ${hereSet.has(p.id)?w.here:w.away}`} onClick={()=>update(x=>({...x,here:hereSet.has(p.id)?x.here.filter(i=>i!==p.id):[...x.here,p.id]}))}>{hereSet.has(p.id)?w.here:w.away}</button>
+    {/* one tap cycles Coming -> Late -> Not coming -> Coming */}
+    <button type="button" className={c.here} data-state={!hereSet.has(p.id)?'away':p.id in store.late?'late':'here'} aria-label={`#${p.num}: ${!hereSet.has(p.id)?w.away:p.id in store.late?w.lateBtn:w.here}`}
+     onClick={()=>update(x=>{const {[p.id]:_drop,...rest}=x.late;void _drop;
+      return !x.here.includes(p.id)?{...x,here:[...x.here,p.id],late:rest}:p.id in x.late?{...x,here:x.here.filter(i=>i!==p.id),late:rest}:{...x,late:{...x.late,[p.id]:null},spots:x.spots.map(i=>i===p.id?'':i)};})}>
+     {!hereSet.has(p.id)?w.away:p.id in store.late?w.lateBtn:w.here}</button>
     <button type="button" className={c.iconBtn} aria-label={`${w.remove} #${p.num}`} onClick={()=>update(x=>({...x,team:{...x.team,players:x.team.players.filter(q=>q.id!==p.id)},here:x.here.filter(i=>i!==p.id)}))}>✕</button>
-   </div></li>)}</ul>
+   </div>
+   {hereSet.has(p.id)&&p.id in store.late&&<label className={c.lateRow}>{w.arrives}<select className={c.input} value={store.late[p.id]==null?'':String(store.late[p.id])}
+    onChange={e=>{const v=e.target.value;update(x=>({...x,late:{...x.late,[p.id]:v===''?null:Number(v)}}));}}>
+    <option value="">{w.arrivesUnknown}</option>{lateMinutes(s).map(m=><option key={m} value={m}>{w.minuteN(m)}</option>)}</select></label>}
+  </li>)}</ul>
   {players.length>0&&<div className={c.btnRow}><button type="button" className={`${c.btn} ${c.btnGhost}`} onClick={()=>add(1)}>{w.addPlayer}</button></div>}
  </>;
 }
@@ -283,7 +301,8 @@ function GameTab({w,store,d,onStart,onResume,onShare,goTeam}:{w:Words;store:Stor
  return <>
   <h1 className={c.h1}>{w.plan}</h1>
   <p className={c.note}>{w.ready(d.here.length,d.F)} · {s.periods} × {s.periodMin} {w.min}</p>
-  <Fair w={w} seconds={sec} ids={d.here.map(p=>p.id)} skip={new Set(fixed?[fixed]:[])} fixedName={fixed?nm(fixed):undefined} step={s.subEvery}/>
+  <Fair w={w} seconds={sec} ids={d.ready.map(p=>p.id)} skip={new Set(fixed?[fixed]:[])} fixedName={fixed?nm(fixed):undefined} step={s.subEvery}/>
+  {d.late.length>0&&<p className={c.note}>{w.lateNote(d.late.length)}</p>}
   <Legend w={w} keeper={keeper}/>
   <TimelineRows w={w} rows={rows} blocks={d.plan.blocks} roles={roles} settings={s} seconds={sec}/>
   <h2 className={c.h2}>{w.changes}</h2>
@@ -384,7 +403,7 @@ function SummaryTab({w,store,now,onShare,onNew}:{w:Words;store:Store;now:number;
  if(!g)return <><h1 className={c.h1}>{w.tabSummary}</h1><div className={c.empty}>{w.noGame}</div></>;
  const done=g.clock.status==='done',sec=done?playedSeconds(g,0).played:summarySeconds(g,now),kept=playedSeconds(g,0).kept;
  const ids=Object.keys(g.status),rows=store.team.players.filter(p=>ids.includes(p.id)).sort((a,b)=>a.num-b.num),max=Math.max(1,...rows.map(p=>sec[p.id]??0));
- const fixed=g.settings.keeper==='fixed'?g.blocks[0]?.gk??null:null,skip=new Set([...(fixed?[fixed]:[]),...ids.filter(p=>g.status[p]!=='ok')]);
+ const fixed=g.settings.keeper==='fixed'?g.blocks[0]?.gk??null:null,skip=new Set([...(fixed?[fixed]:[]),...ids.filter(p=>g.status[p]!=='ok'),...(g.joined??[])]);
  const csv=()=>{const blob=new Blob([minutesCsv(store.team,g,w.csvWords)],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download=`${(store.team.name||'team').replace(/[^\w-]+/g,'-').toLowerCase()}-minutes.csv`;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);};
  return <>

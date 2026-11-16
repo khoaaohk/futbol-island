@@ -5,7 +5,9 @@
 //  3. Re-plan on injury, late arrival, leaving early and a skipped change: totals still fill every place, the spread among
 //     players who were there all game stays within a block, nobody hurt or gone is planned again.
 //  4. The clock from timestamps: start, pause, resume, a "reload" (JSON round trip) and stoppage time.
-//  5. A scripted 2-period game: kick-off, every planned change confirmed, an injury and a late arrival, half-time, full time.
+//  5. A scripted 2-period game: kick-off, every planned change confirmed, an injury and a late arrival, half-time, full time;
+//     simulated live games with a keeper per half (7v7 11 players, injury + late arrival: within one change interval) and a
+//     property sweep over formats x squad sizes x keeper modes x injuries/arrivals; late players planned before the game.
 //  6. The share link round trip and garbage in; the CSV format (BOM, CRLF, quoting, formula defusing).
 //  7. The app shell: noindex, its own manifest and a service worker scoped to /coach only (never /play or the site).
 // usage: node tests/coach-app.cjs
@@ -140,6 +142,60 @@ for(const pre of E.PRESETS)for(const extra of [0,1,2,3,5])for(const keeper of pr
  ok(JSON.stringify(back.blocks[1].on)===JSON.stringify(sh.blocks[1].on),'share blocks round trip');
  ok(S.toShared(T,s,g.blocks,played,true,false).players.every(p=>p.name===''),'names left out when asked');
  for(const bad of ['','!!!','eyJ4IjoxfQ',S.encodeShare(sh).slice(0,20)])ok(S.decodeShare(bad)===null,'garbage link: '+bad);
+}
+/* ---- 5b. simulated live games with a keeper per half: the planner's look-ahead keeps everyone there all game within one change
+   interval (the fairness meter's limit); property sweep over formats, squad sizes and keeper modes with injuries and arrivals ---- */
+function simGame(fmt,N,keeper,hurtAt,lateAt){
+ const s={...E.settingsFor(E.presetOf(fmt)),keeper},team=ids(N),late=lateAt!=null?team[N-1]:null,order=team.filter(p=>p!==late);
+ const status=Object.fromEntries(team.map(p=>[p,p===late?'late':'ok'])),plan=E.buildPlan(order,s),ps=s.periodMin*60;
+ let g=E.newGame(plan,s,Object.fromEntries(plan.blocks[0].on.map((p,i)=>[p,i])),status,0),now=1_000_000;const log=[];
+ const due=()=>{for(let n=0;n<20;n++){const nc=E.nextChange(g);if(!nc||(nc.due!=null&&nc.due>E.nowSec(g,now)))return;g=E.applyChange(g,now,nc.change,nc.index);log.push(`${g.clock.period}:${E.nowSec(g,now)} off ${nc.change.out} on ${nc.change.in}${nc.change.gkTo!==nc.change.gkFrom?' gk '+nc.change.gkTo:''}`);}};
+ for(let per=0;per<s.periods;per++){due();g=E.kickOff(g,now);
+  for(let t=0;t<ps;t+=30){now+=30_000;const abs=per*ps+E.nowSec(g,now);
+   if(hurtAt!=null&&abs===hurtAt){const v=g.on.find(p=>p!==g.gk);g=E.setStatus(g,now,v,'hurt');log.push('hurt '+v);}
+   if(late&&abs===lateAt){g=E.setStatus(g,now,late,'ok');log.push('arrived '+late);}
+   due();}
+  g=E.endCurrentPeriod(g,now);now+=300_000;}
+ const {played}=E.playedSeconds(g,0),hurt=Object.keys(g.status).find(p=>g.status[p]==='hurt'),fixed=keeper==='fixed'?plan.blocks[0].gk:null;
+ const whole=team.filter(p=>p!==hurt&&p!==late&&p!==fixed&&!(g.joined??[]).includes(p));
+ return {g,s,played,late,fr:E.fairness(played,whole),log,total:Object.values(played).reduce((a,b)=>a+b,0)};
+}
+{
+ /* the owner's case: 7v7 2x25, 11 players, a keeper each half, an injury at 8:00 and a late arrival at 12:00 */
+ const r=simGame('7v7',11,'rotate',480,720);
+ ok(r.total===3000*7,'7v7 rotate: every place filled');ok(r.g.joined?.includes(r.late),'the late player is recorded as joined');
+ ok(r.fr.spread<=r.s.subEvery*60,`7v7 rotate, injury + late arrival: everyone there all game within one change interval (${r.fr.min/60}-${r.fr.max/60} min)`);
+ if(process.env.COACH_SIM)console.log(r.log.join('\n'),'\n',Object.fromEntries(Object.entries(r.played).map(([p,v])=>[p,v/60])));
+ let n=0,worst=0;
+ for(const pre of E.PRESETS)for(const extra of [1,2,3,4,5,6])for(const keeper of pre.keeper?['fixed','rotate']:['none']){
+  const half=pre.periodMin*60;
+  for(const [h,l] of [[null,null],[480,null],[null,720],[480,720],[900,300],[half+120,half-60]]){
+   const x=simGame(pre.id,pre.onField+extra,keeper,h,l),lim=x.s.subEvery*60;n++;worst=Math.max(worst,x.fr.spread/lim);
+   ok(x.total===x.s.periods*half*Math.min(pre.onField,pre.onField+extra-(h!=null?1:0))||h!=null||l!=null,`sim ${pre.id}: places filled`);
+   /* with nothing happening: one interval; an injury or arrival mid-block can cost up to half a block more (blocks are whole) */
+   ok(x.fr.spread<=(h==null&&l==null?lim:lim*1.5),`sim ${pre.id} ${pre.onField+extra} ${keeper} hurt ${h} late ${l}: spread ${x.fr.spread/60} min`);
+  }}
+ ok(n>=390,'sim sweep ran');if(process.env.COACH_SIM)console.log(`sim sweep ${n} games, worst ${worst.toFixed(2)} intervals`);
+}
+/* ---- 5c. late players before the game: the plan brings them in at the expected minute, as the live game will ---- */
+{
+ const s={...E.settingsFor(E.presetOf('7v7')),keeper:'rotate'},team=ids(11),order=team.filter(p=>p!=='p10'&&p!=='p9');
+ const pl=E.planWithLate([...order,'p9','p10'],s,{p9:10,p10:null});
+ ok(pl.blocks.every(b=>b.on.length===7&&!b.on.includes('p10')),'late, minute not known: not planned, full field');
+ ok(pl.blocks.filter(b=>b.period*1500+b.start<600).every(b=>!b.on.includes('p9')),'late at minute 10: not on before it');
+ ok(pl.blocks.some(b=>b.on.includes('p9')),'late at minute 10: plays after it');
+ const sec=E.planSeconds(pl.blocks);ok(Object.values(sec).reduce((a,b)=>a+b,0)===3000*7,'late plan fills every place');
+ const fr=E.fairness(sec,order);ok(fr.spread<=300,`late plan: everyone there all game within one interval (${fr.spread})`);
+ ok(JSON.stringify(E.planWithLate(order,s,{}))===JSON.stringify(E.buildPlan(order,s)),'no late players: the opening plan');
+ /* the live game started from the players here, then "Arrived" at minute 10, follows the same plan */
+ const start=E.buildPlan(order,s);let g=E.newGame(start,s,Object.fromEntries(start.blocks[0].on.map((p,i)=>[p,i])),{...Object.fromEntries(order.map(p=>[p,'ok'])),p9:'late',p10:'late'},0),now=0;
+ g=E.kickOff(g,now);for(let t=0;t<600;t+=30){now+=30_000;for(let k=0;k<5;k++){const nc=E.nextChange(g);if(!nc||(nc.due!=null&&nc.due>E.nowSec(g,now)))break;g=E.applyChange(g,now,nc.change,nc.index);}}
+ g=E.setStatus(g,now,'p9','ok');
+ ok(JSON.stringify(g.blocks.filter(b=>b.period*1500+b.start>=600).map(b=>[b.period,b.start,[...b.on].sort()]))===JSON.stringify(pl.blocks.filter(b=>b.period*1500+b.start>=600).map(b=>[b.period,b.start,[...b.on].sort()])),'the live re-plan on arrival matches the plan shown before the game');
+ /* the store keeps late minutes for players who are coming only */
+ const st=S.cleanStore({v:1,team:{players:[{id:'a',num:1},{id:'b',num:2},{id:'c',num:3}]},here:['a','b'],late:{a:12,b:null,c:5,zz:3}});
+ ok(JSON.stringify(st.late)==='{"a":12,"b":null}','late: only players coming, minute or null');
+ ok(JSON.stringify(S.cleanStore({v:1,team:{players:[{id:'a',num:1}]},here:['a'],late:{a:'x'}}).late)==='{}','late: garbage dropped');
 }
 /* ---- 6. presets match the sourced age chart ---- */
 {

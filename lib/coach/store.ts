@@ -16,6 +16,9 @@ export type Lang='en'|'es';
 export type Store={v:1;team:Team;settings:Settings;
  /** who is coming to the next game (ids); missing ids are not coming */
  here:string[];
+ /** who of those is coming late: id -> expected minute of the game from kick-off (null = not known). Late players are not in
+  *  the starting lineup; the plan brings each in at that minute (planWithLate); the live game marks them "Not here yet". */
+ late:Record<string,number|null>;
  /** the starting lineup: one player id (or '') per formation spot */
  spots:string[];
  game:Game|null;lang:Lang|null;sound:boolean;
@@ -34,7 +37,7 @@ export function cleanPlayers(raw:unknown):Player[]{
  }
  return out;
 }
-export const emptyStore=(lang:Lang|null=null):Store=>({v:1,team:{name:'',players:[]},settings:settingsFor(presetOf('7v7')),here:[],spots:[],game:null,lang,sound:true,last:null});
+export const emptyStore=(lang:Lang|null=null):Store=>({v:1,team:{name:'',players:[]},settings:settingsFor(presetOf('7v7')),here:[],late:{},spots:[],game:null,lang,sound:true,last:null});
 const cleanGame=(g:unknown,ids:ReadonlySet<string>):Game|null=>{
  if(!g||typeof g!=='object')return null;const o=g as Game;
  if(o.v!==1||!o.clock||!Array.isArray(o.blocks)||!Array.isArray(o.on)||!Array.isArray(o.stints))return null;
@@ -46,8 +49,16 @@ const cleanGame=(g:unknown,ids:ReadonlySet<string>):Game|null=>{
  const st=['pre','live','paused','break','done'].includes(o.clock.status)?o.clock.status:'pre';
  return {v:1,started:num(o.started),settings:cleanSettings(o.settings),clock:{period:Math.max(0,Math.round(num(o.clock.period))),acc:Math.max(0,num(o.clock.acc)),since:o.clock.since==null?null:num(o.clock.since),added:Math.max(0,num(o.clock.added)),status:st},
   blocks:o.blocks.map(b=>({period:num(b.period),start:num(b.start),end:num(b.end),on:[...b.on],gk:okId(b.gk)?b.gk:null})),next:Math.max(0,Math.round(num(o.next))),delay:Math.max(0,num(o.delay)),
-  on:[...o.on],gk:okId(o.gk)?o.gk:null,spots,stints:o.stints.filter(s=>s&&okId(s.p)).map(s=>({p:s.p,period:num(s.period),from:num(s.from),to:s.to==null?null:num(s.to),gk:!!s.gk})),status,subs:Math.max(0,Math.round(num(o.subs)))};
+  on:[...o.on],gk:okId(o.gk)?o.gk:null,spots,stints:o.stints.filter(s=>s&&okId(s.p)).map(s=>({p:s.p,period:num(s.period),from:num(s.from),to:s.to==null?null:num(s.to),gk:!!s.gk})),status,subs:Math.max(0,Math.round(num(o.subs))),
+  ...(Array.isArray(o.joined)?{joined:[...new Set(o.joined.filter(okId))] as string[]}:{})};
 };
+/** Late players: only players who are coming; a whole minute 0-240 or null (not known). */
+export function cleanLate(raw:unknown,here:ReadonlySet<string>):Record<string,number|null>{
+ const out:Record<string,number|null>={};if(!raw||typeof raw!=='object'||Array.isArray(raw))return out;
+ for(const [k,v] of Object.entries(raw as Record<string,unknown>)){if(!here.has(k))continue;
+  if(v==null)out[k]=null;else{const n=Math.round(Number(v));if(Number.isFinite(n)&&n>=0&&n<=240)out[k]=n;}}
+ return out;
+}
 /** Make anything read from storage a valid store. */
 export function cleanStore(raw:unknown):Store{
  if(!raw||typeof raw!=='object')return emptyStore();
@@ -56,6 +67,7 @@ export function cleanStore(raw:unknown):Store{
  const players=cleanPlayers(o.team?.players),ids=new Set(players.map(p=>p.id));
  return {v:1,team:{name:cleanName(o.team?.name),players},settings:cleanSettings(o.settings),
   here:Array.isArray(o.here)?[...new Set(o.here.filter(p=>typeof p==='string'&&ids.has(p)))]:[],
+  late:cleanLate(o.late,new Set(Array.isArray(o.here)?o.here.filter(p=>typeof p==='string'&&ids.has(p)):[])),
   spots:Array.isArray(o.spots)?o.spots.slice(0,11).map(p=>typeof p==='string'&&ids.has(p)?p:''):[],
   game:cleanGame(o.game,ids),lang:o.lang==='es'||o.lang==='en'?o.lang:null,sound:o.sound!==false,last:cleanGame(o.last,ids)};
 }

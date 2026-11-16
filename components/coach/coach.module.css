@@ -47,7 +47,10 @@
 .num{width:64px;text-align:center;font-weight:800;font-size:20px;font-variant-numeric:tabular-nums}
 .rowTools{display:flex;gap:6px;align-items:center}
 .here{min-height:var(--tap);min-width:96px;border-radius:999px;border:0;background:var(--pitch);color:#fff;font-weight:700;font-size:15px;padding:0 12px}
-.here[aria-pressed=false]{background:var(--well);color:var(--soft)}
+.here[data-state=away]{background:var(--well);color:var(--soft)}
+.here[data-state=late]{background:var(--gold);color:var(--ink)}
+.lateRow{grid-column:1/-1;display:flex;align-items:center;gap:10px;font-size:15px;font-weight:600;color:var(--soft);padding-left:74px}
+.lateRow select{width:auto;flex:1;max-width:220px}
 .iconBtn{min-width:var(--tap);min-height:var(--tap);border-radius:12px;border:1px solid var(--line);background:transparent;font-weight:700;font-size:14px}
 .iconBtn[aria-pressed=true]{background:var(--gold);border-color:var(--gold)}
 .err{color:var(--warn);font-size:14px;font-weight:600;margin:6px 0 0}
@@ -93,7 +96,9 @@
 .changes li{display:grid;grid-template-columns:64px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);font-size:16px}
 .changes time{font-weight:800;font-variant-numeric:tabular-nums}
 .outTxt{color:var(--warn);font-weight:700}.inTxt{color:var(--pitchDeep);font-weight:700}
-.sticky{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom));margin-top:20px}
+/* the main action stays above the tab bar; a paper band behind it so the list never shows through around the button, and it
+   sits in the flow, so at the end of the page it rests below the last item (main's bottom padding clears the tab bar) */
+.sticky{position:sticky;bottom:calc(65px + env(safe-area-inset-bottom));z-index:4;margin:12px -16px 0;padding:24px 16px 12px;background:linear-gradient(to bottom,rgb(251 247 238 / 0),var(--paper) 22px)}
 /* live game */
 .live{position:fixed;inset:0;z-index:20;background:var(--paper);color:var(--ink);display:grid;grid-template-rows:auto 1fr auto;font-size:20px}
 .liveTop{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px;padding:max(8px,env(safe-area-inset-top)) 12px 4px}
