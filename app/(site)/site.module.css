@@ -262,5 +262,6 @@
 @media(max-width:767px){.page[data-playbar]{padding-bottom:calc(68px + env(safe-area-inset-bottom,0px))}}
 @media print{.playBar{display:none!important}}
 /* EN | ES language switch (components/site/LangSwitch.tsx, Spanish round 1, Nov 15 2026): one quiet footer item. */
-.lang{display:inline-flex;gap:2px;align-items:center;white-space:nowrap}
+.lang{display:inline-flex;gap:.4em;align-items:center;white-space:nowrap}
+/* flex trims the spaces around "|", so the gap does the spacing */
 .lang b{font-weight:800}

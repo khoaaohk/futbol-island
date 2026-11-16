@@ -7,11 +7,9 @@
 export const ES_OUT_OF_SCOPE:readonly RegExp[]=[/^\/(play|privacy|marketing|games|cards|fish|exhibits)(\/|$)/];
 /** In scope, not translated yet: [family, pattern]. */
 export const ES_PENDING:readonly (readonly [string,RegExp])[]=[
- ['comparisons',/^\/learn\/soccer-(positions\/(fullback-vs-wingback|striker-vs-winger)|formations\/4-3-3-vs-4-4-2)$/],
- ['formations',/^\/learn\/(soccer-formations(\/.*)?|(7v7|9v9|11v11)-soccer-formations|7v7-9v9-11v11)$/],
  ['drills',/^\/learn\/soccer-drills(\/.*)?$/],
  ['practice plans',/^\/learn\/soccer-practice-plans(\/.*)?$/],
- ['lessons',/^\/learn\/lessons(\/.*)?$/],
+ ['lessons',/^\/learn\/(lessons(\/.*)?|7v7-9v9-11v11)$/],
  ['guide hubs and charts',/^\/(learn\/(football-rules-for-kids|soccer-quiz-for-kids|passing-and-support|futsal-for-kids|soccer-ball-size-by-age|soccer-field-size-by-age|soccer-age-groups)|safe-football-game-for-kids)$/],
  ['tools',/^\/tools(\/.*)?$/],
 ];

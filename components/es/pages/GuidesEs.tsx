@@ -14,7 +14,7 @@ import {abs,articleLd,breadcrumbLd,collectionLd,faqLd,firstSentence} from '@/lib
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {hasEs,toEs} from '@/lib/i18n/esPaths';
 import {longDateEs} from '@/lib/i18n/es/ui';
-import {ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
+import {ES_COMPARISONS,ES_FORMATIONS,esFormatGuide,ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
 import {positionQuizEs,ruleQuizEs,termQuizEs} from '@/lib/i18n/es/quiz';
 import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
 import styles from '@/app/(site)/site.module.css';
@@ -25,6 +25,7 @@ import styles from '@/app/(site)/site.module.css';
  */
 /** Every JSON-LD node on a Spanish page says inLanguage "es" (the English helpers write "en"). */
 export const esLd=<T,>(x:T):T=>JSON.parse(JSON.stringify(x),(k,v)=>k==='inLanguage'?'es':v);
+const POS_FORMATS:readonly string[]=['7v7-2-3-1','9v9-3-2-3','11v11-4-3-3'];/* lib/site/positions.ts POSITIONS_HUB.formats */
 const SUITS_OPEN=/^Es ideal para\s+/;
 const posName=(slug:string)=>ES_POSITIONS().find(p=>p.slug===slug);
 /** A link from a Spanish page: the Spanish counterpart and its Spanish name when it exists, else nothing. */
@@ -177,17 +178,20 @@ export function PositionsHubEsPage(){
    </table></div>
   </Section>
   <Section id="formats" title="Cómo cambian las posiciones en 7v7, 9v9 y 11v11">
-   <ul className={styles.stack}>{(['7v7','9v9','11v11'] as const).map((f,i)=><li key={f} className={styles.card}><h3 className={styles.h3}>{f}</h3><p>{H.formats[i].text}</p></li>)}</ul>
-   <p>{H.futsal}</p>
+   <ul className={styles.stack}>{(['7v7','9v9','11v11'] as const).map((f,i)=>{const fm=ES_FORMATIONS().find(x=>x.slug===POS_FORMATS[i])!,g=esFormatGuide(f);return <li key={f} className={styles.card}><h3 className={styles.h3}>{f}</h3><p>{H.formats[i].text}</p>
+    <p><a href={fm.esPath}>Mira la formación {fm.name}</a> o <a href={g.esPath}>compara las formaciones de {f}</a>.</p></li>;})}</ul>
+   <p>{H.futsal} <a href={toEs('/learn/soccer-formations/futsal-3-1')}>Mira el 3-1 de futsal</a>.</p>
   </Section>
   <QA id="faq" title="Preguntas sobre las posiciones" faq={H.faq}/>
-  <Section id="related" title="Sigue leyendo"><LinkList links={[{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb},{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb}]}/></Section>
+  <Section id="compare" title="Compara las posiciones"><LinkList links={ES_COMPARISONS().filter(c=>c.kind==='position').map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>
+  <Section id="related" title="Sigue leyendo"><LinkList links={[{path:ES_HUBS.formations.path,name:ES_HUBS.formations.h1,line:ES_HUBS.formations.blurb},{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb},{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb}]}/></Section>
   <EsGuideEnd cta={false}/>
  </>;
 }
 export function PositionEsPage({p}:{p:EsPosition}){
  const H=ES_HUBS.positions,all=ES_POSITIONS(),f=formationBySlug(p.diagram)!,lower=p.name.toLowerCase();
  const crumbs=esCrumbs({name:H.crumb,path:H.path},{name:p.name,path:p.esPath}),quiz=positionQuizEs(p,all,SUITS_OPEN);
+ const used=ES_FORMATIONS().filter(x=>x.lines.some(l=>l.spots.some(s=>s.pos===p.slug))),compare=ES_COMPARISONS().filter(c=>c.links.slice(0,2).some(l=>l.path===p.path));
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd({...articleLd({headline:p.title,path:p.esPath,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.name} (posición de fútbol)`,teaches:p.job,image:positionImage(p.slug)}),hasPart:guideQuizPart({path:p.esPath,name:`Prueba: ${p.name}`,questions:quiz})})}/>
@@ -206,8 +210,12 @@ export function PositionEsPage({p}:{p:EsPosition}){
    <p>{p.numberLine} Los números son una costumbre de cuando los titulares usaban del 1 al 11. Hoy los jugadores pueden usar cualquier número.</p>
   </Section>
   <Section id="small" title="En 7v7, 9v9 y futsal"><p>{p.small}</p></Section>
+  {used.length>0&&<Section id="formations" title={`Formaciones con esta posición: ${lower}`}>
+   <LinkList links={[...used.map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:ES_HUBS.formations.path,name:'Todas las formaciones de fútbol',line:ES_HUBS.formations.blurb}]}/>
+  </Section>}
   <QA id="faq" title={`Preguntas sobre: ${lower}`} faq={p.faq}/>
   <EsCoachNotes name={p.name} notes={p.notes}/>
+  {compare.length>0&&<Section id="compare" title="Compárala"><LinkList links={compare.map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
   <Section id="related" title="Otras posiciones"><LinkList links={[...all.filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.name,line:`Número ${x.numbers}`})),{path:H.path,name:'Todas las posiciones del fútbol',line:H.blurb}]}/></Section>
   <GuideQuiz id="quiz" name={lower} questions={quiz} lang="es"/>
   <EsGuideEnd checked={FAMILY_CHECKED.positions} lessonId={p.lessons[0]?.id}/>
