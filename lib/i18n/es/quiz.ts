@@ -21,7 +21,7 @@ export function ruleQuizEs(r:EsRule):QuizQuestion[]{
  return r.mixups.slice(0,3).map((m,k)=>place(r.slug+k,k===0?'¿Cuál es correcta?':k===1?'¿Y esta?':'La última. ¿Cuál es correcta?',firstSentence(m.truth),[unquote(m.said)],m.truth));
 }
 export function termQuizEs(t:EsTerm,all:readonly EsTerm[]):QuizQuestion[]{
- const i=all.indexOf(t),[a,b]=far(all,i),name=low(t.name);
+ const i=all.findIndex(x=>x.slug===t.slug),[a,b]=far(all,i),name=low(t.name);
  const out=[place(t.slug,`¿Qué es: ${name}?`,t.short,[a.short,b.short],t.short)];
  if(t.how.length&&t.mistakes.length>=2)out.push(place(t.slug,`¿Cuál es una buena forma de hacerlo (${name})?`,t.how[0],t.mistakes.slice(0,2),`${t.how[0]} Las otras dos son errores comunes.`));
  const other=t.also?.split(', ')[0];
@@ -31,7 +31,7 @@ export function termQuizEs(t:EsTerm,all:readonly EsTerm[]):QuizQuestion[]{
 }
 /** `suitsOpen`: the opening the Spanish `suits` lines share (stripped for the options, as the English "It suits"). */
 export function positionQuizEs(p:EsPosition,all:readonly EsPosition[],suitsOpen:RegExp):QuizQuestion[]{
- const i=all.indexOf(p),[a,b]=far(all,i),the=low(p.name),suits=(x:EsPosition)=>cap(x.suits.replace(suitsOpen,'').replace(/\.$/,''));
+ const i=all.findIndex(x=>x.slug===p.slug),[a,b]=far(all,i),the=low(p.name),suits=(x:EsPosition)=>cap(x.suits.replace(suitsOpen,'').replace(/\.$/,''));
  return [
   place(p.slug,`¿Dónde se coloca: ${the}?`,firstSentence(p.where),[firstSentence(a.where),firstSentence(b.where)],p.where),
   place(p.slug,`¿A quién le queda bien la posición: ${the}?`,suits(p),[suits(a),suits(b)],suits(p)+'.'),

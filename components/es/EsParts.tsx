@@ -62,7 +62,7 @@ export function EsCoachNotes({name,notes}:{name:string;notes:CoachNotesEs}){
   {notes.match&&<p><b>{ES_UI.inMatch}:</b> {notes.match}</p>}
   {notes.mistakes&&notes.mistakes.length>0&&<><h3 className={styles.h3}>{ES_UI.mistakes}</h3><ul>{notes.mistakes.map(t=><li key={t}>{t}</li>)}</ul></>}
   <h3 className={styles.h3}>{ES_UI.byAge}</h3>
-  <ul>{notes.ages.map(([l,t])=><li key={l}><b>{l}:</b> {t}</li>)}</ul>
+  <ul>{notes.ages.map(([l,t])=><li key={l}><b>{l==='U13 and up'?'U13 y mayores':l}:</b> {t}</li>)}</ul>
  </section>;
 }
 export function EsPrintSheet({path,what='hoja'}:{path:string;what?:string}){

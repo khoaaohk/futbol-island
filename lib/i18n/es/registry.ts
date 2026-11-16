@@ -31,7 +31,7 @@ export function esTerm(slug:string):EsTerm|null{
 }
 export function esPosition(slug:string):EsPosition|null{
  const p=positionBySlug(slug);if(!p)return null;const e=need(POSITIONS_ES,slug,'position');
- return {...p,name:e.name,short:e.short,numberLine:e.numberLine,title:e.title,h1:e.h1,desc:e.desc,answer:e.answer,job:e.job,suits:e.suits,where:e.where,
+ return {...p,numbers:p.numbers.replace(/ and /g,' y ').replace(/ or /g,' o '),name:e.name,short:e.short,numberLine:e.numberLine,title:e.title,h1:e.h1,desc:e.desc,answer:e.answer,job:e.job,suits:e.suits,where:e.where,
   withBall:[...e.withBall],withoutBall:[...e.withoutBall],habits:e.habits.map(h=>({...h})),small:e.small,faq:e.faq.map(f=>({...f})),esPath:toEs(p.path),notes:e.notes};
 }
 export const ES_RULES=():EsRule[]=>RULES.map(r=>esRule(r.slug)!);
