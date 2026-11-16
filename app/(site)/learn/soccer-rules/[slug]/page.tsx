@@ -1,6 +1,7 @@
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
+import PrintSheet from '@/components/site/PrintSheet';
 import {QA} from '@/components/site/LessonHub';
 import {FUTSAL_LAWS_URL,RULES,RULES_HUB,RULE_LEAGUE_LINE,RULE_SOURCE_LINE,ruleBySlug} from '@/lib/site/rules';
 import {TERMS_HUB} from '@/lib/site/terms';
@@ -37,6 +38,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   <JsonLd data={articleLd({headline:r.title,path:r.path,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (soccer rule)`,teaches:r.answer,image:diagramUrl(r.picture)})}/>
   <JsonLd data={faqLd(r.faq)}/>
   <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer}/>
+  <PrintSheet path={r.path} what="rule sheet"/>
   <Section id="diagram" title={`${r.name}: diagram`}>
    {pair
     ?<div className={styles.pair}>{r.scenes.map((s,j)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><SceneDiagram id={`s${j}`} scene={s} small image={j===last?diagramUrl(r.picture):undefined}/></div>)}</div>
