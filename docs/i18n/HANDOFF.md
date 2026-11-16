@@ -51,6 +51,26 @@ comparison links back. Weak-spot lesson links and "Lessons that teach this shape
 lineup builder link says "(en inglés)". `/learn/7v7-9v9-11v11` is a lesson hub, so it moved to the lessons family.
 Futsal dot labels: BACK/FRONT -> ATRÁS/ARRIBA (dot letters B/F, F/A/P stay as the English data has them).
 
+## Done (round D, Nov 16 2026, branch `spanish-lessons`)
+
+- Lessons: `/es/learn/lessons` + 96 lesson pages (`lib/i18n/es/lessons/*.ts`, merged by `lib/i18n/es/lessons.ts` esLesson; chapters,
+  categories, difficulty translated there). Same rule as English: options A-Z (Spanish sort), no verdict opener in explanations
+  (tests/es-pages.cjs checks it). Pages: `components/es/pages/LessonsEs.tsx` (also the search page). Lesson lists are back on
+  rules/terms/positions/formations (EsLessonList), weak-spot lesson links on formations, lineup builder links its Spanish page.
+- Hubs/charts: 5 lesson hubs (incl. /learn/7v7-9v9-11v11 + team-size table), 3 size charts, parents' guide
+  (`lib/i18n/es/hubs.ts`, `charts.ts`, `safety.ts` with the [PUBLIC-WORLD] TODAY/PUBLIC switch; `components/es/pages/HubsEs.tsx`).
+- Tools: 19 pages (`lib/i18n/es/tools.ts`, `components/es/pages/ToolsEs.tsx`); `lang="es"` on LineupBuilder, RotationPlanner,
+  LineupHeading, EmbedSnippet (words in `components/site/tools/toolWordsEs.ts`). Still English: downloadable PNG/SVG sheets and
+  their thumbnails, the /embed iframe (pages say so).
+- Search: `/es/learn?q=` (dispatcher special case, noindex/follow, not in ES_PAGES), index `/es/search-index.json`
+  (`lib/i18n/es/search.ts`, only paths with hasEs), `LearnSearch lang="es"`, WebSite SearchAction on /es, `/es/learn` without q
+  308 -> `/es` (next.config.mjs). Drills/plans join the index when that family lands (add them in search.ts).
+- Round D hooks: esPaths.ts `ES_LESSON_PAGES` / `ES_HUB_PAGES` / `ES_TOOL_PAGES`; routes.tsx ends with
+  `lessonsEsRoute ?? hubsEsRoute ?? toolsEsRoute`. Checks: tsc, eslint, es-pages (197 pages), seo-search/tools/pages/learn tests,
+  production build + seo-crawl 0 problems (1130 URLs), phone + desktop shots (lesson, tool, /es/learn?q=fuera).
+- Left: Spanish header nav has no "Lecciones"/"Herramientas" item yet; ClipPlay aria-label "Play video" is English; the lesson
+  print hint mentions a diagram (lesson sheets have none); dropped English-only links (futsal star cards, /games).
+
 ## Test-suite regressions (fixed Nov 16 2026)
 
 - 12 failures: `lib/site/seo.ts`, `LangSwitch.tsx`, `GuideQuiz.tsx` imported `@/lib/i18n/...`; the vm/require loaders in the
@@ -109,3 +129,11 @@ one-line lab layouts into fewer route groups.
   "mediocampista de contención" / "los dos de contención" for holders, "doble pivote" (11v11) vs "pívot" (futsal), "línea de
   cuatro / de tres" for back four / three, "árbol de Navidad" (2-3-2-1), "el cuadrado" (futsal box), "rombo" (diamond),
   "creador de alineaciones" (lineup builder), "Cuidado con" for "Watch out for".
+- Round D: "prueba" for quiz; "reanudación" for restart; "Dorado"/"Azul" as team names; passing shadow "sombra del pase"; channel
+  "carril"/"pasillo"; outlet "opción de salida"; screen "tapar"/"hacer de pantalla"; second ball "segunda jugada"/"rebote"; lay-off
+  "descarga"; near/far post "primer/segundo palo"; holder "mediocampista defensivo/de contención" (both used: unify); outside back
+  "lateral"; dribble-in "saque conduciendo"; punts "despeje de volea del portero"; bench "banca"; substitute "suplente"; squad
+  "plantel"; template "plantilla"; positions chart "cuadro de posiciones y números"; Game select "Modalidad"; clipboard "tablilla";
+  rolling subs "cambios libres"; playing-time calculator "calculadora de minutos de juego"; preset emotes "gestos predefinidos";
+  playing up "jugar en una categoría superior"; source "It's true./It's false." kept as "Es verdadero./Es falso." (as English).
+  Futsal lesson uses one plural command ("Acérquense juntos"), ustedes form.
