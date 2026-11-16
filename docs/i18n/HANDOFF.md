@@ -60,7 +60,9 @@ Grid diagrams: `GridDiagram` takes an optional `desc` (English output unchanged)
 GK -> POR, other dot letters stay. Guide links (rules/positions/terms/formats, and field/ball size + age groups) resolve through
 `esDrillLink` and appear only when `hasEs(path)`: the size and age-group links show up by themselves when that family lands.
 Rule, term and position pages got "Ejercicios para practicarlo" back (`esDrillLinksFor`). Lesson lists stay off (English titles);
-the gold button opens the page's lesson. Drill names table: scratchpad brief (also the `name` fields).
+the gold button opens the page's lesson. tests/seo-pages.cjs built-site check now expects the /es sitemap entries (exactly
+ES_PAGES; they render on demand, so they are not in the build output). Build + `seo-crawl` on :9036: 1075 URLs, 0 problems.
+Not done: the Spanish header nav (SiteNavEs) has no drills/plans link yet (shared file, left to the coordinator).
 
 
 

@@ -141,7 +141,10 @@ const text=h=>h.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<style[\s\S]*
 // Sitemap: every expected path, nothing else, and each one is built.
 const sitemap=fs.readFileSync(path.join(app,'sitemap.xml.body'),'utf8');
 const locs=[...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(m=>m[1]);
-assert.deepEqual(locs.map(u=>u.slice(SITE.length)||'/').sort(),[...PATHS].sort(),'the sitemap lists every page');
+/* Spanish pages (/es, docs/i18n/HANDOFF.md) render on demand, so they are not in the build output: the sitemap lists exactly ES_PAGES for them. */
+const esP=L('lib/i18n/esPaths.ts'),isEs=p=>p==='/es'||p.startsWith('/es/');
+assert.deepEqual(locs.map(u=>u.slice(SITE.length)||'/').filter(p=>!isEs(p)).sort(),[...PATHS].sort(),'the sitemap lists every page');
+assert.deepEqual(locs.map(u=>u.slice(SITE.length)).filter(isEs).sort(),[...esP.ES_PAGES].map(p=>esP.toEs(p)).sort(),'the sitemap lists every Spanish page');
 assert(locs.every(u=>u.startsWith(SITE+'/')),'absolute https URLs');
 // Personal data: emails, phone numbers, IPs, secrets, storage keys must never be in a page.
 const PERSONAL=[/[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+\.[A-Za-z]{2,}/,/\b\d{3}[-. ]\d{3}[-. ]\d{4}\b/,/\b(?:\d{1,3}\.){3}\d{1,3}\b/,/sk_(live|test)_|service_role|SUPABASE|eyJhbGci/,/fi2-player-cards|localStorage/];
