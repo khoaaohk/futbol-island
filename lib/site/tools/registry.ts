@@ -18,6 +18,8 @@ export const TOOLS_PATH='/tools';
 export const TOOLS_UPDATED='2026-11-10';
 export const LINEUP_PATH='/tools/soccer-lineup-builder';
 export const PLANNER_PATH='/tools/soccer-playing-time-calculator';
+/** The coach app (/coach, Nov 16 2026; docs/coach-app/HANDOFF.md): the tools as one phone app for game day. The tool pages are its front doors. */
+export const COACH_APP_PATH='/coach';
 export const PRIVACY_LINE='Names stay on your device. Nothing you type is sent to Futbol Island or stored on a server.';
 export const TOOL_NAMES='Soccer is called football in most of the world. These tools are free, with no account and no ads, from Futbol Island, a football learning game for kids aged 7 to 12.';
 /** A deep link that opens the builder with one formation chosen (the formation pages' "Build this lineup"). */
@@ -90,9 +92,10 @@ export const PLANNER_PAGES:readonly PlannerPage[]=[
   intro:['Sharing minutes fairly in your head, with a game going on in front of you, is hard. Nine children, seven places, two halves: who has sat out twice? This planner does the arithmetic before the match, so on the side line you only read the next line of the table.',
    'It works for any game: choose 7v7, 9v9, 11v11 or futsal, or type your own numbers for a tournament with short games.'],
   faq:[{q:'How does the calculator keep playing time equal?',a:'It cuts the game into equal blocks, one for each change, and gives every player the same number of blocks. When the numbers do not divide evenly, some players get one block more than others, never two.'},
-   {q:'What if a player does not turn up?',a:'Change the number of players and the plan is made again at once. It takes a few seconds on a phone at the field.'},
+   {q:'What if a player does not turn up, gets hurt or arrives late?',a:'Before the game, change the number of players and the plan is made again at once. During the game, the free coach app does it for you: mark the player hurt, late or gone and the rest of the substitutions re-balance so the minutes stay equal.'},
    {q:'Should the goalkeeper rotate too?',a:'With young players, yes if you can: it lets every child try the position and keeps the minutes equal. Choose “a new goalkeeper each period” and the keeper changes at the breaks. If one child stays in goal, they play the whole game and the others share the rest.'},
-   {q:'Are the names I type saved anywhere?',a:'Only in your own browser. Nothing is sent to a server. Names are optional: the plan works with “Player 1, Player 2” as well.'}]},
+   {q:'Are the names I type saved anywhere?',a:'Only in your own browser. Nothing is sent to a server. Names are optional: the plan works with “Player 1, Player 2” as well.'},
+   {q:'Can I get the playing time in Excel or Google Sheets?',a:'Yes. After the game the coach app downloads a CSV file with every player’s minutes per period, minutes in goal and share of the game. It opens in Excel, Google Sheets and Numbers.'}]},
  {kind:'planner',slug:'7v7-substitution-rotation',path:'/tools/7v7-substitution-rotation',format:'7v7',crumb:'7v7 substitution rotation',title:'7v7 Soccer Substitution Rotation: Equal-Time Planner',h1:'7v7 soccer substitution rotation',
   description:'A 7v7 soccer substitution rotation for 8 to 14 players. Enter who came and get a fair plan with equal playing time, ready to print or paste in a team chat.',
   lead:'Seven on the field and a bench of excited eight- and nine-year-olds. Enter how many players you have and get a 7v7 substitution rotation in which everyone plays the same amount, to within one change.',

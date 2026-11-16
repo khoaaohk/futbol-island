@@ -164,4 +164,14 @@ for(const pre of E.PRESETS)for(const extra of [0,1,2,3,5])for(const keeper of pr
   ok(inScope(u.split('?')[0])===want,`SW scope ${u} -> ${want}`);
  ok(/caches\.open/.test(sw)&&/skipWaiting/.test(sw)&&!/\/play/.test(sw.replace(/\/\/.*$/gm,'')),'SW caches, updates, never names /play');
 }
+/* ---- 8. Spanish words and the front doors ---- */
+{
+ const W=load('lib/coach/words.ts').WORDS,G=load('lib/i18n/es-glossary.ts');
+ ok(JSON.stringify(Object.keys(W.en).sort())===JSON.stringify(Object.keys(W.es).sort()),'English and Spanish have the same keys');
+ const esText=JSON.stringify(W.es)+Object.values(W.es).filter(v=>typeof v==='function').map(f=>[f(1,2),f(0,2),f(1,4)].join(' ')).join(' ');
+ for(const re of G.ES_BANNED)ok(!re.test(esText),'Spanish avoids '+re);
+ const page=read('app/(site)/tools/[slug]/page.tsx'),es=read('components/es/pages/ToolsEs.tsx');
+ ok(/Substitution calculator: a worked example/.test(page)&&/Playing time calculator in Excel or Google Sheets/.test(page)&&/Equal playing time during the game/.test(page),'front door: worked example, Excel, equal playing time');
+ ok((page.match(/app=\{\{href:COACH_APP_PATH/g)||[]).length===2&&/href="\/coach\?lang=es"/.test(es),'front doors link to the app (English and Spanish)');
+}
 console.log(`coach-app: ${checks} checks passed`);

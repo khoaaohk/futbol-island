@@ -129,8 +129,10 @@ export function replan(i:ReplanInput):PBlock[]{
   const rank=(p:string)=>prefSet.size&&!prefSet.has(p)?1:0;
   const cur=i.gk&&availSet.has(i.gk)?i.gk:[...avail].sort((a,b)=>rank(a)-rank(b)||(kept[a]??0)-(kept[b]??0)||avail.indexOf(a)-avail.indexOf(b))[0]??null;
   if(s.keeper==='fixed')segs.forEach((_,k)=>{gkOf[k]=cur;});
-  else{const rota=prefs.length>=2?prefs:avail;let p=-1,who=cur;
-   segs.forEach((g,k)=>{if(g.period!==p){if(p!==-1){const c=rota.filter(x=>x!==who);who=[...c].sort((a,b)=>(kept[a]??0)-(kept[b]??0)||rota.indexOf(a)-rota.indexOf(b))[0]??who;}p=g.period;}
+  else{/* later periods: someone who has not kept yet, the least played first (a whole period in goal is a big share) */
+   const rota=prefs.length>=2?prefs:avail;let p=-1,who=cur;
+   segs.forEach((g,k)=>{if(g.period!==p){if(p!==-1){const c=rota.filter(x=>x!==who);
+     who=[...c].sort((a,b)=>((kept[a]??0)>0?1:0)-((kept[b]??0)>0?1:0)||(i.played[a]??0)-(i.played[b]??0)||rota.indexOf(a)-rota.indexOf(b))[0]??who;}p=g.period;}
     gkOf[k]=who;if(who)kept[who]=(kept[who]??0)+(g.end-g.start);});}
  }
  const total=segs.reduce((a,g)=>a+(g.end-g.start),0);
@@ -139,6 +141,10 @@ export function replan(i:ReplanInput):PBlock[]{
  const pool=avail.filter(p=>p!==fixedGk),places=fixedGk?F-1:F;
  const played=pool.map(p=>i.played[p]??0),L=waterLevel(played,total,total*places);
  const need:Record<string,number>={};pool.forEach((p,k)=>{need[p]=Math.max(0,Math.min(total,L-played[k]));});
+ /* a rotating keeper's blocks in goal are set already: they come out of that player's time owed first, so the other
+    blocks go to everyone else */
+ const ahead:Record<string,number>={};
+ if(!fixedGk)segs.forEach((g,k)=>{const p=gkOf[k];if(p&&need[p]!=null){need[p]-=g.end-g.start;ahead[p]=(ahead[p]??0)+g.end-g.start;}});
  const out:PBlock[]=[];let prev=new Set(i.on.filter(p=>availSet.has(p)));
  let left=total;
  segs.forEach((g,k)=>{
@@ -151,11 +157,11 @@ export function replan(i:ReplanInput):PBlock[]{
   /* mid-period, the block running now keeps whoever is still on and only fills the empty places (one change for the coach,
      not a reshuffle); later blocks are free */
   const keepNow=k===0&&g.start===i.sec&&i.sec>0;
-  const key=(p:string)=>{const n=need[p]??-1e9,must=n>after+0.5;return (must?1e7:keepNow&&prev.has(p)&&n>=len/2?5e6:0)+n+(prev.has(p)?len*0.4:0);};
+  const key=(p:string)=>{const n=need[p]??-1e9,must=n>after-(ahead[p]??0)+0.5;return (must?1e7:keepNow&&prev.has(p)&&n>=len/2?5e6:0)+n+(prev.has(p)?len*0.4:0);};
   const score=new Map(cands.map(p=>[p,key(p)]));
   cands.sort((a,b)=>score.get(b)!-score.get(a)!||avail.indexOf(a)-avail.indexOf(b));
   for(const p of cands){if(chosen.length>=F)break;chosen.push(p);}
-  for(const p of chosen)if(need[p]!=null)need[p]-=len;
+  for(const p of chosen)if(need[p]!=null){if(p===gk&&!fixedGk)ahead[p]-=len;else need[p]-=len;}
   left=after;prev=new Set(chosen);
   out.push({period:g.period,start:g.start,end:g.end,on:chosen,gk:keeperOn?gk:null});
  });

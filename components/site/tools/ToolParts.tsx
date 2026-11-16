@@ -13,11 +13,12 @@ import t from './tools.module.css';
  * on these pages only (the header is already hidden in print by site.module.css), a sheet preview and its download links.
  */
 /** headingFormat: a lineup format landing; its h1 follows the builder's format select (components/site/tools/LineupHeading.tsx). */
-export function ToolIntro({crumbs,h1,lead,headingFormat}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat}){
+export function ToolIntro({crumbs,h1,lead,headingFormat,app}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:{href:string;label:string;line:string}}){
  return <header className={site.intro}>
   <Breadcrumbs crumbs={crumbs}/>
   {headingFormat?<LineupHeading format={headingFormat} className={site.title}/>:<h1 className={site.title}>{h1}</h1>}
   <p className={site.lead}>{lead}</p>
+  {app&&<AppLink {...app}/>}
   <p className={site.caption}>{TOOL_NAMES}</p>
  </header>;
 }
@@ -39,3 +40,7 @@ export function SheetThumb({file}:{file:PrintFile}){
  return <div className={t.sheet}><img src={fileUrl(file.name,'svg')} alt={s.title} width={s.w} height={s.h} loading="lazy" decoding="async"/></div>;
 }
 export const Licence=()=><p className={site.caption} id="licence">{LICENCE}</p>;
+/** "Open the app" on a tool page (the coach app at /coach, Nov 16 2026): the same tool as a phone app for game day. */
+export function AppLink({href,label,line}:{href:string;label:string;line:string}){
+ return <p className={t.appLink}><a className={t.appBtn} href={href} data-coach-app-link="">{label}</a><span className={site.caption}>{line}</span></p>;
+}

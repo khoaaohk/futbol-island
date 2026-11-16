@@ -4,7 +4,7 @@ import LineupBuilder from '@/components/site/tools/LineupBuilder';
 import LineupHeading from '@/components/site/tools/LineupHeading';
 import RotationPlanner from '@/components/site/tools/RotationPlanner';
 import EmbedSnippet from '@/components/site/tools/EmbedSnippet';
-import {PrintStyle,Screen} from '@/components/site/tools/ToolParts';
+import {AppLink,PrintStyle,Screen} from '@/components/site/tools/ToolParts';
 import SheetSvg from '@/lib/site/tools/SheetSvg';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {formationsIn} from '@/lib/site/formations';
@@ -72,11 +72,12 @@ function toolLink(enPath:string):Link|null{
 const links=(xs:(Link|null)[])=>xs.filter((x):x is Link=>!!x);
 
 // ---- shared parts ----
-function EsToolIntro({crumbs,h1,lead,headingFormat}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat}){
+function EsToolIntro({crumbs,h1,lead,headingFormat,app}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:boolean}){
  return <header className={site.intro}>
   <EsBreadcrumbs crumbs={crumbs}/>
   {headingFormat?<LineupHeading format={headingFormat} className={site.title} lang="es"/>:<h1 className={site.title}>{h1}</h1>}
   <p className={site.lead} data-answer="">{lead}</p>
+  {app&&<AppLink href="/coach?lang=es" label="Abrir la app del entrenador" line="La misma herramienta como app para el día del partido: reloj de cambios en vivo, funciona sin conexión, sin cuenta."/>}
   <p className={site.caption}>{TOOL_NAMES_ES}</p>
  </header>;
 }
@@ -188,7 +189,7 @@ function LineupEs({p}:{p:LineupPage}){
    features:['Alineaciones para 7v7, 9v9, 11v11 y futsal','Arrastra o toca para cambiar jugadores y suplentes','Impresión de una página','Descarga de imagen','Compartir por enlace','Sin cuenta; los nombres se quedan en el dispositivo']})}/>
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
-  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} headingFormat={p.format}/></Screen>
+  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} headingFormat={p.format} app/></Screen>
   <LineupBuilder shapes={shapesEs} initial={f.slug} lockFormat={p.format} lang="es"/>
   <Screen>
    <Section id="how" title="Cómo armar tu alineación">
@@ -234,7 +235,7 @@ function PlannerEs({p}:{p:PlannerPage}){
    features:['Minutos iguales para un plantel de cualquier tamaño','Portero fijo o que rota','Tabla para imprimir','Copiar como texto para el chat del equipo','Compartir por enlace','Sin cuenta; los nombres se quedan en el dispositivo']})}/>
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
-  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead}/></Screen>
+  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} app/></Screen>
   <RotationPlanner presets={presetsEs} initial={initial} lockKey={p.format} lang="es"/>
   <Screen>
    <Section id="about" title={p.format?`Repartir un partido de ${p.format}`:'Por qué planear los cambios'}>{e.intro.map(x=><p key={x}>{x}</p>)}</Section>
