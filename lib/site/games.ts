@@ -133,7 +133,7 @@ export const GAME_PAGES:readonly GamePage[]=[
    {q:'What age is Breakaway Run for?',a:'Futbol Island is made for children aged 7 to 12. The Warm-up route is the gentle start; Night Derby and above are for players who want a hard game.'},
    {q:'Is Breakaway Run really endless?',a:'Yes. A goal line clears the round and the road carries on with your score and hearts. Each round is a little harder than the last, and the run ends only when you run out of hearts.'}]},
  {id:'tennis',slug:'soccer-tennis-game',path:page('soccer-tennis-game'),name:'Futbol Tennis',play:play('tennis'),
-  title:'Soccer Tennis Game Online: Futbol Tennis, Free',h1:'Soccer tennis game: Futbol Tennis',
+  title:'Futbol Tennis: Free Soccer Tennis Game (Football Tennis)',h1:'Soccer tennis game: Futbol Tennis',
   description:'Futbol Tennis is a free online soccer tennis game for kids. Rally over the net with kicks, lobs, drops and headers on nine beach-club courts. No ads.',
   lead:'Football tennis in your browser: keep the ball up, control it with your first touch and play it over the net with your feet and head, against tougher opponents on nine beach-club courts.',
   blurb:'Football tennis: first touch and shot choice over a net',genre:['Sports','Arcade','Educational'],skill:'First touch and choosing the right shot',

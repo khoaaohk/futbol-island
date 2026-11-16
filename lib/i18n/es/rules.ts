@@ -364,7 +364,7 @@ export const RULES_ES:Readonly<Record<string,RuleEs>>={
     ['U12','En 9v9 los jugadores aprenden que igual se puede mostrar una tarjeta por la falta en la siguiente pausa después de aplicar la ventaja.']]}},
  // ---- substitutions and game length --------------------------------------------------------------------------------------
  'substitutions-and-game-length':{name:'Cambios y duración del partido',law:'Reglas 3 y 7',
-  title:'Cambios y duración del partido de fútbol por edad',h1:'Cambios y duración del partido de fútbol por edad',
+  title:'¿Cuánto dura un partido de fútbol? Duración y cambios',h1:'¿Cuánto dura un partido de fútbol? Duración y cambios por edad',
   desc:'Cuánto dura un partido de fútbol en cada edad y cómo funcionan los cambios, para niños y padres: tiempos de U6 a U19 y las reglas profesionales.',
   answer:'Un partido de fútbol completo tiene dos tiempos de 45 minutos, y en las competencias de alto nivel un equipo puede usar hasta cinco suplentes, que no pueden volver a entrar. El fútbol juvenil juega partidos más cortos y normalmente deja que los jugadores salgan y vuelvan a entrar las veces que el entrenador quiera.',
   scenes:[{title:'Un cambio',
@@ -396,7 +396,7 @@ export const RULES_ES:Readonly<Record<string,RuleEs>>={
     ['U13 and up','Algunas ligas de 11v11 limitan cuándo o cuántas veces pueden volver a entrar los jugadores. Revisa las reglas de tu liga.']]}},
  // ---- heading ------------------------------------------------------------------------------------------------------------
  'heading-rules-for-kids':{name:'Reglas de cabeceo para niños',law:'Reglas de U.S. Soccer y US Youth Soccer',
-  title:'Reglas de cabeceo para niños en Estados Unidos, por edad',h1:'Reglas de cabeceo en el fútbol para niños en Estados Unidos',
+  title:'¿A qué edad pueden cabecear los niños en el fútbol?',h1:'Reglas de cabeceo en el fútbol para niños en Estados Unidos',
   desc:'A qué edad pueden cabecear los niños en el fútbol juvenil de Estados Unidos: nada de cabeceo a los 10 años o menos, y límites al entrenar a los 11 y 12.',
   answer:'En el fútbol juvenil de Estados Unidos, los jugadores de 10 años o menos no cabecean el balón, ni en partidos ni en entrenamientos. Desde los 11 años se permite cabecear en los partidos, con límites sobre cuánto cabecean en los entrenamientos los jugadores de 11 y 12 años.',
   scenes:[{title:'Después de un cabezazo a propósito en un partido 7v7',

@@ -135,7 +135,7 @@ export const RULES:readonly Rule[]=([
   lessonIds:['next9_restartreturn','next7_dribblein','set_f_throwin','expf_kickinthird'],cta:'next9_restartreturn',exhibitIds:['throw-in'],links:[L.fb,L.wg,L.f9]},
  // ---- goal kick ----------------------------------------------------------------------------------------------------------
  {slug:'goal-kick',name:'Goal kick',law:'Law 16',lawPage:'the-goal-kick/',
-  title:'Soccer Goal Kick Rules for Kids, With a Diagram',h1:'Soccer goal kick rules for kids',
+  title:'Goal Kick Rules in Soccer (Football), for Kids',h1:'Soccer goal kick rules for kids',
   desc:'Soccer goal kick rules in plain words for kids and parents: when it is given, where the ball goes, where the other team waits, and how 7v7 changes it.',
   answer:'In soccer, a goal kick is given when the attacking team touches the ball last before the whole ball crosses the goal line and no goal is scored. A defender or the goalkeeper kicks it from anywhere inside the goal area, and the other team waits outside the penalty area until the ball is kicked.',
   scenes:[{title:'A goal kick',who:'G@44,3 4@24,8 5@76,8 6@50,24 !9@50,19 !7@22,22 !11@78,22',ball:[44,4],zone:[20.4,0,79.6,15.7],passes:['44,4>26,8'],
@@ -225,7 +225,7 @@ export const RULES:readonly Rule[]=([
   lessonIds:['exp11_shortfreekick','expf_freekickbalance','trn_11_recover','def_7_goalside'],cta:'exp11_shortfreekick',exhibitIds:['free-kick-wall'],links:[L.cb,L.dm,L.gk]},
  // ---- penalty kick -------------------------------------------------------------------------------------------------------
  {slug:'penalty-kick',name:'Penalty kick',law:'Law 14',lawPage:'the-penalty-kick/',
-  title:'Soccer Penalty Kick Rules for Kids, With a Diagram',h1:'Soccer penalty kick rules for kids',
+  title:'Penalty Kick Rules in Soccer: Diagram for Kids',h1:'Soccer penalty kick rules for kids',
   desc:'Soccer penalty kick rules in plain words: when a penalty is given, where everyone stands, what the goalkeeper may do and what happens after a save.',
   answer:'In soccer, a penalty kick is given when a defender commits a direct free kick foul, such as a trip, a push or a handball, inside their own penalty area. One attacker shoots from the penalty mark, 12 yards from the goal, with only the goalkeeper to beat.',
   scenes:[{title:'A penalty kick',who:'9@50,88 10@40,76 7@64,77 8@28,80 !G@50,99.5 !4@46,76 !5@58,76 !3@72,80',ball:[50,89.5],zone:[20.4,84.3,79.6,100],passes:['50,89.5>42,100'],
@@ -381,7 +381,7 @@ export const RULES:readonly Rule[]=([
   lessonIds:['trn_9_firstpass','trn_f_firstpass','trn_11_recover'],cta:'trn_9_firstpass',exhibitIds:['laws-1863'],links:[L.st,L.cm,L.old]},
  // ---- substitutions and game length --------------------------------------------------------------------------------------
  {slug:'substitutions-and-game-length',name:'Substitutions and game length',law:'Laws 3 and 7',lawPage:'the-players/',
-  title:'Soccer Substitution Rules and Game Length by Age',h1:'Soccer substitutions and game length by age',
+  title:'How Long Is a Soccer Game? Length and Subs by Age',h1:'How long is a soccer game? Length and subs by age',
   desc:'How long a soccer game lasts at each age and how substitutions work, in plain words for kids and parents: game times from U6 to U19 and the pro rules.',
   answer:'A full soccer game is two halves of 45 minutes, and in top competitions a team may use up to five substitutes who cannot come back on. Youth soccer plays shorter games and usually lets players go off and come back as often as the coach likes.',
   scenes:[{title:'A substitution',who:'7@98,62 14@103,50 9@50,70 8@44,52 4@40,24 !3@86,66 !6@52,58',ball:[101,36],zone:[94,47,106,53],runs:['103,50>94,50','98,62>103,62'],
@@ -407,7 +407,7 @@ export const RULES:readonly Rule[]=([
   lessonIds:['learn7_roles','learn9_shape','learn11_shape','learnf_roles31'],cta:'learn7_roles',links:[L.ages,L.field,L.ball,L.fs]},
  // ---- heading ------------------------------------------------------------------------------------------------------------
  {slug:'heading-rules-for-kids',name:'Heading rules for kids',law:'U.S. Soccer and US Youth Soccer rules',lawPage:'general-modifications/',
-  title:'Soccer Heading Rules for Kids in the US, by Age',h1:'Soccer heading rules for kids in the US',
+  title:'At What Age Can Kids Head the Ball in Soccer? US Rules',h1:'At what age can kids head the ball in soccer?',
   desc:'At what age kids can head the ball in US youth soccer, in plain words for parents: no heading at 10 and under, and limits in practice at 11 and 12.',
   answer:'In US youth soccer, players aged 10 and under do not head the ball, in games or in practice. From age 11 heading is allowed in games, with limits on how much players aged 11 and 12 head the ball in practice.',
   scenes:[{format:'7v7',title:'After a deliberate header in a 7v7 game',who:'8@44,56 9@50,74 7@82,62 3@24,34 !6@52,60 !4@40,76 !5@62,78 !G@50,96',ball:[45,58],zone:[38,58,52,70],
@@ -432,7 +432,7 @@ export const RULES:readonly Rule[]=([
   lessonIds:['learn7_receive','learn9_receive','next7_shotreaction'],cta:'learn7_receive',links:[L.ages,L.f7,L.ball]},
  // ---- futsal rules -------------------------------------------------------------------------------------------------------
  {slug:'futsal-rules',name:'Futsal rules',law:'FIFA Futsal Laws of the Game',lawPage:'general-modifications/',
-  title:'Futsal Rules vs Soccer Rules: The Key Differences',h1:'Futsal rules that are different from soccer',
+  title:'Futsal Rules vs Soccer Rules: The Key Differences',h1:'Futsal rules vs soccer rules: the key differences',
   desc:'Futsal rules and regulations vs soccer, in plain words for kids and parents: the kick-in, the four-second rule, accumulated fouls, no offside and subs.',
   answer:'Futsal is five-a-side soccer on a hard court, and it has its own Laws from FIFA. The biggest differences are a kick-in instead of a throw-in, four seconds to take every restart, no offside, a count of each team’s fouls, and as many substitutions as a team likes, made on the fly.',
   scenes:[{format:'futsal',title:'A futsal kick-in',who:'A@0,58 P@30,78 F@40,30 A@82,60 G@50,5 !A@14,66 !F@42,70 !A@70,52 !G@50,95',ball:[1,59],zone:[0,49,24,69],passes:['2,58>38,32'],

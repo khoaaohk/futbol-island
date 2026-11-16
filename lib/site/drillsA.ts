@@ -150,7 +150,7 @@ export const DRILLS_A:RawDrill[]=[
    {q:'How do I teach turning with the weaker foot?',a:'Give double points for it. Players choose what scores, so make the weak foot worth more.'}]},
 
  {slug:'knockout',name:'Knockout',skill:'dribbling',ages:['U8','U10','U12'],
-  title:'Knockout Soccer Drill: Rules Where No One Sits Out',
+  title:'Knockout Soccer Game for Kids: Rules and Setup',
   desc:'Knockout (King of the Ring) is a soccer game where players shield their own ball and kick others out. Rules, setup and a quick way back in for everyone.',
   answer:'Knockout is a game in which every player dribbles a ball inside a square and tries to kick the other players’ balls out while protecting their own. It trains shielding, dribbling with the head up and winning the ball.',
   players:'6 to 14, one ball each',equipment:'One ball per player; cones for a square',time:'8 to 10 minutes, in rounds of two minutes',

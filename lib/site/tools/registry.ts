@@ -38,7 +38,7 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
    {q:'Where are my players’ names stored?',a:'Only in your own browser, so the lineup is still there when you come back on the same device. Nothing is sent to a server. A link you copy holds the lineup inside the link itself, so only people you send it to can open it.'},
    {q:'Can I use it on my phone at the field?',a:'Yes. It is made for one thumb: tap a player, then tap the spot or the substitute to swap with. On a computer you can drag instead, or use the Tab, arrow and Enter keys.'},
    {q:'How do I share a lineup with parents?',a:'Use “Download picture” and post the picture in your team chat, or use “Copy link” and paste the link. Use first names or nicknames only when you share a lineup of children.'}]},
- {kind:'lineup',slug:'7v7-lineup-builder',path:'/tools/7v7-lineup-builder',format:'7v7',crumb:'7v7 lineup builder',title:'7v7 Lineup Builder: Free Printable Soccer Lineup',h1:'7v7 soccer lineup builder',
+ {kind:'lineup',slug:'7v7-lineup-builder',path:'/tools/7v7-lineup-builder',format:'7v7',crumb:'7v7 lineup builder',title:'7-a-Side Soccer Formation Creator: Free 7v7 Lineup',h1:'7v7 soccer lineup builder',
   description:'Build a 7v7 soccer lineup in a 2-3-1, 3-2-1, 2-2-2 or 3-1-2. Type names, drag players and subs, then print it or share a link. Free, no sign-up.',
   lead:'Set out your seven starters and your substitutes on a 7v7 field with build-out lines. Choose a 2-3-1, 3-2-1, 2-2-2 or 3-1-2, type first names and move players until it looks right.',
   blurb:'Seven starters and the bench on a 7v7 field',
@@ -56,8 +56,8 @@ export const LINEUP_PAGES:readonly LineupPage[]=[
   faq:[{q:'What is the most common 9v9 formation?',a:'The 3-2-3 is the usual first choice: three defenders, two central midfielders and three forwards. It prepares players for the 4-3-3 they will meet in 11v11.'},
    {q:'Can I move a player from the bench into the lineup?',a:'Yes. Tap the substitute, then tap the player on the field. They swap places. On a computer you can drag one onto the other.'},
    {q:'Can I print the 9v9 lineup?',a:'Yes. “Print” makes a one-page sheet in black on white with the field, the names, the bench and your match note, ready for a clipboard.'}]},
- {kind:'lineup',slug:'11v11-lineup-builder',path:'/tools/11v11-lineup-builder',format:'11v11',crumb:'11v11 lineup builder',title:'11v11 Lineup Builder: Free Soccer Lineup Maker',h1:'11v11 soccer lineup builder',
-  description:'Make an 11v11 soccer lineup in a 4-3-3, 4-4-2, 4-2-3-1 or 3-5-2 on a full-size field. Type names, drag players, then print or share it. Free, no sign-up.',
+ {kind:'lineup',slug:'11v11-lineup-builder',path:'/tools/11v11-lineup-builder',format:'11v11',crumb:'11v11 lineup builder',title:'Starting 11 Lineup Maker: Free 11v11 Soccer Lineup',h1:'11v11 soccer lineup builder',
+  description:'Starting 11 maker for soccer: build an 11v11 lineup in a 4-3-3, 4-4-2, 4-2-3-1 or 3-5-2, type names, drag players, print or share. Free, no sign-up.',
   lead:'Draw your starting eleven on a full-size field in a 4-3-3, 4-4-2, 4-2-3-1 or 3-5-2, with the customary numbers on the dots and your substitutes listed beside it.',
   blurb:'A starting eleven on a full-size field',
   intro:['11v11 is the full game, played from U13 in the US and by adults everywhere. Eleven names are a lot to read out before kick-off; a sheet on the bench or a picture in the group chat the night before saves the talk for what matters.',
@@ -86,7 +86,7 @@ export function gameLengths(format:GuideFormat):GameLength[]{
 }
 export type PlannerPage={kind:'planner';slug:string;path:string;format?:Exclude<GuideFormat,'futsal'>;crumb:string;title:string;h1:string;description:string;lead:string;blurb:string;intro:string[];faq:Faq[]};
 export const PLANNER_PAGES:readonly PlannerPage[]=[
- {kind:'planner',slug:'soccer-playing-time-calculator',path:PLANNER_PATH,crumb:'Playing time calculator',title:'Soccer Playing Time Calculator (Sub Rotation)',h1:'Soccer playing time calculator',
+ {kind:'planner',slug:'soccer-playing-time-calculator',path:PLANNER_PATH,crumb:'Playing time calculator',title:'Soccer Sub Calculator: Free Playing Time Calculator',h1:'Soccer playing time calculator',
   description:'Free soccer playing time calculator and sub calculator: enter your players and game length for a fair substitution rotation with equal minutes, to print.',
   lead:'Tell it how many players came, how many play at once and how long the game is. It gives you a substitution plan in which every player gets the same share of the game, to within one change.',
   blurb:'A fair substitution plan with equal minutes for every player',
