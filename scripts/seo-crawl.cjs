@@ -7,12 +7,15 @@
  *  - every internal link on every page resolves (200 or a redirect to a page that does);
  *  - no orphans: every sitemap URL is linked from at least one OTHER page;
  *  - (with --families) the unique text per page family vs the text shared by the family's template.
- * Usage: node scripts/seo-crawl.cjs [base=http://localhost:9010] [--families] [--json out.json]
+ *  - (with --thin [N], Nov 15 2026) the N thinnest pages site-wide (default 30) by words unique to the page: words in sentences
+ *    that appear on no other built page (template lines, footers and shared captions drop out), plus distinct words.
+ * Usage: node scripts/seo-crawl.cjs [base=http://localhost:9010] [--families] [--thin [N]] [--json out.json]
  * Quiet: prints one summary line per check plus at most 20 problems each. Exit 1 on any failure.
  */
 const base = (process.argv.find(a => /^https?:\/\//.test(a)) || 'http://localhost:9010').replace(/\/$/, '');
 const SITE = 'https://futbolisland.app';
 const families = process.argv.includes('--families');
+const thinAt = process.argv.indexOf('--thin'), thin = thinAt > 0 ? (Number(process.argv[thinAt + 1]) || 30) : 0;
 const jsonOut = process.argv[process.argv.indexOf('--json') + 1];
 const strip = s => s.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ').replace(/<svg[\s\S]*?<\/svg>/gi, ' ');
 const text = html => { const m = html.match(/<main[\s\S]*<\/main>/i); return strip(m ? m[0] : html).replace(/<[^>]+>/g, ' ').replace(/&[a-z#0-9]+;/gi, ' ').replace(/\s+/g, ' ').trim(); };
@@ -52,7 +55,7 @@ const familyOf = p => (FAMILY.find(([, re]) => re.test(p)) || ['other'])[0];
       links.add(h);
     }
     for (const h of links) { const k = h.split('?')[0].replace(/(.)\/$/, '$1'); if (k !== p && inbound.has(k)) inbound.get(k).add(p); }
-    pages[p] = { links: [...links], types, text: families ? text(html) : '' };
+    pages[p] = { links: [...links], types, text: families || thin ? text(html) : '' };
   });
   const allLinks = [...new Set(Object.values(pages).flatMap(x => x.links))].filter(h => !inbound.has(h));
   await pool(allLinks, 8, async h => {
@@ -80,6 +83,17 @@ const familyOf = p => (FAMILY.find(([, re]) => re.test(p)) || ['other'])[0];
     console.log('families (words: all / unique-to-page, min):');
     for (const [f, x] of Object.entries(fam)) console.log(`  ${f.padEnd(10)} n=${String(x.n).padEnd(4)} ${x.avgWords} / ${x.avgUnique}  min ${x.minUnique} ${x.minPage}`);
   }
-  if (jsonOut && !jsonOut.startsWith('--')) require('fs').writeFileSync(jsonOut, JSON.stringify({ summary, problems, fam, inbound: Object.fromEntries([...inbound].map(([k, v]) => [k, v.size])) }, null, 1));
+  let thinRows = [];
+  if (thin) {
+    const split = t => t.split(/(?<=[.!?:])\s+/).map(s => s.trim()).filter(s => s.length > 12);
+    const sents = Object.fromEntries(Object.keys(pages).map(p => [p, split(pages[p].text)]));
+    const df = new Map(); for (const ss of Object.values(sents)) new Set(ss).forEach(s => df.set(s, (df.get(s) || 0) + 1));
+    const wordsOf = s => s.toLowerCase().match(/[a-z\u00c0-\u024f0-9’'-]+/g) || [];
+    thinRows = Object.keys(pages).map(p => { const own = sents[p].filter(s => df.get(s) === 1); return { p, family: familyOf(p), unique: own.reduce((a, s) => a + wordsOf(s).length, 0), distinct: new Set(own.flatMap(wordsOf)).size }; })
+      .sort((a, b) => a.unique - b.unique).slice(0, thin);
+    console.log(`thinnest ${thinRows.length} pages (words unique to the page / distinct words):`);
+    for (const r of thinRows) console.log(`  ${String(r.unique).padStart(4)} / ${String(r.distinct).padStart(4)}  ${r.family.padEnd(9)} ${r.p}`);
+  }
+  if (jsonOut && !jsonOut.startsWith('--')) require('fs').writeFileSync(jsonOut, JSON.stringify({ summary, problems, fam, thin: thinRows, inbound: Object.fromEntries([...inbound].map(([k, v]) => [k, v.size])) }, null, 1));
   process.exit(Object.values(problems).some(v => v.length) ? 1 : 0);
 })().catch(e => { console.error(e); process.exit(2); });

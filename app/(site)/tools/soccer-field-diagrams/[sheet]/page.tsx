@@ -1,7 +1,8 @@
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {Downloads,Licence,PrintStyle,Screen,SheetPreview,SheetThumb,ToolIntro} from '@/components/site/tools/ToolParts';
-import {GuideEnd,LinkList,Section} from '@/lib/site/GuideParts';
+import {DataTable,GuideEnd,LinkList,Section} from '@/lib/site/GuideParts';
+import {formationsIn} from '@/lib/site/formations';
 import {breadcrumbLd,pageMeta} from '@/lib/site/seo';
 import {PRINTABLES,printableBySlug} from '@/lib/site/tools/printables';
 import {printableImage,printableLd,PRINTABLES_HUB,toolCrumbs} from '@/lib/site/tools/registry';
@@ -41,6 +42,12 @@ export default function PrintablePage({params}:{params:{sheet:string}}){
    </Section>
    {rest.length>0&&<Section id="versions" title="Every version of this template">
     <ul className={t.thumbs}>{p.files.map(f=><li key={f.name}><SheetThumb file={f}/><b>{f.label}</b><span className={site.caption}>{f.note}</span><Downloads file={f}/></li>)}</ul>
+   </Section>}
+   {p.kind==='cheat-sheet'&&p.format&&<Section id="compare" title="The formations on this sheet, compared">{/* Nov 15 2026 (SEO thin pages): the sheet as a table */}
+    <p>{p.format==='futsal'?'Futsal shapes count the four court players in front of the goalkeeper, from the back to the front: the first number is the fixo or the back players, the last is the pivot or the front players.':`A ${p.format} team has ${{'7v7':6,'9v9':8,'11v11':10}[p.format as '7v7'|'9v9'|'11v11']} field players in front of the goalkeeper, so every ${p.format} shape adds up to ${{'7v7':6,'9v9':8,'11v11':10}[p.format as '7v7'|'9v9'|'11v11']}. Read it from the back: the first number is the defenders, the last the forwards, the rest the midfield.`}</p>
+    <DataTable label={`${p.format} formations compared`} head={['Formation','At the back','In midfield','Up front','Best for','Watch out for']}
+     rows={formationsIn(p.format).map(f=>{const n=f.shape.split('-').map(Number),mid=n.slice(1,-1).reduce((a,b)=>a+b,0);
+      return [<a key={f.slug} href={f.path}>{f.shape}</a>,String(n[0]),n.length>2?String(mid):'none',String(n[n.length-1]),f.best,f.watch];})}/>
    </Section>}
    <Section id="use" title="How coaches use it">{p.use.map(x=><p key={x}>{x}</p>)}</Section>
    <Section id="related" title="Go further"><LinkList links={[...p.links,{path:PRINTABLES_HUB.path,name:'All printable field diagrams',line:PRINTABLES_HUB.blurb}]}/></Section>

@@ -217,7 +217,7 @@ export const NUMBERS:readonly {n:number;name:string;slug:string;line:string}[]=[
  {n:11,name:'Left winger',slug:'winger',line:'Attacks wide on the left.'},
 ];
 export const POSITIONS_HUB={path:POSITIONS_HUB_PATH,crumb:'Soccer positions',blurb:`${POSITIONS.length} positions and the numbers 1 to 11 explained, each with a diagram`,
- title:'Soccer Positions Explained for Kids: Numbers 1 to 11',
+ title:'Soccer Positions by Number (1 to 11), Explained for Kids',
  description:'Every soccer position explained for kids, parents and coaches: goalkeeper, defenders, midfielders and forwards, the numbers 1 to 11, and 7v7 and 9v9 roles.',
  h1:'Soccer positions explained for kids',
  lessons:pick(['learn7_roles','learn9_shape','learn11_shape','learnf_roles31']),
