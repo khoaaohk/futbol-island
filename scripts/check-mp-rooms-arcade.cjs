@@ -12,7 +12,7 @@ const { spawn } = require('child_process');
 const url = (process.argv[2] || 'http://localhost:8762').replace(/\/$/, ''), relay = process.argv[3] || 'http://127.0.0.1:8761', out = process.argv[4] || '/tmp/mp-rooms-arcade';
 require('fs').mkdirSync(out, { recursive: true });
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-// Cabinet stand spots (= lib/multiplayer/rooms/arcade.ts: the hub's walkTo destination 1.8 m in front of the angled cabinet).
+// Cabinet stand spots (= lib/multiplayer/rooms/arcade.ts: the hub's walkTo destination 1.8 m in front of the cabinet).
 const fs = require('fs'), path = require('path'), ts = require('typescript'), vm = require('vm');
 function loadTs(file) {
   const m = { exports: {} }, code = ts.transpileModule(fs.readFileSync(file, 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 } }).outputText;

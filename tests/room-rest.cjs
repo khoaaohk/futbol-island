@@ -19,7 +19,7 @@ ok('1. hub rest gate: only after HUB_REST_S without input, no full-rate tail, no
 
 ok('2. crowd walkerIn: a walking visitor in the frustum blocks rest, one off screen does not; no allocation per call',()=>{
  const {createArcadeRoomCrowd}=load(path.join(ROOT,'lib/arcade/arcadeRoomCrowd.ts'));
- const scene=new T.Scene(),cabinets=[[-8,-7,0],[0,-10,0],[8,-7,0],[-9,4,.55],[9,4,-.55]].map(([x,z,yaw])=>({x,z,yaw}));
+ const scene=new T.Scene(),cabinets=[[-7.5,-10,0],[-1.5,-10,0],[7.5,-10,0],[-4.5,-10,0],[4.5,-10,0]].map(([x,z,yaw])=>({x,z,yaw}));
  const crowd=createArcadeRoomCrowd({scene,mobile:false,cabinets,bounds:{minX:-14,maxX:14,minZ:-11,maxZ:12}});
  const frustumOf=(cx,cz,half)=>{const c=new T.OrthographicCamera(-half,half,half,-half,.1,60);c.position.set(cx,30,cz);c.lookAt(cx,0,cz);c.updateMatrixWorld();c.updateProjectionMatrix();return new T.Frustum().setFromProjectionMatrix(new T.Matrix4().multiplyMatrices(c.projectionMatrix,c.matrixWorldInverse));};
  const all=frustumOf(0,0,20),far=frustumOf(400,400,5);

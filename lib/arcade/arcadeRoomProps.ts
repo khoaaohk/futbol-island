@@ -85,7 +85,7 @@ export function createArcadeRoomProps(scene:T.Scene){
  placement.copy(prizePlacement);tube(10.9,1.28,-7.85,.15,.17,coral);tube(10.9,1.38,-7.85,.065,.015,ink);
  const ticketFeed=animated('arcade-ticket-feed',()=>{for(let i=0;i<5;i++){box(10.88,1.15-i*.09,-7.17,.16,.1,.02,i%2?cream:coral);box(10.88,1.15-i*.09,-7.155,.08,.025,.01,ink);}});
  placement.identity();
- // Gashapon pair on the back wall (Nov 8 2026, lib/gashapon/machines.ts): the shared machine (lib/graphics/gashaponMesh.ts) merged
+ // Gashapon pair (Nov 8 2026; in the middle of the floor since Nov 17, lib/gashapon/machines.ts): the shared machine (lib/graphics/gashaponMesh.ts) merged
  // into one vertex-coloured mesh plus one glass mesh: two draws for both, no lights, static.
  const gashaMachines=GASHAPON_MACHINES.filter(m=>m.zone==='arcade');
  {const g=mergedGashapon(gashaMachines);geometries.push(g.solid,g.glass);const solid=new T.MeshStandardMaterial({vertexColors:true,roughness:.6}),glass=gashaponGlassMaterial();materials.push(solid,glass);

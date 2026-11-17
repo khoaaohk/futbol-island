@@ -7,12 +7,15 @@ import {defaultBeanLookFor,DEFAULT_CASUAL_OUTFIT} from '../graphics/beanLook';
 
 export type ArcadeCrowdCabinet={x:number;z:number;yaw:number};
 export type ArcadeCrowdBounds={minX:number;maxX:number;minZ:number;maxZ:number};
-export type ArcadeCrowdOptions={scene:T.Scene;mobile:boolean;reduced?:boolean;cabinets:readonly ArcadeCrowdCabinet[];bounds:ArcadeCrowdBounds;reactions?:BallReactions};
+export type ArcadeCrowdOptions={scene:T.Scene;mobile:boolean;reduced?:boolean;cabinets:readonly ArcadeCrowdCabinet[];bounds:ArcadeCrowdBounds;reactions?:BallReactions;
+ /** Nov 17 2026: half width of a keep-out strip down the room's centre line (the hub's gashapon pair stands mid-floor). With it the
+  *  walking lanes sit either side of the strip, and the door walk uses the lane (held inside the doorway) instead of the centre. */
+ aisleGap?:number};
 /** Reaction keys made once (the update read them per visitor per frame as template strings: heat QA, Oct 22 2026). */
 const VISITOR_KEYS=Array.from({length:8},(_,i)=>`arcade-visitor-${i}`);
 const walkerSphere=new T.Sphere(new T.Vector3(),1.1);
 /** Parent owns all scheduling. Room disposal removes every rig and crowd-owned resource. */
-export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bounds,reactions}:ArcadeCrowdOptions){
+export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bounds,reactions,aisleGap=0}:ArcadeCrowdOptions){
  const clampX=(x:number)=>T.MathUtils.clamp(x,bounds.minX+.35,bounds.maxX-.35),clampZ=(z:number)=>T.MathUtils.clamp(z,bounds.minZ+.35,bounds.maxZ-.35);
  const aisleX=clampX((bounds.minX+bounds.maxX)/2);
  const stations=cabinets.map((c,i)=>{const side=i%2?1:-1,s=Math.sin(c.yaw),k=Math.cos(c.yaw);return{x:clampX(c.x+s*1.8+k*.7*side),z:clampZ(c.z+k*1.8-s*.7*side),ax:clampX(c.x+s*3.05),az:clampZ(c.z+k*3.05),yaw:c.yaw+Math.PI,owner:-1};});
@@ -23,7 +26,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
   const motion:PlayerMotion={travelMode:'walk',facing:station.yaw,lookY:1.95};
   const arms=['left','right'].map(side=>({shoulder:rig.root.getObjectByName(`${side}-shoulder`)!,elbow:rig.root.getObjectByName(`${side}-elbow`)!}));
   const entering=i===count-1,entryX=clampX(2),entryZ=clampZ(bounds.maxZ-4);if(entering)shadow.position.set(entryX,.083,entryZ);
-  return{rig,shadow,motion,arms,social:null as SocialRoutine|null,socialAge:-1,socialPose:createSocialPose(),consoleBlend:0,greet:0,greetCooldown:0,playerNearby:false,x:entering?entryX:station.x,z:entering?entryZ:station.z,vx:0,vz:0,yaw:station.yaw,cabinet:i,previous:i,phase:(entering?'entry':'play') as 'entry'|'play'|'leave'|'aisle'|'cross'|'approach'|'arrive'|'exitAisle'|'exit'|'away',age:0,deadline:7+i*3.7,tx:entering?aisleX:station.x,tz:entering?entryZ:station.z,visits:0,yielding:false,laneX:clampX(aisleX+(i-(count-1)/2)*1.05),detour:null as {x:number;z:number;age:number}|null,detourCooldown:0};});
+  return{rig,shadow,motion,arms,social:null as SocialRoutine|null,socialAge:-1,socialPose:createSocialPose(),consoleBlend:0,greet:0,greetCooldown:0,playerNearby:false,x:entering?entryX:station.x,z:entering?entryZ:station.z,vx:0,vz:0,yaw:station.yaw,cabinet:i,previous:i,phase:(entering?'entry':'play') as 'entry'|'play'|'leave'|'aisle'|'cross'|'approach'|'arrive'|'exitAisle'|'exit'|'away',age:0,deadline:7+i*3.7,tx:entering?aisleX:station.x,tz:entering?entryZ:station.z,visits:0,yielding:false,laneX:clampX(aisleGap>0?aisleX+(i%2?1:-1)*(aisleGap+Math.floor(i/2)*1.05):aisleX+(i-(count-1)/2)*1.05),detour:null as {x:number;z:number;age:number}|null,detourCooldown:0};});
  const live=members.map(()=>true);
  /** Calm (the hub's rest, arcadeRest.ts): nobody starts a new walk; a walk under way finishes at a cabinet. */
  let calm=false;
@@ -35,6 +38,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
  // leave, it walks back in from the door and finds a free cabinet. Visitors in a social exchange, focused or knocked down are
  // never picked; the reconcile retries next update.
  const doorX=clampX(aisleX),doorZ=clampZ(bounds.maxZ-.4),AWAY_X=0,AWAY_Z=1e4;// parked far outside: the room's proximity / body / floor checks never see it
+ const doorLane=(m:typeof members[number])=>aisleGap>0?T.MathUtils.clamp(m.laneX,doorX-1.7,doorX+1.7):doorX;
  const leaving=(m:typeof members[number])=>m.phase==='exitAisle'||m.phase==='exit'||m.phase==='away';
  function reconcileFriends(dt:number){
   restoreWait=Math.max(0,restoreWait-dt);
@@ -42,7 +46,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
   while(out<friendSlots){let pick=-1,best=Infinity;for(let i=0;i<members.length;i++){const m=members[i];if(leaving(m)||m.social||i===focusedId||reactions?.get(VISITOR_KEYS[i]))continue;const d=Math.hypot(m.x-doorX,m.z-doorZ);if(d<best){best=d;pick=i;}}if(pick<0)break;const m=members[pick];if(stations[m.cabinet].owner===pick)stations[m.cabinet].owner=-1;m.previous=m.cabinet;m.phase='exitAisle';m.tx=m.laneX;m.tz=clampZ(m.z);m.detour=null;m.age=0;out++;}
   // Returning visitors come back one at a time (1.6 s apart) on their own lane, like the original single entering visitor.
   if(out>friendSlots){let pick=-1;for(let i=members.length-1;i>=0;i--)if(members[i].phase==='exitAisle'||members[i].phase==='exit'){pick=i;break;}if(pick<0&&restoreWait===0)for(let i=members.length-1;i>=0;i--)if(members[i].phase==='away'){pick=i;break;}if(pick>=0){const m=members[pick];
-   if(m.phase==='away'){restoreWait=1.6;m.x=m.laneX;m.z=doorZ;m.vx=m.vz=0;m.rig.root.visible=true;m.shadow.visible=true;debugStates[pick].away=false;}
+   if(m.phase==='away'){restoreWait=1.6;m.x=doorLane(m);m.z=doorZ;m.vx=m.vz=0;m.rig.root.visible=true;m.shadow.visible=true;debugStates[pick].away=false;}
    m.phase='aisle';m.age=0;m.tx=m.laneX;m.tz=clampZ(bounds.maxZ-4);}}
  }
  function update(dt:number,time:number,playerX:number,playerZ:number){
@@ -63,7 +67,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
    if(engaged){tx=m.x;tz=m.z;m.vx=m.vz=0;}
    let dx=tx-m.x,dz=tz-m.z,distance=Math.hypot(dx,dz);
    if(!engaged&&distance<.12&&m.phase!=='play'){
-    if(m.phase==='exitAisle'){m.phase='exit';m.tx=doorX;m.tz=doorZ;}
+    if(m.phase==='exitAisle'){m.phase='exit';m.tx=doorLane(m);m.tz=doorZ;}
     else if(m.phase==='exit'){m.phase='away';m.vx=m.vz=0;m.x=AWAY_X;m.z=AWAY_Z;m.rig.root.visible=false;m.shadow.visible=false;const away=debugStates[i];away.away=true;away.phase='away';away.x=AWAY_X;away.z=AWAY_Z;away.yielding=away.greeting=away.attentive=false;continue;}
     else if(m.phase==='entry'){m.phase='cross';m.tx=m.laneX;m.tz=station.az;}
     else if(m.phase==='leave'){m.phase='aisle';m.tx=m.laneX;m.tz=station.az;}
