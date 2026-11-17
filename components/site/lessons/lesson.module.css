@@ -1,0 +1,52 @@
+/* Lesson reading pages: picture parts (components/site/lessons/LessonParts.tsx, visual pass Nov 17 2026). Tokens come from
+   app/(site)/site.module.css (.page sets --paper, --surface, --well, --ink, --accent, --gold, --r-*, --s*, --gutter); radii from
+   --r-* only; flat fills, no rules, no shadows at rest. Phone first; at 960px the coach chapters and the quiz use a wider frame
+   than the 736px reading column (frames beside the steps). Nothing here animates. */
+.icon{flex:none;display:block}
+
+/* "In this lesson you learn": a warm field, the concept large, then the key-facts strip */
+.learn{width:100%;max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;display:grid;gap:var(--s2);padding:var(--pad-box);border-radius:var(--r-lg);background:var(--well);text-align:left}
+.learnTitle{margin:0;font-size:var(--t-cap);line-height:1.3;font-weight:700;color:var(--accent)}
+.learnLead.learnLead{max-width:none;color:var(--ink);font-weight:600;text-wrap:pretty}
+.facts{margin:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,128px),1fr));gap:var(--s1)}
+.fact,.factWide{display:grid;gap:2px;padding:10px 12px;border-radius:var(--r-md);background:var(--paper);min-width:0}
+.factWide{grid-column:1/-1}
+.facts dt{display:flex;align-items:center;gap:6px;font-size:var(--t-cap);font-weight:600;line-height:1.3;color:var(--ink-soft)}
+.facts dd{margin:0;font-weight:700;line-height:1.3;color:var(--ink);overflow-wrap:anywhere}
+
+/* Wide frame for the coach chapters and the quiz (desktop only; equal margins, centred on the reading column) */
+@media(min-width:960px){
+ .wide{--wide:min(1120px,calc(100vw - 2 * var(--gutter) - 32px));width:var(--wide);margin-inline:calc((100% - var(--wide)) / 2)}
+}
+
+/* Coach chapters: heading, frame, steps on a phone; steps beside the frame on desktop, sides alternating */
+.chapters{display:grid;gap:var(--s5)}
+.legend{margin:0}
+.chapter{display:grid;gap:var(--s2);grid-template-areas:'head' 'fig' 'text';align-items:start}
+.chapterTitle{grid-area:head;margin:0;font-size:clamp(26px,1.6vw + 18px,40px);line-height:1.05;font-weight:600;letter-spacing:-.025em;color:var(--ink)}
+.frame{grid-area:fig;margin:0;display:grid;gap:6px;justify-items:center}
+.frame svg{display:block;width:100%;max-width:440px;height:auto;border-radius:var(--r-md)}
+.frame[data-fallback] svg{max-width:300px}
+.frameCap{font-size:var(--t-cap);line-height:1.4;color:var(--ink-soft)}
+.steps.steps{grid-area:text;margin:0;padding-left:1.6em;display:grid;gap:var(--s2);font-size:var(--t-body);line-height:1.5}
+.steps li{padding-left:2px}
+.steps li::marker{color:var(--accent);font-weight:700;font-variant-numeric:tabular-nums}
+@media(min-width:960px){
+ .chapter{grid-template-columns:minmax(0,1fr) minmax(0,440px);grid-template-areas:'head fig' 'text fig';column-gap:var(--s5);row-gap:var(--s3)}
+ .chapter:nth-of-type(even){grid-template-columns:minmax(0,440px) minmax(0,1fr);grid-template-areas:'fig head' 'fig text'}
+ .chapterTitle{align-self:end}
+}
+
+/* Quiz: compact cards, options as chips (letters drawn by CSS so the text stays the option), explanation behind a disclosure */
+.quiz.quiz{grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));align-items:start}
+.q{display:grid;gap:12px;padding:var(--pad-box);border-radius:var(--r-lg);background:var(--surface);min-width:0}
+.qTitle{margin:0;font-size:var(--t-h3);line-height:1.25;font-weight:700;letter-spacing:-.015em;color:var(--ink)}
+.chips.chips{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:var(--s1);counter-reset:opt}
+.chips.chips li{counter-increment:opt;display:inline-flex;align-items:baseline;gap:8px;max-width:100%;box-sizing:border-box;padding:7px 14px 7px 8px;border-radius:var(--r-pill);background:var(--paper);font-weight:500;line-height:1.35}
+.chips li::before{content:counter(opt,upper-alpha);flex:none;display:inline-grid;place-items:center;min-width:22px;height:22px;border-radius:var(--r-pill);background:var(--well);color:var(--accent);font-size:var(--t-label);font-weight:700}
+.explain summary{display:inline-flex;align-items:center;gap:8px;min-height:var(--tap);cursor:pointer;font-weight:700;color:var(--link);list-style:none}
+.explain summary::-webkit-details-marker{display:none}
+.explain summary::after{content:'+';display:inline-grid;place-items:center;width:22px;height:22px;border-radius:var(--r-pill);background:var(--paper);color:var(--ink);font-weight:700}
+.explain[open] summary::after{content:'−'}
+.explain summary:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px;border-radius:var(--r-sm)}
+.explain p{margin:0}
