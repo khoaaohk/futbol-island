@@ -83,6 +83,12 @@ for(const enPath of ep.ES_PAGES){
   assert(!JSON.stringify(ld).includes('"inLanguage":"en"'),`${esPath}: no nested inLanguage en`);
   if(ld['@type']==='FAQPage'){assert(ld.mainEntity.length>0);for(const q of ld.mainEntity){assert(q.name&&q.acceptedAnswer&&q.acceptedAnswer.text,`${esPath}: FAQ entries`);
    assert(html.includes(q.name.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;'))||html.includes(q.name.replace(/&/g,'&amp;')),`${esPath}: FAQ "${q.name}" is shown`);}}
+  // Practice-problem markup (Nov 17 2026): a guide's nested Quiz names the shown right option as acceptedAnswer; lessons have no Quiz.
+  const quiz=[].concat(ld['@type']).includes('LearningResource')?ld.hasPart:null;
+  if(/\/lecciones\//.test(esPath)||/\/lessons\//.test(esPath))assert(!quiz,`${esPath}: no Quiz on a lesson (the answer is never shown)`);
+  if(quiz)for(const x of quiz.hasPart){const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;').replace(/'/g,'&#x27;');
+   assert(x.acceptedAnswer&&x.acceptedAnswer.text&&html.includes(esc(x.acceptedAnswer.text)),`${esPath}: Question "${x.name}" has a shown acceptedAnswer`);
+   assert(html.includes(esc(x.text)),`${esPath}: Question "${x.name}" is shown`);}
   if(ld['@type']==='BreadcrumbList')for(const c of ld.itemListElement)assert(/^https:\/\/futbolisland\.app\/es(\/|$)/.test(c.item),`${esPath}: breadcrumbs stay in Spanish`);
  }
  const text=html.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/g,' ').replace(/<[^>]+>/g,' ').replace(/&[a-z#0-9]+;/g,' ').replace(/\S*futbolisland\.app\S*/g,' ').replace(ALLOWED,'');

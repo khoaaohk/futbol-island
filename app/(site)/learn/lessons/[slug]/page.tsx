@@ -29,7 +29,7 @@ export default function LessonPage({params}:{params:{slug:string}}){
  const guides=guidesForLesson(l.id);/* formations and positions pages that teach from this lesson (lib/site/guides.ts) */
  const sib=lessonSiblings(l),hubs=hubsFor(l.id),faq=[{q:'How do I play this lesson?',a:'Open Futbol Island at futbolisland.app/play and start an island or continue with a save code. In the game, a coach voice shows each idea on a pitch with moving players, step by step, and a quick quiz checks it.'},...HUB_COMMON_FAQ];
  return <>
-  <JsonLd data={lessonLd({name:l.title,path:lessonPath(l.id),description:l.concept,teaches:l.concept,level:l.difficulty,about:`${l.formatLabel} football`,keywords:[l.formatLabel,l.category,l.chapter].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:LESSON_DATA_UPDATED>SITE_UPDATED.lessons?LESSON_DATA_UPDATED:SITE_UPDATED.lessons,questions:l.questions})}/>
+  <JsonLd data={lessonLd({name:l.title,path:lessonPath(l.id),description:l.concept,teaches:l.concept,level:l.difficulty,about:`${l.formatLabel} football`,keywords:[l.formatLabel,l.category,l.chapter].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:LESSON_DATA_UPDATED>SITE_UPDATED.lessons?LESSON_DATA_UPDATED:SITE_UPDATED.lessons})}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={faqLd(faq)}/>
   <header className={styles.intro}>

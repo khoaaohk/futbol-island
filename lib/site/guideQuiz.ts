@@ -23,12 +23,16 @@ function place(seed:string,q:string,right:string,wrong:readonly string[],explain
 /** Two items far from index i in a list (a third and two thirds of the way round), never i itself. */
 const far=<T,>(list:readonly T[],i:number):[T,T]=>{const n=list.length,a=Math.round(n/3),b=Math.round(2*n/3);return [list[(i+a)%n],list[(i+b)%n]];};
 const firstSentence=(s:string)=>(/^.*?[.!?](\s|$)/.exec(s)?.[0]??s).trim();
+/** A rules answer: the truth's first sentence, or its first two when the first is a bare "No." (it must read as an answer). */
+const lead=(s:string)=>{const a=firstSentence(s);return a.length>=15?a:(a+' '+firstSentence(s.slice(a.length).trim())).trim();};
 const unquote=(s:string)=>s.replace(/^[“"]|[”"]$/g,'').trim();
 const cap=(s:string)=>s[0].toUpperCase()+s.slice(1);
 
+/** The rules questions name the rule (Nov 17 2026): "Which one is right?" alone was not a real question in search results. */
+const RULE_ASK=['which of these is true?','which of these is right?','which one is the real rule?'] as const;
 export function ruleQuiz(r:Rule):QuizQuestion[]{
  if(r.mixups.length<3)throw new Error(`rule ${r.slug} needs three mix-ups for its quiz`);
- return r.mixups.slice(0,3).map((m,k)=>place(r.slug+k,k===0?'Which one is right?':k===1?'And this one?':'Last one. Which is right?',firstSentence(m.truth),[unquote(m.said)],m.truth));
+ return r.mixups.slice(0,3).map((m,k)=>place(r.slug+k,`${r.name}: ${RULE_ASK[k]}`,lead(m.truth),[unquote(m.said)],m.truth));
 }
 export function termQuiz(t:TermPage,all:readonly TermPage[]):QuizQuestion[]{
  const i=all.indexOf(t),[a,b]=far(all,i),lower=t.name.toLowerCase(),an=/^[aeiou]/i.test(t.name)?'an':'a';
@@ -36,7 +40,7 @@ export function termQuiz(t:TermPage,all:readonly TermPage[]):QuizQuestion[]{
  if(t.how.length&&t.mistakes.length>=2)out.push(place(t.slug,`Which one is a good way to do ${an} ${lower}?`,t.how[0],t.mistakes.slice(0,2),`${t.how[0]} The other two are common mistakes.`));
  const other=t.also?.split(', ')[0];
  if(other)out.push(place(t.slug,`What is another name for ${an} ${lower}?`,cap(other),[a.name,b.name],`${cap(other)}. ${t.name} is also called ${t.also}.`));
- else out.push(place(t.slug,`Which one is a common mistake?`,t.mistakes[t.mistakes.length-1],t.how.slice(1,3),'That one is on the list of common mistakes. The other two are good habits.'));
+ else out.push(place(t.slug,`Which one is a common mistake with ${an} ${lower}?`,t.mistakes[t.mistakes.length-1],t.how.slice(1,3),'That one is on the list of common mistakes. The other two are good habits.'));
  return out;
 }
 export function positionQuiz(p:Position,all:readonly Position[]):QuizQuestion[]{

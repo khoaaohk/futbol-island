@@ -56,7 +56,7 @@ export function LessonEsPage({l}:{l:EsLesson}){
  const eyebrow=[`Lección de ${fmtWord(l.formatLabel)}`,l.chapterEs,l.difficultyEs].filter(Boolean).join(' · ');
  return <>
   <JsonLd data={esLd(lessonLd({name:l.title,path:l.esPath,description:l.concept,teaches:l.concept,level:l.difficulty,about:formatPhraseEs(l.formatLabel),
-   keywords:[l.formatLabel,l.categoryEs,l.chapterEs].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:CHECKED,questions:l.questions}))}/>
+   keywords:[l.formatLabel,l.categoryEs,l.chapterEs].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:CHECKED}))}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={faqLd(LESSON_FAQ)}/>
   <header className={styles.intro}>

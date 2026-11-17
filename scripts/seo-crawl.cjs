@@ -4,6 +4,7 @@
  *  - every sitemap URL answers 200;
  *  - each page has exactly one self-referencing absolute canonical (https://futbolisland.app/<path>, no trailing slash, no query);
  *  - every <script type="application/ld+json"> parses, and no @type appears twice on a page;
+ *  - (Nov 17 2026, Search Console "Practice Problems") every Question inside a Quiz has an acceptedAnswer whose text is on the page;
  *  - every internal link on every page resolves (200 or a redirect to a page that does);
  *  - no orphans: every sitemap URL is linked from at least one OTHER page;
  *  - click depth (Nov 15 2026): every sitemap URL is at most 3 clicks from / (breadth-first over the pages' own links);
@@ -44,7 +45,17 @@ const familyOf = p => (FAMILY.find(([, re]) => re.test(p)) || ['other'])[0];
     if (canon.length !== 1 || (canon[0] !== want && canon[0] !== want + '/' && !(p === '/' && canon[0] === SITE + '/'))) problems.canonical.push(`${p}: ${canon.join(', ') || 'none'}`);
     const types = [];
     for (const m of html.matchAll(/<script type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)) {
-      try { const j = JSON.parse(m[1]); for (const x of (Array.isArray(j) ? j : j['@graph'] || [j])) types.push([].concat(x['@type']).join('+')); }
+      try {
+        const j = JSON.parse(m[1]);
+        for (const x of (Array.isArray(j) ? j : j['@graph'] || [j])) types.push([].concat(x['@type']).join('+'));
+        const quizzes = []; const walk = o => { if (!o || typeof o !== 'object') return; if ([].concat(o['@type']).includes('Quiz')) quizzes.push(o); Object.values(o).forEach(walk); }; walk(j);
+        const bare = t => t.replace(/&[a-z#0-9]+;/gi, '').replace(/[^\p{L}\p{N}]+/gu, ''), shown = bare(text(html));
+        for (const z of quizzes) for (const q of [].concat(z.hasPart || [])) {
+          const a = q.acceptedAnswer && q.acceptedAnswer.text;
+          if (!a) problems.jsonld.push(`${p}: Quiz question "${q.name}" has no acceptedAnswer`);
+          else if (!shown.includes(bare(a).slice(0, 40))) problems.jsonld.push(`${p}: acceptedAnswer "${a.slice(0, 40)}" not shown`);
+        }
+      }
       catch (e) { problems.jsonld.push(`${p}: parse ${e.message}`); }
     }
     const dup = types.filter((t, i) => types.indexOf(t) !== i); if (dup.length) problems.jsonld.push(`${p}: duplicate ${dup.join(',')}`);
