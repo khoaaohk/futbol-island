@@ -11,21 +11,24 @@ import Breadcrumbs from '@/components/site/Breadcrumbs';
 import PlayBar from '@/components/site/PlayBar';
 import {playLessonHref} from './playLinks';
 import {FactIcon,type FactIconKind} from '@/components/site/FactIcons';
+import OnThisPage from '@/components/site/OnThisPage';
 import styles from '@/app/(site)/site.module.css';
 /**
  * The shared sections of the guide pages (formations, positions and later clusters; lib/site/guides.ts): intro, diagram with
  * its text alternative, bullet lists, lesson and link lists, and the one gold Play button. Server-rendered, classes from
  * app/(site)/site.module.css only (docs/seo/DESIGN.md): index pages put the button in the intro, detail pages at the end.
  */
-export function GuideIntro({crumbs,h1,lead,more,cta,facts}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:string;cta?:boolean;facts?:readonly Fact[]}){
- return <header className={styles.intro}>
+/** `toc` (batch 3, Nov 17 2026): a detail page (no `cta`) also gets the desktop "On this page" column (components/site/OnThisPage.tsx);
+ *  its presence switches .main to the two-column guide layout (site.module.css). Index pages keep one wide column. */
+export function GuideIntro({crumbs,h1,lead,more,cta,facts,toc=!cta}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:string;cta?:boolean;facts?:readonly Fact[];toc?:boolean}){
+ return <><header className={styles.intro}>
   <Breadcrumbs crumbs={crumbs}/>
   <h1 className={styles.title}>{h1}</h1>
   <QuickAnswer lead={lead} facts={facts}/>
   {more&&<p>{more}</p>}
   <p className={styles.caption}>{GUIDE_NAMES}</p>
   {cta&&<a className={styles.cta} href={PLAY_PATH}>Play it on the island</a>}
- </header>;
+ </header>{toc&&<OnThisPage/>}</>;
 }
 /** One key fact under the answer (visual pass, Nov 17 2026): an energy-bar style icon, a short label and the value, taken from
  *  data the page already shows. `href` makes the value a jump link (to the quiz, the deck, a related page). */
