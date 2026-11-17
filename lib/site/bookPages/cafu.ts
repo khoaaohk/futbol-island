@@ -1,7 +1,7 @@
 import type {BookPageSpec} from './types';
 /* Cafu sources checked Nov 17 2026 against Wikipedia (the CNN page answered HTTP 451 from here): every fact on this page is
  * there except the book's last two sentences (a foundation in Jardim Irene, "everything he has, he owes to Jardim Irene"), which
- * Wikipedia does not state, so the FAQ leaves them out; the story text keeps the book's words (owner to confirm). */
+ * Wikipedia does not state, so the FAQ leaves them out; the story text keeps the book’s words (owner, Nov 17 2026: "keep them"). */
 /** Cafu (the sample, Nov 17 2026): the clearest single lesson (five clubs said no, then yes), a real position change that the
  *  positions guide teaches (right-back, the overlap) and three World Cup finals; every chapter has a source. */
 const page:BookPageSpec={
