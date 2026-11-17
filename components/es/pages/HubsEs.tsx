@@ -18,6 +18,8 @@ import {ES_HUBS} from '@/lib/i18n/es/registry';
 import {ES_LESSON_HUB_PATHS,ES_LESSON_HUBS,esHub,TEAM_SIZES_ES,type EsHub} from '@/lib/i18n/es/hubs';
 import {CHART_FIELDS_ES,CHARTS_ES,LINKS_ES} from '@/lib/i18n/es/charts';
 import {SAFE_FACTS_ES,SAFE_FAQ_ES,SAFE_GUIDE_ES,SAFE_TRUST_LINE_ES,ES_SAFE_GUIDE} from '@/lib/i18n/es/safety';
+import {Promises,ShortFaq,TrustTiles} from '@/components/site/PageParts';
+import {safePromises,SAFE_TRUST_ES} from '@/components/site/SafeLook';
 import {Bullets,DataTable,EsBreadcrumbs,EsGuideEnd,EsIntro,EsSceneDiagram,LinkList,Section,esCrumbs,esLessonLinks} from '@/components/es/EsParts';
 import KeepReading from '@/components/site/KeepReading';
 import {Band,CardGrid,groupIcon,Hero,lessonIcon} from '@/components/site/HubParts';
@@ -141,11 +143,12 @@ function SafeGuideEsPage(){
    <p className={styles.lead} data-answer="">{G.lead(HUB_COUNTS.lessons)}</p>
    <a className={styles.cta} href={PLAY_PATH}>Juega Futbol Island</a>
   </header>
+  <TrustTiles items={SAFE_TRUST_ES} label="Futbol Island de un vistazo"/>
   <section className={styles.section} aria-labelledby="facts"><h2 className={styles.h2} id="facts">Lo que los padres deben saber</h2>
-   <ul className={styles.stack}>{SAFE_FACTS_ES.map(f=><li key={f.title} className={styles.card}><h3 className={styles.h3}>{f.title}</h3><p>{f.text}</p></li>)}</ul>
+   <Promises items={safePromises(SAFE_FACTS_ES,'es')}/>
    <p>Todos los detalles, incluido qué se guarda y por cuánto tiempo, están en la <a href="/privacy">política de privacidad (en inglés)</a>. Hay más sobre quién hace el juego en la página <a href={toEs('/about')}>Quiénes somos</a>.</p>
   </section>
-  <QA id="faq" title="Preguntas que hacen los padres" faq={SAFE_FAQ_ES}/>
+  <ShortFaq id="faq" title="Preguntas que hacen los padres" faq={SAFE_FAQ_ES} more="Más"/>
   <MoreToLearnEs except={G.enPath}/>
   <p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Juega Futbol Island</a></p>
  </>;
