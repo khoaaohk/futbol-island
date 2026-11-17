@@ -7,7 +7,9 @@ import {SITE_CARDS} from '@/lib/site/cards';
 import {SITE_EXHIBITS} from '@/lib/site/exhibits';
 import {publicWorldEnabled} from '@/lib/multiplayer/publicFlag';
 import {abs,breadcrumbLd,faqLd,GAME_ID,PLAY_PATH,PUBLISHER,SITE_NAME,SITE_URL} from '@/lib/site/seo';
-import {EsBreadcrumbs,esCrumbs} from '@/components/es/EsParts';
+import {EsBreadcrumbs,QA,esCrumbs} from '@/components/es/EsParts';
+import {IconList,PictureTiles,SHOTS,TrustTiles} from '@/components/site/PageParts';
+import {SAFE_TRUST_ES} from '@/components/site/SafeLook';
 import {toEs} from '@/lib/i18n/esPaths';
 import styles from '@/app/(site)/site.module.css';
 
@@ -16,6 +18,7 @@ import styles from '@/app/(site)/site.module.css';
  * The grown-ups words are lib/site/aboutCopy.ts GROWN_UPS in Spanish (kept here; aboutCopy stays English). The privacy lines
  * follow the English ones, including the public-island flag, and never say more than they do. Game feature names stay as the
  * game shows them (the game is in English for now), with the Spanish meaning in brackets.
+ * Visual pass b5 (Nov 17 2026): the same trust tiles, picture tiles, icon list and collapsible FAQ as the English page.
  */
 const PUB=publicWorldEnabled();
 const G={
@@ -69,6 +72,7 @@ export default function AboutEs(){
    <p className={styles.caption}>¿Quieres ver el recorrido primero? <a href={toEs('/')}>Mira lo que hay dentro del juego</a>: cada parte y la idea de fútbol que enseña.</p>
    <p className={styles.caption}>El juego está en inglés por ahora; estas guías están en español.</p>
   </header>
+  <TrustTiles items={SAFE_TRUST_ES} label="Futbol Island de un vistazo"/>
 
   <section className={styles.section} aria-labelledby="who"><h2 className={styles.h2} id="who">Para quién es</h2>
    <p>Para niños a los que les encanta el fútbol (soccer en Estados Unidos) y quieren entender mejor el juego: dónde pararse, cuándo pasar, cómo un equipo mantiene su forma. También es para padres, cuidadores y entrenadores que buscan una forma tranquila de que los niños aprendan las ideas del juego entre entrenamientos.</p>
@@ -78,25 +82,27 @@ export default function AboutEs(){
 
   <section className={styles.section} aria-labelledby="learn"><h2 className={styles.h2} id="learn">Qué enseña</h2>
    <p>{G.learns}</p>
-   <ul>
-    <li><b>Posiciones y táctica:</b> <a href="/learn/lessons">{LESSONS.length} lecciones cortas</a> en 7v7, 9v9, 11v11 y futsal. Cada una se juega en una cancha con jugadores que se mueven, un entrenador explica cada paso y una prueba rápida revisa la idea.</li>
-    <li><b>Las reglas:</b> las Reglas de Juego de la IFAB, desde el fuera de juego y el penal hasta los saques de banda y los tiros libres, en las lecciones y en el museo.</li>
-    <li><b>La mente del portero:</b> pescar en la isla también es una lección de portero: quédate listo, no caigas en un amago y luego reacciona rápido.</li>
-    <li><b>La búsqueda de balones escondidos:</b> hay balones escondidos por toda la isla, y cada balón que encuentras enseña una idea de fútbol.</li>
-    <li><b>Historia de clubes y cultura del fútbol:</b> <a href="/fish">{SITE_FISH.length} animales marinos</a> para atrapar, cada uno ligado a un club, un equipo o una historia real de fútbol que tiene que ver con el mar, y <a href="/cards">{SITE_CARDS.length} tarjetas de jugadores y entrenadores</a> para coleccionar.</li>
-    <li><b>El museo:</b> <a href="/exhibits">{SITE_EXHIBITS.length} exhibiciones</a> sobre la historia de la Copa Mundial, balones y uniformes, leyendas, las primeras veces del fútbol y la ciencia del juego.</li>
-    <li><b>La sala de juegos:</b> cinco juegos de fútbol, una habilidad a la vez.</li>
-   </ul>
+   <PictureTiles items={[
+    {href:'/learn/lessons',title:`${LESSONS.length} lecciones cortas`,line:'Posiciones y táctica en 7v7, 9v9, 11v11 y futsal. Cada una se juega en una cancha con jugadores que se mueven, un entrenador explica cada paso y una prueba rápida revisa la idea.',shot:SHOTS.lessons,alt:'Una lección del juego: una jugada se ve en la cancha y luego una prueba pregunta por qué funciona el buen desmarque.'},
+    {href:'/cards',title:`${SITE_CARDS.length} tarjetas de jugadores y entrenadores`,line:'Historia de clubes y cultura del fútbol, una tarjeta a la vez, para coleccionar en un álbum.',shot:SHOTS.cards,alt:'El álbum de tarjetas del juego: se abre una tarjeta sorpresa y una tarjeta de jugador vuela al álbum.'},
+    {href:'/fish',title:`${SITE_FISH.length} animales marinos`,line:'Para atrapar, cada uno ligado a un club, un equipo o una historia real de fútbol que tiene que ver con el mar. Pescar también es una lección de portero: quédate listo, no caigas en un amago y luego reacciona rápido.',shot:SHOTS.fishing,alt:'Pesca en la playa en el juego: el sedal se tensa y sale una caballa.'},
+    {href:'/exhibits',title:`${SITE_EXHIBITS.length} exhibiciones del museo`,line:'La historia de la Copa Mundial, balones y uniformes, leyendas, las primeras veces del fútbol y la ciencia del juego.',shot:SHOTS.museum,alt:'El museo de fútbol del juego: una vitrina con el saque de banda y el Balón de Oro.'},
+   ]}/>
+   <IconList items={[
+    {icon:'law',title:'Las reglas:',text:'las Reglas de Juego de la IFAB, desde el fuera de juego y el penal hasta los saques de banda y los tiros libres, en las lecciones y en el museo.'},
+    {icon:'ball',title:'La búsqueda de balones escondidos:',text:'hay balones escondidos por toda la isla, y cada balón que encuentras enseña una idea de fútbol.'},
+    {icon:'star',title:'La sala de juegos:',text:'cinco juegos de fútbol, una habilidad a la vez.'},
+   ]}/>
   </section>
 
   <section className={styles.section} aria-labelledby="how"><h2 className={styles.h2} id="how">Cómo funciona</h2>
-   <ul>
-    <li><b>{G.free}</b> {G.freeWhy}</li>
-    <li><b>Primero para el teléfono.</b> Funciona en el navegador web de teléfonos, tabletas y computadoras. Sin descargas y sin registrarse.</li>
-    <li><b>Sin anuncios emergentes ni de rastreo, sin chat abierto.</b> No hay chat de texto libre con otros jugadores ni publicidad emergente, en video o de rastreo. {SPONSOR_BOARDS_ES}</li>
-    <li><b>Códigos de guardado, no cuentas.</b> {G.privacy} El código no lleva datos personales.</li>
-    <li><b>Para adultos.</b> La pantalla de inicio del juego tiene una página “For grown-ups” (para adultos) y la <a href="/privacy">política de privacidad</a> completa (en inglés).</li>
-   </ul>
+   <IconList two items={[
+    {icon:'coin',title:G.free,text:G.freeWhy},
+    {icon:'phone',title:'Primero para el teléfono.',text:'Funciona en el navegador web de teléfonos, tabletas y computadoras. Sin descargas y sin registrarse.'},
+    {icon:'noads',title:'Sin anuncios emergentes ni de rastreo, sin chat abierto.',text:<>No hay chat de texto libre con otros jugadores ni publicidad emergente, en video o de rastreo. {SPONSOR_BOARDS_ES}</>},
+    {icon:'key',title:'Códigos de guardado, no cuentas.',text:<>{G.privacy} El código no lleva datos personales.</>},
+    {icon:'shield',title:'Para adultos.',text:<>La pantalla de inicio del juego tiene una página “For grown-ups” (para adultos) y la <a href="/privacy">política de privacidad</a> completa (en inglés).</>},
+   ]}/>
   </section>
 
   <section className={styles.section} aria-labelledby="partners"><h2 className={styles.h2} id="partners">{G.partnerTitle}</h2>
@@ -107,9 +113,8 @@ export default function AboutEs(){
    <ul>{NONPROFITS.map(n=><li key={n.name}><a href={n.href} rel="noopener noreferrer">{n.name}</a></li>)}</ul>
   </section>
 
-  <section className={styles.section} aria-labelledby="faq"><h2 className={styles.h2} id="faq">Preguntas que hacen los adultos</h2>
-   <ul className={styles.stack}>{FAQ.map(({q,a})=><li key={q} className={styles.card}><h3 className={styles.h3}>{q}</h3><p>{a}</p></li>)}</ul>
+  <QA id="faq" title="Preguntas que hacen los adultos" faq={FAQ}>
    <p className={styles.caption}><a href="/privacy">Lee la política de privacidad (en inglés)</a></p>
-  </section>
+  </QA>
  </>;
 }
