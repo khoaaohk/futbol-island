@@ -82,7 +82,8 @@ ok('goals and serves: the whole puck over the line, a beat, then a serve toward 
 ok('the ramp is a table: every level is at least as quick, fast, smart and bold as the one before; level 1 is gentle',()=>{
  assert(RAMP.length>=12);const up=['speed','shot','predict','guard','attack','bank'];
  for(let i=1;i<RAMP.length;i++){assert(RAMP[i].react<=RAMP[i-1].react,`react ${i+1}`);assert(RAMP[i].err<=RAMP[i-1].err,`err ${i+1}`);for(const k of up)assert(RAMP[i][k]>=RAMP[i-1][k],`${k} ${i+1}`);}
- assert(RAMP[0].react>=.45&&RAMP[0].speed<=70&&RAMP[0].shot<=100&&RAMP[0].attack<=.35,'level 1 is slow and rarely attacks');assert(RAMP[11].speed>RAMP[0].speed*4&&RAMP[11].predict===1);
+ // Nov 17 2026 (owner: "increase the beginning difficulty of the ai"): level 1 moves and attacks from the first serve, yet is still the easiest row.
+ assert(RAMP[0].react>=.35&&RAMP[0].react<=.4&&RAMP[0].speed>=90&&RAMP[0].speed<=110&&RAMP[0].shot<=135&&RAMP[0].attack>=.45&&RAMP[0].attack<=.5,'level 1 is a real opponent, and the easiest');assert(RAMP[11].speed>RAMP[0].speed*2.5&&RAMP[11].predict===1);
  assert(RAMP.every(r=>r.name&&r.tip.length>20&&r.shot<=AH.VMAX&&r.speed<AH.HUMAN_CAP));assert.equal(new Set(RAMP.map(r=>r.name)).size,RAMP.length);
  assert.equal(K.opponentFor(1).name,'Sandy');assert.equal(K.opponentFor(12),RAMP[11]);const lap=K.opponentFor(13);assert.equal(lap.name,'Sandy II');assert.equal(lap.speed,RAMP[11].speed,'past the table the last row plays on');assert.equal(K.opponentFor(26).name,'Pip III');
 });

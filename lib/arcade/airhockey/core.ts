@@ -20,13 +20,14 @@ const {W,H,PR,SR,GOAL0,GOAL1}=AH,R=PR+SR,STEP=1/AH.HZ;
  *  bank = how often they shoot off a board. */
 export type AirBot={react:number;speed:number;shot:number;predict:number;guard:number;attack:number;err:number;bank:number};
 export type AirOpponent=AirBot&{name:string;tip:string};
-/** The endless ramp, read by tests (monotone) and by docs. Level 1 is gentle: slow, stands in the middle, rarely attacks. */
+/** The endless ramp, read by tests (monotone) and by docs. Nov 17 2026 (owner: "increase the beginning difficulty of the ai"): levels
+ *  1-5 start where level 3 used to (Sandy now plays about like the old Coco) and close on Bruno, who is unchanged; 6+ are as before. */
 export const RAMP:readonly AirOpponent[]=[
- {name:'Sandy',tip:'Sandy stands still. Shoot for the corner of the goal.',react:.5,speed:62,shot:90,predict:0,guard:.25,attack:.3,err:18,bank:0},
- {name:'Pip',tip:'Pip watches the puck, not the boards. Try a shot off the side.',react:.42,speed:80,shot:110,predict:.1,guard:.35,attack:.4,err:15,bank:0},
- {name:'Coco',tip:'Coco leaves the near post open. Shoot from wide.',react:.36,speed:98,shot:130,predict:.2,guard:.45,attack:.5,err:13,bank:0},
- {name:'Rafa',tip:'Rafa likes to attack. Save, then counter fast.',react:.3,speed:116,shot:150,predict:.32,guard:.55,attack:.58,err:11,bank:.1},
- {name:'Mina',tip:'Mina reads straight shots. Use the boards.',react:.26,speed:134,shot:170,predict:.44,guard:.64,attack:.65,err:9.5,bank:.15},
+ {name:'Sandy',tip:'Sandy is slow to move. Shoot for the corner of the goal.',react:.38,speed:96,shot:128,predict:.18,guard:.42,attack:.48,err:13.5,bank:0},
+ {name:'Pip',tip:'Pip watches the puck, not the boards. Try a shot off the side.',react:.33,speed:108,shot:142,predict:.26,guard:.5,attack:.54,err:12,bank:0},
+ {name:'Coco',tip:'Coco leaves the near post open. Shoot from wide.',react:.29,speed:120,shot:155,predict:.34,guard:.57,attack:.6,err:10.8,bank:.05},
+ {name:'Rafa',tip:'Rafa likes to attack. Save, then counter fast.',react:.26,speed:132,shot:168,predict:.42,guard:.63,attack:.65,err:9.8,bank:.1},
+ {name:'Mina',tip:'Mina reads straight shots. Use the boards.',react:.24,speed:143,shot:180,predict:.5,guard:.68,attack:.69,err:8.8,bank:.15},
  {name:'Bruno',tip:'Bruno hits hard. Stay between the puck and your goal.',react:.22,speed:152,shot:190,predict:.55,guard:.72,attack:.72,err:8,bank:.2},
  {name:'Kiko',tip:'Kiko banks shots off the side. Watch the angle in, it is the angle out.',react:.19,speed:170,shot:210,predict:.65,guard:.79,attack:.78,err:7,bank:.25},
  {name:'Zuri',tip:'Zuri covers both posts. Make her move first, then shoot.',react:.16,speed:190,shot:230,predict:.74,guard:.85,attack:.83,err:6,bank:.3},
