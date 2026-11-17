@@ -1,11 +1,11 @@
 import type {ReactNode} from 'react';
-import {chapterAnchor,type SiteBook} from '@/lib/site/books';
+import {chapterAnchor,type BookChapter,type SiteBook} from '@/lib/site/books';
 import {FactIcon} from '@/components/site/FactIcons';
-import ChapterArt from './ChapterArt';
 import s from './books.module.css';
 /**
  * Server parts of the books pages (/books, /books/<slug>; Nov 17 2026). Plain HTML, no script: the cover, the chapters (the
  * whole story as text, each chapter with its year, picture and "What it teaches" card), the sources and the keep-reading row.
+ * The chapter pictures are stills of the game's own 3D paper pop-up spreads, page action done (scripts/capture-book-spreads.cjs).
  * Tokens from app/(site)/site.module.css (.page); radii from --r-* only; flat fills, no rules, no shadows at rest.
  */
 /** Six cover colours from the island's paper set, dealt along the shelf so neighbours differ. */
@@ -27,10 +27,15 @@ export function BookMark({size=16}:{size?:number}){
  </svg>;
 }
 
+/** A chapter's picture: public/books/spreads/<book>/<chapter>.webp, 960×600 (scripts/capture-book-spreads.cjs). */
+export const SPREAD_W=960,SPREAD_H=600;
+export const spreadSrc=(book:string,chapter:string)=>`/books/spreads/${book}/${chapter}.webp`;
+const spreadAlt=(c:Pick<BookChapter,'title'|'year'|'prompt'|'response'>)=>`Paper pop-up spread of “${c.title}” (${c.year}) after “${c.prompt}”: ${c.response}`;
 /** The whole story, chapter by chapter: a timeline down the side on wide screens, the picture alternating sides. */
 export function StoryChapters({book}:{book:SiteBook}){
  return <ol className={s.chapters}>{book.chapters.map((c,i)=><li key={c.id} id={chapterAnchor(c.id)} className={s.chapter} data-side={i%2?'right':'left'}>
-  <div className={s.chapterArt}><ChapterArt motif={c.motif} steps={c.steps}/></div>
+  <div className={s.chapterArt}><img className={s.artImg} src={spreadSrc(book.id,c.id)} width={SPREAD_W} height={SPREAD_H} alt={spreadAlt(c)}
+   loading={i?'lazy':undefined} decoding="async"/></div>
   <div className={s.chapterBody}>
    <p className={s.year}><span className={s.yearDot} aria-hidden="true"/>{c.year}</p>
    <h3 className={s.chapterTitle}>{c.title}</h3>

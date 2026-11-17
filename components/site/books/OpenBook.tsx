@@ -4,8 +4,8 @@ import type {ReaderBook} from '@/lib/site/books';
 import s from './books.module.css';
 /**
  * "Open the pop-up book" (Nov 17 2026): a link to the story on the page (it works with no script) that, on tap, fetches the
- * web reader (./BookReader, its own chunk: no three.js, no game code, no registry) and opens it. Nothing is downloaded before
- * the tap; the narration's audio loads only when Listen is pressed.
+ * game's 3D pop-up reader (./GameBookReader, its own chunk with three.js and the spreads) and opens it. Nothing is downloaded
+ * before the tap.
  */
 type Reader=ComponentType<{book:ReaderBook;onClose:()=>void}>;
 export default function OpenBook({book,label='Open the pop-up book'}:{book:ReaderBook;label?:string}){

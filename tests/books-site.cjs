@@ -1,12 +1,13 @@
 // The pop-up books on the website (Nov 17 2026; lib/site/books.ts, app/(site)/books, components/site/books):
 //  1. Data: every player book in the catalog is on the shelf (36), grouped by region, each with a slug; built pages have a
-//     summary, facts, 3-5 FAQ items and one picture per chapter; the page text is the book's text minus only the action sentence.
+//     summary, facts and 3-5 FAQ items; the page text is the book's text minus only the action sentence; every chapter of every
+//     book has its picture, a still of the game's 3D pop-up spread (public/books/spreads/<book>/<chapter>.webp, 960×600).
 //  2. Hub HTML: one h1, every book's title and subtitle, only built books linked, CollectionPage + BreadcrumbList JSON-LD.
 //  3. Sample page HTML (/books/cafu): h1, the answer-first summary right after it, every chapter's title, year, text (verbatim
 //     paragraphs) and lesson, every source link, the check date, FAQ shown = FAQPage JSON-LD, Book JSON-LD with chapters and
 //     citations, BreadcrumbList, the open button as a real link to the story, keep-reading links to the card and position guide.
-//  4. Lazy reader: the server page and OpenBook import no three.js / game code / registry; the reader is a dynamic import and
-//     only `import type` from lib/site/books; reduced motion is honoured in both stylesheets.
+//  4. Lazy reader: the server page, OpenBook and BookParts import no three.js / game code / registry; the game reader is a
+//     dynamic import; the old 2D reader and drawn pictures (BookReader, ChapterArt) are gone; reduced motion is honoured.
 //  5. Wiring: sitemap paths, llms.txt lines, pageKeys `books`, the footer link.
 //  6. Built site (when a build exists in NEXT_DIST_DIR): /books and /books/cafu are prerendered, and the page's initial JS has no three.js.
 // usage: node tests/books-site.cjs
@@ -24,8 +25,12 @@ ok(B.BUILT_BOOKS.includes('cafu'),'cafu is built');
 for(const id of B.BUILT_BOOKS){const b=B.bookBySlug(id),p=b.page;
  ok(p.summary.split(/\s+/).length>=30&&p.summary.length<=420,`${id}: summary 30+ words`);
  ok(p.faq.length>=3&&p.faq.length<=5,`${id}: 3-5 FAQ items`);
- ok(p.motifs.length===b.chapters.length,`${id}: one picture per chapter`);
  ok(p.facts.length>=4,`${id}: key facts`);}
+const webpSize=f=>{const b=fs.readFileSync(f);return b.toString('ascii',0,4)==='RIFF'&&b.toString('ascii',8,12)==='WEBP'&&b.toString('ascii',12,16)==='VP8 '?[b.readUInt16LE(26)&0x3fff,b.readUInt16LE(28)&0x3fff]:null;};
+let spreadBytes=0;for(const b of B.SITE_BOOKS)for(const c of b.chapters){const f=path.join(root,'public/books/spreads',b.id,c.id+'.webp');
+ ok(fs.existsSync(f),`${b.id}/${c.id}: spread picture exists`);const [w,hh]=webpSize(f)??[];spreadBytes+=fs.statSync(f).size;
+ ok(w===960&&hh===600&&fs.statSync(f).size<90000,`${b.id}/${c.id}: spread picture is a 960×600 webp under 90 KB`);}
+ok(spreadBytes<12e6,`spread pictures total ${(spreadBytes/1e6).toFixed(1)} MB`);
 for(const b of B.SITE_BOOKS)for(const [i,c] of b.chapters.entries()){const raw=LIB.BOOKS[b.id].pages[i];
  const joined=c.paragraphs.join(' '),cut=raw.prompt.replace(/\.$/,'')+'.';
  ok(raw.text.split(/\n\n+/).join(' ').replace(cut,'').replace(/\s+/g,' ').trim()===joined.replace(/\s+/g,' ').trim(),`${b.id}/${c.id}: page text is the book's text minus the action sentence`);}
@@ -45,7 +50,9 @@ for(const f of cafu.page.facts)ok(h.includes(f.value),`page: key fact ${f.label}
 for(const c of cafu.chapters){
  ok(h.includes(`id="chapter-${c.id}"`)&&h.includes(c.title)&&h.includes(c.year)&&h.includes(c.lesson),`page: chapter ${c.id} title, year, lesson`);
  for(const p of c.paragraphs)ok(h.includes(`<p>${p}</p>`),`page: chapter ${c.id} paragraph verbatim`);
- ok(h.includes(`data-motif="${c.motif}"`),`page: chapter ${c.id} picture`);}
+ ok(new RegExp(`<img[^>]*src="/books/spreads/cafu/${c.id}\\.webp"[^>]*>`).test(h),`page: chapter ${c.id} picture`);}
+const imgs=[...h.matchAll(/<img[^>]*src="\/books\/spreads\/[^>]*>/g)].map(m=>m[0]);
+ok(imgs.length===cafu.chapters.length&&imgs.every((t,i)=>/width="960"/.test(t)&&/height="600"/.test(t)&&/decoding="async"/.test(t)&&/alt="Paper pop-up spread of [^"]+"/.test(t)&&(i===0)!==/loading="lazy"/.test(t)),'page: pictures have size, alt, async decode, lazy after the first');
 ok((h.match(/What it teaches/g)||[]).length>=cafu.chapters.length,'page: a lesson card per chapter');
 for(const s of cafu.sources)ok(h.includes(`href="${s.url}"`)&&h.includes(s.label),`page: source ${s.label}`);
 ok(/data-checked="\d{4}-\d{2}-\d{2}"/.test(h),'page: last checked date');
@@ -62,16 +69,16 @@ ok(/<a href="#story"[^>]*data-open-book=""/.test(h)&&/id="story"/.test(h),'open 
 ok(/href="\/cards\/26"/.test(h)&&/href="\/learn\/soccer-positions\/fullback"/.test(h)&&/href="\/books"/.test(h),'keep reading: card, position guide, hub');
 ok(!/three\.js|three\.module|WebGL|PlayerPopUpBook/.test(h),'no three.js in the page HTML');
 // ---- 4. lazy reader ----
-const open=read('components/site/books/OpenBook.tsx'),reader=read('components/site/books/BookReader.tsx'),art=read('components/site/books/ChapterArt.tsx'),parts=read('components/site/books/BookParts.tsx');
+const open=read('components/site/books/OpenBook.tsx'),parts=read('components/site/books/BookParts.tsx');
+ok(!/\b(ChapterArt|BookReader)\b/.test(parts+open)&&!['ChapterArt.tsx','BookReader.tsx','reader.module.css'].some(f=>fs.existsSync(path.join(root,'components/site/books',f))),'the 2D reader and drawn pictures are gone; BookParts shows the spread pictures');
 const page=read('app/(site)/books/[slug]/page.tsx');
 ok(/import\('\.\/GameBookReader'\)/.test(open)&&!/^import[^\n]*(BookReader|PlayerPopUpBook)/m.test(open),'OpenBook imports the game reader only on tap');
 const gameReader=read('components/site/books/GameBookReader.tsx');ok(/PlayerPopUpBook/.test(gameReader)&&/\bsite\b/.test(gameReader),'the website opens the game pop-up book in site mode');
-for(const [n2,src] of [['OpenBook',open],['BookReader',reader],['ChapterArt',art],['BookParts',parts],['page',page]])
+for(const [n2,src] of [['OpenBook',open],['BookParts',parts],['page',page]])
  ok(!/from '(three|@\/lib\/books\/(library|registry|popup|bookAudio|useBookNarration)[^']*|@\/components\/Player[^']*)'/.test(src),`${n2}: no three.js, registry or game reader`);
-for(const [n2,src] of [['OpenBook',open],['BookReader',reader],['ChapterArt',art]])ok(!/^import (?!type)[^\n]*'@\/lib\/site\/books'/m.test(src),`${n2}: only type imports from lib/site/books (the registry stays on the server)`);
-ok(/preload='none'/.test(reader)&&/visibilitychange/.test(reader),'narration loads on Listen and stops when hidden');
-for(const f of ['books','reader'])ok(/prefers-reduced-motion:no-preference/.test(read(`components/site/books/${f}.module.css`)),`${f}.module.css: motion only without reduced motion`);
-ok(!/gradient\(/.test(read('components/site/books/books.module.css')+read('components/site/books/reader.module.css')),'no gradients');
+for(const [n2,src] of [['OpenBook',open]])ok(!/^import (?!type)[^\n]*'@\/lib\/site\/books'/m.test(src),`${n2}: only type imports from lib/site/books (the registry stays on the server)`);
+for(const f of ['books'])ok(/prefers-reduced-motion:no-preference/.test(read(`components/site/books/${f}.module.css`)),`${f}.module.css: motion only without reduced motion`);
+ok(!/gradient\(/.test(read('components/site/books/books.module.css')),'no gradients');
 // ---- 5. wiring ----
 const paths=L('lib/site/paths.ts').sitePaths().map(p=>p.path);
 ok(paths.includes('/books')&&B.BUILT_BOOKS.every(id=>paths.includes('/books/'+id)),'sitemap has the hub and built pages');

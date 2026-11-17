@@ -18,8 +18,8 @@ export const BOOKS_PATH='/books';
 /** Books in shelf order (the catalog's order), without the island starter book (it is about the game, not a player). */
 export const BOOK_IDS=(Object.keys(PLAYER_BOOKS) as PlayerBookId[]).filter(id=>id!=='island'&&Object.prototype.hasOwnProperty.call(BOOKS,id));
 
-export type {Motif,BookFaq,BookFact} from './bookPages/types';
-import type {Motif,BookPageSpec} from './bookPages/types';
+export type {BookFaq,BookFact} from './bookPages/types';
+import type {BookPageSpec} from './bookPages/types';
 import {BOOK_PAGES} from './bookPages/index';
 
 /** The books that have their own page now (the hub links only these). */
@@ -38,7 +38,7 @@ export type BookChapter={id:string;year:string;title:string;
  /** The page text as paragraphs, without the paper-action sentence (see the file comment). */
  paragraphs:string[];
  /** The full text as the island book has it (the reader shows this). */
- text:string;lesson:string;prompt:string;response:string;steps:number;source:{label:string;url:string}|null;motif?:Motif};
+ text:string;lesson:string;prompt:string;response:string;steps:number;source:{label:string;url:string}|null};
 export type SiteBook={id:PlayerBookId;slug:string;path:string|null;player:string;title:string;subtitle:string;fullTitle:string;
  country:string;region:Region;blurb:string;chapters:BookChapter[];sources:readonly {label:string;url:string}[];card?:SiteCard;
  narration:string;page?:BookPageSpec};
@@ -53,8 +53,8 @@ function build(id:PlayerBookId):SiteBook{
  const b=BOOKS[id],spec=BOOK_PAGES[id],card=cardFor(b,id),country=card?.country??FALLBACK_COUNTRY[id]??'';
  return {id,slug:id,path:spec?bookPath(id):null,player:PLAYER_BOOKS[id].player,title:b.title,subtitle:b.subtitle,fullTitle:`${b.title}: ${b.subtitle}`,
   country,region:REGION_OF[country]??'Europe',blurb:firstSentence(b.pages[0]?.text??'',150),sources:b.sources,card,narration:`/voice/books/${id}/narration.json`,page:spec,
-  chapters:b.pages.map((p,i)=>({id:p.id,year:p.year,title:p.title,paragraphs:storyParagraphs(p),text:p.text,lesson:p.lesson,prompt:p.prompt,response:p.response,
-   steps:p.steps??1,source:p.source==null?null:b.sources[p.source]??null,motif:spec?.motifs?.[i]}))};
+  chapters:b.pages.map(p=>({id:p.id,year:p.year,title:p.title,paragraphs:storyParagraphs(p),text:p.text,lesson:p.lesson,prompt:p.prompt,response:p.response,
+   steps:p.steps??1,source:p.source==null?null:b.sources[p.source]??null}))};
 }
 export const bookPath=(id:string)=>`${BOOKS_PATH}/${id}`;
 export const SITE_BOOKS:SiteBook[]=BOOK_IDS.map(build);
@@ -86,6 +86,6 @@ export function bookLd(b:SiteBook,o:{modified:string}){
 }
 export const chapterAnchor=(id:string)=>`chapter-${id}`;
 /** What the client reader needs (and nothing more: the reader chunk never imports the registry). */
-export type ReaderBook={id:string;title:string;subtitle:string;narration:string;chapters:Pick<BookChapter,'id'|'year'|'title'|'text'|'prompt'|'response'|'steps'|'motif'>[]};
+export type ReaderBook={id:string;title:string;subtitle:string;narration:string;chapters:Pick<BookChapter,'id'|'year'|'title'|'text'|'prompt'|'response'|'steps'>[]};
 export const readerBook=(b:SiteBook):ReaderBook=>({id:b.id,title:b.title,subtitle:b.subtitle,narration:b.narration,
- chapters:b.chapters.map(({id,year,title,text,prompt,response,steps,motif})=>({id,year,title,text,prompt,response,steps,motif}))});
+ chapters:b.chapters.map(({id,year,title,text,prompt,response,steps})=>({id,year,title,text,prompt,response,steps}))});

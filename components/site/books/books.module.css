@@ -41,7 +41,7 @@
 .chapters.chapters{list-style:none;padding:0;margin:0;display:grid;gap:var(--s5)}
 .chapter{position:relative;display:grid;gap:var(--s2);max-width:none;scroll-margin-top:84px}
 .chapterArt{border-radius:var(--r-lg);overflow:hidden;background:var(--well)}
-.artSvg{display:block;width:100%;height:auto;aspect-ratio:3/2}
+.artImg{display:block;width:100%;height:auto;aspect-ratio:8/5}
 .chapterBody{display:grid;gap:var(--s2);align-content:start;min-width:0}
 .year{display:flex;align-items:center;gap:10px;font-size:var(--t-cap);line-height:1.3;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
 .yearDot{flex:none;width:14px;height:14px;box-sizing:border-box;border-radius:var(--r-pill);background:var(--gold);border:3px solid #7a4e12}
@@ -93,21 +93,8 @@
 @media(min-width:720px){.feature{grid-template-columns:240px minmax(0,1fr);gap:var(--s4)}}
 @media(max-width:399px){.feature{grid-template-columns:1fr}.feature .cover{max-width:180px}}
 
-/* The moving parts of the drawings (ChapterArt.tsx): the resting pose here, the done pose under [data-done] on the svg */
-.mvBall{transform-origin:30px 136px}
-[data-done] .mvBall{transform:translate(150px,0) rotate(300deg)}
-.mvCard[data-on]{transform:translateY(-10px)}
-.mvGateL{transform-origin:60px 90px}
-.mvGateR{transform-origin:180px 90px}
-[data-done] .mvGateL,[data-done] .mvGateR{transform:scaleX(.18)}
-[data-done] .mvRun{transform:translate(130px,-12px)}
-[data-done] .mvSub{transform:translate(96px,44px)}
-.mvStar{transform-box:fill-box;transform-origin:center;transform:scale(.4);opacity:0}
-[data-done] .mvStar{transform:none;opacity:1}
-[data-done] .mvLift{transform:translateY(-14px)}
-/* The paper actions inside the drawings (the reader moves them; the page shows them done) */
+/* Hover and press motion, only without reduced motion */
 @media(prefers-reduced-motion:no-preference){
- .move{transition:transform .7s cubic-bezier(.3,1.35,.4,1),opacity .4s}
  .tile,.shelfLink .cover{transition:transform .18s ease-out}
  .tile:hover,.shelfLink:hover .cover{transform:translateY(-3px)}
  .tile:active,.shelfLink:active .cover{transform:translateY(0) scale(.98)}
