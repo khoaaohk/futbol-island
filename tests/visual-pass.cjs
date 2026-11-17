@@ -6,6 +6,13 @@
 //     the HTML; the FAQPage JSON-LD names the same questions in the same order; the cards page has ONE FAQ (side questions merged).
 //  3. DataTable: the phone-card markup ([data-stack] on the wrap, data-label on every value cell); the CSS stacks it under 560 px.
 //  4. Folded "more detail" sections: a real h2 inside the <summary>, the body in the HTML.
+// Batch 3 (Nov 17 2026):
+//  5. Keep reading: ONE [data-keep-reading] grid instead of stacked link lists; at most 8 cards before "Show N more", every card
+//     with an aria-hidden icon; the old lesson / drill links are all still there.
+//  6. Desktop two-column layout: detail pages render "On this page" ([data-toc]) right after the intro; the CSS turns that into
+//     a reading column + sticky side column from 1100 px only.
+//  7. Hubs: lesson hubs (futsal, quizzes) and the rules / positions hubs render chapter bands ([data-band]) with an h2, a count,
+//     6 cards and "Show all N" (every lesson / rule link in the HTML); the rules hub's five lines are icon rows. EN and ES.
 // usage: node tests/visual-pass.cjs
 const assert=require('node:assert/strict');
 const {root,L,read,render,React,ldOf}=require('./lib/tsLoad.cjs');process.chdir(root);
@@ -46,6 +53,20 @@ function check(h,where,kind){
  // 4. folded sections
  for(const m of h.matchAll(/<section class="section fold"[^>]*aria-labelledby="([^"]+)"[^>]*><details class="foldBox"><summary class="foldSum"><h2 class="h2" id="([^"]+)">/g))ok(m[1]===m[2],`${where}: folded section ${m[1]} keeps its h2`);
  if(!/futsal-rules/.test(where))ok(/<section class="section fold"/.test(h),`${where}: at least one "more detail" section is folded`);/* futsal: both tables are the page's search answers, kept open */
+ // 5. one "Keep reading" grid
+ keep(h,where);
+ // 6. the desktop side column on guide detail pages (tools have their own screen layout)
+ if(kind!=='tool')ok(/<\/header><nav class="toc"[^>]*data-toc=""/.test(h),`${where}: "On this page" follows the intro`);
+}
+function keep(h,where){
+ const k=[...h.matchAll(/<section class="keep" aria-labelledby="([^"]+)" data-keep-reading="(\d+)">([\s\S]*?)<\/section>/g)];
+ ok(k.length===1,`${where}: one Keep reading grid (${k.length})`);
+ const body=k[0][3],cards=[...body.matchAll(/<li class="item"/g)].length,first=body.split('<details')[0];
+ ok(cards===+k[0][2],`${where}: every link is a card (${cards})`);
+ ok([...first.matchAll(/<li class="item"/g)].length<=8,`${where}: at most 8 cards before "Show N more"`);
+ ok((cards>8)===body.includes('<details class="more">'),`${where}: the rest under one disclosure`);
+ ok([...body.matchAll(/<span class="ico"><svg[^>]*aria-hidden="true"/g)].length===cards,`${where}: each card has an aria-hidden icon`);
+ ok(!/<ul class="list">/.test(h.slice(h.indexOf('data-faq='))),`${where}: no stacked link lists after the FAQ`);
 }
 for(const [kind,file,slug,enPath] of SAMPLES){
  check(page(file,slug),enPath,kind);
@@ -66,4 +87,37 @@ for(const [kind,file,slug,enPath] of SAMPLES){
  ok(/aria-label=\{es\?W\.region:'Rotation table'\} data-stack=""/.test(rp)&&(rp.match(/data-label=\{es\?/g)||[]).length===3,'playing-time plan: phone-card markup');
  for(const c of ['.quick','.facts','.fact','.faqList','.faqItem','.faqSum','.foldSum','.notesH','.plus'])ok(new RegExp(`(^|\\n|\\})${c.replace('.','\\.')}\\{`).test(css),`${c} styled`);
  ok(/prefers-reduced-motion:reduce\)\{\.faqBody,\.plus\{transition:none\}/.test(css),'FAQ motion respects reduced motion');}
+// 5. the old lesson and drill links are all in the grid (rule, term, position)
+{const R=L('lib/site/rules.ts').RULES.find(r=>r.slug==='yellow-and-red-cards'),h=page(`${A}/soccer-rules/[slug]/page.tsx`,R.slug),dl=L('lib/site/drills.ts');
+ for(const l of R.lessons)ok(h.includes(`href="/learn/lessons/${l.id}"`),`rule page: lesson ${l.id} still linked`);
+ for(const d of dl.drillLinksFor(R.path))ok(h.includes(`href="${d.path}"`),`rule page: drill ${d.path} still linked`);
+ const css=read('components/site/keep.module.css');ok(/\.tag::before\{content:attr\(data-tag\)\}/.test(css),'keep CSS: the group word is drawn from data-tag');}
+// 6. desktop layout CSS: two columns from 1100 px, side column sticky, Keep reading spans both
+{const css=read('app/(site)/site.module.css'),k=read('components/site/keep.module.css');
+ ok(/@media screen and \(min-width:1100px\)\{\n \.main:has\(>\[data-toc\]\)\{[^}]*grid-template-columns:minmax\(0,var\(--col\)\) var\(--side\)/.test(css),'site CSS: .main:has([data-toc]) is two columns from 1100 px');
+ ok(/\[data-keep-reading\]\{grid-column:1\/-1\}/.test(css),'site CSS: Keep reading spans both columns');
+ ok(/@media\(min-width:1100px\)\{\n \.toc\{display:grid;[^}]*position:sticky/.test(k)&&/^\.toc\{display:none\}/m.test(k),'keep CSS: the side column shows from 1100 px only, sticky');}
+// 7. hubs as chapter bands, EN and ES
+const bands=(h,where,min)=>{const b=[...h.matchAll(/<section class="band" data-tone="(tint|paper)" aria-labelledby="([^"]+)" data-band="">([\s\S]*?)<\/section>/g)];
+ ok(b.length>=min,`${where}: ${min}+ chapter bands (${b.length})`);
+ for(const [,,id,x] of b){ok(new RegExp(`<h2 class="h2" id="${id}">`).test(x),`${where}: band ${id} has its h2`);
+  const shown=[...x.split('<details')[0].matchAll(/<li class="item"/g)].length,all=[...x.matchAll(/<li class="item"/g)].length;
+  ok(shown<=Math.max(6,all===shown?all:6),`${where}: band ${id} shows at most 6 (${shown})`);
+  ok((all>shown)===/<details class="more"><summary class="moreSum"><span>(Show all|Ver las) \d+<\/span>/.test(x),`${where}: band ${id}: "Show all N" only when there are more`);}
+ return b;};
+for(const slug of ['futsal-for-kids','soccer-quiz-for-kids','passing-and-support']){
+ const hub=L('lib/site/hubs.ts').hubBySlug(slug),en=page(`${A}/${slug}/page.tsx`),esH=es(hub.path);
+ for(const [h,where] of [[en,hub.path],[esH,ep.toEs(hub.path)]]){
+  const b=bands(h,where,hub.groups.length);ok(b.length===hub.groups.length,`${where}: one band per lesson group`);
+  for(const x of b)ok(/<p class="count">\d+ /.test(x[3]),`${where}: band count`);
+  for(const l of hub.groups.flatMap(g=>g.lessons))ok(h.includes(`/learn/lessons/${l.id}`),`${where}: lesson ${l.id} linked`);
+  keep(h,where);}}
+{const RH=L('lib/site/rules.ts').RULES_HUB,PH=L('lib/site/positions.ts');
+ for(const [h,where] of [[page(`${A}/soccer-rules/page.tsx`),'/learn/soccer-rules'],[es('/learn/soccer-rules'),'/es/learn/soccer-rules']]){
+  bands(h,where,RH.groups.length);ok(/<ul class="rows" data-icon-rows="">(<li>[\s\S]*?<\/li>){5}<\/ul>/.test(h),`${where}: the five lines as icon rows`);
+  ok(h.indexOf('id="picture"')<h.indexOf('id="basics"'),`${where}: the diagram comes before the five lines`);
+  for(const r of RH.groups.flatMap(g=>g.rules))ok(h.includes(`/learn/soccer-rules/${r.slug}"`),`${where}: rule ${r.slug} linked`);
+  keep(h,where);}
+ for(const [h,where] of [[page(`${A}/soccer-positions/page.tsx`),'/learn/soccer-positions'],[es('/learn/soccer-positions'),'/es/learn/soccer-positions']]){
+  bands(h,where,1);for(const p of PH.POSITIONS)ok(h.includes(`/learn/soccer-positions/${p.slug}"`),`${where}: position ${p.slug} linked`);keep(h,where);}}
 console.log(`visual-pass: ${n} checks OK`);
