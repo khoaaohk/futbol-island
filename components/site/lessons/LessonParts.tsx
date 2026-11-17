@@ -22,12 +22,12 @@ export type Lang='en'|'es';
 const W={
  en:{learn:'In this lesson you learn',facts:'Lesson facts',format:'Format',level:'Level',questions:'Questions',time:'Time',path:'Part of',
   mins:(m:number)=>`About ${m} min`,
-  legend:'Gold dots are your team, attacking up the pitch; dark dots are the other team. Dashed arrows are runs, solid arrows are the ball, and a white ring marks a player the coach points at.',
+  legend:'Gold dots are your team, attacking up the pitch; blue dots are the other team. Dashed arrows are runs, solid arrows are the ball, and a white ring marks a player the coach points at.',
   chapters:{2:['The start','The move'],3:['The start','The move','The result']} as Record<number,string[]>,
   after:(n:number)=>`The pitch after step ${n}`,
   frame:(f:LessonFrameData,fmt:string)=>{const list=(x:string[])=>x.length>1?`${x.slice(0,-1).join(', ')} and ${x[x.length-1]}`:x[0];
    const runs=[...new Set(f.runs.filter(r=>r.team==='gold').map(r=>r.label))],opp=[...new Set(f.runs.filter(r=>r.team==='opp').map(r=>r.label))],focus=f.players.filter(p=>p.focus).map(p=>p.label);
-   return [`${fmt} pitch after step ${f.step}, seen from above. Gold dots are your team attacking up the picture; dark dots are the other team.`,
+   return [`${fmt} pitch after step ${f.step}, seen from above. Gold dots are your team attacking up the picture; blue dots are the other team.`,
     runs.length?`Your ${list(runs)} ${runs.length>1?'move':'moves'} (dashed arrows).`:'',
     opp.length?`The other team's ${list(opp)} ${opp.length>1?'move':'moves'}.`:'',
     f.holder&&f.receiver&&f.ballPath.length>1?`The ball goes from ${f.holder} to ${f.receiver} (solid arrows).`:f.ballPath.length>1?'The ball moves (solid arrows).':f.holder?`${f.holder} has the ball.`:'',
@@ -36,12 +36,12 @@ const W={
   explain:'Coach’s explanation'},
  es:{learn:'En esta lección aprendes',facts:'Datos de la lección',format:'Formato',level:'Nivel',questions:'Preguntas',time:'Tiempo',path:'Parte de',
   mins:(m:number)=>`Unos ${m} min`,
-  legend:'Los puntos dorados son tu equipo, que ataca hacia arriba; los puntos oscuros son el otro equipo. Las flechas discontinuas son carreras, las continuas son el balón, y un anillo blanco marca al jugador que señala el entrenador.',
+  legend:'Los puntos dorados son tu equipo, que ataca hacia arriba; los puntos azules son el otro equipo. Las flechas discontinuas son carreras, las continuas son el balón, y un anillo blanco marca al jugador que señala el entrenador.',
   chapters:{2:['El inicio','La jugada'],3:['El inicio','La jugada','El resultado']} as Record<number,string[]>,
   after:(n:number)=>`La cancha después del paso ${n}`,
   frame:(f:LessonFrameData,fmt:string)=>{const list=(x:string[])=>x.length>1?`${x.slice(0,-1).join(', ')} y ${x[x.length-1]}`:x[0];
    const runs=[...new Set(f.runs.filter(r=>r.team==='gold').map(r=>r.label))],opp=[...new Set(f.runs.filter(r=>r.team==='opp').map(r=>r.label))],focus=f.players.filter(p=>p.focus).map(p=>p.label);
-   return [`Cancha de ${fmt} después del paso ${f.step}, vista desde arriba. Los puntos dorados son tu equipo, que ataca hacia arriba; los oscuros son el otro equipo.`,
+   return [`Cancha de ${fmt} después del paso ${f.step}, vista desde arriba. Los puntos dorados son tu equipo, que ataca hacia arriba; los azules son el otro equipo.`,
     runs.length?`${runs.length>1?'Tus':'Tu'} ${list(runs)} ${runs.length>1?'se mueven':'se mueve'} (flechas discontinuas).`:'',
     opp.length?`Del otro equipo ${opp.length>1?'se mueven':'se mueve'} ${list(opp)}.`:'',
     f.holder&&f.receiver&&f.ballPath.length>1?`El balón va de ${f.holder} a ${f.receiver} (flechas continuas).`:f.ballPath.length>1?'El balón se mueve (flechas continuas).':f.holder?`${f.holder} tiene el balón.`:'',

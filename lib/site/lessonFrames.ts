@@ -66,8 +66,8 @@ export function lessonFrames(id:string,stepCount:number):LessonFrameData[]|null{
  const frames:LessonFrameData[]=[];
  for(const [a,b] of chapterRanges(stepCount)){
   const rawFrom=a===0?0:ends[a-1]+1,rawTo=ends[b-1]+1,start=poses[rawFrom],end=poses[rawTo];
-  const focusRaw=l.steps[ends[b-1]].focusIds??[],allGold=l.offense.every(o=>focusRaw.includes(o.id));
-  const focus=new Set(allGold?[]:focusRaw);
+  // The coach's focus is a ring only when it picks out a few players (1-3); a whole-team focus is no information.
+  const focusRaw=l.steps[ends[b-1]].focusIds??[],focus=new Set(focusRaw.length<=3?focusRaw:[]);
   const players:FramePlayer[]=[...end.pos].map(([pid,p])=>({id:pid,x:p.x,y:p.y,label:team.get(pid)!.label,team:team.get(pid)!.team,focus:focus.has(pid)}));
   const runs:FrameRun[]=[];
   for(const [pid,p] of end.pos){const s=start.pos.get(pid)!;if(dist(s,p)>=16)runs.push({label:team.get(pid)!.label,team:team.get(pid)!.team,from:s,to:p});}
@@ -81,6 +81,8 @@ export function lessonFrames(id:string,stepCount:number):LessonFrameData[]|null{
   let y0=Math.min(...ys)-36,y1=Math.max(...ys)+36;const min=210;
   if(y1-y0<min){const c=(y0+y1)/2;y0=c-min/2;y1=c+min/2;}
   if(y0<0){y1-=y0;y0=0;}if(y1>FIELD.h){y0-=y1-FIELD.h;y1=FIELD.h;}y0=Math.max(0,y0);
+  // A dot cut in half by the crop edge reads as a glitch (as lib/town/visualQuiz.ts frameView): pull the edge just past it.
+  for(const p of players){if(p.y<y0+15&&p.y>y0-15)y0=Math.max(0,p.y-17);if(p.y>y1-15&&p.y<y1+15)y1=Math.min(FIELD.h,p.y+17);}
   frames.push({step:b,players,ball:end.ball,runs:runs.sort((p,q)=>dist(q.from,q.to)-dist(p.from,p.to)).slice(0,6),ballPath,holder,receiver,view:{y0:Math.round(y0),y1:Math.round(y1)}});
  }
  return frames;

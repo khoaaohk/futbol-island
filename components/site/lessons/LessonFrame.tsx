@@ -3,11 +3,12 @@ import {FIELD,type LessonFrameData} from '../../../lib/site/lessonFrames';
 /**
  * One lesson frame as server-rendered inline SVG (visual pass, Nov 17 2026): the lesson's own positions at the end of a chapter
  * (lib/site/lessonFrames.ts), drawn in the game's 270x400 lesson space and cropped top-to-bottom to where the play happens.
- * Same palette as lib/site/PitchDiagram.tsx (pitch green, white lines, gold team, dark-ink other team). Gold attacks up the
+ * Same palette as lib/site/PitchDiagram.tsx (pitch green, white lines, gold team, blue other team). Gold attacks up the
  * picture. Dashed arrows = runs during the chapter, solid arrows = the ball's path, a white ring = a player the coach points at.
  * No client code, no animation. role="img" with an aria-label; the numbered steps beside it stay the source of truth.
  */
-const INK='#14221d',PAPER='#ffffff',GOLD='#e9c16b',GRASS='#1d6b55';
+/* the other team is blue, as in the game (components/FieldRadar.tsx) and in the coach's words ("the blue midfielder") */
+const INK='#14221d',PAPER='#ffffff',GOLD='#e9c16b',GRASS='#1d6b55',BLUE='#2a64a8';
 /** Short text for the dot: "RIGHT FRONT" -> "RF", "PIVOT" -> "PIV"; the aria-label keeps the full name. */
 export const dotLabel=(s:string)=>{const w=s.trim().split(/\s+/);return w.length>1?w.map(x=>x[0]).join('').slice(0,3):s.length>3?s.slice(0,3):s;};
 export default function LessonFrame({id,format,frame,label}:{id:string;format:GuideFormat;frame:LessonFrameData;label:string}){
@@ -27,12 +28,12 @@ export default function LessonFrame({id,format,frame,label}:{id:string;format:Gu
  const n=(v:number)=>Math.round(v*10)/10;
  /* a ball at a player's feet sits beside the dot, not under it */
  const held=frame.players.some(s=>Math.hypot(s.x-frame.ball.x,s.y-frame.ball.y)<12);
- return <svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label={label} viewBox={`0 ${y0} ${FIELD.w} ${H}`} width={FIELD.w} height={H} data-lesson-frame={frame.step} fontFamily="Arial,Helvetica,sans-serif">
+ return <svg xmlns="http://www.w3.org/2000/svg" role="img" aria-label={label} viewBox={`0 ${y0} ${FIELD.w} ${H}`} width={FIELD.w*1.5} height={Math.round(H*1.5)} data-lesson-frame={frame.step} fontFamily="Arial,Helvetica,sans-serif">
   <defs>
    <marker id={`${id}-w`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill={PAPER}/></marker>
    <marker id={`${id}-k`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill={INK}/></marker>
   </defs>
-  <rect x={0} y={y0} width={FIELD.w} height={H} fill={GRASS}/>
+  <rect x={0} y={y0} width={FIELD.w*1.5} height={Math.round(H*1.5)} fill={GRASS}/>
   <rect {...line} x={FIELD.x0} y={FIELD.y0} width={FIELD.x1-FIELD.x0} height={FIELD.y1-FIELD.y0}/>
   <line {...line} x1={FIELD.x0} x2={FIELD.x1} y1={cy} y2={cy}/>
   <ellipse {...line} cx={cx} cy={cy} rx={p.circle*kx} ry={p.circle*ky}/>
@@ -44,7 +45,7 @@ export default function LessonFrame({id,format,frame,label}:{id:string;format:Gu
   {frame.players.map(s=>{const opp=s.team==='opp',t=dotLabel(s.label);
    return <g key={s.id} data-player={s.label}>
     {s.focus&&<circle cx={n(s.x)} cy={n(s.y)} r={r+4} fill="none" stroke={PAPER} strokeWidth={2.4} data-focus=""/>}
-    <circle cx={n(s.x)} cy={n(s.y)} r={r} fill={opp?INK:GOLD} stroke={opp?PAPER:INK} strokeWidth={1.6}/>
+    <circle cx={n(s.x)} cy={n(s.y)} r={r} fill={opp?BLUE:GOLD} stroke={opp?PAPER:INK} strokeWidth={1.6}/>
     <text x={n(s.x)} y={n(s.y)+3.6} textAnchor="middle" fontSize={t.length>2?7.5:9.5} fontWeight={700} fill={opp?PAPER:INK}>{t}</text>
    </g>;})}
   <circle data-ball="" cx={n(frame.ball.x+(held?8:0))} cy={n(frame.ball.y-(held?9:0))} r={4.5} fill={PAPER} stroke={INK} strokeWidth={1.6}/>
