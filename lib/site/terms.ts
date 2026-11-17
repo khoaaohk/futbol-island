@@ -104,7 +104,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   lessonIds:['learn9_switch','e_switch','expf_switchblock'],related:['overlap','third-man-run','first-touch','cross']},
 
  {slug:'two-v-one',name:'2v1',also:'two against one',short:'Two attackers against one defender. The player with the ball dribbles at the defender, then passes if the defender comes or keeps going if they do not.',
-  title:'2v1 Meaning in Soccer: What Is a Two v One?',h1:'What does 2v1 mean in soccer?',
+  title:'2v1 in Soccer: Meaning of a Two v One, for Kids',h1:'What does 2v1 mean in soccer?',
   desc:'2v1 meaning in soccer: two attackers against one defender. How to beat the defender by choosing pass or dribble, with a diagram and lessons for kids.',
   answer:'2v1 (two v one) in soccer means two attackers against one defender. The player with the ball dribbles at the defender: if the defender comes to the ball, pass to the teammate, and if the defender stays with the teammate, keep going.',
   scene:{title:'A 2v1',who:'7@44,58 9@62,60 !4@50,70 !G@50,96',ball:[45,59],runs:['44,58>46,68','62,60>62,80'],passes:['46,68>62,79'],
@@ -253,7 +253,7 @@ export const TERM_PAGES:readonly TermPage[]=([
  {slug:'free-kick-wall',name:'Free Kick Wall',also:'wall, defensive wall',short:'A line of defenders standing side by side at least 10 yards from a free kick, to block part of the goal.',
   title:'Free Kick Wall in Soccer: Rules and Distance for Kids',h1:'What is a free kick wall in soccer?',
   desc:'What is a free kick wall in soccer (football)? Defenders 10 yards from the ball blocking part of the goal. The rules, the 1-yard gap and how to set it up.',
-  answer:'A free kick wall in soccer is a line of defenders who stand side by side, at least 10 yards (9.15 m) from the ball, to block part of the goal from a free kick. The goalkeeper covers the rest. When three or more defenders form a wall, the attacking team must stay at least 1 yard away from it until the kick is taken.',
+  answer:'A free kick wall in soccer is a line of defenders who stand side by side, at least 10 yards (9.15 m) from the ball, to block part of the goal from a free kick. When three or more defenders form a wall, attackers must stay at least 1 yard away from it until the kick is taken.',
   scene:{title:'A wall at a free kick',who:'10@40,74 8@32,72 9@56,82 7@70,86 !2@42,82 !4@45.5,82.5 !5@49,82.5 !6@52.5,82 !G@56,97 !3@66,90',ball:[40,75],zone:[34,75,58,82],passes:['40,75>60,99'],
    caption:'Gold has a free kick just outside the penalty area. Four defenders stand in a wall 10 yards from the ball, covering one side of the goal, and the goalkeeper guards the other side. Gold number 9 stands at the end of the wall, more than 1 yard from it, and number 10 tries to bend the shot around the wall.'},
   howTitle:'How do you set up a free kick wall?',how:['The goalkeeper calls how many players go in the wall, more when the kick is close and central.','The first player in lines up between the ball and the near post, and the others stand shoulder to shoulder next to them.',
@@ -400,7 +400,7 @@ if(new Set(GLOSSARY.map(g=>g.id)).size!==GLOSSARY.length)throw new Error('glossa
 const letterOf=(g:GlossaryEntry)=>/^\d/.test(g.term)?'T':g.term[0].toUpperCase();
 export const GLOSSARY_LETTERS=[...new Set(GLOSSARY.map(letterOf))].sort().map(letter=>({letter,terms:GLOSSARY.filter(g=>letterOf(g)===letter)}));
 export const TERMS_HUB={path:TERMS_HUB_PATH,crumb:'Soccer terms',blurb:`${GLOSSARY.length} soccer words in plain English, from advantage to yellow card, ${TERM_PAGES.length} with a diagram`,
- title:'Soccer Terms and Meanings: A to Z Glossary for Kids',
+ title:'Soccer Terms A to Z: Meanings and Glossary for Kids',
  description:`Soccer terms A to Z for kids and parents: ${GLOSSARY.length} soccer words in plain English, from positions and rules to moves and slang, with diagrams.`,
  h1:'Soccer terms for kids: an A-Z glossary',
  lead:`Soccer terms are the words players, coaches and referees use for the game’s rules, positions and moves. This A to Z glossary explains ${GLOSSARY.length} of them in plain English, from advantage to yellow card, so a new player or parent can follow any practice or game from the first season.`,
