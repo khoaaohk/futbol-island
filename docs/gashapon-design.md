@@ -45,7 +45,7 @@ One spin = one press = one `spinId` (a UUID made by the UI). Inside the store's 
 The Konbini pairs come from the store's vending-machine spot (`konbiniMachineSpot`) **mirrored across the sliding doors'
 centre line**. So they sit west of the doors, flush against the shopfront with the same back line, facing out (yaw 0), clear of
 the doorway Enter strip and inside the 10 m shopfront. The vending and drink pair stands east of the doors. The arcade pair stands
-against the back wall between Island Strikers and Breakaway Run (room coordinates). The 8 outdoor spots were searched on the town
+in the middle of the room since Nov 17 2026, first against the back wall between Island Strikers and Breakaway Run (room coordinates). The 8 outdoor spots were searched on the town
 the game builds and are re-checked by the test: on land, at least 1.4 m from every building and collider, off roads, narrow walk
 paths, gardens, courts and pitches, at least 4.5 m from every vending machine, at least 40 m apart, and on flat summit or cay
 ground where it applies.
@@ -301,8 +301,8 @@ pendulum grab); (3) Boots & Kits, Trophies & Legends, Rides & Rollers; (4) Bug S
 | 2 | `gs-square-lucky` | Lucky Little Japan | Cute Japanese good-luck figurines | konbini-square: outside the Island Square Konbini, west of the sliding doors | 67.34 | -52.42 | 0 | 0° (+z, out of the shop / into the room) |
 | 3 | `gs-cay-sweets` | Sweet Shop Treats | Japanese sweets and fizzy drinks | konbini-cay: outside the Coral Cay Konbini, west of the sliding doors | 521.26 | -177.42 | 0 | 0° (+z, out of the shop / into the room) |
 | 4 | `gs-cay-bento` | Bento Box Buddies | Konbini hot food and lunch boxes | konbini-cay: outside the Coral Cay Konbini, west of the sliding doors | 520.34 | -177.42 | 0 | 0° (+z, out of the shop / into the room) |
-| 5 | `gs-arcade-heroes` | Cabinet Heroes | Characters from the arcade games | arcade: in the Arcade, on the back wall beside Breakaway Run | -3.6 | -10.25 | 0 | 0° (+z, out of the shop / into the room) |
-| 6 | `gs-arcade-pixel` | Pixel Pitch | Retro 8-bit football | arcade: in the Arcade, on the back wall beside Breakaway Run | -4.52 | -10.25 | 0 | 0° (+z, out of the shop / into the room) |
+| 5 | `gs-arcade-heroes` | Cabinet Heroes | Characters from the arcade games | arcade: in the Arcade, in the middle of the room (moved Nov 17 2026) | -0.46 | 0.5 | 0 | 0° (+z, out of the shop / into the room) |
+| 6 | `gs-arcade-pixel` | Pixel Pitch | Retro 8-bit football | arcade: in the Arcade, in the middle of the room (moved Nov 17 2026) | 0.46 | 0.5 | 0 | 0° (+z, out of the shop / into the room) |
 | 7 | `gs-westbeach` | Beach Day | Beach soccer and sunny sand | outdoor: on the west beach, a short walk east of the Beach Kitchen machine | -55 | 92 | 0 | 26° (towards the island camera) |
 | 8 | `gs-northbeach` | Shell Seekers | Shore creatures and beach finds | outdoor: on the North Beach sand, past the North Beach machine | 76.3 | -194.17 | 0 | 26° (towards the island camera) |
 | 9 | `gs-eleven` | Boots & Kits | Football gear with faces | outdoor: beside the Eleven Park touchline machine | 100.33 | 117.5 | 0 | 26° (towards the island camera) |

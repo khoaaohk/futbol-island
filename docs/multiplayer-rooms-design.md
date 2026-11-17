@@ -398,7 +398,7 @@ Done (tested in `tests/mp-rooms-arcade.cjs`, in `npm test`; `tests/arcade*.cjs` 
   down) walk out through the door, then are hidden, parked at z 1e4 and skip their rig update; at 0 they walk back in one at a time
   (1.6 s apart) and pick free cabinets. Scene objects never change.
 - `lib/town/arcadeDoorHint.ts`: `arcadeDoorHint(rooms, count, out)` -> "2 in the Arcade" above `ARCADE_DOOR` (y 3.4).
-- `arcadeCatalog.ts` `arcadeHubCabinets()` / `ARCADE_HUB_YAW`: the hub's angled side cabinets, shared by scene and descriptor.
+- `arcadeCatalog.ts` `arcadeHubCabinets()`: the hub's cabinet layout (since Nov 17 2026 one back row from `ARCADE_ROW`; `ARCADE_HUB_YAW` is gone), shared by scene and descriptor.
 
 Integrator wiring (after Phase 1 merges), name mapping local -> shared: `RoomDescriptor.code` -> `RoomCode.Arcade`; `bounds` ->
 friend clamp; `caps.fieldRadius` -> field r; `wake.remote*` -> the layer's remote cadence (the hub already applies it).
