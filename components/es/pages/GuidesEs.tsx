@@ -17,9 +17,10 @@ import {ES_UI,longDateEs} from '@/lib/i18n/es/ui';
 import {esDrillLinksFor} from '@/lib/i18n/es/drillsRegistry';
 import {ES_COMPARISONS,ES_FORMATIONS,esFormatGuide,ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
 import {positionQuizEs,ruleQuizEs,termQuizEs} from '@/lib/i18n/es/quiz';
-import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,EsLessonList} from '@/components/es/EsParts';
-import {CardRulesGame,CardRulesSide,CardRulesTop} from '@/components/site/CardRulesSections';
+import {type Fact,Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,EsLessonList} from '@/components/es/EsParts';
+import {CardRulesGame,CardRulesSources,CardRulesTop} from '@/components/site/CardRulesSections';
 import {CARD_RULES_ES} from '@/lib/i18n/es/cardRules';
+import {cardDeckOf} from '@/lib/site/cardRules';
 import {RulePlayDeck,RulePlayGame} from '@/components/site/RulePlaySections';
 import {RULE_PLAY_ES} from '@/lib/i18n/es/rulePlay';
 import {isRulePlaySlug} from '@/lib/site/rulePlay';
@@ -73,11 +74,16 @@ export function RuleEsPage({r}:{r:EsRule}){
  const cards=r.slug==='yellow-and-red-cards';/* Nov 16 2026: lib/i18n/es/cardRules.ts */
  const play=isRulePlaySlug(r.slug)?RULE_PLAY_ES[r.slug]:null;/* Nov 16 2026: lib/i18n/es/rulePlay.ts */
  const moving=(ANIMATED_RULES as readonly string[]).includes(r.slug),futsal=r.slug==='futsal-rules',pair=r.scenes.length>1,last=r.scenes.length-1,F=H.futsalVsSoccer;
+ const deck=cards?{id:CARD_RULES_ES.deck.id,n:cardDeckOf(CARD_RULES_ES).slides.length}:play?{id:play.deck.id,n:play.slides.length}:null;
+ /* visual pass Nov 17 2026: the same key facts as the English page (app/(site)/learn/soccer-rules/[slug]/page.tsx) */
+ const facts:Fact[]=[{icon:'law',label:'Regla',value:r.law},{icon:'steps',label:'Confusiones comunes',value:`${r.mixups.length} aclaradas`,href:'#mixups'},
+  deck?{icon:cards?'cards':'deck',label:'Tarjetas para voltear',value:`${deck.n} para probar`,href:`#${deck.id}`}:{icon:'diagram',label:'Diagrama',value:moving?'Un dibujo que se mueve':'Un dibujo de la cancha',href:'#diagram'},
+  {icon:'quiz',label:'Prueba rápida',value:`${quiz.length} preguntas`,href:'#quiz'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd({...articleLd({headline:r.title,path:r.esPath,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (regla de fútbol)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.esPath,name:`Prueba: ${r.name}`,questions:quiz})})}/>
   <JsonLd data={faqLd(r.faq)}/>
-  <EsIntro crumbs={crumbs} h1={r.h1} lead={r.answer}/>
+  <EsIntro crumbs={crumbs} h1={r.h1} lead={r.answer} facts={facts}/>
   <EsPrintSheet path={r.esPath} what={cards?'hoja de las tarjetas':'hoja de la regla'} has={cards?'las 14 faltas de tarjeta y la tabla de amarilla o roja':undefined}/>
   {cards&&<CardRulesTop c={CARD_RULES_ES}/>}
   {play&&<RulePlayDeck c={play}/>}
@@ -88,7 +94,6 @@ export function RuleEsPage({r}:{r:EsRule}){
   </Section>
   {cards&&<CardRulesGame c={CARD_RULES_ES} lang="es"/>}
   {play&&<RulePlayGame c={play} lang="es"/>}
-  {cards&&<CardRulesSide c={CARD_RULES_ES} checked={`Revisado el ${longDateEs(FAMILY_CHECKED.rules)}.`}/>}
   <Section id="referee" title="Lo que mira el árbitro">
    <Bullets items={r.refs}/>
    <p className={styles.caption}>Regla: {r.law}. {futsal?<a href={FUTSAL_LAWS_URL} rel="noopener">Reglas de Juego de Futsal de la FIFA 2025-26 (en inglés)</a>:<a href={r.lawUrl} rel="noopener">Léela en las Reglas de Juego (IFAB, en inglés)</a>}.</p>
@@ -96,7 +101,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   <Section id="mixups" title="Confusiones comunes">
    <ul className={styles.stack}>{r.mixups.map(m=><li key={m.said} className={styles.card}><h3 className={styles.h3}>{m.said}</h3><p>{m.truth}</p></li>)}</ul>
   </Section>
-  <Section id="formats" title={futsal?'El futsal de un vistazo':'En 7v7, 9v9, 11v11 y futsal'}>
+  <Section id="formats" title={futsal?'El futsal de un vistazo':'En 7v7, 9v9, 11v11 y futsal'} fold={!futsal}>
    <DataTable label={`${r.name} según el tipo de partido`} head={[futsal?'Tema':'Partido',futsal?'Regla de futsal':'Cómo funciona la regla']} rows={r.formats}/>
    <p className={styles.caption}>{H.leagueLine} {H.sourceLine.replace('{date}',longDateEs(FAMILY_CHECKED.rules))}</p>
   </Section>
@@ -104,9 +109,11 @@ export function RuleEsPage({r}:{r:EsRule}){
    <DataTable label={F.title} head={F.head} rows={F.rows}/>
    <p className={styles.caption}>{F.note}</p>
   </Section>}
-  <QA id="faq" title={`Preguntas sobre: ${r.name.toLowerCase()}`} faq={r.faq}/>
+  <QA id="faq" title={`Preguntas sobre: ${r.name.toLowerCase()}`} faq={r.faq} more={cards?CARD_RULES_ES.side.items:undefined}>
+   {cards&&<CardRulesSources c={CARD_RULES_ES} checked={`Revisado el ${longDateEs(FAMILY_CHECKED.rules)}.`}/>}
+  </QA>
   <EsCoachNotes name={r.name} notes={r.notes}/>
-  {esDrillLinksFor(r.path).length>0&&<Section id="drills" title={ES_UI.drills}><LinkList links={esDrillLinksFor(r.path)}/></Section>}
+  {esDrillLinksFor(r.path).length>0&&<Section id="drills" title={ES_UI.drills} fold><LinkList links={esDrillLinksFor(r.path)}/></Section>}
   {r.lessons.length>0&&<Section id="lessons" title="Lecciones que van con esta regla"><EsLessonList lessons={r.lessons}/></Section>}
   <Section id="related" title="Sigue leyendo"><LinkList links={related}/></Section>
   <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz} lang="es"/>
@@ -146,19 +153,23 @@ export function TermEsPage({t}:{t:EsTerm}){
  const H=ES_HUBS.terms,all=ES_TERMS(),crumbs=esCrumbs({name:H.crumb,path:H.path},{name:t.name,path:t.esPath}),quiz=termQuizEs(t,all);
  const related=[...t.related.map(s=>all.find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:x.name,line:x.short})),
   {path:H.path,name:'Todos los términos del fútbol, de la A a la Z',line:H.blurb},{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb}];
+ const rel=t.related.map(s=>all.find(x=>x.slug===s)).find(Boolean);
+ const facts:Fact[]=[t.also?{icon:'tag',label:'Otros nombres',value:t.also}:{icon:'diagram',label:'Diagrama',value:'Un dibujo de la cancha',href:'#diagram'},
+  {icon:'steps',label:'Cómo funciona',value:`${t.how.length} pasos`,href:'#how'},
+  ...(rel?[{icon:'link' as const,label:'Término relacionado',value:rel.name,href:rel.esPath}]:[]),{icon:'quiz',label:'Prueba rápida',value:`${quiz.length} preguntas`,href:'#quiz'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd({...articleLd({headline:t.title,path:t.esPath,description:t.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${t.name} (término de fútbol)`,teaches:t.answer,image:diagramUrl(t.picture)}),hasPart:guideQuizPart({path:t.esPath,name:`Prueba: ${t.name}`,questions:quiz})})}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'DefinedTerm',name:t.name,description:t.short,url:abs(t.esPath),inLanguage:'es',inDefinedTermSet:abs(H.path)+'#terms',...(t.also?{alternateName:t.also.split(', ')}:{})}}/>
   <JsonLd data={faqLd(t.faq)}/>
-  <EsIntro crumbs={crumbs} h1={t.h1} lead={t.answer} more={t.also?`Otros nombres: ${t.also}.`:undefined}/>
+  <EsIntro crumbs={crumbs} h1={t.h1} lead={t.answer} facts={facts}/>
   <Section id="diagram" title={`${t.name}: diagrama`}><EsSceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
   <Section id="mistakes" title="Errores comunes"><Bullets items={t.mistakes}/></Section>
-  <Section id="formats" title="En 7v7, 9v9, 11v11 y futsal"><p>{t.formats}</p></Section>
+  <Section id="formats" title="En 7v7, 9v9, 11v11 y futsal" fold><p>{t.formats}</p></Section>
   <QA id="faq" title={`Preguntas sobre: ${t.name.toLowerCase()}`} faq={t.faq}/>
   <EsCoachNotes name={t.name} notes={t.notes}/>
-  {esDrillLinksFor(t.path).length>0&&<Section id="drills" title={ES_UI.drills}><LinkList links={esDrillLinksFor(t.path)}/></Section>}
+  {esDrillLinksFor(t.path).length>0&&<Section id="drills" title={ES_UI.drills} fold><LinkList links={esDrillLinksFor(t.path)}/></Section>}
   {t.lessons.length>0&&<Section id="lessons" title="Lecciones que lo enseñan"><EsLessonList lessons={t.lessons}/></Section>}
   <Section id="related" title="Términos relacionados"><LinkList links={related}/></Section>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz} lang="es"/>
@@ -209,11 +220,13 @@ export function PositionEsPage({p}:{p:EsPosition}){
  const H=ES_HUBS.positions,all=ES_POSITIONS(),f=formationBySlug(p.diagram)!,lower=p.name.toLowerCase();
  const crumbs=esCrumbs({name:H.crumb,path:H.path},{name:p.name,path:p.esPath}),quiz=positionQuizEs(p,all,SUITS_OPEN);
  const used=ES_FORMATIONS().filter(x=>x.lines.some(l=>l.spots.some(s=>s.pos===p.slug))),compare=ES_COMPARISONS().filter(c=>c.links.slice(0,2).some(l=>l.path===p.path));
+ const facts:Fact[]=[{icon:'shirt',label:'Número de camiseta',value:p.numbers,href:'#number'},{icon:'tag',label:'Nombre corto',value:p.short},
+  {icon:'lineup',label:'Dónde',value:`Diagrama ${f.shape}`,href:'#where'},{icon:'quiz',label:'Prueba rápida',value:`${quiz.length} preguntas`,href:'#quiz'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd({...articleLd({headline:p.title,path:p.esPath,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.name} (posición de fútbol)`,teaches:p.job,image:positionImage(p.slug)}),hasPart:guideQuizPart({path:p.esPath,name:`Prueba: ${p.name}`,questions:quiz})})}/>
   <JsonLd data={faqLd(p.faq)}/>
-  <EsIntro crumbs={crumbs} h1={p.h1} lead={p.answer} more={p.suits}/>
+  <EsIntro crumbs={crumbs} h1={p.h1} lead={p.answer} more={p.suits} facts={facts}/>
   <Section id="where" title={`Dónde se coloca: ${lower}`}>
    <EsDiagram id="where-d" format={f.format} lines={f.lines} what={`la posición de ${lower} en una formación ${f.shape}`} mark={p.slug} markName={lower} image={positionImage(p.slug)}/>
    <p>{p.where}</p>
@@ -226,14 +239,14 @@ export function PositionEsPage({p}:{p:EsPosition}){
   <Section id="number" title={`Número de camiseta: ${p.numbers}`}>
    <p>{p.numberLine} Los números son una costumbre de cuando los titulares usaban del 1 al 11. Hoy los jugadores pueden usar cualquier número.</p>
   </Section>
-  <Section id="small" title="En 7v7, 9v9 y futsal"><p>{p.small}</p></Section>
-  {used.length>0&&<Section id="formations" title={`Formaciones con esta posición: ${lower}`}>
+  <Section id="small" title="En 7v7, 9v9 y futsal" fold><p>{p.small}</p></Section>
+  {used.length>0&&<Section id="formations" title={`Formaciones con esta posición: ${lower}`} fold>
    <LinkList links={[...used.map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:ES_HUBS.formations.path,name:'Todas las formaciones de fútbol',line:ES_HUBS.formations.blurb}]}/>
   </Section>}
   <QA id="faq" title={`Preguntas sobre: ${lower}`} faq={p.faq}/>
   <EsCoachNotes name={p.name} notes={p.notes}/>
   {compare.length>0&&<Section id="compare" title="Compárala"><LinkList links={compare.map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
-  {esDrillLinksFor(p.path).length>0&&<Section id="drills" title={ES_UI.drills}><LinkList links={esDrillLinksFor(p.path)}/></Section>}
+  {esDrillLinksFor(p.path).length>0&&<Section id="drills" title={ES_UI.drills} fold><LinkList links={esDrillLinksFor(p.path)}/></Section>}
   {p.lessons.length>0&&<Section id="lessons" title="Lecciones para esta posición"><EsLessonList lessons={p.lessons}/></Section>}
   <Section id="related" title="Otras posiciones"><LinkList links={[...all.filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.name,line:`Número ${x.numbers}`})),{path:H.path,name:'Todas las posiciones del fútbol',line:H.blurb}]}/></Section>
   <GuideQuiz id="quiz" name={lower} questions={quiz} lang="es"/>

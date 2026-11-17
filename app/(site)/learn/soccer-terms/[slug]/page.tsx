@@ -7,7 +7,7 @@ import {RULES_HUB} from '@/lib/site/rules';
 import {drillLinksFor} from '@/lib/site/drills';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,GuideEnd,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,GuideEnd,GuideIntro,type Fact,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {termQuiz} from '@/lib/site/guideQuiz';
 import {guideQuizPart} from '@/lib/site/learningLd';
@@ -32,21 +32,26 @@ export default function TermPage({params}:{params:{slug:string}}){
  const quiz=termQuiz(t,TERM_PAGES);
  const related=[...t.related.map(s=>termBySlug(s)!).map(x=>({path:x.path,name:x.name,line:x.short})),
   {path:TERMS_HUB.path,name:'All soccer terms, A to Z',line:TERMS_HUB.blurb},{path:RULES_HUB.path,name:RULES_HUB.h1,line:RULES_HUB.blurb}];
+ const rel=t.related.map(s=>termBySlug(s)).find(Boolean);
+ /* visual pass Nov 17 2026: the key facts under the answer (the "Other names" line moved in here) */
+ const facts:Fact[]=[t.also?{icon:'tag',label:'Other names',value:t.also}:{icon:'diagram',label:'Diagram',value:'A pitch picture',href:'#diagram'},
+  {icon:'steps',label:'How it works',value:`${t.how.length} steps`,href:'#how'},
+  ...(rel?[{icon:'link' as const,label:'Related term',value:rel.name,href:rel.path}]:[]),{icon:'quiz',label:'Quick quiz',value:`${quiz.length} questions`,href:'#quiz'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{...articleLd({headline:t.title,path:t.path,description:t.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${t.name} (soccer term)`,teaches:t.answer,image:diagramUrl(t.picture)}),hasPart:guideQuizPart({path:t.path,name:`${t.name} quiz`,questions:quiz})}}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'DefinedTerm',name:t.name,description:t.short,url:abs(t.path),inDefinedTermSet:abs(TERMS_HUB.path)+'#terms',...(t.also?{alternateName:t.also.split(', ')}:{})}}/>
   <JsonLd data={faqLd(t.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={t.h1} lead={t.answer} more={t.also?`Other names: ${t.also}.`:undefined}/>
+  <GuideIntro crumbs={crumbs} h1={t.h1} lead={t.answer} facts={facts}/>
   <Section id="diagram" title={`${t.name}: diagram`}><SceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
   <Section id="mistakes" title="Common mistakes"><Bullets items={t.mistakes}/></Section>
-  <Section id="formats" title="In 7v7, 9v9, 11v11 and futsal"><p>{t.formats}</p></Section>
+  <Section id="formats" title="In 7v7, 9v9, 11v11 and futsal" fold><p>{t.formats}</p></Section>
   <QA id="faq" title={`Questions about the ${t.name.toLowerCase()}`} faq={t.faq}/>
   <CoachNotesSection name={t.name} notes={TERM_NOTES[t.slug]}/>
   <Section id="lessons" title="Lessons that teach it"><LessonList lessons={t.lessons}/></Section>
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
-  {drillLinksFor(t.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(t.path)}/></Section>}
+  {drillLinksFor(t.path).length>0&&<Section id="drills" title="Soccer drills to practice this" fold><LinkList links={drillLinksFor(t.path)}/></Section>}
   <Section id="related" title="Related soccer terms"><LinkList links={related}/></Section>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz}/>
   <GuideEnd checked={FAMILY_CHECKED.terms} lesson={t.cta}/>

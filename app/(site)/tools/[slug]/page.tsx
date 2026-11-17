@@ -6,7 +6,7 @@ import LineupBuilder from '@/components/site/tools/LineupBuilder';
 import RotationPlanner,{type Preset} from '@/components/site/tools/RotationPlanner';
 import {PrintStyle,Screen,ToolIntro} from '@/components/site/tools/ToolParts';
 import {FORMATIONS,formationBySlug,formationsIn,formatGuidePath} from '@/lib/site/formations';
-import {DataTable,GuideEnd,LinkList,Section} from '@/lib/site/GuideParts';
+import {DataTable,GuideEnd,LinkList,Section,type Fact} from '@/lib/site/GuideParts';
 import {GUIDE_FORMATS,PLAYERS_PER_TEAM,type GuideFormat} from '@/lib/site/pitch';
 import {positionPath} from '@/lib/site/positions';
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -39,13 +39,16 @@ function Lineup({p}:{p:LineupPage}){
  const others=LINEUP_PAGES.filter(x=>x!==p).map(x=>({path:x.path,name:x.h1[0].toUpperCase()+x.h1.slice(1),line:x.blurb}));
  const related=[...(p.format?formationsIn(format).map(x=>({path:x.path,name:`${x.name} formation`,line:x.best})):[]),{path:p.format?formatGuidePath(format):'/learn/soccer-formations',name:!p.format?'Soccer formations explained':format==='futsal'?'Futsal lessons for kids':`${format} soccer formations`,line:'How to choose a shape, with a diagram of each'},
   p.format?{path:cheatSheetPath(format),name:`${format==='futsal'?'Futsal':format} formations cheat sheet`,line:'Every shape of this game on one printable page'}:{path:PRINTABLES_HUB_PATH,name:'Formation cheat sheets and blank fields',line:PRINTABLES_HUB.blurb},{path:PLANNER_PATH,name:'Soccer playing time calculator',line:'A fair substitution plan for the same squad'},...others];
+ /* visual pass Nov 17 2026: key facts under the lead, from the tool's own features (webAppLd below) */
+ const facts:Fact[]=[{icon:format==='futsal'?'court':'lineup',label:'Games',value:p.format?FORMAT_WORD(format):'7v7, 9v9, 11v11, futsal'},
+  {icon:'diagram',label:'Formations',value:`${p.format?formationsIn(format).length:FORMATIONS.length} to choose from`},{icon:'share',label:'Share it',value:'Print, picture or link'},{icon:'lock',label:'Account',value:'None, names stay on your device'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={webAppLd({name:p.h1[0].toUpperCase()+p.h1.slice(1),path:p.path,description:p.description,image:TOOL_PAGES.find(t=>t.path===p.path)!.image,
    features:['Lineups for 7v7, 9v9, 11v11 and futsal','Drag or tap to swap players and substitutes','One-page print','Picture download','Share by link','No account; names stay on the device']})}/>
   <JsonLd data={faqLd(p.faq)}/>
   <PrintStyle/>
-  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} headingFormat={p.format&&lineupHeading(p.format)===p.h1?p.format:undefined} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}}/></Screen>
+  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} headingFormat={p.format&&lineupHeading(p.format)===p.h1?p.format:undefined} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts}/></Screen>
   <LineupBuilder shapes={SHAPES} initial={f.slug} lockFormat={p.format}/>
   <Screen>
    <Section id="how" title="How to build your lineup">
@@ -58,7 +61,7 @@ function Lineup({p}:{p:LineupPage}){
     </ol>
    </Section>
    <Section id="about" title={p.format?`About ${FORMAT_WORD(format)} lineups`:'Why draw the lineup'}>{p.intro.map(x=><p key={x}>{x}</p>)}</Section>
-   {!p.format&&<Section id="shapes" title="Every formation you can build">
+   {!p.format&&<Section id="shapes" title="Every formation you can build" fold>
     <p>{FORMATIONS.length} shapes across four games. Each one opens in the builder from its guide page, where you can read its roles, strengths and weak spots first.</p>
     <LinkList links={FORMATIONS.map(x=>({path:x.path,name:`${x.name} formation`,line:x.best}))}/>
    </Section>}
@@ -82,13 +85,16 @@ function Planner({p}:{p:PlannerPage}){
  const related=[{path:'/learn/soccer-rules/substitutions-and-game-length',name:'Substitutions and game length by age',line:'How long games last and how changes work'},{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},
   {path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'U6 to U19 and which game each one plays'},{path:'/learn/lessons',name:'Soccer lessons for kids',line:'Short lessons and quizzes to use at practice'},{path:p.format?`/tools/${p.format}-lineup-builder`:LINEUP_PATH,name:p.format?`${p.format} lineup builder`:'Soccer lineup builder',line:'Put the starters on a field diagram'},
   ...PLANNER_PAGES.filter(x=>x!==p).map(x=>({path:x.path,name:x.h1[0].toUpperCase()+x.h1.slice(1),line:x.blurb})),{path:PRINTABLES_HUB_PATH,name:'Blank soccer field diagrams',line:PRINTABLES_HUB.blurb}];
+ /* visual pass Nov 17 2026: key facts under the lead, from the planner's own features (webAppLd below) */
+ const facts:Fact[]=[{icon:'lineup',label:'Games',value:p.format??'7v7, 9v9, 11v11'},{icon:'clock',label:'Minutes',value:'Equal for every player'},
+  {icon:'share',label:'Share it',value:'Print, text or link'},{icon:'lock',label:'Account',value:'None, names stay on your device'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={webAppLd({name:p.h1[0].toUpperCase()+p.h1.slice(1),path:p.path,description:p.description,image:plannerImage(p),
    features:['Equal playing time for any squad size','Goalkeeper fixed or rotating','Printable table','Copy as text for a team chat','Share by link','No account; names stay on the device']})}/>
   <JsonLd data={faqLd(p.faq)}/>
   <PrintStyle/>
-  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}}/></Screen>
+  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts}/></Screen>
   <RotationPlanner presets={presets} initial={initial} lockKey={p.format}/>
   <Screen>
    <Section id="about" title={p.format?`Sharing a ${p.format} game`:'Why plan the changes'}>{p.intro.map(x=><p key={x}>{x}</p>)}</Section>
@@ -97,11 +103,11 @@ function Planner({p}:{p:PlannerPage}){
     <p>US youth soccer moved to small-sided games (7v7, then 9v9) so that every child touches the ball more often. Sharing the minutes fairly follows the same idea: more children, more touches, more football learned.{p.format?'':' Many recreational leagues also set a minimum share of the game for every player, so check your league’s rules.'}</p>
     <p>{KEEPER_NOTE}</p>
    </Section>
-   <Section id="lengths" title="Typical US youth game lengths">
+   <Section id="lengths" title="Typical US youth game lengths" fold>
     <DataTable label="Typical US youth game lengths by format" head={['Game','Players on the field','Game length','Total']} rows={rows}/>
     <p className={site.caption}>Typical US youth standards for the {SIZES_SEASON} season, from the Futbol Island <a href="/learn/soccer-age-groups">age group chart</a> (sources: U.S. Soccer and US Youth Soccer); your league may differ. Checked on {SIZES_CHECKED}.</p>
    </Section>
-   <Section id="method" title="How the plan is made">
+   <Section id="method" title="How the plan is made" fold>
     <ul>
      <li>Each period is cut into equal blocks, one for every change. A 25-minute half with changes every 5 minutes has five blocks.</li>
      <li>Every player gets the same number of blocks. When that does not divide evenly, some get one block more, never two.</li>
@@ -111,7 +117,7 @@ function Planner({p}:{p:PlannerPage}){
     </ul>
    </Section>
    {!p.format&&<>
-   <Section id="example" title="Substitution calculator: a worked example">
+   <Section id="example" title="Substitution calculator: a worked example" fold>
     <p>Ten players turn up for a 7v7 game of two 25-minute halves, and you change players every 5 minutes. That is 10 blocks of 5 minutes with 7 places in each: 70 places to share.</p>
     <ul>
      <li><b>Goalkeeper changes each half:</b> 70 places for 10 players is 7 blocks each, so every child plays 35 minutes, and two of them each keep goal for one half.</li>
@@ -123,7 +129,7 @@ function Planner({p}:{p:PlannerPage}){
    <Section id="game-day" title="Equal playing time during the game">
     <p>A plan on paper is only half the job. The <a href="/coach">free coach app</a> runs it on your phone at the side line: one big card shows who goes off and who comes on, and when. Tap Done when the change is made. If a child is hurt, arrives late or leaves early, one tap re-balances the rest of the game. The clock keeps time through a locked screen, and your team never leaves your phone.</p>
    </Section>
-   <Section id="excel" title="Playing time calculator in Excel or Google Sheets">
+   <Section id="excel" title="Playing time calculator in Excel or Google Sheets" fold>
     <p>Many coaches keep a season sheet of minutes. After each game the coach app downloads a CSV file: one row per player with minutes in each period, minutes in goal, total minutes and share of the game. Open it in Excel, Google Sheets or Numbers and paste it under last week’s game.</p>
    </Section>
    </>}

@@ -8,7 +8,7 @@ import {TERMS_HUB} from '@/lib/site/terms';
 import {drillLinksFor} from '@/lib/site/drills';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,type Fact,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {ruleQuiz} from '@/lib/site/guideQuiz';
 import {guideQuizPart} from '@/lib/site/learningLd';
@@ -18,8 +18,8 @@ import {SITE_UPDATED} from '@/lib/site/updated';
 import {RULE_NOTES} from '@/lib/site/notesGuides';
 import {checkNotes} from '@/lib/site/coachNotes';
 import {FUTSAL_VS_SOCCER} from '@/lib/site/comparisons';
-import {CardRulesGame,CardRulesSide,CardRulesTop} from '@/components/site/CardRulesSections';
-import {CARD_RULES} from '@/lib/site/cardRules';
+import {CardRulesGame,CardRulesSources,CardRulesTop} from '@/components/site/CardRulesSections';
+import {CARD_RULES,cardDeckOf} from '@/lib/site/cardRules';
 import {RulePlayDeck,RulePlayGame} from '@/components/site/RulePlaySections';
 import {RULE_PLAY,isRulePlaySlug} from '@/lib/site/rulePlay';
 import {longDate} from '@/lib/site/checked';
@@ -44,11 +44,16 @@ export default function RulePage({params}:{params:{slug:string}}){
  const cards=r.slug==='yellow-and-red-cards';/* Nov 16 2026: the cards page's deck, table, side questions and game (lib/site/cardRules.ts) */
  const play=isRulePlaySlug(r.slug)?RULE_PLAY[r.slug]:null;/* Nov 16 2026: the back-pass, throw-in, handball and fouls pages' deck and game (lib/site/rulePlay.ts) */
  const moving=(ANIMATED_RULES as readonly string[]).includes(r.slug),futsal=r.slug==='futsal-rules',pair=r.scenes.length>1,last=r.scenes.length-1;
+ const deck=cards?{id:CARD_RULES.deck.id,n:cardDeckOf(CARD_RULES).slides.length}:play?{id:play.deck.id,n:play.slides.length}:null;
+ /* visual pass Nov 17 2026: the key facts under the answer, all from this page's own data, three of them jump links */
+ const facts:Fact[]=[{icon:'law',label:'Rule',value:r.law},{icon:'steps',label:'Common mix-ups',value:`${r.mixups.length} cleared up`,href:'#mixups'},
+  deck?{icon:cards?'cards':'deck',label:'Flip cards',value:`${deck.n} to try`,href:`#${deck.id}`}:{icon:'diagram',label:'Diagram',value:moving?'A moving picture':'A pitch picture',href:'#diagram'},
+  {icon:'quiz',label:'Quick quiz',value:`${quiz.length} questions`,href:'#quiz'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{...articleLd({headline:r.title,path:r.path,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (soccer rule)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.path,name:`${r.name} quiz`,questions:quiz})}}/>
   <JsonLd data={faqLd(r.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer}/>
+  <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer} facts={facts}/>
   <PrintSheet path={r.path} what={cards?'card rules sheet':'rule sheet'} has={cards?'all 14 card offenses and the yellow vs red table':undefined}/>
   {cards&&<CardRulesTop c={CARD_RULES}/>}
   {play&&<RulePlayDeck c={play}/>}
@@ -59,7 +64,6 @@ export default function RulePage({params}:{params:{slug:string}}){
   </Section>
   {cards&&<CardRulesGame c={CARD_RULES}/>}
   {play&&<RulePlayGame c={play}/>}
-  {cards&&<CardRulesSide c={CARD_RULES} checked={`Checked on ${longDate(FAMILY_CHECKED.rules)}.`}/>}
   <Section id="referee" title="What the referee looks for">
    <Bullets items={r.refs}/>
    <p className={styles.caption}>Rule: {r.law}. {futsal?<a href={FUTSAL_LAWS_URL} rel="noopener">FIFA Futsal Laws of the Game 2025-26</a>:<a href={r.lawUrl} rel="noopener">Read it in the Laws of the Game (The IFAB)</a>}.</p>
@@ -67,7 +71,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   <Section id="mixups" title="Common mix-ups">
    <ul className={styles.stack}>{r.mixups.map(m=><li key={m.said} className={styles.card}><h3 className={styles.h3}>{m.said}</h3><p>{m.truth}</p></li>)}</ul>
   </Section>
-  <Section id="formats" title={futsal?'Futsal at a glance':'In 7v7, 9v9, 11v11 and futsal'}>
+  <Section id="formats" title={futsal?'Futsal at a glance':'In 7v7, 9v9, 11v11 and futsal'} fold={!futsal}>
    <DataTable label={`${r.name} by game format`} head={[futsal?'Topic':'Game',futsal?'Futsal rule':'How the rule works']} rows={r.formats}/>
    <p className={styles.caption}>{RULE_LEAGUE_LINE} {RULE_SOURCE_LINE}</p>
   </Section>
@@ -76,11 +80,14 @@ export default function RulePage({params}:{params:{slug:string}}){
    <DataTable label={FUTSAL_VS_SOCCER.title} head={FUTSAL_VS_SOCCER.head} rows={FUTSAL_VS_SOCCER.rows}/>
    <p className={styles.caption}>{FUTSAL_VS_SOCCER.note}</p>
   </Section>}
-  <QA id="faq" title={`Questions about ${r.name.toLowerCase().replace('futsal rules','futsal rules')}`} faq={r.faq}/>
+  {/* visual pass Nov 17 2026: one FAQ per page; the cards page's side questions join this list (not the FAQPage JSON-LD) */}
+  <QA id="faq" title={`Questions about ${r.name.toLowerCase().replace('futsal rules','futsal rules')}`} faq={r.faq} more={cards?CARD_RULES.side.items:undefined}>
+   {cards&&<CardRulesSources c={CARD_RULES} checked={`Checked on ${longDate(FAMILY_CHECKED.rules)}.`}/>}
+  </QA>
   <CoachNotesSection name={r.name} notes={RULE_NOTES[r.slug]}/>
   <Section id="lessons" title="Lessons that go with this rule"><LessonList lessons={r.lessons}/></Section>
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
-  {drillLinksFor(r.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(r.path)}/></Section>}
+  {drillLinksFor(r.path).length>0&&<Section id="drills" title="Soccer drills to practice this" fold><LinkList links={drillLinksFor(r.path)}/></Section>}
   <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
   <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz}/>
   <GuideEnd checked={FAMILY_CHECKED.rules} lesson={r.cta}/>

@@ -12,7 +12,9 @@ import type {CoachNotesEs} from '@/lib/i18n/es/types';
 import {esLesson} from '@/lib/i18n/es/lessons';
 import p from '@/components/site/printSheet.module.css';
 import styles from '@/app/(site)/site.module.css';
-export {Bullets,DataTable,LinkList,Section} from '@/lib/site/GuideParts';
+import {QuickAnswer,type Fact} from '@/lib/site/GuideParts';
+import {FactIcon} from '@/components/site/FactIcons';
+export {Bullets,DataTable,LinkList,QuickAnswer,Section,type Fact} from '@/lib/site/GuideParts';
 export {QA} from '@/components/site/LessonHub';
 /**
  * The Spanish versions of the guide pages' shared parts (lib/site/GuideParts.tsx and components/site/*), same markup and classes,
@@ -26,11 +28,11 @@ export function EsBreadcrumbs({crumbs}:{crumbs:readonly Crumb[]}){
 export const esCrumbs=(...tail:Crumb[]):Crumb[]=>[{name:ES_UI.home,path:toEs('/')},...tail];
 /** Keep a formation shape such as 4-3-3 on one line (a phone otherwise breaks the h1 after a hyphen: “4-3-” / “3”). */
 const noBreak=(s:string)=>s.split(/(\d+(?:-\d+)+)/).map((x,i)=>i%2?<span key={i} style={{whiteSpace:'nowrap'}}>{x}</span>:x);
-export function EsIntro({crumbs,h1,lead,more,cta}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:string;cta?:boolean}){
+export function EsIntro({crumbs,h1,lead,more,cta,facts}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:string;cta?:boolean;facts?:readonly Fact[]}){
  return <header className={styles.intro}>
   <EsBreadcrumbs crumbs={crumbs}/>
   <h1 className={styles.title}>{noBreak(h1)}</h1>
-  <p className={styles.lead} data-answer="">{lead}</p>
+  <QuickAnswer lead={lead} facts={facts}/>
   {more&&<p>{more}</p>}
   <p className={styles.caption}>{ES_UI.guideNames}</p>
   {cta&&<a className={styles.cta} href={PLAY_PATH}>{ES_UI.playIsland}</a>}
@@ -60,7 +62,7 @@ export function EsGuideEnd({cta=true,checked,lessonId}:{cta?:boolean;checked?:st
   {cta&&(lessonId?<EsPlayEnd href={playLessonHref(lessonId)} label={ES_UI.playLesson}/>:<EsPlayEnd/>)}</>;
 }
 export function EsCoachNotes({name,notes}:{name:string;notes:CoachNotesEs}){
- return <section className={`${styles.section} ${styles.panel}`} aria-labelledby="coach-notes"><h2 className={styles.h2} id="coach-notes">{ES_UI.coachNotes}: {name}</h2>
+ return <section className={`${styles.section} ${styles.panel}`} aria-labelledby="coach-notes"><h2 className={`${styles.h2} ${styles.notesH}`} id="coach-notes"><FactIcon kind="whistle" size={28}/><span>{ES_UI.coachNotes}: {name}</span></h2>
   {notes.coach&&<p><b>{ES_UI.coachPoint}:</b> {notes.coach}</p>}
   {notes.match&&<p><b>{ES_UI.inMatch}:</b> {notes.match}</p>}
   {notes.mistakes&&notes.mistakes.length>0&&<><h3 className={styles.h3}>{ES_UI.mistakes}</h3><ul>{notes.mistakes.map(t=><li key={t}>{t}</li>)}</ul></>}

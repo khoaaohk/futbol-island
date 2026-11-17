@@ -29,7 +29,7 @@ import {ES_FORMATIONS,ES_HUBS,ES_POSITIONS,esFormatGuide,esFormation,esFormation
 import {LICENCE_ES,LINEUP_PAGES_ES,PLANNER_PAGES_ES,PRINTABLES_ES,PRINTABLES_HUB_ES,PRIVACY_LINE_ES,TOOL_NAMES_ES,TOOLS_HUB_ES,fieldNameEs} from '@/lib/i18n/es/tools';
 import type {PrintableEs,ToolPageEs} from '@/lib/i18n/es/types';
 import {ToolCards} from '@/components/site/tools/ToolCards';
-import {DataTable,EsBreadcrumbs,EsPlayEnd,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
+import {DataTable,EsBreadcrumbs,EsPlayEnd,LinkList,QA,QuickAnswer,Section,esCrumbs,type Fact} from '@/components/es/EsParts';
 import {esLd} from './GuidesEs';
 import site from '@/app/(site)/site.module.css';
 import t from '@/components/site/tools/tools.module.css';
@@ -77,11 +77,11 @@ function toolLink(enPath:string):Link|null{
 const links=(xs:(Link|null)[])=>xs.filter((x):x is Link=>!!x);
 
 // ---- shared parts ----
-function EsToolIntro({crumbs,h1,lead,headingFormat,app}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:boolean}){
+function EsToolIntro({crumbs,h1,lead,headingFormat,app,facts}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:boolean;facts?:readonly Fact[]}){
  return <header className={site.intro}>
   <EsBreadcrumbs crumbs={crumbs}/>
   {headingFormat?<LineupHeading format={headingFormat} className={site.title} lang="es"/>:<h1 className={site.title}>{h1}</h1>}
-  <p className={site.lead} data-answer="">{lead}</p>
+  <QuickAnswer lead={lead} facts={facts}/>
   {app&&<AppLink href="/coach?lang=es" label="Abrir la app del entrenador" line="La misma herramienta como app para el día del partido: reloj de cambios en vivo, funciona sin conexión, sin cuenta."/>}
   <p className={site.caption}>{TOOL_NAMES_ES}</p>
  </header>;
@@ -192,13 +192,16 @@ function LineupEs({p}:{p:LineupPage}){
   p.format?esLink(cheatSheetPath(format),{line:'Cada forma de esta modalidad en una página para imprimir'}):esLink(PRINTABLES_HUB_PATH,{name:'Hojas de referencia de formaciones y canchas en blanco'}),
   esLink(PLANNER_PATH,{line:'Un plan de cambios justo para el mismo plantel'}),...others]);
  const fmtWord=format==='futsal'?'futsal':format;
+ /* visual pass Nov 17 2026: the same key facts as the English page (app/(site)/tools/[slug]/page.tsx) */
+ const facts:Fact[]=[{icon:format==='futsal'?'court':'lineup',label:'Modalidades',value:p.format?fmtWord:'7v7, 9v9, 11v11, futsal'},
+  {icon:'diagram',label:'Formaciones',value:`${p.format?esFormationsIn(format).length:ES_FORMATIONS().length} para elegir`},{icon:'share',label:'Compártela',value:'Imprimir, imagen o enlace'},{icon:'lock',label:'Cuenta',value:'Ninguna, los nombres se quedan en tu dispositivo'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={webAppEs({name:e.h1,path:toEs(p.path),description:e.description,image:image(p.path),
    features:['Alineaciones para 7v7, 9v9, 11v11 y futsal','Arrastra o toca para cambiar jugadores y suplentes','Impresión de una página','Descarga de imagen','Compartir por enlace','Sin cuenta; los nombres se quedan en el dispositivo']})}/>
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
-  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} headingFormat={p.format} app/></Screen>
+  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} headingFormat={p.format} app facts={facts}/></Screen>
   <LineupBuilder shapes={shapesEs} initial={f.slug} lockFormat={p.format} lang="es"/>
   <Screen>
    <Section id="how" title="Cómo armar tu alineación">
@@ -211,7 +214,7 @@ function LineupEs({p}:{p:LineupPage}){
     </ol>
    </Section>
    <Section id="about" title={p.format?`Sobre las alineaciones de ${fmtWord}`:'Por qué dibujar la alineación'}>{e.intro.map(x=><p key={x}>{x}</p>)}</Section>
-   {!p.format&&<Section id="shapes" title="Todas las formaciones que puedes armar">
+   {!p.format&&<Section id="shapes" title="Todas las formaciones que puedes armar" fold>
     <p>{ES_FORMATIONS().length} formas en cuatro modalidades. Cada una se abre en el creador desde su guía, donde primero puedes leer sus roles, sus fortalezas y sus puntos débiles.</p>
     <LinkList links={ES_FORMATIONS().map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.best}))}/>
    </Section>}
@@ -238,13 +241,15 @@ function PlannerEs({p}:{p:PlannerPage}){
   esLink(p.format?`/tools/${p.format}-lineup-builder`:LINEUP_PATH,{line:'Pon a los titulares en un diagrama de cancha'}),
   ...PLANNER_PAGES.filter(x=>x!==p).map(x=>toolLink(x.path)),esLink(PRINTABLES_HUB_PATH,{name:'Diagramas de cancha de fútbol en blanco'})]);
  const ages=esLink('/learn/soccer-age-groups',{key:true})!;
+ const facts:Fact[]=[{icon:'lineup',label:'Modalidades',value:p.format??'7v7, 9v9, 11v11'},{icon:'clock',label:'Minutos',value:'Iguales para cada jugador'},
+  {icon:'share',label:'Compártelo',value:'Imprimir, texto o enlace'},{icon:'lock',label:'Cuenta',value:'Ninguna, los nombres se quedan en tu dispositivo'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={webAppEs({name:e.h1,path:toEs(p.path),description:e.description,image:plannerImage(p),
    features:['Minutos iguales para un plantel de cualquier tamaño','Portero fijo o que rota','Tabla para imprimir','Copiar como texto para el chat del equipo','Compartir por enlace','Sin cuenta; los nombres se quedan en el dispositivo']})}/>
   <JsonLd data={faqLd(e.faq.map(x=>({...x})))}/>
   <PrintStyle/>
-  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} app/></Screen>
+  <Screen><EsToolIntro crumbs={crumbs} h1={e.h1} lead={e.lead} app facts={facts}/></Screen>
   <RotationPlanner presets={presetsEs} initial={initial} lockKey={p.format} lang="es"/>
   <Screen>
    <Section id="about" title={p.format?`Repartir un partido de ${p.format}`:'Por qué planear los cambios'}>{e.intro.map(x=><p key={x}>{x}</p>)}</Section>
@@ -253,11 +258,11 @@ function PlannerEs({p}:{p:PlannerPage}){
     <p>El fútbol infantil de Estados Unidos pasó a los juegos reducidos (7v7, luego 9v9) para que cada niño toque más el balón. Repartir los minutos con justicia sigue la misma idea: más niños, más toques, más fútbol aprendido.{p.format?'':' Muchas ligas recreativas también fijan una parte mínima del partido para cada jugador, así que revisa las reglas de tu liga.'}</p>
     <p>Un plan es un punto de partida. Si un niño se lastima, se molesta o simplemente está volando, cámbialo: la meta es una parte justa durante la temporada, no una tabla perfecta cada semana.</p>
    </Section>
-   <Section id="lengths" title="Duración típica de los partidos infantiles en Estados Unidos">
+   <Section id="lengths" title="Duración típica de los partidos infantiles en Estados Unidos" fold>
     <DataTable label="Duración típica de los partidos infantiles en Estados Unidos por modalidad" head={['Modalidad','Jugadores en la cancha','Duración del partido','Total']} rows={rows}/>
     <p className={site.caption}>Estándares típicos del fútbol infantil de Estados Unidos para la temporada {SIZES_SEASON}, de la <a href={ages.path}>tabla de grupos de edad{ages.name.endsWith('(en inglés)')?' (en inglés)':''}</a> de Futbol Island (fuentes: U.S. Soccer y US Youth Soccer); tu liga puede ser distinta. Revisado el {longDateEs(FAMILY_CHECKED.sizes)}.</p>
    </Section>
-   <Section id="method" title="Cómo se hace el plan">
+   <Section id="method" title="Cómo se hace el plan" fold>
     <ul>
      <li>Cada periodo se corta en bloques iguales, uno por cada cambio. Un tiempo de 25 minutos con cambios cada 5 minutos tiene cinco bloques.</li>
      <li>Cada jugador recibe el mismo número de bloques. Cuando no se divide exacto, algunos reciben un bloque más, nunca dos.</li>

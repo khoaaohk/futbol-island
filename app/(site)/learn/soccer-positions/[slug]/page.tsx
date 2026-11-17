@@ -10,7 +10,7 @@ import {POSITIONS,POSITIONS_HUB,positionBySlug} from '@/lib/site/positions';
 import {NUMBERS_PATH} from '@/lib/site/positionNumbers';
 import {guideCrumbs,positionImage} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,type Fact,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
 import {drillLinksFor} from '@/lib/site/drills';
 import {SITE_CARDS,cardPath} from '@/lib/site/cards';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -37,11 +37,14 @@ export default function PositionPage({params}:{params:{slug:string}}){
  const quiz=positionQuiz(p,POSITIONS);
  const hub=roleCollection(p.cardRole),compare=comparisonsFor(p.path);
  const cards=SITE_CARDS.filter(c=>c.role===p.cardRole&&!c.coach).slice(p.cardSkip,p.cardSkip+6);
+ /* visual pass Nov 17 2026: the key facts under the answer, from this page's own data */
+ const facts:Fact[]=[{icon:'shirt',label:'Shirt number',value:p.numbers,href:'#number'},{icon:'tag',label:'Short name',value:p.short},
+  {icon:'lineup',label:'Where',value:`${f.shape} diagram`,href:'#where'},{icon:'quiz',label:'Quick quiz',value:`${quiz.length} questions`,href:'#quiz'}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{...articleLd({headline:p.title,path:p.path,description:p.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${p.name} (soccer position)`,teaches:p.job,image:positionImage(p.slug)}),hasPart:guideQuizPart({path:p.path,name:`${p.name} quiz`,questions:quiz})}}/>
   <JsonLd data={faqLd(p.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={p.h1} lead={p.answer} more={p.suits}/>
+  <GuideIntro crumbs={crumbs} h1={p.h1} lead={p.answer} more={p.suits} facts={facts}/>
   <Section id="where" title={`Where the ${lower} stands`}>
    <Diagram id="where-d" format={f.format} lines={f.lines} what={`the ${lower} position in a ${f.shape} formation`} mark={p.slug} markName={lower} image={positionImage(p.slug)}/>
    <p>{p.where}</p>
@@ -54,19 +57,19 @@ export default function PositionPage({params}:{params:{slug:string}}){
   <Section id="number" title={`Shirt number: ${p.numbers}`}>
    <p>{p.numberLine} The numbers are a coaching custom from the days when starters wore 1 to 11. Players today can wear any number. <a href={NUMBERS_PATH}>All soccer positions by number</a>.</p>
   </Section>
-  <Section id="small" title="In 7v7, 9v9 and futsal"><p>{p.small}</p></Section>
-  {used.length>0&&<Section id="formations" title={`Formations with a ${lower}`}>
+  <Section id="small" title="In 7v7, 9v9 and futsal" fold><p>{p.small}</p></Section>
+  {used.length>0&&<Section id="formations" title={`Formations with a ${lower}`} fold>
    <LinkList links={[...used.map(x=>({path:x.path,name:`${x.name} formation`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:FORMATIONS_HUB.path,name:'All soccer formations',line:FORMATIONS_HUB.blurb}]}/>
   </Section>}
   <QA id="faq" title={`Questions about the ${lower}`} faq={p.faq}/>
   <CoachNotesSection name={p.name} notes={POSITION_NOTES[p.slug]}/>
   <Section id="lessons" title="Lessons for this position"><LessonList lessons={p.lessons}/></Section>
-  {cards.length>0&&<Section id="cards" title="Player cards">
+  {cards.length>0&&<Section id="cards" title="Player cards" fold>
    <p className={styles.caption}>{p.cardNote}</p>
    <LinkList links={[...cards.map(c=>({path:cardPath(c.number),name:c.displayName,line:[c.roleLabel,c.country].filter(Boolean).join(' · ')})),...(hub?[{path:hub.path,name:`See all ${hub.blurb.replace(/,.*$/,'')}`,line:hub.h1}]:[])]}/>
   </Section>}
   {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
-  {drillLinksFor(p.path).length>0&&<Section id="drills" title="Soccer drills to practice this"><LinkList links={drillLinksFor(p.path)}/></Section>}
+  {drillLinksFor(p.path).length>0&&<Section id="drills" title="Soccer drills to practice this" fold><LinkList links={drillLinksFor(p.path)}/></Section>}
   {compare.length>0&&<Section id="compare" title="Compare it"><LinkList links={compare.map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
   <Section id="related" title="Other positions"><LinkList links={[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:NUMBERS_PATH,name:'Soccer positions by number',line:'1 to 11 and the letters: CB, CDM, LCM, DF'},{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}/></Section>
   <GuideQuiz id="quiz" name={`the ${lower}`} questions={quiz}/>
