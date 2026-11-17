@@ -78,11 +78,12 @@ export function splitAnswer(a:string):[string,string]{
  return [head.trim(),parts.slice(i).join('').trim()];
 }
 /** An FAQ that does not repeat the cards above it word for word: each question with its short answer showing, and the rest of
- *  the same answer in a <details> under it. Short + rest is exactly the answer, so the FAQPage JSON-LD still matches the page. */
+ *  the same answer under it. With more to read, the short line IS the <summary> (tap it to open; the "More" cue is drawn by CSS
+ *  from data-more), so the page text reads short + rest exactly as the FAQPage JSON-LD does. */
 export function ShortFaq({id,title,faq,more}:{id:string;title:string;faq:readonly {q:string;a:string}[];more:string}){
  return <section className={site.section} aria-labelledby={id}><h2 className={site.h2} id={id}>{title}</h2>
   <div className={s.faq} data-short-faq={id}>{faq.map(f=>{const [head,rest]=splitAnswer(f.a);
-   return <div key={f.q} className={s.faqRow} data-q={f.q}><h3 className={s.faqQ}>{f.q}</h3><p className={s.faqA}>{head}</p>
-    {rest&&<details className={s.faqMore}><summary>{more}</summary><p>{rest}</p></details>}</div>;})}</div>
+   return <div key={f.q} className={s.faqRow}><h3 className={s.faqQ}>{f.q}</h3>
+    {rest?<details className={s.faqMore}><summary data-more={more}><span className={s.faqA}>{head}</span></summary><p>{rest}</p></details>:<p className={s.faqA}>{head}</p>}</div>;})}</div>
  </section>;
 }

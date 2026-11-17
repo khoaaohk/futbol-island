@@ -82,13 +82,13 @@ a.tile:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3
 .faqRow:first-child{border-top:1px solid var(--rule)}
 .faqQ{margin:0;font-size:var(--t-h3);line-height:1.3;font-weight:600;letter-spacing:-.015em;color:var(--ink)}
 .faqA{margin:0}
-.faqMore summary{display:inline-flex;align-items:center;min-height:var(--tap);color:var(--link);font-weight:600;cursor:pointer;list-style:none}
+.faqMore summary{display:block;cursor:pointer;list-style:none}
 .faqMore summary::-webkit-details-marker{display:none}
-.faqMore summary::after{content:"+";margin-left:8px;font-size:20px;line-height:1;transition:transform .2s ease}
-.faqMore[open] summary::after{transform:rotate(45deg)}
+.faqMore summary::after{content:attr(data-more) " +";display:block;margin-top:4px;min-height:var(--tap);line-height:var(--tap);color:var(--link);font-weight:600}
+.faqMore[open] summary::after{content:none}
 .faqMore summary:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px;border-radius:4px}
-.faqMore p{margin:0;padding-bottom:4px}
-@media(prefers-reduced-motion:reduce){.faqMore summary::after,a.tile{transition:none}}
+.faqMore p{margin:0;padding-top:6px}
+@media(prefers-reduced-motion:reduce){a.tile{transition:none}}
 
 /* a key-facts strip standing on its own (under the fish art): the quick-answer tint, so the paper tiles show */
 .factsBand{box-sizing:border-box;width:100%;max-width:calc(var(--measure) + 2 * var(--s3));padding:var(--s1);border-radius:var(--r-lg);background:var(--quickTint,var(--surface))}

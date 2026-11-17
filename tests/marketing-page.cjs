@@ -40,7 +40,7 @@ const LINK=/(href=["'{`]*|['"`])(https:\/\/futbolisland\.app)?\/marketing(\/|["'
 let scanned=0;
 for(const f of [...walk('app'),...walk('components'),...walk('lib'),...walk('public').filter(f=>/\.(txt|html|xml|json|md|webmanifest)$/.test(f))].filter(f=>/\.(tsx?|jsx?|mjs|cjs|css|txt|html|xml|json|md|webmanifest)$/.test(f))){
  if(OWN.has(f))continue;scanned++;
- assert(!LINK.test(read(f)),`${f} links to /marketing (only the main page's About box may)`);}
+ assert(!LINK.test(read(f).replace(/\/marketing\/[\w\/.-]+\.(?:webp|png|jpe?g|svg|mp4|webm)/g,''))/* a picture file under public/marketing is not a link (b5, Nov 17 2026) */,`${f} links to /marketing (only the main page's About box may)`);}
 assert(scanned>100,'the link scan covered the code ('+scanned+' files)');
 
 // ---- 2. the page ----

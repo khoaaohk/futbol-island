@@ -64,11 +64,11 @@ for(const [where,h] of [['/about',page('app/(site)/about/page.tsx')],['/es/about
  const shots=images(pr[1],where);ok(shots.length>=4,`${where}: at least 4 game screenshots beside the promises (${shots.length})`);
  for(const i of shots)ok(/ alt="[^"]{30,}"/.test(i),`${where}: screenshot alt says what it shows`);
  const faq=faqLdMatches(h,where);
- const rows=[...h.matchAll(/<div class="faqRow" data-q="[^"]*"><h3 class="faqQ">([^<]+)<\/h3><p class="faqA">([^<]*)<\/p>(?:<details class="faqMore"><summary>More<\/summary><p>([^<]*)<\/p><\/details>)?<\/div>/g)];
+ const rows=[...h.matchAll(/<div class="faqRow"><h3 class="faqQ">([^<]+)<\/h3>(?:<details class="faqMore"><summary data-more="More"><span class="faqA">([^<]*)<\/span><\/summary><p>([^<]*)<\/p><\/details>|<p class="faqA">([^<]*)<\/p>)<\/div>/g)];
  ok(rows.length===faq.mainEntity.length,`${where}: one short row per FAQPage question (${rows.length})`);
- rows.forEach((r,i)=>{const x=faq.mainEntity[i];ok(dec(r[1])===x.name,`${where}: same question, same order: ${x.name}`);
-  ok([dec(r[2]),dec(r[3]||'')].filter(Boolean).join(' ')===x.acceptedAnswer.text,`${where}: short line + More is exactly the answer: ${x.name}`);
-  ok(dec(r[2]).length<x.acceptedAnswer.text.length||!r[3],`${where}: the short line is shorter than the answer`);});
+ rows.forEach((r,i)=>{const x=faq.mainEntity[i],head=dec(r[2]??r[4]),rest=dec(r[3]||'');ok(dec(r[1])===x.name,`${where}: same question, same order: ${x.name}`);
+  ok([head,rest].filter(Boolean).join(' ')===x.acceptedAnswer.text,`${where}: short line + the rest is exactly the answer: ${x.name}`);
+  ok(text(r[0]).includes(x.acceptedAnswer.text),`${where}: the answer reads as one run of text (no "More" word between): ${x.name}`);});
  ok(rows.some(r=>r[3]),`${where}: some answers fold the rest under More`);
  images(h,where);}
 // ---- 3. how we check facts ----
