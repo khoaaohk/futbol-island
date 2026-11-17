@@ -178,7 +178,7 @@ for(const l of lessons.LESSONS){const h=html(lessons.lessonPath(l.id));
  const lists=[...h.matchAll(/<ul class="[^"]*options[^"]*">([\s\S]*?)<\/ul>/g)].map(m=>[...m[1].matchAll(/<li>([\s\S]*?)<\/li>/g)].map(x=>text(x[1]).trim()));
  assert.equal(lists.length,l.questions.filter(q=>q.options.length).length,`${l.id}: every question's options are listed`);
  for(const o of lists)assert.deepEqual(o,[...o].sort((a,b)=>a.localeCompare(b,'en')),`${l.id}: options A–Z`);
- for(const m of h.matchAll(/Coach’s explanation:<\/b> ([^<]*)/g))assert(!lessons.VERDICT_OPENER.test(m[1]),`${l.id}: explanation opens with a verdict`);}
+ for(const m of h.matchAll(/data-explain="">([^<]*)/g))/* Nov 17 2026: explanations sit behind a disclosure (components/site/lessons/LessonParts.tsx) */assert(!lessons.VERDICT_OPENER.test(m[1]),`${l.id}: explanation opens with a verdict`);}
 // robots.txt: the bots are allowed, the private routes are closed for each of them and for everyone.
 const robots=fs.readFileSync(path.join(app,'robots.txt.body'),'utf8');
 const groups=robots.split(/\n\s*\n/).map(g=>({ua:(g.match(/^User-Agent: (.+)$/mi)||[])[1],allow:[...g.matchAll(/^Allow: (.+)$/gm)].map(m=>m[1]),dis:[...g.matchAll(/^Disallow: (.+)$/gm)].map(m=>m[1])})).filter(g=>g.ua);

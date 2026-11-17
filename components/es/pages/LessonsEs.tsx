@@ -20,6 +20,8 @@ import {ES_UI} from '@/lib/i18n/es/ui';
 import {EsBreadcrumbs,EsCheckedLine,EsPlayEnd,EsPrintSheet,EsReadNext,QA,esCrumbs} from '@/components/es/EsParts';
 import {esLd} from './GuidesEs';
 import type {EsRoute} from '../routes';
+import {CoachChapters,LearnCard,QuizCards} from '@/components/site/lessons/LessonParts';
+import lx from '@/components/site/lessons/lesson.module.css';
 import styles from '@/app/(site)/site.module.css';
 import fx from '@/components/site/siteForms.module.css';
 /**
@@ -53,7 +55,6 @@ export function LessonEsPage({l}:{l:EsLesson}){
  const fw=fmtWord(l.formatLabel),group=l.categoryEs?`Más lecciones de ${l.categoryEs.toLowerCase()} en ${fw}`:l.chapterEs?`Más lecciones de ${fw}: ${l.chapterEs.toLowerCase()}`:`Más lecciones de ${fw}`;
  const hubs=hubsFor(l.id).map(h=>esHubLink(h.path)).filter((x):x is NonNullable<typeof x>=>!!x);
  const guides=guidesForLesson(l.id).map(g=>guideLinkEs(g.path)).filter((x):x is NonNullable<typeof x>=>!!x);
- const eyebrow=[`Lección de ${fmtWord(l.formatLabel)}`,l.chapterEs,l.difficultyEs].filter(Boolean).join(' · ');
  return <>
   <JsonLd data={esLd(lessonLd({name:l.title,path:l.esPath,description:l.concept,teaches:l.concept,level:l.difficulty,about:formatPhraseEs(l.formatLabel),
    keywords:[l.formatLabel,l.categoryEs,l.chapterEs].filter(Boolean).join(', '),published:SITE_PUBLISHED,modified:CHECKED}))}/>
@@ -61,25 +62,19 @@ export function LessonEsPage({l}:{l:EsLesson}){
   <JsonLd data={faqLd(LESSON_FAQ)}/>
   <header className={styles.intro}>
    <EsBreadcrumbs crumbs={crumbs}/>
-   <p className={styles.eyebrow}>{eyebrow}</p>
    <h1 className={styles.title}>{l.title}</h1>
-   <p className={styles.lead} data-answer="">{l.concept}</p>
+   <LearnCard lang="es" id={l.id} concept={l.concept} formatLabel={fmtWord(l.formatLabel)} difficulty={l.difficulty} difficultyLabel={l.difficultyEs} questions={l.questions.length} chapter={l.chapterEs} answer/>
    <p>“{l.title}” es una lección y prueba gratis de {formatPhraseEs(l.formatLabel)} para niños de 7 a 12 años en Futbol Island, un juego para aprender que se juega en el navegador. El juego está en inglés por ahora.</p>
    <ParentsLine/>
    <a className={styles.cta} href={playLessonHref(l.id)} data-play-cta="">Juega esta lección</a>
   </header>
   <EsPrintSheet path={l.esPath} what="hoja de la lección" has="la idea, los pasos y las preguntas"/>
-  <section className={styles.section} aria-labelledby="coach"><h2 className={styles.h2} id="coach">Lo que dice el entrenador</h2>
-   <div className={styles.card}><ol>{l.steps.map((s,i)=><li key={i}>{s}</li>)}</ol></div>
+  <section className={`${styles.section} ${lx.wide}`} aria-labelledby="coach"><h2 className={styles.h2} id="coach">Lo que dice el entrenador</h2>
+   <CoachChapters lang="es" id={l.id} format={l.format} formatLabel={fmtWord(l.formatLabel)} steps={l.steps}/>
   </section>
-  {l.questions.length>0&&<section className={styles.section} aria-labelledby="quiz"><h2 className={styles.h2} id="quiz">Preguntas de la prueba</h2>
-   <p className={styles.caption}>Intenta responder antes de leer la explicación del entrenador. En la isla respondes cada una en la cancha.</p>
-   <ol className={styles.stack}>{l.questions.map((q,i)=><li key={i} className={styles.card}>
-    <p className={styles.eyebrow}>Pregunta {i+1}</p>
-    <h3 className={styles.h3}>{q.q}</h3>
-    {q.options.length>0&&<ul className={styles.options}>{q.options.map((o,j)=><li key={j}>{o}</li>)}</ul>}
-    {q.explain&&<p><b>Explicación del entrenador:</b> {q.explain}</p>}
-   </li>)}</ol>
+  {l.questions.length>0&&<section className={`${styles.section} ${lx.wide}`} aria-labelledby="quiz"><h2 className={styles.h2} id="quiz">Preguntas de la prueba</h2>
+   <p className={styles.caption}>Intenta responder antes de abrir la explicación del entrenador. En la isla respondes cada una en la cancha.</p>
+   <QuizCards lang="es" questions={l.questions}/>
   </section>}
   <section className={styles.section} aria-labelledby="siblings"><h2 className={styles.h2} id="siblings">{group}</h2>
    <ul className={styles.list}>{[...same,{x:prev,tag:'Lección anterior · '},{x:next,tag:'Lección siguiente · '}].map(({x,tag})=><li key={x.id}><a href={x.esPath}><span className={styles.itemTitle}>{x.title}</span><span className={styles.itemMeta}>{tag}{x.concept}</span></a></li>)}</ul>

@@ -13,9 +13,11 @@ import {LESSON_DATA_UPDATED,SITE_PUBLISHED,SITE_UPDATED} from '@/lib/site/update
 import {formatPhrase,LESSONS,lessonById,lessonDescription,lessonPath,lessonTitle} from '@/lib/site/lessons';
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {lessonLd} from '@/lib/site/learningLd';
+import {CoachChapters,LearnCard,QuizCards} from '@/components/site/lessons/LessonParts';
+import lx from '@/components/site/lessons/lesson.module.css';
 import styles from '../../../site.module.css';
 
-/** One lesson as plain text. The quiz shows its questions, options and explanations, never which option is correct. */
+/** One lesson as plain text with pictures from its own data (components/site/lessons). The quiz shows its questions, options and explanations, never which option is correct. */
 export const dynamic='force-static';
 export const dynamicParams=false;
 export const generateStaticParams=()=>LESSONS.map(l=>({slug:l.id}));
@@ -34,24 +36,19 @@ export default function LessonPage({params}:{params:{slug:string}}){
   <JsonLd data={faqLd(faq)}/>
   <header className={styles.intro}>
    <Breadcrumbs crumbs={crumbs}/>
-   <p className={styles.eyebrow}>{l.formatLabel} lesson{l.chapter?` · ${l.chapter}`:''}{l.difficulty?` · ${l.difficulty}`:''}</p>
    <h1 className={styles.title}>{l.title}</h1>
-   <p className={styles.lead}>{l.concept}</p>
+   {/* Nov 17 2026 (visual pass): the concept and the old eyebrow's format / chapter / level now live in the learn card's facts. */}
+   <LearnCard lang="en" id={l.id} concept={l.concept} formatLabel={l.formatLabel} difficulty={l.difficulty} questions={l.questions.length} chapter={l.chapter}/>
    <p>{l.title} is a free {formatPhrase(l.formatLabel)} lesson and quiz for kids aged 7 to 12 in Futbol Island, a learning game played in the web browser.</p>
    <p className={styles.caption}>{SAFE_TRUST_LINE} <a href={SAFE_GUIDE.path}>Read the parents’ guide</a>.</p>
    <a className={styles.cta} href={playLessonHref(l.id)} data-play-cta="">Play this lesson</a>
   </header>
-  <section className={styles.section} aria-labelledby="coach"><h2 className={styles.h2} id="coach">What the coach says</h2>
-   <div className={styles.card}><ol>{l.steps.map((s,i)=><li key={i}>{s}</li>)}</ol></div>
+  <section className={`${styles.section} ${lx.wide}`} aria-labelledby="coach"><h2 className={styles.h2} id="coach">What the coach says</h2>
+   <CoachChapters lang="en" id={l.id} format={l.format} formatLabel={l.formatLabel} steps={l.steps}/>
   </section>
-  {l.questions.length>0&&<section className={styles.section} aria-labelledby="quiz"><h2 className={styles.h2} id="quiz">Quiz questions</h2>
-   <p className={styles.caption}>Try to answer before you read the coach’s explanation. On the island you answer each one on the pitch.</p>
-   <ol className={styles.stack}>{l.questions.map((q,i)=><li key={i} className={styles.card}>
-    <p className={styles.eyebrow}>Question {i+1}</p>
-    <h3 className={styles.h3}>{q.q}</h3>
-    {q.options.length>0&&<ul className={styles.options}>{q.options.map((o,j)=><li key={j}>{o}</li>)}</ul>}
-    {q.explain&&<p><b>Coach’s explanation:</b> {q.explain}</p>}
-   </li>)}</ol>
+  {l.questions.length>0&&<section className={`${styles.section} ${lx.wide}`} aria-labelledby="quiz"><h2 className={styles.h2} id="quiz">Quiz questions</h2>
+   <p className={styles.caption}>Try to answer before you open the coach’s explanation. On the island you answer each one on the pitch.</p>
+   <QuizCards lang="en" questions={l.questions}/>
   </section>}
   {/* Nov 14 2026 (seo-boost): sibling lessons (lib/site/related.ts lessonSiblings), so every lesson links to its neighbours. */}
   <section className={styles.section} aria-labelledby="siblings"><h2 className={styles.h2} id="siblings">Keep going: {sib.groupName}</h2>
