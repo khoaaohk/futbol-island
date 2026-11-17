@@ -15,6 +15,7 @@ import {ES_HUBS} from '@/lib/i18n/es/registry';
 import {ES_UI} from '@/lib/i18n/es/ui';
 import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
 import {esLd} from './GuidesEs';
+import {Checklist,Glance} from '@/components/site/PageParts';
 import styles from '@/app/(site)/site.module.css';
 /**
  * The Spanish drills hub, drill pages, age and skill guides, plans hub and plan pages (Spanish round C, Nov 16 2026): the
@@ -91,11 +92,11 @@ export function DrillEsPage({d}:{d:EsDrill}){
   <EsPrintSheet path={d.esPath} what="hoja del ejercicio"/>
   <Section id="diagram" title={`${d.name}: diagrama del montaje`}><EsGridFigure id="s0" scene={d.scene} image={diagramUrl(d.picture)}/></Section>
   <Section id="facts" title="De un vistazo">
-   <DataTable label={`${d.name}: edades, jugadores, espacio, material y tiempo`} head={['Dato','En este ejercicio']} rows={[['Edades',d.agesText],['Jugadores',d.players],['Espacio',d.space],['Material',d.equipment],['Tiempo',d.time],['Habilidad',d.skillName]]}/>
+   <Glance label={`${d.name}: edades, jugadores, espacio, material y tiempo`} items={[{icon:'kid',label:'Edades',value:d.agesText},{icon:'people',label:'Jugadores',value:d.players},{icon:'court',label:'Espacio',value:d.space},{icon:'clock',label:'Tiempo',value:d.time},{icon:'ball',label:'Habilidad',value:d.skillName},{icon:'cone',label:'Material',value:d.equipment}]}/>
    <p className={styles.caption}>{DRILL_SAFETY_LINE_ES}</p>
   </Section>
   <Section id="steps" title="Cómo hacerlo"><Steps items={d.steps}/></Section>
-  <Section id="cues" title="Puntos clave para decir en voz alta"><Bullets items={d.cues}/></Section>
+  <Section id="cues" title="Puntos clave para decir en voz alta"><Checklist items={d.cues}/></Section>
   <Section id="versions" title="Hazlo más fácil o más difícil">
    <ul className={styles.stack}><li className={styles.card}><h3 className={styles.h3}>Más fácil</h3><p>{d.easier}</p></li><li className={styles.card}><h3 className={styles.h3}>Más difícil</h3><p>{d.harder}</p></li></ul>
   </Section>
@@ -180,7 +181,7 @@ export function PlanEsPage({p}:{p:EsPlan}){
   <div className={styles.printPage}>
    <EsIntro crumbs={crumbs} h1={p.h1} lead={p.lead}/>
    <Section id="facts" title="De un vistazo">
-    <DataTable label={`${p.h1}: de un vistazo`} head={['Dato','Este plan']} rows={[['Edad',`${p.age} (${AGE_YEARS_ES[p.age]})`],['Duración',`${p.minutes} minutos (guía para ${p.age}: ${PRACTICE_RANGE_ES[p.age]})`],['Jugadores',p.players],['Objetivo del día',p.goal],['Partido final',FIELD_ES[p.age]]]}/>
+    <Glance label={`${p.h1}: de un vistazo`} items={[{icon:'kid',label:'Edad',value:`${p.age} (${AGE_YEARS_ES[p.age]})`},{icon:'clock',label:'Duración',value:`${p.minutes} minutos (guía para ${p.age}: ${PRACTICE_RANGE_ES[p.age]})`},{icon:'people',label:'Jugadores',value:p.players},{icon:'flag',label:'Objetivo del día',value:p.goal},{icon:'court',label:'Partido final',value:FIELD_ES[p.age]}]}/>
    </Section>
    <Section id="clock" title={`El plan de ${p.minutes} minutos`}>
     <DataTable label={`${p.h1}: tabla de tiempos`} head={['Tiempo','Actividad','Parte','Para qué sirve']}
@@ -189,7 +190,7 @@ export function PlanEsPage({p}:{p:EsPlan}){
    </Section>
    <div className={styles.printCols}>
     <Section id="equipment" title="Material"><Bullets items={p.equipment}/></Section>
-    <Section id="notes" title="Notas para el entrenador"><Bullets items={p.notes}/></Section>
+    <Section id="notes" title="Notas para el entrenador"><Checklist items={p.notes}/></Section>
    </div>
    <Section id="swap" title="Si las cosas salen mal">
     <ul className={styles.stack}><li className={styles.card}><h3 className={styles.h3}>{p.swap.sign}</h3><p>{p.swap.instead}</p></li></ul>

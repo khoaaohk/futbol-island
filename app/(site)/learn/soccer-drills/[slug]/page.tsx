@@ -11,6 +11,7 @@ import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,LinkList,Section} from '@/lib/site/GuideParts';
 import {DrillList,GridFigure,Steps} from '@/lib/site/DrillParts';
+import {Checklist,Glance} from '@/components/site/PageParts';
 import {lessonPath} from '@/lib/site/lessons';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -20,6 +21,7 @@ import styles from '../../../site.module.css';
  * /learn/soccer-drills/<slug>: one drill (lib/site/drills.ts) or one age / skill guide (lib/site/drillGuides.ts).
  * A drill page: the two-sentence answer, the setup diagram, the facts box, steps, coaching points, easier and harder versions,
  * mistakes, why it matters in a game (with the lesson that teaches it), an at-home version, FAQ and links.
+ * Visual pass b5 (Nov 17 2026): "At a glance" as icon chips and the coaching points as a checklist.
  */
 export const dynamic='force-static';
 export const dynamicParams=false;
@@ -45,11 +47,11 @@ function DrillPage({d}:{d:Drill}){
   <PrintSheet path={d.path} what="drill sheet"/>
   <Section id="diagram" title={`${d.name}: setup diagram`}><GridFigure id="s0" scene={d.scene} image={diagramUrl(d.picture)}/></Section>
   <Section id="facts" title="At a glance">
-   <DataTable label={`${d.name}: ages, players, space, equipment and time`} head={['Detail','For this drill']} rows={[['Ages',d.agesText],['Players',d.players],['Space',d.space],['Equipment',d.equipment],['Time',d.time],['Skill',skill.name]]}/>
+   <Glance label={`${d.name}: ages, players, space, equipment and time`} items={[{icon:'kid',label:'Ages',value:d.agesText},{icon:'people',label:'Players',value:d.players},{icon:'court',label:'Space',value:d.space},{icon:'clock',label:'Time',value:d.time},{icon:'ball',label:'Skill',value:skill.name},{icon:'cone',label:'Equipment',value:d.equipment}]}/>
    <p className={styles.caption}>{DRILL_SAFETY_LINE}</p>
   </Section>
   <Section id="steps" title="How to run it"><Steps items={d.steps}/></Section>
-  <Section id="cues" title="Coaching points to say out loud"><Bullets items={d.cues}/></Section>
+  <Section id="cues" title="Coaching points to say out loud"><Checklist items={d.cues}/></Section>
   <Section id="versions" title="Make it easier or harder">
    <ul className={styles.stack}><li className={styles.card}><h3 className={styles.h3}>Easier</h3><p>{d.easier}</p></li><li className={styles.card}><h3 className={styles.h3}>Harder</h3><p>{d.harder}</p></li></ul>
   </Section>
