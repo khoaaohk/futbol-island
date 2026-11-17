@@ -21,10 +21,11 @@ import b from '@/components/site/books/books.module.css';
 export const dynamic='force-static';
 export const dynamicParams=false;
 export const generateStaticParams=()=>BUILT_BOOKS.map(slug=>({slug}));
-const headline=(t:string)=>`${t}, a pop-up story for kids`;
+/** "Cafu: a pop-up story for kids · Futbol Island" (the site's title shape, under 60 characters; the h1 carries the subtitle). */
+const headline=(t:string)=>`${t}: a pop-up story for kids`;
 export function generateMetadata({params}:{params:{slug:string}}){
  const book=bookBySlug(params.slug);if(!book)return {};
- return pageMeta(headline(book.fullTitle),book.page!.summary,bookPath(book.slug),{whole:true});
+ return pageMeta(headline(book.title),book.page!.summary,bookPath(book.slug));
 }
 export default function BookPage({params}:{params:{slug:string}}){
  const book=bookBySlug(params.slug);if(!book||!book.page)notFound();
