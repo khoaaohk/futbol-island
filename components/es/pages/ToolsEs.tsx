@@ -28,6 +28,7 @@ import {ES_UI,longDateEs} from '@/lib/i18n/es/ui';
 import {ES_FORMATIONS,ES_HUBS,ES_POSITIONS,esFormatGuide,esFormation,esFormationsIn,esLines,esRule} from '@/lib/i18n/es/registry';
 import {LICENCE_ES,LINEUP_PAGES_ES,PLANNER_PAGES_ES,PRINTABLES_ES,PRINTABLES_HUB_ES,PRIVACY_LINE_ES,TOOL_NAMES_ES,TOOLS_HUB_ES,fieldNameEs} from '@/lib/i18n/es/tools';
 import type {PrintableEs,ToolPageEs} from '@/lib/i18n/es/types';
+import {ToolCards} from '@/components/site/tools/ToolCards';
 import {DataTable,EsBreadcrumbs,EsPlayEnd,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
 import {esLd} from './GuidesEs';
 import site from '@/app/(site)/site.module.css';
@@ -160,19 +161,19 @@ function ToolsHubEs(){
   <EsToolIntro crumbs={crumbs} h1={HUB.h1} lead={HUB.lead}/>
   <Section id="lineups" title="Creadores de alineaciones">
    <p>Pon los nombres en un diagrama de cancha, cambia jugadores con un toque y luego imprime la hoja, guarda una imagen o comparte un enlace. {PRIVACY_LINE_ES}</p>
-   <LinkList links={LINEUP_PAGES.map(p=>toolLink(p.path)!)}/>
+   <ToolCards links={LINEUP_PAGES.map(p=>toolLink(p.path)!)} tint="lineups"/>
   </Section>
   <Section id="playing-time" title="Minutos de juego y cambios">
    <p>Escribe cuántos jugadores vinieron y cuánto dura el partido. La calculadora reparte los minutos por igual y te dice quién entra en cada cambio.</p>
-   <LinkList links={PLANNER_PAGES.map(p=>toolLink(p.path)!)}/>
+   <ToolCards links={PLANNER_PAGES.map(p=>toolLink(p.path)!)} tint="time"/>
   </Section>
   <Section id="practice" title="Herramientas para el entrenamiento">
    <p>Para la cancha de entrenamiento: un teléfono en un cono que muestra colores, números, flechas y pases, para que los jugadores aprendan a mirar por encima del hombro antes de que llegue el balón.</p>
-   <LinkList links={[{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb}]}/>
+   <ToolCards links={[{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb}]} tint="practice"/>
   </Section>
   <Section id="printables" title="Diagramas de cancha y hojas de referencia para imprimir">
    <p>Canchas en blanco para dibujar, todas las formaciones de una modalidad en una página, y las posiciones con sus números. Gratis para imprimir y compartir con equipos, clubes y escuelas.</p>
-   <LinkList links={[toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!)]}/>
+   <ToolCards links={[toolLink(PRINTABLES_HUB_PATH)!,...PRINTABLES.map(p=>toolLink(p.path)!)]} tint="print"/>
   </Section>
   <QA id="faq" title="Preguntas sobre las herramientas" faq={HUB.faq}/>
   <Section id="guides" title="Guías que acompañan a las herramientas"><LinkList links={links([esLink('/learn/soccer-formations',{name:'Formaciones de fútbol',line:'Cada formación de 7v7, 9v9, 11v11 y futsal, con un diagrama'}),esLink('/learn/soccer-positions',{name:'Posiciones del fútbol',line:'Qué hace cada posición y los números del 1 al 11'}),

@@ -1,0 +1,32 @@
+/* The tools hub's cards (ToolCards.tsx). The reading pages' tokens (--ink, --r-*, --tap, --sans), tone steps instead of lines
+   or shadows. Each group sets two tints: the card ground and the icon tile. Phone one column with the icon beside the text,
+   tablet two, desktop three with the icon on top. `ul.cards.cards` beats the reading pages' `.main ul` and link rules. */
+ul.cards.cards{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;
+ --card:#e8f0dd;--card-hover:#dde9cf;--tile:#cbe4b9}
+ul.cards[data-tint="time"]{--card:#f5ecd4;--card-hover:#efe2c0;--tile:#f4d68a}
+ul.cards[data-tint="practice"]{--card:#e1edf0;--card-hover:#d3e5ea;--tile:#bcdde9}
+ul.cards[data-tint="print"]{--card:#f1eadc;--card-hover:#e9dfcb;--tile:#e6d8bb}
+ul.cards.cards>li{max-width:none;display:flex;min-width:0}
+
+ul.cards .card{flex:1;display:grid;grid-template-columns:56px minmax(0,1fr);align-items:center;gap:14px;min-height:var(--tap,44px);
+ padding:14px 16px;box-sizing:border-box;border-radius:var(--r-md,16px);background:var(--card);color:var(--ink);
+ text-decoration:none;font-weight:400;transition:background-color .16s,transform .16s}
+ul.cards .card:focus-visible{outline:3px solid #ffd451;outline-offset:2px}
+.tile{position:relative;display:grid;place-items:center;width:56px;height:56px;border-radius:var(--r-sm,12px);background:var(--tile)}
+.tile svg{display:block}
+.badge{position:absolute;right:-6px;bottom:-6px;padding:2px 5px;border-radius:var(--r-pill,999px);background:var(--ink);color:var(--paper,#fbf7ee);
+ font:800 11px/1.2 var(--sans);letter-spacing:0}
+.body{display:grid;gap:3px;min-width:0}
+.name{font-size:17px;font-weight:700;line-height:1.3;letter-spacing:-.01em}
+.line{font-size:var(--t-cap,15px);line-height:1.4;color:var(--ink-soft)}
+
+@media(min-width:600px){ul.cards.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}}
+@media(min-width:960px){
+ ul.cards.cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+ ul.cards .card{grid-template-columns:minmax(0,1fr);align-items:start;align-content:start;gap:12px;padding:18px}
+ .name{font-size:18px}
+}
+@media(hover:hover){ul.cards .card:hover{background:var(--card-hover)}}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){ul.cards .card:hover{transform:translateY(-2px)}}
+@media(prefers-reduced-motion:reduce){ul.cards .card{transition:none}}
+@media print{ul.cards .card{display:block;background:none;padding:6px 0}.tile{display:none}}
