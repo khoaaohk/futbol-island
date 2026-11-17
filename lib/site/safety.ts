@@ -18,6 +18,14 @@ export const SPONSOR_BOARDS_LINE='The island’s stadium shows sponsor boards th
 /** Drip FC club kit in the Kit Shop (Nov 13 2026, lib/shop/dripKit.ts): the one honest line about sponsor-branded kit. */
 export const SPONSOR_KIT_LINE='Some optional Kit Shop kit and stickers carry the branding of Drip FC, the stadium’s sponsor club. A player picks them, and they are bought only with game coins earned on the island, never with real money.';
 export type SafeFact={title:string;text:string};
+/** The trust tiles under the title of the about and safety pages (visual pass b5, Nov 17 2026): the same promises in five words. */
+export const SAFE_TRUST:readonly {icon:'coin'|'noads'|'nochat'|'key'|'kid';title:string;line:string}[]=[
+ {icon:'coin',title:'Free',line:'Nothing to buy with real money'},
+ {icon:'noads',title:'No pop-up ads',line:'And no video or tracking ads'},
+ {icon:'nochat',title:'No open chat',line:'Preset emotes only'},
+ {icon:'key',title:'No accounts',line:'A save code instead'},
+ {icon:'kid',title:'Ages 7 to 12',line:'And the grown-ups who help them'},
+];
 export const SAFE_FACTS_TODAY:readonly SafeFact[]=[
  {title:'Free, with no pop-up or tracking ads',text:'Futbol Island is free to play. It has no pop-up, video or tracking ads. Coins on the island are earned by playing and learning, never bought with real money.'},
  {title:'Stadium sponsor boards',text:SPONSOR_BOARDS_LINE},

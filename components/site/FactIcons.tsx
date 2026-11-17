@@ -11,7 +11,9 @@ const O='#7a4e12',GOLD='#f2b632',PAPER='#fffaf0',RED='#e0533d',GRASS='#7cc36a',S
 const S={stroke:O,strokeWidth:1.4,strokeLinejoin:'round' as const,strokeLinecap:'round' as const};
 export type FactIconKind=ToolIconKind|'law'|'cards'|'quiz'|'tag'|'link'|'steps'|'deck'|'lock'|'share'
  /* batch 3 (Keep reading groups, hub chapters, the rules hub's five lines) */
- |'ball'|'cone'|'glove'|'flag'|'goal'|'shield'|'swap'|'arrow'|'fish'|'book';
+ |'ball'|'cone'|'glove'|'flag'|'goal'|'shield'|'swap'|'arrow'|'fish'|'book'
+ /* batch 5 (Nov 17 2026): trust tiles, Fishbook facts, drill chips */
+ |'coin'|'noads'|'nochat'|'kid'|'phone'|'key'|'star'|'ruler'|'pin'|'moon'|'boat'|'eye'|'bobber'|'people'|'tick'|'bars';
 
 const DRAW:Partial<Record<FactIconKind,ReactNode>>={
  /* the rule book: a closed book with a page edge */
@@ -54,6 +56,39 @@ const DRAW:Partial<Record<FactIconKind,ReactNode>>={
  fish:<><path d="M1.6 8c2-3.4 6.6-4.2 9.6-1.4l3-2.2v7.2l-3-2.2C8.2 12.2 3.6 11.4 1.6 8Z" fill={SKY} {...S}/><circle cx={5} cy={7.4} r={.9} fill={O}/></>,
  /* an open book: a guide to read */
  book:<><path d="M8 4.2C6.4 2.8 4 2.6 1.8 3v9.8c2.2-.4 4.6-.2 6.2 1.2 1.6-1.4 4-1.6 6.2-1.2V3C12 2.6 9.6 2.8 8 4.2Z" fill={PAPER} {...S}/><path d="M8 4.2V14" stroke={O} strokeWidth={1.2}/><path d="M3.6 6h2.6M3.6 8.4h2.6M9.8 6h2.6M9.8 8.4h2.6" stroke={GOLD} strokeWidth={1.2} strokeLinecap="round"/></>,
+ /* an island coin: free, nothing to buy */
+ coin:<><circle cx={8} cy={8} r={6.2} fill={GOLD} {...S}/><circle cx={8} cy={8} r={3.6} fill="none" stroke={O} strokeWidth={1.1}/><path d="M8 6.2v3.6" stroke={O} strokeWidth={1.4} strokeLinecap="round"/></>,
+ /* a pop-up box with a red slash: no pop-up ads */
+ noads:<><rect x={2} y={3} width={12} height={9.4} rx={1.4} fill={PAPER} {...S}/><path d="M2 5.8h12" stroke={O} strokeWidth={1.2}/><path d="M2.6 13.6 13.4 2.4" stroke={RED} strokeWidth={2} strokeLinecap="round"/></>,
+ /* a speech bubble with a red slash: no open chat */
+ nochat:<><path d="M2.4 3.4h11.2v7.2H7.2L4.4 13v-2.4h-2Z" fill={PAPER} {...S}/><path d="M2.6 13.6 13.4 2.4" stroke={RED} strokeWidth={2} strokeLinecap="round"/></>,
+ /* a kid in a gold shirt: ages */
+ kid:<><circle cx={8} cy={4.6} r={2.6} fill={PAPER} {...S}/><path d="M3.4 14.2v-2.6a3 3 0 0 1 3-3h3.2a3 3 0 0 1 3 3v2.6Z" fill={GOLD} {...S}/></>,
+ /* a phone */
+ phone:<><rect x={4.2} y={1.6} width={7.6} height={12.8} rx={1.6} fill={SKY} {...S}/><rect x={5.6} y={3.4} width={4.8} height={8} rx={.6} fill={PAPER}/><circle cx={8} cy={12.8} r={.7} fill={O}/></>,
+ /* a key: the save code */
+ key:<><circle cx={5} cy={8} r={3} fill={GOLD} {...S}/><circle cx={5} cy={8} r={1} fill={PAPER} stroke={O} strokeWidth={.9}/><path d="M8 8h6M12 8v2.6M14 8v2" fill="none" stroke={O} strokeWidth={1.6} strokeLinecap="round"/></>,
+ /* a star: rarity */
+ star:<path d="m8 1.8 1.9 3.9 4.3.6-3.1 3 .7 4.3L8 11.6l-3.8 2 .7-4.3-3.1-3 4.3-.6Z" fill={GOLD} {...S}/>,
+ /* a ruler: size */
+ ruler:<><rect x={1.6} y={5} width={12.8} height={6} rx={1} fill={GOLD} {...S}/><path d="M4.4 5v2.4M7 5v3.2M9.6 5v2.4M12.2 5v3.2" stroke={O} strokeWidth={1.2} strokeLinecap="round"/></>,
+ /* a map pin: where */
+ pin:<><path d="M8 14.4s-4.6-4.6-4.6-8a4.6 4.6 0 0 1 9.2 0c0 3.4-4.6 8-4.6 8Z" fill={RED} {...S}/><circle cx={8} cy={6.3} r={1.7} fill={PAPER} stroke={O} strokeWidth={1}/></>,
+ /* a moon: time of day */
+ moon:<path d="M10.6 2.2a6 6 0 1 0 3.4 9.4A5 5 0 0 1 10.6 2.2Z" fill={GOLD} {...S}/>,
+ /* a deep-sea boat */
+ boat:<><path d="M1.8 9.6h12.4l-2 3.8H3.8Z" fill={RED} {...S}/><path d="M7.4 2.4v7.2M7.4 3 12 8.6H7.4" fill={PAPER} {...S}/></>,
+ /* an eye: watch the water */
+ eye:<><path d="M1.6 8s2.4-4.4 6.4-4.4S14.4 8 14.4 8s-2.4 4.4-6.4 4.4S1.6 8 1.6 8Z" fill={PAPER} {...S}/><circle cx={8} cy={8} r={2.3} fill={SKY} stroke={O} strokeWidth={1.1}/><circle cx={8} cy={8} r={.8} fill={O}/></>,
+ /* a float on its line: the lure */
+ bobber:<><path d="M8 1.4v3" stroke={O} strokeWidth={1.4} strokeLinecap="round"/><circle cx={8} cy={9.4} r={5} fill={PAPER} {...S}/><path d="M3 9.4a5 5 0 0 1 10 0Z" fill={RED} {...S}/></>,
+ /* two players: players */
+ people:<><circle cx={5.4} cy={4.8} r={2.2} fill={PAPER} {...S}/><path d="M1.6 13.6v-2a2.6 2.6 0 0 1 2.6-2.6h2.4a2.6 2.6 0 0 1 2.6 2.6v2Z" fill={GOLD} {...S}/>
+  <circle cx={11} cy={5.6} r={2} fill={PAPER} {...S}/><path d="M9.2 13.6v-1.8a2.4 2.4 0 0 1 2.4-2.4h.4a2.4 2.4 0 0 1 2.4 2.4v1.8Z" fill={GRASS} {...S}/></>,
+ /* a round tick: a coaching point to say */
+ tick:<><circle cx={8} cy={8} r={6.2} fill={GRASS} {...S}/><path d="M5 8.2 7.1 10.3 11 6" fill="none" stroke={PAPER} strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round"/></>,
+ /* three bars: anonymous totals */
+ bars:<><rect x={2} y={8} width={3.2} height={6} rx={.6} fill={SKY} {...S}/><rect x={6.4} y={4.6} width={3.2} height={9.4} rx={.6} fill={GOLD} {...S}/><rect x={10.8} y={2} width={3.2} height={12} rx={.6} fill={GRASS} {...S}/></>,
 };
 export function FactIcon({kind,size=22}:{kind:FactIconKind;size?:number}){
  const own=DRAW[kind];
