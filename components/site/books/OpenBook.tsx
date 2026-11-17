@@ -15,7 +15,7 @@ export default function OpenBook({book,label='Open the pop-up book'}:{book:Reade
   if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
   e.preventDefault();if(Reader){setOpen(true);return;}
   setBusy(true);
-  import('./BookReader').then(m=>{setReader(()=>m.default);setOpen(true);}).catch(()=>{location.hash='story';}).finally(()=>setBusy(false));
+  import('./GameBookReader').then(m=>{setReader(()=>m.default);setOpen(true);}).catch(()=>{location.hash='story';}).finally(()=>setBusy(false));
  };
  return <>
   <a ref={btn} href="#story" className={s.openBtn} onClick={go} aria-haspopup="dialog" aria-busy={busy||undefined} data-open-book="">

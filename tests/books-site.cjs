@@ -64,7 +64,8 @@ ok(!/three\.js|three\.module|WebGL|PlayerPopUpBook/.test(h),'no three.js in the 
 // ---- 4. lazy reader ----
 const open=read('components/site/books/OpenBook.tsx'),reader=read('components/site/books/BookReader.tsx'),art=read('components/site/books/ChapterArt.tsx'),parts=read('components/site/books/BookParts.tsx');
 const page=read('app/(site)/books/[slug]/page.tsx');
-ok(/import\('\.\/BookReader'\)/.test(open)&&!/^import[^\n]*BookReader/m.test(open),'OpenBook imports the reader only on tap');
+ok(/import\('\.\/GameBookReader'\)/.test(open)&&!/^import[^\n]*(BookReader|PlayerPopUpBook)/m.test(open),'OpenBook imports the game reader only on tap');
+const gameReader=read('components/site/books/GameBookReader.tsx');ok(/PlayerPopUpBook/.test(gameReader)&&/\bsite\b/.test(gameReader),'the website opens the game pop-up book in site mode');
 for(const [n2,src] of [['OpenBook',open],['BookReader',reader],['ChapterArt',art],['BookParts',parts],['page',page]])
  ok(!/from '(three|@\/lib\/books\/(library|registry|popup|bookAudio|useBookNarration)[^']*|@\/components\/Player[^']*)'/.test(src),`${n2}: no three.js, registry or game reader`);
 for(const [n2,src] of [['OpenBook',open],['BookReader',reader],['ChapterArt',art]])ok(!/^import (?!type)[^\n]*'@\/lib\/site\/books'/m.test(src),`${n2}: only type imports from lib/site/books (the registry stays on the server)`);
