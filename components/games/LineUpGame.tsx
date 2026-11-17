@@ -138,7 +138,8 @@ export default function LineUpGame({onExit}:{onExit:()=>void}){
    if(cell){const pr=g.preview(d.slot,cell.x,cell.y);d.ok=pr.ok;d.rows=pr.rows;d.cols=pr.cols;}else{d.ok=false;d.rows=[];d.cols=[];}kick();};
   const down=(e:PointerEvent)=>{if(phaseRef.current!=='playing'||(e.pointerType==='mouse'&&e.button!==0)||(e.target instanceof Element&&e.target.closest('button')))return;
    const g=game.current;if(!g)return;e.preventDefault();audio.current?.unlock();if(g.state.over){endAt.current=1;kick();return;}
-   if(drag.current)return;const slot=v.slotAt(e.clientX-left,e.clientY-top),p=slot>=0?g.state.tray[slot]:null;if(!p)return;
+   if(drag.current)return;{const rr=el.getBoundingClientRect();left=rr.left;top=rr.top;}// the page may have moved without resizing (desktop centring)
+   const slot=v.slotAt(e.clientX-left,e.clientY-top),p=slot>=0?g.state.tray[slot]:null;if(!p)return;
    cursor.current=null;drag.current={slot,x:0,y:0,cell:null,ok:false,rows:[],cols:[],pointer:e.pointerId,touch:e.pointerType!=='mouse'};
    try{el.setPointerCapture(e.pointerId);}catch{/* fine without */}audio.current?.lift(SHAPES[p.shape].n);aim(e.clientX,e.clientY);};
   const move=(e:PointerEvent)=>{const d=drag.current;if(!d||e.pointerId!==d.pointer)return;e.preventDefault();aim(e.clientX,e.clientY);};
@@ -150,7 +151,7 @@ export default function LineUpGame({onExit}:{onExit:()=>void}){
   el.addEventListener('pointerdown',down,opt);el.addEventListener('pointermove',move,opt);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);
   const noScroll=(e:TouchEvent)=>{if(phaseRef.current==='playing'&&e.cancelable)e.preventDefault();};el.addEventListener('touchmove',noScroll,opt);
   const noMenu=(e:Event)=>e.preventDefault();f.addEventListener('contextmenu',noMenu);
-  if(process.env.NODE_ENV!=='production')(window as unknown as {__lineup?:unknown}).__lineup={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get layout(){return view.current?.layout;},get audio(){return audio.current;},get stage(){return el.getBoundingClientRect();}};
+  if(process.env.NODE_ENV!=='production')(window as unknown as {__lineup?:unknown}).__lineup={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get layout(){return view.current?.layout;},get audio(){return audio.current;},get stage(){return el.getBoundingClientRect();},shape:(i:number)=>SHAPES[i],sync:()=>sync(),get cursor(){return cursor.current;},get drag(){return drag.current;}};
   return()=>{ro.disconnect();window.visualViewport?.removeEventListener('resize',fit);el.removeEventListener('pointerdown',down);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);el.removeEventListener('touchmove',noScroll);f.removeEventListener('contextmenu',noMenu);
    if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;v.dispose();view.current=null;game.current=null;audio.current?.dispose();audio.current=null;fitRef.current=()=>{};delete (window as unknown as {__lineup?:unknown}).__lineup;};
  },[kick,sync]);

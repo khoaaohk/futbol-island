@@ -70,7 +70,7 @@ export function createLineupView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:
   c.lineWidth=4;c.strokeRect(tx,ty,tw,th);c.lineWidth=3;for(let k=1;k<3;k++){const x=tx+tw*k/3;c.beginPath();c.moveTo(x,ty+10);c.lineTo(x,ty+th-10);c.stroke();}
  }
 
- const trayScale=(shape:number)=>{const d=SHAPES[shape];return Math.min(.62,(L.slotW*.8)/(d.w*L.cell),(L.trayH*.78)/(d.h*L.cell));};
+ const trayScale=(shape:number)=>{const d=SHAPES[shape];return Math.min(.74,(L.slotW*.84)/(d.w*L.cell),(L.trayH*.8)/(d.h*L.cell));};
  /** A tray piece's top-left in CSS px and its cell size there. */
  function trayRect(slot:number,shape:number){const d=SHAPES[shape],s=L.cell*trayScale(shape),c=L.slots[slot];return {x:c.cx-d.w*s/2,y:c.cy-d.h*s/2,s};}
  function drawPiece(shape:number,kit:number,x:number,y:number,s:number,alpha=1,lift=false){
@@ -87,9 +87,9 @@ export function createLineupView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:
   resize(w:number,h:number,ratio:number,topClear:number){
    dpr=ratio;L.w=w;L.h=h;sprites.clear();for(const c of [bg,fg]){c.width=Math.round(w*dpr);c.height=Math.round(h*dpr);}
    // the pitch takes the width (a 16 px gutter) unless the height is short; the tray sits under it; both centred in what is left
-   const room=h-topClear-16,cellW=(w-40)/(N+.6),cellH=room/(N+.6+3.6+.8),cell=Math.max(18,Math.floor(Math.min(cellW,cellH,64)));
-   const bw=cell*N,pad=Math.round(cell*.28),trayH=Math.round(cell*3.1),gap=Math.round(cell*.75),total=bw+pad*2+gap+trayH;
-   const by=Math.round(topClear+Math.max(8,(room-total)*.42)+pad);
+   const room=h-topClear-16,cellW=(w-40)/(N+.6),cellH=room/(N+.6+3.8+.8),cell=Math.max(18,Math.floor(Math.min(cellW,cellH,64)));
+   const bw=cell*N,pad=Math.round(cell*.28),trayH=Math.round(cell*3.5),gap=Math.round(cell*.75),total=bw+pad*2+gap+trayH;
+   const by=Math.round(topClear+Math.max(8,(room-total)*.5)+pad);
    Object.assign(L,{cell,bw,bx:Math.round((w-bw)/2),by,trayY:by+bw+pad+gap,trayH,slotW:(bw+pad*2)/3});
    L.slots=[0,1,2].map(k=>({cx:L.bx-pad+L.slotW*(k+.5),cy:L.trayY+trayH/2}));
    paintScene();
@@ -141,7 +141,7 @@ export function createLineupView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:
    // ghost: where the piece lands (or a red outline when it does not fit)
    if(drag&&drag.cell){const p=s.tray[drag.slot];if(p){const d=SHAPES[p.shape];
     for(const [cx,cy] of d.cells){const x=L.bx+(drag.cell.x+cx)*c,y=L.by+(drag.cell.y+cy)*c;
-     if(drag.ok)blit(p.kit,x,y,c,1,.42);else{const i=(drag.cell.y+cy)*N+drag.cell.x+cx,blocked=s.grid[i]!==0||s.ref[i]!==0;g.lineWidth=3;g.strokeStyle=RED;g.setLineDash([5,4]);g.strokeRect(x+3,y+3,c-6,c-6);g.setLineDash([]);
+     if(drag.ok)blit(p.kit,x,y,c,.92,.55);else{const i=(drag.cell.y+cy)*N+drag.cell.x+cx,blocked=s.grid[i]!==0||s.ref[i]!==0;g.lineWidth=3;g.strokeStyle=RED;g.setLineDash([5,4]);g.strokeRect(x+3,y+3,c-6,c-6);g.setLineDash([]);
       if(blocked){g.beginPath();g.moveTo(x+c*.3,y+c*.3);g.lineTo(x+c*.7,y+c*.7);g.moveTo(x+c*.7,y+c*.3);g.lineTo(x+c*.3,y+c*.7);g.lineWidth=4;g.stroke();}}}}}
    if(cursor&&!drag){const p=s.tray[cursor.slot];if(p){const d=SHAPES[p.shape],ok=game.fits(p.shape,cursor.x,cursor.y);
     for(const [cx,cy] of d.cells){const x=L.bx+(cursor.x+cx)*c,y=L.by+(cursor.y+cy)*c;if(ok)blit(p.kit,x,y,c,1,.55);else{g.lineWidth=3;g.strokeStyle=RED;g.setLineDash([5,4]);g.strokeRect(x+3,y+3,c-6,c-6);g.setLineDash([]);}}}}

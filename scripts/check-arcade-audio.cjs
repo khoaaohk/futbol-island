@@ -1,12 +1,14 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey] [--suspended] [--headed]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup] [--suspended] [--headed]
 // pinball (Nov 10 2026): windows flipper (KeyA, KeyD), bumper (ball sent into rondo cone 0), goal (ball in the goal mouth) and drain
 // (ball at the bottom, ball save off) are driven on the live table through window.__arcade3d after the launch window.
 // kitrush (Nov 10 2026): windows slice, combo and life-lost are driven through the game's own swipe() on its three teaching waves
 // (one own kit, a pair of own kits, own + rival), and menu / paused must be SILENT (Kit Rush has no menu sound).
 // snake (Nov 10 2026): windows pickup (a team-mate is stood one cell ahead of the captain on the live pitch), full-squad (the same,
 // eleven times, to the fanfare) and crash (hands off into the touchline with the save spent); menu / paused must be SILENT.
+// lineup (Nov 17 2026): windows place (a tray piece set on the empty pitch through the game's own place()), clear (row 0 filled but for
+// the piece's top cells, then the piece placed: the line chord + clap) and over (the end cue); menu / paused must be SILENT.
 // It wraps AudioNode.connect in the page so every connection to an AudioDestinationNode goes through an AnalyserNode first, samples
 // the RMS of what reaches the speakers every 15 ms, and prints the peak RMS per labelled window (tennis: serve kick, bounce, point
 // bell, ambience bed; other games: menu and play). Also prints how many contexts and destination connections were made and each
@@ -86,6 +88,15 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await label('');await put(50,60,0,0);await wait(400);await put(50,8,0,-220);await label('goal');await page.waitForFunction(()=>window.__airhockey.game.state.goals[0]>=1,null,{timeout:3000}).catch(()=>errors.push('no goal'));await wait(1300);must.push('goal');
    await label('');await page.waitForFunction(()=>window.__airhockey.game.state.phase==='play',null,{timeout:8000}).catch(()=>{});await wait(900);await put(20,70,50,0);await wait(300);
    await page.keyboard.press('KeyP');await wait(350);if(await page.evaluate(()=>window.__airhockey.audio.humming))errors.push('the hum kept running under the pause card');await label('paused');await wait(900);quiet.push('paused');await T('touchEnd',[]).catch(()=>{});
+  }else if(game==='lineup'){quiet.push('menu');
+   await page.waitForFunction(()=>window.__lineup&&window.__lineup.phase==='playing',null,{timeout:30000});await label('');await wait(500);
+   const L=fn=>page.evaluate(fn);
+   await L(()=>{const k=window.__lineup,g=k.game,s=g.state;s.grid.fill(0);s.ref.fill(0);window.__audioLabel('place');const p=s.tray.findIndex(Boolean);g.place(p,4,4);k.sync();});await wait(500);must.push('place');
+   await label('');await wait(300);
+   await L(()=>{const k=window.__lineup,g=k.game,s=g.state;s.grid.fill(0);s.ref.fill(0);const slot=s.tray.findIndex(Boolean),sh=k.shape(s.tray[slot].shape),top=new Set(sh.cells.filter(c=>c[1]===0).map(c=>c[0]));for(let x=0;x<8;x++)if(!top.has(x))s.grid[x]=1;window.__audioLabel('clear');g.place(slot,0,0);k.sync();});await wait(900);must.push('clear');
+   await label('');await wait(300);
+   await L(()=>{window.__audioLabel('over');window.__lineup.audio.over();});await wait(1000);must.push('over');
+   await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
   }else if(game==='puzzle'){quiet.push('menu');
    // Pass Puzzles (Nov 10 2026, comic pass): three event windows on the first puzzle. draw = a real finger stroke from the ball to
    // the solution's target (brush foley while it moves, the snap tick when it locks on); pass-complete = the release (strike, first

@@ -7,6 +7,7 @@ import puzzle from './puzzle.module.css';
 import kitrush from './kitrush.module.css';
 import snake from './snake.module.css';
 import airhockey from './airhockey.module.css';
+import lineup from './lineup.module.css';
 
 /** Per-game HUD skin class (COORDINATOR FILE). Put on each game's root element together with data-game="<id>". */
-export const arcadeSkin:Record<ArcadeGameId,string>={live:live.skin,runner:runner.skin,tennis:tennis.skin,pinball:pinball.skin,puzzle:puzzle.skin,kitrush:kitrush.skin,snake:snake.skin,airhockey:airhockey.skin};
+export const arcadeSkin:Record<ArcadeGameId,string>={live:live.skin,runner:runner.skin,tennis:tennis.skin,pinball:pinball.skin,puzzle:puzzle.skin,kitrush:kitrush.skin,snake:snake.skin,airhockey:airhockey.skin,lineup:lineup.skin};
