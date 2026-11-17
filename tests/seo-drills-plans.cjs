@@ -109,7 +109,7 @@ for(const g of PAGES){
  for(const q of faq){assert(body.includes(q.name.replace(/'/g,'’')),`${where}: FAQ question is visible: ${q.name}`);assert(q.acceptedAnswer.text.length>=20,`${where}: answer to ${q.name}`);}
  for(const t of h.match(/<table[\s\S]*?<\/table>/g)||[]){tables++;assert(/<thead><tr>(<th scope="col">[^<]+<\/th>)+<\/tr><\/thead>/.test(t),`${where}: table column headers`);
   const rows=t.match(/<tr>[\s\S]*?<\/tr>/g).slice(1);assert(rows.length>=1&&rows.every(r=>/^<tr><th scope="row">/.test(r)),`${where}: each row starts with a header cell`);}
- const svgs=h.match(/<svg[\s\S]*?<\/svg>/g)||[];diagrams+=svgs.length;
+ const svgs=(h.match(/<svg[\s\S]*?<\/svg>/g)||[]).filter(s=>!/^<svg[^>]*aria-hidden="true"/.test(s));diagrams+=svgs.length;/* not the Coach's notes whistle (visual pass, Nov 17 2026) */
  assert(svgs.length>=1,`${where}: a setup diagram`);
  for(const s of svgs){assert(/<title[^>]*>[^<]+<\/title><desc[^>]*>[^<]{40,}<\/desc>/.test(s),`${where}: diagram title and description`);assert(/role="img"/.test(s)&&/data-diagram="grid"/.test(s)&&/data-grid="\d+x\d+"/.test(s)&&/data-size=""[^>]*>\d+ x \d+ yd \(\d+ x \d+ m\)</.test(s),`${where}: a grid with its size in yards and metres`);
   assert(/data-player=/.test(s)&&(s.match(/data-cone=/g)||[]).length>=4,`${where}: players and corner cones`);}
