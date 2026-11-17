@@ -1,9 +1,10 @@
+import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {chartBySlug,type ChartPage} from '@/lib/site/sizes';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,DataTable,GuideEnd,GuideIntro,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {Bullets,DataTable,GuideEnd,GuideIntro,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import {scene} from '@/lib/site/scenes';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -34,8 +35,7 @@ export default function ChartView({slug}:{slug:string}){
   </Section>}
   {c.sections.map(s=><Section key={s.id} id={s.id} title={s.title}><Bullets items={s.items}/></Section>)}
   <QA id="faq" title={`Questions about ${c.crumb.toLowerCase()}`} faq={c.faq}/>
-  <Section id="lessons" title="Free lessons to start with"><LessonList lessons={c.lessons}/></Section>
-  <Section id="related" title="Keep reading"><LinkList links={[...c.links,{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Share the game fairly: a substitution plan for any squad'}]}/></Section>
+  <KeepReading groups={[{id:'lessons',label:'Free lesson',icon:'steps',links:lessonLinks(c.lessons)},{id:'related',links:[...c.links,{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Share the game fairly: a substitution plan for any squad',tag:'Coach tool'}]}]}/>
   <GuideEnd checked={FAMILY_CHECKED.sizes}/>
  </>;
 }

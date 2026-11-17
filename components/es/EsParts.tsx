@@ -14,6 +14,7 @@ import p from '@/components/site/printSheet.module.css';
 import styles from '@/app/(site)/site.module.css';
 import {QuickAnswer,type Fact} from '@/lib/site/GuideParts';
 import {FactIcon} from '@/components/site/FactIcons';
+import OnThisPage from '@/components/site/OnThisPage';
 export {Bullets,DataTable,LinkList,QuickAnswer,Section,type Fact} from '@/lib/site/GuideParts';
 export {QA} from '@/components/site/LessonHub';
 /**
@@ -28,15 +29,15 @@ export function EsBreadcrumbs({crumbs}:{crumbs:readonly Crumb[]}){
 export const esCrumbs=(...tail:Crumb[]):Crumb[]=>[{name:ES_UI.home,path:toEs('/')},...tail];
 /** Keep a formation shape such as 4-3-3 on one line (a phone otherwise breaks the h1 after a hyphen: “4-3-” / “3”). */
 const noBreak=(s:string)=>s.split(/(\d+(?:-\d+)+)/).map((x,i)=>i%2?<span key={i} style={{whiteSpace:'nowrap'}}>{x}</span>:x);
-export function EsIntro({crumbs,h1,lead,more,cta,facts}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:string;cta?:boolean;facts?:readonly Fact[]}){
- return <header className={styles.intro}>
+export function EsIntro({crumbs,h1,lead,more,cta,facts,toc=!cta}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:string;cta?:boolean;facts?:readonly Fact[];toc?:boolean}){
+ return <><header className={styles.intro}>
   <EsBreadcrumbs crumbs={crumbs}/>
   <h1 className={styles.title}>{noBreak(h1)}</h1>
   <QuickAnswer lead={lead} facts={facts}/>
   {more&&<p>{more}</p>}
   <p className={styles.caption}>{ES_UI.guideNames}</p>
   {cta&&<a className={styles.cta} href={PLAY_PATH}>{ES_UI.playIsland}</a>}
- </header>;
+ </header>{toc&&<OnThisPage lang="es"/>}</>;
 }
 export const sceneDescEs=(s:Scene)=>ES_UI.sceneDesc(s.format,s.caption);
 /** A rule or term scene with Spanish words already merged in (lib/i18n/es/merge.ts). */
@@ -91,3 +92,5 @@ export function EsReadNext({order,path}:{order:readonly {path:string;name:string
 export function EsLessonList({lessons}:{lessons:readonly {id:string}[]}){
  return <ul className={styles.list}>{lessons.map(x=>esLesson(x.id)!).map(l=><li key={l.id}><a href={l.esPath}><span className={styles.itemTitle}>{l.title} (lección de {l.formatLabel==='Futsal'?'futsal':l.formatLabel})</span><span className={styles.itemMeta}>{l.concept}</span></a></li>)}</ul>;
 }
+/** Spanish lessonLinks (components/site/KeepReading.tsx) for the "Sigue leyendo" grid: title, concept, "lección de 7v7". */
+export const esLessonLinks=(lessons:readonly {id:string}[])=>lessons.map(x=>esLesson(x.id)!).map(l=>({path:l.esPath,name:l.title,line:l.concept,tag:`Lección de ${l.formatLabel==='Futsal'?'futsal':l.formatLabel}`}));

@@ -1,10 +1,11 @@
+import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {DRILLS,DRILLS_HUB as HUB,DRILL_SAFETY_LINE,SKILLS,drill,drillLine,drillsBySkill} from '@/lib/site/drills';
 import {AGE_GUIDES,SKILL_GUIDES} from '@/lib/site/drillGuides';
 import {PLANS_HUB} from '@/lib/site/plans';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
-import {Bullets,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {Bullets,GuideEnd,GuideIntro,LinkList,Section} from '@/lib/site/GuideParts';
 import {DrillList,GridFigure} from '@/lib/site/DrillParts';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -44,10 +45,9 @@ export default function DrillsHub(){
   <Section id="guides" title="Guides by skill and practice plans">
    <LinkList links={[...SKILL_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb})),{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}/>
   </Section>
-  <Section id="lessons" title="Lessons that teach the ideas behind the drills"><LessonList lessons={HUB.lessons}/></Section>
   <QA id="faq" title="Questions about soccer drills" faq={HUB.faq}/>
-  <Section id="related" title="Keep reading"><LinkList links={[{path:'/learn/soccer-rules',name:'Soccer rules for kids',line:'Every rule with a diagram'},{path:'/learn/soccer-positions',name:'Soccer positions for kids',line:'What each player does'},
-   {path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},{path:'/learn/soccer-terms',name:'Soccer terms for kids',line:'The words coaches use, explained'}]}/></Section>
+  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'related',links:[{path:'/learn/soccer-rules',name:'Soccer rules for kids',line:'Every rule with a diagram'},{path:'/learn/soccer-positions',name:'Soccer positions for kids',line:'What each player does'},
+   {path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},{path:'/learn/soccer-terms',name:'Soccer terms for kids',line:'The words coaches use, explained'}]}]}/>
   <GuideEnd cta={false}/>
  </>;
 }

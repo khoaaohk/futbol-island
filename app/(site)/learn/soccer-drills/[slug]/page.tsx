@@ -1,3 +1,4 @@
+import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -8,8 +9,9 @@ import {DRILL_GUIDES,SKILL_GUIDES,drillGuideBySlug,guidesForDrill,type DrillGuid
 import {PLANS_HUB,plansForAge,plansForDrill} from '@/lib/site/plans';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,LinkList,Section} from '@/lib/site/GuideParts';
 import {DrillList,GridFigure,Steps} from '@/lib/site/DrillParts';
+import {Checklist,Glance} from '@/components/site/PageParts';
 import {lessonPath} from '@/lib/site/lessons';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -19,6 +21,7 @@ import styles from '../../../site.module.css';
  * /learn/soccer-drills/<slug>: one drill (lib/site/drills.ts) or one age / skill guide (lib/site/drillGuides.ts).
  * A drill page: the two-sentence answer, the setup diagram, the facts box, steps, coaching points, easier and harder versions,
  * mistakes, why it matters in a game (with the lesson that teaches it), an at-home version, FAQ and links.
+ * Visual pass b5 (Nov 17 2026): "At a glance" as icon chips and the coaching points as a checklist.
  */
 export const dynamic='force-static';
 export const dynamicParams=false;
@@ -44,11 +47,11 @@ function DrillPage({d}:{d:Drill}){
   <PrintSheet path={d.path} what="drill sheet"/>
   <Section id="diagram" title={`${d.name}: setup diagram`}><GridFigure id="s0" scene={d.scene} image={diagramUrl(d.picture)}/></Section>
   <Section id="facts" title="At a glance">
-   <DataTable label={`${d.name}: ages, players, space, equipment and time`} head={['Detail','For this drill']} rows={[['Ages',d.agesText],['Players',d.players],['Space',d.space],['Equipment',d.equipment],['Time',d.time],['Skill',skill.name]]}/>
+   <Glance label={`${d.name}: ages, players, space, equipment and time`} items={[{icon:'kid',label:'Ages',value:d.agesText},{icon:'court',label:'Space',value:d.space},{icon:'people',label:'Players',value:d.players},{icon:'clock',label:'Time',value:d.time},{icon:'ball',label:'Skill',value:skill.name},{icon:'cone',label:'Equipment',value:d.equipment}]}/>
    <p className={styles.caption}>{DRILL_SAFETY_LINE}</p>
   </Section>
   <Section id="steps" title="How to run it"><Steps items={d.steps}/></Section>
-  <Section id="cues" title="Coaching points to say out loud"><Bullets items={d.cues}/></Section>
+  <Section id="cues" title="Coaching points to say out loud"><Checklist items={d.cues}/></Section>
   <Section id="versions" title="Make it easier or harder">
    <ul className={styles.stack}><li className={styles.card}><h3 className={styles.h3}>Easier</h3><p>{d.easier}</p></li><li className={styles.card}><h3 className={styles.h3}>Harder</h3><p>{d.harder}</p></li></ul>
   </Section>
@@ -60,8 +63,8 @@ function DrillPage({d}:{d:Drill}){
   <CoachNotesSection name={d.name} notes={{ages:drillAgeNotes(d)}}/>
   {d.home&&<Section id="home" title="Do it at home"><p>{d.home}</p></Section>}
   <QA id="faq" title={`Questions about ${d.name}`} faq={d.faq}/>
-  <Section id="lessons" title="Lessons that teach this idea"><LessonList lessons={d.lessons}/></Section>
-  <Section id="related" title="Related drills and guides"><LinkList links={related}/></Section>
+  {/* batch 3, Nov 17 2026: lessons and related drills and guides as one "Keep reading" row */}
+  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(d.lessons)},{id:'related',links:related}]}/>
   <GuideEnd checked={FAMILY_CHECKED.drills} lesson={d.cta}/>
   <ReadNext path={d.path}/>
  </>;
@@ -89,8 +92,7 @@ function GuidePage({g}:{g:DrillGuide}){
   {sections(g.after)}
   {plans.length>0&&<Section id="plans" title={`${g.age} practice plans`}><LinkList links={plans}/></Section>}
   <QA id="faq" title={`Questions about ${g.kind==='age'?g.name:g.name.toLowerCase()}`} faq={g.faq}/>
-  <Section id="lessons" title="Lessons to go with these drills"><LessonList lessons={g.lessons}/></Section>
-  <Section id="related" title="Keep reading"><LinkList links={[...others,...g.links,{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb},{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}/></Section>
+  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(g.lessons)},{id:'related',links:[...others,...g.links,{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb},{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}]}/>
   <GuideEnd checked={FAMILY_CHECKED.drills} lesson={g.lessons[0]}/>
   <ReadNext path={g.path}/>
  </>;

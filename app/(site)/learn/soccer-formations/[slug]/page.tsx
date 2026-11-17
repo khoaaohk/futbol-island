@@ -1,3 +1,4 @@
+import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -6,7 +7,7 @@ import {FORMATIONS,FORMATIONS_HUB,formationBySlug,formationsIn,formatGuide,withK
 import {POSITIONS_HUB,positionPath} from '@/lib/site/positions';
 import {formationImage,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,Section} from '@/lib/site/GuideParts';
 import {lessonById,lessonPath} from '@/lib/site/lessons';
 import {PLAYERS_PER_TEAM} from '@/lib/site/pitch';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -62,9 +63,8 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <Section id="suits" title="Who it suits"><p>{f.suits}</p></Section>
   <QA id="faq" title={`Questions about the ${f.shape}`} faq={f.faq}/>
   <CoachNotesSection name={f.name} notes={FORMATION_NOTES[f.slug]}/>
-  <Section id="lessons" title="Lessons that teach this shape"><LessonList lessons={f.lessons}/></Section>
-  {comparisonsFor(f.path).length>0&&<Section id="compare" title="Compare it"><LinkList links={comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
-  <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
+  {/* batch 3, Nov 17 2026: lessons, comparisons and related pages as one "Keep reading" row */}
+  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(f.lessons)},{id:'compare',label:'Compare',icon:'swap',links:comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},{id:'related',links:related}]}/>
   <GuideEnd checked={FAMILY_CHECKED.formations} lesson={f.lessons[0]}/>
   <ReadNext path={f.path}/>
  </>;

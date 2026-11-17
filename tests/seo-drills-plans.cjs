@@ -143,7 +143,7 @@ for(const d of drills.DRILLS){const where=d.path,h=html.get(d.path),b=text(h);
  assert(d.ages.length>=1&&d.ages.every(a=>drills.AGES.includes(a)),`${where}: ages`);
  assert(/^\d+ x \d+ yd \(\d+ x \d+ m\)/.test(d.space),`${where}: space in yards and metres (${d.space})`);
  assert(d.equipment.length>=10&&d.players.length>=1&&/minute/.test(d.time),`${where}: equipment, players and time`);
- for(const label of ['Ages','Players','Space','Equipment','Time'])assert(new RegExp(`<th scope="row">${label}</th>`).test(h),`${where}: facts box row ${label}`);
+ for(const label of ['Ages','Players','Space','Equipment','Time'])assert(new RegExp(`<dt><svg[^>]*>(?:(?!<\/dt>)[\\s\\S])*?<\/svg><span>${label}</span></dt>`).test(h),`${where}: "At a glance" chip ${label}`);/* chips since the visual pass b5, Nov 17 2026 */
  assert.equal(two(d.answer),2,`${where}: a two-sentence answer`);assert(b.includes(d.answer.replace(/'/g,'’')),`${where}: the answer is on the page`);
  assert(d.steps.length>=4&&d.cues.length>=3&&d.cues.length<=4&&d.mistakes.length>=3&&d.easier.length>30&&d.harder.length>30&&d.game.length>120,`${where}: steps, cues, versions, mistakes, game moment`);
  assert(/<ol>(<li>[\s\S]*?<\/li>){4,}<\/ol>/.test(h),`${where}: numbered steps`);

@@ -1,3 +1,4 @@
+import KeepReading from '@/components/site/KeepReading';
 import type {EsRoute} from '../routes';
 import JsonLd from '@/components/seo/JsonLd';
 import LineupBuilder from '@/components/site/tools/LineupBuilder';
@@ -224,7 +225,7 @@ function LineupEs({p}:{p:LineupPage}){
    </Section>}
    <EmbedSnippet snippet={embedSnippetEs(p,e.h1)} name={e.h1.toLowerCase()} lang="es"/>
    <QA id="faq" title={`Preguntas sobre el ${e.h1.toLowerCase()}`} faq={e.faq.map(x=>({...x}))}/>
-   <Section id="related" title="Formaciones y más herramientas"><LinkList links={related}/></Section>
+  <KeepReading lang="es" title="Formaciones y más herramientas" groups={[{id:'related',links:related}]}/>
    <EsToolEnd/>
   </Screen>
  </>;
@@ -273,7 +274,7 @@ function PlannerEs({p}:{p:PlannerPage}){
    </Section>
    <EmbedSnippet snippet={embedSnippetEs(p,e.h1)} name={e.h1.toLowerCase()} lang="es"/>
    <QA id="faq" title={`Preguntas sobre ${p.format?`los cambios en ${format}`:'los minutos de juego'}`} faq={e.faq.map(x=>({...x}))}/>
-   <Section id="related" title="Reglas, tablas y más herramientas"><LinkList links={related}/></Section>
+  <KeepReading lang="es" title="Reglas, tablas y más herramientas" groups={[{id:'related',links:related}]}/>
    <EsToolEnd/>
   </Screen>
  </>;
@@ -330,7 +331,7 @@ function PrintableEsPage({p}:{p:Printable}){
       return [<a key={f.slug} href={f.esPath}>{f.shapeEs}</a>,String(s[0]),s.length>2?String(mid):'ninguno',String(s[s.length-1]),f.best,f.watch];})}/>
    </Section>}
    <Section id="use" title="Cómo la usan los entrenadores">{e.use.map(x=><p key={x}>{x}</p>)}</Section>
-   <Section id="related" title="Ve más allá"><LinkList links={links([...p.links.map(l=>esLink(l.path,{key:true})),esLink(PRINTABLES_HUB_PATH,{name:'Todos los diagramas de cancha para imprimir'})])}/></Section>
+  <KeepReading lang="es" title="Ve más allá" groups={[{id:'related',links:links([...p.links.map(l=>esLink(l.path,{key:true})),esLink(PRINTABLES_HUB_PATH,{name:'Todos los diagramas de cancha para imprimir'})])}]}/>
    <EsToolEnd/>
   </Screen>
  </>;

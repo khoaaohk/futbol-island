@@ -334,3 +334,20 @@ details[open]>summary .plus{transform:rotate(45deg)}
  .tableWrap[data-stack] tr:has(>td:nth-of-type(3))>th{margin-bottom:4px}
  .tableWrap[data-stack] tr:has(>td:nth-of-type(3))>td::before{content:attr(data-label) ": ";display:inline;margin:0}
 }
+
+/* ---- Visual pass batch 3, Nov 17 2026 (audit shared fix 6): the desktop two-column guide layout. A guide detail page renders
+   "On this page" (components/site/OnThisPage.tsx, [data-toc]) after its intro; from 1100 px that switches .main to a reading
+   column plus a sticky side column instead of one 736 px column with empty sides. The intro and the quick answer span both
+   columns (answer left, key facts right); "Keep reading" ([data-keep-reading]) spans both too, so the side column ends where
+   the links begin. Rows have no gap here (the side column spans many auto rows); each block keeps the --gap below it instead.
+   Phones and tablets are unchanged: one column. */
+@media screen and (min-width:1100px){
+ .main:has(>[data-toc]){--side:288px;max-width:calc(var(--col) + var(--side) + 72px + 2 * var(--gutter));grid-template-columns:minmax(0,var(--col)) var(--side);column-gap:72px;row-gap:0;justify-content:center}
+ .main:has(>[data-toc])>*,.main:has(>[data-toc])>:is(.printPage,.noPrint)>*{grid-column:1}
+ .main:has(>[data-toc])>*:not(:last-child),.main:has(>[data-toc])>:is(.printPage,.noPrint)>*{margin-bottom:var(--gap)}
+ .main:has(>[data-toc])>.intro{grid-column:1/-1;margin-inline:0}
+ .main:has(>[data-toc])>[data-toc]{grid-column:2;grid-row:2/span 60;margin:0;align-self:start}
+ .main:has(>[data-toc]) [data-keep-reading]{grid-column:1/-1}
+ .main:has(>[data-toc]) .intro .quick{max-width:none;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);align-items:center;column-gap:var(--s4);padding:var(--s4)}
+ .main:has(>[data-toc]) .quick .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}

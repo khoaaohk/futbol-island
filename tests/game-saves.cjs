@@ -435,7 +435,9 @@ await ok('retention',async()=>{
  assert.deepEqual(vercel.crons,[{path:'/api/cron/analytics',schedule:'30 10 * * *'},{path:'/api/cron/scores',schedule:'*/5 * * * *'}],'crons unchanged');
  // Nov 16 2026: compare with the last deployed commit (VERCEL_GIT_PREVIOUS_SHA), not just the newest commit: a push ending in a
  // docs-only commit was skipped whole (the rules pages release). Falls back to HEAD^; a missing SHA makes git fail = build.
- assert.equal(vercel.ignoreCommand,"git diff --quiet ${VERCEL_GIT_PREVIOUS_SHA:-HEAD^} HEAD -- . ':(exclude)docs' ':(exclude)*.md'",'ignoreCommand unchanged');
+ // Nov 17 2026: the previous deployed SHA is often missing from Vercel's shallow clone; git then exits 128, which Vercel treats
+ // as an ERROR (only 0 = skip and 1 = build are valid). So: a missing SHA, or any difference, exits 1 (build).
+ assert.equal(vercel.ignoreCommand,"P=${VERCEL_GIT_PREVIOUS_SHA:-HEAD^}; if git cat-file -e \"$P^{commit}\" 2>/dev/null; then git diff --quiet \"$P\" HEAD -- . ':(exclude)docs' ':(exclude)*.md' || exit 1; else exit 1; fi",'ignoreCommand unchanged');
 });
 
 // 10. A full two-device flow through the real client module, the real handler and the memory store.

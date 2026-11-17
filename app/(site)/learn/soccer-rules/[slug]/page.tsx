@@ -1,3 +1,4 @@
+import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -8,7 +9,7 @@ import {TERMS_HUB} from '@/lib/site/terms';
 import {drillLinksFor} from '@/lib/site/drills';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,type Fact,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,type Fact,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {ruleQuiz} from '@/lib/site/guideQuiz';
 import {guideQuizPart} from '@/lib/site/learningLd';
@@ -85,11 +86,9 @@ export default function RulePage({params}:{params:{slug:string}}){
    {cards&&<CardRulesSources c={CARD_RULES} checked={`Checked on ${longDate(FAMILY_CHECKED.rules)}.`}/>}
   </QA>
   <CoachNotesSection name={r.name} notes={RULE_NOTES[r.slug]}/>
-  <Section id="lessons" title="Lessons that go with this rule"><LessonList lessons={r.lessons}/></Section>
-  {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
-  {drillLinksFor(r.path).length>0&&<Section id="drills" title="Soccer drills to practice this" fold><LinkList links={drillLinksFor(r.path)}/></Section>}
-  <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
   <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz}/>
+  {/* batch 3, Nov 17 2026: lessons, drills (lib/site/drillLinks.ts GUIDE_DRILLS) and related pages as one "Keep reading" row */}
+  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(r.lessons)},{id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(r.path)},{id:'related',links:related}]}/>
   <GuideEnd checked={FAMILY_CHECKED.rules} lesson={r.cta}/>
   <ReadNext path={r.path}/>
  </>;

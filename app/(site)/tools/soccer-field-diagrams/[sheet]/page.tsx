@@ -1,7 +1,8 @@
+import KeepReading from '@/components/site/KeepReading';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {Downloads,Licence,PrintStyle,Screen,SheetPreview,SheetThumb,ToolIntro} from '@/components/site/tools/ToolParts';
-import {DataTable,GuideEnd,LinkList,Section} from '@/lib/site/GuideParts';
+import {DataTable,GuideEnd,Section} from '@/lib/site/GuideParts';
 import {formationsIn} from '@/lib/site/formations';
 import {breadcrumbLd,pageMeta} from '@/lib/site/seo';
 import {PRINTABLES,printableBySlug} from '@/lib/site/tools/printables';
@@ -50,7 +51,7 @@ export default function PrintablePage({params}:{params:{sheet:string}}){
       return [<a key={f.slug} href={f.path}>{f.shape}</a>,String(n[0]),n.length>2?String(mid):'none',String(n[n.length-1]),f.best,f.watch];})}/>
    </Section>}
    <Section id="use" title="How coaches use it">{p.use.map(x=><p key={x}>{x}</p>)}</Section>
-   <Section id="related" title="Go further"><LinkList links={[...p.links,{path:PRINTABLES_HUB.path,name:'All printable field diagrams',line:PRINTABLES_HUB.blurb}]}/></Section>
+   <KeepReading title="Go further" groups={[{id:'related',links:[...p.links,{path:PRINTABLES_HUB.path,name:'All printable field diagrams',line:PRINTABLES_HUB.blurb}]}]}/>
    <GuideEnd sticky={false}/>
   </Screen>
  </>;

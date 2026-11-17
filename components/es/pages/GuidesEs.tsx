@@ -13,11 +13,14 @@ import {guideQuizPart} from '@/lib/site/learningLd';
 import {abs,articleLd,breadcrumbLd,collectionLd,faqLd,firstSentence} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {hasEs,toEs} from '@/lib/i18n/esPaths';
-import {ES_UI,longDateEs} from '@/lib/i18n/es/ui';
+import {longDateEs} from '@/lib/i18n/es/ui';
 import {esDrillLinksFor} from '@/lib/i18n/es/drillsRegistry';
 import {ES_COMPARISONS,ES_FORMATIONS,esFormatGuide,ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
 import {positionQuizEs,ruleQuizEs,termQuizEs} from '@/lib/i18n/es/quiz';
-import {type Fact,Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,EsLessonList} from '@/components/es/EsParts';
+import {type Fact,Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,esLessonLinks,sceneDescEs} from '@/components/es/EsParts';
+import KeepReading from '@/components/site/KeepReading';
+import {Band,CardGrid,IconRows,shirtBadge} from '@/components/site/HubParts';
+import type {FactIconKind} from '@/components/site/FactIcons';
 import {CardRulesGame,CardRulesSources,CardRulesTop} from '@/components/site/CardRulesSections';
 import {CARD_RULES_ES} from '@/lib/i18n/es/cardRules';
 import {cardDeckOf} from '@/lib/site/cardRules';
@@ -25,6 +28,8 @@ import {RulePlayDeck,RulePlayGame} from '@/components/site/RulePlaySections';
 import {RULE_PLAY_ES} from '@/lib/i18n/es/rulePlay';
 import {isRulePlaySlug} from '@/lib/site/rulePlay';
 import styles from '@/app/(site)/site.module.css';
+/** the rules hub's five lines' icons, as English (app/(site)/learn/soccer-rules/page.tsx) */
+const BASIC_ICONS:readonly FactIconKind[]=['goal','glove','flag','cards','whistle'];
 /**
  * The Spanish rules, terms and positions pages (Spanish round 1, Nov 15 2026): the English pages' sections in the same order,
  * with the Spanish words (lib/i18n/es/*.ts merged by registry.ts). Sections that only list English-only pages (lessons,
@@ -53,17 +58,18 @@ export function RulesHubEsPage(){
   <JsonLd data={esLd(collectionLd({name:H.h1,path:H.path,description:H.description,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,items:rules.map(r=>({name:r.h1,path:r.esPath}))}))}/>
   <JsonLd data={faqLd(H.faq)}/>
   <EsIntro crumbs={crumbs} h1={H.h1} lead={H.lead} more={H.more} cta/>
-  <Section id="basics" title="El juego en cinco líneas"><Bullets items={H.basics}/></Section>
-  {RULES_HUB.groups.map((g,i)=><Section key={g.title} id={`g${i}`} title={H.groups[i].title}>
-   <p>{H.groups[i].line}</p>
-   <LinkList links={g.rules.map(x=>rules.find(r=>r.slug===x.slug)!).map(r=>({path:r.esPath,name:r.name,line:firstSentence(r.answer,130)}))}/>
-  </Section>)}
+  {/* batch 3, Nov 17 2026: as English (app/(site)/learn/soccer-rules/page.tsx): the diagram first, icon rows, chapter bands */}
   <Section id="picture" title="Cada regla tiene un diagrama como este">
    <div className={styles.pair}>{offside.scenes.map((s,i)=><div key={s.title}><h3 className={styles.h3}>{s.title}</h3><EsSceneDiagram id={`o${i}`} scene={s} small/></div>)}</div>
    <p>Los puntos dorados son el equipo que ataca hacia arriba y los verde oscuro son el otro equipo. <a href={offside.esPath}>Lee la regla del fuera de juego</a>.</p>
   </Section>
+  <Section id="basics" title="El juego en cinco líneas"><IconRows items={H.basics.map((t,i)=>({icon:BASIC_ICONS[i]??'ball',text:t}))}/></Section>
+  {RULES_HUB.groups.map((g,i)=>{const list=g.rules.map(x=>rules.find(r=>r.slug===x.slug)!),sc=list[0].scenes[0];return <Band key={g.title} id={`g${i}`} title={H.groups[i].title} line={H.groups[i].line} tone={i%2?'paper':'tint'} count={`${list.length} ${list.length===1?'regla':'reglas'}`}
+   art={<PitchDiagram id={`band${i}`} format={sc.format} spots={sc.spots} arrows={sc.runs} title={sc.title} desc={sceneDescEs(sc)} small scene={{ball:sc.ball,lineY:sc.lineY,lineWord:sc.lineWord,zone:sc.zone,passes:sc.passes}}/>}>
+   <CardGrid lang="es" cards={list.map(r=>({path:r.esPath,name:r.name,icon:'law' as const,line:firstSentence(r.answer,130)}))}/>
+  </Band>;})}
   <QA id="faq" title="Preguntas sobre las reglas del fútbol" faq={H.faq}/>
-  <Section id="related" title="Sigue leyendo"><LinkList links={[{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb},{path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:ES_HUBS.positions.blurb}]}/></Section>
+  <KeepReading lang="es" groups={[{id:'related',links:[{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb},{path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:ES_HUBS.positions.blurb}]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }
@@ -113,10 +119,8 @@ export function RuleEsPage({r}:{r:EsRule}){
    {cards&&<CardRulesSources c={CARD_RULES_ES} checked={`Revisado el ${longDateEs(FAMILY_CHECKED.rules)}.`}/>}
   </QA>
   <EsCoachNotes name={r.name} notes={r.notes}/>
-  {esDrillLinksFor(r.path).length>0&&<Section id="drills" title={ES_UI.drills} fold><LinkList links={esDrillLinksFor(r.path)}/></Section>}
-  {r.lessons.length>0&&<Section id="lessons" title="Lecciones que van con esta regla"><EsLessonList lessons={r.lessons}/></Section>}
-  <Section id="related" title="Sigue leyendo"><LinkList links={related}/></Section>
   <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz} lang="es"/>
+  <KeepReading lang="es" groups={[{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(r.lessons)},{id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(r.path)},{id:'related',links:related}]}/>
   <EsGuideEnd checked={FAMILY_CHECKED.rules} lessonId={r.cta?.id}/>
   <EsReadNext order={esOrder('rules')} path={r.esPath}/>
  </>;
@@ -145,7 +149,7 @@ export function TermsHubEsPage(){
   </Section>)}
   <Section id="pages" title="Términos con diagrama"><LinkList links={terms.map(t=>({path:t.esPath,name:t.name,line:t.short}))}/></Section>
   <QA id="faq" title="Preguntas sobre las palabras del fútbol" faq={H.faq}/>
-  <Section id="related" title="Sigue leyendo"><LinkList links={[{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb},{path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:ES_HUBS.positions.blurb}]}/></Section>
+  <KeepReading lang="es" groups={[{id:'related',links:[{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb},{path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:ES_HUBS.positions.blurb}]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }
@@ -169,10 +173,8 @@ export function TermEsPage({t}:{t:EsTerm}){
   <Section id="formats" title="En 7v7, 9v9, 11v11 y futsal" fold><p>{t.formats}</p></Section>
   <QA id="faq" title={`Preguntas sobre: ${t.name.toLowerCase()}`} faq={t.faq}/>
   <EsCoachNotes name={t.name} notes={t.notes}/>
-  {esDrillLinksFor(t.path).length>0&&<Section id="drills" title={ES_UI.drills} fold><LinkList links={esDrillLinksFor(t.path)}/></Section>}
-  {t.lessons.length>0&&<Section id="lessons" title="Lecciones que lo enseñan"><EsLessonList lessons={t.lessons}/></Section>}
-  <Section id="related" title="Términos relacionados"><LinkList links={related}/></Section>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz} lang="es"/>
+  <KeepReading lang="es" groups={[{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(t.lessons)},{id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(t.path)},{id:'related',links:related}]}/>
   <EsGuideEnd checked={FAMILY_CHECKED.terms} lessonId={t.cta?.id}/>
   <EsReadNext order={esOrder('terms')} path={t.esPath}/>
  </>;
@@ -197,7 +199,9 @@ export function PositionsHubEsPage(){
    <EsDiagram id="all" format="11v11" lines={full.lines} what="las once posiciones del fútbol en una formación 4-3-3" image={formationImage(full.slug)}/>
    <ul>{H.lines.map(l=><li key={l.name}><b>{l.name}.</b> {l.text}</li>)}</ul>
   </Section>
-  <Section id="each" title="Cada posición explicada"><LinkList links={all.map(p=>({path:p.esPath,name:`${p.name} (${p.short})`,line:p.job}))}/></Section>
+  <Band id="each" title="Cada posición explicada" tone="tint" icon="shirt" count={`${all.length} posiciones`}>
+   <CardGrid lang="es" show={all.length} cards={all.map(p=>({path:p.esPath,name:`${p.name} (${p.short})`,line:p.job,icon:'shirt' as const,badge:shirtBadge(p.numbers)}))}/>
+  </Band>
   <Section id="numbers" title="Los números de las posiciones, del 1 al 11">
    <Bullets items={H.numbers}/>
    <div className={styles.tableWrap} tabIndex={0} role="region" aria-label="Números de las posiciones"><table className={styles.table}>
@@ -211,8 +215,7 @@ export function PositionsHubEsPage(){
    <p>{H.futsal} <a href={toEs('/learn/soccer-formations/futsal-3-1')}>Mira el 3-1 de futsal</a>.</p>
   </Section>
   <QA id="faq" title="Preguntas sobre las posiciones" faq={H.faq}/>
-  <Section id="compare" title="Compara las posiciones"><LinkList links={ES_COMPARISONS().filter(c=>c.kind==='position').map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>
-  <Section id="related" title="Sigue leyendo"><LinkList links={[{path:ES_HUBS.formations.path,name:ES_HUBS.formations.h1,line:ES_HUBS.formations.blurb},{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb},{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb}]}/></Section>
+  <KeepReading lang="es" groups={[{id:'compare',links:ES_COMPARISONS().filter(c=>c.kind==='position').map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},{id:'related',links:[{path:ES_HUBS.formations.path,name:ES_HUBS.formations.h1,line:ES_HUBS.formations.blurb},{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb},{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb}]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }
@@ -240,16 +243,15 @@ export function PositionEsPage({p}:{p:EsPosition}){
    <p>{p.numberLine} Los números son una costumbre de cuando los titulares usaban del 1 al 11. Hoy los jugadores pueden usar cualquier número.</p>
   </Section>
   <Section id="small" title="En 7v7, 9v9 y futsal" fold><p>{p.small}</p></Section>
-  {used.length>0&&<Section id="formations" title={`Formaciones con esta posición: ${lower}`} fold>
-   <LinkList links={[...used.map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:ES_HUBS.formations.path,name:'Todas las formaciones de fútbol',line:ES_HUBS.formations.blurb}]}/>
-  </Section>}
   <QA id="faq" title={`Preguntas sobre: ${lower}`} faq={p.faq}/>
   <EsCoachNotes name={p.name} notes={p.notes}/>
-  {compare.length>0&&<Section id="compare" title="Compárala"><LinkList links={compare.map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))}/></Section>}
-  {esDrillLinksFor(p.path).length>0&&<Section id="drills" title={ES_UI.drills} fold><LinkList links={esDrillLinksFor(p.path)}/></Section>}
-  {p.lessons.length>0&&<Section id="lessons" title="Lecciones para esta posición"><EsLessonList lessons={p.lessons}/></Section>}
-  <Section id="related" title="Otras posiciones"><LinkList links={[...all.filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.name,line:`Número ${x.numbers}`})),{path:H.path,name:'Todas las posiciones del fútbol',line:H.blurb}]}/></Section>
   <GuideQuiz id="quiz" name={lower} questions={quiz} lang="es"/>
+  {/* batch 3, Nov 17 2026: as English, one "Sigue leyendo" grid (every link kept) */}
+  <KeepReading lang="es" groups={[{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(p.lessons)},
+   {id:'formations',label:'Formación',icon:'lineup',links:used.length>0?[...used.map(x=>({path:x.esPath,name:`Formación ${x.name}`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:ES_HUBS.formations.path,name:'Todas las formaciones de fútbol',line:ES_HUBS.formations.blurb}]:[]},
+   {id:'drills',label:'Ejercicio',icon:'cone',links:esDrillLinksFor(p.path)},
+   {id:'compare',label:'Comparar',icon:'swap',links:compare.map(c=>({path:c.esPath,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},
+   {id:'related',label:'Posición',icon:'shirt',links:[...all.filter(x=>x.slug!==p.slug).map(x=>({path:x.esPath,name:x.name,line:`Número ${x.numbers}`})),{path:H.path,name:'Todas las posiciones del fútbol',line:H.blurb}]}]}/>
   <EsGuideEnd checked={FAMILY_CHECKED.positions} lessonId={p.lessons[0]?.id}/>
   <EsReadNext order={esOrder('positions')} path={p.esPath}/>
  </>;

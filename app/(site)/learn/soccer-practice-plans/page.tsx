@@ -1,10 +1,11 @@
+import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {AGES,AGE_YEARS,DRILLS_HUB,drill} from '@/lib/site/drills';
 import {AGE_GUIDES} from '@/lib/site/drillGuides';
 import {PLANS,PLANS_HUB as HUB,PLAN_SAFETY_LINE,PPP_LINE,plansForAge} from '@/lib/site/plans';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
-import {DataTable,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {DataTable,GuideEnd,GuideIntro,LinkList,Section} from '@/lib/site/GuideParts';
 import {GridFigure} from '@/lib/site/DrillParts';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -36,11 +37,9 @@ export default function PlansHub(){
    <GridFigure id="hub" scene={game.scene} image={PICTURE}/>
    <p>A small game gives every player the ball. <a href={game.path}>See how to set up 3v3</a>.</p>
   </Section>
-  <Section id="drills" title="Drills by age"><LinkList links={[...AGE_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb})),{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb}]}/></Section>
-  <Section id="lessons" title="Lessons to share with your players"><LessonList lessons={HUB.lessons}/></Section>
   <QA id="faq" title="Questions about soccer practice plans" faq={HUB.faq}/>
-  <Section id="related" title="Keep reading"><LinkList links={[{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},{path:'/learn/soccer-ball-size-by-age',name:'Soccer ball size by age',line:'Size 3, 4 or 5'},
-   {path:'/learn/soccer-rules',name:'Soccer rules for kids',line:'Every rule with a diagram'},{path:'/learn/soccer-formations',name:'Soccer formations for kids',line:'Shapes for 7v7, 9v9 and 11v11'}]}/></Section>
+  <KeepReading groups={[{id:'drills',links:[...AGE_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb})),{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb}]},{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'related',links:[{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},{path:'/learn/soccer-ball-size-by-age',name:'Soccer ball size by age',line:'Size 3, 4 or 5'},
+   {path:'/learn/soccer-rules',name:'Soccer rules for kids',line:'Every rule with a diagram'},{path:'/learn/soccer-formations',name:'Soccer formations for kids',line:'Shapes for 7v7, 9v9 and 11v11'}]}]}/>
   <GuideEnd cta={false}/>
  </>;
 }

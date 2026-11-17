@@ -1,3 +1,4 @@
+import KeepReading from '@/components/site/KeepReading';
 import {lineupHeading} from '@/lib/site/tools/lineupHeading';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -71,7 +72,7 @@ function Lineup({p}:{p:LineupPage}){
    </Section>}
    <EmbedSnippet snippet={embedSnippet(p)} name={p.h1}/>
    <QA id="faq" title={`Questions about the ${p.h1}`} faq={p.faq}/>
-   <Section id="related" title="Formations and more tools"><LinkList links={related}/></Section>
+   <KeepReading title="Formations and more tools" groups={[{id:'related',links:related}]}/>
    <GuideEnd sticky={false}/>
   </Screen>
  </>;
@@ -138,7 +139,7 @@ function Planner({p}:{p:PlannerPage}){
    </Section>}
    <EmbedSnippet snippet={embedSnippet(p)} name={p.h1}/>
    <QA id="faq" title={`Questions about ${p.format?`${p.format} substitutions`:'playing time'}`} faq={p.faq}/>
-   <Section id="related" title="Rules, charts and more tools"><LinkList links={related}/></Section>
+   <KeepReading title="Rules, charts and more tools" groups={[{id:'related',links:related}]}/>
    <GuideEnd sticky={false}/>
   </Screen>
  </>;

@@ -1,3 +1,4 @@
+import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -7,7 +8,8 @@ import {ageGuide} from '@/lib/site/drillGuides';
 import {PLANS,PLANS_HUB,PLAN_SAFETY_LINE,PPP_LINE,PRACTICE_RANGE,clock,planBySlug,plansForAge} from '@/lib/site/plans';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {CheckedLine,Bullets,DataTable,GuideIntro,LessonList,LinkList,PlayEnd,Section} from '@/lib/site/GuideParts';
+import {CheckedLine,Bullets,DataTable,GuideIntro,PlayEnd,Section} from '@/lib/site/GuideParts';
+import {Checklist,Glance} from '@/components/site/PageParts';
 import {DrillList,GridFigure} from '@/lib/site/DrillParts';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -37,7 +39,7 @@ export default function PlanPage({params}:{params:{slug:string}}){
   <div className={styles.printPage}>
    <GuideIntro crumbs={crumbs} h1={p.h1} lead={p.lead}/>
    <Section id="facts" title="At a glance">
-    <DataTable label={`${p.h1}: at a glance`} head={['Detail','This plan']} rows={[['Age group',`${p.age} (${AGE_YEARS[p.age]})`],['Length',`${p.minutes} minutes (guidance for ${p.age}: ${PRACTICE_RANGE[p.age]})`],['Players',p.players],['Goal for the day',p.goal],['Final game',p.field]]}/>
+    <Glance label={`${p.h1}: at a glance`} items={[{icon:'kid',label:'Age group',value:`${p.age} (${AGE_YEARS[p.age]})`},{icon:'clock',label:'Length',value:`${p.minutes} minutes (guidance for ${p.age}: ${PRACTICE_RANGE[p.age]})`},{icon:'people',label:'Players',value:p.players},{icon:'flag',label:'Goal for the day',value:p.goal},{icon:'court',label:'Final game',value:p.field}]}/>
    </Section>
    <Section id="clock" title={`The ${p.minutes}-minute plan`}>
     <DataTable label={`${p.h1}: clock table`} head={['Time','Activity','Stage','What it is for']}
@@ -46,7 +48,7 @@ export default function PlanPage({params}:{params:{slug:string}}){
    </Section>
    <div className={styles.printCols}>
     <Section id="equipment" title="Equipment"><Bullets items={p.equipment}/></Section>
-    <Section id="notes" title="Coach notes"><Bullets items={p.notes}/></Section>
+    <Section id="notes" title="Coach notes"><Checklist items={p.notes}/></Section>
    </div>
    <Section id="swap" title="If it is going badly">
     <ul className={styles.stack}><li className={styles.card}><h3 className={styles.h3}>{p.swap.sign}</h3><p>{p.swap.instead}</p></li></ul>
@@ -60,8 +62,7 @@ export default function PlanPage({params}:{params:{slug:string}}){
     <DrillList items={p.drills.map(d=>({drill:d,line:drillLine(d)}))}/>
    </Section>
    <QA id="faq" title={`Questions about this ${p.age} practice`} faq={p.faq}/>
-   <Section id="lessons" title="Lessons to share with your players"><LessonList lessons={p.lessons}/></Section>
-   <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
+   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(p.lessons)},{id:'related',links:related}]}/>
    <p className={styles.caption}>{GUIDE_FOOT}</p>
    <CheckedLine date={FAMILY_CHECKED.plans}/>
    <PlayEnd/>

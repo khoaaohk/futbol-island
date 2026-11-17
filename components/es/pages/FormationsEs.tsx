@@ -1,3 +1,4 @@
+import KeepReading from '@/components/site/KeepReading';
 import JsonLd from '@/components/seo/JsonLd';
 import PitchDiagram from '@/lib/site/PitchDiagram';
 import {arrows,place,PLAYERS_PER_TEAM,GUIDE_FORMATS,type GuideFormat,type Line} from '@/lib/site/pitch';
@@ -9,7 +10,7 @@ import {articleLd,breadcrumbLd,collectionLd,faqLd} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {toEs} from '@/lib/i18n/esPaths';
 import {ES_COMPARISONS,ES_FORMATIONS,ES_HUBS,ES_POSITIONS,describeEs,esFormatGuide,esFormationsIn,esLines,type EsComparison,type EsFormation} from '@/lib/i18n/es/registry';
-import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsReadNext,EsLessonList,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
+import {Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsReadNext,esLessonLinks,LinkList,QA,Section,esCrumbs} from '@/components/es/EsParts';
 import {esLesson} from '@/lib/i18n/es/lessons';
 import {esLd} from './GuidesEs';
 import styles from '@/app/(site)/site.module.css';
@@ -52,8 +53,7 @@ export function FormationsHubEsPage(){
     </div>
    </Section>;})}
   <QA id="faq" title="Preguntas sobre las formaciones" faq={H.faq}/>
-  <Section id="compare" title="Formaciones comparadas"><LinkList links={ES_COMPARISONS().filter(c=>c.kind==='formation').map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))}/></Section>
-  <Section id="related" title="Sigue leyendo"><LinkList links={[posHubLink(),{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb},{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb}]}/></Section>
+  <KeepReading lang="es" groups={[{id:'compare',links:ES_COMPARISONS().filter(c=>c.kind==='formation').map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))},{id:'related',links:[posHubLink(),{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb},{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb}]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }
@@ -94,9 +94,7 @@ export function FormationEsPage({f}:{f:EsFormation}){
   <Section id="suits" title="A quién le sirve"><p>{f.suits}</p></Section>
   <QA id="faq" title={`Preguntas sobre el ${f.shapeEs}`} faq={f.faq}/>
   <EsCoachNotes name={f.name} notes={f.notes}/>
-  {compare.length>0&&<Section id="compare" title="Compárala"><LinkList links={compare.map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))}/></Section>}
-  {f.lessons.length>0&&<Section id="lessons" title="Lecciones que enseñan esta formación"><EsLessonList lessons={f.lessons}/></Section>}
-  <Section id="related" title="Sigue leyendo"><LinkList links={related}/></Section>
+  <KeepReading lang="es" groups={[{id:'compare',links:compare.map(c=>({path:c.esPath,name:c.h1,line:firstSentence(c.answer)}))},{id:'lessons',label:'Lección',icon:'steps',links:esLessonLinks(f.lessons)},{id:'related',links:related}]}/>
   <EsGuideEnd checked={FAMILY_CHECKED.formations} lessonId={f.lessons[0]?.id}/>
   <EsReadNext order={[{path:H.path,name:H.h1},...ES_FORMATIONS().map(x=>({path:x.esPath,name:x.h1}))]} path={f.esPath}/>
  </>;
@@ -125,7 +123,7 @@ export function FormatGuideEsPage({format}:{format:'7v7'|'9v9'|'11v11'}){
   </Section>
   <Section id="basics" title={`El fútbol ${format} en breve`}><Bullets items={g.basics}/></Section>
   <QA id="faq" title={`Preguntas sobre las formaciones de ${format}`} faq={g.faq}/>
-  <Section id="related" title="Sigue leyendo"><LinkList links={[...others.map(o=>({path:o.esPath,name:o.h1,line:o.blurb})),hubLink(),posHubLink()]}/></Section>
+  <KeepReading lang="es" groups={[{id:'related',links:[...others.map(o=>({path:o.esPath,name:o.h1,line:o.blurb})),hubLink(),posHubLink()]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }
@@ -161,7 +159,7 @@ export function CompareEsPage({c}:{c:EsComparison}){
   </Section>
   <Section id="fit" title="¿Cuál le queda a tu equipo?"><Bullets items={c.fit}/></Section>
   <Section id="switching" title="Cómo pasar de una a otra"><Bullets items={c.switching}/></Section>
-  <Section id="related" title="Lee cada una, y más"><LinkList links={[...links,...extra]}/></Section>
+  <KeepReading lang="es" title="Lee cada una, y más" groups={[{id:'related',links:[...links,...extra]}]}/>
   <EsGuideEnd checked={pos?FAMILY_CHECKED.positions:FAMILY_CHECKED.formations}/>
  </>;
 }

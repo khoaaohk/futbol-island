@@ -8,12 +8,17 @@ import {SITE_FISH} from '@/lib/site/fish';
 import {SITE_CARDS} from '@/lib/site/cards';
 import {SITE_EXHIBITS} from '@/lib/site/exhibits';
 import {breadcrumbLd,pageMeta,siteLd} from '@/lib/site/seo';
+import {SAFE_TRUST} from '@/lib/site/safety';
+import {QA} from '@/components/site/LessonHub';
+import {IconList,PictureTiles,SHOTS,TrustTiles} from '@/components/site/PageParts';
 import styles from '../site.module.css';
 
 /**
  * /about (Oct 16 2026): what Futbol Island is, in plain words, for parents, coaches, search engines and AI assistants.
  * The grown-ups copy and partner links come from lib/site/aboutCopy.ts (the same words as the title screen's For grown-ups
  * sheet); privacy statements follow components/privacy/PrivacyPolicy.tsx and must never say more than it does.
+ * Visual pass b5 (Nov 17 2026): trust tiles under the title, "What it teaches" as picture tiles (the game's own screenshots),
+ * "How it works" as an icon list and the FAQ as the site's collapsible rows. Same words as before.
  */
 export const dynamic='force-static';
 const DESC='Futbol Island is a free football learning game for kids aged 7 to 12. Explore an island and learn positions, tactics, rules and football history through short lessons and quizzes. No pop-up or tracking ads, no open chat, no accounts.';
@@ -42,6 +47,7 @@ export default function About(){
    <a className={styles.cta} href="/play">Start Playing</a>
    <p className={styles.caption}>Want the tour first? <a href="/">See what’s inside the game</a>: every feature and the football idea it teaches.</p>
   </header>
+  <TrustTiles items={SAFE_TRUST} label="Futbol Island at a glance"/>
 
   <section className={styles.section} aria-labelledby="who"><h2 className={styles.h2} id="who">Who it is for</h2>
    <p>Kids who love football (soccer) and want to understand the game better: where to stand, when to pass, how a team keeps its shape. It is also for parents, carers and coaches who want a calm way for children to learn the ideas behind the game between practices.</p>
@@ -51,25 +57,27 @@ export default function About(){
 
   <section className={styles.section} aria-labelledby="learn"><h2 className={styles.h2} id="learn">What it teaches</h2>
    <p>{G.learns}</p>
-   <ul>
-    <li><b>Positions and tactics:</b> <a href="/learn/lessons">{LESSONS.length} short lessons</a> in 7v7, 9v9, 11v11 and futsal. Each one plays out on a pitch with moving players, a coach explains every step, and a quick quiz checks the idea.</li>
-    <li><b>The rules:</b> the Laws of the Game, from offside and the penalty kick to throw-ins and free kicks, in the lessons and the museum.</li>
-    <li><b>The keeper’s mindset:</b> fishing on the island doubles as a goalkeeper lesson: stay set, don’t bite on a feint, then react fast.</li>
-    <li><b>The hidden-ball hunt:</b> balls are hidden all around the island, and every ball you find teaches one football idea.</li>
-    <li><b>Club history and football culture:</b> <a href="/fish">{SITE_FISH.length} sea animals</a> to catch, each linked to a real club, team or football story from the sea, and <a href="/cards">{SITE_CARDS.length} player and coach cards</a> to collect.</li>
-    <li><b>The museum:</b> <a href="/exhibits">{SITE_EXHIBITS.length} exhibits</a> on World Cup history, balls and kits, legends, football’s firsts and the science of the game.</li>
-    <li><b>The arcade:</b> five football games, one skill at a time.</li>
-   </ul>
+   <PictureTiles items={[
+    {href:'/learn/lessons',title:`${LESSONS.length} short lessons`,line:'Positions and tactics in 7v7, 9v9, 11v11 and futsal. Each one plays out on a pitch with moving players, a coach explains every step, and a quick quiz checks the idea.',shot:SHOTS.lessons,alt:'A lesson in the game: a play unfolds on the pitch, then a quiz asks why the right run works.'},
+    {href:'/cards',title:`${SITE_CARDS.length} player and coach cards`,line:'Club history and football culture, one card at a time, to collect in a binder.',shot:SHOTS.cards,alt:'The card binder in the game: a mystery card opens and a player card flies into the binder.'},
+    {href:'/fish',title:`${SITE_FISH.length} sea animals`,line:'To catch, each linked to a real club, team or football story from the sea. Fishing doubles as a goalkeeper lesson: stay set, don’t bite on a feint, then react fast.',shot:SHOTS.fishing,alt:'Fishing at the beach in the game: the line goes tight and a mackerel is reeled in.'},
+    {href:'/exhibits',title:`${SITE_EXHIBITS.length} museum exhibits`,line:'World Cup history, balls and kits, legends, football’s firsts and the science of the game.',shot:SHOTS.museum,alt:'The football museum in the game: a case with a throw-in display and the Ballon d’Or.'},
+   ]}/>
+   <IconList items={[
+    {icon:'law',title:'The rules:',text:'the Laws of the Game, from offside and the penalty kick to throw-ins and free kicks, in the lessons and the museum.'},
+    {icon:'ball',title:'The hidden-ball hunt:',text:'balls are hidden all around the island, and every ball you find teaches one football idea.'},
+    {icon:'star',title:'The arcade:',text:'five football games, one skill at a time.'},
+   ]}/>
   </section>
 
   <section className={styles.section} aria-labelledby="how"><h2 className={styles.h2} id="how">How it works</h2>
-   <ul>
-    <li><b>{G.free}</b> {G.freeWhy}</li>
-    <li><b>Phone first.</b> It runs in the web browser on phones, tablets and computers. No download, no sign-up.</li>
-    <li><b>No pop-up or tracking ads, no open chat.</b> There is no free-text chat with other players and no pop-up, video or tracking advertising. {SPONSOR_BOARDS_LINE}</li>
-    <li><b>Save codes, not accounts.</b> {G.privacy} The code carries no personal details.</li>
-    <li><b>For grown-ups.</b> The title screen has a For grown-ups page and the full <a href="/privacy">privacy policy</a>.</li>
-   </ul>
+   <IconList two items={[
+    {icon:'coin',title:G.free,text:G.freeWhy},
+    {icon:'phone',title:'Phone first.',text:'It runs in the web browser on phones, tablets and computers. No download, no sign-up.'},
+    {icon:'noads',title:'No pop-up or tracking ads, no open chat.',text:<>There is no free-text chat with other players and no pop-up, video or tracking advertising. {SPONSOR_BOARDS_LINE}</>},
+    {icon:'key',title:'Save codes, not accounts.',text:<>{G.privacy} The code carries no personal details.</>},
+    {icon:'shield',title:'For grown-ups.',text:<>The title screen has a For grown-ups page and the full <a href="/privacy">privacy policy</a>.</>},
+   ]}/>
   </section>
 
   <section className={styles.section} aria-labelledby="partners"><h2 className={styles.h2} id="partners">{G.partnerTitle}</h2>
@@ -80,9 +88,8 @@ export default function About(){
    <ul>{NONPROFITS.map(n=><li key={n.name}><a href={n.href} rel="noopener noreferrer">{n.name}</a></li>)}</ul>
   </section>
 
-  <section className={styles.section} aria-labelledby="faq"><h2 className={styles.h2} id="faq">Questions grown-ups ask</h2>
-   <ul className={styles.stack}>{FAQ.map(([q,a])=><li key={q} className={styles.card}><h3 className={styles.h3}>{q}</h3><p>{a}</p></li>)}</ul>
+  <QA id="faq" title="Questions grown-ups ask" faq={FAQ.map(([q,a])=>({q,a}))}>
    <p className={styles.caption}><a href="/privacy">Read the privacy policy</a></p>
-  </section>
+  </QA>
  </>;
 }

@@ -18,8 +18,11 @@ import {ES_HUBS} from '@/lib/i18n/es/registry';
 import {ES_LESSON_HUB_PATHS,ES_LESSON_HUBS,esHub,TEAM_SIZES_ES,type EsHub} from '@/lib/i18n/es/hubs';
 import {CHART_FIELDS_ES,CHARTS_ES,LINKS_ES} from '@/lib/i18n/es/charts';
 import {SAFE_FACTS_ES,SAFE_FAQ_ES,SAFE_GUIDE_ES,SAFE_TRUST_LINE_ES,ES_SAFE_GUIDE} from '@/lib/i18n/es/safety';
-import {esLesson} from '@/lib/i18n/es/lessons';
-import {Bullets,DataTable,EsBreadcrumbs,EsGuideEnd,EsIntro,EsSceneDiagram,LinkList,Section,esCrumbs} from '@/components/es/EsParts';
+import {Promises,ShortFaq,TrustTiles} from '@/components/site/PageParts';
+import {safePromises,SAFE_TRUST_ES} from '@/components/site/SafeLook';
+import {Bullets,DataTable,EsBreadcrumbs,EsGuideEnd,EsIntro,EsSceneDiagram,LinkList,Section,esCrumbs,esLessonLinks} from '@/components/es/EsParts';
+import KeepReading from '@/components/site/KeepReading';
+import {Band,CardGrid,groupIcon,Hero,lessonIcon} from '@/components/site/HubParts';
 import {esLd} from './GuidesEs';
 import type {EsRoute} from '../routes';
 import styles from '@/app/(site)/site.module.css';
@@ -55,9 +58,7 @@ function MoreToLearnEs({except}:{except?:string}){
   ...(hasEs(TOOLS_HUB.path)?[{path:toEs(TOOLS_HUB.path),name:'Herramientas gratis para entrenadores de fútbol',en:TOOLS_HUB.path}]:[]),
   {path:LESSONS_ES_PATH,name:'Todas las lecciones de fútbol',en:'/learn/lessons'},{path:ES_SAFE_GUIDE.path,name:'Para padres: un juego de fútbol seguro',en:SAFE_GUIDE_ES.enPath}]
   .filter(l=>l.en!==except&&hasEs(l.en));
- return <section className={styles.section} aria-labelledby="more"><h2 className={styles.h2} id="more">Más para aprender</h2>
-  <ul className={styles.list}>{links.map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span></a></li>)}</ul>
- </section>;
+ return <KeepReading lang="es" id="more" title="Más para aprender" groups={[{id:'more-topics',links:links.map(l=>({path:l.path,name:l.name}))}]}/>;
 }
 
 // ---- lesson hubs ------------------------------------------------------------------------------------------------------------------
@@ -68,6 +69,7 @@ function LessonHubEs({hub,children}:{hub:EsHub;children?:React.ReactNode}){
   <JsonLd data={esLd(collectionLd({name:hub.h1,path:hub.path,description:hub.description,published:SITE_UPDATED.hubs,modified:SITE_UPDATED.hubs,
    items:items.map(l=>({name:`${l.title} (${l.formatLabel})`,path:l.esPath}))}))}/>
   <JsonLd data={faqLd(hub.faq)}/>
+  <Hero video={guideVideo(hub.enPath)&&hub.video?<GuideVideoEs enPath={hub.enPath} words={hub.video}/>:null}>{/* batch 3, as English (components/site/LessonHub.tsx) */}
   <header className={styles.intro}>
    <EsBreadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>{hub.h1}</h1>
@@ -75,15 +77,13 @@ function LessonHubEs({hub,children}:{hub:EsHub;children?:React.ReactNode}){
    <p className={styles.caption}>{SAFE_TRUST_LINE_ES} <a href={ES_SAFE_GUIDE.path}>Lee la guía para padres</a>.</p>
    <a className={styles.cta} href={PLAY_PATH}>{ES_UI.playIsland}</a>
   </header>
-  <GuideVideoEs enPath={hub.enPath} words={hub.video}/>
+  </Hero>
   {children}
-  {hub.groups.map((g,i)=><section key={g.title} className={styles.section} aria-labelledby={`g-${i}`}>
-   <h2 className={styles.h2} id={`g-${i}`}>{g.title} <span className={styles.count}>({g.lessons.length})</span></h2>
-   {g.line&&<p>{g.line}</p>}
-   <ul className={styles.list}>{g.lessons.map(l=><li key={l.id}><a href={hub.showQuestion?`${l.esPath}#quiz`:l.esPath}>
-    <span className={styles.itemTitle}>{l.title}{hub.showQuestion?` (${l.formatLabel}, ${l.questions.length} ${l.questions.length===1?'pregunta':'preguntas'})`:` (${l.formatLabel})`}</span>
-    <span className={styles.itemMeta}>{hub.showQuestion?l.questions[0]?.q:l.concept}</span></a></li>)}</ul>
-  </section>)}
+  {hub.groups.map((g,i)=><Band key={g.title} id={`g-${i}`} title={g.title} line={g.line} tone={i%2?'paper':'tint'} icon={groupIcon(g.lessons)}
+   count={hub.showQuestion?`${g.lessons.length} ${g.lessons.length===1?'cuestionario':'cuestionarios'}`:`${g.lessons.length} ${g.lessons.length===1?'lección':'lecciones'}`}>
+   <CardGrid lang="es" cards={g.lessons.map(l=>({path:hub.showQuestion?`${l.esPath}#quiz`:l.esPath,name:l.title,icon:lessonIcon(l.category),
+    meta:hub.showQuestion?`${l.formatLabel} · ${l.questions.length} ${l.questions.length===1?'pregunta':'preguntas'}`:`Lección de ${l.formatLabel==='Futsal'?'futsal':l.formatLabel}`,line:hub.showQuestion?l.questions[0]?.q:l.concept}))}/>
+  </Band>)}
   <QA id="faq" title="Preguntas y respuestas" faq={hub.faq}/>
   <MoreToLearnEs except={hub.enPath}/>
   <p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>{ES_UI.playIsland}</a></p>
@@ -107,7 +107,6 @@ function TeamSizesEs(){
 function ChartEsPage({slug}:{slug:string}){
  const c=chartBySlug(slug)!,e=CHARTS_ES[slug],path=toEs(c.path),crumbs=hubCrumbsEs({crumb:e.crumb,path});
  const fields=CHART_FIELDS_ES.scenes.map((s,i)=>scene({format:i?'11v11':'7v7',title:s.title,who:'',caption:s.caption}));
- const lessons=c.lessons.map(l=>esLesson(l.id)!);
  const related=present([...c.links.map(l=>linkEs(l.path)),linkEs('/tools/soccer-playing-time-calculator')]);
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
@@ -124,10 +123,7 @@ function ChartEsPage({slug}:{slug:string}){
   </Section>}
   {c.sections.map((s,i)=><Section key={s.id} id={s.id} title={e.sections[i].title}><Bullets items={e.sections[i].items}/></Section>)}
   <QA id="faq" title={`Preguntas sobre: ${e.crumb.toLowerCase()}`} faq={e.faq}/>
-  <Section id="lessons" title="Lecciones gratis para empezar">
-   <ul className={styles.list}>{lessons.map(l=><li key={l.id}><a href={l.esPath}><span className={styles.itemTitle}>{l.title} (lección de {l.formatLabel==='Futsal'?'futsal':l.formatLabel})</span><span className={styles.itemMeta}>{l.concept}</span></a></li>)}</ul>
-  </Section>
-  <Section id="related" title={ES_UI.keepReading}><LinkList links={related}/></Section>
+  <KeepReading lang="es" groups={[{id:'lessons',label:'Lección gratis',icon:'steps',links:esLessonLinks(c.lessons)},{id:'related',links:related}]}/>
   <EsGuideEnd checked={FAMILY_CHECKED.sizes}/>
  </>;
 }
@@ -147,11 +143,12 @@ function SafeGuideEsPage(){
    <p className={styles.lead} data-answer="">{G.lead(HUB_COUNTS.lessons)}</p>
    <a className={styles.cta} href={PLAY_PATH}>Juega Futbol Island</a>
   </header>
+  <TrustTiles items={SAFE_TRUST_ES} label="Futbol Island de un vistazo"/>
   <section className={styles.section} aria-labelledby="facts"><h2 className={styles.h2} id="facts">Lo que los padres deben saber</h2>
-   <ul className={styles.stack}>{SAFE_FACTS_ES.map(f=><li key={f.title} className={styles.card}><h3 className={styles.h3}>{f.title}</h3><p>{f.text}</p></li>)}</ul>
+   <Promises items={safePromises(SAFE_FACTS_ES,'es')}/>
    <p>Todos los detalles, incluido qué se guarda y por cuánto tiempo, están en la <a href="/privacy">política de privacidad (en inglés)</a>. Hay más sobre quién hace el juego en la página <a href={toEs('/about')}>Quiénes somos</a>.</p>
   </section>
-  <QA id="faq" title="Preguntas que hacen los padres" faq={SAFE_FAQ_ES}/>
+  <ShortFaq id="faq" title="Preguntas que hacen los padres" faq={SAFE_FAQ_ES} more="Más"/>
   <MoreToLearnEs except={G.enPath}/>
   <p className={styles.end}><a className={styles.cta} href={PLAY_PATH}>Juega Futbol Island</a></p>
  </>;
