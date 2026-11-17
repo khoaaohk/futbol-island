@@ -1,0 +1,103 @@
+/* Books pages (/books, /books/<slug>): covers, chapters, lesson cards, tiles (components/site/books/BookParts.tsx). Tokens come from
+   app/(site)/site.module.css (.page: --paper, --surface, --well, --ink, --ink-soft, --accent, --gold, --link, --r-*, --s*, --t-*).
+   Flat fills only: no gradients, no outlines, no shadows at rest. Motion only without reduced motion. */
+.sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.mark{flex:none;display:block}
+
+/* The h1's second line: same face and colour, a step down in size */
+.h1Tail{display:block;margin-top:.18em;font-size:.5em;line-height:1.15;letter-spacing:-.015em;font-weight:600}
+
+/* Cover: a book face. The spine is a darker band on the left (flat colour), the name large, the subtitle under it. */
+.cover{--c:#f2b632;--on:#14221d;position:relative;display:flex;flex-direction:column;gap:6px;box-sizing:border-box;aspect-ratio:3/4;width:100%;
+ padding:16px 14px 14px 26px;border-radius:var(--r-sm) var(--r-md) var(--r-md) var(--r-sm);background:var(--c);color:var(--on);overflow:hidden;text-align:left}
+.cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:12px;background:rgb(20 34 29 / .22)}
+.cover[data-tone=pitch]{--c:#2f7a5c;--on:#fffaf0}
+.cover[data-tone=blue]{--c:#3d6aa6;--on:#fffaf0}
+.cover[data-tone=coral]{--c:#ec8b6c}
+.cover[data-tone=mint]{--c:#beded1}
+.cover[data-tone=sky]{--c:#a9d0de}
+.coverName{font-size:clamp(22px,5.4vw,30px);line-height:1;font-weight:700;letter-spacing:-.03em;overflow-wrap:anywhere}
+.coverSub{font-size:15px;line-height:1.25;font-weight:600}
+.coverFoot{margin-top:auto;display:flex;align-items:center;gap:6px;font-size:13px;line-height:1.2;font-weight:600}
+.cover[data-size=lg] .coverName{font-size:clamp(36px,9vw,52px)}
+.cover[data-size=lg] .coverSub{font-size:19px}
+.cover[data-size=lg]{padding:24px 20px 20px 34px}
+.cover[data-size=lg]::before{width:16px}
+
+/* The book block on a story page: the cover beside "read it as a pop-up book" and the open button */
+.bookBlock{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr);gap:var(--s3);align-items:center;padding:var(--pad-box);border-radius:var(--r-lg);background:var(--surface)}
+.bookBlock p{max-width:none}
+.bookText{display:grid;gap:var(--s2);justify-items:start}
+@media(min-width:720px){.bookBlock{grid-template-columns:220px minmax(0,1fr);gap:var(--s4)}}
+@media(max-width:399px){.bookBlock{grid-template-columns:1fr}.bookBlock .cover{max-width:180px}}
+.openBtn.openBtn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:52px;max-width:100%;box-sizing:border-box;padding:0 26px;
+ border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:var(--r-pill);background:var(--btn-green,#244d40);color:var(--btn-ink-on-dark,#fff3d2);
+ box-shadow:0 5px 0 var(--btn-green-edge,#17352b);font-family:var(--btn-font,Arial,Helvetica,sans-serif);font-weight:800;font-size:18px;line-height:1.15;text-decoration:none;cursor:pointer}
+.openBtn:active{translate:0 var(--btn-press,3px);box-shadow:0 2px 0 var(--btn-green-edge,#17352b)}
+.openBtn[aria-busy=true]{opacity:.8}
+.openNote{font-size:var(--t-cap);line-height:1.45;color:var(--ink-soft)}
+
+/* Chapters: one column on phones (picture, then words); from 720px the picture alternates sides and a track runs down the left */
+.chapters.chapters{list-style:none;padding:0;margin:0;display:grid;gap:var(--s5)}
+.chapter{position:relative;display:grid;gap:var(--s2);max-width:none;scroll-margin-top:84px}
+.chapterArt{border-radius:var(--r-lg);overflow:hidden;background:var(--well)}
+.artSvg{display:block;width:100%;height:auto;aspect-ratio:3/2}
+.chapterBody{display:grid;gap:var(--s2);align-content:start;min-width:0}
+.year{display:flex;align-items:center;gap:10px;font-size:var(--t-cap);line-height:1.3;font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+.yearDot{flex:none;width:14px;height:14px;box-sizing:border-box;border-radius:var(--r-pill);background:var(--gold);border:3px solid #7a4e12}
+.chapterTitle{font-size:var(--t-h2);line-height:1.1;font-weight:600;letter-spacing:-.025em;color:var(--ink);text-wrap:balance}
+.lesson{display:grid;gap:6px;padding:14px 16px;border-radius:var(--r-md);background:var(--surface)}
+.lessonHead{display:flex;align-items:center;gap:8px;font-size:var(--t-cap);font-weight:700;color:var(--link)}
+.lesson p{font-weight:500}
+.source{font-size:var(--t-cap);line-height:1.45;color:var(--ink-soft)}
+@media(min-width:720px){
+ .chapters.chapters{padding-left:34px;gap:var(--s5)}
+ .chapters::before{content:'';position:absolute;left:5px;top:8px;bottom:8px;width:4px;border-radius:var(--r-pill);background:var(--well)}
+ .chapters{position:relative}
+ .chapter{grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:var(--s4);align-items:start}
+ .chapter[data-side=right] .chapterArt{order:2}
+ .chapterArt{position:sticky;top:96px}
+ .yearDot{position:absolute;left:-34px;top:2px;width:18px;height:18px}
+ .year{position:relative}
+}
+@media(min-width:720px){.chapterTitle{font-size:28px}}
+
+/* Keep reading tiles */
+.tiles.tiles{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,160px),1fr));gap:var(--s2)}
+.tiles>li{max-width:none;min-width:0}
+.tile{display:flex;flex-direction:column;gap:6px;height:100%;box-sizing:border-box;min-height:120px;padding:16px;border-radius:var(--r-md);background:var(--surface);color:var(--ink);text-decoration:none}
+.tileName{font-weight:700;line-height:1.25;color:var(--link);overflow-wrap:anywhere}
+.tileMeta{font-size:var(--t-cap);line-height:1.35;color:var(--ink-soft)}
+.tile:hover .tileName,.tile:focus-visible .tileName{text-decoration:underline;text-underline-offset:3px}
+
+/* Shelf (the hub): covers in rows, two to a row on a phone */
+.shelf.shelf{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,140px),1fr));gap:var(--s3) var(--s2)}
+@media(max-width:719px){.shelf.shelf{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.shelfItem{max-width:none;min-width:0}
+.shelfLink,.shelfSoon{display:grid;gap:6px;color:var(--ink);text-decoration:none}
+.shelfName{font-weight:700;line-height:1.25;font-size:16px;overflow-wrap:anywhere}
+.shelfLink .shelfName{color:var(--link)}
+.shelfMeta{font-size:14px;line-height:1.3;color:var(--ink-soft)}
+.shelfLink .shelfMeta{color:var(--link);font-weight:600}
+.shelfSoon .cover{opacity:.92}
+.shelfLink:hover .shelfName,.shelfLink:focus-visible .shelfName{text-decoration:underline;text-underline-offset:3px}
+.shelfLink:focus-visible{outline:3px solid var(--link);outline-offset:4px;border-radius:var(--r-md)}
+
+/* The featured book on the hub */
+.feature{display:grid;grid-template-columns:minmax(0,160px) minmax(0,1fr);gap:var(--s3);align-items:center;padding:var(--pad-box);border-radius:var(--r-lg);background:var(--surface)}
+.feature p{max-width:none}
+.featureText{display:grid;gap:var(--s2);justify-items:start}
+.featureTitle{font-size:var(--t-h2);line-height:1.1;font-weight:600;letter-spacing:-.025em}
+@media(min-width:720px){.feature{grid-template-columns:240px minmax(0,1fr);gap:var(--s4)}}
+@media(max-width:399px){.feature{grid-template-columns:1fr}.feature .cover{max-width:180px}}
+
+/* The paper actions inside the drawings (the reader moves them; the page shows them done) */
+@media(prefers-reduced-motion:no-preference){
+ .move{transition:transform .7s cubic-bezier(.3,1.35,.4,1)}
+ .tile,.shelfLink .cover{transition:transform .18s ease-out}
+ .tile:hover,.shelfLink:hover .cover{transform:translateY(-3px)}
+ .tile:active,.shelfLink:active .cover{transform:translateY(0) scale(.98)}
+ .openBtn{transition:translate .16s,box-shadow .16s,scale .2s cubic-bezier(.2,1.28,.32,1)}
+}
+@media(hover:hover) and (prefers-reduced-motion:no-preference){.openBtn:hover{scale:1.03}}
+@media print{.bookBlock,.openBtn{display:none}.chapterArt{position:static}}
