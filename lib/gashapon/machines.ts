@@ -95,9 +95,12 @@ export const SQUARE_DOOR_X=ISLAND_SQUARE_KONBINI.x-.55,CAY_DOOR_X=CAY_KONBINI_DO
  */
 const SQUARE_PAIR=gashaponPairOpposite(ISLAND_SQUARE_KONBINI,SQUARE_DOOR_X),CAY_PAIR=gashaponPairOpposite(CAY_KONBINI,CAY_DOOR_X);
 
-/** The arcade pair: back wall (z −10.7 is the floor's north edge), 3.6–4.5 m west of the Breakaway Run cabinet at (0, −10). */
-export const ARCADE_GASHA_Z=-10.25;
-const ARCADE_X=[-3.6,-3.6-(GASHA_SIZE.w+GASHA_GAP)];
+/** The arcade pair (Nov 17 2026, owner: "move the gashapon to the center of the arcade room"): side by side in the middle of the
+ *  floor, facing the door (yaw 0), with the same 12 cm gap as the Konbini pairs. Clear all round: the cabinet row is 8 m behind
+ *  (z −10), the air hockey table 8 m west, and the walks from the door to the row pass either side (arcadeRoomScene.ts walkTo,
+ *  arcadeRoomCrowd.ts aisleGap). */
+export const ARCADE_GASHA_Z=.5;
+const ARCADE_X=[-(GASHA_SIZE.w+GASHA_GAP)/2,(GASHA_SIZE.w+GASHA_GAP)/2];
 
 /** Outdoor spots (searched on the built town, re-checked by tests/gashapon-data.cjs). */
 /** Nov 9 2026 (owner: "move the gashapon on the mountain next to the vending machines"): side by side with the Summit Isle Konbini vending + drink pair (now behind the east goal, lib/town/vendingPlaces.ts summitSnackSpot), on the vending's left (west) with the same 12 cm gap and the same facing. */
@@ -125,8 +128,8 @@ export const GASHAPON_MACHINES:readonly GashaponMachine[]=[
  {id:'gs-square-lucky',name:'Lucky Little Japan',theme:'Cute Japanese good-luck figurines',zone:'konbini-square',place:'outside the Island Square Konbini, west of the sliding doors',...SQUARE_PAIR[1],y:0,color:'#d23a63',accent:'#ffe08a'},
  {id:'gs-cay-sweets',name:'Sweet Shop Treats',theme:'Japanese sweets and fizzy drinks',zone:'konbini-cay',place:'outside the Coral Cay Konbini, west of the sliding doors',...CAY_PAIR[0],y:0,color:'#f28cb8',accent:'#fff6fb'},
  {id:'gs-cay-bento',name:'Bento Box Buddies',theme:'Konbini hot food and lunch boxes',zone:'konbini-cay',place:'outside the Coral Cay Konbini, west of the sliding doors',...CAY_PAIR[1],y:0,color:'#3f8f6c',accent:'#f8e7b0'},
- {id:'gs-arcade-heroes',name:'Cabinet Heroes',theme:'Characters from the arcade games',zone:'arcade',place:'in the Arcade, on the back wall beside Breakaway Run',x:ARCADE_X[0],z:ARCADE_GASHA_Z,y:0,yaw:0,color:'#ff65c8',accent:'#60e9f2'},
- {id:'gs-arcade-pixel',name:'Pixel Pitch',theme:'Retro 8-bit football',zone:'arcade',place:'in the Arcade, on the back wall beside Breakaway Run',x:r2(ARCADE_X[1]),z:ARCADE_GASHA_Z,y:0,yaw:0,color:'#7b5cff',accent:'#e8b654'},
+ {id:'gs-arcade-heroes',name:'Cabinet Heroes',theme:'Characters from the arcade games',zone:'arcade',place:'in the Arcade, in the middle of the room',x:r2(ARCADE_X[0]),z:ARCADE_GASHA_Z,y:0,yaw:0,color:'#ff65c8',accent:'#60e9f2'},
+ {id:'gs-arcade-pixel',name:'Pixel Pitch',theme:'Retro 8-bit football',zone:'arcade',place:'in the Arcade, in the middle of the room',x:r2(ARCADE_X[1]),z:ARCADE_GASHA_Z,y:0,yaw:0,color:'#7b5cff',accent:'#e8b654'},
  {id:'gs-westbeach',name:'Beach Day',theme:'Beach soccer and sunny sand',zone:'outdoor',place:'on the west beach, a short walk east of the Beach Kitchen machine',x:-55,z:92,y:0,yaw:GASHA_OUTDOOR_YAW,color:'#ffb347',accent:'#3ec6e0'},
  {id:'gs-northbeach',name:'Shell Seekers',theme:'Shore creatures and beach finds',zone:'outdoor',place:'on the North Beach sand, past the North Beach machine',x:76.3,z:-194.17,y:0,yaw:GASHA_OUTDOOR_YAW,color:'#f6d36b',accent:'#2f86d6'},
  {id:'gs-eleven',name:'Boots & Kits',theme:'Football gear with faces',zone:'outdoor',place:'beside the Eleven Park touchline machine',x:100.33,z:117.5,y:0,yaw:GASHA_OUTDOOR_YAW,color:'#23407e',accent:'#ffffff'},
