@@ -25,6 +25,9 @@ export type BookFact={icon:'tag'|'shirt'|'clock'|'steps'|'cards'|'deck';label:st
 /** The editorial layer of a built detail page: only wording and pictures; every fact in it is in the book's own text. */
 type BookPageSpec={summary:string;facts:BookFact[];faq:BookFaq[];motifs:Motif[];exhibits?:string[];published:string};
 
+/* Cafu sources checked Nov 17 2026 against Wikipedia (the CNN page answered HTTP 451 from here): every fact on this page is
+ * there except the book's last two sentences (a foundation in Jardim Irene, "everything he has, he owes to Jardim Irene"), which
+ * Wikipedia does not state, so the FAQ leaves them out; the story text keeps the book's words (owner to confirm). */
 /** Cafu (the sample, Nov 17 2026): the clearest single lesson (five clubs said no, then yes), a real position change that the
  *  positions guide teaches (right-back, the overlap) and three World Cup finals; every chapter has a source. */
 const BOOK_PAGES:Partial<Record<PlayerBookId,BookPageSpec>>={
@@ -44,7 +47,7 @@ const BOOK_PAGES:Partial<Record<PlayerBookId,BookPageSpec>>={
    {q:'Why is he called Cafu?',a:'His real name is Marcos. Friends called him Cafu, after a Brazilian winger called Cafuringa.'},
    {q:'How did Cafu become a right-back?',a:'Cafu was a right-sided midfielder. His coach at São Paulo, Telê Santana, moved him back to right-back, a position he had never played. It suited him: he defended, then sprinted forward on the overlap to attack. With Cafu at right-back, São Paulo won the Copa Libertadores in 1992 and 1993.'},
    {q:'How many World Cup finals did Cafu play in?',a:'Three in a row, and no other player has ever done that. In 1994 he came on from the bench in the final against Italy and Brazil won. In 1998 Brazil lost the final to France. In 2002 he was Brazil’s captain, and Brazil beat Germany 2–0.'},
-   {q:'What did “100% Jardim Irene” mean?',a:'When Cafu lifted the World Cup trophy in 2002, his shirt said 100% Jardim Irene, for the poor part of São Paulo where he grew up. Later he started a foundation in Jardim Irene to help children there.'},
+   {q:'What did “100% Jardim Irene” mean?',a:'When Cafu lifted the World Cup trophy in 2002, his shirt said 100% Jardim Irene, for the poor part of São Paulo where he grew up.'},
   ],
   motifs:['street','cards','gate','overlap','swap','trophy'],
   exhibits:['worldcup-1930'],

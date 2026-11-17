@@ -93,6 +93,18 @@
 @media(min-width:720px){.feature{grid-template-columns:240px minmax(0,1fr);gap:var(--s4)}}
 @media(max-width:399px){.feature{grid-template-columns:1fr}.feature .cover{max-width:180px}}
 
+/* The moving parts of the drawings (ChapterArt.tsx): the resting pose here, the done pose under [data-done] on the svg */
+.mvBall{transform-origin:30px 136px}
+[data-done] .mvBall{transform:translate(150px,0) rotate(300deg)}
+.mvCard[data-on]{transform:translateY(-10px)}
+.mvGateL{transform-origin:60px 90px}
+.mvGateR{transform-origin:180px 90px}
+[data-done] .mvGateL,[data-done] .mvGateR{transform:scaleX(.18)}
+[data-done] .mvRun{transform:translate(130px,-12px)}
+[data-done] .mvSub{transform:translate(96px,44px)}
+.mvStar{transform-box:fill-box;transform-origin:center;transform:scale(.4);opacity:0}
+[data-done] .mvStar{transform:none;opacity:1}
+[data-done] .mvLift{transform:translateY(-14px)}
 /* The paper actions inside the drawings (the reader moves them; the page shows them done) */
 @media(prefers-reduced-motion:no-preference){
  .move{transition:transform .7s cubic-bezier(.3,1.35,.4,1),opacity .4s}

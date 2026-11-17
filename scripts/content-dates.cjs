@@ -14,7 +14,7 @@ const FAMILIES={
  drills:['lib/site/drills.ts','lib/site/drillsA.ts','lib/site/drillsB.ts','lib/site/drillsC.ts','lib/site/drillsD.ts','lib/site/drillGuides.ts'],
  plans:['lib/site/plans.ts'],sizes:['lib/site/sizes.ts'],cards:['lib/site/cardNotes.ts','lib/site/cardNotes.json'],fish:['lib/site/fishNotes.ts','lib/site/fishNotes.json'],
  exhibits:['lib/site/exhibits.ts'],
- books:fs.readdirSync(path.join(root,'lib/books/stories')).filter(f=>f.endsWith('.ts')&&f!=='island.ts').map(f=>'lib/books/stories/'+f).concat('lib/books/messi.ts'),
+ books:['lib/site/books.ts'],/* the built book pages state their own source check (one comment per book) */
 };
 const MON={jan:1,feb:2,mar:3,apr:4,may:5,jun:6,jul:7,aug:8,sep:9,oct:10,nov:11,dec:12};
 const iso=(y,m,d)=>`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;

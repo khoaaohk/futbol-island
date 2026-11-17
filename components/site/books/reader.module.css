@@ -41,8 +41,8 @@
 .listen{display:flex;align-items:center;justify-content:center;gap:12px;min-height:44px;max-width:720px;width:100%;margin:0 auto}
 .listenBtn{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border:0;border-radius:999px;background:#fff3d2;color:#1b3a30;font-weight:700;font-size:16px;cursor:pointer}
 .caption{flex:1;min-width:0;font-size:15px;line-height:1.35;color:#fff3d2;min-height:2.7em;display:flex;align-items:center}
-.dots{display:flex;justify-content:center;gap:4px}
-.dot{width:28px;height:28px;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center}
+.dots{display:flex;justify-content:center;gap:0}
+.dot{width:44px;height:44px;padding:0;border:0;background:none;cursor:pointer;display:grid;place-items:center}
 .dot::before{content:'';width:10px;height:10px;border-radius:999px;background:rgb(255 243 210 / .35)}
 .dot[aria-current=page]::before{width:22px;background:#e9c16b}
 @media(max-height:640px){.dots{display:none}.art,.art svg{max-height:28vh}}
