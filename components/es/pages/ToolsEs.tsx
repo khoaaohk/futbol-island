@@ -167,9 +167,9 @@ function ToolsHubEs(){
    <p>Escribe cuántos jugadores vinieron y cuánto dura el partido. La calculadora reparte los minutos por igual y te dice quién entra en cada cambio.</p>
    <ToolCards links={PLANNER_PAGES.map(p=>toolLink(p.path)!)} tint="time"/>
   </Section>
-  <Section id="practice" title="Herramientas para el entrenamiento">
-   <p>Para la cancha de entrenamiento: un teléfono en un cono que muestra colores, números, flechas y pases, para que los jugadores aprendan a mirar por encima del hombro antes de que llegue el balón.</p>
-   <ToolCards links={[{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb}]} tint="practice"/>
+  <Section id="practice" title="Apps para el entrenamiento y el partido">
+   <p>Dos apps para la cancha: un entrenador de escaneo que muestra colores, números, flechas y pases para que los jugadores miren por encima del hombro, y una app del entrenador con la alineación y un reloj de cambios en vivo.</p>
+   <ToolCards links={[{path:toEs(SCAN_PATH),name:SCAN_ES.h1,line:SCAN_ES.blurb},{path:'/coach?lang=es',name:'App del entrenador para el partido',line:'La alineación y un reloj de cambios en vivo en tu teléfono; funciona sin conexión, sin cuenta'}]} tint="practice"/>
   </Section>
   <Section id="printables" title="Diagramas de cancha y hojas de referencia para imprimir">
    <p>Canchas en blanco para dibujar, todas las formaciones de una modalidad en una página, y las posiciones con sus números. Gratis para imprimir y compartir con equipos, clubes y escuelas.</p>

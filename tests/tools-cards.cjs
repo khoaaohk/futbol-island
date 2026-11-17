@@ -32,7 +32,7 @@ function check(h,lang,prefix){
  assert.deepEqual(lists.map(m=>/data-tint="([^"]+)"/.exec(m[0])[1]),['lineups','time','practice','print'],`${lang}: each group has its own tint`);
  const cards=[...h.matchAll(/<a [^>]*data-tool-card="([^"]+)"[^>]*>([\s\S]*?)<\/a>/g)];
  const hrefs=cards.map(m=>/href="([^"]+)"/.exec(m[0])[1]);
- const want=reg.TOOL_PAGES.filter(p=>p.path!==reg.TOOLS_HUB.path).map(p=>prefix+p.path);
+ const want=[...reg.TOOL_PAGES.filter(p=>p.path!==reg.TOOLS_HUB.path).map(p=>prefix+p.path),prefix?'/coach?lang=es':'/coach'];/* + the coach app (Nov 17) */
  assert.deepEqual([...hrefs].sort(),[...want].sort(),`${lang}: one card per tool page, no more, no less`);
  for(const [a,kind,inner] of cards){
   const where=`${lang} card ${/href="([^"]+)"/.exec(a)[1]}`;
@@ -49,7 +49,7 @@ function check(h,lang,prefix){
  return new Set(cards.map(m=>m[1]));
 }
 const kinds=check(en,'en','');check(es,'es','/es');
-for(const k of ['lineup','court','clock','rotation','diagram','blank','cheat','shirt','scan'])assert(kinds.has(k),`the hub shows the ${k} icon`);
+for(const k of ['lineup','court','clock','rotation','diagram','blank','cheat','shirt','scan','whistle'])assert(kinds.has(k),`the hub shows the ${k} icon`);
 for(const k of ['lineup','court','clock','rotation','diagram','blank','cheat','shirt','scan','whistle'])
  assert(/<path|<circle|<rect/.test(renderToStaticMarkup(React.createElement(icons.ToolIcon,{kind:k}))),`icon ${k} draws`);
 assert.equal(icons.toolIconFor('/tools/9v9-lineup-builder').badge,'9v9');assert.equal(icons.toolIconFor('/es/tools/futsal-lineup-builder').kind,'court');

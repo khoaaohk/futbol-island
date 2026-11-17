@@ -28,9 +28,9 @@ export default function ToolsHub(){
    <p>Enter how many players came and how long the game is. The planner shares the minutes equally and tells you who comes on at each change.</p>
    <ToolCards links={PLANNER_PAGES.map(p=>({path:p.path,name:cap(p.h1),line:p.blurb}))} tint="time"/>
   </Section>
-  <Section id="practice" title="Practice tools">
-   <p>For the training field: a phone on a cone that flashes colors, numbers, arrows and passes, so players learn to look over the shoulder before the ball arrives.</p>
-   <ToolCards links={[{path:SCAN_PATH,name:cap(SCAN_EN.h1),line:SCAN_EN.blurb}]} tint="practice"/>
+  <Section id="practice" title="Apps for practice and match day">
+   <p>Two phone apps for the field: a scanning trainer that flashes colors, numbers, arrows and passes so players look over the shoulder, and a coach app with the lineup and a live substitution clock.</p>
+   <ToolCards links={[{path:SCAN_PATH,name:cap(SCAN_EN.h1),line:SCAN_EN.blurb},{path:'/coach',name:'Coach app for match day',line:'Lineup and a live substitution clock on your phone; works offline, no account'}]} tint="practice"/>
   </Section>
   <Section id="printables" title="Printable field diagrams and cheat sheets">
    <p>Blank fields to draw on, every formation of a game on one page, and the positions with their numbers. Free to print and share for teams, clubs and schools.</p>
