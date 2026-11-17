@@ -81,7 +81,7 @@ const DRAW:Record<Motif,(done:boolean,amount:number)=>ReactNode>={
  /* the captain lifts the trophy */
  trophy:done=><>
   <rect x={0} y={0} width={240} height={160} fill={'#28407a'}/>
-  {[[34,30],[200,40],[62,96],[184,104],[120,18]].map(([x,y],i)=><path key={i} className={s.move} style={{transform:done?'none':'scale(0)',transformOrigin:`${x}px ${y}px`}}
+  {[[34,30],[200,40],[62,96],[184,104],[120,18]].map(([x,y],i)=><path key={i} className={s.move} style={{transform:done?'none':'scale(.4)',opacity:done?1:0,transformOrigin:`${x}px ${y}px`}}
    d={`M${x} ${y-8}l2.4 5.6 6 .6-4.6 4 1.4 6-5.2-3.2-5.2 3.2 1.4-6-4.6-4 6-.6Z`} fill={GOLD}/>)}
   <rect x={70} y={128} width={100} height={32} fill={'#f6d34a'} {...line}/>
   <rect x={70} y={128} width={100} height={10} fill={'#2c8a4f'}/>

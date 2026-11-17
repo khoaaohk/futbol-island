@@ -13,10 +13,10 @@ const TONES=['gold','pitch','blue','coral','mint','sky'] as const;
 export const coverTone=(i:number)=>TONES[i%TONES.length];
 
 /** A typographic book cover: the player's name large, the book's subtitle, a small open-book mark. No photos. */
-export function BookCover({book,tone,size='md',as:Tag='div'}:{book:SiteBook;tone:string;size?:'md'|'lg';as?:'div'|'span'}){
+export function BookCover({book,tone,size='md',as:Tag='div',sub=true}:{book:SiteBook;tone:string;size?:'md'|'lg';as?:'div'|'span';sub?:boolean}){
  return <Tag className={s.cover} data-tone={tone} data-size={size} aria-hidden="true">
   <span className={s.coverName}>{book.title}</span>
-  <span className={s.coverSub}>{book.subtitle}</span>
+  {sub&&<span className={s.coverSub}>{book.subtitle}</span>}
   <span className={s.coverFoot}><BookMark/>{book.chapters.length} chapters</span>
  </Tag>;
 }
@@ -30,7 +30,7 @@ export function BookMark({size=16}:{size?:number}){
 /** The whole story, chapter by chapter: a timeline down the side on wide screens, the picture alternating sides. */
 export function StoryChapters({book}:{book:SiteBook}){
  return <ol className={s.chapters}>{book.chapters.map((c,i)=><li key={c.id} id={chapterAnchor(c.id)} className={s.chapter} data-side={i%2?'right':'left'}>
-  <div className={s.chapterArt}><ChapterArt motif={c.motif}/></div>
+  <div className={s.chapterArt}><ChapterArt motif={c.motif} steps={c.steps}/></div>
   <div className={s.chapterBody}>
    <p className={s.year}><span className={s.yearDot} aria-hidden="true"/>{c.year}</p>
    <h3 className={s.chapterTitle}>{c.title}</h3>
@@ -53,9 +53,9 @@ export function BookLinkTiles({links}:{links:{path:string;name:string;meta?:stri
 
 export function BookShelf({books,start=0,children}:{books:SiteBook[];start?:number;children?:ReactNode}){
  return <ul className={s.shelf}>{books.map((b,i)=><li key={b.id} className={s.shelfItem}>
-  {b.path?<a className={s.shelfLink} href={b.path}><BookCover book={b} tone={coverTone(start+i)} as="span"/>
+  {b.path?<a className={s.shelfLink} href={b.path}><BookCover book={b} tone={coverTone(start+i)} as="span" sub={false}/>
     <span className={s.shelfName}>{b.title}: {b.subtitle}</span><span className={s.shelfMeta}>Read the story</span></a>
-   :<div className={s.shelfSoon}><BookCover book={b} tone={coverTone(start+i)}/>
-    <span className={s.shelfName}>{b.title}: {b.subtitle}</span><span className={s.shelfMeta}>On the island now · web page soon</span></div>}
+   :<div className={s.shelfSoon}><BookCover book={b} tone={coverTone(start+i)} sub={false}/>
+    <span className={s.shelfName}>{b.title}: {b.subtitle}</span><span className={s.shelfMeta}>On the island now</span></div>}
  </li>)}{children}</ul>;
 }

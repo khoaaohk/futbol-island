@@ -35,7 +35,7 @@ export default function BooksHub(){
    <QuickAnswer lead={LEAD} facts={FACTS}/>
   </header>
   {featured&&<section className={b.feature} aria-labelledby="first">
-   <a href={featured.path!} tabIndex={-1} aria-hidden="true"><BookCover book={featured} tone="gold" size="lg" as="span"/></a>
+   <a className={b.coverLink} href={featured.path!} tabIndex={-1} aria-hidden="true"><BookCover book={featured} tone="gold" size="lg" as="span"/></a>
    <div className={b.featureText}>
     <h2 className={b.featureTitle} id="first">Start with {featured.fullTitle}</h2>
     <p>{featured.page!.summary}</p>
