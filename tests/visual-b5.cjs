@@ -84,7 +84,7 @@ for(const [where,h] of [['/about',page('app/(site)/about/page.tsx')],['/es/about
   ok(!/class="eyebrow"/.test(h),`${where}: no eyebrow over the title (rarity is a key fact now)`);
   const k=/<dl class="facts" data-key-facts="">([\s\S]*?)<\/dl>/.exec(h);ok(k,`${where}: key-facts strip`);
   const facts=[...k[1].matchAll(/<dt><svg[^>]*aria-hidden="true"[\s\S]*?<span>([^<]+)<\/span><\/dt>/g)].map(m=>m[1]);
-  for(const l of ['Rarity','Size on the island','Where to catch it','Watch the water for','Market stand pays'])ok(facts.includes(l),`${where}: key fact ${l}`);
+  for(const l of ['Rarity','Size','Where','Shadow','Market price'])ok(facts.includes(l),`${where}: key fact ${l}`);
   ok(facts.includes('When')===!!f.when,`${where}: "When" only for night or sunset fish`);
   ok(h.indexOf('data-key-facts')>h.indexOf('<img')&&h.indexOf('data-key-facts')<h.indexOf('data-fish-grid'),`${where}: the art first, then the facts, then the cards`);
   const st=/<ol class="steps" data-icon-steps="">([\s\S]*?)<\/ol>/.exec(h);ok(st,`${where}: catch steps are a numbered list`);
@@ -94,7 +94,7 @@ for(const [where,h] of [['/about',page('app/(site)/about/page.tsx')],['/es/about
 // ---- 5. drills and practice plans (EN + ES) ----
 {const drills=L('lib/site/drills.ts'),plans=L('lib/site/plans.ts'),ep=L('lib/i18n/esPaths.ts');
  const glance=(h,where,labels)=>{const g=/<dl class="glance"[^>]*data-glance="">([\s\S]*?)<\/dl>/.exec(h);ok(g,`${where}: "At a glance" chips`);
-  const got=[...g[1].matchAll(/<div class="chip"><dt><svg[^>]*aria-hidden="true"[\s\S]*?<span>([^<]+)<\/span><\/dt><dd>[^<]+<\/dd><\/div>/g)].map(m=>m[1]);
+  const got=[...g[1].matchAll(/<div class="chip(?: chipWide)?"><dt><svg[^>]*aria-hidden="true"[\s\S]*?<span>([^<]+)<\/span><\/dt><dd>[^<]+<\/dd><\/div>/g)].map(m=>m[1]);
   ok(labels.every(l=>got.includes(l)),`${where}: chips ${labels.join(', ')} (${got.join(', ')})`);
   ok(!/<table/.test(h.slice(h.indexOf('id="facts"'),h.indexOf('id="facts"')+600)),`${where}: no table for the facts any more`);};
  const checks=(h,where,items)=>{const c=/<ul class="checks" data-checklist="">([\s\S]*?)<\/ul>/.exec(h);ok(c,`${where}: checklist`);

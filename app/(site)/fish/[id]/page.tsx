@@ -38,11 +38,11 @@ function fishFacts(f:FishSpecies):Fact[]{
  const where=spots.length===1?spots[0].name:boats?'Deep-sea boats':`${spots.length} fishing spots`;
  return [
   {icon:'star',label:'Rarity',value:rarityWord(f)},
-  {icon:'ruler',label:'Size on the island',value:`${f.size[0]}–${f.size[1]} cm`},
-  {icon:'pin',label:'Where to catch it',value:spots.length?where:'A rare visitor',href:'#catch'},
-  {icon:'eye',label:'Watch the water for',value:SHADOW_LABEL[f.shadow]},
+  {icon:'ruler',label:'Size',value:`${f.size[0]}–${f.size[1]} cm`},
+  {icon:'pin',label:'Where',value:spots.length?where:'A rare visitor',href:'#catch'},
+  {icon:'eye',label:'Shadow',value:SHADOW_LABEL[f.shadow]},
   ...(f.when?[{icon:'moon' as const,label:'When',value:f.when==='night'?'At night':'At sunset'}]:[]),
-  {icon:'coin',label:'Market stand pays',value:`Up to ${f.price} coins`},
+  {icon:'coin',label:'Market price',value:`Up to ${f.price} coins`},
  ];
 }
 /** Each catch tip's icon, read from the tip itself (lib/site/fishNotes.ts fishCatchTips). */
@@ -64,7 +64,7 @@ export default function FishPage({params}:{params:{id:string}}){
   </header>
   <div className={styles.art}><img src={fishArtPath(f.id)} width={FISH_ART_SIZE.width} height={FISH_ART_SIZE.height} decoding="async"
    alt={`Drawing of a ${f.name.toLowerCase()}, the Fishbook animal for ${f.club.name} (${f.club.country})`}/></div>
-  <KeyFacts facts={fishFacts(f)}/>
+  <div className={pp.factsBand}><KeyFacts facts={fishFacts(f)}/></div>
   <div className={pp.fishGrid} data-fish-grid="">
   <section className={`${styles.card} ${pp.fishClub}`} aria-labelledby="fact">
    <span className={styles.label} id="fact">{f.club.link==='Fun fish fact'?'Fun fish fact + real football fact':`Real football fact · ${f.club.link}`}</span>

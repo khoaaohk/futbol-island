@@ -59,10 +59,10 @@ export function PictureTiles({items}:{items:readonly Tile[]}){
   <Img className={s.tileImg} shot={t.shot} alt={t.alt}/><span className={s.tileTitle}>{t.title}</span><span className={s.tileLine}>{t.line}</span></a></li>)}</ul>;
 }
 
-/** "At a glance" as chips (drills, practice plans): icon, the detail's name and its value. Prints as it shows. */
+/** "At a glance" as chips (drills, practice plans): icon, the detail's name and its value; a long value takes a full row. */
 export type Chip={icon:FactIconKind;label:string;value:ReactNode};
 export function Glance({items,label}:{items:readonly Chip[];label:string}){
- return <dl className={s.glance} aria-label={label} data-glance="">{items.map(c=><div key={c.label} className={s.chip}>
+ return <dl className={s.glance} aria-label={label} data-glance="">{items.map(c=><div key={c.label} className={typeof c.value==='string'&&c.value.length>24?`${s.chip} ${s.chipWide}`:s.chip}>
   <dt><FactIcon kind={c.icon} size={22}/><span>{c.label}</span></dt><dd>{c.value}</dd></div>)}</dl>;
 }
 

@@ -92,7 +92,7 @@ export function DrillEsPage({d}:{d:EsDrill}){
   <EsPrintSheet path={d.esPath} what="hoja del ejercicio"/>
   <Section id="diagram" title={`${d.name}: diagrama del montaje`}><EsGridFigure id="s0" scene={d.scene} image={diagramUrl(d.picture)}/></Section>
   <Section id="facts" title="De un vistazo">
-   <Glance label={`${d.name}: edades, jugadores, espacio, material y tiempo`} items={[{icon:'kid',label:'Edades',value:d.agesText},{icon:'people',label:'Jugadores',value:d.players},{icon:'court',label:'Espacio',value:d.space},{icon:'clock',label:'Tiempo',value:d.time},{icon:'ball',label:'Habilidad',value:d.skillName},{icon:'cone',label:'Material',value:d.equipment}]}/>
+   <Glance label={`${d.name}: edades, jugadores, espacio, material y tiempo`} items={[{icon:'kid',label:'Edades',value:d.agesText},{icon:'court',label:'Espacio',value:d.space},{icon:'people',label:'Jugadores',value:d.players},{icon:'clock',label:'Tiempo',value:d.time},{icon:'ball',label:'Habilidad',value:d.skillName},{icon:'cone',label:'Material',value:d.equipment}]}/>
    <p className={styles.caption}>{DRILL_SAFETY_LINE_ES}</p>
   </Section>
   <Section id="steps" title="Cómo hacerlo"><Steps items={d.steps}/></Section>

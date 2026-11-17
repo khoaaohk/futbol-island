@@ -47,7 +47,7 @@ function DrillPage({d}:{d:Drill}){
   <PrintSheet path={d.path} what="drill sheet"/>
   <Section id="diagram" title={`${d.name}: setup diagram`}><GridFigure id="s0" scene={d.scene} image={diagramUrl(d.picture)}/></Section>
   <Section id="facts" title="At a glance">
-   <Glance label={`${d.name}: ages, players, space, equipment and time`} items={[{icon:'kid',label:'Ages',value:d.agesText},{icon:'people',label:'Players',value:d.players},{icon:'court',label:'Space',value:d.space},{icon:'clock',label:'Time',value:d.time},{icon:'ball',label:'Skill',value:skill.name},{icon:'cone',label:'Equipment',value:d.equipment}]}/>
+   <Glance label={`${d.name}: ages, players, space, equipment and time`} items={[{icon:'kid',label:'Ages',value:d.agesText},{icon:'court',label:'Space',value:d.space},{icon:'people',label:'Players',value:d.players},{icon:'clock',label:'Time',value:d.time},{icon:'ball',label:'Skill',value:skill.name},{icon:'cone',label:'Equipment',value:d.equipment}]}/>
    <p className={styles.caption}>{DRILL_SAFETY_LINE}</p>
   </Section>
   <Section id="steps" title="How to run it"><Steps items={d.steps}/></Section>
