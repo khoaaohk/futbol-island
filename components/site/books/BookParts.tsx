@@ -52,10 +52,9 @@ export function BookLinkTiles({links}:{links:{path:string;name:string;meta?:stri
 }
 
 export function BookShelf({books,start=0,children}:{books:SiteBook[];start?:number;children?:ReactNode}){
+ /* Every book has its own page (Nov 17 2026, all 36 built; tests/books-site.cjs checks it), so every cover is a link. */
  return <ul className={s.shelf}>{books.map((b,i)=><li key={b.id} className={s.shelfItem}>
-  {b.path?<a className={s.shelfLink} href={b.path}><BookCover book={b} tone={coverTone(start+i)} as="span" sub={false}/>
-    <span className={s.shelfName}>{b.title}: {b.subtitle}</span><span className={s.shelfMeta}>Read the story</span></a>
-   :<div className={s.shelfSoon}><BookCover book={b} tone={coverTone(start+i)} sub={false}/>
-    <span className={s.shelfName}>{b.title}: {b.subtitle}</span><span className={s.shelfMeta}>On the island now</span></div>}
+  <a className={s.shelfLink} href={b.path??`/books/${b.id}`}><BookCover book={b} tone={coverTone(start+i)} as="span" sub={false}/>
+   <span className={s.shelfName}>{b.title}: {b.subtitle}</span><span className={s.shelfMeta}>Read the story</span></a>
  </li>)}{children}</ul>;
 }

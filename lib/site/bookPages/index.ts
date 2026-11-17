@@ -29,7 +29,16 @@ import saka from './saka';
 import hegerberg from './hegerberg';
 import nadim from './nadim';
 import kante from './kante';
-/** Every book with its own web page. Add one import + one entry per built book (catalog order is kept by lib/site/books.ts). */
+import salah from './salah';
+import weah from './weah';
+import drogba from './drogba';
+import mane from './mane';
+import oshoala from './oshoala';
+import kerr from './kerr';
+import davies from './davies';
+/** Every book's web page (all 36 player books, Nov 17 2026). A new book needs one import + one entry here (catalog order is kept
+ *  by lib/site/books.ts); tests/books-site.cjs fails until it has one. */
 export const BOOK_PAGES:Partial<Record<PlayerBookId,BookPageSpec>>={messi,falcao,marta,ronaldinho,pele,ronaldo,garrincha,cafu,
  maldini,zidane,cruyff,modric,cristiano,iniesta,vardy,kane,putellas,bronze,
- buffon,eriksen,debruyne,ibrahimovic,lukaku,rashford,eusebio,saka,hegerberg,nadim,kante};
+ buffon,eriksen,debruyne,ibrahimovic,lukaku,rashford,eusebio,saka,hegerberg,nadim,kante,
+ salah,weah,drogba,mane,oshoala,kerr,davies};

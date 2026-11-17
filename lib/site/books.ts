@@ -12,7 +12,8 @@ import {PUBLISHER,KIDS_AUDIENCE,SITE_NAME,SITE_URL,abs,firstSentence} from './se
  * - Every story fact comes from the book itself (lib/books/stories/*.ts, attributed to its sources); nothing here adds a fact.
  * - The page text is the book's text with the paper-action sentence taken out ("Flip the five cards." is the pop-up's
  *   instruction, not part of the story on a flat page); the reader keeps the full text and turns that sentence into its button.
- * - Detail pages exist only for the books listed in BOOK_PAGES (the approved sample first); the hub lists every book.
+ * - Every book has a detail page from its BOOK_PAGES spec (Cafu was the approved sample; all 36 built Nov 17 2026); the hub
+ *   lists and links every book.
  */
 export const BOOKS_PATH='/books';
 /** Books in shelf order (the catalog's order), without the island starter book (it is about the game, not a player). */
@@ -22,7 +23,7 @@ export type {Motif,BookFaq,BookFact} from './bookPages/types';
 import type {Motif,BookPageSpec} from './bookPages/types';
 import {BOOK_PAGES} from './bookPages/index';
 
-/** The books that have their own page now (the hub links only these). */
+/** The books that have their own page (all of them since Nov 17 2026; a new book shows on the hub once its spec exists). */
 export const BUILT_BOOKS=BOOK_IDS.filter(id=>!!BOOK_PAGES[id]);
 
 /** Regions for the shelf, from the country of the player's card (lib/town/playerAppearance.json). A player without a card on the

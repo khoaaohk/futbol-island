@@ -1,7 +1,8 @@
 // The pop-up books on the website (Nov 17 2026; lib/site/books.ts, app/(site)/books, components/site/books):
-//  1. Data: every player book in the catalog is on the shelf (36), grouped by region, each with a slug; built pages have a
-//     summary, facts, 3-5 FAQ items, real exhibits and (Cafu) one picture per chapter; the page text is the book's text minus only the action sentence.
-//  2. Hub HTML: one h1, every book's title and subtitle, only built books linked, CollectionPage + BreadcrumbList JSON-LD.
+//  1. Data: every player book in the catalog is on the shelf (36), grouped by region, each with a slug; every book has a page
+//     (all 36 since Nov 17 2026) with a summary, facts, 3-5 FAQ items, real exhibits and (Cafu) one picture per chapter; the page text is the book's text minus only the action sentence.
+//  2. Hub HTML: one h1, every book's title and subtitle, every cover linked to its page (no "on the island now" stand-ins),
+//     CollectionPage + BreadcrumbList JSON-LD listing every book.
 //  3. Every built page's HTML (/books/<id>; Cafu is the sample): h1, the answer-first summary right after it, every chapter's title, year, text (verbatim
 //     paragraphs) and lesson, every source link, the check date, FAQ shown = FAQPage JSON-LD, Book JSON-LD with chapters and
 //     citations, BreadcrumbList, the open button as a real link to the story, keep-reading links to the card and position guide.
@@ -20,7 +21,7 @@ const ids=Object.keys(CAT.PLAYER_BOOKS).filter(i=>i!=='island');
 ok(B.SITE_BOOKS.length===ids.length&&ids.length===36,`all 36 player books on the shelf (${B.SITE_BOOKS.length})`);
 ok(B.SITE_BOOKS.every(b=>b.region&&b.country&&/^[a-z]+$/.test(b.slug)),'every book has a country, region and slug');
 ok(B.shelf().reduce((a,g)=>a+g.books.length,0)===36,'the shelf groups hold every book once');
-ok(B.BUILT_BOOKS.includes('cafu'),'cafu is built');
+ok(B.BUILT_BOOKS.length===36&&B.SITE_BOOKS.every(b=>b.path===`/books/${b.id}`),'every book has its own page');
 for(const id of B.BUILT_BOOKS){const b=B.bookBySlug(id),p=b.page;
  ok(p.summary.split(/\s+/).length>=30&&p.summary.length<=420,`${id}: summary 30+ words`);
  ok(p.faq.length>=3&&p.faq.length<=5,`${id}: 3-5 FAQ items`);
@@ -36,8 +37,10 @@ const hub=decode(render(React.createElement(L('app/(site)/books/page.tsx').defau
 ok((hub.match(/<h1\b/g)||[]).length===1&&/Football pop-up books for kids<\/h1>/.test(hub),'hub: one h1');
 for(const b of B.SITE_BOOKS)ok(hub.includes(`${b.title}: ${b.subtitle}`),`hub lists ${b.id}`);
 const linked=[...hub.matchAll(/href="\/books\/([a-z]+)"/g)].map(m=>m[1]);
-ok(linked.length>0&&linked.every(x=>B.BUILT_BOOKS.includes(x)),'hub links only built books');
-const hubLd=ldOf(hub);ok(hubLd.some(x=>x['@type']==='CollectionPage')&&hubLd.some(x=>x['@type']==='BreadcrumbList'),'hub JSON-LD: CollectionPage + BreadcrumbList');
+ok(linked.every(x=>B.BUILT_BOOKS.includes(x))&&B.SITE_BOOKS.every(b=>linked.includes(b.id)),'hub links every book, and only built pages');
+ok(!/On the island now|coming soon/i.test(hub),'hub: no stand-in for a missing page');
+const hubLd=ldOf(hub),coll=hubLd.find(x=>x['@type']==='CollectionPage');ok(coll&&hubLd.some(x=>x['@type']==='BreadcrumbList'),'hub JSON-LD: CollectionPage + BreadcrumbList');
+ok(coll.mainEntity.numberOfItems===36&&B.SITE_BOOKS.every(x=>coll.mainEntity.itemListElement.some(it=>it.url===`https://futbolisland.app/books/${x.id}`)),'hub JSON-LD: the CollectionPage lists every book page');
 // ---- 3. every built page (Cafu, the sample, also has hand-drawn pictures and card #26) ----
 const P=L('app/(site)/books/[slug]/page.tsx');
 const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
