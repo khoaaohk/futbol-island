@@ -74,12 +74,11 @@
 .shelf.shelf{list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,140px),1fr));gap:var(--s3) var(--s2)}
 @media(max-width:719px){.shelf.shelf{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .shelfItem{max-width:none;min-width:0}
-.shelfLink,.shelfSoon{display:grid;gap:6px;color:var(--ink);text-decoration:none}
+.shelfLink{display:grid;gap:6px;color:var(--ink);text-decoration:none}
 .shelfName{font-weight:700;line-height:1.25;font-size:16px;overflow-wrap:anywhere}
 .shelfLink .shelfName{color:var(--link)}
 .shelfMeta{font-size:14px;line-height:1.3;color:var(--ink-soft)}
 .shelfLink .shelfMeta{color:var(--link);font-weight:600}
-.shelfSoon .cover{opacity:.92}
 .shelf .cover{aspect-ratio:4/5}
 .coverLink{display:block;text-decoration:none}
 .shelfLink:hover .shelfName,.shelfLink:focus-visible .shelfName{text-decoration:underline;text-underline-offset:3px}

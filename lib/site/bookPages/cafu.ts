@@ -22,7 +22,6 @@ const page:BookPageSpec={
    {q:'How many World Cup finals did Cafu play in?',a:'Three in a row, and no other player has ever done that. In 1994 he came on from the bench in the final against Italy and Brazil won. In 1998 Brazil lost the final to France. In 2002 he was Brazil’s captain, and Brazil beat Germany 2–0.'},
    {q:'What did “100% Jardim Irene” mean?',a:'When Cafu lifted the World Cup trophy in 2002, his shirt said 100% Jardim Irene, for the poor part of São Paulo where he grew up.'},
   ],
-  motifs:['street','cards','gate','overlap','swap','trophy'],
   exhibits:['worldcup-1930'],
  };
 export default page;

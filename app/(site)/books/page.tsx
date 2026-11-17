@@ -8,8 +8,8 @@ import {BookCover,BookShelf} from '@/components/site/books/BookParts';
 import styles from '../site.module.css';
 import b from '@/components/site/books/books.module.css';
 /**
- * The pop-up books shelf (Nov 17 2026): every player book on the island, grouped by where the player is from. Only the books
- * with their own page link (lib/site/books.ts BOOK_PAGES); the others say they are on the island now. Server-only, no script.
+ * The pop-up books shelf (Nov 17 2026): every player book on the island, grouped by where the player is from. Every book has
+ * its own page (lib/site/books.ts BOOK_PAGES, all 36 since Nov 17 2026), so every cover links to it. Server-only, no script.
  */
 export const dynamic='force-static';
 const N=SITE_BOOKS.length;

@@ -12,7 +12,7 @@ import {RULES} from './rules';
 import {NUMBERS_PAGE} from './positionNumbers';
 import {drillGuideBySlug} from './drillGuides';
 import {firstSentence} from './seo';
-import {SITE_BOOKS,bookBySlug} from './books';
+import {SITE_BOOKS,BUILT_BOOKS,bookBySlug} from './books';
 /** Nov 16 2026 (SEO CTR, owner: "written for LLM searches as well"): the pages people search most, each with its stand-alone
  *  one-sentence answer, so an assistant can quote the answer and cite the page (docs/seo-ctr/LLM-CHECKLIST.md). */
 const ANSWER_TERMS=['two-v-one','through-ball','cutback','give-and-go','pressing','first-touch','nutmeg','hat-trick','free-kick-wall'];
@@ -65,7 +65,7 @@ export function llmsText():string{
   `- [History Museum exhibits](https://futbolisland.app/exhibits): ${SITE_EXHIBITS.length} cases on the Laws of the Game, World Cup history, balls and kits, legends, firsts, tactics and the science of the game.`,'',
   '## Books','',/* lib/site/books.ts: the island's pop-up books; one line per built story page, its answer sentence */
   `- [Football pop-up books for kids](https://futbolisland.app/books): ${SITE_BOOKS.length} short true stories about real players, each six chapters with a lesson per chapter and the sources it was checked against.`,
-  `- [Cafu: Told no, again and again](https://futbolisland.app/books/cafu): ${bookBySlug('cafu')!.page!.summary}`,'',
+  ...BUILT_BOOKS.map(id=>{const b=bookBySlug(id)!;return `- [${b.fullTitle}](https://futbolisland.app/books/${id}): ${b.page!.summary}`;}),'',
   '## Privacy','',
   `- [Privacy policy](https://futbolisland.app/privacy): what the game keeps, why and for how long. It counts anonymous usage data (counts and totals, no names), only to run and improve the game and to report combined totals to sponsors; nothing is sold and nothing about an individual child is shared. The policy follows the principles of COPPA and the UK Age Appropriate Design Code.`,'',
   '## Optional','',
