@@ -10,7 +10,7 @@ const {root,L,read,render,React}=require('./lib/tsLoad.cjs');process.chdir(root)
 const drills=L('lib/site/drills.ts'),rules=L('lib/site/rules.ts');
 const css=read('components/site/printSheet.module.css'),print=(css.match(/@media print\{([\s\S]*)\}\s*$/)||[])[1]||'';
 assert(print.length>200,'a print block');
-for(const r of ['body:has(.sheet) [data-reading-page]>:not(main){display:none!important}','main:has(.sheet)>header>:not(h1):not([data-answer]){display:none!important}','main:has(.sheet) button{display:none!important}','.screen{display:none!important}','@page{margin:12mm}'])
+for(const r of ['body:has(.sheet) [data-reading-page]>:not(main){display:none!important}','main:has(.sheet)>header>:not(h1):not([data-answer]):not([data-quick-answer]){display:none!important}','main:has(.sheet) [data-key-facts]{display:none!important}','main:has(.sheet) button{display:none!important}','.screen{display:none!important}','@page{margin:12mm}'])
  assert(print.includes(r),`print CSS: ${r}`);
 assert(/main:has\(\.sheet\)>:not\(header\):not\(\.sheet\)(:not\(section\[aria-labelledby=[a-z-]+\]\))+\{display:none!important\}/.test(print),'print CSS drops every section it does not keep');
 assert(/^\.url\{display:none\}/m.test(css),'the URL line is print-only');

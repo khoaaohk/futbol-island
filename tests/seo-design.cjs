@@ -41,7 +41,7 @@ const templates=[...walk('app/(site)').filter(f=>f.endsWith('.tsx')&&!f.includes
 const inline=templates.filter(f=>!/SiteNav\.tsx$/.test(f)&&/style=\{\{/.test(read(f)));
 ok(inline.length===0,`no inline style one-offs in reading templates: ${inline.join(', ')}`);
 ok(/\.lead\[data-answer\]\{color:var\(--ink\)/.test(css),'the answer lead is full ink');
-ok(/Coach’s notes: \$\{name\}`\} panel>/.test(read('lib/site/GuideParts.tsx')),"coach's notes use the one panel style");
+ok(/className=\{`\$\{styles\.section\} \$\{styles\.panel\}`\} aria-labelledby="coach-notes"/.test(read('lib/site/GuideParts.tsx'))&&/Coach’s notes: \$\{name\}/.test(read('lib/site/GuideParts.tsx')),"coach's notes use the one panel style");/* visual pass Nov 17 2026: a section with the whistle icon in its h2 */
 ok(/pagerWord/.test(read('components/site/ReadNext.tsx'))&&/rel="next"/.test(read('components/site/ReadNext.tsx'))&&/rel="prev"/.test(read('components/site/ReadNext.tsx')),'Read next keeps rel=next/prev and the shared pager style');
 
 // 2. Quiz

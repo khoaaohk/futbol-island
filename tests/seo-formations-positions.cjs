@@ -106,7 +106,7 @@ for(const g of guides.GUIDE_PAGES){
  else{const a=ld.find(x=>[].concat(x['@type']).includes('Article'));assert(a&&a.audience&&a.datePublished&&a.dateModified&&a.headline===g.title,`${where}: Article with audience and dates`);
   assert.equal(a.image,'https://futbolisland.app'+g.image,`${where}: Article image is the diagram`);}
  // diagrams
- const svgs=h.match(/<svg[\s\S]*?<\/svg>/g)||[];assert(svgs.length>=1,`${where}: has a diagram`);
+ const svgs=(h.match(/<svg[\s\S]*?<\/svg>/g)||[]).filter(s=>!/^<svg[^>]*aria-hidden="true"/.test(s));/* not the key-facts icons (visual pass, Nov 17 2026) */assert(svgs.length>=1,`${where}: has a diagram`);
  for(const s of svgs){const fmt=/data-diagram="([^"]+)"/.exec(s)[1],players=(s.match(/data-player=/g)||[]).length;
   assert.equal(players,pitch.PLAYERS_PER_TEAM[fmt],`${where}: a ${fmt} diagram shows ${pitch.PLAYERS_PER_TEAM[fmt]} players`);
   assert(/<title[^>]*>[^<]{10,}<\/title>/.test(s)&&/<desc[^>]*>[^<]{60,}<\/desc>/.test(s)&&/role="img"/.test(s),`${where}: diagram has title, desc and role`);
@@ -124,7 +124,8 @@ for(const g of guides.GUIDE_PAGES){
  // one way into the game, internal links resolve
  assert.equal((h.match(/class="cta"/g)||[]).length,1,`${where}: one Play button`);
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);assert(links.length>=8,`${where}: internal links`);
- for(const l of links){assert(l.startsWith('/'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||(SERVED.has(l)||PLAY_GO.test(l)),`${where}: link target ${l} exists`);}/* a #fragment is allowed: the lineup builder deep link */
+ for(const l of links){if(l.startsWith('#')){assert(h.includes(` id="${l.slice(1)}"`),`${where}: jump link ${l} has its target`);continue;}/* key-facts jump links (visual pass, Nov 17 2026) */
+  assert(l.startsWith('/'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||(SERVED.has(l)||PLAY_GO.test(l)),`${where}: link target ${l} exists`);}/* a #fragment is allowed: the lineup builder deep link */
  assert(links.some(l=>l.startsWith('/learn/lessons/')),`${where}: links to lessons`);
  for(const m of h.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)){const t=text(m[1]);if(t.length>=90){if(!paraPages.has(t))paraPages.set(t,new Set());paraPages.get(t).add(g.path);}}
 }

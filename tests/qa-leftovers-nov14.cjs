@@ -14,7 +14,7 @@ ok('lineup format landings: the h1 follows the builder format (server text = the
  assert.match(read('components/site/tools/LineupHeading.tsx'),/addEventListener\(LINEUP_FORMAT_EVENT,on\)/);
  assert.match(read('app/(site)/tools/[slug]/page.tsx'),/headingFormat=\{p\.format&&lineupHeading\(p\.format\)===p\.h1\?p\.format:undefined\}/);});
 ok('a11y: guide tables named once; the Explore panel body is focusable while it has nothing else to focus',()=>{
- assert.match(read('lib/site/GuideParts.tsx'),/role="region" aria-label=\{label\}><table className=\{styles\.table\}>/);
+ assert.match(read('lib/site/GuideParts.tsx'),/role="region" aria-label=\{label\}( data-stack="")?><table className=\{styles\.table\}>/);
  assert.match(read('components/IslandSettings.tsx'),/<div ref=\{body\} className=\{shell\.body\} \{\.\.\.\(tab==='exploration'\?\{tabIndex:0,role:'region','aria-labelledby':'island-settings-title'\}/);});
 ok('lessons on phones: radar clear of the caption, Choose plays clear of Done at 320, no doubled chips, no half-cut tokens',()=>{
  assert.match(read('components/IslandMapFrame.module.css'),/@media\(max-width:600px\) and \(min-height:421px\)\{\.frame\{top:calc\(76px[^}]*bottom:auto/);
