@@ -20,6 +20,14 @@ export function BookCover({book,tone,size='md',as:Tag='div',sub=true}:{book:Site
   <span className={s.coverFoot}><BookMark/>{book.chapters.length} chapters</span>
  </Tag>;
 }
+/** A field-guide cover on the shelf (Nov 17 2026: the island's Fishbook, a picture guide, not a pop-up story). Same paper cover
+ *  as the player books, with its own count line. */
+export function GuideCover({name,sub,foot,tone}:{name:string;sub:string;foot:string;tone:string}){
+ return <span className={s.cover} data-tone={tone} data-size="md" aria-hidden="true">
+  <span className={s.coverName}>{name}</span><span className={s.coverSub}>{sub}</span>
+  <span className={s.coverFoot}><BookMark/>{foot}</span>
+ </span>;
+}
 /** The energy-bar style mark (gold fill, brown key line, like components/site/cards/CardParts.tsx StatIcon). */
 export function BookMark({size=16}:{size?:number}){
  return <svg className={s.mark} viewBox="0 0 16 16" width={size} height={size} aria-hidden="true" focusable="false" fill="#f2b632" stroke="#7a4e12" strokeWidth="1.4" strokeLinejoin="round">

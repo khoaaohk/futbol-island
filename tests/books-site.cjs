@@ -43,6 +43,8 @@ for(const b of B.SITE_BOOKS)ok(hub.includes(`${b.title}: ${b.subtitle}`),`hub li
 const linked=[...hub.matchAll(/href="\/books\/([a-z]+)"/g)].map(m=>m[1]);
 ok(linked.every(x=>B.BUILT_BOOKS.includes(x))&&B.SITE_BOOKS.every(b=>linked.includes(b.id)),'hub links every book, and only built pages');
 ok(!/On the island now|coming soon/i.test(hub),'hub: no stand-in for a missing page');
+ok(/<a[^>]*href="\/fish"[^>]*>[\s\S]*?Fishbook/.test(hub)&&/Island field guides/.test(hub),'hub: the Fishbook field guide links to /fish');
+ok(/href="\/books"/.test(decode(render(React.createElement(L('app/(site)/fish/page.tsx').default)))),'fish hub links back to the books');
 const hubLd=ldOf(hub),coll=hubLd.find(x=>x['@type']==='CollectionPage');ok(coll&&hubLd.some(x=>x['@type']==='BreadcrumbList'),'hub JSON-LD: CollectionPage + BreadcrumbList');
 ok(coll.mainEntity.numberOfItems===36&&B.SITE_BOOKS.every(x=>coll.mainEntity.itemListElement.some(it=>it.url===`https://futbolisland.app/books/${x.id}`)),'hub JSON-LD: the CollectionPage lists every book page');
 // ---- 3. every built page (Cafu, the sample, also checks card #26) ----
@@ -86,6 +88,7 @@ for(const [n2,src] of [['OpenBook',open],['BookParts',parts],['page',page]])
 for(const [n2,src] of [['OpenBook',open]])ok(!/^import (?!type)[^\n]*'@\/lib\/site\/books'/m.test(src),`${n2}: only type imports from lib/site/books (the registry stays on the server)`);
 for(const f of ['books'])ok(/prefers-reduced-motion:no-preference/.test(read(`components/site/books/${f}.module.css`)),`${f}.module.css: motion only without reduced motion`);
 ok(!/gradient\(/.test(read('components/site/books/books.module.css')),'no gradients');
+ok(/\.shelf \.shelfLink,\.shelf \.shelfLink \*\{text-decoration:none\}/.test(read('components/site/books/books.module.css')),'shelf covers and names are not underlined at rest');
 // ---- 5. wiring ----
 const paths=L('lib/site/paths.ts').sitePaths().map(p=>p.path);
 ok(paths.includes('/books')&&B.BUILT_BOOKS.every(id=>paths.includes('/books/'+id)),'sitemap has the hub and built pages');

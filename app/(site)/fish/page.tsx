@@ -25,6 +25,7 @@ export default function FishIndex(){
    <a className={styles.cta} href="/play">Go fishing on the island</a>
   </header>
   <CollectionLinks list={FISH_COLLECTIONS} title="Browse the Fishbook by group and spot"/>
+  <p className={styles.caption}>The Fishbook sits on the island’s bookshelf next to <a href="/books">36 pop-up story books about real football players</a>.</p>
   {ORDER.map(r=>{const list=SITE_FISH.filter(f=>f.rarity===r);if(!list.length)return null;return <section key={r} className={styles.section} aria-labelledby={`r-${r}`}>
    <h2 className={styles.h2} id={`r-${r}`}>{rarityWord(list[0])} <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(f=><li key={f.id}><a href={fishPath(f.id)}><span className={styles.itemTitle}>{f.name}</span><span className={styles.itemMeta}>{f.club.name}{f.club.nickname?` · “${f.club.nickname}”`:''}</span></a></li>)}</ul>

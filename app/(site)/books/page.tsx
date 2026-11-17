@@ -4,7 +4,8 @@ import {QuickAnswer,PlayEnd,type Fact} from '@/lib/site/GuideParts';
 import {BOOKS_PATH,BUILT_BOOKS,SITE_BOOKS,bookBySlug,shelf} from '@/lib/site/books';
 import {breadcrumbLd,collectionLd,pageMeta} from '@/lib/site/seo';
 import {SITE_PUBLISHED,SITE_UPDATED} from '@/lib/site/updated';
-import {BookCover,BookShelf} from '@/components/site/books/BookParts';
+import {BookCover,BookShelf,GuideCover} from '@/components/site/books/BookParts';
+import {SITE_FISH} from '@/lib/site/fish';
 import styles from '../site.module.css';
 import b from '@/components/site/books/books.module.css';
 /**
@@ -47,6 +48,13 @@ export default function BooksHub(){
     <h2 className={styles.h2} id={id}>Players from {g.region}</h2>
     <BookShelf books={g.books} start={s}/>
    </section>;})}
+  <section className={styles.section} aria-labelledby="guides">
+   <h2 className={styles.h2} id="guides">Island field guides</h2>
+   <ul className={b.shelf}><li className={b.shelfItem}>
+    <a className={b.shelfLink} href="/fish"><GuideCover name="Fishbook" sub="Sea animals and football" foot={`${SITE_FISH.length} sea animals`} tone="sky"/>
+     <span className={b.shelfName}>Fishbook: {SITE_FISH.length} sea animals, each linked to a real football club or story</span><span className={b.shelfMeta}>Open the Fishbook</span></a>
+   </li></ul>
+  </section>
   <section className={styles.card} aria-labelledby="how">
    <h2 className={styles.h2} id="how">How the books are made</h2>
    <p>Each story is written for children aged 7 to 12 from published sources, which are listed at the end of every book. Facts about a player are only what those sources say; we never invent quotes. The “What it teaches” lesson and the paper action on each page are our own coaching ideas.</p>

@@ -81,7 +81,10 @@
 .shelfLink .shelfMeta{color:var(--link);font-weight:600}
 .shelf .cover{aspect-ratio:4/5}
 .coverLink{display:block;text-decoration:none}
-.shelfLink:hover .shelfName,.shelfLink:focus-visible .shelfName{text-decoration:underline;text-underline-offset:3px}
+/* The site's text-link underline (site.module.css `.main :where(.section>ul) a`) must not reach the shelf: covers and names are
+   plain until hover. Two classes beat its one class + element. */
+.shelf .shelfLink,.shelf .shelfLink *{text-decoration:none}
+.shelf .shelfLink:hover .shelfName,.shelf .shelfLink:focus-visible .shelfName{text-decoration:underline;text-decoration-color:currentColor;text-underline-offset:3px}
 .shelfLink:focus-visible{outline:3px solid var(--link);outline-offset:4px;border-radius:var(--r-md)}
 
 /* The featured book on the hub */
