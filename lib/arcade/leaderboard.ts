@@ -126,8 +126,12 @@ export const BOARD_RULES:Record<BoardGame,{name:string;unit:string;max:number;ba
  airhockey:{name:'Air Futbol',unit:'points',max:2_000_000,base:500,perSecond:220,minSeconds:10,learn:'Play the angles. Guard your goal.'},// solo run only: 2,525 points is the most one first-to-5 match can pay (tests/airhockey-core.cjs), and a match takes well over 12 s
  snakedaily:{name:'Daily Squad',unit:'points',max:3_000_000,base:800,perSecond:700,minSeconds:8,learn:'Same squad list for everyone today. Your first run counts.'},
 };
-/** Rows shown per board. */
+/** Rows kept per device board (the device store, fi2-arcade-boards-v1; unchanged), and the island board's size before
+ *  supabase/migrations/20261122_board_top20.sql is pasted. */
 export const BOARD_SIZE=10;
+/** Nov 17 2026 (owner: "show up to top 20"): the island all-time board holds up to 20 rows. The live size comes from the server
+ *  (`size` in /api/arcade-board answers; 10 until the SQL above is pasted), so the client shows whatever comes back, up to 20. */
+export const ISLAND_BOARD_SIZE=20;
 /** A session token is good for this long (a long Strikers cup or a slow puzzle visit still fits). */
 export const SESSION_MAX_MS=3*60*60_000;
 
@@ -200,8 +204,8 @@ export type BoardRow={id?:number;initials:string;icon:string;score:number;day:st
 export function compareRows(a:{score:number;seq:number},b:{score:number;seq:number}){return b.score-a.score||a.seq-b.seq;}
 /** The rank (1-based) a new score would take on `rows` (already in board order); a tie goes below the existing equal scores. */
 export function rankFor(rows:readonly {score:number}[],score:number){let n=1;for(const r of rows)if(r.score>=score)n++;return n;}
-/** True when `score` would make the top BOARD_SIZE of `rows` (it must beat the last row once the board is full). */
-export const qualifies=(rows:readonly {score:number}[],score:number)=>score>0&&rankFor(rows,score)<=BOARD_SIZE;
+/** True when `score` would make the top `size` of `rows` (it must beat the last row once the board is full). */
+export const qualifies=(rows:readonly {score:number}[],score:number,size:number=BOARD_SIZE)=>score>0&&rankFor(rows,score)<=size;
 
 /** "This device" board entry. `seq` orders ties (the device's own counter). */
 export type LocalEntry={initials:string;icon:string;score:number;day:string;week:string;seq:number};

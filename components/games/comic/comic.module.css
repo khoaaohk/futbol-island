@@ -95,8 +95,7 @@
 .chrome.chrome.chrome.chrome [data-board-body] :is([data-board-learn],[data-board-note],[data-board-small]){color:var(--cm-muted)!important}
 .chrome.chrome.chrome.chrome [data-board-chip]{border:2px solid var(--cm-ink);border-radius:0;background:#fff;color:var(--cm-ink);box-shadow:3px 3px 0 var(--cm-ink);font:800 13px/1.1 var(--cm-ui)}
 .chrome.chrome.chrome.chrome [data-board-chip][aria-selected=true]{background:var(--cm-ink);color:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-orange)}
-.chrome.chrome.chrome.chrome :is([data-board-games],[data-board-tabs]){padding-right:4px;padding-bottom:12px}
-.chrome.chrome.chrome.chrome [data-board-tabs]{gap:9px;padding-bottom:4px}
+.chrome.chrome.chrome.chrome [data-board-games]{padding-right:4px;padding-bottom:12px}
 .chrome.chrome.chrome.chrome [data-board-rows]{padding-right:4px}
 .chrome.chrome.chrome.chrome [data-board-rows] li{grid-template-columns:44px 30px 1fr auto;margin:0 0 8px;padding:0 12px 0 0;border:2px solid var(--cm-ink);border-radius:0;background:#fff;box-shadow:none;animation:none}
 .chrome.chrome.chrome.chrome [data-board-rank]{align-self:stretch;display:grid;place-items:center;background:var(--cm-ink);color:var(--cm-paper);font:italic 800 19px/1 var(--cm-letter)}

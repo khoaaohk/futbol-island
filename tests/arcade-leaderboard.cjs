@@ -117,12 +117,14 @@ await ok('API: tokens and validation (local file store)',async()=>{
  const top=await call('top',undefined,{},'game=runner');assert.equal(top.status,200);assert.match(top.cache,/s-maxage=\d+/);
  assert.deepEqual(top.body.all.map(r=>r.initials),['CAT','ACE','BEN'],'higher first; a tie keeps the earlier entry above');
  assert.equal((await call('top',undefined,{},'game=nope')).status,400);
- // Only a top-10 score is kept.
- for(let i=0;i<8;i++)await play('runner',2000+i,{initials:'DAN'});
+ // Nov 17 2026 (owner: "show up to top 20"): only a top-20 score is kept, and the answers say the board's size.
+ assert.equal(top.body.size,20,'the island board holds 20 rows');assert.equal(L.ISLAND_BOARD_SIZE,20);assert.equal(L.BOARD_SIZE,10,'the device store keeps its top 10 (format unchanged)');
+ for(let i=0;i<17;i++)await play('runner',2000+i,{initials:'DAN'});
+ {const full=await call('top',undefined,{},'game=runner');assert.equal(full.body.all.length,20,'20 rows shown');}
  const low=await play('runner',100,{initials:'EVE'});assert.deepEqual(low.body,{ok:false,reason:'not-top'});
  // The week board: last week's rows are not on it, and a lower score can still make this week's board.
  clock+=7*86_400_000;const wk=await play('runner',100,{initials:'FAY'});assert.equal(wk.body.ok,true);assert.deepEqual(wk.body.rank,{all:null,week:1});
- assert.deepEqual(wk.body.weekly.map(r=>r.initials),['FAY']);assert.equal(wk.body.all.length,10);
+ assert.deepEqual(wk.body.weekly.map(r=>r.initials),['FAY']);assert.equal(wk.body.all.length,20);assert.equal(wk.body.size,20);
  // Replace: the device's own lower entry (matching claim) makes way; a wrong claim leaves it.
  const mine=await play('pinball',3000,{initials:'GIL'});const claim=mine.body.claim,id=mine.body.id;
  const wrong=await play('pinball',3500,{initials:'GIL',replace:{id,claim:'0'.repeat(32)}});assert.equal(wrong.body.ok,true);
@@ -215,11 +217,18 @@ await ok('migration: self-check, idempotent, locked down, SQL = TypeScript twin'
    catch(e){return new Response('{}',{status:/does not exist/.test(String(e.stderr))?404:400});}};
   const pg=ST.createSupabaseBoardStore('http://pg.local','service-key',pgFetch),mem=ST.createMemoryBoardStore();
   assert.equal(await pg.schemaVersion(),1);
+  // Nov 17 2026: the first migration's board_top (re-run just above) holds 10 and sends no size: the store reports 10, so the
+  // client offers the entry for a top-10 place only. The later board migrations restore hidden rows and the top 20.
+  assert.equal((await pg.top('runner','2026-10-12')).size,10,'before 20261122_board_top20.sql the island board holds 10');
+  for(const f of ['20261111_board_hidden_rows.sql','20261122_board_top20.sql'])runFile(path.join('supabase/migrations',f));
+  assert.equal((await pg.top('runner','2026-10-12')).size,20,'after 20261122_board_top20.sql it holds 20');
+  assert.equal(psql(fs.readFileSync('supabase/migrations/20261122_board_top20.sql','utf8').slice(fs.readFileSync('supabase/migrations/20261122_board_top20.sql','utf8').indexOf("select 'board_top without size 20'"))),'','top-20 self-check finds nothing missing');
+  assert.equal(fs.readFileSync('docs/arcade-aaa/board-top20-supabase.sql','utf8').includes(fs.readFileSync('supabase/migrations/20261122_board_top20.sql','utf8')),true,'paste-ready copy = the migration');
   async function script(st){const o=[],n=i=>i.toString(16).padStart(32,'0'),W='2026-10-12',LW='2026-10-05',D='2026-10-14';
    const sub=(i,score,initials,week=W,extra={})=>st.submit({game:'runner',score,initials,icon:i%2?'lion':'',nonce:n(i),claimHash:null,replace:null,day:week===W?D:'2026-10-06',week,...extra});
    o.push(await sub(1,500,'AAA'),await sub(2,900,'BBB'),await sub(3,500,'CCC'),await sub(3,800,'DUP'));
-   for(let i=10;i<20;i++)o.push(await sub(i,1000+i,'LST',LW));
-   o.push(await sub(30,50,'LOW'),await sub(31,40,'OLD',LW));
+   for(let i=10;i<30;i++)o.push(await sub(i,1000+i,'LST',LW));
+   o.push(await sub(50,50,'LOW'),await sub(51,40,'OLD',LW));
    o.push(await sub(40,600,'OWN',W,{claimHash:'f'.repeat(64)}));
    const own=(await st.top('runner',W)).week.find(r=>r.initials==='OWN');
    o.push(await sub(41,650,'OWN',W,{claimHash:'e'.repeat(64),replace:{id:own.id,claimHash:'0'.repeat(64)}}));
@@ -260,6 +269,32 @@ await ok('wiring: lazy UI, no timers or polling, device key, route, npm test',()
  assert(!/save-code|SAVE_CODE_KEY|pictureFor/.test(read('lib/arcade/boardClient.ts')+read('components/arcade/HighScoreEntry.tsx')),'the save code (and its pictures) never reach a board');
  assert(!/<input|<textarea|contentEditable/.test(read('components/arcade/HighScoreEntry.tsx')),'no free text: letter wheels only');
  assert(fs.existsSync('app/api/arcade-board/[action]/route.ts'));
+ // Nov 17 2026 (owner: "for the high score only have all time. remove this week and device." + "show up to top 20 ... top 5 and then scroll").
+ {const ui=['components/arcade/BoardsPanel.tsx','components/arcade/BoardTable.tsx','components/arcade/HighScoreEntry.tsx','components/arcade/ArcadeBoards.tsx'].map(read).join('\n');
+  const shown=ui.replace(/\/\*[\s\S]*?\*\//g,'').replace(/^\s*\/\/.*$/gm,'');// kid-facing code only, comments dropped
+  assert(!/BOARD_TABS|BoardTab\b|data-board-tabs|role="tablist" aria-label="Which board"/.test(ui),'no board tab row');
+  assert(!/this week|Island · week|week board|This device|on this device|\.weekly|isl\.week|place\.week|place\.device/i.test(shown),'no week or device board, rank or wording in the board UI');
+  assert(/The best scores ever played on Futbol Island\. Players show three letters only\./.test(ui),'the all-time note');
+  const hs=read('components/arcade/HighScoreEntry.tsx'),client=read('lib/arcade/boardClient.ts');
+  assert(/qualifies\(island\.all,score,island\.size\)/.test(hs)&&!/qualifies\(island\.weekly/.test(hs),'the entry is offered only for an island all-time place (top 20, or the size the server reports)');
+  assert(/if\(device\)void postScore\(game,score,local\.me\?\.initials\?\?'AAA',local\.me\?\.icon\?\?'',false\)/.test(hs),'a score with no all-time place is still saved on the device, silently');
+  assert(/addLocalScore\(boards,game/.test(client)&&/writeLocalBoards\(boards\)/.test(client),'postScore always writes the device store first');
+  assert(/You’re #1 on the island, of all time!/.test(hs)&&/You’re #\$\{onBoard\} on the island, all time!/.test(hs),'all-time cheer lines');
+  assert(/Math\.min\(ISLAND_BOARD_SIZE/.test(client)&&/BOARD_SIZE\)/.test(client),'client shows what comes back, up to 20 (10 from an older server)');
+  // Device store behaviour unchanged: a non-qualifying island score still lands in the device top 10.
+  let b=L.emptyLocalBoards();for(let i=0;i<12;i++)b=L.addLocalScore(b,'runner',{initials:'AAA',icon:'',score:100+i,now:Date.parse('2026-11-17T10:00:00Z')}).boards;
+  assert.equal(b.boards.runner.length,10,'device store still keeps 10');
+  assert.equal(L.qualifies(Array.from({length:19},(_,i)=>({score:1000-i})),5,L.ISLAND_BOARD_SIZE),true,'#20 qualifies on the island');
+  assert.equal(L.qualifies(Array.from({length:20},(_,i)=>({score:1000-i})),5,L.ISLAND_BOARD_SIZE),false,'#21 does not');
+  assert.equal(L.qualifies(Array.from({length:10},(_,i)=>({score:1000-i})),5,10),false,'an older server (size 10): #11 does not');
+  // The 5-row scroll area: five rows in view, the rest scroll inside it, keyboard reachable, a fade hint, the fresh row scrolled into view.
+  const table=read('components/arcade/BoardTable.tsx');
+  assert(/BOARD_VISIBLE_ROWS=5/.test(table)&&/\[BOARD_VISIBLE_ROWS-1\]/.test(table)&&/maxHeight/.test(table),'board area sized to exactly five rows');
+  assert(/tabIndex=\{more\?0:undefined\}/.test(table)&&/role=\{more\?'region'/.test(table),'scroll area focusable when it scrolls');
+  assert(/querySelector<HTMLElement>\('\[data-new\]'\)/.test(table)&&/b\.scrollTop=/.test(table)&&!/scrollIntoView/.test(table),'fresh row scrolled into view inside the area only');
+  assert(/Scroll for more/.test(table),'visible hint that more rows wait below');
+  assert(/\.scroller\{[^}]*overflow-y:auto/.test(read('components/arcade/Leaderboard.module.css'))&&!/\.scroller\{[^}]*overscroll-behavior-y:contain/.test(read('components/arcade/Leaderboard.module.css')),'list scrolls inside the area; no scroll trap');
+  assert(/\[data-board-more\] \.scroller\{[^}]*mask-image/.test(read('components/arcade/Leaderboard.module.css')),'fade at the foot while more rows wait');}
  const css=read('components/arcade/Leaderboard.module.css');assert(/\.step\{[^}]*min-height:48px/.test(css)&&/\.icon\{[^}]*min-height:48px/.test(css),'big tap targets');
  assert(/boardsPurge|purgeBoards\(\)/.test(read('app/api/cron/analytics/route.ts')),'nightly purge');
 });
