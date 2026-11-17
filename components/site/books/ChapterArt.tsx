@@ -30,7 +30,7 @@ const DRAW:Record<Motif,(done:boolean,amount:number)=>ReactNode>={
  /* five trials, five cards that each say NO */
  cards:(_done,amount)=><>
   <rect x={0} y={0} width={240} height={160} fill={'#f4dcc4'}/>
-  {[0,1,2,3,4].map(i=>{const flipped=amount>i,x=16+i*44,rot=(i-2)*6;
+  {[0,1,2,3,4].map(i=>{const flipped=amount>i,x=18+i*42,rot=(i-2)*5;
    return <g key={i} transform={`rotate(${rot} ${x+20} 110)`}><g className={`${s.move} ${s.mvCard}`} data-on={flipped||undefined}>
     <rect x={x} y={44} width={40} height={60} rx={5} fill={flipped?WHITE:BLUE} {...line}/>
     {flipped?<text x={x+20} y={83} textAnchor="middle" fontSize={20} fontWeight={800} fill={RED} fontFamily="system-ui,sans-serif">NO</text>
