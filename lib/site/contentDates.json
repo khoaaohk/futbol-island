@@ -40,6 +40,10 @@
   "exhibits": {
    "date": "2026-11-15",
    "from": "git"
+  },
+  "books": {
+   "date": "2026-09-30",
+   "from": "git"
   }
  }
 }

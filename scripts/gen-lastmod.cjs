@@ -31,6 +31,7 @@ const DEPS=[
  [/^\/fish\/./,[L+'fish.ts',L+'fishNotes.ts',L+'fishNotes.json',L+'related.ts',L+'collections.ts','lib/town/fishing/fishCatalog.ts','components/site/RelatedLinks.tsx']],
  [/^\/exhibits\/./,[L+'exhibits.ts',L+'related.ts','components/site/RelatedLinks.tsx']],
  [/^\/(cards|fish|exhibits)$/,[L+'collections.ts']],
+ [/^\/books(\/|$)/,[L+'books.ts','lib/books/stories','lib/books/messi.ts','components/site/books']],
  [/^\/learn\/lessons\/./,[L+'lessons.ts','public/lessons',L+'related.ts',...SHARED]],
  [/^\/learn\/soccer-rules\/./,[L+'rules.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'drillLinks.ts',...SHARED]],
  [/^\/learn\/soccer-terms\/./,[L+'terms.ts',L+'notesGuides.ts',L+'drillLinks.ts',...SHARED]],

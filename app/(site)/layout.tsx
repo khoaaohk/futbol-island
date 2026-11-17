@@ -12,7 +12,7 @@ import styles from './site.module.css';
  */
 const FOOTER_HUBS:readonly (readonly [string,string])[]=[['/learn/lessons','Lessons'],['/learn/soccer-drills','Drills'],['/learn/soccer-practice-plans','Practice plans'],
  ['/learn/soccer-formations','Formations'],['/learn/soccer-positions','Positions'],['/learn/soccer-rules','Rules'],['/learn/soccer-terms','Soccer terms'],
- ['/learn/soccer-age-groups','Age groups'],['/tools','Coach tools'],['/games','Games'],['/cards','Player cards'],['/fish','Fishbook'],['/exhibits','Museum']];
+ ['/learn/soccer-age-groups','Age groups'],['/tools','Coach tools'],['/games','Games'],['/cards','Player cards'],['/fish','Fishbook'],['/exhibits','Museum'],['/books','Story books']];
 export default function SiteLayout({children}:{children:React.ReactNode}){
  preloadIslandBrush();
  return <HtmlShell lang="en"><div className={styles.page} data-reading-page="">
