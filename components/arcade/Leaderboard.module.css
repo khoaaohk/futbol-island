@@ -37,8 +37,6 @@
 .dialog .chip{flex:none;min-height:44px;min-width:44px;padding:8px 14px;border:2px solid #fff2cd;border-radius:999px;background:var(--btn-cream,#fff1d3);color:var(--ink);font:700 13px/1.1 var(--font-body,Arial,sans-serif);cursor:pointer;box-shadow:0 3px 0 #0006;touch-action:manipulation}
 .dialog .chip[aria-pressed="true"],.dialog .chip[aria-selected="true"]{background:var(--btn-pink,#ed9dce);border-color:#ffd6f1;color:#3a1631;box-shadow:0 3px 0 var(--btn-pink-edge,#aa6590),0 0 14px #ff62c244}
 .dialog .chip:focus-visible,.dialog .pill:focus-visible,.dialog .step:focus-visible,.dialog .icon:focus-visible,.dialog .tile:focus-visible{outline:var(--btn-focus);outline-offset:3px}
-.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:4px 0 12px}
-.dialog .tabs .chip{padding:8px 6px;font-size:12px}
 
 /* Board rows. */
 .rows{list-style:none;margin:0;padding:0;counter-reset:none}
@@ -53,6 +51,12 @@
 .rows li[data-new]{border:2px solid var(--gold);background:#3a3220;box-shadow:0 0 18px #f4c94e55;animation:rowGlow 1.2s ease 2}
 .rows li[data-new] .who,.rows li[data-new] .pts{color:#ffe58c}
 .you{display:inline-block;margin-left:6px;padding:2px 6px;border-radius:8px;background:var(--cyan);color:#0e2a2c;font:800 10px/1.2 var(--font-body,Arial,sans-serif);letter-spacing:.06em;vertical-align:middle}
+.scroller{position:relative;max-height:calc(5 * 50px - 6px);overflow-y:auto;overscroll-behavior-y:auto;border-radius:14px;scrollbar-width:thin;scrollbar-color:#8264a0 transparent}
+.scroller .rows li:last-child{margin-bottom:0}
+.scroller:focus-visible{outline:var(--btn-focus);outline-offset:3px}
+/* More rows below: the foot of the area fades out (a mask, so it works on every skin's background) until the end is reached. */
+.scrollWrap[data-board-more] .scroller{-webkit-mask-image:linear-gradient(#000 calc(100% - 36px),#0000);mask-image:linear-gradient(#000 calc(100% - 36px),#0000)}
+.moreHint{margin:8px 0 0!important;font-size:12px!important;font-weight:700;line-height:18px!important;text-align:center}
 .empty{padding:22px 12px;border:1px dashed #6c5b8280;border-radius:14px;text-align:center;color:#c9bddc;font-size:14px}
 .note{margin:10px 0 0!important;font-size:12px!important;color:#b6abc9!important;text-align:center}
 .cheer{margin:0 0 12px!important;padding:10px 14px;border-radius:14px;background:#2a2335;border:1px solid #ffe58c80;color:#ffe58c!important;font-weight:800;font-size:16px!important;text-align:center}

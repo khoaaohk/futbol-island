@@ -3,7 +3,7 @@ import {useEffect,useMemo,useRef,useState,type ReactNode} from 'react';
 import {DoneButton} from '../DoneButton';
 import {ownServerIds,type BoardGame} from '@/lib/arcade/leaderboard';
 import {fetchIslandBoards,readLocalBoards,type IslandBoards} from '@/lib/arcade/boardClient';
-import {BOARD_TABS,BoardTable,type BoardTab} from './BoardTable';
+import {BoardTable} from './BoardTable';
 import styles from './Leaderboard.module.css';
 
 /** The modal shell every board screen uses: top layer above the game canvas, Escape and backdrop close it, keys stay inside. */
@@ -19,24 +19,20 @@ export function BoardDialog({label,title,gold,closeLabel,onClose,children,onKeyD
 }
 
 /**
- * The three boards for one game: the island this week, the island all-time (fetched when shown, never polled) and this
- * device. `fresh`: the entry just saved (island row id and/or the device entry's seq), highlighted gold.
+ * Nov 17 2026 (owner: "for the high score only have all time. remove this week and device."): one board per game, the island
+ * ALL-TIME board (up to 20 rows, five in view, the rest scroll), fetched when shown, never polled. No tab row. Scores still save
+ * on the device silently (lib/arcade/boardClient.ts postScore); the device store only feeds the YOU tags here.
+ * `fresh`: the island row just posted, highlighted gold and scrolled into view.
  */
-export function BoardsPanel({game,tab:initialTab='week',island:given,fresh}:{game:BoardGame;tab?:BoardTab;island?:IslandBoards|null;fresh?:{id?:number;seq?:number}}){
- const [tab,setTab]=useState<BoardTab>(initialTab),[island,setIsland]=useState<IslandBoards|null|undefined>(given??undefined);
- useEffect(()=>{setTab(initialTab);},[game,initialTab]);
+export function BoardsPanel({game,island:given,fresh}:{game:BoardGame;island?:IslandBoards|null;fresh?:{id?:number}}){
+ const [island,setIsland]=useState<IslandBoards|null|undefined>(given??undefined);
  useEffect(()=>{if(given){setIsland(given);return;}let live=true;setIsland(undefined);void fetchIslandBoards(game).then(v=>{if(live)setIsland(v);});return()=>{live=false;};},[game,given]);
- const local=useMemo(()=>readLocalBoards(),[game,fresh?.seq,fresh?.id]);// re-read after a save
- const mine=ownServerIds(local,game);
- const deviceRows=(local.boards[game]??[]).map(e=>({key:'d'+e.seq,initials:e.initials,icon:e.icon,score:e.score,day:e.day}));
- const islandRows=(tab==='all'?island?.all:island?.weekly)??[];
+ const mine=useMemo(()=>ownServerIds(readLocalBoards(),game),[game,fresh?.id]);// re-read after a save
  return <>
-  <div className={styles.tabs} data-board-tabs role="tablist" aria-label="Which board">{BOARD_TABS.map(t=><button key={t.id} type="button" role="tab" className={styles.chip} data-board-chip aria-selected={tab===t.id} onClick={()=>setTab(t.id)}>{t.label}</button>)}</div>
-  {tab==='device'?<BoardTable game={game} rows={deviceRows} fresh={fresh?.seq?'d'+fresh.seq:null} empty="No scores on this device yet. Play a game to start the board!"/>
-   :island===undefined?<p className={styles.empty} data-board-empty role="status">Loading the island board…</p>
-   :island===null?<p className={styles.empty} data-board-empty>The island board can’t be reached right now. Your scores still save on this device.</p>
-   :<BoardTable game={game} rows={islandRows.map(r=>({...r,key:'i'+r.id}))} mine={r=>r.id!==undefined&&mine.has(r.id)} fresh={fresh?.id?'i'+fresh.id:null}
-     empty={tab==='week'?'No island scores yet this week. Be the first!':'No island scores yet. Be the first!'}/>}
-  {tab!=='device'&&island&&<p className={styles.note} data-board-note>{tab==='week'?'The week board starts fresh every Monday.':'The best scores ever played on Futbol Island.'} Players show three letters only.</p>}
+  {island===undefined?<p className={styles.empty} data-board-empty role="status">Loading the island board…</p>
+   :island===null?<p className={styles.empty} data-board-empty>The island board can’t be reached right now. Your scores are still saved.</p>
+   :<BoardTable game={game} rows={island.all.map(r=>({...r,key:'i'+r.id}))} mine={r=>r.id!==undefined&&mine.has(r.id)} fresh={fresh?.id?'i'+fresh.id:null}
+     empty="No island scores yet. Be the first!"/>}
+  {island&&<p className={styles.note} data-board-note>The best scores ever played on Futbol Island. Players show three letters only.</p>}
  </>;
 }

@@ -61,7 +61,6 @@
 .skin.skin.skin.skin [data-board-body] p{color:#c3cad6}
 .skin.skin.skin.skin [data-board-body] :is([data-board-learn],[data-board-note],[data-board-small]){color:#aab3c2!important;text-align:left}
 .skin.skin.skin.skin [data-board-games]{gap:2px}
-.skin.skin.skin.skin [data-board-tabs]{gap:2px}
 .skin.skin.skin.skin [data-board-chip]{border:0;border-radius:0;background:#232a36;color:var(--bc-paper);box-shadow:none;font:800 13px/1.1 var(--font-body),Arial,sans-serif}
 .skin.skin.skin.skin [data-board-chip][aria-selected=true]{background:var(--bc-signal);color:var(--bc-ink);box-shadow:none}
 .skin.skin.skin.skin [data-board-rows] li{grid-template-columns:44px 30px 1fr auto;gap:10px;min-height:44px;margin:0 0 2px;padding:0 14px 0 0;border:0;border-radius:0;background:#1e242e;box-shadow:none;animation:none}

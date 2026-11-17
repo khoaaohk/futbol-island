@@ -6,8 +6,8 @@
  *    HMAC-SHA256(secret, game + issue time + random nonce). Nothing is stored.
  *  - submit (POST {token, score, initials, icon, replace?}): checks the token's signature and age (at least the game's
  *    minimum play time, at most SESSION_MAX_MS), the game's score ceiling and scoring rate, the three letters (A–Z, not
- *    blocked) and the picture id. One post per token (the nonce is unique in the table). Only scores that make a top 10 are
- *    kept. Per-IP and site-wide hourly/daily caps (a day-salted IP hash, never the IP).
+ *    blocked) and the picture id. One post per token (the nonce is unique in the table). Only scores that make a top 20 (10 before
+ *    supabase/migrations/20261122_board_top20.sql) are kept. Per-IP and site-wide hourly/daily caps (a day-salted IP hash, never the IP).
  *  - top    (GET ?game=): both island boards for one game. The same for everyone, so it is cached briefly at the edge.
  *
  * The secret is LEADERBOARD_SECRET, or derived from SAVE_CODE_PEPPER (HMAC, so the pepper itself is never used as a key here).
@@ -67,7 +67,7 @@ export async function handleBoard(action:string,req:{body?:string|null;query?:UR
   if(action==='top'){
    const game=req.query?.get('game');if(!isBoardGame(game))return {status:400,body:{ok:false}};
    const week=weekOf(now),t=await store.top(game,week);
-   return {status:200,body:{ok:true,game,week,all:t.all,weekly:t.week},cache:TOP_CACHE};
+   return {status:200,body:{ok:true,game,week,size:t.size,all:t.all,weekly:t.week},cache:TOP_CACHE};
   }
   if(!sameOrigin(req.headers))return {status:403,body:{ok:false}};
   const body=parse(req.body);if(!body)return {status:400,body:{ok:false}};
@@ -91,7 +91,7 @@ export async function handleBoard(action:string,req:{body?:string|null;query?:UR
   const res=await store.submit({game,score:body.score,initials,icon,nonce:session.nonce,claimHash:sha(claim),replace,day,week});
   if(!res.ok)return {status:200,body:{ok:false,reason:res.reason}};
   const t=await store.top(game,week);
-  return {status:200,body:{ok:true,id:res.id,claim,rank:{all:res.rankAll,week:res.rankWeek},game,week,all:t.all,weekly:t.week}};
+  return {status:200,body:{ok:true,id:res.id,claim,rank:{all:res.rankAll,week:res.rankWeek},game,week,size:t.size,all:t.all,weekly:t.week}};
  }catch{
   // No error detail leaves (or is logged).
   return {status:503,body:{ok:false,unavailable:true}};

@@ -13,7 +13,7 @@
  */
 import {randomBytes} from 'crypto';
 import * as fs from 'fs';
-import {BOARD_SIZE,compareRows,rankFor,type BoardGame,type BoardRow} from './leaderboard';
+import {BOARD_SIZE,ISLAND_BOARD_SIZE,compareRows,rankFor,type BoardGame,type BoardRow} from './leaderboard';
 
 /** Posts per IP bucket per hour (a class behind one school IP still fits) and site-wide per day. */
 export const BOARD_LIMITS={postPerIp:30,postPerDay:5000} as const;
@@ -22,13 +22,14 @@ export const BOARD_KEEP_ALL=50;
 
 export type SubmitInput={game:BoardGame;score:number;initials:string;icon:string;nonce:string;claimHash:string|null;replace:{id:number;claimHash:string}|null;day:string;week:string};
 export type SubmitResult={ok:true;id:number;rankAll:number|null;rankWeek:number|null}|{ok:false;reason:'used'|'not-top'};
-export type TopResult={all:BoardRow[];week:BoardRow[]};
+/** `size`: how many rows this store's boards hold (ISLAND_BOARD_SIZE in memory; Supabase: 20 once 20261122_board_top20.sql runs, else 10). */
+export type TopResult={all:BoardRow[];week:BoardRow[];size:number};
 export interface BoardStore{
  kind:'supabase'|'memory';
  schemaVersion():Promise<number>;
  salt(day:string):Promise<string>;
  hit(bucket:string,limit:number,minutes:number,now:Date):Promise<boolean>;
- /** Inserts only if the score makes the all-time or this week's top BOARD_SIZE (else not-top); a nonce posts once. */
+ /** Inserts only if the score makes the all-time or this week's top `size` (else not-top); a nonce posts once. */
  submit(s:SubmitInput):Promise<SubmitResult>;
  top(game:BoardGame,week:string):Promise<TopResult>;
  purge(week:string):Promise<{rows:number}>;
@@ -54,7 +55,8 @@ export function createMemoryBoardStore(file?:string):BoardStore&{readonly data:M
  const load=()=>{if(file&&fs.existsSync(file)){try{data={rows:[],nextId:1,throttle:{},salts:{},...JSON.parse(fs.readFileSync(file,'utf8'))};}catch{}}};
  const save=()=>{if(file)fs.writeFileSync(file,JSON.stringify(data));};
  load();
- const top=(game:BoardGame,week:string)=>{const g=data.rows.filter(r=>r.game===game&&!r.hidden);return {all:ordered(g).slice(0,BOARD_SIZE),week:ordered(g.filter(r=>r.week===week)).slice(0,BOARD_SIZE)};};
+ const N=ISLAND_BOARD_SIZE;
+ const top=(game:BoardGame,week:string)=>{const g=data.rows.filter(r=>r.game===game&&!r.hidden);return {all:ordered(g).slice(0,N),week:ordered(g.filter(r=>r.week===week)).slice(0,N)};};
  return {
   kind:'memory',
   get data(){return data;},
@@ -67,12 +69,12 @@ export function createMemoryBoardStore(file?:string):BoardStore&{readonly data:M
    const old=s.replace?data.rows.find(r=>r.id===s.replace!.id&&r.game===s.game&&r.claimHash===s.replace!.claimHash&&r.score<=s.score&&!r.hidden):undefined;
    const rest=data.rows.filter(r=>r.game===s.game&&r!==old&&!r.hidden);
    const rankAll=rankFor(ordered(rest),s.score),rankWeek=rankFor(ordered(rest.filter(r=>r.week===s.week)),s.score);
-   if(rankAll>BOARD_SIZE&&rankWeek>BOARD_SIZE)return {ok:false,reason:'not-top'};
+   if(rankAll>N&&rankWeek>N)return {ok:false,reason:'not-top'};
    if(old)data.rows=data.rows.filter(r=>r!==old);
    const id=data.nextId++;data.rows.push({id,game:s.game,score:s.score,initials:s.initials,icon:s.icon,day:s.day,week:s.week,nonce:s.nonce,claimHash:s.claimHash});save();
-   return {ok:true,id,rankAll:rankAll<=BOARD_SIZE?rankAll:null,rankWeek:rankWeek<=BOARD_SIZE?rankWeek:null};
+   return {ok:true,id,rankAll:rankAll<=N?rankAll:null,rankWeek:rankWeek<=N?rankWeek:null};
   },
-  async top(game,week){load();const t=top(game,week);return {all:t.all.map(view),week:t.week.map(view)};},
+  async top(game,week){load();const t=top(game,week);return {all:t.all.map(view),week:t.week.map(view),size:N};},
   async purge(week){load();const keep=new Set<number>(),before=data.rows.length,last=weeksBefore(week,1);
    for(const g of new Set(data.rows.map(r=>r.game)))for(const r of ordered(data.rows.filter(x=>x.game===g)).slice(0,BOARD_KEEP_ALL))keep.add(r.id);
    data.rows=data.rows.filter(r=>keep.has(r.id)||r.week>=last);
@@ -103,7 +105,9 @@ export function createSupabaseBoardStore(url:string,serviceKey:string,fetchImpl:
   async hit(bucket,limit,minutes){return (await rpc<boolean>('save_hit',{p_bucket:bucket,p_limit:limit,p_minutes:minutes}))===true;},
   async submit(s){const r=await rpc<{ok:boolean;id?:number;rank_all?:number|null;rank_week?:number|null;reason?:string}>('board_submit',{p_game:s.game,p_score:s.score,p_initials:s.initials,p_icon:s.icon,p_nonce:s.nonce,p_claim_hash:s.claimHash,p_replace_id:s.replace?.id??null,p_replace_claim_hash:s.replace?.claimHash??null,p_day:s.day,p_week:s.week});
    return r?.ok?{ok:true,id:Number(r.id),rankAll:r.rank_all??null,rankWeek:r.rank_week??null}:{ok:false,reason:r?.reason==='used'?'used':'not-top'};},
-  async top(game,week){const r=await rpc<{all:unknown;week:unknown}>('board_top',{p_game:game,p_week:week});return {all:rows(r?.all),week:rows(r?.week)};},
+  async top(game,week){const r=await rpc<{all:unknown;week:unknown;size?:unknown}>('board_top',{p_game:game,p_week:week});
+   // Nov 17 2026: board_top answers `size` (20) once 20261122_board_top20.sql runs; before that it has none and holds 10.
+   const size=Math.min(ISLAND_BOARD_SIZE,Math.max(1,Math.trunc(Number(r?.size))||BOARD_SIZE));return {all:rows(r?.all).slice(0,size),week:rows(r?.week).slice(0,size),size};},
   async purge(week){const r=await rpc<{rows:number}>('board_purge',{p_week:week});return {rows:Number(r?.rows)||0};},
   async adminList(game,limit){
    try{const v=await rpc<unknown>('board_admin_list',{p_game:game,p_limit:limit});
