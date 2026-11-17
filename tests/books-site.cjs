@@ -79,7 +79,7 @@ for(const id of B.BUILT_BOOKS){const bk=B.bookBySlug(id),h=pageHtml(id);
 const open=read('components/site/books/OpenBook.tsx'),parts=read('components/site/books/BookParts.tsx');
 ok(!/\b(ChapterArt|BookReader)\b/.test(parts+open)&&!['ChapterArt.tsx','BookReader.tsx','reader.module.css'].some(f=>fs.existsSync(path.join(root,'components/site/books',f))),'the 2D reader and drawn pictures are gone; BookParts shows the spread pictures');
 const page=read('app/(site)/books/[slug]/page.tsx');
-ok(/import\('\.\/GameBookReader'\)/.test(open)&&!/^import[^\n]*(BookReader|PlayerPopUpBook)/m.test(open),'OpenBook imports the game reader only on tap');
+ok(/retryImport\(\(\)=>import\('\.\/GameBookReader'\)\)/.test(open)&&!/^import[^\n]*(BookReader|PlayerPopUpBook)/m.test(open),'OpenBook imports the game reader only on tap');
 const gameReader=read('components/site/books/GameBookReader.tsx');ok(/PlayerPopUpBook/.test(gameReader)&&/\bsite\b/.test(gameReader),'the website opens the game pop-up book in site mode');
 for(const [n2,src] of [['OpenBook',open],['BookParts',parts],['page',page]])
  ok(!/from '(three|@\/lib\/books\/(library|registry|popup|bookAudio|useBookNarration)[^']*|@\/components\/Player[^']*)'/.test(src),`${n2}: no three.js, registry or game reader`);

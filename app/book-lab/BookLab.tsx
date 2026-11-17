@@ -5,10 +5,11 @@
  * the picture fills the window. scripts/capture-book-spreads.cjs drives it to make public/books/spreads/<book>/<chapter>.webp.
  */
 import dynamic from 'next/dynamic';
+import {retryImport} from '@/lib/retryImport';
 import {useEffect,useState} from 'react';
 import {BOOK_PROGRESS_KEY} from '@/lib/books/messi';
 import type {PlayerBookId} from '@/lib/books/catalog';
-const Reader=dynamic(()=>import('@/components/PlayerPopUpBook'),{ssr:false});
+const Reader=dynamic(()=>retryImport(()=>import('@/components/PlayerPopUpBook')),{ssr:false});
 const SHOT=`[data-player-book]{--bottom:0px!important}[data-chapter-line]{display:none!important}
 [data-player-book] header,[data-player-book] nav,[data-player-book] nav *,[data-story-playback-bar]{opacity:0!important}`;
 export default function BookLab(){

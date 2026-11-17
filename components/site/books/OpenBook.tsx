@@ -1,6 +1,7 @@
 'use client';
 import {useRef,useState,type ComponentType} from 'react';
 import type {ReaderBook} from '@/lib/site/books';
+import {retryImport} from '@/lib/retryImport';
 import s from './books.module.css';
 /**
  * "Open the pop-up book" (Nov 17 2026): a link to the story on the page (it works with no script) that, on tap, fetches the
@@ -15,7 +16,7 @@ export default function OpenBook({book,label='Open the pop-up book'}:{book:Reade
   if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
   e.preventDefault();if(Reader){setOpen(true);return;}
   setBusy(true);
-  import('./GameBookReader').then(m=>{setReader(()=>m.default);setOpen(true);}).catch(()=>{location.hash='story';}).finally(()=>setBusy(false));
+  retryImport(()=>import('./GameBookReader')).then(m=>{setReader(()=>m.default);setOpen(true);}).catch(()=>{location.hash='story';}).finally(()=>setBusy(false));
  };
  return <>
   <a ref={btn} href="#story" className={s.openBtn} onClick={go} aria-haspopup="dialog" aria-busy={busy||undefined} data-open-book="">

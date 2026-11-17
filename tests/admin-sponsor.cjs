@@ -52,7 +52,7 @@ await ok('call sites: where the events happen, fixed keys only',()=>{
  has('components/CardFilmPlayer.tsx',/countFilmOpen\(\);return enterActivity\('films'\)/,'film open');
  has('components/CardFilmPlayer.tsx',/if\(!ended\)\{ended=true;countFilmEnd\(\);\}/,'film end once');
  has('components/PlayerPopUpBook.tsx',/countBookOpen\(bookId\);const stopClock=startReadClock\(\)/,'book open + clock');
- has('components/PlayerPopUpBook.tsx',/if\(next===story\.pages\.length-1&&!endCounted\.current\)\{endCounted\.current=true;countBookEnd\(bookId\);\}/,'last page once');
+ has('components/PlayerPopUpBook.tsx',/if\(next===story\.pages\.length-1&&!endCounted\.current(&&!site)?\)\{endCounted\.current=true;countBookEnd\(bookId\);\}/,'last page once');
  has('components/VendingMachine.tsx',/if\(item\.storyId\)countBookBuy\(item\.storyId\);/,'the book key');
  const ev=read('lib/analytics/sponsorEvents.ts');
  assert(!/^import(?! type)[^\n]*(lib\/shop|books\/catalog|cardCollection|cardTiers)/m.test(ev)&&!/^import[^\n]*'\.\.\/(shop|books|town)/m.test(ev),'the event helpers read nothing about the game');
