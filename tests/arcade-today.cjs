@@ -72,10 +72,11 @@ const {localPlayDay}=require('../lib/town/dailyPlay.ts');
  assert.deepEqual(T.todayPlayButton('runner',{done:false,runnerOpen:true}),{label:'Play',today:true},'unlocked: Play opens the Daily Run');
  assert.deepEqual(T.todayPlayButton('runner',{done:true,runnerOpen:true}),{label:'Play again',today:true});
  assert.deepEqual(T.todayPlayButton('pinball',{done:false,runnerOpen:false}),{label:'Play',today:true},'the lock is the Breakaway row only');
- {const panelSrc=fs.readFileSync('components/arcade/ArcadeTodayPanel.tsx','utf8');assert(/if\(btn\.today\)requestTodayLaunch\(c\.cabinet\);onPlay\(cab\.id\)/.test(panelSrc),'only a today button requests the today launch');
-  assert(/>\{btn\.label\}<\/button>/.test(panelSrc),'the button shows the helper label');
-  assert(/\.play\{[^}]*font:inherit[^}]*font-weight:800/.test(fs.readFileSync('components/arcade/ArcadeTodayPanel.module.css','utf8')),'Play buttons: the UI sans at 800, never the brush');}
- const card=fs.readFileSync('components/arcade/ArcadeTodayPanel.tsx','utf8');assert(!/\b(streak|missed|lose|lost)\b/i.test(card),'no streak or missed-day copy');
+ // Nov 17 2026 (owner: "remove the today slideout in arcade. only have scores and exit btns now"): the room has no Today button or
+ // panel; the daily challenges still run inside the games (and from the Welcome back note's ?today=1 link).
+ {const room=fs.readFileSync('components/ArcadeRoom.tsx','utf8');assert(!/data-arcade-today|ArcadeTodayPanel|>Today</.test(room),'no Today button or panel in the room');
+  assert(/data-arcade-scores/.test(room)&&/label="Exit"/.test(room),'the room header keeps Scores and Exit');assert(!fs.existsSync('components/arcade/ArcadeTodayPanel.tsx'));
+  assert(/q\.get\('today'\)==='1'/.test(room),'?today=1 still opens the daily challenge in the game');}
  // Old days are pruned to 14; the save sanitises junk.
  let v=T.emptyToday();for(let i=1;i<=20;i++)v=T.markTodayDone(v,`2026-10-${String(i).padStart(2,'0')}`,'runner').save;assert.equal(Object.keys(v.done).length,14);
  assert.deepEqual(T.sanitizeToday({done:{'bad':['runner'],'2026-11-10':['runner','nope']},pennants:['x','2026-11-09'],trophies:{'arcade:pinball':5,'other':1}}),{v:1,done:{'2026-11-10':['runner']},pennants:['2026-11-09'],trophies:{'arcade:pinball':5}});}

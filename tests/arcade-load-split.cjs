@@ -64,7 +64,7 @@ group('heavy panels stay lazy',()=>{
   assert(/const HighScoreEntry=dynamic\(\(\)=>(?:retryImport\(\(\)=>)?import\('\.\.\/arcade\/HighScoreEntry'\)/.test(src),`${g}: high-score entry is lazy`);
   assert(!graph(`components/games/${g}.tsx`).files.has('components/arcade/HighScoreEntry.tsx'),`${g}: high-score entry is static`);}
  const room=read('components/ArcadeRoom.tsx');
- for(const p of ['./arcade/ArcadeBoards','./arcade/ArcadeTodayPanel','./GashaponPanel'])assert(room.includes(`dynamic(()=>retryImport(()=>import('${p}'))`),`${p} is lazy`);
+ for(const p of ['./arcade/ArcadeBoards','./GashaponPanel'])assert(room.includes(`dynamic(()=>retryImport(()=>import('${p}'))`),`${p} is lazy`);
 });
 
 console.log(`arcade-load-split: ${n} groups passed`);
