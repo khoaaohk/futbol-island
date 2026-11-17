@@ -1,43 +1,43 @@
 {
  "schemaVersion": 1,
  "site": "https://futbolisland.app/",
- "asOf": "2026-11-16",
- "gscDataThrough": "2026-11-14",
+ "asOf": "2026-11-17",
+ "gscDataThrough": "2026-11-15",
  "windows": {
   "d7": {
-   "clicks": 29,
-   "impressions": 826,
-   "ctr": 0.035,
-   "position": 30.4,
+   "clicks": 35,
+   "impressions": 1189,
+   "ctr": 0.029,
+   "position": 32.1,
    "prev": null
   },
   "d28": {
-   "clicks": 29,
-   "impressions": 826,
-   "ctr": 0.035,
-   "position": 30.4,
-   "queries": 170,
-   "pages": 112,
+   "clicks": 35,
+   "impressions": 1189,
+   "ctr": 0.029,
+   "position": 32.1,
+   "queries": 325,
+   "pages": 144,
    "prev": null
   },
   "h24": {
-   "clicks": 4,
-   "impressions": 322,
-   "ctr": 0.012,
-   "position": 36.6,
+   "clicks": 2,
+   "impressions": 217,
+   "ctr": 0.009,
+   "position": 27.1,
    "prev": null
   },
   "d1": {
-   "day": "2026-11-14",
-   "clicks": 4,
-   "impressions": 291,
-   "ctr": 0.014,
-   "position": 34.3,
+   "day": "2026-11-15",
+   "clicks": 6,
+   "impressions": 363,
+   "ctr": 0.017,
+   "position": 35.9,
    "prev": {
-    "clicks": 5,
-    "impressions": 278,
-    "ctr": 0.018,
-    "position": 39.1
+    "clicks": 4,
+    "impressions": 291,
+    "ctr": 0.014,
+    "position": 34.3
    }
   }
  },
@@ -71,9 +71,20 @@
    "day": "2026-11-14",
    "clicks": 4,
    "impressions": 291
+  },
+  {
+   "day": "2026-11-15",
+   "clicks": 6,
+   "impressions": 363
   }
  ],
  "topQueries": [
+  {
+   "query": "futbol island",
+   "clicks": 3,
+   "impressions": 9,
+   "position": 3.8
+  },
   {
    "query": "futbal island",
    "clicks": 1,
@@ -81,16 +92,40 @@
    "position": 2.0
   },
   {
-   "query": "futbol island",
-   "clicks": 1,
-   "impressions": 3,
-   "position": 3.7
-  },
-  {
    "query": "2v1",
    "clicks": null,
-   "impressions": 18,
+   "impressions": 23,
    "position": 8.4
+  },
+  {
+   "query": "yellow card soccer",
+   "clicks": null,
+   "impressions": 11,
+   "position": 60.5
+  },
+  {
+   "query": "yellow card in soccer",
+   "clicks": null,
+   "impressions": 9,
+   "position": 57.1
+  },
+  {
+   "query": "what is a hat trick in soccer",
+   "clicks": null,
+   "impressions": 8,
+   "position": 73.8
+  },
+  {
+   "query": "football tennis",
+   "clicks": null,
+   "impressions": 7,
+   "position": 16.9
+  },
+  {
+   "query": "futsal scorekeeping",
+   "clicks": null,
+   "impressions": 7,
+   "position": 85.0
   },
   {
    "query": "players press",
@@ -99,16 +134,28 @@
    "position": 4.3
   },
   {
-   "query": "yellow card in soccer",
-   "clicks": null,
-   "impressions": 6,
-   "position": 60.5
-  },
-  {
    "query": "through ball",
    "clicks": null,
+   "impressions": 6,
+   "position": 15.0
+  },
+  {
+   "query": "what does a yellow card mean in soccer",
+   "clicks": null,
+   "impressions": 6,
+   "position": 65.0
+  },
+  {
+   "query": "2v1 meaning",
+   "clicks": null,
    "impressions": 5,
-   "position": 15.8
+   "position": 9.2
+  },
+  {
+   "query": "first football match under floodlights",
+   "clicks": null,
+   "impressions": 5,
+   "position": 52.2
   },
   {
    "query": "soccer positions by number",
@@ -117,16 +164,28 @@
    "position": 55.2
   },
   {
-   "query": "what does a yellow card mean in soccer",
+   "query": "yellow card and red card in football",
+   "clicks": null,
+   "impressions": 5,
+   "position": 59.8
+  },
+  {
+   "query": "what is a yellow card in soccer",
+   "clicks": null,
+   "impressions": 5,
+   "position": 64.4
+  },
+  {
+   "query": "soccer terminology",
    "clicks": null,
    "impressions": 5,
    "position": 68.0
   },
   {
-   "query": "what is a hat trick in soccer",
+   "query": "futsal rules",
    "clicks": null,
    "impressions": 5,
-   "position": 75.4
+   "position": 71.8
   },
   {
    "query": "hat trick",
@@ -135,16 +194,28 @@
    "position": 83.6
   },
   {
+   "query": "yellow card in football",
+   "clicks": null,
+   "impressions": 5,
+   "position": 84.8
+  },
+  {
    "query": "football formation creator 7 a side",
    "clicks": null,
    "impressions": 4,
    "position": 4.2
   },
   {
-   "query": "2v1 meaning",
+   "query": "futsal rules vs soccer rules",
    "clicks": null,
    "impressions": 4,
-   "position": 9.2
+   "position": 7.0
+  },
+  {
+   "query": "futbol tennis",
+   "clicks": null,
+   "impressions": 4,
+   "position": 8.0
   },
   {
    "query": "yellow and red card soccer",
@@ -153,198 +224,192 @@
    "position": 40.0
   },
   {
-   "query": "first football match under floodlights",
+   "query": "soccer terms",
    "clicks": null,
    "impressions": 4,
-   "position": 52.2
-  },
-  {
-   "query": "what is a yellow card in soccer",
-   "clicks": null,
-   "impressions": 4,
-   "position": 59.8
+   "position": 73.0
   }
  ],
  "topPages": [
   {
+   "path": "/",
+   "clicks": 32,
+   "impressions": 61,
+   "position": 2.4
+  },
+  {
+   "path": "/games/soccer-tennis-game",
+   "clicks": 2,
+   "impressions": 33,
+   "position": 7.8
+  },
+  {
+   "path": "/games",
+   "clicks": 1,
+   "impressions": 23,
+   "position": 7.1
+  },
+  {
+   "path": "/learn/soccer-drills/first-touch-gates",
+   "clicks": 1,
+   "impressions": 4,
+   "position": 4.5
+  },
+  {
    "path": "/learn/soccer-rules/yellow-and-red-cards",
    "clicks": null,
-   "impressions": 67,
-   "position": 51.4
+   "impressions": 157,
+   "position": 51.8
   },
   {
    "path": "/tools/soccer-playing-time-calculator",
    "clicks": null,
-   "impressions": 45,
-   "position": 12.6
-  },
-  {
-   "path": "/",
-   "clicks": null,
-   "impressions": 37,
-   "position": 2.1
-  },
-  {
-   "path": "/learn/soccer-positions",
-   "clicks": null,
-   "impressions": 32,
-   "position": 23.0
-  },
-  {
-   "path": "/learn/soccer-terms/two-v-one",
-   "clicks": null,
-   "impressions": 23,
-   "position": 7.9
-  },
-  {
-   "path": "/learn/soccer-rules/futsal-rules",
-   "clicks": null,
-   "impressions": 22,
-   "position": 31.5
+   "impressions": 84,
+   "position": 19.5
   },
   {
    "path": "/learn/soccer-rules/back-pass-rule",
    "clicks": null,
-   "impressions": 21,
-   "position": 48.8
+   "impressions": 63,
+   "position": 45.9
   },
   {
    "path": "/learn/soccer-rules/heading-rules-for-kids",
    "clicks": null,
-   "impressions": 20,
-   "position": 8.4
+   "impressions": 60,
+   "position": 10.1
   },
   {
-   "path": "/learn/soccer-terms/cutback",
+   "path": "/learn/soccer-positions",
    "clicks": null,
-   "impressions": 17,
-   "position": 7.0
+   "impressions": 51,
+   "position": 21.3
   },
   {
-   "path": "/learn/soccer-rules/fouls-and-free-kicks",
+   "path": "/learn/soccer-terms/two-v-one",
    "clicks": null,
-   "impressions": 17,
-   "position": 29.5
+   "impressions": 41,
+   "position": 8.1
   },
   {
-   "path": "/games/soccer-tennis-game",
+   "path": "/learn/soccer-rules/futsal-rules",
    "clicks": null,
-   "impressions": 15,
-   "position": 5.7
+   "impressions": 41,
+   "position": 46.3
+  },
+  {
+   "path": "/learn/soccer-terms/hat-trick",
+   "clicks": null,
+   "impressions": 36,
+   "position": 73.6
   },
   {
    "path": "/learn/soccer-terms/through-ball",
    "clicks": null,
-   "impressions": 15,
-   "position": 17.7
+   "impressions": 32,
+   "position": 14.1
+  },
+  {
+   "path": "/learn/soccer-rules/fouls-and-free-kicks",
+   "clicks": null,
+   "impressions": 31,
+   "position": 25.3
+  },
+  {
+   "path": "/learn/soccer-terms",
+   "clicks": null,
+   "impressions": 26,
+   "position": 49.1
   },
   {
    "path": "/play",
    "clicks": null,
-   "impressions": 13,
+   "impressions": 25,
    "position": 3.2
   },
   {
    "path": "/learn/soccer-rules/throw-in",
    "clicks": null,
-   "impressions": 13,
-   "position": 75.6
+   "impressions": 22,
+   "position": 73.7
   },
   {
-   "path": "/learn/lessons",
+   "path": "/learn/soccer-terms/cutback",
    "clicks": null,
-   "impressions": 11,
-   "position": 4.5
-  },
-  {
-   "path": "/learn/soccer-terms",
-   "clicks": null,
-   "impressions": 9,
-   "position": 34.8
+   "impressions": 21,
+   "position": 6.7
   },
   {
    "path": "/learn/soccer-rules/handball",
    "clicks": null,
-   "impressions": 9,
-   "position": 46.1
-  },
-  {
-   "path": "/games",
-   "clicks": null,
-   "impressions": 8,
-   "position": 2.8
+   "impressions": 21,
+   "position": 35.0
   },
   {
    "path": "/tools/11v11-lineup-builder",
    "clicks": null,
-   "impressions": 8,
-   "position": 50.4
-  },
-  {
-   "path": "/learn/soccer-terms/give-and-go",
-   "clicks": null,
-   "impressions": 7,
-   "position": 11.0
-  },
-  {
-   "path": "/exhibits/copa-america-1916",
-   "clicks": null,
-   "impressions": 7,
-   "position": 17.4
-  },
-  {
-   "path": "/learn/soccer-positions/center-back",
-   "clicks": null,
-   "impressions": 6,
-   "position": 32.5
-  },
-  {
-   "path": "/learn/soccer-positions/defensive-midfielder",
-   "clicks": null,
-   "impressions": 6,
-   "position": 42.3
-  },
-  {
-   "path": "/learn/soccer-rules/substitutions-and-game-length",
-   "clicks": null,
-   "impressions": 6,
-   "position": 59.5
-  },
-  {
-   "path": "/learn/soccer-terms/hat-trick",
-   "clicks": null,
-   "impressions": 6,
-   "position": 64.2
-  },
-  {
-   "path": "/learn/soccer-rules/penalty-kick",
-   "clicks": null,
-   "impressions": 5,
-   "position": 5.4
-  },
-  {
-   "path": "/learn/soccer-formations",
-   "clicks": null,
-   "impressions": 5,
-   "position": 38.8
-  },
-  {
-   "path": "/tools",
-   "clicks": null,
-   "impressions": 5,
-   "position": 51.4
-  },
-  {
-   "path": "/learn/soccer-terms/nutmeg",
-   "clicks": null,
-   "impressions": 4,
-   "position": 2.5
+   "impressions": 19,
+   "position": 53.4
   },
   {
    "path": "/about",
    "clicks": null,
-   "impressions": 4,
-   "position": 5.0
+   "impressions": 18,
+   "position": 5.1
+  },
+  {
+   "path": "/learn/soccer-positions/defensive-midfielder",
+   "clicks": null,
+   "impressions": 17,
+   "position": 44.1
+  },
+  {
+   "path": "/learn/lessons",
+   "clicks": null,
+   "impressions": 13,
+   "position": 5.3
+  },
+  {
+   "path": "/learn/soccer-terms/give-and-go",
+   "clicks": null,
+   "impressions": 12,
+   "position": 8.6
+  },
+  {
+   "path": "/learn/soccer-rules/offside",
+   "clicks": null,
+   "impressions": 12,
+   "position": 34.8
+  },
+  {
+   "path": "/learn/soccer-rules/penalty-kick",
+   "clicks": null,
+   "impressions": 12,
+   "position": 38.8
+  },
+  {
+   "path": "/learn/soccer-positions/center-back",
+   "clicks": null,
+   "impressions": 12,
+   "position": 49.3
+  },
+  {
+   "path": "/learn/soccer-rules/substitutions-and-game-length",
+   "clicks": null,
+   "impressions": 12,
+   "position": 55.1
+  },
+  {
+   "path": "/learn/soccer-formations/7v7-2-3-1",
+   "clicks": null,
+   "impressions": 11,
+   "position": 18.0
+  },
+  {
+   "path": "/learn/soccer-drills/u6",
+   "clicks": null,
+   "impressions": 11,
+   "position": 56.4
   }
  ],
  "index": {
@@ -397,9 +462,15 @@
   },
   {
    "path": "/sitemap-images.xml",
-   "lastRead": "2026-11-12",
+   "lastRead": "2026-11-17",
    "status": "Success",
-   "discovered": 788
+   "discovered": 809
+  },
+  {
+   "path": "/sitemap-video.xml",
+   "lastRead": "2026-11-16",
+   "status": "Success",
+   "discovered": 11
   }
  ],
  "workLog": [
@@ -496,6 +567,17 @@
    ],
    "alreadyIndexed": 0,
    "note": "Video sitemap submitted. Re-crawl for the rebuilt cards page and the coach-app playing-time page; Scan Trainer EN+ES after its release."
+  },
+  {
+   "day": "2026-11-17",
+   "requested": [
+    "/learn/soccer-rules/yellow-and-red-cards",
+    "/learn/soccer-positions/numbers",
+    "/learn/soccer-rules/back-pass-rule",
+    "/learn/soccer-rules/heading-rules-for-kids"
+   ],
+   "alreadyIndexed": 0,
+   "note": "After the SEO-titles release; quota reached on /learn/soccer-terms/free-kick-wall (twice). Practice Problems Validate fix started. Video sitemap read: 20 videos found."
   }
  ],
  "history": [
@@ -521,6 +603,14 @@
    "impressions": 826,
    "ctr": 0.035,
    "position": 30.4,
+   "indexed": 314
+  },
+  {
+   "day": "2026-11-17",
+   "clicks": 35,
+   "impressions": 1189,
+   "ctr": 0.029,
+   "position": 32.1,
    "indexed": 314
   }
  ]
