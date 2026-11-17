@@ -11,13 +11,16 @@ import {SITE_UPDATED} from '@/lib/site/updated';
 import {checkedOn} from '@/lib/site/checked';
 import {CheckedLine,PlayEnd} from '@/lib/site/GuideParts';
 import {PLAY_PACKS_HREF} from '@/lib/site/playLinks';
+import {CardTileGroup,CareerTimeline,Chips,Hero,StatStrip,type Stat} from '@/components/site/cards/CardParts';
 import styles from '../../site.module.css';
 
 /** One player (or coach) card as plain text: position, country, blurb, strengths and career. No photo (see lib/site/cards.ts).
  *  Nov 10 2026 (SEO): + the iconic play and the idea it teaches (when the player has a film), the lesson for the card's position
  *  (the lesson's own concept text), data-driven links (lib/site/related.ts) and the page's own share picture (og.png/route.tsx).
  *  Nov 14 2026 (SEO): cards with notes (lib/site/cardNotes.ts) add "Why they matter", "Learn from them" (a drill link) and
- *  "Did you know?" (checked facts, plain-text credit), and describe themselves as an Article about the Person. */
+ *  "Did you know?" (checked facts, plain-text credit), and describe themselves as an Article about the Person.
+ *  Nov 17 2026 (visual pass, AUDIT.md #2): the share picture as the hero <img>, the facts as icon tiles, strengths as chips, clubs
+ *  as a timeline and the related cards as small card faces (components/site/cards/CardParts.tsx). Same words, same links. */
 export const dynamic='force-static';
 export const dynamicParams=false;
 export const generateStaticParams=()=>SITE_CARDS.map(c=>({number:String(c.number)}));
@@ -31,6 +34,8 @@ export default function CardPage({params}:{params:{number:string}}){
  const c=card(params);if(!c)notFound();
  const crumbs=[{name:'Home',path:'/'},{name:'Cards',path:'/cards'},{name:c.displayName,path:cardPath(c.number)}];
  const lesson=roleLesson(c),related=cardRelated(c),note=cardNote(c),drill=note&&cardNoteDrill(note);
+ const stats:Stat[]=[{icon:'position',label:'Position',value:c.roleLabel},...(c.country?[{icon:'country' as const,label:'Country',value:c.country}]:[]),
+  ...(c.national?[{icon:'national' as const,label:'National team',value:c.national}]:[]),{icon:'binder',label:'In the binder',value:`${eraWord(c)}, card #${c.number} of ${SITE_CARDS.length}`}];
  const person={'@type':'Person',name:c.displayName,jobTitle:c.coach?'Football coach':`Football ${c.futsal?'(futsal) ':''}player · ${c.roleLabel}`,...(c.country?{nationality:{'@type':'Country',name:c.country}}:{})};
  return <>
   <JsonLd data={note?cardArticleLd({c,n:note,path:cardPath(c.number),description:c.blurb||note.why,image:ogPath(cardPath(c.number)),modified:SITE_UPDATED.cards,person})
@@ -42,16 +47,12 @@ export default function CardPage({params}:{params:{number:string}}){
    <h1 className={styles.title}>{c.displayName}</h1>
    {c.blurb&&<p className={styles.lead}>{c.blurb}</p>}
   </header>
+  <Hero src={ogPath(cardPath(c.number))} alt={`${c.displayName}, Futbol Island card #${c.number}: ${c.roleLabel}${c.country?`, ${c.country}`:''}`}/>
   <section className={styles.card} aria-labelledby="facts">
    <span className={styles.label}>Real football fact</span>
    <h2 className={styles.h2} id="facts">On the card</h2>
-   <ul className={styles.bare}>
-    <li><b>Position:</b> {c.roleLabel}</li>
-    {c.country&&<li><b>Country:</b> {c.country}</li>}
-    {c.national&&<li><b>National team:</b> {c.national}</li>}
-    <li><b>In the binder:</b> {eraWord(c)}, card #{c.number} of {SITE_CARDS.length}</li>
-   </ul>
-   {c.strengths.length>0&&<><h3 className={styles.h3}>Strengths</h3><ul>{c.strengths.map(s=><li key={s}>{s}</li>)}</ul></>}
+   <StatStrip stats={stats}/>
+   {c.strengths.length>0&&<><h3 className={styles.h3}>Strengths</h3><Chips items={c.strengths}/></>}
   </section>
   {note&&<section className={styles.section} aria-labelledby="why" data-card-notes>
    <h2 className={styles.h2} id="why">Why {c.coach?'this coach matters':'they matter'}</h2>
@@ -59,7 +60,7 @@ export default function CardPage({params}:{params:{number:string}}){
   </section>}
   {c.career.length>0&&<section className={styles.card} aria-labelledby="career">
    <h2 className={styles.h2} id="career">{c.coach?'Coaching career':'Clubs'}</h2>
-   <ul>{c.career.map(s=><li key={s}>{s}</li>)}</ul>
+   <CareerTimeline lines={c.career}/>
   </section>}
   {c.play&&<section className={styles.card} aria-labelledby="play">
    <h2 className={styles.h2} id="play">Iconic play: {c.play.title}</h2>
@@ -84,7 +85,7 @@ export default function CardPage({params}:{params:{number:string}}){
    <p>{lesson.concept}</p>
    <p><a href={lessonPath(lesson.id)}>Read the {lesson.formatLabel} lesson: {lesson.title}</a></p>
   </section>
-  <RelatedLinks related={{...related,read:related.read.slice(1)}} heading="More cards like this" readHeading="Keep reading"/>
+  <RelatedLinks related={{...related,read:related.read.slice(1)}} heading="More cards like this" readHeading="Keep reading" renderGroup={g=><CardTileGroup g={g}/>}/>
   <PlayEnd href={PLAY_PACKS_HREF} label="Collect cards on the island" bar="Open card packs on the island"/>
  </>;
 }
