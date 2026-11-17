@@ -47,6 +47,7 @@ textarea.input{min-height:88px;resize:vertical}
 
 /* Plan table: who is on in each block. The reading pages' table look, with the goalkeeper in bold. */
 .minutes{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding:0!important;margin:0}
+.tool .minutes{display:flex}/* visual pass Nov 17 2026: the reading pages' `.main ul{display:grid}` stacked the chips one per line */
 .minutes li{background:var(--surface);border-radius:var(--r-pill);padding:6px 14px;font-size:var(--t-cap);font-weight:700}
 .off{color:var(--ink-soft)}
 

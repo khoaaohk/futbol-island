@@ -8,6 +8,7 @@ import {LESSONS_INDEX,lessonPath} from '@/lib/site/lessons';
 import {SAFE_TRUST_LINE} from '@/lib/site/safety';
 import {breadcrumbLd,collectionLd,faqLd,PLAY_PATH} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
+import FaqEnhance from '@/components/learn/FaqEnhance';
 import styles from '@/app/(site)/site.module.css';
 /**
  * One topic hub (lib/site/hubs.ts): answer-first lead, the lesson groups as linked lists, short Q&A (mirrored exactly in the
@@ -15,9 +16,19 @@ import styles from '@/app/(site)/site.module.css';
  */
 export const hubCrumbs=(h:{crumb:string;path:string})=>[{name:'Home',path:'/'},{name:'Lessons',path:LESSONS_INDEX},{name:h.crumb,path:h.path}];
 
-export function QA({id,title,faq}:{id:string;title:string;faq:readonly {q:string;a:string}[]}){
+/** The questions (visual pass, Nov 17 2026): one list of plain rows like the home page's FAQ, each a native <details> whose
+ *  <summary> holds the question as an h3; the answer text is in the HTML whether open or closed, so the FAQPage JSON-LD (faq only)
+ *  still matches what the page shows. The first one starts open. `more`: extra questions shown in the same list but not in the
+ *  JSON-LD (the cards page's side questions, merged so a page has one FAQ). `children`: a caption under the list.
+ *  components/learn/FaqEnhance.tsx animates open / close; without JS the plain <details> works. */
+export function QA({id,title,faq,more=[],children}:{id:string;title:string;faq:readonly {q:string;a:string}[];more?:readonly {q:string;a:string}[];children?:React.ReactNode}){
+ const seen=new Set<string>(),items=[...faq,...more].filter(f=>!seen.has(f.q)&&!!seen.add(f.q));
  return <section className={styles.section} aria-labelledby={id}><h2 className={styles.h2} id={id}>{title}</h2>
-  <ul className={styles.stack}>{faq.map(f=><li key={f.q} className={styles.card}><h3 className={styles.h3}>{f.q}</h3><p>{f.a}</p></li>)}</ul>
+  <div className={styles.faqList} data-faq={id}>{items.map((f,i)=><details key={f.q} className={styles.faqItem} open={i===0||undefined} data-x={i===0?'':undefined}>
+   <summary className={styles.faqSum}><h3 className={styles.faqQ}>{f.q}</h3><span className={styles.plus} aria-hidden="true"/></summary>
+   <div className={styles.faqBody}><div className={styles.faqIn}><p>{f.a}</p></div></div></details>)}</div>
+  {children}
+  <FaqEnhance selector={`[data-faq="${id}"]`}/>
  </section>;
 }
 

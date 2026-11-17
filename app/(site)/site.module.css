@@ -146,9 +146,10 @@
 .pager{display:grid;gap:var(--s1);max-width:calc(var(--measure) + 2 * var(--s3))}
 @media(min-width:560px){.pager{grid-template-columns:1fr 1fr}.pager a[rel=next]{grid-column:2;text-align:right}.pager a[rel=prev]{grid-column:1;grid-row:1}}
 @media(max-width:559px){.pager a[rel=next]{order:-1}}
-.page .pager a{display:grid;gap:2px;align-content:center;min-height:var(--tap);padding:14px 18px;box-sizing:border-box;border-radius:var(--r-md);background:var(--surface);color:var(--ink);text-decoration:none;transition:background-color .16s}
-@media(hover:hover){.page .pager a:hover{background:var(--well)}}
-.pagerWord{font-size:var(--t-label);line-height:1.3;font-weight:600;color:var(--ink-soft)}
+.page .pager a{display:grid;gap:2px;align-content:center;min-height:var(--tap);padding:14px 18px;box-sizing:border-box;border-radius:var(--r-md);background:var(--link);color:var(--paper);text-decoration:none;transition:background-color .16s}
+@media(hover:hover){.page .pager a:hover{background:#185a48}}
+.page .pager a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px}
+.pagerWord{font-size:var(--t-label);line-height:1.3;font-weight:600;color:rgb(251 247 238 / .78)}
 .pagerName{font-size:var(--t-cap);line-height:1.35;font-weight:700;text-wrap:balance}
 .pager a[rel=prev] .pagerWord::before{content:'‹ '}
 .pager a[rel=next] .pagerWord::after{content:' ›'}
@@ -228,7 +229,7 @@
 /* End-of-guide quiz (components/site/GuideQuiz.tsx): each question a card; options are full-width buttons (48 px), the chosen
    one turns pitch green when right and gold-ink outlined when wrong, the right one is always shown once answered. */
 .quiz{list-style:none;padding:0!important;display:grid;gap:var(--s2)!important}
-.quizItem{max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--surface);border-radius:var(--r-lg);padding:var(--pad-box);display:grid;gap:var(--s2)}
+.quizItem{max-width:calc(var(--measure) + 2 * var(--s3));box-sizing:border-box;background:var(--quizTint);border-radius:var(--r-lg);padding:var(--pad-box);display:grid;gap:var(--s2)}
 .quizOptions{display:grid;gap:var(--s1)}
 .quizOption{display:block;width:100%;min-height:48px;padding:12px 16px;box-sizing:border-box;border:2px solid transparent;border-radius:var(--r-md);background:var(--paper);color:var(--ink);
  font:500 var(--t-body)/1.4 var(--sans);text-align:left;cursor:pointer;transition:background-color .16s,border-color .16s}
@@ -269,3 +270,67 @@
 .lang{display:inline-flex;gap:.4em;align-items:center;white-space:nowrap}
 /* flex trims the spaces around "|", so the gap does the spacing */
 .lang b{font-weight:800}
+
+/* ---- Visual pass, Nov 17 2026 (owner: "pages read like a wall of text ... break each section up"). Each box has one role and
+   its own field, all from the tokens above: the quick answer is gold-tinted with paper fact tiles, Coach's notes stay in the
+   well tone with a whistle, the FAQ is plain rows (the home page's), the quiz is mint, Read next is pitch green, and the
+   remaining cards (mix-ups, habits) keep the tint. No outlines, no shadows at rest. ---- */
+.page{--quickTint:color-mix(in srgb,var(--gold) 34%,var(--paper));--quizTint:color-mix(in srgb,var(--btn-mint,#beded1) 52%,var(--paper))}
+/* the quick answer: the answer sentence and its key facts in one card, left-aligned under the centred title */
+.quick{justify-self:stretch;display:grid;gap:var(--s2);width:100%;max-width:calc(var(--measure) + 2 * var(--s3));margin-inline:auto;box-sizing:border-box;
+ padding:var(--pad-box);border-radius:var(--r-lg);background:var(--quickTint);text-align:left}
+.main .intro .quick .lead{max-width:none;justify-self:stretch;text-align:left;text-wrap:pretty}
+.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s1);margin:0}
+@media(min-width:720px){.facts{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}}
+.fact{display:grid;gap:4px;align-content:start;min-width:0;padding:12px 14px;border-radius:var(--r-md);background:var(--paper)}
+.fact dt{display:flex;align-items:center;gap:8px;font-size:14px;line-height:1.3;font-weight:600;color:var(--ink-soft)}
+.fact dt svg{flex:none}
+.fact dd{margin:0;font-size:16px;line-height:1.3;font-weight:700;color:var(--ink);overflow-wrap:anywhere}
+.page .fact dd a{color:var(--ink);text-decoration:underline;text-decoration-color:var(--gold);text-decoration-thickness:2px;text-underline-offset:.2em}
+@media(hover:hover){.page .fact dd a:hover{text-decoration-color:var(--ink)}}
+/* Coach's notes: the whistle beside its heading */
+.notesH{display:flex;align-items:center;gap:12px}
+.notesH svg{flex:none}
+/* the plus that turns into a cross (FAQ rows and folded sections), as on the home page */
+.plus{position:relative;flex:none;width:16px;height:16px;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.plus::before,.plus::after{content:"";position:absolute;left:0;top:7px;width:16px;height:2px;border-radius:1px;background:var(--link)}
+.plus::after{transform:rotate(90deg)}
+details[open]>summary .plus{transform:rotate(45deg)}
+/* FAQ: plain rows (components/site/LessonHub.tsx QA); the question is the row, the answer opens under it */
+.faqList{display:grid;max-width:calc(var(--measure) + 2 * var(--s3));border-top:1px solid var(--rule)}
+.faqItem{border-bottom:1px solid var(--rule)}
+.faqSum{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:14px 2px;box-sizing:border-box;cursor:pointer;list-style:none}
+.faqSum::-webkit-details-marker,.foldSum::-webkit-details-marker{display:none}
+.faqSum:focus-visible,.foldSum:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:3px;border-radius:4px}
+.main .faqQ{font-size:var(--t-h3);line-height:1.3;font-weight:600;letter-spacing:-.015em;color:var(--ink)}
+.faqBody{display:grid;grid-template-rows:1fr;opacity:1;transition:grid-template-rows .32s cubic-bezier(.2,.8,.2,1),opacity .26s ease}
+.faqIn{min-height:0;overflow:hidden}
+.faqIn p{padding:0 2px 20px}
+/* components/learn/FaqEnhance.tsx sets data-ready on the list and data-x on an open row once its body may show */
+.faqList[data-ready] .faqItem:not([data-x]) .faqBody{grid-template-rows:0fr;opacity:0}
+.faqList[data-ready] .faqItem[open]:not([data-x]) .plus{transform:none}
+@media(prefers-reduced-motion:reduce){.faqBody,.plus{transition:none}}
+/* folded "more detail" sections (lib/site/GuideParts.tsx Section fold): the h2 is the row; the body opens under it */
+.fold{gap:0}
+.foldBox{display:grid}
+.foldSum{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:var(--tap);padding:6px 2px 14px;box-sizing:border-box;border-bottom:1px solid var(--rule);cursor:pointer;list-style:none}
+.foldBody{display:grid;gap:var(--s2);align-content:start;padding-top:var(--s2)}
+/* phone tables as stacked cards (DataTable and the playing-time plan: [data-stack]): one card per row, the row header as the
+   card's title, each cell under its column name. Wider screens and print keep the real table. */
+@media screen and (max-width:559px){
+ .tableWrap[data-stack]{overflow:visible;background:none;border-radius:0}
+ .tableWrap[data-stack] .table,.tableWrap[data-stack] tbody,.tableWrap[data-stack] tr,.tableWrap[data-stack] .table th,.tableWrap[data-stack] .table td{display:block}
+ .tableWrap[data-stack] thead{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+ .tableWrap[data-stack] tbody{display:grid;gap:var(--s1)}
+ .tableWrap[data-stack] tr{display:grid;gap:10px;padding:14px 16px;border-radius:var(--r-md);background:var(--surface)}
+ .tableWrap[data-stack] .table tbody th{position:static;padding:0;border:0;background:none;box-shadow:none;white-space:normal;font-size:17px;line-height:1.3}
+ .tableWrap[data-stack] .table td{min-width:0;padding:0;border:0}
+ /* a row with exactly two values (yellow vs red, this vs that) shows them side by side under the row's title */
+ .tableWrap[data-stack] tr:has(>td:nth-of-type(2):last-child){grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:var(--s2)}
+ .tableWrap[data-stack] tr:has(>td:nth-of-type(2):last-child)>th{grid-column:1/-1}
+ .tableWrap[data-stack] .table td::before{content:attr(data-label);display:block;margin-bottom:2px;font-size:14px;line-height:1.3;font-weight:600;color:var(--ink-soft)}
+ /* three or more values (the playing-time plan): each label sits in front of its value, so a block card stays short */
+ .tableWrap[data-stack] tr:has(>td:nth-of-type(3)){gap:4px}
+ .tableWrap[data-stack] tr:has(>td:nth-of-type(3))>th{margin-bottom:4px}
+ .tableWrap[data-stack] tr:has(>td:nth-of-type(3))>td::before{content:attr(data-label) ": ";display:inline;margin:0}
+}

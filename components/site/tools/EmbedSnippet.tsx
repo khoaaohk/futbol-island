@@ -12,12 +12,15 @@ export default function EmbedSnippet({snippet,name,lang}:{snippet:string;name:st
  const es=lang==='es';
  const [done,setDone]=useState('');
  const copy=()=>{navigator.clipboard?.writeText(snippet).then(()=>setDone(es?W.copied:'Copied. Paste it into your club’s web page.'),()=>setDone(es?W.select:'Select the code and copy it.'));};
- return <section className={site.section} aria-labelledby="embed" data-embed-snippet="">
-  <h2 className={site.h2} id="embed">{es?W.title:'Use this on your club’s website'}</h2>
+ /* visual pass Nov 17 2026: folded like the pages' other "more detail" sections (lib/site/GuideParts.tsx Section fold) */
+ return <section className={`${site.section} ${site.fold}`} aria-labelledby="embed" data-embed-snippet="" data-fold=""><details className={site.foldBox}>
+  <summary className={site.foldSum}><h2 className={site.h2} id="embed">{es?W.title:'Use this on your club’s website'}</h2><span className={site.plus} aria-hidden="true"/></summary>
+  <div className={site.foldBody}>
   {es?<p>{W.line(name)}</p>:<p>Paste this code into your club or league web page to show the {name} there, for your coaches and parents.</p>}
   <p className={site.caption}>{es?W.caption:'No ads, no tracking, no sign-up; names typed into it stay on each visitor’s device.'}</p>
   <label className={site.caption} htmlFor="embed-code">{es?W.code:'Embed code'}</label>
   <textarea id="embed-code" readOnly rows={4} value={snippet} onFocus={e=>e.currentTarget.select()} className={fx.embedCode}/>
   <p><button type="button" onClick={copy} className={fx.copyBtn}>{es?W.copy:'Copy embed code'}</button> <span role="status" className={site.caption}>{done}</span></p>
+  </div></details>
  </section>;
 }

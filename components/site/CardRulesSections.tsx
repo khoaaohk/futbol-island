@@ -30,9 +30,8 @@ export function CardRulesTop({c}:{c:CardRulesContent}){
 export function CardRulesGame({c,lang}:{c:CardRulesContent;lang?:'es'}){
  return <RefCallGame game={checkCallGame(c.game)} lang={lang}/>;
 }
-export function CardRulesSide({c,checked}:{c:CardRulesContent;checked:string}){
- return <Section id={c.side.id} title={c.side.title}>
-  <ul className={styles.stack}>{c.side.items.map(x=><li key={x.q} className={styles.card}><h3 className={styles.h3}>{x.q}</h3><p>{x.a}</p></li>)}</ul>
-  <p className={styles.caption}>{c.sources.line} {c.sources.links.map((l,i)=><span key={l.url}>{i>0?' · ':''}<a href={l.url} rel="noopener">{l.name}</a></span>)}. {checked}</p>
- </Section>;
+/** The sources line under the page's one FAQ. The side questions (c.side.items) are no longer a second FAQ block (visual pass,
+ *  Nov 17 2026): the page passes them to QA's `more`, so they sit in the same collapsible list after the FAQPage questions. */
+export function CardRulesSources({c,checked}:{c:CardRulesContent;checked:string}){
+ return <p className={styles.caption}>{c.sources.line} {c.sources.links.map((l,i)=><span key={l.url}>{i>0?' · ':''}<a href={l.url} rel="noopener">{l.name}</a></span>)}. {checked}</p>;
 }

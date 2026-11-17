@@ -6,6 +6,7 @@ import {LICENCE} from '@/lib/site/tools/sheet';
 import type {Crumb} from '@/lib/site/seo';
 import type {GuideFormat} from '@/lib/site/pitch';
 import LineupHeading from './LineupHeading';
+import {QuickAnswer,type Fact} from '@/lib/site/GuideParts';
 import site from '@/app/(site)/site.module.css';
 import t from './tools.module.css';
 /**
@@ -13,11 +14,11 @@ import t from './tools.module.css';
  * on these pages only (the header is already hidden in print by site.module.css), a sheet preview and its download links.
  */
 /** headingFormat: a lineup format landing; its h1 follows the builder's format select (components/site/tools/LineupHeading.tsx). */
-export function ToolIntro({crumbs,h1,lead,headingFormat,app}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:{href:string;label:string;line:string}}){
+export function ToolIntro({crumbs,h1,lead,headingFormat,app,facts}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:{href:string;label:string;line:string};facts?:readonly Fact[]}){
  return <header className={site.intro}>
   <Breadcrumbs crumbs={crumbs}/>
   {headingFormat?<LineupHeading format={headingFormat} className={site.title}/>:<h1 className={site.title}>{h1}</h1>}
-  <p className={site.lead}>{lead}</p>
+  <QuickAnswer lead={lead} facts={facts} answer={false}/>
   {app&&<AppLink {...app}/>}
   <p className={site.caption}>{TOOL_NAMES}</p>
  </header>;
