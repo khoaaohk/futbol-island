@@ -1,3 +1,4 @@
+import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -7,7 +8,7 @@ import {ageGuide} from '@/lib/site/drillGuides';
 import {PLANS,PLANS_HUB,PLAN_SAFETY_LINE,PPP_LINE,PRACTICE_RANGE,clock,planBySlug,plansForAge} from '@/lib/site/plans';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {CheckedLine,Bullets,DataTable,GuideIntro,LessonList,LinkList,PlayEnd,Section} from '@/lib/site/GuideParts';
+import {CheckedLine,Bullets,DataTable,GuideIntro,PlayEnd,Section} from '@/lib/site/GuideParts';
 import {DrillList,GridFigure} from '@/lib/site/DrillParts';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -60,8 +61,7 @@ export default function PlanPage({params}:{params:{slug:string}}){
     <DrillList items={p.drills.map(d=>({drill:d,line:drillLine(d)}))}/>
    </Section>
    <QA id="faq" title={`Questions about this ${p.age} practice`} faq={p.faq}/>
-   <Section id="lessons" title="Lessons to share with your players"><LessonList lessons={p.lessons}/></Section>
-   <Section id="related" title="Keep reading"><LinkList links={related}/></Section>
+   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(p.lessons)},{id:'related',links:related}]}/>
    <p className={styles.caption}>{GUIDE_FOOT}</p>
    <CheckedLine date={FAMILY_CHECKED.plans}/>
    <PlayEnd/>

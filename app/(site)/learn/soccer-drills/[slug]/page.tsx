@@ -1,3 +1,4 @@
+import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -8,7 +9,7 @@ import {DRILL_GUIDES,SKILL_GUIDES,drillGuideBySlug,guidesForDrill,type DrillGuid
 import {PLANS_HUB,plansForAge,plansForDrill} from '@/lib/site/plans';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,LessonList,LinkList,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,LinkList,Section} from '@/lib/site/GuideParts';
 import {DrillList,GridFigure,Steps} from '@/lib/site/DrillParts';
 import {lessonPath} from '@/lib/site/lessons';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
@@ -60,8 +61,8 @@ function DrillPage({d}:{d:Drill}){
   <CoachNotesSection name={d.name} notes={{ages:drillAgeNotes(d)}}/>
   {d.home&&<Section id="home" title="Do it at home"><p>{d.home}</p></Section>}
   <QA id="faq" title={`Questions about ${d.name}`} faq={d.faq}/>
-  <Section id="lessons" title="Lessons that teach this idea"><LessonList lessons={d.lessons}/></Section>
-  <Section id="related" title="Related drills and guides"><LinkList links={related}/></Section>
+  {/* batch 3, Nov 17 2026: lessons and related drills and guides as one "Keep reading" row */}
+  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(d.lessons)},{id:'related',links:related}]}/>
   <GuideEnd checked={FAMILY_CHECKED.drills} lesson={d.cta}/>
   <ReadNext path={d.path}/>
  </>;
@@ -89,8 +90,7 @@ function GuidePage({g}:{g:DrillGuide}){
   {sections(g.after)}
   {plans.length>0&&<Section id="plans" title={`${g.age} practice plans`}><LinkList links={plans}/></Section>}
   <QA id="faq" title={`Questions about ${g.kind==='age'?g.name:g.name.toLowerCase()}`} faq={g.faq}/>
-  <Section id="lessons" title="Lessons to go with these drills"><LessonList lessons={g.lessons}/></Section>
-  <Section id="related" title="Keep reading"><LinkList links={[...others,...g.links,{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb},{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}/></Section>
+  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(g.lessons)},{id:'related',links:[...others,...g.links,{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb},{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}]}/>
   <GuideEnd checked={FAMILY_CHECKED.drills} lesson={g.lessons[0]}/>
   <ReadNext path={g.path}/>
  </>;

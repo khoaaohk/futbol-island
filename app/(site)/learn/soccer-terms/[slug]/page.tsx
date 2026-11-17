@@ -1,3 +1,4 @@
+import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
 import ReadNext from '@/components/site/ReadNext';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -7,7 +8,7 @@ import {RULES_HUB} from '@/lib/site/rules';
 import {drillLinksFor} from '@/lib/site/drills';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,GuideEnd,GuideIntro,type Fact,LessonList,LinkList,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,GuideEnd,GuideIntro,type Fact,SceneDiagram,Section} from '@/lib/site/GuideParts';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {termQuiz} from '@/lib/site/guideQuiz';
 import {guideQuizPart} from '@/lib/site/learningLd';
@@ -49,11 +50,9 @@ export default function TermPage({params}:{params:{slug:string}}){
   <Section id="formats" title="In 7v7, 9v9, 11v11 and futsal" fold><p>{t.formats}</p></Section>
   <QA id="faq" title={`Questions about the ${t.name.toLowerCase()}`} faq={t.faq}/>
   <CoachNotesSection name={t.name} notes={TERM_NOTES[t.slug]}/>
-  <Section id="lessons" title="Lessons that teach it"><LessonList lessons={t.lessons}/></Section>
-  {/* Nov 10 2026: drills that train this (lib/site/drillLinks.ts GUIDE_DRILLS) */}
-  {drillLinksFor(t.path).length>0&&<Section id="drills" title="Soccer drills to practice this" fold><LinkList links={drillLinksFor(t.path)}/></Section>}
-  <Section id="related" title="Related soccer terms"><LinkList links={related}/></Section>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz}/>
+  {/* batch 3, Nov 17 2026: lessons, drills (lib/site/drillLinks.ts GUIDE_DRILLS) and related terms as one "Keep reading" row */}
+  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(t.lessons)},{id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(t.path)},{id:'related',links:related}]}/>
   <GuideEnd checked={FAMILY_CHECKED.terms} lesson={t.cta}/>
   <ReadNext path={t.path}/>
  </>;

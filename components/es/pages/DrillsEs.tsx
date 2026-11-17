@@ -1,3 +1,4 @@
+import KeepReading from '@/components/site/KeepReading';
 import JsonLd from '@/components/seo/JsonLd';
 import GridDiagram from '@/lib/site/GridDiagram';
 import {AGES,SKILLS,drillsBySkill} from '@/lib/site/drills';
@@ -68,8 +69,8 @@ export function DrillsHubEsPage(){
    <LinkList links={[...skills.map(guideLink),{path:P().path,name:P().h1,line:P().blurb}]}/>
   </Section>
   <QA id="faq" title="Preguntas sobre los ejercicios de fútbol" faq={h.faq}/>
-  <Section id="related" title={ES_UI.keepReading}><LinkList links={[{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:'Cada regla con un diagrama'},{path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:'Qué hace cada jugador'},
-   ...esDrillLinks([{path:'/learn/soccer-age-groups',name:''}]),{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:'Las palabras que usan los entrenadores, explicadas'}]}/></Section>
+  <KeepReading lang="es" groups={[{id:'related',links:[{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:'Cada regla con un diagrama'},{path:ES_HUBS.positions.path,name:ES_HUBS.positions.h1,line:'Qué hace cada jugador'},
+   ...esDrillLinks([{path:'/learn/soccer-age-groups',name:''}]),{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:'Las palabras que usan los entrenadores, explicadas'}]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }
@@ -103,7 +104,7 @@ export function DrillEsPage({d}:{d:EsDrill}){
   <EsCoachNotes name={d.name} notes={{coach:'',match:'',ages:d.ageNotes}}/>
   {d.home&&<Section id="home" title="Hazlo en casa"><p>{d.home}</p></Section>}
   <QA id="faq" title={`Preguntas sobre: ${d.name}`} faq={d.faq}/>
-  <Section id="related" title="Ejercicios y guías relacionados"><LinkList links={related}/></Section>
+  <KeepReading lang="es" groups={[{id:'related',links:related}]}/>
   <EsGuideEnd checked={FAMILY_CHECKED.drills} lessonId={d.cta.id}/>
   <EsReadNext order={esDrillOrder()} path={d.esPath}/>
  </>;
@@ -133,7 +134,7 @@ export function DrillGuideEsPage({g}:{g:EsDrillGuide}){
   {sections(g.after)}
   {plans.length>0&&<Section id="plans" title={`Planes de entrenamiento ${g.age}`}><LinkList links={plans}/></Section>}
   <QA id="faq" title={`Preguntas sobre: ${g.name.toLowerCase()}`} faq={g.faq}/>
-  <Section id="related" title={ES_UI.keepReading}><LinkList links={[...others,...esDrillLinks(g.links),allDrills(),{path:P().path,name:P().h1,line:P().blurb}]}/></Section>
+  <KeepReading lang="es" groups={[{id:'related',links:[...others,...esDrillLinks(g.links),allDrills(),{path:P().path,name:P().h1,line:P().blurb}]}]}/>
   <EsGuideEnd checked={FAMILY_CHECKED.drills} lessonId={g.lessons[0]?.id}/>
   <EsReadNext order={esDrillOrder()} path={g.esPath}/>
  </>;
@@ -162,10 +163,9 @@ export function PlansHubEsPage(){
    <EsGridFigure id="hub" scene={game.scene} image={picture}/>
    <p>Un partido pequeño le da el balón a todos los jugadores. <a href={game.esPath}>Mira cómo se monta el 3v3</a>.</p>
   </Section>
-  <Section id="drills" title="Ejercicios por edad"><LinkList links={[...AGE_GUIDES.map(g=>guideLink(esDrillGuide(g.slug)!)),allDrills()]}/></Section>
   <QA id="faq" title="Preguntas sobre los planes de entrenamiento de fútbol" faq={h.faq}/>
-  <Section id="related" title={ES_UI.keepReading}><LinkList links={[...esDrillLinks([{path:'/learn/soccer-field-size-by-age',name:''},{path:'/learn/soccer-ball-size-by-age',name:''}]),
-   {path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:'Cada regla con un diagrama'},{path:ES_HUBS.formations.path,name:ES_HUBS.formations.h1,line:'Sistemas para 7v7, 9v9 y 11v11'}]}/></Section>
+  <KeepReading lang="es" groups={[{id:'drills',links:[...AGE_GUIDES.map(g=>guideLink(esDrillGuide(g.slug)!)),allDrills()]},{id:'related',links:[...esDrillLinks([{path:'/learn/soccer-field-size-by-age',name:''},{path:'/learn/soccer-ball-size-by-age',name:''}]),
+   {path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:'Cada regla con un diagrama'},{path:ES_HUBS.formations.path,name:ES_HUBS.formations.h1,line:'Sistemas para 7v7, 9v9 y 11v11'}]}]}/>
   <EsGuideEnd cta={false}/>
  </>;
 }
@@ -203,7 +203,7 @@ export function PlanEsPage({p}:{p:EsPlan}){
     <EsDrillList items={p.drills.map(d=>({drill:d,line:drillLineEs(d)}))}/>
    </Section>
    <QA id="faq" title={`Preguntas sobre este entrenamiento ${p.age}`} faq={p.faq}/>
-   <Section id="related" title={ES_UI.keepReading}><LinkList links={related}/></Section>
+  <KeepReading lang="es" groups={[{id:'related',links:related}]}/>
    <EsGuideEnd checked={FAMILY_CHECKED.plans} lessonId={p.lessons[0]?.id}/>
   </div>
   <EsReadNext order={esPlanOrder()} path={p.esPath}/>

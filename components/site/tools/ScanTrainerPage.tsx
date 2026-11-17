@@ -1,8 +1,9 @@
+import KeepReading from '../KeepReading';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import EmbedSnippet from '@/components/site/tools/EmbedSnippet';
 import {GridFigure} from '@/lib/site/DrillParts';
-import {DataTable,LinkList,Section} from '@/lib/site/GuideParts';
+import {DataTable,Section} from '@/lib/site/GuideParts';
 import type {GridScene} from '@/lib/site/grid';
 import {abs,breadcrumbLd,faqLd,type Crumb} from '@/lib/site/seo';
 import {webAppLd} from '@/lib/site/tools/registry';
@@ -62,7 +63,7 @@ export default function ScanTrainerPage({p,path,crumbs,intro,end,related,lang,fi
   <Section id="tips" title={p.tipsTitle}><ul>{p.tips.map(x=><li key={x}>{x}</li>)}</ul></Section>
   <EmbedSnippet snippet={scanEmbedSnippet(p.h1)} name={p.h1.toLowerCase()} lang={lang==='es'?'es':undefined}/>
   <QA id="faq" title={p.faqTitle} faq={p.faq}/>
-  <Section id="related" title={p.relatedTitle}><LinkList links={related}/></Section>
+  <KeepReading title={p.relatedTitle} groups={[{id:'related',links:related}]} lang={lang==='es'?'es':'en'}/>
   {end}
  </>;
 }

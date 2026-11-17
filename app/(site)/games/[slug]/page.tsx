@@ -1,3 +1,4 @@
+import KeepReading from '@/components/site/KeepReading';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
@@ -48,7 +49,7 @@ export default function GamePageView({params}:{params:{slug:string}}){
   <Section id="harder" title="How the difficulty grows"><List items={g.harder}/></Section>
   <Section id="parents" title="For parents and coaches"><List items={g.parents}/></Section>
   <QA id="faq" title={`Questions about ${g.name}`} faq={g.faq}/>
-  <Section id="more" title="More free soccer games"><LinkList links={others}/></Section>
+  <KeepReading id="more" title="More free soccer games" groups={[{id:'more-games',links:others}]}/>
   <p className={site.caption}>{GAME_FOOT}</p>
   <p className={site.end}><PlayLink game={g}/></p>
  </>;
