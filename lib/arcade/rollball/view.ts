@@ -79,15 +79,16 @@ function pieceGeom(p:Piece,top:Acc,side:Acc,lines:number[],tile:number){
 
 /* ---------------- the ball: panels from the 12 icosahedron points (pentagons) ---------------- */
 function ballGeom(r:number){
- const g=new T.IcosahedronGeometry(r,4).toNonIndexed(),pos=g.getAttribute('position'),n=pos.count,col=new Float32Array(n*3);
- const ico=new T.IcosahedronGeometry(1,0),ip=ico.getAttribute('position'),pts:T.Vector3[]=[];
- for(let i=0;i<ip.count;i++){const v=new T.Vector3().fromBufferAttribute(ip,i).normalize();if(!pts.some(q=>q.distanceTo(v)<1e-3))pts.push(v);}
- ico.dispose();const c=new T.Vector3(),a=new T.Vector3(),b=new T.Vector3(),m=new T.Vector3();
+ const g=new T.IcosahedronGeometry(r,9).toNonIndexed(),pos=g.getAttribute('position'),n=pos.count,col=new Float32Array(n*3);
+ // a truncated icosahedron: 12 pentagon centres (the icosahedron's points) and 20 hexagon centres (its faces)
+ const ico=new T.IcosahedronGeometry(1,0),ip=ico.getAttribute('position'),pent:T.Vector3[]=[],hex:T.Vector3[]=[];
+ for(let i=0;i<ip.count;i++){const v=new T.Vector3().fromBufferAttribute(ip,i).normalize();if(!pent.some(q=>q.distanceTo(v)<1e-3))pent.push(v);}
+ for(let i=0;i<ip.count;i+=3){const v=new T.Vector3().fromBufferAttribute(ip,i).add(new T.Vector3().fromBufferAttribute(ip,i+1)).add(new T.Vector3().fromBufferAttribute(ip,i+2)).normalize();hex.push(v);}
+ ico.dispose();const c=new T.Vector3(),a=new T.Vector3(),b=new T.Vector3(),m=new T.Vector3(),all=[...pent,...hex];
  for(let f=0;f<n;f+=3){a.fromBufferAttribute(pos,f);b.fromBufferAttribute(pos,f+1);m.fromBufferAttribute(pos,f+2);c.copy(a).add(b).add(m).normalize();
-  let best=-2,second=-2;for(const q of pts){const d=c.dot(q);if(d>best){second=best;best=d;}else if(d>second)second=d;}
-  // pentagon patch round each point, a thin seam where two hexagons meet
-  const ink=best>.915,seam=!ink&&best-second<.012;const v=ink?.11:seam?.55:.96;
-  for(let k=0;k<3;k++){col[(f+k)*3]=v;col[(f+k)*3+1]=v;col[(f+k)*3+2]=ink?.14:v*.98;}}
+  let best=-2,second=-2,bi=0;all.forEach((q,i)=>{const d=c.dot(q);if(d>best){second=best;best=d;bi=i;}else if(d>second)second=d;});
+  const ink=bi<12,seam=best-second<.006;const v=seam?.2:ink?.1:.97;
+  for(let k=0;k<3;k++){col[(f+k)*3]=v;col[(f+k)*3+1]=v;col[(f+k)*3+2]=ink&&!seam?.13:v;}}
  g.setAttribute('color',new T.BufferAttribute(col,3));g.computeVertexNormals();return g;
 }
 
@@ -171,7 +172,7 @@ export function createRollballView(canvas:HTMLCanvasElement,opts:{reduced:boolea
  function setWorld(w:World){
   clearLevel();world=w;setTheme(w.mods[0].def.theme);
   w.mods.forEach((P,mi)=>{const group=new T.Group(),geos:T.BufferGeometry[]=[];const tops=new Map<Surf,Acc>(),side:Acc={p:[],u:[]},lines:number[]=[];
-   for(let i=P.p0;i<P.p1;i++){const p=w.pieces[i];if(p.role!==0)continue;let a=tops.get(p.surf);if(!a){a={p:[],u:[]};tops.set(p.surf,a);}pieceGeom(p,a,side,lines,SURF_TILE[p.surf]);}
+   for(let i=P.p0;i<P.p1;i++){const p=w.pieces[i];if(p.role!==0||p.hidden)continue;let a=tops.get(p.surf);if(!a){a={p:[],u:[]};tops.set(p.surf,a);}pieceGeom(p,a,side,lines,SURF_TILE[p.surf]);}
    for(const [k,a] of tops){const g=geom(a);if(!g)continue;geos.push(g);const m=new T.Mesh(g,matFor(k));m.receiveShadow=true;group.add(m);}
    {const g=geom(side);if(g){geos.push(g);const m=new T.Mesh(g,sideMat(P.def.theme));m.receiveShadow=true;group.add(m);}}
    if(lines.length){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(lines,3));geos.push(g);group.add(new T.LineSegments(g,lineMat));}

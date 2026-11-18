@@ -44,7 +44,7 @@ export const THEMES=['Training pitch','Beach','Rooftops','Stadium at night'] as 
 
 /** A terrain piece. kind 0 flat (top a), 1 ramp along z (a at z0 -> b at z1), 2 ramp along x (a at x0 -> b at x1), 3 half-pipe across x
  *  (a at the middle, a+b at both lips). dy: a moving offset (gates sink, bridges rise, lifts move). role: 0 terrain, 1 gate, 2 bridge, 3 lift. */
-export type Piece={x0:number;x1:number;z0:number;z1:number;y0:number;kind:0|1|2|3;a:number;b:number;surf:Surf;dy:number;role:0|1|2|3;mod:number};
+export type Piece={x0:number;x1:number;z0:number;z1:number;y0:number;kind:0|1|2|3;a:number;b:number;surf:Surf;dy:number;role:0|1|2|3;mod:number;/** physics only (the goal's frame: the view draws posts and net) */hidden?:boolean};
 export type PlateKind='latch'|'hold'|'timed'|'stay'|'order'|'heavy';
 export type Plate={x:number;z:number;y:number;half:number;kind:PlateKind;sig:number;T:number;idx:number;group:number;
  /** live */pressed:boolean;timer:number;lit:boolean;mod:number};
@@ -160,7 +160,8 @@ export function mulberry(seed:number){let a=seed>>>0;return()=>{a=(a+0x6d2b79f5)
 
 /** How many puzzle modules a level has and the highest rating it may use. */
 export const levelSize=(level:number)=>level<=2?1:level<=5?2:level<=10?3:level<=16?4:level<=24?5:6;
-export const ratingCap=(level:number)=>Math.min(9,1+Math.floor((Math.max(1,level)-1)*.75));
+/** The cap climbs one module a level: level n may use ratings up to the nth easiest module's, so each of the first 17 levels meets one new puzzle. */
+export const ratingCap=(level:number)=>{const r=MODULES.map(m=>m.rating).sort((a,b)=>a-b);return r[Math.min(r.length,Math.max(1,Math.floor(level)))-1];};
 /**
  * The modules of one level (indices into MODULES). A module rated at most ratingCap(level) that this run has not met yet comes first
  * and alone among new ones (one new puzzle per level); the rest are puzzles already met, the harder ones more likely.
@@ -170,15 +171,17 @@ export function levelPlan(rnd:()=>number,level:number,seen:Set<number>):number[]
  const cap=ratingCap(level),n=levelSize(level),out:number[]=[];
  const fresh=MODULES.map((m,i)=>i).filter(i=>MODULES[i].rating<=cap&&!seen.has(i)).sort((a,b)=>MODULES[a].rating-MODULES[b].rating||a-b);
  if(fresh.length){const lowest=MODULES[fresh[0]].rating,pool=fresh.filter(i=>MODULES[i].rating===lowest);out.push(pool[Math.floor(rnd()*pool.length)]);}
- const old=MODULES.map((m,i)=>i).filter(i=>MODULES[i].rating<=cap&&(seen.has(i))&&!out.includes(i));
+ const floor=ratingFloor(level),old=MODULES.map((m,i)=>i).filter(i=>MODULES[i].rating<=cap&&MODULES[i].rating>=floor&&(seen.has(i))&&!out.includes(i));
  while(out.length<n&&old.length){let tot=0;for(const i of old)tot+=MODULES[i].rating;let p=rnd()*tot,k=0;for(;k<old.length-1;k++){p-=MODULES[old[k]].rating;if(p<=0)break;}out.push(old[k]);old.splice(k,1);}
- while(out.length<n){const i=Math.floor(rnd()*MODULES.length);if(MODULES[i].rating<=cap)out.push(i);}
+ while(out.length<n){const i=Math.floor(rnd()*MODULES.length);if(MODULES[i].rating<=cap&&MODULES[i].rating>=floor)out.push(i);}
  for(const i of out)seen.add(i);
  // the new puzzle sits after one warm-up module when there is one
  if(out.length>1&&fresh.length){const f=out.shift() as number;out.splice(1,0,f);}
  return out;
 }
 export const clockFor=(level:number,par:number)=>Math.round(par*Math.max(RB.clockMin,RB.clockMul-RB.clockStep*(level-RB.clockFrom))+RB.clockAdd);
+/** After every puzzle is met, the easy ones drop out of the mix little by little (level 15: rating 1 gone ... level 30: below 6 gone). */
+export const ratingFloor=(level:number)=>Math.min(6,Math.max(1,Math.floor((level-12)/3)));
 export const levelRating=(plan:readonly number[])=>plan.reduce((s,i)=>s+MODULES[i].rating,0);
 export const levelPar=(plan:readonly number[])=>plan.reduce((s,i)=>s+MODULES[i].par,GOAL_MODULE.par);
 
@@ -210,7 +213,7 @@ export function buildWorld(plan:readonly number[],theme0=0):World{
    drain:(x0,x1,z0,z1,wy,need)=>{w.recvs.push({kind:'drain',piece:-1,need:need.map(S),open:0,h:0,period:0,x0,x1,z0:z+z0,z1:z+z1,wy,fz:0,mod:mi});},
    fan:(x0,x1,z0,z1,hover,push,need)=>{w.recvs.push({kind:'fan',piece:-1,need:need.map(S),open:0,h:hover,period:0,x0,x1,z0:z+z0,z1:z+z1,wy:hover,fz:push,mod:mi});},
    goal:(x,gz)=>{P.goal=[x,z+gz];
-    piece(-1.9,-1.6,gz-.6,gz+.9,0,0,1.5,0,'metal',0);piece(1.6,1.9,gz-.6,gz+.9,0,0,1.5,0,'metal',0);piece(-1.9,1.9,gz+.9,gz+1.15,0,0,1.5,0,'metal',0);},
+    for(const k of [piece(-1.9,-1.6,gz-.6,gz+.9,0,0,1.5,0,'metal',0),piece(1.6,1.9,gz-.6,gz+.9,0,0,1.5,0,'metal',0),piece(-1.9,1.9,gz+.9,gz+1.15,0,0,1.5,0,'metal',0)])w.pieces[k].hidden=true;},
   };
   def.build(B);
   for(let i=0;i<=maxSig;i++)w.sig.push(false);
@@ -462,7 +465,7 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
  *  input and reports when the script is done. noise: random steering error (0 = perfect). */
 export function scriptBot(def:ModuleDef,z0:number,opts:{noise?:number;rnd?:()=>number;star?:boolean}={}){
  const steps:Bot=[...(opts.star&&def.starBot?def.starBot:[]),...def.bot];let k=0,stopT=0,stuck=0,lastD=1e9;
- const rnd=opts.rnd??Math.random,noise=opts.noise??0;
+ const rnd=opts.rnd??mulberry(1),noise=opts.noise??0;
  // a child's thumb is not exact: a slow drift that changes every 0.3-0.8 s (white noise would average out)
  let nx=0,nz=0,nt=0;const drift=()=>{nt-=RB.dt;if(nt<=0){nt=.3+rnd()*.5;const a=rnd()*Math.PI*2,m=noise*(.3+rnd()*.7);nx=Math.cos(a)*m;nz=Math.sin(a)*m;}};
  return {get index(){return k;},get done(){return k>=steps.length;},

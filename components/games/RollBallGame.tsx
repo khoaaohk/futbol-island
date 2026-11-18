@@ -16,7 +16,7 @@ import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {arcadeSkin} from './skins';
 import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst} from './comic';
 import styles from './RollBallGame.module.css';
-import {createRollBall,rollballDailySeed,medalFor,RB,MEDAL_NAMES,THEMES,type RollBall,type RollEvent} from '@/lib/arcade/rollball/core';
+import {createRollBall,rollballDailySeed,scriptBot,medalFor,RB,MEDAL_NAMES,THEMES,type RollBall,type RollEvent} from '@/lib/arcade/rollball/core';
 import type {RollballView} from '@/lib/arcade/rollball/view';
 import {createRollballAudio,type RollballAudio} from '@/lib/arcade/rollball/audio';
 import {readRollballSave,writeRollballSave,settleRollball,nearMissLine,coachLine,liveStreak,emptyRollballSave,type RollballSave,type RollballSettled} from '@/lib/arcade/rollball/save';
@@ -61,6 +61,7 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
  const stage=useRef<HTMLDivElement>(null),cv=useRef<HTMLCanvasElement>(null),clockNum=useRef<HTMLElement>(null),clockBox=useRef<HTMLDivElement>(null);
  const game=useRef<RollBall|null>(null),view=useRef<RollballView|null>(null),audio=useRef<RollballAudio|null>(null);
  const raf=useRef(0),last=useRef(0),drawn=useRef(0),endAt=useRef(0),wordId=useRef(0),run=useRef({id:'',daily:false,day:'',done:true}),shownSec=useRef(-1);
+ const viewReady=useRef<{promise:Promise<void>;done:()=>void}>(null as unknown as {promise:Promise<void>;done:()=>void});if(!viewReady.current){let done=()=>{};const promise=new Promise<void>(r=>{done=r;});viewReady.current={promise,done};}
  const stick=useRef({x:0,y:0}),keys=useRef(new Set<string>()),reduced=useRef(false),frameRef=useRef<(t:number)=>void>(()=>{});
 
  const change=useCallback((p:Phase)=>{phaseRef.current=p;setPhase(p);if(p!=='playing')audio.current?.quiet();},[]);
@@ -123,6 +124,7 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
   const k=keys.current,kx=(k.has('ArrowLeft')||k.has('KeyA')?1:0)-(k.has('ArrowRight')||k.has('KeyD')?1:0),kz=(k.has('ArrowUp')||k.has('KeyW')?1:0)-(k.has('ArrowDown')||k.has('KeyS')?1:0);
   // the camera looks along +z, so screen right is world -x
   if(kx||kz)g.input(kx,kz);else g.input(-stick.current.x,-stick.current.y);
+  if(process.env.NODE_ENV!=='production'){const h=(window as unknown as {__rollball?:{useBot?:boolean;botTick?:()=>void}}).__rollball;if(h?.useBot)h.botTick?.();}// dev: the scripted bot plays (scripts/check-arcade-audio.cjs, browser checks)
   g.tick(dt);sync();paintClock();
   const b=g.state.ball;audio.current?.rolling(Math.hypot(b.vx,b.vz),b.surf,!b.air&&g.state.respawnIn<=0);
   v.render(g.state,now);
@@ -134,6 +136,7 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
  const start=useCallback(async(daily:boolean)=>{
   (audio.current??=createRollballAudio()).unlock();
   const id=await entry.enter();if(!id)return;
+  if(!view.current)await Promise.race([viewReady.current.promise,new Promise(r=>setTimeout(r,8000))]);// the pitch (three.js) may still be loading
   if(!view.current){setFailed(true);return;}
   const day=localPlayDay(Date.now()),seed=daily?rollballDailySeed(day):1+Math.floor(Math.random()*2_000_000_000);
   const g=game.current=createRollBall({seed,daily});run.current={id,daily,day,done:false};
@@ -154,13 +157,13 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
   const el=stage.current,c=cv.current;if(!el||!c)return;let alive=true,ro:ResizeObserver|null=null,fit=()=>{};
   reduced.current=matchMedia('(prefers-reduced-motion: reduce)').matches;
   void retryImport(()=>import('@/lib/arcade/rollball/view')).then(({createRollballView})=>{if(!alive)return;
-   let v:RollballView;try{v=createRollballView(c,{reduced:reduced.current,mobile:matchMedia('(pointer: coarse)').matches});}catch{setFailed(true);return;}view.current=v;
+   let v:RollballView;try{v=createRollballView(c,{reduced:reduced.current,mobile:matchMedia('(pointer: coarse)').matches});}catch{setFailed(true);return;}view.current=v;viewReady.current.done();
    fit=()=>{const r=el.getBoundingClientRect();v.resize(Math.max(1,r.width),Math.max(1,r.height),Math.min(2,window.devicePixelRatio||1));if(game.current&&phaseRef.current!=='menu')v.render(game.current.state,performance.now());};
    fit();ro=new ResizeObserver(fit);ro.observe(el);window.visualViewport?.addEventListener('resize',fit);
   }).catch(()=>setFailed(true));
   const noScroll=(e:TouchEvent)=>{if(phaseRef.current==='playing'&&e.cancelable)e.preventDefault();};el.addEventListener('touchmove',noScroll,{passive:false});
   const noMenu=(e:Event)=>e.preventDefault();c.addEventListener('contextmenu',noMenu);
-  if(process.env.NODE_ENV!=='production')(window as unknown as {__rollball?:unknown}).__rollball={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get view(){return view.current;},get audio(){return audio.current;},sync:()=>sync()};
+  if(process.env.NODE_ENV!=='production')(window as unknown as {__rollball?:unknown}).__rollball={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get view(){return view.current;},get audio(){return audio.current;},sync:()=>sync(),scriptBot,useBot:false,botTick:undefined};
   return()=>{alive=false;ro?.disconnect();window.visualViewport?.removeEventListener('resize',fit);el.removeEventListener('touchmove',noScroll);c.removeEventListener('contextmenu',noMenu);
    if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;view.current?.dispose();view.current=null;game.current=null;audio.current?.dispose();audio.current=null;delete (window as unknown as {__rollball?:unknown}).__rollball;};
  },[sync]);
