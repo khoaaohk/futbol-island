@@ -13,7 +13,7 @@ import {retryImport} from '@/lib/retryImport';
 import {ArcadeTopBar} from '../arcade/ArcadeTopBar';
 import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {arcadeSkin} from './skins';
-import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst} from './comic';
+import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst,ComicMedalTrack} from './comic';
 import styles from './SquadSnakeGame.module.css';
 import {createSquadSnake,snakeDailySeed,medalFor,shapeName,SN,CALLS,SHAPES,POS,POS_COLOR,POS_LABEL,MEDAL_NAMES,type SquadSnake,type SnakeEvent} from '@/lib/arcade/snake/core';
 import {createSnakeView,type SnakeView} from '@/lib/arcade/snake/view';
@@ -240,8 +240,14 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
     {result.settled.newBest&&<ComicBurst word="New best!" size={17} tilt={7} className={styles.stamp}/>}
    </div>
    <div className={styles.medalRow} data-snake-medal={result.settled.medal} role="img" aria-label={result.settled.medal?`${MEDAL_NAMES[result.settled.medal-1]} medal`:'No medal this time'}>{[1,2,3,4].map(l=><Medal key={l} level={l} on={medalFor(result.score)>=l}/>)}<em>{result.settled.medal?MEDAL_NAMES[result.settled.medal-1]:'No medal yet'}</em></div>
+   <ComicMedalTrack score={result.score} best={result.settled.previousBest} medals={SN.medals} names={MEDAL_NAMES} data-snake-track/>
    <ComicPanel tone="sun" tilt={-1.2} className={styles.near} data-snake-near>{result.near}</ComicPanel>
    <div className={styles.hsSlot} data-hs-slot/>
+   <div className={styles.actions}>
+    <ComicButton variant="primary" wide disabled={busy} onClick={()=>{void start(result.daily);}} data-snake-again autoFocus>Play again</ComicButton>
+    <ComicButton size="small" disabled={busy} onClick={()=>{void start(!result.daily);}} data-snake-other>{result.daily?'Endless':'Daily Squad'}</ComicButton>
+    <ComicButton size="small" onClick={()=>{tap();setScores(true);}}>Scores</ComicButton>
+   </div>
    <ComicPanel tone={result.hasShape?'teal':'paper'} flat className={styles.built} data-shape={result.hasShape||undefined}><small>{result.hasShape?'Best shape you built':'Your line'}</small><strong className={result.hasShape?comicNumeral:undefined} data-snake-built>{result.built}</strong>{result.called&&<em>Coach’s call x2</em>}</ComicPanel>
    <div className={styles.chips}>
     <ComicStat value={result.squads} label={result.squads===1?'Full Squad':'Full Squads'}/>
@@ -252,11 +258,6 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
    <p className={styles.coach}>{result.coach}</p>
    <ComicPanel tone="paper" flat className={styles.fact} data-snake-fact><b>{result.settled.fact.title}</b>{result.settled.fact.line}</ComicPanel>
    {(result.coins>0||entry.message)&&<p className={styles.status} role="status">{entry.message||`+${result.coins} ${result.coins===1?'coin':'coins'}`}{result.daily&&!result.settled.dailyFirst&&!entry.message?' · practice run (your first run today is on the board)':''}</p>}
-   <div className={styles.actions}>
-    <ComicButton variant="primary" wide disabled={busy} onClick={()=>{void start(result.daily);}} data-snake-again autoFocus>Play again</ComicButton>
-    <ComicButton size="small" disabled={busy} onClick={()=>{void start(!result.daily);}} data-snake-other>{result.daily?'Endless':'Daily Squad'}</ComicButton>
-    <ComicButton size="small" onClick={()=>{tap();setScores(true);}}>Scores</ComicButton>
-   </div>
   </ComicCard>}
   {board&&phase==='over'&&<HighScoreEntry game={board.game} score={board.score} detail={board.game==='snakedaily'?'Daily Squad: the same squad list for everyone today. Your first run counts.':'Points for team-mates called and Full Squads built.'} onClose={()=>setBoard(null)}/>}
   {scores&&<SquadSnakeScores daily={!!result?.daily} onClose={()=>setScores(false)}/>}

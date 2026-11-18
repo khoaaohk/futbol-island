@@ -70,7 +70,8 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    if(!(await page.evaluate(()=>window.__trophy.game.state.stats.merges>=1)))errors.push('no merge happened');
    await page.locator('[data-arcade-pause]').tap().catch(()=>{});await wait(700);await label('paused');await wait(900);quiet.push('paused');await label('');
   }else if(game==='snake'){quiet.push('menu');
-   await page.waitForFunction(()=>window.__snake&&window.__snake.phase==='playing'&&window.__snake.game.state.ticks>=1,null,{timeout:30000});
+   // Nov 17 2026: kick-off waits for the first input since Nov 11 (state.hold); the probe gives that first press itself
+   await page.waitForFunction(()=>{const k=window.__snake;if(!k||k.phase!=='playing'||!k.game)return false;const s=k.game.state;if(s.hold&&s.ready<=0)k.game.turn(s.dir);return s.ticks>=1;},null,{timeout:30000,polling:100});
    // stands the pitch's own next team-mate one cell ahead of the captain (turning away from a touchline first) until `joined` reaches the goal
    const call=(goal,name)=>page.waitForFunction(([goal,name])=>{const g=window.__snake.game,s=g.state,DX=[0,1,0,-1],DY=[-1,0,1,0];if(s.over)return true;if(s.stats.picks>=goal||s.stats.squads>0&&name==='full-squad')return true;if(s.beat>0||s.qn>0)return false;
      let d=s.dir,x=s.xs[0]+DX[d]*2,y=s.ys[0]+DY[d]*2;if(x<0||y<0||x>=s.cols||y>=s.rows){g.turn((d+1)%4);return false;}

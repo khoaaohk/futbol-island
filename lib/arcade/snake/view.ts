@@ -5,7 +5,10 @@
  * into one atlas per resize. Pools for stars, popups and the crack: render() allocates nothing. No loop lives here: the component
  * calls render() from its own rAF while a round is on (menus, pause, results and a hidden tab draw nothing).
  */
-import {SN,POS_COLOR,POS_DARK,POS_LABEL,CAUSE_WORD,DX,DY,shapeOfCode,type SnakeEvent,type SnakeState,type SquadSnake} from './core';
+import {SN,RAMP,POS_COLOR,POS_DARK,POS_LABEL,CAUSE_WORD,DX,DY,shapeOfCode,type SnakeEvent,type SnakeState,type SquadSnake} from './core';
+/** Level-up note (Nov 17 2026): what the new level brings, read from RAMP (one string a level, made once). */
+const LEVEL_NOTES=RAMP.map((r,i)=>{const p=i?RAMP[i-1]:r;return i===RAMP.length-1?'Top speed!':r.press>p.press?(p.press?'One more pressing defender':'A pressing defender joins'):r.refs>p.refs?(p.refs?'One more referee':'A referee walks on'):'The captain runs faster';});
+const levelNote=(level:number)=>LEVEL_NOTES[Math.max(1,Math.min(RAMP.length,level))-1];
 
 export const INK='#231a2e',PAPER='#fff3d6',SUN='#ffc83a',ORANGE='#ff8a3c',RED='#f0452e',TEAL='#19b5a5',VIOLET='#8f78b8';
 const GRASS_A='#3f9a5c',GRASS_B='#4aa868',APRON='#2f7d4a',SKIN='#ffd9a8';
@@ -173,7 +176,7 @@ export function createSnakeView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{
    case 'pick':for(let i=0;i<s.len;i++)pulse[i]=time+i*.045;burst(x,y,7,POS_COLOR[e.a]);burst(x,y,3,PAPER,.7);pop(x,y-cs*.7,'+'+e.c,PAPER);break;
    case 'squad':for(let i=0;i<s.len;i++){pulse[i]=time+i*.05;burst(cx(s.xs[i]),cy(s.ys[i]),2,POS_COLOR[s.pos[i]]);}fx.flash=reduced?0:.12;
     say('FULL SQUAD!',shapeOfCode(e.a),(e.c?'COACH’S CALL x2  ':'')+'+'+e.b,SUN,RED,SN.beat,ox+cs*C/2,oy+cs*R*.4,1);break;
-   case 'level':for(let i=1;i<SN.maxLine;i++)burst(cx(s.xs[i]),cy(s.ys[i]),2,PAPER,.8);say('LEVEL '+e.a,'','',PAPER,TEAL,.9,ox+cs*C/2,oy+cs*1.6,.62);break;
+   case 'level':for(let i=1;i<SN.maxLine;i++)burst(cx(s.xs[i]),cy(s.ys[i]),2,PAPER,.8);say('LEVEL '+e.a,'',levelNote(e.a),PAPER,TEAL,1.25,ox+cs*C/2,oy+cs*1.6,.62);break;
    case 'ball':burst(x,y,8,PAPER);say('THROUGH PASS!','','',PAPER,TEAL,.8,ox+cs*C/2,oy+cs*1.6,.58);fx.dashGlow=1;break;
    case 'dashEnd':fx.dashGlow=0;break;
    case 'boot':burst(x,y,12,SUN,1.2);pop(x,y-cs*.7,'+'+e.a,SUN,true);break;
@@ -239,7 +242,7 @@ export function createSnakeView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{
     lettering(word.text,word.x+shx,word.y+shy,p2,word.fill,-.07);
     if(word.sub){f.font=`400 ${cs*2.3*sc}px IslandBrush,"Arial Black",sans-serif`;f.setTransform(1,0,0,1,word.x+shx,word.y+cs*2.75+shy);f.rotate(.03);f.textAlign='center';f.textBaseline='middle';const sw=f.measureText(word.sub).width+cs*1.1,sh=cs*2.5;
      f.fillStyle=INK;f.fillRect(-sw/2+cs*.2,-sh/2+cs*.2,sw,sh);f.fillStyle=PAPER;f.fillRect(-sw/2,-sh/2,sw,sh);f.lineWidth=cs*.12;f.strokeStyle=INK;f.strokeRect(-sw/2,-sh/2,sw,sh);f.fillStyle=INK;f.fillText(word.sub,0,cs*.08);}
-    if(word.note)caption(word.note,word.x+shx,word.y+cs*4.75+shy,cs*.5,word.note.startsWith('+')?SUN:'#c9f1ea',-.03);
+    if(word.note)caption(word.note,word.x+shx,word.y+cs*(word.sub?4.75:1.45)+shy,cs*.5,word.note.startsWith('+')?SUN:'#c9f1ea',-.03);
     f.globalAlpha=1;plain();}}
   if(fx.flash>0){fx.flash-=dt;plain();f.globalAlpha=Math.max(0,fx.flash)*4;f.fillStyle=PAPER;f.fillRect(0,0,W,H);f.globalAlpha=1;}
  }

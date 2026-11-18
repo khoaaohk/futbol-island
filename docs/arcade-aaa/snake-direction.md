@@ -57,3 +57,8 @@ skid = brush scrape; save = glove thump; dash = whoosh; card = pea whistle; cras
 2D canvas, no three.js. Static scene never repaints; sprites pre-rendered per resize; effects pooled; the loop runs only while
 playing (60 fps cap, DPR cap 2 falling to 1.5 on long frames). Measured (headless Chrome, `scripts/check-snake-browser.cjs`):
 rules + draw 0.20 ms a frame avg, worst 4.9 ms at 390x844 @2x. Script time only: no GPU raster time or phone temperature measured.
+
+## Polish pass (Nov 17 2026, batch 2a)
+LEVEL n callouts carry a note read from RAMP (a pressing defender joins / a referee walks on / the captain runs faster).
+Results: medal road (`ComicMedalTrack`), Play again moved up under the high-score strip, NEW BEST stamp off the Best badge.
+The audio probe gives the kick-off press itself (it waited for ticks the Nov 11 hold never starts). Rules unchanged.
