@@ -207,11 +207,11 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
 
  // ---- Play and practise -----------------------------------------------------------------------------------------------------
  {id:'arcade',title:'The Arcade',group:'play',imageKey:'arcade',
-  hook:'Seven football games, one skill each.',
-  description:'The Arcade has Kit Rush, Breakaway Run, Squad Snake, Futbol Tennis, Futbol Pinball, Pass Puzzles and Air Futbol (the air hockey table, you against the computer). Each machine names the one skill it trains, and coins from the arcade spend at the vending machines.',
-  footballTie:'One skill per game: know your team; beat the tackle; build your eleven; control the first touch; read the rebound; see the space.',
+  hook:'Eight football games, one skill each.',
+  description:'The Arcade has Kit Rush, Breakaway Run, Squad Snake, Futbol Tennis, Futbol Pinball, Pass Puzzles, Air Futbol (the air hockey table, you against the computer) and Trophy Drop. Each machine names the one skill it trains, and coins from the arcade spend at the vending machines.',
+  footballTie:'One skill per game: know your team; beat the tackle; build your eleven; control the first touch; read the rebound; see the space; small touches add up.',
   where:'Tap Enter Arcade at the arcade building on the island.',
-  proof:'7 arcade games, each with its own skill line.',counts:{arcadeGames:7}},
+  proof:'8 arcade games, each with its own skill line.',counts:{arcadeGames:8}},
  {id:'pass-puzzles',title:'Pass Puzzles',group:'play',imageKey:'pass_puzzles',
   hook:'Draw the pass that splits the defence.',
   description:'Each puzzle freezes a moment in a match, and the player draws the pass with a finger. Packs build from first passes to beating the press, set pieces and wind and rain.',
