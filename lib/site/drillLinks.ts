@@ -42,6 +42,9 @@ export const G={
  /* Nov 17 2026: the puzzle cabinets. */ lineUp:gameLink('lineup'),trophyDrop:gameLink('trophydrop'),
  /* Nov 17 2026: the rolling-ball puzzle. */ rollBall:gameLink('rollball'), /* Nov 17 2026: the shooting game. */ ballBlaster:gameLink('ballblaster'),
  ages:{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},
+ /* seo-nov18: the two pages stuck near position 19 get links from the age guides, plans and tool pages. */
+ calc:{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Plan fair playing time, with equal minutes for every player'},
+ positions:{path:'/learn/soccer-positions',name:'Soccer positions explained',line:'Learn the positions and what each player does'},
 } as const;
 /**
  * The other direction (Nov 10 2026): which drills an existing guide page links to ("Drills to practice this"), keyed by the

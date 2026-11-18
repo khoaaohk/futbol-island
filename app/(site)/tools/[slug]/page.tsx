@@ -35,11 +35,13 @@ export function generateMetadata({params}:{params:{slug:string}}){
 }
 const APP_LINE=(crumb:string)=>`The ${crumb.replace(/^[A-Z](?![A-Z0-9])/,m=>m.toLowerCase())} as a phone app for game day: a live substitution clock, works offline, no account.`;
 const FORMAT_WORD=(f:GuideFormat)=>f==='futsal'?'futsal':f;
+/* seo-nov18: every lineup and playing-time page links the positions hub once */
+const POSITIONS_LINK={path:'/learn/soccer-positions',name:'Soccer positions explained',line:'What each position does, and the numbers 1 to 11'};
 function Lineup({p}:{p:LineupPage}){
  const format=p.format??'7v7',f=formationBySlug(DEFAULT_FORMATION[format])!,crumbs=toolCrumbs({name:p.crumb,path:p.path});
  const others=LINEUP_PAGES.filter(x=>x!==p).map(x=>({path:x.path,name:x.h1[0].toUpperCase()+x.h1.slice(1),line:x.blurb}));
  const related=[...(p.format?formationsIn(format).map(x=>({path:x.path,name:`${x.name} formation`,line:x.best})):[]),{path:p.format?formatGuidePath(format):'/learn/soccer-formations',name:!p.format?'Soccer formations explained':format==='futsal'?'Futsal lessons for kids':`${format} soccer formations`,line:'How to choose a shape, with a diagram of each'},
-  p.format?{path:cheatSheetPath(format),name:`${format==='futsal'?'Futsal':format} formations cheat sheet`,line:'Every shape of this game on one printable page'}:{path:PRINTABLES_HUB_PATH,name:'Formation cheat sheets and blank fields',line:PRINTABLES_HUB.blurb},{path:PLANNER_PATH,name:'Soccer playing time calculator',line:'A fair substitution plan for the same squad'},...others];
+  p.format?{path:cheatSheetPath(format),name:`${format==='futsal'?'Futsal':format} formations cheat sheet`,line:'Every shape of this game on one printable page'}:{path:PRINTABLES_HUB_PATH,name:'Formation cheat sheets and blank fields',line:PRINTABLES_HUB.blurb},{path:PLANNER_PATH,name:'Soccer playing time calculator',line:'A fair substitution plan for the same squad'},POSITIONS_LINK,...others];
  /* visual pass Nov 17 2026: key facts under the lead, from the tool's own features (webAppLd below) */
  const facts:Fact[]=[{icon:format==='futsal'?'court':'lineup',label:'Games',value:p.format?FORMAT_WORD(format):'7v7, 9v9, 11v11, futsal'},
   {icon:'diagram',label:'Formations',value:`${p.format?formationsIn(format).length:FORMATIONS.length} to choose from`},{icon:'share',label:'Share it',value:'Print, picture or link'},{icon:'lock',label:'Account',value:'None, names stay on your device'}];
@@ -84,7 +86,7 @@ function Planner({p}:{p:PlannerPage}){
  const g=gameLengths(format)[0],initial={players:!p.format?11:format==='9v9'?12:10,onField:PLAYERS_PER_TEAM[format],periods:g?.periods??2,periodMin:g?.periodMin??25,subEvery:format==='9v9'?10:5,keeperRotates:true,names:[] as string[],team:''};
  const rows=GUIDE_FORMATS.filter(f=>f!=='futsal').flatMap(f=>gameLengths(f).map(x=>[`${f} (${x.ages})`,`${PLAYERS_PER_TEAM[f]}`,x.label,`${x.periods*x.periodMin} min`]));
  const related=[{path:'/learn/soccer-rules/substitutions-and-game-length',name:'Substitutions and game length by age',line:'How long games last and how changes work'},{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},
-  {path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'U6 to U19 and which game each one plays'},{path:'/learn/lessons',name:'Soccer lessons for kids',line:'Short lessons and quizzes to use at practice'},{path:p.format?`/tools/${p.format}-lineup-builder`:LINEUP_PATH,name:p.format?`${p.format} lineup builder`:'Soccer lineup builder',line:'Put the starters on a field diagram'},
+  {path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'U6 to U19 and which game each one plays'},POSITIONS_LINK,{path:'/learn/lessons',name:'Soccer lessons for kids',line:'Short lessons and quizzes to use at practice'},{path:p.format?`/tools/${p.format}-lineup-builder`:LINEUP_PATH,name:p.format?`${p.format} lineup builder`:'Soccer lineup builder',line:'Put the starters on a field diagram'},
   ...PLANNER_PAGES.filter(x=>x!==p).map(x=>({path:x.path,name:x.h1[0].toUpperCase()+x.h1.slice(1),line:x.blurb})),{path:PRINTABLES_HUB_PATH,name:'Blank soccer field diagrams',line:PRINTABLES_HUB.blurb}];
  /* visual pass Nov 17 2026: key facts under the lead, from the planner's own features (webAppLd below) */
  const facts:Fact[]=[{icon:'lineup',label:'Games',value:p.format??'7v7, 9v9, 11v11'},{icon:'clock',label:'Minutes',value:'Equal for every player'},

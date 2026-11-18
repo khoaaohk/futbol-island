@@ -5,6 +5,7 @@ import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {AGE_YEARS,DRILLS_HUB,drillLine} from '@/lib/site/drills';
 import {ageGuide} from '@/lib/site/drillGuides';
+import {G} from '@/lib/site/drillLinks';
 import {PLANS,PLANS_HUB,PLAN_SAFETY_LINE,PPP_LINE,PRACTICE_RANGE,clock,planBySlug,plansForAge} from '@/lib/site/plans';
 import {GUIDE_FOOT,diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
@@ -30,7 +31,7 @@ export function generateMetadata({params}:{params:{slug:string}}){
 export default function PlanPage({params}:{params:{slug:string}}){
  const p=planBySlug(params.slug);if(!p)notFound();
  const crumbs=guideCrumbs({name:PLANS_HUB.crumb,path:PLANS_HUB.path},{name:p.name,path:p.path}),guide=ageGuide(p.age),shown=p.drills.find(d=>d.picture===p.picture)!;
- const related=[...plansForAge(p.age).filter(x=>x!==p).map(x=>({path:x.path,name:x.h1,line:`${x.minutes} minutes: ${x.goal.toLowerCase()}`})),{path:guide.path,name:guide.h1,line:guide.blurb},...p.links,
+ const related=[...plansForAge(p.age).filter(x=>x!==p).map(x=>({path:x.path,name:x.h1,line:`${x.minutes} minutes: ${x.goal.toLowerCase()}`})),{path:guide.path,name:guide.h1,line:guide.blurb},...p.links,G.calc,
   {path:PLANS_HUB.path,name:'All soccer practice plans',line:PLANS_HUB.blurb},{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>

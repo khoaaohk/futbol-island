@@ -46,7 +46,7 @@ export default function DrillsHub(){
    <LinkList links={[...SKILL_GUIDES.map(g=>({path:g.path,name:g.h1,line:g.blurb})),{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}/>
   </Section>
   <QA id="faq" title="Questions about soccer drills" faq={HUB.faq}/>
-  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'related',links:[{path:'/learn/soccer-rules',name:'Soccer rules for kids',line:'Every rule with a diagram'},{path:'/learn/soccer-positions',name:'Soccer positions for kids',line:'What each player does'},
+  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'related',links:[{path:'/learn/soccer-rules',name:'Soccer rules for kids',line:'Every rule with a diagram'},{path:'/learn/soccer-positions',name:'Soccer positions for kids',line:'What each player does'},{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Plan fair playing time for every player on game day'},
    {path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},{path:'/learn/soccer-terms',name:'Soccer terms for kids',line:'The words coaches use, explained'}]}]}/>
   <GuideEnd cta={false}/>
  </>;

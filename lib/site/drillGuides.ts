@@ -47,7 +47,7 @@ const RAW:RawGuide[]=[
    {q:'How do I coach 5-year-olds who will not listen?',a:'Talk less and play more. Use games with a story, give every child a ball, and change activity before they get bored. It is their attention span, not their attitude.'},
    {q:'Should U6 players learn to pass?',a:'A little, in pairs, for a few minutes. Most five-year-olds are not ready to give the ball away, and dribbling is the skill to build first.'},
    {q:'How many kids should be on a U6 team?',a:'Small rosters work best because the game is 4v4. Ask your league for its roster limit.'}],
-  lessons:['learn7_carry','learn7_receive','learn7_roles'],links:[plan('u6-first-practice','U6 first practice plan','A 45-minute plan for the first day'),G.ages,G.ball,G.field],featured:'sharks-and-minnows'},
+  lessons:['learn7_carry','learn7_receive','learn7_roles'],links:[plan('u6-first-practice','U6 first practice plan','A 45-minute plan for the first day'),G.ages,G.ball,G.field,G.calc],featured:'sharks-and-minnows'},
 
  {slug:'u8',kind:'age',age:'U8',name:'U8 drills',title:'U8 Soccer Drills: 10 Fun Drills for 7 and 8 Year Olds',h1:'U8 soccer drills for 7 and 8 year olds',
   desc:'Ten U8 soccer drills that 7 and 8 year olds enjoy: dribbling games, 1v1, first passing games and 3v3. What players this age can do, and what to avoid.',
@@ -68,7 +68,7 @@ const RAW:RawGuide[]=[
    {q:'What skills should U8 players learn?',a:'Dribbling with both feet, turning, 1v1 attacking and defending, striking the ball with the laces and passing with the inside of the foot to a partner.'},
    {q:'How do I stop U8 players bunching up?',a:'Play 3v3 on a small field and praise the player who finds space. Fewer players means less of a bunch, and the habit of spreading out grows from there.'},
    {q:'Should U8 teams have set positions?',a:'Not fixed ones. In 4v4 everyone attacks and everyone defends. Simple ideas such as “one player stays back a little” are enough.'}],
-  lessons:['learn7_carry','learn7_receive','prn_7_support','prn_7_spread'],links:[plan('u8-first-practice','U8 first practice plan','A 60-minute plan for the first day'),plan('u8-dribbling-practice-plan','U8 dribbling practice plan','One hour built around 1v1'),G.ages,G.field],featured:'gates-dribbling'},
+  lessons:['learn7_carry','learn7_receive','prn_7_support','prn_7_spread'],links:[plan('u8-first-practice','U8 first practice plan','A 60-minute plan for the first day'),plan('u8-dribbling-practice-plan','U8 dribbling practice plan','One hour built around 1v1'),G.ages,G.field,G.positions,G.calc],featured:'gates-dribbling'},
 
  {slug:'u10',kind:'age',age:'U10',name:'U10 drills',title:'U10 Soccer Drills: 10 Drills for 9 and 10 Year Olds',h1:'U10 soccer drills for 9 and 10 year olds',
   desc:'Ten U10 soccer drills for 9 and 10 year olds: rondos, first touch, give-and-go, 2v1, 1v1 defending and first goalkeeper work. What to coach and avoid.',
@@ -89,7 +89,7 @@ const RAW:RawGuide[]=[
    {q:'What should U10 players work on?',a:'First touch, passing and receiving in threes and fours, 1v1 and 2v1 in attack, 1v1 defending, and for everyone, the basics of goalkeeping.'},
    {q:'Can U10 players head the ball?',a:'No. In US youth soccer, players aged 10 and under do not head the ball in games or practice. Teach chest, thigh and foot control for high balls.'},
    {q:'What formation should a U10 team play?',a:'U10 teams play 7v7. Shapes such as 2-3-1 give every player a clear job, and our 7v7 formations page compares them.'}],
-  lessons:['learn7_receive','prn_7_support','learn7_buildout','def_7_goalside'],links:[plan('u10-first-practice','U10 first practice plan','A 60-minute plan for the first day'),plan('u10-passing-practice-plan','U10 passing practice plan','Rondos, a first touch and a four-goal game'),G.f7,G.buildOut,G.heading],featured:'rondo-3v1'},
+  lessons:['learn7_receive','prn_7_support','learn7_buildout','def_7_goalside'],links:[plan('u10-first-practice','U10 first practice plan','A 60-minute plan for the first day'),plan('u10-passing-practice-plan','U10 passing practice plan','Rondos, a first touch and a four-goal game'),G.f7,G.buildOut,G.heading,G.positions,G.calc],featured:'rondo-3v1'},
 
  {slug:'u12',kind:'age',age:'U12',name:'U12 drills',title:'U12 Soccer Drills: 10 Drills for 11 and 12 Year Olds',h1:'U12 soccer drills for 11 and 12 year olds',
   desc:'Ten U12 soccer drills for 11 and 12 year olds: 4v2 rondos, possession games, pressure and cover, 3v2 and finishing from low crosses. What to coach.',
@@ -110,7 +110,7 @@ const RAW:RawGuide[]=[
    {q:'What should U12 players focus on?',a:'Passing and receiving under pressure, scanning before the ball arrives, defending in pairs, and finishing attacks quickly when they have an extra player.'},
    {q:'Can U12 players head the ball?',a:'US Youth Soccer allows heading in games from age 11, with limits on heading in practice at 11 and 12. None of our drills use heading. Check your own league’s rule.'},
    {q:'What formation do U12 teams play?',a:'U12 teams play 9v9. Shapes such as 3-2-3 and 3-3-2 are common, and our 9v9 formations page shows each one.'}],
-  lessons:['learn9_receive','learn9_cover','learn9_switch','gap11_runoncue'],links:[plan('u12-first-practice','U12 first practice plan','A 75-minute plan for the first day'),plan('u12-possession-practice-plan','U12 possession practice plan','Rondos into a three-team game'),G.f9,G.offside,G.heading],featured:'rondo-4v2'},
+  lessons:['learn9_receive','learn9_cover','learn9_switch','gap11_runoncue'],links:[plan('u12-first-practice','U12 first practice plan','A 75-minute plan for the first day'),plan('u12-possession-practice-plan','U12 possession practice plan','Rondos into a three-team game'),G.f9,G.offside,G.heading,G.positions,G.calc],featured:'rondo-4v2'},
 
  {slug:'at-home',kind:'skill',name:'Drills to do at home',title:'Soccer Drills to Do at Home: Alone or With a Parent',h1:'Soccer drills to do at home',
   desc:'Soccer drills kids can do at home, alone or with one parent, in a small space: toe taps, cone weave, wall passing, turns and first touch. A 15-minute plan.',
