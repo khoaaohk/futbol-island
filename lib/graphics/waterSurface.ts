@@ -2,6 +2,7 @@ import * as T from 'three';
 import {DIVE_SLOTS,DIVE_BLOB_MAX,diveBlobParams} from '../town/water/diveSpots';
 import {SHOAL_HEART_D,SHOAL_OPAQUE_D,WATER_Y} from './waterTokens';
 import {stepGroundTime} from './groundTint';
+import {SWIM_FX} from './swimFx';
 /** The dive patch's blob test (diveSpots.ts diveBlobR, same formula): q < 1 inside; q > 1 past the widest reach skips the atan. */
 // Oct 20 2026 (user: "look more like the shore where it's see through", "blend in more on the edges"): the patch's look reaches past
 // the dive blob (q < 1, where Dive shows) and dissolves over a wide noise-broken band out to q = DIVE_SHOAL.fade, so the quick reject
@@ -202,8 +203,28 @@ export const SWIM_CLEAR={radius:9.5,edge:5.5,minAlpha:.32,deepAlpha:.86,diveAlph
 export const SWIM_CLEAR_UNIFORMS={uSwimClear:{value:0},uSwimXZ:{value:new T.Vector2()},uSwimDive:{value:0}};
 const SWIM_CLEAR_GLSL=/* glsl */`
 uniform float uSwimClear,uSwimDive;uniform vec2 uSwimXZ;
-float swimClearAlpha(vec2 xz,float d){float r=distance(xz,uSwimXZ),a=mix(${SWIM_CLEAR.minAlpha.toFixed(2)},mix(${SWIM_CLEAR.deepAlpha.toFixed(2)},${SWIM_CLEAR.diveAlpha.toFixed(2)},uSwimDive),smoothstep(7.,20.,d));
- return 1.-uSwimClear*(1.-smoothstep(${(SWIM_CLEAR.radius-SWIM_CLEAR.edge).toFixed(2)},${SWIM_CLEAR.radius.toFixed(2)},r))*(1.-a);}
+// Nov 17 2026: the disc mask m = uSwimClear x (1 - smoothstep(radius - edge, radius, distance to the swimmer)) is computed ONCE by the
+// caller and shared with the streak line below it (they were two distance() + two identical smoothsteps per sea pixel).
+float swimClearAlpha(float m,float d){float a=mix(${SWIM_CLEAR.minAlpha.toFixed(2)},mix(${SWIM_CLEAR.deepAlpha.toFixed(2)},${SWIM_CLEAR.diveAlpha.toFixed(2)},uSwimDive),smoothstep(7.,20.,d));
+ return 1.-m*(1.-a);}
+`;
+/**
+ * Swim rings and wake drawn in the sea (lib/graphics/swimFx.ts, Nov 17 2026; they replace the six blended ring meshes).
+ * uSwimFx = (bounds centre x, z, bounds radius squared, wake strength); z 0 = nothing live = the whole block is one skipped
+ * uniform branch. uSwimRing[i] = (x, z, radius now, strength now), aged on the CPU. uSwimWake = (swimmer x, z, direction to the
+ * tail / wake length). swimFx() returns (foam 0.., signed swell: + crest, - trough); `n` 0..1 is the ripple tile's value at the
+ * pixel (already fetched: no new read), which wobbles the rings and breaks the foam.
+ */
+export const SWIM_FX_UNIFORMS={uSwimRing:{value:Array.from({length:SWIM_FX.rings},()=>new T.Vector4())},uSwimWake:{value:new T.Vector4()},uSwimFx:{value:new T.Vector4()}};
+export const SWIM_FX_GLSL=/* glsl */`
+uniform vec4 uSwimRing[${SWIM_FX.rings}],uSwimWake,uSwimFx;
+vec2 swimFx(vec2 xz,float n){
+ vec2 p=xz+(n-.5)*.22;float sw=0.,foam=0.;
+ for(int i=0;i<${SWIM_FX.rings};i++){vec4 r=uSwimRing[i];float q=clamp((distance(p,r.xy)-r.z)*${(1/SWIM_FX.width).toFixed(2)},-1.,1.);sw+=r.w*q*(1.-q*q);}
+ sw*=2.6;
+ if(uSwimFx.w>0.){vec2 w=p-uSwimWake.xy;float a=dot(w,uSwimWake.zw),t=clamp(a,0.,1.),e=abs(w.x*uSwimWake.w-w.y*uSwimWake.z)-t*${SWIM_FX.wakeHalf.toFixed(2)};
+  float f=1.-t;foam=uSwimFx.w*smoothstep(0.,.06,a)*(max(0.,1.-abs(e)/(.03+.1*t))*(1.-t*t)*(1.+.6*n)+step(e,0.)*f*f*(.3+1.3*n));}
+ return vec2(foam+max(sw,0.),sw);}
 `;
 /**
  * The clear water window (lib/town/water/clearWindow.ts, Oct 19 2026, docs/water-look-research.md §3): round the player
@@ -313,10 +334,10 @@ void oceanVaryings(vec2 p){float t=uWaterTime;
 /** Patch the island ocean material (MeshStandardMaterial with the ripple tile as `map`). Safe to call once per material. */
 export function patchOceanMaterial(material:T.MeshStandardMaterial){
  material.onBeforeCompile=shader=>{
-  Object.assign(shader.uniforms,WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,CLEAR_WIN_UNIFORMS);
+  Object.assign(shader.uniforms,WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,SWIM_FX_UNIFORMS,CLEAR_WIN_UNIFORMS);
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\n'+OCEAN_VERT_GLSL)
    .replace('#include <project_vertex>','#include <project_vertex>\nvWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;oceanVaryings(vWaterXZ);');
-  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ,vDiveHit;varying vec4 vSeaA,vSeaCam;\n'+DIVE_GLSL+SHORE_GLSL+SWIM_CLEAR_GLSL+CLEAR_WIN_GLSL)
+  shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ,vDiveHit;varying vec4 vSeaA,vSeaCam;\n'+DIVE_GLSL+SHORE_GLSL+SWIM_CLEAR_GLSL+SWIM_FX_GLSL+CLEAR_WIN_GLSL)
    .replace('#include <lights_pars_begin>','#include <lights_pars_begin>\n'+WATER_GLIMMER_GLSL)
    .replace('#include <map_fragment>',/* glsl */`
     // Fishing clear water (lib/town/fishing/shoreWater.ts, Oct 12 2026): the opaque fishing strip covers the ocean here, skip its shading.
@@ -425,10 +446,15 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
    // is open) writes an alpha: it follows depth (clearer over the sand, bluer further out) and rises on the light streaks, so they
    // read as ribbons on the surface above the coral (they replace the window's old stretched light bands: one read fewer).
    .replace('#include <opaque_fragment>',`
+    // Swim rings + wake (swimFx.ts): both programs; one uniform branch when nothing is live, then a bounds test per pixel.
+    float swimFoam=0.;
+    if(uSwimFx.z>0.){vec2 fd=vWaterXZ-uSwimFx.xy;if(dot(fd,fd)<uSwimFx.z){vec2 sf=swimFx(vWaterXZ,(ripple.r-.855)*6.9);swimFoam=min(sf.x,1.);
+     outgoingLight=mix(outgoingLight*(1.+.4*min(sf.y,0.)),vec3(.84,.93,.96)*uWaterNight,swimFoam*.82);}}
     #ifndef OPAQUE
-    {float wm=clearWinMask(vWaterXZ,d);outgoingLight+=min(waterStreak,1.2)*max(wm,diveClr)*vec3(.05,.07,.07);// the ribbons a touch lighter over the window
-     diffuseColor.a=min(min(swimClearAlpha(vWaterXZ,d),clearWinAlpha(wm,clearWinD(vWaterXZ,d))),mix(1.,clearWinAlpha(1.,dd),diveClr));
-     diffuseColor.a+=(1.-diffuseColor.a)*min(waterStreak*.2,.25)*(1.-uSwimClear*(1.-smoothstep(4.,${SWIM_CLEAR.radius.toFixed(1)},distance(vWaterXZ,uSwimXZ))));}
+    {float wm=clearWinMask(vWaterXZ,d),swimM=uSwimClear*(1.-smoothstep(${(SWIM_CLEAR.radius-SWIM_CLEAR.edge).toFixed(2)},${SWIM_CLEAR.radius.toFixed(2)},distance(vWaterXZ,uSwimXZ)));outgoingLight+=min(waterStreak,1.2)*max(wm,diveClr)*vec3(.05,.07,.07);// the ribbons a touch lighter over the window
+     diffuseColor.a=min(min(swimClearAlpha(swimM,d),clearWinAlpha(wm,clearWinD(vWaterXZ,d))),mix(1.,clearWinAlpha(1.,dd),diveClr));
+     diffuseColor.a+=(1.-diffuseColor.a)*min(waterStreak*.2,.25)*(1.-swimM);
+     diffuseColor.a+=(1.-diffuseColor.a)*swimFoam;}
     #endif
     // Glimmer last, ON the surface: over the see-through window the blend would scale it by the low alpha, so the alpha rises
     // by the glimmer's own brightness and the colour is rebalanced (= src*a + glimmer over the coral, an exact additive speck).
@@ -439,6 +465,6 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     #endif
     #include <opaque_fragment>`);
  };
- material.customProgramCacheKey=()=>'island-ocean-water-v10';
+ material.customProgramCacheKey=()=>'island-ocean-water-v11';
  material.needsUpdate=true;
 }

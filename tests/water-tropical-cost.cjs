@@ -24,6 +24,15 @@ BASE.ocean.far.alu+=25;BASE.ocean.nearPhone.alu+=20;// measured 790 and 1280 (+3
 // for by moving work to the vertex shaders and cheaper per-wave hashing. Ratchet: the paths that went DOWN are pinned at the new figures.
 Object.assign(BASE.ocean.far,{alu:788});Object.assign(BASE.ocean.nearPhone,{alu:1254});Object.assign(BASE.ocean.nearDesk,{alu:1568});
 for(const [k,v] of Object.entries({still:301,far:432,nearPhone:473,nearPhoneHot:436,nearDesk:473}))BASE.shore[k].alu=v;
+// Nov 17 2026 swim rings + wake in the ocean shader (docs/graphics/island-graphics-plan-nov17.md S1, lib/graphics/swimFx.ts). They
+// replace six blended ring meshes (up to 6 draws and 6 materials fewer while swimming). Cost, stated plainly:
+//  - nothing live (land, shore, no swimmer near): ONE uniform comparison per sea pixel, the gate. +1 ALU on every path.
+//  - something live: a bounds test on every sea pixel (about 6 ALU), and the full block only inside the bounds circle (a few metres
+//    round the swimmer): the `swimFx` path, pinned here as its own ceiling (a phone near-camera pixel + six rings + the wake).
+//  - paid back in the blended program (the one that runs while swimming or over the clear window; this estimator counts the
+//    opaque program only): the swim disc's mask was computed twice per pixel (two distance() and two identical smoothsteps), now once.
+for(const p of ['far','nearPhone','nearDesk'])BASE.ocean[p].alu+=1;
+BASE.ocean.swimFx={alu:1402,tex:4};
 const now=waterPaths(src('lib/graphics/waterSurface.ts'),src('lib/graphics/islandShore.ts'));
 
 ok('fragment cost per path is not higher than before (ALU and texture reads; ocean + shore strip; phone, desktop, hot, still, far)',()=>{

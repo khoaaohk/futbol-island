@@ -6619,3 +6619,51 @@ hold-power are untouched; rendering, HUD and sound palette changed. Direction: `
 - **Lite** (heat tier 2+, Battery saver): half the voices in renders, no harmony / key change, no olé roll, no positional panning. Teardown 30 s after leaving (renders, buffers, shared noise / impulses).
 - Tests: `tests/stadium-sound.cjs` (crossfade + hysteresis, songs follow the mood, gating, shake, lazy build / teardown, no copyrighted titles, wiring).
 - **Nov 13 (later): shouts + reactions.** Ten chants (eight shouted, one short sung tune); six mono reaction one-shots (~1 MB more in the bank, rendered once on approach in idle time); a third one-shot slot; reactions read the stadium sim's 8-entry touch ring at 10 Hz (no allocation). Headless Chrome, 30 s in the bowl: max tick 0.9 ms.
+
+## Nov 17 2026: swimming graphics, batch A "In the water" (branch `island-gfx`, local, not deployed)
+
+Owner: "How can we make the swimming graphics look even better" / "enhance the graphics ... without increasing heat, especially for
+mobile". Plan and baseline: `docs/graphics/island-graphics-plan-nov17.md` (S1, S2, S3). **No thermal claim: nothing here was run
+on a phone.** What is counted below is draws, triangles, programs, textures and the static shader estimate.
+
+What changed
+- **Rings and wake are drawn by the ocean shader** (`lib/graphics/swimFx.ts` + `SWIM_FX_GLSL` in `lib/graphics/waterSurface.ts`).
+  The six blended ring meshes and their six materials in `ballEffects.ts` are gone. Six `vec4` ring uniforms (five pooled: the
+  player's strokes and treading, the swimming islanders, splash-downs; one "contact collar" that stays at the swimmer's hips), one
+  wake uniform and one bounds uniform. Each ring is a bright crest with a darker trough inside it; the wake is a V of two foam arms
+  behind the crawling swimmer with churn at the feet, on a towed tail so it bends through a turn and fades where it lies when the
+  swimmer stops. The ripple tile value already fetched for the pixel wobbles the rings and breaks the foam: **no new texture read**.
+- **Water line on the body** (`beanSkin.ts` `BEAN_UNDER`, `BEAN_WOBBLE_VERTEX`): a lapping foam line where a part cuts the surface
+  and a few centimetres of sideways sway on the vertices below it. Inside the existing `beanUnder > 0` uniform branch, which only
+  the swimming player's materials ever open (`swimClear.ts`), so land, shop, arcade, previews and every other bean are untouched.
+  The line now follows the water the swimmer is in (`BEAN_WATER.uBeanWaterY`: the sea or the park pond; it was hard-coded to the sea).
+- **Stroke and kick spray** through the ride-splash pool (`rideSplash.ts` `spray`): 3-5 droplets ahead of each entering hand, a low
+  fizz at the feet on Swim fast, 6 when a wade becomes a swim, 10 on a splash-down. Same 56-instance pool, same one draw.
+- **Park pond** rings and wakes (they used the removed ring meshes) ride the same pool (`rideSplash.ts` `ring`).
+- Sharks, rideable sea animals, the dive bubbles and the ball's splash use the other ring pool (`ballEffects.ripple`): unchanged.
+  Friends in multiplayer never had swim rings: unchanged.
+
+Tiers
+- 0-1: rings per stroke, wake, collar, spray.
+- 2, or the governor reporting slow frames: one slow ring every 2 s, collar, half the spray, no wake (`waterFxOn`, the existing gate for decorative water effects).
+- 3+ and Battery saver: one slow ring, collar, no spray, no wake, still water line. Reduced motion: one static ring, collar, still water line.
+
+Cost, as counted
+- `node scripts/gfx-budget.cjs` (headless, SwiftShader; counts exact), camera at rest (`GFX_SETTLE=14000`, new option). Swim view
+  draw calls: tier 0 **110 -> 100**, tier 2 **100 -> 94**; shore 113 -> 108 and 103 -> 99; triangles lower (swim 189,024 ->
+  182,232 and 154,714 -> 154,234); textures equal; town and stadium at tier 0 identical. With the script's default 4 s wait the
+  camera is still flying in and the rows wobble (median draw calls still lower, 102 -> 98/99 and 94 -> 90-92, but triangles up to
+  +4,632 in some runs): both tables are in `docs/graphics/island-graphics-plan-nov17.md` section 8.
+- Programs: **+1 in the swim view** (at rest 67 -> 68 and 64 -> 65). It is the ride-splash program, which already existed and compiles the
+  first time the pool draws; a swimmer now reaches it before a rider in the swash does. No new program was written.
+- Static estimate (`tests/water-tropical-cost.cjs`, opaque ocean program): every path **+1 ALU** (the gate `if(uSwimFx.z>0.)`, one
+  uniform comparison) while nothing is live: far 788 -> 789, phone near 1254 -> 1255, desktop 1568 -> 1569. With something live
+  every sea pixel also pays a bounds test (about 6 ALU) and pixels **inside** the bounds circle (a few metres round the swimmer)
+  pay the full block: 1402 against 1255 (+147, +12 %, new pinned path `swimFx`). Paid back in the blended program, the one that
+  actually runs while swimming and over the clear window: the swim disc mask was computed twice per pixel (two `distance()` and
+  two identical `smoothstep`s), now once, about -12 ALU on every sea pixel. By this count the swimming view is roughly level; it
+  is an estimate, not a GPU measurement.
+- Not measurable here: real GPU time, overdraw and temperature. Needs an iPhone: 5 minutes of swimming before / after.
+
+Tests: `swim-ripples` (rewritten: uniform pool, wake, collar, bounds, no allocation, pool sources), `swim-clear`, `heat-water`,
+`water-tropical-cost` re-pinned as above.

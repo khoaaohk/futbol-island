@@ -22,26 +22,56 @@ ok('treading every .8 s, floating slower, diving / not swimming / other poses no
  const t=mk();t.s.kind='tread';run(t,0,4);assert(t.calls.length>=4&&t.calls.length<=6,'tread '+t.calls.length);
  const f=mk();f.s.kind='float';run(f,0,4);assert(f.calls.length>=2&&f.calls.length<=3&&f.calls[0][4]<t.calls[0][4],'float faint');
  for(const edit of [s=>{s.under=.5;},s=>{s.on=false;},s=>{s.kind='entry';},s=>{s.kind='hold';}]){const q=mk();edit(q.s);q.s.kind==='crawl'&&(q.s.kind='tread');run(q,5,3);assert.equal(q.calls.length,0);}});
-ok('Swim fast adds a stretched V behind the swimmer (two rings), only when fast',()=>{
- const t=mk();t.s.fast=1;run(t,9,3);const v=t.calls.filter(c=>c[5]>1);assert(v.length>=10&&v.length%2===0,'V pairs '+v.length);
- assert(v.every(c=>c[1]<7-.5),'behind (yaw 0: -z)');const l=v.filter(c=>c[0]<5).length,r=v.length-l;assert.equal(l,r);
- assert(v[0][6]!==v[1][6],'the two arms point different ways');
- const n=mk();run(n,5.5,3);assert.equal(n.calls.filter(c=>c[5]>1).length,0);});
+ok('Swim fast spawns no stretched ring pair any more (Nov 17 2026: the V is the ocean shader wake, swimFx.ts)',()=>{
+ const t=mk();t.s.fast=1;run(t,9,3);assert(t.calls.length>=6);assert(t.calls.every(c=>c[5]===1&&c[6]===0),'round rings only');});
 ok('heat: lite = one slow ripple every 2 s (never overlapping), reduced motion = a static faint ring, no strokes',()=>{
  const t=mk();t.s.mode=1;run(t,9,6);assert(t.calls.length>=2&&t.calls.length<=3);assert(t.calls.every(c=>c[3]<=R.SWIM_RIPPLE.lite&&c[7]===0));
  const q=mk();q.s.mode=2;run(q,0,5);assert(q.calls.length>=1&&q.calls.every(c=>c[7]===1&&c[4]<=.2));});
-ok('the pool caps at 6 live ripples, grows in world space, fades, and nothing allocates in the loops',()=>{
- const fx=load('lib/graphics/ballEffects.ts').createBallEffects(),cam=new T.PerspectiveCamera(),p={x:0,y:1,z:0};
- const pool=()=>fx.root.children.filter(o=>o.name==='swim-ripple');assert.equal(pool().length,R.SWIM_RIPPLE_CAP);assert.equal(R.SWIM_RIPPLE_CAP,6);
- for(let i=0;i<20;i++)fx.swimRipple(i,0,0,1.6,1,.35);fx.update(.016,p,false,false,cam);assert.equal(pool().filter(o=>o.visible).length,6,'never more than six live');
- const m=pool().find(o=>o.visible);assert(m.material.opacity<=.35&&m.renderOrder>=1&&m.material.depthWrite===false);
- const r0=m.scale.x;fx.update(.3,p,false,false,cam);const w=pool().find(o=>o.visible);assert(w.scale.x>0);
- fx.update(2,p,false,false,cam);assert.equal(pool().filter(o=>o.visible).length,0,'all gone after their life');
- fx.swimRipple(3,0,4,1.6,1,.3);const q=pool().find(o=>o.position.x===3);fx.update(.5,p,false,false,cam);const x=q.position.x,z=q.position.z;fx.update(.2,{x:99,y:1,z:99},false,false,cam);assert.equal(q.position.x,x);assert.equal(q.position.z,z,'world space: the swimmer moving does not drag it');
- fx.swimRipple(0,0,0,1,1,.3,1,0,1);fx.update(.5,p,false,false,cam);const st=pool().find(o=>o.visible),s1=st.scale.x;fx.update(.2,p,false,false,cam);assert(Math.abs(st.scale.x-s1)<.12,'still ring holds its size');
+// ---- Nov 17 2026 (docs/graphics/island-graphics-plan-nov17.md, batch A): the rings and the wake are ocean-shader uniforms.
+const FX=load('lib/graphics/swimFx.ts');
+const fakeU=()=>{const v=()=>({v:[0,0,0,0],set(x,y,z,w){this.v=[x,y,z,w];}});return {uSwimRing:{value:Array.from({length:FX.SWIM_FX.rings},v)},uSwimWake:{value:v()},uSwimFx:{value:v()}};};
+const inBounds=u=>{const [cx,cz,r2]=u.uSwimFx.value.v;for(const r of u.uSwimRing.value){const [x,z,rad,a]=r.v;if(a>0)assert(Math.hypot(x-cx,z-cz)+rad+FX.SWIM_FX.width<=Math.sqrt(r2)+1e-6,'ring outside the bounds circle');}};
+ok('swimFx rings: 5 pooled + the collar slot, grow in world space, fade to nothing, and the gate uniform closes',()=>{
+ const u=fakeU(),fx=FX.createSwimFx(u);assert.equal(FX.SWIM_FX.rings,6);
+ assert.equal(fx.update(.016),0);assert.deepEqual(u.uSwimFx.value.v,[0,0,0,0],'nothing live: the shader branch is off');
+ for(let i=0;i<20;i++)fx.ring(i,0,1.6,1,1);assert.equal(fx.update(.016),5,'never more than the pool');assert.equal(u.uSwimRing.value[5].v[3],0,'the last slot is the collar');
+ assert(u.uSwimFx.value.v[2]>0);inBounds(u);
+ const a=FX.createSwimFx(fakeU()),ua=fakeU(),b=FX.createSwimFx(ua);void a;b.ring(3,4,1.6,1,1);b.update(.1);const r0=ua.uSwimRing.value[0].v.slice();
+ b.wake(.3,true,50,50,1,0);b.update(.3);const r1=ua.uSwimRing.value[0].v;assert.equal(r1[0],3);assert.equal(r1[1],4,'world space: the swimmer moving does not drag it');
+ assert(r1[2]>r0[2]&&r1[2]<=1.6+1e-6,'it spreads');inBounds(ua);
+ b.wake(1,false,50,50,0,0);for(let i=0;i<120;i++)b.update(1/60);assert.equal(b.live,0);assert.deepEqual(ua.uSwimRing.value[0].v,[0,0,0,0]);assert.equal(ua.uSwimFx.value.v[2],0,'all gone: gate closed again');
+ const o={r:0,a:0};FX.swimRingAt(.5,1,1,1,o);assert.equal(o.r,1,'a still ring holds its size (reduced motion)');FX.swimRingAt(1,1.6,1,0,o);assert(Math.abs(o.r-1.6)<1e-9&&o.a===0);
+ fx.ring(0,0,1,0,1);fx.ring(0,0,1,1,0);/* no life / no strength: ignored */});
+ok('swimFx wake: grows as the swimmer moves, trails behind on a towed tail, bends on a turn, fades when they stop',()=>{
+ const u=fakeU(),fx=FX.createSwimFx(u);let x=0,z=0;
+ fx.wake(1/60,true,x,z,1,0);fx.update(1/60);assert.equal(u.uSwimFx.value.v[3],0,'no wake before the first stroke of distance');
+ for(let i=0;i<180;i++){z+=1.4/60;fx.wake(1/60,true,x,z,1,0);fx.update(1/60);}
+ const w=u.uSwimWake.value.v,len=1/Math.hypot(w[2],w[3]);assert(fx.wakeK>.6&&u.uSwimFx.value.v[3]>.6,'strength '+fx.wakeK);
+ assert(Math.abs(len-FX.SWIM_FX.wakeLen[0])<1e-3,'tail towed at the wake length, '+len);assert(w[3]<0&&Math.abs(w[2])<1e-6,'behind the swimmer (heading +z)');
+ assert(Math.abs(w[0]-x)<1e-6&&Math.abs(w[1]-z)<1e-6);inBounds(u);{const [cx,cz,r2]=u.uSwimFx.value.v;assert(Math.hypot(x-cx,z-cz)<Math.sqrt(r2)&&Math.hypot(x-cx,z-len-cz)<Math.sqrt(r2),'head and tail inside the bounds');}
+ for(let i=0;i<20;i++){x+=1.4/60;fx.wake(1/60,true,x,z,1,0);fx.update(1/60);}/* a right-angle turn */
+ const t=u.uSwimWake.value.v;assert(t[3]<0&&t[2]<0&&Math.abs(t[3])>Math.abs(t[2]),'the tail lags the turn: still mostly behind the old heading');
+ for(let i=0;i<180;i++){x+=1.4/60;fx.wake(1/60,true,x,z,1,1);fx.update(1/60);}assert(Math.abs(1/Math.hypot(u.uSwimWake.value.v[2],u.uSwimWake.value.v[3])-FX.SWIM_FX.wakeLen[1])<1e-3,'Swim fast: a longer wake');
+ for(let i=0;i<60;i++){fx.wake(1/60,true,x,z,0,0);fx.update(1/60);}assert.equal(u.uSwimFx.value.v[3],0,'stopped: faded inside a second');
+ fx.collar(1,true,1,2,1);fx.update(.016);assert(fx.collarOn&&u.uSwimRing.value[5].v[3]>0&&u.uSwimRing.value[5].v[0]===1);assert(u.uSwimFx.value.v[2]>0);
+ fx.collar(1,false,0,0,0);fx.update(.016);assert(!fx.collarOn);assert.equal(u.uSwimFx.value.v[2],0);});
+ok('no ring meshes left, nothing allocates per frame, the shader block is ALU only behind one uniform gate',()=>{
+ const be=load('lib/graphics/ballEffects.ts').createBallEffects();assert.equal(be.root.children.filter(o=>o.name==='swim-ripple').length,0);assert.equal(be.swimRipple,undefined);be.dispose();
  const src=fs.readFileSync('lib/graphics/swimRipples.ts','utf8');const body=src.split('export function createSwimRipples')[1];
  assert(!/new T\.|new Array|\.map\(|\.filter\(|\[\.\.\.|\{\.\.\./.test(body.replace(/const reset=.*/,'')),'the scheduler allocates nothing per frame');
- const fxSrc=fs.readFileSync('lib/graphics/ballEffects.ts','utf8');const loop=fxSrc.split('for(const r of swimRipples)')[1].split('for(const ring of rings)')[0];assert(!/new |\.map\(/.test(loop));fx.dispose();});
+ const fxSrc=fs.readFileSync('lib/graphics/swimFx.ts','utf8'),api=fxSrc.slice(fxSrc.indexOf(' return {\n  /** A ring at'));assert(api.length>500&&!/new |\.map\(|\.filter\(|\[\.\.\.|\{\.\.\./.test(api),'swimFx allocates nothing after create');
+ const W=load('lib/graphics/waterSurface.ts');assert(!/texture2D|texture\(/.test(W.SWIM_FX_GLSL),'no texture read');assert.equal(W.SWIM_FX_UNIFORMS.uSwimRing.value.length,6);
+ const ws=fs.readFileSync('lib/graphics/waterSurface.ts','utf8');assert.equal((ws.match(/vec2 swimFx\(/g)||[]).length,1);assert.equal((ws.match(/=swimFx\(/g)||[]).length,1,'defined once, called once');
+ assert.match(ws,/if\(uSwimFx\.z>0\.\)\{vec2 fd=vWaterXZ-uSwimFx\.xy;if\(dot\(fd,fd\)<uSwimFx\.z\)\{/,'uniform gate, then the bounds circle, then the block');
+ const bean=fs.readFileSync('lib/graphics/beanSkin.ts','utf8');assert.match(bean,/const BEAN_WOBBLE_VERTEX=\/\* glsl \*\/`\nif\(beanUnder>0\.\)\{/,'leg wobble only inside the swimming player\'s uniform branch');
+ assert.match(bean,/fl\*beanUnder\*/,'the water line scales with beanUnder (0 on land and for every other bean)');});
+ok('ride-splash pool: the pond rings and the swim spray are two more sources of the same pool (no new draw), gated by mode',()=>{
+ const RS=load('lib/graphics/rideSplash.ts'),rs=RS.createRideSplash(()=>null);
+ rs.begin(.016,3);rs.ring(1,0,2,1.2,1,.4);assert.equal(rs.alive,1);rs.end();assert(rs.mesh.visible&&rs.mesh.count===1);
+ assert.equal(rs.spray(0,0,0,0,0,1,6,1,2,.2,.1),0,'off');assert.equal(rs.spray(1,0,0,0,0,1,6,1,2,.2,.1),0,'reduced motion: no droplets');
+ assert.equal(rs.spray(2,0,0,0,0,1,6,1,2,.2,.1),3,'lite: half');assert.equal(rs.spray(3,0,0,0,0,1,6,1,2,.2,.1),6);
+ for(let i=0;i<40;i++)rs.spray(3,0,0,0,0,1,6,1,2,.2,.1);rs.begin(.016,3);rs.end();assert(rs.alive<=RS.RIDE_SPLASH.cap&&rs.mesh.count<=RS.RIDE_SPLASH.cap,'the cap holds');
+ for(let i=0;i<200;i++){rs.begin(.016,3);rs.end();}assert.equal(rs.alive,0);assert.equal(rs.mesh.visible,false,'empty pool: no draw');rs.dispose();});
 ok('Town wiring: foot ring hidden while swimming, scheduler fed from the pose + tier gate, old arm splash / wake pair gone',()=>{
  const town=fs.readFileSync('components/Town.tsx','utf8');
  assert.match(town,/ring\.visible=!fieldMenu\.current&&!vendingHide&&rideRef\.current!=='jetpack'&&(?:!party\?\.meRing&&)?!\(water\.inWater&&water\.state\.phase==='swim'\)/);

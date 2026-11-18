@@ -116,13 +116,13 @@ void main(){float r=length(vUv)*2.,a;vec3 col;
    const fx0=Math.sin(yaw),fz0=Math.cos(yaw),rx=fz0,rz=-fx0,y0=y+.04;
    // The foam ring behind the rear wheel (reduced motion: this only, half as often).
    ringT[slot]+=dt;const ringEvery=RIDE_SPLASH.ringEvery*(mode===1?2:1)/(.55+.45*s);
-   if(ringT[slot]>=ringEvery){ringT[slot]=0;spawn(KIND_RING,x-fx0*.6,y0,z-fz0*.6,0,0,0,RIDE_SPLASH.ringLife,.32+.45*s,1,yaw,y0);}
+   if(ringT[slot]>=ringEvery){ringT[slot]=0;spawn(KIND_RING,x-fx0*.6,y0,z-fz0*.6,.55,0,0,RIDE_SPLASH.ringLife,.32+.45*s,1,yaw,y0);}
    if(mode===1)return s;
    // The wake V: two rings stretched along the arms of a V, behind.
    wakeT[slot]+=dt;
    if(wakeT[slot]>=RIDE_SPLASH.wakeEvery&&s>.25){wakeT[slot]=0;const bx=x-fx0*1.1,bz=z-fz0*1.1;
-    spawn(KIND_WAKE,bx+rx*.45,y0,bz+rz*.45,0,0,0,RIDE_SPLASH.wakeLife,.5+.5*s,2.4,Math.atan2(-fx0*.85+rx*.5,-fz0*.85+rz*.5),y0);
-    spawn(KIND_WAKE,bx-rx*.45,y0,bz-rz*.45,0,0,0,RIDE_SPLASH.wakeLife,.5+.5*s,2.4,Math.atan2(-fx0*.85-rx*.5,-fz0*.85-rz*.5),y0);}
+    spawn(KIND_WAKE,bx+rx*.45,y0,bz+rz*.45,.4,0,0,RIDE_SPLASH.wakeLife,.5+.5*s,2.4,Math.atan2(-fx0*.85+rx*.5,-fz0*.85+rz*.5),y0);
+    spawn(KIND_WAKE,bx-rx*.45,y0,bz-rz*.45,.4,0,0,RIDE_SPLASH.wakeLife,.5+.5*s,2.4,Math.atan2(-fx0*.85-rx*.5,-fz0*.85-rz*.5),y0);}
    // Two fans of droplets off the wheels (alternating sides, mostly the rear wheel), thrown sideways, back and up; carried a
    // little by the ride (world space: the rider leaves them behind).
    dropCredit[slot]+=dt*RIDE_SPLASH.dropRate*s*(mode===2?.5:1);
@@ -130,6 +130,23 @@ void main(){float r=length(vUv)*2.,a;vec3 col;
    for(let i=0;i<n;i++){const sd=(side[slot]^=1)?1:-1,rear=rand()<.7,along=rear?-.55:.45,out=(1.1+rand()*1.3)*(.5+.6*s),back=(.4+rand()*.9)*(.4+.6*s)+speed*.35,up=(1.4+rand()*1.2)*(.55+.55*s);
     spawn(KIND_DROP,x+fx0*along+rx*.12*sd,y0+.05,z+fz0*along+rz*.12*sd,rx*out*sd-fx0*back+fx0*speed*.45,up,rz*out*sd-fz0*back+fz0*speed*.45,RIDE_SPLASH.dropLife*(.7+.3*rand()),(.08+.08*s)*(.7+.5*rand()),1,0,y0-.02);}
    return s;
+  },
+  /**
+   * Nov 17 2026 (docs/graphics/island-graphics-plan-nov17.md): two more sources for the SAME pool (same cap, same one draw).
+   * `ring`: a flat foam ring on any water at height y, spreading to `radius` m (the Stadium Park pond's splashes and wakes, which
+   * used the swim-ripple ring meshes that are gone); `angle` is the long axis as atan2(x, z) when `stretch` > 1.
+   */
+  ring(x:number,y:number,z:number,radius:number,life:number,opacity:number,stretch=1,angle=0){spawn(KIND_RING,x,y+.04,z,Math.min(.6,opacity),0,0,life,radius*2.25,stretch,angle,y);},
+  /**
+   * `spray`: `n` droplets thrown from (x, y, z) along the unit ground direction (dx, dz) at about `out` m/s and `up` m/s, fanned by
+   * `fan` (0 = a jet, 1 = all round), `size` m. A swimmer's hands and kick (Town.tsx): droplets only, so nothing for reduced
+   * motion (mode 1) or off (mode 0), half at lite (mode 2). Returns how many were thrown.
+   */
+  spray(m:RideSplashMode,x:number,y:number,z:number,dx:number,dz:number,n:number,out:number,up:number,fan:number,size:number){
+   if(m<2)return 0;const count=m===2?Math.ceil(n/2):n;
+   for(let i=0;i<count;i++){const a=(rand()-.5)*Math.PI*2*fan,c=Math.cos(a),sn=Math.sin(a),ux=dx*c-dz*sn,uz=dx*sn+dz*c,o=out*(.55+.75*rand());
+    spawn(KIND_DROP,x+ux*.06,y+.05,z+uz*.06,ux*o,up*(.7+.6*rand()),uz*o,RIDE_SPLASH.dropLife*(.75+.5*rand()),size*(.7+.6*rand()),1,0,y-.03);}
+   return count;
   },
   /** Ages the pool and writes the live instances (the only per-frame work, and only while something is alive). */
   end(){
@@ -144,7 +161,7 @@ void main(){float r=length(vUv)*2.,a;vec3 col;
     else{const r=size[i]*(.35+.65*(1-(1-t)*(1-t))),sx=r*stretch[i],sz=r,c=Math.cos(angle[i]),s=Math.sin(angle[i]);
      // A flat quad in the water plane: local x across, local y along `angle` (stretch: the wake's long arm).
      M[o]=sz*c;M[o+1]=0;M[o+2]=-sz*s;M[o+3]=0;M[o+4]=sx*s;M[o+5]=0;M[o+6]=sx*c;M[o+7]=0;M[o+8]=0;M[o+9]=1;M[o+10]=0;M[o+11]=0;
-     F[v*3]=k;F[v*3+1]=(k===KIND_WAKE?.4:.55)*(1-t)*(1-t*.3);F[v*3+2]=0;}
+     F[v*3]=k;F[v*3+1]=vx[i]*(1-t)*(1-t*.3);F[v*3+2]=0;}/* a ring's vx holds its opacity (it never moves) */
     M[o+12]=px[i];M[o+13]=py[i];M[o+14]=pz[i];M[o+15]=1;v++;alive++;}
    mesh.count=v;mesh.visible=v>0;
    if(v){mesh.instanceMatrix.clearUpdateRanges();mesh.instanceMatrix.addUpdateRange(0,v*16);mesh.instanceMatrix.needsUpdate=true;fx.clearUpdateRanges();fx.addUpdateRange(0,v*3);fx.needsUpdate=true;}
