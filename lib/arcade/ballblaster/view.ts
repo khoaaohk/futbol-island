@@ -188,7 +188,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  /* ---- the ground and the stadium: a few merged meshes ---- */
  const crowdT=own(crowdTex());crowdT.wrapS=T.RepeatWrapping;crowdT.repeat.set(1,.5);
  const skyT=own(canvasTex(1024,384,g=>paintSky(g,0)));let tod=0;
- let pitchM:T.MeshLambertMaterial|null=null,turfM:T.MeshLambertMaterial|null=null,crowdM:T.MeshLambertMaterial|null=null;
+ let pitchM:T.Material|null=null,turfM:T.Material|null=null,crowdM:T.Material|null=null;type LM=T.MeshLambertMaterial;
  const glowM=own(new T.MeshBasicMaterial({map:own(glowTex()),transparent:true,depthWrite:false,blending:T.AdditiveBlending,fog:false,opacity:TOD[0].glow}));
  {const pt=own(pitchTex()),pm=pitchM=own(lit(new T.MeshLambertMaterial({map:pt,emissiveMap:own(poolTex()),emissive:'#000000'}))),pg=own(new T.PlaneGeometry(30,64));pg.rotateX(-Math.PI/2);const pitch=new T.Mesh(pg,pm);pitch.position.set(0,0,-26);pitch.receiveShadow=true;scene.add(pitch);
   const surround=own(new T.PlaneGeometry(160,160));surround.rotateX(-Math.PI/2);const sm=turfM=own(lit(new T.MeshLambertMaterial({color:'#3a8a47'})));const s=new T.Mesh(surround,sm);s.position.set(0,-.02,-40);scene.add(s);
@@ -278,7 +278,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  function setTod(i:number){tod=i;const p=TOD[i];paintSky((skyT.image as HTMLCanvasElement).getContext('2d')!,i);skyT.needsUpdate=true;(scene.background as T.Color).set(p.low);fog.color.set(p.fog);
   sun.color.set(p.sun);sun.intensity=p.sunI;hemi.color.set(p.hemi);hemi.groundColor.set(p.hemiG);hemi.intensity=p.hemiI;glowM.opacity=p.glow;
   // night reads as night: darker turf lit in floodlight pools, eyes that glow, a hotter additive ball trail (uniform swaps only)
-  pitchM!.color.setScalar(p.turf);pitchM!.emissive.set(p.pool);turfM!.color.set('#3a8a47').multiplyScalar(p.turf);crowdM!.color.setScalar(p.crowd);night=i===2;
+  (pitchM as LM).color.setScalar(p.turf);(pitchM as LM).emissive.set(p.pool);(turfM as LM).color.set('#3a8a47').multiplyScalar(p.turf);(crowdM as LM).color.setScalar(p.crowd);night=i===2;
   const ec=eyes.instanceColor;if(ec){(ec.array as Float32Array).fill(night?1.9:1);for(let k=2;k<ec.array.length;k+=3)(ec.array as Float32Array)[k]=night?1.25:1;ec.needsUpdate=true;}
   trailM.blending=night?T.AdditiveBlending:T.NormalBlending;trailM.needsUpdate=true;}
 
