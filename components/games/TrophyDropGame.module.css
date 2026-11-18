@@ -86,4 +86,4 @@
 }
 @media (max-height:600px){.game [data-trophy-card=start] .chips{display:none}.lesson{display:none}}
 @media (prefers-reduced-motion:reduce){.score[data-new-best]{animation:none}}
-.near+.actions{margin-bottom:12px}
+.hsSlot+.actions{margin-bottom:12px}
