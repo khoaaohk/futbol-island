@@ -66,7 +66,9 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
    }
    if(engaged){tx=m.x;tz=m.z;m.vx=m.vz=0;}
    let dx=tx-m.x,dz=tz-m.z,distance=Math.hypot(dx,dz);
-   if(!engaged&&distance<.12&&m.phase!=='play'){
+   // Nov 17 2026: two visitors stepping sideways to their lanes in the same row can meet head-on and both wait (eleven cabinets put
+   // two of them 0.84 m apart); the lane step is only tidiness, so after 3 s it is skipped and the visitor heads for the door.
+   if(!engaged&&(distance<.12||m.phase==='exitAisle'&&m.age>3)&&m.phase!=='play'){
     if(m.phase==='exitAisle'){m.phase='exit';m.tx=doorLane(m);m.tz=doorZ;}
     else if(m.phase==='exit'){m.phase='away';m.vx=m.vz=0;m.x=AWAY_X;m.z=AWAY_Z;m.rig.root.visible=false;m.shadow.visible=false;const away=debugStates[i];away.away=true;away.phase='away';away.x=AWAY_X;away.z=AWAY_Z;away.yielding=away.greeting=away.attentive=false;continue;}
     else if(m.phase==='entry'){m.phase='cross';m.tx=m.laneX;m.tz=station.az;}

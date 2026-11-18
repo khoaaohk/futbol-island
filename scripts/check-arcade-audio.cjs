@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|clearbox] [--suspended] [--headed]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|clearbox|streetdash] [--suspended] [--headed]
 // trophydrop (Nov 17 2026): windows land (a boot dropped through the game's own drop()) and merge (two size-3 balls dropped on one
 // spot); menu / paused must be SILENT.
 // pinball (Nov 10 2026): windows flipper (KeyA, KeyD), bumper (ball sent into rondo cone 0), goal (ball in the goal mouth) and drain
@@ -11,6 +11,8 @@
 // eleven times, to the fanfare) and crash (hands off into the touchline with the save spent); menu / paused must be SILENT.
 // lineup (Nov 17 2026): windows place (a tray piece set on the empty pitch through the game's own place()), clear (row 0 filled but for
 // the piece's top cells, then the piece placed: the line chord + clap) and over (the end cue); menu / paused must be SILENT.
+// streetdash (Nov 17 2026): windows jump (the game's own press('jump') on the live street), shot (a crate set 5 m ahead and the
+// volley: boot thump + splinters) and hit (a low wall set just ahead: whistle + oof), then over (the end cue); menu / paused SILENT.
 // It wraps AudioNode.connect in the page so every connection to an AudioDestinationNode goes through an AnalyserNode first, samples
 // the RMS of what reaches the speakers every 15 ms, and prints the peak RMS per labelled window (tennis: serve kick, bounce, point
 // bell, ambience bed; other games: menu and play). Also prints how many contexts and destination connections were made and each
@@ -116,6 +118,17 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await C(()=>{const k=window.__clearbox,g=k.game,b=g.state.box,i=b.beans.findIndex((o,n)=>!o.out&&!g.canRun(n));window.__audioLabel('foul');if(i>=0)g.tap(i);else k.audio.foul();k.sync();});await wait(700);must.push('foul');
    await label('');await wait(300);
    await C(()=>{window.__audioLabel('over');window.__clearbox.audio.over();});await wait(1400);must.push('over');
+   await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
+  }else if(game==='streetdash'){quiet.push('menu');
+   await page.waitForFunction(()=>window.__streetdash&&window.__streetdash.phase==='playing',null,{timeout:30000});await label('');await wait(600);
+   const D=fn=>page.evaluate(fn),clear=()=>D(()=>{const s=window.__streetdash.game.state;for(const z of s.haz)if(z.on&&z.x>s.bean.x-2&&z.x<s.bean.x+14)z.on=false;s.invuln=0;});
+   await clear();await D(()=>{window.__audioLabel('jump');window.__streetdash.game.press('jump');});await wait(250);await D(()=>window.__streetdash.game.press('release'));await wait(500);must.push('jump');
+   await label('');await wait(500);await clear();
+   await D(()=>{const s=window.__streetdash.game.state,z=s.haz.find(h=>!h.on);Object.assign(z,{on:true,kind:4,x:s.bean.x+5,y:0,w:.9,h:.95,vx:0,spent:false,done:false,paid:false,teach:0,soft:false,near:false,taught:false});window.__audioLabel('shot');});
+   await page.waitForFunction(()=>window.__streetdash.game.state.aim>=0,null,{timeout:3000}).catch(()=>errors.push('no volley target'));await D(()=>window.__streetdash.game.press('volley'));await wait(800);must.push('shot');
+   await label('');await wait(400);await clear();
+   await D(()=>{const s=window.__streetdash.game.state,z=s.haz.find(h=>!h.on);Object.assign(z,{on:true,kind:1,x:s.bean.x+1.2,y:0,w:.55,h:.75,vx:0,spent:false,done:false,paid:false,teach:0,soft:false,near:false,taught:false});window.__audioLabel('hit');});await wait(900);must.push('hit');
+   await label('');await wait(300);await D(()=>{window.__audioLabel('over');window.__streetdash.audio.over();});await wait(1000);must.push('over');
    await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
   }else if(game==='puzzle'){quiet.push('menu');
    // Pass Puzzles (Nov 10 2026, comic pass): three event windows on the first puzzle. draw = a real finger stroke from the ball to

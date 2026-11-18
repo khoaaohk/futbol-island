@@ -11,6 +11,8 @@
  */
 
 import {publicWorldEnabled} from '../multiplayer/publicFlag';
+import {ARCADE_GAME_COUNT} from '../arcade/arcadeCatalog';/* Nov 17 2026: the arcade count follows the catalog */
+import {NumberWord} from '../numberWord';
 /** [PUBLIC-WORLD] Nov 11 2026: with the public-island build flag on, the few lines below that would become untrue switch (the `PUB?new:old`
  *  ternaries); flag off = today's words byte for byte (tests/mp-public-copy.cjs). Old -> new: docs/multiplayer/PUBLIC-COPY-REVIEW.md. */
 const PUB=publicWorldEnabled();
@@ -207,11 +209,11 @@ export const LEARN_FEATURES:readonly LearnFeature[]=[
 
  // ---- Play and practise -----------------------------------------------------------------------------------------------------
  {id:'arcade',title:'The Arcade',group:'play',imageKey:'arcade',
-  hook:'Ten football games, one skill each.',
-  description:'The Arcade has Kit Rush, Breakaway Run, Squad Snake, Futbol Tennis, Futbol Pinball, Pass Puzzles, Air Futbol (the air hockey table, you against the computer), Line Up (fit shapes of players into full lines), Trophy Drop (drop and merge trophies up to the golden one) and Clear the Box (tap players out of a crowded box, one free lane at a time). Each machine names the one skill it trains, and coins from the arcade spend at the vending machines.',
-  footballTie:'One skill per game: know your team; beat the tackle; build your eleven; control the first touch; read the rebound; see the space; fill the line; small touches add up; time your run.',
+  hook:`${NumberWord(ARCADE_GAME_COUNT)} football games, one skill each.`,
+  description:'The Arcade has Kit Rush, Breakaway Run, Squad Snake, Futbol Tennis, Futbol Pinball, Pass Puzzles, Air Futbol (the air hockey table, you against the computer), Line Up (fit shapes of players into full lines), Trophy Drop (drop and merge trophies up to the golden one), Clear the Box (tap players out of a crowded box, one free lane at a time) and Street Dash (a side-on run with the ball at your feet). Each machine names the one skill it trains, and coins from the arcade spend at the vending machines.',
+  footballTie:'One skill per game: know your team; beat the tackle; build your eleven; control the first touch; read the rebound; see the space; fill the line; small touches add up; time your run; keep the ball close.',
   where:'Tap Enter Arcade at the arcade building on the island.',
-  proof:'10 arcade games, each with its own skill line.',counts:{arcadeGames:10}},
+  proof:`${ARCADE_GAME_COUNT} arcade games, each with its own skill line.`,counts:{arcadeGames:ARCADE_GAME_COUNT}},
  {id:'pass-puzzles',title:'Pass Puzzles',group:'play',imageKey:'pass_puzzles',
   hook:'Draw the pass that splits the defence.',
   description:'Each puzzle freezes a moment in a match, and the player draws the pass with a finger. Packs build from first passes to beating the press, set pieces and wind and rain.',

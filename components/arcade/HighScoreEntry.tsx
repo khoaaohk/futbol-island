@@ -13,7 +13,7 @@ const withLetter=(s:string,i:number,n:number)=>s.slice(0,i)+String.fromCharCode(
 /** Where the score lands: its place on the island all-time board (only then is the entry offered; Nov 17 2026). */
 type Place={all:number;island:IslandBoards};
 /** The seven arcade-room games show their results card first (owner, Nov 10 2026); anywhere else the entry opens at once, as before. */
-const RESULTS_FIRST=['kitrush','snake','airhockey','lineup','trophydrop','clearbox','runner','tennis','pinball','pass-puzzle'].map(k=>`[data-arcade-kind="${k}"]`).join(',');
+const RESULTS_FIRST=['kitrush','snake','airhockey','lineup','trophydrop','clearbox','streetdash','runner','tennis','pinball','pass-puzzle'].map(k=>`[data-arcade-kind="${k}"]`).join(',');
 const ISLAND_WHY:Record<string,string>={short:'The island board needs a full game. Play a little longer next time!',fast:'That score couldn’t be checked, so it isn’t on the island board. Your score is saved.',
  'not-top':'Someone just beat that score on the island. Your score is saved.',busy:'The island board is busy. Your score is saved.',unavailable:'The island board can’t be reached right now. Your score is saved.',
  invalid:'The island board couldn’t take that score. Your score is saved.',none:'The island board can’t be reached right now. Your score is saved.'};

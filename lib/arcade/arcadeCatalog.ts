@@ -7,7 +7,7 @@ import {numberWord} from '../numberWord';
  * the north lounge (x −11.8, z −8..−4) and the corner plinths (±13.6): 6 cabinets 3 m, 9 → 2.75 m, 10 → 2.44 m (0.54 m between bodies).
  * The air hockey table is not in the row.
  */
-export const ARCADE_ROW=['pinball','kitrush','runner','snake','tennis','puzzle','lineup','trophydrop','clearbox'] as const;
+export const ARCADE_ROW=['pinball','kitrush','runner','snake','tennis','puzzle','lineup','trophydrop','clearbox','streetdash'] as const;
 export const ARCADE_ROW_Z=-10,ARCADE_ROW_MAX_HALF=11;
 export const arcadeRowPitch=(count:number=ARCADE_ROW.length):number=>count<2?3:Math.min(3,ARCADE_ROW_MAX_HALF*2/(count-1));
 function rowSpot(id:typeof ARCADE_ROW[number]){const n=ARCADE_ROW.length,i=ARCADE_ROW.indexOf(id);return {x:Math.round((i-(n-1)/2)*arcadeRowPitch(n)*100)/100,z:ARCADE_ROW_Z,yaw:0};}
@@ -30,6 +30,8 @@ export const arcadeCabinets = [
  {id:'trophydrop',name:'Trophy Drop',short:'TROPHY DROP',lesson:'Small touches add up to big wins.',color:'#ffd24a',...rowSpot('trophydrop')},
  // Nov 17 2026: Clear the Box, the tap-out cabinet (docs/arcade-aaa/clearbox-direction.md), after Line Up! at the east end of the back row.
  {id:'clearbox',name:'Clear the Box',short:'CLEAR BOX',lesson:'Time your run. Make the space.',color:'#19b5a5',...rowSpot('clearbox')},
+ // Nov 17 2026: Street Dash, the side-scrolling run (docs/arcade-aaa/streetdash-direction.md), after Clear the Box at the east end of the back row.
+ {id:'streetdash',name:'Street Dash',short:'STREET DASH',lesson:'Keep the ball close. Look up early.',color:'#ff8a3c',...rowSpot('streetdash')},
 ] as const;
 export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
 /** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,
