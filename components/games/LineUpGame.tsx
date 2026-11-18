@@ -37,13 +37,20 @@ const COMBO_WORD=['','LINE UP!','DOUBLE!','TRIPLE!','FOUR LINES!','WHAT A TEAM!'
 /** Level-up callouts (Nov 17 2026): one line on what the new level brings (RAMP in core.ts). */
 const LEVEL_NOTE:Record<number,string>={2:'More big shapes',3:'Odd shapes join in',4:'The referee walks on',7:'Two referees now',11:'Three referees now',12:'Top level!'};
 
-/** A row of four beans in kit colours: the start card's picture of a complete line. */
+/** A row of four footballs on one joined slab (a line of the pitch), then the empty square that finishes it: the start card's picture of a line. */
 function LineArt(){
+ const star='M0 -10 L2.9 -4 L9.5 -3.1 L4.7 1.5 L5.9 8.1 L0 5 L-5.9 8.1 L-4.7 1.5 L-9.5 -3.1 L-2.9 -4Z';
  return <svg className={styles.art} viewBox="0 0 200 52" aria-hidden="true">
-  {[0,1,2,3,4].map(i=>{const x=6+i*38;return <g key={i} transform={`translate(${x} 6)`}>
-   <rect x="0" y="0" width="36" height="36" rx="8" fill={i===4?'none':KIT[[0,1,2,3][i]]} stroke="#231a2e" strokeWidth="3" strokeDasharray={i===4?'5 4':undefined}/>
-   {i<4&&<><circle cx="18" cy="15" r="7.5" fill="#ffd9a8" stroke="#231a2e" strokeWidth="2.2"/><circle cx="15.5" cy="14.5" r="1.3" fill="#231a2e"/><circle cx="20.5" cy="14.5" r="1.3" fill="#231a2e"/><path d="M13 23 L18 27 L23 23" fill="none" stroke="#fff3d6" strokeWidth="2.2"/></>}
+  <rect x="7.5" y="7.5" width="147" height="33" rx="8" fill="#62508f" stroke="#231a2e" strokeWidth="3"/>
+  {[0,1,2,3].map(i=>{const k=[0,1,2,3][i];return <g key={i} transform={`translate(${24+i*38} 24)`}>
+   <circle r="14.5" fill={KIT[k]} stroke="#231a2e" strokeWidth="2.6"/>
+   {k===0&&<path d={star} fill="#fffaf0" stroke="#231a2e" strokeWidth="1.4" strokeLinejoin="round"/>}
+   {k===1&&<g transform="rotate(-34)"><rect x="-14" y="-4.5" width="28" height="9" fill="#fffaf0"/><rect x="-14" y="-1.2" width="28" height="2.4" fill="#231a2e"/></g>}
+   {k===2&&<><path d="M-14 1 Q0 9 14 1 L14 5 Q0 13 -14 5Z" fill="#d98a1c"/><circle cx="-6" cy="5" r="1.6" fill="#fffaf0"/><circle cx="0" cy="6.6" r="1.6" fill="#fffaf0"/><circle cx="6" cy="5" r="1.6" fill="#fffaf0"/></>}
+   {k===3&&<><rect x="-3.2" y="-7" width="6.4" height="14" rx="3" fill="#fffaf0" stroke="#231a2e" strokeWidth="1.2"/><path d="M-5 -4 L5 -2 M5 -4 L-5 -2 M-5 1 L5 3 M5 1 L-5 3" stroke="#231a2e" strokeWidth="1.2"/></>}
+   <ellipse cx="-6" cy="-7" rx="3.6" ry="2" transform="rotate(-40 -6 -7)" fill="#fff"/>
   </g>;})}
+  <rect x="158" y="8" width="32" height="32" rx="8" fill="none" stroke="#231a2e" strokeWidth="3" strokeDasharray="5 4"/>
   <path d="M178 48 L156 48" stroke="#231a2e" strokeWidth="3" strokeLinecap="round"/><path d="M162 43 L155 48 L162 53" fill="none" stroke="#231a2e" strokeWidth="3" strokeLinejoin="round" strokeLinecap="round"/>
  </svg>;
 }
@@ -214,7 +221,7 @@ export default function LineUpGame({onExit}:{onExit:()=>void}){
   {phase==='paused'&&<ArcadePauseCard game="lineup" score={`${hud.score} pts · Level ${hud.level} · ${hud.lines} lines`} status={entry.message||undefined} onResume={resume} onExit={leave} onRestart={()=>{void start(run.current.daily);}} restartDisabled={busy} keys={[['Drag','place a shape'],['1 2 3','pick'],['Enter','place'],['P','pause']]}/>}
   {phase==='menu'&&<ComicCard label="Line Up!" title="Line Up!" badge="Fill the line" badgeTone="teal" best={best>0?`Best ${best}`:undefined} data-lineup-card="start">
    <LineArt/>
-   <p className={styles.learn}>Drag a shape of players onto the pitch. Fill a whole row or column: the line clears and scores. Clear two at once for a <b>combo</b>. The game ends when no shape fits.</p>
+   <p className={styles.learn}>Drag a shape of footballs onto the pitch. Fill a whole row or column: the line clears and scores. Clear two at once for a <b>combo</b>. The game ends when no shape fits.</p>
    <div className={styles.chips}>
     <ComicStat value={best||'–'} label="Best"/>
     <ComicStat value={<span className={styles.medalRow}>{[1,2,3].map(l=><Medal key={l} level={l} on={save.medal>=l}/>)}</span>} label={save.medal?MEDAL_NAMES[save.medal-1]:'No medal yet'}/>
@@ -251,7 +258,7 @@ export default function LineUpGame({onExit}:{onExit:()=>void}){
    <ComicPanel tone="paper" flat className={styles.fact} data-lineup-fact><b>{result.settled.tip.title}</b>{result.settled.tip.line}</ComicPanel>
    {(result.coins>0||entry.message)&&<p className={styles.status} role="status">{entry.message||`+${result.coins} ${result.coins===1?'coin':'coins'}`}{result.daily&&!result.settled.dailyFirst&&!entry.message?' · practice run (your first run today is on the board)':''}</p>}
   </ComicCard>}
-  {board&&phase==='over'&&<HighScoreEntry game="lineup" score={board.score} detail="Points for players placed and lines cleared. Combos and streaks score more." onClose={()=>setBoard(null)}/>}
+  {board&&phase==='over'&&<HighScoreEntry game="lineup" score={board.score} detail="Points for balls placed and lines cleared. Combos and streaks score more." onClose={()=>setBoard(null)}/>}
   {scores&&<LineUpScores onClose={()=>setScores(false)}/>}
  </div>;
 }

@@ -1,7 +1,7 @@
 /**
  * Line Up! (Nov 17 2026, docs/arcade-aaa/new-games-brief + lineup-direction.md): the block-fit cabinet. Pure rules, no DOM, seeded
  * (mulberry32) so a seed always plays the same pieces: the Daily Line-Up gives everybody the same tray order that day.
- * An 8 x 8 pitch. A tray of three shapes made of bean players (1-5 cells). Drag one onto the pitch; a full row or column is a
+ * An 8 x 8 pitch. A tray of three shapes made of footballs (1-5 cells; the view draws one ball type per kit). Drag one onto the pitch; a full row or column is a
  * complete line of the team and clears. When the three are placed a new tray comes at once. The run ends when no tray piece fits.
  * Ramp (RAMP, by level; a level is LU.perLevel placements): bigger and odder shapes, fewer singles, fewer fair re-deals, and from
  * level 4 a referee who blocks one square for a few placements. tests/lineup-core.cjs proves the ramp with a bot.
