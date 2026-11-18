@@ -41,7 +41,7 @@
 .scoreRow{position:relative;display:grid;place-items:center;margin:6px 0 2px}
 .score{--cm-numeral-size:68px;display:block}
 .score[data-new-best]{animation:luPop .6s cubic-bezier(.2,1.6,.4,1) both}
-.stamp{position:absolute;right:-16px;top:-20px}
+.stamp{position:static;order:-1;margin:-4px 0 -8px;z-index:1}
 .medalRow{display:inline-flex;align-items:center;justify-content:center;gap:5px;margin:2px 0 8px}
 .chips .medal{width:16px;height:16px;border-width:2.5px}.chips .medal i{width:4px;height:4px}.chips .medalRow{gap:3px;margin:3px 0 4px}
 .medalRow em{margin-left:6px;font:800 14px/1 var(--cm-ui);font-style:normal;color:var(--cm-ink)}
@@ -76,3 +76,12 @@
 @media (max-height:600px){.game [data-lineup-card=start] .chips{display:none}.fact{display:none}}
 @media (max-width:374px){.strip{gap:7px}.stripItem{font-size:14px}}
 @media (prefers-reduced-motion:reduce){.streak{rotate:none}.streak,.score[data-new-best]{animation:none}.word{animation-duration:.6s}}
+
+/* Nov 17 2026: first-run hint (arrow points up at the tray), danger line, level note under a callout */
+.hint{display:flex;align-items:center;gap:8px;background:var(--cm-sun)}
+.hint i{width:0;height:0;border:8px solid transparent;border-bottom:12px solid var(--cm-ink);border-top:0;animation:luNudge .8s ease-in-out infinite alternate}
+.tight{background:var(--cm-red);color:var(--cm-paper);animation:luPop .32s cubic-bezier(.2,1.6,.4,1) both}
+.sub{display:block;margin-top:2px;padding:3px 8px;border:2px solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);font:800 13px/1.1 var(--cm-ui);font-style:normal;white-space:nowrap}
+@keyframes luNudge{from{translate:0 3px}to{translate:0 -4px}}
+@media (prefers-reduced-motion:reduce){.hint i{animation:none}}
+@media (max-height:700px){.refTip{bottom:calc(2px + env(safe-area-inset-bottom,0px) + var(--lu-cut,0px));padding:3px 8px;font-size:11px}}

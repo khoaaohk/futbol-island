@@ -48,3 +48,8 @@ the streak, clap, horn stab on combos; clean sheet = horn fanfare; referee = pea
 ## Heat
 2D canvas, no three.js. The static scene repaints only on resize; bean tiles are pre-rendered once per kit and size; sparks pooled
 (64). No loop at rest: frames run only while a finger drags or an effect moves. DPR cap 2.
+
+## Polish pass (Nov 17 2026, batch 2a)
+First run: a sun tip with a nudging arrow ("Drag a shape up onto the pitch") until the first piece lands. Danger: a red "Tight!" tip
++ two warning pips the moment a tray shape has no room. LEVEL n callouts with a one-line note on what the level brings. Results: a medal
+road (shared `ComicMedalTrack`, notch at your old best); the NEW BEST stamp no longer covers the Best badge. Rules unchanged.

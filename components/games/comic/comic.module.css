@@ -135,3 +135,16 @@
  .chrome.chrome.chrome.chrome [data-arcade-pause]:active{transform:none}
  .chrome.chrome.chrome.chrome :is([data-arcade-pause-card],[data-arcade-pause-score],[data-board-you],[data-board-cheer]){rotate:none}
  .chrome.chrome.chrome.chrome :is([data-arcade-resume],[data-arcade-exit],[data-arcade-restart],[data-arcade-pause-extra],[data-board-btn],[data-hs-step]):active{translate:none;transform:none}}
+
+/* results: road to the next medal (ComicMedalTrack) */
+.track{display:grid;gap:5px;width:100%;max-width:330px;margin:0 auto 10px}
+.trackBar{position:relative;height:14px;border:var(--cm-line-thin) solid var(--cm-ink);background:var(--cm-white)}
+.trackBar>i{position:absolute;left:0;top:0;bottom:0;background:var(--cm-sun);border-right:2px solid var(--cm-ink);box-sizing:border-box}
+.trackBar>b{position:absolute;top:-6px;bottom:-6px;width:4px;margin-left:-2px;background:var(--cm-red);border:1px solid var(--cm-ink)}
+.trackBar>span{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:var(--cm-line-thin) solid var(--cm-ink);background:var(--cm-paper);box-sizing:border-box}
+.trackBar>span[data-on]{background:var(--cm-orange)}
+.trackBar>span:last-child{margin-left:-11px}
+.trackNames{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;font:800 11px/1.1 var(--cm-ui);color:var(--cm-muted);text-align:right}
+.trackNames span[data-on]{color:var(--cm-ink)}
+.trackNames span[data-next]{color:var(--cm-ink);text-decoration:underline 2px var(--cm-red);text-underline-offset:3px}
+.trackNames small{font-weight:700}

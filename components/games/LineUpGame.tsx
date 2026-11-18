@@ -12,7 +12,7 @@ import {retryImport} from '@/lib/retryImport';
 import {ArcadeTopBar} from '../arcade/ArcadeTopBar';
 import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {arcadeSkin} from './skins';
-import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst} from './comic';
+import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst,ComicMedalTrack} from './comic';
 import styles from './LineUpGame.module.css';
 import {createLineUp,lineupDailySeed,medalFor,LU,SHAPES,KIT,MEDAL_NAMES,type LineUp,type LineEvent} from '@/lib/arcade/lineup/core';
 import {createLineupView,type LineupView,type LineupDrag} from '@/lib/arcade/lineup/view';
@@ -29,11 +29,13 @@ const HighScoreEntry=dynamic(()=>retryImport(()=>import('../arcade/HighScoreEntr
 const LineUpScores=dynamic(()=>retryImport(()=>import('./LineUpScores')),{ssr:false});
 
 type Phase='menu'|'playing'|'paused'|'over';
-type Hud={score:number;level:number;streak:number;lines:number};
+type Hud={score:number;level:number;streak:number;lines:number;tight:number};
 type Result={score:number;daily:boolean;level:number;lines:number;combo:number;streak:number;clean:number;settled:LineupSettled;near:string;coach:string;coins:number};
-type Word={id:number;text:string;pts:number;x:number;y:number;tone:'sun'|'red'|'teal'|'paper'};
+type Word={id:number;text:string;pts:number;x:number;y:number;tone:'sun'|'red'|'teal'|'paper';sub?:string};
 export const LINEUP_COIN_REASON='Line Up!: lines cleared';
 const COMBO_WORD=['','LINE UP!','DOUBLE!','TRIPLE!','FOUR LINES!','WHAT A TEAM!'];
+/** Level-up callouts (Nov 17 2026): one line on what the new level brings (RAMP in core.ts). */
+const LEVEL_NOTE:Record<number,string>={2:'More big shapes',3:'Odd shapes join in',4:'The referee walks on',7:'Two referees now',11:'Three referees now',12:'Top level!'};
 
 /** A row of four beans in kit colours: the start card's picture of a complete line. */
 function LineArt(){
@@ -49,7 +51,7 @@ function Medal({level,on}:{level:number;on:boolean}){return <span className={sty
 
 export default function LineUpGame({onExit}:{onExit:()=>void}){
  const [phase,setPhase]=useState<Phase>('menu'),phaseRef=useRef<Phase>('menu');
- const [hud,setHud]=useState<Hud>({score:0,level:1,streak:0,lines:0}),hudRef=useRef(hud);
+ const [hud,setHud]=useState<Hud>({score:0,level:1,streak:0,lines:0,tight:0}),hudRef=useRef(hud);
  const [save,setSave]=useState<LineupSave>(emptyLineupSave),[result,setResult]=useState<Result|null>(null),[today,setToday]=useState('');
  const [board,setBoard]=useState<{score:number}|null>(null),[scores,setScores]=useState(false),[words,setWords]=useState<Word[]>([]),[refTip,setRefTip]=useState(false);
  const entry=useArcadeEntry('lineup');
@@ -77,9 +79,9 @@ export default function LineUpGame({onExit}:{onExit:()=>void}){
   drag.current=null;cursor.current=null;view.current?.clear();setWords([]);change('over');
  },[change]);
 
- const say=useCallback((text:string,pts:number,cells:number[],tone:Word['tone'])=>{const v=view.current;if(!v)return;const L=v.layout,N=LU.size;
+ const say=useCallback((text:string,pts:number,cells:number[],tone:Word['tone'],sub?:string)=>{const v=view.current;if(!v)return;const L=v.layout,N=LU.size;
   const cx=cells.length?cells.reduce((a,i)=>a+i%N,0)/cells.length:N/2,cy=cells.length?cells.reduce((a,i)=>a+Math.floor(i/N),0)/cells.length:N/2;
-  const w:Word={id:++wordId.current,text,pts,x:Math.max(90,Math.min(L.w-90,L.bx+(cx+.5)*L.cell)),y:L.by+(cy+.5)*L.cell,tone};setWords(list=>[...list.slice(-2),w]);},[]);
+  const w:Word={id:++wordId.current,text,pts,x:Math.max(90,Math.min(L.w-90,L.bx+(cx+.5)*L.cell)),y:L.by+(cy+.5)*L.cell,tone,sub};setWords(list=>[...list.slice(-2),w]);},[]);
 
  /* ---- one rules event: picture, sound, haptics, words ---- */
  const onEvent=useCallback((e:LineEvent)=>{
@@ -91,13 +93,15 @@ export default function LineUpGame({onExit}:{onExit:()=>void}){
    case 'deal':a?.deal();break;
    case 'refOn':a?.whistle();arcadeFeedback(null,'slam');setRefTip(true);break;
    case 'refOff':a?.refOff();break;
-   case 'level':a?.level();break;
+   case 'level':a?.level();say(`LEVEL ${e.a}`,0,[2,5],'teal',LEVEL_NOTE[e.a]??'Tougher shapes');break;
    case 'streakLost':a?.streakLost();break;
    case 'over':a?.over();arcadeFeedback(null,'slam');endAt.current=performance.now()+(reduced.current?400:1100);say('NO ROOM!',0,[],'paper');break;
   }
  },[say]);
  const sync=useCallback(()=>{const g=game.current;if(!g)return;g.drain(onEvent);const s=g.state,h=hudRef.current;
-  if(h.score!==s.score||h.level!==s.level||h.streak!==s.streak||h.lines!==s.stats.lines){const n={score:s.score,level:s.level,streak:s.streak,lines:s.stats.lines};hudRef.current=n;setHud(n);}kick();},[kick,onEvent]);
+  // danger (Nov 17 2026): a tray shape has no room left anywhere; one warning pip when it starts
+  const tight=s.over?0:s.tray.filter(p=>p!==null&&!g.fitsAnywhere(p.shape)).length;if(tight>h.tight)audio.current?.tight();
+  if(h.score!==s.score||h.level!==s.level||h.streak!==s.streak||h.lines!==s.stats.lines||h.tight!==tight){const n={score:s.score,level:s.level,streak:s.streak,lines:s.stats.lines,tight};hudRef.current=n;setHud(n);}kick();},[kick,onEvent]);
 
  /* ---- frames on demand ---- */
  useEffect(()=>{frameRef.current=(now:number)=>{
@@ -115,7 +119,7 @@ export default function LineUpGame({onExit}:{onExit:()=>void}){
   game.current=createLineUp({seed,daily});run.current={id,daily,day,done:false};
   if(!daily||readLineupSave().daily.day!==day||!readLineupSave().daily.counted)beginBoardSession('lineup');
   view.current?.reset();endAt.current=0;drag.current=null;cursor.current=null;setResult(null);setBoard(null);setWords([]);setToday(day);
-  game.current.drain(()=>{});const n={score:0,level:1,streak:0,lines:0};hudRef.current=n;setHud(n);
+  game.current.drain(()=>{});const n={score:0,level:1,streak:0,lines:0,tight:0};hudRef.current=n;setHud(n);
   change('playing');kick();
  },[change,entry,kick]);
  const pause=useCallback(()=>{if(phaseRef.current!=='playing')return;if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;
@@ -199,10 +203,12 @@ export default function LineUpGame({onExit}:{onExit:()=>void}){
     <span className={styles.stripItem} data-lineup-best><small>{gap>0?'To best':'Best'}</small>{gap>0?gap:Math.max(best,hud.score)}</span>
     {hud.streak>=2&&<span className={styles.streak} key={hud.streak} data-lineup-streak={hud.streak}>Streak x{hud.streak}</span>}
    </div>}
-   {live&&refTip&&hud.level<6&&<p className={styles.refTip} data-lineup-reftip>The referee blocks a square. Play around them.</p>}
+   {live&&save.plays===0&&hud.score===0?<p className={`${styles.refTip} ${styles.hint}`} data-lineup-hint><i aria-hidden="true"/>Drag a shape up onto the pitch</p>
+    :live&&hud.tight>0?<p className={`${styles.refTip} ${styles.tight}`} data-lineup-tight>Tight! {hud.tight===1?'One shape has':`${hud.tight===2?'Two':'Three'} shapes have`} no room. Clear a line.</p>
+    :live&&refTip&&hud.level<6&&<p className={styles.refTip} data-lineup-reftip>The referee blocks a square. Play around them.</p>}
    <div className={styles.words} aria-live="polite">{words.map(w=><span key={w.id} className={styles.word} style={{left:w.x,top:w.y}} onAnimationEnd={()=>setWords(l=>l.filter(x=>x.id!==w.id))}>
     <ComicBurst word={w.text} size={w.text.length>10?17:21} tilt={w.id%2?-4:3} color={w.tone==='red'?'#f0452e':w.tone==='teal'?'#19b5a5':w.tone==='paper'?'#fff3d6':'#ffc83a'} fill={w.tone==='red'?'#fff3d6':undefined}/>
-    {w.pts>0&&<b className={`${comicNumeral} ${styles.pts}`}>+{w.pts}</b>}</span>)}</div>
+    {w.pts>0&&<b className={`${comicNumeral} ${styles.pts}`}>+{w.pts}</b>}{w.sub&&<em className={styles.sub}>{w.sub}</em>}</span>)}</div>
   </div>
   <ArcadeTopBar game="lineup" className={styles.topBar} backTitle="Back to arcade" onBack={leave} value={live?hud.score:undefined} word="pts" bumpKey={hud.score} paused={phase==='paused'} canPause={live} onPause={()=>phase==='playing'?pause():resume()}/>
   {phase==='paused'&&<ArcadePauseCard game="lineup" score={`${hud.score} pts · Level ${hud.level} · ${hud.lines} lines`} status={entry.message||undefined} onResume={resume} onExit={leave} onRestart={()=>{void start(run.current.daily);}} restartDisabled={busy} keys={[['Drag','place a shape'],['1 2 3','pick'],['Enter','place'],['P','pause']]}/>}
@@ -227,6 +233,7 @@ export default function LineUpGame({onExit}:{onExit:()=>void}){
     {result.settled.newBest&&<ComicBurst word="New best!" size={17} tilt={7} className={styles.stamp}/>}
    </div>
    <div className={styles.medalRow} data-lineup-medal={result.settled.medal} role="img" aria-label={result.settled.medal?`${MEDAL_NAMES[result.settled.medal-1]} medal`:'No medal this time'}>{[1,2,3].map(l=><Medal key={l} level={l} on={medalFor(result.score)>=l}/>)}<em>{result.settled.medal?MEDAL_NAMES[result.settled.medal-1]:'No medal yet'}</em></div>
+   <ComicMedalTrack score={result.score} best={result.settled.previousBest} medals={LU.medals} names={MEDAL_NAMES} data-lineup-track/>
    <ComicPanel tone="sun" tilt={-1.2} className={styles.near} data-lineup-near>{result.near}</ComicPanel>
    <div className={styles.hsSlot} data-hs-slot/>
    <div className={styles.actions}>

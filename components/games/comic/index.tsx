@@ -34,6 +34,18 @@ export function ComicStat({value,label,tone,className,...rest}:Omit<HTMLAttribut
  return <div className={`${styles.stat}${className?` ${className}`:''}`} data-tone={tone} {...rest}><b>{value}</b><span>{label}</span></div>;
 }
 
+/** Results: the road to the next medal (Nov 17 2026). One equal segment a medal, filled to this run's score, a notch at the player's
+ *  best before this run; colour is never alone (each stop is named). Static markup, no animation loop. */
+export function ComicMedalTrack({score,best=0,medals,names,className,...rest}:Omit<HTMLAttributes<HTMLDivElement>,'children'>&Data&{score:number;best?:number;medals:readonly number[];names:readonly string[]}){
+ const pos=(v:number)=>{let i=0;while(i<medals.length&&v>=medals[i])i++;if(i>=medals.length)return 1;const lo=i?medals[i-1]:0;return (i+Math.max(0,v-lo)/(medals[i]-lo))/medals.length;};
+ const fill=pos(score),mark=best>0&&best!==score?pos(best):-1,next=medals.findIndex(m=>score<m);
+ return <div className={`${styles.track}${className?` ${className}`:''}`} role="img" aria-label={next<0?`Every medal won`:`${medals[next]-score} points to ${names[next]}`} {...rest}>
+  <div className={styles.trackBar}><i style={{width:`${Math.round(fill*1000)/10}%`}}/>{mark>=0&&<b style={{left:`${Math.round(mark*1000)/10}%`}} title="Your best"/>}
+   {medals.map((m,i)=><span key={m} data-on={score>=m||undefined} style={{left:`${(i+1)/medals.length*100}%`}}/>)}</div>
+  <div className={styles.trackNames}>{medals.map((m,i)=><span key={m} data-on={score>=m||undefined} data-next={i===next||undefined}>{names[i]} <small>{m}</small></span>)}</div>
+ </div>;
+}
+
 /** Start / results card on a Ben-Day scrim. `badge` top-left (tilted stamp), `best` top-right, `title` as lettering. */
 export function ComicCard({title,badge,badgeTone,best,children,label,wrapProps,...rest}:HTMLAttributes<HTMLElement>&Data&{title?:ReactNode;badge?:ReactNode;badgeTone?:'red'|'teal'|'sun';best?:ReactNode;label:string;wrapProps?:HTMLAttributes<HTMLDivElement>&Data}){
  return <div className={styles.cardWrap} {...wrapProps}><section className={styles.card} role="dialog" aria-modal="false" aria-label={label} {...rest}>

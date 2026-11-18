@@ -59,6 +59,8 @@ export function createLineupAudio(){
   /** A new tray: three soft ticks. */
   deal(){if(!on())return;for(let i=0;i<3;i++)tone('sine',880+i*120,880+i*120,i*.04,.04,.04,.002);},
   /** The streak ran out: one falling note. */
+  /** A tray shape has no room left (Nov 17 2026): two short high pips, a warning not a failure. */
+  tight(){if(!on())return;tone('square',990,990,0,.05,.05,.002);tone('square',990,990,.12,.05,.05,.002);},
   streakLost(){if(!on())return;tone('sine',600,380,0,.18,.07);},
   level(){if(!on())return;bar(hz(7),0,.16,.18);bar(hz(12),.1,.18,.3);},
   /** The referee walks on: a pea-whistle trill. */
