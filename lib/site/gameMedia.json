@@ -207,6 +207,42 @@
     "h": 1040,
     "bytes": 104372
    }
+  },
+  "lineup": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10.0,
+   "mp4": 190500,
+   "webm": 205989,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 26380
+   }
+  },
+  "trophydrop": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10.0,
+   "mp4": 210777,
+   "webm": 210729,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 33810
+   }
+  },
+  "clearbox": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10.0,
+   "mp4": 200584,
+   "webm": 211893,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 18014
+   }
   }
  },
  "shots": {
@@ -412,6 +448,66 @@
     "w": 960,
     "h": 540,
     "bytes": 23224
+   }
+  ],
+  "lineup": [
+   {
+    "file": "lineup-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 26380
+   },
+   {
+    "file": "lineup-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 30730
+   },
+   {
+    "file": "lineup-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 37850
+   }
+  ],
+  "trophydrop": [
+   {
+    "file": "trophydrop-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 33810
+   },
+   {
+    "file": "trophydrop-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 38726
+   },
+   {
+    "file": "trophydrop-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 40228
+   }
+  ],
+  "clearbox": [
+   {
+    "file": "clearbox-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 18014
+   },
+   {
+    "file": "clearbox-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 26962
+   },
+   {
+    "file": "clearbox-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 19126
    }
   ]
  }

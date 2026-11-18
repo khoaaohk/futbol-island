@@ -235,7 +235,7 @@ export const DRILLS_C:RawDrill[]=[
   harder:'Play 3v2 so the defenders must also slow the attack down. Or add small goals for the attackers.',
   mistakes:['Both defenders pressing the ball, so one pass beats them both.','The cover standing flat, level with the presser. Then a ball between them is a goal.','Silence. The two calls, “ball” and “cover”, do half the work.'],
   game:'A back four, a midfield pair and a futsal team all defend on this idea. Our lessons on cover and on pressure and cover put it in a full team: one player puts pressure on the ball, and another looks after the next danger.',
-  lessons:['learn9_cover','def_11_pressurecover','def_f_goalside','expf_pressreturn'],links:[G.pressing,G.cb,G.marking,G.goalSide],related:['one-v-one-defending','recover-goal-side','rondo-4v2','three-v-two-to-goal'],
+  lessons:['learn9_cover','def_11_pressurecover','def_f_goalside','expf_pressreturn'],links:[G.pressing,G.cb,G.marking,G.goalSide,G.lineUp],related:['one-v-one-defending','recover-goal-side','rondo-4v2','three-v-two-to-goal'],
   faq:[{q:'What is pressure and cover in soccer?',a:'Two defenders sharing the work. One goes to the ball to pressure it. The other stands behind, ready to step in if the first is beaten or to pick up the pass.'},
    {q:'How far behind should the covering defender be?',a:'A few yards, at an angle toward the goal. Close enough to challenge if the presser is beaten, not so deep that the second attacker has free space.'},
    {q:'What age can learn it?',a:'From about U10. Younger players are still learning to defend one against one, which comes first.'}]},

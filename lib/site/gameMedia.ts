@@ -1,4 +1,6 @@
 import M from './gameMedia.json';
+import {ARCADE_GAME_COUNT} from '../arcade/arcadeCatalog';
+import {numberWord} from '../numberWord';
 import type {GameId,GameShot} from './games';
 import {abs} from './seo';
 /**
@@ -9,6 +11,8 @@ import {abs} from './seo';
  * beach match, Kit Shop studio, plaza) are re-cuts of the Nov 3 /learn captures in public/learn/video. Sizes, durations and
  * picture sizes come from lib/site/gameMedia.json, written by the capture's encode step, so nothing here is typed by hand.
  * Files: public/games/clips/<key>.{mp4,webm,webp}, public/games/shots/<key>-<n>.webp. Tests: tests/seo-games.cjs, seo-video.cjs.
+ * Nov 17 2026: Line Up!, Trophy Drop and Clear the Box were captured the same way (dev build, CDP screencast at 390x844 DPR 2, a
+ * scripted player using real mouse drags and taps); the poster is still 1 (the clip's first frame).
  */
 type ClipFile={w:number;h:number;seconds:number;mp4:number;webm:number;poster:{w:number;h:number;bytes:number}};
 type ShotFile={file:string;w:number;h:number;bytes:number};
@@ -23,7 +27,7 @@ const clip=(d:ClipDef):GameClip|null=>{const f=MEDIA.clips[d.key];if(!f)return n
 /** The hub's hero loop: three of the phone games side by side in one file (one player, not three). */
 export const HERO_CLIP=clip({key:'hero',page:'/games',name:'Kit Rush, Squad Snake and Air Futbol, played on a phone',
  alt:'Three phone screens side by side: kit flying up to be swiped in Kit Rush, a line of players in Squad Snake and an air hockey pitch in Air Futbol',
- caption:'Real play from three of the seven games, recorded on a phone screen.'});
+ caption:`Real play from three of the ${numberWord(ARCADE_GAME_COUNT)} games, recorded on a phone screen.`});
 /** One clip per arcade game, keyed by the cabinet id. The words say what the clip shows. */
 const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
  kitrush:{name:'Kit Rush gameplay: swiping a team kit out of the air',alt:'Kit Rush gameplay on a phone: shirts, boots and balls fly up and a finger swipes through the team kit',caption:'Kit Rush: swipe your own kit, leave the other team’s.'},
@@ -33,9 +37,13 @@ const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
  pinball:{name:'Futbol Pinball gameplay: flippers and bumpers on a pitch table',alt:'Futbol Pinball gameplay on a phone: the ball bounces off bumpers and the flippers kick it back up the table',caption:'Futbol Pinball: two flippers, a goalkeeper and a wall.'},
  puzzle:{name:'Pass Puzzles gameplay: passing around the defenders',alt:'Pass Puzzles gameplay on a phone: passes travel from player to player around the defenders toward the goal',caption:'Pass Puzzles: find the open team-mate, then the goal.'},
  airhockey:{name:'Air Futbol gameplay: air hockey on a football pitch',alt:'Air Futbol gameplay on a phone: the teal striker hits the puck up the small pitch and scores in the red goal',caption:'Air Futbol: guard your goal and bank it off the wall.'},
+ lineup:{name:'Line Up! gameplay: shapes of players fill the lines',alt:'Line Up! gameplay on a phone: shapes of players are dragged from the tray onto the pitch and a full line clears',caption:'Line Up!: fill a row or a column and it clears.'},
+ trophydrop:{name:'Trophy Drop gameplay: dropping and merging in the trophy cabinet',alt:'Trophy Drop gameplay on a phone: balls, boots and gloves drop into a glass cabinet and two of the same merge',caption:'Trophy Drop: two of the same merge into the next.'},
+ clearbox:{name:'Clear the Box gameplay: players run out of the penalty box',alt:'Clear the Box gameplay on a phone: tapped players sprint out of the penalty box and the next box slides in',caption:'Clear the Box: tap a player whose lane is free.'},
 };
 const gamePaths:Record<GameId,string>={kitrush:'/games/soccer-swipe-game',snake:'/games/soccer-snake-game',runner:'/games/soccer-runner-game',tennis:'/games/soccer-tennis-game',
- pinball:'/games/soccer-pinball',puzzle:'/games/soccer-passing-puzzle-game',airhockey:'/games/air-hockey-soccer-game'};
+ pinball:'/games/soccer-pinball',puzzle:'/games/soccer-passing-puzzle-game',airhockey:'/games/air-hockey-soccer-game',lineup:'/games/soccer-block-puzzle-game',
+ trophydrop:'/games/soccer-merge-game',clearbox:'/games/soccer-tap-puzzle-game'};
 export const gameClip=(id:GameId)=>clip({key:id,page:gamePaths[id],...GAME_CLIP_DEFS[id]});
 /** New stills of each game (beyond the two hand-made ones in lib/site/games.ts), with their own alt text. */
 const STILL_WORDS:Record<GameId,string[]>={
@@ -46,6 +54,9 @@ const STILL_WORDS:Record<GameId,string[]>={
  pinball:['Futbol Pinball: the ball races up the table past the bumpers','Futbol Pinball: a flipper kicks the ball back toward the goal','Futbol Pinball: the ball bounces between the bumpers near the goalkeeper'],
  puzzle:['Pass Puzzles: a pass goes from one team-mate to another around a defender','Pass Puzzles: the ball travels toward the striker near the goal','Pass Puzzles: a new puzzle with the players set out on the pitch'],
  airhockey:['Air Futbol: GOAL! The puck flies past the red striker into the top goal','Air Futbol: a bank shot goal off the side wall, worth 75 extra points','Air Futbol: a fast rebound off the side wall'],
+ lineup:['Line Up! at the start of a run: a few shapes on the pitch and two left in the tray','Line Up!: a row fills and LINE UP! and +100 appear over the pitch','Line Up!: a shape of players dragged above a crowded pitch'],
+ trophydrop:['Trophy Drop at the start: a boot hangs over the cabinet, with a glove and balls at the bottom','Trophy Drop: a CHAIN x2 burst as two items merge on the pile','Trophy Drop at level 2: the cabinet gets smaller, with a medal in the pile'],
+ clearbox:['Clear the Box at box 2: players with arrows in a chalk penalty box under a 30 second clock','Clear the Box: CLEAN X2! and +540 over the new box 3, after a box with no foul','Clear the Box at box 3: a dark defender stands among the players in the middle of the box'],
 };
 const STILL_CAPS:Record<GameId,string[]>={
  kitrush:['Read the whole wave before you swipe.','Waves get faster as the run goes on.','Three lives: the whistle costs one.'],
@@ -55,6 +66,9 @@ const STILL_CAPS:Record<GameId,string[]>={
  pinball:['Bumpers send the ball flying.','Flip it back up the table.','Score past the goalkeeper.'],
  puzzle:['Pass around the defender.','Then find the striker.','Each puzzle is a new picture.'],
  airhockey:['Score in the top goal.','Bank shots score extra.','Use the side walls.'],
+ lineup:['Three shapes in the tray.','A full line clears.','Drag a shape to its place.'],
+ trophydrop:['Aim, then drop.','Merges can chain.','The cabinet gets smaller.'],
+ clearbox:['Every arrow shows a lane.','Clean boxes in a row score more.','Defenders never move.'],
 };
 export function gameStills(id:GameId,max=3):GameShot[]{
  return (MEDIA.shots[id]??[]).slice(0,max).map((s,i)=>({src:`${SHOTS_DIR}/${s.file}`,w:s.w,h:s.h,alt:STILL_WORDS[id][i]??`${GAME_CLIP_DEFS[id].name}, picture ${i+1}`,caption:STILL_CAPS[id][i]??''}));
@@ -68,7 +82,7 @@ const ISLAND_DEFS:ClipDef[]=[
  {key:'match',page:'/games',name:'A live beach football match on Futbol Island',alt:'A beach football match on the sand: players run, pass and shoot at goal',caption:'Join a live match on the beach.'},
  {key:'kitstudio',page:'/games',name:'Designing a football shirt in the Kit Shop studio',alt:'The Kit Shop studio: a purple and gold shirt with a name and the number 7 on the back',caption:'Design your own kit in the Kit Shop.'},
  {key:'museum',page:'/games',name:'The football museum on Futbol Island',alt:'The football museum seen from above, with exhibits of shirts, balls and trophies',caption:'Explore the football museum.'},
- {key:'room',page:'/games',name:'The arcade room on Futbol Island',alt:'The arcade room on the island with its seven game machines in a row',caption:'The arcade room, where these seven games live.'},
+ {key:'room',page:'/games',name:'The arcade room on Futbol Island',alt:'The arcade room on the island with its game machines in a row',caption:'The arcade room, where these games live.'},
  {key:'plaza',page:'/games',name:'Meeting friends in the plaza on Futbol Island',alt:'Players meet in the town plaza, waving and passing a ball to each other',caption:'Meet friends in the plaza.'},
 ];
 export const islandClips=()=>ISLAND_DEFS.map(clip).filter((c):c is GameClip=>!!c);

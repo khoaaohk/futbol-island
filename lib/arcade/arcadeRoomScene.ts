@@ -18,7 +18,7 @@ import {createBallReactions} from '../graphics/ballReactions';
 import {SKILL_MOVES,skillBall,skillFrame,type SkillMotion} from '../graphics/skillMoves';
 import {BALL_COLORS,loadCustomization,beanLookFor,playerOutfit} from '../town/customization';
 import {getQuizProgress} from '../town/quizProgress';
-import {arcadeHubCabinets,ARCADE_TABLE_ID,ARCADE_TABLE_HALF,arcadeStand,arcadeRowPitch,type ArcadeCabinetId} from './arcadeCatalog';
+import {arcadeHubCabinets,ARCADE_GAME_WORD,ARCADE_TABLE_ID,ARCADE_TABLE_HALF,arcadeStand,arcadeRowPitch,type ArcadeCabinetId} from './arcadeCatalog';
 import {ARCADE_GASHA_Z} from '../gashapon/machines';
 /** Nov 17 2026: the walks to the back row pass the centre gashapon pair this far either side of the centre line. */
 const GASHA_AISLE=2.2;
@@ -49,7 +49,7 @@ export function createArcadeRoomScene(canvas:HTMLCanvasElement,onNear:(id:Arcade
  for(let i=0;i<72;i++){const px=-13+(i*7.31)%26,pz=-10+(i*4.73)%21;const fleck=box(scene,px,.032,pz,.23,.012,.045,i%2?'#443154':'#264454');fleck.rotation.y=(i%5)*.6;}
 
  const sign=(parent:T.Object3D,text:string,sub:string,color:string,w:number,h:number,x:number,y:number,z:number)=>{const c=document.createElement('canvas');c.width=768;c.height=256;const p=c.getContext('2d')!;p.fillStyle='#0b091b';p.fillRect(0,0,768,256);p.strokeStyle=color;p.lineWidth=10;p.strokeRect(8,8,752,240);p.textAlign='center';p.fillStyle=color;p.shadowColor=color;p.shadowBlur=18;p.font='900 64px monospace';p.lineWidth=2;p.strokeText(text,384,112);p.fillStyle='#ffeffb';p.fillText(text,384,112);p.shadowBlur=0;p.fillStyle='#dcd4f7';p.font='28px sans-serif';p.fillText(sub,384,178);const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;textures.push(tex);const mat=new T.MeshBasicMaterial({map:tex});const mesh=new T.Mesh(new T.PlaneGeometry(w,h),mat);mesh.position.set(x,y,z);parent.add(mesh);return mesh;};
- sign(scene,'THE ARCADE','SEVEN GAMES · ALL FOOTBALL','#ff65c8',18,3,0,6,-11.75);
+ sign(scene,'THE ARCADE',`${ARCADE_GAME_WORD.toUpperCase()} GAMES · ALL FOOTBALL`,/* the count follows the catalog (Nov 17 2026) */'#ff65c8',18,3,0,6,-11.75);
  // Bent neon tubing around the marquee, with cached translucent jackets instead of postprocessing.
  function marqueeTube(w:number,h:number,color:string){
   const y=6,z=-11.57,r=.28,l=-w/2,rr=w/2,b=y-h/2,t=y+h/2,path=new T.CurvePath<T.Vector3>();

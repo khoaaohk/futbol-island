@@ -21,7 +21,7 @@ export const DRILLS_A:RawDrill[]=[
   mistakes:['Stamping on the ball instead of touching it lightly, so the ball rolls away or the player slips.','Standing tall with straight legs. Bent knees make it far easier to keep balance.','Staring down the whole time. A quick look up, even for one count, is the habit to build.'],
   game:'In a game the ball has to stay close when a defender is near, and a player who is comfortable on top of the ball can stop, wait and choose. That choice is what our carrying lesson is about: watch the defender, then go where they leave room.',
   home:'This is the best at-home drill there is. Two square yards and one ball are enough: three rounds of 30 seconds of each move, trying to beat yesterday’s count.',
-  lessons:['learn7_carry','next7_dribbleroom','learn7_receive'],links:[G.ball,G.wg],related:['cone-weave-dribbling','turn-and-go','simon-says-soccer','gates-dribbling'],
+  lessons:['learn7_carry','next7_dribbleroom','learn7_receive'],links:[G.ball,G.wg,G.trophyDrop],related:['cone-weave-dribbling','turn-and-go','simon-says-soccer','gates-dribbling'],
   faq:[{q:'What are toe taps in soccer?',a:'A ball mastery move: you touch the top of a still ball with the sole of one foot, then the other, in a quick rhythm. The ball barely moves; your feet do.'},
    {q:'What are foundations in soccer?',a:'Passing the ball to yourself between the insides of your two feet, with your knees bent. Coaches also call it tick-tocks, bells or pendulums.'},
    {q:'How many toe taps should a child do?',a:'Go by time, not by number. Thirty seconds of work and thirty of rest, three or four times, is plenty. Stop while it is still fun.'}]},

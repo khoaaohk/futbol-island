@@ -3,12 +3,12 @@ import JsonLd from '@/components/seo/JsonLd';
 import {QA} from '@/components/site/LessonHub';
 import {ClipFigure,GameFeature,GameIntro,IslandGallery,gamesCss} from '@/components/site/games/GameParts';
 import {LinkList,Section} from '@/lib/site/GuideParts';
-import {GAME_FOOT,GAME_PAGES,GAMES_HUB,gameCrumbs,gameListLd} from '@/lib/site/games';
+import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameCrumbs,gameListLd} from '@/lib/site/games';
 import {gameClipLd,HERO_CLIP,islandClips} from '@/lib/site/gameMedia';
 import {abs,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import site from '../site.module.css';
 
-/** /games (lib/site/games.ts): the seven arcade games as a reading page for search, with real gameplay loops and stills
+/** /games (lib/site/games.ts): every arcade game as a reading page for search, with real gameplay loops and stills
  * (lib/site/gameMedia.ts, Nov 16 2026). Static; the only client code is the clips' LoopClip. No game canvas. */
 export const dynamic='force-static';
 const H=GAMES_HUB;
@@ -27,7 +27,7 @@ export default function GamesHub(){
    <ClipFigure c={HERO_CLIP} auto priority/>
    <a className={site.cta} href={GAME_PAGES[0].play} data-play={GAME_PAGES[0].id}>Play {GAME_PAGES[0].name} now</a>
   </div>}
-  <Section id="games" title="The seven games">
+  <Section id="games" title={`The ${GAMES_WORD} games`}>
    {H.intro.map(x=><p key={x}>{x}</p>)}
    <ul className={`${gamesCss.features} ${gamesCss.bleed}`}>{GAME_PAGES.map((g,i)=><GameFeature key={g.id} game={g} flip={i%2===1}/>)}</ul>
   </Section>
@@ -36,7 +36,7 @@ export default function GamesHub(){
    <div className={gamesCss.bleed}><IslandGallery/></div>
   </Section>
   <Section id="play" title="Pick a game and play">
-   <ul className={gamesCss.playRow7}>{GAME_PAGES.map(g=><li key={g.id}><a className={gamesCss.playNow} href={g.play}>Play {g.name}</a></li>)}</ul>
+   <ul className={gamesCss.playRow}>{GAME_PAGES.map(g=><li key={g.id}><a className={gamesCss.playNow} href={g.play}>Play {g.name}</a></li>)}</ul>
   </Section>
   <Section id="pick" title="Which game to start with">
    <ul>{H.pick.map(([k,v])=><li key={k}><b>{k}:</b> {v}</li>)}</ul>

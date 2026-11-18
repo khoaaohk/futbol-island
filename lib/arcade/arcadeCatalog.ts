@@ -1,3 +1,4 @@
+import {numberWord} from '../numberWord';
 /**
  * Nov 17 2026 (owner: "place the games in the back and reorganize it so they all line side by side"): every upright cabinet stands
  * in ONE row against the back wall, side by side, all facing the door (yaw 0). ARCADE_ROW is the left-to-right order (west to east);
@@ -31,6 +32,10 @@ export const arcadeCabinets = [
  {id:'clearbox',name:'Clear the Box',short:'CLEAR BOX',lesson:'Time your run. Make the space.',color:'#19b5a5',...rowSpot('clearbox')},
 ] as const;
 export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
+/** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,
+ *  /games, the media captions, tests) reads these, so adding a cabinet above updates every count. */
+export const ARCADE_GAME_COUNT=arcadeCabinets.length;
+export const ARCADE_GAME_WORD=numberWord(ARCADE_GAME_COUNT);
 /** Admin analytics id for a cabinet (activity `arcade_<id>`, counter `en:game_<id>`). The ids are allow-listed inside the SQL ingest
  *  function, so Kit Rush reports on the slot it took over ('live', relabelled "Kit Rush" in lib/analytics) instead of needing a migration. */
 /** The one machine that is a table, not an upright cabinet: the room scene keeps the prop it already draws and only adds the

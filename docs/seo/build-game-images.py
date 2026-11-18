@@ -19,7 +19,14 @@ GAMES = [
  ('futbol-pinball-soccer-pinball-game', ['pinball-phone', 'pinball-goal'], ['futbol-pinball-soccer-pinball-game', 'futbol-pinball-goal'], 'Futbol Pinball', 'Free soccer pinball game'),
  ('air-futbol-air-hockey-soccer-game', ['airhockey-phone', 'airhockey-goal'], ['air-futbol-air-hockey-soccer-game', 'air-futbol-goal-bank-shot'], 'Air Futbol', 'Free air hockey soccer game'),
  ('pass-puzzles-soccer-passing-puzzle-game', ['puzzle-phone', 'puzzle-endless'], ['pass-puzzles-soccer-passing-puzzle', 'pass-puzzles-endless-run'], 'Pass Puzzles', 'Free soccer passing puzzle game'),
+ # Nov 17 2026: the three puzzle cabinets, shot from the running games on a 390x844 phone (DPR 2), like the others.
+ ('line-up-soccer-block-puzzle-game', ['lineup-phone', 'lineup-clear'], ['line-up-soccer-block-puzzle-game', 'line-up-tray-of-three-shapes'], 'Line Up!', 'Free soccer block puzzle game'),
+ ('trophy-drop-soccer-merge-game', ['trophydrop-phone', 'trophydrop-medal'], ['trophy-drop-soccer-merge-game', 'trophy-drop-medal-merge'], 'Trophy Drop', 'Free soccer merge game'),
+ ('clear-the-box-soccer-tap-puzzle-game', ['clearbox-phone', 'clearbox-box2'], ['clear-the-box-soccer-tap-puzzle-game', 'clear-the-box-first-boxes'], 'Clear the Box', 'Free soccer tap puzzle game'),
 ]
+# One entry per arcade cabinet, so the hub picture's count follows the list (Street Dash adds one more line above).
+WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen']
+COUNT = WORDS[len(GAMES)] if len(GAMES) < len(WORDS) else str(len(GAMES))
 def shot(n): return Image.open(f'{SRC}/{n}.png').convert('RGB')
 def rounded(im, r):
     m = Image.new('L', im.size, 0); ImageDraw.Draw(m).rounded_rectangle([0, 0, im.width - 1, im.height - 1], r, fill=255); im = im.convert('RGBA'); im.putalpha(m); return im
@@ -58,9 +65,10 @@ for file, shots, outs, name, line in GAMES:
 c = Image.new('RGB', (1200, 630), PAPER); d = ImageDraw.Draw(c); d.rounded_rectangle([560, 40, 1170, 700], 36, fill=TINT)
 for i, s in enumerate(['kitrush-phone', 'snake-fullsquad', 'puzzle-phone']):
     a = rounded(shot(s).resize((180, 390), Image.LANCZOS), 18); c.paste(a, (582 + i * 192, 120 + (i % 2) * 24), a)
-words(d, 'Free soccer games', 'Seven browser games for kids', 50, 180, 480)
+words(d, 'Free soccer games', f'{COUNT.capitalize()} browser games for kids', 50, 180, 480)
 c.save(f'{OUT}/free-soccer-games-for-kids-og.jpg', quality=72, optimize=True, progressive=True)
 tot = 0
 for f in sorted(os.listdir(OUT)):
+    if not os.path.isfile(f'{OUT}/{f}'): continue  # clips/ and shots/ are written by the gameplay capture, not here
     n = os.path.getsize(f'{OUT}/{f}'); tot += n; im = Image.open(f'{OUT}/{f}'); print(f'{f} {im.width}x{im.height} {n // 1024} KB')
 print('total', tot // 1024, 'KB')

@@ -111,7 +111,7 @@ before Nov 10 2026 (without landing pages).
 
 ## Game pages (Nov 10 2026)
 
-Seven search pages for the arcade (registry `lib/site/games.ts`, routes `app/(site)/games`, test `tests/seo-games.cjs`). Static reading pages: no game canvas. Not linked from the home page or the game UI; reached from `/games`, each other, "More to learn", the formations and positions hubs, the offside rule and four drill pages. All seven are in `/sitemap.xml`, `/sitemap-images.xml` (screenshots + share pictures), `llms.txt` and `llms-full.txt`; `scripts/indexnow.mjs` reads the live sitemap, so `node scripts/indexnow.mjs --changed-since 2026-11-10` sends them after the deploy. `/arcade` stays noindex with the canonical `/arcade` for every `?game=` deep link.
+One search page per arcade game, plus the hub (ten games on Nov 17 2026; registry `lib/site/games.ts`, routes `app/(site)/games`, test `tests/seo-games.cjs`). Static reading pages: no game canvas. Not linked from the home page or the game UI; reached from `/games`, each other, "More to learn", the formations and positions hubs, the offside rule and four drill pages. All seven are in `/sitemap.xml`, `/sitemap-images.xml` (screenshots + share pictures), `llms.txt` and `llms-full.txt`; `scripts/indexnow.mjs` reads the live sitemap, so `node scripts/indexnow.mjs --changed-since 2026-11-10` sends them after the deploy. `/arcade` stays noindex with the canonical `/arcade` for every `?game=` deep link.
 
 | URL | Game | Target queries |
 | --- | --- | --- |
@@ -122,5 +122,8 @@ Seven search pages for the arcade (registry `lib/site/games.ts`, routes `app/(si
 | `/games/soccer-tennis-game` | Futbol Tennis | soccer tennis game online, football tennis game, what is soccer tennis, first touch game |
 | `/games/soccer-pinball` | Futbol Pinball | soccer pinball, football pinball game online, free pinball game no download |
 | `/games/soccer-passing-puzzle-game` | Pass Puzzles | soccer puzzle game, soccer passing game, soccer tactics puzzle, offside game for kids |
+| `/games/soccer-block-puzzle-game` | Line Up! (Nov 17) | soccer block puzzle game, football block puzzle, soccer puzzle game for kids, line up game |
+| `/games/soccer-merge-game` | Trophy Drop (Nov 17) | soccer merge game, football merge game, drop and merge game for kids, trophy drop game |
+| `/games/soccer-tap-puzzle-game` | Clear the Box (Nov 17) | soccer tap puzzle game, tap away puzzle soccer, clear the box game, soccer brain game for kids |
 
-Pictures: `public/games/` (12 WebP screenshots, 7 share pictures, about 1.1 MB in all), rebuilt with `python3 docs/seo/build-game-images.py` from `docs/arcade-aaa/shots`. Queue for Search Console: `docs/seo/GAME-PAGES-QUEUE.md`.
+Pictures: `public/games/` (two WebP screenshots and one share picture per game, plus the hub's; about 1.65 MB for ten games, budget 2.0 MB in tests/seo-games.cjs), rebuilt with `python3 docs/seo/build-game-images.py` from `docs/arcade-aaa/shots`. Queue for Search Console: `docs/seo/GAME-PAGES-QUEUE.md`.

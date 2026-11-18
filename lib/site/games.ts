@@ -1,4 +1,6 @@
 import type {Faq} from './safety';
+import {ARCADE_GAME_COUNT} from '../arcade/arcadeCatalog';
+import {NumberWord,numberWord} from '../numberWord';
 import {gameStills,HERO_CLIP,islandStills} from './gameMedia';
 import {abs,KIDS_AUDIENCE,PUBLISHER,SITE_NAME,SITE_URL} from './seo';
 /**
@@ -11,7 +13,9 @@ import {abs,KIDS_AUDIENCE,PUBLISHER,SITE_NAME,SITE_URL} from './seo';
  * tests/seo-games.cjs checks that each one is a real page.
  * FACTS come from the code and the direction docs only (docs/arcade-aaa/<game>-direction.md, lib/arcade/kitrush/core.ts,
  * lib/arcade/snake/core.ts, lib/arcade/runnerEndless.ts + runnerModes.ts, lib/games/soccerPinballEndless.ts,
- * lib/passPuzzle/endless.ts, components/games/ArcadeGame3D.tsx for the keys). No player counts, no ratings, no reviews.
+ * lib/passPuzzle/endless.ts, components/games/ArcadeGame3D.tsx for the keys; Nov 17 2026: lib/arcade/{lineup,trophydrop,clearbox}/core.ts
+ * and components/games/{LineUp,TrophyDrop,ClearBox}Game.tsx). No player counts, no ratings, no reviews.
+ * COUNTS (Nov 17 2026): every "N games" line uses GAMES_WORD, from the arcade catalog (lib/arcade/arcadeCatalog.ts), never a typed number.
  * Tennis is described without match-length rules (its endless mode was being built on the same day).
  * Island Strikers is not a cabinet any more and is never named here as an arcade game.
  * The kit pattern is written str\\u0069pes in the strings: tests/seo-pages.cjs forbids the name of the payment service in lib/site.
@@ -22,7 +26,9 @@ export const GAMES_PATH='/games';
 export const GAMES_UPDATED='2026-11-10';
 export const GAMES_DIR='/games';
 export const GAME_NAMES='Soccer is called football in most of the world. This game is part of Futbol Island, a free football learning game for kids aged 7 to 12.';
-/** All seven machines are free to play (owner, 11 Nov 2026: lib/economy.ts ARCADE_PLAY_COST=0); coins are only earned by playing. */
+/** How many arcade games there are, as a word ("ten"), from the catalog: a new cabinet updates every line that counts them. */
+export const GAMES_WORD=numberWord(ARCADE_GAME_COUNT),GAMES_WORD_CAP=NumberWord(ARCADE_GAME_COUNT);
+/** All the machines are free to play (owner, 11 Nov 2026: lib/economy.ts ARCADE_PLAY_COST=0); coins are only earned by playing. */
 export const GAMES_NAMES='Soccer is called football in most of the world. These games are part of Futbol Island, a free football learning game for kids aged 7 to 12.';
 /** The line that ends every game page. */
 export const GAME_FOOT='Futbol Island is a free football (soccer) learning game for kids aged 7 to 12. The arcade is one room of the island; the lessons, quizzes and the museum teach the rest of the game.';
@@ -30,7 +36,7 @@ export const COIN_LINE='Every play is free, like every game in the arcade. Playi
 const DEVICE:Faq['a']='It runs in a web browser with nothing to install, and it is built for phones first. It also works on tablets and on computers, so a Chromebook is fine as long as the school’s filter allows futbolisland.app.';
 export type GameShot={src:string;w:number;h:number;alt:string;caption:string};
 export type GuideLink={path:string;name:string;line:string};
-export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey';
+export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'clearbox';
 export type GamePage={id:GameId;slug:string;path:string;name:string;play:string;title:string;h1:string;description:string;lead:string;blurb:string;genre:string[];skill:string;
  og:string;ogAlt:string;shots:GameShot[];about:string[];phone:string[];desktop:string[];rules:string[];teaches:string[];guides:GuideLink[];tips:string[];harder:string[];parents:string[];faq:Faq[]};
 const page=(slug:string)=>`${GAMES_PATH}/${slug}`;
@@ -157,7 +163,7 @@ export const GAME_PAGES:readonly GamePage[]=[
    'Session length: a few minutes a court, with a natural stop after each one.'],
   faq:[free('Futbol Tennis',true),{q:'Does Futbol Tennis work on a phone or a school Chromebook?',a:DEVICE+' On a computer it is played with the keyboard.'},
    {q:'How do you play soccer tennis online?',a:'Move your player to where the ball will land, then play it back over the net with a kick, a lob, a drop shot, a header or a scissor kick. Use the trap to control a hard ball with your first touch before you strike it.'},
-   {q:'What age is Futbol Tennis for?',a:'Futbol Island is made for children aged 7 to 12. Futbol Tennis has the most buttons of the seven arcade games, so it suits children who already play the others comfortably.'},
+   {q:'What age is Futbol Tennis for?',a:'Futbol Island is made for children aged 7 to 12. Futbol Tennis has the most buttons of all the arcade games, so it suits children who already play the others comfortably.'},
    {q:'What is soccer tennis?',a:'A training game that football players of every level use: two sides play a ball over a low net with feet, thighs, chest and head, never hands. It builds touch and control. Futbol Tennis is a one-against-one video game version of it.'}]},
  {id:'pinball',slug:'soccer-pinball',path:page('soccer-pinball'),name:'Futbol Pinball',play:play('pinball'),
   title:'Soccer Pinball Game: Futbol Pinball, Free Online',h1:'Soccer pinball: Futbol Pinball',
@@ -184,7 +190,7 @@ export const GAME_PAGES:readonly GamePage[]=[
   parents:[PARENTS_SAFE,'Skill: timing, reading angles and rebounds, and the idea of following a shot. The coaching lines are one short sentence each.','Session length: a match is three minutes, and a run lasts for as many matches as a child can keep a ball in play.'],
   faq:[free('Futbol Pinball',true),{q:'Does Futbol Pinball work on a phone or a school Chromebook?',a:DEVICE+' On a computer the flippers are the A and D keys or the left and right arrows.'},
    {q:'How do you play soccer pinball?',a:'Launch the ball, then use the left and right flippers to keep it on the table and send it up the pitch. Knock down the wall, then shoot past the goalkeeper to score. If the ball drains between the flippers you lose it, and the run ends when the last ball is lost.'},
-   {q:'What age is Futbol Pinball for?',a:'Futbol Island is made for children aged 7 to 12. Two buttons are enough to play, so it is one of the easiest of the seven games to start.'},
+   {q:'What age is Futbol Pinball for?',a:'Futbol Island is made for children aged 7 to 12. Two buttons are enough to play, so it is one of the easiest arcade games to start.'},
    {q:'Do I need to download anything to play?',a:'No. Futbol Pinball runs in the web browser on futbolisland.app. There is no app to install and no plug-in.'}]},
  {id:'puzzle',slug:'soccer-passing-puzzle-game',path:page('soccer-passing-puzzle-game'),name:'Pass Puzzles',play:play('puzzle'),
   title:'Soccer Passing Puzzle Game: Pass Puzzles, Free',h1:'Soccer passing puzzle game: Pass Puzzles',
@@ -210,7 +216,7 @@ export const GAME_PAGES:readonly GamePage[]=[
    'Solve at the first try when you can: it is worth an extra star, and every fifth first-try solve in a row adds a bonus star.','When the direct route is blocked, look for a third player or play backwards to go forwards.','Keep the ball on the ground in the wind, and lift it only when a defender stands in the lane.'],
   harder:['Endless Run opens with two gentle puzzles with Scan switched on.','From level 5 Scan is gone and only the hint key remains. From level 6 there is a thinking clock: 45 seconds at first, shorter at each level, down to 15.',
    'From level 7 an extra defender is added beside the lanes; from level 10 there are no hints; later the extra defender presses, and then there are two.','Every remixed puzzle is checked by the game before it is shown, so there is always a solution.'],
-  parents:[PARENTS_SAFE,'Skill: reading space and passing lanes, patience, and the offside rule. It is the calmest of the seven games: no timer on the early levels and soft sound.','Session length: a puzzle takes ten seconds to a minute, so it fits any spare moment. No coins are needed to play.'],
+  parents:[PARENTS_SAFE,'Skill: reading space and passing lanes, patience, and the offside rule. It is one of the calmest games in the arcade: no timer on the early levels and soft sound.','Session length: a puzzle takes ten seconds to a minute, so it fits any spare moment. No coins are needed to play.'],
   faq:[free('Pass Puzzles',false),{q:'Does Pass Puzzles work on a phone or a school Chromebook?',a:DEVICE+' On a computer you draw the pass with the mouse or a trackpad.'},
    {q:'How do you play Pass Puzzles?',a:'Drag from the player with the ball to a team-mate, or to the goal to shoot. If no defender can reach the line, the pass arrives. Link the passes until you score. A line that turns red is blocked: look for another lane.'},
    {q:'What age is Pass Puzzles for?',a:'Futbol Island is made for children aged 7 to 12. The first puzzles need one pass and no reading; the later ones are a real test for older children and for adults.'},
@@ -247,6 +253,94 @@ export const GAME_PAGES:readonly GamePage[]=[
    {q:'Who do you play against in Air Futbol?',a:'The computer. Air Futbol is a one-player game: you meet twelve named opponents in turn, each a little quicker and smarter, and your best run goes on the high-score board.'},
    {q:'How do you play Air Futbol?',a:'Drag your round striker with a finger (or the mouse) to hit the puck into the goal at the far end, and keep it out of your own. Shots can rebound off the side boards.'},
    {q:'What age is Air Futbol for?',a:'Futbol Island is made for children aged 7 to 12. One finger is all it takes, and the first opponent is gentle, so it is one of the easiest arcade games to start.'}]},
+ {id:'lineup',slug:'soccer-block-puzzle-game',path:page('soccer-block-puzzle-game'),name:'Line Up!',play:play('lineup'),
+  title:'Soccer Block Puzzle Game: Line Up!, Free Online',h1:'Soccer block puzzle game: Line Up!',
+  description:'Line Up! is a free soccer block puzzle game for kids. Drag shapes of players onto an 8 by 8 pitch and fill a row or a column to clear it. No ads.',
+  lead:'Line Up! is a free soccer block puzzle game in your browser. Drag shapes made of players onto an 8 by 8 pitch. A full row or column is a complete line of the team, and it clears.',
+  blurb:'Fit shapes of players into full lines on a pitch',genre:['Puzzle','Sports','Educational'],skill:'Keeping a team’s shape and closing the gaps in a line',
+  og:img('line-up-soccer-block-puzzle-game-og.jpg'),ogAlt:'Line Up!, a soccer block puzzle game: shapes of smiling players fill a pitch and a line clears',
+  shots:[phone('line-up-soccer-block-puzzle-game.webp','Line Up! on a phone: shapes of smiling players in team colours fill an 8 by 8 pitch and LINE UP! appears as a line clears','A line clears, and the streak at the top raises the points.'),
+   phone('line-up-tray-of-three-shapes.webp','Line Up! early in a run: a half-filled pitch above the tray, with two shapes left to place','The tray holds three shapes. Place all three and a new three arrive.')],
+  about:['Line Up! is a block puzzle game with a football (soccer) idea. The pitch is a grid of 8 by 8 squares. Each shape is made of one to five bean players in a team kit, and there are 18 kinds of shape, turned and mirrored.',
+   'A tray under the pitch holds three shapes. Place all three and a new tray is dealt at once. The run ends when none of the shapes in the tray fits on the pitch.'],
+  phone:['Hold the phone upright. Put a finger on a shape in the tray, drag it onto the pitch and lift.','The shape rides a little above your finger, so your thumb never hides it, and a shadow shows where it will land.','Lines that will clear glow yellow before you let go. A shape dropped where it does not fit flies back to the tray.'],
+  desktop:['Drag a shape with the mouse; it sits under the pointer.','Or use the keys: 1, 2 or 3 picks a shape, the arrow keys move it and Enter places it. P or Escape pauses.'],
+  rules:['Fill every square of a row or a column and that line clears.','Each player placed scores 1 point. One shape that clears one line scores 100, two lines 300, three lines 600 and four lines 1,000.',
+   'A streak builds when shape after shape clears a line, up to four times the points. One shape placed without a clear does not break it.','Clear the whole pitch for a clean sheet bonus of 500 points.',
+   'From level 4 a referee walks on and stands on one square for a few turns. A line with the referee in it cannot clear.'],
+  teaches:['Teams defend in lines. When every player holds their place, the line is closed and there is no way through. A gap in the line is where the other team runs in. Line Up! makes that picture simple: a full line clears, a line with one hole stays.',
+   'It also teaches planning ahead. Good players think about the next pass before the ball arrives. In Line Up! you place each shape so that the next ones still fit.',
+   'Each run ends with one short coaching tip about team shape, such as stepping up together or filling the space a team-mate leaves.'],
+  guides:[{path:F+'/11v11-4-4-2',name:'4-4-2 formation',line:'Two lines of four that defend together'},{path:D+'pressure-and-cover-2v2',name:'Pressure and cover 2v2',line:'Close the gap a team-mate leaves'},
+   {path:P+'center-back',name:'Center back in soccer',line:'The players who hold the back line'},{path:R+'offside',name:'The offside rule for kids',line:'Why the back line steps up together'}],
+  tips:['Keep one big empty area. A five-player shape needs room, and it is the shape that ends most runs.','Before you place a shape, look at the other two and make sure they will still fit.',
+   'Finish lines that are nearly full first. A line with one hole is the easiest one to clear.','Try to clear two lines with one shape: two lines score 300 points, not 200.','Play around the referee. Fill the other lines while the referee stands there, then come back when they leave.'],
+  harder:['The level goes up every 15 shapes placed.','Early levels deal mostly small, simple shapes, and every tray is checked so that each shape fits somewhere. Later levels deal more big and awkward shapes, the check gets looser, and from level 12 there is none.',
+   'Referees come from level 4: one at first, up to three later, and they stay for more turns.','Points grow by 10% a level, up to three times. Medals: Bronze at 1,500 points, Silver at 4,000 and Gold at 10,000.'],
+  parents:[PARENTS_SAFE,'Skill: team shape, closing gaps and planning a few moves ahead. There is no clock, so a child can think as long as they like.',
+   'Session length: a few minutes a run. The Daily Line-Up deals the same shapes to everyone once a day, and the first finished daily run goes on the board. One all-time island board keeps the top 20 scores.'],
+  faq:[free('Line Up!',true),{q:'Does Line Up! work on a phone or a school Chromebook?',a:DEVICE+' On a computer it is played with the mouse or the keys.'},
+   {q:'How do you play Line Up!?',a:'Drag a shape of players from the tray onto the pitch. Fill a whole row or column and that line clears. When none of the three shapes in the tray fits anywhere, the run ends.'},
+   {q:'What age is Line Up! for?',a:'Futbol Island is made for children aged 7 to 12. Line Up! has no clock and needs no reading during play, so younger children can play it too.'},
+   {q:'What is the Daily Line-Up?',a:'A daily challenge on the start card. Everyone gets the same shapes in the same order that day. Your first finished daily run goes on the island board; later runs that day are practice.'}]},
+ {id:'trophydrop',slug:'soccer-merge-game',path:page('soccer-merge-game'),name:'Trophy Drop',play:play('trophydrop'),
+  title:'Soccer Merge Game: Trophy Drop, Free in Your Browser',h1:'Soccer merge game: Trophy Drop',
+  description:'Trophy Drop is a free soccer merge game for kids. Drop balls into a trophy cabinet; two the same merge into the next, up to the golden trophy. No ads.',
+  lead:'Trophy Drop is a free soccer merge game in your browser. Slide to aim, let go, and drop a ball into a glass trophy cabinet. Two of the same that touch become the next item, from a small ball up to the golden trophy.',
+  blurb:'Drop and merge, from a small ball to the golden trophy',genre:['Puzzle','Arcade','Educational'],skill:'Patience, planning ahead, and how small touches add up',
+  og:img('trophy-drop-soccer-merge-game-og.jpg'),ogAlt:'Trophy Drop, a soccer merge game: balls, boots, gloves and a medal in a glass trophy cabinet',
+  shots:[phone('trophy-drop-soccer-merge-game.webp','Trophy Drop on a phone: a keeper glove hangs over a glass trophy cabinet with balls, a glove and a medal at the bottom','Slide to aim the glove. The dashed line shows where it will land.'),
+   phone('trophy-drop-medal-merge.webp','Trophy Drop after a merge: MEDAL! appears in a comic panel and CHAIN x2 shows over the pile','Two gloves made a medal, and a chain doubled the points.')],
+  about:['Trophy Drop is a drop-and-merge game set in a club trophy room. Round items fall into a glass cabinet and roll and settle like real objects. When two of the same kind touch, they merge into the next item.',
+   'There are nine items, from small to big: a size 1 ball, a size 3 ball, a size 5 ball, a boot, a keeper glove, a medal, a shield, a cup and the golden trophy. Two golden trophies together make a Golden Double.'],
+  phone:['Hold the phone upright. Put a finger on the cabinet and slide left or right to aim, then let go to drop.','A dashed line shows where the item will land, and a NEXT tag shows the item after it.'],
+  desktop:['Press the mouse button, move to aim and let go to drop.','Or aim with the left and right arrow keys (or A and D) and drop with Space or Enter. P or Escape pauses.'],
+  rules:['Two items of the same kind that touch merge into the next one. The new item scores points: 2 for a size 3 ball, rising to 320 for the golden trophy, and 640 for a Golden Double.',
+   'A chain is a new item that merges again straight away. Each step of a chain multiplies the points, up to five times.','From level 3 a beach ball can drop. It bounces and never merges, but two hard hits turn it into a size 5 ball.',
+   'The run ends when the pile stays over the top line for two seconds. The line turns red and counts down first, so there is still time to save it.'],
+  teaches:['Big wins in football are built from small things done well: a soft first touch, a short pass, ten minutes of practice every day. In Trophy Drop nothing big arrives on its own. Every golden trophy starts as two small balls.',
+   'It also rewards patience and planning. Keep small items near small items and big ones together, and the merges keep coming. Each run ends with one short football fact about small habits, such as using many small touches when you dribble.'],
+  guides:[{path:D+'toe-taps-and-foundations',name:'Toe taps and foundations',line:'Small touches on the ball, a little every day'},{path:D+'dribbling',name:'Soccer dribbling drills',line:'Keep the ball close with many small touches'},
+   {path:T+'first-touch',name:'First touch (soccer term)',line:'The soft touch that sets up the next one'},{path:D+'at-home',name:'Soccer drills at home',line:'Short practice that adds up over time'}],
+  tips:['Keep the biggest item in a corner and line up the others away from it, from big to small.','Drop each item next to its twin, so they merge at once.','Look at the NEXT tag before you drop, and plan two items ahead.',
+   'Look for chains: a new item that lands on another twin merges again and scores more.','Keep the middle low. A tall pile in the middle reaches the top line first.'],
+  harder:['The level goes up every 18 drops, and it never stops.','Higher levels drop more big, awkward items, and the beach ball comes more often, up to one drop in five.',
+   'The cabinet gets smaller: from level 2 the walls step in and the floor rises a little each level, up to a limit. Nothing falls out; the walls push the pile together.','Medals: Bronze at 1,500 points, Silver at 5,000 and Gold at 12,000.'],
+  parents:[PARENTS_SAFE,'Skill: patience, planning ahead and the idea that small steps add up. It is a gentle game: there is no clock, and the only pressure is the top line.',
+   'Session length: a few minutes a run. The Daily Drop gives everyone the same items in the same order once a day. One all-time island board keeps the top 20 scores.'],
+  faq:[free('Trophy Drop',true),{q:'Does Trophy Drop work on a phone or a school Chromebook?',a:DEVICE+' On a computer it is played with the mouse or the arrow keys.'},
+   {q:'How do you play Trophy Drop?',a:'Slide to aim and let go to drop an item into the cabinet. Two of the same kind that touch merge into the next item. Keep the pile under the top line: if it stays over the line for two seconds, the run ends.'},
+   {q:'What age is Trophy Drop for?',a:'Futbol Island is made for children aged 7 to 12. One finger is enough and there is no clock, so it is one of the easiest arcade games to start.'},
+   {q:'What is the biggest item in Trophy Drop?',a:'The golden trophy, made from two cups. Two golden trophies that touch leave the cabinet together as a Golden Double, worth 640 points.'}]},
+ {id:'clearbox',slug:'soccer-tap-puzzle-game',path:page('soccer-tap-puzzle-game'),name:'Clear the Box',play:play('clearbox'),
+  title:'Soccer Tap Puzzle Game: Clear the Box, Free Online',h1:'Soccer tap puzzle game: Clear the Box',
+  description:'Clear the Box is a free soccer tap puzzle game. Tap players in a crowded penalty box to run them out, one free lane at a time, before the clock ends.',
+  lead:'Clear the Box is a free soccer puzzle game in your browser. A crowded penalty box is seen from above, and every player faces one way. Tap a player and they sprint out of the box that way, as long as their lane is free.',
+  blurb:'Tap players out of a crowded box, one free lane at a time',genre:['Puzzle','Sports','Educational'],skill:'Timing a run and making space',
+  og:img('clear-the-box-soccer-tap-puzzle-game-og.jpg'),ogAlt:'Clear the Box, a soccer tap puzzle game: players with arrows in a chalk penalty box under a clock',
+  shots:[phone('clear-the-box-soccer-tap-puzzle-game.webp','Clear the Box on a phone at box 4: players with arrows stand in a chalk penalty box with a planted defender, under a 25 second clock','Box 4. The arrows show which way each player will run; the dark defender never moves.'),
+   phone('clear-the-box-first-boxes.webp','Clear the Box at box 2: five players left, two facing the goal and three facing the side of the box','An early box: send the players whose lanes are open first.')],
+  about:['Clear the Box is a tap-out puzzle game with a football (soccer) idea. Each box is a penalty area seen from above, full of bean players. A chalk arrow in front of every player shows which way they will run.',
+   'Clear every player before the box clock runs out, and the next, more crowded box slides in. Every box is built so that it can always be cleared.'],
+  phone:['Hold the phone upright and tap a player. If nobody stands in the way, they sprint out of the box.','The box number, your three whistles, the players left and the clock are shown at the top.'],
+  desktop:['Click a player to send them.','Or move a marker with the arrow keys (or W, A, S and D) and press Enter or Space to send the player under it. P or Escape pauses.'],
+  rules:['A player runs in a straight line, the way the arrow points. If anyone stands in that lane, the player bumps into them: that is a foul, and it costs one of your three whistles.','The run ends at the third foul, or when the box clock reaches zero.',
+   'Dark defenders are planted: they never move, so a lane through one stays closed.','Players with a sun badge are turners. They turn a quarter turn every time another player leaves the box.',
+   'Points: 10 for each player out, then 100 for a cleared box plus 10 for each whole second left. A box with no foul multiplies its bonus, and three clean boxes in a row win a whistle back.'],
+  teaches:['A run only works into space. A player who sprints into a team-mate gets nowhere, so the first question is always: is my lane free? Clear the Box asks that question at every tap.',
+   'The second lesson is that space is made by moving. Every player who runs out of the box opens a lane for someone else, the way a striker’s run pulls a defender away and leaves room for a team-mate. Each run ends with one short coaching tip.'],
+  guides:[{path:T+'third-man-run',name:'Third-man run (soccer term)',line:'A run into the space another player made'},{path:T+'overlap',name:'Overlap (soccer term)',line:'Running around a team-mate into free space'},
+   {path:D+'busy-square-dribbling',name:'Busy square dribbling',line:'Find the free space in a crowded square'},{path:D+'rondo-4v2',name:'4v2 rondo',line:'Move to open a passing lane'}],
+  tips:['Look before you tap. Find a player whose arrow points at empty grass all the way to the edge.','Start with the players near the edge of the box: they open lanes for the players behind them.',
+   'Watch the turners. They turn after every run, so a closed lane can open.','A clean box is worth more than a fast one, because a foul breaks your streak.','Keep an eye on the clock: it turns orange under 10 seconds and red under 5.'],
+  harder:['Each box is bigger and more crowded. Box 1 is 5 by 5 squares with five players and 30 seconds; box 10 is 7 by 9 squares with 23 players and 22 seconds.','Defenders come from box 3 and turners from box 5. More players stand in each other’s lanes, so the order matters more.',
+   'After box 10 the boxes keep filling up, more turners join and the clock gets shorter, down to 9 seconds.','Points grow by 10% a box, up to three times. Medals: Bronze at 2,500 points, Silver at 6,000 and Gold at 14,000.'],
+  parents:[PARENTS_SAFE,'Skill: looking before acting, timing, and the idea that moving away makes space. Each box has a clock, so it suits a child who enjoys a little pressure.',
+   'Session length: a run often lasts a minute or two. The Daily Drill gives everyone the same boxes once a day, and the first finished daily run goes on the board. One all-time island board keeps the top 20 scores.'],
+  faq:[free('Clear the Box',true),{q:'Does Clear the Box work on a phone or a school Chromebook?',a:DEVICE+' On a computer it is played with the mouse or the keys.'},
+   {q:'How do you play Clear the Box?',a:'Tap a player whose lane is free and they run out of the box the way their arrow points. Clear every player before the clock runs out. Tapping a player whose lane is blocked is a foul, and three fouls end the run.'},
+   {q:'What age is Clear the Box for?',a:'Futbol Island is made for children aged 7 to 12. The first boxes are small and slow, and the later ones are a real test for older children and adults.'},
+   {q:'What is the Daily Drill?',a:'A daily challenge on the start card. Everyone gets the same boxes in the same order that day. Your first finished daily run goes on the island board; later runs that day are practice.'}]},
 ];
 /** A game page's pictures: the hand-made screenshots, then new gameplay stills up to four (lib/site/gameMedia.ts). */
 export const allShots=(g:GamePage):GameShot[]=>[...g.shots,...gameStills(g.id,Math.max(0,4-g.shots.length))];
@@ -255,21 +349,22 @@ export const gameById=(id:GameId)=>GAME_PAGES.find(g=>g.id===id)!;
 /** A ready link to a game page for a guide's own "related" list (lib/site/rules.ts, lib/site/drillLinks.ts, the two hubs). */
 export const gameLink=(id:GameId):GuideLink=>{const g=gameById(id);return {path:g.path,name:`${g.name}: a free ${g.h1.split(':')[0].toLowerCase()}`,line:g.blurb};};
 export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Play Online, No Ads',h1:'Free soccer games for kids',
- description:'Seven free soccer games for kids to play online: pinball, snake, air hockey, an endless runner, soccer tennis, a swipe game and puzzles. No ads.',
- lead:'Seven arcade games from Futbol Island, each built around one football idea. They are free, they run in the browser on a phone, tablet or computer, and there are no ads and no accounts.',
- blurb:'Seven free browser games, each teaching one football idea',
+ // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
+ description:`${GAMES_WORD_CAP} free soccer games for kids to play online: pinball, snake, air hockey, a runner, soccer tennis, swipe, merge and puzzles. No ads.`,
+ lead:`${GAMES_WORD_CAP} arcade games from Futbol Island, each built around one football idea. They are free, they run in the browser on a phone, tablet or computer, and there are no ads and no accounts.`,
+ blurb:`${GAMES_WORD_CAP} free browser games, each teaching one football idea`,
  og:`${GAMES_DIR}/free-soccer-games-for-kids-og.jpg`,ogAlt:'Three free soccer games for kids: Kit Rush, Squad Snake and Pass Puzzles on phone screens',
- intro:['These are the seven machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a swipe game, a puzzle game, a net game) and rebuilds it around something a young player needs: knowing your team at a glance, the order of the positions, beating a tackle, a soft first touch, reading a rebound, guarding a goal, seeing a passing lane.',
+ intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a swipe game, a net game, a block puzzle, a merge game and two more puzzle games) and rebuilds it around something a young player needs: knowing your team at a glance, the order of the positions, beating a tackle, a soft first touch, reading a rebound, guarding a goal, seeing a passing lane, keeping the line, small touches that add up, timing a run into space.`,
   'Every game opens straight from its page. They get harder the longer you play, and a run lasts a few minutes.'],
- pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels.'],
-  ['For two-button fun','Futbol Pinball.'],['For two friends on one phone','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.']] as [string,string][],
- faq:[{q:'Are these soccer games really free?',a:'Yes. There is nothing to buy, no advert and no account. All seven games are free to play, every time. The island’s own coins are earned by playing and learning on Futbol Island and are never sold for real money.'},
+ pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For a puzzle against the clock','Clear the Box.'],
+  ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.']] as [string,string][],
+ faq:[{q:'Are these soccer games really free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time. The island’s own coins are earned by playing and learning on Futbol Island and are never sold for real money.`},
   {q:'Can kids play these soccer games at school?',a:'They run in a web browser with nothing to install, so they work on a Chromebook, a tablet or a phone as long as the school’s filter allows futbolisland.app. There is no open chat and no advertising.'},
-  {q:'What ages are the games for?',a:'Futbol Island is made for children aged 7 to 12. Kit Rush, Squad Snake and Futbol Pinball are the easiest to start; Futbol Tennis and the later Pass Puzzles suit older children.'},
-  {q:'Do the games teach real soccer?',a:'Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds and passing lanes. Each page links to the guides and drills that explain the same idea.'},
+  {q:'What ages are the games for?',a:'Futbol Island is made for children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest to start; Futbol Tennis, Clear the Box and the later Pass Puzzles suit older children.'},
+  {q:'Do the games teach real soccer?',a:'Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches and running into space. Each page links to the guides and drills that explain the same idea.'},
   {q:'Do I need an account or an app?',a:'No. Nothing is downloaded and nothing is signed up for. Progress is kept on the device.'}] as Faq[]};
 export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:GAMES_HUB.crumb,path:GAMES_HUB.path},...tail];
-/** For the sitemap, llms.txt and the image sitemap: the hub first, then the seven pages. */
+/** For the sitemap, llms.txt and the image sitemap: the hub first, then one page per game. */
 export type GameListing={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;images:string[]};
 export const GAME_LISTINGS:readonly GameListing[]=[
  {path:GAMES_HUB.path,name:GAMES_HUB.h1,title:GAMES_HUB.title,description:GAMES_HUB.description,blurb:GAMES_HUB.blurb,hub:true,images:[GAMES_HUB.og,...GAME_PAGES.map(g=>g.shots[0].src),...GAME_PAGES.flatMap(g=>gameStills(g.id,3).map(s=>s.src)),...islandStills().map(s=>s.src),...(HERO_CLIP?[HERO_CLIP.poster]:[])]},

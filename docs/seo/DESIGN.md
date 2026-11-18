@@ -145,7 +145,7 @@ The one exception to "no video" on reading pages, and only on `/games` and `/gam
   is hidden; one clip plays at a time. Muted, playsInline, loop, preload="none". No third-party player.
 - **Hub layout**: intro, the hero loop on a pitch-green field with the gold "Play Kit Rush now", one block per game (clip,
   name, kind, what it teaches, three stills, gold "Play <game>" pill) alternating sides from 860 px, "Inside the island" as a
-  sideways scroll-snap row, "Pick a game and play" (seven gold pills), then the original parents / FAQ / guides. Wide bands
+  sideways scroll-snap row, "Pick a game and play" (one gold pill per game), then the original parents / FAQ / guides. Wide bands
   break out of the 736 px column to 1180 px (`.bleed`). The hero poster is the LCP: preloaded, eager, fetchpriority high.
 - **SEO**: VideoObject per clip (the hub's as `CollectionPage.video`; each game's as `VideoGame.trailer`), all clips in
   `/sitemap-video.xml`, stills in `/sitemap-images.xml` and `VideoGame.screenshot` (up to four per game).

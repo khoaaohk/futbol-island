@@ -1,7 +1,7 @@
 // The arcade games' search pages (Nov 10 2026, owner: "we also need separate SEO pages for these games"; lib/site/games.ts,
 // app/(site)/games). Same method as tests/seo-tools.cjs: no build, the REAL page modules are transpiled and rendered to static
 // HTML, then checked.
-//  1. Registry: every cabinet of the arcade catalog has a page and nothing else does; seven URLs in the sitemap; unique titles
+//  1. Registry: every cabinet of the arcade catalog has a page and nothing else does; one URL per game in the sitemap; unique titles
 //     (30-60) and descriptions (120-155) across guides, tools and games; "soccer" in title and h1, "football" near the top.
 //  2. Metadata: canonical is the page's own path, the share picture is the game's 1200x630 file.
 //  3. Rendered HTML: one h1, JSON-LD that parses (BreadcrumbList; VideoGame: free, web browser, kids, publisher, screenshots, NO
@@ -49,9 +49,10 @@ function size(file){
 const pub=p=>path.join(root,'public',p);
 
 // ---- 1. registry, catalog, sitemap, titles --------------------------------------------------------------------------------
-const WANT=['/games','/games/soccer-swipe-game','/games/soccer-snake-game','/games/soccer-runner-game','/games/soccer-tennis-game','/games/soccer-pinball','/games/soccer-passing-puzzle-game','/games/air-hockey-soccer-game'];
-assert.deepEqual(ALL.map(p=>p.path),WANT,'the seven game URLs, hub first');
-const PAGE_PENDING=['lineup','trophydrop','clearbox'];/* Nov 17 2026: PENDING, not exempt: Line Up!, Trophy Drop and Clear the Box have no /games page yet (a later pass builds them; public/games is at its 1.25 MB picture budget). Remove each id here when its page lands. */assert.deepEqual(PAGES.map(g=>g.id).sort(),catalog.arcadeCabinets.map(c=>c.id).filter(id=>!PAGE_PENDING.includes(id)).sort(),'every cabinet that stands in the arcade room has a page, and only those');
+const WANT=['/games','/games/soccer-swipe-game','/games/soccer-snake-game','/games/soccer-runner-game','/games/soccer-tennis-game','/games/soccer-pinball','/games/soccer-passing-puzzle-game','/games/air-hockey-soccer-game',
+ '/games/soccer-block-puzzle-game','/games/soccer-merge-game','/games/soccer-tap-puzzle-game'];
+assert.deepEqual(ALL.map(p=>p.path),WANT,'one URL per game, hub first');
+const PAGE_PENDING=[];/* PENDING, not exempt: a cabinet that is in the arcade before its /games page is written goes here until the page lands (Nov 17 2026: Line Up!, Trophy Drop and Clear the Box got theirs; Street Dash, if its cabinet merges first, goes here). */assert.deepEqual(PAGES.map(g=>g.id).sort(),catalog.arcadeCabinets.map(c=>c.id).filter(id=>!PAGE_PENDING.includes(id)).sort(),'every cabinet that stands in the arcade room has a page, and only those');
 for(const g of PAGES){const c=catalog.arcadeCabinets.find(x=>x.id===g.id);
  assert.equal(g.name,c.name,`${g.path}: the cabinet's name`);assert.equal(g.play,`/arcade?game=${g.id}`,`${g.path}: the deep link`);assert.equal(g.path,`/games/${g.slug}`,`${g.path}: path`);}
 {const all=[...guides.ALL_GUIDE_PAGES,...tools.TOOL_PAGES,...ALL];
@@ -70,7 +71,7 @@ for(const g of PAGES){assert(g.h1.startsWith('Soccer ')&&g.h1.endsWith(g.name),`
  assert(g.guides.length>=3&&g.tips.length>=3&&g.tips.length<=5&&g.faq.length>=4&&g.faq.length<=6&&g.shots.length>=2,`${g.path}: guides, 3-5 tips, 4-6 questions, screenshots`);
  assert(/free/i.test(g.faq[0].q)&&g.faq.some(f=>/phone/i.test(f.q)&&/Chromebook/i.test(f.q))&&g.faq.some(f=>/^How do you play/.test(f.q))&&g.faq.some(f=>/What age/.test(f.q)),`${g.path}: the four questions people search`);}
 // total weight of the pictures (brief: about 1.2 MB for all), and no stray file
-{const dir=pub('games'),files=fs.readdirSync(dir).filter(f=>fs.statSync(path.join(dir,f)).isFile()),bytes=files.reduce((n,f)=>n+fs.statSync(path.join(dir,f)).size,0);assert(bytes<1.25*1024*1024,`public/games weighs ${Math.round(bytes/1024)} KB`);
+{const dir=pub('games'),files=fs.readdirSync(dir).filter(f=>fs.statSync(path.join(dir,f)).isFile()),bytes=files.reduce((n,f)=>n+fs.statSync(path.join(dir,f)).size,0);assert(bytes<2.0*1024*1024/* Nov 17 2026: was 1.25 MB for seven games (about 175 KB a game: two stills and a share picture); three puzzle games added 430 KB (1.65 MB) and Street Dash will add about 175 KB more, so 2.0 MB covers eleven games */,`public/games weighs ${Math.round(bytes/1024)} KB`);
  const used=new Set(ALL.flatMap(p=>p.images).map(i=>path.basename(i)));for(const f of files)assert(used.has(f),`public/games/${f} is used by a page`);}
 // Nov 16 2026: gameplay footage (lib/site/gameMedia.ts). Every clip and still is used, and the whole set stays under 20 MB.
 {const gm=L('lib/site/gameMedia.ts'),clips=[gm.HERO_CLIP,...gm.islandClips(),...PAGES.map(g=>gm.gameClip(g.id))].filter(Boolean);
@@ -92,7 +93,7 @@ function check(p,meta,el,game){
  const h=renderToStaticMarkup(el);html.set(p.path,h);
  assert.equal((h.match(/<h1[ >]/g)||[]).length,1,`${where}: one h1`);assert(h.includes(`>${p.name}</h1>`),`${where}: the h1 is the registry's`);
  const t=text(h);assert(/football/i.test(t.slice(0,700)),`${where}: "football" near the top`);
- const n=t.split(" ").length;if(process.env.WORDS)console.log(where,n);assert(n>=450&&n<=1300/* Nov 16 2026: was 1270 (gameplay clip and still captions add about 30 words); Nov 11 2026: was 1250; the seventh game adds one entry (about 15 words) to every page's list of the other games */,`${where}: ${n} words`);
+ const n=t.split(" ").length;if(process.env.WORDS)console.log(where,n);assert(n>=450&&n<=1300+(game?15:40)*Math.max(0,PAGES.length-7)/* Nov 17 2026: every game past seven adds one entry (about 15 words) to each page's list of the other games and one block (clip, name, what it teaches, three stills: about 40 words) to the hub, so the ceilings grow with the catalog;  Nov 16 2026: was 1270 (gameplay clip and still captions add about 30 words); Nov 11 2026: was 1250; the seventh game adds one entry (about 15 words) to every page's list of the other games */,`${where}: ${n} words`);
  assert(!/Strikers/.test(h),`${where}: Island Strikers is not an arcade game any more`);
  assert(!/aggregateRating|ratingValue|reviewCount|millions? of players/i.test(h),`${where}: no ratings, no invented numbers`);
  // Nov 16 2026 (owner: videos of the game on these pages): the clips are LoopClip islands that create their <video> on the client
@@ -119,7 +120,7 @@ function check(p,meta,el,game){
  return {h,t,ld,links,by};
 }
 {const r=check(ALL[0],hubMod.metadata,React.createElement(hubMod.default),null);
- const list=r.by('ItemList');assert(list&&list.numberOfItems===7&&list.itemListElement.length===7,'hub: ItemList of seven');
+ const list=r.by('ItemList');assert(list&&list.numberOfItems===PAGES.length&&list.itemListElement.length===PAGES.length,'hub: ItemList of every game');
  list.itemListElement.forEach((x,i)=>{assert.equal(x.position,i+1);assert.equal(x.url,seo.abs(PAGES[i].path));assert.equal(x.name,PAGES[i].name);});
  for(const g of PAGES){assert(r.links.includes(g.path)&&r.links.includes(g.play),`hub links ${g.path} and its deep link`);assert(r.t.includes(g.name),`hub names ${g.name}`);}
  assert(/free soccer games for kids/i.test(r.t)&&/no ads/i.test(r.t)&&/no accounts?/i.test(r.t),'hub: the free / no ads / no account promise');}
@@ -152,7 +153,8 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
  assert(!/['"`]\/games[\/'"`]|site\/games/.test(ui),'the game UI does not link the game pages');}
 {const A='app/(site)/learn',R=(file,params)=>{const m=L(file);return renderToStaticMarkup(params?m.default({params}):React.createElement(m.default));};
  const inbound=[[`${A}/soccer-positions/page.tsx`,null,'airhockey'],[`${A}/soccer-formations/page.tsx`,null,'snake'],[`${A}/soccer-positions/page.tsx`,null,'snake'],[`${A}/soccer-rules/[slug]/page.tsx`,{slug:'offside'},'puzzle'],
-  [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'shoulder-check-colors'},'kitrush'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'wall-passing'},'pinball'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'first-touch-gates'},'tennis'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'dribble-and-shoot'},'runner']];
+  [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'shoulder-check-colors'},'kitrush'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'wall-passing'},'pinball'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'first-touch-gates'},'tennis'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'dribble-and-shoot'},'runner'],
+  [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'pressure-and-cover-2v2'},'lineup'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'toe-taps-and-foundations'},'trophydrop'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'busy-square-dribbling'},'clearbox']];
  const reached=new Set();for(const [file,params,id] of inbound){const g=games.gameById(id);assert(R(file,params).includes(`href="${g.path}"`),`${file} ${params?params.slug:''} links ${g.path}`);reached.add(id);}
  assert.equal(reached.size,PAGES.length,'every game page has a link from a guide page (no orphans)');
  const more=renderToStaticMarkup(React.createElement(L('components/site/LessonHub.tsx').MoreToLearn,{}));assert(more.includes('href="/games"'),'"More to learn" links the games hub');}

@@ -73,17 +73,17 @@
 .featureWide .thumbs li{flex-basis:72%}
 @media(min-width:900px){.thumbs{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));overflow:visible;max-width:360px}.featureWide .thumbs{max-width:none}}
 .thumbs img{display:block;width:100%;height:auto;border-radius:var(--r-sm);background:var(--well)}
-.featureWords .gameLinks .playNow,.playRow7 .playNow{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 18px;border-radius:var(--r-pill);background:var(--gold);color:var(--btn-ink,#244d40);font-weight:800;text-decoration:none;transition:scale .18s cubic-bezier(.2,1.28,.32,1)}
-@media(hover:hover){.featureWords .gameLinks .playNow:hover,.playRow7 .playNow:hover{scale:1.04}}
-.featureWords .gameLinks .playNow:active,.playRow7 .playNow:active{scale:.96}
-@media(prefers-reduced-motion:reduce){.featureWords .gameLinks .playNow,.playRow7 .playNow{transition:none}}
+.featureWords .gameLinks .playNow,.playRow .playNow{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 18px;border-radius:var(--r-pill);background:var(--gold);color:var(--btn-ink,#244d40);font-weight:800;text-decoration:none;transition:scale .18s cubic-bezier(.2,1.28,.32,1)}
+@media(hover:hover){.featureWords .gameLinks .playNow:hover,.playRow .playNow:hover{scale:1.04}}
+.featureWords .gameLinks .playNow:active,.playRow .playNow:active{scale:.96}
+@media(prefers-reduced-motion:reduce){.featureWords .gameLinks .playNow,.playRow .playNow{transition:none}}
 /* Inside the island: one row that swipes sideways, snapping to each picture; the next one peeks in. */
 .gallery{list-style:none;margin:0;padding:0 0 var(--s2)!important;display:flex!important;gap:var(--s2)!important;overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
 .gallery>li{flex:0 0 min(84%,520px);max-width:none!important;scroll-snap-align:start}
 .gallery .shot img{aspect-ratio:16/9;object-fit:cover;border-radius:var(--r-md)}
 /* The "play one now" row on the hub: seven gold links that wrap. */
-.playRow7{list-style:none;padding:0!important;display:flex!important;flex-wrap:wrap;gap:var(--s1) var(--s2)!important}
-.playRow7 li{max-width:none!important}
+.playRow{list-style:none;padding:0!important;display:flex!important;flex-wrap:wrap;gap:var(--s1) var(--s2)!important}
+.playRow li{max-width:none!important}
 /* Game page: the clip beside the stills (phone games), or above them (the wide runner). */
 .media{display:grid;gap:var(--s2);box-sizing:border-box;padding:var(--s2);background:var(--surface);border-radius:clamp(24px,2.4vw,32px)}
 @media(min-width:720px){.media{grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:var(--s3);padding:var(--s3);align-items:start}}
