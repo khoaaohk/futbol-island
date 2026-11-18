@@ -118,6 +118,6 @@ ok('heat and input: frames only on demand, DPR cap 2, reduced motion, lifted dra
  assert.match(shell,/if\(busy\|\|g\.state\.over\)raf\.current=requestAnimationFrame/,'the loop stops when nothing moves');assert.match(shell,/Math\.min\(2,window\.devicePixelRatio\|\|1\)/);
  assert.match(shell,/d\.touch\?y-sh\.h\*c-c\*1\.1/,'a finger drags the piece lifted above the thumb');assert.match(shell,/prefers-reduced-motion/);
  assert.match(shell,/'Digit1','Digit2','Digit3'/);assert.match(shell,/ArrowLeft:\[-1,0\]/);assert.match(view,/sparks:Spark\[\]=Array\.from\(\{length:64\}/,'pooled sparks');
- assert.match(view,/sprites\.get\(key\)/,'bean tiles drawn once per kit and size');
+ assert.match(view,/sprites\.get\(key\)/,'ball sprites drawn once per kit and size');
 });
 console.log(`lineup-core: ${n} checks passed`);
