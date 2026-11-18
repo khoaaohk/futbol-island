@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup] [--suspended] [--headed]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|clearbox] [--suspended] [--headed]
 // pinball (Nov 10 2026): windows flipper (KeyA, KeyD), bumper (ball sent into rondo cone 0), goal (ball in the goal mouth) and drain
 // (ball at the bottom, ball save off) are driven on the live table through window.__arcade3d after the launch window.
 // kitrush (Nov 10 2026): windows slice, combo and life-lost are driven through the game's own swipe() on its three teaching waves
@@ -16,6 +16,8 @@
 // --suspended keeps the real autoplay policy: the context starts suspended, a cue is requested before any tap, then a real tap
 // follows; sound must start only after the tap (the iOS / Safari path).
 // Exit code 1 when a labelled window that must be audible is silent. Never point it at the owner's dev server on 8092.
+// clearbox (Nov 17 2026): windows run (a bean with a free lane tapped through the game's own tap()), foul (a blocked bean tapped: the
+// bump and the whistle) and over (the full-time whistles); menu / paused must be SILENT.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
 const portArg=(process.argv.find(a=>a.startsWith('--port='))||'').slice(7)||process.env.PORT,BASE=process.env.FUTBOL_BASE_URL||(portArg?`http://localhost:${portArg}`:'');
 if(!BASE){console.error('Pass your own server: --port=<port> or FUTBOL_BASE_URL=<url>.');process.exit(1);}
@@ -96,6 +98,15 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await L(()=>{const k=window.__lineup,g=k.game,s=g.state;s.grid.fill(0);s.ref.fill(0);const slot=s.tray.findIndex(Boolean),sh=k.shape(s.tray[slot].shape),top=new Set(sh.cells.filter(c=>c[1]===0).map(c=>c[0]));for(let x=0;x<8;x++)if(!top.has(x))s.grid[x]=1;window.__audioLabel('clear');g.place(slot,0,0);k.sync();});await wait(900);must.push('clear');
    await label('');await wait(300);
    await L(()=>{window.__audioLabel('over');window.__lineup.audio.over();});await wait(1000);must.push('over');
+   await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
+  }else if(game==='clearbox'){quiet.push('menu');
+   await page.waitForFunction(()=>window.__clearbox&&window.__clearbox.phase==='playing',null,{timeout:30000});await label('');await wait(500);
+   const C=fn=>page.evaluate(fn);
+   await C(()=>{const k=window.__clearbox,g=k.game,b=g.state.box,i=b.beans.findIndex((o,n)=>!o.out&&g.canRun(n));window.__audioLabel('run');g.tap(i);k.sync();});await wait(500);must.push('run');
+   await label('');await wait(300);
+   await C(()=>{const k=window.__clearbox,g=k.game,b=g.state.box,i=b.beans.findIndex((o,n)=>!o.out&&!g.canRun(n));window.__audioLabel('foul');if(i>=0)g.tap(i);else k.audio.foul();k.sync();});await wait(700);must.push('foul');
+   await label('');await wait(300);
+   await C(()=>{window.__audioLabel('over');window.__clearbox.audio.over();});await wait(1400);must.push('over');
    await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
   }else if(game==='puzzle'){quiet.push('menu');
    // Pass Puzzles (Nov 10 2026, comic pass): three event windows on the first puzzle. draw = a real finger stroke from the ball to

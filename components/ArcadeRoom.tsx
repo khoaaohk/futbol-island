@@ -36,12 +36,13 @@ const PassPuzzle=dynamic(()=>retryImport(()=>import('./games/PassPuzzleGame')),{
 // reachable from the arcade; an old /arcade?game=live link opens Kit Rush.
 const SquadSnake=dynamic(()=>retryImport(()=>import('./games/SquadSnakeGame')),{ssr:false,loading:()=> <ArcadeGameLoading game="snake"/>});
 const LineUp=dynamic(()=>retryImport(()=>import('./games/LineUpGame')),{ssr:false,loading:()=> <ArcadeGameLoading game="lineup"/>});
+const ClearBox=dynamic(()=>retryImport(()=>import('./games/ClearBoxGame')),{ssr:false,loading:()=> <ArcadeGameLoading game="clearbox"/>});
 const AirFutbol=dynamic(()=>retryImport(()=>import('./games/AirFutbolGame')),{ssr:false,loading:()=> <ArcadeGameLoading game="airhockey"/>});
 const KitRush=dynamic(()=>retryImport(()=>import('./games/KitRushGame')),{ssr:false,loading:()=> <ArcadeGameLoading game="kitrush"/>});
 const gameComponents={tennis:Tennis,pinball:Pinball,runner:Runner};
 /* Nov 11 2026 (slow-connection loading, docs/qa/arcade-load-after.md): the same chunks as the dynamic() games above (webpack shares them).
  * A deep link /arcade?game=<id> starts its game's download while this module evaluates, before hydration, instead of after it. */
-const gameChunks:Record<ArcadeCabinetId,()=>Promise<unknown>>={tennis:()=>import('./games/TennisGame3D'),pinball:()=>import('./games/PinballGame3D'),runner:()=>import('./games/RunnerGame3D'),puzzle:()=>import('./games/PassPuzzleGame'),snake:()=>import('./games/SquadSnakeGame'),airhockey:()=>import('./games/AirFutbolGame'),lineup:()=>import('./games/LineUpGame'),kitrush:()=>import('./games/KitRushGame')};
+const gameChunks:Record<ArcadeCabinetId,()=>Promise<unknown>>={tennis:()=>import('./games/TennisGame3D'),pinball:()=>import('./games/PinballGame3D'),runner:()=>import('./games/RunnerGame3D'),puzzle:()=>import('./games/PassPuzzleGame'),snake:()=>import('./games/SquadSnakeGame'),airhockey:()=>import('./games/AirFutbolGame'),lineup:()=>import('./games/LineUpGame'),clearbox:()=>import('./games/ClearBoxGame'),kitrush:()=>import('./games/KitRushGame')};
 let earlyGame:{id:string;chunk:Promise<unknown>}|null=null;
 if(typeof window!=='undefined'){const raw=new URLSearchParams(location.search).get('game'),id=raw==='live'?'kitrush':raw;if(id&&Object.prototype.hasOwnProperty.call(gameChunks,id))earlyGame={id,chunk:gameChunks[id as ArcadeCabinetId]().catch(()=>{})};}
 const gameChunk=(id:ArcadeCabinetId)=>earlyGame?.id===id?earlyGame.chunk:gameChunks[id]().catch(()=>{});
@@ -91,7 +92,7 @@ export default function ArcadeRoom(){
  const ArcadeGame=gameComponents[game==='tennis'||game==='runner'?game:'pinball'];
  return <main aria-label="The Arcade" className={styles.root} data-entering={!revealed} data-exiting={exiting} data-arcade-room={game?'playing':'room'}>
  {partyOn&&<ArcadePartyLayer onParty={takeParty}/>}
- {game?<div className={styles.game}>{game==='kitrush'?<KitRush onExit={back}/>:game==='snake'?<SquadSnake onExit={back}/>:game==='airhockey'?<AirFutbol onExit={back}/>:game==='lineup'?<LineUp onExit={back}/>:game==='puzzle'?<PassPuzzle onExit={back}/>:<ArcadeGame kind={game} onExit={back}/>}</div>:<>
+ {game?<div className={styles.game}>{game==='kitrush'?<KitRush onExit={back}/>:game==='snake'?<SquadSnake onExit={back}/>:game==='airhockey'?<AirFutbol onExit={back}/>:game==='lineup'?<LineUp onExit={back}/>:game==='clearbox'?<ClearBox onExit={back}/>:game==='puzzle'?<PassPuzzle onExit={back}/>:<ArcadeGame kind={game} onExit={back}/>}</div>:<>
  {/* Nov 17 2026 (owner: "remove the today slideout in arcade. only have scores and exit btns now"): Scores on the left, Exit on the right. */}<header className={styles.header}><div className={styles.headerActions}><button onClick={()=>{setList(false);setHall(true);}} aria-haspopup="dialog" data-arcade-scores><span className={styles.buttonFace}>Scores</span></button></div><NavigationButton back label="Exit" onNavigate={()=>leave()}/></header>
  {party&&<div className={styles.partySlot}><RoomPartyChip party={party} hidden={list||hall} align="right"/></div>}<RoomPlayerCard party={party} blocked={list||hall}/>
  <canvas ref={canvas} tabIndex={0} className={styles.canvas} aria-label="Walkable arcade room. Use WASD or arrow keys to walk, then Enter to play. You can also choose a machine from Coins." onPointerDown={e=>{tap.current={x:e.clientX,y:e.clientY};}} onPointerUp={e=>{const p=tap.current;tap.current=null;if(p&&Math.hypot(e.clientX-p.x,e.clientY-p.y)<12){(document.activeElement as HTMLElement)?.blur?.();const onCabinet=room.current?.cabinetAt(e.clientX,e.clientY);room.current?.pick(e.clientX,e.clientY);if(!onCabinet)roomTapPlayer(party,e.clientX,e.clientY,e.currentTarget);}}}/>
