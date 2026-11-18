@@ -4,8 +4,9 @@ import {QA} from '@/components/site/LessonHub';
 import {ClipFigure,GameFeature,GameIntro,IslandGallery,gamesCss} from '@/components/site/games/GameParts';
 import {LinkList,Section} from '@/lib/site/GuideParts';
 import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameCrumbs,gameListLd} from '@/lib/site/games';
-import {gameClipLd,HERO_CLIP,islandClips} from '@/lib/site/gameMedia';
-import {abs,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
+import {HERO_CLIP} from '@/lib/site/gameMedia';
+import {VIDEOS_PATH,allWatchVideos} from '@/lib/site/videos';
+import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import site from '../site.module.css';
 
 /** /games (lib/site/games.ts): every arcade game as a reading page for search, with real gameplay loops and stills
@@ -16,12 +17,12 @@ export const metadata=pageMeta(H.title,H.description,H.path,{whole:true,type:'we
 export default function GamesHub(){
  // The hero poster is the page's LCP: preload it at high priority (react-dom's preload, in the App Router's React).
  if(HERO_CLIP&&typeof ReactDOM.preload==='function')ReactDOM.preload(HERO_CLIP.poster,{as:'image',fetchPriority:'high'});
- const crumbs=gameCrumbs(),clips=[HERO_CLIP,...islandClips()].filter(c=>c!==null);
+ const crumbs=gameCrumbs(),nVideos=allWatchVideos().length;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={gameListLd()}/>
   <JsonLd data={faqLd(H.faq)}/>
-  {clips.length>0&&<JsonLd data={{'@context':'https://schema.org','@type':'CollectionPage','@id':abs(H.path)+'#page',url:abs(H.path),name:H.title,video:clips.map(c=>gameClipLd(c,false))}}/>}
+  {/* Nov 18 2026: no VideoObject on this page; every clip's one home is its watch page, /videos/<slug> (lib/site/videos.ts) */}
   <GameIntro crumbs={crumbs} h1={H.h1} lead={H.lead}/>
   {HERO_CLIP&&<div className={`${gamesCss.bleed} ${gamesCss.hero}`}>
    <ClipFigure c={HERO_CLIP} auto priority/>
@@ -34,6 +35,7 @@ export default function GamesHub(){
   <Section id="island" title="Inside the island">
    <p>The arcade is one room of Futbol Island, a whole 3D island to explore. Walk or fly around it, fish from the pier, play a match on the beach, design a kit and visit the football museum.</p>
    <div className={gamesCss.bleed}><IslandGallery/></div>
+   <p>Watch all {nVideos} clips, one on each page, on the <a href={VIDEOS_PATH}>Futbol Island videos</a> page.</p>
   </Section>
   <Section id="play" title="Pick a game and play">
    <ul className={gamesCss.playRow}>{GAME_PAGES.map(g=><li key={g.id}><a className={gamesCss.playNow} href={g.play}>Play {g.name}</a></li>)}</ul>

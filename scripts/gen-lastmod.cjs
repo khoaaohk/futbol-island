@@ -42,7 +42,7 @@ const DEPS=[
  [/^\/learn\/soccer-drills\/./,[L+'drills.ts',L+'drillsA.ts',L+'drillsB.ts',L+'drillsC.ts',L+'drillsD.ts',L+'drillGuides.ts',L+'notesDrills.ts',L+'drillLinks.ts','lib/site/DrillParts.tsx',...SHARED]],
  [/^\/learn\/soccer-practice-plans\/./,[L+'plans.ts',...SHARED]],
  [/^\/learn\//,[L+'hubs.ts',L+'guides.ts','components/site/LessonHub.tsx']],
- [/^\/tools/,[L+'tools']],[/^\/games/,[L+'games.ts']],
+ [/^\/tools/,[L+'tools']],[/^\/games/,[L+'games.ts']],[/^\/videos/,[L+'videos.ts',L+'gameMedia.ts',L+'gameMedia.json',L+'guideVideos.ts','components/site/videos/VideoThumbs.tsx']],
 ];
 /** The route file(s) of a path: app/(site)<path>/page.tsx, else the nearest dynamic [param] folder; /play and /privacy are outside (site). */
 function routeFiles(p){

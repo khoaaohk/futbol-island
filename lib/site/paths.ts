@@ -11,6 +11,7 @@ import {FACTS_PATH,FAMILY_CHECKED} from './checked';
 import {COLLECTIONS,COLLECTIONS_UPDATED} from './collections';
 import {COMPARISONS,COMPARISONS_UPDATED} from './comparisons';
 import {BOOKS_PATH,BUILT_BOOKS,bookPath} from './books';
+import {VIDEOS_PATH,VIDEOS_UPDATED,videoSitePaths} from './videos';
 import generated from './lastmod.generated.json';
 /**
  * Every public, indexable path (app/sitemap.ts, tests/seo-pages.cjs). Nov 3 2026 (owner): `/` is the home page (the feature tour,
@@ -43,5 +44,6 @@ function sectionPaths():{path:string;priority:number;lastmod:string}[]{
   ...SITE_CARDS.map(c=>({path:cardPath(c.number),priority:.4,lastmod:U.cards})),...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),priority:.5,lastmod:U.exhibits})),
   ...COLLECTIONS.map(c=>({path:c.path,priority:.7,lastmod:COLLECTIONS_UPDATED})),/* card and Fishbook hubs (lib/site/collections.ts) */
   ...COMPARISONS.map(c=>({path:c.path,priority:.7,lastmod:COMPARISONS_UPDATED})),/* "A vs B" guides (lib/site/comparisons.ts) */
+  ...videoSitePaths().map(path=>({path,priority:path===VIDEOS_PATH?.7:.6,lastmod:VIDEOS_UPDATED})),/* the video watch pages and their hub (lib/site/videos.ts) */
   {path:BOOKS_PATH,priority:.7,lastmod:U.books},...BUILT_BOOKS.map(id=>({path:bookPath(id),priority:.6,lastmod:U.books}))];/* the pop-up books (lib/site/books.ts) *//* "A vs B" guides (lib/site/comparisons.ts) */
 }

@@ -2,6 +2,7 @@ import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {allShots,GAME_NAMES,GAMES_NAMES,type GamePage,type GameShot} from '@/lib/site/games';
 import {gameClip,gameStills,islandClips,islandStills,type GameClip} from '@/lib/site/gameMedia';
 import LoopClip from './LoopClip';
+import {watchPathFor} from '@/lib/site/videos';
 import type {Crumb} from '@/lib/site/seo';
 import site from '@/app/(site)/site.module.css';
 import g from './games.module.css';
@@ -27,11 +28,12 @@ const Shot=({s}:{s:GameShot})=><figure className={g.shot}>
  <img src={s.src} alt={s.alt} width={s.w} height={s.h} loading="lazy" decoding="async"/>
  <figcaption>{s.caption}</figcaption>
 </figure>;
-/** A clip in its frame, with its caption. */
+/** A clip in its frame, with its caption and a link to its watch page (Nov 18 2026, lib/site/videos.ts). */
 export function ClipFigure({c,auto,priority,className}:{c:GameClip;auto?:boolean;priority?:boolean;className?:string}){
+ const watch=watchPathFor(c.key);
  return <figure className={`${g.clipFig}${className?' '+className:''}`}>
   <LoopClip name={c.name} poster={c.poster} mp4={c.mp4} webm={c.webm} w={c.w} h={c.h} pw={c.pw} ph={c.ph} alt={c.alt} auto={auto} priority={priority}/>
-  <figcaption>{c.caption} <span className={g.secs}>{c.seconds} s, no sound.</span></figcaption>
+  <figcaption>{c.caption} <span className={g.secs}>{c.seconds} s, no sound.</span>{watch&&<> <a href={watch} data-watch-link="">Watch the full clip</a></>}</figcaption>
  </figure>;
 }
 /** A game page's pictures: the gameplay clip first, then the hand-made screenshots and the new stills, in one well. */

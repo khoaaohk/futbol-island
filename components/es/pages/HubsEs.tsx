@@ -5,7 +5,7 @@ import {HUB_COUNTS} from '@/lib/site/hubs';
 import {chartBySlug,CHARTS} from '@/lib/site/sizes';
 import {TOOLS_HUB} from '@/lib/site/tools/registry';
 import {diagramUrl} from '@/lib/site/guides';
-import {guideVideo,videoLd} from '@/lib/site/guideVideos';
+import {guideVideo} from '@/lib/site/guideVideos';
 import {learnUrl} from '@/lib/site/learnMedia';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {scene} from '@/lib/site/scenes';
@@ -37,12 +37,12 @@ const hubCrumbsEs=(h:{crumb:string;path:string})=>esCrumbs({name:ES_UI.lessons,p
 const linkEs=(enPath:string,hash='')=>{if(!hasEs(enPath))return null;const w=LINKS_ES[enPath];return w?{path:toEs(enPath)+hash,name:w.name,line:w.line}:null;};
 const present=<T,>(xs:(T|null)[])=>xs.filter((x):x is T=>!!x);
 
-/** "See it in the game": GuideVideo with Spanish words (same clip, same markup). */
+/** "See it in the game": GuideVideo with Spanish words (same clip, same markup). Nov 18 2026: no VideoObject here any more; the
+ *  clip's one structured-data home is its English watch page (/videos/<slug>, lib/site/videos.ts). No Spanish watch pages yet. */
 function GuideVideoEs({enPath,words}:{enPath:string;words?:{name:string;description:string}}){
  const v=guideVideo(enPath);if(!v||!words)return null;
  const id=`clip-${v.key}`;
  return <section className={styles.section} aria-labelledby={id} data-guide-video={v.key}>
-  <JsonLd data={esLd({...videoLd(v),name:words.name,description:words.description,mainEntityOfPage:abs(toEs(enPath))})}/>
   <h2 className={styles.h2} id={id}>Míralo en el juego</h2>
   <ClipPlay name={words.name} poster={learnUrl(v.poster)} webm={v.webm&&learnUrl(v.webm)} mp4={learnUrl(v.mp4!)} width={v.width} height={v.height} describedBy={`${id}-d`} lang="es"/>
   <p className={styles.caption} id={`${id}-d`}>{words.description} {v.seconds} segundos, sin sonido.</p>
