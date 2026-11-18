@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|clearbox|streetdash] [--suspended] [--headed]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|clearbox|streetdash|rollball] [--suspended] [--headed]
 // trophydrop (Nov 17 2026): windows land (a boot dropped through the game's own drop()) and merge (two size-3 balls dropped on one
 // spot); menu / paused must be SILENT.
 // pinball (Nov 10 2026): windows flipper (KeyA, KeyD), bumper (ball sent into rondo cone 0), goal (ball in the goal mouth) and drain
@@ -13,6 +13,8 @@
 // the piece's top cells, then the piece placed: the line chord + clap) and over (the end cue); menu / paused must be SILENT.
 // streetdash (Nov 17 2026): windows jump (the game's own press('jump') on the live street), shot (a crate set 5 m ahead and the
 // volley: boot thump + splinters) and hit (a low wall set just ahead: whistle + oof), then over (the end cue); menu / paused SILENT.
+// rollball (Nov 17 2026): windows roll (the stick held forward through the dev hook: the rolling voice), plate (the ball set on the
+// first plate: clunk + note, then the gate slides) and splash (the ball set past the edge), then over (the end cue); menu / paused SILENT.
 // It wraps AudioNode.connect in the page so every connection to an AudioDestinationNode goes through an AnalyserNode first, samples
 // the RMS of what reaches the speakers every 15 ms, and prints the peak RMS per labelled window (tennis: serve kick, bounce, point
 // bell, ambience bed; other games: menu and play). Also prints how many contexts and destination connections were made and each
@@ -130,6 +132,16 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await D(()=>{const s=window.__streetdash.game.state,z=s.haz.find(h=>!h.on);Object.assign(z,{on:true,kind:1,x:s.bean.x+1.2,y:0,w:.55,h:.75,vx:0,spent:false,done:false,paid:false,teach:0,soft:false,near:false,taught:false});window.__audioLabel('hit');});await wait(900);must.push('hit');
    await label('');await wait(300);await D(()=>{window.__audioLabel('over');window.__streetdash.audio.over();});await wait(1000);must.push('over');
    await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
+  }else if(game==='rollball'){quiet.push('menu');
+   await page.waitForFunction(()=>window.__rollball&&window.__rollball.phase==='playing',null,{timeout:30000});await label('');await wait(600);
+   const D=fn=>page.evaluate(fn);
+   await D(()=>{const k=window.__rollball;k.botTick=()=>k.game.input(.15,1);k.useBot=true;window.__audioLabel('roll');});await wait(900);must.push('roll');
+   await D(()=>{const k=window.__rollball;k.useBot=false;k.botTick=()=>k.game.input(0,0);k.useBot=true;});await label('');await wait(700);
+   await D(()=>{const k=window.__rollball,s=k.game.state,p=s.world.plates[0];s.ball.x=p.x;s.ball.z=p.z;s.ball.y=p.y+.35;s.ball.vx=s.ball.vz=0;window.__audioLabel('plate');});await wait(1100);must.push('plate');
+   await label('');await wait(400);
+   await D(()=>{const s=window.__rollball.game.state;s.ball.x=9;s.ball.y=.35;s.ball.air=true;window.__audioLabel('splash');});await wait(900);must.push('splash');
+   await label('');await wait(600);await D(()=>{window.__audioLabel('over');window.__rollball.audio.over();});await wait(1200);must.push('over');
+   await label('');await D(()=>{window.__rollball.useBot=false;});await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
   }else if(game==='puzzle'){quiet.push('menu');
    // Pass Puzzles (Nov 10 2026, comic pass): three event windows on the first puzzle. draw = a real finger stroke from the ball to
    // the solution's target (brush foley while it moves, the snap tick when it locks on); pass-complete = the release (strike, first

@@ -41,6 +41,7 @@ export const G={
  kitRush:gameLink('kitrush'),pinball:gameLink('pinball'),tennis:gameLink('tennis'),runner:gameLink('runner'),puzzles:gameLink('puzzle'),
  /* Nov 17 2026: the three puzzle cabinets. */ lineUp:gameLink('lineup'),trophyDrop:gameLink('trophydrop'),clearBox:gameLink('clearbox'),
  /* Nov 17 2026: the side-scroller. */ streetDash:gameLink('streetdash'),
+ /* Nov 17 2026: the rolling-ball puzzle. */ rollBall:gameLink('rollball'),
  ages:{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},
 } as const;
 /**

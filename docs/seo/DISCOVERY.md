@@ -126,5 +126,6 @@ One search page per arcade game, plus the hub (ten games on Nov 17 2026; registr
 | `/games/soccer-merge-game` | Trophy Drop (Nov 17) | soccer merge game, football merge game, drop and merge game for kids, trophy drop game |
 | `/games/soccer-tap-puzzle-game` | Clear the Box (Nov 17) | soccer tap puzzle game, tap away puzzle soccer, clear the box game, soccer brain game for kids |
 | `/games/soccer-side-scroller-game` | Street Dash (Nov 17) | soccer side-scroller game, side scrolling soccer game, soccer platformer for kids, street soccer running game |
+| `/games/soccer-ball-rolling-puzzle-game` | Roll It In (Nov 17) | soccer ball rolling puzzle game, roll the ball puzzle game, 3D ball rolling game for kids, soccer physics puzzle |
 
 Pictures: `public/games/` (two WebP screenshots and one share picture per game, plus the hub's; about 1.65 MB for ten games, budget 2.0 MB in tests/seo-games.cjs), rebuilt with `python3 docs/seo/build-game-images.py` from `docs/arcade-aaa/shots`. Queue for Search Console: `docs/seo/GAME-PAGES-QUEUE.md`.

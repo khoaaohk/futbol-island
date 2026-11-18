@@ -13,7 +13,7 @@ import {abs,KIDS_AUDIENCE,PUBLISHER,SITE_NAME,SITE_URL} from './seo';
  * tests/seo-games.cjs checks that each one is a real page.
  * FACTS come from the code and the direction docs only (docs/arcade-aaa/<game>-direction.md, lib/arcade/kitrush/core.ts,
  * lib/arcade/snake/core.ts, lib/arcade/runnerEndless.ts + runnerModes.ts, lib/games/soccerPinballEndless.ts,
- * lib/passPuzzle/endless.ts, components/games/ArcadeGame3D.tsx for the keys; Nov 17 2026: lib/arcade/{lineup,trophydrop,clearbox,streetdash}/core.ts
+ * lib/passPuzzle/endless.ts, components/games/ArcadeGame3D.tsx for the keys; Nov 17 2026: lib/arcade/{lineup,trophydrop,clearbox,streetdash,rollball}/core.ts
  * and components/games/{LineUp,TrophyDrop,ClearBox}Game.tsx). No player counts, no ratings, no reviews.
  * COUNTS (Nov 17 2026): every "N games" line uses GAMES_WORD, from the arcade catalog (lib/arcade/arcadeCatalog.ts), never a typed number.
  * Tennis is described without match-length rules (its endless mode was being built on the same day).
@@ -36,7 +36,7 @@ export const COIN_LINE='Every play is free, like every game in the arcade. Playi
 const DEVICE:Faq['a']='It runs in a web browser with nothing to install, and it is built for phones first. It also works on tablets and on computers, so a Chromebook is fine as long as the school’s filter allows futbolisland.app.';
 export type GameShot={src:string;w:number;h:number;alt:string;caption:string};
 export type GuideLink={path:string;name:string;line:string};
-export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'clearbox'|'streetdash';
+export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'clearbox'|'streetdash'|'rollball';
 export type GamePage={id:GameId;slug:string;path:string;name:string;play:string;title:string;h1:string;description:string;lead:string;blurb:string;genre:string[];skill:string;
  og:string;ogAlt:string;shots:GameShot[];about:string[];phone:string[];desktop:string[];rules:string[];teaches:string[];guides:GuideLink[];tips:string[];harder:string[];parents:string[];faq:Faq[]};
 const page=(slug:string)=>`${GAMES_PATH}/${slug}`;
@@ -370,6 +370,35 @@ export const GAME_PAGES:readonly GamePage[]=[
    {q:'How do you play Street Dash?',a:'Tap to jump, hold the tap to jump higher and swipe down to slide. When the SHOOT button glows, tap it to shoot at a target. Three hits end the run, so look ahead and choose early.'},
    {q:'What age is Street Dash for?',a:'Futbol Island is made for children aged 7 to 12. The first 20 seconds teach every move with no hearts lost, and the run gets faster the further you go, so it is a test for older children and adults too.'},
    {q:'What is the Daily Dash?',a:'A daily challenge on the start card. Everyone runs the same street that day. Your first finished daily run goes on the island board; later runs that day are practice.'}]},
+ {id:'rollball',slug:'soccer-ball-rolling-puzzle-game',path:page('soccer-ball-rolling-puzzle-game'),name:'Roll It In',play:play('rollball'),
+  title:'Soccer Ball Rolling Puzzle Game: Roll It In, Free',h1:'Soccer ball rolling puzzle game: Roll It In',
+  description:'Roll It In is a free soccer puzzle game for kids. You are the ball: roll over hills, sand and planks, press plates and open gates to reach the goal.',
+  lead:'Roll It In is a free 3D puzzle game in your browser where you are the football. Roll over grass, sand, wet tiles and wooden planks, press plates, knock down cones and open gates, then roll the ball into the goal.',
+  blurb:'You are the ball: roll onto plates to open the way to goal',genre:['Puzzle','Sports','Educational'],skill:'Weight of pass and planning the next touch',
+  og:img('roll-it-in-soccer-ball-rolling-puzzle-game-og.jpg'),ogAlt:'Roll It In, a soccer ball rolling puzzle game: the ball jumps a gap between rooftops towards a plate and a goal',
+  shots:[phone('roll-it-in-soccer-ball-rolling-puzzle-game.webp','Roll It In on a phone: the football jumps a gap over the water from a metal ramp, with a yellow plate, a red and white gate and the goal ahead','Take the ramp fast to clear the gap.'),
+   phone('roll-it-in-knock-the-cones.webp','Roll It In on the training pitch: the ball rolls down a hill and knocks over a stack of orange cones to open the gate','Roll down the hill to hit the cones hard.')],
+  about:['Roll It In is a puzzle game seen from behind the ball. Each level is a short course of small puzzles on islands in the sea, and each level ends in a goal.',
+   'The puzzles use plates, gates, cones, switches, crates, lifts, bridges, fans and a whistle that works as a key. The ground changes too: short grass, long grass, sand, mud, wet tiles, planks and metal ramps all roll differently.'],
+  phone:['Hold the phone upright. Press anywhere on the screen and push your thumb the way you want the ball to roll. Let go and the ball slows down.','The Retry button starts the puzzle you are on again, for free.'],
+  desktop:['Roll with the arrow keys or W, A, S and D. You can also press and drag with the mouse.','Press R to start the puzzle again. P or Escape pauses.'],
+  rules:['You have three hearts. Falling into the water costs one, and the ball goes back to the start of the puzzle you were on.','The run ends when the last heart is gone. From level 4 each level has a clock, and running out of time costs a heart too.',
+   'Points: 50 for each puzzle, 200 for each goal, 10 for every second under the level’s par time and 100 for each star. Stars sit off the main path.',
+   'Goals in a row without losing a heart build a streak, which multiplies the goal points, up to three times.'],
+  teaches:['The lesson on the machine is: look before you roll, plan the next touch. Every puzzle can be read before the ball moves. Which plate opens which gate? Does a crate need to go on the plate first?',
+   'A football rolls differently on every pitch, and the same push sends it far on wet tiles and only a little way on sand. Players call this the weight of a pass. A good player looks first, plans where the ball must go next and gives it just the right touch.'],
+  guides:[{path:D+'partner-passing-through-gates',name:'Partner passing through gates',line:'Pass the ball through a gate with the right weight'},{path:D+'first-touch-gates',name:'First touch gates',line:'Move the ball where you want it next'},
+   {path:T+'first-touch',name:'First touch (soccer term)',line:'What a good first touch does'},{path:'/learn/passing-and-support',name:'Passing and support',line:'Why the weight of a pass matters'}],
+  tips:['Stop and look at the whole puzzle before you roll.','Let go of the stick near an edge. The ball slows down on its own.','Sand and mud stop the ball fast. Wet tiles and planks keep it rolling.',
+   'Take a ramp fast to clear a gap. A slow ball falls short.','Plates with a weight sign need a crate. Push it from behind.'],
+  harder:['Every level until level 17 brings one new puzzle, alone first, then mixed with the ones you know. There are 17 puzzles on a training pitch, a beach, the rooftops and a stadium at night.',
+   'Levels grow from one puzzle to six. Later puzzles combine three or more ideas, so the order matters.','From level 4 there is a level clock, and it gets a little shorter every level.','Medals: Bronze at 1,500 points, Silver at 6,000 and Gold at 20,000.'],
+  parents:[PARENTS_SAFE,'Skill: planning ahead, reading a puzzle and gentle control. There is no clock on the first three levels, so it suits a careful child.',
+   'Session length: a run often lasts five to fifteen minutes. The Daily Roll gives everyone the same puzzles once a day, and the first finished daily run goes on the board. One all-time island board keeps the top 20 scores.'],
+  faq:[free('Roll It In',true),{q:'Does Roll It In work on a phone or a school Chromebook?',a:DEVICE+' On a computer it is played with the arrow keys or the mouse.'},
+   {q:'How do you play Roll It In?',a:'You are the football. Push anywhere on the screen to roll. Roll onto plates, knock down cones and carry the whistle to the lock to open the gates, then roll the ball into the goal. Do not fall in the water.'},
+   {q:'What age is Roll It In for?',a:'Futbol Island is made for children aged 7 to 12. The first levels teach one idea at a time with no clock, and later levels mix several puzzles, so older children and adults find them hard too.'},
+   {q:'What is the Daily Roll?',a:'A daily challenge on the start card. Everyone gets the same puzzles in the same order that day. Your first finished daily run goes on the island board; later runs that day are practice.'}]},
 ];
 /** A game page's pictures: the hand-made screenshots, then new gameplay stills up to four (lib/site/gameMedia.ts). */
 export const allShots=(g:GamePage):GameShot[]=>[...g.shots,...gameStills(g.id,Math.max(0,4-g.shots.length))];
@@ -380,18 +409,18 @@ export const gameLink=(id:GameId):GuideLink=>{const g=gameById(id);return {path:
 export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Play Online, No Ads',h1:'Free soccer games for kids',
  // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
  description:`${GAMES_WORD_CAP} free soccer games for kids to play online: pinball, snake, air hockey, a runner, a side-scroller, soccer tennis, swipe, merge and puzzles. No ads.`,
- lead:`${GAMES_WORD_CAP} arcade games from Futbol Island, each built around one football idea. They are free, they run in the browser on a phone, tablet or computer, and there are no ads and no accounts.`,
+ lead:`${GAMES_WORD_CAP} arcade games from Futbol Island, each built around one football idea. They are free, run in the browser on a phone, tablet or computer, and have no ads or accounts.`,
  blurb:`${GAMES_WORD_CAP} free browser games, each teaching one football idea`,
  og:`${GAMES_DIR}/free-soccer-games-for-kids-og.jpg`,ogAlt:'Three free soccer games for kids: Kit Rush, Squad Snake and Pass Puzzles on phone screens',
- intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a side-scroller, a swipe game, a net game, a block puzzle, a merge game and two more puzzle games) and rebuilds it around something a young player needs: knowing your team at a glance, the order of the positions, beating a tackle, a soft first touch, reading a rebound, guarding a goal, seeing a passing lane, keeping the line, small touches that add up, timing a run into space, keeping the ball close.`,
+ intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a side-scroller, a swipe game, a net game, a block puzzle, a merge game and three more puzzle games) and rebuilds it around one thing a young player needs, such as beating a tackle, a soft first touch, seeing a passing lane or the weight of a pass.`,
   'Every game opens straight from its page. They get harder the longer you play, and a run lasts a few minutes.'],
- pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For a puzzle against the clock','Clear the Box.'],['For speed and action','Street Dash.'],
+ pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For a puzzle against the clock','Clear the Box.'],['For speed and action','Street Dash.'],['For a planner','Roll It In: you are the ball.'],
   ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.']] as [string,string][],
  faq:[{q:'Are these soccer games really free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time. The island’s own coins are earned by playing and learning on Futbol Island and are never sold for real money.`},
   {q:'Can kids play these soccer games at school?',a:'They run in a web browser with nothing to install, so they work on a Chromebook, a tablet or a phone as long as the school’s filter allows futbolisland.app. There is no open chat and no advertising.'},
   {q:'What ages are the games for?',a:'Futbol Island is made for children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest to start; Futbol Tennis, Clear the Box and the later Pass Puzzles suit older children.'},
-  {q:'Do the games teach real soccer?',a:'Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, running into space and keeping the ball close. Each page links to the guides and drills that explain the same idea.'},
-  {q:'Do I need an account or an app?',a:'No. Nothing is downloaded and nothing is signed up for. Progress is kept on the device.'}] as Faq[]};
+  {q:'Do the games teach real soccer?',a:'Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, running into space, keeping the ball close and the weight of a pass. Each page links to the guides and drills that explain the same idea.'},
+  {q:'Do I need an account or an app?',a:'No. Nothing is downloaded or signed up for. Progress stays on the device.'}] as Faq[]};
 export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:GAMES_HUB.crumb,path:GAMES_HUB.path},...tail];
 /** For the sitemap, llms.txt and the image sitemap: the hub first, then one page per game. */
 export type GameListing={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;images:string[]};
