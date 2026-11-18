@@ -76,6 +76,8 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
  const chargeRef=useRef(-1),setCh=useCallback((v:number)=>{chargeRef.current=v;setCharge(v);},[]);
  const change=useCallback((p:Phase)=>{phaseRef.current=p;setPhase(p);},[]);
  useEffect(()=>{setSave(readBallblasterSave());setToday(localPlayDay(Date.now()));},[]);
+ /* a coaching hint stays a few seconds; the first one ('Drag to aim') stays until the first kick */
+ useEffect(()=>{if(!hint||hint.startsWith('Drag'))return;const t=setTimeout(()=>setHint(''),6500);return()=>clearTimeout(t);},[hint]);
  const kick=useCallback(()=>{if(!raf.current&&phaseRef.current==='playing'){last.current=0;raf.current=requestAnimationFrame(t=>frameRef.current(t));}},[]);
  const say=useCallback((text:string,pts:number,tone:Word['tone'],teach=false,at?:{x:number;y:number})=>{const w:Word={id:++wordId.current,text,pts,tone,teach,x:at?.x??-1,y:at?.y??-1};
   setWords(list=>[...list.filter(x=>!(teach&&x.teach)).slice(-3),w]);},[]);

@@ -50,7 +50,7 @@ const pub=p=>path.join(root,'public',p);
 
 // ---- 1. registry, catalog, sitemap, titles --------------------------------------------------------------------------------
 const WANT=['/games','/games/soccer-swipe-game','/games/soccer-snake-game','/games/soccer-runner-game','/games/soccer-tennis-game','/games/soccer-pinball','/games/soccer-passing-puzzle-game','/games/air-hockey-soccer-game',
- '/games/soccer-block-puzzle-game','/games/soccer-merge-game','/games/soccer-tap-puzzle-game','/games/soccer-side-scroller-game'];
+ '/games/soccer-block-puzzle-game','/games/soccer-merge-game','/games/soccer-tap-puzzle-game','/games/soccer-side-scroller-game','/games/soccer-shooting-game'];
 assert.deepEqual(ALL.map(p=>p.path),WANT,'one URL per game, hub first');
 const PAGE_PENDING=[];/* PENDING, not exempt: a cabinet that is in the arcade before its /games page is written goes here until the page lands (Nov 17 2026: Line Up!, Trophy Drop and Clear the Box got theirs; Street Dash, if its cabinet merges first, goes here). */assert.deepEqual(PAGES.map(g=>g.id).sort(),catalog.arcadeCabinets.map(c=>c.id).filter(id=>!PAGE_PENDING.includes(id)).sort(),'every cabinet that stands in the arcade room has a page, and only those');
 for(const g of PAGES){const c=catalog.arcadeCabinets.find(x=>x.id===g.id);
@@ -154,7 +154,7 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
 {const A='app/(site)/learn',R=(file,params)=>{const m=L(file);return renderToStaticMarkup(params?m.default({params}):React.createElement(m.default));};
  const inbound=[[`${A}/soccer-positions/page.tsx`,null,'airhockey'],[`${A}/soccer-formations/page.tsx`,null,'snake'],[`${A}/soccer-positions/page.tsx`,null,'snake'],[`${A}/soccer-rules/[slug]/page.tsx`,{slug:'offside'},'puzzle'],
   [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'shoulder-check-colors'},'kitrush'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'wall-passing'},'pinball'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'first-touch-gates'},'tennis'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'dribble-and-shoot'},'runner'],
-  [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'pressure-and-cover-2v2'},'lineup'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'toe-taps-and-foundations'},'trophydrop'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'busy-square-dribbling'},'clearbox'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'gates-dribbling'},'streetdash']];
+  [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'pressure-and-cover-2v2'},'lineup'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'toe-taps-and-foundations'},'trophydrop'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'busy-square-dribbling'},'clearbox'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'gates-dribbling'},'streetdash'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'world-cup-shooting-game'},'ballblaster']];
  const reached=new Set();for(const [file,params,id] of inbound){const g=games.gameById(id);assert(R(file,params).includes(`href="${g.path}"`),`${file} ${params?params.slug:''} links ${g.path}`);reached.add(id);}
  assert.equal(reached.size,PAGES.length,'every game page has a link from a guide page (no orphans)');
  const more=renderToStaticMarkup(React.createElement(L('components/site/LessonHub.tsx').MoreToLearn,{}));assert(more.includes('href="/games"'),'"More to learn" links the games hub');}

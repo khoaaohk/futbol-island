@@ -101,7 +101,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  const renderer=new T.WebGLRenderer({canvas,antialias:!o.mobile,powerPreference:'low-power',alpha:false});
  renderer.toneMapping=T.NoToneMapping;renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;
  const scene=new T.Scene();scene.background=new T.Color(BB_COLORS.sky);scene.fog=new T.Fog('#bfe6f2',48,110);
- const camera=new T.PerspectiveCamera(50,.5,.1,200);const camBase=new T.Vector3(0,4.6,6.6),look=new T.Vector3(0,0,-15);
+ const camera=new T.PerspectiveCamera(50,.5,.1,200);const camBase=new T.Vector3(0,9.2,9.8),look=new T.Vector3(0,0,-16);
  const ink=createComicUniforms({});
  const hemi=new T.HemisphereLight('#ffffff','#a79bb5',.55);scene.add(hemi);
  const sun=new T.DirectionalLight('#ffffff',2.6),toSun=new T.Vector3(-.55,.62,.56).normalize();sun.position.copy(toSun).multiplyScalar(40).add(new T.Vector3(0,0,-20));sun.target.position.set(0,0,-20);scene.add(sun,sun.target);
@@ -132,9 +132,9 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   for(const s of [-1,1]){const p=new T.Mesh(post,white);p.position.set(s*3.66,1.22,.4);p.castShadow=true;scene.add(p);}const cb=new T.Mesh(bar,white);cb.rotation.z=Math.PI/2;cb.position.set(0,2.44,.4);scene.add(cb);}
 
  /* ---- the kicker (a bean from behind) and the ball at its feet ---- */
- const bean=new T.Group();{const b:Parts=[];P(b,cyl(.28,.3,.62,12),BB_COLORS.teal,0,.62,0,0,0,.04,true);P(b,box(.18,.12,.04),COMIC_PAPER,0,.72,-.3,0,0,0);P(b,sph(.27,12),'#ffd9a8',0,1.15,0,0,0,.04,true);P(b,sph(.29,12),'#4a2f22',0,1.24,-.04,0,0,0,true);
+ const bean=new T.Group();{const b:Parts=[];P(b,cyl(.28,.3,.62,12),BB_COLORS.teal,0,.62,0,0,0,.04,true);P(b,box(.18,.12,.04),COMIC_PAPER,0,.72,.3,0,0,0);P(b,sph(.27,12),'#ffd9a8',0,1.15,0,0,0,.04,true);P(b,sph(.29,12),'#4a2f22',0,1.2,.06,0,0,0,true);
   P(b,box(.14,.32,.14),'#1e2a44',-.12,.16,0,0,0,.03);const m=new T.Mesh(bakeParts(b),vmat);m.castShadow=true;bean.add(m);
-  const l:Parts=[];P(l,box(.14,.34,.14),'#1e2a44',0,-.17,0,0,0,.03);P(l,box(.16,.08,.26),COMIC_INK,0,-.34,.05,0,0,.02);const leg=new T.Mesh(bakeParts(l),vmat);leg.position.set(.12,.34,0);leg.castShadow=true;bean.add(leg);bean.userData.leg=leg;}
+  const l:Parts=[];P(l,box(.14,.34,.14),'#1e2a44',0,-.17,0,0,0,.03);P(l,box(.16,.08,.26),COMIC_INK,0,-.34,-.05,0,0,.02);const leg=new T.Mesh(bakeParts(l),vmat);leg.position.set(.12,.34,0);leg.castShadow=true;bean.add(leg);bean.userData.leg=leg;}
  bean.position.set(BB.kx-.42,0,BB.kz+.42);bean.rotation.y=.25;scene.add(bean);
  const bt2=own(ballTex()),ballMat=own(lit(new T.MeshLambertMaterial({map:bt2}),true)),ballGeo=own(new T.SphereGeometry(1,20,14));
  const ready=new T.Mesh(ballGeo,ballMat);ready.scale.setScalar(BB.ballR);ready.position.set(BB.kx,BB.ballR,BB.kz);ready.castShadow=true;scene.add(ready);
@@ -207,10 +207,10 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   // machines and props
   const counts=new Map<number,number>();for(const k of kinds)counts.set(k,0);let bossOn=false;
   for(const e of s.ents){if(!e.on)continue;
-   if(e.kind===K.boss){bossOn=true;boss.visible=true;const w=Math.sin(e.t*3.2);boss.position.set(e.x,Math.abs(w)*.08,e.z);boss.rotation.set(0,0,w*.05);const sc=1+(e.flash>0?e.flash*.6:0);boss.scale.setScalar(sc);
+   if(e.kind===K.boss){bossOn=true;boss.visible=true;const w=Math.sin(e.t*3.2);boss.position.set(e.x,Math.abs(w)*.08,e.z);boss.rotation.set(0,0,w*.05);const sc=1.1*(1+(e.flash>0?e.flash*.6:0));boss.scale.setScalar(sc);
     const arms=boss.userData.arms as T.Mesh[];arms[0].rotation.x=w*.6;arms[1].rotation.x=-w*.6;if(e.phase===2){arms[0].rotation.z=-.6;arms[1].rotation.z=.6;}continue;}
    const m=inst.get(e.kind);if(!m)continue;const i=counts.get(e.kind)!;if(i>=m.instanceMatrix.count)continue;counts.set(e.kind,i+1);
-   const walk=isMachine(e.kind),ph=e.t*9+e.ph,pop=e.flash>0?1+e.flash*1.4:1;
+   const walk=isMachine(e.kind),ph=e.t*9+e.ph,pop=(walk?1.2:1.08)*(e.flash>0?1+e.flash*1.4:1);
    let sy=1,y=e.y;if(walk&&e.kind!==K.drone&&e.kind!==K.dummy)y+=Math.abs(Math.sin(ph))*.06;if(e.kind===K.dummy){const land=1-Math.min(1,e.y/.25);sy=1-land*.18;}
    E.set(e.kind===K.drone?Math.sin(e.t*2)*.15:0,e.kind===K.drone?e.t*.6:0,walk&&e.kind!==K.drone?Math.sin(ph)*.08:0);Q.setFromEuler(E);M.compose(V.set(e.x,y,e.z),Q,SV.set(pop,sy*pop,pop));m.setMatrixAt(i,M);
    C1.setRGB(1,1,1);if(e.gold)C1.setRGB(1.25,1.02,.35);if(e.kind===K.armour&&e.hp<e.max)C1.multiplyScalar(.72);if(e.flash>0)C1.lerp(C2.setRGB(2.2,2.2,2.2),Math.min(1,e.flash*6));m.setColorAt(i,C1);}
