@@ -417,3 +417,41 @@ at-rest table is the like-for-like one. Town, shore and stadium in this mode: wi
 
 Still to do for Batch A: an iPhone check (5 minutes of swimming, before and after), the owner's eye on the ring / wake look, and
 the drip trail if wanted.
+
+---
+
+## 9. Terrain and surfaces batch built (Nov 17-18 2026, branch `island-gfx`, local, not deployed, no phone test)
+
+Details and the per-program cost table: `docs/performance-guide.md`, "Terrain and surfaces: ground and ocean off the PBR light loop ...".
+
+| item | state |
+|---|---|
+| T2 + W1 ground and ocean on Lambert + their own GGX sun highlight | shipped on the branch (same picture: A/B mean difference 0.01-0.7 / 255) |
+| Shader cost estimator for whole programs (`tests/glsl-program-cost.cjs`, `tests/ground-shader-cost.cjs`) | built; reproduces the real compiled grass program's count (448) |
+| T4 detail tile (tiers 0-2), T5 slab joints (stadium plaza and concourse), trail verges, beach wet band | shipped on the branch |
+| T1 lighter shadow filter | dev flag only (`?gfx=shadow4` / `shadow5`), default off, scoped to the island renderer |
+| T6 tone curve | untouched; dev flags `tone-neutral` / `tone-agx` and a comparison sheet for the owner |
+| T3 baked light texture | not built (no paying saving while T1 is off) |
+| W2 foam collars | not built (+1 draw; the shore view is at its ceiling) |
+| T7 culling | not built: crowd finding confirmed (74,232 triangles at the plaza for no visible change) but a frustum test alone does not remove it |
+
+`gfx-budget`, `GFX_SETTLE=14000`, same machine, before = 05e9da8b run the same evening. Draw calls (min-max) / triangles / programs / textures.
+
+| view | tier 0 before | tier 0 after | tier 2 before | tier 2 after |
+|---|---|---|---|---|
+| town | 160 (153-162) / 176,700 / 43 / 26 | 153 (152-161) / 172,560 / 43 / 27 | 149 (149-158) / 162,126 / 43 / 26 | 157 (148-157) / 167,018 / 43 / 27 |
+| shore | 108 (103-111) / 186,622 / 66 / 63 | 106 (100-106) / 185,426 / 64 / 64 | 99 (99-99) / 157,122 / 61 / 62 | 97 (97-97) / 155,926 / 61 / 63 |
+| swim | 102 (102-104) / 187,428 / 68 / 64 | 100 (98-102) / 186,232 / 68 / 65 | 94 (94-94) / 154,234 / 65 / 63 | 92 (92-92) / 153,038 / 65 / 64 |
+| stadium | 78 (76-80) / 202,382 / 78 / 68 | 77 (75-79) / 201,202 / 78 / 69 | 70 (68-72) / 148,058 / 74 / 67 | 69 (67-71) / 146,878 / 74 / 68 |
+
+Reading it: textures +1 in every row is the detail tile (named cost). Programs equal or lower. Draw calls equal or lower except the
+tier-2 town median, which is the same two-valued row as in section 8 (range 148-157 against 149-158: townsfolk in or out of view).
+Shore, swim and stadium are 1-2 draws and about 1,200 triangles lower; the cause was not isolated (treat as noise, not a saving). One run each.
+
+Found while measuring: the follow camera needs 18-34 s to come to rest after a long teleport on this machine (camera position
+polled), not about 10 s, so `GFX_SETTLE=14000` rows can still be a camera in flight; screenshots for this batch waited for the
+camera to stop. The heat governor's own "slow" state (software GL under load) sometimes shows still water in a shot; it is not a
+change of this batch.
+
+Left for later: an iPhone session (list in the performance guide), the owner's choice on the tone sheet, T1 after a walking video,
+T7 with an occlusion rule, T3 once T1 is on, lawn / sand polygon edges (no distance to read today).

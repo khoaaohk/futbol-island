@@ -87,12 +87,12 @@ export function buildFormatFields(scene:T.Scene){
  // the waterline, like the cay's skirt, instead of the vertical foundation step under a row of separate pale cylinders, so the
  // moving shoreline (lib/graphics/islandShore.ts) has a real slope to wash up and the waterline is one smooth curve.
  // Rows per coast point, sea to land: below the water, the rounded edge on the outline, 0.5 m in, then the inner edge.
- const sandPositions:number[]=[],sandIndices:number[]=[],SAND_ROWS=4,SKIRT=1.4,n=ISLAND_SHORE.length;
+ const sandPositions:number[]=[],sandShore:number[]=[],sandIndices:number[]=[],SAND_ROWS=4,SKIRT=1.4,n=ISLAND_SHORE.length;
  ISLAND_SHORE.forEach((p,i)=>{const prev=ISLAND_SHORE[(i+n-1)%n],next=ISLAND_SHORE[(i+1)%n],dx=next.x-prev.x,dz=next.z-prev.z,length=Math.hypot(dx,dz),ox=dz/length,oz=-dx/length;const width=shoreSandWidth(p);
- for(const [o,y] of [[SKIRT,-.5],[0,-.125],[-.5,-.105],[-width,-.105]])sandPositions.push(p.x+ox*o,y,p.z+oz*o);
+ for(const [o,y] of [[SKIRT,-.5],[0,-.125],[-.5,-.105],[-width,-.105]]){sandPositions.push(p.x+ox*o,y,p.z+oz*o);sandShore.push(-o);}// aShore: metres inland of the outline, for the wet band (groundTint.ts 'beach')
  const a=i*SAND_ROWS,b=((i+1)%n)*SAND_ROWS;for(let r=0;r<SAND_ROWS-1;r++)sandIndices.push(a+r,b+r,a+r+1,b+r,b+r+1,a+r+1);
  });
- const sandGeo=new T.BufferGeometry();sandGeo.setAttribute('position',new T.Float32BufferAttribute(sandPositions,3));sandGeo.setIndex(sandIndices);sandGeo.computeVertexNormals();const sandMat=applyGroundTint(new T.MeshStandardMaterial({color:'#f1d6a1',roughness:1,side:T.DoubleSide}),'sand');owned.push(sandGeo,sandMat);const sand=new T.Mesh(sandGeo,sandMat);sand.name='continuous-sandy-shore';sand.receiveShadow=true;scene.add(sand);
+ const sandGeo=new T.BufferGeometry();sandGeo.setAttribute('position',new T.Float32BufferAttribute(sandPositions,3));sandGeo.setAttribute('aShore',new T.Float32BufferAttribute(sandShore,1));sandGeo.setIndex(sandIndices);sandGeo.computeVertexNormals();const sandMat=applyGroundTint(new T.MeshStandardMaterial({color:'#f1d6a1',roughness:1,side:T.DoubleSide}),'beach');owned.push(sandGeo,sandMat);const sand=new T.Mesh(sandGeo,sandMat);sand.name='continuous-sandy-shore';sand.receiveShadow=true;scene.add(sand);
  const floodlights=createFieldLighting(scene,roots,surfaces,frameMaterial,cream);
  return {roots,propSpecs:[...goalSpecs,...floodlights.propSpecs],updateLighting:floodlights.update,setIsolated(isolated:boolean){land.receiveShadow=!isolated;sand.receiveShadow=!isolated;lawn.receiveShadow=!isolated;},dispose(){floodlights.dispose();for(const root of roots.values())root.removeFromParent();land.removeFromParent();sand.removeFromParent();lawn.removeFromParent();for(const item of owned)item.dispose();}};
 }

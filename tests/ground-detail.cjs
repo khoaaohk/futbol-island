@@ -41,6 +41,17 @@ assert.ok(tint.GROUND_TINT_GLSL.includes('sin(q.x*.31+sin(q.y*.23)*1.3)*.4')&&ti
 const src=read('lib/graphics/groundTint.ts');
 assert.ok(/effectiveTier\(\)>=GROUND_GRAIN_OFF_TIER/.test(src)&&tint.GROUND_GRAIN_OFF_TIER===1,'grain is off at tier 1 and above (heat offsets Oct 19 2026; Battery saver is tier 4)');
 assert.ok(/if\(uGroundGrain>0\.\)/.test(src),'the grain branch is skipped by a uniform');
+// Nov 17 2026: the detail tile replaced the hash grain; it stays on at tiers 0-2 and is skipped (no texture read) at tiers 3-4 and in Battery saver; the cloud shade keeps the tier-0 switch above
+assert.ok(/effectiveTier\(\)>=GROUND_DETAIL_OFF_TIER/.test(src)&&tint.GROUND_DETAIL_OFF_TIER===3&&/if\(uGroundDetail>0\.\)\{gt=texture2D\(uGroundTile,/.test(src),'tile read behind a uniform branch, off from tier 3');
+assert.ok(!/fract\(sin\(dot\(floor\(mat2/.test(src),'the per-cell hash grain is gone');
+{const d=tint.groundTileData(),n=tint.GROUND_TILE.size;assert.equal(d.length,n*n*4);
+ for(let k=0;k<4;k++){let m=0,lo=255,hi=0,seam=0;for(let i=0;i<n*n;i++){const v=d[i*4+k];m+=v;lo=Math.min(lo,v);hi=Math.max(hi,v);}m/=n*n;
+  assert.ok(Math.abs(m-127.5)<1.5,'channel '+k+' mean .5 (the mips fade the detail to nothing): '+m);assert.ok(hi-lo>90,'channel '+k+' has contrast: '+lo+'..'+hi);
+  // seamless: the step across the wrap is no bigger than the steps inside
+  let inside=0;for(let y=0;y<n;y++){seam=Math.max(seam,Math.abs(d[(y*n)*4+k]-d[(y*n+n-1)*4+k]));for(let x=1;x<n;x++)inside=Math.max(inside,Math.abs(d[(y*n+x)*4+k]-d[(y*n+x-1)*4+k]));}
+  assert.ok(seam<=inside,'channel '+k+' tiles without a seam: '+seam+' vs '+inside);}
+ assert.equal(Buffer.from(d).toString('hex'),Buffer.from(tint.groundTileData()).toString('hex'),'deterministic');}
+
 assert.ok(/subscribeHeatTier\(syncGrain\)/.test(src),'tier changes update the uniform');
 const heat=load('lib/graphics/heatTier.ts');
 heat.forceHeatTier(0);tint.applyGroundTint(new T.MeshStandardMaterial(),'grass');assert.equal(tint.GROUND_GRAIN.value,1);
@@ -49,7 +60,7 @@ heat.forceHeatTier(3);assert.equal(tint.GROUND_GRAIN.value,0);heat.forceHeatTier
 heat.forceHeatTier(1);assert.equal(tint.GROUND_GRAIN.value,0);heat.forceHeatTier(0);assert.equal(tint.GROUND_GRAIN.value,1);heat.forceHeatTier(null);
 // the materials are wired
 assert.ok(/applyGroundTint\(new T\.MeshStandardMaterial\(\{color:INTERIOR_GRASS_COLOR/.test(read('lib/town/fields.ts')),'main lawn tinted');
-assert.ok(/'sand'\)/.test(read('lib/town/fields.ts'))&&/tintGroundMesh\(sand,'sand'\)/.test(read('lib/town/coralCayWorld.ts'))&&/'mixed'\)/.test(read('lib/town/summitIsleWorld.ts')),'sand/cay/summit tinted');
+assert.ok(/'beach'\)/.test(read('lib/town/fields.ts'))&&/tintGroundMesh\(sand,'sand'\)/.test(read('lib/town/coralCayWorld.ts'))&&/'mixed'\)/.test(read('lib/town/summitIsleWorld.ts')),'sand/cay/summit tinted');
 // the inner sand and the sand-coloured paving are tinted (by source): ribbon, cay ring/shoulders/sandbars/court, paths, plazas, pier sand
 const W=read('lib/town/world.ts'),C=read('lib/town/coralCayWorld.ts');
 assert.ok(/tintGroundMesh\(box\(w,\.035,d,'#eddfbb'[^;]*'path'\)/.test(W),'every path() (beach paths, promenades, cay paths) is tinted');
