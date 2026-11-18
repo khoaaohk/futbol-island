@@ -25,14 +25,16 @@ ok('no loops, timers, targets, audio contexts, pools or materials in the water c
  const town=read('components/Town.tsx');assert.match(town,/ballEffects\.ripple\(location\.x,waterY,location\.z,ev\.ripple\)/);assert.match(town,/ballEffects\.splashDown\(location\.x,waterY,location\.z,size,reduced\)/);/* waterY: the sea's level or the park pond's (Nov 13 2026) */
  // The splash-down's instance budget: the pool's own 5 rings, 14 ghost spheres and 8 charge spheres, the same 6 materials as
  // before, a burst that ends itself after SPLASH_BURST_S (< 1 s) and leaves nothing visible; reduced motion: one ring.
- assert.match(fx,/ghosts=Array\.from\(\{length:14\}/);assert.match(fx,/energy=Array\.from\(\{length:8\}/);assert.equal((fx.match(/new T\.MeshBasicMaterial/g)||[]).length,7,'no new materials for the splash (the same five MeshBasicMaterial literals as before, plus the one swim-ripple pool literal, Oct 19 2026, and the live-match kick ribbon\'s one shared material, Nov 5 2026)');
+ assert.match(fx,/ghosts=Array\.from\(\{length:14\}/);assert.match(fx,/energy=Array\.from\(\{length:8\}/);assert.equal((fx.match(/new T\.MeshBasicMaterial/g)||[]).length,6,'no new materials for the splash (the same five MeshBasicMaterial literals as before and the live-match kick ribbon\'s one shared material, Nov 5 2026; the swim-ripple pool literal of Oct 19 2026 is gone, Nov 17 2026: the ocean shader draws the rings)');
  assert.match(fx,/const SPLASH_BURST_S=\.95,/);assert.match(fx,/if\(k>=1\)burst\.age=SPLASH_BURST_S;\n  \}else if\(burstWas\)\{burstWas=false;burst\.age=SPLASH_BURST_S;lastColor='';for\(const mesh of ghosts\)mesh\.visible=false;for\(const mesh of energy\)mesh\.visible=false;\}/,'the burst hides everything when it ends');
  assert.match(fx,/if\(burst\.age<SPLASH_BURST_S&&!shot&&charging<0&&!reduced\)\{/,'no burst with reduced motion, never over the ball trail');
  assert(!/splashDown\([^)]*\)\{[\s\S]*?new (T\.|Float32Array|Array)/.test(fx.split('splashDown(')[1].split('drips(')[0]),'splashDown allocates nothing');
  // The splash cues: ≤ 5 short setTimeouts per splash (the only timers the sea runs), all cleared on unmount.
  const H=createLoader()('lib/town/water/waterHud.ts');for(const k of Object.keys(H.SPLASH_CUES))assert(H.SPLASH_CUES[k].filter(c=>c[2]>0).length<=4,k+': ≤ 4 timers');
  assert.match(town,/const cueTimers=new Set<ReturnType<typeof setTimeout>>\(\);/);assert.match(town,/for\(const t of cueTimers\)clearTimeout\(t\);cueTimers\.clear\(\);/);
- assert(!/createWaterFx|swimFx|new T\.(Mesh|InstancedMesh)\([^)]*water/i.test(town),'no water pool in Town');
+ assert(!/createWaterFx|new T\.(Mesh|InstancedMesh)\([^)]*water/i.test(town),'no water pool in Town');
+ // Nov 17 2026: swimFx (lib/graphics/swimFx.ts) is not a pool: it writes ring / wake uniforms for the ocean shader and owns no GPU object.
+ {const sfx=read('lib/graphics/swimFx.ts');assert(!/from 'three'|new T\.|document\.|setInterval|setTimeout|requestAnimationFrame/.test(sfx),'swimFx: pure, no three.js object, no timer');}
  // The under tint: a DOM element, opacity only, hidden after UNDER_TINT_MS.
  const css=read('app/globals.css');assert.match(css,/\.water-under\{position:absolute;inset:0;z-index:5;pointer-events:none;background:#2fb8c9;opacity:0\}/);
  assert(!/\.water-under[^}]*backdrop-filter/.test(css),'no backdrop blur over the canvas');assert.match(css,/@keyframes waterUnder\{0%\{opacity:0\}35%\{opacity:\.35\}100%\{opacity:0\}\}/);

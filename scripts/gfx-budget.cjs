@@ -4,6 +4,7 @@
 // Needs a running server (FUTBOL_BASE_URL, default http://localhost:9023), e.g.
 //   NEXT_DIST_DIR=.next-gfx npx next dev -p 9023        (then)        node scripts/gfx-budget.cjs
 // Options (env): GFX_TIER=0..4 (forced heat tier, default 0), GFX_TIME=day|sunset|night (default day), GFX_FRAMES (default 40),
+//   GFX_SETTLE=<ms> (wait after each teleport, default 4000; 14000 lets the follow camera come to rest),
 //   GFX_SHOTS=<dir> (one PNG per viewpoint), GFX_JSON=<file> (the raw table), GFX_SEED=0 (leave Math.random alone).
 //
 // It opens /play as a 390x844 touch phone (DPR 1) flagged as a staff device (no analytics: lib/analytics/staff.ts), enters the island
@@ -20,7 +21,7 @@
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),ts=require('typescript'),vm=require('vm');
 const BASE=process.env.FUTBOL_BASE_URL||'http://localhost:9023',TIER=Number(process.env.GFX_TIER||0),TIME=process.env.GFX_TIME||'day';
-const FRAMES=Number(process.env.GFX_FRAMES||40),SHOTS=process.env.GFX_SHOTS||'',SEED=process.env.GFX_SEED!=='0';
+const SETTLE=Number(process.env.GFX_SETTLE||4000),FRAMES=Number(process.env.GFX_FRAMES||40),SHOTS=process.env.GFX_SHOTS||'',SEED=process.env.GFX_SEED!=='0';
 // The game's own pure TypeScript modules (no three.js), for real coordinates instead of copied literals.
 const ROOT=path.join(__dirname,'..'),cache=new Map();
 const load=file=>{file=path.resolve(ROOT,file);if(cache.has(file))return cache.get(file);const mod={exports:{}};cache.set(file,mod.exports);
@@ -67,7 +68,7 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
   await page.evaluate(({x,z,yaw})=>window.__fi2.teleport(x,z,yaw),v);
   let reached=true;
   if(v.swim)reached=await page.waitForFunction(()=>window.__fi2.water.state.phase==='swim',null,{timeout:20000}).then(()=>true,()=>false);
-  await page.waitForTimeout(4000);// camera settles, chunks in view compile, splash-down ends
+  await page.waitForTimeout(SETTLE);// camera settles, chunks in view compile, splash-down ends (GFX_SETTLE: the follow camera needs ~10 s after a long teleport)
   // Keep the loop awake (an idle island drops to 20 fps or sleeps): a pointer wiggle in the empty top-right corner, away from the HUD buttons.
   await page.evaluate(()=>{window.__gfx.rows.length=0;window.__gfx.on=true;});
   const t0=Date.now();

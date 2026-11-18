@@ -646,10 +646,26 @@ beanWp=instanceMatrix*beanWp;
 #endif
 vBeanW=(modelMatrix*beanWp).xyz;}`;
 const BEAN_UNDER_PARS=/* glsl */`
-varying vec3 vBeanW;uniform float beanUnder,uWaterTime;`;
+varying vec3 vBeanW;uniform float beanUnder,uWaterTime;uniform vec3 uWaterNight;uniform float uBeanWaterY,uBeanWaterStill;`;
+/** The water the swimming player is in (Town.tsx sets it each frame: the sea's level or the park pond's) and 1 = moving water
+ *  (0 = reduced motion / still water: the line holds still and the legs do not wobble). Shared by every bean material; only read
+ *  inside the `beanUnder > 0` branch, so it never touches a bean on land, in the arcade or in a preview. */
+export const BEAN_WATER={uBeanWaterY:{value:-.43},uBeanWaterStill:{value:1}};
+/*
+ * Nov 17 2026 (docs/graphics/island-graphics-plan-nov17.md S2): the legs seen through moving water. Below the water line the
+ * swimming player's vertices sway a few centimetres sideways on a wave that runs down the body (a refraction wobble); nothing
+ * above the line, nothing at all when beanUnder is 0 (one uniform branch per vertex). Before the projection, in object space.
+ */
+const BEAN_WOBBLE_VERTEX=/* glsl */`
+if(beanUnder>0.){vec4 bw=vec4(transformed,1.);
+#ifdef USE_INSTANCING
+bw=instanceMatrix*bw;
+#endif
+bw=modelMatrix*bw;float bu=uBeanWaterY-bw.y;
+if(bu>0.){float k=beanUnder*uBeanWaterStill*min(bu*5.,1.)*.034;transformed.x+=k*sin(bw.y*11.+uWaterTime*3.1+bw.z*2.);transformed.z+=k*sin(bw.y*9.-uWaterTime*2.6+bw.x*2.);}}`;
 const BEAN_UNDER=/* glsl */`
 if(beanUnder>0.){
- float uh=${(-.43).toFixed(2)}-vBeanW.y,uk=beanUnder*smoothstep(-.015,.05,uh);
+ float uh=uBeanWaterY-vBeanW.y,uk=beanUnder*smoothstep(-.015,.05,uh);
  if(uk>0.){
   float l=dot(outgoingLight,vec3(.2126,.7152,.0722)),ab=min(1.-exp(-max(uh,0.)*1.6-.5),.6);// floor: a deep diver stays readable
   vec3 o=mix(outgoingLight,vec3(l),.45)*vec3(.55,.85,.95);
@@ -659,6 +675,9 @@ if(beanUnder>0.){
   o+=vec3(.5,.78,.8)*smoothstep(.55,.95,abs(cs))*.22*exp(-max(uh,0.)*1.1);
   outgoingLight=mix(outgoingLight,o,uk);
  }
+ // The water line (Nov 17 2026, graphics plan S2): a thin foam line that laps a little, exactly where the part cuts the surface.
+ float lap=uBeanWaterStill*.022*sin(vBeanW.x*7.+vBeanW.z*5.+uWaterTime*3.4),fl=1.-smoothstep(.028,.075,abs(uh-.01+lap));
+ outgoingLight=mix(outgoingLight,vec3(.9,.97,1.)*uWaterNight,fl*beanUnder*.85);
 }`;
 export type BeanKind='body'|'limbs'|'hair'|'hat';
 const viewport={value:800};
@@ -669,11 +688,11 @@ function patchVertex(src:string,kind:BeanKind,depth:boolean){
  if(depth)src=src.replace('#include <begin_vertex>','beanShape();vec3 transformed=beanP;');
  else src=src.replace('#include <beginnormal_vertex>','beanShape();vec3 objectNormal=beanN;').replace('#include <begin_vertex>','vec3 transformed=beanP;');
  const lod=kind==='body'?(depth?'':LOD_BODY):kind==='limbs'?LOD_LIMB:LOD_HEAD;
- if(!depth)src=src.replace('#include <common>','#include <common>\nvarying vec3 vBeanW;').replace('#include <project_vertex>','#include <project_vertex>\n'+BEAN_WORLD_VERTEX);
+ if(!depth)src=src.replace('#include <common>','#include <common>\nvarying vec3 vBeanW;uniform float beanUnder,uWaterTime,uBeanWaterY,uBeanWaterStill;').replace('#include <project_vertex>',BEAN_WOBBLE_VERTEX+'\n#include <project_vertex>\n'+BEAN_WORLD_VERTEX);
  return src.replace('#include <project_vertex>','#include <project_vertex>\n'+lod);
 }
 type BeanUniforms={beanData:{value:T.Texture|null};beanDyn:{value:T.Texture|null};beanRowU:{value:Float32Array};uBeanViewport:{value:number};beanFace:{value:T.Texture|null};beanDigits:{value:T.Texture|null};beanName:{value:T.Texture|null};beanClub:{value:T.Texture|null};
- /** 0..1 underwater look below the water line (swimClear.ts; the swimming player only, 0 = no-op for every other bean). */beanUnder:{value:number};uWaterTime:{value:number}};
+ /** 0..1 underwater look below the water line (swimClear.ts; the swimming player only, 0 = no-op for every other bean). */beanUnder:{value:number};uWaterTime:{value:number};uWaterNight:{value:T.Vector3};uBeanWaterY:{value:number};uBeanWaterStill:{value:number}};
 const EMPTY_ROW=new Float32Array(BD.size*4);
 /** A rig's row wrapped as a texture handle: identifies the row for code that clones bean materials; never uploaded. */
 export function beanRowHandle(row:Float32Array){const t=new T.DataTexture(row,BD.size,1,T.RGBAFormat,T.FloatType);t.userData.beanRow=true;t.name='bean-row-handle';return t;}
@@ -687,7 +706,7 @@ const isBatchTexture=(source:RowSource)=>!!source&&!(source instanceof Float32Ar
  * frame re-uploads only the small dynamic texture.
  */
 function uniformsFor(kind:BeanKind,row:Float32Array|null,texture:T.Texture|null):BeanUniforms{
- return {beanData:{value:texture},beanDyn:{value:null},beanRowU:{value:row??EMPTY_ROW},uBeanViewport:viewport,beanFace:{value:kind==='body'?beanFaceAtlas():null},beanDigits:{value:kind==='body'?shirtDigitAtlas():null},beanName:{value:null},beanClub:{value:kind==='body'||kind==='limbs'?clubMarkTexture():null},beanUnder:{value:0},uWaterTime:WATER_UNIFORMS.uWaterTime};
+ return {beanData:{value:texture},beanDyn:{value:null},beanRowU:{value:row??EMPTY_ROW},uBeanViewport:viewport,beanFace:{value:kind==='body'?beanFaceAtlas():null},beanDigits:{value:kind==='body'?shirtDigitAtlas():null},beanName:{value:null},beanClub:{value:kind==='body'||kind==='limbs'?clubMarkTexture():null},beanUnder:{value:0},uWaterTime:WATER_UNIFORMS.uWaterTime,uWaterNight:WATER_UNIFORMS.uWaterNight,uBeanWaterY:BEAN_WATER.uBeanWaterY,uBeanWaterStill:BEAN_WATER.uBeanWaterStill};
 }
 /** Clay MeshStandardMaterial for one bean part; clones (playerBatch) keep the shader with their own data texture. */
 export class BeanMaterial extends T.MeshStandardMaterial{
@@ -709,7 +728,7 @@ export class BeanMaterial extends T.MeshStandardMaterial{
    const pars=kind==='body'?BODY_FRAG_PARS:kind==='limbs'?LIMB_FRAG_PARS:HEAD_FRAG_PARS,body=kind==='body'?BODY_FRAG:kind==='limbs'?LIMB_FRAG:HEAD_FRAG;
    shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\n'+FRAG_COMMON+pars+BEAN_UNDER_PARS).replace('#include <color_fragment>',body).replace('#include <opaque_fragment>',CLAY+BEAN_UNDER+'\n#include <opaque_fragment>');
   };
-  this.customProgramCacheKey=()=>'bean-'+kind+'-v2';
+  this.customProgramCacheKey=()=>'bean-'+kind+'-v3';
   this.onBeforeRender=(renderer:T.WebGLRenderer)=>{viewport.value=renderer.getSize(_size).y||800;};
  }
  copy(source:T.MeshStandardMaterial){

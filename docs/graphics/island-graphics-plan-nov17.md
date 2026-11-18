@@ -3,7 +3,7 @@
 Owner: "see where we can enhance the graphics for this game without increasing heat, especially for mobile ... terrain, water, and
 different surfaces ... How can we make the swimming graphics look even better."
 
-**Nothing in this document is built.** The only code added is the measuring script `scripts/gfx-budget.cjs`. Cost figures for the
+**Update, Nov 17 2026 (later the same day): Batch A "In the water" (S1, S2, S3) is built on branch `island-gfx`; see section 8 at the end. Everything else is still a plan.** When this was written nothing was built: the only code added was the measuring script `scripts/gfx-budget.cjs`. Cost figures for the
 proposals are reasoned from the shaders and from three r169's source, not measured on a phone. Nothing here claims a thermal result
 (AGENTS.md: no heat claim without a real iPhone).
 
@@ -360,3 +360,60 @@ S4 (swim without blending the sea) is deliberately outside the batches until the
 - three-hex-tiling (up to 3 fetches per map per fragment): https://www.npmjs.com/package/three-hex-tiling
 - Unity, "Procedural stochastic texturing" (3 samples per fragment plus a lookup): https://unity.com/blog/engine-platform/procedural-stochastic-texturing-in-unity
 - In-repo: `docs/performance-guide.md`, `docs/desktop-graphics-plan-2026-10-19.md`, `docs/TROPICAL_WATER_OCT26.md`, `docs/water-look-research.md`, `docs/swimming-research.md`; three r169 source `node_modules/three/src/renderers/shaders/ShaderChunk/shadowmap_pars_fragment.glsl.js`, `src/constants.js:58-60`.
+
+---
+
+## 8. Batch A built (Nov 17 2026, branch `island-gfx`, local, not deployed, no phone test)
+
+Built: S1 (rings + V wake in the ocean shader, ring meshes gone), S2 (water line + leg wobble on the swimmer), S3 (stroke, kick and
+entry spray through the ride-splash pool). Details, tiers and the cost statement: `docs/performance-guide.md`, "Nov 17 2026:
+swimming graphics, batch A". Screenshots: `swim-before-phone.png`, `swim-after-phone.png`, `swim-after-night-phone.png`,
+`swim-after-desktop.png`.
+
+Differences from the plan above
+- Rings: 5 pooled + 1 "contact collar" (a small foam ring that stays at the swimmer's hips) instead of 6 pooled. The collar was
+  added because from the follow camera the body's own water line is only a few pixels (the torso rides above the water; only
+  the legs cut the surface), so the contact had to read on the water side too.
+- The fx block is gated by a bounds circle round whatever is live, not by the swim disc radius, because the swimming islanders'
+  rings are not at the player.
+- Programs in the swim view are +1, not equal: the existing ride-splash program compiles the first time a swimmer sprays.
+- The opaque-program estimate is +1 ALU on every path (the gate), not +0. The pay-back is in the blended program (one disc mask
+  instead of two), which the estimator does not count.
+- The Stadium Park pond's rings moved to the ride-splash pool (they used the removed meshes); the pond diver's water line now
+  uses the pond's level.
+- Not built from S3: the 2 s drip trail after walking out of the sea.
+
+`gfx-budget`, before and after, same machine, same day. Draw calls (min-max) / triangles / programs / textures.
+
+**Camera at rest (`GFX_SETTLE=14000`, an option added to the script in this batch).** The section 2 baseline waits 4 s after each
+teleport, but the follow camera needs about 10 s to arrive after a long teleport, so those rows measure a camera still in flight
+and small timing changes move what is in view. With the camera at rest the before and after views are the same picture:
+
+| view | tier 0 before | tier 0 after | tier 2 before | tier 2 after |
+|---|---|---|---|---|
+| town | 162 (153-162) / 176,780 / 42 / 26 | 162 (153-162) / 176,780 / 42 / 26 | 149 (149-158) / 162,126 / 42 / 26 | 158 (149-158) / 168,198 / 42 / 26 |
+| shore | 113 (102-113) / 186,944 / 63 / 63 | 108 (102-109) / 186,622 / 63 / 63 | 103 (99-103) / 157,442 / 60 / 62 | 99 (99-99) / 157,122 / 60 / 62 |
+| swim | 110 (104-112) / 189,024 / 67 / 64 | 100 (98-102) / 182,232 / 68 / 64 | 100 (96-100) / 154,714 / 64 / 63 | 94 (94-94) / 154,234 / 65 / 63 |
+| stadium | 78 (76-80) / 202,382 / 77 / 68 | 78 (76-80) / 202,382 / 78 / 68 | 70 (68-72) / 148,058 / 73 / 67 | 70 (68-72) / 148,302 / 74 / 67 |
+
+Reading it: swim is 10 draw calls lower at tier 0 and 6 lower at tier 2, shore 4-5 lower (the swimming islander's rings were
+meshes too); triangles lower in both; textures equal. Programs are +1 from the swim view on (cumulative): the ride-splash program,
+see above. Town and stadium at tier 0 are identical to the draw call and the triangle. The tier-2 town row has the same range
+(149-158) with a different median and the tier-2 stadium row is +244 triangles: townsfolk walking through a 14 s wait. One run
+each; the tier-0 baseline needed a second attempt (the first timed out loading the page after the code swap).
+
+**Default 4 s wait (comparable with section 2, camera still moving).**
+
+| view | tier 0 before (section 2) | tier 0 after (two runs) | tier 2 before (three runs) | tier 2 after (four runs) |
+|---|---|---|---|---|
+| swim draw calls | 102 (98-103) | 98 (96-100), 99 (96-102) | 94 (92-95) each time | 91 (88-100), 90 (88-91), 92 (90-101), 91 (88-94) |
+| swim triangles | 181,436 | 181,116, 182,232 | 148,242 each time | 150,954, 147,922, 152,874, 150,954 |
+| swim programs / textures | 68 / 64 | 69 / 64, 71 / 64 | 67 / 63 | 68 / 63 each time |
+
+Median draw calls are lower in every run. Triangles and the maximum draw calls are sometimes above the baseline in this mode
+(up to +4,632 triangles, max 101 against 95): the after build reaches a slightly different point of the camera's flight when the
+40 frames are taken, and the view at rest holds more than the view in flight (154,714 against 148,242 before the change). The
+at-rest table is the like-for-like one. Town, shore and stadium in this mode: within 1 draw call and 800 triangles of section 2.
+
+Still to do for Batch A: an iPhone check (5 minutes of swimming, before and after), the owner's eye on the ring / wake look, and
+the drip trail if wanted.

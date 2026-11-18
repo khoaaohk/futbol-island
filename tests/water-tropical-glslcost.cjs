@@ -57,10 +57,14 @@ const between=(s,a,b,from=0)=>{const i=s.indexOf(a,from);if(i<0)throw new Error(
 const add=(...c)=>c.reduce((a,b)=>({alu:a.alu+b.alu,tex:a.tex+b.tex}),{alu:0,tex:0});
 /** Per-path fragment costs of the ocean (opaque program) and the island shore strip. */
 function waterPaths(oceanSrc,shoreSrc){
- const ofns=functions(stripComments(oceanSrc).replace(/\$\{DIVE_SLOTS\}/g,'2'));
+ const ofns=functions(stripComments(oceanSrc).replace(/\$\{DIVE_SLOTS\}/g,'2').replace(/\$\{SWIM_FX\.rings\}/g,'6'));
  const map=between(oceanSrc,".replace('#include <map_fragment>',/* glsl */`","}`)").replace(/\$\{DIVE_SLOTS\}/g,'2');
  const opaque=between(oceanSrc,".replace('#include <opaque_fragment>',`","#include <opaque_fragment>`)").replace(/#ifndef OPAQUE[\s\S]*?#endif/,'').replace(/#ifdef OPAQUE([\s\S]*?)#else[\s\S]*?#endif/,'$1');
- const o=(code)=>add(cost(stripComments(code),ofns),cost(stripComments(opaque),ofns));
+ // Swim rings + wake (Nov 17 2026, lib/graphics/swimFx.ts): one uniform branch, `if(uSwimFx.z>0.)`, skipped for the whole draw unless a
+ // swimmer's ring or wake is live. Every ordinary path drops its body and pays the gate's one comparison (counted by hand, since
+ // dropIf removes the condition too); the `swimFx` path is a phone pixel INSIDE the live bounds circle (all six rings + the wake).
+ const fxGate=/if\(uSwimFx\.z>0\.\)/g,opaqueFx=stripComments(opaque),opaqueIdle=dropIf(opaqueFx,fxGate);
+ const o=(code)=>add(cost(stripComments(code),ofns),cost(opaqueIdle,ofns),{alu:1,tex:0});
  const desk=/if\(uWaterDetail>1\.5\)/g,reach=/if\(reachS>0\.\)/g,crest=/if\(uWaterDetail>\.5\)/g,glit=/if\(uSunGlitter>0\.\)/g,mapS=stripComments(map);
  const ocean={
   far:o(dropIf(dropIf(mapS,reach),desk)),
@@ -68,6 +72,7 @@ function waterPaths(oceanSrc,shoreSrc){
   nearPhoneHot:o(dropIf(dropIf(mapS,desk),glit)),
   nearDesk:o(mapS),
   still:o(dropIf(dropIf(dropIf(mapS,desk),crest),glit)),
+  swimFx:add(cost(dropIf(mapS,desk),ofns),cost(opaqueFx,ofns)),
  };
  const sfns=functions(stripComments(shoreSrc+between(oceanSrc,'export const SHORE_GLSL=/* glsl */`','`;')+between(oceanSrc,'export const CLEAR_WIN_GLSL=/* glsl */`','`;')));
  const strip=stripComments(between(shoreSrc,'const STRIP_GLSL=/* glsl */`','`;'));
