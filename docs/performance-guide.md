@@ -1,5 +1,44 @@
 # Performance reference for future Futbol Island updates
 
+## Terrain and surfaces: ground and ocean off the PBR light loop, detail tile, slab joints, trail verges, wet sand (Nov 17 2026, local, not deployed, no phone test)
+
+Plan: `docs/graphics/island-graphics-plan-nov17.md` (items T2, W1, T4, T5; section 9 has the tables). Owner brief: better terrain, water and surfaces "without increasing heat, especially for mobile".
+
+**What changed**
+- **Ground and ocean lighting** (`lib/graphics/groundTint.ts`, `lib/graphics/waterSurface.ts`, new `lib/graphics/sunHighlight.ts`): every ground-tint material and the ocean plane now compile three's LAMBERT shader source plus one block that reproduces the direct GGX sun highlight of three's physical shader (same D, Smith V and Schlick F, for the one sun, already shadowed). The material objects are still `MeshStandardMaterial` (callers, clones, the paint batch and `patchStadiumNight` are untouched); only the source handed to `onBeforeCompile` differs. Gone: the roughness-from-derivatives clamp, the `PhysicalMaterial` set-up and the indirect-specular / multiscatter maths that multiplied a zero environment. Same picture: on one build, `?gfx=pbr-ground,pbr-ocean` against the default differs by a mean 0.01-0.7 / 255 at day, sunset and night (moving islanders and water account for that).
+- **Detail tile** (`groundTileData`, one shared 64x64 RGBA8 texture, mipmapped, 16 KB): one read replaces the per-0.29 m hash grain. The hash could not be filtered, so it was tier 0 only; the tile stays on at **tiers 0-2** and is skipped by a uniform branch at **tiers 3-4 and in Battery saver** (no read there). Every channel has a mean of .5 and the shader uses (value - .5), so the mip chain fades it to nothing with distance. Grass shows clumps, sand faint wind ripples, paving and asphalt speckle. The cloud shade keeps its tier-0 switch (`GROUND_GRAIN_OFF_TIER`).
+- **Slab joints** (`path` kind, `GROUND_SLAB`): 2.4 m slabs with a per-slab tone on the stadium plaza and the pitch-level concourse, chosen by two world-space rectangles in the shader (the pieces are merged into 50 m chunks, so no per-mesh marker survives). Joint lines are widened to the pixel footprint and fade as they go under a pixel.
+- **Trail verges** (`trail` kind, `lib/town/westPark.ts` ribbons carry `aVerge`): Stadium Park trails break into the lawn with a noise-broken edge and a worn edging line. Caps, the pond rim and the stadium apron carry zeros (no verge) so the batching pass can still merge them.
+- **Wet sand** (`beach` kind, `lib/town/fields.ts` sand ribbon carries `aShore`, metres inland): a darker band with a broken edge and a wet sheen just above the swash. It uses a per-vertex distance from the same coast outline the shore field is baked from; a per-pixel read of the baked field would have added a texture read.
+
+**Cost, counted** (`node tests/ground-shader-cost.cjs`: the complete fragment program, three's light loop included, worst-case pixel; ALU / texture reads; 16 of the reads are the soft shadow filter):
+
+| program | before (05e9da8b) | after, tier 0 | after, tiers 1-2 | after, tiers 3-4 + saver |
+|---|---|---|---|---|
+| grass | 448 / 16 (tier 0), 406 / 16 (tier 1+) | 382 / 17 | 357 / 17 | 341 / 16 |
+| sand (land, mixed, asphalt within 15) | 454 / 16, 412 / 16 | 387 / 17 | 362 / 17 | 347 / 16 |
+| beach (wet-band pixel) | 454 / 16, 412 / 16 | 416 / 17 | 391 / 17 | 376 / 16 |
+| path (slab pixel inside the plaza) | 442 / 16, 400 / 16 | 413 / 17 | 388 / 17 | 376 / 16 |
+| trail (verge pixel) | 443 / 16, 401 / 16 | 420 / 17 | 395 / 17 | 383 / 16 |
+| ocean near camera, phone / hot phone / still / far (same at every tier) | 1612, 1499, 1344, 1146 (all / 20) | 1551, 1438, 1283, 1085 (all / 20) | same | same |
+
+Reading it: ALU is lower on every path of every program. The ONE added texture read is the detail tile at tiers 0-2 (at tier 0 it replaces the hash grain's arithmetic; at tiers 1-2 it is new work, on pixels that lost 44-65 ALU in the same commit pair; on a plaza slab or trail verge pixel the margin is only 6-12 ALU). ALU and reads are different currencies: this is a count, not a GPU measurement. Tiers 3-4 and Battery saver read nothing new and are 19-65 ALU cheaper than before. No draw, mesh, program or render target was added; textures +1 (the tile).
+
+**Not built, and why**
+- Baked island light texture (plan T3): its payer in the plan was the lighter shadow filter, which is behind a flag (below). The Lambert swap's saving is already partly spent on the tile's read; a second read on every ground pixel is not paid for.
+- Foam collars (plan W2): +1 draw at the shore, and the shore view sits exactly at its ceiling (108 / 99 draw calls).
+- Stadium crowd culling (plan T7): confirmed that at Stadium Plaza arrival the crowd's one draw submits 74,232 triangles (201.7k -> 127.4k with its instance count at 0) for no visible change in that view. A per-stand frustum test does not remove it (the near stand's box is inside the frustum; it is hidden by the stand's own back), so it needs an occlusion rule and in-bowl checks from every seat camera: not a change to make blind. Fishing floats / posts and other island-wide instanced meshes: one bound each by design; splitting them adds draws.
+- Plank lines: the ferry dock and the pond jetty already have board lines in geometry (`world.ts` dock boards, `westPark.ts` jetty); their wood is in the shared paint batch, so a shader marker would cost a new material and draws.
+- Lawn / sand edges away from the trails: those are polygon edges with no distance to read; they stay hard.
+
+**Dev-only switches** (`lib/graphics/gfxFlags.ts`, `?gfx=a,b` on a development build; constant false in production): `pbr-ground`, `pbr-ocean` (the old programs, for A/B), `tone-neutral`, `tone-agx` (tone curve of the island renderer only), `shadow4`, `shadow5` (lighter soft-shadow filter, `lib/graphics/shadowKernel.ts`). The live tone mapping (ACES Filmic) and the 16-tap shadow filter are unchanged.
+- Shadow filter estimate: grass 382 / 17 -> 292 / 5 (`shadow4`, one bilinear 2x2) or 290 / 6 (`shadow5`). It is scoped to the island renderer by wrapping that renderer's `render` / `compile` / `compileAsync`: the lighter chunk is in three's global chunk table only inside those calls, so the shop, arcade and preview renderers always compile the stock filter. Needs a walking video on a real phone (thin casters: goal nets, poles, zipline) before it is ever switched on.
+- Tone curve sheet for the owner: current ACES vs Khronos PBR Neutral vs AgX, same three views.
+
+**Validation**: `tests/ground-shader-cost.cjs` (7 checks), `tests/ground-detail.cjs` (tile: mean, seams, determinism, tier switch), `tests/water-tropical-cost.cjs`, `tests/swim-clear.cjs`, and every test matching terrain / ground / island / water / ocean / heat / shadow / stadium / pier / town run one by one (88 files, all pass); typecheck and eslint clean; no program info log on tiers 0, 2 and 4. `gfx-budget` tables: plan section 9.
+
+**Needs a real iPhone (nothing here is a thermal claim)**: 10 minutes on the beach and on the stadium plaza before / after at tier 0 and warmed to tier 2 (does the tile's read cost less than the Lambert swap saves); the tile's look at the phone's pixel ratio (texels are about two pixels near the player); the wet sheen at a low sun; the shadow filter flags while walking.
+
 ## Town split, first steps (Nov 10 2026, local, not deployed): no behaviour change intended
 
 `components/Town.tsx` is being split one system at a time (owner-approved). Done so far:
