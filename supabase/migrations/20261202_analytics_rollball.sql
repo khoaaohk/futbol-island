@@ -1,5 +1,5 @@
 -- Futbol Island admin analytics (Nov 17 2026): Roll It In's activity key 'arcade_rollball' (lib/analytics/islandIds.ts ARCADE_GAMES), after Street Dash's.
--- NOT APPLIED. The owner pastes docs/arcade-aaa/new-games-supabase.sql instead (the same function plus the board ids of all the new games).
+-- NOT APPLIED. The owner pastes docs/arcade-aaa/swap-games-supabase.sql instead (the same function plus the Roll It In and Ball Blaster board ids).
 -- Additive and safe to run twice: analytics_ingest is replaced in place by the body of 20261130_analytics_streetdash.sql with one more
 -- activity key; every key, place and cell allowed before is still allowed. Old rows are untouched.
 -- The LAST result must be one row:

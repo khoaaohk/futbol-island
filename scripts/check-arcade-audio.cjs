@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|clearbox|streetdash|rollball] [--suspended] [--headed]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|clearbox|streetdash|rollball|ballblaster] [--suspended] [--headed]
 // trophydrop (Nov 17 2026): windows land (a boot dropped through the game's own drop()) and merge (two size-3 balls dropped on one
 // spot); menu / paused must be SILENT.
 // pinball (Nov 10 2026): windows flipper (KeyA, KeyD), bumper (ball sent into rondo cone 0), goal (ball in the goal mouth) and drain
@@ -22,6 +22,8 @@
 // --suspended keeps the real autoplay policy: the context starts suspended, a cue is requested before any tap, then a real tap
 // follows; sound must start only after the tap (the iOS / Safari path).
 // Exit code 1 when a labelled window that must be audible is silent. Never point it at the owner's dev server on 8092.
+// ballblaster (Nov 17 2026): windows kick (the game's own shoot() up the empty pitch), smash (a robot set 8 m ahead and shot: the clank,
+// the wind-down spring) and over (the end cue); menu / paused must be SILENT.
 // clearbox (Nov 17 2026): windows run (a bean with a free lane tapped through the game's own tap()), foul (a blocked bean tapped: the
 // bump and the whistle) and over (the full-time whistles); menu / paused must be SILENT.
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'/Users/khoado/.npm/_npx/e41f203b7505f1fb/node_modules/playwright');
@@ -111,6 +113,16 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await L(()=>{const k=window.__lineup,g=k.game,s=g.state;s.grid.fill(0);s.ref.fill(0);const slot=s.tray.findIndex(Boolean),sh=k.shape(s.tray[slot].shape),top=new Set(sh.cells.filter(c=>c[1]===0).map(c=>c[0]));for(let x=0;x<8;x++)if(!top.has(x))s.grid[x]=1;window.__audioLabel('clear');g.place(slot,0,0);k.sync();});await wait(900);must.push('clear');
    await label('');await wait(300);
    await L(()=>{window.__audioLabel('over');window.__lineup.audio.over();});await wait(1000);must.push('over');
+   await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
+  }else if(game==='ballblaster'){quiet.push('menu');
+   await page.waitForFunction(()=>window.__ballblaster&&window.__ballblaster.phase==='playing',null,{timeout:30000});await label('');await wait(600);
+   const B=fn=>page.evaluate(fn);
+   await B(()=>{window.__audioLabel('kick');window.__ballblaster.game.shoot(0,1,-30,.5,0);});await wait(500);must.push('kick');
+   await label('');await wait(300);
+   await B(()=>{const g=window.__ballblaster.game,s=g.state,e=s.ents.find(x=>!x.on);Object.assign(e,{on:true,dead:false,kind:1,id:99999,x:0,y:0,z:-8,r:.48,h:1.5,hp:1,max:1,t:0,ph:0,tx:0,cd:0,lastBall:-1,lastAt:0,flash:0,gold:false,speed:0,phase:0});s.rack=6;window.__audioLabel('smash');g.shoot(0,.75,-8,.6,0);});
+   await page.waitForFunction(()=>window.__ballblaster.game.state.stats.breaks>=1,null,{timeout:3000}).catch(()=>errors.push('no break'));await wait(600);must.push('smash');
+   await label('');await wait(300);
+   await B(()=>{window.__audioLabel('over');window.__ballblaster.audio.over();});await wait(1000);must.push('over');
    await label('');await page.keyboard.press('KeyP');await wait(600);await label('paused');await wait(900);quiet.push('paused');
   }else if(game==='clearbox'){quiet.push('menu');
    await page.waitForFunction(()=>window.__clearbox&&window.__clearbox.phase==='playing',null,{timeout:30000});await label('');await wait(500);

@@ -266,6 +266,17 @@
     "w": 480,
     "h": 1039,
     "bytes": 38442
+   }  },
+  "ballblaster": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10.0,
+   "mp4": 218619,
+   "webm": 254021,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 43662
    }
   }
  },
@@ -572,6 +583,25 @@
     "w": 480,
     "h": 1039,
     "bytes": 36120
+   }  ],
+  "ballblaster": [
+   {
+    "file": "ballblaster-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 43662
+   },
+   {
+    "file": "ballblaster-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 41514
+   },
+   {
+    "file": "ballblaster-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 38382
    }
   ]
  }
