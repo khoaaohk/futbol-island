@@ -1,0 +1,111 @@
+/* Roll It In shell (Nov 17 2026, after the Clear the Box shell): an upright comic page over the 3D pitch. Phone: the stage is the whole screen. Desktop: a centred 9:16 page with an
+ * ink border and a hard shadow on a Ben-Day sunburst backdrop, with two margin strips of caption boxes. Tokens: ../games/comic. */
+.game{position:relative;width:100%;height:100vh;height:100dvh;max-height:100%;overflow:hidden;display:grid;place-items:center;color:var(--cm-ink);font-family:var(--cm-ui);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+ background:var(--cm-dots-orange),#7cc8ef}
+.game button{font-family:var(--cm-ui)}
+.stage{position:relative;width:100%;height:100%;overflow:hidden;background:#3aa6c7;isolation:isolate;touch-action:none;overscroll-behavior:none}
+.scene{position:absolute;inset:0;display:block;width:100%;height:100%;touch-action:none;outline:none}
+.probe{position:absolute;left:0;top:0;width:1px;height:calc(var(--arcade-bar-clear,56px) + env(safe-area-inset-top,0px));visibility:hidden;pointer-events:none}
+.topBar{z-index:5;--btn-gold:#24223e;--btn-gold-bright:#313154;--btn-gold-bright-edge:#121329;--btn-gold-edge:#121329;--btn-ink:#e9f5ff;--btn-rim:#81fbed;--btn-shadow-gold:0 4px 0 #121329,0 0 12px #4debd52e}
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar{z-index:auto}
+.game:is([data-phase=menu],[data-phase=over]) .topBar.topBar>button:first-child{position:relative;z-index:5}
+
+/* HUD strip under the bar: the box number, three whistles, beans left and the box clock (big, with a draining bar) */
+.strip{position:absolute;z-index:3;left:50%;translate:-50% 0;top:calc(var(--arcade-bar-clear,56px) + 6px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:10px;box-sizing:border-box;width:min(calc(100% - 16px),420px);height:56px;padding:0 0 0 0;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);pointer-events:none;white-space:nowrap}
+.lv{align-self:stretch;display:grid;place-content:center;justify-items:center;min-width:46px;padding:0 6px;background:var(--cm-ink);color:var(--cm-paper);font:italic 900 22px/1 var(--cm-title)}
+.lv small{font:800 10px/1 var(--cm-ui);font-style:normal;margin-bottom:2px}
+.hearts{display:flex;gap:2px}
+.heart{width:22px;height:20px;display:block}
+.heart:not([data-on]){opacity:.55}
+.stripItem{display:flex;flex-direction:column;align-items:center;gap:2px;font:italic 900 20px/1 var(--cm-title)}
+.stripItem small{font:800 10px/1 var(--cm-ui);font-style:normal}
+.clock{position:relative;margin-left:auto;align-self:stretch;display:flex;align-items:baseline;justify-content:center;gap:3px;min-width:92px;padding:6px 10px 0;box-sizing:border-box;background:var(--cm-sun);border-left:3px solid var(--cm-ink)}
+.clock b{--cm-numeral-size:34px;display:block;min-width:2.1ch;text-align:right;font-variant-numeric:tabular-nums}
+.clock small{font:800 11px/1 var(--cm-ui)}
+.clock[data-low="2"]{background:#ff8a3c}
+.clock[data-low="1"]{background:var(--cm-red);color:var(--cm-paper)}
+.clock[data-low="1"] b{animation:rbPulse .5s ease-in-out infinite alternate}
+@keyframes rbPulse{to{scale:1.12}}
+.foot{position:absolute;z-index:3;left:50%;translate:-50% 0;bottom:calc(10px + env(safe-area-inset-bottom,0px) + 0px);display:flex;align-items:center;gap:8px;margin:0;padding:5px 10px;border:3px solid var(--cm-ink);background:var(--cm-paper);font:800 14px/1.2 var(--cm-ui);white-space:nowrap;pointer-events:none}
+.foot b{font:italic 900 16px/1 var(--cm-title)}
+.streak{padding:3px 7px 2px;border:2px solid var(--cm-ink);background:var(--cm-teal);color:var(--cm-paper);font:italic 900 13px/1 var(--cm-title);rotate:-3deg;animation:rbPop .32s cubic-bezier(.2,1.6,.4,1) both}
+
+/* words: a starburst and the points (FOUL! at the bump, BOX CLEAR! over the box) */
+.words{position:absolute;inset:0;z-index:4;pointer-events:none}
+.word{position:absolute;display:grid;justify-items:center;gap:2px;translate:-50% -50%;animation:rbWord .9s cubic-bezier(.2,1.4,.4,1) both}
+.pts{--cm-numeral-size:30px;display:block}
+.word .pts{color:var(--cm-sun);-webkit-text-stroke:6px var(--cm-ink);paint-order:stroke fill}
+@keyframes rbWord{0%{scale:.4;opacity:0}18%{scale:1.12;opacity:1}30%{scale:1}75%{opacity:1;translate:-50% -90%}100%{opacity:0;translate:-50% -110%}}
+@keyframes rbPop{0%{scale:.4}100%{scale:1}}
+
+/* cards */
+.art{display:block;width:min(260px,76%);height:auto;margin:2px auto 8px}
+.learn{margin:0 0 10px;font:700 14px/1.35 var(--cm-ui);color:var(--cm-ink)}
+.learn b{font-weight:800}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:0 0 12px}
+.chips>*{flex:1 1 0}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:12px 12px;padding:0 6px 6px 0;margin-bottom:12px}
+.actions>:first-child{grid-column:1/-1}
+.actions>[data-rollball-daily]{grid-column:1/-1}
+.actions button{flex-direction:column;gap:2px}
+.status{margin:0 0 10px;font:800 14px/1.3 var(--cm-ui);color:var(--cm-ink)}
+.scoreRow{position:relative;display:grid;place-items:center;margin:6px 0 2px}
+.score{--cm-numeral-size:68px;display:block}
+.score[data-new-best]{animation:rbPop .6s cubic-bezier(.2,1.6,.4,1) both}
+.stamp{position:absolute;right:-16px;top:-20px}
+.medalRow{display:inline-flex;align-items:center;justify-content:center;gap:5px;margin:2px 0 8px}
+.chips .medal{width:16px;height:16px;border-width:2.5px}.chips .medal i{width:4px;height:4px}.chips .medalRow{gap:3px;margin:3px 0 4px}
+.medalRow em{margin-left:6px;font:800 14px/1 var(--cm-ui);font-style:normal;color:var(--cm-ink)}
+.medal{display:inline-grid;place-items:center;width:22px;height:22px;box-sizing:border-box;border:3px solid var(--cm-ink);border-radius:50%;background:#e9dcc2}
+.medal i{width:6px;height:6px;border-radius:50%;background:#cdb99a}
+.medal[data-on][data-level="1"]{background:#d98a4a}
+.medal[data-on][data-level="2"]{background:#dfe3ea}
+.medal[data-on][data-level="3"]{background:var(--cm-sun)}
+.medal[data-on] i{background:var(--cm-ink)}
+.near{display:inline-block;margin:2px 0 12px;font:800 16px/1.2 var(--cm-ui)}
+.hsSlot{margin:0 4px 14px 0}.hsSlot:empty{display:none}
+.coach{margin:0 0 8px;font:700 14px/1.35 var(--cm-ui)}
+.fact{background:var(--cm-white);border-left-width:10px;margin:0 0 12px;text-align:left;font:600 14px/1.4 var(--cm-ui)}
+.fact b{display:block;font:800 14px/1.3 var(--cm-ui)}
+.boardLearn{margin:0 0 6px;text-align:center}
+
+/* desktop: the page in the middle, caption strips in the margins */
+.side{display:none}
+@media (min-width:700px) and (min-height:520px){
+ .game{background:var(--cm-dots-orange),repeating-conic-gradient(from 4deg at 50% 62%,#6ab9e2 0 8deg,#7cc8ef 8deg 16deg)}
+ .stage{width:auto;height:calc(100dvh - 28px);aspect-ratio:9/16;max-width:calc(100vw - 28px);border:5px solid var(--cm-ink);box-shadow:12px 12px 0 var(--cm-ink)}
+}
+@media (min-width:1080px) and (min-height:560px){
+ .side{position:absolute;top:50%;translate:0 -50%;display:grid;gap:18px;width:min(250px,calc((100vw - (100dvh - 28px)*9/16)/2 - 64px));font:700 15px/1.35 var(--cm-ui)}
+ .side[data-side=left]{left:calc((100vw - (100dvh - 28px)*9/16)/4);translate:-50% -50%}
+ .side[data-side=right]{right:calc((100vw - (100dvh - 28px)*9/16)/4);translate:50% -50%}
+ .sideMedals{display:grid;gap:7px}
+ .sideMedals span{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
+ .sideMedals em{font:400 20px/1 var(--cm-numeral);font-style:normal}
+}
+@media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.score{--cm-numeral-size:52px}.coach{display:none}.art{width:min(200px,60%)}}
+@media (max-height:600px){.game [data-rollball-card=start] .chips{display:none}.fact{display:none}}
+@media (max-width:374px){.strip{gap:6px}.stripItem{font-size:17px}.heart{width:19px;height:17px}.clock{min-width:80px}.clock b{--cm-numeral-size:30px}}
+@media (prefers-reduced-motion:reduce){.streak{rotate:none}.clock[data-low="1"] b,.streak,.score[data-new-best]{animation:none}.word{animation-duration:.6s}}
+
+/* Roll It In's own: the clock only shows from level 4, the puzzle name, the whistle chip, the retry button, the floating stick */
+.clock:not([data-on="1"]){visibility:hidden}
+.keyChip{padding:4px 7px 3px;border:2.5px solid var(--cm-ink);background:var(--cm-sun);font:800 11px/1 var(--cm-ui);rotate:-3deg;animation:rbPop .3s cubic-bezier(.2,1.6,.4,1) both}
+.puzzle{position:absolute;z-index:3;left:12px;top:calc(var(--arcade-bar-clear,56px) + 70px + env(safe-area-inset-top,0px));display:grid;gap:2px;margin:0;padding:6px 10px 5px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);rotate:-1.5deg;pointer-events:none;animation:rbPuzzle 2.6s ease-out both}
+.puzzle b{font:italic 900 18px/1 var(--cm-title)}
+.puzzle small{font:800 11px/1 var(--cm-ui)}
+@keyframes rbPuzzle{0%{opacity:0;translate:-30px 0}10%{opacity:1;translate:0 0}80%{opacity:1}100%{opacity:.82}}
+.retry{position:absolute;z-index:4;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:64px;min-height:44px;padding:0 12px;border:3px solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);font:800 14px/1 var(--cm-ui);box-shadow:3px 3px 0 var(--cm-ink);cursor:pointer}
+.retry:active{translate:2px 2px;box-shadow:1px 1px 0 var(--cm-ink)}
+.retry:focus-visible{outline:3px solid var(--cm-sun);outline-offset:2px}
+.zone{position:absolute;z-index:2;inset:calc(var(--arcade-bar-clear,56px) + 64px + env(safe-area-inset-top,0px)) 0 0 0;touch-action:none;cursor:grab}
+.zone:active{cursor:grabbing}
+.movement{position:absolute;z-index:3;left:50%;bottom:calc(64px + env(safe-area-inset-bottom,0px));translate:-50% 0;--stick:112px;width:var(--stick);height:var(--stick);pointer-events:none}
+.movement :global(.joystick){position:absolute;left:0;bottom:0;margin:0;width:var(--stick);height:var(--stick);pointer-events:none;touch-action:none;border:3.5px solid var(--cm-ink);background:#fff3d633;box-shadow:none}
+.movement :global(.joystick)>span{width:56%;height:56%;opacity:1;border:3px solid var(--cm-ink);background:#fff3d6;box-shadow:2px 3px 0 var(--cm-ink)}
+.movement :global(.joystick):not([data-active=true]){opacity:.55}
+.movement :global(.joystick)[data-active=true]{opacity:1}
+.movement :global(.joystick)[data-active=true]>span{background-color:var(--cm-sun)}
+@media (pointer:fine){.movement :global(.joystick):not([data-active=true]){opacity:0}}
+.foot{right:auto}
+@media (prefers-reduced-motion:reduce){.puzzle{animation:none}.keyChip{animation:none}}
