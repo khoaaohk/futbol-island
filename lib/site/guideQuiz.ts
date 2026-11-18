@@ -37,7 +37,7 @@ export function ruleQuiz(r:Rule):QuizQuestion[]{
 export function termQuiz(t:TermPage,all:readonly TermPage[]):QuizQuestion[]{
  const i=all.indexOf(t),[a,b]=far(all,i),lower=t.name.toLowerCase(),an=/^[aeiou]/i.test(t.name)?'an':'a';
  const out=[place(t.slug,`What is ${an} ${lower}?`,t.short,[a.short,b.short],t.short)];
- if(t.how.length&&t.mistakes.length>=2)out.push(place(t.slug,`Which one is a good way to do ${an} ${lower}?`,t.how[0],t.mistakes.slice(0,2),`${t.how[0]} The other two are common mistakes.`));
+ if(t.how.length&&t.mistakes.length>=2)out.push(place(t.slug,t.quizHow?.q??`Which one is a good way to do ${an} ${lower}?`,t.how[0],t.mistakes.slice(0,2),t.quizHow?.why??`${t.how[0]} The other two are common mistakes.`));
  const other=t.also?.split(', ')[0];
  if(other)out.push(place(t.slug,`What is another name for ${an} ${lower}?`,cap(other),[a.name,b.name],`${cap(other)}. ${t.name} is also called ${t.also}.`));
  else out.push(place(t.slug,`Which one is a common mistake with ${an} ${lower}?`,t.mistakes[t.mistakes.length-1],t.how.slice(1,3),'That one is on the list of common mistakes. The other two are good habits.'));

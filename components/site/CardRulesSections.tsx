@@ -31,6 +31,10 @@ export function CardRulesTop({c}:{c:CardRulesContent}){
   </Section>
  </>;
 }
+/** The line under the answer that links the two one-card pages (Nov 18 2026); goes in GuideIntro's `more`. */
+export function CardRulesPages({c}:{c:CardRulesContent}){
+ return <>{c.pages.label} {c.pages.links.map((l,i)=><span key={l.path}>{i>0?' · ':''}<a href={l.path}>{l.name}</a></span>)}</>;
+}
 export function CardRulesGame({c,lang}:{c:CardRulesContent;lang?:'es'}){
  return <RefCallGame game={checkCallGame(c.game)} lang={lang}/>;
 }

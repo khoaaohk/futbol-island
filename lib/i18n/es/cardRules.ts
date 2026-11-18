@@ -17,6 +17,7 @@ export const CARD_RULES_ES:CardRulesContent={
   words:{label:'Faltas de tarjeta',yellow:'Tarjeta amarilla',red:'Tarjeta roja',flip:'Voltear',flipBack:'Volver',prev:'Tarjeta anterior',next:'Tarjeta siguiente',position:'Tarjeta {n} de {total}',
    example:'Ejemplo',then:'Qué pasa después',how:'Desliza o usa las flechas. Toca una tarjeta para voltearla.'},
   extra:'Las Reglas también nombran algunas faltas que solo se ven en partidos grandes con árbitros de video (entrar al área de revisión, hacer demasiadas veces la señal de “pantalla de TV”, entrar a la sala de video), y otras que una competición puede decidir agregar.'},
+ pages:{label:'Una tarjeta a la vez:',links:[{path:'/es/learn/soccer-terms/yellow-card',name:'¿Qué es una tarjeta amarilla en el fútbol?'},{path:'/es/learn/soccer-terms/red-card',name:'¿Qué es una tarjeta roja en el fútbol?'}]},
  offences:[
   {id:'unsporting',color:'yellow',icon:icon('unsporting'),name:'Conducta antideportiva',
    explain:'Jugar sucio o intentar hacer trampa. Incluye una falta temeraria (hecha sin importar si el otro jugador se lastima), una falta o una mano que corta un ataque prometedor, tirarse para fingir una falta y tocar el balón con la mano para intentar meter gol.',

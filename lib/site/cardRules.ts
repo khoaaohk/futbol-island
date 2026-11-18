@@ -46,6 +46,8 @@ export const cardDeckOf=(c:CardRulesContent):{slides:DeckSlide[];words:DeckWords
  return {slides:c.offences.map(({color,...o})=>({...o,tone:color})),words:{...w,kinds:{yellow,red}}};};
 export type CardRulesContent={
  deck:{id:string;title:string;intro:string;words:CardDeckWords;extra:string};
+ /** Nov 18 2026: the one-card pages (/learn/soccer-terms/yellow-card and red-card), linked under the answer. */
+ pages:{label:string;links:readonly {path:string;name:string}[]};
  offences:readonly CardOffence[];
  next:{id:string;title:string;yellow:{title:string;points:readonly string[]};red:{title:string;points:readonly string[]}};
  compare:{id:string;title:string;head:readonly string[];rows:readonly (readonly string[])[]};
@@ -64,6 +66,7 @@ export const CARD_RULES:CardRulesContent={
   words:{label:'Card offenses',yellow:'Yellow card',red:'Red card',flip:'Flip',flipBack:'Flip back',prev:'Previous card',next:'Next card',position:'Card {n} of {total}',
    example:'Example',then:'What happens next',how:'Swipe, or use the arrows. Tap a card to flip it.'},
   extra:'The Laws also list a few offenses that only come up in top games with video referees (going into the referee review area, too many “TV screen” signals, going into the video room), plus some that a competition may choose to add.'},
+ pages:{label:'One card at a time:',links:[{path:'/learn/soccer-terms/yellow-card',name:'What is a yellow card in soccer?'},{path:'/learn/soccer-terms/red-card',name:'What is a red card in soccer?'}]},
  offences:[
   {id:'unsporting',color:'yellow',icon:'dive',name:'Unsporting behavior',
    explain:'Playing unfairly or trying to cheat. This includes a reckless foul (done without caring if the other player gets hurt), a foul or handball that stops a promising attack, diving and handling the ball to try to score.',

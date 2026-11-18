@@ -15,7 +15,7 @@ import {firstSentence} from './seo';
 import {SITE_BOOKS,BUILT_BOOKS,bookBySlug} from './books';
 /** Nov 16 2026 (SEO CTR, owner: "written for LLM searches as well"): the pages people search most, each with its stand-alone
  *  one-sentence answer, so an assistant can quote the answer and cite the page (docs/seo-ctr/LLM-CHECKLIST.md). */
-const ANSWER_TERMS=['two-v-one','through-ball','cutback','give-and-go','pressing','first-touch','nutmeg','hat-trick','free-kick-wall'];
+const ANSWER_TERMS=['two-v-one','through-ball','cutback','give-and-go','pressing','first-touch','nutmeg','hat-trick','free-kick-wall','yellow-card','red-card'];
 const ANSWER_RULES=['yellow-and-red-cards','back-pass-rule','handball','fouls-and-free-kicks','throw-in','heading-rules-for-kids','substitutions-and-game-length','futsal-rules','penalty-kick','goal-kick'];
 function answers():string[]{
  const cap=(s:string)=>s[0].toUpperCase()+s.slice(1);

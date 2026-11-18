@@ -15,7 +15,9 @@ export type RulesHubEs={crumb:string;blurb:string;title:string;description:strin
  groups:readonly {title:string;line:string}[];faq:readonly Faq[];leagueLine:string;sourceLine:string;
  futsalVsSoccer:{title:string;head:readonly string[];rows:readonly (readonly string[])[];note:string}};
 export type TermEs={name:string;also?:string;title:string;h1:string;desc:string;short:string;answer:string;scene:SceneEs;howTitle:string;
- how:readonly string[];mistakes:readonly string[];formats:string;faq:readonly Faq[];notes:CoachNotesEs};
+ how:readonly string[];mistakes:readonly string[];formats:string;faq:readonly Faq[];notes:CoachNotesEs;
+ /** Required when the English page has them (lib/site/terms.ts TermPage). */
+ howFact?:{label:string;value:string};quizHow?:{q:string;why:string}};
 export type GlossaryEs={term:string;def:string};
 export type TermsHubEs={crumb:string;blurb:string;title:string;description:string;h1:string;lead:string;more?:string;faq:readonly Faq[];
  /** The A-Z list, keyed by the English GLOSSARY entry id. */

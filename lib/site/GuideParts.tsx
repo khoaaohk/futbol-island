@@ -20,7 +20,7 @@ import styles from '@/app/(site)/site.module.css';
  */
 /** `toc` (batch 3, Nov 17 2026): a detail page (no `cta`) also gets the desktop "On this page" column (components/site/OnThisPage.tsx);
  *  its presence switches .main to the two-column guide layout (site.module.css). Index pages keep one wide column. */
-export function GuideIntro({crumbs,h1,lead,more,cta,facts,toc=!cta}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:string;cta?:boolean;facts?:readonly Fact[];toc?:boolean}){
+export function GuideIntro({crumbs,h1,lead,more,cta,facts,toc=!cta}:{crumbs:readonly Crumb[];h1:string;lead:string;more?:React.ReactNode;cta?:boolean;facts?:readonly Fact[];toc?:boolean}){
  return <><header className={styles.intro}>
   <Breadcrumbs crumbs={crumbs}/>
   <h1 className={styles.title}>{h1}</h1>
