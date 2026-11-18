@@ -5,7 +5,6 @@ import {QA} from '@/components/site/LessonHub';
 import {GameIntro,PlayLink,Shots} from '@/components/site/games/GameParts';
 import {LinkList,Section} from '@/lib/site/GuideParts';
 import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameBySlug,gameCrumbs,videoGameLd} from '@/lib/site/games';
-import {gameClip,gameClipLd} from '@/lib/site/gameMedia';
 import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import site from '../../site.module.css';
 
@@ -26,11 +25,11 @@ export function generateMetadata({params}:{params:{slug:string}}){
 const List=({items}:{items:readonly string[]})=><ul>{items.map(x=><li key={x}>{x}</li>)}</ul>;
 export default function GamePageView({params}:{params:{slug:string}}){
  const g=gameBySlug(params.slug);if(!g)notFound();
- const crumbs=gameCrumbs({name:g.name,path:g.path}),ld=videoGameLd(g),clip=gameClip(g.id);
+ const crumbs=gameCrumbs({name:g.name,path:g.path}),ld=videoGameLd(g);
  const others=[...GAME_PAGES.filter(x=>x!==g).map(x=>({path:x.path,name:`${x.name}: ${x.h1.split(':')[0].toLowerCase()}`,line:x.blurb})),{path:GAMES_HUB.path,name:`All ${GAMES_WORD} free soccer games`,line:GAMES_HUB.blurb}];
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
-  <JsonLd data={clip?{...ld,trailer:gameClipLd(clip,false)}:ld}/>
+  <JsonLd data={ld}/>{/* Nov 18 2026: no trailer VideoObject here; the clip's one home is its watch page (lib/site/videos.ts) */}
   <JsonLd data={faqLd(g.faq)}/>
   <GameIntro crumbs={crumbs} h1={g.h1} lead={g.lead} game={g}/>
   <Shots game={g}/>

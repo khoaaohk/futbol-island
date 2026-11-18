@@ -139,7 +139,8 @@ assert(/alternates:\{canonical:path\}/.test(code('lib/site/seo.ts')),'pageMeta s
  const kids={'/cards':[...cards.SITE_CARDS.map(c=>cards.cardPath(c.number)),...col.CARD_COLLECTIONS.map(c=>c.path)],'/fish':[...fish.SITE_FISH.map(f=>fish.fishPath(f.id)),...col.FISH_COLLECTIONS.map(c=>c.path)],
   '/exhibits':ex.SITE_EXHIBITS.map(e=>ex.exhibitPath(e.id)),'/learn/lessons':les.LESSONS.map(l=>les.lessonPath(l.id)),'/learn/soccer-rules':R.RULES.map(r=>r.path),'/learn/soccer-terms':T.TERM_PAGES.map(t=>t.path),
   '/learn/soccer-positions':[...positions.POSITIONS.map(p=>p.path),...cmp.COMPARISONS.filter(c=>c.kind==='position').map(c=>c.path)],'/learn/soccer-formations':[...F.FORMATIONS.map(f=>f.path),...cmp.COMPARISONS.filter(c=>c.kind==='formation').map(c=>c.path),...F.FORMAT_GUIDES.map(g=>g.path)],
-  '/learn/soccer-drills':Dr.DRILLS.map(d=>d.path),'/learn/soccer-practice-plans':Pl.PLANS.map(p=>p.path)};
+  '/learn/soccer-drills':Dr.DRILLS.map(d=>d.path),'/learn/soccer-practice-plans':Pl.PLANS.map(p=>p.path),
+  '/videos':L('lib/site/videos.ts').allWatchVideos().map(v=>v.path)/* the watch pages (Nov 18 2026) */};
  for(const [hub,list] of Object.entries(kids))for(const p of list)set(p,(D.get(hub)??9)+1);
  const deep=[...D.entries()].filter(([,d])=>d>3);assert.equal(deep.length,0,`deeper than 3: ${deep.slice(0,5).join(' ')}`);
  const modelled=SP.filter(x=>D.has(x.path)).length;assert(modelled/SP.length>=.9,`the model covers ${modelled}/${SP.length} pages (the crawl checks the rest)`);}

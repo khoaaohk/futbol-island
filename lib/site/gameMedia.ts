@@ -2,7 +2,6 @@ import M from './gameMedia.json';
 import {ARCADE_GAME_COUNT} from '../arcade/arcadeCatalog';
 import {numberWord} from '../numberWord';
 import type {GameId,GameShot} from './games';
-import {abs} from './seo';
 /**
  * Gameplay footage for /games and /games/<slug> (Nov 16 2026, owner: "include more screenshots of the game and videos of the
  * game. Make this page more visual and engaging"). Every clip and still is a REAL capture: the production build driven in a
@@ -18,12 +17,14 @@ type ClipFile={w:number;h:number;seconds:number;mp4:number;webm:number;poster:{w
 type ShotFile={file:string;w:number;h:number;bytes:number};
 const MEDIA=M as unknown as {clips:Record<string,ClipFile>;shots:Record<string,ShotFile[]>};
 export const CLIPS_DIR='/games/clips',SHOTS_DIR='/games/shots';
-/** The day these clips were first published (VideoObject.uploadDate, video sitemap publication_date). */
+/** The day these clips were first published (VideoObject.uploadDate, video sitemap publication_date). The four clips added on
+ *  Nov 17 2026 carry their own first commit time (git log --diff-filter=A, checked by tests/seo-video.cjs). */
 export const GAME_CLIPS_UPLOADED='2026-11-16T12:00:00-08:00';
-export type GameClip={key:string;name:string;caption:string;alt:string;page:string;w:number;h:number;seconds:number;mp4:string;webm:string;poster:string;pw:number;ph:number};
+const LATER_UPLOADS:Record<string,string>={lineup:'2026-11-17T16:46:54-08:00',trophydrop:'2026-11-17T16:46:54-08:00',ballblaster:'2026-11-17T20:48:49-08:00',rollball:'2026-11-17T21:00:10-08:00'};
+export type GameClip={key:string;name:string;caption:string;alt:string;page:string;w:number;h:number;seconds:number;mp4:string;webm:string;poster:string;pw:number;ph:number;uploaded:string};
 type ClipDef={key:string;name:string;caption:string;alt:string;page:string};
 const clip=(d:ClipDef):GameClip|null=>{const f=MEDIA.clips[d.key];if(!f)return null;
- return {...d,w:f.w,h:f.h,seconds:Math.max(1,Math.round(f.seconds)),mp4:`${CLIPS_DIR}/${d.key}.mp4`,webm:`${CLIPS_DIR}/${d.key}.webm`,poster:`${CLIPS_DIR}/${d.key}.webp`,pw:f.poster.w,ph:f.poster.h};};
+ return {...d,w:f.w,h:f.h,seconds:Math.max(1,Math.round(f.seconds)),mp4:`${CLIPS_DIR}/${d.key}.mp4`,webm:`${CLIPS_DIR}/${d.key}.webm`,poster:`${CLIPS_DIR}/${d.key}.webp`,pw:f.poster.w,ph:f.poster.h,uploaded:LATER_UPLOADS[d.key]??GAME_CLIPS_UPLOADED};};
 /** The hub's hero loop: three of the phone games side by side in one file (one player, not three). */
 export const HERO_CLIP=clip({key:'hero',page:'/games',name:'Kit Rush, Squad Snake and Air Futbol, played on a phone',
  alt:'Three phone screens side by side: kit flying up to be swiped in Kit Rush, a line of players in Squad Snake and an air hockey pitch in Air Futbol',
@@ -98,11 +99,5 @@ export function islandStills():GameShot[]{
   room:[['The arcade room at night with its glowing game machines','The arcade room']]};
  return Object.entries(words).flatMap(([k,ws])=>(MEDIA.shots[k]??[]).slice(0,ws.length).map((s,i)=>({src:`${SHOTS_DIR}/${s.file}`,w:s.w,h:s.h,alt:ws[i][0],caption:ws[i][1]})));
 }
-/** schema.org VideoObject (the same words as the visible caption). */
-export const gameClipLd=(c:GameClip,withContext=true)=>({...(withContext?{'@context':'https://schema.org'}:{}),'@type':'VideoObject',name:c.name,description:`${c.caption} ${c.alt}.`,
- thumbnailUrl:[abs(c.poster)],uploadDate:GAME_CLIPS_UPLOADED,duration:`PT${c.seconds}S`,contentUrl:abs(c.mp4),width:c.w,height:c.h,
- isFamilyFriendly:true,inLanguage:'en',isAccessibleForFree:true});
-/** Clips listed for one page in /sitemap-video.xml. */
-export const gameVideosFor=(pagePath:string):GameClip[]=>pagePath==='/games'?[HERO_CLIP,...islandClips()].filter((c):c is GameClip=>!!c)
- :(Object.keys(gamePaths) as GameId[]).filter(id=>gamePaths[id]===pagePath).map(gameClip).filter((c):c is GameClip=>!!c);
-export const GAME_VIDEO_PAGES=['/games',...Object.values(gamePaths)];
+/** Nov 18 2026 (Search Console: "Video isn't on a watch page"): these clips are supporting media here; each one's VideoObject
+ *  and video sitemap entry live on its own watch page, /videos/<slug> (lib/site/videos.ts). */
