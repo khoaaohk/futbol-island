@@ -169,10 +169,14 @@ export function createTrophyView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:
    const cv=t===BEACH?beachSprites[0]:sprites[t];if(cv){const size=cv.width/dpr,bob=ready?0:(s.cool/TD.cool)*-10;f.globalAlpha=ready?1:.55;f.drawImage(cv,X(x)-size/2,Y(TD.dropY)+bob-size/2,size,size);f.globalAlpha=1;}
    if(!ready)busy=true;
    // the next item: a paper tag pinned on the top right of the frame, clear of the glass where the held item hangs
-   const nx=L.ox+L.cw-30,ny=Math.max(L.top-8,L.oy-30),ncv=s.next===BEACH?beachSprites[0]:sprites[s.next];f.fillStyle=PAPER;f.strokeStyle=INK;f.lineWidth=2.5;f.fillRect(nx-24,ny-16,50,46);f.strokeRect(nx-24,ny-16,50,46);
-   f.fillStyle=INK;f.font='900 9px "Arial Black",Impact,sans-serif';f.textAlign='center';f.textBaseline='middle';f.fillText('NEXT',nx+1,ny-8);
-   if(ncv){const sz=Math.min(30,ncv.width/dpr);f.drawImage(ncv,nx+1-sz/2,ny+12-sz/2,sz,sz);}}
+   // Nov 17 2026: a bigger tag, and the item drawn at 0.6 of its real size so a size-3 ball and a size-5 ball look different
+   const nx=L.ox+L.cw-38,ny=Math.max(L.top-8,L.oy-30),ncv=s.next===BEACH?beachSprites[0]:sprites[s.next];f.fillStyle=PAPER;f.strokeStyle=INK;f.lineWidth=2.5;f.fillRect(nx-32,ny-16,66,62);f.strokeRect(nx-32,ny-16,66,62);
+   f.fillStyle=INK;f.font='900 9px "Arial Black",Impact,sans-serif';f.textAlign='center';f.textBaseline='middle';f.font='900 10px "Arial Black",Impact,sans-serif';f.fillText('NEXT',nx+1,ny-7);
+   if(ncv){const sz=Math.min(44,ncv.width/dpr*.6);f.drawImage(ncv,nx+1-sz/2,ny+20-sz/2,sz,sz);}}
   for(const q of s.bodies){drawBody(q,ox,oy);if(q.sq>0||q.r<q.tr)busy=true;}
+  // twins of the held item (Nov 17 2026): a dashed sun ring says "drop it here to merge"; drawn only with a frame that runs anyway
+  if(!s.over&&s.cool<=0&&s.cur!==BEACH){f.setLineDash([6,5]);for(const q of s.bodies)if(q.t===s.cur){const cx=X(q.x)+ox,cy=Y(q.y)+oy,rr=q.r*k+4;
+   f.lineWidth=5;f.strokeStyle=INK;f.beginPath();f.arc(cx,cy,rr,0,Math.PI*2);f.stroke();f.lineWidth=2.5;f.strokeStyle=SUN;f.stroke();}f.setLineDash([]);}
   // bursts: a comic star behind a ring of ink rays
   for(const z of bursts){if(!z.on)continue;z.t+=dt;if(z.t>=z.life){z.on=false;continue;}busy=true;const p=z.t/z.life,R=z.r*k*(.6+p*.7),cx=X(z.x)+ox,cy=Y(z.y)+oy;
    f.globalAlpha=1-p*p;f.beginPath();for(let i=0;i<20;i++){const a=i*Math.PI/10+p,rr=i%2?R*.62:R;f.lineTo(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr);}f.closePath();f.fillStyle=z.color;f.fill();f.lineWidth=3;f.strokeStyle=INK;f.stroke();

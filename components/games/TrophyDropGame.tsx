@@ -13,7 +13,7 @@ import {retryImport} from '@/lib/retryImport';
 import {ArcadeTopBar} from '../arcade/ArcadeTopBar';
 import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {arcadeSkin} from './skins';
-import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst} from './comic';
+import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst,ComicMedalTrack} from './comic';
 import styles from './TrophyDropGame.module.css';
 import {createTrophyDrop,trophyDailySeed,medalFor,TD,TIERS,MEDAL_NAMES,type TrophyDrop,type TrophyEvent} from '@/lib/arcade/trophydrop/core';
 import {createTrophyView,type TrophyView} from '@/lib/arcade/trophydrop/view';
@@ -204,7 +204,13 @@ export default function TrophyDropGame({onExit}:{onExit:()=>void}){
     {result.settled.newBest&&<ComicBurst word="New best!" size={17} tilt={7} className={styles.stamp}/>}
    </div>
    <div className={styles.medalRow} data-trophy-medal={result.settled.medal} role="img" aria-label={result.settled.medal?`${MEDAL_NAMES[result.settled.medal-1]} medal`:'No medal this time'}>{[1,2,3].map(l=><Medal key={l} level={l} on={medalFor(result.score)>=l}/>)}<em>{result.settled.medal?MEDAL_NAMES[result.settled.medal-1]:'No medal yet'}</em></div>
+   <ComicMedalTrack score={result.score} best={result.settled.previousBest} medals={TD.medals} names={MEDAL_NAMES} data-trophy-track/>
    <ComicPanel tone="sun" tilt={-1.2} className={styles.near} data-trophy-near>{result.near}</ComicPanel>
+   <div className={styles.actions}>
+    <ComicButton variant="primary" wide disabled={waiting} onClick={()=>{void start(result.daily);}} data-trophy-again autoFocus>Play again</ComicButton>
+    <ComicButton size="small" disabled={waiting} onClick={()=>{void start(!result.daily);}} data-trophy-other>{result.daily?'Endless':'Daily Drop'}</ComicButton>
+    <ComicButton size="small" onClick={()=>{tap();setScores(true);}}>Scores</ComicButton>
+   </div>
    <div className={styles.hsSlot} data-hs-slot/>
    <ComicPanel tone="teal" flat className={styles.built} data-trophy-top={result.top}><small>Biggest you made</small><strong>{TIERS[result.top].name}</strong><Ladder upTo={result.top}/></ComicPanel>
    <div className={styles.chips}>
@@ -216,11 +222,6 @@ export default function TrophyDropGame({onExit}:{onExit:()=>void}){
    <p className={styles.coach}>{result.coach}</p>
    <ComicPanel tone="paper" flat className={styles.fact} data-trophy-fact><b>{result.settled.fact.title}</b>{result.settled.fact.line}</ComicPanel>
    {(result.coins>0||entry.message)&&<p className={styles.status} role="status">{entry.message||`+${result.coins} ${result.coins===1?'coin':'coins'}`}</p>}
-   <div className={styles.actions}>
-    <ComicButton variant="primary" wide disabled={waiting} onClick={()=>{void start(result.daily);}} data-trophy-again autoFocus>Play again</ComicButton>
-    <ComicButton size="small" disabled={waiting} onClick={()=>{void start(!result.daily);}} data-trophy-other>{result.daily?'Endless':'Daily Drop'}</ComicButton>
-    <ComicButton size="small" onClick={()=>{tap();setScores(true);}}>Scores</ComicButton>
-   </div>
   </ComicCard>}
   {board&&phase==='over'&&<HighScoreEntry game="trophydrop" score={board.score} detail="Points for every merge, more for bigger items and chains." onClose={()=>setBoard(null)}/>}
   {scores&&<TrophyDropScores onClose={()=>setScores(false)}/>}

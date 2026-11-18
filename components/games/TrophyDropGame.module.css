@@ -38,7 +38,7 @@
 .score{--cm-numeral-size:68px;display:block}
 .score[data-new-best]{animation:tdPop .6s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes tdPop{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
-.stamp{position:absolute;right:-16px;top:-20px}
+.stamp{position:static;order:-1;margin:-4px 0 -8px;z-index:1}
 .medalRow{display:inline-flex;align-items:center;justify-content:center;gap:5px;margin:2px 0 8px}
 .chips .medal{width:16px;height:16px;border-width:2.5px}.chips .medal i{width:4px;height:4px}.chips .medalRow{gap:3px;margin:3px 0 4px}
 .medalRow em{margin-left:6px;font:800 14px/1 var(--cm-ui);font-style:normal;color:var(--cm-ink)}
@@ -86,3 +86,4 @@
 }
 @media (max-height:600px){.game [data-trophy-card=start] .chips{display:none}.lesson{display:none}}
 @media (prefers-reduced-motion:reduce){.score[data-new-best]{animation:none}}
+.near+.actions{margin-bottom:12px}

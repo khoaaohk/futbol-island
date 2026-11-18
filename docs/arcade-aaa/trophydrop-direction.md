@@ -41,3 +41,7 @@ smaller!"; FULL CABINET! at the end. No gradients, no glow (tests/trophydrop-cor
 ## Sound (`audio.ts`, one limiter)
 Wood clonk on landing (deeper for bigger tiers), struck-glass chime per merge rising one major-scale step per tier, sparkle
 on chains, bell peal for the golden double, boing for the beach ball and a hiss when it deflates, two pips on the warning.
+
+## Polish pass (Nov 17 2026, batch 2a)
+Twins of the held item wear a dashed sun ring (where to drop to merge). NEXT tag larger, item drawn at 0.6 of its real size so ball
+sizes differ. Results: medal road (`ComicMedalTrack`), Play again moved up under the near line, NEW BEST stamp off the Best badge. Rules unchanged.
