@@ -57,7 +57,7 @@ const STILL_WORDS:Record<GameId,string[]>={
  airhockey:['Air Futbol: GOAL! The puck flies past the red striker into the top goal','Air Futbol: a bank shot goal off the side wall, worth 75 extra points','Air Futbol: a fast rebound off the side wall'],
  lineup:['Line Up! at the start of a run: a few shapes on the pitch and two left in the tray','Line Up!: a row fills and LINE UP! and +100 appear over the pitch','Line Up!: a shape of players dragged above a crowded pitch'],
  trophydrop:['Trophy Drop at the start: a boot hangs over the cabinet, with a glove and balls at the bottom','Trophy Drop: a CHAIN x2 burst as two items merge on the pile','Trophy Drop at level 2: the cabinet gets smaller, with a medal in the pile'],
- rollball:['Roll It In: the ball flies over a gap between rooftops after a metal ramp, with a star collected in the air','Roll It In: STAR +100 bursts over the pitch as a cone flies off the stack','Roll It In at night: the ball climbs a half-pipe to a glowing plate on the ledge'],
+ rollball:['Roll It In: the ball flies over a gap between rooftops after a metal ramp, with a star collected in the air','Roll It In: POW! as the ball knocks a training cone off its stack, a cable runs to the gate','Roll It In at night: the ball climbs a half-pipe to a glowing plate on the ledge'],
  ballblaster:['Ball Blaster: a ball breaks a robot and POW! bursts over the pitch','Ball Blaster: a water barrel bursts and knocks over the robots next to it','Ball Blaster: the dotted aim line curls round a shield-bot'],
 };
 const STILL_CAPS:Record<GameId,string[]>={
