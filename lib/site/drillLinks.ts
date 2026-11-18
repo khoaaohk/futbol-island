@@ -40,6 +40,7 @@ export const G={
  /* Nov 10 2026: the arcade game that trains the same idea (lib/site/games.ts). */
  kitRush:gameLink('kitrush'),pinball:gameLink('pinball'),tennis:gameLink('tennis'),runner:gameLink('runner'),puzzles:gameLink('puzzle'),
  /* Nov 17 2026: the three puzzle cabinets. */ lineUp:gameLink('lineup'),trophyDrop:gameLink('trophydrop'),clearBox:gameLink('clearbox'),
+ /* Nov 17 2026: the side-scroller. */ streetDash:gameLink('streetdash'),
  ages:{path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'What U6, U8, U10 and U12 mean'},
 } as const;
 /**

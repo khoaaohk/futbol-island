@@ -243,6 +243,18 @@
     "h": 1039,
     "bytes": 18014
    }
+  },
+  "streetdash": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10.0,
+   "mp4": 199328,
+   "webm": 213653,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 23198
+   }
   }
  },
  "shots": {
@@ -508,6 +520,26 @@
     "w": 480,
     "h": 1039,
     "bytes": 19126
+   }
+  ],
+  "streetdash": [
+   {
+    "file": "streetdash-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 23198
+   },
+   {
+    "file": "streetdash-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 22686
+   },
+   {
+    "file": "streetdash-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 20814
    }
   ]
  }

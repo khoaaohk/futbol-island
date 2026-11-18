@@ -31,7 +31,17 @@ Request these after the deploy is live (the hub first again: its game list, coun
 Guide pages that gained a link to one of them (a recrawl picks it up): `/learn/soccer-drills/pressure-and-cover-2v2`,
 `/learn/soccer-drills/toe-taps-and-foundations`, `/learn/soccer-drills/busy-square-dribbling`.
 
-## Adding the next game page (Street Dash, `streetdash`)
+## Nov 17 2026: Street Dash's page (merged with the three above)
+
+Request after the deploy is live (the hub again: its count, description and share picture changed), then run
+`node scripts/indexnow.mjs --changed-since 2026-11-17`.
+
+1. https://futbolisland.app/games
+2. https://futbolisland.app/games/soccer-side-scroller-game (Street Dash)
+
+Guide page that gained a link to it (a recrawl picks it up): `/learn/soccer-drills/gates-dribbling`.
+
+## Adding the next game page (done for Street Dash, `streetdash`, Nov 17 2026; keep as the recipe)
 
 The count words ("ten games", the back-wall sign, /arcade, /games) follow `arcadeCabinets.length` (lib/arcade/arcadeCatalog.ts
 ARCADE_GAME_COUNT / ARCADE_GAME_WORD, lib/numberWord.ts): nothing to retype. If the cabinet merges before its page, add the id

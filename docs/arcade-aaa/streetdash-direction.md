@@ -1,7 +1,7 @@
 # Street Dash: game, retention and look (builder, Nov 17 2026)
 
 **One line:** an endless side-on run in PORTRAIT through the island's streets, rooftops and beach, the bean dribbling a ball at its
-feet. Ninth arcade game (`streetdash`), last in the back row, comic-print house style. Owner, Nov 17: "can we also build a game that
+feet. Eleventh arcade game (`streetdash`; ninth when it was built), last in the back row, comic-print house style. Owner, Nov 17: "can we also build a game that
 is a sidescroller?" Lesson: "Keep the ball close. Look up early." Different from Breakaway Run (behind-the-player lanes): this is
 platforming from the side.
 
@@ -35,7 +35,7 @@ platforming from the side.
 ## Retention loop
 Instant restart (one tap); results card names the nearest thing (points to a medal, to your best, "tap the glowing target");
 **Daily Dash** on the start card (one seed per local day, same street for everyone, first finished run posts, day streak in
-`fi2-streetdash-v1`); the island board works once the owner runs docs/arcade-aaa/streetdash-supabase.sql.
+`fi2-streetdash-v1`); the island board works once the owner runs docs/arcade-aaa/new-games-supabase.sql (Nov 17 2026 merge; it carries Street Dash's board id and activity key).
 
 ## Look (`lib/arcade/streetdash/view.ts`, one canvas)
 - Portrait: street line at 63% of the height, parallax above (sky with a dot screen and cut clouds, a far strip at 0.12, a mid strip
@@ -45,6 +45,8 @@ Instant restart (one tap); results card names the nearest thing (points to a med
   shadow; a red "!" tab at the right edge announces a hazard before it scrolls in; gaps are dark pits (sea on the beach).
 - Palettes: streets morning `#8fd0e6` sky, pastel houses; rooftops sunset `#e9825c` / `#c95b45` tiles; beach `#7cc8ea` sky, `#3aa7c4`
   sea. Ink `#231a2e`, paper `#fff3d6`, sun `#ffc83a`, red `#f0452e`, teal bean `#19b5a5`, rival tackler violet `#8f78b8`.
+- Backdrop change (Nov 17 2026): ONE sky layer (bands, sun, dot screen, clouds) blends its colours and sun position from the old
+  theme to the new over 24 m, so two suns never show; only the far and mid building strips cross-fade.
 - Reduced motion: no shake, no flash, no pulsing, no speed lines, parallax at 35%.
 
 ## Sound (`lib/arcade/streetdash/audio.ts`, one limiter, starts on the first tap, no loops)
