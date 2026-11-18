@@ -104,8 +104,8 @@ export const TERM_PAGES:readonly TermPage[]=([
   lessonIds:['learn9_switch','e_switch','expf_switchblock'],related:['overlap','third-man-run','first-touch','cross']},
 
  {slug:'two-v-one',name:'2v1',also:'two against one',short:'Two attackers against one defender. The player with the ball dribbles at the defender, then passes if the defender comes or keeps going if they do not.',
-  title:'2v1 in Soccer: Meaning of a Two v One, for Kids',h1:'What does 2v1 mean in soccer?',
-  desc:'2v1 meaning in soccer: two attackers against one defender. How to beat the defender by choosing pass or dribble, with a diagram and lessons for kids.',
+  title:'2v1 Meaning in Soccer: What Two v One Means, for Kids',h1:'What does 2v1 mean in soccer?',
+  desc:'2v1 meaning in soccer: two attackers against one defender. Learn the one choice that wins it, pass or dribble, with a diagram and free lessons for kids.',
   answer:'2v1 (two v one) in soccer means two attackers against one defender. The player with the ball dribbles at the defender: if the defender comes to the ball, pass to the teammate, and if the defender stays with the teammate, keep going.',
   scene:{title:'A 2v1',who:'7@44,58 9@62,60 !4@50,70 !G@50,96',ball:[45,59],runs:['44,58>46,68','62,60>62,80'],passes:['46,68>62,79'],
    caption:'Number 7 dribbles straight at the one defender, marked 4. When the defender steps toward the ball, number 7 passes to number 9, who has run into the space beside them.'},

@@ -44,8 +44,8 @@ const seenT=new Map(),seenD=new Map();
 for(const [p,t,d] of metas){
  assert(t&&t.length<=60,`${p}: title ${t&&t.length} > 60: ${t}`);assert(d&&d.length<=155,`${p}: description ${d&&d.length} > 155`);
  assert(!seenT.has(t),`${p}: title repeats ${seenT.get(t)}: ${t}`);seenT.set(t,p);assert(!seenD.has(d),`${p}: description repeats ${seenD.get(d)}`);seenD.set(d,p);}
-// the Search Console wording (gsc data, Nov 15 2026) stays in the titles of the pages people found
-const WANT={'/learn/soccer-rules/yellow-and-red-cards':/yellow and red cards in soccer/i,'/learn/soccer-terms/two-v-one':/^2v1 in soccer/i,'/learn/soccer-rules/futsal-rules':/futsal rules vs soccer/i,
+// the Search Console wording (gsc data, Nov 15 2026; 2v1, heading and tennis re-led Nov 18 2026) stays in the titles of the pages people found
+const WANT={'/learn/soccer-rules/yellow-and-red-cards':/yellow and red cards in soccer/i,'/learn/soccer-terms/two-v-one':/^2v1 meaning in soccer/i,'/learn/soccer-rules/heading-rules-for-kids':/^heading rules in youth soccer/i,'/games/soccer-tennis-game':/^soccer tennis game/i,'/learn/soccer-rules/futsal-rules':/futsal rules vs soccer/i,
  '/tools/soccer-playing-time-calculator':/playing time calculator/i,'/learn/soccer-terms':/soccer terms a to z/i,'/learn/soccer-rules/back-pass-rule':/back[- ]pass rule in soccer/i};
 for(const [p,re] of Object.entries(WANT))assert(re.test((metas.find(m=>m[0]===p)||[])[1]||''),`${p}: title keeps the search wording`);
 

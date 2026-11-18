@@ -49,6 +49,8 @@ export type CardRulesContent={
  offences:readonly CardOffence[];
  next:{id:string;title:string;yellow:{title:string;points:readonly string[]};red:{title:string;points:readonly string[]}};
  compare:{id:string;title:string;head:readonly string[];rows:readonly (readonly string[])[]};
+ /** How cards work in kids' games (seo-nov18): league-by-league, said as "in some leagues", never as universal. */
+ youth:{id:string;title:string;points:readonly string[];link:{path:string;name:string;line:string}};
  side:{id:string;title:string;items:readonly {q:string;a:string}[]};
  sources:{line:string;links:readonly {name:string;url:string}[]};
  game:CallGame;
@@ -119,10 +121,18 @@ export const CARD_RULES:CardRulesContent={
   rows:[['What it means','A warning (a caution)','Sent off (a sending-off)'],
    ['Does the player stay on?','Yes, and keeps playing','No, leaves the field for the rest of the game'],
    ['Can the team replace the player?','No need: the player stays on','No. The team plays one short'],
+   ['Team plays with','All its players (11 in an 11v11 game)','One player fewer (10 in an 11v11 game)'],
    ['Two in one game','A second yellow means a red card','The game is over for that player'],
    ['Next game','Usually no effect, but some leagues ban players after several yellows','Usually a ban of at least one game; the league decides'],
    ['Who can be shown one','Players, substitutes, substituted players and team officials','Players, substitutes, substituted players and team officials'],
-   ['Examples','Dissent, wasting time, a reckless foul, diving','Serious foul play, violent conduct, stopping an obvious goal with a handball']]},
+   ['Typical reasons','Dissent, wasting time, a reckless foul, diving','Serious foul play, violent conduct, stopping an obvious goal with a handball']]},
+ youth:{id:'cards-in-youth-soccer',title:'How cards work in kids’ soccer',points:[
+  'Each league sets its own rules for young players, so card rules are not the same everywhere.',
+  'In some leagues for young children, referees do not show cards. They stop play, explain what went wrong and warn the player instead.',
+  'In some leagues, a yellow card means a short time out, called a sin bin. The Laws of the Game allow sin bins only in youth, veterans, disability and grassroots soccer, when the national association approves.',
+  'In US youth soccer, a deliberate header by a player aged 10 or under gives the other team an indirect free kick. It is not a card.',
+  'Under the Laws of the Game, coaches can be shown cards too. Before the season, ask your league if it uses cards and sin bins, and how many games a red card costs.'],
+  link:{path:'/learn/soccer-rules/heading-rules-for-kids',name:'Heading rules in youth soccer',line:'At what age kids can head the ball'}},
  side:{id:'card-questions',title:'More questions about soccer cards',items:[
   {q:'What does a red card mean in soccer?',a:'A red card means the player is sent off: they leave the field for the rest of the game, and the team plays one player short. It is shown for a serious offense, such as violent conduct or stopping an obvious goal with a handball, or for a second yellow card in the same game.'},
   {q:'Second yellow card vs straight red card',a:'Both send the player off, and the team plays one short either way. A second yellow is two warnings in one game; a straight red is shown for one serious offense. The ban that follows is set by the competition, and some treat a straight red more strictly than two yellows.'},
@@ -130,6 +140,10 @@ export const CARD_RULES:CardRulesContent={
   {q:'Do young kids get cards in US youth and rec soccer?',a:'It depends on the league. Some leagues for young children ask referees to explain and warn instead of showing cards, and referees of young players usually talk first. Check your league’s rules for your child’s age group.'},
   {q:'How many games do you miss for a red card?',a:'The Laws of the Game do not say. Each league, tournament or association sets its own rules. Missing at least the next game is common, and a serious offense can mean a longer ban.'},
   {q:'What is a sin bin in soccer?',a:'A sin bin, or temporary dismissal, is a short time out instead of a warning. The Laws allow it only in youth, veterans, disability and grassroots competitions, and only when the national association approves. The referee shows a yellow card and points to the sin bin with both arms. The player sits out for 10 to 15 percent of the game (10 minutes in a 90-minute game), and the team plays short until they come back. Some competitions use it for every yellow card, others only for some, such as dissent.'},
+  {q:'What is the difference between a yellow card and a red card?',a:'A yellow card is a warning: the player stays on and keeps playing. A red card sends the player off for the rest of the game, and the team plays one player short. Two yellow cards in the same game add up to a red card.'},
+  {q:'How long does a yellow card last?',a:'Only for the game it is shown in. During that game, a second yellow card means a red card. In leagues that use sin bins, the player also sits out for a short time, such as 10 minutes in a 90-minute game.'},
+  {q:'Do yellow cards carry over to the next game?',a:'Not in the Laws of the Game: each game starts with no cards. Some competitions keep count over a season or a tournament, and a player who collects a set number of yellow cards misses a game. Each competition sets that number.'},
+  {q:'Can a goalkeeper get a red card?',a:'Yes. The goalkeeper follows the same card rules as every other player. The one difference is that a goalkeeper may handle the ball inside their own penalty area, so that is never a card. If the goalkeeper is sent off, a teammate or a substitute goes in goal, and the team still plays one player short.'},
   {q:'What is Portugal’s white card?',a:'The Portuguese Football Federation uses a white card to praise fair play, such as helping someone who is hurt. It was first shown in a top-level game in January 2023, to the medical staff of both teams after they helped a fan who fell ill. It is a fair-play idea, not part of the Laws of the Game, and it does not punish anyone.'}]},
  sources:{line:'Sources: IFAB Laws of the Game, Law 12 (fouls and misconduct) and Law 3 (the players), and the IFAB guidelines for temporary dismissals.',
   links:[{name:'Law 12: fouls and misconduct (The IFAB)',url:`${IFAB}fouls-and-misconduct/`},{name:'Law 3: the players (The IFAB)',url:`${IFAB}the-players/`},

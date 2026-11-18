@@ -1,6 +1,6 @@
 import CardDeck from '@/components/site/CardDeck';
 import RefCallGame from '@/components/site/RefCallGame';
-import {DataTable,Section} from '@/lib/site/GuideParts';
+import {Bullets,DataTable,Section} from '@/lib/site/GuideParts';
 import {cardDeckOf,type CardRulesContent} from '@/lib/site/cardRules';
 import {checkCallGame} from '@/lib/site/refCall';
 import styles from '@/app/(site)/site.module.css';
@@ -24,6 +24,10 @@ export function CardRulesTop({c}:{c:CardRulesContent}){
   </Section>
   <Section id={c.compare.id} title={c.compare.title}>
    <DataTable label={c.compare.title} head={c.compare.head} rows={c.compare.rows}/>
+  </Section>
+  <Section id={c.youth.id} title={c.youth.title}>
+   <Bullets items={c.youth.points}/>
+   <p className={styles.caption}><a href={c.youth.link.path}>{c.youth.link.name}</a>: {c.youth.link.line}.</p>
   </Section>
  </>;
 }

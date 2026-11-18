@@ -250,7 +250,7 @@ export const RULES:readonly Rule[]=([
  {slug:'yellow-and-red-cards',name:'Yellow and red cards',law:'Law 12',lawPage:'fouls-and-misconduct/',
   title:'Yellow and Red Cards in Soccer: What a Yellow Card Means',h1:'What does a yellow card mean in soccer?',
   desc:'What does a yellow card mean in soccer? A warning. The 7 yellow and 7 red card offenses, what happens after a red card, and a referee game.',
-  answer:'In soccer, a yellow card is a warning from the referee: the player keeps playing, but a second yellow in the same game becomes a red card. A red card sends the player off for the rest of the game, and the team plays one player short, with no one to replace them.',
+  answer:'A yellow card in soccer is a warning from the referee: the player keeps playing, but a second yellow in the same game becomes a red card. A red card sends the player off for the rest of the game, and the team plays one player short, with no one to replace them.',
   scenes:[{title:'Stopping a clear chance to score',who:'9@52,74 7@80,66 8@40,58 !4@50,71 !5@28,72 !G@50,96',ball:[53,76],zone:[30,76,70,100],runs:['52,74>52,90'],
    caption:'Number 9 is through with only the goalkeeper ahead, and defender number 4 pulls number 9 back from behind. Stopping an obvious chance to score with a foul like this is a red card. The shaded space shows the open route to goal.'}],
   refs:['Yellow: a reckless foul, stopping a promising attack with a foul, arguing with the referee, delaying a restart, not giving the distance at a free kick, pretending to be fouled.',
@@ -271,7 +271,8 @@ export const RULES:readonly Rule[]=([
   lessonIds:['trn_11_recover','def_7_goalside','def_11_pressurecover'],cta:'trn_11_recover',exhibitIds:['var-2018','laws-1863'],links:[
    {path:rulePath('fouls-and-free-kicks'),name:'Fouls and free kicks in soccer',line:'Which fouls give a direct or an indirect free kick'},
    {path:rulePath('penalty-kick'),name:'The penalty kick in soccer',line:'What happens after a foul in the penalty area'},
-   {path:rulePath('handball'),name:'The handball rule in soccer',line:'When a handball is a foul, and when it is a card'},L.cb,L.gk]},
+   {path:rulePath('handball'),name:'The handball rule in soccer',line:'When a handball is a foul, and when it is a card'},
+   {path:rulePath('offside'),name:'The offside rule in soccer',line:'When a player is offside, and why it is a free kick, not a card'},L.cb,L.gk]},
  // ---- back-pass rule -----------------------------------------------------------------------------------------------------
  {slug:'back-pass-rule',name:'Back-pass rule',law:'Law 12',lawPage:'fouls-and-misconduct/',
   title:'Back Pass Rule in Soccer: Can the Keeper Pick It Up?',h1:'What is the back pass rule in soccer?',
@@ -407,8 +408,8 @@ export const RULES:readonly Rule[]=([
   lessonIds:['learn7_roles','learn9_shape','learn11_shape','learnf_roles31'],cta:'learn7_roles',links:[L.ages,L.field,L.ball,L.fs]},
  // ---- heading ------------------------------------------------------------------------------------------------------------
  {slug:'heading-rules-for-kids',name:'Heading rules for kids',law:'U.S. Soccer and US Youth Soccer rules',lawPage:'general-modifications/',
-  title:'At What Age Can Kids Head the Ball in Soccer? US Rules',h1:'At what age can kids head the ball in soccer?',
-  desc:'At what age kids can head the ball in US youth soccer, in plain words for parents: no heading at 10 and under, and limits in practice at 11 and 12.',
+  title:'Heading Rules in Youth Soccer: What Age Can Kids Head?',h1:'Heading rules in youth soccer: at what age can kids head the ball?',
+  desc:'Heading rules in youth soccer: in the US, kids 10 and under do not head the ball. See the U11 and U12 rules, practice limits and what the referee does.',
   answer:'In US youth soccer, players aged 10 and under do not head the ball, in games or in practice. From age 11 heading is allowed in games, with limits on how much players aged 11 and 12 head the ball in practice.',
   scenes:[{format:'7v7',title:'After a deliberate header in a 7v7 game',who:'8@44,56 9@50,74 7@82,62 3@24,34 !6@52,60 !4@40,76 !5@62,78 !G@50,96',ball:[45,58],zone:[38,58,52,70],
    caption:'An under-10 player deliberately heads the ball in midfield. The referee stops play and gives the other team an indirect free kick from that spot. Here gold number 8 takes it, and the opponents give space in front of the ball.'}],
