@@ -10,15 +10,15 @@ It will replace Clear the Box (`clearbox`) once the coordinator removes that cab
   Camera behind and above the ball, looking along the course, so heights and drops read at a glance. Portrait.
 - A level = 1 to 6 hand-made puzzle MODULES chained by a seeded generator, then the goal. Each module: entry at z 0, exit at
   z = len, both at height 0, a difficulty rating 1-9, its mechanics, a par time and a scripted bot solution.
-- 17 modules, four themes: training pitch (5), beach (4), rooftops (4), stadium at night (4). Levels 1-17 each bring exactly one
+- 21 modules, four themes: training pitch (6), beach (5), rooftops (5), stadium at night (5). Levels 1-17 each bring exactly one
   new module (the lowest-rated one not met yet), alone or after one warm-up; later levels mix met modules, easy ones drop out.
 - Surfaces (accel / drag / bounce): short grass, long grass (slow), sand (very slow, leaves a track), wet tiles (slippery), mud
   (sticky), planks (fast, narrow), metal ramps, stone roofs, rubber bumpers.
-- Topography: hills, steps (0.2 m, climbable; anything over 0.26 m is a wall), ramps, raised roofs, a half-pipe, gaps to jump,
+- Topography: smooth hills (`hillZ`), mounds and dips (`bumpZ`), banked slopes (`bankX`) next to the straight ramps, steps (0.2 m, climbable; anything over 0.26 m is a wall), ramps, raised roofs, a half-pipe, gaps to jump,
   a moving lift, a drained pool. Water all round: falling in costs a heart and restarts that module (its puzzle resets too).
 - Puzzles (signals): latch plates, heavy plates (only a crate counts), timed plates (race the gate), stay plates (hold 1.5 s),
   ordered plates (1-2-3, a wrong press resets), cone stacks (hit hard enough), lever switches, a whistle key to a lock;
-  receivers: gates, bridges, a lift, a draining pool, a fan updraft. Night Shift and Final Third chain three or more.
+  receivers: gates, bridges, a lift, a draining pool, a fan updraft. Night Shift, Final Third and the four Nov 17 chains (Over the Hill: crate -> heavy plate -> bridge -> hill cone + plate -> gate; Sandbar Relay: dune switch -> drained pool key -> lock -> bridge, timed plate -> gate; Chimney Run: 1-2-3 across a lift -> fan, stay plate -> gate; Floodlit Valley: training ball rolled into a dip onto a hold plate -> bridge -> key on a bank -> lock -> gate) chain three or more.
 - Retry (button / R) restarts the current puzzle for free, so a stuck crate is never a dead end.
 - Hearts 3; a level clock from level 4 (par x 2.2 shrinking 0.04 a level to x 1.15, + 10 s); running out costs a heart.
 - Score: 50 a module, 200 a goal (x level factor up to 3), 10 a second under par, 100 a star (off the main path), goals
@@ -27,7 +27,15 @@ It will replace Clear the Box (`clearbox`) once the coordinator removes that cab
 - Daily Roll on the start card (same seed for everyone that day); one all-time island board (top 20); "beat your best" line.
 - Lesson on the cabinet: "Look before you roll. Plan the next touch." Results tips teach the weight of a pass and pitch types.
 
-## Look
+## Look (polish pass Nov 17: realistic-but-arcade)
+- Terrain is subdivided and shaded in vertex colours (hillshade to the sun, a rim where ground drops, contact shade under a higher
+  neighbour, noise), with a rounded lip over rough cliffs drawn only where the ground really drops; sea cliffs widen into the water.
+- Toon sea shader (bands, moving crests), shore foam strips round every waterline, pools use the same water; splash rings.
+- Every plate / switch / cone / lock has a dashed cable on the ground to what it opens, flowing and lit when its signal is on.
+  Gates: posts, lamps (red / green), a rail-and-bar frame that sinks. Bridges unfold plank by plank. Lifts on rails. Fans blow streaks.
+- Grass tufts on lips and in long grass, shells on sand, puddles on mud (instanced); a coloured rolled track on sand, mud and long grass.
+- Scenery per theme (trees, ad boards, benches, goals; palms, umbrellas, deckchairs, lifeguard towers; buildings, water towers,
+  washing lines, chimneys; floodlights, stands, flags) merged into three meshes a module, plus a far painted ring per theme.
 - three.js, procedural only: canvas prints per surface (mowed stripes, sand ripples, plank grain, diamond plate, tiles),
   toon shading (three-step ramp), ink lines on every terrain edge, ink hulls on the ball, crates, cones and posts.
 - The ball: a 2,000-face sphere coloured as a real truncated icosahedron (12 black pentagons, seams), panels turn by the
@@ -44,4 +52,6 @@ star bells, goal whistle + net swish + crowd swell, full-time whistle. One limit
 ## Heat
 Low-power WebGL, pixel ratio 1.5 on a phone (2 desktop), one shadow map (512 on a phone), no post-processing, terrain merged
 per module and surface, modules disposed two behind the ball, pooled dust / splash / sand track, frames capped at 60 and
-nothing drawn on the cards, pause or a hidden tab. Measured in headless Chrome (swiftshader): 30-85 draw calls, 2-9k triangles.
+nothing drawn on the cards, pause or a hidden tab. Measured in headless Chrome (swiftshader), phone: before the polish 60-76 draw calls / 5-7k triangles on the heaviest old modules
+(136 on a new chained module); after: 40-65 draw calls / 9-17k triangles a module, 81-93 calls / 19-23k triangles on three-module
+levels. Only the ball's module, the one behind (first 8 m) and two ahead are drawn.

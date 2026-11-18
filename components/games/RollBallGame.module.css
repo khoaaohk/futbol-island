@@ -91,10 +91,16 @@
 /* Roll It In's own: the clock only shows from level 4, the puzzle name, the whistle chip, the retry button, the floating stick */
 .clock:not([data-on="1"]){visibility:hidden}
 .keyChip{padding:4px 7px 3px;border:2.5px solid var(--cm-ink);background:var(--cm-sun);font:800 11px/1 var(--cm-ui);rotate:-3deg;animation:rbPop .3s cubic-bezier(.2,1.6,.4,1) both}
-.puzzle{position:absolute;z-index:3;left:12px;top:calc(var(--arcade-bar-clear,56px) + 70px + env(safe-area-inset-top,0px));display:grid;gap:2px;margin:0;padding:6px 10px 5px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);rotate:-1.5deg;pointer-events:none;animation:rbPuzzle 2.6s ease-out both}
+.puzzle{position:absolute;z-index:3;left:12px;top:calc(var(--arcade-bar-clear,56px) + 58px + env(safe-area-inset-top,0px));display:grid;gap:2px;margin:0;padding:6px 10px 5px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);rotate:-1.5deg;pointer-events:none;animation:rbPuzzle 2.6s ease-out both}
+/* compact strip: only as wide as what it holds; the clock takes no room until it runs */
+.strip{width:auto;max-width:calc(100% - 16px);left:8px;translate:none;height:46px;gap:8px;padding-right:10px}
+.strip .lv{min-width:40px;font-size:19px}
+.strip .clock{margin-left:4px;margin-right:-10px}
+.clock:not([data-on="1"]){display:none}
 .puzzle b{font:italic 900 18px/1 var(--cm-title)}
 .puzzle small{font:800 11px/1 var(--cm-ui)}
-@keyframes rbPuzzle{0%{opacity:0;translate:-30px 0}10%{opacity:1;translate:0 0}80%{opacity:1}100%{opacity:.82}}
+@keyframes rbPuzzle{0%{opacity:0;translate:-30px 0}10%{opacity:1;translate:0 0}77%{opacity:1;translate:0 0}100%{opacity:0;translate:-12px 0;visibility:hidden}}
+@keyframes rbPuzzleFade{0%,77%{opacity:1}100%{opacity:0;visibility:hidden}}
 .retry{position:absolute;z-index:4;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));min-width:64px;min-height:44px;padding:0 12px;border:3px solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);font:800 14px/1 var(--cm-ui);box-shadow:3px 3px 0 var(--cm-ink);cursor:pointer}
 .retry:active{translate:2px 2px;box-shadow:1px 1px 0 var(--cm-ink)}
 .retry:focus-visible{outline:3px solid var(--cm-sun);outline-offset:2px}
@@ -108,4 +114,4 @@
 .movement :global(.joystick)[data-active=true]>span{background-color:var(--cm-sun)}
 @media (pointer:fine){.movement :global(.joystick):not([data-active=true]){opacity:0}}
 .foot{right:auto}
-@media (prefers-reduced-motion:reduce){.puzzle{animation:none}.keyChip{animation:none}}
+@media (prefers-reduced-motion:reduce){.puzzle{animation:rbPuzzleFade 2.6s linear both}.keyChip{animation:none}}

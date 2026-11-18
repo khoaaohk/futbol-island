@@ -43,8 +43,9 @@ export type Theme=0|1|2|3;
 export const THEMES=['Training pitch','Beach','Rooftops','Stadium at night'] as const;
 
 /** A terrain piece. kind 0 flat (top a), 1 ramp along z (a at z0 -> b at z1), 2 ramp along x (a at x0 -> b at x1), 3 half-pipe across x
- *  (a at the middle, a+b at both lips). dy: a moving offset (gates sink, bridges rise, lifts move). role: 0 terrain, 1 gate, 2 bridge, 3 lift. */
-export type Piece={x0:number;x1:number;z0:number;z1:number;y0:number;kind:0|1|2|3;a:number;b:number;surf:Surf;dy:number;role:0|1|2|3;mod:number;/** physics only (the goal's frame: the view draws posts and net) */hidden?:boolean};
+ *  (a at the middle, a+b at both lips), 4 smooth hill along z (a at z0 -> b at z1, level at both ends so it meets flat ground without a
+ *  kink), 5 mound along z (a at both ends, a+b at the middle; a negative b is a dip), 6 smooth bank across x (a at x0 -> b at x1). dy: a moving offset (gates sink, bridges rise, lifts move). role: 0 terrain, 1 gate, 2 bridge, 3 lift. */
+export type Piece={x0:number;x1:number;z0:number;z1:number;y0:number;kind:0|1|2|3|4|5|6;a:number;b:number;surf:Surf;dy:number;role:0|1|2|3;mod:number;/** physics only (the goal's frame: the view draws posts and net) */hidden?:boolean};
 export type PlateKind='latch'|'hold'|'timed'|'stay'|'order'|'heavy';
 export type Plate={x:number;z:number;y:number;half:number;kind:PlateKind;sig:number;T:number;idx:number;group:number;
  /** live */pressed:boolean;timer:number;lit:boolean;mod:number};
@@ -69,6 +70,10 @@ export type Builder={
  rampZ:(x0:number,x1:number,z0:number,z1:number,h0:number,h1:number,surf?:Surf)=>number;
  rampX:(x0:number,x1:number,z0:number,z1:number,h0:number,h1:number,surf?:Surf)=>number;
  pipe:(x0:number,x1:number,z0:number,z1:number,h:number,depth:number,surf?:Surf)=>number;
+ /** smooth terrain: a hill from h0 to h1 along z, a mound (or dip, rise < 0) along z, a bank from h0 at x0 to h1 at x1 */
+ hillZ:(x0:number,x1:number,z0:number,z1:number,h0:number,h1:number,surf?:Surf)=>number;
+ bumpZ:(x0:number,x1:number,z0:number,z1:number,h:number,rise:number,surf?:Surf)=>number;
+ bankX:(x0:number,x1:number,z0:number,z1:number,h0:number,h1:number,surf?:Surf)=>number;
  /** a gate across x0..x1 at z (0.35 deep, 1.1 tall over floor h) that opens when all `need` signals are on */
  gate:(x0:number,x1:number,z:number,need:number[],h?:number)=>number;
  bridge:(x0:number,x1:number,z0:number,z1:number,h:number,need:number[],surf?:Surf)=>number;
@@ -85,7 +90,7 @@ export type Builder={
 /** The 17 modules, four themes, rated 1-9. New mechanics come alone first (MECH_ORDER) and are combined in the high-rated ones. */
 export const MODULES:readonly ModuleDef[]=[
  {id:'first-touch',name:'First Touch',theme:0,rating:1,mech:['roll','plate'],len:12,par:10,
-  build:m=>{m.box(-2,2,0,12,0,'grass');m.rampZ(-2,2,3.5,5.5,0,.5,'grass');m.rampZ(-2,2,5.5,7.5,.5,0,'grass');m.box(2,4,5,8,0,'grass');m.star(3.1,6.5);
+  build:m=>{m.box(-2,2,0,3.5,0,'grass');m.bumpZ(-2,2,3.5,7.5,0,.5,'grass');m.box(-2,2,7.5,12,0,'grass');m.box(2,4,5,8,0,'grass');m.star(3.1,6.5);
    m.plate(0,8.8,'latch',0);m.gate(-2,2,10.2,[0]);},
   bot:[['go',0,8.8],['waitr',0],['go',0,12.6]],starBot:[['go',1.5,4.5],['go',3.1,6.5],['go',1,7.5]]},
  {id:'steps',name:'Up the Steps',theme:0,rating:2,mech:['steps','long'],len:16,par:14,
@@ -93,7 +98,7 @@ export const MODULES:readonly ModuleDef[]=[
    m.plate(-1.6,9.6,'latch',0,{y:.6});m.star(2,7.2,.6);m.gate(-2,2,14,[0]);},
   bot:[['go',0,3.5],['go',-1.4,7],['go',-1.6,9.6],['go',0,10.6],['waitr',0],['go',0,16.6]],starBot:[['go',0,3.5],['go',2,7.2]]},
  {id:'cone-knock',name:'Knock the Cones',theme:0,rating:2,mech:['cone','hill'],len:16,par:18,
-  build:m=>{m.box(-2.5,2.5,0,3,0,'grass');m.rampZ(-2,2,3,5,0,1.1,'grass');m.box(-2,2,5,6,1.1,'grass');m.rampZ(-2,2,6,8.5,1.1,0,'grass');m.box(-3,3,8.5,10.2,0,'grass');m.box(-3,3,10.2,13,0,'long');m.box(-2,2,13,16,0,'grass');
+  build:m=>{m.box(-2.5,2.5,0,3,0,'grass');m.hillZ(-2,2,3,5,0,1.1,'grass');m.box(-2,2,5,6,1.1,'grass');m.hillZ(-2,2,6,8.5,1.1,0,'grass');m.box(-3,3,8.5,10.2,0,'grass');m.box(-3,3,10.2,13,0,'long');m.box(-2,2,13,16,0,'grass');
    m.post(-1.2,9.6,'cone',0);m.post(1.4,9.6,'cone',1);m.star(-2.4,12.4);m.gate(-2,2,13.4,[0,1]);},
   bot:[['go',0,5.5],['run',-1.2,9.6],['go',0,8],['go',0,5.5],['run',1.4,9.6],['go',0,12.6],['waitr',0],['go',0,16.6]],starBot:[['go',-2.4,12.4],['go',0,8]]},
  {id:'hold-door',name:'Hold the Door',theme:0,rating:3,mech:['crate','hold'],len:14,par:25,
@@ -111,8 +116,8 @@ export const MODULES:readonly ModuleDef[]=[
    m.plate(-2.25,4.2,'timed',0,{T:4.5});m.gate(-1.5,1.5,15,[0]);m.star(2.25,6);},
   bot:[['go',-2.25,4.2],['go',-2.25,12.8,7],['go',0,14.2,6],['go',0,18.6,6]],starBot:[['go',2.25,1.6],['go',2.25,6],['go',2.25,2],['go',0,1.6]]},
  {id:'tide-switch',name:'Low Tide',theme:1,rating:4,mech:['switch','drain','dune'],len:15,par:38,
-  build:m=>{m.box(-2,2,0,4,0,'sand');m.box(2,5,0,4,0,'sand');m.rampZ(3,5,4,7,0,1,'sand');m.box(3,5,7,9.5,1,'sand');m.post(4,9,'switch',0,1);
-   m.rampZ(-2,2,4,5.5,0,-.8,'sand');m.box(-2,2,5.5,9.5,-.8,'sand');m.rampZ(-2,2,9.5,11,-.8,0,'sand');m.box(-2,2,11,15,0,'sand');m.drain(-2,2,4,11,-.1,[0]);m.star(0,7.5,-.8);},
+  build:m=>{m.box(-2,2,0,4,0,'sand');m.box(2,5,0,4,0,'sand');m.hillZ(3,5,4,7,0,1,'sand');m.box(3,5,7,9.5,1,'sand');m.post(4,9,'switch',0,1);
+   m.hillZ(-2,2,4,5.5,0,-.8,'sand');m.box(-2,2,5.5,9.5,-.8,'sand');m.hillZ(-2,2,9.5,11,-.8,0,'sand');m.box(-2,2,11,15,0,'sand');m.drain(-2,2,4,11,-.1,[0]);m.star(0,7.5,-.8);},
   bot:[['go',3.5,2],['go',4,6.5],['run',4,9],['wait',0],['go',4,6],['go',3.2,2.5],['go',0,2.8],['go',0,7.5,3],['go',0,15.6]]},
  {id:'shell-order',name:'One, Two, Three',theme:1,rating:5,mech:['order'],len:14,par:28,
   build:m=>{m.box(-4,4,0,12,0,'sand');m.box(-2,2,12,14,0,'sand');m.plate(2.5,4.5,'order',0,{idx:0,group:0});m.plate(0,8.6,'order',0,{idx:1,group:0});m.plate(-2.6,4,'order',0,{idx:2,group:0});
@@ -148,6 +153,29 @@ export const MODULES:readonly ModuleDef[]=[
   build:m=>{m.box(-4,4,0,10,0,'ice');m.box(-4,4,0,2,0,'grass');m.plate(-2.6,3.6,'order',0,{idx:0,group:0});m.plate(2.6,3.6,'order',0,{idx:1,group:0});m.plate(0,6.6,'order',0,{idx:2,group:0});
    m.bridge(4,5,7.6,8.6,0,[0],'wood');m.box(5,7,6.6,9.6,0,'grass');m.key(6,8.1);m.post(-3.2,9.2,'lock',1);m.fan(-1.5,1.5,10,14,.9,4,[1]);m.box(-2,2,14,18,0,'grass');m.star(6.4,9.1);},
   bot:[['go',-2.6,3.6,2.2],['go',0,2.4,2.2],['go',2.6,3.6,2.2],['go',1.4,5.6,2],['go',0,6.6,2],['wait',0],['go',3,8.1,2],['waitr',0],['go',6,8.1,2.5],['go',3.4,8.1,2.5],['go',-2.2,8.6,2.2],['run',-3.2,9.2],['wait',1],['go',0,8.6,2],['go',0,15,3],['go',0,18.6]]},
+ /* Nov 17 polish: longer chains on real topography (three or more linked mechanisms where order matters) */
+ {id:'over-the-hill',name:'Over the Hill',theme:0,rating:7,mech:['crate','heavy','bridge','hill','cone'],len:23,par:34,
+  build:m=>{m.box(-3,0,0,8,0,'grass');m.box(0,3,0,2,0,'grass');m.bumpZ(0,3,2,8,0,1,'long');m.obj('crate',-1.5,2.6);m.plate(-1.5,6.4,'heavy',0);m.star(1.5,5,1);
+   m.bridge(-1,1,8,11,0,[0],'wood');m.box(-3,3,11,12,0,'grass');m.hillZ(-3,3,12,14,0,1,'grass');m.box(-3,3,14,16.5,1,'grass');m.hillZ(-3,3,16.5,18.5,1,0,'grass');m.box(-3,3,18.5,23,0,'grass');
+   m.post(-2.2,15.3,'cone',1,1);m.plate(2.3,19.6,'latch',2);m.gate(-3,3,21,[1,2]);},
+  bot:[['push',0,-1.5,6.4],['go',-.45,5.4],['go',-.45,7.5],['waitr',0],['go',0,11.4,3],['go',-1,13.6],['go',-1.6,14.3],['run',-2.2,15.3],['go',0,16],['go',0,18.6,3],['go',2.3,19.6],['go',0,20.2],['waitr',1],['go',0,23.6]],
+  starBot:[['go',1.5,1.6],['go',1.5,5,2.5],['go',1.5,7.6,2],['go',-.6,7.8]]},
+ {id:'sandbar-relay',name:'Sandbar Relay',theme:1,rating:7,mech:['switch','drain','key','lock','bridge','timed'],len:22,par:44,
+  build:m=>{m.box(-3,4,0,4,0,'sand');m.hillZ(2,4,4,6.5,0,.8,'sand');m.box(2,4,6.5,8.5,.8,'sand');m.post(3.2,8.1,'switch',0,.8);
+   m.hillZ(-2,1,4,5.5,0,-.8,'sand');m.box(-2,1,5.5,8.5,-.8,'sand');m.hillZ(-2,1,8.5,10,-.8,0,'sand');m.drain(-2,1,4,10,-.1,[0]);m.key(-.5,7,-.8);
+   m.box(-3,-2,4,10,0,'long');m.box(-3,3,10,13,0,'sand');m.post(2.4,11.6,'lock',1);m.plate(-2.3,12,'timed',2,{T:5});
+   m.bridge(-1,1,13,16,0,[1],'wood');m.box(-3,3,16,22,0,'sand');m.gate(-3,3,19.6,[2]);m.star(-2.5,7.2);},
+  bot:[['go',3,3],['go',3,7.2,3],['run',3.2,8.1],['wait',0],['go',3,5.5],['go',1.2,3],['waitr',0],['go',-.5,4.6,2.5],['go',-.5,7,2.5],['go',-.5,10.4,3],['go',1.4,11.4],['run',2.4,11.6],['wait',1],['waitr',1],
+   ['go',-2.3,12],['go',0,13.2,6],['go',0,16.4,6],['go',0,19,6],['go',0,22.6,6]],starBot:[['go',-2.5,3.6],['go',-2.5,7.2],['go',-2.5,4],['go',0,2]]},
+ {id:'chimney-run',name:'Chimney Run',theme:2,rating:8,mech:['order','lift','roof','fan','stay'],len:25,par:28,
+  build:m=>{m.box(-3,3,0,5,0,'stone');m.plate(2.2,3,'order',0,{idx:0,group:0});m.lift(-1,1,5,8,1.5,5,'metal');m.box(-3,3,8,13,1.5,'stone');m.plate(-2,10.4,'order',0,{idx:1,group:0,y:1.5});m.plate(2,12,'order',0,{idx:2,group:0,y:1.5});
+   m.fan(-1.5,1.5,13,18,.9,4,[0]);m.box(-3,3,18,25,0,'stone');m.plate(2,20,'stay',1,{T:1.5});m.gate(-3,3,22.4,[1]);m.star(-2.4,19.4);},
+  bot:[['go',2.2,3],['go',0,4.6],['lift',0],['go',0,7.4],['stop',.4],['lift',1],['go',0,9.4],['go',-2,10.4],['go',2,12],['wait',0],['go',0,12.4],['go',0,18.6,3.5],['go',2,20],['stop',1.8],['waitr',2],['go',0,25.6]]},
+ {id:'floodlit-valley',name:'Floodlit Valley',theme:3,rating:9,mech:['ball','dip','hold','bridge','bank','key','lock'],len:24,par:26,
+  build:m=>{m.box(-4,4,0,4,0,'grass');m.box(-4,-1,4,10,0,'grass');m.hillZ(-1,4,4,7,0,-.6,'long');m.hillZ(-1,4,7,10,-.6,0,'long');m.obj('tball',1.5,3.4);m.plate(1.5,7,'hold',0,{y:-.6});
+   m.bridge(-3,-1,10,13,0,[0],'wood');m.box(-4,4,13,20.5,0,'grass');m.bankX(1.5,4,14,18,0,1,'grass');m.box(4,5.5,14,18,1,'grass');m.key(4.7,16,1);
+   m.post(-3.2,19,'lock',1);m.post(-.6,16.2,'bumper');m.gate(-4,4,20.5,[1]);m.box(-2,2,20.85,24,0,'grass');m.star(-3.4,1.2);},
+  bot:[['go',1.5,1.8],['go',1.5,4.4,2.4],['go',-2.5,3.6],['go',-2,9.4],['waitr',0],['go',-2,13.6,3],['go',3,15.4],['go',4.7,16,3],['go',2,17.4],['go',-2.2,18.6],['run',-3.2,19],['wait',1],['waitr',1],['go',0,24.6]]},
 ];
 /** The goal at the end of every level (not in the generator's pool). */
 export const GOAL_MODULE:ModuleDef={id:'goal',name:'Roll It In',theme:0,rating:0,mech:['goal'],len:7,par:3,
@@ -202,6 +230,9 @@ export function buildWorld(plan:readonly number[],theme0=0):World{
    rampZ:(x0,x1,z0,z1,h0,h1,surf='grass')=>piece(x0,x1,z0,z1,RB.water-.6,1,h0,h1,surf),
    rampX:(x0,x1,z0,z1,h0,h1,surf='grass')=>piece(x0,x1,z0,z1,RB.water-.6,2,h0,h1,surf),
    pipe:(x0,x1,z0,z1,h,d,surf='metal')=>piece(x0,x1,z0,z1,RB.water-.6,3,h,d,surf),
+   hillZ:(x0,x1,z0,z1,h0,h1,surf='grass')=>piece(x0,x1,z0,z1,RB.water-.6,4,h0,h1,surf),
+   bumpZ:(x0,x1,z0,z1,h,rise,surf='grass')=>piece(x0,x1,z0,z1,RB.water-.6,5,h,rise,surf),
+   bankX:(x0,x1,z0,z1,h0,h1,surf='grass')=>piece(x0,x1,z0,z1,RB.water-.6,6,h0,h1,surf),
    gate:(x0,x1,gz,need,h=0)=>{const p=piece(x0,x1,gz,gz+.35,h-.2,0,h+1.1,0,'metal',1);w.recvs.push({kind:'gate',piece:p,need:need.map(S),open:0,h:1.1,period:0,x0,x1,z0:z+gz,z1:z+gz+.35,wy:h,fz:0,mod:mi});return p;},
    bridge:(x0,x1,z0,z1,h,need,surf='wood')=>{const p=piece(x0,x1,z0,z1,h-.35,0,h,0,surf,2,-4);w.recvs.push({kind:'bridge',piece:p,need:need.map(S),open:0,h:4,period:0,x0,x1,z0:z+z0,z1:z+z1,wy:h,fz:0,mod:mi});return p;},
    lift:(x0,x1,z0,z1,rise,period,surf='metal')=>{const p=piece(x0,x1,z0,z1,RB.water-.6,0,0,0,surf,3);w.recvs.push({kind:'lift',piece:p,need:[],open:0,h:rise,period,x0,x1,z0:z+z0,z1:z+z1,wy:0,fz:0,mod:mi});return p;},
@@ -232,16 +263,22 @@ export function topAt(p:Piece,x:number,z:number){
   case 1:return p.a+(p.b-p.a)*clamp((z-p.z0)/(p.z1-p.z0),0,1)+p.dy;
   case 2:return p.a+(p.b-p.a)*clamp((x-p.x0)/(p.x1-p.x0),0,1)+p.dy;
   case 3:{const u=clamp((2*x-p.x0-p.x1)/(p.x1-p.x0),-1,1);return p.a+p.b*u*u+p.dy;}
+  case 4:{const u=clamp((z-p.z0)/(p.z1-p.z0),0,1);return p.a+(p.b-p.a)*u*u*(3-2*u)+p.dy;}
+  case 5:{const sn=Math.sin(Math.PI*clamp((z-p.z0)/(p.z1-p.z0),0,1));return p.a+p.b*sn*sn+p.dy;}
+  case 6:{const u=clamp((x-p.x0)/(p.x1-p.x0),0,1);return p.a+(p.b-p.a)*u*u*(3-2*u)+p.dy;}
   default:return p.a+p.dy;
  }
 }
 /** The slope of a piece's top: d(top)/dx and d(top)/dz into G_OUT. */
 const G_OUT={x:0,z:0};
-function gradAt(p:Piece,x:number){
+function gradAt(p:Piece,x:number,z:number){
  G_OUT.x=0;G_OUT.z=0;
  if(p.kind===1)G_OUT.z=(p.b-p.a)/(p.z1-p.z0);
  else if(p.kind===2)G_OUT.x=(p.b-p.a)/(p.x1-p.x0);
  else if(p.kind===3){const W=p.x1-p.x0,u=clamp((2*x-p.x0-p.x1)/W,-1,1);G_OUT.x=p.b*2*u*2/W;}
+ else if(p.kind===4){const L=p.z1-p.z0,u=clamp((z-p.z0)/L,0,1);G_OUT.z=(p.b-p.a)*6*u*(1-u)/L;}
+ else if(p.kind===5){const L=p.z1-p.z0,u=clamp((z-p.z0)/L,0,1);G_OUT.z=p.b*Math.PI*Math.sin(2*Math.PI*u)/L;}
+ else if(p.kind===6){const L=p.x1-p.x0,u=clamp((x-p.x0)/L,0,1);G_OUT.x=(p.b-p.a)*6*u*(1-u)/L;}
  return G_OUT;
 }
 export type Ground={h:number;piece:number};
@@ -328,7 +365,7 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
   const g0=b.air?null:groundAt(w,b.x,b.z,b.y-RB.r,RB.step,lo,hi),gp=g0&&g0.piece>=0?w.pieces[g0.piece]:null;
   const sf=SURF[gp?gp.surf:b.surf];
   let ax=0,az=0;
-  if(!b.air&&gp){b.surf=gp.surf;ax=s.ix*sf.accel;az=s.iz*sf.accel;const gr=gradAt(gp,b.x),k=RB.G*.71/(1+gr.x*gr.x+gr.z*gr.z);ax-=gr.x*k;az-=gr.z*k;}
+  if(!b.air&&gp){b.surf=gp.surf;ax=s.ix*sf.accel;az=s.iz*sf.accel;const gr=gradAt(gp,b.x,b.z),k=RB.G*.71/(1+gr.x*gr.x+gr.z*gr.z);ax-=gr.x*k;az-=gr.z*k;}
   else{ax=s.ix*2.2;az=s.iz*2.2;}
   // fans
   let lift=0;
@@ -386,7 +423,7 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
     for(let j=i+1;j<Q.o1;j++){const q=w.objs[j],ex=q.x-o.x,ez=q.z-o.z,RR=o.r+q.r,e2=ex*ex+ez*ez;if(e2<RR*RR){const d=Math.sqrt(e2)||1e-6,nx=ex/d,nz=ez/d,pen=(RR-d)/2;o.x-=nx*pen;o.z-=nz*pen;q.x+=nx*pen;q.z+=nz*pen;}}
     // ground, slope, drag
     const g=groundAt(w,o.x,o.z,o.y-o.r,RB.step,m-1,m+1);
-    if(!o.air&&g.piece>=0){const p=w.pieces[g.piece],gr=gradAt(p,o.x);if(o.kind==='tball'){o.vx-=gr.x*RB.G*.7*dt;o.vz-=gr.z*RB.G*.7*dt;}
+    if(!o.air&&g.piece>=0){const p=w.pieces[g.piece],gr=gradAt(p,o.x,o.z);if(o.kind==='tball'){o.vx-=gr.x*RB.G*.7*dt;o.vz-=gr.z*RB.G*.7*dt;}
      const fr=Math.exp(-(o.kind==='crate'?(p.surf==='ice'?.6:5.5):SURF[p.surf].drag*.8)*dt);o.vx*=fr;o.vz*=fr;}
     o.x+=o.vx*dt;o.z+=o.vz*dt;o.spin+=Math.hypot(o.vx,o.vz)*dt/o.r;walls(o,o.r,m-1,m+1,.5);
     for(let k=Q.po0;k<Q.po1;k++)postHit(k,o,o.r,0);
