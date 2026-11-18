@@ -15,7 +15,7 @@ const LEARN:Record<string,string>={'11v11-soccer-formations':'11v11 formations',
 /** Top-level routes (a sub-route keeps its top segment: /cards/12 is cards, /marketing/overview is marketing). */
 const TOP:Record<string,[key:string,label:string]>={'':['home','Home'],play:['play','Island'],'island-return':['play','Island'],arcade:['arcade','Arcade'],
  museum:['museum','Museum'],konbini:['konbini','Konbini'],shop:['shop','Kit shop'],controller:['controller','Phone controller'],coffee:['coffee','Support page'],
- start:['start','Start page'],plan:['plan','Football plan'],privacy:['privacy','Privacy'],about:['about','About'],cards:['cards','Cards'],exhibits:['exhibits','Exhibits'],books:['books','Books'],
+ start:['start','Start page'],plan:['plan','Football plan'],privacy:['privacy','Privacy'],about:['about','About'],cards:['cards','Cards'],exhibits:['exhibits','Exhibits'],books:['books','Books'],videos:['videos','Videos'],
  fish:['fish','Fish guide'],games:['games','Games'],tools:['tools','Coach tools'],coach:['coach','Coach app'],scan:['scan','Scan Trainer'],embed:['embed','Club embed'],marketing:['marketing','Marketing page'],
  'safe-football-game-for-kids':['parents','Parents’ guide'],learn:['learn','Learn']};
 const learnKey=(slug:string)=>'learn_'+slug.replace(/-/g,'_');
