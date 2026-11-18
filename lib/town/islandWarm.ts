@@ -7,6 +7,7 @@ import {readArcadeWallet} from '@/lib/arcade/arcadeWallet';
 import {graphicsQuality} from '@/lib/graphics/quality';
 import {heatOptions} from '@/lib/graphics/heatTier';
 import {applyLambertScenery} from '@/lib/graphics/lambertScenery';
+import {applyGfxDevSwitches} from '@/lib/graphics/gfxDevSwitches';
 import {bootMark} from '@/lib/boot/perfMarks';
 
 /**
@@ -40,6 +41,7 @@ const dropStandIns=()=>{for(const o of standIns){o.removeFromParent();(o as T.Li
 /** Town's renderer settings (components/Town.tsx), applied before the compile so the program keys match. */
 export function configureIslandRenderer(r:T.WebGLRenderer){
  r.shadowMap.enabled=true;r.shadowMap.type=T.PCFSoftShadowMap;r.outputColorSpace=T.SRGBColorSpace;r.toneMapping=T.ACESFilmicToneMapping;r.toneMappingExposure=1.0;
+ applyGfxDevSwitches(r);// dev-only ?gfx= A/B switches (tone curve, shadow filter); a no-op without a flag and in production
 }
 
 /**

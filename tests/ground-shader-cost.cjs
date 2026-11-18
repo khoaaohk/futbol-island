@@ -93,4 +93,29 @@ ok('surface detail lives in the existing draws: one shared 64x64 tile, per-verte
  assert(!/sa\.x/.test(uniformsOf('grass').sh.fragmentShader)&&!/sa\.x/.test(uniformsOf('sand').sh.fragmentShader),'never on grass or sand');
  const [plaza,bowl]=G.GROUND_SLAB.rects;assert(plaza[0]+plaza[2]<=-50.69&&plaza[0]-plaza[2]>=-166&&Math.abs(bowl[0]+205)<1e-9&&bowl[2]===40&&bowl[3]===57.5);});
 
+ok('lighter shadow filter (dev flag, OFF by default): 16 -> 4 / 5 shadow reads per lit pixel, scoped to one renderer, stock chunk always restored',()=>{
+ const K=load('lib/graphics/shadowKernel.ts'),stock=T.ShaderChunk.shadowmap_pars_fragment,rows=[];
+ const grass=()=>G.applyGroundTint(new T.MeshStandardMaterial({roughness:.94}),'grass');
+ const base=P.patched(T,grass(),'physical'),b=P.programCost(base.source,base.defines);
+ for(const taps of [4,5]){const lite=K.liteShadowChunk(stock,taps);assert(lite&&lite!==stock&&lite.includes('fi-shadow-edge-fade'),'the island edge fade survives');
+  const p=P.patched(T,grass(),'physical',undefined,{...T.ShaderChunk,shadowmap_pars_fragment:lite}),c=P.programCost(p.source,p.defines);
+  rows.push(`ground.grass.cool shadow${taps}: ${b.alu}/${b.tex} -> ${c.alu}/${c.tex}`);assert.equal(c.tex,b.tex-16+taps);assert(c.alu<b.alu);}
+ console.log('     '+rows.join('\n     '));
+ assert.equal(K.liteShadowChunk('nothing here',4),null,'a changed three chunk is refused, not mangled');
+ // scope: the lighter chunk is in three's global table only while THIS renderer is inside render / compile / compileAsync
+ const seen=[],fake={render(){seen.push(T.ShaderChunk.shadowmap_pars_fragment);return 'r';},compile(){seen.push(T.ShaderChunk.shadowmap_pars_fragment);throw new Error('boom');},compileAsync(){seen.push(T.ShaderChunk.shadowmap_pars_fragment);return Promise.resolve();}};
+ assert.equal(K.installShadowKernel(fake,4),true);assert.equal(T.ShaderChunk.shadowmap_pars_fragment,stock,'installing changes nothing globally');
+ assert.equal(fake.render(),'r');assert.equal(T.ShaderChunk.shadowmap_pars_fragment,stock);
+ assert.throws(()=>fake.compile(),/boom/);assert.equal(T.ShaderChunk.shadowmap_pars_fragment,stock,'restored even when the call throws');
+ fake.compileAsync();assert.equal(T.ShaderChunk.shadowmap_pars_fragment,stock);
+ assert.equal(seen.length,3);for(const s of seen)assert.equal(s,K.liteShadowChunk(stock,4));
+ const other={render(){seen.push(T.ShaderChunk.shadowmap_pars_fragment);}};other.render();assert.equal(seen[3],stock,'another renderer on the page compiles the stock filter');
+ // wiring: only through the dev-only flags; the live settings are untouched
+ const sw=src('lib/graphics/gfxDevSwitches.ts'),warm=src('lib/town/islandWarm.ts'),town=src('components/Town.tsx');
+ assert(/if\(gfxFlag\('shadow4'\)\)installShadowKernel\(renderer,4\);else if\(gfxFlag\('shadow5'\)\)installShadowKernel\(renderer,5\);/.test(sw));
+ assert(/if\(gfxFlag\('tone-neutral'\)\)renderer\.toneMapping=NeutralToneMapping;else if\(gfxFlag\('tone-agx'\)\)renderer\.toneMapping=AgXToneMapping;/.test(sw));
+ assert(/r\.shadowMap\.type=T\.PCFSoftShadowMap;r\.outputColorSpace=T\.SRGBColorSpace;r\.toneMapping=T\.ACESFilmicToneMapping;r\.toneMappingExposure=1\.0;\n applyGfxDevSwitches\(r\);/.test(warm),'warm renderer: ACES + PCF soft, then the dev switches');
+ assert(/renderer\.toneMapping=T\.ACESFilmicToneMapping;renderer\.toneMappingExposure=1\.0;applyGfxDevSwitches\(renderer\);/.test(town),'Town renderer the same');
+ for(const f of ['lib/shop/ballStage.ts','lib/shop/bootScene.ts','lib/arcade/arcadeStage.ts','lib/arcade/arcadeRoomScene.ts','lib/gashapon/toyViewer.ts'])assert(!/gfxDevSwitches|shadowKernel|gfxFlags/.test(src(f)),f+' is not touched by the switches');});
+
 if(failed){console.log(failed+' failed');process.exit(1);}

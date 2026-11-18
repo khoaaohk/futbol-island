@@ -73,14 +73,14 @@ function programCost(fullSrc,defines=PHONE_DEFINES,drop=[]){
  return cost(main,fns);
 }
 /** The fragment source a material's onBeforeCompile produces from a three ShaderLib entry (no GL needed). */
-function patched(T,material,lib,tone='ACESFilmicToneMapping'){
+function patched(T,material,lib,tone='ACESFilmicToneMapping',chunks=T.ShaderChunk){
  const sh={uniforms:{},vertexShader:T.ShaderLib[lib].vertexShader,fragmentShader:T.ShaderLib[lib].fragmentShader};
  if(material.onBeforeCompile)material.onBeforeCompile(sh,null);
  const defs=Object.fromEntries(Object.entries(material.defines||{}).map(([k,v])=>[k,String(v)]));
  if(material.vertexColors)defs.USE_COLOR='';if(material.side===T.DoubleSide)defs.DOUBLE_SIDED='';if(material.map)defs.USE_MAP='';
  // three's fragment prefix carries the tone curve and the output transfer (WebGLProgram: getToneMappingFunction, getTexelEncodingFunction)
  const prefix=T.ShaderChunk.tonemapping_pars_fragment+'\nvec3 toneMapping( vec3 color ) { return '+tone+'( color ); }\n'+T.ShaderChunk.colorspace_pars_fragment+'\nvec4 linearToOutputTexel( vec4 value ) { return ( sRGBTransferOETF( value ) ); }\n';
- return {source:assemble(prefix+sh.fragmentShader,T.ShaderChunk),defines:{...PHONE_DEFINES,...defs}};
+ return {source:assemble(prefix+sh.fragmentShader,chunks),defines:{...PHONE_DEFINES,...defs}};
 }
 module.exports={assemble,preprocess,functions,programCost,patched,PHONE_DEFINES,LIGHTS};
 if(require.main===module){const src=fs.readFileSync(process.argv[2],'utf8');console.log(JSON.stringify(programCost(src,{}),null,1));}

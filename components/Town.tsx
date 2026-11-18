@@ -53,6 +53,7 @@ import {createFocusMode} from '@/lib/graphics/focusMode';
 import {WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,SWIM_FX_UNIFORMS,setWaterDetail,setSunGlitter,sunGlitterLevel} from '@/lib/graphics/waterSurface';
 import {heatOptions,batterySaverOn,effectiveTier} from '@/lib/graphics/heatTier';import {withScoreFanBubbles} from '@/lib/town/stadiumScoreBubbles';import {createNpcChatter,createChatterOut,type ChatterActor} from '@/lib/town/npcChatter';import {THOUGHTS} from '@/lib/town/npcThoughts';import {createChatterBubbles} from '@/lib/graphics/chatterBubbles';
 import {applyLambertScenery,sharpenSceneTextures} from '@/lib/graphics/lambertScenery';
+import {applyGfxDevSwitches} from '@/lib/graphics/gfxDevSwitches';
 import {emitIslandFrame} from '@/lib/town/islandFrames';
 import {findWallJuggleTarget} from '@/lib/town/wallJuggleTarget';
 import {assistedShotYaw} from '@/lib/town/shotAssist';
@@ -642,7 +643,7 @@ export default function Island({returningFromArcade=false,openArcadePacks=false}
     // Phones/tablets: 1.5x pixel ratio while the view moves, full sharpness after 0.5 s still (heat audit pass 2, proposal A).
     // Phones hold one resolution (the governor's tier sets it); the moving/still switch stays a desktop-free no-op on them.
     const motionResolution=new MotionResolution(quality.pixelRatio,dynamicResolutionEnabled(window.devicePixelRatio||1,window.matchMedia('(pointer: coarse)').matches),quality.phone?quality.pixelRatio:undefined);
-    renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;parent.appendChild(renderer.domElement);
+    renderer.shadowMap.enabled=true;renderer.shadowMap.type=T.PCFSoftShadowMap;renderer.outputColorSpace=T.SRGBColorSpace;renderer.toneMapping=T.ACESFilmicToneMapping;renderer.toneMappingExposure=1.0;applyGfxDevSwitches(renderer);/* dev-only ?gfx= A/B switches; no-op without a flag and in production */parent.appendChild(renderer.domElement);
     const scene=warm?.scene??new T.Scene();scene.background=new T.Color('#e8b98b');attachHorizonHaze(scene);// lib/graphics/horizonHaze.ts: the far-plane edge fades into the sky
 
     // A ball-hunt hint (e.g. "Land inside the ring…") owns the top prompt slot: the Learn-plays card steps aside while it shows.
