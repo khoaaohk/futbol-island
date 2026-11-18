@@ -85,7 +85,7 @@ export const RULES:readonly Rule[]=([
  // ---- offside ------------------------------------------------------------------------------------------------------------
  {slug:'offside',name:'Offside',law:'Law 11',lawPage:'offside/',
   title:'Offside Rule in Soccer, Explained for Kids',h1:'Offside in soccer, explained for kids',
-  desc:'The offside rule in soccer in plain words for kids and parents: an onside and offside diagram, what the referee looks for, common mix-ups and a short FAQ.',
+  desc:'The offside rule in soccer (football) in plain words for kids and parents: an onside and offside diagram, what the referee looks for and common mix-ups.',
   answer:'In soccer, a player is in an offside position when they are in the other team’s half and closer to the goal line than both the ball and the second-last opponent at the moment a teammate plays the ball. It is only an offence if that player then gets involved in the play.',
   scenes:[
    {title:'Onside',who:'8@42,58 9@60,73 7@85,66 !4@38,74 !5@66,70 !3@14,68 !G@50,97',ball:[44,60],lineY:74,lineWord:'offside line',passes:['44,60>60,86'],runs:['60,73>61,86'],
@@ -113,7 +113,7 @@ export const RULES:readonly Rule[]=([
  // ---- throw-in -----------------------------------------------------------------------------------------------------------
  {slug:'throw-in',name:'Throw-in',law:'Law 15',lawPage:'the-throw-in/',
   title:'Throw-In Rules in Soccer: How to Take a Legal Throw',h1:'What are the throw-in rules in soccer?',
-  desc:'Throw-in rules in soccer for kids: both hands, from behind and over the head, part of each foot on or behind the line, facing the field. With a diagram.',
+  desc:'Throw-in rules in soccer and football for kids: both hands, from behind and over the head, part of each foot on or behind the line, facing the field.',
   answer:'A throw-in in soccer restarts play when the whole ball crosses the touchline, and the team that did not touch it last throws it back in. The thrower faces the field, keeps part of each foot on or behind the line, and throws with both hands from behind and over the head.',
   scenes:[{title:'A throw-in',who:'2@0,62 7@16,74 8@22,58 4@14,48 !11@9,66 !6@26,66',ball:[1,63],zone:[0,58,6,66],passes:['2,62>20,58'],
    caption:'Number 2 takes the throw-in from the touchline, at the place where the ball went out. Three teammates offer a throw up the line, inside and back. The nearest opponent, number 11, stands at least 2 yards from the thrower.'}],
@@ -136,7 +136,7 @@ export const RULES:readonly Rule[]=([
  // ---- goal kick ----------------------------------------------------------------------------------------------------------
  {slug:'goal-kick',name:'Goal kick',law:'Law 16',lawPage:'the-goal-kick/',
   title:'Goal Kick Rules in Soccer (Football), for Kids',h1:'Soccer goal kick rules for kids',
-  desc:'Soccer goal kick rules in plain words for kids and parents: when it is given, where the ball goes, where the other team waits, and how 7v7 changes it.',
+  desc:'Soccer goal kick rules (the football goal kick) in plain words: when it is given, where the ball goes, where the other team waits, and how 7v7 changes it.',
   answer:'In soccer, a goal kick is given when the attacking team touches the ball last before the whole ball crosses the goal line and no goal is scored. A defender or the goalkeeper kicks it from anywhere inside the goal area, and the other team waits outside the penalty area until the ball is kicked.',
   scenes:[{title:'A goal kick',who:'G@44,3 4@24,8 5@76,8 6@50,24 !9@50,19 !7@22,22 !11@78,22',ball:[44,4],zone:[20.4,0,79.6,15.7],passes:['44,4>26,8'],
    caption:'The goalkeeper takes the goal kick from inside the goal area. Two defenders stand wide inside the penalty area to receive a short pass. The three opponents wait outside the shaded penalty area until the ball is kicked and clearly moves.'}],
@@ -178,7 +178,7 @@ export const RULES:readonly Rule[]=([
  // ---- handball -----------------------------------------------------------------------------------------------------------
  {slug:'handball',name:'Handball',law:'Law 12',lawPage:'fouls-and-misconduct/',
   title:'Handball Rule in Soccer: What Counts, for Kids',h1:'What is a handball in soccer?',
-  desc:'The handball rule in soccer for kids and parents: what counts as a handball and what does not, where the arm starts, and when it is a free kick or penalty.',
+  desc:'Handball rules in soccer (football) for kids and parents: what counts as a handball, what does not, where the arm starts, and free kick or penalty.',
   answer:'A handball in soccer is an offence when a player touches the ball with a hand or arm on purpose, or with an arm that makes the body unnaturally bigger. A touch on the arm is not always a handball, and the arm starts at the bottom of the armpit.',
   scenes:[{title:'Where the goalkeeper may use hands',who:'G@50,8 4@34,20 5@66,20 !9@50,30 !7@80,34',ball:[50,24],zone:[20.4,0,79.6,15.7],
    caption:'The shaded penalty area is the only place where the gold goalkeeper may handle the ball. Outside it, the goalkeeper is like any other player. Everyone else may never use a hand or arm on purpose, anywhere on the field.'}],
@@ -201,7 +201,7 @@ export const RULES:readonly Rule[]=([
  // ---- fouls and free kicks -----------------------------------------------------------------------------------------------
  {slug:'fouls-and-free-kicks',name:'Fouls and free kicks',law:'Laws 12 and 13',lawPage:'free-kicks/',
   title:'Fouls in Soccer for Kids: Direct vs Indirect Free Kick',h1:'What are fouls in soccer? Direct and indirect free kicks',
-  desc:'Fouls in soccer explained for kids: which fouls give a direct or an indirect free kick, the 10-yard rule, the wall and the 1-yard gap, with a diagram.',
+  desc:'Fouls in soccer (football) for kids: which fouls give a direct or an indirect free kick, the 10-yard rule, the wall and the 1-yard gap, with a diagram.',
   answer:'A foul in soccer is an unfair action against an opponent, such as a trip, a push or a hold, and it gives the other team a free kick from where it happened. A direct free kick can be shot straight into the goal; an indirect free kick must touch another player first.',
   scenes:[{title:'A direct free kick and the wall',who:'10@50,72 8@38,70 9@64,88 !2@44,82 !4@48,82.5 !5@52,82.5 !6@56,82 !G@56,97 !3@70,90',ball:[50,73],zone:[38,73,62,82],passes:['50,73>40,99'],
    caption:'Number 10 takes a direct free kick outside the penalty area. Four defenders make a wall 10 yards from the ball, and the shaded space between the ball and the wall stays empty. Attackers must stay at least 1 yard from a wall of three or more defenders.'}],
@@ -226,7 +226,7 @@ export const RULES:readonly Rule[]=([
  // ---- penalty kick -------------------------------------------------------------------------------------------------------
  {slug:'penalty-kick',name:'Penalty kick',law:'Law 14',lawPage:'the-penalty-kick/',
   title:'Penalty Kick Rules in Soccer: Diagram for Kids',h1:'Soccer penalty kick rules for kids',
-  desc:'Soccer penalty kick rules in plain words: when a penalty is given, where everyone stands, what the goalkeeper may do and what happens after a save.',
+  desc:'Soccer penalty kick rules (football penalties) for kids: when a penalty is given, where everyone stands, what the keeper may do and what follows a save.',
   answer:'In soccer, a penalty kick is given when a defender commits a direct free kick foul, such as a trip, a push or a handball, inside their own penalty area. One attacker shoots from the penalty mark, 12 yards from the goal, with only the goalkeeper to beat.',
   scenes:[{title:'A penalty kick',who:'9@50,88 10@40,76 7@64,77 8@28,80 !G@50,99.5 !4@46,76 !5@58,76 !3@72,80',ball:[50,89.5],zone:[20.4,84.3,79.6,100],passes:['50,89.5>42,100'],
    caption:'Number 9 takes the penalty from the penalty mark. The goalkeeper is on the goal line between the posts. Every other player waits outside the shaded penalty area, behind the ball and at least 10 yards from the mark, until the ball is kicked.'}],
@@ -276,8 +276,8 @@ export const RULES:readonly Rule[]=([
  // ---- back-pass rule -----------------------------------------------------------------------------------------------------
  {slug:'back-pass-rule',name:'Back-pass rule',law:'Law 12',lawPage:'fouls-and-misconduct/',
   title:'Back Pass Rule in Soccer: Can the Keeper Pick It Up?',h1:'What is the back pass rule in soccer?',
-  desc:'The back pass rule in soccer (the pass back rule): when the goalkeeper may not pick up a teammate’s pass, what is allowed, and the indirect free kick.',
-  answer:'The back pass rule in soccer says the goalkeeper may not handle the ball when a teammate deliberately kicks it to them, or throws it to them from a throw-in. The keeper must play it with the feet, and handling it gives the other team an indirect free kick.',
+  desc:'The back pass rule in soccer and football (the pass back rule): when the keeper may not pick up a teammate’s pass, what is allowed, and the free kick.',
+  answer:'The back pass rule in soccer, also called the pass back rule, says the goalkeeper may not handle the ball when a teammate deliberately kicks it to them, or throws it to them from a throw-in. The keeper must play it with the feet, and handling it gives the other team an indirect free kick.',
   scenes:[{title:'A pass back to the goalkeeper',who:'G@50,7 4@32,26 5@66,24 6@46,40 !9@40,32 !7@72,34',ball:[33,24],zone:[20.4,0,79.6,15.7],passes:['33,24>48,9','52,8>66,22'],
    caption:'Defender number 4 is under pressure and passes back with the foot. The goalkeeper may not pick this ball up, even inside the shaded penalty area, so the goalkeeper plays it with the feet to the free defender, number 5.'}],
   refs:['Was the ball kicked with the foot? The rule is about a kick, and about a throw-in.','Was it deliberate, and was it meant for the goalkeeper? A miskick or a deflection is not a back-pass.',
@@ -290,7 +290,7 @@ export const RULES:readonly Rule[]=([
    {said:'“The keeper can hold the ball as long as they like.”',truth:'The current Laws give eight seconds. After that the other team gets a corner kick.'}],
   formats:[['7v7','The same rule. In the U.S. Soccer standards the 7v7 goalkeeper also may not punt or drop-kick, so passing with the feet starts early.'],['9v9 and 11v11','Law 12 in full.'],
    ['Futsal','Stricter. After playing the ball, the goalkeeper may not touch it again in their own half from a teammate’s deliberate pass until an opponent has touched it. The keeper also has only four seconds on the ball in their own half.']],
-  faq:[{q:'What is the back pass rule in soccer?',a:'It is the part of Law 12 that stops a goalkeeper from handling the ball when a teammate deliberately kicks it to them, or throws it to them from a throw-in. The keeper has to play that ball with the feet, like any other player.'},
+  faq:[{q:'What is the back pass rule in soccer?',a:'It is the part of Law 12 that stops a goalkeeper from handling the ball when a teammate deliberately kicks it to them, or throws it to them from a throw-in. The keeper has to play that ball with the feet, like any other player. Some people call it the passback rule or the back pass law, but it is one part of Law 12.'},
    {q:'Can a goalkeeper pick up a header from a teammate?',a:'Yes. The rule is only about a deliberate kick and a throw-in, so the keeper may pick up a ball that a teammate heads, chests or knees back. A trick to get around the rule, such as flicking the ball up to head it back, is a yellow card for that teammate and an indirect free kick.'},
    {q:'Is a back pass allowed in soccer?',a:'Yes. Passing back to your own goalkeeper is legal, and good teams do it all the time. Only the keeper handling a teammate’s deliberate kick or throw-in is against the rule.'},
    {q:'What happens if the keeper picks up a back pass?',a:'The other team gets an indirect free kick from the place where the goalkeeper handled the ball. If that place is inside the goal area, the kick is taken from the goal area line.'},
@@ -433,8 +433,8 @@ export const RULES:readonly Rule[]=([
   lessonIds:['learn7_receive','learn9_receive','next7_shotreaction'],cta:'learn7_receive',links:[L.ages,L.f7,L.ball]},
  // ---- futsal rules -------------------------------------------------------------------------------------------------------
  {slug:'futsal-rules',name:'Futsal rules',law:'FIFA Futsal Laws of the Game',lawPage:'general-modifications/',
-  title:'Futsal Rules vs Soccer Rules: The Key Differences',h1:'Futsal rules vs soccer rules: the key differences',
-  desc:'Futsal rules and regulations vs soccer, in plain words for kids and parents: the kick-in, the four-second rule, accumulated fouls, no offside and subs.',
+  title:'Futsal Rules vs Soccer Rules: Key Differences in a Table',h1:'Futsal rules vs soccer rules: the key differences',
+  desc:'Futsal rules vs soccer rules: a kick-in, not a throw-in, four seconds for restarts, no offside, a foul count and unlimited subs. In a table, for kids.',
   answer:'Futsal is five-a-side soccer on a hard court, and it has its own Laws from FIFA. The biggest differences are a kick-in instead of a throw-in, four seconds to take every restart, no offside, a count of each team’s fouls, and as many substitutions as a team likes, made on the fly.',
   scenes:[{format:'futsal',title:'A futsal kick-in',who:'A@0,58 P@30,78 F@40,30 A@82,60 G@50,5 !A@14,66 !F@42,70 !A@70,52 !G@50,95',ball:[1,59],zone:[0,49,24,69],passes:['2,58>38,32'],
    caption:'A gold ala takes a kick-in from the touchline, with the ball still and on the line. Opponents stay out of the shaded space, 5 m from the ball. The kick has to be taken within four seconds, and here it goes back to the fixo, marked F.'}],

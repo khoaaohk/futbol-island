@@ -449,7 +449,7 @@ const LEAGUE='Leagues can set their own details, so check your league’s rules.
 export const FORMAT_GUIDES:readonly FormatGuide[]=[
  {format:'7v7',path:formatGuidePath('7v7'),crumb:'7v7 formations',blurb:'2-3-1, 3-2-1, 2-2-2 and 3-1-2 compared, with diagrams',
   title:'7v7 Soccer Formations: 2-3-1, 3-2-1 and More, for Kids',
-  description:'The four common 7v7 soccer formations (2-3-1, 3-2-1, 2-2-2, 3-1-2) compared in one table, with diagrams and a plain answer on which one to use.',
+  description:'The four common 7v7 soccer formations, or 7-a-side football formations (2-3-1, 3-2-1, 2-2-2, 3-1-2), compared in one table, with diagrams for kids.',
   h1:'7v7 soccer formations',
   lead:'In 7v7 soccer each team has a goalkeeper and six outfield players. The four common formations are the 2-3-1, the 3-2-1, the 2-2-2 and the 3-1-2. For most teams of nine and ten-year-olds, the 2-3-1 is the best place to start.',
   basics:['Seven players: one goalkeeper and six outfield players.','In the United States, 7v7 is the game for players under 9 and under 10 (U9 and U10) in the U.S. Soccer standards.','Those standards add a build-out line. On a goal kick, or when the keeper holds the ball, the other team waits behind it until the ball is played.',
