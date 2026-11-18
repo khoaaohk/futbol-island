@@ -4,7 +4,7 @@ let n=0;const ok=(name,fn)=>{fn();n++;};
 ok('arcade room: a pin over the player shows while a cabinet hides them',()=>{const s=read('lib/arcade/arcadeRoomScene.ts');
  assert.match(s,/new T\.MeshBasicMaterial\(\{color:'#81fbed',depthTest:false/);assert.match(s,/playerPin\.renderOrder=999/);
  assert.match(s,/const hiddenBehindCabinet=\(px:number,pz:number\)=>/);assert.match(s,/crowd\.update\(dt,time,x,z\);updatePlayerPin\(time\);/);});
-ok('Kit Rush: the NEW BEST burst sits below the Best chip',()=>{assert.match(read('components/games/KitRushGame.module.css'),/\.stamp\{position:absolute;right:-16px;top:18px\}/);});
+ok('Kit Rush: the NEW BEST burst sits in the card flow, never over the Best chip',()=>{assert.match(read('components/games/KitRushGame.module.css'),/\.stamp\{position:static;/);});
 ok('binder: the full-back side tab fits ("Backs")',()=>{assert.match(read('components/CardCollection.tsx'),/fullback:'Backs'/);});
 ok('lineup format landings: the h1 follows the builder format (server text = the registry h1)',()=>{
  const ts=require('typescript');require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText,f);
