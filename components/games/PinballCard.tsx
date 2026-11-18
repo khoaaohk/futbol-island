@@ -44,6 +44,12 @@ export function PinballCard({phase,score,detail,takeaway,ended,fresh,best,unlock
  const pickTier=(n:1|2)=>{if(!(n===1?open.derby:open.final))return;const next={...prefs,tier:prefs.tier===n?0:n};setPrefs(next);savePinballPrefs(next);};
  const setNudge=(nudge:boolean)=>{const next={...prefs,nudge};setPrefs(next);savePinballPrefs(next);};
  const paused=phase==='paused',over=phase==='over';
+ // Nov 17 2026: the full-time card says what to beat next: points short of the best, then this division's three star goals
+ // (the bits soccerPinballTable sets: 1 = two goals in the division, 2 = its objective, 4 = a dugout move or a great block).
+ const runBest=tier?tiers[tier.id].best:best,runScore=Number(score.replace(/[^0-9]/g,''))||0,gap=runBest-runScore;
+ const near=over&&!fresh&&runBest>0&&gap>0?(gap<=Math.max(300,runBest*.15)?`So close! ${gap.toLocaleString('en-US')} pts short of your best`:`${gap.toLocaleString('en-US')} pts to beat your best ${runBest.toLocaleString('en-US')}`):null;
+ const goals:readonly (readonly [number,string])[]|null=over&&!tier?[[1,'Score 2 goals'],[2,division.objective],[4,'Win a dugout move']]:null;
+ const playBtn=<ComicButton variant="primary" wide className={styles.play} data-pinball-play disabled={pending} onClick={()=>onPlay({...prefs,level,tier:tier?.tier??0})}><Icon name="play" size={26}/>{paused?'Resume':over?'Play again':'Play'}</ComicButton>;
  return <section className={styles.card} data-pinball-card={phase} data-hard={!tier&&division.hard||undefined} data-tier={tier?.tier} aria-label="Futbol Pinball">
   <header className={styles.top}>
    <span className={styles.badge} data-fresh={over&&fresh||undefined}>{paused?'TIME OUT':over?(fresh?'NEW BEST!':'FULL TIME'):tier?tier.short:'FUTBOL PINBALL'}</span>
@@ -51,6 +57,11 @@ export function PinballCard({phase,score,detail,takeaway,ended,fresh,best,unlock
     :paused?<h3 className={`${styles.title} ${comicLettering}`}>Paused</h3>
     :<><h3 className={`${styles.title} ${comicLettering}`}>{tier?tier.name:division.name}</h3><p className={styles.line}>{tier?tier.objective:division.objective}</p></>}
   </header>
+  {over&&<>{near&&<p className={styles.near} data-pinball-near>{near}</p>}
+   <div className={styles.hsSlot} data-hs-slot/>
+   {playBtn}
+   {goals&&<div className={styles.goals} data-pinball-goals aria-label={`${division.name} stars`}><b>{starCount(stars[level-1]??0)===3?`${division.name}: all 3 stars`:`Next in ${division.name}`}</b>
+    {goals.map(([bit,text])=>{const got=((stars[level-1]??0)&bit)!==0;return <span key={bit} data-got={got||undefined}><i aria-hidden="true">★</i>{text}{got&&<span className={styles.sr}> (done)</span>}</span>;})}</div>}</>}
   {!paused&&<div className={styles.ladder} role="radiogroup" aria-label="Start division">
    {PINBALL_DIVISIONS.map((d,i)=>{const n=i+1,locked=n>top,on=n===level;
     return <button key={d.name} type="button" role="radio" aria-checked={on} aria-label={`Division ${n}: ${d.name}${d.hard?', hard':''}${locked?', locked':''}`} disabled={locked} data-on={on||undefined} data-hard={d.hard||undefined} data-division={n} onClick={()=>pick(n)}>
@@ -58,13 +69,13 @@ export function PinballCard({phase,score,detail,takeaway,ended,fresh,best,unlock
     </button>;})}
    <span className={styles.hardTag} aria-hidden="true">HARD</span>
   </div>}
-  {!paused&&<div className={styles.tiers} role="group" aria-label="Elite tiers">
+  {!paused&&!(over&&!open.derby&&!open.final)&&<div className={styles.tiers} role="group" aria-label="Elite tiers">
    {PINBALL_TIER_IDS.map(id=>{const t=PINBALL_TIERS[id],locked=!(id==='derby'?open.derby:open.final),on=tier?.id===id,b=tiers[id].best;
     return <button key={id} type="button" aria-pressed={on} disabled={locked} data-on={on||undefined} data-pinball-tier={t.tier} aria-label={`${t.name}: ${t.rules.join(', ')}${locked?`. Locked: ${t.unlock}`:''}`} onClick={()=>pickTier(t.tier)}>
      <strong>{locked&&<Lock/>}{t.name}</strong><span>{locked?t.unlock:b>0?`Best ${b.toLocaleString('en-US')}`:`Points ×${t.mult}`}</span>
     </button>;})}
   </div>}
-  <ComicButton variant="primary" wide className={styles.play} data-pinball-play disabled={pending} onClick={()=>onPlay({...prefs,level,tier:tier?.tier??0})}><Icon name="play" size={26}/>{paused?'Resume':over?'Play again':'Play'}</ComicButton>
+  {!over&&playBtn}
   <div className={styles.row}>
    {!paused&&<button type="button" aria-label="Leaderboard" onClick={onBoards}><Icon name="chart" size={22}/></button>}
    <button type="button" aria-label="Options" aria-expanded={options} data-pinball-options onClick={()=>setOptions(v=>!v)}><Icon name="settings" size={22}/></button>

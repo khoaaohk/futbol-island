@@ -66,3 +66,15 @@
 @keyframes pbBest{0%,100%{transform:scale(1)}50%{transform:scale(1.1) rotate(-2deg)}}
 @media(max-height:520px){.tiers{margin-top:6px}.card .tiers button{min-height:48px;padding:4px 8px}}
 @media(prefers-reduced-motion:reduce){.badge[data-fresh],.score[data-fresh]{animation:none}}
+/* Nov 17 2026: full time says what to beat next (the locked elite tiers wait for the start card). A red near line (points short of the best), the shared high-score slot, Play again,
+   then the picked division's three star goals as a printed checklist (earned stars inked sun, open ones paper). */
+.near{margin:10px 0 0;padding:0;color:var(--cm-red);font-size:15px;font-weight:800;line-height:1.25;text-align:center}
+.hsSlot{margin:10px 0 0}.hsSlot:empty{display:none}
+.goals{display:grid;gap:4px;margin:12px 0 0;padding:8px 10px;border:var(--cm-line-thin) solid var(--cm-ink);background:#fff;text-align:left}
+.goals b{font:italic 900 13px/1.1 var(--cm-title);text-transform:uppercase;color:var(--cm-red)}
+.goals>span{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;line-height:1.25;color:var(--cm-ink)}
+.goals i{font-style:normal;font-size:17px;line-height:1;color:#c9bca3}
+.goals [data-got]{color:var(--cm-muted)}.goals [data-got] i{color:var(--cm-orange)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(max-height:700px){.card[data-pinball-card=over] .ladder{margin-top:10px}.card[data-pinball-card=over] .tip{display:none}.goals{padding:6px 10px}.goals>span{font-size:13px}}
+@media(max-height:520px){.goals{display:none}}

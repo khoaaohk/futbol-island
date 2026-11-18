@@ -19,4 +19,7 @@ assert.ok(show('goal','GOAL! +1,500')&&show('goal','REBOUND GOAL! +900')&&show('
 for(const [k,t] of [['goal','PERFECT READ +60'],['goal','FULL TIME +500'],['lit','SWITCH FEET! 3× +75'],['lit','Top corner!'],['warn','TOO EARLY'],['score','+25'],['save','PARRIED!'],['rescue','BALL SAVED']])assert.ok(!show(k,t),`hidden: ${t}`);
 // 5. Start / end cards untouched: PinballCard still renders and the full-time takeaway still flows to it.
 assert.match(tsx,/<PinballCard phase=\{phase==='playing'\?'ready':phase\}[^>]*takeaway=\{phase==='over'\?hud\.message:undefined\}/);
+// 6. Nov 17 2026: full time says what to beat next: near line, the shared high-score slot right under it, Play again, then the division's star goals.
+assert.match(card,/data-pinball-near>\{near\}<\/p>\}\n\s*<div className=\{styles\.hsSlot\} data-hs-slot\/>\n\s*\{playBtn\}/,'near line, high-score slot, Play again in that order');
+assert.match(card,/\[\[1,'Score 2 goals'\],\[2,division\.objective\],\[4,'Win a dugout move'\]\]/,'star goals follow the soccerPinballTable bits');
 console.log('PASS pinball clean table: no tip line, no tutorial hint, only GOAL! +points pops, pads and cards kept');
