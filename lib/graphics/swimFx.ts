@@ -55,11 +55,13 @@ export function createSwimFx(u:SwimFxUniforms){
    const target=on?Math.max(0,Math.min(1,amp)):0;if(on){cx0=x;cz0=z;}
    cAmp=target>cAmp?Math.min(target,cAmp+dt*3):Math.max(target,cAmp-dt*3);cOn=cAmp>.004;
   },
-  /** Ages the rings and writes the uniforms. Returns how many rings are live. */
-  update(dt:number){
+  /** Ages the rings and writes the uniforms. Returns how many rings are live. `focus` (the swimming player): rings centred more than
+   *  `focus.r` m from it still age but are not drawn, so a swimming islander 20 m away cannot stretch the one bounds circle (and
+   *  the per-pixel ring loop) over most of the visible sea (Nov 17 2026 review). */
+  update(dt:number,focus:{x:number;z:number;r:number}|null=null){
    let minX=Infinity,maxX=-Infinity,minZ=Infinity,maxZ=-Infinity;live=0;
    for(let i=0;i<N;i++){const v=u.uSwimRing.value[i];if(rAge[i]>=rLife[i]){if(wasLive)v.set(0,0,0,0);continue;}
-    rAge[i]+=dt;if(rAge[i]>=rLife[i]){v.set(0,0,0,0);continue;}
+    rAge[i]+=dt;if(rAge[i]>=rLife[i]||focus&&Math.abs(rx[i]-focus.x)+Math.abs(rz[i]-focus.z)>focus.r){v.set(0,0,0,0);continue;}
     const o=swimRingAt(rAge[i]/rLife[i],rMax[i],rAmp[i],rStill[i],tmp);v.set(rx[i],rz[i],o.r,o.a);live++;
     const e=o.r+SWIM_FX.width+.2;if(rx[i]-e<minX)minX=rx[i]-e;if(rx[i]+e>maxX)maxX=rx[i]+e;if(rz[i]-e<minZ)minZ=rz[i]-e;if(rz[i]+e>maxZ)maxZ=rz[i]+e;}
    if(cOn){u.uSwimRing.value[C].set(cx0,cz0,SWIM_FX.collarR,cAmp*SWIM_FX.collarAmp);const e=SWIM_FX.collarR+SWIM_FX.width+.2;
