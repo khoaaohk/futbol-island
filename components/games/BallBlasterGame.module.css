@@ -26,7 +26,7 @@
 .pts{--cm-numeral-size:30px;display:block}
 .word .pts{color:var(--cm-sun);-webkit-text-stroke:6px var(--cm-ink);paint-order:stroke fill}
 .word[data-teach]{left:50%!important;top:26%!important}
-@keyframes bbWord{0%{scale:.4;opacity:0}18%{scale:1.12;opacity:1}30%{scale:1}75%{opacity:1;translate:-50% -90%}100%{opacity:0;translate:-50% -110%}}
+@keyframes bbWord{0%{scale:.4;opacity:0}10%{scale:1.18;opacity:1}22%{scale:1}86%{opacity:1;translate:-50% -80%}100%{opacity:0;translate:-50% -96%}}
 @keyframes bbPop{0%{scale:.4}100%{scale:1}}
 
 /* cards */
@@ -85,11 +85,16 @@
 .rack i[data-off]{background:#c9bfae;opacity:.55}
 .rack[data-empty]{animation:bbShake .3s both}
 .power{padding:3px 8px 2px;border:2px solid var(--cm-ink);background:var(--cm-sun);font:italic 900 13px/1 var(--cm-title);rotate:-2deg;margin-left:6px;animation:bbPop .32s cubic-bezier(.2,1.6,.4,1) both}
-.hint{position:absolute;z-index:3;left:50%;bottom:calc(64px + env(safe-area-inset-bottom,0px));translate:-50% 0;max-width:calc(100% - 32px);padding:8px 12px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);font:800 15px/1.25 var(--cm-ui);text-align:center;pointer-events:none;animation:bbPop .4s cubic-bezier(.2,1.6,.4,1) both}
+.hint{position:absolute;z-index:3;left:50%;bottom:calc(66px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));translate:-50% 0;max-width:calc(100% - 32px);padding:5px 10px 4px;border:2px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);font:800 13px/1.2 var(--cm-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;animation:bbPop .4s cubic-bezier(.2,1.6,.4,1) both}
 .wave{position:absolute;z-index:3;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));padding:5px 9px 4px;border:3px solid var(--cm-ink);background:var(--cm-ink);color:var(--cm-paper);font:italic 900 15px/1 var(--cm-title);box-shadow:4px 4px 0 #0005;pointer-events:none}
-.combo{padding:3px 7px 2px;border:2px solid var(--cm-ink);background:var(--cm-red);color:var(--cm-paper);font:italic 900 13px/1 var(--cm-title);rotate:-3deg;animation:bbPop .32s cubic-bezier(.2,1.6,.4,1) both}
+.combo{padding:3px 7px 2px;border:2px solid var(--cm-ink);background:var(--cm-red);color:var(--cm-paper);font:italic 900 13px/1 var(--cm-title);rotate:-3deg;animation:bbPop .32s cubic-bezier(.2,1.6,.4,1) both;position:relative}
 .charge{position:absolute;z-index:3;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));translate:-50% 0;width:min(150px,36%);height:14px;border:3px solid var(--cm-ink);background:var(--cm-paper);pointer-events:none;overflow:hidden}
 .charge b{position:absolute;inset:0;transform-origin:left;background:var(--cm-sun)}
 .charge[data-full] b{background:var(--cm-red)}
+/* the combo meter: the chip grows with the chain, a bar under it drains over the combo window */
+.combo[data-hot]{background:var(--cm-sun);color:var(--cm-ink)}
+.combo i{position:absolute;left:-2px;right:-2px;bottom:-7px;height:5px;border:2px solid var(--cm-ink);background:var(--cm-sun);transform-origin:left;animation:bbDrain 1.5s linear both}
+.combo[data-hot] i{background:var(--cm-red)}
+@keyframes bbDrain{to{transform:scaleX(0)}}
 @keyframes bbShake{0%,100%{translate:0}25%{translate:-5px}75%{translate:5px}}
-@media (prefers-reduced-motion:reduce){.rack[data-empty],.power,.combo,.hint{animation:none}}
+@media (prefers-reduced-motion:reduce){.rack[data-empty],.power,.combo,.hint{animation:none}.combo i{animation-duration:1.5s!important}}

@@ -28,22 +28,34 @@ Nothing alive is hurt: robots, cone-bots, practice dummies, drones and props bre
 - Comic print house style (lib/arcade/comic): banded light, violet halftone shadows, ink hulls baked into every prop.
 - Palette: sky #8fd4ee, grass #4fb85c / #5fc76a mown bands, line paper #fff3d6, ink #231a2e, kit red #f0452e, teal #19b5a5,
   sun #ffc83a, barrel blue #2f8fd8, crate wood #c98a4b.
-- World: a small stadium: painted crowd (canvas), roofs, four floodlight pylons, advert boards ("PICK YOUR TARGET", "STRIKE
-  THROUGH THE BALL"), flat comic sky with inked clouds, our goal behind the kicker. Camera high behind the goal, 50-54° fov.
-- Machines are toys: cream robot with a red chest plate and a wind-up key, orange cone-bots with googly eyes, yellow dummies on
-  a spring, teal drones, blue-shield bots, pink dodgers, grey armour with yellow stripes, a red-and-white Mega Mannequin.
-- Hits: instance flash + squash, comic starburst, pre-made chunks (instanced, coloured per material), dust puffs, ball speed
-  dots, gentle shake (none with reduced motion), slow-mo and a camera pull on a boss knockout.
-- HUD: shared top bar (score), a paper strip (hearts, best, combo), bottom-left ball rack + power-up chip, bottom-right wave tag,
-  a charge bar while holding, DOM comic bursts placed at the projected hit point.
+- World (polish pass, Nov 17): a small stadium that turns day / sunset / night every three waves (sky canvas repainted, sun, hemi
+  and fog retinted, floodlight glow cards brighter at night): six-tier stands with a two-frame crowd that cheers harder after big
+  breaks, a sponsor banner under the roof, invented island sponsors on the boards (Palm Pop Soda, Reef Radio 98, Mango Moo Milk...),
+  four lattice floodlight towers, a goal and net at the far end, an island skyline with palms painted into the sky, mown checks with
+  blade flecks and darker turf outside the boards so the lane reads as the stage. Camera low and close behind the kicker (phone
+  5.3 m up, 60° fov; desktop stage 6 m, 40-50°), so machines loom as they come; a short push on power shots.
+- Machines are toys drawn 1.3x their rules size, each its own silhouette and colour: cream robot (red chest plate, grille mouth,
+  antenna, mitts), orange cone-bots with waving arms, yellow dummies on a coil spring, teal drones with spinning rotors, shield bots
+  peeking over a riot shield, pink dodgers on one wheel, grey armour with hazard stripes and angry brows, the Mega Mannequin.
+  Googly eyes (one instanced mesh) follow the ball in flight, blink, and pop on a hit; wind-up keys turn on their backs.
+  Hit: white flash, squash and a tilt back, eyes pop. Break: chunky inked pieces in the machine's colours plus springs and bolts,
+  ink-rimmed dust puffs, a comic star kept at a readable size, crowd hype. Blob shadows under machines and props.
+- Ball: ink outline baked into the ball geometry, stretch along its speed, a comic streak trail (fire ball burns red and gold,
+  giant ball gold); turf puffs on hard bounces. Hit-stop (60-170 ms, the rules clock pauses) on boss, x3+ combo and trick breaks.
+- HUD: shared top bar (score), a paper strip (hearts, best, combo chip that grows with the chain and a meter draining over the combo
+  window), bottom-left ball rack + power-up chip, bottom-right wave tag, a charge bar while holding, DOM comic bursts placed at the
+  projected hit point (fully opaque, kept inside the stage, stacked upward so they never cover each other), a one-line coach that
+  goes after the second kick.
 
 ## Sound (lib/arcade/ballblaster/audio.ts)
 Leather boot thump (deeper with charge), curl whoosh, tin clank, robot wind-down spring, crate splinters, glass tinkle, hollow
 cone clonk, wet barrel pop, shield tonk, a marimba that climbs with the combo, a ref whistle when a machine gets through.
 
 ## Heat
-One canvas made per mount, low-power context, pixel ratio 1.5 on phones (2 desktop), one shadow-casting sun, no post pass.
-Instanced: one draw per machine / prop kind, balls, pieces (220), dust (48), trail (90), aim dots (40). Loop only while playing,
-at most 60 draws a second (a deviation from the HANDOFF's 30 fps cap: the aim needs it; the cap is one constant in the shell,
-`now-drawn.current>=15.5`). Measured in headless Chrome (swiftshader) at 390x844: about 95-102 draw calls (shadow pass included),
-13-15k triangles.
+One canvas made per mount, low-power context, pixel ratio 1.5 on phones (2 desktop), one shadow-casting sun (only the kicker, the
+balls and the boss cast; machines and props use blob shadows), no post pass. The stadium is baked into a few merged meshes; one
+draw per machine kind, one each for eyes, keys, rotors, balls, chunks, springs, dust, trail, aim dots; empty instanced meshes are
+hidden and live particles are packed so a pool costs only what is alive. Frame cap (HANDOFF rule): 30 draws a second on phones
+(`frameCapSlot`, pointer: coarse), 60 on desktop like ArcadeGame3D, and a press or a kick draws on the next vsync.
+Measured headless Chrome (swiftshader) 390x844 in play, waves 2-5: 20-27 draw calls median (max 36), 8-11k triangles median
+(max 16k). Before the polish pass: 100 / 103 draw calls, 15.7k / 18.2k triangles.

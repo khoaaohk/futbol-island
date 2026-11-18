@@ -21,6 +21,7 @@ import styles from './BallBlasterGame.module.css';
 import {createBallBlaster,ballblasterDailySeed,medalFor,multFor,BB,K,MEDAL_NAMES,P_WORD,type BallBlaster,type BlastEvent} from '@/lib/arcade/ballblaster/core';
 import {createBallblasterView,type BallblasterView} from '@/lib/arcade/ballblaster/view';
 import {createBallblasterAudio,type BallblasterAudio} from '@/lib/arcade/ballblaster/audio';
+import {frameCapSlot} from '@/lib/town/frameCap';
 import {readBallblasterSave,writeBallblasterSave,settleBallblaster,nearMissLine,coachLine,liveStreak,emptyBallblasterSave,type BallblasterSave,type BallblasterSettled} from '@/lib/arcade/ballblaster/save';
 import {arcadeFeedback} from '@/lib/arcade/arcadeFeedback';
 import {useArcadeEntry} from '@/lib/arcade/useArcadeEntry';
@@ -67,7 +68,7 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
  const entry=useArcadeEntry('ballblaster');
  const stage=useRef<HTMLDivElement>(null),focusEl=useRef<HTMLDivElement>(null);
  const game=useRef<BallBlaster|null>(null),view=useRef<BallblasterView|null>(null),audio=useRef<BallblasterAudio|null>(null);
- const raf=useRef(0),last=useRef(0),drawn=useRef(0),endAt=useRef(0),wordId=useRef(0),lastLeak=useRef(0),run=useRef({id:'',daily:false,day:'',done:true}),shots=useRef(0);
+ const raf=useRef(0),last=useRef(0),slot=useRef(0),urgent=useRef(false),stopUntil=useRef(0),frameMs=useRef(1000/30),runShots=useRef(0),endAt=useRef(0),wordId=useRef(0),lastLeak=useRef(0),run=useRef({id:'',daily:false,day:'',done:true}),shots=useRef(0);
  /** the aim being held: screen point (already lifted on touch), when it started, the recent path (for the flick) */
  const hold=useRef<{id:number;x:number;y:number;t:number;touch:boolean;path:{t:number;x:number;y:number}[];key:boolean}|null>(null);
  const keys=useRef({left:false,right:false,up:false,down:false,q:false,e:false}),kAim=useRef({x:0,z:-18});
@@ -78,9 +79,11 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
  useEffect(()=>{setSave(readBallblasterSave());setToday(localPlayDay(Date.now()));},[]);
  /* a coaching hint stays a few seconds; the first one ('Drag to aim') stays until the first kick */
  useEffect(()=>{if(!hint||hint.startsWith('Drag'))return;const t=setTimeout(()=>setHint(''),6500);return()=>clearTimeout(t);},[hint]);
- const kick=useCallback(()=>{if(!raf.current&&phaseRef.current==='playing'){last.current=0;raf.current=requestAnimationFrame(t=>frameRef.current(t));}},[]);
+ const kick=useCallback(()=>{if(!raf.current&&phaseRef.current==='playing'){last.current=0;slot.current=0;raf.current=requestAnimationFrame(t=>frameRef.current(t));}},[]);
  const say=useCallback((text:string,pts:number,tone:Word['tone'],teach=false,at?:{x:number;y:number})=>{const w:Word={id:++wordId.current,text,pts,tone,teach,x:at?.x??-1,y:at?.y??-1};
-  setWords(list=>[...list.filter(x=>!(teach&&x.teach)).slice(-3),w]);},[]);
+  // a word never lands on another: it climbs above any burst already there
+  setWords(list=>{const keep=list.filter(x=>!(teach&&x.teach)).slice(-3);if(w.x>=0)for(let k=0;k<4;k++){const hit=keep.find(o=>!o.teach&&o.x>=0&&Math.abs(o.x-w.x)<150&&Math.abs(o.y-w.y)<88);if(!hit)break;w.y=hit.y-92;}
+   if(w.x>=0)w.y=Math.max(150,w.y);return [...keep,w];});},[]);
 
  /* ---- the run's end: save, coins, board (once per run) ---- */
  const finish=useCallback(()=>{
@@ -97,23 +100,25 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
 
  /* ---- one rules event: sound, haptics, words ---- */
  const onEvent=useCallback((e:BlastEvent)=>{
-  const a=audio.current,v=view.current;v?.onEvent(e);const at=()=>{const p=v?.project(e.x,e.y+.6,e.z);return p&&p.on?{x:p.x,y:p.y}:undefined;};
+  const a=audio.current,v=view.current;v?.onEvent(e);const at=()=>{const p=v?.project(e.x,e.y+.6,e.z),w=stage.current?.clientWidth??390;return p&&p.on?{x:Math.max(96,Math.min(w-96,p.x)),y:p.y}:undefined;};
   switch(e.type){
    case 'shot':a?.kick(e.a,e.b);break;
    case 'bounce':if(e.kind===1)a?.board();else a?.bounce(e.a<5);break;
    case 'hit':a?.clank();if(e.points>0)say('BONK!',e.points,'paper',false,at());break;
    case 'block':a?.block();say('TONK!',0,'teal',false,at());break;
    case 'break':a?.smash(e.kind,e.a);arcadeFeedback(null,e.kind===K.boss?'goal':'combo');
+    // hit-stop: the world holds for a beat on a big break (the rules clock pauses with it)
+    if(e.kind===K.boss||e.a>=3||e.kind===K.board)stopUntil.current=performance.now()+(e.kind===K.boss?170:e.a>=5?90:60);
     {const word=e.kind===K.boss?'KNOCKOUT!':e.kind===K.glass?'TINKLE!':e.kind===K.barrel?'SPLOOSH!':e.kind<10?SMASH[(e.points+e.a)%SMASH.length]:CRACK[(e.points+e.a)%CRACK.length];
      say(e.a>=3&&e.kind!==K.boss?`${word} x${String(multFor(e.a)).replace(/\.?0+$/,'')}`:word,e.points,e.kind===K.boss?'red':e.b?'sun':e.kind<10?'sun':'paper',false,at());}break;
    case 'boom':a?.boom();arcadeFeedback(null,'slam');break;
    case 'topple':if(e.a===0)a?.topple();else say('TIMBER!',0,'paper',false,at());break;
-   case 'trick':a?.trick(e.a);say(`${e.word} ${e.a} HITS`,e.points,'red',false,at());break;
+   case 'trick':a?.trick(e.a);stopUntil.current=performance.now()+80;say(`${e.word} ${e.a} HITS`,e.points,'red',false,at());break;
    case 'power':a?.power();say(e.word,0,'teal',true);break;
    case 'dodge':a?.dodge();break;
    case 'leak':a?.leak();arcadeFeedback(null,'slam');lastLeak.current=e.kind;say(e.kind===K.boss?'IT GOT THROUGH! BACK IT GOES':'IT GOT THROUGH!',0,'paper',true);break;
    case 'empty':a?.empty();setEmpty(n=>n+1);break;
-   case 'wave':a?.wave(e.b===1);say(e.word,0,e.b===1?'red':'sun',true);if(e.a===2&&shots.current>0)setHint('Hold longer for a harder shot. Flick sideways as you let go to curl.');else if(e.a===3)setHint('');break;
+   case 'wave':a?.wave(e.b===1);say(e.word,0,e.b===1?'red':'sun',true);break;
    case 'new':if(e.a>1)setTimeout(()=>say(e.word,0,'teal',true),900);break;
    case 'clear':a?.clear();say(`WAVE CLEAR! ${e.b}% ON TARGET`,e.points,'sun',true);break;
    case 'boss':say(e.word,0,'red',true);break;
@@ -126,23 +131,28 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
   if(p.lock){const e=g.state.ents.find(x=>x.on&&x.id===p.lock);if(e&&e.speed>0){const L=[0,0,0,0,0,0,0,0];g.launch(p.x,p.y,p.z,power,curl,L);const T=Math.hypot(p.x-BB.kx,p.z-BB.kz)/(Math.hypot(L[3],L[5])||1);
    p.z=Math.min(-1.5,p.z+e.speed*(g.state.slowT>0?.4:1)*T*.85);}}
   return p;},[]);
+ /** the one-line coach: after the first kick it teaches power and curl, after the second it goes */
+ const shotHint=useCallback(()=>{shots.current++;const n=++runShots.current;setHint(h=>!h||n>=2?'':'Hold longer for power. Flick sideways to curl.');},[]);
  const powerAt=(t0:number,now:number)=>Math.max(0,Math.min(1,.45+.55*(now-t0-90)/650));
  const release=useCallback((x:number,y:number,curl:number)=>{const g=game.current,h=hold.current;if(!g||!h)return;hold.current=null;view.current?.setAim(null);setCh(-1);
-  const power=powerAt(h.t,performance.now()),p=aimFrom(x,y,power,curl);if(!p)return;if(g.shoot(p.x,p.y,p.z,power,curl)){shots.current++;setHint(s=>s.startsWith('Drag')?'':s);}},[aimFrom]);
+  const power=powerAt(h.t,performance.now()),p=aimFrom(x,y,power,curl);if(!p)return;urgent.current=true;if(g.shoot(p.x,p.y,p.z,power,curl))shotHint();},[aimFrom,shotHint]);
 
- /* ---- the loop: fixed steps in the core, at most 60 draws a second ---- */
+ /* ---- the loop: fixed steps in the core; 30 draws a second on phones (HANDOFF's cap), 60 on desktop like the other 3D cabinets;
+  a press or a kick draws on the very next vsync so the ring and the kick never wait for a slot ---- */
  useEffect(()=>{frameRef.current=(now:number)=>{
   raf.current=0;const g=game.current,v=view.current;if(phaseRef.current!=='playing'||!g||!v)return;
+  const next=urgent.current?now:frameCapSlot(now,slot.current,frameMs.current);urgent.current=false;
+  if(next<0){raf.current=requestAnimationFrame(t=>frameRef.current(t));return;}slot.current=next;
   const dt=last.current?Math.min(.1,(now-last.current)/1000):1/60;last.current=now;
   // keyboard aim
   const k=keys.current,ka=kAim.current;if(k.left||k.right||k.up||k.down){ka.x=Math.max(-8,Math.min(8,ka.x+((k.right?1:0)-(k.left?1:0))*7*dt));ka.z=Math.max(-46,Math.min(-3,ka.z+((k.down?1:0)-(k.up?1:0))*14*dt));}
-  g.advance(dt);g.drain(onEvent);
+  const frozen=now<stopUntil.current;if(!frozen){g.advance(dt);g.drain(onEvent);}
   const h=hold.current;
   if(h){const pw=powerAt(h.t,now),curl=h.key?(k.e?1:k.q?-1:0):0;
    if(h.key)v.setAim({x:ka.x,y:.6,z:ka.z,power:pw,curl,lock:0});else{const p=aimFrom(h.x,h.y,pw,0);if(p)v.setAim({...p,power:pw,curl:0});}
    if(Math.abs(pw-chargeRef.current)>.04)setCh(pw);}
   else if(keys.current.left||keys.current.right||keys.current.up||keys.current.down)v.setAim({x:ka.x,y:.6,z:ka.z,power:.45,curl:0,lock:0});
-  if(now-drawn.current>=15.5){drawn.current=now;v.render(g,now/1000);}
+  v.render(g,now/1000,frozen);
   const s=g.state,hh=hudRef.current;
   if(now-hudAt.current>100&&(hh.score!==s.score||hh.hearts!==s.hearts||hh.rack!==s.rack||hh.wave!==s.wave||hh.combo!==s.combo||hh.power!==s.power||hh.powerN!==s.powerN||hh.slow!==(s.slowT>0))){
    hudAt.current=now;const n:Hud={score:s.score,hearts:s.hearts,rack:s.rack,wave:s.wave,combo:s.t-s.comboT<=BB.comboWin?s.combo:0,power:s.power,powerN:s.powerN,slow:s.slowT>0};hudRef.current=n;setHud(n);}
@@ -156,7 +166,7 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
   (audio.current??=createBallblasterAudio()).unlock();
   const id=await entry.enter();if(!id)return;
   const day=localPlayDay(Date.now()),seed=daily?ballblasterDailySeed(day):1+Math.floor(Math.random()*2_000_000_000);
-  game.current=createBallBlaster({seed,daily});run.current={id,daily,day,done:false};lastLeak.current=0;
+  game.current=createBallBlaster({seed,daily});run.current={id,daily,day,done:false};lastLeak.current=0;runShots.current=0;stopUntil.current=0;
   if(!daily||readBallblasterSave().daily.day!==day||!readBallblasterSave().daily.counted)beginBoardSession('ballblaster');
   view.current?.reset();endAt.current=0;hold.current=null;kAim.current={x:0,z:-18};setResult(null);setBoard(null);setWords([]);setToday(day);setCh(-1);
   setHint(readBallblasterSave().plays<3||shots.current===0?'Drag to aim. Let go to kick.':'');
@@ -173,7 +183,8 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
  useEffect(()=>{
   const el=stage.current;if(!el)return;
   reduced.current=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let v:BallblasterView;try{v=view.current=createBallblasterView(el,{reduced:reduced.current,mobile:matchMedia('(pointer: coarse)').matches});}catch{return;}
+  const mobile=matchMedia('(pointer: coarse)').matches;frameMs.current=1000/(mobile?30:60);
+  let v:BallblasterView;try{v=view.current=createBallblasterView(el,{reduced:reduced.current,mobile});}catch{return;}
   const fit=()=>{const r=el.getBoundingClientRect(),vv=window.visualViewport,cut=Math.max(0,Math.round(r.bottom-(vv?vv.offsetTop+vv.height:window.innerHeight)));el.style.setProperty('--bb-cut',`${cut}px`);
    v.resize(Math.max(1,r.width),Math.max(1,r.height),window.devicePixelRatio||1);const g=game.current;if(g&&phaseRef.current!=='menu')v.render(g,performance.now()/1000);};
   fit();const ro=new ResizeObserver(fit);ro.observe(el);window.visualViewport?.addEventListener('resize',fit);
@@ -183,7 +194,7 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
   const down=(e:PointerEvent)=>{if(phaseRef.current!=='playing'||(e.pointerType==='mouse'&&e.button!==0)||(e.target instanceof Element&&e.target.closest('button')))return;
    const g=game.current;if(!g)return;e.preventDefault();audio.current?.unlock();if(g.state.over){endAt.current=1;return;}
    const touch=e.pointerType!=='mouse',p=local(e,touch),now=performance.now();try{el.setPointerCapture(e.pointerId);}catch{/* fine without */}
-   hold.current={id:e.pointerId,x:p.x,y:p.y,t:now,touch,path:[{t:now,x:p.x,y:p.y}],key:false};setCh(powerAt(now,now));};
+   hold.current={id:e.pointerId,x:p.x,y:p.y,t:now,touch,path:[{t:now,x:p.x,y:p.y}],key:false};urgent.current=true;setCh(powerAt(now,now));};
   const move=(e:PointerEvent)=>{const h=hold.current;if(!h||h.key||e.pointerId!==h.id)return;e.preventDefault();const p=local(e,h.touch),now=performance.now();h.x=p.x;h.y=p.y;h.path.push({t:now,x:p.x,y:p.y});while(h.path.length>2&&now-h.path[0].t>260)h.path.shift();};
   const up=(e:PointerEvent)=>{const h=hold.current;if(!h||h.key||e.pointerId!==h.id)return;try{el.releasePointerCapture(e.pointerId);}catch{/* gone */}
    if(e.type==='pointercancel'){hold.current=null;v.setAim(null);setCh(-1);return;}
@@ -212,10 +223,10 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
    const m=map[e.code];if(m){e.preventDefault();keys.current[m]=true;return;}
    if(e.code==='Space'||e.code==='Enter'){e.preventDefault();if(!e.repeat&&!hold.current)hold.current={id:-1,x:0,y:0,t:performance.now(),touch:false,path:[],key:true};}};
   const keyUp=(e:KeyboardEvent)=>{const m=map[e.code];if(m){keys.current[m]=false;return;}const g=game.current,h=hold.current;if(!g||phaseRef.current!=='playing'||!h||!h.key)return;
-   if(e.code==='Space'||e.code==='Enter'){hold.current=null;view.current?.setAim(null);setCh(-1);const k=keys.current,power=powerAt(h.t,performance.now()),ka=kAim.current;if(g.shoot(ka.x,.6,ka.z,power,k.e?1:k.q?-1:0)){shots.current++;setHint('');}}};
+   if(e.code==='Space'||e.code==='Enter'){hold.current=null;view.current?.setAim(null);setCh(-1);const k=keys.current,power=powerAt(h.t,performance.now()),ka=kAim.current;urgent.current=true;if(g.shoot(ka.x,.6,ka.z,power,k.e?1:k.q?-1:0))shotHint();}};
   window.addEventListener('blur',away);document.addEventListener('visibilitychange',hidden);window.addEventListener('keydown',key);window.addEventListener('keyup',keyUp);
   return()=>{window.removeEventListener('blur',away);document.removeEventListener('visibilitychange',hidden);window.removeEventListener('keydown',key);window.removeEventListener('keyup',keyUp);};
- },[pause,resume]);
+ },[pause,resume,shotHint]);
 
  const streak=today?liveStreak(save,today):0,dailyToday=save.daily.day===today?save.daily:null,busy=entry.pending,live=phase==='playing'||phase==='paused';
  const tap=()=>{(audio.current??=createBallblasterAudio()).unlock();audio.current.tap();};
@@ -235,7 +246,7 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
    {live&&<div className={styles.strip} data-ballblaster-hud aria-live="polite" aria-label={`${hud.hearts} hearts. Wave ${hud.wave}.`}>
     <Hearts n={hud.hearts}/>
     <span className={styles.stripItem} data-ballblaster-best><small>{gap>0?'To best':'Best'}</small>{gap>0?gap:Math.max(best,hud.score)}</span>
-    {hud.combo>=2&&<span className={styles.combo} key={hud.combo} data-ballblaster-combo={hud.combo}>x{String(multFor(hud.combo)).replace(/\.?0+$/,'')}</span>}
+    {hud.combo>=2&&<span className={styles.combo} key={hud.combo} data-ballblaster-combo={hud.combo} data-hot={hud.combo>=5||undefined} style={{fontSize:13+Math.min(7,hud.combo-2)}}>x{String(multFor(hud.combo)).replace(/\.?0+$/,'')}<i aria-hidden="true" style={{animationDuration:`${BB.comboWin}s`}}/></span>}
    </div>}
    {live&&<div className={styles.rack} data-ballblaster-rack={hud.rack} data-empty={empty%2===1||undefined} key={`rack${empty}`} aria-hidden="true">
     {Array.from({length:BB.rack},(_,i)=><i key={i} data-off={i>=hud.rack||undefined}/>)}
