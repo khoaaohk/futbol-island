@@ -20,7 +20,10 @@ import {scene,type RawScene,type Scene} from './scenes';
  *    their plain meaning only. No word origins, no records, no statistics and no named players: none of that was verified.
  */
 export type TermPage={slug:string;path:string;name:string;also?:string;title:string;h1:string;desc:string;short:string;answer:string;scene:Scene;picture:string;how:string[];howTitle:string;
- mistakes:string[];formats:string;faq:Faq[];lessons:SiteLesson[];cta?:SiteLesson;related:string[]};
+ mistakes:string[];formats:string;faq:Faq[];lessons:SiteLesson[];cta?:SiteLesson;related:string[];
+ /** Optional (card pages, Nov 18 2026): pages outside the glossary linked under the answer and in "Keep reading"; the key-fact
+  *  label/value for the `how` list when it is not a list of steps; the quiz question (and its explanation) for how[0]. */
+ links?:{path:string;name:string;line:string}[];howFact?:{label:string;value:string};quizHow?:{q:string;why:string}};
 export type GlossaryEntry={term:string;id:string;def:string;to?:string;toName?:string};
 export const TERMS_HUB_PATH='/learn/soccer-terms';
 export const termPath=(slug:string)=>`${TERMS_HUB_PATH}/${slug}`;
@@ -308,6 +311,64 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'Do penalty kicks count for a hat-trick?',a:'Yes. A goal from a penalty kick during the game is a goal like any other.'},
    {q:'What is a brace in soccer?',a:'Two goals by one player in one game.'}],
   lessonIds:['next7_shotreaction','learnf_farpost','gap11_runoncue'],related:['cross','cutback','through-ball','clean-sheet']},
+
+ // ---- the two cards (Nov 18 2026, Search Console: "yellow card soccer", "what is a yellow card in soccer", "red card in soccer").
+ // One question per page; /learn/soccer-rules/yellow-and-red-cards stays the hub for "yellow and red cards" and links both.
+ // Facts from IFAB Law 12 section 4 and Law 3, as checked for that page (sources in lib/site/cardRules.ts). Not stated: how many
+ // games a red card costs, card rules of any one youth league, futsal's rule after a red card (none of these is universal).
+ {slug:'yellow-card',name:'Yellow Card',also:'caution, booking',title:'What Is a Yellow Card in Soccer? Meaning and Rules',
+  short:'A warning from the referee to a player who broke the rules or behaved badly. The player keeps playing, but two in one game make a red card.',
+  desc:'What is a yellow card in soccer (football)? A warning from the referee. What it is shown for, what happens next, and how cards work in kids’ soccer.',
+  answer:'A yellow card in soccer is a warning, also called a caution, that the referee shows a player for breaking the rules or for bad behavior. The player stays on the field and keeps playing, but a second yellow card in the same game becomes a red card.',
+  scene:{title:'Not backing up at a free kick',who:'10@47,61 9@66,84 7@74,74 !6@50,70 !4@41,76 !5@48,76.5 !3@55,76 !G@52,97',ball:[50,65],zone:[41,65,59,74],
+   caption:'Gold has a free kick. Defender number 6 stands right in front of the ball, inside the shaded space, and will not move back. At a free kick, opponents must be at least 10 yards from the ball, like numbers 3, 4 and 5. The referee shows number 6 a yellow card.'},
+  howTitle:'What is a yellow card shown for?',howFact:{label:'Shown for',value:'7 kinds of offense'},
+  quizHow:{q:'Which one can get a player a yellow card?',why:'Arguing with the referee is called dissent. The other two are common mix-ups about cards.'},
+  how:['Arguing against the referee’s decision, with words or actions. This is called dissent.',
+   'Unsporting behavior: a reckless foul, a foul or handball that stops a promising attack, or diving to trick the referee.',
+   'Breaking the rules again and again. There is no set number: the referee decides when it is too many.',
+   'Delaying the restart, such as kicking or carrying the ball away after the whistle.',
+   'Not backing up when the other team takes a free kick, corner kick, throw-in or dropped ball.',
+   'Coming onto the field, or going back on, without the referee’s permission.',
+   'Leaving the field on purpose without the referee’s permission.'],
+  mistakes:['Thinking every foul is a yellow card. A careless foul, like a trip by accident, gives a free kick and no card.',
+   'Thinking a yellow card means sitting out. Under the Laws of the Game, the player stays on the field and keeps playing.',
+   'Thinking a yellow card carries over to the next game. In the Laws, every game starts with no cards, but some leagues count yellow cards over a season.'],
+  formats:'Yellow cards are part of the Laws in 7v7, 9v9, 11v11 and futsal. Each youth league sets its own rules for young players. In some leagues for young children, referees do not show cards: they stop play, explain and warn instead. Some leagues use a sin bin, a short time out after a yellow card. Ask your league before the season.',
+  faq:[{q:'What does a yellow card mean in football?',a:'The same as in soccer, because football and soccer are the same game. A yellow card is a caution, a warning from the referee, and the player keeps playing. In the UK it is often called a booking.'},
+   {q:'Can a player get two yellow cards in one game?',a:'Yes, but then the game is over for them. The referee shows the second yellow card and then the red card, and the player is sent off. The team plays one player short for the rest of the game.'},
+   {q:'Does a yellow card give the other team a free kick?',a:'If the card was for a foul or a handball, yes. The other team gets the free kick for that offense, or a penalty kick if it happened in the penalty area.'},
+   {q:'Can a goalkeeper or a coach get a yellow card?',a:'Yes. Goalkeepers follow the same card rules as every other player. Substitutes and team officials, such as coaches, can be shown cards too. A goalkeeper handling the ball inside their own penalty area is not a handball, so that is never a card.'},
+   {q:'Do kids get yellow cards in youth soccer?',a:'It depends on the league. Some leagues for young children ask referees to explain and warn instead of showing cards. Other leagues use cards the way the Laws of the Game describe. Check your league’s rules for your child’s age group.'}],
+  links:[{path:'/learn/soccer-rules/yellow-and-red-cards',name:'Yellow and red cards in soccer',line:'All 14 card offenses, a yellow vs red table and a referee game'}],
+  lessonIds:['def_7_goalside','learn9_cover','trn_11_recover'],related:['red-card','free-kick-wall','tackle','marking']},
+
+ {slug:'red-card',name:'Red Card',also:'sending-off',title:'What Does a Red Card Mean in Soccer? Rules for Kids',
+  short:'Shown to a player who is sent off. The player leaves for the rest of the game, and the team plays one player short.',
+  desc:'What does a red card mean in soccer (football)? The player is sent off. What gets a red card, what happens to the team, and red vs yellow cards.',
+  answer:'A red card in soccer means the referee has sent a player off, for a serious offense or for a second yellow card in the same game. The player leaves the field for the rest of the game, and the team plays one player short, because no one can replace them.',
+  scene:{title:'A handball that stops a goal',who:'9@44,84 7@72,80 !3@46,98 !4@60,88 !G@60,95',ball:[45,86],passes:['45,86>46,97'],
+   caption:'Number 9 shoots, and the goalkeeper is beaten. Defender number 3, standing on the goal line, stops the ball with a hand. That stops a goal, so the referee shows number 3 a red card and gives a penalty kick.'},
+  howTitle:'What is a red card shown for?',howFact:{label:'Shown for',value:'7 kinds of offense'},
+  quizHow:{q:'Which one gets a player a red card?',why:'Two yellow cards in one game add up to a red card. The other two are common mix-ups about red cards.'},
+  how:['A second yellow card in the same game.',
+   'Serious foul play: a tackle or challenge that puts an opponent’s safety in danger or uses far too much force.',
+   'Violent conduct: using far too much force against anyone when not going for the ball.',
+   'Biting or spitting at someone.',
+   'Stopping a goal or an obvious chance to score with a handball. This does not apply to a goalkeeper inside their own penalty area.',
+   'Fouling an attacker who has an obvious chance to score. Inside the penalty area, a real try to win the ball gives a penalty kick and a yellow card instead.',
+   'Offensive, insulting or abusive words or gestures toward anyone.'],
+  mistakes:['Thinking a red card player can be replaced. The team plays one player short for the rest of the game.',
+   'Thinking a sent-off player can sit on the bench. They must leave the field and the area around it, including the bench area.',
+   'Thinking the Laws say how many games a red card costs. They do not: each league or tournament decides.'],
+  formats:'Red cards are part of the Laws in 7v7, 9v9 and 11v11. In 11v11, a game cannot go on if a team has fewer than seven players. Each youth league sets its own rules for young players, such as whether referees show cards and how many games a red card costs. Futsal has its own Laws, so check them, or your league, for what happens after a red card there.',
+  faq:[{q:'What does a red card mean in football?',a:'The same as in soccer, because football and soccer are the same game. The player is sent off, which is called a sending-off, and leaves the field for the rest of the game. The team plays on with one player fewer.'},
+   {q:'Is a red card worse than a yellow card?',a:'Yes. A yellow card is a warning, and the player keeps playing. A red card sends the player off for the rest of the game, and the team plays one player short. Two yellow cards in the same game add up to a red card.'},
+   {q:'Can a team replace a player who gets a red card?',a:'No. Under the Laws of the Game, a player sent off during the game cannot be replaced. If the goalkeeper is sent off, a teammate or a substitute goes in goal, and the team still plays one player short.'},
+   {q:'Does a red card mean you miss the next game?',a:'Usually, but the Laws of the Game do not decide this. Each league, tournament or association sets its own rules. Missing at least the next game is common, and a serious offense can mean a longer ban.'},
+   {q:'Can a coach get a red card?',a:'Yes. Coaches and other team officials can be shown yellow and red cards, for example for leaving the bench area to protest. If the referee cannot tell who did it, the senior coach there gets the card.'}],
+  links:[{path:'/learn/soccer-rules/yellow-and-red-cards',name:'Yellow and red cards in soccer',line:'All 14 card offenses, a yellow vs red table and a referee game'}],
+  lessonIds:['trn_11_recover','def_11_pressurecover','trn_9_recover'],related:['yellow-card','tackle','goal-side','counterattack']},
 ] as Raw[]).map(make);
 export const termBySlug=(slug:string)=>TERM_PAGES.find(t=>t.slug===slug);
 for(const t of TERM_PAGES)for(const r of t.related)if(!TERM_PAGES.some(x=>x.slug===r))throw new Error(`${t.slug}: related term ${r} has no page`);
@@ -369,7 +430,6 @@ const PLAIN:[string,string,string?,string?][]=[
  ['Pitch','The British word for a soccer field.','/learn/soccer-field-size-by-age','Field size by age'],
  ['Pivot','The forward in futsal, who often receives with their back to goal, then turns or lays the ball off.','/learn/lessons/f_pivot','Lesson'],
  ['Possession','Having the ball. A team “in possession” is the team with the ball.'],
- ['Red card','Shown to a player who is sent off. The team plays on with one player fewer.',R+'yellow-and-red-cards','Yellow and red cards'],
  ['Referee','The official in charge of the game, who applies the Laws and whose decisions are final.'],
  ['Rest defense','The players a team keeps behind the ball while it attacks, to stop a counterattack.','/learn/lessons/trn_11_restdefense','Lesson'],
  ['Save','When the goalkeeper stops a shot from going into the goal.'],
@@ -388,7 +448,6 @@ const PLAIN:[string,string,string?,string?][]=[
  ['Width','Players staying far apart across the field, so the other team has more space to defend.','/learn/lessons/prn_7_spread','Lesson'],
  ['Wingback','A wide player who defends like a fullback and attacks like a winger.',P+'wingback','Wingback'],
  ['Winger','An attacker who plays near the touchline.',P+'winger','Winger'],
- ['Yellow card','A warning from the referee. Two in one game make a red card.',R+'yellow-and-red-cards','Yellow and red cards'],
 ];
 const anchor=(s:string)=>s.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 export const GLOSSARY:readonly GlossaryEntry[]=[

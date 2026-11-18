@@ -27,7 +27,7 @@ export function ruleQuizEs(r:EsRule):QuizQuestion[]{
 export function termQuizEs(t:EsTerm,all:readonly EsTerm[]):QuizQuestion[]{
  const i=all.findIndex(x=>x.slug===t.slug),[a,b]=far(all,i),name=low(t.name);
  const out=[place(t.slug,`¿Qué es: ${name}?`,t.short,[a.short,b.short],t.short)];
- if(t.how.length&&t.mistakes.length>=2)out.push(place(t.slug,`¿Cuál es una buena forma de hacerlo (${name})?`,t.how[0],t.mistakes.slice(0,2),`${t.how[0]} Las otras dos son errores comunes.`));
+ if(t.how.length&&t.mistakes.length>=2)out.push(place(t.slug,t.quizHow?.q??`¿Cuál es una buena forma de hacerlo (${name})?`,t.how[0],t.mistakes.slice(0,2),t.quizHow?.why??`${t.how[0]} Las otras dos son errores comunes.`));
  const other=t.also?.split(', ')[0];
  if(other)out.push(place(t.slug,`¿Qué otro nombre tiene: ${name}?`,cap(other),[a.name,b.name],`${cap(other)}. ${t.name} también se dice ${t.also}.`));
  else out.push(place(t.slug,`¿Cuál es un error común (${name})?`,t.mistakes[t.mistakes.length-1],t.how.slice(1,3),'Esa está en la lista de errores comunes. Las otras dos son buenos hábitos.'));

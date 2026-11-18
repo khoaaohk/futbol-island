@@ -391,4 +391,17 @@ export const TERM_NOTES:Readonly<Record<string,CoachNotes>>={
   ages:[['U8','Some coaches ask a player who has scored a few goals to set up teammates next, so everyone gets a chance.'],
    ['U10','In 7v7 a hat-trick is a great moment, and a good chance to praise the teammates who helped.'],
    ['U12','At U12 players can learn to share credit for a hat-trick with the team.']]},
+ 'yellow-card':{
+  coach:'Teach players to accept every call and walk away from arguments. Arguing with the referee is a yellow card that a player can always avoid.',
+  match:'A player keeps shouting at the referee after a throw-in decision, and the referee shows a yellow card for dissent. The player stays on and keeps playing.',
+  ages:[['U8','In some leagues for young children, referees stop play, explain and warn instead of showing cards.'],
+   ['U10','In 7v7 some leagues show cards and some do not, so ask your league what it does.'],
+   ['U12','By 9v9 players can learn the yellow card offenses, and that two yellow cards in one game make a red card.'],
+   ['U13 and up','At 11v11 players learn the full card rules of Law 12, and that some leagues count yellow cards over a season.']]},
+ 'red-card':{
+  coach:'Talk with players about staying calm after a hard foul or a bad call. One moment of anger can leave the whole team one player short.',
+  match:'An attacker is through alone on goal, and a defender pulls them down by the shirt. The referee shows a red card, and the team plays the rest of the game with one player fewer.',
+  ages:[['U8','In some leagues for young children, referees do not show cards and talk to the player instead.'],
+   ['U10','In 7v7, ask your league whether it shows cards, and what happens to a player after a red card.'],
+   ['U13 and up','In 11v11 a red card usually means missing at least the next game, and the league decides how many.']]},
 };

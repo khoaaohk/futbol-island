@@ -67,6 +67,8 @@ export const GUIDE_DRILLS:Record<string,string[]>={
  [R+'back-pass-rule']:['goalkeeper-distribution','build-out-game'],
  [R+'offside']:['end-zone-game'],
  [R+'fouls-and-free-kicks']:['one-v-one-defending'],
+ [T+'yellow-card']:['one-v-one-defending','recover-goal-side'],
+ [T+'red-card']:['recover-goal-side','one-v-one-defending'],
  [T+'give-and-go']:['give-and-go','wall-passing'],
  [T+'first-touch']:['receive-across-the-body','first-touch-gates','wall-passing'],
  [T+'two-v-one']:['two-v-one-to-goal','three-v-two-to-goal'],

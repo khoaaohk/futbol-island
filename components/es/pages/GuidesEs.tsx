@@ -21,7 +21,7 @@ import {type Fact,Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet
 import KeepReading from '@/components/site/KeepReading';
 import {Band,CardGrid,IconRows,shirtBadge} from '@/components/site/HubParts';
 import type {FactIconKind} from '@/components/site/FactIcons';
-import {CardRulesGame,CardRulesSources,CardRulesTop} from '@/components/site/CardRulesSections';
+import {CardRulesGame,CardRulesPages,CardRulesSources,CardRulesTop} from '@/components/site/CardRulesSections';
 import {CARD_RULES_ES} from '@/lib/i18n/es/cardRules';
 import {cardDeckOf} from '@/lib/site/cardRules';
 import {RulePlayDeck,RulePlayGame} from '@/components/site/RulePlaySections';
@@ -89,7 +89,7 @@ export function RuleEsPage({r}:{r:EsRule}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd({...articleLd({headline:r.title,path:r.esPath,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (regla de fútbol)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.esPath,name:`Prueba: ${r.name}`,questions:quiz})})}/>
   <JsonLd data={faqLd(r.faq)}/>
-  <EsIntro crumbs={crumbs} h1={r.h1} lead={r.answer} facts={facts}/>
+  <EsIntro crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES_ES}/>:undefined} facts={facts}/>
   <EsPrintSheet path={r.esPath} what={cards?'hoja de las tarjetas':'hoja de la regla'} has={cards?'las 14 faltas de tarjeta y la tabla de amarilla o roja':undefined}/>
   {cards&&<CardRulesTop c={CARD_RULES_ES}/>}
   {play&&<RulePlayDeck c={play}/>}
@@ -155,18 +155,20 @@ export function TermsHubEsPage(){
 }
 export function TermEsPage({t}:{t:EsTerm}){
  const H=ES_HUBS.terms,all=ES_TERMS(),crumbs=esCrumbs({name:H.crumb,path:H.path},{name:t.name,path:t.esPath}),quiz=termQuizEs(t,all);
- const related=[...t.related.map(s=>all.find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:x.name,line:x.short})),
+ const related=[...links(t.links??[]),...t.related.map(s=>all.find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:x.name,line:x.short})),
   {path:H.path,name:'Todos los términos del fútbol, de la A a la Z',line:H.blurb},{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb}];
  const rel=t.related.map(s=>all.find(x=>x.slug===s)).find(Boolean);
  const facts:Fact[]=[t.also?{icon:'tag',label:'Otros nombres',value:t.also}:{icon:'diagram',label:'Diagrama',value:'Un dibujo de la cancha',href:'#diagram'},
-  {icon:'steps',label:'Cómo funciona',value:`${t.how.length} pasos`,href:'#how'},
+  t.howFact?{icon:'steps',label:t.howFact.label,value:t.howFact.value,href:'#how'}:{icon:'steps',label:'Cómo funciona',value:`${t.how.length} pasos`,href:'#how'},
   ...(rel?[{icon:'link' as const,label:'Término relacionado',value:rel.name,href:rel.esPath}]:[]),{icon:'quiz',label:'Prueba rápida',value:`${quiz.length} preguntas`,href:'#quiz'}];
+ const see=t.links?[...links(t.links),...(rel?[{path:rel.esPath,name:rel.h1}]:[])]:[];/* card pages (Nov 18 2026), as in English */
+ const more=see.length?<>Lee también: {see.map((l,i)=><span key={l.path}>{i>0?' · ':''}<a href={l.path}>{l.name}</a></span>)}</>:undefined;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={esLd({...articleLd({headline:t.title,path:t.esPath,description:t.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${t.name} (término de fútbol)`,teaches:t.answer,image:diagramUrl(t.picture)}),hasPart:guideQuizPart({path:t.esPath,name:`Prueba: ${t.name}`,questions:quiz})})}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'DefinedTerm',name:t.name,description:t.short,url:abs(t.esPath),inLanguage:'es',inDefinedTermSet:abs(H.path)+'#terms',...(t.also?{alternateName:t.also.split(', ')}:{})}}/>
   <JsonLd data={faqLd(t.faq)}/>
-  <EsIntro crumbs={crumbs} h1={t.h1} lead={t.answer} facts={facts}/>
+  <EsIntro crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
   <Section id="diagram" title={`${t.name}: diagrama`}><EsSceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
   <Section id="mistakes" title="Errores comunes"><Bullets items={t.mistakes}/></Section>

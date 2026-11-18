@@ -31,19 +31,22 @@ export default function TermPage({params}:{params:{slug:string}}){
  const t=termBySlug(params.slug);if(!t)notFound();
  const crumbs=guideCrumbs({name:TERMS_HUB.crumb,path:TERMS_HUB.path},{name:t.name,path:t.path});
  const quiz=termQuiz(t,TERM_PAGES);
- const related=[...t.related.map(s=>termBySlug(s)!).map(x=>({path:x.path,name:x.name,line:x.short})),
+ const related=[...(t.links??[]),...t.related.map(s=>termBySlug(s)!).map(x=>({path:x.path,name:x.name,line:x.short})),
   {path:TERMS_HUB.path,name:'All soccer terms, A to Z',line:TERMS_HUB.blurb},{path:RULES_HUB.path,name:RULES_HUB.h1,line:RULES_HUB.blurb}];
  const rel=t.related.map(s=>termBySlug(s)).find(Boolean);
  /* visual pass Nov 17 2026: the key facts under the answer (the "Other names" line moved in here) */
  const facts:Fact[]=[t.also?{icon:'tag',label:'Other names',value:t.also}:{icon:'diagram',label:'Diagram',value:'A pitch picture',href:'#diagram'},
-  {icon:'steps',label:'How it works',value:`${t.how.length} steps`,href:'#how'},
+  t.howFact?{icon:'steps',label:t.howFact.label,value:t.howFact.value,href:'#how'}:{icon:'steps',label:'How it works',value:`${t.how.length} steps`,href:'#how'},
   ...(rel?[{icon:'link' as const,label:'Related term',value:rel.name,href:rel.path}]:[]),{icon:'quiz',label:'Quick quiz',value:`${quiz.length} questions`,href:'#quiz'}];
+ /* card pages (Nov 18 2026): the pages in t.links and the first related term, linked right under the answer */
+ const see=t.links?[...t.links,...(rel?[{path:rel.path,name:rel.h1}]:[])]:[];
+ const more=see.length?<>Also read: {see.map((l,i)=><span key={l.path}>{i>0?' · ':''}<a href={l.path}>{l.name}</a></span>)}</>:undefined;
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{...articleLd({headline:t.title,path:t.path,description:t.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${t.name} (soccer term)`,teaches:t.answer,image:diagramUrl(t.picture)}),hasPart:guideQuizPart({path:t.path,name:`${t.name} quiz`,questions:quiz})}}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'DefinedTerm',name:t.name,description:t.short,url:abs(t.path),inDefinedTermSet:abs(TERMS_HUB.path)+'#terms',...(t.also?{alternateName:t.also.split(', ')}:{})}}/>
   <JsonLd data={faqLd(t.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={t.h1} lead={t.answer} facts={facts}/>
+  <GuideIntro crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
   <Section id="diagram" title={`${t.name}: diagram`}><SceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
   <Section id="mistakes" title="Common mistakes"><Bullets items={t.mistakes}/></Section>
