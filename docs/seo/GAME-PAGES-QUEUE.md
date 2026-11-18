@@ -41,6 +41,17 @@ Request after the deploy is live (the hub again: its count, description and shar
 
 Guide page that gained a link to it (a recrawl picks it up): `/learn/soccer-drills/gates-dribbling`.
 
+## Nov 17 2026: Roll It In's page (branch rollball; replaces Clear the Box later, see the coordinator's notes)
+
+Request after the deploy is live (the hub again: its intro, pick list and FAQ changed), then run
+`node scripts/indexnow.mjs --changed-since 2026-11-17`.
+
+1. https://futbolisland.app/games
+2. https://futbolisland.app/games/soccer-ball-rolling-puzzle-game (Roll It In)
+
+Guide page that gained a link to it: `/learn/soccer-drills/partner-passing-through-gates`. The hub share picture still says the old
+count: rebuild it with `python3 docs/seo/build-game-images.py` once the source shots of the other games are in docs/arcade-aaa/shots.
+
 ## Adding the next game page (done for Street Dash, `streetdash`, Nov 17 2026; keep as the recipe)
 
 The count words ("ten games", the back-wall sign, /arcade, /games) follow `arcadeCabinets.length` (lib/arcade/arcadeCatalog.ts

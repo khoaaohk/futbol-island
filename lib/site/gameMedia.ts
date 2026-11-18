@@ -39,12 +39,13 @@ const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
  airhockey:{name:'Air Futbol gameplay: air hockey on a football pitch',alt:'Air Futbol gameplay on a phone: the teal striker hits the puck up the small pitch and scores in the red goal',caption:'Air Futbol: guard your goal and bank it off the wall.'},
  lineup:{name:'Line Up! gameplay: shapes of players fill the lines',alt:'Line Up! gameplay on a phone: shapes of players are dragged from the tray onto the pitch and a full line clears',caption:'Line Up!: fill a row or a column and it clears.'},
  trophydrop:{name:'Trophy Drop gameplay: dropping and merging in the trophy cabinet',alt:'Trophy Drop gameplay on a phone: balls, boots and gloves drop into a glass cabinet and two of the same merge',caption:'Trophy Drop: two of the same merge into the next.'},
+ rollball:{name:'Roll It In gameplay: a football rolling through a puzzle',alt:'Roll It In gameplay on a phone: the ball takes a metal ramp, jumps a gap over the water, presses a plate to open the gate and rolls into the goal',caption:'Roll It In: jump the gap, press the plate, roll it in.'},
  streetdash:{name:'Street Dash gameplay: a side-on run with the ball',alt:'Street Dash gameplay on a phone: the player slides under a banner, shoots the ball at a crate and jumps a sliding tackle',caption:'Street Dash: jump, slide and shoot on the run.'},
  clearbox:{name:'Clear the Box gameplay: players run out of the penalty box',alt:'Clear the Box gameplay on a phone: tapped players sprint out of the penalty box and the next box slides in',caption:'Clear the Box: tap a player whose lane is free.'},
 };
 const gamePaths:Record<GameId,string>={kitrush:'/games/soccer-swipe-game',snake:'/games/soccer-snake-game',runner:'/games/soccer-runner-game',tennis:'/games/soccer-tennis-game',
  pinball:'/games/soccer-pinball',puzzle:'/games/soccer-passing-puzzle-game',airhockey:'/games/air-hockey-soccer-game',lineup:'/games/soccer-block-puzzle-game',
- trophydrop:'/games/soccer-merge-game',clearbox:'/games/soccer-tap-puzzle-game',streetdash:'/games/soccer-side-scroller-game'};
+ trophydrop:'/games/soccer-merge-game',clearbox:'/games/soccer-tap-puzzle-game',streetdash:'/games/soccer-side-scroller-game',rollball:'/games/soccer-ball-rolling-puzzle-game'};
 export const gameClip=(id:GameId)=>clip({key:id,page:gamePaths[id],...GAME_CLIP_DEFS[id]});
 /** New stills of each game (beyond the two hand-made ones in lib/site/games.ts), with their own alt text. */
 const STILL_WORDS:Record<GameId,string[]>={
@@ -57,6 +58,7 @@ const STILL_WORDS:Record<GameId,string[]>={
  airhockey:['Air Futbol: GOAL! The puck flies past the red striker into the top goal','Air Futbol: a bank shot goal off the side wall, worth 75 extra points','Air Futbol: a fast rebound off the side wall'],
  lineup:['Line Up! at the start of a run: a few shapes on the pitch and two left in the tray','Line Up!: a row fills and LINE UP! and +100 appear over the pitch','Line Up!: a shape of players dragged above a crowded pitch'],
  trophydrop:['Trophy Drop at the start: a boot hangs over the cabinet, with a glove and balls at the bottom','Trophy Drop: a CHAIN x2 burst as two items merge on the pile','Trophy Drop at level 2: the cabinet gets smaller, with a medal in the pile'],
+ rollball:['Roll It In: the ball flies over a gap between rooftops after a metal ramp, with a star collected in the air','Roll It In: STAR +100 bursts over the pitch as a cone flies off the stack','Roll It In at night: the ball climbs a half-pipe to a glowing plate on the ledge'],
  streetdash:['Street Dash: a shot breaks a target for +60 and STREAK X2 bursts over the street','Street Dash: the glowing SHOOT button and a dotted line from the ball to a target ahead','Street Dash: the player jumps a puddle on the street, with stars to collect'],
  clearbox:['Clear the Box at box 2: players with arrows in a chalk penalty box under a 30 second clock','Clear the Box: CLEAN X2! and +540 over the new box 3, after a box with no foul','Clear the Box at box 3: a dark defender stands among the players in the middle of the box'],
 };
@@ -70,6 +72,7 @@ const STILL_CAPS:Record<GameId,string[]>={
  airhockey:['Score in the top goal.','Bank shots score extra.','Use the side walls.'],
  lineup:['Three shapes in the tray.','A full line clears.','Drag a shape to its place.'],
  trophydrop:['Aim, then drop.','Merges can chain.','The cabinet gets smaller.'],
+ rollball:['Take the ramp fast.','Stars sit off the main path.','Climb the half-pipe to both plates.'],
  streetdash:['Shots in a row raise the streak.','Shoot when the button glows.','Jump puddles, collect stars.'],
  clearbox:['Every arrow shows a lane.','Clean boxes in a row score more.','Defenders never move.'],
 };

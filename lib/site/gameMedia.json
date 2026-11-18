@@ -255,6 +255,18 @@
     "h": 1039,
     "bytes": 23198
    }
+  },
+  "rollball": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10.0,
+   "mp4": 213537,
+   "webm": 257154,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 38442
+   }
   }
  },
  "shots": {
@@ -540,6 +552,26 @@
     "w": 480,
     "h": 1039,
     "bytes": 20814
+   }
+  ],
+  "rollball": [
+   {
+    "file": "rollball-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 38442
+   },
+   {
+    "file": "rollball-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 43234
+   },
+   {
+    "file": "rollball-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 36120
    }
   ]
  }

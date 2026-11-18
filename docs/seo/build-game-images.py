@@ -25,6 +25,8 @@ GAMES = [
  ('clear-the-box-soccer-tap-puzzle-game', ['clearbox-phone', 'clearbox-box2'], ['clear-the-box-soccer-tap-puzzle-game', 'clear-the-box-first-boxes'], 'Clear the Box', 'Free soccer tap puzzle game'),
  # Nov 17 2026: Street Dash, the side-scroller, shot the same way (real key presses on a 390x844 phone).
  ('street-dash-soccer-side-scroller-game', ['streetdash-phone', 'streetdash-jump'], ['street-dash-soccer-side-scroller-game', 'street-dash-jump-over-a-crate'], 'Street Dash', 'Free soccer side-scroller game'),
+ # Nov 17 2026: Roll It In, the rolling-ball puzzle, shot from real play (the scripted bot through the game's physics, frames stepped at 30 fps on a 390x844 phone).
+ ('roll-it-in-soccer-ball-rolling-puzzle-game', ['rollball-phone', 'rollball-cones'], ['roll-it-in-soccer-ball-rolling-puzzle-game', 'roll-it-in-knock-the-cones'], 'Roll It In', 'Free soccer ball rolling puzzle'),
 ]
 # One entry per arcade cabinet, so the hub picture's count follows the list (Nov 17 2026: eleven with Street Dash).
 WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen']

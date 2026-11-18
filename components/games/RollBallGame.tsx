@@ -110,7 +110,7 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
   }
  },[say]);
  const sync=useCallback(()=>{const g=game.current;if(!g)return;g.drain(onEvent);const s=g.state,h=hudRef.current,P=s.world.mods[s.mod],mods=s.world.mods.length-1;
-  const n:Hud={score:s.score,level:s.level,hearts:s.hearts,stars:s.stats.stars,key:s.ball.key,streak:s.streak,mod:Math.min(s.mod+1,mods),mods,name:P.def.id==='goal'?'Roll it in!':P.def.name,theme:THEMES[P.def.theme]};
+  const n:Hud={score:s.score,level:s.level,hearts:s.hearts,stars:s.stats.stars,key:s.ball.key,streak:s.streak,mod:Math.min(s.mod+1,mods),mods,name:P.def.id==='goal'?'Roll it in!':P.def.name,theme:THEMES[P.def.id==='goal'&&s.mod>0?s.world.mods[s.mod-1].def.theme:P.def.theme]};
   if(n.score!==h.score||n.level!==h.level||n.hearts!==h.hearts||n.stars!==h.stars||n.key!==h.key||n.streak!==h.streak||n.mod!==h.mod||n.name!==h.name){hudRef.current=n;setHud(n);}},[onEvent]);
  const paintClock=useCallback(()=>{const g=game.current;if(!g)return;const s=g.state,sec=s.clockMax?Math.ceil(s.clock):-1;if(sec===shownSec.current)return;shownSec.current=sec;
   if(clockBox.current)clockBox.current.dataset.on=sec>=0?'1':'';if(clockNum.current)clockNum.current.textContent=sec>=0?String(sec):'';if(clockBox.current)clockBox.current.dataset.low=sec>=0&&sec<=10?'1':'';
@@ -119,6 +119,7 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
  /* ---- the frame: input in, fixed physics steps, one draw (60 a second at most) ---- */
  useEffect(()=>{frameRef.current=(now:number)=>{
   raf.current=0;const g=game.current,v=view.current;if(phaseRef.current!=='playing'||!g||!v)return;
+  if(process.env.NODE_ENV!=='production'&&(window as unknown as {__rollball?:{manual?:boolean}}).__rollball?.manual)return;// dev: frames are stepped by hand (media capture)
   if(drawn.current&&now-drawn.current<FRAME_MS){raf.current=requestAnimationFrame(t=>frameRef.current(t));return;}drawn.current=now;
   const dt=last.current?Math.min(.1,(now-last.current)/1000):0;last.current=now;
   const k=keys.current,kx=(k.has('ArrowLeft')||k.has('KeyA')?1:0)-(k.has('ArrowRight')||k.has('KeyD')?1:0),kz=(k.has('ArrowUp')||k.has('KeyW')?1:0)-(k.has('ArrowDown')||k.has('KeyS')?1:0);
@@ -163,7 +164,7 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
   }).catch(()=>setFailed(true));
   const noScroll=(e:TouchEvent)=>{if(phaseRef.current==='playing'&&e.cancelable)e.preventDefault();};el.addEventListener('touchmove',noScroll,{passive:false});
   const noMenu=(e:Event)=>e.preventDefault();c.addEventListener('contextmenu',noMenu);
-  if(process.env.NODE_ENV!=='production')(window as unknown as {__rollball?:unknown}).__rollball={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get view(){return view.current;},get audio(){return audio.current;},sync:()=>sync(),scriptBot,useBot:false,botTick:undefined};
+  if(process.env.NODE_ENV!=='production')(window as unknown as {__rollball?:unknown}).__rollball={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get view(){return view.current;},get audio(){return audio.current;},sync:()=>sync(),scriptBot,useBot:false,botTick:undefined,manual:false,advance:(dt:number,now:number)=>{const g=game.current,v=view.current,h=(window as unknown as {__rollball:{useBot:boolean;botTick?:()=>void}}).__rollball;if(!g||!v)return;if(h.useBot)h.botTick?.();g.tick(dt);sync();v.render(g.state,now);},load:(plan:number[])=>{const g=game.current=createRollBall({seed:7,fixPlan:plan});view.current?.snap(g.state);sync();}};
   return()=>{alive=false;ro?.disconnect();window.visualViewport?.removeEventListener('resize',fit);el.removeEventListener('touchmove',noScroll);c.removeEventListener('contextmenu',noMenu);
    if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;view.current?.dispose();view.current=null;game.current=null;audio.current?.dispose();audio.current=null;delete (window as unknown as {__rollball?:unknown}).__rollball;};
  },[sync]);

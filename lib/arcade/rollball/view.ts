@@ -141,6 +141,33 @@ export function createRollballView(canvas:HTMLCanvasElement,opts:{reduced:boolea
   splash:own(new T.SpriteMaterial({map:own(canvasTex(64,(g,s)=>{g.fillStyle='#e9fbff';g.strokeStyle='#14607a';g.lineWidth=5;g.beginPath();g.arc(s/2,s/2,s/2-5,0,7);g.fill();g.stroke();},false)),transparent:true,depthWrite:false})),
   trail:own(new T.MeshBasicMaterial({color:'#b9925a',transparent:true,opacity:.55,depthWrite:false})),
  };
+ /* scenery round each module: one merged mesh a module (groups: one per material), built from these parts */
+ const decoMats=[toon('#7a5a3a'),toon('#3f9a4a'),toon('#f4f0e6'),toon('#f0452e'),toon('#9aa6ae'),toon('#fff6c8',{emissive:new T.Color('#fff2b0'),emissiveIntensity:1}),toon('#d9b27a'),toon('#4a5468',{map:own(canvasTex(64,(g,s)=>{g.fillStyle='#4a5468';g.fillRect(0,0,s,s);for(let y=6;y<s;y+=16)for(let x=6;x<s;x+=16){g.fillStyle=(x*7+y*3)%5<2?'#ffd97a':'#2c3346';g.fillRect(x,y,7,9);}}))}),toon('#19b5a5'),toon('#ffc83a')];
+ // 0 trunk, 1 leaves, 2 white, 3 red, 4 grey, 5 lamp, 6 sand, 7 windows, 8 teal, 9 sun
+ function deco(P:World['mods'][number],mi:number,w:World,theme:Theme):T.Mesh|null{
+  const r=rng(mi*7919+P.def.id.length*31+(theme+1)),parts:T.BufferGeometry[]=[],mats:number[]=[];let maxX=3;
+  for(let i=P.p0;i<P.p1;i++){const p=w.pieces[i];maxX=Math.max(maxX,Math.abs(p.x0),Math.abs(p.x1));}
+  const put=(g:T.BufferGeometry,m:number,x:number,y:number,z:number,sx=1,sy=1,sz=1,ry=0)=>{const c=g.clone();c.scale(sx,sy,sz);c.rotateY(ry);c.translate(x,y,z);if(c.index)parts.push(c.toNonIndexed());else parts.push(c);c.deleteAttribute?.('normal');mats.push(m);};
+  const isle=(x:number,z:number,rad:number,m=6)=>put(G.cyl,m,x,RB.water+.25,z,rad,.9,rad);
+  const n=Math.max(2,Math.round(P.def.len/5));
+  for(let k=0;k<n;k++)for(const side of [-1,1]){if(r()<.25)continue;const z=P.z+(k+.3+r()*.4)*P.def.len/n,x=side*(maxX+2.2+r()*3.5),t=theme;
+   if(t===0){if(r()<.5){isle(x,z,1.1,1);put(G.cyl,0,x,RB.water+1.2,z,.14,1.6,.14);put(G.sphere,1,x,RB.water+2.4,z,.9,1,.9);put(G.sphere,1,x+.4,RB.water+2,z+.3,.6,.7,.6);}
+    else{isle(x,z,1.4,1);put(G.box,2,x,RB.water+1.05,z,.1,.9,2.2);put(G.box,3,x+side*-.06,RB.water+1.15,z,.04,.42,2);}}
+   else if(t===1){isle(x,z,1.3);if(r()<.6){const lean=(r()-.5)*.5;for(let j=0;j<5;j++)put(G.cyl,0,x+lean*j*.3,RB.water+.8+j*.5,z,.12-j*.01,.5,.12-j*.01);
+     for(let j=0;j<5;j++)put(G.cone,1,x+lean*1.5+Math.cos(j*1.26)*.75,RB.water+3.2,z+Math.sin(j*1.26)*.75,1.2,.35,3.2,-j*1.26);}
+    else{put(G.cyl,2,x,RB.water+1.4,z,.04,1.8,.04);put(G.cone,r()<.5?3:8,x,RB.water+2.35,z,3.4,.9,3.4);}}
+   else if(t===2){const h=1.5+r()*3.5,wd=1.6+r()*1.4;put(G.box,7,x+side*wd*.3,RB.water+h/2,z,wd,h+.3,wd*1.2);put(G.box,4,x+side*wd*.3,RB.water+h+.25,z,wd*1.05,.2,wd*1.25);
+    if(r()<.5){put(G.cyl,3,x+side*wd*.3,RB.water+h+.75,z,.35,.8,.35);}else put(G.box,2,x+side*wd*.3+.3,RB.water+h+.5,z+.3,.18,.7,.18);}
+   else{if(k%2===0){put(G.cyl,4,x,RB.water+3,z,.12,6.5,.12);put(G.box,4,x,RB.water+6.3,z,1.3,.9,.3,0);put(G.box,5,x,RB.water+6.3,z-.17,1.1,.7,.06);isle(x,z,.8,4);}
+    else{put(G.box,7,x+side*1.2,RB.water+1.2,z,2.2,2.6,3.2);put(G.box,3,x+side*.1,RB.water+2.5,z,.3,.25,3.2);}}
+  }
+  if(!parts.length)return null;
+  for(const g of parts){for(const k of Object.keys(g.attributes))if(k!=='position'&&k!=='uv')g.deleteAttribute(k);if(!g.getAttribute('uv'))g.setAttribute('uv',new T.Float32BufferAttribute(new Float32Array(g.getAttribute('position').count*2),2));}
+  // one group per material, in material order
+  const order=parts.map((g,i)=>i).sort((a,b)=>mats[a]-mats[b]),sorted=order.map(i=>parts[i]),merged=mergeGeometries(sorted,true);for(const g of parts)g.dispose();if(!merged)return null;
+  merged.groups.forEach((gr,i)=>{gr.materialIndex=mats[order[i]];});merged.computeVertexNormals();
+  const m=new T.Mesh(merged,decoMats);m.receiveShadow=false;return m;
+ }
  const plateMat:Record<string,T.MeshToonMaterial>={latch:toon('#ffc83a'),hold:toon('#19b5a5'),heavy:toon('#19b5a5'),timed:toon('#ff8a3c'),stay:toon('#8f78b8'),order:toon('#4a9fe0')};
  const litMat=toon('#fff3d6',{emissive:new T.Color('#ffc83a'),emissiveIntensity:.8});
  const digitTex=[1,2,3].map(n=>own(canvasTex(64,(g,s)=>{g.clearRect(0,0,s,s);g.font='900 46px Arial';g.textAlign='center';g.textBaseline='middle';g.lineWidth=8;g.strokeStyle='#231a2e';g.strokeText(String(n),s/2,s/2+2);g.fillStyle='#fff3d6';g.fillText(String(n),s/2,s/2+2);},false)));
@@ -171,15 +198,16 @@ export function createRollballView(canvas:HTMLCanvasElement,opts:{reduced:boolea
  function disposeMod(m:ModView){if(m.disposed)return;m.disposed=true;scene.remove(m.group);for(const g of m.geos)g.dispose();}
  function setWorld(w:World){
   clearLevel();world=w;setTheme(w.mods[0].def.theme);
-  w.mods.forEach((P,mi)=>{const group=new T.Group(),geos:T.BufferGeometry[]=[];const tops=new Map<Surf,Acc>(),side:Acc={p:[],u:[]},lines:number[]=[];
+  w.mods.forEach((P,mi)=>{const th:Theme=P.def.id==='goal'&&mi>0?w.mods[mi-1].def.theme:P.def.theme;// the goal wears the level's last theme
+   const group=new T.Group(),geos:T.BufferGeometry[]=[];const tops=new Map<Surf,Acc>(),side:Acc={p:[],u:[]},lines:number[]=[];
    for(let i=P.p0;i<P.p1;i++){const p=w.pieces[i];if(p.role!==0||p.hidden)continue;let a=tops.get(p.surf);if(!a){a={p:[],u:[]};tops.set(p.surf,a);}pieceGeom(p,a,side,lines,SURF_TILE[p.surf]);}
    for(const [k,a] of tops){const g=geom(a);if(!g)continue;geos.push(g);const m=new T.Mesh(g,matFor(k));m.receiveShadow=true;group.add(m);}
-   {const g=geom(side);if(g){geos.push(g);const m=new T.Mesh(g,sideMat(P.def.theme));m.receiveShadow=true;group.add(m);}}
+   {const g=geom(side);if(g){geos.push(g);const m=new T.Mesh(g,sideMat(th));m.receiveShadow=true;group.add(m);}}
    if(lines.length){const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(lines,3));geos.push(g);group.add(new T.LineSegments(g,lineMat));}
    // moving pieces: their own mesh, moved by dy
    for(let i=P.p0;i<P.p1;i++){const p=w.pieces[i];if(p.role===0)continue;const a:Acc={p:[],u:[]},sd:Acc={p:[],u:[]},ln:number[]=[];pieceGeom({...p,y0:p.role===1?p.y0:topAt({...p,dy:0},p.x0,p.z0)-.35},a,sd,ln,SURF_TILE[p.surf]);
     const g=new T.Group(),gt=geom(a)!,gs=geom(sd)!,gl=new T.BufferGeometry();gl.setAttribute('position',new T.Float32BufferAttribute(ln,3));geos.push(gt,gs,gl);
-    const mt=new T.Mesh(gt,p.role===1?M.gate:matFor(p.surf)),ms=new T.Mesh(gs,p.role===1?M.gate:sideMat(P.def.theme));mt.castShadow=ms.castShadow=true;mt.receiveShadow=true;g.add(mt,ms,new T.LineSegments(gl,lineMat));
+    const mt=new T.Mesh(gt,p.role===1?M.gate:matFor(p.surf)),ms=new T.Mesh(gs,p.role===1?M.gate:sideMat(th));mt.castShadow=ms.castShadow=true;mt.receiveShadow=true;g.add(mt,ms,new T.LineSegments(gl,lineMat));
     group.add(g);dyn.push({piece:i,mesh:g});}
    for(let i=P.pl0;i<P.pl1;i++){const pl=w.plates[i],base=new T.Mesh(G.plate,M.post),cap=new T.Mesh(G.plate,plateMat[pl.kind]);base.scale.set(1.08,.6,1.08);base.position.set(pl.x,pl.y+.02,pl.z);cap.scale.set(.86,1,.86);cap.position.set(pl.x,pl.y+.07,pl.z);cap.receiveShadow=true;
     group.add(base,cap);const rec:{i:number;mesh:T.Mesh;cap:T.Mesh;ring?:T.Mesh}={i,mesh:base,cap};
@@ -210,7 +238,8 @@ export function createRollballView(canvas:HTMLCanvasElement,opts:{reduced:boolea
     const ng=own(new T.PlaneGeometry(3.5,1.5,10,5));const nm=new T.Mesh(ng,M.net);nm.position.set(gx,.75,gz+.88);gg.add(nm);net={mesh:nm,base:Float32Array.from(ng.getAttribute('position').array as ArrayLike<number>),t:9};
     for(const x of [-1.72,1.72]){const s=new T.Mesh(own(new T.PlaneGeometry(1.45,1.5)),M.net);s.rotation.y=Math.PI/2;s.position.set(gx+x,.75,gz+.17);gg.add(s);}
     const roof=new T.Mesh(own(new T.PlaneGeometry(3.5,1.45)),M.net);roof.rotation.x=Math.PI/2;roof.position.set(gx,1.5,gz+.17);gg.add(roof);group.add(gg);}
-   scene.add(group);mods.push({group,disposed:false,geos});void mi;});
+   {const d=deco(P,mi,w,th);if(d){geos.push(d.geometry);group.add(d);}}
+   scene.add(group);mods.push({group,disposed:false,geos});});
  }
 
  /* ---------------- per frame ---------------- */
