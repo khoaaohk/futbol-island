@@ -130,4 +130,5 @@ assert(!/puzpro|puzlgnd|cupPoints/.test(read('lib/arcade/arcadeWalletCore.ts'))&
 }
 // Nov 17 2026: the Endless Run full-time card says how close the run came, then hosts the high-score slot right above Play again.
 {const g=read('components/games/PassPuzzleGame.tsx');assert(/data-endless-near>[^\n]*short of your best run[^\n]*<\/p>\n\s*<div className=\{styles\.hsSlot\} data-hs-slot\/>\n\s*<button[^>]*data-endless-again/.test(g),'endless near line, slot, Play again');}
+{const g=read('components/games/PassPuzzleGame.tsx');assert(/!bestPassed\.current&&step\.run\.score>endBest;if\(best\)\{bestPassed\.current=true;puzzleNewBest/.test(g)&&/data-endless-best>New best!/.test(g),'the run passing the best says so once');}
 console.log('puzzle-polish-nov8 ok');

@@ -162,7 +162,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const endless=useRef<{run:EndlessRun;puzzle:EndlessPuzzle|null;next:EndlessPuzzle|null;timer:number;clockTimer:number;deadline:number;remaining:number;serial:number}|null>(null),endlessRuns=useRef(0);
  const endlessFinish=useRef((success:boolean,move:boolean,reason?:string)=>{void success;void move;void reason;});
  const [endHud,setEndHud]=useState<{level:number;lives:number;score:number;streak:number;clock:number|null;clockKey:number;aid:'scan'|'hint'|'none'}|null>(null);
- const [endNote,setEndNote]=useState<{key:number;kind:'win'|'fail'|'skip'|'clock';title:string;line:string;gained:number;next:boolean}|null>(null);
+ const [endNote,setEndNote]=useState<{key:number;kind:'win'|'fail'|'skip'|'clock';title:string;line:string;gained:number;next:boolean;best?:boolean}|null>(null),bestPassed=useRef(false);
  const [endOver,setEndOver]=useState<{score:number;solved:number;level:number;best:number;newBest:boolean;streak:number;lesson:string}|null>(null),[endBest,setEndBest]=useState(0),[wipe,setWipe]=useState(0);
  useEffect(()=>{try{setEndBest(Number(JSON.parse(localStorage.getItem(ENDLESS_BEST_KEY)??'{}').score)||0);}catch{/* no best yet */}return()=>{const e=endless.current;if(e){clearTimeout(e.timer);clearTimeout(e.clockTimer);}endless.current=null;};},[]);
  useEffect(()=>{if(!endNote||endNote.next)return;const id=setTimeout(()=>setEndNote(n=>n?.key===endNote.key?null:n),2000);return()=>clearTimeout(id);},[endNote]);
@@ -530,7 +530,9 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  /** Score one result, show its teaching line for a moment and keep the run moving. */
  const endlessResolve=(event:EndlessEvent,note:{kind:'win'|'fail'|'skip'|'clock';title:string;line:string},delay:number)=>{const e=endless.current;if(!e)return;clearTimeout(e.clockTimer);e.clockTimer=0;e.remaining=0;const step=stepEndless(e.run,event);e.run=step.run;
   setEndHud(h=>h&&{...h,lives:step.run.lives,score:step.run.score,streak:step.run.streak,clock:null});
-  setEndNote({key:++e.serial,...note,gained:step.gained,next:!step.run.over});
+  // Nov 17 2026: the solve that carries this run past the saved best run says so on the note (once a run) with the new-best chime.
+  const best=endBest>0&&!bestPassed.current&&step.run.score>endBest;if(best){bestPassed.current=true;puzzleNewBest(audio.current,.55);}
+  setEndNote({key:++e.serial,...note,gained:step.gained,next:!step.run.over,best});
   if(step.gained>0){for(let i=0;i<Math.min(3,step.gained);i++)puzzleStar(audio.current,i+1,.2+i*.16);if(step.run.streak>=2)puzzleStreak(audio.current,step.run.streak,.75);}
   if(step.run.over){endlessOver();return;}
   e.timer=window.setTimeout(endlessAdvance,delay);};
@@ -546,7 +548,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  function endlessTimeUp(){const e=endless.current,w=worldRef.current;if(!e||!w||e.run.over||e.timer)return;e.clockTimer=0;
   if(w.state.phase!=='aiming'||viewRef.current!=='play'){if(w.state.phase==='windup'||w.state.phase==='flight')e.clockTimer=window.setTimeout(endlessTimeUp,500);return;}
   cancelDrawing.current();puzzleWhistle(audio.current);endlessResolve({kind:'fail'},{kind:'clock',title:'Time!',line:'Look up early: decide before the clock runs down.'},1300);}
- const startEndless=async()=>{unlock();const id=await entry.enter();if(!id)return;endlessTimers();setBoardScore(null);setEndOver(null);setEndNote(null);beginBoardSession('puzzle');recordExploreActivity('arcade');
+ const startEndless=async()=>{unlock();const id=await entry.enter();if(!id)return;bestPassed.current=false;endlessTimers();setBoardScore(null);setEndOver(null);setEndNote(null);beginBoardSession('puzzle');recordExploreActivity('arcade');
   const seed=endlessSeed(new Date(),endlessRuns.current++);endless.current={run:startEndlessRun(seed),puzzle:null,next:null,timer:0,clockTimer:0,deadline:0,remaining:0,serial:0};
   try{endlessServe(endlessPuzzle(seed,1));}catch{setError(true);}};
  const restartPuzzle=async()=>{const w=worldRef.current;if(!w)return;setPause(false);if(endless.current){await startEndless();return;}replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);loadLevel(w.scenario);await play();};
@@ -575,7 +577,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    {endHud.clock!==null&&<span key={`clock${endHud.clockKey}`} className={styles.endClock} data-endless-clock data-paused={paused||undefined} style={{['--pp-clock' as string]:`${endHud.clock}s`}} role="timer" aria-label={`${endHud.clock} seconds to decide`}><i/></span>}
    <button type="button" className={styles.endSkip} data-endless-skip disabled={endHud.lives<=1||hud.phase!=='aiming'||!!endNote?.next} onClick={endlessSkip} aria-label="Skip this puzzle. It costs one life">Skip<small>−1</small></button>
   </div>}
-  {endNote&&view==='play'&&<div key={`note${endNote.key}`} className={styles.endNote} data-endless-note={endNote.kind} role="status" aria-live="polite"><b>{endNote.title}{endNote.gained>0&&<em>+{endNote.gained} ★</em>}</b>{endNote.line&&<span>{endNote.line}</span>}{endNote.next&&<button type="button" data-endless-next onClick={endlessAdvance}>{endNote.kind==='win'||endNote.kind==='skip'?'Next':'Again'}</button>}</div>}
+  {endNote&&view==='play'&&<div key={`note${endNote.key}`} className={styles.endNote} data-endless-note={endNote.kind} role="status" aria-live="polite"><b>{endNote.title}{endNote.gained>0&&<em>+{endNote.gained} ★</em>}{endNote.best&&<em data-endless-best>New best!</em>}</b>{endNote.line&&<span>{endNote.line}</span>}{endNote.next&&<button type="button" data-endless-next onClick={endlessAdvance}>{endNote.kind==='win'||endNote.kind==='skip'?'Next':'Again'}</button>}</div>}
   {wipe>0&&<div key={`wipe${wipe}`} className={styles.wipe} aria-hidden="true"/>}
   {/* Clean pitch (owner, Oct 27 2026): no tip, hint, lesson or modifier text while playing; the start and result cards teach. */}
   {inPlay&&level?.require.clock?<span ref={clockChip} className={styles.clockChip} role="timer" aria-label="Counter clock" data-clock data-left={`${level.require.clock.toFixed(1)} s`}/>:null}
