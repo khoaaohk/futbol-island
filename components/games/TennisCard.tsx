@@ -1,11 +1,11 @@
 'use client';
 import {useEffect,useState} from 'react';
-import {TENNIS_COURTS,TENNIS_TOURS,TENNIS_TOUR_RULES,tennisTakeaway,tennisLossLine,tennisTourUnlocked,tennisMatchName,tennisRunLives,type TennisState} from '@/lib/games/soccerTennis';
+import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_TOURS,TENNIS_TOUR_RULES,tennisTakeaway,tennisLossLine,tennisTourUnlocked,tennisMatchName,tennisRunLives,type TennisState} from '@/lib/games/soccerTennis';
 import {tennisRampRow,tennisMatchTip} from '@/lib/arcade/tennisEndless';
 import {readTennisStars} from '@/lib/arcade/tennisFeel';
 import type {ArcadeHUD} from '@/lib/arcade/arcadeGames';
 import {Icon} from '../Icon';
-import {TennisCourtPicker,TennisHowTo,tennisStarText} from './TennisCourtPicker';
+import {TennisCourtPicker,TennisHowTo} from './TennisCourtPicker';
 import styles from './TennisCourtPicker.module.css';
 import skin from './skins/tennis.module.css';
 import {tennisVenueFor} from '@/lib/arcade/tennisVenues';
@@ -83,7 +83,9 @@ export function TennisCard(p:Props){
   {t&&t.firstTouchTries>0&&<p className={styles.status} data-tennis-first-touch>First touches on target: <b>{t.firstTouchOnTarget}</b></p>}
   {confetti}
   {over&&!drill&&tennisLossLine(t!)?<p className={styles.why} data-tennis-why>{tennisLossLine(t!)}</p>:null}
-  {!(over&&!drill&&tennisLossLine(t!))&&<p className={styles.tip}>{earned<3?(earned?`3rd ★: ${court.star3}`:`So close! Best here ${tennisStarText(earned)}`):'All 3 stars on this court!'}</p>}
+  {/* Nov 17 2026: what to beat next on this court, always shown (it used to hide behind the loss line, and read "So close!" with no stars):
+      the drill's next target count, or the court's three star goals with this run's perfect touches. */}
+  {t&&<p className={styles.next} data-tennis-next>{earned>=3?'All 3 stars on this court!':drill?<><b>Next ★</b> Hit {TENNIS_DRILL.stars[Math.min(2,earned)]} targets (you hit {t.drillHits})</>:<><b>{earned?'Next ★':'Stars here'}</b> Win a match · 4 perfect touches · {court.star3}</>}</p>}
   {t&&<p className={styles.coach} data-tennis-tip>{drill?tennisMatchTip(t.match):tennisTakeaway(t)}</p>}
   {p.status&&<p role="status" className={styles.status}>{p.status}</p>}
   <button className={`${p.primaryClass} ${styles.play}`} disabled={p.pending} onClick={p.onStart}><Icon name="rotate" size={26}/>{p.hud.nextLabel??'Play again'}</button>

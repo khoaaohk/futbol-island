@@ -101,3 +101,6 @@
 @media(max-width:340px){.info{padding-right:12px;min-height:0}.thumb{display:none}}
 @media(max-height:520px){.card .title.title{margin:0 0 8px!important}.chip{height:46px}.card .bigScore{font-size:40px!important}.earned{font-size:30px!important}.chips{top:52px}.tourStrip{top:calc(env(safe-area-inset-top) + 92px)}}
 @media(prefers-reduced-motion:reduce){.confetti{display:none}.earned i[data-on],.rallyChip,.multChip,.pb[data-new]{animation:none}.chip,.iconBtn,.tourChip,.card .play.play.play{transition:none}.card .title.title,.hardTag,.result,.thumb{rotate:none}}
+/* Nov 17 2026: the full-time "what to beat next" line on a court (stars here, the next drill target). */
+.next{margin:0 0 10px!important;font-size:14px!important;font-weight:700;line-height:1.35!important;color:var(--cm-ink);text-align:left}
+.next b{font-weight:900;color:var(--cm-red,#e8402a)}
