@@ -143,6 +143,8 @@ ok('heat: one canvas, the loop only while playing, pixel ratio cap, low-power GL
  const shell=read('components/games/BallBlasterGame.tsx'),view=read('lib/arcade/ballblaster/view.ts');
  assert.equal((shell.match(/<canvas /g)||[]).length,0);assert.equal((view.match(/document\.createElement\('canvas'\)/g)||[]).length,2,'one GL canvas (made per mount) + one texture canvas helper');assert.match(view,/canvas\.remove\(\)/);assert.match(shell,/if\(phaseRef\.current!=='playing'\|\|!g\|\|!v\)return;/,'the loop stops off the pitch');assert.match(shell,/Math\.min\(\.1,\(now-last\.current\)\/1000\)/,'a long frame is clamped');
  assert.match(view,/powerPreference:'low-power'/);assert.match(view,/mobile\?1\.5:2/);assert.equal((view.match(/new T\.DirectionalLight/g)||[]).length,1,'one sun');assert.match(view,/InstancedMesh/);assert.doesNotMatch(view,/EffectComposer|postprocessing/);
- assert.match(view,/const PIECES=\d+/,'pooled pieces');assert.match(view,/forceContextLoss\(\)/);assert.match(view,/dispose\(\)\{/);assert.match(shell,/prefers-reduced-motion/);
+ assert.match(view,/const PIECES=\d+/,'pooled pieces');assert.match(view,/forceContextLoss\(\)/);assert.match(view,/dispose\(\)\{/);
+ // the kicker is the player's own island bean (shared arcade rig), kicked from the rig's contact phase, and freed with the view
+ assert.match(view,/createIslandArcadePlayer\(/);assert.match(view,/useMainAppearance\(\)/);assert.match(view,/kicker\.pose\(/);assert.match(view,/kicker\.dispose\(\)/);assert.equal((view.match(/createIslandArcadePlayer\(/g)||[]).length,1,'one bean');assert.match(shell,/prefers-reduced-motion/);
 });
 if(MAIN)console.log(`ballblaster-core: ${n} checks passed`);

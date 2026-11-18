@@ -13,8 +13,10 @@
  */
 import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
-import {createComicUniforms,comicDotCell,aimComicSun,comicMaterial,COMIC_INK,COMIC_PAPER} from '../comic/shading';
+import {createComicUniforms,comicDotCell,aimComicSun,comicMaterial,comicTree,COMIC_INK,COMIC_PAPER} from '../comic/shading';
 import {inkedPart,partAt,bakeParts,comicStarGeometry,flipFaces} from '../comic/ink';
+import {createIslandArcadePlayer} from '../islandArcadePlayer';
+import type {ArcadePoseOptions} from '../arcadePlayerMotion';
 import {BB,K,UNLOCK,halfW,BOARD_OUT,isMachine,type BallBlaster,type BlastEvent} from './core';
 
 export const BB_COLORS={sky:'#8fd4ee',grass:'#4fb85c',grassMown:'#5fc76a',line:'#fff3d6',sun:'#ffc83a',red:'#f0452e',teal:'#19b5a5',ink:COMIC_INK,paper:COMIC_PAPER};
@@ -25,6 +27,8 @@ const PIECE_TONES:Record<number,string[]>={1:['#e8e2d4','#f0452e','#cfd8dc','#5b
 const CAP:Record<number,number>={1:18,2:18,3:12,4:10,5:10,6:10,7:10,10:10,11:6,12:6,13:6,14:12,15:4};
 /** Machines are drawn this much bigger than their rules size: toys you can read from the far end of the pitch. */
 const MSCALE=1.3,PSCALE=1.12;
+/** The island bean kicker's scale (the rig is about 1.6 m tall: this keeps the old stand-in's height against the ball and machines). */
+const BEAN_S=.92;
 /** Where each machine's eyes sit (local, before MSCALE): height, forward, half-gap, size; one = a single big lens. */
 const EYE:Record<number,{y:number;z:number;g:number;s:number;one?:boolean}>={1:{y:1.3,z:.23,g:.11,s:.085},2:{y:.6,z:.21,g:.1,s:.1},3:{y:1.47,z:.2,g:.08,s:.065},4:{y:.22,z:.27,g:0,s:.12,one:true},
  5:{y:1.62,z:.22,g:.11,s:.085},6:{y:1.2,z:.23,g:.1,s:.09},7:{y:1.5,z:.24,g:.12,s:.075}};
@@ -225,18 +229,13 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   const statics=new T.Mesh(own(bakeParts(st)),vmat);scene.add(statics);
   const skyM=own(new T.MeshBasicMaterial({map:skyT,fog:false})),skyG=own(new T.PlaneGeometry(180,68));const sky=new T.Mesh(skyG,skyM);sky.position.set(0,27,-104);scene.add(sky);}
 
- /* ---- the kicker (a bean from behind) and the ball at its feet ---- */
- const bean=new T.Group();{const b:Parts=[];const kit=BB_COLORS.teal,sh='#1e2a44',skin='#ffd9a8';
-  P(b,cyl(.27,.3,.6,12),kit,0,.86,0,0,0,.045,true);P(b,box(.3,.05,.03),COMIC_PAPER,0,.98,.29,0,0,0);P(b,box(.05,.24,.03),COMIC_PAPER,.03,.86,.29,0,-.35,0);P(b,cyl(.2,.22,.06,12),BB_COLORS.red,0,1.16,0,0,0,0,true);
-  P(b,cyl(.28,.26,.22,12),sh,0,.5,0,0,0,.04,true);P(b,sph(.27,12),skin,0,1.42,0,0,0,.045,true);P(b,sph(.29,12),'#4a2f22',0,1.46,.06,0,0,0,true);
-  P(b,box(.14,.38,.14),sh,-.12,.2,0,0,0,.035);P(b,box(.17,.1,.3),COMIC_INK,-.12,.05,-.05,0,0,.02);P(b,box(.15,.12,.15),'#fff3d6',-.12,.32,0,0,0,0);
-  const m=new T.Mesh(bakeParts(b),vmat);m.castShadow=true;bean.add(m);
-  const l:Parts=[];P(l,box(.14,.38,.14),sh,0,-.2,0,0,0,.035);P(l,box(.15,.12,.15),'#fff3d6',0,-.08,0,0,0,0);P(l,box(.17,.1,.3),COMIC_INK,0,-.38,-.06,0,0,.02);
-  const leg=new T.Mesh(bakeParts(l),vmat);leg.position.set(.12,.4,0);leg.castShadow=true;bean.add(leg);
-  const a:Parts=[];P(a,box(.11,.42,.11),kit,0,-.18,0,0,0,.03);P(a,sph(.08,8),skin,0,-.42,0,0,0,.025,true);const armG=bakeParts(a);
-  const arms=[-1,1].map(s=>{const am=new T.Mesh(armG,vmat);am.position.set(s*.33,1.1,0);am.rotation.z=s*.25;bean.add(am);return am;});
-  bean.userData={leg,arms,body:m};}
- bean.position.set(BB.kx-.5,0,BB.kz+.4);bean.rotation.y=-.2;bean.scale.setScalar(.92);scene.add(bean);
+ /* ---- the kicker: the player's own island bean (their saved look and outfit) seen from behind, and the ball at its feet ----
+  * The shared arcade rig (lib/arcade/islandArcadePlayer.ts, as Breakaway and Tennis use it), printed in the comic bands. One rig,
+  * no extra light or pass. Its kick starts at the rig's contact phase on the frame the ball leaves, so the boot meets the ball. */
+ const kicker=createIslandArcadePlayer(BB_COLORS.teal,o.reduced,0);kicker.useMainAppearance();
+ const bean=kicker.root;bean.name='ballblaster-kicker';bean.scale.setScalar(BEAN_S);bean.position.set(BB.kx-.42,0,BB.kz+.42);
+ comicTree(bean,{uniforms:ink});bean.traverse(x=>{if((x as T.Mesh).isMesh){x.castShadow=true;x.receiveShadow=false;}});scene.add(bean);
+ const kickPose:ArcadePoseOptions={anticipate:.35};let kickNow=false,stunT=0,cheerT=0,shotPower=.5;
  const bt2=own(ballTex()),ballMat=own(lit(new T.MeshLambertMaterial({map:bt2}),true));
  const ballGeo=own((()=>{const s=new T.SphereGeometry(1,20,14).toNonIndexed(),h=new T.SphereGeometry(1.16,12,9).toNonIndexed();const uv=h.attributes.uv as T.BufferAttribute;for(let i=0;i<uv.count;i++)uv.setXY(i,.5,.985);flipFaces(h);const g=mergeGeometries([s,h])!;s.dispose();h.dispose();return g;})());
  const ready=new T.Mesh(ballGeo,ballMat);ready.scale.setScalar(BB.ballR);ready.position.set(BB.kx,BB.ballR,BB.kz);ready.castShadow=true;scene.add(ready);
@@ -299,19 +298,19 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  function star(x:number,y:number,z:number,s:number,color:string){const st=stars[starI];starI=(starI+1)%STARS;st.g.visible=true;st.g.position.set(x,y,z);st.t=0;st.life=.28;st.s=s;st.b.color.set(color);}
  function onEvent(e:BlastEvent){
   switch(e.type){
-   case 'shot':kickT=0;if(e.a>=BB.powerShot&&!o.reduced)push=1;break;
+   case 'shot':kickT=0;kickNow=true;shotPower=Math.max(.35,Math.min(1,e.a/BB.powerShot));if(e.a>=BB.powerShot&&!o.reduced)push=1;break;
    case 'bounce':if(e.kind===0&&e.a>2.5)puff(e.x,0,e.z,e.a>5?4:2,.5);break;
    case 'hit':star(e.x,e.y,e.z,.75,'#fff3d6');shake=Math.max(shake,.06);spawnPieces(e.kind,e.x,e.y,e.z,4,2.2,1);break;
    case 'block':star(e.x,e.y,e.z,.65,'#8fd0e6');spawnPieces(5,e.x,e.y,e.z,2,1.6);break;
    case 'break':{const big=e.kind===K.boss,mach=e.kind<10;spawnPieces(e.kind,e.x,e.y,e.z,big?60:e.kind===K.board?22:mach?16:12,big?7:4.6,big?14:mach?4:0);
-    star(e.x,e.y+.2,e.z,big?2.6:1.25,e.b?BB_COLORS.sun:mach?BB_COLORS.sun:'#fff3d6');puff(e.x,0,e.z,big?10:5,big?2.2:1);shake=Math.max(shake,big?.4:.14);hype=Math.max(hype,big?3:.8);if(big)camPull=1;break;}
+    star(e.x,e.y+.2,e.z,big?2.6:1.25,e.b?BB_COLORS.sun:mach?BB_COLORS.sun:'#fff3d6');puff(e.x,0,e.z,big?10:5,big?2.2:1);shake=Math.max(shake,big?.4:.14);hype=Math.max(hype,big?3:.8);if(big){camPull=1;cheerT=1;}break;}
    case 'boom':spawnPieces(K.barrel,e.x,.6,e.z,18,5.5);puff(e.x,0,e.z,9,2.4);star(e.x,1,e.z,1.9,'#8fd0e6');shake=Math.max(shake,.24);hype=Math.max(hype,1);break;
    case 'topple':if(e.a===1){puff(e.x,0,e.z,6,1.4);shake=Math.max(shake,.1);}break;
-   case 'leak':shake=Math.max(shake,.3);puff(e.x,0,0,6,1.2);break;
+   case 'leak':shake=Math.max(shake,.3);stunT=1;puff(e.x,0,0,6,1.2);break;
    case 'trick':star(e.x,Math.max(1,e.y),e.z,1.5,BB_COLORS.red);hype=Math.max(hype,1.5);break;
   }
  }
- function reset(){for(const p of pc)p.on=false;for(const b of bt)b.on=false;for(const d of dd)d.on=false;for(const t of tr)t.on=false;for(const s of stars)s.g.visible=false;aim=null;shake=0;camPull=0;push=0;kickT=9;if(tod!==0)setTod(0);}
+ function reset(){for(const p of pc)p.on=false;for(const b of bt)b.on=false;for(const d of dd)d.on=false;for(const t of tr)t.on=false;for(const s of stars)s.g.visible=false;aim=null;shake=0;camPull=0;push=0;kickT=9;kickNow=false;stunT=cheerT=0;kicker.resetPose();if(tod!==0)setTod(0);}
  /** The thing under a screen point (aim assist: a generous sphere), else the pitch under it. */
  const ray=new T.Raycaster(),ndc=new T.Vector2(),plane=new T.Plane(new T.Vector3(0,1,0),0),hitP=new T.Vector3(),center=new T.Vector3();
  function pick(g:BallBlaster|null,sx:number,sy:number):AimPick{ndc.set(sx/W*2-1,-(sy/H)*2+1);ray.setFromCamera(ndc,camera);let best=Infinity,res:AimPick|null=null;
@@ -393,11 +392,14 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
    M.compose(V.set(x,BB.ballR,z),Q.setFromAxisAngle(XV,d/BB.ballR),SV.setScalar(BB.ballR));balls.setMatrixAt(bn,M);balls.setColorAt(bn,C1.setRGB(1,1,1));bn++;}
   balls.count=bn;balls.visible=bn>0;balls.instanceMatrix.needsUpdate=true;if(balls.instanceColor)balls.instanceColor.needsUpdate=true;
   ready.visible=s.rack>0&&kickT>.18&&!s.over;
-  // the kick: wind back, swing through, arms out, a lean into it
-  kickT+=dt;{const ud=bean.userData as {leg:T.Object3D;arms:T.Object3D[];body:T.Object3D};const k=kickT;
-   const swing=-(k<.07?k/.07*.7:k<.22?.7-(k-.07)/.15*2.1:k<.45?-1.4+(k-.22)/.23*1.4:0);ud.leg.rotation.x=swing;
-   const out=k<.45?Math.sin(Math.min(1,k/.45)*Math.PI):0;ud.arms[0].rotation.z=-.25-out*.9;ud.arms[1].rotation.z=.25+out*.9;bean.rotation.x=0;ud.body.rotation.x=-out*.12;
-   if(!s.over&&k>.45){const idle=Math.sin(now*3)*.03;ud.arms[0].rotation.z=-.25-idle;ud.arms[1].rotation.z=.25+idle;}}
+  // the kick: while aiming the boot draws back (the rig's held shot, deeper with power); the shot frame starts the rig's strike at
+  // its contact phase (the ball leaves now), then the follow-through settles into the ready stance. A new shot restarts it cleanly.
+  kickT+=dt;stunT=Math.max(0,stunT-dt*1.6);cheerT=Math.max(0,cheerT-dt*.7);
+  {const held=!!aim&&!s.over&&s.rack>0&&!kickNow,tx=aim?aim.x:BB.kx,tz=aim?Math.min(aim.z,BB.kz-4):-20,bx=bean.position.x,bz=bean.position.z;
+   const f=Math.atan2(tx-bx,tz-bz),wx=BB.kx-bx,wz=BB.kz-bz,c=Math.cos(f),sn=Math.sin(f);
+   kickPose.charge=held?.25+aim!.power*.75:0;kickPose.shotPower=held?aim!.power:shotPower;kickPose.strikeX=(wx*c-wz*sn)/BEAN_S;kickPose.strikeZ=(wx*sn+wz*c)/BEAN_S;
+   kickPose.anticipate=s.over?0:.35;kickPose.stun=stunT;kickPose.celebrate=cheerT*.8;
+   kicker.pose(dt,0,f,kickNow?1:0,0,0,kickPose);kickNow=false;}
   // chunks, springs and bolts, dust, trail, stars
   // live particles are packed into the low instances, so a pool costs only what is alive
   let pn=0;for(let i=0;i<PIECES;i++){const p=pc[i];if(!p.on)continue;p.t+=fdt;if(p.t>p.life){p.on=false;continue;}
@@ -428,7 +430,10 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   get bossShown(){return bossShown;},
   get info(){return renderer.info.render;},
   get canvas(){return canvas;},
-  dispose(){scene.traverse(obj=>{const m=obj as T.Mesh;if(m.geometry)m.geometry.dispose();const mat=m.material as T.Material|T.Material[]|undefined;if(Array.isArray(mat))mat.forEach(x=>x.dispose());else mat?.dispose();});
+  dispose(){const tex=new Set<T.Texture>(),addT=(v:unknown)=>{if((v as T.Texture|null)?.isTexture)tex.add(v as T.Texture);};
+   // the rig's textures too (shared ones such as the bean face atlas hold this renderer otherwise; see arcadeStage dispose)
+   bean.traverse(x=>{const m=(x as T.Mesh).material as T.Material|T.Material[]|undefined;for(const mm of m?(Array.isArray(m)?m:[m]):[])for(const v of Object.values(mm)){addT(v);if(v&&typeof v==='object'&&!(v as T.Texture).isTexture&&!Array.isArray(v))for(const u of Object.values(v as Record<string,unknown>))addT((u as {value?:unknown}|null)?.value);}});
+   kicker.dispose();tex.forEach(t=>t.dispose());scene.traverse(obj=>{const m=obj as T.Mesh;if(m.geometry)m.geometry.dispose();const mat=m.material as T.Material|T.Material[]|undefined;if(Array.isArray(mat))mat.forEach(x=>x.dispose());else mat?.dispose();});
    for(const x of owned)x.dispose();for(const m of inst.values())m.dispose();eyes.dispose();keys.dispose();rotors.dispose();balls.dispose();pieces.dispose();bits.dispose();dust.dispose();trail.dispose();dots.dispose();blobs.dispose();for(const bg of (boss.userData as {geos:T.BufferGeometry[]}).geos)bg.dispose();
    renderer.dispose();renderer.forceContextLoss();canvas.remove();},
  };
