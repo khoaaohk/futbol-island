@@ -56,6 +56,8 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
  const [phase,setPhase]=useState<Phase>('menu'),phaseRef=useRef<Phase>('menu');
  const [hud,setHud]=useState<Hud>({score:0,level:1,lives:AH.LIVES,g0:0,g1:0,wait:true,between:false,first:true}),hudRef=useRef(hud);
  const [save,setSave]=useState<AirSave>(emptyAirSave),[result,setResult]=useState<Result|null>(null);
+ // Nov 17 2026: the moment a run passes the saved best, a NEW BEST! burst pops under the score bar (once per run, 1.8 s, no loop).
+ const [bestCall,setBestCall]=useState(false),bestCalled=useRef(false);
  const [board,setBoard]=useState<{score:number}|null>(null),[scores,setScores]=useState(false),[coarse,setCoarse]=useState(false);
  const entry=useArcadeEntry('airhockey');
  const stage=useRef<HTMLDivElement>(null),bg=useRef<HTMLCanvasElement>(null),fg=useRef<HTMLCanvasElement>(null),probe=useRef<HTMLElement>(null);
@@ -69,6 +71,8 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
  useEffect(()=>requestAnyOrientation(),[]);// upright first, but a phone held sideways still plays (the table lies on its side): no rotate card
 
  /** The rail labels and printed score on the table follow the match. */
+ useEffect(()=>{if(phase!=='playing'||bestCalled.current||save.best<=0||hud.score<=save.best)return;bestCalled.current=true;setBestCall(true);audio.current?.win();arcadeFeedback(null,'perfect');
+  const id=setTimeout(()=>setBestCall(false),1800);return()=>clearTimeout(id);},[phase,hud.score,save.best]);
  const paintHud=useCallback((g:AirFutbol)=>{const s=g.state;view.current?.setHud({top:`L${s.level} ${g.opponent.name.toUpperCase()}`,bottom:'YOU',goals:[s.goals[0],s.goals[1]],lives:s.lives});},[]);
  /* ---- the run's end: save, coins, today, board (once per run) ---- */
  const finish=useCallback(()=>{
@@ -128,6 +132,7 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
   game.current=createAirFutbol({seed:1+Math.floor(Math.random()*2_000_000_000)});run.current={id,done:false};
   beginBoardSession('airhockey');
   view.current?.reset();endAt.current=0;setResult(null);setBoard(null);paintHud(game.current);
+  bestCalled.current=false;setBestCall(false);
   const n:Hud={score:0,level:1,lives:AH.LIVES,g0:0,g1:0,wait:true,between:false,first:true};hudRef.current=n;setHud(n);
   change('playing');view.current?.render(game.current,0);wake();
  },[change,entry,paintHud,wake]);
@@ -200,6 +205,7 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
    <canvas ref={fg} className={styles.play} tabIndex={0} aria-label="Air Futbol table. Drag your striker to hit the puck into the other goal."/>
    {live&&<p className={styles.srOnly} aria-live="polite" data-air-score={`${hud.g0}-${hud.g1}`}>{`You ${hud.g0}, ${oppName} ${hud.g1}. Level ${hud.level}. ${hud.lives} ${hud.lives===1?'life':'lives'} left.`}</p>}
    {phase==='playing'&&hud.wait&&<div className={styles.hint} data-air-hint data-end="bottom" aria-live="polite"><b>{hud.first?(coarse?'Touch and drag your striker':'Move the mouse to drive your striker'):'Touch to serve'}</b>{hud.first&&<small>{`First to ${AH.SOLO_TO} beats ${oppName}`}</small>}</div>}
+   {phase==='playing'&&bestCall&&<ComicBurst word="New best!" size={19} tilt={-5} className={styles.bestCall} data-air-best-call aria-live="polite"/>}
    {phase==='playing'&&hud.between&&<ComicPanel tone="paper" tilt={-1.5} className={styles.next} data-air-next={hud.level} aria-live="polite"><small>Next up · Level {hud.level}</small><strong>{oppName}</strong><span>{game.current?.opponent.tip??opp.tip}</span></ComicPanel>}
   </div>
   <ArcadeTopBar game="airhockey" className={styles.topBar} backTitle="Back to arcade" onBack={leave} value={live?hud.score:undefined} word="pts" bumpKey={hud.score} paused={phase==='paused'} canPause={live} onPause={()=>phase==='playing'?pause():resume()}/>

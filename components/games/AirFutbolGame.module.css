@@ -81,3 +81,7 @@
 @media (orientation:landscape) and (max-height:559px){.game [data-air-card=start] .chips,.diagram{display:none}.idea{grid-template-columns:1fr}
  .hint[data-end=bottom]{top:calc(50% + 31px);left:71%}}
 @media (prefers-reduced-motion:reduce){.hint,.next{animation:none}.hint[data-end=bottom]{rotate:none}.score[data-new-best]{animation:none}.diagram{rotate:none}}
+/* Nov 17 2026: the in-run NEW BEST! burst under the score bar: pops in three steps, holds, then React removes it (1.8 s, once a run). */
+.bestCall{position:absolute;z-index:4;left:50%;top:calc(env(safe-area-inset-top,0px) + 74px);translate:-50% 0;pointer-events:none;animation:airBest .3s steps(3) both}
+@keyframes airBest{from{transform:scale(.5) rotate(-10deg)}to{transform:none}}
+@media(prefers-reduced-motion:reduce){.bestCall{animation:none}}
