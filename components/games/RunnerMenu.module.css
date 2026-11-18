@@ -105,3 +105,7 @@
  .result{margin:4px 0 6px}.score{font-size:44px}.stars{font-size:26px}.why{margin:5px auto 3px;padding:5px 9px;font-size:13px}
 }
 
+/* Nov 17 2026: what to beat next at full time (the first missed star, the gap to the best), then the shared high-score slot. */
+.next{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 12px;margin:6px 0 2px;font:800 14px/1.25 system-ui,sans-serif;color:var(--ink)}
+.next b{color:var(--red);font-weight:900}.next span+span{color:var(--red)}
+.hsSlot{margin:8px 0 0}.hsSlot:empty{display:none}

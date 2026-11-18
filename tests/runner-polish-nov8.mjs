@@ -115,5 +115,6 @@ for(const id of ['cup','legend']){const s=game(id,{lives:1e6});let most=0,fast=0
 {const m=read('components/games/RunnerMenu.tsx'),css=read('components/games/RunnerMenu.module.css');
  assert.equal((m.match(/className=\{styles\.play\}/g)||[]).length,1);assert(/'Retry'/.test(m)&&/data-runner-back/.test(m)&&/>Scores</.test(m));assert(!/How to play|aria-label="Help"/.test(m),'help panel folded into one keys line');
  assert(/data-runner-why/.test(m)&&/KeyR/.test(m),'why line and quick retry');assert(!/IslandBrush/.test(/\.play\{[^}]*\}/.exec(css)[0]+/\.small small\{[^}]*\}/.exec(css)[0]),'buttons use the regular sans');
- assert(/\.small\{[^}]*min-height:var\(--arcade-small-h\)/.test(css),'44 px+ secondary buttons');}
+ assert(/\.small\{[^}]*min-height:var\(--arcade-small-h\)/.test(css),'44 px+ secondary buttons');
+ /* Nov 17 2026: full time names the first missed star (with metres to go) and the gap to the best, then hosts the high-score slot. */assert(/data-runner-next>/.test(m)&&/to beat your best/.test(m)&&/m to go/.test(m)&&/data-runner-next>[\s\S]*?<div className=\{styles\.hsSlot\} data-hs-slot\/>/.test(m),'what to beat next on the runner card');}
 console.log('PASS runner polish Nov 8: elite tiers + own boards, unlocks/stars, tier bests, coin parity, perfect-dodge chain, loss line, fairness, heat/reduced/sound, simplified card');

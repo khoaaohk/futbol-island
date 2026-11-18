@@ -60,6 +60,8 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
  const completed=over&&!!state&&(state.finished||state.won);
  // Elite tiers race their own best (their scores never touch the classic record).
  const shownBest=elite?runnerTierBest(mode):best;
+ // Nov 17 2026: full time names what to beat next: the first star this run missed (the route's own star labels) and the gap to the best.
+ const miss=over&&result?result.flags.findIndex(f=>!f):-1,mTo=miss===0&&state?Math.ceil((m.starRule?m.starRule.far:m.finish)-(state.distance??0)):0,nextStar=miss>=0?`${m.stars[miss]}${mTo>0?` (${mTo} m to go)`:''}`:undefined,runScore=Number(String(score).replace(/[^0-9]/g,''))||0,gap=over&&!state?.newBest&&shownBest>runScore?shownBest-runScore:0;
  const why=over&&state?(runnerLossLine(state)||runnerFinishLine(state)):'';
  const takeaway=over&&state?(state.bestPerfectChain>1?`Best perfect-dodge chain: ×${1+Math.min(4,state.bestPerfectChain)}`:runnerLessonTakeaway(state)||detail.split('\n').filter(Boolean).slice(-1)[0]||''):'';
  const stats=over&&state?`${state.goals} goal${state.goals===1?'':'s'} · ${Math.floor(state.distance)} m${state.perfectDodges?` · ${state.perfectDodges} perfect`:''}`:'';
@@ -74,6 +76,8 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
      {state?.newBest&&<span className={styles.newBest} role="status">New best!</span>}
      {result&&<p className={styles.stars} aria-label={`${result.count} of 3 stars`}>{result.flags.map((f,i)=><span key={i} data-on={f||undefined}>{f?'★':'☆'}</span>)}{result.gained>0&&<em>+{result.gained} new!</em>}</p>}
      <p className={styles.line}>{stats}</p>
+     {(nextStar||gap>0)&&<p className={styles.next} data-runner-next>{nextStar&&<span><b>Next ★</b> {nextStar}</span>}{gap>0&&<span>{gap<=Math.max(150,shownBest*.15)?'So close! ':''}{gap} to beat your best</span>}</p>}
+     <div className={styles.hsSlot} data-hs-slot/>
      {why&&<p className={styles.why} data-runner-why>{why}</p>}
      {takeaway&&<p className={styles.line}>{takeaway}</p>}
      {daily&&today&&<p className={styles.line} data-runner-daily-result>{today.runs<=1?'Today’s board run!':'Practice run. Your first run today counts.'}</p>}
