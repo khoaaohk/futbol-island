@@ -19,6 +19,7 @@ export const RB={
  modPts:50,levelPts:200,secPts:10,starPts:100,streakStep:.25,streakMax:3,levelStep:.1,levelMax:3,
  /** from this level on each level has a clock: par x a share that shrinks 0.04 a level from clockMul to clockMin, + clockAdd seconds.
   *  Running out costs a heart and the clock starts again (the ball goes back to the checkpoint). */
+ /** levels up to this one are gentle: a fall puts the ball back close by (level 1: no heart lost) */gentle:3,
  clockFrom:4,clockMul:2.2,clockMin:1.15,clockStep:.04,clockAdd:10,
  knock:3.0,
  /** medal marks from the drifting-thumb bot (tests/rollball-core.cjs --bots): noise 1.0-1.4 runs score about 850-7100 (median
@@ -300,7 +301,8 @@ export type Ball={x:number;y:number;z:number;vx:number;vy:number;vz:number;air:b
 export type RollState={seed:number;daily:boolean;level:number;plan:number[];world:World;ball:Ball;mod:number;hearts:number;score:number;streak:number;lostThisLevel:boolean;
  levelTime:number;clock:number;clockMax:number;over:boolean;overWhy:''|'water'|'clock';t:number;stats:RollStats;
  /** the level is won and the next one is being dealt after `between` seconds */between:number;goalAt:number;
- /** a fall / time-out is playing out before the respawn */respawnIn:number;ix:number;iz:number};
+ /** a fall / time-out is playing out before the respawn */respawnIn:number;ix:number;iz:number;
+ /** levels 1-3: grounded spots sampled every 0.4 s (the older one is the respawn after a fall into the water), and whether to use it */safe:{x:number;y:number;z:number;px:number;py:number;pz:number;t:number;mod:number};near:boolean};
 const emptyStats=():RollStats=>({levels:0,modules:0,stars:0,starsSeen:0,falls:0,timeouts:0,perfect:0,bestStreak:0,knocks:0,time:0});
 
 export type RollBall=ReturnType<typeof createRollBall>;
@@ -310,7 +312,7 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
  const dealPlan=(level:number)=>opts.fixPlan?[...opts.fixPlan]:levelPlan(rnd,level,seen);
  const plan0=dealPlan(1);
  const s:RollState={seed:opts.seed,daily:!!opts.daily,level:1,plan:plan0,world:buildWorld(plan0),ball:{x:0,y:RB.r,z:1,vx:0,vy:0,vz:0,air:false,surf:'grass',key:false,ground:-1,roll:0},mod:0,hearts:RB.hearts,score:0,streak:0,lostThisLevel:false,
-  levelTime:0,clock:0,clockMax:0,over:false,overWhy:'',t:0,stats:emptyStats(),between:0,goalAt:0,respawnIn:0,ix:0,iz:0};
+  levelTime:0,clock:0,clockMax:0,over:false,overWhy:'',t:0,stats:emptyStats(),between:0,goalAt:0,respawnIn:0,ix:0,iz:0,safe:{x:0,y:RB.r,z:1,px:0,py:RB.r,pz:1,t:0,mod:-1},near:false};
  const emit=(type:RollEventType,a=0,b=0,x=s.ball.x,y=s.ball.y,z=s.ball.z,points=0)=>{events.push({type,a,b,x,y,z,points});};
  const setClock=()=>{const par=levelPar(s.plan);s.clockMax=s.level>=RB.clockFrom?clockFor(s.level,par):0;s.clock=s.clockMax;};
  setClock();s.stats.starsSeen+=s.world.mods.filter(m=>m.star).length;
@@ -325,13 +327,19 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
   for(let i=P.r0;i<P.r1;i++){const r=w.recvs[i];r.open=0;if(r.piece>=0){const p=w.pieces[r.piece];p.dy=r.kind==='bridge'?-4:0;}}
   s.ball.key=false;
  }
- function spawn(){const P=s.world.mods[s.mod],b=s.ball;b.x=0;b.z=P.z+1;b.y=RB.r;b.vx=b.vy=b.vz=0;b.air=false;b.roll=0;resetModule(s.mod);emit('respawn',s.mod);}
+ function spawn(){const P=s.world.mods[s.mod],b=s.ball;
+  // early levels: back on the last firm spot, puzzle kept as it was
+  if(s.near&&s.safe.mod===s.mod){s.near=false;b.x=s.safe.px;b.y=s.safe.py+.02;b.z=s.safe.pz;b.vx=b.vy=b.vz=0;b.air=false;b.roll=0;emit('respawn',s.mod);return;}s.near=false;
+ b.x=0;b.z=P.z+1;b.y=RB.r;b.vx=b.vy=b.vz=0;b.air=false;b.roll=0;resetModule(s.mod);emit('respawn',s.mod);}
  function loseHeart(why:'water'|'clock'){
+  // forgiving first minutes: a fall on levels 1-3 puts the ball back close by; on level 1 it costs no heart
+  const early=why==='water'&&s.level<=RB.gentle;s.near=early&&s.safe.mod===s.mod;
+  if(early&&s.level===1){s.stats.falls++;s.respawnIn=.9;return;}
   s.hearts--;s.lostThisLevel=true;s.streak=0;if(why==='water')s.stats.falls++;else s.stats.timeouts++;emit('heart',s.hearts,why==='water'?0:1);
   if(s.hearts<=0){s.over=true;s.overWhy=why;emit('over',why==='water'?0:1);return;}
   s.respawnIn=why==='water'?.9:.6;
  }
- function nextLevel(){
+ function nextLevel(){s.safe.mod=-1;s.near=false;
   s.level++;s.plan=dealPlan(s.level);s.world=buildWorld(s.plan);s.mod=0;s.lostThisLevel=false;s.levelTime=0;setClock();
   s.stats.starsSeen+=s.world.mods.filter(m=>m.star).length;const b=s.ball;b.x=0;b.z=1;b.y=RB.r;b.vx=b.vy=b.vz=0;b.air=false;b.key=false;emit('level',s.level);
  }
@@ -478,6 +486,7 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
   let wet=b.y<RB.water+RB.r*.2;
   if(!wet)for(let i=w.mods[Math.max(0,s.mod-1)].r0;i<w.mods[Math.min(w.mods.length-1,s.mod+1)].r1;i++){const r=w.recvs[i];if(r.kind==='drain'&&r.open<.5&&b.x>=r.x0&&b.x<=r.x1&&b.z>=r.z0&&b.z<=r.z1&&b.y-RB.r*.3<r.wy){wet=true;break;}}
   if(wet){emit('splash',-1,0,b.x,RB.water,b.z);loseHeart('water');return;}
+  if(s.level<=RB.gentle&&!b.air&&b.ground>=0&&w.pieces[b.ground].role===0&&!w.pieces[b.ground].dy&&s.t-s.safe.t>=.4){const f=s.safe;if(f.mod===s.mod){f.px=f.x;f.py=f.y;f.pz=f.z;}else{f.px=b.x;f.py=b.y;f.pz=b.z;}f.x=b.x;f.y=b.y;f.z=b.z;f.t=s.t;f.mod=s.mod;}
   // module change: the checkpoint moves to the module the ball reached (only forward)
   while(s.mod<w.mods.length-1&&b.z>w.mods[s.mod+1].z+.5&&!b.air){s.mod++;const lf=levelFactor(s.level),pts=w.mods[s.mod-1].def.id==='goal'?0:Math.round(RB.modPts*lf);s.score+=pts;s.stats.modules++;emit('module',s.mod,0,b.x,b.y,b.z,pts);}
   const P=w.mods[s.mod];if(P.goal){const [gx,gz]=P.goal;if(Math.abs(b.x-gx)<1.5&&b.z>gz-.5&&b.z<gz+.9&&b.y<1.4)scoreGoal();}

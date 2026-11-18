@@ -55,3 +55,13 @@ per module and surface, modules disposed two behind the ball, pooled dust / spla
 nothing drawn on the cards, pause or a hidden tab. Measured in headless Chrome (swiftshader), phone: before the polish 60-76 draw calls / 5-7k triangles on the heaviest old modules
 (136 on a new chained module); after: 40-65 draw calls / 9-17k triangles a module, 81-93 calls / 19-23k triangles on three-module
 levels. Only the ball's module, the one behind (first 8 m) and two ahead are drawn.
+
+## Improve pass (Nov 17 2026, batch 1)
+- Slopes read from the chase camera: hillshade gradient x2.4, every slope shaded a band darker than flat tops, mowing-stripe UVs laid
+  by the ground's length on hills; the contact shadow tilts to the slope under the ball; the camera rises (up to 1.8 m) on climbs.
+- Cone stacks are three tall training cones (0.62 m, white band, 12 x 4 segments: same triangles as before); fan streaks are
+  wider, crossed and opaque with blue edges; shore foam stops halfway across a narrow channel instead of stacking.
+- First minutes: the first plate pressed in a session flashes its cable; a fall on levels 1-3 (RB.gentle) respawns on the last
+  firm spot sampled 0.4-0.8 s earlier with the puzzle kept, and costs no heart on level 1. Drifting-thumb bot after this change
+  (its script restarts from the respawn spot): 750-11,300 (was 1,100-9,500 at HEAD); medal lines unchanged.
+- Budget, Knock the Cones + Over the Hill, phone: 76 / 85 draws, 18.1k / 18.3k tris before; 76 / 84, 18.1k / 18.3k after.
