@@ -6,7 +6,7 @@
  * the north lounge (x −11.8, z −8..−4) and the corner plinths (±13.6): 6 cabinets 3 m, 9 → 2.75 m, 10 → 2.44 m (0.54 m between bodies).
  * The air hockey table is not in the row.
  */
-export const ARCADE_ROW=['pinball','kitrush','runner','snake','tennis','puzzle','lineup'] as const;
+export const ARCADE_ROW=['pinball','kitrush','runner','snake','tennis','puzzle','lineup','streetdash'] as const;
 export const ARCADE_ROW_Z=-10,ARCADE_ROW_MAX_HALF=11;
 export const arcadeRowPitch=(count:number=ARCADE_ROW.length):number=>count<2?3:Math.min(3,ARCADE_ROW_MAX_HALF*2/(count-1));
 function rowSpot(id:typeof ARCADE_ROW[number]){const n=ARCADE_ROW.length,i=ARCADE_ROW.indexOf(id);return {x:Math.round((i-(n-1)/2)*arcadeRowPitch(n)*100)/100,z:ARCADE_ROW_Z,yaw:0};}
@@ -25,6 +25,8 @@ export const arcadeCabinets = [
  {id:'airhockey',name:'Air Futbol',short:'AIR FUTBOL',lesson:'Play the angles. Guard your goal.',color:'#19b5a5',x:-10,z:-1,yaw:Math.PI/2},
  // Nov 17 2026: Line Up!, the block-fit cabinet (docs/arcade-aaa/lineup-direction.md), at the east end of the back row.
  {id:'lineup',name:'Line Up!',short:'LINE UP!',lesson:'Fill the line. Keep your shape.',color:'#f0452e',...rowSpot('lineup')},
+ // Nov 17 2026: Street Dash, the side-scrolling run (docs/arcade-aaa/streetdash-direction.md), after Line Up! at the east end of the back row.
+ {id:'streetdash',name:'Street Dash',short:'STREET DASH',lesson:'Keep the ball close. Look up early.',color:'#19b5a5',...rowSpot('streetdash')},
 ] as const;
 export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
 /** Admin analytics id for a cabinet (activity `arcade_<id>`, counter `en:game_<id>`). The ids are allow-listed inside the SQL ingest

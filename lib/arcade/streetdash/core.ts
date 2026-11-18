@@ -230,7 +230,7 @@ export function createStreetDash(opts:{seed:number;daily?:boolean;fixTier?:numbe
   const px=b.x,py=b.y;let windy=false;
   if(!b.ground)for(const w of S.winds)if(w.on&&b.x>=w.x0&&b.x<=w.x1){windy=true;break;}
   b.x+=v*(windy?SD.wind:1)*dt;
-  if(!b.ground){let g=SD.g;if(b.fast)g*=SD.fastG;else if(b.held&&b.hold>0&&b.vy>0)g=SD.gHold;
+  if(!b.ground){let g:number=SD.g;if(b.fast)g*=SD.fastG;else if(b.held&&b.hold>0&&b.vy>0)g=SD.gHold;
    if(b.held)b.hold-=dt;else b.hold=0;b.vy-=g*dt;b.y+=b.vy*dt;b.coyote+=dt;b.air+=dt;}
   else b.run+=v*dt;
   // a ledge face in front: climb it if the feet are nearly there, else it is a hit (and the bean is set on top)

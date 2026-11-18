@@ -95,16 +95,16 @@ ok('device save: best, medal, daily claim and day streak, near-miss and coach li
  assert.ok(S.coachLine({...stats,lines:0},10).length>10);assert.ok(S.LINEUP_TIPS.length>=5);
 });
 ok('arcade wiring: last in the back row, board, coins, save key, last score, room route, analytics, SQL',()=>{
- const cab=arcadeCabinets.find(c=>c.id==='lineup');assert.ok(cab,'a cabinet');assert.equal(ARCADE_ROW[ARCADE_ROW.length-1],'lineup','appended to the end of the row');assert.equal(cab.lesson,'Fill the line. Keep your shape.');
+ const cab=arcadeCabinets.find(c=>c.id==='lineup');assert.ok(cab,'a cabinet');assert.equal(ARCADE_ROW[ARCADE_ROW.indexOf('streetdash')-1],'lineup','appended to the end of the row (Nov 17 2026: Street Dash came after it)');assert.equal(cab.lesson,'Fill the line. Keep your shape.');
  assert.equal(cab.z,-10);assert.equal(cab.yaw,0);
  assert.ok(L.BOARD_GAMES.includes('lineup')&&L.HALL_MACHINES.includes('lineup'),'one all-time board, in the Hall');assert.equal(L.BOARD_TIER_TABS.lineup,undefined,'no second (daily) board');
  assert.equal(arcadeCoinTarget('lineup',{points:4000}),10);assert.equal(arcadeCoinTarget('lineup',{points:1e6}),ARCADE_COIN_CAPS.lineup);
  assert.ok(isSyncKey('fi2-lineup-v1'),'the save travels with the player');assert.ok(LAST_SCORE_GAMES.includes('lineup')&&LAST_SCORE_GAMES.includes('lineup_daily'));
  const room=read('components/ArcadeRoom.tsx');assert.match(room,/import\('\.\/games\/LineUpGame'\)/);assert.match(room,/game==='lineup'\?<LineUp onExit=\{back\}\/>/);
- assert.match(read('lib/analytics/islandIds.ts'),/'snake','airhockey','lineup'\]/);assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_lineup','Arcade: Line Up!'\]/);
+ assert.match(read('lib/analytics/islandIds.ts'),/'snake','airhockey','lineup'[,\]]/);/* Nov 17 2026: Street Dash may follow */assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_lineup','Arcade: Line Up!'\]/);
  assert.match(read('components/arcade/HighScoreEntry.tsx'),/'lineup'/,'results-first high-score strip');assert.match(read('components/games/skins/index.ts'),/lineup:lineup\.skin/);
- const sql=read('docs/arcade-aaa/lineup-supabase.sql'),list=/check \(game in \(([^)]*)\)\)/.exec(sql.replace(/--.*$/gm,''))[1].split(',').map(v=>v.trim().replace(/'/g,''));assert.deepEqual(list,[...L.BOARD_GAMES],'the owner file names every board');assert.match(sql,/between 1 and 9000000/);assert.match(sql,/'airhockey', 'lineup'\)\);/);assert.match(sql,/'arcade_airhockey','arcade_lineup',/);assert.match(sql.trim().split('\n').pop(),/as missing\) x;$/);
- assert.match(read('supabase/migrations/20261124_analytics_lineup.sql'),/'arcade_lineup'/);{const mig=read('supabase/migrations/20261123_lineup_boards.sql');for(const g of L.BOARD_GAMES)assert.ok(mig.includes(`'${g}'`),'migration names '+g);}
+ const sql=read('docs/arcade-aaa/lineup-supabase.sql'),list=/check \(game in \(([^)]*)\)\)/.exec(sql.replace(/--.*$/gm,''))[1].split(',').map(v=>v.trim().replace(/'/g,''));assert.deepEqual(list,[...L.BOARD_GAMES].filter(g=>g!=='streetdash'/* Nov 17 2026: docs/arcade-aaa/streetdash-supabase.sql is its superset */),'the owner file names every board');assert.match(sql,/between 1 and 9000000/);assert.match(sql,/'airhockey', 'lineup'\)\);/);assert.match(sql,/'arcade_airhockey','arcade_lineup',/);assert.match(sql.trim().split('\n').pop(),/as missing\) x;$/);
+ assert.match(read('supabase/migrations/20261124_analytics_lineup.sql'),/'arcade_lineup'/);{const mig=read('supabase/migrations/20261123_lineup_boards.sql');for(const g of L.BOARD_GAMES.filter(g=>g!=='streetdash'/* Nov 17 2026: 20261125_streetdash_boards.sql */))assert.ok(mig.includes(`'${g}'`),'migration names '+g);}
  const shell=read('components/games/LineUpGame.tsx');assert.match(shell,/beginBoardSession\('lineup'\)/);assert.match(shell,/!r\.daily\|\|settled\.dailyFirst/,'only the first daily run posts');
  assert.match(shell,/takeTodayLaunch|data-lineup-daily/,'the daily challenge is offered on the start card');
 });

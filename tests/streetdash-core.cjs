@@ -7,7 +7,7 @@ require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f
 const K=require('../lib/arcade/streetdash/core.ts'),{SD,HZ,CHUNKS,rampAt}=K,STEP=SD.step,BOTS=process.argv.includes('--bots');
 const TRACE=process.env.SDTRACE?process.env.SDTRACE.split(',').map(Number):null;
 const read=p=>fs.readFileSync(p,'utf8');
-let n=0;const ok=(name,fn)=>{const t0=Date.now();fn();n++;if(BOTS)console.log(`  ${name} (${Date.now()-t0} ms)`);};
+let n=0;const MAIN=require.main===module,ok=(name,fn)=>{if(!MAIN)return;const t0=Date.now();fn();n++;if(BOTS)console.log(`  ${name} (${Date.now()-t0} ms)`);};
 
 /* ---- bots ---- */
 /** One tick: scheduled presses, then one fixed step. */
@@ -48,7 +48,7 @@ function scan(seed,tier,metres){const g=K.createStreetDash({seed,fixTier:tier}),
   for(const sg of s.segs)if(sg.on&&!seen.has('g'+sg.id))seen.set('g'+sg.id,{gap:sg.x0});s.bean.x+=1;s.bean.y=0;s.bean.ground=true;g.advance(STEP);s.hits=0;s.invuln=1;s.hearts=3;s.over=false;}
  return seen;}
 /* ---- checks ---- */
-if(require.main!==module){module.exports={playBot,scan,firstHit,findPlan,K};return;}// the bots, for a debugging script
+module.exports={playBot,scan,firstHit,findPlan,K};// the bots, for a debugging script (required, the checks below do not run)
 ok('patterns: at least 18 hand-made chunks, every hazard kind used, the three backdrops',()=>{
  assert.ok(CHUNKS.length>=18,`${CHUNKS.length} chunks`);assert.equal(new Set(CHUNKS.map(c=>c.id)).size,CHUNKS.length);
  const kinds=new Set();for(const o of scan(3,6,3000).values())if(o.kind)kinds.add(o.kind);for(const o of scan(4,2,3000).values())if(o.kind)kinds.add(o.kind);
@@ -128,4 +128,41 @@ ok('free runs: the perfect bot also gets through the lessons and the ramp; a slo
  assert.ok(med(pf)>=SD.medals[1],'a clean 3 km earns Silver at least');assert.ok(Math.max(...gd)<SD.medals[2]*3,'Gold is a stretch, not out of reach');
  const L=require('../lib/arcade/leaderboard.ts'),R=L.BOARD_RULES.streetdash;if(R)for(const b of [...sloppy,...good,...perfect])assert.ok(b.s.score<=R.base+R.perSecond*b.secs,`board rate holds (${b.s.score} in ${b.secs.toFixed(0)} s)`);
 });
-console.log(`streetdash-core: ${n} checks passed`);
+ok('device save: best, longest run, medal, daily claim and day streak, near-miss and coach lines',()=>{
+ const S=require('../lib/arcade/streetdash/save.ts'),stats={stars:4,volleys:3,goals:1,crates:1,gates:0,near:2,hits:3,falls:0,bestStreak:2,jumps:30,slides:5,chunks:20,steals:0};
+ let st=S.settleStreetdash(S.emptyStreetdashSave(),{score:900,daily:false,day:'2026-11-17',dist:600,stats});assert.ok(st.newBest&&st.newMedal);assert.equal(st.save.best,900);assert.equal(st.save.medal,1);assert.equal(st.save.far,600);
+ st=S.settleStreetdash(st.save,{score:500,daily:true,day:'2026-11-17',dist:300,stats});assert.ok(st.dailyFirst);assert.equal(st.save.best,900,'a daily run does not touch the endless best');assert.equal(st.streak,1);
+ const again=S.settleStreetdash(st.save,{score:700,daily:true,day:'2026-11-17',dist:400,stats});assert.equal(again.dailyFirst,false,'later daily runs are practice');assert.equal(again.dailyBest,700);
+ const next=S.settleStreetdash(again.save,{score:10,daily:true,day:'2026-11-18',dist:10,stats});assert.equal(next.streak,2,'a day in a row');assert.equal(S.liveStreak(next.save,'2026-11-20'),0,'a missed day ends it');
+ assert.equal(S.sanitizeStreetdashSave({best:-5,medal:99}).best,0);assert.equal(S.sanitizeStreetdashSave({medal:99}).medal,3);
+ assert.match(S.nearMissLine({score:750,best:0,newBest:true,daily:false,stats}),/50 points from Bronze/);assert.match(S.nearMissLine({score:800,best:900,newBest:false,daily:false,stats}),/100 points from your best/);
+ for(const k of ['fall','banner','dog','tackle','puddle','gate',''])assert.ok(S.coachLine(stats,k).length>10);assert.ok(S.STREETDASH_TIPS.length>=5);
+});
+ok('arcade wiring: last in the back row, board, coins, save key, last score, room route, analytics, SQL',()=>{
+ const L=require('../lib/arcade/leaderboard.ts'),{arcadeCabinets,ARCADE_ROW}=require('../lib/arcade/arcadeCatalog.ts'),{arcadeCoinTarget}=require('../lib/arcade/arcadeWalletCore.ts'),{ARCADE_COIN_CAPS}=require('../lib/economy.ts');
+ const {isSyncKey}=require('../lib/saves/snapshot.ts'),{LAST_SCORE_GAMES}=require('../lib/arcade/lastScore.ts');
+ const cab=arcadeCabinets.find(c=>c.id==='streetdash');assert.ok(cab,'a cabinet');assert.equal(ARCADE_ROW[ARCADE_ROW.length-1],'streetdash','appended to the end of the row');assert.equal(cab.lesson,'Keep the ball close. Look up early.');assert.equal(cab.z,-10);assert.equal(cab.yaw,0);
+ assert.ok(L.BOARD_GAMES.includes('streetdash')&&L.HALL_MACHINES.includes('streetdash'),'one all-time board, in the Hall');assert.equal(L.BOARD_TIER_TABS.streetdash,undefined,'no second (daily) board');
+ assert.equal(arcadeCoinTarget('streetdash',{points:1000}),4);assert.equal(arcadeCoinTarget('streetdash',{points:1e6}),ARCADE_COIN_CAPS.streetdash);assert.equal(K.streetdashCoins(1000),4);
+ assert.ok(isSyncKey('fi2-streetdash-v1'),'the save travels with the player');assert.ok(LAST_SCORE_GAMES.includes('streetdash')&&LAST_SCORE_GAMES.includes('streetdash_daily'));
+ const room=read('components/ArcadeRoom.tsx');assert.match(room,/import\('\.\/games\/StreetDashGame'\)/);assert.match(room,/game==='streetdash'\?<StreetDash onExit=\{back\}\/>/);
+ assert.match(read('lib/analytics/islandIds.ts'),/'lineup','streetdash'\]/);assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_streetdash','Arcade: Street Dash'\]/);
+ assert.match(read('components/arcade/HighScoreEntry.tsx'),/'streetdash'/,'results-first high-score strip');assert.match(read('components/games/skins/index.ts'),/streetdash:streetdash\.skin/);
+ const sql=read('docs/arcade-aaa/streetdash-supabase.sql'),list=/check \(game in \(([^)]*)\)\)/.exec(sql.replace(/--.*$/gm,''))[1].split(',').map(v=>v.trim().replace(/'/g,''));assert.deepEqual(list,[...L.BOARD_GAMES],'the owner file names every board');
+ assert.match(sql,/between 1 and 9000000/);assert.match(sql,/'airhockey', 'lineup', 'streetdash'\)\);/);assert.match(sql,/'arcade_airhockey','arcade_lineup','arcade_streetdash',/);assert.match(sql,/SUPERSET of docs\/arcade-aaa\/lineup-supabase\.sql/);assert.match(sql,/OK, Street Dash board installed/);
+ assert.match(read('supabase/migrations/20261126_analytics_streetdash.sql'),/'arcade_lineup','arcade_streetdash'/);{const mig=read('supabase/migrations/20261125_streetdash_boards.sql');for(const g of L.BOARD_GAMES)assert.ok(mig.includes(`'${g}'`),'migration names '+g);}
+ const shell=read('components/games/StreetDashGame.tsx');assert.match(shell,/beginBoardSession\('streetdash'\)/);assert.match(shell,/!r\.daily\|\|settled\.dailyFirst/,'only the first daily run posts');assert.match(shell,/data-streetdash-daily/,'the daily run is offered on the start card');
+ assert.match(read('scripts/check-arcade-audio.cjs'),/game==='streetdash'/);
+});
+ok('sound: one limiter wired to the output only; made on the first tap; no loops',()=>{
+ const a=read('lib/arcade/streetdash/audio.ts');assert.match(a,/master\.connect\(limiter\);limiter\.connect\(ctx\.destination\);/);assert.equal((a.match(/limiter\.connect\(/g)||[]).length,1);
+ assert.doesNotMatch(a,/setInterval|setTimeout|loop\s*=\s*true/);assert.match(a,/function unlock\(\)/);assert.match(read('components/games/StreetDashGame.tsx'),/\(audio\.current\?\?=createStreetdashAudio\(\)\)\.unlock\(\)/);
+});
+ok('heat and input: one canvas, the loop only while playing, DPR cap 2, pooled effects, reduced motion, the thumb and the keys',()=>{
+ const shell=read('components/games/StreetDashGame.tsx'),view=read('lib/arcade/streetdash/view.ts'),core=read('lib/arcade/streetdash/core.ts');
+ assert.equal((shell.match(/<canvas /g)||[]).length,1,'one canvas');assert.match(shell,/if\(phaseRef\.current!=='playing'\|\|!g\|\|!v\)return;/,'the loop stops off the street');assert.match(shell,/Math\.min\(2,window\.devicePixelRatio\|\|1\)/);
+ assert.match(shell,/Math\.min\(\.1,\(now-last\.current\)\/1000\)/,'a long frame is clamped');assert.match(shell,/prefers-reduced-motion/);assert.match(view,/const shake=\(a:number\)=>\{if\(reduced\)return;/,'no shake in reduced motion');
+ assert.match(view,/parts:Part\[\]=Array\.from\(\{length:96\}/,'pooled particles');assert.match(core,/No allocation in a step/);assert.doesNotMatch(core.slice(core.indexOf('function step()'),core.indexOf('generate();\n return')),/new |\[\]|=>\{|\.map\(|\.filter\(/,'no allocation inside step()');
+ assert.match(shell,/'KeyX'\|\|e\.code==='Enter'/);assert.match(shell,/'ArrowDown'\|\|e\.code==='KeyS'/);assert.match(shell,/TAP_WAIT=55/,'a touch waits 55 ms to tell a tap from a swipe');assert.match(shell,/g\.press\('jump',\(now-tc\.t\)\/1000\)/,'and the wait is handed to the core');
+});
+if(MAIN)console.log(`streetdash-core: ${n} checks passed`);
