@@ -1,3 +1,4 @@
+-- SUPERSEDED FOR PASTING (Nov 17 2026 merge): the owner pastes docs/arcade-aaa/new-games-supabase.sql (all new arcade games in one file); this file is kept for reference.
 -- Futbol Island: Line Up!, the arcade's block-fit game (Nov 17 2026; lib/arcade/lineup/core.ts, lib/arcade/leaderboard.ts BOARD_GAMES
 -- 'lineup', lib/analytics/islandIds.ts 'arcade_lineup').
 -- NOT APPLIED. Paste once into the Supabase SQL editor, AFTER every other board and analytics file (it is safe as the LAST file run

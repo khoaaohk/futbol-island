@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Arcade audio probe (Nov 10 2026): proves a game really puts sound on the output, instead of reading the code.
-//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|clearbox] [--suspended] [--headed]
+//   node scripts/check-arcade-audio.cjs --port=<n> [tennis|pinball|runner|live|puzzle|kitrush|snake|airhockey|lineup|trophydrop|clearbox] [--suspended] [--headed]
+// trophydrop (Nov 17 2026): windows land (a boot dropped through the game's own drop()) and merge (two size-3 balls dropped on one
+// spot); menu / paused must be SILENT.
 // pinball (Nov 10 2026): windows flipper (KeyA, KeyD), bumper (ball sent into rondo cone 0), goal (ball in the goal mouth) and drain
 // (ball at the bottom, ball save off) are driven on the live table through window.__arcade3d after the launch window.
 // kitrush (Nov 10 2026): windows slice, combo and life-lost are driven through the game's own swipe() on its three teaching waves
@@ -58,6 +60,13 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await cut(true,2);await wait(800);must.push('combo');await label('');
    await cut(false,1);await wait(900);must.push('life-lost');await label('');await wait(400);
    await page.locator('[data-arcade-pause]').tap().catch(()=>{});await wait(700);await label('paused');await wait(900);quiet.push('paused');
+  }else if(game==='trophydrop'){quiet.push('menu');
+   await page.waitForFunction(()=>window.__trophy&&window.__trophy.phase==='playing',null,{timeout:30000});
+   const D=(tier,x)=>page.evaluate(([tier,x])=>{const g=window.__trophy.game,s=g.state;s.cool=0;s.cur=tier;g.aim(x);g.drop();window.__trophy.wake();},[tier,x]);
+   await label('land');await D(3,20);await wait(900);must.push('land');await label('');await wait(300);
+   await label('merge');await D(1,70);await wait(120);await D(1,70);await wait(1200);must.push('merge');await label('');
+   if(!(await page.evaluate(()=>window.__trophy.game.state.stats.merges>=1)))errors.push('no merge happened');
+   await page.locator('[data-arcade-pause]').tap().catch(()=>{});await wait(700);await label('paused');await wait(900);quiet.push('paused');await label('');
   }else if(game==='snake'){quiet.push('menu');
    await page.waitForFunction(()=>window.__snake&&window.__snake.phase==='playing'&&window.__snake.game.state.ticks>=1,null,{timeout:30000});
    // stands the pitch's own next team-mate one cell ahead of the captain (turning away from a touchline first) until `joined` reaches the goal

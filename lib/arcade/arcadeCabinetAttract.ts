@@ -2,7 +2,7 @@ import * as T from 'three';
 import type {ArcadeCabinetId} from './arcadeCatalog';
 
 const INK='#152e38',CREAM='#fff0cd',GOLD='#efc060',CORAL='#ee927e',TEAL='#388d7d',BLUE='#83cce0';
-const TITLES:Record<ArcadeCabinetId,string>={runner:'BREAKAWAY',tennis:'FUTBOL TENNIS',pinball:'FUTBOL PINBALL',puzzle:'PASS PUZZLES',kitrush:'KIT RUSH',snake:'SQUAD SNAKE',airhockey:'AIR FUTBOL',lineup:'LINE UP!',clearbox:'CLEAR THE BOX'};
+const TITLES:Record<ArcadeCabinetId,string>={runner:'BREAKAWAY',tennis:'FUTBOL TENNIS',pinball:'FUTBOL PINBALL',puzzle:'PASS PUZZLES',kitrush:'KIT RUSH',snake:'SQUAD SNAKE',airhockey:'AIR FUTBOL',lineup:'LINE UP!',trophydrop:'TROPHY DROP',clearbox:'CLEAR THE BOX'};
 const DASH=[5,4],SOLID:number[]=[];
 const PINBALL_PATH=[128,153,69,103,110,65,186,90,150,139,119,101,153,43,128,25];
 const PUZZLE_PATH=[60,144,105,113,171,86,136,34];
@@ -69,11 +69,20 @@ export function createArcadeCabinetAttract(id:ArcadeCabinetId){
   if(p>.8)burst(128,96,clamp((p-.8)/.2));
   label(p<.25?'CALL YOUR KEEPER FIRST':p<.55?'DEFENDERS, THEN MIDFIELD':p<.8?'FORWARDS LAST':'FULL SQUAD! 4-4-2',p>.8?GOLD:CREAM);
  }
+ // Trophy Drop (Nov 17 2026): balls drop into a glass cabinet, two of a size pop into a bigger one, a burst, the golden trophy.
+ function drawTrophy(t:number){
+  const p=(t%7)/7;rect(70,30,116,140,CREAM);rect(66,166,124,8,CORAL);line(70,30,70,170,INK,3);line(186,30,186,170,INK,3);line(70,170,186,170,INK,3);
+  const fall=ease(clamp(p/.3)),merged=p>.45;circle(98,154,13,BLUE);circle(98,154,9,GOLD);circle(160,151,17,TEAL);
+  if(!merged){circle(128,60+fall*86,10,INK);circle(128,60+fall*86,8,GOLD);circle(118,158,8,INK);circle(118,158,6,GOLD);}
+  else{const g=ease(clamp((p-.45)/.15));circle(124,152,(8+g*5)+2,INK);circle(124,152,8+g*5,CORAL);if(p<.75)burst(124,140,clamp((p-.45)/.3));}
+  if(p>.75){const q=ease(clamp((p-.75)/.2));circle(128,90,22*q+2,INK);circle(128,90,22*q,GOLD);}
+  label(p<.3?'SLIDE AND DROP':p<.45?'TWO OF THE SAME':p<.75?'POP! BIGGER':'MAKE THE TROPHY',p>.75?GOLD:CREAM);
+ }
  function drawStrikers(t:number){
   const p=(t%7)/7;pitch();const run=ease((p-.33)/.3);bean(67,142,GOLD);bean(155+18*run,124-52*run,GOLD);bean(181,111,CORAL,-.9*ease((p-.35)/.12),0,ease((p-.35)/.12));bean(93,74,CORAL);bean(128+Math.sin(t*2)*15,45,CORAL);bean(48,86,GOLD);
   pathBall(STRIKER_PATH,clamp(p/.85));for(let n=3;n>0;n--)circle(ballX+n*2,ballY+n*3,1.5,GOLD);football(ballX,ballY,4);burst(124,31,clamp((p-.85)/.15));label(p<.3?'PASS TO YOUR TEAMMATE':p<.62?'MOVE BEYOND THE TACKLE':p<.85?'PLACE THE FINISH':'GOAL!',p>.85?GOLD:CREAM);
  }
- function draw(time:number){c.setTransform(1,0,0,1,0,0);rect(0,0,256,192,INK);c.lineCap='round';c.fillStyle=CREAM;c.font='bold 12px sans-serif';c.textAlign='center';c.fillText(TITLES[id],128,14);if(id==='runner')drawRunner(time);else if(id==='tennis')drawTennis(time);else if(id==='pinball')drawPinball(time);else if(id==='puzzle')drawPuzzle(time);else if(id==='kitrush')drawKitRush(time);else if(id==='snake')drawSnake(time);else drawStrikers(time);texture.needsUpdate=true;frames++;}
+ function draw(time:number){c.setTransform(1,0,0,1,0,0);rect(0,0,256,192,INK);c.lineCap='round';c.fillStyle=CREAM;c.font='bold 12px sans-serif';c.textAlign='center';c.fillText(TITLES[id],128,14);if(id==='runner')drawRunner(time);else if(id==='tennis')drawTennis(time);else if(id==='pinball')drawPinball(time);else if(id==='puzzle')drawPuzzle(time);else if(id==='kitrush')drawKitRush(time);else if(id==='snake')drawSnake(time);else if(id==='trophydrop')drawTrophy(time);else drawStrikers(time);texture.needsUpdate=true;frames++;}
  draw(id==='tennis'?2.65:id==='runner'?4.7:id==='puzzle'?3.2:2.7);
  return{texture,get frames(){return frames;},update(_dt:number,time:number,active:boolean,reduced:boolean){if(disposed||!active)return;if(reduced){if(!lastReduced){draw(id==='tennis'?2.65:id==='runner'?4.7:id==='puzzle'?3.2:2.7);lastReduced=true;}return;}lastReduced=false;const slot=Math.floor(time*8);if(slot===lastSlot)return;lastSlot=slot;draw(time);},dispose(){if(disposed)return;disposed=true;texture.dispose();canvas.width=canvas.height=1;}};
 }

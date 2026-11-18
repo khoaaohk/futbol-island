@@ -14,7 +14,7 @@
  *    on the same local play day.
  */
 export const ARCADE_LAST_KEY='fi2-arcade-last-v1';
-export const LAST_SCORE_GAMES=['runner','pinball','puzzle','kitrush','snake','airhockey','lineup','clearbox',
+export const LAST_SCORE_GAMES=['runner','pinball','puzzle','kitrush','snake','airhockey','lineup','trophydrop','clearbox',
  'runner_daily','runner_cup','runner_legend','pinball_derby','pinball_final','kitrush_daily','snake_daily','lineup_daily','clearbox_daily'] as const;
 /** The daily-run and elite-tier entries: the cabinet, the mode the Welcome back tap opens (`mode` = a tier, `today` = the daily
  *  run) and the words for "Your last <label> was …". */

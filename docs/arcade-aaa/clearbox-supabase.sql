@@ -1,3 +1,4 @@
+-- SUPERSEDED FOR PASTING (Nov 17 2026 merge): the owner pastes docs/arcade-aaa/new-games-supabase.sql (all new arcade games in one file); this file is kept for reference.
 -- Futbol Island: Clear the Box, the arcade's tap-out game (Nov 17 2026; lib/arcade/clearbox/core.ts, lib/arcade/leaderboard.ts
 -- BOARD_GAMES 'clearbox', lib/analytics/islandIds.ts 'arcade_clearbox').
 -- A SUPERSET of docs/arcade-aaa/lineup-supabase.sql: it carries everything that file does (Line Up!'s board id 'lineup' and its

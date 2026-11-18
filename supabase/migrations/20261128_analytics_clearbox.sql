@@ -1,6 +1,6 @@
 -- Futbol Island admin analytics (Nov 17 2026): Clear the Box's activity key 'arcade_clearbox' (lib/analytics/islandIds.ts ARCADE_GAMES).
 -- NOT APPLIED. The owner pastes docs/arcade-aaa/clearbox-supabase.sql instead (the same function plus the board id).
--- Additive and safe to run twice: analytics_ingest is replaced in place by the body of 20261124_analytics_lineup.sql with one more
+-- Additive and safe to run twice: analytics_ingest is replaced in place by the body of 20261126_analytics_trophydrop.sql with one more
 -- activity key; every key, place and cell allowed before is still allowed. Old rows are untouched.
 -- The LAST result must be one row:
 --   status = OK, Clear the Box activity installed
@@ -40,7 +40,7 @@ begin
                and value ~ '^[0-9]{1,7}$' and value::integer > 0),
            (select coalesce(jsonb_object_agg(key, least(value::numeric, v_e)::integer), '{}'::jsonb)
               from jsonb_each_text(case when jsonb_typeof(p->'activity_ms') = 'object' then p->'activity_ms' else '{}'::jsonb end)
-             where key in ('walk','ride','fly','boat','fishing','job','lesson','watch','quiz','book','cards','films','vending','talk','coaches','paths','menu','arcade_lobby','arcade_live','arcade_runner','arcade_tennis','arcade_pinball','arcade_puzzle','arcade_snake','arcade_airhockey','arcade_lineup','arcade_clearbox','museum_hall','exhibit_timeline','exhibit_laws-1863','exhibit_penalty-1891','exhibit_stadiums','exhibit_boots','exhibit_var-2018','exhibit_worldcup-1930','exhibit_wwc-1991','exhibit_futsal-1989','exhibit_laced-leather','exhibit_telstar-1970','exhibit_shirts','exhibit_hall-of-fame','exhibit_ballon-dor','exhibit_first-international-1872','exhibit_offside-rules','exhibit_formations-history','exhibit_floodlights-1878','exhibit_copa-america-1916','exhibit_keeper-hands-1912','exhibit_free-kick-wall','exhibit_ball-curve','exhibit_throw-in','konbini_shop','kit_shop','kit_studio','swim','controller','other','idle')
+             where key in ('walk','ride','fly','boat','fishing','job','lesson','watch','quiz','book','cards','films','vending','talk','coaches','paths','menu','arcade_lobby','arcade_live','arcade_runner','arcade_tennis','arcade_pinball','arcade_puzzle','arcade_snake','arcade_airhockey','arcade_lineup','arcade_trophydrop','arcade_clearbox','museum_hall','exhibit_timeline','exhibit_laws-1863','exhibit_penalty-1891','exhibit_stadiums','exhibit_boots','exhibit_var-2018','exhibit_worldcup-1930','exhibit_wwc-1991','exhibit_futsal-1989','exhibit_laced-leather','exhibit_telstar-1970','exhibit_shirts','exhibit_hall-of-fame','exhibit_ballon-dor','exhibit_first-international-1872','exhibit_offside-rules','exhibit_formations-history','exhibit_floodlights-1878','exhibit_copa-america-1916','exhibit_keeper-hands-1912','exhibit_free-kick-wall','exhibit_ball-curve','exhibit_throw-in','konbini_shop','kit_shop','kit_studio','swim','controller','other','idle')
                and value ~ '^[0-9]{1,7}$' and value::integer > 0),
            (select coalesce(jsonb_object_agg(key, v), '{}'::jsonb) from (
               select key, least(value::integer, v_e / 1000) v
@@ -63,6 +63,6 @@ revoke all on function public.analytics_ingest(jsonb) from public, anon, authent
 grant execute on function public.analytics_ingest(jsonb) to service_role;
 
 -- Self-check: the last result of this file.
-select case when exists (select 1 from pg_proc where proname = 'analytics_ingest' and prosrc like '%arcade_lineup%' and prosrc like '%arcade_clearbox%' and prosrc like '%stadium_plaza%' and prosrc like '%< 1891%'
+select case when exists (select 1 from pg_proc where proname = 'analytics_ingest' and prosrc like '%arcade_lineup%' and prosrc like '%arcade_trophydrop%' and prosrc like '%arcade_clearbox%' and prosrc like '%stadium_plaza%' and prosrc like '%< 1891%'
     and prosrc like '%arcade_airhockey%' and prosrc like '%exhibit_throw-in%')
   then 'OK, Clear the Box activity installed' else 'NOT INSTALLED: analytics_ingest (arcade_clearbox)' end as status;

@@ -27,7 +27,7 @@
 /** Nov 10 2026: 'kitrush' is Kit Rush (lib/arcade/kitrush/core.ts), the swipe cabinet that took Island Strikers' place in the arcade;
  * 'kitdaily' is its Daily Rush (one seed per local play day; the first finished run of the day posts). The 'live' boards and rows
  * stay as they are. They need docs/arcade-aaa/kitrush-supabase.sql (the owner pastes it; it must run after every other board file). */
-export const BOARD_GAMES=['runner','pinball','tennis','live','puzzle','kick','cupfinal','legend','livepro','livelgnd','tenpro','tenlgnd','pinderby','pinfinal','puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily','kitrush','kitdaily','snake','snakedaily','airhockey','lineup','clearbox'] as const;/* Nov 17 2026: 'clearbox' = Clear the Box (lib/arcade/clearbox/core.ts); needs docs/arcade-aaa/clearbox-supabase.sql *//* Nov 17 2026: 'lineup' = Line Up! (lib/arcade/lineup/core.ts); needs docs/arcade-aaa/lineup-supabase.sql *//* Nov 11 2026: 'airhockey' = Air Futbol's solo run against the machine (lib/arcade/airhockey/core.ts); needs docs/arcade-aaa/airhockey-supabase.sql */// Nov 10 2026: 'snake' = Squad Snake (lib/arcade/snake/core.ts), 'snakedaily' = its Daily Squad; they need docs/arcade-aaa/endless-supabase.sql
+export const BOARD_GAMES=['runner','pinball','tennis','live','puzzle','kick','cupfinal','legend','livepro','livelgnd','tenpro','tenlgnd','pinderby','pinfinal','puzpro','puzlgnd','runwarm','runnight','runstorm','rundaily','kitrush','kitdaily','snake','snakedaily','airhockey','lineup','trophydrop','clearbox'] as const;/* Nov 17 2026: 'clearbox' = Clear the Box (lib/arcade/clearbox/core.ts); needs docs/arcade-aaa/clearbox-supabase.sql *//* Nov 17 2026: 'lineup' = Line Up! (lib/arcade/lineup/core.ts); needs docs/arcade-aaa/lineup-supabase.sql *//* Nov 17 2026: 'trophydrop' = Trophy Drop's one all-time board (lib/arcade/trophydrop/core.ts); needs docs/arcade-aaa/trophydrop-supabase.sql *//* Nov 11 2026: 'airhockey' = Air Futbol's solo run against the machine (lib/arcade/airhockey/core.ts); needs docs/arcade-aaa/airhockey-supabase.sql */// Nov 10 2026: 'snake' = Squad Snake (lib/arcade/snake/core.ts), 'snakedaily' = its Daily Squad; they need docs/arcade-aaa/endless-supabase.sql
 export type BoardGame=typeof BOARD_GAMES[number];
 /** Nov 8 2026: the Hall of High Scores' tab DISPLAY order: each elite tier board sits right after its parent game's board
  * (BOARD_GAMES keeps the data order and ids unchanged). */
@@ -38,7 +38,7 @@ export const BOARD_TAB_ORDER:readonly BoardGame[]=BOARD_GAMES.filter(g=>!TIER_TA
  * stands in the arcade room today, in room order. A machine's mode boards (BOARD_TIER_TABS) are not listed (Nov 11: "keep it simple"); a results card that opens the Hall on one shows that single board with its name.
  * Boards of things that are not a machine in the room (Island Strikers, retired Nov 10; Summit Kick on the island) are not listed;
  * their rows stay in the data and a card that opens the Hall on one of them shows that single board. */
-export const HALL_MACHINES:readonly BoardGame[]=['kitrush','runner','snake','tennis','pinball','puzzle','airhockey','lineup','clearbox'];
+export const HALL_MACHINES:readonly BoardGame[]=['kitrush','runner','snake','tennis','pinball','puzzle','airhockey','lineup','trophydrop','clearbox'];
 export const hallMachineOf=(g:BoardGame):BoardGame|null=>HALL_MACHINES.includes(g)?g:HALL_MACHINES.find(m=>BOARD_TIER_TABS[m]?.includes(g))??null;
 export const isBoardGame=(g:unknown):g is BoardGame=>typeof g==='string'&&(BOARD_GAMES as readonly string[]).includes(g);
 
@@ -125,6 +125,9 @@ export const BOARD_RULES:Record<BoardGame,{name:string;unit:string;max:number;ba
  snake:{name:'Squad Snake',unit:'points',max:3_000_000,base:800,perSecond:700,minSeconds:8,learn:'Call your eleven. Build the shape.'},
  airhockey:{name:'Air Futbol',unit:'points',max:2_000_000,base:500,perSecond:220,minSeconds:10,learn:'Play the angles. Guard your goal.'},// solo run only: 2,525 points is the most one first-to-5 match can pay (tests/airhockey-core.cjs), and a match takes well over 12 s
  lineup:{name:'Line Up!',unit:'points',max:3_000_000,base:1500,perSecond:450,minSeconds:10,learn:'Fill the line. Keep your shape.'},// Nov 17 2026: a 4-line combo on a x4 streak at level 21 pays ~12k in one drop, a fast bot ~60-180 points a second sustained (tests/lineup-core.cjs)
+ // Trophy Drop (Nov 17 2026, endless): a merge pays 2-320 x chain (cap x5), a golden double 640 x chain; bots: 60-140/s when they drop as fast
+ // as the 0.42 s cooldown allows, so 400/s shuts out typed-in scores. 2M is hours of play at the top rate.
+ trophydrop:{name:'Trophy Drop',unit:'points',max:2_000_000,base:600,perSecond:400,minSeconds:8,learn:'Small touches add up to big wins. Merge your way to the golden trophy.'},
  clearbox:{name:'Clear the Box',unit:'points',max:3_000_000,base:2000,perSecond:220,minSeconds:10,learn:'Time your run. Make the space.'},// Nov 17 2026: a clean x4 box late in a run pays ~2k at once; bots score ~80-110 points a second sustained (tests/clearbox-core.cjs)
  snakedaily:{name:'Daily Squad',unit:'points',max:3_000_000,base:800,perSecond:700,minSeconds:8,learn:'Same squad list for everyone today. Your first run counts.'},
 };
