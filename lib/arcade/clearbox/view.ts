@@ -66,7 +66,9 @@ export function createClearboxView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opt
   c.fillStyle='rgba(0,0,0,.06)';for(let y=0;y<H;y+=8)for(let x=((y/8)%2)*4;x<W;x+=8){c.beginPath();c.arc(x,y,1.2,0,6.283);c.fill();}
  }
  function layoutFor(b:Box){
-  const room=L.h-topClear-bottomClear,cellW=(L.w-32)/(b.w+.7),cellH=(room-10)/(b.h+.7+1.5),cell=Math.max(26,Math.floor(Math.min(cellW,cellH,76)));
+  // Nov 17 2026: the box runs nearly edge to edge on a phone (10 px margins, room for the chalk pad and the edge arrows), so the
+  // early 5x5 and 6x6 boxes fill an upright screen instead of floating in grass; a 390 px phone keeps cells >= 49 px up to 7x9.
+  const room=L.h-topClear-bottomClear,cellW=(L.w-20)/(b.w+.5),cellH=(room-6)/(b.h+.6+1.3),cell=Math.max(26,Math.floor(Math.min(cellW,cellH,88)));
   const bw=cell*b.w,bh=cell*b.h,by=Math.round(topClear+cell*1.0+Math.max(4,(room-bh-cell*1.9)*.45));
   Object.assign(L,{cell,bw,bh,bx:Math.round((L.w-bw)/2),by,cols:b.w,rows:b.h});
  }
