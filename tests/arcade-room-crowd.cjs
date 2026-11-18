@@ -62,5 +62,16 @@ console.log('NPC_DISTINCT_ACTIONS_PASS: 72 authored exchanges, individual tempo,
   let visits=0;for(let f=0;f<30*90;f++){if(f===30*20)crowd.setFriendSlots(2);if(f===30*45)crowd.setFriendSlots(0);crowd.update(1/30,f/30,13,10);
    for(const n of crowd.debugStates){if(n.away)continue;for(const m of pair)assert(!(Math.abs(n.x-m.x)<GASHA_SIZE.w/2+.3&&Math.abs(n.z-m.z)<GASHA_SIZE.d/2+.3),`visitor ${n.id} walked through ${m.id} (${n.x.toFixed(2)}, ${n.z.toFixed(2)})`);}}
   for(const n of crowd.debugStates)visits+=n.visits;assert(visits>=crowd.debugStates.length,'visitors still go from cabinet to cabinet along the row');crowd.dispose();}
+ // Nov 17 2026 bug: a walk to a cabinet (Squad Snake first seen) stopped short beside the visitor playing it, because a visitor stands 0.7 m
+ // to the side of the cabinet's walk-up spot (closer than the body spacing) and the walk never arrived. Every cabinet now gets a free spot.
+ {const {arcadeFreeSpot,ARCADE_BODY_SPACING}=load(path.join(ROOT,'lib/arcade/arcadeBodyCollision.ts')),all=C.arcadeHubCabinets(),scene=new T.Scene(),crowd=createArcadeRoomCrowd({scene,mobile:false,cabinets:all,bounds:{minX:-14,maxX:14,minZ:-11,maxZ:12}});
+  let blockedBefore=0,checked=0;for(let f=0;f<30*40;f++){crowd.update(1/30,f/30,13,10);if(f%15)continue;
+   for(const v of crowd.debugStates){if(v.away||v.phase!=='play')continue;const c=all[v.cabinet];if(!c||c.id===C.ARCADE_TABLE_ID)continue;const bx=c.x+Math.sin(c.yaw)*1.8,bz=c.z+Math.cos(c.yaw)*1.8,out={x:0,z:0};
+    if(crowd.debugStates.some(o=>!o.away&&Math.hypot(bx-o.x,bz-o.z)<ARCADE_BODY_SPACING))blockedBefore++;
+    assert(arcadeFreeSpot(bx,bz,Math.cos(c.yaw),-Math.sin(c.yaw),crowd.debugStates.filter(o=>!o.away),out),`${c.id}: a free walk-up spot exists`);checked++;
+    for(const o of crowd.debugStates)if(!o.away)assert(Math.hypot(out.x-o.x,out.z-o.z)>=ARCADE_BODY_SPACING,`${c.id}: the walk-up spot is clear of visitor ${o.id}`);assert(Math.hypot(out.x-bx,out.z-bz)<=.81,`${c.id}: still in front of the cabinet`);}}
+  assert(checked>20&&blockedBefore>0,`visitors at play were checked (${checked}) and the old centre spot was blocked (${blockedBefore})`);crowd.dispose();
+  const scn=fs.readFileSync(path.join(ROOT,'lib/arcade/arcadeRoomScene.ts'),'utf8');assert(/arcadeFreeSpot\(walkSpot\.x,walkSpot\.z,walkSpot\.lx,walkSpot\.lz,people,target\)/.test(scn)&&/walkStall>\.6/.test(scn)&&/arcadeDetour\(x,z,target,people,walkDetours<3\)/.test(scn),'the room walk uses the free spot, steps round a visitor who stopped in the lane, and gives up a blocked waypoint');
+  {const {arcadeDetour}=load(path.join(ROOT,'lib/arcade/arcadeBodyCollision.ts')),v={x:0,z:-1},d=arcadeDetour(0,0,{x:0,z:-5},[v]);assert(d&&Math.hypot(d.x-v.x,d.z-v.z)>=ARCADE_BODY_SPACING&&d.z<0,'a visitor standing in the lane gets a waypoint round it');assert.equal(arcadeDetour(0,0,{x:0,z:-5},[{x:0,z:1}]),null,'a body behind the walker is not in the way');}}
  console.log('ARCADE_BACK_ROW_PASS',JSON.stringify({pitch:[6,9,10].map(n=>+C.arcadeRowPitch(n).toFixed(2)),xs}));
 }
