@@ -3,6 +3,8 @@ import {LEGEND_PACK_PRICE,MYSTERY_PACK_OPTIONS,PACKS_PER_DAY,PACK_RESTOCK_MESSAG
 import {trainingPay} from '../town/dailyMeter';
 import {ARCADE_PLAY_COST as PLAY_COST,ARCADE_COIN_CAPS as COIN_CAPS,PUZZLE_FIRST_SOLVE_COINS as PUZZLE_FIRST} from '../economy';
 /** `learn`: one-off learning coins (lessons, hidden balls, stories, journeys, explore, paths), paid once ever and never metered. */
+/** Nov 18 2026: 'clearbox' and 'streetdash' are retired (no cabinet, no earn rule); kept here and in lib/economy.ts ARCADE_COIN_CAPS so
+ *  coins players already earned in them stay in their saved wallets (sanitize drops runs of unknown games). */
 export type ArcadeCoinGame='runner'|'pinball'|'tennis'|'live'|'puzzle'|'island'|'learn'|'kitrush'|'snake'|'airhockey'|'lineup'|'trophydrop'|'clearbox'|'streetdash'|'rollball'|'ballblaster';
 export const ARCADE_PLAY_COST=PLAY_COST;// lib/economy.ts
 /** Explicit one-time local testing credit; ordinary gameplay caps remain unchanged. */
@@ -65,9 +67,7 @@ export function arcadeCoinTarget(game:Exclude<ArcadeCoinGame,'puzzle'|'island'>,
  if(game==='airhockey')value=Math.floor(n(s.points)/250);// Air Futbol (Nov 11 2026): `points` is the solo run's score, 1 coin per 250 (two-player matches pay nothing)
  if(game==='lineup')value=Math.floor(n(s.points)/400);// Line Up! (Nov 17 2026): `points` is the run's score, 1 coin per 400
  if(game==='trophydrop')value=Math.floor(n(s.points)/150);// Trophy Drop (Nov 17 2026): `points` is the run's score, 1 coin per 150
- if(game==='clearbox')value=Math.floor(n(s.points)/400);// Clear the Box (Nov 17 2026): `points` is the run's score, 1 coin per 400
  if(game==='rollball')value=Math.floor(n(s.points)/300);// Roll It In (Nov 17 2026): `points` is the run's score, 1 coin per 300
- if(game==='streetdash')value=Math.floor(n(s.points)/250);// Street Dash (Nov 17 2026): `points` is the run's score, 1 coin per 250
  if(game==='ballblaster')value=Math.floor(n(s.points)/2000);// Ball Blaster (Nov 17 2026): `points` is the run's score, 1 coin per 2,000 (lib/arcade/ballblaster/core.ts ballblasterCoins)
  if(game==='kitrush')value=Math.floor(n(s.points)/150);// Kit Rush (Nov 10 2026): `points` is the run's score, 1 coin per 150
  return Math.min(ARCADE_COIN_CAPS[game],value);

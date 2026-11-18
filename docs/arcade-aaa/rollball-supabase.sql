@@ -1,4 +1,6 @@
 -- Futbol Island: Roll It In, the arcade's rolling-ball puzzle (Nov 17 2026; lib/arcade/rollball/core.ts, lib/arcade/leaderboard.ts
+-- Nov 18 2026: DO NOT PASTE this file. Paste docs/arcade-aaa/swap-games-supabase.sql instead (both games in one file; this one
+-- alone would leave 'ballblaster' out of the game allow-list).
 -- BOARD_GAMES 'rollball', lib/analytics/islandIds.ts 'arcade_rollball').
 -- FOR THE OWNER. Paste this whole file into the Supabase SQL editor and press Run ONLY IF docs/arcade-aaa/new-games-supabase.sql was
 -- already pasted before Roll It In joined it. Otherwise paste new-games-supabase.sql (it now carries Roll It In too). Both are safe.

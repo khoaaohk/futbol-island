@@ -1,4 +1,6 @@
 -- Ball Blaster for Supabase (Nov 17 2026): paste this WHOLE file into the Supabase SQL editor once and run it.
+-- Nov 18 2026: DO NOT PASTE this file. Paste docs/arcade-aaa/swap-games-supabase.sql instead (both games in one file; this one
+-- alone would leave 'rollball' out of the game allow-list).
 -- It (1) lets the island board take Ball Blaster scores (the arcade_scores.game allow-list, every board before it kept) and
 -- (2) lets admin analytics count time in Ball Blaster (activity key 'arcade_ballblaster').
 -- The game works before this is run: scores save on the device; only the island board is not reachable until then.

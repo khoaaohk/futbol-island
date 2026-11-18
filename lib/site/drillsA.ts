@@ -64,7 +64,7 @@ export const DRILLS_A:RawDrill[]=[
   mistakes:['Players queue at one gate. Tell them an empty gate is the best gate.','Kicking the ball through and chasing it. The ball must stay within a step of the player.','Too few gates, which causes crashes. Use more gates than players.'],
   game:'A gate is a gap between two defenders. A player who dribbles with their eyes up sees which gap is open and carries the ball through it, which is exactly the choice in our lesson on carrying the ball: go where the defender is not.',
   home:'Set up four gates with shoes in the yard. How many gates can you get through in 45 seconds? A parent can stand in one gate to close it.',
-  lessons:['learn7_carry','prn_7_spread','next7_dribbleroom'],links:[G.wg,G.cm,G.streetDash],related:['busy-square-dribbling','sharks-and-minnows','partner-passing-through-gates','cone-weave-dribbling'],
+  lessons:['learn7_carry','prn_7_spread','next7_dribbleroom'],links:[G.wg,G.cm],related:['busy-square-dribbling','sharks-and-minnows','partner-passing-through-gates','cone-weave-dribbling'],
   faq:[{q:'How wide should the gates be?',a:'About 2 yards, or two big steps. Wider for beginners, narrower for players who find it easy.'},
    {q:'How many gates do I need?',a:'A few more than the number of players, so there is always an open gate to find. For 10 players, 12 gates is about right.'},
    {q:'Can I use gates for passing too?',a:'Yes. Put the players in pairs with one ball, and a point is a pass through a gate to your partner. That version is on our partner passing page.'}]},

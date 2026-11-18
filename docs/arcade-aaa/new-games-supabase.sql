@@ -1,14 +1,13 @@
 -- Futbol Island: the NEW ARCADE GAMES owner file (Nov 17 2026). THE ONE FILE TO PASTE into the Supabase SQL editor.
+-- Nov 18 2026: ALREADY PASTED by the owner (Nov 17 2026); kept as it was run. Roll It In and Ball Blaster come in docs/arcade-aaa/swap-games-supabase.sql.
 -- It replaces pasting these one by one (each stays in the repo for reference; this file is a superset of all of them):
 --   docs/arcade-aaa/board-top20-supabase.sql   (supabase/migrations/20261122_board_top20.sql: island boards hold a top 20)
 --   docs/arcade-aaa/lineup-supabase.sql        (20261123_lineup_boards.sql + 20261124_analytics_lineup.sql)
 --   docs/arcade-aaa/trophydrop-supabase.sql    (20261125_trophydrop_board.sql + 20261126_analytics_trophydrop.sql)
 --   docs/arcade-aaa/clearbox-supabase.sql      (20261127_clearbox_boards.sql + 20261128_analytics_clearbox.sql)
 --   docs/arcade-aaa/streetdash-supabase.sql    (20261129_streetdash_boards.sql + 20261130_analytics_streetdash.sql)
---   docs/arcade-aaa/rollball-supabase.sql      (20261201_rollball_boards.sql + 20261202_analytics_rollball.sql)
 -- Nov 17 2026: Street Dash (streetdash) merged: its board id and activity key are in parts 3 and 4 and in the self-check. If an
 -- earlier copy of this file was pasted already, paste this one once more (it is safe to run again).
--- Nov 17 2026: Roll It In (rollball) merged the same way: board id 'rollball' in part 3, activity key 'arcade_rollball' in part 4.
 -- NOT APPLIED. Paste once, AFTER every older board and analytics file (it is safe as the LAST file run). Requires
 -- 20261013_arcade_leaderboards.sql and 20261111_board_hidden_rows.sql. Idempotent: running it twice is harmless.
 -- What it does:
@@ -79,7 +78,7 @@ alter table public.arcade_scores drop constraint if exists arcade_scores_game_ch
 alter table public.arcade_scores add constraint arcade_scores_game_check
   check (game in ('runner', 'pinball', 'tennis', 'live', 'puzzle', 'kick', 'cupfinal', 'legend', 'livepro', 'livelgnd',
     'tenpro', 'tenlgnd', 'pinderby', 'pinfinal', 'puzpro', 'puzlgnd', 'runwarm', 'runnight', 'runstorm', 'rundaily',
-    'kitrush', 'kitdaily', 'snake', 'snakedaily', 'airhockey', 'lineup', 'trophydrop', 'clearbox', 'streetdash', 'rollball'));
+    'kitrush', 'kitdaily', 'snake', 'snakedaily', 'airhockey', 'lineup', 'trophydrop', 'clearbox', 'streetdash'));
 
 -- 4. The arcade activity keys for the admin analytics (skipped when the analytics tables are not installed).
 do $guard$
@@ -121,7 +120,7 @@ begin
                and value ~ '^[0-9]{1,7}$' and value::integer > 0),
            (select coalesce(jsonb_object_agg(key, least(value::numeric, v_e)::integer), '{}'::jsonb)
               from jsonb_each_text(case when jsonb_typeof(p->'activity_ms') = 'object' then p->'activity_ms' else '{}'::jsonb end)
-             where key in ('walk','ride','fly','boat','fishing','job','lesson','watch','quiz','book','cards','films','vending','talk','coaches','paths','menu','arcade_lobby','arcade_live','arcade_runner','arcade_tennis','arcade_pinball','arcade_puzzle','arcade_snake','arcade_airhockey','arcade_lineup','arcade_trophydrop','arcade_clearbox','arcade_streetdash','arcade_rollball','museum_hall','exhibit_timeline','exhibit_laws-1863','exhibit_penalty-1891','exhibit_stadiums','exhibit_boots','exhibit_var-2018','exhibit_worldcup-1930','exhibit_wwc-1991','exhibit_futsal-1989','exhibit_laced-leather','exhibit_telstar-1970','exhibit_shirts','exhibit_hall-of-fame','exhibit_ballon-dor','exhibit_first-international-1872','exhibit_offside-rules','exhibit_formations-history','exhibit_floodlights-1878','exhibit_copa-america-1916','exhibit_keeper-hands-1912','exhibit_free-kick-wall','exhibit_ball-curve','exhibit_throw-in','konbini_shop','kit_shop','kit_studio','swim','controller','other','idle')
+             where key in ('walk','ride','fly','boat','fishing','job','lesson','watch','quiz','book','cards','films','vending','talk','coaches','paths','menu','arcade_lobby','arcade_live','arcade_runner','arcade_tennis','arcade_pinball','arcade_puzzle','arcade_snake','arcade_airhockey','arcade_lineup','arcade_trophydrop','arcade_clearbox','arcade_streetdash','museum_hall','exhibit_timeline','exhibit_laws-1863','exhibit_penalty-1891','exhibit_stadiums','exhibit_boots','exhibit_var-2018','exhibit_worldcup-1930','exhibit_wwc-1991','exhibit_futsal-1989','exhibit_laced-leather','exhibit_telstar-1970','exhibit_shirts','exhibit_hall-of-fame','exhibit_ballon-dor','exhibit_first-international-1872','exhibit_offside-rules','exhibit_formations-history','exhibit_floodlights-1878','exhibit_copa-america-1916','exhibit_keeper-hands-1912','exhibit_free-kick-wall','exhibit_ball-curve','exhibit_throw-in','konbini_shop','kit_shop','kit_studio','swim','controller','other','idle')
                and value ~ '^[0-9]{1,7}$' and value::integer > 0),
            (select coalesce(jsonb_object_agg(key, v), '{}'::jsonb) from (
               select key, least(value::integer, v_e / 1000) v
@@ -157,8 +156,8 @@ select case when missing = '' then 'OK, new arcade games installed' else 'NOT IN
     case when not exists (select 1 from pg_constraint where conrelid = to_regclass('public.arcade_scores') and conname = 'arcade_scores_game_check'
       and pg_get_constraintdef(oid) like '%''snakedaily''%' and pg_get_constraintdef(oid) like '%''airhockey''%'
       and pg_get_constraintdef(oid) like '%''lineup''%' and pg_get_constraintdef(oid) like '%''trophydrop''%'
-      and pg_get_constraintdef(oid) like '%''clearbox''%' and pg_get_constraintdef(oid) like '%''streetdash''%' and pg_get_constraintdef(oid) like '%''rollball''%') then 'game allow-list with lineup, trophydrop, clearbox and streetdash' end,
+      and pg_get_constraintdef(oid) like '%''clearbox''%' and pg_get_constraintdef(oid) like '%''streetdash''%') then 'game allow-list with lineup, trophydrop, clearbox and streetdash' end,
     case when to_regclass('public.analytics_sessions') is not null and not exists (select 1 from pg_proc where proname = 'analytics_ingest'
       and prosrc like '%arcade_airhockey%' and prosrc like '%arcade_lineup%' and prosrc like '%arcade_trophydrop%' and prosrc like '%arcade_clearbox%'
-      and prosrc like '%arcade_streetdash%' and prosrc like '%arcade_rollball%' and prosrc like '%stadium_plaza%' and prosrc like '%< 1891%') then 'analytics_ingest with arcade_lineup, arcade_trophydrop, arcade_clearbox and arcade_streetdash' end
+      and prosrc like '%arcade_streetdash%' and prosrc like '%stadium_plaza%' and prosrc like '%< 1891%') then 'analytics_ingest with arcade_lineup, arcade_trophydrop, arcade_clearbox and arcade_streetdash' end
   ) as missing) x;

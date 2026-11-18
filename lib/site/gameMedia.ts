@@ -11,7 +11,7 @@ import {abs} from './seo';
  * beach match, Kit Shop studio, plaza) are re-cuts of the Nov 3 /learn captures in public/learn/video. Sizes, durations and
  * picture sizes come from lib/site/gameMedia.json, written by the capture's encode step, so nothing here is typed by hand.
  * Files: public/games/clips/<key>.{mp4,webm,webp}, public/games/shots/<key>-<n>.webp. Tests: tests/seo-games.cjs, seo-video.cjs.
- * Nov 17 2026: Line Up!, Trophy Drop and Clear the Box were captured the same way (dev build, CDP screencast at 390x844 DPR 2, a
+ * Nov 17 2026: Line Up! and Trophy Drop were captured the same way (dev build, CDP screencast at 390x844 DPR 2, a
  * scripted player using real mouse drags and taps); the poster is still 1 (the clip's first frame).
  */
 type ClipFile={w:number;h:number;seconds:number;mp4:number;webm:number;poster:{w:number;h:number;bytes:number}};
@@ -40,13 +40,11 @@ const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
  lineup:{name:'Line Up! gameplay: shapes of players fill the lines',alt:'Line Up! gameplay on a phone: shapes of players are dragged from the tray onto the pitch and a full line clears',caption:'Line Up!: fill a row or a column and it clears.'},
  trophydrop:{name:'Trophy Drop gameplay: dropping and merging in the trophy cabinet',alt:'Trophy Drop gameplay on a phone: balls, boots and gloves drop into a glass cabinet and two of the same merge',caption:'Trophy Drop: two of the same merge into the next.'},
  rollball:{name:'Roll It In gameplay: a football rolling through a puzzle',alt:'Roll It In gameplay on a phone: the ball takes a metal ramp, jumps a gap over the water, presses a plate to open the gate and rolls into the goal',caption:'Roll It In: jump the gap, press the plate, roll it in.'},
- streetdash:{name:'Street Dash gameplay: a side-on run with the ball',alt:'Street Dash gameplay on a phone: the player slides under a banner, shoots the ball at a crate and jumps a sliding tackle',caption:'Street Dash: jump, slide and shoot on the run.'},
  ballblaster:{name:'Ball Blaster gameplay: kicking footballs at wind-up robots',alt:'Ball Blaster gameplay on a phone: a ball flies up the pitch and breaks a wind-up robot into pieces with a POW! burst',caption:'Ball Blaster: aim, kick and break the robots before they reach your goal.'},
- clearbox:{name:'Clear the Box gameplay: players run out of the penalty box',alt:'Clear the Box gameplay on a phone: tapped players sprint out of the penalty box and the next box slides in',caption:'Clear the Box: tap a player whose lane is free.'},
 };
 const gamePaths:Record<GameId,string>={kitrush:'/games/soccer-swipe-game',snake:'/games/soccer-snake-game',runner:'/games/soccer-runner-game',tennis:'/games/soccer-tennis-game',
  pinball:'/games/soccer-pinball',puzzle:'/games/soccer-passing-puzzle-game',airhockey:'/games/air-hockey-soccer-game',lineup:'/games/soccer-block-puzzle-game',
- trophydrop:'/games/soccer-merge-game',clearbox:'/games/soccer-tap-puzzle-game',streetdash:'/games/soccer-side-scroller-game',rollball:'/games/soccer-ball-rolling-puzzle-game',ballblaster:'/games/soccer-shooting-game'};
+ trophydrop:'/games/soccer-merge-game',rollball:'/games/soccer-ball-rolling-puzzle-game',ballblaster:'/games/soccer-shooting-game'};
 export const gameClip=(id:GameId)=>clip({key:id,page:gamePaths[id],...GAME_CLIP_DEFS[id]});
 /** New stills of each game (beyond the two hand-made ones in lib/site/games.ts), with their own alt text. */
 const STILL_WORDS:Record<GameId,string[]>={
@@ -60,9 +58,7 @@ const STILL_WORDS:Record<GameId,string[]>={
  lineup:['Line Up! at the start of a run: a few shapes on the pitch and two left in the tray','Line Up!: a row fills and LINE UP! and +100 appear over the pitch','Line Up!: a shape of players dragged above a crowded pitch'],
  trophydrop:['Trophy Drop at the start: a boot hangs over the cabinet, with a glove and balls at the bottom','Trophy Drop: a CHAIN x2 burst as two items merge on the pile','Trophy Drop at level 2: the cabinet gets smaller, with a medal in the pile'],
  rollball:['Roll It In: the ball flies over a gap between rooftops after a metal ramp, with a star collected in the air','Roll It In: STAR +100 bursts over the pitch as a cone flies off the stack','Roll It In at night: the ball climbs a half-pipe to a glowing plate on the ledge'],
- streetdash:['Street Dash: a shot breaks a target for +60 and STREAK X2 bursts over the street','Street Dash: the glowing SHOOT button and a dotted line from the ball to a target ahead','Street Dash: the player jumps a puddle on the street, with stars to collect'],
  ballblaster:['Ball Blaster: a ball breaks a robot and POW! bursts over the pitch','Ball Blaster: a water barrel bursts and knocks over the robots next to it','Ball Blaster: the dotted aim line curls round a shield-bot'],
- clearbox:['Clear the Box at box 2: players with arrows in a chalk penalty box under a 30 second clock','Clear the Box: CLEAN X2! and +540 over the new box 3, after a box with no foul','Clear the Box at box 3: a dark defender stands among the players in the middle of the box'],
 };
 const STILL_CAPS:Record<GameId,string[]>={
  kitrush:['Read the whole wave before you swipe.','Waves get faster as the run goes on.','Three lives: the whistle costs one.'],
@@ -75,9 +71,7 @@ const STILL_CAPS:Record<GameId,string[]>={
  lineup:['Three shapes in the tray.','A full line clears.','Drag a shape to its place.'],
  trophydrop:['Aim, then drop.','Merges can chain.','The cabinet gets smaller.'],
  rollball:['Take the ramp fast.','Stars sit off the main path.','Climb the half-pipe to both plates.'],
- streetdash:['Shots in a row raise the streak.','Shoot when the button glows.','Jump puddles, collect stars.'],
  ballblaster:['Break two things with one ball for a trick.','Barrels and towers make chain reactions.','Curl the ball round a shield.'],
- clearbox:['Every arrow shows a lane.','Clean boxes in a row score more.','Defenders never move.'],
 };
 export function gameStills(id:GameId,max=3):GameShot[]{
  return (MEDIA.shots[id]??[]).slice(0,max).map((s,i)=>({src:`${SHOTS_DIR}/${s.file}`,w:s.w,h:s.h,alt:STILL_WORDS[id][i]??`${GAME_CLIP_DEFS[id].name}, picture ${i+1}`,caption:STILL_CAPS[id][i]??''}));

@@ -7,7 +7,7 @@ import {numberWord} from '../numberWord';
  * the north lounge (x −11.8, z −8..−4) and the corner plinths (±13.6): 6 cabinets 3 m, 9 → 2.75 m, 10 → 2.44 m (0.54 m between bodies).
  * The air hockey table is not in the row.
  */
-export const ARCADE_ROW=['pinball','kitrush','runner','snake','tennis','puzzle','lineup','trophydrop','clearbox','streetdash','rollball','ballblaster'] as const;
+export const ARCADE_ROW=['pinball','kitrush','runner','snake','tennis','puzzle','lineup','trophydrop','rollball','ballblaster'] as const;
 export const ARCADE_ROW_Z=-10,ARCADE_ROW_MAX_HALF=11;
 export const arcadeRowPitch=(count:number=ARCADE_ROW.length):number=>count<2?3:Math.min(3,ARCADE_ROW_MAX_HALF*2/(count-1));
 function rowSpot(id:typeof ARCADE_ROW[number]){const n=ARCADE_ROW.length,i=ARCADE_ROW.indexOf(id);return {x:Math.round((i-(n-1)/2)*arcadeRowPitch(n)*100)/100,z:ARCADE_ROW_Z,yaw:0};}
@@ -28,12 +28,9 @@ export const arcadeCabinets = [
  {id:'lineup',name:'Line Up!',short:'LINE UP!',lesson:'Fill the line. Keep your shape.',color:'#f0452e',...rowSpot('lineup')},
  // Nov 17 2026: Trophy Drop, the drop-and-merge cabinet (docs/arcade-aaa/trophydrop-direction.md), at the east end of the back row.
  {id:'trophydrop',name:'Trophy Drop',short:'TROPHY DROP',lesson:'Small touches add up to big wins.',color:'#ffd24a',...rowSpot('trophydrop')},
- // Nov 17 2026: Clear the Box, the tap-out cabinet (docs/arcade-aaa/clearbox-direction.md), after Line Up! at the east end of the back row.
- {id:'clearbox',name:'Clear the Box',short:'CLEAR BOX',lesson:'Time your run. Make the space.',color:'#19b5a5',...rowSpot('clearbox')},
- // Nov 17 2026: Street Dash, the side-scrolling run (docs/arcade-aaa/streetdash-direction.md), after Clear the Box at the east end of the back row.
- {id:'streetdash',name:'Street Dash',short:'STREET DASH',lesson:'Keep the ball close. Look up early.',color:'#ff8a3c',...rowSpot('streetdash')},
- // Nov 17 2026: Roll It In, the rolling-ball puzzle (docs/arcade-aaa/rollball-direction.md), after Street Dash at the east end of the back row.
- {id:'rollball',name:'Roll It In',short:'ROLL IT IN',lesson:'Look before you roll. Plan the next touch.',color:'#4a9fe0',...rowSpot('rollball')}, // Nov 17 2026: Ball Blaster, the football gallery shooter (docs/arcade-aaa/ballblaster-direction.md), after Street Dash.
+ // Nov 17 2026: Roll It In, the rolling-ball puzzle (docs/arcade-aaa/rollball-direction.md), after Trophy Drop at the east end of the back row (Nov 18 2026: it took over a retired cabinet's place).
+ {id:'rollball',name:'Roll It In',short:'ROLL IT IN',lesson:'Look before you roll. Plan the next touch.',color:'#4a9fe0',...rowSpot('rollball')},
+ // Nov 17 2026: Ball Blaster, the football gallery shooter (docs/arcade-aaa/ballblaster-direction.md), after Roll It In at the east end of the row (Nov 18 2026: it took over a retired cabinet's place).
  {id:'ballblaster',name:'Ball Blaster',short:'BALL BLASTER',lesson:'Pick your target. Strike through the ball.',color:'#f0452e',...rowSpot('ballblaster')},
 ] as const;
 export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];

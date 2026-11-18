@@ -1,4 +1,4 @@
-/* Roll It In shell (Nov 17 2026, after the Clear the Box shell): an upright comic page over the 3D pitch. Phone: the stage is the whole screen. Desktop: a centred 9:16 page with an
+/* Roll It In shell (Nov 17 2026): an upright comic page over the 3D pitch. Phone: the stage is the whole screen. Desktop: a centred 9:16 page with an
  * ink border and a hard shadow on a Ben-Day sunburst backdrop, with two margin strips of caption boxes. Tokens: ../games/comic. */
 .game{position:relative;width:100%;height:100vh;height:100dvh;max-height:100%;overflow:hidden;display:grid;place-items:center;color:var(--cm-ink);font-family:var(--cm-ui);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
  background:var(--cm-dots-orange),#7cc8ef}

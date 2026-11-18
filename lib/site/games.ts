@@ -13,8 +13,8 @@ import {abs,KIDS_AUDIENCE,PUBLISHER,SITE_NAME,SITE_URL} from './seo';
  * tests/seo-games.cjs checks that each one is a real page.
  * FACTS come from the code and the direction docs only (docs/arcade-aaa/<game>-direction.md, lib/arcade/kitrush/core.ts,
  * lib/arcade/snake/core.ts, lib/arcade/runnerEndless.ts + runnerModes.ts, lib/games/soccerPinballEndless.ts,
- * lib/passPuzzle/endless.ts, components/games/ArcadeGame3D.tsx for the keys; Nov 17 2026: lib/arcade/{lineup,trophydrop,clearbox,streetdash,rollball}/core.ts
- * and components/games/{LineUp,TrophyDrop,ClearBox}Game.tsx). No player counts, no ratings, no reviews.
+ * lib/passPuzzle/endless.ts, components/games/ArcadeGame3D.tsx for the keys; Nov 17 2026: lib/arcade/{lineup,trophydrop,rollball,ballblaster}/core.ts
+ * and components/games/{LineUp,TrophyDrop,RollBall,BallBlaster}Game.tsx). No player counts, no ratings, no reviews.
  * COUNTS (Nov 17 2026): every "N games" line uses GAMES_WORD, from the arcade catalog (lib/arcade/arcadeCatalog.ts), never a typed number.
  * Tennis is described without match-length rules (its endless mode was being built on the same day).
  * Island Strikers is not a cabinet any more and is never named here as an arcade game.
@@ -36,7 +36,7 @@ export const COIN_LINE='Every play is free, like every game in the arcade. Playi
 const DEVICE:Faq['a']='It runs in a web browser with nothing to install, and it is built for phones first. It also works on tablets and on computers, so a Chromebook is fine as long as the school’s filter allows futbolisland.app.';
 export type GameShot={src:string;w:number;h:number;alt:string;caption:string};
 export type GuideLink={path:string;name:string;line:string};
-export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'clearbox'|'streetdash'|'rollball'|'ballblaster';
+export type GameId='kitrush'|'snake'|'runner'|'tennis'|'pinball'|'puzzle'|'airhockey'|'lineup'|'trophydrop'|'rollball'|'ballblaster';
 export type GamePage={id:GameId;slug:string;path:string;name:string;play:string;title:string;h1:string;description:string;lead:string;blurb:string;genre:string[];skill:string;
  og:string;ogAlt:string;shots:GameShot[];about:string[];phone:string[];desktop:string[];rules:string[];teaches:string[];guides:GuideLink[];tips:string[];harder:string[];parents:string[];faq:Faq[]};
 const page=(slug:string)=>`${GAMES_PATH}/${slug}`;
@@ -312,64 +312,6 @@ export const GAME_PAGES:readonly GamePage[]=[
    {q:'How do you play Trophy Drop?',a:'Slide to aim and let go to drop an item into the cabinet. Two of the same kind that touch merge into the next item. Keep the pile under the top line: if it stays over the line for two seconds, the run ends.'},
    {q:'What age is Trophy Drop for?',a:'Futbol Island is made for children aged 7 to 12. One finger is enough and there is no clock, so it is one of the easiest arcade games to start.'},
    {q:'What is the biggest item in Trophy Drop?',a:'The golden trophy, made from two cups. Two golden trophies that touch leave the cabinet together as a Golden Double, worth 640 points.'}]},
- {id:'clearbox',slug:'soccer-tap-puzzle-game',path:page('soccer-tap-puzzle-game'),name:'Clear the Box',play:play('clearbox'),
-  title:'Soccer Tap Puzzle Game: Clear the Box, Free Online',h1:'Soccer tap puzzle game: Clear the Box',
-  description:'Clear the Box is a free soccer tap puzzle game. Tap players in a crowded penalty box to run them out, one free lane at a time, before the clock ends.',
-  lead:'Clear the Box is a free soccer puzzle game in your browser. A crowded penalty box is seen from above, and every player faces one way. Tap a player and they sprint out of the box that way, as long as their lane is free.',
-  blurb:'Tap players out of a crowded box, one free lane at a time',genre:['Puzzle','Sports','Educational'],skill:'Timing a run and making space',
-  og:img('clear-the-box-soccer-tap-puzzle-game-og.jpg'),ogAlt:'Clear the Box, a soccer tap puzzle game: players with arrows in a chalk penalty box under a clock',
-  shots:[phone('clear-the-box-soccer-tap-puzzle-game.webp','Clear the Box on a phone at box 4: players with arrows stand in a chalk penalty box with a planted defender, under a 25 second clock','Box 4. The arrows show which way each player will run; the dark defender never moves.'),
-   phone('clear-the-box-first-boxes.webp','Clear the Box at box 2: five players left, two facing the goal and three facing the side of the box','An early box: send the players whose lanes are open first.')],
-  about:['Clear the Box is a tap-out puzzle game with a football (soccer) idea. Each box is a penalty area seen from above, full of bean players. A chalk arrow in front of every player shows which way they will run.',
-   'Clear every player before the box clock runs out, and the next, more crowded box slides in. Every box is built so that it can always be cleared.'],
-  phone:['Hold the phone upright and tap a player. If nobody stands in the way, they sprint out of the box.','The box number, your three whistles, the players left and the clock are shown at the top.'],
-  desktop:['Click a player to send them.','Or move a marker with the arrow keys (or W, A, S and D) and press Enter or Space to send the player under it. P or Escape pauses.'],
-  rules:['A player runs in a straight line, the way the arrow points. If anyone stands in that lane, the player bumps into them: that is a foul, and it costs one of your three whistles.','The run ends at the third foul, or when the box clock reaches zero.',
-   'Dark defenders are planted: they never move, so a lane through one stays closed.','Players with a sun badge are turners. They turn a quarter turn every time another player leaves the box.',
-   'Points: 10 for each player out, then 100 for a cleared box plus 10 for each whole second left. A box with no foul multiplies its bonus, and three clean boxes in a row win a whistle back.'],
-  teaches:['A run only works into space. A player who sprints into a team-mate gets nowhere, so the first question is always: is my lane free? Clear the Box asks that question at every tap.',
-   'The second lesson is that space is made by moving. Every player who runs out of the box opens a lane for someone else, the way a striker’s run pulls a defender away and leaves room for a team-mate. Each run ends with one short coaching tip.'],
-  guides:[{path:T+'third-man-run',name:'Third-man run (soccer term)',line:'A run into the space another player made'},{path:T+'overlap',name:'Overlap (soccer term)',line:'Running around a team-mate into free space'},
-   {path:D+'busy-square-dribbling',name:'Busy square dribbling',line:'Find the free space in a crowded square'},{path:D+'rondo-4v2',name:'4v2 rondo',line:'Move to open a passing lane'}],
-  tips:['Look before you tap. Find a player whose arrow points at empty grass all the way to the edge.','Start with the players near the edge of the box: they open lanes for the players behind them.',
-   'Watch the turners. They turn after every run, so a closed lane can open.','A clean box is worth more than a fast one, because a foul breaks your streak.','Keep an eye on the clock: it turns orange under 10 seconds and red under 5.'],
-  harder:['Each box is bigger and more crowded. Box 1 is 5 by 5 squares with five players and 30 seconds; box 10 is 7 by 9 squares with 23 players and 22 seconds.','Defenders come from box 3 and turners from box 5. More players stand in each other’s lanes, so the order matters more.',
-   'After box 10 the boxes keep filling up, more turners join and the clock gets shorter, down to 9 seconds.','Points grow by 10% a box, up to three times. Medals: Bronze at 2,500 points, Silver at 6,000 and Gold at 14,000.'],
-  parents:[PARENTS_SAFE,'Skill: looking before acting, timing, and the idea that moving away makes space. Each box has a clock, so it suits a child who enjoys a little pressure.',
-   'Session length: a run often lasts a minute or two. The Daily Drill gives everyone the same boxes once a day, and the first finished daily run goes on the board. One all-time island board keeps the top 20 scores.'],
-  faq:[free('Clear the Box',true),{q:'Does Clear the Box work on a phone or a school Chromebook?',a:DEVICE+' On a computer it is played with the mouse or the keys.'},
-   {q:'How do you play Clear the Box?',a:'Tap a player whose lane is free and they run out of the box the way their arrow points. Clear every player before the clock runs out. Tapping a player whose lane is blocked is a foul, and three fouls end the run.'},
-   {q:'What age is Clear the Box for?',a:'Futbol Island is made for children aged 7 to 12. The first boxes are small and slow, and the later ones are a real test for older children and adults.'},
-   {q:'What is the Daily Drill?',a:'A daily challenge on the start card. Everyone gets the same boxes in the same order that day. Your first finished daily run goes on the island board; later runs that day are practice.'}]}, {id:'streetdash',slug:'soccer-side-scroller-game',path:page('soccer-side-scroller-game'),name:'Street Dash',play:play('streetdash'),
-  title:'Soccer Side-Scroller Game: Street Dash, Free Online',h1:'Soccer side-scroller game: Street Dash',
-  description:'Street Dash is a free soccer side-scroller game for kids. Run with the ball through streets, rooftops and the beach. Jump, slide and shoot. No ads.',
-  lead:'Street Dash is a free soccer side-scroller in your browser. Seen from the side, a player runs through the island with the ball at their feet. Jump over tackles, slide under banners and shoot at targets on the way.',
-  blurb:'Run with the ball: jump, slide and shoot on the way',genre:['Arcade','Sports','Educational'],skill:'Keeping the ball close and looking ahead',
-  og:img('street-dash-soccer-side-scroller-game-og.jpg'),ogAlt:'Street Dash, a soccer side-scroller game: a player slides under a CUP banner and jumps a crate on a city street',
-  shots:[phone('street-dash-soccer-side-scroller-game.webp','Street Dash on a phone: the player slides under a hanging CUP banner on a city street, with three hearts and the metres at the top','Swipe down to slide under a banner.'),
-   phone('street-dash-jump-over-a-crate.webp','Street Dash early in a run: the player jumps over a crate, with the hint Tap: jump, Hold: higher, Swipe down: slide','Tap to jump. Hold the tap to jump higher.')],
-  about:['Street Dash is an endless run seen from the side. A player dribbles a ball along the island’s streets, then over the rooftops and along the beach. The scenery changes every 500 metres.',
-   'Walls, sliding tackles, hanging banners, crates, puddles, cone gates, gaps and a dog are in the way. Some of them can be shot with the ball for points, and there are stars to collect.'],
-  phone:['Hold the phone upright. Tap anywhere to jump, and hold the tap to jump higher. Swipe down to slide.','When the ball is at your feet and a target is close, a glowing SHOOT button appears. Tap it, or tap the ringed target, to shoot.'],
-  desktop:['Press Space, the up arrow or W to jump, and hold it to jump higher. A mouse click also jumps.','Press the down arrow or S to slide, and X or Enter to shoot. P or Escape pauses.'],
-  rules:['You have three hearts. Running into a wall, a tackle, a banner, a crate, a puddle, a cone gate or the dog costs one, and so does falling into a gap. The ball rolls loose for a moment, then comes back.',
-   'The run ends when the last heart is gone. The first 20 seconds teach the jump, the slide and the shot, and a mistake there costs no heart.',
-   'Points: 1 for every metre, 10 for a star and 25 for a near miss (a late jump just before a hazard). A shot scores 40 on a crate, 60 on a cone gate and 150 into a street goal.',
-   'Shots in a row without a hit build a streak. The streak multiplies the points for shots, up to three times.'],
-  teaches:['The lesson on the machine is: keep the ball close, look up early. In Street Dash the ball stays at the player’s feet all the way, and every mistake knocks it loose. A good dribbler keeps the ball close, so it is never far away when something gets in the way.',
-   'Looking up early is the other half. A red tab at the right edge of the screen shows a hazard before it arrives, so a player who looks ahead has time to choose: jump, slide or shoot. In a match, a player who looks up early sees the tackle and the space in time. Each run ends with one short tip for the next run.'],
-  guides:[{path:D+'dribbling',name:'Soccer dribbling drills',line:'Keep the ball close while you move'},{path:D+'cone-weave-dribbling',name:'Cone weave dribbling',line:'Close control around a line of cones'},
-   {path:D+'dribble-and-shoot',name:'Dribble and shoot',line:'Run with the ball, then shoot'},{path:T+'tackle',name:'Tackle (soccer term)',line:'How a defender wins the ball'}],
-  tips:['Watch the right edge of the screen. A red tab shows the next hazard before it scrolls in.','Hold the tap for a big jump over wide gaps and cone gates.','Slide under banners. A jump does not clear them.',
-   'Shoot when the SHOOT button glows. Shots in a row raise the streak.','Jump late, just before a hazard, for a 25-point near miss.'],
-  harder:['The run gets faster. It starts at 6.2 metres a second and reaches 10.2 metres a second at 2,400 metres.','Harder patterns join at 200, 500 and 900 metres: two walls in a row, the dog, moving platforms, wide gaps and two tackles together.',
-   'The scenery changes every 500 metres: the streets, then the rooftops with chimneys, then the beach, where a sea wind slows you in the air.','Medals: Bronze at 800 points, Silver at 2,500 and Gold at 6,000.'],
-  parents:[PARENTS_SAFE,'Skill: looking ahead, quick choices and keeping the ball close. It is a fast game with three hearts, so it suits a child who likes action.',
-   'Session length: a run often lasts a minute or two. The Daily Dash gives everyone the same street once a day, and the first finished daily run goes on the board. One all-time island board keeps the top 20 scores.'],
-  faq:[free('Street Dash',true),{q:'Does Street Dash work on a phone or a school Chromebook?',a:DEVICE+' On a computer it is played with the keys or the mouse.'},
-   {q:'How do you play Street Dash?',a:'Tap to jump, hold the tap to jump higher and swipe down to slide. When the SHOOT button glows, tap it to shoot at a target. Three hits end the run, so look ahead and choose early.'},
-   {q:'What age is Street Dash for?',a:'Futbol Island is made for children aged 7 to 12. The first 20 seconds teach every move with no hearts lost, and the run gets faster the further you go, so it is a test for older children and adults too.'},
-   {q:'What is the Daily Dash?',a:'A daily challenge on the start card. Everyone runs the same street that day. Your first finished daily run goes on the island board; later runs that day are practice.'}]},
  {id:'rollball',slug:'soccer-ball-rolling-puzzle-game',path:page('soccer-ball-rolling-puzzle-game'),name:'Roll It In',play:play('rollball'),
   title:'Soccer Ball Rolling Puzzle Game: Roll It In, Free',h1:'Soccer ball rolling puzzle game: Roll It In',
   description:'Roll It In is a free soccer puzzle game for kids. You are the ball: roll over hills, sand and planks, press plates and open gates to reach the goal.',
@@ -436,18 +378,18 @@ export const gameById=(id:GameId)=>GAME_PAGES.find(g=>g.id===id)!;
 export const gameLink=(id:GameId):GuideLink=>{const g=gameById(id);return {path:g.path,name:`${g.name}: a free ${g.h1.split(':')[0].toLowerCase()}`,line:g.blurb};};
 export const GAMES_HUB={path:GAMES_PATH,crumb:'Soccer games',title:'Free Soccer Games for Kids: Play Online, No Ads',h1:'Free soccer games for kids',
  // Nov 17 2026: the count is GAMES_WORD (the catalog); the kinds of game in the description are words, so a new game adds its kind here.
- description:`${GAMES_WORD_CAP} free soccer games for kids to play online: pinball, snake, air hockey, a runner, a side-scroller, a shooter, tennis, merge and puzzles. No ads.`,
+ description:`${GAMES_WORD_CAP} free soccer games for kids to play online: pinball, snake, air hockey, a runner, a shooter, tennis, swipe, merge and puzzles. No ads.`,
  lead:`${GAMES_WORD_CAP} arcade games from Futbol Island, each built around one football idea. They are free, run in the browser on a phone, tablet or computer, and have no ads or accounts.`,
  blurb:`${GAMES_WORD_CAP} free browser games, each teaching one football idea`,
  og:`${GAMES_DIR}/free-soccer-games-for-kids-og.jpg`,ogAlt:'Three free soccer games for kids: Kit Rush, Squad Snake and Pass Puzzles on phone screens',
- intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a side-scroller, a shooter, a swipe game, a net game, a block puzzle, a merge game and three more puzzle games) and rebuilds it around one thing a young player needs, such as beating a tackle, a soft first touch, seeing a passing lane or the weight of a pass, picking a target.`,
+ intro:[`These are the ${GAMES_WORD} machines of the arcade on Futbol Island, a football (soccer) learning game for children aged 7 to 12. Each one takes a well-known kind of game (pinball, snake, air hockey, an endless runner, a shooter, a swipe game, a net game, a block puzzle, a merge game, a rolling-ball puzzle and a passing puzzle) and rebuilds it around one thing a young player needs, such as beating a tackle, a soft first touch, seeing a passing lane, the weight of a pass or picking a target.`,
   'Every game opens straight from its page. They get harder the longer you play, and a run lasts a few minutes.'],
- pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For a puzzle against the clock','Clear the Box.'],['For speed and action','Street Dash and Ball Blaster.'],['For a planner','Roll It In: you are the ball.'],
+ pick:[['The quickest to learn','Kit Rush and Squad Snake: one finger, no buttons.'],['For a child who loves to dribble','Breakaway Run.'],['For a thinker','Pass Puzzles, which has no clock on the early levels, and Line Up!, which has no clock at all.'],['For a calm few minutes','Trophy Drop: slide, drop and watch the merges.'],['For speed and action','Ball Blaster.'],['For a planner','Roll It In: you are the ball.'],
   ['For two-button fun','Futbol Pinball.'],['For one finger against the computer','Air Futbol, the air hockey table.'],['For a player who wants a challenge','Futbol Tennis, with the most moves to learn.']] as [string,string][],
  faq:[{q:'Are these soccer games really free?',a:`Yes. There is nothing to buy, no advert and no account. All ${GAMES_WORD} games are free to play, every time. The island’s own coins are earned by playing and learning on Futbol Island and are never sold for real money.`},
   {q:'Can kids play these soccer games at school?',a:'They run in a web browser with nothing to install, so they work on a Chromebook, a tablet or a phone as long as the school’s filter allows futbolisland.app.'},
-  {q:'What ages are the games for?',a:'Futbol Island is made for children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest to start; Futbol Tennis, Clear the Box and the later Pass Puzzles suit older children.'},
-  {q:'Do the games teach real soccer?',a:'Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, running into space, keeping the ball close and the weight of a pass and shooting.'},
+  {q:'What ages are the games for?',a:'Futbol Island is made for children aged 7 to 12. Kit Rush, Squad Snake, Futbol Pinball and Trophy Drop are the easiest to start; Futbol Tennis, Ball Blaster and the later Pass Puzzles suit older children.'},
+  {q:'Do the games teach real soccer?',a:'Each one is built around one idea from the real game: recognising your team, positions and formations, beating a tackle, first touch, rebounds, passing lanes, keeping a line, small touches, the weight of a pass and picking a target to shoot at.'},
   {q:'Do I need an account or an app?',a:'No. Nothing is downloaded and there is no sign-up. Progress stays on the device.'}] as Faq[]};
 export const gameCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:GAMES_HUB.crumb,path:GAMES_HUB.path},...tail];
 /** For the sitemap, llms.txt and the image sitemap: the hub first, then one page per game. */

@@ -121,19 +121,19 @@ ok('device save: best, medal, daily claim and day streak, near-miss and coach li
 ok('arcade wiring: last in the back row, board, coins, save key, last score, room route, analytics, SQL',()=>{
  const L=require('../lib/arcade/leaderboard.ts'),{arcadeCabinets,ARCADE_ROW}=require('../lib/arcade/arcadeCatalog.ts'),{arcadeCoinTarget}=require('../lib/arcade/arcadeWalletCore.ts'),{ARCADE_COIN_CAPS}=require('../lib/economy.ts');
  const {isSyncKey}=require('../lib/saves/snapshot.ts'),{LAST_SCORE_GAMES}=require('../lib/arcade/lastScore.ts');
- const cab=arcadeCabinets.find(c=>c.id==='ballblaster');assert.ok(cab,'a cabinet');assert.equal(ARCADE_ROW[ARCADE_ROW.indexOf('streetdash')+1],'ballblaster','after Street Dash in the row');assert.equal(cab.lesson,'Pick your target. Strike through the ball.');
+ const cab=arcadeCabinets.find(c=>c.id==='ballblaster');assert.ok(cab,'a cabinet');assert.equal(ARCADE_ROW[ARCADE_ROW.length-1],'ballblaster','last in the row (Nov 18 2026: the retired side-scroller\'s place)');assert.equal(ARCADE_ROW[ARCADE_ROW.length-2],'rollball');assert.equal(cab.lesson,'Pick your target. Strike through the ball.');
  assert.ok(L.BOARD_GAMES.includes('ballblaster')&&L.HALL_MACHINES.includes('ballblaster'),'one all-time board, in the Hall');assert.equal(L.BOARD_TIER_TABS.ballblaster,undefined,'no second (daily) board');
  assert.equal(arcadeCoinTarget('ballblaster',{points:8000}),4);assert.equal(arcadeCoinTarget('ballblaster',{points:1e7}),ARCADE_COIN_CAPS.ballblaster);assert.equal(C.ballblasterCoins(8000),4);
  assert.ok(isSyncKey('fi2-ballblaster-v1'),'the save travels with the player');assert.ok(LAST_SCORE_GAMES.includes('ballblaster')&&LAST_SCORE_GAMES.includes('ballblaster_daily'));
  const room=read('components/ArcadeRoom.tsx');assert.match(room,/import\('\.\/games\/BallBlasterGame'\)/);assert.match(room,/game==='ballblaster'\?<BallBlaster onExit=\{back\}\/>/);
- assert.match(read('lib/analytics/islandIds.ts'),/'streetdash','ballblaster'/);assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_ballblaster','Arcade: Ball Blaster'\]/);
+ assert.match(read('lib/analytics/islandIds.ts'),/'rollball','ballblaster'/);assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_ballblaster','Arcade: Ball Blaster'\]/);
  assert.match(read('components/arcade/HighScoreEntry.tsx'),/'ballblaster'/,'results-first high-score strip');assert.match(read('components/games/skins/index.ts'),/ballblaster:ballblaster\.skin/);
  const own=read('docs/arcade-aaa/ballblaster-supabase.sql'),list=/check \(game in \(([^)]*)\)\)/.exec(own.replace(/--.*$/gm,''))[1].split(',').map(v=>v.trim().replace(/'/g,''));assert.deepEqual(list,[...L.BOARD_GAMES].filter(g=>list.includes(g)).length===list.length?list:[],'the owner file names known boards');
  for(const g of L.BOARD_GAMES.filter(g=>g!=='rollball'))assert.ok(list.includes(g),'the owner file names '+g);
  assert.match(own,/'arcade_streetdash','arcade_ballblaster'/);assert.match(own,/prosrc like '%arcade_ballblaster%'/);assert.match(own,/OK, Ball Blaster installed/);
- assert.match(read('supabase/migrations/20261204_analytics_ballblaster.sql'),/'arcade_streetdash','arcade_ballblaster'/);{const mig=read('supabase/migrations/20261203_ballblaster_boards.sql');for(const g of L.BOARD_GAMES.filter(g=>g!=='rollball'))assert.ok(mig.includes(`'${g}'`),'migration names '+g);}
+ assert.match(read('supabase/migrations/20261204_analytics_ballblaster.sql'),/'arcade_streetdash','arcade_rollball','arcade_ballblaster'/);{const mig=read('supabase/migrations/20261203_ballblaster_boards.sql');for(const g of L.BOARD_GAMES.filter(g=>g!=='rollball'))assert.ok(mig.includes(`'${g}'`),'migration names '+g);}
  const shell=read('components/games/BallBlasterGame.tsx');assert.match(shell,/beginBoardSession\('ballblaster'\)/);assert.match(shell,/!r\.daily\|\|settled\.dailyFirst/,'only the first daily run posts');assert.match(shell,/data-ballblaster-daily/,'the daily run is offered on the start card');
- assert.match(read('scripts/check-arcade-audio.cjs'),/game==='ballblaster'/);assert.match(read('scripts/check-arcade-load.cjs'),/'streetdash','ballblaster'/);
+ assert.match(read('scripts/check-arcade-audio.cjs'),/game==='ballblaster'/);assert.match(read('scripts/check-arcade-load.cjs'),/'rollball','ballblaster'/);
 });
 ok('sound: one limiter wired to the output only; made on the first tap; no loops',()=>{
  const a=read('lib/arcade/ballblaster/audio.ts');assert.match(a,/master\.connect\(limiter\);limiter\.connect\(ctx\.destination\);/);assert.equal((a.match(/limiter\.connect\(/g)||[]).length,1);

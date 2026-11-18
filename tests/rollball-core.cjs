@@ -83,20 +83,20 @@ ok('device save: best, daily first run, day streak, medal, sanitising, results l
 ok('arcade wiring: last in the back row, board, coins, save key, last score, room route, analytics, SQL',()=>{
  const L=require('../lib/arcade/leaderboard.ts'),{arcadeCabinets,ARCADE_ROW}=require('../lib/arcade/arcadeCatalog.ts'),{arcadeCoinTarget}=require('../lib/arcade/arcadeWalletCore.ts'),{ARCADE_COIN_CAPS}=require('../lib/economy.ts');
  const {isSyncKey}=require('../lib/saves/snapshot.ts'),{LAST_SCORE_GAMES}=require('../lib/arcade/lastScore.ts');
- const cab=arcadeCabinets.find(c=>c.id==='rollball');assert.ok(cab,'a cabinet');assert.equal(ARCADE_ROW[ARCADE_ROW.length-1],'rollball','appended to the end of the row');assert.equal(ARCADE_ROW[ARCADE_ROW.length-2],'streetdash');
+ const cab=arcadeCabinets.find(c=>c.id==='rollball');assert.ok(cab,'a cabinet');assert.equal(ARCADE_ROW[ARCADE_ROW.indexOf('trophydrop')+1],'rollball','after Trophy Drop (Nov 18 2026: the retired tap puzzle\'s place)');assert.equal(ARCADE_ROW[ARCADE_ROW.length-2],'rollball','Ball Blaster follows it');
  assert.equal(cab.lesson,'Look before you roll. Plan the next touch.');assert.equal(cab.name,'Roll It In');assert.equal(cab.z,-10);assert.equal(cab.yaw,0);
  assert.ok(L.BOARD_GAMES.includes('rollball')&&L.HALL_MACHINES.includes('rollball'),'one all-time board, in the Hall');assert.equal(L.BOARD_TIER_TABS.rollball,undefined,'no second (daily) board');assert.equal(L.BOARD_RULES.rollball.learn,cab.lesson);
  assert.equal(arcadeCoinTarget('rollball',{points:900}),3);assert.equal(arcadeCoinTarget('rollball',{points:1e6}),ARCADE_COIN_CAPS.rollball);
  assert.ok(isSyncKey('fi2-rollball-v1'),'the save travels with the player');assert.ok(LAST_SCORE_GAMES.includes('rollball')&&LAST_SCORE_GAMES.includes('rollball_daily'));
  const room=read('components/ArcadeRoom.tsx');assert.match(room,/rollball:\(\)=>import\('\.\/games\/RollBallGame'\)/);assert.match(room,/RollBall=dynamic\(\(\)=>retryImport\(\(\)=>import\('\.\/games\/RollBallGame'\)\)/);assert.match(room,/game==='rollball'\?<RollBall onExit=\{back\}\/>/);
- assert.match(read('lib/analytics/islandIds.ts'),/'clearbox','streetdash','rollball'\]/);assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_rollball','Arcade: Roll It In'\]/);
- assert.match(read('components/arcade/HighScoreEntry.tsx'),/'streetdash','rollball'/,'results-first high-score strip');assert.match(read('components/games/skins/index.ts'),/rollball:rollball\.skin/);
+ assert.match(read('lib/analytics/islandIds.ts'),/'trophydrop','rollball','ballblaster'\]/);assert.match(read('lib/analytics/islandIds.ts'),/\['arcade_rollball','Arcade: Roll It In'\]/);
+ assert.match(read('components/arcade/HighScoreEntry.tsx'),/'trophydrop','rollball'/,'results-first high-score strip');assert.match(read('components/games/skins/index.ts'),/rollball:rollball\.skin/);
  const own=read('docs/arcade-aaa/rollball-supabase.sql');assert.match(own,/'clearbox', 'streetdash', 'rollball'\)\);/);assert.match(own,/'arcade_streetdash','arcade_rollball',/);assert.match(own.trim().split('\n').pop(),/end as status;$/);assert.match(own,/'OK, Roll It In installed'/);
- const sql=read('docs/arcade-aaa/new-games-supabase.sql'),list=/check \(game in \(([^)]*)\)\)/.exec(sql.replace(/--.*$/gm,''))[1].split(',').map(v=>v.trim().replace(/'/g,''));assert.deepEqual(list,[...L.BOARD_GAMES],'the owner file names every board');
+ const sql=read('docs/arcade-aaa/swap-games-supabase.sql')/* Nov 18 2026: the owner's paste file for Roll It In and Ball Blaster */,list=/check \(game in \(([^)]*)\)\)/.exec(sql.replace(/--.*$/gm,''))[1].split(',').map(v=>v.trim().replace(/'/g,''));assert.deepEqual(list,[...L.BOARD_GAMES],'the owner file names every board');
  assert.match(sql,/prosrc like '%arcade_rollball%'/,'the self-check looks for the key');
- {const mig=read('supabase/migrations/20261201_rollball_boards.sql');for(const g of L.BOARD_GAMES)assert.ok(mig.includes(`'${g}'`),'migration names '+g);}assert.match(read('supabase/migrations/20261202_analytics_rollball.sql'),/'arcade_streetdash','arcade_rollball'/);
+ {const mig=read('supabase/migrations/20261203_ballblaster_boards.sql')/* Nov 18 2026: the newest board file, it keeps 'rollball' */;for(const g of L.BOARD_GAMES)assert.ok(mig.includes(`'${g}'`),'migration names '+g);}assert.match(read('supabase/migrations/20261202_analytics_rollball.sql'),/'arcade_streetdash','arcade_rollball'/);
  const shell=read('components/games/RollBallGame.tsx');assert.match(shell,/beginBoardSession\('rollball'\)/);assert.match(shell,/!r\.daily\|\|settled\.dailyFirst/,'only the first daily run posts');assert.match(shell,/data-rollball-daily/,'the Daily Roll is offered on the start card');
- assert.match(read('scripts/check-arcade-audio.cjs'),/game==='rollball'/);assert.match(read('scripts/check-arcade-load.cjs'),/'streetdash','rollball'\]/);
+ assert.match(read('scripts/check-arcade-audio.cjs'),/game==='rollball'/);assert.match(read('scripts/check-arcade-load.cjs'),/'trophydrop','rollball','ballblaster'\]/);
 });
 ok('sound: one limiter wired to the output only; made on the first tap; no timers',()=>{
  const a=read('lib/arcade/rollball/audio.ts');assert.match(a,/master\.connect\(limiter\);limiter\.connect\(ctx\.destination\);/);assert.equal((a.match(/limiter\.connect\(/g)||[]).length,1);

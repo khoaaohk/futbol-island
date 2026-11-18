@@ -22,14 +22,12 @@ GAMES = [
  # Nov 17 2026: the three puzzle cabinets, shot from the running games on a 390x844 phone (DPR 2), like the others.
  ('line-up-soccer-block-puzzle-game', ['lineup-phone', 'lineup-clear'], ['line-up-soccer-block-puzzle-game', 'line-up-tray-of-three-shapes'], 'Line Up!', 'Free soccer block puzzle game'),
  ('trophy-drop-soccer-merge-game', ['trophydrop-phone', 'trophydrop-medal'], ['trophy-drop-soccer-merge-game', 'trophy-drop-medal-merge'], 'Trophy Drop', 'Free soccer merge game'),
- ('clear-the-box-soccer-tap-puzzle-game', ['clearbox-phone', 'clearbox-box2'], ['clear-the-box-soccer-tap-puzzle-game', 'clear-the-box-first-boxes'], 'Clear the Box', 'Free soccer tap puzzle game'),
- # Nov 17 2026: Street Dash, the side-scroller, shot the same way (real key presses on a 390x844 phone).
- ('street-dash-soccer-side-scroller-game', ['streetdash-phone', 'streetdash-jump'], ['street-dash-soccer-side-scroller-game', 'street-dash-jump-over-a-crate'], 'Street Dash', 'Free soccer side-scroller game'),
  # Nov 17 2026: Roll It In, the rolling-ball puzzle, shot from real play (the scripted bot through the game's physics, frames stepped at 30 fps on a 390x844 phone).
- ('roll-it-in-soccer-ball-rolling-puzzle-game', ['rollball-phone', 'rollball-cones'], ['roll-it-in-soccer-ball-rolling-puzzle-game', 'roll-it-in-knock-the-cones'], 'Roll It In', 'Free soccer ball rolling puzzle'), # Nov 17 2026: Ball Blaster, the shooting game, shot from real drag-and-release play on a 390x844 phone (DPR 2).
+ ('roll-it-in-soccer-ball-rolling-puzzle-game', ['rollball-phone', 'rollball-cones'], ['roll-it-in-soccer-ball-rolling-puzzle-game', 'roll-it-in-knock-the-cones'], 'Roll It In', 'Free soccer ball rolling puzzle'),
+ # Nov 17 2026: Ball Blaster, the shooting game, shot from real drag-and-release play on a 390x844 phone (DPR 2).
  ('ball-blaster-soccer-shooting-game', ['ballblaster-phone', 'ballblaster-aim'], ['ball-blaster-soccer-shooting-game', 'ball-blaster-aim-and-curl'], 'Ball Blaster', 'Free soccer shooting game'),
 ]
-# One entry per arcade cabinet, so the hub picture's count follows the list (Nov 17 2026: eleven with Street Dash).
+# One entry per arcade cabinet, so the hub picture's count follows the list (Nov 18 2026: eleven after the arcade swap).
 WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen']
 COUNT = WORDS[len(GAMES)] if len(GAMES) < len(WORDS) else str(len(GAMES))
 def shot(n): return Image.open(f'{SRC}/{n}.png').convert('RGB')

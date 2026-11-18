@@ -50,9 +50,9 @@ const pub=p=>path.join(root,'public',p);
 
 // ---- 1. registry, catalog, sitemap, titles --------------------------------------------------------------------------------
 const WANT=['/games','/games/soccer-swipe-game','/games/soccer-snake-game','/games/soccer-runner-game','/games/soccer-tennis-game','/games/soccer-pinball','/games/soccer-passing-puzzle-game','/games/air-hockey-soccer-game',
- '/games/soccer-block-puzzle-game','/games/soccer-merge-game','/games/soccer-tap-puzzle-game','/games/soccer-side-scroller-game','/games/soccer-ball-rolling-puzzle-game','/games/soccer-shooting-game'];
+ '/games/soccer-block-puzzle-game','/games/soccer-merge-game','/games/soccer-ball-rolling-puzzle-game','/games/soccer-shooting-game'];
 assert.deepEqual(ALL.map(p=>p.path),WANT,'one URL per game, hub first');
-const PAGE_PENDING=[];/* PENDING, not exempt: a cabinet that is in the arcade before its /games page is written goes here until the page lands (Nov 17 2026: Line Up!, Trophy Drop and Clear the Box got theirs; Street Dash, if its cabinet merges first, goes here). */assert.deepEqual(PAGES.map(g=>g.id).sort(),catalog.arcadeCabinets.map(c=>c.id).filter(id=>!PAGE_PENDING.includes(id)).sort(),'every cabinet that stands in the arcade room has a page, and only those');
+const PAGE_PENDING=[];/* PENDING, not exempt: a cabinet that is in the arcade before its /games page is written goes here until the page lands (Nov 17 2026: Line Up! and Trophy Drop got theirs; Nov 18 2026: Roll It In and Ball Blaster too). */assert.deepEqual(PAGES.map(g=>g.id).sort(),catalog.arcadeCabinets.map(c=>c.id).filter(id=>!PAGE_PENDING.includes(id)).sort(),'every cabinet that stands in the arcade room has a page, and only those');
 for(const g of PAGES){const c=catalog.arcadeCabinets.find(x=>x.id===g.id);
  assert.equal(g.name,c.name,`${g.path}: the cabinet's name`);assert.equal(g.play,`/arcade?game=${g.id}`,`${g.path}: the deep link`);assert.equal(g.path,`/games/${g.slug}`,`${g.path}: path`);}
 {const all=[...guides.ALL_GUIDE_PAGES,...tools.TOOL_PAGES,...ALL];
@@ -71,7 +71,7 @@ for(const g of PAGES){assert(g.h1.startsWith('Soccer ')&&g.h1.endsWith(g.name),`
  assert(g.guides.length>=3&&g.tips.length>=3&&g.tips.length<=5&&g.faq.length>=4&&g.faq.length<=6&&g.shots.length>=2,`${g.path}: guides, 3-5 tips, 4-6 questions, screenshots`);
  assert(/free/i.test(g.faq[0].q)&&g.faq.some(f=>/phone/i.test(f.q)&&/Chromebook/i.test(f.q))&&g.faq.some(f=>/^How do you play/.test(f.q))&&g.faq.some(f=>/What age/.test(f.q)),`${g.path}: the four questions people search`);}
 // total weight of the pictures (brief: about 1.2 MB for all), and no stray file
-{const dir=pub('games'),files=fs.readdirSync(dir).filter(f=>fs.statSync(path.join(dir,f)).isFile()),bytes=files.reduce((n,f)=>n+fs.statSync(path.join(dir,f)).size,0);assert(bytes<2.0*1024*1024/* Nov 17 2026: was 1.25 MB for seven games (about 175 KB a game: two stills and a share picture); three puzzle games added 430 KB (1.65 MB) and Street Dash will add about 175 KB more, so 2.0 MB covers eleven games */,`public/games weighs ${Math.round(bytes/1024)} KB`);
+{const dir=pub('games'),files=fs.readdirSync(dir).filter(f=>fs.statSync(path.join(dir,f)).isFile()),bytes=files.reduce((n,f)=>n+fs.statSync(path.join(dir,f)).size,0);assert(bytes<2.0*1024*1024/* Nov 17 2026: was 1.25 MB for seven games (about 175 KB a game: two stills and a share picture); three puzzle games added 430 KB (1.65 MB); Nov 18 2026: two games retired and two added, so 2.0 MB still covers eleven games */,`public/games weighs ${Math.round(bytes/1024)} KB`);
  const used=new Set(ALL.flatMap(p=>p.images).map(i=>path.basename(i)));for(const f of files)assert(used.has(f),`public/games/${f} is used by a page`);}
 // Nov 16 2026: gameplay footage (lib/site/gameMedia.ts). Every clip and still is used, and the whole set stays under 20 MB.
 {const gm=L('lib/site/gameMedia.ts'),clips=[gm.HERO_CLIP,...gm.islandClips(),...PAGES.map(g=>gm.gameClip(g.id))].filter(Boolean);
@@ -154,7 +154,7 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
 {const A='app/(site)/learn',R=(file,params)=>{const m=L(file);return renderToStaticMarkup(params?m.default({params}):React.createElement(m.default));};
  const inbound=[[`${A}/soccer-positions/page.tsx`,null,'airhockey'],[`${A}/soccer-formations/page.tsx`,null,'snake'],[`${A}/soccer-positions/page.tsx`,null,'snake'],[`${A}/soccer-rules/[slug]/page.tsx`,{slug:'offside'},'puzzle'],
   [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'shoulder-check-colors'},'kitrush'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'wall-passing'},'pinball'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'first-touch-gates'},'tennis'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'dribble-and-shoot'},'runner'],
-  [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'pressure-and-cover-2v2'},'lineup'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'toe-taps-and-foundations'},'trophydrop'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'busy-square-dribbling'},'clearbox'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'gates-dribbling'},'streetdash'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'partner-passing-through-gates'},'rollball'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'world-cup-shooting-game'},'ballblaster']];
+  [`${A}/soccer-drills/[slug]/page.tsx`,{slug:'pressure-and-cover-2v2'},'lineup'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'toe-taps-and-foundations'},'trophydrop'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'partner-passing-through-gates'},'rollball'],[`${A}/soccer-drills/[slug]/page.tsx`,{slug:'world-cup-shooting-game'},'ballblaster']];
  const reached=new Set();for(const [file,params,id] of inbound){const g=games.gameById(id);assert(R(file,params).includes(`href="${g.path}"`),`${file} ${params?params.slug:''} links ${g.path}`);reached.add(id);}
  assert.equal(reached.size,PAGES.length,'every game page has a link from a guide page (no orphans)');
  const more=renderToStaticMarkup(React.createElement(L('components/site/LessonHub.tsx').MoreToLearn,{}));assert(more.includes('href="/games"'),'"More to learn" links the games hub');}
@@ -171,7 +171,10 @@ assert(/nine/.test(text(html.get('/games/soccer-tennis-game'))),'tennis: nine co
  const arcade=read('app/arcade/page.tsx');assert(/noindexMeta\([^;]*'\/arcade'\)/.test(arcade),'/arcade: noindex, canonical /arcade (so ?game= deep links are never indexable copies)');assert(!/Strikers/.test(arcade),'/arcade metadata names no retired game');}
 (async()=>{
  const cfg=(await import(require('node:url').pathToFileURL(path.join(root,'next.config.mjs')).href)).default('phase-production-build');
- for(const r of await cfg.redirects()){const hostOnly=(r.has||[]).some(h=>h.type==='host');assert(hostOnly||r.source==='/'||r.source==='/learn'||r.source==='/es/learn'/* Spanish search: /es/learn without ?q= -> /es */||r.source.startsWith('/learn/'),`redirect ${r.source} cannot swallow /games`);}
+ const RETIRED={'/games/soccer-tap-puzzle-game':'/games/soccer-ball-rolling-puzzle-game','/games/soccer-side-scroller-game':'/games/soccer-shooting-game'};
+ for(const r of await cfg.redirects()){const hostOnly=(r.has||[]).some(h=>h.type==='host');assert(hostOnly||r.source==='/'||r.source==='/learn'||r.source==='/es/learn'/* Spanish search: /es/learn without ?q= -> /es */||r.source.startsWith('/learn/')||RETIRED[r.source]===r.destination,`redirect ${r.source} cannot swallow /games`);}
+ /* Nov 18 2026: the two retired games' pages redirect permanently to the game that took their cabinet's place (and to a live page) */
+ for(const [from,to] of Object.entries(RETIRED)){const r=(await cfg.redirects()).find(x=>x.source===from);assert(r&&r.destination===to&&r.permanent===true,'permanent redirect '+from+' -> '+to);assert(PAGES.some(g=>g.path===to),to+' is a live game page');assert(!ALL.some(p=>p.path===from),from+' is no longer a page');}
  for(const r of [].concat((await cfg.rewrites()).beforeFiles||[]))assert(!r.source.startsWith('/games'),'no rewrite on /games');
  // Nov 16 2026: a bare `shots` line in .vercelignore dropped public/games/shots from the deploy (screenshots 404'd live). Every
  // ignore pattern must be root-anchored or must not match a folder the pages serve from public/.

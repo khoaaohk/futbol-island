@@ -45,7 +45,7 @@ export const DRILLS_D:RawDrill[]=[
   harder:'Two players without a ball try to steal one, and whoever loses a ball steals another. Nobody is ever out.',
   mistakes:['A square so big that nobody needs to look up.','Too many signals at once. Add one at a time.','Praising speed. Here the best player is the one who never bumps.'],
   game:'A midfield is a busy square. A player who can dribble while seeing other players can find the gap, and our lesson on spreading out shows where teammates should be so the gap is there to find.',
-  lessons:['learn7_receive','prn_7_spread','learn7_carry'],links:[G.cm,G.ages,G.clearBox],related:['gates-dribbling','dribble-tag','shoulder-check-colors','knockout'],
+  lessons:['learn7_receive','prn_7_spread','learn7_carry'],links:[G.cm,G.ages],related:['gates-dribbling','dribble-tag','shoulder-check-colors','knockout'],
   faq:[{q:'How do I teach kids to dribble with their head up?',a:'Give them a reason to look: other players to avoid and silent signals to spot. Telling them “head up” works far less well than a game that needs it.'},
    {q:'How big should the square be?',a:'Start with about 15 by 15 yards for ten players, then shrink it. It should feel crowded but not impossible.'},
    {q:'Is this a warm-up or a drill?',a:'Both. It makes a good first activity because every player has a ball and it needs no explanation.'}]},
