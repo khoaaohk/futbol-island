@@ -95,4 +95,6 @@ assert(/prefers-reduced-motion:reduce\)\{\.confetti\{display:none\}/.test(css),'
 const block=css.slice(css.indexOf('/* Nov 8 2026'));for(const line of block.split('\n').filter(l=>l&&!l.startsWith('/*')&&!l.startsWith('@keyframes')&&!/^\d|^\s*\d|^@media/.test(l)))assert(/^\.[a-zA-Z]/.test(line),'every new selector starts with a local class: '+line.slice(0,40));
 // Nov 17 2026: the full-time card always says what to beat next on the court (never "So close!" with no stars).
 assert.match(card,/data-tennis-next>\{earned>=3\?'All 3 stars on this court!':drill\?/);assert.doesNotMatch(card,/So close! Best here/);assert.match(css,/\.next\{/);
+// Nov 17 2026: passing the saved best rally: the scoreboard numeral reads BEST (court stays clean) and the best jingle plays once.
+assert.match(card,/data-best=\{beat\|\|undefined\}>\{beat\?'Best':'Rally'\}/);assert.match(read('lib/arcade/tennisFeel.ts'),/rallyBestSeen=true;emit\('tennis:best'\)/);
 console.log('tennis polish Nov 8: tours, boards, multiplier, ramp, forgiveness, why line, sounds, wiring OK');

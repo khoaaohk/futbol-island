@@ -2,6 +2,7 @@ import * as T from 'three';
 import type {ArcadePoseOptions} from './arcadePlayerMotion';
 import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_GOLD,TENNIS_HEAD_HEIGHT,TENNIS_RALLY_MILESTONES,tennisPointsToWin,tennisTempo,tennisOpenSide,tennisAimSide,tennisDrillLinedUp,tennisRivalTire,tennisCourtOf,type TennisState,type TennisGrade} from '@/lib/games/soccerTennis';
 import {tennisOpponent} from './tennisEndless';
+import {readArcadeRecord} from './arcadeRecords';
 import {MOVE_PHASE,type PlayerMotion} from '@/lib/graphics/player';
 import {createTennisArena,tennisAtlas,tennisAtlasUv,TENNIS_ATLAS} from './tennisArena';
 
@@ -104,6 +105,9 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
  let kickSeen=tennis.kickCount,bounceSeen=tennis.bounceEvents,netSeen=tennis.netEvents,pointSeen=tennis.pointsPlayed,planSeen=false,setSeen=tennis.setEvents,windSeen=-1;
  let tourSeen=tennis.tourEvents,livesSeen=tennis.tourLives,heatSeen=tennis.tourHeat,endSeen=tennis.matchEvents,matchNo=tennis.match;
  let hitStop=0,realDt=0,wrongSeen=tennis.wrongFooted,netWobble=0,netAge=0,netAmp=0,lastRallyCall=0;
+ /** Nov 17 2026: the saved best rally (the tennis board record), read once a run; passing it mid-rally plays the best jingle once (sound
+  *  only: the court stays clean; the scoreboard's rally numeral turns sun-yellow, components/games/TennisCard.tsx TennisScoreboard). */
+ let rallyBest=-1,rallyBestSeen=false;
  let holdSeen=tennis.pressCount,nudges=0,nudgeSeen=0,nudgeLevel=tennis.level,outSeen=tennis.outEvents,trapSeen=tennis.trapEvents,targetSeen=tennis.targetEvents,goldSeen=false,fakeSeen=false,fakeAge=1,tempoSeen=0,introLevel=0;
  // Pooled move poses (no per-frame allocation): bicycle, shark (airborne scissor), rival sole-roll fake, flick-up serve wind-up.
  const movePose:Array<NonNullable<PlayerMotion['move']>>=[{kind:'bicycle',progress:0,side:1,height:1},{kind:'bicycle',progress:0,side:1,height:1}];
@@ -126,7 +130,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
  const arena=createTennisArena(stage,tennis);
  // Plant / skid reads and celebrations (pooled scalars, no allocation).
  const plantAge=new Float32Array([1,1]),peakSpeed=new Float32Array(2),plantCool=new Float32Array(2);let cheerAge=9,youRun=0,rivalRun=0,matchSeen=-1;
- function reset(){endSeen=tennis.matchEvents;matchNo=tennis.match;tourSeen=tennis.tourEvents;livesSeen=tennis.tourLives;heatSeen=tennis.tourHeat;kickSeen=tennis.kickCount;bounceSeen=tennis.bounceEvents;netSeen=tennis.netEvents;pointSeen=tennis.pointsPlayed;setSeen=tennis.setEvents;windSeen=-1;planSeen=false;hitStop=netWobble=netAge=netAmp=lastRallyCall=realDt=0;wrongSeen=tennis.wrongFooted;hop.fill(0);hopAge.fill(1);
+ function reset(){rallyBest=-1;rallyBestSeen=false;endSeen=tennis.matchEvents;matchNo=tennis.match;tourSeen=tennis.tourEvents;livesSeen=tennis.tourLives;heatSeen=tennis.tourHeat;kickSeen=tennis.kickCount;bounceSeen=tennis.bounceEvents;netSeen=tennis.netEvents;pointSeen=tennis.pointsPlayed;setSeen=tennis.setEvents;windSeen=-1;planSeen=false;hitStop=netWobble=netAge=netAmp=lastRallyCall=realDt=0;wrongSeen=tennis.wrongFooted;hop.fill(0);hopAge.fill(1);
   trapSeen=tennis.trapEvents;targetSeen=tennis.targetEvents;goldSeen=false;fakeSeen=false;fakeAge=1;tempoSeen=0;introLevel=0;nudgeSeen=0;if(nudgeLevel!==tennis.level){nudgeLevel=tennis.level;nudges=0;}
   for(const l of[touch,intent,banner]){l.mesh.visible=false;l.life=0;}arena.reset();plantAge.fill(1);peakSpeed.fill(0);plantCool.fill(0);cheerAge=9;youRun=rivalRun=0;matchSeen=-1;stalk.visible=false;spot.visible=false;spotKick=-1;space.visible=false;spaceAge=0;spaceSide=0;tireSeen=false;outSeen=tennis.outEvents;if(net)net.position.z=0;if(tape)tape.position.z=0;}
  /** Scales the simulation step: returns 0 while a hit-stop holds the contact frame. */
@@ -152,6 +156,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
    emit(`tennis:kick:${side}:${grade||'serve'}:${s.lastShot}:${s.rally}:${kicker.kickPower.toFixed(2)}:${side==='you'?s.perfectStreak:0}:${s.touchVolley?1:0}`);
    // Rally milestones and tempo steps share one banner: when both land on the same touch, say both.
    const tempoNow=tennisTempo(s);if(s.rally<lastRallyCall)lastRallyCall=0; // a new point: milestones count again
+   if(!s.tour&&!rallyBestSeen&&s.rally>1&&s.rally%5!==0){if(rallyBest<0)rallyBest=readArcadeRecord('tennis').best;if(rallyBest>0&&s.rally>rallyBest){rallyBestSeen=true;emit('tennis:best');}}
    if(s.rally>=5&&s.rally%5===0&&s.rally!==lastRallyCall){lastRallyCall=s.rally;const reward=s.rallyMilestone===s.rally&&tennisCourtOf(s).style!=='drill';
     draw(banner,`RALLY ${s.rally}!`,s.rally>=15?'#ffc93c':'#ffe084',reward?(s.goldReady?'+1 gold · GOLDEN TOUCH READY':`+1 gold · ${tempoNow>tempoSeen?'tempo up!':'keep it going!'}`):tempoNow>tempoSeen?'Tempo up · the ball is faster':'Keep moving into position');show(banner,0,2.3,-1.5,1.1,.25);
     if(reward){arena.roar(s.rally);emit(`tennis:streak:${Math.min(9,Math.floor(s.rally/5)+2)}`);}if(tempoNow>tempoSeen){tempoSeen=tempoNow;emit(`tennis:tempo:${tempoNow}`);}}

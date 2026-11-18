@@ -3,6 +3,7 @@ import {useEffect,useState} from 'react';
 import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_TOURS,TENNIS_TOUR_RULES,tennisTakeaway,tennisLossLine,tennisTourUnlocked,tennisMatchName,tennisRunLives,type TennisState} from '@/lib/games/soccerTennis';
 import {tennisRampRow,tennisMatchTip} from '@/lib/arcade/tennisEndless';
 import {readTennisStars} from '@/lib/arcade/tennisFeel';
+import {readArcadeRecord} from '@/lib/arcade/arcadeRecords';
 import type {ArcadeHUD} from '@/lib/arcade/arcadeGames';
 import {Icon} from '../Icon';
 import {TennisCourtPicker,TennisHowTo} from './TennisCourtPicker';
@@ -130,10 +131,12 @@ const titleCase=(s:string)=>s.toLowerCase().replace(/(^|[\s-])\S/g,m=>m.toUpperC
  * with hand-cut numerals for the points, pips for sets, a dot on the server; underneath, the live rally count and a pennant that
  * points with the wind (the same wind the flags, palms and gust lines show on court). Tours show one row: the tour points. Display only. */
 export function TennisScoreboard({hud,tennis}:{hud:ArcadeHUD;tennis:TennisState|undefined}){
+ // Nov 17 2026: the saved best rally (the board record), read after mount; a rally past it inks the numeral sun-yellow as BEST.
+ const [rallyBest,setRallyBest]=useState(0);useEffect(()=>{setRallyBest(readArcadeRecord('tennis').best);},[]);
  if(!tennis)return null;
  const court=tennis.tour?TENNIS_TOURS[tennis.tour-1]:TENNIS_COURTS[Math.max(0,Math.min(TENNIS_COURTS.length-1,tennis.level-1))],venue=tennis.tour&&tennis.matchesWon%9!==0?tennisVenueFor(tennis.venueStop,0):tennisVenueFor(tennis.level,tennis.tour);/* endless: a tour walks the stops too */
  const rank=tennisRampRow(tennis.match).rank,balls=tennisRunLives(tennis);
- const rally=hud.tennisRally??0,wind=tennis.wind,strength=Math.abs(wind)<.2?0:Math.abs(wind)>1.1?2:1;
+ const rally=hud.tennisRally??0,beat=!tennis.tour&&rallyBest>0&&rally>rallyBest,wind=tennis.wind,strength=Math.abs(wind)<.2?0:Math.abs(wind)>1.1?2:1;
  const row=(side:'you'|'rival',name:string)=><div className={skin.sbRow} data-side={side} data-serving={tennis.server===side||undefined}>
   <span className={skin.sbName}>{name}</span>
   {court.sets>0?<span className={skin.sbSets}>{Array.from({length:court.sets},(_,i)=><i key={i} data-on={i<tennis.sets[side]||undefined}/>)}</span>:<span/>}
@@ -144,7 +147,7 @@ export function TennisScoreboard({hud,tennis}:{hud:ArcadeHUD;tennis:TennisState|
   {tennis.tour?<div className={skin.sbRow} data-side="you"><span className={skin.sbName}>{court.name}</span><span/><b className={skin.sbSlat} data-wide key={tennis.tourEvents}>{tennis.tourScore}</b></div>
    :<>{row('you','You')}{row('rival',titleCase(court.rival))}</>}
   <div className={skin.sbFoot} aria-hidden="true">
-   <span className={skin.sbRally} data-on={rally>=2||undefined} data-hot={rally>=10||undefined}>Rally <b>{rally>=2?rally:0}</b></span>
+   <span className={skin.sbRally} data-on={rally>=2||undefined} data-hot={rally>=10||undefined} data-best={beat||undefined}>{beat?'Best':'Rally'} <b>{rally>=2?rally:0}</b></span>
    {!tennis.tour&&<span className={skin.sbRun} data-tennis-run-score><b key={tennis.tourEvents}>{tennis.tourScore}</b><small>pts</small></span>}
    <span className={skin.sbWind} data-dir={wind<0?'left':'right'} data-strength={strength} data-tennis-wind><svg viewBox="0 0 26 14" aria-hidden="true"><path d="M13 1 L25 4 L13 7 Z M12 0 h1.6 v14 h-1.6 Z"/></svg>{strength?'Wind':'Calm'}</span>
   </div>
