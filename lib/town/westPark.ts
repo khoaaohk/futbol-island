@@ -51,21 +51,25 @@ export function buildWestPark(t:Tools):WestParkStats{
  const pathC=new T.Color(PATH_C),sandC=new T.Color(SAND_COLOR),tmpC=new T.Color();
  /** A flat mesh in the trail paving (vertex colours), placed at its own centre so the batching pass files it under its own
   *  50 m chunk (frustum-culled and behind the west region gate) instead of the island centre's. */
- const flat=(g:T.BufferGeometry,material:T.Material,y:number,name?:string)=>{g.computeBoundingBox();const c=g.boundingBox!.getCenter(new T.Vector3());g.translate(-c.x,0,-c.z);
+ const flat=(g:T.BufferGeometry,material:T.Material,y:number,name?:string)=>{g.computeBoundingBox();
+  // every piece in the trail paving carries aVerge (zeros = no verge), so the batching pass can merge them with the ribbons
+  if(material===trailMat&&!g.getAttribute('aVerge'))g.setAttribute('aVerge',new T.Float32BufferAttribute(new Float32Array(g.getAttribute('position').count*3),3));const c=g.boundingBox!.getCenter(new T.Vector3());g.translate(-c.x,0,-c.z);
   const m=new T.Mesh(g,material);m.position.set(c.x,y,c.z);m.castShadow=false;m.receiveShadow=true;if(name)m.name=name;t.add(m);return m;};
  const paint=(g:T.BufferGeometry,c:T.Color)=>{const n=g.getAttribute('position').count,a=new Float32Array(n*3);for(let i=0;i<n;i++)a.set([c.r,c.g,c.b],i*3);g.setAttribute('color',new T.BufferAttribute(a,3));return g;};
  // Flat ground pieces (paths, lawns, plaza) sit between the lawn (-0.112) and a path box's top (-0.0375), clear of depth fighting.
  /** A smooth ribbon down a polyline: miter-free (each point offset along the averaged tangent), closed loops wrap, round caps at
   *  open ends (the joins: a cap sits inside the paving it meets), and a beach end fades into the sand (TRAIL_BEACH). */
- const ribbon=(pts:readonly P[],width:number,y:number,o:{beach?:boolean}={})=>{
+ const ribbon=(pts:readonly P[],width:number,y:number,o:{beach?:boolean;verge?:boolean}={})=>{
   const closed=pts.length>2&&pts[0][0]===pts[pts.length-1][0]&&pts[0][1]===pts[pts.length-1][1],n=pts.length;
-  const run=o.beach?trailBeachRun(pts):null,pos:number[]=[],col:number[]=[],idx:number[]=[];
+  const run=o.beach?trailBeachRun(pts):null,pos:number[]=[],col:number[]=[],verge:number[]=[],idx:number[]=[];
   pts.forEach(([x,z],i)=>{const [px,pz]=closed&&i===0?pts[n-2]:pts[Math.max(0,i-1)],[nx,nz]=closed&&i===n-1?pts[1]:pts[Math.min(n-1,i+1)],dx=nx-px,dz=nz-pz,l=Math.hypot(dx,dz)||1;
    const r=run?run[i]:0,k=run?smooth(-1.5,TRAIL_BEACH.blend,r):0,w=width*(1-TRAIL_BEACH.narrow*smooth(1,TRAIL_BEACH.blend+2,r)),ox=-dz/l*w/2,oz=dx/l*w/2,yy=run?TRAIL_BEACH.y*smooth(-1,3,r)+y*(1-smooth(-1,3,r))-y:0;
-   pos.push(x+ox,yy,z+oz,x-ox,yy,z-oz);tmpC.copy(pathC).lerp(sandC,k);col.push(tmpC.r,tmpC.g,tmpC.b,tmpC.r,tmpC.g,tmpC.b);
+   pos.push(x+ox,yy,z+oz,x-ox,yy,z-oz);
+   // aVerge (groundTint.ts 'trail'): offset from the centre line, half width, and how much the edge breaks into the lawn (none on sand, at an open end, or on the stadium apron).
+   {const vk=o.verge===false||(!closed&&(i===0||i===n-1))?0:1-k;verge.push(w/2,w/2,vk,-w/2,w/2,vk);}tmpC.copy(pathC).lerp(sandC,k);col.push(tmpC.r,tmpC.g,tmpC.b,tmpC.r,tmpC.g,tmpC.b);
    if(i)idx.push((i-1)*2,i*2,(i-1)*2+1,(i-1)*2+1,i*2,i*2+1);// counter-clockwise from above: faces up
    if(i){const [qx,qz]=pts[i-1];surfaceAreas.push({kind:k>.5?'sand':'path',x:(x+qx)/2,z:(z+qz)/2,w:Math.abs(x-qx)+w,d:Math.abs(z-qz)+w});}});
-  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setIndex(idx);g.computeVertexNormals();
+  const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(pos,3));g.setAttribute('color',new T.Float32BufferAttribute(col,3));g.setAttribute('aVerge',new T.Float32BufferAttribute(verge,3));g.setIndex(idx);g.computeVertexNormals();
   flat(g,trailMat,y);
   if(!closed)for(const [i,keep] of [[0,true],[n-1,!o.beach]] as const)if(keep){const cap=new T.CircleGeometry(width/2,20).rotateX(-Math.PI/2);cap.translate(pts[i][0],0,pts[i][1]);flat(paint(cap,pathC),trailMat,y-.001);}
  };
@@ -118,7 +122,7 @@ export function buildWestPark(t:Tools):WestParkStats{
  // the map stop at the waterline): no grass seam between the walk and the rim, and still ~2 m short of the water.
  const onToRim=(pts:P[])=>{const [ax,az]=pts[pts.length-2],[bx,bz]=pts[pts.length-1],l=Math.hypot(bx-ax,bz-az)||1;pts.push([bx+(bx-ax)/l*.3,bz+(bz-az)/l*.3]);return pts;};
  for(const tr of PARK_TRAILS)ribbon(tr.to==='pond'?onToRim(pathPoints(tr.curve)):pathPoints(tr.curve),TRAIL_WIDTH,-.045,{beach:tr.to==='beach'});
- ribbon(ringPoints(),BOWL_RING.width,-.045);
+ ribbon(ringPoints(),BOWL_RING.width,-.045,{verge:false});
  for(const l of PARK_LAWNS)disc(l.x,l.z,l.rx,l.rz,-.075,'#86ad79','grass');
  {const {x,z,rx,rz}=PARK_POND,c=(h:string)=>new T.Color(h),SEG=96,tmpE={x:0,z:0},sandK=(a:number)=>{const d=Math.atan2(Math.sin(a-POND_SAND.bearing),Math.cos(a-POND_SAND.bearing));return 1-smooth(POND_SAND.half*.55,POND_SAND.half,Math.abs(d));};
   /** A ring mesh round the pond's own outline (westParkLayout.ts pondEdge, Nov 13 2026: no longer an ellipse): each ring is the edge

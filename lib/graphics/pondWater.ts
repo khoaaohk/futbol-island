@@ -79,4 +79,4 @@ export function createPondPadMaterial(){
 /** The pond bed (vertex colours: sandy shallows to a deep green-brown middle), ground-tinted like the lawn. */
 export function createPondBedMaterial(){return applyGroundTint(new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:1}),'mixed');}
 /** The trails' paving: vertex colours (the cream path, blending to the beach sand where a trail runs onto the beach). */
-export function createTrailMaterial(){return applyGroundTint(new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.85}),'path');}
+export function createTrailMaterial(){return applyGroundTint(new T.MeshStandardMaterial({color:'#ffffff',vertexColors:true,roughness:.85}),'trail');}

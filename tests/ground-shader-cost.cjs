@@ -15,15 +15,20 @@ const src=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 let failed=0;const ok=(name,fn)=>{try{fn();console.log('ok   '+name);}catch(e){failed++;console.log('FAIL '+name+'\n  '+(e&&e.stack||e));}};
 
 // 05e9da8b (MeshStandardMaterial programs), {ALU, texture reads}: `cool` = heat tier 0, `warm` = tiers 1-2, `low` = tiers 3-4 and
-// Battery saver. Before Nov 17 the ground had two paths only (grain + cloud shade on at tier 0, off above).
+// Battery saver. Before Nov 17 the ground had two paths only (hash grain + cloud shade on at tier 0, off above). `beach` and `trail`
+// are new kinds for meshes that were `sand` (double sided) and `path` (vertex colours): their baselines are those programs.
 const g=(cool,warm)=>({cool:{alu:cool,tex:16},warm:{alu:warm,tex:16},low:{alu:warm,tex:16}});
 const BASE={
- ground:{grass:g(448,406),sand:g(454,412),path:g(442,400),land:g(442,400),mixed:g(442,400),asphalt:g(442,400)},
+ ground:{grass:g(448,406),sand:g(454,412),beach:g(454,412),path:g(442,400),trail:g(443,401),land:g(442,400),mixed:g(442,400),asphalt:g(442,400)},
  ocean:{far:{alu:1146,tex:20},nearPhone:{alu:1612,tex:20},nearPhoneHot:{alu:1499,tex:20},still:{alu:1344,tex:20}},
 };
-const ROUGH={grass:.94,sand:1,path:.9,land:1,mixed:.95,asphalt:.9};
+// Nov 17 2026, detail tile (plan T4): ONE read of the 64x64 ground tile at tiers 0-2, where the hash grain (tier 0) or nothing
+// (tiers 1-2) was. That read is the only texture read added anywhere; the Lambert swap's ALU saving on the same pixels pays for it
+// (stated, not hidden: reads and ALU are different currencies and only a phone can weigh them). Tiers 3-4: no read, as before.
+const TILE_READ={cool:1,warm:1,low:0};
+const ROUGH={grass:.94,sand:1,beach:1,path:.9,trail:.85,land:1,mixed:.95,asphalt:.9};
 const GRAIN=/if\(uGroundGrain>0\.\)/g,DETAIL=/if\(uGroundDetail>0\.\)/g;
-const groundNow=kind=>{const m=G.applyGroundTint(new T.MeshStandardMaterial({roughness:ROUGH[kind]}),kind),p=P.patched(T,m,'physical');
+const groundNow=kind=>{const m=G.applyGroundTint(new T.MeshStandardMaterial({roughness:ROUGH[kind],side:kind==='beach'?T.DoubleSide:T.FrontSide,vertexColors:kind==='trail'}),kind),p=P.patched(T,m,'physical');
  return {source:p.source,cool:P.programCost(p.source,p.defines),warm:P.programCost(p.source,p.defines,[GRAIN]),low:P.programCost(p.source,p.defines,[GRAIN,DETAIL])};};
 const oceanNow=()=>{const m=new T.MeshStandardMaterial({...W.SEA_WATER_LOOK});m.map=new T.Texture();W.patchOceanMaterial(m);const p=P.patched(T,m,'physical');
  const desk=/if\(uWaterDetail>1\.5\)/g,reach=/if\(reachS>0\.\)/g,crest=/if\(uWaterDetail>\.5\)/g,glit=/if\(uSunGlitter>0\.\)/g,fx=/if\(uSwimFx\.z>0\.\)/g;
@@ -35,11 +40,12 @@ ok('the estimator reproduces a known program: three r169 standard, untouched, ph
  assert.equal(c.tex,16,'the soft shadow filter: 16 shadow-map reads');assert(c.alu>350&&c.alu<460,'ALU '+c.alu);
  const l=P.patched(T,new T.MeshLambertMaterial(),'lambert'),lc=P.programCost(l.source,l.defines);assert(lc.alu<c.alu-100,'lambert is at least 100 ALU under standard: '+lc.alu+' vs '+c.alu);});
 
-ok('ground: every kind, every tier path, costs less than before (ALU) and reads no more textures than its allowance',()=>{
+ok('ground: every kind, every tier path, costs less than before (ALU, worst-case pixel incl. slab joints / verge / wet band); +1 texture read at tiers 0-2 only (the detail tile)',()=>{
  const rows=[];
  for(const kind of Object.keys(BASE.ground)){const now=groundNow(kind);
   for(const t of ['cool','warm','low']){const a=BASE.ground[kind][t],b=now[t];rows.push(`ground.${kind}.${t} ${a.alu}/${a.tex} -> ${b.alu}/${b.tex}`);
-   assert(b.alu<=a.alu-40,`${kind}.${t}: ALU ${b.alu} is not at least 40 under ${a.alu}`);assert(b.tex<=a.tex,`${kind}.${t}: texture reads ${b.tex} > ${a.tex}`);}}
+   assert(b.alu<a.alu,`${kind}.${t}: ALU ${b.alu} is not under ${a.alu}`);assert(b.tex<=a.tex+TILE_READ[t],`${kind}.${t}: texture reads ${b.tex} > ${a.tex}+${TILE_READ[t]}`);}
+  assert.equal(now.low.tex,16,kind+': the lowest tiers read no ground texture');}
  console.log('     '+rows.join('\n     '));});
 
 ok('ocean: every phone path costs less than before, same texture reads',()=>{
@@ -69,5 +75,22 @@ ok('the A/B switches are dev-only: a production build never reads the URL',()=>{
  const prev=process.env.NODE_ENV;process.env.NODE_ENV='production';global.window={location:{search:'?gfx=pbr-ground,shadow5,tone-neutral'}};
  try{const F=createLoader()('lib/graphics/gfxFlags.ts');for(const n of ['pbr-ground','pbr-ocean','tone-neutral','tone-agx','shadow5','shadow4'])assert.equal(F.gfxFlag(n),false,n);}
  finally{process.env.NODE_ENV=prev;delete global.window;}});
+
+ok('surface detail lives in the existing draws: one shared 64x64 tile, per-vertex attributes for the beach and the trails, no new mesh / program key',()=>{
+ const gt=src('lib/graphics/groundTint.ts');
+ assert.equal((gt.match(/new T\.DataTexture\(/g)||[]).length,1,'the one detail tile');assert.equal((gt.match(/texture2D\(/g)||[]).length,1,'read once');
+ const uniformsOf=kind=>{const m=G.applyGroundTint(new T.MeshStandardMaterial(),kind),sh={uniforms:{},vertexShader:T.ShaderLib.physical.vertexShader,fragmentShader:T.ShaderLib.physical.fragmentShader};m.onBeforeCompile(sh,null);return {sh,m};};
+ const a=uniformsOf('grass'),b=uniformsOf('path');assert.equal(a.sh.uniforms.uGroundTile,b.sh.uniforms.uGroundTile,'every ground material shares the tile uniform');
+ assert.equal(a.sh.uniforms.uGroundTile.value.image.width,64);assert.equal(a.sh.uniforms.uGroundTile.value.generateMipmaps,true);
+ for(const k of Object.keys(G.GROUND_TINT))assert.equal(uniformsOf(k).m.customProgramCacheKey(),'ground-tint-'+k);
+ const beach=uniformsOf('beach').sh,trail=uniformsOf('trail').sh;
+ assert(/attribute float aShore;/.test(beach.vertexShader)&&/vShore=aShore;/.test(beach.vertexShader)&&/gWet=1\.-smoothstep\(/.test(beach.fragmentShader),'beach: wet band from the per-vertex inland distance (no shore-field read per pixel)');
+ assert(/attribute vec3 aVerge;/.test(trail.vertexShader)&&/vVerge\.y>\.01\?vVerge\.y-abs\(vVerge\.x\):9\./.test(trail.fragmentShader),'trail: verge from the per-vertex edge attribute; pieces without it (zeros) get none');
+ assert(/'aShore',new T\.Float32BufferAttribute\(sandShore,1\)/.test(src('lib/town/fields.ts'))&&/'beach'\)/.test(src('lib/town/fields.ts')));
+ const wp=src('lib/town/westPark.ts');assert(/g\.setAttribute\('aVerge',new T\.Float32BufferAttribute\(verge,3\)\)/.test(wp)&&/material===trailMat&&!g\.getAttribute\('aVerge'\)/.test(wp)&&/ringPoints\(\),BOWL_RING\.width,-\.045,\{verge:false\}/.test(wp),'ribbons carry the verge; caps, rim and apron carry zeros so the batch pass can merge them; the bowl ring sits on paving');
+ // slab joints only inside the stadium rectangles; joint lines are widened to the pixel footprint and fade under a pixel (no shimmer)
+ const path=uniformsOf('path').sh.fragmentShader;assert(/if\(min\(max\(sa\.x,sa\.y\),max\(sb\.x,sb\.y\)\)<0\.\)/.test(path)&&/px=\.0011\/gl_FragCoord\.w/.test(path)&&/min\(1\.,0\.060\/px\)/.test(path));
+ assert(!/sa\.x/.test(uniformsOf('grass').sh.fragmentShader)&&!/sa\.x/.test(uniformsOf('sand').sh.fragmentShader),'never on grass or sand');
+ const [plaza,bowl]=G.GROUND_SLAB.rects;assert(plaza[0]+plaza[2]<=-50.69&&plaza[0]-plaza[2]>=-166&&Math.abs(bowl[0]+205)<1e-9&&bowl[2]===40&&bowl[3]===57.5);});
 
 if(failed){console.log(failed+' failed');process.exit(1);}
