@@ -26,6 +26,8 @@ type Part={on:boolean;x:number;y:number;vx:number;vy:number;t0:number;life:numbe
 type Pop={on:boolean;x:number;y:number;t0:number;n:number};
 
 export type StreetdashView=ReturnType<typeof createStreetdashView>;
+/** Nov 17 2026: '#rrggbb' a to b at t (0..1), for the one shared sky while a backdrop changes. */
+const mixHex=(a:string,b:string,t:number)=>{const p=parseInt(a.slice(1),16),q=parseInt(b.slice(1),16),ch=(s:number)=>Math.round(((p>>s)&255)+((((q>>s)&255)-((p>>s)&255))*t));return `rgb(${ch(16)},${ch(8)},${ch(0)})`;};
 export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:boolean}){
  const g=canvas.getContext('2d',{alpha:false})!;const reduced=opts.reduced;
  const L:StreetdashLayout={w:1,h:1,k:30,gy:400,prompt:{x:0,y:0,r:0},target:{x:0,y:0,r:0}};
@@ -164,20 +166,23 @@ export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:bool
    if(st<.3){const a=shakeAmp*(1-st/.3);ox=Math.sin(st*90)*a;oy=Math.cos(st*70)*a*.6;}
    const X=(x:number)=>(x-camX)*k+ox,Y=(y:number)=>L.gy-(y-camY)*k+oy;
    c.setTransform(dpr,0,0,dpr,0,0);
-   // backdrop: the current theme, cross-faded in over the first 40 m
+   // backdrop: the current theme, cross-faded in over the first 24 m. Nov 17 2026: ONE sky (bands, sun, dot screen, clouds) whose
+   // colours and sun position blend from the old theme to the new, so two suns never show; only the building strips cross-fade.
    const into=(s.dist%SD.themeM),fade=s.dist>SD.themeM&&into<24?into/24:1,prev=(s.theme+2)%3;
-   const drawSky=(i:number,alpha:number)=>{const T=THEMES[i],gy=Y(0);c.globalAlpha=alpha;
-    c.fillStyle=T.sky[0];c.fillRect(0,0,W,gy*.45);c.fillStyle=T.sky[1];c.fillRect(0,gy*.45,W,gy*.3);c.fillStyle=T.sky[2];c.fillRect(0,gy*.75,W,gy*.25+1);
-    const sx=W*(i===1?.3:.74),sy=gy*(i===1?.62:.22),r=Math.min(W,H)*.09;c.fillStyle=T.sunRing;c.beginPath();c.arc(sx,sy,r*1.35,0,6.283);c.fill();c.fillStyle=T.sun;c.beginPath();c.arc(sx,sy,r,0,6.283);c.fill();
+   {const A=THEMES[fade<1?prev:s.theme],B=THEMES[s.theme],m=(p:string,q:string)=>fade>=1?q:mixHex(p,q,fade),gy=Y(0),ia=fade<1?prev:s.theme;
+    c.fillStyle=m(A.sky[0],B.sky[0]);c.fillRect(0,0,W,gy*.45);c.fillStyle=m(A.sky[1],B.sky[1]);c.fillRect(0,gy*.45,W,gy*.3);c.fillStyle=m(A.sky[2],B.sky[2]);c.fillRect(0,gy*.75,W,gy*.25+1);
+    const lerp=(p:number,q:number)=>p+(q-p)*fade,sx=W*lerp(ia===1?.3:.74,s.theme===1?.3:.74),sy=gy*lerp(ia===1?.62:.22,s.theme===1?.62:.22),r=Math.min(W,H)*.09;
+    c.fillStyle=m(A.sunRing,B.sunRing);c.beginPath();c.arc(sx,sy,r*1.35,0,6.283);c.fill();c.fillStyle=m(A.sun,B.sun);c.beginPath();c.arc(sx,sy,r,0,6.283);c.fill();
     // a halftone turn under the sky: rows of dots that grow toward the horizon
-    c.fillStyle=T.dot;for(let row=0;row<7;row++){const yy=4+row*10,rr=2.6-row*.32;for(let x=(row%2)*6;x<W;x+=12){c.beginPath();c.arc(x,yy,rr,0,6.283);c.fill();}}// the print's dot screen, densest at the top
-    {const cf=((camX*k*.05*(reduced?.35:1))%(W*1.5)+W*1.5)%(W*1.5);c.fillStyle=i===1?'#ffd9a8':'#fffaf0';
+    c.fillStyle=m(A.dot,B.dot);for(let row=0;row<7;row++){const yy=4+row*10,rr=2.6-row*.32;for(let x=(row%2)*6;x<W;x+=12){c.beginPath();c.arc(x,yy,rr,0,6.283);c.fill();}}// the print's dot screen, densest at the top
+    {const cf=((camX*k*.05*(reduced?.35:1))%(W*1.5)+W*1.5)%(W*1.5);c.fillStyle=m(ia===1?'#ffd9a8':'#fffaf0',s.theme===1?'#ffd9a8':'#fffaf0');
      for(let n=0;n<4;n++){const cx=((n*W*.47+W*.2-cf)%(W*1.5)+W*1.5)%(W*1.5)-W*.25,cy=gy*(.2+((n*37)%5)*.06),cw=W*(.16+(n%3)*.05);
-      c.beginPath();c.ellipse(cx,cy,cw,cw*.22,0,0,6.283);c.ellipse(cx-cw*.35,cy-cw*.12,cw*.36,cw*.26,0,0,6.283);c.ellipse(cx+cw*.25,cy-cw*.16,cw*.42,cw*.3,0,0,6.283);c.fill();}}
+      c.beginPath();c.ellipse(cx,cy,cw,cw*.22,0,0,6.283);c.ellipse(cx-cw*.35,cy-cw*.12,cw*.36,cw*.26,0,0,6.283);c.ellipse(cx+cw*.25,cy-cw*.16,cw*.42,cw*.3,0,0,6.283);c.fill();}}}
+   const drawStrips=(i:number,alpha:number)=>{const gy=Y(0);c.globalAlpha=alpha;
     const par=reduced?.35:1,fo=((camX*k*.12*par)%tw+tw)%tw,mo=((camX*k*.4*par)%tw+tw)%tw,S=strips[i];
     if(S){const fy=gy-farH-L.k*1.2,my=gy-midH;c.drawImage(S.far,-fo,fy,tw,farH);c.drawImage(S.far,tw-fo,fy,tw,farH);c.drawImage(S.mid,-mo,my,tw,midH);c.drawImage(S.mid,tw-mo,my,tw,midH);}
     c.globalAlpha=1;};
-   if(fade<1)drawSky(prev,1);drawSky(s.theme,fade);
+   if(fade<1)drawStrips(prev,1);drawStrips(s.theme,fade);
    // speed lines across the sky band
    if(!reduced&&s.speed>7.4){c.strokeStyle='rgba(255,243,214,.75)';c.lineWidth=2;const n=6,a=Math.min(1,(s.speed-7.4)/2.5);c.globalAlpha=a;
     for(let i=0;i<n;i++){const yy=L.gy*(.2+i*.11),len=W*.12,xx=W-((t*W*1.6+i*W*.37)%(W*1.4));c.beginPath();c.moveTo(xx,yy);c.lineTo(xx+len,yy);c.stroke();}c.globalAlpha=1;}

@@ -62,7 +62,7 @@ export function createArcadeRoomCrowd({scene,mobile,reduced=false,cabinets,bound
    if(!engaged&&m.phase==='play'){
     tx=station.x;tz=station.z;
     // Leave the console centre and its approach free for the human player.
-    if(Math.hypot(playerX-station.x,playerZ-station.z)<1.65){const c=cabinets[m.cabinet],side=i%2?1:-1;tx=clampX(station.x+Math.cos(c.yaw)*side*.65);tz=clampZ(station.z-Math.sin(c.yaw)*side*.65+.25);m.yielding=true;}
+    if(Math.hypot(playerX-station.x,playerZ-station.z)<1.65){const c=cabinets[m.cabinet],k=Math.cos(c.yaw),s=Math.sin(c.yaw),side=(station.x-playerX)*k-(station.z-playerZ)*s>=0?1:-1;/* Nov 17 2026: step aside AWAY from the player (was a fixed side by visitor index: with ten uprights 2.44 m apart that side could be the player's way in) */tx=clampX(station.x+Math.cos(c.yaw)*side*.65);tz=clampZ(station.z-Math.sin(c.yaw)*side*.65+.25);m.yielding=true;}
    }
    if(engaged){tx=m.x;tz=m.z;m.vx=m.vz=0;}
    let dx=tx-m.x,dz=tz-m.z,distance=Math.hypot(dx,dz);
