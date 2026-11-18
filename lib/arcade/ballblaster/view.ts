@@ -15,7 +15,7 @@ import * as T from 'three';
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {createComicUniforms,comicDotCell,aimComicSun,comicMaterial,COMIC_INK,COMIC_PAPER} from '../comic/shading';
 import {inkedPart,partAt,bakeParts,comicStarGeometry,flipFaces} from '../comic/ink';
-import {BB,K,halfW,BOARD_OUT,isMachine,type BallBlaster,type BlastEvent} from './core';
+import {BB,K,UNLOCK,halfW,BOARD_OUT,isMachine,type BallBlaster,type BlastEvent} from './core';
 
 export const BB_COLORS={sky:'#8fd4ee',grass:'#4fb85c',grassMown:'#5fc76a',line:'#fff3d6',sun:'#ffc83a',red:'#f0452e',teal:'#19b5a5',ink:COMIC_INK,paper:COMIC_PAPER};
 const PIECES=180,BITS=18,DUST=48,DOTS=40,STARS=8,TRAIL=90,EYES=120,KEYS=40,ROTORS=40;
@@ -32,9 +32,9 @@ const EYE:Record<number,{y:number;z:number;g:number;s:number;one?:boolean}>={1:{
 const KEY:Record<number,{y:number;z:number;s:number}>={1:{y:.86,z:-.27,s:1},5:{y:.86,z:-.27,s:1},6:{y:.8,z:-.23,s:.85},7:{y:.9,z:-.33,s:1.25}};
 /** Times of day: the sky turns every three waves. */
 const TOD=[
- {top:'#5ab8e6',low:'#c4ecf7',fog:'#c4e8f2',sun:'#ffffff',sunI:2.6,hemi:'#ffffff',hemiG:'#a79bb5',hemiI:.55,glow:.18,cloud:'#fff8e8',cloudShade:'#cfe6f2',orb:'#fff1b0',hill:'#3f8f5a',hill2:'#5aa86a'},
- {top:'#d9604f',low:'#ffc36a',fog:'#f3b48a',sun:'#ffd3a0',sunI:2.35,hemi:'#ffd0b0',hemiG:'#8a6a9a',hemiI:.62,glow:.55,cloud:'#ffe3b5',cloudShade:'#f2957a',orb:'#fff1b0',hill:'#6a3f6a',hill2:'#8f5a72'},
- {top:'#121842',low:'#3a4386',fog:'#2a3166',sun:'#cdd8ff',sunI:1.9,hemi:'#8a98e0',hemiG:'#2a2440',hemiI:.8,glow:1,cloud:'#4b5594',cloudShade:'#2e3570',orb:'#f6f2dc',hill:'#1d2350',hill2:'#2b326a'},
+ {top:'#5ab8e6',low:'#c4ecf7',fog:'#c4e8f2',sun:'#ffffff',sunI:2.6,hemi:'#ffffff',hemiG:'#a79bb5',hemiI:.55,glow:.18,turf:1,crowd:1,pool:'#000000',cloud:'#fff8e8',cloudShade:'#cfe6f2',orb:'#fff1b0',hill:'#3f8f5a',hill2:'#5aa86a'},
+ {top:'#d9604f',low:'#ffc36a',fog:'#f3b48a',sun:'#ffd3a0',sunI:2.35,hemi:'#ffd0b0',hemiG:'#8a6a9a',hemiI:.62,glow:.55,turf:.92,crowd:.9,pool:'#000000',cloud:'#ffe3b5',cloudShade:'#f2957a',orb:'#fff1b0',hill:'#6a3f6a',hill2:'#8f5a72'},
+ {top:'#121842',low:'#3a4386',fog:'#2a3166',sun:'#cdd8ff',sunI:1.15,hemi:'#7d8ad6',hemiG:'#1c1830',hemiI:.62,glow:1,turf:.34,crowd:.62,pool:'#a89c74',cloud:'#4b5594',cloudShade:'#2e3570',orb:'#f6f2dc',hill:'#1d2350',hill2:'#2b326a'},
 ] as const;
 
 /* ---- canvas textures (made once) ---- */
@@ -88,6 +88,9 @@ function ballTex(){return canvasTex(256,128,g=>{g.fillStyle='#fffaf0';g.fillRect
  for(let i=0;i<5;i++){pent(25.6+i*51.2,38,15);pent(i*51.2,90,15);}pent(256,90,15);g.fillRect(0,0,256,9);g.fillRect(0,119,256,9);});}
 function blobTex(){return canvasTex(64,64,g=>{const r=g.createRadialGradient(32,32,8,32,32,31);r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(.6,'rgba(255,255,255,.8)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.fillRect(0,0,64,64);});}
 function netTex(){return canvasTex(128,128,g=>{g.clearRect(0,0,128,128);g.strokeStyle='#fff8ea';g.lineWidth=3;for(let i=0;i<=128;i+=16){g.beginPath();g.moveTo(i,0);g.lineTo(i,128);g.stroke();g.beginPath();g.moveTo(0,i);g.lineTo(128,i);g.stroke();}});}
+/** Night floodlight pools on the pitch (an emissive map, same layout as pitchTex): four soft warm ovals under the towers' beams. */
+function poolTex(){const S=4;return canvasTex(30*S,64*S,g=>{const X=(x:number)=>(x+15)*S,Z=(z:number)=>(6-z)*S;g.fillStyle='#000';g.fillRect(0,0,30*S,64*S);
+ for(const [x,z,rx,rz] of [[-5.5,-4,8,9],[5.5,-15,8,10],[-4.5,-29,8,10],[4.5,-43,9,11],[0,-52,10,8]]){g.save();g.translate(X(x),Z(z));g.scale(rx,rz);const r=g.createRadialGradient(0,0,0,0,0,S);r.addColorStop(0,'rgba(255,255,255,.95)');r.addColorStop(.55,'rgba(255,255,255,.5)');r.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=r;g.beginPath();g.arc(0,0,S,0,7);g.fill();g.restore();}});}
 function glowTex(){return canvasTex(128,128,g=>{const r=g.createRadialGradient(64,64,4,64,64,64);r.addColorStop(0,'rgba(255,250,220,1)');r.addColorStop(.25,'rgba(255,236,170,.75)');r.addColorStop(1,'rgba(255,220,140,0)');g.fillStyle=r;g.fillRect(0,0,128,128);});}
 
 /* ---- inked props, built once ---- */
@@ -135,18 +138,31 @@ function eyeGeo(){const o:Parts=[];P(o,sph(1,8),'#ffffff',0,0,0,0,0,.22,true);P(
 /** A wind-up key: stem along +z (out of the back is -z, so the instance flips it), butterfly bow. */
 function keyGeo(){const o:Parts=[];P(o,cyl(.04,.04,.26,6).rotateX(Math.PI/2),BB_COLORS.sun,0,0,-.13,0,0,.015,true);P(o,box(.42,.2,.05),BB_COLORS.sun,0,0,-.3,0,0,.025);P(o,box(.1,.1,.06),'#e0a020',0,0,-.3,0,0,0);return bakeParts(o);}
 function rotorGeo(){const o:Parts=[];P(o,box(.46,.025,.08),'#cfd8dc',0,0,0,0,0,.015);P(o,box(.08,.025,.46),'#cfd8dc',0,0,0,0,0,.015);P(o,cyl(.05,.05,.05,6),COMIC_INK,0,.02,0,0,0,0,true);return bakeParts(o);}
-/** Mega Mannequin: the boss, split so its arms swing. Red and white training kit, a big round head with painted eyebrows. */
-function buildBoss(mat:T.Material,eye:T.BufferGeometry,key:T.BufferGeometry){const g=new T.Group(),body:Parts=[],arm:Parts=[];const R=BB_COLORS.red,W='#fff3d6',I=COMIC_INK;
- P(body,box(.42,1.2,.42),'#5b6072',-.36,.6,0);P(body,box(.42,1.2,.42),'#5b6072',.36,.6,0);P(body,box(.5,.16,.62),I,-.36,.08,.08,0,0,.02);P(body,box(.5,.16,.62),I,.36,.08,.08,0,0,.02);
- P(body,box(1.5,1.3,.9),R,0,1.85,0,0,0,.05);P(body,box(1.52,.3,.92),W,0,1.55,0,0,0,0);
- P(body,box(.5,.5,.05),W,0,2.05,.46,0,0,.02);P(body,box(.3,.07,.06),R,0,2.15,.5,0,0,0);P(body,box(.07,.3,.06),R,0,2.05,.5,0,0,0);
- P(body,sph(.62,14),'#ffd9a8',0,2.95,0,0,0,.05,true);P(body,box(.3,.08,.05),I,-.22,3.22,.56,0,.3,0);P(body,box(.3,.08,.05),I,.22,3.22,.56,0,-.3,0);
- P(body,box(.4,.09,.05),I,0,2.72,.6,0,0,0);P(body,box(.08,.14,.05),I,-.2,2.75,.6,0,.5,0);P(body,box(.08,.14,.05),I,.2,2.75,.6,0,-.5,0);
- P(arm,box(.36,1.2,.36),R,0,-.5,0,0,0,.04);P(arm,box(.38,.2,.38),W,0,-.9,0,0,0,0);P(arm,sph(.26,10),'#ffd9a8',0,-1.18,0,0,0,.035,true);
- const b=new T.Mesh(bakeParts(body),mat);b.castShadow=true;g.add(b);const armG=bakeParts(arm),L=new T.Mesh(armG,mat),Rr=new T.Mesh(armG,mat);L.position.set(-.95,2.35,0);Rr.position.set(.95,2.35,0);L.castShadow=Rr.castShadow=true;g.add(L,Rr);
- const eyes=[-1,1].map(s=>{const e=new T.Mesh(eye,mat);e.position.set(s*.22,3.02,.52);e.scale.setScalar(.15);g.add(e);return e;});
- const k=new T.Mesh(key,mat);k.position.set(0,1.95,-.46);k.scale.setScalar(2.2);k.rotation.x=-.4;g.add(k);
- g.userData={arms:[L,Rr],eyes,key:k,armG};g.visible=false;return g;}
+/** Mega Mannequin: the boss, 5 m of training-kit toy. The body is baked three times (all armour, shoulder and thigh plates gone,
+ * helmet and chest frame gone too) and swapped as its phases turn, so the plates cost no extra draw. The glowing chest dial is its
+ * weak spot (one basic-material disc that pulses faster each phase); its eyes ride in the machines' instanced eye mesh. */
+function buildBoss(mat:T.Material,key:T.BufferGeometry){const g=new T.Group();const R=BB_COLORS.red,W='#fff3d6',I=COMIC_INK,G='#8d93a6',G2='#6c7186',Y=BB_COLORS.sun,SK='#ffd9a8';
+ const disc=(r:number,d:number)=>new T.CylinderGeometry(r,r,d,20).rotateX(Math.PI/2);
+ const mk=(plA:boolean,plB:boolean)=>{const o:Parts=[];
+  for(const s of [-1,1]){P(o,box(.56,1.45,.56),'#5b6072',s*.42,.8,0);P(o,box(.68,.24,.84),I,s*.42,.12,.1,0,0,.02);P(o,box(.6,.2,.6),W,s*.42,1.28,0,0,0,.02);}
+  P(o,box(1.5,.36,.86),'#3d4152',0,1.62,0,0,0,.04);P(o,box(1.9,1.5,1.02),R,0,2.5,0,0,0,.05);P(o,box(1.92,.26,1.04),W,0,1.88,0,0,0,0);
+  P(o,box(.18,1.2,.06),W,-.62,2.55,.52,0,0,0);P(o,box(.18,1.2,.06),W,.62,2.55,.52,0,0,0);
+  P(o,disc(.44,.12),I,0,2.55,.5,0,0,0);P(o,cyl(.26,.3,.32,10),SK,0,3.32,0,0,0,.03,true);
+  P(o,sph(.72,16),SK,0,3.86,0,0,0,.05,true);P(o,box(1.46,.05,.05),'#e0b98a',0,3.86,.0,0,0,0);
+  P(o,box(.34,.1,.06),I,-.26,4.16,.66,0,.32,0);P(o,box(.34,.1,.06),I,.26,4.16,.66,0,-.32,0);P(o,box(.46,.1,.06),I,0,3.56,.66,0,0,0);P(o,box(.09,.16,.06),I,-.24,3.6,.66,0,.5,0);P(o,box(.09,.16,.06),I,.24,3.6,.66,0,-.5,0);
+  if(plA)for(const s of [-1,1]){P(o,box(.8,.34,.86),G,s*1.12,3.28,0,0,s*-.28,.05);P(o,box(.82,.09,.88),Y,s*1.12,3.2,0,0,s*-.28,0);P(o,box(.64,.6,.14),G2,s*.42,1.0,.32,0,0,.04);P(o,box(.64,.09,.16),Y,s*.42,1.12,.33,0,0,0);}
+  if(plB){P(o,box(1.56,.46,1.56),G,0,4.42,0,0,0,.05);P(o,box(1.58,.1,1.58),Y,0,4.3,0,0,0,0);P(o,box(1.56,.12,.42),G2,0,4.16,.78,0,0,.03);
+   P(o,box(1.24,.24,.12),G,0,3.08,.54,0,0,.03);P(o,box(1.24,.24,.12),G,0,2.02,.54,0,0,.03);P(o,box(.24,.86,.12),G,-.5,2.55,.54,0,0,.03);P(o,box(.24,.86,.12),G,.5,2.55,.54,0,0,.03);
+   for(const [x,y] of [[-.5,3.08],[.5,3.08],[-.5,2.02],[.5,2.02]])P(o,sph(.07,6),Y,x,y,.62,0,0,0);}
+  return bakeParts(o);};
+ const geos=[mk(true,true),mk(false,true),mk(false,false)];
+ const arm:Parts=[];P(arm,box(.5,1.36,.5),R,0,-.55,0,0,0,.045);P(arm,box(.52,.24,.52),W,0,-1.02,0,0,0,0);P(arm,sph(.36,10),SK,0,-1.36,0,0,0,.04,true);
+ const b=new T.Mesh(geos[0],mat);b.castShadow=true;g.add(b);const armG=bakeParts(arm),L=new T.Mesh(armG,mat),Rr=new T.Mesh(armG,mat);L.position.set(-1.2,3.0,0);Rr.position.set(1.2,3.0,0);L.castShadow=Rr.castShadow=true;g.add(L,Rr);
+ const coreG=disc(.3,.1),coreM=new T.MeshBasicMaterial({color:Y}),core=new T.Mesh(coreG,coreM);core.position.set(0,2.55,.55);g.add(core);
+ const k=new T.Mesh(key,mat);k.position.set(0,2.6,-.56);k.scale.setScalar(2.4);k.rotation.x=-.4;g.add(k);
+ g.userData={arms:[L,Rr],key:k,armG,body:b,geos,core,coreM,coreG,ph:0};g.visible=false;return g;}
+/** Where the boss's two eyes sit in its own space (before its 1.15 scale), and their size. */
+const BOSS_EYE={y:3.94,z:.66,g:.27,s:.17};
 /** Merge plain (indexed or not) geometries that share position/normal/uv; uv scaled per part (texture repeat baked in). */
 function sheet(parts:{g:T.BufferGeometry;m:T.Matrix4;u?:number;v?:number}[]){const out=parts.map(({g,m,u=1,v=1})=>{const n=g.index?g.toNonIndexed():g.clone();g.dispose();const uv=n.attributes.uv as T.BufferAttribute;for(let i=0;i<uv.count;i++)uv.setXY(i,uv.getX(i)*u,uv.getY(i)*v);n.applyMatrix4(m);return n;});
  const g=mergeGeometries(out)!;for(const p of out)p.dispose();return g;}
@@ -172,9 +188,10 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  /* ---- the ground and the stadium: a few merged meshes ---- */
  const crowdT=own(crowdTex());crowdT.wrapS=T.RepeatWrapping;crowdT.repeat.set(1,.5);
  const skyT=own(canvasTex(1024,384,g=>paintSky(g,0)));let tod=0;
+ let pitchM:T.MeshLambertMaterial|null=null,turfM:T.MeshLambertMaterial|null=null,crowdM:T.MeshLambertMaterial|null=null;
  const glowM=own(new T.MeshBasicMaterial({map:own(glowTex()),transparent:true,depthWrite:false,blending:T.AdditiveBlending,fog:false,opacity:TOD[0].glow}));
- {const pt=own(pitchTex()),pm=own(lit(new T.MeshLambertMaterial({map:pt}))),pg=own(new T.PlaneGeometry(30,64));pg.rotateX(-Math.PI/2);const pitch=new T.Mesh(pg,pm);pitch.position.set(0,0,-26);pitch.receiveShadow=true;scene.add(pitch);
-  const surround=own(new T.PlaneGeometry(160,160));surround.rotateX(-Math.PI/2);const sm=own(lit(new T.MeshLambertMaterial({color:'#3a8a47'})));const s=new T.Mesh(surround,sm);s.position.set(0,-.02,-40);scene.add(s);
+ {const pt=own(pitchTex()),pm=pitchM=own(lit(new T.MeshLambertMaterial({map:pt,emissiveMap:own(poolTex()),emissive:'#000000'}))),pg=own(new T.PlaneGeometry(30,64));pg.rotateX(-Math.PI/2);const pitch=new T.Mesh(pg,pm);pitch.position.set(0,0,-26);pitch.receiveShadow=true;scene.add(pitch);
+  const surround=own(new T.PlaneGeometry(160,160));surround.rotateX(-Math.PI/2);const sm=turfM=own(lit(new T.MeshLambertMaterial({color:'#3a8a47'})));const s=new T.Mesh(surround,sm);s.position.set(0,-.02,-40);scene.add(s);
   const st:Parts=[],St='#5b6072',St2='#4a4f63',Rf='#e8e2d4',I=COMIC_INK;
   // advert boards on the slanted touchlines (the balls bounce off these) and one behind the far goal
   const len=Math.hypot(52,52*.15),ad:{g:T.BufferGeometry;m:T.Matrix4;u?:number;v?:number}[]=[];
@@ -190,7 +207,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
    put(box(w+1,11.4,.4),St2,0,5.7,-11.7);put(box(w+1,.4,14),Rf,0,11.6,-6,-.1,.06);put(box(w+1.1,.6,.14),R0,0,12.25,.9,-.1);
    for(let i=-2;i<=2;i++)put(box(.22,11.8,.22),St2,i*w/5,5.9,-.3);};
   stand(0,-61,50,0);stand(-19.5,-24,44,Math.PI/2);stand(19.5,-24,44,-Math.PI/2);
-  const cm=own(lit(new T.MeshLambertMaterial({map:crowdT})));const crowdMesh=new T.Mesh(own(sheet(crowd)),cm);scene.add(crowdMesh);
+  const cm=crowdM=own(lit(new T.MeshLambertMaterial({map:crowdT})));const crowdMesh=new T.Mesh(own(sheet(crowd)),cm);scene.add(crowdMesh);
   // floodlight towers: a lattice mast, a lamp bank facing the pitch, a glow card in front of it
   const glows:{g:T.BufferGeometry;m:T.Matrix4}[]=[];
   for(const [x,z] of [[-13,-74],[13,-74],[-26,-40],[26,-40]]){P(st,cyl(.22,.34,23,6),St,x,11.5,z,0,0,.05,true);for(let k=0;k<7;k++)P(st,box(.9,.08,.08),St2,x,2+k*3,z,k*.8,0,0);
@@ -232,7 +249,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  const blobG=own(new T.PlaneGeometry(2,2));blobG.rotateX(-Math.PI/2);const blobs=new T.InstancedMesh(blobG,own(new T.MeshBasicMaterial({map:own(blobTex()),transparent:true,depthWrite:false,color:COMIC_INK,opacity:.34})),48);blobs.frustumCulled=false;blobs.count=0;blobs.visible=false;blobs.renderOrder=1;scene.add(blobs);
  const eyeG=own(eyeGeo()),keyG=own(keyGeo());
  const eyes=mkInst(eyeG,EYES,false),keys=mkInst(keyG,KEYS,false),rotors=mkInst(own(rotorGeo()),ROTORS,false);
- const boss=buildBoss(vmat,eyeG,keyG);scene.add(boss);
+ const boss=buildBoss(vmat,keyG);scene.add(boss);
  const balls=new T.InstancedMesh(ballGeo,ballMat,BB.rack*4);balls.castShadow=true;balls.frustumCulled=false;balls.count=0;balls.visible=false;balls.setColorAt(0,new T.Color(1,1,1));scene.add(balls);
  const spin=Array.from({length:64},()=>new T.Quaternion());
 
@@ -259,11 +276,15 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
 
  /* ---- time of day ---- */
  function setTod(i:number){tod=i;const p=TOD[i];paintSky((skyT.image as HTMLCanvasElement).getContext('2d')!,i);skyT.needsUpdate=true;(scene.background as T.Color).set(p.low);fog.color.set(p.fog);
-  sun.color.set(p.sun);sun.intensity=p.sunI;hemi.color.set(p.hemi);hemi.groundColor.set(p.hemiG);hemi.intensity=p.hemiI;glowM.opacity=p.glow;}
+  sun.color.set(p.sun);sun.intensity=p.sunI;hemi.color.set(p.hemi);hemi.groundColor.set(p.hemiG);hemi.intensity=p.hemiI;glowM.opacity=p.glow;
+  // night reads as night: darker turf lit in floodlight pools, eyes that glow, a hotter additive ball trail (uniform swaps only)
+  pitchM!.color.setScalar(p.turf);pitchM!.emissive.set(p.pool);turfM!.color.set('#3a8a47').multiplyScalar(p.turf);crowdM!.color.setScalar(p.crowd);night=i===2;
+  const ec=eyes.instanceColor;if(ec){(ec.array as Float32Array).fill(night?1.9:1);for(let k=2;k<ec.array.length;k+=3)(ec.array as Float32Array)[k]=night?1.25:1;ec.needsUpdate=true;}
+  trailM.blending=night?T.AdditiveBlending:T.NormalBlending;trailM.needsUpdate=true;}
 
  /* ---- frame state ---- */
  const M=new T.Matrix4(),M2=new T.Matrix4(),Q=new T.Quaternion(),Q2=new T.Quaternion(),E=new T.Euler(),V=new T.Vector3(),V2=new T.Vector3(),SV=new T.Vector3(),C1=new T.Color(),C2=new T.Color(),ZV=new T.Vector3(0,0,1),XV=new T.Vector3(1,0,0);
- let W=1,H=1,shake=0,kickT=9,lastT=0,bossShown=false,camPull=0,push=0,hype=0,crowdT0=0;
+ let night=false,W=1,H=1,shake=0,kickT=9,lastT=0,bossShown=false,camPull=0,push=0,hype=0,crowdT0=0;
  function resize(w:number,h:number,dpr:number){W=w;H=h;renderer.setPixelRatio(Math.min(o.mobile?1.5:2,dpr));renderer.setSize(w,h,false);camera.aspect=w/h;
   // portrait: low and close with a wide lens (the near lane still fits); wide screens: a longer lens from a little higher
   const a=w/h;if(a<.62){baseFov=60;camBase.set(0,5.3,8.6);look.set(0,.3,-15);}else if(a<1){baseFov=50;camBase.set(0,5.6,8.6);look.set(0,.3,-16);}else{baseFov=40;camBase.set(0,6,9.6);look.set(0,.2,-17);}
@@ -316,8 +337,14 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   for(const e of s.ents){if(!e.on)continue;
    const f=e.flash>0?Math.min(1,e.flash/.18):0;
    if(e.kind===K.boss){bossOn=true;boss.visible=true;const w=Math.sin(e.t*3.2);boss.position.set(e.x,Math.abs(w)*.1,e.z);boss.rotation.set(-f*.25,0,w*.06);const sc=1.15;boss.scale.set(sc*(1+f*.25),sc*(1-f*.18),sc*(1+f*.25));
-    const ud=boss.userData as {arms:T.Mesh[];eyes:T.Mesh[];key:T.Mesh};ud.arms[0].rotation.x=w*.6;ud.arms[1].rotation.x=-w*.6;ud.arms[0].rotation.z=e.phase===2?-.6:0;ud.arms[1].rotation.z=e.phase===2?.6:0;
-    for(const ey of ud.eyes){ey.scale.setScalar(.15*(1+f*.9));ey.lookAt(V.set(lookX,lookY,lookZ));}ud.key.rotation.z+=dt*(e.phase===2?9:4);continue;}
+    const ud=boss.userData as {arms:T.Mesh[];key:T.Mesh;body:T.Mesh;geos:T.BufferGeometry[];core:T.Mesh;coreM:T.MeshBasicMaterial;ph:number};ud.arms[0].rotation.x=w*.6;ud.arms[1].rotation.x=-w*.6;ud.arms[0].rotation.z=e.phase===2?-.6:0;ud.arms[1].rotation.z=e.phase===2?.6:0;
+    // armour plates clatter off as the phases turn (the next baked body, inked grey chunks, a star and a shake)
+    if(e.phase!==ud.ph){if(e.phase>ud.ph){const up=e.phase===1?3.4:4.6;spawnPieces(K.armour,e.x,up,e.z+.4,e.phase===1?14:18,4.2,3);star(e.x,up,e.z+.6,1,'#fff3d6');shake=Math.max(shake,.22);}ud.ph=e.phase;ud.body.geometry=ud.geos[Math.min(2,e.phase)];}
+    // the weak spot: a chest dial that pulses (faster and redder each phase) and flashes white when hit
+    const pulse=.5+.5*Math.sin(now*(4+e.phase*4));ud.coreM.color.set(e.phase===2?'#ff4a2a':'#ffb21f').lerp(C2.setRGB(1,1,.92),pulse*.4);if(f>0)ud.coreM.color.setRGB(1,1,1);ud.core.scale.setScalar(1+pulse*.12+e.phase*.12+f*.4);
+    boss.updateMatrixWorld();const pop=1+f*.9;
+    for(const sgn of [-1,1])if(en<EYES){V.set(sgn*BOSS_EYE.g,BOSS_EYE.y,BOSS_EYE.z).applyMatrix4(boss.matrixWorld);M2.lookAt(V,V2.set(lookX,lookY,lookZ),T.Object3D.DEFAULT_UP);Q2.setFromRotationMatrix(M2);Q2.multiply(Q.setFromAxisAngle(T.Object3D.DEFAULT_UP,Math.PI));const r=BOSS_EYE.s*sc*pop;M2.compose(V,Q2,SV.set(r,r,r));eyes.setMatrixAt(en++,M2);}
+    ud.key.rotation.z+=dt*(e.phase===2?9:4);continue;}
    const m=inst.get(e.kind);if(!m)continue;const i=counts.get(e.kind)!;if(i>=m.instanceMatrix.count)continue;counts.set(e.kind,i+1);
    const walk=isMachine(e.kind),ph=e.t*9+e.ph,sc=(walk?MSCALE:PSCALE);
    let sy=1,y=e.y,rx=0,rz=0,ry=0;
@@ -341,6 +368,14 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
     M2.compose(V,Q2,SV.setScalar(kk.s*sc));keys.setMatrixAt(kn++,M2);E.set(rx,ry,rz);Q.setFromEuler(E);}
    if(e.kind===K.drone&&rn+4<=ROTORS)for(const [lx,lz] of [[-.4,-.4],[.4,-.4],[-.4,.4],[.4,.4]]){V.set(lx,.4,lz).applyMatrix4(M);Q2.copy(Q).multiply(Q.setFromAxisAngle(T.Object3D.DEFAULT_UP,now*40+lx*3));M2.compose(V,Q2,SV.setScalar(sc));rotors.setMatrixAt(rn++,M2);E.set(rx,ry,rz);Q.setFromEuler(E);}
   }
+  // between waves the near pitch is quiet, so the next wave lines up at the far end, marching on the spot as dark silhouettes
+  // (the new kind steps out in full colour and hops); it reuses the machines' instanced meshes, so it adds no draw of its own
+  const lull=(s.mode==='break'||s.mode==='intro')&&!s.over,lullK=lull?Math.min(1,(s.mode==='break'?2.6:1.2)-s.modeT):0;
+  if(lull){const nw=s.wave+1,list=UNLOCK.filter(u=>u.wave<=nw),fresh=list.find(u=>u.wave===nw)?.k??0,n=Math.min(7,3+(nw>>1)),z=-46+lullK*2,w=halfW(z)-1.2;
+   for(let j=0;j<n;j++){const kd=fresh&&j===(n>>1)?fresh:list[(j*3+nw)%list.length].k,m=inst.get(kd);if(!m)continue;const i=counts.get(kd)!;if(i>=m.instanceMatrix.count)continue;counts.set(kd,i+1);
+    const ph=now*7+j*1.3,hop=kd===fresh?Math.abs(Math.sin(now*5))*.35:Math.abs(Math.sin(ph))*.06,x=n>1?-w+2*w*j/(n-1):0;
+    M.compose(V.set(x,(kd===K.drone?2.1:0)+hop,z+(kd===fresh?1.2:0)),Q.setFromEuler(E.set(0,0,Math.sin(ph)*.08)),SV.setScalar(MSCALE*Math.min(1,lullK*1.6)));m.setMatrixAt(i,M);
+    m.setColorAt(i,kd===fresh?C1.setRGB(1.1,1.1,1.1):C1.setRGB(.24,.22,.32));}}
   for(const k of kinds){const m=inst.get(k)!;m.count=counts.get(k)!;m.visible=m.count>0;m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;}
   blobs.count=bn2;blobs.visible=bn2>0;blobs.instanceMatrix.needsUpdate=true;eyes.count=en;eyes.visible=en>0;eyes.instanceMatrix.needsUpdate=true;keys.count=kn;keys.visible=kn>0;keys.instanceMatrix.needsUpdate=true;rotors.count=rn;rotors.visible=rn>0;rotors.instanceMatrix.needsUpdate=true;
   if(!bossOn&&boss.visible)boss.visible=false;bossShown=bossOn;
@@ -352,6 +387,10 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
    balls.setMatrixAt(bn,M);balls.setColorAt(bn,b.fire?C1.set('#ff9a4a'):b.r>BB.ballR?C1.set('#ffe9a0'):C1.setRGB(1,1,1));bn++;
    if(!o.reduced&&sp>7&&dt>0){const n=b.fire?2:1;for(let k=0;k<n;k++){const t=tr[trI];trI=(trI+1)%TRAIL;t.on=true;t.x=b.x-b.vx*.012*k+(b.fire?(Math.random()-.5)*.2:0);t.y=b.y+(b.fire?Math.random()*.15:0);t.z=b.z-b.vz*.012*k;
     const l=v3||1;t.dx=b.vx/l;t.dy=b.vy/l;t.dz=b.vz/l;t.t=0;t.s=b.r*(b.fire?.95:b.r>BB.ballR?.6:.5);t.c=b.fire?(k?2:1):b.r>BB.ballR?3:0;}}}
+  // stray balls roll back to the rack between waves (cosmetic; the rules' rack refills on its own clock)
+  if(lull&&s.wave>0&&!o.reduced)for(let j=0;j<3&&bn<balls.instanceMatrix.count;j++){const t=Math.min(1,Math.max(0,lullK*1.25-j*.18)),e2=1-(1-t)*(1-t),sx=[-6.5,5.5,-2.5][j],sz=[-24,-18,-30][j];
+   const x=sx+(BB.kx+.7-sx)*e2,z=sz+(BB.kz-.2-sz)*e2,d=Math.hypot(BB.kx+.7-sx,BB.kz-.2-sz)*e2;if(t>=1)continue;
+   M.compose(V.set(x,BB.ballR,z),Q.setFromAxisAngle(XV,d/BB.ballR),SV.setScalar(BB.ballR));balls.setMatrixAt(bn,M);balls.setColorAt(bn,C1.setRGB(1,1,1));bn++;}
   balls.count=bn;balls.visible=bn>0;balls.instanceMatrix.needsUpdate=true;if(balls.instanceColor)balls.instanceColor.needsUpdate=true;
   ready.visible=s.rack>0&&kickT>.18&&!s.over;
   // the kick: wind back, swing through, arms out, a lean into it
@@ -372,7 +411,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   let dm=0;for(let i=0;i<DUST;i++){const d=dd[i];if(!d.on)continue;d.t+=fdt;if(d.t>d.life){d.on=false;continue;}const k=d.t/d.life;d.y+=d.vy*fdt;d.x+=d.vx*fdt*(1-k);d.z+=d.vz*fdt*(1-k);
    M.compose(V.set(d.x,d.y,d.z),Q.identity(),SV.setScalar(d.s*(.7+k*.9)*(1-k*k)));dust.setMatrixAt(dm++,M);}
   dust.count=dm;dust.visible=dm>0;dust.instanceMatrix.needsUpdate=true;
-  let tm=0;for(let i=0;i<TRAIL;i++){const t=tr[i];if(!t.on)continue;t.t+=dt;if(t.t>.22){t.on=false;continue;}const k=1-t.t/.22;
+  let tm=0;for(let i=0;i<TRAIL;i++){const t=tr[i];if(!t.on)continue;t.t+=dt;if(t.t>.22){t.on=false;continue;}const k=(1-t.t/.22)*(night?1.35:1);
    Q.setFromUnitVectors(ZV,V2.set(t.dx,t.dy,t.dz));M.compose(V.set(t.x,t.y,t.z),Q,SV.set(t.s*k,t.s*k,t.s*k*(t.c===1||t.c===2?1.6:2.6)));trail.setMatrixAt(tm,M);trail.setColorAt(tm,TRAIL_C[t.c]);tm++;}
   trail.count=tm;trail.visible=tm>0;trail.instanceMatrix.needsUpdate=true;if(trail.instanceColor)trail.instanceColor.needsUpdate=true;
   for(const st of stars){if(!st.g.visible)continue;st.t+=rdt;if(st.t>st.life){st.g.visible=false;continue;}const k=st.t/st.life,near=Math.min(1,st.g.position.distanceTo(camera.position)/16);st.g.quaternion.copy(camera.quaternion);st.g.scale.setScalar(st.s*near*(k<.3?.5+k/.3*.7:1.2-(k-.3)*.4));st.g.rotation.z+=rdt*2;}
@@ -390,7 +429,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   get info(){return renderer.info.render;},
   get canvas(){return canvas;},
   dispose(){scene.traverse(obj=>{const m=obj as T.Mesh;if(m.geometry)m.geometry.dispose();const mat=m.material as T.Material|T.Material[]|undefined;if(Array.isArray(mat))mat.forEach(x=>x.dispose());else mat?.dispose();});
-   for(const x of owned)x.dispose();for(const m of inst.values())m.dispose();eyes.dispose();keys.dispose();rotors.dispose();balls.dispose();pieces.dispose();bits.dispose();dust.dispose();trail.dispose();dots.dispose();blobs.dispose();
+   for(const x of owned)x.dispose();for(const m of inst.values())m.dispose();eyes.dispose();keys.dispose();rotors.dispose();balls.dispose();pieces.dispose();bits.dispose();dust.dispose();trail.dispose();dots.dispose();blobs.dispose();for(const bg of (boss.userData as {geos:T.BufferGeometry[]}).geos)bg.dispose();
    renderer.dispose();renderer.forceContextLoss();canvas.remove();},
  };
 }

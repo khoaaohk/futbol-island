@@ -59,3 +59,13 @@ hidden and live particles are packed so a pool costs only what is alive. Frame c
 (`frameCapSlot`, pointer: coarse), 60 on desktop like ArcadeGame3D, and a press or a kick draws on the next vsync.
 Measured headless Chrome (swiftshader) 390x844 in play, waves 2-5: 20-27 draw calls median (max 36), 8-11k triangles median
 (max 16k). Before the polish pass: 100 / 103 draw calls, 15.7k / 18.2k triangles.
+
+## Improve pass (Nov 17 2026, batch 1)
+- Night reads as night with uniform swaps only: turf x0.34 under an emissive map of five warm floodlight pools, crowd dimmed,
+  machine eyes glow (instance colour 1.9 on the eye mesh), the ball trail turns additive and 35% bigger.
+- Between waves the next wave lines up at the far end as dark silhouettes marching on the spot (the new kind hops in full colour)
+  and three stray balls roll back to the rack; both reuse the machine and ball instanced meshes (no new draw).
+- Mega Mannequin rebuilt: 5 m tall, helmet, shoulder/thigh plates and a chest frame baked into three body variants swapped per phase
+  (plates clatter off as grey chunks), a glowing chest dial weak spot (one basic disc, pulses faster and redder each phase),
+  eyes moved into the instanced eye mesh (boss scene 25 -> 23-25 draws).
+- Desktop 1440x900 checked: lane, HUD and aim arc sit well in the portrait stage; no camera change.
