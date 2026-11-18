@@ -11,6 +11,7 @@ import lineup from './lineup.module.css';
 import trophydrop from './trophydrop.module.css';
 import clearbox from './clearbox.module.css';
 import streetdash from './streetdash.module.css';
+import ballblaster from './ballblaster.module.css';
 
 /** Per-game HUD skin class (COORDINATOR FILE). Put on each game's root element together with data-game="<id>". */
-export const arcadeSkin:Record<ArcadeGameId,string>={live:live.skin,runner:runner.skin,tennis:tennis.skin,pinball:pinball.skin,puzzle:puzzle.skin,kitrush:kitrush.skin,snake:snake.skin,airhockey:airhockey.skin,lineup:lineup.skin,trophydrop:trophydrop.skin,clearbox:clearbox.skin,streetdash:streetdash.skin};
+export const arcadeSkin:Record<ArcadeGameId,string>={live:live.skin,runner:runner.skin,tennis:tennis.skin,pinball:pinball.skin,puzzle:puzzle.skin,kitrush:kitrush.skin,snake:snake.skin,airhockey:airhockey.skin,lineup:lineup.skin,trophydrop:trophydrop.skin,clearbox:clearbox.skin,streetdash:streetdash.skin,ballblaster:ballblaster.skin};
