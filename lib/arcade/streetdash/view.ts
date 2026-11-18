@@ -9,6 +9,8 @@
  */
 import {SD,HZ,type StreetDash,type DashEvent,type DashState,type Haz,type Seg} from './core';
 
+/** the player is drawn this much bigger than its hitbox: easier to read on a phone, and a hit never looks unfair */
+const BEAN_SCALE=1.3;
 const INK='#231a2e',PAPER='#fff3d6',SUN='#ffc83a',RED='#f0452e',TEAL='#19b5a5',TEAL_D='#0f7f86',ORANGE='#ff8a3c',VIOLET='#8f78b8',VIOLET_D='#62508f',SKIN='#ffd9a8';
 type Theme={sky:readonly [string,string,string];sun:string;sunRing:string;void:string;top:string;topEdge:string;body:string;bodyLine:string;far:string;far2:string;mid:readonly string[];midLine:string;dot:string};
 /** street (morning), rooftops (sunset), beach (noon). Scenery colours sit closer to the sky than the hazards ever do. */
@@ -52,9 +54,9 @@ export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:bool
  }
  function paintMid(i:number,c:CanvasRenderingContext2D,W:number,H:number,k:number){const T=THEMES[i];seedN=101+i*13;c.clearRect(0,0,W,H);c.lineWidth=1.5;c.strokeStyle=T.midLine;
   if(i===0){// street: house fronts with windows, awnings and doors
-   let x=0;while(x<W-4){const bw=Math.min(W-x,k*(2.2+prand()*2.2)),bh=H*(.55+prand()*.4),col=T.mid[Math.floor(prand()*T.mid.length)];
+   let x=0;while(x<W-4){const bw=Math.min(W-x,k*(2.2+prand()*2.2)),bh=H*(.42+prand()*.58),col=T.mid[Math.floor(prand()*T.mid.length)];
     c.fillStyle=col;c.fillRect(x,H-bh,bw,bh);c.strokeRect(x+.75,H-bh+.75,bw-1.5,bh);
-    c.fillStyle='#8fb3c9';const ww=k*.42,wh=k*.55;for(let r=0;r<3;r++)for(let q=0;q<3;q++){const wx=x+bw*(.18+q*.3)-ww/2,wy=H-bh+k*.4+r*k*.9;if(wy+wh>H-k*1.2||wx+ww>x+bw-3)continue;c.fillRect(wx,wy,ww,wh);c.strokeRect(wx,wy,ww,wh);}
+    c.fillStyle='#8fb3c9';const ww=k*.42,wh=k*.55;for(let r=0;r<6;r++)for(let q=0;q<3;q++){const wx=x+bw*(.18+q*.3)-ww/2,wy=H-bh+k*.4+r*k*.9;if(wy+wh>H-k*1.2||wx+ww>x+bw-3)continue;c.fillRect(wx,wy,ww,wh);c.strokeRect(wx,wy,ww,wh);}
     if(prand()<.6){const ay=H-k*1.35;c.fillStyle=prand()<.5?'#f2a29a':'#9fd0c4';c.beginPath();c.moveTo(x+4,ay);c.lineTo(x+bw-4,ay);c.lineTo(x+bw-8,ay+k*.35);c.lineTo(x+8,ay+k*.35);c.fill();c.stroke();}
     c.fillStyle='#8a7f96';c.fillRect(x+bw*.6,H-k*1,k*.45,k);x+=bw;}
   }else if(i===1){// rooftops: chimneys, a water tower, aerials and a washing line in silhouette
@@ -92,7 +94,7 @@ export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:bool
   c.save();const by=pose===2||pose===3?.16:.36,bh=.84,bw=.52;
   if(pose===2)c.rotate(-.55);else if(pose===3)c.rotate(-1.25);else if(pose===0)c.rotate(.12);
   // back arm
-  c.fillStyle=kitD;c.beginPath();c.arc(-.06*u+Math.sin(ph)*.12*u,-(by+.42)*u,.085*u,0,6.283);c.fill();c.lineWidth=lw*.8;c.stroke();
+  c.fillStyle=kitD;c.beginPath();c.ellipse(-.08*u+Math.sin(ph)*.14*u,-(by+.24)*u,.07*u,.1*u,Math.sin(ph)*.5,0,6.283);c.fill();c.lineWidth=lw*.8;c.stroke();
   capsule(c,-bw/2*u,-(by+bh)*u,bw*u,bh*u);c.fillStyle=kit;c.fill();c.save();capsule(c,-bw/2*u,-(by+bh)*u,bw*u,bh*u);c.clip();
   c.fillStyle=kitD;c.fillRect(-bw/2*u,-(by+bh)*u,bw*.32*u,bh*u);// shade on the back
   c.fillStyle=SKIN;c.beginPath();c.ellipse(.05*u,-(by+bh-.2)*u,.34*u,.25*u,0,0,6.283);c.fill();
@@ -104,7 +106,7 @@ export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:bool
   if(pose===3){c.lineWidth=lw*.7;c.beginPath();c.moveTo(.08*u,-(by+bh-.3)*u);c.lineTo(.2*u,-(by+bh-.27)*u);c.stroke();}
   if(num){c.fillStyle=PAPER;c.font=`italic 900 ${(.24*u).toFixed(1)}px "Arial Black",Impact,sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(num,-.02*u,-(by+bh*.28)*u);}
   // front arm
-  const ay=pose===4?-(by+bh+.05):-(by+.4);c.fillStyle=pose===4?PAPER:kit;c.beginPath();c.arc((.1-Math.sin(ph)*.12)*u,ay*u,.09*u,0,6.283);c.fill();c.lineWidth=lw*.8;c.stroke();
+  const ay=pose===4?-(by+bh+.05):-(by+.24);c.fillStyle=pose===4?PAPER:kit;c.beginPath();c.ellipse((.06-Math.sin(ph)*.14)*u,ay*u,.08*u,.11*u,-Math.sin(ph)*.5,0,6.283);c.fill();c.lineWidth=lw*.8;c.stroke();
   c.restore();
  }
  function ball(c:CanvasRenderingContext2D,x:number,y:number,r:number,spin:number){
@@ -135,7 +137,7 @@ export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:bool
  return {
   layout:L,
   resize(w:number,h:number,ratio:number){dpr=ratio;L.w=w;L.h=h;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);
-   L.k=Math.max(18,Math.min(48,w/12.5));L.gy=Math.round(h*.62);tw=Math.ceil(w*1.6);farH=Math.round(L.gy*.42);midH=Math.round(Math.min(L.gy*.55,L.k*4.4));
+   L.k=Math.max(20,Math.min(56,w/11));L.gy=Math.round(h*.63);tw=Math.ceil(w*1.6);farH=Math.round(L.gy*.4);midH=Math.round(Math.min(L.gy*.62,L.k*7.5));
    L.prompt.r=0;build();},
   reset(){for(const p of parts)p.on=false;for(const p of pops)p.on=false;camY=0;zoom=1;shakeT0=-1e9;flashT0=-1e9;},
   onEvent(e:DashEvent){
@@ -156,21 +158,24 @@ export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:bool
   render(game:StreetDash,frameT:number){
    const s=game.state,b=s.bean,c=g,W=L.w,H=L.h,t=frameT;lastState=s;
    // camera: zooms out a little with speed; the bean sits 30% from the left; follows the ground height, not the jump
-   const zTarget=1+.2*Math.min(1,Math.max(0,(s.speed-SD.v0)/(SD.vCap-SD.v0)));zoom+=(zTarget-zoom)*.04;const k=L.k/zoom;
+   const zTarget=1+.18*Math.min(1,Math.max(0,(s.speed-SD.v0)/(SD.vCap-SD.v0)));zoom+=(zTarget-zoom)*.04;const k=L.k/zoom;
    const wantY=b.ground?b.y:Math.min(camY,b.y);camY+=(wantY-camY)*(b.ground?.08:.04);
    camX=b.x-.3*W/k;let ox=0,oy=0;const st=t-shakeT0;
    if(st<.3){const a=shakeAmp*(1-st/.3);ox=Math.sin(st*90)*a;oy=Math.cos(st*70)*a*.6;}
    const X=(x:number)=>(x-camX)*k+ox,Y=(y:number)=>L.gy-(y-camY)*k+oy;
    c.setTransform(dpr,0,0,dpr,0,0);
    // backdrop: the current theme, cross-faded in over the first 40 m
-   const into=(s.dist%SD.themeM),fade=s.dist>SD.themeM&&into<40?into/40:1,prev=(s.theme+2)%3;
+   const into=(s.dist%SD.themeM),fade=s.dist>SD.themeM&&into<24?into/24:1,prev=(s.theme+2)%3;
    const drawSky=(i:number,alpha:number)=>{const T=THEMES[i],gy=Y(0);c.globalAlpha=alpha;
     c.fillStyle=T.sky[0];c.fillRect(0,0,W,gy*.45);c.fillStyle=T.sky[1];c.fillRect(0,gy*.45,W,gy*.3);c.fillStyle=T.sky[2];c.fillRect(0,gy*.75,W,gy*.25+1);
     const sx=W*(i===1?.3:.74),sy=gy*(i===1?.62:.22),r=Math.min(W,H)*.09;c.fillStyle=T.sunRing;c.beginPath();c.arc(sx,sy,r*1.35,0,6.283);c.fill();c.fillStyle=T.sun;c.beginPath();c.arc(sx,sy,r,0,6.283);c.fill();
     // a halftone turn under the sky: rows of dots that grow toward the horizon
-    c.fillStyle=T.dot;for(let row=0;row<5;row++){const yy=gy*.47+row*9,rr=.8+row*.45;for(let x=(row%2)*6;x<W;x+=12){c.beginPath();c.arc(x,yy,rr,0,6.283);c.fill();}}
+    c.fillStyle=T.dot;for(let row=0;row<7;row++){const yy=4+row*10,rr=2.6-row*.32;for(let x=(row%2)*6;x<W;x+=12){c.beginPath();c.arc(x,yy,rr,0,6.283);c.fill();}}// the print's dot screen, densest at the top
+    {const cf=((camX*k*.05*(reduced?.35:1))%(W*1.5)+W*1.5)%(W*1.5);c.fillStyle=i===1?'#ffd9a8':'#fffaf0';
+     for(let n=0;n<4;n++){const cx=((n*W*.47+W*.2-cf)%(W*1.5)+W*1.5)%(W*1.5)-W*.25,cy=gy*(.2+((n*37)%5)*.06),cw=W*(.16+(n%3)*.05);
+      c.beginPath();c.ellipse(cx,cy,cw,cw*.22,0,0,6.283);c.ellipse(cx-cw*.35,cy-cw*.12,cw*.36,cw*.26,0,0,6.283);c.ellipse(cx+cw*.25,cy-cw*.16,cw*.42,cw*.3,0,0,6.283);c.fill();}}
     const par=reduced?.35:1,fo=((camX*k*.12*par)%tw+tw)%tw,mo=((camX*k*.4*par)%tw+tw)%tw,S=strips[i];
-    if(S){const fy=gy-farH-L.k*.6,my=gy-midH;c.drawImage(S.far,-fo,fy,tw,farH);c.drawImage(S.far,tw-fo,fy,tw,farH);c.drawImage(S.mid,-mo,my,tw,midH);c.drawImage(S.mid,tw-mo,my,tw,midH);}
+    if(S){const fy=gy-farH-L.k*1.2,my=gy-midH;c.drawImage(S.far,-fo,fy,tw,farH);c.drawImage(S.far,tw-fo,fy,tw,farH);c.drawImage(S.mid,-mo,my,tw,midH);c.drawImage(S.mid,tw-mo,my,tw,midH);}
     c.globalAlpha=1;};
    if(fade<1)drawSky(prev,1);drawSky(s.theme,fade);
    // speed lines across the sky band
@@ -206,9 +211,9 @@ export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:bool
    c.fillStyle='rgba(35,26,46,.25)';{let gy2=b.y;if(!b.ground){gy2=-9;for(const sg of s.segs)if(sg.on&&b.x>=sg.x0&&b.x<=sg.x1){const tp=game.topOf(sg);if(tp<=b.y+.01&&tp>gy2)gy2=tp;}}
     if(gy2>-9){const sc2=Math.max(.3,1-(b.y-gy2)*.3);c.beginPath();c.ellipse(bx,Y(gy2),k*.34*sc2,k*.08*sc2,0,0,6.283);c.fill();}}
    const pose=b.slide>0?2:b.ground?0:1,ph=b.run*2.6;
-   if(!blink){c.save();c.translate(bx,byy+(pose===0?-Math.abs(Math.sin(ph))*k*.04:0));bean(c,k,pose,ph,TEAL,TEAL_D,'9');c.restore();}
+   if(!blink){c.save();c.translate(bx,byy+(pose===0?-Math.abs(Math.sin(ph))*k*.05:0));bean(c,k*BEAN_SCALE,pose,ph,TEAL,TEAL_D,'');c.restore();}
    {const B=s.ball;let fx:number,fy:number,r=k*.15,spin=b.run*3;
-    const feetX=b.x+(pose===2?.62:.34),feetY=b.y+(b.ground?.15+Math.abs(Math.sin(ph))*.18:.12);
+    const feetX=b.x+(pose===2?.75:.42),feetY=b.y+(b.ground?.15+Math.abs(Math.sin(ph))*.18:.12);
     if(B.mode===0){fx=feetX;fy=feetY;}
     else if(B.mode===1){const f=Math.min(1,B.t/B.dur);fx=B.fx+(B.tx-B.fx)*f;fy=B.fy+(B.ty-B.fy)*f+Math.sin(f*Math.PI)*.4;spin=t*20;}
     else if(B.mode===2){const f=Math.min(1,B.t/B.dur);fx=B.fx+(feetX-B.fx)*f;fy=B.fy+(feetY-B.fy)*f+Math.sin(f*Math.PI)*1.1;spin=-t*12;}
@@ -229,6 +234,7 @@ export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:bool
     c.globalAlpha=.35+.65*f;c.fillStyle=z.kind===HZ.crate||z.kind===HZ.gate?SUN:RED;c.beginPath();c.moveTo(W,y-14);c.lineTo(W-18,y);c.lineTo(W,y+14);c.closePath();c.fill();c.lineWidth=3;c.strokeStyle=INK;c.stroke();
     c.fillStyle=INK;c.font='900 13px "Arial Black",Impact,sans-serif';c.fillText('!',W-6,y+1);}
    c.globalAlpha=1;
+   if(s.t<14&&!s.over){c.globalAlpha=Math.min(1,(14-s.t)/2)*.85;c.fillStyle=PAPER;c.font=`800 ${Math.round(Math.min(17,W*.042))}px system-ui,sans-serif`;c.textAlign='center';c.fillText('Tap: jump · Hold: higher · Swipe down: slide',W/2,H-Math.max(40,(H-L.gy)*.22));c.globalAlpha=1;}
    if(t-flashT0<.12&&!reduced){c.fillStyle='rgba(255,243,214,.45)';c.fillRect(0,0,W,H);}
   },
   dispose(){strips.length=0;},
@@ -245,7 +251,9 @@ export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:bool
   // the body: kerb blocks (street), a brick wall with windows (roofs), packed sand (beach)
   c.fillStyle=T.bodyLine;
   if(sg.theme===1){const step=k*1.6,start=x0-((sg.x0*k)%step);for(let x=start;x<x1;x+=step){if(x+k*.6<x0||x>x1)continue;for(let r=0;r<3;r++){const wy=y+th+k*(.7+r*1.4);if(wy>L.h)break;c.fillStyle=r===0&&Math.floor(x/step)%3===0?'#ffcf7a':'#5e3142';c.fillRect(Math.max(x0,x+k*.4),wy,Math.min(k*.55,x1-x-k*.4),k*.7);}}}
-  else if(sg.theme===0){for(let r=1;r<5;r++){const yy=y+th+r*k*.9;if(yy>L.h)break;c.fillRect(x0,yy,x1-x0,2);}}
+  else if(sg.theme===0){c.fillStyle='#b9a787';c.fillRect(x0,y+th,x1-x0,k*.32);c.fillStyle=T.bodyLine;c.fillRect(x0,y+th+k*.32,x1-x0,3);
+   const ly=y+th+k*2.1,step=k*1.8,start=x0-((sg.x0*k)%step);c.fillStyle='#e9d5ad';for(let x=start;x<x1;x+=step){const a=Math.max(x0,x),b2=Math.min(x1,x+k*.9);if(b2>a)c.fillRect(a,ly,b2-a,5);}
+   c.fillStyle=T.bodyLine;for(let yy=y+th+k*3;yy<L.h;yy+=9)for(let x=x0+((yy/9)%2)*5;x<x1;x+=10){c.beginPath();c.arc(x,yy,1.6,0,6.283);c.fill();}}
   else{for(let i=0;i<Math.min(60,(x1-x0)/8);i++){const px=x0+((i*53.7+sg.id*13)%(x1-x0)),py=y+th+((i*37.3)%(Math.max(1,L.h-y-th)));c.fillRect(px,py,3,3);}}
   c.fillStyle=T.top;c.fillRect(x0,y,x1-x0,th);c.fillStyle=T.topEdge;
   if(sg.theme===0){const step=k*1.2,start=x0-((sg.x0*k)%step);for(let x=start;x<x1;x+=step)if(x>x0)c.fillRect(x,y+2,2,th-2);c.fillRect(x0,y+th-4,x1-x0,4);}
@@ -261,9 +269,9 @@ export function createStreetdashView(canvas:HTMLCanvasElement,opts:{reduced:bool
     c.strokeRect(x-2,y-h,w+4,h*.2);c.strokeRect(x,y-h,w,h);break;}
    case HZ.tackle:{const live=z.live&&z.moved<z.run&&!z.spent;c.save();c.translate(x+w*.5,y);c.scale(-1,1);bean(c,k,3,t*10,VIOLET,VIOLET_D,'4');c.restore();
     if(live&&!reduced)for(let i=0;i<3;i++){c.fillStyle='rgba(255,246,230,.85)';c.beginPath();c.arc(x+w*.9+i*k*.3,y-k*.12,k*(.12+i*.04),0,6.283);c.fill();}break;}
-   case HZ.banner:{const top=Y(z.y+1.25);c.strokeStyle=INK;c.lineWidth=2;for(const rx of [x+w*.1,x+w*.9]){c.beginPath();c.moveTo(rx,top);c.lineTo(rx,0);c.stroke();}
+   case HZ.banner:{const top=Y(z.y+1.25);c.strokeStyle=INK;c.lineWidth=2;for(const rx of [x+w*.1,x+w*.9]){c.beginPath();c.moveTo(rx,top);c.lineTo(rx,top-k*2.2);c.stroke();}c.beginPath();c.moveTo(x-k*1.5,top-k*2.3);c.quadraticCurveTo(x+w/2,top-k*1.9,x+w+k*1.5,top-k*2.3);c.stroke();
     c.fillStyle=INK;c.fillRect(x+4,top+4,w,y-top);c.fillStyle=SUN;c.fillRect(x,top,w,y-top);c.fillStyle=RED;c.fillRect(x,top+(y-top)*.3,w,(y-top)*.28);
-    c.fillStyle=PAPER;c.font=`italic 900 ${Math.round((y-top)*.22)}px "Arial Black",Impact,sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText('GOAL!',x+w/2,top+(y-top)*.45);
+    c.fillStyle=PAPER;c.font=`italic 900 ${Math.round((y-top)*.22)}px "Arial Black",Impact,sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText('CUP',x+w/2,top+(y-top)*.45);
     c.lineWidth=lw;c.strokeStyle=INK;c.strokeRect(x,top,w,y-top);
     c.fillStyle=SUN;c.beginPath();for(let fx=x;fx<x+w-1;fx+=k*.3){c.moveTo(fx,y);c.lineTo(fx+k*.15,y+k*.16);c.lineTo(fx+k*.3,y);}c.fill();c.lineWidth=2;c.stroke();break;}
    case HZ.crate:{if(z.done&&simT>=z.doneAt)break;

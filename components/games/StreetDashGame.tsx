@@ -197,7 +197,7 @@ export default function StreetDashGame({onExit}:{onExit:()=>void}){
    <canvas ref={cv} className={styles.play} tabIndex={0} aria-label="Street Dash. Tap to jump, hold to jump higher, swipe down to slide, tap the glowing target to shoot. Keys: Space, Down, X."/>
    {live&&<div className={styles.strip} data-streetdash-hud aria-live="polite" aria-label={`${hud.hearts} hearts. ${hud.dist} metres.`}>
     <Hearts n={hud.hearts}/>
-    <span className={styles.stripItem}><small>m</small>{hud.dist}</span>
+    <span className={styles.stripItem}>{hud.dist}<small>m</small></span>
     <span className={styles.stripItem} data-streetdash-best><small>{gap>0?'To best':'Best'}</small>{gap>0?gap:Math.max(best,hud.score)}</span>
     {hud.streak>=1&&<span className={styles.streak} key={hud.streak} data-streetdash-streak={hud.streak}>x{String(mult).replace('.0','')}</span>}
    </div>}
@@ -237,7 +237,7 @@ export default function StreetDashGame({onExit}:{onExit:()=>void}){
    </div>
    <div className={styles.chips}>
     <ComicStat value={`${result.dist}`} label="Metres"/>
-    <ComicStat value={result.targets} label="Shots on target"/>
+    <ComicStat value={result.targets} label="Shots"/>
     <ComicStat value={result.stars} label="Stars"/>
     <ComicStat value={result.near} label="Near misses"/>
    </div>
