@@ -216,13 +216,19 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
     <ComicButton size="small" onClick={()=>{tap();setScores(true);}} data-air-scores>Scores</ComicButton>
    </div>
   </ComicCard>}
-  {phase==='over'&&result&&<ComicCard label="Full time" badge="Full time" badgeTone="red" best={`Best ${result.settled.save.best}`} data-air-card="results" data-air-result={result.score}>
+  {phase==='over'&&result&&<ComicCard label="Full time" badge="Full time" badgeTone="red" best={result.settled.save.best>0?`Best ${result.settled.save.best}`:undefined} data-air-card="results" data-air-result={result.score}>
    <div className={styles.scoreRow}>
     <strong className={`${comicNumeral} ${styles.score}`} data-new-best={result.settled.newBest||undefined}>{result.score}</strong>
     {result.settled.newBest&&<ComicBurst word="New best!" size={17} tilt={7} className={styles.stamp}/>}
    </div>
    <ComicPanel tone="sun" tilt={-1.2} className={styles.near} data-air-near>{result.near}</ComicPanel>
    <div className={styles.hsSlot} data-hs-slot/>
+   {/* Nov 17 2026: Play again sits right under the near line and the high-score slot (the room's results order); the coach and the
+       run's numbers follow for whoever reads on. */}
+   <div className={styles.actions}>
+    <ComicButton variant="primary" wide disabled={busy} onClick={()=>{void start();}} data-air-again autoFocus>Play again</ComicButton>
+    <ComicButton size="small" onClick={()=>{tap();setScores(true);}} data-air-scores>Scores</ComicButton>
+   </div>
    <ComicPanel tone="paper" flat className={styles.coach} data-air-coach={result.settled.coachKey}><b>Coach</b>{result.settled.coach}</ComicPanel>
    <div className={styles.chips}>
     <ComicStat value={result.level} label="Level"/>
@@ -231,10 +237,6 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
     <ComicStat value={result.saves} label={result.saves===1?'Save':'Saves'}/>
    </div>
    {(result.coins>0||entry.message)&&<p className={styles.status} role="status">{entry.message||`+${result.coins} ${result.coins===1?'coin':'coins'}`}</p>}
-   <div className={styles.actions}>
-    <ComicButton variant="primary" wide disabled={busy} onClick={()=>{void start();}} data-air-again autoFocus>Play again</ComicButton>
-    <ComicButton size="small" onClick={()=>{tap();setScores(true);}} data-air-scores>Scores</ComicButton>
-   </div>
   </ComicCard>}
   {board&&phase==='over'&&<HighScoreEntry game="airhockey" score={board.score} detail="Points for goals, board shots, clean sheets and matches won against the machine." onClose={()=>setBoard(null)}/>}
   {scores&&<AirFutbolScores onClose={()=>setScores(false)}/>}

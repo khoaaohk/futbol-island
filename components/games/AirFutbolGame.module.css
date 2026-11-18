@@ -37,6 +37,7 @@
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:12px 12px;padding:0 6px 6px 0}
 .actions>:first-child{grid-column:1/-1}
 .actions>[data-air-scores]{grid-column:1/-1}
+[data-air-card=results]>.actions{margin-bottom:14px}
 .actions button{flex-direction:column;gap:2px}
 .status{margin:0 0 10px;font:800 14px/1.3 var(--cm-ui);color:var(--cm-ink)}
 .scoreRow{position:relative;display:grid;place-items:center;margin:6px 0 2px}
