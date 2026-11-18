@@ -1,5 +1,7 @@
 import * as T from 'three';
 import {effectiveTier,subscribeHeatTier} from './heatTier';
+import {gfxFlag} from './gfxFlags';
+import {sunHighlightGlsl,ggxA2} from './sunHighlight';
 
 /**
  * Ground detail (Oct 17 2026): the island's lawn, sand and land no longer read as one flat colour. No texture is uploaded and nothing
@@ -48,12 +50,28 @@ export const groundTintFactor=(x:number,z:number,kind:GroundKind)=>1+GROUND_TINT
 
 export const GROUND_TINT_GLSL=`float groundMottle(vec2 q){return sin(q.x*.31+sin(q.y*.23)*1.3)*.4+sin(q.y*.47-q.x*.29+1.7)*.3+sin(q.x*.83+q.y*.71+.9)*.3;}`;
 
+/**
+ * Ground lighting without three's PBR path (Nov 17 2026, docs/graphics/island-graphics-plan-nov17.md T2). Ground is roughness .85-1,
+ * metalness 0, no environment map: of the whole physical light loop only two things reach the picture, the Lambert diffuse and a faint
+ * broad sun highlight (strongest looking toward a low sun). The ground program is therefore built from three's LAMBERT shader source
+ * (same diffuse, hemisphere, shadow, fog and tone code) plus lib/graphics/sunHighlight.ts: the same GGX sun highlight three computed
+ * (D, Smith V, Schlick F with F0 .04), for the one sun, with the material's roughness as a uniform. What is gone: the roughness-from-normal-
+ * derivative clamp, the PhysicalMaterial set-up and the indirect-specular / multiscatter maths that multiplied a zero environment.
+ * The material object stays a MeshStandardMaterial (callers, clones and the paint batch keep working); only its shader source
+ * changes, inside onBeforeCompile. `?gfx=pbr-ground` on a dev build keeps the old program for side-by-side shots.
+ * Estimated cost (tests/ground-shader-cost.cjs, whole fragment program): see the table that test prints.
+ */
+export const GROUND_SUN_GLSL=sunHighlightGlsl('uGroundA2','.04');
+
 export function applyGroundTint<M extends T.MeshStandardMaterial>(material:M,kind:GroundKind):M{
  ensureSubscribed();
  const {amp,grain,wet}=GROUND_TINT[kind],f=(v:number)=>v.toFixed(3);
- material.customProgramCacheKey=()=>'ground-tint-'+kind;
+ const pbr=gfxFlag('pbr-ground');
+ material.customProgramCacheKey=()=>'ground-tint-'+kind+(pbr?'-pbr':'');
  material.onBeforeCompile=sh=>{
   sh.uniforms.uGroundGrain=GROUND_GRAIN;sh.uniforms.uGroundTime=GROUND_TIME;
+  if(!pbr){sh.uniforms.uGroundA2={value:ggxA2(material.roughness)};sh.vertexShader=T.ShaderLib.lambert.vertexShader;
+   sh.fragmentShader=T.ShaderLib.lambert.fragmentShader.replace('#include <common>','#include <common>\nuniform float uGroundA2;').replace('#include <lights_fragment_end>','#include <lights_fragment_end>'+GROUND_SUN_GLSL);}
   sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nvarying vec3 vGT;')
    .replace('#include <project_vertex>','#include <project_vertex>\nvGT=(modelMatrix*vec4(transformed,1.)).xyz;');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>\nvarying vec3 vGT;uniform float uGroundGrain,uGroundTime;\n${GROUND_TINT_GLSL}`)

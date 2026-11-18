@@ -3,6 +3,8 @@ import {DIVE_SLOTS,DIVE_BLOB_MAX,diveBlobParams} from '../town/water/diveSpots';
 import {SHOAL_HEART_D,SHOAL_OPAQUE_D,WATER_Y} from './waterTokens';
 import {stepGroundTime} from './groundTint';
 import {SWIM_FX} from './swimFx';
+import {gfxFlag} from './gfxFlags';
+import {sunHighlightGlsl,ggxA2} from './sunHighlight';
 /** The dive patch's blob test (diveSpots.ts diveBlobR, same formula): q < 1 inside; q > 1 past the widest reach skips the atan. */
 // Oct 20 2026 (user: "look more like the shore where it's see through", "blend in more on the edges"): the patch's look reaches past
 // the dive blob (q < 1, where Dive shows) and dissolves over a wide noise-broken band out to q = DIVE_SHOAL.fade, so the quick reject
@@ -333,8 +335,14 @@ void oceanVaryings(vec2 p){float t=uWaterTime;
 `;
 /** Patch the island ocean material (MeshStandardMaterial with the ripple tile as `map`). Safe to call once per material. */
 export function patchOceanMaterial(material:T.MeshStandardMaterial){
+ const pbr=gfxFlag('pbr-ocean');
  material.onBeforeCompile=shader=>{
   Object.assign(shader.uniforms,WATER_UNIFORMS,SWIM_CLEAR_UNIFORMS,SWIM_FX_UNIFORMS,CLEAR_WIN_UNIFORMS);
+  // Nov 17 2026 (plan W1): the ocean program is three's LAMBERT source + the same GGX sun highlight (sunHighlight.ts) instead of the
+  // full physical light loop; SEA_WATER_LOOK's roughness and 2 % metalness are folded in as constants. `?gfx=pbr-ocean` (dev) keeps the old one.
+  if(!pbr){shader.vertexShader=T.ShaderLib.lambert.vertexShader;
+   shader.fragmentShader=T.ShaderLib.lambert.fragmentShader.replace('#include <lights_lambert_fragment>',`#include <lights_lambert_fragment>\nvec3 seaF0=mix(vec3(.04),diffuseColor.rgb,${SEA_WATER_LOOK.metalness.toFixed(3)});material.diffuseColor*=${(1-SEA_WATER_LOOK.metalness).toFixed(3)};`)
+    .replace('#include <lights_fragment_end>','#include <lights_fragment_end>'+sunHighlightGlsl(ggxA2(SEA_WATER_LOOK.roughness).toFixed(5),'seaF0'));}
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\n'+OCEAN_VERT_GLSL)
    .replace('#include <project_vertex>','#include <project_vertex>\nvWaterXZ=(modelMatrix*vec4(transformed,1.)).xz;oceanVaryings(vWaterXZ);');
   shader.fragmentShader=shader.fragmentShader.replace('#include <common>','#include <common>\nvarying vec2 vWaterXZ,vDiveHit;varying vec4 vSeaA,vSeaCam;\n'+DIVE_GLSL+SHORE_GLSL+SWIM_CLEAR_GLSL+SWIM_FX_GLSL+CLEAR_WIN_GLSL)
@@ -465,6 +473,6 @@ export function patchOceanMaterial(material:T.MeshStandardMaterial){
     #endif
     #include <opaque_fragment>`);
  };
- material.customProgramCacheKey=()=>'island-ocean-water-v11';
+ material.customProgramCacheKey=()=>'island-ocean-water-v12'+(pbr?'-pbr':'');
  material.needsUpdate=true;
 }
