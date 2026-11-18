@@ -5,7 +5,7 @@
  * Everything is pooled: step() and swipe() allocate nothing. The view drains `events` each frame.
  * Units: the field is 100 wide and `h` tall (the screen's aspect, clamped), y grows downwards, kit flies up from y = h.
  */
-export const KR={
+export const KR={dodge:3.2,
  fieldW:100,minH:130,maxH:225,
  r:7.2,ownSlop:1.6,hazardSlop:-1.2,easySlop:1.2,
  lives:3,points:10,comboCap:6,comboLink:.55,callBonusFrom:3,callBonus:10,minTravel:2.5,
@@ -38,9 +38,9 @@ export const MEDAL_NAMES=['Bronze','Silver','Gold','Captain'] as const;
 /** 0 = none, 1 Bronze ... 4 Captain. */
 export function medalFor(score:number){let m=0;for(const t of KR.medals)if(score>=t)m++;return m;}
 
-export type KitItem={active:boolean;kind:number;team:number;x:number;y:number;vx:number;vy:number;rot:number;vr:number;frenzy:boolean;peaked:boolean;seq:number};
+export type KitItem={active:boolean;kind:number;team:number;x:number;y:number;vx:number;vy:number;rot:number;vr:number;frenzy:boolean;peaked:boolean;seq:number;dodged?:boolean};
 type Launch={on:boolean;at:number;kind:number;team:number;x:number;vx:number;vy:number;frenzy:boolean};
-export type KitEventType='toss'|'slice'|'special'|'foul'|'puff'|'miss'|'call'|'switch'|'ready'|'sub'|'over'|'effectEnd';
+export type KitEventType='toss'|'slice'|'special'|'foul'|'puff'|'miss'|'call'|'switch'|'ready'|'sub'|'over'|'effectEnd'|'dodge';
 /** One slot of the event ring. `a`..`d` mean: slice a=points b=place in swipe c=kind d=team, angle in `ang`; foul a=1 whistle / 0 rival, b=lives left;
  *  call a=items b=bonus; switch/ready a=team; special a=kind; puff c=kind d=team; effectEnd a=kind. */
 export type KitEvent={type:KitEventType;x:number;y:number;a:number;b:number;c:number;d:number;ang:number};
@@ -95,7 +95,7 @@ export function createKitRush(opts:{seed:number;h?:number;daily?:boolean}){
  }
  const gravity=(frenzy:boolean)=>{const T=flightTime()*(frenzy?.8:1);return 8*KR.apexRef*h/(T*T);};
  function launch(q:Launch){
-  q.on=false;for(const it of items)if(!it.active){it.active=true;it.kind=q.kind;it.team=q.team;it.x=q.x;it.y=h+KR.r;it.vx=q.vx;it.vy=q.vy;it.rot=(q.x*.37)%6.28;it.vr=(q.vx>=0?1:-1)*(1.4+((q.x*7.3)%1.6));it.frenzy=q.frenzy;it.peaked=false;it.seq=++seq;
+  q.on=false;for(const it of items)if(!it.active){it.active=true;it.kind=q.kind;it.team=q.team;it.x=q.x;it.y=h+KR.r;it.vx=q.vx;it.vy=q.vy;it.rot=(q.x*.37)%6.28;it.vr=(q.vx>=0?1:-1)*(1.4+((q.x*7.3)%1.6));it.frenzy=q.frenzy;it.peaked=false;it.dodged=false;it.seq=++seq;
    emit('toss',q.x,h,q.kind,q.team);return;}
  }
  function rivalTeam(){const n=s.nTeams-1;let k=int(0,n-1);for(let i=0;i<s.nTeams;i++){const t=s.teams[i];if(t===s.team)continue;if(k--===0)return t;}return s.teams[s.teams[0]===s.team?1:0];}
@@ -178,7 +178,9 @@ export function createKitRush(opts:{seed:number;h?:number;daily?:boolean}){
   for(let i=0;i<items.length;i++){const it=items[i];if(!it.active)continue;
    const own=it.kind>=KIND.golden||(it.kind<KIT_KINDS&&it.team===s.team),R=KR.r+(own?KR.ownSlop+easy:KR.hazardSlop);
    let t=((it.x-x0)*dx+(it.y-y0)*dy)/len2;t=t<0?0:t>1?1:t;const px=x0+dx*t-it.x,py=y0+dy*t-it.y;
-   if(px*px+py*py<=R*R){hit(it,k,ang);if(s.real<k.deadUntil||s.over)return;}}
+   if(px*px+py*py<=R*R){hit(it,k,ang);if(s.real<k.deadUntil||s.over)return;}
+   // near miss (Nov 17 2026): the blade passed a rival kit or the whistle by a hair; a CLOSE! cue, no points, no rule change
+   else if(!own&&!it.dodged&&px*px+py*py<=(KR.r+KR.dodge)*(KR.r+KR.dodge)){it.dodged=true;emit('dodge',it.x,it.y,it.kind,it.team);}}
  }
  function beginStroke(pointer:number){const k=strokes[pointer&3];if(k.count>0)bank(k);k.count=0;k.travel=0;k.deadUntil=0;k.last=-9;s.stats.swipes++;}
  function endStroke(pointer:number){const k=strokes[pointer&3];bank(k);k.deadUntil=Infinity;}

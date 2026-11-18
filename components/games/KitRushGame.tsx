@@ -13,7 +13,7 @@ import {retryImport} from '@/lib/retryImport';
 import {ArcadeTopBar} from '../arcade/ArcadeTopBar';
 import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {arcadeSkin} from './skins';
-import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst} from './comic';
+import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst,ComicMedalTrack} from './comic';
 import styles from './KitRushGame.module.css';
 import {createKitRush,kitRushDailySeed,kitRushFieldH,medalFor,KR,KIND,TEAMS,MEDAL_NAMES,type KitRush,type KitEvent,type KitStats} from '@/lib/arcade/kitrush/core';
 import {createKitRushView,type KitRushView} from '@/lib/arcade/kitrush/view';
@@ -99,6 +99,7 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
    case 'special':a?.special(e.a===KIND.golden?'golden':e.a===KIND.stopwatch?'stopwatch':'armband');arcadeFeedback(null,'skill');break;
    case 'sub':a?.sub();arcadeFeedback(null,'level');break;
    case 'miss':a?.miss();break;
+   case 'dodge':a?.dodge();break;
    case 'effectEnd':a?.effectEnd();break;
    case 'over':a?.over();break;
   }
@@ -189,7 +190,7 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
    <canvas ref={bg} className={styles.scene} aria-hidden="true"/>
    <canvas ref={fg} className={styles.play} tabIndex={0} aria-label="Kit Rush play area. Swipe through your team’s kit."/>
    <i className={styles.frame} aria-hidden="true"/>
-   {(phase==='playing'||phase==='paused')&&<div className={styles.banner} data-kitrush-banner aria-live="polite" aria-label={`Your kit: ${team.name}, ${team.pattern}. Lives: ${hud.lives}`}>
+   {(phase==='playing'||phase==='paused')&&<div className={styles.banner} data-kitrush-banner data-last={hud.lives===1||undefined} aria-live="polite" aria-label={`Your kit: ${team.name}, ${team.pattern}. Lives: ${hud.lives}`}>
     <KitShirt team={hud.team} size={30} key={hud.team}/><b>{team.name}</b>
     <span className={styles.lives} data-kitrush-lives={hud.lives}>{[0,1,2].map(i=><i key={i} data-on={i<hud.lives||undefined}/>)}</span>
    </div>}
@@ -221,8 +222,14 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
     {result.settled.newBest&&<ComicBurst word="New best!" size={17} tilt={7} className={styles.stamp}/>}
    </div>
    <div className={styles.medalRow} data-kitrush-medal={result.settled.medal} role="img" aria-label={result.settled.medal?`${MEDAL_NAMES[result.settled.medal-1]} medal`:'No medal this time'}>{[1,2,3,4].map(l=><Medal key={l} level={l} on={medalFor(result.score)>=l}/>)}<em>{result.settled.medal?MEDAL_NAMES[result.settled.medal-1]:'No medal yet'}</em></div>
+   <ComicMedalTrack score={result.score} best={result.settled.previousBest} medals={KR.medals} names={MEDAL_NAMES} data-kitrush-track/>
    <ComicPanel tone="sun" tilt={-1.2} className={styles.near} data-kitrush-near>{result.near}</ComicPanel>
    <div className={styles.hsSlot} data-hs-slot/>
+   <div className={styles.actions}>
+    <ComicButton variant="primary" wide disabled={busy} onClick={()=>{void start(result.daily);}} data-kitrush-again autoFocus>Play again</ComicButton>
+    <ComicButton size="small" disabled={busy} onClick={()=>{void start(!result.daily);}} data-kitrush-other>{result.daily?'Endless Rush':'Daily Rush'}</ComicButton>
+    <ComicButton size="small" onClick={()=>{tap();setScores(true);}}>Scores</ComicButton>
+   </div>
    <div className={styles.chips}>
     <ComicStat value={result.stats.bestCombo||1} label="Best swipe"/>
     <ComicStat value={result.stats.bestClean} label="Clean run"/>
@@ -232,11 +239,6 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
    <p className={styles.coach}>{result.coach}</p>
    <ComicPanel tone="paper" flat className={styles.fact} data-kitrush-fact><b>{result.settled.fact.title}</b>{result.settled.fact.line}</ComicPanel>
    {(result.coins>0||entry.message)&&<p className={styles.status} role="status">{entry.message||`+${result.coins} ${result.coins===1?'coin':'coins'}`}{result.daily&&!result.settled.dailyFirst&&!entry.message?' · practice run (your first run today is on the board)':''}</p>}
-   <div className={styles.actions}>
-    <ComicButton variant="primary" wide disabled={busy} onClick={()=>{void start(result.daily);}} data-kitrush-again autoFocus>Play again</ComicButton>
-    <ComicButton size="small" disabled={busy} onClick={()=>{void start(!result.daily);}} data-kitrush-other>{result.daily?'Endless Rush':'Daily Rush'}</ComicButton>
-    <ComicButton size="small" onClick={()=>{tap();setScores(true);}}>Scores</ComicButton>
-   </div>
   </ComicCard>}
   {board&&phase==='over'&&<HighScoreEntry game={board.game} score={board.score} detail={board.game==='kitdaily'?'Daily Rush: the same kit bag for everyone today. Your first run counts.':'Points for your own kit struck clean.'} onClose={()=>setBoard(null)}/>}
   {scores&&<KitRushScores daily={!!result?.daily} onClose={()=>setScores(false)}/>}

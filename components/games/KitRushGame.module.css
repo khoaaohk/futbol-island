@@ -42,7 +42,7 @@
 .score[data-new-best]{animation:krPop .6s cubic-bezier(.2,1.6,.4,1) both}
 @keyframes krPop{0%{scale:.6;opacity:0}100%{scale:1;opacity:1}}
 /* QA Nov 14 2026: was top:-20px, which sat the burst over the card's "Best 240" chip ("Rest 240"). Now it sticks on the score's top-right. */
-.stamp{position:absolute;right:-16px;top:18px}
+.stamp{position:static;order:-1;margin:-4px 0 -8px;z-index:1}
 .medalRow{display:inline-flex;align-items:center;justify-content:center;gap:5px;margin:2px 0 8px}
 .chips .medal{width:16px;height:16px;border-width:2.5px}.chips .medal i{width:4px;height:4px}.chips .medalRow{gap:3px;margin:3px 0 4px}
 .medalRow em{margin-left:6px;font:800 14px/1 var(--cm-ui);font-style:normal;color:var(--cm-ink)}
@@ -92,3 +92,8 @@
  .game [data-kitrush-card=start] .chips{display:none}
 }
 @media (prefers-reduced-motion:reduce){.banner{rotate:none}.banner svg,.score[data-new-best]{animation:none}}
+.hsSlot+.actions{margin-bottom:12px}
+/* Nov 17 2026: last life: the lives box beats red (danger state) */
+.banner[data-last] .lives i[data-on]{animation:krLast .7s ease-in-out infinite alternate}
+@keyframes krLast{from{scale:1}to{scale:1.3;background:#ff2a12}}
+@media (prefers-reduced-motion:reduce){.banner[data-last] .lives i[data-on]{animation:none;outline:3px solid var(--cm-red);outline-offset:1px}}

@@ -58,3 +58,8 @@ run. Rival: flat cowbell + thud. Whistle: pea-whistle trill. Switch: two-tone wh
 popups and trail points are pooled. The loop runs only while playing (not on start, pause, results or a hidden tab). 60 fps cap. DPR cap 2, falls to 1.5 if the frame's script cost averages over 7 ms.
 Measured (headless Chrome, 390x844 @2x, `scripts/check-kitrush-browser.cjs`): rules + draw calls 0.1-0.2 ms a frame, worst 3.7 ms.
 That is script time only: no GPU raster time and no phone temperature were measured.
+
+## Polish pass (Nov 17 2026, batch 2a)
+Near miss: a swipe that passes a rival kit or the whistle within `KR.dodge` (3.2) of its edge without touching it pops CLOSE!
+with an air slide (no points; hidden if that item is then hit). Last life: the lives pip beats red. Results: medal road
+(`ComicMedalTrack`), Play again moved up under the high-score strip, NEW BEST stamp off the Best badge. Rules unchanged.

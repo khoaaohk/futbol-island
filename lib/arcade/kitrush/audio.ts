@@ -70,6 +70,8 @@ export function createKitRushAudio(){
   effectEnd(){if(!on())return;tone('sine',660,440,0,.16,.08);},
   /** Super sub: a life comes back. */
   sub(){if(!on())return;bar(hz(4,523),0,.2,.2);bar(hz(9,523),.08,.2,.2);bar(hz(16,523),.16,.22,.4);},
+  /** A near miss past a rival kit or the whistle (Nov 17 2026): a quick rising air slide. */
+  dodge(){if(!on())return;tone('sine',700,1300,0,.1,.06,.004);burst('highpass',4000,.8,0,.06,.05);},
   miss(){if(!on())return;tone('sine',210,120,0,.12,.07,.01);},
   over(){if(!on())return;bar(hz(7,262),0,.22,.3);bar(hz(4,262),.16,.22,.3);bar(hz(0,262),.32,.26,.6);tone('sine',90,40,.32,.5,.35,.004);},
   medal(n:number){if(!on())return;const k=2+Math.min(4,Math.max(1,n));for(let i=0;i<k;i++)bar(hz(SCALE[i*2],523),.5+i*.09,.22,.4);burst('highpass',6500,.7,.5+k*.09,.4,.08);},

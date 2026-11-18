@@ -153,12 +153,14 @@ export function createKitRushView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts
    for(const hf of halves){if(hf.on)continue;const side=n?-1:1,nx=-Math.sin(e.ang)*side,ny=Math.cos(e.ang)*side;hf.on=true;hf.spr=spr;hf.x=e.x;hf.y=e.y;hf.vx=nx*22+Math.cos(e.ang)*14;hf.vy=ny*22+Math.sin(e.ang)*14-16;hf.rot=0;hf.vr=side*(3+rnd()*3);hf.cut=e.ang;hf.side=side;hf.life=.75;if(++n>=2)break;}
    spawnBurst(e.x,e.y,e.b>=3?SUN:PAPER,1+Math.min(e.b,6)*.14);spawnDots(e.x,e.y,col,opts.reduced?2:5,38);spawnPop(e.x,e.y-6,e.a,e.b>=3);if(e.b>=4&&!opts.reduced)shake=Math.max(shake,.1);}
   else if(e.type==='puff'){spawnBurst(e.x,e.y,PAPER,.7,.16);if(!opts.reduced)spawnDots(e.x,e.y,INK,2,24);}
-  else if(e.type==='foul'){spawnBurst(e.x,e.y,RED,2.4,.34);spawnDots(e.x,e.y,RED,opts.reduced?3:10,60);say(e.a?'WHISTLE!':'WRONG KIT!',RED,50,s.h*.4,.9);if(!opts.reduced){shake=.28;flash=.14;}}
+  else if(e.type==='foul'){for(const p of pops)if(p.on&&p.text==='CLOSE!')p.on=false;// a near miss that became a hit is not close
+   spawnBurst(e.x,e.y,RED,2.4,.34);spawnDots(e.x,e.y,RED,opts.reduced?3:10,60);say(e.a?'WHISTLE!':'WRONG KIT!',RED,50,s.h*.4,.9);if(!opts.reduced){shake=.28;flash=.14;}}
   else if(e.type==='call'){say(callFor(e.a),e.a>=5?ORANGE:e.a>=3?RED:TEAL,e.x,Math.max(s.h*.22,e.y-14),.5+Math.min(e.a,6)*.08,e.a<=2?.62:e.a===3?.8:1);if(e.b>0)spawnPop(e.x,e.y-16,e.b,true);}
   else if(e.type==='switch'){kit.team=e.a;kit.title='SWITCH!';kit.life=KR.beat;kit.max=KR.beat;}
   else if(e.type==='ready'){kit.team=e.a;kit.title='YOUR KIT';kit.life=KR.readyBeat;kit.max=KR.readyBeat;}
   else if(e.type==='sub')say('SUPER SUB!',TEAL,50,s.h*.24,.9,.72);
   else if(e.type==='special'){say(e.a===KIND.golden?'GOLDEN BALL!':e.a===KIND.stopwatch?'SLOW-MO!':'CAPTAIN x2!',e.a===KIND.stopwatch?TEAL:ORANGE,50,s.h*.24,.9,.72);spawnBurst(e.x,e.y,SUN,2.2,.3);}
+  else if(e.type==='dodge'){for(const p of pops)if(!p.on){p.on=true;p.x=Math.max(10,Math.min(90,e.x));p.y=e.y-10;p.life=.6;p.text='CLOSE!';p.big=false;break;}}
   else if(e.type==='miss'){spawnDots(e.x,s.h-3,INK,2,16);}
  }
  function trailStart(p:number){trails[p&3].n=0;}
