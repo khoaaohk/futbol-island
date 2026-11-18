@@ -663,11 +663,13 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   </section></div>}
 
   {error&&<div className={arcade.overlay}><section className={arcade.card}><span className={arcade.badge}>TAKE A BREATHER</span><h3>The pitch couldn’t load.</h3><p>Return to the arcade and try again.</p><button className={arcade.exit} onClick={onExit}>Back to arcade</button></section></div>}
-  {/* Endless Run: full time (the run's own card; the authored result card below is untouched). */}
+  {/* Endless Run: full time (the run's own card; the authored result card below is untouched). Nov 17 2026: the best-run line says how
+      close this run came (stars short of the best), with the shared high-score slot right under it and Play again under that. */}
   {view==='result'&&endOver&&!outcome&&<div className={`${arcade.overlay} ${styles.lowOverlay}`}><section className={`${arcade.card} ${styles.endOver}`} data-endless-over data-new-best={endOver.newBest||undefined}>
    <span className={arcade.badge}>ENDLESS RUN · LEVEL {endOver.level}</span><h3>{endOver.newBest?'New best run!':'Full time!'}</h3>
    <div className={styles.endStats}><span><b>{endOver.score}</b><small>{endOver.score===1?'star':'stars'}</small></span><span><b>{endOver.solved}</b><small>solved</small></span><span><b>{endOver.streak}</b><small>first-try streak</small></span></div>
-   {endOver.lesson&&<p className={styles.lesson}>{endOver.lesson}</p>}<small className={styles.endBestLine}>Best run: {endOver.best} ★</small>
+   {endOver.lesson&&<p className={styles.lesson}>{endOver.lesson}</p>}<p className={styles.endNear} data-endless-near>{endOver.newBest?`Best run ever: ${endOver.best} ★`:endOver.best===0?'Solve one puzzle to set your first best run.':endOver.best>endOver.score?`${endOver.score>0&&endOver.best-endOver.score<=2?'So close! ':''}${endOver.best-endOver.score} ★ short of your best run (${endOver.best} ★)`:`You matched your best run: ${endOver.best} ★`}</p>
+   <div className={styles.hsSlot} data-hs-slot/>
    <button className={`${arcade.primary} ${styles.go}`} data-endless-again disabled={entry.pending} onClick={()=>{void startEndless();}}>Play again</button><button className={arcade.exit} onClick={()=>{stopEndless();setMenu('home');setView('levels');}}>All puzzles</button>
   </section></div>}
   {boardScore!==null&&boardReady&&view==='result'&&<HighScoreEntry game={boardGame} score={boardScore} detail={boardGame==='puzzle'?(endOver?'Your Endless Run, in stars. One board: your best run or your star total, whichever is higher.':'Your total stars across every puzzle.'):`Your ${PUZZLE_TIERS[boardGame==='puzpro'?'pro':'legend'].title} points: your best on each puzzle, added up.`} onClose={()=>setBoardScore(null)}/>}
