@@ -280,7 +280,9 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  const ring=new T.Group(),ringM=own(new T.MeshBasicMaterial({color:BB_COLORS.sun,depthTest:false,fog:false}));{const a=new T.Mesh(ringInk,own(new T.MeshBasicMaterial({color:COMIC_INK,depthTest:false,fog:false})));const b=new T.Mesh(ringG,ringM);b.position.y=.01;a.renderOrder=12;b.renderOrder=13;ring.add(a,b);}ring.visible=false;scene.add(ring);
  const dotM=own(new T.MeshBasicMaterial({color:'#fff3d6',depthTest:false,fog:false})),dots=new T.InstancedMesh(own(new T.SphereGeometry(1,8,6)),dotM,DOTS);dots.renderOrder=12;dots.frustumCulled=false;dots.count=0;dots.visible=false;dots.setColorAt(0,new T.Color(1,1,1));scene.add(dots);
  const arc=new Float32Array(DOTS*3);
- const shock=Array.from({length:3},()=>{const mat=own(new T.MeshBasicMaterial({color:'#ffffff',transparent:true,depthWrite:false,fog:false})),m=new T.Mesh(ringG,mat);m.renderOrder=3;m.visible=false;scene.add(m);return {m,mat,t:0,s:1};});let shockI=0;
+ // Fix round (Nov 18 2026): the three shock rings are ONE instanced additive mesh (one draw at most, was up to three); the fade is the instance colour.
+ const shockMesh=new T.InstancedMesh(ringG,own(new T.MeshBasicMaterial({color:'#ffffff',transparent:true,depthWrite:false,fog:false,blending:T.AdditiveBlending})),3);shockMesh.renderOrder=3;shockMesh.frustumCulled=false;shockMesh.count=0;shockMesh.visible=false;shockMesh.setColorAt(0,new T.Color(1,1,1));scene.add(shockMesh);
+ const shock=Array.from({length:3},()=>({on:false,x:0,z:0,c:new T.Color(),t:0,s:1}));let shockI=0;
  type Aim={x:number;y:number;z:number;power:number;curl:number;lock:number}|null;let aim:Aim=null;
 
  /* ---- time of day ---- */
@@ -288,6 +290,9 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   sun.color.set(p.sun);sun.intensity=p.sunI;hemi.color.set(p.hemi);hemi.groundColor.set(p.hemiG);hemi.intensity=p.hemiI;glowM.opacity=p.glow;ink.uInkBand.value.x=.24*p.band;ink.uInkBand.value.y=.335*p.band;
   // night reads as night: darker turf lit in floodlight pools, eyes that glow, a hotter additive ball trail (uniform swaps only)
   (pitchM as LM).color.setScalar(p.turf);(pitchM as LM).emissive.set(p.pool);(turfM as LM).color.set('#3a8a47').multiplyScalar(p.turf);(crowdM as LM).color.setScalar(p.crowd);night=i===2;
+  // Fix round (Nov 18 2026): at night the sun's shadow is too faint to read, so nothing casts one (the shadow pass draws nothing: about 8
+  // draws back) and the kicker and every ball stand on a blob from the pool the machines already use.
+  bean.traverse(x=>{if((x as T.Mesh).isMesh)x.castShadow=!night;});ready.castShadow=balls.castShadow=!night;
   const ec=eyes.instanceColor;if(ec){(ec.array as Float32Array).fill(night?1.9:1);for(let k=2;k<ec.array.length;k+=3)(ec.array as Float32Array)[k]=night?1.25:1;ec.needsUpdate=true;}
   trailM.blending=night?T.AdditiveBlending:T.NormalBlending;trailM.needsUpdate=true;}
 
@@ -307,7 +312,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  function confetti(n:number){if(o.reduced)return;const tones=PIECE_TONES[99];for(let i=0;i<n;i++){const p=pc[pieceI];pieceI=(pieceI+1)%PIECES;const side=i%2?1:-1;p.on=true;p.x=side*(4+Math.random()*7);p.y=6+Math.random()*5;p.z=-4-Math.random()*26;
   p.vx=-side*(1+Math.random()*2.4);p.vy=-Math.random();p.vz=(Math.random()-.5)*2;p.wx=(Math.random()-.5)*16;p.wy=(Math.random()-.5)*16;p.rx=Math.random()*6;p.ry=Math.random()*6;p.s=.42+Math.random()*.3;p.t=0;p.life=2.3+Math.random()*.8;p.gr=.16;p.c.set(tones[i%tones.length]);}}
  /** A flat shock ring on the turf (a barrel burst, a super shot, the boss going down). */
- function ringAt(x:number,z:number,size:number,color:string){if(o.reduced)return;const r=shock[shockI];shockI=(shockI+1)%shock.length;r.m.visible=true;r.m.position.set(x,.05,z);r.t=0;r.s=size;r.mat.color.set(color);}
+ function ringAt(x:number,z:number,size:number,color:string){if(o.reduced)return;const r=shock[shockI];shockI=(shockI+1)%shock.length;r.on=true;r.x=x;r.z=z;r.t=0;r.s=size;r.c.set(color);}
  function puff(x:number,y:number,z:number,n:number,size:number){for(let i=0;i<n;i++){const d=dd[dustI];dustI=(dustI+1)%DUST;const a=Math.random()*6.28;d.on=true;d.x=x+(Math.random()-.5)*size*.5;d.y=y+.1+Math.random()*.2;d.z=z+(Math.random()-.5)*size*.5;
   d.vx=Math.cos(a)*size*1.2;d.vz=Math.sin(a)*size*1.2;d.vy=.5+Math.random()*.8;d.s=size*(.11+Math.random()*.12);d.t=0;d.life=.45+Math.random()*.3;}}
  function star(x:number,y:number,z:number,s:number,color:string){const st=stars[starI];starI=(starI+1)%STARS;st.g.visible=true;st.g.position.set(x,y,z);st.t=0;st.life=.28;st.s=s;st.b.color.set(color);}
@@ -331,7 +336,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
    case 'clear':confetti(o.mobile?36:60);hype=Math.max(hype,2.4);cheerT=Math.max(cheerT,.9);break;
   }
  }
- function reset(){for(const p of pc)p.on=false;for(const b of bt)b.on=false;for(const d of dd)d.on=false;for(const t of tr)t.on=false;for(const s of stars)s.g.visible=false;for(const r of shock)r.m.visible=false;aim=null;camX=0;shake=0;camPull=0;push=0;kickT=9;kickNow=false;stunT=cheerT=0;kicker.resetPose();if(tod!==0)setTod(0);}
+ function reset(){for(const p of pc)p.on=false;for(const b of bt)b.on=false;for(const d of dd)d.on=false;for(const t of tr)t.on=false;for(const s of stars)s.g.visible=false;for(const r of shock)r.on=false;shockMesh.count=0;shockMesh.visible=false;aim=null;camX=0;shake=0;camPull=0;push=0;kickT=9;kickNow=false;stunT=cheerT=0;kicker.resetPose();if(tod!==0)setTod(0);}
  /** The thing under a screen point (aim assist: a generous sphere), else the pitch under it. */
  const ray=new T.Raycaster(),ndc=new T.Vector2(),plane=new T.Plane(new T.Vector3(0,1,0),0),hitP=new T.Vector3(),center=new T.Vector3();
  function pick(g:BallBlaster|null,sx:number,sy:number):AimPick{ndc.set(sx/W*2-1,-(sy/H)*2+1);ray.setFromCamera(ndc,camera);let best=Infinity,res:AimPick|null=null;
@@ -408,7 +413,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   for(const k of kinds){const m=inst.get(k)!;m.count=counts.get(k)!;m.visible=m.count>0;m.instanceMatrix.needsUpdate=true;if(m.instanceColor)m.instanceColor.needsUpdate=true;}
   // at night the sun's shadow is faint: the kicker stands on its own blob
   if(night&&bn2<48){M2.compose(V.set(bean.position.x,.02,bean.position.z),Q2.identity(),SV.set(.62,1,.5));blobs.setMatrixAt(bn2++,M2);}
-  blobs.count=bn2;blobs.visible=bn2>0;blobs.instanceMatrix.needsUpdate=true;eyes.count=en;eyes.visible=en>0;eyes.instanceMatrix.needsUpdate=true;keys.count=kn;keys.visible=kn>0;keys.instanceMatrix.needsUpdate=true;rotors.count=rn;rotors.visible=rn>0;rotors.instanceMatrix.needsUpdate=true;
+  eyes.count=en;eyes.visible=en>0;eyes.instanceMatrix.needsUpdate=true;keys.count=kn;keys.visible=kn>0;keys.instanceMatrix.needsUpdate=true;rotors.count=rn;rotors.visible=rn>0;rotors.instanceMatrix.needsUpdate=true;
   if(!bossOn&&boss.visible)boss.visible=false;bossShown=bossOn;
   // balls: spin with their speed, stretch along it, a comic speed trail (fire burns, giant glows gold)
   let bn=0;for(let i=0;i<s.balls.length;i++){const b=s.balls[i];if(!b.on)continue;const q=spin[i%64],sp=Math.hypot(b.vx,b.vz);if(sp>.1){Q.setFromAxisAngle(V.set(-b.vz/sp,0,b.vx/sp),sp*fdt/b.r);q.premultiply(Q);}
@@ -416,12 +421,15 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
    if(st>1.01){V2.set(b.vx/v3,b.vy/v3,b.vz/v3);Q2.setFromUnitVectors(ZV,V2);M.makeRotationFromQuaternion(Q2);M2.makeScale(1/Math.sqrt(st),1/Math.sqrt(st),st);M.multiply(M2);M2.makeRotationFromQuaternion(Q2.invert());M.multiply(M2);M2.makeRotationFromQuaternion(q);M.multiply(M2);
     M2.makeScale(b.r,b.r,b.r);M.multiply(M2);M.setPosition(b.x,b.y,b.z);}else M.compose(V.set(b.x,b.y,b.z),q,SV.setScalar(b.r));
    balls.setMatrixAt(bn,M);balls.setColorAt(bn,b.sup?C1.setRGB(1.5,1.15,.35):b.fire?C1.set('#ff9a4a'):b.r>BB.ballR?C1.set('#ffe9a0'):C1.setRGB(1,1,1));bn++;
+   if(night&&bn2<48){const k=1/(1+Math.max(0,b.y-b.r)*.45);M2.compose(V.set(b.x,.03,b.z),Q2.identity(),SV.set(b.r*1.3*k,1,b.r*1.05*k));blobs.setMatrixAt(bn2++,M2);}
    if(!o.reduced&&sp>7&&dt>0){const n=b.fire||b.sup?2:1;for(let k=0;k<n;k++){const t=tr[trI];trI=(trI+1)%TRAIL;t.on=true;t.x=b.x-b.vx*.012*k+(b.fire?(Math.random()-.5)*.2:0);t.y=b.y+(b.fire?Math.random()*.15:0);t.z=b.z-b.vz*.012*k;
     const l=v3||1;t.dx=b.vx/l;t.dy=b.vy/l;t.dz=b.vz/l;t.t=0;t.s=b.r*(b.sup?1.05:b.fire?.95:b.r>BB.ballR?.6:.5);t.c=b.sup?(k?2:3):b.fire?(k?2:1):b.r>BB.ballR?3:0;}}}
   // stray balls roll back to the rack between waves (cosmetic; the rules' rack refills on its own clock)
   if(lull&&s.wave>0&&!o.reduced)for(let j=0;j<3&&bn<balls.instanceMatrix.count;j++){const t=Math.min(1,Math.max(0,lullK*1.25-j*.18)),e2=1-(1-t)*(1-t),sx=[-6.5,5.5,-2.5][j],sz=[-24,-18,-30][j];
    const x=sx+(BB.kx+.7-sx)*e2,z=sz+(BB.kz-.2-sz)*e2,d=Math.hypot(BB.kx+.7-sx,BB.kz-.2-sz)*e2;if(t>=1)continue;
    M.compose(V.set(x,BB.ballR,z),Q.setFromAxisAngle(XV,d/BB.ballR),SV.setScalar(BB.ballR));balls.setMatrixAt(bn,M);balls.setColorAt(bn,C1.setRGB(1,1,1));bn++;}
+  if(night&&ready.visible&&bn2<48){M2.compose(V.set(ready.position.x,.03,ready.position.z),Q2.identity(),SV.set(BB.ballR*1.3,1,BB.ballR*1.05));blobs.setMatrixAt(bn2++,M2);}
+  blobs.count=bn2;blobs.visible=bn2>0;blobs.instanceMatrix.needsUpdate=true;
   balls.count=bn;balls.visible=bn>0;balls.instanceMatrix.needsUpdate=true;if(balls.instanceColor)balls.instanceColor.needsUpdate=true;
   ready.visible=s.rack>0&&kickT>.18&&!s.over;
   // a super shot is ready: the ball at the kicker's feet swells and throws gold sparks
@@ -451,7 +459,8 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
    Q.setFromUnitVectors(ZV,V2.set(t.dx,t.dy,t.dz));M.compose(V.set(t.x,t.y,t.z),Q,SV.set(t.s*k,t.s*k,t.s*k*(t.c===1||t.c===2?1.6:2.6)));trail.setMatrixAt(tm,M);trail.setColorAt(tm,TRAIL_C[t.c]);tm++;}
   trail.count=tm;trail.visible=tm>0;trail.instanceMatrix.needsUpdate=true;if(trail.instanceColor)trail.instanceColor.needsUpdate=true;
   for(const st of stars){if(!st.g.visible)continue;st.t+=rdt;if(st.t>st.life){st.g.visible=false;continue;}const k=st.t/st.life,near=Math.min(1,st.g.position.distanceTo(camera.position)/16);st.g.quaternion.copy(camera.quaternion);st.g.scale.setScalar(st.s*near*(k<.3?.5+k/.3*.7:1.2-(k-.3)*.4));st.g.rotation.z+=rdt*2;}
-  for(const r of shock){if(!r.m.visible)continue;r.t+=rdt;const k=r.t/.42;if(k>=1){r.m.visible=false;continue;}const e2=1-(1-k)*(1-k);r.m.scale.setScalar(r.s*(.25+e2));r.mat.opacity=(1-k)*.85;}
+  {let sn=0;for(const r of shock){if(!r.on)continue;r.t+=rdt;const k=r.t/.42;if(k>=1){r.on=false;continue;}const e2=1-(1-k)*(1-k);M2.compose(V.set(r.x,.05,r.z),Q2.identity(),SV.setScalar(r.s*(.25+e2)));shockMesh.setMatrixAt(sn,M2);shockMesh.setColorAt(sn,C1.copy(r.c).multiplyScalar((1-k)*.85));sn++;}
+   shockMesh.count=sn;shockMesh.visible=sn>0;if(sn){shockMesh.instanceMatrix.needsUpdate=true;if(shockMesh.instanceColor)shockMesh.instanceColor.needsUpdate=true;}}
   // the aim
   if(aim&&!s.over){ring.visible=true;ring.position.set(aim.x,.03,aim.z);const pulse=1+Math.sin(now*12)*.06*(aim.power);ring.scale.setScalar((aim.lock?1.15:1)*pulse*(1+aim.z/-60));
    ringM.color.set(aim.power>=.9?BB_COLORS.red:BB_COLORS.sun);
@@ -464,6 +473,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   setAim(a:Aim){aim=a;},
   get bossShown(){return bossShown;},
   get info(){return renderer.info.render;},
+  /** Dev probes only (heat scripts walk it to see what is drawn). */get scene(){return scene;},
   get canvas(){return canvas;},
   dispose(){const tex=new Set<T.Texture>(),addT=(v:unknown)=>{if((v as T.Texture|null)?.isTexture)tex.add(v as T.Texture);};
    // the rig's textures too (shared ones such as the bean face atlas hold this renderer otherwise; see arcadeStage dispose)
