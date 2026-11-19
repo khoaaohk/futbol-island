@@ -40,10 +40,21 @@ ok('3. island with lights, 30 simulated minutes: red is obeyed, queues release o
  const body=c=>({x:c.group.position.x,z:c.group.position.z,yaw:c.group.rotation.y,width:(c.pickup?2.1:1.9)-.2,length:(c.pickup?4.5:3.6)-.2});
  const prev=a.cars.map(c=>({p:c.group.position.clone(),v:c.v,yaw:c.group.rotation.y,remaining:c.length-c.distance,route:c.from+':'+c.to,heldAtRed:false})),idle=Array(N).fill(0),longest=Array(N).fill(0),travel=Array(N).fill(0);
  let ranRed=0,crossings=0,waitedAtRed=0,releasedOnGreen=0,hardStops=0,worstTurn=0,worstCayTurn=0,worstGap=Infinity,worstOverlap=0,lampErrors=0,redAge=0;
+ // What a driver SEES (Nov 18 2026 verify pass): the head facing each approach, as painted. Passing 10.5 m from the junction centre
+ // (where the stop line is) under a head that has shown red for longer than the all-red gap is running a red light, whether or not
+ // the car has a stop line there. The short street inside a shared box has none, so its two heads flash yellow instead.
+ const heads=a.signals.heads,headNode=a.signals.headNode,headFor=(n,f)=>{const A=a.nodes[n],F=a.nodes[f],ux=F.x-A.x,uz=F.z-A.z,l=Math.hypot(ux,uz);return heads.findIndex(h=>Math.abs(h.jx-A.x)<.6&&Math.abs(h.jz-A.z)<.6&&(Math.sin(h.yaw)*ux+Math.cos(h.yaw)*uz)/l>.9);};
+ const pairs=[];for(const n of a.nodes)for(const id of n.links)if(id>n.id&&a.signals.offset[n.id]>=0&&a.signals.offset[id]>=0&&Math.hypot(a.nodes[id].x-n.x,a.nodes[id].z-n.z)<24)pairs.push([n.id,id]);
+ assert(pairs.length>=1,'the island has two junctions that share a box');for(const [p,q] of pairs)for(const [n,f] of [[p,q],[q,p]]){const k=headFor(n,f);assert(k>=0&&headNode[k]===-1,'the head facing the short street inside a shared box flashes yellow');assert(a.nodes[n].links.filter(id=>id!==f).every(id=>{const o=headFor(n,id);return o<0||headNode[o]===n;}),'its other heads run the lights');}
+ let passedHeads=0,passedRed=0,bothOpen=0,maxQueue=0,queueGapMin=Infinity,queueGapMax=0;const nodeDistance=a.cars.map(()=>Infinity);
  // The visitor hovers over the town (too high to be a pedestrian), so the lamps are in range and painted.
  const over={x:60,y:40,z:-40};
  for(let tick=0;tick<30*3600;tick++){a.update(dt,over,still);const clock=a.signals.clock;
-  for(let i=0;i<N;i++){const c=a.cars[i],s=prev[i],d=c.group.position.distanceTo(s.p),route=c.from+':'+c.to,remaining=c.length-c.distance;travel[i]+=d;idle[i]=d<1e-6?idle[i]+dt:0;longest[i]=Math.max(longest[i],idle[i]);
+  const queues=new Map();
+  for(let i=0;i<N;i++){const c=a.cars[i],s=prev[i],d=c.group.position.distanceTo(s.p),route=c.from+':'+c.to,remaining=c.length-c.distance;travel[i]+=d;
+   {const to=a.nodes[c.to],near=Math.hypot(c.group.position.x-to.x,c.group.position.z-to.z);if(route===s.route&&nodeDistance[i]>=10.5&&near<10.5){const k=headFor(c.to,c.from);if(k>=0&&headNode[k]>=0){passedHeads++;if(a.signals.lamps.shown[k]===S.RED){let age=0;while(age<30&&S.signalLight(clock-age,a.signals.offset[headNode[k]],heads[k].axis)===S.RED)age+=.05;if(age>S.SIGNAL_ALL_RED+.25)passedRed++;}}}nodeDistance[i]=near;
+    if(c.signalNode>=0&&c.v<.05&&S.signalLight(clock,a.signals.offset[c.signalNode],c.axis)===S.RED){const q=queues.get(route);if(q)q.push(c);else queues.set(route,[c]);}}
+idle[i]=d<1e-6?idle[i]+dt:0;longest[i]=Math.max(longest[i],idle[i]);
    // Speed is eased: never faster up than DRIVE.accel, never an instant stop except the footprint guard (counted).
    assert(c.v-s.v<=D.DRIVE.accel*dt+1e-9,`car ${i} jumped in speed`);if(s.v-c.v>D.DRIVE.hardBrake*dt+1e-9){assert.equal(c.v,0);hardStops++;}
    let turn=Math.abs(c.group.rotation.y-s.yaw);if(turn>Math.PI)turn=2*Math.PI-turn;if(c.group.position.x<228)worstTurn=Math.max(worstTurn,turn);else worstCayTurn=Math.max(worstCayTurn,turn);
@@ -57,15 +68,21 @@ ok('3. island with lights, 30 simulated minutes: red is obeyed, queues release o
     // Following distance on a straight: same street, same way, one behind the other.
     if(c.from===o.from&&c.to===o.to&&c.distance>c.turnLength+4&&o.distance>o.turnLength+4){const along=(o.group.position.x-c.group.position.x)*c.dirX+(o.group.position.z-c.group.position.z)*c.dirZ,back=along>0?c:o,gap=Math.abs(along)-c.halfLength-o.halfLength;if(back.v>.01&&c.dirX*o.dirX+c.dirZ*o.dirZ>.99)worstGap=Math.min(worstGap,gap);}}
    s.p.copy(c.group.position);s.v=c.v;s.yaw=c.group.rotation.y;s.remaining=remaining;s.route=route;}
+  for(const q of queues.values()){if(q.length>maxQueue)maxQueue=q.length;if(q.length<2)continue;q.sort((x,y)=>(x.length-x.distance)-(y.length-y.distance));for(let k=1;k<q.length;k++){const gap=(q[k].length-q[k].distance)-(q[k-1].length-q[k-1].distance)-q[k].halfLength-q[k-1].halfLength;queueGapMin=Math.min(queueGapMin,gap);queueGapMax=Math.max(queueGapMax,gap);}}
+  if(tick%6===0){const open=new Map();heads.forEach((h,k)=>{if(headNode[k]<0||a.signals.lamps.shown[k]===S.RED)return;const o=open.get(headNode[k]);if(o&&o!==h.axis)bothOpen++;open.set(headNode[k],h.axis);});}
   if(tick%30===0)a.signals.heads.forEach((h,k)=>{const node=a.signals.headNode[k],shown=a.signals.lamps.shown[k];/* painted five times a second: a lamp may trail the model by one paint */if(node>=0&&shown!==S.signalLight(clock,a.signals.offset[node],h.axis)&&shown!==S.signalLight(clock-.21,a.signals.offset[node],h.axis))lampErrors++;});
  }
  console.log('     ',JSON.stringify({signalled,flashingHeads:flashing,crossings,ranRed,latestRedCrossing:+redAge.toFixed(2),waitedAtRed,releasedOnGreen,hardStops,longestStop:Math.max(...longest).toFixed(1),minTravel:Math.round(Math.min(...travel)),worstHeadingStepDeg:+(worstTurn*180/Math.PI).toFixed(2),worstCayHeadingStepDeg:+(worstCayTurn*180/Math.PI).toFixed(2),closestFollowingGap:+worstGap.toFixed(2),worstOverlap:+worstOverlap.toFixed(3),lampUploads:a.signals.lamps.stats.uploads}));
  assert(crossings>300,'cars keep crossing signalled junctions');assert.equal(ranRed,0,'no car crosses a stop line on red (after the all-red clearance)');
  assert(waitedAtRed>50&&releasedOnGreen>50,'cars wait at red and move off on green');
+ console.log('     ',JSON.stringify({passedHeads,passedRed,bothOpen,maxQueue,queueGapMin:+queueGapMin.toFixed(2),queueGapMax:+queueGapMax.toFixed(2)}));
+ assert(passedHeads>300&&passedRed===0,'no vehicle drives past a head that shows red: '+passedRed);assert.equal(bothOpen,0,'as painted, the two streets of a junction are never open together');
+ assert(maxQueue>=2,'real queues form at red');assert(queueGapMin>1.2&&queueGapMax<2.2,`a queue holds its gaps: ${queueGapMin.toFixed(2)}..${queueGapMax.toFixed(2)} m`);
  assert(longest.every(t=>t<2*S.SIGNAL_CYCLE),`no deadlock: longest stop ${Math.max(...longest).toFixed(1)} s`);assert(travel.every(d=>d>30*60*1.2),'every vehicle keeps making progress');
  assert(worstTurn<.06,'town: the heading never snaps (it used to kink ~0.59 rad at both ends of every join)');
- // The causeway meets the roundabout's west arm at a hook the road graph forces (arrive heading north-east, leave heading south):
- // taken at a crawl by the yaw-rate limit, still far from the old snap.
+ // Coral Cay: the sharpest heading change left is the U-turn at the boulevard's dead end (a 2 m radius between the two lanes,
+ // taken at walking pace). The causeway's entry to the roundabout is an ordinary right turn since it joins at the ring node its
+ // arm really meets (lib/town/cayTraffic.ts, checked in tests/cay-traffic.cjs).
  assert(worstCayTurn<.13,'cay: no snap at the roundabout entries either');assert(worstGap>.6,'a following vehicle keeps its distance: '+worstGap.toFixed(2));
  assert.equal(lampErrors,0,'the lamps show what the signal model says');assert(a.signals.lamps.mesh.visible,'drawn while a signal is in range');
  {const uploads=a.signals.lamps.stats.uploads;for(let i=0;i<600;i++)a.update(dt,far,still);assert(!a.signals.lamps.mesh.visible&&a.signals.lamps.stats.uploads===uploads,'no lamp draw and no upload when every signal is over 130 m away (Coral Cay, the stadium)');}assert(a.signals.lamps.stats.uploads<30*60*5,'lamp colours upload only on a change');a.dispose();
@@ -123,5 +140,40 @@ ok('7. vehicles: one mesh, one material, one shadow caster each; every style und
  a.setTimeOfDay('night');assert(a.cars.every(c=>c.look.lamp.x>1),'headlamps on at night');a.setTimeOfDay('day');assert(a.cars.every(c=>c.look.lamp.x<.3));a.dispose();
  const src=fs.readFileSync('lib/town/world.ts','utf8');assert(!/signalLenses|signalColors/.test(src)&&/signalHeads\.push\(/.test(src),'world.ts no longer builds lens cylinders; it reports the heads');
  const town=fs.readFileSync('components/Town.tsx','utf8');assert(town.includes('createStreetTraffic(scene,world.obstacles,world.roads,rideRamps,world.signalHeads)')&&town.includes('streetTraffic.setTimeOfDay(timeRef.current)')&&town.includes('people:islandNpcs.entries'),'Town wiring');
+});
+ok('8. feel: the body leans OUT of a bend and dips under braking, on wheels that stay on the road; indicators on the turning side',()=>{
+ const {traffic:a}=fixture(island),dt=1/60,still2={vx:0,vz:0,reduced:false,onCrash(){}},over={x:60,y:40,z:-40};
+ let out=0,into=0,dive=0,rise=0,lift=0,blinkOK=0,blinkWrong=0,grounded=true;const last=a.cars.map(()=>({side:0,at:-9}));
+ for(let tick=0;tick<8*3600;tick++){a.update(dt,over,still2);const clock=a.signals.clock;a.cars.forEach((c,i)=>{const p=c.group.position,r=c.group.rotation;if((p.x-over.x)**2+(p.z-over.z)**2>=10000)return;
+   // +x is the vehicle's left (forward +z, up +y). yawRate > 0 turns left; leaning out lifts the left side: rotation.z > 0.
+   if(Math.abs(c.yawRate)>.4&&c.v>1.5&&Math.abs(r.z)>.004){if(Math.sign(r.z)===Math.sign(c.yawRate))out++;else into++;}
+   if(c.accel<-2&&Math.abs(r.x)>.004){if(r.x>0)dive++;else rise++;}if(c.accel>1.5&&r.x<-.004)lift++;
+   if(p.y!==0||c.look.wheel.z!==r.x||c.look.lamp.w!==r.z)grounded=false;assert(Math.abs(r.x)<.04&&Math.abs(r.z)<.05,'the pitch and roll stay small');
+   const z=c.look.lamp.z;if(z!==0){last[i].side=Math.sign(z);last[i].at=clock;}
+   if(p.x<228&&Math.abs(c.yawRate)>.5&&c.v>1&&clock-last[i].at<.5){if(last[i].side===Math.sign(c.yawRate))blinkOK++;else blinkWrong++;}});}
+ console.log('     ',JSON.stringify({leanOut:out,leanIn:into,noseDown:dive,noseUpBraking:rise,noseUpPullingAway:lift,indicatorRightSide:blinkOK,indicatorWrongSide:blinkWrong}));
+ assert(out>500&&into===0,'the body rolls out of the bend, never into it');/* the pitch is a soft spring: for a few frames after pulling away turns into braking the nose is still on its way down */assert(dive>500&&rise<dive*.03&&lift>500,'nose down under braking, up pulling away');
+ assert(grounded,'the body tilts on its wheels: the group stays at road height and the shader is given the same two angles to take back out of the wheels');
+ assert(blinkOK>500&&blinkWrong===0,'the indicator that blinks is on the side the vehicle turns to');a.dispose();
+ const src=fs.readFileSync('lib/graphics/trafficVehicles.ts','utf8');assert(src.includes('transformed.y+=aPart.z*uWheel.z-aPart.x*uLamp.w')&&src.includes('max(uLamp.z,0.):max(-uLamp.z,0.)'),'wheel vertices undo the body pitch and roll; one signed uniform drives both indicators');
+});
+ok('9. lamps: full colour (no tone mapping), darker unlit lamps at night, and they follow a kicked signal head with no extra draw',()=>{
+ const {traffic:a,S}=fixture(island),lamps=a.signals.lamps,mesh=lamps.mesh,over={x:60,y:40,z:-40},c=new T.Color();
+ assert(mesh.material.toneMapped===false&&mesh.material.fog===false&&!mesh.material.transparent,'unlit, opaque, no tone mapping, no fog');
+ for(let i=0;i<30;i++)a.update(1/60,over,still);const k=a.signals.headNode.findIndex((n,i)=>n>=0&&lamps.shown[i]===S.RED);assert(k>=0);
+ mesh.getColorAt(k*3,c);const litRed=c.r;mesh.getColorAt(k*3+2,c);const dimDay=c.g;assert(litRed>.9,'a lit lamp is at full strength');
+ a.setTimeOfDay('night');for(let i=0;i<30;i++)a.update(1/60,over,still);mesh.getColorAt(k*3,c);assert(c.r===litRed);mesh.getColorAt(k*3+2,c);assert(c.g<dimDay*.6,'unlit lamps go darker at night, so the lit one stands out');
+ // The sway: lib/graphics/propReactions.ts tells followers where a point of the reacting prop is this frame, then null at rest.
+ const P=loader()('lib/graphics/propReactions.ts'),h=a.signals.heads[k],attribute=new T.BufferAttribute(new Float32Array([h.x,0,h.z,h.x,7,h.z,h.x,5.5,h.z]),3);
+ const props=P.createPropReactions([{kind:'signal',parts:[{attribute,start:0,count:3}],min:{x:h.x-1,y:0,z:h.z-1},max:{x:h.x+1,y:7,z:h.z+1}}]);
+ assert(props.follow('signal',h.x,h.z,move=>lamps.sway(k,move))&&!props.follow('signal',h.x+50,h.z,()=>{}),'followers attach to the prop whose bounds hold the point');
+ const rest=Array.from(mesh.instanceMatrix.array.slice(k*48,k*48+48)),others=Array.from(mesh.instanceMatrix.array.slice(0,k*48));
+ assert(props.hit(h.x,1,h.z,14,3),'the kick lands');let moved=0,follows=true;
+ for(let i=0;i<30;i++){props.update(1/60);const m=mesh.instanceMatrix.array,vertex=attribute.array;moved=Math.max(moved,Math.hypot(m[k*48+12]-rest[12],m[k*48+14]-rest[14]));
+  /* the head's own vertex at lamp height (index 2) and the top lamp move together, to within the lamp's 0.37 m offset from the head centre */if(Math.abs((m[k*48+12]-rest[12])-(vertex[6]-h.x))>.02||Math.abs((m[k*48+14]-rest[14])-(vertex[8]-h.z))>.02)follows=false;}
+ assert(moved>.03,'the lamps move with the head: '+moved.toFixed(3));assert(follows,'by the same amount as the head they sit on');
+ for(let i=0;i<60;i++)props.update(1/60);assert.deepEqual(Array.from(mesh.instanceMatrix.array.slice(k*48,k*48+48)),rest,'back exactly at rest when the sway ends');assert.deepEqual(Array.from(mesh.instanceMatrix.array.slice(0,k*48)),others,'no other lamp touched');
+ assert(lamps.stats.sways>0&&lamps.stats.sways<=60,'instance positions are written only during the sway');a.dispose();
+ const town=fs.readFileSync('components/Town.tsx','utf8');assert(town.includes("propReactions.follow('signal',h.x,h.z,move=>lamps.sway(i,move))"),'Town wires the lamps to the signal props');
 });
 console.log(`traffic-signals: ${checks} checks passed`);

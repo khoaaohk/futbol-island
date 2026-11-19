@@ -10,7 +10,9 @@ export const DRIVE={
  /** Room left in front of a person, m (from the bumper). */personGap:2.2,
  /** Speed through a right-angle turn, m/s. */turn:3.2,
  /** Speed through a U-turn at a dead end, m/s. */uTurn:2.2,
- /** A driver held by a townsperson standing in the lane for this long (s) edges past instead of jamming the town. */patience:8,
+ /** A driver held by a townsperson standing in the lane for this long (s) edges past instead of jamming the town. A last resort:
+  *  no townsperson's home, waypoint or route is on the asphalt (measured Nov 18 2026: 0 of 194), so this only happens to someone
+  *  knocked into the road, and 15 s gives them time to get up and walk off (it was 8 s). */patience:15,
 } as const;
 /** The fastest speed from which a stop (or a slow-down to `exit` m/s) within `gap` metres is comfortable. */
 export const stopSpeed=(gap:number,exit=0,brake:number=DRIVE.brake)=>gap<=0?exit:Math.sqrt(exit*exit+2*brake*gap);
