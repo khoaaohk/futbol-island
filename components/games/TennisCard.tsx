@@ -112,6 +112,8 @@ export function TennisHudChips({hud}:{hud:ArcadeHUD}){
   {hud.tennisSets&&<span className={styles.setChip}>{hud.tennisSets}</span>}
  </div>;
 }
+/** The score tag names a touch that went wrong in one word, so the next ball can fix it (the grade's own word; a clean touch needs none). */
+const GAIN_WORD:Record<string,string>={heavy:'HEAVY ',early:'EARLY ',late:'LATE ',stretched:'STRETCHED '};
 /** The touch multiplier in kid words (HUD chip on tours). */
 const MULT_WORD:Record<number,string>={1:'scrappy',2:'clean',3:'perfect',4:'golden'};
 /** Confetti pieces: left %, colour, delay (s). Twelve CSS pieces, one burst, card only (no canvas, no loop). */
@@ -139,7 +141,7 @@ export function TennisScoreboard({hud,tennis}:{hud:ArcadeHUD;tennis:TennisState|
  const gain=useRef({touch:0,ring:0,id:0,kind:'',text:''});
  if(tennis){const g=gain.current;
   if(tennis.bonusEvents!==g.ring){if(tennis.bonusEvents>g.ring&&tennis.bonusGain>0){g.id++;g.kind='ring';g.text=`RING +${tennis.bonusGain}`;}g.ring=tennis.bonusEvents;g.touch=tennis.tourEvents;}
-  else if(tennis.tourEvents!==g.touch){if(tennis.tourEvents>g.touch&&tennis.tourGain>0){const m=tennis.phase==='rally'?tennis.touchMult:0;g.id++;g.kind=m>=4?'gold':m===3?'perfect':m===2?'clean':m===1?'plain':'win';g.text=`${m>=4?'GOLDEN ':m===3?'PERFECT ':''}+${tennis.tourGain}`;}else if(tennis.tourEvents<g.touch)g.kind='';g.touch=tennis.tourEvents;}}
+  else if(tennis.tourEvents!==g.touch){if(tennis.tourEvents>g.touch&&tennis.tourGain>0){const m=tennis.phase==='rally'?tennis.touchMult:0;g.id++;g.kind=m>=4?'gold':m===3?'perfect':m===2?'clean':m===1?'plain':'win';g.text=`${m>=4?'GOLDEN ':m===3?'PERFECT ':m?GAIN_WORD[tennis.touchGrade]??'':''}+${tennis.tourGain}`;}else if(tennis.tourEvents<g.touch)g.kind='';g.touch=tennis.tourEvents;}}
  if(!tennis)return null;
  const court=tennis.tour?TENNIS_TOURS[tennis.tour-1]:TENNIS_COURTS[Math.max(0,Math.min(TENNIS_COURTS.length-1,tennis.level-1))],venue=tennis.tour&&tennis.matchesWon%9!==0?tennisVenueFor(tennis.venueStop,0):tennisVenueFor(tennis.level,tennis.tour);/* endless: a tour walks the stops too */
  const rank=tennisRampRow(tennis.match).rank,balls=tennisRunLives(tennis);
@@ -154,7 +156,7 @@ export function TennisScoreboard({hud,tennis}:{hud:ArcadeHUD;tennis:TennisState|
   {tennis.tour?<div className={skin.sbRow} data-side="you"><span className={skin.sbName}>{court.name}</span><span/><b className={skin.sbSlat} data-wide key={tennis.tourEvents}>{tennis.tourScore}</b></div>
    :<>{row('you','You')}{row('rival',titleCase(court.rival))}</>}
   <div className={skin.sbFoot} aria-hidden="true">
-   <span className={skin.sbRally} data-on={rally>=2||undefined} data-hot={rally>=10||undefined} data-best={beat||undefined}>{beat?'Best':'Rally'} <b>{rally>=2?rally:0}</b></span>
+   <span className={skin.sbRally} data-on={rally>=2||undefined} data-hot={rally>=10||undefined} data-best={beat||undefined}>{beat?'Best':'Rally'} <b key={rally>=2?rally:0} data-tick={rally>=2||undefined}>{rally>=2?rally:0}</b></span>
    {!tennis.tour&&<span className={skin.sbRun} data-tennis-run-score><b key={tennis.tourEvents}>{tennis.tourScore}</b><small>pts</small></span>}
    <span className={skin.sbWind} data-dir={wind<0?'left':'right'} data-strength={strength} data-tennis-wind><svg viewBox="0 0 26 14" aria-hidden="true"><path d="M13 1 L25 4 L13 7 Z M12 0 h1.6 v14 h-1.6 Z"/></svg>{strength?'Wind':'Calm'}</span>
   </div>

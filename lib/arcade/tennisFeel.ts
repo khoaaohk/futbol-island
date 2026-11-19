@@ -28,6 +28,8 @@ export const TENNIS_SPACE_COLOR='#19b5a5';
 export const TENNIS_BOARD_BAND:Record<string,string>={'#73fff1':'#ffc83a','#ffe084':'#ffc83a','#ffc93c':'#ffc83a','#ff9fc8':'#f0452e','#ffc0e8':'#f0452e','#ff8a8a':'#f0452e'};
 /** Rival call-out text, from the player's view (camera looks up the court: -x is screen-left). */
 export function tennisIntentLabel(shot:string|null,x:number){return shot==='drop'?'SHORT BALL!':shot==='lob'?'HIGH LOB!':x<0?'◀ YOUR LEFT':'YOUR RIGHT ▶';}
+/** A ball that lands this close outside a Gold Ring is a near miss (the ring shivers). */
+export const TENNIS_RING_NEAR=.7;
 /** A ball that lands inside the court within this many metres of a side line or the baseline is "on the line". */
 export const TENNIS_LINE_BALL=.3;
 export const tennisLineBall=(x:number,y:number)=>Math.abs(x)<=5&&Math.abs(y)<=8&&(Math.abs(x)>=5-TENNIS_LINE_BALL||Math.abs(y)>=8-TENNIS_LINE_BALL);
@@ -119,7 +121,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
  // Court rings are cells of the shared ink decal sheet (a paper band with an ink keyline), so they read on every surface.
  const sheet=tennisAtlas(scene),inkRing=(r:number,color:string,opacity:number)=>{const g=tennisAtlasUv(new T.PlaneGeometry(2*r/.766,2*r/.766),TENNIS_ATLAS.ring);g.rotateX(-Math.PI/2);return new T.Mesh(g,new T.MeshBasicMaterial({map:sheet,color,transparent:true,opacity,depthWrite:false,toneMapped:false}));};
  const target=inkRing(TENNIS_DRILL.radius-.08,'#ffc83a',1);
- const TARGET_OFF=new T.Color('#ffc83a'),TARGET_ON=new T.Color('#fff3d6');let targetOn=false,ringShown=0,ringHit=0,ringAge=0;
+ const TARGET_OFF=new T.Color('#ffc83a'),TARGET_ON=new T.Color('#fff3d6');let targetOn=false,ringShown=0,ringHit=0,ringAge=0,ringMiss=0;
  const bonus=(()=>{const size=2*TENNIS_BONUS.radius/.75,g=tennisAtlasUv(new T.PlaneGeometry(size,size),TENNIS_ATLAS.bounce);g.rotateX(-Math.PI/2);return new T.Mesh(g,new T.MeshBasicMaterial({map:sheet,color:'#ffc83a',transparent:true,depthWrite:false,toneMapped:false}));})();bonus.position.y=.042;bonus.name='tennis-gold-ring';bonus.visible=false;bonus.renderOrder=2;scene.add(bonus);
  target.position.set(0,.04,-4.6);target.name='tennis-drill-target';target.visible=false;target.renderOrder=2;scene.add(target);
  // Flight read: one ring, shown only while an incoming ball is in the air (+1 draw then). Red = flying out, let it go.
@@ -134,7 +136,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
  const arena=createTennisArena(stage,tennis);
  // Plant / skid reads and celebrations (pooled scalars, no allocation).
  const plantAge=new Float32Array([1,1]),peakSpeed=new Float32Array(2),plantCool=new Float32Array(2);let cheerAge=9,youRun=0,rivalRun=0,matchSeen=-1;
- function reset(){ringShown=tennis.bonusShows;ringHit=tennis.bonusEvents;ringAge=0;rallyBest=-1;rallyBestSeen=false;endSeen=tennis.matchEvents;matchNo=tennis.match;tourSeen=tennis.tourEvents;livesSeen=tennis.tourLives;heatSeen=tennis.tourHeat;kickSeen=tennis.kickCount;bounceSeen=tennis.bounceEvents;netSeen=tennis.netEvents;pointSeen=tennis.pointsPlayed;setSeen=tennis.setEvents;windSeen=-1;planSeen=false;hitStop=netWobble=netAge=netAmp=lastRallyCall=realDt=0;wrongSeen=tennis.wrongFooted;hop.fill(0);hopAge.fill(1);
+ function reset(){ringMiss=0;ringShown=tennis.bonusShows;ringHit=tennis.bonusEvents;ringAge=0;rallyBest=-1;rallyBestSeen=false;endSeen=tennis.matchEvents;matchNo=tennis.match;tourSeen=tennis.tourEvents;livesSeen=tennis.tourLives;heatSeen=tennis.tourHeat;kickSeen=tennis.kickCount;bounceSeen=tennis.bounceEvents;netSeen=tennis.netEvents;pointSeen=tennis.pointsPlayed;setSeen=tennis.setEvents;windSeen=-1;planSeen=false;hitStop=netWobble=netAge=netAmp=lastRallyCall=realDt=0;wrongSeen=tennis.wrongFooted;hop.fill(0);hopAge.fill(1);
   trapSeen=tennis.trapEvents;targetSeen=tennis.targetEvents;goldSeen=false;fakeSeen=false;fakeAge=1;tempoSeen=0;introLevel=0;nudgeSeen=0;if(nudgeLevel!==tennis.level){nudgeLevel=tennis.level;nudges=0;}
   for(const l of[touch,intent,banner]){l.mesh.visible=false;l.life=0;}arena.reset();plantAge.fill(1);peakSpeed.fill(0);plantCool.fill(0);cheerAge=9;youRun=rivalRun=0;matchSeen=-1;stalk.visible=false;spot.visible=false;spotKick=-1;space.visible=false;spaceAge=0;spaceSide=0;tireSeen=false;outSeen=tennis.outEvents;if(net)net.position.z=0;if(tape)tape.position.z=0;}
  /** Scales the simulation step: returns 0 while a hit-stop holds the contact frame. */
@@ -175,6 +177,8 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
    draw(banner,`AIM ${arrow} AWAY FROM IT`,'#ff9fc8',stage.mobile?`Push the stick ${arrow} as you kick`:`Hold ${side<0?'←':'→'} as you kick`);show(banner,0,2.3,-1.5,1.7,.2);emit('tennis:coach');}
   if(s.bounceEvents!==bounceSeen){bounceSeen=s.bounceEvents;const sand=tennisCourtOf(s).surface==='sand';emit(`tennis:bounce:${s.fxLandI.toFixed(2)}:${b.y>0?'you':'rival'}:${sand?'sand':'hard'}:${s.rally}`);if(sand)stage.burst?.(b.x,.06,b.y,.35);
    // On the line (Nov 18 2026): your ball's first bounce inside the last `TENNIS_LINE_BALL` metres of the rival's court kicks up chalk and a bright tick.
+   // So close: your ball lands just outside a Gold Ring that is still up. The ring shivers and two soft ticks fall (no points).
+   if(s.bonusOn&&b.last==='you'&&b.bounces===1&&s.fxLandY<0&&Math.hypot(s.fxLandX-s.bonusX,s.fxLandY-s.bonusY)<=TENNIS_BONUS.radius+TENNIS_RING_NEAR){ringMiss=.4;emit('tennis:ringmiss');}
    if(b.last==='you'&&b.bounces===1&&s.fxLandY<0&&tennisLineBall(s.fxLandX,s.fxLandY)){emit('tennis:line');if(!stage.reduced)stage.burst?.(s.fxLandX,.08,s.fxLandY,.7);}}
   // Trap: name the touch (thigh/chest) and what it sets up.
   if(s.trapEvents!==trapSeen){trapSeen=s.trapEvents;const who=s[s.trapSide],chest=who.kickStyle===5;
@@ -244,7 +248,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   // reads as the plain yellow aim ring. It lands with a short overshoot, turns slowly, and grows with each ring already hit this rally. Sound: `tennis:ringup`, `tennis:ring:<n>`.
   if(tennis.bonusShows!==ringShown){ringShown=tennis.bonusShows;if(tennis.bonusOn){ringAge=0;emit('tennis:ringup:'+(tennis.bonusChain+1));}}
   if(tennis.bonusEvents!==ringHit){ringHit=tennis.bonusEvents;emit('tennis:ring:'+tennis.bonusChain);if(!stage.reduced){stage.burst?.(tennis.bonusX,.3,tennis.bonusY,1.2+tennis.bonusChain*.3);stage.burst?.(tennis.bonusX,.9,tennis.bonusY,.8);}}
-  bonus.visible=tennis.bonusOn&&tennis.phase==='rally';if(bonus.visible){ringAge+=ui;bonus.position.x=tennis.bonusX;bonus.position.z=tennis.bonusY;const pop=stage.reduced?1:ringAge<.3?1.45-.45*ringAge/.3:1+.06*Math.sin((ringAge-.3)*5);bonus.scale.setScalar((1+tennis.bonusChain*.1)*pop);bonus.rotation.y=stage.reduced?0:ringAge*.5;}
+  bonus.visible=tennis.bonusOn&&tennis.phase==='rally';if(bonus.visible){ringAge+=ui;bonus.position.x=tennis.bonusX;bonus.position.z=tennis.bonusY;const pop=stage.reduced?1:ringAge<.3?1.45-.45*ringAge/.3:1+.06*Math.sin((ringAge-.3)*5);bonus.scale.setScalar((1+tennis.bonusChain*.1)*pop);bonus.rotation.y=stage.reduced?0:ringAge*.5;if(ringMiss>0){ringMiss=Math.max(0,ringMiss-ui);if(!stage.reduced)bonus.position.x+=Math.sin(ringMiss*60)*.12*(ringMiss/.4);}}
   {const drill=tennisCourtOf(tennis).style==='drill';target.visible=drill&&tennis.phase!=='over';if(target.visible){target.position.x=tennis.targetX;target.position.z=tennis.targetY;
    // Lined up (the aim ring would land on it): the gold ring lights up, so "yellow on gold" is a visible yes.
    const on=tennisDrillLinedUp(tennis);target.scale.setScalar(on?1.12:1);if(on!==targetOn){targetOn=on;target.material.color.copy(on?TARGET_ON:TARGET_OFF);}}}

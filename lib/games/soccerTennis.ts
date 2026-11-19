@@ -239,7 +239,8 @@ export const TENNIS_GOLD=5;
  * `chainMax`) x the combo x the same scales a touch pays. The next ring waits `every` more touches. A lost or won point clears it.
  * The decision: finish into the open space now, or keep the rally alive and chase a bigger ring. Where it sits is a hash of the
  * point, rally and match counters (six spots: two sides x Drop / Kick / Lob depth), so it never draws from the seeded RNG and the
- * rival's play is unchanged. Board pace: 25 x 3 x combo 4 once per exchange stays under the per-second guard (lib/arcade/leaderboard.ts). */
+ * rival's play is unchanged. Board pace: a top ring (25 x 3 x combo 4) at most every `every` touches, on top of the best touch, stays under the per-second
+ * guard of lib/arcade/leaderboard.ts (tests/tennis-aaa.cjs holds the sum). */
 export const TENNIS_BONUS={from:4,every:3,points:25,chainMax:3,radius:1} as const;
 /** The touch whose depth reaches the Gold Ring (Drop short, Lob deep, Kick middle); '' when no ring is up. */
 export const tennisBonusShot=(s:Pick<TennisState,'bonusOn'|'bonusY'>):''|'auto'|'drop'|'lob'=>!s.bonusOn?'':s.bonusY>-3.5?'drop':s.bonusY<-6?'lob':'auto';

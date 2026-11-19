@@ -68,7 +68,9 @@ const placer=bot(false),ringer=bot(true);
 // 5. Wiring.
 {for(const cue of ["kind==='ringup'","kind==='ring'","kind==='line'","kind==='winner'"])assert(audio.includes(cue),'audio answers '+cue);
  assert(audio.includes("if(kind==='ring')haptic("),'a ring buzzes even when sound is off');
- assert(feel.includes("emit('tennis:ringup:'")&&feel.includes("emit('tennis:ring:'")&&feel.includes("emit('tennis:line')"));
+ assert(feel.includes("emit('tennis:ringup:'")&&feel.includes("emit('tennis:ring:'")&&feel.includes("emit('tennis:line')")&&feel.includes("emit('tennis:ringmiss')")&&audio.includes("kind==='ringmiss'"));
+ assert(card.includes("GAIN_WORD[tennis.touchGrade]")&&/heavy:'HEAVY ',early:'EARLY ',late:'LATE '/.test(card),'a poor touch is named in one word on the score tag');
+ assert(card.includes('data-tick=')&&css.includes('.sbRally b[data-tick]{animation:none}'),'the rally numeral ticks, still under reduced motion');
  assert(feel.includes("runOver||over&&won?'match':'point'"),'a won match gets the match call');
  assert(feel.includes("bonus.name='tennis-gold-ring'")&&feel.includes('TENNIS_ATLAS.bounce')&&feel.includes('bonus.geometry.dispose()'),'one pooled bullseye, disposed');
  assert(feel.includes("bonus.visible=tennis.bonusOn&&tennis.phase==='rally'"),'+1 draw only while a ring is up');
