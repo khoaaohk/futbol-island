@@ -391,7 +391,7 @@ export function createRollballView(canvas:HTMLCanvasElement,opts:{reduced:boolea
  type ModView={group:T.Group;disposed:boolean;geos:T.BufferGeometry[];extra:{dispose():void}[]};
  let world:World|null=null,mods:ModView[]=[];
  const dyn:{piece:number;mesh:T.Object3D}[]=[],plates:{i:number;cap:T.Mesh;ring:T.Mesh;timer?:T.Mesh}[]=[],posts:{i:number;g:T.Group;parts:T.Object3D[];fly:number;vel:T.Vector3[];wx:number;wz:number}[]=[];
- const objs:{i:number;g:T.Object3D}[]=[],picks:{i:number;g:T.Object3D}[]=[],pools:{i:number;m:T.Mesh}[]=[],fans:{i:number;blades:T.Object3D;streaks:T.Mesh}[]=[];
+ const objs:{i:number;g:T.Object3D}[]=[],picks:{i:number;g:T.Object3D;t:number}[]=[],pools:{i:number;m:T.Mesh}[]=[],fans:{i:number;blades:T.Object3D;streaks:T.Mesh}[]=[];
  const gates:{i:number;lamps:T.Mesh[]}[]=[],bridges:{i:number;mesh:T.InstancedMesh;n:number;step:number}[]=[],cables:{mat:T.ShaderMaterial;src:()=>boolean}[]=[];
  let net:{mesh:T.Mesh;base:Float32Array;t:number}|null=null,tufts:T.InstancedMesh|null=null,pebbles:T.InstancedMesh|null=null;
  function clearLevel(){for(const m of mods)disposeMod(m);mods=[];dyn.length=plates.length=posts.length=objs.length=picks.length=pools.length=fans.length=gates.length=bridges.length=cables.length=0;net=null;trail.count=0;trailN=0;
@@ -471,7 +471,7 @@ export function createRollballView(canvas:HTMLCanvasElement,opts:{reduced:boolea
     if(o.kind==='crate'){const gg=new T.Group(),m=new T.Mesh(G.box,M.crate);m.scale.setScalar(.9);m.castShadow=true;m.receiveShadow=true;const h=hull(G.box,1);h.scale.setScalar(.95);gg.add(m,h);g=gg;}
     else{const gg=new T.Group(),m=new T.Mesh(G.sphere,M.tball);m.scale.setScalar(o.r);m.castShadow=true;const band=new T.Mesh(G.ring,M.tballBand);band.scale.setScalar(o.r*1.9);band.rotation.y=Math.PI/2;const h=hull(G.sphere,1);h.scale.setScalar(o.r*1.1);gg.add(m,band,h);g=gg;}
     add(g);objs.push({i,g});}
-   for(let i=P.k0;i<P.k1;i++){const k=w.picks[i];let g:T.Object3D;if(k.kind==='star'){const gg=new T.Group(),m=new T.Mesh(G.star,M.gold);gg.add(m,hull(G.star,1.14));g=gg;}else g=whistle();g.position.set(k.x,k.y,k.z);add(g);picks.push({i,g});}
+   for(let i=P.k0;i<P.k1;i++){const k=w.picks[i];let g:T.Object3D;if(k.kind==='star'){const gg=new T.Group(),m=new T.Mesh(G.star,M.gold);gg.add(m,hull(G.star,1.14));g=gg;}else g=whistle();g.position.set(k.x,k.y,k.z);add(g);picks.push({i,g,t:0});}
    if(P.goal){const [gx,gz]=P.goal,gg=new T.Group(),gy=stillTop(w,gx,gz,mi,mi);const y0=gy>-Infinity?gy:0;
     for(const x of [-1.75,1.75]){const p=new T.Mesh(G.cyl,M.goalPost);p.scale.set(.1,1.5,.1);p.position.set(gx+x,y0+.75,gz-.55);p.castShadow=true;gg.add(p);const s=new T.Mesh(G.cyl8,M.goalPost);s.scale.set(.04,1.6,.04);s.rotation.x=-.75;s.position.set(gx+x,y0+.85,gz+.2);gg.add(s);}
     const bar=new T.Mesh(G.cyl,M.goalPost);bar.scale.set(.1,3.6,.1);bar.rotation.z=Math.PI/2;bar.position.set(gx,y0+1.5,gz-.55);bar.castShadow=true;gg.add(bar);
@@ -504,7 +504,8 @@ export function createRollballView(canvas:HTMLCanvasElement,opts:{reduced:boolea
    case 'close':puff(dust,e.x,e.y,e.z,6,2,.18,0x7dffb0);break;
    case 'gate':if(e.b===1)puff(dust,e.x,e.y+.1,e.z,5,1.2,.32);break;
    case 'star':puff(dust,e.x,e.y,e.z,6,2.2,.2,0xffe27a);break;
-   case 'respawn':case 'level':trail.count=0;trailN=0;heat=0;boostT=0;break;
+   case 'respawn':squash=reduced?0:.22;puff(dust,e.x,e.y,e.z,5,1.5,.2,0xfffdf6);trail.count=0;trailN=0;heat=0;boostT=0;break;
+   case 'level':trail.count=0;trailN=0;heat=0;boostT=0;break;
   }
  }
 function render(s:RollState,now:number){
@@ -567,7 +568,9 @@ function render(s:RollState,now:number){
    if(!p.down&&p.kind==='cone'&&po.fly>0)po.fly=0;
   }
   for(const o of objs){const ob=w.objs[o.i];o.g.position.set(ob.x,ob.y,ob.z);if(ob.kind==='tball')o.g.rotation.x=ob.spin;}
-  for(const k of picks){const p=w.picks[k.i];k.g.visible=!p.taken;if(!p.taken){k.g.rotation.y=now/(p.kind==='star'?380:600);k.g.position.y=p.y+Math.sin(now/300+k.i)*.08;}}
+  // a pickup taken leaps, spins up and shrinks away (follow-through), instead of blinking out
+  for(const k of picks){const p=w.picks[k.i];if(!p.taken){k.t=0;k.g.visible=true;k.g.scale.setScalar(1);k.g.rotation.y=now/(p.kind==='star'?380:600);k.g.position.y=p.y+Math.sin(now/300+k.i)*.08;}
+   else if(k.t<1&&!reduced){k.t=Math.min(1,k.t+dt*3.2);const e=1-(1-k.t)*(1-k.t);k.g.visible=k.t<1;k.g.position.y=p.y+e*1.1;k.g.rotation.y+=dt*22;k.g.scale.setScalar(k.t<.25?1+k.t*1.6:1.4*(1-(k.t-.25)/.75));}else k.g.visible=false;}
   for(const p of pools){const r=w.recvs[p.i];p.m.position.y=r.wy-r.open*.9;p.m.visible=r.open<.98;}
   for(const f of fans){const r=w.recvs[f.i],on=r.open>.5;f.blades.rotation.y+=dt*(on?22:.4);f.streaks.visible=on&&!reduced;if(on){const mt=M.streak.map;if(mt)mt.offset.y=-now/400;}}
   if(net&&net.t<1.2){net.t+=dt;const a=net.mesh.geometry.getAttribute('position') as T.BufferAttribute,arr=a.array as Float32Array;const k=Math.max(0,1-net.t/1.2),bx=b.x-net.mesh.position.x,by=b.y-net.mesh.position.y;

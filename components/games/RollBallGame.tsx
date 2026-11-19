@@ -229,6 +229,7 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
    <div className={styles.words} aria-live="polite">{words.map(w=><span key={w.id} className={styles.word} style={{left:w.x,top:w.y}} onAnimationEnd={e=>{if(e.target===e.currentTarget)setWords(l=>l.filter(x=>x.id!==w.id));}}>
     <ComicBurst word={w.text} size={w.text.length>10?17:22} tilt={w.id%2?-4:3} color={w.tone==='red'?'#f0452e':w.tone==='teal'?'#19b5a5':w.tone==='paper'?'#fff3d6':'#ffc83a'} fill={w.tone==='red'?'#fff3d6':undefined}/>
     </span>)}{words.map(w=>w.pts>0&&<b key={`p${w.id}`} className={`${comicNumeral} ${styles.pts}`} data-rollball-pts style={{left:w.x,top:w.y+30,'--fx':`${w.fx}px`,'--fy':`${w.fy-30}px`} as React.CSSProperties}>+{w.pts}</b>)}</div>
+   {live&&hud.hearts<RB.hearts&&<i className={styles.hurt} key={hud.hearts} aria-hidden="true"/>}
    {live&&tip&&<p className={styles.tip} key={tip.id} data-rollball-tip role="status" onAnimationEnd={()=>setTip(null)}>{tip.text}</p>}
   </div>
   <ArcadeTopBar game="rollball" className={styles.topBar} backTitle="Back to arcade" onBack={leave} value={live?hud.score:undefined} word="pts" bumpKey={hud.score} paused={phase==='paused'} canPause={live} onPause={()=>phase==='playing'?pause():resume()}/>

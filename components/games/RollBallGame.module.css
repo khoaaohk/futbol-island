@@ -36,6 +36,9 @@
 /* the points leave the word and fly up to the counter in the top bar (Nov 18 AAA pass) */
 .pts{--cm-numeral-size:30px;position:absolute;display:block;translate:-50% -50%;color:var(--cm-sun);-webkit-text-stroke:6px var(--cm-ink);paint-order:stroke fill;animation:rbFly .86s cubic-bezier(.5,0,.3,1) both}
 @keyframes rbFly{0%{scale:.4;opacity:0}14%{scale:1.15;opacity:1}38%{scale:1;translate:-50% -50%}92%{opacity:1}100%{scale:.55;opacity:0;translate:calc(-50% + var(--fx)) calc(-50% + var(--fy))}}
+/* a heart lost: the edges of the stage flash red once */
+.hurt{position:absolute;inset:0;z-index:2;pointer-events:none;box-shadow:inset 0 0 0 6px var(--cm-red,#f0452e),inset 0 0 70px 10px rgba(240,69,46,.55);animation:rbHurt .6s ease-out both}
+@keyframes rbHurt{0%{opacity:0}12%{opacity:1}100%{opacity:0;visibility:hidden}}
 /* a one-line lesson over the foot, shown once */
 .tip{position:absolute;z-index:3;left:50%;translate:-50% 0;bottom:calc(58px + env(safe-area-inset-bottom,0px));margin:0;padding:7px 12px 6px;border:3px solid var(--cm-ink);background:var(--cm-sun);box-shadow:3px 3px 0 var(--cm-ink);font:800 15px/1.2 var(--cm-ui);white-space:nowrap;rotate:-1.2deg;pointer-events:none;animation:rbTip 3.6s ease-out both}
 @keyframes rbTip{0%{opacity:0;scale:.7}5%{opacity:1;scale:1.06}9%{scale:1}88%{opacity:1}100%{opacity:0;visibility:hidden}}
@@ -90,7 +93,7 @@
 @media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.score{--cm-numeral-size:52px}.coach{display:none}.art{width:min(200px,60%)}}
 @media (max-height:600px){.game [data-rollball-card=start] .chips{display:none}.fact{display:none}}
 @media (max-width:374px){.strip{gap:6px}.stripItem{font-size:17px}.heart{width:19px;height:17px}.clock{min-width:80px}.clock b{--cm-numeral-size:30px}}
-@media (prefers-reduced-motion:reduce){.pts{animation:rbPuzzleFade .8s linear both}.tip{rotate:none;animation:rbPuzzleFade 3.6s linear both}.streak{rotate:none}.clock[data-low="1"] b,.streak,.score[data-new-best]{animation:none}.word{animation-duration:.6s}}
+@media (prefers-reduced-motion:reduce){.hurt{display:none}.pts{animation:rbPuzzleFade .8s linear both}.tip{rotate:none;animation:rbPuzzleFade 3.6s linear both}.streak{rotate:none}.clock[data-low="1"] b,.streak,.score[data-new-best]{animation:none}.word{animation-duration:.6s}}
 
 /* Roll It In's own: the clock only shows from level 4, the puzzle name, the whistle chip, the retry button, the floating stick */
 .clock:not([data-on="1"]){visibility:hidden}
