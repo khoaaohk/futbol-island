@@ -4,6 +4,7 @@ import type {RunnerGame} from '@/lib/arcade/runnerGame';
 import {RUNNER_MODES,RUNNER_MODE_ORDER,defaultRunnerMode,isRunnerModeOpen,readRunnerRoutes,recordRunnerStars,readRunnerDaily,rememberRunnerMode,runnerKeepsOwnBest,runnerModeLockHint,runnerTierBest,selectRunnerMode,selectedRunnerMode,type RunnerModeId} from '@/lib/arcade/runnerModes';
 import {runnerFinishLine,runnerLessonTakeaway,runnerLossLine} from '@/lib/arcade/runnerHud';
 import {RunnerMissionCard} from './RunnerMissionCard';
+import {runnerChallengeRow} from '@/lib/arcade/runnerMissions';
 import styles from './RunnerMenu.module.css';
 import {takeModeLaunch,takeTodayLaunch} from '@/lib/arcade/arcadeToday';
 /** Nov 10 2026: a "Today in the arcade" row opens the menu on the Daily Run (when it is open), once per tap. */
@@ -95,6 +96,8 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
    </div>}
    {phase==='ready'&&<p className={styles.lineMode} data-runner-line>{m.line}{m.finish?` · ${m.finish} m rounds, endless`:''}{daily?(today?.counted?' · Practice':' · First run counts'):elite?' · own scoreboard':''}</p>}
    {hint&&phase==='ready'&&touch&&<p className={styles.hint}>Swipe left or right (or push the stick) to change lane. Big yellow button = shoot!</p>}
+   {/* Run challenge (Nov 18 2026): one extra goal for the next run, so a second run asks for something new. Hidden while the first-run hint shows. */}
+   {phase==='ready'&&!(hint&&touch)&&(()=>{const c=runnerChallengeRow();return <p className={styles.challenge} data-runner-challenge><b>This run</b><span>{c.label}</span><i>+{c.bonus}</i></p>;})()}
    {message&&<p className={styles.status} role="status">{message}</p>}
    <button className={styles.play} disabled={pending} onClick={play} data-runner-play>{paused?'Resume':over?(nextLabel&&nextLabel!=='Play again'?nextLabel:'Retry'):'Play'}</button>
    {!paused&&<div className={styles.row}>

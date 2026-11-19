@@ -109,3 +109,5 @@
 .next{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 12px;margin:6px 0 2px;font:800 14px/1.25 system-ui,sans-serif;color:var(--ink)}
 .next b{color:var(--red);font-weight:900}.next span+span{color:var(--red)}
 .hsSlot{margin:8px 0 0}.hsSlot:empty{display:none}
+/* Run challenge ticket (Nov 18 2026): ink label, paper body, sun-yellow stub. Square corners, hard border, no blur. */
+.challenge{display:flex;align-items:stretch;margin:10px 0 0;border:3px solid #231a2e;background:#fff3d6;color:#231a2e;font-size:13px;line-height:1.25;text-align:left}.challenge b{display:flex;align-items:center;padding:6px 8px;background:#231a2e;color:#fff3d6;font-size:11px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}.challenge span{flex:1;display:flex;align-items:center;padding:6px 8px;font-weight:700}.challenge i{display:flex;align-items:center;padding:6px 9px;border-left:3px solid #231a2e;background:#ffc83a;font-style:normal;font-weight:800;font-variant-numeric:tabular-nums}

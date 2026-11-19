@@ -78,4 +78,19 @@ ok('6. sound and HUD wiring',()=>{
  assert(fx.includes("kind==='golden'")&&fx.includes("kind==='ladder'"));assert(view.includes('if(o.ladder){')&&view.includes("goldTrail?'#ffc83a':RUNNER_PAPER"));
  assert(!/—/.test(audio.slice(audio.indexOf('Return ball (found silent'),audio.indexOf('Return ball (found silent')+900)));
 });
+ok('7. run challenge: a different extra goal each run, the same for everyone on the Daily Run, a small bonus once, nothing saved',()=>{
+ const M=load('lib/arcade/runnerMissions.ts'),C=M.RUNNER_RUN_CHALLENGES;assert(C.length>=6);assert(M.RUNNER_CHALLENGE_BONUS<=500,'too small to move a board');
+ const seen=new Set();for(let turn=0;turn<C.length;turn++)seen.add(M.runnerChallengeFor('warmup',turn).id);assert.equal(seen.size,C.length,'every challenge comes round');
+ assert.notEqual(M.runnerChallengeFor('warmup',3).id,M.runnerChallengeFor('warmup',4).id,'run 2 differs from run 1');
+ for(let turn=0;turn<C.length;turn++)assert(!M.runnerChallengeFor('classic',turn).line,'no ladder challenge on a route without a goal line');
+ assert.equal(M.runnerChallengeFor('daily',1,'2026-11-18').id,M.runnerChallengeFor('daily',9,'2026-11-18').id,'the Daily Run: one challenge for everyone that day');
+ let writes=0;const keep=globalThis.localStorage;globalThis.localStorage={getItem:k=>keep.getItem(k),setItem:(k,v)=>{writes++;keep.setItem(k,v);},removeItem:k=>keep.removeItem(k)};
+ try{const s=game('warmup');quiet(s);run(s,2);M.tickRunnerMissions(s);const row=M.runnerChallengeRow(s),c=C.find(x=>x.label===row.label);assert(c&&!row.done);
+  const before=s.score;s.goldenGoals=1;s.perfectDodges=2;s.ladders=1;s.streak=3;s.insideCuts=2;s.nearMisses=4;s.goldenShots=1;s.eventAt=-9;
+  for(let i=0;i<6;i++){s.eventAt=-9;M.tickRunnerMissions(s);}
+  assert(M.runnerChallengeRow(s).done);assert(s.score-before>=M.RUNNER_CHALLENGE_BONUS&&(s.score-before)%M.RUNNER_CHALLENGE_BONUS===0&&s.score-before===M.RUNNER_CHALLENGE_BONUS,'paid once');
+  const next=game('warmup');quiet(next);M.tickRunnerMissions(next);assert.notEqual(M.runnerChallengeRow(next).label,row.label,'the next run gets the next challenge');
+ }finally{globalThis.localStorage=keep;}
+ const card=read('components/games/RunnerMissionCard.tsx'),menu=read('components/games/RunnerMenu.tsx');assert(card.includes('data-runner-challenge')&&menu.includes('data-runner-challenge'));
+});
 if(failed){console.log(failed+' failed');process.exit(1);}console.log('runner-aaa-nov18 ok');

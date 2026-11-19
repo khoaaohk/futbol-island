@@ -1,4 +1,5 @@
 import type {RunnerGame} from './runnerGame';
+import {RUNNER_MODES,runnerDailySeed,selectedRunnerMode,type RunnerModeId} from './runnerModes';
 
 /**
  * Breakaway Run missions: three football goals at a time (one star each), in the
@@ -66,25 +67,50 @@ export function resetRunnerProgress(p?:RunnerProgress){cache=p?{...p,done:[...p.
 export const runnerMissionSet=(set:number)=>RUNNER_MISSION_SETS[set%RUNNER_MISSION_SETS.length];
 /** Ball unlocked count: one per completed set, capped at the catalogue. */
 export const runnerBallFor=(p:RunnerProgress)=>RUNNER_BALLS[Math.min(RUNNER_BALLS.length-1,p.set)];
-type RunState={runId:number;set:number;ids:readonly RunnerMissionId[];earned:RunnerMissionId[]};
+/**
+ * Run challenge (Nov 18 2026, AAA pass): one extra goal for THIS run only, so a second run asks for something the first did not.
+ * It rotates run by run (the Daily Run gives everyone the same one that day), pays a small flat bonus once (far too small to move a
+ * board), and is never saved: no star, no storage write. `line` = needs a goal line (the ball ladder lives on the final hill).
+ */
+export const RUNNER_CHALLENGE_BONUS=500;
+export const RUNNER_RUN_CHALLENGES:readonly {id:string;label:string;target:number;value:(s:RunnerGame)=>number;line?:boolean}[]=[
+ {id:'goldenGoal',label:'Score a golden goal',target:1,value:s=>s.goldenGoals},
+ {id:'perfect2',label:'Make 2 perfect dodges',target:2,value:s=>s.perfectDodges},
+ {id:'ladder',label:'Catch every ball on a ball ladder',target:1,value:s=>s.ladders,line:true},
+ {id:'streak3',label:'Score 3 goals in a row',target:3,value:s=>s.streak},
+ {id:'inside2',label:'Cut inside on 2 bends',target:2,value:s=>s.insideCuts},
+ {id:'near4',label:'Beat 4 tackles by cutting away late',target:4,value:s=>s.nearMisses},
+ {id:'goldenClear',label:'Fire a golden shot',target:1,value:s=>s.goldenShots},
+];
+let challengeBase=-1,challengeRuns=0;
+/** The challenge a run on this route would get: `turn` runs into the session (the day's own pick on the Daily Run); a route without a goal line skips the ladder. */
+export function runnerChallengeFor(mode:RunnerModeId,turn:number,day=''){const n=RUNNER_RUN_CHALLENGES.length;let i=((mode==='daily'&&day?runnerDailySeed(day):turn)%n+n)%n;if(RUNNER_RUN_CHALLENGES[i].line&&!RUNNER_MODES[mode].finish)i=(i+1)%n;return RUNNER_RUN_CHALLENGES[i];}
+const challengeTurn=()=>{if(challengeBase<0)challengeBase=Math.floor(Date.now()/86400000);return challengeBase+challengeRuns;};
+/** The run challenge row for the cards: the live run's own, or (before a run) the one the next run will get. */
+export function runnerChallengeRow(s?:RunnerGame):{label:string;done:boolean;progress:string;bonus:number}{
+ const r=s&&runs.get(s)?.runId===s.runId?runs.get(s):undefined,c=r?.challenge??runnerChallengeFor(selectedRunnerMode().id,challengeTurn(),s?.day),value=r&&s?Math.min(c.target,c.value(s)):0;
+ return{label:c.label,done:!!r?.challengeDone,progress:c.target>1&&r&&!r.challengeDone?`${value}/${c.target}`:'',bonus:RUNNER_CHALLENGE_BONUS};}
+type RunState={runId:number;set:number;ids:readonly RunnerMissionId[];earned:RunnerMissionId[];challenge:typeof RUNNER_RUN_CHALLENGES[number];challengeDone:boolean};
 const runs=new WeakMap<RunnerGame,RunState>();
 // Keyed by object AND run id: "Play again" resets the same object, which must start a fresh mission run
 // (the next set after a completed one, and a clean "this run" count).
-function run(s:RunnerGame){let r=runs.get(s);if(!r||r.runId!==s.runId){const p=readRunnerProgress();r={runId:s.runId,set:p.set,ids:runnerMissionSet(p.set),earned:[]};runs.set(s,r);}return r;}
+function run(s:RunnerGame){let r=runs.get(s);if(!r||r.runId!==s.runId){const p=readRunnerProgress();r={runId:s.runId,set:p.set,ids:runnerMissionSet(p.set),earned:[],challenge:runnerChallengeFor(s.mode,challengeTurn(),s.day),challengeDone:false};challengeRuns++;runs.set(s,r);}return r;}
 /** Called once per simulation frame. Completing a mission adds a star and a message;
  * finishing all three moves to the next set (used from the next run) and unlocks a ball. */
 export function tickRunnerMissions(s:RunnerGame){
  if(s.lives<=0)return;const r=run(s),p=readRunnerProgress();
- if(p.set!==r.set)return;
  // Never talk over a fresh teaching moment (a skill name, a goal): announce once it has been read.
  if(s.eventKind!=='mission'&&s.time-s.eventAt<1.2)return;
- for(const id of r.ids){if(p.done.includes(id))continue;const m=RUNNER_MISSIONS[id];if(m.value(s)<m.target)continue;
+ if(p.set===r.set)for(const id of r.ids){if(p.done.includes(id))continue;const m=RUNNER_MISSIONS[id];if(m.value(s)<m.target)continue;
   const done=[...p.done,id],complete=done.length>=r.ids.length,next:RunnerProgress={set:complete?p.set+1:p.set,done:complete?[]:done,stars:p.stars+1};
   r.earned.push(id);save(next);
   const ball=complete?RUNNER_BALLS[Math.min(RUNNER_BALLS.length-1,next.set)]:null;
   s.event++;s.eventKind='mission';s.eventX=s.x;s.eventZ=0;s.eventAt=s.time;
   s.message=ball?`★ MISSION SET COMPLETE! New ball unlocked: ${ball.name}.`:`★ MISSION: ${m.label}!`;
   return;}
+ // The run challenge: once per run, a flat bonus, nothing saved.
+ if(!r.challengeDone&&r.challenge.value(s)>=r.challenge.target){r.challengeDone=true;s.score+=RUNNER_CHALLENGE_BONUS;
+  s.event++;s.eventKind='mission';s.eventX=s.x;s.eventZ=0;s.eventAt=s.time;s.message=`★ RUN CHALLENGE: ${r.challenge.label}! +${RUNNER_CHALLENGE_BONUS}`;}
 }
 /** Short line for the full-time card. */
 export function runnerMissionSummary(s:RunnerGame){const r=run(s),p=readRunnerProgress();const total=r.set===p.set?p.done.length:3;return `★ ${r.earned.length} this run · set ${r.set+1}: ${total}/3`;}
