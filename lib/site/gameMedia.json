@@ -211,19 +211,19 @@
   "lineup": {
    "w": 332,
    "h": 720,
-   "seconds": 10.0,
-   "mp4": 190500,
-   "webm": 205989,
+   "seconds": 10,
+   "mp4": 332132,
+   "webm": 444538,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 26380
+    "bytes": 45612
    }
   },
   "trophydrop": {
    "w": 332,
    "h": 720,
-   "seconds": 10.0,
+   "seconds": 10,
    "mp4": 210777,
    "webm": 210729,
    "poster": {
@@ -235,7 +235,7 @@
   "rollball": {
    "w": 332,
    "h": 720,
-   "seconds": 10.0,
+   "seconds": 10,
    "mp4": 247383,
    "webm": 307838,
    "poster": {
@@ -247,7 +247,7 @@
   "ballblaster": {
    "w": 332,
    "h": 720,
-   "seconds": 10.0,
+   "seconds": 10,
    "mp4": 227197,
    "webm": 369124,
    "poster": {
@@ -467,19 +467,19 @@
     "file": "lineup-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 26380
+    "bytes": 45612
    },
    {
     "file": "lineup-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 30730
+    "bytes": 55488
    },
    {
     "file": "lineup-3.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 37850
+    "bytes": 51524
    }
   ],
   "trophydrop": [
