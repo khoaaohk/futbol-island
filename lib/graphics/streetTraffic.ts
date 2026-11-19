@@ -2,12 +2,10 @@ import {createTruckRampPose} from '../town/truckRampPose';
 import type {RideRamp} from '../town/rideRamps';
 import {truckGoalClear} from '../town/truckCollisions';
 import {recordExploreActivity} from '../town/exploreActivity';
-import {createTrafficTangentCache} from '../town/trafficTangentCache';
 import {canSeparateVehicle,vehicleOverlap,type VehicleFootprint} from '../town/trafficSeparation';
 import {createTrafficRouteSamples} from '../town/trafficRouteSamples';
 import {TRAVEL_MODES} from '../town/travelModes';
 import * as T from 'three';
-import {batchRigidMeshes} from './batchMeshes';
 import {characterStyle} from './characterStyle';
 import {createTruckLandingGlowAssets} from './truckLandingGlow';
 import {buildRoadNetwork,type TrafficRoad,type RoadNode} from '../town/roadNetwork';
@@ -15,42 +13,110 @@ import {blocked,type Obstacle} from '../town/simulation';
 import {createObstacleGrid} from '../town/obstacleGrid';
 import {findTruckRoadRoute,truckRoadRouteSearch} from '../town/truckNavigation';
 import {extendRoadNetworkWithCay} from '../town/cayTraffic';
+import {DRIVE,stopSpeed,stepSpeed,turnSpeed,personStopGap,personInLane} from '../town/trafficDriving';
+import {YELLOW,signalLight,signalStop,signalledNodes,flashOn,type SignalHead,type SignalAxis} from '../town/trafficSignals';
+import {buildVehicleGeometry,createVehicleMaterial,CAR_STYLES,WHEEL_RADIUS} from './trafficVehicles';
+import {createTrafficSignalLamps} from './trafficSignalLamps';
+/** A townsperson the traffic stops for: anything with a position (islandNpcs.entries). */
+export type TrafficPerson={position:{x:number;y:number;z:number}};
+/** Stop line: STOP_ZONE metres before a route's end. Routes end TURN_MARGIN short of the node, so a waiting vehicle's centre is
+ *  10.5 m from the junction centre and its nose about 2 m short of the crossing stripes. A vehicle that has the box keeps it until
+ *  it is LEAVE_CLEAR metres past the end of its turn (6.5 m past the centre going straight on, its tail clear of the crossing
+ *  lanes). Letting go sooner (a flat 8 m of route) locked the island within minutes once the stop lines moved this close. */
+const STOP_ZONE=5.5,LEAVE_CLEAR=1.5,TURN_MARGIN=5,LANE=2,MAX_YAW_RATE=2.2;
 /** Nine cars (two start at Coral Cay's end of the causeway: the roundabout's west arm and the boulevard; the causeway itself is
- *  one road link, so no node sits on it) and two collectible pickup trucks navigate the authored road graph, yielding to visitors and traffic. */
-export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:TrafficRoad[],ramps:RideRamp[]=[]){
+ *  one road link, so no node sits on it) and two collectible pickup trucks navigate the authored road graph, yielding to visitors and traffic.
+ *  Nov 18 2026: every vehicle has a speed that eases toward the lowest of its limits (lib/town/trafficDriving.ts), keeps a
+ *  following distance, slows for bends, stops for people and obeys the traffic lights (lib/town/trafficSignals.ts). Each vehicle
+ *  is one merged mesh (lib/graphics/trafficVehicles.ts); all signal lamps are one instanced draw (trafficSignalLamps.ts). */
+export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:TrafficRoad[],ramps:RideRamp[]=[],signalHeads:readonly SignalHead[]=[]){
  const comments=["Watch where you're going!","Dude, come on!","Are you blind?","Hey! Eyes on the road!","Easy! This is not a racetrack!","Whoa! Give me some room!","I was right here!","Careful with the paint!","Brakes! Try the brakes!","You good? That was a bump!","My car is not a football!","A little space, please!","Come on, I just washed this!","Wrong way, my friend!","Save the tackles for the pitch!","Whoa there, island racer!","Next time, go around!","That is one way to say hello!"];
  const speechTextures:T.Texture[]=[];
  const root=new T.Group();root.name='island-street-cars';scene.add(root);
  const geometry:T.BufferGeometry[]=[],materials:T.Material[]=[];
- const black=new T.MeshStandardMaterial({color:'#303d3c'}),glass=new T.MeshStandardMaterial({color:'#769994',roughness:.35}),cream=new T.MeshStandardMaterial({color:'#efe1bd'});materials.push(black,glass,cream);
- const mesh=(parent:T.Group,g:T.BufferGeometry,m:T.Material,x:number,y:number,z:number)=>{geometry.push(g);const o=new T.Mesh(g,m);o.position.set(x,y,z);o.castShadow=o.receiveShadow=true;parent.add(o);return o;};
  const nodes=buildRoadNetwork(roads),usedStarts=new Set<number>();
  // Coral Cay (Sep 29 2026): the winding causeway and a one-way roundabout join the graph; `forbidden` keeps cars from
  // going the wrong way round the ring (lib/town/cayTraffic.ts).
  const cayTraffic=extendRoadNetworkWithCay(nodes),forbidden=cayTraffic?.forbidden??new Set<string>();
- const segment=(from:RoadNode,to:RoadNode,start?:T.Vector3)=>{const lane=cayTraffic?.laneCurve(from.id,to.id);if(lane){const points=lane.map(p=>new T.Vector3(p.x,0,p.z)),curve=new T.CurvePath<T.Vector3>();if(start)curve.add(new T.QuadraticBezierCurve3(start.clone(),new T.Vector3(from.x,0,from.z),points[0]));curve.add(new T.CatmullRomCurve3(points,false,'centripetal'));return curve;}
-  const dx=to.x-from.x,dz=to.z-from.z,length=Math.hypot(dx,dz),x=dx/length,z=dz/length,margin=Math.min(3,length*.25),entry=new T.Vector3(from.x+x*margin-z*2,0,from.z+z*margin+x*2),end=new T.Vector3(to.x-x*margin-z*2,0,to.z-z*margin+x*2),curve=new T.CurvePath<T.Vector3>();if(start)curve.add(new T.QuadraticBezierCurve3(start.clone(),new T.Vector3(from.x,0,from.z),entry));curve.add(new T.LineCurve3(entry,end));return curve;};
+ // Routes (Nov 18 2026): a lane 2 m right of the centre line, joined to the previous route by a cubic that leaves along the old
+ // heading and arrives along the new one. Straight on is a straight line, a right turn a 3 m arc round the kerb, a left turn a wide
+ // arc across the junction, a dead end a U-turn: the heading never snaps (it used to kink ~34 degrees at both ends of every join).
+ const joinFrom=new T.Vector3();
+ const segment=(from:RoadNode,to:RoadNode,start?:T.Vector3,heading?:{x:number;z:number})=>{
+  const curve=new T.CurvePath<T.Vector3>();let entry:T.Vector3,ex:number,ez:number,rest:T.Curve<T.Vector3>;
+  const lane=cayTraffic?.laneCurve(from.id,to.id);
+  if(lane){const points=lane.map(p=>new T.Vector3(p.x,0,p.z));entry=points[0];ex=points[1].x-entry.x;ez=points[1].z-entry.z;rest=new T.CatmullRomCurve3(points,false,'centripetal');}
+  else{const dx=to.x-from.x,dz=to.z-from.z,length=Math.hypot(dx,dz),x=dx/length,z=dz/length,margin=Math.min(TURN_MARGIN,length*.25);entry=new T.Vector3(from.x+x*margin-z*LANE,0,from.z+z*margin+x*LANE);ex=x;ez=z;
+   // A sharp turn with little room (a right turn, a U-turn, the roundabout's entries) finishes a little further down the new lane.
+   if(start){const room=joinFrom.copy(start).setY(0).distanceTo(entry),hl=heading?Math.hypot(heading.x,heading.z)||1:1;if(room<6&&(heading?(heading.x*x+heading.z*z)/hl:1)<.6){const slide=Math.min(length-margin*2-.3,6-room);if(slide>0){entry.x+=x*slide;entry.z+=z*slide;}}}
+   rest=new T.LineCurve3(entry,new T.Vector3(to.x-x*margin-z*LANE,0,to.z-z*margin+x*LANE));}
+  let turnLength=0,turnAngle=0;
+  if(start&&start.distanceTo(entry)>.05){const l=Math.hypot(ex,ez)||1,ux=ex/l,uz=ez/l,hl=heading?Math.hypot(heading.x,heading.z)||1:1,hx=heading?heading.x/hl:ux,hz=heading?heading.z/hl:uz,gx=entry.x-start.x,gz=entry.z-start.z;
+   // Handles: where the old heading's line and the new lane's line cross there is a corner; fit the arc that touches both lines
+   // (a straight run first on the longer side). Otherwise (straight on, a U-turn, an S) both handles are 0.4 of the gap.
+   let a=Math.min(6,Math.hypot(gx,gz)*.4),b=a;const det=hx*uz-hz*ux;
+   if(det>.05||det<-.05){const t1=(gx*uz-gz*ux)/det,t2=(hx*gz-hz*gx)/det;if(t1>.2&&t2>.2){const reach=t1<t2?t1:t2,angle=Math.acos(T.MathUtils.clamp(hx*ux+hz*uz,-1,1)),k=4/3*Math.tan(angle/4)*reach/Math.tan(angle/2);a=t1-reach+k;b=t2-reach+k;}}
+   const join=new T.CubicBezierCurve3(start.clone().setY(0),new T.Vector3(start.x+hx*a,0,start.z+hz*a),new T.Vector3(entry.x-ux*b,0,entry.z-uz*b),entry.clone());
+   curve.add(join);turnLength=join.getLength();turnAngle=-Math.atan2(hx*uz-hz*ux,hx*ux+hz*uz);}
+  curve.add(rest);return {curve,turnLength,turnAngle};};
+ // Corners and dead ends are guarded too: every turn curve bends through the node centre, so an L-corner's left and
+ // right turners cross paths and, unguarded, locked nose to nose with the queue behind them (the reported jam).
+ const guarded=nodes.map(n=>{if(cayTraffic?.unguarded.has(n.id))return false;if(n.links.length!==2)return n.links.length>0;const a=nodes[n.links[0]],b=nodes[n.links[1]],ax=a.x-n.x,az=a.z-n.z,bx=b.x-n.x,bz=b.z-n.z;return (ax*bx+az*bz)/(Math.hypot(ax,az)*Math.hypot(bx,bz))>-.95;});
+ // Guarded nodes joined by a street shorter than the two 10 m zones share one owner, so a car can never hold one box while waiting
+ // for the next one that the other box's owner is heading out of (a two-junction deadlock).
+ const box=nodes.map(n=>n.id);const boxOf=(id:number):number=>box[id]===id?id:(box[id]=boxOf(box[id]));
+ for(const n of nodes)if(guarded[n.id])for(const id of n.links)if(guarded[id]&&!(cayTraffic?.armBoxes.has(n.id)&&cayTraffic.armBoxes.has(id))&&Math.hypot(nodes[id].x-n.x,nodes[id].z-n.z)<24)box[boxOf(id)]=boxOf(n.id);
  const starts=[[124,-45],[-45,20],[48,90],[124,-140],[218,70],[48,-100],[130,170],[48,-40],[218,110],[516,-159],[560,-159]];
- const cars=['#bb6857','#638d9c','#d9b563','#7eaa81','#ab8eaf','#e1b796','#6a919e','#319c8c','#efad45',...(cayTraffic?['#6fa7c9','#c77d9d']:[])].map((color,i)=>{const group=new T.Group();group.name='street-car-'+i;root.add(group);const paint=new T.MeshStandardMaterial({color,roughness:.7});materials.push(paint);
-  const pickup=i===7||i===8;if(pickup){group.name='matchday-pickup-'+(i-7);
-   mesh(group,new T.BoxGeometry(2,.4,4.4),paint,0,.65,0);
-   // Bean riders (lane F, docs/bean-characters/CONTRACT.md): the rig sits with its hips .44 m above the bed point
-   // and its soles .12 m below it. The bean's round bottom is .31 m up, so it gets a cooler to sit on, and the bed
-   // floor drops .12 m so the boots rest on it instead of inside it. The bed point (rider, coins, landing) is unchanged.
-   const beanBed=characterStyle()==='bean';
-   mesh(group,new T.BoxGeometry(1.9,.12,2.25),cream,0,beanBed?.8:.92,-.95);
-   if(beanBed){mesh(group,new T.BoxGeometry(.7,.43,.46),glass,0,.86+.215,-1.25).name='pickup-cooler-seat';mesh(group,new T.BoxGeometry(.72,.04,.48),cream,0,1.29,-1.25);}
-   mesh(group,new T.BoxGeometry(1.65,.85,1.25),glass,0,1.25,.8);mesh(group,new T.BoxGeometry(1.9,.12,1.4),paint,0,1.73,.8);
-   for(const side of [-1,1])mesh(group,new T.BoxGeometry(.14,.55,2.4),paint,side*.94,1.1,-.95);
-   mesh(group,new T.BoxGeometry(2,.55,.14),paint,0,1.1,-2.12);
-   const mark=mesh(group,new T.TorusGeometry(.48,.045,5,20),cream,0,1,-.95);mark.rotation.x=-Math.PI/2;
-  }else{
-  mesh(group,new T.BoxGeometry(1.7,.55,3.4),paint,0,.68,0);mesh(group,new T.BoxGeometry(1.45,.65,1.7),glass,0,1.22,-.15);mesh(group,new T.BoxGeometry(1.56,.1,1.8),paint,0,1.58,-.15);}
-  for(const side of [-1,1]){for(const z of [-1.05,1.05]){const wheel=mesh(group,new T.CylinderGeometry(.32,.32,.19,12),black,side*.83,.34,z);wheel.rotation.z=Math.PI/2;}mesh(group,new T.BoxGeometry(.32,.18,.055),cream,side*.52,.76,1.72);mesh(group,new T.BoxGeometry(.25,.16,.055),paint,side*.55,.75,-1.72);}
-  geometry.push(...batchRigidMeshes(group));
+ // Lights: `signalOffset[node]` is the node's cycle offset, -1 where no lights run the junction (corners flash yellow; the
+ // roundabout and the cay have none).
+ const signalOffset=signalledNodes(nodes,signalHeads);if(cayTraffic){for(const id of cayTraffic.ring)signalOffset[id]=-1;signalOffset[cayTraffic.spurEnd]=-1;}
+ // Two junctions close enough to share one box (under 24 m) run as one set of lights: the same cycle, and the short street between
+ // them has no stop line of its own (a car stopped there would hold the shared box against the car behind it).
+ for(const n of nodes)if(signalOffset[n.id]>=0&&signalOffset[boxOf(n.id)]>=0)signalOffset[n.id]=signalOffset[boxOf(n.id)];
+ const lamps=signalHeads.length?createTrafficSignalLamps(scene,signalHeads):null,headNode=signalHeads.map(h=>{const n=nodes.find(n=>Math.abs(n.x-h.jx)<.6&&Math.abs(n.z-h.jz)<.6);return n&&signalOffset[n.id]>=0?n.id:-1;});
+ let clock=0,lampTick=-1;
+ const paintLamps=()=>{if(!lamps)return;let changed=false;const flash=flashOn(clock)?YELLOW:-1;for(let i=0;i<signalHeads.length;i++){const node=headNode[i];if(lamps.set(i,node>=0?signalLight(clock,signalOffset[node],signalHeads[i].axis):flash))changed=true;}if(changed)lamps.commit();};
+ const glow={head:.12,tail:.06};
+ const cars=['#bb6857','#638d9c','#d9b563','#7eaa81','#ab8eaf','#e1b796','#6a919e','#319c8c','#efad45',...(cayTraffic?['#6fa7c9','#c77d9d']:[])].map((color,i)=>{const group=new T.Group();group.name='street-car-'+i;group.rotation.order='YXZ';root.add(group);
+  const pickup=i===7||i===8;if(pickup)group.name='matchday-pickup-'+(i-7);
+  // Bean riders (lane F, docs/bean-characters/CONTRACT.md): the rig sits with its hips .44 m above the bed point
+  // and its soles .12 m below it. The bean's round bottom is .31 m up, so it gets a cooler to sit on ('pickup-cooler-seat'), and the bed
+  // floor drops .12 m so the boots rest on it instead of inside it. The bed point (rider, coins, landing) is unchanged.
+  const beanBed=characterStyle()==='bean';
+  const shape=buildVehicleGeometry(CAR_STYLES[i],color,{bedY:beanBed?.8:.92,coolerSeat:beanBed,variant:i-7}),look=createVehicleMaterial();geometry.push(shape);materials.push(look.material);
+  const body=new T.Mesh(shape,look.material);body.name=pickup?'pickup-body':'car-body';body.castShadow=body.receiveShadow=true;body.matrixAutoUpdate=false;group.add(body);look.lamp.set(glow.head,glow.tail,0,0);
   const canvas=document.createElement('canvas');canvas.width=768;canvas.height=192;const texture=new T.CanvasTexture(canvas);texture.colorSpace=T.SRGBColorSpace;speechTextures.push(texture);const speechMaterial=new T.SpriteMaterial({map:texture,depthTest:true,depthWrite:false});materials.push(speechMaterial);const speech=new T.Sprite(speechMaterial);speech.name='driver-reaction';speech.position.set(0,3.8,0);speech.scale.set(9,2.25,1);speech.visible=false;group.add(speech);
-  const obstacle={dynamic:true,x:0,z:0,w:pickup?2.1:1.9,d:pickup?4.5:3.6};obstacles.push(obstacle);const from=nodes.filter(n=>n.links.length&&!usedStarts.has(n.id)).sort((a,b)=>Math.hypot(a.x-starts[i][0],a.z-starts[i][1])-Math.hypot(b.x-starts[i][0],b.z-starts[i][1]))[0];usedStarts.add(from.id);const startLinks=from.links.filter(id=>!forbidden.has(from.id+':'+id)),to=nodes[(startLinks.length?startLinks:from.links)[i%(startLinks.length||from.links.length)]],path=segment(from,to);return{rampPose:createTruckRampPose(ramps),pickup,index:i,group,obstacle,speech,canvas,texture,freeDriven:false,driveSpeed:0,rejoin:null as ReturnType<typeof findTruckRoadRoute>,rejoinAttempted:false,rejoinSearch:null as ReturnType<typeof truckRoadRouteSearch>|null,crashAge:99,crashes:0,from:from.id,to:to.id,path,routeSamples:createTrafficRouteSamples(path),decisionAge:0,trafficWaiting:false,length:path.getLength(),distance:0,visits:new Map<string,number>(),speed:pickup?4.2:5.8+i*.25};
+  const obstacle={dynamic:true,x:0,z:0,w:pickup?2.1:1.9,d:pickup?4.5:3.6};obstacles.push(obstacle);const from=nodes.filter(n=>n.links.length&&!usedStarts.has(n.id)).sort((a,b)=>Math.hypot(a.x-starts[i][0],a.z-starts[i][1])-Math.hypot(b.x-starts[i][0],b.z-starts[i][1]))[0];usedStarts.add(from.id);const startLinks=from.links.filter(id=>!forbidden.has(from.id+':'+id)),to=nodes[(startLinks.length?startLinks:from.links)[i%(startLinks.length||from.links.length)]],first=segment(from,to),path=first.curve;
+  return{rampPose:createTruckRampPose(ramps),pickup,index:i,group,obstacle,speech,canvas,texture,look,halfLength:pickup?2.25:1.8,freeDriven:false,driveSpeed:0,rejoin:null as ReturnType<typeof findTruckRoadRoute>,rejoinAttempted:false,rejoinSearch:null as ReturnType<typeof truckRoadRouteSearch>|null,crashAge:99,crashes:0,from:from.id,to:to.id,next:-1,path,routeSamples:createTrafficRouteSamples(path),decisionAge:0,trafficWaiting:false,length:path.getLength(),distance:0,visits:new Map<string,number>(),speed:pickup?4.2:5.8+i*.25,
+   /** Current speed along the route, m/s. */v:0,/** Unit heading on the ground. */dirX:0,dirZ:1,
+   /** The join at the start of this route: its length and the speed to take it at; the speed to leave this route at. */turnLength:0,turnSpeed:99,turnAngle:0,outSpeed:99,outAngle:0,
+   /** How far along this route the vehicle is still "leaving the box" of the node behind it. */leaveZone:STOP_ZONE,axis:'z' as SignalAxis,signalNode:-1,
+   /** Room to the vehicle ahead (m, bumper to bumper less the standing gap) and its speed; refreshed by the yielding scan. */gap:Infinity,leadV:0,
+   /** Room to a townsperson in the lane, how long one has held this driver, and metres left of edging past. */peopleGap:Infinity,peopleAge:i*.009,peopleWait:0,peopleIgnore:0,
+   /** Look and feel: wheel spin (rad), steer, body pitch (a spring) and roll, last heading. */spin:0,steer:0,pitch:0,pitchV:0,roll:0,yaw:0,yawRate:0,accel:0,
+   /** Waiting at a stop line for a box or a light (nobody gives way to a vehicle that is itself waiting outside the junction). */held:false,/** The box this vehicle wants and since when (traffic clock): boxes are handed out first come, first served. */wantBox:-1,wantSince:0,boxNow:-1,junctionNow:-1,
+   /** No other vehicle within 14 m at the last yielding scan: the footprint check has nothing to test. */alone:false};
  });
+
+ type Car=typeof cars[number];
+ const TAU=Math.PI*2,routePosition=new T.Vector3(),routeTangent=new T.Vector3();
+ /** Where a vehicle goes after `node`: the least-used way on that is allowed (never straight back unless it is a dead end). */
+ const choose=(car:Car,node:RoadNode,cameFrom:number)=>{const allowed=node.links.filter(id=>!forbidden.has(node.id+':'+id)),onward=allowed.filter(id=>id!==cameFrom),options=onward.length?onward:allowed.length?allowed:node.links.slice();
+  options.sort((a,b)=>(car.visits.get(node.id+':'+a)??0)-(car.visits.get(node.id+':'+b)??0)||((a+car.index)%nodes.length)-((b+car.index)%nodes.length));const next=options[0],key=node.id+':'+next;car.visits.set(key,(car.visits.get(key)??0)+1);return next;};
+ /** Put a vehicle on the street from -> to (joined smoothly from `start`/`heading` when given) and plan the turn after it, so it
+  *  can slow down and indicate before it gets there. All the per-route numbers are worked out here, once. */
+ function setRoute(car:Car,from:RoadNode,to:RoadNode,start?:T.Vector3,heading?:{x:number;z:number}){
+  const route=segment(from,to,start,heading);car.path=route.curve;car.routeSamples=createTrafficRouteSamples(route.curve);car.length=route.curve.getLength();car.distance=0;car.from=from.id;car.to=to.id;
+  car.turnLength=route.turnLength;car.turnAngle=route.turnAngle;car.turnSpeed=turnSpeed(car.speed,route.turnAngle);
+  car.next=choose(car,to,from.id);const after=nodes[car.next],ox=after.x-to.x,oz=after.z-to.z;car.routeSamples.tangent(1,routeTangent);
+  car.outAngle=-Math.atan2(routeTangent.x*oz-routeTangent.z*ox,routeTangent.x*ox+routeTangent.z*oz);car.outSpeed=turnSpeed(car.speed,car.outAngle);
+  car.axis=Math.abs(to.x-from.x)>Math.abs(to.z-from.z)?'x':'z';car.signalNode=signalOffset[to.id]>=0&&boxOf(from.id)!==boxOf(to.id)?to.id:-1;
+  // On a street too short for two full boxes the first one is let go early, so a car waiting at the far stop line never holds it.
+  const leave=(route.turnLength>0?route.turnLength:STOP_ZONE)+LEAVE_CLEAR;car.leaveZone=car.length>=leave+STOP_ZONE+.5||!guarded[to.id]||boxOf(from.id)===boxOf(to.id)?leave:Math.max(0,car.length-STOP_ZONE-.5);
+  car.gap=car.peopleGap=Infinity;car.leadV=0;
+ }
+ for(const car of cars){setRoute(car,nodes[car.from],nodes[car.to]);car.routeSamples.sample(0,routePosition);car.routeSamples.tangent(0,routeTangent);car.group.position.copy(routePosition);car.dirX=routeTangent.x;car.dirZ=routeTangent.z;car.yaw=car.group.rotation.y=Math.atan2(routeTangent.x,routeTangent.z);
+  car.obstacle.x=routePosition.x;car.obstacle.z=routePosition.z;car.obstacle.w=Math.abs(car.dirX)*car.halfLength*2+Math.abs(car.dirZ)*(car.pickup?2.1:1.9);car.obstacle.d=Math.abs(car.dirZ)*car.halfLength*2+Math.abs(car.dirX)*(car.pickup?2.1:1.9);}
  const landingGlowAssets=createTruckLandingGlowAssets();
  const pickupMarkers=cars.filter(c=>c.pickup).map(car=>{const glow=landingGlowAssets.create();car.group.add(glow.root);return{car,glow};});
  const rider={index:-1,landingAge:99,waitForNeutral:false,boostTime:0,boostCooldown:0};
@@ -93,6 +159,9 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
   car.group.rotation.order='YXZ';car.group.rotation.y=yaw;car.group.rotation.x=pose.pitch;car.group.rotation.z=0;car.group.position.y=pose.height;
   if(!reduced&&rider.landingAge<.9){const t=rider.landingAge;car.group.position.y-=Math.sin(t*18)*Math.exp(-t*5)*.09;car.group.rotation.z=Math.sin(t*23)*Math.exp(-t*5)*.045;}
   car.obstacle.x=car.group.position.x;car.obstacle.z=car.group.position.z;car.obstacle.w=Math.abs(Math.sin(yaw))*4.5+Math.abs(Math.cos(yaw))*2.1;car.obstacle.d=Math.abs(Math.cos(yaw))*4.5+Math.abs(Math.sin(yaw))*2.1;
+  // Wheels turn and steer while driven too; the tail lamps brighten when the truck is held still.
+  let turned=yaw-car.yaw;if(turned>Math.PI)turned-=TAU;else if(turned<-Math.PI)turned+=TAU;car.yaw=yaw;car.dirX=Math.sin(yaw);car.dirZ=Math.cos(yaw);car.v=0;car.held=false;
+  if(dt>0){car.spin=(car.spin+distance/WHEEL_RADIUS)%TAU;const steer=T.MathUtils.clamp(turned/dt*2.1/Math.max(Math.abs(car.driveSpeed),1.5),-.5,.5);car.steer+=(steer-car.steer)*Math.min(1,dt*10);car.look.wheel.set(Math.cos(car.spin),Math.sin(car.spin),1-car.steer*car.steer*.5,car.steer);car.look.lamp.set(glow.head,car.driveSpeed===0?1.7:glow.tail,0,0);}
   car.speech.visible=false;car.group.userData.controlled=car.index===rider.index;car.group.userData.waiting=car.driveSpeed===0;
  }
  function resumeRoaming(car:typeof cars[number],dt:number,reduced:boolean){
@@ -102,45 +171,105 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
   const dx=target.x-car.group.position.x,dz=target.z-car.group.position.z,distance=Math.hypot(dx,dz);
   // Slow down at each bend; the same swept collision checks apply off-road.
   freeDrive(car,dt,{x:dx,z:dz},Math.min(.55,distance/3),reduced);
-  if(distance<.65){car.rejoin!.points.shift();if(!car.rejoin!.points.length){const node=nodes[car.rejoin!.node],links=node.links.filter(id=>!forbidden.has(node.id+':'+id)),pick=links.length?links:node.links,to=nodes[pick[car.index%pick.length]];/* honour the roundabout's one-way rule (code review finding 7) */car.from=node.id;car.to=to.id;car.path=segment(node,to,car.group.position);car.routeSamples=createTrafficRouteSamples(car.path);car.length=car.path.getLength();car.distance=0;car.freeDriven=false;car.rejoin=null;car.rejoinAttempted=false;}}
+  if(distance<.65){car.rejoin!.points.shift();if(!car.rejoin!.points.length){const node=nodes[car.rejoin!.node],links=node.links.filter(id=>!forbidden.has(node.id+':'+id)),pick=links.length?links:node.links,to=nodes[pick[car.index%pick.length]];/* honour the roundabout's one-way rule (code review finding 7) */const yaw=car.group.rotation.y;setRoute(car,node,to,car.group.position,{x:Math.sin(yaw),z:Math.cos(yaw)});car.group.rotation.x=car.group.rotation.z=0;car.group.position.y=0;car.freeDriven=false;car.rejoin=null;car.rejoinAttempted=false;}}
  }
- const routePosition=new T.Vector3(),routeTangent=new T.Vector3(),tangents=createTrafficTangentCache();
+
  const stats={trafficChecks:0,deferredDecisions:0};
  // Hold a junction until the owner clears its turn; waiting cars stay outside it.
- const junctionOwners=new Map<number,number>();
- // Corners and dead ends are guarded too: every turn curve bends through the node centre, so an L-corner's left and
- // right turners cross paths and, unguarded, locked nose to nose with the queue behind them (the reported jam).
- const guarded=nodes.map(n=>{if(cayTraffic?.unguarded.has(n.id))return false;if(n.links.length!==2)return n.links.length>0;const a=nodes[n.links[0]],b=nodes[n.links[1]],ax=a.x-n.x,az=a.z-n.z,bx=b.x-n.x,bz=b.z-n.z;return (ax*bx+az*bz)/(Math.hypot(ax,az)*Math.hypot(bx,bz))>-.95;});
- // Guarded nodes joined by a street shorter than the two 10 m zones share one owner, so a car can never hold one box while waiting
- // for the next one that the other box's owner is heading out of (a two-junction deadlock).
- const box=nodes.map(n=>n.id);const boxOf=(id:number):number=>box[id]===id?id:(box[id]=boxOf(box[id]));
- for(const n of nodes)if(guarded[n.id])for(const id of n.links)if(guarded[id]&&!(cayTraffic?.armBoxes.has(n.id)&&cayTraffic.armBoxes.has(id))&&Math.hypot(nodes[id].x-n.x,nodes[id].z-n.z)<24)box[boxOf(id)]=boxOf(n.id);
- const leaving=(car:typeof cars[number])=>car.distance<10&&guarded[car.from];
- const junctionFor=(car:typeof cars[number])=>car.freeDriven||car.index===rider.index?-1:leaving(car)?boxOf(car.from):car.length-car.distance<10&&guarded[car.to]?boxOf(car.to):-1;
- function update(dt:number,player:{x:number;y:number;z:number},interaction?:{vx:number;vz:number;reduced:boolean;onCrash:()=>void;drive?:{x:number;z:number}}){stats.trafficChecks=stats.deferredDecisions=0;for(const [node,index] of junctionOwners)if(junctionFor(cars[index])!==node)junctionOwners.delete(node);for(const car of cars){const node=junctionFor(car);if(node>=0&&!junctionOwners.has(node))junctionOwners.set(node,car.index);}rider.landingAge+=Math.max(0,dt);rider.boostTime=Math.max(0,rider.boostTime-dt);rider.boostCooldown=Math.max(0,rider.boostCooldown-dt);const drive=interaction?.drive,driveAmount=drive?Math.min(1,Math.hypot(drive.x,drive.z)):0;if(driveAmount<.15)rider.waitForNeutral=false;for(const car of cars){car.crashAge+=Math.max(0,dt);
-  if(car.index===rider.index){car.rejoin=null;car.rejoinAttempted=false;car.rejoinSearch=null;freeDrive(car,Math.min(.05,Math.max(0,dt)),drive,driveAmount,interaction?.reduced??false);continue;}
-  if(car.freeDriven){resumeRoaming(car,Math.min(.05,Math.max(0,dt)),interaction?.reduced??false);continue;}
-  const progress=Math.min(1,car.distance/Math.max(.01,car.length)),pos=car.routeSamples.sample(progress,routePosition),direction=tangents.sample(car.path,progress,routeTangent),dx=player.x-pos.x,dz=player.z-pos.z,ahead=dx*direction.x+dz*direction.z,lateral=Math.abs(dx*direction.z-dz*direction.x);
-  const speed=Math.hypot(interaction?.vx??0,interaction?.vz??0),headOn=interaction&&speed>4&&(interaction.vx*direction.x+interaction.vz*direction.z)/speed<-.5;
-  if(car.index!==rider.index&&dt>0&&headOn&&player.y<2.4&&ahead>0&&ahead<3.9&&lateral<1.65&&car.crashAge>6){
+ const junctionOwners=new Map<number,number>(),boxClaims=new Map<number,number>();
+ const leaving=(car:Car)=>car.distance<car.leaveZone&&guarded[car.from];
+ /** The box a roaming vehicle is leaving, or the one ahead once it is close enough that braking for its stop line would have to begin. */
+ const approachBox=(car:Car)=>car.freeDriven||car.index===rider.index?-1:leaving(car)?boxOf(car.from):car.length-car.distance<STOP_ZONE+2+car.v*car.v/(2*DRIVE.brake)&&guarded[car.to]?boxOf(car.to):-1;
+ /** Red, or a yellow it can stop for comfortably: the vehicle may not take the box and waits at the stop line. Past the line it clears. */
+ const heldByLight=(car:Car)=>car.signalNode>=0&&!leaving(car)&&signalStop(signalLight(clock,signalOffset[car.signalNode],car.axis),car.length-car.distance-STOP_ZONE,car.v,DRIVE.brake);
+ function update(dt:number,player:{x:number;y:number;z:number},interaction?:{vx:number;vz:number;reduced:boolean;onCrash:()=>void;drive?:{x:number;z:number};people?:readonly TrafficPerson[]}){stats.trafficChecks=stats.deferredDecisions=0;
+  const step=Math.min(.05,Math.max(0,dt));if(step>0){clock+=step;const tick=Math.floor(clock*5);if(tick!==lampTick){lampTick=tick;paintLamps();}}
+  // Each vehicle's box is worked out once per frame (`boxNow`: the box it is in or needs; `junctionNow`: the same unless a light
+  // holds it), then used to release, to claim and, below, to decide who waits. A free box goes to whoever has wanted it longest
+  // (first come, first served; the lower index on a tie): handing it to the lowest index let a stream of cars starve a waiting truck.
+  for(const car of cars){const box=car.boxNow=approachBox(car),node=car.junctionNow=box>=0&&heldByLight(car)?-1:box;if(node<0)car.wantBox=-1;else if(car.wantBox!==node){car.wantBox=node;car.wantSince=clock;}}
+  for(const [node,index] of junctionOwners)if(cars[index].junctionNow!==node)junctionOwners.delete(node);
+  for(const car of cars){const node=car.junctionNow;if(node<0||junctionOwners.has(node))continue;const rival=boxClaims.get(node);if(rival===undefined||car.wantSince<cars[rival].wantSince)boxClaims.set(node,car.index);}
+  if(boxClaims.size){for(const [node,index] of boxClaims)junctionOwners.set(node,index);boxClaims.clear();}
+  rider.landingAge+=Math.max(0,dt);rider.boostTime=Math.max(0,rider.boostTime-dt);rider.boostCooldown=Math.max(0,rider.boostCooldown-dt);const drive=interaction?.drive,driveAmount=drive?Math.min(1,Math.hypot(drive.x,drive.z)):0;if(driveAmount<.15)rider.waitForNeutral=false;
+  const reduced=interaction?.reduced??false,people=interaction?.people,vx=interaction?.vx??0,vz=interaction?.vz??0,playerSpeed=Math.hypot(vx,vz),blinkOn=clock*2.4%1<.5?1.6:0;
+  for(const car of cars){car.crashAge+=Math.max(0,dt);
+  if(car.index===rider.index){car.rejoin=null;car.rejoinAttempted=false;car.rejoinSearch=null;freeDrive(car,step,drive,driveAmount,reduced);continue;}
+  if(car.freeDriven){resumeRoaming(car,step,reduced);continue;}
+  // Everything below is scalar work on last frame's pose: where the visitor is in this vehicle's frame, then one speed limit per
+  // thing ahead. The route is sampled once, for the pose it moves to.
+  const position=car.group.position,rotation=car.group.rotation,px=position.x,pz=position.z,dirX=car.dirX,dirZ=car.dirZ,dx=player.x-px,dz=player.z-pz,ahead=dx*dirX+dz*dirZ,sideways=dx*dirZ-dz*dirX,lateral=Math.abs(sideways),near=dx*dx+dz*dz<10000;
+  if(interaction&&dt>0&&playerSpeed>4&&(vx*dirX+vz*dirZ)/playerSpeed<-.5&&player.y<2.4&&ahead>0&&ahead<3.9&&lateral<1.65&&car.crashAge>6){
    car.crashAge=0;const text=comments[(car.index*3+car.crashes++)%comments.length];car.group.userData.driverComment=text;car.group.userData.crashes=car.crashes;const ctx=car.canvas.getContext('2d')!;ctx.clearRect(0,0,768,192);ctx.fillStyle='#fff8e5';ctx.strokeStyle='#315845';ctx.lineWidth=6;ctx.beginPath();ctx.roundRect(6,6,756,158,28);ctx.fill();ctx.stroke();ctx.beginPath();ctx.moveTo(366,162);ctx.lineTo(384,190);ctx.lineTo(402,162);ctx.fill();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='700 40px sans-serif';ctx.fillStyle='#315845';if(ctx.measureText(text).width<700)ctx.fillText(text,384,84);else{const words=text.split(' '),half=Math.ceil(words.length/2);ctx.fillText(words.slice(0,half).join(' '),384,57);ctx.fillText(words.slice(half).join(' '),384,111);}car.texture.needsUpdate=true;interaction.onCrash();
   }
-  const visitor=rider.index<0&&player.y<2.4&&ahead>-.5&&ahead<9&&lateral<2.5;
+  const remaining=car.length-car.distance;let limit=car.speed;
+  // Bends: the join at the start of this route, and the turn planned at its end.
+  if(car.distance<car.turnLength&&car.turnSpeed<limit)limit=car.turnSpeed;
+  if(car.outSpeed<limit){const s=stopSpeed(remaining-1,car.outSpeed);if(s<limit)limit=s;}
+  // Junction box and lights: without the box (someone else has it, or the light says stop) the vehicle stops at the line.
+  const box=car.boxNow,junctionWaiting=box>=0&&!leaving(car)&&junctionOwners.get(box)!==car.index;
+  car.held=junctionWaiting;if(junctionWaiting){const s=stopSpeed(remaining-STOP_ZONE-.3);if(s<limit)limit=s;}
+  // The visitor: in the lane ahead, or walking into it. Truck passengers are not pedestrians.
+  const visitor=rider.index<0&&player.y<2.4&&personInLane(ahead,lateral,sideways>0?vz*dirX-vx*dirZ:vx*dirZ-vz*dirX,car.halfLength+DRIVE.personGap+3+car.v*car.v/(2*DRIVE.brake),2.5);
+  if(visitor){const s=stopSpeed(personStopGap(ahead,car.halfLength));if(s<limit)limit=s;}
+  // Townsfolk in the lane: looked for ten times a second per vehicle, with a cheap box reject first.
+  if(people){car.peopleAge+=dt;if(car.peopleAge>=.1||dt===0){car.peopleAge=0;let room=Infinity;
+    for(let k=0;k<people.length;k++){const q=people[k].position,ex=q.x-px;if(ex>16||ex<-16)continue;const ez=q.z-pz;if(ez>16||ez<-16||q.y>1.6||q.y<-1)continue;const forward=ex*dirX+ez*dirZ;if(forward<-.5||forward>16)continue;const side=ex*dirZ-ez*dirX;if(side<1.5&&side>-1.5){const g=personStopGap(forward,car.halfLength);if(g<room)room=g;}}
+    car.peopleGap=room;}
+   if(car.peopleIgnore>0){if(limit>1.6)limit=1.6;}
+   else if(car.peopleGap<Infinity){const s=stopSpeed(car.peopleGap);if(s<limit)limit=s;if(car.v<.05){car.peopleWait+=dt;if(car.peopleWait>DRIVE.patience){car.peopleIgnore=10;car.peopleWait=0;}}}
+   else car.peopleWait=0;}
   car.decisionAge+=dt;
   // Only distant ordinary traffic defers yielding decisions; positions keep moving each frame.
   // Pickups and controlled/rejoining trucks keep their immediate interaction path.
-  if(car.pickup||dx*dx+dz*dz<10000||car.decisionAge>=.1||dt===0){
-   car.decisionAge=0;stats.trafficChecks++;car.trafficWaiting=false;
-   for(const other of cars){if(other===car)continue;const ox=other.group.position.x-pos.x,oz=other.group.position.z-pos.z;if(ox*ox+oz*oz>64||overlapsCar(car,other))continue;
-    const forward=ox*direction.x+oz*direction.z,side=Math.abs(ox*direction.z-oz*direction.x);
-    if(forward>0&&forward<7&&side<2.3&&(Math.sin(other.group.rotation.y)*direction.x+Math.cos(other.group.rotation.y)*direction.z>.4||other.index<car.index)){car.trafficWaiting=true;break;}
+  if(car.pickup||near||car.decisionAge>=.1||dt===0){
+   car.decisionAge=0;stats.trafficChecks++;let room=Infinity,lead=0,alone=true;
+   for(const other of cars){if(other===car)continue;const ox=other.group.position.x-px,oz=other.group.position.z-pz;if(ox*ox+oz*oz>196)continue;alone=false;
+    const forward=ox*dirX+oz*dirZ;if(forward<=0)continue;const side=ox*dirZ-oz*dirX;if(side>=2.3||side<=-2.3)continue;
+    // Same way: follow it, keeping DRIVE.gap behind its bumper. Crossing or oncoming in this lane: the higher index gives way,
+    // but never to a vehicle that is itself held at a stop line (it is outside the box; waiting for it locked the roundabout arm).
+    const along=other.dirX*dirX+other.dirZ*dirZ;let g:number,v=0;
+    if(along>.4){g=forward-car.halfLength-other.halfLength-DRIVE.gap;v=other.freeDriven||other.index===rider.index?0:other.v*along;}else if(other.index<car.index&&forward<10&&!other.held)g=forward-7;else continue;
+    if(g<room&&!overlapsCar(car,other)){room=g;lead=v;}
    }
+   car.gap=room;car.leadV=lead;car.trafficWaiting=room<=0;car.alone=alone;
   }else stats.deferredDecisions++;
-  const traffic=car.trafficWaiting;
-  const controlled=car.index===rider.index,throttle=controlled?(rider.waitForNeutral?0:driveAmount):1;const junction=junctionFor(car),junctionWaiting=junction>=0&&!leaving(car)&&junctionOwners.get(junction)!==car.index;const waiting=visitor||traffic||junctionWaiting||car.crashAge<2.2||throttle<.15;if(!waiting){const proposed=car.distance+Math.min(.05,Math.max(0,dt))*(controlled?7.5:car.speed)*throttle,t=Math.min(1,proposed/Math.max(.01,car.length));car.routeSamples.sample(t,routePosition);tangents.sample(car.path,t,routeTangent);if(trafficClear(car,routePosition.x,routePosition.z,Math.atan2(routeTangent.x,routeTangent.z)))car.distance=proposed;}car.group.userData.controlled=controlled;
-  if(car.distance>=car.length){const node=nodes[car.to],choices=node.links.filter(id=>id!==car.from&&!forbidden.has(node.id+':'+id)),options=controlled?node.links.filter(id=>!forbidden.has(node.id+':'+id)):choices.length?choices:node.links.filter(id=>!forbidden.has(node.id+':'+id));options.sort((a,b)=>controlled&&drive?((nodes[b].x-node.x)*drive.x+(nodes[b].z-node.z)*drive.z)/Math.hypot(nodes[b].x-node.x,nodes[b].z-node.z)-((nodes[a].x-node.x)*drive.x+(nodes[a].z-node.z)*drive.z)/Math.hypot(nodes[a].x-node.x,nodes[a].z-node.z):(car.visits.get(node.id+':'+a)??0)-(car.visits.get(node.id+':'+b)??0)||((a+car.index)%nodes.length)-((b+car.index)%nodes.length));const next=options[0],key=node.id+':'+next;car.visits.set(key,(car.visits.get(key)??0)+1);car.path=segment(node,nodes[next],car.path.getPointAt(1));car.routeSamples=createTrafficRouteSamples(car.path);car.from=node.id;car.to=next;car.distance=0;car.length=car.path.getLength();}
-  const t=Math.min(1,car.distance/Math.max(.01,car.length)),p=car.routeSamples.sample(t,routePosition),tangent=tangents.sample(car.path,t,routeTangent);car.group.position.copy(p);car.group.rotation.x=0;car.group.rotation.y=Math.atan2(tangent.x,tangent.z);car.group.rotation.z=interaction?.reduced?0:Math.sin(car.crashAge*30)*Math.exp(-car.crashAge*5)*.15;car.group.position.y=interaction?.reduced?0:Math.sin(Math.min(1,car.crashAge/.4)*Math.PI)*.12;if(car.index===rider.index&&!interaction?.reduced&&rider.landingAge<.9){const t=rider.landingAge;car.group.position.y-=Math.sin(t*18)*Math.exp(-t*5)*.09;car.group.rotation.z+=Math.sin(t*23)*Math.exp(-t*5)*.045;}car.speech.visible=car.crashAge<4.5;car.group.userData.waiting=waiting;car.group.userData.roadFrom=car.from;car.group.userData.roadTo=car.to;car.obstacle.x=p.x;car.obstacle.z=p.z;car.obstacle.w=Math.abs(tangent.x)*(car.pickup?4.5:3.6)+Math.abs(tangent.z)*(car.pickup?2.1:1.9);car.obstacle.d=Math.abs(tangent.z)*(car.pickup?4.5:3.6)+Math.abs(tangent.x)*(car.pickup?2.1:1.9);
+  if(car.gap<Infinity){const s=stopSpeed(car.gap,car.leadV);if(s<limit)limit=s;}
+  // A join that bends harder than a car can turn (the roundabout's spur entry) is taken slowly enough to keep the heading smooth.
+  if(car.yawRate>MAX_YAW_RATE||car.yawRate<-MAX_YAW_RATE){const s=car.v*MAX_YAW_RATE/(car.yawRate<0?-car.yawRate:car.yawRate);if(s<limit)limit=s<.8?.8:s;}
+  if(car.crashAge<2.2)limit=0;
+  const before=car.v;let moved=0;
+  if(step>0){car.v=stepSpeed(car.v,limit,step);
+   if(car.v>0){const proposed=car.distance+car.v*step,t=Math.min(1,proposed/Math.max(.01,car.length));car.routeSamples.sample(t,routePosition);car.routeSamples.tangent(t,routeTangent);const yaw=Math.atan2(routeTangent.x,routeTangent.z);
+    // The footprint check stays the last word: whatever the limits said, no vehicle moves into another.
+    if(car.alone||trafficClear(car,routePosition.x,routePosition.z,yaw)){moved=proposed-car.distance;car.distance=proposed;position.x=routePosition.x;position.z=routePosition.z;let turned=yaw-rotation.y;if(turned>Math.PI)turned-=TAU;else if(turned<-Math.PI)turned+=TAU;car.yawRate=turned/step;rotation.y=yaw;car.dirX=routeTangent.x;car.dirZ=routeTangent.z;
+     car.obstacle.x=position.x;car.obstacle.z=position.z;car.obstacle.w=Math.abs(routeTangent.x)*(car.pickup?4.5:3.6)+Math.abs(routeTangent.z)*(car.pickup?2.1:1.9);car.obstacle.d=Math.abs(routeTangent.z)*(car.pickup?4.5:3.6)+Math.abs(routeTangent.x)*(car.pickup?2.1:1.9);
+     car.gap-=moved;car.peopleGap-=moved;if(car.peopleIgnore>0)car.peopleIgnore-=moved;}
+    else{car.v=0;car.yawRate=0;}}
+   else car.yawRate=0;
+   if(car.distance>=car.length)setRoute(car,nodes[car.to],nodes[car.next],position,{x:car.dirX,z:car.dirZ});
+  }
+  // Feel (near, drawn vehicles only): pitch under braking and pulling away (a soft spring, so it settles with one small bounce),
+  // roll into the bend, wheels that spin and steer, brake lamps, indicators before and through a turn.
+  let wobble=0,lift=0;if(!reduced&&car.crashAge<2.5){wobble=Math.sin(car.crashAge*30)*Math.exp(-car.crashAge*5)*.15;lift=Math.sin(Math.min(1,car.crashAge/.4)*Math.PI)*.12;}
+  if(near&&car.group.visible&&step>0){
+   const yawRate=car.yawRate;
+   car.accel+=((car.v-before)/step-car.accel)*Math.min(1,step*8);
+   if(reduced)car.pitch=car.pitchV=car.roll=0;
+   else{const pitch=car.accel*-.008;car.pitchV+=(((pitch>.028?.028:pitch<-.028?-.028:pitch)-car.pitch)*70-car.pitchV*9)*step;car.pitch+=car.pitchV*step;const roll=yawRate*car.v*-.012;car.roll+=((roll>.045?.045:roll<-.045?-.045:roll)-car.roll)*Math.min(1,step*7);}
+   const steer=yawRate*2.1/(car.v>1.5?car.v:1.5);car.steer+=((steer>.5?.5:steer<-.5?-.5:steer)-car.steer)*Math.min(1,step*10);car.spin=(car.spin+moved/WHEEL_RADIUS)%TAU;
+   car.look.wheel.set(Math.cos(car.spin),Math.sin(car.spin),1-car.steer*car.steer*.5,car.steer);
+   const blink=remaining<24&&(car.outAngle>.5||car.outAngle<-.5)?car.outAngle:car.distance<car.turnLength&&(car.turnAngle>.5||car.turnAngle<-.5)?car.turnAngle:0;
+   car.look.lamp.set(glow.head,car.accel<-1||car.v<.05?1.7:glow.tail,blink>0?blinkOn:0,blink<0?blinkOn:0);
+  }else if(car.pitch!==0||car.roll!==0)car.pitch=car.pitchV=car.roll=0;
+  rotation.x=car.pitch;rotation.z=car.roll+wobble;position.y=lift-(car.pitch<0?-car.pitch:car.pitch)*.4;
+  car.speech.visible=car.crashAge<4.5;const data=car.group.userData;data.controlled=false;data.waiting=car.v<.05||visitor||junctionWaiting;data.roadFrom=car.from;data.roadTo=car.to;
  }}
- update(0,{x:0,y:99,z:0});
- return {stats,tangentStats:tangents.stats,root,cars,nodes,cayTraffic,rider,boost,bedAt,bedPoint,overTruck,landingTruckAt,touchdown,updateLandingIndicator,update,dispose(){pickupMarkers.forEach(p=>p.glow.dispose());landingGlowAssets.dispose();for(const car of cars){const index=obstacles.indexOf(car.obstacle);if(index>=0)obstacles.splice(index,1);}root.removeFromParent();speechTextures.forEach(t=>t.dispose());geometry.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());}};
+ /** Day, sunset or night (Town calls it beside world.updateTrafficSignals): headlamps and tail lamps come on. Emissive only. */
+ function setTimeOfDay(mode:string){glow.head=mode==='night'?1.5:mode==='sunset'?.7:.12;glow.tail=mode==='night'?.55:mode==='sunset'?.3:.06;for(const car of cars){car.look.lamp.x=glow.head;car.look.lamp.y=glow.tail;}}
+ paintLamps();update(0,{x:0,y:99,z:0});
+ return {stats,root,cars,nodes,cayTraffic,rider,boost,bedAt,bedPoint,overTruck,landingTruckAt,touchdown,updateLandingIndicator,update,setTimeOfDay,
+  /** The lights: heads, which node each belongs to (-1: flashing yellow), per-node cycle offsets (-1: none), the lamp mesh, the clock. */
+  signals:{stopZone:STOP_ZONE,heads:signalHeads,headNode,offset:signalOffset,lamps,get clock(){return clock;}},
+  dispose(){pickupMarkers.forEach(p=>p.glow.dispose());landingGlowAssets.dispose();lamps?.dispose();for(const car of cars){const index=obstacles.indexOf(car.obstacle);if(index>=0)obstacles.splice(index,1);}root.removeFromParent();speechTextures.forEach(t=>t.dispose());geometry.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());}};
 }
