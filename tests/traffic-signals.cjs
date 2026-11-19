@@ -95,13 +95,14 @@ ok('5. a vehicle stops for a person in its lane, short of them, and moves off ge
 ok('6. townsfolk: a vehicle stops for one standing in the lane, ignores one on the pavement, and edges past after DRIVE.patience',()=>{
  const {traffic:a,D}=fixture(island,false),dt=1/60;for(let i=0;i<120;i++)a.update(dt,far,still);
  const car=a.cars.find(c=>!c.pickup&&c.length-c.distance>70&&c.distance>c.turnLength+2);assert(car);
+ const above=()=>({x:car.group.position.x+20,y:40,z:car.group.position.z});/* the visitor hovers near by: only vehicles within 100 m look for townsfolk */
  const kerb={position:{x:car.group.position.x+car.dirX*14+car.dirZ*3.2,y:0,z:car.group.position.z+car.dirZ*14-car.dirX*3.2}},people=[kerb],inter={...still,people};
- for(let i=0;i<120;i++)a.update(dt,far,inter);assert(car.v>3,'someone on the pavement does not stop traffic');
+ for(let i=0;i<120;i++)a.update(dt,above(),inter);assert(car.v>3,'someone on the pavement does not stop traffic');
  const person={position:{x:car.group.position.x+car.dirX*15,y:0,z:car.group.position.z+car.dirZ*15}};people.push(person);
  let closest=Infinity;const gap=()=>(person.position.x-car.group.position.x)*car.dirX+(person.position.z-car.group.position.z)*car.dirZ-car.halfLength;
- for(let i=0;i<360;i++){a.update(dt,far,inter);closest=Math.min(closest,gap());}
+ for(let i=0;i<360;i++){a.update(dt,above(),inter);closest=Math.min(closest,gap());}
  assert.equal(car.v,0,'stopped for the townsperson');assert(closest>1.2,'short of them: '+closest.toFixed(2));
- let top=0;for(let i=0;i<(D.DRIVE.patience+6)*60;i++){a.update(dt,far,inter);if(gap()>-4)top=Math.max(top,car.v);}
+ let top=0;for(let i=0;i<(D.DRIVE.patience+6)*60;i++){a.update(dt,above(),inter);if(gap()>-4)top=Math.max(top,car.v);}
  assert(gap()<-1,'it got past');assert(top>0&&top<=1.6+1e-9,'after waiting it edges past at walking pace instead of jamming the street: '+top.toFixed(2));a.dispose();
 });
 

@@ -215,13 +215,15 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
   // The visitor: in the lane ahead, or walking into it. Truck passengers are not pedestrians.
   const visitor=rider.index<0&&player.y<2.4&&personInLane(ahead,lateral,sideways>0?vz*dirX-vx*dirZ:vx*dirZ-vz*dirX,car.halfLength+DRIVE.personGap+3+car.v*car.v/(2*DRIVE.brake),2.5);
   if(visitor){const s=stopSpeed(personStopGap(ahead,car.halfLength));if(s<limit)limit=s;}
-  // Townsfolk in the lane: looked for ten times a second per vehicle, with a cheap box reject first.
-  if(people){car.peopleAge+=dt;if(car.peopleAge>=.1||dt===0){car.peopleAge=0;let room=Infinity;
+  // Townsfolk in the lane: looked for ten times a second per vehicle within 100 m of the visitor (194 townsfolk on the island:
+  // a cheap box reject first; vehicles nobody can see skip it, as they always did).
+  if(people&&near){car.peopleAge+=dt;if(car.peopleAge>=.1||dt===0){car.peopleAge=0;let room=Infinity;
     for(let k=0;k<people.length;k++){const q=people[k].position,ex=q.x-px;if(ex>16||ex<-16)continue;const ez=q.z-pz;if(ez>16||ez<-16||q.y>1.6||q.y<-1)continue;const forward=ex*dirX+ez*dirZ;if(forward<-.5||forward>16)continue;const side=ex*dirZ-ez*dirX;if(side<1.5&&side>-1.5){const g=personStopGap(forward,car.halfLength);if(g<room)room=g;}}
     car.peopleGap=room;}
    if(car.peopleIgnore>0){if(limit>1.6)limit=1.6;}
    else if(car.peopleGap<Infinity){const s=stopSpeed(car.peopleGap);if(s<limit)limit=s;if(car.v<.05){car.peopleWait+=dt;if(car.peopleWait>DRIVE.patience){car.peopleIgnore=10;car.peopleWait=0;}}}
    else car.peopleWait=0;}
+  else if(car.peopleGap<Infinity)car.peopleGap=Infinity;
   car.decisionAge+=dt;
   // Only distant ordinary traffic defers yielding decisions; positions keep moving each frame.
   // Pickups and controlled/rejoining trucks keep their immediate interaction path.
