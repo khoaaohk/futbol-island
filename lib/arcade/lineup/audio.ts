@@ -26,13 +26,13 @@ export function createLineupAudio(){
  }
  const vol=()=>getSoundVolume()*1.6;
  function tone(type:OscillatorType,f0:number,f1:number,at:number,dur:number,gain:number,attack=.004){
-  if(!ctx||!master||voices>24)return;const o=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime+at;voices++;
+  if(!ctx||!master||voices>34)return;const o=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime+at;voices++;
   o.type=type;o.frequency.setValueAtTime(f0,t);if(f1!==f0)o.frequency.exponentialRampToValueAtTime(Math.max(20,f1),t+dur);
   g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(gain*vol(),t+attack);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   o.connect(g);g.connect(master);o.start(t);o.stop(t+dur+.02);o.onended=()=>{voices--;o.disconnect();g.disconnect();};
  }
  function burst(filter:BiquadFilterType,f:number,q:number,at:number,dur:number,gain:number,sweepTo=0){
-  if(!ctx||!master||!noise||voices>24)return;const src=ctx.createBufferSource(),bq=ctx.createBiquadFilter(),g=ctx.createGain(),t=ctx.currentTime+at;voices++;
+  if(!ctx||!master||!noise||voices>34)return;const src=ctx.createBufferSource(),bq=ctx.createBiquadFilter(),g=ctx.createGain(),t=ctx.currentTime+at;voices++;
   src.buffer=noise;bq.type=filter;bq.frequency.setValueAtTime(f,t);bq.Q.value=q;if(sweepTo)bq.frequency.exponentialRampToValueAtTime(sweepTo,t+dur);
   g.gain.setValueAtTime(gain*vol(),t);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
   src.connect(bq);bq.connect(g);g.connect(master);src.start(t,(t*7.3)%.3,dur+.03);src.onended=()=>{voices--;src.disconnect();bq.disconnect();g.disconnect();};
@@ -40,6 +40,13 @@ export function createLineupAudio(){
  /** Marimba-like bar: sine + a quiet 4th partial, quick decay. */
  const bar=(f:number,at:number,gain=.2,dur=.28)=>{tone('sine',f,f,at,dur,gain,.003);tone('sine',f*3.98,f*3.98,at,dur*.35,gain*.28,.002);};
  /** A short brass-like stab: two detuned saws through the limiter, with a sine body. */
+ /** A crowd-like swell: filtered noise with a soft attack (one shot, no loop). */
+ function crowd(at:number,dur:number,gain:number){if(!ctx||!master||!noise||voices>34)return;const src=ctx.createBufferSource(),bq=ctx.createBiquadFilter(),g=ctx.createGain(),t=ctx.currentTime+at;voices++;
+  src.buffer=noise;bq.type='bandpass';bq.frequency.setValueAtTime(700,t);bq.frequency.linearRampToValueAtTime(1500,t+dur*.4);bq.Q.value=.45;
+  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(gain*vol(),t+dur*.3);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  src.connect(bq);bq.connect(g);g.connect(master);src.start(t,0,Math.min(.48,dur));src.onended=()=>{voices--;src.disconnect();bq.disconnect();g.disconnect();};}
+ /** Small pitch drift so a repeated cue never sounds stamped out. */
+ const drift=()=>1+(Math.random()-.5)*.07;
  const stab=(f:number,at:number,dur:number,gain=.09)=>{tone('sawtooth',f,f,at,dur,gain,.012);tone('sawtooth',f*1.006,f*1.006,at,dur,gain*.8,.012);tone('sine',f,f,at,dur*1.1,gain*1.6,.01);};
  return {
   unlock,
@@ -47,11 +54,26 @@ export function createLineupAudio(){
   /** A piece picked up from the tray: a light felt tap, pitched by size. */
   lift(n:number){if(!on())return;tone('triangle',520+n*40,640+n*40,0,.06,.09,.002);},
   /** A piece set on the pitch: a wooden block, lower for bigger shapes. */
-  drop(n:number){if(!on())return;tone('sine',300-n*22,150-n*12,0,.09,.32,.002);burst('bandpass',1800,1.2,0,.03,.14);bar(hz(-12+n),.0,.08,.12);},
+  drop(n:number){if(!on())return;const k=drift();tone('sine',(300-n*22)*k,(150-n*12)*k,0,.09,.32,.002);burst('bandpass',1800*k,1.2,0,.03,.14);bar(hz(-12+n)*k,.0,.08,.12);},
+  /** The ghost snapped to a new square: one very soft tick. */
+  snap(){if(!on())return;tone('sine',1500*drift(),1100,0,.022,.028,.001);},
+  /** A line is ready under the held piece (before the drop): two quick rising notes; brighter for more lines, a third note for a team line. */
+  ready(lines:number,team:boolean){if(!on())return;const b=Math.min(4,Math.max(1,lines))-1;bar(hz(LINE_SCALE[b]+7),0,.07,.1);bar(hz(LINE_SCALE[b+1]+7),.05,.08,.12);if(team)bar(hz(LINE_SCALE[b+2]+12),.1,.08,.16);},
+  /** A piece goes to the bench (or swaps with the one there): a wooden seat knock, twice for a swap. */
+  hold(swap:boolean){if(!on())return;const k=drift();tone('sine',210*k,120*k,0,.1,.3,.002);burst('lowpass',700,.8,0,.05,.16);if(swap){tone('sine',260*k,150*k,.09,.09,.24,.002);burst('lowpass',900,.8,.09,.04,.12);}else bar(hz(-5)*k,.02,.07,.14);},
+  /** A line is one ball short after a placement: a soft open fifth, the "nearly" cue. */
+  near(){if(!on())return;bar(hz(7,262)*drift(),.12,.06,.16);bar(hz(14,262),.2,.05,.2);},
+  /** The streak ends with the next placement that clears nothing: two low ticks. */
+  risk(){if(!on())return;tone('triangle',330,300,0,.07,.09,.003);tone('triangle',330,300,.14,.07,.09,.003);},
+  /** A new venue (every third level): a short horn call and the crowd. */
+  venue(){if(!on())return;stab(hz(-5),0,.14);stab(hz(0),.12,.14);stab(hz(4),.24,.34,.1);crowd(.1,.9,.1);bar(hz(12),.3,.14,.3);bar(hz(16),.38,.14,.3);},
   /** Not here: a dull double knock. */
   nope(){if(!on())return;tone('square',150,120,0,.06,.07,.002);tone('square',130,100,.08,.07,.06,.002);},
   /** Lines cleared: a rising chord, one note a line, lifted by the streak; a clap; a horn stab for a combo. */
-  clear(lines:number,streak:number){if(!on())return;const lift=Math.min(LINE_SCALE.length-4,Math.max(0,streak-1));
+  clear(lines:number,streak:number,team=0){if(!on())return;const lift=Math.min(LINE_SCALE.length-4,Math.max(0,streak-1));
+   // the ripple of kicks along the line, the points landing on the counter, the crowd for a combo, a bright run for a team line
+   for(let i=0;i<6;i++)tone('triangle',hz(LINE_SCALE[lift]+i*2,196)*drift(),hz(LINE_SCALE[lift]+i*2,150),.02+i*.034,.05,.07,.002);bar(hz(LINE_SCALE[lift]+24),.66,.06,.1);
+   if(lines>=2||team)crowd(.06,lines>=3?1.1:.8,lines>=3?.16:.11);if(team)for(let i=0;i<4;i++)bar(hz(LINE_SCALE[lift+i]+12),.2+i*.045,.1,.2);
    for(let i=0;i<Math.min(4,lines)+1;i++)bar(hz(LINE_SCALE[lift+i]),i*.055,.2,.34);burst('bandpass',1500,.9,.02,.08,.3);burst('bandpass',1750,.9,.12,.07,.2);
    if(lines>=2){stab(hz(LINE_SCALE[lift]-12),.1,.22);stab(hz(LINE_SCALE[lift]-5),.1,.22,.07);}tone('triangle',110,70,0,.18,.28);},
   /** Clean sheet: the whole pitch is empty. Horn fanfare and crowd-like noise swell. */

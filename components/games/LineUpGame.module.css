@@ -24,6 +24,8 @@
 .word{position:absolute;display:grid;justify-items:center;gap:2px;translate:-50% -50%;animation:luWord .9s cubic-bezier(.2,1.4,.4,1) both}
 .pts{--cm-numeral-size:30px;display:block}
 .word .pts{color:var(--cm-sun);-webkit-text-stroke:6px var(--cm-ink);paint-order:stroke fill}
+.streak[data-risk]{background:var(--cm-sun);color:var(--cm-ink);animation:luPop .32s cubic-bezier(.2,1.6,.4,1) both,luRisk .5s ease-in-out .32s 4 alternate}
+@keyframes luRisk{from{scale:1}to{scale:1.1}}
 @keyframes luWord{0%{scale:.4;opacity:0}18%{scale:1.12;opacity:1}30%{scale:1}75%{opacity:1;translate:-50% -90%}100%{opacity:0;translate:-50% -110%}}
 @keyframes luPop{0%{scale:.4}100%{scale:1}}
 
@@ -75,7 +77,7 @@
 @media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.score{--cm-numeral-size:52px}.coach{display:none}.art{width:min(200px,60%)}}
 @media (max-height:600px){.game [data-lineup-card=start] .chips{display:none}.fact{display:none}}
 @media (max-width:374px){.strip{gap:7px}.stripItem{font-size:14px}}
-@media (prefers-reduced-motion:reduce){.streak{rotate:none}.streak,.score[data-new-best]{animation:none}.word{animation-duration:.6s}}
+@media (prefers-reduced-motion:reduce){.streak{rotate:none}.streak,.streak[data-risk],.score[data-new-best]{animation:none}.word{animation-duration:.6s}}
 
 /* Nov 17 2026: first-run hint (arrow points up at the tray), danger line, level note under a callout */
 .hint{display:flex;align-items:center;gap:8px;background:var(--cm-sun)}

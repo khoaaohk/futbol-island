@@ -68,6 +68,7 @@ export function coachLine(stats:LineStats,filled:number):string{
  if(stats.lines===0)return 'Fill a whole row or column to clear it. Start along one edge.';
  if(filled>=40)return 'The pitch got crowded. Clear lines early and keep the middle open for big shapes.';
  if(stats.bestCombo<2)return 'Build two lines side by side, then finish both with one piece.';
+ if(stats.holds===0&&stats.placed>=12)return 'Try the bench. Park a big shape there until the pitch has room.';
  return 'Look at all three shapes first. Place the big one while there is room.';
 }
 

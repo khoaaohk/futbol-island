@@ -12,6 +12,8 @@ import type {GameId,GameShot} from './games';
  * Files: public/games/clips/<key>.{mp4,webm,webp}, public/games/shots/<key>-<n>.webp. Tests: tests/seo-games.cjs, seo-video.cjs.
  * Nov 17 2026: Line Up! and Trophy Drop were captured the same way (dev build, CDP screencast at 390x844 DPR 2, a
  * scripted player using real mouse drags and taps); the poster is still 1 (the clip's first frame).
+ * Nov 18 2026: Line Up! was captured again after its pieces became footballs (scripts/capture-lineup-media.cjs: the script, the
+ * scripted player and the encode step in one file; the poster is still 1, an early moment of the same run).
  */
 type ClipFile={w:number;h:number;seconds:number;mp4:number;webm:number;poster:{w:number;h:number;bytes:number}};
 type ShotFile={file:string;w:number;h:number;bytes:number};
@@ -38,7 +40,7 @@ const GAME_CLIP_DEFS:Record<GameId,Omit<ClipDef,'key'|'page'>>={
  pinball:{name:'Futbol Pinball gameplay: flippers and bumpers on a pitch table',alt:'Futbol Pinball gameplay on a phone: the ball bounces off bumpers and the flippers kick it back up the table',caption:'Futbol Pinball: two flippers, a goalkeeper and a wall.'},
  puzzle:{name:'Pass Puzzles gameplay: passing around the defenders',alt:'Pass Puzzles gameplay on a phone: passes travel from player to player around the defenders toward the goal',caption:'Pass Puzzles: find the open team-mate, then the goal.'},
  airhockey:{name:'Air Futbol gameplay: air hockey on a football pitch',alt:'Air Futbol gameplay on a phone: the teal striker hits the puck up the small pitch and scores in the red goal',caption:'Air Futbol: guard your goal and bank it off the wall.'},
- lineup:{name:'Line Up! gameplay: shapes of players fill the lines',alt:'Line Up! gameplay on a phone: shapes of players are dragged from the tray onto the pitch and a full line clears',caption:'Line Up!: fill a row or a column and it clears.'},
+ lineup:{name:'Line Up! gameplay: shapes of footballs fill the lines',alt:'Line Up! gameplay on a phone: shapes of footballs are dragged from the tray onto the pitch and a full line clears',caption:'Line Up!: fill a row or a column and it clears.'},
  trophydrop:{name:'Trophy Drop gameplay: dropping and merging in the trophy cabinet',alt:'Trophy Drop gameplay on a phone: balls, boots and gloves drop into a glass cabinet and two of the same merge',caption:'Trophy Drop: two of the same merge into the next.'},
  rollball:{name:'Roll It In gameplay: a football rolling through a puzzle',alt:'Roll It In gameplay on a phone: the ball takes a metal ramp, jumps a gap over the water, presses a plate to open the gate and rolls into the goal',caption:'Roll It In: jump the gap, press the plate, roll it in.'},
  ballblaster:{name:'Ball Blaster gameplay: kicking footballs at wind-up robots',alt:'Ball Blaster gameplay on a phone: a ball flies up the pitch and breaks a wind-up robot into pieces with a POW! burst',caption:'Ball Blaster: aim, kick and break the robots before they reach your goal.'},
@@ -56,7 +58,7 @@ const STILL_WORDS:Record<GameId,string[]>={
  pinball:['Futbol Pinball: the ball races up the table past the bumpers','Futbol Pinball: a flipper kicks the ball back toward the goal','Futbol Pinball: the ball bounces between the bumpers near the goalkeeper'],
  puzzle:['Pass Puzzles: a pass goes from one team-mate to another around a defender','Pass Puzzles: the ball travels toward the striker near the goal','Pass Puzzles: a new puzzle with the players set out on the pitch'],
  airhockey:['Air Futbol: GOAL! The puck flies past the red striker into the top goal','Air Futbol: a bank shot goal off the side wall, worth 75 extra points','Air Futbol: a fast rebound off the side wall'],
- lineup:['Line Up! at the start of a run: a few shapes on the pitch and two left in the tray','Line Up!: a row fills and LINE UP! and +100 appear over the pitch','Line Up!: a shape of players dragged above a crowded pitch'],
+ lineup:['Line Up! early in a run: a few shapes of footballs on the pitch, one shape left in the tray and the empty bench beside it','Line Up!: a line fills, the footballs are kicked off the pitch and LINE UP! and +100 appear','Line Up!: a shape of three star balls held above a crowded pitch, with its shadow on the square where it will land'],
  trophydrop:['Trophy Drop at the start: a boot hangs over the cabinet, with a glove and balls at the bottom','Trophy Drop: a CHAIN x2 burst as two items merge on the pile','Trophy Drop at level 2: the cabinet gets smaller, with a medal in the pile'],
  rollball:['Roll It In: the ball flies over a gap between rooftops after a metal ramp, with a star collected in the air','Roll It In: POW! as the ball knocks a training cone off its stack, a cable runs to the gate','Roll It In at night: the ball climbs a half-pipe to a glowing plate on the ledge'],
  ballblaster:['Ball Blaster: a ball breaks a robot and POW! bursts over the pitch','Ball Blaster: a water barrel bursts and knocks over the robots next to it','Ball Blaster: the dotted aim line curls round a shield-bot'],
@@ -69,7 +71,7 @@ const STILL_CAPS:Record<GameId,string[]>={
  pinball:['Bumpers send the ball flying.','Flip it back up the table.','Score past the goalkeeper.'],
  puzzle:['Pass around the defender.','Then find the striker.','Each puzzle is a new picture.'],
  airhockey:['Score in the top goal.','Bank shots score extra.','Use the side walls.'],
- lineup:['Three shapes in the tray.','A full line clears.','Drag a shape to its place.'],
+ lineup:['A tray of shapes and a bench.','A full line clears.','Drag a shape to its place.'],
  trophydrop:['Aim, then drop.','Merges can chain.','The cabinet gets smaller.'],
  rollball:['Take the ramp fast.','Stars sit off the main path.','Climb the half-pipe to both plates.'],
  ballblaster:['Break two things with one ball for a trick.','Barrels and towers make chain reactions.','Curl the ball round a shield.'],
