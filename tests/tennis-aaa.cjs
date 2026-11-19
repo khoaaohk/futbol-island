@@ -77,4 +77,21 @@ const placer=bot(false),ringer=bot(true);
  assert(card.includes('data-tennis-gain')&&card.includes('data-tennis-rings')&&css.includes('.sbGain{')&&/prefers-reduced-motion:reduce\)\{\.sbGain\{animation:tnGainFade/.test(css),'score gain tag, reduced motion kept');
  assert(read('components/games/TennisCourtPicker.tsx').includes('data-tennis-ring-how'));
  assert(!/—/.test(card.match(/Gold rings hit[^<]*/)[0]));}
+// 6. Fix round (Nov 18 2026): mashing Kick is not a plan against the stronger rivals, one press a touch is untouched, and the second lap
+//    does not open far easier than the first lap ended.
+{const M=t.TENNIS_MASH;let tick=0;
+ // The masher: runs to where the ball will land and presses Kick six times a second. No aim, no waiting, no shot choice.
+ const masher=s=>{tick++;const press=tick%10===0;if(s.phase==='serve'&&s.server==='you'&&s.phaseTime>.3&&press)t.requestTennisKick(s);if(s.phase==='rally'){if(s.ball.last==='rival'){const l=t.tennisReceivingPoint(s);t.setTennisTarget(s,l.x,l.y);}if(press)t.requestTennisKick(s);}};
+ const share=(f,level)=>{let you=0,all=0,mashed=0;for(const seed of [11,23,37,41,59,67,73,89]){tick=0;const s=t.createTennis(seed,level);t.beginTennis(s);for(let i=0;i<60*150&&s.phase!=='over';i++){f(s);const a=s.pointsPlayed;t.tickTennis(s,1/60);mashed=Math.max(mashed,s.mash);if(s.pointsPlayed!==a){all++;if(s.pointWinner==='you')you++;}}}return {share:you/Math.max(1,all),mashed};};
+ const out=[];for(const level of [4,5,6]){const m=share(masher,level),p=share(placer,level);out.push(`court ${level}: masher ${(m.share*100).toFixed(0)}%, placer ${(p.share*100).toFixed(0)}%`);
+  assert(m.share<.36,`mashing Kick loses clearly on court ${level} (${(m.share*100).toFixed(0)}% of points)`);assert(m.mashed>=M.touches,'the masher is seen');assert.equal(p.mashed,0,'a bot that presses once a touch never trips the rule');assert(p.share>.8,`placing still wins on court ${level} (${(p.share*100).toFixed(0)}%)`);}
+ // courts 1 to 3 never use it; one clean single-press touch steps the count back down
+ assert.equal(t.tennisMashing({mash:4,level:1}),false);assert.equal(t.tennisMashing({mash:4,level:2}),false);assert.equal(t.tennisMashing({mash:M.touches,level:4}),true);assert.equal(t.tennisMashing({mash:M.touches-1,level:6}),false);
+ {const s=t.createTennis(5,4);s.mash=M.touches;assert.equal(t.tennisAssist(s),0,'no timing help for a masher');s.mash=0;assert(t.tennisAssist(s)>0);}
+ // the second lap: match 10 (court 1 again) plays at tier 3 or more with no tiring rival
+ {const c9=t.tennisRampedCourt({level:9,match:9,lap:1}),c10=t.tennisRampedCourt({level:1,match:10,lap:2});assert(c10.tier>=3,'a looped first court is not a beginner court');assert(c10.speed>=c9.speed&&c10.reaction<=c9.reaction+1e-9&&c10.error<=c9.error+1e-9,'and keeps the Legend feet under the later ramp row');
+  assert.equal(t.tennisRampedCourt({level:1,match:1,lap:1}),t.TENNIS_COURTS[0],'match 1 is the base court itself');assert.equal(t.tennisRivalTire({rally:40,level:1,lap:2}),0);assert(t.tennisRivalTire({rally:40,level:1,lap:1})>0,'the first lap rival still tires');}
+ console.log('  '+out.join('; '));}
+// 7. The score tag sits inside the score panel (the clean-court ruling): no rule places it below the panel.
+assert(/\.sbGain\{position:absolute;z-index:1;right:5px;bottom:3px;/.test(css)&&!/\.sbGain\{[^}]*top:calc\(100%/.test(css),'the gain tag is inside the panel');
 console.log('tennis-aaa: ok');

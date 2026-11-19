@@ -115,3 +115,13 @@ Menu 0 frames. Details and the removed list: `docs/performance-guide.md` (Nov 10
 3. The members are very small on a phone and read as coloured dots; the lost-point panel is small.
 4. The sea is a narrow strip on beach stops (the beach was shortened to bring the horizon into frame).
 5. The low strike beat shows the court sheet's ink strokes at a grazing angle, where they shimmer a little.
+
+## Fix round (Nov 18 2026)
+- Mashing: a bot that runs to the landing spot and presses Kick six times a second won 57% / 50% / 27% of its points on courts 4 / 5 / 6.
+  From tier 3 up, a touch that follows four or more Kick presses is a mashed touch; after two in a row the timing help is off and the
+  rival reads a scrappy ball sooner and truer (`TENNIS_MASH`), until a touch is played with a single press. Now 29% / 25% / 26%. The
+  placing bot (one press a touch) is unchanged to the point: 97% / 94% / 88%. Courts 1 to 3 never use the rule.
+- Second lap: a looped court plays at tier 3 at least and its rival no longer tires. The placing bot's share of points over the seam:
+  match 9 67%, then match 10 / 11 were 94% / 93% and are now 59% / 72%.
+- Score tag: it sits inside the score panel now (right of the foot row, over the wind flag for under a second), not in the sky band
+  over the far court.
