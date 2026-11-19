@@ -576,7 +576,7 @@ export function tickRunner(s:RunnerGame,dt:number){
    const top=!!o.ladder&&++s.ladder>=s.ladderSize&&s.ladderSize>0;
    if(top){const bonus=RUNNER_LADDER.bonus*runnerMultiplier(s);s.score+=bonus;s.ladders++;s.gold=0;s.golden=true;s.ladder=0;s.ladderSize=0;feedback(s,'ladder',s.x,o.z,`FULL LADDER! +${bonus} · GOLDEN SHOT ready for the goal.`);}
    else if(armed)feedback(s,'golden',s.x,o.z,'GOLDEN SHOT ready! Your next shot cannot be stopped.');
-   else feedback(s,'collect',s.x,o.z,o.ladder?`Ladder ${s.ladder}/${s.ladderSize} · keep weaving!`:o.bonus?'Brave! Bonus ball through the middle.':s.balls===5?(full?`+${25*runnerMultiplier(s)} · bag full: shoot to use them`:'Five balls ready. Shoot to create space!'):`Ball collected · ${s.balls}/5 ready to shoot`);
+   else feedback(s,'collect',s.x,o.z,o.ladder?`Ladder ${s.ladder}/${s.ladderSize} · keep weaving!`:o.bonus?'Brave! Bonus ball through the middle.':s.balls===5?(full?`+${25*runnerMultiplier(s)} · bag full: more footballs fill the gold shot`:'Five balls ready. Shoot to create space!'):`Ball collected · ${s.balls}/5 ready to shoot`);
    if(s.energy>=RUNNER_TUNING.powerTouches){s.energy=0;s.boost=RUNNER_TUNING.powerSeconds;s.shield=RUNNER_TUNING.powerShield;s.message=RUNNER_TUNING.powerShield?'Clean touches! Burst of pace: you can ride one tackle.':'Five clean touches. Break away! Shoot for a power goal.';}}
   else if(defender&&o.beaten){/* Wrong-footed by a skill move or one-two: no tackle. */}
   else if(same&&o.kind!=='coin'&&s.hurt===0&&!invincible&&!evaded){if(s.shield)absorb(s,o,s.x,o.z);else{o.passed=true;

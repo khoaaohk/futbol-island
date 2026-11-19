@@ -97,7 +97,7 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
    {phase==='ready'&&<p className={styles.lineMode} data-runner-line>{m.line}{m.finish?` · ${m.finish} m rounds, endless`:''}{daily?(today?.counted?' · Practice':' · First run counts'):elite?' · own scoreboard':''}</p>}
    {hint&&phase==='ready'&&touch&&<p className={styles.hint}>Swipe left or right (or push the stick) to change lane. Big yellow button = shoot!</p>}
    {/* Run challenge (Nov 18 2026): one extra goal for the next run, so a second run asks for something new. Hidden while the first-run hint shows. */}
-   {phase==='ready'&&!(hint&&touch)&&(()=>{const c=runnerChallengeRow();return <p className={styles.challenge} data-runner-challenge><b>This run</b><span>{c.label}</span><i>+{c.bonus}</i></p>;})()}
+   {phase==='ready'&&!(hint&&touch)&&(()=>{const c=runnerChallengeRow();return <p className={styles.challenge} data-runner-challenge><b>This run</b>{' '}<span>{c.label}</span>{' '}<i>+{c.bonus}</i></p>;})()}
    {message&&<p className={styles.status} role="status">{message}</p>}
    <button className={styles.play} disabled={pending} onClick={play} data-runner-play>{paused?'Resume':over?(nextLabel&&nextLabel!=='Play again'?nextLabel:'Retry'):'Play'}</button>
    {!paused&&<div className={styles.row}>

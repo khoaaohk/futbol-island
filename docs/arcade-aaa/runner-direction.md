@@ -66,3 +66,24 @@
 
 ## Runtime cost (phone profile, `scripts/measure-arcade-games.cjs runner`, desktop Chrome only: no phone temperature measured)
 - Foundation 56-59 draws / 45-48k triangles / 11 textures; pass 1: 52 draws (max 66) / 59.3k (max 73.8k); pass 2 (final): 43 draws (max 54) / 39-40k (max 51-52k) / 12 textures. No new pass, light or render target; details in `docs/performance-guide.md` (Nov 10 2026 entry).
+
+## AAA pass (Nov 18 2026): what playing found, and what changed
+- Found by playing (phone, scripted inputs, plus the seeded bots): the bag was full about 75 % of the time, so most footballs gave points and nothing
+  else; the final hill of a goal-line route was up to ten seconds with nothing to do; the return ball (a danger cue) had no sound.
+- **Golden shot.** Trail footballs collected with a full bag fill the five ball pips gold (`RUNNER_GOLDEN`: 20 footballs). The next shot is golden:
+  it cannot be blocked or returned, it drives through a lane of defenders and it beats any keeper when on target. It pays what the same shot pays
+  when it scores and does not count toward a heart, so boards stay in range. The choice: spend it on a line of defenders now, or keep it for a keeper.
+  Shown by gold pips, an ink-and-gold Shoot disc that reads "Gold!", a gold ball and trail, bells that climb as the pips fill.
+- **Ball ladder.** Every final hill has a zig-zag of up to eight footballs, one lane change per ball (`RUNNER_LADDER`). No hazard: a missed ball only
+  loses the bonus. Catch them all for a bonus and a golden shot for the goal line. Each rung rings one step higher. It starts beyond any defender
+  still on the road and uses the run seed, so the Daily Run gives everyone the same ladder.
+- **Run challenge.** One extra goal for this run only (`RUNNER_RUN_CHALLENGES`), a new one each run, the same for everyone on the Daily Run, +500 once,
+  never saved. It shows as a paper ticket on the route menu and in the mission card.
+- Sound: return ball (boot crack, then a falling whistle), golden shot armed, golden shot struck, full ladder, ladder rungs, gold pips.
+  `scripts/check-arcade-audio.cjs runner` now also checks return-ball, golden-ready and full-ladder.
+- Feel: the armed shot and the full ladder reuse the aura pulse, speed-line flare, dust, stand flashes and goal confetti; a golden strike adds a short
+  hit-stop; reward haptics through the shared arcade path. Reduced motion keeps only the aura pulse and stops the HUD rocking.
+- Cost (phone profile 390x664, DPR 3, dev build, desktop Chrome): opening 43 draws (max 52) / 39.5k triangles (max 46.0k) / 13 textures before and
+  after. Ball ladder stretch 44 draws (max 45) / 32-35k; busy mid-run stretch up to 59 draws / 60k, unchanged. No new mesh, material, light or pass.
+- Still short of top tier: the ball at the runner's feet is small from the chase camera; Cup Final's fifth wave (a closer beside a drifting defender)
+  catches a child-level bot at 13 s in half of the seeds; the run challenge is not shown on the full-time card.

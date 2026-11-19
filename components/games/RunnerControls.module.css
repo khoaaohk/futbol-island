@@ -52,7 +52,7 @@
 /* Golden shot (Nov 18 2026): footballs into a full bag turn the pips gold one by one; all five gold = the next shot cannot be stopped. */
 .balls u[data-gold]{background:#ffc83a;animation:runnerStamp .22s cubic-bezier(.2,1.6,.4,1) both}
 .balls[data-golden] u{background:#ffc83a;animation:runnerReady .5s steps(2,jump-none) infinite}
-.shoot.shoot[data-golden]{--paper:#fff3d6;outline:5px solid #ffc83a;outline-offset:3px;animation:runnerReady .5s steps(2,jump-none) infinite}
+.shoot.shoot[data-golden]{--paper:#231a2e;color:#ffc83a;outline:5px solid #ffc83a;outline-offset:3px;animation:runnerReady .5s steps(2,jump-none) infinite}
 .shoot.shoot[data-golden] b svg circle{fill:#ffc83a}
 @media (prefers-reduced-motion:reduce){.balls u[data-gold],.balls[data-golden] u,.shoot.shoot[data-golden]{animation:none}}
 .run b{padding:2px 9px 0;border:3px solid #231a2e;background:#fff3d6;box-shadow:3px 3px 0 #231a2e;font:400 22px/1.15 IslandBrush,"Arial Black",sans-serif;color:#231a2e;font-variant-numeric:tabular-nums}
