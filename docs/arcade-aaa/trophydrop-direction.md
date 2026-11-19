@@ -45,3 +45,29 @@ on chains, bell peal for the golden double, boing for the beach ball and a hiss 
 ## Polish pass (Nov 17 2026, batch 2a)
 Twins of the held item wear a dashed sun ring (where to drop to merge). NEXT tag larger, item drawn at 0.6 of its real size so ball
 sizes differ. Results: medal road (`ComicMedalTrack`), Play again moved up under the near line, NEW BEST stamp off the Best badge. Rules unchanged.
+
+## AAA pass (Nov 18 2026)
+Found by playing: an item landing on the bare floor never "landed" (no sound, no squash, the first drop of every run was silent);
+two balls that merged in the air above the line started the top-line alarm; a tap during the 0.42 s cooldown was thrown away; the
+big word panels (LEVEL n, MEDAL!) sat on the pile and the drop guide; the medal's gold disc was drawn off its ring; the drop guide
+stopped in mid air on an item still falling; the NEXT tag hid an item aimed at the far right; Escape / P did nothing on the pause card.
+- **Rules (`core.ts`):** queue of TWO (NEXT + THEN); buffered drop (`queued`); one small hop on a first landing (light items bounce
+  more); cosmetic angle (balls roll, tiers 3+ rock and stand up); a merge pushes its neighbours (`push`); a merged item has 0.35 s
+  before the top line counts it and a falling item (vy > 45) never counts; **Touch streak**: a dropped item that merges within 1.5 s
+  keeps the streak, 5 in a row earn ONE **Shake** (hold 1, at most 2 a run): a jolt that lifts the pile and holds the clock 1.4 s;
+  **Golden Double** also opens the cabinet again by one level of wall and floor; a dashed red preview of the next walls / floor for
+  the last 4 drops of a level. No new points: every point still comes from a merge. The shake has its own RNG stream (the drop
+  list never depends on it).
+- **Look (`view.ts`):** every item has a face; blink = two lids drawn live (no extra sprites); stretch while falling, squash on
+  landing, overshoot when made; pooled sparks and dust; bursts behind the items; ONE chain counter pop; score pops fly to the
+  counter; held item hangs on a brass clamp and swings; four lighting stages (day / sunset at the medal / evening spotlights at
+  the cup / gala night at the golden trophy); nine brass plaques on the plinth fill as items are first made; rug, skirting,
+  crown, shelf rails; word panels moved to the strip under the cabinet; top line = red bar that fills + countdown in its tag +
+  red rings on the items that are over it; touch-streak pips and the Shake button in the strip; the cards' ladder shows the real items.
+- **Feel / sound:** hit-stop 40-76 ms on medal and bigger, 120 ms on the double (rules stand still, picture runs); drop pluck by
+  size; detuned landings; chain climbs `CHAIN_STEPS`; streak ticks; shake rumble; earned run; warning pips rise with the clock;
+  "phew" after a close escape; dull knock on an empty Shake.
+- **Heat:** settled cabinet still draws 0 frames, except one blink of about 10 frames every 3-7 s (off under reduced motion);
+  `bg` repaints only on a lighting stage / plaque change; sprite memory unchanged (same 11 sprites).
+- **Still short of top tier:** no ambience / music bed; the queue cannot be swapped; only one special item (beach ball); the
+  room is mostly wall and floor on a phone (the cabinet takes the screen); desktop play area is the same narrow column.

@@ -106,6 +106,12 @@ function beach(c:Ctx,r:number,lw:number,dent:number){
  shade(c,r,Math.max(2.4,r*.17));face(c,r,BEACH);shine(c,r);ring(c,r,lw);
 }
 
+/** Paints one item (tier 0-8) on a small canvas of `px` css px: the cards' tier ladder shows the real items, not plain discs. */
+export function paintTrophyBadge(cv:HTMLCanvasElement,t:number,px:number,ratio:number){
+ const c=cv.getContext('2d');if(!c)return;const size=Math.round(px*ratio);cv.width=cv.height=size;c.setTransform(ratio,0,0,ratio,size/2,size/2);const R=px/2-1.5,lw=Math.max(1.4,Math.min(2.6,R*.13));
+ if(t===0)ball(c,R,t,PAPER,INK,lw);else if(t===1)ball(c,R,t,SUN,INK,lw);else if(t===2)ball(c,R,t,ORANGE,PAPER,lw);else badge(c,R,t,lw);
+}
+
 type Pop={on:boolean;x:number;y:number;t:number;life:number;text:string;color:string;size:number;kind:number};
 type Burst={on:boolean;x:number;y:number;r:number;t:number;life:number;color:string};
 type Spark={on:boolean;x:number;y:number;vx:number;vy:number;t:number;life:number;color:string;size:number};
@@ -225,11 +231,12 @@ export function createTrophyView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:
    if(s.right<TD.w){f.fillRect(X(s.right),L.oy,(TD.w-s.right)*k,L.ch);f.strokeRect(X(s.right),L.oy,(TD.w-s.right)*k,L.ch);}
    if(s.floor<TD.h){f.fillStyle=WOOD_D;f.fillRect(L.ox,Y(s.floor),L.cw,(TD.h-s.floor)*k);f.fillStyle=WOOD;f.fillRect(L.ox,Y(s.floor),L.cw,Math.min(6,(TD.h-s.floor)*k));f.strokeRect(L.ox,Y(s.floor),L.cw,(TD.h-s.floor)*k);}}
   if(s.left!==s.goalLeft||s.right!==s.goalRight||s.floor!==s.goalFloor)busy=true;
+  let soon=0,soonX=0,soonY=0;
   // the warning before a level up: where the walls and the floor will be, dashed, for the last few drops of the level
   if(!s.over&&g.dropsToLevel<=TD.warnPreview){const nw=g.nextWalls,n=g.dropsToLevel;if(nw.left>s.goalLeft||nw.floor<s.goalFloor){f.strokeStyle=RED;f.lineWidth=2.5;f.setLineDash([6,6]);f.beginPath();
    if(nw.left>s.goalLeft){f.moveTo(X(nw.left),L.oy);f.lineTo(X(nw.left),Y(nw.floor));f.moveTo(X(nw.right),L.oy);f.lineTo(X(nw.right),Y(nw.floor));}
    if(nw.floor<s.goalFloor){f.moveTo(X(nw.left),Y(nw.floor));f.lineTo(X(nw.right),Y(nw.floor));}f.stroke();f.setLineDash([]);
-   tag(n===1?'SMALLER NEXT DROP':`SMALLER IN ${n} DROPS`,X(nw.right)-(n===1?118:124),Y(nw.floor)-11,RED);}}
+   soon=n;soonX=X(nw.right);soonY=Y(nw.floor);}}
   // the top line: dashed ink; over it, the line turns red, a red bar fills along it and the tag counts down (nothing covers the pile)
   const ly=Y(TD.line),warn=s.danger>0,blink=warn&&!reduced?(Math.sin(clock*(10+s.danger*8))>0):warn,x1=X(s.left)+2,x2=X(s.right)-2;
   if(warn){busy=true;f.globalAlpha=.1+.1*Math.min(1,s.danger/TD.overHold);f.fillStyle=RED;f.fillRect(X(s.left),L.oy,(s.right-s.left)*k,ly-L.oy);f.globalAlpha=1;
@@ -239,6 +246,11 @@ export function createTrophyView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:
   if(s.shakeGrace>0)busy=true;
   // an empty cabinet says how to play (the first drop only)
   if(s.drops===0&&!s.over){lettering('SLIDE TO AIM',L.w/2,L.oy+L.ch*.56,Math.min(26,L.cw*.085),PAPER,-.03);lettering('LET GO TO DROP',L.w/2,L.oy+L.ch*.56+Math.min(34,L.cw*.11),Math.min(26,L.cw*.085),SUN,-.03);}
+  // the next two items: a paper tag pinned on the top right of the frame (drawn BEFORE the held item, so an item aimed at the far right hangs in front of it; on a narrow phone it sits under the level strip)
+  if(!s.over){const nx=L.ox+L.cw-52,ny=Math.max(L.w<384?L.top+6:L.top-8,L.oy-30),ncv=s.next===BEACH?beachSprites[0]:sprites[s.next],tcv=s.next2===BEACH?beachSprites[0]:sprites[s.next2];f.fillStyle=INK;f.fillRect(nx-45,ny-12,98,62);f.fillStyle=PAPER;f.strokeStyle=INK;f.lineWidth=2.5;f.fillRect(nx-48,ny-16,98,62);f.strokeRect(nx-48,ny-16,98,62);
+   f.fillStyle=INK;f.font='900 10px "Arial Black",Impact,sans-serif';f.textAlign='center';f.textBaseline='middle';f.fillText('NEXT',nx-18,ny-7);f.globalAlpha=.6;f.font='900 8px "Arial Black",Impact,sans-serif';f.fillText('THEN',nx+31,ny-7);f.globalAlpha=1;
+   f.beginPath();f.moveTo(nx+13,ny-12);f.lineTo(nx+13,ny+42);f.lineWidth=1.5;f.setLineDash([3,3]);f.stroke();f.setLineDash([]);
+   if(ncv){const sz=Math.min(42,ncv.width/dpr*.6);f.drawImage(ncv,nx-18-sz/2,ny+21-sz/2,sz,sz);}if(tcv){const sz=Math.min(26,tcv.width/dpr*.4);f.drawImage(tcv,nx+31-sz/2,ny+21-sz/2,sz,sz);}}
   // the held item on its clamp, and its drop guide
   if(!s.over){const t=s.cur,r=g.radiusOf(t),x=s.aim,ready=s.cool<=0;
    if(lastAim<0)lastAim=x;if(!reduced){swing+=((lastAim-x)*.045-swing)*Math.min(1,dt*12);if(swing>.35)swing=.35;else if(swing<-.35)swing=-.35;if(Math.abs(swing)>.004)busy=true;else swing=0;}lastAim=x;
@@ -258,6 +270,7 @@ export function createTrophyView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:
   // twins of the held item (Nov 17 2026): a dashed sun ring says "drop it here to merge"; drawn only with a frame that runs anyway
   if(!s.over&&s.cool<=0&&s.cur!==BEACH){f.setLineDash([6,5]);for(const q of s.bodies)if(q.t===s.cur){const cx=X(q.x)+ox,cy=Y(q.y)+oy,rr=q.r*k+4;
    f.lineWidth=5;f.strokeStyle=INK;f.beginPath();f.arc(cx,cy,rr,0,Math.PI*2);f.stroke();f.lineWidth=2.5;f.strokeStyle=SUN;f.stroke();}f.setLineDash([]);}
+  if(soon>0)tag(soon===1?'SMALLER NEXT DROP':`SMALLER IN ${soon} DROPS`,soonX-(soon===1?122:128),soonY-11,RED);// over the items: a warning must not hide behind the pile
   // the items that are over the top line wear a red ring: the player sees which ones to bring down
   if(warn){f.lineWidth=4;f.strokeStyle=RED;for(const q of s.bodies)if(q.landed&&q.age>=TD.grace&&q.y-q.r<TD.line){f.beginPath();f.arc(X(q.x)+ox,Y(q.y)+oy,q.r*k+3,0,Math.PI*2);f.stroke();}}
   // sparks and dust (pooled): small inked squares that fly out and fall
@@ -268,11 +281,6 @@ export function createTrophyView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:
    if(p.kind===0&&!reduced&&q>.42){const m=(q-.42)/.58,e=m*m;px+=(L.w/2-px)*e;py+=(Math.max(18,L.top-74)-py)*e;size*=1-e*.35;f.globalAlpha=1;}else f.globalAlpha=q>.7?1-(q-.7)/.3:1;
    lettering(p.text,px,py,size,p.color,p.kind?-.06:.03);f.globalAlpha=1;}
   if(flash>0){flash=Math.max(0,flash-dt);f.globalAlpha=Math.min(.5,flash)*.6;f.fillStyle=PAPER;f.fillRect(0,0,L.w,L.h);f.globalAlpha=1;busy=true;}
-  // the next two items: a paper tag pinned on the top right of the frame, clear of the glass where the held item hangs
-  if(!s.over){const nx=L.ox+L.cw-52,ny=Math.max(L.top-8,L.oy-30),ncv=s.next===BEACH?beachSprites[0]:sprites[s.next],tcv=s.next2===BEACH?beachSprites[0]:sprites[s.next2];f.fillStyle=INK;f.fillRect(nx-45,ny-12,98,62);f.fillStyle=PAPER;f.strokeStyle=INK;f.lineWidth=2.5;f.fillRect(nx-48,ny-16,98,62);f.strokeRect(nx-48,ny-16,98,62);
-   f.fillStyle=INK;f.font='900 10px "Arial Black",Impact,sans-serif';f.textAlign='center';f.textBaseline='middle';f.fillText('NEXT',nx-18,ny-7);f.globalAlpha=.6;f.font='900 8px "Arial Black",Impact,sans-serif';f.fillText('THEN',nx+31,ny-7);f.globalAlpha=1;
-   f.beginPath();f.moveTo(nx+13,ny-12);f.lineTo(nx+13,ny+42);f.lineWidth=1.5;f.setLineDash([3,3]);f.stroke();f.setLineDash([]);
-   if(ncv){const sz=Math.min(42,ncv.width/dpr*.6);f.drawImage(ncv,nx-18-sz/2,ny+21-sz/2,sz,sz);}if(tcv){const sz=Math.min(26,tcv.width/dpr*.4);f.drawImage(tcv,nx+31-sz/2,ny+21-sz/2,sz,sz);}}
   // the touch streak meter in the strip under the cabinet: five pips fill toward a shake
   if(!s.over&&L.h-L.floorY>40&&!(word&&!word.mid)){const mx=Math.max(12,L.ox-4),my=L.stripY,left=TD.shakeMax-s.shakesEarned,have=s.shakes>0;if(meterPulse>0){meterPulse=Math.max(0,meterPulse-dt);busy=true;}if(meterMiss>0){meterMiss=Math.max(0,meterMiss-dt);busy=true;}
    const jx=meterMiss>0&&!reduced?Math.sin(clock*60)*meterMiss*8:0,pr=7+(reduced?0:meterPulse*6);

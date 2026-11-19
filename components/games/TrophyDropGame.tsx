@@ -16,7 +16,7 @@ import {arcadeSkin} from './skins';
 import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst,ComicMedalTrack} from './comic';
 import styles from './TrophyDropGame.module.css';
 import {createTrophyDrop,trophyDailySeed,medalFor,TD,TIERS,MEDAL_NAMES,type TrophyDrop,type TrophyEvent} from '@/lib/arcade/trophydrop/core';
-import {createTrophyView,type TrophyView} from '@/lib/arcade/trophydrop/view';
+import {createTrophyView,paintTrophyBadge,type TrophyView} from '@/lib/arcade/trophydrop/view';
 import {createTrophyAudio,type TrophyAudio} from '@/lib/arcade/trophydrop/audio';
 import {readTrophySave,writeTrophySave,settleTrophy,nearMissLine,coachLine,liveStreak,emptyTrophySave,type TrophySave,type TrophySettled} from '@/lib/arcade/trophydrop/save';
 import {arcadeFeedback} from '@/lib/arcade/arcadeFeedback';
@@ -35,10 +35,15 @@ type Result={score:number;daily:boolean;level:number;drops:number;merges:number;
 export const TROPHY_COIN_REASON='Trophy Drop: cabinet filled';
 const FRAME_MS=1000/60,HUD_ROOM=48,KEY_SPEED=70;
 
-/** The tier ladder as small inked discs (the same colours the canvas badges use). */
+/** The tier ladder: the nine real items, small to big, painted once each on a small canvas (the same drawing the cabinet uses). */
+function Badge({tier,px,on}:{tier:number;px:number;on:boolean}){
+ const ref=useRef<HTMLCanvasElement>(null);
+ useEffect(()=>{if(ref.current)paintTrophyBadge(ref.current,tier,px,Math.min(2,window.devicePixelRatio||1));},[tier,px]);
+ return <canvas ref={ref} style={{width:px,height:px}} data-off={!on||undefined} aria-hidden="true"/>;
+}
 function Ladder({upTo=-1}:{upTo?:number}){
  return <ol className={styles.ladder} aria-label="Merge two of the same to make the next one">{TIERS.map((t,i)=><li key={t.key} data-on={upTo<0||i<=upTo||undefined} title={t.name}>
-  <i style={{width:10+i*3.2,height:10+i*3.2,background:t.color}}/></li>)}</ol>;
+  <Badge tier={i} px={Math.round(17+i*2.6)} on={upTo<0||i<=upTo}/></li>)}</ol>;
 }
 function Medal({level,on}:{level:number;on:boolean}){return <span className={styles.medal} data-level={level} data-on={on||undefined} aria-hidden="true"><i/></span>;}
 
@@ -160,8 +165,10 @@ export default function TrophyDropGame({onExit}:{onExit:()=>void}){
  /* ---- keys; looked away: pause ---- */
  useEffect(()=>{
   const away=()=>pause(),hidden=()=>{if(document.hidden)pause();};
-  const key=(e:KeyboardEvent)=>{if(e.target instanceof HTMLElement&&e.target.closest('button,input,select,textarea,a,dialog'))return;
-   if(e.code==='Escape'||e.code==='KeyP'){e.preventDefault();if(phaseRef.current==='playing')pause();else if(phaseRef.current==='paused')resume();return;}
+  const key=(e:KeyboardEvent)=>{const el=e.target instanceof HTMLElement?e.target:null;
+   // Nov 18 2026: Escape / P also work while a button of the pause card has the focus (they used to do nothing there); never while typing
+   if((e.code==='Escape'||e.code==='KeyP')&&!el?.closest('input,select,textarea')&&(phaseRef.current==='playing'||phaseRef.current==='paused')){e.preventDefault();if(phaseRef.current==='playing')pause();else resume();return;}
+   if(el?.closest('button,input,select,textarea,a,dialog'))return;
    if(phaseRef.current!=='playing')return;
    if(e.code==='ArrowLeft'||e.code==='ArrowRight'||e.code==='KeyA'||e.code==='KeyD'){e.preventDefault();audio.current?.unlock();keys.current.add(e.code);wake();return;}
    if(e.code==='KeyX'||e.code==='ArrowUp'||e.code==='KeyW'){e.preventDefault();if(!e.repeat)shakeNow();return;}
