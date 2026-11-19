@@ -58,13 +58,18 @@ ok('sound: launch fires with its own power, a new ball clicks, the coin run wait
  const f=F.createPinballFeel(),s=P.createPinballState(),cues=[];const emit=(g,c)=>cues.push(c);
  F.stepPinballFeel(f,s,1/30,emit);P.launchPinball(s,.9);assert.equal(s.launchPower,.9);assert.equal(s.plunger,0);F.stepPinballFeel(f,s,1/30,emit);assert.deepEqual(cues,['launch']);
  const audio=read('lib/games/soccerPinballAudio.ts');assert.match(audio,/const power=s\?\(s\.launchPower>0\?s\.launchPower:plungerPull\(s\.plunger\)\):\.68;/);
- for(const cue of ['pb-pot','pb-potUp','pb-ball','pb-tip'])assert.match(audio,new RegExp(`case '${cue}':`),cue+' has a voice');
+ for(const cue of ['pb-pot','pb-potUp','pb-ball','pb-tip','pb-saveOff'])assert.match(audio,new RegExp(`case '${cue}':`),cue+' has a voice');
  assert.match(audio,/case 'left':case 'right':\{const p=\(cue==='left'\?\.95:1\.06\)\*jitter\(\.025\);/,'no two flipper knocks are the same');
  // the pot is won in the goal frame; its cue comes .7 s later
  cues.length=0;s.kickoff=false;s.pot=300;F.stepPinballFeel(f,s,1/30,emit);Object.assign(s.ball,{x:s.keeper<180?238:122,y:55,vx:0,vy:-300});for(let i=0;i<30&&s.phase==='playing';i++)P.stepPinball(s,idle,1/60);assert.equal(s.phase,'goal');
  F.stepPinballFeel(f,s,1/30,emit);assert(!cues.includes('pb-pot'),'not in the fanfare frame');assert.equal(F.pinballFeelActive(f),true);for(let i=0;i<24;i++)F.stepPinballFeel(f,s,1/30,emit);assert.equal(cues.filter(c=>c==='pb-pot').length,1);
  // milestone call
  const g=F.createPinballFeel(),m=P.createPinballState();P.launchPinball(m);F.stepPinballFeel(g,m,1/30,()=>{});const got=[];m.pot=260;F.stepPinballFeel(g,m,1/30,(x,c)=>got.push(c));assert.deepEqual(got,['pb-potUp']);assert.match(F.pinballFeelMessage(g,m),/^GOLDEN POT 260! Score a goal to win it\.$/);
+ // every fifth of the pot rings (one box lamp), and the end of the ball save is heard
+ {const q=F.createPinballFeel(),z=P.createPinballState(),c=[];P.launchPinball(z);F.stepPinballFeel(q,z,1/30,()=>{});for(const pot of [190,210,390,410,600])z.pot=pot,F.stepPinballFeel(q,z,1/30,(x,cue)=>c.push(cue+pot));assert.deepEqual(c,['pb-potUp210','pb-potUp410','pb-potUp600']);
+  c.length=0;z.openingRescue=true;z.launchGrace=1;F.stepPinballFeel(q,z,1/30,(x,cue)=>c.push(cue));z.launchGrace=0;F.stepPinballFeel(q,z,1/30,(x,cue)=>c.push(cue));assert.deepEqual(c,['pb-saveOff']);
+  // in the real sim the save runs out by itself (and a used save is a rescue, not this cue)
+  const r=P.createPinballState(),g=F.createPinballFeel(),h=[];P.beginPinballRun(r,{level:1});P.launchPinball(r,.68);assert(r.launchGrace>0);for(let i=0;i<60*12&&r.phase==='playing'&&!h.includes('pb-saveOff');i++){if(r.ball.y>470&&r.ball.x<341)Object.assign(r.ball,{x:180,y:300,vx:40,vy:-200});P.stepPinball(r,idle,1/60);F.stepPinballFeel(g,r,1/60,(x,cue)=>h.push(cue));}assert(h.includes('pb-saveOff'),'the save ran out and was heard');}
  // a new ball on the plunger
  const h=F.createPinballFeel(),n=P.createPinballState(),heard=[];P.launchPinball(n);F.stepPinballFeel(h,n,1/30,()=>{});n.phase='ready';F.stepPinballFeel(h,n,1/30,(x,c)=>heard.push(c));assert.deepEqual(heard,['pb-ball']);
  n.phase='playing';F.stepPinballFeel(h,n,1/30,()=>{});heard.length=0;n.sfx.tip++;F.stepPinballFeel(h,n,1/30,(x,c)=>heard.push(c));assert(heard.includes('pb-tip'));

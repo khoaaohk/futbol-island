@@ -280,7 +280,8 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
   // Nov 8 2026: a new personal best (any board): a rising pan run, then two flammed claps (the hand-played free-game call),
   // AAA pass (Nov 18 2026). Golden Pot: two rising notes at a milestone (higher as the pot grows); a coin run when a goal wins it,
   // one more note per goal on this ball (2 = brace, 3 = hat-trick), played after the fanfare's top note so the voices never fight.
-  case 'pb-potUp':{const step=s?Math.min(3,Math.floor(s.pot/300)):1;pan(ctx,v,PENTA[1+step],now,.04*vol,.25,true);pan(ctx,v,PENTA[3+step],now+.07,.045*vol,.4,true);break;}
+  case 'pb-potUp':{const step=s?Math.max(1,Math.min(5,Math.floor(s.pot/200))):1;pan(ctx,v,PENTA[step-1],now,.04*vol,.25,true);pan(ctx,v,PENTA[step+1],now+.07,.045*vol,.4,true);break;}
+  case 'pb-saveOff':tone(ctx,v,'sine',659.25,650,now,.12,.03*vol,.004);tone(ctx,v,'sine',493.88,485,now+.11,.2,.03*vol,.004);break;
   case 'pb-pot':{const n=2+Math.min(3,s?.lastPotX??1);for(let i=0;i<n;i++)pan(ctx,v,PENTA[Math.min(PENTA.length-1,3+i)]*2,now+i*.06,.035*vol,i===n-1?.5:.16);break;}
   // The near miss at the drain: the ball ticks the bat's tip and the crowd draws breath.
   case 'pb-tip':woodBlock(ctx,v,now,vol*.6,1.8*jitter(.05));if(!throttled(v,'ooh',now,1.2))ooh(ctx,v,now+.04,vol*.8);break;
