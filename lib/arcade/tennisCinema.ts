@@ -12,6 +12,12 @@
  *   push is a ≤ pushMax dolly toward the subject).
  * - Reduced motion: no slow-mo, no close-up, no push; a beat becomes a short `flash` (0..1) for a light flare only. */
 import {createBeatDirector,smoothstep} from './beatDirector';
+import {tennisLanding,tennisRampedCourt} from '../games/soccerTennis';
+/** Winner read (Nov 18 2026): your ball has bounced once on the rival's side and the rival cannot get to where it comes down again in
+ * time (its distance past its reach, at its top speed with a margin, is longer than the flight). Only then does the long-rally or
+ * big-point winner get its slow-motion beat, so a great retrieval is never slowed down. Pure. */
+export const TENNIS_WINNER={rally:6,reach:1.3,margin:1.25,strength:.55} as const;
+export function tennisWinnerRead(s:Parameters<typeof tennisLanding>[0]):boolean{const b=s.ball;if(s.phase!=='rally'||b.last!=='you'||b.bounces!==1||b.y>=0)return false;const l=tennisLanding(s),speed=Math.max(.1,tennisRampedCourt(s).speed)*TENNIS_WINNER.margin;return (Math.hypot(s.rival.x-l.x,s.rival.y-l.y)-TENNIS_WINNER.reach)/speed>l.time;}
 
 export const TENNIS_BEAT={slowScale:.3,slowMin:.4,slowMax:.7,rampIn:.1,rampOut:.35,slowGap:6,pushGap:2.5,pushTime:.9,pushMax:.1,close:.62,serveClose:.42,flashTime:.35} as const;
 export type TennisBeatKind=''|'strike'|'push';

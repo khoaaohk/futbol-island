@@ -18,12 +18,8 @@ import {createTennisCinema} from '../tennisCinema';
 import {createTennisBounceSpot} from '../tennisBounceSpot';
 import {createTennisFirstTouch} from '../tennisFirstTouch';
 import {tennisMatchPoint,tennisWindArrow} from '../tennisFeel';
-import {startTennisCharge,releaseTennisCharge,cancelTennisCharge,TENNIS_TOUR_RULES,tennisPointsToWin,tennisLanding,tennisRampedCourt} from '@/lib/games/soccerTennis';
-/** Winner read (Nov 18 2026): your ball has bounced once on the rival's side and the rival cannot get to where it comes down again in
- * time (its distance past its reach, at its top speed with a margin, is longer than the flight). Only then does the long-rally or
- * big-point winner get its slow-motion beat, so a great retrieval is never slowed down. Pure. */
-export const TENNIS_WINNER={rally:6,reach:1.3,margin:1.25,strength:.55} as const;
-export function tennisWinnerRead(s:Parameters<typeof tennisLanding>[0]):boolean{const b=s.ball;if(s.phase!=='rally'||b.last!=='you'||b.bounces!==1||b.y>=0)return false;const l=tennisLanding(s),speed=Math.max(.1,tennisRampedCourt(s).speed)*TENNIS_WINNER.margin;return (Math.hypot(s.rival.x-l.x,s.rival.y-l.y)-TENNIS_WINNER.reach)/speed>l.time;}
+import {startTennisCharge,releaseTennisCharge,cancelTennisCharge,TENNIS_TOUR_RULES,tennisPointsToWin} from '@/lib/games/soccerTennis';
+import {TENNIS_WINNER,tennisWinnerRead} from '../tennisCinema';
 /** A point that would win a set (best-of-3 courts) or the match: the members get to their feet and the serve gets a push-in. */
 export function tennisBigPoint(s:Parameters<typeof tennisMatchPoint>[0]&{tour?:number;level:number}):boolean{if(tennisMatchPoint(s))return true;const c=tennisCourt(s as never);if(!c||!c.sets||c.style==='drill')return false;const win=tennisPointsToWin(s.level);return s.score.you>=win-1||s.score.rival>=win-1;}
 import {createPinballState} from '@/lib/games/soccerPinball';

@@ -56,6 +56,7 @@ export function TennisHowTo({level,touch,help}:{level:number;touch:boolean;help:
    {guide.map(g=><li key={g.touch} data-touch={g.touch}><b>{TOUCH_NAME[g.touch]}</b><span>{g.when}</span></li>)}
   </ul>
   <p className={styles.starsHow}>{court.style==='drill'?`Stars: hit ${TENNIS_DRILL.stars.join(' · ')} targets`:`★ win · ★ 4 perfect touches · ★ ${court.star3}`}</p>
+  {court.style!=='drill'&&<p className={styles.starsHow} data-tennis-ring-how>Gold ring: in a long rally a gold ring shows on the far side. Land the ball in it for bonus points. Each ring in the same rally is worth more.</p>}
   <p className={styles.starsHow} data-tennis-run-how>Endless: win a match and the next court walks on. Lose a match, lose a ball. A win brings one back.</p>
   <small>{help}</small>
  </div>;
