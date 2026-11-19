@@ -133,10 +133,10 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
  const v=state(ctx),now=ctx.currentTime,vol=volume;
  switch(cue){
   // Flippers: a wood block and a rim-shot, both struck at `now` (same frame as the press), dry. Left a touch lower than right.
-  case 'left':case 'right':{const p=cue==='left'?.95:1.06;woodBlock(ctx,v,now,vol,p);rim(ctx,v,now,vol,p);break;}
+  case 'left':case 'right':{const p=(cue==='left'?.95:1.06)*jitter(.025);woodBlock(ctx,v,now,vol,p);rim(ctx,v,now,vol,p);break;}
   case 'launch':{
    // Plunger: the shaker winds up with the pull, the air whooshes up the lane, a rim-shot cracks the ball off the tip over a cajon hit.
-   const power=s?plungerPull(s.plunger):.68;
+   const power=s?(s.launchPower>0?s.launchPower:plungerPull(s.plunger)):.68;// AAA pass: the plunger is back at 0 by the time this plays, so read the launch's own power
    shaker(ctx,v,now,vol*(.6+power*.5),2,.05);
    noise(ctx,v,now,.16+power*.1,(.04+power*.05)*vol,'bandpass',420,2400*(.6+power*.4),2.2);
    rim(ctx,v,now+.03,vol*(.8+power*.4),.85);cajon(ctx,v,now+.03,vol*(.6+power*.3),70,0,.12);
@@ -176,7 +176,7 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
    cajon(ctx,v,now,vol,88,1.1,.18);pan(ctx,v,PENTA[v.chain]*jitter(.004),now+.01,.07*vol,.5);
    break;
   }
-  case 'block':rubber(ctx,v,now,vol*1.1,150);noise(ctx,v,now,.03,.03*vol,'bandpass',2300,1500,1.7,.002);break;
+  case 'block':rubber(ctx,v,now,vol*1.1,150*jitter(.07));noise(ctx,v,now,.03,.03*vol,'bandpass',2300*jitter(.06),1500,1.7,.002);break;
   case 'save':{
    // The keeper figure: a padded rubber slap and the mechanism's thud.
    const hit=Math.min(1,(s?.sfx.keeperV??300)/700);
@@ -215,7 +215,7 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
   case 'pb-sling':
    // Slingshot: a tighter cajon slap, higher and shorter than a bumper.
    if(throttled(v,cue,now,.06))return;
-   cajon(ctx,v,now,vol*.85,160,1.4,.07);break;
+   cajon(ctx,v,now,vol*.85,(s&&s.ball.x>180?172:150)*jitter(.05),1.4,.07);break;// AAA pass: the left board sits lower than the right, and no two slaps are the same
   case 'pb-cone':{
    // Pop bumper (the rondo cones): a cajon thump, and the pan walks a pentatonic step an octave down.
    if(throttled(v,cue,now,.05))return;
@@ -277,6 +277,14 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
   case 'halfTime':whistle(ctx,v,now,[[0,.18],[.26,.3]],vol);break;
   case 'stoppage':whistle(ctx,v,now,[[0,.12]],vol);break;
   // Nov 8 2026: a new personal best (any board): a rising pan run, then two flammed claps (the hand-played free-game call),
+  // AAA pass (Nov 18 2026). Golden Pot: two rising notes at a milestone (higher as the pot grows); a coin run when a goal wins it,
+  // one more note per goal on this ball (2 = brace, 3 = hat-trick), played after the fanfare's top note so the voices never fight.
+  case 'pb-potUp':{const step=s?Math.min(3,Math.floor(s.pot/250)):1;pan(ctx,v,PENTA[1+step],now,.04*vol,.25,true);pan(ctx,v,PENTA[3+step],now+.07,.045*vol,.4,true);break;}
+  case 'pb-pot':{const n=2+Math.min(3,s?.lastPotX??1);for(let i=0;i<n;i++)pan(ctx,v,PENTA[Math.min(PENTA.length-1,3+i)]*2,now+i*.06,.035*vol,i===n-1?.5:.16);break;}
+  // The near miss at the drain: the ball ticks the bat's tip and the crowd draws breath.
+  case 'pb-tip':woodBlock(ctx,v,now,vol*.6,1.8*jitter(.05));if(!throttled(v,'ooh',now,1.2))ooh(ctx,v,now+.04,vol*.8);break;
+  // A new ball rolls onto the plunger: one small wooden click.
+  case 'pb-ball':woodBlock(ctx,v,now,vol*.5,1.5*jitter(.04));tone(ctx,v,'sine',240,170,now+.02,.07,.03*vol,.004);break;
   // once per run (pooled voices).
   case 'pb-best':if(!throttled(v,cue,now,2)){arpeggio(ctx,v,[PENTA[2],PENTA[4],PENTA[5],PENTA[7]],now+.05,.09,.045*vol);clap(ctx,v,now+.45,vol);clap(ctx,v,now+.6,vol);}break;
   // The referee's full-time whistle: short, short, long.
