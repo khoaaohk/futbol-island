@@ -136,6 +136,8 @@ New in a run:
 - A deflected pass that still reaches the team-mate stays uncounted on purpose: counting it lets the naive straight pass solve
   "Bend It Round" (tests/pass-puzzle-scenarios.cjs fails at once). The failure is worded honestly instead: "A defender got a touch
   on your pass, so it did not count." (`deflectedPassIn`, `explainFail`).
+- DONE (fix round 2): number flags of players standing close no longer print on top of each other: the later flag is lifted clear
+  along the camera's up (`layFlags`, same single draw). With three players inside a metre a lifted flag can sit over a body.
 - DONE (fix round 2): the 8% of late Endless layouts that still allowed the straight shot (In Behind, Make the Run, Through the
   Gap) now get a defender on the line to the open corner, and the keeper takes a step toward a corner that is still open
   (`withShotBlockers`). Measured: 0 of 236 and 0 of 159 at levels 10 to 30. Hand-made puzzles are not touched.
