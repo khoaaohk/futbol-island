@@ -84,6 +84,43 @@ Run's look ("update the pass puzzle game to match the style of the breakaway gam
   spot, not the habit); the panel hides part of the score bar when the goal is near the top of a phone; curl is not shown in the
   panel; the Shoot key and its slider now overlap with pointing and could be retired.
 
+## AAA pass (Nov 18 2026): the Endless Run, deeper, fairer and louder
+Found by playing it (headless, 390x844 and 1280x800, plus bots in `lib/passPuzzle`):
+- The lazy shot. One straight shot from the first whistle finished 17 to 30% of puzzles from level 5 on (two stars, no reading).
+  Now a remix that leaves the shot on gets a defender stood in its way (`directShotScores`, `withShotBlocker`; the route is proved
+  again in both heading modes). Measured after: 0% at levels 3 to 9, about 8% at 10 to 30 (the last-resort layouts). A random
+  scribble bot still solves under 1%.
+- The fail splash "SO CLOSE!" sat over the lives, Skip and the note that says the same words. In a run the generic splash is gone
+  and the other splash words (SAVED!, POST!) sit under the note.
+- A failed try whose ball went in (too few passes, the counter clock) was told "Low into the corner: the keeper could not get down
+  in time". It now gets the real reason. Same fix on the authored result card.
+- The ink splat of a failed try stayed on the grass for every later puzzle of the run (`load` never hid it).
+- Silent moments: a life going, the change-over, the clock running out, full time.
+- The thinking clock was a 36 px bar squeezed beside Skip on a phone. It has its own line now.
+
+New in a run:
+- Coach's eyes. From level 5 the Scan is not free: a run starts with 2 eyes, holds 3 at most, and every third first-try solve in a
+  row wins one back (`spendEye`, `ENDLESS_EYES`). One eye shows the lanes for one puzzle, and for the second try at it. The Scan
+  key carries the count. Spend now or save for a hard one.
+- Wet pitches. From level 8 a dry puzzle may be served wet (14% rising to 30%; teal turf, the ball skids on): only when its route
+  still solves wet. The level stamp turns teal and reads "Wet".
+- The ramp speaks: one small tag as each step arrives (level 5 "Scans cost 1 now", 6 "Clock on!", 10 "No hints now", "Wet pitch!").
+- Feel: the solve's stars fly from the note to the score and tick as they land, the score pill bumps, a lost life pops and
+  empties, the level number stamps in, the note shows the streak ("3 in a row") and an eye won back ("+1 Scan"), the clock bar
+  knocks through its last five seconds. All CSS on keyed elements: no frames from the 3D loop. Reduced motion: none of it moves.
+- Sound (one-shots on the same bus and voice cap, no loop): a falling two-note for a life, a rising brush for the change-over
+  (higher each level), five wood-block ticks for the clock's end, "look up" for an eye, a falling phrase at full time, star ticks.
+- Haptics: a short buzz for a lost life and an eye (same gates as the shared arcade feedback).
+- Scoring is unchanged (1 solve + 1 move + 1 first try, +1 every fifth in a row). The lazy two-star shot is mostly gone, so late
+  levels pay a little less to a player who used it; the eyes make levels 5+ a little kinder. Old top runs are not easier to beat by
+  much: bots that play the taught route score the same as before. The run of the day (seed = the date) is laid out differently
+  after this ships, for everyone at once. The Daily puzzle (`daily.ts`) is untouched.
+- Heat: no new draws, textures or geometries; the pitch still sleeps (0 frames in 3 s after a level settles). Building a run
+  puzzle costs about 3 ms on a laptop (worst 47 ms in 500), off the frame, as before.
+- Still weak: no time-of-day change along a run; the campaign result card is a wall of text on a phone; number badges of players
+  standing close overlap; a deflected pass that still reaches the teammate does not count as a pass (then a goal fails with
+  "needs more passes"); the wet remix has no rain or spray, only the turf colour.
+
 ## Budget (phone profile, dev server, desktop Chrome: no phone temperature measured)
 - First puzzle (5 players): 38 draws / 22.8k triangles / 15 textures (rigid figures 30 / 18.7k / 13; pre-rebuild beans 95 / 63.9k).
 - Largest puzzle (Two Hunters, 11 players): 55-56 draws (61 for 0.6 s in a goal beat) / 40.3k triangles (42.3k max).

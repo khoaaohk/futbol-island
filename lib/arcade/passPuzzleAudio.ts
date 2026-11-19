@@ -155,3 +155,42 @@ export function puzzleNetHigh(ctx:AudioContext|null){
  if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime;
  air(ctx,t,.24,v*.09,'bandpass',2600,5200,1.2,.02);knock(ctx,t+.03,620,v*.04,.05);knock(ctx,t+.085,700,v*.03,.05);
 }
+
+/* AAA pass (Nov 18 2026): the Endless Run had silent moments (a life going, the change-over, the clock running down, a skip, full
+ * time). Same pool and bus, still one-shots: no loop, no timer here (the game schedules the five clock ticks itself). */
+/** A life goes: the low end of the kalimba falling a fourth, with a soft box thud under it. Sad, not harsh. */
+export function puzzleLifeLost(ctx:AudioContext|null,delay=0){
+ if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime+delay,j=1+jitter()*.03;
+ pluck(ctx,330*j,t,.3,v*.05);pluck(ctx,247*j,t+.13,.55,v*.055);thump(ctx,t+.13,.09,v*.1,260);
+}
+/** The change-over wipe: one loaded brush pulled across the page, rising (a touch higher each level so a long run keeps moving). */
+export function puzzleWipe(ctx:AudioContext|null,level=1){
+ if(!ready(ctx))return;const v=getSoundVolume(),k=Math.min(1,Math.max(0,level/24)),j=jitter();
+ air(ctx,ctx.currentTime,.26,v*.045,'bandpass',(520+260*k)*(1+j*.12),2100+900*k,.9,.05);
+}
+/** The thinking clock's last five seconds: a wood-block tick per second, higher and a little louder as it runs out (left = 5..1). */
+export function puzzleClockTick(ctx:AudioContext|null,left:number){
+ if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime,k=Math.min(1,Math.max(0,(5-left)/4));
+ knock(ctx,t,620+240*k,v*(.05+.04*k),.045);if(left<=2)knock(ctx,t+.12,(620+240*k)*1.06,v*(.035+.03*k),.04);
+}
+/** A Coach's eye is used (the Scan opens): two quick rising plucks and a paper flick, "look up". `earned` is the softer three-note
+ * version for an eye won back by a streak. */
+export function puzzleEye(ctx:AudioContext|null,earned=false,delay=0){
+ if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime+delay;
+ if(earned){[784,988,1175].forEach((hz,i)=>pluck(ctx,hz,t+i*.07,i===2?.5:.2,v*.036));return;}
+ air(ctx,t,.06,v*.045,'highpass',2200,4200,.7,.004);pluck(ctx,659,t+.02,.22,v*.045);pluck(ctx,988,t+.11,.42,v*.045);
+}
+/** Full time on a run: the goal phrase turned round and falling to rest (G5 E5 C5 G4), then one box tap. Short and kind. */
+export function puzzleRunOver(ctx:AudioContext|null,delay=0){
+ if(!ready(ctx))return;const v=getSoundVolume();let at=ctx.currentTime+delay;
+ [784,659,523,392].forEach((hz,i)=>{pluck(ctx,hz,at,i===3?1:.42,v*.05);at+=.15+(i===2?.08:0);});knock(ctx,at+.12,180,v*.08,.12);
+}
+/** A star lands on the score (the flying stars of a run): a tiny bright tick, one step up the pentatonic per star (n = 0..3). */
+export function puzzleStarLand(ctx:AudioContext|null,n:number,delay=0){
+ if(!ready(ctx))return;const v=getSoundVolume(),t=ctx.currentTime+delay;
+ tone(ctx,PENTA[Math.min(PENTA.length-1,3+Math.max(0,n))]*2,t,.07,v*.022,'triangle',1,.002);
+}
+/** A short buzz on phones that have one (the same gates as the shared arcade feedback: sound on, motion allowed, not hidden). */
+export function puzzleBuzz(pattern:number|number[]){
+ try{if(typeof document==='undefined'||document.hidden||!isSoundEnabled()||typeof navigator.vibrate!=='function'||matchMedia('(prefers-reduced-motion: reduce)').matches)return;navigator.vibrate(pattern);}catch{/* no buzz */}
+}

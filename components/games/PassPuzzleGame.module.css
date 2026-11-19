@@ -551,3 +551,37 @@
 /* Tablets and laptop heights (Nov 11 2026): a long result card (stars, why, lesson, high-score strip) ran past the bottom of a 1024x768
  * screen with Next puzzle below the fold. The main action sticks to the bottom of the scrolling overlay at every size, as on short phones. */
 @media(min-height:521px){.game .lowOverlay>section>.go{position:sticky;bottom:6px;z-index:1}}
+/* AAA pass (Nov 18 2026), Endless Run feel. A run's splash words sit under the note (they covered the lives, Skip and the note). */
+@media(min-height:521px){.game[data-game=puzzle][data-run=endless] .callout:not([data-tier="3"]){top:calc(var(--arcade-bar-clear) + 178px + env(safe-area-inset-top,0px))}}
+/* A life goes with a pop (the dot remounts when it turns off); the level number stamps in; a wet pitch turns the stamp teal. */
+.endLevel b{display:inline-block}
+.endLevel[data-wet]{box-shadow:3px 3px 0 var(--cm-teal)}.endLevel[data-wet] small{color:#9ff3e6}
+@media(prefers-reduced-motion:no-preference){
+ .endLives i[data-on=false]{animation:ppLifeLost .62s cubic-bezier(.3,1.3,.5,1) both}
+ .endLevel b{animation:ppStamp .38s cubic-bezier(.2,1.7,.4,1) both}
+ /* the clock's last five seconds: the bar knocks twice a second (it is removed the moment the puzzle is resolved) */
+ .endClock{animation:ppClockLow .5s ease-out infinite;animation-delay:calc(var(--pp-clock,30s) - 5s)}
+ .endClock[data-paused]{animation-play-state:paused}
+}
+@keyframes ppLifeLost{0%{background:var(--cm-red);scale:1;opacity:1;box-shadow:2px 2px 0 var(--cm-ink)}22%{background:var(--cm-sun);scale:1.7;rotate:-14deg}44%{background:var(--cm-red);scale:.7;rotate:10deg}70%{background:var(--cm-paper);scale:1.12;rotate:0deg}100%{background:var(--cm-paper);scale:1;opacity:.55;box-shadow:none}}
+@keyframes ppStamp{from{scale:2.1;rotate:-12deg;opacity:0}to{scale:1;rotate:0deg;opacity:1}}
+@keyframes ppClockLow{0%{scale:1.05 1.3;box-shadow:3px 3px 0 var(--cm-red)}45%,100%{scale:1;box-shadow:3px 3px 0 var(--cm-ink)}}
+/* The stars of a solve fly from the note up to the score (the pill bumps as they land: ArcadeTopBar bumpKey). */
+.starFly{position:absolute;z-index:5;left:50%;top:calc(var(--arcade-bar-clear) + 84px + env(safe-area-inset-top,0px));width:0;height:0;pointer-events:none;--fly-y:-136px}
+.starFly i{position:absolute;left:-13px;top:-13px;width:26px;height:26px;background:var(--cm-sun);clip-path:polygon(50% 0,62% 34%,98% 36%,69% 58%,80% 94%,50% 73%,20% 94%,31% 58%,2% 36%,38% 34%);filter:drop-shadow(2px 2px 0 var(--cm-ink));opacity:0;animation:ppStarFly .5s cubic-bezier(.5,-.3,.7,.6) both;animation-delay:calc(.15s + var(--i) * .09s)}
+@keyframes ppStarFly{0%{opacity:0;translate:calc((var(--i) - 1) * 30px + 40px) 8px;scale:.3;rotate:-40deg}18%{opacity:1;scale:1.35}34%{translate:calc((var(--i) - 1) * 34px + 40px) 14px;scale:1.05;rotate:0deg}90%{opacity:1}100%{opacity:0;translate:0 var(--fly-y);scale:.45;rotate:140deg}}
+@media(prefers-reduced-motion:reduce){.starFly{display:none}}
+.endNote b em[data-endless-streak]{background:var(--cm-ink);color:var(--cm-sun)}
+.endNote b em[data-endless-eye]{background:var(--cm-teal);color:var(--cm-ink)}
+/* Coach's eyes: the Scan key carries how many are left; none left reads as a spent key, not a broken one. */
+.game[data-game=puzzle] .scanToggle.scanToggle small{display:inline-grid;place-items:center;min-width:20px;height:20px;margin-left:2px;padding:0 4px;box-sizing:border-box;background:var(--cm-ink);color:var(--cm-sun);font:800 13px/1 var(--cm-ui);border-radius:50%}
+.game[data-game=puzzle] .scanToggle.scanToggle:disabled{opacity:.5;box-shadow:none;translate:3px 3px;cursor:default}
+/* The thinking clock gets its own line under the level row (it was squeezed to 36 px beside Skip on a phone); the note, the flying
+   stars and the splash words step down with it. */
+.game[data-game=puzzle] .endClock{position:absolute;left:0;right:0;top:calc(100% + 7px);flex:none;height:12px}
+.game[data-game=puzzle][data-run=endless] .endNote{top:calc(var(--arcade-bar-clear) + 86px + env(safe-area-inset-top,0px))}
+.game[data-game=puzzle][data-run=endless] .starFly{top:calc(var(--arcade-bar-clear) + 102px + env(safe-area-inset-top,0px))}
+@media(min-height:521px){.game[data-game=puzzle][data-run=endless] .callout:not([data-tier="3"]){top:calc(var(--arcade-bar-clear) + 200px + env(safe-area-inset-top,0px))}}
+@media(prefers-reduced-motion:no-preference){.game[data-game=puzzle] .callout[data-slow]{animation-duration:2.6s}}
+/* the ramp's words are a small tag, one line, so the goal and the keeper stay in view while they are read */
+.game[data-game=puzzle] .callout[data-slow]{padding:9px 18px 8px;max-width:calc(100% - 40px)}.game[data-game=puzzle] .callout[data-slow] b{font-size:19px;white-space:nowrap;-webkit-text-stroke-width:4px;text-shadow:3px 3px 0 var(--cm-ink)}
