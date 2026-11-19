@@ -14,22 +14,26 @@ export const SN={
  pressEvery:2,refEvery:3,safe:4,pickGap:4,
  medals:[300,1000,2500,6000] as const,
  maxFoes:8,maxEvents:48,
+ /** AAA pass (Nov 18 2026). Quick call: the next team-mate inside chainTicks ticks keeps a chain going (chainPts a step, x level, capped).
+  *  Sliding tackle: its lane flashes slideWarn ticks before he comes. Cones: never closer than coneGap to each other. */
+ chainTicks:10,chainPts:2,chainCap:5,slideWarn:7,maxCones:6,coneGap:3,nearCool:8,
 } as const;
 /** The ramp, one row per level (the last row repeats for ever). step = seconds per cell, press = pressing defenders,
- *  refs = referees, boot = seconds a golden boot stays. tests/snake-core.cjs checks every column only ever gets harder. */
+ *  refs = referees, boot = seconds a golden boot stays, cones = training cones left on the pitch (from level 4), slide = ticks between
+ *  sliding tackles (0 = none; from level 5). tests/snake-core.cjs checks every column only ever gets harder. */
 export const RAMP=[
- {level:1,step:.30,press:0,refs:0,boot:9},
- {level:2,step:.28,press:1,refs:0,boot:8.5},
- {level:3,step:.26,press:1,refs:1,boot:8},
- {level:4,step:.245,press:2,refs:1,boot:7.5},
- {level:5,step:.23,press:2,refs:1,boot:7},
- {level:6,step:.215,press:2,refs:2,boot:6.5},
- {level:7,step:.20,press:3,refs:2,boot:6},
- {level:8,step:.19,press:3,refs:2,boot:5.6},
- {level:9,step:.18,press:3,refs:2,boot:5.2},
- {level:10,step:.17,press:4,refs:2,boot:4.8},
- {level:11,step:.16,press:4,refs:3,boot:4.5},
- {level:12,step:.15,press:4,refs:3,boot:4.2},
+ {level:1,step:.30,press:0,refs:0,boot:9,cones:0,slide:0},
+ {level:2,step:.28,press:1,refs:0,boot:8.5,cones:0,slide:0},
+ {level:3,step:.26,press:1,refs:1,boot:8,cones:0,slide:0},
+ {level:4,step:.245,press:2,refs:1,boot:7.5,cones:2,slide:0},
+ {level:5,step:.23,press:2,refs:1,boot:7,cones:2,slide:30},
+ {level:6,step:.215,press:2,refs:2,boot:6.5,cones:3,slide:30},
+ {level:7,step:.20,press:3,refs:2,boot:6,cones:3,slide:28},
+ {level:8,step:.19,press:3,refs:2,boot:5.6,cones:4,slide:26},
+ {level:9,step:.18,press:3,refs:2,boot:5.2,cones:4,slide:24},
+ {level:10,step:.17,press:4,refs:2,boot:4.8,cones:5,slide:22},
+ {level:11,step:.16,press:4,refs:3,boot:4.5,cones:5,slide:20},
+ {level:12,step:.15,press:4,refs:3,boot:4.2,cones:6,slide:18},
 ] as const;
 export const rampFor=(level:number)=>RAMP[Math.max(1,Math.min(RAMP.length,Math.floor(level)))-1];
 
@@ -56,16 +60,20 @@ export function snakeDailySeed(day:string){let h=0x811c9dc5;const s='snake:'+day
 
 /** Directions: 0 up, 1 right, 2 down, 3 left. */
 export const DX=[0,1,0,-1] as const,DY=[-1,0,1,0] as const;
-export const CAUSE={none:0,wall:1,own:2,tackle:3} as const;
-export const CAUSE_WORD=['','OUT!','TANGLED!','TACKLED!'] as const;
+export const CAUSE={none:0,wall:1,own:2,tackle:3,cone:4} as const;
+export const CAUSE_WORD=['','OUT!','TANGLED!','TACKLED!','TRIPPED!'] as const;
 export type SnakePick={on:boolean;x:number;y:number;pos:number};
 /** kind 0 = pressing defender (patrols lo..hi along its axis), 1 = referee (wanders). px/py = the cell before this tick. */
 export type SnakeFoe={on:boolean;kind:number;x:number;y:number;px:number;py:number;dx:number;dy:number;lo:number;hi:number};
-export type SnakeEventType='ready'|'turn'|'pick'|'squad'|'level'|'ball'|'ballIn'|'dashEnd'|'boot'|'bootIn'|'bootGone'|'skid'|'save'|'card'|'knock'|'crash';
+export type SnakeEventType='ready'|'turn'|'pick'|'squad'|'level'|'ball'|'ballIn'|'dashEnd'|'boot'|'bootIn'|'bootGone'|'skid'|'save'|'card'|'knock'|'crash'|'chain'|'chainEnd'|'cone'|'slideWarn'|'slideGo'|'slideOut'|'near';
+/** The sliding tackle. phase 0 = none, 1 = his lane is flashing (t ticks left), 2 = he is sliding. He runs row/column `at` (horiz = along a row),
+ *  one cell a tick from pos in direction dir; ppos = the cell before this tick. Only the captain can be caught: the line hops over him. */
+export type SnakeSlide={phase:number;horiz:boolean;at:number;pos:number;ppos:number;dir:number;t:number};
 /** One slot of the event ring. pick: a=position b=players joined c=points; squad: a=shape code b=bonus c=1 when it is the coach's call;
- *  level: a=level; ball: a=dash cells; boot: a=points; skid/crash: a=cause; card: a=1 when a team-mate was sent back; knock: a=points. */
+ *  level: a=level; ball: a=dash cells; boot: a=points; skid/crash: a=cause; card: a=1 when a team-mate was sent back; knock: a=points b=kind (2 = the slider);
+ *  chain: a=quick calls in a row b=bonus points; chainEnd: a=the chain that ran out; slideWarn/slideGo: x,y=the cell he enters at, a=1 along a row, b=lane, c=dir. */
 export type SnakeEvent={type:SnakeEventType;x:number;y:number;a:number;b:number;c:number};
-export type SnakeStats={picks:number;squads:number;calls:number;bestCode:number;bestBonus:number;bestCall:boolean;shapes:number;balls:number;boots:number;knocks:number;cards:number;saves:number;skids:number;turns:number;longest:number};
+export type SnakeStats={picks:number;squads:number;calls:number;bestCode:number;bestBonus:number;bestCall:boolean;shapes:number;balls:number;boots:number;knocks:number;cards:number;saves:number;skids:number;turns:number;longest:number;/** AAA pass: best quick-call chain, close shaves, cones knocked in a dash, sliding tackles dodged */chain:number;near:number;cones:number;slides:number};
 export type SnakeState={
  cols:number;rows:number;seed:number;daily:boolean;level:number;score:number;t:number;ticks:number;
  /** The line, head first. xs/ys = cell now, pxs/pys = cell before this tick (draw between them with `frac`). */
@@ -74,6 +82,7 @@ export type SnakeState={
  gk:number;d:number;m:number;f:number;joined:number;call:number;
  picks:SnakePick[];ball:{on:boolean;x:number;y:number};ballIn:number;boot:{on:boolean;x:number;y:number;t:number;max:number};bootIn:number;
  foes:SnakeFoe[];dash:number;stall:number;saves:number;over:boolean;cause:number;stats:SnakeStats;
+ cones:{on:boolean;x:number;y:number}[];slide:SnakeSlide;/** ticks until the next sliding tackle's warning */slideIn:number;/** quick calls in a row, and the ticks left to make the next one */chain:number;chainLeft:number;nearCool:number;
  /** Kick-off waits for the first input (Nov 11 2026, owner: a child who has not found the controls crashed at once). While true the
   *  clock stands still after the ready beat; the first turn() ends it and, with the captain still alone, may aim any way. */
  hold:boolean;
@@ -91,7 +100,8 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean;hold?:boolean}
   gk:0,d:0,m:0,f:0,joined:0,call:int(CALLS.length),
   picks:[{on:false,x:0,y:0,pos:0},{on:false,x:0,y:0,pos:0}],ball:{on:false,x:0,y:0},ballIn:SN.firstBall,boot:{on:false,x:0,y:0,t:0,max:1},bootIn:SN.firstBoot,
   foes:Array.from({length:SN.maxFoes},()=>({on:false,kind:0,x:0,y:0,px:0,py:0,dx:0,dy:0,lo:0,hi:0})),dash:0,stall:0,saves:1,over:false,cause:0,hold:!!opts.hold,
-  stats:{picks:0,squads:0,calls:0,bestCode:0,bestBonus:0,bestCall:false,shapes:0,balls:0,boots:0,knocks:0,cards:0,saves:0,skids:0,turns:0,longest:1}};
+  cones:Array.from({length:SN.maxCones},()=>({on:false,x:0,y:0})),slide:{phase:0,horiz:true,at:0,pos:0,ppos:0,dir:1,t:0},slideIn:0,chain:0,chainLeft:0,nearCool:0,
+  stats:{picks:0,squads:0,calls:0,bestCode:0,bestBonus:0,bestCall:false,shapes:0,balls:0,boots:0,knocks:0,cards:0,saves:0,skids:0,turns:0,longest:1,chain:0,near:0,cones:0,slides:0}};
  s.xs[0]=s.pxs[0]=SN.startX;s.ys[0]=s.pys[0]=SN.startY;
  const events:SnakeEvent[]=Array.from({length:SN.maxEvents},()=>({type:'ready' as SnakeEventType,x:0,y:0,a:0,b:0,c:0}));let en=0;
  function emit(type:SnakeEventType,x:number,y:number,a=0,b=0,c=0){if(en>=events.length)return;const e=events[en++];e.type=type;e.x=x;e.y=y;e.a=a;e.b=b;e.c=c;}
@@ -103,7 +113,10 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean;hold?:boolean}
  function bodyAt(x:number,y:number,from:number,to:number){for(let i=from;i<to;i++)if(s.xs[i]===x&&s.ys[i]===y)return i;return -1;}
  function foeAt(x:number,y:number){for(let i=0;i<s.foes.length;i++){const f=s.foes[i];if(f.on&&f.x===x&&f.y===y)return i;}return -1;}
  function itemAt(x:number,y:number){return (s.picks[0].on&&s.picks[0].x===x&&s.picks[0].y===y)||(s.picks[1].on&&s.picks[1].x===x&&s.picks[1].y===y)||(s.ball.on&&s.ball.x===x&&s.ball.y===y)||(s.boot.on&&s.boot.x===x&&s.boot.y===y);}
- const taken=(x:number,y:number)=>bodyAt(x,y,0,s.len)>=0||foeAt(x,y)>=0||itemAt(x,y);
+ function coneAt(x:number,y:number){for(let i=0;i<s.cones.length;i++){const c=s.cones[i];if(c.on&&c.x===x&&c.y===y)return i;}return -1;}
+ const slX=()=>s.slide.horiz?s.slide.pos:s.slide.at,slY=()=>s.slide.horiz?s.slide.at:s.slide.pos;
+ const sliderAt=(x:number,y:number)=>s.slide.phase===2&&slX()===x&&slY()===y;
+ const taken=(x:number,y:number)=>bodyAt(x,y,0,s.len)>=0||foeAt(x,y)>=0||itemAt(x,y)||coneAt(x,y)>=0;
  const inside=(x:number,y:number)=>x>=0&&y>=0&&x<C&&y<R;
  const edge=(x:number,y:number)=>x===0||y===0||x===C-1||y===R-1;
  /** In the three cells straight ahead of the captain: nothing new ever lands there. */
@@ -136,13 +149,21 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean;hold?:boolean}
  function spawnPresser(f:SnakeFoe):boolean{
   for(let k=0;k<40;k++){const horiz=rnd()<.5,span=horiz?C:R,across=horiz?R:C,len=5+int(4),lo=int(span-len+1),hi=lo+len-1,at=1+int(across-2),c=lo+int(len);
    const x=horiz?c:at,y=horiz?at:c,hx=s.xs[0],hy=s.ys[0];
-   if(Math.abs((horiz?hy:hx)-at)<2||taken(x,y)||Math.abs(x-hx)+Math.abs(y-hy)<SN.safe)continue;
+   let cone=false;for(let q=lo;q<=hi;q++)if(coneAt(horiz?q:at,horiz?at:q)>=0)cone=true;// a patrol lane never has a cone in it: the dashed line is the whole truth
+   if(cone||Math.abs((horiz?hy:hx)-at)<2||taken(x,y)||Math.abs(x-hx)+Math.abs(y-hy)<SN.safe)continue;
    f.on=true;f.kind=0;f.x=f.px=x;f.y=f.py=y;f.dx=horiz?(rnd()<.5?1:-1):0;f.dy=horiz?0:(rnd()<.5?1:-1);f.lo=lo;f.hi=hi;return true;}
   f.on=false;return false;
  }
  function spawnRef(f:SnakeFoe):boolean{if(!place(SN.safe+1,1)){f.on=false;return false;}f.on=true;f.kind=1;f.x=f.px=spot.x;f.y=f.py=spot.y;f.dx=0;f.dy=0;f.lo=0;f.hi=0;return true;}
  function spawnFoes(){const r=rampFor(s.level);let i=0;for(const f of s.foes)f.on=false;
   for(let k=0;k<r.press&&i<s.foes.length;k++)spawnPresser(s.foes[i++]);for(let k=0;k<r.refs&&i<s.foes.length;k++)spawnRef(s.foes[i++]);}
+ /** Training cones for this level: off the touchlines, apart from each other, never near or ahead of the captain. They stand still, so every one is readable. */
+ function spawnCones(){const n=Math.min(SN.maxCones,rampFor(s.level).cones);for(const c of s.cones)c.on=false;
+  for(let i=0;i<n;i++){const c=s.cones[i];for(let k=0;k<40;k++){const x=1+int(C-2),y=1+int(R-2);if(taken(x,y)||ahead(x,y)||Math.abs(x-s.xs[0])+Math.abs(y-s.ys[0])<SN.safe)continue;
+    let close=false;for(const o of s.cones)if(o.on&&Math.abs(o.x-x)+Math.abs(o.y-y)<SN.coneGap)close=true;if(close)continue;c.on=true;c.x=x;c.y=y;break;}}
+ }
+ const endSlide=()=>{s.slide.phase=0;s.slideIn=rampFor(s.level).slide;};
+ function knockSlider(x:number,y:number){const pts=SN.knock*mult();s.score+=pts;s.stats.knocks++;emit('knock',x,y,pts,2);endSlide();}
  const relocate=(f:SnakeFoe)=>{f.on=false;if(f.kind===0)spawnPresser(f);else spawnRef(f);};
 
  function crash(cause:number){s.over=true;s.cause=cause;s.acc=0;emit('crash',s.xs[0],s.ys[0],cause,11-s.joined);}
@@ -150,33 +171,36 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean;hold?:boolean}
   const code=shapeCode(s.d,s.m,s.f),c=CALLS[s.call],called=c[0]===s.d&&c[1]===s.m&&c[2]===s.f,bonus=SN.squadBonus*mult()*(called?SN.callMult:1),st=s.stats;
   s.score+=bonus;st.squads++;if(called)st.calls++;if(bonus>=st.bestBonus){st.bestBonus=bonus;st.bestCode=code;st.bestCall=called;}
   const at=SHAPES.indexOf(shapeName(s.d,s.m,s.f) as typeof SHAPES[number]);if(at>=0)st.shapes|=1<<at;
-  s.picks[0].on=s.picks[1].on=false;s.beat=SN.beat;s.acc=0;s.dash=0;s.qn=0;emit('squad',s.xs[0],s.ys[0],code,bonus,called?1:0);
+  s.picks[0].on=s.picks[1].on=false;s.beat=SN.beat;s.acc=0;s.dash=0;s.qn=0;s.slide.phase=0;emit('squad',s.xs[0],s.ys[0],code,bonus,called?1:0);
  }
  /** The beat is over: the line goes back to the captain, the next level starts where he stands. */
  function nextLevel(){
   s.level++;s.len=1;s.gk=s.d=s.m=s.f=s.joined=0;s.pxs[0]=s.xs[0];s.pys[0]=s.ys[0];s.step=rampFor(s.level).step;s.saves=1;s.stall=0;s.acc=0;s.ready=SN.levelReady;
-  s.call=(s.call+1+int(CALLS.length-1))%CALLS.length;spawnFoes();spawnPicks();emit('level',s.xs[0],s.ys[0],s.level,s.call);
+  s.call=(s.call+1+int(CALLS.length-1))%CALLS.length;spawnCones();spawnFoes();spawnPicks();endSlide();s.nearCool=0;if(s.chain>0)s.chainLeft=SN.chainTicks;/* a chain may run on into the next squad */emit('level',s.xs[0],s.ys[0],s.level,s.call);
  }
  function join(pos:number,tx:number,ty:number){
   const i=s.len;s.xs[i]=s.pxs[i]=tx;s.ys[i]=s.pys[i]=ty;s.pos[i]=pos;s.len++;s.joined++;
   if(pos===POS.gk)s.gk=1;else if(pos===POS.def)s.d++;else if(pos===POS.mid)s.m++;else s.f++;
-  const pts=SN.pick*mult();s.score+=pts;s.stats.picks++;if(s.len>s.stats.longest)s.stats.longest=s.len;emit('pick',s.xs[0],s.ys[0],pos,s.joined,pts);
+  // quick call: the next team-mate inside the window keeps the chain; each step is worth a little more
+  if(s.chainLeft>0)s.chain++;else s.chain=1;s.chainLeft=SN.chainTicks;if(s.chain>s.stats.chain)s.stats.chain=s.chain;
+  const bonus=s.chain>=2?SN.chainPts*Math.min(s.chain-1,SN.chainCap)*mult():0,pts=SN.pick*mult()+bonus;s.score+=pts;s.stats.picks++;if(s.len>s.stats.longest)s.stats.longest=s.len;emit('pick',s.xs[0],s.ys[0],pos,s.joined,pts);
+  if(bonus)emit('chain',s.xs[0],s.ys[0],s.chain,bonus);
   if(s.joined>=SN.squad)squad();else spawnPicks();
  }
- function sendBack(){const i=s.len-1,pos=s.pos[i];s.len--;s.joined--;if(pos===POS.gk)s.gk=0;else if(pos===POS.def)s.d--;else if(pos===POS.mid)s.m--;else s.f--;spawnPicks();}
+ function sendBack(){const i=s.len-1,pos=s.pos[i];s.len--;s.joined--;if(pos===POS.gk)s.gk=0;else if(pos===POS.def)s.d--;else if(pos===POS.mid)s.m--;else s.f--;s.chain=0;s.chainLeft=0;spawnPicks();}
 
  /* ---- one tick: the captain moves a cell, the line follows, opponents take their turn ---- */
  function tick(){
-  s.ticks++;for(let i=0;i<s.len;i++){s.pxs[i]=s.xs[i];s.pys[i]=s.ys[i];}for(const f of s.foes){f.px=f.x;f.py=f.y;}
+  s.ticks++;for(let i=0;i<s.len;i++){s.pxs[i]=s.xs[i];s.pys[i]=s.ys[i];}for(const f of s.foes){f.px=f.x;f.py=f.y;}s.slide.ppos=s.slide.pos;
   if(s.qn>0){if(s.q0!==(s.moved+2)%4)s.dir=s.q0;s.q0=s.q1;s.qn--;}
-  let nx=s.xs[0]+DX[s.dir],ny=s.ys[0]+DY[s.dir],cause=0;const fi=inside(nx,ny)?foeAt(nx,ny):-1;
-  if(!inside(nx,ny))cause=CAUSE.wall;else if(bodyAt(nx,ny,1,s.len-1)>=0)cause=CAUSE.own;else if(fi>=0&&s.dash<=0&&s.foes[fi].kind===0)cause=CAUSE.tackle;
+  let nx=s.xs[0]+DX[s.dir],ny=s.ys[0]+DY[s.dir],cause=0;const fi=inside(nx,ny)?foeAt(nx,ny):-1,ci=inside(nx,ny)?coneAt(nx,ny):-1,sl=sliderAt(nx,ny);
+  if(!inside(nx,ny))cause=CAUSE.wall;else if(bodyAt(nx,ny,1,s.len-1)>=0)cause=CAUSE.own;else if(s.dash<=0&&(sl||fi>=0&&s.foes[fi].kind===0))cause=CAUSE.tackle;else if(ci>=0&&s.dash<=0)cause=CAUSE.cone;
   if(cause){
    // first blocked tick: a skid. The captain waits one tick and a turn into a wall or the line is taken back (he keeps his heading).
    if(!s.stall){s.stall=1;s.stats.skids++;emit('skid',s.xs[0],s.ys[0],cause);s.dir=s.moved;moveFoes();return;}
    // second blocked tick: the one last-ditch save turns the captain into open grass, else the run is over
-   let out=-1;if(s.saves>0){let best=-1;for(const turn of [1,3]){const d=(s.dir+turn)%4,x=s.xs[0]+DX[d],y=s.ys[0]+DY[d];if(!inside(x,y)||bodyAt(x,y,1,s.len-1)>=0||foeAt(x,y)>=0)continue;
-     let room=0;for(let k=1;k<Math.max(C,R);k++){const fx=s.xs[0]+DX[d]*k,fy=s.ys[0]+DY[d]*k;if(!inside(fx,fy)||bodyAt(fx,fy,1,s.len)>=0||foeAt(fx,fy)>=0)break;room++;}if(room>best){best=room;out=d;}}}
+   let out=-1;if(s.saves>0){let best=-1;for(const turn of [1,3]){const d=(s.dir+turn)%4,x=s.xs[0]+DX[d],y=s.ys[0]+DY[d];if(!inside(x,y)||bodyAt(x,y,1,s.len-1)>=0||foeAt(x,y)>=0||coneAt(x,y)>=0||sliderAt(x,y))continue;
+     let room=0;for(let k=1;k<Math.max(C,R);k++){const fx=s.xs[0]+DX[d]*k,fy=s.ys[0]+DY[d]*k;if(!inside(fx,fy)||bodyAt(fx,fy,1,s.len)>=0||foeAt(fx,fy)>=0||coneAt(fx,fy)>=0)break;room++;}if(room>best){best=room;out=d;}}}
    if(out<0){crash(cause);return;}
    s.saves--;s.stats.saves++;s.dir=out;s.qn=0;nx=s.xs[0]+DX[out];ny=s.ys[0]+DY[out];emit('save',s.xs[0],s.ys[0],cause);
   }
@@ -184,6 +208,8 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean;hold?:boolean}
   if(!cause&&fi>=0){const f=s.foes[fi];
    if(s.dash>0){const pts=SN.knock*mult();s.score+=pts;s.stats.knocks++;emit('knock',nx,ny,pts,f.kind);relocate(f);}
    else{s.stats.cards++;const lost=s.len>1?1:0;if(lost)sendBack();else s.score=Math.max(0,s.score-SN.card*mult());emit('card',nx,ny,lost);relocate(f);}}
+  if(!cause&&ci>=0){s.cones[ci].on=false;s.stats.cones++;emit('cone',nx,ny);}// only in a through pass: the cone goes flying
+  if(!cause&&sl)knockSlider(nx,ny);
   const tx=s.xs[s.len-1],ty=s.ys[s.len-1];
   for(let i=s.len-1;i>0;i--){s.xs[i]=s.xs[i-1];s.ys[i]=s.ys[i-1];}s.xs[0]=nx;s.ys[0]=ny;s.moved=s.dir;
   if(s.dash>0){s.dash--;s.score+=SN.dashStep*mult();if(s.dash===0)emit('dashEnd',nx,ny);}
@@ -192,17 +218,34 @@ export function createSquadSnake(opts:{seed:number;daily?:boolean;hold?:boolean}
   for(const p of s.picks)if(p.on&&p.x===nx&&p.y===ny){p.on=false;join(p.pos,tx,ty);break;}
   if(s.beat<=0)moveFoes();
  }
+ /** The sliding tackle: a warned lane, then one cell a tick across the whole pitch. */
+ function moveSlide(){const sl=s.slide;
+  if(sl.phase===0){if(rampFor(s.level).slide>0&&--s.slideIn<=0){const hx=s.xs[0],hy=s.ys[0];sl.horiz=rnd()<.5;const span=sl.horiz?C:R,across=sl.horiz?R:C;
+    sl.at=Math.max(0,Math.min(across-1,(sl.horiz?hy:hx)+int(3)-1));sl.dir=(sl.horiz?hx:hy)<span/2?-1:1;/* he comes from the far side */sl.pos=sl.ppos=sl.dir>0?-1:span;sl.t=SN.slideWarn;sl.phase=1;
+    const e=sl.dir>0?0:span-1;emit('slideWarn',sl.horiz?e:sl.at,sl.horiz?sl.at:e,sl.horiz?1:0,sl.at,sl.dir);}return;}
+  if(sl.phase===1){if(--sl.t<=0){sl.phase=2;const e=sl.dir>0?0:(sl.horiz?C:R)-1;emit('slideGo',sl.horiz?e:sl.at,sl.horiz?sl.at:e,sl.horiz?1:0,sl.at,sl.dir);}return;}
+  sl.pos+=sl.dir;if(sl.pos<0||sl.pos>=(sl.horiz?C:R)){s.stats.slides++;const e=sl.dir>0?(sl.horiz?C:R)-1:0;emit('slideOut',sl.horiz?e:sl.at,sl.horiz?sl.at:e);endSlide();return;}
+  if(slX()===s.xs[0]&&slY()===s.ys[0]){const x=s.xs[0],y=s.ys[0];
+   if(s.dash>0)knockSlider(x,y);else if(s.saves>0){s.saves--;s.stats.saves++;emit('save',x,y,CAUSE.tackle);endSlide();}else crash(CAUSE.tackle);}
+ }
  function moveFoes(){
+  moveSlide();if(s.over)return;movePress();if(s.over)return;
+  if(s.chainLeft>0&&--s.chainLeft===0){if(s.chain>=2)emit('chainEnd',s.xs[0],s.ys[0],s.chain);s.chain=0;}
+  // a close shave: a presser or the slider right beside the captain (no points: the crowd just gasps)
+  if(s.nearCool>0)s.nearCool--;else if(s.dash<=0){const hx=s.xs[0],hy=s.ys[0];let near=s.slide.phase===2&&Math.abs(slX()-hx)+Math.abs(slY()-hy)===1;
+   for(const f of s.foes)if(f.on&&f.kind===0&&Math.abs(f.x-hx)+Math.abs(f.y-hy)===1)near=true;if(near){s.nearCool=SN.nearCool;s.stats.near++;emit('near',hx,hy);}}
+ }
+ function movePress(){
   for(let i=0;i<s.foes.length;i++){const f=s.foes[i];if(!f.on)continue;
    if(f.kind===0){if((s.ticks+i)%SN.pressEvery)continue;const nx=f.x+f.dx,ny=f.y+f.dy,c=f.dx?nx:ny;
-    if(c<f.lo||c>f.hi||bodyAt(nx,ny,1,s.len)>=0||itemAt(nx,ny)||foeAt(nx,ny)>=0){f.dx=-f.dx;f.dy=-f.dy;continue;}
+    if(c<f.lo||c>f.hi||bodyAt(nx,ny,1,s.len)>=0||itemAt(nx,ny)||coneAt(nx,ny)>=0||foeAt(nx,ny)>=0){f.dx=-f.dx;f.dy=-f.dy;continue;}
     if(nx===s.xs[0]&&ny===s.ys[0]){// the presser reaches the captain
      if(s.dash>0){const pts=SN.knock*mult();s.score+=pts;s.stats.knocks++;emit('knock',nx,ny,pts,0);relocate(f);}
      else if(s.saves>0){s.saves--;s.stats.saves++;emit('save',nx,ny,CAUSE.tackle);relocate(f);}
      else{f.x=nx;f.y=ny;crash(CAUSE.tackle);return;}
      continue;}
     f.x=nx;f.y=ny;}
-   else{if((s.ticks+i)%SN.refEvery)continue;const d=int(4),nx=f.x+DX[d],ny=f.y+DY[d];if(inside(nx,ny)&&!edge(nx,ny)&&!taken(nx,ny))f.x=nx,f.y=ny;}
+   else{if((s.ticks+i)%SN.refEvery)continue;const d=int(4),nx=f.x+DX[d],ny=f.y+DY[d];if(inside(nx,ny)&&!edge(nx,ny)&&!taken(nx,ny)&&!ahead(nx,ny))f.x=nx,f.y=ny;}// AAA pass: a referee never steps into the captain's next three cells (that loss could not be read)
   }
  }
 

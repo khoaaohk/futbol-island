@@ -95,6 +95,7 @@ export function coachLine(cause:number):string{
  if(cause===1)return 'You ran out of the pitch. Turn one cell early: swipe before the touchline.';
  if(cause===2)return 'You ran into your own line. Leave a lane open behind you, like a team keeping its shape.';
  if(cause===3)return 'A pressing defender got you. Watch their lane and cross it just after they pass.';
+ if(cause===4)return 'You tripped on a training cone. Cones never move. Plan your way round them.';
  return 'Head up: look where the space is before you turn.';
 }
 /** What the child built, for the results card: "4-3-3" or, without a squad, the line so far ("GK + 3 defenders"). */

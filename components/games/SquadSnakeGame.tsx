@@ -35,7 +35,7 @@ const SquadSnakeScores=dynamic(()=>retryImport(()=>import('./SquadSnakeScores'))
 type Phase='menu'|'playing'|'paused'|'over';
 /** line: the positions joined so far, one digit each ("12223"). */
 type Hud={score:number;level:number;line:string;call:number;saves:number;dash:boolean;wait:boolean};
-type Result={score:number;daily:boolean;level:number;squads:number;longest:number;built:string;hasShape:boolean;called:boolean;settled:SnakeSettled;near:string;coach:string;coins:number};
+type Result={score:number;daily:boolean;level:number;squads:number;longest:number;chain:number;built:string;hasShape:boolean;called:boolean;settled:SnakeSettled;near:string;coach:string;coins:number};
 export const SNAKE_COIN_REASON='Squad Snake: squad called together';
 const FRAME_MS=1000/60,SWIPE_PX=22,HUD_ROOM=66;
 const KEY_DIR:Record<string,number>={ArrowUp:0,KeyW:0,ArrowRight:1,KeyD:1,ArrowDown:2,KeyS:2,ArrowLeft:3,KeyA:3};
@@ -62,7 +62,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
  const game=useRef<SquadSnake|null>(null),view=useRef<SnakeView|null>(null),audio=useRef<SnakeAudio|null>(null);
  const raf=useRef(0),last=useRef(0),slot=useRef(0),endAt=useRef(0),run=useRef({id:'',daily:false,day:'',done:true,board:'snake' as BoardGame});
  const size=useRef({w:1,h:1,dpr:1,left:0,top:0}),perf=useRef({frames:0,sum:0,max:0,window:0,windowSum:0,dropped:false});
- const reduced=useRef(false),pad=useRef(false),fitRef=useRef<()=>void>(()=>{});
+ const reduced=useRef(false),pad=useRef(false),fitRef=useRef<()=>void>(()=>{}),/** hit-stop: seconds the rules stand still after a big hit (the picture keeps moving) */stop=useRef(0);
  // Touch screens always get the d-pad (Nov 11 2026, owner: "on mobile there are no controls to move"); swipes work as well.
  const [coarse,setCoarse]=useState(false),coarseRef=useRef(false);
 
@@ -76,7 +76,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   if(!r.daily)saveArcadeRecord('snake',score);else noteLastScore('snake_daily',score,settled.dailyBest);/* Nov 15 2026: Welcome back "almost your best" (lib/arcade/lastScore.ts) */
   const coins=arcadeCoinTarget('snake',{points:score});if(coins>0)void creditRun(r.id,'snake',coins,SNAKE_COIN_REASON);
   void noteArcadeToday({kind:'snake',daily:r.daily,day:r.day,score,squads:stats.squads,calls:stats.calls,level:s.level});
-  setResult({score,daily:r.daily,level:s.level,squads:stats.squads,longest:stats.longest-1,built:builtLine(stats,line),hasShape:stats.bestCode>0,called:stats.bestCall,settled,coins,
+  setResult({score,daily:r.daily,level:s.level,squads:stats.squads,longest:stats.longest-1,chain:stats.chain,built:builtLine(stats,line),hasShape:stats.bestCode>0,called:stats.bestCall,settled,coins,
    near:nearMissLine({score,best:settled.previousBest,newBest:settled.newBest,joined:s.joined,stats,daily:r.daily,call:s.call}),coach:coachLine(s.cause)});
   if(score>0&&(!r.daily||settled.dailyFirst))setBoard({game:r.board,score});
   if(settled.newMedal||settled.newBest){audio.current?.medal(Math.max(1,settled.medal));arcadeFeedback(null,'goal');}
@@ -89,16 +89,26 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   switch(e.type){
    case 'ready':a?.ready();break;
    case 'turn':a?.turn(e.a);break;
-   case 'pick':a?.pick(e.b);arcadeFeedback(null,'combo');break;
+   case 'pick':a?.pick(e.b);arcadeFeedback(null,'combo');{const s=g.state;if((e.a===POS.mid&&s.m===1)||(e.a===POS.fwd&&s.f===1))a?.line();}break;
+   case 'chain':a?.chain(e.a);break;
+   case 'chainEnd':a?.chainEnd();break;
+   case 'ballIn':a?.ballIn();break;
+   case 'bootGone':a?.bootGone();break;
+   case 'dashEnd':a?.dashEnd();break;
+   case 'cone':a?.cone();arcadeFeedback(null,'skill');break;
+   case 'slideWarn':a?.slideWarn();arcadeFeedback(null,'level');break;
+   case 'slideGo':a?.slideGo();break;
+   case 'slideOut':a?.dodge();break;
+   case 'near':a?.near();arcadeFeedback(null,'skill');break;
    case 'squad':a?.squad(e.c===1);arcadeFeedback(null,'goal');break;
    case 'level':a?.level();break;
    case 'ball':a?.ball();arcadeFeedback(null,'skill');break;
    case 'boot':a?.boot();arcadeFeedback(null,'perfect');break;
    case 'bootIn':a?.bootIn();break;
    case 'skid':a?.skid();arcadeFeedback(null,'slam');break;
-   case 'save':a?.save();arcadeFeedback(null,'level');break;
-   case 'card':a?.card();arcadeFeedback(null,'slam');break;
-   case 'knock':a?.knock();arcadeFeedback(null,'perfect');break;
+   case 'save':a?.save();arcadeFeedback(null,'level');stop.current=.09;break;
+   case 'card':a?.card();if(e.a)a?.lost();arcadeFeedback(null,'slam');stop.current=.08;break;
+   case 'knock':a?.knock();arcadeFeedback(null,'perfect');stop.current=.07;break;
    case 'crash':a?.crash();arcadeFeedback(null,'slam');break;
   }
  },[]);
@@ -108,7 +118,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   raf.current=0;const g=game.current,v=view.current;if(phaseRef.current!=='playing'||!g||!v)return;
   const next=frameCapSlot(now,slot.current,FRAME_MS);
   if(next>=0){slot.current=next;const dt=Math.min(.05,Math.max(0,(now-last.current)/1000));last.current=now;const t0=performance.now();
-   g.step(dt);g.drain(onEvent);v.render(g,dt);
+   if(stop.current>0&&!reduced.current)stop.current-=dt;else{stop.current=0;g.step(dt);}g.drain(onEvent);v.render(g,dt);
    const s=g.state,h=hudRef.current,dash=s.dash>0;
    if(h.score!==s.score||h.level!==s.level||h.line.length!==s.len-1||h.call!==s.call||h.saves!==s.saves||h.dash!==dash||h.wait!==s.hold){const n={score:s.score,level:s.level,line:lineOf(g),call:s.call,saves:s.saves,dash,wait:s.hold};hudRef.current=n;setHud(n);}
    const cost=performance.now()-t0,p=perf.current;p.frames++;p.sum+=cost;if(cost>p.max)p.max=cost;p.window++;p.windowSum+=cost;
@@ -128,7 +138,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   const seed=daily?snakeDailySeed(day):1+Math.floor(Math.random()*2_000_000_000);
   game.current=createSquadSnake({seed,daily,hold:true});/* the captain waits on the spot for the first swipe or arrow */run.current={id,daily,day,done:false,board:boardGame};
   if(!daily||readSnakeSave().daily.day!==day||!readSnakeSave().daily.counted)beginBoardSession(boardGame);
-  view.current?.reset();endAt.current=0;setResult(null);setBoard(null);setDailyFirst(false);setToday(day);
+  view.current?.reset();endAt.current=0;stop.current=0;setResult(null);setBoard(null);setDailyFirst(false);setToday(day);
   const s=game.current.state,n:Hud={score:0,level:1,line:'',call:s.call,saves:s.saves,dash:false,wait:s.hold};hudRef.current=n;setHud(n);
   change('playing');wake();
  },[change,entry,wake]);
@@ -164,7 +174,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   el.addEventListener('pointerdown',down,opt);el.addEventListener('pointermove',move,opt);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('lostpointercapture',up);
   const noScroll=(e:TouchEvent)=>{if(phaseRef.current==='playing'&&e.cancelable)e.preventDefault();};el.addEventListener('touchmove',noScroll,opt);// no scroll, pull-to-refresh or page swipe steals a steer
   const noMenu=(e:Event)=>e.preventDefault();f.addEventListener('contextmenu',noMenu);
-  if(process.env.NODE_ENV!=='production')(window as unknown as {__snake?:unknown}).__snake={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},perf:perf.current,size:size.current,get audio(){return audio.current;},get layout(){return view.current?.layout;}};
+  if(process.env.NODE_ENV!=='production')(window as unknown as {__snake?:unknown}).__snake={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},perf:perf.current,size:size.current,get audio(){return audio.current;},get layout(){return view.current?.layout;},get atlas(){return view.current?.atlasPixels;},get theme(){return view.current?.theme;}};
   return()=>{ro.disconnect();window.visualViewport?.removeEventListener('resize',fit);el.removeEventListener('pointerdown',down);el.removeEventListener('pointermove',move);el.removeEventListener('pointerup',up);el.removeEventListener('pointercancel',up);el.removeEventListener('lostpointercapture',up);el.removeEventListener('touchmove',noScroll);f.removeEventListener('contextmenu',noMenu);
    if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;view.current=null;game.current=null;audio.current?.dispose();audio.current=null;fitRef.current=()=>{};delete (window as unknown as {__snake?:unknown}).__snake;};
  },[]);
@@ -191,6 +201,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   <aside className={styles.side} data-side="right" aria-hidden="true">
    <ComicPanel tilt={1.2} tone="paper" className={styles.sideMedals}><b>Medals</b>{SN.medals.map((m,i)=><span key={m}><Medal level={i+1} on/>{MEDAL_NAMES[i]}<em>{m}</em></span>)}</ComicPanel>
    <ComicPanel tilt={-1} tone="red"><b>Mind the press</b><br/>A defender patrols the dashed lane. Cross just after they pass.</ComicPanel>
+   <ComicPanel tilt={.8} tone="sun"><b>Quick call</b><br/>Reach the next team-mate before the ring runs out. Each one in a row is worth more.</ComicPanel>
   </aside>
   <div className={styles.stage} ref={stage} data-snake-stage>
    <i ref={probe} className={styles.probe} aria-hidden="true"/>
@@ -253,6 +264,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
     <ComicStat value={result.squads} label={result.squads===1?'Full Squad':'Full Squads'}/>
     <ComicStat value={result.level} label="Level"/>
     <ComicStat value={result.longest} label="Longest line"/>
+    {result.chain>=2&&<ComicStat value={`x${result.chain}`} label="Quick calls" tone="sun" data-snake-chain={result.chain}/>}
     {result.daily&&<ComicStat value={result.settled.streak} label={result.settled.streak===1?'Day':'Days in a row'} tone="sun"/>}
    </div>
    <p className={styles.coach}>{result.coach}</p>

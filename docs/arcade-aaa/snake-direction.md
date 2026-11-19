@@ -26,6 +26,12 @@
 - Ramp (`RAMP`, level: seconds per cell / pressers / referees / boot timer): 1: .30/0/0/9.0 · 2: .28/1/0/8.5 ·
   3: .26/1/1/8.0 · 4: .245/2/1/7.5 · 5: .23/2/1/7.0 · 6: .215/2/2/6.5 · 7: .20/3/2/6.0 · 8: .19/3/2/5.6 ·
   9: .18/3/2/5.2 · 10: .17/4/2/4.8 · 11: .16/4/3/4.5 · 12+: .15/4/3/4.2. The run ends only on the player's crash.
+- **AAA pass (Nov 18 2026), new rules.** Quick call: the next team-mate inside 10 ticks keeps a chain (+2 a step x level, capped at +10;
+  a ring round each waiting team-mate is the timer; a card breaks it). Training cones from level 4 (2 rising to 6, still, off the
+  touchlines and the patrol lanes; a through pass knocks them flying, no points). Sliding tackle from level 5: a lane at the captain
+  flashes for 7 ticks with arrows, then he crosses from the far side a cell a tick; only the captain can be caught (save, then the end);
+  the line hops over him. Close shave beside a presser or the slider: CLOSE!, a gasp, no points. A referee no longer steps into the
+  captain's next three cells. `RAMP` gained `cones` and `slide` (ticks between slides: 30 down to 18).
 - Medals: Bronze 300 (about one squad), Silver 1000, Gold 2500, Captain 6000. Coins: 1 per 150 points, cap 12; a play is free (Nov 11 2026: every arcade game is free; was 3 coins).
 
 ## Retention loop
@@ -57,6 +63,21 @@ skid = brush scrape; save = glove thump; dash = whoosh; card = pea whistle; cras
 2D canvas, no three.js. Static scene never repaints; sprites pre-rendered per resize; effects pooled; the loop runs only while
 playing (60 fps cap, DPR cap 2 falling to 1.5 on long frames). Measured (headless Chrome, `scripts/check-snake-browser.cjs`):
 rules + draw 0.20 ms a frame avg, worst 4.9 ms at 390x844 @2x. Script time only: no GPU raster time or phone temperature measured.
+
+## AAA pass (Nov 18 2026)
+Found by playing: a referee could step in front of the captain (unreadable loss); banners sat on the top rows while the captain ran
+there; ball in, boot gone, dash end made no sound; the captain was hard to pick out in a long line; nothing changed between levels but
+speed and one more opponent; the sharp bot never lost (900 s cap); the line moved as one rigid train; a team-mate sent back just vanished.
+- Venue by level (`THEMES` in view.ts, one static repaint a level): golden hour, dusk (bands along), night under the lights (checks,
+  stars, moon, beams), morning (wide bands), then round again. Corner flags, a gull and its shadow, confetti on FULL SQUAD.
+- Captain: sun ring at his feet and an arrow for his heading (paper once a turn is lined up). Team-mates step inside each cell, hop
+  when their line is named (BACK FOUR!, MIDFIELD THREE!), hop over the slider, flinch on a card while the one sent back tumbles away.
+- Banners keep to the end of the pitch the captain is not in. Big scores fly up to the counter. Dust on turns. Hit-stop on save, card, knock.
+- Sound: crowd cheer and gasp as one-shots (no loop, no music bed), quick-call sparkle that climbs, slide warning (two low peeps and a
+  drum), cone, dodge, ball in, boot gone, dash end, line named, sad pair for a team-mate sent back; small random detune on repeats.
+- Heat: atlas unchanged (9 x 6 slots; the cone took a keeper slot no shirt uses). Star pool 40 to 72 objects. Headless phone 390x844 @2x:
+  rules + draw 0.06 ms avg before, about 0.1 ms after; frame interval 16.7 ms both.
+- Score: bots score 8-11% more in the first four minutes (chain) and 25-35% less over a whole run (late levels now end runs).
 
 ## Polish pass (Nov 17 2026, batch 2a)
 LEVEL n callouts carry a note read from RAMP (a pressing defender joins / a referee walks on / the captain runs faster).
