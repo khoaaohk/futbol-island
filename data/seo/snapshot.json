@@ -1,37 +1,37 @@
 {
  "schemaVersion": 1,
  "site": "https://futbolisland.app/",
- "asOf": "2026-11-18",
- "gscDataThrough": "2026-11-16",
+ "asOf": "2026-11-19",
+ "gscDataThrough": "2026-11-17",
  "windows": {
   "d7": {
-   "clicks": 36,
-   "impressions": 1478,
-   "ctr": 0.024,
-   "position": 32.1,
+   "clicks": 32,
+   "impressions": 1847,
+   "ctr": 0.017,
+   "position": 32.4,
    "prev": null
   },
   "d28": {
-   "clicks": 37,
-   "impressions": 1480,
-   "ctr": 0.025,
-   "position": 32,
-   "queries": 388,
-   "pages": 159,
+   "clicks": 42,
+   "impressions": 1869,
+   "ctr": 0.022,
+   "position": 32.1,
+   "queries": 479,
+   "pages": 175,
    "prev": null
   },
   "h24": null,
   "d1": {
-   "day": "2026-11-16",
-   "clicks": 2,
-   "impressions": 294,
-   "ctr": 0.007,
-   "position": 31.7,
+   "day": "2026-11-17",
+   "clicks": 5,
+   "impressions": 386,
+   "ctr": 0.013,
+   "position": 32.4,
    "prev": {
-    "clicks": 6,
-    "impressions": 363,
-    "ctr": 0.017,
-    "position": 35.9
+    "clicks": 2,
+    "impressions": 294,
+    "ctr": 0.007,
+    "position": 31.7
    }
   }
  },
@@ -75,38 +75,73 @@
    "day": "2026-11-16",
    "clicks": 2,
    "impressions": 294
+  },
+  {
+   "day": "2026-11-17",
+   "clicks": 5,
+   "impressions": 386
   }
  ],
  "topQueries": [
   {
    "query": "futbol island",
    "clicks": 3,
-   "impressions": 9,
-   "position": 3.8
+   "impressions": 11,
+   "position": 4.4
   },
   {
    "query": "futbal island",
    "clicks": 1,
    "impressions": 3,
-   "position": 2
+   "position": 2.0
+  },
+  {
+   "query": "δωρεάν ;",
+   "clicks": 1,
+   "impressions": 1,
+   "position": 2.0
   },
   {
    "query": "2v1",
-   "clicks": null,
-   "impressions": 27,
-   "position": 8.4
+   "clicks": 0,
+   "impressions": 33,
+   "position": 9.2
   },
   {
    "query": "yellow card soccer",
-   "clicks": null,
-   "impressions": 16,
-   "position": 62.9
+   "clicks": 0,
+   "impressions": 18,
+   "position": 63.2
   },
   {
    "query": "yellow card in soccer",
-   "clicks": null,
+   "clicks": 0,
+   "impressions": 12,
+   "position": 55.6
+  },
+  {
+   "query": "rio soccer stadium 1950 world cup",
+   "clicks": 0,
+   "impressions": 11,
+   "position": 45.3
+  },
+  {
+   "query": "penalty kick diagram",
+   "clicks": 0,
    "impressions": 10,
-   "position": 56.6
+   "position": 24.2
+  },
+  {
+   "query": "through ball",
+   "clicks": 0,
+   "impressions": 10,
+   "position": 11.4
+  },
+  {
+   "query": "2v1 meaning",
+   "clicks": 0,
+   "impressions": 10,
+   "position": 7.6
   },
   {
    "query": "what is a hat trick in soccer",
@@ -121,12 +156,6 @@
    "position": 17.1
   },
   {
-   "query": "penalty kick diagram",
-   "clicks": null,
-   "impressions": 8,
-   "position": 25.1
-  },
-  {
    "query": "futsal scorekeeping",
    "clicks": null,
    "impressions": 8,
@@ -139,22 +168,10 @@
    "position": 6.9
   },
   {
-   "query": "through ball",
-   "clicks": null,
-   "impressions": 7,
-   "position": 13
-  },
-  {
    "query": "soccer tennis game",
    "clicks": null,
    "impressions": 6,
    "position": 7.3
-  },
-  {
-   "query": "2v1 meaning",
-   "clicks": null,
-   "impressions": 6,
-   "position": 9.2
   },
   {
    "query": "first football match under floodlights",
@@ -215,38 +232,68 @@
    "clicks": null,
    "impressions": 5,
    "position": 55.2
-  },
-  {
-   "query": "hat trick",
-   "clicks": null,
-   "impressions": 5,
-   "position": 83.6
-  },
-  {
-   "query": "yellow card in football",
-   "clicks": null,
-   "impressions": 5,
-   "position": 84.8
   }
  ],
  "topPages": [
   {
+   "path": "/",
+   "clicks": 34,
+   "impressions": 67,
+   "position": 2.7
+  },
+  {
+   "path": "/games/soccer-tennis-game",
+   "clicks": 3,
+   "impressions": 48,
+   "position": 7.8
+  },
+  {
+   "path": "/tools/soccer-scanning-trainer",
+   "clicks": 3,
+   "impressions": 6,
+   "position": 1.7
+  },
+  {
+   "path": "/games",
+   "clicks": 1,
+   "impressions": 27,
+   "position": 6.7
+  },
+  {
+   "path": "/games/soccer-passing-puzzle-game",
+   "clicks": 1,
+   "impressions": 12,
+   "position": 12.8
+  },
+  {
+   "path": "/learn/soccer-drills/first-touch-gates",
+   "clicks": 1,
+   "impressions": 4,
+   "position": 4.5
+  },
+  {
    "path": "/learn/soccer-rules/yellow-and-red-cards",
    "clicks": 0,
-   "impressions": 185,
-   "position": 52.7
+   "impressions": 223,
+   "position": 51.6
   },
   {
    "path": "/tools/soccer-playing-time-calculator",
    "clicks": 0,
-   "impressions": 92,
-   "position": 19.6
+   "impressions": 109,
+   "position": 18.6
   },
   {
    "path": "/learn/soccer-rules/heading-rules-for-kids",
    "clicks": 0,
-   "impressions": 79,
+   "impressions": 85,
    "position": 9.8
+  },
+  {
+   "path": "/learn/soccer-positions",
+   "clicks": 0,
+   "impressions": 77,
+   "position": 18.0
   },
   {
    "path": "/learn/soccer-rules/back-pass-rule",
@@ -255,28 +302,10 @@
    "position": 46.8
   },
   {
-   "path": "/",
-   "clicks": 33,
-   "impressions": 62,
-   "position": 2.3
-  },
-  {
-   "path": "/learn/soccer-positions",
-   "clicks": 0,
-   "impressions": 60,
-   "position": 19
-  },
-  {
    "path": "/learn/soccer-terms/two-v-one",
    "clicks": 0,
    "impressions": 47,
    "position": 8.3
-  },
-  {
-   "path": "/games/soccer-tennis-game",
-   "clicks": 3,
-   "impressions": 45,
-   "position": 8.2
   },
   {
    "path": "/learn/soccer-rules/futsal-rules",
@@ -313,12 +342,6 @@
    "clicks": 0,
    "impressions": 27,
    "position": 38
-  },
-  {
-   "path": "/games",
-   "clicks": 1,
-   "impressions": 26,
-   "position": 6.9
   },
   {
    "path": "/learn/soccer-rules/penalty-kick",
@@ -391,44 +414,26 @@
    "clicks": 0,
    "impressions": 15,
    "position": 13.5
-  },
-  {
-   "path": "/learn/soccer-drills/u10",
-   "clicks": 0,
-   "impressions": 15,
-   "position": 46.7
-  },
-  {
-   "path": "/learn/soccer-rules/offside",
-   "clicks": 0,
-   "impressions": 14,
-   "position": 30.4
-  },
-  {
-   "path": "/learn/soccer-rules/substitutions-and-game-length",
-   "clicks": 0,
-   "impressions": 14,
-   "position": 48.6
   }
  ],
  "index": {
-  "asOf": "2026-11-12",
-  "indexed": 314,
-  "notIndexed": 617,
+  "asOf": "2026-11-15",
+  "indexed": 371,
+  "notIndexed": 777,
   "previous": {
-   "asOf": "2026-11-08",
-   "indexed": 2,
-   "notIndexed": 225
+   "asOf": "2026-11-12",
+   "indexed": 314,
+   "notIndexed": 617
   },
   "reasons": [
    {
     "reason": "Discovered - currently not indexed",
-    "pages": 575,
+    "pages": 559,
     "validation": null
    },
    {
     "reason": "Crawled - currently not indexed",
-    "pages": 37,
+    "pages": 206,
     "validation": null,
     "examples": [
      "/learn/soccer-positions/goalkeeper",
@@ -440,7 +445,7 @@
    },
    {
     "reason": "Duplicate without user-selected canonical",
-    "pages": 5,
+    "pages": 6,
     "validation": "Started 2026-11-15",
     "examples": [
      "/learn/soccer-drills/clean-your-room",
@@ -449,6 +454,16 @@
      "/learn/lessons/def_11_pressurecover",
      "/learn/soccer-formations/7v7-2-2-2"
     ]
+   },
+   {
+    "reason": "Excluded by 'noindex' tag",
+    "pages": 3,
+    "validation": null
+   },
+   {
+    "reason": "Alternate page with proper canonical tag",
+    "pages": 3,
+    "validation": null
    }
   ]
  },
@@ -587,6 +602,20 @@
    ],
    "alreadyIndexed": 1,
    "note": "Quota exceeded from /books/salah on (morning and the 10:47 run). Release f675771b live: 24 video watch pages, new titles, cards page."
+  },
+  {
+   "day": "2026-11-19",
+   "requested": [
+    "/books/salah",
+    "/games/soccer-merge-game",
+    "/learn/soccer-terms/yellow-card",
+    "/learn/soccer-terms/red-card",
+    "/tools/soccer-playing-time-calculator",
+    "/learn/soccer-terms/through-ball",
+    "/videos"
+   ],
+   "alreadyIndexed": 0,
+   "note": "Pages report updated to Nov 15 data: 371 indexed. Release 44ca51a2 live (arcade pass, traffic lights, reef room)."
   }
  ],
  "history": [
@@ -629,6 +658,14 @@
    "ctr": 0.025,
    "position": 32,
    "indexed": 314
+  },
+  {
+   "day": "2026-11-19",
+   "clicks": 42,
+   "impressions": 1869,
+   "ctr": 0.022,
+   "position": 32.1,
+   "indexed": 371
   }
  ]
 }
