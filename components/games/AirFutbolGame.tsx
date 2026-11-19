@@ -36,7 +36,7 @@ const AirFutbolScores=dynamic(()=>retryImport(()=>import('./AirFutbolScores')),{
 
 type Phase='menu'|'playing'|'paused'|'over';
 /** wait: the puck is waiting for a serve touch. between: the next opponent is walking on. first: nobody has served yet. */
-type Hud={score:number;level:number;lives:number;g0:number;g1:number;wait:boolean;between:boolean;first:boolean};
+type Hud={score:number;level:number;lives:number;g0:number;g1:number;wait:boolean;between:boolean;first:boolean;/** the puck rests in your half: a "Your ball" cue */yours:boolean};
 type Result={score:number;level:number;wins:number;bank:number;saves:number;settled:AirSettled;near:string;coins:number};
 export const AIR_COIN_REASON='Air Futbol: goals and matches won';
 const FRAME_MS=1000/60,KEY_SPEED=250;
@@ -54,7 +54,7 @@ function BankDiagram(){
 
 export default function AirFutbolGame({onExit}:{onExit:()=>void}){
  const [phase,setPhase]=useState<Phase>('menu'),phaseRef=useRef<Phase>('menu');
- const [hud,setHud]=useState<Hud>({score:0,level:1,lives:AH.LIVES,g0:0,g1:0,wait:true,between:false,first:true}),hudRef=useRef(hud);
+ const [hud,setHud]=useState<Hud>({score:0,level:1,lives:AH.LIVES,g0:0,g1:0,wait:true,between:false,first:true,yours:false}),hudRef=useRef(hud);
  const [save,setSave]=useState<AirSave>(emptyAirSave),[result,setResult]=useState<Result|null>(null);
  // Nov 17 2026: the moment a run passes the saved best, a NEW BEST! burst pops under the score bar (once per run, 1.8 s, no loop).
  const [bestCall,setBestCall]=useState(false),bestCalled=useRef(false);
@@ -114,8 +114,8 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
    let dx=0,dy=0;for(const code of keys.current){const k=KEYS[code];if(k){dx+=k[0];dy+=k[1];}}// keys: the striker walks at a steady speed
    if(dx||dy){const turn=v.layout.side?1:0,kx=turn?-dy:dx,ky=turn?dx:dy;keyHeld.current=true;g.hold(0,true);g.aim(0,s.sx[0]+kx*KEY_SPEED*dt,s.sy[0]+ky*KEY_SPEED*dt);}else if(keyHeld.current){keyHeld.current=false;if((touches.current?.owner()??-1)<0)g.hold(0,false);}
    if(stopFor.current>0){stopFor.current-=dt;g.step(0);}else g.step(dt);g.drain(onEvent);v.render(g,dt);audio.current?.hum(s.phase==='play'&&!s.inGoal?Math.hypot(s.pvx,s.pvy):0);
-   const h=hudRef.current,wait=s.phase==='wait'&&!s.held[0]&&!s.held[1],between=s.phase==='between',first=s.serves===0;
-   if(h.score!==s.score||h.level!==s.level||h.lives!==s.lives||h.g0!==s.goals[0]||h.g1!==s.goals[1]||h.wait!==wait||h.between!==between||h.first!==first){const n={score:s.score,level:s.level,lives:s.lives,g0:s.goals[0],g1:s.goals[1],wait,between,first};hudRef.current=n;setHud(n);}
+   const h=hudRef.current,wait=s.phase==='wait'&&!s.held[0]&&!s.held[1],between=s.phase==='between',first=s.serves===0,yours=s.yours;
+   if(h.score!==s.score||h.level!==s.level||h.lives!==s.lives||h.g0!==s.goals[0]||h.g1!==s.goals[1]||h.wait!==wait||h.between!==between||h.first!==first||h.yours!==yours){const n={score:s.score,level:s.level,lives:s.lives,g0:s.goals[0],g1:s.goals[1],wait,between,first,yours};hudRef.current=n;setHud(n);}
    const cost=performance.now()-t0,p=perf.current;p.frames++;p.sum+=cost;if(cost>p.max)p.max=cost;p.window++;p.windowSum+=cost;
    if(p.window>=90){if(!p.dropped&&p.windowSum/p.window>7&&size.current.dpr>1.5){p.dropped=true;fitRef.current();}p.window=0;p.windowSum=0;}
    if(s.over){if(!endAt.current)endAt.current=now+(reduced.current?300:1500);else if(now>=endAt.current){finish();return;}}
@@ -135,7 +135,7 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
   beginBoardSession('airhockey');
   view.current?.reset();endAt.current=0;stopFor.current=0;setResult(null);setBoard(null);paintHud(game.current);
   bestCalled.current=false;setBestCall(false);
-  const n:Hud={score:0,level:1,lives:AH.LIVES,g0:0,g1:0,wait:true,between:false,first:true};hudRef.current=n;setHud(n);
+  const n:Hud={score:0,level:1,lives:AH.LIVES,g0:0,g1:0,wait:true,between:false,first:true,yours:false};hudRef.current=n;setHud(n);
   change('playing');view.current?.render(game.current,0);wake();
  },[change,entry,paintHud,wake]);
  const pause=useCallback(()=>{if(phaseRef.current!=='playing')return;sleep();touches.current?.clear();keys.current.clear();change('paused');},[change,sleep]);
@@ -207,6 +207,7 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
    <canvas ref={bg} className={styles.scene} aria-hidden="true"/>
    <canvas ref={fg} className={styles.play} tabIndex={0} aria-label="Air Futbol table. Drag your striker to hit the puck into the other goal."/>
    {live&&<p className={styles.srOnly} aria-live="polite" data-air-score={`${hud.g0}-${hud.g1}`}>{`You ${hud.g0}, ${oppName} ${hud.g1}. Level ${hud.level}. ${hud.lives} ${hud.lives===1?'life':'lives'} left.`}</p>}
+   {phase==='playing'&&hud.yours&&!hud.wait&&<div className={styles.hint} data-air-hint data-air-yours data-end="bottom" aria-live="polite"><b>Your ball</b><small>{coarse?'Drag your striker into it':'Drive your striker into it'}</small></div>}
    {phase==='playing'&&hud.wait&&<div className={styles.hint} data-air-hint data-end="bottom" aria-live="polite"><b>{hud.first?(coarse?'Touch and drag your striker':'Move the mouse to drive your striker'):'Touch to serve'}</b>{hud.first&&<small>{`First to ${AH.SOLO_TO} beats ${oppName}`}</small>}</div>}
    {phase==='playing'&&bestCall&&<ComicBurst word="New best!" size={19} tilt={-5} className={styles.bestCall} data-air-best-call aria-live="polite"/>}
    {phase==='playing'&&hud.between&&<ComicPanel tone="paper" tilt={-1.5} className={styles.next} data-air-next={hud.level} aria-live="polite"><small>Next up · Level {hud.level}</small><strong>{oppName}</strong><span>{game.current?.opponent.tip??opp.tip}</span></ComicPanel>}

@@ -90,6 +90,12 @@ ok('dead zones: a puck that rests on a board for 2 s is nudged back into play; a
   const toMid=(W/2-x)*s.pvx+((y<H/2?H*.3:H*.7)-y)*s.pvy;assert(toMid>0,'toward the middle of that half');run(g,1.5);assert(s.px>PR+AH.DEAD_EDGE&&s.px<W-PR-AH.DEAD_EDGE,'off the board');}
  const g=table(W/2,H*.7),s=g.state;const ev=run(g,5);assert(!ev.some(e=>e.type==='nudge'));assert.equal(s.px,W/2);
 });
+ok('fix round: a puck resting in your half gets one "Your ball" cue after 3 s, then the table sleeps; a touch clears it',()=>{
+ const g=table(W/2,H*.7),s=g.state;let ev=run(g,AH.YOURS_S-.2);assert(!ev.some(e=>e.type==='yours'));assert.equal(s.yours,false);assert(!g.idle,'the clock keeps running while the cue is due');
+ ev=run(g,.4);assert.equal(ev.filter(e=>e.type==='yours').length,1);assert.equal(s.yours,true);assert.equal(s.px,W/2,'the puck is not moved');
+ ev=run(g,6);assert(!ev.some(e=>e.type==='yours'),'one cue, not a loop');assert(g.idle,'then the table may sleep');
+ g.hold(0,true);g.aim(0,W/2,H*.7+2);run(g,.6);assert.equal(s.yours,false,'playing the ball clears the cue');
+});
 ok('goals and serves: the whole puck over the line, a beat, then a serve toward the side that conceded once a finger is down',()=>{
  const g=K.createAirFutbol({seed:3}),s=g.state;assert.equal(s.phase,'wait');assert(g.idle,'nothing moves before the first touch');run(g,2);assert.equal(s.phase,'wait','no serve without a finger');assert.equal(s.px,W/2);
  g.hold(0,true);let ev=run(g,AH.WAIT+.05);assert.equal(s.phase,'play');assert(ev.some(e=>e.type==='serve'));assert(Math.abs(s.pvy)>=AH.SERVE_V*.9&&Math.abs(s.pvx)<=13,'a gentle serve');g.hold(0,false);

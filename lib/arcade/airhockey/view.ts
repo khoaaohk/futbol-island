@@ -164,7 +164,7 @@ export function createAirView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{re
   const s=g.state,a=Math.max(0,Math.min(1,g.alpha)),u=L.scale;wipe();f.setTransform(dpr,0,0,dpr,0,0);clock+=dt;heat+=(s.heat-heat)*Math.min(1,dt*6);mood.t+=dt;blink.t+=dt;pop[0]+=dt;pop[1]+=dt;squash.t+=dt;
   const tx=s.ppx+(s.px-s.ppx)*a,ty=s.ppy+(s.py-s.ppy)*a,px=toScreenX(L,tx,ty),py=toScreenY(L,tx,ty),sp=Math.hypot(s.pvx,s.pvy);
   // the table moves on a big hit (the canvases shift together; composited, no repaint)
-  if(shake.t<shake.dur){shake.t+=dt;const k=1-Math.min(1,shake.t/shake.dur),m=shake.amp*k*k;shake.on=true;const tr=`translate3d(${(Math.sin(clock*71)*m).toFixed(1)}px,${(Math.cos(clock*57)*m).toFixed(1)}px,0)`;bg.style.transform=tr;fg.style.transform=tr;}else still();
+  if(shake.t<shake.dur){shake.t+=dt;const k=1-Math.min(1,shake.t/shake.dur),m=shake.amp*k*k;shake.on=true;/* fix round: the shaken canvases grow by the shake's own reach, so no strip of page shows at the stage edge */const tr=`translate3d(${(Math.sin(clock*71)*m).toFixed(1)}px,${(Math.cos(clock*57)*m).toFixed(1)}px,0) scale(${(1+2*(m+.5)/Math.max(200,Math.min(bg.clientWidth,bg.clientHeight))).toFixed(4)})`;bg.style.transform=tr;fg.style.transform=tr;}else still();
   // rail lights: they fill from the halfway line as the rally warms, chase round after a goal, blink on a near miss
   {const n=9,goalK=flash.t<1.1?Math.floor(flash.t*14):-1,near=blink.t<.3&&Math.floor(blink.t*20)%2===0,lit=heat*(n+1)/2,r=1.3*u,hotC=heat>.66?(Math.floor(clock*8)%2?PAPER:SUN):heat>.33?SUN:PAPER;
    for(let pass=0;pass<2;pass++){f.beginPath();for(let side=0;side<2;side++)for(let i=0;i<n;i++){const d=Math.abs(i-(n-1)/2),on=opts.reduced?d<lit:goalK>=0?(i+goalK+side)%3===0:near||d<lit||(heat>.66&&(i+Math.floor(clock*10))%2===0);if(on!==(pass===1))continue;const y=H*(i+.5)/n,x=side?W+RAIL/2:-RAIL/2,X=toScreenX(L,x,y),Y=toScreenY(L,x,y);f.moveTo(X+r,Y);f.arc(X,Y,r,0,TAU);}
@@ -172,7 +172,7 @@ export function createAirView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{re
   // the goal that was scored in flashes its net (two blinks)
   if(flash.t<1.1)flash.t+=dt;if(flash.t<.7){if(!opts.reduced&&Math.floor(flash.t*8)%2===0){const y=flash.end?H+END/2:-END/2,gx=toScreenX(L,W/2,y),gy=toScreenY(L,W/2,y),gw=(GOAL1-GOAL0)*u,gh=(END-1.6)*u;f.fillStyle=SUN;if(L.side)f.fillRect(gx-gh/2,gy-gw/2,gh,gw);else f.fillRect(gx-gw/2,gy-gh/2,gw,gh);}}
   // serve mark: a dashed ring round the waiting puck
-  if(s.phase==='wait'){f.setLineDash([6,5]);f.lineWidth=2.5;f.strokeStyle=PAPER;f.beginPath();f.arc(px,py,(PR+4)*u,0,TAU);f.stroke();f.setLineDash([]);}
+  if(s.phase==='wait'||s.yours){f.setLineDash([6,5]);f.lineWidth=2.5;f.strokeStyle=PAPER;f.beginPath();f.arc(px,py,(PR+4)*u,0,TAU);f.stroke();f.setLineDash([]);}
   // the trail: where the puck has just been, longer with speed, warmer with the rally
   if(!opts.reduced){if(s.phase==='play'&&!s.inGoal&&sp>70&&dt>0){const p=trail[trailAt=(trailAt+1)%trail.length];p.x=tx;p.y=ty;p.on=true;}else if(dt>0){trail[trailAt=(trailAt+1)%trail.length].on=false;}
    const n=trail.length,show=Math.min(n,3+Math.floor(sp/45)),r=PR*u;f.fillStyle=heat>.66?'#ffb03a':heat>.33?SUN:PAPER;for(let i=1;i<show;i++){const p=trail[(trailAt-i+n*2)%n];if(!p.on)break;f.globalAlpha=(heat>.33?.6:.36)*(1-i/show);disc(toScreenX(L,p.x,p.y),toScreenY(L,p.x,p.y),r*(1-i/(show*1.4)),f.fillStyle as string,0);}f.globalAlpha=1;}
