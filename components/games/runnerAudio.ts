@@ -57,6 +57,8 @@ type SoundtrackState = {
   terrain?: string; finished?: boolean; won?: boolean; thunder?: number; heartsBack?: number;
   /** Nov 8 2026: the live perfect-dodge chain (1, 2, 3 …): its chime climbs one step per link. */
   perfectChain?: number;
+  /** AAA pass (Nov 18 2026): gold pips progress (0..10), ladder rung (0..6) and golden shots fired. */
+  gold?: number; ladder?: number; goldenShots?: number;
 };
 /** Footstep colour per surface: [thud Hz, crunch filter Hz, crunch level, extra: 0 none, 1 hard click, 2 hollow board knock, 3 wet squelch].
  * Nov 10 2026 revoice: the coast road changes underfoot (turf, sand, cobbles, chalk, mud, painted pier, roof tiles, bridge boards). */
@@ -92,7 +94,7 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
   let limiter: DynamicsCompressorNode | null = null, gate: GainNode | null = null, stuck = 0, tailUntil = 0;
   let voices = 0, nextStep = 0, step = 0, prefClock = 99, soundOn = true, sfxVolume = 0.5, musicOn = true, musicVolume = 0.04;
   let hype = 0, seen: SoundtrackState | null = null;
-  const last = { foot: 0, drops: 0, jumps: 0, slides: 0, landings: 0, cuts: 0, nearMisses: 0, event: 0, collected: 0, level: 1, multiplier: 1, coach: 0, thunder: 0, hearts: 0 };
+  const last = { foot: 0, drops: 0, jumps: 0, slides: 0, landings: 0, cuts: 0, nearMisses: 0, event: 0, collected: 0, gold: 0, goldenShots: 0, level: 1, multiplier: 1, coach: 0, thunder: 0, hearts: 0 };
   let seed = 90127;
   const rand = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   const jitter = (amount: number) => 1 + (rand() * 2 - 1) * amount;
@@ -206,7 +208,11 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
     if (s.collected !== last.collected) {
       // Rising ladder while touches stay clean: a kind, musical streak cue.
       const rung = PENTA[Math.min(PENTA.length - 1, s.combo % PENTA.length)];
-      tone(sfx, now, rung * jitter(0.01), 0.035, 0.14, "triangle");
+      // Ball ladder: each rung is one step higher than the last (a climb you can hear), with a pan-drum body under it.
+      if ((s.ladder ?? 0) > 0) { const step = PENTA[Math.min(PENTA.length - 1, (s.ladder ?? 1) - 1)]; tone(sfx, now, step * jitter(0.004), 0.05, 0.2, "triangle"); pan(sfx, now + 0.015, step / 2, 0.03); }
+      else tone(sfx, now, rung * jitter(0.01), 0.035, 0.14, "triangle");
+      // Gold pip: a small bell over the pickup that climbs as the pips fill.
+      if ((s.gold ?? 0) > last.gold) tone(sfx, now + 0.03, 1318.5 * (1 + (s.gold ?? 0) * 0.06), 0.022, 0.22, "sine");
     }
     // Multiplier dropped a tier after a save: a soft two-note "aw" (gentle, so a miss never sounds like a punishment).
     if ((s.comboDrops ?? 0) > last.drops) { tone(sfx, now + 0.12, 659, 0.035, 0.12, "sine"); tone(sfx, now + 0.24, 494, 0.035, 0.2, "sine"); }
@@ -238,6 +244,8 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
       const kind = s.eventKind;
       // Struck ball: a dry leather crack (a few milliseconds of bright noise, a knock of mid), a boot thump under it; a blast adds a sub
       // drop, a second crack and the air the ball tears through.
+      // Golden shot away: a bright rising zing and a shimmer on top of the blast crack.
+      if (kind === "shot" && (s.goldenShots ?? 0) > last.goldenShots) { tone(sfx, now, 880, 0.07, 0.34, "triangle", 2637); tone(sfx, now + 0.02, 1318.5, 0.04, 0.4, "sine", 3520); hiss(sfx, now + 0.02, 0.45, 0.06, "highpass", 6000, 9000, 0.7, 0.01); }
       if (kind === "shot") { const blast = s.lastBlast >= 0.8; hiss(sfx, now, 0.022, blast ? 0.34 : 0.22, "highpass", 3200, 3200, 0.7, 0.001); hiss(sfx, now, 0.06, blast ? 0.2 : 0.13, "bandpass", 1700 * jitter(0.06), 900, 2.4, 0.001); tone(sfx, now, (blast ? 150 : 185) * jitter(0.06), blast ? 0.26 : 0.15, blast ? 0.26 : 0.12, "sine", blast ? 40 : 72);
         if (blast) { tone(sfx, now + 0.01, 70, 0.16, 0.34, "sine", 32); hiss(sfx, now + 0.035, 0.03, 0.16, "highpass", 2400, 2400, 0.7, 0.001); hiss(sfx, now + 0.03, 0.5, 0.1, "bandpass", 2600, 500, 1.2, 0.04); } }
       else if (kind === "clear") tone(sfx, now, 95 * jitter(0.1), 0.12, 0.18, "triangle", 55);
@@ -255,6 +263,11 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
       // An open round cleared without a goal (no goal line on this route): the same light cue.
       else if (kind === "round") roundClear(now + 0.05);
       else if (kind === "save") { tone(sfx, now, 170 * jitter(0.06), 0.13, 0.1, "sine", 70); hiss(sfx, now, 0.07, 0.07, "lowpass", 700, 300); hiss(sfx, now + 0.05, 0.9, 0.08, "bandpass", 900, 380, 1.2, 0.12); } // glove thump + // crowd "ooh"
+      // Return ball (found silent in the Nov 18 play pass): the boot crack up the road, then the ball whistling in. A danger cue: falling, dry, short.
+      else if (kind === "return") { hiss(sfx, now, 0.03, 0.2, "highpass", 2600, 2600, 0.7, 0.001); tone(sfx, now, 210 * jitter(0.05), 0.12, 0.12, "sine", 90); tone(sfx, now + 0.05, 1500, 0.06, 0.42, "sine", 520); hiss(sfx, now + 0.06, 0.4, 0.09, "bandpass", 1400, 3600, 2, 0.05); }
+      // Golden shot armed: three bells up and a shimmer. Full ladder: the whole scale, then the same bells.
+      else if (kind === "golden" || kind === "ladder") { const t0 = kind === "ladder" ? 0.3 : 0; if (kind === "ladder") PENTA.forEach((hz, i) => tone(sfx!, now + i * 0.045, hz, 0.05, 0.16, "triangle"));
+        [1318.5, 1760, 2637].forEach((hz, i) => { tone(sfx!, now + t0 + i * 0.08, hz, 0.05, 0.4, "sine"); tone(sfx!, now + t0 + i * 0.08, hz * 2.01, 0.018, 0.18, "sine"); }); hiss(sfx, now + t0 + 0.16, 0.5, 0.045, "highpass", 7000, 9000, 0.7, 0.02); }
       else if (kind === "block") tone(sfx, now, 140 * jitter(0.06), 0.12, 0.12, "triangle", 80);
       else if (kind === "hit") {
         tone(sfx, now, 90 * jitter(0.06), 0.22, 0.26, "sine", 40); hiss(sfx, now, 0.12, 0.08, "lowpass", 900, 300);
@@ -292,7 +305,7 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
       else if (kind === "perfect") { const c = Math.max(1, Math.min(4, s.perfectChain ?? 1)); tone(sfx, now + 0.06, PENTA[c] * 2 * jitter(0.01), 0.05, 0.1, "triangle"); tone(sfx, now + 0.13, PENTA[c + 1] * 2 * jitter(0.01), 0.05, 0.18 + c * 0.03, "triangle"); }
       else if (kind === "mission") { tone(sfx, now, 784, 0.06, 0.12, "sine", 784); tone(sfx, now + 0.1, 988, 0.06, 0.12, "sine", 988); tone(sfx, now + 0.2, 1319, 0.07, 0.3, "sine", 1319); }
     }
-    last.drops = s.comboDrops ?? 0; last.multiplier = multiplier; last.level = s.level; last.cuts = s.cuts; last.jumps = s.jumps; last.landings = s.landings; last.slides = s.slides; last.nearMisses = s.nearMisses; last.collected = s.collected; last.event = s.event; last.thunder = s.thunder ?? 0; last.hearts = s.heartsBack ?? 0; last.coach = s.coachCount ?? 0;
+    last.drops = s.comboDrops ?? 0; last.multiplier = multiplier; last.level = s.level; last.cuts = s.cuts; last.jumps = s.jumps; last.landings = s.landings; last.slides = s.slides; last.nearMisses = s.nearMisses; last.collected = s.collected; last.gold = s.gold ?? 0; last.goldenShots = s.goldenShots ?? 0; last.event = s.event; last.thunder = s.thunder ?? 0; last.hearts = s.heartsBack ?? 0; last.coach = s.coachCount ?? 0;
   }
 
   return {
@@ -300,7 +313,7 @@ export function createRunnerSoundtrack(getContext: () => AudioContext | null) {
     frame(dt: number, s: SoundtrackState) {
       refreshPrefs(dt);
       const context = ensure();
-      if (seen !== s) { seen = s; Object.assign(last, { foot: Math.floor((s.stride ?? 0) / Math.PI), drops: s.comboDrops ?? 0, coach: s.coachCount ?? 0, jumps: s.jumps, slides: s.slides, landings: s.landings, cuts: s.cuts, nearMisses: s.nearMisses, event: s.event, collected: s.collected, level: s.level, multiplier: Math.min(3, 1 + Math.floor(s.combo / 6)), thunder: s.thunder ?? 0, hearts: s.heartsBack ?? 0 }); }
+      if (seen !== s) { seen = s; Object.assign(last, { foot: Math.floor((s.stride ?? 0) / Math.PI), drops: s.comboDrops ?? 0, coach: s.coachCount ?? 0, jumps: s.jumps, slides: s.slides, landings: s.landings, cuts: s.cuts, nearMisses: s.nearMisses, event: s.event, collected: s.collected, gold: s.gold ?? 0, goldenShots: s.goldenShots ?? 0, level: s.level, multiplier: Math.min(3, 1 + Math.floor(s.combo / 6)), thunder: s.thunder ?? 0, hearts: s.heartsBack ?? 0 }); }
       if (!context || !soundOn) { nextStep = 0; return; }
       const now = context.currentTime;
       if (voices >= MUSIC_CAP) { stuck += dt; if (stuck > 3) { voices = 0; stuck = 0; } } else stuck = 0;

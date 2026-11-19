@@ -33,7 +33,7 @@ export function createRunnerFx(stage:ArcadeStage){
  const {scene,reduced}=stage;
  const dummy=new T.Object3D(),colour=new T.Color();
  let descent=0,elapsed=0,trauma=0,hitstop=0,hitstopScale=1,follow=0,fov=0,lineFlash=0,hype=0,slideDust=0,punch=0,lastFoot=false,whooshAge=0,whooshSide=1;
- const seen={event:0,cuts:0,landings:0,nearMisses:0,hurdles:0,beatScores:0,coach:0,drops:0,state:null as RunnerGame|null,
+ const seen={goldenShots:0,event:0,cuts:0,landings:0,nearMisses:0,hurdles:0,beatScores:0,coach:0,drops:0,state:null as RunnerGame|null,
   /* round 3 */bigAirs:0,doubleJumps:0,graceSaves:0,heartsBack:0,inputs:0,boost:false,rollers:0};
  /* Round 3 cinematic beats (runnerCinema.ts) and the dynamic chase camera's smoothed offsets. */
  const cinema=createRunnerCinema(reduced);let camX=0,camY=0,camZ=0,camPitch=0,introPending=true,lastDuel:RunnerObject|null=null;const pending={heart:false};
@@ -295,7 +295,7 @@ export function createRunnerFx(stage:ArcadeStage){
  /* ---------- per-frame ---------- */
  function update(dt:number,s:RunnerGame){
   elapsed+=dt;
-  if(seen.state!==s){seen.state=s;seen.coach=s.coachCount;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;seen.hurdles=s.hurdles;seen.beatScores=s.beatScores;seen.drops=s.comboDrops;auraTier=runnerMultiplier(s);
+  if(seen.state!==s){seen.state=s;seen.coach=s.coachCount;seen.event=s.event;seen.cuts=s.cuts;seen.landings=s.landings;seen.nearMisses=s.nearMisses;seen.hurdles=s.hurdles;seen.beatScores=s.beatScores;seen.goldenShots=s.goldenShots;seen.drops=s.comboDrops;auraTier=runnerMultiplier(s);
    seen.bigAirs=s.bigAirs;seen.doubleJumps=s.doubleJumps;seen.graceSaves=s.graceSaves;seen.heartsBack=s.heartsBack;seen.inputs=s.jumps+s.slides+s.cuts+s.skills+s.shotsFired;seen.boost=s.boost>0;seen.rollers=s.rollersJumped;}
   // Any input skips a running cinematic beat (never the goal-line duel). Endless play (Nov 10 2026): the goal-line strike beat is
   // skippable too, because the run carries on through it.
@@ -336,11 +336,16 @@ export function createRunnerFx(stage:ArcadeStage){
    // Perfect dodge (Nov 8 2026): reuses the existing pools only (speed-line flare, the multiplier aura pulse, two dust kicks and,
    // from a ×3 chain, a few stand photo flashes). No new mesh, light or draw call; reduced motion keeps only the aura pulse.
    else if(kind==='perfect'){auraFlash=1;if(!reduced){lineFlash=1;puff(s.x-s.cutDir*.3,.1,4,1.2,.5);if(s.perfectChain>=2)photoFlashes(stage.mobile?6:10);}}
+   // AAA pass (Nov 18 2026): the golden shot arming, the full ball ladder and each rung reuse the existing pools only (aura pulse,
+   // speed-line flare, dust kick, stand flashes, goal confetti). No new mesh or draw call; reduced motion keeps the aura pulse.
+   else if(kind==='golden'){auraFlash=1;if(!reduced){lineFlash=Math.max(lineFlash,.8);puff(s.x,-.2,5,1.4,.7);}}
+   else if(kind==='ladder'){auraFlash=1;hype=Math.max(hype,.8);if(!reduced){lineFlash=1;celebrate(s.x,-3);photoFlashes(stage.mobile?8:14);}}
+   else if(kind==='collect'&&s.ladder>0&&!reduced)puff(s.x,-.2,3,.9,.5);
    else if(kind==='boss'&&s.boss===0&&s.lives>0&&/BEATEN/.test(s.message))pop('BACK LINE BEATEN!','#ffe07a',4.6,1.2);
    else if(kind==='shield')pop('RODE IT!','#9ff6ff',3.4,.9);
    else if(kind==='mission')pop('★ MISSION!','#ffe07a',4,1.3);
    else if(kind==='best'){pop('NEW BEST!','#7ff0e2',4.6,1.4,'Keep going!');hype=1;photoFlashes(stage.mobile?10:16);lineFlash=Math.max(lineFlash,.8);}
-   else if(kind==='shot'&&s.lastBlast>=.8)trauma=Math.min(1,trauma+.28);
+   else if(kind==='shot'&&s.lastBlast>=.8){trauma=Math.min(1,trauma+.28);if(s.goldenShots!==seen.goldenShots){seen.goldenShots=s.goldenShots;hitstop=reduced?0:.07;hitstopScale=.25;lineFlash=1;}}
    // Round 3 words and beats: terrain zones, the final hill, combos, power-ups, the goal line.
    if(kind==='terrain')pop(TERRAINS[s.terrain].name,'#ffe07a',3.6,1.4,TERRAINS[s.terrain].tip);
    else if(kind==='finalhill')pop(s.bossTries?'ANOTHER GO!':'FINAL HILL!','#ffd36e',4.4,1.4,s.bossKeeper?'Beat the boss keeper':'Run to the goal line');

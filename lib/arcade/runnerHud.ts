@@ -1,4 +1,4 @@
-import {RUNNER_SKILLS,RUNNER_SKILL_FOR,RUNNER_SKILL_WINDOW,runnerContactTime,runnerMultiplier,runnerOver,runnerSkillTarget,type RunnerGame} from './runnerGame';
+import {RUNNER_SKILLS,RUNNER_SKILL_FOR,RUNNER_SKILL_WINDOW,runnerContactTime,runnerMultiplier,runnerOver,runnerSkillTarget,type RunnerGame,runnerGoldPips} from './runnerGame';
 import {runnerMissionSummary} from './runnerMissions';
 import {RUNNER_MODES} from './runnerModes';
 import {routeCurve,routeGrade,ROUTE_BEND_MIN,ROUTE_STEEP} from '../../components/games/runnerRoute';
@@ -10,7 +10,7 @@ export type RunnerHud={score:string;detail:string;message:string;over:boolean;re
  /** Clean in-play UI (Oct 27 2026): the only text while playing, a short word after a goal or a tackle ('' = none). */flash:string;flashId:number;
  /** Nov 10 2026 (pass 2): the margin strip's numbers as typed fields (the pad used to parse them out of `detail`). Hearts held / route
   * maximum, balls in hand (0-5), clean-play multiplier (1-3), metres run or metres to go on a finite route, near misses so far. */
- runnerLives:number;runnerMaxLives:number;runnerBalls:number;runnerMult:number;runnerMeters:number;runnerToGo:boolean;runnerNear:number;
+ runnerLives:number;runnerMaxLives:number;runnerBalls:number;runnerMult:number;runnerMeters:number;runnerToGo:boolean;runnerNear:number;runnerGold:number;runnerGolden:boolean;
  /** Endless play (Nov 10 2026, runnerEndless.ts): the round being played (1 = the route as it always was; +1 at every goal line cleared). */runnerStage:number};
 /** One short word for the moments worth a flash; everything else stays off screen while playing. */
 export function runnerFlash(r:RunnerGame){
@@ -31,7 +31,7 @@ const ROLE_TIP={
 } as const;
 /** Chances as hearts: a child reads ♥♥♡ faster than "2 chances". */
 export const runnerHearts=(lives:number,max=3)=>'♥'.repeat(Math.max(0,Math.min(max,lives)))+'♡'.repeat(Math.max(0,max-Math.max(0,lives)));
-const FRESH=new Set(['perfect','best','inside','skillmove','early','onetwo','mission','boss','route','shield','goal','save','mud','close','hit','terrain','finalhill','combo','power','round']);
+const FRESH=new Set(['golden','ladder','perfect','best','inside','skillmove','early','onetwo','mission','boss','route','shield','goal','save','mud','close','hit','terrain','finalhill','combo','power','round']);
 /** Round 3: one line about the route for the full-time card. */
 export function runnerFinishLine(r:RunnerGame){
  // Endless play (Nov 10 2026): a run ends when the hearts run out; the line says how many rounds (goal lines) it cleared.
@@ -75,6 +75,7 @@ export function runnerHud(runner:RunnerGame):RunnerHud{
  const finalGoal=runner.finishPhase==='keeper'?runner.objects.find(o=>o.kind==='goal'&&o.final&&!o.passed):undefined;
  const gauntlet=runner.objects.find(o=>o.gauntlet&&!o.passed&&o.z>-40);
  const roller=runner.objects.find(o=>o.kind==='roller'&&!o.passed&&o.z>-30);
+ const ladder=runner.ladderSize>0&&runner.objects.some(o=>!!o.ladder&&!o.passed&&o.z>-45&&o.z<0);
  const magnet=runner.objects.find(o=>o.kind==='magnet'&&!o.passed&&o.z>-30);
  const drifting=runner.objects.find(o=>o.kind==='defender'&&o.drift!==undefined&&!o.passed&&o.z>-45);
  const status=runner.finishPhase==='hill'?'HILL!':runner.finishPhase==='keeper'?(runner.bossKeeper?'BOSS!':'GOAL!'):runner.magnet>0?'MAGNET':runner.boost>0?(runner.shield?'POWER RUN + SHIELD':'POWER RUN'):runner.boss>0?'BACK LINE!':runner.route==='wing'?'WING ROUTE':runner.route==='middle'?'GOALS ×2':`Stage ${runner.level}`;
@@ -92,6 +93,7 @@ export function runnerHud(runner:RunnerGame):RunnerHud{
   :finalGoal&&finalGoal.z>-30?(finalGoal.keeper?`BOSS KEEPER ${(finalGoal.vx??0)>.3?'MOVING RIGHT':(finalGoal.vx??0)<-.3?'MOVING LEFT':'SET'} · shoot the other side`:'GOAL LINE · centre lane, then SHOOT!')
   :gauntlet?(gauntlet.role==='tackler'?'COMBO · JUMP the slide tackles, then SLIDE':'NOW SLIDE · under the line (or jump again)')
   :roller?'LOOSE BALL ROLLING · JUMP it'
+  :ladder?'BALL LADDER · weave to catch every ball'
   :drifting?'MOVING DEFENDER · watch where they stop'
   :magnet?'MAGNET ORB · grab it: balls fly to you'
   :runner.charging?(runner.charge>=.8?'BLAST READY · release to break through':`HOLD TO CHARGE · ${Math.round(runner.charge*100)}%`)
@@ -105,7 +107,8 @@ export function runnerHud(runner:RunnerGame):RunnerHud{
   :threat?.closeTo!==undefined||threat?.closing?'GAP CLOSING · cut into the space they leave'
   :mate&&runner.balls>0?(runner.lane===mate.lane?'TEAMMATE · Shoot to pass: ONE-TWO':`TEAMMATE ON THE ${mate.lane<0?'LEFT':'RIGHT'} · move over for a one-two`)
   :goal&&!goal.keeper&&goal.z> -22&&goal.z< -8&&Math.abs(runner.x-goal.openLane*2.4)<.65?'FINISH NOW · timed shots earn +150'
+  :runner.golden?'GOLDEN SHOT READY · your next shot cannot be stopped'
   :(!goal&&routeTip(runner))||runner.message;
  return{score:String(runner.score),detail,message,over,ready:false,skillLabel,skillReady,coach:over?'':runner.coachButton,flash:runnerFlash(runner),flashId:runner.event,
-  runnerLives:Math.max(0,runner.lives),runnerMaxLives:runner.maxLives,runnerBalls:runner.balls,runnerMult:runnerMultiplier(runner),runnerMeters:runner.finish?Math.max(0,Math.ceil(runner.finish-runner.distance)):Math.floor(runner.distance),runnerToGo:!!runner.finish,runnerNear:runner.nearMisses,runnerStage:runner.round};
+  runnerLives:Math.max(0,runner.lives),runnerMaxLives:runner.maxLives,runnerBalls:runner.balls,runnerMult:runnerMultiplier(runner),runnerMeters:runner.finish?Math.max(0,Math.ceil(runner.finish-runner.distance)):Math.floor(runner.distance),runnerToGo:!!runner.finish,runnerNear:runner.nearMisses,runnerGold:runnerGoldPips(runner),runnerGolden:runner.golden,runnerStage:runner.round};
 }

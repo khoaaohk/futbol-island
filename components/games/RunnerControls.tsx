@@ -7,7 +7,7 @@ import styles from './RunnerControls.module.css';
 
 type Press={onPointerDown:(e:PointerEvent<HTMLButtonElement>)=>void;onClick:(e:{detail:number})=>void};
 type Hold=Press&{onPointerUp:(e:PointerEvent<HTMLButtonElement>)=>void;onPointerCancel:(e:PointerEvent<HTMLButtonElement>)=>void;onLostPointerCapture:(e:PointerEvent<HTMLButtonElement>)=>void};
-type RunnerPadHud={coach?:string;skillLabel?:string;skillReady?:boolean;flash?:string;flashId?:number;runnerLives?:number;runnerMaxLives?:number;runnerBalls?:number;runnerMult?:number;runnerMeters?:number;runnerToGo?:boolean;runnerNear?:number;runnerStage?:number};
+type RunnerPadHud={coach?:string;skillLabel?:string;skillReady?:boolean;flash?:string;flashId?:number;runnerLives?:number;runnerMaxLives?:number;runnerBalls?:number;runnerMult?:number;runnerMeters?:number;runnerToGo?:boolean;runnerNear?:number;runnerStage?:number;runnerGold?:number;runnerGolden?:boolean};
 /* Nov 10 2026 comic HUD: drawn icons (no emoji glyphs) and the page-margin strip. The strip is icons and numerals only, read from the
  * HUD's typed runner fields (pass 2: hearts, balls, multiplier, metres; no more parsing of the status line): no caption words, so the
  * goal / tackle flash stays the one in-play word. The page itself answers the state: a coloured frame with a denser dot screen per
@@ -58,7 +58,7 @@ export function RunnerControls({hud,steer,pressAction,act,shoot}:{hud:RunnerPadH
  const layer={onPointerDown:(e:PointerEvent<HTMLDivElement>)=>{e.preventDefault();swipeDown(e);try{e.currentTarget.setPointerCapture(e.pointerId);}catch{/* capture optional */}},onPointerMove:(e:PointerEvent<HTMLDivElement>)=>swipeMove(e,true),onPointerUp:(e:PointerEvent<HTMLDivElement>)=>swipeEnd(e,true),onPointerCancel:()=>{swipe.current=null;}};
  // The stick zone keeps the stick's handlers; up / down flicks there jump and slide too.
  const zone={...stick.zone,onPointerDown:(e:PointerEvent<HTMLDivElement>)=>{swipeDown(e);stick.zone.onPointerDown(e);},onPointerMove:(e:PointerEvent<HTMLDivElement>)=>{swipeMove(e,false);stick.zone.onPointerMove(e);},onPointerUp:(e:PointerEvent<HTMLDivElement>)=>{swipeEnd(e,false);stick.zone.onPointerUp(e);}};
- const max=hud.runnerMaxLives??0,lives=hud.runnerLives??0,balls=hud.runnerBalls??0,mult=hud.runnerMult??1;
+ const max=hud.runnerMaxLives??0,lives=hud.runnerLives??0,balls=hud.runnerBalls??0,mult=hud.runnerMult??1,gold=hud.runnerGold??0,golden=!!hud.runnerGolden;
  const coachStick=hud.coach==='left'||hud.coach==='right',goal=hud.flash==='GOAL!',hit=hud.flash==='Tackled!';
  // Beats start from what the pad first saw (a resume must not replay them); any touch skips the strike's staged panels (the word stays).
  const near0=useRef(hud.runnerNear??0),tier0=useRef(mult),[skipped,setSkipped]=useState(-1),beat=goal&&skipped!==hud.flashId;
@@ -71,10 +71,10 @@ export function RunnerControls({hud,steer,pressAction,act,shoot}:{hud:RunnerPadH
    <button className={`${styles.btn} ${styles.skill}`} data-runner-skill data-ready={hud.skillReady||undefined} data-coach={hud.coach==='skill'||undefined} aria-label={`Skill move: ${hud.skillLabel??'Skill'}`} {...pressAction(6)}><span>{hud.skillLabel??'Skill'}</span></button>
    <button className={`${styles.btn} ${styles.jump}`} data-runner-jump data-coach={hud.coach==='jump'||undefined} {...pressAction(1)}><b aria-hidden="true"><Glyph d={ICON.jump}/></b><span>Jump</span></button>
    <button className={`${styles.btn} ${styles.slide}`} data-runner-slide {...pressAction(2)}><b aria-hidden="true"><Glyph d={ICON.slide}/></b><span>Slide</span></button>
-   <button className={`${styles.btn} ${styles.shoot}`} data-runner-shoot data-coach={hud.coach==='shoot'||undefined} {...shoot}><i className={styles.gauge} aria-hidden="true"/><b aria-hidden="true"><Ball/></b><span>Shoot</span></button>
+   <button className={`${styles.btn} ${styles.shoot}`} data-runner-shoot data-golden={golden||undefined} data-coach={hud.coach==='shoot'||undefined} aria-label={golden?'Shoot: golden shot ready':'Shoot'} {...shoot}><i className={styles.gauge} aria-hidden="true"/><b aria-hidden="true"><Ball/></b><span>{golden?'Gold!':'Shoot'}</span></button>
   </div>
   {max>0&&<div className={styles.margin} data-runner-margin aria-hidden="true">
-   <p className={styles.lives}>{Array.from({length:max},(_,i)=><i key={i} data-on={i<lives||undefined} data-lost={hit&&i===lives||undefined}><Glyph d={ICON.heart}/></i>)}<span className={styles.balls}>{[0,1,2,3,4].map(i=><u key={i} data-on={i<balls||undefined}/>)}</span></p>
+   <p className={styles.lives}>{Array.from({length:max},(_,i)=><i key={i} data-on={i<lives||undefined} data-lost={hit&&i===lives||undefined}><Glyph d={ICON.heart}/></i>)}<span className={styles.balls} data-runner-balls data-golden={golden||undefined}>{[0,1,2,3,4].map(i=><u key={i} data-on={i<balls||undefined} data-gold={i<gold||undefined}/>)}</span></p>
    <p className={styles.run}>{hud.runnerStage!==undefined&&<i key={`round-${hud.runnerStage}`} data-runner-round={hud.runnerStage} data-up={hud.runnerStage>1||undefined}>Round {hud.runnerStage}</i>}{hud.runnerMeters!==undefined&&<b data-left={hud.runnerToGo||undefined}>{hud.runnerMeters}<small>m</small></b>}{mult>1&&<em key={mult}>×{mult}</em>}</p>
   </div>}
   {hud.runnerNear!==undefined&&hud.runnerNear!==near0.current&&<i key={`near-${hud.runnerNear}`} className={styles.whoosh} data-runner-whoosh aria-hidden="true"/>}

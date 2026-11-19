@@ -37,6 +37,18 @@ export const RUNNER_SKILL_WINDOW={early:.72,late:.07,perfectEarly:.42,perfectLat
 /** Power run: clean (non-link) touches to fill the meter, burst length, and whether it is a
  * one-tackle shield (user decision Oct 4 2026: option b) or the old full invincibility. */
 export const RUNNER_TUNING={powerTouches:8,powerSeconds:3,powerShield:true};
+/** Golden shot (Nov 18 2026, AAA pass). Playing showed the bag is full three quarters of the time, so most footballs gave points and
+ * nothing else. Now `need` trail footballs collected with a FULL bag fill the `pips` gold pips and arm a golden shot. The next shot is
+ * golden: it cannot be blocked or returned, drives through up to `penetrations` more defenders and beats any keeper when it is on
+ * target. A golden goal pays what the same shot pays when it scores (the timed-finish bonus at an open goal, the power bonus only on a
+ * power run or a full charge): certainty, not extra points. The choice: spend it now on a line of defenders, or keep it for a keeper. */
+export const RUNNER_GOLDEN={need:20,pips:5,penetrations:3} as const;
+/** Gold pips shown on the margin strip (0..pips); all of them while a golden shot is armed. */
+export const runnerGoldPips=(s:{gold:number;golden:boolean})=>s.golden?RUNNER_GOLDEN.pips:Math.floor(s.gold*RUNNER_GOLDEN.pips/RUNNER_GOLDEN.need);
+/** Ball ladder (Nov 18 2026, AAA pass). The final hill was ten empty seconds. Now a zig-zag of `balls` footballs climbs it, one lane
+ * change per ball, `beat` seconds apart (down to `minBeat` in later rounds), starting `start` metres ahead and ending `clear` metres
+ * before the goal line. No hazard is added: a missed ball only loses the bonus. Like link balls, rungs reload the bag but do not build the power run or the gold pips. Catch them all: `bonus` x multiplier and a golden shot. */
+export const RUNNER_LADDER={balls:8,minBalls:4,start:34,beat:.62,minBeat:.5,step:[9,15],clear:84,bonus:120} as const;
 /** Seconds of the full-time beat (stumble, slow-down, whistle) before the result card. */
 export const RUNNER_OUTRO=1.35;
 /** Perfect dodge (Nov 8 2026): beat a tackle by cutting lanes in the last `window` seconds before it reaches you. Perfect dodges
@@ -60,8 +72,9 @@ export type RunnerObject={lane:number;z:number;kind:'defender'|'cone'|'coin'|'go
  /** Back-line boss: slot (0 left, 1 right of the pair), clock and current shift (-1 left pair, 1 right pair). */slot?:number;lineClock?:number;shift?:number;boss?:boolean;
  /** Mud: length in metres; over = cleared it in the air. */length?:number;over?:boolean;
  /** Keeper goal: keeper x, sway clock, rush (0..1 off the line), rush enabled, wing cross finish. */keeper?:boolean;kx?:number;kclock?:number;kout?:number;rush?:boolean;cross?:boolean;danger?:boolean;
- /** Bonus ball for brave skill takers. */bonus?:boolean};
-export type RunnerShot={active:boolean;x:number;z:number;age:number;power:boolean;height?:number;volley?:boolean;precision?:boolean;blast?:number;penetrations?:number;returner?:RunnerObject;returning?:boolean;windup?:number;vx?:number;aimX?:number;chip?:boolean};
+ /** Bonus ball for brave skill takers. */bonus?:boolean;
+ /** Ball ladder: this football's place in the final-hill zig-zag (1-based). */ladder?:number};
+export type RunnerShot={active:boolean;x:number;z:number;age:number;power:boolean;/** Golden shot: unstoppable; earned = it was also a power shot (power run or full charge), which is what a golden goal is paid on. */golden?:boolean;earned?:boolean;height?:number;volley?:boolean;precision?:boolean;blast?:number;penetrations?:number;returner?:RunnerObject;returning?:boolean;windup?:number;vx?:number;aimX?:number;chip?:boolean};
 /** Each run gets its own id: the arcade resets a run with Object.assign on the SAME object, so per-run side
  * tables (missions, coach) key on this, not on object identity. */
 let runSerial=0;
@@ -91,6 +104,8 @@ export function createRunnerGame(opts:{seed?:number;idle?:boolean}={}){const mod
  speed:13,prevLane:0,cutDir:0,cutAge:9,cuts:0,jumps:0,slides:0,landings:0,nearMisses:0,nearStreak:0,recover:0,outro:0,hits:0,
  /* Depth systems (Oct 4 2026, round 2). */
  shield:false,easeNext:false,mud:0,burst:0,
+ /* AAA pass (Nov 18 2026): gold pips (0..RUNNER_GOLDEN.need), an armed golden shot and its counters; the ball ladder of this round's final hill. */
+ gold:0,golden:false,goldenShots:0,goldenGoals:0,ladder:0,ladderSize:0,ladders:0,
  skill:'' as RunnerSkill|'',skillT:0,skillSide:1 as -1|1,skillCooldown:0,skillPerfect:false,
  pass:{phase:'' as ''|'out'|'back',t:0,mateX:0,mateZ:0},
  route:'main' as RunnerRoute,goalCount:0,bossPending:false,boss:0,bossSeen:0,
@@ -217,6 +232,17 @@ export function spawnRunnerPattern(s:RunnerGame){
  else if(runup)s.message='Beat the defender, then find the goal!';
  return 42*Math.max(.82,1-(s.level-1)*.04);
 }
+/** The ball ladder of a final hill (RUNNER_LADDER). It starts beyond any line still on the road, so it never lures a cut into a defender;
+ * a hill with too little clear road simply has no ladder. Lanes come from the run seed and the round: the Daily Run gives everyone the same one. */
+export function spawnRunnerLadder(s:RunnerGame,left:number){
+ const L=RUNNER_LADDER;s.ladder=0;s.ladderSize=0;let far=0;
+ for(const o of s.objects)if(!o.passed&&o.z<0&&(o.kind==='defender'||o.kind==='cone'||o.kind==='mud'||o.kind==='roller'))far=Math.max(far,-o.z);
+ const beat=Math.max(L.minBeat,L.beat-(s.round-1)*.03),step=Math.max(L.step[0],Math.min(L.step[1],s.speed*beat)),start=Math.max(L.start,far?far+16:0),count=Math.min(L.balls,Math.floor((left-L.clear-start)/step)+1);
+ if(count<L.minBalls)return;
+ let lane=[-1,0,1][Math.floor(seeded(s.seed,s.round*29+3)*3)];
+ for(let i=0;i<count;i++){s.objects.push({kind:'coin',lane,z:-(start+i*step),passed:false,openLane:0,ladder:i+1});lane=lane===0?(seeded(s.seed,s.round*31+i*7+11)<.5?-1:1):0;}
+ s.ladderSize=count;s.readLane=s.objects[s.objects.length-count].lane;s.pattern='Climb the ball ladder';
+}
 /** The back-line boss: two lines of two defenders that shift across together. */
 /** From stage 2, every second goal of the run is guarded by a back line first. */
 export const runnerBossDue=(s:RunnerGame)=>s.level>=2&&s.goalCount%2===1&&!s.boss&&!s.bossPending;
@@ -232,7 +258,7 @@ export const RUNNER_DEFENDER_REACH={rest:{x:.85,z:.9},jockey:{x:.92,z:1.2},tackl
 export function runnerDefenderReach(o:RunnerObject){return (o.tackle??0)>.08&&(o.tackle??0)<.7?RUNNER_DEFENDER_REACH[o.role??'jockey']:RUNNER_DEFENDER_REACH.rest;}
 /** Big moments own their frame: a ball collected (or a small bonus) in the SAME tick as a tackle, goal or skill move
  * must not overwrite it, or the hit's message, hit-stop, shake and sound are lost (seen in ~1 of 12 kid-bot hits). */
-const RUNNER_MAJOR_EVENTS=new Set(['hit','goal','save','shield','boss','skillmove','onetwo','best','early','close','return','block','perfect']);
+const RUNNER_MAJOR_EVENTS=new Set(['golden','ladder','hit','goal','save','shield','boss','skillmove','onetwo','best','early','close','return','block','perfect']);
 function feedback(s:RunnerGame,kind:string,x:number,z:number,message:string){if(s.eventAt===s.time&&RUNNER_MAJOR_EVENTS.has(s.eventKind)&&!RUNNER_MAJOR_EVENTS.has(kind))return;s.event++;s.eventAt=s.time;s.eventKind=kind;s.eventX=x;s.eventZ=z;s.message=message;}
 /** A defender was beaten (skill, dodge, hurdle, one-two, back line): opens the beat-then-score window. */
 function beat(s:RunnerGame){s.lastBeatAt=s.time;}
@@ -285,7 +311,7 @@ export function runnerSkill(s:RunnerGame){
  const target=runnerSkillTarget(s);
  if(!target){const goal=chipGoal(s);
   if(goal&&s.shotCooldown<=0){const shot=s.shots.find(p=>!p.active);if(!shot)return false;
-   Object.assign(shot,{active:true,returner:undefined,returning:false,windup:0,vx:0,aimX:0,volley:false,height:.28,x:s.x+RUNNER_STRIKE_X,z:-.9,age:0,power:false,precision:false,blast:0,penetrations:0,chip:true});
+   Object.assign(shot,{active:true,returner:undefined,returning:false,windup:0,vx:0,aimX:0,volley:false,golden:false,height:.28,x:s.x+RUNNER_STRIKE_X,z:-.9,age:0,power:false,precision:false,blast:0,penetrations:0,chip:true});
    s.balls--;s.shotsFired++;s.kick=.3;s.shotCooldown=.3;s.skill='chipShot';s.skillT=0;s.skillSide=1;s.skillCooldown=.5;s.lastVolley=false;s.lastBlast=0;
    feedback(s,'shot',shot.x,-.9,(goal.kout??0)>.3?'CHIP! Lift it over the keeper.':'Chip away! Best when the keeper rushes out.');return true;}
   s.message='Skill moves beat a defender right in front of you.';return false;}
@@ -305,10 +331,10 @@ export function runnerShoot(s:RunnerGame){
  const mate=!s.jumping&&s.pass.phase===''&&s.objects.find(o=>o.kind==='mate'&&!o.passed&&o.z>-18&&o.z<-4&&s.lane===o.lane);
  if(mate){mate.passed=true;s.pass.phase='out';s.pass.t=0;s.pass.mateX=mate.x??mate.lane*4.3;s.pass.mateZ=mate.z;s.balls--;s.shotsFired++;s.kick=.3;s.shotCooldown=.3;s.skill='';s.lastVolley=false;s.lastBlast=0;feedback(s,'pass',s.x,mate.z,'Pass! Now move: your teammate plays it back.');return true;}
  const shot=s.shots.find(p=>!p.active);if(!shot)return false;
- const volley=s.jumping&&s.y>.45;
+ const volley=s.jumping&&s.y>.45,golden=s.golden;
  const goal=s.objects.find(o=>o.kind==='goal'&&!o.passed&&o.z< -8&&o.z> -22&&(o.keeper||Math.abs(s.x-o.openLane*2.4)<.65));
- Object.assign(shot,{active:true,returner:undefined,returning:false,windup:0,vx:0,aimX:0,volley,height:volley?s.y*.65+.4:.28,x:s.x+RUNNER_STRIKE_X,z:-.9,age:0,power:s.boost>0||s.charge>=.8,precision:!!goal,blast:s.charge,penetrations:s.charge>=.8?2:0,chip:false});s.balls--;s.shotsFired++;s.lastVolley=volley;s.lastBlast=s.charge;s.kick=.3;s.shotCooldown=.3;s.skill='';
- feedback(s,'shot',shot.x,-.9,volley?'AERIAL VOLLEY! Meet it in the air, then land balanced.':s.charge>=.8?'POWER BLAST! Drive through the defence.':'Shot away! Keep moving into space.');return true;
+ Object.assign(shot,{active:true,returner:undefined,returning:false,windup:0,vx:0,aimX:0,volley,height:volley?s.y*.65+.4:.28,x:s.x+RUNNER_STRIKE_X,z:-.9,age:0,power:golden||s.boost>0||s.charge>=.8,golden,earned:s.boost>0||s.charge>=.8,precision:!!goal,blast:golden?1:s.charge,penetrations:golden?RUNNER_GOLDEN.penetrations:s.charge>=.8?2:0,chip:false});s.balls--;s.shotsFired++;s.lastVolley=volley;s.lastBlast=golden?1:s.charge;if(golden){s.golden=false;s.goldenShots++;}s.kick=.3;s.shotCooldown=.3;s.skill='';
+ feedback(s,'shot',shot.x,-.9,golden?'GOLDEN SHOT! Nothing can stop it.':volley?'AERIAL VOLLEY! Meet it in the air, then land balanced.':s.charge>=.8?'POWER BLAST! Drive through the defence.':'Shot away! Keep moving into space.');return true;
 }
 /** Keeper position at a given time: a readable sway along the line, or rushing at the runner. */
 function keeperStep(s:RunnerGame,o:RunnerObject,dt:number){
@@ -321,13 +347,14 @@ function keeperStep(s:RunnerGame,o:RunnerObject,dt:number){
  // The golden frame shows the side the keeper is leaving (guidance fades after stage 3).
  const ahead=(o.kx??0)+(o.vx??0)*.35;o.openLane=ahead>.4?-1:ahead<-.4?1:(o.vx??0)>0?-1:1;
 }
-function scoreGoal(s:RunnerGame,target:RunnerObject,x:number,power:boolean,precision:boolean,label:string){
+function scoreGoal(s:RunnerGame,target:RunnerObject,x:number,power:boolean,precision:boolean,label:string,golden=false){
  target.passed=true;target.scored=true;target.netHit=.65;target.goalBurst=0;target.hitX=x;s.won=false;s.goals++;s.streak++;s.celebrate=1;
  // The game's lesson in one move: beat the tackle, then find the goal.
  const beatFirst=s.time-s.lastBeatAt<=RUNNER_BEAT_SCORE_WINDOW;if(beatFirst){s.beatScores++;s.lastBeatAt=-99;}
  const reward=(goalPoints(power,s.streak)+150+(precision?150:0))*runnerMultiplier(s)*(target.danger?2:1)*(target.final&&target.keeper?2:1);cleanPlay(s);s.score+=reward;
  // Hearts refill gently: a few goals after a lost chance win one heart back.
- s.refillCount++;let heart='';if(s.lives<s.maxLives&&s.refillCount>=s.refillGoals){s.lives++;s.refillCount=0;s.heartsBack++;heart=' · ♥ +1 heart';}
+ // A golden goal is a gift already: it does not count toward a heart (bots showed sure goals turning into endless hearts).
+ if(!golden)s.refillCount++;let heart='';if(s.lives<s.maxLives&&s.refillCount>=s.refillGoals){s.lives++;s.refillCount=0;s.heartsBack++;heart=' · ♥ +1 heart';}
  s.adapt=Math.max(-.5,s.adapt-.15);
  // Endless play: the goal-line goal clears the round and the run carries straight on (no stop, no menu).
  if(target.final){s.won=true;clearRound(s,true,x,target.z,target.keeper?`BEAT THE BOSS KEEPER! +${reward}`:`GOAL-LINE FINISH! +${reward}`);return;}
@@ -336,6 +363,9 @@ function scoreGoal(s:RunnerGame,target:RunnerObject,x:number,power:boolean,preci
 /** Resolve a shot arriving at a goal. Keeper goals check the gap to the keeper and the shot type. */
 function shotAtGoal(s:RunnerGame,shot:RunnerShot,target:RunnerObject){
  target.hitX=shot.x;
+ // Golden shot: on target it always goes in. It pays what the same shot pays when it scores (timed finish at an open goal, placed
+ // past a keeper): the gold buys certainty, not extra points, so board scores stay in the same range.
+ if(shot.golden&&Math.abs(shot.x)<3.5){s.goldenGoals++;scoreGoal(s,target,shot.x,!!shot.earned,!target.keeper&&!!shot.precision,'GOLDEN GOAL',true);return;}
  if(!target.keeper){
   if(Math.abs(shot.x-target.openLane*2.4)<1.05)scoreGoal(s,target,shot.x,shot.power,!!shot.precision,shot.precision?'PERFECT FINISH':'GOAL');
   else{target.reaction=.5;s.streak=0;dropTier(s);feedback(s,'save',shot.x,target.z,'Saved! Find the golden opening and shoot again.');}
@@ -432,7 +462,7 @@ export function tickRunner(s:RunnerGame,dt:number){
  // Finite routes: no new goals 300 m out, a clear final hill from 200 m, then the goal line itself.
  if(s.finish&&s.finishPhase!=='done'){const left=s.finish-s.distance;
   if(!s.finishPhase&&left<=300){s.finishPhase='approach';s.nextGoal=Infinity;}
-  if(s.finishPhase==='approach'&&left<=200){s.finishPhase='hill';s.balls=Math.max(s.balls,3);feedback(s,'finalhill',s.x,0,s.bossKeeper?'FINAL HILL! The BOSS KEEPER guards the goal line. Balls refilled!':'FINAL HILL! Run up to the goal line. Balls refilled!');}
+  if(s.finishPhase==='approach'&&left<=200){s.finishPhase='hill';s.balls=Math.max(s.balls,3);spawnRunnerLadder(s,left);feedback(s,'finalhill',s.x,0,s.bossKeeper?'FINAL HILL! The BOSS KEEPER guards the goal line. Balls refilled!':'FINAL HILL! Run up to the goal line. Balls refilled!');}
   // Endless ramp: from round 3 one or two defenders stand on the final hill, 66 m before the goal line; one lane always stays open.
   if(s.finishPhase==='hill'&&!s.blockersSet&&s.blockers>0&&left<=130){s.blockersSet=true;const open=[-1,0,1][Math.floor(seeded(s.seed,s.round*17+5)*3)];let n=0;
    for(const l of[-1,0,1])if(l!==open&&n<s.blockers){n++;s.objects.push({kind:'defender',role:n%2?'jockey':'tackler',lane:l,z:-64,passed:false,openLane:open});}
@@ -540,7 +570,13 @@ export function tickRunner(s:RunnerGame,dt:number){
  const same=Math.abs(contactX-defenderX)<(reach?.x??.85),slip=defender&&s.slide>0&&(o.role??'jockey')!=='tackler',late=defender&&s.jumping&&s.time-s.jumpAt<=s.coyote,grace=defender&&s.cutAge<=s.laneGrace&&Math.abs(s.lane*2.4-defenderX)>=(reach?.x??.85),evaded=contactY>=.9||slip||late||grace,invincible=!RUNNER_TUNING.powerShield&&s.boost>0;
   if(!defender)o.passed=true;
   if(o.kind==='goal'){s.streak=0;dropTier(s);s.message=o.keeper?'Shoot before reaching the keeper. Look up early!':'Shoot before reaching the goal. Look up early!';}
-  else if(same&&o.kind==='coin'){const full=s.balls===5;s.score+=25*runnerMultiplier(s);cleanPlay(s);if(!o.link)s.energy++;s.balls=Math.min(5,s.balls+1);s.collected++;feedback(s,'collect',s.x,o.z,o.bonus?'Brave! Bonus ball through the middle.':s.balls===5?(full?`+${25*runnerMultiplier(s)} · bag full: shoot to use them`:'Five balls ready. Shoot to create space!'):`Ball collected · ${s.balls}/5 ready to shoot`);
+  else if(same&&o.kind==='coin'){const full=s.balls===5;s.score+=25*runnerMultiplier(s);cleanPlay(s);if(!o.link&&!o.ladder)s.energy++;s.balls=Math.min(5,s.balls+1);s.collected++;
+   // Golden shot: a trail football into a full bag fills a gold pip. The ladder: every rung counts, the last one pays.
+   const armed=full&&!o.link&&!o.ladder&&!s.golden&&++s.gold>=RUNNER_GOLDEN.need;if(armed){s.gold=0;s.golden=true;}
+   const top=!!o.ladder&&++s.ladder>=s.ladderSize&&s.ladderSize>0;
+   if(top){const bonus=RUNNER_LADDER.bonus*runnerMultiplier(s);s.score+=bonus;s.ladders++;s.gold=0;s.golden=true;s.ladder=0;s.ladderSize=0;feedback(s,'ladder',s.x,o.z,`FULL LADDER! +${bonus} · GOLDEN SHOT ready for the goal.`);}
+   else if(armed)feedback(s,'golden',s.x,o.z,'GOLDEN SHOT ready! Your next shot cannot be stopped.');
+   else feedback(s,'collect',s.x,o.z,o.ladder?`Ladder ${s.ladder}/${s.ladderSize} · keep weaving!`:o.bonus?'Brave! Bonus ball through the middle.':s.balls===5?(full?`+${25*runnerMultiplier(s)} · bag full: shoot to use them`:'Five balls ready. Shoot to create space!'):`Ball collected · ${s.balls}/5 ready to shoot`);
    if(s.energy>=RUNNER_TUNING.powerTouches){s.energy=0;s.boost=RUNNER_TUNING.powerSeconds;s.shield=RUNNER_TUNING.powerShield;s.message=RUNNER_TUNING.powerShield?'Clean touches! Burst of pace: you can ride one tackle.':'Five clean touches. Break away! Shoot for a power goal.';}}
   else if(defender&&o.beaten){/* Wrong-footed by a skill move or one-two: no tackle. */}
   else if(same&&o.kind!=='coin'&&s.hurt===0&&!invincible&&!evaded){if(s.shield)absorb(s,o,s.x,o.z);else{o.passed=true;
