@@ -283,7 +283,6 @@ export default function LineUpGame({onExit}:{onExit:()=>void}){
    </div>
    <div className={styles.chips}>
     <ComicStat value={result.lines} label="Lines"/>
-    <ComicStat value={result.combo} label="Best combo"/>
     <ComicStat value={result.streak} label="Best streak"/>
     <ComicStat value={result.team} label="Team lines"/>
     <ComicStat value={result.level} label="Level"/>
