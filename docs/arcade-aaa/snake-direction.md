@@ -86,4 +86,6 @@ The audio probe gives the kick-off press itself (it waited for ticks the Nov 11 
 
 ## Fix round (Nov 18 2026)
 - The start card names the Quick call; the level notes for the first cones and the first slide tackle say what to do.
-- Not done: the sliding tackler still passes over cones and team-mates with no reaction.
+- DONE (fix round 2): the slider clips a cone in his lane (it jumps, rocks and settles, with dust) and a waiting team-mate hops
+  and leans out of his way, like the line already did. Picture only: no rule changed. The first-move hint now picks a band of
+  the pitch with no waiting team-mate and no captain in it (`tipTop`).

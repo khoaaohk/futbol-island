@@ -34,7 +34,7 @@ const SquadSnakeScores=dynamic(()=>retryImport(()=>import('./SquadSnakeScores'))
 
 type Phase='menu'|'playing'|'paused'|'over';
 /** line: the positions joined so far, one digit each ("12223"). */
-type Hud={score:number;level:number;line:string;call:number;saves:number;dash:boolean;wait:boolean};
+type Hud={score:number;level:number;line:string;call:number;saves:number;dash:boolean;wait:boolean;/** stage px of the first-move hint's middle (0 = the CSS default) */tip:number};
 type Result={score:number;daily:boolean;level:number;squads:number;longest:number;chain:number;built:string;hasShape:boolean;called:boolean;settled:SnakeSettled;near:string;coach:string;coins:number};
 export const SNAKE_COIN_REASON='Squad Snake: squad called together';
 const FRAME_MS=1000/60,SWIPE_PX=22,HUD_ROOM=66;
@@ -50,11 +50,15 @@ function Bean({pos,size=34}:{pos:number;size?:number}){
  </svg>;
 }
 function Medal({level,on}:{level:number;on:boolean}){return <span className={styles.medal} data-level={level} data-on={on||undefined} aria-hidden="true"><i/></span>;}
+/** Fix round 2 (Nov 18 2026): the first-move hint used to sit on one spot and could cover the team-mate waiting to be called. It now
+ *  takes the first of three bands of the pitch (rows 7, 13, 3) that holds neither the captain nor a waiting team-mate. */
+const tipTop=(g:SquadSnake,l:{y0:number;cell:number}|undefined)=>{const s=g.state;if(!l||!s.hold)return 0;
+ for(const r of [7,13,3])if(Math.abs(s.ys[0]-r)>2&&s.picks.every(p=>!p.on||Math.abs(p.y-r)>2))return Math.round(l.y0+(r+.5)*l.cell);return 0;};
 const lineOf=(g:SquadSnake)=>{const s=g.state;let out='';for(let i=1;i<s.len;i++)out+=s.pos[i];return out;};
 
 export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
  const [phase,setPhase]=useState<Phase>('menu'),phaseRef=useRef<Phase>('menu');
- const [hud,setHud]=useState<Hud>({score:0,level:1,line:'',call:0,saves:1,dash:false,wait:false}),hudRef=useRef(hud);
+ const [hud,setHud]=useState<Hud>({score:0,level:1,line:'',call:0,saves:1,dash:false,wait:false,tip:0}),hudRef=useRef(hud);
  const [save,setSave]=useState<SnakeSave>(emptySnakeSave),[result,setResult]=useState<Result|null>(null),[today,setToday]=useState('');
  const [board,setBoard]=useState<{game:BoardGame;score:number}|null>(null),[scores,setScores]=useState(false),[dailyFirst,setDailyFirst]=useState(false);
  const entry=useArcadeEntry('snake');
@@ -119,8 +123,8 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   const next=frameCapSlot(now,slot.current,FRAME_MS);
   if(next>=0){slot.current=next;const dt=Math.min(.05,Math.max(0,(now-last.current)/1000));last.current=now;const t0=performance.now();
    if(stop.current>0&&!reduced.current)stop.current-=dt;else{stop.current=0;g.step(dt);}g.drain(onEvent);v.render(g,dt);
-   const s=g.state,h=hudRef.current,dash=s.dash>0;
-   if(h.score!==s.score||h.level!==s.level||h.line.length!==s.len-1||h.call!==s.call||h.saves!==s.saves||h.dash!==dash||h.wait!==s.hold){const n={score:s.score,level:s.level,line:lineOf(g),call:s.call,saves:s.saves,dash,wait:s.hold};hudRef.current=n;setHud(n);}
+   const s=g.state,h=hudRef.current,dash=s.dash>0,tip=tipTop(g,v.layout);
+   if(h.score!==s.score||h.level!==s.level||h.line.length!==s.len-1||h.call!==s.call||h.saves!==s.saves||h.dash!==dash||h.wait!==s.hold||h.tip!==tip){const n={score:s.score,level:s.level,line:lineOf(g),call:s.call,saves:s.saves,dash,wait:s.hold,tip};hudRef.current=n;setHud(n);}
    const cost=performance.now()-t0,p=perf.current;p.frames++;p.sum+=cost;if(cost>p.max)p.max=cost;p.window++;p.windowSum+=cost;
    if(p.window>=90){if(!p.dropped&&p.windowSum/p.window>7&&size.current.dpr>1.5){p.dropped=true;fitRef.current();}p.window=0;p.windowSum=0;}
    if(s.over){if(!endAt.current)endAt.current=now+(reduced.current?350:780);else if(now>=endAt.current){finish();return;}}
@@ -139,7 +143,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
   game.current=createSquadSnake({seed,daily,hold:true});/* the captain waits on the spot for the first swipe or arrow */run.current={id,daily,day,done:false,board:boardGame};
   if(!daily||readSnakeSave().daily.day!==day||!readSnakeSave().daily.counted)beginBoardSession(boardGame);
   view.current?.reset();endAt.current=0;stop.current=0;setResult(null);setBoard(null);setDailyFirst(false);setToday(day);
-  const s=game.current.state,n:Hud={score:0,level:1,line:'',call:s.call,saves:s.saves,dash:false,wait:s.hold};hudRef.current=n;setHud(n);
+  const s=game.current.state,n:Hud={score:0,level:1,line:'',call:s.call,saves:s.saves,dash:false,wait:s.hold,tip:tipTop(game.current,view.current?.layout)};hudRef.current=n;setHud(n);
   change('playing');wake();
  },[change,entry,wake]);
  const pause=useCallback(()=>{if(phaseRef.current!=='playing')return;sleep();change('paused');},[change,sleep]);
@@ -213,7 +217,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
     <span className={styles.call} data-snake-call={callName}><small>Coach</small>{callName}</span>
     <i className={styles.glove} data-on={hud.saves>0||undefined} title="Last-ditch save"/>
    </div>}
-   {live&&hud.wait&&<div className={styles.hint} data-snake-hint aria-live="polite">
+   {live&&hud.wait&&<div className={styles.hint} data-snake-hint aria-live="polite" style={hud.tip?{top:hud.tip}:undefined}>
     <svg viewBox="0 0 64 40" width="64" height="40" aria-hidden="true"><path d="M6 30 Q26 30 44 14" fill="none" stroke="#231a2e" strokeWidth="3" strokeLinecap="round" strokeDasharray="5 4"/><path d="M38 8 L49 10 L45 21" fill="none" stroke="#231a2e" strokeWidth="3.4" strokeLinejoin="round" strokeLinecap="round"/><circle cx="8" cy="30" r="6.5" fill="#ffc83a" stroke="#231a2e" strokeWidth="3"/></svg>
     <b>{padOn?'Swipe or tap the arrows':'Swipe or use the arrow keys'}</b><small>to start your captain</small>
    </div>}

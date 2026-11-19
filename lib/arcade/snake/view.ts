@@ -160,6 +160,7 @@ export function createSnakeView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{
  /** A bean sent back by the referee, or a cone knocked flying: one tumbling sprite. */
  const ghosts=Array.from({length:MAX_GHOSTS},()=>({on:false,x:0,y:0,vx:0,vy:0,t:0,idx:0}));
  const hop=new Float32Array(SN.maxLine).fill(-9);
+ /** when the slider last clipped each cone (view time) */const coneHit=new Float32Array(SN.maxCones).fill(-9);
  const word={on:false,t:0,dur:1,text:'',sub:'',note:'',fill:SUN,burst:RED,x:0,y:0,size:1};
  const pulse=new Float32Array(SN.maxLine).fill(-9),crack=new Float32Array(CRACK_N*CRACK_SEG*2);
  const fx={crackT:-1,crackX:0,crackY:0,shake:0,flash:0,skid:0,save:0,dashGlow:0};
@@ -255,8 +256,13 @@ export function createSnakeView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{
    if(sl.phase===1){const n=sl.horiz?C:R;f.fillStyle=PAPER;f.strokeStyle=INK;f.lineWidth=cs*.05;for(let k=1;k<n;k+=2){const along=(sl.horiz?bx:by)+(k+.5)*cs+(reduced?0:sl.dir*((time*1.6)%1-.5)*cs*.5),ax=sl.horiz?along:la,ay=sl.horiz?la:along,dx=sl.horiz?sl.dir:0,dy=sl.horiz?0:sl.dir;
      f.beginPath();f.moveTo(ax+dx*cs*.22,ay+dy*cs*.22);f.lineTo(ax-dx*cs*.14-dy*cs*.2,ay-dy*cs*.14+dx*cs*.2);f.lineTo(ax-dx*cs*.14+dy*cs*.2,ay-dy*cs*.14-dx*cs*.2);f.closePath();f.fill();f.stroke();}
     const e=sl.dir>0?0:(sl.horiz?C:R)-1,ex=sl.horiz?X(e):la,ey=sl.horiz?la:Y(e),k=1+.12*blink;star(f,ex,ey,cs*.46*k,cs*.33*k,9,time*2);f.fillStyle=RED;f.fill();f.lineWidth=cs*.06;f.strokeStyle=INK;f.stroke();lettering('!',ex,ey,cs*.5,PAPER,0);plain();}}
-  // training cones
-  for(const c of s.cones)if(c.on)sprite(IDX_CONE,X(c.x),Y(c.y),0,1,1,-1);plain();
+  // Fix round 2 (Nov 18 2026): where the slider is this frame, read before the things he passes are drawn, so they can answer him.
+  let slx=-99,sly=-99;if(sl.phase===2){const p=sl.ppos+(sl.pos-sl.ppos)*fr;slx=sl.horiz?X(p):X(sl.at);sly=sl.horiz?Y(sl.at):Y(p);}
+  // training cones: the slider clips a cone in his lane; it jumps, rocks and settles (no rule change: the cone stays where it is)
+  for(let i=0;i<s.cones.length;i++){const c=s.cones[i];if(!c.on)continue;const x=X(c.x),y=Y(c.y);let rot=0,up=0;
+   if(slx>-90&&Math.hypot(x-slx,y-sly)<cs*.55&&time-coneHit[i]>.6){coneHit[i]=time;dust(x,y,3);}
+   const u=(time-coneHit[i])/.8;if(u>=0&&u<1){if(reduced)rot=.4*(1-u);else{rot=(sl.horiz?sl.dir:1)*Math.cos(u*Math.PI*4.5)*.85*(1-u)*(1-u);up=Math.sin(Math.PI*Math.min(1,u*2.2))*cs*.42;}}
+   sprite(IDX_CONE,x,y-up,rot,1,1,-1);}plain();
   // golden boot with its timer ring
   if(s.boot.on){const x=X(s.boot.x),y=Y(s.boot.y),k=Math.max(0,s.boot.t/s.boot.max),bob=reduced?0:Math.sin(time*5)*cs*.04;
    f.lineWidth=cs*.1;f.strokeStyle=INK;f.beginPath();f.arc(x,y,cs*.47,0,Math.PI*2);f.stroke();f.lineWidth=cs*.065;f.strokeStyle=k<.3?RED:SUN;f.beginPath();f.arc(x,y,cs*.47,-Math.PI/2,-Math.PI/2+Math.PI*2*k);f.stroke();
@@ -267,12 +273,14 @@ export function createSnakeView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{
    f.lineWidth=cs*.085;f.strokeStyle=INK;f.beginPath();f.ellipse(x,y+cs*.36,cs*(.36+k*.06),cs*(.15+k*.03),0,0,Math.PI*2);f.stroke();f.lineWidth=cs*.05;f.strokeStyle=POS_COLOR[p.pos];f.stroke();
    // quick call: the time left to keep the chain, as a ring round each waiting team-mate
    if(s.chainLeft>0&&s.beat<=0){const u=Math.max(0,(s.chainLeft-fr)/SN.chainTicks);f.lineCap='round';f.lineWidth=cs*.13;f.strokeStyle=INK;f.beginPath();f.arc(x,y-cs*.04,cs*.56,-Math.PI/2,-Math.PI/2+Math.PI*2*u);f.stroke();f.lineWidth=cs*.07;f.strokeStyle=u<.25?RED:SUN;f.stroke();f.lineCap='butt';}
-   sprite(beanIndex(p.pos,s.joined+1),x,y-(reduced?0:k*cs*.05),0,1,1,2);sprite(IDX_TAG+p.pos,x,y-cs*.72,0,1,1,-1);plain();}
+   // a waiting team-mate in the slider's lane hops up and leans out of his way as he goes by (the same hop the line makes)
+   let jump=0,lean=0;if(slx>-90){const d=Math.hypot(x-slx,y-sly)/cs;if(d<1.7){const n=Math.sqrt(1-d/1.7);jump=reduced?0:n*cs*.62;lean=reduced?0:n*.3*(sl.horiz?sl.dir:1);}}
+   sprite(beanIndex(p.pos,s.joined+1),x,y-(reduced?0:k*cs*.05)-jump,lean,1,1,2);sprite(IDX_TAG+p.pos,x,y-cs*.72-jump,0,1,1,-1);plain();}
   // opponents
   for(const o of s.foes){if(!o.on)continue;const x=X(o.px+(o.x-o.px)*fr),y=Y(o.py+(o.y-o.py)*fr),bob=reduced?0:Math.abs(Math.sin(time*7+o.lo))*cs*.05;
    sprite(o.kind?IDX_REF:IDX_PRESS,x,y-bob,o.dx*.1,1,1,o.kind?2:o.dx>0?1:o.dx<0?3:o.dy<0?0:2);}
   // the slider himself: a pressing defender laid right over into the slide, kicking up dust every cell
-  let slx=-99,sly=-99;if(sl.phase===2){const p=sl.ppos+(sl.pos-sl.ppos)*fr;slx=sl.horiz?X(p):X(sl.at);sly=sl.horiz?Y(sl.at):Y(p);if(s.ticks!==lastTick)dust(slx,sly,2);
+  if(sl.phase===2){if(s.ticks!==lastTick)dust(slx,sly,2);
    f.lineCap='round';f.lineWidth=cs*.08;f.strokeStyle=PAPER;for(let k=-1;k<=1;k++){const bx2=slx-(sl.horiz?sl.dir:0)*cs*.55+(sl.horiz?0:k*cs*.2),by2=sly-(sl.horiz?0:sl.dir)*cs*.55+(sl.horiz?k*cs*.2:0),len=cs*(k?.4:.7);f.beginPath();f.moveTo(bx2,by2);f.lineTo(bx2-(sl.horiz?sl.dir:0)*len,by2-(sl.horiz?0:sl.dir)*len);f.stroke();}
    sprite(IDX_PRESS,slx,sly+cs*.1,sl.horiz?sl.dir*1.15:0,sl.horiz?1:1.12,sl.horiz?1:.74,sl.horiz?(sl.dir>0?1:3):(sl.dir>0?2:0));}
   plain();
@@ -331,7 +339,7 @@ export function createSnakeView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{
     f.globalAlpha=1;plain();}}
   if(fx.flash>0){fx.flash-=dt;plain();f.globalAlpha=Math.max(0,fx.flash)*4;f.fillStyle=PAPER;f.fillRect(0,0,W,H);f.globalAlpha=1;}
  }
- function reset(){setTheme(0);for(const g of ghosts)g.on=false;hop.fill(-9);lastTick=-1;lastMoved=-1;for(const p of stars)p.on=false;for(const p of pops)p.on=false;word.on=false;pulse.fill(-9);fx.crackT=-1;fx.shake=0;fx.flash=0;fx.skid=0;fx.save=0;fx.dashGlow=0;time=0;}
+ function reset(){setTheme(0);for(const g of ghosts)g.on=false;hop.fill(-9);coneHit.fill(-9);lastTick=-1;lastMoved=-1;for(const p of stars)p.on=false;for(const p of pops)p.on=false;word.on=false;pulse.fill(-9);fx.crackT=-1;fx.shake=0;fx.flash=0;fx.skid=0;fx.save=0;fx.dashGlow=0;time=0;}
  function clear(){plain();f.clearRect(0,0,W,H);}
  return {resize,render,onEvent,reset,clear,get layout(){return L;},get pixels(){return W*H;},get atlasPixels(){return atlas.width*atlas.height;},get theme(){return theme;}};
 }
