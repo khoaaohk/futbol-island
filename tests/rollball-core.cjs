@@ -102,7 +102,7 @@ ok('AAA pass (Nov 18 2026): cones teach their rule, boost pads, sweepers, the go
  assert.match(view,/fragmentShader:BOOST/);assert.match(view,/th===1\?getCrab\(\):getDummy\(\)/);
  assert.match(shell,/hold\(70\)/,'hit-stop on a cone');assert.match(shell,/if\(!reduced\.current\)holdUntil\.current=/);assert.match(shell,/teach\('cone'\)/);assert.match(shell,/data-rollball-tip/);assert.match(shell,/data-rollball-pts/);
  for(const line of shell.match(/const TIPS=\{[^}]*\}/)[0].match(/'[^']+'/g))assert.ok(line.length<36&&!/[—;]/.test(line),'tips are one short line: '+line);
- assert.match(css,/@keyframes rbFly/);assert.match(css,/prefers-reduced-motion:reduce\)\{\.pts\{animation:rbPuzzleFade/);
+ assert.match(css,/@keyframes rbFly/);assert.match(css,/prefers-reduced-motion:reduce\)\{\.hurt\{display:none\}\.pts\{animation:rbPuzzleFade/);
  for(const cue of ['wobble','boost','sweep','close','respawn','ambience'])assert.match(audio,new RegExp('\\b'+cue+'\\('),'a sound for '+cue);assert.match(audio,/const jit=/,'repeats are detuned');
 });
 ok('device save: best, daily first run, day streak, medal, sanitising, results lines',()=>{
