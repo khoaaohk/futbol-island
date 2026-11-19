@@ -77,6 +77,8 @@ export function RunnerMenu({phase,score,detail,nextLabel,state,best,recordStage,
      {state?.newBest&&<span className={styles.newBest} role="status">New best!</span>}
      {result&&<p className={styles.stars} aria-label={`${result.count} of 3 stars`}>{result.flags.map((f,i)=><span key={i} data-on={f||undefined}>{f?'★':'☆'}</span>)}{result.gained>0&&<em>+{result.gained} new!</em>}</p>}
      <p className={styles.line}>{stats}</p>
+     {/* Fix round (Nov 18 2026): the run challenge was shown before and during a run and then vanished; full time now says how it went. */}
+     {state&&(()=>{const c=runnerChallengeRow(state);return <p className={styles.challenge} data-runner-challenge data-runner-challenge-result={c.done?'done':'missed'} data-done={c.done||undefined}><b>This run</b>{' '}<span>{c.label}{c.progress&&<em> {c.progress}</em>}</span>{' '}<i>{c.done?`Done! +${c.bonus}`:'Next time'}</i></p>;})()}
      {(nextStar||gap>0)&&<p className={styles.next} data-runner-next>{nextStar&&<span><b>Next ★</b> {nextStar}</span>}{gap>0&&<span>{gap<=Math.max(150,shownBest*.15)?'So close! ':''}{gap} to beat your best</span>}</p>}
      <div className={styles.hsSlot} data-hs-slot/>
      {why&&<p className={styles.why} data-runner-why>{why}</p>}
