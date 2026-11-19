@@ -86,5 +86,9 @@ ok('the evening comes on with the level; the status tab shows the pot',()=>{
  assert.match(game,/pinball\.potGoals===3\?'HAT-TRICK':pinball\.potGoals===2\?'BRACE':/);
  assert.match(panel,/\{hud\.pinballPot&&<span data-pb-pot /);assert.match(css,/\.skin \[data-pinball-dmd\] \[data-pb-pot\]\{[^}]*background:var\(--cm-ink\);color:var\(--cm-sun\)/);
  assert.doesNotMatch(css,/data-pb-pot[^}]*animation/,'flat print, no motion');
+ // the surf bed: one voice built once, never stopped, fed only while a ball is in play (so the menu, a waiting plunger and pause are silent)
+ const audio=read('lib/games/soccerPinballAudio.ts');assert.match(audio,/export function pinballSeaSound\(ctx:AudioContext\|null\)\{/);assert.match(audio,/export const PINBALL_SEA_LEVEL=\.011;/);
+ assert.equal((audio.split('export function pinballSeaSound')[1].match(/\.stop\(/g)||[]).length,0,'no stop() calls (WebKit)');
+ assert.match(game,/if\(pinball\.phase==='playing'\|\|pinball\.phase==='goal'\)pinballSeaSound\(audioContext\(\)\);/);
 });
 console.log(failed?'FAILED '+failed:'pinball AAA pass ok');process.exit(failed?1:0);

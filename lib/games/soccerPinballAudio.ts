@@ -321,3 +321,25 @@ export function pinballRollSound(ctx:AudioContext|null,speed:number){
  }catch{/* a closed context: drop the voice, the next call on a live context rebuilds it */rolls.delete(ctx);}
 }
 
+/** AAA pass (Nov 18 2026): the surf behind the hoardings, a soft bed under the table. One looped noise source through a band-pass,
+ * built ONCE per AudioContext and never stopped (the rolling voice's Safari-safe pattern above); each call while a ball is in play
+ * sets a slow swell from the audio clock, and the level decays by itself about half a second after the last call (pause, results,
+ * a waiting plunger), then one timer unplugs the voice. Very quiet: it sits under every cue. */
+const seas=new WeakMap<AudioContext,Roll>();
+export function pinballSeaSound(ctx:AudioContext|null){
+ if(!ctx||ctx.state!=='running'||typeof ctx.createBufferSource!=='function')return;
+ const now=ctx.currentTime,volume=isSoundEnabled()&&!(typeof document!=='undefined'&&document.hidden)?getSoundVolume():0;let r=seas.get(ctx);
+ if(!r){if(volume<=0)return;
+  const v=state(ctx);if(!v.noise){const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*.8),ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;v.noise=buffer;}
+  try{const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();src.buffer=v.noise;src.loop=true;src.playbackRate.value=.38;filter.type='bandpass';filter.Q.value=.55;filter.frequency.value=520;gain.gain.value=0;
+   src.connect(filter);filter.connect(gain);src.start(now);r={src,filter,gain,live:false,until:0,timer:null};seas.set(ctx,r);}catch{return;}}
+ const voice=r;
+ try{if(!voice.live){if(volume<=0)return;voice.gain.connect(bus(ctx,state(ctx)));voice.live=true;}
+  // one wave about every seven seconds: the wash rises and brightens, then draws back
+  const swell=.5+.5*Math.sin(now*.9);
+  voice.gain.gain.cancelScheduledValues(now);voice.gain.gain.setTargetAtTime(PINBALL_SEA_LEVEL*(.35+.65*swell)*volume,now,.3);voice.gain.gain.setTargetAtTime(0,now+.3,.18);
+  voice.filter.frequency.setTargetAtTime(420+swell*380,now,.3);voice.until=now+1.4;
+  if(voice.timer===null){const park=()=>{voice.timer=null;const left=voice.until-ctx.currentTime;if(left>0&&ctx.state==='running'){voice.timer=setTimeout(park,left*1000+40);return;}try{voice.gain.disconnect();}catch{}voice.live=false;};voice.timer=setTimeout(park,1440);}
+ }catch{seas.delete(ctx);}
+}
+export const PINBALL_SEA_LEVEL=.011;

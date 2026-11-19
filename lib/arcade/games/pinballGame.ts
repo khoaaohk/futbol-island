@@ -12,7 +12,7 @@ import {createTennis} from '@/lib/games/soccerTennis';
 import {createPinballState,stepPinball,pinballPotLabel,PINBALL_POT_MAX,launchPinball,skipPinballBeat,nudgePinball,tapPinballFlipper,pinballDivision,pinballDefenders,pinballFlippers,pinballReadyFoot,plungerPull,pinballMinute} from '@/lib/games/soccerPinball';
 import {createPinballFeel,resetPinballFeel,stepPinballFeel,pinballTimeScale,pinballFeelActive,pinballFeelMessage} from '@/lib/games/soccerPinballFeel';
 import {createPinballFx} from '@/lib/games/soccerPinballFx';
-import {pinballRollSound} from '@/lib/games/soccerPinballAudio';
+import {pinballRollSound,pinballSeaSound} from '@/lib/games/soccerPinballAudio';
 import {pinballCrewPose} from '@/lib/games/soccerPinballCrew';
 import {createPinballTableView} from '@/lib/games/soccerPinballTableView';
 import {createPinballCamera} from '@/lib/games/soccerPinballCamera';
@@ -188,7 +188,7 @@ const toyMats=new Map<T.Material,T.Material>(),mountDummy=new T.Object3D(),toyHs
  function update(dt:number,input:ArcadeInput){elapsed+=dt;
   if(input.left||input.right)skipCinema(pinballCine);if((input.left||input.right)&&overShow()&&SHOW_LIFE[7]-showT>.35)showT=0;stepPinballCinema(pinballCine,dt,pinball);stepPinball(pinball,{left:input.left,right:input.right,charge:input.charge},dt*pinballTimeScale(pinballFeel)*cinemaTimeScale(pinballCine));stepPinballFeel(pinballFeel,pinball,dt,onSound);watchPinballCinema(pinballCine,pinball);watchPinballPatterns(pinballPatterns,pinball,dt);
   // The ball rolling on wood: one self-stopping voice that follows ball speed (silent in the plunger lane's wait and on menus).
-  {const rolling=pinball.phase==='playing'?Math.hypot(pinball.ball.vx,pinball.ball.vy):0;if(rolling>40)pinballRollSound(audioContext(),rolling);}
+  {const rolling=pinball.phase==='playing'?Math.hypot(pinball.ball.vx,pinball.ball.vy):0;if(rolling>40)pinballRollSound(audioContext(),rolling);if(pinball.phase==='playing'||pinball.phase==='goal')pinballSeaSound(audioContext());}
   const level=((pinball.level));if(level>notedLevel)onSound(true,'level');notedLevel=level;
   const tone=(0);if(tone>chargeTone)onSound(false,'charge'+tone);chargeTone=tone;
   sync((dt));cameraBeat(dt);aimComicSun(ink,sunDir,stage.camera);stage.effects(dt);stage.lighting(elapsed);
