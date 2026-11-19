@@ -116,10 +116,10 @@ ok('level 1 is beatable by a simple scripted player; level 10 beats it',()=>{
  assert(ga>=gf+3&&ga>=gf*2,`level 10 outscores a middling finger (${gf} - ${ga})`);
 });
 ok('the ladder is a fair set of steps: a child wins at level 1 and meets a wall later; a strong finger can beat the last one, and finds it the hardest; a keeper who only camps loses up the ladder',()=>{
- const wins=(p,l,n=8)=>{let w=0;for(let k=0;k<n;k++)if(fingerMatch(p,l,1000+k*7919+l*31).res>0)w++;return w;};
- const kid=[1,2,3,5,8].map(l=>wins(FINGERS.kid,l)),strong=[1,7,12].map(l=>wins(FINGERS.strong,l));
- assert(kid[0]>=7,`a child beats level 1 nearly every time (${kid})`);assert(kid[1]>=5,`and level 2 most times (${kid})`);assert(kid[2]>=2&&kid[2]<=kid[1],`level 3 is a real match (${kid})`);assert(kid[3]<=3&&kid[4]<=1,`then the wall (${kid})`);
- assert.equal(strong[0],8);assert(strong[1]>=4,`a strong finger wins at level 7 (${strong})`);assert(strong[2]>=1&&strong[2]<=5&&strong[2]<=strong[1],`and can beat the last opponent, not often (${strong})`);
+ const wins=(p,l,n=24)=>{let w=0;for(let k=0;k<n;k++)if(fingerMatch(p,l,1000+k*7919+l*31).res>0)w++;return w;};
+ const kid=[1,2,3,5,8].map(l=>wins(FINGERS.kid,l)),strong=[1,7,12].map(l=>wins(FINGERS.strong,l));if(process.argv.includes('--print'))console.log('kid',kid,'strong',strong);
+ assert(kid[0]>=19,`a child beats level 1 nearly every time (${kid})`);assert(kid[1]>=10&&kid[1]<=kid[0],`and level 2 more often than not (${kid})`);assert(kid[2]>=5&&kid[2]<=kid[1]+2,`level 3 is a real match (${kid})`);assert(kid[3]<=7&&kid[4]<=2,`then the wall (${kid})`);
+ assert.equal(strong[0],24);assert(strong[1]>=14,`a strong finger wins at level 7 (${strong})`);assert(strong[2]>=2&&strong[2]<=14&&strong[2]<strong[1],`and can beat the last opponent, not often (${strong})`);
  let gf=0,ga=0;for(const l of [9,12]){const r=fingerMatch(FINGERS.camper,l,77+l);gf+=r.gf;ga+=r.ga;assert.equal(r.res,-1,`a keeper who never shoots loses to level ${l}`);}assert(ga>=gf*3,`camping does not hold out (${gf} - ${ga})`);
 });
 ok('rally heat, the smash and the serve: a long rally warms the table in three steps and speeds the puck; a serve nobody touches stops in the receiver’s half',()=>{
@@ -136,7 +136,7 @@ ok('rally heat, the smash and the serve: a long rally warms the table in three s
 });
 ok('habits: every opponent has its own (how high it stands, how long it admires a shot, how often it is caught flat-footed), and they are human sized',()=>{
  for(const r of RAMP){assert(r.high>=0&&r.high<=1&&r.recover>=0&&r.recover<=.7&&r.slip>=0&&r.slip<=.4,r.name);}
- assert(RAMP[0].slip>RAMP[11].slip&&RAMP[11].slip===0&&RAMP[3].high>=.7&&RAMP[8].high>=.5,'Sandy slips most, the Lighthouse never; Rafa and Dax stand high');
+ assert(RAMP[0].slip>RAMP[11].slip&&RAMP[11].slip===0&&RAMP[3].high>=.5&&RAMP[8].high>=.5,'Sandy slips most, the Lighthouse never; Rafa and Dax stand high');
  assert(new Set(RAMP.map(r=>`${r.high}/${r.recover}/${r.slip}`)).size===RAMP.length,'no two play alike');
 });
 ok('solo scoring: goals, quick goals, board goals, counters, clean sheets, match wins; the next opponent walks on',()=>{

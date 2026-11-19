@@ -32,18 +32,18 @@ export type AirOpponent=AirBot&{name:string;tip:string};
 /** The endless ramp, read by tests (monotone) and by docs. Nov 17 2026 (owner: "increase the beginning difficulty of the ai"): levels
  *  1-5 start where level 3 used to (Sandy now plays about like the old Coco) and close on Bruno, who is unchanged; 6+ are as before. */
 export const RAMP:readonly AirOpponent[]=[
- {name:'Sandy',tip:'Sandy is slow to move. Shoot for the corner of the goal.',react:.38,speed:96,shot:128,predict:.18,guard:.42,attack:.48,err:13.5,bank:0,high:0,recover:0.6,slip:0.32},
- {name:'Pip',tip:'Pip watches the puck, not the boards. Try a shot off the side.',react:.33,speed:108,shot:142,predict:.26,guard:.5,attack:.54,err:12,bank:0,high:0.15,recover:0.5,slip:0.26},
- {name:'Coco',tip:'Coco leaves the near post open. Shoot from wide.',react:.29,speed:120,shot:155,predict:.34,guard:.57,attack:.6,err:10.8,bank:.05,high:0.3,recover:0.4,slip:0.2},
- {name:'Rafa',tip:'Rafa likes to attack. Save, then counter fast.',react:.26,speed:132,shot:168,predict:.42,guard:.63,attack:.65,err:9.8,bank:.1,high:0.8,recover:0.45,slip:0.16},
- {name:'Mina',tip:'Mina reads straight shots. Use the boards.',react:.24,speed:143,shot:180,predict:.5,guard:.68,attack:.69,err:8.8,bank:.15,high:0.2,recover:0.4,slip:0.16},
- {name:'Bruno',tip:'Bruno hits hard. Stay between the puck and your goal.',react:.22,speed:152,shot:190,predict:.55,guard:.72,attack:.72,err:8,bank:.2,high:0.35,recover:0.5,slip:0.12},
- {name:'Kiko',tip:'Kiko banks shots off the side. Watch the angle in, it is the angle out.',react:.19,speed:170,shot:210,predict:.65,guard:.79,attack:.78,err:7,bank:.25,high:0.3,recover:0.25,slip:0.08},
- {name:'Zuri',tip:'Zuri covers both posts. Make her move first, then shoot.',react:.16,speed:190,shot:230,predict:.74,guard:.85,attack:.83,err:6,bank:.3,high:0,recover:0.2,slip:0.06},
- {name:'Dax',tip:'Dax counters in a flash. Drop back the moment you shoot.',react:.135,speed:210,shot:250,predict:.82,guard:.9,attack:.88,err:5,bank:.35,high:0.65,recover:0.1,slip:0.08},
- {name:'Vela',tip:'Vela reads every rebound. Change your angle each time.',react:.115,speed:232,shot:270,predict:.9,guard:.94,attack:.92,err:4,bank:.4,high:0.2,recover:0.22,slip:0.05},
- {name:'Captain Coral',tip:'The captain rarely misses. Guard the near post first.',react:.1,speed:255,shot:290,predict:.95,guard:.97,attack:.95,err:3.2,bank:.45,high:0.1,recover:0.12,slip:0.03},
- {name:'The Lighthouse',tip:'Nothing gets past easily. Be patient and pick your moment.',react:.085,speed:280,shot:310,predict:1,guard:1,attack:.97,err:2.5,bank:.5,high:0,recover:0.08,slip:0},
+ {name:'Sandy',tip:'Sandy is slow to move. Shoot for the corner of the goal.',react:.38,speed:96,shot:128,predict:.18,guard:.42,attack:.48,err:13.5,bank:0,high:0,recover:0.6,slip:0.22},
+ {name:'Pip',tip:'Pip watches the puck, not the boards. Try a shot off the side.',react:.33,speed:108,shot:142,predict:.26,guard:.5,attack:.54,err:12,bank:0,high:0.15,recover:0.3,slip:0.12},
+ {name:'Coco',tip:'Coco leaves the near post open. Shoot from wide.',react:.29,speed:120,shot:155,predict:.34,guard:.57,attack:.6,err:10.8,bank:.05,high:0.3,recover:0.25,slip:0.08},
+ {name:'Rafa',tip:'Rafa likes to attack. Save, then counter fast.',react:.26,speed:132,shot:168,predict:.42,guard:.63,attack:.65,err:9.8,bank:.1,high:0.5,recover:0.35,slip:0.03},
+ {name:'Mina',tip:'Mina reads straight shots. Use the boards.',react:.24,speed:143,shot:180,predict:.5,guard:.68,attack:.69,err:8.8,bank:.15,high:0.2,recover:0.35,slip:0.14},
+ {name:'Bruno',tip:'Bruno hits hard. Stay between the puck and your goal.',react:.22,speed:152,shot:190,predict:.55,guard:.72,attack:.72,err:8,bank:.2,high:0.35,recover:0.4,slip:0.07},
+ {name:'Kiko',tip:'Kiko banks shots off the side. Watch the angle in, it is the angle out.',react:.19,speed:170,shot:210,predict:.65,guard:.79,attack:.78,err:7,bank:.25,high:0.3,recover:0.2,slip:0.05},
+ {name:'Zuri',tip:'Zuri covers both posts. Make her move first, then shoot.',react:.16,speed:190,shot:230,predict:.74,guard:.85,attack:.83,err:6,bank:.3,high:0,recover:0.2,slip:0.07},
+ {name:'Dax',tip:'Dax counters in a flash. Drop back the moment you shoot.',react:.135,speed:210,shot:250,predict:.82,guard:.9,attack:.88,err:5,bank:.35,high:0.65,recover:0.12,slip:0.06},
+ {name:'Vela',tip:'Vela reads every rebound. Change your angle each time.',react:.115,speed:232,shot:270,predict:.9,guard:.94,attack:.92,err:4,bank:.4,high:0.2,recover:0.12,slip:0.02},
+ {name:'Captain Coral',tip:'The captain rarely misses. Guard the near post first.',react:.1,speed:255,shot:290,predict:.95,guard:.97,attack:.95,err:3.2,bank:.45,high:0.1,recover:0.08,slip:0.01},
+ {name:'The Lighthouse',tip:'Nothing gets past easily. Be patient and pick your moment.',react:.085,speed:280,shot:310,predict:1,guard:1,attack:.97,err:2.5,bank:.5,high:0,recover:0.05,slip:0},
 ];
 /** The opponent for a level (1-based). Past the table the last row plays on under the earlier names ("Sandy II"). */
 export function opponentFor(level:number):AirOpponent{const n=RAMP.length,l=Math.max(1,Math.floor(level));if(l<=n)return RAMP[l-1];const lap=Math.floor((l-1)/n)+1,base=RAMP[(l-1)%n];return {...RAMP[n-1],name:`${base.name} ${'I'.repeat(Math.min(3,lap))}`,tip:RAMP[n-1].tip};}
