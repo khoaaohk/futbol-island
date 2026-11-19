@@ -7,7 +7,7 @@
  */
 import {SN,RAMP,POS,POS_COLOR,POS_DARK,POS_LABEL,CAUSE_WORD,DX,DY,shapeOfCode,type SnakeEvent,type SnakeState,type SquadSnake} from './core';
 /** Level-up note (Nov 17 2026): what the new level brings, read from RAMP (one string a level, made once). */
-const LEVEL_NOTES=RAMP.map((r,i)=>{const p=i?RAMP[i-1]:r;return i===RAMP.length-1?'Top speed!':r.cones>0&&!p.cones?'Training cones on the pitch':r.slide>0&&!p.slide?'Watch for the sliding tackle':r.press>p.press?(p.press?'One more pressing defender':'A pressing defender joins'):r.refs>p.refs?(p.refs?'One more referee':'A referee walks on'):r.cones>p.cones?'One more cone':'The captain runs faster';});
+const LEVEL_NOTES=RAMP.map((r,i)=>{const p=i?RAMP[i-1]:r;return i===RAMP.length-1?'Top speed!':r.cones>0&&!p.cones?'Cones! Steer round them':r.slide>0&&!p.slide?'Slide tackle! Keep out of his lane':r.press>p.press?(p.press?'One more pressing defender':'A pressing defender joins'):r.refs>p.refs?(p.refs?'One more referee':'A referee walks on'):r.cones>p.cones?'One more cone':'The captain runs faster';});
 /** AAA pass (Nov 18 2026): the venue changes with the level (one static repaint a level): golden hour, dusk, night under the lights, morning.
  *  mow = the groundsman's pattern: 0 bands across, 1 bands along, 2 checks, 3 wide bands. */
 const THEMES=[
