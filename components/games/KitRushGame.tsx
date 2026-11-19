@@ -6,6 +6,8 @@
  * Heat: the rAF loop runs ONLY while phase === 'playing' (start card, pause, results and a hidden tab draw nothing); 60 fps cap;
  * DPR cap 2, dropped to 1.5 when frames run long; the HUD re-renders only when score, lives, kit or an effect flag changes.
  * Teaches (AGENTS.md): know your team at a glance (colour and pattern), scan before you act, react to a switch.
+ * AAA pass (Nov 18 2026): a clean-run chip under the kit banner (it burns from 6 and again from 12), a short hit-stop on a foul and a
+ * big call, sounds and haptics for the new events (stage, clean-run bonus, run over, dropped kit, look-alike), fuller results chips.
  */
 import {useCallback,useEffect,useRef,useState,type CSSProperties} from 'react';
 import dynamic from 'next/dynamic';
@@ -15,7 +17,7 @@ import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {arcadeSkin} from './skins';
 import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst,ComicMedalTrack} from './comic';
 import styles from './KitRushGame.module.css';
-import {createKitRush,kitRushDailySeed,kitRushFieldH,medalFor,KR,KIND,TEAMS,MEDAL_NAMES,type KitRush,type KitEvent,type KitStats} from '@/lib/arcade/kitrush/core';
+import {createKitRush,kitRushDailySeed,kitRushFieldH,medalFor,KR,KIND,FOUL,TEAMS,MEDAL_NAMES,type KitRush,type KitEvent,type KitStats} from '@/lib/arcade/kitrush/core';
 import {createKitRushView,type KitRushView} from '@/lib/arcade/kitrush/view';
 import {createKitRushAudio,type KitRushAudio} from '@/lib/arcade/kitrush/audio';
 import {readKitRushSave,writeKitRushSave,settleKitRush,nearMissLine,coachLine,liveStreak,emptyKitRushSave,type KitRushSave,type KitRushSettled} from '@/lib/arcade/kitrush/save';
@@ -33,7 +35,7 @@ const HighScoreEntry=dynamic(()=>retryImport(()=>import('../arcade/HighScoreEntr
 const KitRushScores=dynamic(()=>retryImport(()=>import('./KitRushScores')),{ssr:false});
 
 type Phase='menu'|'playing'|'paused'|'over';
-type Hud={score:number;lives:number;team:number;fx:''|'frenzy'|'slow'|'armband'};
+type Hud={score:number;lives:number;team:number;fx:''|'frenzy'|'slow'|'armband';clean:number};
 type Result={score:number;daily:boolean;stats:KitStats;settled:KitRushSettled;near:string;coach:string;coins:number};
 export const KITRUSH_COIN_REASON='Kit Rush: kit struck clean';
 const FRAME_MS=1000/60;
@@ -60,7 +62,7 @@ function Medal({level,on}:{level:number;on:boolean}){return <span className={sty
 
 export default function KitRushGame({onExit}:{onExit:()=>void}){
  const [phase,setPhase]=useState<Phase>('menu'),phaseRef=useRef<Phase>('menu');
- const [hud,setHud]=useState<Hud>({score:0,lives:KR.lives,team:0,fx:''}),hudRef=useRef(hud);
+ const [hud,setHud]=useState<Hud>({score:0,lives:KR.lives,team:0,fx:'',clean:0}),hudRef=useRef(hud);
  const [save,setSave]=useState<KitRushSave>(emptyKitRushSave),[result,setResult]=useState<Result|null>(null),[today,setToday]=useState('');
  const [board,setBoard]=useState<{game:BoardGame;score:number}|null>(null),[scores,setScores]=useState(false),[dailyFirst,setDailyFirst]=useState(false);
  const entry=useArcadeEntry('kitrush');
@@ -68,7 +70,7 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
  const game=useRef<KitRush|null>(null),view=useRef<KitRushView|null>(null),audio=useRef<KitRushAudio|null>(null);
  const raf=useRef(0),last=useRef(0),slot=useRef(0),endAt=useRef(0),run=useRef({id:'',daily:false,day:'',done:true,board:'kitrush' as BoardGame});
  const size=useRef({w:1,h:1,dpr:1,left:0,top:0}),perf=useRef({frames:0,sum:0,max:0,window:0,windowSum:0,dropped:false});
- const reduced=useRef(false);
+ const reduced=useRef(false),stop=useRef(0);
 
  const change=useCallback((p:Phase)=>{phaseRef.current=p;setPhase(p);},[]);
  useEffect(()=>{const s=readKitRushSave();setSave(s);setToday(localPlayDay(Date.now()));setDailyFirst(takeTodayLaunch('kitrush'));},[]);
@@ -91,14 +93,17 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
   const g=game.current,a=audio.current;if(!g)return;view.current?.onEvent(e,g.state);
   switch(e.type){
    case 'toss':a?.toss(e.x);break;
-   case 'slice':a?.slice(e.b,e.d===-2||e.c===KIND.golden);arcadeFeedback(null,e.b>=3?'perfect':'combo');break;
-   case 'call':a?.call(e.a);if(e.a>=3)arcadeFeedback(null,'perfect');break;
-   case 'foul':if(e.a)a?.whistle();else a?.rival();arcadeFeedback(null,'slam');break;
+   case 'slice':a?.slice(e.b,e.d===-2||e.c===KIND.golden,g.state.clean);arcadeFeedback(null,e.b>=3?'perfect':'combo');break;
+   case 'call':a?.call(e.a);if(e.a>=3)arcadeFeedback(null,'perfect');if(e.a>=4&&!reduced.current)stop.current=.05;break;
+   case 'foul':if(e.a===FOUL.whistle)a?.whistle();else if(e.a===FOUL.copy)a?.copy();else if(e.a===FOUL.dropped)a?.dropped();else a?.rival();arcadeFeedback(null,'slam');if(!reduced.current)stop.current=.09;break;
+   case 'stage':a?.stage(e.a);arcadeFeedback(null,'level');break;
+   case 'streak':a?.streak(e.c);arcadeFeedback(null,'perfect');break;
+   case 'lost':a?.lost();break;
    case 'switch':a?.switchTeam();arcadeFeedback(null,'level');break;
    case 'ready':a?.ready();break;
    case 'special':a?.special(e.a===KIND.golden?'golden':e.a===KIND.stopwatch?'stopwatch':'armband');arcadeFeedback(null,'skill');break;
    case 'sub':a?.sub();arcadeFeedback(null,'level');break;
-   case 'miss':a?.miss();break;
+   case 'miss':if(e.a>0){a?.drop(e.a,e.b);arcadeFeedback(null,'drop');}else a?.miss();break;
    case 'dodge':a?.dodge();break;
    case 'effectEnd':a?.effectEnd();break;
    case 'over':a?.over();break;
@@ -110,12 +115,13 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
   raf.current=0;const g=game.current,v=view.current;if(phaseRef.current!=='playing'||!g||!v)return;
   const next=frameCapSlot(now,slot.current,FRAME_MS);
   if(next>=0){slot.current=next;const dt=Math.min(.05,Math.max(0,(now-last.current)/1000));last.current=now;const t0=performance.now();
-   g.step(dt);g.drain(onEvent);v.render(g.state,dt,now);
+   // hit-stop: the rules hold still for a few frames on a foul or a big call; the picture and the finger keep going
+   if(stop.current>0){stop.current-=dt;g.step(0);}else g.step(dt);g.drain(onEvent);v.render(g.state,dt,now);
    const s=g.state,h=hudRef.current,fx:Hud['fx']=s.frenzy>0?'frenzy':s.slow>0?'slow':s.armband>0?'armband':'';
-   if(h.score!==s.score||h.lives!==s.lives||h.team!==s.team||h.fx!==fx){const n={score:s.score,lives:s.lives,team:s.team,fx};hudRef.current=n;setHud(n);}
+   if(h.score!==s.score||h.lives!==s.lives||h.team!==s.team||h.fx!==fx||h.clean!==s.clean){const n={score:s.score,lives:s.lives,team:s.team,fx,clean:s.clean};hudRef.current=n;setHud(n);}
    const cost=performance.now()-t0,p=perf.current;p.frames++;p.sum+=cost;if(cost>p.max)p.max=cost;p.window++;p.windowSum+=cost;
    if(p.window>=90){if(!p.dropped&&p.windowSum/p.window>7&&size.current.dpr>1.5){p.dropped=true;const z=size.current;z.dpr=1.5;v.resize(z.w,z.h,1.5);}p.window=0;p.windowSum=0;}
-   if(s.over){if(!endAt.current)endAt.current=now+(reduced.current?350:850);else if(now>=endAt.current){finish();return;}}
+   if(s.over){if(!endAt.current)endAt.current=now+(reduced.current?700:1300);/* long enough to read what was hit and FULL TIME */else if(now>=endAt.current){finish();return;}}
   }
   raf.current=requestAnimationFrame(frame);
  },[finish,onEvent]);
@@ -130,8 +136,8 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
   const seed=daily?kitRushDailySeed(day):1+Math.floor(Math.random()*2_000_000_000);
   game.current=createKitRush({seed,h:kitRushFieldH(z.w,z.h),daily});run.current={id,daily,day,done:false,board:boardGame};
   if(!daily||readKitRushSave().daily.day!==day||!readKitRushSave().daily.counted)beginBoardSession(boardGame);
-  view.current?.reset();endAt.current=0;setResult(null);setBoard(null);setDailyFirst(false);setToday(day);
-  const s=game.current.state,n:Hud={score:0,lives:s.lives,team:s.team,fx:''};hudRef.current=n;setHud(n);
+  view.current?.reset();endAt.current=0;stop.current=0;setResult(null);setBoard(null);setDailyFirst(false);setToday(day);
+  const s=game.current.state,n:Hud={score:0,lives:s.lives,team:s.team,fx:'',clean:0};hudRef.current=n;setHud(n);
   change('playing');wake();
  },[change,entry,wake]);
  const pause=useCallback(()=>{if(phaseRef.current!=='playing')return;for(let i=0;i<4;i++)game.current?.endStroke(i);sleep();change('paused');},[change,sleep]);
@@ -185,6 +191,7 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
   <aside className={styles.side} data-side="right" aria-hidden="true">
    <ComicPanel tilt={1.2} tone="paper" className={styles.sideMedals}><b>Medals</b>{KR.medals.map((m,i)=><span key={m}><Medal level={i+1} on/>{MEDAL_NAMES[i]}<em>{m}</em></span>)}</ComicPanel>
    <ComicPanel tilt={-1} tone="teal"><b>One swipe, many kits</b><br/>2 One-two · 3 Hat-trick · 4 Tiki-taka</ComicPanel>
+   <ComicPanel tilt={.8} tone="paper"><b>Keep it clean</b><br/>Do not drop your own kit. Four in a row costs a life.</ComicPanel>
   </aside>
   <div className={styles.stage} ref={stage} data-kitrush-stage>
    <canvas ref={bg} className={styles.scene} aria-hidden="true"/>
@@ -193,6 +200,10 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
    {(phase==='playing'||phase==='paused')&&<div className={styles.banner} data-kitrush-banner data-last={hud.lives===1||undefined} aria-live="polite" aria-label={`Your kit: ${team.name}, ${team.pattern}. Lives: ${hud.lives}`}>
     <KitShirt team={hud.team} size={30} key={hud.team}/><b>{team.name}</b>
     <span className={styles.lives} data-kitrush-lives={hud.lives}>{[0,1,2].map(i=><i key={i} data-on={i<hud.lives||undefined}/>)}</span>
+   </div>}
+   {(phase==='playing'||phase==='paused')&&hud.clean>=3&&<div className={styles.streak} data-kitrush-streak-run={hud.clean} data-heat={hud.clean>=12?2:hud.clean>=6?1:0} aria-hidden="true">
+    <svg width="18" height="22" viewBox="0 0 18 22" aria-hidden="true"><path d="M9 1 C10 6 16 8 16 14 A7 7 0 0 1 2 14 C2 11 4 9.5 5 7.5 C6 9.5 7 10 8 9.5 C7.5 6.5 8 3.5 9 1 Z" strokeWidth="2.2" strokeLinejoin="round"/><path d="M9 11 C10 13 12 14 12 16.4 A3 3 0 0 1 6 16.4 C6 14.6 8 13.4 9 11 Z" className={styles.core}/></svg>
+    <b key={hud.clean}>{hud.clean}</b><span>clean</span>
    </div>}
   </div>
   <ArcadeTopBar game="kitrush" className={styles.topBar} backTitle="Back to arcade" onBack={leave} value={phase==='playing'||phase==='paused'?hud.score:undefined} word="pts" bumpKey={hud.score} paused={phase==='paused'} canPause={phase==='playing'||phase==='paused'} onPause={()=>phase==='playing'?pause():resume()}/>
@@ -233,7 +244,8 @@ export default function KitRushGame({onExit}:{onExit:()=>void}){
    <div className={styles.chips}>
     <ComicStat value={result.stats.bestCombo||1} label="Best swipe"/>
     <ComicStat value={result.stats.bestClean} label="Clean run"/>
-    <ComicStat value={result.stats.sliced} label="Kit struck"/>
+    <ComicStat value={`${Math.round(100*result.stats.sliced/Math.max(1,result.stats.sliced+result.stats.missed+result.stats.rival+result.stats.copy+result.stats.whistle))}%`} label="Right picks" data-kitrush-picks/>
+    <ComicStat value={result.stats.stage+1} label="Stage" data-kitrush-stage-reached/>
     {result.daily&&<ComicStat value={result.settled.streak} label={result.settled.streak===1?'Day':'Days in a row'} tone="sun"/>}
    </div>
    <p className={styles.coach}>{result.coach}</p>

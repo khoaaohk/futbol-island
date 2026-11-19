@@ -71,6 +71,9 @@ export function nearMissLine(o:{score:number;best:number;newBest:boolean;stats:K
 }
 /** Why the run ended, as one coaching cue. */
 export function coachLine(stats:KitStats):string{
+ const copy=stats.copy??0,dropped=stats.dropped??0;
+ if(dropped>0&&dropped>=Math.max(stats.whistle,stats.rival,copy))return 'Too many of your own kit fell. Swipe every kit that is yours.';
+ if(copy>0&&copy>=Math.max(stats.whistle,stats.rival))return 'A look-alike got you. Same colour is not enough. Check the pattern too.';
  if(stats.whistle>stats.rival)return 'The whistle got you. Spot it first, then swipe around it.';
  if(stats.rival>0)return 'You hit the other team’s kit. Check the colour AND the pattern before you swipe.';
  return 'Scan first, then swipe once through your colours.';
