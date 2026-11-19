@@ -9,7 +9,9 @@
 // roundabout arm) and records, per island frame: draw calls and triangles (three's counters, shadow pass included), JS time in
 // renderer.render, and JS time in streetTraffic.update. It also walks the traffic objects themselves (every vehicle, wherever it
 // is, plus the signal lamps): meshes that would draw, their triangles, and their shadow casters. Those "traffic" columns do not
-// depend on which cars happen to be in view, so they are exact; the whole-frame columns wobble with townsfolk and cars in view.
+// depend on which cars happen to be in view, so they are exact; the whole-frame columns wobble with townsfolk and cars in view,
+// and with the visitor's own random look (three.js draws its UUIDs from Math.random, so building fewer objects shifts the seeded
+// stream and the page picks a different hairstyle: the last column shows it).
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),ts=require('typescript'),vm=require('vm');
 const BASE=process.env.FUTBOL_BASE_URL||'http://localhost:9025',TIME=process.env.TB_TIME||'day',TIERS=(process.env.TB_TIERS||'0,1,2,3,4').split(',').map(Number);
@@ -58,19 +60,21 @@ const median=a=>{const s=[...a].sort((x,y)=>x-y);return s.length?s[s.length>>1]:
     const roots=[f.streetTraffic.root,f.scene.getObjectByName('traffic-signal-lamps')].filter(Boolean);
     for(const root of roots)root.traverse(o=>{if(!(o.isMesh||o.isSprite))return;acc.all++;if(!shown(o))return;acc.draws++;acc.triangles+=o.isSprite?2:tris(o);if(o.castShadow)acc.casters++;acc.materials.add(o.material.uuid);});
     let sceneCasters=0;f.scene.traverse(o=>{if(o.isMesh&&o.castShadow&&shown(o))sceneCasters++;});
-    return {rows:g.rows.slice(),update:g.update.slice(),traffic:{draws:acc.draws,triangles:acc.triangles,casters:acc.casters,materials:acc.materials.size,objects:acc.all},sceneCasters,
+    // The visitor's own look is random per page load (hair, kit): its meshes and triangles are listed so that difference can be told apart.
+    const me={draws:0,triangles:0};if(f.player&&f.player.root)f.player.root.traverse(o=>{if(o.isMesh&&shown(o)){me.draws++;me.triangles+=tris(o);}});
+    return {rows:g.rows.slice(),update:g.update.slice(),traffic:{draws:acc.draws,triangles:acc.triangles,casters:acc.casters,materials:acc.materials.size,objects:acc.all},sceneCasters,me,
      tier:f.heat.tier??null,near:f.streetTraffic.cars.filter(c=>Math.hypot(c.group.position.x-f.location.x,c.group.position.z-f.location.z)<60).length,at:{x:+f.location.x.toFixed(1),z:+f.location.z.toFixed(1)}};});
    const calls=r.rows.map(x=>x[0]),tri=r.rows.map(x=>x[1]),ms=r.rows.map(x=>x[2]);
    out.push({tier,view:v.id,frames:r.rows.length,calls:median(calls),callsMin:Math.min(...calls),callsMax:Math.max(...calls),triangles:median(tri),renderMs:+median(ms).toFixed(2),
-    updateMs:+mean(r.update).toFixed(4),updateMedianMs:+median(r.update).toFixed(4),traffic:r.traffic,sceneCasters:r.sceneCasters,near:r.near,at:r.at});
+    updateMs:+mean(r.update).toFixed(4),updateMedianMs:+median(r.update).toFixed(4),traffic:r.traffic,sceneCasters:r.sceneCasters,me:r.me,near:r.near,at:r.at});
    if(SHOTS){fs.mkdirSync(SHOTS,{recursive:true});await page.screenshot({path:path.join(SHOTS,`traffic-${TIME}-t${tier}-${v.id}-${VW}.png`)});}
   }
  }
  await browser.close();
  console.log(`traffic-budget  ${BASE}  ${VW}x${VH} DPR 1  ${TIME}  SwiftShader (counts exact; ms = CPU on this machine, NOT GPU cost or heat)`);
- console.log('| tier | view | frame draws (min-max) | frame triangles | render ms | traffic update ms (mean) | traffic draws | traffic triangles | traffic shadow casters | traffic materials | scene shadow casters | cars within 60 m |');
- console.log('|---|---|---|---|---|---|---|---|---|---|---|---|');
- for(const o of out)console.log(`| ${o.tier} | ${o.view} | ${o.calls} (${o.callsMin}-${o.callsMax}) | ${o.triangles} | ${o.renderMs} | ${o.updateMs} | ${o.traffic.draws} | ${o.traffic.triangles} | ${o.traffic.casters} | ${o.traffic.materials} | ${o.sceneCasters} | ${o.near} |`);
+ console.log('| tier | view | frame draws (min-max) | frame triangles | render ms | traffic update ms (mean) | traffic draws | traffic triangles | traffic shadow casters | traffic materials | scene shadow casters | cars within 60 m | visitor rig meshes / triangles |');
+ console.log('|---|---|---|---|---|---|---|---|---|---|---|---|---|');
+ for(const o of out)console.log(`| ${o.tier} | ${o.view} | ${o.calls} (${o.callsMin}-${o.callsMax}) | ${o.triangles} | ${o.renderMs} | ${o.updateMs} | ${o.traffic.draws} | ${o.traffic.triangles} | ${o.traffic.casters} | ${o.traffic.materials} | ${o.sceneCasters} | ${o.near} | ${o.me.draws} / ${o.me.triangles} |`);
  if(process.env.TB_JSON)fs.writeFileSync(process.env.TB_JSON,JSON.stringify({base:BASE,time:TIME,views:out},null,1));
  if(errors.length){console.log('page errors:');for(const e of errors.slice(0,5))console.log('  '+e);}
  if(out.some(o=>o.frames<FRAMES/2)){console.log('FAIL: too few frames at a viewpoint');process.exit(1);}

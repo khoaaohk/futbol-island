@@ -27,7 +27,7 @@ const [VW,VH]=(process.env.TS_VIEW||'390x844').split('x').map(Number),phone=VW<7
  // 1. Wait for a queue at a red light.
  let found=null;const t0=Date.now();
  while(Date.now()-t0<WAIT*1000&&!found){await keepAwake(500);
-  found=await page.evaluate(min=>{const t=window.__fi2.streetTraffic,s=t.signals;for(const c of t.cars){if(!(c.held&&c.v<.05&&c.signalNode>=0))continue;const n=t.nodes[c.signalNode],near=t.cars.filter(o=>Math.hypot(o.group.position.x-n.x,o.group.position.z-n.z)<26);
+  found=await page.evaluate(min=>{const t=window.__fi2.streetTraffic,s=t.signals;for(const c of t.cars){if(!(c.held&&c.v<.05&&c.signalNode>=0)||(min>1&&c.axis!=='z'))continue;/* a north-south street first: the game camera looks along it */const n=t.nodes[c.signalNode],near=t.cars.filter(o=>Math.hypot(o.group.position.x-n.x,o.group.position.z-n.z)<26);
     if(near.length>=min){const up=t.update;t.update=function(dt,p,i){return up.call(this,0,p,i);};return {x:n.x,z:n.z,cx:c.group.position.x,cz:c.group.position.z,dx:c.dirX,dz:c.dirZ,cars:near.length,held:near.filter(o=>o.held).length,clock:s.clock};}}return null;},Date.now()-t0>WAIT*600?1:2);}
  if(!found){console.log('no vehicle held at a red light within',WAIT,'s');await browser.close();process.exit(1);}
  console.log('junction',JSON.stringify(found));
@@ -39,7 +39,7 @@ const [VW,VH]=(process.env.TS_VIEW||'390x844').split('x').map(Number),phone=VW<7
  if(process.env.TS_LINEUP==='1'){
   await page.evaluate(({x,z})=>{const t=window.__fi2.streetTraffic,order=[0,1,2,3,4,6,7,8];order.forEach((k,i)=>{const g=t.cars[k].group;g.visible=true;g.position.set(x-10.5+i*3,0,z+(i%2?.5:-.5));g.rotation.set(0,.35,0);});
    t.cars.forEach((c,k)=>{if(!order.includes(k))c.group.position.set(x,0,z+60);});},found);
-  await keepAwake(600);await snap(`vehicles-${TIME}-front.png`,[found.x+3,6,found.z+17],[found.x,.8,found.z],phone?80:44);await snap(`vehicles-${TIME}-back.png`,[found.x-3,6,found.z-17],[found.x,.8,found.z],phone?80:44);
+  await keepAwake(600);await snap(`vehicles-${TIME}-front.png`,[found.x,6.5,found.z+18],[found.x,.8,found.z],phone?80:52);await snap(`vehicles-${TIME}-back.png`,[found.x,6.5,found.z-18],[found.x,.8,found.z],phone?80:52);
  }
  await browser.close();
  if(errors.length){console.log('page errors:');for(const e of errors.slice(0,6))console.log('  '+e);}
