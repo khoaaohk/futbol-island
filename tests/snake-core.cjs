@@ -19,6 +19,8 @@ function bot(prefer='call',skill=1){let lastTick=-1,r=12345;const rnd=()=>{r=(r*
  return g=>{const s=g.state;if(s.over||s.beat>0||s.ticks===lastTick||s.qn>0)return;lastTick=s.ticks;if(rnd()>skill)return;
   const C=s.cols,R=s.rows,block=new Uint8Array(C*R);for(let i=1;i<s.len-1;i++)block[s.ys[i]*C+s.xs[i]]=1;
   for(const f of s.foes)if(f.on&&s.dash<=0){block[f.y*C+f.x]=1;if(f.kind===0){const x=f.x+f.dx,y=f.y+f.dy;if(x>=0&&y>=0&&x<C&&y<R)block[y*C+x]=1;const x2=f.x-f.dx,y2=f.y-f.dy;if(x2>=0&&y2>=0&&x2<C&&y2<R)block[y2*C+x2]=1;}}
+  if(s.dash<=0)for(const c of s.cones)if(c.on)block[c.y*C+c.x]=1;// AAA pass (Nov 18 2026): cones stand still; the sliding tackle is read ahead in time (where he will be k ticks on)
+  const sl=s.slide,slHit=(x,y,k)=>{if(!sl.phase||s.dash>0||(sl.horiz?y:x)!==sl.at)return false;const p=sl.pos+sl.dir*(sl.phase===2?k:Math.max(0,k-sl.t)),c=sl.horiz?x:y;return c===p||c===p-sl.dir||c===p+sl.dir;};
   const call=K.CALLS[s.call],picks=s.picks.filter(p=>p.on);let want=picks[0];
   if(picks.length===2&&prefer==='call'){const more=p=>p.pos===POS.def?s.d<call[0]:p.pos===POS.mid?(s.m===0?s.d===call[0]:s.m<call[1]):p.pos===POS.fwd?s.m===call[1]:true;want=picks.find(more)||picks[0];}
   else if(picks.length===2&&prefer==='near'){const d=p=>Math.abs(p.x-s.xs[0])+Math.abs(p.y-s.ys[0]);want=d(picks[0])<=d(picks[1])?picks[0]:picks[1];}
@@ -26,9 +28,9 @@ function bot(prefer='call',skill=1){let lastTick=-1,r=12345;const rnd=()=>{r=(r*
   const hx=s.xs[0],hy=s.ys[0],dist=new Int16Array(C*R).fill(-1),first=new Int8Array(C*R).fill(-1),q=[hy*C+hx];dist[hy*C+hx]=0;
   const back=(s.dir+2)%4;let target=want?want.y*C+want.x:-1,found=-1;
   for(let qi=0;qi<q.length;qi++){const c=q[qi],x=c%C,y=(c-x)/C;if(c===target){found=c;break;}
-   for(let d=0;d<4;d++){if(qi===0&&d===back)continue;const nx=x+DX[d],ny=y+DY[d];if(nx<0||ny<0||nx>=C||ny>=R)continue;const nc=ny*C+nx;if(block[nc]||dist[nc]>=0)continue;dist[nc]=dist[c]+1;first[nc]=qi===0?d:first[c];q.push(nc);}}
+   for(let d=0;d<4;d++){if(qi===0&&d===back)continue;const nx=x+DX[d],ny=y+DY[d];if(nx<0||ny<0||nx>=C||ny>=R)continue;const nc=ny*C+nx;if(block[nc]||dist[nc]>=0||slHit(nx,ny,dist[c]+1))continue;dist[nc]=dist[c]+1;first[nc]=qi===0?d:first[c];q.push(nc);}}
   let d=found>=0?first[found]:-1;
-  if(d<0){let best=-1;for(let k=0;k<4;k++){if(k===back)continue;const nx=hx+DX[k],ny=hy+DY[k];if(nx<0||ny<0||nx>=C||ny>=R||block[ny*C+nx])continue;let room=0;for(const c of q)if(first[c]===k)room++;if(room>best){best=room;d=k;}}}
+  if(d<0){let best=-1;for(let k=0;k<4;k++){if(k===back)continue;const nx=hx+DX[k],ny=hy+DY[k];if(nx<0||ny<0||nx>=C||ny>=R||block[ny*C+nx]||slHit(nx,ny,1))continue;let room=0;for(const c of q)if(first[c]===k)room++;if(room>best){best=room;d=k;}}}
   if(d>=0&&d!==s.dir)g.turn(d);};}
 
 ok('same seed and inputs, same run; another seed, another run; the daily seed is one per day',()=>{
