@@ -13,22 +13,23 @@ let n=0;const MAIN=require.main===module,ok=(name,fn)=>{if(!MAIN)return;const t0
 const KID={react:1.3,noise:2.3,lead:.2,curl:false},GOOD={react:.62,noise:.55,lead:.85,curl:true},ACE={react:.4,noise:0,lead:1,curl:true};
 function playBot(opts,skill,{seed=7,maxWaves=1e9,maxSecs=60*60}={}){
  const g=C.createBallBlaster(opts),s=g.state;let r=seed>>>0||1;const rnd=()=>{r=(r*1664525+1013904223)>>>0;return r/4294967296;},gauss=()=>(rnd()+rnd()+rnd()-1.5)*1.4;
- let wait=0,heartsAt={},lastWave=0;const perWave=[];let leaksIn=0;
+ let wait=0,lastWave=0;const leakKinds={};const perWave=[];let leaksIn=0;
  while(!s.over&&s.t<maxSecs&&s.wave<=maxWaves){
   if(s.wave!==lastWave){if(lastWave)perWave.push({wave:lastWave,leaks:leaksIn});lastWave=s.wave;leaksIn=0;}
   wait-=STEP;
-  if(wait<=0&&s.rack>0&&s.mode==='fight'){
-   // the machine nearest the goal line, or a gold crate when nothing is close
+  if(wait<=0&&s.rack>0&&(s.mode==='fight'||s.mode==='bonus')){
+   // the machine nearest the goal line; in target practice, the target that has been up longest
    let t=null;for(const e of s.ents)if(e.on&&C.isMachine(e.kind)&&e.z>BB.spawnZ+2&&(!t||e.z>t.z))t=e;
+   if(!t&&s.mode==='bonus')for(const e of s.ents)if(e.on&&e.kind===K.target&&(!t||e.t>t.t))t=e;
    if(t){const d=Math.hypot(t.x-BB.kx,t.z-BB.kz),pw=d>14?1:.7,v=Math.max(BB.vMin,Math.min(BB.vMax,(BB.vMin+(BB.vMax-BB.vMin)*pw)*(.55+.45*Math.min(1,d/28)))),T=d/v;
-    const slow=s.slowT>0?.4:1,ez=t.z+t.speed*slow*T*skill.lead,ex=t.x+(t.tx-t.x)*.5*skill.lead,e=skill.noise*Math.max(.4,d/20);
+    const slow=s.slowT>0?.4:1,ez=t.z+(t.v??t.speed)*slow*T*skill.lead,ex=t.x+(t.tx-t.x)*.5*skill.lead,e=skill.noise*Math.max(.4,d/20);
     const ty=t.kind===K.drone?t.y+.25:t.kind===K.dummy?.8:Math.min(1.1,t.h*.55);
     const curl=t.kind===K.shield&&skill.curl?(t.x>0?-1:1):0;
     g.shoot(ex+gauss()*e,ty,ez+gauss()*e*.6,pw,curl);wait=skill.react*(.8+rnd()*.4);}}
-  g.advance(STEP);g.drain(ev=>{if(ev.type==='leak')leaksIn++;});
+  g.advance(STEP);g.drain(ev=>{if(ev.type==='leak'){leaksIn++;leakKinds[ev.kind]=(leakKinds[ev.kind]||0)+1;}});
  }
  if(lastWave)perWave.push({wave:lastWave,leaks:leaksIn});
- return {g,s,perWave,secs:s.t};
+ return {g,s,perWave,secs:s.t,leakKinds};
 }
 module.exports={playBot,KID,GOOD,ACE,C};
 const med=a=>a.slice().sort((x,y)=>x-y)[a.length>>1];
