@@ -72,6 +72,39 @@ ok('puzzle rules: heavy plates ignore the ball, order plates reset on a wrong pr
  const ti=MODULES.findIndex(m=>m.id==='quick-gate'),g3=K.createRollBall({seed:1,fixPlan:[ti]}),s3=g3.state,tp=s3.world.plates[0];s3.ball.x=tp.x;s3.ball.z=tp.z;for(let i=0;i<10;i++)g3.step();assert.equal(s3.world.sig[0],true);s3.ball.x=0;s3.ball.z=1;for(let i=0;i<120*(tp.T+.2);i++){g3.input(0,0);g3.step();}assert.equal(s3.world.sig[0],false,'the timed plate lets go');
  const hearts=s.hearts;g.retry();assert.equal(s.hearts,hearts,'retry costs nothing');assert.ok(s.ball.z<1.5);
 });
+ok('AAA pass (Nov 18 2026): cones teach their rule, boost pads, sweepers, the goal keeper, close calls, the look and feel hooks',()=>{
+ const mod=id=>MODULES.findIndex(m=>m.id===id),evs=(g,n,fn)=>{const ev=[];for(let i=0;i<n;i++){if(fn)fn(i);g.step();g.drain(e=>ev.push(e));}return ev;};
+ // a cone hit too softly rocks and stays, and says how close it was; hard enough knocks it; a quick glancing hit is forgiven
+ {const hit=(vx,vz,dx=0)=>{const g=K.createRollBall({seed:1,fixPlan:[mod('cone-knock')]}),s=g.state,c=s.world.posts[0];s.ball.x=c.x+dx;s.ball.z=c.z-1.2;s.ball.y=RB.r;s.ball.vx=vx;s.ball.vz=vz;const ev=evs(g,90,()=>g.input(0,0));return {c,ev};};
+  const soft=hit(0,2),w=soft.ev.find(e=>e.type==='wobble');assert.ok(w&&!soft.c.down,'a soft hit leaves the stack standing and emits a wobble');assert.ok(w.b>.3&&w.b<1,'the wobble carries the share of the speed needed: '+w.b);
+  const softer=hit(0,1.2).ev.find(e=>e.type==='wobble');assert.ok(softer&&softer.b<w.b,'a softer hit rocks less');
+  const hard=hit(0,5);assert.ok(hard.c.down&&hard.ev.some(e=>e.type==='cone'),'a hard hit knocks it');
+  const glance=hit(0,6,.52);assert.ok(glance.c.down,'a quick glancing hit knocks it too');assert.ok(RB.knockGlance<1&&RB.knockFast>1);}
+ // a boost pad sends the ball off at its own speed however it came; a crate on it does nothing
+ {const g=K.createRollBall({seed:1,fixPlan:[mod('speed-strip')]}),s=g.state,pad=s.world.plates.find(p=>p.kind==='boost');s.ball.x=pad.x;s.ball.z=pad.z-.9;s.ball.vz=1;const ev=evs(g,120,()=>g.input(0,.2));
+  assert.ok(ev.some(e=>e.type==='boost'),'boost event');assert.ok(ev.some(e=>e.type==='cone'),'the pad alone carries the ball through the first cone: speed is the lesson');assert.ok(!ev.some(e=>e.type==='plate'),'a pad is not a plate');}
+ // sweepers: the same place at the same time for everyone, they knock the ball away, and the scripted bots wait for the gap
+ {const at=()=>{const g=K.createRollBall({seed:5,fixPlan:[mod('crab-walk')]});for(let i=0;i<333;i++)g.step();return g.state.world.posts[0].x;};assert.equal(at(),at(),'deterministic');
+  const g=K.createRollBall({seed:1,fixPlan:[mod('crab-walk')]}),s=g.state,p=s.world.posts[0];assert.equal(p.kind,'sweeper');let lo=9,hi=-9;const ev=evs(g,120*4,()=>{lo=Math.min(lo,p.x);hi=Math.max(hi,p.x);s.ball.x=0;s.ball.z=p.hz;s.ball.y=RB.r;});
+  assert.ok(hi-lo>2,'it slides across: '+[lo,hi]);assert.ok(ev.some(e=>e.type==='sweep'),'a ball left on its rail is knocked away');}
+ // the goal keeper: none early, on from KEEPER.from, a little faster every level, never under the floor; the exact bot still scores past it
+ {const keeper=L=>K.buildWorld([0],L).posts.find(p=>p.kind==='sweeper');assert.equal(keeper(K.KEEPER.from-1),undefined);assert.ok(keeper(K.KEEPER.from),'a keeper from level '+K.KEEPER.from);
+  assert.ok(K.keeperPeriod(20)<K.keeperPeriod(K.KEEPER.from),'later keepers are quicker');assert.equal(K.keeperPeriod(500),K.KEEPER.min);
+  for(const L of [6,14,40]){const g=K.createRollBall({seed:9,fixPlan:[0]}),s=g.state;s.level=L;s.world=K.buildWorld(s.plan,L);const r=play(g,{maxSec:60});assert.equal(r.stats.levels,1,'level '+L+': the bot scores past the keeper');assert.equal(r.hearts,RB.hearts);}}
+ // through a timed gate with under a second left: one close-call event
+ {const g=K.createRollBall({seed:1,fixPlan:[mod('quick-gate')]}),s=g.state,pl=s.world.plates[0],r=s.world.recvs.find(q=>q.kind==='gate');s.ball.x=pl.x;s.ball.z=pl.z;evs(g,10);s.ball.x=0;s.ball.z=r.z0-.8;s.ball.vx=0;s.ball.vz=0;
+  evs(g,Math.round(120*(pl.T-.7)),()=>g.input(0,0));s.ball.z=r.z0-.4;s.ball.vz=4.5;const ev=evs(g,90,()=>g.input(0,1));assert.equal(ev.filter(e=>e.type==='close').length,1,'JUST IN TIME');}
+ // walls are heard now, and landings bounce
+ {const g=K.createRollBall({seed:1,fixPlan:[0]}),s=g.state;s.ball.x=1.2;s.ball.z=9.6;s.ball.vz=6;const ev=evs(g,40,()=>g.input(0,0));assert.ok(ev.some(e=>e.type==='wall'&&e.b>3),'a wall hit reports its speed');}
+ const view=read('lib/arcade/rollball/view.ts'),shell=read('components/games/RollBallGame.tsx'),css=read('components/games/RollBallGame.module.css'),audio=read('lib/arcade/rollball/audio.ts');
+ assert.match(view,/ring\.material=hot\?coneHot:ringOff/,'the speed ring glows when the ball is quick enough');assert.match(view,/p\.wob\*p\.wob/,'the stack rocks by the share');assert.match(view,/getConeStack\(\)/,'a standing stack is one mesh');
+ assert.match(view,/introT=reduced\?0:1/,'the level opens with a look over the puzzle, not for reduced motion');assert.match(view,/rib\.visible=heat>\.03&&!reduced/);assert.match(view,/gulls\.visible=t!==3&&!reduced/);assert.match(view,/moodFor\(curLevel\)/,'time of day by level');
+ assert.match(view,/fragmentShader:BOOST/);assert.match(view,/th===1\?getCrab\(\):getDummy\(\)/);
+ assert.match(shell,/hold\(70\)/,'hit-stop on a cone');assert.match(shell,/if\(!reduced\.current\)holdUntil\.current=/);assert.match(shell,/teach\('cone'\)/);assert.match(shell,/data-rollball-tip/);assert.match(shell,/data-rollball-pts/);
+ for(const line of shell.match(/const TIPS=\{[^}]*\}/)[0].match(/'[^']+'/g))assert.ok(line.length<36&&!/[—;]/.test(line),'tips are one short line: '+line);
+ assert.match(css,/@keyframes rbFly/);assert.match(css,/prefers-reduced-motion:reduce\)\{\.pts\{animation:rbPuzzleFade/);
+ for(const cue of ['wobble','boost','sweep','close','respawn','ambience'])assert.match(audio,new RegExp('\\b'+cue+'\\('),'a sound for '+cue);assert.match(audio,/const jit=/,'repeats are detuned');
+});
 ok('device save: best, daily first run, day streak, medal, sanitising, results lines',()=>{
  const stats={levels:3,modules:5,stars:2,starsSeen:4,falls:3,timeouts:0,perfect:1,bestStreak:1,knocks:1,time:120};
  let st=S.settleRollball(S.emptyRollballSave(),{score:2600,daily:false,day:'2026-11-17',stats,level:4});assert.ok(st.newBest);assert.equal(st.save.best,2600);assert.equal(st.medal,1);assert.ok(st.newMedal);

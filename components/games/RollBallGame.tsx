@@ -8,7 +8,7 @@
  * number changes; the clock face is written straight to the DOM when its second changes. Pixel ratio capped in the view.
  * Teaches (AGENTS.md): "Look before you roll. Plan the next touch." Every puzzle is read first, then played.
  */
-import {useCallback,useEffect,useRef,useState} from 'react';
+import React,{useCallback,useEffect,useRef,useState} from 'react';
 import dynamic from 'next/dynamic';
 import {retryImport} from '@/lib/retryImport';
 import {ArcadeTopBar} from '../arcade/ArcadeTopBar';
@@ -34,7 +34,9 @@ const RollBallScores=dynamic(()=>retryImport(()=>import('./RollBallScores')),{ss
 type Phase='menu'|'playing'|'paused'|'over';
 type Hud={score:number;level:number;hearts:number;stars:number;key:boolean;streak:number;mod:number;mods:number;name:string;theme:string};
 type Result={score:number;daily:boolean;level:number;levels:number;stars:number;streak:number;falls:number;why:''|'water'|'clock';settled:RollballSettled;near:string;coach:string;coins:number};
-type Word={id:number;text:string;pts:number;x:number;y:number;tone:'sun'|'red'|'teal'|'paper'};
+type Word={id:number;text:string;pts:number;x:number;y:number;fx:number;fy:number;tone:'sun'|'red'|'teal'|'paper'};
+/** One-line lessons, each shown once a run the first time the thing happens (no text walls). */
+const TIPS={cone:'Roll faster to knock the cones.',sweep:'Wait for a gap. Then go.',boost:'Arrows make you fast.',heavy:'Push the crate onto it.',clock:'Hurry. The clock is low.'} as const;
 export const ROLLBALL_COIN_REASON='Roll It In: levels rolled';
 const FRAME_MS=1000/61;
 
@@ -56,11 +58,11 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
  const [phase,setPhase]=useState<Phase>('menu'),phaseRef=useRef<Phase>('menu');
  const [hud,setHud]=useState<Hud>({score:0,level:1,hearts:RB.hearts,stars:0,key:false,streak:0,mod:0,mods:1,name:'',theme:THEMES[0]}),hudRef=useRef(hud);
  const [save,setSave]=useState<RollballSave>(emptyRollballSave),[result,setResult]=useState<Result|null>(null),[today,setToday]=useState('');
- const [board,setBoard]=useState<{score:number}|null>(null),[scores,setScores]=useState(false),[words,setWords]=useState<Word[]>([]),[hint,setHint]=useState(true),[failed,setFailed]=useState(false);
+ const [board,setBoard]=useState<{score:number}|null>(null),[scores,setScores]=useState(false),[words,setWords]=useState<Word[]>([]),[hint,setHint]=useState(true),[failed,setFailed]=useState(false),[tip,setTip]=useState<{id:number;text:string}|null>(null);
  const entry=useArcadeEntry('rollball');
  const stage=useRef<HTMLDivElement>(null),cv=useRef<HTMLCanvasElement>(null),clockNum=useRef<HTMLElement>(null),clockBox=useRef<HTMLDivElement>(null);
  const game=useRef<RollBall|null>(null),view=useRef<RollballView|null>(null),audio=useRef<RollballAudio|null>(null);
- const raf=useRef(0),last=useRef(0),drawn=useRef(0),endAt=useRef(0),wordId=useRef(0),run=useRef({id:'',daily:false,day:'',done:true}),shownSec=useRef(-1);
+ const raf=useRef(0),last=useRef(0),drawn=useRef(0),endAt=useRef(0),wordId=useRef(0),run=useRef({id:'',daily:false,day:'',done:true}),shownSec=useRef(-1),holdUntil=useRef(0),told=useRef(new Set<string>()),amb=useRef(-1);
  const viewReady=useRef<{promise:Promise<void>;done:()=>void}>(null as unknown as {promise:Promise<void>;done:()=>void});if(!viewReady.current){let done=()=>{};const promise=new Promise<void>(r=>{done=r;});viewReady.current={promise,done};}
  const stick=useRef({x:0,y:0}),keys=useRef(new Set<string>()),reduced=useRef(false),frameRef=useRef<(t:number)=>void>(()=>{});
 
@@ -82,27 +84,37 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
  },[change]);
 
  const say=useCallback((text:string,pts:number,x:number,y:number,z:number,tone:Word['tone'])=>{const v=view.current,el=stage.current;if(!v||!el)return;const p=v.project(x,y+.6,z),W=el.clientWidth,H=el.clientHeight;
-  const w:Word={id:++wordId.current,text,pts,x:Math.max(80,Math.min(W-80,p.behind?W/2:p.x)),y:Math.max(150,Math.min(H-170,p.behind?H*.4:p.y)),tone};setWords(list=>[...list.filter(o=>Math.abs(o.y-w.y)>34||Math.abs(o.x-w.x)>120).slice(-2),w]);},[]);
+  const wx=Math.max(80,Math.min(W-80,p.behind?W/2:p.x)),wy=Math.max(150,Math.min(H-170,p.behind?H*.4:p.y)),w:Word={id:++wordId.current,text,pts,x:wx,y:wy,fx:W/2-wx,fy:34-wy,tone};setWords(list=>[...list.filter(o=>Math.abs(o.y-w.y)>34||Math.abs(o.x-w.x)>120).slice(-2),w]);},[]);
 
+ /** A lesson line over the foot, once a run. */
+ const teach=useCallback((k:keyof typeof TIPS)=>{if(told.current.has(k))return;told.current.add(k);setTip({id:++wordId.current,text:TIPS[k]});},[]);
+ /** Hit-stop: the rules hold still for a few frames on a big hit (the picture keeps drawing). */
+ const hold=useCallback((ms:number)=>{if(!reduced.current)holdUntil.current=performance.now()+ms;},[]);
  /* ---- one rules event: picture, sound, haptics, words ---- */
  const onEvent=useCallback((e:RollEvent)=>{
   const a=audio.current,g=game.current;view.current?.onEvent(e);
   switch(e.type){
-   case 'land':a?.land(e.a);break;
-   case 'wall':a?.knock(e.a);break;
+   case 'land':a?.land(e.a,g?.state.ball.surf);if(e.a>7)arcadeFeedback(null,'tap');break;
+   case 'wall':a?.knock(e.b,g?.state.ball.surf);break;
+   case 'wobble':a?.wobble(e.b);arcadeFeedback(null,'tap');say(e.b>.78?'SO CLOSE!':'FASTER!',0,e.x,e.y,e.z,'paper');teach('cone');break;
+   case 'boost':a?.boost();arcadeFeedback(null,'tap');say('ZOOM!',0,e.x,e.y,e.z,'sun');teach('boost');break;
+   case 'sweep':a?.sweep();arcadeFeedback(null,'slam');say('OOF!',0,e.x,e.y+.6,e.z,'red');teach('sweep');break;
+   case 'close':a?.close();arcadeFeedback(null,'goal');say('JUST IN TIME!',0,e.x,e.y,e.z,'teal');break;
+   case 'respawn':a?.respawn();break;
    case 'bump':a?.bumper();arcadeFeedback(null,'tap');say('BOING!',0,e.x,e.y,e.z,'paper');break;
    case 'splash':if(e.a<0){a?.splash();arcadeFeedback(null,'slam');say('SPLASH!',0,e.x,0,e.z,'red');}else a?.splash();break;
-   case 'plate':{a?.plate(e.b>0,1);const pl=g?.state.world.plates[e.a];if(pl&&e.b>0&&(pl.kind==='latch'||e.b===2))say('CLICK!',0,e.x,e.y,e.z,'sun');else if(pl&&pl.kind==='heavy'&&e.b===0)say('TOO LIGHT',0,e.x,e.y,e.z,'paper');setHint(false);break;}
+   case 'plate':{const pl=g?.state.world.plates[e.a],P=g?.state.world.mods[g.state.mod];let lit=0;if(g&&P)for(let i=P.s0;i<P.s1;i++)if(g.state.world.sig[i])lit++;a?.plate(e.b>0,1+lit*2);/* each signal lit in a puzzle rings a step higher */
+    if(pl&&e.b>0&&(pl.kind==='latch'||e.b===2))say('CLICK!',0,e.x,e.y,e.z,'sun');else if(pl&&pl.kind==='heavy'&&e.b===0){say('TOO LIGHT',0,e.x,e.y,e.z,'paper');teach('heavy');}setHint(false);break;}
    case 'order':a?.plate(true,e.b*2);say(`${e.b}!`,0,e.x,e.y,e.z,'teal');break;
    case 'wrong':a?.wrong();say('WRONG ORDER',0,e.x,e.y,e.z,'red');break;
    case 'gate':a?.gate(e.b===1);if(e.b===1){const r=g?.state.world.recvs[e.a];say(r?.kind==='drain'?'LOW TIDE!':r?.kind==='fan'?'WHOOSH!':r?.kind==='bridge'?'BRIDGE UP!':'OPEN!',0,e.x,e.y,e.z,'teal');}break;
-   case 'cone':a?.cone();arcadeFeedback(null,'goal');say('POW!',0,e.x,e.y,e.z,'sun');break;
+   case 'cone':a?.cone(g?.state.stats.knocks??1);arcadeFeedback(null,'goal');hold(70);say('POW!',0,e.x,e.y,e.z,'sun');break;
    case 'switch':a?.lever(e.b===1);arcadeFeedback(null,'tap');break;
    case 'key':a?.key();say('GOT THE WHISTLE!',0,e.x,e.y,e.z,'sun');break;
    case 'lock':a?.lock(e.b===1);if(e.b===1)say('UNLOCKED!',0,e.x,e.y,e.z,'teal');else say('NEED THE WHISTLE',0,e.x,e.y,e.z,'paper');break;
    case 'star':a?.star(g?.state.stats.stars??0);say('STAR!',e.points,e.x,e.y,e.z,'sun');break;
    case 'module':if(e.points>0){a?.module();}break;
-   case 'goal':{const st=g?.state.streak??0;a?.goal(st);arcadeFeedback(null,'goal');say(g&&!g.state.lostThisLevel&&st>=2?`GOAL! x${st}`:'GOAL!',e.points,e.x,e.y,e.z,'sun');break;}
+   case 'goal':{const st=g?.state.streak??0;a?.goal(st);arcadeFeedback(null,'goal');hold(110);say(g&&!g.state.lostThisLevel&&st>=2?`GOAL! x${st}`:'GOAL!',e.points,e.x,e.y,e.z,'sun');break;}
    case 'heart':a?.heart();arcadeFeedback(null,'slam');break;
    case 'timeout':say('TIME!',0,g?.state.ball.x??0,1,g?.state.ball.z??0,'red');break;
    case 'level':setHint(false);break;
@@ -114,7 +126,7 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
   if(n.score!==h.score||n.level!==h.level||n.hearts!==h.hearts||n.stars!==h.stars||n.key!==h.key||n.streak!==h.streak||n.mod!==h.mod||n.name!==h.name){hudRef.current=n;setHud(n);}},[onEvent]);
  const paintClock=useCallback(()=>{const g=game.current;if(!g)return;const s=g.state,sec=s.clockMax?Math.ceil(s.clock):-1;if(sec===shownSec.current)return;shownSec.current=sec;
   if(clockBox.current)clockBox.current.dataset.on=sec>=0?'1':'';if(clockNum.current)clockNum.current.textContent=sec>=0?String(sec):'';if(clockBox.current)clockBox.current.dataset.low=sec>=0&&sec<=10?'1':'';
-  if(sec>0&&sec<=5&&!s.over)audio.current?.tick();},[]);
+  if(sec>0&&sec<=5&&!s.over)audio.current?.tick();if(sec===10)teach('clock');},[teach]);
 
  /* ---- the frame: input in, fixed physics steps, one draw (60 a second at most) ---- */
  useEffect(()=>{frameRef.current=(now:number)=>{
@@ -126,8 +138,9 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
   // the camera looks along +z, so screen right is world -x
   if(kx||kz)g.input(kx,kz);else g.input(-stick.current.x,-stick.current.y);
   if(process.env.NODE_ENV!=='production'){const h=(window as unknown as {__rollball?:{useBot?:boolean;botTick?:()=>void}}).__rollball;if(h?.useBot)h.botTick?.();}// dev: the scripted bot plays (scripts/check-arcade-audio.cjs, browser checks)
-  g.tick(dt);sync();paintClock();
-  const b=g.state.ball;audio.current?.rolling(Math.hypot(b.vx,b.vz),b.surf,!b.air&&g.state.respawnIn<=0);
+  g.tick(now<holdUntil.current?0:dt);sync();paintClock();
+  const b=g.state.ball,P=g.state.world.mods[g.state.mod],th=P.def.id==='goal'&&g.state.mod>0?g.state.world.mods[g.state.mod-1].def.theme:P.def.theme;if(th!==amb.current){amb.current=th;audio.current?.ambience(th);}
+  audio.current?.rolling(Math.hypot(b.vx,b.vz),b.surf,!b.air&&g.state.respawnIn<=0,Math.abs(b.vy));
   v.render(g.state,now);
   if(g.state.over&&endAt.current&&now>=endAt.current){finish();return;}
   raf.current=requestAnimationFrame(t=>frameRef.current(t));
@@ -142,11 +155,11 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
   const day=localPlayDay(Date.now()),seed=daily?rollballDailySeed(day):1+Math.floor(Math.random()*2_000_000_000);
   const g=game.current=createRollBall({seed,daily});run.current={id,daily,day,done:false};
   if(!daily||readRollballSave().daily.day!==day||!readRollballSave().daily.counted)beginBoardSession('rollball');
-  endAt.current=0;shownSec.current=-2;setResult(null);setBoard(null);setWords([]);setToday(day);setHint(true);g.drain(()=>{});
+  endAt.current=0;shownSec.current=-2;holdUntil.current=0;told.current.clear();amb.current=-1;setTip(null);setResult(null);setBoard(null);setWords([]);setToday(day);setHint(true);g.drain(()=>{});
   view.current.snap(g.state);hudRef.current={...hudRef.current,score:-1};sync();change('playing');paintClock();kick();
  },[change,entry,kick,paintClock,sync]);
  const pause=useCallback(()=>{if(phaseRef.current!=='playing')return;if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;change('paused');},[change]);
- const resume=useCallback(()=>{if(phaseRef.current!=='paused')return;audio.current?.unlock();change('playing');kick();},[change,kick]);
+ const resume=useCallback(()=>{if(phaseRef.current!=='paused')return;audio.current?.unlock();amb.current=-1;change('playing');kick();},[change,kick]);
  const leave=useCallback(()=>{if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;onExit();},[onExit]);
  const retry=useCallback(()=>{audio.current?.unlock();audio.current?.tap();game.current?.retry();sync();},[sync]);
 
@@ -164,7 +177,7 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
   }).catch(()=>setFailed(true));
   const noScroll=(e:TouchEvent)=>{if(phaseRef.current==='playing'&&e.cancelable)e.preventDefault();};el.addEventListener('touchmove',noScroll,{passive:false});
   const noMenu=(e:Event)=>e.preventDefault();c.addEventListener('contextmenu',noMenu);
-  if(process.env.NODE_ENV!=='production')(window as unknown as {__rollball?:unknown}).__rollball={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get view(){return view.current;},get audio(){return audio.current;},sync:()=>sync(),scriptBot,useBot:false,botTick:undefined,manual:false,advance:(dt:number,now:number)=>{const g=game.current,v=view.current,h=(window as unknown as {__rollball:{useBot:boolean;botTick?:()=>void}}).__rollball;if(!g||!v)return;if(h.useBot)h.botTick?.();g.tick(dt);sync();v.render(g.state,now);},load:(plan:number[])=>{const g=game.current=createRollBall({seed:7,fixPlan:plan});view.current?.snap(g.state);sync();}};
+  if(process.env.NODE_ENV!=='production')(window as unknown as {__rollball?:unknown}).__rollball={get game(){return game.current;},get phase(){return phaseRef.current;},get loop(){return raf.current!==0;},get view(){return view.current;},get audio(){return audio.current;},sync:()=>sync(),scriptBot,useBot:false,botTick:undefined,manual:false,advance:(dt:number,now:number)=>{const g=game.current,v=view.current,h=(window as unknown as {__rollball:{useBot:boolean;botTick?:()=>void}}).__rollball;if(!g||!v)return;if(h.useBot)h.botTick?.();g.tick(dt);sync();v.render(g.state,now);},load:(plan:number[],level=1)=>{const g=game.current=createRollBall({seed:7,fixPlan:plan});g.state.level=level;view.current?.snap(g.state);sync();}};
   return()=>{alive=false;ro?.disconnect();window.visualViewport?.removeEventListener('resize',fit);el.removeEventListener('touchmove',noScroll);c.removeEventListener('contextmenu',noMenu);
    if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;view.current?.dispose();view.current=null;game.current=null;audio.current?.dispose();audio.current=null;delete (window as unknown as {__rollball?:unknown}).__rollball;};
  },[sync]);
@@ -191,6 +204,7 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
   <aside className={styles.side} data-side="left" aria-hidden="true">
    <ComicPanel tilt={-1.5} tone="paper"><b>You are the ball</b><br/>Press anywhere and push to roll. Let go and the ball slows down.</ComicPanel>
    <ComicPanel tilt={1} tone="sun"><b>Plates and gates</b><br/>Roll onto a plate to open a gate. Some plates need a crate on them. Some close again.</ComicPanel>
+   <ComicPanel tilt={-1.2} tone="paper"><b>Cones</b><br/>Hit cones fast. The ring glows when you are fast enough.</ComicPanel>
    <ComicPanel tilt={-.8} tone="teal"><b>Keys</b><br/>Arrows or WASD roll. R starts the puzzle again. P pauses.</ComicPanel>
   </aside>
   <aside className={styles.side} data-side="right" aria-hidden="true">
@@ -212,9 +226,10 @@ export default function RollBallGame({onExit}:{onExit:()=>void}){
    {live&&<p className={styles.puzzle} data-rollball-puzzle key={`${hud.level}-${hud.mod}`}><b>{hud.name}</b><small>{hud.mod}/{hud.mods} · {hud.theme}</small></p>}
    {live&&<button type="button" className={styles.retry} onClick={retry} data-rollball-retry aria-label="Start this puzzle again">Retry</button>}
    {live&&<p className={styles.foot} data-rollball-foot>{hint&&hud.level===1?'Push anywhere to roll':<>{gap>0?<>To best <b>{gap}</b></>:<>Best <b>{Math.max(best,hud.score)}</b></>}{hud.streak>=2&&<span className={styles.streak} key={hud.streak}>Streak x{hud.streak}</span>}</>}</p>}
-   <div className={styles.words} aria-live="polite">{words.map(w=><span key={w.id} className={styles.word} style={{left:w.x,top:w.y}} onAnimationEnd={()=>setWords(l=>l.filter(x=>x.id!==w.id))}>
+   <div className={styles.words} aria-live="polite">{words.map(w=><span key={w.id} className={styles.word} style={{left:w.x,top:w.y}} onAnimationEnd={e=>{if(e.target===e.currentTarget)setWords(l=>l.filter(x=>x.id!==w.id));}}>
     <ComicBurst word={w.text} size={w.text.length>10?17:22} tilt={w.id%2?-4:3} color={w.tone==='red'?'#f0452e':w.tone==='teal'?'#19b5a5':w.tone==='paper'?'#fff3d6':'#ffc83a'} fill={w.tone==='red'?'#fff3d6':undefined}/>
-    {w.pts>0&&<b className={`${comicNumeral} ${styles.pts}`}>+{w.pts}</b>}</span>)}</div>
+    </span>)}{words.map(w=>w.pts>0&&<b key={`p${w.id}`} className={`${comicNumeral} ${styles.pts}`} data-rollball-pts style={{left:w.x,top:w.y+30,'--fx':`${w.fx}px`,'--fy':`${w.fy-30}px`} as React.CSSProperties}>+{w.pts}</b>)}</div>
+   {live&&tip&&<p className={styles.tip} key={tip.id} data-rollball-tip role="status" onAnimationEnd={()=>setTip(null)}>{tip.text}</p>}
   </div>
   <ArcadeTopBar game="rollball" className={styles.topBar} backTitle="Back to arcade" onBack={leave} value={live?hud.score:undefined} word="pts" bumpKey={hud.score} paused={phase==='paused'} canPause={live} onPause={()=>phase==='playing'?pause():resume()}/>
   {phase==='paused'&&<ArcadePauseCard game="rollball" score={`${hud.score} pts · Level ${hud.level} · ${hud.hearts} hearts`} status={entry.message||undefined} onResume={resume} onExit={leave} onRestart={()=>{void start(run.current.daily);}} restartDisabled={busy} keys={[['Push','roll'],['Arrows','roll'],['R','retry puzzle'],['P','pause']]}/>}

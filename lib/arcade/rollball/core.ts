@@ -21,7 +21,7 @@ export const RB={
   *  Running out costs a heart and the clock starts again (the ball goes back to the checkpoint). */
  /** levels up to this one are gentle: a fall puts the ball back close by (level 1: no heart lost) */gentle:3,
  clockFrom:4,clockMul:2.2,clockMin:1.15,clockStep:.04,clockAdd:10,
- knock:3.0,
+ knock:3.0,knockGlance:.6,knockFast:1.5,
  /** medal marks from the drifting-thumb bot (tests/rollball-core.cjs --bots): noise 1.0-1.4 runs score about 850-7100 (median
   *  near 2500), so bronze comes in a few tries; a steady player passes silver; gold needs a long clean streak. */
  medals:[1500,6000,20000] as readonly number[],
@@ -435,7 +435,8 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
  function postHit(i:number,o:{x:number;y:number;z:number;vx:number;vz:number},r:number,who:number){
   const p=W().posts[i];if(p.down)return;const dx=o.x-p.x,dz=o.z-p.z,R=r+p.r,d2=dx*dx+dz*dz;if(d2>=R*R)return;if(o.y-r>p.y+1.2||o.y+r<p.y)return;
   const d=Math.sqrt(d2)||1e-6,nx=dx/d,nz=dz/d,vn=(o.vx-p.vx)*nx+(o.vz-p.vz)*nz;
-  if(p.kind==='cone'&&-vn>=RB.knock){p.down=true;W().sig[p.sig]=true;s.stats.knocks++;emit('cone',i,-vn,p.x,p.y,p.z);o.vx*=.7;o.vz*=.7;return;}
+  // forgiving: a quick glancing hit counts too (overall speed knockFast with at least knockGlance of it into the cone)
+  if(p.kind==='cone'&&(-vn>=RB.knock||(-vn>=RB.knock*RB.knockGlance&&Math.hypot(o.vx,o.vz)>=RB.knock*RB.knockFast))){p.down=true;W().sig[p.sig]=true;s.stats.knocks++;emit('cone',i,-vn,p.x,p.y,p.z);o.vx*=.7;o.vz*=.7;return;}
   o.x=p.x+nx*R;o.z=p.z+nz*R;
   if(vn<0){const e=p.kind==='bumper'?1.25:p.kind==='sweeper'?.7:p.kind==='cone'?.35:.5;o.vx-=(1+e)*vn*nx;o.vz-=(1+e)*vn*nz;
    if(p.kind==='bumper'){o.vx+=nx*3;o.vz+=nz*3;emit('bump',i,-vn,p.x,p.y,p.z);}
