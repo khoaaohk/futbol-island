@@ -116,7 +116,8 @@ ok('bots: later is harder (a held level 12 ends sooner than a held level 1) and 
  const R=L.BOARD_RULES.lineup;for(const s of runs)assert.ok(s.score<=R.base+R.perSecond*s.stats.placed,`board rate holds (${s.score} in ${s.stats.placed} s)`);
 });
 ok('device save: best, medal, daily claim and day streak, near-miss and coach lines',()=>{
- const stats={placed:40,beans:120,lines:9,clears:7,bestCombo:2,bestStreak:3,cleanSheets:0,refs:1,deals:14,bigShapes:2};
+ const stats={placed:40,beans:120,lines:9,clears:7,bestCombo:2,bestStreak:3,cleanSheets:0,refs:1,deals:14,bigShapes:2,teamLines:1,holds:2};
+ assert.match(S.coachLine({...stats,holds:0},10),/bench/,'a run that never used the bench is told about it');
  let st=S.settleLineup(S.emptyLineupSave(),{score:1600,daily:false,day:'2026-11-17',stats,level:4});assert.ok(st.newBest&&st.newMedal);assert.equal(st.save.best,1600);assert.equal(st.save.medal,1);
  st=S.settleLineup(st.save,{score:900,daily:true,day:'2026-11-17',stats,level:2});assert.ok(st.dailyFirst);assert.equal(st.save.best,1600,'a daily run does not touch the endless best');assert.equal(st.streak,1);
  const again=S.settleLineup(st.save,{score:1000,daily:true,day:'2026-11-17',stats,level:2});assert.equal(again.dailyFirst,false,'later daily runs are practice');assert.equal(again.dailyBest,1000);
@@ -142,6 +143,7 @@ ok('arcade wiring: last in the back row, board, coins, save key, last score, roo
 ok('sound: one limiter wired to the output only; made on the first tap; no loops',()=>{
  const a=read('lib/arcade/lineup/audio.ts');assert.match(a,/master\.connect\(limiter\);limiter\.connect\(ctx\.destination\);/);assert.equal((a.match(/limiter\.connect\(/g)||[]).length,1);
  assert.doesNotMatch(a,/setInterval|setTimeout|loop\s*=\s*true/);assert.match(a,/function unlock\(\)/);
+ for(const cue of ['snap','ready','hold','near','risk','venue'])assert.match(a,new RegExp('\\n  '+cue+'\\('),'AAA pass cue: '+cue);assert.match(a,/clear\(lines:number,streak:number,team=0\)/);
  const shell=read('components/games/LineUpGame.tsx');assert.match(shell,/\(audio\.current\?\?=createLineupAudio\(\)\)\.unlock\(\)/);
 });
 ok('heat and input: frames only on demand, DPR cap 2, reduced motion, lifted drag, keys',()=>{
@@ -149,6 +151,15 @@ ok('heat and input: frames only on demand, DPR cap 2, reduced motion, lifted dra
  assert.match(shell,/if\(busy\|\|g\.state\.over\)raf\.current=requestAnimationFrame/,'the loop stops when nothing moves');assert.match(shell,/Math\.min\(2,window\.devicePixelRatio\|\|1\)/);
  assert.match(shell,/d\.touch\?y-sh\.h\*c-c\*1\.1/,'a finger drags the piece lifted above the thumb');assert.match(shell,/prefers-reduced-motion/);
  assert.match(shell,/'Digit1','Digit2','Digit3'/);assert.match(shell,/ArrowLeft:\[-1,0\]/);assert.match(view,/sparks:Spark\[\]=Array\.from\(\{length:64\}/,'pooled sparks');
- assert.match(view,/sprites\.get\(key\)/,'ball sprites drawn once per kit and size');
+ assert.match(view,/sprites\.get\(kit\)/,'ball sprites drawn once per ball type (AAA pass, Nov 18 2026: one size, scaled; before, one per kit and size, and a fly-back made new ones every frame)');
+ assert.doesNotMatch(view,/sprites\.set\(key/,'no per-size sprite keys');
+ // AAA pass (Nov 18 2026): the drag
+ assert.match(shell,/const done=e\.type==='pointerup'&&d\.moved;/,'a tap never drops a piece');assert.match(shell,/Math\.hypot\(cx-d\.px,cy-d\.py\)>TAP_SLOP/);
+ assert.match(shell,/v\.magnet\(g,p\.shape,d\.x,d\.y\)/,'magnetic snap');assert.match(view,/const MAGNET=\.62;/);assert.match(shell,/d\.bench=d\.slot!==LU\.bench&&d\.moved&&v\.overBench\(x,y\)/,'the bench takes the piece under the finger');
+ assert.match(shell,/g\.hold\(d\.slot\)/);assert.match(shell,/e\.code==='KeyB'/,'B parks a shape from the keys');assert.match(shell,/'Digit1','Digit2','Digit3','Digit4'/,'4 picks the bench');
+ assert.match(shell,/audio\.current\?\.ready\(d\.rows\.length\+d\.cols\.length,d\.team\.length>0\)/,'a cue before the drop when a line is ready');
+ assert.match(shell,/clearTimeout\(idle\.current\);if\(!s\.over\)idle\.current=window\.setTimeout\(/,'the idle nudge is one timeout, set again only by a move');assert.doesNotMatch(shell,/setInterval/);
+ assert.match(view,/setLevel\(level:number\)\{const v=venueFor\(level\);if\(v===venue\)return false;venue=v;paintScene\(\);/,'the static scene repaints only when the venue changes');
+ const V=require('../lib/arcade/lineup/view.ts');assert.equal(V.VENUES.length,4);assert.deepEqual([1,3,4,6,7,9,10,40].map(V.venueFor),[0,0,1,1,2,2,3,3],'a new venue every third level, night from level 10');
 });
 console.log(`lineup-core: ${n} checks passed`);
