@@ -92,12 +92,14 @@ function withDefender(s:Scenario,route:Step[],rand:()=>number,press:boolean):Sce
  * Played in the real engine as a finger would draw it. Before this check a run's later puzzles could be finished with one shot about
  * one time in four (two stars for no reading at all); now a remix that leaves the shot on gets a defender stood in its way.
  */
-export function directShotScores(sc:Scenario):boolean{
- if(sc.require.finish!=='goal')return false;const g=sc.pitch,hg=g.goalWidth/2-.4;
+export function directShotScores(sc:Scenario):boolean{return directShotSpots(sc,true).length>0;}
+/** The spots across the goal (-1 left post to 1 right post) where the lazy shot scores; `first` stops at the first one. */
+export function directShotSpots(sc:Scenario,first=false):number[]{
+ const open:number[]=[];if(sc.require.finish!=='goal')return open;const g=sc.pitch,hg=g.goalWidth/2-.4;
  for(const fx of [-1,-.5,0,.5,1]){const w=createPuzzle(sc);let k:Kick;try{k=readStroke(strokeForKick(w,{kind:'shot',target:{x:fx*hg,z:g.length/2},curl:0,loft:0,power:.5}),w);}catch{continue;}
   if(k.kind!=='shot'||!w.kick(k))continue;for(let n=0;n<120*8;n++){const ph=w.state.phase;if(ph!=='windup'&&ph!=='flight')break;w.step(1/120);}
-  if(w.state.phase==='success')return true;}
- return false;
+  if(w.state.phase==='success'){open.push(fx);if(first)break;}}
+ return open;
 }
 /** True when the taught route is more than a shot (so a one-shot solve would skip the lesson). */
 const hasPass=(route:Step[])=>route.filter(st=>!isCall(st)).length>=2;
@@ -110,6 +112,32 @@ function withShotBlocker(s:Scenario,route:Step[]):Scenario|null{
   if(Math.abs(x)>s.pitch.halfWidth-1||others.some(p=>Math.hypot(p.x-x,p.z-z)<2.2))continue;
   const sc:Scenario={...s,defenders:[...s.defenders,{x,z}]};if(solves(sc,route)&&!directShotScores(endlessPlayable(sc,true)))return sc;}
  return null;
+}
+/**
+ * Fix round 2 (Nov 18 2026): the last resort. About 8% of puzzles at levels 10 to 30 kept the lazy shot, all of them through-ball
+ * layouts where one defender on the line to the middle of the goal either blocks the taught pass or leaves a corner open. Here a
+ * defender is tried on the line to each open corner instead, at seven depths, and a second one if the first leaves a corner open.
+ * If one corner is still open the keeper takes a step or two toward it.
+ * The taught route is proved again each time. Only called where the puzzle used to be served with the shot left on.
+ */
+function withShotBlockers(s:Scenario,route:Step[]):{scenario:Scenario;added:number}|null{
+ const c=s.attackers[s.carrier],gz=s.pitch.length/2,hg=s.pitch.goalWidth/2-.4,spots=(sc:Scenario)=>directShotSpots(endlessPlayable(sc,true));
+ const out=(sc:Scenario)=>({scenario:sc,added:sc.defenders.length-s.defenders.length});
+ // The keeper takes a step or two toward the corner that is still open (only when every open spot is on one side).
+ const keeper=(sc:Scenario,open:number[]):Scenario|null=>{const k=sc.keeper,side=open.every(f=>f>0)?1:open.every(f=>f<0)?-1:0;if(!k||!side)return null;
+  for(const step of [.6,1,1.4,1.8,2.2]){const x=+(k.x+side*step).toFixed(2);if(Math.abs(x)>hg)break;const w:Scenario={...sc,keeper:{...k,x}};if(solves(w,route)&&!spots(w).length)return w;}
+  return null;};
+ let cur=s,open=spots(cur);
+ for(let round=0;round<2&&open.length;round++){
+  const k=keeper(cur,open);if(k)return out(k);
+  if(cur.defenders.length>=10)return null;const others:Vec2[]=[...cur.attackers,...cur.defenders,...(cur.keeper?[cur.keeper]:[])];let best:Scenario|null=null,left=open;
+  search:for(const fx of open){const dx=fx*hg-c.x,dz=gz-c.z,L=Math.hypot(dx,dz)||1;
+   for(const d of [3,4.5,6,8,10,13,16]){if(d>=L-2.5)continue;const x=+(c.x+dx/L*d).toFixed(2),z=+(c.z+dz/L*d).toFixed(2);
+    if(Math.abs(x)>cur.pitch.halfWidth-1||others.some(p=>Math.hypot(p.x-x,p.z-z)<2))continue;
+    const sc:Scenario={...cur,defenders:[...cur.defenders,{x,z}]};if(!solves(sc,route))continue;
+    const rest=spots(sc);if(rest.length<left.length){best=sc;left=rest;if(!rest.length)break search;}}}
+  if(!best)return null;cur=best;open=left;}
+ if(!open.length)return out(cur);const k=keeper(cur,open);return k?out(k):null;
 }
 const solves=(s:Scenario,route:Step[])=>coachRun(endlessPlayable(s,true),route).ok&&coachRun(endlessPlayable(s,false),route).ok;
 
@@ -136,12 +164,14 @@ export function endlessPuzzle(seed:string,level:number):EndlessPuzzle{
   for(let e=0;e<extras&&sc;e++){const p=press&&e===0,next:Scenario|null=withDefender(sc,r.solution,rand,p);if(next){sc=next;added++;pressing=pressing||p;}}
   if(!sc||!solves(sc,r.solution))continue;
   // The lazy shot: stand a defender in its way; if no spot keeps the route alive, roll the layout again (the last tries take it as it is).
-  if(proof&&directShotScores(endlessPlayable(sc,true))){const b=withShotBlocker(sc,r.solution);if(b){sc=b;added++;blocker=true;}else if(n<7)continue;}
+  if(proof&&directShotScores(endlessPlayable(sc,true))){const b=withShotBlocker(sc,r.solution);if(b){sc=b;added++;blocker=true;}else if(n<7)continue;else{const w=withShotBlockers(sc,r.solution);if(w){sc=w.scenario;added+=w.added;blocker=w.added>0;}}}
   if(wantWet&&n<5){const w:Scenario={...sc,weather:{wet:true}};if(solves(w,r.solution)&&!(proof&&directShotScores(endlessPlayable(w,true))))return done(w,r.solution,mirrored,added,pressing,true,blocker);}
   return done(sc,r.solution,mirrored,added,pressing,false,blocker);
  }
- const flat=remix(t,()=>.5,mirrored,pid),mirror=dress(flat.scenario);if(solves(mirror,flat.solution))return done(mirror,flat.solution,mirrored,0,false);
- const plain=remix(t,()=>.5,false,pid);return done(dress(plain.scenario),plain.solution,false,0,false);
+ // Fix round 2: the two fall-back layouts get blockers too when they leave the lazy shot on (they used to be served as they were).
+ const guard=(sc:Scenario,route:Step[],m:boolean):EndlessPuzzle=>{const w=proof&&directShotScores(endlessPlayable(sc,true))?withShotBlocker(sc,route)??withShotBlockers(sc,route)?.scenario:null;return w?done(w,route,m,w.defenders.length-sc.defenders.length,false,false,w.defenders.length>sc.defenders.length):done(sc,route,m,0,false);};
+ const flat=remix(t,()=>.5,mirrored,pid),mirror=dress(flat.scenario);if(solves(mirror,flat.solution))return guard(mirror,flat.solution,mirrored);
+ const plain=remix(t,()=>.5,false,pid);return guard(dress(plain.scenario),plain.solution,false);
 }
 
 /** The run: lives, level, score (in stars, the unit of the Pass Puzzles board) and the first-try streak. */
