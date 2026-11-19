@@ -69,3 +69,31 @@ Measured headless Chrome (swiftshader) 390x844 in play, waves 2-5: 20-27 draw ca
   (plates clatter off as grey chunks), a glowing chest dial weak spot (one basic disc, pulses faster and redder each phase),
   eyes moved into the instanced eye mesh (boss scene 25 -> 23-25 draws).
 - Desktop 1440x900 checked: lane, HUD and aim arc sit well in the portrait stage; no camera change.
+
+## AAA pass (Nov 18 2026)
+Weak points found by playing: an empty pitch for the first 20 s of each early wave; machines only ever walked (no tells); every
+wave had the same shape; the night kicker and near turf were flat (the light bands never moved with the light); bursts piled up
+under the top strip; nothing told you a machine was about to get through; no crowd, no pitch variation in the sound.
+- Rules (core.ts, all seeded): **super shot** (breaks fill a meter, more with a combo; a full-power kick spends it: the ball goes
+  through everything, shields too, and bursts what it breaks; 2 damage to a boss). **Rocket-bots** from wave 9 (stop for 1.15 s
+  with a tell, dash 11 m, then walk; stopped in the tell = +110). **Set pieces** from wave 3: a quiet beat half-way, then a row,
+  a file or a cone rush. **Target practice** after wave 3 and after every boss: 12 pop-up targets, no heart can be lost, the gold
+  one gives a heart back (or a power-up). Close call (+50 for a break within 5 m of the line). Machines run on from the far end
+  at 4.6 m/s or more until z = -27. `Ent.v` is the speed right now (aim assist and bots lead with it). Waves past 15 creep faster.
+- Score scale: medals unchanged (8,000 / 30,000 / 100,000). 48 seeded bot runs, before -> after: kid median 12k -> 13k, good
+  median 74k -> 81k, Gold reached by 27% -> 31% of good runs, best good run 137k -> 216k (one run in 48 got to wave 19).
+- Look: light bands follow the time of day (`band` per TOD: the kicker and machines keep banded light at night), a blob shadow
+  under the kicker at night, **boss dusk** sky on boss waves (a fourth TOD), shock rings (3 pooled meshes), confetti from the
+  stands on a cleared wave (the chunk pool), pop-in for everything that steps on, rocket-bot squat / shake / red glow / flame,
+  red pulse on machines within 9 m of the line, gold sparks on the ball at the kicker's feet when the super shot is ready, a
+  small camera pan toward the aim.
+- Shell: Super meter above the rack, power-up chip above it, hazard tape along the bottom while a machine is near the line, a red
+  frame and a heart shake on a leak, points fly from the burst to the score, a kick asked for with an empty rack waits 320 ms for
+  the next ball, a tick when the charge is full, bursts take the first free place (never under the top strip).
+- Sound: pitch variation on kicks, clanks and breaks; crowd murmur, cheer and groan as one-shot swells (no loops); cues for charge
+  full, super ready, super shot, rocket tell and dash, danger, close call, set piece, target bell, heart back; pause fades the
+  master so no tail rings on.
+- Heat, headless Chrome 390x844, before -> after: waves 1-4 22 -> 21 draw calls median (max 32 -> 33), 14.8k -> 13.4k triangles
+  median (max 22.5k -> 21k); wave 7 night 26 -> 29 median (max 33 -> 42), 20.7k -> 21k median (max 26.5k both). Render call
+  0.5-1.5 ms median on both. No new textures, lights or passes.
+- Not done: a second boss with its own attack, stage dressing beyond the four skies, a music bed (the sound test forbids loops).

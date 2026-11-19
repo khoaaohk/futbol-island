@@ -23,9 +23,16 @@
 /* words: a starburst and the points over the play band; the lesson words bigger and higher */
 .words{position:absolute;inset:0;z-index:4;pointer-events:none}
 .word{position:absolute;left:50%;top:34%;display:grid;justify-items:center;gap:2px;translate:-50% -50%;animation:bbWord .9s cubic-bezier(.2,1.4,.4,1) both}
+/* the points leave the burst and fly up to the score */
+.word[data-fly]{animation-name:bbWordStay}
+.word[data-fly] .pts{animation:bbFly .9s cubic-bezier(.5,0,.7,1) both}
+.word[data-fly]>:first-child{animation:bbFade .9s linear both}
+@keyframes bbWordStay{0%{scale:.4;opacity:0}10%{scale:1.18;opacity:1}22%,100%{scale:1;opacity:1}}
+@keyframes bbFade{0%,60%{opacity:1}85%,100%{opacity:0}}
+@keyframes bbFly{0%,48%{translate:0 0;scale:1;opacity:1}92%{opacity:1}100%{translate:var(--bb-fx,0) var(--bb-fy,0);scale:.45;opacity:0}}
 .pts{--cm-numeral-size:30px;display:block}
 .word .pts{color:var(--cm-sun);-webkit-text-stroke:6px var(--cm-ink);paint-order:stroke fill}
-.word[data-teach]{left:50%!important;top:26%!important}
+.word[data-teach]{left:50%!important;top:25%!important}
 @keyframes bbWord{0%{scale:.4;opacity:0}10%{scale:1.18;opacity:1}22%{scale:1}86%{opacity:1;translate:-50% -80%}100%{opacity:0;translate:-50% -96%}}
 @keyframes bbPop{0%{scale:.4}100%{scale:1}}
 
@@ -76,19 +83,35 @@
 }
 @media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.score{--cm-numeral-size:52px}.coach{display:none}.art{width:min(200px,60%)}}
 @media (max-height:600px){.game [data-ballblaster-card=start] .chips{display:none}.fact{display:none}}
+@media (max-height:700px){.super{width:104px;height:18px}}
 @media (max-width:374px){.strip{gap:7px}.stripItem{font-size:14px}.hearts svg{width:15px;height:13px}}
-@media (prefers-reduced-motion:reduce){.unusedStreak{rotate:none}.streak,.score[data-new-best]{animation:none}.word{animation-duration:.6s}}
+@media (prefers-reduced-motion:reduce){.unusedStreak{rotate:none}.streak,.score[data-new-best]{animation:none}.word{animation-duration:.6s}.word[data-fly]{animation-name:bbWord}.word[data-fly] .pts,.word[data-fly]>:first-child{animation:none}}
 
 /* the ball rack: what is left at your feet, bottom left; the power-up chip next to it */
 .rack{position:absolute;z-index:3;left:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));display:flex;align-items:center;gap:4px;padding:5px 8px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);pointer-events:none}
 .rack i{width:15px;height:15px;box-sizing:border-box;border:2.5px solid var(--cm-ink);border-radius:50%;background:radial-gradient(circle at 50% 50%,var(--cm-ink) 0 2.5px,#fffaf0 3px)}
 .rack i[data-off]{background:#c9bfae;opacity:.55}
 .rack[data-empty]{animation:bbShake .3s both}
-.power{padding:3px 8px 2px;border:2px solid var(--cm-ink);background:var(--cm-sun);font:italic 900 13px/1 var(--cm-title);rotate:-2deg;margin-left:6px;animation:bbPop .32s cubic-bezier(.2,1.6,.4,1) both}
-.hint{position:absolute;z-index:3;left:50%;bottom:calc(66px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));translate:-50% 0;max-width:calc(100% - 32px);padding:5px 10px 4px;border:2px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);font:800 13px/1.2 var(--cm-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;animation:bbPop .4s cubic-bezier(.2,1.6,.4,1) both}
+.power{position:absolute;z-index:3;left:12px;bottom:calc(82px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));padding:4px 8px 3px;border:3px solid var(--cm-ink);background:var(--cm-sun);box-shadow:3px 3px 0 var(--cm-ink);font:italic 900 13px/1 var(--cm-title);rotate:-2deg;pointer-events:none;animation:bbPop .32s cubic-bezier(.2,1.6,.4,1) both}
+/* the super shot meter sits on top of the rack: breaks fill it; full = hold for full power and it goes */
+.super{position:absolute;z-index:3;left:12px;bottom:calc(52px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));width:132px;height:20px;box-sizing:border-box;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:4px 4px 0 var(--cm-ink);overflow:hidden;pointer-events:none}
+.super b{position:absolute;inset:0;transform-origin:left;background:var(--cm-teal,#19b5a5);transition:transform .25s cubic-bezier(.2,1.3,.4,1)}
+.super em{position:absolute;inset:0;display:grid;place-items:center;font:italic 900 11px/1 var(--cm-title);font-style:italic;color:var(--cm-ink);white-space:nowrap}
+.super[data-ready]{width:auto;padding:0 9px;animation:bbReady .5s ease-in-out infinite alternate}
+.super[data-ready] b{background:var(--cm-sun)}
+.super[data-ready] em{position:relative;inset:auto;height:100%}
+@keyframes bbReady{from{scale:1}to{scale:1.07}}
+/* danger: hazard tape along the bottom edge while a machine is near the goal line; a red frame for a beat when one gets through */
+.alarm{position:absolute;z-index:2;left:0;right:0;bottom:0;height:9px;border-top:3px solid var(--cm-ink);background:repeating-linear-gradient(-45deg,var(--cm-red) 0 12px,var(--cm-sun) 12px 24px);pointer-events:none;animation:bbBlink .42s steps(2,jump-none) infinite alternate}
+.flash{position:absolute;z-index:2;inset:0;border:12px solid var(--cm-red);pointer-events:none;animation:bbFlash .55s ease-out both}
+.heartsWrap{display:inline-flex}.heartsWrap[data-hit]{animation:bbShake .3s 2 both}
+.wave[data-bonus]{background:var(--cm-teal,#19b5a5);color:var(--cm-ink)}
+@keyframes bbBlink{from{opacity:1}to{opacity:.45}}
+@keyframes bbFlash{0%{opacity:.95}100%{opacity:0}}
+.hint{position:absolute;z-index:3;left:50%;bottom:calc(116px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));translate:-50% 0;max-width:calc(100% - 32px);padding:5px 10px 4px;border:2px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);font:800 13px/1.2 var(--cm-ui);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;animation:bbPop .4s cubic-bezier(.2,1.6,.4,1) both}
 .wave{position:absolute;z-index:3;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));padding:5px 9px 4px;border:3px solid var(--cm-ink);background:var(--cm-ink);color:var(--cm-paper);font:italic 900 15px/1 var(--cm-title);box-shadow:4px 4px 0 #0005;pointer-events:none}
 .combo{padding:3px 7px 2px;border:2px solid var(--cm-ink);background:var(--cm-red);color:var(--cm-paper);font:italic 900 13px/1 var(--cm-title);rotate:-3deg;animation:bbPop .32s cubic-bezier(.2,1.6,.4,1) both;position:relative}
-.charge{position:absolute;z-index:3;left:50%;bottom:calc(14px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));translate:-50% 0;width:min(150px,36%);height:14px;border:3px solid var(--cm-ink);background:var(--cm-paper);pointer-events:none;overflow:hidden}
+.charge{position:absolute;z-index:3;bottom:calc(14px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px));left:158px;right:126px;height:14px;border:3px solid var(--cm-ink);background:var(--cm-paper);pointer-events:none;overflow:hidden}
 .charge b{position:absolute;inset:0;transform-origin:left;background:var(--cm-sun)}
 .charge[data-full] b{background:var(--cm-red)}
 /* the combo meter: the chip grows with the chain, a bar under it drains over the combo window */
@@ -97,4 +120,4 @@
 .combo[data-hot] i{background:var(--cm-red)}
 @keyframes bbDrain{to{transform:scaleX(0)}}
 @keyframes bbShake{0%,100%{translate:0}25%{translate:-5px}75%{translate:5px}}
-@media (prefers-reduced-motion:reduce){.rack[data-empty],.power,.combo,.hint{animation:none}.combo i{animation-duration:1.5s!important}}
+@media (prefers-reduced-motion:reduce){.rack[data-empty],.power,.combo,.hint,.super[data-ready],.alarm,.heartsWrap[data-hit]{animation:none}.flash{animation-duration:.2s}.combo i{animation-duration:1.5s!important}}

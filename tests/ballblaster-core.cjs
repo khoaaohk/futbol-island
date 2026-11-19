@@ -13,22 +13,23 @@ let n=0;const MAIN=require.main===module,ok=(name,fn)=>{if(!MAIN)return;const t0
 const KID={react:1.3,noise:2.3,lead:.2,curl:false},GOOD={react:.62,noise:.55,lead:.85,curl:true},ACE={react:.4,noise:0,lead:1,curl:true};
 function playBot(opts,skill,{seed=7,maxWaves=1e9,maxSecs=60*60}={}){
  const g=C.createBallBlaster(opts),s=g.state;let r=seed>>>0||1;const rnd=()=>{r=(r*1664525+1013904223)>>>0;return r/4294967296;},gauss=()=>(rnd()+rnd()+rnd()-1.5)*1.4;
- let wait=0,heartsAt={},lastWave=0;const perWave=[];let leaksIn=0;
+ let wait=0,lastWave=0;const leakKinds={};const perWave=[];let leaksIn=0;
  while(!s.over&&s.t<maxSecs&&s.wave<=maxWaves){
   if(s.wave!==lastWave){if(lastWave)perWave.push({wave:lastWave,leaks:leaksIn});lastWave=s.wave;leaksIn=0;}
   wait-=STEP;
-  if(wait<=0&&s.rack>0&&s.mode==='fight'){
-   // the machine nearest the goal line, or a gold crate when nothing is close
+  if(wait<=0&&s.rack>0&&(s.mode==='fight'||s.mode==='bonus')){
+   // the machine nearest the goal line; in target practice, the target that has been up longest
    let t=null;for(const e of s.ents)if(e.on&&C.isMachine(e.kind)&&e.z>BB.spawnZ+2&&(!t||e.z>t.z))t=e;
+   if(!t&&s.mode==='bonus')for(const e of s.ents)if(e.on&&e.kind===K.target&&(!t||e.t>t.t))t=e;
    if(t){const d=Math.hypot(t.x-BB.kx,t.z-BB.kz),pw=d>14?1:.7,v=Math.max(BB.vMin,Math.min(BB.vMax,(BB.vMin+(BB.vMax-BB.vMin)*pw)*(.55+.45*Math.min(1,d/28)))),T=d/v;
-    const slow=s.slowT>0?.4:1,ez=t.z+t.speed*slow*T*skill.lead,ex=t.x+(t.tx-t.x)*.5*skill.lead,e=skill.noise*Math.max(.4,d/20);
+    const slow=s.slowT>0?.4:1,ez=t.z+(t.v??t.speed)*slow*T*skill.lead,ex=t.x+(t.tx-t.x)*.5*skill.lead,e=skill.noise*Math.max(.4,d/20);
     const ty=t.kind===K.drone?t.y+.25:t.kind===K.dummy?.8:Math.min(1.1,t.h*.55);
     const curl=t.kind===K.shield&&skill.curl?(t.x>0?-1:1):0;
     g.shoot(ex+gauss()*e,ty,ez+gauss()*e*.6,pw,curl);wait=skill.react*(.8+rnd()*.4);}}
-  g.advance(STEP);g.drain(ev=>{if(ev.type==='leak')leaksIn++;});
+  g.advance(STEP);g.drain(ev=>{if(ev.type==='leak'){leaksIn++;leakKinds[ev.kind]=(leakKinds[ev.kind]||0)+1;}});
  }
  if(lastWave)perWave.push({wave:lastWave,leaks:leaksIn});
- return {g,s,perWave,secs:s.t};
+ return {g,s,perWave,secs:s.t,leakKinds};
 }
 module.exports={playBot,KID,GOOD,ACE,C};
 const med=a=>a.slice().sort((x,y)=>x-y)[a.length>>1];
@@ -94,6 +95,45 @@ ok('the boss: Mega Mannequin on every fifth wave, three phases, and it calls con
  const {g,s,e}=lab(K.boss,0,-30,{hp:12,max:12,speed:.01});const ev=[];for(let i=0;i<5;i++){e.lastBall=-1;e.hp-=1;}
  g.shoot(0,1.5,-30,1,0);fly(g,2,ev);assert.ok(ev.some(x=>x.type==='boss'&&x.a===1),'phase two');fly(g,5,ev);assert.ok(s.ents.some(x=>x.on&&x.kind===K.cone),'helpers');
  const w=C.createBallBlaster({seed:4,startWave:5});w.advance(2);assert.ok(w.state.ents.some(x=>x.on&&x.kind===K.boss),'a boss wave');
+});
+/* ---- AAA pass (Nov 18 2026): rocket-bots, the super shot, set pieces, target practice, close calls, the run-on ---- */
+const put=(s,i,kind,x,z,extra={})=>Object.assign(s.ents[i],{on:true,dead:false,kind,id:2000+i,x,y:0,z,r:SPEC[kind].r,h:SPEC[kind].h,hp:SPEC[kind].hp,max:SPEC[kind].hp,t:0,ph:0,tx:x,cd:0,lastBall:-1,lastAt:0,flash:0,gold:false,speed:0,v:0,phase:0},extra);
+ok('rocket-bots: a readable tell (it stands still for about a second), then a dash, then a walk; stopping it in the tell pays extra',()=>{
+ {const {g,e}=lab(K.rocket,0,-26,{speed:3});let ev=fly(g,.5);assert.ok(ev.some(x=>x.type==='tell'),'the tell');assert.equal(e.v,0,'it stands while it winds up');const z0=e.z;fly(g,.9);assert.ok(Math.abs(e.z-z0)<1e-9,'still standing');
+  ev=fly(g,.4);assert.ok(ev.some(x=>x.type==='dash'),'the dash');assert.equal(e.v,9.5);fly(g,1.2);assert.ok(e.z>z0+9&&e.z<z0+13,'about eleven metres');assert.equal(e.phase,3);assert.equal(e.v,3,'then it walks');assert.ok(e.z<-8,'the dash ends well short of the goal line');}
+ {const {g,s,e}=lab(K.rocket,0,-24.9,{speed:3});fly(g,.05);assert.equal(e.phase,1);g.shoot(0,.7,e.z,1,0);const ev=fly(g,1);assert.ok(!e.on,'stopped');const sh=ev.find(x=>x.type==='shout');assert.ok(sh&&sh.word==='STOPPED!'&&sh.points===BB.stopBonus);assert.equal(s.score,SPEC[K.rocket].pts+BB.stopBonus);}
+ assert.ok(C.UNLOCK.some(u=>u.k===K.rocket&&u.wave===9),'they join on wave 9');
+});
+ok('the super shot: breaks fill the meter (faster with a combo), a soft kick keeps it, a full-power kick goes through everything and bursts what it breaks',()=>{
+ {const {g,s}=lab(K.robot,0,-15);g.shoot(0,.7,-15,.5,0);fly(g,2);assert.ok(Math.abs(s.sup-(BB.supMachine+BB.supCombo))<1e-9,'one break, one step');}
+ {const {g,s}=lab(K.robot,0,-15);s.sup=.99;g.shoot(0,.7,-15,.5,0);const ev=fly(g,2);assert.ok(s.supReady&&s.sup===1);assert.equal(ev.filter(x=>x.type==='super'&&x.a===0).length,1,'ready is called once');}
+ {const {g,s}=lab(K.shield,0,-15);put(s,1,K.armour,0,-19);put(s,2,K.robot,1.3,-19.2);s.sup=1;s.supReady=true;
+  g.shoot(0,.8,-15,.5,0);assert.ok(s.supReady,'a soft kick does not spend it');fly(g,2);assert.ok(s.ents[0].on,'and the shield still blocks it');
+  g.shoot(0,.8,-15,1,0);const ev=[];g.drain(e=>ev.push({...e}));assert.ok(ev.some(x=>x.type==='super'&&x.a===1)&&ev.some(x=>x.type==='shot'&&x.kind===4));assert.ok(!s.supReady&&s.sup===0);assert.equal(s.stats.supers,1);
+  fly(g,2,ev);assert.ok(!s.ents[0].on&&!s.ents[1].on,'through the shield and the armour behind it');assert.ok(ev.some(x=>x.type==='boom'&&x.a===1),'a burst');assert.ok(!s.ents[2].on,'the burst takes the robot beside them');}
+});
+ok('set pieces and the run-on: from wave 3 every wave that is not a boss wave has one set piece, in time order; machines hurry on from the far end',()=>{
+ for(let w=1;w<=14;w++)for(const seed of [3,8,21]){const g=C.createBallBlaster({seed,startWave:w});g.advance(1.3);const sp=g.state.spawns.slice(0,g.state.spawnN),said=sp.filter(x=>x.say>0);
+  assert.equal(said.length,w>=3&&!C.isBossWave(w)?1:0,`wave ${w}`);for(let i=1;i<sp.length;i++)assert.ok(sp[i].t>=sp[i-1].t-1e-9,'spawn times in order');if(said[0])assert.ok(C.SET_WORD[said[0].say].length>3);}
+ {const far=lab(K.robot,0,-40,{speed:1.8}),near=lab(K.robot,0,-20,{speed:1.8});fly(far.g,1);fly(near.g,1);assert.ok(far.e.z>-40+BB.runOn*.99,'it runs on');assert.ok(Math.abs(near.e.z-(-20+1.8))<.02,'then marches');assert.equal(near.e.v,1.8);}
+});
+ok('target practice: after wave 3 and after every boss, no heart can be lost, twelve targets, the gold one gives a heart back; a close call pays',()=>{
+ const g=C.createBallBlaster({seed:6,startWave:3}),s=g.state;g.advance(1.3);for(const e of s.ents)if(C.isMachine(e.kind))e.on=false;s.spawnI=s.spawnN;const ev=[];fly(g,.1,ev);assert.ok(ev.some(x=>x.type==='clear'));assert.ok(s.bonusDue);
+ fly(g,2.7,ev);assert.equal(s.mode,'bonus');assert.ok(ev.some(x=>x.type==='bonus'&&x.a===1&&x.word==='TARGET PRACTICE!'));s.hearts=2;let shot=false,seen=0;
+ for(let i=0;i<12/STEP&&s.mode==='bonus';i++){const gold=s.ents.find(e=>e.on&&e.kind===K.target&&e.gold);seen=Math.max(seen,s.ents.filter(e=>e.on&&e.kind===K.target).length);if(gold&&!shot&&gold.t>.1){shot=true;g.shoot(gold.x,1.1,gold.z,.7,0);}g.advance(STEP);g.drain(e=>ev.push({...e}));
+  assert.ok(!s.ents.some(e=>e.on&&C.isMachine(e.kind)),'no machine walks during target practice');}
+ assert.equal(s.bonusI,BB.bonusN);assert.ok(seen>=2&&seen<=5,'a few targets up at a time');assert.ok(ev.some(x=>x.type==='heart'),'the gold target');assert.equal(s.hearts,3);assert.equal(s.stats.heartsBack,1);assert.equal(s.stats.leaks,0);
+ assert.ok(ev.some(x=>x.type==='bonus'&&x.a===0&&x.b>=1),'it ends with a count');fly(g,2);assert.equal(s.wave,4,'then the next wave');assert.ok(!s.ents.some(e=>e.on&&e.kind===K.target));
+ {const b=C.createBallBlaster({seed:6,startWave:5}),t=b.state;b.advance(1.3);for(const e of t.ents)if(C.isMachine(e.kind))e.on=false;t.spawnI=t.spawnN;b.advance(.1);assert.ok(t.bonusDue,'after a boss too');}
+ {const c=C.createBallBlaster({seed:6,startWave:2}),t=c.state;c.advance(1.3);for(const e of t.ents)if(C.isMachine(e.kind))e.on=false;t.spawnI=t.spawnN;c.advance(.1);assert.ok(!t.bonusDue,'not after other waves');}
+ {const {g,s}=lab(K.robot,0,-3.5);g.shoot(0,.7,-3.5,.5,0);const e2=fly(g,1);assert.ok(e2.some(x=>x.type==='shout'&&x.word==='CLOSE CALL!'));assert.equal(s.score,100+BB.closeBonus);assert.equal(s.stats.close,1);}
+});
+ok('AAA wiring: super meter, danger tape, kick buffer and points that fly in the shell; crowd one-shots and the pause hush in the sound; light bands, boss dusk and shock rings in the view',()=>{
+ const shell=read('components/games/BallBlasterGame.tsx'),css=read('components/games/BallBlasterGame.module.css'),a=read('lib/arcade/ballblaster/audio.ts'),v=read('lib/arcade/ballblaster/view.ts');
+ assert.match(shell,/data-ballblaster-super=/);assert.match(shell,/data-ballblaster-danger/);assert.match(shell,/KICK_BUFFER=320/);assert.match(shell,/'--bb-fx'/);assert.match(shell,/audio\.current\?\.hush\(true\);change\('paused'\)/,'pause silences every tail');
+ assert.match(css,/@keyframes bbFly/);assert.match(css,/\.super\[data-ready\]/);assert.match(css,/\.super\[data-ready\],\.alarm,\.heartsWrap\[data-hit\]\{animation:none\}/,'reduced motion');
+ for(const cue of ['ready','superReady','tell','dash','danger','close','setPiece','bonus','heart','crowd','cheer','groan','hush'])assert.match(a,new RegExp(`\\b${cue}\\(`),'cue '+cue);assert.match(a,/src\.start\(t,0,d\)/,'the crowd is a one-shot, never a loop');
+ assert.match(v,/ink\.uInkBand\.value\.x=\.24\*p\.band/,'the light bands follow the time of day (the kicker reads at night)');assert.match(v,/s\.wave%BB\.bossEvery===0\?3:/,'boss dusk');assert.match(v,/function ringAt\(/);assert.match(v,/function confetti\(/);assert.match(v,/case K\.rocket:/);assert.match(v,/case K\.target:/);
 });
 ok('bots: later waves are harder (more goals let in), every run ends, the medals sit on bot runs, the board rate holds',()=>{
  // the same good bot dropped into wave 2 and wave 12: it lets in more on the later wave
