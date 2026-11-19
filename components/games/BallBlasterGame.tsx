@@ -87,8 +87,8 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
  const kick=useCallback(()=>{if(!raf.current&&phaseRef.current==='playing'){last.current=0;slot.current=0;raf.current=requestAnimationFrame(t=>frameRef.current(t));}},[]);
  const say=useCallback((text:string,pts:number,tone:Word['tone'],teach=false,at?:{x:number;y:number})=>{const w:Word={id:++wordId.current,text,pts,tone,teach,x:at?.x??-1,y:at?.y??-1,fx:0,fy:0};
   // a word never lands on another: it takes the first free place above or below the bursts already there, clear of the top strip
-  setWords(list=>{const keep=list.filter(x=>!(teach&&x.teach)).slice(-3);if(w.x>=0){const y0=Math.max(300,w.y),free=(y:number)=>y>=300&&!keep.some(o=>!o.teach&&o.x>=0&&Math.abs(o.x-w.x)<150&&Math.abs(o.y-y)<88);
-    w.y=[0,-92,92,-184,184,276].map(d=>y0+d).find(free)??y0;
+  setWords(list=>{const keep=list.filter(x=>!(teach&&x.teach)).slice(-3);if(w.x>=0){const y0=Math.max(270,w.y),free=(y:number)=>y>=270&&!keep.some(o=>!o.teach&&o.x>=0&&Math.abs(o.x-w.x)<150&&Math.abs(o.y-y)<88);
+    w.y=[0,92,-92,184].map(d=>y0+d).find(free)??y0;
     // the points fly from the burst up to the score
     w.fx=(stage.current?.clientWidth??390)/2-w.x;w.fy=44-w.y;}
    return [...keep,w];});},[]);
@@ -110,7 +110,7 @@ export default function BallBlasterGame({onExit}:{onExit:()=>void}){
  const onEvent=useCallback((e:BlastEvent)=>{
   const a=audio.current,v=view.current;v?.onEvent(e);const at=()=>{const p=v?.project(e.x,e.y+.6,e.z),w=stage.current?.clientWidth??390;return p&&p.on?{x:Math.max(96,Math.min(w-96,p.x)),y:p.y}:undefined;};
   switch(e.type){
-   case 'shot':a?.kick(e.a,e.b,e.kind===4);if(e.kind===4){arcadeFeedback(null,'goal');stopUntil.current=performance.now()+70;}else if(e.a>=BB.powerShot)arcadeFeedback(null,'shot');break;
+   case 'shot':a?.kick(e.a,e.b,e.kind===4);if(e.kind===4)arcadeFeedback(null,'goal');else if(e.a>=BB.powerShot)arcadeFeedback(null,'shot');break;
    case 'bounce':if(e.kind===1)a?.board();else a?.bounce(e.a<5);break;
    case 'hit':a?.clank();if(e.points>0)say('BONK!',e.points,'paper',false,at());break;
    case 'block':a?.block();say('TONK!',0,'teal',false,at());break;

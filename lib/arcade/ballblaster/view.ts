@@ -313,7 +313,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  function star(x:number,y:number,z:number,s:number,color:string){const st=stars[starI];starI=(starI+1)%STARS;st.g.visible=true;st.g.position.set(x,y,z);st.t=0;st.life=.28;st.s=s;st.b.color.set(color);}
  function onEvent(e:BlastEvent){
   switch(e.type){
-   case 'shot':kickT=0;kickNow=true;shotPower=Math.max(.35,Math.min(1,e.a/BB.powerShot));if(e.a>=BB.powerShot&&!o.reduced)push=1;if(e.kind===4){ringAt(BB.kx,BB.kz-.4,2.2,BB_COLORS.sun);shake=Math.max(shake,.16);puff(BB.kx,0,BB.kz,6,1.3);}break;
+   case 'shot':kickT=0;kickNow=true;shotPower=Math.max(.35,Math.min(1,e.a/BB.powerShot));if(e.a>=BB.powerShot&&!o.reduced)push=1;if(e.kind===4){ringAt(BB.kx,BB.kz-.4,2.2,BB_COLORS.sun);shake=Math.max(shake,.16);puff(BB.kx,0,BB.kz-.6,4,.6);}break;
    case 'bounce':if(e.kind===0&&e.a>2.5)puff(e.x,0,e.z,e.a>5?4:2,.5);break;
    case 'hit':star(e.x,e.y,e.z,.75,'#fff3d6');shake=Math.max(shake,.06);spawnPieces(e.kind,e.x,e.y,e.z,4,2.2,1);break;
    case 'block':star(e.x,e.y,e.z,.65,'#8fd0e6');spawnPieces(5,e.x,e.y,e.z,2,1.6);break;

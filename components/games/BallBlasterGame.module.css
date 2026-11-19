@@ -83,6 +83,7 @@
 }
 @media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.score{--cm-numeral-size:52px}.coach{display:none}.art{width:min(200px,60%)}}
 @media (max-height:600px){.game [data-ballblaster-card=start] .chips{display:none}.fact{display:none}}
+@media (max-height:700px){.super{width:104px;height:18px}}
 @media (max-width:374px){.strip{gap:7px}.stripItem{font-size:14px}.hearts svg{width:15px;height:13px}}
 @media (prefers-reduced-motion:reduce){.unusedStreak{rotate:none}.streak,.score[data-new-best]{animation:none}.word{animation-duration:.6s}.word[data-fly]{animation-name:bbWord}.word[data-fly] .pts,.word[data-fly]>:first-child{animation:none}}
 

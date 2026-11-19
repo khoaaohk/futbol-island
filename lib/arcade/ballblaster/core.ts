@@ -37,7 +37,7 @@ export const BB={
  /** target practice after every boss: how long it runs, how many targets pop up, how long each one stays */
  bonusSecs:11.6,bonusN:12,targetLife:2.9,firstBonus:3,
  /** the super shot: the meter fills with breaks (more with a combo); a full-power kick spends it */
- supMachine:.045,supCombo:.012,supProp:.02,supR:.36,supBurst:1.7,
+ supMachine:.017,supCombo:.004,supProp:.01,supR:.36,supBurst:1.4,
 } as const;
 
 export const MEDAL_NAMES=['Bronze','Silver','Gold'] as const;
@@ -78,7 +78,7 @@ export function rampAt(wave:number){
   /** seconds between spawns */
   gap:Math.max(.4,2.4-n*.16-Math.max(0,n-12)*.01),
   /** walking speed m/s */
-  speed:1.6*(1+.11*Math.min(n,12)+.04*Math.max(0,n-12)),
+  speed:1.6*(1+.11*Math.min(n,12)+.04*Math.max(0,n-12)+.06*Math.max(0,n-15)),
   /** chance a spawn comes as a pair (then a trio) */
   group:Math.min(.7,Math.max(0,(n-3)*.06)),
   props:Math.min(8,2+Math.ceil(n/2)),
@@ -274,7 +274,7 @@ export function createBallBlaster(opts:{seed:number;daily?:boolean;startWave?:nu
     if(e.kind===K.shield&&!b.fire&&!b.sup&&nz>.25&&Math.abs(b.vx)<.3*Math.abs(b.vz)&&!b.ric){
      // the shield faces the goal: a straight shot bounces off, a curl or a ricochet gets round it
      state.stats.blocks++;emit('block',b.x,b.y,b.z,e.kind);const d=b.vx*nx+b.vy*ny+b.vz*nz;if(d<0){b.vx-=1.6*d*nx;b.vy-=1.6*d*ny;b.vz-=1.6*d*nz;}b.ric=true;b.curl=false;continue;}
-    const amt=b.dmg+(b.fire&&e.kind!==K.boss?1:0);damage(e,amt,b.id,b.vx,b.vz);
+    const amt=e.kind===K.boss&&b.sup?2:b.dmg+(b.fire&&e.kind!==K.boss?1:0);damage(e,amt,b.id,b.vx,b.vz);
     if(b.sup){if(!e.on)addChain(3,e.x,e.z,0,0,b.id,.06);continue;}// a super shot goes through and bursts what it breaks
     if(b.fire)continue;// a fire ball goes through
     const bounce=e.kind===K.tyres?1.9:1.45,d=b.vx*nx+b.vy*ny+b.vz*nz;if(d<0){b.vx-=bounce*d*nx;b.vy-=bounce*d*ny;b.vz-=bounce*d*nz;}
@@ -302,7 +302,7 @@ export function createBallBlaster(opts:{seed:number;daily?:boolean;startWave?:nu
   b.on=true;b.id=state.nextId++;b.x=L[0];b.y=L[1];b.z=L[2];b.vx=L[3]*cs-L[5]*sn;b.vy=L[4];b.vz=L[3]*sn+L[5]*cs;b.ax=L[6];b.az=L[7];b.curl=Math.abs(curl)>.05;
   b.t=0;b.kills=0;b.hit=false;b.ric=false;b.bounces=0;b.shot=state.shotN;
   b.fire=state.power===P.fire;b.r=state.power===P.giant?BB.giantR:BB.ballR;b.dmg=(power>=BB.powerShot||state.power===P.giant?2:1);
-  b.sup=sup;if(sup){b.r=Math.max(b.r,BB.supR);b.dmg=3;}
+  b.sup=sup;if(sup){b.r=Math.max(b.r,BB.supR);b.dmg=3;b.y=Math.max(b.y,b.r);}// a super ball starts on the turf, not in it, so it keeps its arc
   emit('shot',b.x,b.y,b.z,sup?4:b.fire?2:b.r>BB.ballR?3:0,0,power,curl);
  }
  function shoot(tx:number,ty:number,tz:number,power:number,curl=0){
