@@ -105,7 +105,8 @@ function haptic(pattern:number|number[]){
  *  tennis:hold (a pressed kick waits for the ball) · tennis:coach (aim nudge)
  *  tennis:trap:<side>:<chest|thigh> · tennis:golden:<shot> · tennis:goldready · tennis:fake · tennis:target · tennis:tempo:<step> · tennis:tire
  *  Oct 25: tennis:bounce:<i>:<half>:<sand|hard>:<rally> · tennis:skid:<side> · tennis:matchpoint:<you|rival|both>
- *  tennis:streak:<n> · tennis:comeback */
+ *  tennis:streak:<n> · tennis:comeback
+ *  Nov 18: tennis:ringup:<n> (a Gold Ring is painted) · tennis:ring:<n> (hit, n = rings this rally) · tennis:ringmiss · tennis:line · tennis:winner */
 export function tennisSound(ctx:AudioContext|null,cue:string){
  const [,kind,a='',b='',c='',d='0',e='0',f='0',g='0']=cue.split(':');
  if(kind==='venue'){venueSound.surf=Number(a)||0;venueSound.bounce=b||'clay';venueSound.breeze=Number(c)||0;venueSound.wind=0;return;}
@@ -115,6 +116,7 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
  const volume=getSoundVolume();if(volume<=0)return;
  if(kind==='kick'&&a==='you'&&(b==='perfect'||c==='slam'||c==='scissor'||c==='shark'||c==='bicycle'))haptic(b==='perfect'?[9,24,12]:14);
  if(kind==='golden'||kind==='target')haptic(kind==='golden'?[12,30,20]:10);
+ if(kind==='ring')haptic((Number(a)||1)>=3?[10,24,10,24,16]:[10,24,14]);
  if((kind==='point'||kind==='match')&&a==='you')haptic(kind==='match'?[18,35,28,35,40]:[18,35,28]);
  if(!ctx||ctx.state!=='running')return;
  const t=ctx.currentTime+.005,v=volume;
@@ -178,6 +180,14 @@ export function tennisSound(ctx:AudioContext|null,cue:string){
  if(kind==='next'){drum(ctx,t+.5,150,.16,.1*v,.5);drum(ctx,t+.66,200,.14,.09*v,.6);tone(ctx,t+.84,'triangle',659.25,659.25,.1,.04*v);tone(ctx,t+.96,'triangle',880,880,.22,.04*v);haptic([14,30,20]);return;} // endless play: match won, the next opponent walks on (two hand-drum hits, a rising wood-block pair)
  if(kind==='life'){tone(ctx,t+.2,'sine',220,165,.2,.05*v,.01);tone(ctx,t+.36,'sine',165,110,.26,.045*v,.01);return;}
  if(kind==='best'){[523.25,659.25,783.99,1046.5,1318.5].forEach((hz,i)=>tone(ctx,t+i*.07,'triangle',hz,hz,i===4?.5:.15,.05*v));noise(ctx,t+.3,.6,.035*v,'highpass',5000,7000,.7,.05);haptic([14,30,20,30,30]);return;}
+ // Gold Ring (Nov 18 2026): a dry wood-block pair as the ring is painted (a step higher for each ring already hit this rally), and a
+ // steel-pan arpeggio with a shaker when the ball lands in it; the run starts a third higher on the 2nd and 3rd ring of a rally.
+ if(kind==='ringup'){const up=Math.pow(2,(Math.min(3,Number(a)||1)-1)*2/12)*jitter(.01);tone(ctx,t,'triangle',1174.7*up,1174.7*up,.05,.04*v,.002);tone(ctx,t+.07,'triangle',1568*up,1568*up,.09,.04*v,.002);return;}
+ if(kind==='ring'){const n=Math.min(3,Number(a)||1),up=Math.pow(2,(n-1)*4/12);[783.99,987.77,1174.7,1568].slice(0,n+1).forEach((hz,i)=>pan(ctx,t+i*.07,hz*up,i===n?.6:.22,.07*v));noise(ctx,t+.02,.22,.04*v,'highpass',5200,7400,.8,.01);return;}
+ if(kind==='ringmiss'){tone(ctx,t,'triangle',880,830,.06,.035*v,.002);tone(ctx,t+.08,'triangle',698.5,660,.09,.035*v,.002);return;} // so close: two soft falling ticks
+ if(kind==='line'){noise(ctx,t,.05,.07*v,'highpass',4200,6400,.9,.001);tone(ctx,t+.01,'triangle',1760*jitter(.02),1720,.09,.04*v,.002);return;} // chalk off the line: a dry puff and a bright tick
+ // A winner past the rival in a long rally: a falling air swish under the slow-motion beat.
+ if(kind==='winner'){noise(ctx,t,.5,.06*v,'bandpass',2400,500,1.1,.06);tone(ctx,t+.04,'sine',196,98,.4,.05*v,.03);return;}
  if(kind==='ui'){tone(ctx,t,'sine',880*jitter(.03),660,.05,.035*v,.003);return;}
  if(kind==='net'){
   if(a==='net'){tone(ctx,t,'sine',80,45,.14,.13*v);noise(ctx,t,.22,.06*v,'lowpass',900,300,.7);} // net thud

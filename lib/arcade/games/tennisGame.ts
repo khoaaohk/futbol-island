@@ -19,6 +19,7 @@ import {createTennisBounceSpot} from '../tennisBounceSpot';
 import {createTennisFirstTouch} from '../tennisFirstTouch';
 import {tennisMatchPoint,tennisWindArrow} from '../tennisFeel';
 import {startTennisCharge,releaseTennisCharge,cancelTennisCharge,TENNIS_TOUR_RULES,tennisPointsToWin} from '@/lib/games/soccerTennis';
+import {TENNIS_WINNER,tennisWinnerRead} from '../tennisCinema';
 /** A point that would win a set (best-of-3 courts) or the match: the members get to their feet and the serve gets a push-in. */
 export function tennisBigPoint(s:Parameters<typeof tennisMatchPoint>[0]&{tour?:number;level:number}):boolean{if(tennisMatchPoint(s))return true;const c=tennisCourt(s as never);if(!c||!c.sets||c.style==='drill')return false;const win=tennisPointsToWin(s.level);return s.score.you>=win-1||s.score.rival>=win-1;}
 import {createPinballState} from '@/lib/games/soccerPinball';
@@ -31,7 +32,7 @@ export function createTennisGame(canvas:HTMLCanvasElement,onSound:(goal:boolean,
  
  const stage=createArcadeStage(canvas,tennisLook),tennis=createTennis(freshRunnerSeed()),pinball=createPinballState(),runner=createRunnerGame({idle:true});
  const ball=stage.footballMerged(((.3)));ball.traverse(o=>{o.castShadow=false;});/* one merged draw (was 9). Its shadow is a crisp decal projected along the sun (below), not a shadow-map caster: sharper than a 1024 map can make a 30 cm ball */let elapsed=0,event=0;
- const cameraHome=new T.Vector3(),cameraRotation=new T.Quaternion(),shotLook=new T.Vector3(),shotCamera=new T.Vector3(),shotRotation=new T.Quaternion();let windNoted=0,cinema=0,cinemaKick=0,pointSound=0,cameraFocus=0,chargeTone=0,notedLevel=1;
+ const cameraHome=new T.Vector3(),cameraRotation=new T.Quaternion(),shotLook=new T.Vector3(),shotCamera=new T.Vector3(),shotRotation=new T.Quaternion();let windNoted=0,cinema=0,cinemaKick=0,winnerKick=-1,pointSound=0,cameraFocus=0,chargeTone=0,notedLevel=1;
  function cameraBeat(dt:number){const camera=stage.camera;cinema=Math.max(0,cinema-dt);let focus=0;focus=tennisBeat?.state.close??0;/* round 3: lib/arcade/tennisCinema.ts owns the tennis beats (reduced motion → 0) */if(!stage.reduced){}
   if((tennisCam)){tennisCam.update(dt,tennis,tennisGuide?.visible?camSweet:null);cameraRotation.copy(camera.quaternion);}else{camera.position.copy(cameraHome);camera.quaternion.copy(cameraRotation);}
   
@@ -111,7 +112,7 @@ export function createTennisGame(canvas:HTMLCanvasElement,onSound:(goal:boolean,
  /** The seam, on the frame the next opponent walks on: swap the panel and time it (QA: `tennisSeam()`). */
  let venueMatch=1;const seamStat={count:0,last:0,max:0};
  function seamVenue(){venueMatch=tennis.match;const t0=performance.now(),v=applyRunVenue();world.frame(stage.camera);seamStat.count++;seamStat.last=performance.now()-t0;seamStat.max=Math.max(seamStat.max,seamStat.last);windNoted=0;onSound(false,`tennis:venue:${v.surf}:${v.bounce}:${Math.abs(v.breeze)}`);}
- function reset(){resetTennis(tennis);beginTennis(tennis);{const v=applyRunVenue();venueMatch=tennis.match;world.reset(tennis);windNoted=0;onSound(false,`tennis:venue:${v.surf}:${v.bounce}:${Math.abs(v.breeze)}`);}tennisPowerFx?.reset();tennisCam?.update(0,tennis,null,true);tennisReadAt=0;tennisTrailCount=0;tennisTrailClock=0;tennisPoseRest=0;ball.rotation.set(0,0,0);tennisFeel?.reset();tennisBeat?.reset();tennisSpot?.reset();tennisTouchRing?.reset();beatPoint=tennis.pointsPlayed;beatMilestone=tennis.milestoneEvents;beatMatch=-1;elapsed=event=0;cinema=cinemaKick=pointSound=chargeTone=cameraFocus=0;notedLevel=1;cameraBeat(0);world.frame(stage.camera);stage.resetPlayers();}
+ function reset(){resetTennis(tennis);beginTennis(tennis);{const v=applyRunVenue();venueMatch=tennis.match;world.reset(tennis);windNoted=0;onSound(false,`tennis:venue:${v.surf}:${v.bounce}:${Math.abs(v.breeze)}`);}tennisPowerFx?.reset();tennisCam?.update(0,tennis,null,true);tennisReadAt=0;tennisTrailCount=0;tennisTrailClock=0;tennisPoseRest=0;ball.rotation.set(0,0,0);tennisFeel?.reset();tennisBeat?.reset();tennisSpot?.reset();tennisTouchRing?.reset();beatPoint=tennis.pointsPlayed;beatMilestone=tennis.milestoneEvents;beatMatch=-1;elapsed=event=0;winnerKick=-1;cinema=cinemaKick=pointSound=chargeTone=cameraFocus=0;notedLevel=1;cameraBeat(0);world.frame(stage.camera);stage.resetPlayers();}
  function action(id:number){tennisBeat?.skip();requestTennisKick(tennis,undefined,(['auto','lob','drop','header','scissor','trap'] as TennisShot[])[id]??'auto');}
  function target(x:number,y:number){const p=stage.pick(x,y);if(p&&true){if(p.z<0)tennis.shotAim=T.MathUtils.clamp(p.x/3.7,-1,1);else setTennisTarget(tennis,p.x,p.z);}}
  function update(dt:number,input:ArcadeInput){elapsed+=dt;
@@ -123,6 +124,8 @@ export function createTennisGame(canvas:HTMLCanvasElement,onSound:(goal:boolean,
     // Your big strikes get the slow-mo beat (sweet power, golden, aerials, slams, clean volleys); a sliding save a push-in.
     if(tennisBeat&&tennis.lastKicker==='you'){const pg=tennis.powerGrade,sh=tennis.lastShot,strength=tennis.goldenShot||pg==='sweet'?1:sh==='bicycle'||sh==='scissor'?.9:sh==='slam'||sh==='shark'?.8:pg==='power'?.6:tennis.touchVolley?.45:0;
      if(strength>0)tennisBeat.strike(strength);else if(sh==='dive')tennisBeat.push(.6);}}
+   // A winner that beats the rival in a long rally, or on a set or match point: the slow-motion beat and a falling swish.
+   if(tennisBeat&&winnerKick!==tennis.kickCount&&tennis.ball.bounces===1&&(tennis.rally>=TENNIS_WINNER.rally||tennisBigPoint(tennis))&&tennisWinnerRead(tennis)){winnerKick=tennis.kickCount;if(tennisBeat.strike(TENNIS_WINNER.strength))onSound(false,'tennis:winner');}
    if(tennisBeat){
     if(tennis.pointsPlayed!==beatPoint){beatPoint=tennis.pointsPlayed;if(tennis.pointWinner==='you'&&tennis.rally===1&&tennis.lastKicker==='you')tennisBeat.push(1);} // an ace
     if(tennis.milestoneEvents!==beatMilestone){beatMilestone=tennis.milestoneEvents;tennisBeat.push(.5+Math.min(.5,tennis.rallyMilestone/30));}

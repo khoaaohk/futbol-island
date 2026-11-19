@@ -78,12 +78,38 @@ per game. Tables and helpers: `lib/arcade/tennisEndless.ts`; rules: `lib/games/s
 - Score panel: "Match 4 · Harbour" with the balls as three red pips, the run points in the foot. Results name how far the run got.
 - Checks: `tests/tennis-endless.cjs`, `scripts/check-tennis-endless.cjs --port=<n>` (fast by default, `--full` for whole matches).
 
+## AAA pass (Nov 18 2026): what changed
+Found by playing (phone profile, scripted bots, 20 strategy runs in the pure core): a won match sounded like one more point (the
+match call was only reachable on a lost run); on courts the score rose with no visible reason (touch grade and gain were shown on
+tours only); a winner into space had no moment of its own; rallies had nothing to decide beyond "open side"; a ball on the line
+and a near miss looked like any bounce. No scoring exploit found: mashing Kick, serving only, one shot only and standing still all
+score far below a placing bot (see Falls short for the one soft spot).
+- Gold Ring (`TENNIS_BONUS` in `lib/games/soccerTennis.ts`): from the 4th touch of a rally a gold bullseye is painted on the far
+  side (six spots: two sides x Drop / Kick / Lob depth; the button that reaches it lights up). Land the ball in it: 25 x rings this
+  rally (up to 3) x combo x the usual scales. Next ring 3 touches later; the point's end clears it. Decision: finish now or keep
+  the rally alive for a bigger ring. Hash of counters, never the seeded RNG: the rival's play and every seeded run are unchanged.
+  One pooled decal (the sheet's cross-hair cell), +1 draw only while up. Near miss: the ring shivers.
+- Score tag: every gain pops out under the score panel and flies into the points ("PERFECT +24", "LATE +6", "RING +75"); the
+  rally numeral ticks on every touch. It hangs off the panel in the sky band, so the court stays clean.
+- Winner beat: your ball past a beaten rival (`tennisWinnerRead`, `lib/arcade/tennisCinema.ts`) in a rally of 6 or more, or on a set
+  or match point, gets the slow-motion strike beat and a falling swish; same caps (one per 6 s, any tap skips, off in reduced motion).
+- Sound: `tennis:ringup`, `tennis:ring:<n>` (steel-pan run, a third higher per ring, haptic), `tennis:ringmiss`, `tennis:line`
+  (chalk tick + puff on a line ball), `tennis:winner`; a won match now plays the match call before the next opponent's drums.
+- Scores: the placing bot posts 25102 / 28189 / 27497 in 600 s on court 1 (before 24913 / 28189 / 27497); a ring-chasing bot on
+  court 4 about 21k to 27k with 1.9k to 2.7k from rings. Checks: `tests/tennis-aaa.cjs` (ring rules, score range, the curve: opening
+  won with every ball, matches 5-9 harder than 1-4, a run always ends; winner read; wiring).
+- Perf (same scene, court 1, dev server, `scripts/measure-arcade-games.cjs`): before 45 (48) draws / 33.2k triangles / 15 textures,
+  after 42 (47) / 33.2k / 15. Menu 0 frames.
+
 ## Budget (phone profile, `scripts/measure-arcade-games.cjs` counters, dev server, desktop Chrome: no phone temperature measured)
 Median draws (max) / triangles / GL textures. Before: 48 / 45.5k / 16 on court 1, about 53k triangles on the evening.
 After: court 1 46 (49) / 34.9k / 14; lantern evening 42 (50) / 39.0k / 14; the lawn 45 (52) / 37.6k / 14; pier 41 (44) / 31.6k / 14.
 Menu 0 frames. Details and the removed list: `docs/performance-guide.md` (Nov 10 2026, tennis comic entry).
 
 ## Falls short (ranked)
+0. (Nov 18) A bot that only chases the ball and mashes Kick still wins about half its points on courts 4 to 6 (aim assist plus early
+   volleys); it scores a quarter of a placing bot, so the board is safe, but the Champion should punish it. The second lap opens
+   easier than the first lap ended (match 10 on court 1). With the aim ring, space ring and Gold Ring on one side the far court is busy.
 1. Transient frames pass 48 draws (up to 52 on the lawn): the aim, landing, countdown and bounce-spot rings are separate decals.
 2. Casters carry ink hulls, so they cannot receive shadows: palm shadows stop at the wall and the clubhouse.
 3. The members are very small on a phone and read as coloured dots; the lost-point panel is small.
