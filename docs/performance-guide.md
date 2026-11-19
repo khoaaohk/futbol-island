@@ -267,6 +267,37 @@ rendered frames, CDP TaskDuration and a heap *sampling* profile that counts coll
 - LOD without extra draws: ONE non-indexed geometry holds three bands (442 / 160 / 31 triangles, aTw.w); the vertex shader keeps the band each instance wants by camera distance (< 14 m, < 40 m, beyond) and collapses the others to a point. Heat tier 2+ forces the low band; tier 3-4, Battery saver and reduced motion hold the still pose. Rasterised turtle triangles: 442 near (was 188 room / 104 shore), 160 mid, 31 far; vertex work is all three bands (633) per instance, a few turtles per scene.
 - Animation is vertex-shader only (stPose: 4 s figure-8 front stroke with blade bend and feathering, glide, hind trim, body pitch/roll/heave, head bob, neck stretch; per-instance phase). No new CPU matrix writes; draws unchanged (room 14 desktop, one turtle draw per scene). Friend: 324 triangles ('mid' band, ≤ 340). Tests: `tests/realistic-turtle.cjs`.
 
+## Underwater visual pass: the reef room (Nov 18 2026, local, not deployed)
+
+Owner: "improve the visuals of the under water scene. make it more dynamic and more visually appealing"; heat must not increase.
+Code: `lib/graphics/diveRoom.ts`, `diveWreck.ts` (`Merge.tone`, hull growth kinds), `waterTokens.ts` (`ROOM_DEEP`, `ROOM_FOG_NEAR`,
+`ROOM_SUN`, `ROOM_SAND_RIPPLE`, `ROOM_RAY_K`, `ROOM_CAUSTIC_BOOST`, `ROOM_SHALLOW_K`). Re-run: `scripts/underwater-heat.cjs`.
+- **What changed, and what pays for it.** No new draw, texture, light, pass or render target; no per-frame CPU work added.
+  - Coral is built from open tubes (`tubeGeo`: no hidden caps, no capsules, no tip spheres). That freed about 15k triangles on a
+    phone, spent on: 170 / 230 coral pieces (was 100 / 130), three new kinds (plate, barrel sponge, bubble), bowl-shaped table coral,
+    44-triangle layered sea fans (was a flat 9-triangle fan), soft coral whips in the sway draw, shells on the sand, rounder big
+    boulders, 10 more school fish. The room still submits fewer triangles than before (table below).
+  - Vertex colour only: a baked sun side / shade side on every reef piece, growth on the wreck's timber and on rocks, darker reef
+    floor under coral heads, grass-tinted meadows, a sunlit patch round the wreck.
+  - Water: the far water is the zone's tint pulled toward a deep blue, the fog starts further off (constants only).
+  - Reef fragment shader: the caustics' up-test and depth falloff moved to the vertex shader (one varying; no per-fragment matrix
+    multiply, normalize or exp); that pays for the fine sand ripples (2 sin, sand only). Lite (tier 2+) compiles the ripples out.
+  - Sun shafts: same triangles and area, alpha x1.7, two of them placed on the wreck. Bubbles: same points, two in five rise from the hull.
+- **Measured** (dev server, headless Chrome SwiftShader, Captain's Cup, three fixed spots; room = every visible `dive-*` mesh; finish =
+  render + 1-pixel readPixels, median over 4 s, noisy on a shared machine):
+
+| profile | room draws | room triangles | points | finish ms reef / wreck / seabed |
+|---|---|---|---|---|
+| phone tier 0 | 16 → 16 | 46,567 → 39,158 | 150 → 150 | 22.2 / 20.4 / 17.0 → 23.1 / 20.1 / 14.4 |
+| phone tier 2 (lite) | 16 → 16 | 33,237 → 29,500 | 122 → 122 | 21.7 / 15.4 / 17.6 → 15.9 / 23.3 / 12.8 (repeat, wreck: 20.4 → 18-19; reef 15.3 → 13-13.5) |
+| desktop tier 0 | 16 → 16 | 78,023 → 62,188 | 224 → 224 | 79.0 / 75.8 / 67.2 → 62.8 / 68.8 / 61.0 |
+
+- The finish times are within this machine's run-to-run noise on the phone profiles (single runs swing by several ms when another
+  job is running); they show no increase, not a proven saving. **Not measured on an iPhone**: software rendering is not a phone GPU.
+- Validation: `tsc`, `eslint`, the 14 test files that read these modules (explore-v2, explore-life, water-dive, explore-delight,
+  dive-layout, dive-edge, dive-see-through, explore-balls, explore-ball-hunt, explore-swim-oct25, swim-natural-oct27,
+  rare-activities-lazy, realistic-turtle, water-dive-toggle).
+
 ## Explore life: heat savings, solid collision, see-through, current / light / coral / fish / diver (Oct 21-22 2026, local, not deployed)
 
 User: "make that more life like ... all this without additional heat. also find heat savings in that scene"; "shouldn't be able to swim

@@ -51,9 +51,9 @@ const SPOTS=(process.env.UW_SPOTS||'reef,wreck,seabed').split(',');
    console.log(prof,'breakdown',JSON.stringify(await page.evaluate(()=>{const out=[];window.__fi2.dive.room.scene.traverse(o=>{if(!(o.isMesh||o.isPoints)||!o.visible)return;const g=o.geometry,n=(g.index?g.index.count:g.getAttribute('position').count)/(o.isPoints?1:3),k=o.isInstancedMesh?o.count:(g.instanceCount&&isFinite(g.instanceCount)?g.instanceCount:1);out.push([o.name||o.parent?.name||'?',Math.round(n*k)]);});
     const m=new Map();for(const [k,v] of out)m.set(k,(m.get(k)||0)+v);return {draws:out.length,by:[...m].sort((a,b)=>b[1]-a[1])};})));}
   for(const spot of SPOTS){
-   const placed=await page.evaluate(spot=>{const d=window.__fi2.dive,st=d.session.state,room=d.room,wk=st.spot.theme.wreck;
-    const floorY=(x,z)=>{const ray=new (room.camera.position.constructor)(0,-1,0),reef=room.scene.getObjectByName('dive-reef');void ray;void reef;return null;};void floorY;
-    let x=0,z=8,yaw=Math.PI,y=null;
+   if(!await page.evaluate(()=>!!(window.__fi2.dive.diving&&window.__fi2.dive.room))){console.log(`${prof} ${spot}: not in the room; skipped`);break;}
+   const placed=await page.evaluate(spot=>{const d=window.__fi2.dive,st=d.session.state,wk=st.spot.theme.wreck;
+    let x=0,z=8,yaw=Math.PI;
     if(spot==='wreck'&&wk){const c=Math.cos(wk.yaw),s=Math.sin(wk.yaw);x=wk.x+c*10;z=wk.z-s*10;yaw=Math.atan2(wk.x-x,wk.z-z);}
     else if(spot==='reef'){x=6;z=10;yaw=Math.atan2(-x,-z-4);}
     else if(spot==='seabed'){x=-10;z=14;yaw=Math.atan2(4-x,-2-z);}
@@ -65,6 +65,8 @@ const SPOTS=(process.env.UW_SPOTS||'reef,wreck,seabed').split(',');
    await page.waitForTimeout(3000);
    await page.evaluate(()=>{const l=window.__uw;l.calls.length=l.tris.length=l.ms.length=l.gpu.length=l.raf.length=0;l.on=true;});
    await page.waitForTimeout(4000);
+   // A spot outside a small zone's blob swims the diver out across its edge (Seamless Explore): the room is gone, say so and stop this profile.
+   if(!await page.evaluate(()=>!!(window.__fi2.dive.diving&&window.__fi2.dive.room))){console.log(`${prof} ${spot}: the diver left the room here (the spot is outside this zone); skipped`);break;}
    const m=await page.evaluate(()=>{const l=window.__uw;l.on=false;const med=a=>{const b=[...a].sort((p,q)=>p-q);return b.length?b[b.length>>1]:0;},mean=a=>a.length?a.reduce((p,q)=>p+q,0)/a.length:0;
     const r=window.__fi2.renderer,st=window.__fi2.dive.session.state;
     return {frames:l.calls.length,callsMax:Math.max(0,...l.calls),callsMed:med(l.calls),trisMax:Math.max(0,...l.tris),trisMed:med(l.tris),rafMed:+med(l.raf).toFixed(1),renderMs:+mean(l.ms).toFixed(2),gpuMed:+med(l.gpu).toFixed(1),
