@@ -17,6 +17,11 @@ export type RollballAudio=ReturnType<typeof createRollballAudio>;
 export function createRollballAudio(){
  let ctx:AudioContext|null=null,master:GainNode|null=null,limiter:DynamicsCompressorNode|null=null,noise:AudioBuffer|null=null,voices=0;
  let roll:{src:AudioBufferSourceNode;bq:BiquadFilterNode;g:GainNode}|null=null,rollSurf:Surf|'' ='';
+ /** the bed (Nov 18 AAA pass): the same looped noise through a second filter, swelling slowly like surf (an LFO, no timers); wind on the roofs, a far crowd at night */
+ let bed:{bq:BiquadFilterNode;g:GainNode;lfo:OscillatorNode;lg:GainNode}|null=null,bedOn=-1;
+ /** repeats never sound the same twice: a small random detune */
+ const jit=(f:number,w=.06)=>f*(1-w+Math.random()*w*2);
+ const BED:[BiquadFilterType,number,number,number][]=[['lowpass',520,.5,.05],['lowpass',760,.5,.07],['bandpass',420,.7,.06],['bandpass',900,.4,.05]];
  const on=()=>!!ctx&&ctx.state==='running'&&isSoundEnabled()&&getSoundVolume()>0&&!(typeof document!=='undefined'&&document.hidden);
  /** Call from a pointer / key handler. Creates the context once and resumes it (the iOS / Safari suspended path). */
  function unlock(){
@@ -49,29 +54,44 @@ export function createRollballAudio(){
   o1.connect(g);o2.connect(g);g.connect(master);o1.start(t);o2.start(t);lfo.start(t);o1.stop(t+dur+.03);o2.stop(t+dur+.03);lfo.stop(t+dur+.03);
   o1.onended=()=>{voices-=2;o1.disconnect();o2.disconnect();lfo.disconnect();lg.disconnect();g.disconnect();};}
  /** The rolling voice: made once, looped noise through a filter; only its gain and filter move. */
- function rolling(speed:number,surf:Surf,grounded:boolean){
-  if(!ctx||!master||!noise)return;
-  if(!roll){const src=ctx.createBufferSource(),bq=ctx.createBiquadFilter(),g=ctx.createGain();src.buffer=noise;src.loop=true;g.gain.value=0;src.connect(bq);bq.connect(g);g.connect(master);src.start();roll={src,bq,g};}
+ function voice(){if(!ctx||!master||!noise||roll)return;const src=ctx.createBufferSource(),bq=ctx.createBiquadFilter(),g=ctx.createGain();src.buffer=noise;src.loop=true;g.gain.value=0;src.connect(bq);bq.connect(g);g.connect(master);src.start();roll={src,bq,g};
+  const b2=ctx.createBiquadFilter(),g2=ctx.createGain(),lfo=ctx.createOscillator(),lg=ctx.createGain();g2.gain.value=0;lfo.type='sine';lfo.frequency.value=.13;lg.gain.value=0;lfo.connect(lg);lg.connect(g2.gain);src.connect(b2);b2.connect(g2);g2.connect(master);lfo.start();bed={bq:b2,g:g2,lfo,lg};}
+ /** The bed for a theme (0 pitch, 1 beach, 2 roofs, 3 stadium night); silenced by quiet(). */
+ function ambience(theme:number){voice();if(!ctx||!bed)return;bedOn=Math.max(0,Math.min(3,theme));const [type,f,q]=BED[bedOn],t=ctx.currentTime;bed.bq.type=type;bed.bq.frequency.setTargetAtTime(f,t,.4);bed.bq.Q.value=q;}
+ function rolling(speed:number,surf:Surf,grounded:boolean,fall=0){
+  if(!ctx||!master||!noise)return;voice();if(!roll)return;
+  if(bed){const k=on()&&bedOn>=0?BED[bedOn][3]*vol():0,t=ctx.currentTime;bed.g.gain.setTargetAtTime(k*.6,t,.4);bed.lg.gain.setTargetAtTime(k*.4,t,.4);}// the bed follows the mute setting every frame
+  // in the air the same voice is the wind past the ball
+  if(!grounded&&fall+speed>3&&on()){const t=ctx.currentTime;if(rollSurf!==''){roll.bq.type='bandpass';roll.bq.Q.setTargetAtTime(.8,t,.03);rollSurf='';}roll.bq.frequency.setTargetAtTime(900+Math.min(1600,(fall+speed)*120),t,.06);roll.g.gain.setTargetAtTime(Math.min(.1,(fall+speed)*.008)*vol(),t,.08);return;}
   const t=ctx.currentTime,[type,f,q]=ROLL_TONE[surf];if(rollSurf!==surf){roll.bq.type=type;roll.bq.Q.setTargetAtTime(q,t,.03);rollSurf=surf;}
   roll.bq.frequency.setTargetAtTime(f*(.7+Math.min(1.5,speed/7)),t,.05);
   const want=on()&&grounded?Math.min(.32,speed*.05)*vol()*(surf==='mud'?.6:1):0;roll.g.gain.setTargetAtTime(want,t,.06);
  }
  return {
-  unlock,rolling,
+  unlock,rolling,ambience,
   get context(){return ctx;},
-  quiet(){if(ctx&&roll)roll.g.gain.setTargetAtTime(0,ctx.currentTime,.03);},
+  quiet(){if(ctx&&roll)roll.g.gain.setTargetAtTime(0,ctx.currentTime,.03);if(ctx&&bed){bed.g.gain.setTargetAtTime(0,ctx.currentTime,.03);bed.lg.gain.setTargetAtTime(0,ctx.currentTime,.03);}},
   /** A landing: a leather thump, louder for a bigger drop. */
-  land(v:number){if(!on())return;const k=Math.min(1,v/9);tone('sine',150,55,0,.14,.25+k*.35,.002);burst('lowpass',900,.7,0,.05,.12+k*.2);},
+  land(v:number,surf:Surf='grass'){if(!on())return;const k=Math.min(1,v/9),hard=surf==='wood'||surf==='metal'||surf==='stone'||surf==='ice';tone('sine',jit(hard?190:150),55,0,.14,.25+k*.35,.002);burst(hard?'bandpass':'lowpass',jit(hard?ROLL_TONE[surf][1]:900),hard?2:.7,0,hard?.09:.05,.12+k*.2);if(surf==='sand'||surf==='mud')burst('lowpass',jit(500),.5,.01,.16,.1+k*.1,160);},
   /** A wall or post knock. */
-  knock(v:number){if(!on())return;tone('triangle',320,160,0,.06,Math.min(.25,.05+v*.03),.002);},
+  knock(v:number,surf:Surf='grass'){if(!on())return;const g=Math.min(.3,.05+v*.03);tone('triangle',jit(320,.12),160,0,.06,g,.002);burst('lowpass',jit(surf==='metal'?2200:surf==='wood'?1100:600),1,0,.05,g*.7);if(surf==='metal')tone('sine',jit(1240),1180,0,.18,g*.25,.001);},
+  /** A cone hit too softly: a hollow plastic bonk that climbs as the hit gets closer to enough. */
+  wobble(share:number){if(!on())return;const f=240+Math.min(1,share)*300;tone('triangle',jit(f,.03),f*.72,0,.11,.2,.002);tone('sine',f*.5,f*.4,0,.14,.14,.002);burst('bandpass',1400,2,0,.04,.08);},
+  /** A boost pad: a rising whoosh. */
+  boost(){if(!on())return;burst('bandpass',500,1.2,0,.42,.3,3600);tone('sawtooth',jit(160),640,0,.3,.07,.01);tone('sine',330,990,.02,.28,.12,.01);},
+  /** A sweeper knocks the ball away. */
+  sweep(){if(!on())return;tone('sine',jit(210),80,0,.16,.34,.002);burst('lowpass',1300,.8,0,.07,.22);tone('square',jit(520),260,.03,.08,.05);},
+  /** Through a closing gate with under a second left. */
+  close(){if(!on())return;pluck(hz(12),0,.14,.14);pluck(hz(16),.06,.14,.16);pluck(hz(19),.12,.16,.26);},
+  respawn(){if(!on())return;tone('sine',300,620,0,.12,.14,.004);burst('highpass',3000,.6,.02,.08,.05);},
   bumper(){if(!on())return;tone('sine',220,660,0,.12,.3,.002);tone('square',880,440,.02,.06,.05);},
   splash(){if(!on())return;burst('lowpass',2400,.5,0,.5,.4,300);burst('bandpass',700,.8,.04,.35,.25);tone('sine',300,90,0,.3,.2);},
   /** A plate goes down: a stone clunk, a bright note for a lit plate. */
-  plate(lit:boolean,n=0){if(!on())return;tone('square',110,80,0,.08,.12,.002);burst('bandpass',500,1.2,0,.06,.2);if(lit)pluck(hz(SCALE[Math.min(SCALE.length-1,n)]),.04,.16,.3);},
+  plate(lit:boolean,n=0){if(!on())return;tone('square',jit(110),80,0,.08,.12,.002);burst('bandpass',500,1.2,0,.06,.2);if(lit)pluck(hz(SCALE[Math.min(SCALE.length-1,n)]),.04,.16,.3);},
   wrong(){if(!on())return;tone('square',300,150,0,.22,.1);tone('square',240,120,.12,.22,.1);},
   /** A gate / bridge: a heavy slide. */
   gate(open:boolean){if(!on())return;burst('lowpass',open?380:260,.8,0,.55,.28,open?900:120);tone('sine',open?70:90,open?110:60,0,.5,.18);},
-  cone(){if(!on())return;for(let i=0;i<3;i++)tone('triangle',700-i*90,300,i*.05,.09,.12,.002);burst('highpass',2400,.6,0,.12,.12);},
+  cone(n=1){if(!on())return;const up=Math.pow(2,Math.min(7,Math.max(0,n-1))/12);/* each stack knocked in a run rings a little higher */for(let i=0;i<3;i++)tone('triangle',jit((700-i*90)*up,.03),300,i*.05,.09,.12,.002);burst('highpass',2400,.6,0,.12,.12);tone('sine',110,50,0,.12,.3,.002);},
   lever(on1:boolean){if(!on())return;tone('square',on1?900:600,on1?1300:400,0,.05,.08,.001);tone('sine',140,90,.03,.1,.2);},
   key(){if(!on())return;whistle(0,.16,.07);pluck(hz(12),.12,.14,.2);pluck(hz(16),.2,.14,.25);},
   lock(ok:boolean){if(!on())return;if(ok){tone('square',1200,1200,0,.03,.08,.001);tone('square',800,800,.06,.04,.08,.001);pluck(hz(7),.12,.16,.3);}else tone('square',200,180,0,.12,.08);},
@@ -85,6 +105,6 @@ export function createRollballAudio(){
   over(){if(!on())return;whistle(0,.22,.14);whistle(.3,.22,.14);whistle(.6,.6,.14);tone('sine',120,40,.6,.5,.35,.003);},
   medal(n:number){if(!on())return;const k=2+Math.min(3,Math.max(1,n));for(let i=0;i<k;i++)pluck(hz([0,4,7,12,16][i]),.5+i*.09,.22,.4);burst('highpass',6500,.7,.5+k*.09,.4,.08);},
   tap(){if(!on())return;pluck(hz(12,392),0,.12,.09);},
-  dispose(){const c=ctx;ctx=null;try{roll?.src.stop();roll?.src.disconnect();roll?.g.disconnect();master?.disconnect();limiter?.disconnect();}catch{/* already gone */}roll=null;master=null;limiter=null;noise=null;if(c&&c.state!=='closed')void c.close().catch(()=>{});},
+  dispose(){const c=ctx;ctx=null;try{bed?.lfo.stop();bed?.lfo.disconnect();bed?.g.disconnect();bed=null;roll?.src.stop();roll?.src.disconnect();roll?.g.disconnect();master?.disconnect();limiter?.disconnect();}catch{/* already gone */}roll=null;master=null;limiter=null;noise=null;if(c&&c.state!=='closed')void c.close().catch(()=>{});},
  };
 }

@@ -21,7 +21,7 @@ export const RB={
   *  Running out costs a heart and the clock starts again (the ball goes back to the checkpoint). */
  /** levels up to this one are gentle: a fall puts the ball back close by (level 1: no heart lost) */gentle:3,
  clockFrom:4,clockMul:2.2,clockMin:1.15,clockStep:.04,clockAdd:10,
- knock:3.0,
+ knock:3.0,knockGlance:.6,knockFast:1.5,
  /** medal marks from the drifting-thumb bot (tests/rollball-core.cjs --bots): noise 1.0-1.4 runs score about 850-7100 (median
   *  near 2500), so bronze comes in a few tries; a steady player passes silver; gold needs a long clean streak. */
  medals:[1500,6000,20000] as readonly number[],
@@ -47,11 +47,12 @@ export const THEMES=['Training pitch','Beach','Rooftops','Stadium at night'] as 
  *  (a at the middle, a+b at both lips), 4 smooth hill along z (a at z0 -> b at z1, level at both ends so it meets flat ground without a
  *  kink), 5 mound along z (a at both ends, a+b at the middle; a negative b is a dip), 6 smooth bank across x (a at x0 -> b at x1). dy: a moving offset (gates sink, bridges rise, lifts move). role: 0 terrain, 1 gate, 2 bridge, 3 lift. */
 export type Piece={x0:number;x1:number;z0:number;z1:number;y0:number;kind:0|1|2|3|4|5|6;a:number;b:number;surf:Surf;dy:number;role:0|1|2|3;mod:number;/** physics only (the goal's frame: the view draws posts and net) */hidden?:boolean};
-export type PlateKind='latch'|'hold'|'timed'|'stay'|'order'|'heavy';
-export type Plate={x:number;z:number;y:number;half:number;kind:PlateKind;sig:number;T:number;idx:number;group:number;
+export type PlateKind='latch'|'hold'|'timed'|'stay'|'order'|'heavy'|'boost';
+export type Plate={x:number;z:number;y:number;half:number;kind:PlateKind;sig:number;T:number;idx:number;group:number;/** boost pads: the velocity they give the ball */bx:number;bz:number;
  /** live */pressed:boolean;timer:number;lit:boolean;mod:number};
-export type PostKind='cone'|'switch'|'bumper'|'lock';
-export type Post={x:number;z:number;y:number;r:number;kind:PostKind;sig:number;/** live */down:boolean;cool:number;on:boolean;mod:number};
+export type PostKind='cone'|'switch'|'bumper'|'lock'|'sweeper';
+export type Post={x:number;z:number;y:number;r:number;kind:PostKind;sig:number;/** sweepers slide about their home (hx,hz): reach ax / az, one lap every per seconds, phase ph (0..1) */hx:number;hz:number;ax:number;az:number;per:number;ph:number;
+ /** live */down:boolean;cool:number;on:boolean;vx:number;vz:number;wob:number;mod:number};
 export type ObjKind='crate'|'tball';
 export type Obj={kind:ObjKind;x:number;y:number;z:number;vx:number;vy:number;vz:number;r:number;mass:number;hx:number;hz:number;hy:number;mod:number;air:boolean;spin:number};
 export type Pick={kind:'star'|'key';x:number;y:number;z:number;taken:boolean;mod:number};
@@ -60,7 +61,7 @@ export type Recv={kind:'gate'|'bridge'|'lift'|'drain'|'fan';piece:number;need:nu
  /** lift: rise and period; drain / fan: the area; fan: the hover height and the push */h:number;period:number;x0:number;x1:number;z0:number;z1:number;wy:number;fz:number;mod:number};
 
 /* ---------------- the modules ---------------- */
-type Bot=(['go',number,number,number?]|['run',number,number]|['wait',number]|['waitr',number]|['stop',number]|['push',number,number,number]|['lift',number])[];
+type Bot=(['waitm',number,number]|['go',number,number,number?]|['run',number,number]|['wait',number]|['waitr',number]|['stop',number]|['push',number,number,number]|['lift',number])[];
 /** A module as authored: local coordinates (x across, z along, entry at z 0). */
 export type ModuleDef={id:string;name:string;theme:Theme;rating:number;mech:string[];len:number;par:number;
  build:(m:Builder)=>void;
@@ -86,6 +87,11 @@ export type Builder={
  drain:(x0:number,x1:number,z0:number,z1:number,wy:number,need:number[])=>void;
  fan:(x0:number,x1:number,z0:number,z1:number,hover:number,push:number,need:number[])=>void;
  goal:(x:number,z:number)=>void;
+ /** a boost pad: the ball leaves it at (vx,vz) however it came (Nov 18 AAA pass) */
+ boost:(x:number,z:number,vx:number,vz:number,y?:number)=>number;
+ /** a sweeper (a keeper dummy on a rail, a crab): slides ax / az either side of (x,z), one lap every per seconds */
+ sweeper:(x:number,z:number,ax:number,az:number,per:number,ph?:number,y?:number)=>number;
+ /** the level being built (the goal's keeper and the sweepers' pace follow it) */level:number;
 };
 
 /** The 17 modules, four themes, rated 1-9. New mechanics come alone first (MECH_ORDER) and are combined in the high-rated ones. */
@@ -177,12 +183,31 @@ export const MODULES:readonly ModuleDef[]=[
    m.bridge(-3,-1,10,13,0,[0],'wood');m.box(-4,4,13,20.5,0,'grass');m.bankX(1.5,4,14,18,0,1,'grass');m.box(4,5.5,14,18,1,'grass');m.key(4.7,16,1);
    m.post(-3.2,19,'lock',1);m.post(-.6,16.2,'bumper');m.gate(-4,4,20.5,[1]);m.box(-2,2,20.85,24,0,'grass');m.star(-3.4,1.2);},
   bot:[['go',1.5,1.8],['go',1.5,4.4,2.4],['go',-2.5,3.6],['go',-2,9.4],['waitr',0],['go',-2,13.6,3],['go',3,15.4],['go',4.7,16,3],['go',2,17.4],['go',-2.2,18.6],['run',-3.2,19],['wait',1],['waitr',1],['go',0,24.6]]},
+ /* Nov 18 AAA pass: boost pads (speed is a tool) and sweepers (timing), alone first and then chained */
+ {id:'speed-strip',name:'Speed Strip',theme:0,rating:3,mech:['boost','cone'],len:19,par:16,
+  build:m=>{m.box(-2.5,2.5,0,19,0,'grass');m.box(-4.5,-2.5,9,13,0,'long');m.boost(0,3.2,0,9);m.post(0,7.6,'cone',0);m.post(-1.7,13.6,'cone',1);m.star(-3.8,11);m.gate(-2.5,2.5,16,[0,1]);},
+  bot:[['go',0,1.6],['run',0,7.6],['go',1.2,9.6],['run',-1.7,13.6],['go',0,15.2],['waitr',0],['go',0,19.6]],starBot:[['go',-1.8,9.8],['go',-3.8,11],['go',-1.8,10],['go',-1.8,2]]},
+ {id:'crab-walk',name:'Crab Walk',theme:1,rating:4,mech:['sweeper','plank'],len:19,par:20,
+  build:m=>{m.box(-3,3,0,4,0,'sand');m.box(-1.6,1.6,4,13,0,'wood');m.box(-3,3,13,19,0,'sand');m.sweeper(0,6.4,1.15,0,3.4);m.sweeper(0,10.2,1.15,0,3.4,.5);
+   m.plate(-2,15,'latch',0);m.gate(-3,3,16.6,[0]);m.star(-1.25,10.2);},
+  bot:[['go',-1.1,5],['waitm',0,1.55],['go',-1.1,8.3,6],['go',1.1,8.8],['waitm',1,1.55],['go',1.1,12,6],['go',-2,15],['go',0,15.8],['waitr',0],['go',0,19.6]]},
+ {id:'launch-pad',name:'Launch Pad',theme:2,rating:5,mech:['boost','jump','roof'],len:22,par:14,
+  build:m=>{m.box(-2,2,0,5,0,'stone');m.boost(0,3.4,0,9.6);m.rampZ(-1,1,5,8,0,.9,'metal');m.box(-2.5,2.5,10.4,16,.3,'stone');m.rampZ(-1.5,1.5,16,18,.3,0,'stone');m.box(-2,2,18,22,0,'stone');
+   m.plate(1.5,14,'latch',0,{y:.3});m.gate(-2,2,19.4,[0]);m.star(0,9.2,1.3);},
+  bot:[['go',0,2.2],['run',0,12.6],['go',1.5,14],['go',0,15.4],['go',0,18.6],['waitr',0],['go',0,22.6]]},
+ {id:'keeper-drill',name:'Keeper Drill',theme:3,rating:7,mech:['sweeper','boost','timed','cone'],len:25,par:22,
+  build:m=>{m.box(-3,3,0,25,0,'grass');m.plate(-2,3,'timed',0,{T:5.5});m.boost(0,5.4,0,9.6);m.sweeper(0,9.5,2.4,0,3.6);m.sweeper(0,11.6,2.4,0,3.6,.5);m.post(0,16.4,'cone',1);
+   m.gate(-3,3,19,[0,1]);m.star(2.5,10.55);},
+  bot:[['go',-2,3],['go',0,4.2],['waitm',0,.8],['run',0,16.4],['go',0,18.2,7],['go',0,25.6,7]],starBot:[['go',2.5,8.2],['waitm',0,2.6],['go',2.5,10.8,6],['waitm',0,2.6],['go',2.5,8,6],['go',0,2]]},
 ];
 /** The goal at the end of every level (not in the generator's pool). */
 export const GOAL_MODULE:ModuleDef={id:'goal',name:'Roll It In',theme:0,rating:0,mech:['goal'],len:7,par:3,
- build:m=>{m.box(-3,3,0,7,0,'grass');m.goal(0,5.6);},bot:[['go',0,5.6]]};
+ build:m=>{m.box(-3,3,0,7,0,'grass');m.goal(0,5.6);},bot:[['go',-1.05,3.3],['waitm',0,1.45],['go',-1.05,5.7,7]]};
+/** From this level a keeper dummy slides across the goal mouth; it speeds up a little every level down to keeperMin seconds a lap. */
+export const KEEPER={from:6,per:3.6,step:.08,min:2,reach:1,back:1.3} as const;
+export const keeperPeriod=(level:number)=>Math.max(KEEPER.min,KEEPER.per-KEEPER.step*(level-KEEPER.from));
 /** The order a run meets the mechanics (each module's main mechanic is first seen alone). */
-export const MECH_ORDER=['roll','steps','cone','sand','lift','crate','mud','timed','switch','order','jump','fan','key','pipe','scale','combo'] as const;
+export const MECH_ORDER=['roll','steps','cone','sand','lift','crate','mud','timed','switch','order','jump','fan','key','pipe','scale','combo','boost','sweeper'] as const;
 
 export function rollballDailySeed(day:string){let h=0x811c9dc5;const s='rollball:'+day;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return 1+h%2_000_000_000;}
 export function mulberry(seed:number){let a=seed>>>0;return()=>{a=(a+0x6d2b79f5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
@@ -218,7 +243,7 @@ export const levelPar=(plan:readonly number[])=>plan.reduce((s,i)=>s+MODULES[i].
 export type Placed={def:ModuleDef;z:number;/** first index of its pieces, plates, posts, objs, picks, recvs and signals */p0:number;p1:number;pl0:number;pl1:number;po0:number;po1:number;o0:number;o1:number;k0:number;k1:number;r0:number;r1:number;s0:number;s1:number;goal:[number,number]|null;star:boolean};
 export type World={pieces:Piece[];plates:Plate[];posts:Post[];objs:Obj[];picks:Pick[];recvs:Recv[];sig:boolean[];order:number[];mods:Placed[];len:number};
 
-export function buildWorld(plan:readonly number[],theme0=0):World{
+export function buildWorld(plan:readonly number[],level=1):World{
  const w:World={pieces:[],plates:[],posts:[],objs:[],picks:[],recvs:[],sig:[],order:[],mods:[],len:0};
  const defs=[...plan.map(i=>MODULES[i]),GOAL_MODULE];
  let z=0;
@@ -226,7 +251,7 @@ export function buildWorld(plan:readonly number[],theme0=0):World{
   const s0=w.sig.length,P:Placed={def,z,p0:w.pieces.length,p1:0,pl0:w.plates.length,pl1:0,po0:w.posts.length,po1:0,o0:w.objs.length,o1:0,k0:w.picks.length,k1:0,r0:w.recvs.length,r1:0,s0,s1:0,goal:null,star:false};
   let maxSig=-1;const S=(i:number)=>{maxSig=Math.max(maxSig,i);return s0+i;};
   const piece=(x0:number,x1:number,z0:number,z1:number,y0:number,kind:Piece['kind'],a:number,b:number,surf:Surf,role:Piece['role']=0,dy=0)=>{w.pieces.push({x0,x1,z0:z+z0,z1:z+z1,y0,kind,a,b,surf,dy,role,mod:mi});return w.pieces.length-1;};
-  const B:Builder={
+  const B:Builder={level,
    box:(x0,x1,z0,z1,h,surf='grass')=>piece(x0,x1,z0,z1,RB.water-.6,0,h,0,surf),
    rampZ:(x0,x1,z0,z1,h0,h1,surf='grass')=>piece(x0,x1,z0,z1,RB.water-.6,1,h0,h1,surf),
    rampX:(x0,x1,z0,z1,h0,h1,surf='grass')=>piece(x0,x1,z0,z1,RB.water-.6,2,h0,h1,surf),
@@ -237,14 +262,16 @@ export function buildWorld(plan:readonly number[],theme0=0):World{
    gate:(x0,x1,gz,need,h=0)=>{const p=piece(x0,x1,gz,gz+.35,h-.2,0,h+1.1,0,'metal',1);w.recvs.push({kind:'gate',piece:p,need:need.map(S),open:0,h:1.1,period:0,x0,x1,z0:z+gz,z1:z+gz+.35,wy:h,fz:0,mod:mi});return p;},
    bridge:(x0,x1,z0,z1,h,need,surf='wood')=>{const p=piece(x0,x1,z0,z1,h-.35,0,h,0,surf,2,-4);w.recvs.push({kind:'bridge',piece:p,need:need.map(S),open:0,h:4,period:0,x0,x1,z0:z+z0,z1:z+z1,wy:h,fz:0,mod:mi});return p;},
    lift:(x0,x1,z0,z1,rise,period,surf='metal')=>{const p=piece(x0,x1,z0,z1,RB.water-.6,0,0,0,surf,3);w.recvs.push({kind:'lift',piece:p,need:[],open:0,h:rise,period,x0,x1,z0:z+z0,z1:z+z1,wy:0,fz:0,mod:mi});return p;},
-   plate:(x,pz,kind,sig,o={})=>{w.plates.push({x,z:z+pz,y:o.y??0,half:.62,kind,sig:S(sig),T:o.T??0,idx:o.idx??0,group:o.group??0,pressed:false,timer:0,lit:false,mod:mi});return w.plates.length-1;},
-   post:(x,pz,kind,sig=-1,y=0)=>{w.posts.push({x,z:z+pz,y,r:kind==='bumper'?.42:kind==='cone'?.34:.3,kind,sig:sig>=0?S(sig):-1,down:false,cool:0,on:false,mod:mi});return w.posts.length-1;},
+   plate:(x,pz,kind,sig,o={})=>{w.plates.push({x,z:z+pz,y:o.y??0,half:.62,kind,sig:S(sig),T:o.T??0,idx:o.idx??0,group:o.group??0,bx:0,bz:0,pressed:false,timer:0,lit:false,mod:mi});return w.plates.length-1;},
+   post:(x,pz,kind,sig=-1,y=0)=>{w.posts.push({x,z:z+pz,y,r:kind==='bumper'?.42:kind==='cone'?.34:.3,kind,sig:sig>=0?S(sig):-1,hx:x,hz:z+pz,ax:0,az:0,per:0,ph:0,down:false,cool:0,on:false,vx:0,vz:0,wob:0,mod:mi});return w.posts.length-1;},
+   boost:(x,pz,vx,vz,y=0)=>{w.plates.push({x,z:z+pz,y,half:.62,kind:'boost',sig:-1,T:0,idx:0,group:0,bx:vx,bz:vz,pressed:false,timer:0,lit:false,mod:mi});return w.plates.length-1;},
+   sweeper:(x,pz,ax,az,per,ph=0,y=0)=>{w.posts.push({x,z:z+pz,y,r:.4,kind:'sweeper',sig:-1,hx:x,hz:z+pz,ax,az,per,ph,down:false,cool:0,on:false,vx:0,vz:0,wob:0,mod:mi});return w.posts.length-1;},
    obj:(kind,x,oz,y=0)=>{const r=kind==='crate'?.5:.24;w.objs.push({kind,x,y:y+r,z:z+oz,vx:0,vy:0,vz:0,r,mass:kind==='crate'?2:.6,hx:x,hz:z+oz,hy:y+r,mod:mi,air:false,spin:0});return w.objs.length-1;},
    star:(x,sz,y=0)=>{w.picks.push({kind:'star',x,y:y+.55,z:z+sz,taken:false,mod:mi});P.star=true;},
    key:(x,kz,y=0)=>{w.picks.push({kind:'key',x,y:y+.5,z:z+kz,taken:false,mod:mi});},
    drain:(x0,x1,z0,z1,wy,need)=>{w.recvs.push({kind:'drain',piece:-1,need:need.map(S),open:0,h:0,period:0,x0,x1,z0:z+z0,z1:z+z1,wy,fz:0,mod:mi});},
    fan:(x0,x1,z0,z1,hover,push,need)=>{w.recvs.push({kind:'fan',piece:-1,need:need.map(S),open:0,h:hover,period:0,x0,x1,z0:z+z0,z1:z+z1,wy:hover,fz:push,mod:mi});},
-   goal:(x,gz)=>{P.goal=[x,z+gz];
+   goal:(x,gz)=>{P.goal=[x,z+gz];if(level>=KEEPER.from)w.posts.push({x,z:z+gz-KEEPER.back,y:0,r:.4,kind:'sweeper',sig:-1,hx:x,hz:z+gz-KEEPER.back,ax:KEEPER.reach,az:0,per:keeperPeriod(level),ph:0,down:false,cool:0,on:false,vx:0,vz:0,wob:0,mod:mi});
     for(const k of [piece(-1.9,-1.6,gz-.6,gz+.9,0,0,1.5,0,'metal',0),piece(1.6,1.9,gz-.6,gz+.9,0,0,1.5,0,'metal',0),piece(-1.9,1.9,gz+.9,gz+1.15,0,0,1.5,0,'metal',0)])w.pieces[k].hidden=true;},
   };
   def.build(B);
@@ -254,7 +281,7 @@ export function buildWorld(plan:readonly number[],theme0=0):World{
   w.mods.push(P);z+=def.len;
  });
  while(w.order.length<w.sig.length)w.order.push(0);
- w.len=z;void theme0;return w;
+ w.len=z;return w;
 }
 
 /* ---------------- terrain queries (no allocation) ---------------- */
@@ -292,7 +319,7 @@ export function groundAt(w:World,x:number,z:number,bottom:number,reach:number,lo
 }
 
 /* ---------------- the game ---------------- */
-export type RollEventType='plate'|'unplate'|'gate'|'star'|'key'|'lock'|'cone'|'switch'|'bump'|'wall'|'splash'|'land'|'module'|'goal'|'level'|'heart'|'over'|'order'|'wrong'|'timeout'|'push'|'respawn';
+export type RollEventType='plate'|'unplate'|'gate'|'star'|'key'|'lock'|'cone'|'switch'|'bump'|'wall'|'splash'|'land'|'module'|'goal'|'level'|'heart'|'over'|'order'|'wrong'|'timeout'|'push'|'respawn'|'wobble'|'boost'|'sweep'|'close';
 /** a: what (index of plate / post / receiver, impact speed, level...); b: extra; x,y,z: where; points: what it scored. */
 export type RollEvent={type:RollEventType;a:number;b:number;x:number;y:number;z:number;points:number};
 export type RollStats={levels:number;modules:number;stars:number;starsSeen:number;falls:number;timeouts:number;perfect:number;bestStreak:number;knocks:number;time:number};
@@ -311,7 +338,7 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
  const rnd=mulberry(opts.seed),events:RollEvent[]=[],seen=new Set<number>();
  const dealPlan=(level:number)=>opts.fixPlan?[...opts.fixPlan]:levelPlan(rnd,level,seen);
  const plan0=dealPlan(1);
- const s:RollState={seed:opts.seed,daily:!!opts.daily,level:1,plan:plan0,world:buildWorld(plan0),ball:{x:0,y:RB.r,z:1,vx:0,vy:0,vz:0,air:false,surf:'grass',key:false,ground:-1,roll:0},mod:0,hearts:RB.hearts,score:0,streak:0,lostThisLevel:false,
+ const s:RollState={seed:opts.seed,daily:!!opts.daily,level:1,plan:plan0,world:buildWorld(plan0,1),ball:{x:0,y:RB.r,z:1,vx:0,vy:0,vz:0,air:false,surf:'grass',key:false,ground:-1,roll:0},mod:0,hearts:RB.hearts,score:0,streak:0,lostThisLevel:false,
   levelTime:0,clock:0,clockMax:0,over:false,overWhy:'',t:0,stats:emptyStats(),between:0,goalAt:0,respawnIn:0,ix:0,iz:0,safe:{x:0,y:RB.r,z:1,px:0,py:RB.r,pz:1,t:0,mod:-1},near:false};
  const emit=(type:RollEventType,a=0,b=0,x=s.ball.x,y=s.ball.y,z=s.ball.z,points=0)=>{events.push({type,a,b,x,y,z,points});};
  const setClock=()=>{const par=levelPar(s.plan);s.clockMax=s.level>=RB.clockFrom?clockFor(s.level,par):0;s.clock=s.clockMax;};
@@ -321,10 +348,10 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
  function resetModule(k:number){const w=s.world,P=w.mods[k];
   for(let i=P.s0;i<P.s1;i++){w.sig[i]=false;w.order[i]=0;}
   for(let i=P.pl0;i<P.pl1;i++){const p=w.plates[i];p.pressed=false;p.timer=0;p.lit=false;}
-  for(let i=P.po0;i<P.po1;i++){const p=w.posts[i];p.down=false;p.cool=0;p.on=false;}
+  for(let i=P.po0;i<P.po1;i++){const p=w.posts[i];p.down=false;p.cool=0;p.on=false;p.wob=0;}
   for(let i=P.o0;i<P.o1;i++){const o=w.objs[i];o.x=o.hx;o.z=o.hz;o.y=o.hy;o.vx=o.vy=o.vz=0;o.air=false;}
   for(let i=P.k0;i<P.k1;i++){const p=w.picks[i];if(p.kind==='key')p.taken=false;}
-  for(let i=P.r0;i<P.r1;i++){const r=w.recvs[i];r.open=0;if(r.piece>=0){const p=w.pieces[r.piece];p.dy=r.kind==='bridge'?-4:0;}}
+  for(let i=P.r0;i<P.r1;i++){const r=w.recvs[i];r.open=0;if(r.kind==='gate')r.period=0;/* a gate's period marks its close call as cheered */if(r.piece>=0){const p=w.pieces[r.piece];p.dy=r.kind==='bridge'?-4:0;}}
   s.ball.key=false;
  }
  function spawn(){const P=s.world.mods[s.mod],b=s.ball;
@@ -340,7 +367,7 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
   s.respawnIn=why==='water'?.9:.6;
  }
  function nextLevel(){s.safe.mod=-1;s.near=false;
-  s.level++;s.plan=dealPlan(s.level);s.world=buildWorld(s.plan);s.mod=0;s.lostThisLevel=false;s.levelTime=0;setClock();
+  s.level++;s.plan=dealPlan(s.level);s.world=buildWorld(s.plan,s.level);s.mod=0;s.lostThisLevel=false;s.levelTime=0;setClock();
   s.stats.starsSeen+=s.world.mods.filter(m=>m.star).length;const b=s.ball;b.x=0;b.z=1;b.y=RB.r;b.vx=b.vy=b.vz=0;b.air=false;b.key=false;emit('level',s.level);
  }
  function scoreGoal(){
@@ -353,7 +380,7 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
  const W=()=>s.world;
  function signalsOn(need:number[]){for(const i of need)if(!W().sig[i])return false;return true;}
  /** Push a circle (x,z,r) at height y out of every wall piece near it; returns the bounce of the last wall hit (or -1). */
- const HIT={nx:0,nz:0,surf:'grass' as Surf,hit:false};
+ const HIT={nx:0,nz:0,surf:'grass' as Surf,hit:false,v:0};
  function walls(o:{x:number;y:number;z:number;vx:number;vz:number},r:number,lo:number,hi:number,bounceMul=1,own=-1){
   const w=W();HIT.hit=false;const a=w.mods[Math.max(0,lo)].p0,b=w.mods[Math.min(w.mods.length-1,hi)].p1,bottom=o.y-r,op=own>=0?w.pieces[own]:null;
   for(let i=a;i<b;i++){const p=w.pieces[i];
@@ -362,11 +389,10 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
    const qx=clamp(o.x,p.x0,p.x1),qz=clamp(o.z,p.z0,p.z1),dx=o.x-qx,dz=o.z-qz,d2=dx*dx+dz*dz;if(d2>=r*r)continue;
    const t=topAt(p,qx,qz),ref=op?Math.max(bottom,topAt(op,clamp(qx,op.x0,op.x1),clamp(qz,op.z0,op.z1))):bottom;if(t<=ref+RB.step||p.y0>o.y+r)continue;// a surface that carries on (a pipe lip meeting a ledge) is no wall
    const d=Math.sqrt(d2)||1e-6,nx=dx/d,nz=dz/d,pen=r-d;o.x+=nx*pen;o.z+=nz*pen;
-   const vn=o.vx*nx+o.vz*nz;if(vn<0){const e=SURF[p.surf].bounce*bounceMul;o.vx-=(1+e)*vn*nx;o.vz-=(1+e)*vn*nz;HIT.hit=true;HIT.nx=nx;HIT.nz=nz;HIT.surf=p.surf;}
+   const vn=o.vx*nx+o.vz*nz;if(vn<0){const e=SURF[p.surf].bounce*bounceMul;o.vx-=(1+e)*vn*nx;o.vz-=(1+e)*vn*nz;HIT.hit=true;HIT.v=-vn;HIT.nx=nx;HIT.nz=nz;HIT.surf=p.surf;}
   }
   return HIT;
  }
- const lastImpact={v:0};
  function stepBall(dt:number){
   const b=s.ball,w=W(),lo=s.mod-1,hi=s.mod+1;
   // input: the stick is a push on the ground, a little steering in the air
@@ -384,14 +410,14 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
   const sp=Math.hypot(b.vx,b.vz);if(sp>RB.vmax){b.vx*=RB.vmax/sp;b.vz*=RB.vmax/sp;}
   const ox=b.x,oz=b.z,oy=b.y;b.x+=b.vx*dt;b.z+=b.vz*dt;
   // walls
-  b.ground=gp?g0!.piece:-1;const hit=walls(b,RB.r,lo,hi,1,b.ground);if(hit.hit){const imp=Math.abs(lastImpact.v);void imp;if(hit.surf==='rubber')emit('bump',0,0);}
+  b.ground=gp?g0!.piece:-1;const hit=walls(b,RB.r,lo,hi,1,b.ground);if(hit.hit){if(hit.surf==='rubber')emit('bump',-1,hit.v);else if(hit.v>1.4)emit('wall',-1,hit.v);}
   // posts
   for(let i=w.mods[Math.max(0,lo)].po0;i<w.mods[Math.min(w.mods.length-1,hi)].po1;i++)postHit(i,b,RB.r,1);
   // vertical
   if(b.air){
    b.vy+=(lift-RB.G)*dt;b.y+=b.vy*dt;
    const g=groundAt(w,b.x,b.z,oy-RB.r,RB.step+Math.max(0,-b.vy*dt),lo,hi);
-   if(g.piece>=0&&b.y-RB.r<=g.h&&b.vy<=0){b.y=g.h+RB.r;const v=-b.vy;if(v>5.5&&lift===0){b.vy=v*.3;emit('land',v);}else{b.vy=0;b.air=false;if(v>2.2)emit('land',v);}}
+   if(g.piece>=0&&b.y-RB.r<=g.h&&b.vy<=0){b.y=g.h+RB.r;const v=-b.vy;if(v>3.8&&lift===0){b.vy=v*.3;emit('land',v);}else{b.vy=0;b.air=false;if(v>2.2)emit('land',v);}}
   }else{
    const reach=RB.step+Math.hypot(b.x-ox,b.z-oz)*2.2;
    const g=groundAt(w,b.x,b.z,oy-RB.r,reach,lo,hi);
@@ -408,12 +434,16 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
  }
  function postHit(i:number,o:{x:number;y:number;z:number;vx:number;vz:number},r:number,who:number){
   const p=W().posts[i];if(p.down)return;const dx=o.x-p.x,dz=o.z-p.z,R=r+p.r,d2=dx*dx+dz*dz;if(d2>=R*R)return;if(o.y-r>p.y+1.2||o.y+r<p.y)return;
-  const d=Math.sqrt(d2)||1e-6,nx=dx/d,nz=dz/d,vn=o.vx*nx+o.vz*nz;
-  if(p.kind==='cone'&&-vn>=RB.knock){p.down=true;W().sig[p.sig]=true;s.stats.knocks++;emit('cone',i,-vn,p.x,p.y,p.z);o.vx*=.7;o.vz*=.7;return;}
+  const d=Math.sqrt(d2)||1e-6,nx=dx/d,nz=dz/d,vn=(o.vx-p.vx)*nx+(o.vz-p.vz)*nz;
+  // forgiving: a quick glancing hit counts too (overall speed knockFast with at least knockGlance of it into the cone)
+  if(p.kind==='cone'&&(-vn>=RB.knock||(-vn>=RB.knock*RB.knockGlance&&Math.hypot(o.vx,o.vz)>=RB.knock*RB.knockFast))){p.down=true;W().sig[p.sig]=true;s.stats.knocks++;emit('cone',i,-vn,p.x,p.y,p.z);o.vx*=.7;o.vz*=.7;return;}
   o.x=p.x+nx*R;o.z=p.z+nz*R;
-  if(vn<0){const e=p.kind==='bumper'?1.25:p.kind==='cone'?.35:.5;o.vx-=(1+e)*vn*nx;o.vz-=(1+e)*vn*nz;
+  if(vn<0){const e=p.kind==='bumper'?1.25:p.kind==='sweeper'?.7:p.kind==='cone'?.35:.5;o.vx-=(1+e)*vn*nx;o.vz-=(1+e)*vn*nz;
    if(p.kind==='bumper'){o.vx+=nx*3;o.vz+=nz*3;emit('bump',i,-vn,p.x,p.y,p.z);}
-   else if(p.kind==='cone')emit('wall',i,-vn);
+   else if(p.kind==='sweeper'){o.vx+=nx*2.2;o.vz+=nz*2.2;if(who===1&&p.cool<=0){p.cool=.35;emit('sweep',i,-vn,p.x,p.y,p.z);}}
+   // a cone hit too softly rocks and stays: b is the share of the speed it needed (the view rocks it that far, the shell says so)
+   else if(p.kind==='cone'&&-vn>.5&&p.cool<=0){p.cool=.3;p.wob=Math.min(1,-vn/RB.knock);emit('wobble',i,-vn/RB.knock,p.x,p.y,p.z);}
+   else if(p.kind!=='cone'&&-vn>1.4)emit('wall',i,-vn);
   }
   if(who!==1)return;
   if(p.kind==='switch'&&p.cool<=0&&-vn>.6){p.on=!p.on;W().sig[p.sig]=p.on;p.cool=.8;emit('switch',i,p.on?1:0,p.x,p.y,p.z);}
@@ -450,6 +480,7 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
     if(!b.air&&Math.abs(b.x-p.x)<=p.half&&Math.abs(b.z-p.z)<=p.half&&Math.abs(b.y-RB.r-p.y)<.2)wgt+=1;
     for(let k=Q.o0;k<Q.o1;k++){const o=w.objs[k];if(Math.abs(o.x-p.x)<=p.half&&Math.abs(o.z-p.z)<=p.half&&Math.abs(o.y-o.r-p.y)<.25)wgt+=o.mass;}
     const need=p.kind==='heavy'?1.5:.5,on=wgt>=need,was=p.pressed;p.pressed=on;
+    if(p.kind==='boost'){if(wgt>=1&&wgt<1.5&&!b.air&&!was){b.vx=p.bx;b.vz=p.bz;emit('boost',i,Math.hypot(p.bx,p.bz),p.x,p.y,p.z);}p.lit=on;continue;}
     if(on&&!was)emit('plate',i,p.kind==='heavy'&&wgt<1.5?0:1,p.x,p.y,p.z);else if(!on&&was&&(p.kind==='hold'||p.kind==='heavy'))emit('unplate',i,0,p.x,p.y,p.z);
     switch(p.kind){
      case 'latch':if(on&&!p.lit){p.lit=true;w.sig[p.sig]=true;}break;
@@ -461,7 +492,8 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
       else{w.order[grp]=0;for(let k=Q.pl0;k<Q.pl1;k++)if(w.plates[k].kind==='order'&&w.plates[k].sig===grp)w.plates[k].lit=false;emit('wrong',i,0,p.x,p.y,p.z);}}break;
     }
    }
-   for(let i=Q.po0;i<Q.po1;i++){const p=w.posts[i];if(p.cool>0)p.cool-=dt;}
+   for(let i=Q.po0;i<Q.po1;i++){const p=w.posts[i];if(p.cool>0)p.cool-=dt;if(p.wob>0)p.wob=Math.max(0,p.wob-dt*1.6);
+    if(p.per>0){const a=Math.PI*2*(s.t/p.per+p.ph),sn=Math.sin(a),nx=p.hx+p.ax*sn,nz=p.hz+p.az*sn;p.vx=(nx-p.x)/dt;p.vz=(nz-p.z)/dt;p.x=nx;p.z=nz;}}
    for(let i=Q.k0;i<Q.k1;i++){const k=w.picks[i];if(k.taken)continue;const dx=b.x-k.x,dy=b.y-k.y,dz=b.z-k.z;if(dx*dx+dy*dy+dz*dz<.62*.62){k.taken=true;
      if(k.kind==='star'){s.score+=RB.starPts;s.stats.stars++;emit('star',i,0,k.x,k.y,k.z,RB.starPts);}else{b.key=true;emit('key',i,0,k.x,k.y,k.z);}}}
    for(let i=Q.r0;i<Q.r1;i++){const r=w.recvs[i];
@@ -489,6 +521,7 @@ export function createRollBall(opts:{seed:number;daily?:boolean;fixPlan?:number[
   if(s.level<=RB.gentle&&!b.air&&b.ground>=0&&w.pieces[b.ground].role===0&&!w.pieces[b.ground].dy&&s.t-s.safe.t>=.4){const f=s.safe;if(f.mod===s.mod){f.px=f.x;f.py=f.y;f.pz=f.z;}else{f.px=b.x;f.py=b.y;f.pz=b.z;}f.x=b.x;f.y=b.y;f.z=b.z;f.t=s.t;f.mod=s.mod;}
   // module change: the checkpoint moves to the module the ball reached (only forward)
   while(s.mod<w.mods.length-1&&b.z>w.mods[s.mod+1].z+.5&&!b.air){s.mod++;const lf=levelFactor(s.level),pts=w.mods[s.mod-1].def.id==='goal'?0:Math.round(RB.modPts*lf);s.score+=pts;s.stats.modules++;emit('module',s.mod,0,b.x,b.y,b.z,pts);}
+  for(let i=w.mods[s.mod].r0;i<w.mods[s.mod].r1;i++){const r=w.recvs[i];if(r.kind!=='gate'||r.period||r.open<.2)continue;const z1=r.z1+RB.r;if(b.z>z1&&b.z-b.vz*RB.dt<=z1&&b.x>r.x0&&b.x<r.x1){let left=9;for(const pl of w.plates)if(pl.kind==='timed'&&r.need.includes(pl.sig))left=Math.min(left,pl.timer);if(left<1){r.period=1;emit('close',i,left,b.x,b.y,b.z);}}}
   const P=w.mods[s.mod];if(P.goal){const [gx,gz]=P.goal;if(Math.abs(b.x-gx)<1.5&&b.z>gz-.5&&b.z<gz+.9&&b.y<1.4)scoreGoal();}
  }
  const ACC={t:0};
@@ -526,6 +559,7 @@ export function scriptBot(def:ModuleDef,z0:number,opts:{noise?:number;rnd?:()=>n
     case 'go':{const d=seek(st[1],z0+st[2],st[3]??4.5,false);if(d<.45||(k===steps.length-1&&b.z>z0+st[2]-.3))adv();break;}
     case 'run':{const d=seek(st[1],z0+st[2],10,true);if(d<.72||d>lastD+.6)adv();lastD=Math.min(lastD,d);break;}
     case 'wait':{g.input(-b.vx*.4,-b.vz*.4);if(w.sig[P.s0+st[1]])adv();break;}
+    case 'waitm':{g.input(-b.vx*.5,-b.vz*.5);const p=w.posts[P.po0+st[1]];if(!p||p.kind!=='sweeper'||P.po0+st[1]>=P.po1){adv();break;}const off=p.x-b.x;if(Math.abs(off)>=st[2]&&off*p.vx>0&&Math.hypot(b.vx,b.vz)<1)adv();break;}
     case 'waitr':{g.input(-b.vx*.4,-b.vz*.4);const r=w.recvs[P.r0+st[1]];if(!r||r.open>=1)adv();break;}
     case 'stop':{g.input(-b.vx*.5,-b.vz*.5);stopT+=RB.dt;if(stopT>=st[1])adv();break;}
     case 'lift':{g.input(-b.vx*.5,-b.vz*.5);const r=w.recvs.find(q=>q.kind==='lift'&&q.mod===w.mods.indexOf(P));const ok=st[1]?(r?r.open>.995:true):(r?r.open<.01&&((s.t%r.period)/r.period)<.12:true);if(ok)adv();break;}

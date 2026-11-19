@@ -65,3 +65,27 @@ levels. Only the ball's module, the one behind (first 8 m) and two ahead are dra
   firm spot sampled 0.4-0.8 s earlier with the puzzle kept, and costs no heart on level 1. Drifting-thumb bot after this change
   (its script restarts from the respawn spot): 750-11,300 (was 1,100-9,500 at HEAD); medal lines unchanged.
 - Budget, Knock the Cones + Over the Hill, phone: 76 / 85 draws, 18.1k / 18.3k tris before; 76 / 84, 18.1k / 18.3k after.
+
+## AAA pass (Nov 18 2026)
+Weak points found by playing: the cone rule was invisible (a slow hit did nothing and made the wrong sound); walls were silent; no reaction to
+speed; every level opened and ended the same way; pickups blinked out; nothing in the world moved on its own; later levels were only longer.
+- Cones teach themselves: a ground ring under each stack grows with the ball's speed and glows orange when it is quick enough; a hit that is
+  too soft rocks the stack by the share of the speed it needed (`wobble` event), with a bonk that climbs in pitch and FASTER! / SO CLOSE!;
+  one tip line once a run ("Roll faster to knock the cones."). `RB.knock` is unchanged; a quick glancing hit now counts (`knockGlance`, `knockFast`).
+- New mechanics: boost pads (`m.boost`, the ball leaves at the pad's own velocity) and sweepers (`m.sweeper`: keeper dummies on rails, crabs
+  on the beach; they knock the ball away, same place at the same time for everyone). From level 6 a keeper slides across the goal mouth
+  (`KEEPER`, 3.6 s a lap down to 2 s). Four new modules (25 in all): Speed Strip (3), Crab Walk (4), Launch Pad (5), Keeper Drill (7).
+  Bot step `waitm` waits for a sweeper's gap. Levels 1-25 now each bring one new puzzle. Scoring and medal marks unchanged
+  (drifting-thumb bot 740-9,700, exact bot 8,344 at level 9).
+- Feel: landings over 3.8 m/s bounce; stretch in the air; a speed ribbon behind the ball (hot off a pad); hit-stop on a cone (70 ms) and a
+  goal (110 ms); the camera opens each level high over the first puzzle and swoops down, widens with speed, banks a little, and drops in low
+  behind the ball on a goal; wall hits puff and are heard; pickups leap and spin away; a red edge flash on a lost heart; points fly to the
+  counter; JUST IN TIME! through a timed gate with under a second left. All off or plain under reduced motion.
+- Look: time of day by level (clear, warm, golden, lilac dusk: sky, fog, sun colour and sun angle; night keeps its own), six gulls
+  (one instanced draw), a standing cone stack is one mesh (two draws less a stack), chevron shader on pads.
+- Sound: bonk, boost whoosh, sweeper thump, close-call notes, respawn pop, wall and landing by surface, wind in the air, random detune on
+  repeats, cone and plate notes that climb, and a soft bed per theme from the one looped noise voice (surf swell by an LFO; silent on pause).
+- Budget, phone, headless Chrome, same plans before / after: Knock the Cones + Over the Hill 61 avg / 88 max draws, 15.9k avg / 18.1k max
+  tris -> 61 / 89, 16.3k / 19.0k; Half-Pipe + Chimney Run + Floodlit Valley 96 / 101, 24.9k / 25.7k -> 94 / 107 (particles), 24.2k / 25.4k.
+  Frame time 16.7 ms median and 16.8 ms p95 both times (the 60 fps cap).
+- Not done: island bean characters as spectators, a music bed, a real-phone heat reading.
