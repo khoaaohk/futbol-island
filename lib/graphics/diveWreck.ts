@@ -19,12 +19,16 @@ export function rng(seed:number){let a=seed>>>0;return ()=>{a=(a+0x6D2B79F5)>>>0
  *  pieces' own normals are kept (smooth rocks and brain coral, faceted branches), transformed by each piece's matrix. */
 export class Merge{
  pos:number[]=[];nor:number[]=[];col:number[]=[];sway:number[]=[];seed:number[]=[];
+ /** Underwater pass (Nov 18 2026): an optional last touch on every piece's vertex colour (world point, world normal): the reef room
+  *  bakes its sun side / shade side and the wreck's growth here (vertex colour only, no runtime cost). Null = the paint as given
+  *  (the island's above-water wreck top and arch crown). */
+ tone:((c:C,p:T.Vector3,n:T.Vector3)=>C)|null=null;
  private v=new T.Vector3();private n=new T.Vector3();private nm=new T.Matrix3();
  add(g:T.BufferGeometry,m:T.Matrix4,paint:(p:T.Vector3,n:T.Vector3,local:T.Vector3)=>C,sway?:(local:T.Vector3)=>number,seed=0){
   const src=g.index?g.toNonIndexed():g;if(!src.getAttribute('normal'))src.computeVertexNormals();
   const P=src.getAttribute('position'),N=src.getAttribute('normal'),local=new T.Vector3();this.nm.getNormalMatrix(m);
   for(let i=0;i<P.count;i++){local.fromBufferAttribute(P,i);this.v.copy(local).applyMatrix4(m);this.n.fromBufferAttribute(N,i).applyMatrix3(this.nm).normalize();
-   this.pos.push(this.v.x,this.v.y,this.v.z);this.nor.push(this.n.x,this.n.y,this.n.z);const c=paint(this.v,this.n,local);this.col.push(c[0],c[1],c[2]);
+   this.pos.push(this.v.x,this.v.y,this.v.z);this.nor.push(this.n.x,this.n.y,this.n.z);let c=paint(this.v,this.n,local);if(this.tone)c=this.tone(c,this.v,this.n);this.col.push(c[0],c[1],c[2]);
    if(sway){this.sway.push(sway(local));this.seed.push(seed);}}
   if(src!==g)src.dispose();g.dispose();
  }
@@ -103,7 +107,7 @@ export function addDiveWreck(S:Merge,spot:DiveSpot,phone:boolean,coral:((x:numbe
   for(let k=0;k<4;k++){const c=new T.BoxGeometry(2.2,1,1.1);c.translate(0,.5,0);const cx=-L/2-1.5+r()*3,cz=(k-1.5)*2.4,om=onSand(cx,cz,-.15,0,r()*1.2,(r()-.5)*.3);if(solid)add(boxOf('container',om,2.2,1,1.1,0,.5,0));S.add(c,om,(v,n,l)=>scl(col(['#c4553e','#3f7fb0','#e0b23a','#4f9a6a'][k]),(Math.sin(l.x*14)>.6?.75:1)*(.75+.25*n.y)));}}
  barnacles(at(0,.2,0),phone?36:52,[L*.9,H,Wd]);
  for(let k=0;k<(phone?8:12);k++){const u=(r()-.5)*L*.85,side=r()<.5?-1:1;const m=at(u,H*.6+r()*.4,side*Wd*.42);const p=new T.Vector3().setFromMatrixPosition(m);
-  const s=.35+r()*.3,kind=k%2?4:1;if(coral)coral(p.x,p.z,s,col(spot.theme.coral[k%spot.theme.coral.length]),kind);}
+  const s=.35+r()*.3,kind=[1,4,5,7,6,4][k%6];/* underwater pass: brain, finger, plate, bubble and sponge growth on the hull (the room only) */if(coral)coral(p.x,p.z,s,col(spot.theme.coral[k%spot.theme.coral.length]),kind);}
 
 }
 
