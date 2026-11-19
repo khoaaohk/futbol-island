@@ -16,7 +16,7 @@ export const SN={
  maxFoes:8,maxEvents:48,
  /** AAA pass (Nov 18 2026). Quick call: the next team-mate inside chainTicks ticks keeps a chain going (chainPts a step, x level, capped).
   *  Sliding tackle: its lane flashes slideWarn ticks before he comes. Cones: never closer than coneGap to each other. */
- chainTicks:12,chainPts:2,chainCap:5,slideWarn:7,maxCones:6,coneGap:3,nearCool:8,
+ chainTicks:10,chainPts:2,chainCap:5,slideWarn:7,maxCones:6,coneGap:3,nearCool:8,
 } as const;
 /** The ramp, one row per level (the last row repeats for ever). step = seconds per cell, press = pressing defenders,
  *  refs = referees, boot = seconds a golden boot stays, cones = training cones left on the pitch (from level 4), slide = ticks between

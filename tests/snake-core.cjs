@@ -216,4 +216,62 @@ ok('resume grace (QA Nov 14 2026): after a pause the line stands still SN.resume
  g.resumeGrace();assert.equal(g.state.ready,SN.resumeGrace);g.step(SN.resumeGrace*.9);assert.equal(g.state.ticks,t0,'no tick inside the grace');assert.equal(g.state.xs[0],x0);assert.equal(g.state.ys[0],y0);
  assert.ok(g.turn(2)||g.turn(0),'a turn is taken during the grace');g.step(SN.resumeGrace*.2+g.stepSeconds);assert.ok(g.state.ticks>t0,'play goes on after it');
  assert.match(read('components/games/SquadSnakeGame.tsx'),/const resume=useCallback\(\(\)=>\{[^}]*game\.current\?\.resumeGrace\(\)/,'resume calls the grace');});
+ok('AAA pass (Nov 18 2026): quick-call chain, training cones, the warned sliding tackle, close shaves, a referee who keeps out of the way',()=>{
+ // the new ramp columns: nothing new before level 4, cones then the slide, and they only ever get harder
+ assert.deepEqual(RAMP.slice(0,3).map(q=>q.cones+q.slide),[0,0,0],'levels 1-3 keep the old opening');assert(RAMP[3].cones>0&&RAMP[3].slide===0&&RAMP[4].slide>0,'cones from level 4, the slide from level 5');
+ for(let i=1;i<RAMP.length;i++){const a=RAMP[i-1],b=RAMP[i];assert(b.cones>=a.cones&&b.cones<=SN.maxCones);assert(a.slide===0||(b.slide>0&&b.slide<=a.slide),'slides come sooner, never later');}
+ assert(RAMP[RAMP.length-1].slide>=SN.slideWarn+SN.cols,'there is always a breather between two slides');
+ const bare=(seed=21)=>{const g=kickOff(game(seed)),s=g.state;s.picks[0].on=s.picks[1].on=false;s.ballIn=s.bootIn=999;for(const q of s.foes)q.on=false;return g;};
+ const feed=(g,pos)=>{const s=g.state;s.picks[1].on=false;Object.assign(s.picks[0],{on:true,pos,x:s.xs[0]+DX[s.dir],y:s.ys[0]+DY[s.dir]});const ev=tick(g);s.picks[0].on=s.picks[1].on=false;return ev;};
+ // quick call: each team-mate inside the window is worth one step more, capped; the window is in ticks, so it scales with the speed
+ {const g=bare(),s=g.state;let ev=feed(g,POS.gk);assert.equal(ev.find(e=>e.type==='pick').c,SN.pick,'the first call is plain');assert(!ev.some(e=>e.type==='chain'));assert.deepEqual([s.chain,s.chainLeft],[1,SN.chainTicks-1]);
+  ev=feed(g,POS.def);assert.equal(ev.find(e=>e.type==='pick').c,SN.pick+SN.chainPts);assert.deepEqual([ev.find(e=>e.type==='chain').a,ev.find(e=>e.type==='chain').b],[2,SN.chainPts]);
+  ev=feed(g,POS.def);assert.equal(ev.find(e=>e.type==='pick').c,SN.pick+SN.chainPts*2);assert.equal(s.score,SN.pick*3+SN.chainPts*3);assert.equal(s.stats.chain,3);
+  s.chain=40;s.dir=1;s.moved=1;ev=feed(g,POS.def);assert.equal(ev.find(e=>e.type==='pick').c,SN.pick+SN.chainPts*SN.chainCap,'the bonus is capped: at most half a call again');assert(SN.chainPts*SN.chainCap<=SN.pick);
+  s.chainLeft=1;ev=tick(g);assert(ev.some(e=>e.type==='chainEnd'&&e.a===41));assert.deepEqual([s.chain,s.chainLeft],[0,0]);s.dir=2;s.moved=2;ev=feed(g,POS.def);assert.equal(ev.find(e=>e.type==='pick').c,SN.pick,'a late call starts again');
+  const h=bare(22),hs=h.state;feed(h,POS.gk);hs.dir=1;hs.moved=1;feed(h,POS.def);assert.equal(hs.chain,2);Object.assign(hs.foes[0],{on:true,kind:1,x:hs.xs[0]+1,y:hs.ys[0],px:0,py:0,dx:0,dy:0});ev=tick(h);assert(ev.some(e=>e.type==='card'&&e.a===1));assert.equal(hs.chain,0,'a card breaks the chain');}
+ // cones: a wall that stands still. Skid, then the save or the end; knocked flying in a through pass
+ {const put=g=>{const s=g.state;Object.assign(s.cones[0],{on:true,x:s.xs[0],y:s.ys[0]-1});return s;};
+  const a=bare(),as=put(a);as.saves=0;let ev=tick(a);assert(ev.some(e=>e.type==='skid'&&e.a===CAUSE.cone));assert(!as.over);ev=tick(a);assert(as.over&&as.cause===CAUSE.cone);assert.equal(K.CAUSE_WORD[CAUSE.cone],'TRIPPED!');assert(S.coachLine(CAUSE.cone).includes('cone'));
+  const b=bare(),bs=put(b);tick(b);ev=tick(b);assert(ev.some(e=>e.type==='save'));assert(!bs.over&&bs.saves===0&&(bs.dir===1||bs.dir===3));
+  const c=bare(),cs=put(c);cs.dash=3;const sc=cs.score;ev=tick(c);assert(ev.some(e=>e.type==='cone'));assert(!cs.cones[0].on);assert.equal(cs.stats.cones,1);assert.equal(cs.score,sc+SN.dashStep,'no points for a cone: nothing to farm');
+  // whole runs: the right number, off the touchlines, apart, never on a patrol lane, never dropped in front of the captain
+  let seen=0;for(let seed=1;seed<=10;seed++){const g=game(seed*13),s=g.state,think=bot('near');for(let i=0;i<60*400&&!s.over&&s.level<8;i++){think(g);g.step(1/60);g.drain(e=>{if(e.type!=='level')return;const on=s.cones.filter(q=>q.on);assert.equal(on.length,K.rampFor(s.level).cones,'cones at level '+s.level);
+    for(const q of on){seen++;assert(q.x>0&&q.y>0&&q.x<s.cols-1&&q.y<s.rows-1);assert(Math.abs(q.x-s.xs[0])+Math.abs(q.y-s.ys[0])>=SN.safe);for(const o of on)assert(o===q||Math.abs(o.x-q.x)+Math.abs(o.y-q.y)>=SN.coneGap);
+     for(const p of s.foes)if(p.on&&p.kind===0)assert(!(p.dx?q.y===p.y&&q.x>=p.lo&&q.x<=p.hi:q.x===p.x&&q.y>=p.lo&&q.y<=p.hi),'no cone on a patrol lane');}});}}
+  assert(seen>20,'bots reach the cone levels: '+seen);}
+ // the sliding tackle: a lane through the captain's part of the pitch flashes slideWarn ticks, he comes from the far side, one cell a tick, and leaves
+ {const start=(seed=31)=>{const g=bare(seed),s=g.state;s.level=5;s.slideIn=1;const ev=tick(g);return {g,s,w:ev.find(e=>e.type==='slideWarn')};};
+  const {g,s,w}=start();assert(w,'the warning comes first');const sl=s.slide;assert.equal(sl.phase,1);assert.equal(sl.t,SN.slideWarn);assert(Math.abs(sl.at-(sl.horiz?s.ys[0]:s.xs[0]))<=1,'his lane is where the captain is');
+  const span=sl.horiz?s.cols:s.rows,head=sl.horiz?s.xs[0]:s.ys[0];assert.equal(sl.pos,sl.dir>0?-1:span);assert(Math.abs(sl.pos-head)>=span/2,'he starts from the far side: '+sl.pos+' v '+head);
+  // step out of his lane (turn across it) and he slides through the whole pitch
+  sl.horiz=true;sl.at=s.ys[0];sl.dir=-1;sl.pos=sl.ppos=s.cols;s.dir=0;s.moved=0;let ev=[],ticks=0,go=-1;const cells=[];
+  for(let i=0;i<40&&sl.phase;i++){const e=tick(g);ticks++;ev.push(...e);if(e.some(q=>q.type==='slideGo'))go=ticks;if(sl.phase===2)cells.push(sl.pos);if(s.ys[0]<2&&s.dir===0)g.turn(1);else if(s.xs[0]>8&&s.dir===1)g.turn(2);else if(s.ys[0]>12&&s.dir===2)g.turn(3);else if(s.xs[0]<2&&s.dir===3)g.turn(0);}
+  assert.equal(go,SN.slideWarn,'the lane flashes for the whole warning');assert.deepEqual(cells.slice(1,4),[s.cols-1,s.cols-2,s.cols-3],'one cell a tick');assert(ev.some(e=>e.type==='slideOut'));assert.equal(s.stats.slides,1);assert(!s.over);assert.equal(sl.phase,0);assert.equal(s.slideIn,K.rampFor(5).slide);
+  // stand in his way: the last-ditch save first, the end without it; in a through pass he is run past for points
+  const hit=(saves,dash)=>{const q=start(32),z=q.s,l=z.slide;Object.assign(l,{phase:2,horiz:false,at:z.xs[0],dir:1,pos:z.ys[0]-3,ppos:z.ys[0]-3});z.saves=saves;z.dash=dash;const e=[];for(let i=0;i<4&&l.phase&&!z.over;i++)e.push(...tick(q.g));return {z,e};};
+  let h=hit(1,0);assert(h.e.some(e=>e.type==='save'&&e.a===CAUSE.tackle));assert(!h.z.over&&h.z.saves===0&&h.z.slide.phase===0);
+  h=hit(0,0);assert(h.z.over&&h.z.cause===CAUSE.tackle);h=hit(0,6);assert(h.e.some(e=>e.type==='knock'&&e.b===2));assert(!h.z.over&&h.z.stats.knocks===1);
+  // a Full Squad sends him home, and level 4 never has one
+  const q=start(33);q.s.joined=10;q.s.gk=1;q.s.d=4;q.s.m=4;q.s.f=1;q.s.len=11;feed(q.g,POS.fwd);assert.equal(q.s.slide.phase,0);const n4=bare(34);n4.state.level=4;n4.state.slideIn=1;for(let i=0;i<5;i++){tick(n4);if(n4.state.ys[0]<3)n4.turn(1);}assert.equal(n4.state.slide.phase,0);}
+ // close shave: a presser right beside the captain is a gasp, not points, and not on every tick
+ {const g=bare(41),s=g.state;Object.assign(s.foes[0],{on:true,kind:0,x:s.xs[0]+1,y:s.ys[0]-1,px:0,py:0,dx:0,dy:1,lo:s.ys[0]-1,hi:s.ys[0]-1});const sc=s.score;let ev=tick(g);assert(ev.some(e=>e.type==='near'));assert.equal(s.score,sc);assert.equal(s.stats.near,1);
+  s.foes[0].y=s.ys[0]-1;s.foes[0].lo=s.foes[0].hi=s.foes[0].y;ev=tick(g);assert(!ev.some(e=>e.type==='near'),'one gasp, then a rest');assert.equal(s.nearCool,SN.nearCool-1);}
+ // the referee never walks into the captain's next three cells (before the AAA pass he could: a team-mate lost to a step nobody could read)
+ {let moves=0;for(let seed=1;seed<=6;seed++){const g=game(seed*19),s=g.state,think=bot('near'),was=s.foes.map(()=>[0,0]);
+   for(let i=0;i<60*240&&!s.over;i++){think(g);s.foes.forEach((q,k)=>{was[k][0]=q.x;was[k][1]=q.y;});const t=s.ticks;g.step(1/60);g.drain(()=>{});if(s.ticks===t)continue;
+    s.foes.forEach((q,k)=>{if(!q.on||q.kind!==1||(q.x===was[k][0]&&q.y===was[k][1])||Math.abs(q.x-was[k][0])+Math.abs(q.y-was[k][1])!==1)return;moves++;for(let a=1;a<=3;a++)assert(!(q.x===s.xs[0]+DX[s.dir]*a&&q.y===s.ys[0]+DY[s.dir]*a),'referee stepped in front of the captain');});}}
+  assert(moves>200,'referees were watched walking: '+moves);}
+ // a run always ends, and a careful player gets through the opening
+ {const idle=K.createSquadSnake({seed:5,hold:true});idle.turn(1);for(let i=0;i<60*30&&!idle.state.over;i++)idle.step(1/60);assert(idle.state.over,'one press and then nothing: the run ends by itself');assert.equal(idle.state.score,0);
+  for(let i=0;i<10;i++){const g=game(500+i*7),s=g.state,think=bot('call');let t=0;for(;t<60*75&&!s.over;t++){think(g);g.step(1/60);g.drain(()=>{});}assert(!s.over,'a careful bot is still running after 75 s (seed '+(500+i*7)+', level '+s.level+')');}}
+ // wiring: every new event has a picture and a sound, the venue changes with the level, and the atlas did not grow
+ const v=read('lib/arcade/snake/view.ts'),c=read('components/games/SquadSnakeGame.tsx'),a=read('lib/arcade/snake/audio.ts');
+ for(const e of ['chain','chainEnd','ballIn','bootGone','dashEnd','cone','slideWarn','slideGo','slideOut','near'])assert(new RegExp("case '"+e+"':a\\?\\.").test(c),'the shell plays a sound for '+e);
+ for(const m of ['chain','chainEnd','line','ballIn','bootGone','dashEnd','cone','slideWarn','slideGo','dodge','near','lost'])assert(new RegExp('\\b'+m+'\\([a-z:]*\\)\\{if\\(!on\\(\\)\\)return;').test(a),'audio cue '+m);
+ for(const e of ['chain','cone','slideGo','slideOut','near'])assert(v.includes("case '"+e+"':"),'the view answers '+e);
+ assert(/ATLAS_COLS=9,ATLAS_N=53/.test(v)&&/IDX_CONE=2/.test(v),'the cone uses a spare keeper slot: same atlas size');assert(/setTheme\(e\.a-1\)/.test(v)&&/function reset\(\)\{setTheme\(0\)/.test(v));assert.equal(require('../lib/arcade/snake/view.ts').SNAKE_THEMES,4);
+ assert(/const bannerY=/.test(v)&&(v.match(/bannerY\(s\)/g)||[]).length>=4,'banners keep to the end of the pitch the captain is not in');assert(/stop\.current>0&&!reduced\.current/.test(c),'hit-stop, off for reduced motion');assert(/data-snake-chain/.test(c));
+ assert(/const reduced=!!opts\.reduced/.test(v)&&/function confetti\(n:number\)\{if\(reduced\)return;/.test(v)&&/function dust\([^)]*\)\{if\(reduced\)return;/.test(v));
+});
 console.log(`snake-core: ${n} groups passed`);
