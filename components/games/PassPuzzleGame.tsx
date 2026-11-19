@@ -20,7 +20,7 @@ import {coachRun} from '@/lib/passPuzzle/coach';
 import {dailyPuzzle} from '@/lib/passPuzzle/daily';
 // Nov 10 2026: Endless Run (the main arcade entry): puzzle after puzzle, three lives, rising difficulty (lib/passPuzzle/endless.ts).
 import {noteLastScore} from '@/lib/arcade/lastScore';
-import {endlessPuzzle,endlessSeed,startEndlessRun,stepEndless,ENDLESS_LIVES,ENDLESS_BEST_KEY,type EndlessPuzzle,type EndlessRun,type EndlessEvent} from '@/lib/passPuzzle/endless';
+import {endlessPuzzle,endlessSeed,startEndlessRun,stepEndless,spendEye,ENDLESS_LIVES,ENDLESS_BEST_KEY,type EndlessPuzzle,type EndlessRun,type EndlessEvent} from '@/lib/passPuzzle/endless';
 import {arcadeFeedback} from '@/lib/arcade/arcadeFeedback';
 import {puzzleStrike,puzzleTouch,puzzlePassChime,puzzleWhistle,puzzleStar,puzzleShotWhoosh,puzzleGoalRoar,puzzleCrowdOoh,puzzleCombo,puzzleStreak,puzzleSnapTick,puzzleIntercept,puzzleUiTap,puzzleSkillChime,puzzleNewBest} from '@/lib/arcade/passPuzzleAudio';
 // Nov 8 2026: Pro Cup / Legend Cup tiers (own boards), the skill multiplier and cup points (lib/passPuzzle/tiers.ts).
@@ -29,7 +29,7 @@ import type {BoardGame} from '@/lib/arcade/leaderboard';
 import {passCallout,goalCallout,nextStreak,streakLabel,type Callout} from '@/lib/passPuzzle/combo';
 
 import {FIRST_TIME} from '@/lib/passPuzzle/sim';
-import {puzzlePencil,puzzleWoodwork,puzzleNetHigh} from '@/lib/arcade/passPuzzleAudio';
+import {puzzlePencil,puzzleWoodwork,puzzleNetHigh,puzzleLifeLost,puzzleWipe,puzzleClockTick,puzzleEye,puzzleRunOver,puzzleStarLand,puzzleBuzz} from '@/lib/arcade/passPuzzleAudio';
 import {createPassPuzzleScene,shirtNumbersFor,type PassPuzzleScene,type FitRoom} from '@/lib/arcade/passPuzzleScene';
 import {puzzleConceptWords,puzzleConceptLesson,notePuzzleFail,PRACTISE_AFTER} from '@/lib/passPuzzle/conceptLessons';
 import {laneStatus,noteFor,explainSuccess,explainFail,replayCall,type PassNote,type Numbers} from '@/lib/passPuzzle/explain';
@@ -159,12 +159,12 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  /** Oct 26 simple start menu: 'home' (Play, daily, packs), one pack's puzzles, or the small settings sheet. */
  const [menu,setMenu]=useState<'home'|'pack'|'settings'|'expert'>('home');
  /** Endless Run (Nov 10 2026): the run lives in a ref (timers read it); the HUD strip, the teaching note and the full-time card are state. */
- const endless=useRef<{run:EndlessRun;puzzle:EndlessPuzzle|null;next:EndlessPuzzle|null;timer:number;clockTimer:number;deadline:number;remaining:number;serial:number}|null>(null),endlessRuns=useRef(0);
+ const endless=useRef<{run:EndlessRun;puzzle:EndlessPuzzle|null;next:EndlessPuzzle|null;timer:number;clockTimer:number;tickTimer:number;scanLevel:number;deadline:number;remaining:number;serial:number}|null>(null),endlessRuns=useRef(0);
  const endlessFinish=useRef((success:boolean,move:boolean,reason?:string)=>{void success;void move;void reason;});
- const [endHud,setEndHud]=useState<{level:number;lives:number;score:number;streak:number;clock:number|null;clockKey:number;aid:'scan'|'hint'|'none'}|null>(null);
- const [endNote,setEndNote]=useState<{key:number;kind:'win'|'fail'|'skip'|'clock';title:string;line:string;gained:number;next:boolean;best?:boolean}|null>(null),bestPassed=useRef(false);
+ const [endHud,setEndHud]=useState<{level:number;lives:number;score:number;streak:number;clock:number|null;clockKey:number;aid:'scan'|'hint'|'none';/* AAA pass: Coach's eyes left, the Scan bought for this puzzle, a wet pitch */eyes:number;scanOpen:boolean;wet:boolean}|null>(null);
+ const [endNote,setEndNote]=useState<{key:number;kind:'win'|'fail'|'skip'|'clock';title:string;line:string;gained:number;next:boolean;best?:boolean;streak?:number;eye?:boolean}|null>(null),bestPassed=useRef(false);
  const [endOver,setEndOver]=useState<{score:number;solved:number;level:number;best:number;newBest:boolean;streak:number;lesson:string}|null>(null),[endBest,setEndBest]=useState(0),[wipe,setWipe]=useState(0);
- useEffect(()=>{try{setEndBest(Number(JSON.parse(localStorage.getItem(ENDLESS_BEST_KEY)??'{}').score)||0);}catch{/* no best yet */}return()=>{const e=endless.current;if(e){clearTimeout(e.timer);clearTimeout(e.clockTimer);}endless.current=null;};},[]);
+ useEffect(()=>{try{setEndBest(Number(JSON.parse(localStorage.getItem(ENDLESS_BEST_KEY)??'{}').score)||0);}catch{/* no best yet */}return()=>{const e=endless.current;if(e){clearTimeout(e.timer);clearTimeout(e.clockTimer);clearTimeout(e.tickTimer);}endless.current=null;};},[]);
  useEffect(()=>{if(!endNote||endNote.next)return;const id=setTimeout(()=>setEndNote(n=>n?.key===endNote.key?null:n),2000);return()=>clearTimeout(id);},[endNote]);
  /** Live warning while drawing: the predicted receiver would be offside. Clean pitch (owner, Oct 27 2026): no in-play text,
   *  so the lane read and the offside warning show only on the pitch (the aim's lane colour and the flagged teammate). */
@@ -305,7 +305,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
     if(state.phase==='success'||state.phase==='fail'){syncHud();settleUntil.current=now+900;const ok=state.phase==='success';
      // The result beat: a push-in on the scorer (goal) or on the defender who stopped it, then the card.
      if(ok){const sc=state.attackers[state.chain.at(-1)?.kicker??state.carrier]?.p??b;const high=Math.min(1,Math.max(0,(b.y-1.1)/1)),lean=.5+.3*high;/* a high finish leans the push-in up to the net, so the height of the strike reads */cine.play('goal',sc.x+(b.x-sc.x)*lean,sc.z+(b.z+1.5*high-sc.z)*lean);}
-     else{cine.skip();const st=stopPoint(world,attemptEvents.current);failStop.current=st;if(st){scene.showStop(st.at,st.kind);stopShown.current=true;}const fin=finishFromEvents(geoOf(world.scenario),attemptEvents.current,kickKeeperX.current,state.flight?.aim),word=fin&&FINISH_WORD[fin.kind];if((fin?.kind==='post'||fin?.kind==='bar')&&now-woodAt.current<2600){/* POST! / BAR! is already up */}else if(word)shout.current({text:word,teach:'',tier:2});else shout.current({text:'So close!',teach:'',tier:1});}
+     else{cine.skip();const st=stopPoint(world,attemptEvents.current);failStop.current=st;if(st){scene.showStop(st.at,st.kind);stopShown.current=true;}const fin=finishFromEvents(geoOf(world.scenario),attemptEvents.current,kickKeeperX.current,state.flight?.aim),word=fin&&FINISH_WORD[fin.kind];if((fin?.kind==='post'||fin?.kind==='bar')&&now-woodAt.current<2600){/* POST! / BAR! is already up */}else if(word)shout.current({text:word,teach:'',tier:2});else if(!endless.current)shout.current({text:'So close!',teach:'',tier:1});/* in a run the note says it: the splash sat over the lives and the note */}
      finishAt.current=scene.stage.reduced?now+1:now+(ok?950:750);}
    }else if(state.phase==='aiming'){
     // One-touch window: a shrinking ring around the new carrier while a first-time finish still counts.
@@ -456,7 +456,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    expect=st.kind==='shot'?expect:(st.receiver??expect);calls=[];k++;}
   scene.setHint(null);};
  /** "Look up": the Scan lights every simple pass on the frozen pitch (green open, amber tight, red shut). */
- const scanOn=endHud?endHud.aid==='scan'&&(progress.scan??true):progress.scan??SCAN_FIRST.has(level?.pack??''),scanRef=useRef(scanOn);scanRef.current=scanOn;
+ const scanOn=endHud?endHud.scanOpen||(endHud.aid==='scan'&&(progress.scan??true)):progress.scan??SCAN_FIRST.has(level?.pack??''),scanRef=useRef(scanOn);scanRef.current=scanOn;
  applyScan.current=()=>{const scene=sceneRef.current,world=worldRef.current;if(!scene)return;
   if(!scanRef.current||viewRef.current!=='play'||!world||world.state.phase!=='aiming'||replayRef.current||stroke.current){scene.setScan(null);return;}
   try{scene.setScan(lanesNow(world));}catch{scene.setScan(null);}};
@@ -503,15 +503,20 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  const toPuzzles=()=>{stopEndless();cancelDrawing.current();replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);setMenu('home');setView('levels');wake.current();};
  // Restart: this puzzle again from its first try (Pass Puzzles is free to play; the entry just opens a fresh run).
  // ── Endless Run (Nov 10 2026; rules, ramp and scoring in lib/passPuzzle/endless.ts) ──
- const endlessTimers=()=>{const e=endless.current;if(e){clearTimeout(e.timer);clearTimeout(e.clockTimer);e.timer=e.clockTimer=0;e.remaining=0;}};
+ const endlessTimers=()=>{const e=endless.current;if(e){clearTimeout(e.timer);clearTimeout(e.clockTimer);clearTimeout(e.tickTimer);e.timer=e.clockTimer=e.tickTimer=0;e.remaining=0;}};
  const stopEndless=()=>{endlessTimers();endless.current=null;setEndHud(null);setEndNote(null);setEndOver(null);};
- const endlessClockArm=(ms:number)=>{const e=endless.current;if(!e)return;clearTimeout(e.clockTimer);e.deadline=performance.now()+ms;e.clockTimer=window.setTimeout(endlessTimeUp,ms);};
- const endlessPauseClock=(on:boolean)=>{const e=endless.current;if(!e)return;if(on){if(e.clockTimer){clearTimeout(e.clockTimer);e.clockTimer=0;e.remaining=Math.max(300,e.deadline-performance.now());}}else if(e.remaining>0){const ms=e.remaining;e.remaining=0;endlessClockArm(ms);}};
+ const endlessClockArm=(ms:number)=>{const e=endless.current;if(!e)return;clearTimeout(e.clockTimer);clearTimeout(e.tickTimer);e.deadline=performance.now()+ms;e.clockTimer=window.setTimeout(endlessTimeUp,ms);endlessTick();};
+ /** AAA pass: the last five seconds tick (one wood-block a second, rising). One timer at a time, re-armed from the deadline, so a pause or a resolve stops it. */
+ function endlessTick(){const e=endless.current;if(!e)return;clearTimeout(e.tickTimer);e.tickTimer=0;const left=e.deadline-performance.now();if(left<=1050)return;const k=Math.min(5,Math.ceil(left/1000)-1);
+  e.tickTimer=window.setTimeout(()=>{e.tickTimer=0;if(endless.current!==e||!e.clockTimer)return;if(worldRef.current?.state.phase==='aiming'&&viewRef.current==='play'&&!pausedRef.current)puzzleClockTick(audio.current,k);endlessTick();},Math.max(0,left-k*1000));}
+ const endlessPauseClock=(on:boolean)=>{const e=endless.current;if(!e)return;if(on){if(e.clockTimer){clearTimeout(e.clockTimer);clearTimeout(e.tickTimer);e.clockTimer=0;e.remaining=Math.max(300,e.deadline-performance.now());}}else if(e.remaining>0){const ms=e.remaining;e.remaining=0;endlessClockArm(ms);}};
  /** Put a run puzzle on the pitch and start play at once: no brief card, no menu. */
  const endlessServe=(p:EndlessPuzzle)=>{const e=endless.current;if(!e)return;const run=e.run;e.puzzle=p;endlessNow=p;loadLevel(p.scenario);boardRef.current='puzzle';setView('play');aimSince.current=performance.now();
-  setEndHud({level:run.level,lives:run.lives,score:run.score,streak:run.streak,clock:p.clock,clockKey:++e.serial,aid:p.ramp.aid});
-  clearTimeout(e.clockTimer);e.clockTimer=0;e.remaining=0;if(p.clock)endlessClockArm(p.clock*1000);
+  setEndHud({level:run.level,lives:run.lives,score:run.score,streak:run.streak,clock:p.clock,clockKey:++e.serial,aid:p.ramp.aid,eyes:run.eyes,scanOpen:e.scanLevel===run.level,wet:!!p.scenario.weather?.wet});
+  clearTimeout(e.clockTimer);clearTimeout(e.tickTimer);e.clockTimer=0;e.remaining=0;if(p.clock)endlessClockArm(p.clock*1000);
   applyHint.current();applyScan.current();settleUntil.current=performance.now()+700;wake.current();
+  // AAA pass: a step of the ramp is said once, in one splash word, as it arrives (first try at that level only).
+  if(run.tries===0){const word=run.level===5?'Scans cost 1 now':run.level===6?'Clock on!':run.level===10?'No hints now':p.wet?'Wet pitch!':'';if(word)shout.current({text:word,teach:'',tier:2});}
   // The next puzzle is built (and engine-checked) while this one is being read, so the change-over never waits for it.
   e.next=null;window.setTimeout(()=>{if(endless.current===e&&e.puzzle===p&&!e.next)try{e.next=endlessPuzzle(run.seed,run.level+1);}catch{/* built on demand instead */}},150);};
  /** On to the next puzzle (or the same one again after a failed try) behind a quick comic wipe. */
@@ -519,21 +524,24 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   try{p=e.puzzle&&e.puzzle.level===run.level?e.puzzle:e.next&&e.next.level===run.level?e.next:endlessPuzzle(run.seed,run.level);}catch{setError(true);return;}
   setEndNote(n=>n&&{...n,next:false});
   if(sceneRef.current?.stage.reduced){endlessServe(p);return;}
-  setWipe(w=>w+1);e.timer=window.setTimeout(()=>{e.timer=0;if(endless.current===e)endlessServe(p);},130);};
+  setWipe(w=>w+1);puzzleWipe(audio.current,run.level);e.timer=window.setTimeout(()=>{e.timer=0;if(endless.current===e)endlessServe(p);},130);};
  /** Full time: the lives are gone. The fail beat plays, then the run card and the one Pass Puzzles board. */
  const endlessOver=()=>{const e=endless.current;if(!e)return;endlessTimers();const run=e.run,last=e.puzzle?.scenario;let best=0;try{best=Number(JSON.parse(localStorage.getItem(ENDLESS_BEST_KEY)??'{}').score)||0;}catch{/* no best yet */}
  noteLastScore('puzzle',run.score,Math.max(best,run.score));/* Nov 14 2026: the Welcome back "almost your best" (lib/arcade/lastScore.ts) */
   const newBest=run.score>best;if(newBest){try{localStorage.setItem(ENDLESS_BEST_KEY,JSON.stringify({score:run.score,solved:run.solved,level:run.level}));}catch{/* this visit only */}setEndBest(run.score);}
   let lesson=last?.lesson??'';try{const w=last?puzzleConceptWords(last.concept,formatRef.current):null;if(w)lesson=`The move to practise: ${w.name}.${w.line?' '+w.line:''}`;}catch{/* the puzzle's own lesson stays */}
-  setEndOver({score:run.score,solved:run.solved,level:run.level,best:Math.max(best,run.score),newBest,streak:run.bestStreak,lesson});
+  setEndOver({score:run.score,solved:run.solved,level:run.level,best:Math.max(best,run.score),newBest,streak:run.bestStreak,lesson});if(!newBest)puzzleRunOver(audio.current,.75);
   e.timer=window.setTimeout(()=>{e.timer=0;if(endless.current!==e)return;setEndHud(null);setEndNote(null);setView('result');if(run.score>0){setBoardGame('puzzle');setBoardScore(run.score);}if(newBest)puzzleNewBest(audio.current,.2);},sceneRef.current?.stage.reduced?300:1500);};
  /** Score one result, show its teaching line for a moment and keep the run moving. */
- const endlessResolve=(event:EndlessEvent,note:{kind:'win'|'fail'|'skip'|'clock';title:string;line:string},delay:number)=>{const e=endless.current;if(!e)return;clearTimeout(e.clockTimer);e.clockTimer=0;e.remaining=0;const step=stepEndless(e.run,event);e.run=step.run;
-  setEndHud(h=>h&&{...h,lives:step.run.lives,score:step.run.score,streak:step.run.streak,clock:null});
+ const endlessResolve=(event:EndlessEvent,note:{kind:'win'|'fail'|'skip'|'clock';title:string;line:string},delay:number)=>{const e=endless.current;if(!e)return;clearTimeout(e.clockTimer);clearTimeout(e.tickTimer);e.clockTimer=0;e.remaining=0;const step=stepEndless(e.run,event);e.run=step.run;
+  setEndHud(h=>h&&{...h,lives:step.run.lives,score:step.run.score,streak:step.run.streak,clock:null,eyes:step.run.eyes});
+  if(step.lifeLost){puzzleLifeLost(audio.current,event.kind==='skip'?.05:.3);puzzleBuzz(step.run.over?[30,60,40]:22);}
   // Nov 17 2026: the solve that carries this run past the saved best run says so on the note (once a run) with the new-best chime.
   const best=endBest>0&&!bestPassed.current&&step.run.score>endBest;if(best){bestPassed.current=true;puzzleNewBest(audio.current,.55);}
-  setEndNote({key:++e.serial,...note,gained:step.gained,next:!step.run.over,best});
-  if(step.gained>0){for(let i=0;i<Math.min(3,step.gained);i++)puzzleStar(audio.current,i+1,.2+i*.16);if(step.run.streak>=2)puzzleStreak(audio.current,step.run.streak,.75);}
+  setEndNote({key:++e.serial,...note,gained:step.gained,next:!step.run.over,best,streak:step.run.streak,eye:step.eye});
+  if(step.gained>0){for(let i=0;i<Math.min(3,step.gained);i++)puzzleStar(audio.current,i+1,.2+i*.16);if(step.run.streak>=2)puzzleStreak(audio.current,step.run.streak,.75);
+   /* AAA pass: the stars fly from the note to the score; each one ticks as it lands, and an eye won back by the streak answers */
+   if(!sceneRef.current?.stage.reduced)for(let i=0;i<step.gained;i++)puzzleStarLand(audio.current,i,.62+i*.09);if(step.eye)puzzleEye(audio.current,true,1.05);}
   if(step.run.over){endlessOver();return;}
   e.timer=window.setTimeout(endlessAdvance,delay);};
  endlessFinish.current=(success:boolean,move:boolean,reason?:string)=>{const e=endless.current,world=worldRef.current;if(!e||!world||e.timer||e.run.over)return;const sc=world.scenario,f=formatRef.current;
@@ -544,12 +552,15 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   endlessResolve({kind:'fail'},{kind:'fail',title:'So close!',line:why||reasonCopy[reason??'']||'Look again at who can reach the ball.'},1700);};
  const endlessSkip=()=>{const e=endless.current,w=worldRef.current;if(!e||!w||w.state.phase!=='aiming'||e.run.lives<=1||e.timer||!e.puzzle)return;cancelDrawing.current();puzzleUiTap(audio.current);let name=e.puzzle.scenario.title;try{name=puzzleConceptWords(e.puzzle.scenario.concept,formatRef.current)?.name??name;}catch{/* the title stands in */}
   endlessResolve({kind:'skip'},{kind:'skip',title:'Skipped',line:`The move was: ${name}.`},350);};
+ /** AAA pass: spend one Coach's eye. The Scan opens for the puzzle on the pitch and stays for a second try at it. */
+ const endlessEye=()=>{const e=endless.current,w=worldRef.current;if(!e||!w||w.state.phase!=='aiming'||e.timer||e.scanLevel===e.run.level)return;const next=spendEye(e.run);if(!next)return;cancelDrawing.current();e.run=next;e.scanLevel=next.level;puzzleEye(audio.current);puzzleBuzz(10);
+  scanRef.current=true;setEndHud(h=>h&&{...h,eyes:next.eyes,scanOpen:true});applyScan.current();settleUntil.current=performance.now()+160;wake.current();};
  /** The thinking clock ran out. A pass already on its way may finish; the clock only bites while the child is still deciding. */
  function endlessTimeUp(){const e=endless.current,w=worldRef.current;if(!e||!w||e.run.over||e.timer)return;e.clockTimer=0;
   if(w.state.phase!=='aiming'||viewRef.current!=='play'){if(w.state.phase==='windup'||w.state.phase==='flight')e.clockTimer=window.setTimeout(endlessTimeUp,500);return;}
   cancelDrawing.current();puzzleWhistle(audio.current);endlessResolve({kind:'fail'},{kind:'clock',title:'Time!',line:'Look up early: decide before the clock runs down.'},1300);}
  const startEndless=async()=>{unlock();const id=await entry.enter();if(!id)return;bestPassed.current=false;endlessTimers();setBoardScore(null);setEndOver(null);setEndNote(null);beginBoardSession('puzzle');recordExploreActivity('arcade');
-  const seed=endlessSeed(new Date(),endlessRuns.current++);endless.current={run:startEndlessRun(seed),puzzle:null,next:null,timer:0,clockTimer:0,deadline:0,remaining:0,serial:0};
+  const seed=endlessSeed(new Date(),endlessRuns.current++);endless.current={run:startEndlessRun(seed),puzzle:null,next:null,timer:0,clockTimer:0,tickTimer:0,scanLevel:0,deadline:0,remaining:0,serial:0};
   try{endlessServe(endlessPuzzle(seed,1));}catch{setError(true);}};
  const restartPuzzle=async()=>{const w=worldRef.current;if(!w)return;setPause(false);if(endless.current){await startEndless();return;}replayRef.current=null;sceneRef.current?.setReplayFocus(null);setReplaying(false);loadLevel(w.scenario);await play();};
  useEffect(()=>{if(view!=='play'&&pausedRef.current){pausedRef.current=false;setPaused(false);}},[view]);
@@ -564,27 +575,30 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  useEffect(()=>{if(view!=='levels'&&view!=='brief')return;const key=(e:KeyboardEvent)=>{if(e.code!=='Escape'||e.defaultPrevented||boardsOpen||boardScore!==null||(e.target instanceof HTMLElement&&e.target.closest('input,select,textarea')))return;e.preventDefault();if(view==='levels'&&menu!=='home'){setMenu('home');return;}if(view==='brief')setView('levels');else{cancelDrawing.current();exitRef.current();}};window.addEventListener('keydown',key);return()=>window.removeEventListener('keydown',key);},[view,boardsOpen,boardScore,menu]);
  const levelTitle=(s:Scenario)=>heading||!usesHeading(s.id)?s.title:youthScenario(s).title;
 
- return <div className={`${arcade.game} ${styles.game} ${arcadeSkin.puzzle} ${comicRoot}`} ref={rootRef} data-game="puzzle" data-arcade-kind="pass-puzzle" data-cup={level&&tierOfPack(level.pack)?.look||undefined} data-view={view} data-shot-height={controlMode==='shoot'}>
+ return <div className={`${arcade.game} ${styles.game} ${arcadeSkin.puzzle} ${comicRoot}`} ref={rootRef} data-game="puzzle" data-arcade-kind="pass-puzzle" data-cup={level&&tierOfPack(level.pack)?.look||undefined} data-view={view} data-run={endHud?'endless':undefined} data-shot-height={controlMode==='shoot'}>
   <canvas ref={canvas} tabIndex={0} aria-label="Pass Puzzles pitch. Draw from the ball to pass."/>
   {/* The shared arcade score bar (docs/ARCADE_CHROME_OCT27.md): the pass count toward the move; tries live on the brief / result cards. */}
-  <ArcadeTopBar game="pass-puzzle" className={styles.topBar} backTitle="Back to arcade" onBack={()=>{cancelDrawing.current();onExit();}} value={view!=='levels'?progressHud.count:undefined} word={progressHud.label} live met={progressHud.met} pillHidden={view==='brief'||view==='result'} paused={paused} canPause={view==='play'} onPause={()=>setPause(!pausedRef.current)} pauseLabel="Pause puzzle" resumeLabel="Resume puzzle"/>
+  <ArcadeTopBar game="pass-puzzle" className={styles.topBar} backTitle="Back to arcade" onBack={()=>{cancelDrawing.current();onExit();}} value={view!=='levels'?progressHud.count:undefined} word={progressHud.label} bumpKey={endHud?endHud.score:undefined} live met={progressHud.met} pillHidden={view==='brief'||view==='result'} paused={paused} canPause={view==='play'} onPause={()=>setPause(!pausedRef.current)} pauseLabel="Pause puzzle" resumeLabel="Resume puzzle"/>
   {view==='play'&&!replaying&&!paused&&(!endHud||endHud.aid!=='none')&&<div className={styles.hintDock}><button className={arcade.pause} onClick={cycleHint} aria-pressed={spotHint} data-hint-level={spotHint?2:0} data-nudge={nudge||undefined} aria-label={spotHint?'Hide hint':'Show me where'} data-tip={spotHint?'Hide hint':'Hint'}><Icon name="book" size={22}/></button></div>}
   {paused&&view==='play'&&<ArcadePauseCard game="pass-puzzle" score={endHud?`${endHud.score} ${endHud.score===1?'star':'stars'} · level ${endHud.level}`:`${progressHud.count} ${progressHud.label} · try ${hud.attempt}/${hud.attempts}`} onResume={()=>setPause(false)} onExit={()=>{cancelDrawing.current();onExit();}} extra={{label:'Puzzles',onClick:()=>{setPause(false);toPuzzles();}}} onRestart={()=>{void restartPuzzle();}} restartDisabled={entry.pending}/>}
   {/* Endless Run HUD: level, lives, the thinking clock (CSS only: no frames) and Skip. The teaching note shows for a moment and never stops play. */}
-  {endHud&&view==='play'&&<div className={styles.endHud} data-endless-hud data-level={endHud.level} data-lives={endHud.lives} data-score={endHud.score} data-aid={endHud.aid}>
-   <span className={styles.endLevel}><small>Level</small><b>{endHud.level}</b></span>
-   <span className={styles.endLives} role="img" aria-label={`${endHud.lives} of ${ENDLESS_LIVES} lives left`}>{Array.from({length:ENDLESS_LIVES},(_,i)=><i key={i} data-on={i<endHud.lives}/>)}</span>
+  {endHud&&view==='play'&&<div className={styles.endHud} data-endless-hud data-level={endHud.level} data-lives={endHud.lives} data-score={endHud.score} data-aid={endHud.aid} data-eyes={endHud.eyes} data-wet={endHud.wet||undefined}>
+   <span className={styles.endLevel} data-wet={endHud.wet||undefined}><small>{endHud.wet?'Wet · Lv':'Level'}</small><b key={endHud.level}>{endHud.level}</b></span>
+   <span className={styles.endLives} role="img" aria-label={`${endHud.lives} of ${ENDLESS_LIVES} lives left`}>{Array.from({length:ENDLESS_LIVES},(_,i)=><i key={`${i}${i<endHud.lives?'on':'off'}`} data-on={i<endHud.lives}/>)}</span>
    {endHud.clock!==null&&<span key={`clock${endHud.clockKey}`} className={styles.endClock} data-endless-clock data-paused={paused||undefined} style={{['--pp-clock' as string]:`${endHud.clock}s`}} role="timer" aria-label={`${endHud.clock} seconds to decide`}><i/></span>}
    <button type="button" className={styles.endSkip} data-endless-skip disabled={endHud.lives<=1||hud.phase!=='aiming'||!!endNote?.next} onClick={endlessSkip} aria-label="Skip this puzzle. It costs one life">Skip<small>−1</small></button>
   </div>}
-  {endNote&&view==='play'&&<div key={`note${endNote.key}`} className={styles.endNote} data-endless-note={endNote.kind} role="status" aria-live="polite"><b>{endNote.title}{endNote.gained>0&&<em>+{endNote.gained} ★</em>}{endNote.best&&<em data-endless-best>New best!</em>}</b>{endNote.line&&<span>{endNote.line}</span>}{endNote.next&&<button type="button" data-endless-next onClick={endlessAdvance}>{endNote.kind==='win'||endNote.kind==='skip'?'Next':'Again'}</button>}</div>}
+  {endNote&&view==='play'&&<div key={`note${endNote.key}`} className={styles.endNote} data-endless-note={endNote.kind} role="status" aria-live="polite"><b>{endNote.title}{endNote.gained>0&&<em>+{endNote.gained} ★</em>}{endNote.best&&<em data-endless-best>New best!</em>}{endNote.kind==='win'&&(endNote.streak??0)>=2&&<em data-endless-streak>{endNote.streak} in a row</em>}{endNote.eye&&<em data-endless-eye>+1 Scan</em>}</b>{endNote.line&&<span>{endNote.line}</span>}{endNote.next&&<button type="button" data-endless-next onClick={endlessAdvance}>{endNote.kind==='win'||endNote.kind==='skip'?'Next':'Again'}</button>}</div>}
+  {endNote&&endNote.kind==='win'&&endNote.gained>0&&view==='play'&&<div key={`fly${endNote.key}`} className={styles.starFly} data-star-fly aria-hidden="true">{Array.from({length:endNote.gained},(_,i)=><i key={i} style={{['--i' as string]:i}}/>)}</div>}
   {wipe>0&&<div key={`wipe${wipe}`} className={styles.wipe} aria-hidden="true"/>}
   {/* Clean pitch (owner, Oct 27 2026): no tip, hint, lesson or modifier text while playing; the start and result cards teach. */}
   {inPlay&&level?.require.clock?<span ref={clockChip} className={styles.clockChip} role="timer" aria-label="Counter clock" data-clock data-left={`${level.require.clock.toFixed(1)} s`}/>:null}
   {inPlay&&hud.phase==='aiming'&&rewindPoint.current&&!rewound.current&&<button type="button" className={styles.undo} data-undo onClick={rewindPass} aria-label="Undo the last pass (once per try)"><Icon name="reset" size={22}/><span>Undo</span></button>}
   {/* Nov 8 2026 simpler dock: one row (Scan + ball flight). Auto picks the power, so the power slider shows only in a manual mode. */}
   {inPlay&&hud.phase==='aiming'&&<div ref={trayRef} className={styles.passControls} data-pp-tray data-compact={controlMode==='auto'||undefined}>
-   <div className={styles.aidRow}><button type="button" className={styles.scanToggle} hidden={!!endHud&&endHud.aid!=='scan'} aria-pressed={scanOn} onClick={toggleScan} data-scan={scanOn} aria-label={scanOn?'Hide the scan':'Scan: show which passes are open'}><Icon name="target" size={18}/>Scan</button>
+   <div className={styles.aidRow}>{endHud&&endHud.aid!=='scan'
+    ?<button type="button" className={styles.scanToggle} aria-pressed={endHud.scanOpen} disabled={!endHud.scanOpen&&endHud.eyes<=0} onClick={endlessEye} data-scan={endHud.scanOpen} data-eye={endHud.eyes} aria-label={endHud.scanOpen?'The Scan is showing for this puzzle':endHud.eyes>0?`Use a Scan: ${endHud.eyes} left`:'No Scans left. Solve 3 in a row first try to win one'}><Icon name="target" size={18}/>Scan{!endHud.scanOpen&&<small>{endHud.eyes}</small>}</button>
+    :<button type="button" className={styles.scanToggle} aria-pressed={scanOn} onClick={toggleScan} data-scan={scanOn} aria-label={scanOn?'Hide the scan':'Scan: show which passes are open'}><Icon name="target" size={18}/>Scan</button>}
    <div className={styles.passModes} role="group" aria-label="Ball flight">{(['auto','ground','lift','shoot'] as const).map(mode=><button key={mode} aria-pressed={controlMode===mode} onClick={()=>{cancelDrawing.current();controls.current.mode=mode;if(mode==='auto'){controls.current.power=undefined;setPower(null);}setControlMode(mode);}}>{mode==='auto'?'Auto':mode==='ground'?'Ground':mode==='lift'?'Lift':'Shoot'}</button>)}</div></div>
    {controlMode==='shoot'&&<label className={`${styles.powerControl} ${styles.shotHeight}`}><span>Height <b>{shotHeight===0?'Low':shotHeight===100?'Top bins':`${shotHeight}%`}</b></span><input aria-label="Shot height" aria-valuetext={shotHeight===0?'Low shot':shotHeight===100?'Top bins':`${shotHeight}% goal height`} type="range" min="0" max="100" step="5" value={shotHeight} onChange={e=>{const value=Number(e.target.value);controls.current.shotHeight=value/100;setShotHeight(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" onClick={()=>{const value=shotHeight===100?0:100;controls.current.shotHeight=value/100;setShotHeight(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}>{shotHeight===100?'Low':'Top bins'}</button></label>}
    {controlMode!=='auto'&&<label className={styles.powerControl}><span>Power <b>{power===null?'Auto':`${power}%`}</b></span><input ref={powerSlider} aria-label="Pass and shot power" aria-valuetext={power===null?'Automatic power from distance':`${power}% power`} type="range" min="10" max="100" step="5" defaultValue={power??60} onChange={e=>{const value=Number(e.target.value);controls.current.power=value/100;setPower(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" aria-label="Use automatic power" onClick={()=>{controls.current.power=undefined;setPower(null);if(stroke.current)stroke.current.dirty=true;wake.current();}}>Auto</button></label>}
