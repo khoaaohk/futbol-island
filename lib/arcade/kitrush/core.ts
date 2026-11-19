@@ -14,7 +14,11 @@ export const KR={dodge:3.2,
  gap:1.55,gapStep:.93,gapFloor:.68,teach:3,wavesPerLevel:5,
  rivalShare:.22,rivalStep:.035,rivalMax:.46,
  whistleFrom:5,whistle:.12,whistleStep:.035,whistleMax:.34,
- thirdTeamLevel:3,fourthTeamLevel:6,
+ thirdTeamLevel:3,fourthTeamLevel:9,
+ // AAA pass (Nov 18 2026): stages (a readable step every 3 levels, with a breather wave of your own kit), look-alike kits (your colour,
+ // another pattern: read the pattern, not only the colour), dropped kit (3 of yours on the grass in a row costs a life, so a round always ends),
+ // a clean-run bonus when all lives are full, and quicker switches late on
+ levelsPerStage:3,breather:.7,copyFrom:6,copyShare:.3,copyStep:.03,copyMax:.55,dropLimit:4,lostFrom:6,cleanBonus:20,cleanBonusCap:3,quickSwitchLevel:12,switchQuick:[3,5] as const,firstWave:.12,
  switchFirst:[7,9] as const,switchEvery:[5,8] as const,beat:.9,readyBeat:.85,
  specialEvery:[6,9] as const,frenzy:5,frenzyGap:.17,frenzyPoints:15,slow:5,slowScale:.55,armband:8,
  medals:[500,1200,2500,5000] as const,
@@ -40,17 +44,23 @@ export function medalFor(score:number){let m=0;for(const t of KR.medals)if(score
 
 export type KitItem={active:boolean;kind:number;team:number;x:number;y:number;vx:number;vy:number;rot:number;vr:number;frenzy:boolean;peaked:boolean;seq:number;dodged?:boolean};
 type Launch={on:boolean;at:number;kind:number;team:number;x:number;vx:number;vy:number;frenzy:boolean};
-export type KitEventType='toss'|'slice'|'special'|'foul'|'puff'|'miss'|'call'|'switch'|'ready'|'sub'|'over'|'effectEnd'|'dodge';
-/** One slot of the event ring. `a`..`d` mean: slice a=points b=place in swipe c=kind d=team, angle in `ang`; foul a=1 whistle / 0 rival, b=lives left;
+export type KitEventType='toss'|'slice'|'special'|'foul'|'puff'|'miss'|'call'|'switch'|'ready'|'sub'|'over'|'effectEnd'|'dodge'|'stage'|'streak'|'lost';
+/** Why a life went: the other team's kit, the whistle, three of your own kit dropped in a row, or a look-alike (your colour, another pattern). */
+export const FOUL={rival:0,whistle:1,dropped:2,copy:3} as const;
+/** A look-alike kit carries team 4 + the pattern it borrows; it is drawn in YOUR colour. Never your own pattern, so it is told apart by pattern (colour-blind safe). */
+export const COPY_BASE=4;
+export const isCopy=(team:number)=>team>=COPY_BASE;
+/** One slot of the event ring. `a`..`d` mean: slice a=points b=place in swipe c=kind d=team, angle in `ang`; foul a=FOUL cause, b=lives left, c=kind d=team of what was hit;
+ *  miss a=dropped in a row b=the limit; stage a=stage b=level; streak a=bonus b=clean run c=tier; lost a=the clean run that ended;
  *  call a=items b=bonus; switch/ready a=team; special a=kind; puff c=kind d=team; effectEnd a=kind. */
 export type KitEvent={type:KitEventType;x:number;y:number;a:number;b:number;c:number;d:number;ang:number};
 /** `deadUntil`: a foul or a switch mutes the finger for a moment (never two lives from one swipe); a lifted finger is muted until it lands again. */
 export type KitStroke={count:number;last:number;travel:number;deadUntil:number;x:number;y:number};
-export type KitStats={sliced:number;missed:number;rival:number;whistle:number;bestCombo:number;bestClean:number;waves:number;switches:number;specials:number;swipes:number};
+export type KitStats={sliced:number;missed:number;rival:number;whistle:number;bestCombo:number;bestClean:number;waves:number;switches:number;specials:number;swipes:number;copy:number;dropped:number;stage:number};
 export type KitRushState={
  seed:number;daily:boolean;h:number;t:number;real:number;score:number;lives:number;team:number;teams:number[];nTeams:number;
  wave:number;level:number;nextWaveAt:number;switchAt:number;specialAt:number;beat:number;safe:number;clean:number;
- frenzy:number;slow:number;armband:number;frenzyNext:number;subs:number;subAt:number;over:boolean;stats:KitStats;
+ frenzy:number;slow:number;armband:number;frenzyNext:number;subs:number;subAt:number;over:boolean;stats:KitStats;stage:number;drops:number;tier:number;
  items:KitItem[];events:KitEvent[];eventHead:number;eventCount:number;
 };
 
@@ -60,9 +70,10 @@ function rng(seed:number){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a
 export function kitRushDailySeed(day:string){let h=0x811c9dc5;const s='kitrush:'+day;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,0x01000193)>>>0;}return 1+h%2_000_000_000;}
 export const kitRushFieldH=(width:number,height:number)=>Math.max(KR.minH,Math.min(KR.maxH,width>0?KR.fieldW*height/width:160));
 
-const SHAPES=['single','pair','line','fan','vee','stairs','cross','wall','sandwich','fountain'] as const;
+const SHAPES=['single','pair','line','fan','vee','stairs','cross','wall','sandwich','fountain','weave','twin'] as const;
 type Shape=typeof SHAPES[number];
-type Slot={dt:number;x0:number;x1:number;apex:number;role:0|1|2|3};// role 0 free, 1 own, 2 rival, 3 whistle
+type Role=0|1|2|3|4;
+type Slot={dt:number;x0:number;x1:number;apex:number;role:Role};// role 0 free, 1 own, 2 rival, 3 whistle, 4 look-alike
 
 export type KitRush=ReturnType<typeof createKitRush>;
 export function createKitRush(opts:{seed:number;h?:number;daily?:boolean}){
@@ -72,12 +83,12 @@ export function createKitRush(opts:{seed:number;h?:number;daily?:boolean}){
  const items:KitItem[]=Array.from({length:KR.maxItems},()=>({active:false,kind:0,team:0,x:0,y:0,vx:0,vy:0,rot:0,vr:0,frenzy:false,peaked:false,seq:0}));
  const queue:Launch[]=Array.from({length:KR.maxLaunch},()=>({on:false,at:0,kind:0,team:0,x:0,vx:0,vy:0,frenzy:false}));
  const events:KitEvent[]=Array.from({length:KR.maxEvents},()=>({type:'toss' as KitEventType,x:0,y:0,a:0,b:0,c:0,d:0,ang:0}));
- const slots:Slot[]=Array.from({length:8},()=>({dt:0,x0:0,x1:0,apex:0,role:0 as 0|1|2|3}));
+ const slots:Slot[]=Array.from({length:8},()=>({dt:0,x0:0,x1:0,apex:0,role:0 as Role}));
  const strokes:KitStroke[]=[0,1,2,3].map(()=>({count:0,last:-9,travel:0,deadUntil:0,x:0,y:0}));
  const s:KitRushState={seed:opts.seed,daily:!!opts.daily,h,t:0,real:0,score:0,lives:KR.lives,team:perm[0],teams:perm,nTeams:2,wave:0,level:0,
-  nextWaveAt:KR.readyBeat,switchAt:int(KR.switchFirst[0],KR.switchFirst[1]),specialAt:int(KR.specialEvery[0],KR.specialEvery[1]),beat:KR.readyBeat,safe:0,clean:0,
-  frenzy:0,slow:0,armband:0,frenzyNext:0,subs:0,subAt:KR.cleanForSub,over:false,
-  stats:{sliced:0,missed:0,rival:0,whistle:0,bestCombo:0,bestClean:0,waves:0,switches:0,specials:0,swipes:0},
+  nextWaveAt:KR.firstWave/* the kit card beat stops the clock, so the first kit leaves the bag as the card goes (was a second of empty air) */,switchAt:int(KR.switchFirst[0],KR.switchFirst[1]),specialAt:int(KR.specialEvery[0],KR.specialEvery[1]),beat:KR.readyBeat,safe:0,clean:0,
+  frenzy:0,slow:0,armband:0,frenzyNext:0,subs:0,subAt:KR.cleanForSub,over:false,stage:0,drops:0,tier:0,
+  stats:{sliced:0,missed:0,rival:0,whistle:0,bestCombo:0,bestClean:0,waves:0,switches:0,specials:0,swipes:0,copy:0,dropped:0,stage:0},
   items,events,eventHead:0,eventCount:0};
  let seq=0,specialTurn=int(0,2);
  function emit(type:KitEventType,x=0,y=0,a=0,b=0,c=0,d=0,ang=0){
@@ -102,18 +113,21 @@ export function createKitRush(opts:{seed:number;h?:number;daily?:boolean}){
  function pickShape(n:number):Shape{
   const L=s.level;for(let tries=0;tries<12;tries++){const sh=SHAPES[int(0,SHAPES.length-1)];
    if(sh==='single'&&L>1)continue;if((sh==='wall'||sh==='cross')&&L<1)continue;if(sh==='sandwich'&&s.wave<KR.whistleFrom)continue;if(sh==='fountain'&&L<2)continue;
-   if(sh==='pair'&&n>3)continue;return sh;}
+   if(sh==='pair'&&n>3)continue;if(sh==='weave'&&L<4)continue;if(sh==='twin'&&L<KR.copyFrom)continue;return sh;}
   return 'line';
  }
  function buildWave(){
   const w=s.wave,L=s.level=Math.max(0,Math.floor((w-KR.teach)/KR.wavesPerLevel));
   s.nTeams=L>=KR.fourthTeamLevel?4:L>=KR.thirdTeamLevel?3:2;
   if(!s.teams.slice(0,s.nTeams).includes(s.team)){const i=s.teams.indexOf(s.team),t=s.teams[0];s.teams[0]=s.team;s.teams[i]=t;}
-  let n=0,shape:Shape='single';const at=s.t;
-  const put=(dt:number,x0:number,x1:number,apex:number,role:0|1|2|3=0)=>{const sl=slots[n++];sl.dt=dt;sl.x0=x0;sl.x1=x1;sl.apex=apex;sl.role=role;};
+  // a new stage: say so, take a breath, then one wave of only your kit (the look-alike stage opens with one of each, side by side)
+  const stage=Math.floor(L/KR.levelsPerStage),fresh=stage>s.stage;if(fresh){s.stage=stage;s.stats.stage=stage;emit('stage',50,h*.3,stage,L);}
+  let n=0,shape:Shape='single';const at=s.t+(fresh?KR.breather:0);
+  const put=(dt:number,x0:number,x1:number,apex:number,role:Role=0)=>{const sl=slots[n++];sl.dt=dt;sl.x0=x0;sl.x1=x1;sl.apex=apex;sl.role=role;};
   if(w===0)put(0,50,50,.62,1);
   else if(w===1){put(0,30,34,.6,1);put(0,70,66,.6,1);}
   else if(w===2){put(0,26,24,.66,1);put(.1,74,76,.5,2);}
+  else if(fresh){if(stage*KR.levelsPerStage===KR.copyFrom){put(0,32,34,.62,1);put(0,68,66,.62,4);}else{put(0,24,24,.6,1);put(.12,50,50,.66,1);put(.24,76,76,.6,1);}}
   else{
    const max=Math.min(6,3+Math.floor(L/2)),count=int(L>=2?2:1,max);shape=pickShape(count);
    const apex=.52+rand()*.26,dir=rand()<.5?1:-1;
@@ -126,16 +140,19 @@ export function createKitRush(opts:{seed:number;h?:number;daily?:boolean}){
    else if(shape==='cross'){const c=Math.max(2,Math.min(6,count+(count%2)));for(let i=0;i<c;i++){const left=i%2===0;put(Math.floor(i/2)*.22,left?6:94,left?78:22,apex-.05*Math.floor(i/2),left?1:0);}}
    else if(shape==='wall'){const c=count>=5?5:3;for(let i=0;i<c;i++){const x=16+68*i/(c-1);put(0,x,x,apex,i===(c-1)/2?2:1);}}
    else if(shape==='sandwich'){put(0,24,24,apex,1);put(0,50,50,apex,3);put(0,76,76,apex,1);}
+   else if(shape==='weave'){const c=count>=4?5:3;for(let i=0;i<c;i++){const x=14+72*i/(c-1);put(0,x,x,apex+(i%2?.08:0),i%2?2:1);}}
+   else if(shape==='twin'){put(0,dir>0?30:70,dir>0?34:66,apex,1);put(0,dir>0?70:30,dir>0?66:34,apex,4);}
    else{const c=Math.max(3,Math.min(6,count));for(let i=0;i<c;i++)put(i*.13,50,50+dir*(i%2?-1:1)*(10+i*6),apex+.03*(i%3));}
   }
   // roles: free slots become own or rival; one may become a whistle, one own slot may carry a special
   const rivalP=Math.min(KR.rivalMax,KR.rivalShare+KR.rivalStep*L),whistleP=w<KR.whistleFrom?0:Math.min(KR.whistleMax,KR.whistle+KR.whistleStep*L);
-  let own=0;for(let i=0;i<n;i++){const sl=slots[i];if(sl.role===0)sl.role=rand()<rivalP?2:1;if(sl.role===1)own++;}
+  const copyP=L<KR.copyFrom?0:Math.min(KR.copyMax,KR.copyShare+KR.copyStep*(L-KR.copyFrom));
+  let own=0;for(let i=0;i<n;i++){const sl=slots[i];if(sl.role===0)sl.role=rand()<rivalP?2:1;if(sl.role===2&&copyP>0&&rand()<copyP)sl.role=4;if(sl.role===1)own++;}
   if(own===0&&n>0){slots[int(0,n-1)].role=1;own=1;}
-  if(whistleP>0&&shape!=='sandwich'&&n>=2&&rand()<whistleP){const k=int(0,n-1);if(!(slots[k].role===1&&own===1)){if(slots[k].role===1)own--;slots[k].role=3;}}
+  if(whistleP>0&&!fresh&&shape!=='sandwich'&&n>=2&&rand()<whistleP){const k=int(0,n-1);if(!(slots[k].role===1&&own===1)){if(slots[k].role===1)own--;slots[k].role=3;}}
   let special=-1;if(w>=s.specialAt&&own>=1&&s.frenzy<=0){special=KIND.golden+(specialTurn++%3);s.specialAt=w+int(KR.specialEvery[0],KR.specialEvery[1]);}
   let last=0;for(let i=0;i<n;i++){const sl=slots[i];let kind=int(0,KIT_KINDS-1),team=s.team;
-   if(sl.role===2)team=rivalTeam();else if(sl.role===3){kind=KIND.whistle;team=-1;}else if(special>=0){kind=special;team=-1;special=-1;}
+   if(sl.role===2)team=rivalTeam();else if(sl.role===4)team=COPY_BASE+(s.team+1+int(0,2))%4;else if(sl.role===3){kind=KIND.whistle;team=-1;}else if(special>=0){kind=special;team=-1;special=-1;}
    queueLaunch(at+sl.dt,kind,team,sl.x0,sl.x1,sl.apex);if(sl.dt>last)last=sl.dt;}
   s.wave++;s.stats.waves++;
   const gap=Math.max(KR.gapFloor,KR.gap*Math.pow(KR.gapStep,L));
@@ -144,7 +161,7 @@ export function createKitRush(opts:{seed:number;h?:number;daily?:boolean}){
  function clearAir(){for(const it of items)if(it.active){it.active=false;emit('puff',it.x,it.y,0,0,it.kind,it.team);}for(const q of queue)q.on=false;}
  function doSwitch(){
   const old=s.team;let next=rivalTeam();if(next===old)next=s.teams.find(t=>t!==old)??old;
-  clearAir();s.team=next;s.stats.switches++;s.beat=KR.beat;s.nextWaveAt=s.t+.05;s.switchAt=s.wave+int(KR.switchEvery[0],KR.switchEvery[1]);
+  clearAir();s.team=next;s.stats.switches++;s.beat=KR.beat;s.nextWaveAt=s.t+.05;{const q=s.level>=KR.quickSwitchLevel?KR.switchQuick:KR.switchEvery;s.switchAt=s.wave+int(q[0],q[1]);}s.drops=0;
   for(const k of strokes){k.count=0;k.deadUntil=Math.max(k.deadUntil,s.real+KR.beat+.15);}
   emit('switch',50,h*.4,next,old);
  }
@@ -152,19 +169,22 @@ export function createKitRush(opts:{seed:number;h?:number;daily?:boolean}){
   if(k.count>=2){const bonus=k.count>=KR.callBonusFrom?k.count*KR.callBonus*(s.armband>0?2:1):0;s.score+=bonus;if(k.count>s.stats.bestCombo)s.stats.bestCombo=k.count;emit('call',k.x,k.y,k.count,bonus);}
   k.count=0;
  }
- function loseLife(whistle:boolean,x:number,y:number){
-  s.lives--;s.clean=0;s.subAt=KR.cleanForSub+KR.subStep*s.subs;if(whistle)s.stats.whistle++;else s.stats.rival++;
+ /** The clean run ends (a foul or a dropped kit): a long one says so, and the bonus tiers start again. */
+ function endClean(x:number,y:number){if(s.clean>=KR.lostFrom)emit('lost',x,y,s.clean);s.clean=0;s.tier=0;s.subAt=KR.cleanForSub+KR.subStep*s.subs;}
+ function loseLife(cause:number,x:number,y:number,kind=0,team=-1){
+  s.lives--;endClean(x,y);s.drops=0;if(cause===FOUL.whistle)s.stats.whistle++;else if(cause===FOUL.copy)s.stats.copy++;else if(cause===FOUL.dropped)s.stats.dropped++;else s.stats.rival++;
   for(const k of strokes){k.count=0;k.deadUntil=Math.max(k.deadUntil,s.real+.4);}
-  emit('foul',x,y,whistle?1:0,s.lives);clearAir();s.safe=KR.safe;s.nextWaveAt=s.t+KR.safe;
+  emit('foul',x,y,cause,s.lives,kind,team);clearAir();s.safe=KR.safe;s.nextWaveAt=s.t+KR.safe;
   if(s.lives<=0){s.over=true;emit('over',x,y,s.score);}
  }
  function hit(it:KitItem,k:KitStroke,ang:number){
   const special=it.kind>=KIND.golden&&!it.frenzy,hazard=it.kind===KIND.whistle||(it.kind<KIT_KINDS&&it.team!==s.team);
-  if(hazard){if(s.safe>0||s.frenzy>0)return;it.active=false;loseLife(it.kind===KIND.whistle,it.x,it.y);return;}
+  if(hazard){if(s.safe>0||s.frenzy>0)return;it.active=false;loseLife(it.kind===KIND.whistle?FOUL.whistle:isCopy(it.team)?FOUL.copy:FOUL.rival,it.x,it.y,it.kind,it.team);return;}
   it.active=false;k.count++;k.last=s.real;k.x=it.x;k.y=it.y;
   const base=it.frenzy?KR.frenzyPoints:KR.points*Math.min(k.count,KR.comboCap),pts=base*(s.armband>0?2:1);
-  s.score+=pts;s.stats.sliced++;
-  if(!it.frenzy){s.clean++;if(s.clean>s.stats.bestClean)s.stats.bestClean=s.clean;if(s.clean>=s.subAt){if(s.lives<KR.lives){s.lives++;s.subs++;emit('sub',it.x,it.y,s.lives);}s.subAt=s.clean+KR.cleanForSub+KR.subStep*s.subs;}}
+  s.score+=pts;s.stats.sliced++;s.drops=0;
+  // the clean run pays: a life back when one is missing, a rising bonus when all three are there (20, 40, 60 a step)
+  if(!it.frenzy){s.clean++;if(s.clean>s.stats.bestClean)s.stats.bestClean=s.clean;if(s.clean>=s.subAt){s.tier++;if(s.lives<KR.lives){s.lives++;s.subs++;emit('sub',it.x,it.y,s.lives);}else{const b=KR.cleanBonus*Math.min(s.tier,KR.cleanBonusCap);s.score+=b;emit('streak',it.x,it.y,b,s.clean,s.tier);}s.subAt=s.clean+KR.cleanForSub+KR.subStep*s.subs;}}
   emit('slice',it.x,it.y,pts,k.count,it.kind,it.frenzy?-2:it.team,ang);
   if(special){s.stats.specials++;
    if(it.kind===KIND.golden){s.frenzy=KR.frenzy;s.frenzyNext=s.t+.25;for(const o of items)if(o.active&&(o.kind===KIND.whistle||(o.kind<KIT_KINDS&&o.team!==s.team))){o.active=false;emit('puff',o.x,o.y,0,0,o.kind,o.team);}for(const q of queue)q.on=false;}
@@ -200,7 +220,9 @@ export function createKitRush(opts:{seed:number;h?:number;daily?:boolean}){
   for(let i=0;i<items.length;i++){const it=items[i];if(!it.active)continue;const g=gravity(it.frenzy);
    it.vy+=g*dt;it.x+=it.vx*dt;it.y+=it.vy*dt;it.rot+=it.vr*dt;if(it.vy>0)it.peaked=true;
    if(it.x<KR.r){it.x=KR.r;it.vx=Math.abs(it.vx)*.6;}else if(it.x>KR.fieldW-KR.r){it.x=KR.fieldW-KR.r;it.vx=-Math.abs(it.vx)*.6;}
-   if(it.peaked&&it.y>h+KR.r+2){it.active=false;if(it.kind<KIT_KINDS&&it.team===s.team){s.clean=0;s.subAt=KR.cleanForSub+KR.subStep*s.subs;s.stats.missed++;emit('miss',it.x,h);}}}
+   if(it.peaked&&it.y>h+KR.r+2){it.active=false;if(it.kind<KIT_KINDS&&it.team===s.team){endClean(it.x,h-8);s.stats.missed++;
+     // dropped kit: three of yours on the grass in a row is a life (a child who has not struck anything yet is not counted in the first waves)
+     if(s.stats.sliced>0||s.wave>KR.teach+2)s.drops++;emit('miss',it.x,h,s.drops,KR.dropLimit);if(s.drops>=KR.dropLimit)loseLife(FOUL.dropped,it.x,h-10,it.kind,it.team);}}}
  }
  return {state:s,step,swipe,beginStroke,endStroke,drain,strokes};
 }

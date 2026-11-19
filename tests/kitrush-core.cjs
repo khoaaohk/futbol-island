@@ -130,4 +130,58 @@ ok('comic kit: buttons in the UI sans at 800, 44 px, focus ring; no blur or glow
  for(const piece of ['ComicButton','ComicPanel','ComicBurst','ComicStat','ComicCard'])assert(read('components/games/comic/index.tsx').includes('export function '+piece)||read('components/games/comic/index.tsx').includes('export const '+piece),piece);
  assert(fs.existsSync('components/games/comic/README.md'));assert(/"test":.*tests\/kitrush-core\.cjs/.test(read('package.json')),'in the core test chain');
 });
+/* ---- AAA pass (Nov 18 2026): a round always ends, dropped kit, look-alikes, stages with breathers, the clean-run bonus, blind swiping ---- */
+/** An empty air with the wave clock stopped: the test places kit by hand. */
+function lab(seed){const g=K.createKitRush({seed,h:160}),s=g.state;trace(g,1.2);for(const it of s.items)it.active=false;s.nextWaveAt=1e9;s.switchAt=1e9;g.drain(()=>{});
+ const place=(o)=>{const it=s.items[20];Object.assign(it,{active:true,kind:KIND.ball,team:s.team,x:50,y:80,vx:0,vy:0,peaked:true,frenzy:false,dodged:false},o);return it;};
+ const strike=(o)=>{place(o);g.beginStroke(0);g.swipe(0,40,80,60,80);g.endStroke(0);const ev=[];g.drain(e=>ev.push({...e}));return ev;};
+ const drop=()=>{place({y:s.h+KR.r+3,vy:5});g.step(1/60);const ev=[];g.drain(e=>ev.push({...e}));return ev;};
+ return {g,s,strike,drop};}
+ok('AAA pass: a round always ends, and the first kit leaves the bag as the card goes',()=>{
+ for(const seed of [3,77,4242,90210]){const g=K.createKitRush({seed,h:170}),ev=trace(g,90);assert(g.state.over,'an idle round ends, seed '+seed);assert(g.state.real<60,'and soon: '+g.state.real);
+  assert.equal(g.state.stats.dropped,KR.lives);assert(ev.filter(e=>e.type==='foul').every(e=>e.a===K.FOUL.dropped));assert.equal(g.state.score,0);}
+ const g=K.createKitRush({seed:7,h:160});assert(trace(g,KR.readyBeat+.3).some(e=>e.type==='toss'),'no second of empty air after the kit card');
+ const t=K.createKitRush({seed:7,h:160}),miss=trace(t,6).filter(e=>e.type==='miss');assert(miss.length>=2&&miss.slice(0,2).every(e=>e.a===0),'kit dropped in the teaching waves is not counted before the first strike');
+});
+ok('AAA pass: dropped kit: four of yours in a row costs a life, one strike wipes the count',()=>{
+ const {s,strike,drop}=lab(9);strike();assert.equal(s.stats.sliced,1);
+ for(let i=1;i<KR.dropLimit;i++){const ev=drop(),m=ev.find(e=>e.type==='miss');assert(m&&m.a===i&&m.b===KR.dropLimit);assert.equal(s.drops,i);}assert.equal(s.lives,KR.lives);
+ strike();assert.equal(s.drops,0,'a strike wipes the count');for(let i=1;i<KR.dropLimit;i++)drop();assert.equal(s.lives,KR.lives);
+ const ev=drop(),foul=ev.find(e=>e.type==='foul');assert(foul&&foul.a===K.FOUL.dropped&&foul.b===KR.lives-1);assert.equal(s.lives,KR.lives-1);assert.equal(s.drops,0);assert(s.safe>0);assert.equal(s.stats.dropped,1);
+ // their kit on the grass is never a drop
+ s.safe=0;const {s:s2,g:g2}=lab(9);const it=s2.items[20];Object.assign(it,{active:true,kind:KIND.ball,team:s2.teams.find(t=>t!==s2.team),x:50,y:s2.h+KR.r+3,vx:0,vy:5,peaked:true,frenzy:false});g2.step(1/60);assert.equal(s2.drops,0);assert.equal(s2.stats.missed,0);
+});
+ok('AAA pass: look-alikes: your colour, another pattern, from the look-alike stage on; hitting one costs a life and says why',()=>{
+ let copies=0;for(const seed of [1,2,3,4]){const g=K.createKitRush({seed,h:170}),s=g.state;
+  for(let i=0;i<60*100;i++){s.lives=KR.lives;s.drops=0;const team=s.team,level=s.level;g.step(1/60);g.drain(e=>{if(e.type!=='toss'||e.a>=K.KIT_KINDS)return;
+   if(K.isCopy(e.b)){copies++;assert(level>=KR.copyFrom-1,'no look-alike before its stage (level '+level+')');assert.notEqual(e.b-K.COPY_BASE,team,'never your own pattern: told apart by pattern, not colour');assert(e.b-K.COPY_BASE>=0&&e.b-K.COPY_BASE<K.TEAMS.length);}});}
+  assert(s.level>=KR.copyFrom,'100 s reaches the look-alike stage');}
+ assert(copies>20,'look-alikes fly: '+copies);assert.equal(new Set(K.TEAMS.map(t=>t.pattern)).size,K.TEAMS.length,'every kit has its own pattern');
+ const {s,strike}=lab(5),ev=strike({kind:KIND.shirt,team:K.COPY_BASE+(s.team+1)%4}),foul=ev.find(e=>e.type==='foul');
+ assert(foul&&foul.a===K.FOUL.copy&&foul.c===KIND.shirt&&K.isCopy(foul.d));assert.equal(s.lives,KR.lives-1);assert.equal(s.stats.copy,1);assert.equal(s.stats.rival,0);
+ assert.match(S.coachLine({...s.stats}),/pattern/);assert.match(S.coachLine({...s.stats,copy:0,dropped:2}),/own kit/);
+});
+ok('AAA pass: stages: a step every three levels, a breath, then a wave of only your kit; the look-alike stage opens with one of each',()=>{
+ const g=K.createKitRush({seed:12,h:170}),s=g.state,ev=[];for(let i=0;i<60*100;i++){s.lives=KR.lives;s.drops=0;g.step(1/60);g.drain(e=>ev.push({...e,real:s.real,mine:s.team,wave:s.wave}));}
+ const st=ev.filter(e=>e.type==='stage');assert(st.length>=2,'two stages in 100 s');assert.deepEqual(st.slice(0,2).map(e=>e.a),[1,2]);assert.equal(st[0].b,KR.levelsPerStage);assert.equal(s.stats.stage,s.stage);
+ const wave=k=>ev.slice(ev.indexOf(st[k])+1).filter(e=>e.type==='toss'&&e.wave===st[k].wave);
+ const w1=wave(0);assert.equal(w1.length,3);assert(w1[0].real-st[0].real>=KR.breather-.05,'a breath before the new stage');assert(w1.every(e=>e.a>=KIND.golden||e.b===e.mine),'the breather wave is all yours');
+ const w2=wave(1);assert.equal(w2.length,2);assert.equal(w2.filter(e=>K.isCopy(e.b)).length,1,'one look-alike');assert.equal(w2.filter(e=>e.a>=KIND.golden||e.b===e.mine).length,1,'next to one of yours');
+ assert.equal(KR.copyFrom%KR.levelsPerStage,0,'look-alikes start on a stage step');assert(KR.fourthTeamLevel>KR.copyFrom&&KR.quickSwitchLevel>KR.fourthTeamLevel,'each stage brings one new thing');
+});
+ok('AAA pass: the clean run pays a rising bonus when all lives are full, a life when one is missing, and ends out loud',()=>{
+ const {s,strike,drop}=lab(21);let ev=[];for(let i=0;i<KR.cleanForSub;i++)ev=strike();
+ assert.equal(s.score,KR.cleanForSub*KR.points+KR.cleanBonus);let b=ev.find(e=>e.type==='streak');assert(b&&b.a===KR.cleanBonus&&b.b===KR.cleanForSub&&b.c===1);assert(!ev.some(e=>e.type==='sub'));
+ const got=[];for(let k=0;k<3;k++){for(let i=0;i<KR.cleanForSub;i++){const e=strike().find(e=>e.type==='streak');if(e)got.push(e.a);}}assert.deepEqual(got,[2,3,3].map(n=>n*KR.cleanBonus),'20, 40, 60, then it stays at 60');
+ const lost=drop().find(e=>e.type==='lost');assert(lost&&lost.a===KR.cleanForSub*4,'a long clean run ends out loud');assert.equal(s.clean,0);assert.equal(s.tier,0);
+ s.lives=KR.lives-1;const before=s.score;for(let i=0;i<KR.cleanForSub;i++)ev=strike();assert(ev.some(e=>e.type==='sub'));assert.equal(s.lives,KR.lives);assert.equal(s.score-before,KR.cleanForSub*KR.points,'a life back, not points');
+ assert.equal(strike({y:80}).some(e=>e.type==='lost'),false);
+});
+ok('AAA pass: swiping blind does not pay; later is faster, riskier and different',()=>{
+ const blind=seed=>{const g=K.createKitRush({seed,h:170}),s=g.state;for(let f=0;f<60*120&&!s.over;f++){g.step(1/60);if(s.beat<=0&&f%24===0){g.beginStroke(0);g.swipe(0,2,s.h*.5,98,s.h*.5);g.endStroke(0);}g.drain(()=>{});}return s;};
+ const runs=Array.from({length:21},(_,i)=>blind(500+i*13));assert(runs.every(s=>s.over),'a blind round ends');const med=runs.map(s=>s.score).sort((a,b)=>a-b)[10];assert(med<KR.medals[0]*.6,'the median blind round is far from Bronze: '+med);
+ const g=K.createKitRush({seed:5,h:170}),s=g.state,win=[{n:0,haz:0,copy:0,teams:new Set()},{n:0,haz:0,copy:0,teams:new Set()}];
+ for(let i=0;i<60*105;i++){s.lives=KR.lives;s.drops=0;const mine=s.team;g.step(1/60);const w=s.real<25?win[0]:s.real>=80?win[1]:null;g.drain(e=>{if(!w||e.type!=='toss')return;w.n++;if(e.a===KIND.whistle||(e.a<K.KIT_KINDS&&e.b!==mine)){w.haz++;if(K.isCopy(e.b))w.copy++;else if(e.b>=0)w.teams.add(e.b);}});}
+ assert(win[1].n>win[0].n*1.5,'more kit in the air late: '+win[0].n+' then '+win[1].n);assert(win[1].haz/win[1].n>win[0].haz/win[0].n,'a bigger share is not yours');assert.equal(win[0].copy,0);assert(win[1].copy>0,'look-alikes late');assert(win[1].teams.size>win[0].teams.size,'more rival kits late');
+});
 console.log(`kitrush-core: ${n} groups passed`);

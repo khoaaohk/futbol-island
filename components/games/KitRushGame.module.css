@@ -97,3 +97,13 @@
 .banner[data-last] .lives i[data-on]{animation:krLast .7s ease-in-out infinite alternate}
 @keyframes krLast{from{scale:1}to{scale:1.3;background:#ff2a12}}
 @media (prefers-reduced-motion:reduce){.banner[data-last] .lives i[data-on]{animation:none;outline:3px solid var(--cm-red);outline-offset:1px}}
+/* AAA pass (Nov 18 2026): the clean-run chip under the kit banner. It burns orange from 6 and red from 12; the number pops on each strike (no endless loop). */
+.streak{position:absolute;z-index:3;left:calc(22px + env(safe-area-inset-left,0px));top:calc(var(--arcade-bar-clear,56px) + 58px + env(safe-area-inset-top,0px));display:flex;align-items:center;gap:5px;padding:2px 9px 2px 6px;border:3px solid var(--cm-ink);background:var(--cm-paper);box-shadow:3px 3px 0 var(--cm-ink);rotate:1.2deg;pointer-events:none;font:800 12px/1 var(--cm-ui);color:var(--cm-ink);text-transform:uppercase;letter-spacing:.02em}
+.streak svg{display:block;flex:none;overflow:visible}
+.streak svg path{fill:#e9dcc2;stroke:var(--cm-ink)}
+.streak svg .core{fill:var(--cm-paper);stroke:none}
+.streak b{display:inline-block;min-width:1ch;font:400 21px/1 var(--cm-numeral);animation:krStreak .2s cubic-bezier(.2,1.6,.4,1) both}
+.streak[data-heat="1"]{background:var(--cm-sun)}.streak[data-heat="1"] svg path{fill:var(--cm-orange,#ff8a3c)}.streak[data-heat="1"] svg .core{fill:var(--cm-sun)}
+.streak[data-heat="2"]{background:var(--cm-orange,#ff8a3c)}.streak[data-heat="2"] svg path{fill:var(--cm-red)}.streak[data-heat="2"] svg .core{fill:var(--cm-sun)}.streak[data-heat="2"] svg{scale:1.25;transform-origin:50% 100%}
+@keyframes krStreak{0%{scale:1.5}100%{scale:1}}
+@media (prefers-reduced-motion:reduce){.streak{rotate:none}.streak b{animation:none}}

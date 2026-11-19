@@ -22,14 +22,14 @@ Replaces Island Strikers in the arcade (`kitrush`, upright phone first). Drawn i
   each sub used raises the next one by 6, so a long run still has to end.
 - Lives 3. Waves: 3 teaching waves (one of yours, two of yours, one of theirs), then level = wave/5. Gap 1.55 s falling x0.93 a
   level to 0.68 s; flight time 2.55 s x0.97 per level (floor x0.62);
-  rival share 22% rising to 46%; whistles from wave 5 (12% rising to 34%); a third kit from level 3, a fourth from level 6.
+  rival share 22% rising to 46%; whistles from wave 5 (12% rising to 34%); a third kit from level 3, a fourth from level 9 (was 6; look-alikes took level 6, see the AAA pass below).
 - Wave shapes (read the pattern): single, pair, line, fan, vee, stairs, cross, wall (rival in the middle of your row),
   sandwich (whistle between two of yours), fountain.
 - Switch: first at wave 7-9, then every 5-8 waves: 0.9 s beat with a kit card, the air clears, the banner and frame flip, play on.
 - Specials (own colour never needed): golden ball = 5 s frenzy (only golden balls, 15 each, no hazards);
   stopwatch = 5 s slow motion (x0.55); captain's armband = double points for 8 s. One special about every 7 waves.
 - Medals: Bronze 500, Silver 1200, Gold 2500, Captain 5000. Coins: 1 per 150 points, cap 12; a play is free (Nov 11 2026: every arcade game is free; was 3 coins).
-- Bot runs (40 seeds each, optimistic: bots never panic): slow reader median 990 in 66 s, steady 1830 in 80 s, sharp 5070 in 149 s.
+- Bot runs (40 seeds each, optimistic: bots never panic), Nov 10: slow reader median 990 in 66 s, steady 1830 in 80 s, sharp 5070 in 149 s. After the AAA pass: see below.
 
 ## Retention loop
 1. Restart is one tap and under a second (the kit card beat doubles as "ready"). Results always name the next thing: "12 points from Silver", "Best combo 4: one more for TOTAL FOOTBALL", NEW BEST stamp.
@@ -63,3 +63,35 @@ That is script time only: no GPU raster time and no phone temperature were measu
 Near miss: a swipe that passes a rival kit or the whistle within `KR.dodge` (3.2) of its edge without touching it pops CLOSE!
 with an air slide (no points; hidden if that item is then hit). Last life: the lives pip beats red. Results: medal road
 (`ComicMedalTrack`), Play again moved up under the high-score strip, NEW BEST stamp off the Best badge. Rules unchanged.
+
+## AAA pass (Nov 18 2026)
+Found by playing: an idle round never ended (no cost for leaving your own kit); a second of empty air after the kit card; the
+ONE-TWO burst covered a third of the page and ran off its edge, over the kit; a cloud peeked out from under the kit banner;
+difficulty was a smooth slope with no steps and nothing new after about 100 s; a foul said WRONG KIT but never showed why;
+no visible streak; nobody on the pitch.
+- **Stages** (`KR.levelsPerStage` 3): every third level is a stage. The game says what is new, takes a 0.7 s breath, then sends one
+  wave of only your kit. Stage 2 THIRD KIT (level 3), 3 LOOK-ALIKES (6), 4 FOUR KITS (9), 5 QUICK SWITCH (12: switches every 3-5
+  waves), then FASTER. The time of day follows: golden hour, sunset, dusk with the lamps on, floodlit night (one scene repaint each).
+- **Look-alike kits** (from level 6, 30% of rival slots rising to 55%): YOUR colour with another team's pattern. Told apart by
+  pattern only, so it is colour-blind safe by design (never a rival colour with your pattern). The stage opens with one of yours
+  and one look-alike side by side. Team id = `COPY_BASE` + pattern. New shapes: weave (yours, theirs, yours...), twin.
+- **Dropped kit:** four of YOUR kit on the grass in a row costs a life (pips on the bag label, DROPPED 2/4, a lower thud each time).
+  One strike wipes the count. Not counted in the teaching waves before a first strike. An idle round ends in about 30 s.
+- **Clean run:** a chip under the banner counts it (burns from 6, again from 12), a team-mate bean joins the touchline for every
+  four. At 12 clean: a life back if one is missing (as before), else a bonus of 20, then 40, then 60 (cap). A long run that ends
+  says RUN OVER. `events`: stage, streak, lost; foul now carries the cause (`FOUL`) and what was hit.
+- **A wrong answer teaches:** a panel shows YOURS with a tick next to YOU HIT with a cross, same kind of kit, and one line
+  (NOT YOUR COLOUR / RIGHT COLOUR, WRONG PATTERN / SWIPE ALL OF YOUR OWN KIT). The kit card also names the pattern.
+- **Beans:** team-mates in your kit (re-dressed at a switch) breathe, hop on a strike, jump on a call, hide their face on a foul;
+  the referee bean by the bag raises the whistle when you hit it. Pre-rendered into the atlas (57 cells, was 28).
+- **Feel:** kit pops out of the bag small and grows, the whistle shivers, numerals fly to the score counter, the slash core is your
+  kit colour, calls are drawn UNDER the kit and sized by rank, 0.05-0.09 s hit-stop on a big call or a foul, FULL TIME card beat.
+- **Sound:** pitch drift on toss, crack and miss; the strike rings brighter as the clean run grows; new one-shots for stage,
+  bonus, run over, dropped kit, look-alike (two-note uh-oh), crowd swell behind big calls, three peeps at full time. Still no loops.
+- **Scores:** same scale and medals. Bots, 40 seeds, before -> after (median): slow 980 -> 955, steady 1845 -> 2080, sharp 5010 -> 5090;
+  blind sweeping 200 -> 170 (ends in 17 s); idle: never ended -> ends at 29 s with 0. Bots do not model being fooled by a
+  look-alike, so real late-game scores should be a little lower than these.
+- **Heat:** script cost a frame 0.04 -> 0.08 ms average, worst 1.7 -> 2.9 ms (the stage repaint); frame interval 16.67 ms before and
+  after, no frame over 33 ms (headless Chrome, 390x844 @2x). The atlas is 8x8 cells (about 6.7 MB at 2x, was 3.4 MB).
+- **Not done:** no ambience or music bed (the module is one-shots only); the game has no keyboard play (swipe only, P pauses);
+  the frozen picture stays visible behind the pause card; after about level 16 the pace is flat; no goalkeeper kit as a third kind.
