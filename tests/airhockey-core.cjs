@@ -1,6 +1,6 @@
 // Air Futbol (Nov 11 2026, docs/arcade-aaa/airhockey-direction.md): the seeded physics and rules, the opponents' ramp, the fingers,
 // the device save and its arcade wiring.
-// Run: node tests/airhockey-core.cjs   (--bots prints the scripted player against every level, for tuning)
+// Run: node tests/airhockey-core.cjs   (--bots prints the scripted player against every level, --ladder the finger players, for tuning)
 const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript');
 require.extensions['.ts']=(m,f)=>m._compile(ts.transpileModule(fs.readFileSync(f,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020,jsx:ts.JsxEmit.ReactJSX}}).outputText,f);
 const K=require('../lib/arcade/airhockey/core.ts'),S=require('../lib/arcade/airhockey/save.ts'),TT=require('../lib/arcade/airhockey/touch.ts'),V=require('../lib/arcade/airhockey/view.ts'),L=require('../lib/arcade/leaderboard.ts');
@@ -17,6 +17,27 @@ const speed=s=>Math.hypot(s.pvx,s.pvy);
 function score(g,side,o={}){const s=g.state;s.phase='play';s.inGoal=false;s.px=W/2;s.py=side===0?5:H-5;s.pvx=0;s.pvy=side===0?-220:220;s.lastHit=side;s.lastHitT=s.t;s.bank=!!o.bank;s.serveT=o.quick?s.t:s.t-60;s.saveT=o.counter?s.t:-99;
  return run(g,3,x=>x.state.phase==='play');}
 
+/** Finger players (Nov 18 2026): they drive aim() like a child: they see the puck `delay` s late, the hand moves at most `hand` u/s, the
+ *  aim shakes by `jit`, they look away now and then (`lapse`). camp = a keeper who only clears. Used for the ladder tests. */
+const FINGERS={kid:{delay:.34,hand:190,jit:13,swing:26,smart:.15,bank:.05,guard:.75,lapse:.25,patience:150},mid:{delay:.24,hand:300,jit:8,swing:30,smart:.5,bank:.15,guard:.9,lapse:.1,patience:160},
+ strong:{delay:.15,hand:460,jit:3.5,swing:32,smart:.9,bank:.3,guard:1,lapse:.02,patience:170},camper:{delay:.3,hand:300,jit:4,swing:0,smart:0,bank:0,guard:1,lapse:0,patience:0,camp:true}};
+function finger(p,seed){let sd=seed>>>0||1;const rng=()=>{sd=(sd*1664525+1013904223)>>>0;return sd/4294967296;},hist=[],m={swing:0,tx:50,ty:H-26,fx:50,fy:H-26,ax:50,pickT:-9,lapse:0};
+ return (g,s)=>{hist.push(s.px,s.py,s.pvx,s.pvy);const lag=Math.round(p.delay*AH.HZ)*4;if(hist.length>lag+4)hist.splice(0,4);const X=hist[0],Y=hist[1],VX=hist[2],VY=hist[3],sp=Math.hypot(VX,VY);let tx,ty;
+  if(m.swing>0){m.swing--;tx=m.tx;ty=m.ty;}
+  else if(p.camp&&Y>H/2+2&&sp<12&&s.phase==='play'){const bx=X,by=Math.min(H-SR,Y+R+4);if(Math.hypot(m.fx-bx,m.fy-by)<4){m.swing=Math.round(AH.HZ*.1);m.tx=X;m.ty=Y-6;tx=m.tx;ty=m.ty;}else{tx=bx;ty=by;}}
+  else if(!p.camp&&Y>H/2+2&&VY>-40&&sp<p.patience&&s.phase==='play'){
+   if(s.t-m.pickT>1.2){m.pickT=s.t;const smart=rng()<p.smart;let ax=smart?(s.sx[1]<W/2?67:33):33+rng()*34;ax+=(rng()*2-1)*p.jit;if(rng()<p.bank)ax=X<W/2?-ax:2*W-ax;m.ax=ax;}
+   const px=X+VX*p.delay,py=Math.min(H-PR,Y+VY*p.delay),dx=m.ax-px,dy=-py,d=Math.hypot(dx,dy),ux=dx/d,uy=dy/d,bx=px-ux*(R+5),by=Math.min(H-SR,py-uy*(R+5));
+   if(Math.hypot(m.fx-bx,m.fy-by)<4){m.swing=Math.round(AH.HZ*.14);m.tx=px+ux*p.swing;m.ty=py+uy*p.swing;tx=m.tx;ty=m.ty;}else{tx=bx;ty=by;}}
+  else{if(rng()<p.lapse/AH.HZ*2)m.lapse=s.t+.5;const gx=W/2+(X+VX*p.delay*.5-W/2)*p.guard*.55;tx=s.t<m.lapse?m.fx:gx;ty=H-SR-7;}
+  const dx=tx-m.fx,dy=ty-m.fy,d=Math.hypot(dx,dy),max=p.hand/AH.HZ;if(d>max){m.fx+=dx/d*max;m.fy+=dy/d*max;}else{m.fx=tx;m.fy=ty;}g.aim(0,m.fx,m.fy);};}
+/** One match of a finger against a level: res 1 won, -1 lost, 0 not finished inside `cap` seconds. */
+function fingerMatch(p,l,seed,cap=300){const g=K.createAirFutbol({seed,level:l}),s=g.state,f=finger(p,seed*3+1);g.hold(0,true);let res=0,gf=0,ga=0;
+ for(let i=0;i<AH.HZ*cap&&!res;i++){f(g,s);g.tick();g.drain(e=>{if(e.type==='win')res=1;else if(e.type==='lose')res=-1;else if(e.type==='goal'){if(e.a===0)gf++;else ga++;}});}return {res,gf,ga,t:s.t};}
+if(process.argv.includes('--ladder')){const N=16;
+ for(const name of Object.keys(FINGERS)){const row=[];for(let l=1;l<=RAMP.length;l++){let w=0,gf=0,ga=0,tt=0;for(let k=0;k<N;k++){const r=fingerMatch(FINGERS[name],l,1000+k*7919+l*31);if(r.res>0)w++;gf+=r.gf;ga+=r.ga;tt+=r.t;}row.push(`L${l} ${w}/${N} ${gf}-${ga} ${Math.round(tt/N)}s`);}console.log(name.padEnd(7),row.join(' | '));}
+ process.exit(0);
+}
 if(process.argv.includes('--bots')){
  for(let l=1;l<=RAMP.length;l++){let gf=0,ga=0,w=0;for(let seed=1;seed<=6;seed++){const g=K.createAirFutbol({seed:seed*7919,bots:[SCRIPTED,RAMP[l-1]]});for(let i=0;i<AH.HZ*300&&!g.state.over;i++)g.tick();const st=g.state.stats;gf+=st.goalsFor;ga+=st.goalsAgainst;w+=st.wins;}
   console.log(`L${l} ${RAMP[l-1].name}: scripted ${gf} - ${ga}, scripted match wins ${w} over 6 runs (5 min cap)`);}
@@ -45,7 +66,7 @@ ok('collisions keep sensible energy: boards and posts give back a little less, a
  g=table(10,20,0,-150);s=g.state;run(g,.2);assert(s.pvy>0&&s.pvy<150,'the end board outside the goal mouth bounces');
  // a resting puck hit by a striker at speed v leaves at about (1+E_HIT)*v, capped
  g=table(W/2,H*.7);s=g.state;s.sx[0]=W/2;s.sy[0]=H*.7+R+14;const b=K.createAirFutbol({seed:1,bots:[{...SCRIPTED},null]});void b;
- g.hold(0,true);g.aim(0,W/2,H/2+SR);ev=run(g,.2);const hit=ev.find(e=>e.type==='hit');assert(hit&&hit.a===0&&hit.b>100,'a hard hit is reported with its impact speed');assert(s.pvy<-200&&speed(s)<=AH.VMAX+1e-6,`capped at VMAX (${speed(s)})`);
+ g.hold(0,true);g.aim(0,W/2,H/2+SR);ev=run(g,.2);const hit=ev.find(e=>e.type==='hit');assert(hit&&hit.a===0&&hit.b>100,'a hard hit is reported with its impact speed');assert(s.pvy<-200&&speed(s)<=AH.VMAX+AH.SMASH_ADD+1e-6,`capped at VMAX plus the smash (${speed(s)})`);assert(ev.some(e=>e.type==='smash'&&e.a===0),'a full swipe is a smash');run(g,AH.SMASH_S+.2);assert(speed(s)<=AH.VMAX+1e-6,'the smash wears off: back under VMAX');
  // a puck into a striker that stands still comes back slower than it went in
  g=table(W/2,H*.5,0,180);s=g.state;s.sx[0]=s.tx[0]=W/2;s.sy[0]=s.ty[0]=H*.8;run(g,.4);assert(s.pvy<0&&Math.abs(s.pvy)<180*.75,'a dead striker absorbs');
  // post: a puck onto the goal post rebounds and is reported
@@ -60,8 +81,8 @@ ok('strikers: confined to their own half, never faster than the cap, released st
  assert.equal(s.sy[0],H/2+SR);assert.equal(s.sy[1],H/2-SR);g.aim(0,-50,999);run(g,1);assert.equal(s.sx[0],SR);assert.equal(s.sy[0],H-SR);
  g.aim(0,W/2,H*.7);run(g,.02);g.hold(0,false);const at=[s.sx[0],s.sy[0]];run(g,.2);assert.deepEqual([s.sx[0],s.sy[0]],at,'a lifted finger leaves the striker where it is');
  assert.equal(K.clampStrikerY(1,H),H/2-SR);
- // a finger cannot cross the table in one frame: the cap is under three table lengths a second
- assert(AH.HUMAN_CAP/AH.HZ<SR&&AH.HUMAN_CAP<H*3);
+ // a finger cannot cross the table in one frame: the cap is under four table lengths a second
+ assert(AH.HUMAN_CAP/AH.HZ<SR&&AH.HUMAN_CAP<H*4);// Nov 18 2026: 460 -> 600 (a fast swipe left the striker behind the finger); micro-steps still stop tunnelling
 });
 ok('dead zones: a puck that rests on a board for 2 s is nudged back into play; a puck resting in open play waits for a striker',()=>{
  for(const [x,y] of [[PR,PR],[W-PR,H-PR],[PR,H/2],[W/2+30,H-PR]]){const g=table(x,y),s=g.state;s.sx[0]=s.tx[0]=W-SR;s.sx[1]=s.tx[1]=W-SR;if(x>W/2){s.sx[0]=s.tx[0]=SR;}
@@ -89,8 +110,34 @@ ok('the ramp is a table: every level is at least as quick, fast, smart and bold 
 });
 ok('level 1 is beatable by a simple scripted player; level 10 beats it',()=>{
  for(const seed of [11,222,3333]){const g=K.createAirFutbol({seed,bots:[SCRIPTED,RAMP[0]]}),st=g.state.stats;for(let i=0;i<AH.HZ*600&&st.wins===0&&g.state.lives===AH.LIVES;i++)g.tick();assert.equal(st.wins,1,`scripted beats level 1 in its first match (seed ${seed}: ${st.goalsFor}-${st.goalsAgainst})`);assert(st.goalsAgainst<=3);}
- let gf=0,ga=0;for(const seed of [11,222,3333,44444]){const g=K.createAirFutbol({seed,bots:[SCRIPTED,RAMP[9]]});for(let i=0;i<AH.HZ*240&&!g.state.over;i++)g.tick();gf+=g.state.stats.goalsFor;ga+=g.state.stats.goalsAgainst;}
- assert(ga>=gf+3&&ga>=gf*2,`level 10 outscores the scripted player (${gf} - ${ga})`);
+ // Nov 18 2026 (AAA pass): the judge is now a FINGER player (it plays through aim() as a child does: late sight, a hand-speed limit, shaky
+ // aim, no shot cap), because rally heat made machine-against-machine results too even to prove anything (they still run: --bots).
+ let gf=0,ga=0;for(const seed of [11,222,3333,44444]){const r=fingerMatch(FINGERS.mid,10,seed);gf+=r.gf;ga+=r.ga;}
+ assert(ga>=gf+3&&ga>=gf*2,`level 10 outscores a middling finger (${gf} - ${ga})`);
+});
+ok('the ladder is a fair set of steps: a child wins at level 1 and meets a wall later; a strong finger can beat the last one, and finds it the hardest; a keeper who only camps loses up the ladder',()=>{
+ const wins=(p,l,n=24)=>{let w=0;for(let k=0;k<n;k++)if(fingerMatch(p,l,1000+k*7919+l*31).res>0)w++;return w;};
+ const kid=[1,2,3,5,8].map(l=>wins(FINGERS.kid,l)),strong=[1,7,12].map(l=>wins(FINGERS.strong,l));if(process.argv.includes('--print'))console.log('kid',kid,'strong',strong);
+ assert(kid[0]>=19,`a child beats level 1 nearly every time (${kid})`);assert(kid[1]>=10&&kid[1]<=kid[0],`and level 2 more often than not (${kid})`);assert(kid[2]>=5&&kid[2]<=kid[1]+2,`level 3 is a real match (${kid})`);assert(kid[3]<=7&&kid[4]<=2,`then the wall (${kid})`);
+ assert.equal(strong[0],24);assert(strong[1]>=14,`a strong finger wins at level 7 (${strong})`);assert(strong[2]>=2&&strong[2]<=14&&strong[2]<strong[1],`and can beat the last opponent, not often (${strong})`);
+ let gf=0,ga=0;for(const l of [9,12]){const r=fingerMatch(FINGERS.camper,l,77+l);gf+=r.gf;ga+=r.ga;assert.equal(r.res,-1,`a keeper who never shoots loses to level ${l}`);}assert(ga>=gf*3,`camping does not hold out (${gf} - ${ga})`);
+});
+ok('rally heat, the smash and the serve: a long rally warms the table in three steps and speeds the puck; a serve nobody touches stops in the receiver’s half',()=>{
+ // heat: alternate hits by hand
+ const g=table(W/2,H/2),s=g.state,ev=[];const knock=i=>{s.px=W/2;s.py=i?H/2-30:H/2+30;s.pvx=0;s.pvy=0;s.sx[i]=s.tx[i]=W/2;s.sy[i]=i?s.py-R-3:s.py+R+3;g.hold(i,true);g.aim(i,W/2,s.py);ev.push(...run(g,.15));s.sx[i]=s.tx[i]=SR;s.sy[i]=s.ty[i]=i?SR:H-SR;};
+ for(let k=0;k<AH.HEAT_FROM;k++)knock(k%2);assert.equal(s.heat,0,'the first hits are cold');assert.equal(s.rally,AH.HEAT_FROM);knock((AH.HEAT_FROM-1)%2);assert.equal(s.rally,AH.HEAT_FROM,'two hits by the same side count once');
+ for(let k=AH.HEAT_FROM;k<AH.HEAT_FROM+AH.HEAT_HITS+2;k++)knock(k%2);assert.equal(s.heat,1);assert.deepEqual(ev.filter(e=>e.type==='heat').map(e=>e.a),[1,2,3],'three steps, each told once');
+ s.px=W/2;s.py=H/2;s.pvx=0;s.pvy=-900;s.smashT=-9;g.tick();assert(Math.abs(speed(s)-AH.VHOT)<AH.VHOT*.01,'a hot table lifts the top speed to VHOT');assert(AH.VHOT+AH.SMASH_ADD<=AH.HZ*PR*4,'still inside what the micro-steps cover');
+ const hot=score(g,0).find(e=>e.type==='goal');assert(hot.b&K.GOAL_HOT,'a goal off a hot rally is flagged');assert.equal(s.score,AH.pts.goal,'and pays no extra: the score scale is unchanged');run(g,AH.GOAL_BEAT+.1);assert.equal(s.heat,0);assert.equal(s.rally,0,'a goal cools the table');
+ // the serve: nobody touches it
+ for(const seed of [1,2,3,4,5,6]){const k=K.createAirFutbol({seed}),z=k.state;k.hold(0,true);k.aim(0,SR,H-SR);const e2=run(k,8);assert.equal(z.goals[1],0,'an untouched serve never rolls into the goal');assert(!e2.some(e=>e.type==='goal'));assert(z.py>H/2+20&&z.py<H-30,`it rests in the receiver’s half (${z.py})`);assert.equal(speed(z),0);}
+ // the machine fetches a puck that dies on the halfway line
+ const m=K.createAirFutbol({seed:8}),ms=m.state;ms.phase='play';ms.px=30;ms.py=H/2+1;ms.pvx=ms.pvy=0;const e3=run(m,6);assert(e3.some(e=>e.type==='hit'&&e.a===1),'a puck resting on the line is played, not left');
+});
+ok('habits: every opponent has its own (how high it stands, how long it admires a shot, how often it is caught flat-footed), and they are human sized',()=>{
+ for(const r of RAMP){assert(r.high>=0&&r.high<=1&&r.recover>=0&&r.recover<=.7&&r.slip>=0&&r.slip<=.4,r.name);}
+ assert(RAMP[0].slip>RAMP[11].slip&&RAMP[11].slip===0&&RAMP[3].high>=.5&&RAMP[8].high>=.5,'Sandy slips most, the Lighthouse never; Rafa and Dax stand high');
+ assert(new Set(RAMP.map(r=>`${r.high}/${r.recover}/${r.slip}`)).size===RAMP.length,'no two play alike');
 });
 ok('solo scoring: goals, quick goals, board goals, counters, clean sheets, match wins; the next opponent walks on',()=>{
  const g=K.createAirFutbol({seed:4}),s=g.state;assert.equal(g.opponent.name,'Sandy');assert.equal(s.lives,AH.LIVES);

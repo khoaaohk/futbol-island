@@ -18,7 +18,7 @@ import {ArcadePauseCard} from '../arcade/ArcadePauseCard';
 import {arcadeSkin} from './skins';
 import {comicRoot,comicNumeral,ComicButton,ComicCard,ComicPanel,ComicStat,ComicBurst} from './comic';
 import styles from './AirFutbolGame.module.css';
-import {createAirFutbol,AH,RAMP,type AirFutbol,type AirEvent} from '@/lib/arcade/airhockey/core';
+import {createAirFutbol,AH,RAMP,GOAL_OWN,type AirFutbol,type AirEvent} from '@/lib/arcade/airhockey/core';
 import {createAirView,toTableX,toTableY,type AirView} from '@/lib/arcade/airhockey/view';
 import {createAirAudio,type AirAudio} from '@/lib/arcade/airhockey/audio';
 import {createStrikerTouches,type StrikerTouches} from '@/lib/arcade/airhockey/touch';
@@ -62,7 +62,7 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
  const entry=useArcadeEntry('airhockey');
  const stage=useRef<HTMLDivElement>(null),bg=useRef<HTMLCanvasElement>(null),fg=useRef<HTMLCanvasElement>(null),probe=useRef<HTMLElement>(null);
  const game=useRef<AirFutbol|null>(null),view=useRef<AirView|null>(null),audio=useRef<AirAudio|null>(null),touches=useRef<StrikerTouches|null>(null);
- const raf=useRef(0),last=useRef(0),slot=useRef(0),endAt=useRef(0),run=useRef({id:'',done:true});
+ const raf=useRef(0),last=useRef(0),slot=useRef(0),endAt=useRef(0),stopFor=useRef(0),/* hit-stop: seconds the rules wait while the picture plays on */run=useRef({id:'',done:true});
  const size=useRef({w:1,h:1,dpr:1,left:0,top:0}),perf=useRef({frames:0,sum:0,max:0,window:0,windowSum:0,dropped:false,sleeps:0});
  const reduced=useRef(false),fitRef=useRef<()=>void>(()=>{}),keys=useRef<Set<string>>(new Set()),keyHeld=useRef(false);
 
@@ -73,7 +73,7 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
  /** The rail labels and printed score on the table follow the match. */
  useEffect(()=>{if(phase!=='playing'||bestCalled.current||save.best<=0||hud.score<=save.best)return;bestCalled.current=true;setBestCall(true);audio.current?.win();arcadeFeedback(null,'perfect');
   const id=setTimeout(()=>setBestCall(false),1800);return()=>clearTimeout(id);},[phase,hud.score,save.best]);
- const paintHud=useCallback((g:AirFutbol)=>{const s=g.state;view.current?.setHud({top:`L${s.level} ${g.opponent.name.toUpperCase()}`,bottom:'YOU',goals:[s.goals[0],s.goals[1]],lives:s.lives});},[]);
+ const paintHud=useCallback((g:AirFutbol)=>{const s=g.state;view.current?.setHud({top:`L${s.level} ${g.opponent.name.toUpperCase()}`,bottom:'YOU',goals:[s.goals[0],s.goals[1]],lives:s.lives,level:s.level});},[]);
  /* ---- the run's end: save, coins, today, board (once per run) ---- */
  const finish=useCallback(()=>{
   const g=game.current,r=run.current;if(!g||r.done)return;r.done=true;const s=g.state;audio.current?.quiet();
@@ -87,14 +87,16 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
 
  /* ---- one rules event: picture, sound, haptics ---- */
  const onEvent=useCallback((e:AirEvent)=>{
-  const g=game.current,a=audio.current;if(!g)return;view.current?.onEvent(e);
+  const g=game.current,a=audio.current;if(!g)return;view.current?.onEvent(e);a?.warm(g.state.heat);
   switch(e.type){
    case 'hit':a?.hit(e.b,e.a);if(e.a===0)arcadeFeedback(null,e.b>220?'slam':'combo');break;
-   case 'wall':a?.wall(e.b);break;
-   case 'post':a?.post(e.b);break;
+   case 'wall':a?.wall(e.b);if(e.a>=2&&e.b>120&&(Math.abs(e.x-AH.GOAL0)<10||Math.abs(e.x-AH.GOAL1)<10)){a?.near(e.a===2);arcadeFeedback(null,'nudge');}break;// just past a post
+   case 'post':a?.post(e.b);a?.near(e.a===0);arcadeFeedback(null,'nudge');break;
+   case 'smash':a?.smash();arcadeFeedback(null,'slam');if(!reduced.current)stopFor.current=.05;break;
+   case 'heat':a?.heatUp(e.a);arcadeFeedback(null,e.a>=3?'perfect':'combo');break;
    case 'serve':a?.serve();break;
    case 'save':a?.save();if(e.a===0)arcadeFeedback(null,'level');break;
-   case 'goal':if(e.a===0)a?.goal(e.b>0&&e.b<4);else a?.conceded();arcadeFeedback(null,'goal');paintHud(g);break;
+   case 'goal':if(e.a===0)a?.goal(e.b>0&&!(e.b&GOAL_OWN));/* Nov 18 2026: a counter (flag 8) used to get the small horn, `e.b<4` left it out */else a?.conceded();arcadeFeedback(null,'goal');paintHud(g);break;
    case 'win':a?.win();arcadeFeedback(null,'perfect');break;
    case 'lose':a?.lose();arcadeFeedback(null,'slam');break;
    case 'next':a?.next();paintHud(g);break;
@@ -111,7 +113,7 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
   if(next>=0){slot.current=next;const dt=Math.min(.05,Math.max(0,(now-last.current)/1000));last.current=now;const t0=performance.now(),s=g.state;
    let dx=0,dy=0;for(const code of keys.current){const k=KEYS[code];if(k){dx+=k[0];dy+=k[1];}}// keys: the striker walks at a steady speed
    if(dx||dy){const turn=v.layout.side?1:0,kx=turn?-dy:dx,ky=turn?dx:dy;keyHeld.current=true;g.hold(0,true);g.aim(0,s.sx[0]+kx*KEY_SPEED*dt,s.sy[0]+ky*KEY_SPEED*dt);}else if(keyHeld.current){keyHeld.current=false;if((touches.current?.owner()??-1)<0)g.hold(0,false);}
-   g.step(dt);g.drain(onEvent);v.render(g,dt);audio.current?.hum(s.phase==='play'&&!s.inGoal?Math.hypot(s.pvx,s.pvy):0);
+   if(stopFor.current>0){stopFor.current-=dt;g.step(0);}else g.step(dt);g.drain(onEvent);v.render(g,dt);audio.current?.hum(s.phase==='play'&&!s.inGoal?Math.hypot(s.pvx,s.pvy):0);
    const h=hudRef.current,wait=s.phase==='wait'&&!s.held[0]&&!s.held[1],between=s.phase==='between',first=s.serves===0;
    if(h.score!==s.score||h.level!==s.level||h.lives!==s.lives||h.g0!==s.goals[0]||h.g1!==s.goals[1]||h.wait!==wait||h.between!==between||h.first!==first){const n={score:s.score,level:s.level,lives:s.lives,g0:s.goals[0],g1:s.goals[1],wait,between,first};hudRef.current=n;setHud(n);}
    const cost=performance.now()-t0,p=perf.current;p.frames++;p.sum+=cost;if(cost>p.max)p.max=cost;p.window++;p.windowSum+=cost;
@@ -131,7 +133,7 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
   touches.current?.clear();keys.current.clear();
   game.current=createAirFutbol({seed:1+Math.floor(Math.random()*2_000_000_000)});run.current={id,done:false};
   beginBoardSession('airhockey');
-  view.current?.reset();endAt.current=0;setResult(null);setBoard(null);paintHud(game.current);
+  view.current?.reset();endAt.current=0;stopFor.current=0;setResult(null);setBoard(null);paintHud(game.current);
   bestCalled.current=false;setBestCall(false);
   const n:Hud={score:0,level:1,lives:AH.LIVES,g0:0,g1:0,wait:true,between:false,first:true};hudRef.current=n;setHud(n);
   change('playing');view.current?.render(game.current,0);wake();
@@ -198,6 +200,7 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
   <aside className={styles.side} data-side="right" aria-hidden="true">
    <ComicPanel tilt={1.2} tone="paper" className={styles.sidePoints}><b>Points</b><span>Goal<em>{AH.pts.goal}</em></span><span>Off the boards<em>+{AH.pts.bank}</em></span><span>Quick goal<em>+{AH.pts.quick}</em></span><span>Counter<em>+{AH.pts.counter}</em></span><span>Clean sheet<em>+{AH.pts.clean}</em></span></ComicPanel>
    <ComicPanel tilt={-1} tone="red"><b>Save, then strike</b><br/>The best time to score is right after you win the puck.</ComicPanel>
+   <ComicPanel tilt={1.4} tone="sun"><b>Hot rally</b><br/>Each hit in a long rally makes the puck faster. Swipe fast for a smash.</ComicPanel>
   </aside>
   <div className={styles.stage} ref={stage} data-air-stage>
    <i ref={probe} className={styles.probe} aria-hidden="true"/>
@@ -211,7 +214,7 @@ export default function AirFutbolGame({onExit}:{onExit:()=>void}){
   <ArcadeTopBar game="airhockey" className={styles.topBar} backTitle="Back to arcade" onBack={leave} value={live?hud.score:undefined} word="pts" bumpKey={hud.score} paused={phase==='paused'} canPause={live} onPause={()=>phase==='playing'?pause():resume()}/>
   {phase==='paused'&&<ArcadePauseCard game="airhockey" score={`${hud.score} pts · Level ${hud.level} · ${hud.g0}-${hud.g1} against ${oppName}`} status={entry.message||undefined} onResume={resume} onExit={leave} onRestart={()=>{void start();}} restartDisabled={busy} keys={[['Mouse','move'],['Arrows','move'],['P','pause']]}/>}
   {phase==='menu'&&<ComicCard label="Air Futbol" title="Air Futbol" badge="Football air hockey" badgeTone="teal" best={save.best>0?`Best ${save.best}`:undefined} data-air-card="start">
-   <div className={styles.idea}><BankDiagram/><p className={styles.learn}>Drag your striker to hit the puck into the other goal. <b>Stay between the puck and your goal</b>, then shoot <b>off the side boards</b> to get round the keeper.</p></div>
+   <div className={styles.idea}><BankDiagram/><p className={styles.learn}>Drag your striker to hit the puck into the other goal. <b>Stay between the puck and your goal</b>, then shoot <b>off the side boards</b> to get round the keeper. Swipe fast for a <b>smash</b>.</p></div>
    <div className={styles.chips}>
     <ComicStat value={save.best||'–'} label="Best"/>
     <ComicStat value={save.level||'–'} label="Top level"/>

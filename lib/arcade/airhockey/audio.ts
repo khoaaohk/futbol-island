@@ -12,6 +12,9 @@ import {isSoundEnabled,getSoundVolume} from '../../games/sound';
 export type AirAudio=ReturnType<typeof createAirAudio>;
 export function createAirAudio(){
  let ctx:AudioContext|null=null,master:GainNode|null=null,limiter:DynamicsCompressorNode|null=null,noise:AudioBuffer|null=null,voices=0;
+ /* AAA pass (Nov 18 2026): `warmth` is the rally heat (0-1), told by the shell: clacks and ticks rise in pitch with it and the hum
+    tightens, so a long rally sounds like one. `wob` detunes each clack a little so repeats never sound stamped. */
+ let warmth=0;const wob=()=>1+(Math.random()-.5)*.07;
  let humNodes:{a:OscillatorNode;b:OscillatorNode;n:AudioBufferSourceNode;f:BiquadFilterNode;g:GainNode;ng:GainNode}|null=null;
  const on=()=>!!ctx&&ctx.state==='running'&&isSoundEnabled()&&getSoundVolume()>0&&!(typeof document!=='undefined'&&document.hidden);
  /** Call from a pointer / key handler. Creates the context once and resumes it (the iOS / Safari suspended path). */
@@ -49,10 +52,10 @@ export function createAirAudio(){
   get humming(){return humNodes!==null;},
   /** Striker on puck: a sharp plastic clack. `impact` is the closing speed (table units a second): louder, brighter and with a
    *  low knock as it grows. Side 1 is a touch lower so the two strikers can be told apart by ear. */
-  hit(impact:number,side=0){if(!on())return;const k=Math.max(.15,Math.min(1,impact/300)),f=(side?1500:1760)*(1+k*.25);
+  hit(impact:number,side=0){if(!on())return;const k=Math.max(.15,Math.min(1,impact/300)),f=(side?1500:1760)*(1+k*.25)*(1+warmth*.26)*wob();
    burst('highpass',2600,.7,0,.022+k*.02,.2+k*.3);tone('square',f,f*.72,0,.03+k*.02,.07+k*.1,.001);tone('triangle',f*1.52,f*1.3,0,.025,.05+k*.06,.001);if(k>.45)tone('sine',190,90,0,.07,.2*k,.002);},
   /** Board rebound: a lighter tick, pitched by speed. */
-  wall(speed:number){if(!on())return;const k=Math.max(.1,Math.min(1,speed/320));tone('triangle',700+k*900,560+k*700,0,.03,.05+k*.09,.001);burst('bandpass',3200+k*1800,2,0,.014,.05+k*.1);},
+  wall(speed:number){if(!on())return;const k=Math.max(.1,Math.min(1,speed/320)),w=(1+warmth*.2)*wob();tone('triangle',(700+k*900)*w,(560+k*700)*w,0,.03,.05+k*.09,.001);burst('bandpass',3200+k*1800,2,0,.014,.05+k*.1);},
   /** Goal post: a ringing ping. */
   post(speed:number){if(!on())return;const k=Math.max(.2,Math.min(1,speed/300));tone('sine',1180,1170,0,.22,.1*k+.05,.001);tone('sine',2970,2950,0,.12,.05*k+.02,.001);},
   /** The low table hum: call every frame with the puck's speed. Made on the first moving frame, freed when the puck stops. */
@@ -61,16 +64,24 @@ export function createAirAudio(){
    if(!humNodes){const a=ctx.createOscillator(),b=ctx.createOscillator(),n=ctx.createBufferSource(),f=ctx.createBiquadFilter(),g=ctx.createGain(),ng=ctx.createGain();
     a.type='sine';a.frequency.value=58;b.type='triangle';b.frequency.value=87.4;n.buffer=noise;n.loop=true;f.type='lowpass';f.frequency.value=420;f.Q.value=.6;ng.gain.value=.35;g.gain.value=.0001;
     a.connect(g);b.connect(g);n.connect(f);f.connect(ng);ng.connect(g);g.connect(master);a.start();b.start();n.start();humNodes={a,b,n,f,g,ng};}
-   const k=Math.min(1,speed/300),t=ctx.currentTime;humNodes.g.gain.setTargetAtTime((.035+k*.07)*vol(),t,.05);humNodes.f.frequency.setTargetAtTime(320+k*900,t,.06);humNodes.b.frequency.setTargetAtTime(87.4+k*14,t,.08);
+   const k=Math.min(1,speed/300),t=ctx.currentTime;humNodes.g.gain.setTargetAtTime((.035+k*.07+warmth*.02)*vol(),t,.05);humNodes.f.frequency.setTargetAtTime(320+k*900+warmth*500,t,.06);humNodes.b.frequency.setTargetAtTime(87.4+k*14+warmth*29,t,.08);humNodes.a.frequency.setTargetAtTime(58+warmth*7.3,t,.1);
   },
   /** Everything held stops now (pause, sleep, results, leaving). */
   quiet(){stopHum();},
+  /** The rally heat now (0-1). Costs nothing: only read by the next sounds. */
+  warm(h:number){warmth=Math.max(0,Math.min(1,h));},
+  /** A smash: the clack with a body behind it (a low thud, a crack and a short zip up). */
+  smash(){if(!on())return;tone('sine',150,52,0,.16,.42,.002);burst('highpass',1800,.6,0,.05,.42);tone('sawtooth',320,1280,0,.11,.07,.004);burst('bandpass',2400,2.5,.02,.12,.12,5200);},
+  /** The table warms a step (1-3): a short rising call, one note more each step. */
+  heatUp(step:number){if(!on())return;const n=[523,659,784,1047];for(let i=0;i<=Math.min(3,step);i++)tone('triangle',n[i],n[i],i*.055,.09,.085,.004);if(step>=3)burst('bandpass',1500,1.5,.2,.22,.1,4200);},
+  /** A near miss (just past a post): a short falling "ooh" from two soft reeds. mine = it was your shot. */
+  near(mine:boolean){if(!on())return;const f=mine?440:330;tone('triangle',f,f*.8,0,.3,.1,.04);tone('sine',f*1.26,f*.99,0,.3,.07,.05);},
   /** Serve: a short pea-whistle chirp. */
   serve(){if(!on())return;tone('sine',2350,2900,0,.16,.11,.01);tone('sine',2610,3220,0,.16,.07,.01);burst('bandpass',2800,6,0,.14,.05);},
   /** A save: glove thump and one tick. */
   save(){if(!on())return;tone('sine',170,70,0,.14,.3,.002);burst('lowpass',600,.8,0,.07,.2);},
   /** Your goal: horn, horn, long horn, with claps on top (no crowd: the arcade's own cheer). */
-  goal(big:boolean){if(!on())return;horn(233,0,.14);horn(233,.17,.14);horn(311,.34,.5,.12);for(let i=0;i<(big?7:5);i++)clap(.36+i*.085,.22);if(big){tone('triangle',932,932,.4,.3,.08);tone('triangle',1245,1245,.52,.4,.08);}},
+  goal(big:boolean){if(!on())return;horn(233,0,.14);horn(233,.17,.14);horn(311,.34,.5,.12);for(let i=0;i<(big?7:5);i++)clap(.36+i*.085,.22);if(big){tone('triangle',932,932,.4,.3,.08);tone('triangle',1245,1245,.52,.4,.08);}tone('square',1568,1568,.74,.04,.05,.001);tone('square',2093,2093,.8,.06,.05,.001);/* the points land on the counter */},
   /** Their goal: the horn falls away. */
   conceded(){if(!on())return;horn(233,0,.2,.08);horn(196,.2,.2,.08);horn(156,.4,.45,.09);},
   /** Match won: a rising brass call and a held top note over claps. */

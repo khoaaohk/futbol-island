@@ -10,7 +10,7 @@ mini pitch, one player against a line of named computer opponents. Upright phone
 ## Rules and numbers (`lib/arcade/airhockey/core.ts`, all in `AH` and `RAMP`)
 - Table 100 x 160 units; puck r 4.4, striker r 8, goal mouth 46 wide. Side 0 defends the bottom, side 1 the top.
 - Physics: fixed 120 Hz steps, each cut into micro-steps of at most 0.4 puck radii (no tunnelling at any legal speed); puck cap 340 u/s,
-  striker cap 460 u/s (a finger cannot teleport it through the puck); striker hit restitution 0.55 plus the striker's own speed; boards and
+  striker cap 600 u/s (460 before Nov 18 2026; a finger cannot teleport it through the puck); striker hit restitution 0.55 plus the striker's own speed; boards and
   posts 0.9; light drag 0.3/s; a pinned puck pushes the striker back; a puck resting within 2.5 u of a board for 2 s is nudged out at 46 u/s.
 - Goal = whole puck over the line. Beat 1.15 s, then the puck waits on the centre spot and is served (50 u/s) toward the side that conceded
   0.35 s after a finger is down. With no finger down nothing moves and the game sleeps.
@@ -40,6 +40,27 @@ mini pitch, one player against a line of named computer opponents. Upright phone
   a table hum that exists only while the puck moves, pea-whistle serve, two-tone goal horn with claps, falling horn, brass for a match win.
 - Heat: 2D canvas. The static layer repaints only on resize or a score change. The loop runs only while playing AND something moves: start,
   pause, results, a hidden tab and "waiting for a serve with no finger down" draw nothing. 60 fps cap, DPR cap 2 (1.5 on long frames).
+## AAA pass (Nov 18 2026): what changed and why
+Found by playing it with scripted fingers first (`node tests/airhockey-core.cjs --ladder`): goals were rare and matches ran 2 to 5 minutes; a
+keeper who only camped in the goal mouth never lost, even to The Lighthouse; a strong player could not win at all from level 7; an untouched
+serve rolled into the goal; a long name ("L11 CAPTAIN CORAL") ran over the goal; counter goals got the small horn; SAVE! covered your striker.
+- **Rally heat** (`AH.HEAT_*`, `VHOT`): each hit that answers the other side's hit counts. After 2 the table warms over 8 more, in 3 steps.
+  A warm puck leaves every striker faster (finger and machine) and the top speed rises 340 -> 430, so long rallies end. A goal cools it.
+  Shown by the rail lights (they fill from the halfway line), the trail colour, the pitch of the clacks and the hum. No points for it.
+- **Smash**: a finger that swipes into the puck at 330 u/s or more lifts the cap by 60 for a second. Risk: your striker is left up the pitch.
+- **Fair serve**: an untouched serve slows and rests in the receiver's half. **Striker cap** 460 -> 600 u/s so it stays under a fast finger.
+- **Habits** (per opponent, outside the monotone ramp): `high` (stands off the line: Rafa, Dax), `recover` (admires its shot: the counter
+  window), `slip` (caught flat-footed for a beat: Sandy most, The Lighthouse never). The machine also plays a puck resting on the halfway line.
+- **Ladder, wins per 64 matches, before -> after** (finger players in the test file; "before" is 12 matches scaled, main at 8eb2ab36):
+  child L1 100% -> 92%, L2 67% -> 64%, L3 17% -> 47%, L4 0 -> 20%, L5 0 -> 11%, L6+ 0 -> 0 to 2%. Strong finger L1-L6 100% -> 98-100%,
+  L7 0 -> 84%, L8 0 -> 55%, L9 0 -> 53%, L10 0 -> 38%, L11 0 -> 28%, L12 0 -> 31%. A first-time child (slower, shakier) wins 73% at L1.
+- **Score scale**: rules and points unchanged. Runs are quicker and go further, so run totals rise: child 3150-5025 -> 3975-6075.
+- **Picture**: rail lights (heat, goal chase, near-miss blink), speed and heat trail, sparks, puck stretch and squash, striker pop, table
+  shake and a 50 ms hit-stop on a smash, points that fly to the counter, CLOSE! / PHEW! / OFF THE POST!, each opponent as an island bean
+  behind the far goal on tall phones (12 looks, `LOOKS` in view.ts) and as a face on its striker everywhere, four skies as the levels go
+  (golden hour, sunset, dusk, night). All pooled; reduced motion keeps the lights and drops the travel.
+- **Sound**: clacks and ticks rise with the heat and are detuned a little each time; smash, heat step, near miss, points landing.
+- **Not done**: bumpers or moving gates on later tables; a bean for the child's own end; music.
 ## Online play with a friend: findings and proposal (NOT built; owner, Nov 11 2026: will not be built)
 - What exists (read in `multiplayer/protocol/types.ts`, `limits.ts`, `multiplayer/relay/src/roomCore.ts`): besides 10 Hz poses, relay v1.8
   has a shared-match channel (`Cap.Match`, built for the island's live pitches). The first joiner of a "field" OWNS it and runs the only
