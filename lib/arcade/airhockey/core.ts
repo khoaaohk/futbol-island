@@ -9,32 +9,41 @@
  * Teaches (AGENTS.md): angles and rebounds (a board pass), the goalkeeper's rule (stay between ball and goal, guard the near
  * post), and the counter-attack after a save.
  */
-export const AH={W:100,H:160,PR:4.4,SR:8,GOAL0:27,GOAL1:73,HZ:120,VMAX:340,HUMAN_CAP:460,E_HIT:.55,E_WALL:.9,DRAG:.3,REST:3,
+export const AH={W:100,H:160,PR:4.4,SR:8,GOAL0:27,GOAL1:73,HZ:120,VMAX:340,HUMAN_CAP:600,E_HIT:.55,E_WALL:.9,DRAG:.3,REST:3,
  SERVE_V:50,WAIT:.35,GOAL_BEAT:1.15,BETWEEN:2.2,DEAD_V:7,DEAD_S:2,DEAD_EDGE:2.5,NUDGE_V:46,SOLO_TO:5,LIVES:3,LIFE_EVERY:3,
- QUICK_S:4,COUNTER_S:3.5,pts:{goal:100,quick:50,bank:75,counter:50,clean:300,win:250,winLevel:50},coinPer:250,coinCap:12} as const;
+ QUICK_S:4,COUNTER_S:3.5,
+ /* AAA pass, Nov 18 2026. Rally heat: every hit that answers the other side's hit counts; past HEAT_FROM the table warms over HEAT_HITS
+    more (three steps), and a warm puck leaves every striker faster (E_HIT + HEAT_E, the machine's shot cap x (1 + HEAT_SHOT), the top speed
+    VMAX -> VHOT, and never slower than HEAT_FLOOR x heat), so a long rally always ends. Smash: a finger that swipes into the puck at
+    SMASH_V or more lifts the cap by SMASH_ADD for SMASH_S. Serve: an untouched serve slows (SERVE_DRAG) and comes to rest in the
+    receiver's half, so nobody concedes from a serve they never saw. No points for any of it: the score scale is unchanged. */
+ HEAT_FROM:2,HEAT_HITS:8,HEAT_E:.3,HEAT_SHOT:.45,VHOT:430,HEAT_FLOOR:110,SMASH_V:330,SMASH_ADD:60,SMASH_S:1,SERVE_DRAG:1.15,pts:{goal:100,quick:50,bank:75,counter:50,clean:300,win:250,winLevel:50},coinPer:250,coinCap:12} as const;
 const {W,H,PR,SR,GOAL0,GOAL1}=AH,R=PR+SR,STEP=1/AH.HZ;
 
 /** One opponent: how they play. react = seconds between decisions; speed = striker cap; shot = fastest puck off their striker;
  *  predict = how often they read a rebound off the boards (and shoot away from your striker); guard = how well they stand on the
  *  line between puck and goal; attack = how often they go for a puck in their half; err = aim and position error (table units);
- *  bank = how often they shoot off a board. */
-export type AirBot={react:number;speed:number;shot:number;predict:number;guard:number;attack:number;err:number;bank:number};
+ *  bank = how often they shoot off a board.
+ *  Habits (AAA pass, Nov 18 2026; each opponent's own, NOT part of the monotone ramp): high = how far off the line they stand while the
+ *  puck is in your half (0 deep, 1 = far up: open to a long shot); recover = seconds they admire their own shot before they plan
+ *  again (the counter-attack window); slip = how often a shot at their goal catches them flat-footed for one beat. */
+export type AirBot={react:number;speed:number;shot:number;predict:number;guard:number;attack:number;err:number;bank:number;high?:number;recover?:number;slip?:number};
 export type AirOpponent=AirBot&{name:string;tip:string};
 /** The endless ramp, read by tests (monotone) and by docs. Nov 17 2026 (owner: "increase the beginning difficulty of the ai"): levels
  *  1-5 start where level 3 used to (Sandy now plays about like the old Coco) and close on Bruno, who is unchanged; 6+ are as before. */
 export const RAMP:readonly AirOpponent[]=[
- {name:'Sandy',tip:'Sandy is slow to move. Shoot for the corner of the goal.',react:.38,speed:96,shot:128,predict:.18,guard:.42,attack:.48,err:13.5,bank:0},
- {name:'Pip',tip:'Pip watches the puck, not the boards. Try a shot off the side.',react:.33,speed:108,shot:142,predict:.26,guard:.5,attack:.54,err:12,bank:0},
- {name:'Coco',tip:'Coco leaves the near post open. Shoot from wide.',react:.29,speed:120,shot:155,predict:.34,guard:.57,attack:.6,err:10.8,bank:.05},
- {name:'Rafa',tip:'Rafa likes to attack. Save, then counter fast.',react:.26,speed:132,shot:168,predict:.42,guard:.63,attack:.65,err:9.8,bank:.1},
- {name:'Mina',tip:'Mina reads straight shots. Use the boards.',react:.24,speed:143,shot:180,predict:.5,guard:.68,attack:.69,err:8.8,bank:.15},
- {name:'Bruno',tip:'Bruno hits hard. Stay between the puck and your goal.',react:.22,speed:152,shot:190,predict:.55,guard:.72,attack:.72,err:8,bank:.2},
- {name:'Kiko',tip:'Kiko banks shots off the side. Watch the angle in, it is the angle out.',react:.19,speed:170,shot:210,predict:.65,guard:.79,attack:.78,err:7,bank:.25},
- {name:'Zuri',tip:'Zuri covers both posts. Make her move first, then shoot.',react:.16,speed:190,shot:230,predict:.74,guard:.85,attack:.83,err:6,bank:.3},
- {name:'Dax',tip:'Dax counters in a flash. Drop back the moment you shoot.',react:.135,speed:210,shot:250,predict:.82,guard:.9,attack:.88,err:5,bank:.35},
- {name:'Vela',tip:'Vela reads every rebound. Change your angle each time.',react:.115,speed:232,shot:270,predict:.9,guard:.94,attack:.92,err:4,bank:.4},
- {name:'Captain Coral',tip:'The captain rarely misses. Guard the near post first.',react:.1,speed:255,shot:290,predict:.95,guard:.97,attack:.95,err:3.2,bank:.45},
- {name:'The Lighthouse',tip:'Nothing gets past easily. Be patient and pick your moment.',react:.085,speed:280,shot:310,predict:1,guard:1,attack:.97,err:2.5,bank:.5},
+ {name:'Sandy',tip:'Sandy is slow to move. Shoot for the corner of the goal.',react:.38,speed:96,shot:128,predict:.18,guard:.42,attack:.48,err:13.5,bank:0,high:0,recover:0.6,slip:0.32},
+ {name:'Pip',tip:'Pip watches the puck, not the boards. Try a shot off the side.',react:.33,speed:108,shot:142,predict:.26,guard:.5,attack:.54,err:12,bank:0,high:0.15,recover:0.5,slip:0.26},
+ {name:'Coco',tip:'Coco leaves the near post open. Shoot from wide.',react:.29,speed:120,shot:155,predict:.34,guard:.57,attack:.6,err:10.8,bank:.05,high:0.3,recover:0.4,slip:0.2},
+ {name:'Rafa',tip:'Rafa likes to attack. Save, then counter fast.',react:.26,speed:132,shot:168,predict:.42,guard:.63,attack:.65,err:9.8,bank:.1,high:0.8,recover:0.45,slip:0.16},
+ {name:'Mina',tip:'Mina reads straight shots. Use the boards.',react:.24,speed:143,shot:180,predict:.5,guard:.68,attack:.69,err:8.8,bank:.15,high:0.2,recover:0.4,slip:0.16},
+ {name:'Bruno',tip:'Bruno hits hard. Stay between the puck and your goal.',react:.22,speed:152,shot:190,predict:.55,guard:.72,attack:.72,err:8,bank:.2,high:0.35,recover:0.5,slip:0.12},
+ {name:'Kiko',tip:'Kiko banks shots off the side. Watch the angle in, it is the angle out.',react:.19,speed:170,shot:210,predict:.65,guard:.79,attack:.78,err:7,bank:.25,high:0.3,recover:0.25,slip:0.08},
+ {name:'Zuri',tip:'Zuri covers both posts. Make her move first, then shoot.',react:.16,speed:190,shot:230,predict:.74,guard:.85,attack:.83,err:6,bank:.3,high:0,recover:0.2,slip:0.06},
+ {name:'Dax',tip:'Dax counters in a flash. Drop back the moment you shoot.',react:.135,speed:210,shot:250,predict:.82,guard:.9,attack:.88,err:5,bank:.35,high:0.65,recover:0.1,slip:0.08},
+ {name:'Vela',tip:'Vela reads every rebound. Change your angle each time.',react:.115,speed:232,shot:270,predict:.9,guard:.94,attack:.92,err:4,bank:.4,high:0.2,recover:0.22,slip:0.05},
+ {name:'Captain Coral',tip:'The captain rarely misses. Guard the near post first.',react:.1,speed:255,shot:290,predict:.95,guard:.97,attack:.95,err:3.2,bank:.45,high:0.1,recover:0.12,slip:0.03},
+ {name:'The Lighthouse',tip:'Nothing gets past easily. Be patient and pick your moment.',react:.085,speed:280,shot:310,predict:1,guard:1,attack:.97,err:2.5,bank:.5,high:0,recover:0.08,slip:0},
 ];
 /** The opponent for a level (1-based). Past the table the last row plays on under the earlier names ("Sandy II"). */
 export function opponentFor(level:number):AirOpponent{const n=RAMP.length,l=Math.max(1,Math.floor(level));if(l<=n)return RAMP[l-1];const lap=Math.floor((l-1)/n)+1,base=RAMP[(l-1)%n];return {...RAMP[n-1],name:`${base.name} ${'I'.repeat(Math.min(3,lap))}`,tip:RAMP[n-1].tip};}
@@ -44,8 +53,9 @@ export const SCRIPTED:AirBot={react:.24,speed:140,shot:180,predict:.3,guard:.55,
 export type AirPhase='wait'|'play'|'goal'|'between'|'over';
 /** goal: a = scorer, b = flags (GOAL_*). hit: a = side, b = impact speed. wall / post: b = speed. win: a = level beaten, b = bonus
  *  points. lose: a = lives left. next: a = the level that walks on. life: a = lives now. over: a = -1 (the run is over). */
-export type AirEvent={type:'ready'|'serve'|'hit'|'wall'|'post'|'goal'|'save'|'win'|'lose'|'next'|'life'|'nudge'|'over';a:number;b:number;x:number;y:number};
-export const GOAL_BANK=1,GOAL_QUICK=2,GOAL_OWN=4,GOAL_COUNTER=8;
+/** smash: a = side, b = impact speed. heat: a = step now (1-3), b = rally hits. */
+export type AirEvent={type:'ready'|'serve'|'hit'|'wall'|'post'|'goal'|'save'|'win'|'lose'|'next'|'life'|'nudge'|'over'|'smash'|'heat';a:number;b:number;x:number;y:number};
+export const GOAL_BANK=1,GOAL_QUICK=2,GOAL_OWN=4,GOAL_COUNTER=8,GOAL_HOT=16;
 /** Run numbers for the results card and the coaching line. conc* = how the goals against went in. */
 export type AirStats={goalsFor:number;goalsAgainst:number;bank:number;quick:number;counters:number;saves:number;wins:number;clean:number;hits:number;
  concNear:number;concFar:number;concBank:number;concCaught:number;own:number};
@@ -61,7 +71,7 @@ export function createAirFutbol(opts:{seed:number;/** tests: scripted players pe
  const s={phase:'wait' as AirPhase,over:false,t:0,level:Math.max(1,opts.level??1),lives:AH.LIVES as number,score:0,goals:[0,0],serveTo:0,serves:0,
   px:W/2,py:H/2,pvx:0,pvy:0,ppx:W/2,ppy:H/2,inGoal:false,
   sx:[W/2,W/2],sy:[H-26,26],svx:[0,0],svy:[0,0],psx:[W/2,W/2],psy:[H-26,26],tx:[W/2,W/2],ty:[H-26,26],held:[false,false],
-  lastHit:-1,lastHitT:-9,prevHit:-1,prevT:-9,bank:false,shotX:[W/2,W/2] as number[],shotDefY:[H,H] as number[],serveT:0,saveT:-99,beat:0,waitT:0,dead:0,matchT:0,stats:emptyAirStats()};
+  lastHit:-1,lastHitT:-9,prevHit:-1,prevT:-9,bank:false,shotX:[W/2,W/2] as number[],shotDefY:[H,H] as number[],serveT:0,saveT:-99,rally:0,heat:0,smashT:-9,served:false,beat:0,waitT:0,dead:0,matchT:0,stats:emptyAirStats()};
  const bots:[AirBot|null,AirBot|null]=opts.bots?[opts.bots[0],opts.bots[1]]:[null,opponentFor(s.level)];
  const mem=[0,1].map(()=>({next:0,tx:W/2,ty:26,cap:60,mode:0,rest:0,ax:W/2,aimFor:0,since:0,until:0})),cap=[AH.HUMAN_CAP as number,AH.HUMAN_CAP as number],hitAt=[-9,-9];
  mem[0].ty=H-26;
@@ -70,15 +80,15 @@ export function createAirFutbol(opts:{seed:number;/** tests: scripted players pe
  function emit(type:AirEvent['type'],a=0,b=0,x=s.px,y=s.py){const e=ring[(head+count)%ring.length];e.type=type;e.a=a;e.b=b;e.x=x;e.y=y;if(count<ring.length)count++;else head=(head+1)%ring.length;}
  function drain(fn:(e:AirEvent)=>void){while(count>0){const e=ring[head];head=(head+1)%ring.length;count--;fn(e);}}
 
- function resetPuck(){s.px=s.ppx=W/2;s.py=s.ppy=H/2;s.pvx=s.pvy=0;s.inGoal=false;s.lastHit=-1;s.prevHit=-1;s.bank=false;s.dead=0;s.waitT=0;}
- function launch(){const to=s.serveTo;s.pvx=(rng()*2-1)*13;s.pvy=to===0?AH.SERVE_V:-AH.SERVE_V;s.serveT=s.t;s.serves++;s.phase='play';emit('serve',to);}
+ function resetPuck(){s.px=s.ppx=W/2;s.py=s.ppy=H/2;s.pvx=s.pvy=0;s.inGoal=false;s.lastHit=-1;s.prevHit=-1;s.bank=false;s.dead=0;s.waitT=0;s.rally=0;s.heat=0;s.smashT=-9;s.served=false;}
+ function launch(){const to=s.serveTo;s.pvx=(rng()*2-1)*13;s.pvy=to===0?AH.SERVE_V:-AH.SERVE_V;s.serveT=s.t;s.serves++;s.served=true;s.phase='play';emit('serve',to);}
  /** A scripted side decides where its striker goes. Plans every `react` seconds; the strike itself is triggered on the step the
   *  striker is lined up behind the puck. Mirrored so its own goal is always at y = 0. */
  function think(i:number,p:AirBot,dt:number){
-  const m=mem[i],f=i===1,X=s.px,Y=f?s.py:H-s.py,VX=s.pvx,VY=f?s.pvy:-s.pvy,SX=s.sx[i],SY=f?s.sy[i]:H-s.sy[i],sp=Math.hypot(VX,VY),inHalf=Y<H/2-1,live=s.phase==='play'&&!s.inGoal;
+  const m=mem[i],f=i===1,X=s.px,Y=f?s.py:H-s.py,VX=s.pvx,VY=f?s.pvy:-s.pvy,SX=s.sx[i],SY=f?s.sy[i]:H-s.sy[i],sp=Math.hypot(VX,VY),inHalf=Y<H/2-1||(sp<9&&Y<H/2+3),live=s.phase==='play'&&!s.inGoal;
   const set=(tx:number,ty:number,c:number)=>{m.tx=clampStrikerX(tx);m.ty=clampStrikerY(i,f?ty:H-ty);m.cap=c;};
   m.rest=inHalf&&sp<9&&live?m.rest+dt:0;m.next-=dt;
-  if(m.mode===2){if(live&&s.t<m.until&&!(s.lastHit===i&&s.lastHitT>=m.since))return;m.mode=0;m.next=Math.min(m.next,p.react*.5);}// the swing is over: back to guarding
+  if(m.mode===2){if(live&&s.t<m.until&&!(s.lastHit===i&&s.lastHitT>=m.since))return;m.mode=0;m.next=Math.max(p.recover??0,Math.min(m.next,p.react*.5));}// the swing is over: back to guarding
   if(m.mode===1&&live&&inHalf){let dx=m.ax-X,dy=H-Y;const d=Math.hypot(dx,dy)||1;dx/=d;dy/=d;const rx=X-SX,ry=Y-SY,along=rx*dx+ry*dy,lat=Math.abs(rx*dy-ry*dx);
    if(along>R*.4&&along<R*1.6&&lat<R*.45){m.mode=2;m.since=s.t;m.until=s.t+.3;set(X+dx*22+VX*.06,Y+dy*22+VY*.06,p.speed);return;}}// lined up behind it: drive through the puck
   if(m.next>0)return;m.next=p.react*(.8+.4*rng());
@@ -94,15 +104,16 @@ export function createAirFutbol(opts:{seed:number;/** tests: scripted players pe
    else set(XP-dx*(R+3),YP-dy*(R+3),p.speed);
    return;}
   m.mode=0;
+  if(threat&&p.slip&&rng()<p.slip)return;// caught flat-footed: stands still for this beat
   if(threat&&Y>GY){const tt=(GY-Y)/VY;let ix=X+VX*tt;
    if(rng()<p.predict){const span=W-2*PR;let u=(ix-PR)%(2*span);if(u<0)u+=2*span;ix=PR+(u>span?2*span-u:u);}// reads the rebound off the boards
    set(Math.max(GOAL0-2,Math.min(GOAL1+2,ix+(rng()*2-1)*p.err)),GY,p.speed);}
   else if(threat)set(X,Math.max(SR,Y-2),p.speed);
-  else{const gx=W/2+(X-W/2)*GY/Math.max(Y,GY+1);set(W/2+(gx-W/2)*p.guard+(rng()*2-1)*p.err*.5,GY+(Y>H/2?9*p.guard:0),p.speed*.8);}// the keeper's rule: on the line from the puck to the goal
+  else{const gx=W/2+(X-W/2)*GY/Math.max(Y,GY+1);set(W/2+(gx-W/2)*p.guard+(rng()*2-1)*p.err*.5,GY+(Y>H/2?9*p.guard+26*(p.high??0):0),p.speed*.8);}// the keeper's rule: on the line from the puck to the goal
  }
  function goal(scorer:number){
   const st=s.stats,deflect=s.lastHit===1-scorer&&s.prevHit===scorer&&s.t-s.prevT<1.5,/* a save that went in is the shooter's goal */own=(s.lastHit===1-scorer&&!deflect)||s.lastHit<0;let flags=own?GOAL_OWN:0;
-  if(!own&&s.bank)flags|=GOAL_BANK;if(!own&&s.t-s.serveT<=AH.QUICK_S)flags|=GOAL_QUICK;if(!own&&scorer===0&&s.t-s.saveT<=AH.COUNTER_S)flags|=GOAL_COUNTER;
+  if(!own&&s.bank)flags|=GOAL_BANK;if(!own&&s.t-s.serveT<=AH.QUICK_S)flags|=GOAL_QUICK;if(!own&&scorer===0&&s.t-s.saveT<=AH.COUNTER_S)flags|=GOAL_COUNTER;if(!own&&s.heat>=.66)flags|=GOAL_HOT;
   s.goals[scorer]++;
   if(scorer===0){st.goalsFor++;let pts:number=AH.pts.goal;if(flags&GOAL_BANK){pts+=AH.pts.bank;st.bank++;}if(flags&GOAL_QUICK){pts+=AH.pts.quick;st.quick++;}if(flags&GOAL_COUNTER){pts+=AH.pts.counter;st.counters++;}s.score+=pts;}
   else{st.goalsAgainst++;const sx=s.shotX[1];if(s.lastHit<0)st.concFar++;else if(own)st.own++;else if(s.bank&&!deflect)st.concBank++;else if(s.shotDefY[1]<H/2+30)st.concCaught++;else if(Math.abs(sx-W/2)>10&&(sx<W/2)===(s.px<W/2))st.concNear++;else st.concFar++;}
@@ -119,11 +130,13 @@ export function createAirFutbol(opts:{seed:number;/** tests: scripted players pe
  function strike(i:number){
   const dx=s.px-s.sx[i],dy=s.py-s.sy[i],d2=dx*dx+dy*dy;if(d2>=R*R)return;const d=Math.sqrt(d2);let nx=0,ny=i===0?-1:1;if(d>1e-4){nx=dx/d;ny=dy/d;}
   const before=i===0?s.pvy:-s.pvy,vn=(s.pvx-s.svx[i])*nx+(s.pvy-s.svy[i])*ny;s.px=s.sx[i]+nx*R;s.py=s.sy[i]+ny*R;
-  if(vn>=0)return;const j=-(1+AH.E_HIT)*vn;s.pvx+=j*nx;s.pvy+=j*ny;const bot=bots[i];
-  if(bot){const sp=Math.hypot(s.pvx,s.pvy);if(sp>bot.shot){s.pvx*=bot.shot/sp;s.pvy*=bot.shot/sp;}}
-  if(-vn<4)return;
+  if(vn>=0)return;const hot=s.heat,j=-(1+AH.E_HIT+AH.HEAT_E*hot)*vn;s.pvx+=j*nx;s.pvy+=j*ny;const bot=bots[i];let sp=Math.hypot(s.pvx,s.pvy);
+  if(bot){const top=bot.shot*(1+AH.HEAT_SHOT*hot);if(sp>top){s.pvx*=top/sp;s.pvy*=top/sp;sp=top;}}
+  if(-vn<4)return;s.served=false;
+  const floor=AH.HEAT_FLOOR*hot;if(sp>1&&sp<floor){s.pvx*=floor/sp;s.pvy*=floor/sp;}// a warm puck never dies on a striker
+  if(!bot&&-vn>=AH.SMASH_V){s.smashT=s.t;emit('smash',i,-vn);}
   if(before>60&&(i===0?s.py>H-52:s.py<52)){if(i===0){s.stats.saves++;s.saveT=s.t;}emit('save',i,-vn);}// it was heading for this side's goal
-  if(i===0)s.stats.hits++;if(s.lastHit!==i){s.prevHit=s.lastHit;s.prevT=s.lastHitT;}s.lastHit=i;s.lastHitT=s.t;s.bank=false;s.shotX[i]=s.px;s.shotDefY[i]=i===1?s.sy[0]:H-s.sy[1];
+  if(i===0)s.stats.hits++;if(s.lastHit!==i){s.prevHit=s.lastHit;s.prevT=s.lastHitT;s.rally++;const h=Math.max(0,Math.min(1,(s.rally-AH.HEAT_FROM)/AH.HEAT_HITS)),was=Math.floor(s.heat*3+1e-6),now=Math.floor(h*3+1e-6);s.heat=h;if(now>was)emit('heat',now,s.rally);}s.lastHit=i;s.lastHitT=s.t;s.bank=false;s.shotX[i]=s.px;s.shotDefY[i]=i===1?s.sy[0]:H-s.sy[1];
   if(s.t-hitAt[i]>.07){hitAt[i]=s.t;emit('hit',i,-vn);}
  }
  /** Boards, posts and the goal mouths. Returns true when a goal went in. */
@@ -163,8 +176,8 @@ export function createAirFutbol(opts:{seed:number;/** tests: scripted players pe
    for(let i=0;i<2;i++){const dx=s.px-s.sx[i],dy=s.py-s.sy[i],d=Math.hypot(dx,dy);if(d<R-.01&&d>1e-4){// pinned on a board: the striker gives way
      const nx=dx/d,ny=dy/d,push=R-d;s.sx[i]=clampStrikerX(s.sx[i]-nx*push);s.sy[i]=clampStrikerY(i,s.sy[i]-ny*push);const vn=s.svx[i]*nx+s.svy[i]*ny;if(vn>0){s.svx[i]-=vn*nx;s.svy[i]-=vn*ny;}}}
   }
-  const drag=1-AH.DRAG*dt;s.pvx*=drag;s.pvy*=drag;let sp=Math.hypot(s.pvx,s.pvy);
-  if(sp>AH.VMAX){s.pvx*=AH.VMAX/sp;s.pvy*=AH.VMAX/sp;sp=AH.VMAX;}else if(sp<AH.REST){s.pvx=0;s.pvy=0;sp=0;}
+  const drag=1-(s.served?AH.SERVE_DRAG:AH.DRAG)*dt,top=AH.VMAX+(AH.VHOT-AH.VMAX)*s.heat+(s.t-s.smashT<AH.SMASH_S?AH.SMASH_ADD:0);s.pvx*=drag;s.pvy*=drag;let sp=Math.hypot(s.pvx,s.pvy);
+  if(sp>top){s.pvx*=top/sp;s.pvy*=top/sp;sp=top;}else if(sp<AH.REST){s.pvx=0;s.pvy=0;sp=0;}
   const e=PR+AH.DEAD_EDGE;
   if(sp<AH.DEAD_V&&(s.px<e||s.px>W-e||s.py<e||s.py>H-e)){s.dead+=dt;if(s.dead>=AH.DEAD_S){s.dead=0;const ax=W/2-s.px,ay=(s.py<H/2?H*.3:H*.7)-s.py,d=Math.hypot(ax,ay)||1;s.pvx=ax/d*AH.NUDGE_V;s.pvy=ay/d*AH.NUDGE_V;emit('nudge');}}
   else s.dead=0;
