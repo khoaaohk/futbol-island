@@ -151,7 +151,9 @@ const seed=()=>{try{localStorage.setItem('fi2-welcome-v1','completed');localStor
    await wait(5000);must.push('play');
    // Breakaway round clear (Nov 10 2026): endless play clears a round at every goal-line goal, so the cue is a short two-note steel pan,
    // not the full-time whistle and fanfare. Driven as the game's own 'round' event on the live run; it must be audible.
-   if(game==='runner'){await label('');await wait(300);await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.runner;s.event++;s.eventKind='round';window.__audioLabel('round-clear');});await wait(900);must.push('round-clear');}
+   if(game==='runner'){await label('');await wait(300);await page.evaluate(()=>{const s=window.__arcade3d.runtime.state.runner;s.event++;s.eventKind='round';window.__audioLabel('round-clear');});await wait(900);must.push('round-clear');
+    // AAA pass (Nov 18 2026): the return ball (it was silent), the golden shot armed and the full ball ladder each have their own cue.
+    for(const [kind,name] of [['return','return-ball'],['golden','golden-ready'],['ladder','full-ladder']]){await label('');await wait(300);await page.evaluate(([kind,name])=>{const s=window.__arcade3d.runtime.state.runner;s.event++;s.eventKind=kind;window.__audioLabel(name);},[kind,name]);await wait(900);must.push(name);}}
    if(game==='pinball'){
     // Futbol Pinball (Nov 10 2026, comic pass): four event windows, each driven on the live table through the dev handle
     // (window.__arcade3d, non-production builds only). flipper = KeyA then KeyD (wood block + rim-shot, same frame as the press);
