@@ -131,3 +131,9 @@ New in a run:
 2. Bean faces ignore the head joint, and the receive / chest / thigh touches are short at this camera distance.
 3. Endless variation is mirror, shift and added defenders; roles are not swapped and no pitch is generated from nothing.
 4. Desktop still frames the sea, not the horizon panel (phone only so far).
+
+## Fix round (Nov 18 2026)
+- A deflected pass that still reaches the team-mate stays uncounted on purpose: counting it lets the naive straight pass solve
+  "Bend It Round" (tests/pass-puzzle-scenarios.cjs fails at once). The failure is worded honestly instead: "A defender got a touch
+  on your pass, so it did not count." (`deflectedPassIn`, `explainFail`).
+- Not done: the 8% of late Endless layouts that still allow the straight shot.

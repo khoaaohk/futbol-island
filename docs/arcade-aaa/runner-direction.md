@@ -87,3 +87,12 @@
   after. Ball ladder stretch 44 draws (max 45) / 32-35k; busy mid-run stretch up to 59 draws / 60k, unchanged. No new mesh, material, light or pass.
 - Still short of top tier: the ball at the runner's feet is small from the chase camera; Cup Final's fifth wave (a closer beside a drifting defender)
   catches a child-level bot at 13 s in half of the seeds; the run challenge is not shown on the full-time card.
+
+## Fix round (Nov 18 2026)
+- Fairness: Cup Final's wave at 230 m (13 s) was not a closer beside a drifting defender. A normal wave spawned 3 m in front of the
+  back line, so its cone and drifting defender could fill the one lane the line leaves open. A back line now stands alone (no new
+  wave until it is behind the runner; all routes). Child-level bot (react .4 s, jumps 3 tackles in 10), 10 seeds: hearts lost in the
+  first 600 m 9 before, 0 after. Its next loss is the "Split the pair" wave at about 750 m, where the bot reads the outside lane as
+  blocked and cuts inside: a limit of the bot more than of the wave, left as it is.
+- The run challenge is shown on the full-time card ("Done! +bonus" or "Next time").
+- Not done: the ball at the runner's feet is still small from the chase camera.

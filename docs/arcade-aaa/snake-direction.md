@@ -83,3 +83,7 @@ speed and one more opponent; the sharp bot never lost (900 s cap); the line move
 LEVEL n callouts carry a note read from RAMP (a pressing defender joins / a referee walks on / the captain runs faster).
 Results: medal road (`ComicMedalTrack`), Play again moved up under the high-score strip, NEW BEST stamp off the Best badge.
 The audio probe gives the kick-off press itself (it waited for ticks the Nov 11 hold never starts). Rules unchanged.
+
+## Fix round (Nov 18 2026)
+- The start card names the Quick call; the level notes for the first cones and the first slide tackle say what to do.
+- Not done: the sliding tackler still passes over cones and team-mates with no reaction.
