@@ -5,16 +5,25 @@
  * complete line of the team and clears. When the three are placed a new tray comes at once. The run ends when no tray piece fits.
  * Ramp (RAMP, by level; a level is LU.perLevel placements): bigger and odder shapes, fewer singles, fewer fair re-deals, and from
  * level 4 a referee who blocks one square for a few placements. tests/lineup-core.cjs proves the ramp with a bot.
+ * AAA pass (Nov 18 2026): the BENCH (one piece parked for later: hold(); drag a tray piece onto it, swap when it is full; parking the
+ * last tray piece brings the next tray) and the TEAM LINE (a cleared line where LU.teamNeed or more of the eight balls are one ball
+ * type pays LU.teamPts more before the streak and level bonus). Deals on an open pitch (LU.openFree free squares) always hold a piece that fits.
  * Teaches (AGENTS.md): "Fill the line. Keep your shape." A team defends in lines; gaps in a line are where the other team gets through.
  */
 export const LU={
- size:8,tray:3,perLevel:15,
+ size:8,tray:3,/** AAA pass: 10 (was 15), with levelStep .07 (was .1): the bench makes runs longer, so the ramp steps up sooner; points for a placement number stay about the same. */perLevel:10,
  /** points: 1 a bean placed; lines with one piece: 100 x k(k+1)/2 (1:100, 2:300, 3:600, 4:1000 ...). */
  cellPts:1,linePts:100,cleanPts:500,
  /** streak: clearing placements in a row; one placement without a clear is forgiven, the second breaks it. x1.5, x2 ... up to x4. */
  streakStep:.5,streakMax:4,streakGrace:1,
- /** level bonus on line points: +10% a level, up to x3. */
- levelStep:.1,levelMax:3,
+ /** level bonus on line points: +7% a level, up to x3. */
+ levelStep:.07,levelMax:3,
+ /** team line: this many of a cleared line's eight balls are one ball type; it adds teamPts to the line points. */
+ teamNeed:6,teamPts:100,
+ /** a deal on a pitch with this many free squares always holds at least one piece that fits. */
+ openFree:22,
+ /** the bench's slot number for place() / preview(). */
+ bench:3,
  medals:[1500,4000,10000] as readonly number[],
 } as const;
 export const MEDAL_NAMES=['Bronze','Silver','Gold'] as const;
@@ -88,37 +97,43 @@ export function lineupDailySeed(day:string){let h=0x811c9dc5;const s='lineup:'+d
 function mulberry(seed:number){let a=seed>>>0;return()=>{a=(a+0x6d2b79f5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296;};}
 
 export type LinePiece={id:number;shape:number;kit:number};
-export type LineEventType='place'|'clear'|'clean'|'deal'|'refOn'|'refOff'|'level'|'streakLost'|'over';
+export type LineEventType='place'|'clear'|'clean'|'deal'|'refOn'|'refOff'|'level'|'streakLost'|'over'|'hold';
+/** A team line: row (col false) or column index, and the ball type that fills most of it. */
+export type TeamLine={line:number;col:boolean;kit:number};
 /** cells: board indices (y*8+x). rows/cols: the lines cleared. points: what this event scored. a: lines (clear) / level / slot. b: streak. */
 export type LineEvent={type:LineEventType;cells:number[];rows:number[];cols:number[];points:number;a:number;b:number;kit:number;
- /** clear: the kit of each cleared cell (same order as cells; -1 never). */kits:number[]};
-export type LineStats={placed:number;beans:number;lines:number;clears:number;bestCombo:number;bestStreak:number;cleanSheets:number;refs:number;deals:number;bigShapes:number};
+ /** clear: the kit of each cleared cell (same order as cells; -1 never). */kits:number[];
+ /** clear: the team lines among the cleared lines. place: the piece's cells (the clear ripples out from them). */team:TeamLine[];from:number[]};
+export type LineStats={placed:number;beans:number;lines:number;clears:number;bestCombo:number;bestStreak:number;cleanSheets:number;refs:number;deals:number;bigShapes:number;teamLines:number;holds:number};
 export type LineState={
  seed:number;daily:boolean;
  /** 0 empty, else kit + 1. */grid:Uint8Array;
  /** referee placements left on a square (0 = none). */ref:Uint8Array;
- tray:(LinePiece|null)[];score:number;level:number;streak:number;miss:number;over:boolean;
+ tray:(LinePiece|null)[];
+ /** the parked piece (AAA pass). rescue: nothing fits, but parking the last tray piece brings a new tray. */bench:LinePiece|null;rescue:boolean;score:number;level:number;streak:number;miss:number;over:boolean;
  /** placements done; ids for pieces. */nextId:number;stats:LineStats;
 };
-const emptyStats=():LineStats=>({placed:0,beans:0,lines:0,clears:0,bestCombo:0,bestStreak:0,cleanSheets:0,refs:0,deals:0,bigShapes:0});
+const emptyStats=():LineStats=>({placed:0,beans:0,lines:0,clears:0,bestCombo:0,bestStreak:0,cleanSheets:0,refs:0,deals:0,bigShapes:0,teamLines:0,holds:0});
 
 export type LineUp=ReturnType<typeof createLineUp>;
 /** fixLevel: tests only (hold the ramp at one level to measure it). */
 export function createLineUp(opts:{seed:number;daily?:boolean;fixLevel?:number}){
  const N=LU.size,rnd=mulberry(opts.seed);
- const s:LineState={seed:opts.seed,daily:!!opts.daily,grid:new Uint8Array(N*N),ref:new Uint8Array(N*N),tray:[null,null,null],score:0,level:1,streak:0,miss:0,over:false,nextId:1,stats:emptyStats()};
+ const s:LineState={seed:opts.seed,daily:!!opts.daily,grid:new Uint8Array(N*N),ref:new Uint8Array(N*N),tray:[null,null,null],bench:null,rescue:false,score:0,level:1,streak:0,miss:0,over:false,nextId:1,stats:emptyStats()};
  const events:LineEvent[]=[];if(opts.fixLevel)s.level=opts.fixLevel;
- const emit=(type:LineEventType,o:Partial<LineEvent>={})=>{events.push({type,cells:o.cells??[],rows:o.rows??[],cols:o.cols??[],points:o.points??0,a:o.a??0,b:o.b??0,kit:o.kit??0,kits:o.kits??[]});};
+ const emit=(type:LineEventType,o:Partial<LineEvent>={})=>{events.push({type,cells:o.cells??[],rows:o.rows??[],cols:o.cols??[],points:o.points??0,a:o.a??0,b:o.b??0,kit:o.kit??0,kits:o.kits??[],team:o.team??[],from:o.from??[]});};
+ const pieceAt=(slot:number)=>slot===LU.bench?s.bench:s.tray[slot]??null;
  const free=(i:number)=>s.grid[i]===0&&s.ref[i]===0;
  function fits(shape:number,x:number,y:number){const d=SHAPES[shape];if(!d||x<0||y<0||x+d.w>N||y+d.h>N)return false;for(const [cx,cy] of d.cells)if(!free((y+cy)*N+x+cx))return false;return true;}
  function fitsAnywhere(shape:number){const d=SHAPES[shape];for(let y=0;y+d.h<=N;y++)for(let x=0;x+d.w<=N;x++)if(fits(shape,x,y))return true;return false;}
  /** Lines a placement would complete (for the ghost's highlight and for scoring). */
- function linesIf(shape:number,x:number,y:number){
-  const d=SHAPES[shape],add=new Set(d.cells.map(([cx,cy])=>(y+cy)*N+x+cx)),rows:number[]=[],cols:number[]=[];
+ function linesIf(shape:number,x:number,y:number,kit=-1){
+  const d=SHAPES[shape],add=new Set(d.cells.map(([cx,cy])=>(y+cy)*N+x+cx)),rows:number[]=[],cols:number[]=[],team:TeamLine[]=[],cnt=[0,0,0,0,0,0];
+  const teamOf=(line:number,col:boolean)=>{cnt.fill(0);for(let k=0;k<N;k++){const i=col?k*N+line:line*N+k,v=add.has(i)?kit:s.grid[i]-1;if(v>=0)cnt[v]++;}const m=Math.max(...cnt);if(m>=LU.teamNeed)team.push({line,col,kit:cnt.indexOf(m)});};
   const full=(i:number)=>s.grid[i]!==0||add.has(i);
-  for(let r=0;r<N;r++){let ok=true;for(let c=0;c<N;c++)if(!full(r*N+c)){ok=false;break;}if(ok)rows.push(r);}
-  for(let c=0;c<N;c++){let ok=true;for(let r=0;r<N;r++)if(!full(r*N+c)){ok=false;break;}if(ok)cols.push(c);}
-  return {rows,cols};
+  for(let r=0;r<N;r++){let ok=true;for(let c=0;c<N;c++)if(!full(r*N+c)){ok=false;break;}if(ok){rows.push(r);if(kit>=0)teamOf(r,false);}}
+  for(let c=0;c<N;c++){let ok=true;for(let r=0;r<N;r++)if(!full(r*N+c)){ok=false;break;}if(ok){cols.push(c);if(kit>=0)teamOf(c,true);}}
+  return {rows,cols,team};
  }
  function pickShape(level:number){
   const R=rampFor(level);let t=rnd()*R.tier.reduce((a,b)=>a+b,0),tier=0;for(;tier<3;tier++){t-=R.tier[tier];if(t<0)break;}
@@ -130,28 +145,37 @@ export function createLineUp(opts:{seed:number;daily?:boolean;fixLevel?:number})
   const R=rampFor(s.level);let shapes:number[]=[];
   // fair deal: levels 1-3 (fair>=30) re-deal until every piece fits somewhere; later only until one does, with fewer tries
   for(let attempt=0;attempt<=R.fair;attempt++){shapes=[pickShape(s.level),pickShape(s.level),pickShape(s.level)];if(R.fair>=30?shapes.every(fitsAnywhere):shapes.some(fitsAnywhere))break;}
+  // an open pitch never gets three dead pieces (AAA pass): keep dealing while none fits and there is real room
+  if(!shapes.some(fitsAnywhere)){let open=0;for(let i=0;i<N*N;i++)if(free(i))open++;for(let k=0;k<60&&open>=LU.openFree&&!shapes.some(fitsAnywhere);k++)shapes=[pickShape(s.level),pickShape(s.level),pickShape(s.level)];}
   s.tray=shapes.map(shape=>({id:s.nextId++,shape,kit:Math.floor(rnd()*KIT.length)}));s.stats.deals++;emit('deal');
   // a referee walks on with the tray (never onto the last free squares of a nearly full pitch)
   const onPitch=s.ref.reduce((a,v)=>a+(v>0?1:0),0);
   if(R.refs>onPitch&&rnd()<R.refChance){const open:number[]=[];for(let i=0;i<N*N;i++)if(free(i))open.push(i);
    if(open.length>12){const i=open[Math.floor(rnd()*open.length)];s.ref[i]=R.life;s.stats.refs++;emit('refOn',{cells:[i],a:R.life});}}
  }
- function checkOver(){if(s.over)return;if(!s.tray.some(p=>p&&fitsAnywhere(p.shape))){s.over=true;emit('over');}}
+ function checkOver(){if(s.over)return;s.rescue=false;if(s.tray.some(p=>p&&fitsAnywhere(p.shape))||(s.bench&&fitsAnywhere(s.bench.shape)))return;
+  // nothing fits: an empty bench still saves the run when one tray piece is left (parking it brings the next tray)
+  if(!s.bench&&s.tray.filter(Boolean).length===1){s.rescue=true;return;}s.over=true;emit('over');}
+ /** Parks tray slot `slot` on the bench; a piece already there hops into that slot. Costs no placement. False when nothing changes. */
+ function hold(slot:number){
+  const p=s.tray[slot];if(s.over||!p||slot<0||slot>=LU.tray)return false;const back=s.bench;s.bench=p;s.tray[slot]=back;s.stats.holds++;
+  emit('hold',{a:slot,b:back?1:0,kit:p.kit});if(s.tray.every(t=>t===null))deal();checkOver();return true;
+ }
  /** Places tray slot `slot` with its top-left cell at x,y. Returns false (and changes nothing) when it does not fit. */
  function place(slot:number,x:number,y:number){
-  const p=s.tray[slot];if(s.over||!p||!fits(p.shape,x,y))return false;const d=SHAPES[p.shape];
-  const cells=d.cells.map(([cx,cy])=>(y+cy)*N+x+cx);for(const i of cells)s.grid[i]=p.kit+1;s.tray[slot]=null;
+  const p=pieceAt(slot);if(s.over||!p||!fits(p.shape,x,y))return false;const d=SHAPES[p.shape];
+  const {rows,cols,team}=linesIf(p.shape,x,y,p.kit),k=rows.length+cols.length;
+  const cells=d.cells.map(([cx,cy])=>(y+cy)*N+x+cx);for(const i of cells)s.grid[i]=p.kit+1;if(slot===LU.bench)s.bench=null;else s.tray[slot]=null;
   const placePts=d.n*LU.cellPts;s.score+=placePts;s.stats.placed++;s.stats.beans+=d.n;if(d.n>=5)s.stats.bigShapes++;
   emit('place',{cells,points:placePts,a:slot,kit:p.kit});
   // lines
-  const {rows,cols}=linesIf(p.shape,x,y),k=rows.length+cols.length;
   if(k>0){
    s.streak=s.miss<=LU.streakGrace&&s.streak>0?s.streak+1:1;s.miss=0;
-   const pts=Math.round(linePoints(k)*streakFactor(s.streak)*levelFactor(s.level)),gone=new Set<number>();
+   const pts=Math.round((linePoints(k)+team.length*LU.teamPts)*streakFactor(s.streak)*levelFactor(s.level)),gone=new Set<number>();
    for(const r of rows)for(let c=0;c<N;c++)gone.add(r*N+c);for(const c of cols)for(let r=0;r<N;r++)gone.add(r*N+c);
    const cleared=[...gone],kits=cleared.map(i=>s.grid[i]-1);for(const i of gone)s.grid[i]=0;
-   s.score+=pts;s.stats.lines+=k;s.stats.clears++;s.stats.bestCombo=Math.max(s.stats.bestCombo,k);s.stats.bestStreak=Math.max(s.stats.bestStreak,s.streak);
-   emit('clear',{cells:cleared,kits,rows,cols,points:pts,a:k,b:s.streak,kit:p.kit});
+   s.score+=pts;s.stats.lines+=k;s.stats.teamLines+=team.length;s.stats.clears++;s.stats.bestCombo=Math.max(s.stats.bestCombo,k);s.stats.bestStreak=Math.max(s.stats.bestStreak,s.streak);
+   emit('clear',{cells:cleared,kits,rows,cols,points:pts,a:k,b:s.streak,kit:p.kit,team,from:cells});
    if(s.grid.every(v=>v===0)){const bonus=Math.round(LU.cleanPts*levelFactor(s.level));s.score+=bonus;s.stats.cleanSheets++;emit('clean',{points:bonus});}
   }else if(s.streak>0){s.miss++;if(s.miss>LU.streakGrace){emit('streakLost',{b:s.streak});s.streak=0;s.miss=0;}}
   // referees count down
@@ -162,9 +186,9 @@ export function createLineUp(opts:{seed:number;daily?:boolean;fixLevel?:number})
  }
  deal();checkOver();
  return {
-  state:s,fits,fitsAnywhere,linesIf,place,
+  state:s,fits,fitsAnywhere,linesIf,place,hold,pieceAt,
   /** Ghost preview for a tray slot at a cell. */
-  preview(slot:number,x:number,y:number){const p=s.tray[slot];if(!p)return {ok:false,rows:[] as number[],cols:[] as number[]};const ok=fits(p.shape,x,y);return ok?{ok,...linesIf(p.shape,x,y)}:{ok,rows:[] as number[],cols:[] as number[]};},
+  preview(slot:number,x:number,y:number){const p=pieceAt(slot);if(!p)return {ok:false,rows:[] as number[],cols:[] as number[],team:[] as TeamLine[]};const ok=fits(p.shape,x,y);return ok?{ok,...linesIf(p.shape,x,y,p.kit)}:{ok,rows:[] as number[],cols:[] as number[],team:[] as TeamLine[]};},
   drain(fn:(e:LineEvent)=>void){const list=events.splice(0);for(const e of list)fn(e);},
  };
 }

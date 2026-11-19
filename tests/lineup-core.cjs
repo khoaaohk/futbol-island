@@ -11,14 +11,14 @@ let n=0;const ok=(name,fn)=>{fn();n++;};
 /** Holes: empty squares closed in on three or four sides (a bot's sense of a messy pitch). */
 function holes(s){let h=0;for(let i=0;i<64;i++){if(s.grid[i]||s.ref[i])continue;const x=i%8,y=i>>3;let c=0;for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const X=x+dx,Y=y+dy;if(X<0||Y<0||X>7||Y>7||s.grid[Y*8+X]||s.ref[Y*8+X])c++;}if(c>=3)h++;}return h;}
 /** A careful greedy player: tries every tray piece at every square, scores lines, few holes, an emptier pitch. */
-function botMove(g){const s=g.state;let best=null;
- for(let k=0;k<3;k++){const p=s.tray[k];if(!p)continue;const d=SHAPES[p.shape];
+function botMove(g,bench=true){const s=g.state;let best=null;
+ for(let k=0;k<(bench?4:3);k++){const p=g.pieceAt(k);if(!p)continue;const d=SHAPES[p.shape];
   for(let y=0;y+d.h<=8;y++)for(let x=0;x+d.w<=8;x++){if(!g.fits(p.shape,x,y))continue;const ln=g.linesIf(p.shape,x,y),keep=s.grid.slice();
    for(const [cx,cy] of d.cells)s.grid[(y+cy)*8+x+cx]=1;for(const r of ln.rows)for(let c=0;c<8;c++)s.grid[r*8+c]=0;for(const c of ln.cols)for(let r=0;r<8;r++)s.grid[r*8+c]=0;
    let fill=0;for(let i=0;i<64;i++)fill+=s.grid[i]?1:0;const v=(ln.rows.length+ln.cols.length)*10-holes(s)*3-fill*.2+d.n*.5;s.grid.set(keep);
    if(!best||v>best.v)best={v,k,x,y};}}
  return best;}
-function play(opts,cap=5000){const g=K.createLineUp(opts);let moves=0;while(!g.state.over&&moves<cap){const m=botMove(g);if(!m)break;assert.ok(g.place(m.k,m.x,m.y),'the bot only plays legal moves');g.drain(()=>{});moves++;}return g;}
+function play(opts,cap=5000){const g=K.createLineUp(opts);let moves=0;while(!g.state.over&&moves<cap){const m=botMove(g,!opts.noBench);if(!m){/* AAA pass: nothing fits, the bench is the way out */if(g.state.rescue&&!opts.noBench){assert.ok(g.hold(g.state.tray.findIndex(Boolean)));continue;}break;}assert.ok(g.place(m.k,m.x,m.y),'the bot only plays legal moves');g.drain(()=>{});moves++;}return g;}
 
 ok('shapes: 18 groups, every rotation and mirror once, 1-5 beans, tiers 0-3',()=>{
  assert.equal(SHAPE_GROUPS.length,18);const keys=new Set(SHAPES.map(s=>s.group+':'+s.cells.map(c=>c.join(',')).join(';')));assert.equal(keys.size,SHAPES.length,'no duplicate orientation');
@@ -42,13 +42,43 @@ ok('placing: a tray of three, refused when it does not fit, a new tray the momen
 ok('lines: a full row and a full column clear together, combo and streak scoring, clean sheet',()=>{
  const g=K.createLineUp({seed:3}),s=g.state;const slot=0,sh=SHAPES[s.tray[slot].shape];
  // fill row 0 and column 0 except the cells the piece covers at 0,0, so one piece completes both
- const cover=new Set(sh.cells.map(([x,y])=>y*8+x));for(let i=0;i<8;i++){if(!cover.has(i))s.grid[i]=1;if(!cover.has(i*8))s.grid[i*8]=1;}
+ const cover=new Set(sh.cells.map(([x,y])=>y*8+x));for(let i=0;i<8;i++){if(!cover.has(i))s.grid[i]=1+i%6;if(!cover.has(i*8))s.grid[i*8]=1+(i+3)%6;}/* mixed ball types: no team line here */
  const pre=s.score;g.drain(()=>{});assert.ok(g.place(slot,0,0));const ev=[];g.drain(e=>ev.push(e));const clear=ev.find(e=>e.type==='clear');
  assert.ok(clear&&clear.rows.includes(0)&&clear.cols.includes(0),'row 0 and column 0 clear');assert.equal(clear.a,clear.rows.length+clear.cols.length);
- assert.equal(clear.points,Math.round(K.linePoints(clear.a)*K.streakFactor(1)*K.levelFactor(1)));assert.equal(K.linePoints(1),100);assert.equal(K.linePoints(2),300);assert.equal(K.linePoints(4),1000);
+ assert.equal(clear.team.length,0);assert.equal(clear.points,Math.round(K.linePoints(clear.a)*K.streakFactor(1)*K.levelFactor(1)));assert.ok(clear.from.length===sh.n,'the clear knows the piece it rippled from');assert.equal(K.linePoints(1),100);assert.equal(K.linePoints(2),300);assert.equal(K.linePoints(4),1000);
  assert.equal(clear.kits.length,clear.cells.length,'every cleared bean keeps its kit for the burst');
  const empty=sh.cells.every(([x,y])=>x===0||y===0);assert.equal(ev.some(e=>e.type==='clean'),empty,'CLEAN SHEET exactly when the pitch is empty');assert.ok(s.score>=pre+sh.n+clear.points+(empty?LU.cleanPts:0));
  assert.equal(K.streakFactor(1),1);assert.equal(K.streakFactor(3),2);assert.equal(K.streakFactor(99),LU.streakMax);assert.equal(K.levelFactor(1),1);assert.equal(K.levelFactor(99),LU.levelMax);
+});
+ok('team line (AAA pass): five or more of one ball type in a cleared line pays LU.teamPts more, and the preview says so first',()=>{
+ const g=K.createLineUp({seed:9}),s=g.state,p=s.tray[0],sh=SHAPES[p.shape],top=new Set(sh.cells.filter(c=>c[1]===0).map(c=>c[0]));
+ for(let x=0;x<8;x++)if(!top.has(x))s.grid[x]=((p.kit+1)%6)+1;/* seven or fewer of ANOTHER type: still one type, so a team line of that type */
+ const pre=g.preview(0,0,0);assert.ok(pre.ok&&pre.rows.includes(0));const others=8-top.size;assert.equal(pre.team.length,others>=LU.teamNeed||top.size>=LU.teamNeed?1:0);
+ g.drain(()=>{});assert.ok(g.place(0,0,0));const ev=[];g.drain(e=>ev.push(e));const c=ev.find(e=>e.type==='clear');assert.deepEqual(c.team,pre.team,'the drop pays what the preview showed');
+ assert.equal(c.points,Math.round((K.linePoints(c.a)+c.team.length*LU.teamPts)*K.streakFactor(1)*K.levelFactor(1)));assert.equal(s.stats.teamLines,c.team.length);
+ // four of one type and four of another: no team line
+ const h=K.createLineUp({seed:9}),t=h.state,q=t.tray[0],dot=SHAPES.findIndex(d=>d.n===1);q.shape=dot;for(let x=1;x<8;x++)t.grid[x]=x<4?((q.kit+1)%6)+1:((q.kit+2)%6)+1;/* 3 + 4 + the piece */
+ assert.equal(h.preview(0,0,0).team.length,0,'3 + 4 + 1 is no team line');for(let x=1;x<8;x++)t.grid[x]=x<LU.teamNeed?q.kit+1:((q.kit+2)%6)+1;const tp=h.preview(0,0,0).team;assert.equal(tp.length,1);assert.equal(tp[0].kit,q.kit);assert.equal(tp[0].col,false);
+});
+ok('bench (AAA pass): park a piece, swap it, play it from the bench; parking the last piece deals; it saves a stuck run once',()=>{
+ const g=K.createLineUp({seed:21}),s=g.state,a=s.tray[0],b=s.tray[1];assert.equal(s.bench,null);assert.ok(g.hold(0));assert.equal(s.bench,a);assert.equal(s.tray[0],null);assert.equal(s.stats.placed,0,'parking is not a placement');
+ assert.ok(g.hold(1),'a full bench swaps');assert.equal(s.bench,b);assert.equal(s.tray[1],a);assert.equal(g.hold(0),false,'an empty slot parks nothing');
+ const ev=[];g.drain(e=>ev.push(e.type));assert.equal(ev.filter(t=>t==='hold').length,2);
+ assert.ok(g.preview(LU.bench,0,0).ok);assert.ok(g.place(LU.bench,0,0));assert.equal(s.bench,null);assert.equal(s.stats.placed,1);
+ // park the last tray piece: the next tray comes at once
+ const h=K.createLineUp({seed:22}),t=h.state;t.tray[0]=null;t.tray[1]=null;const deals=t.stats.deals;assert.ok(h.hold(2));assert.equal(t.tray.filter(Boolean).length,3);assert.equal(t.stats.deals,deals+1);
+ // stuck: a full pitch but one hole that the last piece does not fit. Empty bench: not over yet (rescue). Bench in use: over.
+ const big=SHAPES.findIndex(d=>d.n===5),stuck=bench=>{const k=K.createLineUp({seed:23}),u=k.state;u.grid.fill(1);u.grid[0]=0;u.tray[0]=null;u.tray[1]=null;u.tray[2].shape=big;if(bench)u.bench={id:99,shape:big,kit:0};k.drain(()=>{});
+  // any placement would re-check; ask through a refused move, then the public re-check that hold() runs
+  return k;};
+ const free=stuck(false);assert.ok(free.hold(2),'the last piece can be parked');assert.equal(free.state.tray.filter(Boolean).length,3,'and a new tray comes');
+ const full=stuck(true);assert.ok(full.hold(2),'a swap is allowed');const evs=[];full.drain(e=>evs.push(e.type));assert.ok(full.state.over&&evs.includes('over'),'a swap that changes nothing ends the run');
+});
+ok('fair deals (AAA pass): an open pitch never gets three dead pieces, at any level',()=>{
+ for(let seed=1;seed<=40;seed++){const g=K.createLineUp({seed,fixLevel:12}),s=g.state;let guard=0;
+  while(!s.over&&guard++<300){let open=0;for(let i=0;i<64;i++)if(!s.grid[i]&&!s.ref[i])open++;
+   if(s.tray.filter(Boolean).length===3&&open>=LU.openFree+3/* a referee may walk on after the deal */)assert.ok(s.tray.some(p=>g.fitsAnywhere(p.shape)),`seed ${seed}: a fresh tray on an open pitch (${open} free) holds a piece that fits`);
+   const m=botMove(g);if(!m){if(s.rescue){g.hold(s.tray.findIndex(Boolean));continue;}break;}g.place(m.k,m.x,m.y);g.drain(()=>{});}}
 });
 ok('streak: one placement without a clear is forgiven, the second breaks it',()=>{
  const g=K.createLineUp({seed:5}),s=g.state;s.streak=2;s.miss=0;
@@ -70,7 +100,7 @@ ok('the ramp is a table that only ever gets harder',()=>{
  assert.equal(K.rampFor(99),RAMP[RAMP.length-1],'the last row holds forever');assert.equal(K.levelForPlaced(0),1);assert.equal(K.levelForPlaced(LU.perLevel),2);
 });
 ok('bots: later is harder (a held level 12 ends sooner than a held level 1) and a run always ends',()=>{
- const seeds=Array.from({length:30},(_,i)=>1000+i),med=a=>a.slice().sort((x,y)=>x-y)[a.length>>1];
+ const seeds=Array.from({length:+process.env.LU_SEEDS||30},(_,i)=>1000+i),med=a=>a.slice().sort((x,y)=>x-y)[a.length>>1];
  const easy=seeds.map(seed=>play({seed,fixLevel:1},400).state),hard=seeds.map(seed=>play({seed,fixLevel:12},400).state);
  const easyMoves=med(easy.map(s=>s.stats.placed)),hardMoves=med(hard.map(s=>s.stats.placed));
  assert.ok(hard.every(s=>s.over),'every level-12 run ends');assert.ok(hardMoves<easyMoves*.75,`level 12 lasts clearly less (${hardMoves} vs ${easyMoves} placements)`);
@@ -78,7 +108,8 @@ ok('bots: later is harder (a held level 12 ends sooner than a held level 1) and 
  const placed=runs.map(s=>s.stats.placed),scores=runs.map(s=>s.score);
  assert.ok(Math.max(...placed)<1000,'and not after an endless time');assert.ok(med(placed)>=30,`a careful player gets a real run (median ${med(placed)} placements)`);
  assert.ok(med(runs.map(s=>s.level))>=3,'and climbs levels');
- if(process.argv.includes('--bots'))console.log(JSON.stringify({easyMoves,hardMoves,medianPlaced:med(placed),medianScore:med(scores),maxScore:Math.max(...scores),medals:LU.medals}));
+ const plain=seeds.map(seed=>play({seed,noBench:true}).state);assert.ok(plain.every(s=>s.over||s.rescue),'a run that never uses the bench ends too (stuck with the bench still free)');
+ if(process.argv.includes('--bots'))console.log(JSON.stringify({easyMoves,hardMoves,medianPlaced:med(placed),medianScore:med(scores),maxScore:Math.max(...scores),noBench:{medianPlaced:med(plain.map(s=>s.stats.placed)),medianScore:med(plain.map(s=>s.score)),maxScore:Math.max(...plain.map(s=>s.score))},teamLines:runs.reduce((a,s)=>a+s.stats.teamLines,0),lines:runs.reduce((a,s)=>a+s.stats.lines,0),medals:LU.medals}));
  // medals sit where a careful player reaches bronze, a good run silver, and gold is a stretch
  assert.ok(med(scores)>=LU.medals[0],'the bot median earns Bronze');assert.ok(Math.max(...scores)<LU.medals[2]*2,'Gold stays in reach of a great run');
  // board rate: a fast bot (1 s a placement) never beats base + perSecond x seconds
