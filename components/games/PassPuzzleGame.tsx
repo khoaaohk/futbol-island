@@ -64,6 +64,8 @@ const todaysDaily=()=>{const hard=hardDailyDay(new Date(),dailyStars);if(dailyCa
 const season=(d:Date)=>{const m=d.getMonth();return m>=8&&m<=10?'autumn':m===11||m<=1?'winter':m<=4?'spring':'summer';};
 /** The Endless Run puzzle on the pitch (generated, so it is in no catalog): the level lookup and the coach's route read it here. */
 let endlessNow:EndlessPuzzle|null=null;
+/** The finishes that are goals (lib/passPuzzle/aim.ts FinishKind): their praise line belongs to a solved puzzle only. */
+const GOAL_FINISH=new Set<string>(['top-corner','low-corner','high','placed']);
 const levelById=(id:string)=>SCENARIOS.find(s=>s.id===id)??(id.startsWith('endless-')?endlessNow?.scenario:todaysDaily()?.scenario.id===id?todaysDaily()!.scenario:undefined);
 const routeOf=(id:string,heading:boolean):Step[]=>id.startsWith('endless-')?endlessNow?.solution??[]:routeFor(id,heading);
 /** A drawn padlock for closed packs (no emoji as icons). */
@@ -198,9 +200,9 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  // Contact voices distinguish a cushioned header, blocked lane and completed combination.
  const hitStop=useRef(0),chimed=useRef(0),aimSince=useRef(0);
  /** Live combo callout ("One-two!"), keyed so each one replays its pop; cleared by a short timer. */
- const [callout,setCallout]=useState<(Callout&{key:number})|null>(null),calloutKey=useRef(0),streak=useRef(0);
- const shout=useRef((c:Callout)=>{calloutKey.current++;setCallout({...c,key:calloutKey.current});});
- useEffect(()=>{if(!callout)return;const id=setTimeout(()=>setCallout(c=>c?.key===callout.key?null:c),callout.tier>=3?2400:1700);return()=>clearTimeout(id);},[callout]);
+ const [callout,setCallout]=useState<(Callout&{key:number;slow?:boolean})|null>(null),calloutKey=useRef(0),streak=useRef(0);
+ const shout=useRef((c:Callout&{slow?:boolean})=>{calloutKey.current++;setCallout({...c,key:calloutKey.current});});
+ useEffect(()=>{if(!callout)return;const id=setTimeout(()=>setCallout(c=>c?.key===callout.key?null:c),callout.tier>=3?2400:callout.slow?2600:1700);return()=>clearTimeout(id);},[callout]);
  const handleEvent=useCallback((e:PuzzleEvent)=>{
   sceneRef.current?.onEvent(e);const ctx=audio.current;
   if(replayRef.current){const i=replayKicks.current,inputs=replayInputs.current,line=replayCall(e,numbersRef.current,k=>inputs[k]?.kick.receiver,i,(inputs[i]?.calls??[]).map(c=>c.attacker));if(e.type==='kick')replayKicks.current++;if(line)setReplayLine(line);
@@ -261,7 +263,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    if(success)why=explainSuccess(kept,sc,nums,f,2);
    else{const stop=attemptEvents.current.filter(e=>['intercept','deflect','save','parry','offside'].includes(e.type)).at(-1),x=explainFail(r.reason,stop,kept.at(-1),nums,f);if(x){why=[x.why];fix=x.fix;}}}catch{/* the generic copy stays */}
   // Aim anywhere: one line that names what the finish did (the keeper, the corner, the bar).
-  let shotLine:string|undefined;try{shotLine=finishFromEvents(geoOf(sc),attemptEvents.current,kickKeeperX.current,s.flight?.aim,formatRef.current==='7v7')?.line;}catch{/* no line */}
+  let shotLine:string|undefined;try{const fin=finishFromEvents(geoOf(sc),attemptEvents.current,kickKeeperX.current,s.flight?.aim,formatRef.current==='7v7');/* AAA pass: a goal that did not count (too few passes, too slow) must not be praised on a failed try */if(fin&&(success||!GOAL_FINISH.has(fin.kind)))shotLine=fin.line;}catch{/* no line */}
   if(shotLine&&!success)fix=undefined;/* the line already says what to try */
   setOutcome({shotLine,success,stars:starCount(mask),mask,fresh,passes:r.passes,bonus:r.bonus,move,reason:r.reason,attemptsLeft:s.attemptsLeft,why,fix,concept,practise,streak:streak.current,skill});setView('result');stroke.current=null;
   // The failure beat: mark where the move was stopped and lean the camera in before the card lands.
@@ -516,7 +518,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   clearTimeout(e.clockTimer);clearTimeout(e.tickTimer);e.clockTimer=0;e.remaining=0;if(p.clock)endlessClockArm(p.clock*1000);
   applyHint.current();applyScan.current();settleUntil.current=performance.now()+700;wake.current();
   // AAA pass: a step of the ramp is said once, in one splash word, as it arrives (first try at that level only).
-  if(run.tries===0){const word=run.level===5?'Scans cost 1 now':run.level===6?'Clock on!':run.level===10?'No hints now':p.wet?'Wet pitch!':'';if(word)shout.current({text:word,teach:'',tier:2});}
+  if(run.tries===0){const word=run.level===5?'Scans cost 1 now':run.level===6?'Clock on!':run.level===10?'No hints now':p.scenario.weather?.wet?'Wet pitch!':'';if(word)shout.current({text:word,teach:'',tier:2,slow:true});}
   // The next puzzle is built (and engine-checked) while this one is being read, so the change-over never waits for it.
   e.next=null;window.setTimeout(()=>{if(endless.current===e&&e.puzzle===p&&!e.next)try{e.next=endlessPuzzle(run.seed,run.level+1);}catch{/* built on demand instead */}},150);};
  /** On to the next puzzle (or the same one again after a failed try) behind a quick comic wipe. */
@@ -548,7 +550,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   let words:{name:string;line:string|null}|null=null;try{words=puzzleConceptWords(sc.concept,f);}catch{/* the title stands in */}
   if(success){endlessResolve({kind:'solve',move},{kind:'win',title:words?.name??sc.title,line:move?(words?.line??sc.lesson):'A clear shot. Play the passes next time for one more star.'},500);return;}
   let why='';try{const nums=shirtNumbersFor(sc),kept=notes.current.slice(0,world.inputs().length),stop=attemptEvents.current.filter(x=>['intercept','deflect','save','parry','offside'].includes(x.type)).at(-1),x=explainFail(reason,stop,kept.at(-1),nums,f);if(x)why=x.fix||x.why;}catch{/* the generic copy stays */}
-  try{const line=finishFromEvents(geoOf(sc),attemptEvents.current,kickKeeperX.current,world.state.flight?.aim,f==='7v7')?.line;if(line)why=line;}catch{/* the pass copy stays */}
+  try{const fin=finishFromEvents(geoOf(sc),attemptEvents.current,kickKeeperX.current,world.state.flight?.aim,f==='7v7');/* AAA pass: the ball went in but the try failed (too few passes, the counter clock): say why, not "Low into the corner" */if(fin&&!GOAL_FINISH.has(fin.kind))why=fin.line;else if(fin&&reasonCopy[reason??''])why=reasonCopy[reason??''];}catch{/* the pass copy stays */}
   endlessResolve({kind:'fail'},{kind:'fail',title:'So close!',line:why||reasonCopy[reason??'']||'Look again at who can reach the ball.'},1700);};
  const endlessSkip=()=>{const e=endless.current,w=worldRef.current;if(!e||!w||w.state.phase!=='aiming'||e.run.lives<=1||e.timer||!e.puzzle)return;cancelDrawing.current();puzzleUiTap(audio.current);let name=e.puzzle.scenario.title;try{name=puzzleConceptWords(e.puzzle.scenario.concept,formatRef.current)?.name??name;}catch{/* the title stands in */}
   endlessResolve({kind:'skip'},{kind:'skip',title:'Skipped',line:`The move was: ${name}.`},350);};
@@ -604,7 +606,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
    {controlMode!=='auto'&&<label className={styles.powerControl}><span>Power <b>{power===null?'Auto':`${power}%`}</b></span><input ref={powerSlider} aria-label="Pass and shot power" aria-valuetext={power===null?'Automatic power from distance':`${power}% power`} type="range" min="10" max="100" step="5" defaultValue={power??60} onChange={e=>{const value=Number(e.target.value);controls.current.power=value/100;setPower(value);if(stroke.current)stroke.current.dirty=true;wake.current();}}/><button type="button" aria-label="Use automatic power" onClick={()=>{controls.current.power=undefined;setPower(null);if(stroke.current)stroke.current.dirty=true;wake.current();}}>Auto</button></label>}
   </div>}
   {replaying&&<><div className={styles.replayChip} role="status"><Icon name="play" size={14}/> {replayKind==='coach'?`Coach’s route · ${progress.replay==='1x'?'1':'0.6'}×`:`Replay · ${progress.replay==='1x'?'1':'0.38'}×`}{replayLine&&<span className={styles.replayCall} aria-live="polite" data-replay-call>{replayLine}</span>}<button className={styles.camToggle} aria-pressed={playerCam} onClick={togglePlayerView}>{playerCam?'Broadcast view':'Player view'}</button><button className={styles.camToggle} data-replay-speed={progress.replay??'slow'} aria-label={progress.replay==='1x'?'Replay speed: normal. Tap for slow motion':'Replay speed: slow motion. Tap for normal'} onClick={()=>{const next:'slow'|'1x'=progress.replay==='1x'?'slow':'1x';progressRef.current={...progressRef.current,replay:next};setProgress(p=>{const n={...p,replay:next};writeProgress(n);return n;});if(replayKind==='coach')watchCoach();else watchAgain();}}>{progress.replay==='1x'?'1×':'Slow'}</button></div><button className={`pixel-btn ${styles.skip}`} onClick={skipReplay}>Skip</button></>}
-  {callout&&(view==='play'||view==='result')&&!replaying&&<div key={callout.key} className={styles.callout} data-tier={callout.tier} role="status" aria-live="polite" data-callout><b>{callout.text}</b></div>}
+  {callout&&(view==='play'||view==='result')&&!replaying&&<div key={callout.key} className={styles.callout} data-tier={callout.tier} data-slow={callout.slow||undefined} role="status" aria-live="polite" data-callout><b>{callout.text}</b></div>}
   <div ref={loftMeter} className={styles.loft} data-active="false" aria-hidden="true"><i/><span>LIFT</span></div>
   {/* Aim anywhere: the goal face beside the finger while a shot is pointed onto the net (filled in on input by showAim). */}
   <div ref={aimPanel} className={styles.aimPanel} data-aim-panel data-on="false" aria-hidden="true"><svg viewBox="-5 -4 10 6" preserveAspectRatio="xMidYMax meet"><path data-aim="net" className={styles.aimNet}/><path d="M-9 0H9" className={styles.aimGrass}/><path data-aim="frame" className={styles.aimFrame}/><g data-aim="keeper" className={styles.aimKeeper}><path d="M-.42 0v-1.05a.42.42 0 0 1 .84 0V0z"/><circle cx="0" cy="-1.62" r=".3"/><path d="M-.42-1.0-.95-1.5M.42-1.0.95-1.5"/></g><circle data-aim="ring" className={styles.aimRing} r=".3"/><g data-aim="spot" className={styles.aimSpot}><circle r=".16"/><path d="M-.42 0h.22M.2 0h.22M0-.42v.22M0 .2v.22"/></g></svg><b data-aim="word"/></div>

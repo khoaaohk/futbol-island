@@ -101,4 +101,7 @@ console.log('PASS endless lives, scoring and board caps');
  assert(/data-star-fly/.test(g)&&/@keyframes ppStarFly/.test(css)&&/prefers-reduced-motion:reduce\)\{\.starFly\{display:none\}/.test(css),'stars fly to the score; not with reduced motion');assert(/bumpKey=\{endHud\?endHud\.score:undefined\}/.test(g),'the score pill bumps');
  for(const fn of ['puzzleLifeLost','puzzleWipe','puzzleClockTick','puzzleEye','puzzleRunOver','puzzleStarLand'])assert(new RegExp(`export function ${fn}\\(ctx:AudioContext\\|null[^\\n]*\\n if\\(!ready\\(ctx\\)\\)return;`).test(au),fn+' goes through the same gate (mute, hidden tab, voice cap)');
  assert(!/setInterval|\.loop=true/.test(au),'still no loops or intervals in the puzzle voices');
+ const sc=fs.readFileSync(path.join(ROOT,'lib/arcade/passPuzzleScene.ts'),'utf8');assert(/cutMark\.visible=endOut\.visible=splat\.visible=false;[^\n]*scenario=s;/.test(sc),'a new puzzle starts with no fail splat left on the grass');
+ assert(/const GOAL_FINISH=new Set<string>\(\['top-corner','low-corner','high','placed'\]\)/.test(g)&&/if\(fin&&!GOAL_FINISH\.has\(fin\.kind\)\)why=fin\.line;else if\(fin&&reasonCopy\[reason\?\?''\]\)why=reasonCopy/.test(g),'a goal that did not count is not praised on a failed try');
+ assert(/run\.level===5\?'Scans cost 1 now':run\.level===6\?'Clock on!':run\.level===10\?'No hints now':p\.scenario\.weather\?\.wet\?'Wet pitch!'/.test(g),'each step of the ramp is said once as it arrives');
  console.log('PASS endless AAA wiring');}

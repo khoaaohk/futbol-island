@@ -582,3 +582,6 @@
 .game[data-game=puzzle][data-run=endless] .endNote{top:calc(var(--arcade-bar-clear) + 86px + env(safe-area-inset-top,0px))}
 .game[data-game=puzzle][data-run=endless] .starFly{top:calc(var(--arcade-bar-clear) + 102px + env(safe-area-inset-top,0px))}
 @media(min-height:521px){.game[data-game=puzzle][data-run=endless] .callout:not([data-tier="3"]){top:calc(var(--arcade-bar-clear) + 200px + env(safe-area-inset-top,0px))}}
+@media(prefers-reduced-motion:no-preference){.game[data-game=puzzle] .callout[data-slow]{animation-duration:2.6s}}
+/* the ramp's words are a small tag, one line, so the goal and the keeper stay in view while they are read */
+.game[data-game=puzzle] .callout[data-slow]{padding:9px 18px 8px;max-width:calc(100% - 40px)}.game[data-game=puzzle] .callout[data-slow] b{font-size:19px;white-space:nowrap;-webkit-text-stroke-width:4px;text-shadow:3px 3px 0 var(--cm-ink)}
