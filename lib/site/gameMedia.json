@@ -224,12 +224,12 @@
    "w": 332,
    "h": 720,
    "seconds": 10,
-   "mp4": 210777,
-   "webm": 210729,
+   "mp4": 513325,
+   "webm": 717060,
    "poster": {
     "w": 480,
     "h": 1039,
-    "bytes": 33810
+    "bytes": 46266
    }
   },
   "rollball": {
@@ -487,19 +487,19 @@
     "file": "trophydrop-1.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 33810
+    "bytes": 46266
    },
    {
     "file": "trophydrop-2.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 38726
+    "bytes": 60376
    },
    {
     "file": "trophydrop-3.webp",
     "w": 480,
     "h": 1039,
-    "bytes": 40228
+    "bytes": 54454
    }
   ],
   "rollball": [

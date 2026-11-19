@@ -13,11 +13,12 @@ function inside(g){const s=g.state;for(const b of s.bodies){const e=.01;if(!(Num
 const value=t=>2**(t===BEACH?K.BEACH_TIER_AFTER:t);
 /** A bot. fast: drops whenever the cooldown allows; otherwise waits for a settled cabinet (or 1.3 s), like a careful child.
  *  It aims at the highest landed twin of the held item, else somewhere random. Returns the run's numbers. */
-function play(seed,{fast=false,maxSeconds=1500,check}={}){
+function play(seed,{fast=false,maxSeconds=1500,check,shake=true}={}){
  const g=K.createTrophyDrop({seed}),rnd=lcg(seed*97+5),s=g.state,ev=[];let wait=0,dropped=0,frames=0,escaped=0;
  while(!s.over&&frames<maxSeconds*60){
   if(s.cool<=0&&(fast||s.asleep||(wait+=1/60)>=1.3)){wait=0;let best=null;for(const b of s.bodies)if(b.t===s.cur&&b.landed&&(!best||b.y<best.y))best=b;
    g.aim(best&&rnd()<.85?best.x+(rnd()-.5)*2:s.left+rnd()*(s.right-s.left));const t=s.cur;if(g.drop())dropped+=value(t);}
+  if(shake&&s.danger>1&&s.shakes>0)g.shake();// AAA pass (Nov 18 2026): the bot spends its rescue when the clock is half gone
   g.step(1/60);g.drain(e=>ev.push({...e}));frames++;if(!inside(g))escaped++;if(check)check(g,dropped,ev);
  }
  return {g,ev,dropped,frames,escaped,secs:frames/60};
@@ -78,7 +79,7 @@ ok('beach ball: bouncy, cannot merge, two hard hits deflate it into a size-5 bal
 ok('solver: stable stacks that go to sleep (no physics on a settled cabinet), never an item outside the glass',()=>{
  const g=K.createTrophyDrop({seed:21}),s=g.state,rnd=lcg(3);
  for(let k=0;k<26;k++){s.cool=0;s.cur=[0,1,2,3][k%4];g.aim(8+rnd()*84);g.drop();for(let i=0;i<70;i++){g.step(1/60);g.drain(()=>{});assert(inside(g));}}
- for(let i=0;i<60*4;i++){g.step(1/60);g.drain(()=>{});}assert(s.asleep,'the pile sleeps');assert(g.idle||s.danger>0);
+ for(let i=0;i<60*6;i++){g.step(1/60);g.drain(()=>{});}assert(s.asleep,'the pile sleeps');/* Nov 18 2026: 6 s (was 4): a merge now pushes its neighbours */assert(g.idle||s.danger>0);
  const at=JSON.stringify(s.bodies.map(b=>[b.x,b.y])),steps=s.steps;for(let i=0;i<60*5;i++)g.step(1/60);assert.equal(s.steps,steps,'no physics while asleep');assert.equal(JSON.stringify(s.bodies.map(b=>[b.x,b.y])),at,'no drift');
  // a fast item fired at the glass and at a pile stays inside
  s.cool=0;s.cur=0;g.aim(50);g.drop();const b=s.bodies[s.bodies.length-1];b.vx=5000;b.vy=5000;for(let i=0;i<240;i++){g.step(1/60);assert(inside(g),'still inside');}
@@ -93,6 +94,36 @@ ok('the top line: a warning first, the run ends only after items stay above it f
  tr.y=TD.line+tr.r-6;for(let i=0;i<60*2.2;i++){g.step(1/60);g.drain(e=>ev.push(e.type));}assert(s.over&&ev.includes('over'));assert.equal(g.drop(),false,'no drops after the end');
  // a fresh drop above the line is not a danger (grace time)
  const h=K.createTrophyDrop({seed:32});h.aim(50);h.drop();for(let i=0;i<20;i++)h.step(1/60);assert.equal(h.state.danger,0);
+});
+ok('AAA pass (Nov 18 2026): two-ahead queue, buffered drop, bounce and roll, merge push, touch streak, shake, golden relief',()=>{
+ // the queue shows two ahead and the drop list is still one list for everyone
+ const q=K.createTrophyDrop({seed:41}),qs=q.state,list=[];for(let i=0;i<40;i++){const n1=qs.next,n2=qs.next2;qs.cool=0;q.aim(50);q.drop();assert.equal(qs.cur,n1);assert.equal(qs.next,n2);list.push(qs.cur);}
+ const q2=K.createTrophyDrop({seed:41}),l2=[];for(let i=0;i<40;i++){q2.state.cool=0;q2.aim(10+i);q2.drop();if(i===5)q2.shake();l2.push(q2.state.cur);}assert.deepEqual(list,l2,'aim and shake never change the drop list');
+ // a drop asked for during the cooldown is kept and goes when the cooldown ends
+ const g=K.createTrophyDrop({seed:42}),s=g.state;g.aim(30);assert.equal(g.drop(),true);g.aim(70);assert.equal(g.drop(),false);assert.equal(s.queued,true);assert(!g.idle);for(let i=0;i<40;i++)g.step(1/60);assert.equal(s.drops,2,'the buffered drop went');assert.equal(s.queued,false);
+ assert(Math.abs(s.bodies[1].x-70)<1,'at the aim of the moment it goes');
+ // a first landing has one small hop; a ball rolls (angle follows its sideways speed); a big item rocks and stands up again
+ const h=K.createTrophyDrop({seed:43}),t=h.state;t.cur=0;h.aim(50);h.drop();let up=0,landed=false;for(let i=0;i<120;i++){h.step(1/60);const b=t.bodies[0];if(b.landed)landed=true;if(landed)up=Math.max(up,t.floor-b.r-b.y);}assert(up>.3&&up<8,'a small hop ('+up.toFixed(2)+')');
+ t.bodies[0].vx=40;t.asleep=false;for(let i=0;i<30;i++)h.step(1/60);assert(Math.abs(t.bodies[0].a)>.5,'the ball rolled');
+ t.cool=0;t.cur=6;h.aim(20);h.drop();for(let i=0;i<90;i++)h.step(1/60);const big=t.bodies.find(b=>b.t===6);big.vx=60;t.asleep=false;let lean=0;for(let i=0;i<240;i++){h.step(1/60);lean=Math.max(lean,Math.abs(big.a));}assert(lean>.02&&lean<=.5,'it rocks');assert(Math.abs(big.a)<.05,'and stands up again');
+ // a merge pushes its neighbours away
+ const m=K.createTrophyDrop({seed:44}),ms=m.state;ms.cur=0;m.aim(50);m.drop();for(let i=0;i<120;i++)m.step(1/60);const by=ms.bodies[0];by.x=50+TIERS[1].r-TIERS[2].r-TIERS[0].r-1.5;ms.asleep=false;for(let i=0;i<60;i++)m.step(1/60);const x0=by.x;
+ ms.cool=0;ms.cur=1;m.aim(50);m.drop();for(let i=0;i<70;i++)m.step(1/60);ms.cool=0;ms.cur=1;m.aim(50+TIERS[1].r*2);m.drop();let pushed=0;for(let i=0;i<120;i++){m.step(1/60);pushed=Math.max(pushed,x0-by.x);}assert(ms.stats.merges>=1&&pushed>.05,'the bystander moved away ('+pushed.toFixed(2)+')');
+ // touch streak: TD.streakNeed merging drops in a row earn ONE shake; a drop that does not merge ends the streak
+ const k=K.createTrophyDrop({seed:45}),ks=k.state,ev=[];const pair=()=>{for(const x of [20,20+TIERS[0].r*2]){ks.cool=0;ks.cur=0;k.aim(x);k.drop();}for(let i=0;i<70;i++){k.step(1/60);k.drain(e=>ev.push({...e}));}for(const b of [...ks.bodies])if(b.t>0)ks.bodies.splice(ks.bodies.indexOf(b),1);};
+ for(let i=0;i<TD.streakNeed;i++)pair();assert.equal(ks.streak,TD.streakNeed);assert.equal(ks.shakes,1);assert.equal(ev.filter(e=>e.type==='earn').length,1);assert.equal(ks.stats.bestStreak,TD.streakNeed);
+ for(let i=0;i<TD.streakNeed;i++)pair();assert.equal(ks.shakes,1,'holds one at a time');
+ ks.cool=0;ks.cur=3;k.aim(80);k.drop();for(let i=0;i<150;i++){k.step(1/60);k.drain(e=>ev.push({...e}));}assert.equal(ks.streak,0);assert(ev.some(e=>e.type==='miss'),'a miss ends it');const score=ks.score;
+ // the shake: lifts the pile, holds the top-line clock, costs no points, and there are at most TD.shakeMax a run
+ const boot=ks.bodies.find(b=>b.t===3);boot.y=TD.line+boot.r-5;boot.age=5;ks.asleep=true;for(let i=0;i<30;i++)k.step(1/60);assert(ks.danger>0);const d0=ks.danger;
+ assert.equal(k.shake(),true);assert.equal(ks.shakes,0);assert.equal(k.shake(),false,'one use');for(let i=0;i<30;i++){k.step(1/60);assert(inside(k));}assert(ks.danger<d0,'the clock is held');assert.equal(ks.score,score,'no points from a shake');assert.equal(ks.stats.shakes,1);
+ ks.shakesEarned=TD.shakeMax;for(let i=0;i<TD.streakNeed*2;i++)pair();assert.equal(ks.shakes,0,'no more than '+TD.shakeMax+' a run');
+ // the golden double opens the cabinet again
+ const d=K.createTrophyDrop({seed:46}),ds=d.state;ds.level=8;ds.goalLeft=ds.left=K.rampFor(8).inset;ds.goalRight=ds.right=TD.w-K.rampFor(8).inset;ds.goalFloor=ds.floor=TD.h-K.rampFor(8).rise;
+ ds.cur=8;d.aim(32);d.drop();ds.cool=0;ds.cur=8;d.aim(60);d.drop();for(let i=0;i<300;i++)d.step(1/60);assert.equal(ds.stats.doubles,1);assert.equal(ds.left,K.rampFor(8-TD.reliefLevels).inset,'walls step back');assert.equal(ds.floor,TD.h-K.rampFor(8-TD.reliefLevels).rise);
+ assert.deepEqual(d.nextWalls,{left:K.rampFor(9-TD.reliefLevels).inset,right:TD.w-K.rampFor(9-TD.reliefLevels).inset,floor:TD.h-K.rampFor(9-TD.reliefLevels).rise});
+ // a merged item has a short grace before the top line counts it (the pop must not start the clock)
+ assert(TD.mergeGrace>0&&TD.mergeGrace<TD.grace);
 });
 ok('bots: every run ends on its own, later is harder, nothing escapes; scores sit around the medal marks',()=>{
  const out=[];for(const fast of [true,false])for(let seed=1;seed<=(fast?6:4);seed++){const r=play(seed,{fast});const s=r.g.state;
@@ -140,12 +171,16 @@ ok('sound: one limiter, wired to the output and nowhere else; made on the first 
  const a=read('lib/arcade/trophydrop/audio.ts');assert.equal((a.match(/createDynamicsCompressor\(\)/g)||[]).length,1);assert(/master\.connect\(limiter\);limiter\.connect\(ctx\.destination\);/.test(a));
  assert.equal((a.match(/limiter\.connect\(/g)||[]).length,1);assert(!/\.connect\(ctx\.destination\)/.test(a.replace('limiter.connect(ctx.destination)','')));assert(!/\.connect\(limiter\)/.test(a.replace('master.connect(limiter)','')));
  assert(!/new Audio\(|\.mp3|\.ogg|\.wav|fetch\(/.test(a));assert(!/setInterval|setTimeout/.test(a));assert(/ctx\.state==='suspended'\)void ctx\.resume\(\)/.test(a));
- for(const cue of ['drop()','land(tier:number','merge(tier:number,chain:number)','double()','hit(n:number)','pop()','level()','warn()','over()','medal(n:number)'])assert(a.includes(cue),cue);
+ for(const cue of ['drop(tier=0)'/* Nov 18 2026: was drop(); the pluck follows the item's size */,'land(tier:number','merge(tier:number,chain:number)','double()','hit(n:number)','pop()','level()','warn(urgency=0)'/* Nov 18 2026: was warn(); the pips climb as the clock runs */,'over()','medal(n:number)','safe(phew=false)','streak(n:number,charge:number)','miss()','earn()','shake()','deny()'])assert(a.includes(cue),cue);
+ const C=require('../lib/arcade/trophydrop/audio.ts').CHAIN_STEPS;for(let i=1;i<C.length;i++)assert(C[i]>C[i-1],'a chain climbs: rising pitch per link');
  const T=require('../lib/arcade/trophydrop/audio.ts').TIER_STEPS;for(let i=2;i<T.length;i++)assert(T[i]>T[i-1],'rising pitch per tier');
 });
 ok('heat: the loop sleeps on a settled cabinet and lives only while playing; DPR cap; pooled effects',()=>{
  const c=read('components/games/TrophyDropGame.tsx'),v=read('lib/arcade/trophydrop/view.ts');
- assert(/if\(phaseRef\.current!=='playing'\|\|!g\|\|!v\)return;/.test(c)&&/else if\(g\.idle&&!busy\.current&&!holding\.current&&!keys\.current\.size\)\{p\.sleeps\+\+;return;\}/.test(c),'sleeps when idle');
+ assert(/if\(phaseRef\.current!=='playing'\|\|!g\|\|!v\)return;/.test(c)&&/else if\(g\.idle&&!busy\.current&&!holding\.current&&!keys\.current\.size\)\{p\.sleeps\+\+;/.test(c)&&/wakeRef\.current\(\);\},3200\+Math\.random\(\)\*3600\);\n    return;\}/.test(c),'sleeps when idle (Nov 18 2026: it books one resting blink first, then returns)');
+ assert(/if\(!idle\.current&&!reduced\.current\)idle\.current=setTimeout/.test(c)&&/if\(idle\.current\)\{clearTimeout\(idle\.current\);idle\.current=null;\}/.test(c),'the blink timer is one-shot, off under reduced motion and cleared on pause and exit');
+ assert(/const sparks:Spark\[\]=Array\.from\(\{length:48\}/.test(v)&&/if\(st!==stage\|\|s\.stats\.bestTier!==made\)\{stage=st;made=s\.stats\.bestTier;paintScene\(\);\}/.test(v),'pooled sparks; the room is repainted only when the lighting stage or a plaque changes');
+ assert(/if\(stopFor\.current>0\)stopFor\.current-=dt;else g\.step\(dt\);/.test(c),'hit-stop holds the rules, never the picture');
  assert(/Math\.min\(2,window\.devicePixelRatio\|\|1\)/.test(c)&&/frameCapSlot\(now,slot\.current,FRAME_MS\)/.test(c)&&/document\.hidden\)pause\(\)/.test(c));
  assert(/const pops:Pop\[\]=Array\.from\(\{length:16\}/.test(v)&&/const bursts:Burst\[\]=Array\.from\(\{length:12\}/.test(v),'pooled');assert(!/requestAnimationFrame|setInterval/.test(v),'the view has no loop of its own');
  assert(!/shadowBlur|createLinearGradient|createRadialGradient/.test(v),'no glow, no gradients: flat comic print');

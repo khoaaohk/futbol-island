@@ -18,10 +18,10 @@
 .dailyTag{background:var(--cm-teal)}
 .bestTag{border-left:3px solid var(--cm-ink)}
 /* the tier ladder: nine inked discs, small to big */
-.ladder{display:flex;align-items:flex-end;justify-content:center;gap:5px;margin:4px 0 10px;padding:0;list-style:none}
+.ladder{display:flex;align-items:flex-end;justify-content:center;gap:2px;margin:4px 0 10px;padding:0;list-style:none}
 .ladder li{display:grid;place-items:end center}
-.ladder i{display:block;box-sizing:border-box;border:2.5px solid var(--cm-ink);border-radius:50%}
-.ladder li:not([data-on]) i{background:#e9dcc2!important;border-style:dashed}
+.ladder canvas{display:block}
+.ladder canvas[data-off]{opacity:.28;filter:grayscale(1)}
 .ladder li+li::before{content:none}
 /* cards */
 .learn{margin:0 0 6px;font:700 14px/1.35 var(--cm-ui);color:var(--cm-ink)}
@@ -87,3 +87,10 @@
 @media (max-height:600px){.game [data-trophy-card=start] .chips{display:none}.lesson{display:none}}
 @media (prefers-reduced-motion:reduce){.score[data-new-best]{animation:none}}
 .hsSlot+.actions{margin-bottom:12px}
+/* AAA pass (Nov 18 2026): the Shake button in the strip under the cabinet (right thumb); --td-strip is the strip's centre line from the canvas layout */
+.shake.shake{position:absolute;z-index:3;right:12px;top:calc(var(--td-strip,80%) - 26px);min-width:88px;min-height:52px;flex-direction:column;gap:1px;padding:4px 12px}
+.shake small{font:800 11px/1 var(--cm-ui)}
+.shake:disabled{opacity:.55;filter:saturate(.3)}
+.shake[data-ready]{animation:tdReady .5s cubic-bezier(.2,1.6,.4,1) both}
+@keyframes tdReady{0%{scale:.7}100%{scale:1}}
+@media (prefers-reduced-motion:reduce){.shake[data-ready]{animation:none}}
