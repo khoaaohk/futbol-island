@@ -188,7 +188,7 @@ export function createTrophyView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:
   else if(e.type==='double'){burstAt(e.x,e.y,50,SUN);sparkAt(e.x,e.y,24,SUN,150,4);pop(e.x,e.y-20,`+${e.b}`,SUN,26);say('GOLDEN DOUBLE!','The cabinet opens up!',1.6,SUN);flash=.5;if(!reduced)shake=.3;}
   else if(e.type==='pop'){burstAt(e.x,e.y,16,PAPER);sparkAt(e.x,e.y,6,TEAL,70,2.6);pop(e.x,e.y-12,'PSSHH!',TEAL,14,1);}
   else if(e.type==='hit'){pop(e.x,e.y-10,'BOING!',RED,12,1);}
-  else if(e.type==='land'){if(e.b>90)sparkAt(e.x,e.y-.5,e.b>180?4:2,PAPER,26+e.b*.12,2.2,.2);}
+  else if(e.type==='land'){if(e.b>90)sparkAt(e.x,e.y-.5,e.b>180?4:2,PAPER,26+e.b*.12,2.2,.2);if(e.a>=5&&e.b>150&&!reduced)shake=Math.max(shake,.05+(e.a-5)*.02);}// the heavy items thump the cabinet
   else if(e.type==='level'){say(`LEVEL ${e.a}`,'The cabinet gets smaller!',1.3,TEAL);}
   else if(e.type==='streak'){meterPulse=.35;}
   else if(e.type==='miss'){if(e.a>=2)meterMiss=.5;}
@@ -246,8 +246,8 @@ export function createTrophyView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:
   if(s.shakeGrace>0)busy=true;
   // an empty cabinet says how to play (the first drop only)
   if(s.drops===0&&!s.over){lettering('SLIDE TO AIM',L.w/2,L.oy+L.ch*.56,Math.min(26,L.cw*.085),PAPER,-.03);lettering('LET GO TO DROP',L.w/2,L.oy+L.ch*.56+Math.min(34,L.cw*.11),Math.min(26,L.cw*.085),SUN,-.03);}
-  // the next two items: a paper tag pinned on the top right of the frame (drawn BEFORE the held item, so an item aimed at the far right hangs in front of it; on a narrow phone it sits under the level strip)
-  if(!s.over){const nx=L.ox+L.cw-52,ny=Math.max(L.w<384?L.top+6:L.top-8,L.oy-30),ncv=s.next===BEACH?beachSprites[0]:sprites[s.next],tcv=s.next2===BEACH?beachSprites[0]:sprites[s.next2];f.fillStyle=INK;f.fillRect(nx-45,ny-12,98,62);f.fillStyle=PAPER;f.strokeStyle=INK;f.lineWidth=2.5;f.fillRect(nx-48,ny-16,98,62);f.strokeRect(nx-48,ny-16,98,62);
+  // the next two items: a paper tag pinned on the top right of the frame (drawn BEFORE the held item, so an item aimed at the far right hangs in front of it; it sits under the level strip, which is wide on a Daily Drop)
+  if(!s.over){const nx=L.ox+L.cw-52,ny=Math.max(L.top+6,L.oy-30),ncv=s.next===BEACH?beachSprites[0]:sprites[s.next],tcv=s.next2===BEACH?beachSprites[0]:sprites[s.next2];f.fillStyle=INK;f.fillRect(nx-45,ny-12,98,62);f.fillStyle=PAPER;f.strokeStyle=INK;f.lineWidth=2.5;f.fillRect(nx-48,ny-16,98,62);f.strokeRect(nx-48,ny-16,98,62);
    f.fillStyle=INK;f.font='900 10px "Arial Black",Impact,sans-serif';f.textAlign='center';f.textBaseline='middle';f.fillText('NEXT',nx-18,ny-7);f.globalAlpha=.6;f.font='900 8px "Arial Black",Impact,sans-serif';f.fillText('THEN',nx+31,ny-7);f.globalAlpha=1;
    f.beginPath();f.moveTo(nx+13,ny-12);f.lineTo(nx+13,ny+42);f.lineWidth=1.5;f.setLineDash([3,3]);f.stroke();f.setLineDash([]);
    if(ncv){const sz=Math.min(42,ncv.width/dpr*.6);f.drawImage(ncv,nx-18-sz/2,ny+21-sz/2,sz,sz);}if(tcv){const sz=Math.min(26,tcv.width/dpr*.4);f.drawImage(tcv,nx+31-sz/2,ny+21-sz/2,sz,sz);}}
