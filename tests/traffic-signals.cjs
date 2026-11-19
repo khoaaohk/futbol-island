@@ -40,7 +40,9 @@ ok('3. island with lights, 30 simulated minutes: red is obeyed, queues release o
  const body=c=>({x:c.group.position.x,z:c.group.position.z,yaw:c.group.rotation.y,width:(c.pickup?2.1:1.9)-.2,length:(c.pickup?4.5:3.6)-.2});
  const prev=a.cars.map(c=>({p:c.group.position.clone(),v:c.v,yaw:c.group.rotation.y,remaining:c.length-c.distance,route:c.from+':'+c.to,heldAtRed:false})),idle=Array(N).fill(0),longest=Array(N).fill(0),travel=Array(N).fill(0);
  let ranRed=0,crossings=0,waitedAtRed=0,releasedOnGreen=0,hardStops=0,worstTurn=0,worstCayTurn=0,worstGap=Infinity,worstOverlap=0,lampErrors=0,redAge=0;
- for(let tick=0;tick<30*3600;tick++){a.update(dt,far,still);const clock=a.signals.clock;
+ // The visitor hovers over the town (too high to be a pedestrian), so the lamps are in range and painted.
+ const over={x:60,y:40,z:-40};
+ for(let tick=0;tick<30*3600;tick++){a.update(dt,over,still);const clock=a.signals.clock;
   for(let i=0;i<N;i++){const c=a.cars[i],s=prev[i],d=c.group.position.distanceTo(s.p),route=c.from+':'+c.to,remaining=c.length-c.distance;travel[i]+=d;idle[i]=d<1e-6?idle[i]+dt:0;longest[i]=Math.max(longest[i],idle[i]);
    // Speed is eased: never faster up than DRIVE.accel, never an instant stop except the footprint guard (counted).
    assert(c.v-s.v<=D.DRIVE.accel*dt+1e-9,`car ${i} jumped in speed`);if(s.v-c.v>D.DRIVE.hardBrake*dt+1e-9){assert.equal(c.v,0);hardStops++;}
@@ -65,7 +67,8 @@ ok('3. island with lights, 30 simulated minutes: red is obeyed, queues release o
  // The causeway meets the roundabout's west arm at a hook the road graph forces (arrive heading north-east, leave heading south):
  // taken at a crawl by the yaw-rate limit, still far from the old snap.
  assert(worstCayTurn<.13,'cay: no snap at the roundabout entries either');assert(worstGap>.6,'a following vehicle keeps its distance: '+worstGap.toFixed(2));
- assert.equal(lampErrors,0,'the lamps show what the signal model says');assert(a.signals.lamps.stats.uploads<30*60*5,'lamp colours upload only on a change');a.dispose();
+ assert.equal(lampErrors,0,'the lamps show what the signal model says');assert(a.signals.lamps.mesh.visible,'drawn while a signal is in range');
+ {const uploads=a.signals.lamps.stats.uploads;for(let i=0;i<600;i++)a.update(dt,far,still);assert(!a.signals.lamps.mesh.visible&&a.signals.lamps.stats.uploads===uploads,'no lamp draw and no upload when every signal is over 130 m away (Coral Cay, the stadium)');}assert(a.signals.lamps.stats.uploads<30*60*5,'lamp colours upload only on a change');a.dispose();
 });
 ok('4. dense 3x3 grid with lights at every junction, 20 minutes: queues through every box, still no deadlock',()=>{
  const dense=[{x:48,z:-46,w:12,d:68,vertical:true},{x:88,z:-46,w:12,d:68,vertical:true},{x:124,z:-46,w:12,d:68,vertical:true},{x:86,z:-80,w:76,d:12,vertical:false},{x:86,z:-46,w:76,d:12,vertical:false},{x:86,z:-12,w:76,d:12,vertical:false}];

@@ -23,7 +23,7 @@ export type TrafficPerson={position:{x:number;y:number;z:number}};
  *  10.5 m from the junction centre and its nose about 2 m short of the crossing stripes. A vehicle that has the box keeps it until
  *  it is LEAVE_CLEAR metres past the end of its turn (6.5 m past the centre going straight on, its tail clear of the crossing
  *  lanes). Letting go sooner (a flat 8 m of route) locked the island within minutes once the stop lines moved this close. */
-const STOP_ZONE=5.5,LEAVE_CLEAR=1.5,TURN_MARGIN=5,LANE=2,MAX_YAW_RATE=2.2;
+const STOP_ZONE=5.5,LEAVE_CLEAR=1.5,TURN_MARGIN=5,LANE=2,MAX_YAW_RATE=2.2,LAMP_RANGE=130;
 /** Nine cars (two start at Coral Cay's end of the causeway: the roundabout's west arm and the boulevard; the causeway itself is
  *  one road link, so no node sits on it) and two collectible pickup trucks navigate the authored road graph, yielding to visitors and traffic.
  *  Nov 18 2026: every vehicle has a speed that eases toward the lowest of its limits (lib/town/trafficDriving.ts), keeps a
@@ -75,7 +75,10 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
  for(const n of nodes)if(signalOffset[n.id]>=0&&signalOffset[boxOf(n.id)]>=0)signalOffset[n.id]=signalOffset[boxOf(n.id)];
  const lamps=signalHeads.length?createTrafficSignalLamps(scene,signalHeads):null,headNode=signalHeads.map(h=>{const n=nodes.find(n=>Math.abs(n.x-h.jx)<.6&&Math.abs(n.z-h.jz)<.6);return n&&signalOffset[n.id]>=0?n.id:-1;});
  let clock=0,lampTick=-1;
- const paintLamps=()=>{if(!lamps)return;let changed=false;const flash=flashOn(clock)?YELLOW:-1;for(let i=0;i<signalHeads.length;i++){const node=headNode[i];if(lamps.set(i,node>=0?signalLight(clock,signalOffset[node],signalHeads[i].axis):flash))changed=true;}if(changed)lamps.commit();};
+ // The lamp draw is skipped (and nothing is painted or uploaded) while no signal is within LAMP_RANGE of the visitor: from Coral Cay,
+ // the stadium or the far beaches the whole town's lamps would otherwise be one more draw that the old per-chunk lenses never cost.
+ const lampSites=signalHeads.filter((h,i)=>signalHeads.findIndex(o=>o.jx===h.jx&&o.jz===h.jz)===i).map(h=>({x:h.jx,z:h.jz}));
+ const paintLamps=(x:number,z:number)=>{if(!lamps)return;let near=false;for(const site of lampSites){const dx=site.x-x,dz=site.z-z;if(dx*dx+dz*dz<LAMP_RANGE*LAMP_RANGE){near=true;break;}}lamps.mesh.visible=near;if(!near)return;let changed=false;const flash=flashOn(clock)?YELLOW:-1;for(let i=0;i<signalHeads.length;i++){const node=headNode[i];if(lamps.set(i,node>=0?signalLight(clock,signalOffset[node],signalHeads[i].axis):flash))changed=true;}if(changed)lamps.commit();};
  const glow={head:.12,tail:.06};
  const cars=['#bb6857','#638d9c','#d9b563','#7eaa81','#ab8eaf','#e1b796','#6a919e','#319c8c','#efad45',...(cayTraffic?['#6fa7c9','#c77d9d']:[])].map((color,i)=>{const group=new T.Group();group.name='street-car-'+i;group.rotation.order='YXZ';root.add(group);
   const pickup=i===7||i===8;if(pickup)group.name='matchday-pickup-'+(i-7);
@@ -183,7 +186,7 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
  /** Red, or a yellow it can stop for comfortably: the vehicle may not take the box and waits at the stop line. Past the line it clears. */
  const heldByLight=(car:Car)=>car.signalNode>=0&&!leaving(car)&&signalStop(signalLight(clock,signalOffset[car.signalNode],car.axis),car.length-car.distance-STOP_ZONE,car.v,DRIVE.brake);
  function update(dt:number,player:{x:number;y:number;z:number},interaction?:{vx:number;vz:number;reduced:boolean;onCrash:()=>void;drive?:{x:number;z:number};people?:readonly TrafficPerson[]}){stats.trafficChecks=stats.deferredDecisions=0;
-  const step=Math.min(.05,Math.max(0,dt));if(step>0){clock+=step;const tick=Math.floor(clock*5);if(tick!==lampTick){lampTick=tick;paintLamps();}}
+  const step=Math.min(.05,Math.max(0,dt));if(step>0){clock+=step;const tick=Math.floor(clock*5);if(tick!==lampTick){lampTick=tick;paintLamps(player.x,player.z);}}
   // Each vehicle's box is worked out once per frame (`boxNow`: the box it is in or needs; `junctionNow`: the same unless a light
   // holds it), then used to release, to claim and, below, to decide who waits. A free box goes to whoever has wanted it longest
   // (first come, first served; the lower index on a tie): handing it to the lowest index let a stream of cars starve a waiting truck.
@@ -267,7 +270,7 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
  }}
  /** Day, sunset or night (Town calls it beside world.updateTrafficSignals): headlamps and tail lamps come on. Emissive only. */
  function setTimeOfDay(mode:string){glow.head=mode==='night'?1.5:mode==='sunset'?.7:.12;glow.tail=mode==='night'?.55:mode==='sunset'?.3:.06;for(const car of cars){car.look.lamp.x=glow.head;car.look.lamp.y=glow.tail;}}
- paintLamps();update(0,{x:0,y:99,z:0});
+ paintLamps(0,0);update(0,{x:0,y:99,z:0});
  return {stats,root,cars,nodes,cayTraffic,rider,boost,bedAt,bedPoint,overTruck,landingTruckAt,touchdown,updateLandingIndicator,update,setTimeOfDay,
   /** The lights: heads, which node each belongs to (-1: flashing yellow), per-node cycle offsets (-1: none), the lamp mesh, the clock. */
   signals:{stopZone:STOP_ZONE,heads:signalHeads,headNode,offset:signalOffset,lamps,get clock(){return clock;}},
