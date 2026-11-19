@@ -880,7 +880,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     disposers.add(()=>truckReactions.dispose());
     const rideRamps=[...planRideRamps(world.roads,world.obstacles,world.surfaceAreas.filter(area=>area.kind==='path')),...planRoofRamps(world.buildings)],rampVisuals=createRideRampVisuals(rideRamps),rampMotion=createRampMotion(rideRamps,world.obstacles,world.buildings,world.walls);scene.add(rampVisuals.root);
     disposers.add(()=>rampVisuals.dispose());
-    const streetTraffic=createStreetTraffic(scene,world.obstacles,world.roads,rideRamps);
+    const streetTraffic=createStreetTraffic(scene,world.obstacles,world.roads,rideRamps,world.signalHeads);
     disposers.add(()=>streetTraffic.dispose());
     const rooftop=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,location,world.roofObstacles,(x,z)=>rampSurface(rideRamps,x,z),world.landingExclusions,world.canopies);
     // Landing from the sky (jetpack, parachute): canopies over open ground count (canopySurfaces.ts); the ground's view leaves them out.
@@ -1869,7 +1869,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       world.plazaFlags.update(active&&!fieldMenu.current?dt:0,reduced);
       propReactions.update(active&&!fieldMenu.current?dt:0,reduced);
       ballReactions.update(active&&!fieldMenu.current?dt:0,camera,reduced,!fieldMenu.current&&!lessonRef.current);
-      lighting.update(timeRef.current,dt,reduced);if(signalMode!==timeRef.current){signalMode=timeRef.current;world.updateTrafficSignals(timeRef.current);}
+      lighting.update(timeRef.current,dt,reduced);if(signalMode!==timeRef.current){signalMode=timeRef.current;world.updateTrafficSignals(timeRef.current);streetTraffic.setTimeOfDay(timeRef.current);}
       streetTraffic.root.visible=!fieldMenu.current&&!lessonRef.current;
       if(truckBoostRequested.current){truckBoostRequested.current=false;if(streetTraffic.rider.index>=0)streetTraffic.boost();}
       if(truckHonkRequested.current){truckHonkRequested.current=false;if(streetTraffic.rider.index>=0)sound.honk();}
@@ -1882,7 +1882,7 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
       if(publicWorld.current){const t=performance.now();lifeFrame(t,Date.now(),publicCount());activityGlows?.frame(camera,t);{const pl=liveJoin.joined?liveJoin.format:null;if(pl!==glowPlaying){glowPlaying=pl;refreshGlows();}}/* phase 3: the Match o'clock clock (1 Hz) and no glow over my own pitch */publicFrame(t,othersNear());holdoutFrame(t);publicTick(t,location.x,location.z,liveJoin.joined||liveKnockout.joined||!!lessonRef.current||!!fieldSession.current);}// public island: minutes with others near; the first-time card's 25 m check (2 Hz) and its busy flag
       partyFrame(performance.now());// minutes in a live party: a comparison per frame, a sample every ~5 s (lib/analytics/partyEvents.ts)
       summitTravel.sample(location.x,location.z,rideRef.current==='jetpack'||jetActions.state.phase==='parachute',dt);
-      if(streetTraffic.root.visible&&(!backgroundFrozen||live.traffic))streetTraffic.update(active?heldDt:0,{x:location.x,y:rideRef.current==='jetpack'?flight.height:rooftop.state.height+rampMotion.state.lift,z:location.z},{drive:{x:driveX*.857+driveZ*.515,z:-driveX*.515+driveZ*.857},vx:rooftop.state.recovery>0?0:velocity.x,vz:rooftop.state.recovery>0?0:velocity.z,reduced,onCrash:()=>{resetInputs();velocity.x=velocity.z=0;rideTricks.reset();rampMotion.reset();spinCrashAge=0;rooftop.state.recovery=ROOF_RECOVERY_TIME;sound.impact();tapHaptic();}});
+      if(streetTraffic.root.visible&&(!backgroundFrozen||live.traffic))streetTraffic.update(active?heldDt:0,{x:location.x,y:rideRef.current==='jetpack'?flight.height:rooftop.state.height+rampMotion.state.lift,z:location.z},{drive:{x:driveX*.857+driveZ*.515,z:-driveX*.515+driveZ*.857},vx:rooftop.state.recovery>0?0:velocity.x,vz:rooftop.state.recovery>0?0:velocity.z,reduced,onCrash:()=>{resetInputs();velocity.x=velocity.z=0;rideTricks.reset();rampMotion.reset();spinCrashAge=0;rooftop.state.recovery=ROOF_RECOVERY_TIME;sound.impact();tapHaptic();},people:islandNpcs.entries});
       const hitTruck=streetTraffic.rider.index>=0?streetTraffic.cars[streetTraffic.rider.index]:null;
       const ride=rideRef.current,lightRide=ride==='scooter'||ride==='bike'||ride==='moped'?ride:null;
       const rideSpeed=Math.hypot(velocity.x,velocity.z),grounded=rampMotion.state.lift<.45&&!rooftop.state.falling;
