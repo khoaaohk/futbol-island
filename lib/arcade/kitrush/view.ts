@@ -167,12 +167,15 @@ type Dot={on:boolean;x:number;y:number;vx:number;vy:number;life:number;color:str
 type Pop={on:boolean;x:number;y:number;x0:number;y0:number;life:number;max:number;text:string;big:boolean;fly:boolean;color:string};
 type Trail={x:Float32Array;y:Float32Array;t:Float32Array;head:number;n:number};
 const TRAIL=18,TRAIL_MS=150;
-const STAGE_WORDS=['','THIRD KIT!','LOOK-ALIKES!','FOUR KITS!','QUICK SWITCH!','FASTER!'] as const;
-const STAGE_SUBS=['','A NEW TEAM JOINS','CHECK THE PATTERN','ONLY ONE KIT IS YOURS','YOUR KIT CHANGES FASTER','KEEP SCANNING'] as const;
+const STAGE_WORDS=['','THIRD KIT!','LOOK-ALIKES!','FOUR KITS!','QUICK SWITCH!','FASTER!','FASTER STILL!','TOP SPEED!','TOP SPEED!'] as const;
+const STAGE_SUBS=['','A NEW TEAM JOINS','CHECK THE PATTERN','ONLY ONE KIT IS YOURS','YOUR KIT CHANGES FASTER','THE KIT FLIES QUICKER','QUICKER AGAIN','KEEP SCANNING','YOU ARE FLYING'] as const;
 const FOUL_WORDS=['WRONG KIT!','WHISTLE!','DROPPED!','LOOK-ALIKE!'] as const;
 const FOUL_SUBS=['NOT YOUR COLOUR','','SWIPE ALL OF YOUR OWN KIT','RIGHT COLOUR, WRONG PATTERN'] as const;
-// atlas cells: 0-23 the four kits, 24-27 whistle and specials, 28-51 look-alikes (YOUR colour, each pattern), 52-54 team-mate poses, 55-56 referee
-const A_COPY=28,A_MATE=52,A_REF=55,A_CELLS=57;
+// atlas cells: 0-23 the four kits, 24-27 whistle and specials, 28-30 team-mate poses, 31-32 referee: 33 cells, 11 across, 3 rows.
+// Fix round (Nov 18 2026): the look-alikes (YOUR colour, the 3 OTHER patterns: 18 cells, 6 across) live on their own sheet, painted
+// the first time one is thrown (level 6). The pass had put 57 cells on an 8x8 sheet (about 6.7 MB at 2x, was 3.4 MB); a run that never
+// meets a look-alike now holds 33 cells (about 3.5 MB) and a long run 51 (about 5.4 MB). Sprites keep their size and look.
+const A_MATE=28,A_REF=31,A_CELLS=33,A_COLS=11,A_COPY=64,C_COLS=6,C_CELLS=18;
 /** Where the team-mates stand on the left touchline (x, feet up from the bottom edge, size): the nearest first. */
 const MATES=[[11.5,4.5,1.15],[9,23,.94],[7.8,37.5,.8],[7,49,.68]] as const;
 
@@ -192,15 +195,24 @@ export function createKitRushView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts
  const squad=[1,0,0,0],crew={mood:0,moodT:0,jump:0,jumpMax:.5,hop:0,flip:0,ref:0};
  const pointText=new Map<number,string>();let shake=0,flash=0,jit=7,fontPop='',fontPopBig='',fontCall='',fontCap='',fontNote='';
  const rnd=()=>{jit=(jit*1103515245+12345)&0x7fffffff;return jit/0x7fffffff;};
- const sprite=(kind:number,team:number)=>kind<KIT_KINDS?(isCopy(team)?A_COPY+kind*4+(team-COPY_BASE):kind*4+Math.max(0,team)):24+(kind-KIT_KINDS);
- const cell=(i:number)=>{actx.setTransform(1,0,0,1,0,0);actx.clearRect((i%cols)*S,Math.floor(i/cols)*S,S,S);actx.translate((i%cols)*S+S/2,Math.floor(i/cols)*S+S/2);actx.scale(KR.r*u,KR.r*u);};
+ /** A look-alike borrows another team's pattern (never yours): 3 per kit kind on the look-alike sheet. */
+ const copySlot=(pattern:number)=>Math.min(2,pattern<myTeam?pattern:pattern-1);
+ const sprite=(kind:number,team:number)=>kind<KIT_KINDS?(isCopy(team)?A_COPY+kind*3+copySlot(team-COPY_BASE):kind*4+Math.max(0,team)):24+(kind-KIT_KINDS);
+ let copies:HTMLCanvasElement|null=null,cctx:Ctx|null=null;
+ const cellOn=(c:Ctx,i:number,across:number)=>{c.setTransform(1,0,0,1,0,0);c.clearRect((i%across)*S,Math.floor(i/across)*S,S,S);c.translate((i%across)*S+S/2,Math.floor(i/across)*S+S/2);c.scale(KR.r*u,KR.r*u);};
+ const cell=(i:number)=>cellOn(actx,i,cols);
+ function paintCopies(){if(!copies||!cctx||!S)return;if(copies.width!==S*C_COLS||copies.height!==S*C_CELLS/C_COLS){copies.width=S*C_COLS;copies.height=S*C_CELLS/C_COLS;}
+  for(let k=0;k<KIT_KINDS;k++)for(let p=0;p<4;p++){if(p===myTeam)continue;cellOn(cctx,k*3+copySlot(p),C_COLS);paintKit(cctx,k,myTeam,p);}cctx.setTransform(1,0,0,1,0,0);}
+ /** Where sprite `i` lives: the main sheet, or the look-alike sheet (made on first use). */
+ const sheetOf=(i:number):HTMLCanvasElement=>{if(i<A_COPY)return atlas;if(!copies){copies=document.createElement('canvas');cctx=copies.getContext('2d')!;paintCopies();}return copies;};
+ const cellX=(i:number)=>i<A_COPY?(i%cols)*S:((i-A_COPY)%C_COLS)*S,cellY=(i:number)=>i<A_COPY?Math.floor(i/cols)*S:Math.floor((i-A_COPY)/C_COLS)*S;
  /** Everything that wears YOUR kit is painted again when your kit changes: the look-alikes (your colour, the other patterns) and the team-mates. */
- function dress(team:number){myTeam=team;if(!S)return;for(let k=0;k<KIT_KINDS;k++)for(let p=0;p<4;p++){cell(A_COPY+k*4+p);paintKit(actx,k,team,p);}for(let p=0;p<3;p++){cell(A_MATE+p);paintBean(actx,team,p);}actx.setTransform(1,0,0,1,0,0);}
+ function dress(team:number){myTeam=team;if(!S)return;paintCopies();for(let p=0;p<3;p++){cell(A_MATE+p);paintBean(actx,team,p);}actx.setTransform(1,0,0,1,0,0);}
  function resize(cssW:number,cssH:number,ratio:number){
   dpr=ratio;W=Math.max(1,Math.round(cssW*dpr));H=Math.max(1,Math.round(cssH*dpr));u=W/KR.fieldW;
   for(const cv of [bg,fg]){cv.width=W;cv.height=H;}
   paintScene(bctx,W,H,tod);
-  S=Math.ceil(KR.r*u*SPR*2)+2;cols=8;atlas.width=S*cols;atlas.height=S*Math.ceil(A_CELLS/cols);
+  S=Math.ceil(KR.r*u*SPR*2)+2;cols=A_COLS;atlas.width=S*cols;atlas.height=S*Math.ceil(A_CELLS/cols);
   for(let i=0;i<28;i++){cell(i);if(i<24)paintKit(actx,Math.floor(i/4),i%4);else paintSpecial(actx,KIT_KINDS+i-24);}
   for(let p=0;p<2;p++){cell(A_REF+p);paintBean(actx,-1,p);}dress(myTeam);
   const px=(n:number)=>Math.round(n*u);
@@ -242,9 +254,9 @@ export function createKitRushView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts
  }
  function trailStart(p:number){trails[p&3].n=0;}
  function trailPoint(p:number,x:number,y:number,now:number){const t=trails[p&3];t.head=(t.head+1)%TRAIL;t.x[t.head]=x;t.y[t.head]=y;t.t[t.head]=now;if(t.n<TRAIL)t.n++;}
- function drawSprite(i:number,x:number,y:number,rot:number,scale=1){const c=Math.cos(rot)*scale,sn=Math.sin(rot)*scale;ctx.setTransform(c,sn,-sn,c,x*u,y*u);ctx.drawImage(atlas,(i%cols)*S,Math.floor(i/cols)*S,S,S,-S/2,-S/2,S,S);}
+ function drawSprite(i:number,x:number,y:number,rot:number,scale=1){const c=Math.cos(rot)*scale,sn=Math.sin(rot)*scale;ctx.setTransform(c,sn,-sn,c,x*u,y*u);ctx.drawImage(sheetOf(i),cellX(i),cellY(i),S,S,-S/2,-S/2,S,S);}
  /** A bean stands on its feet: squash and stretch grow from the ground. */
- function drawBean(i:number,x:number,feet:number,sx:number,sy:number){ctx.setTransform(sx,0,0,sy,x*u,feet*u);ctx.drawImage(atlas,(i%cols)*S,Math.floor(i/cols)*S,S,S,-S/2,-S/2-FOOT*KR.r*u,S,S);}
+ function drawBean(i:number,x:number,feet:number,sx:number,sy:number){ctx.setTransform(sx,0,0,sy,x*u,feet*u);ctx.drawImage(sheetOf(i),cellX(i),cellY(i),S,S,-S/2,-S/2-FOOT*KR.r*u,S,S);}
  function lettering(text:string,x:number,y:number,font:string,fill:string,stroke:number){ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';ctx.lineJoin='round';ctx.fillStyle=INK;ctx.fillText(text,x+stroke*.9,y+stroke*.9);ctx.lineWidth=stroke;ctx.strokeStyle=INK;ctx.strokeText(text,x,y);ctx.fillStyle=fill;ctx.fillText(text,x,y);}
  function strip(text:string,x:number,y:number,fill:string){ctx.font=fontCap;const w=ctx.measureText(text).width+u*5,hh=u*6.4;ctx.fillStyle=INK;ctx.fillRect(x-w/2+u*.9,y-hh/2+u*.9,w,hh);ctx.fillStyle=fill;ctx.fillRect(x-w/2,y-hh/2,w,hh);ctx.lineWidth=u*.6;ctx.strokeStyle=INK;ctx.strokeRect(x-w/2,y-hh/2,w,hh);ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=INK;ctx.fillText(text,x,y+u*.2);}
  /** Draws one frame of the round. `dt` is real seconds since the last frame, `now` is performance.now(). */
@@ -275,7 +287,7 @@ export function createKitRushView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts
   const items=s.items;for(let i=0;i<items.length;i++){const it=items[i];if(!it.active)continue;let sc=1;if(!opts.reduced){if(!it.peaked){const k=(s.h+KR.r-it.y)/16;if(k<1)sc=.55+.45*k*(2-k);}if(it.kind===KIND.whistle)sc*=1+.06*Math.sin(now*.02+it.seq);}drawSprite(sprite(it.kind,it.team),it.x+ox/u,it.y+oy/u,it.rot,sc);}
   // halves fly apart
   for(const hf of halves){if(!hf.on)continue;hf.life-=dt;if(hf.life<=0||hf.y>s.h+12){hf.on=false;continue;}hf.vy+=150*dt*slow;hf.x+=hf.vx*dt*slow;hf.y+=hf.vy*dt*slow;hf.rot+=hf.vr*dt*slow;
-   const a=hf.cut+hf.rot,c=Math.cos(a),sn=Math.sin(a);ctx.setTransform(c,sn,-sn,c,hf.x*u,hf.y*u);ctx.save();ctx.beginPath();ctx.rect(-S,hf.side>0?0:-S,S*2,S);ctx.clip();ctx.rotate(-hf.cut);ctx.drawImage(atlas,(hf.spr%cols)*S,Math.floor(hf.spr/cols)*S,S,S,-S/2,-S/2,S,S);ctx.restore();}
+   const a=hf.cut+hf.rot,c=Math.cos(a),sn=Math.sin(a);ctx.setTransform(c,sn,-sn,c,hf.x*u,hf.y*u);ctx.save();ctx.beginPath();ctx.rect(-S,hf.side>0?0:-S,S*2,S);ctx.clip();ctx.rotate(-hf.cut);ctx.drawImage(sheetOf(hf.spr),cellX(hf.spr),cellY(hf.spr),S,S,-S/2,-S/2,S,S);ctx.restore();}
   ctx.setTransform(1,0,0,1,ox,oy);
   // star bursts: pop to full size, then gone (print, not a fade)
   for(const b of bursts){if(!b.on)continue;b.life-=dt;if(b.life<=0){b.on=false;continue;}const k=1-b.life/b.max,r=KR.r*u*b.size*(.7+k*1.1);star(ctx,b.x*u,b.y*u,r*1.5,r*.8,9,b.rot);ctx.fillStyle=b.color;ctx.fill();ctx.lineWidth=u*.7;ctx.strokeStyle=INK;ctx.stroke();}
@@ -296,7 +308,7 @@ export function createKitRushView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts
   if(teach.life>0){teach.life-=dt;const k=Math.min(1,(teach.max-teach.life)/.12),sc=opts.reduced?1:.7+.3*k*(2-k),cx=W/2,cy=s.h*u*.52,bw=u*74,bh=u*38,mark=u*5;
    ctx.setTransform(sc,.03*sc,-.03*sc,sc,cx+ox,cy+oy);ctx.fillStyle=INK;ctx.fillRect(-bw/2+u*1.6,-bh/2+u*1.6,bw,bh);ctx.fillStyle=PAPER;ctx.fillRect(-bw/2,-bh/2,bw,bh);ctx.lineWidth=u*.9;ctx.strokeStyle=INK;ctx.strokeRect(-bw/2,-bh/2,bw,bh);
    ctx.beginPath();ctx.moveTo(0,-bh/2);ctx.lineTo(0,bh/2-u*9);ctx.stroke();ctx.font=fontCap;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=INK;ctx.fillText('YOURS',-bw/4,-bh/2+u*4.6);ctx.fillText(teach.cause===2?'ON THE GRASS':'YOU HIT',bw/4,-bh/2+u*4.6);
-   for(let n=0;n<2;n++){const x=(n?1:-1)*bw/4,i=sprite(teach.kind,n&&teach.cause!==2?teach.team:myTeam),z=1.15;ctx.drawImage(atlas,(i%cols)*S,Math.floor(i/cols)*S,S,S,x-S*z/2,-u*3-S*z/2,S*z,S*z);
+   for(let n=0;n<2;n++){const x=(n?1:-1)*bw/4,i=sprite(teach.kind,n&&teach.cause!==2?teach.team:myTeam),z=1.15;ctx.drawImage(sheetOf(i),cellX(i),cellY(i),S,S,x-S*z/2,-u*3-S*z/2,S*z,S*z);
     ctx.lineCap='round';ctx.lineWidth=u*2.6;ctx.strokeStyle=INK;ctx.beginPath();if(n){ctx.moveTo(x+u*8,-u*13);ctx.lineTo(x+u*8+mark,-u*13+mark);ctx.moveTo(x+u*8+mark,-u*13);ctx.lineTo(x+u*8,-u*13+mark);}else{ctx.moveTo(x+u*8,-u*10.5);ctx.lineTo(x+u*10,-u*8.5);ctx.lineTo(x+u*8+mark,-u*13);}ctx.stroke();ctx.lineWidth=u*1.3;ctx.strokeStyle=n?RED:TEAL;ctx.stroke();}
    ctx.fillStyle=teach.cause===2?SUN:RED;ctx.fillRect(-bw/2,bh/2-u*9,bw,u*9);ctx.strokeStyle=INK;ctx.lineWidth=u*.9;ctx.strokeRect(-bw/2,bh/2-u*9,bw,u*9);ctx.font=fontCap;ctx.fillStyle=teach.cause===2?INK:PAPER;ctx.translate(0,bh/2-u*4.3);ctx.scale(teach.fit,teach.fit);ctx.fillText(teach.sub,0,0);ctx.setTransform(1,0,0,1,ox,oy);}
   // the kit card: your kit at kick-off and at every switch (the game holds its breath for the beat)

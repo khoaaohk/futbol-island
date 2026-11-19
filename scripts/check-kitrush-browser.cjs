@@ -21,6 +21,10 @@ const fails=[],check=(ok,what,detail='')=>{console.log(`${ok?'ok  ':'FAIL'} ${wh
  const browser=await chromium.launch({channel:'chrome',headless:!has('headed'),args:['--mute-audio','--use-angle=metal','--enable-gpu','--ignore-gpu-blocklist']});
  try{
   const ctx=await browser.newContext(mobile?{viewport:{width:vw,height:vh},deviceScaleFactor:2,isMobile:true,hasTouch:true,reducedMotion:reduced?'reduce':'no-preference'}:{viewport:{width:1440,height:900},deviceScaleFactor:1,reducedMotion:reduced?'reduce':'no-preference'});
+  // Fix round (Nov 18 2026): the high-score strip only appears when the island board answers. A dev server without the board's keys
+  // answers 503, so this check failed at "high-score strip in the card" on every local run (the game was right, the check assumed a
+  // live board). The board is stubbed: an empty all-time board, so any score places, and nothing is ever posted to a real one.
+  await ctx.route('**/api/arcade-board/**',r=>{const u=r.request().url();r.fulfill({status:200,contentType:'application/json',body:JSON.stringify(u.includes('/start')?{ok:true,token:'check'}:u.includes('/top')?{ok:true,all:[],size:20}:{ok:true})});});
   await ctx.addInitScript(seed);const page=await ctx.newPage(),errors=[];
   page.on('pageerror',e=>errors.push('pageerror: '+e.message.slice(0,200)));
   page.on('console',m=>{if(m.type()!=='error')return;const t=m.text();if(/arcade-board|Failed to load resource|favicon|\[HMR\]|Download the React DevTools/i.test(t))return;errors.push('console: '+t.slice(0,200));});

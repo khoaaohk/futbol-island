@@ -19,6 +19,9 @@ export const KR={dodge:3.2,
  // another pattern: read the pattern, not only the colour), dropped kit (3 of yours on the grass in a row costs a life, so a round always ends),
  // a clean-run bonus when all lives are full, and quicker switches late on
  levelsPerStage:3,breather:.7,copyFrom:6,copyShare:.3,copyStep:.03,copyMax:.55,dropLimit:4,lostFrom:6,cleanBonus:20,cleanBonusCap:3,quickSwitchLevel:12,switchQuick:[3,5] as const,firstWave:.12,
+ // Fix round (Nov 18 2026): the pace was flat after about level 16 (every knob at its cap) while each new stage still said FASTER!.
+ // From stage 5 (level 15) each stage really is quicker: the whole flight runs 6% faster a stage, three steps (+18% from level 21).
+ lateStage:5,lateStep:.06,lateSteps:3,
  switchFirst:[7,9] as const,switchEvery:[5,8] as const,beat:.9,readyBeat:.85,
  specialEvery:[6,9] as const,frenzy:5,frenzyGap:.17,frenzyPoints:15,slow:5,slowScale:.55,armband:8,
  medals:[500,1200,2500,5000] as const,
@@ -44,6 +47,8 @@ export function medalFor(score:number){let m=0;for(const t of KR.medals)if(score
 
 export type KitItem={active:boolean;kind:number;team:number;x:number;y:number;vx:number;vy:number;rot:number;vr:number;frenzy:boolean;peaked:boolean;seq:number;dodged?:boolean};
 type Launch={on:boolean;at:number;kind:number;team:number;x:number;vx:number;vy:number;frenzy:boolean};
+/** How fast the flight runs at a stage: 1 until the late stages, then one readable step a stage (see KR.lateStage). */
+export const kitPace=(stage:number)=>1+KR.lateStep*Math.max(0,Math.min(KR.lateSteps,stage-KR.lateStage+1));
 export type KitEventType='toss'|'slice'|'special'|'foul'|'puff'|'miss'|'call'|'switch'|'ready'|'sub'|'over'|'effectEnd'|'dodge'|'stage'|'streak'|'lost';
 /** Why a life went: the other team's kit, the whistle, three of your own kit dropped in a row, or a look-alike (your colour, another pattern). */
 export const FOUL={rival:0,whistle:1,dropped:2,copy:3} as const;
@@ -209,7 +214,7 @@ export function createKitRush(opts:{seed:number;h?:number;daily?:boolean}){
   for(const k of strokes)if(k.count>0&&s.real-k.last>KR.comboLink)bank(k);
   if(s.safe>0)s.safe-=dr;
   if(s.beat>0){s.beat-=dr;return;}
-  const dt=dr*(s.slow>0?KR.slowScale:1);s.t+=dt;
+  const dt=dr*(s.slow>0?KR.slowScale:1)*kitPace(s.stage);s.t+=dt;
   if(s.slow>0){s.slow-=dr;if(s.slow<=0)emit('effectEnd',0,0,KIND.stopwatch);}
   if(s.armband>0){s.armband-=dr;if(s.armband<=0)emit('effectEnd',0,0,KIND.armband);}
   if(s.frenzy>0){s.frenzy-=dr;

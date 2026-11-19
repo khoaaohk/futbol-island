@@ -184,4 +184,10 @@ ok('AAA pass: swiping blind does not pay; later is faster, riskier and different
  for(let i=0;i<60*105;i++){s.lives=KR.lives;s.drops=0;const mine=s.team;g.step(1/60);const w=s.real<25?win[0]:s.real>=80?win[1]:null;g.drain(e=>{if(!w||e.type!=='toss')return;w.n++;if(e.a===KIND.whistle||(e.a<K.KIT_KINDS&&e.b!==mine)){w.haz++;if(K.isCopy(e.b))w.copy++;else if(e.b>=0)w.teams.add(e.b);}});}
  assert(win[1].n>win[0].n*1.5,'more kit in the air late: '+win[0].n+' then '+win[1].n);assert(win[1].haz/win[1].n>win[0].haz/win[0].n,'a bigger share is not yours');assert.equal(win[0].copy,0);assert(win[1].copy>0,'look-alikes late');assert(win[1].teams.size>win[0].teams.size,'more rival kits late');
 });
+ok('fix round: the late stages really are faster (one readable step a stage, capped), and the early game is untouched',()=>{
+ assert.deepEqual([0,1,4,5,6,7,8,20].map(st=>+K.kitPace(st).toFixed(2)),[1,1,1,1.06,1.12,1.18,1.18,1.18]);
+ const adv=stage=>{const g=K.createKitRush({seed:77,h:170}),s=g.state;for(let i=0;i<600&&s.beat>0;i++)g.step(1/60);s.stage=stage;const t0=s.t;g.step(1/60);return s.t-t0;};
+ assert(Math.abs(adv(0)-1/60)<1e-9,'stage 0 runs at the clock');assert(Math.abs(adv(6)/adv(0)-1.12)<1e-6,'stage 6 runs 12% quicker');
+ assert(KR.lateStage*KR.levelsPerStage>KR.quickSwitchLevel,'the pace step comes after the last new rule');
+});
 console.log(`kitrush-core: ${n} groups passed`);
