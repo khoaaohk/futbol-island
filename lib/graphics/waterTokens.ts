@@ -45,6 +45,14 @@ export const ROOM_SHALLOW='#5cc7c4',ROOM_SHALLOW_MIX=[.62,.18] as const;
 export const ROOM_WINDOW='#8fdcdc',ROOM_SHIMMER='#d8fbf6';
 /** The light lines on the sand (the shore's sun-net, moving): colour and peak strength (0 at heat tier 2+ / Battery saver: static). */
 export const ROOM_CAUSTIC='#bff3e6',ROOM_CAUSTIC_K=.34;
+/** Underwater pass (Nov 18 2026; owner: "murky uniform blue-green water ... make it more dynamic and more visually appealing"). The
+ *  room's far water is the zone's tint pulled ROOM_DEEP_MIX of the way to ROOM_DEEP (a clear deep blue), so the distance reads as
+ *  deep water and the sunlit sand and the bright surface stand out against it; the fog starts ROOM_FOG_NEAR of the zone's near
+ *  distance (was .6: things a few metres off keep their own colour). ROOM_SUN is the baked sun side / shade side on the reef's
+ *  vertex colours (lit, shaded multipliers; the shade leans ROOM_SHADE_TINT toward the water's colour). ROOM_SAND_RIPPLE is the
+ *  strength of the fine sand ripples drawn in the reef's fragment shader (paid for by moving the caustics' up-test and depth
+ *  falloff to the vertex shader). ROOM_RAY_K scales the sun shafts' alpha (same triangles, same area). */
+export const ROOM_DEEP='#1565a8',ROOM_DEEP_MIX=.42,ROOM_FOG_NEAR=.85,ROOM_SUN=[1.16,.7] as const,ROOM_SHADE_TINT=.16,ROOM_SAND_RIPPLE=.085,ROOM_RAY_K=1.7,ROOM_CAUSTIC_BOOST=1.2,ROOM_SHALLOW_K=.5/* the turquoise share of ROOM_SHALLOW_MIX the room now takes: the reef is shallow everywhere, so the full share washed the whole view pale */;
 /** Ride splash (rideSplash.ts, Oct 23 2026): the spray droplets thrown off the wheels and the foam ring / wake behind them in the
  *  shallows (light, with a touch of the shore sheet's turquoise so they read as water over the sand, not as dust). */
 export const RIDE_SPLASH_DROP='#effcff',RIDE_SPLASH_FOAM='#dcf7f6';

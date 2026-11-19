@@ -127,4 +127,16 @@ ok('analytics: wa:dive_ball_find registered, counted on a first ball find and on
  assert(/if\(f\.kind==='ball'\)\{countDiveBallFind\(\);/.test(read('components/Town.tsx')));
 });
 
+ok('every find, journey pickup, friend and sparkle spot can be reached: a free body position in range, a clear swim down to it (phone, desktop, lite rooms; Nov 18 2026 underwater pass moved the coral)',()=>{
+ const R=load('lib/graphics/diveRoom.ts'),SO=load('lib/town/water/diveSolids.ts');
+ for(const s of D.DIVE_SPOTS)for(const o of [{phone:true},{phone:false},{phone:true,lite:true}]){const picks=J.journeyPickups(s),room=R.createDiveRoom(s,{...o,reduced:false,found:[],pickups:picks}),w=room.solids,top=D.DIVE_SURFACE_Y-.8;
+  const pts=[...s.finds.map(f=>{const p=D.diveFindPoint(f,undefined,s.floor);return ['find '+f.id,p,3];}),...picks.map(p=>['pickup',p,1.5]),['friend',DL.friendHome(s),2.5]];
+  for(let k=0;k<40;k++)pts.push(['sparkle',SP.sparkleSpot(s,SP.localDate(new Date(2026,9,1+k))),1.8]);
+  for(const [n,p,reach] of pts){let free=false;
+   for(let dy=0;dy<=reach&&!free;dy+=.25)for(let a=0;a<16&&!free;a++)for(let rr=0;rr<=2.8;rr+=.4){if(Math.hypot(rr,dy)>reach)continue;const x=p.x+Math.cos(a/16*6.283)*rr,z=p.z+Math.sin(a/16*6.283)*rr,y=Math.min(p.y+dy,top);
+    if(y<D.diveFloor(x,z,s.floor)+.3||SO.divePenetration(w,x,y,z,.45)>.02||SO.diveClearFrac(w,x,top,z,x,y,z,.45)<.999)continue;free=true;break;}
+   assert(free,`${n} at ${p.x.toFixed(1)},${p.z.toFixed(1)} is boxed in (${s.id} ${JSON.stringify(o)})`);}
+  room.dispose();}
+});
+
 if(failed){console.log(`explore-balls: ${failed} failed`);process.exit(1);}console.log('explore-balls: all passed');
