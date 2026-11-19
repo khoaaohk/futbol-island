@@ -25,6 +25,7 @@ const fails=[],check=(ok,what,detail='')=>{console.log(`${ok?'ok  ':'FAIL'} ${wh
 const think=()=>{const k=window.__snake,g=k&&k.game;if(!g)return null;const s=g.state;if(s.over||s.beat>0||s.qn>0)return null;const C=s.cols,R=s.rows,DX=[0,1,0,-1],DY=[-1,0,1,0],block=new Uint8Array(C*R);
  for(let i=1;i<s.len-1;i++)block[s.ys[i]*C+s.xs[i]]=1;
  for(const f of s.foes)if(f.on&&s.dash<=0)for(const [x,y] of [[f.x,f.y],[f.x+f.dx,f.y+f.dy],[f.x-f.dx,f.y-f.dy],[f.x+1,f.y],[f.x-1,f.y],[f.x,f.y+1],[f.x,f.y-1]])if(x>=0&&y>=0&&x<C&&y<R)block[y*C+x]=1;
+ if(s.dash<=0)for(const c of s.cones||[])if(c.on)block[c.y*C+c.x]=1;/* AAA pass (Nov 18 2026): training cones stand in the way from level 4 */
  const picks=s.picks.filter(p=>p.on),hx=s.xs[0],hy=s.ys[0],call=[[4,4,2],[4,3,3],[3,5,2]][s.call];let want=picks[0];
  if(picks.length===2){const more=p=>p.pos===2?s.d<call[0]:p.pos===3?(s.m===0?s.d===call[0]:s.m<call[1]):p.pos===4?s.m===call[1]:true;want=picks.find(more)||picks[0];for(const p of picks)if(p!==want)block[p.y*C+p.x]=1;}
  const dist=new Int16Array(C*R).fill(-1),first=new Int8Array(C*R).fill(-1),q=[hy*C+hx],back=(s.moved+2)%4,target=want?want.y*C+want.x:-1;dist[q[0]]=0;let found=-1;

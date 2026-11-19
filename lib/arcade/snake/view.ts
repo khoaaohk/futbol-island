@@ -215,7 +215,7 @@ export function createSnakeView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts:{
    case 'cone':burst(x,y,7,ORANGE,1.1);fling(IDX_CONE,x,y,(DX[s.dir]||(rnd()<.5?1:-1))*cs*5);break;
    case 'slideGo':dust(x,y,5);break;
    case 'slideOut':dust(x,y,4);pop(cx(s.xs[0]),cy(s.ys[0])-cs*.8,'DODGED!',PAPER);break;
-   case 'near':pop(x,y-cs*.8,'CLOSE!',PAPER);break;
+   case 'near':pop(x,y-cs*.8,'CLOSE!',PAPER);pulse[0]=time;break;
    case 'squad':for(let i=0;i<s.len;i++){pulse[i]=time+i*.05;burst(cx(s.xs[i]),cy(s.ys[i]),2,POS_COLOR[s.pos[i]]);}fx.flash=reduced?0:.12;
     confetti(34);for(let i=0;i<s.len;i++)hop[i]=time+.3+i*.06;
     say('FULL SQUAD!',shapeOfCode(e.a),(e.c?'COACH’S CALL x2  ':'')+'+'+e.b,SUN,RED,SN.beat,ox+cs*C/2,oy+cs*R*.4,1);break;
