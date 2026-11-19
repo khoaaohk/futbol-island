@@ -107,3 +107,6 @@
 .streak[data-heat="2"]{background:var(--cm-orange,#ff8a3c)}.streak[data-heat="2"] svg path{fill:var(--cm-red)}.streak[data-heat="2"] svg .core{fill:var(--cm-sun)}.streak[data-heat="2"] svg{scale:1.25;transform-origin:50% 100%}
 @keyframes krStreak{0%{scale:1.5}100%{scale:1}}
 @media (prefers-reduced-motion:reduce){.streak{rotate:none}.streak b{animation:none}}
+/* Fix round (Nov 18 2026): a paused wave is not a free look. The moving layer (kit in the air, trails) is hidden behind the pause card;
+   the pitch stays. Nothing is redrawn, so resume shows the same frame. */
+.game[data-phase=paused] .play{visibility:hidden}

@@ -62,3 +62,10 @@ memory 11.1 MB before (29 canvases), 10.2 MB after (9).
 ## Still short of top tier (honest list)
 No music or ambience (loops are forbidden here). The crowd is a still picture. The six ball types have one rule (team line), no
 special ball. No objectives inside a run beyond the venue chapters. In landscape on a phone the pitch is small.
+
+## Fix round (Nov 18 2026)
+- Medal marks are right and unchanged. The "Gold in reach" check compared the BEST of the sample with twice Gold, which only
+  measures how many seeds were run (30 seeds: 15k, 150 seeds: 23k). It now asks for a share and a percentile: 23% of careful-bot
+  runs reach Gold, 81% Silver, 95th percentile 14.2k (150 and 400 seeds).
+- Five-long shapes in the tray at 360 wide: about 14 px a ball lying down, 18 px standing. The count reads; the ball pattern is
+  faint. Left as it is: the bay is a quarter of the tray and the piece already fills 88% of it.

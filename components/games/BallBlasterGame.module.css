@@ -83,7 +83,8 @@
 }
 @media (max-height:700px){.learn{font-size:13px;margin-bottom:8px}.score{--cm-numeral-size:52px}.coach{display:none}.art{width:min(200px,60%)}}
 @media (max-height:600px){.game [data-ballblaster-card=start] .chips{display:none}.fact{display:none}}
-@media (max-height:700px){.super{width:104px;height:18px}}
+/* Fix round (Nov 18 2026): on a short phone (360x640) the ready bar grew to 160 px and reached under the kicker's feet and the ball.
+   It now keeps the rack's width and sits tight on the rack; the label shrinks to fit. Placed after .super[data-ready] below. */
 @media (max-width:374px){.strip{gap:7px}.stripItem{font-size:14px}.hearts svg{width:15px;height:13px}}
 @media (prefers-reduced-motion:reduce){.unusedStreak{rotate:none}.streak,.score[data-new-best]{animation:none}.word{animation-duration:.6s}.word[data-fly]{animation-name:bbWord}.word[data-fly] .pts,.word[data-fly]>:first-child{animation:none}}
 
@@ -100,6 +101,7 @@
 .super[data-ready]{width:auto;padding:0 9px;animation:bbReady .5s ease-in-out infinite alternate}
 .super[data-ready] b{background:var(--cm-sun)}
 .super[data-ready] em{position:relative;inset:auto;height:100%}
+@media (max-height:700px){.super,.super[data-ready]{width:132px;height:18px;padding:0;bottom:calc(48px + env(safe-area-inset-bottom,0px) + var(--bb-cut,0px))}.super[data-ready] em{position:absolute;inset:0;font-size:9px;letter-spacing:-.01em}}
 @keyframes bbReady{from{scale:1}to{scale:1.07}}
 /* danger: hazard tape along the bottom edge while a machine is near the goal line; a red frame for a beat when one gets through */
 .alarm{position:absolute;z-index:2;left:0;right:0;bottom:0;height:9px;border-top:3px solid var(--cm-ink);background:repeating-linear-gradient(-45deg,var(--cm-red) 0 12px,var(--cm-sun) 12px 24px);pointer-events:none;animation:bbBlink .42s steps(2,jump-none) infinite alternate}

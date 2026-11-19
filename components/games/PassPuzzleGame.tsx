@@ -32,7 +32,7 @@ import {FIRST_TIME} from '@/lib/passPuzzle/sim';
 import {puzzlePencil,puzzleWoodwork,puzzleNetHigh,puzzleLifeLost,puzzleWipe,puzzleClockTick,puzzleEye,puzzleRunOver,puzzleStarLand,puzzleBuzz} from '@/lib/arcade/passPuzzleAudio';
 import {createPassPuzzleScene,shirtNumbersFor,type PassPuzzleScene,type FitRoom} from '@/lib/arcade/passPuzzleScene';
 import {puzzleConceptWords,puzzleConceptLesson,notePuzzleFail,PRACTISE_AFTER} from '@/lib/passPuzzle/conceptLessons';
-import {laneStatus,noteFor,explainSuccess,explainFail,replayCall,type PassNote,type Numbers} from '@/lib/passPuzzle/explain';
+import {laneStatus,noteFor,explainSuccess,explainFail,deflectedPassIn,replayCall,type PassNote,type Numbers} from '@/lib/passPuzzle/explain';
 import {isCall,type Step} from '@/lib/passPuzzle/packs';
 import {stopPoint,passProgress} from '@/lib/passPuzzle/feel';
 import {frameCapSlot} from '@/lib/town/frameCap';
@@ -261,7 +261,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
   try{const f=formatRef.current;if(success)concept=puzzleConceptWords(sc.concept,f);else if(notePuzzleFail(conceptFails.current,sc.concept)>=PRACTISE_AFTER)practise=puzzleConceptLesson(sc.concept,f);}catch{/* no concept line */}
   try{const nums=shirtNumbersFor(sc),f=formatRef.current,kept=notes.current.slice(0,world.inputs().length);
    if(success)why=explainSuccess(kept,sc,nums,f,2);
-   else{const stop=attemptEvents.current.filter(e=>['intercept','deflect','save','parry','offside'].includes(e.type)).at(-1),x=explainFail(r.reason,stop,kept.at(-1),nums,f);if(x){why=[x.why];fix=x.fix;}}}catch{/* the generic copy stays */}
+   else{const stop=attemptEvents.current.filter(e=>['intercept','deflect','save','parry','offside'].includes(e.type)).at(-1),x=explainFail(r.reason,stop,kept.at(-1),nums,f,deflectedPassIn(attemptEvents.current));if(x){why=[x.why];fix=x.fix;}}}catch{/* the generic copy stays */}
   // Aim anywhere: one line that names what the finish did (the keeper, the corner, the bar).
   let shotLine:string|undefined;try{const fin=finishFromEvents(geoOf(sc),attemptEvents.current,kickKeeperX.current,s.flight?.aim,formatRef.current==='7v7');/* AAA pass: a goal that did not count (too few passes, too slow) must not be praised on a failed try */if(fin&&(success||!GOAL_FINISH.has(fin.kind)))shotLine=fin.line;}catch{/* no line */}
   if(shotLine&&!success)fix=undefined;/* the line already says what to try */
@@ -549,7 +549,7 @@ export default function PassPuzzleGame({onExit}:{onExit:()=>void}){
  endlessFinish.current=(success:boolean,move:boolean,reason?:string)=>{const e=endless.current,world=worldRef.current;if(!e||!world||e.timer||e.run.over)return;const sc=world.scenario,f=formatRef.current;
   let words:{name:string;line:string|null}|null=null;try{words=puzzleConceptWords(sc.concept,f);}catch{/* the title stands in */}
   if(success){endlessResolve({kind:'solve',move},{kind:'win',title:words?.name??sc.title,line:move?(words?.line??sc.lesson):'A clear shot. Play the passes next time for one more star.'},500);return;}
-  let why='';try{const nums=shirtNumbersFor(sc),kept=notes.current.slice(0,world.inputs().length),stop=attemptEvents.current.filter(x=>['intercept','deflect','save','parry','offside'].includes(x.type)).at(-1),x=explainFail(reason,stop,kept.at(-1),nums,f);if(x)why=x.fix||x.why;}catch{/* the generic copy stays */}
+  let why='';try{const nums=shirtNumbersFor(sc),kept=notes.current.slice(0,world.inputs().length),stop=attemptEvents.current.filter(x=>['intercept','deflect','save','parry','offside'].includes(x.type)).at(-1),x=explainFail(reason,stop,kept.at(-1),nums,f,deflectedPassIn(attemptEvents.current));if(x)why=x.fix||x.why;}catch{/* the generic copy stays */}
   try{const fin=finishFromEvents(geoOf(sc),attemptEvents.current,kickKeeperX.current,world.state.flight?.aim,f==='7v7');/* AAA pass: the ball went in but the try failed (too few passes, the counter clock): say why, not "Low into the corner" */if(fin&&!GOAL_FINISH.has(fin.kind))why=fin.line;else if(fin&&reasonCopy[reason??''])why=reasonCopy[reason??''];}catch{/* the pass copy stays */}
   endlessResolve({kind:'fail'},{kind:'fail',title:'So close!',line:why||reasonCopy[reason??'']||'Look again at who can reach the ball.'},1700);};
  const endlessSkip=()=>{const e=endless.current,w=worldRef.current;if(!e||!w||w.state.phase!=='aiming'||e.run.lives<=1||e.timer||!e.puzzle)return;cancelDrawing.current();puzzleUiTap(audio.current);let name=e.puzzle.scenario.title;try{name=puzzleConceptWords(e.puzzle.scenario.concept,formatRef.current)?.name??name;}catch{/* the title stands in */}

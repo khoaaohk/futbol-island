@@ -230,7 +230,7 @@ export default function SquadSnakeGame({onExit}:{onExit:()=>void}){
    <ol className={styles.order} aria-label="Call the squad in this order">
     {[POS.gk,POS.def,POS.mid,POS.fwd].map(p=><li key={p}><span><Bean pos={p} size={38}/><b style={{background:POS_COLOR[p]}}>{POS_LABEL[p]}</b></span></li>)}
    </ol>
-   <p className={styles.learn}>{coarse?'Swipe or tap the arrows':'Swipe or use the arrow keys'} to turn your captain. The kick-off waits for your first move. Call the keeper, then defenders, midfielders and forwards. Eleven make a <b>Full Squad</b>: build the coach’s shape for double points.</p>
+   <p className={styles.learn}>{coarse?'Swipe or tap the arrows':'Swipe or use the arrow keys'} to turn your captain. The kick-off waits for your first move. Call the keeper, then defenders, midfielders and forwards. Eleven make a <b>Full Squad</b>: build the coach’s shape for double points. Call the next one fast for a <b>Quick call</b> bonus.</p>
    <ul className={styles.album} aria-label="Shapes you have built" data-snake-album>{SHAPES.map((sh,i)=><li key={sh} data-on={(save.shapes>>i&1)===1||undefined}>{sh}</li>)}</ul>
    <div className={styles.chips}>
     <ComicStat value={save.best||'–'} label="Best"/>

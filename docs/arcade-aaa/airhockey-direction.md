@@ -78,3 +78,8 @@ serve rolled into the goal; a long name ("L11 CAPTAIN CORAL") ran over the goal;
   260 u/s, and the owner swaps each rematch so the small advantage is shared. (6) Cheating: matches stay off the board and pay no coins,
   like same-device matches, so there is nothing to win by it. (7) Leaving the table or the party ends the match; no new text anywhere.
   Size: about 5-6 days and a relay deploy, so it was left out.
+
+## Fix round (Nov 18 2026)
+- A puck that rests in the child's half for 3 s gets one "Your ball" cue (the serve ring round the puck and a small card), then the
+  table sleeps again: no loop, no nudge, the puck is not moved (`AH.YOURS_S`, event `yours`).
+- The shaken canvases grow by the shake's own reach, so the page no longer shows at the stage edge (computed, not seen on a phone).

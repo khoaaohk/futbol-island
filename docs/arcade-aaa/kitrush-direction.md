@@ -95,3 +95,14 @@ no visible streak; nobody on the pitch.
   after, no frame over 33 ms (headless Chrome, 390x844 @2x). The atlas is 8x8 cells (about 6.7 MB at 2x, was 3.4 MB).
 - **Not done:** no ambience or music bed (the module is one-shots only); the game has no keyboard play (swipe only, P pauses);
   the frozen picture stays visible behind the pause card; after about level 16 the pace is flat; no goalkeeper kit as a third kind.
+
+## Fix round (Nov 18 2026)
+- Sprite sheet: the main sheet holds 33 cells, 11 across (1782x486 at 390x844 @2x = 3.3 MB; the pass had 8x8 = about 6.7 MB). The 18
+  look-alikes (your colour, the 3 other patterns; your own pattern was painted and never used) live on a second sheet made the
+  first time one is thrown at level 6 (972x486 = 1.8 MB). A short run holds 3.3 MB, a long one 5.1 MB. No sprite changed size.
+- Pause: the moving layer is hidden behind the pause card (a paused wave is not a free look); the pitch stays.
+- Pace: stages 5, 6 and 7 (levels 15, 18, 21) each run the flight 6% quicker (`kitPace`, +18% at the cap), and the stage calls say
+  so (FASTER! / FASTER STILL! / TOP SPEED!). Before, every stage after level 15 said FASTER! and nothing changed.
+- `scripts/check-kitrush-browser.cjs`: the "high-score strip in the card" step failed on every local run because the strip only
+  shows when the island board answers, and a dev server without the board's keys answers 503. The game was right; the check now
+  stubs the board (empty all-time board, nothing posted). `--mobile` passes.

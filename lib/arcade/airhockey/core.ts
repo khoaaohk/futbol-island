@@ -10,6 +10,7 @@
  * post), and the counter-attack after a save.
  */
 export const AH={W:100,H:160,PR:4.4,SR:8,GOAL0:27,GOAL1:73,HZ:120,VMAX:340,HUMAN_CAP:600,E_HIT:.55,E_WALL:.9,DRAG:.3,REST:3,
+ /* fix round (Nov 18 2026): a puck resting in the child's half for YOURS_S gets a "Your ball" cue (it used to wait in silence) */YOURS_S:3,
  SERVE_V:50,WAIT:.35,GOAL_BEAT:1.15,BETWEEN:2.2,DEAD_V:7,DEAD_S:2,DEAD_EDGE:2.5,NUDGE_V:46,SOLO_TO:5,LIVES:3,LIFE_EVERY:3,
  QUICK_S:4,COUNTER_S:3.5,
  /* AAA pass, Nov 18 2026. Rally heat: every hit that answers the other side's hit counts; past HEAT_FROM the table warms over HEAT_HITS
@@ -54,7 +55,7 @@ export type AirPhase='wait'|'play'|'goal'|'between'|'over';
 /** goal: a = scorer, b = flags (GOAL_*). hit: a = side, b = impact speed. wall / post: b = speed. win: a = level beaten, b = bonus
  *  points. lose: a = lives left. next: a = the level that walks on. life: a = lives now. over: a = -1 (the run is over). */
 /** smash: a = side, b = impact speed. heat: a = step now (1-3), b = rally hits. */
-export type AirEvent={type:'ready'|'serve'|'hit'|'wall'|'post'|'goal'|'save'|'win'|'lose'|'next'|'life'|'nudge'|'over'|'smash'|'heat';a:number;b:number;x:number;y:number};
+export type AirEvent={type:'ready'|'serve'|'hit'|'wall'|'post'|'goal'|'save'|'win'|'lose'|'next'|'life'|'nudge'|'over'|'smash'|'heat'|'yours';a:number;b:number;x:number;y:number};
 export const GOAL_BANK=1,GOAL_QUICK=2,GOAL_OWN=4,GOAL_COUNTER=8,GOAL_HOT=16;
 /** Run numbers for the results card and the coaching line. conc* = how the goals against went in. */
 export type AirStats={goalsFor:number;goalsAgainst:number;bank:number;quick:number;counters:number;saves:number;wins:number;clean:number;hits:number;
@@ -71,7 +72,7 @@ export function createAirFutbol(opts:{seed:number;/** tests: scripted players pe
  const s={phase:'wait' as AirPhase,over:false,t:0,level:Math.max(1,opts.level??1),lives:AH.LIVES as number,score:0,goals:[0,0],serveTo:0,serves:0,
   px:W/2,py:H/2,pvx:0,pvy:0,ppx:W/2,ppy:H/2,inGoal:false,
   sx:[W/2,W/2],sy:[H-26,26],svx:[0,0],svy:[0,0],psx:[W/2,W/2],psy:[H-26,26],tx:[W/2,W/2],ty:[H-26,26],held:[false,false],
-  lastHit:-1,lastHitT:-9,prevHit:-1,prevT:-9,bank:false,shotX:[W/2,W/2] as number[],shotDefY:[H,H] as number[],serveT:0,saveT:-99,rally:0,heat:0,smashT:-9,served:false,beat:0,waitT:0,dead:0,matchT:0,stats:emptyAirStats()};
+  lastHit:-1,lastHitT:-9,prevHit:-1,prevT:-9,bank:false,shotX:[W/2,W/2] as number[],shotDefY:[H,H] as number[],serveT:0,saveT:-99,rally:0,heat:0,smashT:-9,served:false,beat:0,waitT:0,dead:0,yoursT:0,yours:false,matchT:0,stats:emptyAirStats()};
  const bots:[AirBot|null,AirBot|null]=opts.bots?[opts.bots[0],opts.bots[1]]:[null,opponentFor(s.level)];
  const mem=[0,1].map(()=>({next:0,tx:W/2,ty:26,cap:60,mode:0,rest:0,ax:W/2,aimFor:0,since:0,until:0})),cap=[AH.HUMAN_CAP as number,AH.HUMAN_CAP as number],hitAt=[-9,-9];
  mem[0].ty=H-26;
@@ -80,7 +81,7 @@ export function createAirFutbol(opts:{seed:number;/** tests: scripted players pe
  function emit(type:AirEvent['type'],a=0,b=0,x=s.px,y=s.py){const e=ring[(head+count)%ring.length];e.type=type;e.a=a;e.b=b;e.x=x;e.y=y;if(count<ring.length)count++;else head=(head+1)%ring.length;}
  function drain(fn:(e:AirEvent)=>void){while(count>0){const e=ring[head];head=(head+1)%ring.length;count--;fn(e);}}
 
- function resetPuck(){s.px=s.ppx=W/2;s.py=s.ppy=H/2;s.pvx=s.pvy=0;s.inGoal=false;s.lastHit=-1;s.prevHit=-1;s.bank=false;s.dead=0;s.waitT=0;s.rally=0;s.heat=0;s.smashT=-9;s.served=false;}
+ function resetPuck(){s.px=s.ppx=W/2;s.py=s.ppy=H/2;s.pvx=s.pvy=0;s.inGoal=false;s.lastHit=-1;s.prevHit=-1;s.bank=false;s.dead=0;s.yoursT=0;s.yours=false;s.waitT=0;s.rally=0;s.heat=0;s.smashT=-9;s.served=false;}
  function launch(){const to=s.serveTo;s.pvx=(rng()*2-1)*13;s.pvy=to===0?AH.SERVE_V:-AH.SERVE_V;s.serveT=s.t;s.serves++;s.served=true;s.phase='play';emit('serve',to);}
  /** A scripted side decides where its striker goes. Plans every `react` seconds; the strike itself is triggered on the step the
   *  striker is lined up behind the puck. Mirrored so its own goal is always at y = 0. */
@@ -181,6 +182,8 @@ export function createAirFutbol(opts:{seed:number;/** tests: scripted players pe
   const e=PR+AH.DEAD_EDGE;
   if(sp<AH.DEAD_V&&(s.px<e||s.px>W-e||s.py<e||s.py>H-e)){s.dead+=dt;if(s.dead>=AH.DEAD_S){s.dead=0;const ax=W/2-s.px,ay=(s.py<H/2?H*.3:H*.7)-s.py,d=Math.hypot(ax,ay)||1;s.pvx=ax/d*AH.NUDGE_V;s.pvy=ay/d*AH.NUDGE_V;emit('nudge');}}
   else s.dead=0;
+  // Your ball: the puck has come to rest in the child's half (side 0, the near half) and nobody is touching it. One cue, then the table may sleep.
+  if(s.phase==='play'&&sp===0&&s.py>H/2&&!s.inGoal&&!s.held[0]){if(!s.yours){s.yoursT+=dt;if(s.yoursT>=AH.YOURS_S){s.yours=true;emit('yours');}}}else{s.yoursT=0;s.yours=false;}
  }
  let acc=0;
  return {
@@ -194,7 +197,7 @@ export function createAirFutbol(opts:{seed:number;/** tests: scripted players pe
   /** Skips the walk-on beat between opponents. */
   skip(){if(s.phase==='between')s.beat=Math.min(s.beat,.05);},
   /** Everything at rest and nobody touching: the shell may stop drawing until the next touch. */
-  get idle(){if(s.held[0]||s.held[1]||s.dead>0)return false;if(s.phase!=='wait'&&!(s.phase==='play'&&s.pvx===0&&s.pvy===0))return s.phase==='over';
+  get idle(){if(s.held[0]||s.held[1]||s.dead>0)return false;if(s.phase==='play'&&s.pvx===0&&s.pvy===0&&s.py>H/2&&!s.inGoal&&!s.yours)return false;/* the Your ball clock is running */if(s.phase!=='wait'&&!(s.phase==='play'&&s.pvx===0&&s.pvy===0))return s.phase==='over';
    for(let i=0;i<2;i++)if(Math.hypot(s.tx[i]-s.sx[i],s.ty[i]-s.sy[i])>.3||(bots[i]&&mem[i].rest>0))return false;return true;},
   step(dt:number){acc+=Math.min(.1,Math.max(0,dt));let guard=0;while(acc>=STEP&&guard++<16){acc-=STEP;fixed();}if(acc>=STEP)acc=0;},
   /** Tests: one fixed step. */

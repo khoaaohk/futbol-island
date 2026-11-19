@@ -157,6 +157,9 @@ export function spawnRunnerPattern(s:RunnerGame){
  if(goal){s.readLane=goal.openLane;s.pattern=goal.keeper?'Watch the keeper':'Find the golden opening';return 24;}
  // Reserve a distinct finishing beat: no fresh obstacle line is placed across a goal or a back line.
  const room=s.nextGoal-s.distance;if(room<(runnerBossDue(s)||s.bossPending?175:RUNNER_GOAL_RUNUP))return 18;
+ // Nov 18 2026 fairness: a back line stands alone. A wave used to spawn 3 m in front of it (Cup Final, 230 m), and its cone and
+ // drifting defender could fill the one lane the line leaves open. No new wave until the line is behind the runner.
+ if(s.objects.some(o=>o.kind==='defender'&&o.role==='line'&&!o.passed))return 18;
  // The final hill is clear: one goal line, one keeper.
  if(s.finishPhase==='hill'||s.finishPhase==='keeper'||s.finishPhase==='done')return 18;
  const index=s.wave++,stage=RUNNER_STAGES[Math.min(5,s.level-1)];

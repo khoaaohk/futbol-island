@@ -103,7 +103,11 @@ export function explainSuccess(notes:PassNote[],sc:Scenario,nums:Numbers,f:Forma
 }
 
 /** "Why it didn't work" plus what to try: names the player who stopped it. */
-export function explainFail(reason:string|undefined,stop:PuzzleEvent|undefined,note:PassNote|undefined,nums:Numbers,f:Format):{why:string;fix:string}|null{
+/** Fix round (Nov 18 2026): did a pass in this attempt reach a team-mate only after a defender got a touch on it? Such a pass does not
+ *  count (the puzzles that teach bending or lifting the ball round a defender depend on that), so a goal after it fails for too few
+ *  passes. The card used to say only "needs more passes", which read as a miscount. Now it says what happened. */
+export function deflectedPassIn(events:readonly PuzzleEvent[]):boolean{let touched=false,pass=false;for(const e of events){if(e.type==='kick'){touched=false;pass=e.kind!=='shot';}else if(e.type==='deflect')touched=pass;else if(e.type==='receive'&&touched)return true;}return false;}
+export function explainFail(reason:string|undefined,stop:PuzzleEvent|undefined,note:PassNote|undefined,nums:Numbers,f:Format,touched=false):{why:string;fix:string}|null{
   const y=young(f),d=(i:number|undefined)=>i===undefined?'A defender':`#${nums.defenders[i]}`;
   switch(reason){
     case 'intercept':{const who=stop?.defender;const inLane=note?.inLine!==undefined&&note.inLine===who;
@@ -114,7 +118,8 @@ export function explainFail(reason:string|undefined,stop:PuzzleEvent|undefined,n
     case 'out':return{why:y?'The ball ran out of play.':'Too much on it: the ball ran out.',fix:y?'Draw a shorter line for a softer pass.':'A shorter stroke means less power.'};
     case 'rest':return{why:y?'The ball stopped before anyone got it.':'Under-hit: it died before a teammate arrived.',fix:y?'Draw a longer line for a harder pass.':'Lengthen the stroke for more pace.'};
     case 'offside':return{why:y?'Your friend was past the second-last defender when you passed.':'The receiver was beyond the second-last defender at the pass.',fix:y?'Pass sooner, or drag your friend back first.':'Release earlier, or drop the runner back onside first.'};
-    case 'too-few-passes':return{why:y?'This puzzle needs more passes first.':'Right finish, but not enough passes for this puzzle.',fix:y?'Pass to a friend before you shoot.':'Build the move first: the brief says how many passes.'};
+    case 'too-few-passes':if(touched)return{why:y?'A defender got a touch on your pass, so it did not count.':'A defender deflected your pass, so it did not count as a pass.',fix:y?'Pass where no defender can reach it. Then shoot.':'Find a clean lane first: bend it round or lift it over, then finish.'};
+      return{why:y?'This puzzle needs more passes first.':'Right finish, but not enough passes for this puzzle.',fix:y?'Pass to a friend before you shoot.':'Build the move first: the brief says how many passes.'};
     case 'timeout':return{why:y?'Too slow! The defence got back.':'The defence recovered before the finish.',fix:y?'Pass forward quickly.':'Fewer, forward passes: go before they get back.'};
     default:return null;
   }

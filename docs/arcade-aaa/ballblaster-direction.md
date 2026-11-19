@@ -97,3 +97,11 @@ under the top strip; nothing told you a machine was about to get through; no cro
   median (max 22.5k -> 21k); wave 7 night 26 -> 29 median (max 33 -> 42), 20.7k -> 21k median (max 26.5k both). Render call
   0.5-1.5 ms median on both. No new textures, lights or passes.
 - Not done: a second boss with its own attack, stage dressing beyond the four skies, a music bed (the sound test forbids loops).
+
+## Fix round (Nov 18 2026)
+- Heat at night: three.js does not count the shadow pass in `renderer.info.render.calls`, so the figures above miss about 7 real
+  draws (the kicker's 5 meshes, the ball at the feet, the flying balls). At night nothing casts a shadow now (the sun is too faint
+  to read) and the kicker and every ball stand on a blob from the pool the machines already use. The three shock rings are one
+  instanced additive mesh (one draw at most, was up to three). Same script, 60 s of waves 7-8, headless 390x844: counted draws
+  26 median / 31 p95 / 37 max before, 25 / 30 / 38 after; real draws with the shadow pass about 33 / 38 / 44 before, 25 / 30 / 38 after.
+- 360x640: the Super bar keeps the rack's width when it is ready and sits tight on the rack, 12 px clear of the ball.

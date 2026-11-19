@@ -111,7 +111,12 @@ ok('bots: later is harder (a held level 12 ends sooner than a held level 1) and 
  const plain=seeds.map(seed=>play({seed,noBench:true}).state);assert.ok(plain.every(s=>s.over||s.rescue),'a run that never uses the bench ends too (stuck with the bench still free)');
  if(process.argv.includes('--bots'))console.log(JSON.stringify({easyMoves,hardMoves,medianPlaced:med(placed),medianScore:med(scores),maxScore:Math.max(...scores),noBench:{medianPlaced:med(plain.map(s=>s.stats.placed)),medianScore:med(plain.map(s=>s.score)),maxScore:Math.max(...plain.map(s=>s.score))},teamLines:runs.reduce((a,s)=>a+s.stats.teamLines,0),lines:runs.reduce((a,s)=>a+s.stats.lines,0),medals:LU.medals}));
  // medals sit where a careful player reaches bronze, a good run silver, and gold is a stretch
- assert.ok(med(scores)>=LU.medals[0],'the bot median earns Bronze');assert.ok(Math.max(...scores)<LU.medals[2]*2,'Gold stays in reach of a great run');
+ assert.ok(med(scores)>=LU.medals[0],'the bot median earns Bronze');// Fix round (Nov 18 2026): this read `max(scores) < 2 x Gold`, which is a fact about the sample size, not the medals (the best of 150
+ // careful runs is 23k, the best of 30 is 15k: it failed with LU_SEEDS=150 and passed with 30). The marks are right; the check now asks
+ // what it meant: Gold is earned by a real share of careful runs but not most of them, and a strong run (95th percentile) is not far past it.
+ {const sorted=scores.slice().sort((x,y)=>x-y),p95=sorted[Math.min(sorted.length-1,Math.floor(sorted.length*.95))],gold=scores.filter(x=>x>=LU.medals[2]).length/scores.length;
+  assert.ok(gold>=.08&&gold<=.45,`Gold is a stretch, not a gift and not out of reach (${(gold*100).toFixed(0)}% of careful runs)`);assert.ok(p95<LU.medals[2]*2,`a strong run sits within twice Gold (95th percentile ${p95})`);
+  if(process.argv.includes('--bots'))console.log(JSON.stringify({goldShare:+gold.toFixed(2),p95,silverShare:+(scores.filter(x=>x>=LU.medals[1]).length/scores.length).toFixed(2)}));}
  // board rate: a fast bot (1 s a placement) never beats base + perSecond x seconds
  const R=L.BOARD_RULES.lineup;for(const s of runs)assert.ok(s.score<=R.base+R.perSecond*s.stats.placed,`board rate holds (${s.score} in ${s.stats.placed} s)`);
 });

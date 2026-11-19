@@ -93,4 +93,14 @@ ok('7. run challenge: a different extra goal each run, the same for everyone on 
  }finally{globalThis.localStorage=keep;}
  const card=read('components/games/RunnerMissionCard.tsx'),menu=read('components/games/RunnerMenu.tsx');assert(card.includes('data-runner-challenge')&&menu.includes('data-runner-challenge'));
 });
+// Fix round (Nov 18 2026): Cup Final's wave at 230 m put a cone and a drifting defender 3 m in front of the back line, so the one lane
+// the line leaves open could be filled (a child-level bot lost a heart there at 13 s in 5 of 10 seeds). A back line now stands alone.
+ok('fix round: a back line stands alone, and a child-level bot clears the first 600 m of the Cup Final',()=>{
+ for(const mode of ['night','storm','cup','legend','daily'])for(let seed=1;seed<=6;seed++){const born=new WeakMap();let lines=0;
+  botRun(R,Mo,mode,{seed,lapse:0,maxSeconds:90,each:(s,t)=>{const line=s.objects.filter(o=>o.role==='line'&&!o.passed);lines+=line.length;
+   for(const o of s.objects)if(!born.has(o)){born.set(o,1);if((o.kind==='defender'||o.kind==='cone'||o.kind==='mud')&&o.role!=='line')for(const l of line)assert(Math.abs(o.z-l.z)>20,mode+' seed '+seed+': a '+o.kind+' spawned '+Math.abs(o.z-l.z).toFixed(0)+' m from a live back line at '+t.toFixed(1)+' s');}}});
+  if(mode==='cup')assert(lines>0,'the Cup Final still has its back line');}
+ let early=0;for(let seed=1;seed<=10;seed++){let lives=null,hit=false;botRun(R,Mo,'cup',{seed,lapse:0,react:.4,nerve:.3,maxSeconds:40,each:s=>{if(lives===null)lives=s.lives;if(s.lives<lives&&s.distance<600)hit=true;lives=s.lives;}});if(hit)early++;}
+ assert(early<=1,'a child-level bot (react .4 s, jumps 3 tackles in 10) lost a heart in the first 600 m in '+early+' of 10 seeds');
+});
 if(failed){console.log(failed+' failed');process.exit(1);}console.log('runner-aaa-nov18 ok');
