@@ -39,4 +39,12 @@ const base={path:[{x:0,y:0,z:0}],end:'rest',threats:[],keeperThreat:false};
 assert.equal(X.laneStatus({...base,closest:{defender:0,slack:1,at:{x:0,z:0}}}),'clear');
 assert.equal(X.laneStatus({...base,closest:{defender:0,slack:.2,at:{x:0,z:0}}}),'tight');
 assert.equal(X.laneStatus({...base,threats:[0]}),'blocked');assert.equal(X.laneStatus({...base,end:'offside'}),'offside');assert.equal(X.laneStatus(null),null);
+// Fix round (Nov 18 2026): a pass a defender touched does not count, and the card says so instead of "needs more passes".
+{const E=(type,x={})=>({type,tick:1,t:1,at:{x:0,y:0,z:0},...x}),nums={attackers:[10,7],defenders:[4]};
+ assert.equal(X.deflectedPassIn([E('kick',{kind:'pass-feet'}),E('deflect',{defender:0}),E('receive',{attacker:1}),E('kick',{kind:'shot'}),E('goal')]),true);
+ assert.equal(X.deflectedPassIn([E('kick',{kind:'pass-feet'}),E('receive',{attacker:1}),E('kick',{kind:'shot'}),E('goal')]),false,'a clean pass');
+ assert.equal(X.deflectedPassIn([E('kick',{kind:'shot'}),E('deflect',{defender:0}),E('receive',{attacker:1})]),false,'a deflected shot is not a pass');
+ assert.equal(X.deflectedPassIn([E('kick',{kind:'pass-feet'}),E('deflect',{defender:0}),E('kick',{kind:'pass-feet'}),E('receive',{attacker:1})]),false,'the touch belongs to its own kick');
+ for(const f of ['7v7','9v9','11v11']){const plain=X.explainFail('too-few-passes',undefined,undefined,nums,f),hit=X.explainFail('too-few-passes',undefined,undefined,nums,f,true);
+  assert.match(hit.why,/did not count/);assert.notEqual(hit.why,plain.why);assert(!/—/.test(hit.why+hit.fix));assert.match(plain.why,/passes/);}}
 console.log(`PASS explain: ${solved} routes explained (${reasons} reasons over 3 formats), ${blocked} naive passes flagged before release, fails explained ${JSON.stringify(fails)}, ${calls} replay calls`);
