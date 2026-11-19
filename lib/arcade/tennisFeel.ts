@@ -1,6 +1,6 @@
 import * as T from 'three';
 import type {ArcadePoseOptions} from './arcadePlayerMotion';
-import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_GOLD,TENNIS_HEAD_HEIGHT,TENNIS_RALLY_MILESTONES,tennisPointsToWin,tennisTempo,tennisOpenSide,tennisAimSide,tennisDrillLinedUp,tennisRivalTire,tennisCourtOf,type TennisState,type TennisGrade} from '@/lib/games/soccerTennis';
+import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_BONUS,TENNIS_GOLD,TENNIS_HEAD_HEIGHT,TENNIS_RALLY_MILESTONES,tennisPointsToWin,tennisTempo,tennisOpenSide,tennisAimSide,tennisDrillLinedUp,tennisRivalTire,tennisCourtOf,type TennisState,type TennisGrade} from '@/lib/games/soccerTennis';
 import {tennisOpponent} from './tennisEndless';
 import {readArcadeRecord} from './arcadeRecords';
 import {MOVE_PHASE,type PlayerMotion} from '@/lib/graphics/player';
@@ -116,7 +116,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
  // Court rings are cells of the shared ink decal sheet (a paper band with an ink keyline), so they read on every surface.
  const sheet=tennisAtlas(scene),inkRing=(r:number,color:string,opacity:number)=>{const g=tennisAtlasUv(new T.PlaneGeometry(2*r/.766,2*r/.766),TENNIS_ATLAS.ring);g.rotateX(-Math.PI/2);return new T.Mesh(g,new T.MeshBasicMaterial({map:sheet,color,transparent:true,opacity,depthWrite:false,toneMapped:false}));};
  const target=inkRing(TENNIS_DRILL.radius-.08,'#ffc83a',1);
- const TARGET_OFF=new T.Color('#ffc83a'),TARGET_ON=new T.Color('#fff3d6');let targetOn=false;
+ const TARGET_OFF=new T.Color('#ffc83a'),TARGET_ON=new T.Color('#fff3d6'),RING_SCALE=TENNIS_BONUS.radius/TENNIS_DRILL.radius;let targetOn=false,ringShown=0,ringHit=0,ringAge=0;
  target.position.set(0,.04,-4.6);target.name='tennis-drill-target';target.visible=false;target.renderOrder=2;scene.add(target);
  // Flight read: one ring, shown only while an incoming ball is in the air (+1 draw then). Red = flying out, let it go.
  // Blue = where a high ball drops through head height: stand there to head it.
@@ -130,7 +130,7 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
  const arena=createTennisArena(stage,tennis);
  // Plant / skid reads and celebrations (pooled scalars, no allocation).
  const plantAge=new Float32Array([1,1]),peakSpeed=new Float32Array(2),plantCool=new Float32Array(2);let cheerAge=9,youRun=0,rivalRun=0,matchSeen=-1;
- function reset(){rallyBest=-1;rallyBestSeen=false;endSeen=tennis.matchEvents;matchNo=tennis.match;tourSeen=tennis.tourEvents;livesSeen=tennis.tourLives;heatSeen=tennis.tourHeat;kickSeen=tennis.kickCount;bounceSeen=tennis.bounceEvents;netSeen=tennis.netEvents;pointSeen=tennis.pointsPlayed;setSeen=tennis.setEvents;windSeen=-1;planSeen=false;hitStop=netWobble=netAge=netAmp=lastRallyCall=realDt=0;wrongSeen=tennis.wrongFooted;hop.fill(0);hopAge.fill(1);
+ function reset(){ringShown=tennis.bonusShows;ringHit=tennis.bonusEvents;ringAge=0;rallyBest=-1;rallyBestSeen=false;endSeen=tennis.matchEvents;matchNo=tennis.match;tourSeen=tennis.tourEvents;livesSeen=tennis.tourLives;heatSeen=tennis.tourHeat;kickSeen=tennis.kickCount;bounceSeen=tennis.bounceEvents;netSeen=tennis.netEvents;pointSeen=tennis.pointsPlayed;setSeen=tennis.setEvents;windSeen=-1;planSeen=false;hitStop=netWobble=netAge=netAmp=lastRallyCall=realDt=0;wrongSeen=tennis.wrongFooted;hop.fill(0);hopAge.fill(1);
   trapSeen=tennis.trapEvents;targetSeen=tennis.targetEvents;goldSeen=false;fakeSeen=false;fakeAge=1;tempoSeen=0;introLevel=0;nudgeSeen=0;if(nudgeLevel!==tennis.level){nudgeLevel=tennis.level;nudges=0;}
   for(const l of[touch,intent,banner]){l.mesh.visible=false;l.life=0;}arena.reset();plantAge.fill(1);peakSpeed.fill(0);plantCool.fill(0);cheerAge=9;youRun=rivalRun=0;matchSeen=-1;stalk.visible=false;spot.visible=false;spotKick=-1;space.visible=false;spaceAge=0;spaceSide=0;tireSeen=false;outSeen=tennis.outEvents;if(net)net.position.z=0;if(tape)tape.position.z=0;}
  /** Scales the simulation step: returns 0 while a hit-stop holds the contact frame. */
@@ -232,7 +232,12 @@ export function createTennisFeel(stage:Stage,tennis:TennisState,emit:(cue:string
   if(intent.mesh.visible&&intent.text!=='GOING OUT · LET IT GO'){intent.x=tennis.rival.x;intent.z=tennis.rival.y;}
   // Net cord: the whole net and tape shiver from the hit point, decaying quickly.
   if(netWobble>0){netWobble=Math.max(0,netWobble-ui);netAge+=ui;const z=stage.reduced?0:Math.sin(netAge*42)*netAmp*(netWobble/.6);if(net)net.position.z=z;if(tape)tape.position.z=z*.6;}
-  {const drill=tennisCourtOf(tennis).style==='drill';target.visible=drill&&tennis.phase!=='over';if(target.visible){target.position.x=tennis.targetX;target.position.z=tennis.targetY;
+  // Gold Ring (Nov 18 2026): the same pooled ring is the rally bonus ring off the drill (+1 draw only while it is up). It lands with a
+  // short overshoot, breathes slowly, and grows a size with each ring already hit this rally. Sound: `tennis:ringup`, `tennis:ring:<n>`.
+  if(tennis.bonusShows!==ringShown){ringShown=tennis.bonusShows;if(tennis.bonusOn){ringAge=0;emit('tennis:ringup:'+(tennis.bonusChain+1));}}
+  if(tennis.bonusEvents!==ringHit){ringHit=tennis.bonusEvents;emit('tennis:ring:'+tennis.bonusChain);if(!stage.reduced){stage.burst?.(tennis.bonusX,.3,tennis.bonusY,1.2+tennis.bonusChain*.3);stage.burst?.(tennis.bonusX,.9,tennis.bonusY,.8);}}
+  if(tennis.bonusOn&&tennisCourtOf(tennis).style!=='drill'){ringAge+=ui;target.visible=true;target.position.x=tennis.bonusX;target.position.z=tennis.bonusY;const pop=stage.reduced?1:ringAge<.3?1.45-.45*ringAge/.3:1+.06*Math.sin((ringAge-.3)*5);target.scale.setScalar((RING_SCALE+tennis.bonusChain*.08)*pop);if(targetOn){targetOn=false;target.material.color.copy(TARGET_OFF);}}
+  else{const drill=tennisCourtOf(tennis).style==='drill';target.visible=drill&&tennis.phase!=='over';if(target.visible){target.position.x=tennis.targetX;target.position.z=tennis.targetY;
    // Lined up (the aim ring would land on it): the gold ring lights up, so "yellow on gold" is a visible yes.
    const on=tennisDrillLinedUp(tennis);target.scale.setScalar(on?1.12:1);if(on!==targetOn){targetOn=on;target.material.color.copy(on?TARGET_ON:TARGET_OFF);}}}
   if(fakeAge<1)fakeAge=Math.min(1,fakeAge+ui/.8);

@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useState} from 'react';
+import {useEffect,useRef,useState} from 'react';
 import {TENNIS_COURTS,TENNIS_DRILL,TENNIS_TOURS,TENNIS_TOUR_RULES,tennisTakeaway,tennisLossLine,tennisTourUnlocked,tennisMatchName,tennisRunLives,type TennisState} from '@/lib/games/soccerTennis';
 import {tennisRampRow,tennisMatchTip} from '@/lib/arcade/tennisEndless';
 import {readTennisStars} from '@/lib/arcade/tennisFeel';
@@ -81,6 +81,7 @@ export function TennisCard(p:Props){
    <li><b>{t.perfectTouches}</b><span>perfect</span></li>
    <li><b>{t.sweetShots}</b><span>sweet</span></li>
   </ul>}
+  {t&&t.bonusHits>0&&<p className={styles.status} data-tennis-rings>Gold rings hit: <b>{t.bonusHits}</b></p>}
   {t&&t.firstTouchTries>0&&<p className={styles.status} data-tennis-first-touch>First touches on target: <b>{t.firstTouchOnTarget}</b></p>}
   {confetti}
   {over&&!drill&&tennisLossLine(t!)?<p className={styles.why} data-tennis-why>{tennisLossLine(t!)}</p>:null}
@@ -133,6 +134,12 @@ const titleCase=(s:string)=>s.toLowerCase().replace(/(^|[\s-])\S/g,m=>m.toUpperC
 export function TennisScoreboard({hud,tennis}:{hud:ArcadeHUD;tennis:TennisState|undefined}){
  // Nov 17 2026: the saved best rally (the board record), read after mount; a rally past it inks the numeral sun-yellow as BEST.
  const [rallyBest,setRallyBest]=useState(0);useEffect(()=>{setRallyBest(readArcadeRecord('tennis').best);},[]);
+ // Nov 18 2026: every score gain pops out under the panel and flies up into the points (a touch by its grade, a won point, a Gold
+ // Ring). One keyed element, CSS only; it hangs off the panel in the sky band, so the court itself stays clean (owner, Oct 27 2026).
+ const gain=useRef({touch:0,ring:0,id:0,kind:'',text:''});
+ if(tennis){const g=gain.current;
+  if(tennis.bonusEvents!==g.ring){if(tennis.bonusEvents>g.ring&&tennis.bonusGain>0){g.id++;g.kind='ring';g.text=`RING +${tennis.bonusGain}`;}g.ring=tennis.bonusEvents;g.touch=tennis.tourEvents;}
+  else if(tennis.tourEvents!==g.touch){if(tennis.tourEvents>g.touch&&tennis.tourGain>0){const m=tennis.phase==='rally'?tennis.touchMult:0;g.id++;g.kind=m>=4?'gold':m===3?'perfect':m===2?'clean':m===1?'plain':'win';g.text=`${m>=4?'GOLDEN ':m===3?'PERFECT ':''}+${tennis.tourGain}`;}else if(tennis.tourEvents<g.touch)g.kind='';g.touch=tennis.tourEvents;}}
  if(!tennis)return null;
  const court=tennis.tour?TENNIS_TOURS[tennis.tour-1]:TENNIS_COURTS[Math.max(0,Math.min(TENNIS_COURTS.length-1,tennis.level-1))],venue=tennis.tour&&tennis.matchesWon%9!==0?tennisVenueFor(tennis.venueStop,0):tennisVenueFor(tennis.level,tennis.tour);/* endless: a tour walks the stops too */
  const rank=tennisRampRow(tennis.match).rank,balls=tennisRunLives(tennis);
@@ -151,5 +158,6 @@ export function TennisScoreboard({hud,tennis}:{hud:ArcadeHUD;tennis:TennisState|
    {!tennis.tour&&<span className={skin.sbRun} data-tennis-run-score><b key={tennis.tourEvents}>{tennis.tourScore}</b><small>pts</small></span>}
    <span className={skin.sbWind} data-dir={wind<0?'left':'right'} data-strength={strength} data-tennis-wind><svg viewBox="0 0 26 14" aria-hidden="true"><path d="M13 1 L25 4 L13 7 Z M12 0 h1.6 v14 h-1.6 Z"/></svg>{strength?'Wind':'Calm'}</span>
   </div>
+  {gain.current.kind&&<i className={skin.sbGain} key={gain.current.id} data-kind={gain.current.kind} data-tennis-gain aria-hidden="true">{gain.current.text}</i>}
  </div>;
 }
