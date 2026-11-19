@@ -10,13 +10,16 @@
  * (components/games/PinballScorePanel.tsx: match minute, balls left as inked discs, division), tucked behind the pill and kept INSIDE
  * the top bar row: its foot is the bar's foot (edge-top + 52 = 66 px; 54 px on short landscape), centred between Arcade and Pause.
  * It keeps the `data-pinball-dmd` hook the framing checks read as "the display". No band under the bar: the table starts there. */
-.skin [data-pinball-dmd]{position:absolute;z-index:2;top:calc(var(--arcade-edge-top,14px) + env(safe-area-inset-top,0px) + 41px);left:50%;transform:translateX(-50%);box-sizing:border-box;height:16px;max-width:186px;display:flex;align-items:center;gap:5px;padding:0 7px;border:2px solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);font:800 10px/1 var(--cm-ui);white-space:nowrap;pointer-events:none}
+.skin [data-pinball-dmd]{position:absolute;z-index:2;top:calc(var(--arcade-edge-top,14px) + env(safe-area-inset-top,0px) + 41px);left:50%;transform:translateX(-50%);box-sizing:border-box;height:16px;max-width:258px;display:flex;align-items:center;gap:5px;padding:0 7px;border:2px solid var(--cm-ink);background:var(--cm-paper);color:var(--cm-ink);font:800 10px/1 var(--cm-ui);white-space:nowrap;pointer-events:none}
 .skin [data-pinball-dmd] em{font-style:normal;font-variant-numeric:tabular-nums}
 .skin [data-pinball-dmd] em[data-late]{color:var(--cm-red)}
 .skin [data-pinball-dmd] [data-pb-balls]{display:flex;gap:2px}
 .skin [data-pinball-dmd] [data-pb-balls] b{box-sizing:border-box;width:7px;height:7px;border:1.5px solid var(--cm-ink);border-radius:50%;background:transparent}
 .skin [data-pinball-dmd] [data-pb-balls] b[data-on]{background:var(--cm-ink)}
 .skin [data-pinball-dmd] [data-pb-div]{overflow:hidden;text-overflow:clip;text-transform:uppercase}
+/* AAA pass: the Golden Pot, an ink block with sun figures; it prints red when full. Flat print, no motion. */
+.skin [data-pinball-dmd] [data-pb-pot]{align-self:stretch;display:flex;align-items:center;padding:0 5px;background:var(--cm-ink);color:var(--cm-sun);font-variant-numeric:tabular-nums}
+.skin [data-pinball-dmd] [data-pb-pot][data-full]{background:var(--cm-red);color:var(--cm-paper)}
 /* Endless play: the level (match number), a sun block at the end of the tab. Flat print, no motion. */
 .skin [data-pinball-dmd] [data-pb-level]{align-self:stretch;display:flex;align-items:center;margin-right:-7px;padding:0 5px;border-left:2px solid var(--cm-ink);background:var(--cm-sun);font-variant-numeric:tabular-nums}
 @media(max-height:520px){.skin [data-pinball-dmd]{top:calc(var(--arcade-edge-top,6px) + env(safe-area-inset-top,0px) + 32px)}}

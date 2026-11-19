@@ -16,7 +16,7 @@ export type ScoreCall={kind:ScoreCallKind;title:string;sub:string;life:number;at
 /** What an in-play coaching line becomes on the panel: a short call, or null for the resting score. Pure. */
 export function scoreCall(message:string):Omit<ScoreCall,'at'|'id'>|null{
  const m=message||'';let hit:RegExpMatchArray|null;
- if((hit=m.match(/(MOVE COMPLETE|CORNER FINISH|GOAL)! \+(\d+)/)))return{kind:'goal',title:hit[1]==='GOAL'?'GOAL!':hit[1],sub:'+'+hit[2],life:2.3};
+ if((hit=m.match(/(MOVE COMPLETE|CORNER FINISH|HAT-TRICK|BRACE|GOAL)! \+(\d+)/)))return{kind:'goal',title:hit[1]==='GOAL'?'GOAL!':hit[1]==='HAT-TRICK'||hit[1]==='BRACE'?hit[1]+'!':hit[1],sub:'+'+hit[2],life:2.3};
  // The game-over sequence (lib/arcade/games/pinballGame.ts holds the run open while it plays).
  // Endless play: the full-time whistle is a beat inside the run (the bonus under the words; the level is on the status tab).
  if((hit=m.match(/^FULL TIME! \+(\d+) · (LEVEL \d+)/)))return{kind:'mode',title:'FULL TIME!',sub:hit[2]+' · +'+hit[1],life:2.4};
@@ -27,7 +27,7 @@ export function scoreCall(message:string):Omit<ScoreCall,'at'|'id'>|null{
  const head=clean(m.split(/ · |!|\. |: /)[0]);
  if(!head||head.length>30||/^[A-Z][a-z]/.test(m)&&head.length>17)return null;
  if(/^(SAVED|PARRIED|SWEEPER SAVE|CLEARED OFF THE LINE|OFF THE LINE|GREAT BLOCK|BALL SAVED)/.test(m))return{kind:'save',title:head+'!',sub:'',life:1.6};
- if(/^(MODE|2v1|CUP FINAL|DUGOUT OPEN|GOAL LIT|WALL BROKEN|STOPPAGE TIME|EXTRA BALL|BEAT THE CLOCK|G-O-A-L|TWO ON ONE|CHALLENGE DONE)/.test(m))return{kind:'mode',title:head+(/^[^·.]*!/.test(m)?'!':''),sub:'',life:2.2};
+ if(/^(GOLDEN POT|POT FULL|MODE|2v1|CUP FINAL|DUGOUT OPEN|GOAL LIT|WALL BROKEN|STOPPAGE TIME|EXTRA BALL|BEAT THE CLOCK|G-O-A-L|TWO ON ONE|CHALLENGE DONE)/.test(m))return{kind:'mode',title:head+(/^[^·.]*!/.test(m)?'!':''),sub:'',life:2.2};
  if(/^(ON FIRE|SWITCH FEET|PERFECT)/.test(m))return{kind:'combo',title:head+(/^[^·.]*!/.test(m)?'!':''),sub:'',life:1.4};
  return{kind:'text',title:head+(/^[^·.]*!/.test(m)?'!':''),sub:'',life:head.length>17?2.4:1.3};
 }

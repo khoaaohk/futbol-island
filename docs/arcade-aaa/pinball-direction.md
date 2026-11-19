@@ -57,10 +57,34 @@ Breakaway" and "all these games should be in the new style". Layout, rules, scor
 ## Budget (phone profile, `scripts/measure-arcade-games.cjs pinball`, dev server, desktop Chrome: no phone temperature measured)
 - Draws 69 (max 70; was 78), triangles 33.3k (was 33.8k), GL textures 14 (was 15), menu 0 frames, ready table 0 frames.
 
+## AAA pass (Nov 18 2026): what changed
+- Found by playing: the plunger voice was never fired (and read the plunger after it had snapped back to 0); a new ball, the near
+  miss at the drain and the end of the ball save were silent; flipper, foot-block and slingshot sounds never varied; holding
+  Launch at half power scored from 16 of 27 launches with no flipper pressed (Division 4, 34k); nothing on the table built toward
+  a jackpot; the scene never changed over a long run.
+- Kick-off rule (`s.kickoff`, `PINBALL_KICKOFF_Y`): a ball straight off the plunger cannot score. Until a flipper kicks it or it
+  comes down into play, the goal line plays as the top rail, with a knock and the call KICK IT FIRST! The skill shot still pays.
+- Golden Pot (`s.pot`, `PINBALL_POT_STEP` 10, `PINBALL_POT_MAX` 1000): every bumper, cone and slingshot hit fills the pot. A goal
+  wins it times the goals on this ball (2 = BRACE, 3 = HAT-TRICK, the cap). A lost ball empties it. Read three ways: the ink chip
+  on the status tab (`POT 320 ×2`, red when full), the five red box lamps as its meter, a rising two-note cue per lamp with a
+  call at the first, third and last. A hat-trick gets the big confetti and a longer freeze.
+- Evening by level (`PINBALL_EVENING`): each full-time whistle prints the next step of the sunset on the light band (golden hour,
+  amber, orange, rose, first dusk). Classic ladder only; two uniforms; this replaces "the lights never change" for the band's tint.
+- Sound added: launch (with its real power), new-ball click, near-miss tick and crowd breath, save-off notes, pot lamp steps,
+  the pot's coin run after the fanfare (it would take the fanfare's voices in the same frame), the surf bed (`pinballSeaSound`,
+  one voice built once, fed only while a ball is in play). Pitch jitter on flippers, foot blocks and slingshots (left board lower).
+- Bots (24 seeds, 30 fps, tap launch; before -> after, p50 / max): careless 181k / 476k -> 204k / 474k; semi-skilled 347k / 553k ->
+  340k / 573k; good 467k / 722k -> 479k / 750k. Same range: the pot adds about 5%, the kick-off rule takes the free goals away.
+- Budget (phone profile, dev server, desktop Chrome): open play 61 draws (max 64), 26.3k triangles; goal beat 61 (max 63), 25.4k;
+  GL textures 15. No mesh, material or texture added.
+
 ## Falls short (ranked)
 1. DONE (endless pass, Nov 10): a run ends only on the last ball; full time is a whistle, the level rises (ramp table in
    `lib/games/soccerPinballEndless.ts`), the status tab shows `LV n`. Still open: the ramp was tuned on bots, not on children.
 2. The hoardings and the keeper are backlit, so they print in the shadow band and read dull next to the sunlit pitch.
 3. Small legends (STAR LANES, BUILD UP) are still tiny on a phone; palms are boards and cones, cruder than Breakaway's.
 4. Call bursts cover the goal mouth for a second or two; passing calls are narrower but still sit on the wall.
-5. File and hook names kept from the machine passes (`soccerPinballCabinet.ts`, `data-pinball-dmd`, `giHeat`).
+5. A tap launch plays the same first second on every ball (rail, rail, parry, cone). The plunger needs a little spread.
+6. A semi-skilled bot's run lasts about fifteen minutes: the ramp is real (the first ball lasts less at level 9) but shallow.
+7. The evening tint does not reach the unlit backcloth: the sky and sea stay at golden hour while the table goes to dusk.
+8. File and hook names kept from the machine passes (`soccerPinballCabinet.ts`, `data-pinball-dmd`, `giHeat`).

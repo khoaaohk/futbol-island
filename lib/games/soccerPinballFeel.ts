@@ -1,4 +1,4 @@
-import {pinballDivision,pinballMinute,plungerPull,pinballReadShow,PERFECT_POINTS,READ_POINTS,WALL_PASS_POINTS,type PinballState} from './soccerPinball';
+import {pinballDivision,pinballMinute,plungerPull,PINBALL_POT_MAX,pinballReadShow,PERFECT_POINTS,READ_POINTS,WALL_PASS_POINTS,type PinballState} from './soccerPinball';
 import {createPinballCrew,triggerPinballCrew,stepPinballCrew,pinballCrewActive,type PinballCrew} from './soccerPinballCrew';
 import {pinballModeNeed,PINBALL_MAX_BALLS} from './soccerPinballEndless';
 import {pinballMatchFocus} from './soccerPinballPatterns';
@@ -38,13 +38,19 @@ export type PinballFeel={
  confettiSerial:number;confettiPower:number;confettiTime:number;
  /** Highest alternating-foot combo already celebrated this rally. */
  streakShown:number;
+ /** Golden Pot (AAA pass, Nov 18 2026): the pot last seen, and seconds left of the milestone call (200, 600, full: the first, third and last box lamp). */
+ pot:number;potNote:number;potDue:number;
+ /** The kick-off rule's call: the count last seen and seconds left of 'KICK IT FIRST!'. */
+ kickoff:number;kickNote:number;
+ /** The new-ball save was live last frame (its end gets a cue). */
+ saveOn:boolean;
 };
 
 export function createPinballFeel():PinballFeel{
  return{hitStop:0,shake:0,drainFlash:0,rescueFlash:0,ringX:0,ringY:0,ringPower:0,ringSerial:0,
   popups:Array.from({length:PINBALL_POPUPS},()=>({age:PINBALL_POPUP_LIFE,x:0,y:0,text:'',kind:'score' as PinballPopupKind,serial:0})),popupCursor:0,popupSerial:0,
   last:{tip:0,sweeper:0,hitId:0,score:0,wall:0,gate:0,flipper:0,keeper:0,bumper:0,join:0,parry:0,grade:0,phase:'ready',lit:false,level:1,balls:3},
-  ball:{number:1,startScore:0,goals:0,bestCombo:0,knockdowns:0,perfect:0},table:{sling:0,drop:0,wallDown:0,wallUp:0,flag:0,word:0,lane:0,crest:0,skill:0,cone:0,spin:0,dugout:0,mode:0,modeDone:0,modeEnd:0,block:0,saver:0,final:0},savedStars:[0,0,0,0,0,0],runBestCombo:0,summary:'',summaryFresh:false,crew:createPinballCrew(),confettiSerial:0,confettiPower:1,confettiTime:0,streakShown:1};
+  ball:{number:1,startScore:0,goals:0,bestCombo:0,knockdowns:0,perfect:0},table:{sling:0,drop:0,wallDown:0,wallUp:0,flag:0,word:0,lane:0,crest:0,skill:0,cone:0,spin:0,dugout:0,mode:0,modeDone:0,modeEnd:0,block:0,saver:0,final:0},savedStars:[0,0,0,0,0,0],runBestCombo:0,summary:'',summaryFresh:false,crew:createPinballCrew(),confettiSerial:0,confettiPower:1,confettiTime:0,streakShown:1,pot:0,potNote:0,potDue:0,kickoff:0,kickNote:0,saveOn:false};
 }
 export function resetPinballFeel(f:PinballFeel){const fresh=createPinballFeel();for(let i=0;i<f.popups.length;i++)Object.assign(f.popups[i],fresh.popups[i]);fresh.popups=f.popups;fresh.confettiSerial=f.confettiSerial;Object.assign(f,fresh);}
 
@@ -53,7 +59,7 @@ export function resetPinballFeel(f:PinballFeel){const fresh=createPinballFeel();
  * so the freeze doubles as an input buffer rather than eating presses. */
 export function pinballTimeScale(f:PinballFeel){return f.hitStop>0?0:1;}
 
-export function pinballFeelActive(f:PinballFeel){if(f.hitStop>0||f.shake>.005||f.drainFlash>0||f.rescueFlash>0||f.confettiTime>0||pinballCrewActive(f.crew))return true;for(const p of f.popups)if(p.age<PINBALL_POPUP_LIFE)return true;return false;}
+export function pinballFeelActive(f:PinballFeel){if(f.potDue>0||f.hitStop>0||f.shake>.005||f.drainFlash>0||f.rescueFlash>0||f.confettiTime>0||pinballCrewActive(f.crew))return true;for(const p of f.popups)if(p.age<PINBALL_POPUP_LIFE)return true;return false;}
 
 function popup(f:PinballFeel,x:number,y:number,text:string,kind:PinballPopupKind){
  const p=f.popups[f.popupCursor];f.popupCursor=(f.popupCursor+1)%f.popups.length;
@@ -82,7 +88,7 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
  if(x.bumper>L.bumper)kick(f,.18);
  if(x.keeper>L.keeper){kick(f,.32);if(x.keeperV>300){stop(f,.05);ring(f,s.keeper,83,.8);}}
  if(x.join>L.join)emit(false,'pb-whistle');
- if(x.tip>L.tip){popup(f,s.ball.x,500,'OOH! SO CLOSE!','warn');kick(f,.1);}
+ if(x.tip>L.tip){popup(f,s.ball.x,500,'OOH! SO CLOSE!','warn');kick(f,.1);emit(false,'pb-tip');/* AAA pass: the near miss at the drain was silent */}
  // Timing coach: every strike is graded by where in its swing the bat met
  // the ball. PERFECT gets a tiny freeze + sparkle (the "sweet spot" feel);
  // EARLY/LATE get a soft, honest label, never a penalty sound.
@@ -119,7 +125,7 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
  if(s.hitId!==L.hitId){
   const gained=s.score-L.score;
   if(s.phase==='goal'){
-   f.ball.goals++;stop(f,.1);kick(f,.7);ring(f,s.hitX,s.hitY,1.4);triggerPinballCrew(f.crew,'goal');confetti(f,1);
+   f.ball.goals++;stop(f,s.potGoals===3?.14:.1);kick(f,.7);ring(f,s.hitX,s.hitY,1.4);triggerPinballCrew(f.crew,'goal');confetti(f,s.potGoals===3?2:1);/* a hat-trick gets the big finale's confetti and a longer freeze */
    popup(f,180,215,`${s.lastRebound?'REBOUND GOAL':s.cue==='corner'?'CORNER':'GOAL'}! +${formatPinballPoints(s.lastGoalPoints)}`,'goal');
    popup(f,180,160,pinballCommentary(s),'lit');
   }else switch(s.cue){
@@ -170,6 +176,20 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
  // Phase transitions: launch, real drain, full time.
  // A "ball" is a life: goals and ball-save relaunches continue it.
  if(L.phase!=='playing'&&s.phase==='playing')f.summaryFresh=false;
+ // AAA pass: the plunger was silent (the 'launch' voice existed but nothing fired it), and a new ball reached the lane without a sound.
+ if(L.phase==='ready'&&s.phase==='playing')emit(false,'launch');
+ if(L.phase!=='ready'&&s.phase==='ready'&&s.balls>0)emit(false,'pb-ball');
+ // Golden Pot: a call and a rising two-note cue at 250, 500 and full; a coin run when a goal wins it.
+ f.kickNote=Math.max(0,f.kickNote-dt);if(x.kickoff>f.kickoff){f.kickoff=x.kickoff;f.kickNote=1.5;emit(false,'block');kick(f,.12);ring(f,s.ball.x,57,.9);}
+ f.potNote=Math.max(0,f.potNote-dt);
+ // every box lamp that lights (a fifth of the pot) rings a step higher; the first, third and last also get the call
+ if(s.pot>f.pot&&Math.floor(s.pot/POT_LAMP)>Math.floor(f.pot/POT_LAMP)){emit(false,'pb-potUp');ring(f,180,108,s.pot>=PINBALL_POT_MAX?1.6:.8);for(const mark of POT_MARKS)if(f.pot<mark&&s.pot>=mark)f.potNote=1.6;}
+ // The ball save runs out: two soft falling notes, so the danger is heard and not only read off the lamp.
+ {const saveOn=s.phase==='playing'&&s.openingRescue&&s.launchGrace>0;if(f.saveOn&&!saveOn&&s.phase==='playing'&&s.cue!=='rescue')emit(false,'pb-saveOff');f.saveOn=saveOn;}
+ // The coin run waits for the goal fanfare's top note: asked for in the same frame it would take the fanfare's voices (14-voice cap).
+ if(s.pot<f.pot&&s.lastPot>0&&(s.phase==='goal'||s.cue==='mbGoal')){f.potNote=0;f.potDue=.7;}
+ if(f.potDue>0){f.potDue-=dt;if(f.potDue<=0){f.potDue=0;emit(false,'pb-pot');}}
+ f.pot=s.pot;
  // A real drain is the only thing that spends a ball (rescues never do).
  if(s.balls<L.balls){
   f.drainFlash=1;kick(f,.25);triggerPinballCrew(f.crew,'drain');f.streakShown=1;if(s.cue!=='concede')emit(false,'pb-drain');
@@ -181,8 +201,10 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
  L.tip=x.tip;L.sweeper=x.sweeper;L.hitId=s.hitId;L.score=s.score;L.wall=x.wall;L.gate=x.gate;L.flipper=x.flipper;L.keeper=x.keeper;L.bumper=x.bumper;L.join=x.join;L.parry=x.parry;L.grade=x.grade;L.phase=s.phase;L.lit=lit;L.level=s.level;L.balls=s.balls;
 }
 
+const POT_MARKS=[200,600,PINBALL_POT_MAX] as const,POT_LAMP=PINBALL_POT_MAX/5;
 /** One short commentator line for a goal: names the football idea that made it (reading age ~8). */
 export function pinballCommentary(s:PinballState):string{
+ if(s.potGoals===3)return 'A HAT-TRICK!';
  if(s.lastRush)return 'BEAT THE CLOCK!';
  if(s.lastChallengeBonus>0)return 'CHALLENGE DONE!';
  if(s.lastRebound)return 'FOLLOWED IT UP!';
@@ -193,6 +215,8 @@ export function pinballCommentary(s:PinballState):string{
 }
 /** HUD line override for the moments the feel layer owns, else null. */
 export function pinballFeelMessage(f:PinballFeel,s:PinballState):string|null{
+ if(f.kickNote>0&&s.phase==='playing')return 'KICK IT FIRST! A goal needs a flipper kick.';
+ if(f.potNote>0&&s.phase==='playing'&&s.pot>0)return s.pot>=PINBALL_POT_MAX?'POT FULL! Score a goal to win it.':`GOLDEN POT ${s.pot}! Score a goal to win it.`;
  if(!f.summaryFresh)return pinballTableMessage(s);
  if(s.phase==='lost')return `${f.summary}. ${s.cue==='concede'?'Read the wind-up next time.':'Let it reach the flipper, then strike.'}`;
  if(s.phase==='ready'&&s.plunger<=.02&&s.cue!=='rescue')return `${f.summary} · ${plural(s.balls,'ball')} left. Hold Launch!`;

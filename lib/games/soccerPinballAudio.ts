@@ -126,17 +126,18 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
  const volume=getSoundVolume();if(volume<=0)return;
  if(cue==='goal'||cue==='level')haptic(cue==='goal'?[18,35,28]:[10,30,10]);
  else if(cue==='dazed'||cue==='save'||cue==='nudge'||cue==='attack'||cue==='pb-wallDown'||cue==='pb-block'||cue==='pb-saver'||cue==='pb-modeDone')haptic(12);
- else if(cue==='pb-perfect'||cue==='pb-read')haptic(8);
+ else if(cue==='pb-perfect'||cue==='pb-read'||cue==='pb-tip'||cue==='pb-potUp')haptic(8);
+ else if(cue==='pb-pot')haptic([10,24,14]);
  // Oct 26 2026: a tiny tick under the thumb on each flipper press (Android; throttled, off for reduced motion).
  else if(cue==='left'||cue==='right')haptic(5);
  if(!ctx||ctx.state!=='running')return;
  const v=state(ctx),now=ctx.currentTime,vol=volume;
  switch(cue){
   // Flippers: a wood block and a rim-shot, both struck at `now` (same frame as the press), dry. Left a touch lower than right.
-  case 'left':case 'right':{const p=cue==='left'?.95:1.06;woodBlock(ctx,v,now,vol,p);rim(ctx,v,now,vol,p);break;}
+  case 'left':case 'right':{const p=(cue==='left'?.95:1.06)*jitter(.025);woodBlock(ctx,v,now,vol,p);rim(ctx,v,now,vol,p);break;}
   case 'launch':{
    // Plunger: the shaker winds up with the pull, the air whooshes up the lane, a rim-shot cracks the ball off the tip over a cajon hit.
-   const power=s?plungerPull(s.plunger):.68;
+   const power=s?(s.launchPower>0?s.launchPower:plungerPull(s.plunger)):.68;// AAA pass: the plunger is back at 0 by the time this plays, so read the launch's own power
    shaker(ctx,v,now,vol*(.6+power*.5),2,.05);
    noise(ctx,v,now,.16+power*.1,(.04+power*.05)*vol,'bandpass',420,2400*(.6+power*.4),2.2);
    rim(ctx,v,now+.03,vol*(.8+power*.4),.85);cajon(ctx,v,now+.03,vol*(.6+power*.3),70,0,.12);
@@ -176,7 +177,7 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
    cajon(ctx,v,now,vol,88,1.1,.18);pan(ctx,v,PENTA[v.chain]*jitter(.004),now+.01,.07*vol,.5);
    break;
   }
-  case 'block':rubber(ctx,v,now,vol*1.1,150);noise(ctx,v,now,.03,.03*vol,'bandpass',2300,1500,1.7,.002);break;
+  case 'block':rubber(ctx,v,now,vol*1.1,150*jitter(.07));noise(ctx,v,now,.03,.03*vol,'bandpass',2300*jitter(.06),1500,1.7,.002);break;
   case 'save':{
    // The keeper figure: a padded rubber slap and the mechanism's thud.
    const hit=Math.min(1,(s?.sfx.keeperV??300)/700);
@@ -215,7 +216,7 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
   case 'pb-sling':
    // Slingshot: a tighter cajon slap, higher and shorter than a bumper.
    if(throttled(v,cue,now,.06))return;
-   cajon(ctx,v,now,vol*.85,160,1.4,.07);break;
+   cajon(ctx,v,now,vol*.85,(s&&s.ball.x>180?172:150)*jitter(.05),1.4,.07);break;// AAA pass: the left board sits lower than the right, and no two slaps are the same
   case 'pb-cone':{
    // Pop bumper (the rondo cones): a cajon thump, and the pan walks a pentatonic step an octave down.
    if(throttled(v,cue,now,.05))return;
@@ -277,6 +278,15 @@ export function playPinballCue(ctx:AudioContext|null,cue:string,s?:PinballState|
   case 'halfTime':whistle(ctx,v,now,[[0,.18],[.26,.3]],vol);break;
   case 'stoppage':whistle(ctx,v,now,[[0,.12]],vol);break;
   // Nov 8 2026: a new personal best (any board): a rising pan run, then two flammed claps (the hand-played free-game call),
+  // AAA pass (Nov 18 2026). Golden Pot: two rising notes at a milestone (higher as the pot grows); a coin run when a goal wins it,
+  // one more note per goal on this ball (2 = brace, 3 = hat-trick), played after the fanfare's top note so the voices never fight.
+  case 'pb-potUp':{const step=s?Math.max(1,Math.min(5,Math.floor(s.pot/200))):1;pan(ctx,v,PENTA[step-1],now,.04*vol,.25,true);pan(ctx,v,PENTA[step+1],now+.07,.045*vol,.4,true);break;}
+  case 'pb-saveOff':tone(ctx,v,'sine',659.25,650,now,.12,.03*vol,.004);tone(ctx,v,'sine',493.88,485,now+.11,.2,.03*vol,.004);break;
+  case 'pb-pot':{const n=2+Math.min(3,s?.lastPotX??1);for(let i=0;i<n;i++)pan(ctx,v,PENTA[Math.min(PENTA.length-1,3+i)]*2,now+i*.06,.035*vol,i===n-1?.5:.16);break;}
+  // The near miss at the drain: the ball ticks the bat's tip and the crowd draws breath.
+  case 'pb-tip':woodBlock(ctx,v,now,vol*.6,1.8*jitter(.05));if(!throttled(v,'ooh',now,1.2))ooh(ctx,v,now+.04,vol*.8);break;
+  // A new ball rolls onto the plunger: one small wooden click.
+  case 'pb-ball':woodBlock(ctx,v,now,vol*.5,1.5*jitter(.04));tone(ctx,v,'sine',240,170,now+.02,.07,.03*vol,.004);break;
   // once per run (pooled voices).
   case 'pb-best':if(!throttled(v,cue,now,2)){arpeggio(ctx,v,[PENTA[2],PENTA[4],PENTA[5],PENTA[7]],now+.05,.09,.045*vol);clap(ctx,v,now+.45,vol);clap(ctx,v,now+.6,vol);}break;
   // The referee's full-time whistle: short, short, long.
@@ -312,3 +322,25 @@ export function pinballRollSound(ctx:AudioContext|null,speed:number){
  }catch{/* a closed context: drop the voice, the next call on a live context rebuilds it */rolls.delete(ctx);}
 }
 
+/** AAA pass (Nov 18 2026): the surf behind the hoardings, a soft bed under the table. One looped noise source through a band-pass,
+ * built ONCE per AudioContext and never stopped (the rolling voice's Safari-safe pattern above); each call while a ball is in play
+ * sets a slow swell from the audio clock, and the level decays by itself about half a second after the last call (pause, results,
+ * a waiting plunger), then one timer unplugs the voice. Very quiet: it sits under every cue. */
+const seas=new WeakMap<AudioContext,Roll>();
+export function pinballSeaSound(ctx:AudioContext|null){
+ if(!ctx||ctx.state!=='running'||typeof ctx.createBufferSource!=='function')return;
+ const now=ctx.currentTime,volume=isSoundEnabled()&&!(typeof document!=='undefined'&&document.hidden)?getSoundVolume():0;let r=seas.get(ctx);
+ if(!r){if(volume<=0)return;
+  const v=state(ctx);if(!v.noise){const buffer=ctx.createBuffer(1,Math.ceil(ctx.sampleRate*.8),ctx.sampleRate),data=buffer.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=Math.random()*2-1;v.noise=buffer;}
+  try{const src=ctx.createBufferSource(),filter=ctx.createBiquadFilter(),gain=ctx.createGain();src.buffer=v.noise;src.loop=true;src.playbackRate.value=.38;filter.type='bandpass';filter.Q.value=.55;filter.frequency.value=520;gain.gain.value=0;
+   src.connect(filter);filter.connect(gain);src.start(now);r={src,filter,gain,live:false,until:0,timer:null};seas.set(ctx,r);}catch{return;}}
+ const voice=r;
+ try{if(!voice.live){if(volume<=0)return;voice.gain.connect(bus(ctx,state(ctx)));voice.live=true;}
+  // one wave about every seven seconds: the wash rises and brightens, then draws back
+  const swell=.5+.5*Math.sin(now*.9);
+  voice.gain.gain.cancelScheduledValues(now);voice.gain.gain.setTargetAtTime(PINBALL_SEA_LEVEL*(.35+.65*swell)*volume,now,.3);voice.gain.gain.setTargetAtTime(0,now+.3,.18);
+  voice.filter.frequency.setTargetAtTime(420+swell*380,now,.3);voice.until=now+1.4;
+  if(voice.timer===null){const park=()=>{voice.timer=null;const left=voice.until-ctx.currentTime;if(left>0&&ctx.state==='running'){voice.timer=setTimeout(park,left*1000+40);return;}try{voice.gain.disconnect();}catch{}voice.live=false;};voice.timer=setTimeout(park,1440);}
+ }catch{seas.delete(ctx);}
+}
+export const PINBALL_SEA_LEVEL=.011;
