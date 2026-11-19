@@ -882,6 +882,8 @@ const coinHunt=createCoinHunt(scene,()=>sound.ui('click'),(text:string)=>{coinHi
     disposers.add(()=>rampVisuals.dispose());
     const streetTraffic=createStreetTraffic(scene,world.obstacles,world.roads,rideRamps,world.signalHeads);
     disposers.add(()=>streetTraffic.dispose());
+    // A kicked signal sways (propReactions): its lamps, drawn by the traffic's one instanced mesh, follow the head.
+    {const lamps=streetTraffic.signals.lamps;if(lamps)world.signalHeads.forEach((h,i)=>propReactions.follow('signal',h.x,h.z,move=>lamps.sway(i,move)));}
     const rooftop=createRooftopTravel([...world.buildings,...world.walkSurfaces],world.obstacles,location,world.roofObstacles,(x,z)=>rampSurface(rideRamps,x,z),world.landingExclusions,world.canopies);
     // Landing from the sky (jetpack, parachute): canopies over open ground count (canopySurfaces.ts); the ground's view leaves them out.
     const skySurface=(x:number,z:number)=>rooftop.surface(x,z,Infinity);

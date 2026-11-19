@@ -115,9 +115,12 @@ function pickup(paint:string,bedY:number,coolerSeat:boolean,variant:number){
 export function buildVehicleGeometry(style:VehicleStyle,paint:string,options:{bedY?:number;coolerSeat?:boolean;variant?:number}={}){
  return style==='pickup'?pickup(paint,options.bedY??.92,options.coolerSeat??false,options.variant??0):car(style,paint);
 }
-/** One material per vehicle (its own wheel and lamp uniforms), one shader program for all of them. */
+/** One material per vehicle (its own wheel and lamp uniforms), one shader program for all of them.
+ *  `wheel` = (cos spin, sin spin, body pitch, steer); `lamp` = (head, brake/tail, indicator: + left / - right, body roll).
+ *  The body pitches and rolls on its suspension (the group's rotation); the wheel vertices take those two small angles back out
+ *  (y += z*pitch - x*roll about the wheel centre), so the tyres stay on the road. Pass 0, 0 when the tilt is the ground's (a ramp). */
 export function createVehicleMaterial(){
- const wheel=new T.Vector4(1,0,1,0),lamp=new T.Vector4(0,0,0,0);
+ const wheel=new T.Vector4(1,0,0,0),lamp=new T.Vector4(0,0,0,0);
  const material=new T.MeshStandardMaterial({vertexColors:true,roughness:.7});
  material.onBeforeCompile=shader=>{
   shader.uniforms.uWheel={value:wheel};shader.uniforms.uLamp={value:lamp};
@@ -125,14 +128,15 @@ export function createVehicleMaterial(){
    .replace('#include <beginnormal_vertex>',`#include <beginnormal_vertex>
 bool fiWheel=aPart.w>.5&&aPart.w<2.5;bool fiSteer=aPart.w>1.5&&aPart.w<2.5;
 if(fiWheel){objectNormal.yz=vec2(objectNormal.y*uWheel.x-objectNormal.z*uWheel.y,objectNormal.y*uWheel.y+objectNormal.z*uWheel.x);
- if(fiSteer)objectNormal.xz=vec2(objectNormal.x*uWheel.z+objectNormal.z*uWheel.w,objectNormal.z*uWheel.z-objectNormal.x*uWheel.w);}`)
+ if(fiSteer)objectNormal.xz=vec2(objectNormal.x+objectNormal.z*uWheel.w,objectNormal.z-objectNormal.x*uWheel.w);}`)
    .replace('#include <begin_vertex>',`#include <begin_vertex>
 if(fiWheel){vec3 fiQ=transformed-aPart.xyz;fiQ.yz=vec2(fiQ.y*uWheel.x-fiQ.z*uWheel.y,fiQ.y*uWheel.y+fiQ.z*uWheel.x);
- if(fiSteer)fiQ.xz=vec2(fiQ.x*uWheel.z+fiQ.z*uWheel.w,fiQ.z*uWheel.z-fiQ.x*uWheel.w);transformed=aPart.xyz+fiQ;}
-vGlow=aPart.w<2.5?0.:aPart.w<3.5?uLamp.x:aPart.w<4.5?uLamp.y:aPart.w<5.5?uLamp.z:uLamp.w;`);
+ if(fiSteer){float fiC=1.-.5*uWheel.w*uWheel.w;fiQ.xz=vec2(fiQ.x*fiC+fiQ.z*uWheel.w,fiQ.z*fiC-fiQ.x*uWheel.w);}
+ transformed=aPart.xyz+fiQ;transformed.y+=aPart.z*uWheel.z-aPart.x*uLamp.w;}
+vGlow=aPart.w<2.5?0.:aPart.w<3.5?uLamp.x:aPart.w<4.5?uLamp.y:aPart.w<5.5?max(uLamp.z,0.):max(-uLamp.z,0.);`);
   shader.fragmentShader='varying float vGlow;\n'+shader.fragmentShader.replace('vec3 totalEmissiveRadiance = emissive;','vec3 totalEmissiveRadiance = vColor.rgb * vGlow;');
  };
- material.customProgramCacheKey=()=>'street-vehicle-v1';
+ material.customProgramCacheKey=()=>'street-vehicle-v2';
  return {material,wheel,lamp};
 }
 export const triangleCount=(g:T.BufferGeometry)=>g.getAttribute('position').count/3;

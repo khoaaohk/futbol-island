@@ -73,7 +73,11 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
  // Two junctions close enough to share one box (under 24 m) run as one set of lights: the same cycle, and the short street between
  // them has no stop line of its own (a car stopped there would hold the shared box against the car behind it).
  for(const n of nodes)if(signalOffset[n.id]>=0&&signalOffset[boxOf(n.id)]>=0)signalOffset[n.id]=signalOffset[boxOf(n.id)];
- const lamps=signalHeads.length?createTrafficSignalLamps(scene,signalHeads):null,headNode=signalHeads.map(h=>{const n=nodes.find(n=>Math.abs(n.x-h.jx)<.6&&Math.abs(n.z-h.jz)<.6);return n&&signalOffset[n.id]>=0?n.id:-1;});
+ const lamps=signalHeads.length?createTrafficSignalLamps(scene,signalHeads):null,headNode=signalHeads.map(h=>{const n=nodes.find(n=>Math.abs(n.x-h.jx)<.6&&Math.abs(n.z-h.jz)<.6);if(!n||signalOffset[n.id]<0)return -1;
+  // A head faces the street its drivers arrive on. Where that street is the short one inside a shared box (no stop line: see above)
+  // the head flashes yellow like a corner's: a red there would be driven past by everyone who entered the pair on green.
+  const sx=Math.sin(h.yaw),sz=Math.cos(h.yaw);for(const id of n.links){const f=nodes[id],dx=f.x-n.x,dz=f.z-n.z;if((dx*sx+dz*sz)/Math.hypot(dx,dz)>.9&&signalOffset[id]>=0&&boxOf(id)===boxOf(n.id))return -1;}
+  return n.id;});
  let clock=0,lampTick=-1;
  // The lamp draw is skipped (and nothing is painted or uploaded) while no signal is within LAMP_RANGE of the visitor: from Coral Cay,
  // the stadium or the far beaches the whole town's lamps would otherwise be one more draw that the old per-chunk lenses never cost.
@@ -164,7 +168,7 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
   car.obstacle.x=car.group.position.x;car.obstacle.z=car.group.position.z;car.obstacle.w=Math.abs(Math.sin(yaw))*4.5+Math.abs(Math.cos(yaw))*2.1;car.obstacle.d=Math.abs(Math.cos(yaw))*4.5+Math.abs(Math.sin(yaw))*2.1;
   // Wheels turn and steer while driven too; the tail lamps brighten when the truck is held still.
   let turned=yaw-car.yaw;if(turned>Math.PI)turned-=TAU;else if(turned<-Math.PI)turned+=TAU;car.yaw=yaw;car.dirX=Math.sin(yaw);car.dirZ=Math.cos(yaw);car.v=0;car.held=false;
-  if(dt>0){car.spin=(car.spin+distance/WHEEL_RADIUS)%TAU;const steer=T.MathUtils.clamp(turned/dt*2.1/Math.max(Math.abs(car.driveSpeed),1.5),-.5,.5);car.steer+=(steer-car.steer)*Math.min(1,dt*10);car.look.wheel.set(Math.cos(car.spin),Math.sin(car.spin),1-car.steer*car.steer*.5,car.steer);car.look.lamp.set(glow.head,car.driveSpeed===0?1.7:glow.tail,0,0);}
+  if(dt>0){car.spin=(car.spin+distance/WHEEL_RADIUS)%TAU;const steer=T.MathUtils.clamp(turned/dt*2.1/Math.max(Math.abs(car.driveSpeed),1.5),-.5,.5);car.steer+=(steer-car.steer)*Math.min(1,dt*10);car.look.wheel.set(Math.cos(car.spin),Math.sin(car.spin),0,car.steer);car.look.lamp.set(glow.head,car.driveSpeed===0?1.7:glow.tail,0,0);}
   car.speech.visible=false;car.group.userData.controlled=car.index===rider.index;car.group.userData.waiting=car.driveSpeed===0;
  }
  function resumeRoaming(car:typeof cars[number],dt:number,reduced:boolean){
@@ -255,23 +259,25 @@ export function createStreetTraffic(scene:T.Scene,obstacles:Obstacle[],roads:Tra
    if(car.distance>=car.length)setRoute(car,nodes[car.to],nodes[car.next],position,{x:car.dirX,z:car.dirZ});
   }
   // Feel (near, drawn vehicles only): pitch under braking and pulling away (a soft spring, so it settles with one small bounce),
-  // roll into the bend, wheels that spin and steer, brake lamps, indicators before and through a turn.
+  // roll OUT of the bend (the body leans away from the turn: +x is the vehicle's left, a left turn has yawRate > 0 and lifts that
+  // side), wheels that spin and steer, brake lamps, indicators before and through a turn. The body pitches and rolls on its
+  // wheels: the shader takes the same two angles back out of the wheel vertices, so no tyre sinks into the road or lifts off it.
   let wobble=0,lift=0;if(!reduced&&car.crashAge<2.5){wobble=Math.sin(car.crashAge*30)*Math.exp(-car.crashAge*5)*.15;lift=Math.sin(Math.min(1,car.crashAge/.4)*Math.PI)*.12;}
   if(near&&car.group.visible&&step>0){
    const yawRate=car.yawRate;
    car.accel+=((car.v-before)/step-car.accel)*Math.min(1,step*8);
    if(reduced)car.pitch=car.pitchV=car.roll=0;
-   else{const pitch=car.accel*-.008;car.pitchV+=(((pitch>.028?.028:pitch<-.028?-.028:pitch)-car.pitch)*70-car.pitchV*9)*step;car.pitch+=car.pitchV*step;const roll=yawRate*car.v*-.012;car.roll+=((roll>.045?.045:roll<-.045?-.045:roll)-car.roll)*Math.min(1,step*7);}
+   else{const pitch=car.accel*-.008;car.pitchV+=(((pitch>.028?.028:pitch<-.028?-.028:pitch)-car.pitch)*70-car.pitchV*9)*step;car.pitch+=car.pitchV*step;const roll=yawRate*car.v*.012;car.roll+=((roll>.045?.045:roll<-.045?-.045:roll)-car.roll)*Math.min(1,step*7);}
    const steer=yawRate*2.1/(car.v>1.5?car.v:1.5);car.steer+=((steer>.5?.5:steer<-.5?-.5:steer)-car.steer)*Math.min(1,step*10);car.spin=(car.spin+moved/WHEEL_RADIUS)%TAU;
-   car.look.wheel.set(Math.cos(car.spin),Math.sin(car.spin),1-car.steer*car.steer*.5,car.steer);
+   car.look.wheel.set(Math.cos(car.spin),Math.sin(car.spin),0,car.steer);
    const blink=remaining<24&&(car.outAngle>.5||car.outAngle<-.5)?car.outAngle:car.distance<car.turnLength&&(car.turnAngle>.5||car.turnAngle<-.5)?car.turnAngle:0;
-   car.look.lamp.set(glow.head,car.accel<-1||car.v<.05?1.7:glow.tail,blink>0?blinkOn:0,blink<0?blinkOn:0);
+   car.look.lamp.set(glow.head,car.accel<-1||car.v<.05?1.7:glow.tail,blink>0?blinkOn:blink<0?-blinkOn:0,0);
   }else if(car.pitch!==0||car.roll!==0)car.pitch=car.pitchV=car.roll=0;
-  rotation.x=car.pitch;rotation.z=car.roll+wobble;position.y=lift-(car.pitch<0?-car.pitch:car.pitch)*.4;
+  rotation.x=car.look.wheel.z=car.pitch;rotation.z=car.look.lamp.w=car.roll+wobble;position.y=lift;
   car.speech.visible=car.crashAge<4.5;const data=car.group.userData;data.controlled=false;data.waiting=car.v<.05||visitor||junctionWaiting;data.roadFrom=car.from;data.roadTo=car.to;
  }}
  /** Day, sunset or night (Town calls it beside world.updateTrafficSignals): headlamps and tail lamps come on. Emissive only. */
- function setTimeOfDay(mode:string){glow.head=mode==='night'?1.5:mode==='sunset'?.7:.12;glow.tail=mode==='night'?.55:mode==='sunset'?.3:.06;for(const car of cars){car.look.lamp.x=glow.head;car.look.lamp.y=glow.tail;}}
+ function setTimeOfDay(mode:string){glow.head=mode==='night'?1.5:mode==='sunset'?.7:.12;glow.tail=mode==='night'?.55:mode==='sunset'?.3:.06;for(const car of cars){car.look.lamp.x=glow.head;car.look.lamp.y=glow.tail;}lamps?.setNight(mode==='night');}
  paintLamps(0,0);update(0,{x:0,y:99,z:0});
  return {stats,root,cars,nodes,cayTraffic,rider,boost,bedAt,bedPoint,overTruck,landingTruckAt,touchdown,updateLandingIndicator,update,setTimeOfDay,
   /** The lights: heads, which node each belongs to (-1: flashing yellow), per-node cycle offsets (-1: none), the lamp mesh, the clock. */

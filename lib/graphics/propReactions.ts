@@ -110,6 +110,11 @@ export type PropSpec={
  light?:{mesh:T.InstancedMesh;index:number};
 };
 
+/** Where a world-space point of a reacting prop is this frame (its rigid motion: tilt, height-weighted shake, jolt, bob). */
+export type PropMove=(x:number,y:number,z:number,out:{x:number;y:number;z:number})=>void;
+/** Something that is not in the prop's vertex runs but hangs on it (the traffic lamps on a signal head): called with the
+ *  frame's motion while the prop reacts, then once with null when it is back at rest. */
+export type PropFollower=(move:PropMove|null)=>void;
 /** Animated props at once; more hits still make their sound. */
 export const MAX_ACTIVE=4;
 /** Larger props (no current prop comes close) still sound but never animate. */
@@ -120,7 +125,7 @@ export function createPropReactions(specs:readonly PropSpec[]){
  const props=specs.map(s=>{
   const verts=s.parts.reduce((n,p)=>n+p.count,0),off=s.offset??{x:0,y:0,z:0};
   const pivot=s.pivot??{x:(s.min.x+s.max.x)/2-off.x,y:s.min.y-off.y,z:(s.min.z+s.max.z)/2-off.z};
-  return {...s,style:PROP_REACTIONS[s.kind],off,pivot,height:Math.max(.3,s.max.y-s.min.y),verts,animatable:verts>0&&verts<=MAX_PROP_VERTICES&&s.parts.length<=MAX_PARTS,readyAt:-Infinity,slot:-1};
+  return {...s,followers:null as PropFollower[]|null,style:PROP_REACTIONS[s.kind],off,pivot,height:Math.max(.3,s.max.y-s.min.y),verts,animatable:verts>0&&verts<=MAX_PROP_VERTICES&&s.parts.length<=MAX_PARTS,readyAt:-Infinity,slot:-1};
  });
  // Coarse grid over the props' bounds; only read on an actual ball collision.
  const grid=new Map<number,number[]>(),key=(cx:number,cz:number)=>(cx+2048)*4096+(cz+2048);
@@ -146,8 +151,14 @@ export function createPropReactions(specs:readonly PropSpec[]){
    (a.array as Float32Array).set(s.orig!.subarray(o,o+part.count*3),part.start*3);
    upload(part,0,part.count);o+=part.count*3;}
   if(p.light&&p.style.flicker){const m=p.light.mesh.instanceMatrix.array,b=p.light.index*16;m[b]=s.light0;m[b+10]=s.light2;p.light.mesh.instanceMatrix.addUpdateRange(b,16);p.light.mesh.instanceMatrix.needsUpdate=true;}
+  if(p.followers)for(const f of p.followers)f(null);
   p.slot=-1;s.prop=-1;active--;
  }
+ // The motion of the slot being updated, for followers (set just before they are called; no allocation per frame).
+ let mTheta=0,mShake=0,mA=0,mB=0,mJolt=0,mBob=0,mUx=0,mUz=1,mPx=0,mPy=0,mPz=0,mInvH=1,mOx=0,mOy=0,mOz=0;
+ const move:PropMove=(wx,wy,wz,out)=>{const ox=wx-mOx,oy=wy-mOy,oz=wz-mOz,rx=ox-mPx,ry=oy-mPy,rz=oz-mPz;let h=ry*mInvH;h=h<0?0:h>1.25?1.25:h;
+  const c=1-mTheta*mTheta*.5,along=rx*mUx+rz*mUz,moved=along*c+ry*mTheta-along,sh=mShake*h*h;
+  out.x=ox+moved*mUx+sh*(mUx*mA-mUz*mB)+mJolt*mUx+mOx;out.y=mPy+ry*c-along*mTheta+mBob+mOy;out.z=oz+moved*mUz+sh*(mUz*mA+mUx*mB)+mJolt*mUz+mOz;};
  function upload(part:PropPart,lo:number,hi:number){
   if(hi<=lo)return;const a=part.attribute;
   if(typeof a.addUpdateRange==='function')a.addUpdateRange((part.start+lo)*3,(hi-lo)*3);
@@ -214,6 +225,7 @@ export function createPropReactions(specs:readonly PropSpec[]){
     }
     stats.vertexWrites+=hi-lo;upload(part,lo,hi);o+=part.count*3;
    }
+   if(p.followers){mTheta=theta;mShake=shakeA;mA=sA;mB=sB;mJolt=jolt;mBob=bob;mUx=ux;mUz=uz;mPx=px;mPy=py;mPz=pz;mInvH=invH;mOx=p.off.x;mOy=p.off.y;mOz=p.off.z;for(const f of p.followers)f(move);}
    if(p.light&&st.flicker&&!s.gentle){// a short stutter in the first .35 s, never brighter than normal
     const m=p.light.mesh.instanceMatrix.array,b=p.light.index*16,f=t<.35?1-.45*(1-t/.35)*(Math.sin(t*61)>.2?1:.25):1;
     m[b]=s.light0*f;m[b+10]=s.light2*f;p.light.mesh.instanceMatrix.addUpdateRange(b,16);p.light.mesh.instanceMatrix.needsUpdate=true;}
@@ -236,6 +248,9 @@ export function createPropReactions(specs:readonly PropSpec[]){
    const grown=p.animatable&&p.verts>capacity;if(grown){capacity=p.verts;for(const s of slots)s.orig=null;}
    return true;
   },
+  /** `fn` hears the motion of the prop of `kind` whose bounds hold world (x, z) while it reacts (see PropFollower): for things
+   *  drawn elsewhere that must move with it. Costs nothing until that prop is hit. Returns false when no prop matched. */
+  follow(kind:PropReactionKind,x:number,z:number,fn:PropFollower){const p=props.find(p=>p.kind===kind&&x>=p.min.x&&x<=p.max.x&&z>=p.min.z&&z<=p.max.z);if(!p)return false;(p.followers??=[]).push(fn);return true;},
   /** Prop types registered, for the debug panel and tests. */
   kinds(){const n:Partial<Record<PropReactionKind,number>>={};for(const p of props)n[p.kind]=(n[p.kind]??0)+1;return n;},
   /** Ends every running reaction now, originals restored (before another system rewrites the same runs: the gashapon swap). */

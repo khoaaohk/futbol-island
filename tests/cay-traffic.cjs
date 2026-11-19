@@ -14,7 +14,13 @@ assert(a.cars.every(c=>!a.cayTraffic.forbidden.has(c.from+':'+c.to)),'no car sta
 const player={x:900,y:40,z:900},inter={vx:0,vz:0,reduced:true,onCrash(){}};
 const onRoad=(x,z)=>{const r=Math.hypot(x-R.x,z-R.z);if(r<R.roadOuter+1)return r>R.roadInner-.4;if(x>R.x&&Math.abs(z-cay.CAUSEWAY.z)<4.3&&x<cay.CAY_BOULEVARD.x1+3)return true;return cay.causewayFrame(x,z,true).dist<4.3;};
 const trips=a.cars.map(()=>({east:false,back:false})),angle=a.cars.map(()=>null);let offRoad=0,samples=0,wrongWay=0,ringMoves=0;
+// The causeway's entry to the roundabout (Nov 18 2026): cars arrive at the ring node the arm really meets (the one after the west
+// node) and merge with an ordinary right turn. It used to enter at the west node: a hook against the arm, 6 rad/s at 0.8 m/s.
+const CT=a.cayTraffic,entryNode=CT.ring[1],westNode=CT.ring[0],entry={arrivals:0,maxYaw:0,minV:Infinity},lastRoute=a.cars.map(()=>'');
+assert(CT.forbidden.has(CT.junction+':'+westNode)&&CT.forbidden.has(entryNode+':'+CT.junction)&&a.nodes[CT.junction].links.includes(entryNode),'arrive at the entry node, leave from the west node');
 for(let tick=0;tick<20*3600;tick++){a.update(1/60,player,inter);
+ a.cars.forEach((c,i)=>{const route=c.from+':'+c.to;assert(route!==CT.junction+':'+westNode&&route!==entryNode+':'+CT.junction,'nobody uses the arm the wrong way');
+  if(c.from===entryNode&&lastRoute[i]===CT.junction+':'+entryNode)entry.arrivals++;if(c.from===entryNode&&c.distance<c.turnLength&&c.turnLength>6){entry.maxYaw=Math.max(entry.maxYaw,Math.abs(c.yawRate));entry.minV=Math.min(entry.minV,c.v);}lastRoute[i]=route;});
  if(tick%10)continue;
  a.cars.forEach((c,i)=>{const {x,z}=c.group.position;if(x<228)return;samples++;
   // Body corners too: a car never reaches past the kerb (lamps at 6.65 m, rails at 6.2 m, arch piers at 7.4 m).
@@ -27,6 +33,8 @@ console.log(JSON.stringify({samples,offRoad,ringMoves,wrongWay,roundTrips:trips.
 assert.equal(offRoad,0,'every car body stays on the causeway carriageway, the ring or the boulevard');
 assert(ringMoves>50&&wrongWay===0,'cars circulate the roundabout anticlockwise (map view) only');
 assert(trips.filter(t=>t.back).length>=2,'cars drive out to Coral Cay, turn at the roundabout and come back');
+console.log(JSON.stringify({ringEntries:entry.arrivals,entryMaxYawRate:+entry.maxYaw.toFixed(2),entryMinSpeed:+entry.minV.toFixed(2)}));
+assert(entry.arrivals>=2&&entry.maxYaw<2.2&&entry.minV>2.5,'the causeway joins the ring with a smooth right turn, not a hook');
 // A driven pickup left near the roundabout rejoins the road (resumeRoaming) without going the wrong way round the ring
 // (code review finding 7): every ring node, both pickups (car 8 used to always take the backward link).
 {const {traffic:b}=fixture(island);let rejoins=0;
