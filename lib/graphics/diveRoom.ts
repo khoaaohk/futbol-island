@@ -389,7 +389,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   W.add(mergeGeos(parts),M(x,y,z,0,0,0,.9+r()*.5),(v,n,l)=>l.y<.25?scl(c,.7):mix(c,tipC,Math.min(1,(l.y-.25)*2.5)),l=>Math.max(0,Math.min(1,(l.y-.2)*2)),r()*6.28);}
  // Underwater pass (Nov 18 2026): soft coral whips: a bush of thin tapering ribbons in the middle of each coral head, in the fans'
  // colours, bending with the current more than anything else on the reef (36 triangles a bush; the same draw, the same shader).
- for(let i=0,n=Math.round((phone?12:18)*lite);i<n;i++){const h=headAt(i),a=r()*6.28,d=r()*1.6,x=h.x+Math.cos(a)*d,z=h.z+Math.sin(a)*d;if(!clearOf(x,z,1.2))continue;
+ for(let i=0,n=Math.round((phone?12:18)*lite*Math.min(1,th.mix.coral/.6)/* fewer where the reef is thin (Ray Meadow's seagrass: its triangles stay at or under before) */);i<n;i++){const h=headAt(i),a=r()*6.28,d=r()*1.6,x=h.x+Math.cos(a)*d,z=h.z+Math.sin(a)*d;if(!clearOf(x,z,1.2))continue;
   const y0=F(x,z),H=Math.max(.5,Math.min(1.5,DIVE_SURFACE_Y-y0-1)*(.7+r()*.3)),c=fans[(i+1)%fans.length],c2=mix(c,[1,1,1],.4),pos:number[]=[];
   for(let b=0;b<6;b++){const aa=b/6*6.28+r()*.6,lean=.25+r()*.35,hh=H*(.6+r()*.4),ca=Math.cos(aa),sa=Math.sin(aa),w=.045;
    const P=(t:number,side:number)=>{const q=lean*t*t*hh,ww=w*(1-t*.75)*side;pos.push(ca*(.08+q)-sa*ww,t*hh,sa*(.08+q)+ca*ww);};
@@ -471,7 +471,7 @@ float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1
   'blue-tang':()=>school(undefined,undefined,undefined,shoal(12,{x:h0.x,y:fy(h0.x,h0.z,1.3),z:h0.z},3.6,.33,false,[.36,.46],.4,{bob:.15}),'blue-tang',reefFishModel('blue-tang')),
   'yellow-tang':()=>school(undefined,undefined,undefined,shoal(10,{x:h1.x,y:fy(h1.x,h1.z,1.2),z:h1.z},3.2,-.37,false,[.32,.42],.4,{bob:.15,phase:2}),'yellow-tang',reefFishModel('yellow-tang')),
   snapper:()=>school(undefined,undefined,undefined,shoal(8,{x:wx,y:wy,z:wz},wk?wreckHalf+1.5:7,.15,true,[.55,.7],.4,{stretch:wk?.35:.7,yaw:wk?-wk.yaw:-.3,bob:.2,phase:1}),'snapper',reefFishModel('snapper')),
-  anthias:()=>school(undefined,undefined,undefined,shoal(16,{x:h2.x,y:fy(h2.x,h2.z,1.1),z:h2.z},2.6,.45,true,[.24,.3],.4,{bob:.15,phase:3,wag:15}),'anthias',reefFishModel('anthias')),
+  anthias:()=>school(undefined,undefined,undefined,shoal(phone?12:16,{x:h2.x,y:fy(h2.x,h2.z,1.1),z:h2.z},2.6,.45,true,[.24,.3],.4,{bob:.15,phase:3,wag:15}),'anthias',reefFishModel('anthias')),
   bigeye:()=>school(undefined,undefined,undefined,shoal(7,{x:wx,y:wy-.3,z:wz},2.6,.42,false,[.34,.42],.3),'bigeye',reefFishModel('bigeye')),
   trevally:()=>school(undefined,undefined,undefined,shoal(6,{x:0,y:top,z:-2},14,-.1,false,[.6,.75],.4,{stretch:.85,bob:.2,phase:4}),'trevally',reefFishModel('trevally')),
   grouper:()=>school('grouper',undefined,undefined,[{cx:wx+1,cy:wy-.4,cz:wz+1,r:3.8,omega:-.11,phase:0,eight:false,stretch:.6,yaw:.3,bob:.1,wag:4,seed:2,scale:1.3}],'grouper'),
