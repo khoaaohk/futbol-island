@@ -105,3 +105,9 @@ under the top strip; nothing told you a machine was about to get through; no cro
   instanced additive mesh (one draw at most, was up to three). Same script, 60 s of waves 7-8, headless 390x844: counted draws
   26 median / 31 p95 / 37 max before, 25 / 30 / 38 after; real draws with the shadow pass about 33 / 38 / 44 before, 25 / 30 / 38 after.
 - 360x640: the Super bar keeps the rack's width when it is ready and sits tight on the rack, 12 px clear of the ball.
+
+## Fix round 2 (Nov 18 2026)
+- Heat at night: the comic stars were two meshes each (ink + colour), up to eight draws when four robots break in one frame, and
+  they made the peak. They are one instanced mesh now (`starMesh`, two instances a star). Same probe, 60 s of waves 7-8, headless
+  390x844, counted draws: 27 median / 33 p95 / 40 max before, 26 / 30 / 32 after. The pre-pass max was 33.
+- The `scene` getter on the view is only reachable through `window.__ballblaster`, which is set only when NODE_ENV is not production.
