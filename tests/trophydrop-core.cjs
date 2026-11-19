@@ -171,12 +171,16 @@ ok('sound: one limiter, wired to the output and nowhere else; made on the first 
  const a=read('lib/arcade/trophydrop/audio.ts');assert.equal((a.match(/createDynamicsCompressor\(\)/g)||[]).length,1);assert(/master\.connect\(limiter\);limiter\.connect\(ctx\.destination\);/.test(a));
  assert.equal((a.match(/limiter\.connect\(/g)||[]).length,1);assert(!/\.connect\(ctx\.destination\)/.test(a.replace('limiter.connect(ctx.destination)','')));assert(!/\.connect\(limiter\)/.test(a.replace('master.connect(limiter)','')));
  assert(!/new Audio\(|\.mp3|\.ogg|\.wav|fetch\(/.test(a));assert(!/setInterval|setTimeout/.test(a));assert(/ctx\.state==='suspended'\)void ctx\.resume\(\)/.test(a));
- for(const cue of ['drop()','land(tier:number','merge(tier:number,chain:number)','double()','hit(n:number)','pop()','level()','warn()','over()','medal(n:number)'])assert(a.includes(cue),cue);
+ for(const cue of ['drop(tier=0)'/* Nov 18 2026: was drop(); the pluck follows the item's size */,'land(tier:number','merge(tier:number,chain:number)','double()','hit(n:number)','pop()','level()','warn(urgency=0)'/* Nov 18 2026: was warn(); the pips climb as the clock runs */,'over()','medal(n:number)','safe(phew=false)','streak(n:number,charge:number)','miss()','earn()','shake()','deny()'])assert(a.includes(cue),cue);
+ const C=require('../lib/arcade/trophydrop/audio.ts').CHAIN_STEPS;for(let i=1;i<C.length;i++)assert(C[i]>C[i-1],'a chain climbs: rising pitch per link');
  const T=require('../lib/arcade/trophydrop/audio.ts').TIER_STEPS;for(let i=2;i<T.length;i++)assert(T[i]>T[i-1],'rising pitch per tier');
 });
 ok('heat: the loop sleeps on a settled cabinet and lives only while playing; DPR cap; pooled effects',()=>{
  const c=read('components/games/TrophyDropGame.tsx'),v=read('lib/arcade/trophydrop/view.ts');
- assert(/if\(phaseRef\.current!=='playing'\|\|!g\|\|!v\)return;/.test(c)&&/else if\(g\.idle&&!busy\.current&&!holding\.current&&!keys\.current\.size\)\{p\.sleeps\+\+;return;\}/.test(c),'sleeps when idle');
+ assert(/if\(phaseRef\.current!=='playing'\|\|!g\|\|!v\)return;/.test(c)&&/else if\(g\.idle&&!busy\.current&&!holding\.current&&!keys\.current\.size\)\{p\.sleeps\+\+;/.test(c)&&/wakeRef\.current\(\);\},3200\+Math\.random\(\)\*3600\);\n    return;\}/.test(c),'sleeps when idle (Nov 18 2026: it books one resting blink first, then returns)');
+ assert(/if\(!idle\.current&&!reduced\.current\)idle\.current=setTimeout/.test(c)&&/if\(idle\.current\)\{clearTimeout\(idle\.current\);idle\.current=null;\}/.test(c),'the blink timer is one-shot, off under reduced motion and cleared on pause and exit');
+ assert(/const sparks:Spark\[\]=Array\.from\(\{length:48\}/.test(v)&&/if\(st!==stage\|\|s\.stats\.bestTier!==made\)\{stage=st;made=s\.stats\.bestTier;paintScene\(\);\}/.test(v),'pooled sparks; the room is repainted only when the lighting stage or a plaque changes');
+ assert(/if\(stopFor\.current>0\)stopFor\.current-=dt;else g\.step\(dt\);/.test(c),'hit-stop holds the rules, never the picture');
  assert(/Math\.min\(2,window\.devicePixelRatio\|\|1\)/.test(c)&&/frameCapSlot\(now,slot\.current,FRAME_MS\)/.test(c)&&/document\.hidden\)pause\(\)/.test(c));
  assert(/const pops:Pop\[\]=Array\.from\(\{length:16\}/.test(v)&&/const bursts:Burst\[\]=Array\.from\(\{length:12\}/.test(v),'pooled');assert(!/requestAnimationFrame|setInterval/.test(v),'the view has no loop of its own');
  assert(!/shadowBlur|createLinearGradient|createRadialGradient/.test(v),'no glow, no gradients: flat comic print');

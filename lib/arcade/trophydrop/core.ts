@@ -20,7 +20,7 @@ export const TD={
  w:100,h:150,line:30,dropY:16,gravity:420,dt:1/120,iters:7,vmax:260,cool:.42,grace:1,overHold:2,calm:.45,calmSpeed:7,
  grow:70,chainWindow:1,chainCap:5,doubleBonus:640,beachHits:2,beachHitSpeed:45,beachBounce:.62,landSpeed:28,
  perLevel:18,wallSpeed:9,maxEvents:64,maxBodies:90,
- streakAge:1.5,streakNeed:5,shakeMax:3,shakeGrace:1.4,reliefLevels:2,mergeGrace:.35,warnPreview:4,
+ streakAge:1.5,streakNeed:5,shakeMax:2,shakeGrace:1.4,reliefLevels:1,mergeGrace:.35,fallSpeed:45,warnPreview:4,
  medals:[1500,5000,12000] as const,
 } as const;
 /** The nine tiers, small to big. r = radius in world units, pts = points for MAKING this tier by a merge. */
@@ -180,7 +180,9 @@ export function createTrophyDrop(opts:{seed:number;daily?:boolean}){
   emit('shake',TD.w/2,TD.h/2,s.shakes);return true;
  }
  function danger(dt:number){
-  let above=false,near=false;for(const b of s.bodies){if(!b.landed||b.age<TD.grace)continue;const top=b.y-b.r;if(top<TD.line)above=true;else if(top<TD.line+12)near=true;}
+  let above=false,near=false;for(const b of s.bodies){if(!b.landed||b.age<TD.grace)continue;
+   // Nov 18 2026: an item still falling does not count (two balls that merged in the air above the line used to start the clock and the alarm)
+   if(!s.asleep&&b.vy>TD.fallSpeed)continue;const top=b.y-b.r;if(top<TD.line)above=true;else if(top<TD.line+12)near=true;}
   s.near=near||above;if(s.shakeGrace>0){s.shakeGrace=Math.max(0,s.shakeGrace-dt);above=false;}
   if(above){s.danger+=dt;if(s.danger>s.peak)s.peak=s.danger;if(!s.warned){s.warned=true;emit('warn',TD.w/2,TD.line,TD.overHold);}if(s.danger>=TD.overHold){s.over=true;emit('over',TD.w/2,TD.line);}}
   else{s.danger=Math.max(0,s.danger-dt*2);if(s.warned&&s.danger<=0){s.warned=false;emit('safe',TD.w/2,TD.line,Math.round(s.peak*10));s.peak=0;}}
