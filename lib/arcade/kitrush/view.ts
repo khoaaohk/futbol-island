@@ -115,7 +115,7 @@ function paintScene(c:Ctx,W:number,H:number,tod:number){
   c.beginPath();c.arc(W*.72,hz*.3,u*7,0,Math.PI*2);c.fill();c.lineWidth=u*.5;c.strokeStyle=INK;c.stroke();c.fillStyle=sky[0];c.beginPath();c.arc(W*.72+u*3,hz*.3-u*1.6,u*5.6,0,Math.PI*2);c.fill();}
  // cut clouds (none hides behind the kit banner)
  const cl=CLOUDS[tod],cloud=(x:number,y:number,s:number,col:string)=>{c.fillStyle=col;c.beginPath();c.moveTo(x-9*s,y);c.quadraticCurveTo(x-9*s,y-3*s,x-4*s,y-3*s);c.quadraticCurveTo(x-2*s,y-7*s,x+3*s,y-4.4*s);c.quadraticCurveTo(x+9*s,y-5*s,x+10*s,y);c.closePath();c.fill();c.lineWidth=u*.5;c.strokeStyle=INK;c.stroke();};
- cloud(W*.2,hz*.52,u*1.5,cl[0]);cloud(W*.84,hz*.24,u*1.1,cl[1]);cloud(W*.52,hz*.66,u*.9,cl[2]);
+ cloud(W*.2,hz*.7,u*1.5,cl[0]);cloud(W*.84,hz*.24,u*1.1,cl[1]);cloud(W*.54,hz*.5,u*.9,cl[2]);
  // far stand: two rows of heads, flags, and the boards along the touchline
  c.fillStyle=STAND[tod];c.beginPath();c.moveTo(0,hz);c.lineTo(0,hz*.84);c.lineTo(W*.3,hz*.78);c.lineTo(W*.34,hz*.86);c.lineTo(W*.62,hz*.86);c.lineTo(W*.66,hz*.8);c.lineTo(W,hz*.86);c.lineTo(W,hz);c.closePath();c.fill();c.lineWidth=u*.55;c.strokeStyle=INK;c.stroke();
  for(let row=0;row<2;row++){let i=0;for(let x=u*(2+row*1.6);x<W;x+=u*3.2,i++){const y=hz*(.93-row*.035)+((x*13)%7)*u*.12-u*1.6;c.fillStyle=lit&&(i+row)%5===0?SUN:row?STAND[Math.max(0,tod-1)]:CROWD[tod];c.beginPath();c.arc(x,y,u*(.75-row*.12),0,Math.PI*2);c.fill();}}
@@ -265,7 +265,7 @@ export function createKitRushView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts
    drawBean(A_MATE+crew.mood,m[0]+ox/u,s.h-m[1]-lift*m[2]+oy/u,sc*turn*(1-stretch-breath*.6),sc*(1+stretch+breath));}
   {const up=crew.ref>0,k=up&&!opts.reduced?Math.sin(Math.PI*Math.min(1,(1.1-crew.ref)/.3)):0,breath=opts.reduced?0:Math.sin(now*.0036+2)*.025;drawBean(A_REF+(up?1:0),90.5+ox/u,s.h-4.5-k*3+oy/u,1.15*(1-breath*.6),1.15*(1+breath+k*.06));}
   // dropped kit: one pip on the bag's label for each of yours on the grass
-  if(s.drops>0){ctx.setTransform(1,0,0,1,ox,oy);for(let i=0;i<KR.dropLimit;i++){ctx.beginPath();ctx.arc((50+(i-(KR.dropLimit-1)/2)*3.6)*u,H-u*4.2,u*1.05,0,6.283);ctx.fillStyle=i<s.drops?RED:PAPER;ctx.fill();ctx.lineWidth=u*.45;ctx.strokeStyle=INK;ctx.stroke();}}
+  if(s.drops>0){ctx.setTransform(1,0,0,1,ox,oy);for(let i=0;i<KR.dropLimit;i++){ctx.beginPath();ctx.arc((50+(i-(KR.dropLimit-1)/2)*3.9)*u,H-u*4.4,u*1.2,0,6.283);ctx.fillStyle=i<s.drops?RED:PAPER;ctx.fill();ctx.lineWidth=u*.45;ctx.strokeStyle=INK;ctx.stroke();}}
   // the call: a tilted starburst word panel, under the kit so it never hides what you must read
   if(call.life>0){call.life-=dt;const k=Math.min(1,(call.max-call.life)/.09),sc=opts.reduced?1:.6+.4*k+(k>=1?0:.12),x=call.x*u,y=call.y*u;const fit=Math.min(1,W*.66/call.w)*call.size,tw=call.w*fit;
    ctx.setTransform(sc,call.tilt*sc,-call.tilt*sc,sc,x+ox,y+oy);ctx.save();ctx.scale(1,.46);star(ctx,u*1.2,u*2.6,tw*.72,tw*.56,13,.12);ctx.fillStyle=INK;ctx.fill();star(ctx,0,0,tw*.72,tw*.56,13,.12);ctx.fillStyle=call.color;ctx.fill();ctx.lineWidth=u*1.3;ctx.strokeStyle=INK;ctx.stroke();ctx.restore();
@@ -280,9 +280,9 @@ export function createKitRushView(bg:HTMLCanvasElement,fg:HTMLCanvasElement,opts
   // star bursts: pop to full size, then gone (print, not a fade)
   for(const b of bursts){if(!b.on)continue;b.life-=dt;if(b.life<=0){b.on=false;continue;}const k=1-b.life/b.max,r=KR.r*u*b.size*(.7+k*1.1);star(ctx,b.x*u,b.y*u,r*1.5,r*.8,9,b.rot);ctx.fillStyle=b.color;ctx.fill();ctx.lineWidth=u*.7;ctx.strokeStyle=INK;ctx.stroke();}
   for(const d of dots){if(!d.on)continue;d.life-=dt;if(d.life<=0){d.on=false;continue;}d.vy+=120*dt;d.x+=d.vx*dt;d.y+=d.vy*dt;ctx.fillStyle=d.color;ctx.beginPath();ctx.arc(d.x*u,d.y*u,d.r*u,0,6.283);ctx.fill();}
-  // the slash: tapered ink with a paper core, straight from the pointer samples
-  ctx.lineCap='round';ctx.lineJoin='round';
-  for(const t of trails){if(t.n<2)continue;for(let pass=0;pass<2;pass++){ctx.strokeStyle=pass?PAPER:INK;let px=0,py=0,has=false;
+  // the slash: tapered ink with a core in YOUR kit colour (one more reminder of who you are), straight from the pointer samples
+  ctx.lineCap='round';ctx.lineJoin='round';const blade=TEAMS[s.team].color;
+  for(const t of trails){if(t.n<2)continue;for(let pass=0;pass<2;pass++){ctx.strokeStyle=pass?blade:INK;let px=0,py=0,has=false;
     for(let k=t.n-1;k>=0;k--){const i=(t.head-k+TRAIL*2)%TRAIL,age=now-t.t[i];if(age>TRAIL_MS){has=false;continue;}const x=t.x[i]*u,y=t.y[i]*u;
      if(has){const w=(1-age/TRAIL_MS)*(pass?1.5:3.6)*u;if(w>.3){ctx.lineWidth=w;ctx.beginPath();ctx.moveTo(px,py);ctx.lineTo(x,y);ctx.stroke();}}px=x;py=y;has=true;}}}
   // numerals: pop, hang, then fly up to the score counter; words only rise
