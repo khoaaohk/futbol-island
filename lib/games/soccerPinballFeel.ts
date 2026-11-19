@@ -38,15 +38,17 @@ export type PinballFeel={
  confettiSerial:number;confettiPower:number;confettiTime:number;
  /** Highest alternating-foot combo already celebrated this rally. */
  streakShown:number;
- /** Golden Pot (AAA pass, Nov 18 2026): the pot last seen, and seconds left of the milestone call (250, 500, full). */
+ /** Golden Pot (AAA pass, Nov 18 2026): the pot last seen, and seconds left of the milestone call (200, 600, full: the first, third and last box lamp). */
  pot:number;potNote:number;potDue:number;
+ /** The kick-off rule's call: the count last seen and seconds left of 'KICK IT FIRST!'. */
+ kickoff:number;kickNote:number;
 };
 
 export function createPinballFeel():PinballFeel{
  return{hitStop:0,shake:0,drainFlash:0,rescueFlash:0,ringX:0,ringY:0,ringPower:0,ringSerial:0,
   popups:Array.from({length:PINBALL_POPUPS},()=>({age:PINBALL_POPUP_LIFE,x:0,y:0,text:'',kind:'score' as PinballPopupKind,serial:0})),popupCursor:0,popupSerial:0,
   last:{tip:0,sweeper:0,hitId:0,score:0,wall:0,gate:0,flipper:0,keeper:0,bumper:0,join:0,parry:0,grade:0,phase:'ready',lit:false,level:1,balls:3},
-  ball:{number:1,startScore:0,goals:0,bestCombo:0,knockdowns:0,perfect:0},table:{sling:0,drop:0,wallDown:0,wallUp:0,flag:0,word:0,lane:0,crest:0,skill:0,cone:0,spin:0,dugout:0,mode:0,modeDone:0,modeEnd:0,block:0,saver:0,final:0},savedStars:[0,0,0,0,0,0],runBestCombo:0,summary:'',summaryFresh:false,crew:createPinballCrew(),confettiSerial:0,confettiPower:1,confettiTime:0,streakShown:1,pot:0,potNote:0,potDue:0};
+  ball:{number:1,startScore:0,goals:0,bestCombo:0,knockdowns:0,perfect:0},table:{sling:0,drop:0,wallDown:0,wallUp:0,flag:0,word:0,lane:0,crest:0,skill:0,cone:0,spin:0,dugout:0,mode:0,modeDone:0,modeEnd:0,block:0,saver:0,final:0},savedStars:[0,0,0,0,0,0],runBestCombo:0,summary:'',summaryFresh:false,crew:createPinballCrew(),confettiSerial:0,confettiPower:1,confettiTime:0,streakShown:1,pot:0,potNote:0,potDue:0,kickoff:0,kickNote:0};
 }
 export function resetPinballFeel(f:PinballFeel){const fresh=createPinballFeel();for(let i=0;i<f.popups.length;i++)Object.assign(f.popups[i],fresh.popups[i]);fresh.popups=f.popups;fresh.confettiSerial=f.confettiSerial;Object.assign(f,fresh);}
 
@@ -176,6 +178,7 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
  if(L.phase==='ready'&&s.phase==='playing')emit(false,'launch');
  if(L.phase!=='ready'&&s.phase==='ready'&&s.balls>0)emit(false,'pb-ball');
  // Golden Pot: a call and a rising two-note cue at 250, 500 and full; a coin run when a goal wins it.
+ f.kickNote=Math.max(0,f.kickNote-dt);if(x.kickoff>f.kickoff){f.kickoff=x.kickoff;f.kickNote=1.5;emit(false,'block');kick(f,.12);ring(f,s.ball.x,57,.9);}
  f.potNote=Math.max(0,f.potNote-dt);
  if(s.pot>f.pot)for(const mark of POT_MARKS)if(f.pot<mark&&s.pot>=mark){f.potNote=1.6;emit(false,'pb-potUp');ring(f,180,60,mark>=PINBALL_POT_MAX?1.6:1);}
  // The coin run waits for the goal fanfare's top note: asked for in the same frame it would take the fanfare's voices (14-voice cap).
@@ -193,7 +196,7 @@ export function stepPinballFeel(f:PinballFeel,s:PinballState,dt:number,emit:(goa
  L.tip=x.tip;L.sweeper=x.sweeper;L.hitId=s.hitId;L.score=s.score;L.wall=x.wall;L.gate=x.gate;L.flipper=x.flipper;L.keeper=x.keeper;L.bumper=x.bumper;L.join=x.join;L.parry=x.parry;L.grade=x.grade;L.phase=s.phase;L.lit=lit;L.level=s.level;L.balls=s.balls;
 }
 
-const POT_MARKS=[250,500,PINBALL_POT_MAX] as const;
+const POT_MARKS=[200,600,PINBALL_POT_MAX] as const;
 /** One short commentator line for a goal: names the football idea that made it (reading age ~8). */
 export function pinballCommentary(s:PinballState):string{
  if(s.potGoals===3)return 'A HAT-TRICK!';
@@ -207,6 +210,7 @@ export function pinballCommentary(s:PinballState):string{
 }
 /** HUD line override for the moments the feel layer owns, else null. */
 export function pinballFeelMessage(f:PinballFeel,s:PinballState):string|null{
+ if(f.kickNote>0&&s.phase==='playing')return 'KICK IT FIRST! A goal needs a flipper kick.';
  if(f.potNote>0&&s.phase==='playing'&&s.pot>0)return s.pot>=PINBALL_POT_MAX?'POT FULL! Score a goal to win it.':`GOLDEN POT ${s.pot}! Score a goal to win it.`;
  if(!f.summaryFresh)return pinballTableMessage(s);
  if(s.phase==='lost')return `${f.summary}. ${s.cue==='concede'?'Read the wind-up next time.':'Let it reach the flipper, then strike.'}`;

@@ -9,7 +9,7 @@ import {createArcadeStage} from '../arcadeStage';
 import {pinballLook,PINBALL_BULBS as BULB,PINBALL_INK as INK} from '../looks/pinball';
 import {sideGameDress} from '../../town/beanLooks';
 import {createTennis} from '@/lib/games/soccerTennis';
-import {createPinballState,stepPinball,pinballPotLabel,launchPinball,skipPinballBeat,nudgePinball,tapPinballFlipper,pinballDivision,pinballDefenders,pinballFlippers,pinballReadyFoot,plungerPull,pinballMinute} from '@/lib/games/soccerPinball';
+import {createPinballState,stepPinball,pinballPotLabel,PINBALL_POT_MAX,launchPinball,skipPinballBeat,nudgePinball,tapPinballFlipper,pinballDivision,pinballDefenders,pinballFlippers,pinballReadyFoot,plungerPull,pinballMinute} from '@/lib/games/soccerPinball';
 import {createPinballFeel,resetPinballFeel,stepPinballFeel,pinballTimeScale,pinballFeelActive,pinballFeelMessage} from '@/lib/games/soccerPinballFeel';
 import {createPinballFx} from '@/lib/games/soccerPinballFx';
 import {pinballRollSound} from '@/lib/games/soccerPinballAudio';
@@ -27,7 +27,7 @@ import {pinballLevelLabel} from '@/lib/games/soccerPinballEndless';
 import {createRunnerGame,freshRunnerSeed} from '../runnerGame';
 import type {ArcadeInput,ArcadeHUD} from '../arcadeGameTypes';
 /** The light band's tint per endless level (level 1 is untouched): the sun goes down one printed step per match. */
-export const PINBALL_EVENING:readonly (readonly [number,number,number])[]=[[1,1,1],[1,.95,.86],[1,.89,.76],[1,.83,.78],[.93,.8,.88]];
+export const PINBALL_EVENING:readonly (readonly [number,number,number])[]=[[1,1,1],[1,.94,.84],[1,.87,.72],[1,.8,.75],[.9,.76,.9]];
 export function createPinballGame(canvas:HTMLCanvasElement,onSound:(goal:boolean,cue?:string)=>void,audioContext:()=>AudioContext|null=()=>null){
  // Nov 10 2026: every browser session plays fresh courses (tests keep the deterministic default seeds): tennis starts from a random
  // seed, Breakaway runs ask freshRunnerSeed, and the tennis/pinball cabinets build an idle runner that never uses a run id.
@@ -274,7 +274,9 @@ const toyMats=new Map<T.Material,T.Material>(),mountDummy=new T.Object3D(),toyHs
      let show=0,boost=charge>0?.5:0;
      if(sk)show=showAt(x,z);if(sk===3)boost=age<.3?1:.35;else if(sk===7)boost=age<.28?.7:0;
      const hold=pinball.phase==='goal'&&sk!==3?.5:0;
-     const energy=Math.min(1,nearBall+ripple+left+right+charge+show+hold+(waiting?(i%2?.46:.14):0));floorEnergy[i]=dt>0&&!waiting?lampStep(floorEnergy[i],energy,dt):energy;if(Math.abs(floorEnergy[i]-energy)>.006)floorMoving=true;
+     // AAA pass: the five red lamps of the box are the Golden Pot's meter, one lamp per fifth of a full pot (a steady print, no motion).
+     const potLamp=i>=insertN-5&&pinball.phase==='playing'&&pinball.pot>=(i-(insertN-6))*(PINBALL_POT_MAX/5)?.82:0;
+     const energy=Math.min(1,nearBall+ripple+left+right+charge+show+hold+potLamp+(waiting?(i%2?.46:.14):0));floorEnergy[i]=dt>0&&!waiting?lampStep(floorEnergy[i],energy,dt):energy;if(Math.abs(floorEnergy[i]-energy)>.006)floorMoving=true;
      cabinet.setInsert(i,floorEnergy[i],boost);
     }cabinet.flush();
    }

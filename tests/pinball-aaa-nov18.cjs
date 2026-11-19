@@ -23,6 +23,9 @@ ok('kick-off rule: the plunger alone never scores; a kicked ball does',()=>{
  for(const power of [.5,.55,.68,.8,.9]){const s=P.createPinballState();P.beginPinballRun(s,{level:1});let t=0,wait=0,direct=0,goals=0,at=0;
   while(t<90&&s.phase!=='over'){if(s.phase==='ready'){wait+=1/60;if(wait>.4){P.launchPinball(s,power);wait=0;at=t;goals=s.goals;}}P.stepPinball(s,idle,1/60);t+=1/60;if(s.goals>goals&&t-at<2.5){direct++;goals=s.goals;}}
   assert.equal(direct,0,`power ${power}: goals straight off the plunger`);assert(s.level<=2,`power ${power}: plunger-only play stays in the first divisions (got ${s.level})`);}
+ // the closed goal line is called once, with a sound
+ {const k=P.createPinballState(),f=F.createPinballFeel(),cues=[];P.launchPinball(k,.5);F.stepPinballFeel(f,k,1/60,()=>{});for(let i=0;i<240&&k.sfx.kickoff===0;i++){P.stepPinball(k,idle,1/60);F.stepPinballFeel(f,k,1/60,(g,c)=>cues.push(c));}
+  assert(k.sfx.kickoff>0,'a half-power launch meets the closed goal line');assert(cues.includes('block'));assert.equal(F.pinballFeelMessage(f,k),'KICK IT FIRST! A goal needs a flipper kick.');assert.equal(SP.scoreCall(F.pinballFeelMessage(f,k)).title,'KICK IT FIRST!');}
  const s=P.createPinballState();P.launchPinball(s);assert.equal(s.kickoff,true);
  // the same ball, kicked once (the flipper counter moved): the goal counts
  s.sfx.flipper++;Object.assign(s.ball,{x:s.keeper<180?235:125,y:60,vx:0,vy:-300});for(let i=0;i<30&&s.phase==='playing';i++)P.stepPinball(s,idle,1/60);assert.equal(s.phase,'goal');assert.equal(s.kickoff,false);
@@ -78,6 +81,7 @@ ok('the evening comes on with the level; the status tab shows the pot',()=>{
  const game=read('lib/arcade/games/pinballGame.ts'),panel=read('components/games/PinballScorePanel.tsx'),css=read('components/games/skins/pinball.module.css');
  assert.match(game,/export const PINBALL_EVENING:readonly \(readonly \[number,number,number\]\)\[\]=\[\[1,1,1\],/,'level 1 is the golden hour as it was');
  assert.match(game,/const eve=pinball\.tier\?0:Math\.min\(PINBALL_EVENING\.length-1,Math\.max\(0,pinball\.match-1\)\);/);
+ assert.match(game,/const potLamp=i>=insertN-5&&pinball\.phase==='playing'&&pinball\.pot>=\(i-\(insertN-6\)\)\*\(PINBALL_POT_MAX\/5\)\?\.82:0;/,'the box lamps are the pot meter');
  assert.match(game,/function hud\(\):ArcadeHUD\{return\{pinballPot:pinballPotLabel\(pinball\),/);
  assert.match(game,/pinball\.potGoals===3\?'HAT-TRICK':pinball\.potGoals===2\?'BRACE':/);
  assert.match(panel,/\{hud\.pinballPot&&<span data-pb-pot /);assert.match(css,/\.skin \[data-pinball-dmd\] \[data-pb-pot\]\{[^}]*background:var\(--cm-ink\);color:var\(--cm-sun\)/);
