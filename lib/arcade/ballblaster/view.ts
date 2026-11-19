@@ -273,8 +273,10 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  const trailM=own(new T.MeshBasicMaterial({color:'#ffffff'})),trail=new T.InstancedMesh(own(new T.IcosahedronGeometry(1,0)),trailM,TRAIL);trail.frustumCulled=false;trail.count=0;trail.visible=false;trail.setColorAt(0,new T.Color(1,1,1));scene.add(trail);
  const tr=Array.from({length:TRAIL},()=>({on:false,x:0,y:0,z:0,dx:0,dy:0,dz:1,t:0,s:0,c:0}));let trI=0;
  const TRAIL_C=[new T.Color('#fff3d6'),new T.Color('#ffc83a'),new T.Color('#f0452e'),new T.Color('#ffe9a0')];
- const starG=own(comicStarGeometry()),stars=Array.from({length:STARS},()=>{const g=new T.Group(),a=new T.Mesh(starG,own(new T.MeshBasicMaterial({color:COMIC_INK,depthTest:false,fog:false}))),b=new T.Mesh(starG,own(new T.MeshBasicMaterial({color:BB_COLORS.sun,depthTest:false,fog:false})));
-  b.scale.setScalar(.78);b.position.z=.01;g.add(a,b);g.renderOrder=10;a.renderOrder=10;b.renderOrder=11;g.visible=false;scene.add(g);return {g,b:b.material as T.MeshBasicMaterial,t:0,life:0,s:1};});let starI=0;
+ // Fix round 2 (Nov 18 2026): the comic stars were two meshes each (ink + colour), so four stars in one frame cost eight draws and
+ // made the night-wave peak (38 to 40 counted draws). They are now ONE instanced mesh: two instances a star, ink first, colour on top.
+ const starG=own(comicStarGeometry()),starMesh=new T.InstancedMesh(starG,own(new T.MeshBasicMaterial({color:'#ffffff',depthTest:false,fog:false})),STARS*2);starMesh.renderOrder=10;starMesh.frustumCulled=false;starMesh.count=0;starMesh.visible=false;starMesh.setColorAt(0,new T.Color(1,1,1));scene.add(starMesh);
+ const starInk=new T.Color(COMIC_INK),stars=Array.from({length:STARS},()=>({on:false,x:0,y:0,z:0,rot:0,c:new T.Color(BB_COLORS.sun),t:0,life:0,s:1}));let starI=0;
  // the aim: a ring on the target, a dotted arc
  const ringG=own(new T.RingGeometry(.42,.58,32)),ringInk=own(new T.RingGeometry(.36,.66,32));ringG.rotateX(-Math.PI/2);ringInk.rotateX(-Math.PI/2);
  const ring=new T.Group(),ringM=own(new T.MeshBasicMaterial({color:BB_COLORS.sun,depthTest:false,fog:false}));{const a=new T.Mesh(ringInk,own(new T.MeshBasicMaterial({color:COMIC_INK,depthTest:false,fog:false})));const b=new T.Mesh(ringG,ringM);b.position.y=.01;a.renderOrder=12;b.renderOrder=13;ring.add(a,b);}ring.visible=false;scene.add(ring);
@@ -315,7 +317,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
  function ringAt(x:number,z:number,size:number,color:string){if(o.reduced)return;const r=shock[shockI];shockI=(shockI+1)%shock.length;r.on=true;r.x=x;r.z=z;r.t=0;r.s=size;r.c.set(color);}
  function puff(x:number,y:number,z:number,n:number,size:number){for(let i=0;i<n;i++){const d=dd[dustI];dustI=(dustI+1)%DUST;const a=Math.random()*6.28;d.on=true;d.x=x+(Math.random()-.5)*size*.5;d.y=y+.1+Math.random()*.2;d.z=z+(Math.random()-.5)*size*.5;
   d.vx=Math.cos(a)*size*1.2;d.vz=Math.sin(a)*size*1.2;d.vy=.5+Math.random()*.8;d.s=size*(.11+Math.random()*.12);d.t=0;d.life=.45+Math.random()*.3;}}
- function star(x:number,y:number,z:number,s:number,color:string){const st=stars[starI];starI=(starI+1)%STARS;st.g.visible=true;st.g.position.set(x,y,z);st.t=0;st.life=.28;st.s=s;st.b.color.set(color);}
+ function star(x:number,y:number,z:number,s:number,color:string){const st=stars[starI];starI=(starI+1)%STARS;st.on=true;st.x=x;st.y=y;st.z=z;st.rot=0;st.t=0;st.life=.28;st.s=s;st.c.set(color);}
  function onEvent(e:BlastEvent){
   switch(e.type){
    case 'shot':kickT=0;kickNow=true;shotPower=Math.max(.35,Math.min(1,e.a/BB.powerShot));if(e.a>=BB.powerShot&&!o.reduced)push=1;if(e.kind===4){ringAt(BB.kx,BB.kz-.4,2.2,BB_COLORS.sun);shake=Math.max(shake,.16);puff(BB.kx,0,BB.kz-.6,4,.6);}break;
@@ -336,7 +338,7 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
    case 'clear':confetti(o.mobile?36:60);hype=Math.max(hype,2.4);cheerT=Math.max(cheerT,.9);break;
   }
  }
- function reset(){for(const p of pc)p.on=false;for(const b of bt)b.on=false;for(const d of dd)d.on=false;for(const t of tr)t.on=false;for(const s of stars)s.g.visible=false;for(const r of shock)r.on=false;shockMesh.count=0;shockMesh.visible=false;aim=null;camX=0;shake=0;camPull=0;push=0;kickT=9;kickNow=false;stunT=cheerT=0;kicker.resetPose();if(tod!==0)setTod(0);}
+ function reset(){for(const p of pc)p.on=false;for(const b of bt)b.on=false;for(const d of dd)d.on=false;for(const t of tr)t.on=false;for(const s of stars)s.on=false;starMesh.count=0;starMesh.visible=false;for(const r of shock)r.on=false;shockMesh.count=0;shockMesh.visible=false;aim=null;camX=0;shake=0;camPull=0;push=0;kickT=9;kickNow=false;stunT=cheerT=0;kicker.resetPose();if(tod!==0)setTod(0);}
  /** The thing under a screen point (aim assist: a generous sphere), else the pitch under it. */
  const ray=new T.Raycaster(),ndc=new T.Vector2(),plane=new T.Plane(new T.Vector3(0,1,0),0),hitP=new T.Vector3(),center=new T.Vector3();
  function pick(g:BallBlaster|null,sx:number,sy:number):AimPick{ndc.set(sx/W*2-1,-(sy/H)*2+1);ray.setFromCamera(ndc,camera);let best=Infinity,res:AimPick|null=null;
@@ -458,7 +460,9 @@ export function createBallblasterView(host:HTMLElement,o:{reduced:boolean;mobile
   let tm=0;for(let i=0;i<TRAIL;i++){const t=tr[i];if(!t.on)continue;t.t+=dt;if(t.t>.22){t.on=false;continue;}const k=(1-t.t/.22)*(night?1.35:1);
    Q.setFromUnitVectors(ZV,V2.set(t.dx,t.dy,t.dz));M.compose(V.set(t.x,t.y,t.z),Q,SV.set(t.s*k,t.s*k,t.s*k*(t.c===1||t.c===2?1.6:2.6)));trail.setMatrixAt(tm,M);trail.setColorAt(tm,TRAIL_C[t.c]);tm++;}
   trail.count=tm;trail.visible=tm>0;trail.instanceMatrix.needsUpdate=true;if(trail.instanceColor)trail.instanceColor.needsUpdate=true;
-  for(const st of stars){if(!st.g.visible)continue;st.t+=rdt;if(st.t>st.life){st.g.visible=false;continue;}const k=st.t/st.life,near=Math.min(1,st.g.position.distanceTo(camera.position)/16);st.g.quaternion.copy(camera.quaternion);st.g.scale.setScalar(st.s*near*(k<.3?.5+k/.3*.7:1.2-(k-.3)*.4));st.g.rotation.z+=rdt*2;}
+  {let n=0;for(const st of stars){if(!st.on)continue;st.t+=rdt;if(st.t>st.life){st.on=false;continue;}const k=st.t/st.life,near=Math.min(1,V.set(st.x,st.y,st.z).distanceTo(camera.position)/16),sc=st.s*near*(k<.3?.5+k/.3*.7:1.2-(k-.3)*.4);st.rot+=rdt*2;
+    Q2.setFromAxisAngle(ZV,st.rot).premultiply(camera.quaternion);M2.compose(V,Q2,SV.setScalar(sc));starMesh.setMatrixAt(n,M2);starMesh.setColorAt(n,starInk);n++;M2.compose(V,Q2,SV.setScalar(sc*.78));starMesh.setMatrixAt(n,M2);starMesh.setColorAt(n,st.c);n++;}
+   starMesh.count=n;starMesh.visible=n>0;if(n){starMesh.instanceMatrix.needsUpdate=true;if(starMesh.instanceColor)starMesh.instanceColor.needsUpdate=true;}}
   {let sn=0;for(const r of shock){if(!r.on)continue;r.t+=rdt;const k=r.t/.42;if(k>=1){r.on=false;continue;}const e2=1-(1-k)*(1-k);M2.compose(V.set(r.x,.05,r.z),Q2.identity(),SV.setScalar(r.s*(.25+e2)));shockMesh.setMatrixAt(sn,M2);shockMesh.setColorAt(sn,C1.copy(r.c).multiplyScalar((1-k)*.85));sn++;}
    shockMesh.count=sn;shockMesh.visible=sn>0;if(sn){shockMesh.instanceMatrix.needsUpdate=true;if(shockMesh.instanceColor)shockMesh.instanceColor.needsUpdate=true;}}
   // the aim

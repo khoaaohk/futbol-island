@@ -84,7 +84,10 @@ Breakaway" and "all these games should be in the new style". Layout, rules, scor
 2. The hoardings and the keeper are backlit, so they print in the shadow band and read dull next to the sunlit pitch.
 3. Small legends (STAR LANES, BUILD UP) are still tiny on a phone; palms are boards and cones, cruder than Breakaway's.
 4. Call bursts cover the goal mouth for a second or two; passing calls are narrower but still sit on the wall.
-5. A tap launch plays the same first second on every ball (rail, rail, parry, cone). The plunger needs a little spread.
-6. A semi-skilled bot's run lasts about fifteen minutes: the ramp is real (the first ball lasts less at level 9) but shallow.
-7. The evening tint does not reach the unlit backcloth: the sky and sea stay at golden hour while the table goes to dusk.
+5. DONE (fix round 2): the n-th tap launch of a run leaves the plunger up to 0.03 softer or harder (`pinballTapSpread`, a fixed
+   sequence, no random number: same inputs, same run). The first ball of every run is still the plain tap.
+6. PART DONE (fix round 2): levels 6 to 12 run faster and levels 5 to 12 give a shorter save. A semi-skilled bot held at one level
+   lasts 6.4 min at level 6 (was 7.7), 4.2 at 8 (was 5.2), 1.6 at 12 (was 2.6). A full run is still about 14 minutes at the
+   median, because the median bot run ends at level 4 and levels 1 to 4 were left alone for young children.
+7. DONE (fix round 2): the sky and sea backcloth takes the evening step too (its material colour; no new draw).
 8. File and hook names kept from the machine passes (`soccerPinballCabinet.ts`, `data-pinball-dmd`, `giHeat`).

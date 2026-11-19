@@ -57,6 +57,8 @@ export function createPinballGame(canvas:HTMLCanvasElement,onSound:(goal:boolean
  // Print lamps over the inserts and the page tone: the stage's lights never change (the comic bands are cut from them); a drain,
  // a goal and full time tint the two bands instead (the light band falls to dusk violet, a goal prints it hot).
  const insertN=PINBALL_INSERTS.length,insertX=new Float32Array(insertN),insertZ=new Float32Array(insertN),floorEnergy=new Float32Array(insertN);let floorWave=0,floorHitX=0,floorHitZ=0,giHeat=1,giTarget=1;
+ // Fix round 2 (Nov 18 2026): the evening also prints on the sky and sea backcloth (its own unlit material: one colour, no new draw).
+ const coastMat=(stage.scenery.getObjectByName('pinball-coast-backdrop') as T.Mesh|undefined)?.material as T.MeshBasicMaterial|undefined;let coastEve=-1;
  const toneLight=ink.uInkLight.value.clone(),toneShade=ink.uInkShade.value.clone(),toneDusk=new T.Color().setRGB(.7,.6,.88),toneDeep=new T.Color().setRGB(.4,.33,.62),toneHot=new T.Color().setRGB(1.14,1.1,.98),toneTier=new T.Color();
  const pinballGlow:T.Mesh<T.BufferGeometry,T.MeshBasicMaterial>[]=[],flipperLights:T.Mesh<T.BufferGeometry,T.MeshBasicMaterial>[]=[],flipperPivots:T.Mesh[]=[];
  const flipperPrevious=[0,0],flipperSnap=[0,0];
@@ -219,6 +221,7 @@ const toyMats=new Map<T.Material,T.Material>(),mountDummy=new T.Object3D(),toyHs
     // AAA pass (Nov 18 2026): the evening comes on with the endless level. Each full-time whistle prints the next step of the sunset
     // (golden hour, amber, orange, rose, first dusk); the classic ladder only, two uniforms, no new draw, nothing animated.
     const eve=pinball.tier?0:Math.min(PINBALL_EVENING.length-1,Math.max(0,pinball.match-1));if(eve>0){const e=PINBALL_EVENING[eve];toneTier.setRGB(toneTier.r*e[0],toneTier.g*e[1],toneTier.b*e[2]);}
+    if(coastMat&&eve!==coastEve){coastEve=eve;const e=PINBALL_EVENING[eve],k=1-eve*.045;coastMat.color.setRGB(e[0]*k,e[1]*k,e[2]*k);}
     ink.uInkLight.value.copy(toneTier).lerp(toneDusk,dusk).lerp(toneHot,hot);ink.uInkShade.value.copy(toneShade).lerp(toneDeep,Math.max(dusk*.8,eve*.09));}
 
    const keeperPose=pinballPose[0],incoming=pinball.phase==='playing'&&b.vy<-100&&b.y<290;

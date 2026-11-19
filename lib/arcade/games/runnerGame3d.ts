@@ -29,6 +29,7 @@ export function createRunnerGame3d(canvas:HTMLCanvasElement,onSound:(goal:boolea
  // seed, Breakaway runs ask freshRunnerSeed, and the tennis/pinball cabinets build an idle runner that never uses a run id.
  setRunnerSeedSource(freshRunnerSeed);
  const stage=createArcadeStage(canvas,runnerLook),tennis=createTennis(freshRunnerSeed()),pinball=createPinballState(),runner=createRunnerGame({});
+ const RUNNER_BALL_SCALE=1.34;
  const ball=stage.football(((.22)));let elapsed=0,event=0;
  const cameraHome=new T.Vector3(),cameraRotation=new T.Quaternion(),shotLook=new T.Vector3(),shotCamera=new T.Vector3(),shotRotation=new T.Quaternion();let cinema=0,cinemaKick=0,pointSound=0,cameraFocus=0,chargeTone=0,notedLevel=1,freeze=0;
  function cameraBeat(dt:number){const camera=stage.camera;cinema=Math.max(0,cinema-dt);let focus=0;/* round 3: lib/arcade/tennisCinema.ts owns the tennis beats (reduced motion → 0) */if(!stage.reduced){focus=T.MathUtils.clamp((runner.charge-.2)/.8,0,1)*.65;}
@@ -155,8 +156,8 @@ export function createRunnerGame3d(canvas:HTMLCanvasElement,onSound:(goal:boolea
    players[0].root.visible=true;
    if(runnerAimEnd){runnerAimEnd.visible=runner.charging;runnerAimEnd.position.set(runner.x,.04,-.8);runnerAimEnd.scale.setScalar(1+runner.charge*.9);}
    const touch=Math.sin(runner.stride),push=(1-Math.cos(runner.stride*2))*.5;
-   ball.visible=runner.balls>0&&runner.kick<.14;ball.scale.setScalar(1+runner.charge*.16+(runner.golden&&!stage.reduced?.14+Math.sin(elapsed*9)*.07:0));
-   ball.position.set(runner.x+touch*.15*(1-runner.slidePose),.24+push*.09+runner.y*.18,-.66-push*.32-runner.slidePose*.45);if(runnerPose.dribbling){players[0].dribbleContact(runnerDribble);ball.position.x=runnerDribble.x;ball.position.z=runnerDribble.z;}if(runner.charging){const load=Math.min(1,runner.charge*8);ball.position.x=T.MathUtils.lerp(ball.position.x,runner.x+RUNNER_STRIKE_X,load);ball.position.z=T.MathUtils.lerp(ball.position.z,-.9,load);}ball.rotation.x=-runner.distance/.22;ball.rotation.z=-runner.x/.22;runnerFx?.player(runner,runnerPose as ArcadePoseOptions,ball);
+   ball.visible=runner.balls>0&&runner.kick<.14;/* Fix round 2 (Nov 18 2026): the ball at his feet was small from the chase camera: it is drawn RUNNER_BALL_SCALE up (the same mesh, no new draw), sits that much higher so it still rests on the grass, and its blob shadow is wider and darker. */ball.scale.setScalar(RUNNER_BALL_SCALE+runner.charge*.16+(runner.golden&&!stage.reduced?.14+Math.sin(elapsed*9)*.07:0));
+   ball.position.set(runner.x+touch*.15*(1-runner.slidePose),.24+.22*(RUNNER_BALL_SCALE-1)+push*.09+runner.y*.18,-.66-push*.32-runner.slidePose*.45);if(runnerPose.dribbling){players[0].dribbleContact(runnerDribble);ball.position.x=runnerDribble.x;ball.position.z=runnerDribble.z;}if(runner.charging){const load=Math.min(1,runner.charge*8);ball.position.x=T.MathUtils.lerp(ball.position.x,runner.x+RUNNER_STRIKE_X,load);ball.position.z=T.MathUtils.lerp(ball.position.z,-.9,load);}ball.rotation.x=-runner.distance/.22;ball.rotation.z=-runner.x/.22;runnerFx?.player(runner,runnerPose as ArcadePoseOptions,ball);
    if(runnerShotTrail)runnerShotTrail.count=0;let goldTrail=false;
    runnerShots.forEach((mesh,i)=>{const shot=runner.shots[i];mesh.visible=shot.active;if(shot.active){
     const height=.28+Math.max(0,(shot.height??.28)-.28)*(1-Math.min(1,shot.age/1.8))+Math.sin(Math.min(1,shot.age/1.8)*Math.PI)*.3;mesh.position.set(shot.x,height,shot.z);mesh.rotation.x+=dt*(shot.returning?35:-35);mesh.scale.setScalar(1+(shot.returning?.2:(shot.blast??0)*.95)+(shot.golden?.5:0));if(shot.golden&&runnerShotTrail)goldTrail=true;
@@ -207,7 +208,7 @@ export function createRunnerGame3d(canvas:HTMLCanvasElement,onSound:(goal:boolea
    if(event!==runner.event){event=runner.event;if(runner.eventKind==='goal'&&!stage.reduced)freeze=.11;if(['shot','clear','goal'].includes(runner.eventKind)&&(runner.lastBlast>.25||runner.eventKind==='goal')){runnerBlastAge=.6;runnerBlastPower=Math.max(runner.lastBlast,runner.eventKind==='goal'?.55:0);for(const ring of runnerBlastRings)ring.position.set(runner.eventX,.75,runner.eventZ);}stage.burst(runner.eventX,.4,runner.eventZ,runner.eventKind==='goal'?2:['shot','clear'].includes(runner.eventKind)&&runner.lastBlast>=.8?3:1);/* AAA pass (Nov 18 2026): the armed golden shot and the full ladder buzz like a perfect dodge (reward haptic); a return ball is a warning knock, no buzz. */onSound(runner.eventKind==='goal',runner.eventKind==='golden'||runner.eventKind==='ladder'?'perfect':runner.eventKind==='return'?'block':runner.eventKind);}
 
   }
-  shadow.visible=ball.visible;shadow.position.set(ball.position.x,.04,ball.position.z);const h=ball.position.y;shadow.scale.setScalar(1+h*.2);(shadow.material as T.MeshBasicMaterial).opacity=.3/(1+h*.4);
+  shadow.visible=ball.visible;shadow.position.set(ball.position.x,.04,ball.position.z);const h=ball.position.y;shadow.scale.setScalar(RUNNER_BALL_SCALE*1.12*(1+h*.2));(shadow.material as T.MeshBasicMaterial).opacity=.44/(1+h*.4);
  }
  function hud():ArcadeHUD{return runnerHud(runner);}
  // Freeze-frame: for a tenth of a second after a goal this game's stage skips its draw, so the last frame stays on the glass while the

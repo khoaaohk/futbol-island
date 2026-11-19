@@ -478,9 +478,15 @@ export function createPassPuzzleScene(canvas:HTMLCanvasElement){
  // A rig keeps posing for this long after its last cause of motion, so every blend (stance, recovery, turn) settles; then it sleeps.
  const SETTLE=.5,KICK_SECONDS=.46,FOOT_R=.42*RIG_SCALE,headAt=new T.Vector3();
  /** Number flags face the camera at a near-constant screen size, pinned to the top of each (possibly leaning) player. */
+ // Fix round 2 (Nov 18 2026): two players standing close had their flags printed on top of each other. A flag that would cover an
+ // earlier one is lifted clear of it along the camera's up (eased in by how far the two overlap sideways, so nothing jumps).
+ const flagU=new Float32Array(FLAGS),flagV=new Float32Array(FLAGS),flagS=new Float32Array(FLAGS),flagLift=new Float32Array(FLAGS);
  function layFlags(){camera.updateMatrixWorld();const e=camera.matrixWorld.elements,cx=camera.position.x,cy=camera.position.y,cz=camera.position.z;
+  {const all=everyone();for(let i=0;i<all.length;i++){const a=all[i],f=a.flag,dxp=a.topX-cx,dyp=a.topY-cy,dzp=a.topZ-cz;flagU[f]=dxp*e[0]+dyp*e[1]+dzp*e[2];flagV[f]=dxp*e[4]+dyp*e[5]+dzp*e[6];flagS[f]=Math.max(1.5,-(dxp*e[8]+dyp*e[9]+dzp*e[10])*.029/camera.zoom);let lift=0;
+    for(let pass=0;pass<2;pass++)for(let j=0;j<i;j++){const g=all[j].flag,sz=(flagS[f]+flagS[g])/2,w=Math.max(0,Math.min(1,(sz*.92-Math.abs(flagU[f]-flagU[g]))/(sz*.3))),dv=flagV[f]+lift-flagV[g]-flagLift[g];if(w>0&&Math.abs(dv)<sz*.96)lift+=w*(sz*.96-dv);}
+    flagLift[f]=lift;}}
   for(const a of everyone()){const dxp=a.topX-cx,dyp=a.topY-cy,dzp=a.topZ-cz,depth=-(dxp*e[8]+dyp*e[9]+dzp*e[10]),size=Math.max(1.5,depth*.029/camera.zoom),h=size/2,t=((a.number*37+a.slot*11)%7-3)*.03,c=Math.cos(t),s=Math.sin(t);
-   const rx=e[0]*c+e[4]*s,ry=e[1]*c+e[5]*s,rz=e[2]*c+e[6]*s,ux=-e[0]*s+e[4]*c,uy=-e[1]*s+e[5]*c,uz=-e[2]*s+e[6]*c,k=a.flag*4,bx=a.topX,by=a.topY-.08,bz=a.topZ;
+   const rx=e[0]*c+e[4]*s,ry=e[1]*c+e[5]*s,rz=e[2]*c+e[6]*s,ux=-e[0]*s+e[4]*c,uy=-e[1]*s+e[5]*c,uz=-e[2]*s+e[6]*c,k=a.flag*4,lf=flagLift[a.flag],bx=a.topX+e[4]*lf,by=a.topY-.08+e[5]*lf,bz=a.topZ+e[6]*lf;
    flagPos.setXYZ(k,bx-rx*h,by-ry*h,bz-rz*h);flagPos.setXYZ(k+1,bx+rx*h,by+ry*h,bz+rz*h);flagPos.setXYZ(k+2,bx+rx*h+ux*size,by+ry*h+uy*size,bz+rz*h+uz*size);flagPos.setXYZ(k+3,bx-rx*h+ux*size,by-ry*h+uy*size,bz-rz*h+uz*size);}
   flagPos.needsUpdate=true;}
  /** Advance visuals by dt (0 = re-pose only). Returns true while an animation still needs frames. */

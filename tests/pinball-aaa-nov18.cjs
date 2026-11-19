@@ -74,6 +74,16 @@ ok('sound: launch fires with its own power, a new ball clicks, the coin run wait
  const h=F.createPinballFeel(),n=P.createPinballState(),heard=[];P.launchPinball(n);F.stepPinballFeel(h,n,1/30,()=>{});n.phase='ready';F.stepPinballFeel(h,n,1/30,(x,c)=>heard.push(c));assert.deepEqual(heard,['pb-ball']);
  n.phase='playing';F.stepPinballFeel(h,n,1/30,()=>{});heard.length=0;n.sfx.tip++;F.stepPinballFeel(h,n,1/30,(x,c)=>heard.push(c));assert(heard.includes('pb-tip'));
 });
+ok('fix round 2: tap launches spread a little, by a fixed sequence, and the same inputs still give the same run',()=>{
+ assert.equal(P.pinballTapSpread(0),0,'the first ball of a run is the plain tap');const seen=new Set();
+ for(let n=1;n<=40;n++){const d=P.pinballTapSpread(n);assert(Math.abs(d)<=P.PINBALL_TAP_SPREAD&&P.PINBALL_TAP_SPREAD<=.04,'inside the band');seen.add(d.toFixed(4));}assert(seen.size>=38,'no two balls alike');
+ const at=n=>{const s=P.createPinballState();P.beginPinballRun(s,{level:1});s.launches=n;P.launchPinball(s);const power=s.launchPower;let top=999;for(let i=0;i<60;i++){P.stepPinball(s,idle,1/60);top=Math.min(top,s.ball.y);}return{power,x:s.ball.x,y:s.ball.y,top,n:s.launches};};
+ const a=at(0),b=at(1),c=at(2),again=at(1);assert.equal(a.power,.68);assert.equal(a.n,1);assert.notEqual(b.power,a.power);assert.deepEqual(again,b,'deterministic');
+ assert(Math.hypot(b.x-a.x,b.y-a.y)>8||Math.hypot(c.x-a.x,c.y-a.y)>8,'one second in, the balls are in different places');
+ for(let n=0;n<40;n++)assert(at(n).top<150,'tap '+n+' still clears the top arch');
+ {const s=P.createPinballState();P.launchPinball(s,.9);assert.equal(s.launchPower,.9);assert.equal(s.launches,0,'a held pull is never changed');}
+ {const s=P.createPinballState();s.launches=5;s.plunger=.5;P.launchPinball(s);assert.equal(s.launchPower,P.plungerPull(.5));}
+});
 ok('the curve: later levels are harder, runs end, a careful bot survives the opening, runs are deterministic',()=>{
  const seeds=[3,17,29,41,53,67];let early=0,late=0;
  for(const seed of seeds){early+=bot(seed,.7,400,1).first||400;late+=bot(seed,.7,400,9).first||400;}

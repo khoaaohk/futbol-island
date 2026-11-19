@@ -39,6 +39,12 @@ export function plungerPull(plunger: number) {
         ? SOFT_PULL_MIN + (k / SOFT_K) * (SOFT_PULL_MAX - SOFT_PULL_MIN)
         : SOFT_PULL_MAX + ((k - SOFT_K) / (1 - SOFT_K)) * (1 - SOFT_PULL_MAX);
 }
+/* Fix round 2 (Nov 18 2026): a tap launch used to play the same first second on every ball (rail, rail, parry, cone). The n-th tap
+ * of a run now leaves the plunger a little softer or harder: a fixed golden-ratio sequence inside +-PINBALL_TAP_SPREAD, no random
+ * number, so the same inputs still give the same run on every device. The first ball of a run is the plain .68 tap. Every value
+ * in the band clears the top arch (probed .60 to .80). A held pull is the player's own choice and is never changed. */
+export const PINBALL_TAP_SPREAD = .03;
+export function pinballTapSpread(n: number) { const k = Math.max(0, Math.floor(n)); return k ? (((k * .6180339887) % 1) * 2 - 1) * PINBALL_TAP_SPREAD : 0; }
 export type PinballInput = {
     left: boolean;
     right: boolean;
@@ -214,6 +220,8 @@ export type PinballState = {
     plungerSnap: number;
     /** power of the most recent launch (for launch SFX intensity) */
     launchPower: number;
+    /** Fix round 2 (Nov 18 2026): tap launches so far in this state. Feeds pinballTapSpread, so no two balls of a run open alike. */
+    launches: number;
     /** active defenders (1 at kickoff, +1 per goal up to 3) */
     defs: number;
     /** 1 -> 0 while the newest defender jogs in from the sideline */
@@ -312,7 +320,7 @@ function readyFootFor(b:PinballBall): -1|0|1 {
  return x>=88&&x<=166?0:x>=194&&x<=272?1:-1;
 }
 function freshBall(): PinballBall { return { x: LANE_X, y: PLUNGER_TIP - 7, vx: 0, vy: 0, r: 7, spin: 0, omega: 0, contact: 0, contactX: 0, contactY: 1 }; }
-export function createPinballState(): PinballState { return { pot:0,potGoals:0,lastPot:0,lastPotX:0,kickoff:false,kickoffAt:0,kickX:0,kickY:0,tier:0,stall:0,unstuck:0,trap:0,trapX:0,trapY:0,match:1,matchGoals:0,extraBalls:0,ballsWon:0,level:1,startLevel:1,beginner:false,nudgeOn:true,keeper2:180,keeper2Velocity:0,rush:0,lastRush:false,mbAuto:false,hot:createPinballHot(),hype:0,challengeComplete:false,lastChallengeBonus:0,challengeBall:false,banked:false,openingRescue:true,launchGrace:0,nudges:1,nudgeCooldown:0,ball: freshBall(), phase: 'ready', score: 0, goals: 0, balls: 3, time: 0, timer: 0, left: 0, right: 0, keeper: 180, keeperVelocity: 0, cue: 'scan', cueTime: 0, lastGoalPoints: 500, moveTime: 0, moves: 0, lastGoalBonus: 0, combination: 0, lastFoot: -1, lastStrikeAt: -10, defenders: pinballDefenders(0), previousDefenders: pinballDefenders(0), keeperCommit: 0, keeperDirection: 1, defenderAI: Array.from({length:3},()=>({offset:0,velocity:0,target:0,think:0,block:0,cooldown:0,aim:0,dazed:0,hitX:0,hitY:0,fallYaw:0})), keeperDive: 0, keeperTarget: 180, possession:-1,possessionTime:0,attackReceiver:-1,counterAttack:false,attackPasses:0,passTarget:-1,passTime:0,keeperThink: 0, flash: 0, hitX: 0, hitY: 0, hitId: 0, bumperCooldown: [0, 0, 0], flipperCooldown: [0, 0], flipperPulse:[0,0], accumulator: 0, plunger: 0, plungerSnap: 0, launchPower: 0, defs: 1, defJoin: 0, table: createPinballTable(), clock: 0, stoppage: -1, halfTime: false, fullTimeBonus: 0, rebound: 0, lastRebound: false, keeperParry: 0, reboundAt: -10, extra: freshBall(), extraLive: false, mbSave: 0, stats: { parries: 0, rebounds: 0, wallPasses: 0, corners: 0, mbStarts: 0, mbGoals: 0, perfect: 0, early: 0, late: 0, reads: 0 }, timing: { grade: 'none', at: -10, streak: 0, best: 0, read: false, held: [0, 0], passedAt: -10, cool: 0 }, read: { live: false, x: 0, side: -1, eta: 0, at: -10, dirty: true, fromRebound: false, lastSide: -1, lastAt: -10, n: 0, dots: new Float32Array(PINBALL_READ_DOTS * 2) }, sfx: { wall: 0, wallV: 0, bumper: 0, bumperI: 0, flipper: 0, flipperV: 0, keeper: 0, keeperV: 0, gate: 0, join: 0, parry: 0, grade: 0, tip: 0, tipAt: -10, hot: 0, sweeper: 0, kickoff: 0 } }; }
+export function createPinballState(): PinballState { return { pot:0,potGoals:0,lastPot:0,lastPotX:0,kickoff:false,kickoffAt:0,kickX:0,kickY:0,tier:0,stall:0,unstuck:0,trap:0,trapX:0,trapY:0,match:1,matchGoals:0,extraBalls:0,ballsWon:0,level:1,startLevel:1,beginner:false,nudgeOn:true,keeper2:180,keeper2Velocity:0,rush:0,lastRush:false,mbAuto:false,hot:createPinballHot(),hype:0,challengeComplete:false,lastChallengeBonus:0,challengeBall:false,banked:false,openingRescue:true,launchGrace:0,nudges:1,nudgeCooldown:0,ball: freshBall(), phase: 'ready', score: 0, goals: 0, balls: 3, time: 0, timer: 0, left: 0, right: 0, keeper: 180, keeperVelocity: 0, cue: 'scan', cueTime: 0, lastGoalPoints: 500, moveTime: 0, moves: 0, lastGoalBonus: 0, combination: 0, lastFoot: -1, lastStrikeAt: -10, defenders: pinballDefenders(0), previousDefenders: pinballDefenders(0), keeperCommit: 0, keeperDirection: 1, defenderAI: Array.from({length:3},()=>({offset:0,velocity:0,target:0,think:0,block:0,cooldown:0,aim:0,dazed:0,hitX:0,hitY:0,fallYaw:0})), keeperDive: 0, keeperTarget: 180, possession:-1,possessionTime:0,attackReceiver:-1,counterAttack:false,attackPasses:0,passTarget:-1,passTime:0,keeperThink: 0, flash: 0, hitX: 0, hitY: 0, hitId: 0, bumperCooldown: [0, 0, 0], flipperCooldown: [0, 0], flipperPulse:[0,0], accumulator: 0, plunger: 0, plungerSnap: 0, launchPower: 0, launches: 0, defs: 1, defJoin: 0, table: createPinballTable(), clock: 0, stoppage: -1, halfTime: false, fullTimeBonus: 0, rebound: 0, lastRebound: false, keeperParry: 0, reboundAt: -10, extra: freshBall(), extraLive: false, mbSave: 0, stats: { parries: 0, rebounds: 0, wallPasses: 0, corners: 0, mbStarts: 0, mbGoals: 0, perfect: 0, early: 0, late: 0, reads: 0 }, timing: { grade: 'none', at: -10, streak: 0, best: 0, read: false, held: [0, 0], passedAt: -10, cool: 0 }, read: { live: false, x: 0, side: -1, eta: 0, at: -10, dirty: true, fromRebound: false, lastSide: -1, lastAt: -10, n: 0, dots: new Float32Array(PINBALL_READ_DOTS * 2) }, sfx: { wall: 0, wallV: 0, bumper: 0, bumperI: 0, flipper: 0, flipperV: 0, keeper: 0, keeperV: 0, gate: 0, join: 0, parry: 0, grade: 0, tip: 0, tipAt: -10, hot: 0, sweeper: 0, kickoff: 0 } }; }
 function gradeStrike(s: PinballState, grade: PinballGrade, read = false) {
     const t = s.timing;
     t.grade = grade; t.at = s.time; t.read = read; t.cool = .7;
@@ -377,7 +385,8 @@ export function tapPinballFlipper(s:PinballState,side:0|1){if(s.phase==='playing
 export function launchPinball(s: PinballState, power?: number) {
     if (s.phase !== 'ready')
         return false;
-    const pull = power !== undefined ? power : plungerPull(s.plunger);
+    const raw = power !== undefined ? power : plungerPull(s.plunger), tap = raw === TAP_PULL;
+    const pull = tap ? raw + pinballTapSpread(s.launches) : raw; if (tap) s.launches++;
     const p = Math.max(.12, Math.min(1, pull));
     s.ball = { x: LANE_X, y: PLUNGER_TIP - 7, vx: 0, vy: -(430 + 810 * p), r: 7, spin: 0, omega: 0, contact: 0, contactX: 0, contactY: 1 };
     s.possession=-1;s.possessionTime=0;s.counterAttack=false;s.attackPasses=0;s.passTarget=-1;s.passTime=0;

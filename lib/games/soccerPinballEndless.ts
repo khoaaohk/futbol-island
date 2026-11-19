@@ -18,6 +18,9 @@
  *  - bat     px taken off each flipper (the centre gap widens, as in the hard divisions: 63 px classic, never under PINBALL_BAT_MIN)
  *  - saver   whether Build Up still raises the free goal-line saver on every ball (the earned G-O-A-L saver and the quiet
  *            two-quick-drains assist stay at every level)
+ *
+ * Fix round 2 (Nov 18 2026): levels 6 to 12 run a little faster (the top was 1.26, now 1.3) and levels 5 to 12 give a shorter
+ * new-ball save (the top was .36, now .32). Levels 1 to 4 are unchanged, so a child's first matches play as before.
  */
 export type PinballRampRow={level:number;speed:number;keeper:number;reach:number;defs:number;press:number;save:number;window:number;bat:number;saver:boolean};
 export const PINBALL_RAMP:readonly PinballRampRow[]=[
@@ -25,14 +28,14 @@ export const PINBALL_RAMP:readonly PinballRampRow[]=[
  {level:2, speed:1.03,keeper:1.06,reach:1, defs:2,press:.5, save:.9, window:.95,bat:0, saver:true},
  {level:3, speed:1.06,keeper:1.12,reach:2, defs:3,press:1,  save:.8, window:.9, bat:1, saver:false},
  {level:4, speed:1.09,keeper:1.18,reach:3, defs:3,press:1.5,save:.7, window:.85,bat:2, saver:false},
- {level:5, speed:1.12,keeper:1.24,reach:4, defs:3,press:2,  save:.62,window:.8, bat:3, saver:false},
- {level:6, speed:1.14,keeper:1.3, reach:5, defs:3,press:2.5,save:.55,window:.75,bat:4, saver:false},
- {level:7, speed:1.16,keeper:1.35,reach:6, defs:3,press:3,  save:.5, window:.7, bat:5, saver:false},
- {level:8, speed:1.18,keeper:1.4, reach:7, defs:3,press:3.5,save:.45,window:.66,bat:6, saver:false},
- {level:9, speed:1.2, keeper:1.44,reach:8, defs:3,press:4,  save:.42,window:.63,bat:7, saver:false},
- {level:10,speed:1.22,keeper:1.48,reach:9, defs:3,press:4.5,save:.4, window:.6, bat:8, saver:false},
- {level:11,speed:1.24,keeper:1.52,reach:10,defs:3,press:5,  save:.38,window:.57,bat:9, saver:false},
- {level:12,speed:1.26,keeper:1.56,reach:11,defs:3,press:5.5,save:.36,window:.55,bat:10,saver:false},
+ {level:5, speed:1.12,keeper:1.24,reach:4, defs:3,press:2,  save:.6, window:.8, bat:3, saver:false},
+ {level:6, speed:1.15,keeper:1.3, reach:5, defs:3,press:2.5,save:.52,window:.75,bat:4, saver:false},
+ {level:7, speed:1.18,keeper:1.35,reach:6, defs:3,press:3,  save:.46,window:.7, bat:5, saver:false},
+ {level:8, speed:1.21,keeper:1.4, reach:7, defs:3,press:3.5,save:.41,window:.66,bat:6, saver:false},
+ {level:9, speed:1.24,keeper:1.44,reach:8, defs:3,press:4,  save:.38,window:.63,bat:7, saver:false},
+ {level:10,speed:1.26,keeper:1.48,reach:9, defs:3,press:4.5,save:.36,window:.6, bat:8, saver:false},
+ {level:11,speed:1.28,keeper:1.52,reach:10,defs:3,press:5,  save:.34,window:.57,bat:9, saver:false},
+ {level:12,speed:1.3, keeper:1.56,reach:11,defs:3,press:5.5,save:.32,window:.55,bat:10,saver:false},
 ];
 export const PINBALL_RAMP_TOP=PINBALL_RAMP.length;
 /** The ramp row for a level (match number). Anything below 1 or not a number plays level 1; past the table plays the last row. */

@@ -95,4 +95,5 @@
   first 600 m 9 before, 0 after. Its next loss is the "Split the pair" wave at about 750 m, where the bot reads the outside lane as
   blocked and cuts inside: a limit of the bot more than of the wave, left as it is.
 - The run challenge is shown on the full-time card ("Done! +bonus" or "Next time").
-- Not done: the ball at the runner's feet is still small from the chase camera.
+- PART DONE (fix round 2): the ball at his feet is drawn a third bigger with a wider, darker blob shadow (same mesh, no new draw).
+  It now shows on both sides of his legs, but from straight behind the legs still cover its middle.
