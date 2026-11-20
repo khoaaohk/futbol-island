@@ -57,7 +57,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{...articleLd({headline:r.title,path:r.path,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (soccer rule)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.path,name:`${r.name} quiz`,questions:quiz})}}/>
   <JsonLd data={faqLd(r.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES}/>:undefined} facts={facts}/>
+  <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES}/>:r.bodies?<span data-last-checked={r.bodies.checked}>Last checked against the official pages: <time dateTime={r.bodies.checked}>{longDate(r.bodies.checked)}</time>. <a href="#by-country">See the rules by country</a>.</span>:undefined} facts={facts}/>
   <PrintSheet path={r.path} what={cards?'card rules sheet':'rule sheet'} has={cards?'all 14 card offenses and the yellow vs red table':undefined}/>
   {cards&&<CardRulesTop c={CARD_RULES}/>}
   {play&&<RulePlayDeck c={play}/>}
@@ -72,6 +72,11 @@ export default function RulePage({params}:{params:{slug:string}}){
    <Bullets items={r.refs}/>
    <p className={styles.caption}>Rule: {r.law}. {futsal?<a href={FUTSAL_LAWS_URL} rel="noopener">FIFA Futsal Laws of the Game 2025-26</a>:<a href={r.lawUrl} rel="noopener">Read it in the Laws of the Game (The IFAB)</a>}.</p>
   </Section>
+  {/* Nov 20 2026 (SEO foundation): what each governing body says, each row linked to its official page (lib/site/rules.ts bodies) */}
+  {r.bodies&&<Section id="by-country" title={r.bodies.title}>
+   <DataTable label={r.bodies.title} head={['Country','Body','What it says','Official page']} rows={r.bodies.rows.map(b=>[b.place,b.body,b.says,<a key={b.url} href={b.url} rel="noopener">{b.source}</a>])}/>
+   <p className={styles.caption}>{r.bodies.note} Checked on {longDate(r.bodies.checked)}.</p>
+  </Section>}
   <Section id="mixups" title="Common mix-ups">
    <ul className={styles.stack}>{r.mixups.map(m=><li key={m.said} className={styles.card}><h3 className={styles.h3}>{m.said}</h3><p>{m.truth}</p></li>)}</ul>
   </Section>

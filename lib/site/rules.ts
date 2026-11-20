@@ -46,7 +46,10 @@ import {scene,type RawScene,type Scene} from './scenes';
 export type Mixup={said:string;truth:string};
 export type RuleLink={path:string;name:string;line?:string};
 export type Rule={slug:string;path:string;name:string;title:string;h1:string;desc:string;answer:string;law:string;lawUrl:string;scenes:Scene[];picture:string;
- refs:string[];mixups:Mixup[];formats:[string,string][];faq:Faq[];lessons:SiteLesson[];cta?:SiteLesson;exhibits:RuleLink[];links:RuleLink[]};
+ refs:string[];mixups:Mixup[];formats:[string,string][];faq:Faq[];lessons:SiteLesson[];cta?:SiteLesson;exhibits:RuleLink[];links:RuleLink[];
+ /** Optional (SEO foundation, Nov 20 2026; the heading page): what each governing body says, one row per official page, each
+  *  row linked to that page. `checked` is the day those pages were read. A health topic: a row says only what its page says. */
+ bodies?:{title:string;checked:string;note:string;rows:{place:string;body:string;says:string;source:string;url:string}[]}};
 export const RULES_HUB_PATH='/learn/soccer-rules';
 export const rulePath=(slug:string)=>`${RULES_HUB_PATH}/${slug}`;
 const pick=(ids:string[])=>ids.map(id=>{const l=lessonById(id);if(!l)throw new Error(`rule lesson ${id} is not in the lesson catalog`);return l;});
@@ -407,7 +410,23 @@ export const RULES:readonly Rule[]=([
    {q:'How many players does a team need to play?',a:'In the 11-a-side Laws a game cannot start or go on if a team has fewer than seven players. Small-sided leagues set their own minimum.'}],
   lessonIds:['learn7_roles','learn9_shape','learn11_shape','learnf_roles31'],cta:'learn7_roles',links:[L.ages,L.field,L.ball,L.fs]},
  // ---- heading ------------------------------------------------------------------------------------------------------------
- {slug:'heading-rules-for-kids',name:'Heading rules for kids',law:'U.S. Soccer and US Youth Soccer rules',lawPage:'general-modifications/',
+ {slug:'heading-rules-for-kids',name:'Heading rules for kids',
+  /* SOURCES for `bodies` (each page fetched and read on Nov 20 2026; nothing from memory, nothing from news sites):
+     - U.S. Soccer, "U.S. Soccer Announces Recognize to Recover Player Health and Safety Program" (December 2015).
+     - US Youth Soccer, Policy on Players and Playing Rules, Rule 305 "Heading" (edition dated December 5, 2025).
+     - England Football (The FA), "New heading rules for grassroots football youth matches" (May 17, 2024).
+     - England Football (The FA), "Heading in Football" (the training guidance by age group). */
+  bodies:{title:'Heading rules by country and governing body',checked:'2026-11-20',
+   note:'Each row says what the official page says, and links to it. Rules change, and a league can be stricter, so ask your own league.',
+   rows:[
+    {place:'United States',body:'U.S. Soccer',says:'Its 2015 Recognize to Recover announcement recommends that heading is prohibited for children 10 and under, and limited to practice only for ages 11 to 13.',
+     source:'U.S. Soccer: Recognize to Recover announcement',url:'https://www.ussoccer.com/stories/2015/12/us-soccer-announces-recognize-to-recover-player-health-and-safety-program'},
+    {place:'United States',body:'US Youth Soccer',says:'Rule 305: players aged 10 and under do not head the ball in any match, and do not practice heading in an organized team setting. Players aged 11 and 12 may head in matches, and no player heads more than 25 times a week in practice. Players aged 13 and older may head in matches and practice.',
+     source:'US Youth Soccer: Policy on Players and Playing Rules (December 5, 2025)',url:'https://www.usyouthsoccer.org/wp-content/uploads/sites/160/2025/12/Policy-on-Players-and-Playing-Rules-_APP-12.05.2025.pdf'},
+    {place:'England',body:'The FA (matches)',says:'Deliberate heading is being phased out of grassroots youth matches from U7 to U11: U7 to U9 from the 2024-25 season, U10 from 2025-26 and U11 from 2026-27. A deliberate header is punished with an indirect free kick.',
+     source:'England Football: new heading rules for youth matches',url:'https://www.englandfootball.com/articles/2024/May/17/New-heading-rules-for-grassroots-football-youth-matches'},
+    {place:'England',body:'The FA (training)',says:'U7 to U11: heading should not be introduced in training sessions. U12 and U13: at most one session a week, with light balls and at most five headers. U14 to U16: at most one session a week and 10 headers per player in a session.',
+     source:'England Football: Heading in Football',url:'https://www.englandfootball.com/learn/Brain-Health/Heading-in-Football'}]},law:'U.S. Soccer and US Youth Soccer rules',lawPage:'general-modifications/',
   title:'Heading Rules in Youth Soccer: What Age Can Kids Head?',h1:'Heading rules in youth soccer: at what age can kids head the ball?',
   desc:'Heading rules in youth soccer: in the US, kids 10 and under do not head the ball. See the U11 and U12 rules, practice limits and what the referee does.',
   answer:'In US youth soccer, players aged 10 and under do not head the ball, in games or in practice. From age 11 heading is allowed in games, with limits on how much players aged 11 and 12 head the ball in practice.',
@@ -425,7 +444,7 @@ export const RULES:readonly Rule[]=([
    ['9v9 (U11, U12)','U.S. Soccer’s 2016 standards: no deliberate heading in U11 games, allowed at U12. US Youth Soccer (2025): ages 11 and 12 may head in games, with no more than 25 headers a week for any player in practice.'],
    ['11v11 (U13 and up)','Heading is allowed in games and practice (US Youth Soccer Rule 305).'],
    ['Futsal','Ask your futsal league which heading rule it follows.'],
-   ['England','The FA has its own heading guidance for children, which is different from the US rules.']],
+   ['England','The FA has its own heading rules for children, which are different from the US rules. See the table by country on this page.']],
   faq:[{q:'At what age can kids head the ball in soccer?',a:'In US youth soccer, from age 11 in games. Players aged 10 and under do not head the ball at all. Players aged 11 and 12 have limits in practice.'},
    {q:'What happens if a 9-year-old heads the ball in a game?',a:'If it was deliberate, the referee stops play and the other team gets an indirect free kick from that spot. No card is shown.'},
    {q:'Why is heading limited for kids?',a:'U.S. Soccer introduced the limits as part of its concussion initiative, on the advice of its medical committee.'},

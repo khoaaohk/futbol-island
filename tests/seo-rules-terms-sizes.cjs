@@ -79,6 +79,8 @@ const text=h=>h.replace(/<script[\s\S]*?<\/script>/g,' ').replace(/<(title|desc)
 const SERVED=new Set(['/play','/privacy',...[...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`${guides.DIAGRAM_DIR}/${f}`)]);
 /* Nov 15 2026 (seo-design): the game's "Play this in the game" deep links; tests/seo-design.cjs checks each id is real. */
 const PLAY_GO=/^\/play\?go=(lesson|fish)(:[A-Za-z0-9_-]+)?$/;
+/* Nov 20 2026: the heading page's by-country table links one official page per row (lib/site/rules.ts bodies) */
+const BODY_SOURCES=new Set(rules.RULES.flatMap(r=>(r.bodies?r.bodies.rows:[]).map(b=>b.url)));assert(BODY_SOURCES.size>=4&&[...BODY_SOURCES].every(u=>/^https:\/\/www\.(ussoccer\.com|usyouthsoccer\.org|englandfootball\.com)\//.test(u)),'by-country sources are official pages');
 const SOURCES=/^https:\/\/(www\.theifab\.com\/laws\/latest\/[a-z-]+\/|the-aiff\.com\/media\/uploads\/2025\/09\/Futsal-Laws-of-the-Game-2025-2026_EN\.pdf|www\.euronews\.com\/2023\/01\/25\/referee-shows-a-white-card-for-the-first-time-in-football-history-but-why)$/;/* euronews: Portugal's white card on the cards page (lib/site/cardRules.ts SOURCES) */
 const paraPages=new Map();let words=0,tables=0;
 const kind=p=>p.startsWith('/learn/soccer-rules/')?'rule':p.startsWith('/learn/soccer-terms/')?'term':/soccer-(rules|terms)$/.test(p)?'hub':'chart';
@@ -115,7 +117,7 @@ for(const g of PAGES){
  const ids=new Set([...h.matchAll(/ id="([^"]+)"/g)].map(m=>m[1]));
  for(const l of links){
   if(l.startsWith('#')){assert(ids.has(l.slice(1)),`${where}: anchor ${l} exists`);continue;}
-  if(l.startsWith('http')){assert(SOURCES.test(l),`${where}: external link ${l} is a cited source`);continue;}
+  if(l.startsWith('http')){assert(SOURCES.test(l)||BODY_SOURCES.has(l),`${where}: external link ${l} is a cited source`);continue;}
   assert(l.startsWith('/'),`${where}: link ${l}`);assert(PATHS.has(l)||(SERVED.has(l)||PLAY_GO.test(l)),`${where}: link target ${l} exists`);}
  assert(links.some(l=>l.startsWith('/learn/lessons/')),`${where}: links to lessons`);
  assert(links.some(l=>l!==g.path&&PAGES.some(x=>x.path===l)),`${where}: links to another page of the cluster`);
