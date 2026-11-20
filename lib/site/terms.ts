@@ -767,7 +767,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   faq:[{q:'Is it normal to have a weak foot?',a:'Yes. Almost every player has one foot that feels more natural. The aim is not two perfect feet. It is a weaker foot you can trust for a pass and a first touch.'},
    {q:'How long does it take to improve a weak foot?',a:'It is different for every player. Short practice on most days helps more than one long session each week.'},
    {q:'What does two-footed mean in soccer?',a:'A two-footed player can pass, dribble and shoot well with either foot, so defenders cannot guess which way they will go.'}],
-  lessonIds:['learn7_receive','bld_f_passtofeet'],related:['first-touch','dribble','one-touch','cross','step-over']},
+  lessonIds:['learn7_receive','bld_f_passtofeet','bld_11_throughlines'],related:['first-touch','dribble','one-touch','cross','step-over']},
 
  {slug:'one-touch',sides:{title:'How do you defend one-touch passing?',items:['Do not chase every pass. Stay in your position and block the way forward.','Press when the pass is slow, bouncing or behind the receiver.','Guess the next pass and step into its path.','Stay close to the players near the ball, so the first-time pass has nowhere to go.']},
   name:'One-Touch',also:'one touch, first-time pass, first time',short:'Playing the ball with your first touch, without stopping it. A one-touch pass is also called a first-time pass.',
@@ -856,12 +856,12 @@ export const TERM_PAGES:readonly TermPage[]=([
   name:'Step-Over',also:'step over, stepover, scissors',short:'A dribbling move: swing one foot around the ball without touching it, then take the ball the other way.',
   title:'Step-Over in Soccer: What It Is and How to Do One',h1:'What is a step-over in soccer?',
   desc:'A step-over in soccer is a dribbling move. You swing one foot around the ball without touching it, then go the other way. Simple steps for kids.',
-  answer:'A step-over in soccer (football) is a dribbling move in which you swing one foot around the ball without touching it, then take the ball away in the other direction. It makes the defender think you are going one way.',
+  answer:'A step-over in soccer (football) is a dribbling move in which you swing one foot around the ball without touching it, then take the ball away in the other direction. It makes the defender think you are going one way, and then you go the other.',
   scene:{title:'A step-over',who:'7@70,62 9@46,80 !3@70,71 !4@50,74 !G@50,97',ball:[70,64],runs:['70,71>64,70','71,64>80,80'],
    caption:'Number 7 dribbles at the defender marked 3 and swings a foot around the ball as if to go inside. The defender leans that way, and number 7 pushes the ball past on the outside.'},
   howTitle:'How do you do a step-over?',how:['Dribble at the defender at a steady speed, with the ball close.','Swing one foot around the front of the ball, from the inside to the outside, without touching it.',
    'Drop your shoulder to that side, so the fake looks real.','Push the ball the other way with the outside of your other foot.','Speed up for the first three steps after the move.'],
-  mistakes:['Doing it too far from the defender, so there is no one to fool.','Doing it too close, where the defender can poke the ball away.','Not speeding up after the move, so the defender catches up.','Doing many step-overs when one is enough.'],
+  mistakes:['Doing it too far from the defender, so there is no one to fool.','Doing it too close, where the defender can poke the ball away.','Not speeding up after the move, so the defender catches up.'],
   formats:'A step-over is a 1v1 move, so it works in every game size. It is most useful for wide players in 7v7, 9v9 and 11v11, who meet one defender with space behind. In futsal, players more often use the sole of the foot to move the ball, because the court is tight.',
   faq:[{q:'Is a step-over the same as a scissors move?',a:'Most coaches use the two names for the same move. Some call it a scissors when the foot goes around the ball from the inside to the outside.'},
    {q:'What is a double step-over?',a:'Two step-overs in a row, one with each foot, before taking the ball away. Learn the single one first.'},
@@ -873,7 +873,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   name:'Dummy',also:'dummy run, letting the ball run',short:'Pretending to play the ball, then letting it run past to a teammate.',
   title:'Dummy in Soccer: What It Means to Let the Ball Run',h1:'What is a dummy in soccer?',
   desc:'A dummy in soccer is when a player pretends to play the ball but lets it run on to a teammate. How it works and when to use it, with a diagram.',
-  answer:'A dummy in soccer (football) is when a player pretends to play the ball but lets it run past to a teammate. The defender follows the first player, and the ball reaches a second player who is free.',
+  answer:'A dummy in soccer (football) is when a player pretends to play the ball but lets it run past to a teammate. The defender follows the first player, and the ball reaches a second player who is free and has more time.',
   scene:{title:'A dummy',who:'8@30,62 10@48,68 9@62,74 !6@47,74 !5@70,82 !G@50,97',ball:[31,63],passes:['31,63>61,73.5'],
    caption:'Number 8 passes toward number 10, who has the defender marked 6 close behind. Number 10 steps over the ball without touching it, and it runs on to number 9, who is free.'},
   howTitle:'How do you do a dummy?',how:['Know before the ball comes that a teammate is behind you, in the path of the pass.','Move to the ball as if you will take it.',
@@ -899,7 +899,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   faq:[{q:'What is the difference between a chip and a lob?',a:'Many people use both words for the same thing. Some say chip for a ball struck from the ground with a stab, and lob for a high ball played over the goalkeeper, often after a bounce.'},
    {q:'When should you chip the goalkeeper?',a:'When the goalkeeper is well off the line and still coming forward. If the goalkeeper stays back, a low shot to a corner is usually better.'},
    {q:'What is a chipped pass?',a:'A short pass lifted over an opponent’s foot or leg to a teammate. It is useful when a defender blocks the pass along the ground.'}],
-  lessonIds:['gap11_runoncue','next7_shotreaction'],related:['sweeper-keeper','through-ball','volley','tap-in','high-line']},
+  lessonIds:['gap11_runoncue','next7_shotreaction','learn7_carry'],related:['sweeper-keeper','through-ball','volley','tap-in','high-line']},
 
  {slug:'tap-in',sides:{title:'How do defenders stop a tap-in?',items:['Run back with the attacker at the far post. Do not stop to watch the ball.','Stay goal-side, between the attacker and the goal.','Clear a low pass across the goal toward the side line, not back into the middle.','The goalkeeper holds the shot or pushes it wide, away from the front of the goal.']},
   name:'Tap-In',also:'tap in, easy finish',short:'A goal scored from very close to the goal with a soft touch, often into an open goal.',
@@ -987,7 +987,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   lessonIds:['f_pivot','expf_thirdplayer','expf_replacepivot','expf_denypivot'],related:['shielding','false-nine','give-and-go','third-man-run','support']},
 
  {slug:'penalty-area',sides:{title:'What should players remember inside the penalty area?',items:['Defenders stay on their feet. A careless tackle here can be a penalty kick.','Defenders keep their arms close to the body when a shot or a cross comes in.','Attackers keep the ball moving and shoot early. There is little time in the area.','The goalkeeper may use hands up to the line, and not past it.']},
-  name:'Penalty Area',also:'the box, 18-yard box, the 18, penalty box',short:'The big box in front of each goal. The goalkeeper may use hands inside it, and a foul by a defender inside it can be a penalty kick. On a full-size field it reaches 18 yards from the goal line.',
+  name:'Penalty Area',also:'the box, 18-yard box, the 18, penalty box',short:'The big box in front of each goal. The goalkeeper may use hands inside it, and a foul by a defender inside it can be a penalty kick.',
   title:'Penalty Area in Soccer: What Is the 18-Yard Box?',h1:'What is the penalty area in soccer?',
   desc:'The penalty area in soccer is the big box in front of each goal, also called the 18-yard box. The size, the lines and the rules that change inside it.',
   answer:'The penalty area in soccer (football) is the big box marked in front of each goal. People also call it the box or the 18-yard box. Inside their own penalty area the goalkeeper may use hands, and a direct free kick foul by a defender there is a penalty kick.',
@@ -1009,7 +1009,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   name:'Goal Area',also:'six-yard box, 6-yard box, small box',short:'The small box in front of the goal. Goal kicks are taken from inside it. Some people call it the six-yard box.',
   title:'Goal Area in Soccer: What Is the Six-Yard Box?',h1:'What is the goal area in soccer?',
   desc:'The goal area in soccer is the small box in front of the goal, also called the six-yard box. Its size, what it is for and how it differs from the 18.',
-  answer:'The goal area in soccer (football) is the small box marked right in front of each goal. Many people call it the six-yard box. Goal kicks are taken from inside it, and it sits inside the bigger penalty area.',
+  answer:'The goal area in soccer (football) is the small box marked right in front of each goal. Many people call it the six-yard box. Goal kicks are taken from inside it, and it sits inside the bigger penalty area. On a full-size field it is 6 yards deep.',
   scene:{title:'The goal area',who:'G@46,3 4@26,9 5@74,9 6@50,22 !9@50,27 !7@24,25',ball:[45,4],zone:[36.5,0,63.5,5.2],passes:['45,4>27,8.6'],
    caption:'The small shaded box is the goal area, also called the six-yard box. The goalkeeper takes a goal kick from inside it and passes to number 4, and the opponents wait outside the penalty area.'},
   howTitle:'What is the goal area for?',howFact:{label:'Full-size field',value:'6 yards deep'},quizHow:{q:'Which one is true about the goal area?',why:'A goal kick may be taken from anywhere inside the goal area. The goal area is the small box, and the penalty area is the big box around it.'},
@@ -1078,7 +1078,7 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'Can the goalkeeper take a kick in a shoot-out?',a:'Yes. The goalkeeper is one of the players on the field, so they may take a kick, and they must take one before any teammate kicks twice.'},
    {q:'Who goes first in a penalty shoot-out?',a:'The referee tosses a coin. The captain who wins the toss chooses to kick first or second.'}],
   links:[{path:'/learn/soccer-rules/penalty-kick',name:'Penalty kick rules in soccer',line:'The kick given for a foul, with a diagram'}],
-  lessonIds:['learn7_roles','learn11_shape'],related:['extra-time','stoppage-time','penalty-area','set-piece']},
+  lessonIds:['learn7_roles','learn7_shape','learn11_shape'],related:['extra-time','stoppage-time','penalty-area','set-piece']},
 ] as Raw[]).map(make);
 export const termBySlug=(slug:string)=>TERM_PAGES.find(t=>t.slug===slug);
 for(const t of TERM_PAGES)for(const r of t.related)if(!TERM_PAGES.some(x=>x.slug===r))throw new Error(`${t.slug}: related term ${r} has no page`);
