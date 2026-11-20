@@ -10,6 +10,7 @@
  * failure still rejects, so a real deploy mismatch reaches the error screen and its reload as before. Webpack forgets a failed
  * chunk (JS and CSS), so the retry really fetches again. No timers while online and loaded; one `online` listener while waiting.
  */
+import {chunkFailedForUpdate} from './buildUpdate';
 export const RETRY_IMPORT_PAUSE_MS=1500;
 /** How many lazy parts are waiting for the connection right now (components/NetSaveNotice.tsx shows "Waiting for internet…"). */
 let waitingOffline=0;
@@ -19,7 +20,11 @@ export const netWaitCount=()=>waitingOffline;
 export function subscribeNetWait(f:()=>void){waitSubs.add(f);return()=>{waitSubs.delete(f);};}
 export function retryImport<T>(load:()=>Promise<T>,pauseMs=RETRY_IMPORT_PAUSE_MS):Promise<T>{
  return load().catch(()=>new Promise<T>((resolve,reject)=>{
-  const again=()=>{load().then(resolve,reject);};
+  // Second failure (Nov 20 2026): a chunk that is gone because a newer release is live never comes back, so instead of
+  // the error screen the part just stays closed while "New update ready. Tap to refresh." shows (lib/buildUpdate.ts).
+  // Any other failure still rejects, as before.
+  const fail=(err:unknown)=>{chunkFailedForUpdate(err).then(update=>{if(!update)reject(err);},()=>reject(err));};
+  const again=()=>{load().then(resolve,fail);};
   if(typeof window!=='undefined'&&typeof navigator!=='undefined'&&navigator.onLine===false){
    setWaiting(1);
    window.addEventListener('online',()=>{setWaiting(-1);again();},{once:true});

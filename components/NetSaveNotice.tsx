@@ -7,6 +7,8 @@
  *   Ask a grown-up, or use your save code." Game pages only (not the tour site). Tap closes it; it leaves after NO_SAVE_MS.
  * Most panels are modal <dialog>s, which sit in the browser's top layer above any z-index: while one is open the note is drawn
  * inside the topmost open dialog (a portal), so a panel waiting inside Settings still shows it.
+ * - A newer release is live and a lazy part could not load, or the tab came back to a newer release (lib/buildUpdate.ts):
+ *   "New update ready. Tap to refresh." Tap reloads (the island comes back from the save). It stays until tapped.
  * Event-driven: one subscription, one hide timeout while the storage note shows. Nothing runs when storage and the network are fine.
  */
 import {useEffect,useState,useSyncExternalStore} from 'react';
@@ -14,6 +16,10 @@ import {createPortal} from 'react-dom';
 import {usePathname} from 'next/navigation';
 import styles from './NetSaveNotice.module.css';
 import {isOfflineChunkNoise,netWaitCount,subscribeNetWait} from '@/lib/retryImport';
+import {UPDATE_TEXT,UPDATE_TITLE,installUpdateWatch,updateWatch} from '@/lib/buildUpdate';
+const noSub=()=>()=>{};
+const subUpdate=(f:()=>void)=>updateWatch()?.subscribe(f)??(()=>{});
+const isUpdateReady=()=>updateWatch()?.ready()??false;
 
 export const NO_SAVE_MS=9000;
 export const NO_SAVE_SEEN_KEY='fi2-no-save-note-v1';
@@ -36,6 +42,8 @@ function markNoSaveSeen(win:{sessionStorage?:Storage}){noSaveShown=true;try{win.
 export default function NetSaveNotice(){
  const waiting=useSyncExternalStore(subscribeNetWait,netWaitCount,()=>0);
  const pathname=usePathname();
+ const update=useSyncExternalStore(pathname&&/^\/(admin|embed)(\/|$)/.test(pathname)?noSub:subUpdate,isUpdateReady,()=>false);
+ useEffect(()=>{if(!pathname||!/^\/(admin|embed)(\/|$)/.test(pathname))installUpdateWatch();},[pathname]);
  const [noSave,setNoSave]=useState(false);
  // Offline, webpack's background chunk prefetches reject with nobody listening: mark those handled so the console stays quiet
  // (lib/retryImport.ts isOfflineChunkNoise). One listener, it only runs when a promise rejects unhandled.
@@ -47,12 +55,14 @@ export default function NetSaveNotice(){
   markNoSaveSeen(w);setNoSave(true);
  },[pathname]);
  useEffect(()=>{if(!noSave)return;const t=setTimeout(()=>setNoSave(false),NO_SAVE_MS);return()=>clearTimeout(t);},[noSave]);
- const showing=waiting>0||noSave;
+ const showing=waiting>0||update||noSave;
  const [host,setHost]=useState<HTMLElement|null>(null);
- useEffect(()=>{setHost(showing?topDialog():null);},[showing,waiting]);
+ useEffect(()=>{setHost(showing?topDialog():null);},[showing,waiting,update]);
  if(!showing)return null;
  const note=waiting>0?<div className={styles.wrap}><p className={styles.toast} role="status" data-net-wait="">
   <b>{NET_WAIT_TITLE}</b><span>{NET_WAIT_TEXT}</span></p></div>
+  :update?<div className={styles.wrap}><button type="button" className={styles.toast} role="status" data-update-ready="" onClick={()=>window.location.reload()}>
+  <b>{UPDATE_TITLE}</b><span>{UPDATE_TEXT}</span></button></div>
   :<div className={styles.wrap}><button type="button" className={styles.toast} role="status" data-no-save-note="" onClick={()=>setNoSave(false)}>
   <span>{NO_SAVE_TEXT}</span></button></div>;
  return host&&host.isConnected?createPortal(note,host):note;
