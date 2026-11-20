@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import {hasEs,languageAlternates} from '../i18n/esPaths';
+import {pageModified,publishedBefore} from './lastmod';
 /**
  * The static reading pages (Oct 16 2026, "make the site easier to find through ChatGPT, Claude and search"): shared metadata
  * and JSON-LD helpers for app/(site)/*, app/sitemap.ts, app/robots.ts and the llms files. Pure data: no env reads, no client
@@ -59,7 +60,7 @@ export const HOME_DESC='Futbol Island is a free football (soccer) game for kids 
 export const faqLd=(faq:readonly {q:string;a:string}[])=>({'@context':'https://schema.org','@type':'FAQPage',mainEntity:faq.map(x=>({'@type':'Question',name:x.q,acceptedAnswer:{'@type':'Answer',text:x.a}}))});
 /** A collection page (the topic hubs) with real content dates (lib/site/updated.ts). */
 export const collectionLd=(o:{name:string;path:string;description:string;published:string;modified:string;items:{name:string;path:string}[]})=>({'@context':'https://schema.org','@type':'CollectionPage',
- name:o.name,url:abs(o.path),description:o.description,inLanguage:'en',datePublished:o.published,dateModified:o.modified,isAccessibleForFree:true,audience:KIDS_AUDIENCE,
+ name:o.name,url:abs(o.path),description:o.description,inLanguage:'en',datePublished:publishedBefore(o.published,pageModified(o.path,o.modified)),dateModified:pageModified(o.path,o.modified),isAccessibleForFree:true,audience:KIDS_AUDIENCE,
  isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,
  mainEntity:{'@type':'ItemList',numberOfItems:o.items.length,itemListElement:o.items.map((x,i)=>({'@type':'ListItem',position:i+1,name:x.name,url:abs(x.path)}))}});
 export type Crumb={name:string;path:string};
@@ -103,7 +104,7 @@ export const resourceTypeFor=(path:string)=>/^\/learn\/soccer-drills\/./.test(pa
  *  Nov 15 2026: one entity with both types, never a second node), for kids and coaches, with real content dates. */
 export const articleLd=(o:{headline:string;path:string;description:string;published:string;modified:string;about:string;teaches?:string;image?:string})=>({'@context':'https://schema.org','@type':['Article','LearningResource'],
  headline:o.headline,name:o.headline,url:abs(o.path),mainEntityOfPage:abs(o.path),description:o.description,inLanguage:'en',isAccessibleForFree:true,
- datePublished:o.published,dateModified:o.modified,learningResourceType:resourceTypeFor(o.path),educationalLevel:'Beginner',audience:LEARN_AUDIENCE,
+ datePublished:publishedBefore(o.published,pageModified(o.path,o.modified)),dateModified:pageModified(o.path,o.modified),learningResourceType:resourceTypeFor(o.path),educationalLevel:'Beginner',audience:LEARN_AUDIENCE,
  about:{'@type':'Thing',name:o.about},...(o.teaches?{teaches:o.teaches}:{}),...(o.image?{image:abs(o.image)}:{}),
  author:PUBLISHER,publisher:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
 /** A plain-text page about one thing (a fish, a card, an exhibit). */

@@ -1,3 +1,4 @@
+import {pageModified} from './lastmod';
 import type {Faq} from './safety';
 import {ARCADE_GAME_COUNT} from '../arcade/arcadeCatalog';
 import {NumberWord,numberWord} from '../numberWord';
@@ -405,7 +406,7 @@ export const videoGameLd=(g:GamePage)=>({'@context':'https://schema.org','@type'
  image:abs(g.og),screenshot:allShots(g).map(s=>({'@type':'ImageObject',contentUrl:abs(s.src),encodingFormat:'image/webp',width:s.w,height:s.h,caption:s.alt})),
  genre:g.genre,gamePlatform:'Web browser',operatingSystem:'Web browser',applicationCategory:'Game',playMode:'SinglePlayer',inLanguage:'en',isAccessibleForFree:true,
  offers:{'@type':'Offer',price:0,priceCurrency:'USD',availability:'https://schema.org/InStock',url:abs(g.path)},audience:KIDS_AUDIENCE,isFamilyFriendly:true,teaches:g.skill,
- datePublished:GAMES_UPDATED,dateModified:GAMES_UPDATED,publisher:PUBLISHER,author:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
+ datePublished:GAMES_UPDATED,dateModified:pageModified(g.path,GAMES_UPDATED),publisher:PUBLISHER,author:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
 /** The hub's list of games. */
 export const gameListLd=()=>({'@context':'https://schema.org','@type':'ItemList',name:GAMES_HUB.h1,url:abs(GAMES_HUB.path),numberOfItems:GAME_PAGES.length,
  itemListElement:GAME_PAGES.map((g,i)=>({'@type':'ListItem',position:i+1,name:g.name,url:abs(g.path),image:abs(g.shots[0].src)}))});

@@ -92,7 +92,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz}/>
   {/* batch 3, Nov 17 2026: lessons, drills (lib/site/drillLinks.ts GUIDE_DRILLS) and related pages as one "Keep reading" row */}
   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(r.lessons)},{id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(r.path)},{id:'related',links:related}]}/>
-  <GuideEnd checked={FAMILY_CHECKED.rules} lesson={r.cta}/>
+  <GuideEnd path={r.path} checked={FAMILY_CHECKED.rules} lesson={r.cta}/>
   <ReadNext path={r.path}/>
  </>;
 }

@@ -23,21 +23,21 @@ function load(file){
  return mod.exports;
 }
 /** The data each family of pages is built from, by path prefix (first match wins). Route files are found from the path. */
-const L='lib/site/',T='lib/town/',SHARED=[L+'GuideParts.tsx',L+'readNext.ts','components/site/ReadNext.tsx'];
+const L='lib/site/',T='lib/town/',SHARED=[L+'GuideParts.tsx',L+'readNext.ts','components/site/ReadNext.tsx'],X=L+'crossLinks.ts';/* X (Nov 20 2026): the cross-cluster links */
 const DEPS=[
  [/^\/cards\/\d+$/,[L+'cards.ts',L+'cardNotes.ts',L+'cardNotes.json',L+'cardPlays.generated.json',L+'related.ts',L+'collections.ts',T+'playerProfiles.json',T+'playerCareers.json','components/site/RelatedLinks.tsx']],
- [/^\/cards\/./,[L+'collections.ts',L+'cardGroups.ts','components/site/CollectionHub.tsx',L+'cards.ts']],
+ [/^\/cards\/./,[X,L+'collections.ts',L+'cardGroups.ts','components/site/CollectionHub.tsx',L+'cards.ts']],
  [/^\/fish\/spots$|^\/fish\/[a-z-]+-and-|^\/fish\/sharks$/,[L+'collections.ts','components/site/CollectionHub.tsx','lib/town/fishing/fishCatalog.ts']],
  [/^\/fish\/./,[L+'fish.ts',L+'fishNotes.ts',L+'fishNotes.json',L+'related.ts',L+'collections.ts','lib/town/fishing/fishCatalog.ts','components/site/RelatedLinks.tsx']],
- [/^\/exhibits\/./,[L+'exhibits.ts',L+'related.ts','components/site/RelatedLinks.tsx']],
+ [/^\/exhibits\/./,[X,L+'exhibits.ts',L+'related.ts','components/site/RelatedLinks.tsx']],
  [/^\/(cards|fish|exhibits)$/,[L+'collections.ts']],
  [/^\/books(\/|$)/,[L+'books.ts','lib/books/stories','lib/books/messi.ts','components/site/books']],
  [/^\/learn\/lessons\/./,[L+'lessons.ts','public/lessons',L+'related.ts',...SHARED]],
- [/^\/learn\/soccer-rules\/./,[L+'rules.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'drillLinks.ts',...SHARED]],
- [/^\/learn\/soccer-terms\/./,[L+'terms.ts',L+'notesGuides.ts',L+'drillLinks.ts',...SHARED]],
+ [/^\/learn\/soccer-rules\/./,[X,L+'rules.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'drillLinks.ts',...SHARED]],
+ [/^\/learn\/soccer-terms\/./,[X,L+'terms.ts',L+'notesGuides.ts',L+'drillLinks.ts',...SHARED]],
  [/^\/learn\/soccer-positions\/.*-vs-|^\/learn\/soccer-formations\/.*-vs-/,[L+'comparisons.ts',L+'positions.ts',L+'formations.ts','components/site/ComparePage.tsx']],
  [/^\/learn\/soccer-positions\/numbers$/,[L+'positionNumbers.ts',L+'positions.ts',L+'formations.ts',...SHARED]],
- [/^\/learn\/soccer-positions\/./,[L+'positions.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'collections.ts',L+'drillLinks.ts',...SHARED]],
+ [/^\/learn\/soccer-positions\/./,[X,L+'positions.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'collections.ts',L+'drillLinks.ts',...SHARED]],
  [/^\/learn\/soccer-formations\/./,[L+'formations.ts',L+'notesGuides.ts',L+'comparisons.ts',...SHARED]],
  [/^\/learn\/soccer-drills\/./,[L+'drills.ts',L+'drillsA.ts',L+'drillsB.ts',L+'drillsC.ts',L+'drillsD.ts',L+'drillGuides.ts',L+'notesDrills.ts',L+'drillLinks.ts','lib/site/DrillParts.tsx',...SHARED]],
  [/^\/learn\/soccer-practice-plans\/./,[L+'plans.ts',...SHARED]],

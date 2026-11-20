@@ -1,3 +1,4 @@
+import {pageModified} from '@/lib/site/lastmod';
 import PitchDiagram from './PitchDiagram';
 import {arrows,describe,place,type GuideFormat,type Line,type Mode} from './pitch';
 import {lessonPath,type SiteLesson} from './lessons';
@@ -7,6 +8,7 @@ import MotionToggle from '@/components/site/MotionToggle';
 import {GUIDE_FOOT,GUIDE_NAMES} from './guides';
 import {PLAY_PATH,type Crumb} from './seo';
 import {FACTS_PATH,longDate} from './checked';
+import {SITE_UPDATED} from './updated';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import PlayBar from '@/components/site/PlayBar';
 import {playLessonHref} from './playLinks';
@@ -93,10 +95,16 @@ export function LinkList({links}:{links:readonly {path:string;name:string;line?:
 export function CheckedLine({date}:{date:string}){
  return <p className={styles.caption} data-checked={date}>Last checked: <time dateTime={date}>{longDate(date)}</time>. <a href={FACTS_PATH}>How we check facts</a>.</p>;
 }
+/** "Last updated" (Nov 20 2026, lib/site/lastmod.ts): the page's own last change, the same date as its sitemap <lastmod> and
+ *  its JSON-LD dateModified. Not the fact-check date, which keeps its own "Last checked" line. */
+export function UpdatedLine({path,fallback}:{path:string;fallback:string}){
+ const date=pageModified(path,fallback);
+ return <p className={styles.caption} data-updated={date}>Last updated: <time dateTime={date}>{longDate(date)}</time>.</p>;
+}
 /** The end of a guide (one style everywhere): the "about this guide" line and "Last checked" as one quiet block, then the gold
  *  button. `lesson` (Nov 15 2026) makes the button open that lesson in the game (lib/site/playLinks.ts). */
-export function GuideEnd({cta=true,checked,lesson,sticky=true}:{cta?:boolean;checked?:string;lesson?:{id:string;title:string};sticky?:boolean}){
- return <><div className={styles.endNote}><p className={styles.caption}>{GUIDE_FOOT}</p>{checked&&<CheckedLine date={checked}/>}</div>
+export function GuideEnd({cta=true,checked,lesson,sticky=true,path}:{cta?:boolean;checked?:string;lesson?:{id:string;title:string};sticky?:boolean;/** the page's path: shows its "Last updated" date */path?:string}){
+ return <><div className={styles.endNote}><p className={styles.caption}>{GUIDE_FOOT}</p>{checked&&<CheckedLine date={checked}/>}{path&&<UpdatedLine path={path} fallback={checked??SITE_UPDATED.guides}/>}</div>
   {cta&&(lesson?<PlayEnd href={playLessonHref(lesson.id)} label={`Play the lesson: ${lesson.title}`} bar={`Play “${lesson.title}”`} sticky={sticky}/>:<PlayEnd sticky={sticky}/>)}</>;
 }
 /** The one gold Play button at the end of a detail page (`data-play-cta`), plus the phones' sticky "Play free" bar

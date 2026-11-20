@@ -1,3 +1,4 @@
+import {pageModified,publishedBefore} from './lastmod';
 import {abs,KIDS_AUDIENCE,LEARN_AUDIENCE,PUBLISHER,SITE_NAME,SITE_URL} from './seo';
 /**
  * Education structured data (seo-extras, Nov 15 2026). Lessons are a LearningResource for kids and coaches; guide pages
@@ -32,4 +33,4 @@ export const lessonLd=(o:{name:string;path:string;description:string;teaches:str
  '@context':'https://schema.org','@type':'LearningResource',name:o.name,url:abs(o.path),description:o.description,
  inLanguage:'en',isAccessibleForFree:true,educationalLevel:o.level??'Beginner',learningResourceType:['Lesson','Quiz'],
  teaches:o.teaches,about:{'@type':'Thing',name:o.about},keywords:o.keywords,audience:LEARN_AUDIENCE,
- isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,datePublished:o.published,dateModified:o.modified});
+ isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,datePublished:publishedBefore(o.published,pageModified(o.path,o.modified)),dateModified:pageModified(o.path,o.modified)});

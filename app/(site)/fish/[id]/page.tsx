@@ -1,3 +1,4 @@
+import {pageModified} from '@/lib/site/lastmod';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
@@ -56,7 +57,7 @@ export default function FishPage({params}:{params:{id:string}}){
   <JsonLd data={{...creativeWorkLd({name:`${f.name} and ${f.club.name}`,path:fishPath(f.id),description:f.club.fact,image:ogPath(fishPath(f.id)),
    about:[{'@type':'Thing',name:f.name,...(wiki?{sameAs:wiki}:{})},{'@type':'SportsOrganization',name:f.club.name,sport:'Football',location:f.club.country}]}),
    ...(note?{'@type':'Article',headline:`${f.name}: where it lives, a fun fact and how to catch it`,author:PUBLISHER,
-    datePublished:SITE_PUBLISHED,dateModified:SITE_UPDATED.fish,learningResourceType:'Fact sheet',mainEntityOfPage:abs(fishPath(f.id)),citation:[...note.src,f.club.source]}:{})}}/>
+    datePublished:SITE_PUBLISHED,dateModified:pageModified(fishPath(f.id),SITE_UPDATED.fish),learningResourceType:'Fact sheet',mainEntityOfPage:abs(fishPath(f.id)),citation:[...note.src,f.club.source]}:{})}}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <header className={styles.intro}>
    <Breadcrumbs crumbs={crumbs}/>

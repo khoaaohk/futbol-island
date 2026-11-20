@@ -12,7 +12,7 @@ import {COLLECTIONS,COLLECTIONS_UPDATED} from './collections';
 import {COMPARISONS,COMPARISONS_UPDATED} from './comparisons';
 import {BOOKS_PATH,BUILT_BOOKS,bookPath} from './books';
 import {VIDEOS_PATH,VIDEOS_UPDATED,videoSitePaths} from './videos';
-import generated from './lastmod.generated.json';
+import {pageModified} from './lastmod';
 /**
  * Every public, indexable path (app/sitemap.ts, tests/seo-pages.cjs). Nov 3 2026 (owner): `/` is the home page (the feature tour,
  * formerly /learn, which now redirects to `/`) and the main entry; the game is /play, indexable at a low priority.
@@ -25,15 +25,14 @@ export const HOME_UPDATED=SITE_UPDATED.home;
 /** The topic hubs (lib/site/hubs.ts) and the parents' guide (SEO, Nov 8 2026). */
 export const GUIDE_PATHS=[...HUB_PATHS,SAFE_GUIDE.path] as const;
 /** Nov 15 2026 (seo-links): each URL's own last change (scripts/gen-lastmod.cjs: the last commit touching its route and data
- *  files), read from lib/site/lastmod.generated.json; the hand-kept section date below is the fallback for a path not in it. */
-const LASTMOD=generated as Record<string,string>;
+ *  files), read from lib/site/lastmod.generated.json through lib/site/lastmod.ts pageModified() (Nov 20 2026: the same call feeds JSON-LD dateModified and the visible "Last updated" line); the hand-kept section date below is the fallback for a path not in it. */
 /** Nov 20 2026 (SEO foundation, owner approved): the single card pages (/cards/<n>) are real pages reached by links, but they are
  *  kept out of the index (robots noindex, follow) and out of sitemap.xml and sitemap-images.xml: about 450 short pages with no
  *  search intent were most of Google's "Discovered - not indexed". /cards and the card group pages stay indexed. */
 export const NOINDEX_CARD_PATHS:readonly string[]=SITE_CARDS.map(c=>cardPath(c.number));
 /** Every path with its sitemap priority and its real content date (no build-time "now"). */
 export function sitePaths():{path:string;priority:number;lastmod:string}[]{
- return sectionPaths().map(x=>({...x,lastmod:LASTMOD[x.path]??x.lastmod}));
+ return sectionPaths().map(x=>({...x,lastmod:pageModified(x.path,x.lastmod)}));
 }
 function sectionPaths():{path:string;priority:number;lastmod:string}[]{
  const U=SITE_UPDATED;

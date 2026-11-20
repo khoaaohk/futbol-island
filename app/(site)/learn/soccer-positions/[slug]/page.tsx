@@ -72,7 +72,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
    {id:'books',label:'Pop-up book',icon:'book',links:booksForRole(p.cardRole)},/* Nov 20 2026: the books about players of this position */
    {id:'compare',label:'Compare',icon:'swap',links:compare.map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},
    {id:'related',links:[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:NUMBERS_PATH,name:'Soccer positions by number',line:'1 to 11 and the letters: CB, CDM, LCM, DF'},{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}]}/>
-  <GuideEnd checked={FAMILY_CHECKED.positions} lesson={p.lessons[0]}/>
+  <GuideEnd path={p.path} checked={FAMILY_CHECKED.positions} lesson={p.lessons[0]}/>
   <ReadNext path={p.path}/>
  </>;
 }

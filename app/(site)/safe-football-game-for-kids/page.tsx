@@ -1,3 +1,4 @@
+import {pageModified} from '@/lib/site/lastmod';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {MoreToLearn} from '@/components/site/LessonHub';
@@ -19,7 +20,7 @@ export default function SafeGuide(){
  return <>
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'WebPage',name:SAFE_GUIDE.h1,url:abs(SAFE_GUIDE.path),description:SAFE_GUIDE.description,inLanguage:'en',
-   dateModified:SITE_UPDATED.hubs,audience:{'@type':'Audience',audienceType:'Parents, carers and coaches'},about:{'@type':'VideoGame',name:SITE_NAME,url:abs(PLAY_PATH),audience:KIDS_AUDIENCE},
+   dateModified:pageModified(SAFE_GUIDE.path,SITE_UPDATED.hubs),audience:{'@type':'Audience',audienceType:'Parents, carers and coaches'},about:{'@type':'VideoGame',name:SITE_NAME,url:abs(PLAY_PATH),audience:KIDS_AUDIENCE},
    isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER}}/>
   <JsonLd data={faqLd(SAFE_FAQ)}/>
   <header className={styles.intro}>
