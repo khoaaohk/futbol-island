@@ -427,7 +427,7 @@ export const TERM_NOTES:Readonly<Record<string,CoachNotes>>={
   coach:'Let players drop the ball, let it bounce once and strike it as it comes up. Timing matters more than power.',
   match:'A clearance lands in front of a midfielder outside the penalty area. The midfielder strikes it just after the bounce, and the shot stays low.',
   ages:[['U8','Drop, bounce and kick to a partner is a simple game for learning the timing.'],
-   ['U10','Goalkeepers in 7v7 can practice the drop kick where their league allows it, and a throw where it does not.'],
+   ['U10','Punts and drop kicks are not allowed in 7v7 under U.S. Soccer standards, so practice the half-volley as a shot or a pass.'],
    ['U12','Ask for half-volley passes with the inside of the foot in pairs, kept along the ground.']]},
  'square-pass':{
   coach:'Ask for a firm pass to the far foot, and ask the receiver to open their body so the next pass can go forward.',

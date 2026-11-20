@@ -446,7 +446,7 @@ export const TERM_PAGES:readonly TermPage[]=([
   howTitle:'How do you hit a half-volley?',how:['Watch where the ball will land and put your standing foot beside that spot.','Strike the ball just as it leaves the ground, not when it is high.',
    'Lock your ankle and use your laces, with your knee over the ball.','Follow through toward your target and land on your kicking foot.'],
   mistakes:['Striking too late, when the ball has bounced up high, so it flies over the goal.','Leaning back at the moment you kick.','Standing too far from where the ball lands, so you have to stretch for it.'],
-  formats:'Half-volleys appear in every game size when the ball drops from the air. A futsal ball bounces less than a soccer ball, so the moment to strike comes sooner and lower. Many young players meet the half-volley first as a goalkeeper’s drop kick.',
+  formats:'Half-volleys appear in every game size when the ball drops from the air. A futsal ball bounces less than a soccer ball, so the moment to strike comes sooner and lower. A goalkeeper’s drop kick is a half-volley too. Under U.S. Soccer standards the 7v7 goalkeeper may not punt or drop-kick the ball, so that kick comes later.',
   faq:[{q:'What is a drop kick in soccer?',a:'A drop kick is a goalkeeper’s half-volley. The goalkeeper drops the ball from the hands and kicks it just as it bounces.'},
    {q:'Is a half-volley harder than a volley?',a:'Many players find it harder, because the ball changes direction at the bounce. On a bumpy field the bounce can also surprise you.'},
    {q:'Can you make a pass with a half-volley?',a:'Yes. A soft half-volley with the inside of the foot is a quick way to pass a bouncing ball along the ground to a teammate.'}],
