@@ -352,19 +352,29 @@ export function createDiveRoom(spot:DiveSpot,opt:DiveRoomOptions){
   // Underwater pass (Nov 18 2026): the caustics' up-test and depth falloff moved to the vertex shader (vDvK.x: no per-fragment
   // matrix multiply, normalize or exp), which pays for fine sand ripples in the fragment shader (vDvK.y marks the sand; 2 sin).
   // Lite (heat tier 2+ / Battery saver) compiles the ripples out: its fragment shader only got cheaper.
-  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float aSand;uniform float uCaustic;varying vec3 vDvW;varying vec3 vDvAbs;varying vec2 vDvK;'+DIVE_ABSORB_GLSL).replace('#include <begin_vertex>','#include <begin_vertex>\nvDvW=transformed;vDvAbs=dvAbsorb('+DIVE_SURFACE_Y.toFixed(2)+'-transformed.y);vDvK=vec2(clamp(normal.y,0.,1.)*uCaustic*exp(-max(0.,'+DIVE_SURFACE_Y.toFixed(2)+'-transformed.y)*.22),aSand);');
+  sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\nattribute float aSand;attribute vec3 aDvC;uniform float uCaustic;varying vec3 vDvW;varying vec3 vDvAbs;varying vec2 vDvK;varying vec2 vDvC;'+DIVE_ABSORB_GLSL).replace('#include <begin_vertex>','#include <begin_vertex>\nvDvW=transformed;vDvAbs=dvAbsorb('+DIVE_SURFACE_Y.toFixed(2)+'-transformed.y);vDvC=aDvC.xy;vDvK=vec2(clamp(normal.y,0.,1.)*uCaustic*aDvC.z*exp(-max(0.,'+DIVE_SURFACE_Y.toFixed(2)+'-transformed.y)*.22),aSand);');
   sh.fragmentShader=sh.fragmentShader.replace('#include <common>',`#include <common>
-uniform float uDiveTime,uReef;uniform vec3 uCausticC;varying vec3 vDvW;varying vec3 vDvAbs;varying vec2 vDvK;
+uniform float uDiveTime,uReef;uniform vec3 uCausticC;varying vec3 vDvW;varying vec3 vDvAbs;varying vec2 vDvK;varying vec2 vDvC;
 float dvNet(vec2 p,float t){float a=sin(p.x+sin(p.y*1.3+t)*1.1+t*.7),b=sin(p.y*1.1+sin(p.x*1.2-t*.8)*1.2-t*.5);float k=1.-abs(a*b);k*=k;return k*k*k;}`)
    .replace('#include <fog_fragment>',`{vec3 g=vec3(dot(gl_FragColor.rgb,vec3(.299,.587,.114)));gl_FragColor.rgb=mix(g,gl_FragColor.rgb,uReef);
  gl_FragColor.rgb*=vDvAbs;// Explore life: the water's colour absorption (red fades first with depth; per vertex)
  ${fineSand?`gl_FragColor.rgb*=1.+vDvK.y*${ROOM_SAND_RIPPLE.toFixed(3)}*sin(vDvW.x*7.3+sin(vDvW.z*1.9)*1.5+vDvW.z*2.1);`:''}
  // Explore life (heat): ONE warped octave (was two), only on faces that look up, k^6 by multiplies (no pow).
- if(vDvK.x>.012){float c=dvNet(vDvW.xz*1.05,uDiveTime*.8)*${ROOM_CAUSTIC_BOOST.toFixed(2)};
+ if(vDvK.x>.012){float c=dvNet(vDvC,uDiveTime*.8)*${ROOM_CAUSTIC_BOOST.toFixed(2)};
   gl_FragColor.rgb+=uCausticC*c*vDvK.x;}}
 #include <fog_fragment>`);};
- reefMat.customProgramCacheKey=()=>'dive-reef-v4'+(fineSand?'':'-lite');
+ reefMat.customProgramCacheKey=()=>'dive-reef-v5'+(fineSand?'':'-lite');
  const reefGeo=S.geometry();{const a=new Float32Array(reefGeo.getAttribute('position').count);a.fill(1,0,sandVerts);reefGeo.setAttribute('aSand',new T.BufferAttribute(a,1));}
+ // Uneven light lines (Nov 20 2026, owner: "the pattern is too similar and predictable"): the net was a regular grid of cells. Its
+ // lookup point is now turned and bent by a slow, uneven warp, and its strength varies in patches. All of it is worked out ONCE here
+ // per vertex (aDvC: x, y = where to read the net, z = strength), so the fragment shader does one multiply LESS than before.
+ {const pos=reefGeo.getAttribute('position'),c=new Float32Array(pos.count*3),cr=Math.cos(.62),sr=Math.sin(.62);
+  for(let i=0;i<pos.count;i++){const x=pos.getX(i),z=pos.getZ(i);
+   const wx=2.3*Math.sin(x*.093+z*.041+1.7)+1.5*Math.sin(z*.171-x*.057+.3)+.8*Math.sin((x+z)*.29+4.1)+.45*Math.sin(x*.53-z*.47+2.2);
+   const wz=2.3*Math.sin(z*.087-x*.049+5.2)+1.5*Math.sin(x*.163+z*.071+3.9)+.8*Math.sin((x-z)*.31+.9)+.45*Math.sin(z*.57+x*.43+6.);
+   const m=.78+.3*Math.sin(x*.137+2.6)*Math.sin(z*.119+.8)+.18*Math.sin((x*.7-z)*.061+1.1);
+   c[i*3]=(x*cr-z*sr)*1.05+wx;c[i*3+1]=(x*sr+z*cr)*1.05+wz;c[i*3+2]=m;}
+  reefGeo.setAttribute('aDvC',new T.BufferAttribute(c,3));}
  const reef=new T.Mesh(reefGeo,reefMat);reef.name='dive-reef';reef.matrixAutoUpdate=false;scene.add(reef);
 
  // ---- The swaying life: sea fans, anemones, kelp, seagrass. ONE draw, bent in the vertex shader.
