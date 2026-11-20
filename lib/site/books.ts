@@ -14,6 +14,8 @@ import {PUBLISHER,KIDS_AUDIENCE,SITE_NAME,SITE_URL,abs,firstSentence} from './se
  *   instruction, not part of the story on a flat page); the reader keeps the full text and turns that sentence into its button.
  * - Every book has a detail page from its BOOK_PAGES spec (Cafu was the approved sample; all 36 built Nov 17 2026); the hub
  *   lists and links every book.
+ * SOURCES checked Nov 17 2026 (each book's own source list). An edit to this file that changes no fact does not move this date
+ * (scripts/content-dates.cjs reads it here; before, the date followed the file's last commit).
  */
 export const BOOKS_PATH='/books';
 /** Books in shelf order (the catalog's order), without the island starter book (it is about the game, not a player). */
@@ -75,11 +77,14 @@ export function bookLinks(b:SiteBook):(SiteLink&{icon:'cards'|'shirt'|'law'|'dec
 
 /** schema.org Book for one story page: the book is the page's main thing, about one real person, citing its sources, its six
  *  chapters as hasPart Chapter. Only properties schema.org defines on Book / CreativeWork; no ratings, no ISBN (none exist). */
+/** A book's own picture: its first chapter's spread (public/books/spreads/<book>/<chapter>.webp, 960 x 600). */
+export const bookImage=(b:Pick<SiteBook,'id'|'chapters'>)=>`/books/spreads/${b.id}/${b.chapters[0].id}.webp`;
 export function bookLd(b:SiteBook,o:{modified:string}){
  const path=bookPath(b.slug),wiki=b.sources.find(s=>/wikipedia\.org\/wiki\//.test(s.url));
  return {'@context':'https://schema.org','@type':'Book','@id':abs(path)+'#book',name:b.fullTitle,url:abs(path),mainEntityOfPage:abs(path),
   description:b.page?.summary??b.blurb,inLanguage:'en',isAccessibleForFree:true,bookFormat:'https://schema.org/EBook',numberOfPages:b.chapters.length,
   genre:'Children’s biography',audience:KIDS_AUDIENCE,datePublished:b.page?.published,dateModified:o.modified,
+  ...(b.chapters[0]?{image:abs(bookImage(b))}:{}),/* Nov 20 2026: the first chapter's pop-up picture (tests/books-site.cjs checks the file exists) */
   about:{'@type':'Person',name:b.player,...(wiki?{sameAs:wiki.url}:{})},author:PUBLISHER,publisher:PUBLISHER,
   citation:b.sources.map(s=>({'@type':'CreativeWork',name:s.label,url:s.url})),
   hasPart:b.chapters.map((c,i)=>({'@type':'Chapter',name:c.title,position:i+1,url:`${abs(path)}#${chapterAnchor(c.id)}`})),

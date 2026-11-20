@@ -65,7 +65,7 @@ function DrillPage({d}:{d:Drill}){
   <QA id="faq" title={`Questions about ${d.name}`} faq={d.faq}/>
   {/* batch 3, Nov 17 2026: lessons and related drills and guides as one "Keep reading" row */}
   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(d.lessons)},{id:'related',links:related}]}/>
-  <GuideEnd checked={FAMILY_CHECKED.drills} lesson={d.cta}/>
+  <GuideEnd path={d.path} checked={FAMILY_CHECKED.drills} lesson={d.cta}/>
   <ReadNext path={d.path}/>
  </>;
 }
@@ -93,7 +93,7 @@ function GuidePage({g}:{g:DrillGuide}){
   {plans.length>0&&<Section id="plans" title={`${g.age} practice plans`}><LinkList links={plans}/></Section>}
   <QA id="faq" title={`Questions about ${g.kind==='age'?g.name:g.name.toLowerCase()}`} faq={g.faq}/>
   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(g.lessons)},{id:'related',links:[...others,...g.links,{path:DRILLS_HUB.path,name:'All soccer drills for kids',line:DRILLS_HUB.blurb},{path:PLANS_HUB.path,name:PLANS_HUB.h1,line:PLANS_HUB.blurb}]}]}/>
-  <GuideEnd checked={FAMILY_CHECKED.drills} lesson={g.lessons[0]}/>
+  <GuideEnd path={g.path} checked={FAMILY_CHECKED.drills} lesson={g.lessons[0]}/>
   <ReadNext path={g.path}/>
  </>;
 }

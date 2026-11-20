@@ -1,3 +1,4 @@
+import {pageModified} from '../lastmod';
 import type {Faq} from '../safety';
 import {formationBySlug} from '../formations';
 import {chartBySlug} from '../sizes';
@@ -92,7 +93,7 @@ export const PLANNER_PAGES:readonly PlannerPage[]=[
   blurb:'A fair substitution plan with equal minutes for every player',
   intro:['Sharing minutes fairly in your head, with a game going on in front of you, is hard. Nine children, seven places, two halves: who has sat out twice? This planner does the arithmetic before the match, so on the side line you only read the next line of the table.',
    'It works for any game: choose 7v7, 9v9, 11v11 or futsal, or type your own numbers for a tournament with short games.'],
-  faq:[{q:'How does the calculator keep playing time equal?',a:'It cuts the game into equal blocks, one for each change, and gives every player the same number of blocks. When the numbers do not divide evenly, some players get one block more than others, never two.'},
+  faq:[{q:'How does the calculator give every player equal game time?',a:'It cuts the game into equal blocks, one for each change, and gives every player the same number of blocks. When the numbers do not divide evenly, some players get one block more than others, never two. Coaches in the UK call this equal game time or even playing time. It is the same idea.'},
    {q:'What if a player does not turn up, gets hurt or arrives late?',a:'Before the game, change the number of players and the plan is made again at once. During the game, the free coach app does it for you: mark the player hurt, late or gone and the rest of the substitutions re-balance so the minutes stay equal.'},
    {q:'Should the goalkeeper rotate too?',a:'With young players, yes if you can: it lets every child try the position and keeps the minutes equal. Choose “a new goalkeeper each period” and the keeper changes at the breaks. If one child stays in goal, they play the whole game and the others share the rest.'},
    {q:'Are the names I type saved anywhere?',a:'Only in your own browser. Nothing is sent to a server. Names are optional: the plan works with “Player 1, Player 2” as well.'},
@@ -134,8 +135,11 @@ export const PRINTABLES_HUB={path:PRINTABLES_HUB_PATH,crumb:'Field diagrams',tit
   {q:'Why is a 7v7 field drawn differently from a full-size field?',a:'Because it is a different field, not a smaller copy. In the US a 7v7 field has build-out lines and its own penalty area size. Each template here keeps the markings of its own game.'}] as Faq[]};
 export type ToolPage={path:string;name:string;title:string;description:string;blurb:string;hub?:boolean;image?:string;kind:'hub'|'lineup'|'planner'|'printables'|'printable'|'scan'};
 const lineupImage=(p:LineupPage)=>formationImg(DEFAULT_FORMATION[p.format??'7v7']);
+/** Nov 20 2026 (SEO foundation): the calculator's own picture is a real screenshot of the tool (public/tools/, captured from the
+ *  built page with headless Chrome at 1200 x 630), not a formation diagram. */
+export const PLANNER_SHOT='/tools/soccer-playing-time-calculator.png';
 const PLANNER_IMAGE:Record<string,string>={'7v7':formationImg('7v7-3-2-1'),'9v9':formationImg('9v9-3-3-2')};
-export const plannerImage=(p:PlannerPage)=>PLANNER_IMAGE[p.format??'']??formationImg('7v7-2-2-2');
+export const plannerImage=(p:PlannerPage)=>PLANNER_IMAGE[p.format??'']??PLANNER_SHOT;
 export const printableImage=(p:Printable)=>fileUrl(p.files[0].name,'png');
 export const TOOL_PAGES:readonly ToolPage[]=[
  {path:TOOLS_HUB.path,name:TOOLS_HUB.h1,title:TOOLS_HUB.title,description:TOOLS_HUB.description,blurb:TOOLS_HUB.blurb,hub:true,kind:'hub',image:formationImg('9v9-3-2-3')},
@@ -150,18 +154,27 @@ export const TOOL_PAGES:readonly ToolPage[]=[
 export const TOOL_HUBS=TOOL_PAGES.filter(t=>t.hub);
 export const toolCrumbs=(...tail:{name:string;path:string}[])=>[{name:'Home',path:'/'},{name:TOOLS_HUB.crumb,path:TOOLS_HUB.path},...tail];
 export const lineupPage=(slug:string)=>LINEUP_PAGES.find(p=>p.slug===slug);
+/** The worked example at the top of the calculator page (Nov 20 2026): its numbers are computed by the tool's own planRotation()
+ *  on the page, never typed by hand. */
+export const PLANNER_EXAMPLE={players:12,onField:7,periods:2,periodMin:25,subEvery:5,keeperRotates:true} as const;
+/** Official pages that say what the calculator page says about minimum playing time (each one fetched and read on Nov 20 2026). */
+export const PLANNER_SOURCES:readonly {name:string;url:string;says:string}[]=[
+ {name:'US Youth Soccer, Policy on Players and Playing Rules (December 5, 2025)',url:'https://www.usyouthsoccer.org/wp-content/uploads/sites/160/2025/12/Policy-on-Players-and-Playing-Rules-_APP-12.05.2025.pdf',
+  says:'A recreational league is one whose rules require that each player plays at least one-half of each game, except for injury, illness or discipline.'},
+ {name:'AYSO, Everyone Plays',url:'https://ayso.org/ayso-core/',says:'Every child plays at least half of every game.'},
+];
 export const plannerPage=(slug:string)=>PLANNER_PAGES.find(p=>p.slug===slug);
 export const onFieldFor=(f:GuideFormat)=>PLAYERS_PER_TEAM[f];
 /* ---- JSON-LD ---- */
 /** A free browser tool. No ratings or reviews: none exist, and none are invented. */
 export const webAppLd=(o:{name:string;path:string;description:string;image?:string;features:string[]})=>({'@context':'https://schema.org','@type':'WebApplication',name:o.name,url:abs(o.path),description:o.description,
  applicationCategory:'SportsApplication',operatingSystem:'Web browser',browserRequirements:'Requires JavaScript',inLanguage:'en',isAccessibleForFree:true,
- offers:{'@type':'Offer',price:0,priceCurrency:'USD'},featureList:o.features,...(o.image?{image:abs(o.image),screenshot:abs(o.image)}:{}),
+ offers:{'@type':'Offer',price:0,priceCurrency:'USD'},featureList:o.features,dateModified:pageModified(o.path,TOOLS_UPDATED),/* Nov 20 2026: the same date as the sitemap and the page's "Last updated" line */...(o.image?{image:abs(o.image),screenshot:abs(o.image)}:{}),
  audience:{'@type':'Audience',audienceType:'Youth soccer coaches, teachers and parents'},publisher:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
 const LICENCE_URL=`${PRINTABLES_HUB_PATH}#licence`;
 export const imageLd=(o:{name:string;file:string;description:string;width:number;height:number})=>({'@type':'ImageObject',name:o.name,contentUrl:abs(fileUrl(o.file,'png')),encodingFormat:'image/png',width:o.width,height:o.height,
  description:o.description,license:abs(LICENCE_URL),acquireLicensePage:abs(LICENCE_URL),creditText:SITE_NAME,copyrightNotice:SITE_NAME,creator:PUBLISHER});
 /** A printable: a free CreativeWork whose pictures are ImageObjects with the licence and the credit. */
 export const printableLd=(p:Printable)=>({'@context':'https://schema.org','@type':'CreativeWork',name:p.h1,url:abs(p.path),description:p.description,inLanguage:'en',isAccessibleForFree:true,
- learningResourceType:'Printable worksheet',datePublished:TOOLS_UPDATED,dateModified:TOOLS_UPDATED,license:abs(LICENCE_URL),creator:PUBLISHER,publisher:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},
+ learningResourceType:'Printable worksheet',datePublished:TOOLS_UPDATED,dateModified:pageModified(p.path,TOOLS_UPDATED),license:abs(LICENCE_URL),creator:PUBLISHER,publisher:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},
  image:p.files.map(f=>{const s=f.sheet();return imageLd({name:s.title,file:f.name,description:s.desc,width:s.w*1.5,height:s.h*1.5});})});

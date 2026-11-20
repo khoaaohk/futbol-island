@@ -90,7 +90,7 @@ function EsToolIntro({crumbs,h1,lead,headingFormat,app,facts}:{crumbs:readonly C
 const EsToolEnd=()=><><div className={site.endNote}><p className={site.caption}>{ES_UI.guideFoot}</p></div><EsPlayEnd sticky={false}/></>;
 const LicenceEs=()=><p className={site.caption} id="licence">{LICENCE_ES}</p>;
 const webAppEs=(o:{name:string;path:string;description:string;image?:string;features:string[]})=>esLd({...webAppLd(o),audience:{'@type':'Audience',audienceType:'Entrenadores de fútbol infantil, maestros y padres'}});
-const embedSnippetEs=(p:LineupPage|PlannerPage,h1:string)=>`<iframe src="${abs(embedPath(p.slug))}" title="${h1} (Futbol Island)" width="100%" height="${EMBED_HEIGHT[p.kind]}" style="border:0;max-width:760px" loading="lazy" referrerpolicy="strict-origin"></iframe>`;
+const embedSnippetEs=(p:LineupPage|PlannerPage,h1:string)=>`<iframe src="${abs(embedPath(p.slug))}" title="${h1} (Futbol Island)" width="100%" height="${EMBED_HEIGHT[p.kind]}" style="border:0;max-width:760px" loading="lazy" referrerpolicy="strict-origin"></iframe>\n<p style="font:14px sans-serif;margin:8px 0 0"><a href="${abs(toEs(p.path))}">Hecho con Futbol Island</a></p>`;/* Nov 20 2026: one visible credit line, like the English code (lib/site/tools/embed.ts) */
 
 // ---- Spanish sheets (the page preview; same drawing as lib/site/tools/printables.ts, Spanish words) ----
 const VARIANT_LABEL:Record<Variant,string>={blank:'En blanco','no-build-out-lines':'Sin líneas de salida',thirds:'Tercios',zones:'Zonas'};

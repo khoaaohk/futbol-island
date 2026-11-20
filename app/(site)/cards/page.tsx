@@ -5,12 +5,13 @@ import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {cardPath,SITE_CARDS} from '@/lib/site/cards';
 import {ROLE_LABELS,ROLE_ORDER} from '@/lib/town/cardCollection';
 import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
+import {REFEREE_CARDS_LINK} from '@/lib/site/crossLinks';
 import styles from '../site.module.css';
 
 export const dynamic='force-static';
 const PLAYERS=SITE_CARDS.filter(c=>!c.coach).length,COACHES=SITE_CARDS.length-PLAYERS;
 const DESC=`The Futbol Island card binder: ${PLAYERS} player cards and ${COACHES} coach cards, from today’s stars to all-time greats, in football and futsal.`;
-export const metadata=pageMeta('Player cards',DESC,'/cards');
+export const metadata=pageMeta('Football Player Cards for Kids: Today’s Stars and Greats',DESC,'/cards',{whole:true})/* Nov 20 2026: was "Player cards" */;
 const CRUMBS=[{name:'Home',path:'/'},{name:'Cards',path:'/cards'}];
 
 export default function CardsIndex(){
@@ -29,5 +30,10 @@ export default function CardsIndex(){
    <h2 className={styles.h2} id={`role-${role}`}>{ROLE_LABELS[role]??role} <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(c=><li key={c.number}><a href={cardPath(c.number)}><span className={styles.itemTitle}>#{c.number} {c.displayName}</span><span className={styles.itemMeta}>{[c.country,c.era==='allTime'?'All-time great':'Current'].filter(Boolean).join(' · ')}</span></a></li>)}</ul>
   </section>;})}
+  {/* Nov 20 2026 (SEO foundation): the guides the cards are about, and the referee's cards for readers who wanted the rule */}
+  <section className={styles.section} aria-labelledby="learn-more"><h2 className={styles.h2} id="learn-more">Keep reading</h2>
+   <ul className={styles.list}>{[{path:'/learn/soccer-positions',name:'Soccer positions explained',line:'What each position on a card does'},REFEREE_CARDS_LINK,{path:'/books',name:'Football pop-up books for kids',line:'True stories about players in the binder'}]
+    .map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span><span className={styles.itemMeta}>{l.line}</span></a></li>)}</ul>
+  </section>
  </>;
 }

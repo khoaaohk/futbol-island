@@ -67,7 +67,7 @@ const J=x=>JSON.parse(JSON.stringify(x));// values built inside the vm have anot
 
  // ---- 3. internal links ------------------------------------------------------------------------------------------------------
  const rel=L('lib/site/related.ts'),cards=L('lib/site/cards.ts'),exhibits=L('lib/site/exhibits.ts'),fish=L('lib/site/fish.ts'),paths=L('lib/site/paths.ts'),lessons=L('lib/site/lessons.ts');
- const PATHS=new Set(paths.sitePaths().map(p=>p.path));
+ const PATHS=new Set([...paths.sitePaths().map(p=>p.path),...paths.NOINDEX_CARD_PATHS]);/* Nov 20 2026: single card pages are real pages, noindex and out of the sitemap */
  const check=(name,self,r,extra)=>{
   const all=[r.prev,r.next,...r.groups.flatMap(g=>g.links),...r.read];
   for(const l of all){assert(PATHS.has(l.path.split('#')[0]),`${name}: ${l.path} is a sitemap page`);assert(l.name&&l.path!==self,`${name}: no empty or self link`);}

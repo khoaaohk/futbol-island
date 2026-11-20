@@ -24,6 +24,7 @@ import {CARD_RULES,cardDeckOf} from '@/lib/site/cardRules';
 import {RulePlayDeck,RulePlayGame} from '@/components/site/RulePlaySections';
 import {RULE_PLAY,isRulePlaySlug} from '@/lib/site/rulePlay';
 import {longDate} from '@/lib/site/checked';
+import {ruleCrossLinks} from '@/lib/site/crossLinks';
 import styles from '../../../site.module.css';
 
 /** One rule (lib/site/rules.ts): the two-sentence answer, the diagram, what the referee looks for, mix-ups, formats, FAQ, lessons. */
@@ -40,7 +41,9 @@ export default function RulePage({params}:{params:{slug:string}}){
  const crumbs=guideCrumbs({name:RULES_HUB.crumb,path:RULES_HUB.path},{name:r.name,path:r.path});
  const quiz=ruleQuiz(r);
  const i=RULES.indexOf(r),next=[RULES[(i+1)%RULES.length],RULES[(i+2)%RULES.length]];
- const related=[...(r.slug==='substitutions-and-game-length'?[{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'A fair substitution plan with equal minutes for every player'}]:[]),...r.exhibits,...r.links,...next.map(x=>({path:x.path,name:x.h1,line:`${x.law}, with a diagram`})),
+ /* Nov 20 2026 (SEO foundation): the rule's coach tool, its glossary terms and a sister rule come first (lib/site/crossLinks.ts) */
+ const cross=ruleCrossLinks(r.slug);
+ const related=[...cross,...[...r.exhibits,...r.links].filter(l=>!cross.some(x=>x.path===l.path)),...next.map(x=>({path:x.path,name:x.h1,line:`${x.law}, with a diagram`})),
   {path:RULES_HUB.path,name:'All soccer rules for kids',line:RULES_HUB.blurb},{path:TERMS_HUB.path,name:TERMS_HUB.h1,line:TERMS_HUB.blurb}];
  const cards=r.slug==='yellow-and-red-cards';/* Nov 16 2026: the cards page's deck, table, side questions and game (lib/site/cardRules.ts) */
  const play=isRulePlaySlug(r.slug)?RULE_PLAY[r.slug]:null;/* Nov 16 2026: the back-pass, throw-in, handball and fouls pages' deck and game (lib/site/rulePlay.ts) */
@@ -54,7 +57,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={{...articleLd({headline:r.title,path:r.path,description:r.desc,published:SITE_UPDATED.guides,modified:SITE_UPDATED.guides,about:`${r.name} (soccer rule)`,teaches:r.answer,image:diagramUrl(r.picture)}),hasPart:guideQuizPart({path:r.path,name:`${r.name} quiz`,questions:quiz})}}/>
   <JsonLd data={faqLd(r.faq)}/>
-  <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES}/>:undefined} facts={facts}/>
+  <GuideIntro crumbs={crumbs} h1={r.h1} lead={r.answer} more={cards?<CardRulesPages c={CARD_RULES}/>:r.bodies?<span data-last-checked={r.bodies.checked}>Last checked against the official pages: <time dateTime={r.bodies.checked}>{longDate(r.bodies.checked)}</time>. <a href="#by-country">See the rules by country</a>.</span>:undefined} facts={facts}/>
   <PrintSheet path={r.path} what={cards?'card rules sheet':'rule sheet'} has={cards?'all 14 card offenses and the yellow vs red table':undefined}/>
   {cards&&<CardRulesTop c={CARD_RULES}/>}
   {play&&<RulePlayDeck c={play}/>}
@@ -69,6 +72,11 @@ export default function RulePage({params}:{params:{slug:string}}){
    <Bullets items={r.refs}/>
    <p className={styles.caption}>Rule: {r.law}. {futsal?<a href={FUTSAL_LAWS_URL} rel="noopener">FIFA Futsal Laws of the Game 2025-26</a>:<a href={r.lawUrl} rel="noopener">Read it in the Laws of the Game (The IFAB)</a>}.</p>
   </Section>
+  {/* Nov 20 2026 (SEO foundation): what each governing body says, each row linked to its official page (lib/site/rules.ts bodies) */}
+  {r.bodies&&<Section id="by-country" title={r.bodies.title}>
+   <DataTable label={r.bodies.title} head={['Country','Body','What it says','Official page']} rows={r.bodies.rows.map(b=>[b.place,b.body,b.says,<a key={b.url} href={b.url} rel="noopener">{b.source}</a>])}/>
+   <p className={styles.caption}>{r.bodies.note} Checked on {longDate(r.bodies.checked)}.</p>
+  </Section>}
   <Section id="mixups" title="Common mix-ups">
    <ul className={styles.stack}>{r.mixups.map(m=><li key={m.said} className={styles.card}><h3 className={styles.h3}>{m.said}</h3><p>{m.truth}</p></li>)}</ul>
   </Section>
@@ -89,7 +97,7 @@ export default function RulePage({params}:{params:{slug:string}}){
   <GuideQuiz id="quiz" name={r.name.toLowerCase()} questions={quiz}/>
   {/* batch 3, Nov 17 2026: lessons, drills (lib/site/drillLinks.ts GUIDE_DRILLS) and related pages as one "Keep reading" row */}
   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(r.lessons)},{id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(r.path)},{id:'related',links:related}]}/>
-  <GuideEnd checked={FAMILY_CHECKED.rules} lesson={r.cta}/>
+  <GuideEnd path={r.path} checked={FAMILY_CHECKED.rules} lesson={r.cta}/>
   <ReadNext path={r.path}/>
  </>;
 }

@@ -43,7 +43,7 @@ const WANT=['/tools','/tools/soccer-lineup-builder','/tools/7v7-lineup-builder',
  ...['blank-7v7-soccer-field','blank-9v9-soccer-field','blank-11v11-soccer-field','blank-futsal-court','7v7-soccer-formations-cheat-sheet','9v9-soccer-formations-cheat-sheet','11v11-soccer-formations-cheat-sheet','futsal-formations-cheat-sheet','soccer-positions-and-numbers'].map(s=>`/tools/soccer-field-diagrams/${s}`),'/tools/soccer-scanning-trainer'/* Scan Trainer's front door (tests/scan-trainer.cjs) */];
 assert.deepEqual(PAGES.map(p=>p.path),WANT,'the tool pages');
 assert.deepEqual(reg.TOOL_HUBS.map(p=>p.path),['/tools','/tools/soccer-lineup-builder','/tools/soccer-playing-time-calculator','/tools/soccer-field-diagrams','/tools/soccer-scanning-trainer'],'hub-level pages');
-const SERVED=new Set([...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`/learn/diagrams/${f}`).concat(pr.PRINT_FILE_NAMES.map(f=>`${pr.FILES_DIR}/${f}`),[`/coach`,`/scan`,'/tools/soccer-scanning-trainer.png']/* the coach app and Scan Trainer (noindex apps; tests/coach-app.cjs, tests/scan-trainer.cjs) and its share picture */));
+const SERVED=new Set([...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES].map(f=>`/learn/diagrams/${f}`).concat(pr.PRINT_FILE_NAMES.map(f=>`${pr.FILES_DIR}/${f}`),[`/coach`,`/scan`,'/tools/soccer-scanning-trainer.png',...(fs.existsSync(path.join(root,'public/tools/soccer-playing-time-calculator.png'))?['/tools/soccer-playing-time-calculator.png']:[])/* Nov 20 2026: the calculator's real screenshot */]/* the coach app and Scan Trainer (noindex apps; tests/coach-app.cjs, tests/scan-trainer.cjs) and its share picture */));
 {const all=[...guides.ALL_GUIDE_PAGES,...PAGES];
  assert.equal(new Set(all.map(p=>p.title)).size,all.length,'titles are unique across guides and tools');assert.equal(new Set(all.map(p=>p.description)).size,all.length,'descriptions are unique');}
 for(const p of PAGES){
@@ -92,7 +92,9 @@ for(const p of PAGES){const where=p.path,mod=L(file(p)),meta=mod.metadata??mod.g
  for(const s of h.match(/<svg[^>]*role="img"[\s\S]*?<\/svg>/g)||[])assert(/<title[^>]*>[^<]+<\/title><desc[^>]*>[^<]{40,}<\/desc>/.test(s),`${where}: diagram title and description`);
  assert.equal(new Set(h.match(/ id="[^"]+"/g)||[]).size,(h.match(/ id="[^"]+"/g)||[]).length,`${where}: unique ids`);
  assert.equal((h.match(/class="cta"/g)||[]).length,1,`${where}: one gold button`);assert(!/IslandBrush/.test(h));
- const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);assert(links.length>=8,`${where}: links`);
+ /* Nov 20 2026: the calculator's Sources list links its official pages (registry PLANNER_SOURCES); every other link is internal */
+ const SRC=new Set(reg.PLANNER_SOURCES.map(x=>x.url));if(p.path===reg.PLANNER_PATH)for(const u of SRC)assert(h.includes(`href="${u}"`),`${where}: source link ${u}`);
+ const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]).filter(l=>!SRC.has(l));assert(links.length>=8,`${where}: links`);
  for(const l of links){assert(l.startsWith('/')&&!l.includes('?'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||SERVED.has(l),`${where}: link target ${l} exists`);}
  for(const m of h.matchAll(/<img[^>]*src="([^"]+)"[^>]*>/g)){assert(SERVED.has(m[1]),`${where}: image ${m[1]} exists`);assert(/ alt="[^"]{8,}"/.test(m[0])&&/ width="\d+"/.test(m[0]),`${where}: image alt and size`);}
  assert(links.some(l=>l!==p.path&&PAGES.some(x=>x.path===l)),`${where}: links to another tool page`);
@@ -162,7 +164,7 @@ for(const f of ['components/site/tools/LineupBuilder.tsx','components/site/tools
  for(const f of pr.PRINT_FILES)assert(listed.has(pr.fileUrl(f.name,'png')),`image sitemap lists ${f.name}.png`);
  for(const f of [...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES])assert(listed.has(`/learn/diagrams/${f}`),`image sitemap lists ${f}`);
  {const fish=L('lib/site/fish.ts'),cards=L('lib/site/cards.ts'),ex=L('lib/site/exhibits.ts');
-  assert(listed.has(fish.fishArtPath(fish.SITE_FISH[0].id))&&listed.has(`/cards/${cards.SITE_CARDS[0].number}/og.png`)&&listed.has(`/exhibits/${ex.SITE_EXHIBITS[0].id}/og.png`),'fish, card and exhibit pictures');
+  assert(listed.has(fish.fishArtPath(fish.SITE_FISH[0].id))&&!listed.has(`/cards/${cards.SITE_CARDS[0].number}/og.png`)/* Nov 20 2026: single card pages are noindex, so not in the image sitemap */&&listed.has(`/exhibits/${ex.SITE_EXHIBITS[0].id}/og.png`),'fish and exhibit pictures, no single card pictures');
   for(const d of ['fish/[id]/art.png','fish/[id]/og.png','cards/[number]/og.png','exhibits/[id]/og.png'])assert(fs.existsSync(path.join(root,'app/(site)',d)),`${d} route exists`);}
  const xml=im.imageSitemapXml();assert(xml.startsWith('<?xml')&&xml.includes('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"')&&xml.trim().endsWith('</urlset>'));
  assert.equal((xml.match(/<url>/g)||[]).length,entries.length);assert.equal((xml.match(/<image:loc>https:\/\/futbolisland\.app\/[^<]+<\/image:loc>/g)||[]).length,entries.reduce((a,e)=>a+e.images.length,0));

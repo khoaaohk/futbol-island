@@ -23,21 +23,21 @@ function load(file){
  return mod.exports;
 }
 /** The data each family of pages is built from, by path prefix (first match wins). Route files are found from the path. */
-const L='lib/site/',T='lib/town/',SHARED=[L+'GuideParts.tsx',L+'readNext.ts','components/site/ReadNext.tsx'];
+const L='lib/site/',T='lib/town/',SHARED=[L+'GuideParts.tsx',L+'readNext.ts','components/site/ReadNext.tsx'],X=L+'crossLinks.ts';/* X (Nov 20 2026): the cross-cluster links */
 const DEPS=[
  [/^\/cards\/\d+$/,[L+'cards.ts',L+'cardNotes.ts',L+'cardNotes.json',L+'cardPlays.generated.json',L+'related.ts',L+'collections.ts',T+'playerProfiles.json',T+'playerCareers.json','components/site/RelatedLinks.tsx']],
- [/^\/cards\/./,[L+'collections.ts',L+'cardGroups.ts','components/site/CollectionHub.tsx',L+'cards.ts']],
+ [/^\/cards\/./,[X,L+'collections.ts',L+'cardGroups.ts','components/site/CollectionHub.tsx',L+'cards.ts']],
  [/^\/fish\/spots$|^\/fish\/[a-z-]+-and-|^\/fish\/sharks$/,[L+'collections.ts','components/site/CollectionHub.tsx','lib/town/fishing/fishCatalog.ts']],
  [/^\/fish\/./,[L+'fish.ts',L+'fishNotes.ts',L+'fishNotes.json',L+'related.ts',L+'collections.ts','lib/town/fishing/fishCatalog.ts','components/site/RelatedLinks.tsx']],
- [/^\/exhibits\/./,[L+'exhibits.ts',L+'related.ts','components/site/RelatedLinks.tsx']],
+ [/^\/exhibits\/./,[X,L+'exhibits.ts',L+'related.ts','components/site/RelatedLinks.tsx']],
  [/^\/(cards|fish|exhibits)$/,[L+'collections.ts']],
  [/^\/books(\/|$)/,[L+'books.ts','lib/books/stories','lib/books/messi.ts','components/site/books']],
  [/^\/learn\/lessons\/./,[L+'lessons.ts','public/lessons',L+'related.ts',...SHARED]],
- [/^\/learn\/soccer-rules\/./,[L+'rules.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'drillLinks.ts',...SHARED]],
- [/^\/learn\/soccer-terms\/./,[L+'terms.ts',L+'notesGuides.ts',L+'drillLinks.ts',...SHARED]],
+ [/^\/learn\/soccer-rules\/./,[X,L+'rules.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'drillLinks.ts',...SHARED]],
+ [/^\/learn\/soccer-terms\/./,[X,L+'terms.ts',L+'notesGuides.ts',L+'drillLinks.ts',...SHARED]],
  [/^\/learn\/soccer-positions\/.*-vs-|^\/learn\/soccer-formations\/.*-vs-/,[L+'comparisons.ts',L+'positions.ts',L+'formations.ts','components/site/ComparePage.tsx']],
  [/^\/learn\/soccer-positions\/numbers$/,[L+'positionNumbers.ts',L+'positions.ts',L+'formations.ts',...SHARED]],
- [/^\/learn\/soccer-positions\/./,[L+'positions.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'collections.ts',L+'drillLinks.ts',...SHARED]],
+ [/^\/learn\/soccer-positions\/./,[X,L+'positions.ts',L+'notesGuides.ts',L+'comparisons.ts',L+'collections.ts',L+'drillLinks.ts',...SHARED]],
  [/^\/learn\/soccer-formations\/./,[L+'formations.ts',L+'notesGuides.ts',L+'comparisons.ts',...SHARED]],
  [/^\/learn\/soccer-drills\/./,[L+'drills.ts',L+'drillsA.ts',L+'drillsB.ts',L+'drillsC.ts',L+'drillsD.ts',L+'drillGuides.ts',L+'notesDrills.ts',L+'drillLinks.ts','lib/site/DrillParts.tsx',...SHARED]],
  [/^\/learn\/soccer-practice-plans\/./,[L+'plans.ts',...SHARED]],
@@ -59,12 +59,16 @@ function routeFiles(p){
 }
 const git=(args)=>execFileSync('git',args,{cwd:root,encoding:'utf8'}).trim();
 const now=new Date(),today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;/* local, like git's %cs */
+/** Commits that changed no page's content, only its metadata, schema or the date plumbing itself (verify, Nov 20 2026): they
+ *  must not move a page's date, or one template touch makes the whole site say "updated today". Add a hash only for such a commit. */
+const IGNORE=['2b3b8b71'/* home title */,'20517bb8'/* one date source + Last updated line */,'66e58404'/* titles and descriptions */,'ad01e60b'/* Book schema image, robots */,'c8b48030'/* books date note */];
 const memo=new Map();
 function dateOf(files){
  const k=files.join('|');if(memo.has(k))return memo.get(k);
  const existing=files.filter(f=>fs.existsSync(path.join(root,f)));
  const dirty=git(['status','--porcelain','--',...existing]);
- const d=dirty?today:git(['log','-1','--format=%cs','--',...existing])||today;
+ const hit=dirty?null:git(['log','--format=%H %cs','--',...existing]).split('\n').find(l=>l&&!IGNORE.some(h=>l.startsWith(h)));
+ const d=dirty?today:(hit?hit.split(' ')[1]:today);
  memo.set(k,d);return d;
 }
 function build(){

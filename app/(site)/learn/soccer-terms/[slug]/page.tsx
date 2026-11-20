@@ -6,9 +6,11 @@ import {QA} from '@/components/site/LessonHub';
 import {TERMS_HUB,TERM_PAGES,termBySlug} from '@/lib/site/terms';
 import {RULES_HUB} from '@/lib/site/rules';
 import {drillLinksFor} from '@/lib/site/drills';
+import {termCrossLinks} from '@/lib/site/crossLinks';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
-import {Bullets,CoachNotesSection,GuideEnd,GuideIntro,type Fact,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {Bullets,CoachNotesSection,DataTable,GuideEnd,GuideIntro,type Fact,SceneDiagram,Section} from '@/lib/site/GuideParts';
+import {lessonPath} from '@/lib/site/lessons';
 import GuideQuiz from '@/components/site/GuideQuiz';
 import {termQuiz} from '@/lib/site/guideQuiz';
 import {guideQuizPart} from '@/lib/site/learningLd';
@@ -31,9 +33,12 @@ export default function TermPage({params}:{params:{slug:string}}){
  const t=termBySlug(params.slug);if(!t)notFound();
  const crumbs=guideCrumbs({name:TERMS_HUB.crumb,path:TERMS_HUB.path},{name:t.name,path:t.path});
  const quiz=termQuiz(t,TERM_PAGES);
- const related=[...(t.links??[]),...t.related.map(s=>termBySlug(s)!).map(x=>({path:x.path,name:x.name,line:x.short})),
+ /* Nov 20 2026 (SEO foundation): the term's rule and coach tool come first (lib/site/crossLinks.ts) */
+ const cross=termCrossLinks(t.slug);
+ const related=[...cross,...(t.links??[]).filter(l=>!cross.some(x=>x.path===l.path)),...t.related.map(s=>termBySlug(s)!).map(x=>({path:x.path,name:x.name,line:x.short})),
   {path:TERMS_HUB.path,name:'All soccer terms, A to Z',line:TERMS_HUB.blurb},{path:RULES_HUB.path,name:RULES_HUB.h1,line:RULES_HUB.blurb}];
  const rel=t.related.map(s=>termBySlug(s)).find(Boolean);
+ const drill=drillLinksFor(t.path)[0];
  /* visual pass Nov 17 2026: the key facts under the answer (the "Other names" line moved in here) */
  const facts:Fact[]=[t.also?{icon:'tag',label:'Other names',value:t.also}:{icon:'diagram',label:'Diagram',value:'A pitch picture',href:'#diagram'},
   t.howFact?{icon:'steps',label:t.howFact.label,value:t.howFact.value,href:'#how'}:{icon:'steps',label:'How it works',value:`${t.how.length} steps`,href:'#how'},
@@ -49,14 +54,20 @@ export default function TermPage({params}:{params:{slug:string}}){
   <GuideIntro crumbs={crumbs} h1={t.h1} lead={t.answer} more={more} facts={facts}/>
   <Section id="diagram" title={`${t.name}: diagram`}><SceneDiagram id="s0" scene={t.scene} image={diagramUrl(t.picture)} animate={(ANIMATED_TERMS as readonly string[]).includes(t.slug)?t.name.toLowerCase():undefined}/></Section>
   <Section id="how" title={t.howTitle}><ol>{t.how.map(h=><li key={h}>{h}</li>)}</ol></Section>
+  {/* Nov 20 2026 (SEO foundation): the kinds of the move, the other side of it, a second meaning, then one drill and one lesson */}
+  {t.kinds&&<Section id="types" title={t.kinds.title}><DataTable label={t.kinds.title} head={['Type','What it is']} rows={t.kinds.rows}/></Section>}
   <Section id="mistakes" title="Common mistakes"><Bullets items={t.mistakes}/></Section>
+  {t.sides&&<Section id="other-side" title={t.sides.title}><Bullets items={t.sides.items}/>
+   {(drill||t.cta)&&<p data-practise="">{drill&&<>Practise it: <a href={drill.path}>{drill.name}</a>. </>}{t.cta&&<>Lesson: <a href={lessonPath(t.cta.id)}>{t.cta.title}</a>.</>}</p>}
+  </Section>}
+  {t.alsoMeans&&<Section id="also-means" title={`${t.name}: also means`}><p>{t.alsoMeans}</p></Section>}
   <Section id="formats" title="In 7v7, 9v9, 11v11 and futsal" fold><p>{t.formats}</p></Section>
   <QA id="faq" title={`Questions about the ${t.name.toLowerCase()}`} faq={t.faq}/>
   <CoachNotesSection name={t.name} notes={TERM_NOTES[t.slug]}/>
   <GuideQuiz id="quiz" name={t.name.toLowerCase()} questions={quiz}/>
   {/* batch 3, Nov 17 2026: lessons, drills (lib/site/drillLinks.ts GUIDE_DRILLS) and related terms as one "Keep reading" row */}
   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(t.lessons)},{id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(t.path)},{id:'related',links:related}]}/>
-  <GuideEnd checked={FAMILY_CHECKED.terms} lesson={t.cta}/>
+  <GuideEnd path={t.path} checked={FAMILY_CHECKED.terms} lesson={t.cta}/>
   <ReadNext path={t.path}/>
  </>;
 }

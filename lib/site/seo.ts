@@ -1,5 +1,6 @@
 import type {Metadata} from 'next';
 import {hasEs,languageAlternates} from '../i18n/esPaths';
+import {pageModified,publishedBefore} from './lastmod';
 /**
  * The static reading pages (Oct 16 2026, "make the site easier to find through ChatGPT, Claude and search"): shared metadata
  * and JSON-LD helpers for app/(site)/*, app/sitemap.ts, app/robots.ts and the llms files. Pure data: no env reads, no client
@@ -34,6 +35,14 @@ export function fitDescription(d:string):string{
  if(s.length>155)s=s.slice(0,154).replace(/\s+\S*$/,'')+'…';
  return s;
 }
+/** A short first-sentence description made full (SEO foundation, Nov 20 2026: 35 fish, card and exhibit pages had 71 to 89
+ *  characters). Under 120 characters, it takes the first of `tails` that brings it to 120-155; a full one is left alone. The
+ *  tails are template sentences built from the page's own data, so no fact is added. */
+export function fullDescription(base:string,tails:readonly string[]):string{
+ const b=base.replace(/\s+/g,' ').trim();if(b.length>=120)return b;
+ const fits=tails.map(t=>`${b} ${t}`).filter(x=>x.length<=155);
+ return fits.find(x=>x.length>=120)??fits.sort((x,y)=>y.length-x.length)[0]??b;
+}
 /** Page metadata: "X · Futbol Island" (or the title as given with `whole`, for the home page), description, canonical, Open Graph. */
 export function pageMeta(title:string,description:string,path:string,o:{whole?:boolean;type?:'article'|'website';image?:{url:string;alt:string}}={}):Metadata{
  const full=fitTitle(title,o.whole);description=fitDescription(description);
@@ -52,13 +61,14 @@ export function noindexMeta(title:string,description:string,path:string):Metadat
  return {title,description,alternates:{canonical:path},robots:{index:false,follow:true}};
 }
 /** Home `/` (SEO, Nov 8 2026: "learn football (soccer) for kids, lessons and quizzes, fun and safe, free in your browser"). */
-export const HOME_TITLE='Learn Football for Kids: Free Lessons and Quizzes';
-export const HOME_DESC='Free football (soccer) lessons and quizzes for kids 7 to 12, on a fun island. No pop-up or tracking ads, no accounts, no open chat. Play in your browser.';
+/* Nov 20 2026 (SEO foundation): the title starts with the brand ("futbol island" ranked 4.4 under a title that never said it). */
+export const HOME_TITLE='Futbol Island: Free Football Game and Lessons for Kids';
+export const HOME_DESC='Futbol Island is a free football (soccer) game for kids 7 to 12, with lessons and quizzes. No pop-up or tracking ads, no accounts, no open chat.';
 /** FAQPage JSON-LD: pass exactly the questions and answers the page shows. */
 export const faqLd=(faq:readonly {q:string;a:string}[])=>({'@context':'https://schema.org','@type':'FAQPage',mainEntity:faq.map(x=>({'@type':'Question',name:x.q,acceptedAnswer:{'@type':'Answer',text:x.a}}))});
 /** A collection page (the topic hubs) with real content dates (lib/site/updated.ts). */
 export const collectionLd=(o:{name:string;path:string;description:string;published:string;modified:string;items:{name:string;path:string}[]})=>({'@context':'https://schema.org','@type':'CollectionPage',
- name:o.name,url:abs(o.path),description:o.description,inLanguage:'en',datePublished:o.published,dateModified:o.modified,isAccessibleForFree:true,audience:KIDS_AUDIENCE,
+ name:o.name,url:abs(o.path),description:o.description,inLanguage:'en',datePublished:publishedBefore(o.published,pageModified(o.path,o.modified)),dateModified:pageModified(o.path,o.modified),isAccessibleForFree:true,audience:KIDS_AUDIENCE,
  isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'},publisher:PUBLISHER,
  mainEntity:{'@type':'ItemList',numberOfItems:o.items.length,itemListElement:o.items.map((x,i)=>({'@type':'ListItem',position:i+1,name:x.name,url:abs(x.path)}))}});
 export type Crumb={name:string;path:string};
@@ -90,7 +100,10 @@ export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite','
  potentialAction:{'@type':'SearchAction',target:{'@type':'EntryPoint',urlTemplate:SITE_URL+'/learn?q={search_term_string}'},'query-input':'required name=search_term_string'}});
 /** No sameAs: Futbol Island has no social profile of its own yet (the Instagram on `/` is the partner founder's personal
  *  account, not the game's), and sameAs must name the same entity. Add its own profiles here when they exist. */
-export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png',
+/** TODO(owner): put Futbol Island's OWN public profile URLs here (its own Instagram, YouTube, TikTok, LinkedIn page) when they
+ *  exist. Left empty on purpose (Nov 20 2026): a sameAs that names another entity is a false statement, so none is invented. */
+export const ORG_SAME_AS:readonly string[]=[];
+export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png',...(ORG_SAME_AS.length>0?{sameAs:[...ORG_SAME_AS]}:{}),
  description:'Futbol Island makes a free football (soccer) learning game for kids aged 7 to 12, built in San Diego with White Sports Ventures.'});
 /** Who the learning pages are for (seo-extras, Nov 15 2026): kids 7 to 12 and the grown-ups who coach them. */
 export const COACH_AUDIENCE={'@type':'EducationalAudience',educationalRole:'coach',audienceType:'Youth soccer coaches and parents'};
@@ -102,7 +115,7 @@ export const resourceTypeFor=(path:string)=>/^\/learn\/soccer-drills\/./.test(pa
  *  Nov 15 2026: one entity with both types, never a second node), for kids and coaches, with real content dates. */
 export const articleLd=(o:{headline:string;path:string;description:string;published:string;modified:string;about:string;teaches?:string;image?:string})=>({'@context':'https://schema.org','@type':['Article','LearningResource'],
  headline:o.headline,name:o.headline,url:abs(o.path),mainEntityOfPage:abs(o.path),description:o.description,inLanguage:'en',isAccessibleForFree:true,
- datePublished:o.published,dateModified:o.modified,learningResourceType:resourceTypeFor(o.path),educationalLevel:'Beginner',audience:LEARN_AUDIENCE,
+ datePublished:publishedBefore(o.published,pageModified(o.path,o.modified)),dateModified:pageModified(o.path,o.modified),learningResourceType:resourceTypeFor(o.path),educationalLevel:'Beginner',audience:LEARN_AUDIENCE,
  about:{'@type':'Thing',name:o.about},...(o.teaches?{teaches:o.teaches}:{}),...(o.image?{image:abs(o.image)}:{}),
  author:PUBLISHER,publisher:PUBLISHER,isPartOf:{'@type':'WebSite',name:SITE_NAME,url:SITE_URL+'/'}});
 /** A plain-text page about one thing (a fish, a card, an exhibit). */

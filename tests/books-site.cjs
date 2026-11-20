@@ -50,7 +50,7 @@ ok(coll.mainEntity.numberOfItems===36&&B.SITE_BOOKS.every(x=>coll.mainEntity.ite
 // ---- 3. every built page (Cafu, the sample, also checks card #26) ----
 const P=L('app/(site)/books/[slug]/page.tsx');
 const esc=x=>x.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-const allowed=new Set(['@context','@type','@id','name','url','mainEntityOfPage','description','inLanguage','isAccessibleForFree','bookFormat','numberOfPages','genre','audience','datePublished','dateModified','about','author','publisher','citation','hasPart','isPartOf']);
+const allowed=new Set(['image','@context','@type','@id','name','url','mainEntityOfPage','description','inLanguage','isAccessibleForFree','bookFormat','numberOfPages','genre','audience','datePublished','dateModified','about','author','publisher','citation','hasPart','isPartOf']);
 const pageHtml=id=>decode(render(React.createElement(P.default,{params:{slug:id}})));
 for(const id of B.BUILT_BOOKS){const bk=B.bookBySlug(id),h=pageHtml(id);
  ok((h.match(/<h1\b/g)||[]).length===1&&new RegExp('<h1[^>]*>'+esc(bk.fullTitle)+'<span[^>]*> — </span><span[^>]*>a pop-up story for kids</span></h1>').test(h),`${id}: h1 names the book and says pop-up story for kids`);
@@ -100,6 +100,8 @@ ok(/\['\/books','Story books'\]/.test(read('app/(site)/layout.tsx')),'footer lin
 console.log(`books-site: ${n} source/HTML checks OK`);
 // ---- 6. built site ----
 const dist=path.join(root,process.env.NEXT_DIST_DIR||'.next'),app=path.join(dist,'server/app');
+/* Nov 20 2026 (SEO foundation): the Book JSON-LD carries a real picture of the book (its first chapter's spread) */
+for(const b of B.SITE_BOOKS.filter(x=>x.page)){const ld=B.bookLd(b,{modified:'2026-11-20'});assert(ld.image===`https://futbolisland.app/books/spreads/${b.id}/${b.chapters[0].id}.webp`&&fs.existsSync(path.join(root,'public',B.bookImage(b))),`${b.id}: Book image exists`);}
 if(!fs.existsSync(path.join(app,'books/cafu.html'))){console.log(`  SKIP built-site checks: no build in ${path.relative(root,dist)}`);process.exit(0);}
 const built=fs.readFileSync(path.join(app,'books/cafu.html'),'utf8');
 ok(fs.existsSync(path.join(app,'books.html')),'built: /books prerendered');

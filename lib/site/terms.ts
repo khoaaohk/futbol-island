@@ -23,6 +23,10 @@ export type TermPage={slug:string;path:string;name:string;also?:string;title:str
  mistakes:string[];formats:string;faq:Faq[];lessons:SiteLesson[];cta?:SiteLesson;related:string[];
  /** Optional (card pages, Nov 18 2026): pages outside the glossary linked under the answer and in "Keep reading"; the key-fact
   *  label/value for the `how` list when it is not a list of steps; the quiz question (and its explanation) for how[0]. */
+ /** Optional (SEO foundation, Nov 20 2026; the five terms near page one): the other side of the move ("How do you defend it?"),
+  *  a second use of the same word ("Also means") and the named kinds of the move. Plain coaching points in our own words: no
+  *  records, no statistics, no named players, like the rest of this file. */
+ sides?:{title:string;items:string[]};alsoMeans?:string;kinds?:{title:string;rows:[string,string][]};
  links?:{path:string;name:string;line:string}[];howFact?:{label:string;value:string};quizHow?:{q:string;why:string}};
 export type GlossaryEntry={term:string;id:string;def:string;to?:string;toName?:string};
 export const TERMS_HUB_PATH='/learn/soccer-terms';
@@ -33,7 +37,8 @@ const make=({scene:sc,lessonIds,...t}:Raw):TermPage=>{const lessons=pick(lessonI
  return {...t,title:t.title??`What Is ${/^[aeiou]/i.test(t.name)?'an':'a'} ${t.name} in Soccer? For Kids`,h1:t.h1??`What is ${/^[aeiou]/i.test(t.name)?'an':'a'} ${t.name.toLowerCase()} in soccer?`,path:termPath(t.slug),scene:scene(sc),picture:`${t.slug}-term.png`,lessons,cta:lessons[0]};};
 
 export const TERM_PAGES:readonly TermPage[]=([
- {slug:'give-and-go',name:'Give-and-Go',also:'one-two, wall pass',short:'Pass to a teammate, run past your defender and get the ball straight back. Also called a one-two or a wall pass.',
+ {slug:'give-and-go',sides:{title:'How do you defend a give-and-go?',items:['Follow the runner, not the ball. The player who passes is about to run.','Stay on the goal side of the runner, so the pass back has no space to land in.','The defender near the wall player steps close, to block or win the pass back.','Talk. A teammate can call “runner”, so nobody stands and watches the ball.']},
+  name:'Give-and-Go',also:'one-two, wall pass',short:'Pass to a teammate, run past your defender and get the ball straight back. Also called a one-two or a wall pass.',
   title:'Give and Go in Soccer: One-Two Meaning and Drills',h1:'What is a give-and-go in soccer?',
   desc:'Give and go in soccer, also called a one-two or wall pass: what it means, a diagram, four steps, give-and-go drills and lessons for kids and coaches.',
   answer:'A give-and-go in soccer is a pass to a teammate, a quick run past your defender, and a pass straight back to you in the space behind them. It is also called a one-two or a wall pass, because the teammate returns the ball like a wall.',
@@ -76,7 +81,9 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'Is an overlap risky?',a:'It leaves a space behind the runner. Good teams have a midfielder or the other fullback ready to cover it.'}],
   lessonIds:['next7_outsideback','nx9_fourthrunner','exp11_insidefullback'],related:['two-v-one','cross','give-and-go','cutback']},
 
- {slug:'through-ball',title:'Through Ball in Football and Soccer: What Is a Through Pass?',name:'Through Ball',also:'through pass',short:'A pass played between or behind the defenders into space, for a teammate to run on to.',
+ {slug:'through-ball',kinds:{title:'Types of through ball',rows:[['Ground through ball','Rolled along the grass through a gap between two defenders. It is the easiest one to control.'],['Lofted through ball','Lifted over the defenders to drop in the space behind them. Use it when there is no gap on the ground.'],['Diagonal through ball','Played at an angle across the field into the path of the runner. The runner can see the ball and the goal together.']]},
+  sides:{title:'How do you defend a through ball?',items:['Put pressure on the passer, so there is no time to look up and pick the pass.','Keep the back line together, so there is no gap to pass through.','One defender drops a few steps to cover the space behind.','Run with the attacker, on the goal side, when the pass is played.','The goalkeeper stays ready to come out and collect a pass that is hit too hard.']},
+  title:'Through Ball in Football and Soccer: What Is a Through Pass?',name:'Through Ball',also:'through pass',short:'A pass played between or behind the defenders into space, for a teammate to run on to.',
   desc:'A through ball, or through pass, is a pass between or behind the defenders into space for a teammate to run on to. How to time it, with a diagram for kids.',
   answer:'A through ball in soccer (football) is a pass played between or behind the defenders into open space, for a teammate to run on to. The pass goes where the runner will be, not to their feet, and the runner must be onside when the ball is played.',
   scene:{title:'A through ball',who:'10@46,56 9@58,70 7@84,64 !4@42,72 !5@62,72 !G@50,96',ball:[47,57],lineY:72,lineWord:'offside line',passes:['47,57>52,86'],runs:['58,70>53,86'],
@@ -106,7 +113,9 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'Who switches play?',a:'Center backs, the defensive midfielder and the goalkeeper do it most, because they are behind the ball.'}],
   lessonIds:['learn9_switch','e_switch','expf_switchblock'],related:['overlap','third-man-run','first-touch','cross']},
 
- {slug:'two-v-one',name:'2v1',also:'two against one',short:'Two attackers against one defender. The player with the ball dribbles at the defender, then passes if the defender comes or keeps going if they do not.',
+ {slug:'two-v-one',alsoMeans:'2v1 is also the name of a small practice game. Two attackers play against one defender in a small space, again and again, so both sides learn the choice.',
+  sides:{title:'How do you defend a 2v1?',items:['Do not rush in. Back off slowly and stay between the ball and your goal.','Stand half turned, so you can see the ball and the second attacker.','Try to block the pass and show the dribbler toward the side line.','Slow the attack down. Every second helps a teammate get back.','Step in to win the ball only when the dribbler takes a heavy touch.']},
+  name:'2v1',also:'two against one',short:'Two attackers against one defender. The player with the ball dribbles at the defender, then passes if the defender comes or keeps going if they do not.',
   title:'2v1 Meaning in Soccer: What Two v One Means, for Kids',h1:'What does 2v1 mean in soccer?',
   desc:'2v1 meaning in soccer: two attackers against one defender. Learn the one choice that wins it, pass or dribble, with a diagram and free lessons for kids.',
   answer:'2v1 (two v one) in soccer means two attackers against one defender. The player with the ball dribbles at the defender: if the defender comes to the ball, pass to the teammate, and if the defender stays with the teammate, keep going.',
@@ -122,7 +131,9 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'How do you make a 2v1?',a:'With an overlap, a give-and-go, or by running forward quickly after winning the ball.'}],
   lessonIds:['learn9_two_one','learn7_carry','expf_2v1','expf_delay2v1'],related:['overlap','give-and-go','counterattack','goal-side']},
 
- {slug:'cutback',title:'What Is a Cutback in Football? Cut Back in Soccer',name:'Cutback',also:'cut-back, pull-back',short:'A pass from near the goal line back toward a teammate arriving in front of goal.',
+ {slug:'cutback',alsoMeans:'A cutback is also a turn. The player with the ball pulls it back behind their standing leg to change direction and lose a defender. On this page the word means the pass.',
+  sides:{title:'How do you defend a cutback?',items:['The nearest defender goes with the wide player and tries to block the pass back.','Not every defender runs to the goal line. One stops near the penalty mark.','Look over your shoulder for the attacker who arrives late.','The goalkeeper guards the near post first, then moves across with the pass.']},
+  title:'What Is a Cutback in Football? Cut Back in Soccer',name:'Cutback',also:'cut-back, pull-back',short:'A pass from near the goal line back toward a teammate arriving in front of goal.',
   desc:'What is a cut back in football (soccer)? A pass from near the goal line back to a teammate arriving in front of goal. Diagram, steps and lessons for kids.',
   answer:'A cutback (or cut back) in soccer is a pass from near the goal line back toward a teammate who is arriving in front of the goal. Defenders are running toward their own goal, so the space just behind them is open for a shot.',
   scene:{title:'A cutback',who:'7@82,95 8@52,80 9@46,95 !3@76,93 !4@48,93 !5@58,95 !G@54,98',ball:[81,94],passes:['81,94>54,82'],runs:['52,74>52,81'],zone:[40,78,64,88],
@@ -166,7 +177,8 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'How can kids practise first touch at home?',a:'Pass against a wall and take the first touch to one side, then the other. Use both feet, and look away from the ball before it comes back.'}],
   lessonIds:['learn7_receive','learn9_receive','bld_f_passtofeet','bld_11_throughlines'],related:['through-ball','switching-play','give-and-go','pressing']},
 
- {slug:'pressing',name:'Press',also:'pressing, pressure',short:'Running to close down the player with the ball so they have less time, while a teammate covers behind.',
+ {slug:'pressing',sides:{title:'How do you play against a press?',items:['Spread out, wide and deep, so the pressing players have more ground to cover.','Look around before the ball comes, so you already know your next pass.','Play with one or two touches. The ball moves faster than a runner.','Use the goalkeeper as a free player to pass to.','Switch the ball to the far side, where there is more space.']},
+  name:'Press',also:'pressing, pressure',short:'Running to close down the player with the ball so they have less time, while a teammate covers behind.',
   title:'Players Press in Soccer: What Pressing Means, for Kids',h1:'What is pressing in soccer?',
   desc:'When players press in soccer, they close down the player with the ball so they have less time, and a teammate covers behind. A diagram and steps for kids.',
   answer:'Pressing in soccer means players run to close down the opponent who has the ball, so that player has less time and space to play. One player goes to the ball and a teammate covers the space just behind, so the team is not beaten by one pass.',

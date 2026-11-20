@@ -36,7 +36,7 @@ const {renderToStaticMarkup}=require('react-dom/server'),React=require('react');
 
 const guides=L('lib/site/guides.ts'),formations=L('lib/site/formations.ts'),positions=L('lib/site/positions.ts'),pitch=L('lib/site/pitch.ts');
 const paths=L('lib/site/paths.ts'),lessons=L('lib/site/lessons.ts');
-const PATHS=new Set(paths.sitePaths().map(p=>p.path));
+const PATHS=new Set([...paths.sitePaths().map(p=>p.path),...paths.NOINDEX_CARD_PATHS]);/* Nov 20 2026: single card pages are real pages, noindex and out of the sitemap */
 const A='app/(site)/learn';
 
 // ---- 1. registry, sitemap, metadata -------------------------------------------------------------------------------------------

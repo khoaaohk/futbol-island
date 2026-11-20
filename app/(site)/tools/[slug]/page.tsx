@@ -1,3 +1,4 @@
+import {planRotation} from '@/lib/site/tools/rotation';
 import KeepReading from '@/components/site/KeepReading';
 import {lineupHeading} from '@/lib/site/tools/lineupHeading';
 import {notFound} from 'next/navigation';
@@ -14,7 +15,7 @@ import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SIZES_CHECKED,SIZES_SEASON} from '@/lib/site/sizes';
 import {DEFAULT_FORMATION} from '@/lib/site/tools/lineup';
 import {cheatSheetPath,PRINTABLES_HUB_PATH} from '@/lib/site/tools/printables';
-import {COACH_APP_PATH,gameLengths,LINEUP_PAGES,LINEUP_PATH,lineupPage,PLANNER_PAGES,PLANNER_PATH,plannerImage,plannerPage,PRINTABLES_HUB,TOOL_PAGES,toolCrumbs,webAppLd,type LineupPage,type PlannerPage} from '@/lib/site/tools/registry';
+import {COACH_APP_PATH,gameLengths,LINEUP_PAGES,LINEUP_PATH,lineupPage,PLANNER_EXAMPLE,PLANNER_PAGES,PLANNER_PATH,PLANNER_SOURCES,plannerImage,plannerPage,PRINTABLES_HUB,TOOL_PAGES,toolCrumbs,webAppLd,type LineupPage,type PlannerPage} from '@/lib/site/tools/registry';
 import {SHAPES} from '@/lib/site/tools/shapes';
 import EmbedSnippet from '@/components/site/tools/EmbedSnippet';
 import {embedSnippet} from '@/lib/site/tools/embed';
@@ -75,7 +76,7 @@ function Lineup({p}:{p:LineupPage}){
    <EmbedSnippet snippet={embedSnippet(p)} name={p.h1}/>
    <QA id="faq" title={`Questions about the ${p.h1}`} faq={p.faq}/>
    <KeepReading title="Formations and more tools" groups={[{id:'related',links:related}]}/>
-   <GuideEnd sticky={false}/>
+   <GuideEnd sticky={false} path={p.path}/>
   </Screen>
  </>;
 }
@@ -88,6 +89,13 @@ function Planner({p}:{p:PlannerPage}){
  const related=[{path:'/learn/soccer-rules/substitutions-and-game-length',name:'Substitutions and game length by age',line:'How long games last and how changes work'},{path:'/learn/soccer-field-size-by-age',name:'Soccer field size by age',line:'Field, goal and game length for each age group'},
   {path:'/learn/soccer-age-groups',name:'Soccer age groups explained',line:'U6 to U19 and which game each one plays'},POSITIONS_LINK,{path:'/learn/lessons',name:'Soccer lessons for kids',line:'Short lessons and quizzes to use at practice'},{path:p.format?`/tools/${p.format}-lineup-builder`:LINEUP_PATH,name:p.format?`${p.format} lineup builder`:'Soccer lineup builder',line:'Put the starters on a field diagram'},
   ...PLANNER_PAGES.filter(x=>x!==p).map(x=>({path:x.path,name:x.h1[0].toUpperCase()+x.h1.slice(1),line:x.blurb})),{path:PRINTABLES_HUB_PATH,name:'Blank soccer field diagrams',line:PRINTABLES_HUB.blurb}];
+ /* Nov 20 2026 (SEO foundation): the main calculator says what goes in and what comes out right under the h1, then the rule
+    with numbers. The numbers come from planRotation() itself, so the page can never disagree with the tool. */
+ const ex=planRotation(PLANNER_EXAMPLE),exMin=[...new Set(ex.minutes)].sort((a,b)=>b-a).map(m=>({m,n:ex.minutes.filter(x=>x===m).length}));
+ const first=p.format?undefined:<div data-calc-rule="">
+  <p><b>What goes in:</b> three numbers for your soccer (football) game: how many players came, how many play at once and how long the game is. <b>What comes out:</b> a substitution plan with equal minutes for every player.</p>
+  <p><b>The rule:</b> minutes each = players on the field × game minutes ÷ players in the squad. With {ex.input.players} players, {ex.input.onField} on the field and a {ex.gameMin}-minute game, that is {ex.input.onField} × {ex.gameMin} ÷ {ex.input.players}, about {Math.round(ex.fairShare)} minutes each. Changing every {ex.input.subEvery} minutes, the plan gives {exMin.map((x,i)=>`${i>0?(i===exMin.length-1?' and ':', '):''}${x.n} players ${x.m} minutes`).join('')}.</p>
+ </div>;
  /* visual pass Nov 17 2026: key facts under the lead, from the planner's own features (webAppLd below) */
  const facts:Fact[]=[{icon:'lineup',label:'Games',value:p.format??'7v7, 9v9, 11v11'},{icon:'clock',label:'Minutes',value:'Equal for every player'},
   {icon:'share',label:'Share it',value:'Print, text or link'},{icon:'lock',label:'Account',value:'None, names stay on your device'}];
@@ -97,7 +105,7 @@ function Planner({p}:{p:PlannerPage}){
    features:['Equal playing time for any squad size','Goalkeeper fixed or rotating','Printable table','Copy as text for a team chat','Share by link','No account; names stay on the device']})}/>
   <JsonLd data={faqLd(p.faq)}/>
   <PrintStyle/>
-  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts}/></Screen>
+  <Screen><ToolIntro crumbs={crumbs} h1={p.h1} lead={p.lead} app={{href:COACH_APP_PATH,label:'Open the coach app',line:APP_LINE(p.crumb)}} facts={facts} first={first}/></Screen>
   <RotationPlanner presets={presets} initial={initial} lockKey={p.format}/>
   <Screen>
    <Section id="about" title={p.format?`Sharing a ${p.format} game`:'Why plan the changes'}>{p.intro.map(x=><p key={x}>{x}</p>)}</Section>
@@ -132,6 +140,14 @@ function Planner({p}:{p:PlannerPage}){
    <Section id="game-day" title="Equal playing time during the game">
     <p>A plan on paper is only half the job. The <a href="/coach">free coach app</a> runs it on your phone at the side line: one big card shows who goes off and who comes on, and when. Tap Done when the change is made. If a child is hurt, arrives late or leaves early, one tap re-balances the rest of the game. The clock keeps time through a locked screen, and your team never leaves your phone.</p>
    </Section>
+   <Section id="uk" title="Equal game time: the same idea in the UK">
+    <p>In the UK, coaches often say equal game time or even playing time. It means the same as equal playing time. The calculator works the same way for any match: type how many players you have, how many play at once and how long your match is.</p>
+   </Section>
+   <Section id="sources" title="Sources">
+    <p>Many recreational leagues set a minimum share of the game for every player. These official pages say so in their own words:</p>
+    <ul>{PLANNER_SOURCES.map(x=><li key={x.url}><a href={x.url} rel="noopener">{x.name}</a>: {x.says}</li>)}</ul>
+    <p className={site.caption}>Your own league’s rules come first. Ask your league what it requires.</p>
+   </Section>
    <Section id="excel" title="Playing time calculator in Excel or Google Sheets" fold>
     <p>Many coaches keep a season sheet of minutes. After each game the coach app downloads a CSV file: one row per player with minutes in each period, minutes in goal, total minutes and share of the game. Open it in Excel, Google Sheets or Numbers and paste it under last week’s game.</p>
    </Section>
@@ -142,7 +158,7 @@ function Planner({p}:{p:PlannerPage}){
    <EmbedSnippet snippet={embedSnippet(p)} name={p.h1}/>
    <QA id="faq" title={`Questions about ${p.format?`${p.format} substitutions`:'playing time'}`} faq={p.faq}/>
    <KeepReading title="Rules, charts and more tools" groups={[{id:'related',links:related}]}/>
-   <GuideEnd sticky={false}/>
+   <GuideEnd sticky={false} path={p.path}/>
   </Screen>
  </>;
 }

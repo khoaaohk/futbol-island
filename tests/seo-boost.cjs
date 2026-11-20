@@ -98,7 +98,7 @@ const L=rel=>load(path.join(root,rel));
   if(faq)for(const q of faq.mainEntity)if(!norm(strip(h).replace(/<[^>]+>/g,' ').replace(/&#x27;/g,'\'').replace(/&amp;/g,'&').replace(/&quot;/g,'"')).includes(norm(q.name)))problems.push(`${p}: FAQ question not on the page: ${q.name.slice(0,50)}`);
   const bc=lds.find(x=>x['@type']==='BreadcrumbList');
   if(bc){const last=bc.itemListElement.at(-1).item;if(last!==SITE+(p==='/'?'/':p))problems.push(`${p}: breadcrumb ends at ${last}`);
-   const nav=h.match(/<nav[^>]*aria-label="Breadcrumb"[\s\S]*?<\/nav>/i);if(!nav)problems.push(`${p}: BreadcrumbList without visible breadcrumbs`);}
+   const nav=h.match(/<nav[^>]*aria-label="(?:Breadcrumb|Ruta de navegación)"[\s\S]*?<\/nav>/i);if(!nav)problems.push(`${p}: BreadcrumbList without visible breadcrumbs`);}
   const links=new Set([...h.matchAll(/<a\b[^>]*href="(\/[^"#?]*)/g)].map(m=>m[1].replace(/(.)\/$/,'$1')));
   for(const l of links)if(l!==p&&inbound.has(l))inbound.set(l,inbound.get(l)+1);
   if(CHILD.test(p)){const rel=h.match(/id="(related|siblings|more)"[\s\S]*?<\/section>/g)?.join('')??'';const n=new Set([...rel.matchAll(/href="(\/[^"#]+)"/g)].map(m=>m[1])).size;

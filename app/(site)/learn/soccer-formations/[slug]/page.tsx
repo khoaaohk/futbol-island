@@ -65,7 +65,7 @@ export default function FormationPage({params}:{params:{slug:string}}){
   <CoachNotesSection name={f.name} notes={FORMATION_NOTES[f.slug]}/>
   {/* batch 3, Nov 17 2026: lessons, comparisons and related pages as one "Keep reading" row */}
   <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(f.lessons)},{id:'compare',label:'Compare',icon:'swap',links:comparisonsFor(f.path).map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},{id:'related',links:related}]}/>
-  <GuideEnd checked={FAMILY_CHECKED.formations} lesson={f.lessons[0]}/>
+  <GuideEnd path={f.path} checked={FAMILY_CHECKED.formations} lesson={f.lessons[0]}/>
   <ReadNext path={f.path}/>
  </>;
 }

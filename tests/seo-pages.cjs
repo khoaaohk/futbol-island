@@ -58,7 +58,7 @@ for(const c of cards.SITE_CARDS)assert(c.blurb&&c.roleLabel,`card ${c.number} ha
 assert.equal(exhibits.SITE_EXHIBITS.length,L('lib/endgame/museum.ts').EXHIBITS.length,'every exhibit');
 const PATHS=paths.sitePaths().map(p=>p.path);
 /* the card and fish collection hubs (seo-links) are search-titled whole too */
-const WHOLE_HUBS=new Set(L('lib/site/collections.ts').COLLECTIONS.map(c=>c.path));
+const WHOLE_HUBS=new Set([...L('lib/site/collections.ts').COLLECTIONS.map(c=>c.path),'/about','/fish','/cards'/* Nov 20 2026 (SEO foundation 9): their fuller titles are whole titles */]);
 // Nov 6 2026 (signature species, waves 1-2, parametric: no hard-coded count): every Fishbook species, the new waves included, has a
 // sitemap page and a fish tale, and a fun fish fact is labelled as such on its public page.
 {const SIG=L('lib/town/fishing/shoreSignatures.ts'),page=fs.readFileSync(path.join(__dirname,'../app/(site)/fish/[id]/page.tsx'),'utf8');
@@ -71,12 +71,14 @@ assert(!PATHS.includes('/learn'),'/learn redirects to / (next.config.mjs), so it
 {const sp=paths.sitePaths(),pr=p=>sp.find(x=>x.path===p).priority;assert.equal(pr('/'),1,'/ is the main entry');assert(pr('/play')<pr('/about')&&pr('/play')>0,'/play listed, low priority');assert(sp.find(x=>x.path==='/').lastmod,'/ has a lastmod');}
 assert(!PATHS.some(p=>p==='/'+'start'),'the removed landing page is not listed');
 const hubs=L('lib/site/hubs.ts'),GUIDES=paths.GUIDE_PATHS;
-assert.equal(PATHS.length,10+/* / /about /about/how-we-check-facts /privacy /play /marketing + the 4 index pages */ GUIDES.length+L('lib/site/guides.ts').ALL_GUIDE_PAGES.length/* both guide clusters */+L('lib/site/tools/registry.ts').TOOL_PAGES.length/* coach tools and printables */+L('lib/site/games.ts').GAME_LISTINGS.length/* the arcade games' search pages (tests/seo-games.cjs) */+lessons.LESSONS.length+fish.SITE_FISH.length+cards.SITE_CARDS.length+exhibits.SITE_EXHIBITS.length+L('lib/site/collections.ts').COLLECTIONS.length/* card and Fishbook hubs */+L('lib/site/comparisons.ts').COMPARISONS.length/* A vs B guides */+1+L('lib/site/books.ts').BUILT_BOOKS.length/* the books hub and built story pages */+1+L('lib/site/videos.ts').allWatchVideos().length/* /videos and one watch page per clip (tests/seo-video.cjs) */);
+assert.equal(PATHS.length,10+/* / /about /about/how-we-check-facts /privacy /play /marketing + the 4 index pages */ GUIDES.length+L('lib/site/guides.ts').ALL_GUIDE_PAGES.length/* both guide clusters */+L('lib/site/tools/registry.ts').TOOL_PAGES.length/* coach tools and printables */+L('lib/site/games.ts').GAME_LISTINGS.length/* the arcade games' search pages (tests/seo-games.cjs) */+lessons.LESSONS.length+fish.SITE_FISH.length/* Nov 20 2026: no single card pages (noindex, out of the sitemap) */+exhibits.SITE_EXHIBITS.length+L('lib/site/collections.ts').COLLECTIONS.length/* card and Fishbook hubs */+L('lib/site/comparisons.ts').COMPARISONS.length/* A vs B guides */+1+L('lib/site/books.ts').BUILT_BOOKS.length/* the books hub and built story pages */+1+L('lib/site/videos.ts').allWatchVideos().length/* /videos and one watch page per clip (tests/seo-video.cjs) */);
 // robots.ts names every bot and closes the private routes (checked again on the built file below).
 const robotsSrc=read('app/robots.ts');
 // Nov 8 2026 (owner, AI search): every answer engine's search and user-fetch agent by name.
-const BOTS=['GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','Claude-Web','Claude-SearchBot','Claude-User','anthropic-ai','PerplexityBot','Perplexity-User','Google-Extended','Applebot','Applebot-Extended','CCBot','Bingbot','Googlebot'];
+const BOTS=['GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','Claude-SearchBot','Claude-User','PerplexityBot','Perplexity-User','Google-Extended','Applebot','Applebot-Extended','CCBot','Bingbot','Googlebot'];
 for(const b of BOTS)assert(robotsSrc.includes(`'${b}'`),`robots.ts names ${b}`);
+/* Nov 20 2026: no undocumented agent names and no Host: line */
+for(const b of ['Claude-Web','anthropic-ai'])assert(!robotsSrc.includes(`'${b}'`),`robots.ts no longer names ${b}`);assert(!/\bhost:/.test(robotsSrc),'robots.ts has no Host line');
 // the game's routes are untouched by the group: no (site) page shadows a game route.
 for(const r of ['museum','arcade','konbini','shop','privacy','admin','api','controller','coffee','plan'])assert(!fs.existsSync(path.join(root,'app/(site)',r)),`(site) leaves /${r} alone`);
 // llms.txt: a title line, a summary, and the sections.
@@ -130,6 +132,11 @@ assert(!fs.existsSync(path.join(root,'public/llms.txt')),'no static public/llms.
  const long=seo.fitTitle('An extremely long lesson title that goes on and on and on without end (11v11 lesson)');assert(long.length<=60,'long title is cut: '+long);
  assert(seo.fitDescription('Too short.').length>=70,'short descriptions get a tail');
  assert(seo.fitDescription('word '.repeat(80)).length<=160,'long descriptions are cut');}
+/* Nov 20 2026 (SEO foundation): single card pages are noindex,follow and in neither sitemap; /cards and the group pages stay. */
+{const N=paths.NOINDEX_CARD_PATHS;assert.equal(N.length,cards.SITE_CARDS.length);for(const p of N)assert(!PATHS.includes(p),`${p} is not in the sitemap`);
+ assert(PATHS.includes('/cards')&&L('lib/site/collections.ts').CARD_COLLECTIONS.every(c=>PATHS.includes(c.path)),'/cards and the card group pages stay in the sitemap');
+ assert(/robots:\{index:false,follow:true\}/.test(fs.readFileSync(path.join(root,'app/(site)/cards/[number]/page.tsx'),'utf8')),'single card pages are noindex, follow');
+ assert(!L('lib/site/tools/imageSitemap.ts').imageEntries().some(e=>/^\/cards\/\d+$/.test(e.path)),'no single card page in the image sitemap');}
 console.log(`seo sources ok: ${lessons.LESSONS.length} lessons, ${fish.SITE_FISH.length} fish, ${cards.SITE_CARDS.length} cards, ${exhibits.SITE_EXHIBITS.length} exhibits, ${PATHS.length} sitemap paths`);
 
 // ---- 2. the built site --------------------------------------------------------------------------------------------------------
@@ -220,7 +227,7 @@ assert.notEqual(attr(html('/'),/<title>([^<]*)<\/title>/),attr(html('/play'),/<t
  for(const m of h.matchAll(/<img [^>]*>/g))assert(/\balt="[^"]+"/.test(m[0])||/aria-hidden="true"|alt=""/.test(m[0]),`/: every image has alt text: ${m[0].slice(0,80)}`);}
 {const t=text(html('/play'));assert(/free football learning game/i.test(t)&&/save code/i.test(t),'/play has crawlable text');}
 // The reading pages' gold Play buttons (class "cta") go to the game at /play, or a /play?go= deep link (seo-design; the museum pages straight into the /museum room, the game pages into /arcade?game=).
-{let ctas=0;for(const p of PATHS.filter(p=>p!=='/play'&&p!=='/marketing'))for(const m of html(p).matchAll(/<a class="[^"]*_cta__[^"]*" href="([^"]*)"/g)){ctas++;assert(/^\/play(\?(go|store)=[a-z]+(:[A-Za-z0-9_-]+)?)?$/.test(m[1])||(m[1]==='/museum'&&p.startsWith('/exhibits'))||(/^\/arcade\?game=[a-z]+$/.test(m[1])&&(p==='/games'||p.startsWith('/games/')))/* Nov 16 2026: the /games hub's Play buttons open each arcade game too */,`${p}: Play goes to /play (exhibits: straight into /museum), not ${m[1]}`);}
+{let ctas=0;for(const p of PATHS.filter(p=>p!=='/play'&&p!=='/marketing'&&!p.startsWith('/videos/')/* Nov 18 2026: a watch page's button opens the clip's own page or game (tests/seo-video.cjs) */))for(const m of html(p).matchAll(/<a class="[^"]*_cta__[^"]*" href="([^"]*)"/g)){ctas++;assert(/^\/play(\?(go|store)=[a-z]+(:[A-Za-z0-9_-]+)?)?$/.test(m[1])||(m[1]==='/museum'&&p.startsWith('/exhibits'))||(/^\/arcade\?game=[a-z]+$/.test(m[1])&&(p==='/games'||p.startsWith('/games/')))/* Nov 16 2026: the /games hub's Play buttons open each arcade game too */,`${p}: Play goes to /play (exhibits: straight into /museum), not ${m[1]}`);}
  assert(ctas>PATHS.length/2,`the gold Play buttons were found (${ctas})`);}
 // Nov 7 2026 audit: every sitemap page (incl. the 150 fish) has a title <= 60 and a 70-160 character description; fish are distinct.
 {const dec=x=>x.replace(/&#x27;/g,"'").replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>'),seen=new Map();

@@ -36,6 +36,6 @@ export default function ChartView({slug}:{slug:string}){
   {c.sections.map(s=><Section key={s.id} id={s.id} title={s.title}><Bullets items={s.items}/></Section>)}
   <QA id="faq" title={`Questions about ${c.crumb.toLowerCase()}`} faq={c.faq}/>
   <KeepReading groups={[{id:'lessons',label:'Free lesson',icon:'steps',links:lessonLinks(c.lessons)},{id:'related',links:[...c.links,{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'Share the game fairly: a substitution plan for any squad',tag:'Coach tool'}]}]}/>
-  <GuideEnd checked={FAMILY_CHECKED.sizes}/>
+  <GuideEnd path={c.path} checked={FAMILY_CHECKED.sizes}/>
  </>;
 }
