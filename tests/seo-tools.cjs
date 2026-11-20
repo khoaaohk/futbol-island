@@ -92,7 +92,9 @@ for(const p of PAGES){const where=p.path,mod=L(file(p)),meta=mod.metadata??mod.g
  for(const s of h.match(/<svg[^>]*role="img"[\s\S]*?<\/svg>/g)||[])assert(/<title[^>]*>[^<]+<\/title><desc[^>]*>[^<]{40,}<\/desc>/.test(s),`${where}: diagram title and description`);
  assert.equal(new Set(h.match(/ id="[^"]+"/g)||[]).size,(h.match(/ id="[^"]+"/g)||[]).length,`${where}: unique ids`);
  assert.equal((h.match(/class="cta"/g)||[]).length,1,`${where}: one gold button`);assert(!/IslandBrush/.test(h));
- const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]);assert(links.length>=8,`${where}: links`);
+ /* Nov 20 2026: the calculator's Sources list links its official pages (registry PLANNER_SOURCES); every other link is internal */
+ const SRC=new Set(reg.PLANNER_SOURCES.map(x=>x.url));if(p.path===reg.PLANNER_PATH)for(const u of SRC)assert(h.includes(`href="${u}"`),`${where}: source link ${u}`);
+ const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1]).filter(l=>!SRC.has(l));assert(links.length>=8,`${where}: links`);
  for(const l of links){assert(l.startsWith('/')&&!l.includes('?'),`${where}: internal link ${l}`);assert(PATHS.has(l.split('#')[0])||SERVED.has(l),`${where}: link target ${l} exists`);}
  for(const m of h.matchAll(/<img[^>]*src="([^"]+)"[^>]*>/g)){assert(SERVED.has(m[1]),`${where}: image ${m[1]} exists`);assert(/ alt="[^"]{8,}"/.test(m[0])&&/ width="\d+"/.test(m[0]),`${where}: image alt and size`);}
  assert(links.some(l=>l!==p.path&&PAGES.some(x=>x.path===l)),`${where}: links to another tool page`);
