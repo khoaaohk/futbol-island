@@ -951,7 +951,7 @@ export const TERM_PAGES:readonly TermPage[]=([
    {q:'Should young teams play a low block?',a:'Most youth coaches first teach players to press the ball and cover each other. A deep block all game gives young players fewer chances to learn with the ball.'}],
   lessonIds:['def_11_shift','expf_diamondshift','def_11_pressurecover','expf_switchblock'],related:['high-line','counterattack','cover','marking','pressing']},
 
- {slug:'high-line',sides:{title:'How do attackers beat a high line?',items:['Run in behind as the pass is played, starting from an onside position.','Play a through ball or a lofted pass into the space behind the defenders.','A fast forward stays level with the last defender, ready to run.','Run from deep. A midfielder who starts behind the ball is hard to catch offside.']},
+ {slug:'high-line',sides:{title:'How do attackers beat a high line?',items:['Run in behind as the pass is played, starting from an onside position.','Play a through ball or a lofted pass into the space behind the defenders.','A fast forward stays level with the second-last defender, ready to run.','Run from deep. A midfielder who starts behind the ball is hard to catch offside.']},
   name:'High Line',also:'high defensive line, high back line, pushing up',short:'Defenders standing far from their own goal, near the halfway line, to keep the team close together.',
   title:'High Line in Soccer: What a High Defensive Line Means',h1:'What is a high line in soccer?',
   desc:'A high line in soccer is when the defenders stand far from their own goal, near the halfway line. Why teams use it, the risk behind it, with a diagram.',
