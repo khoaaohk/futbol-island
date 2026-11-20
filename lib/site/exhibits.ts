@@ -51,11 +51,41 @@ const STORY:Record<string,Raw[]>={
  'hall-of-fame':[TROPHIES.map(t=>({head:t.name,text:[`${t.tournament}: ${t.firstNote}.`,t.made,t.story].filter(Boolean).join(' ')}))],
  'formations-history':[SHAPE_ERAS.map(e=>({when:e.when,head:`${e.shape}: ${e.name}`,text:`${e.why} ${e.who}.`}))],
 };
-export type SiteExhibit=Exhibit&{galleryTitle:string;galleryBlurb:string;story:StoryLine[]};
+/** Search words (SEO phase 2, Nov 20 2026): the case titles are museum labels ("Under the lights", "Numbers and colours"), short
+ *  and close to each other, so a search result did not say what the page is about. Each case gets a page title (60 characters
+ *  at most, used whole) and an h1 that name the subject, the year and the sport in the words people type. Every word comes from
+ *  the case's own facts in lib/endgame/museum.ts; the short label stays on tiles, breadcrumbs and lists. A case with no row
+ *  throws at load. Tests: tests/seo-media.cjs. */
+const SEARCH:Record<string,[title:string,h1:string]>={
+ 'laws-1863':['The First Football Rules, 1863: Laws of the Game for Kids','The first Laws of the Game, 1863'],
+ 'penalty-1891':['History of the Penalty Kick in Soccer, from 1891','The penalty kick, in the Laws since 1891'],
+ 'var-2018':['What Is VAR in Soccer? The Video Assistant Referee','VAR: the video assistant referee'],
+ 'worldcup-1930':['The First World Cup, 1930 in Uruguay: History for Kids','The first World Cup: Uruguay, 1930'],
+ 'wwc-1991':['The First Women’s World Cup, 1991: History for Kids','The first Women’s World Cup: China, 1991'],
+ 'futsal-1989':['History of Futsal: From 1930 to the 1989 World Cup','Futsal and its first World Cup, 1989'],
+ 'stadiums':['Famous Soccer Stadiums of the World: Facts for Kids','Famous football stadiums of the world'],
+ 'laced-leather':['Old Leather Soccer Balls and Ball Sizes Today','Laced leather footballs and ball sizes'],
+ 'telstar-1970':['The Telstar: The Black and White 1970 World Cup Ball','The Telstar, the 1970 World Cup ball'],
+ 'boots':['History of Football Boots: Heavy Leather to Light Knit','Football boots through time'],
+ 'shirts':['Why Soccer Shirts Have Numbers: Shirt Numbers Since 1928','Shirt numbers and team colours'],
+ 'hall-of-fame':['Famous Football Trophies at True Size: The Trophy Room','The trophy room: football’s great trophies'],
+ 'ballon-dor':['Ballon d’Or History for Kids: The Golden Ball Since 1956','The Ballon d’Or, the Golden Ball since 1956'],
+ 'first-international-1872':['The First International Football Match, 1872','The first international football match, 1872'],
+ 'offside-rules':['History of the Offside Rule in Soccer, from 1863','How the offside rule changed through time'],
+ 'formations-history':['History of Soccer Formations: From 2-3-5 to 4-4-2','Soccer formations through time'],
+ 'floodlights-1878':['The First Football Match Under Floodlights, 1878','The first football match under floodlights, 1878'],
+ 'copa-america-1916':['Copa América History: The First Tournament, 1916','The Copa América: how it began in 1916'],
+ 'keeper-hands-1912':['Where Can a Goalkeeper Use Their Hands? The 1912 Rule','The goalkeeper’s hands and the 1912 rule'],
+ 'free-kick-wall':['Free Kicks and the Wall in Soccer: The 9.15 Metre Rule','Free kicks and the wall: the 9.15 metre rule'],
+ 'ball-curve':['Why Does a Soccer Ball Curve? The Magnus Effect for Kids','Why a spinning ball curves'],
+ 'throw-in':['The Throw-In in Soccer: How to Take One, Since 1863','The throw-in: how to take one'],
+};
+export type SiteExhibit=Exhibit&{galleryTitle:string;galleryBlurb:string;story:StoryLine[];seoTitle:string;h1:string};
 export const SITE_EXHIBITS:SiteExhibit[]=timelineOrder(EXHIBITS).map(e=>{
  const g=GALLERIES.find(x=>x.id===e.gallery),facts=new Set(e.facts);
  const story=(STORY[e.id]??[]).flatMap(lines).filter(l=>!facts.has(l.text));
- return {...e,galleryTitle:g?.title??e.gallery,galleryBlurb:g?.blurb??'',story};
+ const words=SEARCH[e.id];if(!words)throw new Error(`exhibits: ${e.id} has no search title`);
+ return {...e,galleryTitle:g?.title??e.gallery,galleryBlurb:g?.blurb??'',story,seoTitle:words[0],h1:words[1]};
 });
 export const exhibitById=(id:string)=>SITE_EXHIBITS.find(e=>e.id===id);
 export const exhibitPath=(id:string)=>`/exhibits/${id}`;

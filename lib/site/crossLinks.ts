@@ -4,6 +4,10 @@ import {TOOL_PAGES} from './tools/registry';
 import {SITE_BOOKS,type SiteBook} from './books';
 import {cardPath,type SiteCard} from './cards';
 import type {Collection} from './collections';
+import {CHARTS} from './sizes';
+import {POSITIONS} from './positions';
+import {FORMATIONS_HUB} from './formations';
+import {EXHIBITS} from '@/lib/endgame/museum';
 /**
  * Cross-cluster links (SEO foundation, Nov 20 2026): the pages that can rank had few links from OTHER clusters. A rule page
  * linked the next two rules and its hubs, a term page linked terms, and each pop-up book had one inlink (the shelf). The
@@ -128,3 +132,46 @@ export function booksForCollection(c:Pick<Collection,'parent'|'groups'>):XLink[]
 }
 /** Books with no player card on the site yet: they join the positions guide's book list so no book has only the shelf link. */
 export const booksWithoutCard=():XLink[]=>built.filter(b=>!b.card).map(bookLink);
+
+// ---- museum exhibits (SEO phase 2, Nov 20 2026) -----------------------------------------------------------------------------------
+/** Museum case -> the rule, term, position, formation and size-chart pages about the same thing. A case page linked other cases,
+ *  one lesson or hub and the lessons list, so the history pages gave nothing to the pages that explain today's game. `r:` a rule,
+ *  `t:` a term, `tool:` a tool, `pos:` a position page, `chart:` a size chart, `hub:` the positions or formations guide. Each row
+ *  is tied to a fact the case states (the 1863 Laws, the 1925 offside change, the size 5 ball, the two goals in the 1991 final). */
+const EXHIBIT_TOPICS:Record<string,string[]>={
+ 'laws-1863':['r:offside','r:fouls-and-free-kicks','r:kick-off'],
+ 'penalty-1891':['r:penalty-kick','r:fouls-and-free-kicks','pos:goalkeeper'],
+ 'var-2018':['r:offside','r:penalty-kick','r:yellow-and-red-cards','r:handball'],
+ 'worldcup-1930':['hub:formations','t:hat-trick','r:substitutions-and-game-length'],
+ 'wwc-1991':['t:brace','pos:striker','r:substitutions-and-game-length'],
+ 'futsal-1989':['r:futsal-rules','tool:futsal','t:first-touch'],
+ 'stadiums':['chart:soccer-field-size-by-age','tool:fields'],
+ 'laced-leather':['chart:soccer-ball-size-by-age','r:heading-rules-for-kids'],
+ 'telstar-1970':['chart:soccer-ball-size-by-age','t:first-touch'],
+ 'boots':['t:first-touch','t:dribble','t:tackle'],
+ 'shirts':['hub:positions','pos:goalkeeper','pos:striker','tool:lineup'],
+ 'hall-of-fame':['hub:positions','t:hat-trick','t:clean-sheet'],
+ 'ballon-dor':['hub:positions','pos:striker','t:assist'],
+ 'first-international-1872':['hub:formations','t:dribble','t:square-pass'],
+ 'offside-rules':['r:offside','t:offside-trap','t:through-ball'],
+ 'formations-history':['hub:formations','t:false-nine','pos:center-back','tool:lineup'],
+ 'floodlights-1878':['r:kick-off','r:substitutions-and-game-length'],
+ 'copa-america-1916':['hub:formations','r:substitutions-and-game-length','t:clean-sheet'],
+ 'keeper-hands-1912':['r:handball','r:back-pass-rule','pos:goalkeeper','t:sweeper-keeper'],
+ 'free-kick-wall':['r:fouls-and-free-kicks','t:free-kick-wall','t:set-piece'],
+ 'ball-curve':['t:cross','t:set-piece','r:corner-kick','t:volley'],
+ 'throw-in':['r:throw-in','t:set-piece','t:first-touch'],
+};
+const HUB_LINKS:Record<string,XLink>={positions:POSITIONS_LINK,formations:{path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.crumb,line:FORMATIONS_HUB.blurb}};
+function exhibitTopic(key:string):XLink{
+ const [kind,id]=[key.slice(0,key.indexOf(':')),key.slice(key.indexOf(':')+1)];
+ if(kind==='pos'){const p=POSITIONS.find(x=>x.slug===id);if(!p)throw new Error(`crossLinks: position ${id} does not exist`);return {path:p.path,name:p.h1,line:p.numberLine};}
+ if(kind==='chart'){const c=CHARTS.find(x=>x.slug===id);if(!c)throw new Error(`crossLinks: chart ${id} does not exist`);return {path:c.path,name:c.h1,line:c.blurb};}
+ if(kind==='hub'){const h=HUB_LINKS[id];if(!h)throw new Error(`crossLinks: hub ${id} does not exist`);return h;}
+ return topic(key);
+}
+/* Checked at load: every case has a row of at least two real pages, and no row names a case that is gone. */
+for(const e of EXHIBITS){const row=EXHIBIT_TOPICS[e.id];if(!row||row.length<2)throw new Error(`crossLinks: exhibit ${e.id} has no row`);row.forEach(exhibitTopic);}
+for(const id of Object.keys(EXHIBIT_TOPICS))if(!EXHIBITS.some(e=>e.id===id))throw new Error(`crossLinks: exhibit ${id} does not exist`);
+/** A museum case's links out of the museum: the rule, term, position, formation and chart pages about the same thing. */
+export const exhibitCrossLinks=(id:string):XLink[]=>uniq((EXHIBIT_TOPICS[id]??[]).map(exhibitTopic));
