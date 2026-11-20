@@ -5,7 +5,7 @@ import {QA} from '@/components/site/LessonHub';
 import {GameIntro,PlayLink,Shots} from '@/components/site/games/GameParts';
 import {LinkList,Section} from '@/lib/site/GuideParts';
 import {GAME_FOOT,GAME_PAGES,GAMES_HUB,GAMES_WORD,gameBySlug,gameCrumbs,videoGameLd} from '@/lib/site/games';
-import {breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
+import {breadcrumbLd,faqLd,pageMeta,PLAY_PATH} from '@/lib/site/seo';
 import site from '../../site.module.css';
 
 /**
@@ -49,6 +49,10 @@ export default function GamePageView({params}:{params:{slug:string}}){
   <Section id="parents" title="For parents and coaches"><List items={g.parents}/></Section>
   <QA id="faq" title={`Questions about ${g.name}`} faq={g.faq}/>
   <KeepReading id="more" title="More free soccer games" groups={[{id:'more-games',links:others}]}/>
+  {/* Nov 20 2026 (SEO foundation): each game page leads on to the island itself (a game page, not the home page) */}
+  <Section id="island" title="Play the whole island">
+   <p>{g.name} is one game in the Futbol Island arcade. The island also has lessons, quizzes, fishing and player cards. <a href={PLAY_PATH} data-island-link="">Play the whole island</a>.</p>
+  </Section>
   <p className={site.caption}>{GAME_FOOT}</p>
   <p className={site.end}><PlayLink game={g}/></p>
  </>;

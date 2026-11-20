@@ -93,7 +93,7 @@ function check(p,meta,el,game){
  const h=renderToStaticMarkup(el);html.set(p.path,h);
  assert.equal((h.match(/<h1[ >]/g)||[]).length,1,`${where}: one h1`);assert(h.includes(`>${p.name}</h1>`),`${where}: the h1 is the registry's`);
  const t=text(h);assert(/football/i.test(t.slice(0,700)),`${where}: "football" near the top`);
- const n=t.split(" ").length;if(process.env.WORDS)console.log(where,n);assert(n>=450&&n<=1300+(game?4:4*L('lib/site/videos.ts').allWatchVideos().filter(v=>v.group!=='lessons').length+15)/* Nov 18 2026: each clip's "Watch the full clip" link to its watch page (4 words; every games clip is on the hub) and the hub's line to /videos */+(game?15:40)*Math.max(0,PAGES.length-7)/* Nov 17 2026: every game past seven adds one entry (about 15 words) to each page's list of the other games and one block (clip, name, what it teaches, three stills: about 40 words) to the hub, so the ceilings grow with the catalog;  Nov 16 2026: was 1270 (gameplay clip and still captions add about 30 words); Nov 11 2026: was 1250; the seventh game adds one entry (about 15 words) to every page's list of the other games */,`${where}: ${n} words`);
+ const n=t.split(" ").length;if(process.env.WORDS)console.log(where,n);assert(n>=450&&n<=1300+(game?4+30/* Nov 20 2026: the "Play the whole island" section, about 30 words */:4*L('lib/site/videos.ts').allWatchVideos().filter(v=>v.group!=='lessons').length+15)/* Nov 18 2026: each clip's "Watch the full clip" link to its watch page (4 words; every games clip is on the hub) and the hub's line to /videos */+(game?15:40)*Math.max(0,PAGES.length-7)/* Nov 17 2026: every game past seven adds one entry (about 15 words) to each page's list of the other games and one block (clip, name, what it teaches, three stills: about 40 words) to the hub, so the ceilings grow with the catalog;  Nov 16 2026: was 1270 (gameplay clip and still captions add about 30 words); Nov 11 2026: was 1250; the seventh game adds one entry (about 15 words) to every page's list of the other games */,`${where}: ${n} words`);
  assert(!/Strikers/.test(h),`${where}: Island Strikers is not an arcade game any more`);
  assert(!/aggregateRating|ratingValue|reviewCount|millions? of players/i.test(h),`${where}: no ratings, no invented numbers`);
  // Nov 16 2026 (owner: videos of the game on these pages): the clips are LoopClip islands that create their <video> on the client
@@ -116,7 +116,10 @@ function check(p,meta,el,game){
  const links=[...h.matchAll(/href="([^"]+)"/g)].map(m=>m[1].replace(/&amp;/g,'&'));
  for(const l of links){if(/^\/arcade\?game=/.test(l)){assert(PAGES.some(g=>g.play===l),`${where}: deep link ${l}`);continue;}
   assert(l.startsWith('/'),`${where}: ${l} is an internal link`);assert(PATHS.has(l.split('#')[0])||l==='/safe-football-game-for-kids',`${where}: link target ${l} exists`);}
- assert(!links.includes('/play'),`${where}: the buttons open the games, not the island`);
+ /* Nov 20 2026 (SEO foundation, owner approved): the gold buttons still open the game; a game page also has ONE plain text link
+    "Play the whole island" to /play in its content (the hub has none). */
+ assert(!/class="[^"]*cta[^"]*"[^>]*href="\/play"|href="\/play"[^>]*class="[^"]*cta/.test(h),`${where}: the buttons open the games, not the island`);
+ {const n=links.filter(l=>l==='/play').length,isGame=PAGES.some(g=>g.path===where);assert.equal(n,isGame?1:0,`${where}: ${isGame?'one':'no'} text link to the island`);if(isGame)assert(/<a href="\/play" data-island-link="">Play the whole island<\/a>/.test(h),`${where}: the island link says what it is`);}
  return {h,t,ld,links,by};
 }
 {const r=check(ALL[0],hubMod.metadata,React.createElement(hubMod.default),null);
