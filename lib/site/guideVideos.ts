@@ -30,7 +30,7 @@ export function guideVideo(pagePath:string):GuideVideo|null{
  const m=readManifest()[d.key],v=m?.video;
  const poster=`learn/${d.key}.webp`,mp4=`learn/video/${d.key}.mp4`,webm=`learn/video/${d.key}.webm`;
  if(!v?.duration||!onDisk(poster)||!onDisk(mp4))return null;
- return {...d,poster:'/'+poster,mp4:'/'+mp4,...(onDisk(webm)?{webm:'/'+webm}:{}),width:v.width??390,height:v.height??844,seconds:Math.ceil(v.duration)};
+ return {...d,poster:'/'+poster,mp4:'/'+mp4,...(onDisk(webm)?{webm:'/'+webm}:{}),width:v.width??390,height:v.height??844,seconds:Math.max(1,Math.round(v.duration))/* Nov 20 2026: the nearest second, as the game clips do (7.04 s read as 8) */};
 }
 export const allGuideVideos=()=>GUIDE_VIDEOS.map(d=>guideVideo(d.path)).filter((v):v is GuideVideo=>!!v);
 /** The clip file's absolute URL (learnUrl adds ?v=<hash>, or the R2 host when MEDIA_BASE is set). */

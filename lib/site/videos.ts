@@ -40,7 +40,7 @@ const GAME_DEFS:Record<GameId,Omit<Def,'key'|'group'>>={
  rollball:{slug:'roll-it-in-gameplay',title:'Roll It In gameplay: a ball rolls to goal',text:['A football rolls through a puzzle course in Roll It In.','It takes a metal ramp, jumps a gap over the water and presses a plate that opens the gate.','Then it rolls into the goal at the end of the course.']},
  ballblaster:{slug:'ball-blaster-gameplay',title:'Ball Blaster gameplay: kicking at robots',text:['A football flies up the pitch and breaks a wind-up robot in Ball Blaster.','A POW! burst shows the hit.','You aim each kick and break the robots before they reach your goal.']},
 };
-const HERO_DEF:Omit<Def,'key'|'group'>={slug:'three-arcade-games-on-a-phone',title:'Kit Rush, Squad Snake and Air Futbol',text:['Three phone screens play side by side: Kit Rush, Squad Snake and Air Futbol.','In the first, kit flies up to be swiped; in the second, a line of players winds across the pitch; in the third, a puck crosses a small pitch.','All three are real play recorded on a phone.']};
+const HERO_DEF:Omit<Def,'key'|'group'>={slug:'three-arcade-games-on-a-phone',title:'Three soccer arcade games played on a phone',text:['Three phone screens play side by side: Kit Rush, Squad Snake and Air Futbol.','In the first, kit flies up to be swiped; in the second, a line of players winds across the pitch; in the third, a puck crosses a small pitch.','All three are real play recorded on a phone.']};
 const ISLAND_DEFS:Record<string,Omit<Def,'key'|'group'>>={
  walk:{slug:'walking-across-futbol-island',title:'Walking across Futbol Island',text:['A player walks along a sunny path on Futbol Island.','The path goes past houses, trees and shops, with the sea beside it.','You can walk anywhere on the island in the browser game.']},
  fly:{slug:'jetpack-flight-over-futbol-island',title:'Flying over Futbol Island with a jetpack',text:['A player lifts off with a jetpack and flies over Futbol Island.','The town, the beach and the sea pass underneath.','From the air you can see where everything on the island is.']},
@@ -87,8 +87,16 @@ export const videoCrumbs=(v?:WatchVideo):Crumb[]=>[{name:'Home',path:'/'},{name:
 export const isPortrait=(v:{w:number;h:number})=>v.h>v.w;
 const DATE_FMT=new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'America/Los_Angeles'});
 export const videoDateLabel=(v:WatchVideo)=>DATE_FMT.format(new Date(v.uploadDate));
-/** The search snippet: the first sentence and the length (70-155 characters, checked by tests/seo-video.cjs). */
-export const watchMetaDescription=(v:WatchVideo)=>`${v.text[0]} Watch the ${v.seconds}-second clip from Futbol Island.`;
+/** The search snippet, 120 to 155 characters (SEO phase 2, Nov 20 2026: 20 of the 24 were 92 to 119): the first sentence of
+ *  what the clip shows, then the first template tail that fits. A short first sentence takes the second sentence too. The
+ *  tails are built from the clip's own length and group, so no fact is added. Checked by tests/seo-video.cjs. */
+const GROUP_TAIL:Record<VideoGroup,string>={games:'a free soccer game for kids',island:'a free 3D football game for kids',lessons:'a free football learning game for kids'};
+export function watchMetaDescription(v:WatchVideo):string{
+ const n=v.seconds,tails=[`Watch the ${n}-second clip of real play from Futbol Island, ${GROUP_TAIL[v.group]} aged 7 to 12.`,`Watch the ${n}-second clip from Futbol Island, ${GROUP_TAIL[v.group]}.`,
+  `Watch the ${n}-second clip of real play from Futbol Island.`,`Watch the ${n}-second clip from Futbol Island.`,`A ${n}-second clip.`];
+ for(const base of [v.text[0],`${v.text[0]} ${v.text[1]}`]){const hit=tails.map(t=>`${base} ${t}`).find(x=>x.length>=120&&x.length<=155);if(hit)return hit;}
+ return `${v.text[0]} ${tails[3]}`;
+}
 export const watchDescription=(v:WatchVideo)=>v.text.join(' ');
 /** Other clips for "More videos": the same shape (tall or wide), starting after this one, so the row's pictures match. */
 export function moreVideos(v:WatchVideo,n=6):WatchVideo[]{

@@ -4,6 +4,8 @@ import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import VideoThumbs from '@/components/site/videos/VideoThumbs';
+import KeepReading from '@/components/site/KeepReading';
+import {watchAbout,watchLinks} from '@/lib/site/videoPages';
 import {allWatchVideos,isPortrait,moreVideos,VIDEOS_PATH,videoCrumbs,videoDateLabel,watchMetaDescription,watchVideoBySlug,watchVideoLd} from '@/lib/site/videos';
 import {breadcrumbLd,pageMeta} from '@/lib/site/seo';
 import site from '../../site.module.css';
@@ -30,6 +32,7 @@ export default function WatchPage({params}:{params:{slug:string}}){
  const v=watchVideoBySlug(params.slug);if(!v)notFound();
  const crumbs=videoCrumbs(v),tall=isPortrait(v),more=moreVideos(v),total=allWatchVideos().length;
  const size={'--w':v.w,'--h':v.h} as CSSProperties;
+ const about=watchAbout(v),links=watchLinks(v);
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={watchVideoLd(v)}/>
@@ -48,6 +51,12 @@ export default function WatchPage({params}:{params:{slug:string}}){
     <p className={css.actions}><a className={site.cta} href={v.play.href}>{v.play.label}</a><a href={v.origin.href}>{v.origin.label}</a></p>
    </div>
   </article>
+  {/* Nov 20 2026 (SEO phase 2): the record of the game or lesson the clip shows, and links to its pages (lib/site/videoPages.ts) */}
+  <section className={site.section} aria-labelledby="about">
+   <h2 className={site.h2} id="about">{about.title}</h2>
+   {about.lines.map(l=><p key={l.text}>{l.label&&<b>{l.label}: </b>}{l.text}</p>)}
+  </section>
+  <KeepReading id="go" title="Where to go from this clip" groups={[{id:'clip-links',links}]}/>
   <section className={site.section} aria-labelledby="more">
    <h2 className={site.h2} id="more">More videos</h2>
    <VideoThumbs videos={more}/>

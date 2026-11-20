@@ -3,7 +3,7 @@
 //     (the day git first saw the file, or later).
 //  2. Every clip has ONE watch page, /videos/<slug> (lib/site/videos.ts): the native player first (controls, playsInline,
 //     preload="metadata", poster, real width and height, no autoplay), one h1 = the title, the words, a play button, more videos;
-//     exactly one VideoObject (+ BreadcrumbList), a unique title with the site suffix, a 70-155 character description, a
+//     exactly one VideoObject (+ BreadcrumbList), a unique title with the site suffix, a 120-155 character description, a
 //     self canonical and Open Graph video tags.
 //  3. The video sitemap has one <url> per watch page, one <video:video> each, and every entry matches its page's VideoObject.
 //  4. The pages the clips also play on (guides, /games, /games/<slug>, the Spanish hubs) emit NO VideoObject and link the watch page.
@@ -48,7 +48,7 @@ for(const v of W){
  assert(v.text.length>=2&&v.text.length<=4,`${at}: 2-4 sentences`);assert(!/\b(?:piece of cake|in a nutshell|ballpark|hit the ground|game changer)\b/i.test(v.text.join(' ')),`${at}: no idioms`);
  const meta=page.generateMetadata({params:{slug:v.slug}});
  assert.equal(meta.title,`${v.title} · Futbol Island`,`${at}: title with the site suffix`);assert(meta.title.length<=60,`${at}: title fits (${meta.title.length})`);
- assert(meta.description.length>=70&&meta.description.length<=155&&!meta.description.endsWith('…'),`${at}: description 70-155 (${meta.description.length})`);
+ assert(meta.description.length>=120&&meta.description.length<=155&&!meta.description.endsWith('…'),`${at}: description 120-155 (${meta.description.length})`);/* Nov 20 2026: was 70-155 */
  assert.equal(meta.alternates.canonical,at,`${at}: self canonical`);
  assert.equal(meta.openGraph.type,'video.other');assert.equal(meta.openGraph.images[0].url,v.poster,`${at}: og:image is the poster`);
  const ogv=meta.openGraph.videos[0];assert(ogv.url===v.contentUrl&&ogv.type==='video/mp4'&&ogv.width===v.w&&ogv.height===v.h,`${at}: og:video tags`);

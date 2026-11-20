@@ -1,0 +1,59 @@
+import {CHARTS} from './sizes';
+import {exhibitById,exhibitPath} from './exhibits';
+import {GAME_FOOT,GAME_PAGES,GAMES_HUB,gameById,type GameId} from './games';
+import {DEFINITION,hubBySlug,SAFE_GUIDE} from './hubs';
+import {GUIDE_VIDEOS} from './guideVideos';
+import {allWatchVideos,type WatchVideo} from './videos';
+/**
+ * What a watch page says and links below the clip's own words (SEO phase 2, Nov 20 2026). The 24 watch pages had 61 to 82
+ * unique words and two links out, so they read as thin next to the game pages. Nothing here is written per page: the words
+ * are the game's own record (lib/site/games.ts: lead, skill, the first phone control, the first rule), the guide clip's own
+ * caption (lib/site/guideVideos.ts) or the site's one-line definition, and every link takes its name and line from the page
+ * it points to. Kept apart from lib/site/videos.ts so the pages that only list clips do not load the museum's text.
+ * A link target that does not exist throws at build time. No key moments: the clips are 5 to 10 second loops with no
+ * measured time marks, so none are claimed. Tests: tests/seo-media.cjs.
+ */
+export type WatchLink={path:string;name:string;line:string};
+export type WatchAbout={title:string;lines:{label?:string;text:string}[]};
+const lower=(s:string)=>s.charAt(0).toLowerCase()+s.slice(1);
+const gameOf=(v:WatchVideo)=>GAME_PAGES.find(g=>g.id===v.key);
+const PLAY:WatchLink={path:'/play',name:'Play Futbol Island',line:'The whole island, free in the browser'};
+const HUB:WatchLink={path:GAMES_HUB.path,name:GAMES_HUB.h1,line:GAMES_HUB.blurb};
+const LESSONS:WatchLink={path:'/learn/lessons',name:'Football lessons and quizzes for kids',line:'Every lesson, by team size'};
+const SAFE:WatchLink={path:SAFE_GUIDE.path,name:SAFE_GUIDE.h1,line:'A parents’ guide: no accounts and no open chat'};
+const game=(id:GameId):WatchLink=>{const g=gameById(id);return {path:g.path,name:`${g.name}: ${lower(g.h1.split(':')[0])}`,line:g.blurb};};
+const hub=(slug:string):WatchLink=>{const h=hubBySlug(slug);if(!h)throw new Error(`videoPages: hub ${slug} does not exist`);return {path:h.path,name:h.h1,line:h.blurb};};
+const exhibit=(id:string):WatchLink=>{const e=exhibitById(id);if(!e)throw new Error(`videoPages: exhibit ${id} does not exist`);return {path:exhibitPath(e.id),name:e.h1,line:`${e.galleryTitle} · ${e.year}`};};
+const chart=(slug:string):WatchLink=>{const c=CHARTS.find(x=>x.slug===slug);if(!c)throw new Error(`videoPages: chart ${slug} does not exist`);return {path:c.path,name:c.h1,line:c.blurb};};
+const FISHBOOK:WatchLink={path:'/fish',name:'Fishbook',line:'Every sea animal you can catch, and its football club'};
+const SPOTS:WatchLink={path:'/fish/spots',name:'Fishing spots on Futbol Island',line:'Which animals bite at each spot'};
+const MUSEUM:WatchLink={path:'/exhibits',name:'Football history museum',line:'Every case in the museum, as a page to read'};
+/** Island clip -> the pages about the place it shows. */
+const ISLAND_LINKS:Record<string,()=>WatchLink[]>={
+ walk:()=>[LESSONS,SAFE],fly:()=>[LESSONS,SAFE],stadium:()=>[exhibit('stadiums'),chart('soccer-field-size-by-age')],fishing:()=>[FISHBOOK,SPOTS],
+ match:()=>[hub('7v7-9v9-11v11'),hub('passing-and-support')],kitstudio:()=>[exhibit('shirts'),exhibit('boots')],museum:()=>[MUSEUM,exhibit('laws-1863'),exhibit('worldcup-1930')],
+ room:()=>[game('kitrush'),game('pinball')],plaza:()=>[SAFE,LESSONS],
+};
+const GUIDE_LINKS:Record<string,()=>WatchLink[]>={
+ pass_puzzles:()=>[hub('passing-and-support'),game('puzzle'),LESSONS],quiz_question:()=>[hub('soccer-quiz-for-kids'),LESSONS],lesson_field:()=>[LESSONS,hub('soccer-quiz-for-kids'),hub('football-rules-for-kids')],
+};
+const uniq=(l:WatchLink[],skip:string[])=>l.filter((x,i,a)=>!skip.includes(x.path)&&a.findIndex(y=>y.path===x.path)===i);
+/** The links under a clip: the game or guide it comes from, the matching learn pages, the games list and the island. */
+export function watchLinks(v:WatchVideo):WatchLink[]{
+ const g=gameOf(v);
+ const own=g?[{path:g.path,name:`How to play ${g.name}`,line:g.blurb},...g.guides.slice(0,2)]
+  :v.key==='hero'?[game('kitrush'),game('snake'),game('airhockey')]
+  :v.group==='island'?(ISLAND_LINKS[v.key]?.()??[]):(GUIDE_LINKS[v.key]?.()??[]);
+ return uniq([...own,HUB,PLAY],[v.path]);
+}
+/** The text under a clip's own words, from the record of the thing it shows. */
+export function watchAbout(v:WatchVideo):WatchAbout{
+ const g=gameOf(v);
+ if(g)return {title:`About ${g.name}`,lines:[{text:g.lead},{label:'The football skill',text:`${g.skill}.`},{label:'On a phone',text:g.phone[0]},{label:'The first rule',text:g.rules[0]}]};
+ if(v.key==='hero')return {title:'About the arcade games',lines:[{text:GAMES_HUB.lead},{text:GAMES_HUB.intro[1]}]};
+ const guide=GUIDE_VIDEOS.find(x=>x.key===v.key);
+ if(guide)return {title:'About this lesson clip',lines:[{text:guide.description},{text:DEFINITION}]};
+ return {title:'About Futbol Island',lines:[{text:GAME_FOOT}]};
+}
+/* Checked at load: every clip has links to at least three other pages. */
+for(const v of allWatchVideos())if(watchLinks(v).length<3)throw new Error(`videoPages: ${v.slug} has fewer than three links`);
