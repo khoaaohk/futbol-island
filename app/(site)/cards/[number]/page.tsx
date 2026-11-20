@@ -6,7 +6,7 @@ import {cardByNumber,cardPath,eraWord,SITE_CARDS} from '@/lib/site/cards';
 import {cardArticleLd,cardNote,cardNoteDrill,noteCredit} from '@/lib/site/cardNotes';
 import {lessonPath} from '@/lib/site/lessons';
 import {cardRelated,roleLesson,rolePlural} from '@/lib/site/related';
-import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta} from '@/lib/site/seo';
+import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta,fullDescription} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {checkedOn} from '@/lib/site/checked';
 import {bookForCard,cardTopicLinks} from '@/lib/site/crossLinks';
@@ -29,7 +29,7 @@ const card=(p:{number:string})=>/^\d+$/.test(p.number)?cardByNumber(Number(p.num
 export function generateMetadata({params}:{params:{number:string}}){
  const c=card(params);if(!c)return {};
  /* Nov 20 2026 (SEO foundation): noindex, follow (lib/site/paths.ts NOINDEX_CARD_PATHS): reached by links, not listed in search. */
- return {robots:{index:false,follow:true},...pageMeta(`${c.displayName} Football Card #${c.number}`.length<=44?`${c.displayName} Football Card #${c.number}`:`${c.displayName} (card #${c.number})`,/* Nov 17 2026: says what the page is (Search Console: "… football cards" queries); the number stays in the picture alt */firstSentence(c.blurb||`${c.displayName}, ${c.roleLabel}.`),cardPath(c.number),
+ return {robots:{index:false,follow:true},...pageMeta(`${c.displayName} Football Card #${c.number}`.length<=44?`${c.displayName} Football Card #${c.number}`:`${c.displayName} (card #${c.number})`,/* Nov 17 2026: says what the page is (Search Console: "… football cards" queries); the number stays in the picture alt */fullDescription(firstSentence(c.blurb||`${c.displayName}, ${c.roleLabel}.`),[`See the position, strengths and clubs on Futbol Island card #${c.number}.`,'See the position, strengths and clubs on the card.','On a Futbol Island card.']),cardPath(c.number),
   {image:{url:ogPath(cardPath(c.number)),alt:`${c.displayName}, Futbol Island card #${c.number}: ${c.roleLabel}`}})};
 }
 export default function CardPage({params}:{params:{number:string}}){

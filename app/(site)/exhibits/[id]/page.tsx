@@ -5,7 +5,7 @@ import RelatedLinks from '@/components/site/RelatedLinks';
 import {exhibitById,exhibitPath,SITE_EXHIBITS} from '@/lib/site/exhibits';
 import {exhibitRelated} from '@/lib/site/related';
 import {booksForExhibit} from '@/lib/site/crossLinks';
-import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta} from '@/lib/site/seo';
+import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta,fullDescription} from '@/lib/site/seo';
 import {ExhibitStamp,ExhibitTileGroup,Hero,isDated,StoryTimeline} from '@/components/site/cards/CardParts';
 import styles from '../../site.module.css';
 
@@ -17,7 +17,7 @@ export const dynamicParams=false;
 export const generateStaticParams=()=>SITE_EXHIBITS.map(e=>({id:e.id}));
 export function generateMetadata({params}:{params:{id:string}}){
  const e=exhibitById(params.id);if(!e)return {};
- return pageMeta(`${e.title} (${e.year})`,firstSentence(e.facts[0]??e.galleryBlurb),exhibitPath(e.id),
+ return pageMeta(`${e.title} (${e.year})`,fullDescription(firstSentence(e.facts[0]??e.galleryBlurb),['Read the story of this case in the Futbol Island football history museum for kids.','A case in the Futbol Island football history museum for kids.','A case in the Futbol Island history museum.','From the Futbol Island museum.']),exhibitPath(e.id),
   {image:{url:ogPath(exhibitPath(e.id)),alt:`${e.title} (${e.year}), a case in the Futbol Island history museum`}});
 }
 export default function ExhibitPage({params}:{params:{id:string}}){

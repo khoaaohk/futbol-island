@@ -11,7 +11,7 @@ import styles from '../site.module.css';
 export const dynamic='force-static';
 const PLAYERS=SITE_CARDS.filter(c=>!c.coach).length,COACHES=SITE_CARDS.length-PLAYERS;
 const DESC=`The Futbol Island card binder: ${PLAYERS} player cards and ${COACHES} coach cards, from today’s stars to all-time greats, in football and futsal.`;
-export const metadata=pageMeta('Player cards',DESC,'/cards');
+export const metadata=pageMeta('Football Player Cards for Kids: Today’s Stars and Greats',DESC,'/cards',{whole:true})/* Nov 20 2026: was "Player cards" */;
 const CRUMBS=[{name:'Home',path:'/'},{name:'Cards',path:'/cards'}];
 
 export default function CardsIndex(){

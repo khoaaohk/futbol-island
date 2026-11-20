@@ -35,6 +35,14 @@ export function fitDescription(d:string):string{
  if(s.length>155)s=s.slice(0,154).replace(/\s+\S*$/,'')+'…';
  return s;
 }
+/** A short first-sentence description made full (SEO foundation, Nov 20 2026: 35 fish, card and exhibit pages had 71 to 89
+ *  characters). Under 120 characters, it takes the first of `tails` that brings it to 120-155; a full one is left alone. The
+ *  tails are template sentences built from the page's own data, so no fact is added. */
+export function fullDescription(base:string,tails:readonly string[]):string{
+ const b=base.replace(/\s+/g,' ').trim();if(b.length>=120)return b;
+ const fits=tails.map(t=>`${b} ${t}`).filter(x=>x.length<=155);
+ return fits.find(x=>x.length>=120)??fits.sort((x,y)=>y.length-x.length)[0]??b;
+}
 /** Page metadata: "X · Futbol Island" (or the title as given with `whole`, for the home page), description, canonical, Open Graph. */
 export function pageMeta(title:string,description:string,path:string,o:{whole?:boolean;type?:'article'|'website';image?:{url:string;alt:string}}={}):Metadata{
  const full=fitTitle(title,o.whole);description=fitDescription(description);

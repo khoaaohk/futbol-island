@@ -7,8 +7,8 @@ import {abs,breadcrumbLd,pageMeta,SITE_NAME} from '@/lib/site/seo';
 import styles from '../site.module.css';
 
 export const dynamic='force-static';
-const DESC=`The Futbol Island Fishbook: ${SITE_FISH.length} sea animals, each linked to a real football club, team or story from the sea.`;
-export const metadata=pageMeta('Fishbook',DESC,'/fish');
+const DESC=`The Futbol Island Fishbook: ${SITE_FISH.length} sea animals, each linked to a real football club, team or story from the sea. With a fun fact and how to catch each one.`;
+export const metadata=pageMeta(`Fishbook: ${SITE_FISH.length} Sea Animals and Their Football Clubs`,DESC,'/fish',{whole:true})/* Nov 20 2026: was "Fishbook" */;
 const CRUMBS=[{name:'Home',path:'/'},{name:'Fish',path:'/fish'}];
 const ORDER=['common','uncommon','rare','legendary'] as const;
 
