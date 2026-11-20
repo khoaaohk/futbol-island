@@ -1,7 +1,9 @@
 import {CHARTS} from './sizes';
-import {exhibitById,exhibitPath} from './exhibits';
+import {exhibitById,exhibitPath,GALLERIES,SITE_EXHIBITS} from './exhibits';
 import {GAME_FOOT,GAME_PAGES,GAMES_HUB,gameById,type GameId} from './games';
-import {DEFINITION,hubBySlug,SAFE_GUIDE} from './hubs';
+import {DEFINITION,HUB_COUNTS,hubBySlug,SAFE_GUIDE} from './hubs';
+import {SAFE_FACTS,SPONSOR_BOARDS_LINE} from './safety';
+import {SITE_FISH} from './fish';
 import {GUIDE_VIDEOS} from './guideVideos';
 import {allWatchVideos,type WatchVideo} from './videos';
 /**
@@ -37,6 +39,25 @@ const ISLAND_LINKS:Record<string,()=>WatchLink[]>={
 const GUIDE_LINKS:Record<string,()=>WatchLink[]>={
  pass_puzzles:()=>[hub('passing-and-support'),game('puzzle'),LESSONS],quiz_question:()=>[hub('soccer-quiz-for-kids'),LESSONS],lesson_field:()=>[LESSONS,hub('soccer-quiz-for-kids'),hub('football-rules-for-kids')],
 };
+/* Nov 20 2026 (checked): the nine island clips all carried one shared sentence and the three lesson clips another, so the
+ * pages read as copies of each other. Each clip now takes its lines from the record of the place it shows: the safety facts
+ * (lib/site/safety.ts, word for word), the counts of lessons, quizzes, fish, museum cases and arcade machines, and the
+ * museum case on shirts. No sentence is on two watch pages (tests/seo-media.cjs). */
+const safe=(title:string)=>{const f=SAFE_FACTS.find(x=>x.title===title);if(!f)throw new Error(`videoPages: safety fact ${title} does not exist`);return f.text;};
+const hubLine=(slug:string)=>{const h=hub(slug);return `${h.name}: ${lower(h.line)}.`;};
+const list=(l:string[])=>`${l.slice(0,-1).join(', ')} and ${l[l.length-1]}`;
+const ISLAND_ABOUT:Record<string,()=>string[]>={
+ walk:()=>[DEFINITION,safe('No accounts')],fly:()=>[safe('Free, with no pop-up or tracking ads')],plaza:()=>[safe('No open chat'),safe('Grown-ups stay in charge')],
+ stadium:()=>[SPONSOR_BOARDS_LINE],fishing:()=>[`The Fishbook has a page for each of the ${SITE_FISH.length} sea animals you can catch on the island.`],
+ match:()=>[hubLine('7v7-9v9-11v11'),hubLine('passing-and-support')],kitstudio:()=>exhibitById('shirts')!.facts.slice(1,3),
+ museum:()=>{const g=GALLERIES.filter(x=>SITE_EXHIBITS.some(e=>e.gallery===x.id));return [`The museum has ${SITE_EXHIBITS.length} cases in ${g.length} galleries: ${list(g.map(x=>x.title))}.`];},
+ room:()=>[`The arcade room has ${GAME_PAGES.length} machines: ${list(GAME_PAGES.map(x=>x.name))}.`],
+};
+const GUIDE_ABOUT:Record<string,()=>string>={
+ pass_puzzles:()=>`Futbol Island has ${hub('passing-and-support').line.replace('lessons on','lessons on passing:')}.`,
+ quiz_question:()=>`Futbol Island has ${HUB_COUNTS.quizzes} quizzes with ${HUB_COUNTS.questions} questions.`,
+ lesson_field:()=>`Futbol Island has ${HUB_COUNTS.lessons} football lessons for 7v7, 9v9, 11v11 and futsal.`,
+};
 const uniq=(l:WatchLink[],skip:string[])=>l.filter((x,i,a)=>!skip.includes(x.path)&&a.findIndex(y=>y.path===x.path)===i);
 /** The links under a clip: the game or guide it comes from, the matching learn pages, the games list and the island. */
 export function watchLinks(v:WatchVideo):WatchLink[]{
@@ -52,8 +73,8 @@ export function watchAbout(v:WatchVideo):WatchAbout{
  if(g)return {title:`About ${g.name}`,lines:[{text:g.lead},{label:'The football skill',text:`${g.skill}.`},{label:'On a phone',text:g.phone[0]},{label:'The first rule',text:g.rules[0]}]};
  if(v.key==='hero')return {title:'About the arcade games',lines:[{text:GAMES_HUB.lead},{text:GAMES_HUB.intro[1]}]};
  const guide=GUIDE_VIDEOS.find(x=>x.key===v.key);
- if(guide)return {title:'About this lesson clip',lines:[{text:guide.description},{text:DEFINITION}]};
- return {title:'About Futbol Island',lines:[{text:GAME_FOOT}]};
+ if(guide)return {title:'About this lesson clip',lines:[{text:guide.description},{text:(GUIDE_ABOUT[v.key]??(()=>DEFINITION))()}]};
+ return {title:'About Futbol Island',lines:(ISLAND_ABOUT[v.key]?.()??[GAME_FOOT]).map(text=>({text}))};
 }
 /* Checked at load: every clip has links to at least three other pages. */
 for(const v of allWatchVideos())if(watchLinks(v).length<3)throw new Error(`videoPages: ${v.slug} has fewer than three links`);

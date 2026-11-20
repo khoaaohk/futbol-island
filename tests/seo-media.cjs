@@ -22,7 +22,8 @@ for(const e of E){
  const at=ex.exhibitPath(e.id),m=page.generateMetadata({params:{id:e.id}});
  assert.equal(m.title,e.seoTitle,`${at}: the title is the search title, whole`);assert(m.title.length>=40&&m.title.length<=60,`${at}: title 40-60 (${m.title.length})`);
  assert(/football|soccer|futsal|goalkeeper|world cup|ballon|copa|var\b/i.test(m.title),`${at}: the title names the sport or the subject`);
- assert(m.description.length>=120&&m.description.length<=155,`${at}: description 120-155 (${m.description.length})`);
+ assert(m.description.length>=120&&m.description.length<=155,`${at}: description 120-155 (${m.description.length})`);assert(/[.!?]$/.test(m.description),`${at}: the description ends on a whole sentence`);
+ for(const l of e.story)assert(!/undefined/.test(l.text),`${at}: no empty field in the story`);
  assert.equal(m.alternates.canonical,at,`${at}: self canonical`);
  const html=render(React.createElement(page.default,{params:{id:e.id}}));
  assert.equal((html.match(/<h1[ >]/g)||[]).length,1,`${at}: one h1`);assert(html.includes(`>${esc(e.h1)}</h1>`),`${at}: the h1`);
@@ -37,10 +38,11 @@ for(const e of E){
  assert(hub.metadata.description.length>=120&&hub.metadata.description.length<=155,'/exhibits: description 120-155');
  for(const e of E)assert(h.includes(`href="${ex.exhibitPath(e.id)}"`),`/exhibits links ${e.id}`);assert.equal((h.match(/<h1[ >]/g)||[]).length,1,'/exhibits: one h1');}
 // ---- 2. watch pages ------------------------------------------------------------------------------------------------------------
-const W=vs.allWatchVideos(),watch=L('app/(site)/videos/[slug]/page.tsx');let vLinks=0;
+const W=vs.allWatchVideos(),watch=L('app/(site)/videos/[slug]/page.tsx');let vLinks=0;const said=new Map();
 for(const v of W){
  const at=v.path,about=vp.watchAbout(v),links=vp.watchLinks(v),html=render(React.createElement(watch.default,{params:{slug:v.slug}}));vLinks+=links.length;
  assert(about.title&&about.lines.length>=1,`${at}: an about section`);
+ for(const l of about.lines){assert(!said.has(l.text),`${at}: an about sentence is also on ${said.get(l.text)}`);said.set(l.text,at);assert(!/undefined/.test(l.text),`${at}: no empty field`);}
  for(const l of about.lines){assert(l.text.length>20,`${at}: about text`);assert(html.includes(esc(l.text)),`${at}: the about text is on the page`);assert(!/—/.test(l.text),`${at}: no em dash`);}
  assert(links.length>=3&&links.length<=6,`${at}: 3-6 links (${links.length})`);assert.equal(new Set(links.map(l=>l.path)).size,links.length,`${at}: no link twice`);
  for(const l of links){assert(real(l.path),`${at}: ${l.path} is a real page`);assert(l.path!==at,`${at}: no self link`);assert(html.includes(`href="${l.path}"`),`${at}: links ${l.path}`);}

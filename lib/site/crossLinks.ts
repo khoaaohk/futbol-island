@@ -1,4 +1,4 @@
-import {RULES,ruleBySlug} from './rules';
+import {RULES,RULES_HUB,ruleBySlug} from './rules';
 import {TERM_PAGES,termBySlug} from './terms';
 import {TOOL_PAGES} from './tools/registry';
 import {SITE_BOOKS,type SiteBook} from './books';
@@ -8,6 +8,7 @@ import {CHARTS} from './sizes';
 import {POSITIONS} from './positions';
 import {FORMATIONS_HUB} from './formations';
 import {EXHIBITS} from '@/lib/endgame/museum';
+import {hubBySlug} from './hubs';
 /**
  * Cross-cluster links (SEO foundation, Nov 20 2026): the pages that can rank had few links from OTHER clusters. A rule page
  * linked the next two rules and its hubs, a term page linked terms, and each pop-up book had one inlink (the shelf). The
@@ -136,33 +137,38 @@ export const booksWithoutCard=():XLink[]=>built.filter(b=>!b.card).map(bookLink)
 // ---- museum exhibits (SEO phase 2, Nov 20 2026) -----------------------------------------------------------------------------------
 /** Museum case -> the rule, term, position, formation and size-chart pages about the same thing. A case page linked other cases,
  *  one lesson or hub and the lessons list, so the history pages gave nothing to the pages that explain today's game. `r:` a rule,
- *  `t:` a term, `tool:` a tool, `pos:` a position page, `chart:` a size chart, `hub:` the positions or formations guide. Each row
- *  is tied to a fact the case states (the 1863 Laws, the 1925 offside change, the size 5 ball, the two goals in the 1991 final). */
+ *  `t:` a term, `tool:` a tool, `pos:` a position page, `chart:` a size chart, `hub:` a guide or lessons list (HUB_LINKS). Each row
+ *  is tied to a fact the case states (the 1863 Laws, the 1925 offside change, the size 5 ball, the two goals in the 1991 final,
+ *  the 80 minute matches of 1991, boots for indoor courts, the four paths in the trophy room). Checked Nov 20 2026: loose rows
+ *  (boots to tackle, trophies to clean sheet, the first World Cup to hat-trick) were cut. The cup and floodlight cases state no
+ *  fact a rule or term page explains, so they link the rules list and the match length page and nothing more. */
 const EXHIBIT_TOPICS:Record<string,string[]>={
- 'laws-1863':['r:offside','r:fouls-and-free-kicks','r:kick-off'],
+ 'laws-1863':['hub:rules','r:offside','r:fouls-and-free-kicks','r:throw-in'],
  'penalty-1891':['r:penalty-kick','r:fouls-and-free-kicks','pos:goalkeeper'],
- 'var-2018':['r:offside','r:penalty-kick','r:yellow-and-red-cards','r:handball'],
- 'worldcup-1930':['hub:formations','t:hat-trick','r:substitutions-and-game-length'],
+ 'var-2018':['r:penalty-kick','r:yellow-and-red-cards','r:offside'],
+ 'worldcup-1930':['hub:rules','r:substitutions-and-game-length'],
  'wwc-1991':['t:brace','pos:striker','r:substitutions-and-game-length'],
- 'futsal-1989':['r:futsal-rules','tool:futsal','t:first-touch'],
+ 'futsal-1989':['r:futsal-rules','hub:futsal','tool:futsal','t:first-touch'],
  'stadiums':['chart:soccer-field-size-by-age','tool:fields'],
- 'laced-leather':['chart:soccer-ball-size-by-age','r:heading-rules-for-kids'],
- 'telstar-1970':['chart:soccer-ball-size-by-age','t:first-touch'],
- 'boots':['t:first-touch','t:dribble','t:tackle'],
+ 'laced-leather':['chart:soccer-ball-size-by-age','chart:soccer-age-groups'],
+ 'telstar-1970':['chart:soccer-ball-size-by-age','chart:soccer-age-groups'],
+ 'boots':['r:futsal-rules','hub:futsal'],
  'shirts':['hub:positions','pos:goalkeeper','pos:striker','tool:lineup'],
- 'hall-of-fame':['hub:positions','t:hat-trick','t:clean-sheet'],
- 'ballon-dor':['hub:positions','pos:striker','t:assist'],
- 'first-international-1872':['hub:formations','t:dribble','t:square-pass'],
+ 'hall-of-fame':['hub:sizes','hub:futsal'],
+ 'ballon-dor':['hub:positions','pos:striker','pos:goalkeeper'],
+ 'first-international-1872':['hub:formations','hub:passing','t:dribble'],
  'offside-rules':['r:offside','t:offside-trap','t:through-ball'],
  'formations-history':['hub:formations','t:false-nine','pos:center-back','tool:lineup'],
- 'floodlights-1878':['r:kick-off','r:substitutions-and-game-length'],
- 'copa-america-1916':['hub:formations','r:substitutions-and-game-length','t:clean-sheet'],
+ 'floodlights-1878':['r:substitutions-and-game-length','chart:soccer-field-size-by-age'],
+ 'copa-america-1916':['hub:rules','r:substitutions-and-game-length'],
  'keeper-hands-1912':['r:handball','r:back-pass-rule','pos:goalkeeper','t:sweeper-keeper'],
  'free-kick-wall':['r:fouls-and-free-kicks','t:free-kick-wall','t:set-piece'],
- 'ball-curve':['t:cross','t:set-piece','r:corner-kick','t:volley'],
- 'throw-in':['r:throw-in','t:set-piece','t:first-touch'],
+ 'ball-curve':['r:fouls-and-free-kicks','t:free-kick-wall','t:set-piece'],
+ 'throw-in':['r:throw-in','t:set-piece'],
 };
-const HUB_LINKS:Record<string,XLink>={positions:POSITIONS_LINK,formations:{path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.crumb,line:FORMATIONS_HUB.blurb}};
+const lessonHub=(slug:string):XLink=>{const h=hubBySlug(slug);if(!h)throw new Error(`crossLinks: hub ${slug} does not exist`);return {path:h.path,name:h.h1,line:h.blurb};};
+const HUB_LINKS:Record<string,XLink>={positions:POSITIONS_LINK,formations:{path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.crumb,line:FORMATIONS_HUB.blurb},
+ rules:{path:RULES_HUB.path,name:RULES_HUB.h1,line:RULES_HUB.blurb},passing:lessonHub('passing-and-support'),futsal:lessonHub('futsal-for-kids'),sizes:lessonHub('7v7-9v9-11v11')};
 function exhibitTopic(key:string):XLink{
  const [kind,id]=[key.slice(0,key.indexOf(':')),key.slice(key.indexOf(':')+1)];
  if(kind==='pos'){const p=POSITIONS.find(x=>x.slug===id);if(!p)throw new Error(`crossLinks: position ${id} does not exist`);return {path:p.path,name:p.h1,line:p.numberLine};}

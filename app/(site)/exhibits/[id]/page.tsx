@@ -18,7 +18,7 @@ export const generateStaticParams=()=>SITE_EXHIBITS.map(e=>({id:e.id}));
 export function generateMetadata({params}:{params:{id:string}}){
  const e=exhibitById(params.id);if(!e)return {};
  /* Nov 20 2026 (SEO phase 2): the title is the case's search title (lib/site/exhibits.ts SEARCH), used whole */
- return pageMeta(e.seoTitle,fullDescription(firstSentence(e.facts[0]??e.galleryBlurb),['Read the story of this case in the Futbol Island football history museum for kids.','A case in the Futbol Island football history museum for kids.','A case in the Futbol Island history museum.','From the Futbol Island museum.']),exhibitPath(e.id),
+ return pageMeta(e.seoTitle,e.seoDescription??fullDescription(firstSentence(e.facts[0]??e.galleryBlurb),['Read the story of this case in the Futbol Island football history museum for kids.','A case in the Futbol Island football history museum for kids.','A case in the Futbol Island history museum.','From the Futbol Island museum.']),exhibitPath(e.id),
   {whole:true,image:{url:ogPath(exhibitPath(e.id)),alt:`${e.title} (${e.year}), a case in the Futbol Island history museum`}});
 }
 export default function ExhibitPage({params}:{params:{id:string}}){
