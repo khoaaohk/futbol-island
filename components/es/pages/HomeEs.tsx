@@ -16,8 +16,8 @@ import styles from '@/app/(site)/site.module.css';
 const PUB=publicWorldEnabled();
 const URL_ES=SITE_URL+toEs('/');
 export const meta={
- title:'Aprende fútbol para niños: lecciones y pruebas gratis',
- desc:'Lecciones y pruebas rápidas de fútbol gratis para niños de 7 a 12 años, en una isla divertida. Sin anuncios de rastreo, sin cuentas y sin chat abierto.',
+ title:'Futbol Island: juego de fútbol gratis para niños',
+ desc:'Futbol Island es un juego gratis para aprender fútbol, para niños de 7 a 12 años, con lecciones y pruebas. Sin anuncios de rastreo, sin cuentas y sin chat abierto.',
 };
 /** The hidden-ball count, kept in step with the English "Explore" chip. */
 const BALLS=LEARN_HIGHLIGHTS.find(h=>h.id==='explore')?.chips[0]?.match(/\d+/)?.[0];

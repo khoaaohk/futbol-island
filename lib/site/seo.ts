@@ -52,8 +52,9 @@ export function noindexMeta(title:string,description:string,path:string):Metadat
  return {title,description,alternates:{canonical:path},robots:{index:false,follow:true}};
 }
 /** Home `/` (SEO, Nov 8 2026: "learn football (soccer) for kids, lessons and quizzes, fun and safe, free in your browser"). */
-export const HOME_TITLE='Learn Football for Kids: Free Lessons and Quizzes';
-export const HOME_DESC='Free football (soccer) lessons and quizzes for kids 7 to 12, on a fun island. No pop-up or tracking ads, no accounts, no open chat. Play in your browser.';
+/* Nov 20 2026 (SEO foundation): the title starts with the brand ("futbol island" ranked 4.4 under a title that never said it). */
+export const HOME_TITLE='Futbol Island: Free Football Game and Lessons for Kids';
+export const HOME_DESC='Futbol Island is a free football (soccer) game for kids 7 to 12, with lessons and quizzes. No pop-up or tracking ads, no accounts, no open chat.';
 /** FAQPage JSON-LD: pass exactly the questions and answers the page shows. */
 export const faqLd=(faq:readonly {q:string;a:string}[])=>({'@context':'https://schema.org','@type':'FAQPage',mainEntity:faq.map(x=>({'@type':'Question',name:x.q,acceptedAnswer:{'@type':'Answer',text:x.a}}))});
 /** A collection page (the topic hubs) with real content dates (lib/site/updated.ts). */
