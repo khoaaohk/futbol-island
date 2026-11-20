@@ -1,3 +1,4 @@
+import type {ReactNode} from 'react';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import SheetSvg from '@/lib/site/tools/SheetSvg';
 import {fileUrl,type PrintFile} from '@/lib/site/tools/printables';
@@ -14,10 +15,11 @@ import t from './tools.module.css';
  * on these pages only (the header is already hidden in print by site.module.css), a sheet preview and its download links.
  */
 /** headingFormat: a lineup format landing; its h1 follows the builder's format select (components/site/tools/LineupHeading.tsx). */
-export function ToolIntro({crumbs,h1,lead,headingFormat,app,facts}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:{href:string;label:string;line:string};facts?:readonly Fact[]}){
+export function ToolIntro({crumbs,h1,lead,headingFormat,app,facts,first}:{crumbs:readonly Crumb[];h1:string;lead:string;headingFormat?:GuideFormat;app?:{href:string;label:string;line:string};facts?:readonly Fact[];/** shown right under the h1, before the lead (Nov 20 2026: what goes in, what comes out) */first?:ReactNode}){
  return <header className={site.intro}>
   <Breadcrumbs crumbs={crumbs}/>
   {headingFormat?<LineupHeading format={headingFormat} className={site.title}/>:<h1 className={site.title}>{h1}</h1>}
+  {first}
   <QuickAnswer lead={lead} facts={facts} answer={false}/>
   {app&&<AppLink {...app}/>}
   <p className={site.caption}>{TOOL_NAMES}</p>
