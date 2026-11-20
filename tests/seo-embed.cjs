@@ -48,6 +48,7 @@ const em=L('lib/site/tools/embed.ts'),reg=L('lib/site/tools/registry.ts'),iE=L('
   assert(/Use this on your club’s website/.test(h),`/tools/${s}: the embed box`);
   assert(h.includes(`&lt;iframe src=&quot;https://futbolisland.app/embed/${s}&quot;`),`/tools/${s}: the iframe snippet`);}
  const sn=em.embedSnippet(em.embedTool('soccer-lineup-builder'));
- assert(/^<iframe src="https:\/\/futbolisland\.app\/embed\/soccer-lineup-builder" title="[^"]+" width="100%" height="\d+" style="[^"]+" loading="lazy" referrerpolicy="strict-origin"><\/iframe>$/.test(sn),'snippet shape');
+ assert(/^<iframe src="https:\/\/futbolisland\.app\/embed\/soccer-lineup-builder" title="[^"]+" width="100%" height="\d+" style="[^"]+" loading="lazy" referrerpolicy="strict-origin"><\/iframe>\n<p style="[^"]+"><a href="https:\/\/futbolisland\.app\/tools\/soccer-lineup-builder">Made with Futbol Island<\/a><\/p>$/.test(sn),'snippet shape: the iframe, then one visible credit line that links to the tool page (Nov 20 2026)');
+ assert(!/rel=|display:\s*none|font-size:\s*0|visibility/.test(sn),'the credit line is plain and visible');
  console.log(`seo-embed: ok (${slugs.length} embeds)`);
 })().catch(e=>{console.error(e);process.exit(1);});

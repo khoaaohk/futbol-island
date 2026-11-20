@@ -18,8 +18,10 @@ export default function EmbedSnippet({snippet,name,lang}:{snippet:string;name:st
   <div className={site.foldBody}>
   {es?<p>{W.line(name)}</p>:<p>Paste this code into your club or league web page to show the {name} there, for your coaches and parents.</p>}
   <p className={site.caption}>{es?W.caption:'No ads, no tracking, no sign-up; names typed into it stay on each visitor’s device.'}</p>
+  {/* Nov 20 2026: the code ends with one plain credit line (lib/site/tools/embed.ts) */}
+  <p className={site.caption} data-embed-credit="">{es?'El código termina con una línea de crédito pequeña, “Hecho con Futbol Island”. Puedes borrarla.':'The code ends with one small credit line, “Made with Futbol Island”. You can delete it.'}</p>
   <label className={site.caption} htmlFor="embed-code">{es?W.code:'Embed code'}</label>
-  <textarea id="embed-code" readOnly rows={4} value={snippet} onFocus={e=>e.currentTarget.select()} className={fx.embedCode}/>
+  <textarea id="embed-code" readOnly rows={6} value={snippet} onFocus={e=>e.currentTarget.select()} className={fx.embedCode}/>
   <p><button type="button" onClick={copy} className={fx.copyBtn}>{es?W.copy:'Copy embed code'}</button> <span role="status" className={site.caption}>{done}</span></p>
   </div></details>
  </section>;
