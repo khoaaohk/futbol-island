@@ -44,6 +44,16 @@ export const LESSONS_INDEX='/learn/lessons';
 export const formatPhrase=(f:string)=>f==='Futsal'?'futsal':`${f} football (soccer)`;
 export const lessonTitle=(l:{title:string;formatLabel:string})=>{const f=l.formatLabel,k=f==='Futsal'?'Futsal':`${f} Football`;
  return [`${l.title}: ${k} Lesson and Quiz for Kids`,`${l.title}: ${f} Lesson and Quiz for Kids`,`${l.title}: ${f} Football Quiz for Kids`,`${l.title} (${f} Lesson and Quiz)`,`${l.title} (${f} lesson)`].find(t=>t.length<=60)??l.title;};
-/** The concept's first sentence, then what the page is; cut back to <= 155 characters by dropping the tail first. */
-export const lessonDescription=(l:{concept:string;formatLabel:string})=>{const c=firstSentence(l.concept,120),f=l.formatLabel;
- return [`${c} A free ${formatPhrase(f)} lesson and quiz for kids. No ads.`,`${c} A free ${formatPhrase(f)} lesson and quiz for kids.`,`${c} Free ${f} lesson and quiz for kids.`,c].find(d=>d.length<=155)??c.slice(0,155);};
+/** The concept's first sentence, then what the page is; cut back to <= 155 characters by dropping the tail first.
+ *  Nov 20 2026 (SEO leftovers): a short concept left 14 descriptions under 120 characters. Those now get a fuller tail built from
+ *  the lesson's own fields (how many coach steps and quiz questions, its level, its topic), the fullest form that fits 155. */
+type DescLesson={concept:string;formatLabel:string;steps?:readonly unknown[];questions?:readonly unknown[];difficulty?:string;category?:string};
+export const DESC_MIN=120,DESC_MAX=155;
+export const lessonDescription=(l:DescLesson)=>{const c=firstSentence(l.concept,120),f=l.formatLabel;
+ const d=[`${c} A free ${formatPhrase(f)} lesson and quiz for kids. No ads.`,`${c} A free ${formatPhrase(f)} lesson and quiz for kids.`,`${c} Free ${f} lesson and quiz for kids.`,c].find(x=>x.length<=DESC_MAX)??c.slice(0,DESC_MAX);
+ if(d.length>=DESC_MIN)return d;
+ const whole=firstSentence(l.concept,DESC_MAX);if(c.endsWith('…')&&!whole.endsWith('…')&&whole.length>=DESC_MIN)return whole;/* a long first sentence, uncut, is a full description */
+ const s=l.steps?.length??0,q=l.questions?.length??0,n=(k:number,w:string)=>`${k} ${w}${k===1?'':'s'}`;
+ const what=s>0&&q>0?`${c} A free ${formatPhrase(f)} lesson for kids with ${n(s,'coach step')} and ${n(q,'quiz question')}.`:`${c} A free ${formatPhrase(f)} lesson and quiz for kids.`;
+ const level=l.difficulty?` Level: ${l.difficulty.toLowerCase()}.`:'',topic=l.category?` Topic: ${l.category.toLowerCase()}.`:'';
+ return [`${what}${level}${topic} No ads.`,`${what}${level} No ads.`,`${what}${topic} No ads.`,`${what} No ads.`,what,`${c} A free ${f} lesson for kids with ${n(s,'step')} and ${n(q,'quiz question')}. No ads.`].find(x=>x.length>=DESC_MIN&&x.length<=DESC_MAX)??d;};
