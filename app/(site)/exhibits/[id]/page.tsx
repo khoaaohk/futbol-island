@@ -4,7 +4,7 @@ import Breadcrumbs from '@/components/site/Breadcrumbs';
 import RelatedLinks from '@/components/site/RelatedLinks';
 import {exhibitById,exhibitPath,SITE_EXHIBITS} from '@/lib/site/exhibits';
 import {exhibitRelated} from '@/lib/site/related';
-import {booksForExhibit} from '@/lib/site/crossLinks';
+import {booksForExhibit,exhibitCrossLinks} from '@/lib/site/crossLinks';
 import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta,fullDescription} from '@/lib/site/seo';
 import {ExhibitStamp,ExhibitTileGroup,Hero,isDated,StoryTimeline} from '@/components/site/cards/CardParts';
 import styles from '../../site.module.css';
@@ -17,8 +17,9 @@ export const dynamicParams=false;
 export const generateStaticParams=()=>SITE_EXHIBITS.map(e=>({id:e.id}));
 export function generateMetadata({params}:{params:{id:string}}){
  const e=exhibitById(params.id);if(!e)return {};
- return pageMeta(`${e.title} (${e.year})`,fullDescription(firstSentence(e.facts[0]??e.galleryBlurb),['Read the story of this case in the Futbol Island football history museum for kids.','A case in the Futbol Island football history museum for kids.','A case in the Futbol Island history museum.','From the Futbol Island museum.']),exhibitPath(e.id),
-  {image:{url:ogPath(exhibitPath(e.id)),alt:`${e.title} (${e.year}), a case in the Futbol Island history museum`}});
+ /* Nov 20 2026 (SEO phase 2): the title is the case's search title (lib/site/exhibits.ts SEARCH), used whole */
+ return pageMeta(e.seoTitle,e.seoDescription??fullDescription(firstSentence(e.facts[0]??e.galleryBlurb),['Read the story of this case in the Futbol Island football history museum for kids.','A case in the Futbol Island football history museum for kids.','A case in the Futbol Island history museum.','From the Futbol Island museum.']),exhibitPath(e.id),
+  {whole:true,image:{url:ogPath(exhibitPath(e.id)),alt:`${e.title} (${e.year}), a case in the Futbol Island history museum`}});
 }
 export default function ExhibitPage({params}:{params:{id:string}}){
  const e=exhibitById(params.id);if(!e)notFound();
@@ -26,13 +27,13 @@ export default function ExhibitPage({params}:{params:{id:string}}){
  const dated=e.story.filter(l=>isDated(l.head)).length,timeline=dated>=2&&dated*2>=e.story.length;
  const rel=exhibitRelated(e);
  return <>
-  <JsonLd data={creativeWorkLd({name:e.title,path:exhibitPath(e.id),description:e.facts.join(' '),image:ogPath(exhibitPath(e.id)),
+  <JsonLd data={creativeWorkLd({name:e.h1,path:exhibitPath(e.id),description:e.facts.join(' '),image:ogPath(exhibitPath(e.id)),
    about:{'@type':'Thing',name:`${e.title} (${e.year})`,description:e.galleryTitle}})}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <header className={styles.intro}>
    <Breadcrumbs crumbs={crumbs}/>
    <p className={styles.eyebrow}>{e.galleryTitle} · {e.year}</p>
-   <h1 className={styles.title}>{e.title}</h1>
+   <h1 className={styles.title}>{e.h1}</h1>
   </header>
   <Hero src={ogPath(exhibitPath(e.id))} alt={`${e.title} (${e.year}), a case in the Futbol Island history museum: ${e.galleryTitle}`}/>
   <ExhibitStamp year={e.year} gallery={e.galleryTitle}/>
@@ -46,8 +47,9 @@ export default function ExhibitPage({params}:{params:{id:string}}){
   {e.sources.length>0&&<section className={styles.section} aria-labelledby="sources"><h2 className={styles.h3} id="sources">Sources</h2>
    <ul className={styles.caption}>{e.sources.map(s=><li key={s.url}>{s.title}</li>)}</ul>
   </section>}
- {/* Nov 20 2026 (SEO foundation): the pop-up books that name this case link back from it */}
-  <RelatedLinks related={{...rel,read:[...rel.read,...booksForExhibit(e.id).map(b=>({path:b.path,name:b.name,meta:b.line}))]}} heading="More from the museum" readHeading="Learn it on the pitch" renderGroup={g=><ExhibitTileGroup g={g}/>}/>
+ {/* Nov 20 2026 (SEO foundation): the pop-up books that name this case link back from it; (phase 2) first the rule, term,
+     position and chart pages about the same thing (lib/site/crossLinks.ts exhibitCrossLinks) */}
+  <RelatedLinks related={{...rel,read:[...[...exhibitCrossLinks(e.id),...booksForExhibit(e.id)].map(b=>({path:b.path,name:b.name,meta:b.line})),...rel.read].filter((x,i,a)=>a.findIndex(y=>y.path===x.path)===i)}} heading="More from the museum" readHeading="Learn it on the pitch" renderGroup={g=><ExhibitTileGroup g={g}/>}/>
   <p className={styles.end}><a className={styles.cta} href="/museum">See it in the museum on the island</a></p>
  </>;
 }

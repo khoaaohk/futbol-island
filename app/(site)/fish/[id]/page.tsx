@@ -30,7 +30,7 @@ export const dynamicParams=false;
 export const generateStaticParams=()=>SITE_FISH.map(f=>({id:f.id}));
 export function generateMetadata({params}:{params:{id:string}}){
  const f=fishById(params.id);if(!f)return {};
- return pageMeta(`${f.name}: Fun Fact and Size`.length<=44?`${f.name}: Fun Fact and Size`:`${f.name} (Fishbook)`,/* Nov 17 2026: says what the page holds; a long name keeps the old short label so the site suffix still fits */fullDescription(firstSentence(f.club.fact),[`See where the ${f.name.toLowerCase()} lives, a fun fact and how to catch it in the Futbol Island Fishbook.`,'See where it lives, a fun fact and how to catch it on Futbol Island.','See where it lives and how to catch it on Futbol Island.','With a fun fact and how to catch it.']),fishPath(f.id),
+ return pageMeta(`${f.name}: Fun Fact and Size`.length<=44?`${f.name}: Fun Fact and Size`:`${f.name} (Fishbook)`,/* Nov 17 2026: says what the page holds; a long name keeps the old short label so the site suffix still fits */fullDescription(firstSentence(f.club.fact),[`See where the ${f.name.toLowerCase()} lives, a fun fact and how to catch it in the Futbol Island Fishbook.`,'See where it lives, a fun fact and how to catch it on Futbol Island.','See where it lives and how to catch it on Futbol Island.','With a fun fact and how to catch it.','See it in the Fishbook.'/* Nov 20 2026: four pages sat at 119 characters with no tail that fit */]),fishPath(f.id),
   {image:{url:ogPath(fishPath(f.id)),alt:`Drawing of a ${f.name.toLowerCase()}, the Fishbook animal for ${f.club.name}`}});
 }
 /** The key facts, all from the game's own data (lib/town/fishing). */
