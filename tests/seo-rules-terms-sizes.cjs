@@ -39,8 +39,8 @@ const PATHS=new Set(paths.sitePaths().map(p=>p.path)),A='app/(site)/learn',PAGES
 const WANT_RULES=['offside','throw-in','goal-kick','corner-kick','handball','fouls-and-free-kicks','penalty-kick','yellow-and-red-cards','back-pass-rule','build-out-line','kick-off','drop-ball','advantage','substitutions-and-game-length','heading-rules-for-kids','futsal-rules'];
 assert.deepEqual(rules.RULES.map(r=>r.slug),WANT_RULES,'the sixteen rules');
 assert.deepEqual(sizes.CHARTS.map(c=>c.path),['/learn/soccer-ball-size-by-age','/learn/soccer-field-size-by-age','/learn/soccer-age-groups']);
-assert(terms.TERM_PAGES.length>=35&&terms.TERM_PAGES.length<=45,`35-45 term pages (${terms.TERM_PAGES.length})`);
-assert(terms.GLOSSARY.length>=60&&terms.GLOSSARY.length<=110,`glossary size (${terms.GLOSSARY.length})`);
+assert(terms.TERM_PAGES.length>=55&&terms.TERM_PAGES.length<=65,`55-65 term pages (${terms.TERM_PAGES.length})`);
+assert(terms.GLOSSARY.length>=80&&terms.GLOSSARY.length<=120,`glossary size (${terms.GLOSSARY.length})`);
 assert.equal(PAGES.length,2+3+rules.RULES.length+terms.TERM_PAGES.length,'two hubs, three charts, the rules, the term pages');
 assert.equal(new Set(guides.ALL_GUIDE_PAGES.map(g=>g.path)).size,guides.ALL_GUIDE_PAGES.length,'unique paths across both clusters');
 const SINGLE=['/learn/soccer-rules','/learn/soccer-ball-size-by-age','/learn/soccer-field-size-by-age','/learn/soccer-age-groups','/learn/soccer-terms'];

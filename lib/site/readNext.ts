@@ -25,7 +25,9 @@ const TERM_ORDER=['two-v-one','give-and-go','through-ball','third-man-run','over
  'pressing','marking','goal-side','tackle','set-piece','free-kick-wall','yellow-card','red-card','clean-sheet','hat-trick',
  /* batch 1, Nov 20 2026: the ball, passing and runs, defending, roles, then the words for goals */
  'dribble','shielding','volley','half-volley','square-pass','man-on','overload','underlap','far-post','build-up','false-nine','box-to-box','sweeper-keeper',
- 'jockeying','cover','clearance','offside-trap','assist','brace','own-goal'];
+ 'jockeying','cover','clearance','offside-trap','assist','brace','own-goal',
+ /* batch 2, Nov 20 2026: the ball, team shape, moves and finishes, defending shapes, futsal, the areas, then the words for time */
+ 'header','weak-foot','one-touch','scanning','support','possession','width','step-over','dummy','chip','tap-in','near-post','low-block','high-line','pivot','penalty-area','goal-area','stoppage-time','extra-time','penalty-shoot-out'];
 function ordered<T extends {slug:string}>(list:readonly T[],order:readonly string[],what:string):T[]{
  const out=order.map(s=>{const x=list.find(y=>y.slug===s);if(!x)throw new Error(`readNext: ${what} ${s} does not exist`);return x;});
  if(out.length!==list.length||new Set(order).size!==order.length)throw new Error(`readNext: the ${what} order must list every page once`);
