@@ -34,7 +34,7 @@ assert(!/marketing/.test(strip(read('app/llms-full.txt/route.ts'))),'llms-full.t
 assert(/path:'\/marketing'/.test(strip(read('lib/site/paths.ts'))),'paths.ts (the sitemap) lists /marketing');
 assert(!/marketing\/overview/.test(strip(read('lib/site/paths.ts'))),'the print page /marketing/overview is not in the sitemap');
 // No link anywhere: an href, a link target string or a router push to /marketing outside the marketing files.
-const OWN=new Set([PAGE,DOC,LIB,'lib/site/paths.ts'/* the sitemap lists /marketing since Nov 6 2026 */,'lib/site/lastmod.generated.json'/* its sitemap lastmod (Nov 15 2026) */,'app/(site)/page.tsx',/* the main page's About chapter links to it (owner, Nov 4) */'tests/marketing-page.cjs','scripts/build-marketing-pdf.cjs']);
+const OWN=new Set([PAGE,DOC,LIB,'lib/site/paths.ts'/* the sitemap lists /marketing since Nov 6 2026 */,'lib/site/lastmod.generated.json'/* its sitemap lastmod (Nov 15 2026) */,'lib/site/lastmodData.generated.ts'/* the same lastmod list as a code module (Nov 20 2026) */,'app/(site)/page.tsx',/* the main page's About chapter links to it (owner, Nov 4) */'tests/marketing-page.cjs','scripts/build-marketing-pdf.cjs']);
 const walk=d=>{const abs=path.join(root,d);if(!fs.existsSync(abs))return [];return fs.readdirSync(abs,{withFileTypes:true}).flatMap(e=>e.isDirectory()?(e.name==='node_modules'||e.name.startsWith('.')?[]:walk(`${d}/${e.name}`)):[`${d}/${e.name}`]);};
 const LINK=/(href=["'{`]*|['"`])(https:\/\/futbolisland\.app)?\/marketing(\/|["'`?#])/;
 let scanned=0;
