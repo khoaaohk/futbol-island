@@ -664,15 +664,15 @@ time fishing. Funnel: all 24 misses were "too late"; 0 of 30 runs were stopped i
 tiny browser binding), `lib/welcomeSuggestion.ts`, and small edits in the files named below. Tests: `tests/fishing-reach.cjs` (in `npm test`).
 
 **A. Reach**
-1. **Go fishing.** Two entries travel to the nearest shore spot (`nearestFishingSpot`, never a boat), landing at its post facing
+1. **Go fishing.** The Welcome back entry travels to the nearest shore spot (`nearestFishingSpot`, never a boat), landing at its post facing
    the float, so the Fish prompt is already up:
    - **Welcome back note** (`components/WelcomeBack.tsx`): one extra "for you" line, "Fish are biting today. Tap here to go
      fishing!", picked on the device from the local save (`pickWelcomeSuggestion`: fewer than 5 Fishbook species). It is still a
      note, not a menu (owner, Oct 1 2026): the whole note is the one tap target, and with the suggestion that tap goes fishing. Same
      classes as before (`CostumeMilestoneToast.module.css` `.toast`, `WelcomeBack.module.css` `.card` / `.note`), same toast lane and
      dwell. Later suggestion kinds (next Paths lesson, the daily puzzle, the Kit Shop) add a case there. The title screen is unchanged.
-   - **Island map** (`components/IslandTravelMap.tsx`): a **Go fishing** button between the key and the map, in the shared mint
-     secondary button look (the title card's "Use a different code").
+   - **Island map**: the Go fishing button was removed on Nov 20 2026 (owner decision). The map's F markers still travel to a
+     fishing spot, and the `fi:go_map` counter stays defined for old data.
    Both fire `fi2-go-fishing` (`GO_FISHING_EVENT`); `Town.tsx` resolves the nearest spot in its next frame, like map travel.
 2. **First catch guaranteed.** Until this device has landed a fish (`fi2-fish-first-catch-v1`, a DEVICE key) and while the Fishbook
    is empty, the live roll (`fishingLogStore.ts liveCatchRoll`) returns the spot's most common common (`firstCatchFish`), and the

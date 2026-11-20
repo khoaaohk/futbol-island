@@ -47,7 +47,7 @@ const wb=read('components/WelcomeBack.tsx'),wa=read('lib/welcome/act.ts');ok((wb
 ok(!/welcomeSuggestion|GoFishing/.test(read('components/landing/TitleActions.tsx')),'the title screen card is unchanged');
 // 5. Wiring.
 const town=read('components/Town.tsx');ok(/window\.addEventListener\(GO_FISHING_EVENT,on\)/.test(town)&&/goFishingTarget\(location\.x,location\.z,goFishSpots\.current\)/.test(town)&&/goFishSpots\.current=\(e as CustomEvent/.test(town),'Town travels on Go fishing (to the named fish\'s spot when the event carries spots)');
-const map=read('components/IslandTravelMap.tsx');ok(/data-map-go-fishing/.test(map)&&/countGoFishing\('map'\);requestGoFishing\(\)/.test(map),'the map has Go fishing');
+const map=read('components/IslandTravelMap.tsx');ok(!/data-map-go-fishing|requestGoFishing|Go fishing/.test(map),'the map has no Go fishing button (owner, Nov 20 2026: removed; the Welcome back note still offers it)');
 const log=read('lib/town/fishing/fishingLogStore.ts');ok(/if\(isNewAngler\(\)\)\{const first=firstCatchFish\(spot\);if\(first\)return first;\}/.test(log)&&/markFirstCatch\(\);countFirstCatch\(\)/.test(log),'the live roll guarantees the first catch and counts it');
 const world=read('lib/town/fishing/fishingWorld.ts');ok(/closestPost<DISCOVER_RANGE&&isNewAngler\(\)/.test(world)&&/if\(i===discoverSpot\)countRippleStart\(\)/.test(world)&&/easy:c\.reduced\|\|session\.easyBite\|\|isNewAngler\(\)/.test(world),'discovery ripples, ripple starts and an easy first bite');
 ok(!/new T\.(Mesh|InstancedMesh)\(/.test(world.slice(world.indexOf('discoverSpot=!fishing'))),'no new meshes for discovery (heat)');

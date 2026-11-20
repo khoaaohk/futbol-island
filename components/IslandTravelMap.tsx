@@ -13,10 +13,6 @@ import {usePartyHasFriends} from './FriendMapDots';
 import {usePlayersOnMap} from './PlayerMapDots';
 import type {FriendDot} from '@/lib/town/friendMarks';
 import styles from './IslandTravelMap.module.css';
-import {requestGoFishing} from '@/lib/town/fishing/fishingReach';
-import {countGoFishing} from '@/lib/analytics/fishingEvents';
-/** A small fish (currentColor), for the Go fishing button. */
-const FishGlyph=()=><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 12c3-4.5 9-6 14-2l4-3v10l-4-3c-5 4-11 2.5-14-2z"/><circle cx="8" cy="11" r=".9" fill="currentColor"/></svg>;
 type Props={position:{x:number;z:number};open:boolean;onOpenChange:(open:boolean)=>void;onSelect:(destination:MapDestination)=>void;roads:MapFootprint[];buildings:MapFootprint[]};
 type Direction='up'|'right'|'down'|'left';
 // The overview's viewBox (flight bounds plus its 8-unit rim). The map is drawn to cover the frame, so it overflows on one axis and pans.
@@ -112,8 +108,6 @@ export default function IslandTravelMap({position,open,onOpenChange,onSelect,roa
  return <dialog ref={dialog} className={`${styles.dialog} ${open?styles.entering:styles.leaving}`} aria-labelledby="town-dialog-title" onCancel={e=>{e.preventDefault();if(tip){setTip(null);return;}onOpenChange(false);}} onClick={e=>{if(e.target===e.currentTarget)onOpenChange(false);}} onKeyDown={e=>{e.stopPropagation();if(e.key==='Escape'&&tip){e.preventDefault();setTip(null);}}} onKeyUp={e=>e.stopPropagation()}>
  <section className={`${styles.panel} ${shell.shell} ${shell.white}`}><header className={shell.header}><div><h2 id="town-dialog-title">Pick your patch</h2></div><DoneButton ref={close} onDone={()=>onOpenChange(false)}/></header>
  <div className={`${shell.body} ${styles.body}`}><ul className={styles.legend} aria-label="Map key" data-map-legend data-legend-count={legend.length}>{legend.map(({tip:kind,...item})=><li key={item.label}>{kind?<button type="button" className={styles.legendTip} data-legend-tip={kind} aria-label={legendTipText(kind)} onClick={e=>showTip(kind,e.currentTarget)} onFocus={e=>showTip(kind,e.currentTarget)} onBlur={onTipBlur}><LegendMark {...item}/><span>{item.label}</span></button>:<><LegendMark {...item}/><span>{item.label}</span></>}</li>)}</ul>
-  {/* Nov 14 2026 (fishing reach, lib/town/fishing/fishingReach.ts): one tap to the nearest fishing spot (Town.tsx travels there). */}
-  <button type="button" className={styles.goFish} data-map-go-fishing onClick={()=>{countGoFishing('map');requestGoFishing();onOpenChange(false);}}><FishGlyph/>Go fishing</button>
     <div className={styles.frame} onKeyDown={onKeyDown}>
 <div ref={view} className={styles.map} data-map-fit={size.fit?'true':undefined} tabIndex={0} role="region" aria-label="Island map. Tap a place to travel there; use the arrow keys to move the map." onFocus={onFocus} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag} onLostPointerCapture={endDrag} onClickCapture={e=>{if(swallowClick.current&&e.detail!==0){swallowClick.current=false;e.preventDefault();e.stopPropagation();}}}>
    <div ref={stage} className={styles.stage} data-eased={eased?'true':undefined} style={stageStyle}><IslandOverview markerPosition={position} roads={roads} buildings={buildings} onSelect={onSelect} friends={open} onFriendTip={friendTip}/></div>
