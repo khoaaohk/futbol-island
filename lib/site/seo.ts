@@ -102,7 +102,7 @@ export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite','
  *  account, not the game's), and sameAs must name the same entity. Add its own profiles here when they exist. */
 /** TODO(owner): put Futbol Island's OWN public profile URLs here (its own Instagram, YouTube, TikTok, LinkedIn page) when they
  *  exist. Left empty on purpose (Nov 20 2026): a sameAs that names another entity is a false statement, so none is invented. */
-export const ORG_SAME_AS:readonly string[]=[];
+export const ORG_SAME_AS:readonly string[]=['https://itch.io/profile/futbolisland'];
 export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png',...(ORG_SAME_AS.length>0?{sameAs:[...ORG_SAME_AS]}:{}),
  description:'Futbol Island makes a free football (soccer) learning game for kids aged 7 to 12, built in San Diego with White Sports Ventures.'});
 /** Who the learning pages are for (seo-extras, Nov 15 2026): kids 7 to 12 and the grown-ups who coach them. */

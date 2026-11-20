@@ -1,4 +1,4 @@
-import generated from './lastmod.generated.json';
+import generated from './lastmodData.generated';
 import {toEn} from '../i18n/esPaths';
 /**
  * The ONE date of a page's last real change (SEO foundation, Nov 20 2026). Before, three dates disagreed: the sitemap said
