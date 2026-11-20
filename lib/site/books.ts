@@ -14,6 +14,8 @@ import {PUBLISHER,KIDS_AUDIENCE,SITE_NAME,SITE_URL,abs,firstSentence} from './se
  *   instruction, not part of the story on a flat page); the reader keeps the full text and turns that sentence into its button.
  * - Every book has a detail page from its BOOK_PAGES spec (Cafu was the approved sample; all 36 built Nov 17 2026); the hub
  *   lists and links every book.
+ * SOURCES checked Nov 17 2026 (each book's own source list). An edit to this file that changes no fact does not move this date
+ * (scripts/content-dates.cjs reads it here; before, the date followed the file's last commit).
  */
 export const BOOKS_PATH='/books';
 /** Books in shelf order (the catalog's order), without the island starter book (it is about the game, not a player). */
