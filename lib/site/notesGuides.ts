@@ -599,7 +599,7 @@ export const TERM_NOTES:Readonly<Record<string,CoachNotes>>={
    ['U12','In 9v9, practice crossing with one runner to each post, and swap the runners.'],
    ['U13 and up','In 11v11, add the timing: the near-post runner goes first and the far-post runner arrives later.']]},
  'low-block':{
-  coach:'Teach the distances with a rope or cones: the two lines stay about 10 to 15 yards apart and slide together.',
+  coach:'Teach the distances with a rope or cones: the two lines stay close to each other and slide across together.',
   match:'A team leads by one goal late in the game. It drops into two lines near its own penalty area and clears each cross.',
   ages:[['U10','In 7v7, the simple version is “get back behind the ball and stay close together”.'],
    ['U12','In 9v9, show two lines that slide across the field as the ball moves.'],
@@ -631,7 +631,7 @@ export const TERM_NOTES:Readonly<Record<string,CoachNotes>>={
  'stoppage-time':{
   coach:'Teach players to play until the whistle. Tell them before the game whether your league adds time or runs a fixed clock.',
   match:'The board shows three minutes. In the second of them a team wins a corner kick, and the game goes on until the referee blows.',
-  ages:[['U8','Most games for young children run on a fixed clock with no added time.'],
+  ages:[['U8','Many games for young children run on a fixed clock with no added time.'],
    ['U10','In 7v7, many leagues do not add time, because the next game starts on the same field.'],
    ['U13 and up','In 11v11, referees add time under Law 7. Teach players how to act when ahead and when behind.']]},
  'extra-time':{

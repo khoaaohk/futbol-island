@@ -54,7 +54,7 @@ const TERM_RULES:Record<string,string[]>={
  /* batch 2 of new term pages, Nov 20 2026 */
  'header':['heading-rules-for-kids','corner-kick'],'weak-foot':['corner-kick'],'one-touch':['fouls-and-free-kicks'],'scanning':['throw-in'],'support':['back-pass-rule'],
  'possession':['back-pass-rule','throw-in'],'width':['goal-kick'],'step-over':['fouls-and-free-kicks'],'dummy':['corner-kick','offside'],'chip':['fouls-and-free-kicks'],'tap-in':['offside'],
- 'near-post':['corner-kick'],'low-block':['offside'],'high-line':['offside'],'pivot':['futsal-rules'],'penalty-area':['penalty-kick','handball'],'goal-area':['goal-kick','fouls-and-free-kicks'],
+ 'near-post':['corner-kick'],'low-block':['offside'],'high-line':['offside','build-out-line'],'pivot':['futsal-rules'],'penalty-area':['penalty-kick','handball'],'goal-area':['goal-kick','fouls-and-free-kicks'],
  'stoppage-time':['substitutions-and-game-length'],'extra-time':['substitutions-and-game-length','kick-off'],'penalty-shoot-out':['penalty-kick'],
 };
 /** Term page -> a coach tool, only where the word is about team shape or game time. */
