@@ -20,21 +20,21 @@ type ToolKey=keyof typeof TOOL;
 const R='/learn/soccer-rules/';
 /** Rule page -> the coach tool that goes with it, 2 or 3 glossary terms the rule uses, and a sister rule where one explains the other. */
 const RULE_LINKS:Record<string,{tool:ToolKey;terms:string[];rules?:string[]}>={
- 'kick-off':{tool:'lineup',terms:['set-piece','pressing']},
- 'throw-in':{tool:'fields',terms:['set-piece','marking','first-touch']},
- 'goal-kick':{tool:'l7',terms:['pressing','switching-play','set-piece']},
- 'corner-kick':{tool:'fields',terms:['set-piece','cross','marking']},
+ 'kick-off':{tool:'lineup',terms:['set-piece','pressing','own-goal']},
+ 'throw-in':{tool:'fields',terms:['set-piece','marking','first-touch','own-goal']},
+ 'goal-kick':{tool:'l7',terms:['pressing','switching-play','set-piece','build-up']},
+ 'corner-kick':{tool:'fields',terms:['set-piece','cross','marking','far-post']},
  'drop-ball':{tool:'fields',terms:['set-piece','first-touch']},
  'yellow-and-red-cards':{tool:'lineup',terms:['yellow-card','red-card','tackle']},
- 'fouls-and-free-kicks':{tool:'fields',terms:['tackle','free-kick-wall','set-piece'],rules:['yellow-and-red-cards']},
- 'penalty-kick':{tool:'fields',terms:['set-piece','red-card'],rules:['yellow-and-red-cards']},
- 'handball':{tool:'fields',terms:['free-kick-wall','yellow-card','red-card'],rules:['yellow-and-red-cards']},
+ 'fouls-and-free-kicks':{tool:'fields',terms:['tackle','free-kick-wall','set-piece','shielding','jockeying'],rules:['yellow-and-red-cards']},
+ 'penalty-kick':{tool:'fields',terms:['set-piece','red-card','brace'],rules:['yellow-and-red-cards']},
+ 'handball':{tool:'fields',terms:['free-kick-wall','yellow-card','red-card','sweeper-keeper'],rules:['yellow-and-red-cards']},
  'advantage':{tool:'fields',terms:['counterattack','tackle','yellow-card'],rules:['yellow-and-red-cards']},
- 'offside':{tool:'lineup',terms:['through-ball','cutback','give-and-go']},
- 'back-pass-rule':{tool:'l7',terms:['pressing','first-touch','switching-play']},
- 'build-out-line':{tool:'l7',terms:['pressing','two-v-one','switching-play'],rules:['heading-rules-for-kids']},
- 'heading-rules-for-kids':{tool:'l7',terms:['cross','set-piece','first-touch']},
- 'substitutions-and-game-length':{tool:'calc',terms:['pressing','marking'],rules:['heading-rules-for-kids']},
+ 'offside':{tool:'lineup',terms:['through-ball','cutback','give-and-go','offside-trap']},
+ 'back-pass-rule':{tool:'l7',terms:['pressing','first-touch','switching-play','sweeper-keeper']},
+ 'build-out-line':{tool:'l7',terms:['pressing','two-v-one','switching-play','build-up'],rules:['heading-rules-for-kids']},
+ 'heading-rules-for-kids':{tool:'l7',terms:['cross','set-piece','first-touch','clearance','volley']},
+ 'substitutions-and-game-length':{tool:'calc',terms:['pressing','marking','box-to-box'],rules:['heading-rules-for-kids']},
  'futsal-rules':{tool:'futsal',terms:['give-and-go','two-v-one','pressing'],rules:['yellow-and-red-cards']},
 };
 /** Term page -> the rule (or two) the word meets in a game. */
@@ -45,9 +45,16 @@ const TERM_RULES:Record<string,string[]>={
  'goal-side':['corner-kick'],'tackle':['fouls-and-free-kicks','yellow-and-red-cards'],'set-piece':['fouls-and-free-kicks','heading-rules-for-kids'],
  'free-kick-wall':['fouls-and-free-kicks','handball'],'yellow-card':['yellow-and-red-cards'],'red-card':['yellow-and-red-cards'],
  'clean-sheet':['substitutions-and-game-length'],'hat-trick':['kick-off'],
+ /* batch 1 of new term pages, Nov 20 2026 */
+ 'dribble':['fouls-and-free-kicks'],'shielding':['fouls-and-free-kicks'],'volley':['corner-kick','heading-rules-for-kids'],'half-volley':['fouls-and-free-kicks'],
+ 'square-pass':['offside','back-pass-rule'],'man-on':['yellow-and-red-cards'],'overload':['offside'],'underlap':['offside'],'far-post':['corner-kick'],
+ 'offside-trap':['offside','build-out-line'],'jockeying':['fouls-and-free-kicks'],'cover':['offside'],'clearance':['heading-rules-for-kids','corner-kick'],
+ 'build-up':['build-out-line','goal-kick'],'false-nine':['offside'],'sweeper-keeper':['handball','back-pass-rule'],'box-to-box':['substitutions-and-game-length'],
+ 'assist':['corner-kick'],'brace':['penalty-kick','kick-off'],'own-goal':['throw-in','back-pass-rule'],
 };
 /** Term page -> a coach tool, only where the word is about team shape or game time. */
-const TERM_TOOL:Record<string,ToolKey>={'pressing':'calc','switching-play':'lineup','overlap':'lineup','counterattack':'lineup','marking':'lineup','set-piece':'fields','free-kick-wall':'fields'};
+const TERM_TOOL:Record<string,ToolKey>={'pressing':'calc','switching-play':'lineup','overlap':'lineup','counterattack':'lineup','marking':'lineup','set-piece':'fields','free-kick-wall':'fields',
+ 'overload':'lineup','false-nine':'lineup','build-up':'l7','box-to-box':'calc'};
 /** Card role -> the terms and rules that role's football is about. A card page shows two of them, picked by card number, so
  *  the links spread over the list instead of every card pointing at the same page. `t:` a term, `r:` a rule, `tool:` a tool. */
 const ROLE_TOPICS:Record<string,string[]>={
