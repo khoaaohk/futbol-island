@@ -58,7 +58,7 @@ for(const c of cards.SITE_CARDS)assert(c.blurb&&c.roleLabel,`card ${c.number} ha
 assert.equal(exhibits.SITE_EXHIBITS.length,L('lib/endgame/museum.ts').EXHIBITS.length,'every exhibit');
 const PATHS=paths.sitePaths().map(p=>p.path);
 /* the card and fish collection hubs (seo-links) are search-titled whole too */
-const WHOLE_HUBS=new Set(L('lib/site/collections.ts').COLLECTIONS.map(c=>c.path));
+const WHOLE_HUBS=new Set([...L('lib/site/collections.ts').COLLECTIONS.map(c=>c.path),'/about','/fish','/cards'/* Nov 20 2026 (SEO foundation 9): their fuller titles are whole titles */]);
 // Nov 6 2026 (signature species, waves 1-2, parametric: no hard-coded count): every Fishbook species, the new waves included, has a
 // sitemap page and a fish tale, and a fun fish fact is labelled as such on its public page.
 {const SIG=L('lib/town/fishing/shoreSignatures.ts'),page=fs.readFileSync(path.join(__dirname,'../app/(site)/fish/[id]/page.tsx'),'utf8');
@@ -227,7 +227,7 @@ assert.notEqual(attr(html('/'),/<title>([^<]*)<\/title>/),attr(html('/play'),/<t
  for(const m of h.matchAll(/<img [^>]*>/g))assert(/\balt="[^"]+"/.test(m[0])||/aria-hidden="true"|alt=""/.test(m[0]),`/: every image has alt text: ${m[0].slice(0,80)}`);}
 {const t=text(html('/play'));assert(/free football learning game/i.test(t)&&/save code/i.test(t),'/play has crawlable text');}
 // The reading pages' gold Play buttons (class "cta") go to the game at /play, or a /play?go= deep link (seo-design; the museum pages straight into the /museum room, the game pages into /arcade?game=).
-{let ctas=0;for(const p of PATHS.filter(p=>p!=='/play'&&p!=='/marketing'))for(const m of html(p).matchAll(/<a class="[^"]*_cta__[^"]*" href="([^"]*)"/g)){ctas++;assert(/^\/play(\?(go|store)=[a-z]+(:[A-Za-z0-9_-]+)?)?$/.test(m[1])||(m[1]==='/museum'&&p.startsWith('/exhibits'))||(/^\/arcade\?game=[a-z]+$/.test(m[1])&&(p==='/games'||p.startsWith('/games/')))/* Nov 16 2026: the /games hub's Play buttons open each arcade game too */,`${p}: Play goes to /play (exhibits: straight into /museum), not ${m[1]}`);}
+{let ctas=0;for(const p of PATHS.filter(p=>p!=='/play'&&p!=='/marketing'&&!p.startsWith('/videos/')/* Nov 18 2026: a watch page's button opens the clip's own page or game (tests/seo-video.cjs) */))for(const m of html(p).matchAll(/<a class="[^"]*_cta__[^"]*" href="([^"]*)"/g)){ctas++;assert(/^\/play(\?(go|store)=[a-z]+(:[A-Za-z0-9_-]+)?)?$/.test(m[1])||(m[1]==='/museum'&&p.startsWith('/exhibits'))||(/^\/arcade\?game=[a-z]+$/.test(m[1])&&(p==='/games'||p.startsWith('/games/')))/* Nov 16 2026: the /games hub's Play buttons open each arcade game too */,`${p}: Play goes to /play (exhibits: straight into /museum), not ${m[1]}`);}
  assert(ctas>PATHS.length/2,`the gold Play buttons were found (${ctas})`);}
 // Nov 7 2026 audit: every sitemap page (incl. the 150 fish) has a title <= 60 and a 70-160 character description; fish are distinct.
 {const dec=x=>x.replace(/&#x27;/g,"'").replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&lt;/g,'<').replace(/&gt;/g,'>'),seen=new Map();

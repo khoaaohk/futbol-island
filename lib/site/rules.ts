@@ -432,7 +432,7 @@ export const RULES:readonly Rule[]=([
   answer:'In US youth soccer, players aged 10 and under do not head the ball, in games or in practice. Under US Youth Soccer rules, heading is allowed in games from age 11, with a limit of 25 headers a week for players aged 11 and 12.',
   scenes:[{format:'7v7',title:'After a deliberate header in a 7v7 game',who:'8@44,56 9@50,74 7@82,62 3@24,34 !6@52,60 !4@40,76 !5@62,78 !G@50,96',ball:[45,58],zone:[38,58,52,70],
    caption:'An under-10 player deliberately heads the ball in midfield. The referee stops play and gives the other team an indirect free kick from that spot. Here gold number 8 takes it, and the opponents give space in front of the ball.'}],
-  refs:['Was the header deliberate? A ball that hits a child on the head by accident is not an offence.','The age group of the game, not the height or skill of the player.',
+  refs:['Was the header deliberate? A ball that hits a child on the head by accident is not an offence.','The player’s age, not their height or skill.',
    'The spot. The indirect free kick is taken where the header happened.','Near the goal: under US Youth Soccer Rule 305, a header inside the penalty area gives a free kick from just outside it.',
    'Any sign of a head injury. The player comes off to be checked, and a substitute may come on.'],
   mixups:[
