@@ -71,13 +71,17 @@ export function scrubMessage(raw:unknown):string{
 export function cleanFrame(file:unknown,line:unknown,siteHost?:string):string{
  if(typeof file!=='string'||!file)return 'unknown';
  let path='other';
- try{const u=new URL(file);if(!siteHost||u.host===siteHost||u.hostname==='localhost')path=cleanPath(u.pathname).replace(/^\/_next\/static\/chunks\//,'chunks/');}catch{}
+ try{const u=new URL(file);if(!siteHost||u.host===siteHost||u.hostname==='localhost')path=cleanPath(u.pathname).replace(/^\/_next\/static\/chunks\//,'chunks/')
+   /* Nov 20 2026: drop the content hash (webpack-f594e6ea7bfaa967.js -> webpack-H.js) so one error is one row across releases. */
+   .replace(/-[0-9a-f]{16,20}(\.(?:js|css))$/i,'-H$1');}catch{}
  const n=Number(line);return `${path.slice(0,80)}:${Number.isInteger(n)&&n>0&&n<1e7?n:0}`;
 }
 export function errKey(message:string,frame:string,route:string){
  const hash=createHash('sha256').update(message+'|'+frame).digest('hex').slice(0,8);
  return {key:`${hash}|${cleanPath(route)}`.slice(0,200),label:`${message} @ ${frame}`.slice(0,240)};
 }
+/** ResizeObserver's "loop" notices: the browser deferring a resize to the next frame, never a crash. */
+export const BENIGN_ERROR=/^ResizeObserver loop (completed with undelivered notifications|limit exceeded)/;
 export type ErrInput={m?:unknown;f?:unknown;l?:unknown;r?:unknown};
 /** One beacon body: {m: message, f: file, l: line, r: route path}. Null when it is not that shape. */
 export function parseErrorReport(body:string,siteHost?:string):{key:string;label:string}|null{
@@ -85,6 +89,7 @@ export function parseErrorReport(body:string,siteHost?:string):{key:string;label
  let o:ErrInput;try{o=JSON.parse(body);}catch{return null;}
  if(!o||typeof o!=='object'||Array.isArray(o))return null;
  for(const k of Object.keys(o))if(!['m','f','l','r'].includes(k))return null;
+ if(typeof o.m==='string'&&BENIGN_ERROR.test(o.m))return null;/* browser noise, not a bug (components/ErrorBeacon.tsx skips it too) */
  return errKey(scrubMessage(o.m),cleanFrame(o.f,o.l,siteHost),typeof o.r==='string'?o.r:'/');
 }
 
