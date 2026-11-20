@@ -95,7 +95,7 @@ export const GUIDE_DRILLS:Record<string,string[]>={
  [T+'dribble']:['gates-dribbling','cone-weave-dribbling','dribble-tag'],
  [T+'shielding']:['knockout','one-v-one-two-goals'],
  [T+'volley']:['crossing-and-finishing','thigh-and-chest-control'],
- [T+'half-volley']:['thigh-and-chest-control'],
+ [T+'half-volley']:['thigh-and-chest-control','follow-the-shot'],
  [T+'square-pass']:['partner-passing-through-gates','rondo-3v1'],
  [T+'man-on']:['shoulder-check-colors','receive-and-turn'],
  [T+'overload']:['three-v-two-to-goal','rondo-4v2'],
