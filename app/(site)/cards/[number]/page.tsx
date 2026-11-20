@@ -27,8 +27,9 @@ export const generateStaticParams=()=>SITE_CARDS.map(c=>({number:String(c.number
 const card=(p:{number:string})=>/^\d+$/.test(p.number)?cardByNumber(Number(p.number)):undefined;
 export function generateMetadata({params}:{params:{number:string}}){
  const c=card(params);if(!c)return {};
- return pageMeta(`${c.displayName} Football Card #${c.number}`.length<=44?`${c.displayName} Football Card #${c.number}`:`${c.displayName} (card #${c.number})`,/* Nov 17 2026: says what the page is (Search Console: "… football cards" queries); the number stays in the picture alt */firstSentence(c.blurb||`${c.displayName}, ${c.roleLabel}.`),cardPath(c.number),
-  {image:{url:ogPath(cardPath(c.number)),alt:`${c.displayName}, Futbol Island card #${c.number}: ${c.roleLabel}`}});
+ /* Nov 20 2026 (SEO foundation): noindex, follow (lib/site/paths.ts NOINDEX_CARD_PATHS): reached by links, not listed in search. */
+ return {robots:{index:false,follow:true},...pageMeta(`${c.displayName} Football Card #${c.number}`.length<=44?`${c.displayName} Football Card #${c.number}`:`${c.displayName} (card #${c.number})`,/* Nov 17 2026: says what the page is (Search Console: "… football cards" queries); the number stays in the picture alt */firstSentence(c.blurb||`${c.displayName}, ${c.roleLabel}.`),cardPath(c.number),
+  {image:{url:ogPath(cardPath(c.number)),alt:`${c.displayName}, Futbol Island card #${c.number}: ${c.roleLabel}`}})};
 }
 export default function CardPage({params}:{params:{number:string}}){
  const c=card(params);if(!c)notFound();

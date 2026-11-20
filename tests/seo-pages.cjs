@@ -71,7 +71,7 @@ assert(!PATHS.includes('/learn'),'/learn redirects to / (next.config.mjs), so it
 {const sp=paths.sitePaths(),pr=p=>sp.find(x=>x.path===p).priority;assert.equal(pr('/'),1,'/ is the main entry');assert(pr('/play')<pr('/about')&&pr('/play')>0,'/play listed, low priority');assert(sp.find(x=>x.path==='/').lastmod,'/ has a lastmod');}
 assert(!PATHS.some(p=>p==='/'+'start'),'the removed landing page is not listed');
 const hubs=L('lib/site/hubs.ts'),GUIDES=paths.GUIDE_PATHS;
-assert.equal(PATHS.length,10+/* / /about /about/how-we-check-facts /privacy /play /marketing + the 4 index pages */ GUIDES.length+L('lib/site/guides.ts').ALL_GUIDE_PAGES.length/* both guide clusters */+L('lib/site/tools/registry.ts').TOOL_PAGES.length/* coach tools and printables */+L('lib/site/games.ts').GAME_LISTINGS.length/* the arcade games' search pages (tests/seo-games.cjs) */+lessons.LESSONS.length+fish.SITE_FISH.length+cards.SITE_CARDS.length+exhibits.SITE_EXHIBITS.length+L('lib/site/collections.ts').COLLECTIONS.length/* card and Fishbook hubs */+L('lib/site/comparisons.ts').COMPARISONS.length/* A vs B guides */+1+L('lib/site/books.ts').BUILT_BOOKS.length/* the books hub and built story pages */+1+L('lib/site/videos.ts').allWatchVideos().length/* /videos and one watch page per clip (tests/seo-video.cjs) */);
+assert.equal(PATHS.length,10+/* / /about /about/how-we-check-facts /privacy /play /marketing + the 4 index pages */ GUIDES.length+L('lib/site/guides.ts').ALL_GUIDE_PAGES.length/* both guide clusters */+L('lib/site/tools/registry.ts').TOOL_PAGES.length/* coach tools and printables */+L('lib/site/games.ts').GAME_LISTINGS.length/* the arcade games' search pages (tests/seo-games.cjs) */+lessons.LESSONS.length+fish.SITE_FISH.length/* Nov 20 2026: no single card pages (noindex, out of the sitemap) */+exhibits.SITE_EXHIBITS.length+L('lib/site/collections.ts').COLLECTIONS.length/* card and Fishbook hubs */+L('lib/site/comparisons.ts').COMPARISONS.length/* A vs B guides */+1+L('lib/site/books.ts').BUILT_BOOKS.length/* the books hub and built story pages */+1+L('lib/site/videos.ts').allWatchVideos().length/* /videos and one watch page per clip (tests/seo-video.cjs) */);
 // robots.ts names every bot and closes the private routes (checked again on the built file below).
 const robotsSrc=read('app/robots.ts');
 // Nov 8 2026 (owner, AI search): every answer engine's search and user-fetch agent by name.
@@ -130,6 +130,11 @@ assert(!fs.existsSync(path.join(root,'public/llms.txt')),'no static public/llms.
  const long=seo.fitTitle('An extremely long lesson title that goes on and on and on without end (11v11 lesson)');assert(long.length<=60,'long title is cut: '+long);
  assert(seo.fitDescription('Too short.').length>=70,'short descriptions get a tail');
  assert(seo.fitDescription('word '.repeat(80)).length<=160,'long descriptions are cut');}
+/* Nov 20 2026 (SEO foundation): single card pages are noindex,follow and in neither sitemap; /cards and the group pages stay. */
+{const N=paths.NOINDEX_CARD_PATHS;assert.equal(N.length,cards.SITE_CARDS.length);for(const p of N)assert(!PATHS.includes(p),`${p} is not in the sitemap`);
+ assert(PATHS.includes('/cards')&&L('lib/site/collections.ts').CARD_COLLECTIONS.every(c=>PATHS.includes(c.path)),'/cards and the card group pages stay in the sitemap');
+ assert(/robots:\{index:false,follow:true\}/.test(fs.readFileSync(path.join(root,'app/(site)/cards/[number]/page.tsx'),'utf8')),'single card pages are noindex, follow');
+ assert(!L('lib/site/tools/imageSitemap.ts').imageEntries().some(e=>/^\/cards\/\d+$/.test(e.path)),'no single card page in the image sitemap');}
 console.log(`seo sources ok: ${lessons.LESSONS.length} lessons, ${fish.SITE_FISH.length} fish, ${cards.SITE_CARDS.length} cards, ${exhibits.SITE_EXHIBITS.length} exhibits, ${PATHS.length} sitemap paths`);
 
 // ---- 2. the built site --------------------------------------------------------------------------------------------------------

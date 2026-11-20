@@ -162,7 +162,7 @@ for(const f of ['components/site/tools/LineupBuilder.tsx','components/site/tools
  for(const f of pr.PRINT_FILES)assert(listed.has(pr.fileUrl(f.name,'png')),`image sitemap lists ${f.name}.png`);
  for(const f of [...guides.DIAGRAM_FILES,...guides.REFERENCE_FILES])assert(listed.has(`/learn/diagrams/${f}`),`image sitemap lists ${f}`);
  {const fish=L('lib/site/fish.ts'),cards=L('lib/site/cards.ts'),ex=L('lib/site/exhibits.ts');
-  assert(listed.has(fish.fishArtPath(fish.SITE_FISH[0].id))&&listed.has(`/cards/${cards.SITE_CARDS[0].number}/og.png`)&&listed.has(`/exhibits/${ex.SITE_EXHIBITS[0].id}/og.png`),'fish, card and exhibit pictures');
+  assert(listed.has(fish.fishArtPath(fish.SITE_FISH[0].id))&&!listed.has(`/cards/${cards.SITE_CARDS[0].number}/og.png`)/* Nov 20 2026: single card pages are noindex, so not in the image sitemap */&&listed.has(`/exhibits/${ex.SITE_EXHIBITS[0].id}/og.png`),'fish and exhibit pictures, no single card pictures');
   for(const d of ['fish/[id]/art.png','fish/[id]/og.png','cards/[number]/og.png','exhibits/[id]/og.png'])assert(fs.existsSync(path.join(root,'app/(site)',d)),`${d} route exists`);}
  const xml=im.imageSitemapXml();assert(xml.startsWith('<?xml')&&xml.includes('xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"')&&xml.trim().endsWith('</urlset>'));
  assert.equal((xml.match(/<url>/g)||[]).length,entries.length);assert.equal((xml.match(/<image:loc>https:\/\/futbolisland\.app\/[^<]+<\/image:loc>/g)||[]).length,entries.reduce((a,e)=>a+e.images.length,0));

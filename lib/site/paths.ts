@@ -27,6 +27,10 @@ export const GUIDE_PATHS=[...HUB_PATHS,SAFE_GUIDE.path] as const;
 /** Nov 15 2026 (seo-links): each URL's own last change (scripts/gen-lastmod.cjs: the last commit touching its route and data
  *  files), read from lib/site/lastmod.generated.json; the hand-kept section date below is the fallback for a path not in it. */
 const LASTMOD=generated as Record<string,string>;
+/** Nov 20 2026 (SEO foundation, owner approved): the single card pages (/cards/<n>) are real pages reached by links, but they are
+ *  kept out of the index (robots noindex, follow) and out of sitemap.xml and sitemap-images.xml: about 450 short pages with no
+ *  search intent were most of Google's "Discovered - not indexed". /cards and the card group pages stay indexed. */
+export const NOINDEX_CARD_PATHS:readonly string[]=SITE_CARDS.map(c=>cardPath(c.number));
 /** Every path with its sitemap priority and its real content date (no build-time "now"). */
 export function sitePaths():{path:string;priority:number;lastmod:string}[]{
  return sectionPaths().map(x=>({...x,lastmod:LASTMOD[x.path]??x.lastmod}));
@@ -41,7 +45,7 @@ function sectionPaths():{path:string;priority:number;lastmod:string}[]{
   ...TOOL_PAGES.map(t=>({path:t.path,priority:t.hub?.8:.7,lastmod:TOOLS_UPDATED})),/* the free coach tools and printables (lib/site/tools/registry.ts) */
   ...GAME_LISTINGS.map(g=>({path:g.path,priority:g.hub?.8:.7,lastmod:GAMES_UPDATED})),/* the arcade games' search pages (lib/site/games.ts) */
   ...LESSONS.map(l=>({path:lessonPath(l.id),priority:.6,lastmod:U.lessons})),...SITE_FISH.map(f=>({path:fishPath(f.id),priority:.4,lastmod:U.fish})),
-  ...SITE_CARDS.map(c=>({path:cardPath(c.number),priority:.4,lastmod:U.cards})),...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),priority:.5,lastmod:U.exhibits})),
+  /* Nov 20 2026 (SEO foundation): single card pages are noindex,follow and out of both sitemaps (NOINDEX_CARD_PATHS below) */...SITE_EXHIBITS.map(e=>({path:exhibitPath(e.id),priority:.5,lastmod:U.exhibits})),
   ...COLLECTIONS.map(c=>({path:c.path,priority:.7,lastmod:COLLECTIONS_UPDATED})),/* card and Fishbook hubs (lib/site/collections.ts) */
   ...COMPARISONS.map(c=>({path:c.path,priority:.7,lastmod:COMPARISONS_UPDATED})),/* "A vs B" guides (lib/site/comparisons.ts) */
   ...videoSitePaths().map(path=>({path,priority:path===VIDEOS_PATH?.7:.6,lastmod:VIDEOS_UPDATED})),/* the video watch pages and their hub (lib/site/videos.ts) */

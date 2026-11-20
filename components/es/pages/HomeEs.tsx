@@ -17,7 +17,7 @@ const PUB=publicWorldEnabled();
 const URL_ES=SITE_URL+toEs('/');
 export const meta={
  title:'Futbol Island: juego de fútbol gratis para niños',
- desc:'Futbol Island es un juego gratis para aprender fútbol, para niños de 7 a 12 años, con lecciones y pruebas. Sin anuncios de rastreo, sin cuentas y sin chat abierto.',
+ desc:'Futbol Island es un juego gratis de fútbol para niños de 7 a 12 años, con lecciones y pruebas. Sin anuncios de rastreo, sin cuentas y sin chat abierto.',
 };
 /** The hidden-ball count, kept in step with the English "Explore" chip. */
 const BALLS=LEARN_HIGHLIGHTS.find(h=>h.id==='explore')?.chips[0]?.match(/\d+/)?.[0];

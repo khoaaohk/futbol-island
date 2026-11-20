@@ -34,7 +34,7 @@ const {load}=(()=>{const ts=require('typescript'),vm=require('node:vm'),cache=ne
 const L=rel=>load(path.join(root,rel));
 const read=rel=>fs.readFileSync(path.join(root,rel),'utf8');
 const code=rel=>read(rel).replace(/\/\*[\s\S]*?\*\//g,'');
-const paths=L('lib/site/paths.ts'),SP=paths.sitePaths(),PATHS=new Set(SP.map(x=>x.path));
+const paths=L('lib/site/paths.ts'),SP=paths.sitePaths(),PATHS=new Set([...SP.map(x=>x.path),...paths.NOINDEX_CARD_PATHS]);/* Nov 20 2026: single card pages are real pages, noindex and out of the sitemap */
 const col=L('lib/site/collections.ts'),cmp=L('lib/site/comparisons.ts'),rel=L('lib/site/related.ts'),cards=L('lib/site/cards.ts'),fish=L('lib/site/fish.ts');
 const groups=L('lib/site/cardGroups.ts'),positions=L('lib/site/positions.ts'),rn=L('lib/site/readNext.ts'),guides=L('lib/site/guides.ts');
 const isPage=p=>PATHS.has(p.split('#')[0]);
@@ -96,7 +96,7 @@ assert(/FUTSAL_VS_SOCCER/.test(code('app/(site)/learn/soccer-rules/[slug]/page.t
 assert(!SP.some(x=>/futsal-vs-soccer|7v7-vs|9v9-vs/.test(x.path)),'no separate near-duplicate comparison page for futsal or team sizes');
 
 // ---- 4. no duplicate canonical ---------------------------------------------------------------------------------------------
-assert.equal(PATHS.size,SP.length,'every sitemap path once');
+assert.equal(new Set(SP.map(x=>x.path)).size,SP.length,'every sitemap path once');
 {const titles=[...guides.ALL_GUIDE_PAGES.map(g=>g.title),...col.COLLECTIONS.map(c=>c.title),...cmp.COMPARISONS.map(c=>c.title)];
  assert.equal(new Set(titles.map(t=>t.toLowerCase())).size,titles.length,'no two guide, hub or comparison pages share a title');}
 for(const f of [...col.COLLECTIONS.map(c=>`app/(site)${c.path}/page.tsx`),...cmp.COMPARISONS.map(c=>`app/(site)${c.path}/page.tsx`)])
@@ -143,7 +143,7 @@ assert(/alternates:\{canonical:path\}/.test(code('lib/site/seo.ts')),'pageMeta s
   '/videos':L('lib/site/videos.ts').allWatchVideos().map(v=>v.path)/* the watch pages (Nov 18 2026) */};
  for(const [hub,list] of Object.entries(kids))for(const p of list)set(p,(D.get(hub)??9)+1);
  const deep=[...D.entries()].filter(([,d])=>d>3);assert.equal(deep.length,0,`deeper than 3: ${deep.slice(0,5).join(' ')}`);
- const modelled=SP.filter(x=>D.has(x.path)).length;assert(modelled/SP.length>=.9,`the model covers ${modelled}/${SP.length} pages (the crawl checks the rest)`);}
+ const modelled=SP.filter(x=>D.has(x.path)).length;assert(modelled/SP.length>=.8/* Nov 20 2026: was .9 with the 450 single card pages in the sitemap */,`the model covers ${modelled}/${SP.length} pages (the crawl checks the rest)`);}
 
 const avg=a=>(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1);
 console.log(`seo-links: ${col.COLLECTIONS.length} hubs, ${cmp.COMPARISONS.length} comparisons, ${rn.CHAINS.length} read-next chains (${rn.CHAINS.reduce((a,c)=>a+c.pages.length,0)} pages); reading links per card ${Math.min(...stats.card)}-${Math.max(...stats.card)} (avg ${avg(stats.card)}), per fish ${Math.min(...stats.fish)}-${Math.max(...stats.fish)}; ${new Set(SP.map(x=>x.lastmod)).size} distinct lastmod dates — ok`);
