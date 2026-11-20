@@ -75,11 +75,14 @@ export function bookLinks(b:SiteBook):(SiteLink&{icon:'cards'|'shirt'|'law'|'dec
 
 /** schema.org Book for one story page: the book is the page's main thing, about one real person, citing its sources, its six
  *  chapters as hasPart Chapter. Only properties schema.org defines on Book / CreativeWork; no ratings, no ISBN (none exist). */
+/** A book's own picture: its first chapter's spread (public/books/spreads/<book>/<chapter>.webp, 960 x 600). */
+export const bookImage=(b:Pick<SiteBook,'id'|'chapters'>)=>`/books/spreads/${b.id}/${b.chapters[0].id}.webp`;
 export function bookLd(b:SiteBook,o:{modified:string}){
  const path=bookPath(b.slug),wiki=b.sources.find(s=>/wikipedia\.org\/wiki\//.test(s.url));
  return {'@context':'https://schema.org','@type':'Book','@id':abs(path)+'#book',name:b.fullTitle,url:abs(path),mainEntityOfPage:abs(path),
   description:b.page?.summary??b.blurb,inLanguage:'en',isAccessibleForFree:true,bookFormat:'https://schema.org/EBook',numberOfPages:b.chapters.length,
   genre:'Children’s biography',audience:KIDS_AUDIENCE,datePublished:b.page?.published,dateModified:o.modified,
+  ...(b.chapters[0]?{image:abs(bookImage(b))}:{}),/* Nov 20 2026: the first chapter's pop-up picture (tests/books-site.cjs checks the file exists) */
   about:{'@type':'Person',name:b.player,...(wiki?{sameAs:wiki.url}:{})},author:PUBLISHER,publisher:PUBLISHER,
   citation:b.sources.map(s=>({'@type':'CreativeWork',name:s.label,url:s.url})),
   hasPart:b.chapters.map((c,i)=>({'@type':'Chapter',name:c.title,position:i+1,url:`${abs(path)}#${chapterAnchor(c.id)}`})),

@@ -100,7 +100,10 @@ export const websiteLd=()=>({'@context':'https://schema.org','@type':'WebSite','
  potentialAction:{'@type':'SearchAction',target:{'@type':'EntryPoint',urlTemplate:SITE_URL+'/learn?q={search_term_string}'},'query-input':'required name=search_term_string'}});
 /** No sameAs: Futbol Island has no social profile of its own yet (the Instagram on `/` is the partner founder's personal
  *  account, not the game's), and sameAs must name the same entity. Add its own profiles here when they exist. */
-export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png',
+/** TODO(owner): put Futbol Island's OWN public profile URLs here (its own Instagram, YouTube, TikTok, LinkedIn page) when they
+ *  exist. Left empty on purpose (Nov 20 2026): a sameAs that names another entity is a false statement, so none is invented. */
+export const ORG_SAME_AS:readonly string[]=[];
+export const organizationLd=()=>({'@context':'https://schema.org',...PUBLISHER,logo:SITE_URL+'/icon.png',...(ORG_SAME_AS.length>0?{sameAs:[...ORG_SAME_AS]}:{}),
  description:'Futbol Island makes a free football (soccer) learning game for kids aged 7 to 12, built in San Diego with White Sports Ventures.'});
 /** Who the learning pages are for (seo-extras, Nov 15 2026): kids 7 to 12 and the grown-ups who coach them. */
 export const COACH_AUDIENCE={'@type':'EducationalAudience',educationalRole:'coach',audienceType:'Youth soccer coaches and parents'};

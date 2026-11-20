@@ -9,9 +9,12 @@ import {SITE_URL} from '@/lib/site/seo';
 export const dynamic='force-static';
 // Nov 8 2026 (owner, AI search): + Claude-User, Perplexity-User, Applebot-Extended, so every answer engine's search and
 // user-fetch agent is allowed by name. CCBot (Common Crawl) stays allowed, as before (owner's call).
-const AI_AND_SEARCH_BOTS=['GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','Claude-Web','Claude-SearchBot','Claude-User','anthropic-ai','PerplexityBot','Perplexity-User','Google-Extended','CCBot','Bingbot','Googlebot','Applebot','Applebot-Extended'] as const;
+const AI_AND_SEARCH_BOTS=['GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','Claude-SearchBot','Claude-User','PerplexityBot','Perplexity-User','Google-Extended','CCBot','Bingbot','Googlebot','Applebot','Applebot-Extended'] as const;
+// Nov 20 2026 (SEO foundation): the two names Anthropic does not document (the old Claude web agent and the old company token)
+// are gone; its documented agents (ClaudeBot, Claude-SearchBot, Claude-User) stay allowed, and `*` still allows everyone else.
+// The non-standard Host: line is gone too (Google ignores it; the canonical tags and sitemap already name the host).
 const DISALLOW=['/admin','/api',...LAB_ROUTES,'/coffee/checkout'];
 export default function robots():MetadataRoute.Robots{
  return {rules:[...AI_AND_SEARCH_BOTS.map(userAgent=>({userAgent,allow:'/',disallow:DISALLOW})),{userAgent:'*',allow:'/',disallow:DISALLOW}],
-  sitemap:[`${SITE_URL}/sitemap.xml`,`${SITE_URL}/sitemap-images.xml`/* pictures per page: lib/site/tools/imageSitemap.ts */,`${SITE_URL}/sitemap-video.xml`/* one entry per watch page: lib/site/videos.ts */],host:SITE_URL};
+  sitemap:[`${SITE_URL}/sitemap.xml`,`${SITE_URL}/sitemap-images.xml`/* pictures per page: lib/site/tools/imageSitemap.ts */,`${SITE_URL}/sitemap-video.xml`/* one entry per watch page: lib/site/videos.ts */]};
 }

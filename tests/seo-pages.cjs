@@ -75,8 +75,10 @@ assert.equal(PATHS.length,10+/* / /about /about/how-we-check-facts /privacy /pla
 // robots.ts names every bot and closes the private routes (checked again on the built file below).
 const robotsSrc=read('app/robots.ts');
 // Nov 8 2026 (owner, AI search): every answer engine's search and user-fetch agent by name.
-const BOTS=['GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','Claude-Web','Claude-SearchBot','Claude-User','anthropic-ai','PerplexityBot','Perplexity-User','Google-Extended','Applebot','Applebot-Extended','CCBot','Bingbot','Googlebot'];
+const BOTS=['GPTBot','OAI-SearchBot','ChatGPT-User','ClaudeBot','Claude-SearchBot','Claude-User','PerplexityBot','Perplexity-User','Google-Extended','Applebot','Applebot-Extended','CCBot','Bingbot','Googlebot'];
 for(const b of BOTS)assert(robotsSrc.includes(`'${b}'`),`robots.ts names ${b}`);
+/* Nov 20 2026: no undocumented agent names and no Host: line */
+for(const b of ['Claude-Web','anthropic-ai'])assert(!robotsSrc.includes(`'${b}'`),`robots.ts no longer names ${b}`);assert(!/\bhost:/.test(robotsSrc),'robots.ts has no Host line');
 // the game's routes are untouched by the group: no (site) page shadows a game route.
 for(const r of ['museum','arcade','konbini','shop','privacy','admin','api','controller','coffee','plan'])assert(!fs.existsSync(path.join(root,'app/(site)',r)),`(site) leaves /${r} alone`);
 // llms.txt: a title line, a summary, and the sections.
