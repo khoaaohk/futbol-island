@@ -6,6 +6,7 @@ import {formationImage,guideCrumbs} from '@/lib/site/guides';
 import {gameLink} from '@/lib/site/games';
 import {Bullets,Diagram,GuideEnd,GuideIntro,Section} from '@/lib/site/GuideParts';
 import KeepReading,{lessonLinks} from '@/components/site/KeepReading';
+import {booksWithoutCard} from '@/lib/site/crossLinks';
 import {Band,CardGrid,shirtBadge} from '@/components/site/HubParts';
 import {breadcrumbLd,collectionLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -46,7 +47,7 @@ export default function PositionsHub(){
    <p>{HUB.futsal} <a href="/learn/soccer-formations/futsal-3-1">See the futsal 3-1</a>.</p>
   </Section>
   <QA id="faq" title="Questions about positions" faq={HUB.faq}/>
-  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'compare',links:[...COMPARISONS.filter(c=>c.kind==='position').map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'})),...CARD_COLLECTIONS.filter(h=>h.slug!=='coaches'&&h.slug!=='futsal'&&h.slug!=='women'&&h.slug!=='world-cup-winners').map(h=>({path:h.path,name:h.h1.replace(/: player cards$/,''),line:h.blurb}))]},   {id:'related',links:[gameLink('snake'),gameLink('airhockey'),/* Air Futbol: the goalkeeper's rule (Nov 11 2026) *//* the arcade game that builds formations (lib/site/games.ts) */{path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.h1,line:FORMATIONS_HUB.blurb},{path:'/learn/lessons',name:'All football lessons',line:'Every lesson in 7v7, 9v9, 11v11 and futsal'}]}]}/>
+  <KeepReading groups={[{id:'lessons',label:'Lesson',icon:'steps',links:lessonLinks(HUB.lessons)},{id:'books',label:'Pop-up book',icon:'book',links:booksWithoutCard()},/* Nov 20 2026: the books whose player has no card page yet */{id:'compare',links:[...COMPARISONS.filter(c=>c.kind==='position').map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'})),...CARD_COLLECTIONS.filter(h=>h.slug!=='coaches'&&h.slug!=='futsal'&&h.slug!=='women'&&h.slug!=='world-cup-winners').map(h=>({path:h.path,name:h.h1.replace(/: player cards$/,''),line:h.blurb}))]},   {id:'related',links:[gameLink('snake'),gameLink('airhockey'),/* Air Futbol: the goalkeeper's rule (Nov 11 2026) *//* the arcade game that builds formations (lib/site/games.ts) */{path:FORMATIONS_HUB.path,name:FORMATIONS_HUB.h1,line:FORMATIONS_HUB.blurb},{path:'/learn/lessons',name:'All football lessons',line:'Every lesson in 7v7, 9v9, 11v11 and futsal'}]}]}/>
   <GuideEnd cta={false}/>
  </>;
 }

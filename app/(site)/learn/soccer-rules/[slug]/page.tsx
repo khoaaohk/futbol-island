@@ -24,6 +24,7 @@ import {CARD_RULES,cardDeckOf} from '@/lib/site/cardRules';
 import {RulePlayDeck,RulePlayGame} from '@/components/site/RulePlaySections';
 import {RULE_PLAY,isRulePlaySlug} from '@/lib/site/rulePlay';
 import {longDate} from '@/lib/site/checked';
+import {ruleCrossLinks} from '@/lib/site/crossLinks';
 import styles from '../../../site.module.css';
 
 /** One rule (lib/site/rules.ts): the two-sentence answer, the diagram, what the referee looks for, mix-ups, formats, FAQ, lessons. */
@@ -40,7 +41,9 @@ export default function RulePage({params}:{params:{slug:string}}){
  const crumbs=guideCrumbs({name:RULES_HUB.crumb,path:RULES_HUB.path},{name:r.name,path:r.path});
  const quiz=ruleQuiz(r);
  const i=RULES.indexOf(r),next=[RULES[(i+1)%RULES.length],RULES[(i+2)%RULES.length]];
- const related=[...(r.slug==='substitutions-and-game-length'?[{path:'/tools/soccer-playing-time-calculator',name:'Soccer playing time calculator',line:'A fair substitution plan with equal minutes for every player'}]:[]),...r.exhibits,...r.links,...next.map(x=>({path:x.path,name:x.h1,line:`${x.law}, with a diagram`})),
+ /* Nov 20 2026 (SEO foundation): the rule's coach tool, its glossary terms and a sister rule come first (lib/site/crossLinks.ts) */
+ const cross=ruleCrossLinks(r.slug);
+ const related=[...cross,...[...r.exhibits,...r.links].filter(l=>!cross.some(x=>x.path===l.path)),...next.map(x=>({path:x.path,name:x.h1,line:`${x.law}, with a diagram`})),
   {path:RULES_HUB.path,name:'All soccer rules for kids',line:RULES_HUB.blurb},{path:TERMS_HUB.path,name:TERMS_HUB.h1,line:TERMS_HUB.blurb}];
  const cards=r.slug==='yellow-and-red-cards';/* Nov 16 2026: the cards page's deck, table, side questions and game (lib/site/cardRules.ts) */
  const play=isRulePlaySlug(r.slug)?RULE_PLAY[r.slug]:null;/* Nov 16 2026: the back-pass, throw-in, handball and fouls pages' deck and game (lib/site/rulePlay.ts) */

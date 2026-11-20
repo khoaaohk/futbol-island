@@ -6,6 +6,7 @@ import {QA} from '@/components/site/LessonHub';
 import {TERMS_HUB,TERM_PAGES,termBySlug} from '@/lib/site/terms';
 import {RULES_HUB} from '@/lib/site/rules';
 import {drillLinksFor} from '@/lib/site/drills';
+import {termCrossLinks} from '@/lib/site/crossLinks';
 import {diagramUrl,guideCrumbs} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {Bullets,CoachNotesSection,GuideEnd,GuideIntro,type Fact,SceneDiagram,Section} from '@/lib/site/GuideParts';
@@ -31,7 +32,9 @@ export default function TermPage({params}:{params:{slug:string}}){
  const t=termBySlug(params.slug);if(!t)notFound();
  const crumbs=guideCrumbs({name:TERMS_HUB.crumb,path:TERMS_HUB.path},{name:t.name,path:t.path});
  const quiz=termQuiz(t,TERM_PAGES);
- const related=[...(t.links??[]),...t.related.map(s=>termBySlug(s)!).map(x=>({path:x.path,name:x.name,line:x.short})),
+ /* Nov 20 2026 (SEO foundation): the term's rule and coach tool come first (lib/site/crossLinks.ts) */
+ const cross=termCrossLinks(t.slug);
+ const related=[...cross,...(t.links??[]).filter(l=>!cross.some(x=>x.path===l.path)),...t.related.map(s=>termBySlug(s)!).map(x=>({path:x.path,name:x.name,line:x.short})),
   {path:TERMS_HUB.path,name:'All soccer terms, A to Z',line:TERMS_HUB.blurb},{path:RULES_HUB.path,name:RULES_HUB.h1,line:RULES_HUB.blurb}];
  const rel=t.related.map(s=>termBySlug(s)).find(Boolean);
  /* visual pass Nov 17 2026: the key facts under the answer (the "Other names" line moved in here) */

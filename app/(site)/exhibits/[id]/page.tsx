@@ -4,6 +4,7 @@ import Breadcrumbs from '@/components/site/Breadcrumbs';
 import RelatedLinks from '@/components/site/RelatedLinks';
 import {exhibitById,exhibitPath,SITE_EXHIBITS} from '@/lib/site/exhibits';
 import {exhibitRelated} from '@/lib/site/related';
+import {booksForExhibit} from '@/lib/site/crossLinks';
 import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta} from '@/lib/site/seo';
 import {ExhibitStamp,ExhibitTileGroup,Hero,isDated,StoryTimeline} from '@/components/site/cards/CardParts';
 import styles from '../../site.module.css';
@@ -23,6 +24,7 @@ export default function ExhibitPage({params}:{params:{id:string}}){
  const e=exhibitById(params.id);if(!e)notFound();
  const crumbs=[{name:'Home',path:'/'},{name:'Museum',path:'/exhibits'},{name:e.title,path:exhibitPath(e.id)}];
  const dated=e.story.filter(l=>isDated(l.head)).length,timeline=dated>=2&&dated*2>=e.story.length;
+ const rel=exhibitRelated(e);
  return <>
   <JsonLd data={creativeWorkLd({name:e.title,path:exhibitPath(e.id),description:e.facts.join(' '),image:ogPath(exhibitPath(e.id)),
    about:{'@type':'Thing',name:`${e.title} (${e.year})`,description:e.galleryTitle}})}/>
@@ -44,7 +46,8 @@ export default function ExhibitPage({params}:{params:{id:string}}){
   {e.sources.length>0&&<section className={styles.section} aria-labelledby="sources"><h2 className={styles.h3} id="sources">Sources</h2>
    <ul className={styles.caption}>{e.sources.map(s=><li key={s.url}>{s.title}</li>)}</ul>
   </section>}
-  <RelatedLinks related={exhibitRelated(e)} heading="More from the museum" readHeading="Learn it on the pitch" renderGroup={g=><ExhibitTileGroup g={g}/>}/>
+ {/* Nov 20 2026 (SEO foundation): the pop-up books that name this case link back from it */}
+  <RelatedLinks related={{...rel,read:[...rel.read,...booksForExhibit(e.id).map(b=>({path:b.path,name:b.name,meta:b.line}))]}} heading="More from the museum" readHeading="Learn it on the pitch" renderGroup={g=><ExhibitTileGroup g={g}/>}/>
   <p className={styles.end}><a className={styles.cta} href="/museum">See it in the museum on the island</a></p>
  </>;
 }

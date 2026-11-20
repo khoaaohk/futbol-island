@@ -13,6 +13,7 @@ import {guideCrumbs,positionImage} from '@/lib/site/guides';
 import {FAMILY_CHECKED} from '@/lib/site/checked';
 import {Bullets,CoachNotesSection,Diagram,GuideEnd,GuideIntro,type Fact,Section} from '@/lib/site/GuideParts';
 import {drillLinksFor} from '@/lib/site/drills';
+import {booksForRole} from '@/lib/site/crossLinks';
 import {SITE_CARDS,cardPath} from '@/lib/site/cards';
 import {articleLd,breadcrumbLd,faqLd,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
@@ -68,6 +69,7 @@ export default function PositionPage({params}:{params:{slug:string}}){
    {id:'formations',label:'Formation',icon:'lineup',links:used.length>0?[...used.map(x=>({path:x.path,name:`${x.name} formation`,line:x.roles.find(r=>r.pos===p.slug)?.title??x.best})),{path:FORMATIONS_HUB.path,name:'All soccer formations',line:FORMATIONS_HUB.blurb}]:[]},
    {id:'cards',label:'Player card',icon:'shirt',links:cards.length>0?[...cards.map(c=>({path:cardPath(c.number),name:c.displayName,line:[c.roleLabel,c.country].filter(Boolean).join(' · ')})),...(hub?[{path:hub.path,name:`See all ${hub.blurb.replace(/,.*$/,'')}`,line:hub.h1}]:[])]:[]},
    {id:'drills',label:'Drill',icon:'cone',links:drillLinksFor(p.path)},
+   {id:'books',label:'Pop-up book',icon:'book',links:booksForRole(p.cardRole)},/* Nov 20 2026: the books about players of this position */
    {id:'compare',label:'Compare',icon:'swap',links:compare.map(c=>({path:c.path,name:c.h1,line:c.answer.split('. ')[0]+'.'}))},
    {id:'related',links:[...POSITIONS.filter(x=>x!==p).map(x=>({path:x.path,name:x.name,line:`Number ${x.numbers}`})),{path:NUMBERS_PATH,name:'Soccer positions by number',line:'1 to 11 and the letters: CB, CDM, LCM, DF'},{path:POSITIONS_HUB.path,name:'All soccer positions',line:POSITIONS_HUB.blurb}]}]}/>
   <GuideEnd checked={FAMILY_CHECKED.positions} lesson={p.lessons[0]}/>

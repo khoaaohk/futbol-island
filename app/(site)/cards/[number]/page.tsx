@@ -9,6 +9,7 @@ import {cardRelated,roleLesson,rolePlural} from '@/lib/site/related';
 import {breadcrumbLd,creativeWorkLd,firstSentence,ogPath,pageMeta} from '@/lib/site/seo';
 import {SITE_UPDATED} from '@/lib/site/updated';
 import {checkedOn} from '@/lib/site/checked';
+import {bookForCard,cardTopicLinks} from '@/lib/site/crossLinks';
 import {CheckedLine,PlayEnd} from '@/lib/site/GuideParts';
 import {PLAY_PACKS_HREF} from '@/lib/site/playLinks';
 import {CardTileGroup,CareerTimeline,Chips,Hero,StatStrip,type Stat} from '@/components/site/cards/CardParts';
@@ -34,6 +35,7 @@ export function generateMetadata({params}:{params:{number:string}}){
 export default function CardPage({params}:{params:{number:string}}){
  const c=card(params);if(!c)notFound();
  const crumbs=[{name:'Home',path:'/'},{name:'Cards',path:'/cards'},{name:c.displayName,path:cardPath(c.number)}];
+ const book=bookForCard(c);
  const lesson=roleLesson(c),related=cardRelated(c),note=cardNote(c),drill=note&&cardNoteDrill(note);
  const stats:Stat[]=[{icon:'position',label:'Position',value:c.roleLabel},...(c.country?[{icon:'country' as const,label:'Country',value:c.country}]:[]),
   ...(c.national?[{icon:'national' as const,label:'National team',value:c.national}]:[]),{icon:'binder',label:'In the binder',value:`${eraWord(c)}, card #${c.number} of ${SITE_CARDS.length}`}];
@@ -86,7 +88,8 @@ export default function CardPage({params}:{params:{number:string}}){
    <p>{lesson.concept}</p>
    <p><a href={lessonPath(lesson.id)}>Read the {lesson.formatLabel} lesson: {lesson.title}</a></p>
   </section>
-  <RelatedLinks related={{...related,read:related.read.slice(1)}} heading="More cards like this" readHeading="Keep reading" renderGroup={g=><CardTileGroup g={g}/>}/>
+  {/* Nov 20 2026 (SEO foundation): + the player's pop-up book and two topic pages for the position (lib/site/crossLinks.ts) */}
+  <RelatedLinks related={{...related,read:[...(book?[{path:book.path,name:book.name,meta:book.line}]:[]),...related.read.slice(1),...cardTopicLinks(c).map(l=>({path:l.path,name:l.name,meta:l.line}))].filter((x,i,a)=>a.findIndex(y=>y.path===x.path)===i)}} heading="More cards like this" readHeading="Keep reading" renderGroup={g=><CardTileGroup g={g}/>}/>
   <PlayEnd href={PLAY_PACKS_HREF} label="Collect cards on the island" bar="Open card packs on the island"/>
  </>;
 }

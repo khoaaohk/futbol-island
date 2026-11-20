@@ -82,4 +82,13 @@ export const GUIDE_DRILLS:Record<string,string[]>={
  [T+'marking']:['pressure-and-cover-2v2'],
  [T+'counterattack']:['three-v-two-to-goal','two-v-one-to-goal'],
  [T+'nutmeg']:['one-v-one-to-end-zones'],
+ /* Nov 20 2026 (SEO foundation): the rule and term pages that had no drill link, where a drill really trains the idea. */
+ [R+'corner-kick']:['crossing-and-finishing'],
+ [R+'yellow-and-red-cards']:['one-v-one-defending'],
+ [R+'handball']:['thigh-and-chest-control'],
+ [T+'third-man-run']:['triangle-passing'],
+ [T+'overlap']:['two-v-one-to-goal'],
+ [T+'set-piece']:['throw-in-game'],
+ [T+'clean-sheet']:['goalkeeper-angles'],
+ [T+'hat-trick']:['world-cup-shooting-game'],
 };
