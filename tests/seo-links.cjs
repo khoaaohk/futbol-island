@@ -140,10 +140,11 @@ assert(/alternates:\{canonical:path\}/.test(code('lib/site/seo.ts')),'pageMeta s
   '/exhibits':ex.SITE_EXHIBITS.map(e=>ex.exhibitPath(e.id)),'/learn/lessons':les.LESSONS.map(l=>les.lessonPath(l.id)),'/learn/soccer-rules':R.RULES.map(r=>r.path),'/learn/soccer-terms':T.TERM_PAGES.map(t=>t.path),
   '/learn/soccer-positions':[...positions.POSITIONS.map(p=>p.path),...cmp.COMPARISONS.filter(c=>c.kind==='position').map(c=>c.path)],'/learn/soccer-formations':[...F.FORMATIONS.map(f=>f.path),...cmp.COMPARISONS.filter(c=>c.kind==='formation').map(c=>c.path),...F.FORMAT_GUIDES.map(g=>g.path)],
   '/learn/soccer-drills':Dr.DRILLS.map(d=>d.path),'/learn/soccer-practice-plans':Pl.PLANS.map(p=>p.path),
-  '/videos':L('lib/site/videos.ts').allWatchVideos().map(v=>v.path)/* the watch pages (Nov 18 2026) */};
+  '/videos':L('lib/site/videos.ts').allWatchVideos().map(v=>v.path)/* the watch pages (Nov 18 2026) */,
+  '/books':L('lib/site/books.ts').SITE_BOOKS.filter(b=>b.path).map(b=>b.path),'/games':L('lib/site/games.ts').GAME_LISTINGS.map(g=>g.path)/* Nov 20 2026: the footer hubs list every book and game page */};
  for(const [hub,list] of Object.entries(kids))for(const p of list)set(p,(D.get(hub)??9)+1);
  const deep=[...D.entries()].filter(([,d])=>d>3);assert.equal(deep.length,0,`deeper than 3: ${deep.slice(0,5).join(' ')}`);
- const modelled=SP.filter(x=>D.has(x.path)).length;assert(modelled/SP.length>=.8/* Nov 20 2026: was .9 with the 450 single card pages in the sitemap */,`the model covers ${modelled}/${SP.length} pages (the crawl checks the rest)`);}
+ const modelled=SP.filter(x=>D.has(x.path)).length;assert(modelled/SP.length>=.9/* Nov 20 2026: the 450 single card pages left the sitemap, so /books and /games children are modelled to keep the bar */,`the model covers ${modelled}/${SP.length} pages (the crawl checks the rest)`);}
 
 const avg=a=>(a.reduce((x,y)=>x+y,0)/a.length).toFixed(1);
 console.log(`seo-links: ${col.COLLECTIONS.length} hubs, ${cmp.COMPARISONS.length} comparisons, ${rn.CHAINS.length} read-next chains (${rn.CHAINS.reduce((a,c)=>a+c.pages.length,0)} pages); reading links per card ${Math.min(...stats.card)}-${Math.max(...stats.card)} (avg ${avg(stats.card)}), per fish ${Math.min(...stats.fish)}-${Math.max(...stats.fish)}; ${new Set(SP.map(x=>x.lastmod)).size} distinct lastmod dates — ok`);
