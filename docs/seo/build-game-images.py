@@ -20,6 +20,8 @@ GAMES = [
  ('air-futbol-air-hockey-soccer-game', ['airhockey-phone', 'airhockey-goal'], ['air-futbol-air-hockey-soccer-game', 'air-futbol-goal-bank-shot'], 'Air Futbol', 'Free air hockey soccer game'),
  ('pass-puzzles-soccer-passing-puzzle-game', ['puzzle-phone', 'puzzle-endless'], ['pass-puzzles-soccer-passing-puzzle', 'pass-puzzles-endless-run'], 'Pass Puzzles', 'Free soccer passing puzzle game'),
  # Nov 17 2026: the three puzzle cabinets, shot from the running games on a 390x844 phone (DPR 2), like the others.
+ # Nov 20 2026: the two share pictures below were re-made after the Nov 18-19 visual pass from the current stills in public/games/shots
+ #  (lineup-1 + lineup-2, trophydrop-3 + trophydrop-2) with og() as it is here; docs/arcade-aaa/shots is not in the repo, so re-shoot there before a full re-run.
  ('line-up-soccer-block-puzzle-game', ['lineup-phone', 'lineup-clear'], ['line-up-soccer-block-puzzle-game', 'line-up-tray-of-three-shapes'], 'Line Up!', 'Free soccer block puzzle game'),
  ('trophy-drop-soccer-merge-game', ['trophydrop-phone', 'trophydrop-medal'], ['trophy-drop-soccer-merge-game', 'trophy-drop-medal-merge'], 'Trophy Drop', 'Free soccer merge game'),
  # Nov 17 2026: Roll It In, the rolling-ball puzzle, shot from real play (the scripted bot through the game's physics, frames stepped at 30 fps on a 390x844 phone).

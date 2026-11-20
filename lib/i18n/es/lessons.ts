@@ -45,7 +45,14 @@ export const formatPhraseEs=(f:string)=>f==='Futsal'||f==='futsal'?'futsal':`fú
 /** Page title (<= 60): the longest form that fits. */
 export const lessonTitleEs=(l:{title:string;formatLabel:string})=>{const f=formatPhraseEs(l.formatLabel);
  return [`${l.title}: lección de ${f} para niños`,`${l.title}: lección de ${f}`,`${l.title} (lección de ${l.formatLabel})`,l.title].find(t=>t.length<=60)??l.title.slice(0,60);};
-/** Description (70-155): the concept's first sentence, then what the page is. */
-export const lessonDescriptionEs=(l:{concept:string;formatLabel:string})=>{const c=firstSentence(l.concept,120),f=formatPhraseEs(l.formatLabel);
- return [`${c} Lección y prueba gratis de ${f} para niños. Sin anuncios.`,`${c} Lección y prueba gratis de ${f} para niños.`,`${c} Lección gratis de ${f}.`,c].find(d=>d.length<=155&&d.length>=70)
-  ??(c.length>155?c.slice(0,154).replace(/\s+\S*$/,'')+'…':`${c} Lección y prueba gratis de ${f} para niños, con las preguntas y las explicaciones del entrenador.`.slice(0,155));};
+/** Description (70-155): the concept's first sentence, then what the page is. Nov 20 2026 (SEO leftovers): one under 120
+ *  characters gets a fuller tail from the lesson's own fields (steps, quiz questions, level, topic), as lib/site/lessons.ts. */
+export const lessonDescriptionEs=(l:{concept:string;formatLabel:string;steps?:readonly unknown[];questions?:readonly unknown[];difficultyEs?:string;categoryEs?:string})=>{const c=firstSentence(l.concept,120),f=formatPhraseEs(l.formatLabel);
+ const d=[`${c} Lección y prueba gratis de ${f} para niños. Sin anuncios.`,`${c} Lección y prueba gratis de ${f} para niños.`,`${c} Lección gratis de ${f}.`,c].find(x=>x.length<=155&&x.length>=70)
+  ??(c.length>155?c.slice(0,154).replace(/\s+\S*$/,'')+'…':`${c} Lección y prueba gratis de ${f} para niños, con las preguntas y las explicaciones del entrenador.`.slice(0,155));
+ if(d.length>=120)return d;
+ const s=l.steps?.length??0,q=l.questions?.length??0;
+ const what=s>0&&q>0?`${c} Lección gratis de ${f} para niños con ${s} ${s===1?'paso':'pasos'} del entrenador y ${q} ${q===1?'pregunta':'preguntas'} de prueba.`:`${c} Lección y prueba gratis de ${f} para niños.`;
+ const level=l.difficultyEs?` Nivel: ${l.difficultyEs.toLowerCase()}.`:'',topic=l.categoryEs?` Tema: ${l.categoryEs.toLowerCase()}.`:'';
+ return [`${what}${level}${topic} Sin anuncios.`,`${what}${level} Sin anuncios.`,`${what}${topic} Sin anuncios.`,`${what} Sin anuncios.`,what,
+  `${c} Lección gratis de ${f} para niños con ${s} ${s===1?'paso':'pasos'} y ${q} ${q===1?'pregunta':'preguntas'} de prueba. Sin anuncios.`].find(x=>x.length>=120&&x.length<=155)??d;};
