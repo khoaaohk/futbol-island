@@ -59,12 +59,16 @@ function routeFiles(p){
 }
 const git=(args)=>execFileSync('git',args,{cwd:root,encoding:'utf8'}).trim();
 const now=new Date(),today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;/* local, like git's %cs */
+/** Commits that changed no page's content, only its metadata, schema or the date plumbing itself (verify, Nov 20 2026): they
+ *  must not move a page's date, or one template touch makes the whole site say "updated today". Add a hash only for such a commit. */
+const IGNORE=['2b3b8b71'/* home title */,'20517bb8'/* one date source + Last updated line */,'66e58404'/* titles and descriptions */,'ad01e60b'/* Book schema image, robots */,'c8b48030'/* books date note */];
 const memo=new Map();
 function dateOf(files){
  const k=files.join('|');if(memo.has(k))return memo.get(k);
  const existing=files.filter(f=>fs.existsSync(path.join(root,f)));
  const dirty=git(['status','--porcelain','--',...existing]);
- const d=dirty?today:git(['log','-1','--format=%cs','--',...existing])||today;
+ const hit=dirty?null:git(['log','--format=%H %cs','--',...existing]).split('\n').find(l=>l&&!IGNORE.some(h=>l.startsWith(h)));
+ const d=dirty?today:(hit?hit.split(' ')[1]:today);
  memo.set(k,d);return d;
 }
 function build(){
