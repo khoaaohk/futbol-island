@@ -15,6 +15,7 @@ import {SITE_UPDATED} from '@/lib/site/updated';
 import {hasEs,toEs} from '@/lib/i18n/esPaths';
 import {longDateEs} from '@/lib/i18n/es/ui';
 import {esDrillLinksFor} from '@/lib/i18n/es/drillsRegistry';
+import {esRuleCrossLinks,esTermCrossLinks} from '@/lib/i18n/es/crossLinks';
 import {ES_COMPARISONS,ES_FORMATIONS,esFormatGuide,ES_HUBS,ES_POSITIONS,ES_RULES,ES_TERMS,describeEs,esLines,esOrder,type EsPosition,type EsRule,type EsTerm} from '@/lib/i18n/es/registry';
 import {positionQuizEs,ruleQuizEs,termQuizEs} from '@/lib/i18n/es/quiz';
 import {type Fact,Bullets,DataTable,EsCoachNotes,EsGuideEnd,EsIntro,EsPrintSheet,EsReadNext,EsSceneDiagram,LinkList,QA,Section,esCrumbs,esLessonLinks,sceneDescEs} from '@/components/es/EsParts';
@@ -76,7 +77,9 @@ export function RulesHubEsPage(){
 export function RuleEsPage({r}:{r:EsRule}){
  const H=ES_HUBS.rules,crumbs=esCrumbs({name:H.crumb,path:H.path},{name:r.name,path:r.esPath}),all=ES_RULES(),quiz=ruleQuizEs(r);
  const i=all.findIndex(x=>x.slug===r.slug),next=[all[(i+1)%all.length],all[(i+2)%all.length]];
- const related=[...links(r.links),...next.map(x=>({path:x.esPath,name:x.h1,line:`${x.law}, con diagrama`})),{path:H.path,name:'Todas las reglas del fútbol para niños',line:H.blurb},{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb}];
+ /* Nov 20 2026 (SEO leftovers): the rule's coach tool, its terms and a sister rule come first, as in English (lib/i18n/es/crossLinks.ts) */
+ const cross=esRuleCrossLinks(r.slug),fresh=(l:{path:string})=>!cross.some(x=>x.path===l.path);
+ const related=[...cross,...links(r.links).filter(fresh),...next.filter(x=>fresh({path:x.esPath})).map(x=>({path:x.esPath,name:x.h1,line:`${x.law}, con diagrama`})),{path:H.path,name:'Todas las reglas del fútbol para niños',line:H.blurb},{path:ES_HUBS.terms.path,name:ES_HUBS.terms.h1,line:ES_HUBS.terms.blurb}];
  const cards=r.slug==='yellow-and-red-cards';/* Nov 16 2026: lib/i18n/es/cardRules.ts */
  const play=isRulePlaySlug(r.slug)?RULE_PLAY_ES[r.slug]:null;/* Nov 16 2026: lib/i18n/es/rulePlay.ts */
  const moving=(ANIMATED_RULES as readonly string[]).includes(r.slug),futsal=r.slug==='futsal-rules',pair=r.scenes.length>1,last=r.scenes.length-1,F=H.futsalVsSoccer;
@@ -155,7 +158,9 @@ export function TermsHubEsPage(){
 }
 export function TermEsPage({t}:{t:EsTerm}){
  const H=ES_HUBS.terms,all=ES_TERMS(),crumbs=esCrumbs({name:H.crumb,path:H.path},{name:t.name,path:t.esPath}),quiz=termQuizEs(t,all);
- const related=[...links(t.links??[]),...t.related.map(s=>all.find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:x.name,line:x.short})),
+ /* Nov 20 2026 (SEO leftovers): the term's rule and coach tool come first, as in English (lib/i18n/es/crossLinks.ts) */
+ const cross=esTermCrossLinks(t.slug);
+ const related=[...cross,...links(t.links??[]).filter(l=>!cross.some(x=>x.path===l.path)),...t.related.map(s=>all.find(x=>x.slug===s)!).map(x=>({path:x.esPath,name:x.name,line:x.short})),
   {path:H.path,name:'Todos los términos del fútbol, de la A a la Z',line:H.blurb},{path:ES_HUBS.rules.path,name:ES_HUBS.rules.h1,line:ES_HUBS.rules.blurb}];
  const rel=t.related.map(s=>all.find(x=>x.slug===s)).find(Boolean);
  const facts:Fact[]=[t.also?{icon:'tag',label:'Otros nombres',value:t.also}:{icon:'diagram',label:'Diagrama',value:'Un dibujo de la cancha',href:'#diagram'},
