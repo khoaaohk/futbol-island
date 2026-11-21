@@ -1,3 +1,4 @@
+-- Nov 21 2026: DO NOT PASTE THIS FILE: use docs/arcade-aaa/new-games-nov21-supabase.sql instead (all three new games in one file).
 -- Futbol Island: Keepy-Uppy Beat, the juggling rhythm game (Nov 21 2026; lib/arcade/keepyuppy/core.ts, docs/arcade-aaa/keepyuppy-direction.md).
 -- FOR THE OWNER. Paste this whole file into the Supabase SQL editor and press Run. It is meant to run AFTER
 -- docs/arcade-aaa/safehands-supabase.sql (it is a superset of it, so pasting only this one also installs Safe Hands);

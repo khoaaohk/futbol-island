@@ -41,6 +41,8 @@ export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
 export const arcadeUnplaced=[
  {id:'safehands',name:'Safe Hands',short:'SAFE HANDS',lesson:'Set your position. Read the striker.',color:'#19b5a5'},
  {id:'keepyuppy',name:'Keepy-Uppy Beat',short:'KEEPY-UPPY',lesson:'Soft touches. Both feet. Find the rhythm.',color:'#ffc83a'},// Nov 21 2026: the juggling rhythm game (docs/arcade-aaa/keepyuppy-direction.md "Room placement")
+ /* Nov 21 2026: Hold the Line, the defending game (docs/arcade-aaa/holdtheline-direction.md "Room placement"): the same wait for a spot */
+ {id:'holdtheline',name:'Hold the Line',short:'HOLD THE LINE',lesson:'Step up together. Catch them offside.',color:'#f0452e'},
 ] as const;
 export type ArcadePlayableId=ArcadeCabinetId|typeof arcadeUnplaced[number]['id'];
 /** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,

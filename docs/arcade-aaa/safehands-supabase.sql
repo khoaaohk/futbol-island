@@ -1,3 +1,4 @@
+-- Nov 21 2026: DO NOT PASTE THIS FILE: use docs/arcade-aaa/new-games-nov21-supabase.sql instead (all three new games in one file).
 -- Futbol Island: Safe Hands, the goalkeeper game (Nov 21 2026; lib/arcade/safehands/core.ts, docs/arcade-aaa/safehands-direction.md).
 -- FOR THE OWNER. Paste this whole file into the Supabase SQL editor and press Run. It is meant to run AFTER
 -- docs/arcade-aaa/swap-games-supabase.sql (Roll It In + Ball Blaster); paste it once, running it again is harmless.
