@@ -12,6 +12,7 @@ import {RULES} from './rules';
 import {NUMBERS_PAGE} from './positionNumbers';
 import {drillGuideBySlug} from './drillGuides';
 import {firstSentence} from './seo';
+import {LIBRARY_PATH} from './libraryPath';
 import {SITE_BOOKS,BUILT_BOOKS,bookBySlug} from './books';
 /** Nov 16 2026 (SEO CTR, owner: "written for LLM searches as well"): the pages people search most, each with its stand-alone
  *  one-sentence answer, so an assistant can quote the answer and cite the page (docs/seo-ctr/LLM-CHECKLIST.md). */
@@ -40,6 +41,10 @@ export function llmsText():string{
   `> Futbol Island (https://futbolisland.app) is a free, phone-first football (soccer) learning game for kids aged 7 to 12, played in the web browser with nothing to download. Players explore an island and learn positions, team shape, tactics and the rules of 7v7, 9v9, 11v11 and futsal through ${LESSONS.length} short animated lessons with ${HUB_COUNTS.questions} quiz questions, and discover football history and culture: a hidden-ball hunt, a Fishbook of ${SITE_FISH.length} sea animals each linked to a real football fact, ${SITE_CARDS.length} player cards and a History Museum of ${SITE_EXHIBITS.length} exhibits. It is for kids and for the parents, carers and coaches who help them. No pop-up, video or tracking ads, no accounts, no open chat. The island’s stadium shows sponsor boards: pictures only, with no links and no tracking. Built in San Diego with White Sports Ventures (founded by former U.S. Men's National Team player Jeremiah White III) and the local non-profits FC YAP, Street Soccer San Diego and Ronin Futsal.`,'',
   '## About','',
   `- [Futbol Island home](https://futbolisland.app/): the feature tour for parents and coaches: what kids learn (lessons, quizzes, exploring, playing with friends), how it stays safe, and a FAQ for grown-ups.`,
+  /* Nov 20 2026 (new layout SEO, owner: "boost traffic to these three main pages, Island, games, and library", "Also play"): the four
+     main pages first: home, the Library, the games hub, the game */
+  `- [The Futbol Island Library](https://futbolisland.app${LIBRARY_PATH}): learn soccer for kids on one page: lessons, rules, soccer terms, drills, positions, formations, practice plans, coach tools, age groups, games, videos, player cards, story books, the Fishbook and the museum, each with a link into its section. In Spanish at https://futbolisland.app/es${LIBRARY_PATH}.`,
+  `- [Free soccer games for kids](https://futbolisland.app/games): the arcade games, each with its own page, plus the island game itself.`,
   `- [Play the game](https://futbolisland.app/play): the title screen (start a new island, continue with a save code, or join friends) and the island itself, in the web browser on phones, tablets and computers.`,
   `- [About Futbol Island](https://futbolisland.app/about): who it is for, what it teaches, how it works, the partners and a short FAQ.`,
   `- [Parents' guide](https://futbolisland.app${SAFE_GUIDE.path}): the safety facts in plain words, with questions parents ask.`,'',
