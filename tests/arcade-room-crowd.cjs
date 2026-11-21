@@ -81,7 +81,7 @@ console.log('NPC_DISTINCT_ACTIONS_PASS: 72 authored exchanges, individual tempo,
   const gap=(P,Q)=>{let best=-Infinity;for(const S of [P,Q])for(let i=0;i<S.length;i++){const p=S[i],q=S[(i+1)%S.length],n=[q[1]-p[1],p[0]-q[0]],l=Math.hypot(...n),pr=X=>X.map(x=>(x[0]*n[0]+x[1]*n[1])/l),A=pr(P),B=pr(Q);best=Math.max(best,Math.min(...B)-Math.max(...A),Math.min(...A)-Math.max(...B));}return best;};
   const P=-Math.PI/3,prize=(x,z)=>{const lx=x-10,lz=z+9.6;return [13+lx*Math.cos(P)+lz*Math.sin(P),-2-lx*Math.sin(P)+lz*Math.cos(P)];};/* arcadeRoomProps.ts place(10,-9.6,13,-2,-PI/3) */
   const props={counter:rect(...prize(10,-7.9),2.75,-.75,.75,P),shelf:rect(...prize(10,-10.6),2.85,-.55,.55,P),vending:rect(12.6,9.6,1.374,-1.428,1.428,0)/* Nov 21 2026: moved from 12,8 */};
-  const wall=C.arcadeHubCabinets().filter(c=>C.ARCADE_WALL_IDS.includes(c.id));assert.equal(wall.map(c=>c.id).join(),'keepyuppy,holdtheline');
+  const wall=C.arcadeHubCabinets().filter(c=>C.ARCADE_WALL_IDS.includes(c.id)&&c.x>0)/* Nov 22 2026: the west pair has its own block below */;assert.equal(wall.map(c=>c.id).join(),'keepyuppy,holdtheline');
   const bodies=wall.map(c=>rect(c.x,c.z,.95,-.63,1.32,c.yaw)),rowEast=row.reduce((m,c)=>c.x>m.x?c:m);
   wall.forEach((c,i)=>{assert(c.x>10&&Math.abs(c.yaw+Math.PI/3)<1e-9,c.id+': on the east wall, turned like the counter');
    for(const [k,o] of Object.entries(props))assert(gap(bodies[i],o)>=.2,`${c.id} clears the ${k} (${gap(bodies[i],o).toFixed(2)} m)`);
@@ -90,5 +90,18 @@ console.log('NPC_DISTINCT_ACTIONS_PASS: 72 authored exchanges, individual tempo,
    for(const [k,o] of Object.entries(props))assert(gap(spot,o)>=.2,`${c.id}: walk-up spot clear of the ${k}`);bodies.forEach((b,j)=>assert(gap(spot,b)>=(j===i?.05:.3),c.id+': walk-up spot clear of the cabinet bodies'));});
   assert(gap(bodies[0],bodies[1])>=.3,'the two wall cabinets do not touch');
   console.log('ARCADE_EAST_WALL_PASS',JSON.stringify(wall.map((c,i)=>({id:c.id,x:c.x,z:c.z,clear:+Math.min(...Object.values(props).map(o=>gap(bodies[i],o))).toFixed(2)}))));}
+ // Nov 22 2026: the west wall pair, Flick It and FootGolf Island, turned +60 degrees between the air hockey table and the Claw Club where
+ // the south lounge stood. Same body and walk-up rules as the east pair, against the table, the claw machine and the north lounge.
+ {const rect=(cx,cz,hx,lo,hi,yaw)=>{const ax=[Math.cos(yaw),-Math.sin(yaw)],az=[Math.sin(yaw),Math.cos(yaw)];return [[-hx,lo],[hx,lo],[hx,hi],[-hx,hi]].map(([u,v])=>[cx+u*ax[0]+v*az[0],cz+u*ax[1]+v*az[1]]);};
+  const gap=(P,Q)=>{let best=-Infinity;for(const S of [P,Q])for(let i=0;i<S.length;i++){const p=S[i],q=S[(i+1)%S.length],n=[q[1]-p[1],p[0]-q[0]],l=Math.hypot(...n),pr=X=>X.map(x=>(x[0]*n[0]+x[1]*n[1])/l),A=pr(P),B=pr(Q);best=Math.max(best,Math.min(...B)-Math.max(...A),Math.min(...A)-Math.max(...B));}return best;};
+  const props={hockey:rect(-10,-1,1.55,-2.4,2.4,0),claw:rect(-12,8,1.615,-1.596,1.596,0),lounge:rect(-13,-6,1.05,-1.85,1.85,0)};/* the colliders in arcadeRoomProps.ts; the north lounge sofa (arcadeRoomScene.ts) */
+  const wall=C.arcadeHubCabinets().filter(c=>C.ARCADE_WALL_IDS.includes(c.id)&&c.x<0);assert.equal(wall.map(c=>c.id).join(),'flickit,footgolf');
+  const bodies=wall.map(c=>rect(c.x,c.z,.95,-.63,1.32,c.yaw));
+  wall.forEach((c,i)=>{assert(c.x< -10&&Math.abs(c.yaw-Math.PI/3)<1e-9,c.id+': on the west wall, turned toward the aisle');assert(Math.min(...bodies[i].map(p=>p[0]))> -15,c.id+': inside the wall');
+   for(const [k,o] of Object.entries(props))assert(gap(bodies[i],o)>=.2,`${c.id} clears the ${k} (${gap(bodies[i],o).toFixed(2)} m)`);
+   const sx=c.x+Math.sin(c.yaw)*1.8,sz=c.z+Math.cos(c.yaw)*1.8,spot=rect(sx,sz,.3,-.3,.3,0);assert(sx<13.7&&sx>-13.7&&sz<11.1&&sz>-10.7,c.id+': walk-up spot on the floor');
+   for(const [k,o] of Object.entries(props))assert(gap(spot,o)>=.2,`${c.id}: walk-up spot clear of the ${k}`);bodies.forEach((b,j)=>assert(gap(spot,b)>=(j===i?.05:.3),c.id+': walk-up spot clear of the cabinet bodies'));});
+  assert(gap(bodies[0],bodies[1])>=.3,'the two west wall cabinets do not touch');
+  console.log('ARCADE_WEST_WALL_PASS',JSON.stringify(wall.map((c,i)=>({id:c.id,x:c.x,z:c.z,clear:+Math.min(...Object.values(props).map(o=>gap(bodies[i],o))).toFixed(2)}))));}
  console.log('ARCADE_BACK_ROW_PASS',JSON.stringify({pitch:[6,9,10].map(n=>+C.arcadeRowPitch(n).toFixed(2)),xs}));
 }

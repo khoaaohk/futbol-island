@@ -1,6 +1,6 @@
 import {numberWord} from '../numberWord';
 /** Nov 21 2026: the wall machines: upright cabinets that are not in the back row (the air hockey table is not one of them). */
-export const ARCADE_WALL_IDS=['keepyuppy','holdtheline'] as const;
+export const ARCADE_WALL_IDS=['keepyuppy','holdtheline','flickit','footgolf'] as const;/* Nov 22 2026: Flick It and FootGolf Island on the west wall */
 /**
  * Nov 17 2026 (owner: "place the games in the back and reorganize it so they all line side by side"): every upright cabinet stands
  * in ONE row against the back wall, side by side, all facing the door (yaw 0). ARCADE_ROW is the left-to-right order (west to east);
@@ -42,15 +42,18 @@ export const arcadeCabinets = [
  // (docs/arcade-aaa/holdtheline-direction.md), toward the vending machine.
  {id:'keepyuppy',name:'Keepy-Uppy Beat',short:'KEEPY-UPPY',lesson:'Soft touches. Both feet. Find the rhythm.',color:'#ffc83a',x:11.75,z:2.85,yaw:-Math.PI/3},
  {id:'holdtheline',name:'Hold the Line',short:'HOLD THE LINE',lesson:'Step up together. Catch them offside.',color:'#f0452e',x:12.85,z:5.2,yaw:-Math.PI/3},
+ // Nov 22 2026 (owner approved the release): Flick It and FootGolf Island stand against the WEST wall, mirroring the east pair, between
+ // the air hockey table and the Claw Club, where the south lounge sofa stood (removed for them). Turned +60 degrees so they face the aisle
+ // and lean toward the room camera; spots measured against the room's colliders (tests/arcade-room-crowd.cjs "west wall").
+ {id:'flickit',name:'Flick It',short:'FLICK IT',lesson:'Laces for power. Inside of the foot to bend it.',color:'#2f8fd8',x:-12.7,z:2.4,yaw:Math.PI/3},// docs/arcade-aaa/flickit-direction.md
+ {id:'footgolf',name:'FootGolf Island',short:'FOOTGOLF',lesson:'Laces to go far. Inside of the foot to roll it in.',color:'#3f9a50',x:-13.8,z:4.4,yaw:Math.PI/3},// docs/arcade-aaa/footgolf-direction.md
 ] as const;
 export type ArcadeCabinetId=typeof arcadeCabinets[number]['id'];
 /** Nov 21 2026: games that can be played (deep link /arcade?game=<id>) but have NO machine in the room yet wait here for the
  *  owner's decision on their spot: the room, its draw budget, the row spacing and every "N games" count read arcadeCabinets, so they do not change. To place it, move the entry
  *  into arcadeCabinets (and its id into ARCADE_ROW). */
 export const arcadeUnplaced=[
- {id:'footgolf',name:'FootGolf Island',short:'FOOTGOLF',lesson:'Laces to go far. Inside of the foot to roll it in.',color:'#3f9a50'},// Nov 21 2026: real footgolf round nine holes of the island (docs/arcade-aaa/footgolf-direction.md); no machine in the room yet
- {id:'flickit',name:'Flick It',short:'FLICK IT',lesson:'Laces for power. Inside of the foot to bend it.',color:'#2f8fd8'},// Nov 21 2026: the football flick game (docs/arcade-aaa/flickit-direction.md); no machine in the room yet
-] as const;
+] as readonly {readonly id:never;readonly name:string;readonly short:string;readonly lesson:string;readonly color:string}[];/* Nov 22 2026: empty again (Flick It and FootGolf Island placed on the west wall); the mechanism and tests/seo-games-gate.cjs stay for the next game */
 export type ArcadePlayableId=ArcadeCabinetId|typeof arcadeUnplaced[number]['id'];
 /** How many games the arcade has (Nov 17 2026), as a number and a word ("ten"). Every "N games" line (the back-wall sign, /arcade,
  *  /games, the media captions, tests) reads these, so adding a cabinet above updates every count. */

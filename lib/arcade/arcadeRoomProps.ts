@@ -67,7 +67,7 @@ export function createArcadeRoomProps(scene:T.Scene){
  const stockMaterial=(stock.children[0] as T.Mesh).material as T.MeshStandardMaterial;
  placement.identity();
  // Quiet lived-in detail stays on existing furniture, clear of walking lanes.
- for(const z of[-6,2.5]){
+ for(const z of[-6]/* Nov 22 2026: the south lounge's side table went with it (west wall machines) */){
   box(-12.85,.75,z+.7,.65,.1,.5,ink);box(-12.85,.81,z+.7,.56,.012,.42,cream);
   for(let i=0;i<4;i++)box(-13.02+i*.11,.82,z+.7,.025,.009,.3,i%2?teal:coral);
   tube(-13.2,.92,z-.9,.12,.27,coral);tube(-13.2,1.06,z-.9,.125,.025,cream);tube(-13.2,1.18,z-.9,.015,.23,gold);

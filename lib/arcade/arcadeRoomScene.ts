@@ -62,7 +62,7 @@ export function createArcadeRoomScene(canvas:HTMLCanvasElement,onNear:(id:Arcade
  marqueeTube(18.55,3.5,'#60e9f2');marqueeTube(17.95,2.95,'#ff65c8');
  for(const side of[-1,1])box(scene,side*8.6,2.9,-11.8,.25,5.8,.25,'#171328');
  // A little room beyond the machines: lounge, trophy plinth and pennants.
- for(const seatZ of[-6,2.5]){const side=-1,lx=-13;box(scene,lx,.35,seatZ,2.1,.7,3.7,'#50365f');box(scene,lx+side*.85,1,seatZ,.4,1.2,3.7,'#795282');for(const dz of[-1.4,1.4])box(scene,lx,.8,seatZ+dz,2.1,.6,.32,'#795282');box(scene,lx,.83,seatZ-.8,1.55,.25,.85,'#a776a5');}
+ for(const seatZ of[-6]/* Nov 22 2026: the south lounge (z 2.5) made way for Flick It and FootGolf Island (arcadeCatalog.ts) */){const side=-1,lx=-13;box(scene,lx,.35,seatZ,2.1,.7,3.7,'#50365f');box(scene,lx+side*.85,1,seatZ,.4,1.2,3.7,'#795282');for(const dz of[-1.4,1.4])box(scene,lx,.8,seatZ+dz,2.1,.6,.32,'#795282');box(scene,lx,.83,seatZ-.8,1.55,.25,.85,'#a776a5');}
 
  for(const side of[-1,1]){const px=side*14;box(scene,px,1,-10.5,.75,2,.75,'#eedbb5');box(scene,px,2.2,-10.5,.48,.4,.48,'#edb957');}
  for(const side of[-1,1]){for(const z of[-9,-1,8]){box(scene,side*15.3,1.9,z,.75,3.8,.75,'#36555f');box(scene,side*15.3,3.8,z,1,.18,1,side<0?'#ff65c8':'#60e9f2');}}
