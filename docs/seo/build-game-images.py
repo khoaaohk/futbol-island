@@ -29,6 +29,12 @@ GAMES = [
  # Nov 17 2026: Ball Blaster, the shooting game, shot from real drag-and-release play on a 390x844 phone (DPR 2).
  ('ball-blaster-soccer-shooting-game', ['ballblaster-phone', 'ballblaster-aim'], ['ball-blaster-soccer-shooting-game', 'ball-blaster-aim-and-curl'], 'Ball Blaster', 'Free soccer shooting game'),
 ]
+# Nov 21 2026: games with a page but no machine in the room yet (lib/arcade/arcadeCatalog.ts arcadeUnplaced): only the share
+# picture is made (their page pictures are gameplay stills in public/games/shots), at a lower JPEG quality so public/games stays
+# under its cap (tests/seo-games.cjs), and they are NOT counted on the hub picture. Move an entry up into GAMES when it is placed.
+UNPLACED = [
+ ('safe-hands-soccer-goalkeeper-game', ['safehands-phone', 'safehands-cup'], [], 'Safe Hands', 'Free soccer goalkeeper game', 56),
+]
 # One entry per arcade cabinet, so the hub picture's count follows the list (Nov 18 2026: eleven after the arcade swap).
 WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen']
 COUNT = WORDS[len(GAMES)] if len(GAMES) < len(WORDS) else str(len(GAMES))
@@ -45,7 +51,7 @@ def words(d, name, line, x, y, width):
     g = fit(d, line, SANS, 40, width); d.text((x, y + 118), line, font=g, fill=INK)
     h = ImageFont.truetype(SANS, 26); d.text((x, y + 176), 'No ads · no sign-up · futbolisland.app', font=h, fill=SOFT)
     d.rounded_rectangle([x, y + 228, x + 150, y + 238], 5, fill=GOLD)
-def og(file, shots, name, line):
+def og(file, shots, name, line, q=72):
     c = Image.new('RGB', (1200, 630), PAPER); d = ImageDraw.Draw(c); ims = [shot(s) for s in shots]
     if ims[0].width > ims[0].height:  # a landscape game: words on top, the picture under them
         d.rounded_rectangle([40, 250, 1160, 700], 36, fill=TINT)
@@ -58,7 +64,7 @@ def og(file, shots, name, line):
         for i, im in enumerate(ims[:2]):
             a = rounded(im.resize((250, min(541, round(im.height * 250 / im.width))), Image.LANCZOS), 22); c.paste(a, (624 + i * 262, 64 + i * 20), a)  # 541 for a 390x844 shot; shorter shots keep their shape
         words(d, name, line, 60, 180, 500)
-    c.save(f'{OUT}/{file}-og.jpg', quality=72, optimize=True, progressive=True)
+    c.save(f'{OUT}/{file}-og.jpg', quality=q, optimize=True, progressive=True)
 ONLY = sys.argv[1:]  # e.g. `air-futbol hub`: rebuild only the games whose file name starts with one of these (and the hub picture)
 for file, shots, outs, name, line in GAMES:
     if ONLY and not any(file.startswith(o) for o in ONLY): continue
@@ -66,7 +72,11 @@ for file, shots, outs, name, line in GAMES:
         im = shot(s); w = 960 if im.width > im.height else 480
         im.resize((w, round(im.height * w / im.width)), Image.LANCZOS).save(f'{OUT}/{o}.webp', quality=74, method=6)
     og(file, shots, name, line)
-# the hub: three games side by side
+for file, shots, outs, name, line, q in UNPLACED:
+    if ONLY and not any(file.startswith(o) for o in ONLY): continue
+    og(file, shots, name, line, q)
+# the hub: three games side by side (skipped when only unplaced games were asked for: `safe-hands`)
+if ONLY and not any(f.startswith(o) for o in ONLY for f, *_ in GAMES) and 'hub' not in ONLY: sys.exit(0)
 c = Image.new('RGB', (1200, 630), PAPER); d = ImageDraw.Draw(c); d.rounded_rectangle([560, 40, 1170, 700], 36, fill=TINT)
 for i, s in enumerate(['kitrush-phone', 'snake-fullsquad', 'puzzle-phone']):
     a = rounded(shot(s).resize((180, 390), Image.LANCZOS), 18); c.paste(a, (582 + i * 192, 120 + (i % 2) * 24), a)

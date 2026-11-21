@@ -269,6 +269,18 @@
     "h": 1039,
     "bytes": 54032
    }
+  },
+  "safehands": {
+   "w": 332,
+   "h": 720,
+   "seconds": 10,
+   "mp4": 235218,
+   "webm": 337128,
+   "poster": {
+    "w": 480,
+    "h": 1039,
+    "bytes": 40152
+   }
   }
  },
  "shots": {
@@ -626,6 +638,32 @@
     "w": 480,
     "h": 1039,
     "bytes": 57848
+   }
+  ],
+  "safehands": [
+   {
+    "file": "safehands-1.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 38110
+   },
+   {
+    "file": "safehands-2.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 36338
+   },
+   {
+    "file": "safehands-3.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 38138
+   },
+   {
+    "file": "safehands-4.webp",
+    "w": 480,
+    "h": 1039,
+    "bytes": 33156
    }
   ]
  }
