@@ -43,9 +43,9 @@ const WORDS={en:{title:'Keep reading',more:(n:number)=>`Show ${n} more`},es:{tit
 /** Nov 20 2026 (new layout SEO, owner: "We need to boost traffic to these three main pages, Island, games, and library"): every Keep
  *  reading grid ends with one card to the Library and one to the games hub, with the words people search for as the link text, unless
  *  the grid already links there (docs/seo/NEW-LAYOUT-SEO-PLAN-2026-11-20.md). One group, so shareOut gives it a visible slot. */
-const MAIN={en:[{path:LIBRARY_PATH,name:'Learn soccer: the whole Library',line:'Lessons, rules, positions, drills and more, all free',tag:'Library'},
+const MAIN={en:[{path:LIBRARY_PATH,name:'Learn soccer: the whole Library',line:'Lessons, rules, drills and more, free',tag:'Library'},
   {path:GAMES_HUB.path,name:'Free soccer games for kids',line:GAMES_HUB.blurb}],
- es:[{path:'/es'+LIBRARY_PATH,name:'Aprende fútbol: toda la biblioteca',line:'Lecciones, reglas, posiciones, ejercicios y más, todo gratis',tag:'Biblioteca'},
+ es:[{path:'/es'+LIBRARY_PATH,name:'Aprende fútbol: toda la biblioteca',line:'Lecciones, reglas, ejercicios y más, gratis',tag:'Biblioteca'},
   {path:GAMES_HUB.path,name:'Juegos de fútbol gratis para niños',line:'Juegos de arcade, cada uno sobre una idea del fútbol (en inglés)'}]} as const satisfies Record<'en'|'es',readonly ReadLink[]>;
 
 /** Visible slots per group: one each in turn until `show` is used up or every group is empty. */
