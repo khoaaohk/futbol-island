@@ -1,3 +1,6 @@
+import RailNav from '@/components/site/shell/RailNav';
+import tgt from '@/components/site/railTarget.module.css';
+import {collectionRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import Breadcrumbs from '@/components/site/Breadcrumbs';
 import {COLLECTIONS_UPDATED,collectionBySlug,type Collection} from '@/lib/site/collections';
@@ -14,7 +17,7 @@ export const collectionCrumbs=(c:Collection)=>[{name:'Home',path:'/'},{name:PARE
 export function hubMeta(parent:'cards'|'fish',slug:string){const c=collectionBySlug(parent,slug)!;return pageMeta(c.title,c.description,c.path,{whole:true,type:'website'});}
 /** The list of hubs on /cards and /fish ("Browse by …"). */
 export function CollectionLinks({list,title}:{list:readonly Collection[];title:string}){
- return <section className={styles.section} aria-labelledby="collections"><h2 className={styles.h2} id="collections">{title}</h2>
+ return <section className={styles.section} aria-labelledby="collections"><h2 className={`${styles.h2} ${tgt.target}`} id="collections">{title}</h2>
   <ul className={styles.list}>{list.map(c=><li key={c.path}><a href={c.path}><span className={styles.itemTitle}>{c.h1}</span><span className={styles.itemMeta}>{c.blurb}</span></a></li>)}</ul>
  </section>;
 }
@@ -26,7 +29,9 @@ export default function CollectionHub({parent,slug,siblings}:{parent:'cards'|'fi
  return <>
   <JsonLd data={breadcrumbLd(crumbs)}/>
   <JsonLd data={collectionLd({name:c.h1,path:c.path,description:c.description,published:SITE_PUBLISHED,modified:COLLECTIONS_UPDATED,items:items.map(l=>({name:l.name,path:l.path}))})}/>
-  <header className={styles.intro}>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={collectionRail(parent,c.groups.map((g,i)=>[g.id??`g-${i}`,g.title] as const))} current="#top"/>
+  <header className={styles.intro} id="top">
    <Breadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>{c.h1}</h1>
    <p className={styles.lead}>{c.intro}</p>
@@ -34,11 +39,11 @@ export default function CollectionHub({parent,slug,siblings}:{parent:'cards'|'fi
    <a className={styles.cta} href={PLAY_PATH}>{PARENT[parent].cta}</a>
   </header>
   {c.groups.map((g,i)=>{const id=g.id??`g-${i}`;return <section key={id} className={styles.section} aria-labelledby={id}>
-   <h2 className={styles.h2} id={id}>{g.title} <span className={styles.count}>({g.links.length})</span></h2>
+   <h2 className={`${styles.h2} ${tgt.target}`} id={id}>{g.title} <span className={styles.count}>({g.links.length})</span></h2>
    {g.line&&<p>{g.line}</p>}
    <ul className={styles.list}>{g.links.map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span>{l.meta&&<span className={styles.itemMeta}>{l.meta}</span>}</a></li>)}</ul>
   </section>;})}
-  <section className={styles.section} aria-labelledby="learn-more"><h2 className={styles.h2} id="learn-more">Keep reading</h2>
+  <section className={styles.section} aria-labelledby="learn-more"><h2 className={`${styles.h2} ${tgt.target}`} id="learn-more">Keep reading</h2>
    <ul className={styles.list}>{[...c.learn,...cross,...siblings.filter(s=>s.path!==c.path&&!c.learn.some(l=>l.path===s.path)&&!cross.some(l=>l.path===s.path)).map(s=>({path:s.path,name:s.h1,line:s.blurb})),
     {path:PARENT[parent].path,name:parent==='cards'?'Every player card':'The whole Fishbook',line:parent==='cards'?'All the cards, by position':'Every sea animal, by rarity'}]
     .map(l=><li key={l.path}><a href={l.path}><span className={styles.itemTitle}>{l.name}</span><span className={styles.itemMeta}>{l.line}</span></a></li>)}</ul>

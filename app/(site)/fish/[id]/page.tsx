@@ -1,3 +1,6 @@
+import RailNav from '@/components/site/shell/RailNav';
+import tgt from '@/components/site/railTarget.module.css';
+import {fishRail} from '@/lib/site/railNavCollections';
 import {pageModified} from '@/lib/site/lastmod';
 import {notFound} from 'next/navigation';
 import JsonLd from '@/components/seo/JsonLd';
@@ -59,7 +62,9 @@ export default function FishPage({params}:{params:{id:string}}){
    ...(note?{'@type':'Article',headline:`${f.name}: where it lives, a fun fact and how to catch it`,author:PUBLISHER,
     datePublished:SITE_PUBLISHED,dateModified:pageModified(fishPath(f.id),SITE_UPDATED.fish),learningResourceType:'Fact sheet',mainEntityOfPage:abs(fishPath(f.id)),citation:[...note.src,f.club.source]}:{})}}/>
   <JsonLd data={breadcrumbLd(crumbs)}/>
-  <header className={styles.intro}>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={fishRail({tale:!!f.story,wild:!!note})} current="#top"/>
+  <header className={styles.intro} id="top">
    <Breadcrumbs crumbs={crumbs}/>
    <h1 className={styles.title}>{f.name}</h1>
   </header>
@@ -67,25 +72,25 @@ export default function FishPage({params}:{params:{id:string}}){
    alt={`Drawing of a ${f.name.toLowerCase()}, the Fishbook animal for ${f.club.name} (${f.club.country})`}/></div>
   <div className={pp.factsBand}><KeyFacts facts={fishFacts(f)}/></div>
   <div className={pp.fishGrid} data-fish-grid="">
-  <section className={`${styles.card} ${pp.fishClub}`} aria-labelledby="fact">
+  <section className={`${styles.card} ${pp.fishClub} ${tgt.target}`} aria-labelledby="fact" id="fish-fact">
    <span className={styles.label} id="fact">{f.club.link==='Fun fish fact'?'Fun fish fact + real football fact':`Real football fact · ${f.club.link}`}</span>
    <h2 className={styles.h2}>{f.club.name}{f.club.nickname?` · “${f.club.nickname}”`:''} <span className={styles.count}>({f.club.country})</span></h2>
    <p>{f.club.fact}</p>
    <p className={styles.caption}>Source: {fishCredit(f)}</p>
   </section>
-  {f.story&&<section className={styles.card} aria-labelledby="tale" data-fish-story>
+  {f.story&&<section className={`${styles.card} ${tgt.target}`} aria-labelledby="tale" id="fish-tale" data-fish-story>
    <span className={styles.label} id="tale">Fish tale</span>
    <p>{f.story}</p>
   </section>}
   {note&&<section className={`${styles.card} ${pp.fishWild}`} aria-labelledby="wild" data-fish-notes>
    <span className={styles.label}>Fun fish fact</span>
-   <h2 className={styles.h2} id="wild">The {f.name.toLowerCase()} in the wild</h2>
+   <h2 className={`${styles.h2} ${tgt.target}`} id="wild">The {f.name.toLowerCase()} in the wild</h2>
    <p><b>Where it lives:</b> {note.lives}</p>
    <p>{note.fact}</p>
    <p className={styles.caption}>Checked against: {[...new Set(note.src.map(sourceLabel))].join(', ')}.</p>
    <CheckedLine date={checkedOn('fish',note.checked)}/>
   </section>}
-  <section className={`${styles.card} ${(f.story?1:0)+(note?1:0)===1?pp.fishWide:''}`} aria-labelledby="story">
+  <section className={`${styles.card} ${(f.story?1:0)+(note?1:0)===1?pp.fishWide:''} ${tgt.target}`} aria-labelledby="story" id="fish-story">
    <span className={styles.label} id="story">Island story</span>
    {places.length>0?<><p>On Futbol Island the {f.name.toLowerCase()} can be caught at:</p><ul>{places.map(p=><li key={p.name}><b>{p.name}</b>: {p.story}</li>)}</ul></>:<p>A rare visitor to the island’s waters.</p>}
    {when&&<p>{when}.</p>}
@@ -93,7 +98,7 @@ export default function FishPage({params}:{params:{id:string}}){
   </section>
   </div>
   <section className={styles.section} aria-labelledby="catch">
-   <h2 className={styles.h2} id="catch">How to catch it in Futbol Island</h2>
+   <h2 className={`${styles.h2} ${tgt.target}`} id="catch">How to catch it in Futbol Island</h2>
    <IconSteps items={tips.map(t=>({icon:tipIcon(t),text:t}))}/>
   </section>
   <RelatedLinks related={withRelatedFish(f,fishRelated(f))} heading="More from the Fishbook" readHeading="Keep reading"/>

@@ -1,3 +1,6 @@
+import RailNav from '@/components/site/shell/RailNav';
+import tgt from '@/components/site/railTarget.module.css';
+import {fishHubRail} from '@/lib/site/railNavCollections';
 import JsonLd from '@/components/seo/JsonLd';
 import {CollectionLinks} from '@/components/site/CollectionHub';
 import {FISH_COLLECTIONS} from '@/lib/site/collections';
@@ -17,7 +20,9 @@ export default function FishIndex(){
   <JsonLd data={breadcrumbLd(CRUMBS)}/>
   <JsonLd data={{'@context':'https://schema.org','@type':'ItemList',name:`${SITE_NAME} Fishbook`,numberOfItems:SITE_FISH.length,
    itemListElement:SITE_FISH.map((f,i)=>({'@type':'ListItem',position:i+1,name:f.name,url:abs(fishPath(f.id))}))}}/>
-  <header className={styles.intro}>
+  {/* layout batch 3 (Nov 20 2026; owner: "it should list what's on that page to smooth scroll down"): Back, Overview and this page's sections */}
+  <RailNav rail={fishHubRail(ORDER.flatMap(r=>{const x=SITE_FISH.find(f=>f.rarity===r);return x?[[`r-${r}`,rarityWord(x)] as const]:[];}))} current="#top"/>
+  <header className={styles.intro} id="top">
    <Breadcrumbs crumbs={CRUMBS}/>
    <h1 className={styles.title}>Fishbook</h1>
    <p className={styles.lead}>{DESC} Fishing on the island also teaches a goalkeeper’s patience: wait for the real bite, like a keeper waits for the real shot.</p>
@@ -27,7 +32,7 @@ export default function FishIndex(){
   <CollectionLinks list={FISH_COLLECTIONS} title="Browse the Fishbook by group and spot"/>
   <p className={styles.caption}>The Fishbook sits on the island’s bookshelf next to <a href="/books">36 pop-up story books about real football players</a>.</p>
   {ORDER.map(r=>{const list=SITE_FISH.filter(f=>f.rarity===r);if(!list.length)return null;return <section key={r} className={styles.section} aria-labelledby={`r-${r}`}>
-   <h2 className={styles.h2} id={`r-${r}`}>{rarityWord(list[0])} <span className={styles.count}>({list.length})</span></h2>
+   <h2 className={`${styles.h2} ${tgt.target}`} id={`r-${r}`}>{rarityWord(list[0])} <span className={styles.count}>({list.length})</span></h2>
    <ul className={styles.list}>{list.map(f=><li key={f.id}><a href={fishPath(f.id)}><span className={styles.itemTitle}>{f.name}</span><span className={styles.itemMeta}>{f.club.name}{f.club.nickname?` · “${f.club.nickname}”`:''}</span></a></li>)}</ul>
   </section>;})}
  </>;

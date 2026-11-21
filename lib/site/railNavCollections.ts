@@ -72,3 +72,12 @@ export const bookRail=():Rail=>page('On this page',{href:'/books',name:'All stor
 export const chartRail=(o:{tables:readonly {id:string;title:string}[];fields?:string;sections:readonly {id:string;title:string}[]},es=false):Rail=>
  hub(L(es,'On this page','En esta página'),[...o.tables.map(t=>[t.id,t.title] as const),...(o.fields?[['fields',o.fields] as const]:[]),
   ...o.sections.map(x=>[x.id,x.title] as const),qa(es),more(es)],es);
+
+/* Fishbook and player cards: the hub lists its browse-by-group block and its own groups (fish by rarity; cards as their page groups
+   them), never the 167 fish or 450 cards; a group page (/fish/sharks, /cards/strikers) goes Back to its hub and lists its groups;
+   a fish or a card goes Back to its hub and lists its own sections */
+const FISH_BACK:RailItem={href:'/fish',name:'Fishbook'},CARDS_BACK:RailItem={href:'/cards',name:'All player cards'};
+export const fishHubRail=(groups:readonly Sec[]):Rail=>hub('Fishbook on this page',[['collections','Browse by group'],...groups]);
+export const fishRail=(o:{tale:boolean;wild:boolean}):Rail=>page('On this page',FISH_BACK,[['fish-fact','Football fact'],...(o.tale?[['fish-tale','Fish tale'] as const]:[]),
+ ...(o.wild?[['wild','In the wild'] as const]:[]),['fish-story','Island story'],['catch','How to catch it'],['more','More from the Fishbook']]);
+export const collectionRail=(parent:'cards'|'fish',groups:readonly Sec[]):Rail=>page('On this page',parent==='fish'?FISH_BACK:CARDS_BACK,[...groups,['learn-more','Keep reading']]);
