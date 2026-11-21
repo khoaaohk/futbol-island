@@ -17,7 +17,7 @@ export type KeepySong={music:Music;bars:number;mode:'full'|'drums'|'click';timeO
 export type KeepyAudio=ReturnType<typeof createKeepyAudio>;
 export function createKeepyAudio(){
  let ctx:AudioContext|null=null,master:GainNode|null=null,limiter:DynamicsCompressorNode|null=null,bus:GainNode|null=null,noise:AudioBuffer|null=null,voices=0,quiet=false,scheduled=0;
- let song:(KeepySong&{t0:number;until:number})|null=null;
+ let song:(KeepySong&{t0:number;until:number;live?:boolean})|null=null;
  const wanted=()=>isSoundEnabled()&&getSoundVolume()>0;
  const on=()=>!!ctx&&ctx.state==='running'&&wanted()&&!(typeof document!=='undefined'&&document.hidden);
  /** Call from a pointer / key handler. Creates the context once (only when sound is on) and resumes it (the iOS / Safari path). */
@@ -73,11 +73,14 @@ export function createKeepyAudio(){
   /** The song starts: song time `at` (the count-in is negative) is the context's time now. */
   startSong(s:KeepySong,at:number){if(!ctx){song=null;return;}song={...s,t0:ctx.currentTime+.04-at,until:s.beatAt(at)};},
   stopSong(){song=null;},
+  /** Verifier fix (Nov 21 2026): the browser suspended the context in the middle of a song (iOS on a call, a system sound, a Bluetooth
+   *  switch). The audio clock stands still while the picture would go on, so the shell pauses the run; resume restarts the song. */
+  get lost(){return !!song&&!!song.live&&!!ctx&&ctx.state!=='running'&&!quiet&&wanted();},
   /** Song time by the audio clock (null with sound off, before the first tap, or while the context is not running). */
   songTime():number|null{return song&&ctx&&ctx.state==='running'?ctx.currentTime-song.t0:null;},
   /** Look-ahead scheduling: queue every music event up to 0.25 s ahead on the AudioContext clock. Called from the game loop. */
   pump(songNow:number){
-   if(!song||!ctx||ctx.state!=='running')return;const to=song.beatAt(songNow+LOOK);if(to<=song.until)return;
+   if(!song||!ctx||ctx.state!=='running')return;song.live=true;const to=song.beatAt(songNow+LOOK);if(to<=song.until)return;
    if(on())for(const e of musicEvents(song.music,song.until,to,song.bars,song.mode)){const t=song.t0+song.timeOf(e.beat);if(t>=ctx.currentTime-.02)voice(e,Math.max(t,ctx.currentTime),song.music);}
    song.until=to;
   },

@@ -82,7 +82,7 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
  const clock=useRef(createSongClock(()=>performance.now()/1000,()=>audio.current?.songTime()??null));
  const raf=useRef(0),draws=useRef(0),cost=useRef({n:0,ms:0,max:0}),slot=useRef(0),frameMs=useRef(1000/60),endAt=useRef(0),wordId=useRef(0),pressed=useRef(0),lat=useRef(0),off=useRef(DEFAULT_OFFSET);
  const run=useRef<{id:string;daily:boolean;day:string;track:number;twist:TwistId|'';strong:Foot;stages:Stage[];at:number;done:boolean;solo:boolean;lessons:TrickId[];tricks:Partial<Record<TrickId,number>>}>({id:'',daily:false,day:'',track:0,twist:'',strong:'R',stages:[],at:0,done:true,solo:false,lessons:[],tricks:{}});
- const ptrs=useRef(new Map<number,{lane:number;sx:number;sy:number;swiped:boolean}>()),keysDown=useRef(new Set<string>()),reduced=useRef(false),frameRef=useRef<(t:number)=>void>(()=>{});
+ const pauseRef=useRef<()=>void>(()=>{});const ptrs=useRef(new Map<number,{lane:number;sx:number;sy:number;swiped:boolean}>()),keysDown=useRef(new Set<string>()),reduced=useRef(false),frameRef=useRef<(t:number)=>void>(()=>{});
 
  const change=useCallback((p:Phase)=>{phaseRef.current=p;setPhase(p);},[]);
  useEffect(()=>{const s=readKeepySave();setSave(s);setToday(localPlayDay(Date.now()));},[]);
@@ -148,6 +148,7 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
  /* ---- the loop: the song clock drives the rules; the music is scheduled 0.25 s ahead on the audio clock ---- */
  useEffect(()=>{frameRef.current=(now:number)=>{
   raf.current=0;const g=game.current,v=view.current;if(phaseRef.current!=='playing'||!g||!v)return;
+  if(audio.current?.lost){pauseRef.current();return;}// the browser suspended the sound mid-song: pause (see audio.ts lost)
   const next=frameCapSlot(now,slot.current,frameMs.current);
   if(next<0){raf.current=requestAnimationFrame(t=>frameRef.current(t));return;}slot.current=next;
   const c0=performance.now(),song=clock.current.now(),t=song-lat.current;audio.current?.pump(song);
@@ -180,6 +181,7 @@ export default function KeepyUppyGame({onExit}:{onExit:()=>void}){
   if(!g){if(r.at+1<r.stages.length){r.at++;setTip(r.at);}else{r.done=true;change('menu');}return;}nextStage();setHeld('');},[change,nextStage]);
  const pause=useCallback(()=>{if(phaseRef.current!=='playing')return;if(raf.current)cancelAnimationFrame(raf.current);raf.current=0;ptrs.current.clear();pressed.current=0;keysDown.current.clear();const g=game.current;
   if(tip<0&&g?.state.over){if(g.mode==='track')finish();else nextStage();return;}clock.current.pause();audio.current?.hush(true);change('paused');},[change,finish,nextStage,tip]);
+ useEffect(()=>{pauseRef.current=pause;},[pause]);
  /** Back from a pause: the song steps back two beats so the player hears the beat before the next ball. */
  const resume=useCallback(()=>{if(phaseRef.current!=='paused')return;const a=audio.current,g=game.current;a?.unlock();a?.hush(false);change('playing');
   if(g&&tip<0){const c=g.chart,at=Math.max(c.start,clock.current.now()-2*60/c.bpm);a?.startSong({music:g.track.music,bars:c.bars,mode:g.mode==='calib'?'click':g.mode==='lesson'?'drums':'full',timeOf:b=>timeOfBeat(c,b),beatAt:t=>beatAtTime(c,t)},at);clock.current.start(at);kick();}
