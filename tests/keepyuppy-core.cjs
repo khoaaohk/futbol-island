@@ -50,16 +50,16 @@ ok('scoring: 100 / 60 / 20 a touch, the combo adds 10% every ten clean touches (
  assert.equal(C.keepyCoins(0),0);assert.equal(C.keepyCoins(4100),2);assert.equal(C.keepyCoins(99999),12);});
 
 ok('balls: a drop loses the combo and one ball, eight touches that stay up win one back, no balls left ends the run early',()=>{
- assert.deepEqual(TRACKS.map(t=>t.balls),[5,4,3,3,3,3]);
- const g=game(2),N=g.chart.notes;g.advance(N[0].t+.2);assert.equal(g.state.lives,2);for(let i=1;i<=8;i++)hit(g,i,i%2?.14:0);assert.equal(g.state.lives,3,'Early and Late touches still count toward winning a ball back');assert.equal(g.state.regained,1);
+ assert.deepEqual(TRACKS.map(t=>t.balls),[5,4,4,3,3,3]);
+ const g=game(3),N=g.chart.notes;g.advance(N[0].t+.2);assert.equal(g.state.lives,2);for(let i=1;i<=8;i++)hit(g,i,i%2?.14:0);assert.equal(g.state.lives,3,'Early and Late touches still count toward winning a ball back');assert.equal(g.state.regained,1);
  for(let i=9;i<=16;i++)hit(g,i);assert.equal(g.state.lives,3,'never more than the track gives');
- const h=game(2);h.advance(h.chart.notes[2].t+.2);const ev=events(h);assert.equal(h.state.over,true);assert.equal(h.state.out,true);assert.equal(ev.at(-1).type,'over');assert.equal(ev.at(-1).a,0);assert.equal(h.stars(),0);assert.equal(h.weakScore(),-1);assert.equal(h.press(0,9),'');
+ const h=game(3);h.advance(h.chart.notes[2].t+.2);const ev=events(h);assert.equal(h.state.over,true);assert.equal(h.state.out,true);assert.equal(ev.at(-1).type,'over');assert.equal(ev.at(-1).a,0);assert.equal(h.stars(),0);assert.equal(h.weakScore(),-1);assert.equal(h.press(0,9),'');
  assert.deepEqual(KU.stars,[.4,.7,.88]);});
 
 ok('tricks: a stall is held, a swipe is swiped, a tap trick is three clean taps; each landing counts for the Trick Book',()=>{
  const upTo=(g,k)=>{for(let i=0;i<k;i++){const x=g.chart.notes[i];g.advance(x.t-.001);g.press(x.lane,x.t);if(x.kind==='swipe')g.swipe(x.lane,x.dir,x.t+.05);if(x.kind==='hold'){g.advance(x.tEnd);}}g.drain(()=>{});};
  {const g=game(2),k=g.chart.notes.findIndex(x=>x.kind==='hold'),x=g.chart.notes[k];upTo(g,k);assert.equal(hit(g,k),'held');assert.equal(x.st,1);g.advance(x.tEnd-.5);assert.equal(x.st,1);g.advance(x.tEnd);assert.equal(x.grade,'sweet');assert.equal(g.state.tricks.stall,1);assert.ok(events(g).some(e=>e.type==='trick'&&C.TRICK_IDS[e.a]==='stall'&&e.points>=150));}
- {const g=game(2),k=g.chart.notes.findIndex(x=>x.kind==='hold'),x=g.chart.notes[k];upTo(g,k);hit(g,k);assert.equal(g.release(x.lane,x.t+.4),true);assert.equal(x.grade,'slip','let go too soon');assert.equal(g.state.tricks.stall,undefined);assert.equal(g.state.lives,3,'a slip keeps the ball');}
+ {const g=game(2),k=g.chart.notes.findIndex(x=>x.kind==='hold'),x=g.chart.notes[k];upTo(g,k);hit(g,k);assert.equal(g.release(x.lane,x.t+.4),true);assert.equal(x.grade,'slip','let go too soon');assert.equal(g.state.tricks.stall,undefined);assert.equal(g.state.lives,TRACKS[2].balls,'a slip keeps the ball');}
  {const g=game(2),k=g.chart.notes.findIndex(x=>x.kind==='hold'),x=g.chart.notes[k];upTo(g,k);hit(g,k);assert.equal(g.release(x.lane,x.tEnd-.15),true);assert.equal(x.grade,'sweet','letting go just before the end is fine');}
  {const g=game(3),k=g.chart.notes.findIndex(x=>x.trick==='atw'),x=g.chart.notes[k];upTo(g,k);assert.equal(hit(g,k),'held');assert.equal(g.swipe(x.lane,'side',x.t+.1),true);assert.equal(x.grade,'sweet','Around the World: any swipe');assert.equal(g.state.tricks.atw,1);}
  {const g=game(4),k=g.chart.notes.findIndex(x=>x.trick==='heel'),x=g.chart.notes[k];upTo(g,k);hit(g,k);g.swipe(x.lane,'side',x.t+.1);assert.equal(x.grade,'slip','a Heel Flick is a swipe UP');}

@@ -20,7 +20,7 @@ export const TRACKS:readonly Track[]=[
   chart:'S...W... S.W.T... S.W.S.W. T.T.H... S.W.T.H. S.S.W.W. [TST]..H.. S.W.S... [TST]..W.. H.H.S.W. '
    +'W...W... W.T.W.H. W.W.T... [TWT]..W.. S.W.S.W. T.H.T.H. S.SW..T. [TST]..H.. S.W.T.H. SW..SW.. [TST].H... S.W.S...',
   music:{root:50,scale:MAJ,lead:'tri',kick:'x...x...x...x...',clap:'....x.......x..x',shaker:'x.x.x.x.x.x.x.x.',bass:'0...0..2....3...0...0..2....4.3.',motif:'5.5.7...5.4.2...4.4.5...4.2.0...'}},
- {id:'beach',name:'Beach Bounce',venue:'The beach, at low tide',bpm:104,balls:3,weak:[13,16],
+ {id:'beach',name:'Beach Bounce',venue:'The beach, at low tide',bpm:104,balls:4,weak:[13,16],
   tip:{title:'Eyes on the ball',line:'Watch the ball all the way onto your foot, your thigh or your forehead. Your head follows the ball.'},
   chart:'S...W... S.W.T... H.H.S.W. T.H.S... N=====.. S.W.S.W. [H.H.H.].. SW..T.H. N===..S. W.S.TH.. [H.H.H.]W. S.W.T... '
    +'W...W.W. W.T.W.H. WT..W.H. W.W.N==. S.W.S.W. TH..TH.. [H.H.H.].. SW.TH.S. N=====.. S.W.T.H. SW..SW.. [H.H.H.]..',

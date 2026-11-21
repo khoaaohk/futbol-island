@@ -39,7 +39,7 @@ const until=async at=>{const d=at-now();if(d>4)await wait(d-3);while(now()<at);}
   const click=sel=>page.locator(sel).first().click();
   const rafIn=async ms=>{const a=await page.evaluate(()=>window.__rafCalls);await wait(ms);return (await page.evaluate(()=>window.__rafCalls))-a;};
   const read=()=>page.evaluate(()=>{const h=window.__keepyuppy,g=h&&h.game;if(!h)return null;const a=h.audio,base={ui:h.phase,loop:h.loop,draws:h.draws,cost:h.cost,audio:a?{state:a.state,scheduled:a.scheduled,song:a.songTime()!==null}:{state:'none',scheduled:0,song:false},offset:h.offset,latency:h.latency};if(!g)return base;
-   const s=g.state,L=h.view.layout,r=h.stage;return {...base,time:h.time,mode:g.mode,over:s.over,out:s.out,lives:s.lives,score:s.score,combo:s.combo,bestCombo:s.bestCombo,counts:s.counts,stars:g.stars(),acc:Math.round(g.accuracy()*100),end:g.chart.end,total:g.chart.notes.length,bpm:g.chart.bpm,
+   const s=g.state,L=h.view.layout,r=h.stage;return {...base,time:h.time,mode:g.mode,over:s.over,out:s.out,lives:s.lives,score:s.score,combo:s.combo,bestCombo:s.bestCombo,counts:s.counts,stars:g.stars(),acc:Math.round(g.accuracy()*100),end:g.chart.end,total:g.chart.notes.length,dropped:g.chart.notes.filter(n=>n.grade==='drop').map(n=>n.i),bpm:g.chart.bpm,
     notes:g.chart.notes.filter(n=>n.st===0).slice(0,5).map(n=>({i:n.i,t:n.t,tEnd:n.tEnd,lane:n.lane,kind:n.kind,dir:n.dir,trick:n.trick})),pad:{x:r.left,y:r.top+L.padTop+L.padH*.45,w:L.laneW,groundY:r.top+L.groundY,S:L.S,cx:r.left+L.W/2},ball:{...h.view.ball}};});
   const KEY=['KeyD','KeyF','KeyJ','KeyK'];let touchId=0;
   const touch=(type,x,y,id)=>cdp.send('Input.dispatchTouchEvent',{type,touchPoints:type==='touchEnd'?[]:[{x,y,id}]});
@@ -110,16 +110,16 @@ const until=async at=>{const d=at-now();if(d>4)await wait(d-3);while(now()<at);}
     if(muted)check(b.audio.state==='none'&&!b.audio.song,'sound off: the run is on the performance clock');else{check(b.audio.state==='running'&&b.audio.song,'the song clock is the AudioContext clock',b.audio.state);check(b.audio.scheduled>c0,'music events are being scheduled ahead on the audio clock',`${b.audio.scheduled-c0} voices in 2 s`);}}
    let paused=false,sawCombo=false,dropLives=-1,frames=0;
    const each=async(s,i)=>{
-    if(i===4)await shot(mobile?'play':'desktop');
+    if(i===2)await shot(mobile?'play':'desktop');
     if(!sawCombo&&s.combo>=9){sawCombo=true;await wait(160);await shot('combo');}
     if(!paused&&i===16){paused=true;await page.keyboard.press('KeyP');await wait(350);const p=await read();check(p.ui==='paused','P pauses');check(await rafIn(1500)===0,'paused: 0 frames in 1.5 s');if(!muted)check((await read()).audio.state==='suspended','paused: the AudioContext is suspended');
      const t=p.time;await wait(300);check(Math.abs((await read()).time-t)<.005,'paused: the song clock stands still');await shot('paused');await page.keyboard.press('KeyP');await wait(250);const q=await read();check(q.ui==='playing'&&q.loop,'P resumes');check(q.time<t-.5,'the song steps back two beats on resume',`${(t-q.time).toFixed(2)} s`);}
-    if(seq&&i===24&&shots){const c={x:Math.max(0,s.pad.cx-150),y:Math.max(0,s.pad.groundY-s.pad.S*2.9),width:300,height:s.pad.S*2.9+30};for(let k=0;k<20;k++){await shot(`seq-${String(k).padStart(2,'0')}`,c);frames++;await wait(30);}}};
-   const run=await playStage({skip:[30],afterSkip:async()=>{await wait(120);const s=await read();dropLives=s.lives;await shot('drop');},each});
+    if(seq&&i===1&&shots){const c={x:Math.max(0,s.pad.cx-150),y:Math.max(0,s.pad.groundY-s.pad.S*2.9),width:300,height:s.pad.S*2.9+30};for(let k=0;k<20;k++){await shot(`seq-${String(k).padStart(2,'0')}`,c);frames++;await wait(30);}}};
+   const run=await playStage({skip:[5],afterSkip:async()=>{await wait(120);const s=await read();dropLives=s.lives;await shot('drop');},each});
    await page.waitForSelector('[data-keepyuppy-card="results"]',{timeout:20000});await wait(1000);
    {const st=await read(),res=page.locator('[data-keepyuppy-card="results"]'),shown=Number(await res.getAttribute('data-keepyuppy-score')),stars=Number(await res.getAttribute('data-keepyuppy-stars')),acc=Number(await res.getAttribute('data-keepyuppy-acc'));
-    console.log(`     run: ${run.played} touches, ${JSON.stringify(st.counts)}, best combo ${st.bestCombo}, ${st.score} pts, ${acc}%, ${stars} stars; frame cost avg ${(st.cost.ms/st.cost.n).toFixed(2)} ms, worst ${st.cost.max.toFixed(1)} ms over ${st.cost.n} frames`);
-    check(st.over&&!st.out,'the track is played to the end');check(dropLives===4||(seq&&dropLives===3),'a ball left alone costs one ball (5 on track 1)',`${dropLives}`);check(st.counts.drop<=2&&st.counts.sweet+st.counts.good>=st.total-4,'real input lands on the beat: nearly every touch Sweet or Good',JSON.stringify(st.counts));
+    console.log(`     run: ${run.played} touches, ${JSON.stringify(st.counts)}, dropped notes [${st.dropped}], best combo ${st.bestCombo}, ${st.score} pts, ${acc}%, ${stars} stars; frame cost avg ${(st.cost.ms/st.cost.n).toFixed(2)} ms, worst ${st.cost.max.toFixed(1)} ms over ${st.cost.n} frames`);
+    check(st.over&&!st.out,'the track is played to the end');check(dropLives===4,'a ball left alone costs one ball (5 on track 1)',`${dropLives}`);check(st.counts.drop===1&&st.dropped[0]===5&&st.counts.sweet+st.counts.good>=st.total-3,'real input lands on the beat: nearly every touch Sweet or Good',JSON.stringify(st.counts));
     check(shown===st.score&&stars>=2&&acc>=85,'the results card shows the score and the stars',`${shown} pts, ${stars} stars, ${acc}%`);check(st.cost.ms/st.cost.n<2.5,'a frame costs well under 2.5 ms',`${(st.cost.ms/st.cost.n).toFixed(2)} ms`);
     check(await page.locator('[data-keepyuppy-weak]').count()===1,'the results card has the weak-foot line',await page.locator('[data-keepyuppy-weak]').innerText().catch(()=>''));
     check((await page.locator('[data-keepyuppy-coach]').innerText()).length>10,'the results card coaches');check((await page.locator('[data-keepyuppy-fact]').innerText()).length>20,'the results card teaches one juggling idea');
