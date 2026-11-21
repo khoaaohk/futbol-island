@@ -2,22 +2,27 @@
    menu (library.module.css .menu): fixed on the left from 1280 px, a one-row chip bar under the header below that. Here: group
    names (rail only), the up links (section hub, Library) and the current page. */
 .group{display:none}
-/* Back button. Phone and tablet bar: a round button fixed at the bar's left; the chip row starts after it and scrolls under it. */
-.back{position:absolute;z-index:3;left:0;top:0;bottom:0;display:flex;align-items:center;margin:0;padding:0 8px 2px max(var(--gutter),calc(50vw - 590px));background:linear-gradient(to right,var(--paper) calc(100% - 8px),transparent)}
-.back a{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:40px;height:40px;border-radius:999px;background:var(--surface);color:var(--ink);font-weight:800;text-decoration:none;box-shadow:0 2px 0 var(--rule);transition:translate .12s}
-.back a:active{translate:0 2px}
-.back a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:2px}
-.arrow{font-size:18px;line-height:1}
+/* Back button (owner, Nov 20 2026: "make sure the back btn is the same style as the game btn"): the game's own Back button
+   (components/DoneButton.module.css: gold paper pill, cream rim, gold edge, one press effect), from the same tokens.
+   Phone and tablet bar: the round form, fixed at the bar's left; the chip row starts after it and scrolls under it. */
+.back{position:absolute;z-index:3;left:0;top:0;bottom:0;display:flex;align-items:center;margin:0;padding:0 8px 4px max(var(--gutter),calc(50vw - 590px));background:linear-gradient(to right,var(--paper) calc(100% - 8px),transparent)}
+.back a{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;width:40px;height:40px;padding:0;border:var(--btn-rim-width,3px) solid var(--btn-rim,#fff2cd);border-radius:999px;background:var(--btn-gold,#e9c16b) var(--btn-grain,none) center/128px 128px;background-blend-mode:soft-light;color:var(--btn-ink,#244d40);box-shadow:0 3px 0 var(--btn-gold-edge,#a8863d);font-family:var(--btn-font,Arial,Helvetica,sans-serif);font-size:14px;font-weight:600;line-height:1.1;text-decoration:none;transition:translate .16s,box-shadow .16s}
+.back a:active{translate:0 2px;box-shadow:0 1px 0 var(--btn-gold-edge,#a8863d)}
+.back a:focus{outline:none}
+.back a:focus-visible{outline:var(--btn-focus,3px solid #ffd451);outline-offset:var(--btn-focus-offset,2px)}
+.arrow{font-size:18px;line-height:1;font-weight:800}
 .backTxt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .rail:has(.back) ul{padding-left:calc(max(var(--gutter),calc(50vw - 590px)) + 52px);scroll-padding-inline-start:calc(var(--gutter) + 52px)}
 @media(prefers-reduced-motion:reduce){.back a{transition:none}}
 .rail a[aria-current=page]{background:var(--btn-mint,#beded1);color:var(--btn-ink,#244d40)}
 .rail ul[data-pill-on] a[aria-current=page]{background:transparent}
 @media(min-width:1280px){
- .back{position:static;display:block;margin:0 0 var(--s1);padding:0 0 var(--s1);background:none;box-shadow:0 1px 0 var(--rule)}
- .back a{width:auto;height:auto;justify-content:flex-start;gap:8px;min-height:44px;padding:8px 14px;border-radius:var(--r-md);background:transparent;box-shadow:none;font-size:16px;line-height:1.3}
- .backTxt{position:static;width:auto;height:auto;overflow:visible;clip:auto;white-space:normal}
- @media(hover:hover){.back a:hover{background:color-mix(in srgb,var(--gold) 35%,transparent)}}
+ /* Rail: the pill form with its word, in the place the first entry (Overview) has on the Library and the games hub: same left edge, same top. */
+ .back{position:static;display:block;margin:0 0 var(--s2);padding:0 0 calc(var(--s2) + 2px);background:none;box-shadow:0 1px 0 var(--rule)}
+ .back a{width:var(--btn-nav-width,76px);height:var(--btn-height,44px);box-shadow:var(--btn-shadow-gold,0 5px 0 #a8863d)}
+ .back a:active{translate:0 var(--btn-press,3px);box-shadow:var(--btn-shadow-gold-pressed,0 2px 0 #a8863d)}
+ .arrow{display:none}
+ .backTxt{position:static;width:auto;height:auto;overflow:visible;clip:auto}
  .rail:has(.back) ul{padding-left:0;scroll-padding-inline-start:0}
  .group{display:block;margin:var(--s2) 0 2px;padding:0 14px;font-size:var(--t-label);line-height:1.3;font-weight:700;color:var(--ink-soft)}
  .group span{display:block}
