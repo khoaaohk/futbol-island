@@ -455,3 +455,16 @@ change of this batch.
 
 Left for later: an iPhone session (list in the performance guide), the owner's choice on the tone sheet, T1 after a walking video,
 T7 with an occlusion rule, T3 once T1 is on, lawn / sand polygon edges (no distance to read today).
+
+## 10. Zero-heat graphics batch 1 built (Nov 21 2026, branch `gfx-zero-heat-1`, local, not deployed, no phone test)
+
+Details, values and the full before/after budget table: `docs/performance-guide.md`, "Zero-heat graphics batch 1 ...".
+
+| item | state |
+|---|---|
+| A greens split (pitch brighter and yellower, lawn darker and cooler, canopies darker) | built, constants only |
+| B light ratio (less fill, more sun, blue shade; darker bluer night, existing window and lamp glow raised) | built, preset numbers only |
+| C richer load-time bake (sun-side warm / far-side cool walls, per-building jitter, smooth canopy gradient) | built, about 5 ms more one-time work |
+| D window glass gradient in the pane vertex colours | built |
+
+Budget (`scripts/gfx-budget.cjs`, tiers 0 and 2 by day, tier 0 at night, four views): programs, textures and geometries equal to main; draw calls inside main's own run-to-run range. Awaiting the owner's verdict on the sheets; not on a phone yet.

@@ -1,5 +1,45 @@
 # Performance reference for future Futbol Island updates
 
+## Zero-heat graphics batch 1: split greens, light ratio, richer load-time bake, window gradient (Nov 21 2026, branch `gfx-zero-heat-1`, local, not deployed, no phone test)
+
+Owner brief: make the island read better (pitches stand out, less milky, night with warm pools) with **no added heat**. Everything in this batch is a constant or one-time load work. Four commits, one per item, so any one can be dropped.
+
+**What changed**
+- **A. Greens split** (constants): pitch turf `#6e9678` -> `#78a970` on every format pitch, the stadium, the summit isle pitch and the market pitch (`lib/town/venues.ts`, `stadiumWorld.ts`, `summitIsleWorld.ts`, `world.ts`), stadium light stripe `#78a083` -> `#80b578`, rooftop turf `#648c72` -> `#6e9b67`; lawn `#6e9678` -> `#608870` (`lib/town/shoreline.ts` `INTERIOR_GRASS_COLOR`, `lib/graphics/groundTint.ts` `LAWN_COLOR`); town tree and planter canopies `#739568` -> `#5b8c5c` (`world.ts`). Before, lawn, pitch and tree tops were one sage green.
+- **B. Light ratio** (`lib/graphics/islandLighting.ts` preset numbers; the same two lights, the same settled-lighting sleep): day hemisphere 1.6 -> 1.5, sun 3.4 -> 3.7, sky colour `#eaf4ff` -> `#d3e6ff` (shade reads blue), bounce `#8a8f7c` -> `#a2ab7c`; sunset hemisphere 1.45 -> 1.3, sun 3.2 -> 3.45; night hemisphere 1.15 -> .9, sky colour `#9fb0cf` -> `#8098c8`, bounce `#4a5163` -> `#3c4660`. The EXISTING night glow went up to carry the darker night (`world.ts`): window emissive .82 -> 1.25 (dusk .16 -> .22), lamp lens 1.7 -> 2.3 (dusk .4 -> .5), lamp pool gradient alphas .56/.34/.09 -> .72/.46/.13 (the same 32 px canvas texture, painted once).
+- **C. Richer bake** (`world.ts`, the existing vertex-colour loop of the merged town chunks): walls facing the fixed sun (`ISLAND_SUN_POSITION`) take up to +12% red / -12% blue, walls turned away up to +6% blue; each building gets its own +-7% value and +-4% warmth (a hash of its index, found through a 16 m cell grid); tree and bush canopies go from three brightness steps to one smooth foot-to-crown gradient (.9 to 1.24, cooler below, yellower above). Stadium pieces keep the old brightness steps (no tint).
+- **D. Window glass** (same loop): panes fade from sky blue at the top to dark at the sill in their vertex colours. The night glow is the material's emissive, so lit windows are unchanged by the gradient.
+
+**Why this costs nothing per frame**: no mesh, material, texture, light, render pass or uniform was added; no shader source changed (`tests/ground-shader-cost.cjs` and `tests/water-tropical-cost.cjs` pass without re-pinning); pixel ratio, shadow size and tone mapping untouched. The bake runs once while the town is built: 2,180,018 vertices, 54 ms after against 48 ms before for the whole paint loop (4 loads each, dev build on the Mac; the spread between loads is about +-5 ms, so the added time is roughly 5 ms).
+
+**Budget, `scripts/gfx-budget.cjs`** (390x844 phone, `GFX_SETTLE=30000`, medians; before = origin/main f04e1b3b, after = this branch; "/" separates repeat runs):
+
+| run | view | draw calls before | after | programs b/a | textures b/a | geometries b/a |
+|---|---|---|---|---|---|---|
+| tier 0 day | town | 164 / 164 | 164 / 154 / 164 | 44 / 44 | 27 / 27 | 1066 / 1066 |
+| tier 0 day | shore | 105 / 107 | 107 / 107 / 107 | 68 / 68 | 64 / 64 | 1149 / 1149 |
+| tier 0 day | swim | 97 / 95 | 97 / 97 / 95 | 70 / 70 (73 in one run) | 65 / 65 | 1154 / 1154 (1157 in one run) |
+| tier 0 day | stadium | 79 / 79 | 76 / 77 / 77 | 80 / 80 (83 in one run) | 69 / 69 | 1169 / 1169 (1172 in one run) |
+| tier 2 day | town | 156 | 158 (same 150-160 range) | 44 / 44 | 27 / 27 | 1066 / 1066 |
+| tier 2 day | shore | 96 | 96 | 63 / 63 | 63 / 63 | 1142 / 1142 |
+| tier 2 day | swim | 87 | 87 | 67 / 67 | 64 / 64 | 1148 / 1148 |
+| tier 2 day | stadium | 69 | 71 (69-73) | 76 / 76 | 68 / 68 | 1162 / 1162 |
+| tier 0 night | town | 156 | 156 | 45 / 45 | 28 / 28 | 1067 / 1067 |
+| tier 0 night | shore | 111 | 111 | 71 / 71 | 66 / 66 | 1151 / 1151 |
+| tier 0 night | swim | 102 | 102 | 73 / 73 | 67 / 67 | 1157 / 1157 |
+| tier 0 night | stadium | 79 | 79 | 83 / 83 | 71 / 71 | 1172 / 1172 |
+
+Reading it: programs, textures and geometries are equal in every run but one. In the first of three tier-0 day runs after the change, three more programs and three more geometries were alive from the swim view on (73/83, 1157/1172); the two repeat runs matched main exactly. Nothing in this batch creates a material or a geometry, so this is taken to be an object that appears on a timer (not identified; the sea-life events are the likely candidate), not a cost of the batch. Draw calls move by a few between runs on main itself (townsfolk and cars), and the after numbers stay inside the before ranges. The whole scene holds the same 985 visible meshes and 889,250 triangles before and after (counted once in the browser at the town spawn). Rendered triangles read 272 higher in most after rows (for example town 181,908 -> 182,180): that is the test player, not the island. The probe seeds `Math.random`; four new distinct colours mean four more colour-keyed source materials are created while the town is built (they are merged into the same vertex-coloured batches, so they are never drawn on their own: programs and draw calls are equal), three.js draws their ids from `Math.random`, the seeded sequence shifts by 16 calls and the fresh save is dealt a different random starter character with a different hat. A third run on main gave the same programs, textures and draw-call ranges again (geometries 1148-1169).
+
+**Tests**: `tests/lighting-idle.cjs` and `tests/night-atmosphere.cjs` pin the preset numbers and the window glow; their numbers were updated to the new values (intended by item B). `tests/night-atmosphere.cjs` still fails its unrelated "bounded pool size" assertion: it fails the same way on untouched origin/main f04e1b3b.
+
+**Tradeoffs and open points**
+- Night is darker on purpose; pitches, lines, players and the ball stay clear in the captures, but real phone screens outdoors are dimmer than a Mac: check the night match on a phone.
+- The shop's ball pictures (`components/StorePreviews.tsx`) use the day preset, so they get the same slightly stronger sun; not captured in this batch.
+- Other greens were left alone: pocket futsal court, Coral Cay lawn and trees, Stadium Park trees, market plants.
+- Before/after sheets: `.claude/worktrees/_recovery-nov20/gfx/*-compare.jpg` (not in the repo).
+- **Not yet verified on a real phone.** The work per frame is unchanged by construction and by the counters above; this is not a temperature measurement.
+
 ## Terrain and surfaces: ground and ocean off the PBR light loop, detail tile, slab joints, trail verges, wet sand (Nov 17 2026, local, not deployed, no phone test)
 
 Plan: `docs/graphics/island-graphics-plan-nov17.md` (items T2, W1, T4, T5; section 9 has the tables). Owner brief: better terrain, water and surfaces "without increasing heat, especially for mobile".
