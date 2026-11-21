@@ -73,7 +73,9 @@ async function load(p,url){
  await p.evaluate(async()=>{for(let y=0;y<document.documentElement.scrollHeight;y+=700){window.scrollTo(0,y);await new Promise(r=>setTimeout(r,40));}window.scrollTo(0,0);});
  await p.waitForTimeout(500);
 }
-const settle=async p=>{let last=-1;for(let i=0;i<40;i++){const y=await p.evaluate(()=>scrollY);if(y===last)return;last=y;await p.waitForTimeout(80);}};
+/* release check, Nov 20 2026: still for 3 reads (~240 ms), not 1: a long glide (the cards hub, 14,000 px) has single 80-170 ms frames in
+   headless Chrome, and one still read stopped the wait mid-glide (it then landed exactly under the header) */
+const settle=async p=>{let last=-1,same=0;for(let i=0;i<60;i++){const y=await p.evaluate(()=>scrollY);if(y===last){if(++same>=3)return;}else same=0;last=y;await p.waitForTimeout(80);}};
 
 /* everything measured in the page */
 const probe=()=>{
