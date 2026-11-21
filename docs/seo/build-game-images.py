@@ -35,6 +35,7 @@ GAMES = [
 UNPLACED = [
  ('safe-hands-soccer-goalkeeper-game', ['safehands-phone', 'safehands-cup'], [], 'Safe Hands', 'Free soccer goalkeeper game', 56),
  ('keepy-uppy-beat-soccer-juggling-game', ['keepyuppy-park', 'keepyuppy-cup'], [], 'Keepy-Uppy Beat', 'Free soccer juggling game', 56),
+ ('hold-the-line-soccer-defending-game', ['holdtheline-offside', 'holdtheline-night'], [], 'Hold the Line', 'Free soccer defending game', 50),
 ]
 # One entry per arcade cabinet, so the hub picture's count follows the list (Nov 18 2026: eleven after the arcade swap).
 WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen']
