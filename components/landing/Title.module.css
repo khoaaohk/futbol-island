@@ -293,6 +293,8 @@ button.playHero.playHero.playHero.playHero[data-closing=true]{width:56px!importa
 .grownInner p{margin:0}
 .grownInner a{color:#244d40;font-weight:800}
 .grownFree{margin-top:22px!important;font-weight:800;color:#244d40}
+.grownMore.grownMore{display:flex;flex-wrap:wrap;column-gap:18px;margin-top:26px!important;padding:14px 0 0!important;border-top:1px solid rgba(36,77,64,.18);font-size:16px}/* Nov 20 2026: Library · Games */
+.grownMore a{display:inline-flex;align-items:center;min-height:44px;padding:0;color:#244d40;font-size:inherit;font-weight:800;text-decoration:underline;text-underline-offset:3px}
 @media(prefers-reduced-motion:reduce){.grownDialog{animation:none}}
 .inlineLink{display:inline;padding:0;border:0;background:none;color:#244d40;font:inherit;font-weight:800;text-decoration:underline;cursor:pointer}
 .grownHeader>h2{flex:1 1 auto;text-align:center}

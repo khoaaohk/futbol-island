@@ -39,6 +39,9 @@ export function LegalLinks(){
   <a className={styles.grownLink} href="/privacy" data-track="sp:open">Privacy</a>
   <Sheet open={sheet==='grown'} onClose={close} title="For grown-ups" id="grown-ups-title">
    <AboutGrownUps donateReturn="start"/>
+   {/* Nov 20 2026 (owner: "go with your recommendations", SEO plan): plain links to the two hubs, in this sheet only (the kid flow
+       never sees them). Server-rendered with the closed dialog, so crawlers see them; no new script. */}
+   <p className={`${styles.grownInner} ${styles.grownMore}`} data-hub-links=""><a href="/library">Learn soccer in the Library</a> <a href="/games">Free soccer games</a></p>
   </Sheet>
  </>;
 }
